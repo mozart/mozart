@@ -390,7 +390,7 @@ void engine() {
 // ------------------------------------------------------------------------
  LBLschedule:
 
-  Thread::Current->schedule();
+  Thread::ScheduleCurrent();
 
  LBLerror:
  LBLstart:
@@ -430,9 +430,9 @@ void engine() {
 
     if (!e->currentTaskStack) {
       {
-	Thread *c = Thread::Current;
+	Thread *c = Thread::GetCurrent();
 	if (c->flags&T_RootTask) {
-	  tmpBB = Board::Root;
+	  tmpBB = Board::GetRoot();
 	  PC = c->continuation->getPC();
 	  Y = c->continuation->getY();
 	  G = c->continuation->getG();					     
@@ -509,8 +509,7 @@ void engine() {
     }
 
   LBLTaskEmpty:
-    Thread::Current->finished();
-    Thread::Current=(Thread *) NULL;
+    Thread::FinishCurrent();
     goto LBLstart;
 
   LBLTaskNervous:
@@ -1763,7 +1762,7 @@ void engine() {
 
 	tmpBB = CBB;
 
-	Board::SetCurrent (CBB->getParentBoardDeref());
+	Board::SetCurrent(CBB->getParentBoardDeref());
 
 	tmpBB->setBoard(CBB);
 
@@ -1811,7 +1810,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB,Thread::Current->getPriority(),
+      CAA = new AskActor(CBB,Thread::GetCurrentPriority(),
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
 
@@ -1823,7 +1822,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB,Thread::Current->getPriority(),
+      CAA = new WaitActor(CBB,Thread::GetCurrentPriority(),
 			  NOCODE, Y, G, X, argsToSave);
 
       DISPATCH(3);
@@ -1834,9 +1833,9 @@ void engine() {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB,Thread::Current->getPriority(),
+      CAA = new WaitActor(CBB,Thread::GetCurrentPriority(),
 			  NOCODE, Y, G, X, argsToSave);
-
+      CAA->setDisWait();
       DISPATCH(3);
     }
 
@@ -1848,18 +1847,18 @@ void engine() {
 	Board *w = new WaitBoard(NULL);
 	IncfProfCounter(waitCounter,sizeof(WaitBoard));
 	w->setBoard(CBB);
-	CBB = w;
+	Board::SetCurrent(w);
 	DISPATCH(1);
       }
 
       // create a node
-      Board::SetCurrent (new WaitBoard(CAA));
+      Board::SetCurrent(new WaitBoard(CAA));
       goto LBLcreateBoard;
     }
 
   INSTRUCTION(ASKCLAUSE)
     {
-      Board::SetCurrent (new AskBoard(CAA));
+      Board::SetCurrent(new AskBoard(CAA));
       IncfProfCounter(askCounter,sizeof(AskBoard));
 
     LBLcreateBoard:
@@ -1881,14 +1880,13 @@ void engine() {
 
       e->pushTask(CBB,savedPC,Y,G);
       int aux_prio =
-	Thread::Current->getPriority() > Thread::UserPriority
+	Thread::GetCurrentPriority() > Thread::UserPriority
 	? Thread::UserPriority
-	: Thread::Current->getPriority();
+	: Thread::GetCurrentPriority();
 
-      Thread::Current->schedule();
-      Thread::Current = new Thread(aux_prio);
-
-      e->currentTaskStack = Thread::Current->getTaskStack();
+      Thread::ScheduleCurrent();
+      Thread::NewCurrent(aux_prio);
+      e->currentTaskStack = Thread::GetCurrentTaskStack();
 
       IncfProfCounter(procCounter,sizeof(Thread)+TaskStack::DefaultSize*4);
       DISPATCH(2);
@@ -1980,7 +1978,7 @@ void engine() {
       LOADCONT(CAA->getNext());
       PC = CastAskActor(CAA)->getElsePC();
       if (PC != NOCODE) {
-	CBB = CBB->getParentBoardDeref();
+	Board::SetCurrent(CBB->getParentBoardDeref());
 	CAA->setCommitted();
 	CBB->removeSuspension();
 	goto LBLemulateIfProcess;
@@ -1989,7 +1987,7 @@ void engine() {
 // rule: if fi --> false
 
       CAA->setCommitted();
-      CBB=CBB->getParentBoardDeref();
+      Board::SetCurrent(CBB->getParentBoardDeref());
       CBB->removeSuspension();
 
       HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
@@ -2023,7 +2021,7 @@ void engine() {
 	goto LBLreduce;
       }
 
-      CBB = waitNode;
+      Board::SetCurrent(waitNode);
 
       LOADCONT(waitNode->getBodyPtr());
 
@@ -2077,7 +2075,7 @@ void engine() {
 
       tmpBB = CBB;
 
-      Board::SetCurrent (CBB->getParentBoardDeref());
+      Board::SetCurrent(CBB->getParentBoardDeref());
 
       tmpBB->setBoard(CBB);
 
