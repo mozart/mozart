@@ -1750,7 +1750,7 @@ OZ_C_proc_begin(unix_randLimits, 2)
 }
 OZ_C_proc_end
 
-void MyinitUnix()
+void BIinitUnix()
 {
   OZ_addBuiltin("unix_getDir",2,unix_getDir);
   OZ_addBuiltin("unix_stat",2,unix_stat);
