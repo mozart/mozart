@@ -110,6 +110,9 @@ OZ_Return TaskIntervalsPropagator::propagate(void)
   int &ts  = reg_sz;
   int * dur = reg_offset;
 
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
+
   struct Set {
     int low, up, dur, extSize, lst, ect;
     int * ext;
@@ -618,6 +621,9 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   int * dur    = reg_offset;
   int * use    = reg_use;
   int capacity = reg_capacity;
+
+  // if we have no tasks the prop returns trivially true
+  if (ts == 0) return PROCEED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, ts);
 
