@@ -317,7 +317,7 @@ void ByteData::bytePrintStream(ostream& out) {
     else {
       // output in octal notation
       int d1 = b / 64;
-      b -= b % 64;
+      b = b % 64;
       int d2 = b / 8;
       int d3 = b % 8;
       out << "\\" << d1 << d2 << d3;
