@@ -1,0 +1,12 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+#WHATCLASS=misc
+#PRINTNAME=Macros
+WHAT = macro
+MAIN = main.sgml
+SGMLSRCS = macro.sgml loop.sgml
+HTMLEXTRAFILES = 
+
+include ../Makefile.common

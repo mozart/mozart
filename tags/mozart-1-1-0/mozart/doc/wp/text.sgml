@@ -1,0 +1,408 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<Chapter id="chapter.text">
+  <Title/Text Widgets/
+
+  <p>
+    <index/text/<index/widget<and>text/
+    Text widgets display (as suggested by the name) one or more lines
+    of text, where the text can be edited. It offers commands to
+    manipulate segments of text and to embed other widgets into the
+    flow of text. This chapter attempts to give a short overview on
+    text widgets, for the details consult <ref.extern
+    to="&tkcmd/text.htm"/<kbd/text//.
+
+  <section id="section.text.widget">
+    <title/Manipulating Text/
+
+    <p>
+      Let us start with a very simple example where we want to display
+      a given text in a text widget. <ptr to="figure.text.started">
+      shows a program that does the job.
+
+    <p>
+      <figure id="figure.text.started">
+        <caption/Displaying text./
+        <p>
+               <picture.choice>
+          <picture.extern to="display.gif" type=gif>
+          <Picture.Extern id="pict.ext.text.display" to="pictures/text/display.eps" type=ps>
+               </picture.choice>
+<chunk class=anonymous><title/text display/
+T={New Tk.text tkInit(parent:W width:28 height:5 bg:white)}
+{T tk(insert 'end' "The quick brown fox jumps over the lazy dog.")}
+</chunk>          
+      </figure>
+
+    <para class=apropos><title/scanning/
+<index/scanning/
+      Similar to <ref
+      to="section.widgets-2.listbox"/listboxes/, a text widget
+      supports scanning: The text can be scanned by pressing the
+      second mouse button and moving the mouse pointer while the
+      button is still being pressed. And of course, in the same way as
+      canvas widgets scrollbars can be attached to a text widget. 
+
+    <para class=apropos><title/text wrapping/
+<index/text<and>wrapping/
+      The text is wrapped where word boundaries (that is,
+      spaces) are not taken into account. Changing the wrapping such
+      that word boundaries are preserved can be done as follows:
+<chunk class=anonymous><title/wrap:word/
+{T tk(configure wrap:word)}
+</chunk>
+
+    <para id="para.text.position" class=apropos><title/positions/
+<index class=tails/text<and>position/
+      Positions in the displayed text can be referred to by
+      <def/positions/. A position can be denoted by a tickle 
+      <<p(?_{L} ?_{C})>>, where ?_{L} gives the line (starting from
+      one) and ?_{C} the position in that line (also starting from
+      zero). Positions also can take modifiers, for more details on
+      this issue see <ref.extern
+      to="&tkcmd/text.htm"/<kbd/text//. Another helpful position is
+      <<'end'>> which refers to the position after the last character.
+
+    <para class=apropos><title/getting text/
+<index class=tails/text<and>getting/
+      Portions of the text can be retrieved. For example,
+<chunk class=anonymous><title/text get/
+{T tkReturnAtom(get p(1 4) p(1 9) $)}
+</chunk>
+      returns the atom <<quick>>. 
+
+    <para class=apropos><title/inserting text/
+<index class=tails/text<and>inserting/
+      Positions also specify where to insert text, for example
+<chunk class=anonymous><title/text insert/
+{T tk(insert p(1 4) "very very ")}
+</chunk>
+      inserts the text directly before quick.
+
+    <para class=apropos><title/deleting text/
+<index class=tails/text<and>deleting/
+      In the same way text can also be deleted. For example
+<chunk class=anonymous><title/text delete/
+{T tk(delete p(1 4) p(1 14))}
+</chunk>
+      deletes again the text <<"very very ">>.
+
+    <para class=apropos><title/disabling input/
+<index class=tails/text<and>disabling input/
+      We do not discuss here how to employ a text widget as a powerful
+      editor, please see again <ref.extern 
+      to="&tkcmd/text.htm"/<kbd/text//. If you try to place a cursor
+      inside the text widget and make some character strokes, you will
+      notice that by default a text widget accepts input. To prevent a
+      user from altering the text in a display only situation the
+      widget can be configured as follows:
+<chunk class=anonymous><title/text disabled/
+{T tk(configure state:disabled)}
+</chunk>
+
+   
+  </section>
+
+  <section id="section.text.tags">
+    <title/Text Tags and Marks/
+
+    <para class=apropos><title/creating tags/
+<index class=tails/text<and>tag/
+      In the same way as canvas widgets, text widgets support
+      tags. While canvas tags refer to sets of items (see <ptr
+      to="section.text.tags">),
+      text tags refer to sets of characters and allow to configure
+      and manipulate the set of characters. For example, the following
+<index class=tails/<<Tk>><and><<textTag>>/
+<chunk class=anonymous><title/text tag init/
+B={New Tk.textTag tkInit(parent:T foreground:brown)}
+</chunk>
+      creates a new tag, where the tag is configured such that all
+      characters that will be referred to by this tag (initially, no
+      characters) are displayed in brown color.
+
+    <para class=apropos><title/adding text/
+      Already inserted text can be added to a tag by defining the text
+      portion to be added with positions. The following
+<chunk class=anonymous><title/text tag add/
+{B tk(add p(1 10) p(1 15))}
+</chunk>
+      adds the text part <kbd/"brown"/ to the tag <<B>>, which changes
+      the color of that text to brown.
+
+    <para class=apropos><title/configuring tags/
+      Changing the configuration of a tag takes effect on all
+      characters that are referred to by that tag. For example, if the
+      tag <<B>> is configured for a larger font as follows
+<chunk class=anonymous><title/text tag configure/
+{B tk(configure font:{New Tk.font tkInit(size:18)})}
+</chunk>
+      the text portion <kbd/"brown"/ now appears in that larger font.
+
+    <para class=apropos><title/inserting and adding text/
+      The <<insert>> command also supports tags directly. The following
+<chunk class=anonymous><title/text tag insert/
+{T tk(insert 'end' "\nDogs are ")}
+{T tk(insert 'end' "brown" B)}
+{T tk(insert 'end' " as well.")}
+</chunk>
+      adds three portions of text to the text widget, where the text
+      <kbd/"brown"/ is both inserted and added to the tag <<B>>, which
+      makes it appear both in brown color and with a large font. Now
+      the text widget looks as shown in <ptr to="figure.text.tags">.
+
+    <p>
+      <figure id="figure.text.tags">
+        <caption/Using tags with text widgets./
+               <picture.choice>
+        <picture.extern to="text-tags.gif" type=gif>
+        <Picture.Extern id="pict.ext.text.text-tags" to="pictures/text/text-tags.eps" type=ps>
+               </picture.choice>
+      </figure>
+
+    <p>
+      In the same way as described in <ptr to="section.canvas.tags">
+      for canvas tags, events can be attached to text tags. We will
+      exemplify this in the <ref to="section.text.toy"/next section/.
+
+    <p>
+<index class=tails/text<and>mark/
+<index class=tails/<<Tk>><and><<textMark>>/
+      In addition to tags, text widgets also support
+      <def/marks/. Marks refer to positions in the text rather than to
+      particular characters as tags do. They are supported by the
+      class <<Tk.textMark>>. For their use, see again <ref.extern
+      to="&tkcmd/text.htm"/<kbd/text//.
+
+  </section>
+
+
+  <section id="section.text.toy">
+    <title/Example: A ToyText Browser/
+
+    <p>
+      In the following we discuss a tiny ToyText browser that
+      supports following of links in the text and going back to
+      previously displayed pages. A ToyText hypertext is a
+      record, where the features are the links and the fields describe
+      pages. For an example, see <ptr
+      to="data.text.toy">. A page consists out of head and body, where
+      the body is a list of elements. An element is either a virtual
+      string or a record <<a(ref:?_{R} ?_{Es})>>, where ?_{R} is a
+      feature of the record and ?_{Es} is a list of elements.
+
+    <p>
+      <ptr to="figure.text.display"> shows the main routine to display
+      a ToyText page in a text widget <<T>>. The procedure <<Display>>
+      takes a list of references <<Rs>> as input, and displays the
+      page that is referred to by its first element.
+
+    <p>
+      <figure id="figure.text.display">
+        <caption/Displaying a ToyText page./
+<chunk><title/Definition of Display/
+proc {Display Rs}
+   case Rs of nil then skip
+   [] R|Rr then
+     {T tk(delete p(0 0) 'end')}
+     {Head ToyText.R.head Rr} {Body ToyText.R.body Rs}
+   end      
+end
+</chunk>
+      </figure>
+
+    <p>
+      <ptr to="figure.text.head"> shows how the head of a ToyText page
+      is displayed, where <<E>> is the virtual string to be displayed
+      and <<Rs>> is the list of current references without  its first
+      element. The tag <<HT>> is configured such that clicking it
+      displays the previous page.
+      
+    <p>
+
+      <figure id="figure.text.head">
+        <caption/Displaying the head of a ToyText page./
+<chunk><title/Definition of Head/
+local
+   HF={New Tk.font    tkInit(family:helvetica size:18 weight:bold)}
+   HT={New Tk.textTag tkInit(parent:T font:HF foreground:orange)}
+in
+   proc {Head E Rs}
+      {T tk(insert p(0 0) E#'\n' HT)}
+      {HT tkBind(event:  '<1>'
+		 action: proc {$} {Display Rs} end)}
+   end
+end
+</chunk>
+      </figure>
+
+    <p>
+      <ptr to="figure.text.body"> shows how the body of a ToyText
+      page is displayed, where <<Es>> is the list of elements, <<CT>> is
+      the current tag to which inserted text is added, and <<Rs>> are
+      the current references, including a reference to the page
+      currently under display as first element. To display a reference
+      element, a new tag <<RT>> is created that carries as action a
+      procedure that displays the referred page.
+
+    <p>
+      <figure id="figure.text.body">
+        <caption/Displaying the body of a ToyText page./
+<chunk><title/Definition of Body/
+local
+   BF={New Tk.font    tkInit(family:helvetica size:12 weight:normal)}
+   BT={New Tk.textTag tkInit(parent:T font:BF)}
+   proc {Do Es CT Rs}
+      case Es of nil then skip
+      [] E|Er then
+	 case E
+	 of a(ref:R Es) then
+	    RT={New Tk.textTag tkInit(parent:T font:BF
+                                      foreground:blue underline:true)}
+	 in
+	    {RT tkBind(event: '<1>'
+		       action: proc {$} {Display R|Rs} end)}
+	    {Do Es RT Rs}
+	 else
+	    {T tk(insert 'end' E CT)}
+	 end
+	 {Do Er CT Rs}
+      end
+   end
+in
+   proc {Body Es Rs}
+      {Do Es BT Rs}
+   end
+end
+</chunk>
+      </figure>
+
+    <p>
+      <ptr to="figure.text.toy"> shows the complete ToyText browser
+      and how it looks when displaying pages.
+      
+
+    <p>
+      <figure id="figure.text.toy">
+        <caption/A ToyText browser./
+      <p>
+               <picture.choice>
+        <picture.extern to="toy.gif" type=gif>  
+        <Picture.Extern id="pict.ext.text.toy" to="pictures/text/toy.eps" type=ps>  
+               </picture.choice>
+<chunk class=anonymous><title/ToyBrowse/
+proc {ToyBrowse ToyText Root}
+   W={New Tk.toplevel tkInit}
+   T={New Tk.text tkInit(parent:W width:40 height:8 bg:white wrap:word)}
+   <chunk.ref/Definition of Head/
+   <chunk.ref/Definition of Body/
+   <chunk.ref/Definition of Display/
+in
+   {Tk.send pack(T)}
+   {Display [Root]}
+end
+{ToyBrowse <chunk.ref/Sample ToyText/ canvas}
+</chunk>
+      </figure>
+
+
+  </section>
+
+
+
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Text Widgets
+%%%
+
+%%
+%% Inserting Text
+%%
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/text display/
+{Tk.send pack(T)}
+
+<chunk.ref/wrap:word/
+
+{Browse <chunk.ref/text get/}
+
+<chunk.ref/text insert/
+
+<chunk.ref/text delete/
+
+<chunk.ref/text disabled/
+
+
+{W tkClose}
+
+
+
+%%
+%% Text Tags
+%%
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/text display/
+{Tk.send pack(T)}
+
+declare
+<chunk.ref/text tag init/
+
+<chunk.ref/text tag add/
+
+<chunk.ref/text tag configure/
+
+<chunk.ref/text tag insert/
+
+
+{W tkClose}
+
+
+
+%%
+%% Example: A ToyText Browser
+%%
+
+declare
+<chunk.ref/ToyBrowse/
+
+
+
+
+
+</chunk>
+]]>
+
+</Chapter>
+
+
+
+

@@ -1,0 +1,211 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|none|sh|tcl">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!entity % EXTRA "IGNORE">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY intro     SYSTEM "intro.sgml">
+<!ENTITY started   SYSTEM "started.sgml">
+<!ENTITY widgets-1 SYSTEM "widgets-1.sgml">
+<!ENTITY geometry  SYSTEM "geometry.sgml">
+<!ENTITY widgets-2 SYSTEM "widgets-2.sgml">
+<!ENTITY tools     SYSTEM "tools.sgml">
+<!ENTITY canvas    SYSTEM "canvas.sgml">
+<!ENTITY text      SYSTEM "text.sgml">
+<!ENTITY data      SYSTEM "data.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+<!ENTITY amp "&">
+<!ENTITY tkcmd "../tcltk/TkCmd">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY emdash PI "emdash">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name="html.split"       value="chapter.introduction">
+
+    <Meta name="html.split"       value="chapter.started">
+    <Meta name="html.split"       value="section.started.first">
+    <Meta name="html.split"       value="section.started.architecture">
+    <Meta name="html.split"       value="section.started.implementation">
+
+    <Meta name="html.split"       value="chapter.widgets-1">
+    <Meta name="html.split"       value="section.widgets-1.toplevel">
+    <Meta name="html.split"       value="section.widgets-1.tickles">
+    <Meta name="html.split"       value="section.widgets-1.frame">
+    <Meta name="html.split"       value="section.widgets-1.hierarchy">
+    <Meta name="html.split"       value="section.widgets-1.label">
+    <Meta name="html.split"       value="section.widgets-1.images">
+    <Meta name="html.split"       value="section.widgets-1.messages">
+
+    <Meta name="html.split"       value="chapter.geometry">
+    <Meta name="html.split"       value="section.geometry.intro">
+    <Meta name="html.split"       value="section.geometry.pack">
+    <Meta name="html.split"       value="section.geometry.grid">
+    <Meta name="html.split"       value="section.geometry.anchor">
+
+    <Meta name="html.split"       value="chapter.widgets-2">
+    <Meta name="html.split"       value="section.widgets-2.button">
+    <Meta name="html.split"       value="section.widgets-2.otherbuttons">
+    <Meta name="html.split"       value="section.widgets-2.return">
+    <Meta name="html.split"       value="section.widgets-2.menu">
+    <Meta name="html.split"       value="section.widgets-2.events">
+    <Meta name="html.split"       value="section.widgets-2.action">
+    <Meta name="html.split"       value="section.widgets-2.entry">
+    <Meta name="html.split"       value="section.widgets-2.scale">
+    <Meta name="html.split"       value="section.widgets-2.listbox">
+    <Meta name="html.split"       value="section.widgets-2.wm">
+    <Meta name="html.split"       value="section.widgets-2.file">
+    <Meta name="html.split"       value="section.widgets-2.help">
+
+    <Meta name="html.split"       value="chapter.canvas">
+    <Meta name="html.split"       value="section.canvas.widgets">
+    <Meta name="html.split"       value="section.canvas.barchart">
+    <Meta name="html.split"       value="section.canvas.region">
+    <Meta name="html.split"       value="section.canvas.tags">
+    <Meta name="html.split"       value="section.canvas.animated">
+
+    <Meta name="html.split"       value="chapter.text">
+    <Meta name="html.split"       value="section.text.widget">
+    <Meta name="html.split"       value="section.text.tags">
+    <Meta name="html.split"       value="section.text.toy">
+
+    <Meta name="html.split"       value="chapter.tools">
+    <Meta name="html.split"       value="section.tools.dialogs">
+    <Meta name="html.split"       value="section.tools.error">
+    <Meta name="html.split"       value="section.tools.menubars">
+    <Meta name="html.split"       value="section.tools.images">
+
+    <Meta name="html.split"       value="appendix.data">
+
+    <Meta name="html.split.toc"   value="">
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=latex.table.spec arg1=table.intro.start arg2="CC">
+    <Meta name=latex.table.spec arg1="table.widgets-2.event-args" arg2="CCCC">
+
+<meta name="latex.picture.width" arg1="pict.ext.canvas.barchart" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.canvas.tags" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.canvas.waitdone" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid-span" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid-sticky" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid-weight" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.grid" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-anchor" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-bottom" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-fill" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-ipad" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-left" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-pad" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-plain" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-resize-both" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-resize-expand" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.packer-resize-fill" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.geometry.widget-anchor" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.started.lower" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.started.upper" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.text.display" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.text.text-tags" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.text.toy" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.tools.dialog" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.tools.error" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.tools.menubar" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.fonts" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.images-1" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.labels" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.messages" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.predefined" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.relief-frames" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-1.toplevel-1" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.button" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.check-and-radio-action" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.check-and-radio" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.entry" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.file" arg2="10cm">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.help" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.listbox" arg2="">
+<meta name="latex.picture.width" arg1="pict.ext.widgets-2.menu" arg2="">
+<meta name="latex.picture.width"
+arg1="pict.ext.widgets-2.scale" arg2="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="pst-node">
+
+    <Title/Window Programming in Mozart/
+      <Author.Extern to="author.db" key="Christian.Schulte"> 
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="wp.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+      This document is an introduction to window programming in
+      Mozart. Mozart uses a high-level object-oriented interface to Tk
+      for window programming. The interface inherits from &Oz; concurrency,
+      objects and first-class procedures. From Tk the interface
+      inherits a set of powerful graphical abstractions. This document
+      exemplifies both aspects: the basic usage of the graphical
+      abstractions and how to profit from &Oz;'s language features. 
+    </Abstract>
+  <Body>
+    &intro;  
+    &started;  
+    &widgets-1; 
+    &geometry;  
+    &widgets-2;  
+    &canvas;
+    &text;
+    &tools;
+    &data;
+  <Back>
+    <Bib.Extern id="Ousterhout.94"  
+                to="wp.bib" key="Ousterhout.94"> 
+    <Bib.Extern id="HarrisonMcLennan.98"  
+                to="wp.bib" key="HarrisonMcLennan.98"> 
+</Book>
+

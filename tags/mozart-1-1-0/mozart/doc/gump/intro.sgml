@@ -1,0 +1,72 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1996-1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.intro">
+  <Title/Introduction/
+  <P>
+    The <Span class=index/<Name type=creature>Gump</Name>/ is a fictional
+    `creature' in the children's novel <Ref.Extern
+    to="http://almond.srv.cs.cmu.edu/afs/cs.cmu.edu/user/rgs/mosaic/ozland-ftitle.html"
+    ><Q class=quotation>The Marvelous Land of Oz</Q></Ref.Extern> by
+    L.&nbsp;Frank Baum<Index/Baum, L.&nbsp;Frank/, sequel to <Q class=title
+    >The Wonderful Wizard of Oz</Q>&nbsp;<Ptr to="baum00">.  It is a living
+    flying machine assembled by the main characters from individually selected
+    materials.  The <Span class=index/Tin Woodman/ fastens a gump's head to
+    one end of the machine, explaining that it <Q class=quotation>will show
+    which is the front end of the Thing.</Q>
+  <P>
+    &Gump; is also the name of the specification language and tool described
+    in this handbook from the user's point of view.  Like the gump's head in
+    the novel, the language is used to specify front-ends in &Oz;, in this
+    case the lexical and phrase structure of a language.  The tool is the
+    <Q class=quotation>Powder of Life</Q> that generates executable programs
+    (&Oz; class definitions) from such specifications.
+  <Section class=unnumbered>
+    <Title/Overview/
+    <P>
+      This manual consists of two parts.  <Ptr to="chapter.scanner"> describes
+      the &Gump; Scanner Generator; <Ptr to="chapter.parser"> the &Gump; Parser
+      Generator.  Each chapter is divided in two sections, the first explaining
+      the basic concepts by example and the second providing a detailed
+      reference for the programmer.
+  <Section class=unnumbered>
+    <Title/Acknowledgements/
+    <P>
+      The specification language and the software tool have been designed
+      and implemented as the subject of my Master's Thesis&nbsp;<Ptr
+      to="kornstaedt96"> which has been supervised by Prof&dot;&nbsp;Dr&dot;
+      Gert Smolka and Dipl&dot;-Inform&dot; Christian Schulte at the
+      Programming Systems Lab at the Universität des Saarlandes, as well
+      as by Prof&dot;&nbsp;Dr&dot; Hans-Wilm Wippermann at the University
+      of Kaiserslautern.
+    <P>
+      The software makes use of the GNU variants of <Span class=index/&lex;/
+      and <Span class=index/&yacc;/, called <Span class=index/&flex;/&nbsp;<Ptr
+      to="paxson95"> and <Span class=index/&bison;/&nbsp;<Ptr
+      to="donellystallman95"> respectively.
+    <P>
+      &Oz; is the name of a programming language developed at the Programming
+      Systems Lab at the Universität des Saarlandes.  Mozart is an
+      implementation of &Oz;.
+    <P>
+      The cover illustration has been drawn by Andreas Schoch.
+</Chapter>

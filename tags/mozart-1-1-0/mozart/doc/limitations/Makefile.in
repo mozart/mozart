@@ -1,0 +1,16 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = limitations
+MAIN = main.sgml
+#WHATCLASS=unused
+#PRINTNAME=Limitations
+
+HTMLEXTRAFILES =
+
+HTMLEXTRASUPPORTFILES = 
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+

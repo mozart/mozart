@@ -1,0 +1,233 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="Chapter.Error">
+  <Title/Error Formatting: <<Error>>/
+  <P>
+    The <<Error>> module is concerned with various tasks related to
+    error reporting.  This encompasses the following:
+    <List>
+      <Item>
+	Reporting errors as represented by data-structures called
+	<Def/error messages/.
+      <Item>
+	Constructing error messages from run-time error conditions
+	in the form of exceptions.
+      <Item>
+	Registering error formatters in the <Def/error registry/.
+    </List>
+    At boot time, the system installs a default exception handler processing
+    all uncaught exceptions.  This involves printing out the exception with
+    the mechanisms mentioned above and executing a handler as given by the
+    properties <<'errors.toplevel'>> and <<'errors.subordinate'>>, which see.
+  <Section>
+    <Title/Data Structures/
+    <P>
+      The central data structure used in this module is the error message.
+      The general format is as follows:
+      <Grammar.Rule/?={message}
+	<Grammar.Alt/?={message label}<<(>>/
+	<Grammar.Alt type=space/<<   >>[<<kind: ?={extended virtual string}>>]
+	  <Grammar.Note/origin subsystem or component//
+	<Grammar.Alt type=space/<<   >>[<<msg: ?={extended virtual string}>>]
+	  <Grammar.Note/main message//
+	<Grammar.Alt type=space/<<   >>[<<items: [?={line}]>>]
+	  <Grammar.Note/additional information//
+	<Grammar.Alt type=space/<<   &ellipsis;)>>
+	  <Grammar.Note/internal fields///
+      All fields of the record are optional and specify information as
+      indicated by the comments (wherever applicable).  It is recommended
+      that both <<kind>> and <<msg>> start with a lower-case letter and
+      do not end in a period.
+    <P>
+      The label of the record is currently ignored by the procedures from
+      the <<Error>> module, but other system modules expect it to be either
+      <<error>> or <<warn>>, depending on the severity of the condition.
+      <Grammar.Rule/?={message label}
+	<Grammar.Alt/<<error>> | <<warn>>//
+    <P>
+      The <<items>> describe a sequence of lines meant to give additional
+      hints about the error, but one should make sure that the error message
+      is comprehensible without this information.  All keys should start with
+      a capital letter.
+      <Grammar.Rule/?={line}
+	<Grammar.Alt/<<hint(>>[<<l: ?={extended virtual string}>>]/
+	<Grammar.Alt type=space/<<     >>[<<m: ?={extended virtual string}>>])
+	  <Grammar.Note/key&slash;value pair//
+	<Grammar.Alt/?={coordinates}
+	  <Grammar.Note/source code error relates to//
+	<Grammar.Alt/<<line(?={extended virtual string})>>
+	  <Grammar.Note/full line of text//
+	<Grammar.Alt/<<unit>>
+	  <Grammar.Note/empty line (separator)///
+      <Grammar.Rule/?={coordinates}
+	<Grammar.Alt/<<pos(?={atom}>>
+	  <Grammar.Note/file name; <<''>> if not known//
+	<Grammar.Alt type=space/<<    ?={int}>>
+	  <Grammar.Note/line number; required//
+	<Grammar.Alt type=space/<<    ?={int})>>
+	  <Grammar.Note/column number; <<~1>> if not known///
+    <P>
+      An ?={extended virtual string} is a virtual string that may contain,
+      for convenience, embedded records with special interpretation.
+      <Grammar.Rule/?={extended virtual string}
+	<Grammar.Alt/?={atom} | ?={int} | ?={float} | ?={string}/
+	<Grammar.Alt/<<'#'(>>?={extended virtual string} &ellipsis;
+	  ?={extended virtual string}<<)>>/
+	<Grammar.Alt/<<oz(?={value})>>/
+	<Grammar.Alt/<<pn(?={atom})>>/
+	<Grammar.Alt/?={coordinates}/
+	<Grammar.Alt/<<apply(?={procedure or print name} [?={value}])>>/
+	<Grammar.Alt/<<list([?={value}] ?={extended virtual string})>>//
+      <Grammar.Rule/?={procedure or print name}
+	<Grammar.Alt/?={procedure} | ?={atom}//
+      The embedded records are translated to virtual strings as follows:
+      <List enum>
+	<Entry/<<oz(?_{X})>>/
+	<Item>
+	  transforms ?_{X} using <<Value.toVirtualString>>, using the print
+	  depth and width given by the system properties <<'errors.depth'>>
+	  and <<'errors.width'>>, respectively.
+	<Entry/<<pn(?+{A})>>/
+	<Item>
+	  considers ?_{A} to be a variable print name, &ie;, escapes
+	  non-printable characters according to variable concrete syntax
+	  if ?_{A} is enclosed in backquotes.
+	<Entry/<<pos(?+{A} ?+{I} ?+{I})>>/
+	<Item>
+	  prints out source coordinates, &eg;, <Code proglang=none
+	  /in file ?_{A}, line ?_{I}, column ?_{I}/ with the
+	  unspecified parts omitted.
+	<Entry/<<apply(?+{X} ?+{Ys})>>/
+	<Item>
+	  represents an Oz application of ?_{X} to ?_{Ys}.  Output uses
+	  the usual brace notation.
+	<Entry/<<list(?+{Xs} ?+{ExtendedVirtualString})>>/
+	<Item>
+	  outputs the values in ?_{Xs} as if each was wrapped inside
+	  <<oz(&ellipsis;)>>, inserting ?_{ExtendedVirtualString} between
+	  every pair of elements.
+      </List>
+  <Section>
+    <Title/The Error Registry/
+    <P>
+      The <Def/error registry/ has the purpose of storing so-called
+      <Def/error formatters/ under specific keys of type <Q/literal/.
+      An error formatter&nbsp;?{P} is a procedure with the signature
+      <<<{?{P} ?+{ExceptionR} ??{MessageR}}>>>
+      ?{P}&nbsp;must be capable of processing any exception having as
+      label any of the keys under which ?{P} has been entered into the
+      error registry and must return a ?={message} as defined above
+      describing the condition.  In the case of error or system exceptions,
+      only the record found in the dispatch field of the exception is
+      handed to the formatter.
+    <P>
+      Error formatters may be invoked by the default exception handler
+      installed at boot time.  Possibly dealing with serious conditions,
+      formatters are required to be robust.  In particular, the handler
+      flags the thread executing the formatter to be <Def/non-blocking/,
+      &ie;, if it ever blocks on a logic variable, an exception is raised
+      in this thread.  This increases chances of any message being output
+      at all.  Note that it is allowed to block on futures though and that
+      this flag is not inherited by any created child thread.
+  <Section>
+    <Title/Example Error Formatter/
+    <P>
+      The following piece of code illustrates how an error formatter might
+      be registered and how it could behave.  Assume a system component
+      called <<compiler>>, which is given <Q/queries/ to process.  If any
+      query is ill-typed, an exception is raised, containing the query,
+      the number of the ill-typed argument, and the expected argument type.
+      Furthermore, an <<internal>> exception is raised when an internal
+      programming assertion is violated.  For robustness, an <<else>> case
+      is included to handle any other exceptions.  The formatter simply
+      prints out the exception record, since this might help more than no
+      output at all.
+<<<{Error.registerFormatter compiler
+ fun {$ E}
+    T = 'compiler engine error'
+    BugReport = 'please send a bug report to mozart-bugs@ps.uni-sb.de'
+ in
+    case E of compiler(internal X) then
+       error(kind: T
+	     msg: 'Internal compiler error'
+	     items: [hint(l: 'Additional information' m: oz(X))
+		     line(BugReport)])
+    elseof compiler(invalidQuery M I A) then
+       error(kind: T
+	     msg: 'Ill-typed query argument'
+	     items: [hint(l: 'Query' m: oz(M))
+		     hint(l: 'At argument' m: I)
+		     hint(l: 'Expected type' m: A)])
+    &ellipsis;
+    else
+       error(kind: T
+	     items: [line(oz(E))])
+    end
+ end}>>>
+  <Section>
+    <Title/The Module/
+    <P>
+      <List enum>
+	<Entry><<exceptionToMessage>>
+	  <Index class=tails/<<Error>><And><<exceptionToMessage>>/
+	<Synopsis><<{Error.exceptionToMessage ?+{Exception} ??{Message}}>>
+	<Item>
+	  constructs a ?={message} from an exception, using the formatters
+	  defined in the error registry or a generic formatter if none is
+	  defined for the exception.  The message returned by the formatter
+	  is enriched with additional fields copied from the exception.
+
+	<Entry><<messageToVirtualString>>
+	  <Index class=tails/<<Error>><And><<messageToVirtualString>>/
+	<Synopsis><<{Error.messageToVirtualString ?+{Message} ??{V}}>>
+	<Item>
+	  converts a ?={message} to a virtual string using the standard layout.
+	  This can span several lines and includes the final newline.
+
+	<Entry><<extendedVSToVS>>
+	  <Index class=tails/<<Error>><And><<extendedVSToVS>>/
+	<Synopsis><<{Error.extendedVSToVS ?+{ExtendedVirtualString} ??{V}}>>
+	<Item>
+	  converts an ?={extended virtual string} to a ?={virtual string}.
+
+	<Entry><<printException>>
+	  <Index class=tails/<<Error>><And><<printException>>/
+	<Synopsis><<{Error.printException ?+{Exception}}>>
+	<Item>
+	  converts an exception to a message and this to a virtual string,
+	  printing the result on standard error (using <<System.printError>>).
+
+	<Entry><<registerFormatter>>
+	  <Index class=tails/<<Error>><And><<registerFormatter>>/
+	<Synopsis><<{Error.registerFormatter ?+{L} ?+{P}}>>
+	<Item>
+	  enters a formatter for exceptions with label&nbsp;?_{L} into
+	  the error registry, quietly replacing a possibly existing
+	  formatter for&nbsp;?_{L}.
+      </List>
+</Chapter>

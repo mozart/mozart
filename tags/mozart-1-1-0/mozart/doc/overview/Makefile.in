@@ -1,0 +1,55 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+DOCDIR		= $(PREFIX)/doc
+
+HTMLFILES = \
+	index overview \
+        getstarted tutorials reference contrib
+
+FILES = $(HTMLFILES:%=%.html) \
+	ozdoc.css page.gif
+
+all:
+quick:
+clean:
+veryclean:
+depend:
+check:
+distclean:
+bootstrap:
+bootquick:
+boot-quick:
+installps:
+clean-xref:
+
+install: $(DOCDIR) $(addprefix $(DOCDIR)/,$(FILES))
+$(DOCDIR):
+	$(INSTALL_DIR) $(DOCDIR)
+$(DOCDIR)/%: %
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/ozdoc.css: $(SRCDIR)/../utilities/ozdoc.css
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/%.gif: $(SRCDIR)/../utilities/%.gif
+	$(INSTALL_FILE) $< $@
+
+Makefile: $(SRCDIR)/Makefile.in ../config.status
+	cd .. && ./config.status
+
+JAVA_BIN	= @JAVA_BIN@
+JAVA_THREADS	= @JAVA_THREADS@
+JAVA		= $(JAVA_BIN)java  $(JAVA_THREADS)
+JAVAC		= $(JAVA_BIN)javac $(JAVA_THREADS)
+JAR		= $(JAVA_BIN)jar   $(JAVA_THREADS)
+
+CLASSPATH	= $(SRCTOP)/doc/xsl/xt-new.jar
+
+contrib.html: contrib.xml contrib.xsl
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver \
+	$(SRCDIR)/contrib.xml $(SRCDIR)/contrib.xsl $@ \
+	|| { rm -f $@; exit -1 }

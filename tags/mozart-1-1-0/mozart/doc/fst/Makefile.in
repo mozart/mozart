@@ -1,0 +1,31 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = fst
+
+MAIN = 0.sgml
+WHATCLASS=tutorial
+PRINTNAME=FiniteSetProgramming
+
+SGMLSRCS = \
+	fset_tutorial.sgml		\
+	fset_crew_problem.oz                            \
+	fset_example_steiner.sgml                       \
+	fset_example_hamming.sgml                       \
+	fset_example_binpacking.sgml                    \
+	fset_example_crew.sgml                          \
+	fset_example_golf.sgml fset_steiner_order.oz    \
+	fset_hamming.oz fset_steiner.oz fset_crew.oz    \
+	fset_golf.oz fset_binpacking.oz			\
+	constraints.bib
+
+HTMLEXTRAFILES = \
+	setdistr.gif                \
+	fset_steiner_naive.gif fset_steiner_order.gif   \
+	hamming_browser.gif golf_explorer.gif           \
+	crew_browser.gif
+
+OZDOCHTMLFLAGS =
+
+include ../Makefile.common
+

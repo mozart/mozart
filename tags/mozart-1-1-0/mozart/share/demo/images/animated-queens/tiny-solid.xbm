@@ -1,0 +1,16 @@
+/*
+ * Programming Systems Lab, DFKI Saarbruecken,
+ * Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+ * Author: Christian Schulte
+ * Email: schulte@dfki.uni-sb.de
+ * Last modified: $Date$ by $Author$
+ * Version: $Revision$
+ */
+
+#define tiny-solid_width 10
+#define tiny-solid_height 10
+#define tiny-solid_x_hot 0
+#define tiny-solid_y_hot 0
+static unsigned char tiny-solid_bits[] = {
+   0x1f, 0x00, 0x1f, 0x00, 0x1f, 0x00, 0x1f, 0x00, 0x1f, 0x00, 0xe0, 0x03,
+   0xe0, 0x03, 0xe0, 0x03, 0xe0, 0x03, 0xe0, 0x03};

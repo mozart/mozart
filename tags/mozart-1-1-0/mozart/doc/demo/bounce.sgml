@@ -1,0 +1,72 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.bounce">
+  <Title/Bounce/
+    <Author.Extern to="author.db" key="Michael.Mehl">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Author.Extern to="author.db" key="Gert.Smolka">
+    <Author.Extern to="author.db" key="Joerg.Wuertz">
+
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Bounce.oza"/Start Applet/
+      <Item>
+	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+    </List>
+  </P>
+
+  <Section class=unnumbered>
+    <Title/Creating a Ball/  
+
+    <P>
+      Click the left mouse button to create a ball at the 
+      current mouse pointer position.
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered>
+    <Title/Deleting a Ball/  
+
+    <P>
+     Click the right mouse button to delete the ball that has been
+     created last.
+    </P>
+
+  </Section>
+
+  <section class=unnumbered id="section.bounce.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.bounce>
+      <title>Root functor: <file/Bounce.oz/</title>
+      <para><title><ref.extern to="Bounce.oz">Source
+File</ref.extern></title>
+<code.extern display to="Bounce.oz" proglang=oz></para>
+    </subsection>
+
+
+
+</Chapter>
