@@ -91,7 +91,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
 //  Make a runnable thread with a single task stack entry <local thread queue>
 Thread * oz_mkLPQ(Board *bb, int prio)
 {
-  Thread * th = new Thread(S_RTHREAD|T_runnable|T_lpq, prio, bb, am.newId());
+  Thread * th = new Thread(S_RTHREAD|T_runnable|T_lpq, prio, bb, oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
