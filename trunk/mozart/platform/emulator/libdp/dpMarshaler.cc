@@ -406,13 +406,13 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
       // mm2: abstraction val=newObjectProxy(o,gnobj,gnclass,clas)
       val = newObjectProxy(o,gnobj,gnclass,clas);
 
-      ob->mkVar(val, ob->getFlags()); 
+      ob->changeToVar(val); 
       return val;}
   default:         
     Assert(0);
   }
   val=makeTaggedConst(tert);
-  ob->mkTertiary(tert,ob->getFlags()); 
+  ob->changeToTertiary(tert); 
   return val;
 }
 

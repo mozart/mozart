@@ -2343,6 +2343,9 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_Port:  
     {
+      if(((Tertiary *)this)->getTertType()==Te_Proxy) {
+	ret = (ConstTerm *) gcReallocStatic(this, SIZEOFPORTPROXY);
+	break;}
       if(((Tertiary *)this)->getTertType()==Te_Local) {
 	CheckLocal((PortLocal *) this);}
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(PortLocal));
