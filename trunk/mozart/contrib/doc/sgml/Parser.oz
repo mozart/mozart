@@ -173,7 +173,7 @@ define
       fun {Loop}
 	 {GetEvent NextLine CaseNormalize}
       end
-   in event(error:{IO.readAsString ERR.read}
+   in event(error:{IO.readSLazy ERR.read}
 	    get:Loop)
    end
 
