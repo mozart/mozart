@@ -93,6 +93,9 @@ in
 
 	 StatusSync : _
 
+	 MsgList    : nil
+	 MsgListTl  : nil
+
       meth init
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
@@ -279,6 +282,8 @@ in
 			    {Int.toFloat SortedData.1.@SortBy} + 0.1 end
 	    XStretch   = 207.0
 
+	    C          = {self.BarCanvas w($)}
+
 	    fun {YStretch I}
 	       (I-1)*32
 	    end
@@ -286,37 +291,38 @@ in
 	    Gui,DeleteBars(false)
 	    {List.forAllInd SortedData
 	     proc {$ I S}
+		CTag   = {New Tk.canvasTag tkInit(parent:C)}
 		Length = {Int.toFloat S.@SortBy}
-		CTag = {New Tk.canvasTag tkInit(parent:{self.BarCanvas w($)})}
 	     in
-		{ForAll [tk(crea rectangle
-			    7                             {YStretch I}+18
-			    7.0+(Length/Max)*XStretch     {YStretch I}+32
-			    fill: SelectedBackground
-			    tags: CTag)
-			 tk(crea text
-			    7.0+(Length/Max)*XStretch+5.0 {YStretch I}+19
-			    text:   case @SortBy
-				    of heap then {FormatSize S.heap}
-				    [] X    then S.X
-				    end
-			    anchor: nw
-			    tags:   CTag
-			    font:   BoldFont)
-			 tk(crea text
-			    8                             {YStretch I}+4
-			    text:   {CheckName S.name}
-			    anchor: nw
-			    tags:   CTag
-			    font:   DefaultFont)
-			] self.BarCanvas}
+		Gui,Enqueue(o(C crea rectangle
+			      7                             {YStretch I}+18
+			      7.0+(Length/Max)*XStretch     {YStretch I}+32
+			      fill: SelectedBackground
+			      tags: CTag))
+		Gui,Enqueue(o(C crea text
+			      7.0+(Length/Max)*XStretch+5.0 {YStretch I}+19
+			      text:   case @SortBy
+				      of heap then {FormatSize S.heap}
+				      [] X    then S.X
+				      end
+			      anchor: nw
+			      tags:   CTag
+			      font:   BoldFont))
+		Gui,Enqueue(o(C crea text
+			      8                             {YStretch I}+4
+			      text:   {CheckName S.name}
+			      anchor: nw
+			      tags:   CTag
+			      font:   DefaultFont))
 		{CTag tkBind(event:  '<1>'
 			     action: self # UpdateProcInfo(S))}
 		TagList <- CTag | @TagList
 		StatsCount <- I
 	     end}
-	    {self.BarCanvas
-	     tk(conf scrollregion: q(7 3 XStretch {YStretch @StatsCount}+40))}
+	    Gui,Enqueue(o(C conf
+			  scrollregion: q(7 3 XStretch
+					  {YStretch @StatsCount}+40)))
+	    Gui,ClearQueue
 	    Gui,UpdateProcInfo({CondSelect SortedData 1 nil})
 	    Gui,UpdateSumInfo
 	 end
@@ -329,12 +335,33 @@ in
 	       {Emacs removeBar}
 	    else skip end
 	 else skip end
-	 {ForAll @TagList
-	  proc {$ T}
-	     {self.BarCanvas tk(delete T)}
-	  end}
+	 local
+	    C = {self.BarCanvas w($)}
+	 in
+	    {ForAll @TagList
+	     proc {$ T}
+		Gui,Enqueue(o(C delete T))
+	     end}
+	 end
+	 case RemoveEmacsBar then
+	    Gui,ClearQueue
+	 else skip end
 	 TagList    <- nil
 	 StatsCount <- 0
+      end
+
+      meth Enqueue(Ticklet) NewTl in
+	 case {IsDet @MsgListTl} then
+	    MsgList <- Ticklet|NewTl
+	 else
+	    @MsgListTl = Ticklet|NewTl
+	 end
+	 MsgListTl <- NewTl
+      end
+      meth ClearQueue
+	 @MsgListTl = nil
+	 {Tk.batch @MsgList}
+	 MsgList <- nil
       end
 
       meth DeleteProcInfo
@@ -348,17 +375,24 @@ in
       end
 
       meth UpdateProcInfo(S)
-	 Gui,Clear(self.ProcText)
-	 case S == nil then skip else
-	    Gui,Append(self.ProcText
-		       ' Name: ' # {CheckName S.name} # '\n' #
-		       ' File: ' # {StripPath S.file} # '\n' #
-		       ' Line: ' # S.line # '\n' #
-		       ' Call: ' # S.calls # '\n' #
-		       ' Clos: ' # S.closures # '\n' #
-		       ' Smpl: ' # S.samples # '\n' #
-		       ' Heap: ' # {FormatSize S.heap})
-	    Gui,Disable(self.ProcText)
+	 T = {self.ProcText w($)}
+      in
+	 case S == nil then
+	    {Tk.batch [o(T conf state:normal)
+		       o(T delete '0.0' 'end')
+		       o(T conf state:disabled)]}
+	 else
+	    {Tk.batch [o(T conf state:normal)
+		       o(T delete '0.0' 'end')
+		       o(T insert 'end'
+			 ' Name: ' # {CheckName S.name} # '\n' #
+			 ' File: ' # {StripPath S.file} # '\n' #
+			 ' Line: ' # S.line # '\n' #
+			 ' Call: ' # S.calls # '\n' #
+			 ' Clos: ' # S.closures # '\n' #
+			 ' Smpl: ' # S.samples # '\n' #
+			 ' Heap: ' # {FormatSize S.heap})
+		       o(T conf state:disabled)]}
 	    case {Cget emacs} then
 	       {Emacs bar(file:S.file line:S.line column:unit state:runnable)}
 	    else skip end
@@ -366,10 +400,13 @@ in
       end
 
       meth UpdateSumInfo
+	 T = {self.SumText w($)}
+      in
 	 case @Stats == nil then
-	    Gui,Clear(self.SumText)
-	    Gui,Append(self.SumText ' No info available')
-	    Gui,Disable(self.SumText)
+	    {Tk.batch [o(T conf state:normal)
+		       o(T delete '0.0' 'end')
+		       o(T insert 'end' ' No info available')
+		       o(T conf state:disabled)]}
 	 else
 	    Procs    = {Length @Stats}
 	    Calls    = {FoldL @Stats fun {$ A S} A+S.calls end 0}
@@ -377,14 +414,15 @@ in
 	    Heap     = {FoldL @Stats fun {$ A S} A+S.heap end 0}
 	    TimeDiff = {OS.time} - @ResetTime
 	 in
-	    Gui,Clear(self.SumText)
-	    Gui,Append(self.SumText
-		       ' Procs:    ' # Procs             # '\n' #
-		       ' Calls:    ' # Calls             # '\n' #
-		       ' Closures: ' # Closures          # '\n' #
-		       ' Heap:     ' # {FormatSize Heap} # '\n' #
-		       ' Time:     ' # {FormatTime TimeDiff})
-	    Gui,Disable(self.SumText)
+	    {Tk.batch [o(T conf state:normal)
+		       o(T delete '0.0' 'end')
+		       o(T insert 'end'
+			 ' Procs:    ' # Procs             # '\n' #
+			 ' Calls:    ' # Calls             # '\n' #
+			 ' Closures: ' # Closures          # '\n' #
+			 ' Heap:     ' # {FormatSize Heap} # '\n' #
+			 ' Time:     ' # {FormatTime TimeDiff})
+		       o(T conf state:disabled)]}
 	 end
       end
 
