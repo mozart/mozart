@@ -148,7 +148,7 @@ error include resources.hh before mozart.h
 #define PERDIO_TEMP_RETRY_FLOOR      500
 #define PERDIO_TEMP_RETRY_FACTOR     50
 #define PERDIO_MAX_TCP_CACHE         30
-#define PERDIO_CHECK_ALIVE_INTERVAL  600
+#define PERDIO_CHECK_ALIVE_INTERVAL  600000
 
 //
 // Distributed Oz - virtual sites
