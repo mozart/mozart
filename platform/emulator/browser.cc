@@ -207,6 +207,21 @@ OZ_BI_define(BIprocLoc,1,3)
 } OZ_BI_end
 
 
+OZ_BI_define(BIshortName,1,1)
+{
+  OZ_declareAtom(0,longN);
+#ifdef WINDOWS
+  char shortN[2048];
+  int n = GetShortPathName(longN, shortN, sizeof(shortN));
+  if (n == 0 || n >= sizeof(shortN))
+    return OZ_FAILED;
+  else
+    OZ_RETURN_ATOM(shortN);
+#else
+  OZ_RETURN_ATOM(longN);
+#endif
+} OZ_BI_end
+
 /*
  * The builtin table
  */
