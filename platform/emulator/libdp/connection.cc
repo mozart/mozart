@@ -105,8 +105,7 @@ inline OZ_Return parseRequestor(OZ_Term requestor,
 
       // The comObj might be returned and not used which is checked with valid,
       // or it may be reused which is checked by comparing the sites.
-      if(comController->valid(comObj) &&
-         comObj->getState()==CLOSED_WF_HANDOVER) {
+      if(comController->valid(comObj)) {
         DSite *site=comObj->getSite();
         if(site==NULL) { // this comObj has been reused for accept
 //        fprintf(stderr,"reused for accept\n");
@@ -149,6 +148,8 @@ OZ_BI_define(BIgetConnGrant,4,0){
     ret=parseRequestor(requestor,comObj,unused);
     if(ret!=OZ_ENTAILED)
       return ret;
+    if(comObj->getState()!=CLOSED_WF_HANDOVER)
+      return OZ_FAILED;
     Assert(!comObj->connectgrantrequested);
     Assert(comObj->connectVar==(OZ_Term) 0x45);
     Assert(comObj->transtype==(OZ_Term) 0x46);
@@ -245,7 +246,6 @@ OZ_BI_define(BIhandover,3,0){
       ret=parseRequestor(requestor,comObj,siteid);
 //        printf("bef cmp %s %d %s\n",toC(requestor),(int) comObj,siteid);
       if(ret!=OZ_ENTAILED) {
-        printf("parseRequestor in handover failed\n");
         return ret;
       }
     }
