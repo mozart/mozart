@@ -306,7 +306,7 @@ Bool hookCheckNeeded(AM *e)
 // -----------------------------------------------------------------------
 // THREADED CODE
 
-#define WANT_INSTRPROFILE
+// #define WANT_INSTRPROFILE
 
 #if defined(RECINSTRFETCH) && defined(THREADED)
  Error: RECINSTRFETCH requires THREADED == 0;
@@ -339,8 +339,6 @@ Bool hookCheckNeeded(AM *e)
 #endif
 
 #else /* THREADED */
-
-#define asmLbl(INSTR)
 
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
