@@ -838,6 +838,11 @@ Propagator * Propagator::gcGetFwd(void)
   return UNMARKFLAGTO(Propagator *, P_gcmark);
 }
 
+Propagator * Propagator::gcGetFwdOutlined(void)
+{
+  return gcGetFwd();
+}
+
 inline
 Propagator * Propagator::gcPropagator(void)
 {
@@ -951,6 +956,9 @@ TaggedRef * OzVariable::gcGetFwd(void) {
   return (TaggedRef *) UnMarkPointer(suspList);
 }
 
+TaggedRef * OzVariable::gcGetFwdOutlined(void) {
+  return gcGetFwd();
+}
 
 inline
 void OZ_FiniteDomainImpl::gc(void) {
@@ -1740,14 +1748,15 @@ void AM::gc(int msgLevel) {
   (*gcBorrowTableUnusedFrames)();
   gcStack.recurse();
 
+#ifdef NEW_NAMER
+  GCMeManager::gc();
+  gcStack.recurse();
+#endif
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   varFix.fix();
   Assert(gcStack.isEmpty());
 
-#ifdef NEW_NAMER
-  GCMeManager::gc();
-#endif
 
   GT.gcGNameTable();
   //   MERGECON gcPerdioFinal();
@@ -1857,6 +1866,12 @@ redo:
   gcStack.recurse();
 
   varFix.fix();
+
+#ifdef NEW_NAMER
+  if (am.isPropagatorLocation()) {
+    GCMeManager::copyTree();
+  }
+#endif
 
   cpTrail.unwind();
 

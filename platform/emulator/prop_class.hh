@@ -97,6 +97,7 @@ public:
   Bool gcIsMarkedOutlined(void);
   void gcMark(Propagator *);
   void ** gcGetMarkField(void);
+  Propagator * gcGetFwdOutlined(void);
   Propagator * gcGetFwd(void);
 
   Board * getBoardInternal(void) {

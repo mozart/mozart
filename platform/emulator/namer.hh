@@ -48,6 +48,7 @@
 class GCMe {
 public:
   virtual void gc(void) = 0;
+  virtual void copyTree(void) = 0;
 };
 
 class GCMeManager {
@@ -84,6 +85,10 @@ public:
   static void gc(void) {
     for (GCMeManager * tmp = _head; tmp; tmp = tmp->_next)
       tmp->_object->gc();
+  }
+  static void copyTree(void) {
+    for (GCMeManager * tmp = _head; tmp; tmp = tmp->_next)
+      tmp->_object->copyTree();
   }
 };
 
@@ -135,7 +140,7 @@ public:
 
     _head = new Namer<T_INDEX, T_NAME>(index, name, _head);
 
-    NEW_NAMER_DEBUG_PRINT(("adding %s\n", toStringNamer(name)));
+    //NEW_NAMER_DEBUG_PRINT(("adding %s at index %x\n", toStringNamer(name), (int) index));
   }
   static void cloneEntry(T_INDEX index_org, T_INDEX index_clone) {
     T_NAME name = getName(index_org);
@@ -150,7 +155,7 @@ public:
     _head = NULL;
 
     while (tmp) {
-      NEW_NAMER_DEBUG_PRINT(("what 0x%x ", (OZ_Term) tmp->_index));
+      NEW_NAMER_DEBUG_PRINT(("gc namer: what 0x%x ", (OZ_Term) tmp->_index));
 
       if (isGcMarkedNamer(tmp->_index)) {
         NEW_NAMER_DEBUG_PRINT(("keeping %s\n", toStringNamer(tmp->_name)));
@@ -169,6 +174,21 @@ public:
         delete tmp_delete;
       }
 
+    }
+  }
+  void copyTree(void) {
+    Namer<T_INDEX, T_NAME> * tmp = _head;
+
+    while (tmp) {
+      NEW_NAMER_DEBUG_PRINT(("copytree namer what 0x%x ", (OZ_Term) tmp->_index));
+
+      if (isGcMarkedNamer(tmp->_index)) {
+        NEW_NAMER_DEBUG_PRINT(("copied %s\n", toStringNamer(tmp->_name)));
+        addName(getGcForward(tmp->_index), tmp->_name);
+      } else {
+        NEW_NAMER_DEBUG_PRINT(("untouched %s\n", toStringNamer(tmp->_name)));
+      }
+      tmp = tmp->_next;
     }
   }
 };

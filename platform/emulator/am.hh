@@ -235,6 +235,9 @@ private:
   TaggedRef debugStreamTail;
   Bool debugMode;
 
+  // location of propagators on/off
+  Bool propLocation;
+
   int statusReg;
   TaggedRef xRegs[NumberOfXRegisters];
   TaskStack *cachedStack;
@@ -455,6 +458,10 @@ public:
 
   Bool debugmode()          { return debugMode; }
   void setdebugmode(Bool x) { debugMode = x; }
+
+  Bool isPropagatorLocation(void)    { return propLocation; }
+  void setPropagatorLocation(Bool x) { propLocation = x; }
+
 
 
   void setCurrent(Board *c, Bool checkNotGC=OK);

@@ -60,6 +60,14 @@ void GcIndexNamer(OZ_Term &t)
   OZ_collectHeapTerm(t, t);
 }
 
+OZ_Term getGcForward(OZ_Term t)
+{
+  OZ_Term t_deref = oz_deref(t);
+  return (isCVar(t_deref)
+          ? makeTaggedRef(tagged2CVar(t_deref)->gcGetFwdOutlined())
+          : (OZ_Term) GCUNMARK(t));
+}
+
 void GcDataNamer(const char * &)
 {
   // nothing to be done
@@ -84,13 +92,18 @@ PropNamer * PropNamer::_head;
 
 PropNamer propNamer;
 
-Bool isGcMarkedNamer(Propagator *p)
+Bool isGcMarkedNamer(Propagator * p)
 {
   return p->gcIsMarkedOutlined();
 }
 void GcIndexNamer(Propagator * &p)
 {
   p = p->gcPropagatorOutlined();
+}
+
+Propagator *  getGcForward(Propagator * p)
+{
+  return p->gcGetFwdOutlined();
 }
 
 void GcDataNamer(OZ_Term &t)
@@ -117,8 +130,10 @@ OZ_Term oz_propGetName(Propagator * p)
 
 void oz_propAddName(Propagator * p, OZ_Term name)
 {
+  /*
   NEW_NAMER_DEBUG_PRINT(("oz_propAddName: %p = %s\n", p,
                          OZ_toC(name, 10, 10)));
+  */
   propNamer.addName(p, name);
 }
 

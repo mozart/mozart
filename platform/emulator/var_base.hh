@@ -176,6 +176,7 @@ public:
   Bool           gcIsMarkedOutlined(void);
   void           gcMark(Bool, TaggedRef *);
   TaggedRef *    gcGetFwd(void);
+  TaggedRef *    gcGetFwdOutlined(void);
   OzVariable *   gcVar();
   void           gcVarRecurse(void);
 
