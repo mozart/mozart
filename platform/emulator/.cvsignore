@@ -23,3 +23,15 @@ ozma-s.cc
 ozma-p.yy
 ozma-p.cc
 perdio.cc
+libfd.tbl
+libfd.dcl
+libschedule.tbl
+libschedule.dcl
+fsetbuilti.tbl
+fsetbuilti.dcl
+libfset.tbl
+libfset.dcl
+libwif.tbl
+libwif.dcl
+libparser.tbl
+libparser.dcl
