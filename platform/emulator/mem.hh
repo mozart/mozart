@@ -201,9 +201,10 @@ Bool reallyHeapNever(void *ptr1, void *ptr2)
 
 
 // free list management
-#define freeListMaxSize 2048
+#define freeListMaxSize 64+4
 
-extern void *FreeList[freeListMaxSize];
+extern void * FreeList[freeListMaxSize];
+extern size_t nextChopSize;
 
 unsigned int getMemoryInFreeList();
  
@@ -217,15 +218,15 @@ void initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
 void printChunkChain(void *);
+#ifdef DEBUG_MEM
 void scanFreeList(void);
-
-void *freeListMallocOutline(size_t chunk_size);
-void freeListDisposeOutline(void *addr, size_t chunk_size);
+#endif
 
 #ifndef OUTLINE
 #include "mem.icc"
 #else
 void * freeListMalloc(size_t chunk_size);
+void freeListDisposeNoClean(void *addr, size_t chunk_size);
 void freeListDispose(void *addr, size_t chunk_size);
 
 // return free used kilo bytes on the heap
@@ -234,3 +235,5 @@ unsigned int getUsedMemoryBytes(void);
 #endif
 
 #endif
+
+
