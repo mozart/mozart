@@ -1324,7 +1324,12 @@ inline char* dropConst(const char* s)
 char* OZ_vsToC(OZ_Term t,int*n)
 {
   char * s;
-  if (OZ_isAtom(t)) {
+  if (OZ_isNil(t)) {
+    static char *null = "";
+    *n = 0;
+    return null;
+  }
+  else if (OZ_isAtom(t)) {
     s = dropConst(OZ_atomToC(t));
     if (n!=0) *n = strlen(s);
   } else {
