@@ -104,7 +104,7 @@ end
   <title/Text Widgets/
 
 <p>
-<chunk><title/Sample ToyText/
+<chunk id="data.text.toy"><title/Sample ToyText/
 hyper(canvas:	
 	 e(head:'Canvas'
 	   body:['A canvas widget displays items. '

@@ -56,7 +56,7 @@
 	  The options given to the geometry manager.
       </List>
 
-    <P>
+    <para class=apropos><title/parcels/
       The geometry manager computes for each slave of a master widget a
       so-called <Def/parcel/.  The parcel is a rectangle and describes the
       space and the position computed for the slave.  From the slaves'
@@ -132,7 +132,7 @@ end
 {Tk.send pack(L1 L2 L3)}
 </chunk>
 
-    <P>
+    <P id="para.geometry.batch">
       This computes and displays a geometry for the toplevel widget as shown
       in <Ptr to="figure.geometry.pack-basic">.  Rather than giving a tickle
       which contains each of the labels as field we can give a <Def/batch
@@ -153,6 +153,7 @@ end
 
     <SubSection>
       <Title/Side Options/
+
       <P>
 	The label widgets in the previous examples were placed from the top to
 	the bottom of the toplevel widget.  The side where the widgets are
@@ -180,6 +181,7 @@ end
 
     <SubSection>
       <Title/Padding/
+
       <P>
 	The geometry computed for widgets by the packer can be given
 	additional space in two different ways: either externally or
@@ -210,6 +212,7 @@ end
 
     <SubSection id="section.geometry.anchors">
       <Title/Anchors/
+
       <P>
 	With the <<anchor>> option it can be specified where in a widget's
 	parcel the packer places the widget. If no <<anchor>> option is given,
@@ -324,6 +327,7 @@ end
 
     <SubSection>
       <Title/Padding/
+
       <P>
 	The <<grid>> command supports padding in the same way as the packer
 	does.  In the above example we used external padding by giving <<padx>>
