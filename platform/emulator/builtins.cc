@@ -7097,6 +7097,13 @@ OZ_C_proc_end
  * builtins for the new compiler's environment handling
  ******************************************************************** */
 
+OZ_C_proc_begin(BIrunningUnderEmacs,1)
+{
+  oz_declareArg(0,res);
+  return oz_unify(res,ozconf.runningUnderEmacs? NameTrue: NameFalse);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIisBuiltin,2)
 {
   oz_declareNonvarArg(0,val);
@@ -7733,6 +7740,7 @@ BIspec allSpec[] = {
   {"raiseError", 1, BIraiseError, 0},
 
   // builtins for the new compiler's environment handling:
+  {"runningUnderEmacs",          1, BIrunningUnderEmacs,          0},
   {"isBuiltin",                  2, BIisBuiltin,                  0},
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
   {"nameVariable",               2, BInameVariable,               0},
