@@ -44,7 +44,7 @@ protected:
 public:
   Actor(int typ,Board *bb,int prio,int compMode);
 
-  ~Actor() { flags=Ac_None; board=0; }
+  ~Actor() {}
 
   USEHEAPMEMORY;
   Actor *gcActor();
@@ -85,8 +85,6 @@ public:
   AWActor(int type,Board *s,int prio,int compMode,
 	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
 	  RefsArray x=0,int i=0);
-  ~AWActor();
-
   USEHEAPMEMORY;
 
   void addChild(Board *n);
