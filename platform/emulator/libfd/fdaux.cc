@@ -282,4 +282,25 @@ void oz_debugprint(char *format, ...)
 
 //-----------------------------------------------------------------------------
 
+sum_ops getSumOps(OZ_Term op) {
+  static OZ_Term a_sum_op_eq  = OZ_atom(SUM_OP_EQ);
+  static OZ_Term a_sum_op_neq = OZ_atom(SUM_OP_NEQ);
+  static OZ_Term a_sum_op_leq = OZ_atom(SUM_OP_LEQ);
+  static OZ_Term a_sum_op_geq = OZ_atom(SUM_OP_GEQ);
+  static OZ_Term a_sum_op_lt  = OZ_atom(SUM_OP_LT);
+  static OZ_Term a_sum_op_gt  = OZ_atom(SUM_OP_GT);
 
+  if (OZ_eq(a_sum_op_eq,op))
+    return sum_ops_eq;
+  if (OZ_eq(a_sum_op_leq,op))
+    return sum_ops_leq;
+  if (OZ_eq(a_sum_op_geq,op))
+    return sum_ops_geq;
+  if (OZ_eq(a_sum_op_lt,op))
+    return sum_ops_lt;
+  if (OZ_eq(a_sum_op_gt,op))
+    return sum_ops_gt;
+  if (OZ_eq(a_sum_op_neq,op))
+    return sum_ops_neq;
+  return sum_ops_unknown;
+}
