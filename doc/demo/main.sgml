@@ -145,5 +145,6 @@
        <Title/Appendices/
        &appendix.enable;
     </Part>
-
+  <Back>
+    <Bib.Extern id="FischerKuhn.93" to="demo.bib" key="FischerKuhn.93"> 
 </BOOK>
