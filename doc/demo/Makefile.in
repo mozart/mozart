@@ -12,16 +12,6 @@ SGMLSRCS = \
 	transportation.sgml trucks.sgml cutting.sgml \
 	college.sgml flowers.sgml dict-client.sgml chat.sgml
 
-HTMLEXTRAFILES = \
-	note-gui-l1.gif note-gui-lm1.gif demo.gif
-
-OZDOCHTMLFLAGS = --autoindex
-
-all:: code
-quick:: code
-
-include ../Makefile.common
-
 ALL_SRC = \
 	AnimatedQueens.oz Bounce.oz Trucks.oz Lift.oz Board.oz
 
@@ -40,32 +30,36 @@ SRC_TRANSPORT = \
 SUBDIRS = \
 	Cutting JobShop Transport
 
-code: $(SUBDIRS) \
+SRCFILES = \
 	$(ALL_SRC) \
 	$(addprefix Cutting/,$(SRC_CUTTING)) \
 	$(addprefix Transport/,$(SRC_TRANSPORT)) \
 	$(addprefix JobShop/,$(SRC_JOBSHOP))
 
-Cutting:
-	mkdir Cutting
+HTMLEXTRAFILES = \
+	note-gui-l1.gif note-gui-lm1.gif demo.gif
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+
+$(SRCFILES): $(SUBDIRS)
+
+$(WHAT)-html/index.html: $(SRCFILES)
+
+
 Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
 	$(PERL) $(SRCDIR)/offwithhishead $< > $@
-JobShop:
-	mkdir JobShop
 JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
 	$(PERL) $(SRCDIR)/offwithhishead $< > $@
-Transport:
-	mkdir Transport
 Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
 	$(PERL) $(SRCDIR)/offwithhishead $< > $@
 %.oz: $(SRCTOP)/share/demo/%.oz
 	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+$(SUBDIRS):
+	mkdir $@
 
-install:: $(SUBDIRS:%=$(DOCDIR)/%) \
-	$(ALL_SRC:%=$(DOCDIR)/%) \
-	$(addprefix $(DOCDIR)/Cutting/,$(SRC_CUTTING)) \
-	$(addprefix $(DOCDIR)/Transport/,$(SRC_TRANSPORT)) \
-	$(addprefix $(DOCDIR)/JobShop/,$(SRC_JOBSHOP)) 
+install:: $(SUBDIRS:%=$(DOCDIR)/%) $(SRCFILES:%=$(DOCDIR)/%)
 
 
 $(DOCDIR)/Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
