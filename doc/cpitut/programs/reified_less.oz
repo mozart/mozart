@@ -2,8 +2,7 @@ declare FD_PROP in
 
 local
    FD_PROP_O = {{New Module.manager init}
-                link(url:
-                {OS.getEnv 'HOME'}#'/mozart/doc/cpi/programs/reified_less.so{native}' $)}
+                link(url: 'reified_less.so{native}' $)}
 in
    FD_PROP = fd(init: FD_PROP_O.init
                 lessEq: FD_PROP_O.lessEq
@@ -15,6 +14,7 @@ end
 
 
 /*
+
 declare X Y R in {Browse [X Y R]}
 [X Y] ::: 0#10
 R :: 0#1
