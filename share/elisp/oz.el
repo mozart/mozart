@@ -749,8 +749,8 @@ the GDB commands `cd DIR' and `directory'."
 	    ((looking-at oz-end-pattern)
 	     ;; we are the first token after an 'fi' 'end'
 	     (oz-search-matching-begin nil)
-	     ;mm2 (oz-calc-indent1)
-	     (current-column)
+	     (oz-calc-indent1)
+	     ;; (current-column)
 	     )
 	    ((looking-at oz-right-pattern)
 	     ;; we are the first token after an ')' '}'
