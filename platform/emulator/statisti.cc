@@ -24,7 +24,7 @@
 #include "fdomn.hh"
 
 
-#if !defined(OSF1_ALPHA) && !defined(WINDOWS) && !defined(FREEBSD_I486)
+#if !defined(OSF1_ALPHA) && !defined(WINDOWS) && !defined(FREEBSD) && !defined(NETBSD)
 extern "C" void *sbrk(int incr);
 #endif
 

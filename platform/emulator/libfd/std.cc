@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(NETBSD)
 
 /* the following have been copied from linux's values.h */
 #define _DEXPLEN    11
