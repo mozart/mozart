@@ -6,6 +6,10 @@ PRE, CODE {
   font-family: courier;
 }
 
+CODE.DISPLAY {
+  text-align: left;
+}
+
 BODY {
   background-color: white;
   margin-left: 160px;

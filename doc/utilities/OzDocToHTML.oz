@@ -263,7 +263,7 @@ define
          if {HasFeature M I} then
             case M.I of S=_|_ then
                %--** support <Span class=ignore>...</Span>
-               Out <- @Out#('<CODE>'#
+               Out <- @Out#('<CODE CLASS='#M.display#'>'#
                             {@MyFontifier
                              enqueueVirtualString(@ProgLang.1 S '<BR>' $)}#
                             '</CODE>')
