@@ -84,7 +84,7 @@ based on adaptive observation of actual network behavior.
 <P>These affect what operations are available to the programmer.
 They document where
 the full language specification is not implemented.
-We hope that the undergrowth of limitations is thin
+We hope that the undergrowth of limitations is sparse
 enough to let the flowers of Oz grow unwithered.<NOTE
 FOOT>C. A. R. Hoare, <em>The Emperor's Old Clothes</em>,
 1980 Turing Award Lecture.</NOTE>
@@ -93,6 +93,10 @@ FOOT>C. A. R. Hoare, <em>The Emperor's Old Clothes</em>,
 <item>On Windows, the <<Remote>> module has limited functionality.
 Only a single option is possible for <<fork>>, namely <<sh>>.
 Future releases will add more options.
+
+<item>The <<Connection>> module does not work correctly
+for applications separated by a firewall.
+This limitation will be addressed in a future release.
 
 <item>Threads, dictionaries, arrays, and spaces are sited,
 even though they are in base modules.
