@@ -43,7 +43,7 @@ local
 
    proc {TraceOFF _ _} skip end
 
-   class BaseManager
+   class UnsitedBaseManager
       prop locking
       feat ModuleMap
 
@@ -84,7 +84,7 @@ local
 			      {ModNameToUrl ModName}
 			   end
 	     in
-		BaseManager,Link({UrlResolve Url EmbedUrl} $)
+		UnsitedBaseManager,Link({UrlResolve Url EmbedUrl} $)
 	     end}
       in
 	 {Func.apply IM}
@@ -111,30 +111,18 @@ local
 		?Module       <= _) = Message
 	 Url = {NameOrUrlToUrl ModName UrlV}
       in
-	 Module = BaseManager,Link(Url $)
+	 Module = UnsitedBaseManager,Link(Url $)
 	 if {Not {HasFeature Message 1}} then
 	    thread {Wait Module} end
 	 end
       end
 	 
-      meth apply(name: ModName <= NONE
-		 url:  UrlV    <= NONE
-		 Func
-		 ?Module       <= _) = Message
-	 Url = {NameOrUrlToUrl ModName UrlV}
-      in
-	 Module = BaseManager,Apply(Url Func $)
-	 if {Not {HasFeature Message 2}} then
-	    thread {Wait Module} end
-	 end
-      end
-
       meth enter(name: ModName <= NONE
 		 url:  UrlV    <= NONE
 		 Module)
 	 Url = {NameOrUrlToUrl ModName UrlV}
       in
-	 BaseManager,Enter(Url Module)
+	 UnsitedBaseManager,Enter(Url Module)
       end
 
    end
@@ -153,6 +141,24 @@ in
 
    define
 
+      class BaseManager from UnsitedBaseManager
+	 meth apply(name: ModName <= NONE
+		    url:  UrlV    <= NONE
+		    Func
+		    ?Module       <= _) = Message
+	    Url = if ModName==NONE andthen UrlV==NONE then
+		     {UrlMake {OS.getCWD}#'/'}
+		  else
+		     {NameOrUrlToUrl ModName UrlV}
+		  end
+	 in
+	    Module = UnsitedBaseManager,Apply(Url Func $)
+	    if {Not {HasFeature Message 2}} then
+	       thread {Wait Module} end
+	    end
+	 end
+      end
+      
       proc {TraceON X1 X2}
 	 {System.printError 'Module manager: '#X1#' '#{UrlToVs X2}#'\n'}
       end
