@@ -102,9 +102,6 @@
             The module ?{M} is added to the module table under
             ?{U}. If the module table already contains an entry for
             ?{U}, an exception is raised.
-        
-            Application takes a functor ?{F} and a <def/base url/
-            ?{U} and returns a module ?{M}.
         </list> 
        
       <P> 
