@@ -27,7 +27,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomCharSpace, AtomPunct, AtomOther,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
   AtomMin, AtomMax, AtomMid,
-  AtomNaive, AtomSize, AtomConstraints,
+  AtomNaive, AtomSize, AtomNbSusps,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
   NameOoDefaultVar,NameOoRequiredArg,
   NameUnit,
@@ -83,12 +83,12 @@ void initLiterals()
   NameOoDefaultVar  = makeTaggedName("ooDefaultVar");
   NameOoRequiredArg = makeTaggedName("ooRequiredArg");
 
-  AtomMin          = makeTaggedAtom("min");
-  AtomMax          = makeTaggedAtom("max");
-  AtomMid          = makeTaggedAtom("mid");
-  AtomNaive        = makeTaggedAtom("naive");
-  AtomSize         = makeTaggedAtom("size");
-  AtomConstraints  = makeTaggedAtom("constraints");
+  AtomMin     = makeTaggedAtom("min");
+  AtomMax     = makeTaggedAtom("max");
+  AtomMid     = makeTaggedAtom("mid");
+  AtomNaive   = makeTaggedAtom("naive");
+  AtomSize    = makeTaggedAtom("size");
+  AtomNbSusps = makeTaggedAtom("nbSusps");
 
   AtomLow          = makeTaggedAtom("low");
 
