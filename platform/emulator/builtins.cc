@@ -4926,7 +4926,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstatisticsReset, 0)
 {
-  ProfileCode(ozstat.initCount());
+  ozstat.initCount();
   return PROCEED;
 }
 OZ_C_proc_end
@@ -4942,8 +4942,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIstatisticsPrintProcs, 0)
 {
-  ProfileCode(PrTabEntry::printPrTabEntries());
+  PrTabEntry::printPrTabEntries();
   return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIstatisticsGetProcs, 1)
+{
+  oz_declareArg(0,ret);
+  return oz_unify(ret,PrTabEntry::getProfileStats());
 }
 OZ_C_proc_end
 
@@ -7493,6 +7500,7 @@ BIspec allSpec[] = {
   {"statisticsReset",     0, BIstatisticsReset},
   {"statisticsPrint",     0, BIstatisticsPrint},
   {"statisticsPrintProcs",0, BIstatisticsPrintProcs},
+  {"statisticsGetProcs",  1, BIstatisticsGetProcs},
 
   {"traceBack",0,BItraceBack},
 

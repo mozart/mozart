@@ -23,6 +23,7 @@
 MemChunks *MemChunks::list = NULL;
 
 unsigned int heapTotalSize;
+unsigned int heapTotalSizeBytes;
 
 #ifndef HEAPTOPINTOREGISTER
 char *heapTop;
@@ -36,7 +37,7 @@ void initMemoryManagement(void) {
     FreeList[i] = NULL;
 
   // init heap memory
-  heapTotalSize = 0;
+  heapTotalSizeBytes = heapTotalSize = 0;
   heapTop       = NULL;
 
   // allocate first chunck of memory;
@@ -397,7 +398,8 @@ void getMemFromOS(size_t sz) {
     osExit(1);
   }
 
-  heapTotalSize += ozconf.heapBlockSize/KB;
+  heapTotalSize      += ozconf.heapBlockSize/KB;
+  heapTotalSizeBytes += ozconf.heapBlockSize;
 
   if (ozconf.heapMaxSize != -1 &&
       ((gc_is_running == NO) ?

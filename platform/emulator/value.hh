@@ -1653,15 +1653,16 @@ private:
   TaggedRef info;
 
 public:
-  ProfileCode(
-      PrTabEntry *next;
-      int numClosures;
-      int numCalled;
-      int heapUsed;
-      int samples;
-      static PrTabEntry *allPrTabEntries;
-      static void printPrTabEntries();
-      static void profileReset();)
+  PrTabEntry *next;
+  int numClosures;
+  int numCalled;
+  int heapUsed;
+  int samples;
+  int lastHeap;
+  static PrTabEntry *allPrTabEntries;
+  static void printPrTabEntries();
+  static TaggedRef getProfileStats();
+  static void profileReset();
 
   ProgramCounter PC;
 
@@ -1674,8 +1675,9 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = nil();
-    ProfileCode(numClosures=numCalled=heapUsed=samples=0;
-                next=allPrTabEntries; allPrTabEntries=this);
+    numClosures = numCalled = heapUsed = samples = lastHeap =0;
+    next = allPrTabEntries;
+    allPrTabEntries = this;
   }
 
   OZPRINTLONG;

@@ -76,8 +76,8 @@ ProfileCode(
 void Statistics::heapAlloced(int sz)
 {
   COUNT1(totalAllocated,sz);
-  if (currAbstr)
-    currAbstr->getPred()->heapUsed += sz;
+  //  if (currAbstr)
+  //    currAbstr->getPred()->heapUsed += sz;
 }
 )
 
@@ -202,8 +202,8 @@ void Statistics::printGcMsg(int level)
   }
 }
 
-#ifdef HEAP_PROFILE
 void Statistics::initCount() {
+#ifdef HEAP_PROFILE
   literal=0;
   ozfloat=0;
   bigInt=0;
@@ -249,10 +249,32 @@ void Statistics::initCount() {
   numNewName=numNewNamedName=0;
   numThreads=0;
 
-  currAbstr = NULL;
+#endif
 
+  currAbstr = NULL;
   PrTabEntry::profileReset();
 }
+
+
+void Statistics::enterCall(PrTabEntry  *a)
+{
+  if (a)
+    a->lastHeap = getUsedMemoryBytes();
+  currAbstr = a;
+}
+
+void Statistics::leaveCall(PrTabEntry  *old)
+{
+  if (currAbstr) {
+    Assert(currAbstr->lastHeap>0);
+    currAbstr->heapUsed += getUsedMemoryBytes() - currAbstr->lastHeap;
+    currAbstr->lastHeap = 0;
+  }
+  currAbstr = old;
+}
+
+
+#ifdef HEAP_PROFILE
 
 #include "ofgenvar.hh"
 

@@ -86,7 +86,7 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
       Object *newSelf = (Object*)Y;
       am.setSelf(newSelf);
     } else if (PC==C_SET_ABSTR_Ptr) {
-      ProfileCode(ozstat.leaveCall((Abstraction*)Y));
+      ozstat.leaveCall((PrTabEntry*)Y);
     }
     if (out) {
       if (verbose) {

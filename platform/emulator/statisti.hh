@@ -97,9 +97,16 @@ public:
   void incSolveSolved(void)  { solveSolved.incf(); }
   void incSolveFailed(void)  { solveFailed.incf(); }
 
-#ifdef HEAP_PROFILE
+  PrTabEntry *currAbstr;
+  void enterCall(PrTabEntry  *a);
+  void leaveCall(PrTabEntry  *old);
+  void heapAlloced(int sz);
+
   void initCount();
   void printCount();
+
+
+#ifdef HEAP_PROFILE
   long literal;
   long ozfloat;
   long bigInt;
@@ -143,11 +150,6 @@ public:
 
   long numNewName, numNewNamedName;
   long numThreads;
-
-  Abstraction *currAbstr;
-  void enterCall(Abstraction *a)   { currAbstr = a; }
-  void leaveCall(Abstraction *old) { currAbstr = old; }
-  void heapAlloced(int sz);
 
   // those are also counted during GC
   long lenDeref, numDerefs, longestDeref;

@@ -26,11 +26,8 @@
 #define ERROR_HINTS             1
 
 #define TIME_SLICE              50  /* ms */
-#ifdef HEAP_PROFILE
 #define CLOCK_TICK              TIME_SLICE*(1000/5)     /* usec */
-#else
-#define CLOCK_TICK              TIME_SLICE*1000 /* usec */
-#endif
+
 
 #define HI_PRIORITY             2
 #define MID_PRIORITY            1

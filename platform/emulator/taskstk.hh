@@ -333,7 +333,7 @@ public:
   void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
   void pushDebug(OzDebug *deb)   { pushFrame(C_DEBUG_CONT_Ptr,deb,0); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
-  void pushAbstr(Abstraction *a) { Assert(a==0 || isAbstraction(a));pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
+  void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
   void pushActor(Actor *aa)      { pushFrame(C_ACTOR_Ptr,aa,0); }
 
   int tasks();

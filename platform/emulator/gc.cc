@@ -1093,7 +1093,7 @@ Thread *Thread::gcDeadThread()
 
   storeForward (&item.threadBody, newThread);
   setSelf(getSelf()->gcObject());
-  ProfileCode(setAbstr(gcAbstraction(getAbstr()));)
+  getAbstr()->gcPrTabEntry();
 
   return (newThread);
 }
@@ -1151,7 +1151,7 @@ void Thread::gcRecurse ()
   }
 
   setSelf(getSelf()->gcObject());
-  ProfileCode(setAbstr(gcAbstraction(getAbstr()));)
+  getAbstr()->gcPrTabEntry();
 
   gcTertiary();
 }
@@ -1559,7 +1559,7 @@ void AM::gc(int msgLevel)
 
   rootBoard = rootBoard->gcBoard();   // must go first!
   Assert(cachedSelf==0);
-  ProfileCode(Assert(ozstat.currAbstr==NULL));
+  Assert(ozstat.currAbstr==NULL);
   Assert(shallowHeapTop==0);
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
@@ -1810,6 +1810,8 @@ void ArityTable::gc()
 
 void PrTabEntry::gcPrTabEntry()
 {
+  if (this == NULL) return;
+
   gcTagged(info,info);
 }
 
@@ -1960,7 +1962,7 @@ void TaskStack::gc(TaskStack *newstack)
     } else if (PC == C_SET_SELF_Ptr) {
       Y = (RefsArray) ((Object*)Y)->gcConstTerm();
     } else if (PC == C_SET_ABSTR_Ptr) {
-      Y = (RefsArray) ((Abstraction*)Y)->gcConstTerm();
+      ((PrTabEntry *)Y)->gcPrTabEntry();
     } else if (PC == C_DEBUG_CONT_Ptr) {
       Y = (RefsArray) ((OzDebug *) Y)->gcOzDebug();
     } else if (PC == C_CALL_CONT_Ptr) {
