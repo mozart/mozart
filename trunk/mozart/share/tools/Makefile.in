@@ -127,8 +127,8 @@ bootstrap: boot-all
 %.ozf: %.oz
 	$(COMPILE) $< -o $@
 
-opi: MakeOPI.oz ../url-defaults.oz ../functor-defaults.oz
-	$(EXEC) -l Pickle $< -o $@
+opi: MakeOPI.oz ../functor-defaults.oz
+	$(EXEC) $< -o $@
 
 
 

@@ -26,57 +26,45 @@
 %%%
 
 local
+
+   %% List of all functors
    local
-      UrlDefaults = \insert ../url-defaults
+      ModuleDefs = \insert '../functor-defaults.oz'
    in
-      FunExt    = UrlDefaults.'functor'
-      MozartUrl = UrlDefaults.'home'
+      Modules = {FoldL [ModuleDefs.lib
+			ModuleDefs.tools
+			ModuleDefs.volatile] Append nil}
+   end
+   
+   ShortCuts = [%% Library
+		'Pickle'('Load': [load]
+			 'Save': [save])
+
+		'Search'('SearchOne':  [base one]
+			 'SearchAll':  [base all]
+			 'SearchBest': [base best])
+		
+		'System'('Show':  [show]
+			 'Print': [print])
+		
+		%% Tools
+		'Browser'('Browse': [browse])
+
+		'Explorer'('ExploreOne':  [one]
+			   'ExploreAll':  [all]
+			   'ExploreBest': [best]) 
+	       ]
+
+   fun {Dots M Fs}
+      case Fs of nil then M
+      [] F|Fr then {Dots M.F Fr}
+      end
    end
 
-   FuncDefaults = \insert ../functor-defaults
-
-   local
-      fun {IsPrintName A} S in
-	 S = {Atom.toString A}
-	 case S of nil then false
-	 [] C|_ then {Char.isUpper C} orelse C == &`
-	 end
-      end
-   in
-      fun {GetPrintNames E}
-	 {Filter {Arity E} IsPrintName}
-      end
-   end
-
-   PrintNames =
-   {FoldL {Append FuncDefaults.lib FuncDefaults.tools}
-    fun {$ PNs A}
-       Ns = {GetPrintNames
-	     {Pickle.load MozartUrl#A#FunExt}.'export'}
-    in
-       case Ns == nil then PNs
-       else A#Ns|PNs
-       end
-    end nil}
-
-   proc {LazyAdapt M1 Fs ?M2}
-      Request
-      proc {FwdRequest _}
-	 Request = unit
-      end
-   in
-      M2 = {MakeRecord 'export' Fs}
-      {Record.forAll M2
-       fun {$}
-	  {ByNeed FwdRequest}
-       end}
-      thread
-	 {Wait Request}
-	 {ForAll Fs proc {$ F} M1.F = M2.F end}
-      end
-   end
 in
+   
    functor prop once
+	      
    import
       Module
       System.printError
@@ -85,7 +73,9 @@ in
       Open.file
       Compiler.engine
       Emacs.interface
+      
    body
+      
       local
 	 OZVERSION = {Property.get 'oz.version'}
 	 DATE      = {Property.get 'oz.date'}
@@ -99,42 +89,34 @@ in
       OPICompiler = {New Compiler.engine init()}
       {OPICompiler enqueue(setSwitch(warnunused true))}
 
-      ModMan = {New Module.manager init}
-
       local
-	 Env = {List.toRecord env
-		{Map FuncDefaults.lib
-		 fun {$ A}
-		    A#{ModMan link(name:A $)}
-		 end}}
+	 ModMan = {New Module.manager init}
       in
-	 {OPICompiler enqueue(mergeEnv(Env))}
+	 %% Get system modules
+	 local
+	    Env = {List.toRecord env
+		   {Map Modules
+		    fun {$ ModName}
+		       ModName#{ModMan link(name:ModName $)}
+		    end}}
+	 in
+	    {OPICompiler enqueue(mergeEnv(Env))}
+	 end
+
+	 %% Provide shortcuts
+	 {ForAll ShortCuts
+	  proc {$ SC}
+	     Module = {ModMan link(name:{Label SC} $)}
+	     Env    = {Record.map SC
+		       fun lazy {$ Fs}
+			  {Dots Module Fs}
+		       end}
+	  in
+	    {OPICompiler enqueue(mergeEnv(Env))}
+	  end}
+
       end
-
-      {ForAll PrintNames
-       proc {$ Key#Feats}
-	  Env={LazyAdapt {ModMan link(name:Key $)} Feats}
-       in
-	  {OPICompiler enqueue(mergeEnv(Env))}
-       end}
-
-      {OPICompiler
-       enqueue(mergeEnv({List.toRecord env
-			 {Map FuncDefaults.volatile
-			  fun {$ A}
-			     A#{ModMan link(name:A $)}
-			  end}}))}
-
-      %% QUICK HACK, I WILL TAKE CARE OF IT SOON: CS
-
-      local
-	 System = {ModMan link(name:'System' $)}
-      in
-	 {OPICompiler
-	  enqueue(mergeEnv(env('Show':   System.show
-			       'Print':  System.print)))}
-      end
-
+      
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
       {Property.put 'opi.compiler' CompilerUI}

@@ -46,10 +46,10 @@ import
       from 'x-oz://boot/Debug'
    
 export
-   'Ozcar': Ozcar
-   
    'object': Ozcar
-
+   'open':   OpenOzcar
+   'close':  CloseOzcar
+   
 body
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
@@ -66,4 +66,13 @@ body
    \insert 'ozcar/gui'
 
    \insert 'ozcar/ozcar'
+
+   proc {OpenOzcar}
+      {Ozcar on}
+   end
+   
+   proc {CloseOzcar}
+      {Ozcar off}
+   end
+   
 end

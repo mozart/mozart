@@ -50,14 +50,24 @@ import
 	    menubar}
    
 export
-   'class': PanelClass
-   'panel': Panel
-
-   'Panel': Panel
-
+   'class':  PanelClass
+   'object': Panel
+   
+   'open':   OpenPanel
+   'close':  ClosePanel
+   
 body
    \insert 'panel/errors.oz'
    \insert 'panel/main.oz'
 
    Panel = {New PanelClass init}
+
+   proc {OpenPanel}
+      {Panel open}
+   end
+   
+   proc {ClosePanel}
+      {Panel close}
+   end
+   
 end

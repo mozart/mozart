@@ -20,7 +20,6 @@
 %%% WARRANTIES.
 %%%
 
-
 local
 
    \insert 'explorer/configure-static.oz'
@@ -52,17 +51,14 @@ in
       Browser.{browse}
       
    export
-      'ExplorerClass': ExplorerClass
-      'Explorer':      Explorer
-      'ExploreOne':    ExploreOne
-      'ExploreAll':    ExploreAll
-      'ExploreBest':   ExploreBest
-      
       'class':  ExplorerClass
       'object': Explorer
+      
       'one':    ExploreOne
       'all':    ExploreAll
       'best':   ExploreBest
+
+      'close':  CloseExplorer
       
    body
       
@@ -81,6 +77,10 @@ in
       
       proc {ExploreBest P O}
 	 {Explorer all(P O)}
+      end
+
+      proc {CloseExplorer}
+	 {Explorer close}
       end
       
    end
