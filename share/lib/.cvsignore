@@ -7,3 +7,5 @@ compiler-Builtins.oz
 ozc ozl
 boot-init boot-ozc
 boot-init.ozt boot-ozc.ozt
+gdkclasses.oz gdkexports.oz
+gnome-canvas-classes.oz gnome-canvas-exports.oz
