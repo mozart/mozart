@@ -665,11 +665,6 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
       }
   
     default:
-        /* Builtins, Abstractions and Cells are also records */
-        if (isConstChunk(term)) {
-	  term = makeTaggedSRecord(chunkCast(term)->getRecord());
-	  goto Record;
-	}
         // All other types fail when unified with an open feature structure
         // error("unexpected case in unifyOFS");
         return FALSE;
