@@ -60,9 +60,10 @@ fd_set isSocket;
 static long openMax;
 
 #ifdef WINDOWS
-int runnningUnderNT = 0;
+int runningUnderNT = 0;
 
 int fileTimeToMS(FILETIME *ft);
+int getTime();
 
 #endif
 
@@ -71,8 +72,8 @@ int fileTimeToMS(FILETIME *ft);
 unsigned int osUserTime()
 {
 #if defined(WINDOWS)
-  if (!runnningUnderNT) {
-    return ((1000*clock())/CLOCKS_PER_SEC);
+  if (!runningUnderNT) {
+    return getTime();
   }
 
   /* only NT supports this */
@@ -92,7 +93,7 @@ unsigned int osUserTime()
 unsigned int osSystemTime()
 {
 #if defined(WINDOWS)
-  if (!runnningUnderNT) {
+  if (!runningUnderNT) {
     return 0;
   }
 
@@ -544,8 +545,7 @@ void osInit()
   OSVERSIONINFO vi;
   vi.dwOSVersionInfoSize = sizeof(vi);
   BOOL b = GetVersionExW(&vi);
-  runnningUnderNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
-
+  runningUnderNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
   /* make sure everything is opened in binary mode */
   setmode(fileno(stdin),O_BINARY);  // otherwise input blocks!!
   _fmode = O_BINARY;
