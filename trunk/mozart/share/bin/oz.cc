@@ -54,7 +54,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     if (emacshome==NULL) {
       OzPanic(1,"Emacs home not found.\nDid you install Emacs?");
     }
-    sprintf(buffer,"%s/bin/runemacs.exe -l \"%s/share/elisp/oz.elc\" -f run-oz",
+    sprintf(buffer,"%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
 	    emacshome,ozhome);
   } else if (stricmp(progname,"ozengine.exe")==0) {
     /*
