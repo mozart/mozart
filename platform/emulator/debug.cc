@@ -541,7 +541,7 @@ Bool trace(char *s,Board *board,Actor *actor,
 	sscanf(&command[1],"%x %d",&from,&size);
 	printf("%x:",from);
 	for (int i = 0; i < 20; i++)
-	  printf(" %d",CodeArea::getShort(from+i));
+	  printf(" %d",CodeArea::getWord(from+i));
 	printf("\n%x:\n",from+20);
       }
       break;
