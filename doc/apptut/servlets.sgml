@@ -52,8 +52,9 @@ so that it knows how to display it.
 For example, if the
 servlet outputs HTML,
 you have to print something like:
-<code display proglang=fundamental>Content-type: text/html\n\n</code>
-<P>The <<Open.html>> class has support for this (see example below).
+<code display proglang=fundamental>'Content-type: text/html\n\n'</code>
+<P>(without the quotes).
+The <<Open.html>> class has support for this (see example below).
 
 <item>Output the real data.  For example, text in HTML format.
 </list>
@@ -61,13 +62,13 @@ you have to print something like:
 It uses a class <<Open.html>> to generate HTML code on the fly.
 You can test it by sending a URL that looks like this:
 <code display proglang=fundamental>
-http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&text=3DHi+Guys
+'http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&text=3DHi+Guys'
 </code>
 <p>In this example,
 the value <<10>> is passed
-for the argument <code proglang=fundamental>number</code>
+for the argument <<'number'>>
 and the value <<"Hi+Guys">> for 
-the argument <code proglang=fundamental>text</code>
+the argument <<'text'>>
 (in CGI argument syntax,
 the plus is used to quote a space).
 
@@ -103,7 +104,7 @@ end
 
 <P>In order to compile this servlet,
 you have to do:
-<code display proglang=fundamental>
+<code display proglang=sh>
 ozc --execpath=$OZHOME -x small.oz -o small.cgi
 </code>
 <P>The <<execpath>> argument is needed because the
