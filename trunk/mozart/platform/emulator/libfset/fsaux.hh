@@ -24,7 +24,7 @@
  *
  */
 
-#include "../oz_cpi.hh" // TMUELLER
+#include "oz_cpi.hh" // TMUELLER
 
 #ifndef __FSAUX_HH__
 #define __FSAUX_HH__

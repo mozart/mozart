@@ -31,7 +31,7 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "../oz_cpi.hh" // TMUELLER
+#include "oz_cpi.hh" // TMUELLER
 
 //-----------------------------------------------------------------------------
 // debug macros
