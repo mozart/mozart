@@ -382,8 +382,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static members
 
-OZ_CFun LinEqPropagator::spawner = fdp_sumC;
-OZ_CFun LinNotEqPropagator::spawner = fdp_sumC;
-OZ_CFun LinLessEqPropagator::spawner = fdp_sumC;
-OZ_CFun NonLinEqPropagatorP::spawner = fdp_sumCN;
-OZ_CFun NonLinLessEqPropagatorP::spawner = fdp_sumCN;
+OZ_CFunHeader LinEqPropagator::spawner = fdp_sumC;
+OZ_CFunHeader LinNotEqPropagator::spawner = fdp_sumC;
+OZ_CFunHeader LinLessEqPropagator::spawner = fdp_sumC;
+OZ_CFunHeader NonLinEqPropagatorP::spawner = fdp_sumCN;
+OZ_CFunHeader NonLinLessEqPropagatorP::spawner = fdp_sumCN;

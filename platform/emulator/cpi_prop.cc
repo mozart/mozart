@@ -110,7 +110,7 @@ problem:
 
 ostream& operator << (ostream& o, const OZ_Propagator &p) 
 {
-  char * func_name = builtinTab.getName((void *) p.getHeaderFunc());
+  char * func_name = builtinTab.getName((void *) p.getHeader()->getHeaderFunc());
   OZ_Term args = p.getParameters();
  
  

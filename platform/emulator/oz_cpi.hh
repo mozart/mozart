@@ -276,7 +276,7 @@ public:
     _next = _all_headers;
     _all_headers = this;
   }
-  OZ_CFun getHeader(void) { return _header; }
+  OZ_CFun getHeaderFunc(void) { return _header; }
   void incSamples()       { _samples++; }
   void incCalls()         { _calls++; }
   unsigned getSamples()   { return _samples; }
@@ -316,7 +316,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;
   virtual OZ_Return propagate(void) = 0;
   virtual OZ_Term getParameters(void) const = 0;
-  virtual OZ_CFun getHeaderFunc(void) const = 0;
+  virtual OZ_CFunHeader * getHeader(void) const = 0;
 
   // support for nonmonotonic propagator
   virtual OZ_Boolean isMonotonic(void) const { return OZ_TRUE; }

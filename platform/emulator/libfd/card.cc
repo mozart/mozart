@@ -508,8 +508,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static member
 
-OZ_CFun LinEqBPropagator::spawner = fdp_sumCR;
-OZ_CFun LinNotEqBPropagator::spawner = fdp_sumCR;
-OZ_CFun LinLessEqBPropagator::spawner = fdp_sumCR;
-OZ_CFun InBPropagator::spawner = fdp_intR;
-OZ_CFun CardBPropagator::spawner = fdp_card;
+OZ_CFunHeader LinEqBPropagator::spawner = fdp_sumCR;
+OZ_CFunHeader LinNotEqBPropagator::spawner = fdp_sumCR;
+OZ_CFunHeader LinLessEqBPropagator::spawner = fdp_sumCR;
+OZ_CFunHeader InBPropagator::spawner = fdp_intR;
+OZ_CFunHeader CardBPropagator::spawner = fdp_card;

@@ -384,9 +384,9 @@ failure:
 // static member
 
 
-OZ_CFun ConjunctionPropagator::spawner = fdp_conj;
-OZ_CFun DisjunctionPropagator::spawner = fdp_disj;
-OZ_CFun XDisjunctionPropagator::spawner = fdp_exor;
-OZ_CFun ImplicationPropagator::spawner = fdp_impl;
-OZ_CFun EquivalencePropagator::spawner = fdp_equi;
-OZ_CFun NegationPropagator::spawner = fdp_nega;
+OZ_CFunHeader ConjunctionPropagator::spawner = fdp_conj;
+OZ_CFunHeader DisjunctionPropagator::spawner = fdp_disj;
+OZ_CFunHeader XDisjunctionPropagator::spawner = fdp_exor;
+OZ_CFunHeader ImplicationPropagator::spawner = fdp_impl;
+OZ_CFunHeader EquivalencePropagator::spawner = fdp_equi;
+OZ_CFunHeader NegationPropagator::spawner = fdp_nega;
