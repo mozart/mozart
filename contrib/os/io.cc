@@ -116,8 +116,7 @@ while ((RET = CALL) < 0) {                              \
     (void) OZ_writeSelect(FD, NameUnit, t);             \
     DEREF(t, t_ptr);                                    \
     if (oz_isVar(t)) {                                  \
-      am.addSuspendVarList(t_ptr);                      \
-      return SUSPEND;                                   \
+      return oz_addSuspendVarList(t_ptr);               \
     }                                                   \
   }                                                     \
 }
@@ -152,8 +151,7 @@ OZ_BI_define(io_write,3,1)
     (void) OZ_readSelect(FD, NameUnit, t);              \
     DEREF(t, t_ptr);                                    \
     if (oz_isVar(t)) {                                  \
-      am.addSuspendVarList(t_ptr);                      \
-      return SUSPEND;                                   \
+      return oz_addSuspendVarList(t_ptr);               \
     }                                                   \
   }                                                     \
 }
