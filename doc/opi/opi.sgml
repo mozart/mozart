@@ -27,7 +27,7 @@
     <Meta name="html.split" value="chapter.running">
     <Meta name="html.split" value="chapter.tools">
     <Meta name="html.split" value="chapter.gdb">
-    <Meta name="html.split" value="chapter.internals">
+    <Meta name="html.split" value="chapter.api">
     <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
@@ -39,7 +39,8 @@
 	The Oz Programming Interface (&OPI;) is the primary tool for
 	interaction with the Mozart development system.  It offers special
 	support for editing Oz code, running Mozart as a sub-process, and
-	running Mozart's development tools.
+	interacting with Mozart's development tools.  This document is a
+	reference manual for the complete functionality of the &OPI;.
     </Abstract>
   <Body>
     <Chapter id="chapter.intro">
@@ -48,7 +49,7 @@
 	The Mozart Programming System provides a powerful environment for
 	the development of software systems, called the <Q/Oz Programming
 	Interface/ (&OPI;).  The &OPI; is built around the extensible Emacs
-	editor and runs (at least) under GNU Emacs, Version&nbsp;19.28 or
+	editor and runs (at least) under GNU Emacs, Version&nbsp;19.24 or
 	greater, and XEmacs, Version&nbsp;19.14 or greater.  Its main
 	features are:
       <Para class=apropos><Title/Features/
@@ -81,19 +82,22 @@
 	will give an overview about the general integration of the &OPI;
 	into the standard framework provided by Emacsen<Note foot><Q/Emacsen/
 	is the plural of <Q/Emacs/.  This term is used in this manual when the
-	described feature applies to both GNU Emacs and XEmacs.</Note>.  Then
-	will follow <Ptr to="chapter.editing">, <Ptr to="chapter.running"> and
-	<Ptr to="chapter.tools">, dedicated to the three main points mentioned
-	above respectively.  <Ptr to="chapter.gdb"> details how to run Mozart
-	under <Name type=tool/gdb/.  Finally, <Ptr to="chapter.internals">
-	documents some internal functions of the &OPI; that might be useful
-	for users who want to write their own editing commands.
+	described feature applies to both GNU Emacs and XEmacs.</Note>.
+	The next three chapters (<Ptr to="chapter.editing">,
+	<Ptr to="chapter.running">, and <Ptr to="chapter.tools">) are
+	dedicated to the three main features mentioned above respectively.
+	<Ptr to="chapter.gdb"> details how to run Mozart under <Name
+	type=tool/gdb/.  Finally, <Ptr to="chapter.api"> documents some
+	functions of the &OPI; that might be useful for users who want to
+	write their own editing commands.
       <Para class=apropos><Title/Learning Emacs/
-	In order to exploit the power of the &OPI; you will have to get
+	This manual will assume some familiarity with the general editing
+	commands of Emacsen and will use standard Emacs terminology.
+	If you want to exploit the full power of the &OPI; you should get
 	some acquaintance with Emacs.  A good place to start is the Emacs
-	on-line tutorial, available from the Emacs Help menu.  This manual
-	will assume some familiarity with the general editing commands of
-	Emacsen.
+	on-line tutorial, available from the Emacs Help menu; this is also
+	the place to check if you are confused by the terminology used in
+	this manual.
       <Section class=unnumbered>
 	<Title/Acknowledgements/
 	<P>
@@ -120,9 +124,9 @@
 	  Leif Kornstaedt is the person now responsible for the entirety
 	  of Mozart's &OPI;.  Please address any remarks to him.
     <Chapter id="chapter.start">
-      <Title/Getting Started/
+      <Title/Invoking the &OPI;/
       <Section>
-	<Title/Starting the &OPI; in the Unix Environment/
+	<Title/Invoking the &OPI; in the Unix Environment/
 	  <P>
 	    The easiest way to start the &OPI; is to type the following
 	    command at the shell prompt<Note foot>The percent sign
@@ -155,22 +159,24 @@
 		  <Var type=env/PATH/, this is used.
 	    </List>
       <Section>
-	<Title/Starting the &OPI; Under Windows/
+	<Title/Invoking the &OPI; Under Windows/
 	  <P>
 	    The installation procedure will have created a program group
 	    for the Mozart system.  The &OPI; is started by launching the
 	    <Name type=program/Mozart/ item.
       <Section>
-	<Title/Starting the &OPI; From Within Emacs/
+	<Title/Invoking the &OPI; From Within Emacs/
 	  <P>
 	    You can also configure your Emacs so that you can use all of
 	    the &OPI;'s functionality without using the <File/oz/ script.
 	    Here's what you would typically add to your Emacs startup file
 	    (usually called <File>~/.emacs</File> under Unix and <File
-	    >C:\_emacs</File> under Windows):
+	    >C:\_emacs</File> under Windows&nbsp;95; under Windows&nbsp;NT,
+	    it is located in your home directory):
 	    <Code.Extern display to="oz.el">
+	    Don't worry if you don't understand all of this (yet).
       <Section>
-	<Title/The Oz and Oz-Gump Major Modes/
+	<Title/The Oz Major Modes/
 	  <P>
 	    All of the &OPI;'s functions are accessible in the following two
 	    major modes:
@@ -197,9 +203,9 @@
 	      <Entry class=useroption><<oz-mode-hook>>
 	      <Item>
 		<P.silent><!--**-->
-		  A list of functions to be run when either Oz mode or Oz-Gump
-		  mode is activated.  These functions are applied without
-		  arguments.  Change using Emacs functions <<add-hook>> and
+		  A list of functions to be run when one of the Oz modes is
+		  activated.  These functions are applied without arguments.
+		  Change using Emacs functions <<add-hook>> and
 		  <<remove-hook>>.
 	    </List>
       <Section>
@@ -274,6 +280,9 @@
 		<P.silent><!--**-->
 		  Keymap used in the Oz modes.
 	    </List>
+	    Note that if a key binding is not installed if <<oz-pc-keys>>
+	    is non-<<nil>>, but there is an alternative binding, then only
+	    the alternative binding is listed in this manual.
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
       <Section>
@@ -289,17 +298,12 @@
 		  Note that this buffer has no associated file name,
 		  so quitting Emacs will kill it without warning.
 	      <Entry class=command><<oz-previous-buffer>> (<Key/M-p/)
-	      <Item>
-		<P.silent><!--**-->
-		  Switch to the previous buffer in the buffer list that
-		  runs in an Oz mode.  If no such buffer exists, an error
-		  is signalled.
 	      <Entry class=command><<oz-next-buffer>> (<Key/M-n/)
 	      <Item>
 		<P.silent><!--**-->
-		  Switch to the next buffer in the buffer list that runs
-		  in an Oz mode.  If no such buffer exists, an error is
-		  signalled.
+		  Switch to the previous &resp; next buffer in the buffer list
+		  that runs in an Oz mode.  If no such buffer exists, an error
+		  is signalled.
 	    </List>
       <Section>
 	<Title/Indentation/
@@ -313,27 +317,27 @@
 		  Number of columns that statements are indented &wrt;
 		  the block containing them.
 	    </List>
-	    Several commands assist in indenting existing Oz code.
+	    Several commands assist in formatting existing Oz code.
 	    <List>
 	      <Entry class=command><<oz-indent-line &amp;optional COUNT>>
 		(<Key/TAB/)
 	      <Item>
 		<P.silent><!--**-->
-		  Indent the current line.  If <<COUNT>> is given, reindent
+		  Reindent the current line.  If <<COUNT>> is given, reindent
 		  that many lines above and below point as well.
 	      <Entry class=command><<oz-indent-region>>
 	      <Item>
 		<P.silent><!--**-->
-		  Indent all lines at least partly covered by the current
+		  Reindent all lines at least partly covered by the current
 		  region.
 	      <Entry class=command><<oz-indent-buffer>>
 	      <Item>
 		<P.silent><!--**-->
-		  Indent every line in the buffer.
+		  Reindent every line in the buffer.
 	      <Entry class=command><<indent-oz-expr>> (<Key/M-C-q/)
 	      <Item>
 		<P.silent><!--**-->
-		  Indent all lines at least partly covered by the Oz
+		  Reindent all lines at least partly covered by the Oz
 		  expression following point.  For a description of
 		  what constitutes an Oz expression, see <Ptr
 		  to="section.expression-commands">.
@@ -356,17 +360,18 @@
       <Section>
 	<Title/Fontification/
 	  <P>
-	    <Def/Fontification/ is the term used in Emacs for displaying
-	    text in different faces, depending on syntactical properties,
-	    to ease reading of code.  For example, comments and strings may
-	    be displayed in different colours.
+	    <Def/Fontification/ is the term used in Emacs for displaying text
+	    in different font faces, depending on its syntactical form and
+	    context, to ease reading of code.  For example, comments and
+	    strings may be displayed in different colours.
 	  <P>
 	    Many major modes in Emacs provide several levels of fontification
-	    with increasing use of colours, but also increasing resource
+	    with increasing use of faces, but also increasing resource
 	    consumption.  In the Oz modes, there are three levels.  You can
 	    select one using the <<font-lock-maximum-decoration>> user option,
 	    &eg;, add the following line to your <File/.emacs/:
 	    <<<(setq font-lock-maximum-decoration 3)>>>
+	    The default level is one.
 	  <P>
 	    The following user option and command control automatic
 	    fontification in the &OPI;.
@@ -375,7 +380,9 @@
 	      <Item>
 		<P.silent><!--**-->
 		  If non-<<nil>>, automatically invoke <<font-lock-mode>> when
-		  any of the Oz modes is activated.
+		  any of the Oz modes is activated.  If you prefer to control
+		  this via <<global-font-lock-mode>>, you can set this to
+		  <<nil>>.
 	      <Entry class=command><<oz-fontify-buffer &amp;optional ARG>>
 		(<Key/M-l/)
 	      <Item>
@@ -415,8 +422,10 @@
 		  Like the <<fill-paragraph>> command, but handles Oz comments.
 		  If any of the current line is a comment, fill the comment
 		  or the paragraph of it that point is in, preserving the
-		  comment's indentation and initial percent signs.  Bound to
-		  the buffer-local variable <<fill-paragraph-function>>.
+		  comment's indentation and initial percent signs.  The
+		  buffer-local variable <<fill-paragraph-function>> is
+		  bound to this command, so it will also be invoked by
+		  <Key/M-x fill-paragraph/ (<Key/M-q/).
 	      <Entry class=command>
 		<<oz-comment-region START END &amp;optional ARG>>
 	      <Item>
@@ -449,14 +458,16 @@
 		(<Key/M-C-f/)
 	      <Item>
 		<P.silent><!--**-->
-		  Move forward one balanced Oz expression.  With <<COUNT>>, do
-		  it that many times.  Negative <<COUNT>> means backwards.
+		  Move point forward by one balanced Oz expression.  With
+		  <<COUNT>>, do it that many times.  Negative <<COUNT>> means
+		  backwards.
 	      <Entry class=command><<backward-oz-expr &amp;optional COUNT>>
 		(<Key/M-C-b/)
 	      <Item>
 		<P.silent><!--**-->
-		  Move backward one balanced Oz expression.  With <<COUNT>>, do
-		  it that many times.  <<COUNT>> must be positive.
+		  Move point backward by one balanced Oz expression.  With
+		  <<COUNT>>, do it that many times.  <<COUNT>> must be
+		  positive.
 	      <Entry class=command><<mark-oz-expr COUNT>>
 		(<Key/M-C-@/, <Key/M-C-SPC/)
 	      <Item>
@@ -467,9 +478,9 @@
 	      <Entry class=command><<transpose-oz-exprs ARG>> (<Key/M-C-t/)
 	      <Item>
 		<P.silent><!--**-->
-		  Like the <<transpose-words>> command (usually bound to
-		  <Key/M-t/) but applies to balanced Oz expressions.  Caveat:
-		  This might not produce nice results in all cases.
+		  Like the <<transpose-words>> command (<Key/M-t/) but applies
+		  to balanced Oz expressions.  Caveat:  This might not produce
+		  nice results in all cases.
 	      <Entry class=command><<kill-oz-expr COUNT>> (<Key/M-C-k/)
 	      <Item>
 		<P.silent><!--**-->
@@ -478,7 +489,8 @@
 		  Negative <<COUNT>> means kill <<-COUNT>> Oz expressions
 		  before point.
 	      <Entry class=command><<backward-kill-oz-expr COUNT>>
-		(<Key/M-C-DEL/)
+		(<Key/M-C-DEL/<Note foot>Note that under some configurations,
+		this key combination kills the X server.</Note>)
 	      <Item>
 		<P.silent><!--**-->
 		  Kill the balanced Oz expression preceding point.  With
@@ -488,14 +500,14 @@
 	      <Entry class=command><<oz-beginning-of-defun>> (<Key/M-C-a/)
 	      <Item>
 		<P.silent><!--**-->
-		  Move to the start of the Oz definition point is in.
+		  Move point to the start of the Oz definition it is in.
 		  If point is not inside an Oz definition, move to start of
 		  buffer.  Returns <<t>> unless search stops due to beginning
 		  or end of buffer.
 	      <Entry class=command><<oz-end-of-defun>> (<Key/M-C-e/)
 	      <Item>
 		<P.silent><!--**-->
-		  Move to the end of the Oz definition point is in.
+		  Move point to the end of the Oz definition it is in.
 		  If point is not inside an Oz definition, move to end of
 		  buffer.
 	    </List>
@@ -528,7 +540,9 @@
 	instead.
 	<List>
 	  <Entry class=useroption><<OZ-HOME>>
-	    (default: <File>/usr/local/oz</File>)
+	    (default: <File>/usr/local/oz</File><Note foot>This default is
+	    actually fixed at the time the Mozart system is configured and
+	    built, so it might vary on your system.</Note>)
 	  <Item>
 	    <P.silent><!--**-->
 	      Directory where Oz is installed.  Only used as fallback when
@@ -540,7 +554,7 @@
 	  The following commands are used to start and halt the Mozart
 	  sub-process.
 	  <List>
-	    <Entry class=command><<run-oz>>
+	    <Entry class=command><<run-oz>> (<Key/C-c C-r/)
 	    <Item>
 	      <P.silent><!--**-->
 		Start Mozart as a sub-process if it is not already running.
@@ -559,7 +573,7 @@
 		String to use as Emacs frame title while a Mozart sub-process
 		is running.  In the default shown above, the old frame title
 		will be inserted in place of the ellipsis.
-	    <Entry class=command><<oz-halt FORCE>>
+	    <Entry class=command><<oz-halt FORCE>> (<Key/C-c C-h/)
 	    <Item>
 	      <P.silent><!--**-->
 		Halt the Mozart sub-process.  If <<FORCE>> is <<nil>>, send a
@@ -579,9 +593,9 @@
 	  Several commands make inspecting the Oz Emulator and Oz Compiler
 	  buffers easier.
 	  <List>
-	    <Entry class=command><<oz-toggle-emulator>>
-	    <Entry class=command><<oz-toggle-compiler>>
-	    <Entry class=command><<oz-toggle-temp>>
+	    <Entry class=command><<oz-toggle-emulator>> (<Key/C-c C-e/)
+	    <Entry class=command><<oz-toggle-compiler>> (<Key/C-c C-c/)
+	    <Entry class=command><<oz-toggle-temp>> (<Key/C-c C-t/)
 	    <Item>
 	      <P.silent><!--**-->
 		Toggle visibility of the Oz Emulator, Compiler or Temporary
@@ -625,10 +639,14 @@
 		paragraph are fed.
 	  </List>
 	  <List>
-	    <Entry class=command><<oz-feed-buffer>>
+	    <Entry class=command><<oz-feed-buffer>> (<Key/M-RET/)
 	    <Entry class=command><<oz-feed-region START END>>
+	      (<Key/M-r/<Note foot>This key binding is only available if the
+	      <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
 	    <Entry class=command><<oz-feed-line COUNT>>
-	    <Entry class=command><<oz-feed-paragraph COUNT>>
+	      (<Key/M-l/<Note foot>This key binding is only available if the
+	      <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
+	    <Entry class=command><<oz-feed-paragraph COUNT>> (<Key/C-c C-p/)
 	    <Item>
 	      <P.silent><!--**-->
 		The corresponding text region is fed to the compiler and
@@ -701,6 +719,7 @@
 		  When in Compiler buffer, visit error message surrounding
 		  point.
 	      <Entry class=command><<oz-mouse-goto-error EVENT>>
+		(<Key/S-&lt;button-2>/)
 	      <Item>
 		<P.silent>
 		  Visit the error coordinates associated with the error message
@@ -715,27 +734,52 @@
 	the &OPI;; several of these commands are available from the <Key/Oz/
 	menu.  For more details about the tools themselves, see the individual
 	user manuals.
+      <P>
+	The following command is useful for several of the tools.
+	<List>
+	  <Entry class=command><<oz-bar-remove>>
+	  <Item>
+	    <P.silent><!--**-->
+	      Remove any coloured bar marking an Oz source line.  Such bars are
+	      used by the Compiler Panel, the Debugger and the Profiler.
+	</List>
+      <Para class=apropos><Title/Browser/
 	<List>
 	  <Entry class=command><<oz-browse-buffer>>
-	  <Entry class=command><<oz-browse-region START END>>
+	  <Entry class=command><<oz-browse-region START END>> (<Key/C-c C-b/)
 	  <Entry class=command><<oz-browse-line COUNT>>
+	    (<Key/C-c b/<Note foot>This key binding is only available if the
+	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
 	  <Entry class=command><<oz-browse-paragraph COUNT>>
 	  <Item>
 	    <P.silent><!--**-->
 	      Feed the corresponding text region to the Oz Compiler.
 	      Assuming it to contain an expression, enclose it by an
 	      application of the procedure <Code proglang=oz>Browse</Code>.
+	</List>
+      <Para class=apropos><Title/Panel/
+	<List>
 	  <Entry class=command><<oz-open-panel>>
+	    (<Key/C-c p/<Note foot>This key binding is only available if the
+	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
 	  <Item>
 	    <P.silent><!--**-->
 	      Open the System Panel by feeding the statement <Code proglang=oz
 	      >{Panel.open}</Code> to the Oz Compiler.
+	</List>
+      <Para class=apropos><Title/Compiler Panel/
+	<List>
 	  <Entry class=command><<oz-open-compiler-panel>>
+	    (<Key/C-c c/<Note foot>This key binding is only available if the
+	    <<oz-pc-keys>> variable is non-<<nil>>.</Note>)
 	  <Item>
 	    <P.silent><!--**-->
 	      Open the Compiler Panel by feeding the statement <Code
 	      proglang=oz>{New CompilerPanel.'class' init(`Compiler`) _}</Code
 	      > to the Oz Compiler.
+	</List>
+      <Para class=apropos><Title/Debugger/
+	<List>
 	  <Entry class=command><<oz-debugger ARG>> (<Key/C-c C-d/)
 	  <Item>
 	    <P.silent><!--**-->
@@ -757,21 +801,19 @@
 	    <P.silent><!--**-->
 	      Set &resp; delete a dynamic breakpoint at the point clicked with
 	      the mouse.  See <<oz-breakpoint-at-point>> for details.
+	</List>
+      <Para class=apropos><Title/Profiler/
+	<List>
 	  <Entry class=command><<oz-profiler ARG>> (<Key/C-c C-f/)
 	  <Item>
 	    <P.silent><!--**-->
 	      Open the Oz Profiler by feeding the statement <Code proglang=oz
 	      >{Profiler.open}</Code> to the Oz Compiler.  With <<ARG>>, close
 	      it instead by <Code proglang=oz>{Profiler.close}</Code>.
-	  <Entry class=command><<oz-bar-remove>>
-	  <Item>
-	    <P.silent><!--**-->
-	      Remove any coloured bar marking an Oz source line.  Such bars are
-	      used by the Debugger and Profiler.
 	</List>
     <Chapter id="chapter.gdb">
-      <Title/Running Mozart under gdb/
-      <Para class=apropos><Title/Developer's Section/
+      <Title/Mozart System Development Support/
+      <P>
 	The commands and user options described in this section are
 	probably only interesting for people developing or extending
 	parts of Mozart and thus compiling their own system components.
@@ -780,91 +822,108 @@
       <P>
 	For completeness and as a reference for the developers themselves,
 	they are described here nevertheless.
-      <Para class=apropos><Title/Testing Locally/
-	One part of the support is concerned with testing system components
-	locally.
-	<List>
-	  <Entry class=useroption><<oz-emulator>> (default: see below)
-	  <Item>
-	    <P.silent><!--**-->
-	      File name of the Oz Emulator binary.  This is used when running
-	      the Emulator under gdb and by the <<oz-other>> command.
-	  <Entry class=useroption><<oz-components-path>> (default: see below)
-	  <Item>
-	    <P.silent><!--**-->
-	      Search path for the Oz Components.  This is used by the
-	      <<oz-other>> command.  By default, this specifies rules to look
-	      for components in the <File/stage1/ directories under <File
-	      >~/mozart/share/lib</File> and <File>~/mozart/share/tools</File>.
-	      This is useful for first testing changes before installing the
-	      modified functors globally.
-	  <Entry class=useroption><<oz-root-functor>>
-	    (default: <<"http://www.ps.uni-sb.de/ozhome/share/OPI.ozf">>
-	  <Item>
-	    <P.silent><!--**-->
-	      Name of the root functor to load on startup.
-	  <Entry class=command><<oz-set-other SET-COMPONENTS>>
-	  <Item>
-	    <P.silent><!--**-->
-	      Interactively set the value of the environment variables
-	      <Var type=env/OZEMULATOR/ or <Var type=env/OZ_LOAD/.
-	    <P>
-	      If <<SET-COMPONENTS>> is <<nil>>, set <Var type=env/OZEMULATOR/
-	      and <<oz-emulator>> (the file name of the emulator binary, can
-	      also be done via <<oz-set-emulator>>).
-	    <P>
-	      Else, set <Var type=env/OZ_LOAD/ and <<oz-components-path>>
-	      (the components search path, can also be done via
-	      <<oz-set-components>>).
-	  <Entry class=command><<oz-set-emulator>>
-	  <Entry class=command><<oz-set-components>>
-	  <Item>
-	    <P.silent><!--**-->
-	      See <<oz-set-other>>.
-	  <Entry class=command><<oz-other SET-COMPONENTS>>
-	  <Item>
-	    <P.silent><!--**-->
-	      Toggle between global and local Oz Emulator or Oz Components.
-	      If <<SET-COMPONENTS>> is <<nil>>, toggle the emulator binary
-	      (via <<oz-other-emulator>>); else, toggle the components search
-	      path (via <<oz-other-components>>).
-	  <Entry class=command><<oz-other-emulator>>
-	  <Item>
-	    <P.silent><!--**-->
-	      Toggle between global and local Oz Emulator.  The local
-	      emulator is given by the user option <<oz-emulator>>; see
-	      <<oz-set-emulator>>.
-	  <Entry class=command><<oz-other-components>>
-	  <Item>
-	    <P.silent><!--**-->
-	      Toggle between global and local Oz Components search path.
-	      The local components are given by the user option
-	      <<oz-components-path>>; see <<oz-set-components>>.
-	</List>
-      <Para class=apropos><Title/Running under gdb/
-	The last command is for starting the Mozart Emulator under gdb.
-	<List>
-	  <Entry class=command><<oz-gdb>>
-	  <Item>
-	    <P.silent><!--**-->
-	      Toggle debugging of the Oz Emulator with gdb.  This sets
-	      some additional environment variables since the <File/oz/
-	      script has to be bypassed, and starts <<gud-mode>> with the
-	      emulator binary specified by the user option <<oz-emulator>>.
-	  <Entry class=useroption><<oz-gdb-autostart>> (default: <<t>>)
-	  <Item>
-	    <P.silent><!--**-->
-	      If non-<<nil>>, start emulator immediately when in gdb mode.
-	      Else you have the possibility to first set breakpoints and only
-	      run the emulator when you issue the <Samp/run/ command to gdb.
-	</List>
-    <Chapter id="chapter.internals">
-      <Title/Internal Functions/
+      <Section>
+	<Title/Testing Locally/
+	<P>
+	  One part of the support is concerned with testing system components
+	  locally.
+	  <List>
+	    <Entry class=useroption><<oz-emulator>> (default: see below)
+	    <Item>
+	      <P.silent><!--**-->
+		File name of the Oz Emulator binary.  This is used when running
+		the Emulator under gdb and by the <<oz-other>> command.
+	      <P proglang=sh>
+		The default value of this variable is taken from the
+		environment variable <Var type=env/OZEMULATOR/ if it is set,
+		else it is set to
+		<<<$HOME/mozart/platform/emulator/oz.emulator.bin>>>
+		where <<$HOME>> stands for the value of the environment
+		variable <Var type=env/HOME/.
+	    <Entry class=useroption><<oz-components-path>> (default: see below)
+	    <Item>
+	      <P.silent><!--**-->
+		Search path for the Oz Components.  This is used by the
+		<<oz-other>> command.  By default, this specifies rules to look
+		for components in the <File/stage1/ directories under <File
+		>~/mozart/share/lib</File> and <File>~/mozart/share/tools</File
+		>.  This is useful for first testing changes before installing
+		the modified functors globally.
+	      <P proglang=sh>
+		The default value of this variable is taken from the
+		environment variable <Var type=env/OZ_LOAD/ if it is set,
+		else it is set to
+<<<prefix=http\\://www.ps.uni-sb.de/ozhome/=~/mozart/share/lib/stage1/:
+prefix=http\\://www.ps.uni-sb.de/ozhome/=~/mozart/share/tools/stage1/:
+cache=~/.oz/cache:cache=$OZHOME/cache>>>
+		where <<$OZHOME>> stands for the value of the environment
+		variable <Var type=env/OZHOME/.
+	    <Entry class=useroption><<oz-root-functor>>
+	      (default: <<"http://www.ps.uni-sb.de/ozhome/share/OPI.ozf">>)
+	    <Item>
+	      <P.silent><!--**-->
+		Name of the root functor to load on startup.
+	    <Entry class=command><<oz-set-other SET-COMPONENTS>>
+	      (<Key/C-c C-m/)
+	    <Item>
+	      <P.silent><!--**-->
+		If <<SET-COMPONENTS>> is <<nil>>, call <<oz-set-emulator>>,
+		else call <<oz-set-components>>.
+	    <Entry class=command><<oz-set-emulator>> (<Key/C-c C-m/)
+	    <Item>
+	      <P.silent><!--**-->
+		Interactively set the value of the variable <<oz-emulator>>.
+		Also, if the environment variable <Var type=env/OZEMULATOR/ is
+		set, replace its value by this one.
+	    <Entry class=command><<oz-set-components>> (<Key/C-u C-c C-m/)
+	    <Item>
+	      <P.silent><!--**-->
+		Interactively set the value of the variable
+		<<oz-components-path>>.  Also, if the environment variable
+		<Var type=env/OZ_LOAD/ is set, replace its value by this one.
+	    <Entry class=command><<oz-other SET-COMPONENTS>> (<Key/C-c C-o/)
+	    <Item>
+	      <P.silent><!--**-->
+		If <<SET-COMPONENTS>> is <<nil>>, call <<oz-other-emulator>>,
+		else call <<oz-other-components>>.
+	    <Entry class=command><<oz-other-emulator>> (<Key/C-c C-o/)
+	    <Item>
+	      <P.silent><!--**-->
+		Toggle between global and local Oz Emulator.  The local
+		emulator is given by the user option <<oz-emulator>>; see
+		<<oz-set-emulator>>.
+	    <Entry class=command><<oz-other-components>> (<Key/C-u C-c C-o/)
+	    <Item>
+	      <P.silent><!--**-->
+		Toggle between global and local Oz Components search path.
+		The local components are given by the user option
+		<<oz-components-path>>; see <<oz-set-components>>.
+	  </List>
+      <Section>
+	<Title/Running under gdb/
+	<P>
+	  The last command is for starting the Mozart Emulator under gdb.
+	  <List>
+	    <Entry class=command><<oz-gdb>> (<Key/C-c C-g/)
+	    <Item>
+	      <P.silent><!--**-->
+		Toggle debugging of the Oz Emulator with gdb.  This sets
+		some additional environment variables since the <File/oz/
+		script has to be bypassed, and starts <<gud-mode>> with the
+		emulator binary specified by the user option <<oz-emulator>>.
+	    <Entry class=useroption><<oz-gdb-autostart>> (default: <<t>>)
+	    <Item>
+	      <P.silent><!--**-->
+		If non-<<nil>>, start emulator immediately when in gdb mode.
+		Else you have the possibility to first set breakpoints and only
+		run the emulator when you issue the <Samp/run/ command to gdb.
+	  </List>
+    <Chapter id="chapter.api">
+      <Title/Application Programmer's Interface/
       <P>
-	This section documents some internal functions that might be
-	useful to user's wanting to write their own Oz-syntax-aware
-	commands.  All of these commands respect Oz syntax &wrt; quoted
-	elements.
+	This section documents some functions that might be useful to users
+	wanting to write their own Oz-syntax-aware commands.  All of these
+	commands respect Oz syntax &wrt; quoted elements.
 	<List>
 	  <Entry class=function><<oz-is-quoted>>
 	  <Item>
