@@ -36,7 +36,7 @@ micq : server.ozf defaultsettings.ozf startserver.oz
         ozc -x startserver.oz -o micq
 
 
-server.ozf: methods.ozf database.ozf mobility.ozf newaccountgui.ozf log.ozf server.oz sysadm.ozf
+server.ozf: methods.ozf database.ozf mobility.ozf log.ozf server.oz sysadm.ozf
         ozc -c server.oz -o server.ozf
 
 methods.ozf : methods.oz
@@ -57,7 +57,7 @@ log.ozf: log.oz
 sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
         ozc -c sysadm.oz -o sysadm.ozf
 
-client : client.ozf startclient.oz
+client : client.ozf startclient.oz newaccountgui.ozf
         ozc -x startclient -o client
 
 client.ozf : methods.ozf clientgui.ozf newfriendsgui.ozf defaultsettings.ozf dialoggui.ozf mobility.ozf client.oz

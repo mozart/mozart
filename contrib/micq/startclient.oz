@@ -46,13 +46,15 @@ define
    proc{StartICQ Args}
       T={New Tk.toplevel tkInit(title:"Settings for Client...")}
       V1 V2 V3 V4
+      B1 B2 BF={New Tk.frame tkInit(parent:T)}
       Index={NewCell 0}
       GO
       proc{Start2}
          A=start(file:{V4 tkReturnAtom($)}
                  login:{V1 tkReturnAtom($)}
                  ticketURL:{V2 tkReturnString($)}
-                 passwd:{V3 tkReturnAtom($)})
+                 passwd:{V3 tkReturnAtom($)}
+                 newuser:GO==newuser)
       in
          {Wait A.file} {Wait A.login} {Wait A.ticketURL} {Wait A.passwd}
          {T tkClose}
@@ -77,6 +79,16 @@ define
       V1={NewEntry "Login:" Args.login}
       V3={NewEntry "Password:" Args.passwd}
       V4={NewEntry "Init file:" Args.file}
+      B1={New Tk.button tkInit(parent:BF text:"New User" action:proc{$} GO=newuser end)}
+      B2={New Tk.button tkInit(parent:BF text:"Login" action:proc{$} GO=unit end)}
+      {Tk.batch [grid(BF row:20 column:0 columnspan:2 sticky:we)
+                 grid(B1 row:0 column:0 sticky:we)
+                 grid(B2 row:0 column:1 sticky:we)
+                 grid(columnconfigure T 0 weight:1)
+                 grid(columnconfigure BF 0 weight:1)
+                 grid(columnconfigure BF 1 weight:1)
+                 wm(resizable T 0 0)]}
+
       {Wait GO}
       {Start2}
    end
