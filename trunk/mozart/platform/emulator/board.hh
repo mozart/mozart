@@ -96,7 +96,7 @@ enum BoardFlags {
 
 
 class Board {
-friend void engine(Bool init);
+friend int engine(Bool init);
 private:
   int flags;
   int suspCount;

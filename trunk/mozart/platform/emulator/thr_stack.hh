@@ -143,7 +143,8 @@ public:
 
   TaggedRef frameToRecord(Frame *&frame, Thread *thread, Bool verbose);
 
-  Bool findCatch(ProgramCounter PC=NOCODE, TaggedRef *traceBack=0,
+  Bool findCatch(Thread *thr,
+		 ProgramCounter PC=NOCODE, TaggedRef *traceBack=0,
 		 Bool verbose=NO);
 
 

@@ -210,7 +210,8 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
   }
 }
 
-Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose) 
+Bool TaskStack::findCatch(Thread *thr,
+			  ProgramCounter PC, TaggedRef *out, Bool verbose) 
 {
   Assert(this);
 
@@ -235,7 +236,7 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
   while (!isEmpty()) {
     if (out) {
       Frame *frame = getTop();
-      TaggedRef frameRec = frameToRecord(frame,am.currentThread(),verbose);
+      TaggedRef frameRec = frameToRecord(frame,thr,verbose);
       if (frameRec != makeTaggedNULL())
 	*out = cons(frameRec,*out);
     }
@@ -255,12 +256,12 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
       case Te_Local: ((LockLocal*)lck)->unlock();break;
-      case Te_Frame: ((LockFrame*)lck)->unlock(am.currentThread());break;
-      case Te_Manager: ((LockManager*)lck)->unlock(am.currentThread());break;
+      case Te_Frame: ((LockFrame*)lck)->unlock(thr);break;
+      case Te_Manager: ((LockManager*)lck)->unlock(thr);break;
       case Te_Proxy: error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) { 
       Object *newSelf = (Object*)Y;
-      am.setSelf(newSelf);
+      thr->setSelf(newSelf);
     } else if (PC==C_SET_ABSTR_Ptr) { 
       ozstat.leaveCall((PrTabEntry*)Y);
     }
