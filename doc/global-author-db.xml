@@ -44,13 +44,13 @@
         EMAIL='mehl@dfki.de'/>
 <OZDOC.AUTHOR
         KEY='Martin.Mueller'
-        LASTNAME='Müller'
+        LASTNAME='M&#252;ller'
         FIRSTNAME='Martin'
         WWW='http://www.ps.uni-sb.de/~mmueller/'
         EMAIL='mmueller@ps.uni-sb.de'/>
 <OZDOC.AUTHOR
         KEY='Tobias.Mueller'
-        LASTNAME='Müller'
+        LASTNAME='M&#252;ller'
         FIRSTNAME='Tobias'
         WWW='http://www.ps.uni-sb.de/~tmueller/'
         EMAIL='tmueller@ps.uni-sb.de'/>
@@ -81,13 +81,13 @@
         EMAIL='smolka@ps.uni-sb.de'/>
 <OZDOC.AUTHOR
         KEY='Joerg.Wuertz'
-        LASTNAME='Würtz'
-        FIRSTNAME='Jörg'
+        LASTNAME='W&#252;rtz'
+        FIRSTNAME='J&#246;rg'
         WWW='http://www.ps.uni-sb.de/~wuertz/'
         EMAIL='wuertz@de.ibm.com'/>
 <OZDOC.AUTHOR
         KEY='Andreas.Sundstroem'
-        LASTNAME='Sundström'
+        LASTNAME='Sundstr&#246;m'
         FIRSTNAME='Andreas'
         WWW='http://www.sics.se/~andreas'
         EMAIL='andreas@sics.se'/>
@@ -99,7 +99,7 @@
         EMAIL='seif@sics.se'/>
 <OZDOC.AUTHOR
         KEY='Nils.Franzen'
-        LASTNAME='Franzén'
+        LASTNAME='Franz&#233;n'
         FIRSTNAME='Nils'
         WWW='http://www.sics.se/~nilsf'
         EMAIL='nilsf@sics.se'/>
