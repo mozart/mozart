@@ -30,23 +30,30 @@
 #include "am.hh"
 #include "value.hh"
 
-OZ_Extension::~OZ_Extension() {
+#if defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
+#  define ozdeclspec __declspec(dllexport)
+#else
+#  define ozdeclspec
+#endif
+
+
+ozdeclspec OZ_Extension::~OZ_Extension() {
   OZ_error("invoking destructor ~OZ_Extension()");
 }
 
-void OZ_Extension::operator delete(void*,size_t) {
+ozdeclspec void OZ_Extension::operator delete(void*,size_t) {
   OZ_error("invoking OZ_Extension::operator delete(void*,size_t)");
 }
 
-OZ_Term OZ_Extension::typeV() {
+ozdeclspec OZ_Term OZ_Extension::typeV() {
   return AtomExtension;
 }
 
-OZ_Term OZ_Extension::printLongV(int depth, int offset) {
+ozdeclspec OZ_Term OZ_Extension::printLongV(int depth, int offset) {
   return OZ_pair2(printV(depth),AtomNewLine);
 }
 
-OZ_Term OZ_Extension::getFeatureV(OZ_Term f) {
+ozdeclspec OZ_Term OZ_Extension::getFeatureV(OZ_Term f) {
   OZ_Term t;
   return (getFeatureV(f,t)==PROCEED)?t:0;
 }
