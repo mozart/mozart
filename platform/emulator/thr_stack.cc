@@ -243,8 +243,9 @@ Bool TaskStack::findCatch(Thread *thr,
       OzLock *lck = (OzLock *) G;
       switch(lck->getTertType()){
       case Te_Local:
-        if (((LockLocal*)lck)->hasLock(thr))
+        if (((LockLocal*)lck)->hasLock(thr)) {
           ((LockLocal*)lck)->unlock();
+        }
         break;
       case Te_Frame:
         if (((LockFrameEmul*)lck)->hasLock(thr))
