@@ -345,14 +345,14 @@ starts the emulator under gdb")
   "Start the debugger."
   (interactive)
   (oz-emacs-connect)
-  (oz-feed-file "tools/ozcar/main.oz")
+  (oz-insert-file "tools/ozcar/main.oz")
   (setq oz-debug-mode t))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
   (setq oz-debug-mode nil)
-  (oz-feed-file "tools/ozcar/exit.oz"))
+  (oz-insert-file "tools/ozcar/exit.oz"))
 
 
 ;;------------------------------------------------------------
