@@ -409,7 +409,7 @@ will discuss later. Another way is to change the
 thread execution speed (by changing the thread's priority)
 so that consumers get more time-slices than producers.
 
-<P>The modules <<Thread>>, and <<Property>>, provide a number of
+<P>The modules <<Thread>> and <<Property>> provide a number of
 operations pertinent to threads. Some of these are summarized in 
 <PTR TO="threadTable">.
 
