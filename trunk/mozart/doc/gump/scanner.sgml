@@ -37,7 +37,7 @@
 	<Figure float id="program.scanner.example" class=program>
 	  <Caption>The <<LambdaScanner>> scanner specification.</Caption>
 	  <P> <!--**-->
-	    <Code.Extern display to="LambdaScanner.ozg">
+	    <Code.Extern to="LambdaScanner.ozg" class=linenumbers>
 	</Figure>
       <Para class=apropos><Title/Class Descriptors/
 	At the first glance the scanner specification closely resembles a
@@ -48,15 +48,14 @@
 	scanner specification.  Consider the <<from>>, <<attr>> and <<meth>>
 	constructs used in lines 2 to&nbsp;10.
       <Para class=apropos><Title/Lexical Abbreviations/
-	The scanner-specific declarations begin at line&nbsp;12.  Two
-	kinds of definition can be introduced by the keyword <<lex>>:
-	the definition of a <Def>lexical abbreviation</Def>, as seen
-	in lines 12 to&nbsp;15, and the <Def>lexical rules</Def> found
-	from line&nbsp;17 to the end of the specification.  A lexical
-	abbreviation <<lex ?{I} = &lt;?{R}&gt; end>> simply associates
-	an identifier&nbsp;<Var type=meta>I</Var> with a given regular
-	expression&nbsp;<Var type=meta>R</Var>.  The construct&nbsp;<Var
-	type=meta>I</Var> in other regular expressions is then expanded
+	The scanner-specific declarations begin at line&nbsp;12.  Two kinds
+	of definition can be introduced by the keyword <<lex>>: either a <Def
+	>lexical abbreviation</Def>, as seen in lines 12 to&nbsp;15, or a
+	<Def>lexical rule</Def> as found from line&nbsp;17 to the end of the
+	specification.  A lexical abbreviation <<lex ?{I} = &lt;?{R}&gt; end>>
+	associates an identifier&nbsp;<Var type=meta>I</Var> with a given
+	regular expression&nbsp;<Var type=meta>R</Var>.  Occurrences
+	of&nbsp;<<{?{I}}>> in other regular expressions are then replaced
 	to&nbsp;<<(?{R})>>.
       <P>
 	Note that regular expressions use the same syntax as regular
@@ -77,18 +76,18 @@
 	Lexical rules of the form <<lex &lt;?{R}&gt; ?{S} end>> are
 	more interesting, since the set of these is the actual scanner
 	specification.  Upon a match of a prefix of the input character
-	stream with the regular expression&nbsp;<Var type=meta>R</Var>, the
-	statement&nbsp;<Var type=meta>S</Var> is executed as a method body
-	(&ie;, the object state may be accessed and modified).  Two methods
-	are provided by the mixin class <<GumpScanner.'class'>> (inherited
-	from in line&nbsp;2) to append tokens to the token stream:
-	<<putToken1>>, which appends a token of a given class without a
-	value (<<unit>> being used instead), and <<putToken>>, which allows
-	a specific token value to be provided.  Token classes may be
-	represented by arbitrary &Oz; values, but the parser generator in
-	<Ptr to="chapter.parser"> expects them to be atoms.  In lines 18
-	and&nbsp;21 you can see how constants are used as token classes.
-	In line&nbsp;33 the token class is computed from the lexeme.
+	stream with the regular expression&nbsp;<<R>>, the
+	statement&nbsp;<<S>> is executed as a method body (&ie;, <<self>> may
+	be accessed and modified).  Two methods are provided by the mixin
+	class <<GumpScanner.'class'>> (inherited from in line&nbsp;2) to
+	append tokens to the token stream: <<putToken1>>, which appends a
+	token of a given class without a value (<<unit>> being used instead),
+	and <<putToken>>, which allows a specific token value to be provided.
+	Token classes may be represented by arbitrary &Oz; values, but the
+	parser generator in <Ptr to="chapter.parser"> expects them to be
+	atoms.  In lines 18 and&nbsp;21 you can see how constants are used
+	as token classes.  In line&nbsp;33 the token class is computed from
+	the lexeme.
       <Para class=apropos><Title/Accessing the Lexeme/
 	The lexeme itself may be accessed in several ways.  The method
 	<<getAtom>> returns the lexeme as an atom, which is the representation
@@ -97,17 +96,16 @@
 	where it is subsequently converted to an integer.
       <P>
 	The remaining lexical rules are easily explained.  Lines 36
-	and&nbsp;37 respectively describe that whitespace and comments
-	are to be ignored.  This stems from the fact that neither <<putToken1>>
-	nor <<putToken>> is called.  (Note that an action can also invoke
-	them several times to append multiple tokens to the token stream,
-	just as it may chose not to invoke them at all to simply ignore the
-	lexeme or only produce side effects.)  The rule in line&nbsp;38
-	ignores any matched newlines, but updates the line counter attribute
-	<<LineNumber>> as it does so.  The rule in line&nbsp;41 reports any
-	remaining unmatched characters in the input as lexical errors and
-	returns the token <<'error'>> which the parser can recognize as an
-	erroneous token.
+	and&nbsp;37 respectively describe how whitespace and comments
+	are to be ignored.  This is done by neither calling <<putToken1>>
+	nor <<putToken>>.  (Note that an action can also invoke them several
+	times to append multiple tokens to the token stream, just as it may
+	chose not to invoke them at all to simply ignore the lexeme or only
+	produce side effects.)  The rule in line&nbsp;38 ignores any matched
+	newlines, but updates the line counter attribute <<LineNumber>> as it
+	does so.  The rule in line&nbsp;41 reports any remaining unmatched
+	characters in the input as lexical errors and returns the token
+	<<'error'>> which the parser can recognize as an erroneous token.
       <Para class=apropos><Title/End-of-File Rules/
 	The final rule, in line&nbsp;46, has the special syntax
 	<<&lt;&lt;EOF&gt;&gt;>> (it might also have been written as
@@ -164,11 +162,10 @@
 	The procedure <<GetTokens>> repeatedly invokes the <<GumpScanner>>
 	method
 	<<<getToken(??{X} ??{Y})>>>
-	which returns the next token's token class in&nbsp;<Var type=meta
-	>X</Var> and token value in&nbsp;<Var type=meta>Y</Var> and removes
-	it from the token stream.  <<GetTokens>> exits when the end of the
-	token stream is reached, which is recognized by the token class
-	<<'EOF'>>.
+	which returns the next token's token class in&nbsp;<<X>> and token
+	value in&nbsp;<<Y>> and removes it from the token stream.
+	<<GetTokens>> exits when the end of the token stream is reached,
+	which is recognized by the token class <<'EOF'>>.
       <Para class=apropos><Title/Providing Inputs/
 	To actually start scanning we have to provide an input character
 	stream.  This is done via one of the methods
@@ -231,10 +228,10 @@
 	curly brackets.  The regular expression is additionally parenthesized
 	when it is expanded.
 	<Grammar.Rule>?={lexical abbreviation}
-	  <Grammar.Alt type="def"
-	    ><<lex>> ?={atom} <<=>> ?={regex} <<end>></Grammar.Alt>
-	  <Grammar.Alt type="or"
-	    ><<lex>> ?={variable} <<=>> ?={regex} <<end>></Grammar.Alt>
+	  <Grammar.Alt type="def"><<lex>> ?={atom} <Q
+	    class=terminal/<<=>>/ ?={regex} <<end>></Grammar.Alt>
+	  <Grammar.Alt type="or"><<lex>> ?={variable} <Q
+	    class=terminal/<<=>>/ ?={regex} <<end>></Grammar.Alt>
       <P>
 	The definition of a <Def>lexical rule</Def> is similar to the
 	definition of a method.  However, its head consists of a regular
@@ -257,7 +254,7 @@
 	are annotated with the implicitly declared mode <<INITIAL>>.
 	<Grammar.Rule>?={lexical mode}
 	  <Grammar.Alt type="def"
-	    ><<mode>> ?={variable} [ <<from>> { ?={variable} }+ ]
+	    ><<mode>> ?={variable} [ <<from>> { ?={variable} }+ ]</Grammar.Alt>
 	  <Grammar.Alt>{ ?={mode descriptor} }</Grammar.Alt>
 	  <Grammar.Alt><<end>></Grammar.Alt>
 	<Grammar.Rule>?={mode descriptor}
@@ -306,23 +303,48 @@
 	    <Entry>Best-fit.
 	    <Item>
 	      <P.silent><!--**-->
-		Suppose two conflicting rules are rule&nbsp;<Math>r_1</Math>
-		and rule&nbsp;<Math>r_2</Math>, which are annotated by sets
-		of lexical modes <Math>L_1</Math> and&nbsp;<Math>L_2</Math>
-		respectively.  Then <Math>r_1</Math> is preferred
-		over&nbsp;<Math>r_2</Math> if and only if the following
-		conditions hold:
-		<Math display>
-		  S_1 \subseteq S_2 \; \wedge \; L(r_1) \subseteq L(r_2)
-		</Math>
-		where <Math>L(r)</Math> is the language generated by a regular
-		expression&nbsp;<Math>r</Math>, that is, the set of strings
-		that match&nbsp;<Math>r</Math>.  Intuitively, this rule
-		means that <Math>r_1</Math> is <Q/more specialized
-		than/&nbsp;<Math>r_2</Math>.  Additionally to the errors
-		possible in the rule set in the first-fit case, here the
-		situation may arise that the rule set is not well-ordered
-		&wrt; the <Q/more specialized than/ relation.
+		Suppose two conflicting rules are rule&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+		<Math type=latex>r_1</Math></Math.Choice>
+		and rule&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math
+		><Math type=latex>r_2</Math></Math.Choice>, which are
+		annotated by sets of lexical modes <Math.Choice>
+		<Math type=html><I>S&lt;/I><SUB>1&lt;/SUB></Math>
+		<Math type=latex>S_1</Math></Math.Choice>
+		and&nbsp;<Math.Choice>
+		<Math type=html><I>S&lt;/I><SUB>2&lt;/SUB></Math>
+		<Math type=latex>S_2</Math></Math.Choice>
+		respectively.  Then <Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+		<Math type=latex>r_1</Math></Math.Choice> is preferred
+		over&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+		<Math type=latex>r_2</Math></Math.Choice> if and only
+		if the following condition holds:
+		<Math.Choice display>
+		  <Math type=html><I>S&lt;/I><SUB>1&lt;/SUB> is a subset of
+		  <I>S&lt;/I><SUB>2&lt;/SUB> and L(<I>r&lt;/I><SUB>1&lt;/SUB>)
+		  is a subset of L(<I>r&lt;/I><SUB>2&lt;/SUB>)</Math>
+		  <Math type=latex>S_1 \subseteq S_2 \; \wedge \;
+		  L(r_1) \subseteq L(r_2)</Math>
+		</Math.Choice>
+		where <Math.Choice><Math type=html>L(<I>r&lt;/I>)</Math>
+		<Math type=latex>L(r)</Math></Math.choice> is the language
+		generated by a regular expression&nbsp;<Math.Choice><Math
+		type=html><I>r&lt;/I></Math><Math type=latex>r</Math>
+		</Math.Choice>, that is, the set of strings that
+		match&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+		<Math type=latex>r</Math></Math.Choice>.  Intuitively, this
+		rule means that <Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+		<Math type=latex>r_1</Math></Math.Choice> is <Q/more
+		specialized than/&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+		<Math type=latex>r_2</Math></Math.Choice>.  Additionally
+		to the errors possible in the rule set in the first-fit
+		case, here the situation may arise that the rule set is not
+		well-ordered &wrt; the <Q/more specialized than/ relation.
 	  </List>
 	<P>
 	  The following errors in the rule set may occur:
@@ -335,17 +357,35 @@
 	    <Entry>Completely covered rules.
 	    <Item>
 	      <P.silent><!--**-->
-		A rule&nbsp;<Math>r</Math> is never matched because for every
-		prefix in&nbsp;<Math>L(r)</Math> exists another rule&nbsp;<Math
-		>s</Math> which is preferred over&nbsp;<Math>r</Math>.
+		A rule&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+		<Math type=latex>r</Math></Math.Choice> is never matched
+		because for every prefix in&nbsp;<Math.Choice>
+		<Math type=html>L(<I>r&lt;/I>)</Math>
+		<Math type=latex>L(r)</Math></Math.choice> exists another
+		rule&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+		<Math type=latex>s</Math></Math.Choice> which is preferred
+		over&nbsp;<Math.Choice><Math type=html><I>r&lt;/I></Math>
+		<Math type=latex>r</Math></Math.Choice>.
 	    <Entry>Non well-orderedness.
 	    <Item>
 	      <P.silent><!--**-->
-		Two rules&nbsp;<Math>r_1</Math> and&nbsp;<Math>r_2</Math>
+		Two rules&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+		<Math type=latex>r_1</Math></Math.Choice>
+		and&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+		<Math type=latex>r_2</Math></Math.Choice>
 		are in conflict in the best-fit case, but neither is
-		<Math>r_1</Math> more specialized than&nbsp;<Math>r_2</Math>
+		<Math.Choice><Math type=html><I>r&lt;/I><SUB>1&lt;/SUB></Math>
+		<Math type=latex>r_1</Math></Math.Choice> more
+		specialized than&nbsp;<Math.Choice>
+		<Math type=html><I>r&lt;/I><SUB>2&lt;/SUB></Math>
+		<Math type=latex>r_2</Math></Math.Choice>
 		nor the other way round, and no rule or set of rules exists
-		that covers the intersection <Math>L(r_1) \cap L(r_2)</Math>.
+		that covers <Math.Choice>
+		<Math type=html>L(<I>r&lt;/I><SUB>1&lt;/SUB>) intersected
+		with L(<I>r&lt;/I><SUB>2&lt;/SUB>)</Math>
+		<Math type=latex>L(r_1) \cap L(r_2)</Math></Math.Choice>.
 	  </List>
     <SubSection id="section.scanner.params">
       <Title/Parameters to Scanner Generation/
@@ -424,11 +464,11 @@
 	  <Item>
 	    <P.silent><!--**-->
 	      The operation mode of the scanner is set to the lexical
-	      mode&nbsp;<Var type=meta>I</Var>.  Lexical modes are represented
-	      internally as integers.  Since modes are identified by variables,
-	      the class generation phase wraps a <<local &ellipsis; end>>
-	      around the class equating the mode variables to the assigned
-	      unique integers.
+	      mode&nbsp;<<I>>.  Lexical modes are represented internally as
+	      integers.  Since modes are identified by variables, the class
+	      generation phase wraps a <<local &ellipsis; end>> around the
+	      class equating the mode variables to the assigned unique
+	      integers.
 	  <Entry><<meth currentMode(??{I})>>
 	  <Item>
 	    <P.silent><!--**-->
@@ -438,16 +478,16 @@
 	  <Item>
 	    <P.silent><!--**-->
 	      This method is used to access the lexeme last matched.  It is
-	      returned as an atom in the variable&nbsp;<Var type=meta>A</Var>.
-	      Note that if the lexeme contains a <Name type=char>NUL</Name>
-	      character (ISO&nbsp;0) then only the text up to the first
+	      returned as an atom in the variable&nbsp;<<A>>.  Note that if
+	      the lexeme contains a <Name type=char>NUL</Name> character
+	      (ISO&nbsp;0) then only the text up to the first
 	      <Name type=char>NUL</Name> but excluding it is returned.
 	  <Entry><<meth getString(??{S})>>
 	  <Item>
 	    <P.silent><!--**-->
 	      This method returns the lexeme as a string in the
-	      variable&nbsp;<Var type=meta>S</Var>.  The restrictions
-	      concerning <<getAtom>> do not apply for <<getString>>.
+	      variable&nbsp;<<S>>.  The restrictions concerning <<getAtom>>
+	      do not apply for <<getString>>.
 	  <Entry><<meth getLength(??{I})>>
 	  <Item>
 	    <P.silent><!--**-->
@@ -457,52 +497,49 @@
 	  <Item>
 	    <P.silent><!--**-->
 	      This method may be used to append a token with token
-	      class&nbsp;<Var type=meta>X</Var> and value&nbsp;<Var type=meta
-	      >Y</Var> to the token stream.  (Actually, the token class may be
-	      an arbitrary &Oz; value, but atoms and the integers between 0
-	      and&nbsp;255 are the only representations understood by
-	      &Gump;-generated parsers.)
+	      class&nbsp;<<X>> and value&nbsp;<<Y>> to the token stream.
+	      (Actually, the token class may be an arbitrary &Oz; value, but
+	      atoms and the integers between 0 and&nbsp;255 are the only
+	      representations understood by &Gump;-generated parsers.)
 	  <Entry><<meth putToken1(?+{X})>>
 	  <Item>
 	    <P.silent><!--**-->
 	      This method may be used to append a token with token
-	      class&nbsp;<Var type=meta>X</Var> and value <<unit>> to the
-	      token stream.
+	      class&nbsp;<<X>> and value <<unit>> to the token stream.
 	  <Entry><<meth getToken(??{X} ?_{Y})>>
 	  <Item>
 	    <P.silent><!--**-->
 	      The next token is removed from the token stream and returned.
-	      The token class is returned in&nbsp;<Var type=meta>X</Var>
-	      and its value in&nbsp;<Var type=meta>Y</Var>.
+	      The token class is returned in&nbsp;<<X>> and its value
+	      in&nbsp;<<Y>>.
 	  <Entry><<meth input(??{C})>>
 	  <Item>
 	    <P.silent><!--**-->
 	      The next (unmatched) character is removed from the character
-	      stream and returned in&nbsp;<Var type=meta>C</Var>.
+	      stream and returned in&nbsp;<<C>>.
 	  <Entry><<meth unput(?+{C})>>
 	  <Item>
 	    <P.silent><!--**-->
-	      A character&nbsp;<Var type=meta>C</Var> is prepended to the
-	      input character stream.  This is next used by matching operations
-	      or returned by <<input>>.
+	      A character&nbsp;<<C>> is prepended to the input character
+	      stream.  This is next used by matching operations or returned
+	      by <<input>>.
 	  <Entry><<meth scanFile(?+{V})>>
 	  <Item>
 	    <P.silent><!--**-->
 	      This method causes the currently scanned buffer (if any) to be
 	      pushed on a stack of active buffers.  A new buffer is created
-	      from the file with name&nbsp;<Var type=meta>V</Var> and scanned.
+	      from the file with name&nbsp;<<V>> and scanned.
 	      If the file does not exist, the error exception
 	      <<gump(fileNotFound ?_{V})</Code> with the filename
-	      in&nbsp;<Var type=meta>V</Var> is raised; the default
-	      treatment is the invocation of a custom error printer.
+	      in&nbsp;<<V>> is raised; the default treatment is the invocation
+	      of a custom error printer.
 	  <Entry><<meth scanVirtualString(?+{V})>>
 	  <Item>
 	    <P.silent><!--**-->
-	      Like <<scanFile>>, but scans a virtual string&nbsp;<Var
-	      type=meta>V</Var>.  If&nbsp;<Var type=meta>V</Var> contains
-	      <Name type=char>NUL</Name> characters (ISO&nbsp;0) then the
-	      virtual string is only scanned up to and excluding the first
-	      <Name type=char>NUL</Name> character.
+	      Like <<scanFile>>, but scans a virtual string&nbsp;<<V>>.
+	      If&nbsp;<<V>> contains <Name type=char >NUL</Name> characters
+	      (ISO&nbsp;0) then the virtual string is only scanned up to and
+	      excluding the first <Name type=char>NUL</Name> character.
 	  <Entry><<meth setInteractive(?+{B})>>
 	  <Item>
 	    <P.silent><!--**-->
@@ -510,10 +547,9 @@
 	      interactive buffer only reads as many characters as are needed
 	      to be considered to decide about a match; a non-interactive
 	      buffer may read ahead.  This method allows the topmost buffer
-	      on the stack to be set to interactive (if <Var type=meta>B</Var>
-	      is <<true>>) or non-interactive (if <Var type=meta>B</Var> is
-	      <<false>>).  New buffers are always created as non-interactive
-	      buffers.
+	      on the stack to be set to interactive (if <<B>> is <<true>>) or
+	      non-interactive (if <<B>> is <<false>>).  New buffers are always
+	      created as non-interactive buffers.
 	  <Entry><<meth getInteractive(??{B})>>
 	  <Item>
 	    <P.silent><!--**-->
