@@ -30,7 +30,7 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 	 );
 
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-			   localPropStore.isInLocalPropagation()));
+			   localPropStore.isInLocalPropagation()););
 
   switch (getType()){
   case FDVariable:

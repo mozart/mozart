@@ -22,6 +22,18 @@
 #include <sys/types.h>
 #include <iostream.h>
 
+#ifdef WINDOWS
+
+// sleep
+#include <dos.h>
+
+// execlp, getpid
+#include <process.h>
+
+inline int fork() { return -1; };
+
+#endif
+
 #if defined(SUNOS_SPARC) || defined(ULTRIX_MIPS)
 extern "C" {
 
@@ -63,7 +75,11 @@ void osInitSignals();        // initialize signal handler
 void osSetAlarmTimer(int t, Bool interval=OK);
 void osBlockSignals(Bool check=NO); // check: check if no other signals are blocked
 void osUnblockSignals();
+#ifdef WINDOWS
+typedef void OsSigFun(int);
+#else
 typedef void OsSigFun(void);
+#endif
 OsSigFun *osSignal(int signo, OsSigFun *fun); /* Oz version of signal(2) */
 int osSystem(char *cmd);     /* Oz version of system(3) */
 
