@@ -347,7 +347,7 @@ public:
     if (gcExpVars) {
       expVars = gcFinishOVP(gcExpVars);
       gcExpVars = (OZ_Term) 0;
-      Assert(expVars != (OzValuePatch *) 0;);
+      Assert(expVars != (OzValuePatch *) 0);
     }
   }
 

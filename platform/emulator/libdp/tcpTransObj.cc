@@ -85,10 +85,11 @@ ErrorClass classifyError() {
 
 void TCPTransObj::init()
 {
+  Assert(bufferSize > 0);
   comObj = NULL;
-  bufferSize = ozconf.dpBufferSize;
-  fd=-1;
-  DebugCode(readBuffer = writeBuffer = (ByteBuffer *) -1);
+  fd = -1;
+  readBuffer->reinit();
+  writeBuffer->reinit();
 }
 
 void TCPTransObj::close() {
@@ -97,6 +98,10 @@ void TCPTransObj::close() {
 
 void TCPTransObj::close(Bool isrunning) {
   PD((TCP_INTERFACE,"TCPTransObj closing down"));
+
+//    fprintf(stdout, "close transObj %p (pid %d), fd=%d\n",
+//        this, osgetpid(), fd);
+//    fflush(stdout);
 
   if(fd!=-1) {
     OZ_unregisterRead(fd);  // Sometimes done twice!
@@ -112,11 +117,14 @@ void TCPTransObj::close(Bool isrunning) {
 void TCPTransObj::deliver() {
   // ComObj responsible for not doing this unnecesarily, OS-call
   // kost@ : what OS call? I see none..
-  Assert(fd!=-1);
+  Assert(fd != -1);
+  Assert(writeBuffer != (ByteBuffer *) -1);
   OZ_registerWriteHandler(fd,tcpTransObj_writeHandler,(void *) this);
 }
 
 void TCPTransObj::readyToReceive() {
+  Assert(fd != -1);
+  Assert(readBuffer != (ByteBuffer *) -1);
   OZ_registerReadHandler(fd,tcpTransObj_readHandler,(void *) this);
 }
 
@@ -393,40 +401,49 @@ TransObj *TCPTransController::newTransObj()
   TCPTransObj *tcpTransObj;
 
   if (f == NULL) {
-    tcpTransObj=new TCPTransObj();
+    tcpTransObj = new TCPTransObj();
   } else {
-    GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
+    GenCast(f, FreeListEntry*, tcpTransObj, TCPTransObj*);
   }
 
-  tcpTransObj->init();
+  tcpTransObj->bufferSize = ozconf.dpBufferSize;
   tcpTransObj->readBuffer =
     byteBufferManager->getByteBuffer(tcpTransObj->bufferSize,
                                      new BYTE[tcpTransObj->bufferSize]);
-  tcpTransObj->readBuffer->reinit();
   tcpTransObj->writeBuffer =
     byteBufferManager->getByteBuffer(tcpTransObj->bufferSize,
                                      new BYTE[tcpTransObj->bufferSize]);
-  tcpTransObj->writeBuffer->reinit();
+  tcpTransObj->init();
 
   ++wc;
+//    fprintf(stdout, "new transObj %p (pid %d), rb=%p, wb=%p\n",
+//        tcpTransObj, osgetpid(),
+//        tcpTransObj->readBuffer, tcpTransObj->writeBuffer);
+//    fflush(stdout);
   return (tcpTransObj);
 }
 
 void TCPTransController::deleteTransObj(TransObj* transObj)
 {
-  delete [] byteBufferManager->
-    deleteByteBuffer(((TCPTransObj *) transObj)->readBuffer);
-  delete [] byteBufferManager->
-    deleteByteBuffer(((TCPTransObj *) transObj)->writeBuffer);
+  TCPTransObj *tcpTransObj = (TCPTransObj *) transObj;
+  delete [] byteBufferManager->deleteByteBuffer(tcpTransObj->readBuffer);
+  delete [] byteBufferManager->deleteByteBuffer(tcpTransObj->writeBuffer);
+
+  DebugCode(tcpTransObj->comObj = (ComObj *) -1;);
+  DebugCode(tcpTransObj->bufferSize = -1;);
+  DebugCode(tcpTransObj->fd = -1;);
+  DebugCode(tcpTransObj->readBuffer = (ByteBuffer *) -1;);
+  DebugCode(tcpTransObj->writeBuffer = (ByteBuffer *) -1;);
 
   FreeListEntry *f;
   --wc;
-  GenCast((TCPTransObj *)transObj,TCPTransObj*,f,FreeListEntry*);
-  if(putOne(f))
-    return;
+  GenCast(tcpTransObj, TCPTransObj*, f, FreeListEntry*);
+  if (!putOne(f))
+    delete (TCPTransObj *) transObj;
 
-  delete (TCPTransObj *) transObj;
-  return;
+//    fprintf(stdout, "deleted transObj %p (pid %d)\n",
+//        tcpTransObj, osgetpid());
+//    fflush(stdout);
 }
 
 void TCPTransObj::setBufferSize(int bufSizeIn)
@@ -445,6 +462,10 @@ void TCPTransObj::setBufferSize(int bufSizeIn)
   writeBuffer =
     byteBufferManager->getByteBuffer(bufferSize, new BYTE[bufferSize]);
   writeBuffer->reinit();
+
+//    fprintf(stdout, "changed buffer size for transObj %p (pid %d)\n",
+//        this, osgetpid());
+//    fflush(stdout);
 }
 
 int TCPTransController::getInfo(int &size)
