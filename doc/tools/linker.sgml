@@ -1,5 +1,5 @@
 <Chapter id="Chapter.Linker" proglang=sh>
-  <Title/The Oz Linker: <Kbd/ozl//
+  <Title/The Oz Linker: <code/ozl//
 
     <P>
       Application development can be considerably eased by splitting
