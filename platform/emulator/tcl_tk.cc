@@ -542,24 +542,54 @@ public:
 
 };
 
-static  tcl_session_no  = -1;
-#define tcl_session_max 8
+#define TCL_SESSION_INC 8
+static  int tcl_session_free  = 0;
+static  int tcl_session_max   = 0;
 
-static TclSession * tcl_sessions[tcl_session_max];
+static TclSession **tcl_sessions=0;
+
+typedef TclSession *TclSessionPtr;
+
+void tcl_sessions_init() {
+
+  int new_tcl_session_max = tcl_session_max+TCL_SESSION_INC;
+  TclSession **new_tcl_sessions = new TclSessionPtr[new_tcl_session_max];
+
+  if (tcl_session_max>0) {
+    for (int i=0; i<tcl_session_max; i++)
+      new_tcl_sessions[i] = tcl_sessions[i];
+    delete tcl_sessions;
+  }
+
+  for (int i=tcl_session_max; i<new_tcl_session_max; i++)
+    new_tcl_sessions[i] = 0;
+
+  tcl_sessions=new_tcl_sessions;
+
+  tcl_session_max=new_tcl_session_max;
+}
+
+
 
 void gc_tcl_sessions() {
-  for (int i=tcl_session_max; i--; ) {
+  for (int i=tcl_session_free; i--; ) {
     tcl_sessions[i]->gc();
   }
 }
 
 int get_next_tcl_session() {
-  tcl_session_no++;
-  if (tcl_session_no < tcl_session_max)
-    return tcl_session_no;
+  if (tcl_session_free < tcl_session_max) {
+    Assert(!tcl_sessions[tcl_session_free]);
+    return tcl_session_free++;
+  }
 
-  warning("Number of tcl sessions limited to 8\n. Sorry\n");
-  osExit(1);
+  for (int i=0; i<tcl_session_max; i++) {
+    if (!tcl_sessions[i]) return i;
+  }
+
+  tcl_sessions_init();
+  Assert(!tcl_sessions[tcl_session_free]);
+  return tcl_session_free++;
 }
 
 OZ_Return TclSession::write() {
@@ -1107,25 +1137,36 @@ OZ_Return TclSession::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 }
 
 
+#define GET_TCL_SESSION						\
+TclSession *ts;							\
+{								\
+  OZ_Term sid=deref(OZ_args[0]);				\
+  if (!isAnyVar(deref(tail(sid)))) {				\
+    return oz_raise(E_SYSTEM,E_TK,"sessionAlreadyClosed",0);	\
+  }								\
+  ts = tcl_sessions[smallIntValue(head(sid))];			\
+}
+
 
 OZ_C_proc_begin(BIinitTclSession, 4) {
   int session_no = get_next_tcl_session();
   int fd = smallIntValue(deref(OZ_args[0]));
   tcl_sessions[session_no] = new TclSession(fd, deref(OZ_args[1]), OZ_args[2]);
-  return OZ_unify(OZ_args[3],newSmallInt(session_no));
+  OZ_Term sid = cons(newSmallInt(session_no),oz_newVariable());
+  return OZ_unify(OZ_args[3],sid);
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcloseTclSession, 1) {
-  TclSession ** ts = &tcl_sessions[smallIntValue(deref(OZ_args[0]))];
-  delete *ts;
-  *ts = (TclSession *) NULL;
+  OZ_Term sid=deref(OZ_args[0]);
+
+  if (isAnyVar(deref(tail(sid)))) {
+    TclSession ** ts = &tcl_sessions[smallIntValue(head(sid))];
+    delete *ts;
+    *ts = (TclSession *) NULL;
+    OZ_unify(tail(sid),NameUnit);
+  }
   return PROCEED;
 } OZ_C_proc_end
-
-
-#define GET_TCL_SESSION \
-  TclSession *ts = tcl_sessions[smallIntValue(deref(OZ_args[0]))];
-
 
 
 OZ_C_proc_begin(BItclWrite, 2) {
@@ -1571,6 +1612,7 @@ static
 BIspec tclTkSpec[] = {
   {"getTclNames",        3, BIgetTclNames,        0},
   {"initTclSession",     4, BIinitTclSession,     0},
+  {"closeTclSession",    1, BIcloseTclSession,    0},
   {"Tk.send",            2, BItclWrite,           0},
   {"tclWriteReturn",     4, BItclWriteReturn,     0},
   {"tclWriteReturnMess", 5, BItclWriteReturnMess, 0},
@@ -1620,7 +1662,5 @@ void BIinitTclTk() {
   NameTclSlaveEntry = OZ_newName(); OZ_protect(&NameTclSlaveEntry);
   NameTclClosed     = OZ_newName(); OZ_protect(&NameTclClosed);
 
-  for (int i=tcl_session_max; i--; )
-    tcl_sessions[i] = (TclSession *) 0;
-  
+  tcl_sessions_init();
 }
