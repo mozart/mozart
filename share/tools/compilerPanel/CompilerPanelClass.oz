@@ -716,21 +716,16 @@ in
 		     CompilerPanel, ShowInfo(VS)
 		  [] info(VS Coord) then
 		     CompilerPanel, ShowInfo(VS Coord)
-		  [] message(Record Coord) then VSCell State in
-		     case {Label Record} of error then
+		  [] message(Record Coord) then VS State in
+		     case Record of error(...) then
 			{self.Book toTop(self.Messages)}
 		     else skip
 		     end
-		     VSCell = {NewCell ""}
-		     {Error.msg
-		      proc {$ X}
-			 {Assign VSCell {Access VSCell}#{Error.formatLine X}}
-		      end
-		      Record}
+		     VS = {Error.messageToVirtualString Record}
 		     State = case {Label Record} of error then blocked
 			     else runnable
 			     end
-		     CompilerPanel, ShowInfo({Access VSCell} Coord State)
+		     CompilerPanel, ShowInfo(VS Coord State)
 		  [] displaySource(Title _ VS) then
 		     {New SourceWindow init(self.TopLevel Title VS) _}
 		  [] attention() then skip

@@ -30,10 +30,6 @@ import
 
    Application(exit)
 
-   Error(formatGeneric
-	 format
-	 dispatch)
-
    ErrorRegistry(put)
 
    Open(file)

@@ -2,9 +2,6 @@
 %%% Authors:
 %%%   Christian Schulte (schulte@dfki.de)
 %%%
-%%% Contributors:
-%%%   Martin Mueller <mmueller@ps.uni-sb.de>
-%%% 
 %%% Copyright:
 %%%   Christian Schulte, 1997
 %%%
@@ -23,26 +20,22 @@
 %%% WARRANTIES.
 %%%
 
-{ErrorRegistry.put
- 
- explorer
-
- fun {$ Exc}
-    E = {Error.dispatch Exc}
+{ErrorRegistry.put explorer
+ fun {$ E}
     T = 'error in Oz Explorer'
  in
     case E
     of explorer(Kind OM) then
-       {Error.format T
-	case Kind
-	of actionAdd then 'Illegal action addition'
-	[] actionDel then 'Illegal action deletion'
-	[] option    then 'Illegal option specification'
-	end
-	[hint(l:'Message'
-	      m:oz(OM))]
-	Exc}
+       error(kind: T
+	     msg: case Kind
+		  of actionAdd then 'Illegal action addition'
+		  [] actionDel then 'Illegal action deletion'
+		  [] option    then 'Illegal option specification'
+		  end
+	     items: [hint(l:'Message'
+			  m:oz(OM))])
     else
-       {Error.formatGeneric T Exc}
+       error(kind: T
+	     items: [line(oz(E))])
     end
  end}

@@ -23,7 +23,7 @@ functor
 import
    Property(get condGet)
    System(printInfo)
-   Error(formatLine msg)
+   Error(messageToVirtualString)
    OS(getEnv stat tmpnam)
    Open(socket text file)
    Listener('class')
@@ -190,11 +190,8 @@ define
 		     CompilerInterfaceEmacs, ToTop()
 		  else skip
 		  end
-		  {Error.msg
-		   proc {$ X}
-		      CompilerInterfaceEmacs, Write({Error.formatLine X})
-		   end
-		   Record}
+		  CompilerInterfaceEmacs,
+		  Write({Error.messageToVirtualString Record})
 	       [] displaySource(_ Ext VS) then Name File in
 		  Name = {OS.tmpnam}#Ext
 		  File = {New Open.file

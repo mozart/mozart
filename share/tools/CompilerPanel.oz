@@ -22,7 +22,7 @@
 functor
 import
    System(show)
-   Error(formatLine msg)
+   Error(messageToVirtualString)
    Open(file)
    Pickle(load save)
    Tk
@@ -30,20 +30,15 @@ import
    Listener('class')
    Browser(browse)
    Emacs(condSend)
-   
+export
+   'class': CompilerPanel
 require
    DefaultURL(pickleExt: PickleExt
 	      homeUrl)
    URL(make resolve toAtom)
-
 prepare
    BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
 			    {URL.make 'images/'}}}
-   
-export
-   'class': CompilerPanel
-   
 define
    \insert 'compilerPanel/CompilerPanelClass.oz'
-   
 end

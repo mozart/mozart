@@ -23,23 +23,18 @@
 %%% WARRANTIES.
 %%%
 
-{ErrorRegistry.put
- 
- panel
-
- fun {$ Exc}
-    E = {Error.dispatch Exc}
+{ErrorRegistry.put panel
+ fun {$ E}
     T = 'error in Oz Panel'
  in
     case E
     of panel(option OM) then
-       {Error.format T
-	'Illegal option specification'
-	[hint(l:'Message'
-	      m:oz(OM))]
-	Exc}
+       error(kind: T
+	     msg: 'Illegal option specification'
+	     items: [hint(l:'Message'
+			  m:oz(OM))])
     else
-       {Error.formatGeneric T Exc}
+       error(kind: T
+	     items: [line(oz(E))])
     end
  end}
-   
