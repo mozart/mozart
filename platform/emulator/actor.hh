@@ -13,7 +13,7 @@
 #ifndef __ACTORH
 #define __ACTORH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

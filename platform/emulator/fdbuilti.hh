@@ -12,7 +12,7 @@
 #ifndef __FDBUILTIN_H__
 #define __FDBUILTIN_H__
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

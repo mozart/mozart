@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#if defined(__GNUC__) && !defined(NOPRAGMA)
+#if defined(INTERFACE)
 #pragma implementation "trail.hh"
 #endif
 

@@ -13,7 +13,7 @@
 #ifndef __SOLVEH
 #define __SOLVEH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

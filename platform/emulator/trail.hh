@@ -16,7 +16,7 @@
 #ifndef __TRAILH
 #define __TRAILH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

@@ -12,7 +12,7 @@
 #ifndef __THRSPOOLH
 #define __THRSPOOLH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

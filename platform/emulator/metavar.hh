@@ -2,7 +2,7 @@
 #define __metavar__hh__
 
 
-#if defined(__GNUC__)
+#if defined(INTERFACE)
 #pragma interface
 #endif
 

@@ -12,7 +12,7 @@
 #ifndef __metavar_icc__
 #define __metavar_icc__
 
-#if defined(__GNUC__) && !defined(OUTLINE)
+#if defined(INTERFACE) && !defined(OUTLINE)
 #pragma interface
 #endif
 

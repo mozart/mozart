@@ -12,7 +12,7 @@
 #ifndef __AMH
 #define __AMH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

@@ -19,7 +19,7 @@
 #ifndef __GENVAR__H__
 #define __GENVAR__H__
 
-#if defined(__GNUC__)
+#if defined(INTERFACE)
 #pragma interface
 #endif
 

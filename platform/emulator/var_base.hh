@@ -1,7 +1,7 @@
 #ifndef __VARIABLEH
 #define __VARIABLEH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 
