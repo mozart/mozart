@@ -356,7 +356,9 @@ in
 	    %%
 	    %% scrollbars;
 	    SelfBWO = self
-	    create MyHandler from Object.base
+	    MyHandler=
+	    {New
+	     class from Object.base
 	       meth m(...) = Mess
 		  case Mess of m("moveto" F) then
 		      %% "moveto Fraction" - just feed it further;
@@ -411,8 +413,9 @@ in
 		  else {BrowserError 'Unknown type of scrollbar operation!'}
 		  end
 	       end
-	    end
-
+	     end
+	     noop}
+	    
 	    %%
 	    VS = {New Tk.scrollbar tkInit(parent: W
 					  relief: IFrameRelief

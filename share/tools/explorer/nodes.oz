@@ -175,7 +175,9 @@ local
 
 in
 
-   create Sentinel
+   Sentinel=
+   {New
+    class
       from
 	 BaseObject
 	 LayoutNodes.sentinel
@@ -185,7 +187,8 @@ in
 	 StatNodes.sentinel
 	 ActionNodes.sentinel
 	 TkNodes.sentinel
-   end
+    end
+    noop}
       
    fun {MakeRoot Manager Query Order}
       class Features
