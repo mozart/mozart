@@ -1,5 +1,5 @@
 ### NOTES:
-###     configure should really look for oz.h and substitute the
+###     configure should really look for mozart.h and substitute the
 ###     appropriate dependency
 
 @SET_MAKE@
@@ -51,7 +51,7 @@ subdirs:
           fi; \
         done
 
-GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/oz.h
+GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
         $(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
 

@@ -23,7 +23,7 @@
 
 #include <FlexLexer.h>
 
-#include "oz.h"
+#include "mozart.h"
 
 #define YY_BUF_SIZE 16384
 #define YY_END_OF_BUFFER_CHAR 0

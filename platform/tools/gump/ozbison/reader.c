@@ -29,7 +29,7 @@ The entry point is reader().  */
 #include "symtab.h"
 #include "gram.h"
 
-#include <oz.h>
+#include <mozart.h>
 
 static void read_tokens(OZ_Term);
 static void read_assocs(OZ_Term);
