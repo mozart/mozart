@@ -22,6 +22,10 @@
 
 const int ALLSEQMODE=3;
 
+enum TFlags {
+  T_Suspended=0x0001
+};
+
 class Thread : public ConstTerm
 {
 friend void engine();
@@ -30,7 +34,8 @@ private:
   int priority;
   Board *home;
   Board *notificationBoard; // for search capabilities;
-  int compMode;
+  short compMode;
+  short flags;
   TaskStack taskStack;
 
 public:
@@ -41,7 +46,7 @@ public:
   void gcThreadRecurse();
 
   Thread(int size);
-  void init(int prio,Board *home);
+  void init(int prio,Board *home,int compMode);
   int getPriority();
   // isSolve() replace by hasNotificationBoard()
   // kost@ : 'notificationBoard' is not used actually;
@@ -55,6 +60,9 @@ public:
     taskStack.pushDebug(b, d);
   }
 
+  void setSuspended() { flags |= T_Suspended; }
+  void unsetSuspended() { flags &= ~T_Suspended; }
+  int  isSuspended() { return (flags & T_Suspended); }
   void pushCall(Board *b, Chunk *pred, RefsArray  x, int n)
   {
 #ifndef NEWCOUNTER
