@@ -1614,6 +1614,7 @@ public:
   TaggedRef getArityList();
   int getWidth ();
 
+  Object *gcObjectInline();
   Object *gcObject();
 
   GName *globalize();

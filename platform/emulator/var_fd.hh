@@ -61,8 +61,6 @@ public:
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
-  OzFDVariable(DummyClass *) : OzVariable(OZ_VAR_FD,(DummyClass*)0) {}
-
   OzFDVariable(Board *bb) : OzVariable(OZ_VAR_FD,bb) {
     ozstat.fdvarsCreated.incf();
     finiteDomain.initFull();
@@ -70,7 +68,7 @@ public:
   }
 
   // methods relevant for term copying (gc and solve)
-  void gc(OzFDVariable *); 
+  void gc(void); 
   inline void dispose(void);
   
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
