@@ -30,13 +30,13 @@
 
 #define HF_BODY(MSG_SHORT,MSG_LONG)                                           \
   if (allowTopLevelFailureMsg) {                                              \
-    if (ozconf.errorVerbosity > 0) {                                         \
+    if (ozconf.errorVerbosity > 0) {                                          \
       toplevelErrorHeader();                                                  \
       {MSG_SHORT;}                                                            \
-      if (ozconf.errorVerbosity > 1) {                                       \
+      if (ozconf.errorVerbosity > 1) {                                        \
         message("\n");                                                        \
         {MSG_LONG;}                                                           \
-	e->currentThread->printDebug(PC,NO,10000);		      \
+	e->currentThread->printDebug(PC);		      		      \
       }                                                                       \
       errorTrailer();                                                         \
     } else {                                                                  \
@@ -96,7 +96,7 @@ void failureNomsg(AM *e, ProgramCounter PC) { HF_BODY(,); }
 
 
 
-#define NOFLATGUARD()   (!inShallowGuard)
+#define NOFLATGUARD()   (shallowCP==NULL)
 
 #define SHALLOWFAIL if (!NOFLATGUARD()) { goto LBLshallowFail; }
 
@@ -189,17 +189,12 @@ ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
 
 Bool Board::isFailureInBody ()
 {
-  Assert(isWaiting () == OK);
-  if (isWaitTop () == OK) {
+  Assert(isWaiting());
+  if (isWaitTop()) {
     return (NO);
-  } else {
-#ifdef THREADED
-    Opcode op = CodeArea::adressToOpcode (CodeArea::getOP (body.getPC ()));
-#else
-    Opcode op = CodeArea::getOP (body.getPC ());
-#endif
-    return (op == FAILURE);
-  }
+  } 
+  Opcode op = CodeArea::adressToOpcode(CodeArea::getOP(body.getPC()));
+  return (op == FAILURE);
 }
 
 // -----------------------------------------------------------------------
@@ -307,7 +302,7 @@ Bool AM::hookCheckNeeded()
  */
 
 #ifdef THREADED
-#define Case(INSTR)   asmLbl(INSTR); INSTR##LBL
+#define Case(INSTR) INSTR##LBL : asmLbl(INSTR); 
 
 #ifdef LINUX
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
@@ -323,7 +318,7 @@ Bool AM::hookCheckNeeded()
 
 #else /* THREADED */
 
-#define Case(INSTR)   case INSTR
+#define Case(INSTR)   case INSTR :
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
 #endif
@@ -470,7 +465,7 @@ void AM::handleToplevelBlocking()
   message("\n");
   message("(Hint: don't forget to use task ... end)\n");
   message("\n");
-  currentThread->printDebug(NOCODE,NO,10000);
+  currentThread->printDebug(NOCODE);
   message("******************************************\n");
   rootThread=newThread(currentThread->getPriority(),rootBoard);
   checkToplevel();
@@ -479,12 +474,12 @@ void AM::handleToplevelBlocking()
 
 #define CHECKSEQ \
 if (e->currentThread->compMode == ALLSEQMODE) { \
-  if (e->currentThread==e->rootThread) { \
-    e->handleToplevelBlocking(); \
-  } \
-  e->currentThread=0; \
-  goto LBLstart; \
-} \
+  if (e->currentThread==e->rootThread) {        \
+    e->handleToplevelBlocking();                \
+  }                                             \
+  e->currentThread=0;                           \
+  goto LBLstart;                                \
+}                                               \
 goto LBLpopTask;
 
 inline
@@ -983,8 +978,8 @@ loop:
 #define NoReg(Var) { void *p = &Var; }
 
 
-void engine() {
-  
+void engine() 
+{  
 // ------------------------------------------------------------------------
 // *** Global Variables
 // ------------------------------------------------------------------------
@@ -1000,11 +995,10 @@ void engine() {
 
   int XSize = 0; NoReg(XSize);
 
-  Bool isTailCall = NO; NoReg(isTailCall);
-  Suspension* &currentTaskSusp =
-    FDcurrentTaskSusp; NoReg(currentTaskSusp);
-  AWActor *CAA = NULL;
-  Board *tmpBB = NULL; NoReg(tmpBB);
+  Bool isTailCall              = NO;                NoReg(isTailCall);
+  Suspension* &currentTaskSusp = FDcurrentTaskSusp; NoReg(currentTaskSusp);
+  AWActor *CAA                 = NULL;
+  Board *tmpBB                 = NULL;              NoReg(tmpBB);
 
 # define CBB (e->currentBoard)
 # define CPP (e->currentThread->getPriority())
@@ -1014,7 +1008,6 @@ void engine() {
 
   /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
-  Bool inShallowGuard = NO;
 
   /* which kind of solve combinator to choose */
   Bool isEatWaits    = NO;
@@ -1502,14 +1495,14 @@ void engine() {
 // CLASS: (Fast-) Call/Execute Inline Funs/Rels
 // ------------------------------------------------------------------------
 
-  Case(FASTCALL):
+  Case(FASTCALL)
     {
       CallPushCont(PC+2);
       goto LBLFastTailCall;
     }
 
 
-  Case(FASTTAILCALL):
+  Case(FASTTAILCALL)
   LBLFastTailCall:
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
@@ -1527,7 +1520,7 @@ void engine() {
       }
     }
 
-  Case(CALLBUILTIN):
+  Case(CALLBUILTIN)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       OZ_CFun fun = entry->getFun();
@@ -1562,7 +1555,7 @@ void engine() {
     }
 
 
-  Case(INLINEREL1):
+  Case(INLINEREL1)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
@@ -1587,7 +1580,7 @@ void engine() {
       }
     }
 
-  Case(INLINEREL2):
+  Case(INLINEREL2)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
@@ -1615,7 +1608,7 @@ void engine() {
       }
     }
 
-  Case(INLINEFUN1):
+  Case(INLINEFUN1)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
@@ -1645,13 +1638,13 @@ void engine() {
       }
     }
 
-  Case(INLINEFUN2):
+  Case(INLINEFUN2)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
       
-      // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
+      // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
 	DISPATCH(6);
@@ -1679,7 +1672,7 @@ void engine() {
     }
 
 
-  Case(INLINEFUN3):
+  Case(INLINEFUN3)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun3 fun = (InlineFun3)entry->getInlineFun();
@@ -1713,7 +1706,7 @@ void engine() {
       }
     }
 
-  Case(INLINEEQEQ):
+  Case(INLINEEQEQ)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
@@ -1741,15 +1734,14 @@ void engine() {
 // CLASS: Shallow guards stuff
 // ------------------------------------------------------------------------
 
-  Case(SHALLOWGUARD):
+  Case(SHALLOWGUARD)
     {
       shallowCP = PC;
-      inShallowGuard = OK;
       e->trail.pushMark();
       DISPATCH(3);
     }
 
-  Case(SHALLOWTEST1):
+  Case(SHALLOWTEST1)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
@@ -1770,7 +1762,7 @@ void engine() {
       }
     }
 
-  Case(SHALLOWTEST2):
+  Case(SHALLOWTEST2)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
@@ -1796,29 +1788,19 @@ void engine() {
       }
     }
 
-  Case(SHALLOWTHEN):
+  Case(SHALLOWTHEN)
     {
       if (e->trail.isEmptyChunk()) {
-	inShallowGuard = NO;
 	shallowCP = NULL;
 	e->trail.popMark();
 	DISPATCH(1);
       }
 
-/* RS:  OUTLINE */
-      int numbOfCons = e->trail.chunkSize();
-      Assert(numbOfCons>0);
-
-      if (ozconf.showSuspension) {
-	printSuspension(PC);
-      }
-
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp = e->mkSuspension(CBB,CPP,
 					 shallowCP,Y,G,X,argsToSave);
-      inShallowGuard = NO;
       shallowCP = NULL;
-      e->reduceTrailOnShallow(numbOfCons);
+      e->reduceTrailOnShallow();
       e->suspendOnVarList(susp);
       CHECKSEQ;
     }
@@ -1828,7 +1810,7 @@ void engine() {
 // CLASS: Environment
 // -------------------------------------------------------------------------
 
-  Case(ALLOCATEL):
+  Case(ALLOCATEL)
     {
       int posInt = getPosIntArg(PC+1);
       Assert(posInt > 0);
@@ -1836,18 +1818,18 @@ void engine() {
       DISPATCH(2);
     }
 
-  Case(ALLOCATEL1):  { Y =  allocateY(1); DISPATCH(1); }
-  Case(ALLOCATEL2):  { Y =  allocateY(2); DISPATCH(1); }
-  Case(ALLOCATEL3):  { Y =  allocateY(3); DISPATCH(1); }
-  Case(ALLOCATEL4):  { Y =  allocateY(4); DISPATCH(1); }
-  Case(ALLOCATEL5):  { Y =  allocateY(5); DISPATCH(1); }
-  Case(ALLOCATEL6):  { Y =  allocateY(6); DISPATCH(1); }
-  Case(ALLOCATEL7):  { Y =  allocateY(7); DISPATCH(1); }
-  Case(ALLOCATEL8):  { Y =  allocateY(8); DISPATCH(1); }
-  Case(ALLOCATEL9):  { Y =  allocateY(9); DISPATCH(1); }
-  Case(ALLOCATEL10): { Y = allocateY(10); DISPATCH(1); }
+  Case(ALLOCATEL1)  { Y =  allocateY(1); DISPATCH(1); }
+  Case(ALLOCATEL2)  { Y =  allocateY(2); DISPATCH(1); }
+  Case(ALLOCATEL3)  { Y =  allocateY(3); DISPATCH(1); }
+  Case(ALLOCATEL4)  { Y =  allocateY(4); DISPATCH(1); }
+  Case(ALLOCATEL5)  { Y =  allocateY(5); DISPATCH(1); }
+  Case(ALLOCATEL6)  { Y =  allocateY(6); DISPATCH(1); }
+  Case(ALLOCATEL7)  { Y =  allocateY(7); DISPATCH(1); }
+  Case(ALLOCATEL8)  { Y =  allocateY(8); DISPATCH(1); }
+  Case(ALLOCATEL9)  { Y =  allocateY(9); DISPATCH(1); }
+  Case(ALLOCATEL10) { Y = allocateY(10); DISPATCH(1); }
 
-  Case(DEALLOCATEL):
+  Case(DEALLOCATEL)
     {
       Assert(!isFreedRefsArray(Y));
       if (!isDirtyRefsArray(Y)) {
@@ -1860,22 +1842,22 @@ void engine() {
 // CLASS: CONTROL: FAIL/SUCCESS/RETURN/SAVECONT
 // -------------------------------------------------------------------------
 
-  Case(FAILURE):
+  Case(FAILURE)
     {
       HF_FAIL(, message("Executing 'false'\n"));
     }
 
 
-  Case(SUCCEED):
+  Case(SUCCEED)
     DISPATCH(1);
 
-  Case(SAVECONT):
+  Case(SAVECONT)
     {
       e->pushTask(CBB,getLabelArg(PC+1),Y,G);
       DISPATCH(2);
     }
 
-  Case(RETURN):
+  Case(RETURN)
   {
 #ifdef NEWCOUNTER
     goto LBLpopTask;
@@ -1889,7 +1871,7 @@ void engine() {
 // CLASS: Definition
 // ------------------------------------------------------------------------
 
-  Case(DEFINITION):
+  Case(DEFINITION)
     {
       Reg reg                     = getRegArg(PC+1);
       ProgramCounter nxt          = getLabelArg(PC+2);
@@ -1921,15 +1903,15 @@ void engine() {
 // CLASS: CONTROL: FENCE/CALL/EXECUTE/SWITCH/BRANCH
 // -------------------------------------------------------------------------
   
-  Case(BRANCH):
+  Case(BRANCH)
     JUMP( getLabelArg(PC+1) );
 
   
   /* weakDet(X) woken up, WHENEVER something happens to X 
    *            (important if X is a FD var) */
-  Case(WEAKDETX): ONREG(WeakDet,X);
-  Case(WEAKDETY): ONREG(WeakDet,Y);
-  Case(WEAKDETG): ONREG(WeakDet,G);
+  Case(WEAKDETX) ONREG(WeakDet,X);
+  Case(WEAKDETY) ONREG(WeakDet,Y);
+  Case(WEAKDETG) ONREG(WeakDet,G);
   WeakDet:
   {
     TaggedRef term = RegAccess(HelpReg,getRegArg(PC+1));
@@ -1949,15 +1931,9 @@ void engine() {
 
 
   /* det(X) wait until X will be ground */
-  //#define DETBUGGY
-#ifdef DETBUGGY
-  Case(DETX): ONREG(WeakDet,X);
-  Case(DETY): ONREG(WeakDet,Y);
-  Case(DETG): ONREG(WeakDet,G);
-#else
-  Case(DETX): ONREG(Det,X);
-  Case(DETY): ONREG(Det,Y);
-  Case(DETG): ONREG(Det,G);
+  Case(DETX) ONREG(Det,X);
+  Case(DETY) ONREG(Det,Y);
+  Case(DETG) ONREG(Det,G);
   Det:
   {
     TaggedRef term = RegAccess(HelpReg,getRegArg(PC+1));
@@ -1966,10 +1942,8 @@ void engine() {
     if (!isAnyVar(tag)) {
       DISPATCH(3);
     }
+    /* INCFPC(3): dont do it */
     int argsToSave = getPosIntArg(PC+2);
-    /* INCFPC(3); // suspend on next instruction!
-     * mm: bug fixed: do not suspend on next instruktion (var - var binding)
-     */
     Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
     if (isCVar(tag)) {
       tagged2CVar(term)->addDetSusp(susp);
@@ -1978,15 +1952,14 @@ void engine() {
     }
     CHECKSEQ;
   }
-#endif
 
-  Case(TAILSENDMSGX): isTailCall = OK; ONREG(SendMethod,X);
-  Case(TAILSENDMSGY): isTailCall = OK; ONREG(SendMethod,Y);
-  Case(TAILSENDMSGG): isTailCall = OK; ONREG(SendMethod,G);
+  Case(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
+  Case(TAILSENDMSGY) isTailCall = OK; ONREG(SendMethod,Y);
+  Case(TAILSENDMSGG) isTailCall = OK; ONREG(SendMethod,G);
 
-  Case(SENDMSGX): isTailCall = NO; ONREG(SendMethod,X);
-  Case(SENDMSGY): isTailCall = NO; ONREG(SendMethod,Y);
-  Case(SENDMSGG): isTailCall = NO; ONREG(SendMethod,G);
+  Case(SENDMSGX) isTailCall = NO; ONREG(SendMethod,X);
+  Case(SENDMSGY) isTailCall = NO; ONREG(SendMethod,Y);
+  Case(SENDMSGG) isTailCall = NO; ONREG(SendMethod,G);
 
  SendMethod:
   {
@@ -2035,13 +2008,13 @@ void engine() {
   }
 
 
-  Case(TAILAPPLMETHX): isTailCall = OK; ONREG(ApplyMethod,X);
-  Case(TAILAPPLMETHY): isTailCall = OK; ONREG(ApplyMethod,Y);
-  Case(TAILAPPLMETHG): isTailCall = OK; ONREG(ApplyMethod,G);
+  Case(TAILAPPLMETHX) isTailCall = OK; ONREG(ApplyMethod,X);
+  Case(TAILAPPLMETHY) isTailCall = OK; ONREG(ApplyMethod,Y);
+  Case(TAILAPPLMETHG) isTailCall = OK; ONREG(ApplyMethod,G);
 
-  Case(APPLMETHX): isTailCall = NO; ONREG(ApplyMethod,X);
-  Case(APPLMETHY): isTailCall = NO; ONREG(ApplyMethod,Y);
-  Case(APPLMETHG): isTailCall = NO; ONREG(ApplyMethod,G);
+  Case(APPLMETHX) isTailCall = NO; ONREG(ApplyMethod,X);
+  Case(APPLMETHY) isTailCall = NO; ONREG(ApplyMethod,Y);
+  Case(APPLMETHG) isTailCall = NO; ONREG(ApplyMethod,G);
 
  ApplyMethod:
   {
@@ -2084,13 +2057,13 @@ void engine() {
   }
 
 
-  Case(CALLX): isTailCall = NO; ONREG(Call,X);
-  Case(CALLY): isTailCall = NO; ONREG(Call,Y);
-  Case(CALLG): isTailCall = NO; ONREG(Call,G);
+  Case(CALLX) isTailCall = NO; ONREG(Call,X);
+  Case(CALLY) isTailCall = NO; ONREG(Call,Y);
+  Case(CALLG) isTailCall = NO; ONREG(Call,G);
 
-  Case(TAILCALLX): isTailCall = OK; ONREG(Call,X);
-  Case(TAILCALLY): isTailCall = OK; ONREG(Call,Y);
-  Case(TAILCALLG): isTailCall = OK; ONREG(Call,G);
+  Case(TAILCALLX) isTailCall = OK; ONREG(Call,X);
+  Case(TAILCALLY) isTailCall = OK; ONREG(Call,Y);
+  Case(TAILCALLG) isTailCall = OK; ONREG(Call,G);
 
  Call:
    {
@@ -2553,7 +2526,7 @@ void engine() {
 // --------------------------------------------------------------------------
 
   
-  Case(WAIT):
+  Case(WAIT)
     {
       Assert(CBB->isWait() && !CBB->isCommitted());
 
@@ -2585,7 +2558,7 @@ void engine() {
     }
 
 
-  Case(WAITTOP):
+  Case(WAITTOP)
     {
       /* top commit */
 #ifdef NEWCOUNTER
@@ -2673,7 +2646,7 @@ void engine() {
       goto LBLsuspendBoardWaitTop;
     }
 
-  Case(ASK):
+  Case(ASK)
     {
 #ifdef NEWCOUNTER
       CBB->decSuspCount();
@@ -2689,10 +2662,6 @@ void engine() {
 	DISPATCH(1);
       }
 
-      if (ozconf.showSuspension) {
-	printSuspension(PC);
-      }
-      
     LBLsuspendBoard:
 
       CBB->setBody(PC+1, Y, G,NULL,0);
@@ -2715,7 +2684,6 @@ void engine() {
 	goto LBLemulate; // no thread switch allowed here (CAA)
       }
 
-      // suspend a actor
       DebugTrace(trace("suspend actor",CBB,CAA));
 
       goto LBLpopTask;
@@ -2726,7 +2694,7 @@ void engine() {
 // CLASS: NODES: CREATE/END
 // -------------------------------------------------------------------------
 
-  Case(CREATECOND):
+  Case(CREATECOND)
     {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
@@ -2737,7 +2705,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  Case(CREATEOR):
+  Case(CREATEOR)
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
@@ -2745,7 +2713,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  Case(CREATEENUMOR):
+  Case(CREATEENUMOR)
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
@@ -2759,7 +2727,7 @@ void engine() {
       DISPATCH(3);
     }
 
-  Case(WAITCLAUSE):
+  Case(WAITCLAUSE)
     {
       // create a node
       e->setCurrent(new Board(CAA,Bo_Wait),OK);
@@ -2770,7 +2738,7 @@ void engine() {
       DISPATCH(1);
     }
 
-  Case(ASKCLAUSE):
+  Case(ASKCLAUSE)
     {
       e->setCurrent(new Board(CAA,Bo_Ask),OK);
       CBB->setInstalled();
@@ -2781,10 +2749,10 @@ void engine() {
     }
 
 
-  Case(ELSECLAUSE):
+  Case(ELSECLAUSE)
     DISPATCH(1);
 
-  Case(THREAD):
+  Case(THREAD)
     {
       markDirtyRefsArray(Y);
       ProgramCounter newPC = PC+2;
@@ -2807,11 +2775,11 @@ void engine() {
     }
 
 
-  Case(NEXTCLAUSE):
+  Case(NEXTCLAUSE)
       CAA->nextClause(getLabelArg(PC+1));
       DISPATCH(2);
 
-  Case(LASTCLAUSE):
+  Case(LASTCLAUSE)
       CAA->lastClause();
       DISPATCH(1);
 
@@ -2819,12 +2787,12 @@ void engine() {
 // CLASS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
 
-  Case(ERROR):
+  Case(ERROR)
       error("Emulate: ERROR command executed");
       goto LBLerror;
 
 
-  Case(DEBUGINFO):
+  Case(DEBUGINFO)
     {
       /*
       TaggedRef filename = getLiteralArg(PC+1);
@@ -2845,7 +2813,7 @@ void engine() {
       DISPATCH(6);
     }
 
-  Case(SWITCHCOMPMODE):
+  Case(SWITCHCOMPMODE)
     /* brute force: don't know exactly, when to mark Y as dirty (RS) */
     markDirtyRefsArray(Y);
     e->currentThread->switchCompMode();
@@ -2861,24 +2829,24 @@ void engine() {
     }
     DISPATCH(1);
 
-  Case(TESTLABEL1):
-  Case(TESTLABEL2):
-  Case(TESTLABEL3):
-  Case(TESTLABEL4):
+  Case(TESTLABEL1)
+  Case(TESTLABEL2)
+  Case(TESTLABEL3)
+  Case(TESTLABEL4)
 
-  Case(TEST1):
-  Case(TEST2):
-  Case(TEST3):
-  Case(TEST4):
+  Case(TEST1)
+  Case(TEST2)
+  Case(TEST3)
+  Case(TEST4)
 
-  Case(INLINEDOT):
+  Case(INLINEDOT)
 
-  Case(ENDOFFILE):
-  Case(ENDDEFINITION):
+  Case(ENDOFFILE)
+  Case(ENDDEFINITION)
 
 #ifndef THREADED
   default:
-    warning("emulate instruction: default should never happen");
+    error("emulate instruction: default should never happen");
     break;
   } /* switch*/
 #endif
@@ -2930,9 +2898,12 @@ LBLcheckEntailment:
 // ------------------------------------------------------------------------
  LBLshallowFail:
   {
-    e->reduceTrailOnFail();
+    if (e->trail.isEmptyChunk()) {
+      e->trail.popMark();
+    } else {
+      e->reduceTrailOnFail();
+    }
     ProgramCounter nxt = getLabelArg(shallowCP+1);
-    inShallowGuard = NO;
     shallowCP = NULL;
     JUMP(nxt);
   }
