@@ -28,6 +28,7 @@ DOCDIR          = $(PREFIX)/share/doc
 ELISPDIR        = $(PREFIX)/share/elisp
 CSSDIR          = /www/css
 HOMEURL         = @HOMEURL@
+BUILDTOP        = @BUILDTOP@
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@

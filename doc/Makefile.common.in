@@ -5,6 +5,7 @@ SRCTOP          = @SRCTOP@
 OZENGINE        = @OZENGINE@
 OZDOC           = @OZDOC@
 HOMEURL         = @HOMEURL@
+BUILDTOP        = @BUILDTOP@
 
 OZDOCFLAGS      =
 DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
