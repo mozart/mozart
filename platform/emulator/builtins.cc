@@ -846,8 +846,8 @@ OZ_BI_define(BIvsToBs,3,1)
     // size is len
     ByteString* bs = new ByteString(len);
     ostrstream *out = new ostrstream;
-    extern void virtualString2buffer(ostream &,OZ_Term);
-    virtualString2buffer(*out,OZ_in(2));
+    extern void virtualString2buffer(ostream &,OZ_Term,int);
+    virtualString2buffer(*out,OZ_in(2),1);
     bs->copy(out->str(),len);
     delete out;
     OZ_RETURN(oz_makeTaggedExtension(bs));
