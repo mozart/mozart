@@ -785,10 +785,18 @@ TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, TypeOfTerm &tag)
 // Binding
 // ---------------------------------------------------------------------------
 
+#ifdef DEBUG_CHECK
+TaggedRef *derefPtr(TaggedRef t) {
+  DEREF(t,tPtr,_1);
+  return tPtr;
+}
+#endif
+
 inline
 void doBind(TaggedRef *p, TaggedRef t)
 {
   CHECK_NONVAR(t);
+  Assert(p!=derefPtr(t));
   *p = t;
 }
 
