@@ -56,8 +56,13 @@
 ;; Screen title bars
 ;;------------------------------------------------------------
 
-(defvar oz-compiler-state "dead")
-(defvar oz-machine-state  "dead")
+(defvar oz-compiler-state "???")
+(defvar oz-machine-state  "???")
+
+(defvar oz-old-screen-title
+  (if  lucid-emacs
+      screen-title-format
+    (cdr (assoc 'name (frame-parameters)))))
 
 
 ;; only for FSF Emacs
@@ -68,23 +73,29 @@
 
 (defvar oz-title-format "C: %s  M: %s")
 
+(defun oz-canon-status-string(s)
+  (cond ((string-match "\\<idle\\>" s) s)
+	((string-match "\\<running\\>" s) "running")
+	((string-match "\\<halted\\>" s) "halted")
+	((string-match "\\<booting\\>" s) "booting")
+	( t "???")))
+
 
 (defun oz-set-state(state string)
-  (set state string)
+  (setq string (oz-canon-status-string string))
+  (set state 
+       (format "%-30s" 
+		 (substring string 0 
+			    (min 30 (length string)))))
   (if (not lucid-emacs)
-      (mapcar '(lambda(scr)
-		      (oz-set-screen-name scr
-					  (format oz-title-format 
-						  oz-compiler-state 
-						  oz-machine-state)))
-	      (visible-screen-list))))
+    (mapcar '(lambda(scr)
+	       (oz-set-screen-name scr
+				   (format oz-title-format 
+					   oz-compiler-state 
+					   oz-machine-state)))
+	    (visible-screen-list))))
 
 
-
-;; only for Lucid
-(setq screen-title-format
-      '((" C:  "  (40 . oz-compiler-state))
-	("   M:  " (-25 . oz-machine-state))))
 
 
 
@@ -225,15 +236,20 @@
   (define-key map "\M-l"    'oz-feed-line)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler-window)
+
   (if lucid-emacs
-      ;; do not show it as "C-c C-RET" but as "C-c C-m" in menu bar
-      (define-key map [(control c) (control m)]    'oz-toggle-machine-window)
-      (define-key map "\C-c\C-m"    'oz-toggle-machine-window))
+      (progn
+	;; do not show it as "C-c C-RET" but as "C-c C-m" in menu bar
+	(define-key map [(control c) (control m)] 'oz-toggle-machine-window)
+	(define-key map [(control c) (control h)] 'halt-oz)
+	(define-key map [(control c) (control i)] 'oz-include-file))
+    (define-key map "\C-c\C-m"    'oz-toggle-machine-window)
+    (define-key map "\C-c\C-h"    'halt-oz)
+    (define-key map "\C-c\C-i"    'oz-include-file))
+
   (define-key map "\C-c\C-n"    'oz-new-buffer)
-  (define-key map "\C-c\C-z"    'oz-prettyprint)
+  (define-key map "\C-c\C-l"    'oz-prettyprint)
   (define-key map "\C-c\C-r"    'run-oz)
-  (define-key map "\C-c\C-h"    'halt-oz)
-  (define-key map "\C-ci"    'oz-include-file)
   (define-key map "\C-cc"    'oz-precompile-file)
   )
 
@@ -373,6 +389,7 @@ if that value is non-nil."
 (defun run-oz ()
   "Run an inferior Oz process, input and output via buffer *Oz Compiler*."
   (interactive)
+  (oz-check-running)
   (if (get-process "Oz Compiler")
       (error "Oz already running")
     (start-oz-process)
@@ -380,38 +397,57 @@ if that value is non-nil."
 
 
 (defun ensure-oz-process ()
+  (oz-check-running)
   (start-oz-process))
+
+
+(defun oz-check-running()
+  (if (and (get-process "Oz Compiler")
+	   (not (get-process "Oz Machine")))
+      (progn 
+	(oz-set-state 'oz-machine-state "???")
+	(error "Machine has died, for some unknown reason, try halting Oz")))
+  (if (and (not (get-process "Oz Compiler"))
+	   (get-process "Oz Machine"))
+      (progn 
+	(oz-set-state 'oz-compiler-state "???")
+	(error "Compiler has died, for some unknown reason, try halting Oz"))))
 
 
 (defun start-oz-process()
   (or (get-process "Oz Compiler")
       (let ((file (oz-make-temp-name "/tmp/ozsock")))
-	(oz-set-state 'oz-compiler-state "booting...")
+	(setq oz-machine-visible (get-buffer-window "*Oz Machine*"))
+
+	(oz-set-state 'oz-compiler-state "booting")
         (make-comint "Oz Compiler" oz-compiler nil "-S" file)
 
-	(if (get-buffer "*Oz Machine*")
-	    (kill-buffer "*Oz Machine*"))
-	(if (get-buffer "*Oz Errors*")
-	    (kill-buffer "*Oz Errors*"))
-	(oz-set-state 'oz-machine-state "booting...")
-	(make-comint "Oz Machine" oz-machine nil "-S" file)
+;	(if (get-buffer "*Oz Machine*")
+;	    (kill-buffer "*Oz Machine*"))
+;	(if (get-buffer "*Oz Errors*")
+;	    (kill-buffer "*Oz Errors*"))
 
-        (set-process-filter  (get-process "Oz Compiler") 'oz-compiler-filter)
-        (set-process-filter  (get-process "Oz Machine") 'oz-machine-filter)
+	(oz-set-state 'oz-machine-state "booting")
+	(make-comint "Oz Machine" oz-machine nil "-S" file)
 
 	;; make sure buffers exist
 	(oz-create-buffer "*Oz Compiler*")
 	(oz-create-buffer "*Oz Machine*")
 	(oz-create-buffer "*Oz Errors*")
 	
-	(set-buffer (process-buffer (start-oz-process)))
+;	(set-buffer (process-buffer (get-process "Oz Compiler")))
 	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
 	(set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
 
 	(bury-buffer "*Oz Machine*")
 	(bury-buffer "*Oz Compiler*")
-	(oz-hide-errors)
-	(get-process "Oz Compiler"))))
+;	(oz-hide-errors)
+
+	(if lucid-emacs
+	    (setq screen-title-format
+		  '((" C:  "   (-30 . oz-compiler-state))
+		    ("   M:  " (-30 . oz-machine-state))))))))
+
 
 (defun oz-create-buffer (buf)
   (save-excursion
@@ -476,24 +512,38 @@ if that value is non-nil."
   (oz-hide-errors)
   (oz-send-string (concat "!precompile '" file "'\n"))) 
 
+
+
+(defvar oz-machine-visible nil "")
+
 (defun oz-hide-errors()
   (interactive)
   (if (get-buffer "*Oz Errors*")
       (progn
 	(delete-windows-on "*Oz Errors*")
-	(if oz-prev-win
-	    (oz-show-buffer oz-prev-win)))))
+	(if oz-machine-visible
+	    (oz-show-buffer "*Oz Machine*")))))
 
 
 
 (defun oz-toggle-compiler-window()
   (interactive)
-  (oz-toggle-window "*Oz Compiler*"))
+  (if (get-buffer-window "*Oz Compiler*")
+      (progn
+	(delete-windows-on "*Oz Compiler*")
+	(if oz-machine-visible
+	    (oz-show-buffer "*Oz Machine*")))
+    (oz-toggle-window "*Oz Compiler*")))
+
+    
+
+
 
 
 (defun oz-toggle-machine-window()
   (interactive)
-  (oz-toggle-window "*Oz Machine*"))
+  (oz-toggle-window "*Oz Machine*")
+  (setq oz-machine-visible (get-buffer-window "*Oz Machine*")))
 
 
 (defun oz-toggle-errors()
@@ -513,8 +563,22 @@ if that value is non-nil."
 
 (defun halt-oz()
   (interactive)
-  (oz-send-string "!halt \n"))
+  (if lucid-emacs
+      (setq screen-title-format oz-old-screen-title)
+    (mapcar '(lambda(scr) (oz-set-screen-name scr oz-old-screen-title))
+	    (visible-screen-list)))
+    
+  (if (and (get-process "Oz Compiler")
+	   (get-process "Oz Machine"))
+      (oz-send-string "!halt \n"))
 
+  (message "halting Oz...")
+  (sleep-for 5)
+  (if (get-process "Oz Compiler")
+      (delete-process "*Oz Compiler*"))
+  (if (get-process "Oz Machine")
+      (delete-process "*Oz Machine*"))
+  (message ""))
 
 
 
@@ -524,20 +588,12 @@ if that value is non-nil."
   (process-send-eof "Oz Compiler"))
 
 
-(defvar oz-prev-win nil "")
-(setq oz-other-buffer-percent 30)
 (defvar oz-other-buffer-percent 35 
   "
    How many percent of the actual screen will be occupied by the
    OZ compiler, machine and error window")
 
 (defun oz-show-buffer (buffer)
-  (if (equal (get-buffer "*Oz Errors*") buffer)
-      (setq oz-prev-win (or (if (get-buffer-window "*Oz Machine*") 
-				(get-buffer "*Oz Machine*"))
-			    (if (get-buffer-window "*Oz Compiler*") 
-				(get-buffer "*Oz Compiler*"))))
-    (setq oz-prev-win nil))
   (let* ((old-win (selected-window))
 	 (edges (window-edges old-win))
 	 (win (or (get-buffer-window "*Oz Machine*")
@@ -956,7 +1012,7 @@ if that value is non-nil."
 (defun oz-fontify-comments(beg end)
   (save-excursion
     (goto-char beg)
-    (while (re-search-forward "%\\|/\\*" end t)
+    (while  (condition-case () (re-search-forward "%\\|/\\*" end t) (error nil))
       (let ((beg (match-beginning 0))
 	    (end))
 	(if (= (preceding-char) 37)   ; == "%" ?
