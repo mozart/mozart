@@ -134,7 +134,8 @@ case "$cmd" in
    ozc)
 	set -e
         for file in $@; do
-	    $OZCOMPILER +c $file
+            # +p /dev/null --> do not load ~/.ozrc
+	    $OZCOMPILER +p /dev/null +c $file
         done
         exit $?
    ;;
