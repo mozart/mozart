@@ -20,7 +20,7 @@
 
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
 
-#define DEBUG_FD_IR(COND, CODE) //if (COND) CODE; 
+#define DEBUG_FD_IR(COND, CODE) if (COND) CODE; 
 
 Bool FDIntervals::isConsistent(void) {
   for (int i = 0; i < high; i++) {
@@ -1405,7 +1405,7 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
 
 FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
 {
-  DEBUG_FD_IR(TRUE, cout << *this << " | " << y << " =  ");
+  DEBUG_FD_IR(FALSE, cout << *this << " | " << y << " =  ");
   
   FiniteDomain &z = return_var; z.setEmpty();
   
@@ -1429,7 +1429,7 @@ FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
   }
   if (z.isSingleInterval()) z.setType(fd_descr);
 
-  DEBUG_FD_IR(TRUE, cout << z << endl);
+  DEBUG_FD_IR(FALSE, cout << z << endl);
   
   return z;
 }
@@ -1475,9 +1475,12 @@ FDIntervals * FiniteDomain::asIntervals(void) const
 
 int FiniteDomain::operator &= (const FiniteDomain &y)
 {
-  DEBUG_FD_IR(TRUE, cout << *this << " &= " << y << " = ");
-  
-  if (getType() == fd_descr && y.getType() == fd_descr) {
+  DEBUG_FD_IR(FALSE, cout << *this << " &= " << y << " = ");
+
+  if (*this == fd_empty || y == fd_empty) {
+    DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
+    return initEmpty();
+  } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
       size = 0;
     } else {
@@ -1506,18 +1509,21 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
   
   if (isSingleInterval()) setType(fd_descr);
   
-  DEBUG_FD_IR(TRUE, cout << *this << endl);
+  DEBUG_FD_IR(FALSE, cout << *this << endl);
 
   return size;
 }
 
 FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
 {
-  DEBUG_FD_IR(TRUE, cout << *this << " & " << y << " = ");
+  DEBUG_FD_IR(FALSE, cout << *this << " & " << y << " = ");
   
   FiniteDomain &z = return_var; z.setEmpty();
 
-  if (getType() == fd_descr && y.getType() == fd_descr) {
+  if (*this == fd_empty || y == fd_empty) {
+    DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
+    return z;
+  } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
       z.size = 0;
     } else {
@@ -1547,7 +1553,7 @@ FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
   
   if (z.isSingleInterval()) z.setType(fd_descr);
 
-  DEBUG_FD_IR(TRUE, cout << z << endl);
+  DEBUG_FD_IR(FALSE, cout << z << endl);
 
   return z;
 }
