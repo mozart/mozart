@@ -154,29 +154,41 @@ define
       end
       
       meth updateEntity(Data Key) Site Col Index Used in
-	 Key =  {self.makeKey Data}
-	 Site = {self.makeSite Data}
-	 if {Dictionary.member self.table Key} then
-	    OldCredit = {self.getCredit {Dictionary.get self.table Key}}
-	 in
-	    if OldCredit \= {self.getCredit Data} then
-	       Used = self.usedCounter.Key + 1
-	       Table, increment(self.diff Site)
-	       updates <- Key|@updates 
+	 try 
+	    Key =  {self.makeKey Data}
+	    Site = {self.makeSite Data}
+	    if {Dictionary.member self.table Key} then
+	       OldCredit = {self.getCredit {Dictionary.get self.table Key}}
+	    in
+	       if OldCredit \= {self.getCredit Data} then
+		  Used = self.usedCounter.Key + 1
+		  Table, increment(self.diff Site)
+		  updates <- Key|@updates 
+	       else
+		  Used = self.usedCounter.Key
+	       end
 	    else
-	       Used = self.usedCounter.Key
-	    end
-	 else
-	    Used = 1
-	    {self.colorAlloc get(Site Col Index)}
-	    new <- site(key:Key fg:Col
-			text: Data.index#'   '#Data.type#' exp/imp'#1)|@new 
+	       Used = 1
+	       try
+		  {self.colorAlloc get(Site Col Index)}
+	       catch _ then
+		  raise notFound end
+	       end
+	       
+	       new <- site(key:Key fg:Col
+			   text: Data.index#'   '#Data.type#' exp/imp'#1)|@new 
+	       self.usedCounter.Key:=Used
+	       Table, increment(self.diff Site)
+	    end 
+	    Table, increment(self.counter Site)
 	    self.usedCounter.Key:=Used
-	    Table, increment(self.diff Site)
-	 end 
-	 Table, increment(self.counter Site)
-	 self.usedCounter.Key:=Used
-	 {Dictionary.put self.table Key Data}
+	    self.table.Key:=Data
+	 catch notFound then
+	    %% The site where the entity comes from might not be present yet. 
+	    %% If so the color alloc will fail and raise the exception 
+	    %% 'notFound'. The entry will be inserted in the next update. 
+	    skip
+	 end
       end
       
       meth update(Data) CurrentKeys in
