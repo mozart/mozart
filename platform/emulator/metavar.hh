@@ -59,7 +59,7 @@ public:
 
   char * getName(void) { return tag->name; }
   
-  char * toString(void) { return tag->print_meta_data(data); }
+  char * toString(int depth) { return tag->print_meta_data(data, depth); }
 
   Bool valid(TaggedRef v);
 
@@ -68,12 +68,13 @@ public:
     propagate(v, suspList, d, pc_propagator);
   }
 
-  Bool isStrongerThan(TaggedRef data);
+  Bool isStrongerThan(TaggedRef var, TaggedRef vdata);
 
   Bool isSingleValue(void) {return tag->sgl_val_meta_data(data);}
 
-  mur_t check(OZ_MetaType t, TaggedRef d) {
-    return tag->unify_meta_meta(0, getData(), 0, d, t, NULL);
+  mur_t check(TaggedRef var, OZ_MetaType vtype, TaggedRef vdata) {
+    return tag->unify_meta_meta(makeTaggedCVar(this), getData(), 
+				var, vdata, vtype, NULL);
   }
 };
 
