@@ -1,0 +1,11 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = opi
+MAIN = opi.sgml
+SGMLSRCS = \
+	oz.el opi.bib
+HTMLEXTRAFILES = menu.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

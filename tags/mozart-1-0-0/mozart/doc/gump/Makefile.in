@@ -1,0 +1,13 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = gump
+MAIN = gump.sgml
+SGMLSRCS = \
+	intro.sgml parser.sgml scanner.sgml syntax.sgml \
+	LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg \
+	Lambda.in gump.bib
+HTMLEXTRAFILES = \
+	gump.gif
+
+include ../Makefile.common

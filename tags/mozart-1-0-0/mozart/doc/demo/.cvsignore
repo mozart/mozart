@@ -1,0 +1,6 @@
+Makefile
+*~
+demo-html
+latex.db
+AnimatedQueens.oz Bounce.oz Trucks.oz Lift.oz Board.oz
+JobShop College Cutting Flowers Transport DictClient

@@ -1,0 +1,442 @@
+BUILDTOP	= @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/share/lib
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+HOMEURL         = @HOMEURL@
+
+PREFIX		= @prefix@
+OZPREFIX	= @prefix@
+
+OZBIN		= $(PREFIX)/bin
+OZLIB		= $(PREFIX)/share
+IMAGESDIR	= $(OZLIB)/images
+SHELL		= /bin/sh
+LN_S		= @LN_S@
+M4		= @M4@
+PERL            = @PERL@
+THEGZIP		= @THEGZIP@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+OZENGINE        = @OZENGINE@
+
+COMPRESSLEVEL   = @oz_picklecompression@
+COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
+
+OZCFLAGS	= $(COMPRESSFLAGS)
+OZC		= @OZC@
+
+COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(SRCDIR)/Base.ozf -b $(BUILDDIR)/
+COMPILE		= $(COMPILENOMODE) -c
+COMPILEEXEC	= $(COMPILENOMODE) -x
+
+OZLFLAGS        = $(COMPRESSFLAGS)
+OZL		= @OZL@
+
+P2T		= $(SRCDIR)/p2t.sh
+T2P		= $(SRCDIR)/t2p.sh
+
+# exports
+export BUILDTOP
+export SRCDIR
+export OZPREFIX
+export OZLIB
+export OZPATH = .:$(SRCDIR)
+export OZ_PI = 1
+export OZ_LIB = $(OZLIB)
+export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=$(HOMEURL)/share/=$(OZ_LIB)/:prefix=/=/:=
+
+export OZMAKE_COPYALWAYS	= no
+export OZMAKE_VERBOSE		= no
+
+SPSRC   = Error ErrorFormatters Finalize
+OPSRC   = Open
+APSRC   = Application
+CPSRC1  = Search FD FS
+CPSRC2  = Schedule ParSearch ParWorker ParLogging
+DPSRC   = Connection Remote RemoteServer Fault URL
+WPSRC   = Tk TkTools
+SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
+
+RUNFUNCTORS = \
+	$(SPSRC:%=%.ozf) \
+	$(OPSRC:%=%.ozf) \
+	$(APSRC:%=%.ozf) \
+	$(CPSRC1:%=%.ozf) \
+	Init.ozf
+
+FUNCTORS = \
+	$(RUNFUNCTORS) \
+	$(DPSRC:%=%.ozf) \
+	$(WPSRC:%=%.ozf) \
+	$(SUPPSRC:%=%.ozf) \
+	$(CPSRC2:%=%.ozf) \
+	Compiler.ozf
+
+SYSLETS = ozc ozl
+
+.PHONY: all
+
+all: $(FUNCTORS) $(SYSLETS)
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+support/DefaultURL.oz: support/DefaultURL.oz.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+#---------------------------------------------------------------------
+# Init
+#---------------------------------------------------------------------
+
+INITSRC0 = Init Resolve Prop Module ModuleAbstractions UrlExpand
+
+INITSRC = $(INITSRC0:%=init/%.oz)
+
+Init.ozf: URL.ozf DefaultURL.ozf $(INITSRC)
+	$(COMPILE) init/Init.oz -o Init.ozf
+
+#---------------------------------------------------------------------
+# Base
+#---------------------------------------------------------------------
+
+.PHONY: new-base
+
+BASESRC1 = \
+	Record Unit Tuple Atom Name Procedure \
+	Int Float Number Bool List Chunk \
+	Literal Value Cell Lock Char String \
+	VirtualString Object Loop Port \
+	Time Thread Space Array Dictionary \
+	Exception Functor BitArray BitString \
+	ByteString ForeignPointer Base
+BASESRC = $(BASESRC1:%=base/%.oz)
+
+new-base: $(BASESRC)
+	$(OZC) $(OZCFLAGS) -c base/Base.oz -o $(SRCDIR)/Base.ozf
+
+#---------------------------------------------------------------------
+# Remaining functors
+#---------------------------------------------------------------------
+
+$(FUNCTORS): Base.ozf
+
+%.ozf: sp/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+%.ozf: op/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+%.ozf: ap/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+Search.ozf: cp/Search.oz Base.ozf
+	$(COMPILE) $< -o $@
+CpSupport.ozf: cp/CpSupport.oz Base.ozf
+	$(COMPILE) $< -o $@
+%.ozf: cp/%.oz CpSupport.ozf Base.ozf
+	$(COMPILE) $< -o $@
+
+PARSEARCHFUNCTORS = \
+	ParBarChart.ozf ParFindLimit.ozf ParGetColor.ozf \
+	ParLogging.ozf ParManager.ozf ParProcess.ozf \
+	ParSearch.ozf ParServer.ozf ParStatistics.ozf \
+	ParTraceSpace.ozf ParWorker.ozf
+ParBarChart.ozf: ParGetColor.ozf ParFindLimit.ozf ParServer.ozf
+ParLogging.ozf: ParStatistics.ozf
+ParStatistics.ozf: ParBarChart.ozf
+ParManager.ozf: ParLogging.ozf
+ParSearchTmp.ozf: cp/par/ParSearch.oz \
+	ParServer.ozf 
+	$(COMPILE) $< -o $@
+ParWorkerTmp.ozf: cp/par/ParWorker.oz \
+	ParLogging.ozf ParTraceSpace.ozf ParServer.ozf
+	$(COMPILE) $< -o $@
+ParLoggingTmp.ozf: cp/par/ParLogging.oz
+	$(COMPILE) $< -o $@
+ParWorker.ozf: ParWorkerTmp.ozf ozl
+	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl
+	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
+	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+%.ozf: cp/par/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+
+%.ozf: dp/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+%.ozf: wp/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+%.ozf: %.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+%.ozf: compiler/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+%.ozf: support/%.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+# support dependencies
+DefaultURL.ozf: URL.ozf
+
+# op dependencies
+Open.ozf: op/HtmlTable.oz
+
+# wp dependencies
+Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
+TkTools.ozf: DefaultURL.ozf
+
+# compiler dependencies
+COMPILERSRC1 = \
+	CompilerClass.oz PrintName.oz ParseOz.oz FormatStrings.oz \
+	CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
+	StaticAnalysis.oz POTypes.oz PatternMatching.oz CodeGen.oz \
+	CodeStore.oz CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz \
+	Unnester.oz UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
+	Errors.oz RunTime.oz
+
+COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz
+
+COMPILERSRCNOVER = \
+	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
+
+compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
+	echo 'DATE = '\'`date '+%h %d %Y (%T)'`\' > $@ \
+	|| (rm -f $@; exit 1)
+
+# NOTE: update this list also in platform/emulator/Makefile.in 
+BIMODSPECS = \
+	Array Atom BitArray Bool Cell Char Chunk Class \
+	Dictionary Exception Float ForeignPointer Int List Literal \
+	Lock Name Number Object Port Procedure Record Space \
+	String Thread Time Tuple Unit Value VirtualString \
+	BitString ByteString InterFault
+
+EMUSRCDIR=$(SRCDIR)/../../platform/emulator
+BIDECL=$(EMUSRCDIR)/bidecl.perl
+BIMODFILES = $(BIMODSPECS:%=$(EMUSRCDIR)/mod%.spec)
+
+first: $(COMPILERSRCEXTRA) compiler-Version.oz
+
+compiler-Builtins.oz: $(BIMODFILES)
+	$(PERL) $(BIDECL) -srcdir $(EMUSRCDIR) -builtins $(BIMODSPECS) > $@
+
+compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
+	$(M4) -DEMUDIR=$(EMUSRCDIR) $< > $@ \
+	|| (rm -f $@; exit 1)
+
+FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
+	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf \
+	Main.ozf RunTime.ozf Annotate.ozf
+
+PrintName.ozf: compiler/PrintName.oz
+
+Builtins.ozf: compiler/Builtins.oz compiler-Builtins.oz
+
+Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
+	compiler/BindingAnalysis.oz compiler/UnnestFD.oz
+
+Annotate.ozf: compiler/Annotate.oz
+
+Core.ozf: compiler/Core.oz Annotate.ozf
+
+StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
+	Search.ozf FD.ozf FS.ozf
+	$(COMPILE) compiler/StaticAnalysis.oz -o $@
+
+CodeGen.ozf: compiler/CodeGen.oz compiler/PatternMatching.oz \
+	compiler/CodeStore.oz compiler/CodeEmitter.oz
+
+Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
+
+Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
+	compiler/CheckTupleSyntax.oz compiler/ParseOz.oz \
+	compiler/CompilerClass.oz compiler/Interface.oz \
+	compiler/Abstractions.oz compiler/Errors.oz \
+	compiler-Version.oz Base.ozf
+
+RunTime.ozf: compiler/RunTime.oz Base.ozf
+	$(COMPILE) $< -o $@
+
+Compiler.ozf: $(FUNFUNCTORS) ozl
+	$(OZENGINE) ozl $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
+
+#---------------------------------------------------------------------
+# Syslets
+#---------------------------------------------------------------------
+
+$(SYSLETS): $(RUNFUNCTORS)
+
+ozc: Base.ozf ozbatch/Compile.oz
+	$(COMPILEEXEC) ozbatch/Compile.oz -o $@
+
+ozl: Base.ozf DefaultURL.ozf linker/Print.oz linker/Main.oz linker/Link.oz
+	$(COMPILEEXEC) linker/Main.oz -o $@
+
+#---------------------------------------------------------------------
+# Installation
+#---------------------------------------------------------------------
+
+.PHONY: install install-main install-images install-cache
+
+LIBFUNCTORS = \
+	$(FUNCTORS:%=$(OZLIB)/%)
+BINFILES = \
+	$(SYSLETS:%=$(OZBIN)/%)
+
+BOOTINITTXT	= boot-init.ozt
+BOOTOZCTXT	= boot-ozc.ozt
+
+install: install-main install-images install-cache
+
+install-main: all \
+	$(OZLIB) $(LIBFUNCTORS) \
+	$(OZBIN) $(BINFILES)
+
+IMAGES1 = mini-dec.xbm mini-inc.xbm
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+
+install-images: \
+	$(IMAGESDIR) $(IMAGES)
+
+HOMECACHE = @HOMECACHE@
+CACHEDIR  = $(PREFIX)/cache/$(HOMECACHE)
+
+install-cache: \
+	$(CACHEDIR)
+
+$(CACHEDIR):
+	$(INSTALL_DIR) $(CACHEDIR)
+	-rm -rf $(CACHEDIR)
+	$(LN_S) ../../.. $(CACHEDIR)
+
+$(OZLIB) $(IMAGESDIR) $(OZBIN):
+	$(INSTALL_DIR) $@
+
+$(OZLIB)/%.ozf: %.ozf
+	$(INSTALL_FILE) $< $@
+
+$(IMAGESDIR)/%: images/%
+	$(INSTALL_FILE) $< $@
+
+$(OZBIN)/%: %
+	$(INSTALL_BIN) $< $@
+
+$(OZLIB)/boot-%: boot-%
+	$(INSTALL_FILE) $< $@
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+.PHONY: clean veryclean distclean
+
+CLEANFILES = \
+	compiler-Version.oz \
+	$(COMPILERSRCEXTRA) \
+	CpSupport.ozf \
+	$(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
+	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
+
+clean:
+	-rm -f $(CLEANFILES)
+
+veryclean: clean
+
+distclean: veryclean
+	@echo To really make distclean, please use \"cd ..\; make distclean\".
+
+#---------------------------------------------------------------------
+# Bootstrapping
+#---------------------------------------------------------------------
+
+.PHONY: bootstrap check
+
+# use the boot compiler to create the functors
+bootstrap:
+	$(MAKE) boot-unzip boot-init boot-ozc boot-all
+
+boot-all:
+	$(MAKE) all \
+		OZC=$(SRCDIR)/boot-ozc.sh \
+		OZENGINE=$(SRCDIR)/oze.sh \
+		OZINIT=Init.ozf \
+		OZ_LIB=. \
+		OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
+
+check:
+
+#---------------------------------------------------------------------
+# Boot compiler
+#---------------------------------------------------------------------
+# The boot compiler is simply the ordinary compiler with all functors
+# packaged together using the linker.  There is also a a boot init
+# file which is just the ordinary Init functor.  Both are provided in
+# the text-pickle format from which the boot functors are obtained
+# using text2pickle.
+#---------------------------------------------------------------------
+
+.PHONY: new-boot
+
+$(BOOTINITTXT):
+	$(MAKE) boot-init.linked && \
+	$(P2T) < boot-init.linked > $@ && \
+	rm -f boot-init.linked
+
+$(BOOTOZCTXT):
+	$(MAKE) boot-ozc.linked && \
+	$(P2T) < boot-ozc.linked > $@ && \
+	rm -f boot-ozc.linked
+
+new-boot:
+	-rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
+	$(MAKE) $(BOOTINITTXT) $(BOOTOZCTXT)
+	$(THEGZIP) < $(BOOTINITTXT) > $(SRCDIR)/$(BOOTINITTXT).gz
+	$(THEGZIP) < $(BOOTOZCTXT) > $(SRCDIR)/$(BOOTOZCTXT).gz
+
+boot-unzip:
+	rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
+	$(THEGZIP) -d < $(SRCDIR)/$(BOOTINITTXT).gz > $(BOOTINITTXT)
+	$(THEGZIP) -d < $(SRCDIR)/$(BOOTOZCTXT).gz > $(BOOTOZCTXT)
+
+BOOTINITTXTFROM	= $(BOOTINITTXT)
+BOOTOZCTXTFROM	= $(BOOTOZCTXT)
+
+boot-ozc: $(BOOTOZCTXTFROM)
+	$(T2P) < $< > $@ \
+	|| (rm -f $@; exit 1)
+
+boot-init: $(BOOTINITTXTFROM)
+	$(T2P) < $< > $@ \
+	|| (rm -f $@; exit 1)
+
+# OZMAKE_COPYALWAYS=yes causes the emulator to always copy functors
+# regardless of whether they have `prop once' or not.  This is required
+# for the archiver when it must package functors for modules that are
+# currently linked in the system: else the bytecode of these functors
+# may have been side-effected and may contains stateful stuff
+
+boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
+	OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+
+boot-init.linked: Init.ozf
+	cp $< $@
+
+# no suffixes needed
+.SUFFIXES:
+
+.PHONY: depend
+depend:

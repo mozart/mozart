@@ -1,0 +1,35 @@
+#! /bin/sh
+
+LEMACS=/usr/gnu/lib/lemacs
+LEMACS=/usr/share/gs/soft/lemacs-19.9
+CP="gcp -av"
+
+echo -n "Copying Lucid Emacs ..."
+mkdir -p lemacs/etc lemacs/lisp lemacs/info lemacs/lock
+cd lemacs
+$CP /usr/gnu/info/dir /usr/gnu/info/lemacs* info
+$CP $LEMACS/etc/DOC* etc
+$CP $LEMACS/lemacs* .
+
+
+# Copy the elisp files. To save space: if a byte compiled
+# version of a file exists (ending in ".elc" instead of ".el")
+# copy only this and not its ".el" counterpart
+
+whereami=`pwd`
+cd $LEMACS
+#cp lisp/*.el $whereami/lisp
+
+
+for i in lisp/*
+do
+   if [ -d $i ]; then
+      mkdir -p $whereami/$i
+      if [ "$i" != "lisp/sunview" ]; then 
+         $CP $i/*.elc $whereami/$i
+      fi
+      echo -n .   # to see that we are still working echo a dot from time to time
+   fi
+done
+
+

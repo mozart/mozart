@@ -1,0 +1,89 @@
+# -*- Makefile -*-
+
+PREFIX		= @prefix@
+SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
+OZENGINE	= @OZENGINE@
+OZDOC		= @OZDOC@
+HOMEURL         = @HOMEURL@
+
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR		= $(PREFIX)/doc/$(WHAT)
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+HTMLSUPPORTFILES0 = \
+	ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
+HTMLSUPPORTFILES = \
+	$(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
+
+.PHONY: all bootstrap quick validate verify install clean veryclean distclean
+
+all:: Makefile ../Makefile.common $(WHAT)-html/index.html
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: $(SRCDIR)/Makefile.in ../config.status
+	cd .. && ./config.status
+
+../Makefile.common: $(SRCTOP)/doc/Makefile.common.in ../config.status
+	cd .. && ./config.status
+
+$(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+	rm -f latex.db && \
+	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
+	--type=html-stylesheets --stylesheet=ozdoc.css --top=../index.html \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities \
+	--latexdb=latex.db \
+	--xrefdb=../xref.db --xrefdir=$(WHAT) && \
+	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
+	do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
+
+$(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
+	$(DOCIFY) $(OZDOCTEXFLAGS) --in=$< --out=$(WHAT)-tex \
+	--type=latex \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities && \
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(TEXEXTRAFILES)) NONE; \
+	do { test $$i = NONE || cp -p $$i $(WHAT)-tex; } done
+
+quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
+	--type=html-stylesheets --stylesheet=ozdoc.css --top=../ \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities \
+	--latexdb=latex.db --keeppictures \
+	--xrefdb=../xref.db --xrefdir=$(WHAT) && \
+	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
+	do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
+
+verify: $(MAIN)
+	nsgmls -s -c$(PREFIX)/share/doc/catalog $<
+
+validate: $(WHAT)-html/index.html
+	nsgmls -cHTML4.soc -sB $(WHAT)-html/*.html
+
+install:: $(WHAT)-html/index.html $(DOCDIR)
+	for i in $(WHAT)-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+clean::
+	-rm -rf $(WHAT)-html $(WHAT)-tex *~
+
+veryclean: clean
+	-rm -f latex.db
+
+distclean: veryclean
+	-rm -f Makefile

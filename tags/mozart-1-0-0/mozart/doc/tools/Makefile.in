@@ -1,0 +1,17 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = tools
+MAIN = main.sgml
+
+SGMLSRCS0 = \
+	linker compiler debugger profiler oztool ozengine
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
+
+HTMLEXTRASUPPORTFILES = \
+	danger.gif
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

@@ -1,0 +1,23 @@
+This code is derived from GNU Bison Version 1.25 for use with Oz/Gump.
+
+Instead of reading the grammar from a file, all information is passed
+via parameters to the Oz Builtin `Bison.generate'.
+
+
+Synopsis:
+
+   {Bison.generate +Grammar +VerboseFile ?Tables}
+
+where
+
+   Grammar = Atom#                  % start symbol
+             [Atom]#                % token declarations
+             [Assoc]#
+             [Rule].
+   Assoc = Atom#'leftAssoc'#Int
+         | Atom#'rightAssoc'#Int
+         | Atom#'nonAssoc'#Int.
+   Rule = Value#Atom#[Atom]         % position, nonterminal, rhs symbols
+        | Value#Atom#[Atom]#Atom.   % idem with precedence symbol
+
+   VerboseFile = Atom.              % if '': do not output; else: filename

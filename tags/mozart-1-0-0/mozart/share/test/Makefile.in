@@ -1,0 +1,200 @@
+####################################################
+@SET_MAKE@
+VPATH=		@srcdir@
+SRCDIR=		@srcdir@
+BUILDTOP=	@BUILDTOP@
+SRCTOP=		@SRCTOP@
+HOMEURL=        @HOMEURL@
+OZPLATFORM=	@PLATFORM@
+
+INSTALL_DIR	= @INSTALL_DIR@
+
+export OZPATH = .:$(SRCDIR)
+
+# Test for spaces
+SPACELOCAL = \
+	basic nomosim queens
+SPACEOZF = $(SPACELOCAL:%=./space/%.ozf)
+
+# Tests for finite domains
+FDLOCAL = \
+	distribute alpha money misc1 misc2 \
+	watlasm dsum sumabs constrdisj binpacking \
+	bridge buildhouse cars change color \
+	conference configuration diagnosis divmod \
+	donald equations family fraction guards \
+	zebra grocery pythagoras safe schur multiply \
+	tiling srat students hubert pigeon permutation \
+	kalotan knights houses warehouse bridge_noterm \
+	queens mapcoloring magicsquare magicsequence \
+	photo coins train
+
+FDOZF = $(FDLOCAL:%=./fd/%.ozf)
+
+# Tests for finite sets
+FSLOCAL = \
+	golf crew hamming steiner knapsack misc
+
+FSOZF = $(FSLOCAL:%=./fs/%.ozf)
+
+# Tests for scheduling
+SCHEDLOCAL = \
+	abz6 company product
+
+SCHEDOZF = $(SCHEDLOCAL:%=./scheduling/%.ozf)
+
+FBASE = \
+	conversion float record type exception guards future misc \
+	link instruction compiler except dictionary ofs pickles \
+	thread unix
+
+BASE = $(FBASE:%=./base/%.ozf)
+
+FBENCH = \
+	nrev tak fd compiler
+
+BENCH = $(FBENCH:%=./bench/%.ozf)
+
+DP1= \
+	url mini maxi equality table port cell cellAndLock variable object \
+        objectAndLock injectors watchers basicfault fault_state \
+	parallel-search
+
+DP2=
+DP=	$(DP1:%=./dp/%.ozf) $(DP2:%=./dp/%.ozf)
+
+FTOOLS = \
+	gump
+
+TOOLS = $(FTOOLS:%=./tools/%.ozf)
+
+FNATIVES = \
+	base/smallbuf
+
+SONATIVES = $(FNATIVES:%=%.so-$(OZPLATFORM))
+
+DIRS = base space fd fs scheduling dp tools bench
+
+# All tests
+COMPONENTS = \
+	$(BASE) $(SPACEOZF) $(FDOZF) $(SCHEDOZF) $(FSOZF) $(DP) $(TOOLS) \
+	$(BENCH)
+OTHERS= dp/TestMisc.ozf
+
+####################################################
+
+COMPRESSLEVEL   = @oz_picklecompression@
+COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
+
+OZE =
+OZC = @OZC@
+OZFLAGS = $(COMPRESSFLAGS)
+OZTOOL = @OZTOOL@
+
+OZEE = $(OZC) $(OZFLAGS)
+OZCC = $(OZEE) -c
+
+.PHONY: all bootstrap install check dirs clean veryclean distclean depend
+.PHONY: boot-check boot-all
+
+all: dirs oztest ozbench $(SONATIVES)
+
+boot-all:
+	BUILDTOP=$(BUILDTOP) SRCDIR=$(SRCDIR) \
+	make all \
+	OZ_LOAD=prefix=$(HOMEURL)/share/=$(BUILDTOP)/share/lib/:prefix=./=./:prefix=/=/:.:= \
+	OZINIT=$(BUILDTOP)/share/lib/Init.ozf \
+	OZC="$(SRCTOP)/share/lib/oze.sh $(BUILDTOP)/share/lib/ozc" \
+	OZE=$(SRCTOP)/share/lib/oze.sh
+
+BUILDTOPA = $(shell cd $(BUILDTOP); pwd)
+CURDIRA   = $(BUILDTOPA)/share/test
+#OZPLATFORM= $(shell $(SRCTOP)/share/bin/ozplatform)
+PREFIX    = @prefix@
+
+boot-check: boot-all
+	PATH=$(SRCTOP)/share/bin:$(SRCDIR):$(PATH) \
+	BUILDTOP=$(BUILDTOP) SRCDIR=$(SRCDIR) \
+	make check \
+	OZ_LOAD=prefix=$(HOMEURL)/share/GumpScanner.so-$(OZPLATFORM)=$(BUILDTOP)/platform/tools/gump/GumpScanner.so:prefix=$(HOMEURL)/share/Bison.so-$(OZPLATFORM)=$(BUILDTOP)/platform/tools/gump/ozbison/Bison.so:prefix=$(HOMEURL)/share/=$(BUILDTOP)/share/lib/:prefix=$(HOMEURL)/share/=$(BUILDTOP)/share/tools/:prefix=./=./:prefix=/=/:.:= \
+	OZINIT=$(BUILDTOP)/share/lib/Init.ozf \
+	OZC="$(SRCTOP)/share/lib/oze.sh $(BUILDTOP)/share/lib/ozc" \
+	OZE=$(SRCTOP)/share/lib/oze.sh \
+	OZTOOL="/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh" \
+	OZTOOL_INCLUDES="-I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump" \
+	OZFLEX=$(BUILDTOP)/platform/tools/gump/ozflex/flex \
+	OZTESTOPTS="$(OZTESTOPTS) --ignores=dp"
+
+bootstrap:
+
+install:
+
+OZTESTOPTS = --verbose
+
+check: oztest
+	$(OZE) ./oztest $(OZTESTOPTS)
+
+dirs:
+	@ds="$(DIRS)"; for d in $$ds; do if test ! -d $$d; then $(INSTALL_DIR) $$d; fi; done && touch $@
+
+# what is this bullshit
+# $(COMPONENTS): dirs
+
+TESTSRCS=make-test engine passed failed help-string compute-tests
+oztest: $(TESTSRCS:%=./lib/%.oz) $(COMPONENTS) $(OTHERS)
+	$(OZC) $(OZFLAGS) -x lib/make-test.oz -o make-test
+	$(OZE) ./make-test --verbose $(COMPONENTS:%=`pwd`/%)
+	chmod +x oztest
+	-rm -f ./make-test
+
+BENCHSRCS=make-bench engine compute-tests help-bench
+ozbench: $(BENCHSRCS:%=./lib/%.oz) $(COMPONENTS) $(OTHERS)
+	$(OZC) $(OZFLAGS) -x $(SRCDIR)/lib/make-bench.oz -o make-bench
+	$(OZE) ./make-bench --verbose $(COMPONENTS:%=`pwd`/%)
+	chmod +x ozbench
+	-rm -f ./make-bench
+
+
+clean:
+	-rm -f *~ ./*/*~ ./*/*/*~
+	-rm -f $(COMPONENTS) $(OTHERS)
+	-rm -f $(SONATIVES)
+	-rm -f LambdaScanner.* LambdaParser.*
+	-rm -f make-test
+	-rm -f te.ozf
+
+veryclean: clean
+	-rm -f oztest
+
+distclean: veryclean
+	-rmdir $(DIRS)
+	-rm -f Makefile dirs
+
+.SUFFIXES:
+.SUFFIXES: $SUFFIXES .ozf .oz
+
+.oz.ozf:
+	$(OZCC) $< -o $@
+
+%.ozm: %.oz
+	$(OZC) --expression -S $< -o $@
+
+include $(SRCTOP)/share/Makefile.boot
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
+depend:
+
+tools/gump.ozf: gump-examples
+
+gump-examples:
+	ln -s $(SRCDIR)/../tools/gump/examples $@
+
+%.so-$(OZPLATFORM): %.o
+	$(OZTOOL) ld $< -o $@
+%.o: %.cc
+	$(OZTOOL) c++ -I$(SRCTOP)/platform/emulator -c $< -o $@

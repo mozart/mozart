@@ -1,0 +1,42 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+PREFIX		= @prefix@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+HOMEURL		= @HOMEURL@
+LIB_DIR		= $(PREFIX)/contrib/tk
+OZC		= @OZC@
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+FUNCTORS	= CheckBox.ozf
+
+all:		$(FUNCTORS)
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+install:	$(LIB_DIR) $(addprefix $(LIB_DIR)/,$(FUNCTORS))
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+clean veryclean:
+	-rm *~ *.ozf
+
+distclean: veryclean
+	-rm Makefile config.*
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

@@ -1,0 +1,125 @@
+/*
+ *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ * 
+ *  Contributors:
+ *    Michael Mehl (mehl@dfki.de)
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+// Solver
+
+#ifndef __SOLVE_ICC_
+#define __SOLVE_ICC_
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+#include "board.hh"
+#include "susplist.hh"
+
+#ifdef OUTLINE
+#define inline
+#endif
+
+/* ------------------------------------------------------------------------
+ * class SolveActor
+ * ------------------------------------------------------------------------ */
+
+inline
+void SolveActor::addSuspension (Suspension susp)
+{
+  suspList = new SuspList (susp, suspList);
+}
+
+inline
+void SolveActor::mergeCPB(Board *bb, int sibling) {
+  // adjoin the list of or-actors to the list in actual solve actor!
+  if (bb->isWait()) {
+    WaitActor::Cast(bb->getActor())->mergeChoices(cpb);
+  } else if (bb->isSolve()) {
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
+    sa->mergeChoices(cpb);
+    if (sibling) 
+      sa->incThreads(threads);
+  }
+}
+
+inline
+void SolveActor::mergeNonMono(Board *bb) {
+  // merge nonmonotonic susp lists
+  if (nonMonoSuspList) {
+    // Merge in current solve board but not elsewhere
+    if (bb && bb->isSolve()) {
+      // merge nonmonotonic susp list to another solve space
+      SolveActor * sa = SolveActor::Cast(bb->getActor());
+      if (sa->nonMonoSuspList) {
+	sa->mergeNonMonoSuspListWith(nonMonoSuspList);
+	setNonMonoSuspList(NULL);
+      } else {
+	sa->setNonMonoSuspList(nonMonoSuspList);
+      }
+    } else {
+      // merge nonmonotinic susp list to a non-solve space
+      DebugCode(OZ_warning("Merging solve space with non-solve space."));
+      oz_solve_scheduleNonMonoSuspList(this);
+    }
+  }
+}
+
+inline
+WaitActor *SolveActor::select(int left, int right) 
+{
+  ozstat.incSolveAlt();
+
+  if (cpb==0)
+    return 0;
+
+  WaitActor * wa = cpb->access();
+  
+  if (!wa)
+    return 0;
+
+  wa->selectOrFailChildren(left, right);
+
+  return wa;
+}
+
+
+inline
+void SolveActor::clearResult(Board* bb) {
+  if (OZ_isVariable(result))
+    return;
+
+  result = oz_newVar(bb);
+}
+
+#ifdef DEBUG_THREADCOUNT
+extern int existingLTQs;
+#endif
+
+
+#ifdef OUTLINE
+#undef inline
+#endif
+
+#endif  // __SOLVE_ICC_

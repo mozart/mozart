@@ -1,0 +1,65 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+LIB_DIR		= $(PREFIX)/contrib/text
+OZC		= @OZC@
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+EMACS		= emacs
+HOMEURL         = @HOMEURL@
+PLATFORM	= @PLATFORM@
+OZTOOL		= @OZTOOL@
+OZTOOL_INCLUDES	= -I$(PREFIX)/include
+OZFLEX		= @OZFLEX@
+
+TARGETS		= XML.ozf XML_Scanner.so-$(PLATFORM) \
+		  XSL-ATTRIBUTE.ozf XSL_Scanner.so-$(PLATFORM) \
+		  XSL-ELEMENT.ozf XSL-MATCHING.ozf XSL-POSITION.ozf \
+		  XSL-SEARCH.ozf XSL-SELECTING.ozf XSL-READ.ozf
+LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
+APPLICS		= ozxsl
+
+all:		$(TARGETS) $(APPLICS)
+install:	$(LIB_DIR) $(LIB_TARGETS)
+
+$(LIB_DIR) $(ELIB_DIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf : %.ozf
+	$(INSTALL_LIB) $< $@
+$(LIB_DIR)/%.so-$(PLATFORM) : %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+
+ozxsl: ozxsl.oz
+	$(OZC) -x $< -o $@
+
+XSL_Scanner.so-$(PLATFORM): XSL-ATTRIBUTE.ozf
+XML_Scanner.so-$(PLATFORM): XML.ozf
+
+clean veryclean:
+	-rm *~ *.ozf *.C *.l *.o *.so-* $(APPLICS)
+
+distclean: veryclean
+	-rm Makefile config.*
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

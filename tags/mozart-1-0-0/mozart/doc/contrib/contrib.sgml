@@ -1,0 +1,26 @@
+<!doctype book system "ozdoc.dtd" [
+<!entity regex system "regex.sgml">
+<!entity gdbm system "gdbm.sgml">
+<!entity EG PI "PI:EG">
+<!ENTITY % proglang.values.local "|sh|makefile">
+
+]>
+<book proglang=oz>
+    <meta name="html.split" value="chapter.regex">
+    <meta name="html.split" value="chapter.gdbm">
+    <meta name="html.split" value="chapter.gdbm.install">
+    <meta name="html.split" value="chapter.gdbm.interface">
+    <title/Contributed Libraries/
+    <author.extern to="author.db" key="Denys.Duchier">
+    &regex;
+    &gdbm;
+</book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

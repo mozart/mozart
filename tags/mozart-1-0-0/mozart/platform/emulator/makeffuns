@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# This script creates 2 files "mozart.c" and "initffuns.cc", that are used
+# to allow dynamic linking under Windows 95/NT.  
+#
+# The problem here is that DLLs can only have external references to
+# other DLLs (as fare as I now) but not to an executable.
+#
+# So we solved this as follows: functions like "OZ_isAtom" are in
+# "mozart.h" not declared as functions but as _pointers_ to functions. The
+# user has to integrate "mozart.c" into his DLL. This file declares all
+# these function pointers and provides a procedure "OZ_initFF(char*
+# version, void **ffuns)". When the emulator loads a DLL it calls this
+# function, which first does a version check via "version" and then
+# instantiates all the function pointers like "OZ_isAtom" to the real
+# functions that are passed through the parameter "ffuns".
+
+
+srcdir=$1
+OZVERSION=$2
+
+ozc=mozart.c
+in=$srcdir/mozart.h
+initffuns=initffuns.cc
+
+cat > $ozc << EOF
+#include <string.h>
+#include <stdio.h>
+#include "mozart.h"
+
+#define extern
+
+EOF
+
+grep _FUNDECL $in | grep -v define >> $ozc
+
+echo "#define OZVERSION \"$OZVERSION\"" >> $ozc
+
+cat >> $ozc << EOF
+
+#undef extern
+
+#undef _FUNDECL
+#define _FUNDECL(type,fun,args) fun = funs[i++]
+
+
+ozdeclspec int ozcdecl OZ_linkFF(char *version, void** funs)
+{
+  int i=0;
+
+  if (strcmp(OZVERSION,version)!=0) {
+    fprintf(stderr,"*** version mismatch in 'OZ_linkFF' (%s,%s)\n",
+            OZVERSION,version);
+    return 0;
+  }
+EOF
+
+
+grep _FUNDECL $in | grep -v define >> $ozc
+
+cat >> $ozc << EOF
+
+  return 1;
+}
+EOF
+
+cat > $initffuns << EOF
+#include "base.hh"
+
+#ifdef WINDOWS
+
+#undef _FUNDECL
+#define _FUNDECL(type,fun,args) ffuns[i++] = &fun
+
+void **ffuns;
+
+#define numffuns 200
+
+void initffuns()
+{
+  int i=0;
+
+  ffuns = new void*[numffuns];
+
+EOF
+
+grep _FUNDECL $in | grep -v define >> $initffuns
+
+cat >> $initffuns << EOF
+  Assert(i<numffuns);
+}
+
+#else
+
+void initffuns() {}
+
+#endif /* WINDOWS */
+
+EOF

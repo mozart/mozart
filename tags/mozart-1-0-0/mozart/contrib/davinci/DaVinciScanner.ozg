@@ -1,0 +1,246 @@
+%%%
+%%% Author:
+%%%   Tobias Mueller <tmueller@ps.uni-sb.de>
+%%%
+%%% Contributor:
+%%%   Leif Kornstaedt
+%%%
+%%% Copyright:
+%%%   Tobias Mueller, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%   http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%   http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+functor
+
+export
+   DaVinciAnswerToValue
+   InPipeScannerClass
+
+import
+   GumpScanner
+   GumpParser
+
+define
+
+   \gumpscannerprefix inPipeScannerClass
+
+   scanner InPipeScannerClass from GumpScanner.'class'
+      meth init()
+	 GumpScanner.'class', init()
+      end
+
+      lex <^"program error".*> S in
+	 GumpScanner.'class', getString(?S)
+	 {Exception.raiseError daVinci(programError S)}
+      end
+
+      lex <^"parser error".*> S in
+	 GumpScanner.'class', getString(?S)
+	 {Exception.raiseError daVinci(parserError S)}
+      end
+
+      lex <.*> A in
+	 GumpScanner.'class', getAtom(?A)
+	 GumpScanner.'class', putToken('id' A)
+      end
+   
+      lex <\n> skip end
+
+      lex <<EOF>>
+	 GumpScanner.'class', putToken('EOF' 'quit')
+      end
+   end
+
+   \gumpscannerprefix daVinciAnswerToValueScannerClass
+
+   scanner DaVinciAnswerToValueScannerClass from GumpScanner.'class'
+      attr Col
+      meth init()
+	 Col <- 0
+	 GumpScanner.'class', init()
+      end
+      meth getCol($)
+	 @Col
+      end
+
+      lex charsequ = <[ _,0-9A-Za-z-]+> end
+
+      lex charseqatom = <[a-z][_0-9A-Za-z]*> end
+      lex charseqint = <[0-9]+> end
+
+      lex <"("|")"|"["|"]"|","|\"|"[]"|"<"|">"|"|"> A in
+	 Col <- @Col + GumpScanner.'class', getLength($)
+	 GumpScanner.'class', getAtom(A)
+	 GumpScanner.'class', putToken1(A)
+      end
+ 
+      lex <error|ok|node_selections_labels|communication_error|edge_selection_labels|node_double_click|edge_selection_label|edge_double_click|open_window|create_node|disconnect|close|quit|menu_selection|icon_selection|popup_selection_node|popup_selection_edge|context_id|context_window|close_window|tcl_answer|browser_answer|create_node_and_edge|create_edge|drop_node> A in
+	 Col <- @Col + GumpScanner.'class', getLength($)
+	 GumpScanner.'class', getAtom(?A)
+	 GumpScanner.'class', putToken1(A)
+      end
+
+      lex <{charseqatom}> A in
+	 Col <- @Col + GumpScanner.'class', getLength($)
+	 GumpScanner.'class', getAtom(A)
+	 GumpScanner.'class', putToken('charseqatom' A)
+      end
+
+      lex <{charseqint}> A in
+	 Col <- @Col + GumpScanner.'class', getLength($)
+	 GumpScanner.'class', getAtom(A)
+	 GumpScanner.'class', putToken('charseqint' A)
+      end
+
+      lex <{charsequ}> A in
+	 Col <- @Col + GumpScanner.'class', getLength($)
+	 GumpScanner.'class', getAtom(A)
+	 GumpScanner.'class', putToken('charsequ' A)
+      end
+
+      lex <.> A in
+	 GumpScanner.'class', getAtom(A)
+	 {Raise error('unrecognized character '#oz(A))}
+      end
+
+      lex <\n>
+	 {Exception.raiseError daVinci(unexpectedResponse)}
+      end
+
+      lex <<EOF>>
+	 GumpScanner.'class', putToken1('EOF')
+      end
+   end
+
+   parser DaVinciAnswerToValueParserClass from GumpParser.'class'
+      meth error(V)
+	 {Raise error(V)}
+      end
+
+      token
+	 'charsequ' 'charseqatom' 'charseqint'
+	 '(' ')' '[' ']' ',' '"' '[]' '<' '>' '|'
+	 'ok' 'communication_error' 'node_selections_labels'
+	 'edge_selection_labels' 'node_double_click'
+	 'edge_selection_label' 'edge_double_click'
+	 'open_window' 'create_node' 'disconnect'
+	 'close' 'quit' 'menu_selection' 'icon_selection'
+	 'popup_selection_node' 'popup_selection_edge'
+	 'context' 'context_window' 'close_window'
+	 'tcl_answer' 'browser_answer' 'create_node_and_edge'
+	 'create_edge' 'drop_node' 'error'
+	 
+      syn answer($)
+	 'ok'
+	 => ok 
+      [] 'node_double_click'
+	 => node_double_click
+      [] 'edge_double_click'
+	 => edge_double_click
+      [] 'open_window'
+	 => open_window
+      [] 'create_node'
+	 => create_node
+      [] 'disconnect'
+	 => disconnect
+      [] 'close'
+	 => close
+      [] 'quit'
+	 => quit
+      [] 'error'
+	 => error
+      [] 'communication_error' '(' String(S) ')'
+	 => communication_error(S)
+      [] 'node_selections_labels' '(' NodeIds(N) ')'
+	 => node_selections_labels(N)
+      [] 'edge_selection_labels' '(' NodeId(N1) ',' NodeId(N2) ')'
+	 => edge_selection_labels(N1 N2)
+      [] 'edge_selection_label' '(' EdgeId(E) ')'
+	 => edge_selection_label(E)
+      [] 'menu_selection' '(' MenuId(M) ')'
+	 => menu_selection(M)
+      [] 'icon_selection' '(' IconId(I) ')'
+	 => icon_selection(I)
+      [] 'popup_selection_node' '(' NodeId(N) ',' MenuId(M) ')'
+	 => popup_selection_node(N M)
+      [] 'popup_selection_edge' '(' EdgeId(E) ',' MenuId(M) ')'
+	 => popup_selection_edge(E M)
+      [] 'context' '(' ContextId(C) ')'
+	 => context(C)
+      [] 'context_window' '(' ContextId(C) ',' WindowId(W) ')'
+	 => context_window(C W)
+      [] 'close_window' '(' WindowId(W) ')'
+	 => close_window(W)
+      [] 'tcl_answer' '(' String(S) ')'
+	 => tcl_answer()
+      [] 'browser_answer' '(' String(S1) ',' String(S2) ')'
+	 => browser_answer(S1 S2)
+      [] 'create_node_and_edge' '(' NodeId(N) ')'
+	 => create_node_and_edge(N)
+      [] 'create_edge' '(' NodeId(N1) ',' NodeId(N2) ')'
+	 => create_edge(N1 N2)
+      [] 'drop_node' '(' NodeId(N1) ContextId(C) WindowId(W) NodeId(N2) ')'
+	 => drop_node(N1 C W N2)
+      end
+      syn String($)
+	 '"' 'charsequ'(S) '"' => S
+      [] '"' 'charseqatom'(S) '"' => S
+      [] '"' 'charseqatom'(S1) '<' StringList(S2) '>' '"'
+	 => {List.toTuple S1 S2}
+      end
+      syn StringList($)
+	 'charseqatom'(S)                    => S|nil
+      [] 'charseqint'(S)
+	 => {StringToInt {VirtualString.toString S}}|nil
+      [] 'charseqatom'(S) '|' StringList(Ss) => S|Ss      
+      [] 'charseqint'(S) '|' StringList(Ss)
+	 => {StringToInt {VirtualString.toString S}}|Ss      
+      end
+      syn NodeId($) String(S) => S end
+      syn EdgeId($) String(S) => S end
+      syn MenuId($) String(S) => S end
+      syn IconId($) String(S) => S end
+      syn ContextId($) String(S) => S end
+      syn WindowId($) String(S) => S end
+
+      syn NodeIds($)
+	 '[' NodeIds1(N) ']' => N 
+      [] '[]'                => nil
+      end
+
+      syn NodeIds1($)
+	 NodeId(N)                  => N|nil
+      [] NodeId(N) ',' NodeIds1(Ns) => N|Ns
+      end
+   end
+
+   fun {DaVinciAnswerToValue VS}
+      DaVinciAnswerToValueScanner =
+      {New DaVinciAnswerToValueScannerClass init()}
+      DaVinciAnswerToValueParser =
+      {New DaVinciAnswerToValueParserClass init(DaVinciAnswerToValueScanner)}
+   in
+      {DaVinciAnswerToValueScanner scanVirtualString(VS)}
+      try
+	 {DaVinciAnswerToValueParser parse(answer($) _)}
+      catch error(Msg) then
+	 {Exception.raiseError
+	  daVinci(parseError Msg VS {DaVinciAnswerToValueScanner getCol($)})}
+	 unit
+      finally
+	 {DaVinciAnswerToValueScanner close()}
+      end
+   end
+end

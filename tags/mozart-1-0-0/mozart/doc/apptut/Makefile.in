@@ -1,0 +1,40 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT = apptut
+MAIN = main.sgml
+SGMLSRCS = \
+	deploy.sgml devel.sgml hello.sgml \
+	cs-intro.sgml cs-db.sgml \
+	cs-ozc.sgml native-celloid.sgml native-counter.sgml \
+	native-counter-obj.sgml chat.sgml \
+	conc-cheap.sgml conc-patterns.sgml app.sgml \
+	mof.sgml pickle.sgml applets.sgml servlets.sgml
+HTMLEXTRAFILES = apptut.gif
+CHUNKFILES = \
+	chat-server.oz chat-client.oz chat-gui.oz \
+	Webget.oz DB.oz Form.oz LMF.oz
+PROGSRCS1 = \
+	counter.cc counter-obj.cc native-celloid.cc
+PROGSRCS = $(addprefix $(SRCDIR)/,$(PROGSRCS1))
+
+include ../Makefile.common
+
+all:: $(CHUNKFILES) $(PROGSRCS)
+quick:: $(CHUNKFILES) $(PROGSRCS)
+
+chat-server.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --type=chunk --in=$< --out='Chat Server' >$@
+chat-client.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --type=chunk --in=$< --out='Chat Client' >$@
+chat-gui.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --type=chunk --in=$< --out='Chat GUI' >$@
+%.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --type=chunk --in=$< --out=$@ >$@
+
+install:: $(CHUNKFILES)
+	for i in $(CHUNKFILES); do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+install:: $(PROGSRCS)
+	for i in $(PROGSRCS); do $(INSTALL_FILE) $$i $(DOCDIR); done

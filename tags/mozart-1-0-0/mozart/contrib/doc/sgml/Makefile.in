@@ -1,0 +1,47 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+LIB_DIR		= $(PREFIX)/contrib/doc/sgml
+OZC		= @OZC@
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+HOMEURL         = @HOMEURL@
+
+TARGETS		= Parser.ozf
+LIB_TARGETS	= $(addprefix $(LIB_DIR)/,$(TARGETS))
+
+all:		$(TARGETS)
+install:	$(LIB_DIR) $(LIB_TARGETS)
+
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_TARGETS): $(LIB_DIR)/% : %
+	$(INSTALL_LIB) $< $@
+
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+
+clean veryclean:
+	-rm *~ *.ozf
+
+distclean: veryclean
+	-rm Makefile config.*
+
+include $(SRCDIR)/../../../share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+config.status: ../configure
+	cd .. && ./config.status --recheck

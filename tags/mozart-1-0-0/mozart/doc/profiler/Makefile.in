@@ -1,0 +1,14 @@
+# $Id$
+
+VPATH  = @srcdir@
+SRCDIR = @srcdir@
+
+WHAT = profiler
+MAIN = profiler.sgml
+SGMLSRCS =
+HTMLEXTRAFILES = prof1.gif prof2.gif prof3.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+
+install::

@@ -1,0 +1,521 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de> (SGML Translation)
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.chunks">
+  <Title/Chunks/
+  <Section id="section.chunks.general">
+    <Title/Chunks in General/
+    <P>
+      The module <Span class=index/<<Chunk>>/ contains procedures operating
+      on chunks.
+      <List>
+	<Entry><Span class=index/<<.>>/
+	  <Index/<<Value>><And><<'.'>>/
+	<Synopsis>
+	  <<{Value.'.' ?+{RC} ?+{LI} ?_{X}}>>
+	<Item>
+	  returns the field&nbsp;?_{X} of&nbsp;?_{RC} at feature&nbsp;?_{LI}.
+
+	<Entry><Span class=index/<<HasFeature>>/
+	  <Index/<<Value>><And><<hasFeature>>/
+	<Synopsis>
+	  <<{Value.hasFeature ?+{RC} ?+{LI} ??{B}}>>
+	<Item>
+	  tests whether ?_{RC} has feature&nbsp;?_{LI}.
+
+	<Entry><Span class=index/<<CondSelect>>/
+	  <Index/<<Value>><And><<condSelect>>/
+	<Synopsis>
+	  <<{Value.condSelect ?+{RC} ?+{LI} ?_{X} ?_{Y}}>>
+	<Item>
+	  returns the field&nbsp;?_{Y} of&nbsp;?_{RC} at&nbsp;?_{LI}, if
+	  ?_{RC} has feature&nbsp;?_{LI}.  Otherwise, returns&nbsp;?_{X}.
+
+	<Entry><Span class=index/<<IsChunk>>/
+	  <Index class=tails/<<Chunk>><And><<is>>/
+	<Synopsis>
+	  <<{Chunk.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a chunk.
+
+	<Entry><Span class=index/<<NewChunk>>/
+	  <Index class=tails/<<Chunk>><And><<new>>/
+	<Synopsis>
+	  <<{Chunk.new ?+{R} ??{C}}>>
+	<Item>
+	  returns a new chunk with the same features and fields as&nbsp;?_{R}.
+      </List>
+
+  <Section id="section.chunks.arrays">
+    <Title/Arrays/
+    <P>
+      The module <Span class=index/<<Array>>/ contains procedures operating
+      on arrays.  Whenever an array access is indexed with an illegal key, an
+      error exception is raised.
+      <List>
+	<Entry><Span class=index/<<IsArray>>/
+	  <Index class=tails/<<Array>><And><<is>>/
+	<Synopsis>
+	  <<{Array.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is an array.
+
+	<Entry><Span class=index/<<NewArray>>/
+	  <Index class=tails/<<Array>><And><<new>>/
+	<Synopsis>
+	  <<{Array.new ?+{LowI} ?+{HighI} ?_{InitX} ??{Array}}>>
+	<Item>
+	  returns a new array with key range from ?_{LowI} to ?_{HighI}
+	  including both.  All items are initialized to ?_{InitX}.
+
+	<Entry><Span class=index/<<Put>>/
+	  <Index/<<Array>><And><<put>>/
+	<Synopsis>
+	  <<{Array.put ?+{Array} ?+{I} ?_{X}}>>
+	<Item>
+	  sets the item of ?_{Array} under key&nbsp;?_{I} to&nbsp;?_{X}.
+
+	<Entry><Span class=index/<<Get>>/
+	  <Index/<<Array>><And><<get>>/
+	<Synopsis>
+	  <<{Array.get ?+{Array} ?+{I} ?_{X}}>>
+	<Item>
+	  returns the item of ?_{Array} under key&nbsp;?_{I}.
+
+	<Entry><<low>>
+	  <Index class=tails/<<Array>><And><<low>>/
+	<Synopsis>
+	  <<{Array.low ?+{Array} ??{LowI}}>>
+	<Item>
+	  returns the lower bound of the key range of ?_{Array}.
+
+	<Entry><<high>>
+	  <Index class=tails/<<Array>><And><<high>>/
+	<Synopsis>
+	  <<{Array.high ?+{Array} ??{HighI}}>>
+	<Item>
+	  returns the upper bound of the key range of ?_{Array}.
+
+	<Entry><<clone>>
+	  <Index class=tails/<<Array>><And><<clone>>/
+	<Synopsis>
+	  <<{Array.clone ?+{A1} ??{A2}}>>
+	<Item>
+	  returns a new array with the same bounds and contents as&nbsp;?_{A1}.
+
+	<Entry><<toRecord>>
+	  <Index class=tails/<<Array>><And><<toRecord>>/
+	<Synopsis>
+	  <<{Array.toRecord ?+{L} ?+{A} ??{R}}>>
+	<Item>
+	  returns a record with label&nbsp;L that contains as features the
+	  integers between <<{Array.low ?_{A}}>> and <<{Array.high ?_{A}}>>
+	  and with the corresponding fields.
+      </List>
+
+  <Section id="section.chunks.dictionaries">
+    <Title/Dictionaries/
+    <P>
+      The module <Span class=index/<<Dictionary>>/ contains procedures
+      operating on dictionaries.  If a dictionary contains an item under
+      some key&nbsp;?_{LI}, we say ?_{LI} is a <Def/valid key/.  Whenever
+      a dictionary access is indexed with an invalid key, a type error is
+      raised.
+      <List>
+	<Entry><Span class=index/<<IsDictionary>>/
+	  <Index class=tails/<<Dictionary>><And><<is>>/
+	<Synopsis>
+	  <<{Dictionary.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a dictionary.
+
+	<Entry><Span class=index/<<NewDictionary>>/
+	  <Index class=tails/<<Dictionary>><And><<new>>/
+	<Synopsis>
+	  <<{Dictionary.new ??{Dictionary}}>>
+	<Item>
+	  returns a new empty dictionary.
+
+	<Entry><<put>>
+	  <Index class=tails/<<Dictionary>><And><<put>>/
+	<Synopsis>
+	  <<{Dictionary.put ?+{Dictionary} ?+{LI} ?_{X}}>>
+	<Item>
+	  sets the item in ?_{Dictionary} under key&nbsp;?_{LI} to&nbsp;?_{X}.
+
+	<Entry><<get>>
+	  <Index class=tails/<<Dictionary>><And><<get>>/
+	<Synopsis>
+	  <<{Dictionary.get ?+{Dictionary} ?+{LI} ?_{X}}>>
+	<Item>
+	  returns the item&nbsp;?_{X} of ?_{Dictionary} under key&nbsp;?_{LI}.
+
+	<Entry><<condGet>>
+	  <Index class=tails/<<Dictionary>><And><<condGet>>/
+	<Synopsis>
+	  <<{Dictionary.condGet ?+{Dictionary} ?+{LI} ?_{X} ?_{Y}}>>
+	<Item>
+	  returns the item&nbsp;?_{Y} of ?_{Dictionary} under key&nbsp;?_{LI},
+	  if ?_{LI} is a valid key of ?_{Dictionary}.  Otherwise,
+	  returns&nbsp;?_{X}.
+
+	<Entry><<keys>>
+	  <Index class=tails/<<Dictionary>><And><<keys>>/
+	<Synopsis>
+	  <<{Dictionary.keys ?+{Dictionary} ??{LIs}}>>
+	<Item>
+	  returns a list of all currently valid keys of ?_{Dictionary}.
+
+	<Entry><<entries>>
+	  <Index class=tails/<<Dictionary>><And><<entries>>/
+	<Synopsis>
+	  <<{Dictionary.entries ?+{Dictionary} ??{Ts}}>>
+	<Item>
+	  returns the list of current entries of ?_{Dictionary}.  An entry is a
+	  pair <<?_{LI}#?_{X}>>, where ?_{LI} is a valid key of ?_{Dictionary}
+	  and ?_{X} the corresponding item.
+
+	<Entry><<items>>
+	  <Index class=tails/<<Dictionary>><And><<items>>/
+	<Synopsis>
+	  <<{Dictionary.items ?+{Dictionary} ??{Xs}}>>
+	<Item>
+	  returns the list of all items currently in ?_{Dictionary}.
+
+	<Entry><<isEmpty>>
+	  <Index class=tails/<<Dictionary>><And><<isEmpty>>/
+	<Synopsis>
+	  <<{Dictionary.isEmpty ?+{Dictionary} ??{B}}>>
+	<Item>
+	  tests whether ?_{Dictionary} currently contains an entry.
+
+	<Entry><<remove>>
+	  <Index class=tails/<<Dictionary>><And><<remove>>/
+	<Synopsis>
+	  <<{Dictionary.remove ?+{Dictionary} ?+{LI}}>>
+	<Item>
+	  removes the item under key&nbsp;?_{LI} from ?_{Dictionary} if
+	  ?_{LI} is a valid key.  Otherwise, does nothing.
+
+	<Entry><<removeAll>>
+	  <Index class=tails/<<Dictionary>><And><<removeAll>>/
+	<Synopsis>
+	  <<{Dictionary.removeAll ?+{Dictionary}}>>
+	<Item>
+	  removes all entries currently in ?_{Dictionary}.
+
+	<Entry><<member>>
+	  <Index class=tails/<<Dictionary>><And><<member>>/
+	<Synopsis>
+	  <<{Dictionary.member ?+{Dictionary} ?+{LI} ??{B}}>>
+	<Item>
+	  tests whether ?_{LI} is a valid key of ?_{Dictionary}.
+
+	<Entry><<clone>>
+	  <Index class=tails/<<Dictionary>><And><<clone>>/
+	<Synopsis>
+	  <<{Dictionary.clone ?+{Dictionary1} ??{Dictionary2}}>>
+	<Item>
+	  returns a new dictionary ?_{Dictionary2} containing the currently
+	  valid keys and corresponding items of ?_{Dictionary1}.
+
+	<Entry><<toRecord>>
+	  <Index class=tails/<<Dictionary>><And><<toRecord>>/
+	<Synopsis>
+	  <<{Dictionary.toRecord ?+{L} ?+{Dictionary} ??{R}}>>
+	<Item>
+	  returns a record&nbsp;?_{R} with label&nbsp;?_{L} whose features
+	  and their fields correspond to the keys and their entries of
+	  ?_{Dictionary}.
+      </List>
+
+  <Section id="section.chunks.bitarrays">
+    <Title/Bit Arrays/
+    <P>
+      The module <Span class=index/<<BitArray>>/ contains procedures operating
+      on arrays of bits (&ie;, units of information each being either <Def/set/
+      or <Def/reset/).
+<list>
+	<entry/<span class=index/<code/IsBitArray//
+<index class=tails/<code/BitArray/<and><code/is///
+	<synopsis/<code/{BitArray.is ?+{X} ??{B}}//
+	<item/tests whether ?_{X} is a bit array./
+
+	<entry/<code/new/
+<index class=tails/<code/BitArray/<and><code/new///
+	<synopsis/<code/{BitArray.new ?+{LowI} ?+{HighI} ??{BitArray}}//
+	<item/creates an new ?_{BitArray} with lower bound ?_{LowI}
+and upper bound ?_{HighI}, and all bits initially cleared.  This
+interface is identical to that of general Oz arrays./
+
+	<entry/<code/set/
+<index class=tails/<code/BitArray/<and><code/set///
+	<synopsis/<code/{BitArray.set ?+{BitArray} ?+{I}}//
+	<item/sets bit&nbsp;?_{I} of ?_{BitArray}./
+
+	<entry/<code/clear/
+<index class=tails/<code/BitArray/<and><code/clear///
+	<synopsis/<code/{BitArray.clear ?+{BitArray} ?+{I}}//
+	<item/clears bit&nbsp;?_{I} of ?_{BitArray}./
+
+	<entry/<code/test/
+<index class=tails/<code/BitArray/<and><code/test///
+	<synopsis/<code/{BitArray.test ?+{BitArray} ?+{I} ??{B}}//
+	<item/tests whether bit&nbsp;?_{I} of ?_{BitArray} is
+set./
+
+	<entry/<code/low/
+<index class=tails/<code/BitArray/<and><code/low///
+	<synopsis/<code/{BitArray.low ?+{BitArray} ??{LowI}}//
+	<item/returns the lower bound ?_{LowI} of ?_{BitArray}./
+
+	<entry/<code/high/
+<index class=tails/<code/BitArray/<and><code/high///
+	<synopsis/<code/{BitArray.high ?+{BitArray} ??{HighI}}//
+	<item/returns the upper bound ?_{HighI} of ?_{BitArray}./
+
+	<entry/<code/clone/
+<index class=tails/<code/BitArray/<and><code/clone///
+	<synopsis/<code/{BitArray.clone ?+{BitArray1} ??{BitArray2}}//
+	<item/returns a new bit array that is a copy of its first
+argument./
+
+	<entry/<code/disj/
+<index class=tails/<code/BitArray/<and><code/disj///
+	<synopsis/<code/{BitArray.disj ?+{BitArray1} ?+{BitArray2}}//
+	<item/side-effects its first argument with the bitwise <q/or/ of
+the two arguments./
+
+	<entry/<code/conj/
+<index class=tails/<code/BitArray/<and><code/conj///
+	<synopsis/<code/{BitArray.conj ?+{BitArray1} ?+{BitArray2}}//
+	<item/side-effects its first argument with the bitwise <q/and/ of
+the two arguments./
+
+	<entry/<code/nimpl/
+<index class=tails/<code/BitArray/<and><code/nimpl///
+	<synopsis/<code/{BitArray.nimpl ?+{BitArray1} ?+{BitArray2}}//
+	<item/side-effects its first argument with the bitwise <q/and/ of
+the the first argument and the negation of the second argument (&ie;,
+negated implication)./
+
+	<entry/<code/disjoint/
+<index class=tails/<code/BitArray/<and><code/disjoint///
+	<synopsis/<code/{BitArray.disjoint ?+{BitArray1} ?+{BitArray2} ??{B}}//
+	<item/tests whether the bit arrays have no set bits in common./
+
+	<entry/<code/card/
+<index class=tails/<code/BitArray/<and><code/card///
+	<synopsis/<code/{BitArray.card ?+{BitArray} ??{I}}//
+	<item/returns the number of set bits./
+
+	<entry/<code/toList/
+<index class=tails/<code/BitArray/<and><code/toList///
+	<synopsis/<code/{BitArray.toList ?+{BitArray} ??{L}}//
+	<item/returns the list of indices for all set bits in ?_{BitArray}./
+
+	<entry/<code/complementToList/
+<index class=tails/<code/BitArray/<and><code/complementToList///
+	<synopsis/<code/{BitArray.complementToList ?+{BitArray} ??{L}}//
+	<item/returns the list of indices for all cleared bits in
+?_{BitArray}./
+
+      </list></p>
+  </section>
+
+  <Section id="section.chunks.ports">
+    <Title/Ports/
+    <P>
+      The module <Span class=index/<<Port>>/ contains procedures operating on
+      ports.
+      <List>
+	<Entry><Span class=index/<<IsPort>>/
+	  <Index class=tails/<<Port>><And><<is>>/
+	<Synopsis>
+	  <<{Port.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a port.
+
+	<Entry><Span class=index/<<NewPort>>/
+	  <Index class=tails/<<Port>><And><<new>>/
+	<Synopsis>
+	  <<{Port.new ?_{Xs} ??{Port}}>>
+	<Item>
+	  returns a new port pointing to the stream&nbsp;?_{Xs}.
+
+	<Entry><Span class=index/<<Send>>/
+	  <Index/<<Port>><And><<send>>/
+	<Synopsis>
+	  <<{Port.send ?+{Port} ?_{X}}>>
+	<Item>
+	  sends ?_{X} to the port ?_{Port}:  The stream pointed to by
+	  ?_{Port} is unified with <<?_{X}|_>> (in a newly created thread),
+	  and the pointer advances to the stream's new tail.
+      </List>
+
+  <Section id="section.chunks.locks">
+    <Title/Locks/
+    <P>
+      The module <Span class=index/<<Lock>>/ contains procedures for locks.
+      <List>
+	<Entry><Span class=index/<<IsLock>>/
+	  <Index class=tails/<<Lock>><And><<is>>/
+	<Synopsis>
+	  <<{Lock.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a lock.
+
+	<Entry><Span class=index/<<NewLock>>/
+	  <Index class=tails/<<Lock>><And><<new>>/
+	<Synopsis>
+	  <<{Lock.new ??{LockC}}>>
+	<Item>
+	  creates and returns a new lock.
+      </List>
+
+  <Section id="section.chunks.classes">
+    <Title/Classes/
+    <P>
+      The module <Span class=index/<<Class>>/ contains procedures operating
+      on classes.
+      <List>
+	<Entry><Span class=index/<<IsClass>>/
+	  <Index class=tails/<<Class>><And><<is>>/
+	<Synopsis>
+	  <<{Class.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a class.
+
+	<Entry><<new>>
+	  <Index class=tails/<<Class>><And><<new>>/
+	<Synopsis>
+	  <<{Class.new ?+{ParentKs} ?+{AttrR} ?+{FeatR} ?+{PropAs} ??{K}}>>
+	<Item>
+	  creates a new class by inheriting from ?_{ParentKs} with new
+	  attributes ?_{AttrR} and new features ?_{FeatR}. The fields
+	  with integer features in ?_{AttrR} define the free
+	  attributes. The fields with literal features define
+	  attributes with initial values, where the feature is the
+	  attribute name and the field its initial value. The
+	  semantics for ?_{FeatR} is accordingly. The properties of the class 
+          to be created are defined by ?_{PropAs} (a list of atoms, valid 
+          elements are <<sited>>, <<final>>, and <<locking>>). 
+        <p>
+          For example, the statement
+<<<C={Class.new [D E] a(a:1 b) f(f:2 g) [final]}>>>
+          is equivalent to
+<<<class C from D E
+   prop final
+   attr a:1 b
+   feat f:2 g
+end>>>
+     
+
+      </List>
+
+  <Section id="section.chunks.objects">
+    <Title/Objects/
+    <P>
+      The module <Span class=index/<<Object>>/ contains procedures operating
+      on objects.
+    <P>
+      The system procedures that define the behaviour of &Oz; objects and
+      classes are also given in this section.
+      <List>
+	<Entry><Span class=index/<<IsObject>>/
+	  <Index class=tails/<<Object>><And><<is>>/
+	<Synopsis>
+	  <<{Object.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is an object.
+
+	<Entry><Span class=index/<<New>>/
+	  <Index class=tails/<<Object>><And><<new>>/
+	<Synopsis>
+	  <<{Object.new ?+{K} ?+{InitMessageR} ??{O}}>>
+	<Item>
+	  Creates a new object from class&nbsp;?_{K} with initial message
+	  ?_{InitMessageR}.
+
+      </List>
+    <SubSection class=unnumbered>
+      <Title/The <<BaseObject>> Class/
+      <P>
+	<Index class=tails/<<Object>><And><<base>>/
+	The class <Span class=index/<<BaseObject>>/ defines the following
+	method.
+	<List>
+	  <Entry><<noop>>
+	    <Index/<<Object>><And><<base>><And><<noop>>/
+	  <Synopsis>
+	    <<noop()>>
+	  <Item>
+	    does nothing.  It is defined as <<meth noop() skip end>>.
+	</List>
+
+  <Section id="section.chunks.functors">
+    <Title/Functors/
+    <P>
+      The module <Span class=index/<<Functor>>/ contains procedures operating
+      on functors.
+      <List>
+	<Entry><<is>>
+	  <Index class=tails/<<Functor>><And><<is>>/
+	<Synopsis>
+	  <<{Functor.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a functor.
+
+	<Entry><<new>>
+	  <Index class=tails/<<Functor>><And><<new>>/
+	<Synopsis>
+	  <<{Functor.new ?+{T1} ?+{T2} ?+{P} ??{B}}>>
+	<Item>
+	  returns a new functor with imports as described by&nbsp;?_{T1},
+	  exports as described by&nbsp;?_{T2} and body as performed
+	  by&nbsp;?_{P}.
+	  <!--** be a bit more verbose -->
+
+	<Entry><<getFeatures>>
+	  <Index class=tails/<<Functor>><And><<getFeatures>>/
+	<Synopsis>
+	  <<{Functor.getFeatures ?+{Functor} ??{LIs}}>>
+	<Item>
+	  returns a list of the features exported by <<?_{Functor}>>.
+      </List>
+</Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
+

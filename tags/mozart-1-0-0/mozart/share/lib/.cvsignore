@@ -1,0 +1,11 @@
+*~
+Makefile
+compiler-Version.oz
+compiler-Opcodes.oz
+compiler-Builtins.oz
+*.ozf
+ozc ozl
+stage1 stage2 stage3 save
+boot-init boot-ozc
+boot-init.ozt boot-ozc.ozt
+boot-init.ozt.gz.SAVE boot-ozc.ozt.gz.SAVE
