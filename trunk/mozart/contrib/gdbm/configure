@@ -3604,6 +3604,79 @@ fi
 
 
 
+
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
+    # Extract the first word of "ozplatform", so it can be a program name with args.
+set dummy ozplatform; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:3621: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_PLATFORMSCRIPT'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$PLATFORMSCRIPT" in
+  /*)
+  ac_cv_path_PLATFORMSCRIPT="$PLATFORMSCRIPT" # Let the user override the test with a path.
+  ;;
+  ?:/*)			 
+  ac_cv_path_PLATFORMSCRIPT="$PLATFORMSCRIPT" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$oz_for"
+  for ac_dir in $ac_dummy; do 
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_PLATFORMSCRIPT="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+PLATFORMSCRIPT="$ac_cv_path_PLATFORMSCRIPT"
+if test -n "$PLATFORMSCRIPT"; then
+  echo "$ac_t""$PLATFORMSCRIPT" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    case "$host_os" in
+      cygwin32) ;;
+      *) PLATFORMSCRIPT=`echo $PLATFORMSCRIPT | sed -e "s|//|/|g"`;;
+    esac
+    if test ! -n "$PLATFORMSCRIPT"
+    then
+	PLATFORMSCRIPT=undefined
+	
+    fi
+    
+
+: ${platform=`$PLATFORMSCRIPT`}
+
+
+case "$platform" in
+   win32-i486)
+	INSTALLWINDLLS=installwindlls
+	: ${WINDLLDIR=$windlldir}
+   ;;
+    
+   *)
+	INSTALLWINDLLS=""
+   ;;    
+esac
+
+
+
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -3774,6 +3847,10 @@ s%@OZC@%$OZC%g
 s%@OZL@%$OZL%g
 s%@CXX@%$CXX%g
 s%@CXXCPP@%$CXXCPP%g
+s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
+s%@platform@%$platform%g
+s%@WINDLLDIR@%$WINDLLDIR%g
+s%@INSTALLWINDLLS@%$INSTALLWINDLLS%g
 
 CEOF
 EOF
