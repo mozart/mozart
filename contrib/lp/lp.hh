@@ -59,7 +59,7 @@ public:
 
   OZ_expect_t expectObjFnRecord(OZ_Term t) {
     static OZ_Term arity[] = {
-      {atom_row}, {atom_opt}, {(OZ_Term) 0}
+      atom_row, atom_opt, (OZ_Term) 0
     };
 
     OZ_expect_t r = expectProperRecord(t, arity);
@@ -76,7 +76,7 @@ public:
 
   OZ_expect_t expectConstrRecord(OZ_Term t) {
     static OZ_Term arity[] = {
-      {atom_row}, {atom_type}, {atom_rhs}, {(OZ_Term) 0}
+      atom_row, atom_type, atom_rhs, (OZ_Term) 0
     };
     OZ_expect_t r(1,1);
 
@@ -99,20 +99,20 @@ public:
 
   OZ_expect_t expectLPReturnLiteral(OZ_Term t) {
     static OZ_Term one_of[] = {
-      {atom_optimal}, {atom_infeasible}, {atom_unbounded},
-      {atom_failure}, {(OZ_Term) 0}
+      atom_optimal, atom_infeasible, atom_unbounded,
+      atom_failure, (OZ_Term) 0
     };
     return expectLiteralOutOf(t, one_of);
   }
   OZ_expect_t expectMinMaxLiteral(OZ_Term t) {
     static OZ_Term one_of[] = {
-      {atom_min}, {atom_max}, {(OZ_Term) 0}
+      atom_min, atom_max, (OZ_Term) 0
     };
     return expectLiteralOutOf(t, one_of);
   }
   OZ_expect_t expectRhsLiteral(OZ_Term t) {
     static OZ_Term one_of[] = {
-      {atom_le}, {atom_ge}, {atom_eq}, {(OZ_Term) 0}
+      atom_le, atom_ge, atom_eq, (OZ_Term) 0
     };
     return expectLiteralOutOf(t, one_of);
   }

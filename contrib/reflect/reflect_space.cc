@@ -121,14 +121,14 @@ OZ_Term reflect_space_prop(ReflectStack &rec_stack,
   OZ_Propagator * p = prop->getPropagator();
 
   OZ_Term arity_def[] = {
-    {OZ_pair2(atom_id,     term_id)},
-    {OZ_pair2(atom_ref,    propagator2Term(prop))},
-    {OZ_pair2(atom_params, reflect_space_params(rec_stack,
-                                                vtable,
-                                                p->getParameters()))},
-    {OZ_pair2(atom_name,   prop_name(p->getProfile()->getPropagatorName()))},
-    {OZ_pair2(atom_loc,    oz_propGetName(prop))},
-    {(OZ_Term) 0}
+    OZ_pair2(atom_id,     term_id),
+    OZ_pair2(atom_ref,    propagator2Term(prop)),
+    OZ_pair2(atom_params, reflect_space_params(rec_stack,
+                                               vtable,
+                                               p->getParameters())),
+    OZ_pair2(atom_name,   prop_name(p->getProfile()->getPropagatorName())),
+    OZ_pair2(atom_loc,    oz_propGetName(prop)),
+    (OZ_Term) 0
   };
 
   MKARITY(arity, arity_def);
@@ -210,12 +210,12 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_type = atom_any;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any,
-                (oz_isVar(var) ?
-                 reflect_space_susplist(rec_stack, ptable,
-                                        tagged2Var(var)->getSuspList())
-                 : OZ_nil()))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any,
+               (oz_isVar(var) ?
+                reflect_space_susplist(rec_stack, ptable,
+                                       tagged2Var(var)->getSuspList())
+                : OZ_nil())),
+      (OZ_Term) 0
     };
 
     MKARITY(susp_arity, susp_arity_def);
@@ -239,19 +239,19 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_type = atom_fd;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2Var(var)->
-                                       getSuspList()))},
-      {OZ_pair2(atom_bounds,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2GenFDVar(var)->
-                                       getSuspList(fd_prop_bounds)))},
-      {OZ_pair2(atom_val,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2GenFDVar(var)->
-                                       getSuspList(fd_prop_singl)))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2Var(var)->
+                                      getSuspList())),
+      OZ_pair2(atom_bounds,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2GenFDVar(var)->
+                                      getSuspList(fd_prop_bounds))),
+      OZ_pair2(atom_val,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2GenFDVar(var)->
+                                      getSuspList(fd_prop_singl))),
+      (OZ_Term) 0
     };
     DEBUGPRINT(("reflect_space_variable (d)"));
 
@@ -276,10 +276,10 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_type = atom_bool;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2Var(var)->getSuspList()))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2Var(var)->getSuspList())),
+      (OZ_Term) 0
     };
 
     MKARITY(susp_arity, susp_arity_def);
@@ -301,22 +301,22 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     term_type = atom_fs;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2Var(var)->getSuspList()))},
-      {OZ_pair2(atom_glb,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2GenFSetVar(var)->
-                                       getSuspList(fs_prop_glb)))},
-      {OZ_pair2(atom_lub,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2GenFSetVar(var)->
-                                       getSuspList(fs_prop_lub)))},
-      {OZ_pair2(atom_val,
-                reflect_space_susplist(rec_stack, ptable,
-                                       tagged2GenFSetVar(var)->
-                                       getSuspList(fs_prop_val)))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2Var(var)->getSuspList())),
+      OZ_pair2(atom_glb,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2GenFSetVar(var)->
+                                      getSuspList(fs_prop_glb))),
+      OZ_pair2(atom_lub,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2GenFSetVar(var)->
+                                      getSuspList(fs_prop_lub))),
+      OZ_pair2(atom_val,
+               reflect_space_susplist(rec_stack, ptable,
+                                      tagged2GenFSetVar(var)->
+                                      getSuspList(fs_prop_val))),
+      (OZ_Term) 0
     };
 
     MKARITY(susp_arity, susp_arity_def);
@@ -363,12 +363,12 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
 
   if (term_type != OZ_nil()) { // it is a variable
     OZ_Term arity_def[] = {
-      {OZ_pair2(atom_ref,       var_itself)},
-      {OZ_pair2(atom_type,      term_type)},
-      {OZ_pair2(atom_id,        term_id)},
-      {OZ_pair2(atom_susplists, term_susplist)},
-      {OZ_pair2(atom_name,      OZ_atom(oz_varGetName(var_itself)))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_ref,       var_itself),
+      OZ_pair2(atom_type,      term_type),
+      OZ_pair2(atom_id,        term_id),
+      OZ_pair2(atom_susplists, term_susplist),
+      OZ_pair2(atom_name,      OZ_atom(oz_varGetName(var_itself))),
+      (OZ_Term) 0
     };
 
     MKARITY(arity, arity_def);
@@ -442,9 +442,9 @@ OZ_Term reflect_space(OZ_Term v)
   _DEBUGPRINT(("Reflecting Space done.\n"));
 
   OZ_Term arity_def[] = {
-    {OZ_pair2(atom_vars, OZ_recordInit(atom_reflect_vartable, var_list))},
-    {OZ_pair2(atom_props, OZ_recordInit(atom_reflect_proptable, prop_list))},
-    {(OZ_Term) 0}
+    OZ_pair2(atom_vars, OZ_recordInit(atom_reflect_vartable, var_list)),
+    OZ_pair2(atom_props, OZ_recordInit(atom_reflect_proptable, prop_list)),
+    (OZ_Term) 0
   };
 
   MKARITY(term_arity, arity_def);
