@@ -84,8 +84,8 @@ OZ_C_proc_begin(fsp_disjoint, 2)
 
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarBounds, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarGlb, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarGlb, susp_count);
   
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 

@@ -128,7 +128,7 @@ public:
   void copyExtension(void);
   void disposeExtension(void);
 
-  char * toString() const;
+  char * toString(void) const;
 };   
 
 
@@ -149,6 +149,9 @@ protected:
 public:
   OZ_FSetValue(void) {}
   OZ_FSetValue(const OZ_FSetConstraint&);
+  OZ_FSetValue(const OZ_Term);
+  OZ_FSetValue(OZ_FSetState);
+
   int getCard(void) const { return _card; }
   int getKnownNotIn(void) const { return 32 * fset_high - _card; }
   OZ_Boolean isIn(int) const;
@@ -159,7 +162,17 @@ public:
   int getNextSmallerElem(int) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
-  char * toString() const;
+  char * toString(void) const;
+
+  OZ_FSetValue operator & (const OZ_FSetValue &) const;
+  OZ_FSetValue operator | (const OZ_FSetValue &) const;
+  OZ_FSetValue operator - (const OZ_FSetValue &) const;
+  OZ_FSetValue operator &= (const OZ_FSetValue &);
+  OZ_FSetValue operator |= (const OZ_FSetValue &);
+  OZ_FSetValue operator &= (const int);
+  OZ_FSetValue operator += (const int);
+  OZ_FSetValue operator -= (const int);
+  OZ_FSetValue operator - (void) const;
 };
 
 
@@ -201,6 +214,7 @@ public:
   OZ_Boolean putCard(int, int);
   OZ_Boolean isValue(void) const;
   void init(void);
+  void init(OZ_FSetState);
   OZ_Boolean isIn(int) const;
   OZ_Boolean isNotIn(int) const;
   OZ_Boolean isEmpty(void) const;
@@ -217,13 +231,14 @@ public:
   OZ_Boolean operator <<= (const OZ_FSetConstraint &);
   OZ_FSetConstraint operator & (const OZ_FSetConstraint &) const;
   OZ_FSetConstraint operator | (const OZ_FSetConstraint &) const;
+  OZ_FSetConstraint operator - (const OZ_FSetConstraint &) const;
   OZ_Boolean operator <= (const OZ_FSetConstraint &);
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
   OZ_Boolean operator == (const OZ_FSetConstraint &);
   OZ_Boolean operator <= (const int);
   OZ_Boolean operator >= (const int);
-  char * toString() const;
+  char * toString(void) const;
 };   
 
 
@@ -277,7 +292,7 @@ public:
     return 0; 
   }
 
-  char * toString() const;
+  char * toString(void) const;
 };
 
 //-----------------------------------------------------------------------------

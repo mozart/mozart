@@ -35,9 +35,9 @@ void GenFSetVariable::dispose(void) {
 #endif
 
 
-Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var, 
-				TaggedRef * tptr, TaggedRef term,
-				ByteCode *scp, /* propagate */
+Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var, 
+				OZ_Term * tptr, OZ_Term term,
+				ByteCode * scp, /* propagate */
 				Bool disp  /* dispose */)
 {
   TypeOfTerm ttag = tagTypeOf(term);
@@ -46,16 +46,12 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   case FSETVALUE:
     {
 #ifdef DEBUG_FSUNIFY 
-      (*cpi_cout) << "fsunify: (" << _fset.toString() << " = " 
+      (*cpi_cout) << "fsunify(value): (" << _fset.toString() << " = " 
 		<< *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
       
       if (! ((OZ_FSetImpl *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term)))
 	goto f;
-      
-#ifdef DEBUG_FSUNIFY 
-      (*cpi_cout) << " -> " <<  _fset.toString();
-#endif
       
       Bool isLocalVar = am.isLocalSVar(this);
       Bool isNotInstallingScript = !am.isInstallingScript();
@@ -70,6 +66,10 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	am.doBindAndTrail(var, vptr, term);
       }
       
+#ifdef DEBUG_FSUNIFY 
+      (*cpi_cout) << " -> " <<  _fset.toString();
+#endif
+      
       goto t;
     } // case FSETVALUE:
   case CVAR:
@@ -83,14 +83,14 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	  OZ_FSetImpl new_fset;
 
 #ifdef DEBUG_FSUNIFY 
-	  (*cpi_cout) << "fsunify: (" << *fset << " = " << *t_fset << " )";
+	  (*cpi_cout) << "fsunify(var): (" << *fset << " = " << *t_fset << " )";
 #endif
       
 	  if ((new_fset = t_fset->unify(*fset)).getCardMin() == -1)
 	    goto f;
 
 #ifdef DEBUG_FSUNIFY 
-	  (*cpi_cout) << " -> " << new_fset;
+	  (*cpi_cout) << " -> " << new_fset << " " << new_fset.isValue();
 #endif
       
 	  Bool var_is_local  = am.isLocalSVar(this);
@@ -105,7 +105,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	  switch (var_is_local + 2 * term_is_local) {
 	  case TRUE + 2 * TRUE: // var and term are local
 	    {
-	      if (new_fset.isFSetValue()) {
+	      if (new_fset.isValue()) {
 		OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
 		term_var->propagateUnify(term);
 		propagateUnify(var);
@@ -137,7 +137,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	  case TRUE + 2 * FALSE: // var is local and term is global
 	    {
 	      if (t_fset->isWeakerThan(new_fset)) {
-		if (new_fset.isFSetValue()) {
+		if (new_fset.isValue()) {
 		  OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
 		  if (is_not_installing_script) term_var->propagateUnify(term);
 		  if (var_is_constrained) propagateUnify(var);
@@ -164,7 +164,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	  case FALSE + 2 * TRUE: // var is global and term is local
 	    {
 	      if (fset->isWeakerThan(new_fset)){
-		if(new_fset.isFSetValue()) {
+		if(new_fset.isValue()) {
 		  OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
 		  if (is_not_installing_script) propagateUnify(var);
 		  if (term_is_constrained) term_var->propagateUnify(term);
@@ -191,7 +191,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	    } // FALSE + 2 * TRUE:
 	  case FALSE + 2 * FALSE: // var and term is global
 	    {
-	      if (new_fset.isFSetValue()){
+	      if (new_fset.isValue()){
 		OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
 		if (scp==0) {
 		  propagateUnify(var);
@@ -228,7 +228,8 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   } // switch switch (ttag)
 t:
 #ifdef DEBUG_FSUNIFY 
-  (*cpi_cout) << " true" << endl << flush;
+  
+  (*cpi_cout) << tagged2String(*vptr,1,1) << " true" << endl << flush;
 #endif
   return TRUE;
 
