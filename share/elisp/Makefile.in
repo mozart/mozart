@@ -1,3 +1,4 @@
+BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 
 SRCDIR		= @srcdir@
@@ -14,9 +15,10 @@ MKINSTALLDIRS	= @MKINSTALLDIRS@
 
 LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc
 
-.PHONY: all install clean veryclean realclean distclean tags
+.PHONY: bootstrap all install clean veryclean realclean distclean tags
 
 all: oz.elc
+bootstrap: all
 
 oz.elc: oz.el
 	@$(ECHO) "(setq byte-compile-compatibility t) \
@@ -42,8 +44,8 @@ veryclean: clean
 
 realclean: clean
 
-distclean:
-	$(RM) Makefile
+distclean: clean
+	$(RM) Makefile oz.el
 
 tags:
 	etags oz.el
