@@ -3945,12 +3945,11 @@ OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val){
   return PROCEED;
 }
 
-OZ_Return sendAcknowledge(Site* sd,int OTI){
+void sendAcknowledge(Site* sd,int OTI){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);  
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_ACKNOWLEDGE(bs,mySite,OTI);
   SendTo(sd,bs,M_ACKNOWLEDGE,mySite,OTI);
-  return PROCEED;
 }
 
 void PerdioVar::acknowledge(OZ_Term *p){
@@ -3987,14 +3986,17 @@ OZ_Return sendRedirect(PerdioVar *pv,OZ_Term val, Site* ackSite, int OTI)
     CheckNogoods(val,bs,UNIFY_ERRORMSG,);
   }
   while (pl) {
-    Site* sd=pl->sd;
-    ProxyList *tmp=pl->next;
+    Site* sd = pl->sd;
+    if (sd==ackSite) {
+      sendAcknowledge(sd,OTI);
+    } else {
+      ret = sendRedirect(sd,OTI,val);
+      if (ret != PROCEED)
+	break;
+    }
+    ProxyList *tmp = pl->next;
     pl->dispose();
     pl = tmp;
-
-    ret = (sd==ackSite) ? sendAcknowledge(sd,OTI) : sendRedirect(sd,OTI,val);
-    if (ret != PROCEED)
-      break;
   }
   return ret;
 }
@@ -4004,10 +4006,11 @@ OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
   PD((PD_VAR,"bindPerdioVar by thread: %x",oz_currentThread()));
   if (pv->isManager()) {
     PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
-    OT->getOwner(pv->getIndex())->mkRef();
     OZ_Return aux = sendRedirect(pv,v,mySite,pv->getIndex());
-    if (aux == PROCEED)
+    if (aux == PROCEED) {
+      OT->getOwner(pv->getIndex())->mkRef();
       pv->primBind(lPtr,v);
+    }
     return aux;
   } 
   if (pv->isObject()) {
