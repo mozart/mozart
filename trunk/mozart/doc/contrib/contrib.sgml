@@ -30,7 +30,7 @@ automatically compiled into a regex object.
 the pattern and also feature 0 for the whole match.  The value on each
 feature is a pair <code/I#J/ of start and end indices into ?_{TXT}.
 If ?_{TXT} is a byte string, you can simply invoke
-<code/{ByteString TXT I J}/ to extract the match.
+<code/{ByteString.slice TXT I J}/ to extract the match.
 	<entry>Regex.group
 	<synopsis>{Regex.group ?+{N} ?+{MATCH} ?+{TXT} ??{GROUP}}
 	<item>Return the substring ?_{GROUP} matched by the ?_{N} group of
