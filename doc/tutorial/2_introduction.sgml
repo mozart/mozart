@@ -165,8 +165,9 @@
 	    <grammar.alt or/<code/proc {?{X} ?{Y1} ... ?{Yn}} ?{S1} end//
 	    <grammar.alt or/<code/{X ?{Y1} ... ?{Yn}}//
 	    <grammar.alt or/<code/{NewCell Y X}//
+            <grammar.alt or/<code/Y=@X//
+            <grammar.alt or/<code/X:=Y//
 	    <grammar.alt or/<code/{Exchange X Y Z}//
-	    <grammar.alt or/<code/{Access X Y}//
 	    <grammar.alt or/<code/if ?{B} then ?{S1} else ?{S2} end//
 	    <grammar.alt or/<code/thread ?{S1} end//
 	    <grammar.alt or/<code/try ?{S1} catch ?{X} then ?{S2} end//
@@ -182,7 +183,7 @@ S ::= ?{S1} ?{S2}
     | local ?{X1} ... ?{Xn} then ?{S1} end
     | proc {?{X} ?{Y1} ... ?{Yn}} ?{S1} end
     | {X ?{Y1} ... ?{Yn}}
-    | {NewCell Y X} | {Exchange X Y Z} | {Access X Y}
+    | {NewCell Y X} | {Exchange X Y Z} | Y = @X | X:=Y
     | if ?{B} then ?{S1} else ?{S2} end
     | thread ?{S1} end
     | try ?{S1} catch ?{X} then ?{S2} end | raise ?{X} end
@@ -221,8 +222,8 @@ statement. Procedures are defined at run-time with the <<proc>>
 statement and referred to by a variable. Procedure applications block
 until their first argument refers to a procedure. State is created
 explicitly by <EM>NewCell</EM>, which creates a cell, an updateable
-pointer into the variable store. Cells are updated by
-<EM>Exchange</EM> and read by <EM>Access</EM>. Conditionals use the
+pointer into the variable store. Cells are read by <<@>> and updated by
+<<:=>> or alternatively by <EM>Exchange</EM>. Conditionals use the
 keyword <<if>> and block until the condition variable ?{B} is <<true>>
 or <<false>>
 in the variable store. Threads are created explicitly with the
