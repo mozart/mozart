@@ -71,7 +71,7 @@ synchronizes on a choice the tuple <<alternatives(?{I})>> is returned, where ?{I
 Synchronizes on stability of ?_{Space}.
 
 <p>
-Raises a runtime error if the current space is not addmissible
+Raises a runtime error if the current space is not admissible
 for ?_{Space}.
 
 <entry><<askVerbose>>
@@ -105,7 +105,7 @@ where ?_{I} gives the number of alternatives of the selected choice.
 Does not synchronize on stability of ?_{Space}.
 
 <p>
-Raises a runtime error if the current space is not addmissible
+Raises a runtime error if the current space is not admissible
 for ?_{Space}.
 
 <entry><<merge>>
@@ -121,7 +121,7 @@ Does not synchronize on stability of ?_{Space}.
 
 <p>
 Raises a runtime error if ?_{Space} is already merged, or if the
-current space is not addmissible for ?_{Space}.
+current space is not admissible for ?_{Space}.
 
 <entry><<clone>>
 <index class=tails/<<Space>><and><<clone>>/
@@ -136,7 +136,7 @@ Synchronizes on stability of ?_{Space}.
 
 <p>
 Raises a runtime error if ?_{Space} is already merged, or if the
-current space is not addmissible for ?_{Space}.
+current space is not admissible for ?_{Space}.
 
 
 <entry><<inject>>
@@ -152,7 +152,7 @@ Does not synchronize on stability of ?_{Space}.
 
 <p>
 Raises a runtime error if ?_{Space} is already merged, or if the
-current space is not addmissible for ?_{Space}.
+current space is not admissible for ?_{Space}.
 
 
 <entry><<kill>>
@@ -174,7 +174,7 @@ Does not synchronize on stability of ?_{Space}.
 
 <p>
 Raises a runtime error if ?_{Space} is already merged, or if the
-current space is not addmissible for ?_{Space}.
+current space is not admissible for ?_{Space}.
 
 <entry><<commit>>
 <index class=tails/<<Space>><and><<commit>>/
@@ -201,7 +201,7 @@ Synchronizes on stability of ?_{Space}.
 <p>
 Raises a runtime error, if ?_{Space} has been merged already, if
 there exists no selected choice in ?_{Space}, or if the current
-space is not addmissible for ?_{Space}.
+space is not admissible for ?_{Space}.
 
 
 <entry><<waitStable>>
