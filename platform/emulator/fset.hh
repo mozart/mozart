@@ -34,6 +34,9 @@
 #include "base.hh"
 #include "oz_cpi.hh"
 
+// loeckelt
+#include "fdomn.hh"
+
 class FSetValue : public OZ_FSetValue {
 
 friend class FSetConstraint;
@@ -42,8 +45,9 @@ public:
   FSetValue(void) {}
   FSetValue(const FSetConstraint &s);
   FSetValue(OZ_Term);
-  FSetValue(const int *);
+  FSetValue(const int *, bool);
   FSetValue(OZ_FSetState s);
+  FSetValue(const OZ_FiniteDomain &fd);
 
   void init(const FSetConstraint &);
   void init(const OZ_Term);
@@ -81,8 +85,20 @@ public:
 
   OZ_Boolean isIn(int) const;
 
-  const int * getBV(void) const { return _in; }
+  const int * getBV(void) const {
+    //#ifndef BIGFSET
+    return _in;
+    //#else
+    //error("FSetValue::getBV() called with big FSets\n");
+    //return NULL;
+    //#endif
+  }
+  // conversion functions
+  void toNormal(void);
+  void toExtended(void);
+  bool maybeToNormal(void);
 
+  void DP(const char *s) const;
 };
 
 inline
@@ -91,7 +107,11 @@ ostream &operator << (ostream &ofile, const FSetValue &fs) {
 }
 
 const int fset_inf = 0;
+#ifdef BIGFSET
+const int fset_sup = 134217726;
+#else
 const int fset_sup = (32 * fset_high) - 1;
+#endif
 
 class FSetConstraint : public OZ_FSetConstraint {
 friend class FSetValue;
@@ -113,6 +133,9 @@ public:
   void init(const FSetValue &);
   void init(const FSetConstraint &);
   void init(OZ_FSetState);
+
+  FSetConstraint *gc(void);
+  void copyExtensions(void);
 
   FSetConstraint unify(const FSetConstraint &) const;
   OZ_Boolean valid(const FSetValue &) const;
@@ -150,6 +173,23 @@ public:
   int getNotInCard(void) const;
   int getUnknownCard(void) const;
 
+  int getGlbMinElem(void) const;
+  int getLubMinElem(void) const;
+  int getNotInMinElem(void) const;
+  int getUnknownMinElem(void) const;
+  int getGlbMaxElem(void) const;
+  int getLubMaxElem(void) const;
+  int getNotInMaxElem(void) const;
+  int getUnknownMaxElem(void) const;
+  int getGlbNextSmallerElem(int) const;
+  int getLubNextSmallerElem(int) const;
+  int getNotInNextSmallerElem(int) const;
+  int getUnknownNextSmallerElem(int) const;
+  int getGlbNextLargerElem(int) const;
+  int getLubNextLargerElem(int) const;
+  int getNotInNextLargerElem(int) const;
+  int getUnknownNextLargerElem(int) const;
+
   FSetConstraint operator - (void) const;
   OZ_Boolean operator += (int i); // assert i is in *this
   OZ_Boolean operator -= (int i); // assert i is in _not_ *this
@@ -164,6 +204,12 @@ public:
   OZ_Boolean operator == (const FSetConstraint &) const;
   OZ_Boolean operator <= (const int);
   OZ_Boolean operator >= (const int);
+
+  // conversion functions
+  void toNormal(void);
+  void toExtended(void);
+  bool maybeToNormal(void);
+  void DP(const char *s) const;
 };
 
 inline

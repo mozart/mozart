@@ -2017,7 +2017,28 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
 inline
 int OZ_FiniteDomainImpl::initFSetValue(const OZ_FSetValue &fs)
 {
+#ifdef BIGFSET
+  FDBitVector * bv = newBitVector(fset_high);
+  const int * set_bv = ((const FSetValue *) &fs)->getBV();
 
+  for (int i = fset_high; i--; )
+    bv->b_arr[i] = set_bv[i];
+
+  setType(bv);
+  min_elem = bv->findMinElem();
+  max_elem = bv->findMaxElem();
+
+  if (fs._other) {
+    FDIntervals *f = asIntervals();
+    FDIntervals *other = newIntervals(1);
+    other->init(32*fset_high, fs_sup);
+    FDIntervals *z = newIntervals(f->high + 1);
+    z->union_iv(*f, *other);
+    setType(z);
+  }
+  return size = fs.getCard();
+
+#else
   FDBitVector * bv = newBitVector(fset_high);
   const int * set_bv = ((const FSetValue *) &fs)->getBV();
 
@@ -2030,6 +2051,7 @@ int OZ_FiniteDomainImpl::initFSetValue(const OZ_FSetValue &fs)
 
 
   return size = fs.getCard();
+#endif
 }
 
 inline
@@ -2222,8 +2244,18 @@ OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FiniteDomain &fd)
 
 OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FSetValue &fs)
 {
+#ifdef BIGFSET
+  if (fs._normal) {
+    CASTTHIS->FiniteDomainInit(NULL);
+    CASTTHIS->initFSetValue(fs);
+  }
+  else {
+    CASTTHIS->operator =(CASTREF fs._IN);
+  }
+#else
   CASTTHIS->FiniteDomainInit(NULL);
   CASTTHIS->initFSetValue(fs);
+#endif
 }
 
 void OZ_FiniteDomain::disposeExtension(void)

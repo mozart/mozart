@@ -31,6 +31,16 @@
 #include <stdio.h>
 #include "oz.h"
 
+#define BIGFSET
+
+// loeckelt:
+// this might not be necessary anymore:
+#ifdef BIGFSET
+#ifdef FSET_HIGH
+#undef FSET_HIGH
+#endif
+#endif
+
 //-----------------------------------------------------------------------------
 // misc macros
 
@@ -53,7 +63,7 @@
     OZ_expect_t r = O.F(P);                                                     \
     if (O.isFailing(r)) {                                                       \
       O.fail();                                                                 \
-      return OZ_typeErrorCPI(expectedType, A, "");                                      \
+      return OZ_typeErrorCPI(expectedType, A, "");                              \
     } else if (O.isSuspending(r)) {                                             \
       SC += 1;                                                                  \
     } else if (O.isExceptional(r)) {                                            \
@@ -67,6 +77,7 @@ _OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 #define _OZ_EM_FDINF    "0"
 #define _OZ_EM_FDSUP    "134 217 726"
 #define _OZ_EM_FSETINF  "0"
+// loeckelt: change?
 #define _OZ_EM_FSETSUP  "63"
 #define _OZ_EM_INTMAX   "134 217 727"
 
@@ -153,24 +164,52 @@ public:
 
 enum OZ_FSetState {fs_empty, fs_full};
 
+
+#ifdef BIGFSET
+const int fs_sup = 134217726;
+const int fsethigh32 = 134217727;
 const int fset_high = 2;
+#else
+
+const int fset_high = 2;
+const int fs_sup = 32*fset_high - 1;
 //const int fset_high = 220;
 const int fsethigh32 = 32*fset_high;
+#endif
 
 class OZ_FSetConstraint;
+class OZ_FiniteDomainImpl;
+class FSetValue;
 
 class OZ_FSetValue {
+
+friend class OZ_FiniteDomainImpl;
+friend class OZ_FiniteDomain;
+
 protected:
   int _card;
+#ifdef BIGFSET
+  bool _other;
+  OZ_FiniteDomain _IN;
+  bool _normal;
+#endif
+
   int _in[fset_high];
 
 public:
+
   OZ_FSetValue(void) {}
   OZ_FSetValue(const OZ_FSetConstraint&);
   OZ_FSetValue(const OZ_Term);
   OZ_FSetValue(const OZ_FSetState);
   OZ_FSetValue(int, int);
   OZ_FSetValue(const OZ_FiniteDomain &);
+
+  void gc(void) {
+#ifdef BIGFSET
+    _IN.copyExtension();
+#endif
+  }
 
   int getCard(void) const { return _card; }
   int getKnownNotIn(void) const { return fsethigh32 - _card; }
@@ -213,8 +252,17 @@ enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val,
 class OZ_FSetConstraint {
 protected:
   int _card_min, _card_max;
-  int _known_not_in, _known_in;
+  int _known_in, _known_not_in;
+
+#ifdef BIGFSET
+  bool _normal;
+  bool _otherin;
+  bool _otherout;
+  OZ_FiniteDomain _IN;
+  OZ_FiniteDomain _OUT;
+#endif
   int _in[fset_high], _not_in[fset_high];
+
 
 public:
   OZ_FSetConstraint(void) {}
@@ -224,10 +272,17 @@ public:
   OZ_FSetConstraint(const OZ_FSetConstraint &);
   OZ_FSetConstraint &operator = (const OZ_FSetConstraint &);
 
+  // loeckelt: for gc
+  void copyExtensions(void);
+
   int getKnownIn(void) const { return _known_in; }
   int getKnownNotIn(void) const { return _known_not_in; }
   int getUnknown(void) const {
+#ifdef BIGFSET
+    return fs_sup - _known_in - _known_not_in + 1;
+#else
     return fsethigh32 - _known_in - _known_not_in;
+#endif
   }
 
   OZ_FSetValue getGlbSet(void) const;
