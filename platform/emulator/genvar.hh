@@ -33,8 +33,14 @@ enum TypeOfGenCVariable {
   OFSVariable,
   MetaVariable, 
   BoolVariable,
-  AVAR
+  AVAR,
+  DVAR
 };
+
+#define GenVarCheckType(t)				\
+    Assert(t == FDVariable || t == OFSVariable || 	\
+	   t == MetaVariable || t == BoolVariable || 	\
+	   t==AVAR || t==DVAR)
 
 class GenCVariable: public SVariable {
 
@@ -55,8 +61,7 @@ public:
 
   TypeOfGenCVariable getType(void){ return var_type; }
   void setType(TypeOfGenCVariable t){
-    Assert(t == FDVariable || t == OFSVariable || 
-	   t == MetaVariable || t == BoolVariable || t==AVAR);
+    GenVarCheckType(t);
     var_type = t;
   }  
     
@@ -73,7 +78,7 @@ public:
   int getSuspListLength(void);
 
   // is X=val still valid
-  Bool valid(TaggedRef val);
+  Bool valid(TaggedRef *varPtr, TaggedRef val);
   
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
@@ -120,6 +125,7 @@ void addSuspCVar(TaggedRef v, Thread * el)
 #include "ofgenvar.hh"
 #include "metavar.hh"
 #include "avar.hh"
+#include "dvar.hh"
 
 #ifndef OUTLINE
 #include "genvar.icc"

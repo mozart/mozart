@@ -246,13 +246,12 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       stream << ' ' << me->toString(DEC(depth)) << '>';
       break;
     }
+  case DVAR:
   case AVAR:
-    {
-      AVar* me = (AVar *) this;
-      stream << indent(offset) << "<AVAR "
+    stream << indent(offset) << (getType()==AVAR ? "<AVAR " : "<DVAR ")
 	     << getVarName(v) << " @" << this << ">";
       break;
-    }
+
   default:
     error("Unexpected type of generic variable at %s:%d.",
 	  __FILE__, __LINE__);

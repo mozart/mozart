@@ -316,7 +316,7 @@ Case(SETVOID)
 	}
 
         if (isNotCVar(term) ||
-	    isCVar(term) && tagged2CVar(term)->valid(atm)) {
+	    isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  Thread *thr = e->mkSuspThread ();
 	  addSusp (termPtr, thr);
@@ -384,7 +384,7 @@ Case(SETVOID)
 	}
 
         if (isNotCVar(term) ||
-	    isCVar(term) && tagged2CVar(term)->valid(i)) {
+	    isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  Thread *thr = e->mkSuspThread ();
 	  addSusp (termPtr, thr);
