@@ -83,7 +83,7 @@ define
       meth get_srcdir($)
 	 if @SrcDir==unit then
 	    if @Dir\=unit then
-	       SrcDir<-Dir
+	       SrcDir<-@Dir
 	    elseif @MakeFile\=unit then
 	       SrcDir<-{Path.dirname @MakeFile}
 	    else
