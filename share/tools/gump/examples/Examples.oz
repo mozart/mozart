@@ -21,7 +21,6 @@
 
 %%
 %% This file contains the test programs from the Gump Manual.
-%% Note: You should feed this file paragraph-wise!
 %%
 
 \switch +gump
