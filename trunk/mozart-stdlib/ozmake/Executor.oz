@@ -205,7 +205,6 @@ define
       end
 
       meth OZC_FAST(DST SRC Options)
-	 {self trace('ozc fast: '#SRC#' -> '#DST)}
 	 %% we need the chDir in order for the .so created by Gump to end up
 	 %% the appropriate directory.  This is fairly aggravating: we should
 	 %% NEVER change or rely on the current directory being one thing or
