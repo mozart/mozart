@@ -80,7 +80,6 @@ public:
 /*
  * Basic aligned allocation routine:
  *  - Supports alignment of 4 and 8
- *  -
  *
  */
 
@@ -131,10 +130,36 @@ void * _oz_amalloc(const size_t sz, const size_t align) {
   return _oz_heap_cur;
 }
 
+/*
+ * Routine that rounds a requested size to a multiple of
+ * sizeof(int32)
+ *
+ */
+
+#define HMALLOC_SAFE_SZ(sz) \
+   (((sz) + (sizeof(int32)-1)) & (~(sizeof(int32)-1)))
+
+/*
+ * Unsafe allocation routines:
+ *  - various alignment types
+ *  - requested sz must be multiple of sizeof(int32)
+ *
+ */
 
 #define int32Malloc(sz)  (_oz_amalloc((sz),sizeof(int32)))
 #define doubleMalloc(sz) (_oz_amalloc((sz),sizeof(double)))
 #define heapMalloc(sz)   (_oz_amalloc((sz),sizeof(void *)))
+
+/*
+ * Safe allocation routines:
+ *  - various alignment types
+ *  - requested sz can be arbitrary
+ *
+ */
+
+#define int32MallocSafe(sz)  int32Malloc(HMALLOC_SAFE_SZ(sz))
+#define doubleMallocSafe(sz) doubleMalloc(sz)
+#define heapMallocSafe(sz)   heapMalloc(HMALLOC_SAFE_SZ(sz))
 
 
 void initMemoryManagement(void);
@@ -192,7 +217,7 @@ unsigned int getUsedMemoryBytes(void) {
 
 // Transformations between FreeListIndex and Size
 #define FL_SizeToIndex(sz) ((sz) >> 2)
-#define FL_IndexToSize(i)  ((i) << 2)
+#define FL_IndexToSize(i)  ((i)  << 2)
 
 // Alignment restrictions
 #define FL_IsValidSize(sz) (!((sz) & 3))
@@ -289,17 +314,22 @@ public:
 
 
 /*
- * The real allocation routines
+ * The real allocation routines:
+ *  - aligment is fixed to 4
+ *  - for difference between Safe and other see above
  *
  */
 
-#define freeListMalloc(s)    (FL_Manager::alloc((s)))
+#define freeListMalloc(s)     (FL_Manager::alloc((s)))
+#define freeListMallocSafe(s) freeListMalloc(HMALLOC_SAFE_SZ(s))
 
 #ifdef CS_PROFILE
 #define freeListDispose(p,s)
 #else
 #define freeListDispose(p,s) FL_Manager::free((p),(s))
 #endif
+
+#define freeListDisposeSafe(p,s) freeListDispose(p,HMALLOC_SAFE_SZ(s))
 
 
 
