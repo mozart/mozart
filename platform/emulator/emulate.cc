@@ -1593,9 +1593,13 @@ LBLkillThread:
       // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
+        killPropagatedCurrentTaskSusp();
+        LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+                          goto localHack75;);
         DISPATCH(6);
 
       case SUSPEND:
+        LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
         {
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
@@ -1612,6 +1616,9 @@ LBLkillThread:
         }
 
       case FAILED:
+        LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
+        LOCAL_PROPAGATION(localPropStore.reset());
+      localHack75:
         SHALLOWFAIL;
         HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
       case SLEEP:
