@@ -1391,7 +1391,13 @@ OZ_BI_define(BIthreadSuspend,1,0)
 void threadResume(Thread *th) {
   th->setStop(NO);
 
-  if (!th->isRunnable() && !am.threadsPool.isScheduledSlow(th)) {
+  /* mm2: I don't understand this, but let's try to give some explanation.
+   *  1. resuming the current thread should be a NOOP.
+   *  2. only runnable threads need to be rescheduled.
+   */
+  if (th!=oz_currentThread() &&
+      th->isRunnable() &&
+      !am.threadsPool.isScheduledSlow(th)) {
     am.threadsPool.scheduleThread(th);
   }
 }
