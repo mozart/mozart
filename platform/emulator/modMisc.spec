@@ -72,11 +72,6 @@
                              BI  => BIbiPrint,
                              ifdef=>'PROFILE_BI'},
 
-    'halt'              => { in  => [],
-                             out => [],
-                             BI  => BIhalt,
-                             ifdef=>'DEBUG_TRACE'},
-
     ###
     ### Christian's private stuff
     ###
@@ -105,9 +100,5 @@
     ### Tobias's private stuff
     ###
 
-
-    ###
-    ### Michael's private stuff
-    ###
 
  );
