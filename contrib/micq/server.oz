@@ -415,7 +415,8 @@ define
       end
 
 
-      meth !S_addUser(firstname:F lastname:L friends:Fr<=nil organization:O email:E passwd:P id:U userlevel: UL)
+      meth !S_addUser(firstname:F lastname:L friends:Fr<=nil organization:O
+                      email:E passwd:P id:U userlevel:UL extra:Xtra<=nil)
          {WriteLog "Create account for "#U#" ("#F#" "#L#", "#O#")"}
          try
             {DB addUser(id:U
@@ -425,7 +426,8 @@ define
                         friends:Fr
                         email:E
                         passwd:P
-                        userlevel: UL)}
+                        userlevel: UL
+                        extra:Xtra)}
          catch idAllreadyInUse(M) then
             {WriteLog "Id '"#U#"' is allready taken!"}
             raise idAllreadyInUse(M) end
@@ -492,10 +494,11 @@ define
          catch _ then {WriteLog "Can't return info about "#Id} end
       end
 
-      meth !S_updateUser(firstname:F lastname:L organization:O email:E passwd:P id:U userlevel:UL) ON I in
+      meth !S_updateUser(firstname:F lastname:L organization:O email:E
+                         passwd:P id:U userlevel:UL extra:Xtra<=nil) ON I in
          %% Update the databse
          {DB updateUser(id:U firstname:F lastname:L organization:O email:E passwd:P
-                        userlevel: UL)}
+                        userlevel: UL extra:Xtra)}
 
          %% Update the client
          try
@@ -567,10 +570,13 @@ define
             {WriteLog "["#Id#"] failed to remove application ("#Aid#")"} end
       end
 
+      %% Unprotected methods (will change when methods.oz is recomiled)
+      meth getTextRepresentationOfAllUsers($)
+         nil
+      end
+
 
       %% Local methods (used ONLY by server)
-
-
       meth !HaltServer(1:Msg<=nil)
          {Gate close}
          {WriteLog "*** System is halting..."}
