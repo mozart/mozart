@@ -13,22 +13,65 @@ SED		= @SED@
 ECHO		= @@ECHO@
 M4		= @M4@
 RM		= @RM@ -f
+CXX		= @CXX@
 
 LIBS            = @LIBS@
 LDFLAGS		= @LDFLAGS@
 
 COPT		= @COPT@
 DEFS		= @DEFS@
+PROF_DEFS	= \
+	-DTHREADED -DFASTREGACCESS -DREGOPT -DPROFILE \
+	-DWANT_INSTRPROFILE -DDEBUG_DET
+DEBUG_DEFS	= \
+	-DDEBUG_TRACE \
+	-DDEBUG_CHECK \
+	-DINTERFACE \
+	-DXXSLOW_DEBUG_CHECK \
+	-DXXTHREADED \
+	-DXXFASTREGACESS \
+	-DXXREGOPT \
+	-DXXDEBUG_GC \
+	-DXXDEBUG_VERBOSE \
+	-DXXRECINSTRFETCH=500 \
+	-DDEBUG_FD \
+	-DXXDEBUG_FDCD \
+	-DDEBUG_DET \
+	-DXXPROFILE_FD \
+	-DDEBUG_MEM \
+	-DOUTLINE \
+	-DXXDEBUG_META \
+	-DXXDEBUG_STACK \
+	-DXXDEBUG_STABLE \
+	-DXXDEBUG_THREADS \
+	-DDEBUG_FSET \
+	-DXXDEBUG_LTQ \
+	-DXXDEBUG_INDICES \
+	-DXXDEBUG_PROPAGATORS \
+	-DXXALLDIFF \
+	-DPRINT_LONG \
+	-DXXMM_DEBUG \
+	-DDEBUG_PERDIO
+
 CFLAGS		= $(COPT) $(DEFS) $(CDYN) $(CUSR)
-CCFLAGS		= $(CFLAGS) $(CCINCLUDES)
-CXXDEPEND	= $(CXX) $(CCFLAGS) -MM
+CXXFLAGS	= $(CFLAGS) $(CCINCLUDES)
+CXXDEPEND	= $(CXX) $(CXXFLAGS) -MM
+
+MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
+	-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
+	-Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes \
+	-Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
+	-Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
+
+CWARN = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+	-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
+	-Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized
+
+ERRWARN = -Werr
 
 INSTRDEFS = ../include/instrDefs.m4
 
-
-all::
-
-M4FILES = scancode.cc instrtab.hh opcodes.hh optostr.hh\
+M4FILES = scancode.cc instrtab.hh opcodes.hh optostr.hh \
 	  register.hh opcodes.cc marshallcode.cc
 
 PEANUTS = am.cc genvar.cc \
@@ -59,6 +102,7 @@ CPISRCS =	cpi.cc cpi_fd.cc cpi_prop.cc cpi_fs.cc \
 
 FSETSRCS = 	fset.cc fsetcore.cc fsgenvar.cc
 
+
 SRCS = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@
 
 OBJS = $(SRCS:.cc=.o)
@@ -71,7 +115,6 @@ FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
 	    $(FDDIR)/sum.cc $(FDDIR)/sumequal.cc \
 	    $(FDDIR)/distance.cc $(FDDIR)/misc.cc $(FDDIR)/streamProps.cc \
 	    $(FDDIR)/sumd.cc $(FDDIR)/sumabs.cc  
-
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
 
@@ -92,13 +135,13 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 PROPOBJ = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
-DESTBIN = $(OZHOME)/platform/@OzPlatform@
+DESTBIN = $(OZHOME)/platform/@platform@
 
 EMUEXE = oz.emulator.bin
 
-.NOEXPORT: emulate.o $(EMUEXE) peanuts.o
+.NOEXPORT: emulate.o @EMUEXE@ peanuts.o
 
-all:: $(EMUEXE)
+all:: @EMUEXE@
 
 win:: ozlib.lnk $(M4FILES)
 
@@ -110,13 +153,9 @@ first: version $(M4FILES) $(SRCS)
 
 fd: $(FDLIB) $(SCHEDLIB)
 
-$(EMUEXE): first main.o $(OBJS) @PROPOBJ@ $(FDLIB) $(SCHEDLIB)
+@EMUEXE@: first main.o $(OBJS) @PROPOBJ@ $(FDLIB) $(SCHEDLIB)
 	$(CXX) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
 	   main.o $(OBJS) @PROPOBJ@ $(LIBS); \
-	echo 'moving ...'; mv /tmp/$@.$$$$ $@
-
-oz.emulator.o: first $(OBJS)
-	$(CXX) -r $(LDOPT) -o /tmp/$@.$$$$ $(OBJS);\
 	echo 'moving ...'; mv /tmp/$@.$$$$ $@
 
 install:: $(DESTBIN)/oz.emulator.bin \
@@ -142,7 +181,7 @@ initffuns.cc oz.c: oz.h
 
 version::
 	$(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
-	     -e "s/OZPLATFORM/@OzPlatform@/" \
+	     -e "s/OZPLATFORM/@platform@/" \
 	     $(srcdir)/version.sed > version.cc
 
 
@@ -153,12 +192,6 @@ depend:: $(M4FILES) $(SRCS)
 
 $(M4FILES): $(INSTRDEFS)
 
-
-MAKEMAKEFILEOPT = 
-
-MAKEMAKEFILEOPT += -DLINKFOREIGNFD
-
-
 tags:	$(M4FILES) version.cc
 	etags -C $(SRCS) *.hh
 
@@ -166,26 +199,13 @@ clean::
 	$(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt
 
 realclean::
-	$(RM) version.cc $(EMUEXE) 
+	$(RM) version.cc @EMUEXE@
 	$(RM) ozlib.lnk *.exe *.map *.imp *.sym
 	$(RM) $(M4FILES)
 
 ozlib.lnk: oz.h
 	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
 	sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
-
-
-builtins1.o: builtins.cc
-builtins2.o: builtins.cc
-
-linkdir:
-	dir=../Emulator-`ozplatform`; \
-	mkdir $$dir; cd $$dir; \
-	ln -s ../Emulator/version.sed \
-	      ../Emulator/?*c ../Emulator/?*h \
-	      ../Emulator/Imakefile .; ../ozmkmf; \
-	rm -f version.cc; make version
-
 
 scanner.cc: scanner.ll
 	$(LEX) $(LFLAGS) -t scanner.ll > scanner.cc
@@ -198,14 +218,11 @@ parser.cc parser.hh: parser.yy
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
 
-.cc.o:
-	$(CXX) $(CCFLAGS) -c -o $@ $<
-
 .cc.s:
-	$(CXX) $(CCFLAGS) -S -o $@ $<
+	$(CXX) $(CXXFLAGS) -S -o $@ $<
 
 .cc.E:
-	$(CXX) $(CCFLAGS) -E -o $@ $<
+	$(CXX) $(CXXFLAGS) -E -o $@ $<
 
 .m4cc.cc:
 	$(M4) $< > $@
