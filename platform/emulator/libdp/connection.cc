@@ -150,9 +150,11 @@ OZ_BI_define(BIgetConnGrant,4,0){
       return ret;
     Assert(!comObj->connectgrantrequested);
     comObj->connectVar=var;
+    comObj->transtype=type;
     comObj->connectgrantrequested=TRUE;
     OZ_protect(&comObj->connectVar); // Protects connectVar from GC, 
                                      // must be unprotected when done
+    OZ_protect(&comObj->transtype);
     transController->getTransObj(comObj);
     // When the transObj is ready var will be bound
   }
@@ -204,6 +206,7 @@ void transObjReady(ComObj *comObj,TransObj *transObj) {
 					     (int) transObj),
 				   oz_nil())));
     OZ_unprotect(&comObj->connectVar);
+    OZ_unprotect(&comObj->transtype);
     comObj->connectgrantrequested=FALSE;
   }
   else
@@ -271,8 +274,16 @@ void handback(ComObj *comObj, TransObj *transObj) {
 // it was waiting for.
 void comObjDone(ComObj *comObj) {
   if(comObj->connectgrantrequested) {
-    OZ_unify(comObj->connectVar,oz_atom("abort"));
+    //    OZ_unify(comObj->connectVar,oz_atom("abort"));
+    OZ_Term tcp=oz_atom("tcp");
+    TransController *transController;
+    if(oz_eq(comObj->transtype,tcp))
+      transController=tcptransController;
+    else
+      OZ_error("Unknown transport media");
+    transController->comObjDone(comObj);
     OZ_unprotect(&comObj->connectVar);
+    OZ_unprotect(&comObj->transtype);
     comObj->connectgrantrequested=FALSE;
   }
   // Requestor=requestor(id:SiteId req:comObj)
