@@ -66,7 +66,6 @@ public:
   Bool isInBlock(void *value) {
     return ((block <= (char *) value) && ((char *) value < block + xsize));
   }
-  MemChunks *getNext() { return next; }
 
 #ifdef DEBUG_MEM
   Bool inChunkChain(void *value);
