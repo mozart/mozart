@@ -1,3 +1,4 @@
+### -*- perl -*-
 ###
 ### Authors:
 ###   Denys Duchier <duchier@ps.uni-sb.de>
@@ -22,16 +23,17 @@
 ### WARRANTIES.
 ###
 
-# -*- perl -*-
-
 %builtins_all =
 (
-    'file'		=> { in     => ['+virtualString','+record'],
-			     out    => ['+value'],
-			     bi     => parser_parseFile},
+ 'file'			=> { in  => ['+virtualString','+record'],
+			     out => ['+value'],
+			     bi  => parser_parseFile},
 
-    'virtualString' => { in     => ['+virtualString','+record'],
-			 out    => ['+value'],
-			 bi     => parser_parseVirtualString},
+ 'virtualString'	=> { in  => ['+virtualString','+record'],
+			     out => ['+value'],
+			     bi  => parser_parseVirtualString},
 
+ 'expandFileName'	=> { in  => ['+virtualString'],
+			     out => ['+value'],
+			     bi  => parser_expandFileName},
  );
