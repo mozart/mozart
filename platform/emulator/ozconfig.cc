@@ -89,12 +89,12 @@ void ConfigData::init() {
   debugPerdio  = 0;
   perdioMinimal = 0;
   debugIP = 0;
-  maxTcpCache = MAX_TCP_CACHE;
-  maxUdpPacket = MAX_UDP_PACKET;
-  tcpPacketSize = TCP_PACKET_SIZE;
 
   perdioSeifHandler = 1;
+  perdioFlowBufferSize  = FLOW_BUFFER_SiZE;
+  perdioFlowBufferTime  = FLOW_BUFFER_TIME;
   perdioUseAltVarProtocol = FALSE;
+  perdioTimeout = PERDIO_TIMEOUT;
 
   dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
   dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;

@@ -147,10 +147,6 @@ error include resources.hh before mozart.h
 #define THREAD_ID_MAX           ((1 << THREAD_ID_SIZE) - 1)
 #define THREAD_ID_MASK          THREAD_ID_MAX
 
-#define MAX_TCP_CACHE     5
-#define MAX_UDP_PACKET    100*1024  /* 100k */
-#define TCP_PACKET_SIZE   1*1024    /* 1k */
-
 //
 // Tasks manager;
 // Minimal frequency in ms. Rounded up to the 'CLOCK_TICK' value;
@@ -160,6 +156,9 @@ error include resources.hh before mozart.h
 //
 // Distributed Oz - general;
 #define PROBE_INTERVAL      1000 /* ms */
+#define FLOW_BUFFER_SiZE    1000000
+#define FLOW_BUFFER_TIME    1000
+#define PERDIO_TIMEOUT      30000 /* ms */
 
 //
 // Distributed Oz - virtual sites
