@@ -1,88 +1,85 @@
-<Appendix ID="appendix.notation">
-  <Title>The Used Notation
+<Appendix id="appendix.notation">
+  <Title/The Used Notation/
   <P>
     This appendix describes the notation used to specify the syntax of the
-    Gump specification language as an extension of the Oz language.  It is
+    Gump specification language as an extension of the &Oz; language.  It is
     an extended Backus-Naur-Formalism built from the following parts:
-    <LIST>
+    <List>
       <Item>
-	<P>
-	   terminals and nonterminals are enclosed in angle brackets
-	   <Math>\langle\ldots\rangle</Math>;
+	<P.silent><!--**-->
+	  terminals and nonterminals are enclosed in angle brackets
+	  <Math>\langle\ldots\rangle</Math>;
       <Item>
-	<P>
+	<P.silent><!--**-->
 	  the left side is separated from the right side by either ::= or
 	  +=, where += adds productions to an existing nonterminal;
       <Item>
-	<P>
+	<P.silent><!--**-->
 	  the vertical bar separates alternatives;
       <Item>
-	<P>
+	<P.silent><!--**-->
 	  square brackets denote optional phrases;
       <Item>
-	<P>
+	<P.silent><!--**-->
 	  curly braces enclose phrases that may be repeated 0 to <Math
 	  >n</Math>&nbsp;times;
       <Item>
-	<P>
+	<P.silent><!--**-->
 	  curly braces with a suffixed&nbsp;+ enclose phrases that may be
 	  repeated 1 to <Math>n</Math>&nbsp;times;
       <Item>
-	<P>
-	  literal strings are set in <Code>typewriter</Code>.
-    </LIST>
-  <Section><Title>Elements from the Oz Syntax
-    <PARA CLASS=apropos><TITLE/Lexical Conventions/
-      Since the tool's specification language is embedded into Oz, the same
-      lexical conventions apply as for Oz.  The only additional terminal type
-      is ?={regex}, described in <PTR TO="section.scanner.syntax"
-      CLASS="Section">.
-    <PARA CLASS=apropos><TITLE/Terminals/
+	<P.silent><!--**-->
+	  literal strings are typeset in <Code>this way</Code>.
+    </List>
+  <Section>
+    <Title/Elements from the Oz Syntax/
+    <Para class=apropos><Title/Lexical Conventions/
+      Since the tool's specification language is embedded into &Oz;, the same
+      lexical conventions apply as for &Oz;.  The only additional terminal
+      type is ?={regex}, described in <Ptr to="section.scanner.syntax">.
+    <Para class=apropos><Title/Terminals/
       The following terminals from the Oz syntax are used:
-      <LIST>
-	<ENTRY>?={atom}
+      <List>
+	<Entry>?={atom}
 	<Item>
-	  <P>
-	    stands for an Oz atom (quoted or not).
-	<ENTRY>?={variable}
+	  <P.silent><!--**-->
+	    stands for an &Oz; atom (quoted or not).
+	<Entry>?={variable}
 	<Item>
-	  <P>
-	    denotes an Oz variable (backquoted or not).
-	<ENTRY>?={atom label}
+	  <P.silent><!--**-->
+	    denotes an &Oz; variable (backquoted or not).
+	<Entry>?={atom label}
 	<Item>
-	  <P>
-	    is an Oz atom that is immediately followed by a left parenthesis.
-	<ENTRY>?={variable label}
+	  <P.silent><!--**-->
+	    is an &Oz; atom that is immediately followed by a left parenthesis.
+	<Entry>?={variable label}
 	<Item>
-	  <P>
-	    is an Oz variable that is immediately followed by a left
+	  <P.silent><!--**-->
+	    is an &Oz; variable that is immediately followed by a left
 	    parenthesis.
-      </LIST>
-    <PARA CLASS=apropos><TITLE/Nonterminals/
-      Furthermore, the following nonterminals from the Oz syntax are used:
-      <LIST>
-	<ENTRY>?={escaped variable}
+      </List>
+    <Para class=apropos><Title/Nonterminals/
+      Furthermore, the following nonterminals from the &Oz; syntax are used:
+      <List>
+	<Entry>?={escaped variable}
 	<Item>
-	  <P>
-	    stands for an Oz variable that may optionally be preceded by an
+	  <P.silent><!--**-->
+	    stands for an &Oz; variable that may optionally be preceded by an
 	    exclamation mark, preventing its implicit declaration.
-	<ENTRY>?={phrase}
+	<Entry>?={phrase}
 	<Item>
-	  <P>
-	    is an Oz statement or expression.  This distinction is not made
+	  <P.silent><!--**-->
+	    is an &Oz; statement or expression.  This distinction is not made
 	    by the context-free syntax; it is stated informally in the
 	    descriptions instead.
-	<ENTRY>?={class descriptor}
+	<Entry>?={class descriptor}
 	<Item>
-	  <P>
-	    stands for a class descriptor, &IE;, one of <Code
-	    proglang="gump">from</Code>, <Code proglang="gump">prop</Code>,
-	    <Code
-	    proglang="gump">attr</Code> or <Code proglang="gump">feat</Code>.
-	<ENTRY>?={method}
+	  <P.silent><!--**-->
+	    stands for a class descriptor, &ie;, one of <<from>>, <<prop>>,
+	    <<attr>> or <<feat>>.
+	<Entry>?={method}
 	<Item>
-	  <P>
-	    stands for a <Code proglang="gump">meth</Code> &Ellipsis; <Code
-	    proglang="gump">end</Code> definition.
-      </LIST>
+	  <P.silent><!--**-->
+	    stands for a <<meth &ellipsis; end>> definition.
+      </List>
 </Appendix>
