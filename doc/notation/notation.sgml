@@ -815,16 +815,16 @@
           <Grammar.Rule/?={expression}
             <Grammar.Alt type=add/<<functor>> [ <Q class=terminal/<<$>>/ ]
               { ?={functor descriptor} } <<end>>//
-        <Para class=apropos><Title/Import Declarations/
-          The import clause names values (usually modules) to be made
+        <Para class=apropos><Title/Import Specification/
+          The import specification names values (usually modules) to be made
           available to the body.  They represent formal arguments to the
           body abstraction.  The aditional <<at>> clause allows to specify
           where the actual argument is to come from.  This must be an atom
           (interpreted as a relative URL) so that a functor creating the
           referenced module may be located at compile time.
           <Grammar.Rule/?={functor descriptor}
-            <Grammar.Alt/<<import>> { ?={import declaration} }+//
-          <Grammar.Rule/?={import declaration}
+            <Grammar.Alt/<<import>> { ?={import clause} }+//
+          <Grammar.Rule/?={import clause}
             <Grammar.Alt/?={variable} [ <<at>> ?={atom} ]/
             <Grammar.Alt/?={variable label} ?={import features}
               [ <<at>> ?={atom} ]//
@@ -843,7 +843,7 @@
           imported module's subtrees.
           <Grammar.Rule/?={import alias}
             <Grammar.Alt/[ <Q class=terminal/<<:>>/ ?={variable} ]//
-        <Para class=apropos><Title/Functor Bodies/
+        <Para class=apropos><Title/Functor Body/
           The body of the functor is a statement (usually a sequence of
           definitions that compute the exported values).  This statement
           is a pattern position.  Note the difference between this
@@ -853,9 +853,9 @@
           <Grammar.Rule/?={functor descriptor}
             <Grammar.Alt type=add/<<define>> ?={declaration part}
               [ <<in>> ?={statement} ]//
-        <Para class=apropos><Title/Export Declarations/
-          The export descriptor specifies the structure the modules
-          created by applications of this functor will have.
+        <Para class=apropos><Title/Export Specification/
+          The export specification specifies the structure the
+          modules created by applications of this functor will have.
           <Grammar.Rule/?={functor descriptor}
             <Grammar.Alt type=add/<<export>>
               { [ ?={module feature} <Q class=terminal/<<:>>/ ]
@@ -877,7 +877,7 @@
           instead of functor application.  The variables introduced by these
           clauses are visible in the <<define>> and <<export>> clauses.
           <Grammar.Rule/?={functor descriptor}
-            <Grammar.Alt type=add/<<require>> { ?={import declaration} }/
+            <Grammar.Alt type=add/<<require>> { ?={import clause} }+/
             <Grammar.Alt/<<prepare>> ?={declaration part}
               [ <<in>> ?={statement} ]//
       <Section id="section.context-free.operators">
