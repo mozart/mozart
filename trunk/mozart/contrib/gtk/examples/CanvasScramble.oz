@@ -154,8 +154,8 @@ define
 				  "x"#25.0 "y"#25.0 "font"#Font
 				  "anchor"#GTK.'ANCHOR_CENTER'
 				  "fill_color_gdk"#Black] $)}
-	    proc {PieceEvent Args}
-	       case {Label Args.1}
+	    proc {PieceEvent [Event]}
+	       case {Label Event}
 	       of 'GDK_ENTER_NOTIFY' then {Text set("fill_color_gdk" White)}
 	       [] 'GDK_LEAVE_NOTIFY' then {Text set("fill_color_gdk" Black)}
 	       [] 'GDK_BUTTON_PRESS' then
@@ -182,7 +182,7 @@ define
 	 in
 	    {Dictionary.put ItemArr I some(Group)}
 	    {Dictionary.put PosArr I I}
-	    {Group signalConnect('event' PieceEvent [gdk_event] _)}
+	    {Group signalConnect('event' PieceEvent _)}
 	    MyCanvas, fillBoard((I + 1) Root)
 	 else
 	    {Dictionary.put ItemArr I none}
@@ -287,7 +287,7 @@ define
 	 {Frame add(Canvas)}
 	 {Canvas show}
 	 {self packStart(Button 0 0 0)}
-	 {Button signalConnect('clicked' {ScrambleEvent Canvas Board} nil _)}
+	 {Button signalConnect('clicked' {ScrambleEvent Canvas Board} _)}
       end
    end
    
@@ -300,9 +300,9 @@ define
 	 GTK.window, add(Notebook)
 	 {Notebook setShowTabs(1)}
 	 {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
-	 {self signalConnect('delete_event' deleteEvent nil _)}
+	 {self signalConnect('delete-event' deleteEvent _)}
       end
-      meth deleteEvent(Event)
+      meth deleteEvent(Args)
 	 %% Caution: At this time, the underlying GTK object
 	 %% Caution: has been destroyed already
 	 %% Caution: Destruction also includes all attached child objects.

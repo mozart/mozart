@@ -27,22 +27,23 @@ export
    'create' : Create
 define
    FilePrefix = ["#include <mozart.h>"
-		 "#include <gtk/gtk.h>\n"
+		 "#include <gtk/gtk.h>"
+		 "#include <GOZData.h>\n"
 		 "extern OZ_Term createGdkEvent(GdkEvent *event);\n"
 		 "OZ_Term makeArgTerm(GtkArg *arg) {"
 		 "  GtkType type = arg->type;\n"
 		 "  if (type == GTK_TYPE_INT) {"
-		 "    return OZ_int(arg->d.int_data);"
+		 "    return GOZ_ARG_int(arg->d.int_data);"
 		 "  } else if (type == GTK_TYPE_DOUBLE) {"
-		 "    return OZ_float(arg->d.float_data);"
+		 "    return GOZ_ARG_double(arg->d.float_data);"
 		 "  } else if (type == GTK_TYPE_BOOL) {"
-		 "    return OZ_int(arg->d.bool_data);"
+		 "    return GOZ_ARG_int(arg->d.bool_data);"
 		 "  } else if (type == GTK_TYPE_STRING) {"
-		 "    return OZ_string(arg->d.string_data);"
+		 "    return GOZ_ARG_string(arg->d.string_data);"
 		 "  } else if (type == GTK_TYPE_POINTER) {"
-		 "    return OZ_makeForeignPointer(arg->d.pointer_data);"
+		 "    return GOZ_ARG_pointer(arg->d.pointer_data);"
 		 "  } else if (type == GTK_TYPE_OBJECT) {"
-		 "    return OZ_makeForeignPointer(arg->d.object_data);"
+		 "    return GOZ_ARG_object(arg->d.object_data);"
 		]
 
    
@@ -93,10 +94,27 @@ define
 	    if {IsLegal C}
 	    then
 	       Conv = if {self isEnum(C $)}
-		      then "OZ_int(arg->d.int_data);"
-		      elseif C == 'GTK_TYPE_GDK_EVENT'
-		      then "createGdkEvent((GdkEvent *) (arg->d.object_data));"
-		      else "OZ_makeForeignPointer(arg->d.object_data);"
+		      then "GOZ_ARG_int(arg->d.int_data);"
+		      elsecase C
+		      of 'GTK_TYPE_GDK_EVENT' then
+			 "GOZ_ARG_event(createGdkEvent((GdkEvent *) (arg->d.object_data)));"
+		      [] 'GTK_TYPE_GDK_COLOR' then
+			 "GOZ_ARG_color(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_COLOR_CONTEXT' then
+			 "GOZ_ARG_context(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_COLORMAP' then
+			 "GOZ_ARG_map(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_DRAWABLE' then
+			 "GOZ_ARG_drawable(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_FONT' then
+			 "GOZ_ARG_font(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_GC' then
+			 "GOZ_ARG_gc(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_IMAGE' then
+			 "GOZ_ARG_image(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_WINDOW' then
+			 "GOZ_ARG_window(arg->d.object_data);"
+		      else "GOZ_ARG_pointer(arg->d.object_data);"
 		      end
 	    in
 	       TextFile, putS({ToS "  } else if (type == "#C#") {"})
@@ -105,7 +123,7 @@ define
 	    GtkConstants, writeConstants(Cr)
 	 [] nil  then
 	    TextFile, putS({ToS "  }"})
-	    TextFile, putS("  return OZ_makeForeignPointer(arg->d.object_data);")
+	    TextFile, putS("  return GOZ_ARG_object(arg->d.object_data);")
 	 end
       end
       meth isEnum(C $)

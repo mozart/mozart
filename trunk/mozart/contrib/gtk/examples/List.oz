@@ -37,15 +37,16 @@ define
 	 GTK.list, appendItems(Items)
 	 GTK.list, signalConnect('select-child'
 				 proc {$ [Item]}
-				    {System.show 'handler'#GTK.list, childPosition(Item $)}
-				 end [obj(GTK.listItem)] _)
+				    {System.show 'handler got'#
+				     GTK.list, childPosition(Item $)}
+				 end _)
       end
    end
 
    class MyToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-	 GTK.window, signalConnect('delete_event' deleteEvent nil _)
+	 GTK.window, signalConnect('delete-event' deleteEvent _)
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("List Test")
 	 GTK.window, add({New MyList new})
