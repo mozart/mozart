@@ -241,6 +241,21 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       continue;
     }
 
+    if (PC==C_XCONT_Ptr) {
+      TaggedRef pairlist =
+        cons(OZ_pairA("name", OZ_atom("cond")),
+             cons(OZ_pairA("args", nil()),
+                  nil()));
+      TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
+      out = cons(entry, out);
+
+      time_t feedtime = (time_t) 0;
+      TaggedRef dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
+      out = cons(OZ_mkTupleC("debug",1,dinfo), out);
+
+      continue;
+    }
+
     TaggedRef def = CodeArea::dbgGetDef(PC);
     if (!OZ_isNil(def))
       out = cons(def,out);
