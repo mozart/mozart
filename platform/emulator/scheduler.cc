@@ -38,18 +38,6 @@
 #include "space.hh"
 
 
-inline
-TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
-  OZ_Term d = OZ_record(AtomD,
-                        oz_cons(AtomInfo,
-                                oz_cons(AtomStack, oz_nil())));
-  OZ_putSubtree(d, AtomStack, traceBack);
-  OZ_putSubtree(d, AtomInfo,  info);
-
-  return OZ_adjoinAt(val, AtomDebug, d);
-}
-
-
 /*
  * Checking stability
  *
@@ -201,9 +189,6 @@ void scheduler(void) {
         checkStability(ct,cb);
         break;
 
-      case T_RAISE:
-        goto LBLraise;
-
       case T_FAILURE:
         goto LBLfailure;
 
@@ -252,70 +237,6 @@ void scheduler(void) {
 #endif
 
       continue;
-    }
-
-
-    /*
-     * Raise exception
-     *
-     */
-
-  LBLraise:
-    {
-
-      Bool foundHdl;
-
-      if (e->exception.debug) {
-        OZ_Term traceBack;
-        foundHdl =
-          ct->getTaskStackRef()->findCatch(ct,
-                                           e->exception.pc,
-                                           e->exception.y,
-                                           e->exception.cap,
-                                           &traceBack,
-                                           e->debugmode());
-
-        e->exception.value = formatError(e->exception.info,
-                                         e->exception.value,
-                                         traceBack);
-
-      } else {
-        foundHdl = ct->getTaskStackRef()->findCatch(ct);
-      }
-
-      if (foundHdl) {
-        if (e->debugmode() && ct->isTrace())
-          debugStreamUpdate(ct);
-        e->xRegs[0] = e->exception.value; // mm2: use pushX
-        goto LBLrunThread;  // execute task with no preemption!
-      }
-
-      if (!cb->isRoot() &&
-          OZ_eq(OZ_label(e->exception.value),AtomFailure)) {
-        goto LBLfailure;
-      }
-
-      if (e->debugmode()) {
-        ct->setTrace();
-        ct->setStep();
-        debugStreamException(ct,e->exception.value);
-        // Preempt thread
-        am.threadsPool.scheduleThread(ct);
-        continue;
-      }
-
-      if (e->defaultExceptionHdl) {
-        ct->pushCall(e->defaultExceptionHdl,e->exception.value);
-      } else {
-        prefixError();
-        fprintf(stderr,
-                "Exception raised:\n   %s\n",
-                OZ_toC(e->exception.value,100,100));
-        fflush(stderr);
-      }
-
-      goto LBLrunThread;
-
     }
 
   } while(1);
