@@ -1481,3 +1481,27 @@ OZ_Term oz_string(const char * s, const int len, const OZ_Term tail) {
 
 #undef STRING_BLOCK_SZ 
 
+Arity * __OMR_static(const int width, const char ** c_feat, int * i_feat) {
+  OZ_Term a_feat[width];
+  OZ_Term l = AtomNil;
+  for (int i = width; i--; ) {
+    a_feat[i] = oz_atomNoDup(c_feat[i]);
+    l = oz_cons(a_feat[i],l);
+  }
+  Arity * arity = (Arity *) OZ_makeArity(l);
+  for (int i = width; i--; )
+    i_feat[i] = arity->lookupInternal(a_feat[i]);
+  return arity;
+}
+
+OZ_Term __OMR_dynamic(const int width, OZ_Term label, Arity * arity,
+		      int * i_feat, OZ_Term * fields) {
+  SRecord * sr = SRecord::newSRecord(label,arity);
+
+  for (int i = width; i--; ) 
+    sr->setArg(i_feat[i], fields[i]);
+  
+  return makeTaggedSRecord(sr);
+}
+
+
