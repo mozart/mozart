@@ -546,11 +546,11 @@ void AM::decSolveThreads (Board *bb)
 //  X = Y 
 // --> if det Y then ... fi
 
-SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
-				  SuspList* suspList,
-				  TaggedRef term, SVariable* rightVar)
+SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
+				  SuspList * suspList,
+				  TaggedRef term, SVariable * rightVar)
 {
-  SuspList* retSuspList = NULL;
+  SuspList * retSuspList = NULL;
 #ifdef DEBUG_CHECK
   // see the reduction of solve actor by the enumeration; 
   if (dontPropagate == OK)
@@ -566,12 +566,10 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
       continue;
     }
 
-    Board* n = susp->getNode()->getBoardDeref();
-
     // suspension points to an already reduced branch of the computation tree
-    if (!n) {
+    if (! susp->getNode()->getBoardDeref()) {
       susp->markDead();
-      (void) checkExtSuspension (susp);
+      checkExtSuspension (susp);
       suspList = suspList->dispose();
       continue;
     }
@@ -579,7 +577,7 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
     // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
       if ((suspList->checkCondition(taggedvar, term)) &&
-	  (susp->wakeUp(var, rightVar))){
+	  (susp->wakeUp(var, rightVar))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
 	  suspList = suspList->dispose();
@@ -587,17 +585,9 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
 	}
       }
     }
-#ifdef DEBUG_CHECK
-    else
-      if (! susp->isResistant())
-	error("Propagated susp has to be resistant.");
-
-    if (susp->isDead())
-      error("Unexpected dead suspension.");
-#endif
     
     // susp cannot be woken up therefore relink it
-    SuspList *first = suspList;
+    SuspList * first = suspList;
     suspList = suspList->getNext();
     first->setNext(retSuspList);
     retSuspList = first;
