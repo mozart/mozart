@@ -244,6 +244,12 @@ in
          else skip end
       end
 
+      meth kill(T I)
+         {Dbg.trace T false}
+         ThreadManager,remove(T I kill)
+         {Thread.terminate T}
+      end
+
       meth forget(T I)
          {Dbg.trace T false}      %% thread is not traced anymore
          {Dbg.stepmode T false}   %% no step mode, run as you like!
