@@ -1547,22 +1547,62 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   if (space->isFailed())
     return FAILED;
 
-  if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
+  Board *CBB = am.currentBoard;
+  Board *SBB = space->getSolveBoard()->derefBoard();
+  Board *SBP = SBB->getParent()->derefBoard();
+
+  // There can be two different situations during merging:
+  //  1) SBB is subordinated to CBB:          CBB  <-+
+  //                                           |     |
+  //                                          SBB   -+
+  //
+  //
+  //  2) SBB is a sibling of CBB:            parent
+  //                                          /   \
+  //                                        CBB   SBB
+  //                                         ^     |
+  //                                         +-----+
+
+  Assert(CBB == CBB->derefBoard());
+
+  Bool isSibling = (!CBB->isRoot() && 
+		    CBB->getParent()->derefBoard() == SBP &&
+		    CBB != SBB);
+
+  if (!isSibling && CBB != SBP)
     return am.raise(E_ERROR,E_KERNEL,"spaceSuper",1,tagged_space);
       
-  Board *CBB = am.currentBoard;
-
-  // Check board
+  Assert(!am.isBelow(CBB,SBB));
   
   TaggedRef result = space->getSolveActor()->getResult();
 
   if (result == makeTaggedNULL())
     return FAILED;
 
-  if (OZ_isVariable(result) && OZ_unify(result, AtomMerged) == FAILED)
-    return FAILED;
+  if (OZ_isVariable(result)) {
 
-  TaggedRef root = space->getSolveActor()->merge(CBB);
+    if (isSibling) {
+      switch (am.installPath(SBP)) {
+      case INST_FAILED: case INST_REJECTED: return FAILED;
+      case INST_OK: break;
+      }
+
+      if (OZ_unify(result, AtomMerged) == FAILED)
+	return FAILED;
+
+      switch (am.installPath(CBB)) {
+      case INST_FAILED: case INST_REJECTED: return FAILED;
+      case INST_OK: break;
+      }
+
+    } else {
+      if (OZ_unify(result, AtomMerged) == FAILED)
+	return FAILED;
+    }
+  }
+
+
+  TaggedRef root = space->getSolveActor()->merge(CBB, isSibling);
   space->merge();
 
   if (root == makeTaggedNULL())
@@ -1570,6 +1610,7 @@ OZ_C_proc_begin(BImergeSpace, 2) {
 
   return OZ_unify(root, OZ_getCArg(1));
 } OZ_C_proc_end
+
 
 
 OZ_C_proc_begin(BIcloneSpace, 2) {
