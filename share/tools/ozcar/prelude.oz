@@ -16,6 +16,13 @@ Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
 	   checkStopped: {`Builtin` checkStopped 2}
 	 )
 
+fun {NewCompiler}
+   %% return true when using new compiler, false otherwise
+   try {{`Builtin` 'getOPICompiler' 1} _} true
+   catch error(...) then false
+   end
+end
+
 %% some constants
 NL = [10]  %% newline
 
