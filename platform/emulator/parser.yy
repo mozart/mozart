@@ -3,11 +3,8 @@
  *    Martin Henz (henz@iscs.nus.sg)
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  *
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Martin Henz and Leif Kornstaedt, 1996, 1997
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -316,8 +313,8 @@ static CTerm decls[DEPTH];
 %token DEFAULT CHOICE LDOTS OBJPATTERNOPEN OBJPATTERNCLOSE
 %token attr _case_ catch choice _class_ _condis_ declare dis
 %token _else_ elsecase elseif elseof end fail false FALSE_LABEL
-%token feat finally _from_ _fun_ _if_ _in_ local _lock_ _meth_
-%token not of or proc prop ozraise self skip then
+%token feat finally _from_ _fun_ functor _if_ _in_ local _lock_
+%token _meth_ not of or proc prop ozraise self skip then
 %token thread true TRUE_LABEL try unit UNIT_LABEL with
 
 %token ENDOFFILE

@@ -4,6 +4,8 @@
  *
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
+ *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -974,7 +976,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case MARSHALLEDFASTCALL:
       {
-        fprintf(ofile, "(%s %d)\n", toC(getTaggedArg(PC+1)),getPosIntArg(PC+2));
+        fprintf(ofile, "(%s %d)\n",toC(getTaggedArg(PC+1)),getPosIntArg(PC+2));
         DISPATCH();
       }
 
