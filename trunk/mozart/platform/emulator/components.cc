@@ -1087,7 +1087,10 @@ OZ_BI_define(BIpicklePack, 1, 1) {
   if (r != PROCEED)
     return r;
 
-  OZ_RETURN(OZ_mkByteString(d.data,d.size));
+  r = OZ_mkByteString(d.data, d.size);
+  free(d.data);
+
+  OZ_RETURN(r);
 } OZ_BI_end 
 
 

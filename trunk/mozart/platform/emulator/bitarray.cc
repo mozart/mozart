@@ -43,7 +43,7 @@ private:
   }
   int *allocate(int size) {
     size_t n = size * sizeof(int);
-    return (int *) oz_heapMalloc(n);
+    return ((int *) _OZ_new_OZ_Extension(n));
   }
 public:
   virtual
@@ -79,7 +79,7 @@ public:
     upperBound = upper;
     int size = getSize();
     array = allocate(size);
-    for (int i = 0; i < size; i++)
+    for (int i = size; i--; )
       array[i] = 0;
   }
   BitArray(const BitArray *b): OZ_Extension() {

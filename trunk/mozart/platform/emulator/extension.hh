@@ -50,6 +50,10 @@ enum OZ_Registered_Extension_Id {
 //
 class MarshalerBuffer;
 
+// kost@: Extensions bodies are allocated using the
+//        'oz_heapMalloc(..)' (through '_OZ_new_OZ_Extension(..)').
+//        Descending data (arrays, etc.) are supposed to be allocated
+//        the same way (no explicit/implicit malloc"s!!);
 class OZ_Extension : public OZ_Container {
 private:
   void *space;
@@ -62,7 +66,7 @@ public:
   OZ_Extension(void *sp) : space(sp) {
     OZ_Container::initAsExtension();
   }
-
+  
   void *  __getSpaceInternal(void)      { return space; }
   void    __setSpaceInternal(void * sp) { space = sp;   }
 
