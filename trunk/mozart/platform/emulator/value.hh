@@ -350,6 +350,9 @@ public:
       Assert(0);
     }
   }
+  BigInt(MP_INT *i) {
+    mpz_init_set(&value, i);
+  }
   void dispose() 
   {
     mpz_clear(&value);
