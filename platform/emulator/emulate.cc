@@ -20,6 +20,7 @@
 #include "indexing.hh"
 
 #include "genvar.hh"
+#include "dictionary.hh"
 #include "fdhook.hh"
 
 /*
@@ -2696,7 +2697,7 @@ LBLsuspendThread:
              CheckArity(1,makeTaggedConst(o));
              def = o->getAbstraction();
              /* {Obj Msg} --> {Send Msg Methods Obj} */
-             X[predArity++] = o->getSlowMethods();
+             X[predArity++] = makeTaggedConst(o->getSlowMethods());
              X[predArity++] = makeTaggedConst(o);
              if (!isTailCall) {
                CallPushCont(PC);

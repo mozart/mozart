@@ -12,6 +12,8 @@
 
 #include "am.hh"
 #include "board.hh"
+#include "genvar.hh"
+#include "dictionary.hh"
 
 /*===================================================================
  * global names and atoms
@@ -219,13 +221,14 @@ TaggedRef Object::attachThread()
 
 Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity)
 {
-  SRecord *methods = getMethods();
-  TaggedRef method = methods ? methods->getFeature(label)
-                             : makeTaggedNULL();
-  if (method == makeTaggedNULL())
+  OzDictionary *methods = getMethods();
+  TaggedRef method;
+
+  if (methods->getArg(label,method)!=PROCEED)
     return NULL;
 
-  Assert(!isRef(method) && isAbstraction(method));
+  DEREF(method,_1,_2);
+  Assert(isAbstraction(method));
 
   Abstraction *abstr = (Abstraction*) tagged2Const(method);
   if (!sameSRecordArity(abstr->getMethodArity(),arity)) {

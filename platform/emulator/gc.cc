@@ -2080,12 +2080,12 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Array:
-    CheckLocal((Cell *) this);
+    CheckLocal((OzArray *) this);
     sz = sizeof(OzArray);
     break;
 
   case Co_Dictionary:
-    CheckLocal((Cell *) this);
+    CheckLocal((OzDictionary *) this);
     sz = sizeof(OzDictionary);
     break;
 
@@ -2240,11 +2240,11 @@ ObjectClass *ObjectClass::gcClass()
   COUNT(objectClass);
   ObjectClass *ret = (ObjectClass *) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
-  SRecord *fastm = fastMethods;
+  OzDictionary *fastm = fastMethods;
   storeForward(&fastMethods, ret);
-  ret->fastMethods = fastm->gcSRecord();
-  ret->printName = printName->gc();
-  gcTagged(slowMethods,ret->slowMethods);
+  ret->fastMethods = (OzDictionary*) fastm->gcConstTerm();
+  ret->slowMethods = (OzDictionary*) slowMethods->gcConstTerm();
+  ret->printName   = printName->gc();
   ret->send = (Abstraction *) send->gcConstTerm();
   ret->unfreeFeatures = ret->unfreeFeatures->gcSRecord();
   gcTagged(ozclass,ret->ozclass);
