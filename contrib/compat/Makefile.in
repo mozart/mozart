@@ -50,6 +50,9 @@ $(CACHEDIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 TextPickle.so-$(PLATFORM): TextPickle.ozf
         @echo > /dev/null
 
+convertTextPickle$(EXE_EXT): ConvertTextPickle.oz
+        $(OZC) $(OZCFLAGS) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
+
 clean:
         -rm -f TextPickleScanner.[Clo]
 
@@ -62,9 +65,6 @@ distclean: clean
 include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
-
-convertTextPickle$(EXE_EXT): ConvertTextPickle.oz
-        $(OZC) $(OZCFLAGS) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
 
 #---------------------------------------------------------------------
 # Automatic Makefile update
