@@ -620,6 +620,7 @@ Bool AM::checkEntailment(Continuation *&contAfter, int &prio)
 {
 
 loop:
+  DebugTrace(trace("check entailment",currentBoard));
 
   currentBoard->unsetNervous();
 
@@ -709,6 +710,9 @@ loop:
 
 	  solveAA->incThreads();
 	  Assert(currentThread);
+#ifdef NEWCOUNTER
+	  solveBB->incSuspCount();
+#endif
 	  pushCFun(solveBB, &AM::SolveActorWaker);
 
 	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
@@ -756,6 +760,9 @@ loop:
 
 	    // Make the actor unstable by incremneting the thread counter
 	    solveAA->incThreads();
+#ifdef NEWCOUNTER
+	    solveBB->incSuspCount();
+#endif
 	    
 	    // put ~'solve actor';
 	    Assert(currentThread);
@@ -794,6 +801,9 @@ loop:
 
 		// Make the actor unstable by incremneting the thread counter
 		solveAA->incThreads();
+#ifdef NEWCOUNTER
+		solveBB->incSuspCount();
+#endif
 		
 		// put ~'solve actor';
 		Assert(currentThread);
@@ -1100,6 +1110,7 @@ void engine() {
       }
       Assert((fsb = auxBoard->getSolveBoard())==0 ||
 	     !fsb->isReflected ());
+      DebugTrace(trace("c cont",auxBoard));
       INSTALLPATH(auxBoard);
 #ifndef NEWCOUNTER
       auxBoard->decSuspCount();
@@ -1136,6 +1147,7 @@ void engine() {
 
       Assert((fsb = tmpBB->getSolveBoard())==0 ||
 	     !fsb->isReflected ());
+      DebugTrace(trace("c xcont",tmpBB));
       INSTALLPATH(tmpBB);
 #ifndef NEWCOUNTER
       tmpBB->decSuspCount();
@@ -1173,6 +1185,7 @@ void engine() {
 	}
 	disposeRefsArray(tmpX);
 	taskstack->setTop(topCache);
+	DebugTrace(trace("call cont",tmpBB));
 	INSTALLPATH(tmpBB);
 #ifndef NEWCOUNTER
 	tmpBB->decSuspCount();
@@ -1227,6 +1240,7 @@ void engine() {
 	}
 
 	Assert((fsb = tmpBB->getSolveBoard())==0 || !fsb->isReflected ());
+	DebugTrace(trace("cfunc cont",tmpBB));
 	INSTALLPATH(tmpBB);
 #ifndef NEWCOUNTER
 	tmpBB->decSuspCount();
@@ -1236,6 +1250,15 @@ void engine() {
 
 #ifdef NEWCOUNTER
 	if (biFun == AM::SolveActorWaker) {
+	  Assert(CBB->isSolve());
+	  Assert(!CBB->isCommitted() && !CBB->isFailed());
+	  SolveActor *sa = SolveActor::Cast(CBB->getActor());
+  
+	  Assert(!CBB->isReflected());
+
+	  sa->decThreads ();      // get rid of threads - '1' in creator;
+	  CBB->decSuspCount();
+
 	  Continuation *cont;
 	  int prio;
 	  switch (e->checkEntailment(cont,prio)) {
@@ -1292,6 +1315,7 @@ void engine() {
       if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
 	if (tmpThread->hasNotificationBoard()) {
 	  Board *nb = tmpThread->notificationBoard->getBoardFast();
+	  Assert(nb==tmpThread->getBoardFast());
 	  e->decSolveThreads(nb);
 	}
 	e->currentThread=(Thread *) NULL;
@@ -2738,8 +2762,6 @@ void engine() {
    */
 LBLcheckEntailment:
   {
-    DebugTrace(trace("check entailment",CBB));
-
     /* optimize: builtin called on toplevel mm (29.8.94) */
     if (CBB == e->rootBoard) {
 #ifdef NEWCOUNTER
@@ -2802,11 +2824,11 @@ LBLcheckEntailment:
     e->reduceTrailOnFail();
     CBB->unsetInstalled();
 #ifdef NEWCOUNTER
-    // mm2
-    warning("mm2: here is more todo: clean thread of all task of failed board");
+    // mm2: here is more todo: clean thread of all task of failed board
     if (e->currentThread->getBoardFast()==CBB) {
       e->setCurrent(aa->getBoardFast());
       e->currentThread->home=CBB;
+      e->currentThread->notificationBoard=CBB;
       CBB->incSuspCount();
     } else
 #endif
