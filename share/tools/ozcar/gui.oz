@@ -93,16 +93,6 @@ local
       else &\n | {MakeLines N-1} end
    end
 
-   Lck =
-   {New class
-	   attr
-	      L : false
-	   meth init skip end
-	   meth set   L <- true  end
-	   meth unset L <- false end
-	   meth is($) @L end
-	end init}
-
    StackTag
 
 in
@@ -134,6 +124,10 @@ in
 	 StatusSync : _
 
 	 LastClicked : unit
+
+      meth resetLastSelectedFrame
+	 LastSelectedFrame <- 0
+      end
 
       meth lastClickedValue(?V)
 	 try
@@ -291,10 +285,10 @@ in
 	  end}
 
 	 %% the global stack tag, to make Tk happy (and me!! :-))
-	 StackTag = 4711 * 4711
-	 {ForAll [tk(conf state:normal)
-		  tk(insert 'end' "" StackTag)
-		  tk(conf state:disabled)] self.StackText}
+	 StackTag = 'globalTag'
+	 {self.StackText tk(conf state:normal)}
+	 {self.StackText tk(insert 'end' "" StackTag)}
+	 {self.StackText tk(conf state:disabled)}
 
 	 {Tk.batch [grid(self.ThreadTree    row:3 column:0
 			 sticky:nswe rowspan:2)
@@ -376,10 +370,10 @@ in
 					{Browse Value} LastClicked <- Value
 				     end)}
 	     in
-		{ForAll [tk(insert 'end' {PrintF ' ' # Name {EnvVarWidth}})
-			 tk(insert 'end' Print # '\n' T)
-			 tk(tag bind T '<1>' Ac)
-			 tk(tag conf T font:BoldFont)] Widget}
+		{Widget tk(insert 'end' {PrintF ' ' # Name {EnvVarWidth}})}
+		{Widget tk(insert 'end' Print # '\n' T)}
+		{Widget tk(tag bind T '<1>' Ac)}
+		{Widget tk(tag conf T font:BoldFont)}
 	     else skip end
 	  end}
       end
@@ -423,20 +417,10 @@ in
 	 Gui,Disable(self.GlobalEnvText)
       end
 
-      meth frameClick(frame:F highlight:Highlight<=true delay:D<=true)
-	 L CurThr
-      in
-	 case D then
-	    {Delay 70} % > TIME_SLICE
-	    L = {Lck is($)}
-	 else
-	    L = false
-	 end
-	 CurThr = @currentThread
-	 case L orelse CurThr == unit then skip
-	 elsecase
-	    {Dbg.checkStopped CurThr}
-	 then    % allow switching of stack frames only if thread is stopped
+      meth frameClick(frame:F highlight:Highlight<=true)
+	 case @currentThread == unit then skip
+	 elsecase {Dbg.checkStopped @currentThread} then
+	    %% allow switching of stack frames only if thread is stopped
 	    Vars = Gui,getEnv(F $)
 	 in
 	    {OzcarMessage 'selecting frame #' # F.nr}
@@ -471,13 +455,12 @@ in
 	    F   = {Stack getFrame(N $)}
 	 in
 	    case F == unit then skip else
-	       Gui,frameClick(frame:F highlight:true delay:false)
+	       Gui,frameClick(frame:F highlight:true)
 	    end
 	 end
       end
 
       meth SelectStackFrame(T)
-	 W   = self.StackText
 	 LSF = @LastSelectedFrame
       in
 	 {OzcarMessage 'SelectStackFrame: LSF == ' # LSF # ', T == ' # T}
@@ -493,7 +476,6 @@ in
       end
 
       meth UnselectStackFrame
-	 W   = self.StackText
 	 LSF = @LastSelectedFrame
       in
 	 {OzcarMessage 'UnselectStackFrame: LSF == ' # LSF}
@@ -504,86 +486,75 @@ in
       end
 
       meth printStackFrame(frame:Frame delete:Delete<=true)
-	 W           = self.StackText
-	 FrameNr     = Frame.nr                 % frame number
-	 FrameName   = Frame.name               % procedure/builtin name
-	 FrameArgs   = case Frame.args == unit then unit
-		       else {FormatArgs Frame.args}  % argument list
-		       end
-	 FrameFile   = {StripPath  Frame.file}
-	 FrameLine   = Frame.line
-	 FrameColumn = Frame.column
-	 LineTag     = FrameNr
-	 LineAction  =
-	 {New Tk.action
-	  tkInit(parent: W
-		 action: Ozcar # PrivateSend(frameClick(frame:Frame)))}
-	 LineEnd     = FrameNr # '.end'
+	 W          = self.StackText
+	 FrameNr    = Frame.nr    %% frame number
+	 FrameName  = Frame.name  %% procedure/builtin name
+	 FrameArgs  = case Frame.args == unit then unit
+		      else {FormatArgs Frame.args}  %% argument list
+		      end
+	 LineColTag = FrameNr       %% no need to garbage collect this tag
+	 LineActTag = act # FrameNr %% dito
+	 LineAction = {New Tk.action
+		       tkInit(parent: W
+			      action: self # frameClick(frame:Frame))}
+	 LineEnd     = p(FrameNr 'end')
 	 UpToDate    = 1 > 0 % {Emacs isUpToDate(Frame.time $)}
       in
-
-	 {OzcarMessage '  printing frame #' # FrameNr}
-
 	 lock
 	    case Delete then
 	       Gui,Enable(W)
 	       Gui,DeleteToEnd(W FrameNr+1)
 	       Gui,DeleteLine(W FrameNr)
 	    else skip end
-
 	    {W tk(insert LineEnd
-		  case Frame.dir == entry then
-		     ' -> '
-		  else
-		     ' <- '
-		  end # FrameNr #
+		  case Frame.dir == entry then ' -> ' else ' <- ' end #
+		  FrameNr #
 		  case {IsSpecialFrameName FrameName} then
-		     ' '#FrameName
+		     ' ' # FrameName
 		  else
-		     ' {' #
-		     case FrameName == '' then '$' else FrameName end
+		     ' {' # case FrameName
+			    of ''  then '$'
+			    [] nil then "nil"
+			    [] '#' then "#"
+			    else FrameName end
 		  end
-		  q(StackTag LineTag))}
-
+		  q(StackTag LineActTag LineColTag))}
 	    case FrameArgs of unit then
 	       case {IsSpecialFrameName FrameName} then skip
-	       else {W tk(insert LineEnd ' ...' q(StackTag LineTag))}
+	       else {W tk(insert LineEnd ' ...'
+			  q(StackTag LineActTag LineColTag))}
 	       end
 	    else
 	       {ForAll FrameArgs
 		proc {$ Arg}
+		   P # V     = Arg
 		   ArgTag    = {W newTag($)}
-		   ArgAction =
-		   {New Tk.action
-		    tkInit(parent: W
-			   action: proc {$}
-				      {Lck set}
-				      {Browse Arg.2} LastClicked <- Arg.2
-				      {Delay 150}
-				      {Lck unset}
-				   end)}
+		   ArgAction = {New Tk.action
+				tkInit(parent: W
+				       action: proc {$}
+						  {Browse V}
+						  LastClicked <- V
+					       end)}
 		in
-		   {ForAll [tk(insert LineEnd ' ' q(StackTag LineTag))
-			    tk(insert LineEnd Arg.1 q(StackTag LineTag ArgTag))
-			    tk(tag bind ArgTag '<1>' ArgAction)
-			    tk(tag conf ArgTag font:BoldFont)] W}
+		   {W tk(insert LineEnd ' '
+			 q(StackTag LineActTag LineColTag))}
+		   {W tk(insert LineEnd P
+			 q(StackTag LineColTag ArgTag))}
+		   {W tk(tag bind ArgTag '<1>' ArgAction)}
+		   {W tk(tag conf ArgTag font:BoldFont)}
 		end}
 	    end
 
-	    {ForAll [tk(insert LineEnd
-			case {IsSpecialFrameName FrameName} then ''
-			else '}'
-			end #
-			case UpToDate then nil else
-			   ' (source has changed)' end #
-			case Delete then '\n' else "" end
-			q(StackTag LineTag))
-		     tk(tag add  LineTag LineEnd) % extend tag to whole line
-		     tk(tag bind LineTag '<1>' LineAction)] W}
+	    {W tk(insert LineEnd
+		  case {IsSpecialFrameName FrameName} then '' else '}' end #
+		  case UpToDate then nil else ' (source has changed)' end #
+		  case Delete then '\n' else "" end
+		  q(StackTag LineActTag LineColTag))}
+	    {W tk(tag add  LineActTag LineEnd)} % extend tag to whole line
+	    {W tk(tag add  LineColTag LineEnd)} % dito
+	    {W tk(tag bind LineActTag '<1>' LineAction)}
 
 	    case Delete then
-	       FrameDir = Frame.dir
-	    in
 	       Gui,Disable(W)
 	       {W tk(yview 'end')}
 	       Gui,frameClick(frame:Frame highlight:false)
@@ -703,16 +674,14 @@ in
 
       meth markStack(How)
 	 case How
-	 of active   then
+	 of active then
 	    {OzcarMessage 'activating stack'}
-	    {ForAll [tk(tag 'raise' StackTag)
-		     tk(tag conf StackTag foreground:DefaultForeground)
-		    ] self.StackText}
+	    {self.StackText tk(tag 'raise' StackTag)}
+	    {self.StackText tk(tag conf StackTag foreground:DefaultForeground)}
 	 [] inactive then
 	    {OzcarMessage 'deactivating stack'}
-	    {ForAll [tk(tag 'raise' StackTag)
-		     tk(tag conf StackTag foreground:DirtyColor)
-		    ] self.StackText}
+	    {self.StackText tk(tag 'raise' StackTag)}
+	    {self.StackText tk(tag conf StackTag foreground:DirtyColor)}
 	 else skip end
       end
 
@@ -836,7 +805,6 @@ in
 			end
 
 			%% delete all tags
-			{self.StackText resetReservedTags({Stk getSize($)})}
 			{self.StackText resetTags}
 
 			Gui,markNode({Thread.id T} running)
@@ -869,8 +837,9 @@ in
 			case S == blocked then
 			   F L C in
 			   {Thread.suspend T}
-			   {ForAll [rebuild(true) print
-				    getPos(file:F line:L column:C)] Stack}
+			   {Stack rebuild(true)}
+			   {Stack print}
+			   {Stack getPos(file:F line:L column:C)}
 			   {SendEmacs bar(file:F line:L column:C state:S)}
 			else
 			   {Stack rebuild(true)}
@@ -933,38 +902,31 @@ in
       end
 
       meth Clear(Widget)
-	 {ForAll [resetTags
-		  tk(conf state:normal)
-		  tk(delete '0.0' 'end')] Widget}
+	 {Widget resetTags}
+	 {Widget tk(conf state:normal)}
+	 {Widget tk(delete p(0 0) 'end')}
       end
 
       meth ClearNoTags(Widget)
-	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')] Widget}
-      end
-
-      meth resetReservedTags(Size)
-	 {self.StackText resetReservedTags(Size)}
-	 LastSelectedFrame <- 0
+	 {Widget tk(conf state:normal)}
+	 {Widget tk(delete p(0 0) 'end')}
       end
 
       meth DeactivateLine(Tag)
-	 {ForAll [tk(tag 'raise' Tag)
-		  tk(tag conf Tag
-		     relief:flat borderwidth:0
-		     background: DefaultBackground
-		     foreground: DefaultForeground)
-		 ] self.StackText}
+	 {self.StackText tk(tag 'raise' Tag)}
+	 {self.StackText tk(tag conf Tag
+			    relief:flat borderwidth:0
+			    background: DefaultBackground
+			    foreground: DefaultForeground)}
       end
 
       meth ActivateLine(Tag)
-	 {ForAll [tk(tag 'raise' Tag)
-		  tk(tag conf Tag
-		     relief:raised borderwidth:0
-		     background: SelectedBackground
-		     foreground: SelectedForeground)
-		  tk(see p(Tag 0))
-		 ] self.StackText}
+	 {self.StackText tk(tag 'raise' Tag)}
+	 {self.StackText tk(tag conf Tag
+			    relief:raised borderwidth:0
+			    background: SelectedBackground
+			    foreground: SelectedForeground)}
+	 {self.StackText tk(see p(Tag 0))}
       end
 
       meth Enable(Widget)
@@ -981,11 +943,11 @@ in
       end
 
       meth DeleteLine(Widget Nr)
-	 {Widget tk(delete Nr#'.0' Nr#'.end')}
+	 {Widget tk(delete p(Nr 0) p(Nr 'end'))}
       end
 
       meth DeleteToEnd(Widget Nr)
-	 {Widget tk(delete Nr#'.0' 'end')}
+	 {Widget tk(delete p(Nr 0) 'end')}
       end
    end
 end

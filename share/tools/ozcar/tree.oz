@@ -151,7 +151,6 @@ local
 	     Q = {N get($)}.q
 	  in
 	     case {Dictionary.member self.ThreadDic Q} then
-		{Show fals#{N get($)}.i}
 		{N setRoot(false)}
 	     else
 		{N setRoot(true)}
@@ -326,10 +325,10 @@ in
 	 {self tk(delete all)}
 	 {ForAll @nodes
 	  proc{$ N}
-	     X Y R S DY I Q
+	     X Y R S DY I
 	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
 	  in
-	     node(x:X y:Y r:R s:S dy:DY i:I q:Q ...) = {N get($)}
+	     node(x:X y:Y r:R s:S dy:DY i:I ...) = {N get($)}
 
 	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
 		      width:1 fill:TrunkColor)}

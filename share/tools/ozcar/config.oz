@@ -58,23 +58,14 @@ GlobalEnvTitle         = 'Global Variables'
 %% error, warning & debug messages
 %%
 
-ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = fun {$}
 			    'Ozcar[' # {Thread.id {Thread.this}} # ']: '
 			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
 
-InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = ('step message without line number information, ' #
 			  'continuing thread #')
-NoFileBlockInfo        = ' blocks without line number information'
-EarlyThreadDeath       = 'won\'t add short living thread #'
 EarlyTermThread        = 'Early terminating thread'
-KnownThread            = 'Got known thread'
-NewThread              = 'Got new thread'
-WaitForThread          = ('waiting for thread to be added ' #
-			  'to dictionary of debugged threads...')
-
 FirstSelectThread      = 'You must select a thread first!'
 
 StackAction            = {NewName}
@@ -155,7 +146,6 @@ end
 
 ThreadTreeFont         = DefaultFont
 ThreadTreeBoldFont     = BoldFont
-ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 StatusFont             = TitleFont
 HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-18-*-*-*-*-*-*-*'
@@ -191,7 +181,6 @@ TextCursor             = left_ptr
 %% the timeout variables have critical values --
 %% you should know what you are doing when changing them...
 TimeoutToCalcTree      = 380 % ms
-TimeoutToBlock         = 620
 TimeoutToUpdateEnv     = 430
 TimeoutToSwitch        = 340
 TimeoutToStatus        = 210
