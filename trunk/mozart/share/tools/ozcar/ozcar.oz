@@ -7,7 +7,7 @@ Ozcar =
 	   ThreadManager
 	   SourceManager
 	   Gui
-	
+
 	meth init
 	   ThreadManager,init
 	   SourceManager,init
