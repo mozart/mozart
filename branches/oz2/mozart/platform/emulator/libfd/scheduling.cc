@@ -330,7 +330,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	dur0 =+ dl;
+	dur0 = dur0 + dl;
 	maxEst = max(maxEst,xlMin+dl); 
 	mSi = min( mSi, xlMin+dl );
 	maxSi = max( maxSi, MinMax[l].max );
@@ -540,7 +540,7 @@ cploop:
 	   int xlMax = MinMax[l].max;
 	   int xlMaxDL = xlMax + dl;
 	   if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	     dur0 =+ dl;
+	     dur0 = dur0 + dl;
 	     mSi = max( mSi, xlMax );
 	     minSi = min( minSi, xlMin+dl );
 	     minLst = min(minLst,xlMax);
@@ -1234,7 +1234,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	use0 =+ dl*use[l];
+	use0 = use0 + dl*use[l];
 	set0[set0Size++] = l;
       }
       else {
@@ -1266,7 +1266,6 @@ cploop:
 	oset->ext[k] = set0[k];
       }
     }
-
 
     int setSize = 0;
 
@@ -1382,7 +1381,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	use0 =+ dl*use[l];
+	use0 = use0 + dl*use[l];
 	set0[set0Size++] = l;
       }
       else {
@@ -1458,8 +1457,6 @@ cploop:
       int durL = dur[l];
       int useL = use[l];
 
-//      cout << "setCount: " << setCount << "\n";
-//      cout << "lCount: " << lCount << "\n";
 
       if (minL < s->sLow) {
 	if ( (s->sUp - s->sLow)*capacity >= s->dSi + durL*useL) {
