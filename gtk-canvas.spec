@@ -36,6 +36,9 @@ make install
 %post
 ldconfig
 
+%postun
+ldconfig
+
 %files
 /usr/local/lib/libart_lgpl.so.2.2.0
 /usr/local/lib/libart_lgpl.so.2
