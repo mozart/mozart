@@ -211,6 +211,11 @@ public:
   OZ_Boolean le (const int);
   OZ_Boolean ge (const int);
 
+  void operator <= (const int);
+  void operator >= (const int);
+  void operator |= (const FSetValue &);
+  void operator &= (const FSetValue &);
+
   // conversion functions
   void toNormal(void);
   void toExtended(void);
