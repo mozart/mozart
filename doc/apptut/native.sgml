@@ -1,12 +1,26 @@
 <PART>
   <TITLE/Foreign Extensions/
   <CHAPTER>
+    <TITLE/Introduction/
 
+    <P>Oz can be very simply extended with new functionality and
+datatypes implemented in C or C++.  This capability is often used to
+interface Oz to existing libraries: for example, the <NAME
+type="library"/regex/ and <NAME type="library"/gdbm/ modules are
+implemented in this fashion.</P>
+
+    <PARA TYPE=APROPOS><TITLE/Native Functors/
+Every extension is presented to the system in the form of a
+<DEF/native functor/, &ie; a functor which happens to be implemented
+in C or C++ rather than in Oz.</P>
 </PART>
 
 <!--
 Local Variables:
+mode: sgml
+mode: auto-fill
 sgml-default-dtd-file: "part.ced"
 sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
 End:
 -->
