@@ -33,11 +33,18 @@ require
 	     vectorToTuple:  VectorToTuple
 	     
 	     formatOrigin:   FormatOrigin)
-
-   at '../CpSupport.ozf'
    
 import
-   SCP at 'x-oz://boot/Schedule'
+   SCP(disjoint_card:      SchedDisjointCard
+       cpIterate:          SchedCpIterate
+       taskIntervals:      SchedTaskIntervals
+       disjunctive:        SchedDisjunctive
+       cpIterateCap:       SchedCpIterateCap
+       cumulativeTI:       SchedCumulativeTI
+       cpIterateCapUp:     SchedCpIterateCapUp
+       taskIntervalsProof: SchedTaskIntervalsProof
+       firstsLasts:        SchedFirstsLasts)
+   at 'x-oz://boot/Schedule'
 
    FD(bool
       is
@@ -75,17 +82,6 @@ define
       
    {Wait FD.bool}
 
-   SchedDisjointCard	=       SCP.disjoint_card
-   SchedCpIterate =	        SCP.cpIterate
-   SchedTaskIntervals =	SCP.taskIntervals
-   SchedDisjunctive =	SCP.disjunctive
-   SchedCpIterateCap	=       SCP.cpIterateCap
-   SchedCumulativeTI	=       SCP.cumulativeTI
-   SchedCpIterateCapUp =	SCP.cpIterateCapUp
-   SchedTaskIntervalsProof = SCP.taskIntervalsProof
-   SchedFirstsLasts =	SCP.firstsLasts
-      
-      
    %% Propagators
       
    proc {Cumulative Tasks Start Dur Use Capacities}
