@@ -46,9 +46,9 @@
 
     ##* Assembler support
 
-    'newCodeBlock'              => { in  => ['+int'],
-                                     out => ['+foreignPointer'],
-                                     BI  => BInewCodeBlock},
+    'allocateCodeBlock'         => { in  => ['+int','+[value]'],
+                                     out => ['+foreignPointer','+procedure/0'],
+                                     BI  => BIallocateCodeBlock},
 
     'getOpcode'                 => { in  => ['+atom'],
                                      out => ['+int'],
@@ -57,10 +57,6 @@
     'getInstructionSize'        => { in  => ['+atom'],
                                      out => ['+int'],
                                      BI  => BIgetInstructionSize},
-
-    'makeProc'                  => { in  => ['+foreignPointer','+[value]'],
-                                     out => ['+procedure/0'],
-                                     BI  => BImakeProc},
 
     'addDebugInfo'              => { in  => ['+foreignPointer','+atom','+int'],
                                      out => [],

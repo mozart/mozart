@@ -110,35 +110,21 @@ OZ_BI_define(BIgetInstructionSize,1,1)
 } OZ_BI_end
 
 
-OZ_BI_define(BInewCodeBlock,1,1)
+OZ_BI_define(BIallocateCodeBlock,2,2)
 {
   oz_declareIntIN(0,size);
+  oz_declareNonvarIN(1,globals);
+
   if (size < 0) {
     return oz_raise(E_ERROR,OZ_atom("assembler"),
                     "illegalCodeBlockSize",1,OZ_in(0));
   }
-  CodeArea *code = new CodeArea(size);
-  OZ_RETURN(OZ_makeForeignPointer(code));
-} OZ_BI_end
-
-
-#define OZ_declareCodeBlockIN(num,name)                 \
-  CodeArea *name;                                       \
-  {                                                     \
-    OZ_declareForeignPointerIN(num,__aux);              \
-    name = (CodeArea *) __aux;                          \
-  }
-
-
-OZ_BI_define(BImakeProc,2,1)
-{
-  OZ_declareCodeBlockIN(0,code);
-  oz_declareNonvarIN(1,globals);
-
   int numGlobals = OZ_length(globals);
   if (numGlobals == -1) {
     return OZ_typeError(1,"List");
   }
+
+  CodeArea *code = new CodeArea(size);
   const int maxX=-1; // should never suspend
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
                                    mkTupleWidth(0), AtomEmpty, 0, -1, oz_nil(),
@@ -155,8 +141,18 @@ OZ_BI_define(BImakeProc,2,1)
     globals = oz_deref(oz_tail(globals));
   }
 
-  OZ_RETURN(makeTaggedConst(p));
+  OZ_out(0) = OZ_makeForeignPointer(code);
+  OZ_out(1) = makeTaggedConst(p);
+  return PROCEED;
 } OZ_BI_end
+
+
+#define OZ_declareCodeBlockIN(num,name)                 \
+  CodeArea *name;                                       \
+  {                                                     \
+    OZ_declareForeignPointerIN(num,__aux);              \
+    name = (CodeArea *) __aux;                          \
+  }
 
 
 OZ_BI_define(BIaddDebugInfo,3,0)
