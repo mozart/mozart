@@ -291,6 +291,19 @@ ByteBufferManager::ByteBufferManager():
   wc = 0;
 }
 
+ByteBufferManager::~ByteBufferManager(){
+  ByteBuffer *byteBuffer;
+  FreeListEntry *f;
+  int l=length();
+  for(int i=0;i<l;i++) {
+    f=getOne();
+    Assert(f!=NULL);
+    GenCast(f,FreeListEntry*,byteBuffer,ByteBuffer*);
+    delete byteBuffer;
+  }
+  Assert(length()==0);
+}
+
 ByteBuffer * ByteBufferManager::getByteBuffer(int size, BYTE *buf){
   FreeListEntry *f=getOne();
   ByteBuffer *bb;
@@ -310,8 +323,8 @@ BYTE *ByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
   FreeListEntry *f;
   --wc;
   GenCast(bb,ByteBuffer*,f,FreeListEntry*);
-  if(putOne(f)) return ret;
-  delete bb;
+  if(!putOne(f))
+    delete bb;
   return ret;
 }
 

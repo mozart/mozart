@@ -36,6 +36,19 @@ static Bool timers_wakeUpTimers(unsigned long time,void *timers);
 class TimerElementManager: public FreeListManager {
 public:
   TimerElementManager():FreeListManager(TimerElement_CUTOFF){wc = 0;}
+  ~TimerElementManager() {
+    TimerElement *te;
+    FreeListEntry *f;
+    int l=length();
+    for(int i=0;i<l;i++) {
+      f=getOne();
+      Assert(f!=NULL);
+      GenCast(f,FreeListEntry*,te,TimerElement*);
+      delete te;
+    }
+    Assert(length()==0);
+  }
+
   int wc;
 
   TimerElement * getTimerElement(){
@@ -73,9 +86,15 @@ Timers::Timers() {
   timerElementManager=new TimerElementManager();
 }
 
-// Is this ever called?
 Timers::~Timers() {
   am.removeTask((void*) this, timers_checkTimers);
+  delete timerElementManager;
+  TimerElement *tmp;
+  while(elems!=NULL) {
+    tmp=elems;
+    elems=elems->next;
+    delete tmp;
+  }
 }
 
 // If te!=NULL it must be a te set by this timers-object.

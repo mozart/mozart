@@ -49,7 +49,8 @@ extern Bool ipIsbehindFW;
 //
 // Run this when starting;
 void initNetwork();
-
+// Do cleanups in debugmode
+DebugCode(void exitNetwork();)
 
 //
 // Used by distpane
@@ -60,8 +61,11 @@ int getLastRTT_ComObj(ComObj*);
 
 int getComControllerInfo(int &size);
 int getTransControllerInfo(int &size);
-int getTransControllerUsed();
 int getMsgContainerManagerInfo(int &size);
+
+int getComControllerUnused();
+int getTransControllerUnused();
+int getMsgContainerManagerUnused();
 
 //
 // Used when "disconnecting" a site
