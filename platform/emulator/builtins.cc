@@ -4860,6 +4860,26 @@ OZ_C_proc_end
 
 
 /* -----------------------------------------------------------------
+   Statistics
+   ----------------------------------------------------------------- */
+
+
+OZ_C_proc_begin(BIstatisticsReset, 0)
+{
+  ProfileCode(ozstat.initCount());
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstatisticsPrint, 0)
+{
+  ProfileCode(ozstat.printCount());
+  return PROCEED;
+}
+OZ_C_proc_end
+
+/* -----------------------------------------------------------------
    dynamic link objects files
    ----------------------------------------------------------------- */
 
@@ -7195,6 +7215,9 @@ BIspec allSpec[] = {
   {"Thread.state",2,BIthreadState},
 
   {"printLong",1,BIprintLong},
+
+  {"statisticsReset",0,BIstatisticsReset},
+  {"statisticsPrint",0,BIstatisticsPrint},
 
   {"traceBack",0,BItraceBack},
 

@@ -1529,7 +1529,7 @@ void AM::gc(int msgLevel)
 
   INITCHECKSPACE;
   initMemoryManagement();
-  INITCOUNT();
+  //  ProfileCode(ozstat.initCount());
 
   { /* initialize X regs; this IS necessary ! */
     int sz = getRefsArraySize(xRegs);
@@ -2203,7 +2203,6 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   case Co_Port:  /* TODO: what to count TODO: no need for local check?? */
     {
-      COUNT(port);
       switch(((Tertiary *)this)->getTertType()) {
       case Te_Local:
         CheckLocal((PortLocal *) this);

@@ -116,6 +116,7 @@ void AM::init(int argc,char **argv)
 {
   Assert(makeTaggedNULL() == 0);
   ozconf.init();
+  ProfileCode(ozstat.initCount());
   osInit();
   bigIntInit();
 
@@ -400,6 +401,7 @@ Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
 {
+  COUNT(totalUnify);
   int argSize;
   RefsArray args1, args2;
 
@@ -453,6 +455,7 @@ start:
    *   UVAR      -> SVAR
    *   local newer -> local older
    */
+  COUNT(varVarUnify);
   if (isNotCVar(tag1)) {
     if ( isNotCVar(tag2) &&
          isMoreLocal(term2,term1) &&
@@ -493,6 +496,7 @@ start:
 
   case LTUPLE:
     {
+      COUNT(recRecUnify);
       args1 = tagged2LTuple(term1)->getRef();
       args2 = tagged2LTuple(term2)->getRef();
       argSize = 2;
@@ -501,6 +505,7 @@ start:
 
   case SRECORD:
     {
+      COUNT(recRecUnify);
       SRecord *sr1 = tagged2SRecord(term1);
       SRecord *sr2 = tagged2SRecord(term2);
 

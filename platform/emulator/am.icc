@@ -51,6 +51,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
 inline
 Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
 {
+  COUNT(totalUnify);
   if (!prop) goto bomb;
 
   {
@@ -63,6 +64,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
     if (proto == term1) {
       DEREF(term2,_2,_3);
       if (!isAnyVar(term2)) {
+        COUNT(varVarUnify);
         doBind(term1Ptr,term2);
         goto exit;
       }
@@ -77,6 +79,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
     }
   }
  bomb:
+  COUNT1(totalUnify,-1);
   return unify(A,B,prop);
 
  exit:
