@@ -185,7 +185,7 @@ COMPONENTS = \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
 	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
 	GumpScanner.ozc GumpParser.ozc Misc.ozc \
-	StandardModules.ozc StandardSubModules.ozc 
+	StandardModules.ozc StandardSubModules.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 LIBOZM = $(OZLIB)/ozbatch.ozm
@@ -205,7 +205,7 @@ OZCARBITMAPS1 = \
 	step.xbm stop.xbm term.xbm unleash.xbm
 OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
-.PHONY: all install clean realclean veryclean tags
+.PHONY: all install clean realclean veryclean tags bootstrap
 
 all: Makefile env $(TYPS) $(TYCS) $(COMPONENTS) ozbatch ozserver
 
@@ -258,15 +258,16 @@ install-src: $(ALLSRCS:%=$(OZLIB)/%)
 clean:
 	$(RM) *~ *.bak
 	$(RM) compiler-Version.oz compiler-Opcodes.oz ozcar-version.oz
-	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS) 
+	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS)
 	$(RM) ozbatch ozserver
 	$(RM) TAGS
 	$(RM) -r tyc
 	$(RM) compiler/*.ozc
 
 realclean: clean
+	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE3)
 
-veryclean: clean
+veryclean: realclean
 
 distclean: veryclean
 	$(RM) confdefs.h config.cache config.status config.log
@@ -435,7 +436,7 @@ bootstrap: ${OZMA_LIB}
 #    make check
 #  test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
-.PHONY: stage1 stage2
+.PHONY: stage1 stage1-bootstrap stage2 stage3 check
 
 STAGE1=./stage1
 STAGE2=./stage2
@@ -465,8 +466,7 @@ stage3:
 check:
 	make stage1-bootstrap clean stage2
 
-realclean:
-	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE3)
+.PHONY: denys install-denys denys2
 
 denys: SP.ozc CP.ozc OP.ozc Compiler.ozc Gump.ozc AP.ozc tycs ozbatch
 
