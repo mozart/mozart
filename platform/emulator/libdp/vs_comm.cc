@@ -394,6 +394,12 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
     }
 
     //
+#ifdef DENYS_EVENTS
+    {
+      static TaggedRef VSMsgQ = oz_atom("VSMsgQ");
+      OZ_eventPush(VSMsgQ);
+    }
+#endif
     return (ACCEPTED);
   }
   return(ACCEPTED);	// to make gcc happy;
