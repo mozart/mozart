@@ -64,7 +64,7 @@ ifeq ($(IS_DARWIN),yes)
 ######################################################################
 
 $(OZWISH): unixMain.cc MacOSX/OzWish.pbxproj/project.pbxproj MacOSX/OzWish.pbxproj/icns
-	cd MacOSX/OzWish.pbxproj && pbxbuild SYMROOT=$(BUILTOP)/platform/wish
+	cd MacOSX/OzWish.pbxproj && pbxbuild SYMROOT=$(BUILDTOP)/platform/wish
 
 clean:
 	-rm *~
