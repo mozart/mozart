@@ -463,7 +463,7 @@ constraint is inconsistent with the constraint store.
 &moz3; distribution) and can be accessed either by 
 <<<declare [RI] = {Module.link ['x-oz://contrib/RI']}>> 
 or by 
-<<<import RI @ 'x-oz://contrib/RI'>>> 
+<<<import RI at 'x-oz://contrib/RI'>>> 
 as part of a functor definition.
 
 <P>
