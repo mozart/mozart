@@ -68,7 +68,8 @@ define
 	    %% both cases, we initialize the makefile info from the package
 	    %% record we just read, but we don't actually write out the
 	    %% makefile.
-	    {self makefile_from_record(REC.info fromPackage:true)}
+	    {self set_fromPackage(true)}
+	    {self makefile_from_record(REC.info)}
 	    {self set_no_makefile(false)}
 	 end
       end

@@ -79,6 +79,7 @@ define
 	 OzTool     : unit
 	 ResolverExtended : false
 	 SubResolverStack : nil
+	 FromPackage: false
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -652,6 +653,15 @@ define
 	 case @SubResolverStack of PATH|L then
 	    SubResolverStack<-L
 	    {OS.putEnv 'OZ_SEARCH_LOAD' PATH}
+	 end
+      end
+
+      meth set_fromPackage(B) FromPackage<-B end
+      meth get_fromPackage($)
+	 if @Superman\=unit then
+	    {@Superman get_fromPackage($)}
+	 else
+	    @FromPackage
 	 end
       end
    end

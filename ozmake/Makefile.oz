@@ -38,7 +38,7 @@ define
 	 {CondSelect @Target2Section {Path.toAtom T} unit}
       end
 
-      meth makefile_from_record(R fromPackage:FromPackage<=false)
+      meth makefile_from_record(R)
 
 	 Target2Section<-{NewDictionary}
 	 Target2Rule   <-{NewDictionary}
@@ -181,7 +181,9 @@ define
 	 if {HasFeature R submakefiles} then
 	    if {Not {IsRecord R.submakefiles}} then
 	       raise ozmake(makefile:badsubmakefiles(R.submakefiles)) end
-	    elseif {Width R.submakefiles}\=0 andthen {Not FromPackage} then
+	    elseif {Width R.submakefiles}\=0
+	       andthen {Not {self get_fromPackage($)}}
+	    then
 	       raise ozmake(makefile:submakefilesnotallowed) end
 	    else
 	       {self set_submakefiles(R.submakefiles)}
