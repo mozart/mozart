@@ -26,7 +26,6 @@
  *    member data:
  *      flags: see enum ActorFlags
  *      board: board in which actor is installed
- *      priority: if a new thread must be created;
  *
  * class AWActor:
  *    may be conditional or disjunction

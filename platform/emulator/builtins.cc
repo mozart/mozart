@@ -1330,14 +1330,13 @@ OZ_C_proc_begin(BInewSpace, 2) {
     oz_typeError(0, "Procedure");
 
   Board* CBB = am.currentBoard;
-  int    CPP = am.currentThread->getPriority();
 
   ozstat.incSolveCreated();
   // creation of solve actor and solve board
-  SolveActor *sa = new SolveActor(CBB, CPP);
+  SolveActor *sa = new SolveActor(CBB);
 
   // thread creation for {proc root}
-  sa->inject(CPP, proc);
+  sa->inject(DEFAULT_PRIORITY, proc);
 
   // create space
   return oz_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
@@ -1625,7 +1624,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   sa->clearResult(space->getBoard());
 
   // inject
-  sa->inject(sa->getPriority(), proc);
+  sa->inject(DEFAULT_PRIORITY, proc);
 
   return PROCEED;
 } OZ_C_proc_end

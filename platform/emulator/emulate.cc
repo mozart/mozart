@@ -1295,7 +1295,7 @@ LBLsuspendThread:
     DebugTrace (trace("suspend runnable thread", CBB));
 
     Assert (CTT);
-    CTT->unmarkPropagated();
+    CTT->unmarkRunnable();
 
     Assert (CBB);
     Assert (!(CBB->isFailed ()));
@@ -2539,7 +2539,7 @@ LBLdispatcher:
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB,CPP,CTT,
+      CAA = new AskActor(CBB,CTT,
                          elsePC ? elsePC : NOCODE,
                          NOCODE, Y, G, X, argsToSave);
       CTS->pushActor(CAA);
@@ -2548,7 +2548,7 @@ LBLdispatcher:
 
   Case(CREATEOR)
     {
-      CAA = new WaitActor(CBB, CPP, CTT, NOCODE, Y, G, X, 0, NO);
+      CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
       CTS->pushActor(CAA);
 
       DISPATCH(1);
@@ -2558,7 +2558,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, NO);
+      CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
       CTS->pushActor(CAA);
 
       if (bb->isWait()) {
@@ -2574,7 +2574,7 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, OK);
+      CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
       CTS->pushActor(CAA);
 
       Assert(CAA->isChoice());

@@ -104,7 +104,7 @@ Bool LocalPropagationStore::propagate_locally () {
     Assert (am.currentThread != (Thread *) NULL);
     Assert (am.currentBoard == thr->getBoard());
     //
-    //  No 'propagated' threads are allowed here,
+    //  No 'runnable' threads are allowed here,
     // because only true propagators are in the LPS;
     Assert (!(am.currentThread->isDeadThread ()));
     Assert (am.currentThread->isPropagator ());
