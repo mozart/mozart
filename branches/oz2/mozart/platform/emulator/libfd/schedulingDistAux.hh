@@ -14,7 +14,6 @@
 
 #include "std.hh"
 
-#include <iostream.h>
 
 //////////
 // FIrsts and Lasts
