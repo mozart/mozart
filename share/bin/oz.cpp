@@ -36,9 +36,9 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   /*
    * TCL/TK
    */
-  sprintf(buffer,"%s/ozwish/lib/tcl7.5",ozhome);
+  sprintf(buffer,"%s/ozwish-win/lib/tcl7.5",ozhome);
   ozSetenv("TCL_LIBRARY",buffer);
-  sprintf(buffer,"%s/ozwish/lib/tk4.1",ozhome);
+  sprintf(buffer,"%s/ozwish-win/lib/tk4.1",ozhome);
   ozSetenv("TK_LIBRARY",buffer);
 
 
@@ -58,8 +58,9 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   } else if (stricmp(progname,"ozemacs.exe")==0) {
     sprintf(buffer,"%s",ebin);
   } else if (stricmp(progname,"ozdemo.exe")==0) {
-    sprintf(buffer,"%s/platform/%s/ozdemo.bat",ozhome,ozplatform);
-    console = CREATE_NEW_CONSOLE;
+    sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
+	    ozhome,ozplatform,ozhome);
+    //    console = CREATE_NEW_CONSOLE;
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
   }
