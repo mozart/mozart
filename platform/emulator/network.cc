@@ -2036,6 +2036,15 @@ void NetMsgBuffer::constructMsg(RemoteSite* rs, tcpMessageType msg){
    *****************************************************************
  * *************************************************************** */
 
+/* switch off Nagle's algorithm */
+static
+int nagleOff(int fd)
+{
+  int ON = 1;
+  return setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,&ON,sizeof(ON));
+}
+
+
 inline Bool createTcpPort_RETRY(){
   if(ossockerrno()==ENOENT) return TRUE;
   if(ossockerrno()==EADDRINUSE) return FALSE;
@@ -2070,6 +2079,10 @@ retry:
     if(errno==ENOBUFS) return IP_TIMER;
     NETWORK_ERROR(("system:socket %d\n",errno));}
   addr.sin_port = htons(port);
+
+  if(nagleOff(fd)<0) {
+    NETWORK_ERROR(("nagle"));
+  }
 
   if(bind(fd,(sockaddr *) &addr,sizeof(struct sockaddr_in))<0) {
     PD((WEIRD,"create TcpPort bind redo port:%d errno:%d",
@@ -2184,18 +2197,17 @@ retry:
 
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
-
     return IP_NET_CRASH;}
-    /*
-    if(errno==ENOBUFS){
-      PD((WEIRD,"tcpOpen set on timer",errno));
-      return IP_TIMER;}
-    NETWORK_ERROR(("system:socket %d",errno));}
+  /*
+      if(errno==ENOBUFS){
+        PD((WEIRD,"tcpOpen set on timer",errno));
+        return IP_TIMER;}
+      NETWORK_ERROR(("system:socket %d",errno));}
+      */
 
-
-      if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,1,sizeof(int))<0)
-    {NETWORK_ERROR(("setsockopt"));}*/
-
+  if(nagleOff(fd)<0) {
+    NETWORK_ERROR(("nagle"));
+  }
 
   // critical region
   if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0) {
