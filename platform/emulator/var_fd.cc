@@ -56,6 +56,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 // ... and check if resulting domain is empty -> failure
       if (intersection == empty)
 	return NO;
+      FDState left_dom = intersection.checkAgainst(finiteDomain);
+      FDState right_dom = intersection.checkAgainst(termDom);
       
 // bind - trail - propagate
       Bool varIsLocal = isLocalVariable();
@@ -71,8 +73,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      term = *tPtr = newSmallInt(intersection.singl());
 	    else
 	      termVar->setDom(intersection);
-	    propagate(var, FiniteDomain::leftDom, tPtr);
-	    termVar->propagate(auxterm, FiniteDomain::rightDom, tPtr);
+	    propagate(var, left_dom, tPtr, TRUE);
+	    termVar->propagate(auxterm, right_dom, tPtr, TRUE);
 	    if (isCVar(term) == OK)
 	      relinkSuspList(termVar);
 	    bind(vPtr, var, varIsLocal, tPtr, term);
@@ -83,8 +85,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      var = *vPtr = newSmallInt(intersection.singl());
 	    else
 	      setDom(intersection);
-	    termVar->propagate(term, FiniteDomain::rightDom, vPtr);
-	    propagate(auxvar, FiniteDomain::leftDom, vPtr);
+	    termVar->propagate(term, right_dom, vPtr, TRUE);
+	    propagate(auxvar, left_dom, vPtr, TRUE);
 	    if (isCVar(var) == OK)
 	      termVar->relinkSuspList(this);
 	    bind(tPtr, term, termIsLocal, vPtr, var);
@@ -100,13 +102,13 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      var = *vPtr = newSmallInt(intersection.singl());
 	    else
 	      setDom(intersection);
-	    termVar->propagate(term, FiniteDomain::rightDom, vPtr);
-	    propagate(auxvar, FiniteDomain::leftDom, vPtr);
+	    termVar->propagate(term, right_dom, vPtr, TRUE);
+	    propagate(auxvar, left_dom, vPtr, TRUE);
 	    termVar->addSuspension(new Suspension(am.currentBoard));
 	    bind(tPtr, term, termIsLocal, vPtr, var);
 	  } else {
-	    termVar->propagate(term, FiniteDomain::rightDom, tPtr);
-	    propagate(var, FiniteDomain::leftDom, tPtr);
+	    termVar->propagate(term, right_dom, tPtr, TRUE);
+	    propagate(var, left_dom, tPtr, TRUE);
 	    if (isCVar(term) == OK)
 	      relinkSuspList(termVar);
 	    bind(vPtr, var, varIsLocal, tPtr, term);
@@ -122,13 +124,13 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	      term = *tPtr = newSmallInt(intersection.singl());
 	    else
 	      termVar->setDom(intersection);
-	    propagate(var, FiniteDomain::leftDom, tPtr);
-	    termVar->propagate(auxterm, FiniteDomain::rightDom, tPtr);
+	    propagate(var, left_dom, tPtr, TRUE);
+	    termVar->propagate(auxterm, right_dom, tPtr, TRUE);
 	    addSuspension(new Suspension(am.currentBoard));
 	    bind(vPtr, var, varIsLocal, tPtr, term);
 	  } else {
-	    termVar->propagate(term, FiniteDomain::rightDom, vPtr);
-	    propagate(var, FiniteDomain::leftDom, vPtr);
+	    termVar->propagate(term, right_dom, vPtr, TRUE);
+	    propagate(var, left_dom, vPtr, TRUE);
 	    if (isCVar(var) == OK)
 	      termVar->relinkSuspList(this);
 	    bind(tPtr, term, termIsLocal, vPtr, var);
@@ -142,14 +144,14 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  if (intersection == singleton){
 	    aPtr = NULL;
 	    aux = newSmallInt(intersection.singl());
-	    propagate(var, FiniteDomain::leftDom, aux);
-	    termVar->propagate(term, FiniteDomain::rightDom, aux);
+	    propagate(var, left_dom, aux, TRUE);
+	    termVar->propagate(term, right_dom, aux, TRUE);
 	  } else {
 	    TaggedRef pn = tagged2CVar(var)->getName();
 	    aPtr = newTaggedCVar(new GenFDVariable(intersection, pn));
 	    aux = *aPtr;
-	    propagate(var, FiniteDomain::leftDom, aPtr);
-	    termVar->propagate(term, FiniteDomain::rightDom, aPtr);
+	    propagate(var, left_dom, aPtr, TRUE);
+	    termVar->propagate(term, right_dom, aPtr, TRUE);
 	  }
 	  Suspension* susp = new Suspension(am.currentBoard);
 	  termVar->addSuspension(susp);
