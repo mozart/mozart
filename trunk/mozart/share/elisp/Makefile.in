@@ -23,7 +23,7 @@ oz.elc: $(SRCDIR)/oz.el
 	$(EMACS) -q -batch -l compile.el
 	@$(RM) compile.el
 
-install: $(ELISPDIR) $(LIBFILES)
+install: all $(ELISPDIR) $(LIBFILES)
 
 $(ELISPDIR):
 	$(INSTALLDIR) $@
