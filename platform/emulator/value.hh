@@ -43,7 +43,9 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
        AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
        AtomHeap, AtomDebugIP, AtomDebugPerdio,
-  RecordFailure;
+  RecordFailure,
+  E_ERROR, E_KERNEL, E_OBJECT, E_OPEN, E_TK, E_UNIX, E_SYSTEM
+;
 
 /*===================================================================
  * Literal
