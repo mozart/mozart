@@ -54,7 +54,7 @@ define
             try
                {Send P M#Sync}
             catch _ then
-               try Sync=exception(newtworkFailure(remoteObjectGone(P))) catch _ then skip end
+               try Sync=exception(networkFailure(remoteObjectGone(P))) catch _ then skip end
             end
 
             %% Wait for outcome
