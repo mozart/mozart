@@ -114,6 +114,23 @@ GenFDVariable * tagged2GenFDVar(TaggedRef term)
   return (GenFDVariable*) tagged2CVar(term);
 }
 
+inline
+void addSuspFDVar(TaggedRef v, SuspList * el, FDPropState l)
+{
+  DebugCheck(l > fd_eqvar, error("list index out of range."));
+  
+  GenFDVariable * fv = tagged2GenFDVar(v);
+  fv->fdSuspList[l] = addSuspToList(fv->fdSuspList[l], el, fv->home);
+}
+
+inline
+void addSuspFDVar(TaggedRef v, SuspList * el)
+{
+  GenFDVariable * fv = tagged2GenFDVar(v);
+  fv->suspList = addSuspToList(fv->suspList, el, fv->home);
+}
+
+
 #endif
 
 
