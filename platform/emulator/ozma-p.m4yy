@@ -94,7 +94,7 @@ static void lookupLabel(TaggedRef key, int *location) {
 %token <tagged> TRUE FALSE UNIT NAMEDNAME COPYABLENAME UNIQUENAME
 %token <tagged> PREDICATEREF COPYABLEPREDICATEREF
 %token <index> XREGISTER YREGISTER GREGISTER
-%token LBL PID HT ONSCALAR ONRECORD GCI AMI
+%token POS LBL PID HT ONSCALAR ONRECORD GCI AMI
 
 define(readArg,$1)
 define(writeArg,$1)
@@ -395,8 +395,8 @@ PredicateRef    : UNIT
                   }
                 ;
 
-Pos             : Atom '(' Atom INTEGER INTEGER ')'
-                  { $$ = OZ_mkTuple($1,3,$3,$4,$5); }
+Pos             : POS '(' Atom INTEGER INTEGER ')'
+                  { $$ = OZ_mkTuple(OZ_atom("pos"),3,$3,$4,$5); }
                 ;
 
 Flags           : NIL

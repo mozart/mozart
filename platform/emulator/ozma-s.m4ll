@@ -177,6 +177,7 @@ x\({DIGIT}+\)                  { setRegisterIndex(); return XREGISTER; }
 y\({DIGIT}+\)                  { setRegisterIndex(); return YREGISTER; }
 g\({DIGIT}+\)                  { setRegisterIndex(); return GREGISTER; }
 
+"pos"                          { return POS; }
 "lbl"                          { return LBL; }
 "pid"                          { return PID; }
 "ht"                           { return HT; }
