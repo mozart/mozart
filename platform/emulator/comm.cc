@@ -195,15 +195,16 @@ void SiteHashTable::cleanup(){
     else{
       s->removeGCMarkSite();}
     ghn1=ghn->getNext();
-    while(ghn!=NULL){
+    while(ghn1!=NULL){
       GenCast(ghn1->getBaseKey(),GenHashBaseKey*,s,Site*);
-      if(s->isGCMarkedSite){
+      if(s->isGCMarkedSite()){
 	s->removeGCMarkSite();}
       else{
 	if(s->canBeFreed()){
 	  siteManager.freeSite(s);
 	  deleteNonFirst(ghn,ghn1);}}
-      ghn1=ghn->getNext();}
+      ghn=ghn1;
+      ghn1=ghn1->getNext();}
     i++;
     ghn=getByIndex(i);}
   return;
