@@ -24,7 +24,7 @@ Index by Category
 
  Meta-MEPs (MEPs about MEPs or Process)
 
- I     0  Index of Python Enhancement Proposals        Duchier
+ I     0  Index of Mozart Enhancement Proposals        Duchier
  I     1  MEP Guidelines                               Duchier
  I     2  Sample ReStructuredText MEP Template         Duchier
  I     3  Sample Plaintext MEP Template                Duchier
