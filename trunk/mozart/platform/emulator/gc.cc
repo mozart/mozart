@@ -1776,14 +1776,11 @@ void Chunk::gcRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      Bool isc = o->getIsClass();
-      o->claas = o->getClass()->gcClass();
-      gcTagged(o->cell,o->cell);
-      if (o->getIsClass()) 
-	o->setIsClass();
+      o->setClass(o->getClass()->gcClass());
       if (o->isDeep()){
 	((DeepObject*)o)->home = o->getBoardFast()->gcBoard();
       }
+      gcTagged(o->cell,o->cell);
       break;
     }
     
@@ -1836,6 +1833,14 @@ void ConstTerm::gcConstRecurse()
 }
 
 
+#define CheckLocal(chunk) 					\
+{								\
+   Board *bb=(chunk)->getBoardFast();				\
+   if (!bb->gcIsAlive()) return NULL;				\
+   if (opMode == IN_TC && !isLocalBoard(bb)) return this;	\
+}
+
+
 ConstTerm *ConstTerm::gcConstTerm()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
@@ -1854,26 +1859,24 @@ ConstTerm *ConstTerm::gcConstTerm()
       Assert(isConstChunk(this));
       size_t sz;
       switch(((Chunk*) this)->getType()) {
-      case Co_Abstraction: {
-	Abstraction *a = (Abstraction *) this;
-	Board *bb=a->getBoardFast();
-	if (!bb->gcIsAlive()) return 0;
-	if (opMode == IN_TC && !isLocalBoard(bb)) return this;
-	sz = sizeof(Abstraction);
-//	DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
-	break;
-      }
-      case Co_Object:
-	sz = ((Object*)this)->isDeep() ? sizeof(DeepObject): sizeof(Object);
-	break;
-      case Co_Cell:
+      case Co_Abstraction: 
+	  CheckLocal((Abstraction *) this);
+	  sz = sizeof(Abstraction);
+	  // DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
+	  break;
+
+      case Co_Object: 
 	{
-	  Board *bb=((Cell *) this)->getBoardFast();
-	  if (!bb->gcIsAlive()) return 0;
-	  if (opMode == IN_TC && !isLocalBoard(bb)) return this;
-	  sz = sizeof(Cell);
+	  Object *o = (Object *) this;
+	  CheckLocal(o);
+	  sz = o->isDeep() ? sizeof(DeepObject): sizeof(Object);
+	  break;
 	}
-	break;
+      case Co_Cell:
+	  CheckLocal((Cell *) this);
+	  sz = sizeof(Cell);
+	  break;
+
       case Co_Builtin:
 	switch (((Builtin *) this)->getType()) {
 	case BIsolveCont:
