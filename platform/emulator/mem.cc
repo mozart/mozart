@@ -141,6 +141,15 @@ void freeListChop(void * addr, size_t size) {
 
 }
 
+
+static
+Bool checkAddress(void *ptr)
+{
+  void *aux = tagValueOf(makeTaggedMiscp(ptr));
+  return (aux == ptr);
+}
+
+
 // ----------------------------------------------------------------
 // mem from os with 3 alternatives MMAP, SBRK or MALLOC
 
@@ -506,6 +515,8 @@ SbrkMemory *SbrkMemory::freeList = NULL;
 
 static void fakeMalloc(int sz)
 {
+  /* not needed under Windows, since we there use VirtualAlloc */
+#ifndef WINDOWS
   int chunksz = 1024;
   void **array = new void*[sz/chunksz + 1];
   int i=0;
@@ -519,6 +530,7 @@ static void fakeMalloc(int sz)
     free(array[i]);
   }
   delete array;
+#endif
 }
 
 void *ozMalloc(int chunk_size)
@@ -570,6 +582,65 @@ void ozFree(char *p, size_t ignored)
 {
   SbrkMemory::freeList =
     (SbrkMemory::freeList->add(((SbrkMemory *)p)-1))->shrink();
+}
+
+#elif defined(WINDOWS)
+
+#include <windows.h>
+
+void ozFree(char *ptr, int sz)
+{
+  //message("free(0x%p)\n",ptr);
+  if (ptr && VirtualFree(ptr,0,MEM_RELEASE) != TRUE) {
+    OZ_warning("free(0x%p) failed: %d\n",ptr,GetLastError());
+  }
+}
+
+
+char *ozMalloc0(int sz)
+{
+  char *ret = (char *)VirtualAlloc(0,sz,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
+
+  if (ret==0)
+    return ret;
+
+  if (checkAddress(ret+sz))
+    return ret;
+
+  ozFree(ret,sz);
+
+  /* address space exhausted, so we walk the whole address space: */
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  char *base = (char*)si.lpMinimumApplicationAddress;
+  // message("base = 0x%p\n",base);
+
+  while(1) {
+    ret = (char*)VirtualAlloc(base,sz,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
+    if (!checkAddress(ret+sz)) {
+      //message("ozMalloc finally failed: ptr = 0x%p\n",ret);
+      ozFree(ret,sz);
+      return NULL;
+    }
+
+    if (ret!=NULL) {
+      //message("malloc(%d)=0x%p\n",sz,ret);
+      return ret;
+    }
+
+    if (!checkAddress(base+sz)) // address space exhausted ?
+      return NULL;
+
+    base += si.dwAllocationGranularity;
+  }
+}
+
+
+char *ozMalloc(int sz)
+{
+  char *aux = ozMalloc0(sz);
+  //message("malloc(%d)=0x%p\n",sz,aux);
+  return aux;
 }
 
 #else
@@ -727,9 +798,9 @@ char *getMemFromOS(size_t sz) {
 
   heapTop = heapEnd+thisBlockSz;
 
-  void *aux = tagValueOf(makeTaggedMiscp(heapTop));
-  if (aux != heapTop) {
-    OZ_warning("Oz address space exhausted: %p != %p (%d)\n", aux, heapTop,sz);
+  if (!checkAddress(heapTop)) {
+    OZ_warning("Oz address space exhausted: %p != %p (%d)\n",
+               tagValueOf(makeTaggedMiscp(heapTop)), heapTop,sz);
     am.exitOz(1);
   }
 
