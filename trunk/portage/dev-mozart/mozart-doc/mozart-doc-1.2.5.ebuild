@@ -8,5 +8,6 @@ S="${WORKDIR}/mozart"
 
 src_compile() { true; }
 src_install() {
+    dodir /opt/mozart
     cp -a . ${D}/opt/mozart
 }
