@@ -71,7 +71,7 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
 }
 
 TaggedRef OzDebug::getFrameVariables() {
-  return CodeArea::getFrameVariables(PC,Y,G);
+  return CodeArea::getFrameVariables(PC,Y,CAP);
 }
 
 // ------------------ debug stream messages ---------------------------
@@ -320,7 +320,7 @@ void ozd_tracerOff()
   mode = NO;
 }
 
-Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
+Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,Abstraction *CAP)
 {
   static char command[MaxLine];
   static int skip=0;
@@ -473,9 +473,9 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
           {
             int numb=0;
             sscanf(&command[1],"%d",&numb);
-            printf ("G[%d] = ", numb);
+            printf("G[%d] = ", numb);
             fflush(stdout);
-            if (G) oz_print(G[numb]);
+            if (CAP) oz_print(CAP->getG(numb));
             printf ("\n");
           }
           break;
@@ -484,7 +484,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
             int numb=0;
             sscanf(&command[1],"%d",&numb);
             printf ( "G[%d]:\n", numb);
-            if (G) ozd_printLong(G[numb]);
+            if (CAP) ozd_printLong(CAP->getG(numb));
             printf ( "\n");
           }
           break;

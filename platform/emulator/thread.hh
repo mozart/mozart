@@ -428,10 +428,10 @@ public:
     item.threadBody->taskStack.pushDebug(dbg,dothis);
   }
   void popDebug(OzDebug *&dbg, OzDebugDoit &dothis) {
-    PopFrame(&item.threadBody->taskStack,pc,y,g);
+    PopFrame(&item.threadBody->taskStack,pc,y,cap);
     if (pc == C_DEBUG_CONT_Ptr) {
       dbg = (OzDebug *) y;
-      dothis = (OzDebugDoit) (int) g;
+      dothis = (OzDebugDoit) (int) cap;
     } else {
       item.threadBody->taskStack.restoreFrame();
       dbg = (OzDebug *) NULL;

@@ -232,7 +232,7 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
 }
 
 Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
-                          RefsArray Y, RefsArray G,
+                          RefsArray Y, Abstraction *G,
                           TaggedRef *out, Bool verbose)
 {
   Assert(this);

@@ -1249,13 +1249,13 @@ void Abstraction::printLongStream(ostream &stream, int depth, int offset)
          << "Abstraction @id"
          << this << endl;
   getPred()->printLongStream(stream,depth,offset);
-  int n = gRegs ? getRefsArraySize(gRegs) : 0;
+  int n = getPred()->getGSize();
   if (offset == 0) {
     if (n > 0) {
       stream <<  "G Regs:";
       for (int i = 0; i < n; i++) {
         stream << " G[" << i << "]:\n";
-        ozd_printLongStream(gRegs[i],stream,depth,offset+2);
+        ozd_printLongStream(getG(i),stream,depth,offset+2);
       }
     } else {
       stream << "No G-Regs" << endl;

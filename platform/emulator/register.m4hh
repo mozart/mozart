@@ -171,13 +171,13 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
   Case(UNIFYXX) ONREG2(Unify,X,X);
   Case(UNIFYXY) ONREG2(Unify,X,Y);
-  Case(UNIFYXG) ONREG2(Unify,X,G);
+  Case(UNIFYXG) ONREG2(Unify,X,GREF);
   Case(UNIFYYX) ONREG2(Unify,Y,X);
   Case(UNIFYYY) ONREG2(Unify,Y,Y);
-  Case(UNIFYYG) ONREG2(Unify,Y,G);
-  Case(UNIFYGX) ONREG2(Unify,G,X);
-  Case(UNIFYGY) ONREG2(Unify,G,Y);
-  Case(UNIFYGG) ONREG2(Unify,G,G);
+  Case(UNIFYYG) ONREG2(Unify,Y,GREF);
+  Case(UNIFYGX) ONREG2(Unify,GREF,X);
+  Case(UNIFYGY) ONREG2(Unify,GREF,Y);
+  Case(UNIFYGG) ONREG2(Unify,GREF,GREF);
   {
   Unify: asmLbl(UNIFY);
       const TaggedRef A = RegAccess(HelpReg1,getRegArg(PC+1));
@@ -272,7 +272,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
   Case(GETRECORDX) ONREG(GetRecord,X);
   Case(GETRECORDY) ONREG(GetRecord,Y);
-  Case(GETRECORDG) ONREG(GetRecord,G);
+  Case(GETRECORDG) ONREG(GetRecord,GREF);
   {
   GetRecord: asmLbl(GETRECORD);
     TaggedRef label = getLiteralArg(PC+1);
@@ -328,7 +328,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(termPtr,atm)) {
-          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
           addSuspPtr(termPtr, CTT);
 
           /* Bug fix:
@@ -367,7 +367,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         }
 
         if (oz_isVariable(term)) {
-          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
@@ -394,7 +394,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
         if (isNotCVar(term) ||
             isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
-          PushContX(PC,Y,G,X,getPosIntArg(PC+5));
+          PushContX(PC,Y,CAP,X,getPosIntArg(PC+5));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
@@ -436,14 +436,14 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
             // fall through
           case PerdioVariable:
           case LazyVariable:
-            PushContX(PC,Y,G,X,getPosIntArg(PC+6));
+            PushContX(PC,Y,CAP,X,getPosIntArg(PC+6));
             addSuspPtr(termPtr, CTT);
             return T_SUSPEND;
           default:
             break;
           }
         } else if (oz_isVariable(term)) {
-          PushContX(PC,Y,G,X,getPosIntArg(PC+6));
+          PushContX(PC,Y,CAP,X,getPosIntArg(PC+6));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
@@ -473,14 +473,14 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
             // fall through
           case PerdioVariable:
           case LazyVariable:
-            PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+            PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
             addSuspPtr(termPtr, CTT);
             return T_SUSPEND;
           default:
             break;
           }
         } else if (oz_isVariable(term)) {
-          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+          PushContX(PC,Y,CAP,X,getPosIntArg(PC+4));
           addSuspPtr(termPtr, CTT);
           return T_SUSPEND;
         }
@@ -708,13 +708,13 @@ Case(GETVOID)
 
   Case(UNIFYVALVARXX) ONREG2(UnifyValVar,X,X);
   Case(UNIFYVALVARXY) ONREG2(UnifyValVar,X,Y);
-  Case(UNIFYVALVARXG) ONREG2(UnifyValVar,X,G);
+  Case(UNIFYVALVARXG) ONREG2(UnifyValVar,X,GREF);
   Case(UNIFYVALVARYX) ONREG2(UnifyValVar,Y,X);
   Case(UNIFYVALVARYY) ONREG2(UnifyValVar,Y,Y);
-  Case(UNIFYVALVARYG) ONREG2(UnifyValVar,Y,G);
-  Case(UNIFYVALVARGX) ONREG2(UnifyValVar,G,X);
-  Case(UNIFYVALVARGY) ONREG2(UnifyValVar,G,Y);
-  Case(UNIFYVALVARGG) ONREG2(UnifyValVar,G,G);
+  Case(UNIFYVALVARYG) ONREG2(UnifyValVar,Y,GREF);
+  Case(UNIFYVALVARGX) ONREG2(UnifyValVar,GREF,X);
+  Case(UNIFYVALVARGY) ONREG2(UnifyValVar,GREF,Y);
+  Case(UNIFYVALVARGG) ONREG2(UnifyValVar,GREF,GREF);
   {
   UnifyValVar: asmLbl(UNIFYVALVAR);
 

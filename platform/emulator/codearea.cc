@@ -143,7 +143,6 @@ void AbstractionEntry::setPred(Abstraction *ab)
 
   abstr = ab;
   pc    = abstr->getPC();
-  g     = abstr->getGRegs();
   arity = abstr->getArity();
 
   // indexing on X[0] optimized !!!
@@ -195,7 +194,7 @@ ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-                              int frameId, RefsArray Y, RefsArray G)
+                              int frameId, RefsArray Y, Abstraction *G)
 {
   Reg reg;
   int next;
@@ -232,7 +231,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 }
 
 TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
-                                      RefsArray Y, RefsArray G) {
+                                      RefsArray Y, Abstraction *G) {
   TaggedRef locals = nil();
   TaggedRef globals = nil();
 
@@ -252,11 +251,12 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     }
     locals = reverseC(locals);
 
-    if (G) {
+    int gsize=G->getPred()->getGSize();
+    if (gsize>0) {
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
         TaggedRef aux1 = getLiteralArg(aux+1);
         if (!literalEq(aux1, AtomEmpty)) {
-          globals = cons(OZ_mkTupleC("#", 2, aux1, G[i]), globals);
+          globals = cons(OZ_mkTupleC("#", 2, aux1, G->getG(i)), globals);
         }
         aux += sizeOf(getOpcode(aux));
       }

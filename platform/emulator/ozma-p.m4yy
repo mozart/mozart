@@ -609,5 +609,5 @@ TaggedRef ozma_readProc(const char *filename)
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
                                            mkTupleWidth(0),nil(),0,NO);
   pte->PC = codeArea->getStart();
-  return makeTaggedConst(new Abstraction(pte,gRegs,am.currentBoard()));
+  return makeTaggedConst(Abstraction::newAbstraction(pte,am.currentBoard()));
 }

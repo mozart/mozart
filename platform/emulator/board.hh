@@ -211,10 +211,10 @@ public:
   }
 
   void setBody(ProgramCounter p,RefsArray y,
-               RefsArray g,RefsArray x,int i){
+               Abstraction *cap,RefsArray x,int i){
     body.setPC(p);
     body.setY(y);
-    body.setG(g);
+    body.setCAP(cap);
     body.setX(x,i);
   }
 

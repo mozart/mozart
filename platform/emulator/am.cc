@@ -1990,7 +1990,7 @@ int AM::commit(Board *bb, Thread *tt)
     WaitActor::Cast(aw)->disposeWait();
   }
 
-  ts->pushCont(cont->getPC(),cont->getY(),cont->getG());
+  ts->pushCont(cont->getPC(),cont->getY(),cont->getCAP());
   if (cont->getX()) ts->pushX(cont->getX());
 
   return 1;

@@ -40,14 +40,15 @@ public:
   USEFREELISTMEMORY;
 
   ProgramCounter PC;
-  RefsArray Y, G;
+  RefsArray Y;
+  Abstraction *CAP;
   TaggedRef data;
   RefsArray arguments;
 
-  OzDebug(ProgramCounter pc, RefsArray y, RefsArray g) {
+  OzDebug(ProgramCounter pc, RefsArray y, Abstraction *cap) {
     PC        = pc;
     Y         = y;
-    G         = g;
+    CAP       = cap;
     data      = makeTaggedNULL();
     arguments = (RefsArray) NULL;
   }
@@ -55,7 +56,7 @@ public:
   OzDebug(const OzDebug &d) {
     PC        = d.PC;
     Y         = d.Y;
-    G         = d.G;
+    CAP       = d.CAP;
     data      = d.data;
     arguments = d.arguments == (RefsArray) NULL ?
                       (RefsArray) NULL : copyRefsArray(d.arguments);
@@ -110,7 +111,7 @@ OZ_C_proc_proto(BIlivenessX);
 
 #ifdef DEBUG_TRACE
 Bool ozd_trace(char *s,
-               ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);
+               ProgramCounter PC=NOCODE,RefsArray Y=NULL,Abstraction *G=NULL);
 void ozd_tracerOn();
 void ozd_tracerOff();
 

@@ -538,7 +538,7 @@ LBLfailure:
            } else {
              Continuation *tmpCont = aa->getNext();
              ts->pushCont(aa->getElsePC(),
-                          tmpCont->getY(), tmpCont->getG());
+                          tmpCont->getY(), tmpCont->getCAP());
              if (tmpCont->getX()) ts->pushX(tmpCont->getX());
              aa->disposeAsk();
              e->suspThreadToRunnableOPT(tt);
@@ -572,7 +572,7 @@ LBLraise:
       OZ_Term traceBack;
       foundHdl =
         CTT->getTaskStackRef()->findCatch(CTT,e->exception.pc,
-                                          e->exception.y, e->exception.g,
+                                          e->exception.y, e->exception.cap,
                                           &traceBack,e->debugmode());
 
       OZ_Term loc = oz_getLocation(CBB);
