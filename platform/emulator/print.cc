@@ -926,7 +926,6 @@ PRINTLONG(Actor)
   CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
-  stream << indent(offset) << "Priority: " << priority << endl;
   if (isSolve()) {
     ((SolveActor *)this)->printLong(stream,depth,offset);
   }
@@ -1431,11 +1430,8 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     PopFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK)
       break;
-    if (verbose) {
-      message("\tC_CONT: PC=0x%x, Y=0x%x, G=0x%x\n\t",
-	      PC, Y, G);
-    }
     CodeArea::printDef(PC);
+    if (verbose) { message("\t\tPC=0x%x, Y=0x%x, G=0x%x\n",PC, Y, G); }
   }
 }
 

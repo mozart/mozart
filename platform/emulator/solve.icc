@@ -101,7 +101,7 @@ TaggedRef SolveActor::merge(Board *bb, Bool isSibling) {
       // unpack threads of ltq, i.e. make them runnable in new space
       while (!localThreadQueue->isEmpty()) {
 	Thread * thr = localThreadQueue->dequeue();
-	DebugCode (thr->unmarkPropagated());
+	DebugCode (thr->unmarkRunnable());
 	thr->propagatorToRunnable ();
 	am.scheduleThreadInline (thr, thr->getPriority());
       }

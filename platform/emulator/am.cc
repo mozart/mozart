@@ -604,8 +604,8 @@ PROFILE_CODE1
    }
    )
   
- // already propagated susps remain in suspList
-    if (thr->isPropagated ()) {
+ // already runnable susps remain in suspList
+    if (thr->isRunnable ()) {
       if (thr->isPropagator ()) {
 	if (calledBy && !(thr->isUnifyThread ())) {
 	  switch (isBetween(thr->getBoard(), var->getBoard())) {
@@ -628,7 +628,7 @@ PROFILE_CODE1
       }
     } else {
       if (thr->wakeUp(var->getBoard(), calledBy)) {
-	Assert (thr->isDeadThread () || thr->isPropagated ());
+	Assert (thr->isDeadThread () || thr->isRunnable ());
 	suspList = suspList->dispose ();
 	continue;
       }
@@ -937,7 +937,7 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
     while (suspList) {
         Thread *thr = suspList->getElem ();
 
-        // The added condition ' || thr->isPropagated () ' is incorrect
+        // The added condition ' || thr->isRunnable () ' is incorrect
         // since isPropagated means only that the thread is runnable
         if (thr->isDeadThread ()) {
             suspList=suspList->getNext();
@@ -1249,7 +1249,7 @@ void AM::decSolveThreads(Board *bb)
 	//
 	// ... first - notification board below the failed solve board; 
 	if (!(sa->isCommitted ()) && isStableSolve (sa)) {
-	  scheduleThread (mkRunnableThread(sa->getPriority(),bb,OK));
+	  scheduleThread (mkRunnableThread(DEFAULT_PRIORITY,bb,OK));
 	}
       } else {
 	Assert (sa->getThreads () > 0);
@@ -1565,7 +1565,7 @@ OZ_Term AM::dbgGetLoc(Board *bb) {
 //  Make a runnable thread with a single task stack entry <local trhread queue>
 Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
 {
-  Thread *th = new Thread(S_RTHREAD | T_prop | T_ltq,prio,bb);
+  Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb);
   th->setBody(allocateBody());
 
   Assert(bb == currentBoard);
@@ -1592,7 +1592,8 @@ void AM::stopThread(Thread *th) {
 void AM::resumeThread(Thread *th) {
   if (th->pCont()==0) {
     th->cont();
-    if (!th->isDeadThread() && th->isRunnable() && !am.isScheduled(th)) {
+    if (!th->isDeadThread() && !am.isScheduled(th)) {
+      if (!th->isRunnable()) th->markRunnable();
       am.scheduleThread(th);
     }
   }

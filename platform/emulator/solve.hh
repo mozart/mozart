@@ -42,7 +42,7 @@ public:
   SolveActor();
   ~SolveActor();
   SolveActor(SolveActor&);
-  SolveActor(Board *bb, int prio);
+  SolveActor(Board *bb);
 
   Board *getSolveBoard() { return solveBoard; }
 
