@@ -36,8 +36,7 @@
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
 
-//#define COMOBJ_LOG
-//#define COMOBJ_CONNECT_LOG
+
 #define DO_CONNECT_LOG ozconf.dpLogConnectLog
 #define DO_MESSAGE_LOG ozconf.dpLogMessageLog
 
@@ -180,9 +179,9 @@ Bool ComObj::handover(TransObj *transObj) {
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
   if(DO_CONNECT_LOG) {
-    fprintf(logfile,"handover(%s ",
-           myDSite->stringrep_notype());
-    fprintf(logfile,"%s %d)\n",
+    fprintf(logfile,"handover(\"%s\" ",
+            myDSite->stringrep_notype());
+    fprintf(logfile,"\"%s\" %d)\n",
            site!=NULL?site->stringrep_notype():"-",
            (int) am.getEmulatorClock());
   }
@@ -276,9 +275,9 @@ void ComObj::close(CState statetobe,Bool merging) {
 
   if(transObj!=NULL) {
     if(DO_CONNECT_LOG) {
-      fprintf(logfile,"close(%s ",
+      fprintf(logfile,"close(\"%s\" ",
               myDSite->stringrep_notype());
-      fprintf(logfile,"%s %d %d %d)\n",
+      fprintf(logfile,"\"%s\" %d %d %d)\n",
               site!=NULL?site->stringrep_notype():"-",
               (int) am.getEmulatorClock(),
               state,statetobe);
@@ -487,9 +486,9 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       transObj->setSite(site);
 
       if(DO_CONNECT_LOG) {
-        fprintf(logfile,"accept(%s ",
+        fprintf(logfile,"accept(\"%s\" ",
                 myDSite->stringrep_notype());
-        fprintf(logfile,"%s %d)\n",
+        fprintf(logfile,"\"%s\" %d)\n",
                 site!=NULL?site->stringrep_notype():"-",
                 (int) am.getEmulatorClock());
       }
