@@ -356,6 +356,40 @@ proceed:
   return PROCEED;
 }
 
+// inline DISABLED CS
+void GenFSetVariable::propagate(OZ_FSetPropState state,
+                                PropCaller prop_eq)
+{
+  if (prop_eq == pc_propagator) {
+    switch (state) {
+    case fs_prop_val: { // no break
+      for (int i = fs_prop_any; i--; )
+        if (fsSuspList[i])
+          GenCVariable::propagate(fsSuspList[i], prop_eq);
+    }
+           case fs_prop_lub: case fs_prop_glb:
+      if (fsSuspList[state])
+        GenCVariable::propagate(fsSuspList[state], prop_eq);
+      break;
+    case fs_prop_bounds:
+      if (fsSuspList[fs_prop_lub])
+        GenCVariable::propagate(fsSuspList[fs_prop_lub], prop_eq);
+      if (fsSuspList[fs_prop_glb])
+        GenCVariable::propagate(fsSuspList[fs_prop_glb], prop_eq);
+      break;
+    default:
+      break;
+    }
+  } else {
+    for (int i = fs_prop_any; i--; )
+      if (fsSuspList[i])
+        GenCVariable::propagate(fsSuspList[i], prop_eq);
+  }
+  if (suspList)
+    GenCVariable::propagate(suspList, prop_eq);
+}
+
+
 #if defined(OUTLINE)
 #define inline
 #include "fsgenvar.icc"
