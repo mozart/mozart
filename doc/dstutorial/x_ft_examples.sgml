@@ -220,7 +220,7 @@ fun {FSomeOf FS AFS}
 end
 >>>
 
-<SECTION><TITLE>Fault-tolerant stationary objects</TITLE>
+<SECTION id="fault.tolerant.stationary.objects"><TITLE>Fault-tolerant stationary objects</TITLE>
 
 <P>To be useful in practice,
 stationary objects must have well-defined behavior when
