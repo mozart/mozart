@@ -171,6 +171,9 @@ public:
   OZ_expect_t expectVectorIntVarAny(OZ_Term t) {
     return expectVector(t, &PropagatorExpect::expectIntVarAny);
   }
+  OZ_expect_t expectVectorBoolVar(OZ_Term t) {
+    return expectVector(t, &PropagatorExpect::expectBoolVar);
+  }
   OZ_expect_t expectVectorVectorIntVarMinMax(OZ_Term t) {
     return expectVector(t, &PropagatorExpect::expectVectorIntVarMinMax);
   }
