@@ -64,7 +64,7 @@
 #endif
 
 /* we use function pointers only when creating DLLs 
- * STATIC_FUNCTIONS is defined when compiling the emulator */
+ * WINDOWS_EMULATOR is defined when compiling the emulator */
 #if defined(OZWIN) && !defined(WINDOWS_EMULATOR)
 #define OzFun(fun) (ozcdecl *fun)
 #else
@@ -111,6 +111,7 @@ typedef void *OZ_Thread;
 typedef void *OZ_Arity;
 
 typedef _FUNTYPEDECL(OZ_Return,OZ_CFun,(OZ_Term *,int *));
+typedef _FUNTYPEDECL(OZ_Term,oz_unmarshalProcType,(void*));
 
 typedef int OZ_Boolean;
 #define OZ_FALSE 0
@@ -689,7 +690,16 @@ VAR = OZ_vsToC(OZ_in(ARG),&LEN);
 #endif
 
 #if defined(__cplusplus)
+
+#include <stdlib.h>
+
+/* some internal functions to make the extension class work */
+_FUNDECL(void*,_OZ_new_OZ_Extension,(size_t n));
+_FUNDECL(OZ_Boolean,_OZ_isLocal_OZ_Extension,(void*));
+_FUNDECL(void*,_OZ_currentBoard,());
+
 #include "extension.hh"
+
 #endif
 
 #endif
