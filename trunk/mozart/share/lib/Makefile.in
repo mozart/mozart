@@ -75,7 +75,7 @@ LOCALBITMAPFILES = \
 all:: Makefile $(COMPONENTS) ozbatch
 
 realclean::
-	$(RM) config.cache config.status config.log Makefile
+	$(RM) config.cache config.status config.log Makefile Makefile.vars
 
 Assembly.ozm: MakeAssembly.oz $(BASESRC) Base.env Standard.env \
 	$(SPSRC) SP.env $(CPSRC) CP.env $(OPSRC) OP.env \
