@@ -21,6 +21,7 @@
 #  WARRANTIES.
 #
 
+SRCTOP		= @SRCTOP@
 BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 
