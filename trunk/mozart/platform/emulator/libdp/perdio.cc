@@ -579,6 +579,23 @@ void msgReceived(MsgBuffer* bs)
       break;
     }
 
+  case M_REQUESTED:
+    {
+      int OTI;
+      unmarshal_M_REQUESTED(bs,OTI);
+      PD((MSG_RECEIVED,"M_REQUESTED index:%d", OTI));
+      OwnerEntry *oe = receiveAtOwner(OTI);
+
+      if (oe->isVar()) {
+	PD((PD_VAR,"REQUESTED do it"));
+	GET_VAR(oe,Manager)->requested(oe->getPtr());
+      } else {
+	PD((PD_VAR,"REQUESTED discard"));
+	PD((WEIRD,"REQUESTED discard"));
+      }
+      break;
+    }
+
   case M_ISDET:
     {
       int OTI;
@@ -884,6 +901,16 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
       if(fc==COMM_FAULT_PERM_NOT_SENT){
 	ResetCP(((MsgBuffer*)fi),M_SURRENDER);
 	unmarshal_M_SURRENDER((MsgBuffer*)fi,OTI,s1,tr);
+	returnSendCredit(myDSite,OTI);
+	return;}
+      flag=USUAL_OWNER_CASE;
+      break;}
+
+    // mm2: I don't understand this: its a copy of M_SURRENDER!
+    case M_REQUESTED:{
+      if(fc==COMM_FAULT_PERM_NOT_SENT){
+	ResetCP(((MsgBuffer*)fi),M_REQUESTED);
+	unmarshal_M_REQUESTED((MsgBuffer*)fi,OTI);
 	returnSendCredit(myDSite,OTI);
 	return;}
       flag=USUAL_OWNER_CASE;

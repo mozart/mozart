@@ -38,7 +38,6 @@ class Future: public OzVariable {
 private:
   OZ_Term function;
 
-  void kick(TaggedRef *);
 public:
   Future(Board *bb) : OzVariable(OZ_VAR_FUTURE,bb), function(0) {}
   Future(OZ_Term function,Board *bb)
@@ -67,6 +66,7 @@ public:
     printStream(out,depth); out << endl;
   }
   OZ_Term inspect();
+  void kick(TaggedRef *);
 };
 
 #endif /* __BYNEED__HH__ */
