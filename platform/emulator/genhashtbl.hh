@@ -32,7 +32,6 @@
 #endif
 
 #include "base.hh"
-#include "resources.hh"
 
 #define GenCast(X,XType,Y,NewType)\
 { XType tmp=X; Y= (NewType) tmp;}

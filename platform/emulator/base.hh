@@ -33,12 +33,12 @@
 #endif
 
 #include "conf.h"
+#include "resources.hh"
 
 #define STATIC_FUNCTIONS
 #include "mozart.h"
 
 #include "machine.hh"
-#include "resources.hh"
 #include "config.h"
 #include "ozostream.hh"
 

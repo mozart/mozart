@@ -1052,7 +1052,9 @@ void OB_Entry::gcPO() {
 
   if (isTertiary()) {
     PD((GC,"OT tertiary found"));
+#ifdef DEBUG_GC
     Assert(!inToSpace(u.tert));
+#endif
     u.tert=(Tertiary *)u.tert->gcConstTerm();
   } else {
     Assert(isRef() || isVar());
