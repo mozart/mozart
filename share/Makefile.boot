@@ -80,7 +80,9 @@ export OZTOOL_INCLUDES
 endif
 
 ifdef OZFLEX
+ifneq (OZFLEX,)
 export OZFLEX
+endif
 endif
 
 boot-%:
