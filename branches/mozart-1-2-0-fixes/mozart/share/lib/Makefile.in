@@ -401,8 +401,8 @@ compiler-Builtins.oz: $(BIMODFILES)
 	$(PERL) $(BIDECL) -srcdir $(EMUSRCDIR) -builtins $(BIMODSPECS) > $@
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
-	StaticAnalysis.ozf CodeGen.ozf Assembler.ozf \
-	Main.ozf RunTime.ozf Annotate.ozf GroundZip.ozf \
+	StaticAnalysis.ozf CodeGen.ozf CodeStore.ozf CodeEmitter.ozf \
+	Assembler.ozf Main.ozf RunTime.ozf Annotate.ozf GroundZip.ozf \
 	ForLoop.ozf
 
 PrintName.ozf: compiler/PrintName.oz
@@ -422,8 +422,11 @@ StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
 	Search.ozf FD.ozf FS.ozf
 	$(COMPILE) compiler/StaticAnalysis.oz -o $@
 
-CodeGen.ozf: compiler/CodeGen.oz compiler/PatternMatching.oz \
-	compiler/CodeStore.oz compiler/CodeEmitter.oz
+CodeGen.ozf: compiler/CodeGen.oz compiler/PatternMatching.oz
+
+CodeStore.ozf: compiler/CodeStore.oz
+
+CodeEmitter.ozf: compiler/CodeEmitter.oz
 
 Assembler.ozf: compiler/Assembler.oz
 
