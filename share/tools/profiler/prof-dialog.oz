@@ -78,7 +78,7 @@ local
                    focus:   1
                    default: 1)
 
-            TimeScale = {New DiscreteScale
+            TimeScale = {New TkTools.scale
                          init(parent:  self
                               width:   ScaleWidth
                               values:  UpdateTimes
