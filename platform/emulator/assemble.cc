@@ -5,245 +5,363 @@
   */
 
 
-#ifdef ASSEMBLER
-
 #if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "assemble.hh"
 #endif
 
-#include "am.hh"
 #include "assemble.hh"
+#include "am.hh"
+#include "runtime.hh"
+#include "indexing.hh"
 
 
-OZ_C_proc_begin(BIstringToOp,2)
+
+OZ_C_proc_begin(BIopInfo,2)
 {
-  OZ_declareAtomArg("stringToOp",0,str);
-  OZ_Term out = OZ_getCArg(1);
+  OZ_declareAtomArg(0,opname);
+  OZ_declareArg(1,ret);
 
-  Opcode oc = CodeArea::stringToOp(str);
+  Opcode oc = CodeArea::stringToOp(opname);
   if (oc == OZERROR) {
-    return OZ_unifyInt(out,-1);
-  } else {
-    return OZ_unifyInt(out,(int)oc);
+    return oz_raise(E_ERROR,E_KERNEL,"spaceSuper",1,opname);
   }
+  return OZ_unify(ret, OZ_pair2(OZ_int(oc), OZ_int(sizeOf(oc))));
 }
 OZ_C_proc_end
 
 
-
-OZ_C_proc_begin(BIsizeOfOp,2)
+OZ_C_proc_begin(BInewCodeBlock,2)
 {
-  OZ_declareIntArg("sizeOfOp",0,opcode);
-  OZ_Term out = OZ_getCArg(1);
+  OZ_declareIntArg(0,size);
+  OZ_declareArg(1,ret);
 
-  if (opcode > (int) OZERROR || opcode < 0) {
-    return OZ_unifyInt(out,-1);
-  }
-
-  int sz = sizeOf((Opcode)opcode);
-
-  return OZ_unifyInt(out,sz);
+  CodeArea *code = new CodeArea(size);
+  return OZ_unifyInt(ret, ToInt32(code));
 }
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BInewCodeArea,2)
+#define declareCodeBlock(num,name)			\
+   OZ_declareIntArg(num,__aux);				\
+   CodeArea *name = (CodeArea*) ToPointer(__aux);
+
+
+OZ_C_proc_begin(BImakeProc,3)
 {
-  OZ_declareIntArg("newCodeArea",0,sz);
-  OZ_Term out = OZ_getCArg(1);
-
-  ProgramCounter mypc;
-  CodeArea *result = new CodeArea(NULL,sz,mypc);
-      
-  if (mypc == NOCODE) {
-    return OZ_unifyInt(out,-1);
-  }
-
-  return OZ_unifyInt(out,ToInt32(mypc));
-}
-OZ_C_proc_end
-
-
-
-#define PCIN(fun)   OZ_declareIntArg(fun,0,help); \
-                    ProgramCounter pc = (ProgramCounter) help;
-
-#define RET(Call,N) return OZ_unifyInt(OZ_getCArg(N),ToInt32(Call));
-
-
-OZ_C_proc_begin(BIscheduleCode,3)
-{
-  PCIN("scheduleCode");
-  OZ_Term greglist = OZ_getCArg(1);
-
-  int size = OZ_length(greglist);
-  RefsArray gregs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
-
-  int i = 0;
-  while(!OZ_isNil(greglist)) {
-    if (i >= size) {
-      error("list should be empty");
-    }
-    gregs[i++] = OZ_head(greglist);
-    greglist = OZ_tail(greglist);
-  }
-
-  PrTabEntry *predd = new PrTabEntry(OZ_nil(),0,size,FALSE);
-  predd->PC = pc;
-  Abstraction *p = new Abstraction(predd, gregs, NULL);
-
-  return OZ_unify(OZ_getCArg(2),makeTaggedConst(p));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIwriteOpcode,3)
-{
-  PCIN("writeOpcode");
-  OZ_declareIntArg("writeOpcode",1,opcode);
-
-  RET(CodeArea::writeOpcode((Opcode)opcode,pc),2);
-}
-OZ_C_proc_end
-
-
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,globals);
+  OZ_declareArg(2,ret);
   
-OZ_C_proc_begin(BIwriteBuiltin,3)
-{
-  PCIN("BIwriteBuiltin");
-  OZ_Term bi  = OZ_getCArg(1);
+  int numglobals = length(globals);
+  RefsArray gRegs = (numglobals == 0) ? (RefsArray) NULL : allocateRefsArray(numglobals);
 
-  DEREF(bi,_1,_2);
-  if (!isConst(bi) || tagged2Const(bi)->getType() != Co_Builtin) {
-    warning("writeBuiltin: builtin expected", toC(bi));
-    return FAILED;
+  for (int i = 0; i < numglobals; i++) {
+    gRegs[i] = head(globals);
+    globals = tail(globals);
+  }
+  Assert(isNil(globals));
+
+  PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
+				   mkTupleWidth(0),nil(),0);
+  pte->PC = code->getStart();
+
+  Abstraction *p = new Abstraction (pte, gRegs, am.rootBoard);
+
+  return OZ_unify(ret,makeTaggedConst(p));
+}
+OZ_C_proc_end
+
+
+   
+OZ_C_proc_begin(BIstoreInt,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,i);
+  code->writeInt(i);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreOp,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,i);
+  Assert(i>=0 && i<(int)OZERROR);
+  code->writeOpcode((Opcode)i);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreTagged,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,atomOrInt);
+  atomOrInt = deref(atomOrInt);
+  Assert(OZ_isLiteral(atomOrInt) || OZ_isInt(atomOrInt));
+  code->writeTagged(atomOrInt);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreBuiltinname,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,builtin);
+  builtin = deref(builtin);
+  Assert(isBuiltin(builtin));
+  code->writeBuiltin(tagged2Builtin(builtin));
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreLabel,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,label);
+  code->writeLabel(label);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+static 
+SRecordArity getArity(TaggedRef arity)
+{
+  arity = deref(arity);
+  if (isSmallInt(arity)) {
+    return mkTupleWidth(smallIntValue(arity));
+  } 
+
+  int len=length(arity);
+  arity = sortlist(arity,len);
+  Arity *ari = aritytable.find(arity);
+  return (ari->isTuple()) ? mkTupleWidth(ari->getWidth()) :  mkRecordArity(ari);
+}
+
+
+OZ_C_proc_begin(BIstoreRecordArity,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,arity);
+  code->writeSRecordArity(getArity(arity));
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreCache,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,ignored);
+  code->writeCache();  
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+
+OZ_C_proc_begin(BIstorePredicateRef,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,id);
+  AbstractionEntry *predId = AbstractionTable::add(id);
+  code->writeAddress(predId);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstorePredId,5)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,name); name = deref(name);
+  OZ_declareNonvarArg(2,arity);
+  OZ_declareNonvarArg(3,file); file = deref(file);
+  OZ_declareIntArg(4,line);
+
+  PrTabEntry *pte  = new PrTabEntry(name,getArity(arity),file,line);
+  code->writeAddress(pte);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+inline 
+Bool getBool(TaggedRef t)
+{
+  return literalEq(deref(t),NameTrue);
+}
+
+OZ_C_proc_begin(BIstoreGenCallInfo,6)
+{
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,regindex);
+  OZ_declareNonvarArg(2,isMethod);
+  OZ_declareNonvarArg(3,name);
+  OZ_declareNonvarArg(4,isTail);
+  OZ_declareIntArg(5,arity);
+
+  GenCallInfoClass *gci = new GenCallInfoClass(regindex,getBool(isMethod),name, 
+					       getBool(isTail),getArity(arity));
+  code->writeAddress(gci);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreApplMethInfo,3)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,name);
+  OZ_declareIntArg(2,arity);
+
+  ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
+  code->writeAddress(ami);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIstoreGRegRef,2)
+{
+  declareCodeBlock(0,code);
+  OZ_declareNonvarArg(1,globals);
+  int numglobals = length(globals);
+
+  AssRegArray *gregs = new AssRegArray(numglobals);
+
+  unsigned int reg;
+  for (int i = 0; i < numglobals; i++) {
+    SRecord *rec = tagged2SRecord(deref(head(globals)));
+    globals = tail(globals);
+
+    char *label = rec->getLabelLiteral()->getPrintName();
+    KindOfReg regType;
+    if (strcmp(label,"x")==0) {
+      regType = XReg;
+    } else if (strcmp(label,"y")==0) {
+      regType = YReg;
+    } else {
+      Assert(strcmp(label,"g")==0);
+      regType = GReg;
+    }
+    (*gregs)[i].kind = regType;
+    (*gregs)[i].number = smallIntValue(rec->getArg(0));
   }
 
-  BuiltinTabEntry *found = ((Builtin*)tagged2SRecord(bi))->getBITabEntry();
+  Assert(isNil(globals));
 
-  RET(CodeArea::writeBuiltin(found,pc),2);
+  code->writeAddress(gregs);
+  return PROCEED;
 }
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIwriteConst,3)
+OZ_C_proc_begin(BInewHashTable,4)
 {
-  PCIN("writeOpcode");
-  OZ_Term literal = OZ_getCArg(1);
-  DEREF(literal,_1,_2);
+  declareCodeBlock(0,code);
+  OZ_declareIntArg(1,size);
+  OZ_declareIntArg(2,elseLabel);
+  OZ_declareArg(3,ret);
 
-  RET(CodeArea::writeLiteral(literal,pc),2);
+  IHashTable *ht = new IHashTable(size,code->getStart()+elseLabel);
+  
+  code->writeAddress(ht);
+  return OZ_unifyInt(ret, ToInt32(ht));
 }
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIwriteInt,3)
-{
-  PCIN("writeInt");
-  OZ_Term i = OZ_getCArg(1);
-  DEREF(i,_1,_2);
+#define declareHTable(num,name)				\
+   OZ_declareIntArg(num,__aux1);			\
+   IHashTable *name = (IHashTable*) ToPointer(__aux1);
 
-  RET(CodeArea::writeInt(i,pc),2);
+
+OZ_C_proc_begin(BIstoreHTVarLabel,3)
+{
+  declareCodeBlock(0,code);
+  declareHTable(1,ht);
+  OZ_declareIntArg(2,label);
+  ByteCode *absaddr = code->getStart() + label;
+
+  ht->addVar(absaddr);
+  return PROCEED;
 }
 OZ_C_proc_end
 
 
-
-OZ_C_proc_begin(BIwriteReg,3)
+OZ_C_proc_begin(BIstoreHTScalar,4)
 {
-  PCIN("writeReg");
-  OZ_declareIntArg("writeReg",1,reg);
+  declareCodeBlock(0,code);
+  declareHTable(1,ht);
+  OZ_declareNonvarArg(2,value);
+  OZ_declareIntArg(3,label);
+  ByteCode *absaddr = code->getStart() + label;
 
-  RET(CodeArea::writeRegIndex(reg,pc),2);
+  value = deref(value);
+  if (isLiteral(value)) {
+    ht->add(tagged2Literal(value),absaddr);
+  } else {
+    Assert(isNumber(value));
+    ht->add(value,absaddr);
+  }
+
+  return PROCEED;
 }
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIwritePosint,3)
+OZ_C_proc_begin(BIstoreHTRecord,5)
 {
-  PCIN("writePosint");
-  OZ_declareIntArg("writePosint",1,i);
+  declareCodeBlock(0,code);
+  declareHTable(1,ht);
+  OZ_declareNonvarArg(2,reclabel);
+  OZ_declareNonvarArg(3,arity);
+  OZ_declareIntArg(4,label);
 
-  RET(CodeArea::writeInt(i,pc),2);
-}
-OZ_C_proc_end
+  SRecordArity ar   = getArity(arity);
+  reclabel          = deref(reclabel);
+  ByteCode *absaddr = code->getStart() + label;
+  
+  if (literalEq(reclabel,AtomCons) && sraIsTuple(ar) && getTupleWidth(ar)==2) {
+    ht->addList(absaddr);
+  } else {
+    ht->add(tagged2Literal(reclabel),ar,absaddr);
+  }
 
-
-OZ_C_proc_begin(BIwriteArity,3)
-{
-  PCIN("writeArity");
-  OZ_declareIntArg("writeArity",1,i);
-
-  RET(CodeArea::writeArity(i,pc),2);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIwriteRecordArity,3)
-{
-  PCIN("writeRecordArity");
-  Arity *ar = aritytable.find(OZ_getCArg(1));
-
-  RET(CodeArea::writeRecordArity(ar,pc),2);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIwritePredicateRef,3)
-{
-  PCIN("writePosint");
-  OZ_declareIntArg("writePredicateRef",1,i);
-
-  RET(CodeArea::writePredicateRef(i,pc),2);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIwriteLabel,4)
-{
-  PCIN("writeReg");
-  OZ_declareIntArg("writeReg",1,start);
-  OZ_declareIntArg("writeReg",2,lab);
-
-  RET(CodeArea::writeLabel(lab,(ProgramCounter)start,pc,OK),3);
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIwritePredId,4)
-{
-  PCIN("writeReg");
-  OZ_Term name = OZ_getCArg(1);
-  DEREF(name,_1,_2);
-  OZ_declareIntArg("writePredId",2,arity);
-
-  int nGRegs = 0;
-  PrTabEntry *pred = new PrTabEntry(name,arity,nGRegs,FALSE);
-  pc = CodeArea::writeBuiltin((BuiltinTabEntry*) pred, pc);
-  pred->PC = pc+1;
-
-  RET(pc,3);
+  return PROCEED;
 }
 OZ_C_proc_end
 
 
 static
 BIspec biSpec[] = {
-  {"stringToOp",        2, BIstringToOp,	NO,0},
-  {"sizeOfOp",          2, BIsizeOfOp,		NO,0},
-  {"newCodeArea",       2, BInewCodeArea,	NO,0},
-  {"scheduleCode",      3, BIscheduleCode,	NO,0},
-  {"writeOpcode",       3, BIwriteOpcode,	NO,0},
-  {"writeReg",          3, BIwriteReg,		NO,0},
-  {"writeBuiltin",      3, BIwriteBuiltin,	NO,0},
-  {"writeConst",        3, BIwriteConst,	NO,0},
-  {"writePosint",       3, BIwritePosint,	NO,0},
-  {"writeInt",          3, BIwriteInt,		NO,0},
-  {"writeArity",        3, BIwriteArity,	NO,0},
-  {"writeRecordArity",  3, BIwriteRecordArity,	NO,0},
-  {"writePredicateRef", 3, BIwritePredicateRef,	NO,0},
-  {"writeLabel",        4, BIwriteLabel,	NO,0},
-  {"writePredId",       4, BIwritePredId,	NO,0},
-  {0,0,0,0,0}
+  {"opInfo",           2, BIopInfo,           0},
+  {"newCodeBlock",     2, BInewCodeBlock,     0},
+  {"makeProc",         3, BImakeProc,         0},
+  {"storeOp",          2, BIstoreOp,          0},
+  {"storeInt",         2, BIstoreInt,         0},
+  {"storeTagged",      2, BIstoreTagged,      0},
+  {"storeBuiltinname", 2, BIstoreBuiltinname, 0},
+  {"storeLabel",       2, BIstoreLabel,       0},
+  {"storeRecordArity", 2, BIstoreRecordArity, 0},
+  {"storeCache",       2, BIstoreCache,       0},
+  {"storePredicateRef",2, BIstorePredicateRef,0},
+  {"storePredId",      5, BIstorePredId,      0},
+  {"storeGenCallInfo", 6, BIstoreGenCallInfo, 0},
+  {"storeApplMethInfo",3, BIstoreApplMethInfo, 0},
+  {"storeGRegRef",     2, BIstoreGRegRef, 0},
+
+  {"newHashTable",     4, BInewHashTable, 0},
+  {"storeHTVarLabel",  3, BIstoreHTVarLabel, 0},
+  {"storeHTScalar",    4, BIstoreHTScalar, 0},
+  {"storeHTRecord",    5, BIstoreHTRecord, 0},
+
+  {0,0,0,0}
 };
 
 void BIinitAssembler()
@@ -251,4 +369,9 @@ void BIinitAssembler()
   BIaddSpec(biSpec);
 }
 
-#endif
+
+
+
+
+
+

@@ -393,7 +393,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   Assert(getOpcode(PC) == DEFINITION);
   reg  = regToInt(getRegArg(PC+1));
   next = getLabelArg(PC+2);
-  pred = getPredArg(PC+3);
+  pred = getPredArg(PC+4);
   file = pred ? pred->getFileName() : nil();
   line = pred ? pred->getLine() : 0;
 }
