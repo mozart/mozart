@@ -14,7 +14,7 @@ Ozcar =
 	   SourceManager,init
 	end
 	
-	meth hide
+	meth off
 	   I T = @currentThread
 	in
 	   case T \= undef then         %% == undef: closed from within Ozcar
@@ -26,7 +26,7 @@ Ozcar =
 	   {Compile "\\sw +optimize -debuginfo"}
 	end
 	
-	meth unhide
+	meth on
 	   {Tk.send wm(deiconify self.toplevel)}
 	   {Compile "\\sw -optimize +debuginfo"}
 	   
@@ -34,6 +34,7 @@ Ozcar =
 	   {System.set gc(on:false)}
 	   
 	   {Debug.on}
+	   Gui,rawStatus(TitleName # ' initialized successfully')
 	end
 	
 	meth exit

@@ -27,7 +27,7 @@ in
 	  [MB(text: 'File'
 	      menu:
 		 [C(label:   'Quit'
-		    action:  self # hide
+		    action:  self # off
 		    key:     ctrl(c)
 		    feature: quit)]
 	      feature: file)

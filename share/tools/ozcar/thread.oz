@@ -12,48 +12,6 @@ local
       end
    end
 
-   class Thr
-      feat
-	 Th
-	 Stack
-      
-      attr
-	 Loc  : loc( file:undef line:undef)
-	 Call : call(builtin:false name:undef args:undef)
-	 Time : 0
-      
-      meth init(T I)
-	 self.Th    = T
-	 self.Stack = {New StackManager init(thr:T id:I
-					     output:{Ozcar getStackText($)})}
-      end
-      
-      meth setPos(name:N args:A<=nil file:F<=undef line:L<=0
-		  builtin:B<=false time:T<=0)
-	 Loc  <- loc( file:F line:L)
-	 Call <- call(builtin:B name:N args:A)
-	 Time <- T
-      end
-      meth getPos(file:?F line:?L name:?N args:?A builtin:?B time:?T)
-	 F = @Loc.file
-	 L = @Loc.line
-	 N = @Call.name
-	 A = @Call.args
-	 B = @Call.builtin
-	 T = @Time
-      end
-
-      meth isBuiltin($)
-	 @Call.builtin
-      end
-      
-      meth getThr($)
-	 self.Th
-      end
-      
-      meth getStack($) self.Stack end
-   end
-
 in
    
    class ThreadManager
@@ -64,7 +22,6 @@ in
 	 ReadLoopThread        %% we need to kill it when closing the manager
 
       attr
-	 Threads : nil         %% list of debugged threads
 	 currentThread : undef
       
       meth init
@@ -76,6 +33,10 @@ in
 	 end
       end
 
+      meth getCurrentThread($)
+	 @currentThread
+      end
+      
       meth getThreadDic($)
 	 self.ThreadDic
       end
@@ -90,6 +51,7 @@ in
 	    Line       = M.line
 	    IsBuiltin  = M.builtin
 	    Time       = M.time
+	    FrameId    = M.frame
 	    Name = case {Value.hasFeature M name} then M.name else nil end
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
@@ -108,7 +70,7 @@ in
 	    in
 	       case Ok then
 		  ThreadManager,step(file:File line:Line thr:T id:I
-				     name:Name args:Args
+				     name:Name args:Args frame:FrameId
 				     builtin:IsBuiltin time:Time)
 	       else
 		  {OzcarMessage 'Skipping procedure \'' # Name # '\''}
@@ -117,6 +79,13 @@ in
 	    else
 	       {OzcarMessage InvalidThreadID}
 	    end
+
+	 [] exit then
+	    I       = M.thr.2
+	    FrameId = M.frame
+	    Stack   = {Dget self.ThreadDic I}
+	 in
+	    {Stack exit(FrameId)}
 	    
 	 [] thr then
 	    T = M.thr.1
@@ -126,7 +95,7 @@ in
 		else
 		   0        %% parent unknown (threads of tk actions...)
 		end
-	    E = {Ozcar exists(T $)}
+	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
 	       {OzcarMessage KnownThread # {ID I}}
@@ -149,7 +118,7 @@ in
 	 [] term then
 	    T = M.thr.1  %% just terminated thread
 	    I = M.thr.2  %% ...with it's id
-	    E = {Ozcar exists(T $)}
+	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
 	       ThreadManager,remove(T I noKill)
@@ -158,8 +127,8 @@ in
 	       skip
 	    end
 	    
-	 [] susp then
-	    T    = M.thr.1  %% just suspending thread
+	 [] block then
+	    T    = M.thr.1  %% just blocking thread
 	    I    = M.thr.2  %% ...with it's id
 	    F    = M.file
 	    L    = M.line
@@ -167,10 +136,11 @@ in
 	    A    = M.args
 	    B    = M.builtin
 	    Time = M.time
-	    E = {Ozcar exists(T $)}
+	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
-	       ThreadManager,block(T I F L N A B Time)
+	       ThreadManager,block(thr:T id:I file:F line:L name:N args:A
+				   builtin:B time:Time)
 	    else
 	       {OzcarMessage UnknownSuspThread}
 	    end
@@ -178,7 +148,7 @@ in
 	 [] cont then
 	    T = M.thr.1  %% woken thread
 	    I = M.thr.2  %% ...with it's id
-	    E = {Ozcar exists(T $)}
+	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
 	       case T == @currentThread then
@@ -196,13 +166,12 @@ in
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      meth exists(T $)
-	 {List.member T @Threads}
+      meth exists(I $)
+	 {Dmember self.ThreadDic I}
       end
-
+      
       meth add(T I Q)
-	 Threads <- T | @Threads
-	 {Dictionary.put self.ThreadDic I {New Thr init(T I)}}
+	 {Dput self.ThreadDic I {New StackManager init(thr:T id:I)}}
 	 Gui,addNode(I Q)
 	 case Q == 0 orelse Q == 1 then 
 	    ThreadManager,switch(I)       %% does Gui,displayTree
@@ -212,13 +181,9 @@ in
       end
 
       meth remove(T I Mode)
-	 O = {Dget self.ThreadDic I}
-      in
-	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
-	 {O setPos(name:undef)}
+	 {OzcarMessage 'removing thread #' # I}
+	 {Dremove self.ThreadDic I}
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
-	 Gui,printAppl(id:I name:undef args:undef)
-	 {{O getStack($)} clear}
 	 case Mode == kill then
 	    currentThread <- undef
 	    Gui,killNode(I)
@@ -227,7 +192,8 @@ in
 	    Gui,removeNode(I)
 	    Gui,status(I terminated)
 	 end
-	 case @Threads == nil then
+	 case {Dkeys self.ThreadDic} == nil then
+	    {OzcarMessage 'no more threads to debug.'}
 	    currentThread <- undef
 	    Gui,status(0)
 	    Gui,selectNode(0)
@@ -243,53 +209,45 @@ in
       end
 
       meth step(file:F line:L thr:T id:I name:N args:A
-		builtin:IsBuiltin time:Time)
-	 O = {Dget self.ThreadDic I}
+		builtin:B time:Time frame:FrameId)
+	 Stack = {Dget self.ThreadDic I}
       in
-	 {O setPos(file:F line:L time:Time name:N args:A builtin:IsBuiltin)}
+	 {Stack step(name:N args:A builtin:B file:F line:L
+		     time:Time frame:FrameId)}
+	 
 	 case T == @currentThread then
 	    Ack
 	 in
-	    %{{O getStack($)} update}
-	    {{O getStack($)} print}
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
-	       SourceManager,scrollbar(file:'' line:undef color:undef
-				       what:both)
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
 	       {Thread.resume @currentThread}
 	    else
-	       SourceManager,scrollbar(file:'' line:undef color:undef
-				       what:stack)
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	       thread
 		  SourceManager,scrollbar(file:F line:L ack:Ack
 					  color:ScrollbarApplColor what:appl)
 	       end
 	       thread Gui,loadStatus(F Ack) end
 	    end
-	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin time:Time
-			  file:F line:L)
 	 else skip end
       end
 
-      meth block(T I F L N A B Time)
-	 O = {Dget self.ThreadDic I}
+      meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
+	 Stack = {Dget self.ThreadDic I}
       in
-	 {O setPos(file:F line:L time:Time name:N args:A builtin:B)}
+	 {Stack step(name:N args:A builtin:B file:F line:L time:Time)}
 	 Gui,markNode(I blocked)
+
 	 case T == @currentThread then
-	    {{O getStack($)} print}
-	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
+	    case {UnknownFile F} then
 	       {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
-	       SourceManager,scrollbar(file:'' line:undef
-				       color:undef what:both)
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
 	    else
 	       SourceManager,scrollbar(file:F line:L
 				       color:ScrollbarBlockedColor what:appl)
-	       SourceManager,scrollbar(file:'' line:undef
-				       color:undef what:stack)
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	    end
-	    Gui,printAppl(id:I name:N args:A builtin:B
-			  file:F line:L time:Time)
 	    Gui,status(I blocked)
 	 else skip end
       end
@@ -300,20 +258,21 @@ in
 	 case I == 1 then
 	    Gui,status(0)
 	 else
-	    O = {Dget self.ThreadDic I}
-	    T = {O getThr($)}
-	    S = {Thread.state T}
+	    
+	    Stack = {Dget self.ThreadDic I}
+	    T     = {Stack getThread($)}
+	    S     = {Thread.state T}
 	 in
 	    currentThread <- T
-	    {O getPos(file:F line:L name:N args:A builtin:B time:Time)}
-
-	    {{O getStack($)} print}
+	    {Stack getPos(file:F line:L)}
 	    
 	    Gui,status(I S)
 	    Gui,selectNode(I)
 	    Gui,displayTree
-
-	    case S \= terminated then
+	    
+	    case S == terminated then
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
+	    else
 	       SourceManager,
 	       scrollbar(file:F line:L
 			 color:
@@ -322,13 +281,9 @@ in
 			    [] blocked  then ScrollbarBlockedColor
 			    end
 			 what:appl)
-	    else
-	       SourceManager,scrollbar(file:undef line:undef
-				       color:undef what:appl)
 	    end
-	    SourceManager,scrollbar(file:undef line:undef
-				    color:undef what:stack)
-	    Gui,printAppl(id:I name:N args:A builtin:B file:F line:L time:Time)
+	    
+	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	 end
       end
 
