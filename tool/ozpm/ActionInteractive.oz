@@ -3,7 +3,7 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(localDB mogulDB readDB)
+   Global(localDB mogulDB)
    ActionInstall(install:Install)
    ActionInfo(view)
    System(show:Show)
@@ -267,11 +267,23 @@ define
    %%
    %%
    TitleLook={QTk.newLook}
-   {TitleLook.set label(font:{QTk.newFont font(family:'Times' size:16)}
-			
-		       )}
+   {TitleLook.set label(bg:white font:{QTk.newFont font(family:'Times' size:16)})}
    AuthorLook={QTk.newLook}
-   {AuthorLook.set label(font:{QTk.newFont font(family:'Times' size:12)})}
+   {AuthorLook.set label(bg:white
+			 font:{QTk.newFont font(family:'Times'
+						slant:italic
+						size:12)})}
+
+   DescLook={QTk.newLook}
+   {DescLook.set text(bg:white
+		      font:{QTk.newFont font(family:'Times'
+					     size:12)})}
+					      
+   
+   WhiteLook={QTk.newLook}
+   {WhiteLook.set label(bg:white)}
+   {WhiteLook.set td(bg:white)}
+   {WhiteLook.set lr(bg:white)}
    
    class NiceInfoView
       feat
@@ -283,30 +295,32 @@ define
       meth init(Parent ST Desc)
 	 self.parent=Parent
 	 self.setTitle=ST
-	 Desc=scrollframe(glue:nswe
-			  bg:white
-			  tdscrollbar:true
-			  td(glue:nswe
-			     handle:self.handle
-			     label(glue:nwe
-				   look:TitleLook
-				   feature:title)
-			     lr(glue:nwe
-				feature:author
-				label(glue:w
-				      feature:desc)
-				label(glue:nw
-				      look:AuthorLook
-				      feature:data))
-			     lr(glue:nwe
-				feature:blurb
-				label(glue:nw
-				      feature:desc)
-				label(glue:nswe
-				      anchor:nw
-				      justify:left
-				      feature:data))
-			    ))
+	 Desc=td(glue:nswe
+		 bg:white
+		 look:WhiteLook
+%		 tdscrollbar:true
+		 td(glue:nswe
+		    handle:self.handle
+		    label(glue:nwe
+			  look:TitleLook
+			  feature:title)
+		    lr(glue:nwe
+		       feature:author
+		       label(glue:w
+			     feature:desc)
+		       label(glue:nwe
+			     anchor:w
+			     look:AuthorLook
+			     feature:data))
+		    lr(glue:nswe
+		       feature:blurb
+		       label(glue:nw
+			     feature:desc)
+		       placeholder(feature:place
+				   bg:white
+				   padx:5 pady:5
+				   glue:nswe))
+		))
       end
       meth display(Inf)
 	 info<-Inf
@@ -314,7 +328,7 @@ define
 	 {self.handle.author.desc set("")}
 	 {self.handle.author.data set("")}
 	 {self.handle.blurb.desc set("")}
-	 {self.handle.blurb.data set("")}
+	 {self.handle.blurb.place set(empty)}
 	 if Inf==unit then
 	    {self.setTitle ""}
 	 else
@@ -331,21 +345,30 @@ define
 	    end
 	 in
 	    {self.setTitle {VirtualString.toString Info.id}}
-	    {self.title set({Capitalize {GetLabel Info.id}})}
+	    {self.handle.title set({Capitalize {GetLabel Info.id}})}
 	    if {CondSelect Info author unit}\=unit then 
 	       {self.handle.author.desc set("Author : ")}
 	       {self.handle.author.data set({ListToString Info.author})}
 	    else
 	       {self.handle.author.desc set("No author defined.")}
 	    end
-	    if {CondSelect Info body unit}\=unit then
-	       {self.handle.blurb.desc set("Description : ")}
-	       {self.handle.blurb.data set({ListToString Info.body})}
-	    elseif {CondSelect Info blurb unit}\=unit then
-	       {self.handle.blurb.desc set("Description : ")}
-	       {self.handle.blurb.data set({ListToString Info.blurb})}
-	    else
-	       {self.handle.blurb.desc set("No description availabel.")}
+	    local
+	       Desc={CondSelect Info body
+		     {CondSelect Info blurb unit}}
+	    in
+	       if Desc\=unit then
+		  {self.handle.blurb.desc set("Description : ")}
+		  {self.handle.blurb.place
+		   set(text(glue:nswe
+			    look:DescLook
+			    bg:white
+%			    state:disabled
+			    wrap:word
+			    tdscrollbar:true
+			    init:{ListToString Desc}))}
+	       else
+		  {self.handle.blurb.desc set("No description available.")}
+	       end
 	    end
 	 end
       end
@@ -385,9 +408,9 @@ define
 	 DataMain
 	 {TitleLook.set label(text:"" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2 justify:left anchor:w)}
 	 %%
-	 info<-{New InfoView init(self
-				  proc{$ Title} {self.infoLabel set(text:Title)} end
-				  InfoMain)}
+	 info<-{New NiceInfoView init(self
+				      proc{$ Title} {self.infoLabel set(text:Title)} end
+				      InfoMain)}
 	 data<-{New TreeDataView init(self
 				      proc{$ Title} {self.dataLabel set(text:Title)} end
 				      DataMain)}
@@ -557,7 +580,7 @@ define
       end
       
       meth displayInstalled
-	 {@data display(r(info:Global.localDB title:"Installed package"))}
+	 {@data display(r(info:{Global.localDB items($)} title:"Installed package"))}
       end
 
       meth displayMogul
