@@ -310,3 +310,4 @@ in
    {Browse {SearchBest {KnapsackFDLP Problem}
 	    proc {$ O N} O.maxprofit <: N.maxprofit end}}
 end
+

@@ -52,22 +52,22 @@ all:	demo $(TARGET) lp2mps mps2lp
 $(COBJ): $(HEADERS)
 
 demo:	demo.o $(LPKLIB)
-	$(CC) -o demo $(CFLAGS) demo.o $(LPKLIB) -lfl -lm
+	$(CC) -o demo $(CFLAGS) demo.o $(LPKLIB) -lm
 
 lp2mps:	lp2mps.o $(LPKLIB)
-	$(CC) -o lp2mps $(CFLAGS) lp2mps.o $(LPKLIB) -lfl -lm
+	$(CC) -o lp2mps $(CFLAGS) lp2mps.o $(LPKLIB) -lm
 
 mps2lp: mps2lp.o $(LPKLIB)
-	$(CC) -o mps2lp $(CFLAGS) mps2lp.o $(LPKLIB) -lfl -lm
+	$(CC) -o mps2lp $(CFLAGS) mps2lp.o $(LPKLIB) -lm
 
 $(TARGET): lp_solve.o $(LPKLIB)
-	$(CC) -o $(TARGET) $(CFLAGS) lp_solve.o $(LPKLIB) -lfl -lm
+	$(CC) -o $(TARGET) $(CFLAGS) lp_solve.o $(LPKLIB) -lm
 
 purify: lp_solve.o $(LPKLIB)
-	purify $(CC) -o $(TARGET) $(CFLAGS) lp_solve.o $(LPKLIB) -lfl -lm
+	purify $(CC) -o $(TARGET) $(CFLAGS) lp_solve.o $(LPKLIB) -lm
 
 quantify: lp_solve.o $(LPKLIB)
-	quantify $(CC) -o $(TARGET) $(CFLAGS) lp_solve.o $(LPKLIB) -lfl -lm
+	quantify $(CC) -o $(TARGET) $(CFLAGS) lp_solve.o $(LPKLIB) -lm
 
 $(LPKLIB): $(LPKOBJ)
 	ar rv $@ $(LPKOBJ)
