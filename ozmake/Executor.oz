@@ -75,7 +75,7 @@ define
       %% turn a target into an actual filename
 
       meth make_dst(F $)	% output of a tool
-	 {Path.resolve {self get_builddir($)} {Path.maybeAddPlatform F}}
+	 {Path.resolveAtom {self get_builddir($)} {Path.maybeAddPlatform F}}
       end
 
       meth make_src(F $)	% input of a tool
