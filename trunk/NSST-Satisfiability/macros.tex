@@ -1,0 +1,23 @@
+\usepackage{latexsym}
+
+\newcommand{\und}{\wedge}
+% \newcommand{\sup}{\bigcap}
+
+\newenvironment{proof}%
+        {\beweisendedfalse\par\noindent{\bf Proof: }}%
+        {\beweisende\par\aftergroup\beweisendedfalse}
+\def\@bweqno#1\]{\eqno#1$$}
+\global\newif\ifbeweisended\beweisendedfalse
+\def\beweisende{%
+\ifbeweisended\else%
+  \leavevmode\global\beweisendedtrue%
+  \ifhmode%
+    \nobreak\hbox to5pt{\hfil}\nobreak\hskip 0pt plus1fill\nobreak$\Box$%
+  \else%
+    \ifinner%
+      \nobreak\hbox to5pt{\hfil}\nobreak\hskip 0pt plus1fill\nobreak\Box%
+    \else%
+      \@bweqno\Box%
+    \fi%
+  \fi%
+\fi}
