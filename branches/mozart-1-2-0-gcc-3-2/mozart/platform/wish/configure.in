@@ -296,6 +296,9 @@ TODO="Makefile"
 case ${platform} in
 *-darwin)
 	IS_DARWIN=yes
+	if ! test -d MacOSX; then
+	    mkdir MacOSX
+	fi
 	TODO="$TODO MacOSX/OzWish.pbxproj/project.pbxproj"
 	;;
 esac
