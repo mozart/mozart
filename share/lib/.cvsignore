@@ -9,4 +9,5 @@ compiler-Env.oz
 ozc functor2env ozar ozremote
 stage1 stage2 stage3 save
 boot-init boot-ozc
+boot-init.ozt boot-ozc.ozt
 boot-init.ozt.gz.SAVE boot-ozc.ozt.gz.SAVE
