@@ -55,7 +55,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
        NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
        NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
-       AtomNew, AtomSend, AtomApply, AtomApplyList,
+       AtomNew, AtomApply, AtomApplyList,
 
        NameUnit, NameGroupVoid,
        NameNonExportable,
@@ -1698,7 +1698,6 @@ public:
 			 Bool &defaultsUsed);
 
   TaggedRef getFallbackNew();
-  TaggedRef getFallbackSend();
   TaggedRef getFallbackApply();
 
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);

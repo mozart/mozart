@@ -1842,23 +1842,30 @@ LBLdispatcher:
      {
        TypeOfConst typ = predicate->getType();
 
-       if (typ==Co_Abstraction || typ==Co_Object) {
-	 Abstraction *def;
-	 if (typ==Co_Object) {
-	   COUNT(nonoptsendmsg);
-	   Object *o = (Object*) predicate;
-	   Assert(o->getClass()->getFallbackSend());
-	   def = tagged2Abstraction(o->getClass()->getFallbackSend());
-	   /* {Obj Msg} --> {Send Msg Class Obj} */
-	   X[predArity++] = makeTaggedConst(o->getClass());
-	   X[predArity++] = makeTaggedConst(o);
-	 } else {
-	   def = (Abstraction *) predicate;
-	 }
+       if (typ==Co_Abstraction) {
+	 Abstraction *def = (Abstraction *) predicate;
 	 CheckArity(def->getArity(), makeTaggedConst(def));
 	 if (!isTailCall) { PushCont(PC); }
-       
 	 CallDoChecks(def);
+	 JUMPABSOLUTE(def->getPC());
+       }
+
+// -----------------------------------------------------------------------
+// --- Call: Object
+// -----------------------------------------------------------------------
+       if (typ==Co_Object) {
+	 COUNT(nonoptsendmsg);
+	 Object *o = (Object*) predicate;
+	 Assert(o->getClass()->getFallbackApply());
+	 Abstraction *def =
+	   tagged2Abstraction(o->getClass()->getFallbackApply());
+	 /* {Obj Msg} --> {SetSelf Obj} {FallbackApply Class Msg} */
+	 X[1] = X[0];
+	 X[0] = makeTaggedConst(o->getClass());
+	 predArity = 2;
+	 if (!isTailCall) { PushCont(PC); }
+	 CallDoChecks(def);
+	 am.changeSelf(o);
 	 JUMPABSOLUTE(def->getPC());
        }
 
