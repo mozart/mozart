@@ -684,6 +684,69 @@ PROFILE_CODE1
 }
 
 
+// Check if there exists an S_ofs (Open Feature Structure) suspension in the suspList
+Bool AM::hasOFSSuspension(SuspList *suspList)
+{
+    while (suspList) {
+        Suspension *susp=suspList->getElem();
+        if (susp->isOFSSusp()) return TRUE;
+        suspList = suspList->getNext();
+    }
+    return FALSE;
+}
+
+
+// Add list of features to each OFS-marked suspension list
+// 'flist' has three possible values: a single feature (literal), a nonempty list of
+// features, or NULL (no extra features).  'determined'==TRUE iff the unify makes the
+// OFS determined.
+// This routine is inspired by am.checkSuspensionList.
+void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool determined)
+{
+    while (suspList) {
+        Suspension *susp=suspList->getElem();
+
+        if (susp->isDead()) {
+            suspList = suspList->dispose();
+            continue;
+        }
+
+        // suspension points to an already reduced branch of the computation tree
+        if (! susp->getBoard()->getBoardDeref()) {
+            susp->markDead();
+            checkExtSuspension(susp);
+            suspList = suspList->dispose();
+            continue;
+        }
+
+        if (susp->isOFSSusp()) {
+            // Add the feature or feat. list to the diff. list in xRegs[1] and xRegs[2]
+            CFuncContinuation *cont=susp->getCCont();
+            RefsArray xRegs=cont->getX();
+            if (flist) {
+                if (isLiteral(flist))
+                    xRegs[1]=cons(flist,xRegs[1]);
+                else {
+                    // flist must be a list
+                    Assert(isLTuple(flist));
+                    TaggedRef tmplist=flist;
+                    while (tmplist!=AtomNil) {
+                        xRegs[1]=cons(head(tmplist),xRegs[1]);
+                        tmplist=tail(tmplist);
+                    }
+                }
+            }
+            if (determined) {
+                // FS is det.: tail of list must be unified with nil: (always succeeds)
+                Bool ok=am.unify(xRegs[2],AtomNil);
+                Assert(ok);
+            }
+        }
+        suspList = suspList->getNext();
+    }
+}
+
+
 void AM::awakeNode(Board *node)
 {
   node = node->getBoardDeref();

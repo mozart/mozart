@@ -183,7 +183,7 @@ public:
     // Merge the current dynamictable into an external dynamictable
     // Return a pairlist containing all term pairs with the same feature
     // The external dynamictable is resized if necessary
-    void merge(DynamicTable* &dt, PairList* &pairs);
+    void merge(DynamicTable* &dt, PairList* &pairs, long &pairlen);
 
     // Check an srecord against the current dynamictable
     // Return TRUE if all elements of dynamictable exist in srecord.
@@ -192,6 +192,16 @@ public:
     // If FALSE, pair list contains a well-terminated but meaningless list.
     // Neither the srecord nor the dynamictable is modified.
     Bool srecordcheck(SRecord &sr, PairList* &pairs);
+
+    // Return a difference list of all the features currently in the dynamic table.
+    // The head is the return value and the tail is returned through an argument.
+    TaggedRef getOpenArityList(TaggedRef*);
+
+    // Return list of features in current table that are not in dt:
+    TaggedRef extraFeatures(DynamicTable* &dt);
+
+    // Return list of features in srecord that are not in current table:
+    TaggedRef extraSRecFeatures(SRecord &sr);
 
 private:
 
@@ -269,6 +279,8 @@ public:
         return dynamictable;
     }
 
+    TaggedRef getOpenArityList(TaggedRef*);
+
     Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
     // Return the feature value if feature exists, return NULL if it doesn't exist
@@ -279,7 +291,7 @@ public:
 
     // Add the feature and its value
     // If the feature already exists, do not insert anything
-    // Return TRUE if feature successfully inserted, FALSE otherwise
+    // Return TRUE if feature successfully inserted, FALSE if it already exists
     // ATTENTION: only use this for terms that do not have to be trailed
     Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
         Assert(isLiteral(feature));
@@ -288,6 +300,7 @@ public:
         // (a future optimization: a second suspList only waiting on features)
         if (prev==makeTaggedNULL()) {
             // propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
+            am.addFeatOFSSuspensionList(suspList,feature,FALSE);
             return TRUE;
         } else {
             return FALSE;
@@ -317,7 +330,6 @@ public:
     // void propagate (needs no redefinition from GenCVariable version)
     // void relinkSuspList (needs no redefinition from GenCVariable version)
     // void becomesSmallIntAndPropagate (meaningless for ofs)
-    // Bool valid (meaningless for ofs)
     // void setDom (meaningless for ofs)
     // FiniteDomain &getDom (meaningless for ofs)
 };
