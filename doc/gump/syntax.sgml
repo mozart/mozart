@@ -29,8 +29,7 @@
     <List>
       <Item>
         terminals and nonterminals are enclosed in angle brackets
-        <Math.Choice><Math type=html>&lt;...&gt;</Math>
-        <Math type=latex>\langle\ldots\rangle</Math></Math.Choice>;
+        &lt;&ellipsis;&gt;;
       <Item>
         the left side is separated from the right side by either ::= or
         +=, where += adds productions to an existing nonterminal;
