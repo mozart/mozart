@@ -433,7 +433,7 @@ AC_DEFUN(OZ_PROG_FLEX,[
     if test "$oz_tmp_ok" = yes; then
       oz_cv_LEX=$LEX
     else
-      AC_MSG_ERROR([
+      AC_MSG_WARN([
 GNU flex version] OZ_VERSION_FLEX [or higher is needed to build the
 system.  It can be retrieved from:
 
@@ -485,7 +485,7 @@ AC_DEFUN(OZ_PROG_BISON,[
     if test "$oz_tmp_ok" = yes; then
       oz_cv_YACC=$YACC
     else
-      AC_MSG_ERROR([
+      AC_MSG_WARN([
 GNU bison version] OZ_VERSION_BISON [or higher is needed to build the system.
 It can be retrieved from:
 
