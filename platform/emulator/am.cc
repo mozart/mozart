@@ -230,8 +230,6 @@ void AM::init(int argc,char **argv)
   threadStream     = OZ_newVariable();
   threadStreamTail = threadStream;
 
-  breakflag = NO;
-
   initThreads();
   toplevelQueue = (Toplevel *) NULL;
 
