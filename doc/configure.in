@@ -30,24 +30,6 @@ OZ_PATH_PROG(OZDOC,ozdoc,OZDOC=$BUILDTOP/doc/utilities/ozdoc)
 AC_SUBST(OZENGINE)
 AC_SUBST(OZDOC)
 
-AC_MSG_CHECKING(for --with-psgml-dir)
-AC_ARG_WITH(psgml-dir,
-    [--with-psgml-dir=DIR
-    	directory where psgml mode support is located],
-    oz_psgml_dir=${with_psgml_dir})
-: ${oz_psgml_dir=}
-AC_MSG_RESULT($oz_psgml_dir)
-if test -n "${oz_psgml_dir}"
-then
-    PSGML="${oz_psgml_dir}"
-    CED="ozdoc.ced"
-else
-    PSGML=
-    CED=
-fi
-AC_SUBST(PSGML)
-AC_SUBST(CED)
-
 AC_MSG_CHECKING(for --with-java-bin)
 AC_ARG_WITH(java,
   [--with-java-bin='DIR'
