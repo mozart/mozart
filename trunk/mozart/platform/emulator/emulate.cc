@@ -885,6 +885,7 @@ void engine() {
       CallDoChecks(entry->getAbstr(),entry->getGRegs(),NO,PC,
 		   entry->getAbstr()->getArity());
 
+      Y = NULL; // allocateL(0);
       // set pc
       IHashTable *table = entry->indexTable;
       if (table) {
@@ -902,6 +903,7 @@ void engine() {
       CallDoChecks(entry->getAbstr(),entry->getGRegs(),OK,PC,
 		   entry->getAbstr()->getArity());
 
+      Y = NULL; // allocateL(0);
       // set pc
       IHashTable *table = entry->indexTable;
       if (table) {
