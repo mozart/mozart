@@ -134,7 +134,10 @@ define
       meth set_libdir(D) LibDir<-{Path.expand D} end
       meth get_libdir($)
 	 if @LibDir==unit then
-	    if @Superman\=unit then
+	    if @Uri\=unit then
+	       LibDir<-{Path.resolve Attribs,get_libroot($)
+			{Path.toCache Attribs,get_uri($)}}
+	    elseif @Superman\=unit then
 	       LibDir<-{Path.resolve {@Superman get_libdir($)} @AsSubdir}
 	    else
 	       LibDir<-{Path.resolve Attribs,get_libroot($)
