@@ -5,12 +5,6 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-
-PanelWidth       = 560
-FrameWidth       = PanelWidth - 20
-FullPanelHeight  = 335
-PartPanelHeight  = 240
-
 SmallPad     = 2
 Pad          = 4
 

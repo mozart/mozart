@@ -13,10 +13,6 @@ local
 
    \insert discrete-scale.oz
    
-   \insert notebook.oz
-
-   \insert labelframe.oz
-
    \insert runtime-bar.oz
 
    \insert load.oz

@@ -338,31 +338,24 @@ local
       case Fs
       of nil then TclT
       [] F|Fr then TclR TclS
-	 Border = {New Labelframe tkInit(parent: P
-					 width:  FrameWidth
-					 height: F.height
-					 text:   F.text)}
-	 Frame  = {New Tk.frame tkInit(parent:            Border
+	 Border = {New TkTools.textframe tkInit(parent: P
+						text:   F.text)}
+	 Left   = {New Tk.frame tkInit(parent:            Border.inner
 				       highlightthickness: 0)}
-	 Left   = {New Tk.frame tkInit(parent:            Frame
-				       highlightthickness: 0)}
-	 Right  = {New Tk.frame tkInit(parent:            Frame
+	 Right  = {New Tk.frame tkInit(parent:            Border.inner
 				       highlightthickness: 0)}
 	 FR     = {MakeRecord a frame|{Append {Map F.left GetFeature}
 				 {Map F.right GetFeature}}}
       in
 	 FR.frame = Border
-	 {Border add(Frame)}
 	 R.{GetFeature F}=FR
 	 {MakeSide F.left 0 Left FR
 	  {MakeSide F.right 0 Right FR
+	   pack(Left   side:left  anchor:nw) |
+	   pack(Right  side:right anchor:se) |
 	   case {CondSelect F pack True} then
-	      pack(Border pady:Pad padx:Pad side:top) |
-	      pack(Left   side:left  anchor:n) |
-	      pack(Right  side:right anchor:s) | {MakeFrames Fr P R TclT}
-	   else
-	      pack(Left   side:left  anchor:n) |
-	      pack(Right  side:right anchor:s) | {MakeFrames Fr P R TclT}
+	      pack(Border fill:x side:top) | {MakeFrames Fr P R TclT}
+	   else {MakeFrames Fr P R TclT}
 	   end}}
      end
    end
@@ -373,10 +366,8 @@ in
       R    = {MakeRecord a {Map PageSpec GetFeature}}
       Page = {New Class init(parent:Book options:R text:' '#Mark#' ')}
    in
-      case Add then {Book add(note:Page)} else true end
-      thread
-	 {Tk.batch {MakeFrames PageSpec Page R nil}}
-      end
+      {Tk.batch {MakeFrames PageSpec Page R nil}}
+      case Add then {Book add(Page)} else true end
       Page
    end
 
