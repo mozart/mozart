@@ -1464,7 +1464,7 @@ OZ_C_proc_begin(BInewSpace, 2) {
 
   ozstat.incSolveCreated();
   // creation of solve actor and solve board
-  SolveActor *sa = new SolveActor(CBB, CPP);
+  SolveActor *sa = new SolveActor(CBB);
 
   // thread creation for {proc root}
   sa->inject(CPP, proc);
@@ -1756,7 +1756,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   sa->clearResult(space->getBoard());
 
   // inject
-  sa->inject(sa->getPriority(), proc);
+  sa->inject(DEFAULT_PRIORITY, proc);
     
   return PROCEED;
 } OZ_C_proc_end

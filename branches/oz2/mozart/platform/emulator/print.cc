@@ -846,7 +846,6 @@ PRINTLONG(Actor)
   CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
-  stream << indent(offset) << "Priority: " << priority << endl;
   if (isSolve()) {
     ((SolveActor *)this)->printLong(stream,depth,offset);
   }

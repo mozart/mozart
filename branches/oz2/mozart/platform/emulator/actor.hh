@@ -41,11 +41,10 @@ public:
 protected:
   int flags;
   Board *board;
-  int priority;
 public:
   Actor();
   Actor(Actor &);
-  Actor(int typ,Board *bb,int prio);
+  Actor(int typ,Board *bb);
 
   ~Actor();
 
@@ -55,7 +54,6 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  int getPriority() { return (priority); }
   inline Board *getBoard();
   inline Board *getBoardAndTest();
   Bool isCommitted() { return flags & Ac_Committed; }
@@ -87,7 +85,7 @@ public:
   AWActor();
   ~AWActor();
   AWActor(AWActor&);
-  AWActor(int type,Board *s,int prio,Thread *tt,
+  AWActor(int type,Board *s,Thread *tt,
 	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
 	  RefsArray x=0,int i=0);
   USEHEAPMEMORY;
@@ -117,7 +115,7 @@ public:
   AskActor();
   ~AskActor();
   AskActor(AskActor&);
-  AskActor(Board *s,int prio,Thread *tt,
+  AskActor(Board *s,Thread *tt,
 	   ProgramCounter elsepc,
 	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
 
@@ -141,7 +139,7 @@ public:
   WaitActor();
   ~WaitActor();
   WaitActor(WaitActor&);
-  WaitActor(Board *s,int prio,Thread *tt,
+  WaitActor(Board *s,Thread *tt,
 	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i,
 	    Bool d);
 
