@@ -167,11 +167,11 @@ OZ_BI_define(BIinitIPConnection,1,1)
   Bool fw;
 
   if (oz_isLiteral(rec)){
-    oz_typeError(0,"Must specify Accept and Connect procedures");
+;//      oz_typeError(0,"Must specify Accept and Connect procedures");
   }
   else if (oz_isLTuple(rec))
     {
-    oz_typeError(0,"Must specify Accept and Connect procedures");
+;//      oz_typeError(0,"Must specify Accept and Connect procedures");
     }
   else if (oz_isSRecord(rec)) {
     SRecord *srec = tagged2SRecord(rec);
@@ -210,8 +210,8 @@ OZ_BI_define(BIinitIPConnection,1,1)
       defaultAcceptProcedure = proc;
       oz_protect(&defaultAcceptProcedure);
     }
-    else
-      oz_typeError(0,"Must specify Accept procedure");
+//      else
+//        oz_typeError(0,"Must specify Accept procedure");
     
       
     index = srec->getIndex(cpr);
@@ -223,8 +223,8 @@ OZ_BI_define(BIinitIPConnection,1,1)
       defaultConnectionProcedure = proc;
       oz_protect(&defaultConnectionProcedure);
     }
-    else
-      oz_typeError(0,"Must specify Connect procedure");
+//      else
+//        oz_typeError(0,"Must specify Connect procedure");
      
     
   } else {
@@ -240,11 +240,13 @@ OZ_BI_define(BIinitIPConnection,1,1)
 				  , 
 				  oz_cons(oz_pairAI("port",getIPPort()),
 					  oz_cons(oz_pairA("firewall",oz_bool(getFireWallStatus())), 
-						  oz_nil())
+						  oz_cons(oz_pairAA("acceptProc","<>"),
+							  oz_cons(oz_pairAA("connectProc","<>"),
+								  oz_nil())
 					  )
 				  )
-			  )
-	    );
+					  )
+	    )));
 } OZ_BI_end
 
 //
