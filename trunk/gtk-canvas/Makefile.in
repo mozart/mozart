@@ -315,7 +315,12 @@ maintainer-clean-tags:
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
 
-tar: dist
+tar:
+	-rm -rf $(distdir)
+	cp -a $(srcdir) $(distdir)
+	find $(distdir) -name '*~' -exec rm {} \;
+	$(TAR) czf $(distdir).tar.gz $(distdir)
+	-rm -rf $(distdir)
 rpm: gtk-canvas.spec $(distdir).tar.gz
 	cp $(distdir).tar.gz /usr/src/redhat/SOURCES/
 	rpmbuild -bs $<

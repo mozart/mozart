@@ -134,7 +134,7 @@ cxxflags_set = @cxxflags_set@
 l = @l@
 need_gnome_support = @need_gnome_support@
 
-INCLUDES = -I.. -I$(srcdir)/.. 	-I$(includedir) $(GDK_IMLIB_CFLAGS) 
+INCLUDES = -I.. @ART_CFLAGS@ -I$(srcdir)/.. 	-I$(includedir) $(GDK_IMLIB_CFLAGS) 
 
 
 noinst_PROGRAMS = test-gtkcanvas
