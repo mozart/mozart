@@ -12,7 +12,7 @@ This opens a window that displays different data on the distributed work done by
 
 <p>Since the distribution behavior is affected by the garbage collector a red vertical bar is inserted in all graphs when garbage collection occurs. This allows garbage collection related behaviour to be understood.
 
-<Picture.Extern id="RCframeGCbar.gif" to="RCframe.gif" type=gif>
+<Picture.Extern id="basic.gif" to="basic.gif" type=gif>
 
 The Distribution Panel has several different frames described in detail the remaining sections of this chapter.
 
@@ -84,7 +84,7 @@ transferred and when its acknowledgement is received back. This value
 includes the network RTT as well as any delays due to ongoing local or
 remote computation.
 
-<Picture.Extern id="RCframe.gif" to="RCframe.gif" type=gif>
+<Picture.Extern id="Cframe.gif" to="Cframe.gif" type=gif>
 
 
 

@@ -33,7 +33,8 @@
     <Meta name="html.split" value="chapter.remote">
     <Meta name="html.split" value="chapter.chapter2">
     <Meta name="html.split.bib" value="">
-    <Meta name="latex.picture.width" arg1="RCframe.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="basic.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="Cframe.gif" arg2="0.5\linewidth">
     <Meta name="latex.picture.width" arg1="DSframe.gif" arg2="0.5\linewidth">
     <Meta name="latex.picture.width" arg1="EEframe.gif" arg2="0.5\linewidth">
     <Meta name="latex.picture.width" arg1="IEframe.gif" arg2="0.5\linewidth">

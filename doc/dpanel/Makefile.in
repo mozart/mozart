@@ -5,7 +5,7 @@ VPATH           = @srcdir@
 WHAT = dpanel
 WHATCLASS=tools
 PRINTNAME=Oz
-HTMLEXTRAFILES=DSframe.gif  MSframe.gif          RCframeGCbar.gif  UxpctExports.gif EEframe.gif  MassImportation.gif  StrangeRTT.gif IEframe.gif  RCframe.gif TicketPort.gif
+HTMLEXTRAFILES=basic.gif DSframe.gif  MSframe.gif UxpctExports.gif EEframe.gif  MassImportation.gif  StrangeRTT.gif IEframe.gif Cframe.gif TicketPort.gif
 
 
 WHAT    = dpanel
