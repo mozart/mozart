@@ -187,7 +187,7 @@ in
 
 	 %%
 	 case RefObj
-	 of !InitValue then NewTail in 
+	 of !InitValue then NewTail in
 	    @tail = Obj|NewTail   % transaction; 
 	    tail <- NewTail
 	    length <- @length + 1
