@@ -3239,19 +3239,12 @@ Case(GETVOID)
 
   Case(PROFILEPROC)
     {
-
-      static int sizeOfDef = -1;
-      if (sizeOfDef==-1) sizeOfDef = sizeOf(DEFINITION);
-
-      Assert(CodeArea::getOpcode(PC-sizeOfDef) == DEFINITION);
-      PrTabEntry *pred = getPredArg(PC-sizeOfDef+3); /* this is faster */
-
+      PrTabEntry *pred = CAP->getPred();
       pred->getProfile()->numCalled++;
       if (pred!=ozstat.currAbstr) {
         CTS->pushAbstr(ozstat.currAbstr);
         ozstat.leaveCall(pred);
       }
-
       DISPATCH(1);
     }
 
