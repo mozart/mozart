@@ -50,7 +50,7 @@
         <item> A line item consists of several connected segments. It is
         possible to configure line items such that B\'{e}zier splines are used.
         <entry><<oval>>
-        <item> An oval can either be a circle or am ellipsis.
+        <item> An oval can either be a circle or an ellipsis.
         <entry><<polygon>>
         <item> A polygon is described by three or more line segments. As
         with line items, it is possible to use B\'{e}zier splines.
