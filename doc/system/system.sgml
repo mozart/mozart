@@ -146,7 +146,7 @@
       <entry><<eq>>
         <index class=tails/<<System>><And><<eq>>/
       <synopsis>
-        <<{System.eq ?_{X} ?_{Y}}>>
+        <<{System.eq ?_{X} ?_{Y} ??{B}}>>
       <item>
         Tests whether ?_{X} and ?_{Y} refer to the same value node in
         the store.
