@@ -71,9 +71,11 @@ in
 end
 
 proc {SendEmacs M}
-   case {Cget useEmacsBar} then
-      {Emacs.condSend.interface M}
-   else skip end
+   if {Cget useEmacsBar} then
+      case {Cget emacsInterface} of false then skip
+      elseof I then {I M}
+      end
+   end
 end
 
 ValuesHelp             = {NewName}
