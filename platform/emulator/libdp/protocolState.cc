@@ -215,6 +215,7 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,DSite* toS){
 }
 
 void cellReceiveDump(CellManager *cm,DSite *fromS){
+  if(tokenLostCheckManager(cm)) return; // FAIL-HOOK
   Assert(cm->getType()==Co_Cell);
   Assert(cm->isManager());
   if((cm->getChain()->getCurrent()!=fromS) ||
@@ -420,6 +421,7 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,DSite* toS){
 }
 
 void lockReceiveDump(LockManager* lm,DSite *fromS){
+  if(tokenLostCheckManager(lm)) return; // FAIL-HOOK
   Assert(lm->getType()==Co_Lock);
   Assert(lm->isManager());
   LockSec* sec=lm->getLockSec();
