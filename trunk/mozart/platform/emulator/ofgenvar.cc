@@ -15,6 +15,13 @@ Bool isPwrTwo(dt_index s) {
     // while ((s&1)==0) s=(s>>1); return (s==1);
 }
 
+// Return the least power of two greater or equal to s:
+dt_index ceilPwrTwo(dt_index s) {
+    Assert(s>0);
+    if (isPwrTwo(s)) return s;
+    return ceilPwrTwo((s>>1)|1)<<1;
+}
+
 //-------------------------------------------------------------------------
 //                               for class DynamicTable
 //-------------------------------------------------------------------------
@@ -44,8 +51,7 @@ void DynamicTable::init(dt_index s) {
 /* Full/Max: 0/0, 1/1, 2/2, 4/4, 6/8, 12/16, 24/32 (limit:75%) */
 /* !!! DOING +2 instead of +1 goes into INFINITE LOOP.  CHECK IT OUT! */
 // #define fullFunc(size) (((size)+((size)>>1)+1)>>1)
-#define FULLLIMIT 4
-#define fullFunc(size) ((size)<=FULLLIMIT?(size):( (size) - ((size)>>2) ))
+#define fullFunc(size) ((size)<=FILLLIMIT?(size):( (size) - ((size)>>2) ))
 
 // Fill factor at which the hash table is considered sparse enough to halve in size:
 /* Empty/Max: 0/0, 0/1, 1/2, 2/4, 3/8, 6/16, ... (limit:37.5%) */
@@ -372,17 +378,15 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Literals have no features:
         if (getWidth()>0) return FALSE;
 
-        // Unify the labels:
-        if (!am.unify(term,label,prop)) return FALSE;
-
-        // At this point, unification is successful
-
         // Get local/global flag:
         Bool vLoc=(prop && am.isLocalSVar(this));
 
         // Bind OFSVar to the Literal:
         if (vLoc) doBind(vPtr, term);
         else am.doBindAndTrail(var, vPtr, term);
+
+        // Unify the labels:
+        if (!am.unify(term,label,prop)) return FALSE;
 
         // Update the OFS suspensions:
         if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
@@ -401,6 +405,52 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         return TRUE;
       }
 
+    case LTUPLE:
+      {
+        // Get the LTuple corresponding to term:
+        LTuple* termLTup=tagged2LTuple(term);
+
+        // Get local/global flag:
+        Bool vLoc=(prop && am.isLocalSVar(this));
+
+        // Check that var features are subset of {1,2}
+        TaggedRef arg1=getFeatureValue(makeTaggedSmallInt(1));
+        TaggedRef arg2=getFeatureValue(makeTaggedSmallInt(2));
+        if ((arg1!=makeTaggedNULL())+(arg2!=makeTaggedNULL()) != getWidth())
+            return FALSE;
+
+        // Take care of OFS suspensions:
+        if (vLoc && am.hasOFSSuspension(suspList)) {
+	    if (getWidth()<2) {
+                // Calculate feature or list of features 'flist' that are
+                // in LTUPLE and not in OFS.
+                TaggedRef flist=AtomNil;
+                if (arg2) flist=cons(makeTaggedSmallInt(2),flist);
+                if (arg1) flist=cons(makeTaggedSmallInt(1),flist);
+                // Add the extra features to S_ofs suspensions:
+                am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
+	    } else {
+                am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
+	    }
+        }
+
+        // Bind OFSVar to the LTuple:
+        if (vLoc) doBind(vPtr, bindInRecordCaseHack);
+        else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
+
+        // Unify the labels:
+        if (!am.unify(AtomCons,label,prop)) return FALSE;
+
+        // Unify corresponding feature values:
+        if (arg1 && !am.unify(termLTup->getHead(),arg1,prop)) return FALSE;
+        if (arg2 && !am.unify(termLTup->getTail(),arg2,prop)) return FALSE;
+
+        // Propagate changes to the suspensions:
+        // (this routine is actually GenCVariable::propagate)
+        if (prop) propagate(var, suspList, pc_cv_unif);
+        return TRUE;
+      }
+
     case SRECORD:
     Record:
       {
@@ -411,13 +461,6 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Get the SRecord corresponding to term:
         SRecord* termSRec=tagged2SRecord(term);
         Assert(termSRec!=NULL);
-  
-        // Unify the labels:
-        if (!am.unify(termSRec->getLabel(),label,prop)) return FALSE;
-        // Must be literal or variable:
-        // TaggedRef tmp=label;
-        // DEREF(tmp,_1,_2);
-	// if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
 
         // Get local/global flag:
         Bool vLoc=(prop && am.isLocalSVar(this));
@@ -444,6 +487,10 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Bind OFSVar to the SRecord:
         if (vLoc) doBind(vPtr, bindInRecordCaseHack);
         else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
+  
+        // Unify the labels:
+        if (!am.unify(termSRec->getLabel(),label,prop)) 
+            { pairs->free(); return FALSE; }
 
         // Unify corresponding feature values:
         PairList* p=pairs;
@@ -487,13 +534,6 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         GenOFSVariable* termVar=tagged2GenOFSVar(term);
         Assert(termVar!=NULL);
 
-        // Unify the labels:
-        if (!am.unify(termVar->label,label,prop)) return FALSE;
-        // Must be literal or variable:
-        TaggedRef tmp=label;
-        DEREF(tmp,_1,_2);
-	if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
-  
         // Get local/global flags:
         Bool vLoc=(prop && am.isLocalSVar(this));
         Bool tLoc=(prop && am.isLocalSVar(termVar));
@@ -607,6 +647,15 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 				newVar, termVar, prop);
         } else Assert(FALSE);
 
+        // Unify the labels:
+        if (!am.unify(termVar->label,label,prop)) 
+            { pairs->free(); return FALSE; }
+        // Must be literal or variable:
+        TaggedRef tmp=label;
+        DEREF(tmp,_1,_2);
+	if (!isLiteral(tmp) && !isAnyVar(tmp))
+            { pairs->free(); return FALSE; }
+  
         // Unify the corresponding feature values in the two variables:
         // Return FALSE upon encountering the first failing unification
         // Return TRUE if all unifications succeed
