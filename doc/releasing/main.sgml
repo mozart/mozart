@@ -47,14 +47,32 @@
     <title/The Secret Sucky Guide To Making Releases/
     <author.Extern to="author.db" key="Denys.Duchier">
     <Abstract>
-    This document explains how to create releases for various platforms.
+       This document explains how to create releases for various
+       platforms.  If you are a Mozart user interested in creating a
+       binary distribution for your platform, you have two main
+       options:
+       <list>
+         <item/if your platform supports RPMs, then see how to create
+	 binary RPMs using our source RPM/
+	 <item/otherwise, you should create binary tarballs./
+       </list>
+       Please, Please, Please: do contribute your binary distros back
+       to us.  This way, we can place them in our download area and
+       everybody else can benefit from your effort.  You do not need
+       to bother with source and documentation distros, since our
+       offerings for those are platform independent.  If you are
+       a Mozart release manager, see the last chapter which tells you
+       all the steps you need to follow.
     </Abstract>
 
     <chapter id="chap.intro">
       <title/Introduction/
-      <p>You need to get, from the Mozart CVS archive, the sources
-      corresponding to the release.  A release is identified by a tag,
-      e.g. <code/mozart-1-2-2-a/.  In the following, I'll write
+      <p>First, you need to download the sources.  You can either
+      download the source tarballs from our FTP server, or you can check out
+      the sources directly from our CVS server.</p>
+      <p>Here is how to get the sources of a particular release from
+      the Mozart CVS archive.  A release is identified by a tag,
+      e.g. <code/mozart-1-2-3/.  In the following, I'll write
       <code/$REL/ for the release tag.  Use <code/ssh/, &ie; set
       environment variable <code/CVS_RSH=ssh/.
       <code display>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r $REL mozart</code>
@@ -64,23 +82,31 @@
       sources as <code/$SOURCE/: it is typically called <file/mozart/
       unless you used option <code/-d/ to the CVS <code/get/ command
       (which is unrelated to the <code/-d/ option to the <code/cvs/
-      command itself).</p>
+      command itself).  It is highly recommended to also get a copy of
+      the Mozart Standard Library:
+      <code display>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r $REL mozart-stdlib</code>
+      I will refer to the top directory containing the sources of the
+      standard library as <code/$STDLIB/.</p>
       <p>In order to build the release, you should create a separate
-      build directory.  I will call it <code/$BUILD/.  <code/$BUILD/
+      build directory.  I will call it <code/$BUILD/ and it
       should not be created in <code/$SOURCE/ tree.  Simplest is to
-      create it as a sibling of <code/$SOURCE/.</p>
-      <p>To build the system, you first need to configure it.  Make
+      create it as a sibling of <code/$SOURCE/.  Then you need to
+      configure <code/$BUILD/: make
       very sure that no OZ utilities are found in your shell's search
       path and no OZ related variables are set in your environment.
       Personally, I have defined shell aliases <code/ozon/ and
       <code/ozoff/ to switch between having OZ utilities in my path
       and having a pristine environment blissfully unaware of things
-      Mozartian.
+      Mozartian.  A minimally parametrized configuration would be:
       <code display>cd $BUILD
-$MOZART/configure</code>
+$SOURCE/configure</code>
       By default, this will set things up to install in the default
       location <file>/usr/local/oz</file>.  You can change this
-      default using option <code/--prefix=DIR/.  It's a good idea to
+      default using option <code/--prefix=$PREFIX/.  A more complete
+      invocation of configure would look like:
+      <code display>$SOURCE --prefix=$PREFIX --with-stdlib=$STDLIB</code>
+      and that's the invocation I would recommend.  Next,
+      it's a good idea to
       set up dependencies in case you need to update the sources and
       then rebuild what needs rebuilding:
       <code display>make depend</code>
@@ -94,10 +120,10 @@ $MOZART/configure</code>
       directly invoke <code/make install/.  At the top level
       <code/make/ is equivalent to <code/make bootstrap/. If you want
       to do it in one command, then you need to type:
-      <code display/make bootstrap install/</p>
-      <p>If you need to reconfigure, beware that <code/configure/
+      <code display/make bootstrap install/
+      If you need to reconfigure, beware that <code/configure/
       builds a cache of configuration data in
-      <file>$BUILD/config.cache</file>.  You may need to remove
+      <code>$BUILD/config.cache</code>.  You may need to remove
       that.</p>
       <p>In order to also build the documentation, you need to invoke
       configure with option:
@@ -115,10 +141,10 @@ $MOZART/configure</code>
 	<code display>cd $BUILD
 make src</code>
         This will result in the creation of file
-	<file>mozart-$VERSION.$DATE-src.tar.gz</file>
+	<code>mozart-$VERSION.$DATE-src.tar.gz</code>
 	where <code/$VERSION/ is the release number and <code/$DATE/
-	is the build date (the current date).  That's it, you're
-	done.</p>
+	is the build date (the current date, or rather, the date when
+	you invoked <code/configure/).  That's it, you're done.</p>
       </section>
       <section>
         <title/Documentation Tarball/
@@ -138,9 +164,22 @@ make src</code>
 	<code display>cd $BUILD
 make doc</code>
         This will suck in all the installed documentation and create
-	file <file>mozart-$VERSION.$DATE-src.tar.gz</file>.</p>
-	<p>Except I lied and you need to install the standard library
-	before that, else its doc will be missing.  See below.</p>
+	file <code>mozart-$VERSION.$DATE-doc.tar.gz</code>.  If you
+	have installed the standard library, this tarball will also
+	contain its documentation.</p>
+      </section>
+      <section>
+	  <title/Standard Library Tarball/
+	  <p>If you have configured using
+	  <code/--with-stdlib=$STDLIB/, then you can create the
+          standard library tarball with:
+	  <code display/make std/
+	  This will only work after <code/make install/ because it uses the
+	  installed <code/ozengine/ and core libraries.  As result the
+	  following tarball is created:
+	  <list>
+	    <item><code>mozart-$VERSION.$DATE-$PLATFORM-std.tar.gz</code></item>
+	  </list>
       </section>
       <section>
         <title/Binary Tarballs/
@@ -153,33 +192,15 @@ make bin</code>
 	necessary files to include in the binary tarballs.  As a
 	result, three tarballs are created:
 <list>
-<item><file>mozart-$VERSION.$DATE-$PLATFORM.tar.gz</file></item>
-<item><file>mozart-$VERSION.$DATE-$PLATFORM-contrib.tar.gz</file></item>
-<item><file>mozart-$VERSION.$DATE-$PLATFORM-internal.tar.gz</file></item>
+<item><code>mozart-$VERSION.$DATE-$PLATFORM.tar.gz</code></item>
+<item><code>mozart-$VERSION.$DATE-$PLATFORM-contrib.tar.gz</code></item>
+<item><code>mozart-$VERSION.$DATE-$PLATFORM-internal.tar.gz</code></item>
 </list>
         where <code/$PLATFORM/ stands for your platform, &ie; the
 	value returned by shell script:
 	<code display>$SOURCE/share/bin/ozplatform</code>
-        You can ignore the last tarball.</p>
-	<subsection>
-	  <title/Mozart Standard Library/
-	  <p>In order to produce a complete binary distribution, you
-	  also need to install the Mozart Standard Library.  You must
-	  do this before invoking <code/make bin/.  It can be obtained
-	  from the CVS server as follows:
-	  <code display>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r $REL mozart-stdlib</code>
-	  you can create a tarball for the standard library by
-	  invoking
-	  <code display>make STDLIB=... std</code>
-	  where <code/.../ is the directory where you checked out the
-	  standard library.
-	  However, before you do this, you need to have
-	  <code/ozengine/ and <code/ozmake/ in your path.  As a
-	  result, the following tarball is created:
-	  <list>
-	    <item><file>mozart-$VERSION.$DATE-$PLATFORM-std.tar.gz</file></item>
-	  </list>
-	</subsection>
+        You can ignore the last tarball.  If you have installed the
+	standard library, it will be included in the first tarball.</p>
 	<subsection>
 	  <title/Non-Linux Platforms/
 	  <p>Mozart requires a number of libraries which are not
@@ -214,7 +235,7 @@ make bin</code>
 	    <title>Tcl/Tk</title>
 	    <p>This is frequently a pain in the rear.  Check other
 	    documentation as well as
-	    <file>$SOURCE/platform/wish/configure.in</file>.</p>
+	    <code>$SOURCE/platform/wish/configure.in</code>.</p>
 	  </subsubsection>
 	</subsection>
       </section>
@@ -235,18 +256,18 @@ make bin</code>
         <title/Source RPM/
 	<p>In order to create the source RPM, you need to have already
 	created or downloaded the source, documentation, and standard
-	library tarballs.
-	Become somebody important and execute:
+	library tarballs.  Assuming that you have placed them in <code/$BUILD/,
+	become somebody important and execute:
 	<code display>$SOURCE/misc/create-rpm $BUILD $BUILD</code>
 	Note that this will create both a source RPM and binary RPMs.
 	They will be placed in <code>$BUILD</code> or whatever
 	directory you supplied as the second argument to
 	<file/create-rpm/:
 <list>
-<item><file>mozart-$VERSION-$DATE-$REVISION.src.rpm</file></item>
-<item><file>mozart-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
-<item><file>mozart-contrib-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
-<item><file>mozart-doc-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
+<item><code>mozart-$VERSION.$DATE-$REVISION.src.rpm</code></item>
+<item><code>mozart-$VERSION.$DATE-$REVISION.i386.rpm</code></item>
+<item><code>mozart-contrib-$VERSION.$DATE-$REVISION.i386.rpm</code></item>
+<item><code>mozart-doc-$VERSION.$DATE-$REVISION.i386.rpm</code></item>
 </list>
 
       </section>
@@ -267,25 +288,29 @@ make bin</code>
 	You should check it out, cd to the directory of the checked
 	out version and issue the following command:
 	<code display/cvs tag -r mozart-1-2-3/</item>
+	<item>check out the standard library and also cut the same tag
+	in it.  Let's call <code/$STDLIB/ the directory into which you
+	checked it out.</item>
 	<item>then you should configure, build and install the
-	release.  In particular, you should configure with option
-	<code/--with-documents=all/.</item>
+	release:
+	<code display>$SOURCE/configure --with-stdlib=$STDLIB --with-documents=all</code>
+	You can also supply <code/--prefix=$PREFIX/ if you want to install elsewhere than
+	the default; this has no ill-effect.</item>
 	<item>As stated above, you should then <code/make/ followed by
-	<code/make install/.</item>
-	<item>Now you need to make the postscript and pdf
-	documentation.  cd to the build doc directory and invoke
-	<code/make ps/ followed by <code/make pdf/.  Finally do
-	<code/make installps/.</item>
-	<item>cd back to the top build directory and now invoke
-	<code/make src doc bin/ in order to create all the necessary
-	tar files.  Note that you also need to create a <file/README/
-	file which describes the important points about linking:  This
-	can be done by using <code>ldd</code> on
-	<file>platform/emulator/emulator.exe</file> and on
-	<file>platform/wish/tk.exe</file>.  Note that depending on
+	<code/make install/.  If you did not forget the
+	<code/--with-stdlib/ option, this will also build and install
+	the standard library.</item>
+	<item>Now invoke
+	<code/make src doc bin std/ in order to create all the necessary
+	tar files.  <code/make bin/ creates a file
+	<code/README-$VERSION.$DATE-$PLATFORM/ which describes the
+	important points about linking:  i.e. what libraries
+	<file/emulator.exe/ and <file/tk.exe/ are dynamically linked
+	against.  Note that, depending on
 	whether you used <code>--enable-static-linking</code> or not,
 	you should rename the tar and README files accordingly so that
-	they can be distinguished.  My own preference is to add
+	multiple offerings for the same platform but with different
+	linking policies can be distinguished.  My own preference is to add
 	<code/-dynfull/ when dynamic linking is used and
 	<code/-dynless/ when <code/--enable-static-linking/ (and
 	possibly <code/--enable-modules-static/ - I normally specify
@@ -295,7 +320,7 @@ make bin</code>
 	for release 1.2.3 for the dynamically linked version of the
 	mozart release for freebsd on the intel architecture:
 	<list>
-	  <item><file>README.freebsdelf-i486-dynfull</file></item>
+	  <item><file>README-1.2.3.20011121-freebsdelf-i486-dynfull</file></item>
 	  <item><file>mozart-1.2.3.20011121-freebsdelf-i486-dynfull-contrib.tar.gz</file></item>
 	  <item><file>mozart-1.2.3.20011121-freebsdelf-i486-dynfull.tar.gz</file></item>
 	</list>
@@ -312,11 +337,19 @@ make bin</code>
 	    <item>this creates the directory structure for the
 	    release.  Use option <code/-n/ to see what <code/mkftp/
 	    would do without actually doing it.</item>
-	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README.*</code></entry>
+	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --tar *.tar.gz README-*</code></entry>
 	    <item>this will install the tar and README files appropriately.</item>
 	    <entry><code>perl $SOURCE/misc/mkftp --release=$VERSION --rpm=redhat *.rpm</code></entry>
 	    <item>install the source and binary RPMs.</item>
 	  </list>
+	</item>
+	<item>Now you need to make the postscript and pdf
+	documentation.  cd to the build doc directory and invoke
+	<code/make ps/ followed by <code/make pdf/.  Finally do
+	<code/make installps/ which installs the documentation
+	in the global <code/print/ directory of your installation.
+	Now propagate this documentation to the ftp directory:
+	<code display>perl $SOURCE/misc/mkftp --release=$VERSION --doc=$PREFIX</code>
 	</item>
       </list>
     </chapter>
