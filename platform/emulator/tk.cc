@@ -33,38 +33,39 @@
 #include <errno.h>
 
 TaggedRef 
-  WifAtomTclOption, WifAtomTclList, WifAtomTclPosition,
-  WifAtomTclQuote, WifAtomTclString, WifAtomTclVS,
-  WifAtomTclBatch, WifAtomTclColor, WifAtomTclDelete,
-  WifAtomDot, 
-  WifAtomTagPrefix, WifAtomVarPrefix, WifAtomImagePrefix,
+  TkAtomTclOption, TkAtomTclList, TkAtomTclPosition,
+  TkAtomTclQuote, TkAtomTclString, TkAtomTclVS,
+  TkAtomTclBatch, TkAtomTclColor, TkAtomTclDelete,
+  TkAtomDot, 
+  TkAtomTagPrefix, TkAtomVarPrefix, TkAtomImagePrefix,
+  TkAtomFontPrefix,
 
-  WifNameTclName, 
-  WifNameTclClosed,
-  WifNameTclSlaves,
-  WifNameTclSlaveEntry;
+  TkNameTclName, 
+  TkNameTclClosed,
+  TkNameTclSlaves,
+  TkNameTclSlaveEntry;
 
-void wifInitLiterals() {
 
-  WifAtomTclOption    = OZ_atom("o");
-  WifAtomTclDelete    = OZ_atom("d");
-  WifAtomTclList      = OZ_atom("l");
-  WifAtomTclPosition  = OZ_atom("p");
-  WifAtomTclQuote     = OZ_atom("q");
-  WifAtomTclString    = OZ_atom("s");
-  WifAtomTclVS        = OZ_atom("v");
-  WifAtomTclBatch     = OZ_atom("b");
-  WifAtomTclColor     = OZ_atom("c");
-  WifAtomDot          = OZ_atom(".");
-  WifAtomTagPrefix    = OZ_atom("t");
-  WifAtomVarPrefix    = OZ_atom("v");
-  WifAtomImagePrefix  = OZ_atom("i");
+void tkInitLiterals() {
+  TkAtomTclOption    = OZ_atom("o");
+  TkAtomTclDelete    = OZ_atom("d");
+  TkAtomTclList      = OZ_atom("l");
+  TkAtomTclPosition  = OZ_atom("p");
+  TkAtomTclQuote     = OZ_atom("q");
+  TkAtomTclString    = OZ_atom("s");
+  TkAtomTclVS        = OZ_atom("v");
+  TkAtomTclBatch     = OZ_atom("b");
+  TkAtomTclColor     = OZ_atom("c");
+  TkAtomDot          = OZ_atom(".");
+  TkAtomTagPrefix    = OZ_atom("t");
+  TkAtomVarPrefix    = OZ_atom("v");
+  TkAtomImagePrefix  = OZ_atom("i");
+  TkAtomFontPrefix   = OZ_atom("f");
   
-  WifNameTclName       = OZ_newName(); OZ_protect(&WifNameTclName);
-  WifNameTclSlaves     = OZ_newName(); OZ_protect(&WifNameTclSlaves);
-  WifNameTclSlaveEntry = OZ_newName(); OZ_protect(&WifNameTclSlaveEntry);
-  WifNameTclClosed     = OZ_newName(); OZ_protect(&WifNameTclClosed);
-
+  TkNameTclName       = OZ_newName(); OZ_protect(&TkNameTclName);
+  TkNameTclSlaves     = OZ_newName(); OZ_protect(&TkNameTclSlaves);
+  TkNameTclSlaveEntry = OZ_newName(); OZ_protect(&TkNameTclSlaveEntry);
+  TkNameTclClosed     = OZ_newName(); OZ_protect(&TkNameTclClosed);
 }
 
 /*
@@ -104,19 +105,19 @@ static OZ_Return raise_toplevel(void) {
  * Locking
  */
 
-#define ENTER_WIF_LOCK { \
-  TaggedRef t = wif.getLock();     \
+#define ENTER_TK_LOCK { \
+  TaggedRef t = tk.getLock();     \
   DEREF(t, t_ptr, t_tag);          \
   if (isVariableTag(t_tag)) {      \
     am.addSuspendVarList(t_ptr);   \
     return SUSPEND;                \
   } else {                         \
-    wif.setLock(oz_newVariable()); \
+    tk.setLock(oz_newVariable()); \
   }                                \
 }
 
-#define LEAVE_WIF_LOCK \
-  (void) oz_unify(wif.getLock(), NameUnit);
+#define LEAVE_TK_LOCK \
+  (void) oz_unify(tk.getLock(), NameUnit);
 
 
 
@@ -141,23 +142,24 @@ char hex_digit(unsigned int i) {
 
 static char static_buffer[STRING_BUFFER_SIZE+SAFETY_MARGIN];
 
-class WIF {
+class TK {
   char * buffer;
   char * start;
   char * write_start;
   char * end;
   char * protect_start;
 
-  int wif_fd;
+  int tk_fd;
 
-  TaggedRef wif_lock;
-  TaggedRef wif_rets;
-  TaggedRef wif_dict;
+  TaggedRef tk_lock;
+  TaggedRef tk_rets;
+  TaggedRef tk_dict;
 
   int widget_ctr;
   int tag_ctr;
   int var_ctr;
   int image_ctr;
+  int font_ctr;
 
   void ensure(int n) {
     while (buffer+n>end) 
@@ -166,24 +168,24 @@ class WIF {
 
 public:
   TaggedRef getLock() { 
-    return wif_lock; 
+    return tk_lock; 
   }
 
   void setLock(TaggedRef t) { 
-    wif_lock = t; 
+    tk_lock = t; 
   }
 
   void enterReturn(TaggedRef ret, TaggedRef cast) {
     TaggedRef newt = OZ_cons(OZ_cons(ret,cast),
 			     oz_newVariable());
     
-    (void) oz_unify(newt,wif_rets); // mm_u
-    wif_rets = oz_tail(newt);
+    (void) oz_unify(newt,tk_rets); // mm_u
+    tk_rets = oz_tail(newt);
   }
 
   TaggedRef genTopName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
-    s->setArg(0,WifAtomDot);
+    s->setArg(0,TkAtomDot);
     s->setArg(1,oz_int(widget_ctr++));
     return makeTaggedSRecord(s);
   }
@@ -191,58 +193,66 @@ public:
   TaggedRef genWidgetName(TaggedRef parent) {
     SRecord * s = SRecord::newSRecord(AtomPair,3);
     s->setArg(0,parent);
-    s->setArg(1,WifAtomDot);
+    s->setArg(1,TkAtomDot);
     s->setArg(2,oz_int(widget_ctr++));
     return makeTaggedSRecord(s);
   }
 
   TaggedRef genTagName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
-    s->setArg(0,WifAtomTagPrefix);
+    s->setArg(0,TkAtomTagPrefix);
     s->setArg(1,oz_int(tag_ctr++));
     return makeTaggedSRecord(s);
   }
 
   TaggedRef genVarName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
-    s->setArg(0,WifAtomVarPrefix);
+    s->setArg(0,TkAtomVarPrefix);
     s->setArg(1,oz_int(var_ctr++));
     return makeTaggedSRecord(s);
   }
 
   TaggedRef genImageName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
-    s->setArg(0,WifAtomImagePrefix);
+    s->setArg(0,TkAtomImagePrefix);
     s->setArg(1,oz_int(image_ctr++));
     return makeTaggedSRecord(s);
   }
 
-  WIF() {}
+  TaggedRef genFontName() {
+    SRecord * s = SRecord::newSRecord(AtomPair,2);
+    s->setArg(0,TkAtomFontPrefix);
+    s->setArg(1,oz_int(font_ctr++));
+    return makeTaggedSRecord(s);
+  }
+
+  TK() {}
 
   void init(int fd, TaggedRef d, TaggedRef r) {
 
-    wifInitLiterals();
+    tkInitLiterals();
 
     widget_ctr = 0;
     tag_ctr    = 0;
     var_ctr    = 0;
     image_ctr  = 0;
+    font_ctr   = 0;
 
     start         = static_buffer;
     end           = start + STRING_BUFFER_SIZE;
     buffer        = start;
 
-    wif_fd        = fd;
-    wif_lock      = NameUnit;
-    wif_rets      = r;
-    wif_dict      = d;
+    tk_fd        = fd;
+    tk_lock      = NameUnit;
+    tk_rets      = r;
+    tk_dict      = d;
 
-    (void) oz_protect(&wif_lock);
-    (void) oz_protect(&wif_rets);
-    (void) oz_protect(&wif_dict);
+    (void) oz_protect(&tk_lock);
+    (void) oz_protect(&tk_rets);
+    (void) oz_protect(&tk_dict);
   }
 
-  ~WIF() {
+  ~TK() {
     dispose();
   }
 
@@ -488,32 +498,32 @@ public:
 };
 
 
-static WIF wif;
+static TK tk;
 
 
-OZ_Return WIF::write() {
+OZ_Return TK::write() {
 redo:
-  int ret = osTestSelect(wif_fd, SEL_WRITE);
+  int ret = osTestSelect(tk_fd, SEL_WRITE);
   
   if (ret < 0)  { 
     reset();
-    LEAVE_WIF_LOCK;
+    LEAVE_TK_LOCK;
     return raise_os_error();
   } else if (ret==0) {
     goto wait_select;
   }  
   
-  while ((ret = oswrite(wif_fd, write_start, buffer-write_start)) < 0) {
+  while ((ret = oswrite(tk_fd, write_start, buffer-write_start)) < 0) {
     if (errno != EINTR) { 
       reset();
-      LEAVE_WIF_LOCK;
+      LEAVE_TK_LOCK;
       return raise_os_error();
     }
   }
   
   if (buffer - write_start == ret) {
     reset();
-    LEAVE_WIF_LOCK;
+    LEAVE_TK_LOCK;
     return PROCEED;
   }
   
@@ -521,7 +531,7 @@ redo:
 wait_select:
   TaggedRef var = oz_newVariable();
   
-  (void) oz_io_select(wif_fd, SEL_WRITE, NameUnit, var);
+  (void) oz_io_select(tk_fd, SEL_WRITE, NameUnit, var);
   DEREF(var, var_ptr, var_tag);
   if (isVariableTag(var_tag)) {
     am.addSuspendVarList(var_ptr);
@@ -532,7 +542,7 @@ wait_select:
 }
 
 
-void WIF::resize(void) {
+void TK::resize(void) {
   int new_size = (3 * (end - start)) / 2; 
   char *new_start = new char[new_size + SAFETY_MARGIN];
   
@@ -548,7 +558,7 @@ void WIF::resize(void) {
 
 
 
-OZ_Return WIF::put_tuple(SRecord *st, int start) {
+OZ_Return TK::put_tuple(SRecord *st, int start) {
   if (start < st->getWidth()) {
     StateReturn(put_tcl(st->getArg(start)));
 
@@ -560,7 +570,7 @@ OZ_Return WIF::put_tuple(SRecord *st, int start) {
   return PROCEED;
 }
 
-OZ_Return WIF::put_record(SRecord * sr, TaggedRef as) {
+OZ_Return TK::put_record(SRecord * sr, TaggedRef as) {
   TaggedRef a = oz_head(as);
   
   StateReturn(put_feature(sr,a));
@@ -575,7 +585,7 @@ OZ_Return WIF::put_record(SRecord * sr, TaggedRef as) {
   return PROCEED;
 }
 
-OZ_Return WIF::put_batch(TaggedRef batch, char delim) { 	
+OZ_Return TK::put_batch(TaggedRef batch, char delim) { 	
 
   DEREF(batch, batch_ptr, batch_tag);
   
@@ -617,7 +627,7 @@ OZ_Return WIF::put_batch(TaggedRef batch, char delim) {
   }
 }
 
-OZ_Return WIF::put_record_or_tuple(TaggedRef tcl, int start = 0) {
+OZ_Return TK::put_record_or_tuple(TaggedRef tcl, int start = 0) {
   SRecord * st = tagged2SRecord(oz_deref(tcl));
 
   if (st->isTuple()) {
@@ -654,7 +664,7 @@ OZ_Return WIF::put_record_or_tuple(TaggedRef tcl, int start = 0) {
   }
 }
 
-OZ_Return WIF::put_vs(TaggedRef vs) {
+OZ_Return TK::put_vs(TaggedRef vs) {
   DEREF(vs, vs_ptr, vs_tag);
 
   if (isVariableTag(vs_tag)) {
@@ -693,7 +703,7 @@ OZ_Return WIF::put_vs(TaggedRef vs) {
 }
 
 
-OZ_Return WIF::put_vs_quote(TaggedRef vs) {
+OZ_Return TK::put_vs_quote(TaggedRef vs) {
   DEREF(vs, vs_ptr, vs_tag);
 
   if (isVariableTag(vs_tag)) {
@@ -732,7 +742,7 @@ OZ_Return WIF::put_vs_quote(TaggedRef vs) {
 }
 
 
-OZ_Return WIF::put_tcl(TaggedRef tcl) {
+OZ_Return TK::put_tcl(TaggedRef tcl) {
   DEREF(tcl, tcl_ptr, tcl_tag);
        
   if (isVariableTag(tcl_tag)) {
@@ -762,7 +772,7 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
       return raise_type_error(tcl);
     }
   } else if (oz_isObject(tcl)) {
-    TaggedRef v = tagged2Object(tcl)->getFeature(WifNameTclName);
+    TaggedRef v = tagged2Object(tcl)->getFeature(TkNameTclName);
  
     if (v!=makeTaggedNULL()) {
       DEREF(v, v_ptr, v_tag);
@@ -770,7 +780,7 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
       if (isVariableTag(v_tag)) {
 	am.addSuspendVarList(v_ptr);
 	return SUSPEND;
-      } else if (isLiteralTag(v_tag) && oz_eq(v,WifNameTclClosed)) {
+      } else if (isLiteralTag(v_tag) && oz_eq(v,TkNameTclClosed)) {
 	return raise_closed(tcl);
       } else {
 	return put_vs(v);
@@ -791,7 +801,7 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 	StateReturn(put_vs_quote(tcl));
 	stop_protect();
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclVS)) {
+      } else if (oz_eq(l,TkAtomTclVS)) {
 	TaggedRef arg = st->getArg(0);
 
 	if (st->getWidth() != 1)
@@ -806,12 +816,12 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 
 	return put_vs(arg);
 
-      } else if (oz_eq(l,WifAtomTclBatch)) {
+      } else if (oz_eq(l,TkAtomTclBatch)) {
 	if (st->getWidth() != 1)
 	  return raise_type_error(tcl);
 	  
 	return put_batch(st->getArg(0), ' ');
-      } else if (oz_eq(l,WifAtomTclColor)) {
+      } else if (oz_eq(l,TkAtomTclColor)) {
 	if (st->getWidth() != 3)
 	  return raise_type_error(tcl);
 	  
@@ -839,9 +849,9 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 	  put2(c1,c2);
 	}
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclOption)) {
+      } else if (oz_eq(l,TkAtomTclOption)) {
 	return put_tuple(st);
-      } else if (oz_eq(l,WifAtomTclDelete)) {
+      } else if (oz_eq(l,TkAtomTclDelete)) {
 	if (st->getWidth() != 1)
 	  return raise_type_error(tcl);
 	TaggedRef rt = st->getArg(0);
@@ -851,22 +861,22 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 	  return SUSPEND;
 	}
 	return put_record_or_tuple(rt);
-      } else if (oz_eq(l,WifAtomTclList)) {
+      } else if (oz_eq(l,TkAtomTclList)) {
 	put('['); 
 	StateReturn(put_tuple(st)); 
 	put(']');
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclQuote)) {
+      } else if (oz_eq(l,TkAtomTclQuote)) {
 	put('{'); 
 	StateReturn(put_tuple(st)); 
 	put('}');
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclString)) {
+      } else if (oz_eq(l,TkAtomTclString)) {
 	put('"'); 
 	StateReturn(put_tuple(st)); 
 	put('"');
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclPosition)) {
+      } else if (oz_eq(l,TkAtomTclPosition)) {
 	put('{'); 
 	StateReturn(put_tcl(st->getArg(0)));
 	put('.'); 
@@ -889,27 +899,27 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
     if (tagged2Literal(l)->isAtom()) {
 
       if (oz_eq(l,AtomPair) || oz_eq(l,AtomCons) ||
-	  oz_eq(l,WifAtomTclVS) || oz_eq(l,WifAtomTclBatch) ||
-	  oz_eq(l,WifAtomTclColor)) {
+	  oz_eq(l,TkAtomTclVS) || oz_eq(l,TkAtomTclBatch) ||
+	  oz_eq(l,TkAtomTclColor)) {
 	return raise_type_error(tcl);
-      } else if (oz_eq(l,WifAtomTclOption)) {
+      } else if (oz_eq(l,TkAtomTclOption)) {
 	return put_record(sr, as);
-      } else if (oz_eq(l,WifAtomTclList)) {
+      } else if (oz_eq(l,TkAtomTclList)) {
 	put('['); 
 	StateReturn(put_record(sr, as)); 
 	put(']');
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclQuote)) {
+      } else if (oz_eq(l,TkAtomTclQuote)) {
 	put('{'); 
 	StateReturn(put_record(sr, as)); 
 	put('}');
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclString)) {
+      } else if (oz_eq(l,TkAtomTclString)) {
 	put('"'); 
 	StateReturn(put_record(sr, as)); 
 	put('"');
 	return PROCEED;
-      } else if (oz_eq(l,WifAtomTclPosition)) {
+      } else if (oz_eq(l,TkAtomTclPosition)) {
 	put('{'); 
 	StateReturn(put_feature(sr, oz_head(as)));
 	put('.');
@@ -940,7 +950,7 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 }
 
 
-OZ_Return WIF::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
+OZ_Return TK::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
   DEREF(tcl, tcl_ptr, tcl_tag);
 
   if (isLiteralTag(tcl_tag)) {
@@ -986,7 +996,7 @@ OZ_Return WIF::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
 }
 
 
-OZ_Return WIF::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
+OZ_Return TK::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
   *ret = makeTaggedNULL();
   DEREF(tcl, tcl_ptr, tcl_tag);
 
@@ -1050,9 +1060,9 @@ OZ_Return WIF::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 }
 
 
-OZ_BI_define(BIwif_init, 3, 0) {
+OZ_BI_define(BItk_init, 3, 0) {
 
-  wif.init(smallIntValue(oz_deref(OZ_in(0))), 
+  tk.init(smallIntValue(oz_deref(OZ_in(0))), 
 	   oz_deref(OZ_in(1)), 
 	   OZ_in(2));
 
@@ -1060,34 +1070,34 @@ OZ_BI_define(BIwif_init, 3, 0) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_write, 1, 0) {
+OZ_BI_define(BItk_write, 1, 0) {
 
   /*
    * OZ_in(0): tickle to be written
    */
 
-  if (OZ_in(0) == WifNameTclClosed) {
+  if (OZ_in(0) == TkNameTclClosed) {
 
-    return wif.write();
+    return tk.write();
 
   } else {
 
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
 
-    wif.reset();
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put('\n');
+    tk.reset();
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put('\n');
 
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
   
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
 
   }
@@ -1095,7 +1105,7 @@ OZ_BI_define(BIwif_write, 1, 0) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_writeReturn,3,0) {  
+OZ_BI_define(BItk_writeReturn,3,0) {  
 
   /*
    * OZ_in(0): 
@@ -1103,35 +1113,35 @@ OZ_BI_define(BIwif_writeReturn,3,0) {
    * OZ_in(2): 
    */
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
 
-    wif.reset();
-    wif.put2('o', 'z');
-    wif.put2('r', ' ');
-    wif.put('[');
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put2(']','\n');
+    tk.reset();
+    tk.put2('o', 'z');
+    tk.put2('r', ' ');
+    tk.put('[');
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put2(']','\n');
 
-    wif.enterReturn(OZ_in(2), OZ_in(1));
+    tk.enterReturn(OZ_in(2), OZ_in(1));
         
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_writeReturnMess,4,0) {  
+OZ_BI_define(BItk_writeReturnMess,4,0) {  
 
   /*
    * OZ_in(0): tickle object and modifier (for tags and marks)
@@ -1140,14 +1150,14 @@ OZ_BI_define(BIwif_writeReturnMess,4,0) {
    * OZ_in(3): type cast for return value
    */
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
-    TaggedRef ret = WifNameTclClosed;
+    TaggedRef ret = TkNameTclClosed;
     TaggedRef mess = oz_deref(OZ_in(1));
     TaggedRef frst;
 
@@ -1165,70 +1175,70 @@ OZ_BI_define(BIwif_writeReturnMess,4,0) {
       goto exit;
     }
       
-    wif.reset();
-    wif.put2('o', 'z');
-    wif.put2('r', ' ');
-    wif.put('[');
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put(' ');
-    StateExit(wif.put_tcl(frst));
-    wif.put(' ');
-    StateExit(wif.put_tcl(OZ_in(2)));
-    wif.put(' ');
+    tk.reset();
+    tk.put2('o', 'z');
+    tk.put2('r', ' ');
+    tk.put('[');
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put(' ');
+    StateExit(tk.put_tcl(frst));
+    tk.put(' ');
+    StateExit(tk.put_tcl(OZ_in(2)));
+    tk.put(' ');
 
-    StateExit(wif.put_tcl_return(mess, &ret));
-    wif.put2(']','\n');
+    StateExit(tk.put_tcl_return(mess, &ret));
+    tk.put2(']','\n');
 
     // Enter return variable and cast
-    wif.enterReturn(ret, OZ_in(3));
+    tk.enterReturn(ret, OZ_in(3));
     
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write(); 
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write(); 
   
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
     
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_writeBatch,1,0) {  
+OZ_BI_define(BItk_writeBatch,1,0) {  
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
 
-    wif.reset();
-    StateExit(wif.put_batch(oz_deref(OZ_in(0)),';'));
-    wif.put('\n');
+    tk.reset();
+    StateExit(tk.put_batch(oz_deref(OZ_in(0)),';'));
+    tk.put('\n');
 
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
   
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_writeTuple,2,0) {  
+OZ_BI_define(BItk_writeTuple,2,0) {  
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
 
     TaggedRef mess = oz_deref(OZ_in(1));
@@ -1248,19 +1258,19 @@ OZ_BI_define(BIwif_writeTuple,2,0) {
       goto exit;
     }
       
-    wif.reset();
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put(' ');
-    StateExit(wif.put_record_or_tuple(OZ_in(1)));
-    wif.put('\n');
+    tk.reset();
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put(' ');
+    StateExit(tk.put_record_or_tuple(OZ_in(1)));
+    tk.put('\n');
 
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
   
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
 
@@ -1269,14 +1279,14 @@ OZ_BI_define(BIwif_writeTuple,2,0) {
 
 
 
-OZ_BI_define(BIwif_writeTagTuple,3,0) {  
+OZ_BI_define(BItk_writeTagTuple,3,0) {  
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
     TaggedRef tuple = oz_deref(OZ_in(2));
     TaggedRef fst;
@@ -1295,23 +1305,23 @@ OZ_BI_define(BIwif_writeTagTuple,3,0) {
       goto exit;
     }
 
-    wif.reset();
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put(' ');
-    StateExit(wif.put_tcl(fst));
-    wif.put(' ');
-    StateExit(wif.put_tcl(OZ_in(1)));
-    wif.put(' ');
-    StateExit(wif.put_record_or_tuple(tuple,1));
-    wif.put('\n');
+    tk.reset();
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put(' ');
+    StateExit(tk.put_tcl(fst));
+    tk.put(' ');
+    StateExit(tk.put_tcl(OZ_in(1)));
+    tk.put(' ');
+    StateExit(tk.put_record_or_tuple(tuple,1));
+    tk.put('\n');
 
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
     
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
 } OZ_BI_end
@@ -1319,41 +1329,41 @@ OZ_BI_define(BIwif_writeTagTuple,3,0) {
 
 
 
-OZ_BI_define(BIwif_writeFilter,5,0) {  
+OZ_BI_define(BItk_writeFilter,5,0) {  
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
 
-    wif.reset();
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put(' ');
-    StateExit(wif.put_vs(OZ_in(1)));
-    wif.put(' ');
-    StateExit(wif.put_tcl_filter(OZ_in(2), oz_deref(OZ_in(3))));
-    wif.put(' ');
-    StateExit(wif.put_tcl(OZ_in(4)));
-    wif.put('\n');
+    tk.reset();
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put(' ');
+    StateExit(tk.put_vs(OZ_in(1)));
+    tk.put(' ');
+    StateExit(tk.put_tcl_filter(OZ_in(2), oz_deref(OZ_in(3))));
+    tk.put(' ');
+    StateExit(tk.put_tcl(OZ_in(4)));
+    tk.put('\n');
 
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
   
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
 } OZ_BI_end
 
 
 
-OZ_Return WIF::close_hierarchy(Object * o) {
-  TaggedRef v = o->replaceFeature(WifNameTclName, WifNameTclClosed);
+OZ_Return TK::close_hierarchy(Object * o) {
+  TaggedRef v = o->replaceFeature(TkNameTclName, TkNameTclClosed);
     
   if (v == makeTaggedNULL()) {
     return raise_type_error(makeTaggedConst(o));;
@@ -1364,11 +1374,11 @@ OZ_Return WIF::close_hierarchy(Object * o) {
   Assert(!isVariableTag(v_tag)); 
   // since the message has been assembled for closing already!
 
-  if (isLiteralTag(v_tag) && oz_eq(v,WifNameTclClosed)) {
+  if (isLiteralTag(v_tag) && oz_eq(v,TkNameTclClosed)) {
     // okay, has been closed already
     return PROCEED;
   } else {
-    TaggedRef slaves      = o->getFeature(WifNameTclSlaves);
+    TaggedRef slaves      = o->getFeature(TkNameTclSlaves);
 
     // close slaves
     if (slaves != makeTaggedNULL()) {
@@ -1380,8 +1390,8 @@ OZ_Return WIF::close_hierarchy(Object * o) {
 	if (oz_isSmallInt(slave)) {
 	  // this an entry in the event dictionary
 
-	  Assert(oz_isDictionary(wif_dict));
-	  tagged2Dictionary(wif_dict)->remove(slave);
+	  Assert(oz_isDictionary(tk_dict));
+	  tagged2Dictionary(tk_dict)->remove(slave);
 	  
 	} else if (oz_isObject(slave)) {
 	  // this is an object which needs to be closed as well
@@ -1415,14 +1425,14 @@ TaggedRef findAliveEntry(TaggedRef group) {
   return group;
 }
   
-OZ_BI_define(BIwif_close,2,0) {  
+OZ_BI_define(BItk_close,2,0) {  
 
-  if (OZ_in(0) == WifNameTclClosed) {
-    return wif.write();
+  if (OZ_in(0) == TkNameTclClosed) {
+    return tk.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
-    ENTER_WIF_LOCK;
+    ENTER_TK_LOCK;
     OZ_Return s;
 
     // Perform closing of objects
@@ -1432,7 +1442,7 @@ OZ_BI_define(BIwif_close,2,0) {
     Assert(oz_isObject(to));
 
     Object  * o = tagged2Object(to);
-    TaggedRef v = o->getFeature(WifNameTclName);
+    TaggedRef v = o->getFeature(TkNameTclName);
     TaggedRef slave_entry;    
 	
     if (v == makeTaggedNULL()) {
@@ -1447,20 +1457,20 @@ OZ_BI_define(BIwif_close,2,0) {
 	am.addSuspendVarList(v_ptr);
 	s = SUSPEND;
 	goto exit;
-      } else if (isLiteralTag(v_tag) && oz_eq(v,WifNameTclClosed)) {
-	LEAVE_WIF_LOCK;
+      } else if (isLiteralTag(v_tag) && oz_eq(v,TkNameTclClosed)) {
+	LEAVE_TK_LOCK;
 	return PROCEED;
       }
     }
 	
     // Create close tcl
-    wif.reset();
-    StateExit(wif.put_tcl(OZ_in(0)));
-    wif.put('\n');
+    tk.reset();
+    StateExit(tk.put_tcl(OZ_in(0)));
+    tk.put('\n');
 
 
     // okay, let us close it
-    slave_entry = o->getFeature(WifNameTclSlaveEntry);
+    slave_entry = o->getFeature(TkNameTclSlaveEntry);
 
     // remove from parent
     if (slave_entry != makeTaggedNULL()) {
@@ -1473,15 +1483,15 @@ OZ_BI_define(BIwif_close,2,0) {
       }
     }
 	  
-    wif.close_hierarchy(o);
+    tk.close_hierarchy(o);
 
-    wif.start_write();
-    OZ_in(0) = WifNameTclClosed;
-    return wif.write();
+    tk.start_write();
+    OZ_in(0) = TkNameTclClosed;
+    return tk.write();
     
   exit:
-    wif.reset();
-    LEAVE_WIF_LOCK;
+    tk.reset();
+    LEAVE_TK_LOCK;
     return s;
   }
 } OZ_BI_end
@@ -1492,12 +1502,12 @@ OZ_BI_define(BIwif_close,2,0) {
 // ---------------------------------------------------------------------
 
 
-OZ_BI_define(BIwif_genTopName,0,1) {
-  OZ_RETURN(wif.genTopName());
+OZ_BI_define(BItk_genTopName,0,1) {
+  OZ_RETURN(tk.genTopName());
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_genWidgetName,1,1) {
+OZ_BI_define(BItk_genWidgetName,1,1) {
   TaggedRef parent = OZ_in(0);
 
   DEREF(parent, p_ptr, p_tag);
@@ -1505,29 +1515,34 @@ OZ_BI_define(BIwif_genWidgetName,1,1) {
   if (isVariableTag(p_tag))
     OZ_suspendOn(makeTaggedRef(p_ptr));
 
-  OZ_RETURN(wif.genWidgetName(parent));
+  OZ_RETURN(tk.genWidgetName(parent));
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_genTagName,0,1) {
-  OZ_RETURN(wif.genTagName());
+OZ_BI_define(BItk_genTagName,0,1) {
+  OZ_RETURN(tk.genTagName());
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_genVarName,0,1) {
-  OZ_RETURN(wif.genVarName());
+OZ_BI_define(BItk_genVarName,0,1) {
+  OZ_RETURN(tk.genVarName());
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_genImageName,0,1) {
-  OZ_RETURN(wif.genImageName());
+OZ_BI_define(BItk_genImageName,0,1) {
+  OZ_RETURN(tk.genImageName());
 } OZ_BI_end
 
 
-OZ_BI_define(BIwif_getNames,0,3) {
-  OZ_out(0) = WifNameTclSlaves;
-  OZ_out(1) = WifNameTclSlaveEntry;
-  OZ_out(2) = WifNameTclName;
+OZ_BI_define(BItk_genFontName,0,1) {
+  OZ_RETURN(tk.genFontName());
+} OZ_BI_end
+
+
+OZ_BI_define(BItk_getNames,0,3) {
+  OZ_out(0) = TkNameTclSlaves;
+  OZ_out(1) = TkNameTclSlaveEntry;
+  OZ_out(2) = TkNameTclName;
   return PROCEED;
 } OZ_BI_end
 
@@ -1537,7 +1552,7 @@ OZ_BI_define(BIwif_getNames,0,3) {
  */
 
 
-OZ_BI_define(BIaddFastGroup,2,1)
+OZ_BI_define(BItk_addGroup,2,1)
 {
   OZ_nonvarIN(0);
   TaggedRef group = oz_deref(OZ_in(0)); 
@@ -1551,7 +1566,7 @@ OZ_BI_define(BIaddFastGroup,2,1)
 } OZ_BI_end 
 
 
-OZ_BI_define(BIdelFastGroup,1,0)
+OZ_BI_define(BItk_delGroup,1,0)
 {
   TaggedRef member = oz_deref(OZ_in(0));
 
