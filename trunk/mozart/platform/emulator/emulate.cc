@@ -651,8 +651,6 @@ void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
   default:
     error("suspendInline");
   }
-    
-  suspendVarList = makeTaggedNULL();   // mm2 please check
 }
 
 
@@ -2253,7 +2251,8 @@ LBLsuspendThread:
 	  TaggedRef A=XPC(2);
 	  TaggedRef B=XPC(3);
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
-	  e->suspendInline(2,A,B);
+	  Thread *thr=e->mkSuspThread();
+	  e->suspendOnVarList(thr);
 	  CHECK_CURRENT_THREAD;
 	}
 
