@@ -4482,6 +4482,7 @@ void sendObject(Site* sd, Object *o, Bool sendClass)
   Assert(refTrail->isEmpty());
 
   int OTI = o->getIndex();
+  ObjectClass *oc = o->getClass();
 
   ByteStream *bs= bufferManager->getByteStreamMarshal();
   marshallMess(bs,sendClass?M_SEND_OBJECTANDCLASS:M_SEND_OBJECT);
@@ -4496,7 +4497,7 @@ void sendObject(Site* sd, Object *o, Bool sendClass)
   }
 
   if (sendClass) {
-    marshallClass(sd,o->getClass(),bs);
+    marshallClass(sd,oc,bs);
   }
   bs->marshalEnd();
   refTrail->unwind();
