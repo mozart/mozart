@@ -158,18 +158,20 @@ define
       end
       meth putc(C)
 	 if C==&\n then
-	    column<-0 flushed<-false
+	    column<-@margin flushed<-false
 	    Indentor,PUTC(C)
-	 elseif C==&\t then
-	    Indentor,PUTTAB
 	 else
-	    column<-@column+1
 	    if @flushed then skip
 	    else
 	       Indentor,PUTMARGIN(@margin)
 	       flushed<-true
 	    end
-	    Indentor,PUTC(C)
+	    if C==&\t then
+	       Indentor,PUTTAB
+	    else
+	       column<-@column+1
+	       Indentor,PUTC(C)
+	    end
 	 end
       end
       meth entercode(Code)
@@ -179,7 +181,7 @@ define
 	 elseof chunk(Code) then
 	    Margin = @margin
 	 in
-	    margin<-@column
+	    margin<-if @flushed then @column else @margin end
 	    Indentor,entercode(Code)
 	    margin<-Margin
 	 elseof nil then skip
