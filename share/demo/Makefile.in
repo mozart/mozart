@@ -33,7 +33,7 @@ LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 #
 
 APPLETNAMES = \
-	JobShop AnimatedQueens \
+	JobShop Cutting AnimatedQueens \
 	Bounce Trucks Transport Lift \
 	Board DictClient
 
@@ -44,7 +44,7 @@ DEMOAPPLETS = \
 	$(APPLETS:%=$(OZDEMO)/%)
 
 DIRS = \
-	JobShop Transport DictClient
+	JobShop Cutting Transport DictClient
 
 all: dirs $(APPLETS)
 
@@ -81,6 +81,24 @@ $(JOBSHOPFUN2): $(JOBSHOPFUN1)
 
 JobShop.oza: $(JOBSHOPFUN2)
 	$(LINK) JobShop/Main.ozf -o $@
+
+
+# JobShop application
+Cutting/%.ozf: Cutting/%.oz
+	$(COMPILE) -b $(BUILDDIR)/Cutting/ $< -o $@
+
+CUTTING1 = \
+	Configure
+CUTTING2 = \
+	Script Edit Compute Main
+
+CUTTINGFUN1 = $(CUTTING1:%=Cutting/%.ozf)
+CUTTINGFUN2 = $(CUTTING2:%=Cutting/%.ozf)
+
+$(CUTTINGFUN2): $(CUTTINGFUN1) 
+
+Cutting.oza: $(CUTTINGFUN2)
+	$(LINK) Cutting/Main.ozf -o $@
 
 
 # Transport application
