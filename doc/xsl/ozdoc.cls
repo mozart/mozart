@@ -916,8 +916,12 @@
     \setcounter{mozart@chunk@subpage}{1}%
   \fi}
 
+\newcommand{\chunk@ref@font}{\normalfont
+  \sffamily\small}
+
 \newcommand{\mozart@chunk@label}{%
-  \llap{\hbox to1cm{\hfil\mozart@chunk@curr@page\alph{mozart@chunk@subpage}\quad}}}
+  \llap{\hbox to1cm{\chunk@ref@font\hfil
+    \mozart@chunk@curr@page\alph{mozart@chunk@subpage}\quad}}}
 
 % \mozart@chunk@ref@bwd{CHUNK.ID}{CHUNK.NUM}
 
@@ -927,7 +931,7 @@
     \advance\mozart@cnt\m@ne
     \@ifundefined{r@chunk.#1.\the\mozart@cnt}%
       {}%
-      {$\triangleleft$\pageref{chunk.#1.\the\mozart@cnt}}%
+      {$\triangleleft$\chunk@ref@font\pageref{chunk.#1.\the\mozart@cnt}}%
     \hfil}}
 
 \newcommand{\mozart@chunk@ref@fwd}[2]{%
@@ -937,7 +941,7 @@
     \advance\mozart@cnt\@ne
     \@ifundefined{r@chunk.#1.\the\mozart@cnt}%
       {}%
-      {\pageref{chunk.#1.\the\mozart@cnt}$\triangleright$}}}
+      {{\chunk@ref@font\pageref{chunk.#1.\the\mozart@cnt}}$\triangleright$}}}
 
 \newcommand{\mozart@chunk@equiv}[1]{%
   \ifnum#1=1\else{+}\fi{\equiv}}
@@ -946,7 +950,7 @@
   \@ifundefined{r@chunk.#1.1}{}%
     {\edef\mozart@temp{\expandafter\expandafter
        \expandafter\@firstoftwo\csname r@chunk.#1.1\endcsname}%
-     ~~\pageref{chunk.#1.1}\@alph{\mozart@temp}}}
+     ~~{\chunk@ref@font\pageref{chunk.#1.1}\@alph{\mozart@temp}}}}
 
 \newenvironment{CHUNK}[3]
   {\begin{list}{}{\leftmargin\mozart@displaymargin}%
