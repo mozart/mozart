@@ -5,6 +5,7 @@
  * 
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -86,6 +87,13 @@ public:
   }
   OZPRINT;
 
+#ifdef PROP_MERGING
+  void merge(ThreadQueueImpl * tq) {
+    while (!tq->isEmpty())
+      enqueue(tq->dequeue());
+  }
+#endif
+
   int getRunnableNumber();
   void deleteThread(Thread *th);
 
@@ -128,6 +136,10 @@ public:
 
   Thread * getLTQThread(void) { return ltq_thr; }
 };
+
+#ifdef PROP_MERGING
+typedef LocalThreadQueue PropagatorQueue;
+#endif
 
 #endif /* __THREADQUEUEH */
 
