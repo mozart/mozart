@@ -897,6 +897,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
     vi = new VirtualInfo(myDSite, myVSMailboxManager->getSHMKey());
     myDSite->makeMySiteVirtual(vi);
 
+#ifndef DENYS_EVENTS
     //
     // Install the 'read-from-virtual-sites' & 'delayed-write' handlers;
     if (!am.registerTask((void *) myVSMailboxManager->getMailbox(),
@@ -926,6 +927,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
     // This should be a pretty large interval;
     am.setMinimalTaskInterval((void *) myVSChunksPoolManager,
                               VS_SEGS_MAXPHASE_MS);
+#endif
   }
 
   //
@@ -1115,6 +1117,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   myVSMsgBufferImported->releaseChunks();
   myVSMsgBufferImported->cleanup();
 
+#ifndef DENYS_EVENTS
   //
   // (see the comments in BIVSnewMailbox;)
   if (!am.registerTask((void *) myVSMailboxManager->getMailbox(),
@@ -1134,7 +1137,7 @@ OZ_BI_define(BIVSinitServer,1,0)
       OZ_error("virtual sites: unable to register a task");
   am.setMinimalTaskInterval((void *) myVSChunksPoolManager,
                             VS_SEGS_MAXPHASE_MS);
-
+#endif
   //
   return (PROCEED);
 } OZ_BI_end
@@ -1191,6 +1194,46 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
 
 #endif // VIRTUALSITES
 
+#ifdef DENYS_EVENTS
+
+OZ_BI_define(BIVSprocess_mailbox,0,1)
+{
+  // returns true iff there are still messages in the mailbox
+  unsigned long clock = am.getEmulatorClock();
+  readVSMessages(clock,(void*)myVSMailboxManager->getMailbox());
+  OZ_RETURN_BOOL(myVSMailboxManager->getMailbox()->isNotEmpty());
+}
+OZ_BI_end
+
+OZ_BI_define(BIVSprocess_messageq,0,1)
+{
+  // returns true iff there are still messages in the queue
+  unsigned long clock = am.getEmulatorClock();
+  if (vsSiteQueue.isNotEmpty())
+    processMessageQueue(clock,(void*)&vsSiteQueue);
+  OZ_RETURN_BOOL(vsSiteQueue.isNotEmpty());
+}
+OZ_BI_end
+
+OZ_BI_define(BIVSprocess_probes,0,1)
+{
+  unsigned long clock = am.getEmulatorClock();
+  if (checkProbes(clock,(void*)&vsProbingObject))
+    processProbes(clock,(void*)&vsProbingObject);
+  OZ_RETURN(OZ_true());
+}
+OZ_BI_end
+
+OZ_BI_define(BIVSprocess_gc,0,1)
+{
+  unsigned long clock = am.getEmulatorClock();
+  if (checkGCMsgChunks(clock,(void*)myVSChunksPoolManager))
+    processGCMsgChunks(clock,(void*)myVSChunksPoolManager);
+  OZ_RETURN(OZ_true());
+}
+OZ_BI_end
+
+#endif
 
 /*
  * The builtin table
