@@ -43,7 +43,7 @@ OZ_PATH_PROG(MKINSTALLDIRS,  mkinstalldirs)
 
 AC_CONFIG_SUBDIRS(bin elisp ozwish Emulator lib)
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile contrib/conf.all:contrib/conf.in)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded.
