@@ -620,16 +620,12 @@ void adjustProxyForFailure(Tertiary*t, EntityCond oldEC, EntityCond newEC){
       proxyDeInform(t,askPart(t,oldEC));
     proxyInform(t,askPart(t,newEC));}
   if(managerProbePart(t,oldEC)!=managerProbePart(t,newEC)){
-    if(someTempCondition(managerProbePart(t,oldEC)))
-      getSiteFromTertiaryProxy(t)->deinstallProbe(PROBE_TYPE_ALL);
-    else
-      getSiteFromTertiaryProxy(t)->deinstallProbe(PROBE_TYPE_PERM);
-    if(managerProbePart(t,newEC) != ENTITY_NORMAL){
-      if(someTempCondition(managerProbePart(t,newEC))){
-        tertiaryInstallProbe(getSiteFromTertiaryProxy(t),PROBE_TYPE_ALL,t);}
-      else
-        tertiaryInstallProbe(getSiteFromTertiaryProxy(t),PROBE_TYPE_PERM,t);}}
-}
+    ProbeType pt=managerProbePart(t,oldEC);
+    if(pt!=PROBE_TYPE_NONE)
+      getSiteFromTertiaryProxy(t)->deinstallProbe(pt);
+    pt=managerProbePart(t,newEC);
+    if(pt!=PROBE_TYPE_NONE)
+      tertiaryInstallProbe(getSiteFromTertiaryProxy(t),pt,t);}}
 
 // current scheme doesn't need anything else - VARIABLES will
 void initManagerForFailure(Tertiary* t){
