@@ -111,6 +111,32 @@
     <Meta name=latex.package value="pifont">
 
     <Meta name=latex.input value="system-utils.tex">
+    <Meta name=latex.table.spec arg1="table.prop.threads"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.prio"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.time"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.gc"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.print"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.fd"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.space"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.errors"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.messages"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.memory"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.limits"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.platform"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.application"
+	  arg2="lllp{0.6\linewidth}">
 
     <!-- Splitting the document into different HTML nodes -->
 
