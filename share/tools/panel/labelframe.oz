@@ -6,8 +6,10 @@
 %%%  Version: $Revision$
 
 local
-   DarkColor       = '#828282'
-   BrightColor     = '#ffffff'
+   DarkColor   #
+   BrightColor  = case Tk.isColor then '#828282' # '#ffffff'
+		  else black # black
+		  end
 
    RidgeWidth      = 2
    InnerOffset     = 4

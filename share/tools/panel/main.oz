@@ -17,7 +17,7 @@ local
 
    \insert labelframe.oz
 
-   \insert pie.oz
+   \insert runtime-bar.oz
 
    \insert load.oz
 
@@ -41,10 +41,6 @@ in
 			    end
 	 else true
 	 end
-      end
-
-      meth options
-	 true
       end
 
       meth !PanelTopClosed

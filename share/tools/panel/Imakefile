@@ -4,12 +4,13 @@ OZPANEL  = $(OZLIB)/panel
 
 
 LOCALFILES = \
-	configure.oz load.oz make-notes.oz pie.oz top.oz \
+	configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
 	labelframe.oz main.oz notebook.oz dialogs.oz \
 	discrete-scale.oz
 
 BITMAPS = \
-	panel.xbm
+	panel.xbm zig-zag.xbm lines-lr.xbm lines-rl.xbm \
+	grid-25.xbm grid-50.xbm dash-line.xbm
 
 
 BITMAPFILES = ${BITMAPS:%=$(BITMAPDIR)/%}
