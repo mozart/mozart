@@ -28,7 +28,7 @@
 #include "sum.hh"
 #include "auxcomp.hh"
 
-#define Reify(C, V) if (C) {FailOnEmpty(*b &= V); return P.vanish();}
+#define Reify(C, V) if (C) {FailOnEmpty(*b &= V); OZ_DEBUGPRINTTHIS("out (reify)"); return P.vanish();}
 #define ReifyOnFailure(X, V) Reify((X) == 0, V)
 
 
