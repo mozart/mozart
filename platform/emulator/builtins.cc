@@ -741,8 +741,7 @@ State tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
       }
 
       {
-        SRecord *s =
-          SRecord::newSRecord(label,i);
+        SRecord *s = SRecord::newSRecord(label,i);
 
         TaggedRef newVar = am.currentUVarPrototype;
         for (int j = 0; j < i; j++) {
@@ -5093,6 +5092,20 @@ OZ_C_proc_begin(BIhalt,0)
 OZ_C_proc_end
 
 
+// ---------------------------------------------------------------------------
+// Debugging: special builtins for Benni
+// ---------------------------------------------------------------------------
+
+OZ_C_proc_begin(BIsetDebugVar,1)
+{
+  OZ_Term var = OZ_getCArg(0);
+  Assert(OZ_isVariable(var));
+  am.currentThread->setDebugVar(var);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 // --------------------- ... -----------------------------
 
 OZ_C_proc_begin(BIprintLong,1)
@@ -5815,6 +5828,8 @@ BIspec allSpec[] = {
   {"getArgv", 1,BIgetArgv},
 
   {"halt",0,BIhalt},
+
+  {"setDebugVar",1,BIsetDebugVar},
 
   {"printLong",1,BIprintLong},
 
