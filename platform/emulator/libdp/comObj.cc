@@ -12,7 +12,7 @@
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
 
-#define COMOBJ_LOG
+//#define COMOBJ_LOG
 //#define COMOBJ_CONNECT_LOG
 
 ComObj::ComObj(DSite *site, int recCtr) {
