@@ -210,12 +210,13 @@ Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 { 
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
   SChunk *ch    = (SChunk *) chunkConst;
-  GName *gname  = globalizeConst(ch,bs);
+  GName *gname  = globalizeConst(ch, bs);
+  Assert(gname);
 
   //
   marshalDIF(bs,DIF_CHUNK);
   rememberNode(this, bs, chunkTerm);
-  if (gname) marshalGName(bs, gname);
+  marshalGName(bs, gname);
 
   //
   return (NO);
@@ -263,12 +264,13 @@ Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
   ObjectClass *cl = (ObjectClass *) classConst;
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
   Assert(!cl->isSited());
+  GName *gn = globalizeConst(cl, bs);
+  Assert(gn);
 
   //
   marshalDIF(bs, DIF_CLASS);
-  GName *gn = globalizeConst(cl, bs);
   rememberNode(this, bs, classTerm);
-  if (gn) marshalGName(bs, gn);
+  marshalGName(bs, gn);
   marshalNumber(bs, cl->getFlags());
   return (NO);
 }
@@ -281,6 +283,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 
   //
   GName* gname = globalizeConst(pp, bs);
+  Assert(gname);
   PrTabEntry *pred = pp->getPred();
   Assert(!pred->isSited());
   ProgramCounter start;
@@ -290,7 +293,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   rememberNode(this, bs, absTerm);
 
   //
-  if (gname) marshalGName(bs, gname);
+  marshalGName(bs, gname);
   marshalNumber(bs, pp->getArity());
   ProgramCounter pc = pp->getPC();
   int gs = pred->getGSize();
