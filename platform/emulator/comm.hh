@@ -37,6 +37,9 @@
 #include "pickle.hh"
 #include "marshaler.hh"
 
+// time_t
+#include <time.h>
+
 //
 class MsgBuffer;
 class VirtualInfo;
