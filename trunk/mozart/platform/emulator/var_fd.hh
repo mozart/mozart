@@ -66,8 +66,10 @@ public:
 
   void relinkSuspList(GenFDVariable * leftVar);
 
-  void propagate(TaggedRef var, FDState state, TaggedRef term);  
-  void propagate(TaggedRef var, FDState state, TaggedRef * tPtr);
+  void propagate(TaggedRef var, FDState state,
+		 TaggedRef term, Bool prop_eq = FALSE);  
+  void propagate(TaggedRef var, FDState state,
+		 TaggedRef * tPtr, Bool prop_eq = FALSE);
 
 };
 
