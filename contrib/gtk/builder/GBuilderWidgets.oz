@@ -1352,5 +1352,24 @@ prepare
 		  accelGroup(type: accelGroup
 			     set: addAccelGroup)]
 	   new: [[type]#new]
-	   set: [[wmclassName wmclassClass]#setWmclass]))
+	   set: [[wmclassName wmclassClass]#setWmclass])
+
+      %% GTKCANVAS
+
+      canvas:
+	 %--** there's a get for more than one parameter: getScrollRegion
+	 o(api: gtkcanvas
+	   isa: layout
+	   args: [scrollRegionLeftmost(type: float)
+		  scrollRegionUpper(type: float)
+		  scrollRegionRightmost(type: float)
+		  scrollRegionLower(type: float)
+		  pixelsPerUnit(type: float
+				set: setPixelsPerUnit)
+		  dither(type: rgbDither
+			 set: setDither
+			 get: getDither)]
+	   new: [nil#new]
+	   set: [[scrollRegionLeftmost scrollRegionUpper
+		  scrollRegionRightmost scrollRegionLower]#setScrollRegion]))
 end
