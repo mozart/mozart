@@ -22,7 +22,7 @@
 functor $
 import
    System(show)
-   GTK at 'x-oz://system/GTK.ozf'
+   GTK at 'x-oz://system/system/GTK.ozf'
 define
    {Wait GTK}
    
