@@ -1,16 +1,19 @@
 $Id$
 
-Mon Mar  3 21:59:55 MET 1997
-bei aktiviertem start threads; stack kaputt bei tk action (cd.oz)
-bei "rest-debugs" auf dem stack diese entfernen! ("cont")
-'start threads' und breakpoints, in die viele th laufen, testen
- ...ausserdem auch ohne breakpoints Probleme bei blocking!
-C-c C-d C-h mit 'start threads' laesst thread zurueck
+Tue Jan 14 18:25:50 MET 1997
+Erkennung von "veralteter" Codearea (wenn korrespondierendes
+Source-File neueren Datums ist) klappt nicht bei vorcompiliertem Code
+(Der Compiler muesste die aktuelle Zeit beim Compilieren berechnen,
+nicht der Emulator beim Laden des Codes).
 
-Thu Mar 27 15:02:53 MET 1997
-running... anzeige realisieren!
-  (z.B. blinkende(?) thread nummern im thread tree :-))
+Wed Jan 22 18:54:07 MET 1997
+Das Builtin breakpointAt braucht weiteren Parameter `timestamp'. Sonst
+kann es passieren, dass faelschlicherweise das Setzen eines Breakpoints
+als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code) 
+gar nicht geklappt hat.
 
-Tue Apr  1 14:37:45 MET DST 1997
-Action auf args einstellbar Browse <-> Show
-(eventuell???????) Doppelclick fuer Argument Anzeige Action
+Tue Apr  1 14:49:21 MET DST 1997
+Tags werden nicht geloescht aus Stack/Env Fenster
+
+Thu Jul 10 16:04:43 MET DST 1997
+spy-flag reaktivieren: value.hh:class PrTabEntry
