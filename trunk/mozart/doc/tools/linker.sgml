@@ -128,8 +128,8 @@ Scheduling:
 
     <P>
       Note that multiple <<--include>> and <<--exclude>> directives
-      can be given on the commandline.  Earlier directives take
-      precedence over later ones.
+      can be given on the commandline.  Later directives take
+      precedence over earlier ones.
     </P>
 
   </Section>
