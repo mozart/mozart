@@ -156,6 +156,22 @@ Board::~Board() {
   error("Board::~Board");
 }
 
+/*
+ * for debugging: check if a board is alive
+ * NOTE: this test can be very expensive !!!
+ */
+Bool Board::checkAlive()
+{
+  Board *bb=this;
+loop:
+  Assert(!bb->isCommitted());
+  if (bb->isFailed()) return NO;
+  if (bb->isRoot()) return OK;
+  Actor *aa=bb->getActor();
+  if (aa->isCommitted()) return NO;
+  bb=aa->getBoardFast();
+  goto loop;
+}
 
 // -------------------------------------------------------------------------
 
