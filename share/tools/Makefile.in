@@ -19,6 +19,7 @@ INSTALL_DIR	= @INSTALL_DIR@
 
 OZFLAGS		= 
 OZC		= @OZC@
+OZAR		= @OZAR@
 LN_S		= @LN_S@
 
 COMPILE		= $(OZC) $(OZFLAGS) -c
@@ -88,6 +89,24 @@ GUMPEXAMPLES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
 	OzParser.ozg OzScanner.ozg
 
+INSPECTORSRC1 = \
+	InspectorOptions.oz InspectorMain.oz
+INSPECTORSRC2 = \
+	SupportNodes.oz CreateObjects.oz LayoutObjects.oz DrawObjects.oz \
+	TreeNodes.oz StoreListener.oz CycleManager.oz TreeWidget.oz
+INSPECTORSRC = $(INSPECTORSRC1:%=inspector/%) \
+	$(INSPECTORSRC2:%=inspector/TreeWidget/%)
+
+INSPECTOROBJS = \
+	InspectorMain.ozf InspectorOptions.ozf \
+	SupportNodes.ozf CreateObjects.ozf LayoutObjects.ozf DrawObjects.ozf \
+	TreeNodes.ozf StoreListener.ozf CycleManager.ozf TreeWidget.ozf
+
+INSPECTORIMAGESDIR = $(IMAGESDIR)/inspector
+INSPECTORIMAGES1 = \
+	depth.xbm width.xbm
+INSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(INSPECTORIMAGESDIR)/%)
+
 TOOLSDIRS1 = gump gump/examples
 TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
 
@@ -97,7 +116,7 @@ TOOLSFILES = \
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
-	ProductionTemplates.ozf OPI.ozf
+	ProductionTemplates.ozf OPI.ozf Inspector.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -155,6 +174,14 @@ GumpParser.ozf: $(GUMPPARSERSRC)
 ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
 	$(COMPILE) -l Compiler ProductionTemplates.oz -o $@
 
+Inspector.ozf: $(INSPECTOROBJS)
+	$(OZAR) --verbose --nosequential --in=InspectorMain.ozf --out=$@
+
+%.ozf: inspector/%.oz
+	$(COMPILE) $< -o $@
+
+%.ozf: inspector/TreeWidget/%.oz
+	$(COMPILE) $< -o $@
 
 #---------------------------------------------------------------------
 # Installation
@@ -166,9 +193,10 @@ install-main: all \
 	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS)
 
 install-images: \
-	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
+	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
+	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
 
-$(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
+$(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR) $(INSPECTORIMAGESDIR):
 	$(INSTALL_DIR) $@
 
 $(OZTOOLS)/%.oz: %.oz
@@ -184,6 +212,9 @@ $(IMAGESDIR)/%: images/%
 	$(INSTALL_FILE) $< $@
 
 $(OZCARIMAGESDIR)/%: ozcar/images/%
+	$(INSTALL_FILE) $< $@
+
+$(INSPECTORIMAGESDIR)/%: inspector/images/%
 	$(INSTALL_FILE) $< $@
 
 CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
@@ -203,7 +234,7 @@ $(CACHELINK): $(CACHEDIR)
 #---------------------------------------------------------------------
 
 clean:
-	rm -f *~ *.bak ./*/*~ ./*/*.bak
+	rm -f *~ *.bak ./*/*~ ./*/*/*~ ./*/*.bak ./*/*/*.bak
 	rm -f ozcar-version.oz
 	rm -f $(FUNCTORS)
 	rm -f opi
