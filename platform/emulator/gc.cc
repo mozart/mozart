@@ -1045,7 +1045,7 @@ Thread *Thread::gcDeadThread()
   GCNEWADDRMSG (newThread);
   gcTagged(cell,newThread->cell);
 
-  newThread->setBoard(0);
+  newThread->setBoard(am.rootBoard);
   newThread->state.flags=0;
   newThread->item.threadBody=0;
 

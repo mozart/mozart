@@ -441,7 +441,10 @@ public:
   void suspThreadToRunnable ();
   void wakeupToRunnable ();
   void propagatorToRunnable ();
+
   Bool terminate();
+  void propagatorToNormal();
+
   //
   //  Note that the stack is allocated now in "lazy fashion", i.e.
   // that it is created only when a thread is getting "running";
