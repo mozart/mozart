@@ -5,8 +5,6 @@
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY amp "&">
-<!ENTITY alfa "ALFA">
-<!ENTITY lambda "LAMBDA">
 <!ENTITY % proglang.values.local "|lambda">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
@@ -25,7 +23,7 @@
 <!ENTITY stateful	SYSTEM	"9_stateful.sgml">
 <!ENTITY classes	SYSTEM	"10_classes.sgml">
 <!ENTITY objectscc	SYSTEM	"11_objectscc.sgml">
-
+<!ENTITY logicp		SYSTEM	"12_lp.sgml"> 
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
@@ -85,6 +83,7 @@
     <Meta name="html.split" value="section.objectscc.fifo">
     <Meta name="html.split" value="section.objectscc.monitor">
     <Meta name="html.split" value="section.objectscc.active">
+    <Meta name="html.split" value="chapter.lp">
     <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
@@ -111,6 +110,7 @@
    &stateful;
    &classes;
    &objectscc;
+   &logicp;
   </BODY> 
   <!-- Hallo -->
   <BACK>
