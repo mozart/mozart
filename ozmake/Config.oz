@@ -14,9 +14,8 @@ prepare
       else X end
    end
    fun {ToVS X}
-      if {IsAtom X} then '\''#X#'\''
+      if X==nil then 'nil'
       elseif {IsVirtualString X} then '"'#X#'"'
-      elseif X==nil then 'nil'
       elseif {IsList X} then
 	 '['#{FoldL X fun {$ Accu X}
 			 Accu#if Accu==nil then nil else ' ' end#{ToVS X}
@@ -96,7 +95,7 @@ define
 	       for Key#_#Flag in OPTLIST do
 		  if {HasFeature Args Key} then
 		     if Flag then
-			{self xtrace('setting '#Key#': '#Args.Key)}
+			{self xtrace('setting '#Key#': '#{ToVS Args.Key})}
 			@DB.Key := Args.Key
 		     else
 			{self vtrace('ignoring: '#Key)}
