@@ -49,7 +49,7 @@ public:
   int type;
   virtual void marshal_RR(MarshalerBuffer *buf)=0;
   virtual void unmarshal_RR(MarshalerBuffer *buf, int *error)=0;
-
+  virtual ~RRinstance(){}
 };
 
 
@@ -76,6 +76,7 @@ public:
   virtual OZ_Term extract_info(OZ_Term)=0;
   virtual OZ_Term extract_OzId()=0;
   virtual void remove()=0;
+  virtual ~GCalgorithm(){}
 };
 
 
@@ -111,6 +112,8 @@ class RemoteReference{
   friend class BorrowEntry;
   friend class BorrowTable;
 public:
+  RemoteReference(){}
+
   NetAddress netaddr;
   GCalgorithm *algs;
 

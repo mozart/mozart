@@ -137,7 +137,7 @@ void TL::leaseTimerExpired()
   }
   else{
     printf("Forced localizing %d!\n",(parent.hr)->oti);
-    OT->getEntry((parent.hr)->oti)->localize((parent.hr)->oti);
+    OT->odi2entry((parent.hr)->oti)->localize((parent.hr)->oti);
   }
 }
 

@@ -37,12 +37,17 @@
 
 void marshalCredit(MarshalerBuffer *buf, RRinstance *r){
   int len = 0;
+  RRinstance *tmp;
   for(RRinstance *tmp = r;tmp!=NULL; tmp = tmp->next,len ++);
   buf->put(DIF_PRIMARY);
   marshalNumber(buf, len);
-  for(;r!=NULL; r = r->next)r->marshal_RR(buf);
+  while(r!=NULL){
+    r->marshal_RR(buf);
+    tmp = r;
+    r = r->next;
+    delete tmp;
+  }
 }
-
 RRinstance *unmarshalCreditRobust(MarshalerBuffer *buf, int *error)
 {
   RRinstance *ans=NULL;
@@ -70,11 +75,17 @@ RRinstance *unmarshalCreditRobust(MarshalerBuffer *buf, int *error)
 
 void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti){
   int len= 0 ;
+  RRinstance *tmp;
   for(RRinstance *tmp = r;tmp!=NULL; tmp = tmp->next,len ++);
   buf->put(DIF_OWNER);
   marshalNumber(buf, oti);
   marshalNumber(buf, len);
-  for(;r!=NULL; r = r->next)r->marshal_RR(buf);
+  while(r!=NULL){
+    r->marshal_RR(buf);
+    tmp = r;
+    r = r->next;
+    delete tmp;
+  }
 }
 
 
@@ -161,14 +172,27 @@ Bool HomeReference::mergeReference(RRinstance *r){
   // the entity should be reclaimed. This is
   // independantly of what the other algorithms
   // reports.
+  Bool Ans;
 
   for(GCalgorithm *tmp = algs;tmp != NULL ; tmp = tmp->next)
     {
       RRinstance *tmpR = r;
       for(; tmpR != NULL; tmpR=tmpR->next)
-        if (tmp->type == tmpR->type && tmp->mergeReference(tmpR) )
+        if (tmp->type == tmpR->type && tmp->mergeReference(tmpR) ){
+          while(r!=NULL){
+            tmpR = r;
+            r = r->next;
+            delete tmpR;
+          }
           return TRUE;
+        }
     }
+  RRinstance *tmp;
+  while(r!=NULL){
+    tmp = r;
+    r = r->next;
+    delete tmp;
+  }
   return FALSE;
 }
 RRinstance* HomeReference::getBigReference(){
@@ -210,19 +234,21 @@ Bool RemoteReference::canBeReclaimed(){
 void RemoteReference::setUp(RRinstance *r,DSite* s,int i){
   netaddr.set(s,i);
   algs = NULL;
-  for(RRinstance *tmpR = r; tmpR != NULL; tmpR = tmpR->next)
-    {
-      switch(tmpR->type){
-      case GC_ALG_WRC:
-        algs = new WRC(this,tmpR,algs);
-        break;
-      case GC_ALG_TL:
-        algs = new TL(this,tmpR,algs);
-        break;
-      default:
-        Assert(0);
-      }
+  while(r!=NULL){
+    RRinstance *tmpR = r;
+    r = r->next;
+    switch(tmpR->type){
+    case GC_ALG_WRC:
+      algs = new WRC(this,tmpR,algs);
+      break;
+    case GC_ALG_TL:
+      algs = new TL(this,tmpR,algs);
+      break;
+    default:
+      Assert(0);
     }
+    delete tmpR;
+  }
 }
 
 void HomeReference::removeReference(){
@@ -294,6 +320,14 @@ void RemoteReference::mergeReference(RRinstance *r){
           tmp = &((*tmp)->next);
         }
     }
+
+  RRinstance *tmpR = r;
+  while(r!=NULL){
+    tmpR = r;
+    r = r->next;
+    delete tmpR;
+ }
+
 }
 
 RRinstance *RemoteReference::getBigReference(){

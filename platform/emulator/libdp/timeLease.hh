@@ -39,6 +39,7 @@ public:
 
   void marshal_RR(MarshalerBuffer *buf);
   void unmarshal_RR(MarshalerBuffer *buf, int *error);
+  virtual ~RRinstance_TL(){}
 };
 
 class TL:public GCalgorithm
@@ -61,6 +62,7 @@ public:
   OZ_Term extract_info(OZ_Term in);
   OZ_Term extract_OzId();
   void remove();
+  virtual ~TL(){}
 };
 
 #endif // __TIME_LEASE_HH
