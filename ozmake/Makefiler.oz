@@ -626,15 +626,16 @@ define
 	 %% note that we assume that T is an atom
 	 if Makefile,target_is_src(T $) andthen {Not {self get_fullbuild($)}} then nil
 	 else
-	    L = {self get_autodepend_build(T $)}
+	    Table = {NewDictionary}
+	    for D in {CondSelect @Target2Depends T nil} do Table.D := unit end
+	    for D in {self get_autodepend_build(T $)}   do Table.D := unit end
 	    R = Makefile,get_rule(T $)
 	 in
-	    if R.tool==unit orelse {Member R.file L} then L
-	    elseif R.tool==ozg then Table={NewDictionary} in
-	       for D in L do Table.D := unit end
+	    if     R.tool==unit then skip
+	    elseif R.tool==ozg  then
 	       for D in {self get_depends(R.file $)} do Table.D := unit end
-	       {Dictionary.keys Table}
-	    else R.file|L end
+	    else Table.(R.file) := unit end
+	    {Dictionary.keys Table}
 	 end
       end
 
