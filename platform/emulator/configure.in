@@ -233,10 +233,10 @@ fi
 AC_SUBST(LD)
 
 
+oz_enable_modules_static=yes
 case $platform in
     sunos*)
         TOOLLDCMD=""
-        oz_enable_modules_static=yes
         ;;
     linux*)
         TOOLLDCMD="gcc -shared"
@@ -248,8 +248,7 @@ case $platform in
         : ${oz_enable_modules_static=no}
         ;;
     irix*)
-        TOOLLDCMD="gcc -shared -Wl,-check_registry -Wl,/dev/null"
-        oz_enable_modules_static=yes
+        TOOLLDCMD="ld -shared"
         ;;
     osf1*)
         TOOLLDCMD="gcc -shared -Wl,-expect_unresolved -Wl,*"
@@ -259,15 +258,12 @@ case $platform in
         ;;
     hpux*)
         TOOLLDCMD="ld -b"
-        oz_enable_modules_static=yes
         ;;
     freebsd*)
         TOOLLDCMD="ld -Bshareable"
-        oz_enable_modules_static=yes
         ;;
     netbsd*)
         TOOLLDCMD="ld -Bshareable"
-        oz_enable_modules_static=yes
         ;;
 esac
 
