@@ -128,8 +128,20 @@ Scheduling:
 
     <P>
       Note that multiple <<--include>> and <<--exclude>> directives
-      can be given on the commandline.  Later directives take
-      precedence over earlier ones.
+      can be given on the commandline.  They have cummulative effect,
+      with the policy that later directives take precedence over earlier
+      ones.  For example:
+<code display proglang=sh>
+% ozl --include=/foo/ --exclude=/foo/bar/ ...
+</code>
+      causes all imports from files below directory <file>/foo</file> to
+      be included except those under directory <file>/foo/bar</file>.  We
+      can further refine this policy by introducing an exception to the
+      last exclusion pattern and request inclusion of modules imported
+      from below directory <file>/foo/bar/baz</file>:
+<code display proglang=sh>
+% ozl --include=/foo/ --exclude=/foo/bar/ --include=/foo/bar/baz/ ...
+</code>
     </P>
 
   </Section>
