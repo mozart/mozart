@@ -854,7 +854,8 @@ inline int isNowMarked(OZ_Term t)
       if (lit->isAtom()) return 1;
       else return ((Name*)lit)->cacIsMarked();
     }
-  case EXT       : return ((*(int32*)oz_tagged2Extension(t))&1);
+  case EXT       : return 
+		     ((*(int32*) oz_tagged2Extension(t)->__getSpaceRefInternal())&1);
   case LTUPLE    : goto RETURN_NO;
   case SRECORD   : goto RETURN_NO;
   case OZFLOAT   : goto RETURN_NO;
