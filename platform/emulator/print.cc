@@ -23,7 +23,7 @@
 #include "board.hh"
 #include "cell.hh"
 #include "debug.hh"
-#include "fdgenvar.hh"
+#include "genvar.hh"
 #include "fdomn.hh"
 #include "misc.hh"
 #include "records.hh"
@@ -147,7 +147,7 @@ PRINT(GenCVariable){
   if (isEffectiveList(suspList) == OK)
     stream << " a" << suspList->length();
   
-  switch(type){
+  switch(getType()){
   case FDVariable:
     {
       GenFDVariable * me = (GenFDVariable *) this;
@@ -206,8 +206,7 @@ PRINT(STuple)
 
 PRINT(SRecord)
 {
-  TypeOfRecord type = getType();
-  switch (type) {
+  switch (getType()) {
   case R_ABSTRACTION:
   case R_OBJECT:
     ((Abstraction *) this)->print(stream,depth,offset);
@@ -773,7 +772,7 @@ PRINTLONG(GenCVariable){
 	 << "Any SuspList:\n"; 
   suspList->print(stream, 0, offset+3);
   
-  if (type == FDVariable) {
+  if (getType() == FDVariable) {
     stream << indent(offset) << "Det SuspList:\n"; 
     ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, 0, offset+3);
   
@@ -792,7 +791,7 @@ PRINTLONG(GenCVariable){
   home->getBoardDeref()->print(stream,0);
   stream << endl;
 
-  switch(type){
+  switch(getType()){
   case FDVariable:
     ((GenFDVariable*)this)->getDom().printLong(stream, offset);
     break;

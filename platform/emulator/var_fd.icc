@@ -81,19 +81,29 @@ void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 }
 
 
+#ifdef CVAR_ONLY_FDVAR
+#define cvarIsFDvar(term) (OK)
+#else
+inline Bool cvarIsFDvar(TaggedRef term)
+{
+  return (tagged2CVar(term)->getType() == FDVariable);
+}
+#endif
+
+
 inline
 Bool isGenFDVar(TaggedRef term)
 {
   GCDEBUG(term);
-#ifdef CVAR_ONLY_FDVAR
-  return isCVar(term);
-#else
-  return (tagTypeOf(term) == CVAR)
-    ? ((tagged2CVar(term)->getType() == FDVariable))
-    : FALSE;
-#endif
+  return isCVar(term) && cvarIsFDvar(term);
 }
 
+inline
+Bool isGenFDVar(TaggedRef term, TypeOfTerm tag)
+{
+  GCDEBUG(term);
+  return isCVar(tag) && cvarIsFDvar(term);
+}
 
 inline
 GenFDVariable * tagged2GenFDVar(TaggedRef term)

@@ -31,14 +31,26 @@
 
 
 #define CVAR_ONLY_FDVAR
+
 enum TypeOfGenCVariable {
   FDVariable
 };
 
 class GenCVariable: public SVariable {
 protected:
-  TypeOfGenCVariable type;
 
+#ifdef CVAR_ONLY_FDVAR
+public:
+  TypeOfGenCVariable getType(void){return FDVariable;}
+  void setType(TypeOfGenCVariable t){;}
+#else
+  TypeOfGenCVariable type;
+public:
+  TypeOfGenCVariable getType(void){return type;}
+  void setType(TypeOfGenCVariable t){ type=t;}  
+#endif
+
+protected:
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
   void relinkSuspList(GenCVariable * leftVar);
@@ -50,8 +62,6 @@ public:
 
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable , TaggedRef = AtomVoid, Board * = NULL);
-
-  TypeOfGenCVariable getType(void){return type;}
 
   // return OK, if var is local to the current node
   Bool isLocalVariable(void);
@@ -76,6 +86,7 @@ public:
   MPRINT;
 };
 
+#include "fdgenvar.hh"
 
 #ifndef OUTLINE
 #include "genvar.icc"
