@@ -42,6 +42,12 @@ fi
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
 export OZPLATFORM
 
+if [ ${OZEMULATOR-xx} = xx ]; then
+    OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
+else
+    echo "Using $OZEMULATOR"
+fi
+
 case "$cmd" in
    oz-debug)	OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin.debug
 		export OZEMULATOR
@@ -127,6 +133,18 @@ fi
 
 case "$cmd" in
 
+   ozdemo)  exec $OZHOME/demo/rundemo "$@" ;;
+
+   ozemacs) exec $OZEMACS "$@" ;;
+
+   ozsa)    exec $OZEMULATOR -E "$@" ;;
+
+   oz-)     exec $OZILE $OZCOMPILER "$@" ;;
+
+   ozdo)    exec "$@" ;;
+
+   oznc)    exec $OZEMULATOR -u $OZHOME/lib/Compiler.ozc "$@" -a $OZARGV ;;
+
    oz) 
         echo "Using emacs '${OZEMACS}'"
 	# store cmd line args starting from "-a" in $OZARGV
@@ -148,14 +166,6 @@ case "$cmd" in
 	exec $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz $EMACSARGV
    ;;
 
-   ozdemo) 
-	exec $OZHOME/demo/rundemo "$@"
-   ;;
-
-   ozemacs) 
-	exec $OZEMACS "$@"
-   ;;
-
    oz.compiler)
 	if [ X$OZCOMPNW = "Xnone" ]; then
 	  exec $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
@@ -170,11 +180,6 @@ case "$cmd" in
    ;;
 
    oz.emulator)
-        if [ ${OZEMULATOR-xx} = xx ]; then
-	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-	else
-	   echo "Using $OZEMULATOR"
-	fi
 	if [ X$OZEMULNW = "Xnone" ]; then
 	        exec $OZEMULATOR "$@" -a $OZARGV
 	elif [ X$1 = X"-emacs" ]; then
@@ -187,33 +192,15 @@ case "$cmd" in
 	exit 0
    ;;
 
-   ozsa)  # standalone system
-	if [ ${OZEMULATOR-xx} = xx ]; then
-	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-	else
-	   echo "Using $OZEMULATOR"
-	fi
-        exec $OZEMULATOR -E "$@"
-   ;;
-
    ozcs)  # compute server
-    if [ $# -lt 1 ]
-    then
-	echo "usage: ozcs <url> <args>";
-	exit 1;
-    fi
-	if [ ${OZEMULATOR-xx} = xx ]; then
-	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-	else
-	   echo "Using $OZEMULATOR"
+	if [ $# -lt 1 ]
+	then
+	    echo "usage: ozcs <url> <args>";
+	    exit 1;
 	fi
 	url=$1
 	shift
         exec $OZEMULATOR -quiet -u $url "$@"
-   ;;
-
-   oz-)
-	exec $OZILE $OZCOMPILER "$@"
    ;;
 
    ozc)
@@ -237,22 +224,12 @@ case "$cmd" in
 	echo ""
    ;;
 
-   ozdo)
-	exec "$@"
-   ;;
-
    oze)
-        if [ ${OZEMULATOR-xx} = xx ]; then
-	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-	else
-	   echo "Using $OZEMULATOR"
-	fi
 	OZEMULNW=none
 	OZCOMPNW=none
 	export OZEMULNW
 	export OZCOMPNW
 	exec $OZEMULATOR "$@" -a $OZARGV
-	exit 0
    ;;
 
 
