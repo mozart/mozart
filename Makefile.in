@@ -179,7 +179,7 @@ oz-win::
         $(INSTALL_DIR) $(WINCACHEDIR)/share
         $(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
         mv oz3/share/images oz3/share/?*.ozf $(WINCACHEDIR)/share
-        cp oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share
+        cp oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share || true
         rm -f oz3/share/*.so-win32-i486
         cp -r oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
         find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
