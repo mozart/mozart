@@ -1305,7 +1305,7 @@ TaggedRef PrTabEntry::getProfileStats()
 	SRecord *rec = SRecord::newSRecord(ps,arity);
 	rec->setFeature(samples,oz_int(aux->getSamples()));
 	rec->setFeature(calls,oz_int(aux->getCalls()));
-	rec->setFeature(heap,oz_int(0));
+	rec->setFeature(heap,oz_int(aux->getHeap()));
 	rec->setFeature(closures,oz_int(0));
 	rec->setFeature(line,oz_int(1));
 	rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeaderFunc()))));
