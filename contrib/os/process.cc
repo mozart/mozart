@@ -17,8 +17,10 @@ public:
   virtual int        getIdV() { return id; }
   virtual OZ_Term    typeV()  { return OZ_atom("process"); }
   virtual OZ_Term    printV(int depth = 10);
-  virtual OZ_Extension* gcV();
-  virtual void gcRecurseV();
+  virtual OZ_Extension* gCollectV(void);
+  virtual OZ_Extension* sCloneV(void) { Assert(0); return NULL; }
+  virtual void gCollectRecurseV(void);
+  virtual void sCloneRecurseV(void) { Assert(0); }
 };
 
 OZ_Term all_processes;
@@ -53,14 +55,14 @@ OZ_Term Process::printV(int depth = 10)
                                     OZ_pair2(status,OZ_atom(")>")))));
 }
 
-OZ_Extension* Process::gcV()
+OZ_Extension* Process::gCollectV()
 {
   return new Process(pid,status);
 }
 
-void Process::gcRecurseV()
+void Process::gCollectRecurseV()
 {
-  OZ_collectHeapTerm(status,status);
+  OZ_gCollect(&status);
 }
 
 typedef struct { int from; int to; } fdPair;
