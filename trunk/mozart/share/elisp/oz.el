@@ -1028,7 +1028,8 @@ buffer."
   (cond (oz-gnu-emacs
 	 (oz-make-menu-gnu oz-mode-map
 			   (list (cons "menu-bar" (cons nil list))))
-	 (define-key oz-mode-map [down-mouse-3] 'oz-menubar))
+	 ;;(define-key oz-mode-map [down-mouse-3] 'oz-menubar)
+	 )
 	(oz-lucid-emacs
 	 (setq oz-menubar (car (oz-make-menu-lucid list))))))
 
