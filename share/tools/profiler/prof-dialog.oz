@@ -36,17 +36,13 @@ local
 				  font:   HelpTitleFont
 				  text:   'Oz ' # IconName)}
 
-	 V = {New Tk.label tkInit(parent: self
-				  bg:     DefaultBackground
-				  text:   'Last updated on ' # Version)}
-
 	 A = {New Tk.label
 	      tkInit(parent: self
 		     bg:     DefaultBackground
 		     text:   (NameOfRalf #' & '#
 			      NameOfBenni #'\n'# EmailOfBoth))}
       in
-	 {Tk.send pack(T V A side:top expand:1)}
+	 {Tk.send pack(T A side:top expand:1)}
 	 AboutDialog,tkPack
       end
 
