@@ -28,15 +28,15 @@
 
 
 #define USEFREELISTMEMORY \
-  static inline void *operator new(size_t size) \
-    { return freeListMalloc(size); } \
+  static inline void *operator new(size_t chunk_size) \
+    { return freeListMalloc(chunk_size); } \
   static inline void operator delete(void *,size_t ) \
     { error("deleting free list mem"); }
 
 
 #define USEHEAPMEMORY \
-  static inline void *operator new(size_t size) \
-    { return heapMalloc(size); }\
+  static inline void *operator new(size_t chunk_size) \
+    { return heapMalloc(chunk_size); }\
   static inline void operator delete(void *,size_t) \
     { error("deleting heap mem");}
 
@@ -79,18 +79,19 @@ inline unsigned int getAllocatedMemory() {
   return heapTotalSize;
 }
 
-inline void *heapMalloc(size_t size)
+inline
+void *heapMalloc(size_t chunk_size)
 {
   char *oldTop = heapTop;
-  heapTop += size;
-  if (  heapTop > heapEnd ) {
-    getMemFromOS(size);
+  heapTop += chunk_size;
+  if (heapTop > heapEnd) {
+    getMemFromOS(chunk_size);
     oldTop = heapTop;
-    heapTop += size;
+    heapTop += chunk_size;
   }
 
 #ifdef DEBUG_MEM
-  memset((char *)oldTop,0x5A,size);
+  memset((char *)oldTop, 0x5A, chunk_size);
 #endif
   return oldTop;
 } // heapMalloc
@@ -104,23 +105,24 @@ extern void *FreeList[freeListMaxSize];
 unsigned int getMemoryInFreeList();
  
 
-inline void *freeListMalloc(size_t size)
+inline
+void *freeListMalloc(size_t chunk_size)
 {
 #ifdef DEBUG_CHECK
-  if (size % 4 != 0) {
+  if (chunk_size % 4 != 0) {
     error("freeListMalloc: not aligned to word boundaries");
   }
 #endif
 
-  void *aux = size < freeListMaxSize ? FreeList[size] : (void *)NULL;
+  void *aux = chunk_size < freeListMaxSize ? FreeList[chunk_size] : (void *)NULL;
 
   if (aux == (void *) NULL)
-    aux = heapMalloc(size); 
+    aux = heapMalloc(chunk_size); 
   else {
-    FreeList[size] = *(void **)aux;
+    FreeList[chunk_size] = *(void **)aux;
   }
 #ifdef DEBUG_MEM
-  memset((char *)aux,0x5A,size);
+  memset((char *)aux,0x5A,chunk_size);
 #endif
   return aux;
 }
@@ -129,10 +131,10 @@ inline void *freeListMalloc(size_t size)
 extern "C" void* memset(void*, int, size_t);
 
 
-inline void freeListDispose(void *addr, size_t size)
+inline void freeListDispose(void *addr, size_t chunk_size)
 {
 #ifdef DEBUG_CHECK
-  if (size % 4 != 0) {
+  if (chunk_size % 4 != 0) {
     error("freeListDispose: not aligned to word boundaries");
   }
 #endif
@@ -140,14 +142,14 @@ inline void freeListDispose(void *addr, size_t size)
 
 // clear mem, so every reference leads to strange errors
 // and turn off free list memory, do not reuse the memory
-  memset((char *)addr,0x5A,size);
+  memset((char *)addr,0x5A,chunk_size);
   return;
 
 #else
 
-  if (size < freeListMaxSize && size > 0) {
-    *(void **)addr =  FreeList[size];
-    FreeList[size] = addr;
+  if (chunk_size < freeListMaxSize && chunk_size > 0) {
+    *(void **)addr =  FreeList[chunk_size];
+    FreeList[chunk_size] = addr;
   }
 #endif
 }
