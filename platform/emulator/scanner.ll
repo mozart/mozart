@@ -231,7 +231,7 @@ static void toggle_cond() {
       conditional[conditional_p] = 0;
     else
       conditional[conditional_p] = 1;
-  } else if (get_cond())
+  } else
     xyreportError("macro directive error",
                   "\\else without previous corresponding \\ifdef or \\ifndef",
                   xyFileName,xylino,xycharno());
