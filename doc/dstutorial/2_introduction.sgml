@@ -10,7 +10,7 @@ a global infrastructure for distributed applications:
 a global namespace (URLs) and
 a global communications protocol (TCP/IP).
 Platforms such as
-<index id=idx.java/Java/
+<index id=idx.java/Java language<and>/
 Java and
 <index id=idx.corba/CORBA/
 CORBA that take advantage
@@ -123,9 +123,9 @@ All limitations and modifications are explained where they occur
 and they are also listed together at the end of the tutorial
 (see <ptr to="chapter.limits">).
 
-<P>We say two or more applications are
-<index id=idx.connected/application<and>connected applications/
+<index id=idx.connected/application<and>connected/
 <index id=idx.connectedapplications/connected applications/
+<P>We say two or more applications are
 <EM>connected</EM>
 if they share a reference to a language entity that allows
 them to exchange information.
