@@ -37,8 +37,10 @@ protected:
   StackEntry *stackEnd;
 
   virtual void resize(int newSize);
+  void resizeOutline(int newSize);
 
   // memory management: default via malloc/free
+  void allocate(int sz, void *(*allocfun)(size_t t));
   virtual void deallocate(StackEntry *p, int n);
   virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
 
@@ -49,12 +51,14 @@ public:
   virtual ~Stack() { deallocate(array,size); }
 
   Bool isEmpty(void) { return (tos <= array) ? OK : NO; }
-  void ensureFree(int n)
+  StackEntry *ensureFree(int n)
   {
+    StackEntry *ret = tos;
     if (stackEnd <= tos+n) {
-      resize((size*3)/2);  // faster than size*1.5
-      ensureFree(n);
+      resizeOutline(n);
+      ret = tos;
     }
+    return ret;
   }
 
   void checkConsistency()
