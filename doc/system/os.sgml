@@ -555,7 +555,7 @@ Gets the name of a socket.
 See <file /getsockname(3)/.
 
 <Entry> <<send>> <Synopsis> <<{OS.send ?+{SockI} ?+{MsgV} ?+{FlagsAs} ??{LenI}}>>
-<Entry> <<sendTo>> <Synopsis> <<{OS.sendTo ?+{SockI} ?+{MsgV} ?+{FlagsAs} ?+{HostV} ?+{PortI}}>>
+<Entry> <<sendTo>> <Synopsis> <<{OS.sendTo ?+{SockI} ?+{MsgV} ?+{FlagsAs} ?+{HostV} ?+{PortI}} ??{LenI}}>>
 <Index class=module/OS<and>send/
 <Index class=module/OS<and>sendTo/
 <item>
@@ -569,7 +569,7 @@ See <file /send(2)/ and <file /gethostbyname(3)/.
 <Entry> <<receiveFrom>> <Synopsis>
 <<<
 {OS.receiveFrom ?+{SockI} ?+{MaxI} ?+{FlagsAs} ??{MsgS}
-                ??{TailX} ??{HostS} ??{PortI} ??{LenI}}
+                ?+{TailX} ??{HostS} ??{PortI} ??{LenI}}
 >>>
 <Index class=module/OS<and>receiveFrom/
 <item>
