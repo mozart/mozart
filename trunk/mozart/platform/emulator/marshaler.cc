@@ -347,22 +347,28 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     {
       OzDictionary *d = (OzDictionary *) t;
 
-      if (!d->isSafeDict()) {
+      if (!d->isSafeDict() && !d->isCacheDict()) {
 	goto bomb;
       }
 
       marshalDIF(bs,DIF_DICT);
-      int size = d->getSize();
-      trailCycle(d,bs);
-      marshalNumber(size,bs);
-      
-      int i = d->getFirst();
-      i = d->getNext(i);
-      while(i>=0) {
-	marshalTerm(d->getKey(i),bs);
-	marshalTerm(d->getValue(i),bs);
+
+      if (d->isCacheDict()) {
+	trailCycle(d,bs);
+	marshalNumber(~1,bs);
+      } else {
+	int size = d->getSize();
+	trailCycle(d,bs);
+	marshalNumber(size,bs);
+	
+	int i = d->getFirst();
 	i = d->getNext(i);
-	size--;
+	while(i>=0) {
+	  marshalTerm(d->getKey(i),bs);
+	  marshalTerm(d->getValue(i),bs);
+	  i = d->getNext(i);
+	  size--;
+	}
       }
       return;
     }
@@ -626,10 +632,16 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
   int size   = unmarshalNumber(bs);
   Assert(oz_onToplevel());
   OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
-  aux->markSafe();
   *ret = makeTaggedConst(aux);
   gotRef(bs,*ret,refTag);
 
+  if (size < 0) {
+    aux->markCache();
+    return;
+  }
+
+  aux->markSafe();
+  
   while(size-- > 0) {
     TaggedRef key = unmarshalTerm(bs);
     TaggedRef val = unmarshalTerm(bs);
