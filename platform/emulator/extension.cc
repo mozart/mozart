@@ -29,12 +29,13 @@
 #include "ozostream.hh"
 #include "am.hh"
 
-int oz_newUniqueId() {
-  static int counter=OZ_E_LAST;
+unsigned int oz_newUniqueId() {
+  static unsigned int counter=OZ_E_LAST;
+  if (counter==0) error("oz_newUniqueId: counter overflow");
   return counter++;
 }
 
-int OZ_getUniqueId(void)
+unsigned int OZ_getUniqueId(void)
 {
   return oz_newUniqueId();
 }
