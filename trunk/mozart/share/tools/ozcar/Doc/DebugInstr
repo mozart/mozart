@@ -15,3 +15,9 @@ debugExit
    Posint           number of live registers
 
 kind = call, cond, handler, lock
+
+localVarname
+   Variablename     print name of the next Y register or ''
+
+globalVarname
+   Variablename     print name of the next G register or ''
