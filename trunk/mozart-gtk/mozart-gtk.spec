@@ -2,7 +2,7 @@
 # Author: Denys Duchier, 2003
 # Copyright: Denys Duchier, 2003
 Name: mozart-gtk
-Version: 1
+Version: 1.0
 Release: 1
 Summary: GTK 1.2 bindings for Mozart and Alice
 Copyright: Free
@@ -10,8 +10,12 @@ Vendor: Mozart Consortium
 URL: http://www.mozart-oz.org/
 Group: Development/Languages
 Packager: Denys Duchier
-Source: ftp://ftp.mozart-oz.org/pub/extras/mozart-gtk-1.tar.gz
+Source: ftp://ftp.mozart-oz.org/pub/extras/mozart-gtk-1.0.tar.gz
 Prefix: /usr/local/oz
+BuildRoot: /var/tmp/mozart-gtk
+
+%description
+This package provides GTK 1.2 bindings for Mozart and Alice
 
 %prep
 %setup
@@ -24,6 +28,8 @@ export CFLAGS CXXFLAGS
 make
 
 %install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/local/oz
 make install
 
 %files
