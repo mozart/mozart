@@ -240,6 +240,18 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr)
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 {
+#ifdef TELLCONSTRAINTS_BY_UNIFICATION
+  // create appropriate constrained variable
+  OzCtVariable * cv = (constr
+		       ?  new OzCtVariable(constr, def, oz_currentBoard())
+		       :  new OzCtVariable(def->leastConstraint(), def, 
+					   oz_currentBoard()));
+      
+  OZ_Term *  tcv = newTaggedCVar(cv);
+
+  return OZ_unify(v, makeTaggedRef(tcv));
+#else
+
   DEREF(v, vptr, vtag);
 
 
@@ -343,6 +355,7 @@ failed:
 
 proceed:
   return PROCEED;
+#endif /* TELLCONSTRAINTS_BY_UNIFICATION */
 }
 
 
