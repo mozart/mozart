@@ -46,7 +46,6 @@ protected:
   //  formerly in AM;
   //
   Thread *_currentThread;
-  Thread *_rootThread;
   RunnableThreadBody *threadBodyFreeList;
 public:
   ThreadsPool () {};
@@ -55,7 +54,6 @@ public:
   Thread *currentThread()           { return _currentThread; }
   void unsetCurrentThread()         { _currentThread=0; }
   void setCurrentThread(Thread *th) { _currentThread=th; }
-  Thread *rootThread()              { return _rootThread; }
 
   void initThreads();
 

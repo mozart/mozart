@@ -169,11 +169,6 @@ public:
   static ProgramCounter definitionStart(ProgramCounter from);
   static ProgramCounter definitionEnd(ProgramCounter from);
 
-#ifdef OLD_COMPILER
-  /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
-  static Bool load(CompStream *fd, ProgramCounter &newPC);
-#endif
-
 #ifdef THREADED
   static void **globalInstrTable;
   static HashTable *opcodeTable;
@@ -205,34 +200,6 @@ private:
   static void recordInstr(ProgramCounter PC);
 #endif
 
-#ifdef OLD_COMPILER
-// functions
-  static int scanChar(CompStream *fd);
-  static char *scanString (CompStream *fd);
-  static int scanUInt(CompStream *fd);
-  static Bool scanBool(CompStream *fd);
-  void scanVariablename (CompStream *fd);
-  void scanLiteral(CompStream *fd);
-  void scanFeature(CompStream *fd);
-  TaggedRef parseFeature(CompStream *fd);
-  TaggedRef parseLiteral(CompStream *fd);
-  TaggedRef parseLiteral(CompStream *fd, int what);
-  TaggedRef parseNumber(CompStream *fd);
-  void scanRegister(CompStream *fd, int &regAdd);
-  void scanRegisterIndex (CompStream *fd);
-  void scanArity(CompStream *fd);
-  void scanNumber(CompStream *fd);
-  void scanPosint(CompStream *fd);
-  void scanCache(CompStream *fd);
-  void scanPredicateRef(CompStream *fd);
-  void scanGenCallInfo(CompStream *fd);
-  void scanApplMethInfo(CompStream *fd);
-  void scanLabel(CompStream *fd, int offset);
-  SRecordArity parseRecordArity(CompStream *fd);
-  void scanRecordArity(CompStream *fd);
-  TaggedRef parseRecordArity (CompStream *fd, int length);
-  void scanBuiltinname(CompStream *fd);
-#endif
 
   static ProgramCounter writeWord(ByteCode c, ProgramCounter ptr)  
   { 
@@ -270,12 +237,9 @@ public:
     return writeWord(i,ptr);    
   }
 
-  static ProgramCounter writeLabel(int label, int offset, ProgramCounter ptr,
-				   Bool checkLabel)
+  static ProgramCounter writeLabel(int label, int offset, ProgramCounter ptr)
   {
-    //  label==0 means fail in createCond
-    //  in this case do not add start
-    return writeWord(checkLabel && label==0 ? NOCODE : ToPointer(label-offset), ptr);    
+    return writeWord(ToPointer(label-offset), ptr);    
   }
 
   static ProgramCounter writeBuiltin(Builtin *bi, ProgramCounter ptr)
@@ -337,7 +301,7 @@ public:
   void writeSRecordArity(SRecordArity ar){ CheckWPtr; wPtr=writeSRecordArity(ar,wPtr); }
   void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }
   void writeReg(int i)                   { CheckWPtr; wPtr=writeRegIndex(i,wPtr); }
-  void writeLabel(int lbl) { CheckWPtr; wPtr=writeLabel(lbl,curInstr-codeBlock,wPtr,OK); }
+  void writeLabel(int lbl) { CheckWPtr; wPtr=writeLabel(lbl,curInstr-codeBlock,wPtr); }
   int computeLabel(int lbl) { return lbl-(curInstr-codeBlock); }
   void writeDebugInfo(TaggedRef file, int line) {
     CheckWPtr; allDbgInfos = new DbgInfo(wPtr,file,line,allDbgInfos);
@@ -374,7 +338,6 @@ inline void printNameTab()
 #define getPredArg(PC)   ((PrTabEntry *) getAdressArg(PC))
 #define getLabelArg(PC)  ((int) getWord(PC))
 #define GetLoc(PC)       ((OZ_Location*) getAdressArg(PC))
-#define GetXList(PC)     ((XRegisterIndexListClass*) getAdressArg(PC))
 #define GetBI(PC)        ((Builtin*) getAdressArg(PC))
 
 /*
@@ -494,31 +457,6 @@ public:
       }
     }
     return n;
-  }
-};
-
-class XRegisterIndexListClass {
-private:
-  int n;
-  int array[0];
-public:
-  NO_DEFAULT_CONSTRUCTORS(XRegisterIndexListClass);
-  static XRegisterIndexListClass *newXRegisterIndexList(int n)
-  {
-    int sz = sizeof(XRegisterIndexListClass)+sizeof(int)*n;
-    XRegisterIndexListClass *xlist = (XRegisterIndexListClass *)new char[sz];
-    xlist->n=n;
-    return xlist;
-  }
-  int getLength() { return n; }
-  int *getArray() { return array; }
-  int get(int i) {
-    Assert(i>=0 && i<n);
-    return array[i];
-  }
-  void set(int i, int j) {
-    Assert(i>=0 && i<n);
-    array[i] = j;
   }
 };
 

@@ -126,10 +126,8 @@ typedef enum {
   DIF_CHUNK,            // SITE INDEX NAME value
   DIF_PROC,		// SITE INDEX NAME ARITY globals code
   DIF_CLASS,            // SITE INDEX NAME obj class
-  DIF_URL,              // UNUSED
   DIF_ARRAY,
   DIF_FSETVALUE,	// finite set constant
-  DIF_NEWNAME,		// allways create a new name (code instantiation)
   DIF_ABSTRENTRY,	// AbstractionEntry (code instantiation)
   DIF_PRIMARY,
   DIF_SECONDARY,

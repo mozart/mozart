@@ -185,7 +185,6 @@ g\({DIGIT}+\)                  { setRegisterIndex(); return GREGISTER; }
 "lbl"                          { return LBL; }
 "pid"                          { return PID; }
 "ht"                           { return HT; }
-"onVar"                        { return ONVAR; }
 "onScalar"                     { return ONSCALAR; }
 "onRecord"                     { return ONRECORD; }
 "gci"                          { return GCI; }

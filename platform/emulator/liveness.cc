@@ -213,10 +213,6 @@ outerLoop2:
 	  BREAK;
 	}
 
-      case CALLBUILTIN:
-	ISREAD_TO(getPosIntArg(PC+2));
-	break;
-
       case CALLBI:
 	ISLOC(GetBI(PC+1),GetLoc(PC+2));
 	break;
@@ -226,27 +222,10 @@ outerLoop2:
 	PUSH(getLabelArg(PC+3));
 	break;
 
-      case INLINEREL3:
-	ISREAD(GETREGARG(PC+4));
-	// fall through
-
-      case INLINEREL2:
-	ISREAD(GETREGARG(PC+3));
-	// fall through
-
-      case INLINEREL1:
-	ISREAD(GETREGARG(PC+2));
-	break;
-
       case INLINEPLUS1:
       case INLINEMINUS1:
 	ISREAD(GETREGARG(PC+1));
 	ISWRITE(GETREGARG(PC+2)); // must be last
-	break;
-
-      case INLINEFUN1:
-	ISREAD(GETREGARG(PC+2));
-	ISWRITE(GETREGARG(PC+3)); // must be last
 	break;
 
       case INLINEPLUS:
@@ -254,12 +233,6 @@ outerLoop2:
 	ISREAD(GETREGARG(PC+1));
 	ISREAD(GETREGARG(PC+2));
 	ISWRITE(GETREGARG(PC+3)); // must be last
-	break;
-
-      case INLINEFUN2:
-	ISREAD(GETREGARG(PC+2));
-	ISREAD(GETREGARG(PC+3));
-	ISWRITE(GETREGARG(PC+4)); // must be last
 	break;
 
       case INLINEDOT:
@@ -281,33 +254,8 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+3)); // must be last?
 	break;
 
-      case INLINEFUN3:
-	ISREAD(GETREGARG(PC+2));
-	ISREAD(GETREGARG(PC+3));
-	ISREAD(GETREGARG(PC+4));
-	ISWRITE(GETREGARG(PC+5)); // must be last
-	break;
-
-      case INLINEEQEQ:
-	ISREAD(GETREGARG(PC+2));
-	ISREAD(GETREGARG(PC+3));
-	ISWRITE(GETREGARG(PC+4)); // must be last
-	break;
-
       case SHALLOWGUARD:
 	PUSH(getLabelArg(PC+1));
-	break;
-
-      case SHALLOWTEST1:
-	ISREAD(GETREGARG(PC+2));
-	PUSH(getLabelArg(PC+3));
-	break;
-
-      case TESTLESS:
-      case TESTLESSEQ:
-	ISREAD(GETREGARG(PC+1));
-	ISREAD(GETREGARG(PC+2));
-	PUSH(getLabelArg(PC+3));
 	break;
 
       case TESTLE:
@@ -315,12 +263,6 @@ outerLoop2:
 	ISREAD(GETREGARG(PC+1));
 	ISREAD(GETREGARG(PC+2));
 	ISWRITE(GETREGARG(PC+3));
-	PUSH(getLabelArg(PC+4));
-	break;
-
-      case SHALLOWTEST2:
-	ISREAD(GETREGARG(PC+2));
-	ISREAD(GETREGARG(PC+3));
 	PUSH(getLabelArg(PC+4));
 	break;
 
@@ -372,9 +314,6 @@ outerLoop2:
 	  CONTINUE(lbl);
 	}
 
-      case WEAKDETX:
-	ISREAD(GETREGARG(PC+1));
-	break;
       case TAILSENDMSGX:
       case SENDMSGX:
 	ISREAD(GETREGARG(PC+2));
@@ -456,9 +395,6 @@ outerLoop2:
 	ISREAD(GETREGARG(PC+1));
 	ISWRITE(GETREGARG(PC+4));
 	break;
-      case CREATENAMEDVARIABLEX:
-	ISWRITE(GETREGARG(PC+1));
-	break;
       case GETSELF:
 	ISWRITE(GETREGARG(PC+1));
 	break;
@@ -487,8 +423,6 @@ outerLoop2:
       case PUTRECORDX:
 	ISWRITE(GETREGARG(PC+3));
 	break;
-      case PUTNUMBERX:
-      case PUTLITERALX:
       case PUTCONSTANTX:
 	ISWRITE(GETREGARG(PC+2));
 	break;
@@ -504,18 +438,6 @@ outerLoop2:
       case GETRECORDX:
 	ISREAD(GETREGARG(PC+3));
 	break;
-      case GETRECORDVARSX:
-	ISREAD(GETREGARG(PC+3));
-	// fall through
-      case GETRECORDVARSY:
-      case GETRECORDVARSG:
-	{
-	  XRegisterIndexListClass *xlist = GetXList(PC+4);
-	  for (int i = 0; i < xlist->getLength(); i++) {
-	    ISWRITE(xlist->get(i));
-	  }
-	  break;
-	}
       case TESTLITERALX:
       case TESTBOOLX:
       case TESTNUMBERX:
@@ -580,13 +502,10 @@ outerLoop2:
 	ISWRITE(GETREGARG(PC+2));
 	break;
 
-      case SWITCHONTERMX:
       case MATCHX:
 	ISREAD(GETREGARG(PC+1));
 	// fall through
-      case SWITCHONTERMY:
       case MATCHY:
-      case SWITCHONTERMG:
       case MATCHG:
 	{
 	
@@ -605,20 +524,11 @@ outerLoop2:
 	  IHashTable *table = (IHashTable *) getAdressArg(PC+2);
 	  PUSH(table->elseLabel);
 	  if (table->elseLabel != table->listLabel) PUSH(table->listLabel);
-	  PUSH(table->varLabel);
 	  if (table->literalTable) DOTABLE(table->literalTable);
 	  if (table->functorTable) DOTABLE(table->functorTable);
 	  if (table->numberTable) DOTABLE(table->numberTable);
 	  BREAK;
 	}
-
-      case BRANCHONNONVARX:
-	ISREAD(GETREGARG(PC+1));
-	// fall through
-      case BRANCHONNONVARY:
-      case BRANCHONNONVARG:
-	PUSH(getLabelArg(PC+2));
-	break;
 
       default:
 	// no usage of X registers
