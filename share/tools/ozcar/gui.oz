@@ -834,31 +834,31 @@ in
 	 case A == TermAllAction then
 	    Gui,doStatus('Terminating all threads...')
 	    ThreadManager,termAll
-	    {Delay 200} %% just to look nice... ;)
+	    {Delay TimeoutToLookNice}
 	    Gui,doStatus(' done' append)
 
 	 elsecase A == TermAllButCurAction then
 	    Gui,doStatus('Terminating all threads but current...')
 	    ThreadManager,termAllButCur
-	    {Delay 200} %% just to look nice... ;)
+	    {Delay TimeoutToLookNice}
 	    Gui,doStatus(' done' append)
 
 	 elsecase A == DetachAllAction then
 	    Gui,doStatus('Detaching all threads...')
 	    ThreadManager,detachAll
-	    {Delay 200}
+	    {Delay TimeoutToLookNice}
 	    Gui,doStatus(' done' append)
 
 	 elsecase A == DetachAllButCurAction then
 	    Gui,doStatus('Detaching all threads but current...')
 	    ThreadManager,detachAllButCur
-	    {Delay 200}
+	    {Delay TimeoutToLookNice}
 	    Gui,doStatus(' done' append)
 
 	 elsecase A == DetachAllDeadAction then
 	    Gui,doStatus('Detaching all dead threads...')
 	    ThreadManager,detachAllDead
-	    {Delay 200}
+	    {Delay TimeoutToLookNice}
 	    Gui,doStatus(' done' append)
 
 	 elsecase A == StepButtonBitmap then T I in
