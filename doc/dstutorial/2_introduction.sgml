@@ -4,8 +4,9 @@
 <P>Fueled by the explosive development
 of the Internet,
 distributed programming is becoming more and more popular.
-The Internet provides
-a global infrastructure for distributed applications.
+The Internet provides the first steps towards
+a global infrastructure for distributed applications,
+namely a global namespace (URLs) and global communications (TCP/IP).
 Platforms such as Java and CORBA that take advantage
 of this infrastructure have become widely-used.
 On first glance, one might think that distributed
@@ -29,7 +30,8 @@ The driving goal is to separate the fundamental aspects
 of programming a distributed system:
 application functionality, distribution structure,
 fault tolerance, security, and open computing.
-The current release completely separates
+
+<P>The current Mozart release completely separates
 application functionality and distribution structure,
 and provides primitives for fault-tolerance,
 open computing, and partial support for security.
@@ -77,23 +79,27 @@ In each case, there are just one or two basic operations.
 For example, <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/ has just two basic operations:
 offering a ticket and taking a ticket.
-The fourth module, <ref.extern to="ozdoc:system"
+
+<P>The fourth module, <ref.extern to="ozdoc:system"
 key="chapter.fault"/<<Fault>>/, is the base on which
 fault-tolerant abstractions are built.
+The current module provides complete fault detection ability
+for both site and network failures
+and has hooks that allow to build efficient fault-tolerant
+abstractions within the Oz language.
 This release provides a few of the most useful abstractions
 to get you started.
-The development of more powerful ones is still ongoing
-research and will be provided in future releases.
+The development of more powerful ones is still ongoing research.
+They will be provided in future releases.
 
-<P>This tutorial attempts to give a precise specification
-of the distribution model and the failure model.
+<P>This tutorial gives an informal but precise specification
+of both the distribution model and the failure model.
 The tutorial carefully indicates where the current release
 is incomplete with respect to the specification
 (this is called a <EM>limitation</EM>)
 or has a different behavior (this is called a <EM>modification</EM>).
-All limitations and modifications are listed where they occur.
-In addition,
-they are listed together at the end of the tutorial.
+All limitations and modifications are explained where they occur
+and they are also listed together at the end of the tutorial.
 
 <P>We say two or more applications are <EM>connected</EM>
 if they share a reference to a language entity that allows
