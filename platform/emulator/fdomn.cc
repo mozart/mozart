@@ -30,6 +30,7 @@
 
 #include <stdarg.h>
 
+#include "base.hh"
 #include "ozostream.hh"
 #include "fdomn.hh"
 

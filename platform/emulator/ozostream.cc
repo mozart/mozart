@@ -31,8 +31,8 @@
 
 #include <errno.h>
 
-#include "ozostream.hh"
 #include "base.hh"
+#include "ozostream.hh"
 #include "os.hh"
 
 ozostream& ends(ozostream& outs)  { return outs.ends();}
