@@ -7,70 +7,19 @@
 
 local
 
-   class AboutDialog 
-      from TkTools.dialog
-
-      meth init(master:Master done:Done)
-	 <<TkTools.dialog tkInit(master:  Master
-				 title:   TitleName#': About'
-				 buttons: ['Okay'#close(proc {$}
-							   Done = Unit
-							end)]
-				 focus:   1
-				 default: 1)>>
-	 Title = {New Tk.label tkInit(parent:     self
-				      font:       AboutFont
-				      text:       TitleName
-				      foreground: AboutColor)}
-
-	 Author = {New Tk.label tkInit(parent: self
-				       text: ('Christian Schulte\n' #
-					      '(schulte@dfki.uni-sb.de)\n'))}
-      in
-	 {Tk.send pack(Title Author
-		       side:top expand:1 padx:BigPad pady:BigPad)}
-      end
-
-   end
-
-   class ShutdownDialog 
-      from TkTools.dialog
-
-      meth init(master:Master done:Done)
-	 <<TkTools.dialog tkInit(master:  Master
-				 title:   TitleName#': Shutdown'
-				 buttons: ['Okay'#close(proc {$}
-							   Done = True
-							end)
-					   'Cancel'#close(proc {$}
-							   Done = False
-							end)]
-				 focus:   1
-				 default: 1)>>
-	 Bitmap  = {New Tk.label   tkInit(parent: self
-					  bitmap: question)}
-	 Message = {New Tk.message tkInit(parent: self
-					  text:   'Do you really want to shutdown')}   
-      in
-	 {Tk.send pack(Bitmap Message
-		       side:left expand:1 padx:BigPad pady:BigPad)}
-      end
-
-   end
-
    class UpdatePage
       from Note
       feat options
-      meth init(parent:P options:O)
-	 <<Note tkInit(parent:P)>>
+      meth init(parent:P options:O text:T)
+	 <<Note tkInit(parent:P text:T)>>
 	 self.options = O
       end
    end
 	 
    class ThreadPage
       from UpdatePage
-
-      meth update(What Slice)
+      attr InfoVisible: False
+      meth update(What)
 	 O  = self.options
 	 OT = O.threads
 	 OP = O.priorities
@@ -80,14 +29,17 @@ local
 	 R = {System.get time}
       in
 	 case What==nosample then true else
-	    {OT.load        display([{IntToFloat T.runnable}] Slice)}
+	    {OT.load        display([{IntToFloat T.runnable}] 2)}
 	 end
 	 case What==sample then true else
 	    {OR.pie         display(R)}
 	    {OT.created     set(T.created)}
 	    {OT.runnable    set(T.runnable)}
-	    {OP.high        set(P.high)}
-	    {OP.middle      set(P.middle)}
+	    case @InfoVisible then
+	       {OP.high        set(P.high)}
+	       {OP.middle      set(P.middle)}
+	    else true
+	    end
 	    {OR.run         set(R.run)}
 	    {OR.gc          set(R.gc)}
 	    {OR.copy        set(R.copy)}
@@ -107,14 +59,26 @@ local
 	 {OR.copy        clear}
 	 {OR.propagation clear}
 	 {OR.load        clear}
-	 <<ThreadPage update(nosample 0)>>
+	 <<ThreadPage update(nosample)>>
+      end
+      meth toggleInfo
+	 O = self.options
+      in
+	 {Tk.send case @InfoVisible then pack(forget O.priorities.frame)
+		  else pack(O.priorities.frame
+			    after:O.threads.frame side:top padx:Pad pady:Pad)
+		  end}
+	 InfoVisible <- {Not @InfoVisible}
+      end
+      meth toTop
+	 <<ThreadPage update(nosample)>>
       end
    end
    
    class MemoryPage
       from UpdatePage
-
-      meth update(What Slice)
+      attr InfoVisible: False
+      meth update(What)
 	 O  = self.options
 	 OG = O.gc
 	 OP = O.parameter
@@ -125,18 +89,34 @@ local
 	    {OU.load       display([{IntToFloat G.threshold} / MegaByteF
 				    {IntToFloat G.size} / MegaByteF
 				    {IntToFloat G.active} / MegaByteF]
-				   Slice)}
+				   2)}
 	 end
 	 case What==sample then true else
 	    {OU.active     set(G.active div KiloByteI)}
 	    {OU.size       set(G.size div KiloByteI)}
 	    {OU.threshold  set(G.threshold div KiloByteI)}
-	    {OP.minSize    set(G.min div MegaByteI)}
-	    {OP.maxSize    set(G.max div MegaByteI)}
-	    {OP.free       set(G.free)}
-	    {OP.tolerance  set(G.tolerance)}
-	    {OG.active     set(G.on)}
+	    case @InfoVisible then
+	       {OP.minSize    set(G.min div MegaByteI)}
+	       {OP.maxSize    set(G.max div MegaByteI)}
+	       {OP.free       set(G.free)}
+	       {OP.tolerance  set(G.tolerance)}
+	       {OG.active     set(G.on)}
+	    else true
+	    end
 	 end
+      end
+      meth toggleInfo
+	 O = self.options
+      in
+	 {Tk.send case @InfoVisible then
+		     pack(forget O.parameter.frame O.gc.frame)
+		  else pack(O.parameter.frame O.gc.frame
+			    after:O.usage.frame side:top pady:Pad padx:Pad)
+		  end}
+	 InfoVisible <- {Not @InfoVisible}
+      end
+      meth toTop
+	 <<MemoryPage update(nosample)>>
       end
    end
 
@@ -159,7 +139,6 @@ local
 	 {OF.var       set(F.variables)}
       end
       meth clear
-	 <<PsPage update>>
 	 O  = self.options
 	 OS = O.spaces
 	 OF = O.fd
@@ -172,8 +151,12 @@ local
 	 {OF.propc     clear}
 	 {OF.propi     clear}
 	 {OF.var       clear}
+	 <<PsPage update>>
       end
-      
+      meth toTop
+	 <<PsPage update>>
+      end
+
    end
    
    class OpiPage
@@ -196,12 +179,16 @@ local
 	 {OM.gc       set(M.gc)}
 	 {OM.time     set(M.idle)}
       end
+      meth toTop
+	 <<OpiPage update>>
+      end
+
    end
    
 in
    
    class PanelTop
-      from Tk.toplevel Time.repeat
+      from Tk.toplevel
 
       feat
 	 manager
@@ -209,7 +196,11 @@ in
 	 menu
 	 threads memory opi ps
       attr
-	 Slice: 2
+	 UpdateTime:   1000
+	 RequireMouse: True
+	 MouseInside:  True
+	 DelayStamp:   0
+	 InfoVisible:  False
       
       meth init(manager:Manager)
 	 <<Tk.toplevel tkInit(title:              TitleName
@@ -217,63 +208,54 @@ in
 	 {Tk.batch [wm(iconname   self TitleName)
 		    wm(iconbitmap self BitMap)
 		    wm(resizable self 0 0)]}
-
-	 VarSample = {New Tk.variable tkInit(1)}
-	 Menu  = {TkTools.menubar self self
-		  [menubutton(text: ' Oz Panel '
-			      menu: [command(label:   'About...'
+	 EventFrame = {New Tk.frame tkInit(parent:             self
+					   highlightthickness: 0)}
+	 Menu  = {TkTools.menubar EventFrame self
+		  [menubutton(text: ' Panel '
+			      menu: [command(label:   'About ...'
 					     action:  self # about
 					     feature: about)
 				     separator
 				     command(label:   'Clear'
 					     action:  self # clear)
 				     separator
-				     command(label:   'Shutdown System'
+				     command(label:   'Shutdown System ...'
 					     action:  self # shutdown
 					     feature: shutdown)
 				     separator
 				     command(label:   'Close'
 					     action:  self # close)]
 			      feature: panel)
-		   menubutton(text: ' Sample '
-			      menu: [radiobutton(label:    'Every half second'
-						 variable: VarSample
-						 value:    0
-						 action:   self # sample(1))
-				     radiobutton(label:    'Every second'
-						 variable: VarSample
-						 value:    1
-						 action:   self # sample(2))
-				     radiobutton(label:    'Every 2 seconds'
-						 variable: VarSample
-						 value:    2
-						 action:   self # sample(4))
-				     radiobutton(label:    'Every 10 seconds'
-						 variable: VarSample
-						 value:    3
-						 action:   self # sample(20))
-				     radiobutton(label:    'Every minute'
-						 variable: VarSample
-						 value:    4
-						 action:   self # sample(120))])]
+		   menubutton(text:    ' Options '
+			      feature: options
+			      menu: [checkbutton(label: 'Configurable'
+						 variable: {New Tk.variable
+							    tkInit(False)}
+						 action: self # toggleInfo)
+				     separator
+				     command(label:  'Update ...'
+					     action:  self # optionUpdate
+					     feature: update)])
+		  ]
 		  nil}
-	 Frame = {New Tk.frame tkInit(parent: self
+	 Frame = {New Tk.frame tkInit(parent: EventFrame
 				      highlightthickness: 0
 				      bd:                 4)}
 	 Book  = {New Notebook tkInit(parent: Frame
 				      width:  PanelWidth
-				      height: PanelHeight)}
+				      height: PartPanelHeight)}
 	 Threads =
-	 {MakePage ThreadPage 'Threads' Book
+	 {MakePage ThreadPage 'Threads' Book True
 	  [frame(text:    'Threads'
-		 height:  90
+		 height:  70
 		 left:    [number(text: 'Created:')
 			   number(text: 'Runnable:'
 				  color: RunnableColor)]
 		 right:   [load(feature: load
 				colors:  [RunnableColor])])
 	   frame(text:    'Priorities'
-		 height:  70
+		 height:  64
+		 pack:    False
 		 left:    [scale(text:    'High / Middle:'
 				 state:   {System.get priorities}.high
 				 feature: high
@@ -293,7 +275,7 @@ in
 					     {System.set
 					      priorities(high:   10
 							 middle: 10)}
-					     {Threads update(nosample 0)}
+					     {Threads update(nosample)}
 					  end)])
 	   frame(text:    'Runtime'
 		 height:  100
@@ -310,10 +292,10 @@ in
 				color:   TimeColors.load)]
 		 right:   [pie(feature: pie)])]}
 	 Memory =
-	 {MakePage MemoryPage 'Memory' Book
+	 {MakePage MemoryPage 'Memory' Book True
 	  [frame(text:    'Heap Usage'
 		 feature: usage
-		 height:  90
+		 height:  70
 		 left:    [size(text:    'Threshold:'
 				color:   ThresholdColor)
 			   size(text:    'Size:'
@@ -326,12 +308,17 @@ in
 				dim:     'MB')])
 	   frame(text:    'Heap Parameters'
 		 feature: parameter
-		 height:  130
-		 left:    [scale(text:    'Maximal Size:'
+		 pack:    False
+		 height:  125
+		 left:    [scale(text:    'Maximal size:'
 				 range:   1#512
 				 dim:     'MB'
 				 feature: maxSize
-				 state:   {System.get gc}.max div MegaByteI
+				 state:   local MS={System.get gc}.max in
+					     case MS=<0 then 512
+					     else MS div MegaByteI
+					     end
+					  end
 				 action:  proc {$ N}
 					     S = Memory.options.
 					            parameter.minSize
@@ -342,7 +329,7 @@ in
 					     {System.set 
 					      gc(max: N * MegaByteI)}
 					  end)
-			   scale(text:    'Minimal Size:'
+			   scale(text:    'Minimal size:'
 				 range:   1#512
 				 dim:     'MB'
 				 feature: minSize
@@ -377,7 +364,7 @@ in
 						 min:       1 * MegaByteI
 						 free:      60
 						 tolerance: 20)}
-					     {Memory update(nosample 0)}
+					     {Memory update(nosample)}
 					  end)
 			   button(text:'Middle'
 				  action: proc {$}
@@ -386,7 +373,7 @@ in
 						 min:       2  * MegaByteI
 						 free:      70
 						 tolerance: 15)}
-					     {Memory update(nosample 0)}
+					     {Memory update(nosample)}
 					  end)
 			   button(text:'Large'
 				  action: proc {$}
@@ -395,10 +382,11 @@ in
 						 min:       8 * MegaByteI
 						 free:      80
 						 tolerance: 10)}
-					     {Memory update(nosample 0)}
+					     {Memory update(nosample)}
 					  end)])
 	   frame(text:    'Garbage Collector'
 		 feature: gc
+		 pack:    False
 		 height:  30
 		 left:    [checkbutton(text:   'Active'
 				       state:  {System.get gc}.on
@@ -410,7 +398,7 @@ in
 					     {System.gcDo}
 					  end)])]}
 	 PS =
-	 {MakePage PsPage 'Problem Solving' Book
+	 {MakePage PsPage 'Problem Solving' Book True
 	  [frame(text:    'Finite Domain Constraints'
 		 feature: fd
 		 height:  60
@@ -435,7 +423,7 @@ in
 				  feature: chosen)]
 		 right:   nil)]}
 	 OPI =
-	 {MakePage OpiPage 'Programming Interface' Book
+	 {MakePage OpiPage 'Programming Interface' Book False
 	  [frame(text:    'Errors'
 		 height:  60
 		 left:    [checkbutton(text:    'Show thread'
@@ -489,7 +477,7 @@ in
 					  end)])
 	   frame(text:    'Status Messages'
 		 feature: messages
-		 height:  50
+		 height:  45
 		 left:    [checkbutton(text:    'Idle'
 				       feature: time
 				       state:  {System.get messages}.idle
@@ -497,7 +485,7 @@ in
 						  {System.set
 						   messages(idle: B)}
 					       end)
-			   checkbutton(text:    'Garbage Collection'
+			   checkbutton(text:    'Garbage collection'
 				       feature: gc
 				       state:  {System.get messages}.gc
 				       action: proc {$ B}
@@ -511,11 +499,12 @@ in
 						       gc:   True)}
 					     {OPI update}
 					  end)])]}
+	  
       in
-	  {Tk.batch [pack(Menu side:top fill:x)
-		     pack(Frame side:bottom)
-		     pack(Book)]}
-	 {Book toTop(Threads)}
+	 {Tk.batch [pack(Menu side:top fill:x)
+		    pack(Book)
+		    pack(Frame side:bottom)
+		    pack(EventFrame)]}
 	 self.manager  = Manager
 	 self.threads  = Threads
 	 self.memory   = Memory
@@ -523,38 +512,40 @@ in
 	 self.ps       = PS
 	 self.notebook = Book
 	 self.menu     = Menu
-	 <<Time.repeat setRepAll(action: update
-				 delay:  1000)>>
-	 <<Time.repeat go>>
+	 {EventFrame tkBind(event:'<Enter>'
+			    action:self # enter)}
+	 {EventFrame tkBind(event:'<Leave>'
+			    action:self # leave)}
+	 <<PanelTop update(@DelayStamp)>>
       end
 
-      meth update
-	 TopNote = {self.notebook getTop($)}
-	 Threads = self.threads
-	 Memory  = self.memory
-	 S       = @Slice
-      in
-	 case TopNote
-	 of !Threads then
-	    {Threads update(both   S)}
-	    {Memory  update(sample S)}
-	 [] !Memory  then
-	    {Threads update(sample S)}
-	    {Memory  update(both   S)}
-	 else
-	    {Threads update(sample S)}
-	    {Memory  update(sample S)}
-	    {TopNote update}
+      meth update(Stamp)
+	 case Stamp==@DelayStamp then
+	    TopNote = {self.notebook getTop($)}
+	    Threads = self.threads
+	    Memory  = self.memory
+	 in
+	    case TopNote
+	    of !Threads then
+	       {Threads update(both)}
+	       {Memory  update(sample)}
+	    [] !Memory  then
+	       {Threads update(sample)}
+	       {Memory  update(both)}
+	    else
+	       {Threads update(sample)}
+	       {Memory  update(sample)}
+	       {TopNote update}
+	    end
+	    <<PanelTop delay>>
+	 else true
 	 end
       end
 
       meth shutdown
-	 Done
-      in
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
-	 _ = {New ShutdownDialog init(master:self done:Done)}
 	 thread
-	    case Done then {System.shutDown exit}
+	    case {DoShutdown self} then {System.shutDown exit}
 	    else true
 	    end
 	    {self.menu.panel.shutdown tk(entryconf state:normal)}
@@ -562,24 +553,91 @@ in
       end
 
       meth about
-	 Done
-      in
 	 {self.menu.panel.about tk(entryconf state:disabled)}
-	 _ = {New AboutDialog init(master:self done:Done)}
 	 thread
-	    {Wait Done}
+	    {Wait {DoAbout self}}
 	    {self.menu.panel.about tk(entryconf state:normal)}
+	 end
+      end
+
+      meth toggleInfo
+	 InfoVisible <- {Not @InfoVisible}
+	 case @InfoVisible then
+	    {self.notebook confHeight(FullPanelHeight)}
+	    {self.notebook add(note:self.opi)}
+	 else
+	    {self.notebook confHeight(PartPanelHeight)}
+	    {self.notebook remove(note:self.opi)}
+	 end
+	 {self.threads toggleInfo}
+	 {self.memory  toggleInfo}
+      end
+      
+      meth delay
+	 DS = @DelayStamp
+      in
+	 {Delay @UpdateTime}
+	 {self update(DS)}
+      end
+
+      meth stop
+	 DelayStamp <- @DelayStamp + 1
+      end
+      
+      meth enter
+	 MouseInside <- True
+	 case @RequireMouse then <<PanelTop delay>>
+	 else true
+	 end
+      end
+
+      meth leave
+	 MouseInside <- False
+	 case @RequireMouse then <<PanelTop stop>>
+	 else true
+	 end
+      end
+      
+      meth setUpdate(time:T mouse:M) 
+	 case
+	    {Or case @RequireMouse==M then False
+		else
+		   RequireMouse <- M
+		   case M then
+		      case @MouseInside then True
+		      else <<PanelTop stop>> False
+		      end
+		   else <<PanelTop stop>> True
+		   end
+		end
+	        case @UpdateTime==T then False
+		else
+		   UpdateTime <- T
+		   <<PanelTop stop>>
+		   True
+		end}
+	 then <<PanelTop delay>>
+	 else true
+	 end
+      end
+      
+      meth optionUpdate
+	 T = @UpdateTime
+	 M = @RequireMouse
+      in
+	 {self.menu.options.update tk(entryconf state:disabled)}
+	 thread
+	    Next = {DoOptionUpdate self setUpdate(time:T mouse:M)}
+	 in
+	    {Wait Next}
+	    {self.menu.options.update tk(entryconf state:normal)}
+	    {self Next}
 	 end
       end
 
       meth clear
 	 {self.ps      clear}
 	 {self.threads clear}
-      end
-      
-      meth sample(S)
-	 Slice <- S
-	 <<Time.repeat setRepDelay(S * 500)>>
       end
       
       meth close
