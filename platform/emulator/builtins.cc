@@ -4471,6 +4471,8 @@ OZ_C_proc_begin(BIsendPort,2)
   OZ_declareNonvarArg(0,prt);
   OZ_declareArg(1,msg);
 
+  prt = deref(prt);
+
   if (!isPort(prt)) {
     TypeErrorT(0,"Port");
   }
