@@ -35,7 +35,7 @@ define
 	 CardLock={NewLock}
 	 SYVisible={NewCell true}
 	 LastX={NewCell 0}
-	 LCol=white  DCol=darkgrey
+	 LCol=white  DCol= '#a9a9a9'
 	 Y=30 DX=5 W=3 H=3 SC=2
 	 DB={NewDictionary}
 	 DC={New Tk.canvas tkInit(parent:self height:Y+1 bd:0 highlightthickness:0)}
