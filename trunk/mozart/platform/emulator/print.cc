@@ -6,6 +6,8 @@
   ------------------------------------------------------------------------
 */
 
+#include "types.hh"
+
 #ifdef PRINT_LONG
 #include "ozostream.hh"
 
