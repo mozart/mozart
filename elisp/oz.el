@@ -2,7 +2,6 @@
 ;; Copyright (C) 1993 DFKI GmbH
 ;; Author: Ralf Scheidhauer and Michael Mehl ([scheidhr|mehl]@dfki.uni-sb.de)
 
-
 ;; TODO
 ;; - state message: Should we use the mode-line ???
 
@@ -95,10 +94,13 @@ starts the emulator under gdb")
 (defvar oz-temp-counter 0
   "gensym counter")
 
-(defvar oz-title-format
-  (concat "Oz Programming Interface ("
-	  (cdr (assoc 'name (frame-parameters))) ")")
-  "The format string for the window title" )
+;;------------------------------------------------------------
+;; Screen title
+;;------------------------------------------------------------
+
+;; lucid supports screen-title as format string (is better ...)
+;;  see function mode-line-format
+;; gnu19 supports frame-title as constant string
 
 (defvar oz-old-screen-title
   (if oz-lucid
@@ -109,6 +111,43 @@ starts the emulator under gdb")
 	      (cdr (assoc 'name (frame-parameters))))))
   "The saved window title")
 
+
+(defun oz-get-title()
+  (if oz-gnu19
+      (cdr (assoc 'name (frame-parameters (car (visible-frame-list)))))
+      (if oz-lucid
+	screen-title-format
+	"")))
+
+(defvar oz-title-format
+  (concat "Oz Programming Interface ("
+	  (oz-get-title) ")")
+  "The format string for the window title")
+
+
+(defun oz-set-title ()
+  (if oz-gnu19
+      (mapcar '(lambda(scr)
+		 (modify-frame-parameters 
+		  scr
+		  (list (cons 'name oz-title-format))))
+	      (visible-screen-list)))
+
+  (if oz-lucid
+      (setq screen-title-format oz-title-format)))
+
+
+
+(defun oz-reset-title ()
+  "reset to the initial window title"
+  (if oz-lucid
+   (setq screen-title-format oz-old-screen-title))
+  (if oz-gnu19
+   (mapcar '(lambda(scr)
+	      (modify-frame-parameters 
+	       scr
+	       (list (cons 'name oz-old-screen-title))))
+	   (visible-screen-list))))
 
 (defun oz-window-system()
   "Non-nil iff we are running under X"
@@ -135,36 +174,6 @@ starts the emulator under gdb")
       (setq end (point))
       (cons beg end))))
 
-
-;;------------------------------------------------------------
-;; Screen title
-;;------------------------------------------------------------
-
-;; lucid supports screen-title as format string (is better ...)
-;;  see function mode-line-format
-;; gnu19 supports frame-title as constant string
-
-(defun oz-set-title ()
-  (if oz-gnu19
-      (mapcar '(lambda(scr)
-		 (modify-frame-parameters 
-		  scr
-		  (list (cons 'name oz-title-format))))
-	      (visible-screen-list)))
-
-  (if oz-lucid
-      (setq screen-title-format oz-title-format)))
-
-(defun oz-reset-title()
-  "reset to the initial window title"
-  (if oz-lucid
-   (setq screen-title-format oz-old-screen-title))
-  (if oz-gnu19
-   (mapcar '(lambda(scr)
-	      (modify-frame-parameters 
-	       scr
-	       (list (cons 'name oz-old-screen-title))))
-	   (visible-screen-list))))
 
 ;;------------------------------------------------------------
 ;; Fonts
