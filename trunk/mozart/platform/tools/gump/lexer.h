@@ -65,7 +65,14 @@ OZ_BI_end
 OZ_BI_define(yy_lexer_getNextMatch, 1, 1)
 {
   OZ_declareForeignPointerIN(0, p);
-  OZ_RETURN_INT(((yyFlexLexer *) p)->yylex());
+  yyFlexLexer *lexer = (yyFlexLexer *) p;
+  int res = lexer->yylex();
+  if (res == -1) {
+    return OZ_raiseErrorC("gump",2,OZ_atom("fatalError"),
+			  OZ_string(lexer->yy_last_error_msg));
+  } else {
+    OZ_RETURN_INT(res);
+  }
 }
 OZ_BI_end
 
