@@ -123,10 +123,10 @@ public:
     return expectVector(t, (LPPropagatorExpectMeth) &OZ_Expect::expectFloat);
   }
   OZ_expect_t expectVectorRIVarMinMax(OZ_Term t) {
-    return expectVector(t,  &expectRIVarMinMax);
+    return expectVector(t,  &LPExpect::expectRIVarMinMax);
   }
   OZ_expect_t expectVectorConstrRecord(OZ_Term t) {
-    return expectVector(t,  &expectConstrRecord);
+    return expectVector(t,  &LPExpect::expectConstrRecord);
   }
   OZ_expect_t expectIntVarMinMax(OZ_Term t) {
     return expectIntVar(t, fd_prop_bounds); 

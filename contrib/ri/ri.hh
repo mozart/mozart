@@ -473,7 +473,7 @@ public:
     return expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectFloat);
   }
   OZ_expect_t expectVectorRIVarMinMax(OZ_Term t) {
-    return expectVector(t,  &expectRIVarMinMax);
+    return expectVector(t,  &RIExpect::expectRIVarMinMax);
   }
   OZ_expect_t expectIntVarMinMax(OZ_Term t) {
     return expectIntVar(t, fd_prop_bounds);
