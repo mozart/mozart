@@ -155,6 +155,7 @@ OZ_C_proc_proto(BIfdWatchBounds3)
 
 // fddist.cc
 OZ_C_proc_proto(BIfdDistribute)
+OZ_C_proc_proto(BIfdDistributeMinPairs)
 
 // body prototypes
 OZ_C_proc_proto(BIfdPlus_body)
