@@ -1549,7 +1549,21 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
   }
 }
 
-// mm2: OZ_adjoinAt(...)
+OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
+{
+  rec = deref(rec);
+  fea = deref(fea);
+  if (!isFeature(fea) || !isRecord(rec)) return 0;
+
+  if (isLiteral(rec)) {
+    SRecord *srec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
+    srec->setArg(0,val);
+    return makeTaggedSRecord(srec);
+  }
+
+  SRecord *srec = makeRecord(rec);
+  return srec->adjoinAt(fea,val);
+}
 
 OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
 {
