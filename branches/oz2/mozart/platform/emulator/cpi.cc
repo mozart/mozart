@@ -17,16 +17,12 @@
 
 char * ctHeap, * ctHeapTop = new char[MAXFDBIARGS * 100];
 
-_spawnVars_t * staticSpawnVars = new _spawnVars_t[MAXFDBIARGS];
-
-_spawnVars_t * staticSpawnVarsProp = new _spawnVars_t[MAXFDBIARGS];
-
-OZ_Term ** staticSuspendVars = new OZ_Term*[MAXFDBIARGS];
+EnlargeableArray<_spawnVars_t> staticSpawnVars(MAXFDBIARGS);
+EnlargeableArray<_spawnVars_t> staticSpawnVarsProp(MAXFDBIARGS);
+EnlargeableArray<OZ_Term *> staticSuspendVars(MAXFDBIARGS);
 
 int staticSpawnVarsNumber = 0;
-
 int staticSpawnVarsNumberProp = 0;
-
 int staticSuspendVarsNumber = 0;
 
 #if defined(OUTLINE)

@@ -19,7 +19,7 @@ void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
   staticSpawnVarsProp[staticSpawnVarsNumberProp].expected_type = FDVariable;
   staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
   
-  Assert(staticSpawnVarsNumberProp < MAXFDBIARGS);
+  staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
 }
 
 inline
@@ -29,7 +29,7 @@ void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
   staticSpawnVars[staticSpawnVarsNumber].expected_type = FDVariable;
   staticSpawnVars[staticSpawnVarsNumber++].var = v;
   
-  Assert(staticSpawnVarsNumber < MAXFDBIARGS);
+  staticSpawnVars.request(staticSpawnVarsNumber);
 }
 
 inline
