@@ -939,7 +939,7 @@ S={New Tk.scrollbar tkInit(parent:W)}
       For example, by
       <<<{Tk.send wm(iconify ?_{T})}>>>
       the toplevel widget&nbsp;?_{T} is iconified whereas by
-      <<<{Tk.send wm(iconify ?_{T})}>>>
+      <<<{Tk.send wm(deiconify ?_{T})}>>>
       it is deiconified.
       For more information see <ref.extern to="&tkcmd/wm.htm"/<kbd/wm//.
 
