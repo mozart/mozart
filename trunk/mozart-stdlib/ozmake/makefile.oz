@@ -37,6 +37,6 @@ deployment.
 <SPAN CLASS="TOOL">ozmake</SPAN> must currently be invoked from a shell, but it
 will eventually acquire additionally an optional, user-friendly
 graphical interface.
-Precompiled versions for both Unix and Windows can be downloaded from the documentation
-page</P>')
+<b>Precompiled versions for both Unix and Windows can be downloaded from the documentation
+page</b></P>')
 
