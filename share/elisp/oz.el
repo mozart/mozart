@@ -947,10 +947,60 @@ buffer."
 (defmacro oz-kbd (keys)
   (read-kbd-macro keys))
 
+(defvar mozart-bindings nil)
+
 (defvar oz-mode-map
   (let ((map (make-sparse-keymap)))
     (cond
      (oz-gnu-emacs
+      (cond (mozart-bindings
+	     (define-key map (oz-kbd "TAB") 'oz-indent-line)
+	     (define-key map (oz-kbd "DEL") 'backward-delete-char-untabify)
+	     (define-key map (oz-kbd "RET") 'oz-electric-terminate-line)
+	     ;;
+	     (define-key map (oz-kbd "C-. e") 'oz-toggle-emulator)
+	     (define-key map (oz-kbd "C-. c") 'oz-toggle-compiler)
+	     (define-key map (oz-kbd "C-. t") 'oz-toggle-temp)
+	     (define-key map (oz-kbd "C-. r") 'run-oz)
+	     (define-key map (oz-kbd "C-. h") 'oz-halt)
+	     (define-key map (oz-kbd "C-. n") 'oz-new-buffer)
+	     (define-key map (oz-kbd "C-. d") 'oz-gdb)
+	     (define-key map (oz-kbd "C-. o") 'oz-other)
+	     (define-key map (oz-kbd "C-. m") 'oz-set-other)
+	     ;;
+	     (define-key map (oz-kbd "C-. C-l") 'oz-feed-line)
+	     (define-key map (oz-kbd "C-. C-r") 'oz-feed-region)
+	     (define-key map (oz-kbd "C-. C-b") 'oz-feed-buffer)
+	     (define-key map (oz-kbd "C-. C-p") 'oz-feed-paragraph)
+	     (define-key map (oz-kbd "M-C-x"  ) 'oz-feed-paragraph)
+	     ;;
+	     (define-key map (oz-kbd "C-. b C-l") 'oz-browse-line)
+	     (define-key map (oz-kbd "C-. b C-r") 'oz-browse-region)
+	     (define-key map (oz-kbd "C-. b C-b") 'oz-browse-buffer)
+	     (define-key map (oz-kbd "C-. b C-p") 'oz-browse-paragraph)
+	     ;;
+	     (define-key map (oz-kbd "C-. s C-l") 'oz-show-line)
+	     (define-key map (oz-kbd "C-. s C-r") 'oz-show-region)
+	     (define-key map (oz-kbd "C-. s C-b") 'oz-show-buffer)
+	     (define-key map (oz-kbd "C-. s C-p") 'oz-show-paragraph)
+	     ;;
+	     (define-key map (oz-kbd "C-. C-. s") 'oz-open-panel)
+	     (define-key map (oz-kbd "C-. C-. c") 'oz-open-compiler-panel)
+	     (define-key map (oz-kbd "C-. C-. p") 'oz-profiler)
+	     (define-key map (oz-kbd "C-. C-. d") 'oz-debugger)
+	     ;;
+	     (define-key map (oz-kbd "C-x SPC") 'oz-breakpoint-at-point)
+	     (define-key map (oz-kbd "M-C-f"  ) 'forward-oz-expr)
+	     (define-key map (oz-kbd "M-C-b"  ) 'backward-oz-expr)
+	     (define-key map (oz-kbd "M-C-k"  ) 'kill-oz-expr)
+	     (define-key map (oz-kbd "M-C-@"  ) 'mark-oz-expr)
+	     (define-key map (oz-kbd "M-C-SPC") 'mark-oz-expr)
+	     (define-key map (oz-kbd "M-C-DEL") 'backward-kill-oz-expr)
+	     (define-key map (oz-kbd "M-C-q"  ) 'indent-oz-expr)
+	     (define-key map (oz-kbd "M-C-a"  ) 'oz-beginning-of-defun)
+	     (define-key map (oz-kbd "M-C-e"  ) 'oz-end-of-defun)
+	     (define-key map (oz-kbd "M-C-t"  ) 'transpose-oz-exprs))
+	    (t
       (define-key map (oz-kbd "TAB")         'oz-indent-line)
       (define-key map (oz-kbd "DEL")         'backward-delete-char-untabify)
 
@@ -1004,7 +1054,7 @@ buffer."
 
 	    (define-key map (oz-kbd "C-c m") 'oz-set-other)
 	    (define-key map (oz-kbd "C-c o") 'oz-other)
-	    (define-key map (oz-kbd "C-c d") 'oz-gdb))))
+	    (define-key map (oz-kbd "C-c d") 'oz-gdb))))))
 
      (oz-lucid-emacs
       (define-key map [tab]                       'oz-indent-line)
