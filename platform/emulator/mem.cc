@@ -63,9 +63,6 @@ char *heapTop;
 char *heapEnd;
 
 void initMemoryManagement(void) {
-  // init free store list
-  for(int i=freeListMaxSize; i--; )
-    FreeList[i] = NULL;
 
 #ifdef LINKED_QUEUES
   extern void initLinkedQueueFreeList();
@@ -81,6 +78,21 @@ void initMemoryManagement(void) {
   // allocate first chunk of memory;
   MemChunks::list = NULL;
   (void) getMemFromOS(0);
+
+  // init free store list
+  {
+    for (int i = freeListMaxSize; i--; ) 
+      FreeList[i] = NULL;
+  }
+
+  /*
+   * Ensure that the proper slots are filled with blocks
+   */
+  {
+    for(int i=sizeof(FreeListMem); i < freeListMaxSize; i+=sizeof(FreeListMem))
+      freeListRefill(&(FreeList[i]));
+  }
+
 }
 
 
@@ -90,11 +102,6 @@ void initMemoryManagement(void) {
 FreeListMem* FreeList[freeListMaxSize];
 size_t nextChopSize;
 
-void heapFree(void * /* addr */)
-{
-//  error("Heap Free: called: @ %d\n",addr);
-}
-
 // count bytes free in FreeList memory
 unsigned int getMemoryInFreeList() {
   unsigned int sum = 0;
@@ -102,7 +109,7 @@ unsigned int getMemoryInFreeList() {
 
   for (int i=0; i<freeListMaxSize; i++) {
     ptr = FreeList[i];
-    while(ptr != NULL) {
+    while (ptr != NULL) {
       sum += i;
       ptr = (FreeListMem*) ToPointer(ptr->next);
     }
@@ -122,6 +129,32 @@ void scanFreeList(void) {
 	;
 }
 #endif
+
+#define FreeListRefillQuantity 16
+
+void freeListRefill(FreeListMem ** fl) {
+  int sz = fl - FreeList;
+  Assert(sz >= sizeof(FreeListMem) && sz <= freeListMaxSize);
+
+  /*
+   * With how much entries should be the guy refilled?
+   * Could be dynamic, but let's just take a fixed number.
+   */
+
+  char * block = 
+    (char *) heapMalloc(sz * FreeListRefillQuantity);
+
+  *fl = (FreeListMem *) block;
+
+  for (int i=FreeListRefillQuantity-1; i--; ) {
+    ((FreeListMem *) block)->next = ToInt32(block+sz);
+    block += sz;
+  }
+
+  ((FreeListMem *) (block))->next = ToInt32(NULL);
+
+}
+
 
 void freeListChop(void * addr, size_t size) {
   // Chop the chunk into pieces of the likely sizes

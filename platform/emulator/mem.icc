@@ -31,30 +31,47 @@
 #pragma interface
 #endif
 
+/*
+ * The freelist works as follows:
+ *  - It has always at least one entry for each size
+ *  - When the last entry is taken that slot gets refilled
+ *
+ */
 
 inline
 void * freeListMalloc(size_t size) {
   Assert(((size & 3) == 0) && (size > 0));
 
   if (size < freeListMaxSize) {
-    register FreeListMem ** fl = &(FreeList[size]);
-    register FreeListMem * aux = *fl;
+    FreeListMem ** fl = &(FreeList[size]);
+    FreeListMem * aux = *fl;
 
-    if (aux) {
-      *fl = (FreeListMem*) ToPointer(aux->next);
+    /*
+     * Yes, there must be an entry!
+     */
+    Assert(aux);
+
+    FreeListMem * next = (FreeListMem*) ToPointer(aux->next);
+    *fl = next;
+
+    /*
+     * If it became empty, fill it!
+     */
+    if (!next) 
+      freeListRefill(fl);
+
 #ifdef DEBUG_MEM
-      {
-	char *s=(char *)aux;
-	s+=sizeof(FreeListMem);
-	for (int i=size-sizeof(FreeListMem); i--;) {
-	  Assert(*s++==0x5a)
-	}
+    {
+      char *s=(char *)aux;
+      s+=sizeof(FreeListMem);
+      for (int i=size-sizeof(FreeListMem); i--;) {
+	Assert(*s++==0x5a);
       }
-#endif
-      DebugMem(memset((char *)aux,0x5A,size));
-      return aux;
     }
-  } 
+#endif
+    DebugMem(memset((char *)aux,0x5A,size));
+    return aux;
+  }
 
   register void * aux = heapMalloc(size);
   
