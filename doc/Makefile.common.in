@@ -105,7 +105,7 @@ $(WHAT).tex: $(WHAT)-ready.xml
         $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
         || { rm -f $@; exit -1 }
 
-export TEXINPUTS = $(SRCDIR):$(SRCTOP)/doc/xsl:$(shell echo $$TEXINPUTS)
+export TEXINPUTS = $(SRCDIR):$(SRCTOP)/doc/xsl:../xsl:$(shell echo $$TEXINPUTS)
 export BSTINPUTS = .:$(SRCDIR):$(shell echo $$BSTINPUTS)
 export BIBINPUTS = .:$(SRCDIR):$(shell echo $$BIBINPUTS)
 
