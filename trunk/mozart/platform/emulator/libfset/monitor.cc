@@ -26,7 +26,7 @@
 
 #include "monitor.hh"
 
-OZ_C_proc_begin(fsp_monitorIn, 2)
+OZ_BI_define(fsp_monitorIn, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_STREAM);
 
@@ -35,11 +35,11 @@ OZ_C_proc_begin(fsp_monitorIn, 2)
   OZ_EXPECT(pe, 0, expectFSetVarAny);
   OZ_EXPECT(pe, 1, expectStream);
 
-  return pe.impose(new MonitorInPropagator(OZ_args[0], OZ_args[1]));
+  return pe.impose(new MonitorInPropagator(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(fsp_monitorOut, 2)
+OZ_BI_define(fsp_monitorOut, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_STREAM);
 
@@ -48,9 +48,9 @@ OZ_C_proc_begin(fsp_monitorOut, 2)
   OZ_EXPECT(pe, 0, expectFSetVarAny);
   OZ_EXPECT(pe, 1, expectStream);
 
-  return pe.impose(new MonitorOutPropagator(OZ_args[0], OZ_args[1]));
+  return pe.impose(new MonitorOutPropagator(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return MonitorPropagator::propagate(OZ_Boolean is_inprop)
 {
