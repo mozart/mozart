@@ -32,7 +32,7 @@
 #include "objects.hh"
 
 
-void printWhere(ostream cout,ProgramCounter PC);
+void printWhere(ostream &cout,ProgramCounter PC);
 
 
 #define PRINT(C) \
@@ -1235,7 +1235,7 @@ void printSuspension(ProgramCounter pc)
   }
 }
 
-void printWhere(ostream stream,ProgramCounter PC)
+void printWhere(ostream &stream,ProgramCounter PC)
 {
   PC = CodeArea::definitionStart(PC);
 
