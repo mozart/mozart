@@ -77,9 +77,6 @@ AboutFont = '-Adobe-times-bold-r-normal--*-240*'
 
 TitleName = 'Oz Panel'
 
-
-BitMap = BitMapDir # 'panel.xbm'
-
 UpdateTimes         = [500   # '500ms'
 		       1000  # '1s'
 		       5000  # '5s'
