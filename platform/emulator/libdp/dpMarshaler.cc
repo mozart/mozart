@@ -2030,6 +2030,21 @@ unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
   return oz;
 }
 
+//
+void DPBuilderCodeAreaDescriptor::gc()
+{
+  Assert(current >= start && current <= end);
+  // Unfortunately, 'ENDOFFILE' has to be recorded eagerly, because
+  // 'CodeArea::gCollectCodeAreaStart()' (in its current incarnation)
+  // has to be called before any codearea can be reached by other
+  // means;
+#if defined(DEBUG_CHECK)
+  if (getCurrent()) {
+    Opcode op = CodeArea::getOpcode(getCurrent());
+    Assert(op == ENDOFFILE);
+  }
+#endif
+}
 
 //
 //

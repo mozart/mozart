@@ -124,8 +124,12 @@ void GenTraverser::gCollect()
     if (oz_isMark(tc)) {
       switch (tc) {
       case taggedBATask:
-	--ptr;
-	--ptr;
+	{
+	  GTAbstractEntity *desc = (GTAbstractEntity *) *(--ptr);
+	  if (desc)
+	    desc->gc();
+	  --ptr;
+	}
 	break;
 
       case taggedSyncTask:
@@ -417,7 +421,7 @@ void GenTraverser::doit()
       case taggedBATask:
 	{
 	  // If the argument is zero then the task is empty:
-	  void *arg = getPtr();
+	  GTAbstractEntity *arg = (GTAbstractEntity *) getPtr();
 
 	  //
 	  if (arg) {
@@ -988,11 +992,9 @@ repeat:
     break;
 
   //
-  // 'BT_binary' is transient here: it must be either saved or
-  // discarded if it's already done;
   case BT_binary:
     {
-      GetBTTaskPtr1(frame, void*, arg);
+      GetBTTaskPtr1(frame, GTAbstractEntity*, arg);
       Assert(arg == 0);
       DiscardBTFrame(frame);
       GetBTTaskTypeNoDecl(frame, type);
@@ -1009,7 +1011,7 @@ repeat:
       GetBTTaskArg1(frame, OZ_Term, ozValue);
       DiscardBTFrame(frame);
       GetBTFramePtr1(frame, OzValueProcessor, proc);
-      GetBTFramePtr2(frame, void*, arg);
+      GetBTFramePtr2(frame, GTAbstractEntity*, arg);
       DiscardBTFrame(frame);
       //
       (*proc)(arg, ozValue);
