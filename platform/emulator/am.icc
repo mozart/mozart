@@ -38,9 +38,11 @@ void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
  */
 
 inline
-Bool AM::fastUnify(TaggedRef A, TaggedRef B)
+Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
 {
 
+  if (prop == NO) return unify(A,B,NO);
+  
   TaggedRef proto = currentUVarPrototype;
   TaggedRef term1 = A;
   TaggedRef term2 = B;
@@ -61,11 +63,7 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B)
     }
   }
 
-#ifdef FASTSS
-  return fastUnifyOutline(term1,term1Ptr,B);
-#else
   return unify(A,B);
-#endif
 }
 
 inline
@@ -240,11 +238,11 @@ void updateExtSuspension(Board *varHome, Suspension *susp)
 
 inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-			     SVariable * rightVar, PropCaller calledBy)
+			     PropCaller calledBy)
 {
   SVariable * var = tagged2SuspVar(taggedvar);
   var->setSuspList(checkSuspensionList(var, taggedvar, var->getSuspList(),
-				       term, rightVar, calledBy));
+				       term, calledBy));
 }
 
 inline

@@ -594,7 +594,7 @@ void AM::decSolveThreads (Board *bb)
 
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				   SuspList * suspList,
-				   TaggedRef term, SVariable * rightVar,
+				   TaggedRef term,
 				   PropCaller calledBy)
 {
   SuspList * retSuspList = NULL;
@@ -623,7 +623,7 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
     // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
       if ((suspList->checkCondition(taggedvar, term)) &&
-	  (susp->wakeUp(var->getHome(), rightVar, calledBy))) {
+	  (susp->wakeUp(var->getHome(), calledBy))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
 	  suspList = suspList->dispose();
@@ -678,8 +678,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     SVariable *svar = (termPtr && isNotCVar(tag)) ? 
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
-    checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term,
-			svar, pc_std_unif);
+    checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term, pc_std_unif);
 
 #ifdef DEBUG_CHECK
     Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
