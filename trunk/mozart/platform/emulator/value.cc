@@ -239,6 +239,7 @@ void Name::import(GName *name)
 {
   Assert(getBoard()==am.rootBoard);
   homeOrGName = ToInt32(name);
+  setFlag(Lit_hasGName);
 }
 
 /*===================================================================
