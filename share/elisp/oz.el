@@ -430,10 +430,12 @@ if that value is non-nil."
 
 (defun oz-indent-region(b e)
   (interactive "r")
-  (goto-char b)
-  (while (< (point) e)
-    (oz-indent-line t)
-    (forward-line 1)
+  (let ((end (copy-marker e)))
+    (goto-char b)
+    (while (< (point) end)
+      (oz-indent-line t)
+      (forward-line 1)
+      )
     )
   )
 
