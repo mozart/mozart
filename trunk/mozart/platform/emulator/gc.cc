@@ -1130,6 +1130,15 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
       }
       return;
     }
+
+#ifdef RS
+    if (updateVar(auxTerm) && auxTermTag == CVAR) {
+      TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
+      *ref = gcVariable(auxTerm);
+      setHeapCell(auxTermPtr, GCMARK(ref));
+      return;
+    }
+#endif
     
     // put address of ref cell to be updated onto update stack    
     if (updateVar(auxTerm)) {
@@ -1298,8 +1307,10 @@ void processUpdateStack(void)
 	  *Term = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
 	  break;
 	case CVAR:
+#ifndef RS
 	  *Term = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
 	  break;
+#endif
 	default:
 	  error("processUpdateStack: variable expected here.");
 	} // switch
