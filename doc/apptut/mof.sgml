@@ -28,19 +28,35 @@
     <title/Computed Functors/
 
     <p>
-      The body of the main functor definition in <ptr
-      to="section.development.root"> contains a statement that creates
-      a large data structure containing the initial flights. In
-      general a data structure takes less space on the disk
-      as the statement to create the data structure. And in general,
-      the construction of a data structure can be computationally
-      arbitrarily involved (think of classes, or the
-      computation. This stinks.
+      We distinguish between <def/compiled functors/ and <def/computed
+      functors/.  A compiled functor is obtained by compilation of a
+      functor definition.  Computed functors are obtained by executing
+      compiled functors whose definitions contain nested functor
+      definitions. Compiled functors can only have lexical bindings to
+      the data structures of the base environment. Computed functors
+      can have lexical bindings to all data structures that the
+      creating compiled functors supply to their definitions.
 
     <p>
-      Functors directly support precomputation of data by
-      <def/computed functors/. For example,
+      Pickled computed functors can carry computed data structures
+      with them.  This matters since
+      <list enum>
+        <item>
+          a computed data structure can now be loaded together
+          with a functor rather than being computed  a new for each
+          virtual machine using it.
+        <item>
+          the functors needed to compute the carried with data
+          structure are not needed by the virtual machine using it.
+      </list>
 
+    <p>
+      Computed functors are syntactically supported by a <<prepare>>
+      and <<require>> section. For example, the root functor
+      definition in the file <file/LMF.oz/ can be rewritten using a
+      <<prepare>> section as
+      follows:
+    <p>
 <chunk class=anonymous><title/Computed Functor/
 functor
 import
@@ -56,17 +72,28 @@ end
 </chunk>
 
     <p>
-      During the excution of the outer functor (?), also modules can
-      be imported with a <<require>> list. The require is identical to
-      import.
+      Here the difference between the compiled functor and the
+      computed functor is that the compiled functor contains the code
+      to create the list of sample flights. The computed functor just
+      contains the list itself.
 
+    <p>
+      All variable identifiers that are introduced in the <<prepare>>
+      section are visible in the <<define>> section. The variables
+      introduced by the <<import>> section are of course only visible
+      in the <<define>> section.
 
+    <p>
+      The <<require>> section of a computed functors relates to the
+      <<prepare>> section as does the <<import>> section to the
+      <<define>> section: modules imported in the <<require>> section
+      are available in the <<prepare>> section.
 
   <section id="section.mof.import">
     <title/Imports/
 
     <p>
-      <<import>> and <<require>> specifications support...
+      <<import>> and <<require>> specifications support ??.
 
 
 

@@ -41,6 +41,8 @@
 <!ENTITY chapter.pickle      SYSTEM "pickle.sgml">
 <!ENTITY chapter.mof         SYSTEM "mof.sgml">
 <!ENTITY chapter.deployment  SYSTEM "deploy.sgml">
+<!ENTITY chapter.applets     SYSTEM "applets.sgml">
+<!ENTITY chapter.servlets    SYSTEM "servlets.sgml">
 
 <!ENTITY app                 SYSTEM "app.sgml">
 
@@ -77,6 +79,10 @@
     <meta name="html.split" value="chapter.mof">
     <meta name="html.split" value="chapter.deployment">
 
+    <meta name="html.split" value="part.www">
+
+    <meta name="html.split" value="chapter.applets">
+    <meta name="html.split" value="chapter.servlets">
 
     <meta name="html.split" value="part.foreign.extensions">
     <meta name="html.split" value="chapter.counter.global">
@@ -136,6 +142,12 @@
       &chapter.client.server.intro;
       &chapter.client.server.db;
       &chapter.client.server.ozc;
+    </part>
+
+    <part id=part.www>
+      <title/Programming the Web/
+      &chapter.applets;
+      &chapter.servlets;
     </part>
 
     <part id=part.distributed.applications>
