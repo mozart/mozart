@@ -10,9 +10,7 @@
 #ifndef __TCL_TK_H__
 #define __TCL_TK_H__
 
-extern TaggedRef tcl_lock;
-extern TaggedRef tcl_rets;
-extern TaggedRef tcl_dict;
+extern void gc_tcl_sessions();
 
 #endif //__TCL_TK_H__
 
