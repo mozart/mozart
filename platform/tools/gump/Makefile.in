@@ -20,7 +20,7 @@ CPPFLAGS        = -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 CXXFLAGS        = @CXXFLAGS@ $(CFLAGS)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
-CFLAGS          = -O6
+CFLAGS          =
 
 INSTALL         = @INSTALL@
 INSTALLPRG      = $(INSTALL) -m 555
@@ -30,10 +30,10 @@ MKINSTALLDIRS   = @INSTALL_DIR@
 SHAREDIR = $(PREFIX)/share
 SHAREFILES = \
         $(SHAREDIR)/GumpScanner.so-$(PLATFORM) \
-        $(SHAREDIR)/ozbison.so-$(PLATFORM)
+        $(SHAREDIR)/Bison.so-$(PLATFORM)
 PLATFORMDIR = $(PREFIX)/platform/$(PLATFORM)
 PLATFORMFILES = \
-        $(PLATFORMDIR)/oz.flex.bin
+        $(PLATFORMDIR)/flex.exe
 INCDIR = $(PREFIX)/include
 INCFILES = \
         $(INCDIR)/FlexLexer.h $(INCDIR)/lexer.h
@@ -73,19 +73,19 @@ $(SHAREDIR)/GumpScanner.so-$(PLATFORM): $(PLATFORMDIR)/GumpScanner.so
          $(LNS) ../platform/$(PLATFORM)/GumpScanner.so \
                 GumpScanner.so-$(PLATFORM))
 
-$(SHAREDIR)/ozbison.so-$(PLATFORM): $(PLATFORMDIR)/ozbison.so
-        $(RM) $(SHAREDIR)/ozbison.so-$(PLATFORM)
+$(SHAREDIR)/Bison.so-$(PLATFORM): $(PLATFORMDIR)/Bison.so
+        $(RM) $(SHAREDIR)/Bison.so-$(PLATFORM)
         (cd $(SHAREDIR) && \
-         $(LNS) ../platform/$(PLATFORM)/ozbison.so ozbison.so-$(PLATFORM))
+         $(LNS) ../platform/$(PLATFORM)/Bison.so Bison.so-$(PLATFORM))
 
-$(PLATFORMDIR)/oz.flex.bin: ozflex/flex
+$(PLATFORMDIR)/flex.exe: ozflex/flex
         $(INSTALLPRG) $< $@
 
 $(PLATFORMDIR)/GumpScanner.so: GumpScanner.so
-        $(INSTALLFILE) $< $@
+        $(INSTALLPRG) $< $@
 
-$(PLATFORMDIR)/ozbison.so: ozbison/ozbison.so
-        $(INSTALLFILE) $< $@
+$(PLATFORMDIR)/Bison.so: ozbison/Bison.so
+        $(INSTALLPRG) $< $@
 
 $(INCDIR)/%: %
         $(INSTALLFILE) $< $@
