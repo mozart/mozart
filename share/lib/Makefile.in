@@ -44,7 +44,7 @@ SPSRC   = Foreign Error ErrorRegistry Finalize
 OPSRC   = Open
 APSRC   = GetArgs Syslet Servlet Applet Application
 CPSRC   = Search FD Schedule FS
-DPSRC   = Connection Remote VirtualSite Fault URL
+DPSRC   = Connection Remote Fault URL
 WPSRC   = Tk TkTools
 MISCSRC = Misc
 SUPPSRC = Type
@@ -64,7 +64,7 @@ FUNCTORS = \
 	$(MISCSRC:%=%.ozf) \
 	RunTimeLibrary.ozf Compiler.ozf
 
-SYSLETS = ozc ozserver ozvsserver ozar
+SYSLETS = ozc ozar ozremote
 
 .PHONY: all
 
@@ -220,15 +220,13 @@ $(SYSLETS): $(RUNFUNCTORS)
 ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
 	$(COMPILESYSLET) MakeBatch.oz -o $@
 
-ozserver: Standard.ozf MakeOzServer.oz
-	$(COMPILESYSLET) MakeOzServer.oz -o $@
-
-ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
-	$(COMPILESYSLET) MakeOzVSServer.oz -o $@
-
 ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
 	../url-defaults.oz
 	$(COMPILESYSLET) -l URL=URL.ozf ar/Main.oz -o $@
+
+ozremote: Standard.ozf dp/RemoteServer.oz
+	$(COMPILESYSLET) dp/RemoteServer.oz -o $@
+
 
 #---------------------------------------------------------------------
 # Installation
