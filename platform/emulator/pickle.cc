@@ -898,7 +898,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
 	  // in ByteCode"s;
 	  int codesize  = unmarshalNumberRobust(bs, &error);
 	  RETURN_ON_ERROR(error);
-	  RETURN_ON_ERROR(maxX < 0 || maxX >= NumberOfXRegisters);
+	  RETURN_ON_ERROR(maxX < 0 || maxX > NumberOfXRegisters); // maxX is the number of X registers used
 #else
 	  int refTag    = unmarshalRefTag(bs);
 	  GName *gname  = unmarshalGName(&value, bs);
