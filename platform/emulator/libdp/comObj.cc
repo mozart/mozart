@@ -430,6 +430,7 @@ inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
     index=srec->getIndex(oz_atom("lastReceived"));
     remLastReceived=oz_intToC(srec->getArg(index));
     queues.msgAcked(remLastReceived,TRUE,FALSE);      // Resend/Ack msgs
+    queues.clearRec();                                // Clear partly received
     lastSent=remLastReceived; // Others requeued
 
     index=srec->getIndex(oz_atom("msgAckTimeOut"));

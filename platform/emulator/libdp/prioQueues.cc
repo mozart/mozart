@@ -337,26 +337,15 @@ MsgContainer *PrioQueues::getRec(int num) {
   return NULL;
 }
 
-//  void PrioQueues::clearRec(MsgContainer *msgC) {
-//    MsgContainer *tmp=recList;
-//    MsgContainer *prev=NULL;
+void PrioQueues::clearRec() {
+  MsgContainer *tmp;
 
-//    while(tmp!=NULL) {
-//      if(msgC==tmp) {
-//        if(prev==NULL)
-//      recList=tmp->next;
-//        else
-//      prev->next=tmp->next;
-//        msgContainerManager->deleteMsgContainer(tmp);
-//        return;
-//      }
-//      else {
-//        prev=tmp;
-//        tmp=tmp->next;
-//      }
-//    }
-//    printf("Unknown msgC to clearRec\n");
-//  }
+  while(recList!=NULL) {
+    tmp=recList;
+    recList=recList->next;
+    msgContainerManager->deleteMsgContainer(tmp);
+  }
+}
 
 Bool PrioQueues::hasQueued() {
   for(int i=1;i<=5;i++) {
