@@ -27,8 +27,7 @@ OZC		= @OZC@
 SCOMPILE	= $(OZC) $(OZFLAGS) -c
 COMPILE		= $(OZC) $(OZFLAGS) -l Standard -c
 EXEC		= $(OZC) $(OZFLAGS)
-EXECWITHSTD	= $(OZC) $(OZFLAGS) \
-	-l Application=$(SRCDIR)/Application.ozf,Standard
+EXECWITHSTD	= $(OZC) $(OZFLAGS) -l Standard -x
 OZMA		= $(OZC) $(OZFLAGS) -DOZM --ozma
 
 # exports
@@ -37,7 +36,7 @@ export SRCDIR
 export OZPREFIX
 export OZLIB
 export OZMAINIT = Init.ozp
-export OZMAFILE = -u ozc.ozp
+export OZMAFILE = -init ozc.ozp
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
@@ -45,7 +44,7 @@ export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
 SPSRC = System Debug Foreign Error ErrorRegistry Finalize
 OPSRC = OS Open Pickle
-APSRC = Application
+APSRC = GetArgs Syslet Servlet Applet Application
 CPSRC = Search FD Schedule FS
 DPSRC = Connection Remote VirtualSite Fault
 WPSRC = Tk TkTools
@@ -90,8 +89,9 @@ Makefile: Makefile.in ../config.status
 # Init
 #---------------------------------------------------------------------
 
-INITSRC1 = URL.oz Prop.oz
-INITSRC = $(INITSRC1:%=init/%) Init.oz
+INITSRC1 = URL.oz Prop.oz Module.oz RURL.oz
+INITSRC = $(INITSRC1:%=init/%) Init.oz \
+	../url-defaults.oz ../functor-defaults.oz
 
 Init.ozp: $(INITSRC)
 	OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozp
@@ -141,13 +141,6 @@ Standard.ozf: Init.ozp
 %.ozf: compiler/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
 
-# ap dependencies
-Application.ozf: ap/ArgParser.oz init/Module.oz init/RURL.oz
-
-Application.ozf: $(PEANUTSFUNCTORS) module-Peanuts.oz
-
-Application.ozf: ../url-defaults.oz ../functor-defaults.oz
-
 module-Peanuts.oz:
 	echo "[$(PEANUTS:%='%')]" > module-Peanuts.oz
 
@@ -186,10 +179,13 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 	|| (rm -f $@; exit 1)
 
 functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
-	$(EXECWITHSTD) MakeFunctorToEnv.oz
+	$(EXECWITHSTD) MakeFunctorToEnv.oz -o $@
 
 compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
 	$(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
+
+FUNFUNCTORS = FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
+	FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf
 
 FunMisc.ozf: compiler/Misc.oz $(STANDARD)
 
@@ -232,13 +228,13 @@ $(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
 $(SYSLETS): $(RUNFUNCTORS)
 
 ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
-	$(EXECWITHSTD) MakeBatch.oz
+	$(EXECWITHSTD) MakeBatch.oz -o $@
 
 ozserver: Standard.ozf MakeOzServer.oz
-	$(EXECWITHSTD) MakeOzServer.oz
+	$(EXECWITHSTD) MakeOzServer.oz -o $@
 
 ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
-	$(EXECWITHSTD) MakeOzVSServer.oz
+	$(EXECWITHSTD) MakeOzVSServer.oz -o $@
 
 #---------------------------------------------------------------------
 # Installation
@@ -309,7 +305,7 @@ clean:
 	-rm -f compiler-Opcodes.oz
 	-rm -f envgen compiler-Env.oz
 	-rm -f module-Peanuts.oz
-	-rm -f Init.ozp ozc.ozp Standard.ozf $(FUNCTORS)
+	-rm -f Init.ozp ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
 	-rm -f $(SYSLETS)
 
 veryclean: clean
@@ -381,11 +377,11 @@ stage2b:
 # stage3: recreate the functors and Ozma file using the stage2 Ozma file
 stage3:
 	$(MAKE) ozc.ozp install-stage PREFIX=$(STAGE3) \
-	OZ_LOAD=prefix== \
+	OZ_LOAD=prefix=$(URL)/lib/=./:.:= \
 	OZC=$(SRCDIR)/ozc.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozp \
 	OZMAINIT=$(STAGE2)/lib/Init.ozp \
-	OZMAFILE="-u $(STAGE2)/lib/ozc.ozp"
+	OZMAFILE="-init $(STAGE2)/lib/ozc.ozp"
 
 # stage3a: recreate only the functors using the stage2b Ozma file
 stage3a:
@@ -394,7 +390,7 @@ stage3a:
 	OZC=$(SRCDIR)/ozc.sh \
 	OZINIT=$(STAGE2B)/lib/Init.ozp \
 	OZMAINIT=$(STAGE2B)/lib/Init.ozp \
-	OZMAFILE="-u $(STAGE2B)/lib/ozc.ozp"
+	OZMAFILE="-init $(STAGE2B)/lib/ozc.ozp"
 
 # stage3b: recreate the functors and Ozma file using the stage3a functors
 stage3b:
