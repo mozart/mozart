@@ -1777,8 +1777,7 @@ public:
   TaggedRef *getStreamRef() { return &strm; }
 
   NetAddress *getAddress() { return addr; }
-
-  NetAddress *export();
+  void setAddress(NetAddress *na) { addr=na; }
 
   Bool isLocal() { return (addr==NULL || addr->isLocal()); }
 
