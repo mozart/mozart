@@ -43,41 +43,33 @@
     for a description.
   <Section class=unnumbered>
     <Title/The Compiler's State/
-    <SubSection class=unnumbered>
-      <Title/Macro Definitions/
-      <P>
-	The compiler stores a set of so-called <Def/macro names/, used to
-	control conditional compilation via macro directives such as <<\ifdef>>
-	(see <Ptr to="section.directives.macro">).
-      <P>
-	Initially, the set of macro names consists of entries describing the
-	Oz version number, &eg;, when running Oz&nbsp;3.0.10, all of <<Oz_3>>,
-	<<Oz_3_0>>, and <<Oz_3_0_10>> are macro names.
-    <SubSection class=unnumbered>
-      <Title/Compiler Switches/
-      <P>
-	The compiler's behaviour is influenced by a number of boolean switches.
-	The current switch settings are given by a mapping from switch names
-	to boolean values.  The compiler manages a stack of switch states, the
-	top element of which is taken as the active state.  This allows to
-	temporarily escape into a different mode of compiler operation.
-      <P>
-	The available switches and their effects on the compilation process
-	are described in detail in <Ptr to="appendix.switches">.
-    <SubSection class=unnumbered>
-      <Title/The Environment/
-      <P>
-	An environment is a mapping from variable print names to arbitrary
-	Oz values.
-      <P>
-	The Oz compiler does not take the environment as input for each
-	evaluation as was illustrated above, but stores its active environment.
-	This may be extended as a side-effects of the compilation, and it may
-	be replaced by other environments at will.
-    <SubSection class=unnumbered>
-      <Title/The Query Queue/
-      <P>
-	Since the Oz compiler has internal state, it is not implemented
-	as a function as described above, but as an active object that
-	sequentializes all requests made to it via a <Def/query queue/.
+    <Para class=apropos><Title/Macro Definitions/
+      The compiler stores a set of so-called <Def/macro names/, used to
+      control conditional compilation via macro directives such as <<\ifdef>>
+      (see <Ptr to="section.directives.macro">).
+    <P>
+      Initially, the set of macro names consists of entries describing the
+      Oz version number, &eg;, when running Oz&nbsp;3.0.10, all of <<Oz_3>>,
+      <<Oz_3_0>>, and <<Oz_3_0_10>> are macro names.
+    <Para class=apropos><Title/Compiler Switches/
+      The compiler's behaviour is influenced by a number of boolean switches.
+      The current switch settings are given by a mapping from switch names
+      to boolean values.  The compiler manages a stack of switch states, the
+      top element of which is taken as the active state.  This allows to
+      temporarily escape into a different mode of compiler operation.
+    <P>
+      The available switches and their effects on the compilation process
+      are described in detail in <Ptr to="appendix.switches">.
+    <Para class=apropos><Title/The Environment/
+      An environment is a mapping from variable print names to arbitrary
+      Oz values.
+    <P>
+      The Oz compiler does not take the environment as input for each
+      evaluation as was illustrated above, but stores its active environment.
+      This may be extended as a side-effects of the compilation, and it may
+      be replaced by other environments at will.
+    <Para class=apropos><Title/The Query Queue/
+      Since the Oz compiler has internal state, it is not implemented
+      as a function as described above, but as an active object that
+      sequentializes all requests made to it via a <Def/query queue/.
 </Chapter>
