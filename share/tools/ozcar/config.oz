@@ -23,8 +23,8 @@ AltGlobalEnvTitle      = 'Global Environment of Frame  #'
 StatusInitText         = 'No current thread'
 StatusEndText          = 'See you again...'
 
-ApplPrefixText         = 'Current application: '
-ApplLabelInit          = ' none'
+ApplPrefixText         = 'Application:'
+ApplFilePrefixText     = 'File:'
 
 InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = 'step message without line number information, ' #
@@ -49,7 +49,7 @@ SourceWindowGeometry   = '501x549+612+100'  %% I really hate hardcoding this
                                             %% to be f*cking stupid :-((
 SourceWindowTextSize   = 80 # 50
 
-ThreadTreeWidth        = 120
+ThreadTreeWidth        = 0
 ThreadTreeStretchX     = 11
 ThreadTreeStretchY     = 14
 ThreadTreeOffset       = 4
