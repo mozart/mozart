@@ -14,7 +14,7 @@ define
 	 %% area
 	 {self makefile_read}
 	 MOG = {self get_mogul($)}
-	 FIL = {Utils.mogulToFilename MOG}
+	 FIL = {Utils.mogulToPackagename MOG}
 	 PKG = {Path.resolve {self get_publishdir($)} FIL}
       in
 	 {self set_package(PKG)}

@@ -4,8 +4,10 @@
 
 ozmake: Main.ozf Utils.ozf Path.ozf Shell.ozf Executor.ozf Attribs.ozf \
 	Builder.ozf Makefile.ozf Manager.ozf Installer.ozf Database.ozf \
-	Cleaner.ozf Creator.ozf Extractor.ozf Lister.ozf
+	Cleaner.ozf Creator.ozf Extractor.ozf Lister.ozf Help.ozf
 	$(OZL) $(OZLFLAGS) -x Main.ozf -o $@
+
+Help.ozf: Help.oz HELP.txt Utils.ozf
 
 clean::
 	-rm -f ozmake

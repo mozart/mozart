@@ -2,6 +2,7 @@ functor
 import
    Application Error
    Manager at 'Manager.ozf'
+   Help    at 'Help.ozf'
 prepare
    OPTIONS =
    record(
@@ -29,8 +30,9 @@ prepare
 
       makefile(single char:&m type:string)
       package( single char:&p type:string)
+      database(single         type:string)
 
-      action(single type:atom(build install clean veryclean create publish extract list) default:build)
+      action(single type:atom(build install clean veryclean create publish extract list help) default:build)
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
       fullbuild(single type:bool)
@@ -40,10 +42,11 @@ prepare
       publish(          alias:action#publish)
       extract(  char:&x alias:action#extract)
       list(     char:&l alias:action#list)
+      help(     char:&h alias:action#help)
 
       grade(single type:atom(none up down same any))
       upgrade(  char:&U alias:[action#install grade#up])
-      downgrade(char:&D alias:[action#install grade#down])
+      downgrade(        alias:[action#install grade#down])
       anygrade( char:&A alias:[action#install grade#any])
       replacefiles(single type:bool)
       replace(  char:&R alias:[action#install grade#any replacefiles#true])
@@ -84,6 +87,7 @@ prepare
     archive        # set_archive
     makefile       # set_makefile
     package        # set_package
+    database       # set_database
     grade          # set_grade
     replacefiles   # set_replacefiles
     keepzombies    # set_keepzombies
@@ -114,6 +118,7 @@ define
       [] publish   then {Man publish}
       [] extract   then {Man extract}
       [] list      then {Man list}
+      [] help      then {Help.help}
       end
       {Application.exit 0}
    catch E then
