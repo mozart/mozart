@@ -33,11 +33,6 @@
 
 #ifndef MODULES_LINK_STATIC
 
-#include "../modFSP.dcl"
-
-OZ_C_proc_interface mod_int_FSP[] = {
-#include "../modFSP.tbl"
- {0,0,0,0}
-};
+#include "../modFSP-if.cc"
 
 #endif
