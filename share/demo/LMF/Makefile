@@ -20,7 +20,7 @@ all: $(FUNCTORS) $(SERVLETS)
 lmf.cgi: $(FUNCTORS)
 	$(LINK) Book.ozf -o lmf.cgi
 
-book-lmf.cgi: $(FUNCTORS)
+lmf-book.cgi: $(FUNCTORS)
 	$(LINK) ProcessBook.ozf -o lmf-book.cgi
 
 %.ozf: %.oz

@@ -35,14 +35,9 @@ prepare
 		    email(single type:string)
 		    url(single type:string))
 
-   fun {ParseHelp Args}
-      {List.toRecord args {Map Args fun {$ A#V} {String.toAtom A}#V end}}
-   end
-   
-
 define
 
-   Argv = {ParseHelp {Application.getCgiArgs ArgSpec}}
+   Argv = {Application.getCgiArgs ArgSpec}
 
    SE      = {Abstractions.connect Argv.url}
 
