@@ -53,7 +53,6 @@ void oz_merge(Board *bb, Board *to,int inc);
 
 //  Check all the solve actors above for stabily
 // (and, of course, wake them up if needed);
-inline void oz_removeExtThread(Thread *tt);
 Bool oz_solve_checkExtSuspList (SolveActor *sa);
 
 void oz_setExtSuspensionOutlined(Suspension susp, Board *varHome);

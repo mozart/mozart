@@ -191,6 +191,14 @@ void _wakeupThread(Thread *tt)
 }
 
 inline
+void oz_removeExtThread(Thread *tt)
+{
+  if (tt->wasExtThread()) {
+    oz_removeExtThreadOutlined(tt);
+  }
+}
+
+inline
 void oz_wakeupThreadOPT(Thread *tt)
 {
   _wakeupThread(tt);
@@ -245,6 +253,14 @@ Propagator * oz_newPropagator(int prio, OZ_Propagator * p)
   return prop;
 }
 
+
+inline
+void oz_checkExtSuspension(Suspension susp)
+{
+  if (susp.wasExtSuspension()) {
+    oz_checkExtSuspensionOutlined(susp);
+  }
+}
 
 //
 //  Terminate a propagator thread which is (still) marked as runnable
@@ -369,22 +385,6 @@ OZ_Return oz_runPropagator(Propagator * p)
  * ------------------------------------------------------------------------- */
 
 // EXT STUFF
-
-inline
-void oz_checkExtSuspension(Suspension susp)
-{
-  if (susp.wasExtSuspension()) {
-    oz_checkExtSuspensionOutlined(susp);
-  }
-}
-
-inline
-void oz_removeExtThread(Thread *tt)
-{
-  if (tt->wasExtThread()) {
-    oz_removeExtThreadOutlined(tt);
-  }
-}
 
 // WAKEUP
 
