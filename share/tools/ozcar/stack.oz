@@ -92,23 +92,20 @@ local
 	    line:    {CondSelect Frame line unit}
 	    column:  {CondSelect Frame column unit}
 	    time:    Frame.time
-	    name:    case {CondSelect Frame name unit} of unit then
-			case Kind == 'call' then
-			   case {IsDet Data} then
-			      case Data == unit then 'unknown'
-			      elsecase {IsProcedure Data} then
-				 {System.printName Data}
-			      else
-				 {System.valueToVirtualString Data 0 0}
-			      end
-			   elsecase {IsLazy Data} then
-			      LazyVarType
+	    name:    case Kind == 'call' then
+			case {IsDet Data} then
+			   case Data == unit then 'unknown'
+			   elsecase {IsProcedure Data} then
+			      {System.printName Data}
 			   else
-			      UnboundType
+			      {System.valueToVirtualString Data 0 0}
 			   end
-			else Kind
+			elsecase {IsLazy Data} then
+			   LazyVarType
+			else
+			   UnboundType
 			end
-		     elseof Name then Name
+		     else Kind
 		     end
 	    kind:    Kind
 	    granul:  Granul
