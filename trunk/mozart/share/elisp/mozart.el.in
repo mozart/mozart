@@ -47,7 +47,8 @@
 (eval-and-compile
   (eval '(defgroup mozart nil
 	   "Running a Mozart sub-process."
-	   :group 'oz)))
+	   :group 'oz
+	   :prefix "oz-")))
 
 (eval-and-compile
   (eval '(defcustom OZ-HOME "@prefix@"
@@ -122,7 +123,7 @@ Used as fallback if the environment variable OZHOME is not set."
 		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
 	   "*Search path for the Oz functors (used by \\[oz-other])."
 	   :type 'string
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-functor-path 'variable-interactive
      "sOz functor search path: ")
 
@@ -131,7 +132,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	   "x-oz://system/OPI.ozf"
 	   "*Name of the root functor to load on startup."
 	   :type 'string
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-root-functor 'variable-interactive
      "sName of the root functor to load on startup: ")
 
@@ -141,7 +142,7 @@ Used as fallback if the environment variable OZHOME is not set."
 If nil, you have the possibility to first set breakpoints and only
 run the emulator when you issue the command `run' to gdb."
 	   :type 'boolean
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-gdb-autostart 'variable-interactive
      "XStart emulator immediately when in gdb mode? (t or nil): ")
 
@@ -149,7 +150,7 @@ run the emulator when you issue the command `run' to gdb."
   (eval '(defcustom oz-other-buffer-size 35
 	   "*Percentage of screen to use for Oz Compiler/Emulator/Temp window."
 	   :type 'integer
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-other-buffer-size 'variable-interactive
      "nPercentage of screen to use for Oz windows: ")
 
@@ -157,7 +158,7 @@ run the emulator when you issue the command `run' to gdb."
   (eval '(defcustom oz-popup-on-error t
 	   "*If non-nil, pop up Compiler resp. Emulator buffer upon error."
 	   :type 'boolean
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-popup-on-error 'variable-interactive
      "XPop up Oz buffers on error? (t or nil): ")
 
@@ -165,7 +166,7 @@ run the emulator when you issue the command `run' to gdb."
   (eval '(defcustom oz-halt-timeout 30
 	   "*Number of seconds to wait for shutdown in oz-halt."
 	   :type 'integer
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-halt-timeout 'variable-interactive
      "nNumber of seconds to wait for shutdown of the Mozart sub-process: ")
 
@@ -175,7 +176,7 @@ run the emulator when you issue the command `run' to gdb."
 This may contain at most one occurrence of `%s', which is replaced by the
 current buffer's file name."
 	   :type 'string
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-compile-command 'variable-interactive
      "sShell command to do an Oz compilation: ")
 
@@ -185,7 +186,7 @@ current buffer's file name."
 This may contain at most one occurrence of `%s', which is replaced by the
 current buffer's file name, minus the `.oz' or `.ozg' extension."
 	   :type 'string
-	   :group 'oz)))
+	   :group 'mozart)))
 (put 'oz-application-command 'variable-interactive
      "sShell command to invoke an Oz application: ")
 
@@ -447,10 +448,9 @@ Handle input and output via the Oz Emulator buffer."
   (oz-create-oz-buffer))
 
 (defun oz-create-oz-buffer ()
-  (or (equal mode-name "Oz")
-      (equal mode-name "Oz-Gump")
-      (equal mode-name "Oz-Machine")
-      (equal mode-name "Oz-SML")
+  (or (eq major-mode 'oz-mode)
+      (eq major-mode 'oz-gump-mode)
+      (eq major-mode 'ozm-mode)
       (oz-new-buffer)))
 
 (defun oz-halt (force)
