@@ -36,6 +36,7 @@ define
    Syslet.spec = single('in'(         type:string optional:false default:unit)
                         'type'(       type:string optional:false default:unit)
                         'out'(        type:string optional:false default:unit)
+                        'autoindex'(  type:bool                  default:true)
                         % HTML options
                         'stylesheet'( type:string optional:false default:unit)
                         'latexmath'(  type:bool                  default:true)
@@ -155,6 +156,7 @@ define
           '                    (supported: '#
           'html-color html-mono html-stylesheets).\n'#
           '--out=<Dir>         The output directory.\n'#
+          '--(no)autoindex     Automatically generate index entries.\n'#
           '\n'#
           'HTML options\n'#
           '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
