@@ -344,6 +344,14 @@ OZ_C_proc_begin(Name,Arity)                                                   \
   }                                             \
 }
 
+#define OZ_declareNonvarArg(ARG,VAR)            \
+OZ_Term VAR = OZ_getCArg(ARG);                  \
+{                                               \
+  if (OZ_isVariable(VAR)) {                     \
+    OZ_suspendOn(VAR);                          \
+  }                                             \
+}
+
 #define OZ_declareIntArg(ARG,VAR)               \
  int VAR;                                       \
  OZ_nonvarArg(ARG);                             \
@@ -353,38 +361,38 @@ OZ_C_proc_begin(Name,Arity)                                                   \
    VAR = OZ_intToC(OZ_getCArg(ARG));            \
  }
 
-#define OZ_declareFloatArg(ARG,VAR)                                           \
- double VAR;                                                                  \
- OZ_nonvarArg(ARG);                                                           \
- if (! OZ_isFloat(OZ_getCArg(ARG))) {                                         \
-   return OZ_typeError(ARG,"Float");                                          \
-   return FAILED;                                                             \
- } else {                                                                     \
-   VAR = OZ_floatToC(OZ_getCArg(ARG));                                        \
+#define OZ_declareFloatArg(ARG,VAR)             \
+ double VAR;                                    \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isFloat(OZ_getCArg(ARG))) {           \
+   return OZ_typeError(ARG,"Float");            \
+   return FAILED;                               \
+ } else {                                       \
+   VAR = OZ_floatToC(OZ_getCArg(ARG));          \
  }
 
 
-#define OZ_declareAtomArg(ARG,VAR)                                            \
- char *VAR;                                                                   \
- OZ_nonvarArg(ARG);                                                           \
- if (! OZ_isAtom(OZ_getCArg(ARG))) {                                          \
-   return OZ_typeError(ARG,"Atom");                                           \
- } else {                                                                     \
-   VAR = OZ_atomToC(OZ_getCArg(ARG));                                         \
- }
-
-#define OZ_declareStringArg(ARG,VAR)            \
+#define OZ_declareAtomArg(ARG,VAR)              \
  char *VAR;                                     \
- {                                              \
-   OZ_Term OZ_avar;                             \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isAtom(OZ_getCArg(ARG))) {            \
+   return OZ_typeError(ARG,"Atom");             \
+ } else {                                       \
+   VAR = OZ_atomToC(OZ_getCArg(ARG));           \
+ }
+
+#define OZ_declareStringArg(ARG,VAR)                    \
+ char *VAR;                                             \
+ {                                                      \
+   OZ_Term OZ_avar;                                     \
    if (!OZ_isString(OZ_getCArg(ARG),&OZ_avar)) {        \
-     if (OZ_avar == 0) {                        \
-       return OZ_typeError(ARG,"Atom");         \
-     } else {                                   \
-       OZ_suspendOn(OZ_avar);                   \
-     }                                          \
-   }                                            \
-   VAR = OZ_stringToC(OZ_getCArg(ARG));         \
+     if (OZ_avar == 0) {                                \
+       return OZ_typeError(ARG,"Atom");                 \
+     } else {                                           \
+       OZ_suspendOn(OZ_avar);                           \
+     }                                                  \
+   }                                                    \
+   VAR = OZ_stringToC(OZ_getCArg(ARG));                 \
  }
 
 /* ------------------------------------------------------------------------ *
