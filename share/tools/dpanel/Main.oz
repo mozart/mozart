@@ -336,7 +336,9 @@ define
 	    if ST then
 	       {self.SiteTable display}
 	    end
-	    {TableInfo.fetchInfo self.OwnerTable self.BorrowTable}
+	    if OT orelse BT then 
+	       {TableInfo.fetchInfo self.OwnerTable self.BorrowTable}
+	    end
 	    if OT then
 	       {self.OwnerTable display}
 	    end
