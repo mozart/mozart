@@ -249,6 +249,10 @@
           ( AtomY,             "Y" ),
           ( AtomG,             "G" ),
           ( AtomV,             "v" ),
+
+          # browser-related;
+          ( AtomBBuiltin,       "(builtin)" ),
+          ( AtomDash,           "-" ),
           );
 
 
