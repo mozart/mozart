@@ -193,7 +193,7 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	ldd $(PREFIX)/platform/$(PLATFORM)/emulator.exe \
 	    $(PREFIX)/platform/$(PLATFORM)/tk.exe | \
 	sed 's/^.*emulator.exe:/emulator.exe dynamically linked against:/' | \
-	sed 's/^.*tk.exe:/tk.exe dynamically linked against:/' > README.`$(OZVERSION)`.$(OZBUILD)-$@
+	sed 's/^.*tk.exe:/tk.exe dynamically linked against:/' > README-`$(OZVERSION)`.$(OZBUILD)-$@
 	rm -rf $(PACKDIR)/mozart
 	rm -f files.base files.base-$@ files.contrib files.contrib-$@
 	rm -f files.base-all files.contrib-all files.all
