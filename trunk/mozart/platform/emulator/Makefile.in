@@ -34,7 +34,8 @@ include Makefile.vars
 
 MODULE_NAMES =							\
 	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
-	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat
+	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
+	System Profile
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -168,6 +169,10 @@ RECORDCSRCS = \
 	ofs-bi.cc
 COMPATSRCS = \
 	compat.cc
+SYSTEMSRCS = \
+	system.cc
+PROFILESRCS = \
+	profile.cc
 
 TKOBJS=	$(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
@@ -179,12 +184,15 @@ FSBOBJS=	$(FSBSRCS:%.cc=%.lo)
 CTBOBJS=	$(CTBSRCS:%.cc=%.lo)
 RECORDCOBJS=	$(RECORDCSRCS:%.cc=%.lo)
 COMPATOBJS=	$(COMPATSRCS:%.cc=%.lo)
+SYSTEMOBJS=	$(SYSTEMSRCS:%.cc=%.lo)
+PROFILEOBJS=	$(PROFILESRCS:%.cc=%.lo)
 
 
 ALLSRCS= $(SRCS) \
 	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
 	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
-	$(RECORDCSRCS) $(COMPATSRCS) \
+	$(RECORDCSRCS) $(COMPATSRCS) $(SYSTEMSRCS) \
+	$(PROFILESRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
@@ -276,6 +284,12 @@ Compat.so: $(COMPATOBJS)
 libCompat.a: $(COMPATOBJS)
 	$(AR) -rc $@ $(COMPATOBJS) && $(RANLIB) $@
 
+Profile.so: $(PROFILEOBJS)
+	$(DYNLD) -o $@ $(PROFILEOBJS)
+
+libProfile.a: $(PROFILEOBJS)
+	$(AR) -rc $@ $(PROFILEOBJS) && $(RANLIB) $@
+
 CompilerSupport.so: $(COMPILERSUPPORTOBJS)
 	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
 
@@ -295,6 +309,12 @@ Debug.so: $(DEBUGOBJS)
 
 libDebug.a: $(DEBUGOBJS)
 	$(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
+
+System.so: $(SYSTEMOBJS)
+	$(DYNLD) -o $@ $(SYSTEMOBJS)
+
+libSystem.a: $(SYSTEMOBJS)
+	$(AR) -rc $@ $(SYSTEMOBJS) && $(RANLIB) $@
 
 
 PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
@@ -475,3 +495,8 @@ veryclean::
 distclean::
 	-rm -f OZCONF.h conf.h config.cache config.log config.status \
 		Makefile.rules Makefile.vars Makefile makefile oztool.sh .gdbinit
+
+
+
+
+
