@@ -1,0 +1,49 @@
+declare
+scanner LambdaScanner from GumpScanner BaseObject
+   attr LineNumber
+   meth init()
+      GumpScanner, init()
+      LineNumber <- 1
+   end
+   meth getLineNumber($)
+      @LineNumber
+   end
+
+   lex digit = <[0-9]> end
+   lex letter = <[A-Za-z]> end
+   lex id = <{letter}({letter}|{digit})*> end
+   lex int = <{digit}+> end
+
+   lex <define>
+      GumpScanner, putToken1('define')
+   end
+   lex <lambda>
+      GumpScanner, putToken1('lambda')
+   end
+   lex <{id}> A in
+      GumpScanner, getAtom(?A)
+      GumpScanner, putToken('id' A)
+   end
+   lex <{int}> S in
+      GumpScanner, getString(?S)
+      GumpScanner, putToken('int' {String.toInt S})
+   end
+   lex <"."|"("|")"|"="|";"> A in
+      GumpScanner, getAtom(?A)
+      GumpScanner, putToken1(A)
+   end
+
+   lex <[ \t]> skip end
+   lex <"%".*> skip end
+   lex <\n>
+      LineNumber <- @LineNumber + 1
+   end
+   lex <.>
+      {System.showInfo 'line '#@LineNumber#': unrecognized character'}
+      GumpScanner, putToken1('error')
+   end
+
+   lex <<EOF>>
+      GumpScanner, putToken1('EOF')
+   end
+end
