@@ -60,6 +60,9 @@
 /* define if use native register for am registers (requires GCC) */
 #undef REGOPT
 
+/* optionally use zlib for pickles */
+#undef USE_ZLIB
+
 
 
 /* define if modules are linked statically */
