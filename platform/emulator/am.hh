@@ -21,7 +21,7 @@
 #include "alarm.hh"
 #include "codearea.hh"
 #include "gc.hh"
-#include "genvar.hh"
+// #include "genvar.hh"
 #include "misc.hh"
 #include "records.hh"
 #include "statisti.hh"

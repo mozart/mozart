@@ -8,23 +8,176 @@
 #include "genvar.hh"
 #include "misc.hh"
 
+//-------------------------------------------------------------------------
+//                               for class DynamicTable
+//-------------------------------------------------------------------------
 
-void DynamicTable::print(ostream& ofile, int idnt) const {
-    ofile << indent(idnt) << '(' << ' ';
-    Bool first=TRUE;
-    for (dt_index i=0; i<size; i++) {
-        if (table[i].ident) {
-            if (!first) ofile << ' ';
-            first=FALSE;
-            ofile << tagged2Literal(table[i].ident)->getPrintName() << ':';
+// Create an initially empty dynamictable of size s (default 1)
+DynamicTable* DynamicTable::newDynamicTable(dt_index s=1) {
+    Assert(isPwrTwo(s));
+    size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
+    DynamicTable* ret = (DynamicTable *) heapMalloc(memSize);
+    Assert(ret!=NULL);
+    ret->init(s);
+    return ret;
+}
+
+// Initialize an elsewhere-allocated dynamictable of size s
+void DynamicTable::init(dt_index s=1) {
+    Assert(isPwrTwo(s));
+    numelem=0;
+    size=s;
+    for (dt_index i=0; i<s; i++) table[i].ident=makeTaggedNULL();
+}
+
+// Create a copy of an existing dynamictable
+DynamicTable* DynamicTable::copyDynamicTable() {
+    Assert(isPwrTwo(size));
+    Assert(numelem<size);
+    Assert(size>0);
+    size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(size-1);
+    DynamicTable* ret = (DynamicTable *) heapMalloc(memSize);
+    ret->numelem=numelem;
+    ret->size=size;
+    for (dt_index i=0; i<ret->size; i++) ret->table[i]=table[i];
+    return ret;
+}
+
+// Test whether the current table has too little room for one new element:
+// ATTENTION: Calls to insert should be preceded by fullTest.
+Bool DynamicTable::fullTest() {
+    Assert(isPwrTwo(size));
+    return (numelem>=(size>>1));
+}
+
+// Return a table that is double the size of the current table and
+// that contains the same elements:
+// ATTENTION: Should be called before insert if the table is full.
+DynamicTable* DynamicTable::doubleDynamicTable() {
+    Assert(isPwrTwo(size));
+    int newSize=size<<1;
+    DynamicTable* ret=newDynamicTable(newSize);
+    for(dt_index i=0; i<size; i++) {
+        if (table[i].ident!=makeTaggedNULL()) {
+            Assert(isLiteral(table[i].ident));
+            ret->insert(table[i].ident, table[i].value);
         }
     }
-    ofile << ' ' << ')';
+    return ret;
 }
 
-void DynamicTable::printLong(ostream& ofile, int idnt) const {
-    print(ofile, idnt);
+// Insert val at index id
+// Return NULL if val is successfully inserted (id did not exist)
+// Return the value of the pre-existing element if id already exists
+// Test for and increase size of hash table if it becomes too full
+// ATTENTION: insert must only be done if the table has room for a new element.
+TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val) {
+    Assert(isPwrTwo(size));
+    Assert(isLiteral(id));
+    Assert(!fullTest());
+    dt_index i=fullhash(id);
+    Assert(i<size);
+    if (table[i].ident!=makeTaggedNULL()) {
+        Assert(isLiteral(table[i].ident));
+        // Ident exists already; return value & don't insert
+        return table[i].value;
+    } else {
+        // Ident doesn't exist; insert value
+        numelem++;
+        Assert(numelem<size);
+        table[i].ident=id;
+        table[i].value=val;
+        return makeTaggedNULL();
+    }
 }
+
+// Look up val at index id
+// Return val if it is found
+// Return NULL if nothing is found
+TaggedRef DynamicTable::lookup(TaggedRef id) {
+    Assert(isPwrTwo(size));
+    Assert(isLiteral(id));
+    dt_index i=fullhash(id);
+    Assert(i<size);
+    if (table[i].ident==id) {
+        Assert(isLiteral(table[i].ident));
+        // Val is found
+        return table[i].value;
+    } else {
+        // Val is not found
+        return makeTaggedNULL();
+    }
+}
+
+// Return TRUE iff there are features in an external dynamictable that
+// are not in the current dynamictable
+Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
+    Assert(isPwrTwo(size));
+    for (dt_index i=0; i<dt->size; i++) {
+        if (dt->table[i].ident!=makeTaggedNULL()) {
+        Assert(isLiteral(dt->table[i].ident));
+        Bool exists=lookup(dt->table[i].ident);
+        if (!exists) return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Merge the current dynamictable into an external dynamictable
+// Return a pairlist containing all term pairs with the same feature
+// The external dynamictable is resized if necessary
+void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
+    Assert(isPwrTwo(size));
+    pairs=new PairList();
+    Assert(pairs->isempty());
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident!=makeTaggedNULL()) {
+            Assert(isLiteral(table[i].ident));
+            if (dt->fullTest()) dt = dt->doubleDynamicTable();
+            TaggedRef val=dt->insert(table[i].ident, table[i].value);
+            if  (val!=makeTaggedNULL()) {
+                // Two terms have this feature; don't insert
+                // Add the terms to the list of pairs:
+                pairs->addpair(val, table[i].value);
+                Assert(!pairs->isempty());
+            } else {
+                // Element successfully inserted
+            }
+        }
+    }
+}
+
+// Check an srecord against the current dynamictable
+// Return TRUE if all elements of dynamictable exist in srecord.
+// Return FALSE if there exists element of dynamictable that is not in srecord.
+// If TRUE, collect pairs of corresponding elements of dynamictable and srecord.
+// If FALSE, pair list contains a well-terminated but meaningless list.
+// Neither the srecord nor the dynamictable is modified.
+Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
+    Assert(isPwrTwo(size));
+    pairs=new PairList();
+    Assert(pairs->isempty());
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident!=makeTaggedNULL()) {
+            Assert(isLiteral(table[i].ident));
+            TaggedRef val=sr.getFeature(table[i].ident);
+            if (val!=makeTaggedNULL()) {
+                // Feature found in srecord; add corresponding terms to list of pairs:
+                pairs->addpair(val, table[i].value);
+                Assert (!pairs->isempty());
+            } else {
+                // Feature not found in srecord; failure of unification
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
+
+//-------------------------------------------------------------------------
+//                               for class GenOFSVariable
+//-------------------------------------------------------------------------
 
 
 // (Arguments are dereferenced)
@@ -46,8 +199,12 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         SRecord* termSRec=tagged2SRecord(term);
         Assert(termSRec!=NULL);
 
-        // Check that the label is 'open':
-        if (!sameLiteral(termSRec->getLabel(),AtomOpen)) return FALSE;
+        // Unify the labels:
+        if (!am.unify(termSRec->getLabel(),label,prop)) return FALSE;
+        // Must be literal or variable:
+        TaggedRef tmp=label;
+        DEREF(tmp,_1,_2);
+        if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
 
         // Get local/global flag:
         Bool vLoc=(prop && isLocalVariable());
@@ -55,12 +212,12 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Check that all features of the OFSVar exist in the SRecord:
         // (During the check, calculate the list of feature pairs that correspond.)
         PairList* pairs;
-        Bool success=dynamictable.srecordcheck(*termSRec, pairs);
+        Bool success=dynamictable->srecordcheck(*termSRec, pairs);
         if (!success) { pairs->free(); return FALSE; }
 
         // Bind OFSVar to the SRecord:
-        if (vLoc) doBind(vPtr, TaggedRef(tPtr));
-        else doBindAndTrail(var, vPtr, TaggedRef(tPtr));
+        if (vLoc) doBind(vPtr, TaggedRef(term));
+        else doBindAndTrail(var, vPtr, TaggedRef(term));
 
         // Unify corresponding feature values:
         PairList* p=pairs;
@@ -98,14 +255,18 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
     case CVAR:
       {
         if (tagged2CVar(term)->getType() != OFSVariable) return FALSE;
-
-        // Terms are identical; can return immediately
-        // Should be redundant:
         Assert(term!=var);
-        // if (term==var) return TRUE;
 
         // Get the GenOFSVariable corresponding to term:
         GenOFSVariable* termVar=tagged2GenOFSVar(term);
+        Assert(termVar!=NULL);
+
+        // Unify the labels:
+        if (!am.unify(termVar->label,label,prop)) return FALSE;
+        // Must be literal or variable:
+        TaggedRef tmp=label;
+        DEREF(tmp,_1,_2);
+        if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
 
         // Get local/global flags:
         Bool vLoc=(prop && isLocalVariable());
@@ -125,16 +286,16 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             newVar=this;
             nvRefPtr=vPtr;
             otherVar=termVar;
-            globConstrained = otherVar->dynamictable.extraFeaturesIn(newVar->dynamictable);
+            globConstrained = otherVar->dynamictable->extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && tLoc) {
             // Reuse the term:
             newVar=termVar;
             nvRefPtr=tPtr;
             otherVar=this;
-            globConstrained = otherVar->dynamictable.extraFeaturesIn(newVar->dynamictable);
+            globConstrained = otherVar->dynamictable->extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && !tLoc) {
-            // Make a copy of the var's DynamicTable.
-            DynamicTable* dt=new DynamicTable(dynamictable);
+            // Make a local copy of the var's DynamicTable.
+            DynamicTable* dt=dynamictable->copyDynamicTable();
             // Make a new GenOFSVariable with the new DynamicTable:
             TaggedRef pn=tagged2CVar(var)->getName();
             newVar=new GenOFSVariable(*dt, pn);
@@ -145,10 +306,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(newVar!=NULL);
         Assert(otherVar!=NULL);
 
+        // (CRUCIAL FUTURE OPTIMIZATION: Make merge direction depend on relative table sizes)
         // Merge otherVar's DynamicTable into newVar's DynamicTable.
         // (During the merge, calculate the list of feature pairs that correspond.)
         PairList* pairs;
-        newVar->dynamictable.merge(otherVar->dynamictable, pairs);
+        otherVar->dynamictable->merge(newVar->dynamictable, pairs);
 
         // Bind both var and term to the (possibly reused) newVar:
         // Because of cycles, these bindings must be done _before_ the unification

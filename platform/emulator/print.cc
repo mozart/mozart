@@ -172,14 +172,17 @@ PRINT(GenCVariable){
 
   case OFSVariable:
     {
-      GenOFSVariable* me = (GenOFSVariable *) this;
-      stream << " ofs(" << me->getNumOfFeatures() << ')';
-
       stream << ' ';
-      me->getLabel()->print(stream, 0);
-      me->getTable()->print(stream, 0);
+      if (depth<=1) {
+          stream << "ofs(...)";
+      } else {
+          GenOFSVariable* me = (GenOFSVariable *) this;
+          tagged2Stream(me->getLabel(),stream,depth-1,offset);
+          // me->getLabel()->print(stream, depth-1, offset);
+          me->getTable()->print(stream, depth-1, offset+2);
+      }
       break;
-    }
+   }
 
   default:
     error("Unexpected type generic variable at %s:%d.",
@@ -189,6 +192,29 @@ PRINT(GenCVariable){
 
   stream << ">";
 } // PRINT(GenCVariable)
+
+
+PRINT(DynamicTable)
+{
+    stream << '(';
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident) {
+            stream << ' ';
+            CHECK_DEREF(table[i].ident);
+            tagged2Stream(table[i].ident,stream,depth);
+            stream << ':';
+            stream << ' ';
+            tagged2Stream(table[i].value,stream,depth);
+        }
+    }
+    stream << ' ' << ')';
+}
+
+PRINTLONG(DynamicTable)
+{
+    print(stream, depth, offset);
+}
+
 
 
 PRINT(STuple)
@@ -795,15 +821,17 @@ PRINTLONG(GenCVariable){
     break;
   case OFSVariable:
     {
-      GenOFSVariable* me = (GenOFSVariable *) this;
-      stream << " ofs(" << me->getNumOfFeatures() << ')';
-
       stream << ' ';
-      me->getLabel()->print(stream, 0);
-      me->getTable()->print(stream, 0);
-      stream << endl;
+      if (depth<=1) {
+          stream << "ofs(...)";
+      } else {
+          GenOFSVariable* me = (GenOFSVariable *) this;
+          tagged2Stream(me->getLabel(),stream,depth-1,offset);
+          // me->getLabel()->print(stream, depth-1, offset);
+          me->getTable()->print(stream, depth-1, offset+2);
+      }
+      break;
     }
-    break;
   default:
     error("Unexpected type generic variable at %s:%d.",
           __FILE__, __LINE__);

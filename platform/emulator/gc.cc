@@ -33,6 +33,7 @@
 #include "debug.hh"
 #include "dllist.hh"
 #include "genvar.hh"
+#include "ofgenvar.hh"
 #include "fdhook.hh"
 #include "io.hh"
 #include "misc.hh"
@@ -281,7 +282,8 @@ enum TypeOfPtr {
   PTR_THREAD,
   PTR_CONT,
   PTR_CFUNCONT,
-  PTR_SUSPCONT
+  PTR_SUSPCONT,
+  PTR_DYNTAB
 };
 
 
@@ -1151,26 +1153,48 @@ void GenFDVariable::gc(void)
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
-void DynamicTable::gc(void)
+
+DynamicTable* DynamicTable::gc(void)
 {
+    GCMETHMSG("DynamicTable::gc");
+
     Assert(isPwrTwo(size));
-    // Copy the actual table:
-    HashElement* tableCopy=(HashElement*) gcRealloc(table,size*sizeof(HashElement));
+    // Copy the table:
+    size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
+    DynamicTable* ret = (DynamicTable*) gcRealloc(this,len);
+    GCNEWADDRMSG(ret);
     // Take care of all TaggedRefs in the table:
+    ptrStack.push(ret,PTR_DYNTAB);
+    // (no storeForward needed since only one place points to the dynamictable)
     for (dt_index i=0; i<size; i++) {
-        if (table[i].ident!=makeTaggedNULL()) {
-            gcTagged(table[i].ident, tableCopy[i].ident);
-            gcTagged(table[i].value, tableCopy[i].value);
+        if (table[i].ident!=makeTaggedNULL()
+            && (!isRef(table[i].ident) && isAnyVar(table[i].ident))) {
+            gcTagged(table[i].ident, ret->table[i].ident);
+            gcTagged(table[i].value, ret->table[i].value);
         }
     }
-    // Update the pointer in the copied block:
-    table=tableCopy;
+    return ret;
+}
+
+
+void DynamicTable::gcRecurse()
+{
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident!=makeTaggedNULL()
+            && (isRef(table[i].ident) || !isAnyVar(table[i].ident))) {
+            gcTagged(table[i].ident, table[i].ident);
+            gcTagged(table[i].value, table[i].value);
+        }
+    }
 }
 
 
 void GenOFSVariable::gc(void)
 {
-    dynamictable.gc();
+    GCMETHMSG("GenOFSVariable::gc");
+    gcTagged(label, label);
+    // Update the pointer in the copied block:
+    dynamictable=dynamictable->gc();
 }
 
 
@@ -2101,6 +2125,10 @@ void performCopying(void){
 
     case PTR_SRECORD:
       ((SRecord *) ptr)->gcRecurse();
+      break;
+
+    case PTR_DYNTAB:
+      ((DynamicTable *) ptr)->gcRecurse();
       break;
 
     case PTR_NAME:
