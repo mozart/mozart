@@ -786,8 +786,9 @@ void engine() {
     case FAILED:
       killPropagatedCurrentTaskSusp();
       HANDLE_FAILURE(0,
-                     message("call of (*0x%x)(int, TaggedRef[]) failed",
-                             biFun); biFun = NULL;
+                     message("call of %s(int, TaggedRef[]) failed",
+                             builtinTab.getName((void *) biFun));
+                     biFun = NULL;
                      for (int i = 0; i < XSize; i++)
                         message("\nArg %d: %s",i+1,tagged2String(X[i]));
                      );
