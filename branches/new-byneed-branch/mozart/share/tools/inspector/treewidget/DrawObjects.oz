@@ -50,6 +50,7 @@ export
    futureGrDrawObject          : FutureGrDrawObject
    freeDrawObject              : FreeDrawObject
    freeGrDrawObject            : FreeGrDrawObject
+   failedDrawObject            : FailedDrawObject
    fdIntDrawObject             : FDIntDrawObject
    fdIntGrDrawObject           : FDIntGrDrawObject
    variableRefDrawObject       : VariableRefDrawObject

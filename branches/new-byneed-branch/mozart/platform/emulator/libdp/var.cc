@@ -38,7 +38,7 @@
 #include "dpMarshaler.hh"
 #include "unify.hh"
 #include "var_simple.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "chain.hh"
 
 
@@ -448,6 +448,8 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr)
 }
 
 // Return 'TRUE' if successful (that is, the variable is bound)
+//
+// raph: this function is no longer used
 Bool triggerVariable(TaggedRef *tPtr)
 {
   Assert(tPtr!=NULL);
@@ -455,25 +457,21 @@ Bool triggerVariable(TaggedRef *tPtr)
   if (oz_isFuture(var)) {
     // kost@ : 'oz_isFuture(var)' does NOT mean that the 'var' is of
     // type Future: it can be also a manager var keeping a future!
-    Future *fut;
+    //
+    // raph: futures are now implemented by ReadOnly
+    ReadOnly *fut;
     if (oz_isManagerVar(var)) {
       ManagerVar *mv = oz_getManagerVar(var);
-      fut = (Future *) mv->getOrigVar();
+      fut = (ReadOnly *) mv->getOrigVar();
     } else {
-      fut = (Future *) tagged2Var(var);
+      fut = (ReadOnly *) tagged2Var(var);
     }
-    Assert(fut->getType() == OZ_VAR_FUTURE);
+    Assert(fut->getType() == OZ_VAR_READONLY ||
+	   fut->getType() == OZ_VAR_READONLY_QUIET);
 
-    //
-    switch (fut->kick(tPtr)) {
-    case PROCEED: return (TRUE);
-    case SUSPEND: return (FALSE);
-      // kost@ : I dunno how to handle it. Those who have introduced
-      // 'RAISE' as a return value of 'Future::kick' should have fixed
-      // this part as well.
-    case RAISE: return (FALSE);
-    }
-    return (FALSE);
+    fut->becomeNeeded();
+    return (TRUE);
+
   } else {
     return (FALSE);
   }
@@ -565,13 +563,14 @@ void sendGetStatus(BorrowEntry *be){
   msgC->put_M_GETSTATUS(na->index);
   send(msgC);
 }
- 
+
 OZ_Term ProxyVar::statusV()
 {
-  if(status ==0){
+  if (status==0) {
     BorrowEntry *be = borrowIndex2borrowEntry(getIndex());
     sendGetStatus(be);
-    status= oz_newVariable();}
+    status= oz_newVariable();
+  }
   return status;
 }
 
@@ -593,12 +592,11 @@ void ManagerVar::localize(TaggedRef *vPtr)
 }
 
 OZ_Term ManagerVar::statusV() {
-  return getOrigVar()->getType()==OZ_VAR_FUTURE ? AtomFuture : AtomFree;
+  return oz_isFuture(origVar) ? AtomFuture : AtomFree;
 }
 
 VarStatus ManagerVar::checkStatusV(){
-  return getOrigVar()->getType()==OZ_VAR_FUTURE ?  EVAR_STATUS_FUTURE : 
-    EVAR_STATUS_FREE;
+  return oz_isFuture(origVar) ? EVAR_STATUS_FUTURE : EVAR_STATUS_FREE;
 }
 
 void oz_dpvar_localize(TaggedRef *vPtr) {

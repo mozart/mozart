@@ -36,7 +36,6 @@
 #include "thr_int.hh"
 #include "value.hh"
 #include "atoms.hh"
-#include "var_failed.hh"
 
 // this builtin is only internally available
 OZ_BI_define(BIbindFuture,2,0)
@@ -180,6 +179,7 @@ OZ_BI_define(BIvarToFuture,2,0)
       goto bind_fut;
     }
     if (oz_isFuture(v)) {
+      Assert(tagged2Var(v)->getType() == OZ_VAR_FUTURE);
       if (((Future*)tagged2Var(v))->isFailed()) {
 	v = makeTaggedRef(vPtr);
 	goto bind_fut;
@@ -199,8 +199,10 @@ OZ_BI_define(BIvarToFuture,2,0)
   return PROCEED;
 } OZ_BI_end
 
+// deprecated
 OZ_BI_define(BIfuture,1,1)
 {
+  Assert(0);   // raph: should no longer be used
   TaggedRef v = OZ_in(0);
   v = oz_safeDeref(v);
   if (oz_isRef(v)) {
@@ -225,35 +227,6 @@ OZ_BI_define(BIfuture,1,1)
   OZ_RETURN(v);
 } OZ_BI_end
 
-OZ_BI_define(BIwaitQuiet,1,0)
-{
-  oz_declareDerefIN(0,fut);
-  Assert(!oz_isRef(fut));
-  if (oz_isVarOrRef(fut)) {
-    if (oz_isFailed(fut)) return PROCEED;   // added by raph
-    if (oz_isFuture(fut)) {
-      Future* p = (Future*)tagged2Var(fut);
-      if (p->isFailed()) return PROCEED;
-      p->addSuspSVar(oz_currentThread());
-      return (SUSPEND);
-    }
-    // oz_suspendOnPtr(futPtr);
-    return oz_var_addQuietSusp(futPtr, oz_currentThread());
-  }
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BIisFailed,1,1)
-{
-  oz_declareDerefIN(0,fut);
-  Assert(!oz_isRef(fut));
-  OZ_RETURN(
-	    (oz_isVarOrRef(fut) &&
-	     (oz_isFailed(fut) ||   // added by raph
-	      (oz_isFuture(fut) && ((Future*)tagged2Var(fut))->isFailed())))
-	    ? oz_true() : oz_false() );
-} OZ_BI_end
-
 OZ_BI_define(BIbyNeedFuture,1,1)
 {
   oz_declareNonvarIN(0,p);
@@ -263,8 +236,10 @@ OZ_BI_define(BIbyNeedFuture,1,1)
   oz_typeError(0,"Unary Procedure");
 } OZ_BI_end
 
+// deprecated
 OZ_BI_define(BIbyNeedDot,2,1)
 {
+  Assert(0);   // raph: should no longer be used
   oz_declareSafeDerefIN(0,fut);
   oz_declareNonvarIN(1,fea);
   if (!oz_isFeature(fea)) oz_typeError(1,"Feature");
@@ -286,8 +261,10 @@ OZ_BI_define(BIbyNeedDot,2,1)
   }
 } OZ_BI_end
 
+// deprecated
 OZ_BI_define(BIbyNeedFail,1,1)
 {
+  Assert(0);   // raph: should no longer be used
   Future *newFut = new Future(oz_currentBoard(),
 			      OZ_mkTuple(AtomFail,1,OZ_in(0)));
   OZ_RETURN(makeTaggedRef(newTaggedVar(newFut)));

@@ -347,6 +347,7 @@ OZ_BI_define(BIwidthC, 2, 0)
 	  }
 
 	case EVAR_STATUS_FUTURE:
+	case EVAR_STATUS_FAILED:
 	case EVAR_STATUS_DET:
 	case EVAR_STATUS_UNKNOWN:
 	  // kost@ : wait until the picture gets clear;

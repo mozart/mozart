@@ -74,9 +74,9 @@
 			     out => [],
 			     bi  => BIwaitNeeded},
 
-     'need'             => { in  => ['value'],
+     'makeNeeded'       => { in  => ['value'],
 			     out => [],
-			     bi  => BIneed},
+			     bi  => BImakeNeeded},
 
      'waitOr'		=> { in  => ['value','value'],
 			     out => [],

@@ -77,7 +77,7 @@ prepare
 		       then {self SYSTEM(Url $)}
 		       else {self LOAD(  Url $)}
 		       end
-		    catch E then {Value.byNeedFail E} end
+		    catch E then {Value.failed E} end
 		 end}}
 	    end
 	    Entry  = {Dictionary.get ModMap Key}
@@ -88,7 +88,7 @@ prepare
 	       else {ByNeedFuture
 		     fun {$}
 			try Entry.1
-			catch E then {Value.byNeedFail E} end
+			catch E then {Value.failed E} end
 		     end}
 	       end
 	    else
@@ -109,12 +109,12 @@ prepare
 			     ActualType ExpectedType o(url: Key)} == ok
 			 then Module
 			 else
-			    {Value.byNeedFail
+			    {Value.failed
 			     system(module(typeMismatch Key
 					   ActualType ExpectedType))}
 			 end
 		      end
-		   catch E then {Value.byNeedFail E} end
+		   catch E then {Value.failed E} end
 		end}
 	    end
 	 end

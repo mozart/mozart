@@ -378,7 +378,7 @@ OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
-OZ_Return oz_var_need(TaggedRef *);
+OZ_Return oz_var_makeNeeded(TaggedRef *);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
@@ -417,6 +417,7 @@ enum VarStatus {
   EVAR_STATUS_KINDED,
   EVAR_STATUS_FREE,
   EVAR_STATUS_FUTURE,
+  EVAR_STATUS_FAILED,
   EVAR_STATUS_DET,
   EVAR_STATUS_UNKNOWN
 };
@@ -451,11 +452,10 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return EVAR_STATUS_FREE;
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
-  case OZ_VAR_FAILED:
-    return EVAR_STATUS_UNKNOWN;   // this is temporary
-//      return EVAR_STATUS_DET;   // special value here
   case OZ_VAR_FUTURE:
     return EVAR_STATUS_FUTURE;
+  case OZ_VAR_FAILED:
+    return EVAR_STATUS_FAILED;
   case OZ_VAR_OPT:
     return EVAR_STATUS_FREE;
   ExhaustiveSwitch();
@@ -494,6 +494,13 @@ int oz_isFuture(TaggedRef r)
 	  oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE);
 }
 
+// returns TRUE iff the entity is a failed value
+inline
+int oz_isFailed(TaggedRef r) {
+  return (oz_isVar(r) &&
+	  oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FAILED);
+}
+
 inline
 int oz_isNonKinded(TaggedRef r)
 {
@@ -513,6 +520,9 @@ int oz_isNonKinded(TaggedRef r)
 
 #define oz_isFuture(r)							\
 ((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FUTURE))
+
+#define oz_isFailed(r)							\
+((oz_isVar(r) && oz_check_var_status(tagged2Var(r))==EVAR_STATUS_FAILED))
 
 #define oz_isNonKinded(r)						\
 ((oz_isVar(r) && !oz_isKindedVar(r)))

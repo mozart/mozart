@@ -26,17 +26,15 @@
 %% Module
 %%
 local
-   ByNeedFail = Boot_Value.'byNeedFail'
    fun {ByNeedDot X F}
       if {IsDet X} andthen {IsDet F}
-      then try X.F catch E then {ByNeedFail E} end
-      else {ByNeedFuture fun {$} try X.F catch E then {ByNeedFail E} end end}
+      then try X.F catch E then {FailedValue E} end
+      else {ByNeedFuture fun {$} try X.F catch E then {FailedValue E} end end}
       end
    end
 in
    Value = value(wait:            Wait
 		 waitQuiet:       Boot_Value.'waitQuiet'
-                 waitNeeded:      WaitNeeded
 		 waitOr:          WaitOr
 
 		 '=<':            Boot_Value.'=<'
@@ -58,17 +56,19 @@ in
 		 isFuture:        IsFuture
 		 isFailed:        IsFailed
 		 isDet:           IsDet
-		 isNeeded:        IsNeeded
 		 status:          Boot_Value.status
 		 type:            Boot_Value.type
 
-		 '!!':            Boot_Value.'!!'
+		 isNeeded:        IsNeeded
+		 waitNeeded:      WaitNeeded
+		 makeNeeded:      Boot_Value.makeNeeded
 		 byNeed:          ByNeed
 		 byNeedFuture:    ByNeedFuture
 		 byNeedDot:       ByNeedDot
-		 byNeedFail:      Boot_Value.'byNeedFail'
-		 readOnly:        Boot_Value.readOnly
-		 failed:          Boot_Value.failedValue
+
+		 '!!':            Boot_Value.readOnly
+		 byNeedFail:      FailedValue
+		 failed:          FailedValue
 
 		 toVirtualString: Boot_Value.toVirtualString
 		)
