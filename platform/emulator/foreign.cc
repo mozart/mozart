@@ -1929,7 +1929,7 @@ void OZ_addBISpec(OZ_BIspec *spec)
 // don't raise errors, because debug info is never included!
 // use OZ_raiseError
 OZ_Return OZ_raise(OZ_Term exc) {
-  am.setException(exc,NameUnit,FALSE);
+  am.setException(exc,FALSE);
   return RAISE;
 }
 
@@ -1941,7 +1941,7 @@ OZ_Return OZ_raiseDebug(OZ_Term exc) {
   int debug =
     OZ_isRecord(exc) && OZ_subtree(exc,AtomDebug) &&
     (literalEq(OZ_label(exc),E_ERROR) || ozconf.errorDebug);
-  am.setException(exc,NameUnit,debug);
+  am.setException(exc,debug);
   return RAISE;
 }
 
@@ -1971,7 +1971,7 @@ OZ_Return OZ_raiseError(OZ_Term exc)
   OZ_putSubtree(ret,oz_int(1),exc);
   OZ_putSubtree(ret,oz_atom("debug"),NameUnit);
 
-  am.setException(ret,NameUnit,TRUE);
+  am.setException(ret,TRUE);
   return RAISE;
 }
 

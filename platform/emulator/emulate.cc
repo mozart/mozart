@@ -113,6 +113,24 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 }
 
 static
+void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
+{
+  int iarity = bi->getInArity();
+  int oarity = bi->getOutArity();
+
+  OZ_Term tt=OZ_tupleC("apply",iarity+oarity+1);
+
+  OZ_Term args=nil();
+  for (int j = iarity; j--;) {
+    cons(X[map == OZ_ID_MAP? j : map[j]],args);
+  }
+  am.setExceptionInfo(OZ_mkTupleC("fapply",3,
+                                  makeTaggedConst(bi),
+                                  args,
+                                  OZ_int(oarity)));
+}
+
+static
 OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
   OZ_Term out=nil();
   for (int i=loc->getOutArity(); i--; ) {
@@ -1023,7 +1041,10 @@ LBLdispatcher:
       if (res == PROCEED) { DISPATCH(3); }
       switch (res) {
       case FAILED:        HF_BI_NEW(bi,loc);
-      case RAISE:         RAISE_THREAD;
+      case RAISE:
+        if (e->exception.debug) set_exception_info_call(bi,X,loc->mapping());
+        RAISE_THREAD;
+
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 
       case SUSPEND:
@@ -1067,7 +1088,9 @@ LBLdispatcher:
       }
 
       switch (ret) {
-      case RAISE:         RAISE_THREAD;
+      case RAISE:
+        if (e->exception.debug) set_exception_info_call(bi,X,loc->mapping());
+        RAISE_THREAD;
       case BI_TYPE_ERROR: RAISE_TYPE_NEW(bi,loc);
 
       case SUSPEND:
@@ -1919,7 +1942,9 @@ LBLdispatcher:
          JUMPABSOLUTE(PC);
 
        case SLEEP:         Assert(0);
-       case RAISE:         RAISE_THREAD;
+       case RAISE:
+         if (e->exception.debug) set_exception_info_call(bi,X);
+         RAISE_THREAD;
        case BI_TYPE_ERROR: RAISE_TYPE(bi);
        case FAILED:        HF_BI(bi);
 
@@ -2331,7 +2356,10 @@ LBLdispatcher:
        switch (biFun(X,OZ_ID_MAP)) {
        case PROCEED:       goto LBLpopTask;
        case FAILED:        HF_BI(builtinTab.getEntry((void *) biFun));
-       case RAISE:         RAISE_THREAD_NO_PC;
+       case RAISE:
+         if (e->exception.debug)
+           set_exception_info_call(builtinTab.getEntry((void *) biFun),X);
+         RAISE_THREAD_NO_PC;
        case BI_TYPE_ERROR: RAISE_TYPE(builtinTab.getEntry((void *) biFun));
 
        case BI_REPLACEBICALL:
@@ -2409,9 +2437,9 @@ LBLdispatcher:
              }
 
              if (ozconf.errorDebug)
-               e->exception.info = OZ_mkTupleC("apply",2,
+               e->setExceptionInfo(OZ_mkTupleC("apply",2,
                                                OZ_atom(builtinTab.getName((void *)(prop->getPropagator()->getHeader()->getHeaderFunc()))),
-                                               prop->getPropagator()->getParameters());
+                                               prop->getPropagator()->getParameters()));
 
              e->closeDonePropagator(prop);
 

@@ -52,8 +52,7 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
   OZ_putSubtree(ret,OZ_int(1),exc);
   OZ_putSubtree(ret,AtomDebug,NameUnit);
 
-  am.setException(ret,NameUnit,
-                  literalEq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);
+  am.setException(ret, literalEq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);
   return RAISE;
 }
 
