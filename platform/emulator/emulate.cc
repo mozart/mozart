@@ -2672,10 +2672,10 @@ Case(GETVOID)
       }
 
       for (int i = 0; i < size; i++) {
-        switch ((*list)[i].kind) {
-        case K_XReg: p->initG(i, XREGS[(*list)[i].number]); break;
-        case K_YReg: p->initG(i, Y[(*list)[i].number]); break;
-        case K_GReg: p->initG(i, CAP->getG((*list)[i].number)); break;
+        switch ((*list)[i].getKind()) {
+        case K_XReg: p->initG(i, XREGS[(*list)[i].getIndex()]); break;
+        case K_YReg: p->initG(i, Y[(*list)[i].getIndex()]); break;
+        case K_GReg: p->initG(i, CAP->getG((*list)[i].getIndex())); break;
         }
       }
       XPC(1) = makeTaggedConst(p);

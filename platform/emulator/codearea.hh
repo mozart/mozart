@@ -115,17 +115,16 @@ const int codeGCListBlockSize = 10;
 
 class GCListEntry {
 private:
-  int    _tag;
-  void * _ptr;
+  Tagged2 entry;
 public:
   void set(void * p, int t) {
-    _ptr = p; _tag = t;
+    entry.set(p,t);
   }
   int getTag(void) {
-    return _tag;
+    return entry.getTag();
   }
   void * getPtr(void) {
-    return _ptr;
+    return entry.getPtr();
   }
 };
 

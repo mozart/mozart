@@ -144,7 +144,7 @@ void marshalGRegRef(AssRegArray *gregs, MsgBuffer *bs)
   marshalNumber(nGRegs,bs);
 
   for (int i = 0; i < nGRegs; i++) {
-    int out = ((*gregs)[i].number<<2) | (int)(*gregs)[i].kind;
+    int out = ((*gregs)[i].getIndex()<<2) | (int)(*gregs)[i].getKind();
     marshalNumber(out,bs);
   }
 }
@@ -467,8 +467,7 @@ ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs)
   for (int i = 0; i < nGRegs; i++) {
     unsigned int reg = unmarshalNumber(bs);
     if (PC) {
-      (*gregs)[i].number = reg>>2;
-      (*gregs)[i].kind = (KindOfReg) (reg&3);
+      (*gregs)[i].set(reg>>2,reg&3);
     }
   }
 
@@ -1101,8 +1100,7 @@ ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,MsgBuffer *bs,int *error
     unsigned int reg = unmarshalNumberRobust(bs, &e2);
     e1 = e1 || e2;
     if (PC) {
-      (*gregs)[i].number = reg>>2;
-      (*gregs)[i].kind = (KindOfReg) (reg&3);
+      (*gregs)[i].set(reg>>2,(reg&3));
     }
   }
   *error = e1;

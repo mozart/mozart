@@ -437,7 +437,7 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 
     SRecord *rec = tagged2SRecord(reg);
     const char *label = rec->getLabelLiteral()->getPrintName();
-    KindOfReg regType;
+    PosInt regType;
     if (!strcmp(label,"x")) {
       regType = K_XReg;
     } else if (!strcmp(label,"y")) {
@@ -447,12 +447,11 @@ OZ_BI_define(BIstoreGRegRef,2,0)
     } else {
       oz_typeError(1,"RegisterList");
     }
-    (*gregs)[i].kind = regType;
     OZ_Term index = oz_deref(rec->getArg(0));
     if (!oz_isSmallInt(index)) {
       oz_typeError(1,"RegisterList");
     }
-    (*gregs)[i].number = smallIntValue(index);
+    (*gregs)[i].set(smallIntValue(index),regType);
   }
 
   code->writeAddress(gregs);

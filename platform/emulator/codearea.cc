@@ -978,10 +978,10 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
         else {
           fprintf(ofile,"[");
           for (int k = 0; k < size; k++) {
-            switch ((*list)[k].kind) {
-            case K_XReg: fprintf(ofile,"x(%d)",(*list)[k].number); break;
-            case K_YReg: fprintf(ofile,"y(%d)",(*list)[k].number); break;
-            case K_GReg: fprintf(ofile,"g(%d)",(*list)[k].number); break;
+            switch ((*list)[k].getKind()) {
+            case K_XReg: fprintf(ofile,"x(%d)",(*list)[k].getIndex()); break;
+            case K_YReg: fprintf(ofile,"y(%d)",(*list)[k].getIndex()); break;
+            case K_GReg: fprintf(ofile,"g(%d)",(*list)[k].getIndex()); break;
             }
             if (k != size - 1)
               fprintf(ofile, " ");

@@ -319,8 +319,8 @@ outerLoop2:
           AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
           int size = list->getSize();
           for (int i = 0; i < size; i++) {
-            if (((*list)[i].kind) == K_XReg)
-              ISREAD((*list)[i].number);
+            if (((*list)[i].getKind()) == K_XReg)
+              ISREAD((*list)[i].getIndex());
           }
 
           if (op==DEFINITIONCOPY) { // Michael please check !!!
