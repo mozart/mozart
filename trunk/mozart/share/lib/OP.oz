@@ -20,21 +20,30 @@
 %%% WARRANTIES.
 %%%
 
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-   = IMPORT.'SP'
+local
 
-   \insert 'op/OS.oz'
+   \insert 'op/HtmlTable.oz'
 
-   URL = {System.property.condGet url unit}
-
-   \insert 'op/Open.oz'
-   
-   \insert 'op/Component.oz'
-   
 in
    
-   \insert 'OP.env'
+   fun instantiate {$ IMPORT}
+      \insert 'SP.env'
+      = IMPORT.'SP'
+      
+      \insert 'op/OS.oz'
+      
+      URL = {System.property.condGet url unit}
+      
+      \insert 'op/Open.oz'
+      
+      \insert 'op/Component.oz'
+      
+   in
    
+      \insert 'OP.env'
+   
+   end
+
 end
+
 
