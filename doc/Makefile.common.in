@@ -40,19 +40,19 @@ $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	--type=html-stylesheets --stylesheet=ozdoc.css \
 	--xrefdb=$(BUILDTOP)/doc/xref.db --xrefdir=$(WHAT) && \
 	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
-	for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)); do cp -p $$i $(WHAT)-html; done
 
 $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 	$(DOCIFY) $(OZDOCTEXFLAGS) --in=$< --out=$(WHAT)-tex \
 	--type=latex && \
-	for i in $(TEXEXTRAFILES); do cp -p $$i $(WHAT)-tex; done
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(TEXEXTRAFILES)); do cp -p $$i $(WHAT)-tex; done
 
 quick: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
 	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
 	--type=html-stylesheets --stylesheet=ozdoc.css --keeppictures \
 	--latexdb=latex.db && \
 	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
-	for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)); do cp -p $$i $(WHAT)-html; done
 
 verify: $(MAIN)
 	nsgmls -c$(PREFIX)/share/doc/catalog $< -s $<
