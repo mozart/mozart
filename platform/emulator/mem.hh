@@ -113,13 +113,13 @@ void *freeListMalloc(size_t chunk_size)
     error("freeListMalloc: not aligned to word boundaries");
   }
 #endif
-
-  void *aux = chunk_size < freeListMaxSize ? FreeList[chunk_size] : (void *)NULL;
+  void **freeListCache = FreeList;
+  void *aux = chunk_size < freeListMaxSize ? freeListCache[chunk_size] : (void *)NULL;
 
   if (aux == (void *) NULL)
     aux = heapMalloc(chunk_size); 
   else {
-    FreeList[chunk_size] = *(void **)aux;
+    freeListCache[chunk_size] = *(void **)aux;
   }
 #ifdef DEBUG_MEM
   memset((char *)aux,0x5A,chunk_size);
