@@ -42,31 +42,9 @@
 #include <netdb.h>
 #endif
 
-int BaseSite::hash() {
-  BYTE *p=(BYTE*)&address;
-  unsigned h=0,g;
-  int i;
-  int limit=sizeof(address);
-  for(i=0;i<limit;i++,p++){
-    h = (h << 4) + (*p);
-    if ((g = h & 0xf0000000)) {
-      h = h ^ (g >> 24);
-      h = h ^ g;}}
-  p= (BYTE*) &port;
-  limit=sizeof(port);
-  for(i=0;i<limit;i++,p++){
-    h = (h << 4) + (*p);
-    if ((g = h & 0xf0000000)) {
-      h = h ^ (g >> 24);
-      h = h ^ g;}}
-  p= (BYTE*) &timestamp;
-  limit=sizeof(port);
-  for(i=0;i<limit;i++,p++){
-    h = (h << 4) + (*p);
-    if ((g = h & 0xf0000000)) {
-      h = h ^ (g >> 24);
-      h = h ^ g;}}
-  return (int) h;}
+unsigned int BaseSite::hash() {
+  return ((unsigned int)address)+((unsigned int)port)+
+    ((unsigned int)timestamp.start)+((unsigned int)timestamp.pid);} 
 
 //
 void BaseSite::marshalBaseSite(MarshalerBuffer* buf)
