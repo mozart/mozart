@@ -160,10 +160,10 @@ COMPILERSUPPORTSRCS=	compiler.cc
 BROWSERSRCS=	browser.cc
 DEBUGSRCS=	debugBI.cc
 
-WIFOBJS=	$(WIFSRCS:%.cc=%.o)
-COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.o)
-BROWSEROBJS=	$(BROWSERSRCS:%.cc=%.o)
-DEBUGOBJS=	$(DEBUGSRCS:%.cc=%.o)
+WIFOBJS=	$(WIFSRCS:%.cc=%.lo)
+COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
+BROWSEROBJS=	$(BROWSERSRCS:%.cc=%.lo)
+DEBUGOBJS=	$(DEBUGSRCS:%.cc=%.lo)
 
 ALLSRCS= $(SRCS) \
 	$(WIFSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
@@ -347,11 +347,12 @@ parser.hh: parser.yy
 	@mv y.tab.c parser.cc
 	@mv y.tab.h parser.hh
 
-Parser.so: parser.o scanner.o parsertable.o
-	$(DYNLD) -o $@ parser.o scanner.o parsertable.o
+PARSEROBJS = parser.lo scanner.lo parsertable.lo
+Parser.so: $(PARSEROBJS)
+	$(DYNLD) -o $@ $(PARSEROBJS)
 
-libParser.a: parser.o scanner.o parsertable.o
-	$(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
+libParser.a: $(PARSEROBJS)
+	$(AR) -rc $@ $(PARSEROBJS) && $(RANLIB) $@
 
 wif.o: modWif-if.cc
 

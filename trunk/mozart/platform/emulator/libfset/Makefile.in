@@ -35,7 +35,7 @@ FSETLIBSRCS =	standard.cc telling.cc \
 		std_n.cc table.cc \
 		fsinit.cc
 
-FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
+FSETLIBOBJS = $(FSETLIBSRCS:.cc=.lo)
 
 all: $(FSETTARGETS)
 
