@@ -16,17 +16,6 @@
 // optimize: inline ....
 
 inline
-void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)
-/* (re)bind Ref *ref to Term *ptr;                     */
-/* We need this procedure for the rational unification */
-/* algorithm;                                          */
-{
-  rebindTrail.pushCouple(refPtr, *refPtr);   /* always;   */
-  doBind(refPtr,newRef);
-}
-
-
-inline
 void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
 		      TaggedRef a, ByteCode *scp) 
 {
