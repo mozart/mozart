@@ -116,6 +116,7 @@ define
 	    of "("|T then {Loop T N+1}
 	    [] ")"|T then
 	       if N==1 then T else {Loop T N-1} end
+	    [] _|T then {Loop T N}
 	    end
 	 end
       in
