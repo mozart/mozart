@@ -42,7 +42,7 @@
       SC += 1;                                                              \
   }
 
-#define EXPECT_SAMELENGTH_VECTORS(I, J)					\
+#define SAMELENGTH_VECTORS(I, J)					\
   { 									\
     int i_size = OZ_vectorSize(OZ_args[I]);				\
     int j_size = OZ_vectorSize(OZ_args[J]);				\
@@ -83,8 +83,8 @@ public:
   int initBool(void);
 
   int getMidElem(void) const; 
-  int getNextSmallerElem(int v) const;
-  int getNextLargerElem(int v) const;
+  int getNextSmallerEl(int v) const;
+  int getNextLargerEl(int v) const;
   int getSize(void) const { return size; }
   int getMinElem(void) const { return min_elem; }
   int getMaxElem(void) const { return max_elem; }
@@ -135,7 +135,7 @@ public:
   static void operator delete(void *, size_t);
 
   OZ_Propagator * gc(void); 
-  OZ_Boolean isEqualVarsPossible(void);
+  OZ_Boolean mayBeEqualVars(void);
   OZ_Return replaceBy(OZ_Propagator *);
   OZ_Return replaceBy(OZ_Term, OZ_Term);
   OZ_Return replaceByInt(OZ_Term, int);
@@ -152,7 +152,7 @@ public:
 ostream& operator << (ostream& o, const OZ_Propagator &p);
 
 //-----------------------------------------------------------------------------
-// class OZ_PropagatorExpect, etc.
+// class OZ_Expect, etc.
 
 struct OZ_expect_t {
   int size, accepted; 
@@ -161,11 +161,11 @@ struct OZ_expect_t {
 
 enum OZ_PropagatorFlags { NULL_flag, OFS_flag, CD_flag };
 
-class OZ_PropagatorExpect;
+class OZ_Expect;
 
-typedef OZ_expect_t (OZ_PropagatorExpect::*OZ_PropagatorExpectMeth) (OZ_Term);
+typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
 
-class OZ_PropagatorExpect {
+class OZ_Expect {
 private:
   struct spawnVars_t {OZ_Term * var; OZ_FDPropState state;} * spawnVars;
   OZ_Term ** suspendVars;
@@ -174,17 +174,17 @@ protected:
   void addSpawn(OZ_FDPropState, OZ_Term *);
   void addSuspend(OZ_Term *);
 public:
-  OZ_PropagatorExpect(void); 
-  ~OZ_PropagatorExpect(void); 
+  OZ_Expect(void); 
+  ~OZ_Expect(void); 
 
-  OZ_expect_t expectDomainDescription(OZ_Term, int = 4);
+  OZ_expect_t expectDomDescr(OZ_Term, int = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
   OZ_expect_t expectIntVarAny(OZ_Term t) { return expectIntVar(t, fd_any); }
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
-  OZ_expect_t expectVector(OZ_Term, OZ_PropagatorExpectMeth);
+  OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
 
   OZ_Return spawn(OZ_Propagator *, int prio = OZ_getPropagatorPrio(),
                   OZ_PropagatorFlags flags=NULL_flag);
@@ -248,10 +248,10 @@ void OZ_gcTerm(OZ_Term &);
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 
-OZ_Term * OZ_allocOzTermsOnHeap(int);
-int * OZ_allocCIntsOnHeap(int);
-void OZ_deallocOzTermsFromHeap(OZ_Term *, int);
-void OZ_deallocCIntsFromHeap(int *, int);
+OZ_Term * OZ_hallocOzTerms(int);
+int *     OZ_hallocCInts(int);
+void      OZ_hfreeOzTerms(OZ_Term *, int);
+void      OZ_hfreeCInts(int *, int);
 
 int * OZ_findEqualVars(int, OZ_Term *); // static return value
 OZ_Boolean OZ_isEqualVars(OZ_Term, OZ_Term);
