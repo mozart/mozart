@@ -1,6 +1,5 @@
 functor
 import
-   Browser(browse: Browse)
    Colour(list)
    DPPane(getNetInfo) at 'x-oz://boot/DPPane.ozf'
    DPB at 'x-oz://boot/DPB.ozf'
@@ -38,7 +37,7 @@ define
       in
 	 if New \= @string then
 	    Changed = true
-	    Delete = @string
+	    Delete = @key
 	    Add = site(key:@key fg:@color text:New)
 	    string <- New
 	 else
@@ -56,10 +55,8 @@ define
 	 end
       end
       
-      meth numberValue(V0 $) Old New in
-	 thread {Cell.exchange V0 Old New} end
-	 New = Old + @nr
-	 {IntToFloat New}#@key
+      meth numberValue(V0 $)
+	 {IntToFloat @nr}#@key
       end
       meth sizeValue(V0 $) Old New in
 	 thread {Cell.exchange V0 Old New} end
@@ -103,7 +100,6 @@ define
 	 end
       in
 	 {DPPane.getNetInfo Data}
-	 {Browse Data}
 	 {List.forAll Data Store}
       end
 
@@ -146,7 +142,6 @@ define
 	 Values
       in
 	 {List.map {Dictionary.keys self.info} GetValue Values}
-	 {Browse Values}
 	 {self.guiNumber display({List.reverse Values})}
       end
       meth displayByte
@@ -158,13 +153,11 @@ define
 	 Values
       in
 	 {List.map {Dictionary.keys self.info} GetValue Values}
-	 {Browse Values}
 	 {self.guiByte display({List.reverse Values})}
       end
       meth display
 	 NetInfo, update
 	 NetInfo, displayList
-	 {Cell.assign self.val0 0}
 	 NetInfo, displayNumber
 	 {Cell.assign self.val0 0}
 	 NetInfo, displayByte
