@@ -63,7 +63,7 @@ in
 	 LeftMaxY:  0.0
 	 RightMaxY: 0.0
 	 PrevYs:    nil
-	 CurX:      2
+	 CurX:      0
 	 CurScale:  1.0
 	 CurLimit:  0.0
       

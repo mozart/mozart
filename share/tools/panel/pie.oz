@@ -12,11 +12,23 @@ local
    PieSize     = 70
    Border      = 5
    PieTop      = PieSize + Border
+
+   ZeroTime    = time(copy:      0 
+		      gc:        0 
+		      load:      0
+		      propagate: 0 
+		      run:       0
+		      system:    0
+		      user:      0)
 in
 
    class Pie
       from Tk.canvas
       feat Tag
+      attr
+	 Saved: ZeroTime
+	 Clear: ZeroTime
+
       meth init(parent:P)
 	 <<Pie tkInit(parent: P
 		      width:  PieSize + 2 * Border
@@ -28,40 +40,58 @@ in
 		  outline: BrightColor)>>
       end
 
-      meth draw(g:GcTime c:CopyTime p:PropTime r:RunTime l:LoadTime)
-	 case RunTime > 0 then
-	    ArcTag    = self.Tag
-	    HalfTime  = RunTime div 2
-	    GcEx      = (GcTime * 360 + HalfTime)   div RunTime
-	    CopyStart = GcEx
-	    CopyEx    = (CopyTime * 360 + HalfTime) div RunTime
-	    PropStart = CopyStart + CopyEx 
-	    PropEx    = (PropTime * 360 + HalfTime) div RunTime
-	    LoadStart = PropStart + PropEx 
-	    LoadEx    = (LoadTime * 360 + HalfTime) div RunTime
-	    RunStart  = LoadStart + LoadEx
-	    RunEx     = 360 - RunStart
+      meth clear
+	 Clear <- @Saved
+	 Saved <- Unit
+      end
+      
+      meth display(T)
+	 case T==@Saved then true else
+	    C        = @Clear
+	    GcTime   = T.gc   - C.gc
+	    CopyTime = T.copy - C.copy
+	    PropTime = T.propagate - C.propagate
+	    RunTime  = T.user - C.user
+	    LoadTime = T.load - C.load
+	    ArcTag   = self.Tag
 	 in
-	    <<Pie tk(crea arc Border Border PieTop PieTop
-		     start:0         extent:GcEx
-		     fill:TimeColors.gc outline: ''
-		     tags:ArcTag)>>
-	    <<Pie tk(crea arc Border Border PieTop PieTop
-		     start:CopyStart extent:CopyEx
-		     fill:TimeColors.copy outline: ''
-		     tags:ArcTag)>>
-	    <<Pie tk(crea arc Border Border PieTop PieTop
-		     start:PropStart extent:PropEx
-		     fill:TimeColors.prop outline: ''
-		     tags:ArcTag)>>
-	    <<Pie tk(crea arc Border Border PieTop PieTop
-		     start:LoadStart extent:LoadEx
-		     fill:TimeColors.load outline: ''
-		     tags:ArcTag)>>
-	    <<Pie tk(crea arc Border Border PieTop PieTop
-		     start:RunStart extent:RunEx
-		     fill:TimeColors.run outline: ''
-		     tags:ArcTag)>>
+	    {ArcTag tk(delete)}
+	    case RunTime==0 then true else
+	       HalfTime  = RunTime div 2
+	       GcEx      = (GcTime * 360 + HalfTime)   div RunTime
+	       CopyStart = GcEx
+	       CopyEx    = (CopyTime * 360 + HalfTime) div RunTime
+	       PropStart = CopyStart + CopyEx 
+	       PropEx    = (PropTime * 360 + HalfTime) div RunTime
+	       LoadStart = PropStart + PropEx 
+	       LoadEx    = (LoadTime * 360 + HalfTime) div RunTime
+	       RunStart  = LoadStart + LoadEx
+	       RunEx     = case RunStart==0 then 359.99 else
+			      360 - RunStart
+			   end
+	    in
+	       Saved <- T
+	       <<Pie tk(crea arc Border Border PieTop PieTop
+			start:0         extent:GcEx
+			fill:TimeColors.gc outline: ''
+			tags:ArcTag)>>
+	       <<Pie tk(crea arc Border Border PieTop PieTop
+			start:CopyStart extent:CopyEx
+			fill:TimeColors.copy outline: ''
+			tags:ArcTag)>>
+	       <<Pie tk(crea arc Border Border PieTop PieTop
+			start:PropStart extent:PropEx
+			fill:TimeColors.prop outline: ''
+			tags:ArcTag)>>
+	       <<Pie tk(crea arc Border Border PieTop PieTop
+			start:LoadStart extent:LoadEx
+			fill:TimeColors.load outline: ''
+			tags:ArcTag)>>
+	       <<Pie tk(crea arc Border Border PieTop PieTop
+			start:RunStart extent:RunEx
+			fill:TimeColors.run outline: ''
+			tags:ArcTag)>>
+	    end
 	 end
       end
    end
