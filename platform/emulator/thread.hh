@@ -22,7 +22,6 @@
 
 #include "types.hh"
 
-
 class Toplevel;
 
 class Thread : public ConstTerm
@@ -53,12 +52,16 @@ private:
   Thread *next;
   Thread *prev;
   int priority;
+#ifdef NEWCOUNTER
+  Board *home;
+#endif
   Board *notificationBoard; // for search capabilities; 
-
 public:
   TaskStack taskStack;
-  Thread(int prio);
-  static Thread *newThread(int prio);
+
+public:
+  Thread(int prio,Board *home);
+  static Thread *newThread(int prio,Board *home);
 
   USEFREELISTMEMORY;
   OZPRINT;
@@ -67,20 +70,24 @@ public:
   void gcRecurse();
 
   int getPriority();
-  Bool isSolve () { return ((notificationBoard == (Board *) NULL) ? NO : OK); }
+  // isSolve() replace by hasNotificationBoard()
+  Bool hasNotificationBoard () { return notificationBoard ? OK : NO; }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
   Board* getNotificationBoard () { return (notificationBoard); }
   void pushTask(Board *n,ProgramCounter pc,
-		       RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
+		RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushTask(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
   void schedule();
   void setPriority(int prio);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
   void pushToplevel(ProgramCounter pc);
-
+#ifdef NEWCOUNTER
+  Board *getHome() { return home->getBoardDeref(); }
+  void setHome(Board *b) { home=b; }
+#endif
 private:
-  void init(int prio);
+  void init(int prio,Board *home);
   Bool isScheduled();
   void insertFromTail();
   void insertFromHead();

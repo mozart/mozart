@@ -6,25 +6,10 @@
   Version: $Revision$
   State: $State$
 
-  ------------------------------------------------------------------------
-
-  exported variables/classes:
-
-  exported procedures:
-
-  ------------------------------------------------------------------------
-
-  internal static variables:
-
-  internal procedures:
-
-  ------------------------------------------------------------------------
-*/
-/*
       (main) AM::procedure;
       another things.
+  ------------------------------------------------------------------------
 */
-
 
 #if defined(__GNUC__) && !defined(NOPRAGMA)
 #pragma implementation "am.hh"
@@ -33,8 +18,6 @@
 #include <signal.h>
 
 #include "../include/config.h"
-
-#include "sunproto.h"
 
 #include "actor.hh"
 #include "am.hh"
@@ -68,9 +51,11 @@ void ConfigData::init() {
   ozPath		= OZ_PATH;
   linkPath		= OZ_PATH;
   printDepth		= PRINT_DEPTH;
+  DebugCheckT(printDepth=10);
   showFastLoad		= SHOW_FAST_LOAD;
   showForeignLoad	= SHOW_FOREIGN_LOAD;
   showIdleMessage	= SHOW_IDLE_MESSAGE;
+  DebugCheckT(showIdleMessage=1);
   showSuspension	= SHOW_SUSPENSION;
 
   stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
@@ -88,6 +73,7 @@ void ConfigData::init() {
   systemPriority	= SYSTEM_PRIORITY;
   taskStackSize		= TASK_STACK_SIZE;
   errorVerbosity        = ERROR_VERBOSITY;
+  DebugCheckT(errorVerbosity=2);
   dumpCore		= 0;
   cellHack		= 0;
 }
@@ -569,7 +555,7 @@ Bool AM::_checkExtSuspension (Suspension *susp)
       // that the stability condition can not be COMPLETELY controlled by the 
       // absence of active threads; 
       // Note too:
-      //  If the note is not yet stable, it means that there are other
+      //  If the node is not yet stable, it means that there are other
       // external suspension(s) and/or threads. Therefore it need not be waked.
     }
     sb = (sb->getParentBoard ())->getSolveBoard ();
@@ -577,37 +563,24 @@ Bool AM::_checkExtSuspension (Suspension *susp)
   return (wasFound);
 }
 
-void AM::incSolveThreads (Board *bb)
+/*
+  increment/decrement the thread counter in every solve board above
+  if "stable" generate a new thread "solve waker"
+  */
+void AM::incSolveThreads (Board *bb,int n)
 {
-  // get the next "cluster"; 
-  // no getBoardDeref () !!!
+  /* get the next "cluster";
+     no getBoardDeref() !!!
+       (mm2: because discarded/failed threads count too ?) */
   while (bb != (Board *) NULL && bb->isCommitted () == OK)
     bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
-    if (bb->isSolve () == OK) {
-      DebugCheck ((bb->isReflected () == OK),
-		  error ("reflected board is found in AM::incSolveThreads ()"));
-      SolveActor *sa = SolveActor::Cast (bb->getActor ());
-      DebugCheck ((sa->getBoard () == (Board *) NULL),
-		  error ("solve actor in abstraction (AM::incSolveThreads ())"));
-      sa->incThreads ();
-    }
-    bb = bb->getParentBoard ();
-    while (bb != (Board *) NULL && bb->isCommitted () == OK)
-      bb = bb->getBoard ();
-  }
-}
+    if (bb->isSolve () == OK && !bb->isFailed()) {
+      Assert(!bb->isReflected () && !bb->isDiscarded() && !bb->isFailed());
 
-void AM::decSolveThreads (Board *bb)
-{
-  while (bb != (Board *) NULL && bb->isCommitted () == OK)
-    bb = bb->getBoard ();
-  while (bb != (Board *) NULL && bb != rootBoard) {
-    if (bb->isSolve () == OK) {
-      DebugCheck ((bb->isReflected () == OK),
-		  error ("reflected board is found in AM::decSolveThreads ()"));
       SolveActor *sa = SolveActor::Cast (bb->getActor ());
-      sa->decThreads ();
+      Assert(sa->getBoard());
+      sa->incThreads (n);
       if (sa->isStable () == OK) {
 	Thread::ScheduleSolve (bb);
       }
@@ -617,6 +590,39 @@ void AM::decSolveThreads (Board *bb)
       bb = bb->getBoard ();
   }
 }
+
+void AM::decSolveThreads (Board *bb)
+{
+  incSolveThreads(bb,-1);
+}
+
+/*
+  find "stable" board
+  */
+Board *AM::findStableSolve(Board *bb)
+{
+  /* get the next "cluster";
+     no getBoardDeref() !!! */
+  while (bb != (Board *) NULL && bb->isCommitted () == OK)
+    bb = bb->getBoard ();
+  while (bb != (Board *) NULL && bb != rootBoard) {
+    if (bb->isSolve () == OK) {
+      Assert(!bb->isReflected ());
+
+      SolveActor *sa = SolveActor::Cast (bb->getActor ());
+      Assert(sa->getBoard());
+      if (sa->isStable () == OK) {
+	return bb;
+      }
+      return NULL;
+    }
+    bb = bb->getParentBoard ();
+    while (bb != (Board *) NULL && bb->isCommitted () == OK)
+      bb = bb->getBoard ();
+  }
+  return NULL;
+}
+
 
 // ------------------------------------------------------------------------
 
@@ -798,8 +804,9 @@ void AM::awakeNode(Board *node)
 
   if (!node)
     return;
-
-  node->removeSuspension();
+#ifndef NEWCOUNTER
+  node->decSuspCount();
+#endif
   Thread::ScheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!!
 }
 
@@ -975,6 +982,7 @@ void AM::reduceTrailOnSuspend()
 
   Suspension *susp;
   Board *bb = currentBoard;
+  Bool used = NO;
 
   // one single suspension for all
   
@@ -998,8 +1006,10 @@ void AM::reduceTrailOnSuspend()
 		  error ("the right var is local  and unconstrained");
 		  return;);
       // add susps to global non-cvars
-      if(!isLocalVariable(oldVal) && isNotCVar(tagOldVal)) 
+      if(!isLocalVariable(oldVal) && isNotCVar(tagOldVal)) {
 	taggedBecomesSuspVar(ptrOldVal)->addSuspension (susp);
+	used = OK;
+      }
     }
 #ifdef DEBUG_CHECK
     TaggedRef aux = value;
@@ -1009,11 +1019,16 @@ void AM::reduceTrailOnSuspend()
     if (isUVar (tag) == OK)
       error ("UVar is found as value in trail;");
 #endif
-    if (isNotCVar(value))
+    if (isNotCVar(value)) {
       tagged2SuspVar(value)->addSuspension(susp);
+      used = OK;
+    }
     *refPtr = value;
   }
   trail.popMark();
+  if (susp && !used) {
+    susp->killSusp();
+  }
 }
 
 
@@ -1064,13 +1079,17 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 
 void AM::pushCall(Board *n, SRecord *def, int arity, RefsArray args)
 {
+#ifndef NEWCOUNTER
   n->incSuspCount();
+#endif
   currentThread->taskStack.pushCall(n,def,args,arity);
 }
 
 void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
 {
+#ifndef NEWCOUNTER
   n->incSuspCount();
+#endif
   currentThread->taskStack.pushDebug(n, new OzDebug(def,arity,args));
 }
 

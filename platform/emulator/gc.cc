@@ -1807,7 +1807,7 @@ void TaskStack::gcRecurse()
 
     case C_NERVOUS:
       break;
-      
+
     case C_CONT: 
       gcQueue(oldstack->pop()); 			  // PC
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
@@ -1923,6 +1923,9 @@ void Thread::gcRecurse()
 
   GCREF(next);
   GCREF(prev);
+#ifdef NEWCOUNTER
+  home=home->gcBoard();
+#endif
 
   DebugGC ((opMode == IN_TC), error ("thread is gc'ed in 'copy' mode?"));
   taskStack.gcRecurse();

@@ -454,7 +454,7 @@ void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
   DEREF(A,APtr,ATag);
   if (isAnyVar(ATag)) {
     Suspension *susp =
-      new Suspension(new SuspContinuation(b,prio,PC,Y,G,X,argsToSave));
+      new Suspension(b,prio,PC,Y,G,X,argsToSave);
     b->incSuspCount();
     taggedBecomesSuspVar(APtr)->addSuspension(susp);
 
@@ -540,7 +540,7 @@ void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
 			 ProgramCounter PC, RefsArray X, RefsArray Y, RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-  Suspension *susp  = new Suspension(new SuspContinuation(b,prio,PC,Y,G,X,argsToSave));
+  Suspension *susp  = new Suspension(b,prio,PC,Y,G,X,argsToSave);
   b->incSuspCount();
 
   Assert(isAnyVar(ATag) || isAnyVar(BTag));
@@ -744,7 +744,7 @@ void engine() {
 	if (auxBoard == NULL) {
 	  goto LBLpopTask;
 	}
-	auxBoard->removeSuspension();
+	auxBoard->decSuspCount();
       } else {
 	/* optimization: no need to maintain counter for rootBoard (RS) */
       }
@@ -758,7 +758,7 @@ void engine() {
     }
       
     if (taskstack->isEmpty((TaskStackEntry) tb)) { // 
-      if (e->currentThread->isSolve () == OK) {
+      if (e->currentThread->hasNotificationBoard () == OK) {
 	Board *nb = e->currentThread->getNotificationBoard ();
 	e->decSolveThreads (nb);
       }
@@ -790,7 +790,7 @@ void engine() {
 		   fsb->isReflected () == OK),
 		  error ("activity under reduced solve actor"));
 
-      tmpBB->removeSuspension();
+      tmpBB->decSuspCount();
       
       INSTALLPATH(tmpBB);
 
@@ -803,7 +803,7 @@ void engine() {
 	if (!tmpBB) {
 	  goto LBLpopTask;
 	}
-	tmpBB->removeSuspension();
+	tmpBB->decSuspCount();
 	
 	if (CBB != tmpBB) {
 	  switch (e->installPath(tmpBB)) {
@@ -832,7 +832,7 @@ void engine() {
 	  goto LBLpopTask;
 	}
 	INSTALLPATH(tmpBB);
-	tmpBB->removeSuspension();
+	tmpBB->decSuspCount();
 	isExecute = OK;
 	goto LBLcall;
       }
@@ -886,7 +886,7 @@ void engine() {
 		     fsb->isReflected () == OK),
 		    error ("activity under reduced solve actor"));
 	
-	tmpBB->removeSuspension();
+	tmpBB->decSuspCount();
 
 	if (currentTaskSusp != NULL && currentTaskSusp->isDead()) {
 	  currentTaskSusp = NULL;
@@ -1257,9 +1257,9 @@ void engine() {
 
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp = 
-        new Suspension(new SuspContinuation(CBB,
-                                            GET_CURRENT_PRIORITY(),
-                                            shallowCP, Y, G, X, argsToSave));
+        new Suspension(CBB,
+		       GET_CURRENT_PRIORITY(),
+		       shallowCP, Y, G, X, argsToSave);
 
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
@@ -1883,7 +1883,7 @@ void engine() {
 	 e->setCurrent(CBB->getParentBoard()->getBoardDeref());
 	 tmpBB->unsetInstalled();
 	 tmpBB->setCommitted(CBB);
-	 CBB->removeSuspension();
+	 CBB->decSuspCount();
 
 	 goto LBLcheckEntailment;
        }
@@ -1903,7 +1903,7 @@ void engine() {
 	}
 	Assert(ret != NO);
 	CBB->incSuspCount(bb->getSuspCount());
-	CBB->removeSuspension();
+	CBB->decSuspCount();
 	goto LBLcheckEntailment;
       }
 
@@ -1922,7 +1922,7 @@ void engine() {
 	e->setCurrent(CBB->getParentBoard()->getBoardDeref());
 	tmpBB->unsetInstalled();
 	tmpBB->setCommitted(CBB);
-	CBB->removeSuspension();
+	CBB->decSuspCount();
 	DISPATCH(1);
       }
 
@@ -2038,7 +2038,7 @@ void engine() {
 	prio = defPrio;
       }
 
-      Thread *tt = new Thread(prio);
+      Thread *tt = Thread::newThread(prio,CBB);
       if (e->currentSolveBoard != (Board *) NULL) {
 	e->incSolveThreads (e->currentSolveBoard);
 	tt->setNotificationBoard (e->currentSolveBoard);
@@ -2145,7 +2145,7 @@ void engine() {
       tmpBB->unsetInstalled();
       tmpBB->setCommitted(CBB);
 
-      CBB->removeSuspension();
+      CBB->decSuspCount();
 
       goto LBLemulateHook;
     }
@@ -2184,7 +2184,7 @@ void engine() {
       SolveActor *solveAA = SolveActor::Cast (CBB->getActor ());
       Board *solveBB = CBB; 
       e->setCurrent ((CBB->getParentBoard ())->getBoardDeref ());
-      CBB->removeSuspension ();
+      CBB->decSuspCount ();
 
       if (solveBB->hasSuspension () == NO) {
 	// 'solved';
@@ -2233,7 +2233,7 @@ void engine() {
 	  } else {
 	    // 'proper' enumeration; 
 	    WaitActor *nwa = new WaitActor (wa);
-	    solveBB->removeSuspension ();   // since WaitActor::WaitActor adds one; 
+	    solveBB->decSuspCount ();   // since WaitActor::WaitActor adds one; 
 	    waitBoard->setActor (nwa);
 	    ((AWActor *) nwa)->addChild (waitBoard);
 	    wa->unsetBoard ();  // may not copy the actor and rest of boards too;
@@ -2349,7 +2349,7 @@ void engine() {
 	LOADCONT((AskActor::Cast (aa))->getNext());
 	PC = AskActor::Cast(aa)->getElsePC();
 	if (PC != NOCODE) {
-	  CBB->removeSuspension();
+	  CBB->decSuspCount();
 	  goto LBLemulateHook;
 	}
 
@@ -2404,7 +2404,7 @@ void engine() {
       //  The solve actor goes simply away, and the 'failed' atom is bound to
       // the result variable; 
       aa->setCommitted();
-      CBB->removeSuspension();
+      CBB->decSuspCount();
       if ( !e->fastUnifyOutline(SolveActor::Cast(aa)->getResult(),
 				SolveActor::Cast(aa)->genFailed(),
 				OK) ) {
