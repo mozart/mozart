@@ -8,6 +8,13 @@
 #include "genvar.hh"
 #include "ofgenvar.hh"
 
+// Return true iff argument is a power of two
+Bool isPwrTwo(dt_index s) {
+    Assert(s>0);
+    return (s & (s-1))==0;
+    // while ((s&1)==0) s=(s>>1); return (s==1);
+}
+
 //-------------------------------------------------------------------------
 //                               for class DynamicTable
 //-------------------------------------------------------------------------
