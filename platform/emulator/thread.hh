@@ -481,7 +481,7 @@ public:
   void wakeupToRunnable ();
   void propagatorToRunnable ();
 
-  Bool terminate();
+  void terminate();
   void propagatorToNormal();
 
   // 

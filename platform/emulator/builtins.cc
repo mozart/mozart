@@ -2751,7 +2751,6 @@ OZ_C_proc_end
 
 /*
  * terminate a thread
- *   in deep guard == failed
  */
 OZ_C_proc_begin(BIthreadTerminate,1)
 {
@@ -2759,16 +2758,15 @@ OZ_C_proc_begin(BIthreadTerminate,1)
 
   if (th->isDeadThread()) return PROCEED;
 
-  Bool isLocal=th->terminate();
+  th->terminate();
 
-  if (am.currentThread == th) {
-    if (isLocal) return FAILED;
-    return BI_TERMINATE;
+  if (!th->isRunnable()) {
+    th->markPropagated();
+    am.scheduleThread(th);
   }
 
-  if (isLocal) th->getBoard()->setFailed();
-  if (!th->isRunnable()) {
-    am.scheduleThread(th);
+  if (am.currentThread == th) {
+    return BI_TERMINATE;
   }
   return PROCEED;
 }
