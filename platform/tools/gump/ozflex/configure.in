@@ -1,16 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 AC_INIT(initscan.c)
-BUILDTOP=`cd ../../../.. && pwd`
-AC_SUBST(BUILDTOP)
+OZ_INIT
 AC_CONFIG_HEADER(config.h:conf.in)
 
 dnl AC_LN_S
-AC_PROG_YACC
 OZ_CC_CHOOSE
+OZ_PROG_BISON
 dnl AC_PROG_RANLIB
 dnl AC_PROG_INSTALL
-AC_PROG_MAKE_SET
 AC_CONST
 AC_TYPE_SIZE_T
 AC_HEADER_STDC
@@ -24,3 +22,9 @@ esac
 
 AC_OUTPUT(Makefile,
 [test -z "$CONFIG_HEADERS" || echo timestamp > stamp-h])
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ../../../..' to include ../../../../aclocal.m4.
+]))
