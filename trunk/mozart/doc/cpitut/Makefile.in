@@ -1,0 +1,29 @@
+# Generated automatically from Makefile.in by configure.
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = cpitut
+MAIN = 0.sgml
+SGMLSRCS = 	0.sgml \
+		lp_tutorial_intro.sgml \
+		u_nesting.sgml \
+		ct_cpi_tutorial.sgml \
+		u_advanced.sgml \
+		u_replacing.sgml \
+		ip_tutorial.sgml \
+		u_basic_concepts.sgml \
+		u_vectors.sgml \
+		lp_tutorial.sgml \
+		u_getting_started.sgml \
+		r_anhang.sgml
+
+
+HTMLEXTRAFILES = propagatorstates.gif \
+		mks_fd_explorer.gif \
+		mks_lp_explorer.gif \
+		mks_fdlp_explorer.gif
+
+OZDOCHTMLFLAGS =
+
+include ../Makefile.common
+
