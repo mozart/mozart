@@ -38,6 +38,7 @@
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"
+#include "var_future.hh"
 #include "os.hh"
 
 #ifdef OUTLINE
@@ -65,7 +66,7 @@ Board::Board(Board * p)
     threads(0), suspList(0), nonMonoSuspList(0)
 {
   Assert(!p->isCommitted());
-  status  = oz_newVar(p);
+  status  = oz_newFuture(p);
   rootVar = oz_newVar(this);
   parentAndFlags.set((void *) p, 0);
   lpq.init();
@@ -74,6 +75,28 @@ Board::Board(Board * p)
   copy_start  = (int32 *) NULL;
   copy_size   = 0;
 #endif
+}
+
+TaggedRef Board::genBlocked(TaggedRef arg) {
+  SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+  stuple->setArg(0, arg);
+  return makeTaggedSRecord(stuple);
+}
+
+void Board::bindStatus(TaggedRef t) {
+  TaggedRef s = getStatus();
+  DEREF(s, sPtr, _);
+
+  // STRANGE
+  if (oz_isFuture(s))
+    oz_bindFuture(sPtr, t);
+}
+
+void Board::clearStatus() {
+  if (oz_isFuture(oz_deref(getStatus())))
+    return;
+
+  status = oz_newFuture(getParent());
 }
 
 
@@ -364,8 +387,7 @@ void Board::checkStability(void) {
 	am.trail.popMark();
 	am.setCurrent(getParent());
       
-	int ret = oz_unify(getStatus(), genAlt(n));
-	Assert(ret==PROCEED);
+	bindStatus(genAlt(n));
 
 	goto exit;
       }
@@ -376,10 +398,7 @@ void Board::checkStability(void) {
     am.trail.popMark();
     am.setCurrent(getParent());
     
-    int ret = oz_unify(getStatus(), genSucceeded(getSuspCount() == 0));
-
-    // VIOLATED ASSERTION!!!! CS-SPECIAL
-    //   Assert(ret==PROCEED);
+    bindStatus(genSucceeded(getSuspCount() == 0));
 
     goto exit;
   }
@@ -389,13 +408,12 @@ void Board::checkStability(void) {
 
     oz_deinstallCurrent();
 
-    TaggedRef newVar = oz_newVariable();
-    TaggedRef status = getStatus();
+    TaggedRef newVar = oz_newFuture(oz_currentBoard());
+
+    bindStatus(genBlocked(newVar));
 
     setStatus(newVar);
 
-    int ret = oz_unify(status, genBlocked(newVar));
-    Assert(ret==PROCEED);
     goto exit;
   }
 
@@ -421,9 +439,7 @@ void Board::fail(Thread * ct) {
       
   am.setCurrent(pb);
       
-  if (!oz_unify(getStatus(),genFailed())) {
-    Assert(0);
-  }
+  bindStatus(genFailed());
      
   pb->decSolveThreads();
 
