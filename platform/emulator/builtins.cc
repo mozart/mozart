@@ -321,7 +321,8 @@ OZ_C_proc_begin(BIbuiltin,3)
 
   if (arity!=-1 && (arity != found->getArity())) {
     return am.raise(E_ERROR,E_SYSTEM,"builtinArity",2,
-                    OZ_getCArg(0),makeTaggedSmallInt(found->getArity()));
+                    OZ_getCArg(0),OZ_getCArg(1),
+                    makeTaggedSmallInt(found->getArity()));
   }
 
   return OZ_unify(ret,makeTaggedConst(found));
