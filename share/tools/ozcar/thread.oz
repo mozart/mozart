@@ -47,14 +47,14 @@ in
    
    class ThreadManager
       feat
-	 Stream            %% info stream of the emulator
-	 ThreadDic         %% dictionary that holds various information
-                           %% about debugged threads
-	 ReadLoopThread    %% we need to kill it when closing the manager
+	 Stream                %% info stream of the emulator
+	 ThreadDic             %% dictionary that holds various information
+                               %% about debugged threads
+	 ReadLoopThread        %% we need to kill it when closing the manager
 
       attr
-	 Threads : nil     %% list of debugged threads
-	 currentThread
+	 Threads : nil         %% list of debugged threads
+	 currentThread : undef
       
       meth init
 	 self.Stream    = {Dbg.stream}
@@ -87,8 +87,11 @@ in
 	 elseof thr then
 	    T = M.thr.1
 	    I = M.thr.2
-	    P = M.par.1
-	    Q = M.par.2  %% id of parent thread
+	    Q = case {Value.hasFeature M par} then
+		   M.par.2  %% id of parent thread
+		else
+		   1
+		end
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
@@ -99,23 +102,21 @@ in
 		  {Thread.state T} == terminated then
 		  {OzcarMessage EarlyThreadDeath}
 	       else
-		  ThreadManager,add(T I P Q)
+		  ThreadManager,add(T I Q)
 	       end
 	    end
 	    
 	 elseof term then
 	    T = M.thr.1  %% just terminated thread
 	    I = M.thr.2  %% ...with it's id
-	    P = M.par.1  %% the sad parent <schnueff>
-	    Q = M.par.2  %% ...with it's id
 	    E = {Ozcar exists(T $)}
 	 in
 	    case E then
-	       ThreadManager,remove(T I P Q)
+	       ThreadManager,remove(T I noKill)
 	    else
 	       {OzcarMessage 'Unknown terminating thread'}
 	    end
-
+	    
 	 elseof susp then
 	    T = M.thr.1  %% just suspending thread
 	    I = M.thr.2  %% ...with it's id
@@ -149,20 +150,31 @@ in
 	 end
       end
 
-      meth add(T I P Q)
+      meth add(T I Q)
 	 Threads <- T | @Threads
 	 {Dictionary.put self.ThreadDic I {New Thr init(T)}}
 	 Gui,addNode(I Q)
-	 ThreadManager,switch(I)
+	 case @currentThread == undef then
+	    ThreadManager,switch(I)
+	 else
+	    Gui,displayTree
+	 end
       end
       
-      meth remove(T I P Q)  %% Q = <id of parent thread>
+      meth remove(T I Mode)
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
-	 case @currentThread == T then
-	    ThreadManager,switch(Q)
+	 {Show left#{List.length @Threads}}
+	 case Mode == kill then
+	    Gui,killNode(I)
+	 else
+	    Gui,removeNode(I)
+	 end
+	 case @Threads == nil then
+	    currentThread <- undef
+	    Gui,status(0)
+	    Gui,selectNode(0)
+	    Gui,displayTree
 	 else skip end
-	 Gui,removeNode(I)
-	 Gui,displayTree
       end
       
       meth exists(T $)
@@ -189,9 +201,17 @@ in
       end
       
       meth step(file:F line:L thr:T id:I name:N args:A builtin:IsBuiltin)
-	 SourceManager,scrollbar(file:F line:L color:ScrollbarDefaultColor)
-	 ThreadManager,setThrPos(id:I file:F line:L name:N args:A)
-	 Gui,printStackFrame(nr:1 name:N args:A)
+	 case F == '' then
+	    {OzcarMessage NoFileInfo # I}
+	    {Dbg.stepmode @currentThread false}
+	    {Thread.resume @currentThread}
+	    SourceManager,scrollbar(file:'' line:undef color:undef)
+	    ThreadManager,remove(T I kill)
+	 else
+	    SourceManager,scrollbar(file:F line:L color:ScrollbarDefaultColor)
+	    ThreadManager,setThrPos(id:I file:F line:L name:N args:A)
+	    Gui,printStackFrame(nr:1 name:N args:A)
+	 end
       end
       
       meth switch(I)

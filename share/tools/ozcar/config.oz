@@ -20,6 +20,8 @@ AltEnvTitle            = 'Environment of Frame  #'
 StatusInitText         = 'No current Thread'
 
 InvalidThreadID        = 'Invalid Thread ID in step message'
+NoFileInfo             = 'step message without line number information, ' #
+                         'continuing thread #'
 EarlyThreadDeath       = '...hm, but it has died already?!'
 KnownThread            = 'Got known thread'
 NewThread              = 'Got new thread'

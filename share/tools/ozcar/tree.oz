@@ -110,29 +110,41 @@ in
       end
       
       meth add(I Q)
+	 {Show treeAdd#I}
 	 %% each new thread is runnable, initially... (hope so?)
 	 nodes <- {New Node init(I Q RunningThreadColor)} | @nodes
+	 {Show nodesNow#{Map @nodes fun{$ X}{X get($)}.i end}}
 	 BaseTree,calculatePositions
       end
       
       meth remove(I)
 	 Tree,mark(I dead)
-	 %%nodes <- {List.filter @nodes fun {$ N} {N get($)}.i \= I end}
-	 %%BaseTree,calculatePositions
+      end
+
+      meth kill(I)
+	 nodes <- {List.filter @nodes fun {$ N} {N get($)}.i \= I end}
+	 BaseTree,calculatePositions
+	 Tree,display %% should be avoided, but... f*cking Tk...
       end
       
       meth select(I CT<=gaga)
-	 N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
-      in
-	 case N \= nil then
-	    Selected <- N.1
-	 %{self tk(itemconfigure CT font:ThreadTreeBoldFont)}
+	 case I == 0 then
+	    Selected <- undef
 	 else
-	    {OzcarMessage 'Select unknown node?!'}
+	    N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
+	 in
+	    case N \= nil then
+	       Selected <- N.1
+	       %{self tk(itemconfigure CT font:ThreadTreeBoldFont)}
+	    else
+	       {OzcarMessage 'Select unknown node?!'}
+	    end
 	 end
       end
       
       meth mark(I How)
+	 {Show mark(I How)}
+	 {Show {Map @nodes fun{$ X}{X get($)}.i end}}
 	 N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
 	 case N == nil then
@@ -146,11 +158,11 @@ in
 		    end
 	 in
 	    node(ct:CT ...) = {N.1 get($)}
-	    {Show itemconf}
-	    ScrolledTitleCanvas,tk(itemconfigure CT outline:Color)
+	    %ScrolledTitleCanvas,tk(itemconfigure CT outline:Color)
 	    {N.1 setColor(Color)}
+	    Tree,display %% should be avoided, but... f*cking Tk...
 	 end
-      end   
+      end
       
       meth display
 	 SF = ThreadTreeStretch
