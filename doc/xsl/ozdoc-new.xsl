@@ -1233,9 +1233,7 @@
 <template match="BACK">
   <for-each select="BIB.EXTERN">
       <txt:usemap><text>
-\nocite{</text></txt:usemap>
-        <value-of select="string(@KEY)"/>
-      <txt:usemap><text>}
+\nocite{</text><value-of select="string(@KEY)"/><text>}
 \mozartBibAdd{</text></txt:usemap>
     <value-of select="substring-before((string(@TO)),'.bib')"/>
       <txt:usemap><text>}
