@@ -655,6 +655,8 @@ the GDB commands `cd DIR' and `directory'."
 	 0)
 	((looking-at "%%%")
 	 0)
+	((looking-at "%[^%]")
+	 -1)
 	((oz-is-field-value)
 	 (oz-search-matching-paren)
 	 (+ (oz-indent-after-paren) oz-indent-chars))
