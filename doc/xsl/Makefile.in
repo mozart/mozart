@@ -3,6 +3,7 @@ VPATH           = @srcdir@
 SHDOCDIR        = $(PREFIX)/share/doc
 DOCDIR          = $(PREFIX)/doc
 BUILDDIR        = @BUILDDIR@
+SRCTOP          = @SRCTOP@
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -15,8 +16,11 @@ all bootstrap:: TeX.class ID.class Msg.class Meta.class
 
 bootquick::
 
+CLASSPATH       = $(shell echo $$CLASSPATH)
+OZCLASSPATH     = $(SRCTOP)/doc/xsl/xt.jar:$(SRCTOP)/doc/xsl/xp.jar:$(SRCTOP)/doc/xsl/sax.jar:../xsl
+
 %.class: %.java
-        javac -d . $<
+        javac -classpath $(CLASSPATH):$(OZCLASSPATH) -d . $<
 
 Makefile: Makefile.in ../config.status
         cd .. && ./config.status
