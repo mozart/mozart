@@ -1503,16 +1503,7 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
 // Spaces
 // ---------------------------------------------------------------------
 
-// #define declareSpace()                                       \
-//   OZ_Term tagged_space = OZ_getCArg(0);                      \
-//   DEREF(tagged_space, space_ptr, space_tag);         \
-//   if (isAnyVar(space_tag))                           \
-//     oz_suspendOn(makeTaggedRef(space_ptr));          \
-//   if (!isSpace(tagged_space))                                \
-//     oz_typeError(0, "Space");                                \
-//   Space *space = (Space *) tagged2Const(tagged_space);
-
-#define NEW_declareSpace()                              \
+#define declareSpace()                          \
   OZ_Term tagged_space = OZ_in(0);                      \
   DEREF(tagged_space, space_ptr, space_tag);            \
   if (isAnyVar(space_tag))                              \
@@ -1561,7 +1552,7 @@ OZ_BI_define(BIisSpace, 1,1) {
 
 
 OZ_BI_define(BIaskSpace, 1,1) {
-  NEW_declareSpace();
+  declareSpace();
 
   if (space->isProxy()) {
     OZ_out(0) = oz_newVariable();
@@ -1588,7 +1579,7 @@ OZ_BI_define(BIaskSpace, 1,1) {
 
 
 OZ_BI_define(BIaskVerboseSpace, 2,0) {
-  NEW_declareSpace();
+  declareSpace();
   oz_declareIN(1,out);
 
   if (space->isProxy()) {
@@ -1623,7 +1614,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
 
 
 OZ_BI_define(BImergeSpace, 1,1) {
-  NEW_declareSpace();
+  declareSpace();
 
   if (space->isProxy()) {
     OZ_out(0) = oz_newVariable();
@@ -1703,7 +1694,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
 
 OZ_BI_define(BIcloneSpace, 1,1) {
-  NEW_declareSpace();
+  declareSpace();
 
   if (space->isProxy()) {
     OZ_out(0) = oz_newVariable();
@@ -1730,7 +1721,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
 
 OZ_BI_define(BIcommitSpace, 2,0) {
-  NEW_declareSpace();
+  declareSpace();
   oz_declareIN(1,choice);
 
   if (space->isProxy()) {
@@ -1817,7 +1808,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
 OZ_BI_define(BIinjectSpace, 2,0)
 {
-  NEW_declareSpace();
+  declareSpace();
   oz_declareIN(1,proc);
 
   if (space->isProxy()) {
@@ -1858,7 +1849,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
 #ifdef CS_PROFILE
 OZ_BI_define(BIgetCloneDiff, 1,1) {
-  NEW_declareSpace();
+  declareSpace();
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
