@@ -1851,6 +1851,12 @@ $builtins = {
 			     module=>'os',
 			     native => true},
 
+    'OS.getRUsage'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_getRUsage,
+			     module=>'os',
+			     native => true},
+
     'OS.getpwnam'	=> { in  => ['+virtualString'],
 			     out => ['+record'],
 			     BI  => unix_getpwnam,
