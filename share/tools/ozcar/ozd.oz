@@ -24,12 +24,11 @@
 %%
 %% TODO:
 %% -- synchronize environment of created compiler with Ozcar's stack display
+%% -- closing Ozcar should terminate the application
 %% -- map Application.exit of the debugged application to the following
 %%    actions:
 %%     * remove emacs bar
 %%     * ask `Exit Emacs?' in Emacs
-%% -- if the debugged application has no debug information, exit is
-%%    highly ungraceful
 %% -- is it possible to attach to a running Emacs instead of starting
 %%    a new one?  Alternatively, provide for a means to start ozd from
 %%    the OPI
@@ -38,7 +37,6 @@
 %% -- the environment of the created compiler should be richer (cf. OPI),
 %%    especially, it is not yet possible to set breakpoints since Ozcar is
 %%    not in there
-%% -- closing Ozcar should terminate the application
 %%
 
 functor
@@ -53,13 +51,32 @@ import
    Ozcar(object)
    Pickle(load)
    Property(get put)
-   System(showError)
+   System(printError)
 prepare
-   ArgSpec = record(useemacs(rightmost char: &E type: bool default: false)
+   ArgSpec = record(help(rightmost char: [&h &?] default: false)
+		    useemacs(rightmost char: &E type: bool default: false)
 		    emacs(single type: string default: unit))
+
+   UsageString =
+   '--help, -h, -?  Display this message.\n'#
+   '--useemacs, -E  Start a subordinate Emacs process.\n'#
+   '--nouseemacs    Do not start a subordinate Emacs process.\n'#
+   '                This is the default.\n'#
+   '--emacs=FILE    Specify the Emacs binary to run\n'#
+   '                (Default: $OZEMACS or emacs).\n'
 define
+   proc {Usage VS Status}
+      {System.printError
+       VS#'Usage: '#{Property.get 'application.url'}#
+       ' <options> <appfunctor> -- <appargs>\n'#UsageString}
+      {Application.exit Status}
+   end
+
    try Args in
       Args = {Application.getCmdArgs ArgSpec}
+      if Args.help then
+	 {Usage "" 0}
+      end
       case Args.1 of AppName|AppArgs then AppFunc MM in
 	 {Property.put 'ozd.args' AppArgs}
 	 {Ozcar.object on()}
@@ -100,11 +117,10 @@ define
 	 {Property.put 'errors.subordinate' proc {$} fail end}
 	 MM = {New Module.manager init()}
 	 {Wait {MM apply(url: AppName AppFunc $)}}
-      else
+      [] nil then
 	 {Exception.raiseError ap(usage 'missing application argument')}
       end
    catch error(ap(usage VS) ...) then
-      {System.showError 'Usage error: '#VS}
-      {Application.exit 2}
+      {Usage 'Usage error: '#VS#'\n' 2}
    end
 end
