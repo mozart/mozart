@@ -123,25 +123,8 @@ case "$cmd" in
 
    ozdo)    exec "$@" ;;
 
-   oznc)    if [ ${OZCOMPONENTS-xx} = xx ]
-            then OZCOMPONENTS="$OZHOME/lib/"
-            else $doecho "Using components URL: $OZCOMPONENTS"
-                case $OZCOMPONENTS in
-                http:*)
-                    ;;
-                file:*)
-                    OZPATH=`echo $OZCOMPONENTS | sed 's/^file://'`:$OZPATH
-                    export OZPATH
-                    ;;
-                *)
-                    OZPATH=$OZCOMPONENTS:$OZPATH
-                    export OZPATH
-                    ;;
-                esac
-            fi
-
-            exec $OZEMULATOR -u "$OZCOMPONENTS"OPI.ozc "$@" -a $OZARGV
-    ;;
+   oznc)    exec $OZEMULATOR -u http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc \
+            "$@" -a $OZARGV ;;
 
    oz)
         echo "Using emacs '${OZEMACS}'"
@@ -151,11 +134,7 @@ case "$cmd" in
         while [ $# -gt 0 ]
         do
            case "$1" in
-            -nc|-newcompiler)
-                 OZUSENEWCOMPILER=true; export OZUSENEWCOMPILER
-                 shift
-            ;;
-            -a)  shift
+            -a|--)  shift
                  while [ $# -gt 0 ]; do
                     OZARGV="$OZARGV $1"
                     shift
