@@ -1,0 +1,1582 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.tk">
+<title/The Module <<Tk>>/
+
+  <p>
+   This chapter contains reference information for the <<Tk>> module. 
+
+  <section id="section.tk.tickles">
+    <title/Tickles/
+
+    <p>
+      <index class=module/tickles<and>id/ <def/Tickles/ are &Oz; values
+      used to communicate with the graphics engine. The graphics engine
+      receives and executes tickles. The graphics engine is
+      implemented in Tcl/Tk (see <ptr to="Ousterhout.94">). In order
+      to execute tickles the graphics engine first translates tickles
+      into strings. This section defines tickles,
+      defines how tickles are translated into strings, and presents
+      the &Oz; procedures to send tickles.
+
+    <subsection id="section.tk.tickles.syntax">
+      <title/Syntax/
+
+    <p>
+      The set of tickles contains virtual strings, boolean values, and
+      so-called tickle-objects. A tickle-object is an object which is
+      created from a class the Tk module provides for (all classes but
+      <<Tk.listener>>). Roughly spoken, the set of tickles is closed
+      under record construction, where only records are allowed which
+      do not contain names as features or as label. Proper records with
+      the labels <<v>>, <<b>>, <<#>>, and <<|>> are special
+      cases. Examples for tickles can be found in <ptr.extern
+      to="ozdoc:wp" key="section.widgets-1.tickles">.
+
+    <figure id="figure.tk.tickle-def">
+      <caption/Procedure <<IsTcl>> tests whether a value is tickle./
+<chunk class=anonymous><title/IsTcl/
+fun {IsTcl X}
+   {IsBool X} orelse {IsUnit X} orelse
+   {IsVirtualString X} orelse 
+   {IsTclObject X} orelse
+   {IsRecord X} andthen 
+   {Not {Some {Arity X} IsName}} andthen
+   {Not {IsName {Label X}}} andthen
+   case {Label X}
+   of  v  then {Arity X}==[1] andthen {IsVirtualString X.1}
+   []  b  then {Arity X}==[1] andthen {All X.1 IsTcl}
+   []  c  then {Arity X}==[1 2 3] andthen 
+               {All X fun {$ I} I>=0 andthen I<=255 end}
+   [] '#' then false
+   [] '|' then false
+   else {Record.all X IsTcl}
+   end
+end
+</chunk>
+    </figure>
+
+    <p>
+      The exact definition of a tickle is given by the procedure
+      <<IsTcl>> which is shown in <Ptr to="figure.tk.tickle-def">. The
+      procedure <<IsTcl>> returns <<true>>, if and only if <<X>> is a
+      tickle. Otherwise <<false>> is returned. The procedure
+      <<IsTclObject>> tests whether an object is a tickle-object. Note
+      that records which have the labels <<#>> and <<|>> are treated
+      as virtual strings. Note that <<IsTcl>> and the following
+      procedures serve as specification, the graphics engine itself
+      employs well optimized routines instead.
+
+    <subsection id="section.tk.tickles.translation">
+      <title/Translation to Virtual Strings/
+
+    <p>
+      The translation of a tickle into a virtual string that then by the
+      graphics agent is interpreted as a tcl command is shown in <ptr
+      to="figure.tk.tickle-trans">. The used help routines are shown
+      in <ptr to="figure.tk.tickle-trans-help">.
+
+    <figure id="figure.tk.tickle-trans">
+      <caption/Procedure <<TclToV>> translates a tickle into a virtual
+       string./
+<chunk class=anonymous><title/TclToV/
+local
+   fun {FieldToV AI Tcl}
+      if {IsInt AI} then '' else '-'#{Quote AI}#' ' end # {TclToV Tcl}
+   end
+   fun {RecordToV R AIs}
+      {FoldR AIs fun {$ AI V}
+                    {FieldToV AI R.AI} # ' ' # V
+                 end ''}
+   end
+in
+   fun {TclToV Tcl}
+      if {IsBool Tcl} then case Tcl then 0 else 1 end
+      elseif {IsUnit Tcl} then ''
+      elseif {IsVirtualString Tcl} then {Quote Tcl}
+      elseif {IsTclObject Tcl} then {TclObjectToV Tcl}
+      else
+        case {Label Tcl}
+        of o then {RecordToV Tcl {Arity Tcl}}
+        [] p then AI|AIs={Arity Tcl} in
+           '{'#{FieldToV AI Tcl.AI}#'.'#{RecordToV Tcl AIs}#'}'
+        [] b then {FoldR Tcl.1 fun {$ Tcl V} 
+                                  {TclToV Tcl}#' '#V
+                               end ''}
+        [] c then '#'#{Hex Tcl.1}#{Hex Tcl.2}#{Hex Tcl.3}
+        [] v then Tcl.1
+        [] s then '"'#{RecordToV Tcl {Arity Tcl}}#'"'
+        [] l then '['#{RecordToV Tcl {Arity Tcl}}#']'
+        [] q then '{'#{RecordToV Tcl {Arity Tcl}}#'}'
+        else {Quote {Label Tcl}}#' '#{RecordToV Tcl {Arity Tcl}}
+        end
+      end
+   end
+end
+</chunk>
+    </figure>
+
+    <figure id="figure.tk.tickle-trans-help">
+      <caption/Help routines to translate a tickle into a virtual
+       string./
+<p>
+<chunk><title/Definition of Octal/
+fun {Octal I}
+   [&\\ (I div 64 + &0) ((I mod 64) div 8 + &0) (I mod 8 + &0)]
+end
+</chunk>
+<chunk><title/Definition of Quote/
+fun {Quote V}
+   case {VirtualString.toString V} of nil then "\"\""
+   [] S then
+      {FoldR S fun {$ I Ir}
+                  if {Member I "{}[]\\$\";"} then &\\|I|Ir
+                  elseif I<33 orelse I>127 then {Append {Octal I} Ir}
+                  else I|Ir
+                  end
+               end nil}
+   end
+end
+</chunk>
+<chunk><title/Definition of Hex/
+local
+   fun {HexDigit I}
+      I + if I>9 then &amp;a-10 else &amp;0 end
+   end
+in
+   fun {Hex I}
+      [{HexDigit I div 16} {HexDigit I mod 16}]
+   end
+end
+</chunk>
+    </figure>
+
+
+    <subsection id="section.tk.tickles.send">
+      <title/Sending Tickles/
+
+      <p>
+        Tickles can be send to the graphics engine with the following
+        procedures. The graphics engine processes tickles in batches:
+        it reads a batch of tickles and executes it. If no further
+        batch can be read currently, it updates the graphics. After
+        having updated the graphics, it checks whether user events are
+        to be processed.
+
+      <p>
+        The Oz procedures to send tickles are asynchronous and
+        preserve order: all tickles are processed in the same order
+        they are send in. However, after the procedure has been
+        executed, the graphics engine might not yet have executed the
+        tickle.
+
+      <p>
+        <list>
+          <entry><<send>> <index class=module/Tk<and>send/ 
+          <synopsis>
+            <<<{Tk.send ?+{Tcl}}>>>
+          <item>
+            Sends ?+{Tcl} to the graphics engine.
+
+          <entry> <<batch>> <index class=module/Tk<and>batch/
+          <synopsis>
+            <<<{Tk.batch ?+{TclS}}>>>
+          <item>
+            Sends a list of list of tickles ?+{TclS} to the graphics
+            engine. It is guaranteed that the graphics engine
+            processes all tickles in ?_{TclS} in a single batch.
+        </list>
+
+    </subsection>
+
+    <subsection id="section.tk.return-values">
+      <title/Sending Tickles and Returning Values/
+
+      <p>
+        In the same way as sending tickles to graphics engine, the
+        engine can asynchronously send back return values which are
+        strings. The following procedures send tickles and
+        return the values returned by executing the tickles by the
+        graphics engine.
+
+      <p>
+        <list>
+          <entry> <<returnString>>
+            <index class=module/Tk<and>returnString/
+          <synopsis>
+            <<<{Tk.returnString ?+{Tcl} ??{S}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as string.
+
+          <entry> <<return>> <index class=module/Tk<and>return/
+          <synopsis>
+            <<<{Tk.return ?+{Tcl} ??{S}}>>>
+          <item>
+            Shortcut for <<Tk.returnString>>.
+
+          <entry> <<returnAtom>>
+            <index class=module/Tk<and>returnAtom/
+          <synopsis>
+            <<<{Tk.returnAtom ?+{Tcl} ??{A}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as string.
+
+          <entry> <<returnInt>>
+            <index class=module/Tk<and>returnInt/
+          <synopsis>
+            <<<{Tk.returnInt ?+{Tcl} ??{IB}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            integer. If the result does not describe a number
+            <<false>> is returned.
+
+          <entry> <<returnFloat>>
+            <index class=module/Tk<and>returnFloat/
+          <synopsis>
+            <<<{Tk.returnFloat ?+{Tcl} ??{FB}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            float. If the result does not describe a number <<false>>
+            is returned.
+
+          <entry> <<returnListString>>
+            <index class=module/Tk<and>returnListString/
+          <synopsis>
+            <<<{Tk.returnListString ?+{Tcl} ??{Ss}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of strings.
+
+          <entry> <<returnList>>
+            <index class=module/Tk<and>returnList/
+          <synopsis>
+            <<<{Tk.returnList ?+{Tcl} ??{Ss}}>>>
+          <item>
+            Shortcut for <<Tk.returnListString>>.
+
+          <entry> <<returnListAtom>>
+            <index class=module/Tk<and>returnListAtom/
+          <synopsis>
+            <<<{Tk.returnListAtom ?+{Tcl} ??{ABs}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of atoms. If elements of the list do not form valid
+            atoms, the list contains the element <<false>> instead.
+
+          <entry> <<returnListInt>>
+            <index class=module/Tk<and>returnListInt/
+          <synopsis>
+            <<<{Tk.returnListInt ?+{Tcl} ??{IBs}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of integers. If elements of the list do not form valid
+            numbers, the list contains the element <<false>> instead.
+
+          <entry> <<returnListFloat>>
+            <index class=module/Tk<and>returnListFloat/
+          <synopsis>
+            <<<{Tk.returnListFloat ?+{Tcl} ??{FBs}}>>>
+          <item>
+            Returns the result of sending and executing ?+{Tcl} as
+            list of integers. If elements of the list do not form valid
+            numbers, the list contains the element <<false>> instead.
+
+        </list>
+
+      </subsection>
+
+  </section>
+
+  <section id="section.tk.objects">
+    <title/Tickle Objects/
+
+    <p>
+      Rather than programming with tickles directly, all graphical
+      entities are provided as classes. To these classes we refer to
+      as <def/tickle classes/ and to their instances as <def/tickle
+      objects/. Applying a tickle object to a message translates it
+      in a straightforward way into a tickle.
+
+    <p>
+      Tickle objects themselves enjoy an translation into strings,
+      each tickle object carries a unique identifier that is its
+      translation. Creation of a tickle object creates a new unique
+      identifier, where the exact identifier depends on the tickle
+      class the object is created from. The translation of a tickle
+      object application of course uses the tickle object's
+      identifier.
+
+    <figure id="figure.tk.hierarchy">
+      <caption/Hierarchy of tickle objects./
+<picture latex>
+\newcommand{\OzClass}[3]{%
+\rput(#1,#2){\psframe[fillcolor=lightgray,fillstyle=solid,boxsep=false,framearc=.3](-0.35,-0.4)(0.35,0.4)\makebox(0,0){\texttt{#3}}}}
+\newcommand{\clc}[4]{\psline{-}(#1,#2)(#3,#4)}
+\newcommand{\ViClass}[3]{%
+\rput(#1,#2){\psframe[fillcolor=white,fillstyle=solid,boxsep=false,framearc=.3](-0.35,-0.4)(0.35,0.4)\makebox(0,0){\texttt{#3}}}}
+
+\psset{xunit=3cm,yunit=0.55cm,runit=.26cm,framearc=0,linewidth=.75pt}% ,arcangle=15}
+\begin{pspicture}(-0.5,-0.5)(3.5,23.5)\footnotesize
+\OzClass{3}{23}{canvas}\OzClass{3}{22}{entry}
+\OzClass{3}{21}{frame}\OzClass{3}{20}{label}
+\OzClass{3}{19}{listbox}\OzClass{3}{18}{menu}
+\OzClass{3}{17}{menubutton}\OzClass{3}{16}{message}
+\OzClass{3}{15}{text}\OzClass{3}{14}{button}
+\OzClass{3}{13}{checkbutton}\OzClass{3}{12}{radiobutton}
+\OzClass{3}{11}{scale}\OzClass{3}{10}{scrollbar}
+\ViClass{2}{19}{no action}
+\clc{2.35}{19}{2.65}{23}\clc{2.35}{19}{2.65}{22}
+\clc{2.35}{19}{2.65}{21}\clc{2.35}{19}{2.65}{20}
+\clc{2.35}{19}{2.65}{19}\clc{2.35}{19}{2.65}{18}
+\clc{2.35}{19}{2.65}{17}\clc{2.35}{19}{2.65}{16}
+\clc{2.35}{19}{2.65}{15}
+\ViClass{2}{12}{action}
+\clc{2.35}{12}{2.65}{14}\clc{2.35}{12}{2.65}{13}
+\clc{2.35}{12}{2.65}{12}\clc{2.35}{12}{2.65}{11}
+\clc{2.35}{12}{2.65}{10}
+\OzClass{2}{11}{toplevel}\OzClass{2}{10}{cascade}
+\OzClass{2}{09}{checkbutton}\OzClass{2}{08}{command}
+\OzClass{2}{07}{radiobutton}\OzClass{2}{06}{separator}
+\OzClass{2}{05}{canvas tag}\OzClass{2}{04}{text tag}
+\OzClass{2}{03}{text mark}
+\ViClass{1}{15}{widget}
+\clc{1.35}{15}{1.65}{19}\clc{1.35}{15}{1.65}{12}
+\clc{1.35}{15}{1.65}{11}
+\ViClass{1}{08}{menuentry}
+\clc{1.35}{08}{1.65}{10}\clc{1.35}{08}{1.65}{09}
+\clc{1.35}{08}{1.65}{08}\clc{1.35}{08}{1.65}{07}
+\clc{1.35}{08}{1.65}{06}
+\ViClass{1}{04}{tag or mark}
+\clc{1.35}{04}{1.65}{05}\clc{1.35}{04}{1.65}{04}
+\clc{1.35}{04}{1.65}{03}
+\OzClass{1}{03}{image}\OzClass{1}{02}{font}
+\OzClass{1}{01}{action}\OzClass{1}{00}{variable}
+\ViClass{0}{09}{Tcl object}
+\clc{0.35}{09}{0.65}{15}\clc{0.35}{09}{0.65}{08}
+\clc{0.35}{09}{0.65}{04}\clc{0.35}{09}{0.65}{03}
+\clc{0.35}{09}{0.65}{02}\clc{0.35}{09}{0.65}{01}
+\clc{0.35}{09}{0.65}{00}
+\end{pspicture}
+      </picture>
+      </figure>
+
+    <p>
+      The available tickle classes are shown in <ptr
+      to="figure.tk.hierarchy">, where the classes that are shadowed
+      gray are classes provided by the <<Tk>> module, the others are
+      just conceptual. The rest of the document will be concerned with
+      giving a short overview on the tickle object interfaces. 
+   
+    <p> 
+      Messages to tickle objects are translated in a straightforward
+      way to tickles, for examples see <ptr.extern to="ozdoc:wp"
+      key="section.widgets-1.tickles">.
+
+    <p>
+      In the following we will present values other than tickles that
+      are used in messages to tickle objects.
+
+    <subsection id="section.tk.action-values">
+      <title/Action Values/
+
+      <p>
+        An action value is either   
+        <list>
+          <entry> A procedure ?_{P}.
+          <item> The action is <def/invoked/ by creating a new thread
+          that applies ?_{P} to action or event arguments.
+
+          <entry> A listener object method pair <<?_{ListenerO}#?_{M}>>
+          <item> The action is <def/invoked/ by letting the
+          ?_{ListenerO} serve the message ?_{M1} (see <ptr
+          to="section.tk.listener">). The message ?_{M1} is obtained
+          by appending action or event arguments to ?_{M}.
+
+          <entry> An object method pair <<?_{O}#?_{M}>>
+          <item> Here of course, ?_{O} must not be an instance of a
+          listener. The action is <def/invoked/ by creating a new thread
+          that executes the object application <<{?_{O} ?_{M1}}>>. The
+          message ?_{M1} is obtained 
+          by appending action or event arguments to ?_{M}.
+        </list>
+
+    <subsection id="section.tk.action-arguments">
+      <title/Action Argument Values/
+
+      <p>
+        When an action is executed, it possibly has some
+        arguments attached to it. <def/Action argument values/
+        describe the number and types of arguments that are used with
+        the invoked action value. For an example see <ptr.extern
+        to="ozdoc:wp" key="section.widgets-2.scale">.
+
+      <p>
+        Legal action argument values are lists whose elements are
+        drawn from the following set:
+        <table>
+          <tr/<td/<<string>>/ <td/<<atom>>/ 
+              <td/<<int>>/ <td/<<float>>//
+          <tr/<td/<<list(string)>>/ <td/<<list(atom)>>/ 
+              <td/<<list(int)>>/ <td/<<list(float)>>//
+        </table>
+        The length of the list defines the number of action arguments
+        and the elements define in the obvious way the type of the
+        arguments.
+
+    <subsection id="section.tk.action-event-arguments">
+      <title/Event Argument Values/
+
+      <p>
+        When an event is executed, it possibly has some
+        arguments attached to it. <def/Event argument values/
+        describe the number, types, and substitutions of arguments
+        that are used with 
+        the invoked action value. For an example see <ptr.extern
+        to="ozdoc:wp" key="section.canvas.tags">. For reference
+        information on substitutions see <ref.extern
+        to="&tkcmd;/bind.htm"/<file/bind//.
+
+      <p>
+        Legal action argument values are lists whose elements are
+        drawn from the following set:
+        <table>
+          <tr/<td/<<string(?_{V})>>/ <td/<<atom(?_{V})>>/ 
+              <td/<<int(?_{V})>>/ <td/<<float(?_{V})>>//
+          <tr/<td/<<list(string(?_{V}))>>/ <td/<<list(atom(?_{V}))>>/ 
+              <td/<<list(int(?_{V}))>>/ <td/<<list(float(?_{V}))>>//
+        </table>
+
+      <p>
+        The length of the list defines the number of action arguments
+        and the elements define the type of the
+        arguments, where ?_{V} gives the substitution to be performed.
+        For example, the value <<[int(x)]>> describes, that the action
+        handler value takes a single argument. The single argument
+        will be <<x>>-coordinate as an integer associated with the
+        event.
+
+
+  <section id="section.tk.no-action">
+    <title/No-Action Widgets/
+   
+    <p>
+      <index  class=module/Tk<and>canvas/
+      <index  class=module/Tk<and>entry/
+      <index  class=module/Tk<and>frame/
+      <index  class=module/Tk<and>label/
+      <index  class=module/Tk<and>listbox/
+      <index  class=module/Tk<and>menu/
+      <index  class=module/Tk<and>menubutton/
+      <index  class=module/Tk<and>message/
+      <index  class=module/Tk<and>text/
+      The following table lists the widgets that do not accept actions:
+      <table>
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.canvas>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="chapter.canvas"/
+             <td/<ref.extern to="&tkcmd;/canvas.htm"/<file/canvas////
+        <tr/ <td/<<Tk.entry>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.entry"/
+             <td/<ref.extern to="&tkcmd;/entry.htm"/<file/entry////
+        <tr/ <td/<<Tk.frame>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.frame"/
+             <td/<ref.extern to="&tkcmd;/frame.htm"/<file/frame////
+        <tr/ <td/<<Tk.label>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.label"/
+             <td/<ref.extern to="&tkcmd;/label.htm"/<file/label////
+        <tr/ <td/<<Tk.listbox>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.listbox"/
+             <td/<ref.extern to="&tkcmd;/listbox.htm"/<file/listbox////
+        <tr/ <td/<<Tk.menu>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menubutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menubutton.htm"/<file/menubutton////
+        <tr/ <td/<<Tk.message>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-1.messages"/
+             <td/<ref.extern to="&tkcmd;/message.htm"/<file/message////
+        <tr/ <td/<<Tk.text>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="chapter.text"/
+             <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
+      </table>
+
+     <p>
+       All above mentioned classes provide the following methods:
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>canvas<and>tkInit/
+         <index class=module/Tk<and>entry<and>tkInit/
+         <index class=module/Tk<and>frame<and>tkInit/
+         <index class=module/Tk<and>label<and>tkInit/
+         <index class=module/Tk<and>listbox<and>tkInit/
+         <index class=module/Tk<and>menu<and>tkInit/
+         <index class=module/Tk<and>menubutton<and>tkInit/
+         <index class=module/Tk<and>message<and>tkInit/
+         <index class=module/Tk<and>text<and>tkInit/
+       <synopsis>
+         <<<tkInit(parent:?+{WidgetO} ...)>>>
+       <item>
+         Initializes the widget object and creates the widget.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be a tickle object. <<self>> becomes a slave of
+         ?_{WidgetO}.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>canvas<and>tk/
+         <index class=module/Tk<and>entry<and>tk/
+         <index class=module/Tk<and>frame<and>tk/
+         <index class=module/Tk<and>label<and>tk/
+         <index class=module/Tk<and>listbox<and>tk/
+         <index class=module/Tk<and>menu<and>tk/
+         <index class=module/Tk<and>menubutton<and>tk/
+         <index class=module/Tk<and>message<and>tk/
+         <index class=module/Tk<and>text<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>canvas<and>tkReturn/
+         <index class=module/Tk<and>entry<and>tkReturn/
+         <index class=module/Tk<and>frame<and>tkReturn/
+         <index class=module/Tk<and>label<and>tkReturn/
+         <index class=module/Tk<and>listbox<and>tkReturn/
+         <index class=module/Tk<and>menu<and>tkReturn/
+         <index class=module/Tk<and>menubutton<and>tkReturn/
+         <index class=module/Tk<and>message<and>tkReturn/
+         <index class=module/Tk<and>text<and>tkReturn/
+         <index class=module/Tk<and>canvas<and>tkReturnString/
+         <index class=module/Tk<and>entry<and>tkReturnString/
+         <index class=module/Tk<and>frame<and>tkReturnString/
+         <index class=module/Tk<and>label<and>tkReturnString/
+         <index class=module/Tk<and>listbox<and>tkReturnString/
+         <index class=module/Tk<and>menu<and>tkReturnString/
+         <index class=module/Tk<and>menubutton<and>tkReturnString/
+         <index class=module/Tk<and>message<and>tkReturnString/
+         <index class=module/Tk<and>text<and>tkReturnString/
+         <index class=module/Tk<and>canvas<and>tkReturnAtom/
+         <index class=module/Tk<and>entry<and>tkReturnAtom/
+         <index class=module/Tk<and>frame<and>tkReturnAtom/
+         <index class=module/Tk<and>label<and>tkReturnAtom/
+         <index class=module/Tk<and>listbox<and>tkReturnAtom/
+         <index class=module/Tk<and>menu<and>tkReturnAtom/
+         <index class=module/Tk<and>menubutton<and>tkReturnAtom/
+         <index class=module/Tk<and>message<and>tkReturnAtom/
+         <index class=module/Tk<and>text<and>tkReturnAtom/
+         <index class=module/Tk<and>canvas<and>tkReturnInt/
+         <index class=module/Tk<and>entry<and>tkReturnInt/
+         <index class=module/Tk<and>frame<and>tkReturnInt/
+         <index class=module/Tk<and>label<and>tkReturnInt/
+         <index class=module/Tk<and>listbox<and>tkReturnInt/
+         <index class=module/Tk<and>menu<and>tkReturnInt/
+         <index class=module/Tk<and>menubutton<and>tkReturnInt/
+         <index class=module/Tk<and>message<and>tkReturnInt/
+         <index class=module/Tk<and>text<and>tkReturnInt/
+         <index class=module/Tk<and>canvas<and>tkReturnFloat/
+         <index class=module/Tk<and>entry<and>tkReturnFloat/
+         <index class=module/Tk<and>frame<and>tkReturnFloat/
+         <index class=module/Tk<and>label<and>tkReturnFloat/
+         <index class=module/Tk<and>listbox<and>tkReturnFloat/
+         <index class=module/Tk<and>menu<and>tkReturnFloat/
+         <index class=module/Tk<and>menubutton<and>tkReturnFloat/
+         <index class=module/Tk<and>message<and>tkReturnFloat/
+         <index class=module/Tk<and>text<and>tkReturnFloat/
+         <index class=module/Tk<and>canvas<and>tkReturnList/
+         <index class=module/Tk<and>entry<and>tkReturnList/
+         <index class=module/Tk<and>frame<and>tkReturnList/
+         <index class=module/Tk<and>label<and>tkReturnList/
+         <index class=module/Tk<and>listbox<and>tkReturnList/
+         <index class=module/Tk<and>menu<and>tkReturnList/
+         <index class=module/Tk<and>menubutton<and>tkReturnList/
+         <index class=module/Tk<and>message<and>tkReturnList/
+         <index class=module/Tk<and>text<and>tkReturnList/
+         <index class=module/Tk<and>canvas<and>tkReturnListString/
+         <index class=module/Tk<and>entry<and>tkReturnListString/
+         <index class=module/Tk<and>frame<and>tkReturnListString/
+         <index class=module/Tk<and>label<and>tkReturnListString/
+         <index class=module/Tk<and>listbox<and>tkReturnListString/
+         <index class=module/Tk<and>menu<and>tkReturnListString/
+         <index class=module/Tk<and>menubutton<and>tkReturnListString/
+         <index class=module/Tk<and>message<and>tkReturnListString/
+         <index class=module/Tk<and>text<and>tkReturnListString/
+         <index class=module/Tk<and>canvas<and>tkReturnListAtom/
+         <index class=module/Tk<and>entry<and>tkReturnListAtom/
+         <index class=module/Tk<and>frame<and>tkReturnListAtom/
+         <index class=module/Tk<and>label<and>tkReturnListAtom/
+         <index class=module/Tk<and>listbox<and>tkReturnListAtom/
+         <index class=module/Tk<and>menu<and>tkReturnListAtom/
+         <index class=module/Tk<and>menubutton<and>tkReturnListAtom/
+         <index class=module/Tk<and>message<and>tkReturnListAtom/
+         <index class=module/Tk<and>text<and>tkReturnListAtom/
+         <index class=module/Tk<and>canvas<and>tkReturnListInt/
+         <index class=module/Tk<and>entry<and>tkReturnListInt/
+         <index class=module/Tk<and>frame<and>tkReturnListInt/
+         <index class=module/Tk<and>label<and>tkReturnListInt/
+         <index class=module/Tk<and>listbox<and>tkReturnListInt/
+         <index class=module/Tk<and>menu<and>tkReturnListInt/
+         <index class=module/Tk<and>menubutton<and>tkReturnListInt/
+         <index class=module/Tk<and>message<and>tkReturnListInt/
+         <index class=module/Tk<and>text<and>tkReturnListInt/
+         <index class=module/Tk<and>canvas<and>tkReturnListFloat/
+         <index class=module/Tk<and>entry<and>tkReturnListFloat/
+         <index class=module/Tk<and>frame<and>tkReturnListFloat/
+         <index class=module/Tk<and>label<and>tkReturnListFloat/
+         <index class=module/Tk<and>listbox<and>tkReturnListFloat/
+         <index class=module/Tk<and>menu<and>tkReturnListFloat/
+         <index class=module/Tk<and>menubutton<and>tkReturnListFloat/
+         <index class=module/Tk<and>message<and>tkReturnListFloat/
+         <index class=module/Tk<and>text<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature. 
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>canvas<and>tkBind/
+         <index class=module/Tk<and>entry<and>tkBind/
+         <index class=module/Tk<and>frame<and>tkBind/
+         <index class=module/Tk<and>label<and>tkBind/
+         <index class=module/Tk<and>listbox<and>tkBind/
+         <index class=module/Tk<and>menu<and>tkBind/
+         <index class=module/Tk<and>menubutton<and>tkBind/
+         <index class=module/Tk<and>message<and>tkBind/
+         <index class=module/Tk<and>text<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events"> and <ptr
+         to="section.tk.action-event-arguments">.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>canvas<and>tkClose/
+         <index class=module/Tk<and>entry<and>tkClose/
+         <index class=module/Tk<and>frame<and>tkClose/
+         <index class=module/Tk<and>label<and>tkClose/
+         <index class=module/Tk<and>listbox<and>tkClose/
+         <index class=module/Tk<and>menu<and>tkClose/
+         <index class=module/Tk<and>menubutton<and>tkClose/
+         <index class=module/Tk<and>message<and>tkClose/
+         <index class=module/Tk<and>text<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application of <<self>> raises an
+         exception.
+
+     </list>
+
+  </section>
+
+
+  <section id="section.tk.action-widget">
+    <title/Action Widgets/
+   
+    <p>
+      <index class=module/Tk<and>button/
+      <index class=module/Tk<and>checkbutton/
+      <index class=module/Tk<and>radiobutton/
+      <index class=module/Tk<and>scale/
+      <index class=module/Tk<and>scrollbar/
+      <table>
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.button>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.button"/
+             <td/<ref.extern to="&tkcmd;/button.htm"/<file/button////
+        <tr/ <td/<<Tk.checkbutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" 
+                             key="section.widgets-2.otherbuttons"/
+             <td/<ref.extern to="&tkcmd;/checkbutton.htm"/<file/checkbutton////
+        <tr/ <td/<<Tk.radiobutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" 
+                             key="section.widgets-2.otherbuttons"/
+             <td/<ref.extern to="&tkcmd;/radiobutton.htm"/<file/radiobutton////
+        <tr/ <td/<<Tk.scale>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.scale"/
+             <td/<ref.extern to="&tkcmd;/scale.htm"/<file/scale////
+        <tr/ <td/<<Tk.scrollbar>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.listbox"/
+             <td/<ref.extern to="&tkcmd;/scrollbar.htm"/<file/scrollbar////
+      </table>
+
+    <p>
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>button<and>tkInit/
+         <index class=module/Tk<and>checkbutton<and>tkInit/
+         <index class=module/Tk<and>radiobutton<and>tkInit/
+         <index class=module/Tk<and>scale<and>tkInit/
+         <index class=module/Tk<and>scrollbar<and>tkInit/
+       <synopsis>
+         <<<tkInit(parent: ?+{WidgetO} 
+       action: ?+{Action}
+       args:   ?+{Args}   <= nil 
+       ...)>>>
+       <item>
+         Initializes the widget object and creates the widget.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be a tickle object. <<self>> becomes a slave of
+         ?_{WidgetO}. ?_{Action} and ?_{Args} are described in <ptr
+         to="section.tk.action-values"> and <ptr
+         to="section.tk.action-arguments">.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>button<and>tk/
+         <index class=module/Tk<and>checkbutton<and>tk/
+         <index class=module/Tk<and>radiobutton<and>tk/
+         <index class=module/Tk<and>scale<and>tk/
+         <index class=module/Tk<and>scrollbar<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>button<and>tkReturn/
+         <index class=module/Tk<and>checkbutton<and>tkReturn/
+         <index class=module/Tk<and>radiobutton<and>tkReturn/
+         <index class=module/Tk<and>scale<and>tkReturn/
+         <index class=module/Tk<and>scrollbar<and>tkReturn/
+         <index class=module/Tk<and>button<and>tkReturnString/
+         <index class=module/Tk<and>checkbutton<and>tkReturnString/
+         <index class=module/Tk<and>radiobutton<and>tkReturnString/
+         <index class=module/Tk<and>scale<and>tkReturnString/
+         <index class=module/Tk<and>scrollbar<and>tkReturnString/
+         <index class=module/Tk<and>button<and>tkReturnAtom/
+         <index class=module/Tk<and>checkbutton<and>tkReturnAtom/
+         <index class=module/Tk<and>radiobutton<and>tkReturnAtom/
+         <index class=module/Tk<and>scale<and>tkReturnAtom/
+         <index class=module/Tk<and>scrollbar<and>tkReturnAtom/
+         <index class=module/Tk<and>button<and>tkReturnInt/
+         <index class=module/Tk<and>checkbutton<and>tkReturnInt/
+         <index class=module/Tk<and>radiobutton<and>tkReturnInt/
+         <index class=module/Tk<and>scale<and>tkReturnInt/
+         <index class=module/Tk<and>scrollbar<and>tkReturnInt/
+         <index class=module/Tk<and>button<and>tkReturnFloat/
+         <index class=module/Tk<and>checkbutton<and>tkReturnFloat/
+         <index class=module/Tk<and>radiobutton<and>tkReturnFloat/
+         <index class=module/Tk<and>scale<and>tkReturnFloat/
+         <index class=module/Tk<and>scrollbar<and>tkReturnFloat/
+         <index class=module/Tk<and>button<and>tkReturnList/
+         <index class=module/Tk<and>checkbutton<and>tkReturnList/
+         <index class=module/Tk<and>radiobutton<and>tkReturnList/
+         <index class=module/Tk<and>scale<and>tkReturnList/
+         <index class=module/Tk<and>scrollbar<and>tkReturnList/
+         <index class=module/Tk<and>button<and>tkReturnListString/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListString/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListString/
+         <index class=module/Tk<and>scale<and>tkReturnListString/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListString/
+         <index class=module/Tk<and>button<and>tkReturnListAtom/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListAtom/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListAtom/
+         <index class=module/Tk<and>scale<and>tkReturnListAtom/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListAtom/
+         <index class=module/Tk<and>button<and>tkReturnListInt/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListInt/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListInt/
+         <index class=module/Tk<and>scale<and>tkReturnListInt/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListInt/
+         <index class=module/Tk<and>button<and>tkReturnListFloat/
+         <index class=module/Tk<and>checkbutton<and>tkReturnListFloat/
+         <index class=module/Tk<and>radiobutton<and>tkReturnListFloat/
+         <index class=module/Tk<and>scale<and>tkReturnListFloat/
+         <index class=module/Tk<and>scrollbar<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature. 
+
+       <entry><<tkAction>>
+         <index class=module/Tk<and>button<and>tkAction/
+         <index class=module/Tk<and>checkbutton<and>tkAction/
+         <index class=module/Tk<and>radiobutton<and>tkAction/
+         <index class=module/Tk<and>scale<and>tkAction/
+         <index class=module/Tk<and>scrollbar<and>tkAction/
+       <synopsis>
+<<<tkAction(action: ?+{Action} <= unit
+         args:   ?+{Args})>>>
+       <item>
+         Redefines or deletes an action. ?_{Action} and ?_{Args} are
+         described in <ptr 
+         to="section.tk.action-values"> and <ptr
+         to="section.tk.action-arguments">.
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>button<and>tkBind/
+         <index class=module/Tk<and>checkbutton<and>tkBind/
+         <index class=module/Tk<and>radiobutton<and>tkBind/
+         <index class=module/Tk<and>scale<and>tkBind/
+         <index class=module/Tk<and>scrollbar<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events"> and <ptr
+         to="section.tk.action-event-arguments">.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>button<and>tkClose/
+         <index class=module/Tk<and>checkbutton<and>tkClose/
+         <index class=module/Tk<and>radiobutton<and>tkClose/
+         <index class=module/Tk<and>scale<and>tkClose/
+         <index class=module/Tk<and>scrollbar<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application of <<self>> raises an
+         exception.
+
+     </list>
+
+  </section>
+
+
+  <section id="section.tk.toplevel">
+    <title/Toplevel Widgets/
+   
+     <p>
+       <index class=module/Tk<and>toplevel/
+       The class <<Tk.toplevel>> provides the following methods:
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>toplevel<and>tkInit/
+       <synopsis>
+<<<tkInit(parent:   ?+{ParentTcl}
+       delete:   ?+{DeleteAction}
+       title:    ?+{TitleTcl}
+       withdraw: ?+{WithdrawB}
+       ...)>>>
+       <item>
+         Initializes the widget object and creates a new toplevel widget.
+       <p>
+         For more information see <ptr.extern to="ozdoc:wp"
+         key="section.widgets-1.toplevel"> and <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.wm"> 
+
+       <entry><<tk>>
+         <index class=module/Tk<and>toplevel<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+<!--
+       <entry><<tkWM>>
+         <index class=module/Tk<and>toplevel<and>tkWM/
+       <synopsis>
+         <<<tkWM(...)>>>
+       <item>
+         Sends am window manager command for <<self>> to the graphics
+         engine. See also <ptr.extern to="ozdoc:wp" key="
+-->
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>toplevel<and>tkReturn/
+         <index class=module/Tk<and>toplevel<and>tkReturnString/
+         <index class=module/Tk<and>toplevel<and>tkReturnAtom/
+         <index class=module/Tk<and>toplevel<and>tkReturnInt/
+         <index class=module/Tk<and>toplevel<and>tkReturnFloat/
+         <index class=module/Tk<and>toplevel<and>tkReturnList/
+         <index class=module/Tk<and>toplevel<and>tkReturnListString/
+         <index class=module/Tk<and>toplevel<and>tkReturnListAtom/
+         <index class=module/Tk<and>toplevel<and>tkReturnListInt/
+         <index class=module/Tk<and>toplevel<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature. 
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>toplevel<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events"> and <ptr
+         to="section.tk.action-event-arguments">.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>toplevel<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Closes the widget object and destroys the widgets and all
+         slave widgets. Further object application raises an
+         exception.
+
+     </list>
+
+  </section>
+
+
+  <section id="section.tk.menuentry">
+    <title/Menu Entries/
+   
+    <p>
+      <index class=module/Tk<and>menuentry<and>cascade/
+      <index class=module/Tk<and>menuentry<and>checkbutton/
+      <index class=module/Tk<and>menuentry<and>command/
+      <index class=module/Tk<and>menuentry<and>radiobutton/
+      <index class=module/Tk<and>menuentry<and>separator/
+      <table>
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.menuentry.cascade>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.checkbutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.command>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.radiobutton>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+        <tr/ <td/<<Tk.menuentry.separator>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.widgets-2.menu"/
+             <td/<ref.extern to="&tkcmd;/menu.htm"/<file/menu////
+      </table>
+
+    <p>
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>menuentry<and>cascade<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>checkbutton<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>command<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>radiobutton<and>tkInit/
+         <index class=module/Tk<and>menuentry<and>separator<and>tkInit/
+       <synopsis>
+         <<<
+tkInit(parent: ?+{WidgetO} 
+       before: ?+{BeforeTcl}
+       action: ?+{Action}
+       args:   ?+{Args}   <= nil 
+       ...)>>>
+       <item>
+         Initializes and creates a menu entry.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be an instance of <<Tk.menu>>. <<self>> becomes a slave of
+         ?_{WidgetO}. ?_{Action} and ?_{Args} are described in <ptr
+         to="section.tk.action-values"> and <ptr
+         to="section.tk.action-arguments">.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>menuentry<and>cascade<and>tk/
+         <index class=module/Tk<and>menuentry<and>checkbutton<and>tk/
+         <index class=module/Tk<and>menuentry<and>command<and>tk/
+         <index class=module/Tk<and>menuentry<and>radiobutton<and>tk/
+         <index class=module/Tk<and>menuentry<and>separator<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>menuentry<and>cascade<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>checkbutton<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>command<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>radiobutton<and>tkClose/
+         <index class=module/Tk<and>menuentry<and>separator<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Closes the object and destroys the menu entry. Further object
+         application raises an exception.
+
+     </list>
+
+
+  </section>
+
+
+  <section id="section.tk.variable">
+    <title/Variables/
+   
+    <index class=module/Tk<and>variable/
+
+    <p>
+      The class <<Tk.variable>> provides the following methods. Note
+      that it does not provide a method for closing.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>variable<and>tkInit/
+       <synopsis>
+         <<<tkInit(?+{Tcl} <= unit)>>>
+       <item>
+         Creates a new tickle variable with initial value ?_{Tcl}.
+
+       <entry><<tkSet>>
+         <index class=module/Tk<and>variable<and>tkSet/
+       <synopsis>
+         <<<tkSet(?+{Tcl})>>>
+       <item>
+         Sets the variable's value to ?+{Tcl}.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>variable<and>tkReturn/
+         <index class=module/Tk<and>variable<and>tkReturnString/
+         <index class=module/Tk<and>variable<and>tkReturnAtom/
+         <index class=module/Tk<and>variable<and>tkReturnInt/
+         <index class=module/Tk<and>variable<and>tkReturnFloat/
+         <index class=module/Tk<and>variable<and>tkReturnList/
+         <index class=module/Tk<and>variable<and>tkReturnListString/
+         <index class=module/Tk<and>variable<and>tkReturnListAtom/
+         <index class=module/Tk<and>variable<and>tkReturnListInt/
+         <index class=module/Tk<and>variable<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Returns the current value of the variable.
+
+     </list>
+
+    <p>
+
+  </section>
+
+  <section id="section.tk.tagmark">
+    <title/Tags And Marks/
+   
+    <p>
+      <index  class=module/Tk<and>canvasTag/
+      <index  class=module/Tk<and>textTag/
+      <index  class=module/Tk<and>textMark/
+      The following table lists the widgets that do not accept actions:
+      <table>
+        <tr/ <th/Class/ <th/Example/ <th/Reference//
+        <tr/ <td/<<Tk.canvasTag>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.canvas.tags"/
+             <td/<ref.extern to="&tkcmd;/canvas.htm"/<file/canvas////
+        <tr/ <td/<<Tk.textTag>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.text.tags"/
+             <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
+        <tr/ <td/<<Tk.textMark>>/ 
+             <td/<ptr.extern to="ozdoc:wp" key="section.text.tags"/
+             <td/<ref.extern to="&tkcmd;/text.htm"/<file/text////
+      </table>
+
+     <p>
+       The above mentioned classes provide the following methods:
+
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>canvasTag<and>tkInit/
+         <index class=module/Tk<and>textTag<and>tkInit/
+         <index class=module/Tk<and>textMark<and>tkInit/
+       <synopsis>
+         <<<tkInit(parent:?+{WidgetO} ...)>>>
+       <item>
+         Initializes the widget object and creates the widget.
+       <p>
+         The field ?_{WidgetO} for the special feature <<parent>> must
+         be a tickle object. If <<self>> is an instance of
+<<Tk.canvasTag>>, ?_{WidgetO} must be an instance of
+<<Tk.canvas>>. Otherwise, ?_{WidgetO} must be an instance of
+<<Tk.text>>. <<self>> becomes a slave of
+         ?_{WidgetO}.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>canvasTag<and>tk/
+         <index class=module/Tk<and>textTag<and>tk/
+         <index class=module/Tk<and>textMark<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>canvasTag<and>tkReturn/
+         <index class=module/Tk<and>textTag<and>tkReturn/
+         <index class=module/Tk<and>textMark<and>tkReturn/
+         <index class=module/Tk<and>canvasTag<and>tkReturnString/
+         <index class=module/Tk<and>textTag<and>tkReturnString/
+         <index class=module/Tk<and>textMark<and>tkReturnString/
+         <index class=module/Tk<and>canvasTag<and>tkReturnAtom/
+         <index class=module/Tk<and>textTag<and>tkReturnAtom/
+         <index class=module/Tk<and>textMark<and>tkReturnAtom/
+         <index class=module/Tk<and>canvasTag<and>tkReturnInt/
+         <index class=module/Tk<and>textTag<and>tkReturnInt/
+         <index class=module/Tk<and>textMark<and>tkReturnInt/
+         <index class=module/Tk<and>canvasTag<and>tkReturnFloat/
+         <index class=module/Tk<and>textTag<and>tkReturnFloat/
+         <index class=module/Tk<and>textMark<and>tkReturnFloat/
+         <index class=module/Tk<and>canvasTag<and>tkReturnList/
+         <index class=module/Tk<and>textTag<and>tkReturnList/
+         <index class=module/Tk<and>textMark<and>tkReturnList/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListString/
+         <index class=module/Tk<and>textTag<and>tkReturnListString/
+         <index class=module/Tk<and>textMark<and>tkReturnListString/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListAtom/
+         <index class=module/Tk<and>textTag<and>tkReturnListAtom/
+         <index class=module/Tk<and>textMark<and>tkReturnListAtom/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListInt/
+         <index class=module/Tk<and>textTag<and>tkReturnListInt/
+         <index class=module/Tk<and>textMark<and>tkReturnListInt/
+         <index class=module/Tk<and>canvasTag<and>tkReturnListFloat/
+         <index class=module/Tk<and>textTag<and>tkReturnListFloat/
+         <index class=module/Tk<and>textMark<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature. 
+
+       <entry><<tkBind>>
+         <index class=module/Tk<and>canvasTag<and>tkBind/
+         <index class=module/Tk<and>textTag<and>tkBind/
+         <index class=module/Tk<and>textMark<and>tkBind/
+       <synopsis>
+         <<<tkBind(event:  ?_{EventV}
+       action: ?_{Action}  <= _
+       args:   ?_{Args}    <= nil
+       append: ?_{AppendB} <= false
+       break:  ?_{BreakB}  <= false)>>>
+       <item>
+         Defines an event binding for <<self>>. Events are described
+         in <ptr.extern to="ozdoc:wp"
+         key="section.widgets-2.events">,
+         <ptr.extern to="ozdoc:wp" key="section.canvas.tags">,
+         <ptr.extern to="ozdoc:wp" key="section.text.toy">,
+ and <ptr
+         to="section.tk.action-event-arguments">.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>canvasTag<and>tkClose/
+         <index class=module/Tk<and>textTag<and>tkClose/
+         <index class=module/Tk<and>textMark<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Closes the object and performs a <<delete>> command on all
+         entities that are currently referred to by <<self>>.
+
+     </list>
+
+  </section>
+
+
+  <section id="section.tk.image">
+    <title/Images/
+   
+    <index class=module/Tk<and>image/
+
+    <p>
+      The class <<Tk.image>> provides the following methods. An
+      example can be found in <ptr.extern to="ozdoc:wp"
+      key="section.widgets-1.images">, for reference documentation see
+      <ref.extern to="&tkcmd;/image.htm"/<file/image//.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>image<and>tkInit/
+       <synopsis>
+<<<tkInit(type:    ?+{TypeTcl}
+       url:     ?+{UrlV} <= unit
+       maskurl: ?+{MarkUrlV} <= unit 
+       ...)>>>
+       <item>
+         Creates a new image.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>image<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>image<and>tkReturn/
+         <index class=module/Tk<and>image<and>tkReturnString/
+         <index class=module/Tk<and>image<and>tkReturnAtom/
+         <index class=module/Tk<and>image<and>tkReturnInt/
+         <index class=module/Tk<and>image<and>tkReturnFloat/
+         <index class=module/Tk<and>image<and>tkReturnList/
+         <index class=module/Tk<and>image<and>tkReturnListString/
+         <index class=module/Tk<and>image<and>tkReturnListAtom/
+         <index class=module/Tk<and>image<and>tkReturnListInt/
+         <index class=module/Tk<and>image<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature. 
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>image<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Destroys the image and closes the image object.
+
+     </list>
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.font">
+    <title/Fonts/
+   
+    <index class=module/Tk<and>font/
+
+    <p>
+      The class <<Tk.font>> provides the following methods. An
+      example can be found in <ptr.extern to="ozdoc:wp"
+      key="section.widgets-1.fonts">, for reference documentation see
+      <ref.extern to="&tkcmd;/font.htm"/<file/font//.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>font<and>tkInit/
+       <synopsis>
+<<<tkInit(...)>>>
+       <item>
+         Creates a new font.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>font<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>font<and>tkReturn/
+         <index class=module/Tk<and>font<and>tkReturnString/
+         <index class=module/Tk<and>font<and>tkReturnAtom/
+         <index class=module/Tk<and>font<and>tkReturnInt/
+         <index class=module/Tk<and>font<and>tkReturnFloat/
+         <index class=module/Tk<and>font<and>tkReturnList/
+         <index class=module/Tk<and>font<and>tkReturnListString/
+         <index class=module/Tk<and>font<and>tkReturnListAtom/
+         <index class=module/Tk<and>font<and>tkReturnListInt/
+         <index class=module/Tk<and>font<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Sends a command for <<self>> to the graphics engine and
+         returns the result in the field with the highest integer
+         feature. 
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>font<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Destroys the font and closes the font object.
+
+     </list>
+
+
+  </section>
+
+
+  <section id="section.tk.listener">
+    <title/Listeners/
+   
+    <index class=module/Tk<and>listener/
+
+    <p>
+      The class <<Tk.listener>> is not a tcl object. Is main use is to
+      serve as listener for events, see also <ptr
+      to="section.tk.action-values">. It provides the
+      following methods. For an example see <ptr.extern
+      to="ozdoc:wp" key="section.widgets-2.action">.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>listener<and>tkInit/
+       <synopsis>
+         <<<tkInit()>>>
+       <item>
+         Creates a new listener, which consists of a message stream
+         and a thread that serves each message on the stream by
+         applying <<self>> to it.
+
+       <entry><<tkServe>>
+         <index class=module/Tk<and>listener<and>tkServe/
+       <synopsis>
+         <<<tkServe(?+{MessageR})>>>
+       <item>
+         Adds the message ?_{MessageR} to the current tail of the
+         message stream.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>listener<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Decouples the message stream from the serving thread. That
+         is, after all messages that are currently on the stream have
+         been served, the serving thread terminates. 
+
+     </list>
+
+    <p>
+
+  </section>
+
+
+  <section id="section.tk.strings">
+    <title/Strings/
+    
+    <p>
+    <Index scope="section.tk.strings"/Tk<and>string/
+
+    <list>
+      <entry> <<toAtom>>
+        <index class=module/Tk<and>string<and>toAtom/
+      <synopsis>
+        <<{Tk.string.toAtom ?+{S} ??{A}}>>
+      <item>
+        Returns an atom corresponding to the string ?_{S}.
+
+      <entry> <<toInt>>
+        <index class=module/Tk<and>string<and>toInt/
+      <synopsis>
+        <<{Tk.string.toInt ?+{S} ??{IB}}>>
+      <item>
+        Returns an integer corresponding to the string ?_{S}. If ?_{S}
+        does not form a valid number, <<false>> is returned.
+
+      <entry> <<toFloat>>
+        <index class=module/Tk<and>string<and>toFloat/
+      <synopsis>
+        <<{Tk.string.toFloat ?+{S} ??{FB}}>>
+      <item>
+        Returns a float corresponding to the string ?_{S}. If ?_{S}
+        does not form a valid number, <<false>> is returned.
+
+      <entry> <<toListString>>
+        <index class=module/Tk<and>string<and>toListString/
+      <synopsis>
+        <<{Tk.string.toListString ?+{S} ??{Ss}}>>
+      <item>
+        Returns a list of strings that corresponds to the space
+        separated substrings of ?_{S}.
+
+      <entry> <<toListAtom>>
+        <index class=module/Tk<and>string<and>toListAtom/
+      <synopsis>
+        <<{Tk.string.toListAtom ?+{S} ??{As}}>>
+      <item>
+        Returns a list of atoms that corresponds to the space
+        separated substrings of ?_{S}.
+
+      <entry> <<toListInt>>
+        <index class=module/Tk<and>string<and>toListInt/
+      <synopsis>
+        <<{Tk.string.toListInt ?+{S} ??{IBs}}>>
+      <item>
+        Returns a list of integers that corresponds to the space
+        separated number strings of ?_{S}. If one of the substrings
+        does not form a valid number, the element will be <<false>>
+        rather than an integer.
+
+      <entry> <<toListFloat>>
+        <index class=module/Tk<and>string<and>toListFloat/
+      <synopsis>
+        <<{Tk.string.toListFloat ?+{S} ??{FBs}}>>
+      <item>
+        Returns a list of floats that corresponds to the space
+        separated number strings of ?_{S}. If one of the substrings
+        does not form a valid number, the element will be <<false>>
+        rather than a float.
+    </list>
+
+  </section>
+
+
+  <section id="section.tk.misc">
+    <title/Miscellaneous/
+<p>
+
+    <list>
+      <entry> <<isColor>>
+        <index class=module/Tk<and>isColor/
+      <synopsis>
+        <<Tk.isColor>>
+      <item>
+        Is <<true>>, if the current display supports colors.
+      <p>
+        Is defined as
+        <<<Tk.isColor={Tk.returnInt winfo(depth '.')}&gt;1>>>
+
+      <entry> <<addXScrollbar>>
+        <index class=module/Tk<and>addXScrollbar/
+      <synopsis>
+        <<{Tk.addXScrollbar ?+{BarTcl} ?+{ToScrollTcl}}>>
+      <item>
+        Attaches a horizontal scrollbar defined by ?_{BarTcl} to a
+        scrollable widget defined by ?_{ToScrollTcl}.
+
+      <entry> <<addYScrollbar>>
+        <index class=module/Tk<and>addYScrollbar/
+      <synopsis>
+        <<{Tk.addYScrollbar ?+{BarTcl} ?+{ToScrollTcl}}>>
+      <item>
+        Attaches a vertical scrollbar defined by ?_{BarTcl} to a
+        scrollable widget defined by ?_{ToScrollTcl}.
+
+      <entry> <<getId>>
+        <index class=module/Tk<and>getId/
+      <synopsis>
+        <<{Tk.getId ?_{V}}>>
+      <item>
+        Returns a virtual string ?_{V} that can be used as new unique
+        tickle identifier.
+
+      <entry> <<getPrefix>>
+        <index class=module/Tk<and>getPrefix/
+      <synopsis>
+        <<{Tk.getPrefix ?_{V}}>>
+      <item>
+        Returns a virtual string ?_{V} that can be used as prefix for
+        new unique tickle identifiers. It is guaranteed that appending
+        integers to ?_{V} yields unique identifiers.
+
+    </list>
+  </section>
+
+
+</chapter>
+
+
+
+
+
+
+
+
+
+
+

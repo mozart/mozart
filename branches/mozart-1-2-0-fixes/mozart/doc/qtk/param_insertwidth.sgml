@@ -1,0 +1,1 @@
+<ITEM> <<insertwidth:P>> : Specifies a value indicating the total width of the insertion cursor. If a border has been specified for the insertion cursor (using the <<insertborderwidth>> option), the border will be drawn inside the width specified by the <<insertwidth>> option. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">).

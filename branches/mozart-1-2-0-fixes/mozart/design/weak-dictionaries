@@ -1,0 +1,189 @@
+-*- outline -*-
+
+	  WEAK DICTIONARIES, WEAK POINTERS, AND FINALIZATION
+
+			    Denys Duchier
+
+
+
+Weak dictionaries serve a double purpose: to implement weak references
+and  to provide support  for finalization.   The view  of finalization
+adopted here  was primarily influenced by the  1993 article "Guardians
+in  a  Generation-Based  Garbage  Collector"  (R.  Kent  Dybvig,  Carl
+Bruggeman, David Eby).
+
+* Weak Dictionaries
+
+A weak dictionary  is a bit like  a dictionary and a bit  like a port.
+Like a dictionary  it associates keys to values and like  a port it is
+associated   with  a   stream  (the   finalization   stream).   Unlike
+dictionaries,  the existence  of  an association  key->value does  not
+cause the  value to  be retained.  If  the value  becomes inaccessible
+except through a weak dictionary, then this value becomes eligible for
+finalization.  When the GC notices  that an entry in a weak dictionary
+has become eligible for finalization  it removes it from the table and
+puts the pair key#value on the weak dictionary's finalization stream.
+
+A weak dictionary is created as follows:
+
+	   {WeakDictionary.new FinalizationStream WeakDict}
+
+WeakDict  is  the  weak   dictionary  and  FinalizationStream  is  its
+associated  finalization  stream.   It  is  up to  the  programmer  to
+appropriately process entries that  appear on the finalization stream:
+module  Finalize  provides  some  abstractions for  this  purpose,  in
+particular a  "guardian" abstraction.  Sometimes a  weak dictionary is
+only desired in order to  implement weak references; in that case, the
+finalization  stream  is not  needed,  and,  as  an optimization,  the
+programmer can explicitly "close" it using WeadDictionary.close.
+
+It  is  important  to  understand  that,  even if  the  key  is  still
+reachable, this does not cause the value to be retained.  The value is
+retained  only  if  it  is  reachable without  going  through  a  weak
+dictionary.
+
+** Weak Pointers
+
+Weak pointers  are simply keys  into weak dictionaries.  If  the value
+corresponding to a  key has been scheduled for  finalization, then the
+key no longer appears in the dictionary.
+
+* The Contractual Aspect of Weak Dictionaries
+
+An important aspect of a  weak dictionary (this became apparent during
+fruitful discussions with Seif and Per)  is that it has a contract: it
+is committed  to sending to its  finalization stream every  one of its
+entries as  the value  becomes unreachable.  This  means that  it must
+fulfill  this contract  also in  the  event that  the weak  dictionary
+itself becomes inaccessible.  What  this means is that an inaccessible
+weak dictionary with a non-closed stream must be kept alive as long as
+it still has entries.
+
+For example,  suppose that you are developing  a graphics manipulation
+package and  that you have  created a new OZ_Extension  to encapsulate
+pointers to very  large bitmaps.  Each time you  create an instance of
+your extension, you  also record it for finalization,  normally with a
+guardian created  especially for  this new abstract  datatype: suppose
+the  guardian becomes  unreachable; you  would still  like  the memory
+occupied  by  your  huge  bitmaps  to be  released  once  they  become
+unreachable.  This  would not happen  if the weak dictionary  in which
+they are registered  was allowed to disappear before  the bitmaps have
+been scheduled for finalization.
+
+An obvious implication  for the implementation is that  the GC must be
+able to  locate all weak  dictionaries regardless of whether  they are
+reachable or not.  For this  reason all weak dictionaries are recorded
+in a list stored in the global variable `weakList' of the emulator.
+
+* Garbage Collection
+
+The way we can determine whether an entry is eligible for finalization
+or not  is by noticing whether it  is reached by GC  when started from
+its usual  set of  roots.  Thus the  way to process  weak dictionaries
+during GC is to first let GC proceed as usual (except that it does not
+recursively process the entries of weak dictionaries) and then to look
+inside  each weak  dictionary  to  find out  which  entries have  been
+reached and  which not; only  at this point  can we decide  whether an
+entry should be finalized or kept.
+
+** AM::gCollect in g-collect.cc
+
+The main GC code contains the following stuff:
+
+  gCollectWeakDictionariesInit();
+  ...
+  gCollectWeakDictionariesPreserve();
+  cacStack.gCollectRecurse();
+  ...
+  gCollectWeakDictionariesContent();
+  weakReviveStack.recurse();
+  cacStack.gCollectRecurse();
+
+these are actually documented in the source, but we will go through
+them here again.
+
+*** gCollectWeakDictionariesInit()
+
+This is  called at  the very  beginning of GC.   The current  value of
+`weakList' is saved into `previousWeakList' and `weakList' is reset to
+0.  We will  be able to  iterate through `previousWeakList'  during GC
+whenever we  need to  perform an additional  bit of processing  on all
+weak dictionaries that were still live at the start of GC.
+
+Why do  we reset  `weakList' to  0?  because when  we gCollect  a weak
+dictionary in  the normal  fashion we record  it again  in `weaklist',
+however we do  not recursively process its entries:  we will take care
+of that in  a second phase after the main GC  phase has been completed
+(all   reachable  memory   has  been   traversed/marked).    All  weak
+dictionaries live after GC will be recorded in `weakList'.
+
+*** gCollectWeakDictionariesPreserve()
+
+As explained above, each weak dictionary has a contract.  An otherwise
+unreachable dictionary  that has not yet fully  fulfilled its contract
+must be  preserved: it must be preserved  as long as it  might need to
+forward  some entry  to its  finalization  stream.  This  is what  the
+procedure `g...Preserve()'  does: it goes  through `previousWeakList',
+find each weak  dictionary that needs to be  preserved, and gCollect's
+it.
+
+A weak dictionary  may contain a (finalization) stream,  but, in order
+not  to break  the invariants  of the  GC, garbage  collection  is not
+recursive.   Instead the  contents  of objects  reached, are  actually
+collected in a second phase where `gCollectRecurse()' is called.  This
+is  why   now  that  we   have  possibly  collected   additional  weak
+dictionaries, it  is important  to also cause  the recursive  phase to
+happen so  that the stream are also  traversed by GC.  This  is why we
+have a call to `cacStack.gCollectRecurse()'.
+
+*** gCollectWeakDictionariesContent()
+
+All weak dictionaries  that must be preserved have  been traversed and
+are recorded in `weakList'.  Now  we can process their entries to find
+out which one are eligible for finalization.  This is done by invoking
+the `weakGC()' method od each weak dictionary in `weakList'.
+
+**** weakGC()
+
+It takes care of 2 things: (1) finding out the entries that should be
+finalized, (2) creating the updated table on the new heap to replace
+the old table on the old heap.
+
+Each entry  in the old table  is examined: if the  value is GC-marked,
+the the value is still live and  the entry added to the new table.  If
+the value is not GC-marked  and the weak dictionary has a finalization
+stream (i.e. has not been  explicitly closed), then the pair key#value
+is pushed on the `weakReviveStack' and added to the list named `list'.
+Note that  we initialize `list' with  a future that will  serve as the
+new tail of the stream.
+
+Note that neither key nor value  has been gCollect'ed yet (well, it is
+possible that the key has  already been gCollect'ed if it is reachable
+from somewhere else,  but the value certainly has not  since it is not
+GC-marked).  We  don't want to  gCollect them right away  because this
+would  affect GC-marks and  would therefore  perturb the  process that
+decides whether to finalize an entry  now or keep it around.  Thus, in
+order to gCollect them later, we push them onto the weakReviveStack.
+
+During weakGC(),  we accumulate the  `list' of pairs  `key#value' that
+must be sent  for finalization (this list ends with  a future which is
+to serve  as the new  tail of the  finalization stream).  When  we are
+done,  we push `(stream,list)'  on the  `weakStack'.  `stream'  is the
+pre-GC tail of the finalization stream (a future).
+
+After we  have weakGC'ed all  preserved weak dictionaries,  we process
+the weakReviveStack:  for each pair  `key#value' we gCollect  both the
+`key' and the  `value'.  Notice that this means that  a value that has
+become eligible for finalization is  preserved for (at least) one more
+round so that the thread  processing the finalization stream may apply
+to  it the actual  finalization procedure.   Thus a  finalizable value
+doesn't immediately disappear: rather  it becomes reachable again, but
+only  from  its finalization  stream(s).   However,  it  is no  longer
+recorded  in any  weak dictionary  (unless the  finalization procedure
+decides to register it again).
+
+At  this point,  for each  entry `(stream,list)'  on  the `weakStack',
+`list' is a list of `key#value'  where both args have now been revived
+(traversed by GC) and ending in a  future which is the new tail of the
+finalization stream  post-GC. `stream' is the gCollect'ed  old tail of
+the finalization stream.  We simply bind `stream' to `list'.

@@ -1,0 +1,113 @@
+<Chapter id="chapter.lp">
+  <Title/Employing Linear Programming Solvers/
+<Section id="lp.reference">
+    <Title/The Module <<LP>>/
+
+<P> The module <<LP>> is provided as contribution (being part of the
+&moz3; distribution<note foot>The module <<LP>>
+is <Em/not/ provided on any Windows platform.</note>) 
+and can be accessed either by 
+<<<declare [LP] = {Module.link ['x-oz://contrib/LP']}>> 
+or by 
+<<<import RI at 'x-oz://contrib/LP'>>> 
+as part of a functor definition.
+
+<P>
+<List>
+
+<Entry> <<{LP.solve ?@{RIs} ?+{ObjFn} ?+{Constrs} ??{OptSol} ??{RetVal}}>>
+<Index class=proglang><<LP>><And><<solve>></Index>
+<Item> Invoke the LP solver. Use <<LP.config>> for configuring the solver.
+
+	<Grammar.Rule>?{VECTOR_OF(X)}
+	  <Grammar.Alt type=def>tuple of ?{X}</Grammar.Alt>
+	  <Grammar.Alt type=or>record of ?{X}</Grammar.Alt>
+	  <Grammar.Alt type=or>list of ?{X}</Grammar.Alt>
+
+	<Grammar.Rule>?{RIs}
+	  <Grammar.Alt type=def> ?{VECTOR_OF(RI)}</Grammar.Alt>
+
+	<Grammar.Rule>?{RI}
+	  <Grammar.Alt type=def>float | real interval variable
+          </Grammar.Alt>
+
+The first parameter is a vector of real-interval variables. The
+current bounds of the real-intervals are used as bound constraints by
+the LP solver.
+
+The second parameter determines the objective function:
+
+	<Grammar.Rule>?{ObjFn}
+	  <Grammar.Alt type=def>
+                       <<objfn(row: >> ?={VECTOR_OF(float)}</Grammar.Alt>
+	  <Grammar.Alt type=space>
+                       <<      opt: min | max)>>
+          </Grammar.Alt>
+
+The value at <<opt>> stands for minimize (<<min>>) &resp; maximize
+(<<max>>). The third parameter introduces the constraints to the LP solver.
+
+	<Grammar.Rule>?{Constrs}
+	  <Grammar.Alt type=def> ?{VECTOR_OF(Constr)}</Grammar.Alt>
+
+	<Grammar.Rule>?{Constr}
+	  <Grammar.Alt type=def>
+                       <<constr(row:  >> ?={VECTOR_OF(float)}</Grammar.Alt>
+	  <Grammar.Alt type=space>
+                       <<       type: '=<' | '==' | '>=">>
+	  <Grammar.Alt type=space>
+                       <<       rhs:  >> float <<)>>
+          </Grammar.Alt>
+
+The fourth parameter <<OptSol>> is constrained to the optimal
+solution. In case it is already constrained to a real-interval
+variable, the LP solver derives an additional constraint which makes
+sure that no greater (minimize) &resp; smaller (maximize) solution is
+found.
+
+The last parameter indicates the success of the LP solvers.
+
+       <Grammar.Rule>?{RetVal} 
+          <Grammar.Alt type="def"><<optimal>></Grammar.Alt>
+          <Grammar.Alt type="or"><<infeasable>></Grammar.Alt>
+          <Grammar.Alt type="or"><<unbounded>></Grammar.Alt>
+          <Grammar.Alt type="or"><<failure>></Grammar.Alt>
+
+<Entry> <<{LP.config ?+{put} ?+{ConfigDirection}}>>
+<Index class=proglang><<LP>><And><<config>><And><<put>></Index>
+<Item> Set configuration of module <<LP>>. One can set <<mode>> and <<solver>>.
+
+<Entry> <<{LP.config ?+{get} ??{CurrentConfig}}>>
+<Index class=proglang><<LP>><And><<config>><And><<get>></Index>
+<Item> Read current configuration of module <<LP>>.
+
+	<Grammar.Rule>?{CurrentConfig}
+	  <Grammar.Alt type="def">
+                       <<config(avail:  ?={AVAIL_SOLVERS}>></Grammar.Alt>
+	  <Grammar.Alt><<       mode:   ?={MODES}>></Grammar.Alt>
+	  <Grammar.Alt><<       solver: ?={SOLVER})>></Grammar.Alt> 
+
+       Note that ?={SOLVER} takes a value out of ?={AVAIL_SOLVERS}. The
+       solvers available depend on your local installation. The solver
+       <EM/LP_SOLVE/ (<<lpsolve>>) is the default solver.
+
+       <Grammar.Rule>?{AVAIL_SOLVERS} 
+          <Grammar.Alt type="def"><<lpsolve>></Grammar.Alt>
+          <Grammar.Alt type="or"><<cplex_primopt>></Grammar.Alt>
+          <Grammar.Alt type="or"><<cplex_dualopt>></Grammar.Alt>
+       
+       The solver may run in two modes:
+
+       <Grammar.Rule>?{MODES} 
+          <Grammar.Alt type="def"><<quiet>></Grammar.Alt>
+          <Grammar.Alt type="or"><<verbose>></Grammar.Alt>
+
+       The <<verbose>> mode is intended for debugging and outputs
+       whether an optimal was found (&resp; if not what was the
+       problem) and if so the optimal solution.
+
+</List>
+
+</Section>
+
+</Chapter>

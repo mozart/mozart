@@ -1,0 +1,162 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Gert Smolka <smolka@dfki.de>
+  -   Jörg Würtz
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Christian Schulte, 1998
+  -   Gert Smolka, 1998
+  -   Jörg Würtz, 1997
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<appendix id=appendix.golden-rules><title/Golden Rules/
+<p>
+We offer the following rules for the design of
+efficient constraint programs.
+
+<section class=unnumbered><title/Analyze and Understand your Script/
+<p>
+The first script for a difficult problem usually
+does not show satisfactory performance, even if
+you are expert.  To improve it, you need to
+analyze and understand the search tree.  The
+Explorer is a powerful tool for doing this.  Use
+the statistics feature of the Panel to analyse the
+performance of your script: how many variables and
+propagators have been created?  How often where
+the propagators invoked?
+</section>
+
+<section class=unnumbered><title/Experiment/
+<p>
+Once you have analyzed the search tree and
+performance of your script, start to experiment
+with different models, different distribution
+strategies, and propagators for redundant
+constraints.
+</section>
+
+<section class=unnumbered><title/Have as much Constraint Propagation as Possible/
+<p>
+More constraint propagation results in smaller
+search trees.  Try to design a model that yields
+strong propagation.  Try to eliminate symmetries
+by imposing canonical orders.  Finally, try to
+find redundant constraints that result in
+stronger propagation when imposed as
+propagators.
+</section>
+
+<section class=unnumbered><title/Find a Good Distribution Strategy/
+<p>
+A good distribution strategy can reduce the size
+of the search trees dramatically.  Usually, it's a
+good idea to start with a first-fail strategy.
+The Grocery Puzzle (see
+<ptr to="section.elimination.grocery">) is an example where
+domain splitting is much better than trying the
+least possible value.  Our script for the Queens
+Puzzle (see <ptr to="section.scripts.queens">) can solve
+the puzzle even for large ?{N}'s by using a
+first-fail distribution strategy that tries the
+value in the middle of the domain of the selected
+variable first.
+</section>
+
+<section class=unnumbered><title/Keep the Number of Variables and Propagators Low/
+<p>
+The memory consumption of a script depends very
+much on the number of propagators and finite
+domain variables created.  Models that keep these
+numbers low usually lead to more efficient
+scripts.  The model for the Queens Problem in
+<ptr to="section.scripts.queens"> is particularly
+successful in keeping the number of propagators
+low.  
+<p>
+Use the statistics feature of the Panel to find
+out how many variables and propagators were
+created.
+<p>
+This rule conflicts with the rule asking for
+maximization of constraint propagation.  Extra
+propagators for redundant constraints will improve
+performance if they reduce significantly either
+the size of search tree or the number of
+propagation steps (for the latter, see the
+Pythagoras Example in
+<ptr to="section.propagators.pythagoras">).
+</section>
+
+<section class=unnumbered><title/Eliminate Symmetries/
+<p>
+It is always a good idea to design a model such
+that symmetries are avoided as much as possible.
+The model for the Queens Puzzle (see
+<ptr to="section.scripts.queens">) avoids possible
+symmetries by having a minimal number of
+variables.  The models for the Grocery and Family
+Puzzles (see &nbsp;<ptr to="section.elimination.grocery">
+and&nbsp;<ptr to="section.elimination.family">) eliminate symmetries by
+imposing a canonical order on the variables by
+means of additional constraints.  The model of the
+Grocery Puzzle eliminates a subtle symmetry by
+stating that the price of the first item must have
+a large prime factor in common with the product of
+the prices of the items.  The Fraction Puzzle (see
+<ptr to="section.propagators.fractions">) eliminates
+symmetries by imposing an order on the three
+occurring fractions.
+</section>
+
+<section class=unnumbered><title/Introduce Propagators for Redundant Constraints/
+
+<p>
+Propagators for redundant constraints can often
+strengthen a script's propagation.  A redundant
+constraint is a constraint that is logically
+entailed by the constraints specifying the
+problem.  Try to find redundant constraints that
+yield nonredundant propagators. The models for the
+Fraction and Magic Square puzzles (see
+<ptr to="section.propagators.fractions">
+and <ptr to="section.propagators.squares">) feature good examples
+for nonredundant propagators for redundant
+constraints.
+</section>
+
+<section class=unnumbered><title/Use Recomputation 
+if Memory Consumption is a Problem/
+
+<p>
+Scripts which create a large number of variables or propagators or
+scripts for which the search tree is very deep might use too much
+memory to be feasible. Search engines described in <Ptr.extern
+to="ozdoc:system" key="chapter.search"> and the Explorer (see
+<Ptr.extern to="ozdoc:explorer">) feature support
+for so-called <def/ recomputation/. Recomputation reduces the space
+requirements for these problems in that it trades space for time.
+
+</section>
+</appendix>
+

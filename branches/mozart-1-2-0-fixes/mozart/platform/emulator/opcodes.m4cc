@@ -1,0 +1,60 @@
+/*
+ *  Authors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#include "opcodes.hh"
+#include "base.hh"
+
+OpcodeInfo opcodes[] = {
+
+define(readArg,$1)
+define(writeArg,$1)
+
+define(Size,`ifelse($1,`',0,
+		    $1,Cache,CacheSize,
+	            1)')
+
+define(instruction,
+	`define(`sz',eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8)))dnl
+         {"$1",sz}, dnl
+')
+
+include(EMUDIR/instrDefs.m4)
+
+{"OZERROR",1}
+};
+
+
+
+Opcode stringToOpcode(const char *s)
+{
+  for (int i=0; i < (Opcode) OZERROR; i++) {
+    if (strcmp(s,opcodeToString((Opcode)i)) == 0 ) {
+      return (Opcode) i;
+    }
+  }
+
+  return OZERROR;
+}

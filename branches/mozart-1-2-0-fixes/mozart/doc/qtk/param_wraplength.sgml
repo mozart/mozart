@@ -1,0 +1,2 @@
+<ITEM> <<wraplength:P>> : For widgets that can perform word-wrapping, this option specifies the maximum line length. Lines that
+    would exceed this length are wrapped onto the next line, so that no line is longer than the specified length. If this value is less than or equal to 0 then no wrapping is done: lines will break only at newline characters in the text. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
