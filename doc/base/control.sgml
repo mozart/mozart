@@ -21,34 +21,34 @@
 	<Synopsis>
 	  <<{Value.wait ?+{X}}>>
 	<Item>
-	  blocks until <<X>> is determined.
+	  blocks until ?_{X} is determined.
 
 	<Entry><Span class=index/<<WaitOr>>/
 	  <Index/<<Value>><And><<waitOr>>/
 	<Synopsis>
-	  <<{Value.waitOr X Y}>>
+	  <<{Value.waitOr ?_{X} ?_{Y}}>>
 	<Item>
-	  blocks until at least one of <<X>> or&nbsp;<<Y>> is determined.
+	  blocks until at least one of ?_{X} or&nbsp;?_{Y} is determined.
 
 	<Entry><<!!>>
 	  <Index/<<Value>><And><<'!!'>>/
 	<Synopsis>
 	  <<{Value.'!!' ?_{X} ?_{Y}}>>
 	<Item>
-	  returns a <Def/future/&nbsp;<<Y>> for&nbsp;<<X>>, &ie;, a read-only
-	  placeholder for&nbsp;<<X>>.
+	  returns a <Def/future/&nbsp;?_{Y} for&nbsp;?_{X}, &ie;, a read-only
+	  placeholder for&nbsp;?_{X}.
 
 	<Entry><<byNeed>>
 	  <Index class=tails/<<Value>><And><<byNeed>>/
 	<Synopsis>
 	  <<{Value.byNeed ?+{P} ?_{X}}>>
 	<Item>
-	  creates a future&nbsp;<<X>>.  When <<X>> is <Span class=index
-	  /requested/ (&ie;, some thread blocks on&nbsp;<<X>>), the unary
-	  procedure&nbsp;<<P>> is applied to a fresh variable&nbsp;<<Y>>
-	  in a new thread.  When the application of&nbsp;<<P>> is fully
-	  reduced, the variable associated with&nbsp;<<X>> is bound
-	  to&nbsp;<<Y>>.
+	  creates a future&nbsp;?_{X}.  When ?_{X} is <Span class=index
+	  /requested/ (&ie;, some thread blocks on&nbsp;?_{X}), the unary
+	  procedure&nbsp;?_{P} is applied to a fresh variable&nbsp;?_{Y}
+	  in a new thread.  When the application of&nbsp;?_{P} is fully
+	  reduced, the variable associated with&nbsp;?_{X} is bound
+	  to&nbsp;?_{Y}.
       </List>
 
   <Section>
@@ -62,8 +62,8 @@
 	<Synopsis>
 	  <<{Loop.for ?+{I1} ?+{I2} ?+{I3} ?+{P}}>>
 	<Item>
-	  applies the binary procedure&nbsp;<<P>> to integers from <<I1>>
-	  to&nbsp;<<I2>> proceeding in steps of size&nbsp;<<I3>>.  For example,
+	  applies the binary procedure&nbsp;?_{P} to integers from ?_{I1}
+	  to&nbsp;?_{I2} proceeding in steps of size&nbsp;?_{I3}.  For example,
 	  <<<{For 1 11 3 Browse}>>>
 	  displays the numbers <<1>>, <<4>>, <<7>>, and&nbsp;<<10>>
 	  in the browser window, whereas
@@ -73,13 +73,13 @@
 	<Entry><Span class=index/<<ForThread>>/
 	  <Index/<<Loop>><And><<forThread>>/
 	<Synopsis>
-	  <<{Loop.forThread ?+{I1} ?+{I2} ?+{I3} ?+{P} X ??{Y}}>>
+	  <<{Loop.forThread ?+{I1} ?+{I2} ?+{I3} ?+{P} ?_{X} ??{Y}}>>
 	<Item>
-	  applies the ternary procedure&nbsp;<<P>> to integers from <<I1>>
-	  to&nbsp;<<I2>> proceeding in steps of size&nbsp;<<I3>> while
+	  applies the ternary procedure&nbsp;?_{P} to integers from ?_{I1}
+	  to&nbsp;?_{I2} proceeding in steps of size&nbsp;?_{I3} while
 	  threading an additional accumulator argument through the iteration.
-	  The procedure&nbsp;<<P>> takes the accumulator argument (initially
-	  set to&nbsp;<<X>>) and the loop index and returns an updated
+	  The procedure&nbsp;?_{P} takes the accumulator argument (initially
+	  set to&nbsp;?_{X}) and the loop index and returns an updated
 	  accumulator.
 	<P>
 	  For example,
@@ -98,9 +98,10 @@
 	<Item>
 	  generalizes <<For>> (see above) to the case of multiple nested loops.
 	<P>
-	  <<Xs>> is a list containing tuples of the form <<I1#I2#I3>>
-	  specifying a loop by its start value&nbsp;<<I1>>, upper
-	  limit&nbsp;<<I2>> and step size&nbsp;<<I3>>.
+	  ?_{Xs} is a list containing tuples of the form
+	  <<?_{I1}#?_{I2}#?_{I3}>> specifying a loop by its start
+	  value&nbsp;?_{I1}, upper limit&nbsp;?_{I2} and step
+	  size&nbsp;?_{I3}.
 	<P>
 	  For example,
 	  <<<{Loop.multiFor [1#5#1 10#20#2] Browse}>>>
@@ -110,14 +111,15 @@
 	<Entry><<multiForThread>>
 	  <Index class=tails/<<Loop>><And><<multiForThread>>/
 	<Synopsis>
-	  <<{Loop.multiForThread ?+{Xs} ?+{P} X ??{Y}}>>
+	  <<{Loop.multiForThread ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
 	<Item>
 	  generalizes <<ForThread>> (see above) to the case of multiple nested
 	  loops.
 	<P>
-	  <<Xs>> is a list containing tuples of the form <<I1#I2#I3>>
-	  specifying a loop by its start value&nbsp;<<I1>>, upper
-	  limit&nbsp;<<I2>> and step size&nbsp;<<I3>>.
+	  ?_{Xs} is a list containing tuples of the form
+	  <<?_{I1}#?_{I2}#?_{I3}>> specifying a loop by its start
+	  value&nbsp;?_{I1}, upper limit&nbsp;?_{I2} and step
+	  size&nbsp;?_{I3}.
 	<P>
 	  For example,
 <<<{Loop.multiForThread [1#2#1 5#4#~1]
@@ -138,7 +140,7 @@
 	<Synopsis>
 	  <<{Time.alarm ?+{I} ??{U}}>>
 	<Item>
-	  returns <<unit>> after <<I>> milliseconds. This is done
+	  returns <<unit>> after ?_{I} milliseconds. This is done
 	  asynchronously in that it is evaluated on its own thread.
 
 	<Entry><Span class=index/<<Delay>>/
@@ -146,15 +148,15 @@
 	<Synopsis>
 	  <<{Time.delay ?+{I}}>>
 	<Item>
-	  reduces to <<skip>> after <<I>> milliseconds.  Whenever
-	  <<I =&lt; 0>>, <<{Delay I}>> reduces immediately.
+	  reduces to <<skip>> after ?_{I} milliseconds.  Whenever
+	  <<?_{I} =&lt; 0>>, <<{Delay ?_{I}}>> reduces immediately.
 
 	<Entry><<time>>
 	  <Index class=tails/<<Time>><And><<time>>/
 	<Synopsis>
 	  <<{Time.time ??{T}}>>
 	<Item>
-	  binds <<T>> to the number of seconds elapsed since January, 1st of
+	  binds ?_{T} to the number of seconds elapsed since January, 1st of
 	  the current year.
       </List>
     <SubSection class=unnumbered>
@@ -191,18 +193,18 @@
 	  delayFun: ?+{DelayFunP} <= fun {$} 1000 end
 	  number:   ?+{NumI}      <= ~1)>>
 	      <Item>
-		initializes the loop with the action <<ActionPR>> to iterate
-		(default: message <<dummyRep>>), the action <<FinalPR>> to
+		initializes the loop with the action ?_{ActionPR} to iterate
+		(default: message <<dummyRep>>), the action ?_{FinalPR} to
 		finalize a finite iteration (default: message <<finalRep>>),
-		the delay <<DelayI>> between iterations (default: one second),
-		the function <<DelayFunP>> yielding the delay between
+		the delay ?_{DelayI} between iterations (default: one second),
+		the function ?_{DelayFunP} yielding the delay between
 		iterations (default: constant <<1000>>), and the maximal
-		number <<NumI>> of iterations (default: infinitely many).
+		number ?_{NumI} of iterations (default: infinitely many).
 	      <P>
 		The methods <<dummyRep>> and <<finalRep>> do nothing.  When
 		both <<delay>> and <<delayFun>> parameters are given, the
-		value of <<DelayFunP>> takes priority over that one of
-		<<DelayI>>.  The default actions <<ActionPR>> and <<FinalPR>>
+		value of ?_{DelayFunP} takes priority over that one of
+		?_{DelayI}.  The default actions ?_{ActionPR} and ?_{FinalPR}
 		can be changed by inheritance.
 	      <P>
 		The loop is started on the calling thread.
@@ -226,11 +228,11 @@ end>>>
        number:   ??{LimitI}    <= _
        actual:   ??{NumI}      <= _)>>
 	      <Item>
-		returns the current loop parameters: <<LimitI>> returns the
-		current limit of the iteration, and <<NumI>> the number of
+		returns the current loop parameters: ?_{LimitI} returns the
+		current limit of the iteration, and ?_{NumI} the number of
 		iterations left to be done.  If the delay was specified via
-		<<DelayFunP>> (which need not be constant), then <<DelayI>>
-		returns the <Em/last/ delay used.  If <<DelayI>> is requested
+		?_{DelayFunP} (which need not be constant), then ?_{DelayI}
+		returns the <Em/last/ delay used.  If ?_{DelayI} is requested
 		before the start of the iteration, then <<~1>> is returned.
 		The other values correspond to the fields of the method
 		<<setRepAll>>.
@@ -279,16 +281,16 @@ end>>>
 	      <Item>
 		allow to set the numeric parameters of the iteration.
 	      <P>
-		<<DelayI>> and <<NumI>> must be integers.  The iteration limit
-		<<NumI>> is stored and subsequent loop instances (triggered by
+		?_{DelayI} and ?_{NumI} must be integers.  The iteration limit
+		?_{NumI} is stored and subsequent loop instances (triggered by
 		<<go>>) also obey it, unless the limit is reset to&nbsp;<<~1>>.
 	      <P>
-		<<ActionPR>> and <<FinalPR>> may be nullary procedures or
+		?_{ActionPR} and ?_{FinalPR} may be nullary procedures or
 		records.  If they are procedures they are called as is.  If
 		they are records, they are interpreted as messages to be sent
 		to <<self>>.
 	      <P>
-		<<DelayFunP>> must be a unary procedure which returns an
+		?_{DelayFunP} must be a unary procedure which returns an
 		integer value on application.
 
 	      <Entry><<go>>
@@ -335,7 +337,7 @@ end>>>
 	<Synopsis>
 	  <<{Thread.is ?+{X} ??{B}}>>
 	<Item>
-	  test whether <<X>> is a thread.
+	  test whether ?_{X} is a thread.
 
 	<Entry><<this>>
 	  <Index class=tails/<<Thread>><And><<this>>/
@@ -350,35 +352,35 @@ end>>>
 	  <<{Thread.state ?+{Thread} ??{A}}>>
 	<Item>
 	  returns one of the atoms <<runnable>>, <<blocked>>, <<terminated>>
-	  according to the current state of <<Thread>>.
+	  according to the current state of ?_{Thread}.
 
 	<Entry><<resume>>
 	  <Index class=tails/<<Thread>><And><<resume>>/
 	<Synopsis>
 	  <<{Thread.resume ?+{Thread}}>>
 	<Item>
-	  resumes <<Thread>>.  Resumption undoes suspension.
+	  resumes ?_{Thread}.  Resumption undoes suspension.
 
 	<Entry><<suspend>>
 	  <Index class=tails/<<Thread>><And><<suspend>>/
 	<Synopsis>
 	  <<{Thread.suspend ?+{Thread}}>>
 	<Item>
-	  suspends <<Thread>> such that it cannot be further reduced.
+	  suspends ?_{Thread} such that it cannot be further reduced.
 
 	<Entry><<isSuspended>>
 	  <Index class=tails/<<Thread>><And><<isSuspended>>/
 	<Synopsis>
 	  <<{Thread.isSuspended ?+{Thread} ??{B}}>>
 	<Item>
-	  tests whether <<Thread>> is currently suspended.
+	  tests whether ?_{Thread} is currently suspended.
 
 	<Entry><<injectException>>
 	  <Index class=tails/<<Thread>><And><<injectException>>/
 	<Synopsis>
 	  <<{Thread.injectException ?+{Thread} ?+{X}}>>
 	<Item>
-	  raises <<X>> as exception on <<Thread>>.  If <<Thread>> is
+	  raises ?_{X} as exception on ?_{Thread}.  If ?_{Thread} is
 	  terminated, an error exception is raised in the current thread.
 
 	<Entry><<terminate>>
@@ -386,7 +388,7 @@ end>>>
 	<Synopsis>
 	  <<{Thread.terminate ?+{Thread}}>>
 	<Item>
-	  raises an exception <<kernel(terminate ...)>> on <<Thread>>.
+	  raises an exception <<kernel(terminate ...)>> on ?_{Thread}.
 
 	<Entry><<getPriority>>
 	  <Index class=tails/<<Thread>><And><<getPriority>>/
@@ -394,15 +396,15 @@ end>>>
 	  <<{Thread.getPriority ?+{Thread} ??{A}}>>
 	<Item>
 	  returns one of them atoms <<low>>, <<medium>>, or <<high>>
-	  according to the current priority of <<Thread>>.
+	  according to the current priority of ?_{Thread}.
 
 	<Entry><<setPriority>>
 	  <Index class=tails/<<Thread>><And><<setPriority>>/
 	<Synopsis>
 	  <<{Thread.setPriority ?+{Thread} ?+{A}}>>
 	<Item>
-	  sets priority of thread <<Thread>> to the priority described by
-	  atom&nbsp;<<A>>.  <<A>> must be one of <<low>>, <<medium>>, or
+	  sets priority of thread ?_{Thread} to the priority described by
+	  atom&nbsp;?_{A}.  ?_{A} must be one of <<low>>, <<medium>>, or
 	  <<high>>.
 
 	<Entry><<getThisPriority>>
@@ -419,7 +421,7 @@ end>>>
 	  <<{Thread.setThisPriority ?+{A}}>>
 	<Item>
 	  sets priority of the current thread to the priority described by
-	  atom&nbsp;<<A>>.  <<A>> must be one of <<low>>, <<medium>>, or
+	  atom&nbsp;?_{A}.  ?_{A} must be one of <<low>>, <<medium>>, or
 	  <<high>>.
 
 	<Entry><<preempt>>
@@ -428,6 +430,6 @@ end>>>
 	  <<{Thread.preempt ?+{Thread}}>>
 	<Item>
 	  preempts the current thread, &ie;, immediately schedules another
-	  runnable thread (if there is one).  <<Thread>> stays runnable.
+	  runnable thread (if there is one).  ?_{Thread} stays runnable.
       </List>
 </Chapter>
