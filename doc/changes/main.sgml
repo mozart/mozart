@@ -94,23 +94,6 @@ particular, it lists the changes from
       <section id="section.m110.changes">
         <title/Changes/
 
-        <subsection><title/Support for loops/
-          <p>
-In order to provide convenient syntax for loops, 2 new keywords have
-been introduced: <code/for/ and <code/do/.  This is an incompatible
-change.  Check your code: you must now quote every occurrence of
-<q/for/ and <q/do/.  Support for loops is still
-preliminary.  The general syntax is:
-<code display>for ?{Iterators} do ... end</code>
-where ?{Iterators} is a sequence of 1 or more iterators.  Supported
-iterators are &eg;
-<code display/X in L/
-for iterating over the elements of a list
-<code display/X in I..J/
-for iterating from integer <code/I/ to <code/J/.  The loop terminates
-as soon as one iterator runs out.
-The complete documentation is available in <ptr.extern
-to="ozdoc:loop"></p>
 
         <subsection><title/Pickling/
 
@@ -221,6 +204,24 @@ under the Getting Started/Documentation
           <entry>Postscript and PDF
           <item> Is available now.
           </list>
+
+        <subsection><title/Support for loops/
+          <p>
+In order to provide convenient syntax for loops, 2 new keywords have
+been introduced: <code/for/ and <code/do/.  This is an incompatible
+change.  Check your code: you must now quote every occurrence of
+<q/for/ and <q/do/.  Support for loops is still
+preliminary.  The general syntax is:
+<code display>for ?{Iterators} do ... end</code>
+where ?{Iterators} is a sequence of 1 or more iterators.  Supported
+iterators are &eg;
+<code display/X in L/
+for iterating over the elements of a list
+<code display/X in I..J/
+for iterating from integer <code/I/ to <code/J/.  The loop terminates
+as soon as one iterator runs out.
+The complete documentation is available in <ptr.extern
+to="ozdoc:loop"></p>
 
         <SubSection>
           <Title/Compiler Macro Names/
