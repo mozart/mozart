@@ -24,10 +24,28 @@
  *
  */
 
+#ifndef __COMM_HH
+#define __COMM_HH
+
 #ifdef INTERFACE  
 #pragma interface
 #endif
 
+//
+#include "runtime.hh"
+#include "codearea.hh"
+#include "indexing.hh"
+#include "perdio.hh"
+#include "perdio_debug.hh"  
+#include "genvar.hh"
+#include "perdiovar.hh"
+#include "gc.hh"
+#include "dictionary.hh"
+#include "urlc.hh"
+#include "marshaler.hh"
+
+//
+class MsgBuffer;
 class VirtualInfo;
 class RemoteSite;
 class VirtualSite;
@@ -92,7 +110,7 @@ enum ProbeType{
 
 enum SiteStatus{
   SITE_OK,
-  SITE_PERM,
+  SITE_PERM,			// kost@ : redundant - for debugging only!
   SITE_TEMP
 };
 
@@ -113,11 +131,10 @@ Site * unmarshalSite(MsgBuffer*);
 /*   SECTION :: provided by network communication layer               */
 /**********************************************************************/
 
-RemoteSite* createRemoteSite(Site*,int readCtr);
+RemoteSite* createRemoteSite(Site*, int readCtr);
 
 void zeroRefsToRemote(RemoteSite *);
-void nonZeroRefsToRemote(RemoteSite *); 
-int sendTo_RemoteSite(RemoteSite*,MsgBuffer*,MessageType,Site*, int);
+int sendTo_RemoteSite(RemoteSite*, MsgBuffer*, MessageType, Site*, int);
 void sendAck_RemoteSite(RemoteSite*);
 int discardUnsentMessage_RemoteSite(RemoteSite*,int);
 int getQueueStatus_RemoteSite(RemoteSite*);  // return size in bytes
@@ -132,22 +149,22 @@ GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
 void dumpRemoteMsgBuffer(MsgBuffer*);
 
+//
+//
 void initNetwork();
 
 /**********************************************************************/
 /*   SECTION :: provided by virtual site communication layer          */
 /**********************************************************************/
 
-VirtualSite* createVirtualSite(Site*,int);
+//
+VirtualSite* createVirtualSite(Site *site);
 
 void unmarshalUselessVirtualInfo(MsgBuffer*); // discard marshalled virtual info (hit or unsent msg)
 VirtualInfo* unmarshalVirtualInfo(MsgBuffer*);
 void marshalVirtualInfo(VirtualInfo*,MsgBuffer*);
 
 void zeroRefsToVirtual(VirtualSite *);
-void nonZeroRefsToVirtual(VirtualSite *); 
-
-Bool inMyGroup(Site*,VirtualInfo*);
 
 int sendTo_VirtualSite(VirtualSite*,MsgBuffer*,MessageType,Site*, int);
 int discardUnsentMessage_VirtualSite(VirtualSite*,int);
@@ -167,15 +184,17 @@ void dumpVirtualInfo(VirtualInfo*);
 /*   SECTION :: class BaseSite                                       */
 /**********************************************************************/
 
+//
+// kost@ : we don't really need a separte 'BaseSite';
 class BaseSite{
 friend class Site;
 friend class SiteManager;
 friend class SiteHashTable;
 private:
 protected:
-  ip_address address;    
+  ip_address address;
   time_t timestamp;
-  port_t port;          
+  port_t port;
   unsigned short flags;
 
   void init(ip_address ip,port_t p,time_t t){
@@ -197,6 +216,7 @@ public:
   ip_address getAddress(){return address;} // ATTENTION
   port_t getPort(){return port;} // ATTENTION
   time_t getTimeStamp(){return timestamp;} // ATTENTION
+  // kost@ : What attention??? Where??? $%$#% !@#$ @#$!!!!!
   int hashPrimary();
   int hashSecondary();
 
@@ -247,34 +267,46 @@ public:
 /*   SECTION :: Site                                                  */
 /**********************************************************************/
 
+#define REMOTE_SITE           0x1
+#define VIRTUAL_SITE          0x2
+#define VIRTUAL_INFO          0x4
+#define CONNECTED             0x8
+#define PERM_SITE             0x10
+#define SECONDARY_TABLE_SITE  0x20
+#define MY_SITE		      0x40
+#define GC_MARK		      0x80
 
-#define REMOTE_SITE           1
-#define VIRTUAL_SITE          2
-#define CONNECTED             4
-#define PERM_SITE             8
-#define SECONDARY_TABLE_SITE 16
-#define MY_SITE		     32
-#define GC_MARK		     64
+//
+// Flag combination possibilities (discounting gc);
+//
+/*
+  //
+  NONE				// GName'd;
 
+  //
+  REMOTE_SITE			// remote site ...
+  REMOTE_SITE | CONNECTED	// ... connected (as such);
+  VIRTUAL_SITE | VIRTUAL_INFO	// virtual site ...
+  VIRTUAL_SITE | VIRTUAL_INFO | CONNECTED // ... connected;
+  REMOTE_SITE | VIRTUAL_INFO	// remote site from a foreign VS group;
+  REMOTE_SITE | VIRTUAL_INFO | CONNECTED  // ... connected;
 
-/* Sites -14  possibilities  discounting gc
+  //
+  PERM_SITE			// permanently down;
+  PERM_SITE | SECONDARY_TABLE_SITE        // ... in secondary table;
 
-   
-                    (REMOTE_SITE)              1  (REMOTE_SITE|CONNECTED)               5
-                    (VIRTUAL_SITE)             2  (VIRTUAL_SITE|CONNECTED)              6
-                    (VIRTUAL_SITE|REMOTE_SITE) 3  (VIRTUAL_SITE|REMOTE_SITE|CONNECTED)  7
+  //
+  // next 3 are transitory:
+  // discovered by third party to be dead:
+  REMOTE_SITE | PERM_SITE | CONNECTED     //
+  // ... and even more: the network layer still believes it's connected to:
+  REMOTE_SITE | VIRTUAL_INFO | PERM_SITE | CONNECTED // 
+  // ... with a virtual site (i (kost@) hardly believe this will be used):
+  VIRTUAL_SITE | PERM_SITE | CONNECTED    // 
 
-		    ()                                               0  (passive)
-                    (PERM_SITE)                                      8  
-		    (PERM_SITE|SECONDARY_TABLE_SITE)                24
-
-		    (REMOTE_SITE|PERM_SITE|CONNECTED)               13
-		    (VIRTUAL_SITE|PERM_SITE|CONNECTED)              14
-		    (VIRTUAL_SITE|REMOTE_SITE|CONNECTED|PERM_SITE)  15
-		    last 3 transitory
-		    (MY_SITE)                                       32
-		    (MY_SITE|VIRTUAL_SITE)                          34
-
+  //
+  MY_SITE			// 
+  MY_SITE | VIRTUAL_INFO	// 
 */
 
 /**********************************************************************/
@@ -295,11 +327,14 @@ friend class SiteManager;
 private:
   VirtualInfo *info;
 
-  union{
-  RemoteSite* rsite;
-  VirtualSite* vsite;
-  int readCtr; }uRVC;
+  union {
+    RemoteSite* rsite;
+    VirtualSite* vsite;
+    int readCtr;
+  } uRVC;   // kost@ : who has thought out this abbreviation??!
 
+  //
+private:
   void setType(unsigned int i){flags=i;}
 
   void disconnectInPerm();
@@ -320,7 +355,9 @@ private:
       uRVC.rsite=rs;
       PD((SITE,"connect; not connected yet, connecting to remote %d",rs));}
     else{
-      VirtualSite *vs=createVirtualSite(this,uRVC.readCtr);
+      Assert(t & VIRTUAL_SITE);
+      Assert(t & VIRTUAL_INFO);
+      VirtualSite *vs = createVirtualSite(this);
       Assert(vs!=NULL);
       uRVC.vsite=vs;
       PD((SITE,"connect; not connected yet, connecting to virtual %d",vs));}
@@ -332,6 +369,7 @@ private:
       if(getType() & REMOTE_SITE){
 	zeroRefsToRemote(getRemoteSite());
 	return;}
+      Assert(getType() & VIRTUAL_SITE);
       zeroRefsToVirtual(getVirtualSite());
       return;}}
 
@@ -348,10 +386,6 @@ protected:
 
   unsigned short getType(){ return flags;}
 
-  VirtualInfo* getVirtualInfo(){
-    Assert(getType() & VIRTUAL_SITE);
-    return info;}
-
 public:
 
   Site(){}
@@ -367,15 +401,16 @@ public:
     if(getType() & (REMOTE_SITE|VIRTUAL_SITE)) return OK;
     return NO;}
 
- Bool remoteComm(){
-   if(getType() & REMOTE_SITE) return OK;
-   if(getType() & PERM_SITE) return OK;      // ATTENTION
-   return NO;}
-
-  Bool commVirtual(){
+  Bool remoteComm(){
     if(getType() & REMOTE_SITE) return OK;
+    if(getType() & PERM_SITE) return OK;      // ATTENTION
     return NO;}
-    
+  Bool virtualComm(){
+    if(getType() & VIRTUAL_SITE) return OK;
+    // used for dropping buffers of dead connections?
+    if(getType() & PERM_SITE) return OK;
+    return NO;}
+
   void passiveToPerm(){
     Assert(!(ActiveSite()));
     flags |= PERM_SITE;
@@ -401,25 +436,54 @@ public:
       return NO;}
     return OK;}
 
-  void initMySiteR(){
+  //
+  void initMySite() {
     info=NULL;
     uRVC.readCtr=0;
     setType(MY_SITE);}
+  // 
+  // Extending the 'mySite' to be a virtual one (to be used whenever 
+  // a master creates its first child, or a child initializes itself
+  // upon 'M_INIT_VS');
+  void makeMySiteVirtual(VirtualInfo *v) {
+    info = v;
+    Assert(uRVC.rsite == (RemoteSite *) 0);
+    Assert(uRVC.vsite == (VirtualSite *) 0);
+    Assert(uRVC.readCtr == 0);
+    setType(getType() | VIRTUAL_INFO);
+  }
 
-  void initMySiteV(VirtualInfo *v){
-    info=v;
-    uRVC.readCtr=0;    
-    setType(MY_SITE|VIRTUAL_SITE);}
+  //
+  void setVirtual() {
+    setType(VIRTUAL_SITE | VIRTUAL_INFO);
+  }
+  void initVirtual(VirtualInfo *vi) {
+    info = vi;
+    Assert(uRVC.readCtr == 0);
+    setVirtual();
+  }
+  //
+  Bool hasVirtualInfo() { return (getType() & VIRTUAL_INFO); }
+  VirtualInfo* getVirtualInfo() {
+    Assert(getType() & VIRTUAL_INFO);
+    return (info);
+  }
 
-  void initVirtual(VirtualInfo *vi){
-    info=vi;
-    uRVC.readCtr=0;
-    setType(VIRTUAL_SITE);}
-    
-  void initVirtualRemote(VirtualInfo *vi){
-    info=vi;
-    uRVC.readCtr=0;
-    setType(VIRTUAL_SITE|REMOTE_SITE);}
+  //
+  // Initializes 'VirtualInfo' object's address, port and timestamp
+  // fields. This is to be used whenever a master virtual site 
+  // is created. 
+  // This is the method of this class (BaseSite) since this 
+  // triple should not be exposed outside these classes. It is used
+  // for the 'VirtualInfo' constructor;
+  void initVirtualInfoArg(VirtualInfo *vi);
+
+  //
+  void initRemoteVirtual(VirtualInfo *vi) {
+    info = vi;
+    uRVC.readCtr = 0;
+    setType(REMOTE_SITE | VIRTUAL_INFO);
+  }
 
   void initRemote(){
     info=NULL;
@@ -444,7 +508,7 @@ public:
     setType(REMOTE_SITE);}
 
   void makeActiveVirtual(){
-    uRVC.readCtr=0;
+    Assert(uRVC.readCtr == 0);
     setType(VIRTUAL_SITE);}
 
 // provided to network-comm
@@ -473,19 +537,25 @@ public:
     Assert(!(getType() & REMOTE_SITE));
     return uRVC.vsite;}
 
-  void dumpVirtualSite(int readCtr){
+  void dumpVirtualSite(void) {
     Assert(getType() & CONNECTED);
     Assert(getType() & VIRTUAL_SITE);
-    Assert(!(getType() & VIRTUAL_SITE));
+    Assert(!(getType() & REMOTE_SITE));
     disconnect();    
-    uRVC.readCtr=readCtr;}
+    uRVC.readCtr = 0;
+  }
+
+  //
+  // Compare "virtual info"s of two sites.
+  // Note that this is a metod of the 'Site' class since 
+  // (a) it contains that virtual info, and (b) address/port/timestamp 
+  // fields are private members of 'VirtualInfo' objects;
+  Bool isInMyVSGroup(VirtualInfo *vi);
 
   // for use by the network-comm and virtual-comm
   // ASSUMPTION: network-comm has reclaimed RemoteSite 
-//               virtual-comm has reclaimed VirtualSite
+  //             virtual-comm has reclaimed VirtualSite
   
-
-
   // for use by the protocol-layer
 
   int sendTo(MsgBuffer *buf,MessageType mt,Site* storeSite,int storeIndex){
@@ -493,16 +563,18 @@ public:
     if(connect()){
       if(getType() & REMOTE_SITE){
 	return sendTo_RemoteSite(getRemoteSite(),buf,mt,storeSite,storeIndex);}
+      Assert(getType() & VIRTUAL_SITE);
       return sendTo_VirtualSite(getVirtualSite(),buf,mt,storeSite,storeIndex);}
     PD((ERROR_DET,"MsgNot sent, discovered at Site level %d",
 	PERM_NOT_SENT));
     return PERM_NOT_SENT;}
 
   int discardUnsentMessage(int msgNum){
-    if(getType()==(VIRTUAL_SITE|CONNECTED)){
-      return discardUnsentMessage_VirtualSite(getVirtualSite(),msgNum);}
-    Assert(getType() & REMOTE_SITE);
     Assert(getType() & CONNECTED);
+    if(getType() & VIRTUAL_SITE) {
+      return discardUnsentMessage_VirtualSite(getVirtualSite(),msgNum);
+    }
+    Assert(getType() & REMOTE_SITE);
     return discardUnsentMessage_RemoteSite(getRemoteSite(),msgNum);}
 
   int getQueueStatus(int &noMsgs){
@@ -513,6 +585,7 @@ public:
     if(t & REMOTE_SITE){
       noMsgs = 0;
       return getQueueStatus_RemoteSite(getRemoteSite());}
+    Assert(t & VIRTUAL_SITE);
     return getQueueStatus_VirtualSite(getVirtualSite(),noMsgs);} 
     
   SiteStatus siteStatus(){
@@ -522,6 +595,7 @@ public:
       return SITE_OK;}
     if(t & REMOTE_SITE){
       return siteStatus_RemoteSite(getRemoteSite());}
+    Assert(t & VIRTUAL_SITE);
     return siteStatus_VirtualSite(getVirtualSite());}
 
   MonitorReturn demonitorQueue(){
@@ -531,12 +605,14 @@ public:
     if(t & REMOTE_SITE){
       demonitorQueue_RemoteSite(getRemoteSite());
       return MONITOR_OK;}
+    Assert(t & VIRTUAL_SITE);
     return demonitorQueue_VirtualSite(getVirtualSite());}
 
   MonitorReturn monitorQueue(int size,int noMsgs,void *storePtr){
     if(connect()){
       if(getType() & REMOTE_SITE){
 	monitorQueue_RemoteSite(getRemoteSite(),size); return MONITOR_OK;}
+      Assert(getType() & VIRTUAL_SITE);
       return monitorQueue_VirtualSite(getVirtualSite(),size,noMsgs,storePtr);}
     return MONITOR_PERM;}
 
@@ -544,6 +620,7 @@ public:
     if(connect()){
       if(getType() & REMOTE_SITE){
 	return installProbe_RemoteSite(getRemoteSite(),pt,frequency);}
+      Assert(getType() & VIRTUAL_SITE);
       return installProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL,frequency,NULL);}
     return PROBE_PERM;}
     
@@ -552,6 +629,7 @@ public:
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
 	return deinstallProbe_RemoteSite(getRemoteSite(),pt);}	
+      Assert(t & VIRTUAL_SITE);
       return deinstallProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL);}
     return PROBE_NONEXISTENT;}
 
@@ -560,6 +638,7 @@ public:
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
 	return probeStatus_RemoteSite(getRemoteSite(),pt,frequency,storePtr);}	
+      Assert(t & VIRTUAL_SITE);
       return probeStatus_VirtualSite(getVirtualSite(),pt,frequency,storePtr);}
     return PROBE_NONEXISTENT;}
     
@@ -571,6 +650,7 @@ public:
 	makePermConnected();
 	if(t & REMOTE_SITE){
 	  return giveUp_RemoteSite(getRemoteSite());}
+	Assert(t & VIRTUAL_SITE);
 	return giveUp_VirtualSite(getVirtualSite());}
       makePerm();}
     if(siteStatus()==SITE_OK){ return SITE_NOW_NORMAL;}
@@ -578,6 +658,7 @@ public:
       makePermConnected();
       if(t & REMOTE_SITE){
 	return giveUp_RemoteSite(getRemoteSite());}
+      Assert(t & VIRTUAL_SITE);
       return giveUp_VirtualSite(getVirtualSite());}
     makePerm();
     return GIVES_UP;}
@@ -595,19 +676,20 @@ public:
     if(t & PERM_SITE) return;
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
-	if(t & VIRTUAL_SITE) {
+	if(t & VIRTUAL_INFO) {
 	  dumpVirtualInfo(info);
 	  info=NULL;}
 	discoveryPerm_RemoteSite(getRemoteSite());
 	makePermConnected();
 	return;}
+      Assert(t & VIRTUAL_SITE);
       dumpVirtualInfo(info);      
       info=NULL;
       discoveryPerm_VirtualSite(getVirtualSite());
       makePermConnected();
       return;}
     makePerm();
-    if(t & VIRTUAL_SITE){
+    if(t & VIRTUAL_INFO){
       dumpVirtualInfo(info);}}
 
 
@@ -633,10 +715,16 @@ public:
     return flags & MY_SITE;}
 };
 
+//
+// kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.
+// That's quite natural: we don't know who send us a message (of
+// course, communication layer for remote site do know, but that's
+// other story).
+void msgReceived(MsgBuffer *);
 
-
-Site* initMySite(ip_address,port_t,time_t);
-Site* initMySiteVirtual(ip_address,port_t,time_t,VirtualInfo*);
+//
+// kost@ : that's a part of the boot-up procedure ('perdioInit()');
+Site* makeMySite(ip_address,port_t,time_t);
 
 /**********************************************************************
  *   SECTION :: new gate support
@@ -645,3 +733,4 @@ Site* initMySiteVirtual(ip_address,port_t,time_t,VirtualInfo*);
 extern OZ_Term  GateStream;
 Site *findSite(ip_address a,int port,time_t stamp); 
 
+#endif // __COMM_HH

@@ -304,7 +304,7 @@ void *ozMalloc(int chunk_size)
     lastBrk = sbrk(0);
     if (ret_val == (caddr_t) - 1) {
       fprintf(stderr,"Virtual memory exhausted\n");
-      osExit(1);
+      am.exitOz(1);
     }
     
     SbrkMemory *newMem = (SbrkMemory *) ret_val;
@@ -434,7 +434,7 @@ char *getMemFromOS(size_t sz) {
     thisBlockSz = sz;
     warning("Allocating very large heap block: size = %d kB",sz/KB);
     //    warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
-    //    osExit(1);
+    //    am.exitOz(1);
   }
 
   heapTotalSize      += thisBlockSz/KB;
@@ -463,7 +463,7 @@ char *getMemFromOS(size_t sz) {
   
   if (heapEnd == NULL) {
     fprintf(stderr,"Virtual memory exceeded\n");
-    osExit(1);
+    am.exitOz(1);
   }
 
   /* align heapEnd to word boundaries */
@@ -481,7 +481,7 @@ char *getMemFromOS(size_t sz) {
   void *aux = tagValueOf(makeTaggedMiscp(heapTop));
   if (aux != heapTop) {
     warning("Oz address space exhausted: %p != %p\n", aux, heapTop);
-    osExit(1);
+    am.exitOz(1);
   }
   
   MemChunks::list = new MemChunks(heapEnd,MemChunks::list,thisBlockSz);
