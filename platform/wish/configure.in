@@ -254,23 +254,6 @@ fi
 AC_SUBST(PROVIDETCLLIBS)
 
 dnl *****************************************************************
-dnl special hack for static linking under linux
-dnl *****************************************************************
-
-case $platform in
-    linux*)
-        if ! test -f /usr/include/xopen_lim.h
-        then
-            AC_ARG_ENABLE(lstatic,[  statically link on linux-libc5],
-                    AC_MSG_RESULT(yes)
-                    LIBS=`echo $LIBS | sed -e 's/[ ]-ldl//g'`
-                    LIBS="-ldl -Xlinker -Bstatic $LIBS"
-                    )
-        fi
-        ;;
-esac
-
-dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
