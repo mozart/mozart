@@ -114,6 +114,11 @@ extern "C" void *sbrk(int incr);
 extern "C"  int brk(void *incr);
 
 
+/* remember the last sbrk(0), if it changed --> malloc needs more
+ * memory, so call fakeMalloc
+ */
+static void *lastBrk = 0;
+
 class SbrkMemory {
  public:
   /* a list containing all free blocks in ascending order */
@@ -164,6 +169,7 @@ class SbrkMemory {
       printf("*** Returning %d bytes to the operating system\n",size);
 #endif
       int ret = brk(oldBrk);
+      lastBrk = sbrk(0);
       if (ret == -1) {
 	error("*** Something wrong when shrinking memory");
       }
@@ -205,22 +211,29 @@ SbrkMemory *SbrkMemory::freeList = NULL;
 /* allocate memory via sbrk, first see if there is
    a block in free list */
 
+
+
+
+/* first we allocate space via malloc and release it directly: this means
+ * that future malloc's will use this area. In this way the heaps, that are
+ * allocated via sbrk, will be rather surely on top of the UNIX process's
+ * heap, so we can release this space again!
+ */
+
+static void fakeMalloc(int sz)
+{
+  void *p = malloc(sz);
+  malloc(sizeof(long)); /* ensures that following free does not hand back mem to OS */
+  free(p);
+}
+
 void *ozMalloc(int chunk_size)
 {
   static int firstCall = 1;
 
-
-  /* first we allocate space via malloc and release it directly: this means
-     that future malloc's will use this area. In this way the heaps, that are
-     allocated via sbrk, will be rather surely on top of the UNIX process's
-     heap, so we can release this space again!
-     */
-
   if (firstCall == 1) {
     firstCall = 0;
-    void *p = malloc(MB*3);
-    malloc(sizeof(long)); /* ensures that following free does not hand back mem to OS */
-    free(p);
+    fakeMalloc(3*MB);
   }
 
   chunk_size += sizeof(SbrkMemory);
@@ -233,7 +246,13 @@ void *ozMalloc(int chunk_size)
     printf("*** Allocating %d bytes\n",chunk_size);
 #endif
     void *old = sbrk(0);
+    if (lastBrk && old != lastBrk) {
+      DebugCheckT(message("fakeMallocing 1MB\n"));
+      // message("fakeMallocing 1MB\n");
+      fakeMalloc(1*MB);
+    }
     void *ret_val = sbrk(chunk_size);
+    lastBrk = sbrk(0);
     if (ret_val == (caddr_t) - 1) {
       fprintf(stderr,"Virtual memory exhausted\n");
       osExit(1);
