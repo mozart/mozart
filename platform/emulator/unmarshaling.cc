@@ -30,6 +30,7 @@
 #ifdef ROBUST_UNMARSHALER
 jmp_buf unmarshal_error_jmp;
 #define RAISE_UNMARSHAL_ERROR longjmp(unmarshal_error_jmp,1)
+// #define RAISE_UNMARSHAL_ERROR OZ_error("here")
 #define TRY_UNMARSHAL_ERROR if(setjmp(unmarshal_error_jmp)==0)
 #define CATCH_UNMARSHAL_ERROR else
 #endif
@@ -65,7 +66,7 @@ OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
       dif_counter[tag].recv();	// kost@ : TODO: needed?
       //      printf("tag: %d\n", tag);
 
-      switch(tag) {
+      switch (tag) {
 
       case DIF_SMALLINT: 
 	{
@@ -573,7 +574,7 @@ OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
 	    (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
 	  //
 #ifdef ROBUST_UNMARSHALER
-	  switch(unmarshalCodeRobust(bs, b, desc)) {
+	  switch (unmarshalCodeRobust(bs, b, desc)) {
 	  case ERR:
 	    (void) b->finish();
 	    return 0;
@@ -667,30 +668,32 @@ OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
 	}
 
       case DIF_FSETVALUE:
-	{
-	  b->buildFSETValue();
-	  break;
-	}
+	b->buildFSETValue();
+	break;
 
       case DIF_REF_DEBUG:
-	{ 
 #ifdef ROBUST_UNMARSHALER   
-	  (void) b->finish();
-	  return 0;
+	(void) b->finish();
+	return 0;
 #else
-	  OZD_error("not implemented!"); 
+	OZD_error("not implemented!"); 
 #endif
-	}
 
       case DIF_ARRAY:
-	{ 
 #ifdef ROBUST_UNMARSHALER   
-	  (void) b->finish();
-	  return 0;
+	(void) b->finish();
+	return 0;
 #else
-	  OZD_error("not implemented!"); 
+	OZD_error("not implemented!"); 
+	break;
 #endif
-	}
+
+	//
+	// 'DIF_SYNC' and its handling is a part of the interfaca
+	// between the builder object and the unmarshaler itself:
+      case DIF_SYNC:
+	b->processSync();
+	break;
 
       case DIF_EOF: 
 	return (b->finish());
@@ -755,7 +758,7 @@ Builder::buildValueOutline(OZ_Term value, BTFrame *frame,
   // Procedure invariant: it gets frame but must get rid of it;
 repeat:
   //
-  switch(type) {
+  switch (type) {
 
     //
     // Though it's handled inline, we can get here iteratively:
@@ -810,6 +813,8 @@ repeat:
 
 	//
 	OZ_Term *args = rec->getRef();
+	// put tasks in reverse order (since subtrees will appear in
+	// the normal order):
 	EnsureBTSpace(frame, arity);
 	while(arity-- > 0) {
 	  PutBTTaskPtr(frame, BT_spointer, args++);
@@ -820,9 +825,6 @@ repeat:
 
 	//
 	OZ_Term *args = rec->getRef();
-	// put tasks in reverse order (since subtrees will appear in
-	// the normal order):
-	args = args;		// after the last one;
 	EnsureBTSpace(frame, arity);
 	arity--;
 	PutBTTaskPtr(frame, BT_spointer_iterate, args++);
@@ -834,35 +836,28 @@ repeat:
     }
 
   case BT_takeRecordLabel:
-    {
-      ReplaceBTTask1stArg(frame, BT_takeRecordArity, value);
-      break;
-    }
+    ReplaceBTTask1stArg(frame, BT_takeRecordArity, value);
+    break;
 
   case BT_takeRecordLabelMemo:
-    {
-      ReplaceBTTask1stArg(frame, BT_takeRecordArityMemo, value);
-      break;
-    }
+    ReplaceBTTask1stArg(frame, BT_takeRecordArityMemo, value);
+    break;
 
   case BT_takeRecordArity:
-    {
-      ReplaceBTTask2ndArg(frame, BT_makeRecord_intermediate, value);
-      break;
-    }
+    ReplaceBTTask2ndArg(frame, BT_makeRecordSync, value);
+    break;
 
   case BT_takeRecordArityMemo:
-    {
-      ReplaceBTTask2ndArg(frame, BT_makeRecordMemo_intermediate, value);
-      break;
-    }
+    ReplaceBTTask2ndArg(frame, BT_makeRecordMemoSync, value);
+    break;
 
-  case BT_makeRecordMemo_intermediate:
+  case BT_makeRecordMemoSync:
     doMemo = OK;
     // fall through;
 
-  case BT_makeRecord_intermediate:
+  case BT_makeRecordSync:
     {
+      Assert(value == (OZ_Term) 0);
       GetBTTaskArg1(frame, OZ_Term, label);
       GetBTTaskArg2(frame, OZ_Term, arity);
 #ifdef ROBUST_UNMARSHALER
@@ -881,30 +876,17 @@ repeat:
 	SRecord::newSRecord(label, aritytable.find(sortedArity));
       OZ_Term recTerm = makeTaggedSRecord(rec);
       if (doMemo) {
-      GetNextBTFrameArg1(frame, int, memoIndex);
-      set(recTerm, memoIndex);
-      doMemo = NO;
-      if (isGCTaggedInt(value)) {
-        // fprintf(stdout, " non-existing value (%d)!\n",
-        //         getGCTaggedInt(value));
-        //
-        // That must be the same slot: a missing value (i.e. we see
-        // here 'GC' TaggedRef) can occur only when an intermediate
-        // task (like this one) matches a 'DIF_REF' token from the
-        // stream for the same (currently only record) term.
-        // Observe, there is no place for recursion etc., thus, only
-        // one term may miss in the table, and that one must be
-        // 'memoIndex'.
-        Assert(memoIndex == getGCTaggedInt(value));
-        value = recTerm;
-      }
-      } else {
-      Assert(!isGCTaggedInt(value));
+	GetNextBTFrameArg1(frame, int, memoIndex);
+	set(recTerm, memoIndex);
+	doMemo = NO;
       }
       DiscardBT2Frames(frame); 
 
       //
       GetBTTaskType(frame, nt);
+      // An optimization (for the most frequent case?): 
+      // if the record is just to be stored somewhere ('spointer'
+      // task), then let's do it now:
       if (nt == BT_spointer) {
 	CrazyDebug(incDebugNODES(););
 	GetBTTaskPtr1(frame, OZ_Term*, spointer);
@@ -919,6 +901,8 @@ repeat:
 	}
       } else {
 	//
+	// The last 'iterate' task will restore 'value' to the record
+	// and iterate to the (non-spointer) task that handles it:
 	EnsureBTSpace1Frame(frame);
 	PutBTTaskPtrArg(frame, BT_recordArg_iterate, rec, oz_head(arity));
 	arity = oz_tail(arity);
@@ -930,9 +914,7 @@ repeat:
       }
 
       //
-      // 'value' is preserved;
-      GetBTTaskTypeNoDecl(frame, type);
-      goto repeat;
+      break;
     }
 
   case BT_recordArg:
@@ -963,7 +945,6 @@ repeat:
       if(!oz_isFeature(value))
       	RAISE_UNMARSHAL_ERROR;
 #endif
-      GetBTTaskPtr1(frame, OzDictionary*, dict);
       // 'dict' remains in place:
       ReplaceBTTask2ndArg(frame, BT_dictVal, value);
       break;
@@ -979,35 +960,33 @@ repeat:
     }
 
   case BT_fsetvalue:
-    {
-      ReplaceBTTask2ndArg(frame, BT_fsetvalueFinal, value);
-      break;
-    }
+    ReplaceBTTask2ndArg(frame, BT_fsetvalueSync, value);
+    break;
 
   case BT_fsetvalueMemo:
-    {
-      ReplaceBTTask2ndArg(frame, BT_fsetvalueFinalMemo, value);
-      break;
-    }
+    ReplaceBTTask2ndArg(frame, BT_fsetvalueMemoSync, value);
+    break;
 
-  case BT_fsetvalueFinal:
-    {
-      OZ_Term ret;
-      DiscardBTFrame(frame);
-      makeFSetValue(value, &ret);
-      value = ret;
-      GetBTTaskTypeNoDecl(frame, type);
-      goto repeat;
-    }
+  case BT_fsetvalueMemoSync:
+    doMemo = OK;
 
-  case BT_fsetvalueFinalMemo:
+  case BT_fsetvalueSync:
     {
-      GetBTTaskArg1(frame, int, memoIndex);
+      Assert(value == (OZ_Term) 0);
+      //
+      GetBTTaskArg2(frame, OZ_Term, listRep);
+      // will iterate to the task that handles value:
+      makeFSetValue(listRep, &value);
+      if (doMemo) {
+	GetBTTaskArg1(frame, int, memoIndex);
+	set(value, memoIndex);
+	doMemo = NO;
+      }
       DiscardBTFrame(frame);
-      OZ_Term ret;
-      makeFSetValue(value, &ret);
-      value = ret;
-      set(value, memoIndex);
+
+      //
+      // 'value' now is the 'fsetvalue' we've just built. Let's just
+      // go and do whatever is supposed to happen with it:
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -1072,16 +1051,12 @@ repeat:
     }
 
   case BT_procFile:
-    {
-      ReplaceBTTask1stArg(frame, BT_proc, value);
-      break;
-    }
+    ReplaceBTTask1stArg(frame, BT_proc, value);
+    break;
 
   case BT_procFileMemo:
-    {
-      ReplaceBTTask1stArg(frame, BT_procMemo, value);
-      break;
-    }
+    ReplaceBTTask1stArg(frame, BT_procMemo, value);
+    break;
 
   case BT_procMemo:
     doMemo = OK;
@@ -1173,30 +1148,19 @@ repeat:
   case BT_binary:
     {
       GetBTTaskPtr1(frame, void*, arg);
-      if (arg)
-	binaryTasks.save(arg);
+      Assert(arg == 0);
       DiscardBTFrame(frame);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
 
   case BT_binary_getValue:
-    {
-      GetBTTaskPtr1(frame, OzValueProcessor, proc);
-      GetBTTaskPtr2(frame, void*, arg);
-      DiscardBTFrame(frame);
-      (*proc)(arg, value);
-      break;
-    }
+    ReplaceBTTask1stArg(frame, BT_binary_getValueSync, value);
+    break;
 
-  case BT_binary_getCompleteValue:
+  case BT_binary_getValueSync:
     {
-      ReplaceBTTask1stArg(frame, BT_binary_getValue_intermediate, value);
-      break;
-    }
-
-  case BT_binary_getValue_intermediate:
-    {
+      Assert(value == (OZ_Term) 0);
       GetBTTaskArg1(frame, OZ_Term, ozValue);
       DiscardBTFrame(frame);
       GetBTFramePtr1(frame, OzValueProcessor, proc);
@@ -1206,9 +1170,7 @@ repeat:
       (*proc)(arg, ozValue);
 
       //
-      // 'value' is preserved;
-      GetBTTaskTypeNoDecl(frame, type);
-      goto repeat;
+      break;
     }
 
   case BT_binary_doGenAction_intermediate:
@@ -1220,9 +1182,109 @@ repeat:
       (*proc)(arg);
 
       //
-      // 'value' is preserved;
+      // Note that 'value' is preserved;
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
+    }
+
+  case BT_nop:
+    Assert(value == (OZ_Term) 0);
+    DiscardBTFrame(frame);
+    break;
+
+  default:
+#ifdef ROBUST_UNMARSHALER
+    RAISE_UNMARSHAL_ERROR;
+#else
+    OZD_error("Builder: unknown task!");
+#endif
+  }
+
+  //
+  SetBTFrame(frame);
+}
+
+//
+BTFrame* Builder::liftTask(int sz)
+{
+  GetBTFrame(frame);
+  BTFrame *newTop = frame + bsFrameSize*sz;
+  SetBTFrame(newTop);
+
+  //
+  // Iterate until a non-'goto iterate' task is found:
+ repeat:
+  GetBTTaskType(frame, type);
+  switch (type) {
+
+    // single frame:
+  case BT_spointer:
+  case BT_makeTupleMemo:
+  case BT_makeTuple:
+  case BT_recordArg:
+  case BT_dictKey:
+  case BT_dictVal:
+  case BT_fsetvalue:
+  case BT_fsetvalueMemo:
+  case BT_closureElem:
+  case BT_nop:
+    CopyBTFrame(frame ,newTop);
+    break;
+
+    // single frame iterate:
+  case BT_binary:
+    { 
+      DebugCode(GetBTTaskPtr1(frame, void*, bp););
+      Assert(bp == 0);
+    }
+  case BT_spointer_iterate:
+  case BT_buildValue:
+  case BT_recordArg_iterate:
+  case BT_fsetvalueMemoSync:
+  case BT_fsetvalueSync:
+  case BT_chunkMemo:
+  case BT_chunk:
+  case BT_classFeatures:
+  case BT_closureElem_iterate:
+  case BT_binary_doGenAction_intermediate:
+    CopyBTFrame(frame, newTop);
+    goto repeat;
+
+    // two frames:
+  case BT_takeRecordLabel:
+  case BT_takeRecordLabelMemo:
+  case BT_takeRecordArity:
+  case BT_takeRecordArityMemo:
+  case BT_makeRecordMemoSync:
+  case BT_makeRecordSync:
+  case BT_binary_getValue:
+  case BT_binary_getValueSync:
+    CopyBTFrame(frame, newTop);
+    CopyBTFrame(frame, newTop);
+    break;
+
+    // four frames:
+  case BT_procFile:
+  case BT_procFileMemo:
+    CopyBTFrame(frame, newTop);
+    CopyBTFrame(frame, newTop);
+    CopyBTFrame(frame, newTop);
+    CopyBTFrame(frame, newTop);
+    break;
+
+    // four frames a'la procMemo:
+  case BT_procMemo:
+  case BT_proc:
+    {
+      CopyBTFrame(frame, newTop);
+      CopyBTFrame(frame, newTop);
+      CopyBTFrame(frame, newTop);
+      GetBTFrameArg2(frame, int, gsize);
+      CopyBTFrame(frame, newTop);
+      if (gsize > 0)
+	break;
+      else
+	goto repeat;
     }
 
   default:
@@ -1234,13 +1296,85 @@ repeat:
   }
 
   //
-  while (!binaryTasks.isEmpty()) {
-    void *arg = binaryTasks.pop();
-    Assert(arg);
-    EnsureBTSpace1Frame(frame);
-    PutBTTaskPtr(frame, BT_binary, arg);
-  }
+  return (frame);
+}
+
+//
+BTFrame* Builder::findBinary(BTFrame *frame)
+{
+  void *bp;
   //
-  SetBTFrame(frame);
+  // Iterate until a non-'goto iterate' task is found:
+ repeat:
+  GetBTTaskType(frame, type);
+  switch (type) {
+
+    // found:
+  case BT_binary:
+    GetBTTaskPtr1NoDecl(frame, void*, bp);
+    if (bp)
+      break;
+    // else fall through;
+
+    // single frame:
+  case BT_spointer:
+  case BT_makeTupleMemo:
+  case BT_makeTuple:
+  case BT_recordArg:
+  case BT_dictKey:
+  case BT_dictVal:
+  case BT_fsetvalue:
+  case BT_fsetvalueMemo:
+  case BT_closureElem:
+  case BT_nop:
+    // single frame iterate:
+  case BT_spointer_iterate:
+  case BT_buildValue:
+  case BT_recordArg_iterate:
+  case BT_fsetvalueMemoSync:
+  case BT_fsetvalueSync:
+  case BT_chunkMemo:
+  case BT_chunk:
+  case BT_classFeatures:
+  case BT_closureElem_iterate:
+  case BT_binary_doGenAction_intermediate:
+    NextBTFrame(frame);
+    goto repeat;
+
+    // two frames:
+  case BT_takeRecordLabel:
+  case BT_takeRecordLabelMemo:
+  case BT_takeRecordArity:
+  case BT_takeRecordArityMemo:
+  case BT_makeRecordMemoSync:
+  case BT_makeRecordSync:
+  case BT_binary_getValue:
+  case BT_binary_getValueSync:
+    NextBTFrame(frame);
+    NextBTFrame(frame);
+    goto repeat;
+
+    // four frames:
+  case BT_procFile:
+  case BT_procFileMemo:
+    // four frames a'la procMemo:
+  case BT_procMemo:
+  case BT_proc:
+    NextBTFrame(frame);
+    NextBTFrame(frame);
+    NextBTFrame(frame);
+    NextBTFrame(frame);
+    goto repeat;
+
+  default:
+#ifdef ROBUST_UNMARSHALER
+    RAISE_UNMARSHAL_ERROR;
+#else
+    OZD_error("Builder: unknown task!");
+#endif
+  }
+
+  //
+  return (frame);
 }
 
