@@ -65,7 +65,7 @@ void OZ_FDIntVar::ask(OZ_Term v)
   } 
 }
 
-void OZ_FDIntVar::read(OZ_Term v) 
+int OZ_FDIntVar::read(OZ_Term v) 
 {
   Assert(isRef(v) || !isAnyVar(v));
   
@@ -78,7 +78,6 @@ void OZ_FDIntVar::read(OZ_Term v)
     initial_width = 0;
     domPtr = &dom;
     setSort(sgl_e);
-
   } else {
     Assert(isCVar(vtag));
 
@@ -162,9 +161,10 @@ void OZ_FDIntVar::read(OZ_Term v)
  
     setStoreFlag(v);
   }
+  return domPtr->getSize();
 }
 
-void OZ_FDIntVar::readEncap(OZ_Term v) 
+int OZ_FDIntVar::readEncap(OZ_Term v) 
 {
   Assert(isRef(v) || !isAnyVar(v));
 
@@ -212,6 +212,7 @@ void OZ_FDIntVar::readEncap(OZ_Term v)
     }
     setReifiedFlag(v);
   } 
+  return domPtr->getSize();
 }
 
 #define CHECK_BOUNDS 							\
