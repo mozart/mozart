@@ -58,7 +58,7 @@ AC_MSG_CHECKING(for --enable-wincross)
 AC_ARG_ENABLE(wincross,
   [--enable-wincross   Windows cross compilation (default=no)])
 if test "x$enable_wincross" = xyes; then
-        AC_MSG_RESULT(yes)
+        AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
         WINCROSS="/project/ps/soft/cygwin-cross"
         CXX="$WINCROSS/bin/i386-cygwin32-gcc"
         CC="$CXX"
@@ -117,7 +117,6 @@ AC_SUBST(TARGETS)
 AC_SUBST(FDTARGETS)
 AC_SUBST(FSETTARGETS)
 AC_SUBST(INSTALL_PROP)
-AC_SUBST(COPT)
 AC_SUBST(LD)
 AC_SUBST(AR)
 AC_SUBST(M4_S)
@@ -156,17 +155,21 @@ dnl *****************************************************************
 dnl Compiler and Linker options
 dnl *****************************************************************
 
-COPT="-O"
+if test "$ac_test_CFLAGS" != set; then
+    CFLAGS=""
+fi
+
+O_OPT="-O"
 G_OPT="-g"
 
 dnl mm2: test for SunPro
 if test "x$SunPro" = xyes; then
-    COPT="-fast"
+    O_OPT="-fast"
     DEPEND="$CXX -xM"
 fi
 
 if test "x$GXX" = xyes; then
-    COPT="-O6"
+    O_OPT="-O6"
     G_OPT="-g3 -DINTERFACE"
     M4_S="$M4 -s"
     DEPEND="$CXX -MM"
@@ -285,7 +288,7 @@ AC_MSG_CHECKING(for --enable-ozma)
 AC_ARG_ENABLE(ozma,
     [--enable-ozma      add assembler (default=no)])
         if test "x$enable_ozma" = xyes; then
-                AC_MSG_RESULT(yes)
+                AC_MSG_RESULT(yes (-DOZMA))
                 AC_DEFINE(OZMA)
         else
                 AC_MSG_RESULT(no)
@@ -295,22 +298,26 @@ AC_MSG_CHECKING(for --enable-opt)
 AC_ARG_ENABLE(opt,
     [--enable-opt       optimize [y|n|d[ebug]|p[rofile]] (default=yes)])
 case $enable_opt in
-    n*|d*)
-        AC_MSG_RESULT(debug)
+    n*)
+        AC_MSG_RESULT(no)
+        ;;
+    d*)
+        AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
         AC_DEFINE(DEBUG_EMULATOR)
-        COPT="$G_OPT"
+        CFLAGS="$CFLAGS $G_OPT"
     ;;
     *)
+        CFLAGS="$CFLAGS $O_OPT"
 dnl ********************************
 dnl OPTIMIZED EMULATOR
 dnl ********************************
         case $enable_opt in
             p*)
-                AC_MSG_RESULT(profile)
+                AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
                 AC_DEFINE(PROFILE_EMULATOR)
-                COPT="$COPT -pg"
+                CFLAGS="$CFLAGS -pg"
                 if test "x$GXX" = xyes; then
-                    COPT="$COPT -fno-inline -fno-default-inline"
+                    CFLAGS="$CFLAGS -fno-inline -fno-default-inline"
                 fi
                 LDFLAGS="$LDFLAGS -pg"
                 ;;
@@ -318,7 +325,7 @@ dnl ********************************
                 AC_MSG_RESULT(yes)
                 case $platform in
                     linux*)
-                        COPT="$COPT -fomit-frame-pointer"
+                        CFLAGS="$CFLAGS -fomit-frame-pointer"
                     ;;
                 esac
                 ;;
@@ -327,7 +334,7 @@ dnl ********************************
         AC_ARG_ENABLE(threaded,
           [  --enable-threaded  threaded code emulator (default=yes)])
         if test "x$enable_threaded" != xno; then
-                AC_MSG_RESULT(yes)
+                AC_MSG_RESULT(yes (-DTHREADED))
                 AC_DEFINE(THREADED)
         else
                 AC_MSG_RESULT(no)
@@ -337,7 +344,7 @@ dnl ********************************
         AC_ARG_ENABLE(fastreg,
           [  --enable-fastreg   fast register access (default=yes)])
         if test "x$enable_fastreg" != xno; then
-                AC_MSG_RESULT(yes)
+                AC_MSG_RESULT(yes (-DFASTREGACCESS))
                 AC_DEFINE(FASTREGACCESS)
         else
                 AC_MSG_RESULT(no)
@@ -346,7 +353,7 @@ dnl ********************************
         AC_ARG_ENABLE(regopt,
           [  --enable-regopt    register optimization (default=yes)])
         if test "x$enable_regopt" != xno; then
-                AC_MSG_RESULT(yes)
+                AC_MSG_RESULT(yes (-DREGOPT))
                 AC_DEFINE(REGOPT)
         else
                 AC_MSG_RESULT(no)
@@ -360,13 +367,13 @@ dnl ********************************
                 [  --with-pgcc       use pgcc compiler (if available)])
             if test "$with_pgcc" != xno; then
                 AC_MSG_RESULT(yes)
-                COPT="$COPT -frisc -fno-rtti -Wno-sign-compare -mpentium"
+                CFLAGS="$CFLAGS -frisc -fno-rtti -Wno-sign-compare -mpentium"
                 CXX=$PGXX
             else
                 AC_MSG_RESULT(no)
-                COPT="$COPT -m486"
-                COPT="$COPT -malign-loops=4 -malign-jumps=4"
-                COPT="$COPT -malign-functions=4"
+                CFLAGS="$CFLAGS -m486"
+                CFLAGS="$CFLAGS -malign-loops=4 -malign-jumps=4"
+                CFLAGS="$CFLAGS -malign-functions=4"
             fi
           fi
         fi
@@ -378,7 +385,7 @@ AC_MSG_CHECKING(for --enable-linkprop)
 AC_ARG_ENABLE(linkprop,
   [--enable-linkprop  link propagators statically (default=yes)])
 if test "x$enable_linkprop" != xno; then
-        AC_MSG_RESULT(yes)
+        AC_MSG_RESULT(yes (-UFOREIGNFDPROPS))
         FDTARGETS="libfd.a libsched.a"
         FSETTARGETS="libfset.a"
         LIBS="-L./FDLib -lfd -lsched -L./FSetLib -lfset $LIBS"
@@ -386,8 +393,8 @@ else
         FDTARGETS="fdlib.so schedlib.so"
         FSETTARGETS="fsetlib.so"
         INSTALL_PROP="install-prop"
+        AC_MSG_RESULT(no (-DFOREIGNFDPROPS))
         AC_DEFINE(FOREIGNFDPROPS)
-        AC_MSG_RESULT(no)
 fi
 
 AC_MSG_CHECKING(for --enable-peanuts)
