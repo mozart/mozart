@@ -115,6 +115,7 @@ define
 	     end}
 	    {File write(vs: ('\\pagestyle{empty}\n'#
 			     '\\begin{document}\n'#
+			     '\\renewcommand{\\familydefault}{\\sfdefault}\n'#
 			     '\\vsize=100cm\n\\textheight=\\vsize\n'))}
 	    Outs = {FoldR @Keys
 		    fun {$ X#N In}
