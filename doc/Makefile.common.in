@@ -29,7 +29,7 @@ HTMLSUPPORTFILES0 = \
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
-.PHONY: all bootstrap bootquick quick validate verify install clean veryclean distclean
+.PHONY: all bootstrap bootquick quick validate verify install clean veryclean distclean clean-xref xref
 
 all:: Makefile ../Makefile.common $(WHAT)-html/index.html
 
@@ -277,3 +277,7 @@ $(WHAT)-new-hilite.xml: $(WHAT)-new.el
 
 ../global-xref-db.xml:
         cd .. && $(MAKE) global-xref-db.xml
+
+clean-xref::
+        -rm -rf $(WHAT)-xref-db.xml
+xref:: $(WHAT)-xref-db.xml
