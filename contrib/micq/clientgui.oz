@@ -198,6 +198,10 @@ define
 	 else {Tk.send bell} end
       end
       meth getState($) user(id:self.id name:@name online:{Dictionary.get DB self.id}.online) end
+      meth updateName(N)
+	 {self.label tk(config text:"["#self.id#"] "#N)}
+      end
+      
       meth tkInit(id:ID name:T parent:P ...)=M
 	 L I
 	 M1={Record.subtract {Record.subtract M id} name}
@@ -722,8 +726,10 @@ define
       %% How about messages here?!? /Nils 17/11-98
       lock CLock then
 	 E = {Dictionary.get DB M.id}
-	 N = changeStatus( id: M.id online: M.online )
+%	 N = changeStatus( id: M.id online: M.online )
       in
+	 {E.widget updateName(M.name)}
+	 /*
 	 if E.online==false then
 	    {Offline remove(id:E.id)}
 	    {Offline add(id:M.id name:M.name)}
@@ -732,6 +738,7 @@ define
 	    {Online add(id:E.id name:M.name)}
 	 end
 	 {ChangeStatus N}
+	 */
       end
    end
    
