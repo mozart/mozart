@@ -16,6 +16,8 @@
 
 #include "wsock.hh"
 
+#include "am.hh"
+
 #include <errno.h>
 #include <limits.h>
 #include <malloc.h>
@@ -522,6 +524,45 @@ int osOpenMax()
 #endif
 }
 
+#ifdef WINDOWS
+unsigned __stdcall watchCompilerThread(void *arg)
+{
+  HANDLE handle = (HANDLE) arg;
+  DWORD ret = WaitForSingleObject(handle,INFINITE);
+  if (ret != WAIT_OBJECT_0) {
+    warning("WaitForSingleObject(0x%x) failed: %d (error=%d)",
+            handle,ret,GetLastError());
+    ExitThread(0);
+  }
+  ossleep(2);
+  am.exitOz(0);
+  return 1;
+}
+
+/* there are no process groups under Win32
+ * so compiler hands its pid via envvar OZPPID to emulator
+ * it then creates a thread watching whether the compiler is still living
+ * and terminating otherwise
+ */
+void watchParent()
+{
+  char *ozppid = getenv("OZPPID");
+  if (ozppid!=NULL) {
+    int pid = atoi(ozppid);
+    HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
+    if (handle==0) {
+      message("OpenProcess(%d) failed",pid);
+    } else {
+      unsigned thrid;
+      _beginthreadex(0,0,watchCompilerThread,handle,0,&thrid);
+    }
+  }
+}
+
+
+
+#endif
+
 void osInit()
 {
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
@@ -533,6 +574,7 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
   FD_ZERO(&isSocket);
+
 #ifdef WINDOWS
   OSVERSIONINFO vi;
   vi.dwOSVersionInfoSize = sizeof(vi);
@@ -542,6 +584,7 @@ void osInit()
   setmode(fileno(stdin),O_BINARY);  // otherwise input blocks!!
   _fmode = O_BINARY;
 
+  watchParent();
 #endif
 }
 
