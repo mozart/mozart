@@ -327,8 +327,7 @@ starts the emulator under gdb")
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
     ("-----")
-    ("Start Debugger" . oz-debug-start)
-    ("Leave Debugger" . oz-debug-stop)
+    ("Debugger" . oz-debug-start)
     ))
 
   "The contents of the Oz menu")
@@ -346,14 +345,14 @@ starts the emulator under gdb")
   "Start the debugger."
   (interactive)
   (oz-emacs-connect)
-  (oz-feed-file "tools/debugger/buggi.oz")
+  (oz-feed-file "tools/ozcar/main.oz")
   (setq oz-debug-mode t))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
   (setq oz-debug-mode nil)
-  (oz-feed-file "tools/debugger/buggi-stop.oz"))
+  (oz-feed-file "tools/ozcar/exit.oz"))
 
 
 ;;------------------------------------------------------------
