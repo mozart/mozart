@@ -86,7 +86,7 @@
 #endif
 
 
-#if defined(MIPS) || defined(SPARC) || defined(OSF1_ALPHA)
+#if defined(MIPS) || defined(sparc) || defined(OSF1_ALPHA)
 #define DELAY_SLOT
 #endif
 
