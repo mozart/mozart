@@ -718,14 +718,17 @@ in
 		  CompilerPanel, ShowInfo(VS)
 	       [] info(VS Coord) then
 		  CompilerPanel, ShowInfo(VS Coord)
-	       [] message(Record Coord) then VSCell in
+	       [] message(Record Coord) then VSCell State in
 		  VSCell = {NewCell ""}
 		  {Error.msg
 		   proc {$ X}
 		      {Assign VSCell {Access VSCell}#{Error.formatLine X}}
 		   end
 		   Record}
-		  CompilerPanel, ShowInfo({Access VSCell} Coord)
+		  State = case {Label Record} of error then blocked
+			  else runnable
+			  end
+		  CompilerPanel, ShowInfo({Access VSCell} Coord State)
 	       [] displaySource(Title _ VS) then
 		  {New SourceWindow init(self.TopLevel Title VS) _}
 	       [] toTop() then
@@ -745,7 +748,7 @@ in
 	 [] nil then skip
 	 end
       end
-      meth ShowInfo(VS Coord <= unit) Begin Middle End in
+      meth ShowInfo(VS Coord <= unit State <= runnable) Begin Middle End in
 	 End = [o(self.Text configure state: disabled)]
 	 Middle =
 	 case {self.ScrollToBottom tkReturnInt($)} == 1 then
@@ -769,7 +772,7 @@ in
 	       Action = {New Tk.action
 			 tkInit(parent: self.Text
 				action: (Compiler.genericInterface, getPort($)#
-					 Goto(File Line Column)))}
+					 Goto(File Line Column State)))}
 	       o(self.Text insert 'end' VS Tag)|
 	       o(self.Text tag bind Tag '<1>' Action)|
 	       Middle
@@ -1420,9 +1423,9 @@ in
 	 {Dialog tkPack()}
       end
 
-      meth Goto(File Line Column) VS in
-	 VS = 'oz-bar '#File#' '#Line#' '#Column#' runnable'
-	 {Print {String.toAtom {VirtualString.toString VS}}}
+      meth Goto(File Line Column State)
+	 {Emacs.condSend.interface
+	  bar(file: File line: Line column: Column state: State)}
       end
       meth ClearInfo()
 	 {Tk.batch [o(self.Text configure state: normal)
