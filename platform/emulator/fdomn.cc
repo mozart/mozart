@@ -91,8 +91,9 @@ int toTheUpperEnd[32] = {
 
 int fd_bv_max_high, fd_bv_max_elem, fd_bv_conv_max_high;
 int * fd_bv_left_conv, * fd_bv_right_conv;
-intptr fd_iv_ptr_sort[FDOMNINITSIZE];
-int fd_iv_left_sort[FDOMNINITSIZE], fd_iv_right_sort[FDOMNINITSIZE];
+EnlargeableArray<intptr> fd_iv_ptr_sort(FDOMNINITSIZE);
+EnlargeableArray<int> fd_iv_left_sort(FDOMNINITSIZE);
+EnlargeableArray<int> fd_iv_right_sort(FDOMNINITSIZE);
 
 inline
 int _word32(int n) { return mod32(n) ? div32(n) + 1 : div32(n); }
@@ -1288,6 +1289,9 @@ int OZ_FiniteDomainImpl::simplify(int list_len,
 				  int * list_right)
 {
 
+  fd_iv_ptr_sort.request(list_len);
+  fd_iv_left_sort.request(list_len);
+  fd_iv_right_sort.request(list_len);
   // producing list of sorted pointers in terms of this list 
   int i;
 
@@ -1296,7 +1300,7 @@ int OZ_FiniteDomainImpl::simplify(int list_len,
   }
 
   Order_IntPtr_Inc lt;
-  fastsort(fd_iv_ptr_sort, list_len, lt);
+  fastsort((intptr*)fd_iv_ptr_sort, list_len, lt);
 
   //  qsort(fd_iv_ptr_sort, list_len, sizeof(int **), intcompare);
 
