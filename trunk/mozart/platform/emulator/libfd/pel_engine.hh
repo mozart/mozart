@@ -132,20 +132,22 @@ public:
     _current_params = 0;
     return 0;
   }
-  int expectIntVarBounds(PEL_PersistentFDIntVar &fdv) {
-    _PEL_EventList * el = &(fdv.getEventLists().getBounds());
-    _ela[_current_params] = el;
-    _current_params += 1;
-    CASSERT(_current_params < MAX_PARAMS);
-    return 0;
-  }
-  int expectIntVarBounds(PEL_PersistentFDIntVar &fdv, int &r) {
-    _PEL_EventList * el = &(fdv.getEventLists().getBounds());
-    _ela[_current_params] = el;
+  int expectVar(_PEL_EventList * el, int &r) {
+    _PEL_EventList * _el = el;
+    _ela[_current_params] = _el;
     _current_params += 1;
     CASSERT(_current_params < MAX_PARAMS);
     r = 0;
     return 0;
+  }
+  int expectIntVarBounds(PEL_PersistentFDIntVar &fdv) {
+    _PEL_EventList * el = &(fdv.getEventLists().getBounds());
+    int r;
+    return expectVar(el, r);
+  }
+  int expectIntVarBounds(PEL_PersistentFDIntVar &fdv, int &r) {
+    _PEL_EventList * el = &(fdv.getEventLists().getBounds());
+    return expectVar(el, r);
   }
   int expectInt(OZ_Term v, int &r) {
     r = 0;
@@ -177,9 +179,11 @@ public:
   void decAPF(void) { _pe->decAPF(); }
   //
   void propagate(void) {
-    while (!isEmpty()) {
-      if (pf_failed == apply()) {
-	break;
+    if (!isFailed()) {
+      while (!isEmpty()) {
+	if (pf_failed == apply()) {
+	  break;
+	}
       }
     }
   }
