@@ -1,25 +1,23 @@
-/*
- *  Authors:
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
- *
- *  Copyright:
- *    Leif Kornstaedt, 1997
- *
- *  Last change:
- *    $Date$ by $Author$
- *    $Revision$
- *
- *  This file is part of Mozart, an implementation
- *  of Oz 3:
- *     $MOZARTURL$
- *
- *  See the file "LICENSE" or
- *     $LICENSEURL$
- *  for information on usage and redistribution
- *  of this file, and for a DISCLAIMER OF ALL
- *  WARRANTIES.
- *
- */
+dnl
+dnl Author:
+dnl   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+dnl
+dnl Copyright:
+dnl   Leif Kornstaedt, 1997
+dnl
+dnl Last change:
+dnl   $Date$ by $Author$
+dnl   $Revision$
+dnl
+dnl This file is part of Mozart, an implementation of Oz 3:
+dnl   $MOZARTURL$
+dnl
+dnl See the file "LICENSE" or
+dnl   $LICENSEURL$
+dnl for information on usage and redistribution
+dnl of this file, and for a DISCLAIMER OF ALL
+dnl WARRANTIES.
+dnl
 
 %{
 #include "resources.hh"
@@ -40,7 +38,9 @@ int ozmalex(void);
 void ozmarestart(FILE *);
 
 static CodeArea *codeArea = NULL;
-static int offset = 0;
+#ifdef OZMA_DEBUG
+static int ninstrs = 0;
+#endif
 
 static OzDictionary *labelDict = NULL;
 static OzDictionary *abstrEntryDict = NULL;
@@ -68,15 +68,17 @@ inline Bool getBool(TaggedRef t) {
   return literalEq(deref(t),NameTrue);
 }
 
-static void lookupLabel(TaggedRef key, ProgramCounter *location) {
+static void lookupLabel(TaggedRef key, int *location) {
   TaggedRef backpatchListOrLabel;
   if (labelDict->getArg(key,backpatchListOrLabel) == PROCEED)
     if (OZ_isInt(backpatchListOrLabel))
-      *location = codeArea->getStart() + OZ_intToC(backpatchListOrLabel);
+      *location = (ProgramCounter) OZ_intToC(backpatchListOrLabel) - opcodePC;
     else
-      labelDict->setArg(key,OZ_cons(OZ_int(location),backpatchListOrLabel));
+      labelDict->setArg(key,OZ_cons(OZ_cons(OZ_int(opcodePC),OZ_int(location)),
+				    backpatchListOrLabel));
   else
-    labelDict->setArg(key,OZ_cons(OZ_int(location),OZ_nil()));
+    labelDict->setArg(key,OZ_cons(OZ_cons(OZ_int(opcodePC),OZ_int(location)),
+				  OZ_nil()));
 }
 
 %}
@@ -117,12 +119,19 @@ undefine(`instruction')
 File		: CodeSize Instructions
 		  {
 		    ; //--** warn about undeclared labels
+#ifdef OZMA_DEBUG
+		    printf("\nCode:\n");
+		    displayCode(codeArea->getStart(),ninstrs);
+#endif
 		  }
 		;
 
 CodeSize	: INTEGER
 		  {
 		    int size = OZ_intToC($1);
+#ifdef OZMA_DEBUG
+		    ninstrs = 0;
+#endif
 		    codeArea = new CodeArea(size);
 		    labelDict = new OzDictionary(am.currentBoard());
 		    abstrEntryDict = new OzDictionary(am.currentBoard());
@@ -135,24 +144,27 @@ Instructions	: Instruction
 		;
 
 changequote(@,~)
-define(noReg,{
+define(noReg,{ opcodePC = codeArea->getWritePtr();
 #ifdef OZMA_DEBUG
-  opcodePC = codeArea->getWritePtr();
+  ninstrs++;
 #endif
   codeArea->writeOpcode((Opcode) $1);
-  offset += sizeOf($1);
 })
 define(oneReg,{ opcodePC = codeArea->getWritePtr();
+#ifdef OZMA_DEBUG
+  ninstrs++;
+#endif
   codeArea->writeOpcode((Opcode) OZERROR);
-  offset += sizeOf($1X);
   static Opcode ops[3] = {@`$1X,$1Y,$1G'~};
   opcodeTable = ops;
   opcodeIndex = 0;
   opcodeIndexFactor = 1;
 })
 define(twoRegs,{ opcodePC = codeArea->getWritePtr();
+#ifdef OZMA_DEBUG
+  ninstrs++;
+#endif
   codeArea->writeOpcode((Opcode) OZERROR);
-  offset += sizeOf($1XX);
   static Opcode ops[9] = {@`$1XX,$1XY,$1XG,'~
 			  @`$1YX,$1YY,$1YG,'~
 			  @`$1GX,$1GY,$1GG'~};
@@ -170,11 +182,6 @@ $2 $3 $4 $5 $6 $7 dnl
 @ifelse(numOfRegs($2,$3,$4),0,,
 { codeArea->writeOpcode(opcodeTable[opcodeIndex],opcodePC); }
 )~
-{
-#ifdef OZMA_DEBUG
-  displayCode(opcodePC,1);
-#endif
-}
 )
 changequote(`,')
 
@@ -187,18 +194,21 @@ DefLabel	: Atom
 Instruction	: LBL '(' DefLabel ')'
 		  {
 		    TaggedRef backpatchList;
+		    ProgramCounter PC = codeArea->getWritePtr();
 		    if (labelDict->getArg($3,backpatchList) == PROCEED) {
 		      if (OZ_isInt(backpatchList))
 			ozmaerror("label multiply defined");
 		      else
 			while (!literalEq(backpatchList,AtomNil)) {
-			  ProgramCounter ptr = OZ_intToC(head(backpatchList));
-			  codeArea->writeLabel(offset,codeArea->getStart(),
-					       ptr,OK);
+			  TaggedRef pair = head(backpatchList);
+			  ProgramCounter opcodePC =
+			      (ProgramCounter) OZ_intToC(head(pair));
+			  int *location = (int *) OZ_intToC(tail(pair));
+			  *location = PC - opcodePC;
 			  backpatchList = tail(backpatchList);
 			}
 		    }
-		    labelDict->setArg($3,OZ_int(offset));
+		    labelDict->setArg($3,OZ_int(PC));
 		  }
 include(OZINCDIR/instrDefs.m4)
 undefine(`instruction')
@@ -314,10 +324,9 @@ YRegisterIndex	: YREGISTER
 
 Label		: DefLabel
 		  {
-		    ProgramCounter location = codeArea->getWritePtr();
-		    // write a dummy to advance the write pointer
-		    codeArea->writeLabel(location - codeArea->getStart());
-		    lookupLabel($1,(ProgramCounter *) location);
+		    int *location = (int *) codeArea->getWritePtr();
+		    codeArea->writeLabel(0);   // write a dummy for now
+		    lookupLabel($1,location);
 		  }
 		;
 
