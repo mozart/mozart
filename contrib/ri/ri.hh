@@ -563,10 +563,14 @@ protected:
 public:
   Propagator_RI_RI(OZ_Term x, OZ_Term y) : _x(x), _y(y) {}
 
-  virtual void updateHeapRefs(OZ_Boolean)
+  virtual void gCollect(void)
   {
-    OZ_updateHeapTerm(_x);
-    OZ_updateHeapTerm(_y);
+    OZ_gCollectBlock(&_x, &_x, 2);
+  }
+
+  virtual void sClone(void)
+  {
+    OZ_sCloneBlock(&_x, &_x, 2);
   }
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_RI_RI); }
@@ -585,11 +589,14 @@ protected:
 public:
   Propagator_RI_RI_RI(OZ_Term x, OZ_Term y, OZ_Term z) : _x(x), _y(y), _z(z) {}
 
-  virtual void updateHeapRefs(OZ_Boolean)
+  virtual void gCollect(void)
   {
-    OZ_updateHeapTerm(_x);
-    OZ_updateHeapTerm(_y);
-    OZ_updateHeapTerm(_z);
+    OZ_gCollectBlock(&_x, &_x, 3);
+  }
+
+  virtual void sClone(void)
+  {
+    OZ_sCloneBlock(&_x, &_x, 3);
   }
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_RI_RI_RI); }
@@ -608,10 +615,14 @@ protected:
 public:
   Propagator_RI_D(OZ_Term ri, OZ_Term d) : _ri(ri), _d(d) {}
 
-  virtual void updateHeapRefs(OZ_Boolean)
+  virtual void gCollect(void)
   {
-    OZ_updateHeapTerm(_ri);
-    OZ_updateHeapTerm(_d);
+    OZ_gCollectBlock(&_ri, &_ri, 2);
+  }
+
+  virtual void sClone(void)
+  {
+    OZ_sCloneBlock(&_ri, &_ri, 2);
   }
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_RI_D); }

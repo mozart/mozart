@@ -64,13 +64,22 @@ public:
 
   virtual int getIdV(void) { return _id; }
 
-  virtual OZ_SituatedExtension * gcV(void) {
+  virtual OZ_SituatedExtension * sCloneV(void) {
     return new PropagatorReference(_p);
   }
 
-  virtual void gcRecurseV(void) {
-    _p = (Propagator *) ((Suspendable *) _p)->gcSuspendable();
+  virtual void sCloneRecursiveV(void) {
+    _p = (Propagator *) ((Suspendable *) _p)->sCloneSuspendable();
   }
+
+  virtual OZ_SituatedExtension * gCollectV(void) {
+    return new PropagatorReference(_p);
+  }
+
+  virtual void gCollectRecursiveV(void) {
+    _p = (Propagator *) ((Suspendable *) _p)->gCollectSuspendable();
+  }
+
 
   virtual OZ_Term printV(int) {
     char buf[100];
