@@ -1,0 +1,8 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+<!ENTITY part.native SYSTEM "native.sgml">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+]>
+<BOOK>
+&part.native;
+</BOOK>
