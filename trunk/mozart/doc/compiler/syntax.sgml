@@ -196,7 +196,7 @@
 	<Grammar.Alt/<<fNot(?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fCond([?={clause}] ?={opt else} ?={coord})>>/
 	<Grammar.Alt/<<fOr([?={clause opt then}] for ?={coord})>>/
-	<Grammar.Alt/<<fOr([?={clause}] fdis ?={coord})>>/
+	<Grammar.Alt/<<fOr([?={clause opt then}] fdis ?={coord})>>/
 	<Grammar.Alt/<<fOr([?={clause}] fchoice ?={coord})>>/
 	<Grammar.Alt/<<fCondis([[?={fd expression}]] ?={coord})>>/
       <Grammar.Rule class=compact>?={fd expression}
