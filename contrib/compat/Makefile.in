@@ -10,6 +10,7 @@ BIN_DIR         = $(PREFIX)/bin
 HOMEURL         = @HOMEURL@
 
 OZC             = @OZC@
+OZTOOL          = @OZTOOL@
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
@@ -25,7 +26,7 @@ BIN_TARGETS     = $(BIN_DIR)/convertTextPickle
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 %.ozf: %.ozg
-        $(OZC) -z 9 --gump $(OZCFLAGS) -c $< -o $@
+        OZTOOL="$(OZTOOL)" $(OZC) -z 9 --gump $(OZCFLAGS) -c $< -o $@
 
 all: $(TARGETS)
 
@@ -53,7 +54,7 @@ clean:
         -rm -f TextPickleScanner.[Clo]
 
 veryclean: clean
-        -rm -f *.so-* *.ozf
+        -rm -f *.so-* *.ozf convertTextPickle
 
 distclean: clean
         -rm -f config.* Makefile
