@@ -2605,7 +2605,7 @@ LBLdispatcher:
   Case(GENFASTCALL)
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-      Bool tailcall           =  getPosIntArg(PC+2);
+      Bool tailcall           =  getPosIntArg(PC+2) & 1;
 
       if (entry->getAbstr() == 0) {
         (void) oz_raise(E_ERROR,E_SYSTEM,"inconsistentFastcall",0);
