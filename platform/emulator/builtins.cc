@@ -22,7 +22,7 @@ BuiltinTab builtinTab(750);
 
 
 BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, Bool replace,
-                       InlineFunOrRel infun)
+                       IFOR infun)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
 
@@ -101,7 +101,9 @@ BuiltinTabEntry *BIinit()
   BIinitSpecial();
   BIinitSystem();
 
+#ifdef ASSEMBLER
   BIinitAssembler();
+#endif
 
   BIinitObjects();
 
