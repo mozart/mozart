@@ -30,11 +30,11 @@
                              out => ['value'],
                              bi  => BIdot},
 
-     'dotAssign'        => { in  => ['*recordCOrChunk','+feature','value'],
+     'dotAssign'        => { in  => ['+value','+value','value'],
                              out => [],
                              BI  => BIdotAssign},
 
-     'dotExchange'      => { in  => ['*recordCOrChunk','+feature','value'],
+     'dotExchange'      => { in  => ['+value','+value','value'],
                              out => ['value'],
                              BI  => BIdotExchange},
 
