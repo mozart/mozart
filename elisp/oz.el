@@ -145,7 +145,7 @@ everything into the *Oz Emulator* buffer."
      "XUse New Oz Compiler? (t or nil): ")
 
 (defcustom oz-new-compiler-url
-  (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
+  (concat "file:" (getenv "HOME") "/Oz/lib/OPI.ozc")
   "*URL of the new Oz Compiler for gdb mode and for \\[oz-other]."
   :type 'string
   :group 'oz)
@@ -797,7 +797,7 @@ If FORCE is non-nil, kill the processes immediately."
 		 (setq oz-read-emulator-output t)
 		 (let ((compilercomp
 			(or (getenv "OZCOMPILERCOMP")
-			    (concat "file:" (oz-home) "/lib/Compiler.ozc"))))
+			    (concat "file:" (oz-home) "/lib/OPI.ozc"))))
 		   (make-comint "Oz Emulator" "ozemulator" nil "-E"
 				"-u" compilercomp)))
 		(oz-using-new-compiler
@@ -956,8 +956,7 @@ the gdb commands `cd DIR' and `directory'."
 	(init-str (if oz-using-new-compiler
 		      (concat "set args -u "
 			      (or (getenv "OZCOMPILERCOMP")
-				  (concat "file:" (oz-home)
-					  "/lib/Compiler.ozc"))
+				  (concat "file:" (oz-home) "/lib/OPI.ozc"))
 			      "\n")
 		    (concat "set args -S " file "\n"))))
     (cond ((get-buffer oz-emulator-buffer)
@@ -2579,12 +2578,12 @@ of the procedure Browse."
   (oz-send-string "{Panel open}"))
 
 (defun oz-compiler-panel ()
-  "Feed `{`Compiler` openPanel(Tk TkTools Open Browse)}' to the Oz Compiler."
+  "Feed `{`Compiler` openPanel()}' to the Oz Compiler."
   (interactive)
   (if oz-using-new-compiler
       (oz-send-string
        (concat "\\switch +threadedqueries\n"
-	       "{`Compiler` openPanel(Tk TkTools Open Browse)}"))
+	       "{`Compiler` openPanel()}"))
     (error "Compiler panel not supported with the old compiler")))
 
 (defun oz-feed-file (file)
