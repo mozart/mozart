@@ -119,7 +119,8 @@ local
 	     'Chunk'#Green
 	     'Class'#Blue
 	     'Object'#Cyan
-	     'Array'#Green 'Dictionary'#Green 'Port'#Green 'Lock'#Green
+	     'Array'#Green 'Bit Array'#Green 'Dictionary'#Green
+	     'Port'#Green 'Lock'#Green
 	     'Promise'#Green
 	     'Thread'#Orange 'Space'#Orange
 	     'Finite Set Value'#Red 'Foreign Pointer'#Red]
@@ -136,6 +137,7 @@ local
 	     elsecase {IsProcedure Value} then 'Procedure'
 	     elsecase {IsCell Value} then 'Cell'
 	     elsecase {IsArray Value} then 'Array'
+	     elsecase {BitArray.is Value} then 'Bit Array'
 	     elsecase {IsDictionary Value} then 'Dictionary'
 	     elsecase {IsClass Value} then 'Class'
 	     elsecase {IsObject Value} then 'Object'
