@@ -79,7 +79,7 @@ parser OzParser from GP
 
       '<=' '[]' '...' 
 
-      'at' 'attr' 'case' 'catch' 'choice' 'class' 'cond' 'condis' 'declare'
+      'at' 'attr' 'case' 'catch' 'choice' 'class' 'cond' 'declare'
       'define' 'dis' 'else' 'elsecase' 'elseif' 'elseof' 'end' 'export' 'fail'
       'false' 'false()' 'feat' 'finally' 'from' 'fun' 'functor' 'if' 'in'
       'import' 'local' 'lock' 'meth' 'not' 'of' 'or' 'proc' 'prop' 'prepare'
@@ -252,8 +252,6 @@ parser OzParser from GP
       => fDis(Cs {MakeLongPos C1 C2})
    [] 'choice'(C1) ChoiceClauseList(Cs) 'end'(C2)
       => fChoice(Cs {MakeLongPos C1 C2})
-   [] 'condis'(C1) CondisClauseList(Cs) 'end'(C2)
-      => fCondis(Cs {MakeLongPos C1 C2})
    [] ScannerSpecification($)
    [] ParserSpecification($)
    end
@@ -493,17 +491,6 @@ parser OzParser from GP
       => fClause(fSkip(C) S1 S2)
    [] Sequence(S1) 'in' Sequence(S2) 'then' InSequence(S3)
       => fClause(S1 S2 S3)
-   end
-
-   syn CondisClauseList($)
-      Fs1=( FdExpression($) )+ '[]' Fsr=( ( FdExpression($) )+ // '[]' )+
-      => Fs1|Fsr
-   end
-   syn FdExpression($)
-      Phrase(P1) 'FdCompare'(Op) Coord(C) Phrase(P2)
-      => fFdCompare(Op P1 P2 C)
-   [] Phrase(P1) 'FdIn'(Op) Coord(C) Phrase(P2)
-      => fFdIn(Op P1 P2 C)
    end
 
    syn OrClauseList($)

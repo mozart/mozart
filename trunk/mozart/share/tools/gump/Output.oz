@@ -202,11 +202,6 @@ local
       [] fClause(R S T) then
 	 {OutputOz R}#' in '#{OutputOz S}#
 	 case T of fNoThen(_) then "" else ' then'#IN#NL#{OzBlock T}#EX end
-      [] fCondis(Tss _) then
-	 PU#'condis '#IN#
-	 {LI {Map Tss fun {$ Ts} {LI {Map Ts OutputOz} GL} end}
-	  EX#NL#'[] '#IN}#
-	 EX#NL#PO#'end'
       [] fOr(Clauses Type _) then
 	 PU#case Type of fchoice then 'choice '
 	    [] fdis then 'dis '
