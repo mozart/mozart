@@ -103,3 +103,8 @@ global-xref-db.xml:
 		echo "</OZDOC.DOCUMENT>" >> $@; \
 	done; \
 	echo '</OZDOC.DB>' >> $@
+
+ps:
+	$(MAKE) global-xref-db.xml; \
+	dirs="$(PSDOCDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) $$i.ps) || exit 1; done
