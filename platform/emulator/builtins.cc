@@ -4486,13 +4486,17 @@ OZ_Term finalize_handler= 0;
 //         2 otherwise
 static int finalizable(OZ_Term& x)
 {
+  x=oz_safeDeref(x);
+  if (oz_isRef(x)) return 0;
+
   DEREF(x,xPtr,xTag);
 
   switch (xTag) {
   case UVAR:
     // FUT
   case CVAR:
-    return 0;
+    Assert(0);
+
     //  case SMALLINT:
     //  case FSETVALUE:
     //  case LITERAL:
