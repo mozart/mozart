@@ -1347,13 +1347,13 @@ LBLsuspendThread:
 #endif
 
     if (e->debugmode() && CTT->isTraced()) {
-      TaskStackEntry *auxtos = CTT->getTaskStackRef()->getTop();
-      PopFrame(auxtos,debugPC,Y,G);
+      Frame *auxtos = CTT->getTaskStackRef()->getTop();
+      GetFrame(auxtos,debugPC,Y,G);
 
       ProgramCounter debuginfoPC;
       RefsArray _Y,_G;
       do {
-        PopFrameNoDecl(auxtos,debuginfoPC,_Y,_G);
+        GetFrameNoDecl(auxtos,debuginfoPC,_Y,_G);
       } while (debuginfoPC == C_DEBUG_CONT_Ptr);
 
       TaggedRef name = OZ_atom("Unknown");
@@ -2187,7 +2187,7 @@ LBLdispatcher:
       LBLpopTaskNoPreempt:
         Assert(CTS==CTT->getTaskStackRef());
         TaskStack *taskstack     = CTS;
-        TaskStackEntry *topCache = taskstack->getTop();
+        Frame *topCache = taskstack->getTop();
         PopFrameNoDecl(topCache,PC,Y,G);
         taskstack->setTop(topCache);
         JUMP(PC);
@@ -2542,7 +2542,7 @@ LBLdispatcher:
    LBLreplaceBICall:
      {
        if (PC != NOCODE) {
-         TaskStackEntry *topCache = CTS->getTop();
+         Frame *topCache = CTS->getTop();
          PopFrame(topCache,auxPC,auxY,auxG);
          CTS->setTop(topCache);
 
@@ -2568,19 +2568,24 @@ LBLdispatcher:
 
        shallowCP = 0; // failure in shallow guard can never be handled
 
-       TaskStackEntry *lastTop=CTT->getTop();
-       Bool foundHdl = CTT->findCatch();
-       /* topmost entry points to handler now */
+       Bool foundHdl;
 
        if (e->exception.debug) {
 
          OZ_Term traceBack;
-         if (e->debugmode())
+         foundHdl = CTT->getTaskStackRef()->findCatch(&traceBack);
+         if (PC != NOCODE) traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+
+#ifdef MM2
+         if (e->debugmode()) {
            traceBack = CTT->getTaskStackRef()->dbgGetTaskStack(PC,100,lastTop);
-         else
-           traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
+         }
+#endif
+
          OZ_Term loc = e->dbgGetLoc(CBB);
          e->formatError(traceBack,loc);
+       } else {
+         foundHdl = CTT->getTaskStackRef()->findCatch();
        }
 
        if (foundHdl) {
@@ -2791,8 +2796,8 @@ LBLdispatcher:
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
 
       if (e->debugmode()) {
-        TaskStackEntry *aux = CTT->getTaskStackRef()->getTop();
-        PopFrame(aux,ozdebugPC,Y,G);
+        Frame *aux = CTT->getTaskStackRef()->getTop();
+        GetFrame(aux,ozdebugPC,Y,G);
 
         if (ozdebugPC==C_DEBUG_CONT_Ptr) {
           // inherit ozdebug from parent thread
@@ -2816,7 +2821,7 @@ LBLdispatcher:
   Case(TASKEMPTYSTACK)
     {
       Assert(Y==0 && G==0);
-      CTS->restoreFrame();
+      CTS->pushEmpty();
       if (e->isToplevel ()) {
         goto LBLkillToplevelThread;
       } else {
@@ -3010,7 +3015,7 @@ LBLdispatcher:
 #ifdef PROP_TIME
            ozstat.timeForPropagation.incf(osUserTime()-starttime);
 #endif
-           CTS->restoreFrame(); // RS: is this needed ???
+           CTS->pushLTQ(sa); // RS: is this needed ???
            // failure of propagator is never catched !
            goto LBLfailure; // top-level failure not possible
          } else {
@@ -3034,7 +3039,7 @@ LBLdispatcher:
 #ifdef DEBUG_LTQ
          cout << "sa emu sa=" << sa << " PREEMPTIVE" << endl << flush;
 #endif
-         CTS->restoreFrame();
+         CTS->pushLTQ(sa);
          Assert(sa->getLocalThreadQueue());
          goto LBLpreemption;
        }
@@ -3051,7 +3056,7 @@ LBLdispatcher:
       if (aw->hasNext()) {
         LOADCONT(aw->getNext());
         CAA=aw;
-        CTS->restoreFrame();
+        CTS->pushActor(aw);
         goto LBLemulate; // no thread switch allowed here (CAA)
       }
 
@@ -3077,7 +3082,7 @@ LBLdispatcher:
         }
 
         // suspend wait actor
-        CTS->restoreFrame();
+        CTS->pushActor(aw);
         goto LBLsuspendThread;
       }
 
@@ -3100,7 +3105,7 @@ LBLdispatcher:
         goto LBLemulate;
       }
 
-      CTS->restoreFrame();
+      CTS->pushActor(aw);
       goto LBLsuspendThread;
     }
 

@@ -1885,94 +1885,77 @@ OrderedSuspList * OrderedSuspList::gc()
 void TaskStack::gc(TaskStack *newstack)
 {
   COUNT(taskStack);
-  COUNT1(taskStackLen,getMaxSize());
+  // mm2 COUNT1(taskStackLen,getMaxSize());
 
-  newstack->allocate(suggestNewSize());
   TaskStack *oldstack = this;
 
-  TaskStackEntry *oldtop = oldstack->getTop();
-  int offset             = oldstack->getUsed();
-  TaskStackEntry *newtop = newstack->array + offset;
+#ifdef NEW_STACK
+  Frame **newtop=&newstack->tos;
+#else
+  newstack->allocate(suggestNewSize());
+  Frame *oldtop = oldstack->getTop();
+  int offset    = oldstack->getUsed();
+  Frame *newtop = newstack->array + offset;
+#endif
 
+#ifdef NEW_STACK
+  for (Frame *oldtop = oldstack->getTop(); oldtop; oldtop=oldtop->next) {
+    ProgramCounter PC=oldtop->getPC();
+    RefsArray Y=oldtop->getY();
+    RefsArray G=oldtop->getG();
+#else
   while (1) {
-
     PopFrame(oldtop,PC,Y,G);
+#endif
 
-    *(--newtop) = PC;
-
-    if (PC==C_EMPTY_STACK) {
+    if (PC == C_EMPTY_STACK) {
+#ifdef NEW_STACK
+#else
+      *(--newtop) = PC;
       *(--newtop) = Y;
       *(--newtop) = G;
-      break;
-    }
-
-    if (PC==C_ACTOR_Ptr) {
-      *(--newtop) = ((AWActor *) Y)->gcActor();
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_XCONT_Ptr) {
-      *(--newtop) = gcRefsArray(Y); // X
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_LOCK_Ptr) {
-      *(--newtop) = ((OzLock *) Y)->gcConstTerm();
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_CATCH_Ptr) {
-      *(--newtop) = Y;
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_LTQ_Ptr) {
-      *(--newtop) = ((Actor *) Y)->gcActor();
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_SET_SELF_Ptr) {
-      *(--newtop) = ((Object*)Y)->gcConstTerm();
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_DEBUG_CONT_Ptr) {
-      *(--newtop) = ((OzDebug *) Y)->gcOzDebug();
-      *(--newtop) = G;
-      continue;
-    }
-
-    if (PC==C_CALL_CONT_Ptr) {
+      Assert(newstack->array == newtop);
+      newstack->setTop(newstack->array+offset);
+      return;
+#endif
+    } else if (PC == C_CATCH_Ptr) {
+    } else if (PC == C_ACTOR_Ptr) {
+      Y = (RefsArray) ((AWActor *) Y)->gcActor();
+    } else if (PC == C_XCONT_Ptr) {
+      Y = gcRefsArray(Y); // X
+    } else if (PC == C_LOCK_Ptr) {
+      Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
+    } else if (PC == C_LTQ_Ptr) {
+      Y = (RefsArray) ((Actor *) Y)->gcActor();
+    } else if (PC == C_SET_SELF_Ptr) {
+      Y = (RefsArray) ((Object*)Y)->gcConstTerm();
+    } else if (PC == C_DEBUG_CONT_Ptr) {
+      Y = (RefsArray) ((OzDebug *) Y)->gcOzDebug();
+    } else if (PC == C_CALL_CONT_Ptr) {
       TaggedRef tt=deref((TaggedRef) ToInt32(Y));
       Assert(!isAnyVar(tt));
       gcTagged(tt,tt);
-      *(--newtop) = ToPointer(tt);
-      *(--newtop) = gcRefsArray(G);
-      continue;
+      Y = (RefsArray) ToPointer(tt);
+      G = gcRefsArray(G);
+    } else if (PC == C_CFUNC_CONT_Ptr) {
+      G = gcRefsArray(G);
+    } else { // usual continuation
+      COUNT(cCont);
+      Y = gcRefsArray(Y);
+      G = gcRefsArray(G);
     }
 
-    if (PC==C_CFUNC_CONT_Ptr) {
-      *(--newtop) = Y;                // OZ_CFun
-      *(--newtop) = gcRefsArray(G);
-      continue;
-    }
-
-    COUNT(cCont);
-    // PC is already queued
-    *(--newtop) = gcRefsArray(Y);
-    *(--newtop) = gcRefsArray(G);
+#ifdef NEW_STACK
+    Frame *fr=new Frame(PC,Y,G,0);
+    *newtop=fr;
+    newtop=&fr->next;
+#else
+    *(--newtop) = PC;
+    *(--newtop) = Y;
+    *(--newtop) = G;
+#endif
   } // while not task stack is empty
-
-  Assert(newstack->array == newtop);
-  newstack->setTop(newstack->array+offset);
 }
-
 
 
 //*********************************************************************

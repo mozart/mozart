@@ -94,7 +94,11 @@ public:
   void reInit ();               // for the root thread only;
 
   //  gc methods;
+#ifdef NEW_STACK
+  RunnableThreadBody() : taskStack() { }
+#else
   RunnableThreadBody(int sz) : taskStack(sz) { }
+#endif
   RunnableThreadBody *gcRTBody();
 
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x)
@@ -532,14 +536,6 @@ public:
     item.threadBody->taskStack.pushCatch();
   }
 
-  Bool findCatch() {
-    return item.threadBody->taskStack.findCatch();
-  }
-  TaggedRef reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
-                    ProgramCounter pc=NOCODE) {
-    return item.threadBody->taskStack.reflect(from,to,pc);
-  }
-
   void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
   void pushCont (ProgramCounter pc,
                  RefsArray y, RefsArray g, RefsArray x);
@@ -555,8 +551,10 @@ public:
 
   //
   TaskStack *getTaskStackRef ();
+#ifdef MM2
   TaskStackEntry *getTop ();
   TaskStackEntry pop ();
+#endif
 
   /*
    *  propagators special;

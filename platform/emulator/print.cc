@@ -1521,10 +1521,10 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     CodeArea::printDef(pc);
   }
 
-  TaskStackEntry *auxtos = getTop();
+  Frame *auxtos = getTop();
 
   while (depth-- > 0) {
-    PopFrame(auxtos,PC,Y,G);
+    GetFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK)
       return;
     CodeArea::printDef(PC);
@@ -1538,10 +1538,10 @@ TaggedRef TaskStack::dbgFrameVariables(int frameId)
   int     depth = 10000;
   bool    match = NO;
 
-  TaskStackEntry *auxtos = getTop();
+  Frame *auxtos = getTop();
 
   while (depth-- > 0) {
-    PopFrame(auxtos,PC,Y,G);
+    GetFrame(auxtos,PC,Y,G);
 
     if (PC==C_EMPTY_STACK)
       break;
@@ -1562,7 +1562,7 @@ TaggedRef TaskStack::dbgFrameVariables(int frameId)
 }
 
 TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
-                                     TaskStackEntry *top)
+                                     Frame *top)
 {
   Assert(this);
 
@@ -1572,10 +1572,10 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
     out = cons(CodeArea::dbgGetDef(pc),out);
   }
 
-  TaskStackEntry *auxtos = top ? top : getTop();
+  Frame *auxtos = top ? top : getTop();
 
   while (depth-- > 0) {
-    PopFrame(auxtos,PC,Y,G);
+    GetFrame(auxtos,PC,Y,G);
     if (PC==C_EMPTY_STACK)
       break;
 
