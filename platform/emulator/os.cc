@@ -35,6 +35,8 @@
 #ifdef WINDOWS
 #include <time.h>
 #include <process.h>
+extern "C" int _fmode;
+
 #else
 #include <sys/times.h>
 #include <sys/wait.h>
@@ -60,13 +62,7 @@ static long openMax;
 #ifdef WINDOWS
 int runnningUnderNT = 0;
 
-inline
-int fileTimeToMS(FILETIME *ft)
-{
-  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/10000)<<32)
-  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/16*625)<<32)
-  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime<<28)/625);
-}
+int fileTimeToMS(FILETIME *ft);
 
 #endif
 
@@ -549,6 +545,11 @@ void osInit()
   vi.dwOSVersionInfoSize = sizeof(vi);
   BOOL b = GetVersionExW(&vi);
   runnningUnderNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
+
+  /* make sure everything is opened in binary mode */
+  setmode(fileno(stdin),O_BINARY);  // otherwise input blocks!!
+  _fmode = O_BINARY;
+
 #endif
 }
 
