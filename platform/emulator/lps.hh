@@ -29,7 +29,7 @@
  */
 
 #ifndef DONT_LP
-//! #define TM_LP
+#define TM_LP
 #endif
 
 class LocalPropagationQueue {
