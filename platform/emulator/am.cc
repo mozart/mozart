@@ -963,13 +963,6 @@ char flagChar(StatusBit flag)
 }
 #endif
 
-void AM::addSuspendVarList(TaggedRef t) {
-  addSuspendVarListInline(t);
-}
-
-void AM::addSuspendVarList(TaggedRef * t) {
-  addSuspendVarListInline(t);
-}
 
 void AM::prepareCall(TaggedRef pred, RefsArray * args)
 {
@@ -1031,3 +1024,63 @@ TaggedRef oz_newVariable(Board *b)
   *ret = b->getOptVar();
   return makeTaggedRef(ret);
 }
+
+OZ_Return oz_addSuspendVarList(TaggedRef * t) {
+  return am.addSuspendVarListInline(t);
+}
+
+OZ_Return oz_addSuspendVarList(TaggedRef t) {
+  return am.addSuspendVarListInline(t);
+}
+
+OZ_Return oz_addSuspendVarList2(TaggedRef t1,TaggedRef t2) {
+  DEREF(t1,t1ptr);
+  if (oz_isVar(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  DEREF(t2,t2ptr);
+  if (oz_isVar(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
+  return SUSPEND;
+}
+
+OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]) {
+  TaggedRef t1 = OZ_in(0);
+  DEREF(t1,t1ptr);
+  if (oz_isVar(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  TaggedRef t2 = OZ_in(1);
+  DEREF(t2,t2ptr);
+  if (oz_isVar(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
+  return SUSPEND;
+}
+
+OZ_Return oz_addSuspendVarList3(TaggedRef t1, TaggedRef t2, TaggedRef t3) {
+  DEREF(t1,t1ptr);
+  if (oz_isVar(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  DEREF(t2,t2ptr);
+  if (oz_isVar(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
+  DEREF(t3,t3ptr);
+  if (oz_isVar(t3))
+    (void) am.addSuspendVarListInline(t3ptr);
+  return SUSPEND;
+}
+
+OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
+  TaggedRef t1 = OZ_in(0);
+  DEREF(t1,t1ptr);
+  if (oz_isVar(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  TaggedRef t2 = OZ_in(1);
+  DEREF(t2,t2ptr);
+  if (oz_isVar(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
+  TaggedRef t3 = OZ_in(2);
+  DEREF(t3,t3ptr);
+  if (oz_isVar(t3))
+    (void) am.addSuspendVarListInline(t3ptr);
+  return SUSPEND;
+}
+

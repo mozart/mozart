@@ -738,19 +738,20 @@ OZ_BI_define(BIdictionaryWaitOr,1,1)
 
   OzDictionary * dict = tagged2Dictionary(td);
 
-  TaggedRef arity = dict->keys();
+  TaggedRef arity = oz_deref(dict->keys());
 
-  while (!OZ_isNil(arity)) {
+  while (!oz_isNil(arity)) {
+    TaggedRef f = oz_deref(oz_head(arity)); 
     TaggedRef v;
-    dict->getArg(OZ_head(arity),v);
+    dict->getArg(f,v);
 
     DEREF(v,vPtr);
     if (!oz_isVar(v)) {
       am.emptySuspendVarList();
-      OZ_RETURN(OZ_head(arity));
+      OZ_RETURN(f);
     }
-    am.addSuspendVarList(vPtr);
-    arity=OZ_tail(arity);
+    (void) am.addSuspendVarListInline(vPtr);
+    arity=oz_deref(oz_tail(arity));
   }
   
   return SUSPEND;
