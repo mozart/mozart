@@ -49,7 +49,7 @@ public:
   USEFREELISTMEMORY;
 
   // the constructor creates per default a local variable (wrt curr. node)
-  GenCVariable(TypeOfGenCVariable , TaggedRef = AtomVoid, Board * = NULL);
+  GenCVariable(TypeOfGenCVariable, Board * = NULL);
 
   TypeOfGenCVariable getType(void){return type;}
 
@@ -71,8 +71,9 @@ public:
   // is X=val still valid
   Bool valid(TaggedRef val);
   
-  OZPRINT;
-  OZPRINTLONG;
+  void print(ostream &stream, int depth, int offset, TaggedRef v);
+  void printLong(ostream &stream, int depth, int offset, TaggedRef v);
+
 };
 
 #include "fdgenvar.hh"

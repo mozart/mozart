@@ -245,14 +245,14 @@ private:
     DynamicTable* dynamictable;
 
 public:
-    GenOFSVariable(DynamicTable &dt, TaggedRef pn = AtomVoid)
-    : GenCVariable(OFSVariable, pn) {
+    GenOFSVariable(DynamicTable &dt)
+    : GenCVariable(OFSVariable) {
         label=makeTaggedRef(newTaggedUVar(am.currentBoard));
         dynamictable= &dt;
     }
 
-    GenOFSVariable(TaggedRef pn = AtomVoid)
-    : GenCVariable(OFSVariable, pn) {
+    GenOFSVariable()
+    : GenCVariable(OFSVariable) {
         label=makeTaggedRef(newTaggedUVar(am.currentBoard));
         dynamictable=DynamicTable::newDynamicTable();
     }
