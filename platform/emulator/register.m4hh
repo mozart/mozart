@@ -37,6 +37,19 @@ define(CaseOneReg,``''
        ``undefine(``Reg1'')''
       )
 
+define(CaseOneRegGImpossible,``''
+       Case($1X)
+       ``define(``Reg1'',Xreg(``$''1))''{$2}
+
+       Case($1Y)
+       ``define(``Reg1'',Yreg(``$''1))''{$2}
+
+       Case($1G)
+       IMPOSSIBLE("$1G");
+
+       ``undefine(``Reg1'')''
+      )
+
 
 define(CaseTwoRegs,``''
        Case($1XX)
@@ -109,7 +122,7 @@ define(CaseTwoRegs,``''
       DISPATCH(5);
     }
 
-  CaseOneReg(CREATENAMEDVARIABLE, 
+  CaseOneRegGImpossible(CREATENAMEDVARIABLE, 
     ``
     {
       int regIndex = getRegArg(PC+1);
@@ -126,37 +139,17 @@ define(CaseTwoRegs,``''
 
 #define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype))
 
-Case(CREATEVARIABLEX)
-   {
-     Xreg(getRegArg(PC+1)) = MakeVar;
-     DISPATCH(2);
-   }
-Case(CREATEVARIABLEY)
-   {
-     Yreg(getRegArg(PC+1)) = MakeVar;
-     DISPATCH(2);
-   }
-Case(CREATEVARIABLEG)
-   {
-     error("CREATEVARIABLEG: impossible");
-     DISPATCH(2);
-   }
+CaseOneRegGImpossible(CREATEVARIABLE,
+   ``{
+       Reg1(getRegArg(PC+1)) = MakeVar;
+       DISPATCH(2);
+     }'')
 
-Case(CREATEVARIABLEMOVEX)
-   {
-     Xreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
-     DISPATCH(3);
-   }
-Case(CREATEVARIABLEMOVEY)
-   {
-     Yreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
-     DISPATCH(3);
-   }
-Case(CREATEVARIABLEMOVEG)
-   {
-     error("CREATEVARIABLEMOVEG: impossible");
-     DISPATCH(3);
-   }
+CaseOneRegGImpossible(CREATEVARIABLEMOVE,
+   ``{
+       Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
+       DISPATCH(3);
+     }'')
 
 #undef MakeVar
 
@@ -175,22 +168,20 @@ Case(CREATEVARIABLEMOVEG)
 		 )
   
   
-  CaseOneReg( PUTSTRUCTURE,
+  CaseOneRegGImpossible( PUTSTRUCTURE,
 	       ``
 		 STuple *stuple =
 		   STuple::newSTuple(getLiteralArg(PC+1),getPosIntArg(PC+2));
-		 TaggedRef term = makeTaggedSTuple(stuple);
-
-		 Reg1(getRegArg(PC+3)) = term;
+		 Reg1(getRegArg(PC+3)) = makeTaggedSTuple(stuple);
 		 sPointer = stuple->getRef();
 		 
 		 DISPATCH(4);''
 	       )
 
 
-  Case(PUTRECORDX) ONREG(PutRecord,X);
+  Case(PUTRECORDG) IMPOSSIBLE("PUTRECORDG");
   Case(PUTRECORDY) ONREG(PutRecord,Y);
-  Case(PUTRECORDG) ONREG(PutRecord,G);
+  Case(PUTRECORDX) ONREG(PutRecord,X);
          PutRecord:
           {
             TaggedRef label = getLiteralArg(PC+1);
@@ -213,9 +204,9 @@ Case(CREATEVARIABLEMOVEG)
 
   Case(PUTCONSTANTG)
   Case(PUTINTG)
-     Greg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
+     IMPOSSIBLE("PUTCONSTANTG/PUTINTG");
 
-  CaseOneReg( PUTLIST,
+  CaseOneRegGImpossible( PUTLIST,
 	       ``{
 		 LTuple *term = new LTuple();
 		 Reg1(getRegArg(PC+1)) = makeTaggedLTuple(term);
@@ -663,7 +654,7 @@ Case(GETVOID)
 	
        if (InWriteMode) {
 	 TaggedRef *sp = GetSPointerWrite(sPointer);
-	 *sp = RegAccess(HelpReg,reg);
+	 *sp = RegAccess(HelpReg1,reg);
 
 	 *(sp+1) = e->currentUVarPrototype;
 	 RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sp+1);
@@ -671,10 +662,10 @@ Case(GETVOID)
 	 sPointer += 2;
 	 DISPATCH(3);
        }
-       if ( !e->fastUnify(RegAccess(HelpReg,reg), makeTaggedRef(sPointer),
+       if ( !e->fastUnify(RegAccess(HelpReg1,reg), makeTaggedRef(sPointer),
 			  NOFLATGUARD) ) {
 	 SHALLOWFAIL;
-	 HF_FAIL2("INSTR:unifyValVar", *sPointer, RegAccess(HelpReg,reg));
+	 HF_FAIL2("INSTR:unifyValVar", *sPointer, RegAccess(HelpReg1,reg));
        }
 
        RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
