@@ -891,6 +891,7 @@ enum CommCase{
   MessageType mt1=unmarshalHeader(buf);\
   Assert(mt1==mt);}
 
+// not working code
 void DSite::communicationProblem(MessageType mt, DSite* storeSite,
 				 int storeIndex, FaultCode fc, 
 				 FaultInfo fi) {
@@ -898,6 +899,8 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
   DSite* s1,*s2;
   TaggedRef tr;
   CommCase flag;
+
+  return; // shortcut out of not working code
 
   if (storeSite) {
   PD((SITE,"CommProb type:%d site:%s\n storeSite: %s \n indx:%d faultCode:%d",
