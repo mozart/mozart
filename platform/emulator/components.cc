@@ -897,14 +897,14 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIload,2)
 {
-  RefsArray args = allocateY(2);
+  RefsArray args = allocateRefsArray(2);
   OZ_Term loader = service_get(AtomLoad);
   args[0] = OZ_getCArg(0);
   args[1] = OZ_getCArg(1);
   Thread*tt=am.currentThread();
   if (loader) tt->pushCall(loader,args,2);
   else        tt->pushCFun(BIurl_load,args,2,OK);
-  deallocateY(args);
+  disposeRefsArray(args);
   return BI_REPLACEBICALL;
 }
 OZ_C_proc_end
