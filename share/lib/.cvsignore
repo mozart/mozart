@@ -4,6 +4,7 @@ compiler-Version.oz
 compiler-Opcodes.oz
 compiler-Builtins.oz
 compiler-Env.oz
+module-Peanuts.oz
 *.ozp
 *.ozf
 ozc ozserver ozvsserver functor2env
