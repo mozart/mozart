@@ -294,9 +294,6 @@ OZ_Bool genericHead_x_y_z(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 OZ_Bool genericHead_x_y_z_det_x_or_y(int OZ_arity, OZ_Term OZ_args[],
 				     OZ_CFun OZ_self, OZ_CFun BI_body);
 
-OZ_Bool genericHead_x(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
-		      OZ_CFun BI_body, FDPropState target_list);
-
 OZ_Bool genericHead_x_y_c(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
 			  OZ_CFun BI_body, FDPropState target_list);
 
