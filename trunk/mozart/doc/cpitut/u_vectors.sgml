@@ -11,10 +11,9 @@ implemented by the &cpi .
 
 <p>
 The previous section explained techniques of how to handle propagator
-parameters which are vectors. This section discusses an  implementation
-of the constraint 
-<Math/element(n, [d_1,\ldots,d_m], v)/, whose  declarative
-semantics is defined by <Math/d_n=v/.
+parameters which are vectors. This section implements the constraint
+<Math/element(n, [d_1,\ldots,d_m], v)/, whose declarative semantics is
+defined by <Math/d_n=v/.
 
 <p>
 All parameters of the <Math/element/ propagator are allowed to be finite
@@ -91,10 +90,10 @@ extended element-wise.
 The member functions <<gCollect()>> and <<sClone()>> update the
 propagator's references to the heap after the propagator has been
 copied by garbage collection or space cloning.  Updating the data
-members <<_n>> and <<_v>> is done by applying the functions
-<<OZ_gCollectTerm()>> resp. <<OZ_sCloneTerm>> to them.  Updating the
-array <<_d>> requires to duplicate the array and then to update all
-elements. This funtionality is provided by <<OZ_gCollectAllocBlock()>>
+members <<_n>> and <<_v>> is done by applying <<OZ_gCollectTerm()>>
+resp. <<OZ_sCloneTerm>> to them.  Updating the array <<_d>> requires
+to duplicate the array and then to update all elements. This
+funtionality is provided by <<OZ_gCollectAllocBlock()>>
 (<<OZ_sCloneAllocBlock()>>) for garbage collection (space
 cloning). Here comes the code of that member function.
 
@@ -214,8 +213,3 @@ of type <<OZ_FDIntVar>> and replaces the <Math/element/ propagator by
 the equality <Math/v = d_o/ using the member function <<replaceBy()>>
 of class <<OZ_Propagator>> (see <ptr to="u_replacing">).
 <p>
-
-
-
-
-

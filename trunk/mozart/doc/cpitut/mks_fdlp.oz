@@ -5,7 +5,8 @@ fun {KnapsackFDLP Problem}
 in
    proc {$ Sol}
       sol(maxprofit: FDMaxProfit = {FD.decl}
-	  products:  FDProducts  = {FD.list NumProducts 0#FD.sup}) = Sol
+	  products: FDProducts = {FD.list NumProducts 0#FD.sup})
+      = Sol
 
       ObjFn Constraints
       MaxProfit = {RI.var.decl}
@@ -26,9 +27,10 @@ in
       %%
       %% linear programming part
       %%
-      {ForAll Products proc {$ V} {RI.var.bounds 0.0 RI.sup V} end}
+      {ForAll Products
+       proc {$ V} {RI.var.bounds 0.0 RI.sup V} end}
 
-      ObjFn = objfn(row: {Map Problem.profit fun {$ I} {IntToFloat I} end}
+      ObjFn = objfn(row: {Map Problem.profit {IntToFloat I}}
 		    opt: max)
 
       Constraints = 
@@ -36,7 +38,7 @@ in
         fun {$ ResourceName}
 	  Resource = Resources.ResourceName
        in
-	  constr(row: {Map Resource.npp fun {$ I} {IntToFloat I} end}
+	  constr(row: {Map Resource.npp IntToFloat}
 		 type: '=<'
 		 rhs: {IntToFloat Resource.ta})
        end}
@@ -45,9 +47,11 @@ in
       %% connecting both constraint systems
       %%
       {RI.intBounds MaxProfit FDMaxProfit}
-      {Map Products proc {$ R D} {RI.intBounds R D} end FDProducts}
+      {Map Products
+       proc {$ R D} {RI.intBounds R D} end FDProducts}
 
       
-      {DistributeKnapSackLP Products ObjFn Constraints MaxProfit}
+      {DistributeKnapSackLP Products ObjFn Constraints
+       MaxProfit}
    end
 end
