@@ -43,8 +43,6 @@ OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef term2,
     return ((GenFSetVariable *)this)->unifyV(tptr1, term2, scp);
   case OFSVariable:
     return ((GenOFSVariable *)this)->unifyV(tptr1, term2, scp);
-  case MetaVariable:
-    return ((GenMetaVariable *)this)->unifyV(tptr1, term2, scp);
   case BoolVariable:
     return ((GenBoolVariable *)this)->unifyV(tptr1, term2, scp);
   case PerdioVariable:
@@ -83,7 +81,6 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   switch (getType()){
   case FDVariable:   return ((GenFDVariable*)this)->valid(val);
   case OFSVariable:  return ((GenOFSVariable*)this)->valid(val);
-  case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
   case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
@@ -99,7 +96,6 @@ int GenCVariable::hasFeature(TaggedRef fea,TaggedRef *out)
   case FDVariable:   return FAILED;
   case OFSVariable:  return ((GenOFSVariable*)this)->hasFeature(fea,out);
 
-  case MetaVariable:
   case BoolVariable:
   case FSetVariable:
   case PerdioVariable:
@@ -221,7 +217,6 @@ void addSuspCVar(TaggedRef *v, Suspension susp, int unstable=TRUE)
     break;
   case FDVariable:
   case OFSVariable:
-  case MetaVariable:
   case BoolVariable:
   case FSetVariable:
   case CtVariable:
