@@ -27,7 +27,7 @@
 functor $
 
 import
-   System.{get}
+   Property.{get}
    
    OS.{time}
    

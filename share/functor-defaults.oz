@@ -29,7 +29,8 @@ defaults(dirs:
 	 lib:
 	    ['Application' 'GetArgs' 'Applet' 'Syslet' 'Servlet'
 	     'Search' 'FD' 'Schedule' 'FS'
-	     'System' 'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
+	     'System' 'Property'
+	     'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
 	     'Fault' 'Connection' 'Remote' 'VirtualSite'
 	     'OS' 'Open' 'Pickle'
 	     'Tk' 'TkTools'

@@ -42,7 +42,7 @@ export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
-SPSRC = System Debug Foreign Error ErrorRegistry Finalize
+SPSRC = System Debug Foreign Error ErrorRegistry Finalize Property
 OPSRC = OS Open Pickle
 APSRC = GetArgs Syslet Servlet Applet Application
 CPSRC = Search FD Schedule FS
@@ -64,7 +64,7 @@ FUNCTORS = \
 	Compiler.ozf 
 
 PEANUTS = \
-	System Pickle Finalize OS
+	System Property Pickle Finalize OS
 
 PEANUTSFUNCTORS = \
 	$(PEANUTS:%=%.ozf)

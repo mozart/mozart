@@ -75,7 +75,7 @@ local
 	    {Rep logSubPhase('compiling scanner ...')}
 	    case {OS.system
 		  'g++ -fno-rtti -O3 '#
-		  '-I'#{System.get home}#'/include -I'#INCLUDEDIR#
+		  '-I'#{Property.get 'oz.home'}#'/include -I'#INCLUDEDIR#
 		  ' -c '#{MakeFileName T ".C"}#
 		  ' -o '#{MakeFileName T ".o"}} \= 0 then
 	       {Rep error(kind: 'system error'
