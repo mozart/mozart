@@ -572,7 +572,7 @@ void AddressHashTableFastReset::htAdd(intlong k, void *val)
 //
 void AddressHashTableFastReset::mkEmpty(Bool force)
 {
-  DebugCode(printStatistics(DEBUG_THRESHOLD));
+  // DebugCode(printStatistics(DEBUG_THRESHOLD));
   if (force || counter > (int) (DUMMYRESET * tableSize)) {
     for (int i = 0; i < tableSize; i++) {
       table[i].setEmpty();
