@@ -158,15 +158,15 @@ read(list: ??{ListS}
 <index class=module/Open<AND>file<AND>read/
 Reads data from a file.
 
-?+{SizeAI} specifies how much data should be read from the file.  If
-the field <<len>> is present, ??{LenI} is bound to the number of bytes
-actually read. ??{LenI} may be less than ?+{SizeAI}. The atom <<all>>
-is also a legal value for ?+{SizeAI}. In this case the entire file is
+?_{SizeAI} specifies how much data should be read from the file.  If
+the field <<len>> is present, ?_{LenI} is bound to the number of bytes
+actually read. ?_{LenI} may be less than ?_{SizeAI}. The atom <<all>>
+is also a legal value for ?_{SizeAI}. In this case the entire file is
 read.
 <p>
-The data read binds ??{ListS} to a list of characters characters. The
+The data read binds ?_{ListS} to a list of characters characters. The
 tail of the list can be given by ?_{TailX}. The value for ?_{TailX}
-defaults to <<nil>>, which means that in this case the list ??{ListS} is
+defaults to <<nil>>, which means that in this case the list ?_{ListS} is
 a string.
 <p>
 See also <file/read(2)/.
@@ -177,7 +177,7 @@ write(vs:  ?+{V}
       len: ??{I} &lt;= _)
 </code><item>
 <index class=module/Open<AND>file<AND>write/
-Writes the virtual string ?+{V} to a file. 
+Writes the virtual string ?_{V} to a file. 
 <p>
 See <file/write(2)/.
 
@@ -189,18 +189,18 @@ seek(whence: ?+{WhenceA} &lt;= set
 <index class=module/Open<AND>file<AND>seek/
 Sets the file object's seek pointer
 <p>
-Allowed values for ?+{WhenceA} are the atoms <<set>>, <<current>>, or
+Allowed values for ?_{WhenceA} are the atoms <<set>>, <<current>>, or
 <<'end'>>.
 <p>
 In case of <<set>> the position of the seek pointer is moved
 to the absolute position from the beginning of the file given by the
-value of ?+{OffsetI}. 
+value of ?_{OffsetI}. 
 <p>
-In case of <<current>> the pointer is moved ahead by ?+{OffsetI}.
+In case of <<current>> the pointer is moved ahead by ?_{OffsetI}.
 Notice, that the pointer can be moved backward by a negative
-?+{OffsetI}, and forward by a positive ?+{OffsetI}.
+?_{OffsetI}, and forward by a positive ?_{OffsetI}.
 <p>
-If <<'end'>> is given, the pointer is moved by ?+{OffsetI} with
+If <<'end'>> is given, the pointer is moved by ?_{OffsetI} with
 respect to the current end of the file. 
 <p>
 In particular,  invoking <<seek>> with the default parameters moves
@@ -233,7 +233,7 @@ dOpen(?+{ReadFileDescI} ?+{WriteFileDescI})
 </code><item>
 <index class=module/Open<AND>file<AND>dOpen /
 <p class=danger>
-Initializes the object. ?+{ReadFileDescI} and ?+{WriteFileDescI} must
+Initializes the object. ?_{ReadFileDescI} and ?_{WriteFileDescI} must
 be integers of already open file descriptors (in the usual operating
 system sense).
 Note that this method should only be used for advanced purposes.
@@ -246,8 +246,8 @@ getDesc(??{ReadFileDescIB} ??{WriteFileDescIB})
 <p class=danger>
 Returns the internally used file descriptors.
 <p>
-If the object is not yet initialized, ??{ReadFileDescIB} and
-??{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
+If the object is not yet initialized, ?_{ReadFileDescIB} and
+?_{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
 integers.
 Note, that this method is only for advanced purposes.
 </list>
@@ -269,16 +269,16 @@ init(type:     ?+{TypeA}  &lt;= stream
 
 Initializes a socket object.
 <p>
-The type of the socket ?+{TypeA} determines the type of the socket,
+The type of the socket ?_{TypeA} determines the type of the socket,
 which can be either <<stream>> or <<datagram>>.
 <p>
-The protocol is described by ?+{ProtoV} where the empty string <<"">>
+The protocol is described by ?_{ProtoV} where the empty string <<"">>
 means to choose an appropriate protocol automatically. Other possible
 values are the TCP protocol <index/protocol<AND>TCP/ (you have to give
 <<"tcp">>) for stream sockets, and UDP <index/protocol<AND>UDP/ (you have to
 give <<"udp">>) for datagram sockets.
 <p>
-The integer ?+{TimeI} specifys for how long a time (in milliseconds)
+The integer ?_{TimeI} specifys for how long a time (in milliseconds)
 the socket attempts to accept a connection.  The value <<~1>> means
 infinite time. See the following description of the <<accept>> method for
 more details.
@@ -306,7 +306,7 @@ listen(backLog: ?+{LogI} &lt;= 5)
 <index class=module/Open<AND>socket<AND>listen /
 Signals that a socket is willing to accept connections.
 <p>
-?+{LogI} describes the maximum number of pending connections to be
+?_{LogI} describes the maximum number of pending connections to be
 buffered by the system.
 <p>
 See also <file/listen(2)/.
@@ -324,16 +324,16 @@ Accepts a connection from another socket.
 The method suspends until a connection has been accepted or the number
 of milliseconds as specified by the time value in the <<init>> method has
 elapsed. After this period, no connection will be accepted, and both
-??{PortIB} and ??{HostSB} are bound to <<false>>.
+?_{PortIB} and ?_{HostSB} are bound to <<false>>.
 <p>
 If a connection is accepted within the given time, the following
-happens: ??{HostSB} and ??{PortIB} are bound accordingly if their
+happens: ?_{HostSB} and ?_{PortIB} are bound accordingly if their
 fields are present.
 <p>
-If the fields <<accepted>> and <<acceptClass>> are present, ??{Object}
-is bound to an object created from the class ?+{Class}. ?+{Class} must
+If the fields <<accepted>> and <<acceptClass>> are present, ?_{Object}
+is bound to an object created from the class ?_{Class}. ?_{Class} must
 be a sub class of <<Open.socket>>. Then the accepted connection is
-available with ??{Object}.
+available with ?_{Object}.
 <p>
 Otherwise, the access to the socket at which the connection was
 accepted, because any subsequent message will refer to the accepted
@@ -349,8 +349,8 @@ connect(host: ?+{HostV} &lt;= localhost
 <index class=module/Open<AND>socket<AND>connect /
 Connects to another socket.
 <p>
-The address of the socket to connect to is given by ?+{HostV} and
-?+{PortI}.
+The address of the socket to connect to is given by ?_{HostV} and
+?_{PortI}.
 <p>
 <p class=danger>
 Be very careful in using this method: it blocks the
@@ -385,16 +385,16 @@ read(list: ??{ListS}
 Receives data from a stream-connected socket or
 from a datagram socket with peer specified.
 <p>
-An attempt is made to read ?+{SizeAI} bytes from the socket.
-??{ListS} is constrained to the data while the tail of ??{ListS}
+An attempt is made to read ?_{SizeAI} bytes from the socket.
+?_{ListS} is constrained to the data while the tail of ?_{ListS}
 is constrained to ?_{TailX}.
 The atom <<all>>
-is also a legal value for ?+{SizeAI}. In this case the entire input is
+is also a legal value for ?_{SizeAI}. In this case the entire input is
 read.
 <p>
-??{LenI} is bound to the number of bytes actually read. If the
+?_{LenI} is bound to the number of bytes actually read. If the
 socket is of type stream and the other end of the connection has been
-closed ??{LenI} is bound to <<0>>.
+closed ?_{LenI} is bound to <<0>>.
 <p>
 See also <file/read(2)/.
 
@@ -410,16 +410,16 @@ receive(list: ??{ListS}
 <index class=module/Open<AND>socket<AND>receive /
 Receives data from a socket.
 <p>
-An attempt is made to read ?+{SizeI} bytes from the socket. 
-??{ListS} is bound to the data while the tail of the list is
+An attempt is made to read ?_{SizeI} bytes from the socket. 
+?_{ListS} is bound to the data while the tail of the list is
 bound to ?_{TailX}.
 <p>
-??{LenI} is bound to the number of bytes actually read. If the
+?_{LenI} is bound to the number of bytes actually read. If the
 socket is of type stream and the other end of the connection has been
-closed ??{LenI} is bound to <<0>>.
+closed ?_{LenI} is bound to <<0>>.
 <p>
-The source of the data is signaled by binding ??{HostS} and
-??{PortI}.
+The source of the data is signaled by binding ?_{HostS} and
+?_{PortI}.
 <p>
 See also <file/recvfrom(2)/.
 
@@ -429,10 +429,10 @@ write(vs:  ?+{V}
       len: ??{I} &lt;= _)
 </code><item>
 <index class=module/Open<AND>socket<AND>write/
-Writes the virtual string ?+{V} to a stream-connected
+Writes the virtual string ?_{V} to a stream-connected
 socket or to a datagram socket with peer specified.
 <p>
-??{I} is bound to the number of characters written.
+?_{I} is bound to the number of characters written.
 <p>
 See also <file/write(2)/.
 
@@ -446,12 +446,12 @@ send(vs:   ?+{V}
      host: ?+{HostV} &lt;= localhost)
 </code><item>
 <index class=module/Open<AND>socket<AND>send/
-Sends data as specified by ?+{V} to a socket.
+Sends data as specified by ?_{V} to a socket.
 <p>
-The destination of the data may be given by ?+{HostV} and
-?+{PortI}. If they are omitted, the data is sent to the peer of a
+The destination of the data may be given by ?_{HostV} and
+?_{PortI}. If they are omitted, the data is sent to the peer of a
 datagram socket or to the other end of a connection in case of a stream
-socket. ??{I} is bound to the number of characters written.
+socket. ?_{I} is bound to the number of characters written.
 <p>
 See also <file/send(2)/.
 
@@ -462,7 +462,7 @@ shutDown(how: ?+{HowAs} &lt;= [receive send])
 <index class=module/Open<AND>socket<AND>shutDown /
 Disallows further actions on the socket.
 <p>
-?+{HowAs} has to be a non-empty list which must contain only the atoms
+?_{HowAs} has to be a non-empty list which must contain only the atoms
 <<receive>> and <<send>>. The atom <<send>> signals that no
 further data transmission is allowed, while <<receive>> signals
 that no further data reception is allowed.
@@ -486,7 +486,7 @@ flush(how: ?+{HowAs} &lt;= [receive send])
 Blocks until all requests for reading, receiving,
 writing, and sending have been fulfilled.
 <p>
-?+{HowAs} must be a non-empty list which may include the atoms
+?_{HowAs} must be a non-empty list which may include the atoms
 <<receive>> and <<send>>. The atom <<send>> signals that the method should
 block until all send (or write) requests are fulfilled,
 while <<receive>> signals the same for receive (or read).
@@ -497,7 +497,7 @@ dOpen(?+{ReadFileDescI} ?+{WriteFileDescI})
 </code><item>
 <index class=module/Open<AND>socket<AND>dOpen /
 <p class=danger>
-Initializes the object. ?+{ReadFileDescI} and ?+{WriteFileDescI} must
+Initializes the object. ?_{ReadFileDescI} and ?_{WriteFileDescI} must
 be integers of already open file descriptors (in the usual operating
 system sense).
 <p>
@@ -511,8 +511,8 @@ getDesc(??{ReadFileDescIB} ??{WriteFileDescIB})
 <p class=danger>
 Returns the internally used file descriptors.
 <p>
-If the object is not yet initialized, ??{ReadFileDescIB} and
-??{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
+If the object is not yet initialized, ?_{ReadFileDescIB} and
+?_{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
 integers.
 <p>
 Note, that this method is only for advanced purposes.
@@ -533,7 +533,7 @@ init(cmd:  ?+{CmdV}
 </code><item>
 <index class=module/Open<AND>pipe<AND>init /
 Initilizes the object and forks a process with process identification
-??{PidI} executing the command ?+{CmdV} with arguments ?+{ArgsVs}. 
+?_{PidI} executing the command ?_{CmdV} with arguments ?_{ArgsVs}. 
 <p>
 The environment of the forked process is inherited from the process
 which runs the Oz Emulator. The standard input of
@@ -553,15 +553,15 @@ read(list: ??{ListS}
 Reads data ?{ListS} from the standard output or standard error of
 the forked process.
 <p>
-An attempt is made to read ?+{SizeI} bytes. ??{ListS} is bound to
-the data read while the tail of ??{ListS} is bound to ?_{TailX}.
+An attempt is made to read ?_{SizeI} bytes. ?_{ListS} is bound to
+the data read while the tail of ?_{ListS} is bound to ?_{TailX}.
 The atom <<all>>
-is also a legal value for ?+{SizeAI}. In this case the entire input is
+is also a legal value for ?_{SizeAI}. In this case the entire input is
 read.
 <p>
-??{LenI} is bound to the number of bytes actually read. If the
+?_{LenI} is bound to the number of bytes actually read. If the
 socket is of type stream and the other end of the connection has been
-closed ??{LenI} is bound to <<0>>.
+closed ?_{LenI} is bound to <<0>>.
 <p>
 See also <file/read(2)/.
 
@@ -571,10 +571,10 @@ write(vs:  ?+{V}
       len: ??{I} &lt;= _)
 </code><item>
 <index class=module/Open<AND>pipe<AND>write /
-Writes the virtual string ?+{V} to the standard input of the forked
+Writes the virtual string ?_{V} to the standard input of the forked
 process.
 <p>
-??{I} is bound to the number of characters written.
+?_{I} is bound to the number of characters written.
 <p>
 See also <file/write(2)/.
 
@@ -585,7 +585,7 @@ flush(how: ?+{HowAs} &lt;= [receive send])
 <index class=module/Open<AND>pipe<AND>flush /
 Blocks until all requests for reading and writing have been performed.
 <p>
-?+{HowAs} must be a non-empty list which may include the atoms
+?_{HowAs} must be a non-empty list which may include the atoms
 <<receive>> and <<send>>. The atom <<send>> signals that the method should
 block until all write requests are fulfilled,
 while <<receive>> signals the same for read.
@@ -611,7 +611,7 @@ dOpen(?+{ReadFileDescI} ?+{WriteFileDescI})
 </code><item>
 <index class=module/Open<AND>pipe<AND>dOpen /
 <p class=danger>
-Initializes the object. ?+{ReadFileDescI} and ?+{WriteFileDescI} must
+Initializes the object. ?_{ReadFileDescI} and ?_{WriteFileDescI} must
 be integers of already open file descriptors (in the usual operating
 system sense).
 <p>
@@ -625,8 +625,8 @@ getDesc(??{ReadFileDescIB} ??{WriteFileDescIB})
 <p class=danger>
 Returns the internally used file descriptors.
 <p>
-If the object is not yet initialized, ??{ReadFileDescIB} and
-??{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
+If the object is not yet initialized, ?_{ReadFileDescIB} and
+?_{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
 integers.
 <p>
 Note that this method is only for advanced purposes.
@@ -658,7 +658,7 @@ putC(?+{I})
 </code><item>
 <index class=module/Open<AND>text<AND>putC /
 
-Writes the character ?+{I}.
+Writes the character ?_{I}.
 
 <entry> <<unGetC>> <synopsis>
 <code display>
@@ -676,7 +676,7 @@ getS(??{SB})
 <index class=module/Open<AND>text<AND>getS /
 
 Returns the next line of the input as string, or
-<<false>> if the input is at the end. ??{SB} does not contain the newline character. 
+<<false>> if the input is at the end. ?_{SB} does not contain the newline character. 
 <p>
 Note that if an object is created that inherits from both
 <<Open.text>> and <<Open.file>>, the methods <<read>> and <<seek>> from the
@@ -688,7 +688,7 @@ putS(?+{V})
 </code><item>
 <index class=module/Open<AND>text<AND>putS /
 
-Writes the virtual string ?+{V}. Note that a newline character is
+Writes the virtual string ?_{V}. Note that a newline character is
 appended.
 
 <entry> <<atEnd>> <synopsis>
@@ -706,7 +706,7 @@ dOpen(?+{ReadFileDescI} ?+{WriteFileDescI})
 <index class=module/Open<AND>text<AND>dOpen /
 
 <p class=danger>
-Initializes the object. ?+{ReadFileDescI} and ?+{WriteFileDescI} must
+Initializes the object. ?_{ReadFileDescI} and ?_{WriteFileDescI} must
 be integers of already open file descriptors (in the usual operating
 system sense).
 <p>
@@ -721,8 +721,8 @@ getDesc(??{ReadFileDescIB} ??{WriteFileDescIB})
 <p class=danger>
 Returns the internally used file descriptors.
 <p>
-If the object is not yet initialized, ??{ReadFileDescIB} and
-??{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
+If the object is not yet initialized, ?_{ReadFileDescIB} and
+?_{WriteFileDescIB} are bound to <<false>>, otherwise to the respective
 integers.
 <p>
 Note that this method is only for advanced purposes.
