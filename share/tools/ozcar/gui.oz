@@ -200,7 +200,7 @@ class Gui from Menu Dialog
    meth frameClick(nr:I frame:F tag:T)
       Gui,SelectStackFrame(T)
       Gui,printEnv(frame:I vars:F.vars)
-      SourceManager,scrollbar(file:F.file line:F.line
+      SourceManager,scrollbar(file:F.file line:{Abs F.line}
 			      color:ScrollbarStackColor what:stack)
       case {Cget verbose} then
 	 {Debug.displayCode F.'PC' 7}
@@ -259,7 +259,8 @@ class Gui from Menu Dialog
 		      {PrintF ' ' # I # ' ' # case F.name == ''
 					      then '$' else F.name
 					      end 35} #
-		      {StripPath F.file} # FileLineSeparator # F.line # NL T)
+		      {StripPath F.file} # FileLineSeparator #
+		      {Abs F.line} # NL T)
 		      tk(tag bind T '<1>' Ac)
 		      tk(tag conf T font:BoldFont)] W}
 	     case I == 1 andthen (Top orelse SL == 1)
@@ -277,15 +278,14 @@ class Gui from Menu Dialog
       UpToDate = SourceManager,isUpToDate(Time $)
       W        = self.ApplText
    in
+      Gui,Clear(W)
       case N == undef orelse A == undef then
-	 Gui,Clear(W)
 	 Gui,Disable(W)
       else
 	 Args      = {FormatArgs A}
 	 ApplColor = case B then BuiltinColor else ProcColor end 
 	 T         = {TagCounter get($)}
       in
-	 Gui,Clear(W)
 	 {ForAll [tk(insert 'end' ' {')
 		  tk(insert 'end' case N == '' then '$' else N end T)
 		  tk(tag conf T foreground:ApplColor)] W}
@@ -315,7 +315,7 @@ class Gui from Menu Dialog
       in
 	 Gui,Clear(W)
 	 case F \= undef then
-	    S = ' ' # {StripPath F} # FileLineSeparator # L
+	    S = ' ' # {StripPath F} # FileLineSeparator # {Abs L}
 	 in
 	    case UpToDate then
 	       {W tk(insert 'end' S)}
