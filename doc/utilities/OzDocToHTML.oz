@@ -182,6 +182,8 @@ define
 	 % for Figure:
 	 Floats: unit
 	 FigureCounters: unit
+	 % for Grammar.Alt:
+	 GrammarAltType: unit
 	 % for List:
 	 InDescription: unit
 	 % back matter:
@@ -730,18 +732,21 @@ define
 	    %-----------------------------------------------------------
 	    % BNF Markup
 	    %-----------------------------------------------------------
-	    [] 'grammar.rule' then
+	    [] 'grammar.rule' then X in
 	       %--** display attribute?
 	       Out <- @Out#'</P><TABLE border=0 cellpadding=0 cellspacing=0>\n'
 	       Out <- @Out#'<TR><TD>'
-	       OzDocToHTML, Batch(M.1 1)
+	       OzDocToHTML, Process(M.1)
 	       Out <- @Out#'</TD>\n'
+	       X = @GrammarAltType
+	       GrammarAltType <- def
 	       OzDocToHTML, Batch(M 2)
+	       GrammarAltType <- X
 	       Out <- @Out#'</TABLE><P'#@Align#'>\n'
 	    [] 'grammar.head' then
 	       OzDocToHTML, Batch(M 1)
 	    [] 'grammar.alt' then
-	       Out <- @Out#case {CondSelect M type unit} of def then
+	       Out <- @Out#case {CondSelect M type @GrammarAltType} of def then
 			      '<TD align=center>&nbsp;::=&nbsp;'
 			   [] add then
 			      '<TD align="center">&nbsp;+=&nbsp;'
@@ -749,9 +754,8 @@ define
 			      '<TR><TD></TD><TD align=center>&nbsp;|&nbsp;'
 			   [] space then
 			      '<TR><TD></TD><TD align=center>'
-			   [] unit then
-			      '<TR><TD></TD><TD align=center>'
 			   end
+	       GrammarAltType <- 'or'
 	       Out <- @Out#'</TD><TD>'
 	       OzDocToHTML, Batch(M 1)
 	       Out <- @Out#'</TD><TR>\n'
