@@ -9,13 +9,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-OZ_C_proc_begin(cgdbm_open,5)
+OZ_BI_define(cgdbm_open,4,1)
 {
-  OZ_Term name  = OZ_getCArg(0);
-  OZ_Term flags = OZ_getCArg(1);
-  OZ_Term mode  = OZ_getCArg(2);
-  OZ_Term block = OZ_getCArg(3);
-  OZ_Term result= OZ_getCArg(4);
+  OZ_declareNonvarIN(0,name);
+  OZ_declareNonvarIN(1,flags);
+  OZ_declareNonvarIN(2,mode);
+  OZ_declareNonvarIN(3,block);
   int t_name  = 0;
   int t_flags = 0;
   int t_mode  = 0;
@@ -102,19 +101,22 @@ OZ_C_proc_begin(cgdbm_open,5)
     return OZ_raiseC("gdbm",1,gdbm_errno);
   else {
     OZ_Term chunk = OZ_makeHeapChunk(sizeof(GDBM_FILE));
-    char* s       = OZ_getHeapChunkData(chunk);
+    char* s       = (char*) OZ_getHeapChunkData(chunk);
     memcpy(s,(char*)&file,sizeof(GDBM_FILE));
-    return OZ_unify(result,chunk);
+    OZ_RETURN(chunk);
   }
-}
-OZ_C_proc_end
+} OZ_BI_end
 
 OZ_Return
-datum2term(datum dat,OZ_Term out)
+datum2term(datum dat,OZ_Term& out)
 {
   OZ_Datum d;
   d.data = dat.dptr;
   d.size = dat.dsize;
+  // eventually OZ_datumToValue should take an OZ_Term& instead
+  // of performing unify internally. when that happens, we can
+  // dispense with the allocation of a new variable.
+  out = OZ_newVariable();
   return OZ_datumToValue(d,out);
 }
 
@@ -136,11 +138,10 @@ term2datum(OZ_Term in,datum& dat)
     return OZ_raiseErrorC("gdbm",2,OZ_atom("alreadyClosed"),x); \
 }
 
-OZ_C_proc_begin(cgdbm_fetch,3)
+OZ_BI_define(cgdbm_fetch,2,1)
 {
-  OZ_Term oz_db  = OZ_getCArg(0);
-  OZ_Term oz_key = OZ_getCArg(1);
-  OZ_Term oz_val = OZ_getCArg(2);
+  OZ_declareNonvarIN(0,oz_db);
+  OZ_declareNonvarIN(1,oz_key);
   datum val;
 
   CHECK_GDBM(oz_db);
@@ -157,18 +158,16 @@ OZ_C_proc_begin(cgdbm_fetch,3)
 
   val.dsize = strlen(val.dptr);
   val = gdbm_fetch(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),val);
-  if (val.dptr==NULL) return OZ_unify(oz_val,OZ_unit());
-  else return datum2term(val,oz_val);
-}
-OZ_C_proc_end
+  if (val.dptr==NULL) OZ_RETURN(OZ_unit());
+  else return datum2term(val,OZ_out(0));
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_store,5)
+OZ_BI_define(cgdbm_store,4,1)
 {
-  OZ_Term oz_db  = OZ_getCArg(0);
-  OZ_Term oz_key = OZ_getCArg(1); int t_key = 0;
-  OZ_Term oz_val = OZ_getCArg(2);
-  OZ_Term oz_rep = OZ_getCArg(3); int rep;
-  OZ_Term oz_res = OZ_getCArg(4);
+  OZ_declareNonvarIN(0,oz_db);
+  OZ_declareNonvarIN(1,oz_key); int t_key = 0;
+  OZ_declareNonvarIN(2,oz_val);
+  OZ_declareNonvarIN(3,oz_rep); int rep;
   datum key,val;
   int ret;
 
@@ -206,20 +205,18 @@ OZ_C_proc_begin(cgdbm_store,5)
   free(key.dptr);
   free(val.dptr);
 
-  return OZ_unify(oz_res,OZ_int(ret));
-}
-OZ_C_proc_end
+  OZ_RETURN_INT(ret);
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_firstkey,2)
+OZ_BI_define(cgdbm_firstkey,1,1)
 {
-  OZ_Term oz_db  = OZ_getCArg(0);
-  OZ_Term oz_key = OZ_getCArg(1);
+  OZ_declareNonvarIN(0,oz_db);
   datum key;
 
   CHECK_GDBM(oz_db);
 
   key = gdbm_firstkey(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
-  if (key.dptr==NULL) return OZ_unify(oz_key,OZ_unit());
+  if (key.dptr==NULL) OZ_RETURN(OZ_unit());
   else {
     OZ_Term res;
     char* s = (char*) malloc(key.dsize+1);
@@ -228,16 +225,15 @@ OZ_C_proc_begin(cgdbm_firstkey,2)
     res = OZ_atom(s);
     free(s);
     free(key.dptr);
-    return OZ_unify(oz_key,res);
+    OZ_RETURN(res);
   }
-}
-OZ_C_proc_end
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_nextkey,3)
+OZ_BI_define(cgdbm_nextkey,2,1)
 {
-  OZ_Term oz_db   = OZ_getCArg(0);
-  OZ_Term oz_key1 = OZ_getCArg(1);
-  OZ_Term oz_key2 = OZ_getCArg(2);
+  OZ_declareNonvarIN(0,oz_db);
+  OZ_declareNonvarIN(1,oz_key1);
+  // OZ_Term oz_key2 = OZ_getCArg(2);
   datum key,val;
 
   CHECK_GDBM(oz_db);
@@ -254,7 +250,7 @@ OZ_C_proc_begin(cgdbm_nextkey,3)
 
   val = gdbm_nextkey(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),key);
   free(key.dptr);
-  if (val.dptr==NULL) return OZ_unify(oz_key2,OZ_unit());
+  if (val.dptr==NULL) OZ_RETURN(OZ_unit());
   else {
     OZ_Term res;
     char *s = (char*) malloc(val.dsize+1);
@@ -263,14 +259,13 @@ OZ_C_proc_begin(cgdbm_nextkey,3)
     res = OZ_atom(s);
     free(s);
     free(val.dptr);
-    return OZ_unify(oz_key2,res);
+    OZ_RETURN(res);
   }
-}
-OZ_C_proc_end
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_close,1)
+OZ_BI_define(cgdbm_close,1,0)
 {
-  OZ_Term oz_db = OZ_getCArg(0);
+  OZ_declareNonvarIN(0,oz_db);
 
   if (!OZ_isChunk(oz_db)
       || OZ_getHeapChunkSize(oz_db)!=sizeof(GDBM_FILE))
@@ -278,27 +273,22 @@ OZ_C_proc_begin(cgdbm_close,1)
 
   gdbm_close(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
   *(GDBM_FILE*)OZ_getHeapChunkData(oz_db) = (GDBM_FILE)0;
-  return OZ_ENTAILED;
-}
-OZ_C_proc_end
+  return PROCEED;
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_error,2)
+OZ_BI_define(cgdbm_error,1,1)
 {
-  OZ_Term oz_num = OZ_getCArg(0);
-  OZ_Term oz_msg = OZ_getCArg(1);
+  OZ_declareIntIN(0,oz_num);
   const char* s;
 
-  if (!OZ_isInt(oz_num)) return OZ_typeError(0,"Int");
-  s = gdbm_strerror(OZ_intToC(oz_num));
-  return OZ_unify(oz_msg,OZ_string(s));
-}
-OZ_C_proc_end
+  s = gdbm_strerror(oz_num);
+  OZ_RETURN_STRING(s);
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_delete,3)
+OZ_BI_define(cgdbm_delete,2,1)
 {
-  OZ_Term oz_db  = OZ_getCArg(0);
-  OZ_Term oz_key = OZ_getCArg(1);
-  OZ_Term oz_res = OZ_getCArg(2);
+  OZ_declareNonvarIN(0,oz_db);
+  OZ_declareNonvarIN(1,oz_key);
   datum key; int res;
 
   CHECK_GDBM(oz_db);
@@ -314,34 +304,37 @@ OZ_C_proc_begin(cgdbm_delete,3)
   key.dsize = strlen(key.dptr);
 
   res = gdbm_delete(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db),key);
-  return OZ_unify(oz_res,OZ_int(res));
-}
-OZ_C_proc_end
+  OZ_RETURN_INT(res);
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_reorganize,2)
+OZ_BI_define(cgdbm_reorganize,1,1)
 {
-  OZ_Term oz_db  = OZ_getCArg(0);
-  OZ_Term oz_res = OZ_getCArg(1);
+  OZ_declareNonvarIN(0,oz_db);
   int res;
 
   CHECK_GDBM(oz_db);
 
   res = gdbm_reorganize(*(GDBM_FILE*)OZ_getHeapChunkData(oz_db));
-  return OZ_unify(oz_res,OZ_int(res));
-}
-OZ_C_proc_end
+  OZ_RETURN_INT(res);
+} OZ_BI_end
 
-OZ_C_proc_begin(cgdbm_bitor,3)
+OZ_BI_define(cgdbm_bitor,2,1)
 {
-  OZ_Term oz_n1 = OZ_getCArg(0);
-  OZ_Term oz_n2 = OZ_getCArg(1);
-  OZ_Term oz_n3 = OZ_getCArg(2);
+  OZ_declareIntIN(0,n1);
+  OZ_declareIntIN(1,n2);
+  OZ_RETURN_INT(n1|n2);
+} OZ_BI_end
 
-  if (!OZ_isInt(oz_n1)) return OZ_typeError(0,"Int");
-  if (!OZ_isInt(oz_n2)) return OZ_typeError(1,"Int");
-  int n1 = OZ_intToC(oz_n1);
-  int n2 = OZ_intToC(oz_n2);
-  int n3 = n1|n2;
-  return OZ_unify(oz_n3,OZ_int(n3));
-}
-OZ_C_proc_end
+OZ_C_proc_interface oz_interface[] = {
+  {"cgdbm_open"         ,4,1},
+  {"cgdbm_fetch"        ,2,1},
+  {"cgdbm_store"        ,4,1},
+  {"cgdbm_firstkey"     ,1,1},
+  {"cgdbm_nextkey"      ,2,1},
+  {"cgdbm_close"        ,1,0},
+  {"cgdbm_error"        ,1,1},
+  {"cgdbm_delete"       ,2,1},
+  {"cgdbm_reorganize"   ,1,1},
+  {"cgdbm_bitor"        ,2,1},
+  {0,0,0}
+};

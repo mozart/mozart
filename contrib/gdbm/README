@@ -8,24 +8,18 @@ into/from such a database.
 
                              INSTALLATION
 
-ozmkmf
+./configure
 make
 make install
 
-At the PS Lab: ozmkmf -DPS
-to automatically resolve libgdbm according to our local installation.
-Elsewhere, you can supply -D options to ozmkmf, e.g.:
-
-ozmkmf -DINCS='-I/opt/gnu/include' -DLIBS='/opt/gnu/lib/libgdbm.a -lc'
+You may try to set CPPFLAGS and/or LIBS prior to invoking configure
+so that gdbm stuff may be found.
 
                             INSTANTIATION
 
 The GDBM module must be instantiated with Foreign.
-declare GDBM = {{Load URL_of_GDBM_component} Foreign}
-URL_of_GDBM_component might be:
-        file:$(OZHOME)/tool/gdbm/gdbm.ozc
-where $(OZHOME) might be:
-        /project/ps/soft/oz-devel/oz
+declare GDBM =
+ {{Load 'http://www.ps.uni-sb.de/ozhome/tools/gdbm/gdbm.ozc'} Foreign}
 
                             DOCUMENTATION
 

@@ -2,27 +2,26 @@
 %%% ------------------------------------------------------------------
 %%%
 %%%
-declare
-proc {NewGdbm Foreign %Standard
-      GDBM}
-%\insert 'Standard.env'
-%   = Standard
-   skip
+
+proc {$ Foreign GDBM}
+   FLoad = Foreign.load
 in
    %% open a new `local' to protect redefinitions of
    %% variables already in Base
    local
-      cgdbm(open:Open fetch:Fetch store:Store
-            firstkey:FirstKey nextkey:NextKey close:Close
-            error:Error delete:Delete reorganize:Reorganize
-            bitor:BitOr)
+      foreign(cgdbm_open        :Open
+              cgdbm_fetch       :Fetch
+              cgdbm_store       :Store
+              cgdbm_firstkey    :FirstKey
+              cgdbm_nextkey     :NextKey
+              cgdbm_close       :Close
+              cgdbm_error       :Error
+              cgdbm_delete      :Delete
+              cgdbm_reorganize  :Reorganize
+              cgdbm_bitor       :BitOr)
       %% Foreign.require will resolve this name in a platform
       %% dependent way
-      = {Foreign.require 'tools/gdbm/gdbm.dl'
-         cgdbm(open:5 fetch:3 store:5
-               firstkey:2 nextkey:3 close:1
-               error:2 delete:3 reorganize:2
-               bitor:3)}
+      = {FLoad 'tools/gdbm/gdbm.so'}
       fun {FlagsToVS L}
          case L of [F] then {FlagToVS F}
          elseof nil then nil
@@ -56,7 +55,7 @@ in
       fun {ModeToInt Who N Rights}
          MAP=Modes.Who
       in
-         {List.foldL Rights
+         {FoldL Rights
           fun {$ N Right} {BitOr N MAP.Right} end N}
       end
 
@@ -105,10 +104,3 @@ in
       end
    end
 end
-
-in
-
-{Save NewGdbm 'gdbm.ozc'
- x(components:unit resources:nil)}
-
-{Exit 0}
