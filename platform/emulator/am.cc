@@ -111,10 +111,10 @@ void AM::init(int argc,char **argv)
 #endif
 
 #if THREADED == 1
-  printf("Using threaded code (rel jumps).\n");
+  // printf("Using threaded code (rel jumps).\n");
 #else
 #if THREADED == 2
-  printf("Using threaded code (abs jumps).\n");
+  // printf("Using threaded code (abs jumps).\n");
 #else
   printf("Not using threaded code.\n");
 #endif
