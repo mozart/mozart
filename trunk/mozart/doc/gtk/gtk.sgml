@@ -34,11 +34,18 @@
 <!ENTITY wrt PI "wrt">
 <!ENTITY eg PI "eg">
 
+<!-- Include Files -->
+<!ENTITY intro     SYSTEM "intro.sgml">
+<!ENTITY basics    SYSTEM "basics.sgml">
+<!ENTITY mapping   SYSTEM "mapping.sgml">
+<!ENTITY builder   SYSTEM "builder.sgml">
+<!ENTITY reference SYSTEM "reference.sgml">
+
 ]>
 
 <Book proglang=oz>
   <Front>
-    <!-- Splitting the document into different HTML nodes -->
+    <!-- Splitting the document into different HTML files -->
     <Meta name="html.split" value="chapter.intro">
     <Meta name="html.split" value="chapter.basics">
     <Meta name="html.split" value="chapter.mapping">
@@ -67,56 +74,10 @@
       in Oz.
     </Abstract>
   <Body>
-    <Chapter id="chapter.intro">
-      <Title/Introduction/
-      <Para class=apropos><Title/GTK/
-	<!--**-->
-	What is GTK+?  Link + description, in the following just called GTK
-      <Para class=apropos><Title/GDK/
-	<!--**-->
-	What is GDK?
-      <Para class=apropos><Title/The Binding/
-	<!--**-->
-	What is provided by the binding?  Version numbers, &ellipsis;
-      <Section>
-	<Title/Example/
-	  <!--**-->
-      <Section>
-	<Title/Structure of the Manual/
-	  <!--**-->
-
-    <Chapter id="chapter.basics">
-      <Title/GTK Basics/
-      <P>
-	<!--**-->
-	widgets, signals, properties
-
-    <Chapter id="chapter.mapping">
-      <Title/How the C API is mapped to Oz/
-<!--**
-- types
-    guint -> integer
-    gfloat -> float
-    gchar * -> virtual string
-    GList * -> list
-    GtkWidget * -> object
-    enumeration types and flags -> integer (with constants)
-- constants
-   - enumeration types
-   - flags
-- classes
-   - methods
-- toplevel functions
-- limitations
-   - varargs
--->
-
-    <Chapter id="chapter.builder">
-      <Title/The GBuilder/
-	<!--**-->
-
-    <Chapter id="chapter.reference">
-      <Title/API Reference/
-	<!--**-->
-
+    &intro;
+    &basics;
+    &mapping;
+    &builder;
+    &reference;
+  </Body>
 </Book>
