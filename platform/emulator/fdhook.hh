@@ -51,7 +51,7 @@ Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				OZ_Term * args, int arity)
 {
   return new Suspension(am.currentBoard,
-			am.currentThread->getPriority(),
+			ozconf.defaultPriority,
 			fun, args, arity);
 }
 
