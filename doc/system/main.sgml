@@ -212,6 +212,7 @@
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Author.Extern to="author.db" key="Tobias.Mueller">
     <Author.Extern to="author.db" key="Christian.Schulte">
+    <Author.Extern to="author.db" key="Peter.VanRoy">
 
     <Comic>
       <Picture.Choice>
