@@ -30,6 +30,20 @@
                              out => [],
                              BI  => BIclose},
 
+     'sendcp'           => { in  => ['+int', '+int', '+int', '+int', '+int'],
+                             out => [],
+                             BI  => BIsendCping},
+
+
+     'sendmpp'          => { in  => ['+int', '+int', '+int', '+int', '+int'],
+                             out => [],
+                             BI  => BIsendMpongPL},
+
+     'sendmpt'          => { in  => ['+int', '+int', '+int', '+int', '+int' ,'value'],
+                             out => [],
+                             BI  => BIsendMpongTerm},
+
+
      'crash'            => { in  => [],
                              out => [],
                              BI  => BIcrash,

@@ -40,6 +40,7 @@
 #include "base.hh"
 
 #include "var.hh"
+#include "msgContainer.hh"
 
 #ifndef WINDOWS
 #include <sys/errno.h>
@@ -340,7 +341,11 @@ OZ_BI_define(BIgetMsgCntr,0,1)
                           oz_cons(oz_pairAI("oswritten",globalOSWriteCounter),
                           oz_cons(oz_pairAI("osread",globalOSReadCounter),
                           oz_cons(oz_pairAI("cont",globalContCounter),
-                                  oz_nil())))))));
+                          oz_cons(oz_pairAI("btResize",btResize),
+                          oz_cons(oz_pairAI("btCompactify",btCompactify),
+                          oz_cons(oz_pairAI("otResize",otResize),
+                                  oz_cons(oz_pairAI("otCompactify",otCompactify),
+                                  oz_nil())))))))))));
 }OZ_BI_end
 
 OZ_BI_define(BIgetConnectWstream,0,1)
@@ -397,7 +402,7 @@ OZ_BI_define(BIsetDGC,2,1)
     else
       OZ_RETURN(oz_atom("not_manager"));
   }
-  if (ownerTable->getEntry(OTI)->homeRef.removeAlgorithm(algorithm))
+  if (ownerTable->index2entry(OTI)->homeRef.removeAlgorithm(algorithm))
     OZ_RETURN(oz_true());
   else
     OZ_RETURN(oz_false());
@@ -412,15 +417,15 @@ OZ_BI_define(BIgetDGC,1,1)
       if (tert->isLocal())
         OZ_RETURN(oz_atom("local_entity"));
       if (tert->isManager()){
-        OZ_RETURN(ownerTable->getEntry(tert->getIndex())->homeRef.extract_info());}
-      OZ_RETURN(borrowTable->getBorrow(tert->getIndex())->remoteRef.extract_info());
+        OZ_RETURN(ownerTable->index2entry(tert->getIndex())->homeRef.extract_info());}
+      OZ_RETURN(borrowTable->bi2borrow(tert->getIndex())->remoteRef.extract_info());
     }
   DEREF(entity,e0);
   if(oz_isVarOrRef(entity)){
     if (oz_isManagerVar(*e0))
-      OZ_RETURN(ownerTable->getEntry(oz_getManagerVar(*e0)->getIndex())->homeRef.extract_info());
+      OZ_RETURN(ownerTable->index2entry(oz_getManagerVar(*e0)->getIndex())->homeRef.extract_info());
     if (oz_isProxyVar(*e0))
-      OZ_RETURN(borrowTable->getBorrow(oz_getProxyVar(*e0)->getIndex())->remoteRef.extract_info());
+      OZ_RETURN(borrowTable->bi2borrow(oz_getProxyVar(*e0)->getIndex())->remoteRef.extract_info());
   }
   OZ_RETURN(oz_atom("local_entity"));
 }OZ_BI_end
@@ -497,6 +502,66 @@ OZ_BI_define(BIsetMsgPriority,2,0)
     }
   return FAILED;
 }OZ_BI_end
+
+
+
+
+OZ_BI_define(BIsendCping,5,0)
+{
+  oz_declareVirtualStringIN(0,host);
+  oz_declareIntIN(1,Port);
+  oz_declareIntIN(2,Ts);
+  oz_declareIntIN(3,Pid);
+  oz_declareIntIN(4,Pings);
+  if (Pings < 0) return PROCEED;
+  ip_address addr = ntohl(inet_addr(host));
+  TimeStamp ts(Ts,Pid);
+  DSite *site = findDSite(addr, Port, ts);
+  int id = ++sendJobbCntr;
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+  msgC->put_C_SEND_PING_PONG(id,Pings*2);
+  send(msgC);
+  return newSendJobb(id);
+} OZ_BI_end
+
+OZ_BI_define(BIsendMpongTerm,6,0)
+{
+  oz_declareVirtualStringIN(0,host);
+  oz_declareIntIN(1,Port);
+  oz_declareIntIN(2,Ts);
+  oz_declareIntIN(3,Pid);
+  oz_declareIntIN(4,Pings);
+  oz_declareIN(5,trm);
+  if (Pings < 0) return PROCEED;
+  ip_address addr = ntohl(inet_addr(host));
+  TimeStamp ts(Ts,Pid);
+  DSite *site = findDSite(addr, Port, ts);
+  int id = ++sendJobbCntr;
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+  msgC->put_M_PONG_TERM(myDSite,Pings*2,id,trm);
+  send(msgC);
+  return newSendJobb(id);
+} OZ_BI_end
+
+
+OZ_BI_define(BIsendMpongPL,5,0)
+{
+  oz_declareVirtualStringIN(0,host);
+  oz_declareIntIN(1,Port);
+  oz_declareIntIN(2,Ts);
+  oz_declareIntIN(3,Pid);
+  oz_declareIntIN(4,Pings);
+  if (Pings < 0) return PROCEED;
+  ip_address addr = ntohl(inet_addr(host));
+  TimeStamp ts(Ts,Pid);
+  DSite *site = findDSite(addr, Port, ts);
+  int id = ++sendJobbCntr;
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+  msgC->put_M_PONG_PL(myDSite,Pings*2,id);
+  send(msgC);
+  return newSendJobb(id);
+} OZ_BI_end
+
 
 
 
