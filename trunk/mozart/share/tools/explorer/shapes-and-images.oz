@@ -81,11 +81,20 @@ local
 
    local
 
+      NoArg = {NewName}
+      
       class Image
 	 from Tk.canvas
 	 
-	 meth init(parent:Parent tcl:Tcl)
-	    Image,tkInit(parent:Parent width:ImageSize height:ImageSize)
+	 meth init(parent:Parent tcl:Tcl bg:Bg)
+	    case Bg==NoArg then
+	       Image,tkInit(parent:Parent width:ImageSize height:ImageSize
+			    highlightthickness:0)
+	    else
+	       Image,tkInit(parent:Parent width:ImageSize height:ImageSize
+			    highlightthickness:0
+			    bg:Bg)
+	    end
 	    Image,tk(crea Tcl)
 	 end
       
@@ -99,9 +108,10 @@ local
 	    
 	 feat Tag
 	    
-	 meth init(parent:Parent)
+	 meth init(parent:Parent bg:Bg<=NoArg)
 	    self.Tag = {Tk.getId}
 	    Image,init(parent: Parent
+		       bg:     Bg
 		       tcl:    o({ChooseShape ImageCenter ImageCenter
 				  ImageScale}
 				 fill:    ChooseColor
@@ -123,8 +133,9 @@ local
 	 from Image
 	 prop final
 
-	 meth init(parent:Parent)
+	 meth init(parent:Parent bg:Bg<=NoArg)
 	    Image,init(parent: Parent
+		       bg:     Bg
 		       tcl:    o({FailedShape ImageCenter ImageCenter
 				  ImageScale}
 				 fill:    FailedColor
@@ -137,8 +148,9 @@ local
 	 from Image
 	 prop final
 
-	 meth init(parent:Parent)
+	 meth init(parent:Parent bg:Bg<=NoArg)
 	    Image,init(parent: Parent
+		       bg:     Bg
 		       tcl:    o({SucceededShape ImageCenter ImageCenter
 				  ImageScale}
 				 fill:    EntailedColor
@@ -151,8 +163,9 @@ local
 	 from Image
 	 prop final
 	    
-	 meth init(parent:Parent)
+	 meth init(parent:Parent bg:Bg<=NoArg)
 	    Image,init(parent: Parent
+		       bg:     Bg
 		       tcl:    o({BlockedShape ImageCenter ImageCenter
 				  ImageScale}
 				 fill:    BlockedColor

@@ -84,7 +84,6 @@ local
 
    end
 
-   
    class ScrollCanvas
       from Tk.canvas
       prop final
@@ -107,6 +106,7 @@ local
 	 numbers
 	 cursor
 	 connection
+	 balloon
 
       meth init(Toplevel Manager)
 	 Tk.canvas,tkInit(parent:             Toplevel
@@ -121,8 +121,10 @@ local
 			  append: true)
 	 ActionTag = {New Tk.canvasTag tkInit(parent:self)}
 	 FloatXY   = [float(x) float(y)]
+	 Balloon   = {NewBalloonPort}
       in
 	 self.manager    = Manager
+	 self.balloon    = Balloon
 	 %% Get some tags
 	 self.cursor     = {New Tk.canvasTag tkInit(parent:self)}
 	 self.connection = {New Tk.canvasTag tkInit(parent:self)}
@@ -130,7 +132,7 @@ local
 	 self.actions    = ActionTag
 	 {ActionTag tkBind(event:  '<1>'
 			   args:   FloatXY
-			   action: Manager # setByXY )}
+			   action: Manager # setByXY)}
 	 {ActionTag tkBind(event:  '<Double-1>'
 			   args:   FloatXY
 			   action: Manager # selInfo)}
@@ -146,6 +148,11 @@ local
 	 {ActionTag tkBind(event:  '<Double-3>'
 			   args:   FloatXY
 			   action: Manager # doByXY(next))}
+	 {ActionTag tkBind(event:  '<Enter>'
+			   args:   FloatXY
+			   action: Balloon # popup(Manager))}
+	 {ActionTag tkBind(event:  '<Leave>'
+			   action: Balloon # close)}
       end
 
       meth tkCreate(Tickle)
@@ -187,6 +194,7 @@ local
       end
    
       meth AdjustRegion
+	 {Port.send self.balloon close}
 	 Scale  = @scale
 	 Left   = Scale * {IntToFloat @left}
 	 Right  = Scale * {IntToFloat @right}
