@@ -121,7 +121,7 @@ loop:
 
   if (bb->isFailed()) 
     return NO;
-  if (bb->isRoot() || bb->isSolve())
+  if (bb->_isRoot() || bb->isSolve())
     return OK;
   
   aa=bb->getActor();

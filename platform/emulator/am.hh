@@ -76,13 +76,13 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend void engine(Bool init);
-
-public:
-  Board *currentBoard;
-  Board *rootBoard;
-  Board *currentSolveBoard;       // current 'solve' board or NULL if none;
+friend Board *ozx_rootBoard();
 
 private:
+  Board *_currentBoard;
+  Board *_rootBoard;
+  Board *_currentSolveBoard;       // current 'solve' board or NULL if none;
+
   // source level debugger
   TaggedRef debugStreamTail;
 
@@ -145,8 +145,15 @@ public:
 
   AM() {};
 
-  Bool inShallowGuard() { return shallowHeapTop!=0; }
-  TaggedRef getOpiCompiler() { return opiCompiler; }
+  Board *currentBoard()         { return _currentBoard; }
+  Board *currentSolveBoard()    { return _currentSolveBoard; }
+  Board *rootBoardGC()          { return _rootBoard; }
+  int isCurrentBoard(Board *bb) { return bb==_currentBoard; }
+  int isRootBoard(Board *bb)    { return bb==_rootBoard; }
+  int isBelowSolveBoard()       { return _currentSolveBoard!=0; }
+  Bool inShallowGuard()         { return shallowHeapTop!=0; }
+
+  TaggedRef getOpiCompiler()       { return opiCompiler; }
   void setOpiCompiler(TaggedRef o) { opiCompiler = o; }
 
   TaggedRef getAVarBindHandler() { return aVarBindHandler; }
@@ -186,16 +193,15 @@ public:
   }
 
   TaggedRef getDebugStreamTail() { return debugStreamTail; }
+
   void debugStreamMessage(TaggedRef message) {
-    Board *bb = currentBoard;
-    currentBoard = rootBoard;
+    // mm2: maybe change this into an assertion
+    if (!onToplevel()) return;
 
     TaggedRef newTail = OZ_newVariable();
     OZ_Return ret     = OZ_unify(debugStreamTail,cons(message,newTail));
     debugStreamTail   = newTail;
     Assert(ret == PROCEED);
-
-    currentBoard = bb;
   }
 
 
@@ -223,7 +229,7 @@ public:
     return _currentUVarPrototype == t;
   }
   TaggedRef currentUVarPrototype() {
-    Assert(currentBoard=tagged2VarHome(_currentUVarPrototype));
+    Assert(isCurrentBoard(tagged2VarHome(_currentUVarPrototype)));
 #ifdef OPT_VAR_IN_STRUCTURE
     return _currentUVarPrototype;
 #else
@@ -244,19 +250,6 @@ public:
       suspendVarList=cons(makeTaggedRef(t),suspendVarList);
     }
   }
-  void suspendOnVarList(Thread *thr);
-
-  void stopThread(Thread *th);
-  void resumeThread(Thread *th);
-
-  void formatError(OZ_Term traceBack,OZ_Term loc);
-  void formatFailure(OZ_Term traceBack,OZ_Term loc);
-  int raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
-  void enrichTypeException(const char *fun, OZ_Term args);
-
-  void suspendInline(int n,
-		     OZ_Term A,OZ_Term B=makeTaggedNULL(),
-		     OZ_Term C=makeTaggedNULL());
 
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
@@ -266,6 +259,7 @@ public:
   void checkVersion();
   void exitOz(int status);
   void suspendEngine();
+  void checkStatus();
 
   Bool isCritical() { return criticalFlag; }
 
@@ -301,7 +295,7 @@ public:
   }
   void checkDebugOutline(Thread *tt);
 
-  void checkStatus(); // in emulate.cc
+
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
@@ -314,7 +308,8 @@ public:
   void reduceTrailOnUnitCommit();
   void reduceTrailOnSuspend();
   void reduceTrailOnFail();
-  void reduceTrailOnShallow(Thread *);
+  void reduceTrailOnShallow();
+  void reduceTrailOnEqEq();
 
   // in emulate.cc
   Bool emulateHookOutline();
@@ -412,7 +407,7 @@ public:
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
 
-  Bool isToplevel() { return currentBoard == rootBoard; }
+  Bool onToplevel() { return _currentBoard == _rootBoard; }
 
   void gc(int msgLevel);  // ###
   void doGC();
@@ -471,7 +466,6 @@ public:
   Bool loadQuery(CompStream *fd);
   void select(int fd, int mode, OZ_IOHandler fun, void *val);
   void acceptSelect(int fd, OZ_IOHandler fun, void *val);
-
   int select(int fd,int mode, TaggedRef l, TaggedRef r);
   void acceptSelect(int fd, TaggedRef l, TaggedRef r);
   void deSelect(int fd);
@@ -480,16 +474,12 @@ public:
 
   void handleAlarm();
   void handleUser();
-
   void setUserAlarmTimer(int ticks) { userCounter=ticks; }
   int getUserAlarmTimer() { return userCounter; } 
-
   void insertUser(int t,TaggedRef node);
   int wakeUser();
 
   Bool isStableSolve(SolveActor *sa);
-
-  OZ_Term dbgGetLoc(Board*);
 };
 
 extern AM am;

@@ -139,17 +139,6 @@ void addSuspAnyVar(TaggedRefPtr v, Thread *thr,int unstable=TRUE)
   }
 }
 
-inline
-SVariable *tagged2SuspVar(TaggedRef var)
-{
-  Assert(isSVar(var) || isCVar(var));
-  return isSVar(var) ? tagged2SVar(var)
-    /* cast needed, since CVariable unknown here
-     * (void*) cast needed to make gcc quite */
-    : (SVariable *) (void*) tagged2CVar(var); 
-}
-
-
 /*
  * Class VariableNamer: assign names to variables
  */

@@ -88,7 +88,7 @@ void debugStreamTerm(Thread *thread) {
 }
 
 void debugStreamException(Thread *thread, TaggedRef exc) {
-  am.currentThread->setStop(OK);
+  am.currentThread()->setStop(OK);
 
   TaggedRef pairlist =
     cons(OZ_pairA("thr",makeTaggedConst(thread)),
@@ -97,14 +97,14 @@ void debugStreamException(Thread *thread, TaggedRef exc) {
 }
 
 void debugStreamEntry(OzDebug *dbg, int frameId) {
-  am.currentThread->setStop(OK);
-  am.debugStreamMessage(dbg->toRecord("entry",am.currentThread,frameId));
+  am.currentThread()->setStop(OK);
+  am.debugStreamMessage(dbg->toRecord("entry",am.currentThread(),frameId));
 }
 
 void debugStreamExit(OzDebug *dbg, int frameId) {
-  am.currentThread->setStep(OK);
-  am.currentThread->setStop(OK);
-  am.debugStreamMessage(dbg->toRecord("exit",am.currentThread,frameId));
+  am.currentThread()->setStep(OK);
+  am.currentThread()->setStop(OK);
+  am.debugStreamMessage(dbg->toRecord("exit",am.currentThread(),frameId));
 }
 
 void debugStreamUpdate(Thread *thread) {
@@ -249,7 +249,7 @@ void execBreakpoint(Thread *t) {
 OZ_C_proc_begin(BIbreakpoint, 0)
 {
   if (am.debugmode())
-    execBreakpoint(am.currentThread);
+    execBreakpoint(am.currentThread());
   return PROCEED;
 }
 OZ_C_proc_end
@@ -301,7 +301,7 @@ Bool trace(char *s,Board *board,Actor *actor,
     return OK;
   }
   if (!board) {
-    board = am.currentBoard;
+    board = am.currentBoard();
   }
   if (PC != NOCODE) {
     CodeArea::display(PC, 1);
@@ -365,7 +365,7 @@ Bool trace(char *s,Board *board,Actor *actor,
       mode = OK;
       return OK;
     case 't':
-      am.currentThread->printLong(cout,10,0);
+      am.currentThread()->printLong(cout,10,0);
       break;
     case 'A':
       ozd_printAM();

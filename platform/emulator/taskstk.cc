@@ -214,7 +214,7 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
   while (!isEmpty()) {
     if (out) {
       Frame *frame = getTop();
-      TaggedRef frameRec = frameToRecord(frame,am.currentThread,verbose);
+      TaggedRef frameRec = frameToRecord(frame,am.currentThread(),verbose);
       if (frameRec != makeTaggedNULL())
 	*out = cons(frameRec,*out);
     }
@@ -229,7 +229,7 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
     } else if (PC==C_ACTOR_Ptr) {
       Actor *ac = (Actor *) Y;
       ac->discardActor();
-      am.currentBoard->decSuspCount();
+      am.currentBoard()->decSuspCount();
     } else if (PC==C_LOCK_Ptr) { 
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){
@@ -251,7 +251,8 @@ Bool TaskStack::findCatch(ProgramCounter PC, TaggedRef *out, Bool verbose)
 // for debugging:
 void printStack()
 {
-  am.currentThread->getTaskStackRef()->printTaskStack(ozconf.errorThreadDepth);
+  am.currentThread()->getTaskStackRef()
+    ->printTaskStack(ozconf.errorThreadDepth);
 }
 
 void TaskStack::printTaskStack(int depth)

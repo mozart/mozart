@@ -234,7 +234,7 @@ public:
     state.flags = state.flags | T_runnable;
   }
   void unmarkRunnable() { 
-    Assert((isRunnable () && !isDeadThread ()) || getStop());
+    Assert((isRunnable () && !isDeadThread ()) || getStop() || getPStop());
     state.flags &= ~T_runnable;
   }
 
@@ -313,6 +313,7 @@ public:
   
   int pStop() { return stopCount++; }
   int pCont() { return --stopCount; }
+  int getPStop() { return stopCount; }
 
   int getThrType() { return (state.flags & S_TYPE_MASK); }
 
@@ -384,12 +385,9 @@ public:
     state.flags = state.flags | T_stack; 
   }
 
-  void reInit(int prio, Board *home) {  // for the root thread only;
-    Assert(home);
-    setPriority(prio);
+  void reInit() {  // for the root thread only;
     setRunnable();
     item.threadBody->reInit();
-    setBoard(home);
   }
 
   TaggedRef getStreamTail();

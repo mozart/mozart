@@ -74,7 +74,7 @@ void OZ_FSetVar::read(OZ_Term v)
   } else {
     Assert(isCVar(vtag));
 
-    if (am.currentThread->isLocalThread()) {
+    if (am.currentThread()->isLocalThread()) {
     // local variable per definition
 
       setState(loc_e);
@@ -82,7 +82,7 @@ void OZ_FSetVar::read(OZ_Term v)
 
       setSort(var_e);
       
-      if (am.currentBoard->isRoot())
+      if (am.onToplevel())
 	set = fsvar->getSet();
       setPtr = &fsvar->getSet();
       
@@ -94,9 +94,9 @@ void OZ_FSetVar::read(OZ_Term v)
       // don't know before hand if local or global
       
       GenFSetVariable * fsvar = tagged2GenFSetVar(v);
-      setState(am.isLocalCVar(v) ? loc_e : glob_e);
+      setState(am.isLocalSVar(v) ? loc_e : glob_e);
       
-      if (isState(glob_e) || am.currentBoard->isRoot())
+      if (isState(glob_e) || am.onToplevel())
 	set = fsvar->getSet();
       setPtr = &fsvar->getSet();
       known_in = setPtr->getKnownIn();
@@ -229,7 +229,7 @@ void OZ_FSetVar::fail(void)
   // dont't change the order of the calls (side effects!)
   if (testResetStoreFlag(var) && isState(glob_e) && isSort(var_e)) {
     *setPtr = set;
-  } else if (am.currentBoard->isRoot()) {
+  } else if (am.onToplevel()) {
     *setPtr = set;
   }
 }

@@ -702,11 +702,11 @@ Bool isLocalBoard(Board* b)
 inline
 void setPathMarks(Board *bb)
 {
-  Assert(!bb->isRoot());
+  Assert(!bb->_isRoot());
   do {
     bb = bb->getParent();
     bb->setPathMark();
-  } while (!bb->isRoot());
+  } while (!bb->_isRoot());
 }
 
 /*
@@ -716,11 +716,11 @@ void setPathMarks(Board *bb)
 inline
 void unsetPathMarks(Board *bb)
 {
-  Assert(!bb->isRoot());
+  Assert(!bb->_isRoot());
   do {
     bb = bb->getParent();
     bb->unsetPathMark();
-  } while (!bb->isRoot());
+  } while (!bb->_isRoot());
 }
 
 
@@ -1151,8 +1151,8 @@ Thread *Thread::gcDeadThread()
   Thread *newThread = (Thread *) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(newThread);
 
-  Assert(inToSpace(am.rootBoard));
-  newThread->setBoard(am.rootBoard);
+  Assert(inToSpace(am.rootBoardGC()));
+  newThread->setBoard(am.rootBoardGC());
   //  newThread->state.flags=0;
   Assert(newThread->item.threadBody==NULL);
 
@@ -1624,17 +1624,16 @@ void AM::gc(int msgLevel)
   Assert(cachedSelf==0);
   Assert(ozstat.currAbstr==NULL);
   Assert(shallowHeapTop==0);
-  Assert(rootBoard);
+  Assert(_rootBoard);
 
-  rootBoard = rootBoard->gcBoard();   // must go first!
-  setCurrent(currentBoard->gcBoard(),NO);
+  _rootBoard = _rootBoard->gcBoard();   // must go first!
+  setCurrent(_currentBoard->gcBoard(),NO);
 
   GCPROCMSG("Predicate table");
   CodeArea::gc();
 
   aritytable.gc ();
   ThreadsPool::doGC ();
-  Assert(rootThread);
 
 #ifdef DEBUG_STABLE
   board_constraints = board_constraints->gc ();
@@ -1690,7 +1689,6 @@ void AM::gc(int msgLevel)
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
 
-  Assert(currentThread==NULL);
   cachedStack = NULL;
 
   ozstat.printGcMsg(msgLevel);
@@ -1900,8 +1898,8 @@ void CodeArea::gc()
 
 void ThreadsPool::doGC ()
 {
-  Assert(currentThread==NULL);
-  rootThread         = rootThread->gcThread();
+  Assert(_currentThread==NULL);
+  _rootThread         = _rootThread->gcThread();
   threadBodyFreeList = (RunnableThreadBody *) NULL;
 
   hiQueue.gc();
@@ -2460,7 +2458,7 @@ Board* Board::gcGetNotificationBoard()
   Board *bb = this->derefBoard();
   Board *nb = bb;
  loop:
-  if (GCISMARKED(*bb->getGCField()) || bb->isRoot())  return nb;
+  if (GCISMARKED(*bb->getGCField()) || bb->_isRoot())  return nb;
   Assert(!bb->isCommitted());
   Actor *aa=bb->getActor();
   if (bb->isFailed() || aa->isCommitted()) {
@@ -2496,7 +2494,7 @@ Bool Board::gcIsAlive()
   Assert (!(bb->isCommitted ()));
 
   if (bb->isFailed ()) return (NO);
-  if (bb->isRoot () || GCISMARKED (*(bb->getGCField ()))) return (OK);
+  if (bb->_isRoot () || GCISMARKED (*(bb->getGCField ()))) return (OK);
   
   aa=bb->getActor();
   if (aa->isCommitted ()) return (NO);
@@ -2777,7 +2775,7 @@ void AM::doGC()
 {
   osBlockSignals();
   ThreadList::dispose();
-  Assert(isToplevel());
+  Assert(onToplevel());
 
   /* do gc */
   gc(ozconf.gcVerbosity);

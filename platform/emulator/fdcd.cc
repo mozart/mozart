@@ -491,7 +491,7 @@ OZ_CFunHeader CDPropagator::spawner = BIfdConstrDisj;
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b) 
 {
-  thr = (OZ_Thread) am.mkPropagator(am.currentBoard,
+  thr = (OZ_Thread) am.mkPropagator(am.currentBoard(),
 				    OZ_getHighPrio(),
 				    p);
   // cd threads,  are expected to be suspended
@@ -521,8 +521,8 @@ OZ_Return CDSuppl::propagate(void)
     return replaceBy(p);
   }
 
-  Thread * backup_currentThread = am.currentThread;
-  am.currentThread = (Thread *) thr;
+  Thread * backup_currentThread = am.currentThread();
+  am.setCurrentThread((Thread *) thr);
   // propagate unify flag to actual propagator
   if (backup_currentThread->isUnifyThread()) {
     backup_currentThread->unmarkUnifyThread();
@@ -531,7 +531,7 @@ OZ_Return CDSuppl::propagate(void)
 
   OZ_Return ret_val = am.runPropagator((Thread *) thr);
 
-  am.currentThread = backup_currentThread;
+  am.setCurrentThread(backup_currentThread);
 
   OZ_ASSERT(b->getMaxElem() >= 2);
 

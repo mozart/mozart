@@ -80,7 +80,7 @@ extern "C" char *inet_ntoa(struct in_addr in);
 #define OZ_C_ioproc_begin(Name,Arity)					\
 OZ_C_proc_begin(Name,Arity)						\
   if (!OZ_onToplevel()) {						\
-    return am.raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));	\
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("io"));	\
   }
 
 #define OZ_C_ioproc_end }
@@ -93,7 +93,7 @@ OZ_C_proc_begin(Name,Arity)						\
      if (OZ_isVariable(susp)) {						\
        OZ_suspendOn(susp);						\
      } else {								\
-       return am.raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,		\
+       return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,		\
 			OZ_string("virtual string too long"));		\
      }									\
    } else if (status != PROCEED) {					\
@@ -153,7 +153,7 @@ while ((RET = CALL) < 0) {                   \
 // -------------------------------------------------
 
 int raiseUnixError(int n, char * e, char * g) {
-  return am.raise(E_SYSTEM,E_OS, g, 2, OZ_int(n), OZ_string(e)); 
+  return oz_raise(E_SYSTEM,E_OS, g, 2, OZ_int(n), OZ_string(e)); 
 }
 
 // return upon unix-error
@@ -1471,7 +1471,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   argl=args;
   
   if (argno+2 >= maxArgv) {
-    return am.raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
+    return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
 		    OZ_string("too many arguments for pipe"));
   }
   argv[0] = s;
@@ -1491,7 +1491,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
     if (status == SUSPEND) {
       free(vsarg);
       Assert(!OZ_isVariable(susp));
-      return am.raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
+      return oz_raise(E_SYSTEM,E_SYSTEM,"limitInternal",1,
 		   OZ_string("virtual string too long"));
     }
     Assert(status == PROCEED);
@@ -1861,7 +1861,7 @@ OZ_C_proc_begin(unix_random, 1)
 #if defined(SOLARIS) || defined(SUNOS_SPARC) || defined(LINUX)
   return OZ_unifyInt(out,random());
 #else
-  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.random"));
+  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.random"));
   // return OZ_unifyInt(out,rand());
 #endif
 }
@@ -1877,7 +1877,7 @@ OZ_C_proc_begin(unix_srandom, 1)
 #if defined(SOLARIS) || defined(SUNOS_SPARC) || defined(LINUX)
   srandom((unsigned int) seed);
 #else
-  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.srandom"));
+  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.srandom"));
   // srand((unsigned int) seed);
 #endif
   
@@ -1892,7 +1892,7 @@ OZ_C_proc_end
 #define NotAvail(Name,Arity,Fun)			\
 OZ_C_ioproc_begin(Fun,Arity)				\
 {							\
-  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,	\
+  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,	\
 		   OZ_atom(Name));			\
 }							\
 OZ_C_proc_end
