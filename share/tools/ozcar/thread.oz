@@ -105,6 +105,8 @@ in
 
 	    else
 	       Data   = {CondSelect M data unit}
+	       %% The following really isn't very nice. A better solution
+	       %% will be implemented at some time in the near future...
 	       Ignore = case {Not {IsDet Data}} then false
 			else Data == Ozcar orelse
 			   Data == {Compiler.getOPICompiler}
