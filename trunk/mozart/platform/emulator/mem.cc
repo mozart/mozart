@@ -135,9 +135,44 @@ void freeListChop(void * addr, size_t size) {
 }
 
 // ----------------------------------------------------------------
-// mem from os with 2 alternatives SBRK or MALLOC
+// mem from os with 3 alternatives MMAP, SBRK or MALLOC
 
-#if !defined(CCMALLOC) && defined(HAVE_SBRK)
+#if !defined(CCMALLOC) && defined(xxHAVE_MMAP)
+
+#include <sys/mman.h>
+#include <fcntl.h>
+
+void ozFree(char *addr, size_t sz) 
+{
+  munmap(addr,sz);
+}
+
+void *ozMalloc(size_t sz) 
+{
+  static int fd = -1;
+  static int pagesize = -1;
+  if (fd==-1) {
+    fd = open("/dev/zero",O_CREAT);
+    if (fd<0) { perror("mmap: open /dev/zero"); }
+    pagesize = sysconf(_SC_PAGESIZE);
+  }
+
+  char *start = (char*) (((((unsigned int32)-1)>>lostPtrBits)/pagesize)*pagesize);
+  sz = (sz/pagesize)*pagesize;
+  start -=sz;
+
+ loop:
+  void *ret = mmap(start,sz,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_FIXED,fd,0);
+  if (ret<0) { perror("mmap"); }
+  if (ret!=start) {
+    start -=sz;
+    goto loop;
+  }
+  
+  return ret;  
+}
+
+#elif !defined(CCMALLOC) && defined(HAVE_SBRK)
 
 /* remember the last sbrk(0), if it changed --> malloc needs more
  * memory, so call fakeMalloc
@@ -299,7 +334,7 @@ void *ozMalloc(int chunk_size)
 
 /* free via sbrk */
 
-void ozFree(void *p) 
+void ozFree(char *p, size_t ignored) 
 {
   SbrkMemory::freeList =
     (SbrkMemory::freeList->add(((SbrkMemory *)p)-1))->shrink();
@@ -307,7 +342,7 @@ void ozFree(void *p)
 
 #else
 
-void ozFree(void *addr) {
+void ozFree(char *addr, size_t ignored) {
   free(addr);
 }
 
@@ -327,7 +362,7 @@ void MemChunks::deleteChunkChain()
 //    memset(aux->block,0x14,aux->xsize);
     memset(aux->block,-1,aux->xsize);
 #endif
-    ozFree(aux->block);
+    ozFree(aux->block,aux->xsize);
 
     MemChunks *aux1 = aux;    
     aux = aux->next;
