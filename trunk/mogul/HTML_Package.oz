@@ -57,7 +57,7 @@ define
 			      {self categoriesToHrefs($)}
 			      $)}
 		  end
-		  {Manager trace('before format')}
+		  try {Manager trace('before format')}
 		  if @format==nil then
 		     {self formatHeader(
 			      'format'
@@ -71,7 +71,9 @@ define
 			      'class':'headerdoc'
 			      $)}
 		  end
+		  finally
 		  {Manager trace('after format')}
+		  end
 		  /*
 		  if @keywords==nil then '' else
 		     {self formatHeader(
