@@ -237,7 +237,10 @@ void AM::init(int argc,char **argv)
   threadStream     = OZ_newVariable();
   threadStreamTail = threadStream;
 
-  //threadArray = new TaggedRef[200000];
+  breakflag = NO;
+#ifdef THREADARRAY
+  threadArray = new TaggedRef[200000];
+#endif
 
   initThreads();
   toplevelQueue = (Toplevel *) NULL;

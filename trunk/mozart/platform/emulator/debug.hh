@@ -34,6 +34,8 @@ void enterCall(Board *b, TaggedRef def,int arity, TaggedRef *args);
 void exitCall(OZ_Return,OzDebug *);
 void exitBuiltin(OZ_Return, TaggedRef bi, int arity, TaggedRef *args);
 
+void debugStreamThread(Thread*);
+
 OZ_C_proc_proto(BItaskStack)
 OZ_C_proc_proto(BIgetThreadByID)
 OZ_C_proc_proto(BIspy)
@@ -41,7 +43,7 @@ OZ_C_proc_proto(BInospy)
 OZ_C_proc_proto(BItraceOn)
 OZ_C_proc_proto(BItraceOff)
 OZ_C_proc_proto(BIdisplayCode)
-
+OZ_C_proc_proto(BIbreakpoint)
 
 Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
 	   ProgramCounter PC=NOCODE,RefsArray Y=NULL,RefsArray G=NULL);
