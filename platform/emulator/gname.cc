@@ -31,7 +31,6 @@
 #include "site.hh"
 #include "am.hh"
 #include "board.hh"
-#include "marshaler.hh"
 
 GNameTable gnameTable;
 

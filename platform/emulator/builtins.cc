@@ -3918,7 +3918,7 @@ OZ_BI_define(BIgetReturn,0,1)
 OZ_BI_define(BIraise,1,0)
 {
   oz_declareIN(0,exc);
-
+  //  message("Raise: %s\n",toC(exc));
   return OZ_raiseDebug(exc);
 } OZ_BI_end
 

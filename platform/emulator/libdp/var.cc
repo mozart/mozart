@@ -35,6 +35,7 @@
 #include "var_ext.hh"
 #include "var_obj.hh"
 #include "dpMarshaler.hh"
+#include "newmarshaler.hh"
 #include "unify.hh"
 #include "var_simple.hh"
 #include "var_future.hh"

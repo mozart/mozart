@@ -34,8 +34,6 @@
 
 #include "base.hh"
 
-#ifdef NEWMARSHALER
-
 #include "stack.hh"
 #include "hashtbl.hh"
 #include "indexing.hh"
@@ -1583,5 +1581,3 @@ public:
 };
 
 #endif
-
-#endif /* NEWMARSHALER */

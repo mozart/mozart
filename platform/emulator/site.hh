@@ -34,7 +34,6 @@
 #include "base.hh"
 #include "genhashtbl.hh"
 #include "msgbuffer.hh"
-#include "marshaler.hh"
 
 // time_t
 #include <time.h>

@@ -46,7 +46,6 @@
 
 #include "boot-manager.hh"
 #include "dictionary.hh"
-#include "marshaler.hh"
 #include "copycode.hh"
 #include "trace.hh"
 #include "os.hh"
@@ -939,6 +938,20 @@ LBLdispatcher:
     }
 
 
+  Case(SETSELFG)
+    {
+      TaggedRef term = Greg(getRegArg(PC+1));
+      if (oz_isRef(term)) {
+        DEREF(term,termPtr,tag);
+        if (oz_isVariable(term)) {
+          SUSP_PC(termPtr,PC);
+        }
+      }
+      ChangeSelf(tagged2Object(term));
+      DISPATCH(2);
+    }
+
+
   Case(GETRETURNX) { Xreg(getRegArg(PC+1)) = GetFunReturn(); DISPATCH(2); }
   Case(GETRETURNY) { Yreg(getRegArg(PC+1)) = GetFunReturn(); DISPATCH(2); }
   Case(GETRETURNG) { Greg(getRegArg(PC+1)) = GetFunReturn(); DISPATCH(2); }
@@ -1092,6 +1105,7 @@ LBLdispatcher:
     }
 
   Case(SETPREDICATEREF)
+  Case(SETPROCEDUREREF)
     {
       *sPointer++ = OZ_makeForeignPointer(getAdressArg(PC+1));
       DISPATCH(2);
@@ -2744,76 +2758,6 @@ Case(GETVOID)
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
-// KOSTJA: THIS IS DEAD CS
-
-  Case(FAILURE)
-  Case(UNIFYYX)
-  Case(UNIFYYY)
-  Case(UNIFYYG)
-  Case(UNIFYGX)
-  Case(UNIFYGY)
-  Case(UNIFYGG)
-
-  Case(GETLISTVALVARY)
-  Case(GETLISTVALVARG)
-  Case(GETVARVARGX)
-  Case(GETVARVARGY)
-  Case(GETVARVARGG)
-  Case(GETVARVARXG)
-  Case(GETVARVARYG)
-  Case(MOVEGG)
-  Case(MOVEXG)
-  Case(MOVEYG)
-  Case(PUTRECORDG)
-  Case(PUTCONSTANTG)
-  Case(PUTLISTG)
-  Case(SETVARIABLEG)
-  Case(GETVARIABLEG)
-  Case(UNIFYVARIABLEG)
-  Case(UNIFYVALVARXG)
-  Case(UNIFYVALVARYG)
-  Case(UNIFYVALVARGG)
-
-  Case(INLINEUPARROW)
-
-  Case(TAILCALLY)
-  Case(TAILAPPLMETHX)
-  Case(TAILAPPLMETHY)
-  Case(TAILAPPLMETHG)
-  Case(APPLMETHX)
-  Case(APPLMETHY)
-  Case(APPLMETHG)
-
-  Case(SHALLOWGUARD)
-  Case(SHALLOWTHEN)
-  Case(WAIT)
-  Case(WAITTOP)
-  Case(ASK)
-  Case(CREATECOND)
-  Case(CREATEOR)
-  Case(CREATEENUMOR)
-  Case(CREATECHOICE)
-  Case(CLAUSE)
-  Case(EMPTYCLAUSE)
-  Case(NEXTCLAUSE)
-  Case(LASTCLAUSE)
-  Case(THREAD)
-
-  Case(TESTLABEL1)
-  Case(TESTLABEL2)
-  Case(TESTLABEL3)
-  Case(TESTLABEL4)
-
-  Case(TEST1)
-  Case(TEST2)
-  Case(TEST3)
-  Case(TEST4)
-  Case(CREATEVARIABLEG)
-  Case(CREATEVARIABLEMOVEG)
-    {
-      OZ_error("DEPRECATED DEEP GUARD INSTRUCTION (%s) ENCOUNTERED.\n PLEASE RECOMPILE YOUR PROGRAMS!!!",opcodeToString(CodeArea::getOpcode(PC)));
-      return T_ERROR;
-    }
 
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: MISC: ERROR/NOOP/default
@@ -3094,7 +3038,6 @@ Case(GETVOID)
           switch (CodeArea::getOpcode(PC+5)) {
           case PUTCONSTANTX:
           case PUTCONSTANTY:
-          case PUTCONSTANTG:
           case GETLITERALX:
           case GETLITERALY:
           case GETLITERALG:
@@ -3167,6 +3110,10 @@ Case(GETVOID)
       DISPATCH(5);
     }
 
+  Case(CALLPROCEDUREREF)
+      OZ_error("CALLPROCEDUREREF not yet implemented");
+      return T_ERROR;
+
   Case(GENFASTCALL)
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
@@ -3180,6 +3127,9 @@ Case(GETVOID)
       DISPATCH(0);
     }
 
+  Case(CALLCONSTANT)
+      OZ_error("CALLCONSTANT not yet implemented");
+      return T_ERROR;
   Case(MARSHALLEDFASTCALL)
     {
       TaggedRef pred = getTaggedArg(PC+1);
@@ -3208,6 +3158,13 @@ Case(GETVOID)
       }
       RAISE_APPLY(pred,oz_mklist(OZ_atom("proc or builtin expected.")));
     }
+
+  Case(CALLGLOBAL)
+      OZ_error("CALLGLOBAL not yet implemented");
+      return T_ERROR;
+  Case(CALLMETHOD)
+      OZ_error("CALLMETHOD not yet implemented");
+      return T_ERROR;
 
   Case(GENCALL)
     {
@@ -3490,17 +3447,14 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
     }
 
 
-    case GETLISTVALVARX: ONREG(getListValVar,X);
-    case GETLISTVALVARY: ONREG(getListValVar,Y);
-    case GETLISTVALVARG: ONREG(getListValVar,GREF);
-    getListValVar:
+    case GETLISTVALVARX:
       {
         TaggedRef term = RegAccess(X,getRegArg(PC+1));
         DEREF(term,termPtr,tag);
 
         Assert(isUVar(term));
         LTuple *ltuple = new LTuple();
-        ltuple->setHead(RegAccess(auxReg,getRegArg(PC+2)));
+        ltuple->setHead(RegAccess(X,getRegArg(PC+2)));
         ltuple->setTail(am.currentUVarPrototype());
         bindOPT(termPtr,makeTaggedLTuple(ltuple));
         RegAccess(X,getRegArg(PC+3)) = makeTaggedRef(ltuple->getRef()+1);
@@ -3524,7 +3478,6 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
 
     case UNIFYVARIABLEX: ONREG(unifyVariable,X);
     case UNIFYVARIABLEY: ONREG(unifyVariable,Y);
-    case UNIFYVARIABLEG: ONREG(unifyVariable,GREF);
     unifyVariable:
     {
         *sPointer = am.currentUVarPrototype();
@@ -3543,13 +3496,10 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
 
     case UNIFYVALVARXX: ONREG2(UnifyValVar,X,X);
     case UNIFYVALVARXY: ONREG2(UnifyValVar,X,Y);
-    case UNIFYVALVARXG: ONREG2(UnifyValVar,X,GREF);
     case UNIFYVALVARYX: ONREG2(UnifyValVar,Y,X);
     case UNIFYVALVARYY: ONREG2(UnifyValVar,Y,Y);
-    case UNIFYVALVARYG: ONREG2(UnifyValVar,Y,GREF);
     case UNIFYVALVARGX: ONREG2(UnifyValVar,GREF,X);
     case UNIFYVALVARGY: ONREG2(UnifyValVar,GREF,Y);
-    case UNIFYVALVARGG: ONREG2(UnifyValVar,GREF,GREF);
       {
       UnifyValVar:
         *sPointer++ = RegAccess(auxReg,getRegArg(PC+1));

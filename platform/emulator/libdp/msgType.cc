@@ -28,7 +28,7 @@
 
 #include "base.hh"
 #include "msgType.hh"
-#include "marshaler.hh"
+#include "newmarshaler.hh"
 
 SendRecvCounter mess_counter[M_LAST];
 

@@ -508,6 +508,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case CREATEVARIABLEY:
     case GETSELF:
     case SETSELF:
+    case SETSELFG:
     case CLEARY:
       fprintf(ofile, "(%d)\n", regToInt(getRegArg(PC+1)));
       DISPATCH();
@@ -609,7 +610,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case INLINEPLUS:
     case INLINEMINUS:
-    case INLINEUPARROW:
       {
         fprintf (ofile,
                  "(x(%d) x(%d) x(%d))\n",
@@ -653,9 +653,16 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       fprintf(ofile, " %p)\n",computeLabelArg(PC,PC+3));
       DISPATCH();
 
+    case CALLGLOBAL:
+      {
+        fprintf(ofile,"(%d %d)\n",regToInt(getRegArg(PC+1)),getPosIntArg(PC+2));
+        DISPATCH();
+      }
+
     case GENFASTCALL:
     case FASTCALL:
     case FASTTAILCALL:
+    case CALLPROCEDUREREF:
       {
         AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
         fprintf(ofile,"(%p[pc:%p n:%d] %d)\n",entry,
@@ -664,6 +671,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       }
 
     case SETPREDICATEREF:
+    case SETPROCEDUREREF:
       {
         AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
         fprintf(ofile,"(%p[pc:%p n:%d])\n",entry,
@@ -865,6 +873,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       }
       DISPATCH();
 
+    case CALLMETHOD:
     case GENCALL:
       {
         GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
@@ -874,6 +883,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
         DISPATCH();
       }
 
+    case CALLCONSTANT:
     case MARSHALLEDFASTCALL:
       {
         fprintf(ofile, "(%s %d)\n",toC(getTaggedArg(PC+1)),getPosIntArg(PC+2));

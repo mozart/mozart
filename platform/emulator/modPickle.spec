@@ -46,9 +46,4 @@
                              out    => ['value'],
                              BI     => BIloadWithHeader},
 
-    'newMarshaler'      => { in     => ['+int'],
-                             out    => [],
-                             BI     => BInewMarshaler,
-                             ifdef  => NEWMARSHALER},
-
  );

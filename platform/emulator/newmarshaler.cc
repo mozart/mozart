@@ -34,7 +34,63 @@
 #include "newmarshaler.hh"
 #include "boot-manager.hh"
 
-#ifdef NEWMARSHALER
+
+inline int unmarshalRefTag(MsgBuffer *bs)
+{
+  return unmarshalNumber(bs);
+}
+
+GName *globalizeConst(ConstTerm *t, MsgBuffer *bs)
+{
+  if (!bs->globalize())
+    return 0;
+
+  switch(t->getType()) {
+  case Co_Object:      return ((Object*)t)->globalize();
+  case Co_Class:       return ((ObjectClass*)t)->globalize();
+  case Co_Chunk:       return ((SChunk*)t)->globalize();
+  case Co_Abstraction: return ((Abstraction*)t)->globalize();
+  default: Assert(0); return NULL;
+  }
+}
+
+void marshalGName(GName *gname, MsgBuffer *bs)
+{
+  if (gname==NULL)
+    return;
+
+  misc_counter[MISC_GNAME].send();
+
+  gname->site->marshalSiteForGName(bs);
+  for (int i=0; i<fatIntDigits; i++) {
+    marshalNumber(gname->id.number[i],bs);
+  }
+  marshalNumber((int)gname->gnameType,bs);
+}
+
+
+void unmarshalGName1(GName *gname, MsgBuffer *bs)
+{
+  gname->site=unmarshalSite(bs);
+  for (int i=0; i<fatIntDigits; i++) {
+    gname->id.number[i] = unmarshalNumber(bs);
+  }
+  gname->gnameType = (GNameType) unmarshalNumber(bs);
+}
+
+GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
+{
+  misc_counter[MISC_GNAME].recv();
+  GName gname;
+  unmarshalGName1(&gname,bs);
+
+  TaggedRef aux = oz_findGName(&gname);
+  if (aux) {
+    if (ret) *ret = aux; // ATTENTION
+    return 0;
+  }
+  return new GName(gname);
+}
 
 //
 int32* NMMemoryManager::freelist[NMMM_SIZE];
@@ -731,4 +787,8 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
   Assert(0);
 }
 
-#endif
+SendRecvCounter dif_counter[DIF_LAST];
+SendRecvCounter misc_counter[MISC_LAST];
+
+
+#include "pickle.cc"
