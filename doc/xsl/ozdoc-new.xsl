@@ -263,7 +263,23 @@
 <template match="AUTHOR.EXTERN">
   <if test="not(position()=1)"><txt:usemap>\EOLN
 </txt:usemap></if>
-  <value-of select="translate((string(@KEY)),'.',' ')"/>
+  <variable name="key"><value-of select="@KEY"/></variable>
+  <variable name="author"
+            select="/BOOK/OZDOC.DB/OZDOC.AUTHOR.DB/OZDOC.AUTHOR[@KEY=$key]"/>
+  <choose>
+    <when test="$author">
+      <apply-templates select="$author"/>
+    </when>
+    <otherwise>
+      <value-of select="translate((string($key)),'.',' ')"/>
+    </otherwise>
+  </choose>
+</template>
+
+<template match="OZDOC.AUTHOR">
+  <value-of select="@FIRSTNAME"/>
+  <text>  </text>
+  <value-of select="@LASTNAME"/>
 </template>
 
 <template match="AUTHOR">
