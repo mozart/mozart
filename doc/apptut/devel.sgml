@@ -221,7 +221,9 @@ define
       [] Fs then
          O={Form.book Fs}
       in
-         {System.showInfo ('Booked: '#O.key#' for: '#O.first#' '#O.last#
+         {System.showInfo ('Booked: '#O.key#
+                           ' for: '#O.first#
+                           ' '#O.last#
                            ' ('#O.email#')')}
          {DB.remove O.key}
          {Book}
