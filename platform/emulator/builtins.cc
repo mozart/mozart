@@ -6452,17 +6452,6 @@ OZ_C_proc_begin(BINew,3)
 OZ_C_proc_end
 
 
-OZ_BI_define(BIsetSelf,1,0) {
-  oz_declareNonvarIN(0,obj);
-  obj = oz_deref(obj);
-  if (!oz_isObject(obj)) {
-    oz_typeError(0,"Object");
-  }
-  am.changeSelf(tagged2Object(obj));
-  return PROCEED;
-} OZ_BI_end
-
-
 OZ_Return ooGetLockInline(TaggedRef val)
 { 
   OzLock *lock = am.getSelf()->getLock();
