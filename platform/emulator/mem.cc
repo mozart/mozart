@@ -422,7 +422,7 @@ void *ozMalloc(size_t size)
 
 #endif  // defined(WINDOWS)
 #else   // defined(USE_MALLOC)
-#error BOOOOOM			// an undefined allocation scheme!!
+BOOOOOM;			// an undefined allocation scheme!!
 #endif  // defined(USE_MALLOC)
 
 
