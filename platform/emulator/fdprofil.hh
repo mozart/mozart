@@ -17,11 +17,12 @@
 #endif
 
 #include <iostream.h>
+#include <limits.h>
 
 #include "tagged.hh"
 
-enum ProfileDataIndex {
-  no_props = 0,
+enum ProfileDataIndex1 {
+  no_props1 = 0,
   no_vars_copied,
   size_vars_copied,
   no_ent_props,
@@ -39,72 +40,88 @@ enum ProfileDataIndex {
   susps_per_propagate_p,
   no_calls_checksusplist,
   susps_per_checksusplist,
-  
-  
-  cp_no_literal,
+
+  no_high1
+};
+
+enum ProfileDataIndex2 {
   cp_size_literal,
-  cp_no_script,
   cp_size_script,
-  cp_no_suspcont,
   cp_size_suspcont,
-  cp_no_refsarray,
   cp_size_refsarray,
-  cp_no_cfunccont,
   cp_size_cfunccont,
-  cp_no_cont,
   cp_size_cont,
-  cp_no_stuple,
   cp_size_stuple,
-  cp_no_ltuple,
   cp_size_ltuple,
-  cp_no_record,
   cp_size_record,
-  cp_no_susp,
   cp_size_susp,
-  cp_no_condsusplist,
   cp_size_condsusplist,
-  cp_no_susplist,
   cp_size_susplist,
-  cp_no_svar,
   cp_size_svar,
-  cp_no_fdvar,
   cp_size_fdvar,
-  cp_no_ofsvar,
   cp_size_ofsvar,
-  cp_no_board,
+  cp_size_boolvar,
+  cp_size_metavar,
   cp_size_board,
-  cp_no_askactor,
   cp_size_askactor,
-  cp_no_waitactor,
   cp_size_waitactor,
-  cp_no_solveactor,
   cp_size_solveactor,
 
-  fd_bool,
-  fd_bool_saved,
-  fd_bitvector,
-  fd_bitvector_saved,
-  fd_intervals,
-  fd_intervals_saved,
-  
-  no_high
+  no_high2
 };
 
 class ProfileData {
+friend class ProfileDataTotal;
 private:
-  static char * print_msg[no_high];
-  unsigned items[no_high];
+  static char * print_msg1[no_high1], * print_msg2[no_high2];
+  unsigned items1[no_high1];
+  struct {unsigned no; unsigned size;} items2[no_high2];
 public:
-  void init(void) { for (int i = no_high; i--; ) items[i] = 0; }
-  ProfileData(void) { init(); }
-  void inc_item(ProfileDataIndex i, int by) { items[i] += by; }
-  void print(void);
-  void operator += (ProfileData &y);
-  unsigned getItem(int i) {return items[i];}
-  static char * getPrintMsg(int i) {
-    if (i < 0 || i >= no_high) error("Index overflow.");
-    return print_msg[i];
+  void init(void) { 
+    for (int i = no_high1; i--; ) items1[i] = 0; 
+    for (int i = no_high2; i--; ) items2[i].no = items2[i].size = 0; 
   }
+  ProfileData(void) { init(); }
+  
+  void inc_item(int i) { 
+    if (i < 0 || no_high1 <= i) error("index");
+    items1[i] += 1;
+  }
+  void inc_item(int i, int by) { 
+    if (i < 0 || no_high2 <= i) error("index");
+    items2[i].size += by; 
+    items2[i].no += 1;
+  }
+  
+  void print(void);
+
+  static char * getPrintMsg1(int i) {
+    if (i < 0 || i >= no_high1) error("Index overflow.");
+    return print_msg1[i];
+  }
+  static char * getPrintMsg2(int i) {
+    if (i < 0 || i >= no_high2) error("Index overflow.");
+    return print_msg2[i];
+  }
+};
+
+
+class ProfileDataTotal : public ProfileData {
+private:
+  unsigned min2[no_high2], max2[no_high2];
+public:
+  ProfileDataTotal(void) {init();}
+
+  void init(void) { 
+    ProfileData::init();
+    for (int i = no_high2; i--; ) {
+      max2[i] = 0;
+      min2[i] = UINT_MAX; 
+    }
+  }
+  
+  void printTotal(unsigned n);
+  void operator += (ProfileData &y);
 };
 
 class ProfileList : public ProfileData {
@@ -127,10 +144,12 @@ private:
   ProfileList * head;
   ProfileList * tail;
   ProfileList * curr;
-  ProfileData total;
+  ProfileDataTotal total;
 public:
   ProfileHost(void) : head(NULL), tail(NULL), curr(NULL) { add(); }
-  void inc_item(ProfileDataIndex i, int by = 1) { tail->inc_item(i, by); }
+  
+  void inc_item(int i) { tail->inc_item(i); }
+  void inc_item(int i, int by) { tail->inc_item(i, by); }
 
   void reset(void) { curr = head; }
   ProfileList * next(void) {
@@ -168,9 +187,9 @@ public:
 };
 
 
-#if PROFILE_FD == 1
+#if PROFILE_FD 
 # define _PROFILE_CODE1(CODE) CODE
-# define PROFILE_CODE1(CODE) {_PROFILE_CODE1(CODE)}
+# define PROFILE_CODE1(CODE) {_PROFILE_CODE1(CODE) }
 #else
 # define _PROFILE_CODE1(CODE)
 # define PROFILE_CODE1(CODE)
