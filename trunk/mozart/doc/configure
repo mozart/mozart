@@ -16,7 +16,7 @@ ac_help="$ac_help
 --with-psgml-dir=DIR
     	directory where psgml mode support is located"
 ac_help="$ac_help
---with-documents="DIR1 ... DIRN" (or all)      
+--with-documents='DIR1 ... DIRN' (or all)      
        document subdirectories (default=none)"
 
 # Initialize some variables set by options.
