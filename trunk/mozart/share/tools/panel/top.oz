@@ -216,6 +216,8 @@ local
       end
 
    end
+
+   fun {ProjectSnd X Y} Y end
    
 in
    
@@ -263,6 +265,10 @@ in
 				 font:    BoldFont
 				 action:  self # clear)
 			 separator
+			 command(label:   'Save Parameters...'
+				 action:  self # save
+				 font:    BoldFont
+				 feature: save)
 			 command(label:   'Shutdown System...'
 				 action:  self # shutdown
 				 font:    BoldFont
@@ -681,6 +687,44 @@ in
 	 else skip
 	 end
 	 {self.menu.panel.shutdown tk(entryconf state:normal)}
+      end
+
+      meth save
+	 {self.menu.panel.save tk(entryconf state:disabled)}
+	 case {Tk.return
+	       tk_getSaveFile(filetypes:  q(q('Oz Files'  q('.oz'))
+					    q('All Files' '*'))
+			      parent:     self
+			      title:      TitleName#': Save Parameters')}
+	 of nil then skip
+	 elseof S then
+	    try
+	       F = {New Open.file init(name:S flags:[write create truncate])}
+	    in
+	       {F write(vs:('%%\n' #
+			    '%% System parameters (Created by Oz Panel)\n' #
+			    '%%\n'))}
+	       {ForAll
+		[priorities(high:unit medium:unit)
+		 gc(min:unit max:unit free:unit tolerance:unit on:unit)
+		 messages(idle:unit gc:unit)
+		 print(depth:unit width:unit)
+		 errors(depth:unit hints:unit location:unit 'thread':unit)]
+		proc {$ SS}
+		   {F write(vs:('{System.set ' #
+				  {System.valueToVirtualString
+				   {Record.zip SS {System.get {Label SS}}
+				    ProjectSnd} 100 100} #
+				  '}\n'))}
+		end}
+	       {F close}
+	    catch system(os(_ _ T) ...) then
+	       {Wait {New TkTools.error
+		      tkInit(master: self
+			     text:   'Error in writing file: '#T)}.tkClosed}
+	    end
+	 end
+	 {self.menu.panel.save tk(entryconf state:normal)}
       end
 
       meth about
