@@ -158,9 +158,21 @@ void WeakDictionary::put(OZ_Term key,OZ_Term val)
   }
 }
 
+// kost@ + raph : OptVar's should not be put in weak dictionaries.
+// OptVar's are not marked by the garbage collector, and are therefore
+// always considered as garbage.  This macro turns v into a SimpleVar
+// if necessary.
+#define NonOptVar(v)							\
+  TaggedRef w = v;							\
+  DEREF(w,w_ptr);							\
+  if (oz_isOptVar(w)) { (void) oz_getNonOptVar(w_ptr); }
+
 OZ_Return WeakDictionary::putFeatureV(OZ_Term f,OZ_Term  v)
 {
   if (!OZ_isFeature(f)) { OZ_typeError(1,"feature"); }
+  if (!isLocal()) return oz_raise(E_ERROR,E_KERNEL,"globalState",1,
+				  oz_atom("weakDictionary"));
+  NonOptVar(v);   // bug fix for OptVar's
   put(f,v);
   return PROCEED;
 }
@@ -188,30 +200,6 @@ OZ_declareType(ARG,VAR,WeakDictionary*,"weakDictionary",\
 #define OZ_declareFeature(ARG,VAR) \
 OZ_declareType(ARG,VAR,OZ_Term,"feature",OZ_isFeature,NO_COERCE)
 
-OZ_BI_define(weakdict_put,3,0)
-{
- OZ_declareWeakDict(0,d);
- if (!d->isLocal())
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("weakDictionary"));
- OZ_declareDetTerm(1,k);
- OZ_declareTerm(2,v);
- TaggedRef w = v;
- DEREF(w,w_ptr);
- if (oz_isOptVar(w)) {
-   // we must bind the UVAR to a VAR (simple)
-   // kost@ : didn't get exactly "why", but now that means that
-   // OptVar"s are to be eliminated:
-   OzVariable *wv = tagged2Var(w);
-   Board *wh = wv->getBoardInternal();
-   OZ_Return r = 
-     oz_unify(makeTaggedRef(newTaggedVar(oz_newSimpleVar(wh))), v);
-   if (r != PROCEED) return r;
- }
- d->put(oz_deref(k),v);
- return PROCEED;
-}
-OZ_BI_end
-
 OZ_BI_define(weakdict_get,2,1)
 {
   OZ_declareWeakDict(0,d);
@@ -230,6 +218,61 @@ OZ_BI_define(weakdict_condGet,3,1)
   OZ_Term v;
   if (!d->get(k,v)) OZ_RETURN(OZ_in(2));
   OZ_RETURN(v);
+}
+OZ_BI_end
+
+OZ_BI_define(weakdict_put,3,0)
+{
+  OZ_declareWeakDict(0,d);
+  if (!d->isLocal()) return oz_raise(E_ERROR,E_KERNEL,"globalState",1,
+				     oz_atom("weakDictionary"));
+  OZ_declareFeature(1,k);
+  OZ_declareTerm(2,v);
+  NonOptVar(v);   // bug fix for OptVar's
+  d->put(oz_deref(k),v);
+  return PROCEED;
+}
+OZ_BI_end
+
+// {WeakDictionary.exchange D LI ?OldVal NewVal}
+OZ_BI_define(weakdict_exchange,4,0)
+{
+  OZ_declareWeakDict(0,d);
+  if (!d->isLocal()) return oz_raise(E_ERROR,E_KERNEL,"globalState",1,
+				     oz_atom("weakDictionary"));
+  OZ_declareFeature(1,k);
+  OZ_declareTerm(3,new_val);
+  OZ_Term old;
+  // read the old value
+  if (!d->get(k,old))
+    return oz_raise(E_SYSTEM,E_KERNEL,"weakDictionary",2,OZ_in(0),OZ_in(1));
+  // put the new value
+  NonOptVar(new_val);   // bug fix for OptVar's
+  d->put(oz_deref(k),new_val);
+  // unify the old value with third argument
+  am.prepareCall(BI_Unify, RefsArray::make(OZ_in(2), old));
+  return BI_REPLACEBICALL;
+}
+OZ_BI_end
+
+// {WeakDictionary.condExchange D LI DefVal ?OldVal NewVal}
+OZ_BI_define(weakdict_condExchange,5,0)
+{
+  OZ_declareWeakDict(0,d);
+  if (!d->isLocal()) return oz_raise(E_ERROR,E_KERNEL,"globalState",1,
+				     oz_atom("weakDictionary"));
+  OZ_declareFeature(1,k);
+  OZ_declareTerm(2,def_val);
+  OZ_declareTerm(4,new_val);
+  OZ_Term old;
+  // read the old value, or take def_val if not present
+  if (!d->get(k,old)) old = def_val;
+  // put the new value
+  NonOptVar(new_val);   // bug fix for OptVar's
+  d->put(oz_deref(k),new_val);
+  // unify the old value with fourth argument
+  am.prepareCall(BI_Unify, RefsArray::make(OZ_in(3), old));
+  return BI_REPLACEBICALL;
 }
 OZ_BI_end
 
