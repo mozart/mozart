@@ -1457,7 +1457,7 @@ public:
     FreeListManager(WRITE_CONNECTION_CUTOFF){wc = 0;} 
 
   void freeConnection(WriteConnection *r){ 
-    //printf("freed r:%d nr%d\n",(int)r,--wc);
+    printf("freed r:%d\n",(int)r);
     r->clearFlag(WRITE_CON);
     //Assert(r->isRemovable());
     deleteConnection(r);
@@ -1465,7 +1465,7 @@ public:
 
   WriteConnection *allocConnection(RemoteSite *s,int f){
     WriteConnection *r=newConnection(s,f);
-    //printf("allocated r:%d s:%d fd:%d nr:%d\n",(int)r,(int)s,f,++wc);
+    printf("allocated r:%d s:%d fd:%d\n",(int)r,(int)s,f);
     return r;}
  };
 
@@ -1768,8 +1768,7 @@ public:
       accept = TRUE;} 
   
   void add(Connection *w) {
-    //    printf("cache add connection r:%x site:%x o:%d c:%d \n",(int)w,
-    //   (int)w->getRemoteSite(),open_size,close_size);
+    printf("cache add connection r:%d\n",(int)w);
     if(w->isOpening()){
       addToFront(w, currentHead, currentTail);  
       open_size++;
@@ -1800,7 +1799,7 @@ public:
     Assert(0);}
   
   void remove(Connection *w){
-    //printf("cache remove connection r:%x site:%x o:%d c:%d\n",(int)w,
+    printf("cache remove connection r:%d\n",(int)w);
     //	   (int)w->getRemoteSite(),open_size, close_size);
     //EK remove thisone?
     if(w->isOpening()){
@@ -3445,7 +3444,9 @@ void RemoteSite::sitePrmDwn(){
     /* If we are in a Tmp state we must now remove the
        writeconnection from TC. I dont know about the LOST....
     */
-    if(writeConnection->getFD() != LOST || writeConnection->isTmpDwn())
+    if(writeConnection->getFD() != LOST || 
+       writeConnection->isTmpDwn()||
+       writeConnection->isOpening())
       writeConnection->prmDwn();
     writeConnectionManager->freeConnection(writeConnection);
     writeConnection = NULL;}
