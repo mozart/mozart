@@ -23,13 +23,6 @@
  *  WARRANTIES.
  *
  */
-/*
- * FBPS DFKI Saarbr"ucken
- * Author: mehl
- *
- * class Continuation: (PC,Y,G,[X])
- */
-
 
 #ifndef __CONTHH
 #define __CONTHH

@@ -5,7 +5,7 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
