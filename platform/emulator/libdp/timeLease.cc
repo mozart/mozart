@@ -123,7 +123,7 @@ void TL::updateTimerExpired()
   else{
     MsgContainer *msgC = msgContainerManager->newMsgContainer(parent.rr->netaddr.site);
     msgC->put_M_UPDATE_REFERENCE(parent.rr->netaddr.index,myDSite);
-    send(msgC,-1);
+    send(msgC);
   }
 }
 
