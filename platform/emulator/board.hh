@@ -164,6 +164,7 @@ public:
   void incSolveThreads(void);
   void decSolveThreads(void);
   void checkSolveThreads(void);
+  void checkStability(void);
 
   //
   // Thread counter
@@ -290,7 +291,6 @@ public:
     bag = MarkPointer(db,IsMarkedPointer(bag,3));
   }
   void addToDistBag(Distributor * d);
-  void cleanDistributors(void);
   Distributor * getDistributor(void);
 
 
@@ -305,24 +305,23 @@ public:
   // Status variable
   //
 private:
-  TaggedRef result;
+  TaggedRef status;
 
 public:
-  TaggedRef getResult() {
-    return result;
+  TaggedRef getStatus() {
+    return status;
   }
-  void setResult(TaggedRef v) {
-    result = v;
+  void setStatus(TaggedRef v) {
+    status = v;
   }
 
-  void clearResult();
-  void patchChoiceResult(int i);
+  void clearStatus();
+  void patchAltStatus(int i);
 
-  TaggedRef genSolved();
-  TaggedRef genStuck();
-  TaggedRef genChoice(int noOfClauses);
+  TaggedRef genSucceeded(Bool);
+  TaggedRef genAlt(int);
   TaggedRef genFailed();
-  TaggedRef genUnstable(TaggedRef arg);
+  TaggedRef genBlocked(TaggedRef arg);
 
 
   //

@@ -40,92 +40,6 @@
 # define CTT (oz_currentThread())
 
 
-/*
- * check stability after thread is finished
- */
-static
-void oz_checkStability()
-{
-  // try to reduce a solve board;
-  Board * solveBB = oz_currentBoard();
-
-  if (solveBB->isStable()) {
-    Assert(am.trail.isEmptyChunk());
-    // all possible reduction steps require this;
-
-    // check for nonmonotonic propagators
-    solveBB->scheduleNonMono();
-    if (!solveBB->isStable())
-      return;
-
-    // Check whether there are registered distributors
-    Distributor * d = solveBB->getDistributor();
-
-    if (d) {
-
-      if (d->getAlternatives() == 1) {
-        // Is the distributor unary?
-        d->commit(solveBB,1,1);
-
-        return;
-      } else {
-        // don't decrement counter of parent board!
-        am.trail.popMark();
-        solveBB->unsetInstalled();
-        am.setCurrent(solveBB->getParent());
-
-        int ret = oz_unify(solveBB->getResult(),
-                           solveBB->genChoice(d->getAlternatives()));
-        Assert(ret==PROCEED);
-
-        return;
-      }
-
-    }
-
-    if (solveBB->getSuspCount() == 0) {
-      // 'succeeded';
-      am.trail.popMark();
-      solveBB->unsetInstalled();
-      am.setCurrent(solveBB->getParent());
-
-      int ret = oz_unify(solveBB->getResult(), solveBB->genSolved());
-
-      // VIOLATED ASSERTION!!!! CS-SPECIAL
-      //   Assert(ret==PROCEED);
-
-      return;
-    }
-
-    // suspended
-    am.trail.popMark();
-    oz_currentBoard()->unsetInstalled();
-    am.setCurrent(oz_currentBoard()->getParent());
-
-    int ret = oz_unify(solveBB->getResult(), solveBB->genStuck());
-    Assert(ret==PROCEED);
-    return;
-  }
-
-  if (solveBB->getThreads() == 0) {
-    // There are some external suspensions: blocked
-
-    oz_deinstallCurrent();
-
-    TaggedRef newVar = oz_newVariable();
-    TaggedRef result = solveBB->getResult();
-
-    solveBB->setResult(newVar);
-
-    int ret = oz_unify(result, solveBB->genUnstable(newVar));
-    Assert(ret==PROCEED);
-    return;
-  }
-
-  oz_deinstallCurrent();
-  return;
-}
-
 static
 TaggedRef formatError(TaggedRef info,TaggedRef val,
                       OZ_Term traceBack,OZ_Term loc)
@@ -366,7 +280,7 @@ LBLcheckEntailmentAndStability:
 
     Assert(!CBB->isRoot());
 
-    oz_checkStability();
+    CBB->checkStability();
 
     //  deref nb, because it maybe just committed!
 
@@ -493,7 +407,7 @@ LBLfailure:
 
      am.setCurrent(p);
 
-     if (!oz_unify(b->getResult(),b->genFailed())) { // mm_u
+     if (!oz_unify(b->getStatus(),b->genFailed())) { // mm_u
        // this should never happen?
        Assert(0);
      }

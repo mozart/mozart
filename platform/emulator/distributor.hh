@@ -34,73 +34,47 @@ class Distributor {
 public:
   USEFREELISTMEMORY;
 
-  virtual int isAlive(void) = 0;
   virtual int getAlternatives(void) = 0;
   virtual int commit(Board *, int, int) = 0;
 
   virtual Distributor * gc(void) = 0;
-
   virtual void dispose(void) = 0;
+
 };
 
+
 class DistBag {
+private:
   Distributor * dist;
   DistBag     * next;
+  Bool          isUnary;
+
+  DistBag(Distributor *d, DistBag *b, Bool iu) {
+    dist = d; next = b; isUnary = iu;
+  }
+
+  DistBag(Distributor *d, Bool iu) {
+    dist = d; isUnary = iu;
+  }
+
+  void dispose(void);
+
 public:
   USEFREELISTMEMORY;
 
-  DistBag(Distributor *d, DistBag *b) {
-    dist = d; next = b;
-  }
-  DistBag(Distributor *d) {
-    dist = d; next = (DistBag *) 0;
+  DistBag * addIt(Distributor *d, Bool isUnary);
+  DistBag * add(Distributor * d) {
+    return addIt(d,NO);
   }
 
-  Distributor * getDist(void) {
+  DistBag * get(Distributor ** d);
+
+  Distributor * getFirst(void) {
+    Assert(this);
     return dist;
   }
-  DistBag * getNext(void) {
-    return next;
-  }
-  void setNext(DistBag * d) {
-    next = d;
-  }
 
-  DistBag * clean(void);
-
-  void dispose(void) {
-    freeListDispose(this, sizeof(DistBag));
-  }
-
-  DistBag * getLast(void) {
-    Assert(this);
-    DistBag * last = this;
-    while (last->next) {
-      last = last->next;
-    }
-    return last;
-  }
-
-  DistBag * add(Distributor *d) {
-    return new DistBag(d,this);
-  }
-
-  DistBag * merge(DistBag * b) {
-    if (!this) {
-      return b;
-    } else {
-      if (b)
-        getLast()->next = b;
-      return this;
-    }
-  }
-
-  DistBag * remove(void) {
-    Assert(this);
-    DistBag * ret = this->next;
-    dispose();
-    return ret;
-  }
+  DistBag * merge(DistBag * b);
 
   DistBag * gc(void);
 

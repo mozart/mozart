@@ -84,6 +84,10 @@ void Script::dealloc()
   }
 }
 
+/*
+ * Misc stuff
+ *
+ */
 
 inline
 void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
@@ -96,6 +100,75 @@ void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
 }
 
 
+class BaseDistributor : public Distributor {
+protected:
+  int offset, num;
+  TaggedRef var;
+
+public:
+
+  BaseDistributor::BaseDistributor(Board * bb, const int n) {
+    offset = 0;
+    num    = n;
+    var    = oz_newVar(bb);
+  }
+
+  TaggedRef getVar(void) {
+    return var;
+  }
+
+  virtual int getAlternatives(void) {
+    return num;
+  }
+
+  virtual int BaseDistributor::commit(Board * bb, int l, int r) {
+    if (l > num+1) {
+      num = 0;
+    } else {
+      offset += l-1;
+      num     = min(num,min(r,num+1)-l+1);
+
+      if (num == 1) {
+        num = 0;
+
+        telleq(bb,var,makeTaggedSmallInt(offset + 1));
+        return 1;
+      }
+    }
+    return num;
+  }
+
+  virtual void dispose(void) {
+    freeListDispose(this, sizeof(BaseDistributor));
+  }
+
+  void BaseDistributor::unitCommit() {
+    Assert(num==1 && offset==0);
+
+    int ret = oz_unify(var,makeTaggedSmallInt(1));
+    Assert(ret==PROCEED);
+
+    dispose();
+  }
+
+  virtual Distributor * BaseDistributor::gc(void) {
+    BaseDistributor * t =
+      (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
+
+    OZ_collectHeapTerm(var, t->var);
+
+    return (Distributor *) t;
+  }
+
+};
+
+
+
+
+/*
+ * Generic operations
+ *
+ */
 
 Board::Board(Board * p)
   : localPropagatorQueue(0), suspCount(0), bag(0),
@@ -104,10 +177,10 @@ Board::Board(Board * p)
   Assert(p==NULL || !p->isCommitted());
   setParentInternal(p);
   if (p) {
-    result  = oz_newVar(p);
+    status  = oz_newVar(p);
     rootVar = oz_newVar(this);
   } else {
-    rootVar = result = taggedVoidValue;
+    rootVar = status = taggedVoidValue;
   }
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -116,8 +189,94 @@ Board::Board(Board * p)
 #endif
 }
 
+
 /*
- * Routines for checking suspensions
+ * Non monotonic propagators
+ *
+ */
+
+inline
+void Board::scheduleNonMono(void) {
+
+  for (OrderedSuspList * p = getNonMono();
+       p != NULL;
+       p = p->getNext()) {
+    Propagator * prop = p->getPropagator();
+
+    oz_pushToLPQ(GETBOARD(prop),prop);
+  }
+
+  setNonMono(NULL);
+
+}
+
+
+/*
+ * Distributors
+ *
+ */
+
+inline
+Distributor * Board::getDistributor(void) {
+  Distributor * d = NULL;
+  setDistBag(getDistBag()->get(&d));
+  return d;
+}
+
+
+
+/*
+ * Status variable
+ *
+ */
+
+inline
+void Board::patchAltStatus(int i) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+  stuple->setArg(0, makeTaggedSmallInt(i));
+  status = makeTaggedSRecord(stuple);
+}
+
+inline
+void Board::clearStatus() {
+  if (OZ_isVariable(status))
+    return;
+
+  status = oz_newVar(getParent());
+}
+
+inline
+TaggedRef Board::genSucceeded(Bool isEntailed) {
+  ozstat.incSolveSolved();
+  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
+
+  stuple->setArg(0, isEntailed ? AtomEntailed : AtomSuspended);
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+TaggedRef Board::genAlt(int noOfClauses) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+
+  Assert(!isCommitted());
+  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+TaggedRef Board::genBlocked(TaggedRef arg) {
+  SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+  stuple->setArg(0, arg);
+  return makeTaggedSRecord(stuple);
+}
+
+
+
+
+/*
+ * Routines for checking external suspensions
  *
  */
 
@@ -261,6 +420,85 @@ void Board::clearSuspList(Suspension killSusp) {
 
 
 /*
+ * Stability checking
+ *
+ */
+
+inline
+Bool Board::isBlocked(void) {
+  return (getThreads()==0) && !isStable();
+}
+
+void Board::checkStability(void) {
+
+  if (isStable()) {
+    Assert(am.trail.isEmptyChunk());
+
+    // check for nonmonotonic propagators
+    scheduleNonMono();
+    if (!isStable())
+      return;
+
+    // Check whether there are registered distributors
+    Distributor * d = getDistributor();
+
+    if (d) {
+
+      int n = d->getAlternatives();
+
+      if (n == 1) {
+        // Is the distributor unary?
+        ((BaseDistributor *) d)->unitCommit();
+        return;
+      } else {
+        // don't decrement counter of parent board!
+        am.trail.popMark();
+        unsetInstalled();
+        am.setCurrent(getParent());
+
+        int ret = oz_unify(getStatus(), genAlt(n));
+        Assert(ret==PROCEED);
+
+        return;
+      }
+
+    }
+
+    // succeeded
+    am.trail.popMark();
+    unsetInstalled();
+    am.setCurrent(getParent());
+
+    int ret = oz_unify(getStatus(), genSucceeded(getSuspCount() == 0));
+
+    // VIOLATED ASSERTION!!!! CS-SPECIAL
+    //   Assert(ret==PROCEED);
+
+    return;
+  }
+
+  if (getThreads() == 0) {
+    // There are some external suspensions: blocked
+
+    oz_deinstallCurrent();
+
+    TaggedRef newVar = oz_newVariable();
+    TaggedRef status = getStatus();
+
+    setStatus(newVar);
+
+    int ret = oz_unify(status, genBlocked(newVar));
+    Assert(ret==PROCEED);
+    return;
+  }
+
+  oz_deinstallCurrent();
+  return;
+}
+
+
+
+/*
  * Implementation of space operations
  */
 
@@ -320,70 +558,11 @@ inline
 int Board::commit(int left, int right) {
   ozstat.incSolveAlt();
 
-  Assert(getDistBag() && getDistBag()->getDist()->isAlive());
-
-  return getDistBag()->getDist()->commit(this,left,right);
+  return getDistBag()->getFirst()->commit(this,left,right);
 
 }
 
 
-
-//
-// Status variable
-//
-
-TaggedRef Board::genSolved() {
-  ozstat.incSolveSolved();
-  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
-
-  stuple->setArg(0, AtomEntailed);
-
-  return makeTaggedSRecord(stuple);
-}
-
-TaggedRef Board::genStuck() {
-  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
-
-  stuple->setArg(0, AtomSuspended);
-  return makeTaggedSRecord(stuple);
-}
-
-TaggedRef Board::genChoice(int noOfClauses) {
-  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
-
-  Assert(!isCommitted());
-  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
-
-  return makeTaggedSRecord(stuple);
-}
-
-TaggedRef Board::genFailed() {
-  ozstat.incSolveFailed();
-  return AtomFailed;
-}
-
-TaggedRef Board::genUnstable(TaggedRef arg) {
-  SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-  stuple->setArg(0, arg);
-  return makeTaggedSRecord(stuple);
-}
-
-
-//-----------------------------------------------------------------------------
-
-void Board::scheduleNonMono(void) {
-
-  for (OrderedSuspList * p = getNonMono();
-       p != NULL;
-       p = p->getNext()) {
-    Propagator * prop = p->getPropagator();
-
-    oz_pushToLPQ(GETBOARD(prop),prop);
-  }
-
-  setNonMono(NULL);
-
-}
 
 
 
@@ -452,7 +631,7 @@ OZ_BI_define(BIaskSpace, 1,1) {
   if (space->isMarkedMerged())
     OZ_RETURN(AtomMerged);
 
-  TaggedRef answer = space->getSpace()->getResult();
+  TaggedRef answer = space->getSpace()->getStatus();
 
   DEREF(answer, answer_ptr, answer_tag);
 
@@ -487,7 +666,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
     OZ_in(1) = stuple->getArg(0);
   }
 
-  TaggedRef answer = space->getSpace()->getResult();
+  TaggedRef answer = space->getSpace()->getStatus();
 
   DEREF(answer, answer_ptr, answer_tag);
 
@@ -518,7 +697,7 @@ OZ_BI_define(BIaskUnsafeSpace, 2,0) {
     OZ_in(1) = stuple->getArg(0);
   }
 
-  TaggedRef answer = space->getSpace()->getResult();
+  TaggedRef answer = space->getSpace()->getStatus();
 
   return oz_unify(OZ_in(1), answer);
 } OZ_BI_end
@@ -561,19 +740,19 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Assert(!oz_isBelow(CBB,SBB));
 
-  TaggedRef result = space->getSpace()->getResult();
+  TaggedRef status = space->getSpace()->getStatus();
 
-  Assert(result);
+  Assert(status);
 
-  if (OZ_isVariable(result)) {
+  if (OZ_isVariable(status)) {
 
     if (isSibling) {
 
       // Inject a thread to SBP to make the tell
-      telleq(SBP,result,AtomMerged);
+      telleq(SBP,status,AtomMerged);
 
     } else {
-      if (oz_unify(result, AtomMerged) == FAILED)
+      if (oz_unify(status, AtomMerged) == FAILED)
         return FAILED;
     }
 
@@ -601,12 +780,12 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   if (isFailedSpace)
     OZ_RETURN(makeTaggedConst(new Space(CBB, (Board *) 0)));
 
-  TaggedRef result = space->getSpace()->getResult();
+  TaggedRef status = space->getSpace()->getStatus();
 
-  DEREF(result, result_ptr, result_tag);
+  DEREF(status, status_ptr, status_tag);
 
-  if (isVariableTag(result_tag))
-    oz_suspendOn(makeTaggedRef(result_ptr));
+  if (isVariableTag(status_tag))
+    oz_suspendOn(makeTaggedRef(status_ptr));
 
   ozstat.incSolveCloned();
 
@@ -632,11 +811,11 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   if (isFailedSpace)
     return PROCEED;
 
-  TaggedRef result = space->getSpace()->getResult();
+  TaggedRef status = space->getSpace()->getStatus();
 
-  DEREF(result, result_ptr, result_tag);
-  if (isVariableTag(result_tag))
-    oz_suspendOn(makeTaggedRef(result_ptr));
+  DEREF(status, status_ptr, status_tag);
+  if (isVariableTag(status_tag))
+    oz_suspendOn(makeTaggedRef(status_ptr));
 
   DEREF(choice, choice_ptr, choice_tag);
 
@@ -683,12 +862,12 @@ OZ_BI_define(BIcommitSpace, 2,0) {
                     smallIntValue(right));
 
   if (n>1) {
-    sb->patchChoiceResult(n);
+    sb->patchAltStatus(n);
 
     return PROCEED;
   }
 
-  sb->clearResult();
+  sb->clearStatus();
 
   return BI_PREEMPT;
 } OZ_BI_end
@@ -720,76 +899,13 @@ OZ_BI_define(BIinjectSpace, 2,0)
   Board *sb = space->getSpace();
 
   // clear status
-  sb->clearResult();
+  sb->clearStatus();
 
   // inject
   sb->inject(proc);
 
   return BI_PREEMPT;
 } OZ_BI_end
-
-
-inline
-void Board::addToDistBag(Distributor * d) {
-  setDistBag(getDistBag()->add(d));
-}
-
-class BaseDistributor : public Distributor {
-protected:
-  int offset, num;
-  TaggedRef var;
-
-public:
-
-  BaseDistributor::BaseDistributor(Board * bb, const int n) {
-    offset = 0;
-    num    = n;
-    var    = oz_newVar(bb);
-  }
-
-  TaggedRef getVar(void) {
-    return var;
-  }
-
-  virtual int isAlive(void) {
-    return num > 0;
-  }
-
-  virtual int getAlternatives(void) {
-    return num;
-  }
-
-  virtual int BaseDistributor::commit(Board * bb, int l, int r) {
-    if (l > num+1) {
-      num = 0;
-    } else {
-      offset += l-1;
-      num     = min(num,min(r,num+1)-l+1);
-
-      if (num == 1) {
-        num = 0;
-
-        telleq(bb,var,makeTaggedSmallInt(offset + 1));
-        return 1;
-      }
-    }
-    return num;
-  }
-
-  virtual void dispose(void) {
-    freeListDispose(this, sizeof(BaseDistributor));
-  }
-
-  virtual Distributor * BaseDistributor::gc(void) {
-    BaseDistributor * t =
-      (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
-
-    OZ_collectHeapTerm(var, t->var);
-
-    return (Distributor *) t;
-  }
-
-};
 
 
 
@@ -801,9 +917,13 @@ OZ_BI_define(BIregisterSpace, 1, 1) {
   if (bb->isRoot()) {
     OZ_out(0) = oz_newVar(bb);
   } else {
+
     BaseDistributor * bd = new BaseDistributor(bb,i);
 
-    bb->addToDistBag(bd);
+    if (i==1)
+      bb->setDistBag(bb->getDistBag()->addIt(bd,OK));
+    else
+      bb->addToDistBag(bd);
 
     OZ_out(0) = bd->getVar();
   }

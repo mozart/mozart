@@ -2446,13 +2446,13 @@ DistBag * DistBag::gc(void) {
   DistBag *  old  = this;
 
   while (old) {
-    if (old->getDist()->isAlive()) {
-      DistBag * one = new DistBag(old->getDist()->gc());
-      *cur = one;
-      cur  = &(one->next);
-    }
-    old = old->next;
+    DistBag * one = new DistBag(old->dist->gc(),old->isUnary);
+    *cur = one;
+    cur  = &(one->next);
+    old  = old->next;
   }
+
+  *cur = 0;
 
   return copy;
 }
@@ -2473,7 +2473,7 @@ void Board::gcRecurse() {
 
   OZ_collectHeapTerm(rootVar,rootVar);
 
-  OZ_collectHeapTerm(result,result);
+  OZ_collectHeapTerm(status,status);
 
   suspList         = suspList->gc();
   setDistBag(getDistBag()->gc());
