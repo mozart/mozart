@@ -249,10 +249,14 @@ ByteSinkFD::allocateBytes(int n) { return PROCEED; }
 OZ_Return
 ByteSinkFD::putBytes(BYTE*pos,int len)
 {
-  if (oswrite(fd,pos,len)<0)
-    return raiseGeneric("Write failed during save",
-                        oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+ loop:
+  if (oswrite(fd,pos,len)<0) {
+    if (errno != EINTR)
+      return raiseGeneric("Write failed during save",
+                          oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
                                 oz_nil()));
+    goto loop;
+  }
   return PROCEED;
 }
 
@@ -275,10 +279,14 @@ ByteSinkFile::allocateBytes(int n)
 OZ_Return
 ByteSinkFile::putBytes(BYTE*pos,int len)
 {
-  if (oswrite(fd,pos,len)<0)
-    return raiseGeneric("Write failed during save",
-                        oz_mklist(OZ_pairA("File",oz_atom(filename)),
-                                  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+ loop:
+  if (oswrite(fd,pos,len)<0) {
+    if (errno != EINTR)
+      return raiseGeneric("Write failed during save",
+                          oz_mklist(OZ_pairA("File",oz_atom(filename)),
+                                    OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+    goto loop;
+  }
   return PROCEED;
 }
 
