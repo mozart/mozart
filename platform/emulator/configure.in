@@ -609,79 +609,121 @@ AC_CACHE_VAL(ac_cv_can_vs,
  AC_CHECK_FUNCS(shmctl,, can_vs=no)
  if test $can_vs = yes; then
     AC_MSG_CHECKING(shared memory with a test program)
-    AC_TRY_RUN([#include <sys/types.h>
- #include <unistd.h>
- #include <sys/ipc.h>
- #include <sys/shm.h>
- #include <errno.h>
+    AC_TRY_RUN([
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <errno.h>
 
- #define VS_KEYTYPE_SIZE                4
- #define VS_SEQ_SIZE            12
- #define VS_PID_MASK            0xffff
- #define SEQ_NUM                        0x5
- #define VS_MSGBUFFER_KEY       0x1
- #define SHMSIZE                        (1024*1024)
- #define        PERMS                   0666
- #define SHM_OPT                        0
+#define VS_KEYTYPE_SIZE         4
+#define VS_SEQ_SIZE             12
+#define VS_PID_MASK             0xffff
+#define SEQ_NUM                 0x5
+#define VS_MSGBUFFER_KEY        0x1
+#define SHMSIZE                 (1024*1024)
+#define PERMS                   0666
+#define SHM_OPT                 0
 
- key_t vsTypeToKey(int type)
- {
-   int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
-   int seqOffset = idOffset - VS_SEQ_SIZE;
-   return ((key_t) ((type << idOffset) |
+typedef unsigned int Value;
+
+#if defined(sparc)
+
+#define ASM_SWAP(cell, value)                                   \
+({                                                              \
+  Value out;                                                    \
+  __asm__ __volatile__ ("swap %3,%0"                            \
+                 : "=r" (out),   "=m" (cell)    /* output */    \
+                 : "0"  (value), "m"  (cell));  /* input  */    \
+  out;                                                          \
+})
+;
+
+#elif defined(i386)
+
+#define ASM_SWAP(cell, value)                                   \
+({                                                              \
+  Value out;                                                    \
+  __asm__ __volatile__ ("xchgl %3,%0"                           \
+                         :"=r" (out), "=m" (cell)               \
+                         :"0" (value), "m" (cell));             \
+  out;                                                          \
+})
+;
+
+#else
+
+DO NOT COMPILE THE CRAP!
+
+#endif
+
+key_t vsTypeToKey(int type)
+{
+  int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
+  int seqOffset = idOffset - VS_SEQ_SIZE;
+  return ((key_t) ((type << idOffset) |
                     (SEQ_NUM << seqOffset) |
                     (getpid() & VS_PID_MASK)));
- }
+}
 
- main()
- {
-   int shmkey;
-   int shmid;
-   void *shm;
-   struct shmid_ds ds;
+int volatile global;
 
-   shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
-   if ((shmid = shmget(shmkey, SHMSIZE, (PERMS|IPC_CREAT))) < 0)
-     exit(-1);
-   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
-     exit(-2);
-   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
-     *addr = (char) 0;
-   if (shmdt((char *) shm) < 0)
-     exit(-3);
+main()
+{
+  int shmkey;
+  int shmid;
+  void *shm;
+  struct shmid_ds ds;
 
-   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
-     exit(-4);
-   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
-     if (*addr != (char) 0)
-       exit(-5);
-   if (shmdt((char *) shm) < 0)
-     exit(-6);
+  shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
+  if ((shmid = shmget(shmkey, SHMSIZE, (PERMS|IPC_CREAT))) < 0)
+    exit(-1);
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-2);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    *addr = (char) 0;
+  if (shmdt((char *) shm) < 0)
+    exit(-3);
 
-   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
-     exit(-7);
-   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
-     *addr = (char) 0x4f;
-   if (shmdt((char *) shm) < 0)
-     exit(-8);
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-4);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    if (*addr != (char) 0)
+      exit(-5);
+  if (shmdt((char *) shm) < 0)
+    exit(-6);
 
-   if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
-     exit(-9);
-   for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
-     if (*addr != (char) 0x4f)
-       exit(-10);
-   if (shmdt((char *) shm) < 0)
-     exit(-11);
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-7);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    *addr = (char) 0x4f;
+  if (shmdt((char *) shm) < 0)
+    exit(-8);
 
-   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
-     exit(-12);
-   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) == 0)
-     exit(-13);
-   if (errno != EIDRM && errno != EINVAL)
-     exit(-14);
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-9);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    if (*addr != (char) 0x4f)
+      exit(-10);
+  if (shmdt((char *) shm) < 0)
+    exit(-11);
 
-   exit(0);
-     }],
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
+    exit(-12);
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) == 0)
+    exit(-13);
+  if (errno != EIDRM && errno != EINVAL)
+    exit(-14);
+
+  int local = 0;
+  global = 1;
+  local = ASM_SWAP(global, local);
+
+  if (global != 0 || local != 1) exit(-15);
+
+  exit(0);
+}
+],
     AC_MSG_RESULT(succeeded),
     AC_MSG_RESULT(failed)
     can_vs=no,
