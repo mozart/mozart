@@ -851,9 +851,10 @@ size_t FDBitVector::memory_required(void) { // used for profiling
 
 // private methods ------------------------------------------------------------
 
+
 inline
 void OZ_FiniteDomainImpl::setType(descr_type t) {
-  descr = orPointer(andPointer(descr,~3),t);
+  descr = orPointer(andPointer(NULL,~3),t);
 }
 
 inline

@@ -12,6 +12,9 @@
 #define FD_NOI 4 // number of intervals
 //#define FD_NOI 16 // number of intervals
 
+const int fd_inf = 0;
+const int fd_sup = OZ_smallIntMax() - 1;
+
 const int fd_iv_max_high = FD_NOI;
 const int fd_full_size = fd_sup + 1;
 
