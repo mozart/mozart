@@ -620,203 +620,151 @@ OZ_Return MonitorArityPropagator::propagate(void)
 
 
 
-
-// Create new thread on suspension:
-OZ_Return uparrowInlineNonBlocking(TaggedRef, TaggedRef, TaggedRef&);
-OZ_DECLAREBI_USEINLINEFUN2(BIuparrowNonBlocking,uparrowInlineNonBlocking)
-
-// Block current thread on suspension:
-OZ_Return uparrowInlineBlocking(TaggedRef, TaggedRef, TaggedRef&);
-OZ_DECLAREBI_USEINLINEFUN2(BIuparrowBlocking,uparrowInlineBlocking)
-
-OZ_BI_define(BIuparrowBlockingWrapper,3,0)
-{
-  OZ_Term out;
-  uparrowInlineBlocking(OZ_in(0),OZ_in(1),out);
-  return oz_unify(OZ_in(2),out);
-} OZ_BI_end
-
-
-
-/*
- * NOTE: similar functions are dot, genericSet, uparrow
- */
 // X^Y=Z: add feature Y to open feature structure X (Tell operation).
-OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bool blocking)
-{
-    TaggedRef termOrig=term;
-    TaggedRef feaOrig=fea;
-    DEREF(term, termPtr, termTag);
-    DEREF(fea,  feaPtr,  feaTag);
 
-    // mm2
-    // optimize the most common case: adding or reading a feature
-    if (isCVar(termTag) &&
-	tagged2CVar(term)->getType()==OZ_VAR_OF &&
-	oz_isFeature(fea)) {
+OZ_BI_define(BIofsUpArrow, 2, 1) {
+  TaggedRef term = OZ_in(0);
+  TaggedRef fea  = OZ_in(1);
+
+  DEREF(term, termPtr, termTag);
+  DEREF(fea,  feaPtr,  feaTag);
+
+  // optimize the most common case: adding or reading a feature
+  if (isCVar(termTag) &&
+      tagged2CVar(term)->getType()==OZ_VAR_OF &&
+      oz_isFeature(fea)) {
+    OzOFVariable *ofsvar=tagged2GenOFSVar(term);
+    
+    TaggedRef t=ofsvar->getFeatureValue(fea);
+    if (t!=makeTaggedNULL()) {
+      // Feature exists
+      OZ_RETURN(t);
+    }
+    
+    if (oz_isCurrentBoard(GETBOARD(ofsvar))) {
+      TaggedRef uvar=oz_newVariable();
+      Bool ok=ofsvar->addFeatureValue(fea,uvar);
+      Assert(ok);
+      ofsvar->propagateOFS();
+      OZ_RETURN(uvar);
+    }
+  }
+  
+  // Wait until Y is a feature:
+  if (isVariableTag(feaTag)) {
+
+    if (isCVar(feaTag) && tagged2CVar(fea)->getType()==OZ_VAR_OF) {
+      OzOFVariable *ofsvar=tagged2GenOFSVar(fea);
+      if (ofsvar->getWidth()>0) 
+	goto typeError2;
+    }
+
+    if (!oz_isVariable(term) && !oz_isRecord(term)) 
+      goto typeError2;
+    
+    oz_suspendOnPtr(feaPtr);
+  }
+
+  if (!oz_isFeature(fea)) 
+    goto typeError2;
+  
+  // Add feature and return:
+  Assert(term!=makeTaggedNULL());
+
+  switch (termTag) {
+  case CVAR:
+
+    if (tagged2CVar(term)->getType() == OZ_VAR_OF) {
       OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-
       TaggedRef t=ofsvar->getFeatureValue(fea);
+
       if (t!=makeTaggedNULL()) {
 	// Feature exists
-	out=t;
-	return PROCEED;
+	OZ_RETURN(t);
       }
-      
+
+      // Feature does not yet exist
+      // Add feature by (1) creating new ofsvar with one feature,
+      // (2) unifying the new ofsvar with the old.
+
+      TaggedRef uvar=oz_newVariable();
+	
       if (oz_isCurrentBoard(GETBOARD(ofsvar))) {
-	TaggedRef uvar=oz_newVariable();
 	Bool ok=ofsvar->addFeatureValue(fea,uvar);
 	Assert(ok);
 	ofsvar->propagateOFS();
-	out=uvar;
-	return PROCEED;
-      }
-    }
-
-    // Wait until Y is a feature:
-    if (isVariableTag(feaTag)) {
-      if (isCVar(feaTag) && tagged2CVar(fea)->getType()==OZ_VAR_OF) {
-	OzOFVariable *ofsvar=tagged2GenOFSVar(fea);
-	if (ofsvar->getWidth()>0) goto typeError2;
-      }
-      if (!oz_isVariable(term) && !oz_isRecord(term)) goto typeError2;
-
-      if (blocking) {
-	return SUSPEND;
       } else {
-	if (oz_isFree(term)) {
-	  // Create newofsvar with unbound variable as label:
-	  OzOFVariable *newofsvar=new OzOFVariable(oz_currentBoard());
-	  // Unify newofsvar and term:
-	  Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
-			   makeTaggedRef(termPtr));
-	  Assert(ok==PROCEED); // mm2
-	  term=makeTaggedRef(termPtr);
-	  DEREF(term, termPtr2, tag2);
-	  termPtr=termPtr2;
-	  termTag=tag2;
-	}
-	// Create thread containing relational blocking version of uparrow:
-	RefsArray x=allocateRefsArray(3, NO);
-	out=oz_newVariable();
-	x[0]=termOrig;
-	x[1]=feaOrig;
-	x[2]=out;
-	OZ_Thread thr=OZ_makeSuspendedThread(BIuparrowBlockingWrapper,x,3); 
-	OZ_addThread(feaOrig,thr);
-	return PROCEED;                     
-      }
-    }
-    if (!oz_isFeature(fea)) goto typeError2;
-
-    // Add feature and return:
-    Assert(term!=makeTaggedNULL());
-    switch (termTag) {
-    case CVAR:
-      if (tagged2CVar(term)->getType() == OZ_VAR_OF) {
-        OzOFVariable *ofsvar=tagged2GenOFSVar(term);
-        TaggedRef t=ofsvar->getFeatureValue(fea);
-        if (t!=makeTaggedNULL()) {
-            // Feature exists
-            out=t;
-        } else {
-            // Feature does not yet exist
-            // Add feature by (1) creating new ofsvar with one feature,
-            // (2) unifying the new ofsvar with the old.
-	  if (oz_isCurrentBoard(GETBOARD(ofsvar))) {
-                // Optimization:
-                // If current board is same as ofsvar board then can add feature directly
-                TaggedRef uvar=oz_newVariable();
-                Bool ok=ofsvar->addFeatureValue(fea,uvar);
-                Assert(ok);
-                ofsvar->propagateOFS();
-                out=uvar;
-            } else {
-                // Create newofsvar:
-                OzOFVariable *newofsvar
-		  =new OzOFVariable(oz_currentBoard());
-                // Add feature to newofsvar:
-                TaggedRef uvar=oz_newVariable();
-                Bool ok1=newofsvar->addFeatureValue(fea,uvar);
-                Assert(ok1);
-                out=uvar;
-                // Unify newofsvar and term (which is also an ofsvar):
-                Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
-				  makeTaggedRef(termPtr));
-                Assert(ok2==PROCEED); // mm2
-            }
-        }
-        return PROCEED;
-      }
-      // else fall through
-    case UVAR:
-      // FUT
-      {
-        // Create newofsvar:
-        OzOFVariable *newofsvar=new OzOFVariable(oz_currentBoard());
-        // Add feature to newofsvar:
-        TaggedRef uvar=oz_newVariable();
+	// Create newofsvar:
+	OzOFVariable *newofsvar
+	  =new OzOFVariable(oz_currentBoard());
+	// Add feature to newofsvar:
 	Bool ok1=newofsvar->addFeatureValue(fea,uvar);
 	Assert(ok1);
-        out=uvar;
-        // Unify newofsvar (CVAR) and term (SVAR or UVAR):
+	// Unify newofsvar and term (which is also an ofsvar):
 	Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			  makeTaggedRef(termPtr));
 	Assert(ok2==PROCEED); // mm2
-        return PROCEED;
-      }
-  
-    case SRECORD:
-      {
-        // Get the SRecord corresponding to term:
-        SRecord* termSRec=makeRecord(term);
-
-        TaggedRef t=termSRec->getFeature(fea);
-        if (t!=makeTaggedNULL()) {
-            out=t;
-            return PROCEED;
-        }
-        return FAILED;
       }
 
-    case LTUPLE:
-      {
-        if (!oz_isSmallInt(fea)) return FAILED;
-        int i2 = smallIntValue(fea);
-        switch (i2) {
-        case 1:
-          out=tagged2LTuple(term)->getHead();
-          return PROCEED;
-        case 2:
-          out=tagged2LTuple(term)->getTail();
-          return PROCEED;
-        }
-        return FAILED;
-      }
-
-    case LITERAL:
-        return FAILED;
-
-    default:
-        goto typeError1;
+      OZ_RETURN(uvar);
+      
     }
-typeError1:
-    oz_typeError(0,"Record");
-typeError2:
-    oz_typeError(1,"Feature");
-}
 
+    // else fall through
+  case UVAR:
+    // FUT
+    {
+      // Create newofsvar:
+      OzOFVariable *newofsvar=new OzOFVariable(oz_currentBoard());
+      // Add feature to newofsvar:
+      TaggedRef uvar=oz_newVariable();
+      Bool ok1=newofsvar->addFeatureValue(fea,uvar);
+      Assert(ok1);
+      
+      // Unify newofsvar (CVAR) and term (SVAR or UVAR):
+      Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+			makeTaggedRef(termPtr));
+      Assert(ok2==PROCEED); // mm2
+      OZ_RETURN(uvar);
+    }
+    
+  case SRECORD:
+    {
+      // Get the SRecord corresponding to term:
+      SRecord* termSRec=makeRecord(term);
+      
+      TaggedRef t=termSRec->getFeature(fea);
+      if (t!=makeTaggedNULL()) {
+	OZ_RETURN(t);
+      }
+      return FAILED;
+    }
 
-OZ_Return uparrowInlineNonBlocking(TaggedRef term, TaggedRef fea,
-				   TaggedRef &out)
-{
-    return genericUparrowInline(term, fea, out, FALSE);
-}
+  case LTUPLE:
+    {
+      if (!oz_isSmallInt(fea)) return FAILED;
+      int i2 = smallIntValue(fea);
+      switch (i2) {
+      case 1:
+	OZ_RETURN(tagged2LTuple(term)->getHead());
+      case 2:
+	OZ_RETURN(tagged2LTuple(term)->getTail());
+      }
+      return FAILED;
+    }
+    
+  case LITERAL:
+    return FAILED;
+    
+  default:
+    goto typeError1;
+  }
+ typeError1:
+  oz_typeError(0,"Record");
+ typeError2:
+  oz_typeError(1,"Feature");
+} OZ_BI_end
 
-OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
-{
-    return genericUparrowInline(term, fea, out, TRUE);
-}
 
 
 
