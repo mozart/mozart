@@ -2,10 +2,13 @@
 <!-- $Id$ -->
 
 <!-- Extension to the DTD -->
+<!entity % proglang.values.local "|sh">
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
 <!ENTITY emdash PI "emdash">
 <!ENTITY endash PI "endash">
+<!entity ie PI "ie">
+<!entity eg PI "eg">
 <!-- Abbreviations -->
 <!-- Processing Instructions -->
 
@@ -15,7 +18,10 @@
   <front>
     <meta name=ozversion value="3.0">
     <meta name=status value=draft>
+    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
     <title/The Mozart Profiler/
+    <author.extern to="author.db" key="Denys.Duchier">
+    <author.extern to="author.db" key="Ralf.Scheidhauer">
     <author.extern to="author.db" key="Benjamin.Lorenz">
     <abstract>
 
@@ -28,9 +34,86 @@
     </abstract>
   <body>
     <chapter>
-      <title/Getting Started/
-      <p>
-      More to come soon...
+      <title/What Is Profiling/
+      <p>Once your application works, you may wish to optimize it for
+speed and memory consumption.  For this, you need to identify the
+parts of your application that may significantly benefit from such
+optimizations; it would be pointless to optimize a procedure that is
+called only once.  Profiling automatically instruments your program to
+gather statistical data on procedure invocations and memory
+allocation.</p>
+      <p>The profiler collects information in a per procedure basis.
+This information consists of the following quantities:
+<list>
+          <entry class=bold/head/
+          <item/heap memory allocated by the procedure/
+          <entry/calls/
+          <item/how many time the procedure was called/
+          <entry/closures/
+          <item/how many times the corresponding closure was created/
+          <entry/samples/
+          <item/statistical estimation of the time spent in the
+procedure. This works as follows: every 10ms a signal is delivered and
+the emulator increases the <q/samples/ counter of the procedure
+currently executing./
+        </list></p>
+    </chapter>
+
+    <chapter>
+      <title/How To Compile For Profiling/
+      <p>In order to gather the profiling information, your code has
+to be instrumented with additional profiling code.  This code is
+automatically inserted by the compiler when it is invoked with the
+<code proglang=sh/--profiler/ option.  This option can also be
+abbreviated <code proglang=sh/-p/.  There is however an unfortunate
+limitation when compiling code for profiling: tail-call optimization
+is turned off (except for self applications).</p>
+      <p>As an example, let's consider the following rather pointless
+application below.  I call it <q/The 3 Little Piggies/, and it does
+nothing but waste time and memory:
+<code.extern display to="piggies.oz">
+The application can be compiled for profiling as follows:
+<code display proglang=sh/ozc -px piggies.oz/
+</p>
+    </chapter>
+
+    <chapter>
+      <title/How To Invoke The Profiler/
+      <p>The profiler interface is integrated in the Oz debugger
+tool <code proglang=sh/ozd/ and can be invoked using the <code/-p/
+option.  We can profile <q/The 3 Little Piggies/ as follows:
+<code display proglang=sh/ozd -p piggies -- --size 1000 --times 100/
+Note how the double dash separate <code proglang=sh/ozd/'s arguments
+from the application's arguments.  Shortly thereafter, the window
+shown below pops up:
+<picture.choice display>
+          <picture.extern to="prof1.gif" type="gif">
+        </picture.choice>
+Now click <em/Update/ and a summary of procedure calls is displayed.
+We learn that the <code/SecondPiggy/ is called 100 times and the
+<code/ThirdPiggy/ 10000 times (&ie; 100*100).
+<picture.choice display>
+          <picture.extern to="prof2.gif" type="gif">
+        </picture.choice>
+The <code/FirstPiggy/ is not shown by default because it is called
+only once.  Let's now select a different <em/Sort By/ (the menu button
+on the right): we choose <em/heap/ to display the memory allocation
+profile.  From this we verify &eg; that <code/ThirdPiggy/ allocates
+about 100 times more memory as <code/SecondPiggy/, which is as it
+should be since it is called 100 times more and allocates the same
+large list.
+<picture.choice display>
+          <picture.extern to="prof3.gif" type="gif">
+        </picture.choice>
+    </chapter>
+
+    <chapter>
+      <title/How To Interpret The Results/
+    </chapter>
+
+    <chapter>
+      <title/How To Profile In The OPI/
+    </chapter>
 </book>
 
 <!--
