@@ -2506,7 +2506,7 @@ static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
     if (literalEq(vs,AtomPair) || 
 	literalEq(vs,AtomNil)) 
       return PROCEED;
-    *len = *len + strlen(tagged2Literal(vs)->getPrintName());
+    *len = *len + tagged2Literal(vs)->getSize();
     return PROCEED;
   } else if (isCons(vs_tag)) {
     TaggedRef cdr  = vs;

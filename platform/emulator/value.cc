@@ -165,9 +165,9 @@ void initLiterals()
 int Literal::LiteralCurrentNumber = 0x200000;
 
 
-Literal::Literal(char *str, Bool flag)
-{
-  printName = ozstrdup(str);
+Literal::Literal(char *str, Bool flag) {
+  printName   = ozstrdup(str);
+  printLength = strlen(str);
   if (flag) 
     home = (Board *) ToPointer(ALLBITS);  // only top-level names;
   else
@@ -175,9 +175,9 @@ Literal::Literal(char *str, Bool flag)
   seqNumber = LiteralCurrentNumber++;
 }
 
-Literal::Literal (Board *hb)
-{
-  printName = "";
+Literal::Literal (Board *hb) {
+  printName   = "";
+  printLength = 0;
   if (hb == am.rootBoard) {
     home = (Board *) ToPointer(ALLBITS);
   } else {
