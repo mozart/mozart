@@ -194,7 +194,7 @@ void xy_setScannerPrefix() {
 }
 
 void xy_setParserExpect() {
-  parserExpect = makeInt(xytext,pos());
+  parserExpect = OZ_CStringToInt(xytext);
 }
 
 %}
