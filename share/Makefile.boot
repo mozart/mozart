@@ -83,12 +83,3 @@ boot-%:
 	OZDOC_ELISP_PATH="$(BUILDDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
 	OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities" \
 	OZDOC_CATALOG="$(BUILDTOP)/doc/bootcatalog"
-
-# stage1-all: create the components using the BUILDTOP/share/lib/stage1
-STAGE1_LIB=$(BUILDLIB)/stage1
-STAGE1_TOOLS=$(BUILDTOOLS)/stage1
-stage1-%:
-	$(MAKE) $* \
-	OZ_LOAD=root=.:prefix=$(HOMEURL)=$(STAGE1_LIB):prefix=$(HOMEURL)/share=.:prefix=/=/:= \
-	OZINIT=$(STAGE1_LIB)/lib/Init.ozf \
-	OZC=$(STAGE1_LIB)/bin/ozc
