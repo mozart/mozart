@@ -410,6 +410,7 @@ public:
 
   void pushPreparedCalls(Thread *thr=0);
   void emptyPreparedCalls();
+  Bool isEmptyPreparedCalls();
 
   void init(int argc,char **argv);
   void checkVersion();
