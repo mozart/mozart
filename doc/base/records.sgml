@@ -543,6 +543,14 @@
           ?_{Y}&nbsp;needs not be a list. However,
           ?_{Zs} is only a proper list, if also
           ?_{Y} is a proper list.
+        <P>
+          For example,
+          <<<{Append [1 2] [3 4]}>>>
+          returns the list <<[1 2 3 4]>>>, whereas
+          <<<{Append 1|2|nil 3|4}>>>
+          returns <<1|2|(3|4)>>> which is not a
+          well formed list.
+
 
 
         <Entry><Span class=index/<<Member>>/
