@@ -26,6 +26,15 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
+dnl Known Problems and Bugs
+dnl  SunPro feature
+dnl  Warnings pedwarn
+dnl  Windows support
+dnl  dynamic linking of propagators
+dnl  PS-LAB: prefix and rcp/mv
+dnl  VPATH
+dnl  pmake support
+
 dnl *****************************************************************
 dnl INITIALIZE
 dnl *****************************************************************
@@ -41,6 +50,7 @@ dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
+AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LEX
@@ -55,25 +65,32 @@ AC_CHECK_PROGS(MV, mv)
 AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
 AC_CHECK_PROGS(PGXX, pg++)
+AC_CHECK_PROGS(PLATFORMSCRIPT, ozplatform ../bin/ozplatform)
 
 dnl *****************************************************************
 dnl configurable variables
 dnl *****************************************************************
 
 dnl substitutions variable
-AC_SUBST(PROPOBJ)
+AC_SUBST(PROPOBJS)
 AC_SUBST(platform)
 AC_SUBST(PLATFORM)
 AC_SUBST(PEANUTS)
-AC_SUBST(EMUEXE)
+AC_SUBST(PROGRAM)
 AC_SUBST(COPT)
+AC_SUBST(LD)
+AC_SUBST(M4_S)
+AC_SUBST(DEPEND)
+AC_SUBST(LD_DYN)
 
-platform=`../bin/ozplatform`
-EMUEXE=oz.emulator.bin
+platform=`$PLATFORMSCRIPT`
+PROGRAM=oz.emulator.bin
 psdir=/project/ps
 libs="$psdir/lib/$platform $HOME/lib/$platform"
 COPT="-O"
 G_OPT="-g"
+M4_S="$M4 -s"
+DEPEND="$CXX -MM"
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
@@ -91,6 +108,8 @@ fi
 dnl mm2: test for SunPro
 if test "x$SunPro" = xyes; then
     COPT="-fast"
+    M4_S="$M4"
+    DEPEND="$CXX -xM"
 fi
 
 if test "x$GXX" = xyes; then
@@ -100,9 +119,25 @@ fi
 case $host_os in
     sunos*)
         LDFLAGS="$LDFLAGS -Wl"
+        LD_DYN=""
         ;;
     linux*)
         COPT="$COPT -rdynamic"
+        LD_DYN="-shared"
+        ;;
+    solaris*)
+        LD_DYN="-G -lsocket -lnsl -lintl"
+        ;;
+    irix*)
+        LD_DYN="-shared -check_registry /dev/null"
+        ;;
+    osf1*)
+        dnl dont change LDFLAGS, see machine.hh !!!
+        LDFLAGS="$LDFLAGS -Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
+        LD_DYN="-shared -expect_unresolved '*'"
+        ;;
+    hpux*)
+        LD_DYN="-b"
         ;;
 esac
 
@@ -110,9 +145,18 @@ dnl *****************************************************************
 dnl Checks for libraries.
 dnl *****************************************************************
 
+dnl Note: use $(CC) for linking, not $(CXX):
+dnl g++ creates references to libg++
+LD=$CXX
+if test "x$GCC" = xyes
+then
+  LD="$CC"
+fi
+
 AC_CHECK_LIB(intl, main)
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
+AC_CHECK_LIB(m, main)
 
 for p in $libs
 do
@@ -201,7 +245,7 @@ case $enable_opt in
         AC_MSG_RESULT(debug)
         AC_DEFINE(DEBUG_EMULATOR)
         AC_DEFINE(INTERFACE)
-        COPT=$G_OPT
+        COPT="$G_OPT"
     ;;
     *)
 dnl ********************************
@@ -282,9 +326,9 @@ AC_ARG_ENABLE(linkprop,
   [--enable-linkprop  link propagators statically (default=yes)])
 if test "x$enable_linkprop" != xno; then
         AC_MSG_RESULT(yes)
-        PROPOBJ="\$(PROPOBJ)"
+        PROPOBJS="\$(ALLPROPOBJS)"
 else
-        PROPOBJ=""
+        PROPOBJS=""
         AC_DEFINE(FOREIGNFDPROPS)
         AC_MSG_RESULT(no)
 fi

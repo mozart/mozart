@@ -27,15 +27,19 @@ srcdir          = @srcdir@
 VPATH           = @srcdir@
 SHELL           = @SH@
 LEX             = @LEX@
-LFLAGS          = -Pxy -8
+LFLAGS          = -8
 YACC            = @YACC@
-YFLAGS          = -d -p xy
+YFLAGS          = -d
 MV              = @MV@
 SED             = @SED@
 ECHO            = @@ECHO@
 M4              = @M4@
+M4_S            = @M4_S@
 RM              = @RM@ -f
 CXX             = @CXX@
+CC              = @CC@
+LD              = @LD@
+
 INSTALL         = @INSTALL@
 LIBS            = @LIBS@
 LDFLAGS         = @LDFLAGS@
@@ -44,8 +48,10 @@ COPT            = @COPT@
 DEFS            = @DEFS@
 CWARN           = @CWARN@
 CFLAGS          = $(COPT) $(DEFS) $(CWARN) $(CUSR)
-CXXFLAGS        = $(CFLAGS) $(CCINCLUDES)
-CXXDEPEND       = $(CXX) $(CXXFLAGS) -MM
+CXXFLAGS        = $(CFLAGS)
+DEPEND          = @DEPEND@ $(CXXFLAGS)
+
+PROGRAM         = @PROGRAM@
 
 prefix          = @prefix@
 bindir          = $(prefix)/platform/@platform@
@@ -64,6 +70,9 @@ CWARN = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
         -Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized
 
 ERRWARN = -Werr
+
+WARNLINUXDEBUG = -W -Wswitch -Wreturn-type -Wparentheses -Wimplicit \
+        /*-Wpointer-arithm*/ -Wconversion /*-Wshadow*/ -Wcast-align
 
 INSTRDEFS = ../include/instrDefs.m4
 
@@ -104,7 +113,6 @@ CPISRCS =       cpi.cc cpi_fd.cc cpi_prop.cc cpi_fs.cc \
 
 FSETSRCS =      fset.cc fsetcore.cc fsgenvar.cc
 
-
 SRCS = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@
 
 OBJS = $(SRCS:.cc=.o)
@@ -135,11 +143,13 @@ FSETLIBSRCS =   $(FSETDIR)/standard.cc $(FSETDIR)/telling.cc \
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
-PROPOBJ = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
+ALLPROPOBJS = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
-.NOEXPORT: emulate.o @EMUEXE@ peanuts.o
+PROPOBJS = @PROPOBJS@
 
-all:: @EMUEXE@
+.NOEXPORT: emulate.o $(PROGRAM) peanuts.o
+
+all:: $(PROGRAM)
 
 win:: ozlib.lnk $(M4FILES)
 
@@ -151,9 +161,9 @@ first: version $(M4FILES) $(SRCS)
 
 fd: $(FDLIB) $(SCHEDLIB)
 
-@EMUEXE@: first main.o $(OBJS) @PROPOBJ@ $(FDLIB) $(SCHEDLIB)
-        $(CXX) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
-           main.o $(OBJS) @PROPOBJ@ $(LIBS); \
+$(PROGRAM): first main.o $(OBJS) $(PROPOBJS) $(FDLIB) $(SCHEDLIB)
+        $(LD) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
+           main.o $(OBJS) $(PROPOBJS) $(LIBS); \
         echo 'moving ...'; mv /tmp/$@.$$$$ $@
 
 install:: oz.emulator.bin oz.h oz_cpi.hh
@@ -175,27 +185,31 @@ version::
              $(srcdir)/version.sed > version.cc
 
 
-depend:: $(M4FILES) $(SRCS)
-        ozmkmf $(ARGS)
-        $(CXXDEPEND) $(CCINCLUDES) $(SRCS) >> Makefile
-
+depend:: $(M4FILES) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS)
+        $(DEPEND) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS) \
+                >> Makefile
 
 $(M4FILES): $(INSTRDEFS)
 
 tags:   $(M4FILES) version.cc
-        etags -C $(SRCS) *.hh
+        etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
+        *c *h *//**/*c *//**/*h
+
+clean+: clean
+        $(RM) $(PROGRAM)
 
 clean::
-        $(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt
-        $(RM) $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS) *~  *.bak
+        $(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt \
+                $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
 realclean::
-        $(RM) version.cc scanner.cc parser.cc parser.hh @EMUEXE@
-        $(RM) ozma-s.cc ozma-p.cc ozma.hh
-        $(RM) ozlib.lnk *.exe *.map *.imp *.sym *.so
-        $(RM) $(M4FILES)
-        $(RM) oz.c initffuns.cc TAGS
-        $(RM) conf.h Makefile
+        $(RM) version.cc scanner.cc parser.cc parser.hh $(PROGRAM) \
+                ozma-s.cc ozma-p.cc ozma.hh \
+                ozlib.lnk *.exe *.map *.imp *.sym *.so \
+                $(M4FILES) \
+                oz.c initffuns.cc TAGS \
+                conf.h Makefile config.cache \
+                $(FDLIB) $(SCHEDLIB) $(FSETLIB)
 
 veryclean:: realclean
 
@@ -204,10 +218,10 @@ ozlib.lnk: oz.h
         sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
 
 scanner.cc: scanner.ll
-        $(LEX) $(LFLAGS) -t scanner.ll > scanner.cc
+        $(LEX) $(LFLAGS) -Pxy -t scanner.ll > scanner.cc
 
 parser.cc parser.hh: parser.yy
-        $(YACC) $(YFLAGS) parser.yy
+        $(YACC) $(YFLAGS) -p xy parser.yy
         @mv y.tab.c parser.cc
         @mv y.tab.h parser.hh
 
@@ -233,6 +247,12 @@ ozma-s.ll: ozma-s.m4ll
 ozma-p.yy: ozma-p.m4yy
         $(M4) ozma-p.m4yy > $@
 
+#/usr/include/signal.h is broken on Linux:
+#os.cc: In function `void osBlockSignals(int = 0)':
+#os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
+#os.o: os.cc
+#       $(CXX) $(CXXFLAGS) -w -c $< -o $@
+
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
 
 .cc.o:
@@ -245,7 +265,7 @@ ozma-p.yy: ozma-p.m4yy
         $(CXX) $(CXXFLAGS) -E -o $@ $<
 
 .m4cc.cc:
-        $(M4) $< > $@
+        $(M4_S) $< > $@
 
 .m4hh.hh:
-        $(M4) $< > $@
+        $(M4_S) $< > $@
