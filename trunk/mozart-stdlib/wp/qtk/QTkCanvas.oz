@@ -255,6 +255,15 @@ define
    in	    
       {New TagOrId Init(parent:Parent)}
    end
+
+   Id={NewCell 0}
+   fun{GetUniqueId}
+      O N
+   in
+      {Exchange Id O N}
+      N=O+1
+      {VirtualString.toString "cid"#N}
+   end
    
    class QTkCanvas
 
@@ -297,6 +306,7 @@ define
 			     tdscrollbar:unit
 			     scrollwidth:unit)}
 		   )
+      attr idList
 	 
       from Tk.canvas QTkClass
       
@@ -307,6 +317,7 @@ define
 	    QTkClass,M
 	    {SplitParams M [lrscrollbar tdscrollbar scrollwidth] A _}
 	    Tk.canvas,{TkInit A}
+	    idList<-nil
 	 end
       end
 
@@ -314,10 +325,50 @@ define
 	 if {HasFeature M event}==false then
 	    {Exception.raiseError qtk(missingParameter event canvas M)}
 	 else skip end
-	 {What tkBind(event:M.event
-		      args:{CondSelect M args nil}
-		      action:{{New QTkAction init(parent:self
-						  action:{CondSelect M action proc{$} skip end})} action($)})}
+	 if {Int.is What} then
+	    fun {GetFields Ts} % copy/paste from Tk module
+	       case Ts of nil then ''
+	       [] T|Tr then
+		  ' %' # case T
+			 of list(T) then
+			    case T
+			    of atom(A)   then A
+			    [] int(I)    then I
+			    [] float(F)  then F
+			    [] string(S) then S
+			    else T
+			    end
+			 [] string(S) then S
+			 [] atom(A)   then A
+			 [] int(I)    then I
+			 [] float(F)  then F
+			 else T
+			 end # {GetFields Tr}
+	       end
+	    end
+	    Id={GetUniqueId}
+	    Args={CondSelect M args nil}
+	    Command={Tk.defineUserCmd Id
+		     {{New QTkAction init(parent:self
+					  action:{CondSelect M action proc{$} skip end})} action($)}
+		     Args}
+	    O N
+	 in
+	    O=idList<-N
+	    N=Command|O
+	    {self tk(bind What M.event q(Id v({GetFields Args})))}
+	 else
+	    {What tkBind(event:M.event
+			 args:{CondSelect M args nil}
+			 action:{{New QTkAction init(parent:self
+						     action:{CondSelect M action proc{$} skip end})} action($)})}
+	 end
+      end
+
+      meth destroy
+	 lock
+	    {ForAll @idList proc{$ C} {C} end}
+	 end
       end
 
       meth bind(...)=M
