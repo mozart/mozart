@@ -1,4 +1,5 @@
 BUILDTOP	= @BUILDTOP@
+BUILDDIR        = $(BUILDTOP)/share/tools
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
@@ -152,13 +153,13 @@ bootstrap: boot-all
 %.ozf: %.oz
 	$(COMPILE) $< -o $@
 
-OPI.ozf: OPI.oz ../functor-defaults.oz
+OPI.ozf: OPI.oz
 
-CompilerPanel.ozf: $(COMPILERPANELSRC) ../url-defaults.oz
+CompilerPanel.ozf: $(COMPILERPANELSRC)
 
-Panel.ozf: $(PANELSRC) ../url-defaults.oz
+Panel.ozf: $(PANELSRC)
 
-Browser.ozf: $(BROWSERSRC) ../url-defaults.oz
+Browser.ozf: $(BROWSERSRC)
 
 Explorer.ozf: $(EXPLORERSRC)
 
@@ -167,7 +168,7 @@ Emacs.ozf: $(EMACSSRC)
 ozcar-version.oz: $(OZCARSRCNOVER)
 	echo \'`date '+%b %d %H:%M'`\' > $@
 
-Ozcar.ozf: $(OZCARSRC) ../url-defaults.oz
+Ozcar.ozf: $(OZCARSRC)
 
 Profiler.ozf: $(PROFILERSRC)
 
@@ -179,7 +180,7 @@ GumpScanner.ozf: $(GUMPSCANNERSRC)
 GumpParser.ozf: $(GUMPPARSERSRC)
 
 ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
-	$(COMPILE) -l Compiler $(SRCDIR)/ProductionTemplates.oz -o $@
+	$(COMPILE) $(BUILDDIR)/ProductionTemplates.oz -o $@
 
 Inspector.ozf: $(INSPECTOROBJS)
 	$(LINK) InspectorMain.ozf -o $@

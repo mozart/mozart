@@ -30,12 +30,20 @@ import
    Listener('class')
    Browser(browse)
    Emacs(condSend)
+   
+require
+   DefaultURL(pickleExt: PickleExt
+	      homeUrl)
+   URL(make resolve toAtom)
+
+prepare
+   BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
+			    {URL.make 'images/'}}}
+   
 export
    'class': CompilerPanel
+   
 define
-   local
-      UrlDefaults = \insert '../url-defaults.oz'
-   in
-      \insert compilerPanel/CompilerPanelClass
-   end
+   \insert 'compilerPanel/CompilerPanelClass.oz'
+   
 end

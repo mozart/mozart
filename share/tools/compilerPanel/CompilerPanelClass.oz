@@ -83,12 +83,6 @@ local
       Options = {New Tk.optionsManager tkInit(Resources)}
    end
 
-   local
-      UrlDefaults = \insert '../../url-defaults.oz'
-   in
-      BitmapUrl = UrlDefaults.home#'images/'
-   end
-
    Black = c(0 0 0)
    Gray = c(127 127 127)
    Red = c(191 0 0)
@@ -1595,7 +1589,7 @@ in
 				   title: 'Oz Compiler Panel: Pickle Value'
 				   filetypes:
 				      q(q('Oz Pickles'
-					  q(UrlDefaults.pickle))
+					  q(PickleExt))
 					q('All Files' '*')))}
 	 if FileName == "" then skip
 	 else {Pickle.save Value FileName}

@@ -26,6 +26,14 @@
 
 functor
 
+require
+   DefaultURL(homeUrl)
+   URL(make resolve toAtom)
+
+prepare
+   BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
+			    {URL.make 'images/ozcar/'}}}
+   
 import
    System
    Property

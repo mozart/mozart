@@ -1,6 +1,7 @@
 *~
 Makefile
 ozcar-version.oz
+ProductionTemplates.oz
 tyc
 *.ozc
 *.ozf
