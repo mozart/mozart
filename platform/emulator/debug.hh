@@ -48,6 +48,7 @@ void debugStreamExit(TaggedRef);
 void debugStreamRaise(Thread*, TaggedRef);
 
 OZ_C_proc_proto(BIdebugmode)
+OZ_C_proc_proto(BIcheckStopped)
 OZ_C_proc_proto(BItaskStack)
 OZ_C_proc_proto(BIsuspendDebug)
 OZ_C_proc_proto(BIrunChildren)

@@ -6344,10 +6344,10 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
 
   if (debugmode == 0) {
     am.unsetSFlag(DebugMode);
-    printf("DebugMode turned OFF\n");
+    //printf("DebugMode turned OFF\n");
   } else if (debugmode == 1) {
     am.setSFlag(DebugMode);
-    printf("DebugMode turned ON\n");
+    //printf("DebugMode turned ON\n");
   }
     
   SetIfPos(ozconf.showSuspension,        suspension, 1);
@@ -7639,6 +7639,7 @@ BIspec allSpec[] = {
 
   // Debugging
   {"debugmode",1,BIdebugmode},
+  {"checkStopped",2,BIcheckStopped},
   {"globalThreadStream",1,BIglobalThreadStream},
   {"currentThread",1,BIcurrentThread},
   {"setContFlag",2,BIsetContFlag},
