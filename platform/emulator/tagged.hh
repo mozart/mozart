@@ -553,16 +553,6 @@ TaggedRef *newTaggedCVar(GenCVariable *c) {
 }
 
 
-// ---------------------------------------------------------------------------
-// --- TaggedRef: conversion: tagged2<Type>
-
-inline
-void doBind(TaggedRef *p, TaggedRef t)
-{
-  CHECK_NONVAR(t);
-  *p = t;
-}
-
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: conversion: tagged2<Type>
@@ -693,7 +683,8 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 //  - destructively changes 'term'
 //  - 'tag' is the tag of the deref'ed 'term'
 //  - 'termPtr' is the pointer to the last REF-Cell in a chain of REF's
-//      (needed for destructive changes of variables)
+//    and is NULL, if no deref step was necessary (needed for destructive
+//    changes of variables)
 
 // Usage:
 // void test(TaggedRef a) {
