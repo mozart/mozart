@@ -2,10 +2,11 @@ functor
 export
    'class' : Executor
 import
-   OS Property System(showError:Print) Open(file:OpenFile)
+   OS Property System(showError:Print) Open(file:OpenFile) URL
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
    Shell at 'Shell.ozf'
+   Fixes at 'Fixes.ozf'
 define
    %% the Executor mediates the execution of commands and provides
    %% optionall tracing and optional dry runs
@@ -117,29 +118,43 @@ define
       %% Oz compiler
 
       meth OZC(DST SRC Options)
+	 %% we need the chDir in order for the .so created by Gump to end up
+	 %% the appropriate directory.  This is fairly aggravating: we should
+	 %% NEVER change or rely on the current directory being one thing or
+	 %% another
 	 DIR = {Path.dirname DST}
-	 CUR = {OS.getCWD}
+	 HaveGumpdir = {Fixes.condGet gumpdir false}
+	 CUR = if HaveGumpdir then unit else {OS.getCWD} end
+	 DSTBase SRCBase
       in
+	 if HaveGumpdir then
+	    DSTBase = DST
+	    SRCBase = SRC
+	 else
+	    DSTBase = {Path.basename DST}
+	    SRCBase = {Path.basename SRC}
+	 end
 	 try
 	    Executor,exec_mkdir(DIR)
-	    if DIR\=nil then {OS.chDir DIR} end
-	    L1 = [SRC '-o' DST]
+	    if {Not HaveGumpdir} andthen DIR\=nil then {OS.chDir DIR} end
+	    L1 = [SRCBase '-o' DSTBase]
 	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
+	    L4 = if HaveGumpdir then '--gumpdir='#DIR|L3 else L3 end
 	 in
-	    {self xtrace({Utils.listToVS ozc|L3})}
+	    {self xtrace({Utils.listToVS ozc|L4})}
 	    if {self get_justprint($)} then
 	       %% record time of simulated build
 	       Executor,SimulatedTouch(DST)
 	    else
 	       try {Shell.executeProgram
-		    {self get_oz_engine($)}|{self get_oz_ozc($)}|L3}
+		    {self get_oz_engine($)}|{self get_oz_ozc($)}|L4}
 	       catch shell(CMD) then
 		  raise ozmake(build:shell(CMD)) end
 	       end
 	    end
 	 finally
-	    if DIR\=nil then
+	    if {Not HaveGumpdir} andthen DIR\=nil then
 	       try {OS.chDir CUR} catch _ then skip end
 	    end
 	 end
@@ -153,25 +168,21 @@ define
 	 L0 = [SRC '-o' DST]
 	 L1 = if {Member executable Options} then '-x'|L0 else L0 end
 	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
-	 URI={self get_uri($)}
+	 %% here is a temporary fix. The right thing to do is
+	 %% to extend ozl with --rooturl=URL to let it know
+	 %% from where to resolve the imports
+	 URI={Path.toString {URL.toBase {self get_uri($)}}}
+	 L3 = if DIR\=nil then '--rewrite='#DIR#'/='#URI|L2 else L2 end
+	 L4 = if {self get_veryVerbose($)} then '--verbose'|L3 else L3 end
       in
-	 {self xtrace({Utils.listToVS
-		       ozl
-		       |if DIR\=nil
-			then '--rewrite='#DIR#'/='#URI#'/'|L2
-			else L2 end})}
+	 {self xtrace({Utils.listToVS ozl|L4})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
 	    try {Shell.executeProgram
 		 {self get_oz_engine($)}|{self get_oz_ozl($)}
-		 %% here is a temporary fix. The right thing to do is
-		 %% to extend ozl with --rooturl=URL to let it know
-		 %% from where to resolve the imports
-		 |if DIR\=nil
-		  then '--rewrite='#DIR#'/='#URI#'/'|L2
-		  else L2 end}
+		 |L4}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
 	    end

@@ -347,11 +347,31 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
 </optentry>
 <optentry>
   <option>
+    <opt>--(no)sysincludedirs</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>tell the C++ compiler to additionally search (or not, if using
+  <opt>--nosysincludedirs</opt>) the Mozart-specific include
+  directories located in the global installation directory and in the
+  user's private <file>~/.oz</file> area.</item>
+</optentry>
+<optentry>
+  <option>
     <opt>--librarydir DIR</opt>
     <opt>-L DIR</opt>
   </option>
   <item>tell the C++ linker to additionally search
   <file>DIR</file> for libraries</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)syslibrarydirs</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>tell the C++ linker to additionally search (or not, if using
+  <opt>--nosyslibrarydirs</opt>) the Mozart-specific library
+  directories located in the global installation directory and in the
+  user's private <file>~/.oz</file> area.</item>
 </optentry>
 </optlist>
 
