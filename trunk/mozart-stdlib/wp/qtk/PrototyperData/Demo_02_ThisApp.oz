@@ -24,7 +24,7 @@ local
 		fun{$ A B}
 		   {String.toAtom A}<{String.toAtom B}
 		end}
-   catch _ then FileList=nil end
+   catch _ then FileList=FileList={List.map PrototyperData fun{$ F} A in F=A#_#_ A end} end
    ListObj
    FileNameVar
    NfoText
@@ -49,6 +49,7 @@ local
 	       {Compiler.evalExpression Code
 		env('QTk':QTk 'OS':OS 'Compiler':Compiler 'System':System
 		    'Application':Application
+		    'PrototyperData':PrototyperData
 		    'Open':Open 'Show':System.show 'Error':Error)
 		_ _}
 	    catch E then
@@ -67,7 +68,18 @@ local
 	    {HOZ close}
 	 in
 	    {CodeText set({Purge COZ})}
-	 catch _ then {CodeText set("")}
+	 catch _ then
+	    R
+	 in
+	    {ForAll PrototyperData
+	     proc{$ F}
+		A B
+	     in
+		F=A#B#_
+		if A==Name then R=B end
+	     end}
+	    if {IsFree R} then R="" end
+	    {CodeText set(R)}
 	 end
       end
    
@@ -85,7 +97,13 @@ local
 	    in
 	       {NfoText set({Purge COZ})}
 	    catch _ then
-	       {NfoText set("No information available.")}
+	       {NfoText set({fun{$}
+				F={List.nth PrototyperData Ind}
+				C
+			     in
+				F=_#_#C
+				C
+			     end})}
 	    end
 	    {self loadCurFile}
 	 else
