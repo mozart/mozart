@@ -1,7 +1,7 @@
 functor
 import
    Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
-   DPPane(siteStatistics) at 'x-oz://boot/DPPane'
+   DPStatistics(siteStatistics) at 'x-oz://boot/DPStatistics'
 export
    Open
    OpenNetInfo
@@ -20,7 +20,8 @@ define
 	 
       meth init(ServerPort)
 	 S P = {NewPort S}
-	 Site = {Filter {DPPane.siteStatistics} fun{$ M} M.state == mine end}.1
+	 Site = {Filter {DPStatistics.siteStatistics}
+		 fun{$ M} M.state == mine end}.1
       in
 	 self.site = site(ip:Site.ip port:Site.port pid:Site.pid)
 	 self.serverPort = ServerPort
@@ -34,7 +35,7 @@ define
 
       meth start(Time)
 	 %% skiping accumulated data 
-	 _ = {DPPane.siteStatistics}
+	 _ = {DPStatistics.siteStatistics}
 	 state <- running(Time)
 	 {self update(Time)}
       end
@@ -42,7 +43,8 @@ define
       meth update(Time)
 	 if @state == running(Time) then
 	    try 
-	       {Send self.serverPort data({DPPane.siteStatistics} self.site)}
+	       {Send self.serverPort data({DPStatistics.siteStatistics}
+					  self.site)}
 	       if Time == 0 then skip
 	       else {Delay Time} end
 	    catch _ then
