@@ -286,7 +286,7 @@ int PrioQueues::msgAcked(int num,Bool resend,Bool calcrtt) {
   while(cur!=NULL && cur->getMsgNum()>num) {
     prev=cur;
     if(resend) {
-      DebugCode(printf("resend\n");)
+      DebugCode(printf("resend %d\n",cur->getMsgNum());)
       unackedList=cur->next;
       cur->resetMarshaling();
       u_addFirst(cur,&qs[4-1]);
