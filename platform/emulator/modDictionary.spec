@@ -76,6 +76,10 @@
 		     out => ['+dictionary'],
 		     BI  => BIdictionaryClone},
 
+     'isEmpty'  => { in  => ['+dictionary'],
+		     out => ['+bool'],
+		     BI  => BIdictionaryIsEmpty},
+
      'markSafe' => { in  => ['+dictionary'],
 		     out => [],
 		     BI  => BIdictionaryMarkSafe},
