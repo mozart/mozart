@@ -3,7 +3,7 @@
   -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -
   - Copyright:
-  -   Leif Kornstaedt, 1998-2001
+  -   Leif Kornstaedt, 1998-2002
   -
   - Last change:
   -   $Date$ by $Author$
@@ -74,10 +74,18 @@
           <Entry><<processArgv>>
             <Index class=tails/<<Application>><And><<processArgv>>/
           <Synopsis>
-            <<{Application.processArgv ?+{Spec} ??{L}}>>
+            <<{Application.processArgv ?+{Spec} ??{Ss}}>>
           <Item>
-            performs argument parsing on the explicitly given list of strings ?_{L}
-            according to specification ?_{Spec}.
+            performs argument parsing on the explicitly given list of
+            strings&nbsp;?_{Ss} according to specification ?_{Spec}.
+
+          <Entry><<processCgiString>>
+            <Index class=tails/<<Application>><And><<processCgiString>>/
+          <Synopsis>
+            <<{Application.processCgiString ?+{Spec} ??{S}}>>
+          <Item>
+            performs argument parsing on the explicitly given CGI query
+            string&nbsp;?_{S} according to specification ?_{Spec}.
 
         </List>
       <Para class=apropos><Title/Error Handling/
