@@ -5,7 +5,7 @@ srcdir          = @srcdir@
 VPATH           = @srcdir@
 SHELL           = @SH@
 LEX             = @LEX@
-LEXFLAGS        = -8
+LFLAGS          = -Pxy -8
 YACC            = @YACC@
 YFLAGS          = -d -p xy
 MV              = @MV@
@@ -19,6 +19,7 @@ CFLAGS          = $(COPT) $(DEFS) $(CDYN) $(CUSR)
 CCFLAGS         = $(CFLAGS) $(CCINCLUDES)
 CXXDEPEND       = $(CXX) $(CCFLAGS) -MM
 LIBS            = @LIBS@
+LDFLAGS         = @LDFLAGS@
 
 INSTRDEFS = ../include/instrDefs.m4
 
@@ -148,10 +149,12 @@ version.cc: version
 
 emulate.cc:: register.hh
 
-ThePlatform=@OzPlatform@
+initffuns.cc oz.c: oz.h
+        ./makeffuns
+
 version::
         $(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
-             -e "s/OZPLATFORM/ThePlatform/" \
+             -e "s/OZPLATFORM/@OzPlatform@/" \
              $(srcdir)/version.sed > version.cc
 
 
