@@ -75,10 +75,15 @@ its virtual computer.
   
 . On Linux (or when just using rpm), 'su' to root, run
 
-    cd $BUILD; mozart/misc/make-mozart-rpm.sh |& tee make-mozart-rpm.log
+    cd $BUILD; mozart/misc/make-mozart-rpm.sh --lib-copies |& tee make-mozart-rpm-generic.log
+    rm mozart*src.rpm
 
-  The outcome of that are the rpm"s.
+  The outcome of this are the generic (binary) rpm"s.
 
+    cd $BUILD; mozart/misc/make-mozart-rpm.sh |& tee make-mozart-source-rpm.log
+    rm mozart*i386.rpm
+
+  The outcome of that are the generic (binary) rpm"s.
 
 1. Implicit system dependencies
 
