@@ -1087,19 +1087,20 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
 
   WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
 
-  struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
-                                          fromlen, AF_INET);
-  if (gethost) {
-    OZ_out(1) = OZ_int(ntohs(from.sin_port));
-    OZ_out(0) = OZ_string(gethost->h_name);
-    OZ_out(2) = OZ_int(fd);
-    return PROCEED;
+  char *host = inet_ntoa(from.sin_addr);
+  if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being    
+    host = "localhost";               // opened when working at home for example
   } else {
-    OZ_out(1) = OZ_int(ntohs(from.sin_port));
-    OZ_out(0) = OZ_string(inet_ntoa(from.sin_addr));
-    OZ_out(2) = OZ_int(fd);
-    return PROCEED;
+    struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
+					    fromlen, AF_INET);
+    if (gethost) {
+      host = gethost->h_name;
+    }
   }
+  OZ_out(0) = OZ_string(host);
+  OZ_out(1) = OZ_int(ntohs(from.sin_port));
+  OZ_out(2) = OZ_int(fd);
+  return PROCEED;
 } OZ_BI_ioend
 
 
