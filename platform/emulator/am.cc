@@ -1255,7 +1255,7 @@ void AM::decSolveThreads(Board *bb)
         //
         // ... first - notification board below the failed solve board;
         if (!(sa->isCommitted ()) && isStableSolve (sa)) {
-          scheduleThread (mkRunnableThread(sa->getPriority(),bb,0,OK));
+          scheduleThread (mkRunnableThread(sa->getPriority(),bb,OK));
         }
       } else {
         Assert (sa->getThreads () > 0);

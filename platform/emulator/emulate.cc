@@ -452,8 +452,11 @@ Bool AM::hookCheckNeeded()
 
 #define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G,NULL,0)
 
-#define SaveSelf(obj)                           \
-      e->changeSelf(obj);                       \
+#define ChangeSelf(obj)                         \
+      e->changeSelf(obj);
+
+#define SaveSelf                                \
+      e->saveSelf();
 
 
 /* NOTE:
@@ -914,7 +917,7 @@ void engine()
 // ------------------------------------------------------------------------
  LBLpreemption:
 
-  SaveSelf(NULL);
+  SaveSelf;
   Assert(CTT->getBoard()==CBB);
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
@@ -1064,7 +1067,7 @@ LBLinstallThread:
 
       {
         OZ_Propagator *prop = CTT->getPropagator();
-        CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB, 0);
+        CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB);
         e->restartThread();
         HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getSpawner()))),
                  prop->getArguments());
@@ -1640,7 +1643,7 @@ LBLsuspendThread:
     //  First, set the board and self, and perform special action for
     // the case of blocking the root thread;
     Assert(CTT->getBoard()==CBB);
-    SaveSelf(NULL);
+    SaveSelf;
 
 #ifdef DEBUG_CHECK
     if (CTT==e->rootThread) {
@@ -2504,7 +2507,7 @@ LBLdispatcher:
       }
 
       if (!isTailCall) CallPushCont(PC+6);
-      SaveSelf(obj);
+      ChangeSelf(obj);
       CallDoChecks(def,def->getGRegs(),getWidth(arity));
       JUMP(def->getPC());
     }
@@ -2635,7 +2638,7 @@ LBLdispatcher:
              if (!isTailCall) {
                CallPushCont(PC);
              }
-             SaveSelf(o);
+             ChangeSelf(o);
            } else {
              def = (Abstraction *) predicate;
              CheckArity(def->getArity(), makeTaggedConst(def));
@@ -3016,9 +3019,9 @@ LBLdispatcher:
 
 #ifdef LINKEDTHREADS
       Bool link = am.currentThread->getID() < 0x80000000;
-      Thread *tt = e->mkRunnableThread(prio, CBB, CTT->getValue(), NO, link);
+      Thread *tt = e->mkRunnableThread(prio, CBB, NO, link);
 #else
-      Thread *tt = e->mkRunnableThread(prio, CBB, CTT->getValue());
+      Thread *tt = e->mkRunnableThread(prio, CBB);
 #endif
 
       ozstat.createdThreads.incf();

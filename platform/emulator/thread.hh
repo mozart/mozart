@@ -99,8 +99,6 @@ public:
   RunnableThreadBody(int sz) : taskStack(sz) { }
   RunnableThreadBody *gcRTBody();
 
-  void makeRunning();
-
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   {
     taskStack.pushCont(pc,y,g,x,i);
@@ -148,7 +146,7 @@ private:
   unsigned long id;
 
   TaggedRef name;
-  TaggedRef cell;
+  Object *self;
   ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 
   //  special allocator for thread's bodies;
@@ -183,7 +181,7 @@ public:
   Thread(const Thread &tt);
   Thread &operator = (const Thread& tt);
 
-  Thread(int flags, int prio, Board *bb, TaggedRef val, Bool link=NO);
+  Thread(int flags, int prio, Board *bb, Bool link=NO);
 
   USEHEAPMEMORY;
   OZPRINT;
@@ -243,8 +241,8 @@ public:
     return item.threadBody->childThreads;
   }
 #endif
-  TaggedRef getValue() { return cell; }
-  void setValue(TaggedRef v) { cell = v; }
+
+  void setSelf(Object *o) { self = o; }
 
   TaggedRef getName() { return name; }
   void setName(TaggedRef n) { name = n; }

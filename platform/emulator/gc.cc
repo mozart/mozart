@@ -1092,7 +1092,7 @@ Thread *Thread::gcDeadThread()
   storeForward (&item.threadBody, newThread);
 
   gcTagged(name,newThread->name);
-  gcTagged(cell,newThread->cell);
+  self = self->gcObject();
 
   return (newThread);
 }
@@ -1148,7 +1148,7 @@ void Thread::gcRecurse ()
   }
 
   gcTagged(name,name);
-  gcTagged(cell,cell);
+  self = self->gcObject();
 }
 
 /*

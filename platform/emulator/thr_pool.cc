@@ -41,9 +41,9 @@ void ThreadsPool::initThreads ()
   ozstat.createdThreads.incf();
 
 #ifndef LINKEDTHREADS
-  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0);
+  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard);
 #else
-  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0,NO,OK);
+  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,NO,OK);
   rootThread->setParent(makeTaggedConst(rootThread));// has itself as daddy -BL
 #endif
 

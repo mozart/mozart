@@ -1783,7 +1783,6 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 
   Thread *it = am.mkRunnableThread(am.currentThread->getPriority(),
                                 space->getSolveBoard(),
-                                am.currentThread->getValue(),
                                 OK);
   it->pushCFunCont(contChooseInternal, args, 2, NO);
   am.scheduleThread(it);
@@ -2846,20 +2845,6 @@ OZ_C_proc_begin(BIthreadTerminate,1)
     am.scheduleThread(th);
   }
   return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIthreadExchange,3)
-{
-  OZ_declareThreadArg(0,th);
-  OZ_declareArg(1,out);
-  OZ_declareArg(2,in);
-
-  OZ_Term old=th->getValue();
-  th->setValue(in);
-  if (!old) old = nil();
-
-  return OZ_unify(out,old);
 }
 OZ_C_proc_end
 
@@ -4714,7 +4699,7 @@ OZ_C_proc_begin(BIlockLock,1)
   OzLock *lck = tagged2Lock(lock);
   if (!am.isToplevel()) {
     if (am.currentBoard != lck->getBoard()) {
-      OZ_raiseC("attempt to lock object in guard",0);
+      return raiseKernel("globalState",1,OZ_atom("lock"));
     }
   }
 
@@ -7124,7 +7109,7 @@ OZ_Return ooGetLockInline(TaggedRef val)
 {
   OzLock *lock = am.getSelf()->getLock();
   if (lock==NULL)
-    return OZ_raiseC("locking unlockable object",0);
+    return raiseObject("locking",1,makeTaggedConst(am.getSelf()));
 
   return am.fastUnify(val,makeTaggedConst(lock),OK) ? PROCEED : FAILED;
 }
@@ -7492,7 +7477,6 @@ BIspec allSpec2[] = {
   {"Thread.resume",1,BIthreadResume},
   {"Thread.terminate",1,BIthreadTerminate},
   {"Thread.preempt",1,BIthreadPreempt},
-  {"Thread.exchange",3,BIthreadExchange},
   {"Thread.setPriority",2,BIthreadSetPriority},
   {"Thread.getPriority",2,BIthreadGetPriority},
   {"Thread.isSuspended",2,BIthreadIsSuspended},

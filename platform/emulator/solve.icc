@@ -49,7 +49,7 @@ void SolveActor::inject(int prio, TaggedRef proc) {
   RefsArray args = allocateRefsArray(1, NO);
   args[0] = makeTaggedRef(&solveVar);
 
-  Thread *it = am.mkRunnableThread(prio, solveBoard, 0, OK);
+  Thread *it = am.mkRunnableThread(prio, solveBoard, OK);
   it->pushCall(proc, args, 1);
   am.scheduleThread(it);
 }

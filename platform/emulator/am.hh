@@ -110,12 +110,11 @@ public:
 
   Board *currentBoard;
   TaskStack *cachedStack;
-private:
-
   Object *cachedSelf;
 
 public:
   void changeSelf(Object *o);
+  void saveSelf();
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
 
@@ -264,7 +263,6 @@ public:
 
   inline RunnableThreadBody* allocateBody();
   inline Thread *mkRunnableThread(int prio, Board *bb,
-                                  TaggedRef val,
                                   Bool inSolve=NO, Bool link=NO);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
