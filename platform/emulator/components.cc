@@ -132,10 +132,15 @@ public:
 	buf = (char *) realloc(buf,bufsz);
       }
 
-      if (read(i,&buf[j],1)<=0 || buf[j]==OLDSYSLETHEADER) {
+#ifdef WINDOWS
+      if (osread(i,&buf[j],1)<=0)
+	break;
+#else
+      if (osread(i,&buf[j],1)<=0 || buf[j]==OLDSYSLETHEADER) {
 	oldformat = OK;
 	break; 
       }
+#endif
 
       /* check whether we got syslet header 3 times in sequence */
       if (buf[j]==SYSLETHEADER) {
@@ -158,7 +163,7 @@ public:
     if (!oldformat) {
       for (int k=0; k<sizeof(int32); k++) {
 	unsigned char c;
-	read(i,&c,1);
+	osread(i,&c,1);
 	checkSum |=  c<<(k*8);
       }
     }
@@ -975,7 +980,7 @@ OZ_BI_define(BIurl_open,1,1)
 } OZ_BI_end
 
 OZ_BI_define(BIurl_load,1,1)
-{
+{  
   OZ_declareVirtualString(0,url);
   OZ_Term aux = 0;
   OZ_Return ret = URL_get(url,aux,URL_LOAD);
