@@ -24,19 +24,13 @@
 
 class Board : public ConstTerm {
 friend void engine();
-private:
-  static Board *Root;
-  static Board *Current;
 public:
   static void Init();
-  static void Print();
-  static Board *GetCurrent();
-  static Board *GetRoot();
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
   static void NewCurrentAsk(Actor *a);
   static void NewCurrentWait(Actor *a);
+  static Board *NewRoot();
   static Actor *FailCurrent();
-  static void GC();
 
 private:
   int flags;

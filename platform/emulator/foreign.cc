@@ -9,7 +9,6 @@
   */
 
 
-#define OZ_Suspension Suspension
 #include "foreign.h"
 
 
@@ -17,8 +16,10 @@
 #include "bignum.hh"
 #include "builtins.hh"
 #include "cell.hh"
+#include "io.hh"
 #include "records.hh"
 #include "thread.hh"
+#include "suspension.hh"
 
 int OZ_isInt(OZ_Term term)
 {
@@ -165,14 +166,14 @@ OZ_Bool OZ_unify(OZ_Term t1, OZ_Term t2)
 
 OZ_Term OZ_newVariable(char *name)
 {
-  SVariable *cvar = new SVariable(Board::GetCurrent(),
+  SVariable *cvar = new SVariable(am.currentBoard,
 				  OZ_stringToTerm(name));
   return makeTaggedRef(newTaggedSVar(cvar));
 }
 
 OZ_Term OZ_newVar()
 {
-  return makeTaggedRef(newTaggedUVar(Board::GetCurrent()));
+  return makeTaggedRef(newTaggedUVar(am.currentBoard));
 }
 
 int OZ_label(OZ_Term term, char **label)
@@ -300,19 +301,19 @@ OZ_Term OZ_getRecordArg(OZ_Term term, char *fea)
 // ----------------------------------------------------------------------
 
 int OZ_select(int fd) {
-  if (am.setIORequest(fd) == NO) {
+  if (IO::setIORequest(fd) == NO) {
     return 0;
   }
   return 1;
 }
 
 int OZ_openIO(int fd) {
-  am.openIO(fd);
+  IO::openIO(fd);
   return 1;
 }
 
 int OZ_closeIO(int fd) {
-  am.closeIO(fd);
+  IO::closeIO(fd);
   return 1;
 }
 
@@ -350,7 +351,7 @@ OZ_Term OZ_protectCopy(OZ_Term t) {
 
 void OZ_print(OZ_Term t)
 {
-  taggedPrint(t,am.printDepthVal);
+  taggedPrint(t,conf.printDepth);
   fflush(stdout);
 }
 
@@ -375,17 +376,24 @@ int addBuiltin(char *name, int arity, OZ_CFun fun)
 /* Suspending builtins */
 
 
-OZ_Suspension *OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
+Suspension *OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 				 OZ_Term *args,int arity)
 {
-  Board::GetCurrent()->addSuspension();
-  return new OZ_Suspension(new CFuncContinuation(Board::GetCurrent(),
-						 Thread::GetCurrentPriority(),
-						 fun, args, arity));
+  am.currentBoard->addSuspension();
+  return new Suspension(new CFuncContinuation(am.currentBoard,
+					      am.currentThread->getPriority(),
+					      fun, args, arity));
 }
 
+Suspension *OZ_makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
+				     OZ_Term *args,int arity)
+{
+  return new Suspension(new CFuncContinuation(am.currentBoard,
+					      am.currentThread->getPriority(),
+					      fun, args, arity));
+}
 
-void OZ_addSuspension(OZ_Term *var, OZ_Suspension *s)
+void OZ_addSuspension(OZ_Term *var, Suspension *s)
 {
   SVariable *svar = taggedBecomesSuspVar(var);
 
@@ -393,9 +401,14 @@ void OZ_addSuspension(OZ_Term *var, OZ_Suspension *s)
 }
 
 
-OZ_Bool onToplevel()
+OZ_Bool OZ_onToplevel()
 {
   return am.isToplevel() == OK ? PROCEED : FAILED;
 }
 
 
+// mm2: obsolete
+OZ_Bool onToplevel()
+{
+  return am.isToplevel() == OK ? PROCEED : FAILED;
+}
