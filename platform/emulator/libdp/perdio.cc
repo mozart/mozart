@@ -131,21 +131,19 @@ void initDP()
 // PER-LOOK simplify
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
-  OZ_Term nogoods = bs->getNoGoods();
-  if (!oz_eq(oz_nil(),nogoods)) {
-    OZ_warning("send message '%s' contains nogoods: %s",
-	       mess_names[mt],toC(nogoods));
-  }
-
   int ret=toS->sendTo(bs,mt,sS,sI);
+  if(ozconf.perdioMinimal){
+    OZ_Term nogoods = bs->getNoGoods();
+    if (!oz_eq(oz_nil(),nogoods)) {
+      OZ_warning("send message '%s' contains nogoods: %s",
+		 mess_names[mt],toC(nogoods));
+    }}
   if(ret==ACCEPTED) return;
   if(ret==PERM_NOT_SENT){
     toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,
 			      (FaultInfo) bs);
     msgBufferManager->dumpMsgBuffer(bs);
   }
-  else
-    toS->communicationProblem(mt,sS,sI,COMM_FAULT_TEMP_NOT_SENT,ret);
 }
 
 
@@ -964,11 +962,6 @@ enum CommCase{
   Assert(mt1==mt);					\
 }
 
-// LOOK-PER: not working code
-
-// kost@ : 'communicationProblem(...)' handles message buffers (or
-// whatever else - streams, etc.) on its own: must do
-// 'unmarshalBegin'/'unmarshalEnd';
 void DSite::communicationProblem(MessageType mt, DSite* storeSite,
 				 int storeIndex, FaultCode fc, 
 				 FaultInfo fi) {
