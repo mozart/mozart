@@ -390,7 +390,7 @@ void getMemFromOS(size_t sz)
   /* initialize with zeros */
   DebugCheckT(memset(heapEnd,0,ozconf.heapBlockSize));
 
-  heapTop = &heapEnd[ozconf.heapBlockSize];
+  heapTop = heapEnd+ozconf.heapBlockSize;
 
 //  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
   if (tagValueOf(makeTaggedMisc(heapTop)) != heapTop) {
