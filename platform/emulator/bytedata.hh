@@ -118,6 +118,7 @@ public:
 
 inline Bool oz_isBitString(TaggedRef term)
 {
+  term = oz_deref(term);
   return oz_isExtension(term) &&
     tagged2Extension(term)->getIdV()==OZ_E_BITSTRING;
 }
@@ -125,7 +126,7 @@ inline Bool oz_isBitString(TaggedRef term)
 inline BitString *tagged2BitString(TaggedRef term)
 {
   Assert(oz_isBitString(term));
-  return (BitString *) tagged2Extension(term);
+  return (BitString *) tagged2Extension(oz_deref(term));
 }
 
 #define oz_declareBitStringIN(ARG,VAR)		\
@@ -150,6 +151,7 @@ protected:
   int width;
 public:
   int getWidth() { return width; }
+  BYTE* getData() { return data; }
   virtual int getSize() { return width; }
   ByteData operator=(const ByteData&);
   ByteData(){};
@@ -209,7 +211,7 @@ inline Bool oz_isByteString(TaggedRef term)
 inline ByteString *tagged2ByteString(TaggedRef term)
 {
   Assert(oz_isByteString(term));
-  return (ByteString *) tagged2Extension(term);
+  return (ByteString *) tagged2Extension(oz_deref(term));
 }
 
 #define oz_declareByteStringIN(ARG,VAR)		\
