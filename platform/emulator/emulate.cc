@@ -120,7 +120,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 }
 
 
-#define DORAISE(T) { X[0] = (T); X[1] = OZ_atom("system"); goto LBLraise; }
+#define DORAISE(T) { X[1] = (T); X[0] = OZ_atom("system"); goto LBLraise; }
 
 #define RAISE_APPLY(fun,args)                   \
    DORAISE(OZ_mkTupleC("apply",2,fun,args));
@@ -1301,7 +1301,7 @@ LBLpopTask:
     case C_CATCH:
       {
         TaskStackPop(--topCache);
-        goto LBLpopTask;
+        goto next_task;
       }
 
     case C_DEBUG_CONT:
@@ -2699,7 +2699,6 @@ LBLsuspendThread:
            switch (bi->getType()) {
 
            case BIraise:
-             X[1] = OZ_atom("user");
              goto LBLraise;
 
            case BIDefault:
@@ -2774,8 +2773,8 @@ LBLsuspendThread:
 // ------------------------------------------------------------------------
 
    LBLraise:
-     // exception is in X[0];
-     // type is in X[1];
+     // type is in X[0];
+     // exception is in X[1];
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
@@ -2795,8 +2794,8 @@ LBLsuspendThread:
        }
 
        RefsArray argsArray = allocateRefsArray(1,NO);
-       argsArray[0] = OZ_mkTuple(X[1],3,
-                                 X[0],e->dbgGetSpaces(),traceBack);
+       argsArray[0] = OZ_mkTuple(X[0],3,
+                                 X[1],e->dbgGetSpaces(),traceBack);
        e->currentThread->pushCall(pred,argsArray,1);
        goto LBLpopTask;
      }

@@ -7482,7 +7482,7 @@ BuiltinTabEntry *BIinit()
   BIaddSpec(allSpec2);
 
   /* see emulate.cc */
-  BIaddSpecial("raise",             1, BIraise);
+  BIaddSpecial("raise",             2, BIraise);
 
 #ifdef ASSEMBLER
   BIinitAssembler();
