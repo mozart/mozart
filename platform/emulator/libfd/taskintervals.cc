@@ -1,12 +1,13 @@
 /*
  *  Authors:
- *    Joerg Wuertz (wuertz@dfki.de)
+ *    Jörg Würtz (wuertz@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Jörg Würtz, 1998
+ *    Christian Schulte, 2001
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -24,10 +25,14 @@
  *
  */
 
+#ifdef USE_SORT_TEMPLATE
+#include "sort.hh"
+#endif
+
 #include "taskintervals.hh"
 #include "rel.hh"
-#include "auxcomp.hh"
 #include <stdlib.h>
+#include <math.h>
 
 //-----------------------------------------------------------------------------
 
@@ -556,6 +561,28 @@ struct Interval {
   int left, right, use;
 };
 
+
+#ifdef USE_SORT_TEMPLATE
+
+inline
+Bool compareDursUse(const StartDurUseTerms &a, const StartDurUseTerms &b) {
+  return a.dur * a.use > b.dur * b.use;
+}
+
+inline
+Bool compareIntervals(const Interval &i1, const Interval &i2)  {
+  return ((i1.left < i2.left) ||
+          (i1.left == i2.left) && (i1.right < i2.right));
+}
+
+
+inline
+Bool compareBounds(const int &i, const int &j) {
+  return i<j;
+}
+
+#else
+
 template <class T>
 static void myqsort(T * my, int left, int right,
              int (*compar)(const T *a, const T *b))
@@ -607,6 +634,7 @@ static int ozcdecl CompareBounds(const int *Int1, const int *Int2) {
   else return 0;
 }
 
+#endif
 
 CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
                                                    OZ_Term starts,
@@ -634,8 +662,11 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-
+#ifdef USE_SORT_TEMPLATE
+  fastsort<StartDurUseTerms,compareDursUse>(&sdu[0], reg_sz);
+#else
   myqsort((StartDurUseTerms*) GET_ARRAY(sdu), 0, reg_sz-1, compareDursUse);
+#endif
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;
@@ -1031,8 +1062,12 @@ capLoop:
     //////////
     // sort the intervals lexicographically
     //////////
+#ifdef USE_SORT_TEMPLATE
+    fastsort<Interval,compareIntervals>(&Intervals[0], interval_nb);
+#else
     Interval * intervals = Intervals;
     myqsort(intervals, 0, interval_nb-1, CompareIntervals);
+#endif
     //////////
     // compute the set of all bounds of intervals
     //////////
@@ -1047,9 +1082,12 @@ capLoop:
     //////////
     // sort the bounds in ascending order
     //////////
+#ifdef USE_SORT_TEMPLATE
+    fastsort<int,compareBounds>(&IntervalBounds[0], double_nb);
+#else
     int * intervalBounds = IntervalBounds;
     myqsort(intervalBounds, 0, double_nb-1, CompareBounds);
-
+#endif
 
     //////////
     // compute the set of intervals, for which there is exclusion
