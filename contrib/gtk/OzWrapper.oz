@@ -80,6 +80,7 @@ define
     "   OzBase     = GOZCore.ozBase"
     "   P2O        = GOZCore.pointerToObject"
     "   O2P        = GOZCore.objectToPointer"
+    "   ExportList = GOZCore.exportList"
     "   ImportList = GOZCore.importList"
     "   GetEvent   = GOZCore.getGdkEvent"
     "   class OzColorBase from OzBase"
@@ -116,7 +117,7 @@ define
     "   GdkGC        = GDK.gC"
     "   GdkColorContext = GDK.colorContext"
     "  \\insert 'GTKCANVASFIELDS.oz'"
-    "   \\insert 'OzCanvasBase.oz'"
+    "  \\insert 'OzCanvasBase.oz'"
    ]
 
    GtkEnd   = ["end"]
@@ -149,6 +150,20 @@ define
          if Prefix == Space
          then RawName
          else {Util.toString Space#RawName}
+         end
+      end
+      meth checkClassName(Name Prefix $)
+         NameS = {Util.toString Name}
+         Space = if {Util.checkPrefix "GtkCanvas" NameS}
+                 then "GtkCanvas"
+                 elseif {Util.checkPrefix "Gtk" NameS}
+                 then "Gtk"
+                 else "Gdk"
+                 end
+      in
+         if Prefix == Space
+         then {Util.cutPrefix Prefix NameS}
+         else NameS
          end
       end
    end
@@ -483,10 +498,15 @@ define
          in
             case {Dictionary.get @classes Class}
             of 'class'(anchestor: Anchestor methods: Methods) then
+             %  " from "#{Util.cutPrefix @stdPrefix {Util.toString Anchestor}}
                From    =
-               " from "#{Util.cutPrefix @stdPrefix {Util.toString Anchestor}}
-               ValName = {Util.cutPrefix @stdPrefix ClassSN}
-               Fields  = if ValName == "Imlib"
+               " from "#{ClassReg checkClassName(Anchestor @impPrefix $)}
+               ValName = case {Util.cutPrefix @stdPrefix ClassSN}
+                         of nil then "Misc"
+                         [] ValName then ValName
+                         end
+               Fields  = if ValName == "Imlib" orelse
+                            (ValName == "Misc" andthen @stdPrefix == "Gdk")
                          then nil
                          else ValName#"Fields"
                          end
@@ -614,7 +634,7 @@ define
             of I#'OUT'(Type)#_ then
                TextFile, putS({Util.indent 3}#"AO"#I#
                               " = {GOZCore.get"#Type#" AP"#I#"}")
-               TextFile, putS({Util.indent 3}#"{GOZCore.freeData AP"#I#"}")
+               TextFile, putS({Util.indent 3}#"{GOZCore.freeData AP"#I#" _}")
             [] _ then skip
             end
             GtkClasses, handleOutArgs(Ar)
@@ -641,7 +661,10 @@ define
       meth emitInterface(Keys)
          case Keys
          of Key|Kr then
-            Id = {Util.cutPrefix @stdPrefix {Util.toString Key}}
+            Id = case {Util.cutPrefix @stdPrefix {Util.toString Key}}
+                 of nil then "Misc"
+                 [] Id then Id
+                 end
          in
             TextFile, putS({Util.indent 1}#Id)
             GtkClasses, emitInterface(Kr)
@@ -744,15 +767,20 @@ define
          in
             GtkClasses, addClass({Util.toAtom Base} {Util.toAtom Key} nil)
             GdkClasses, collect(Kr)
-         [] nil then skip
+         [] nil then
+            %% Collect remaining functions not contained in the
+            %% other classes
+            GtkClasses, addClass({Util.toAtom "GdkOzBase"}
+                                 {Util.toAtom "Gdk"}
+                                 GdkClassList)
          end
       end
    end
 
-   CanvasClassList = ["GtkOzCanvasBase"#"GtkCanvas"#
-                      ["GtkCanvasItem" "GtkCanvasGroup"]
+   CanvasClassList = ["GtkCanvasOzCanvasBase"#"GtkCanvas"#
+                      ["GtkCanvasCanvasItem" "GtkCanvasGroup"]
                       "GtkObject"#"GtkCanvasItem"#nil
-                      "GtkCanvasItem"#"GtkCanvasGroup"#nil]
+                      "GtkCanvasCanvasItem"#"GtkCanvasGroup"#nil]
 
    class CanvasClasses from GtkClasses
       meth init(Types AllTypes Name)
@@ -839,7 +867,11 @@ define
          of Name|Nr then
             case GtkFieldClasses, resolve(Name $)
             of struct(Items) then
-               ClassName = {Util.cutPrefix @stdPrefix {Util.toString Name}}
+               ClassName = case {Util.cutPrefix @stdPrefix
+                                 {Util.toString Name}}
+                           of nil then "Misc"
+                           [] Name then Name
+                           end
                Class     = ClassName#"Fields"
             in
                TextFile, putS({ToS "\n"#{Util.indent 1}#"class "#Class})

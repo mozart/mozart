@@ -71,7 +71,7 @@ define
    %% Create a Rectangle item (member of root group)
    RectItemPars = ["x1"#10.0 "y1"#20.0 "x2"#380.0 "y2"#380.0
                    "fill_color_gdk"#White "outline_color_gdk"#Black]
-   RectItem = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas rectGetType($)}
+   RectItem = {MyCanvas newItem({MyCanvas root($)} {MyCanvas rectGetType($)}
                                 RectItemPars $)}
 
    %% Assign Events to Rectangle Item
@@ -119,7 +119,7 @@ define
    PolyItemPars =["points"#[20#20 380#200 20#380]
                   "fill_color_gdk"#Black
                   "width_pixels"#2]
-   _ = {MyCanvas itemNew({MyCanvas root($)} {MyCanvas lineGetType($)}
+   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas lineGetType($)}
                          PolyItemPars $)}
 
    %% Make it all visible

@@ -33,7 +33,7 @@ in
          [] nil then Points
          end
       end
-      meth !AssignArgs(Item Args $)
+      meth !AssignArgs(Item Args)
          case Args
          of (Par#RawVal)|Ar then
             ParVal = case Par
@@ -45,17 +45,21 @@ in
                      end
          in
             {Item set(Par ParVal)}
-            OzCanvasBase, AssignArgs(Item Ar $)
-         [] nil then Item
+            OzCanvasBase, AssignArgs(Item Ar)
+         [] nil then skip
          end
       end
-      meth itemNew(Group Type Args $)
+      meth newItem(Group Type Args $)
          Item = {New CanvasItem new(Group Type unit {GOZCore.null})}
       in
          children <- Item|@children
-         OzCanvasBase, AssignArgs(Item Args $)
+         OzCanvasBase, AssignArgs(Item Args)
+         Item
       end
-      meth itemClose(Item)
+      meth configureItem(Item Args)
+         OzCanvasBase, AssignArgs(Item Args)
+      end
+      meth closeItem(Item)
          children <- {Filter @children fun {$ Child}
                                           Child \= Item
                                        end}
