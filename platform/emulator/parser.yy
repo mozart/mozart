@@ -315,7 +315,6 @@ void xy_setParserExpect() {
 %type <t>  orClauseList
 %type <t>  orClause
 %type <t>  choiceClauseList
-%type <t>  choiceClause
 %type <t>  atom
 %type <t>  nakedVariable
 %type <t>  variable
@@ -565,14 +564,11 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 		| cond condMain
 		  { $$ = $2; }
 		| or coord orClauseList end coord
-		  { $$ = newCTerm("fOr",$3,newCTerm("for"),
-				  makeLongPos($2,$5)); }
+		  { $$ = newCTerm("fOr",$3,makeLongPos($2,$5)); }
 		| dis coord orClauseList end coord
-		  { $$ = newCTerm("fOr",$3,newCTerm("fdis"),
-				  makeLongPos($2,$5)); }
+		  { $$ = newCTerm("fDis",$3,makeLongPos($2,$5)); }
 		| choice coord choiceClauseList end coord
-		  { $$ = newCTerm("fOr",$3,newCTerm("fchoice"),
-				  makeLongPos($2,$5)); }
+		  { $$ = newCTerm("fChoice",$3,makeLongPos($2,$5)); }
 		| _condis_ coord condisClauseList end coord
 		  { $$ = newCTerm("fCondis",$3,makeLongPos($2,$5)); }
 		| scannerSpecification
@@ -1023,27 +1019,10 @@ orClause	: sequence thisCoord
 		  { $$ = newCTerm("fClause",$1,$3,$5); }
 		;
 
-choiceClauseList: choiceClause
+choiceClauseList: inSequence
 		  { $$ = consList($1,nilAtom); }
-		| choiceClause CHOICE choiceClauseList
+		| inSequence CHOICE choiceClauseList
 		  { $$ = consList($1,$3); }
-		;
-
-choiceClause	: sequence thisCoord
-		  { $$ = newCTerm("fClause",
-				  newCTerm("fSkip",$2),
-				  newCTerm("fSkip",$2),
-				  $1); }
-		| sequence thisCoord _in_ sequence
-		  { $$ = newCTerm("fClause",
-				  newCTerm("fSkip",$2),
-				  newCTerm("fSkip",$2),
-				  newCTerm("fLocal",$1,$4,$2)); }
-		| sequence thisCoord then inSequence
-		  { $$ = newCTerm("fClause",
-				  newCTerm("fSkip",$2),$1,$4); }
-		| sequence thisCoord _in_ sequence then inSequence
-		  { $$ = newCTerm("fClause",$1,$4,$6); }
 		;
 
 atom		: OZATOM
