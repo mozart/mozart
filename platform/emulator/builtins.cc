@@ -36,7 +36,6 @@
 
 #include "builtins.hh"
 
-#include "perdio.hh"
 #include "os.hh"
 #include "codearea.hh"
 #include "threadInterface.hh"
@@ -57,6 +56,15 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
+
+// perdio
+OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
+OZ_Return portSend(Tertiary *p, TaggedRef msg);
+OZ_Return cellDoExchange(Tertiary*,TaggedRef,TaggedRef);
+OZ_Return cellDoAccess(Tertiary*,TaggedRef);
+OZ_Return cellAtAccess(Tertiary*,TaggedRef,TaggedRef);
+OZ_Return cellAtExchange(Tertiary*,TaggedRef,TaggedRef);
+OZ_Return cellAssignExchange(Tertiary*,TaggedRef,TaggedRef);
 
 /********************************************************************
  * `builtin`
@@ -438,6 +446,7 @@ OZ_BI_define(BIisSpace, 1,1) {
 OZ_BI_define(BIaskSpace, 1,1) {
   declareSpace();
 
+  // mm2: dead code
   if (space->isProxy()) {
     OZ_out(0) = oz_newVariable();
     return remoteSend(space,"Space.ask",OZ_out(0));

@@ -33,14 +33,8 @@
 
 //
 #include "controlvar.hh"
-#include "codearea.hh"
-#include "indexing.hh"
-#include "perdio.hh"
-#include "perdio_debug.hh"  
-#include "genvar.hh"
-#include "gc.hh"
-#include "dictionary.hh"
-#include "urlc.hh"
+#include "perdio_debug.hh"
+#include "pickle.hh"
 #include "marshaler.hh"
 
 //
@@ -284,6 +278,8 @@ public:
     return checkTimeStamp(&s->timestamp);
   }
 };
+
+char *oz_site2String(Site *s);
 
 /**********************************************************************/
 /*   SECTION :: Site                                                  */

@@ -29,6 +29,8 @@
 #ifndef __MARSHALER_M4HH
 #define __MARSHALER_M4HH
 
+#include "dp_msgType.hh"
+
 //  provided by marshaler to protocol-layer.
 
 void marshalTerm(OZ_Term,MsgBuffer*);
