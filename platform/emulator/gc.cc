@@ -2855,8 +2855,7 @@ void AM::doGC() {
   int used   = getUsedMemory();
   int wanted = ((ozconf.heapFree == 100)
                 ? ozconf.heapMaxSize
-                : max(min(((long) used) * (100 / (100 - ozconf.heapFree)),
-                          ozconf.heapMaxSize),
+                : max(((long) used) * (100 / (100 - ozconf.heapFree)),
                       ozconf.heapMinSize));
 
   /* Try to align as much as possible to end of blocksize */
@@ -2869,7 +2868,17 @@ void AM::doGC() {
   wanted += min(block_dist,
                 (((long) wanted) * ozconf.heapTolerance / 100));
 
-  ozconf.heapThreshold = min(wanted, ozconf.heapMaxSize);
+  if (wanted > ozconf.heapMaxSize) {
+    if (ozconf.runningUnderEmacs) {
+      OZ_warning("\n*** Heap Max Size exceeded: Increasing from %d to %d.\n",
+                 ozconf.heapMaxSize,wanted);
+      prefixError();
+      fflush(stdout);
+    }
+    ozconf.heapMaxSize = wanted;
+  }
+
+  ozconf.heapThreshold = wanted;
 
   unsetSFlag(StartGC);
 }

@@ -70,48 +70,18 @@ void TaskStack::checkMax(int n)
 {
   int maxSize = getMaxSize();
 
-  if (maxSize >= ozconf.stackMaxSize &&
-      ozconf.stackMaxSize!=-1 &&
-      ozconf.runningUnderEmacs) {
+  if (maxSize >= ozconf.stackMaxSize && ozconf.stackMaxSize!=-1) {
+
     int newMaxSize = (maxSize*3)/2;
 
-loop:
-    printf("\n*** Task stack maxsize exceeded. Increase from %d to %d? (y/n/b/u/?) ",
-           ozconf.stackMaxSize,newMaxSize);
-    prefixError();
-    fflush(stdout);
-    char buf[1000];
-    if (osfgets(buf,1000,stdin) == 0) {
-      perror("\nofsgets");
-      am.exitOz(1);
+    if (ozconf.runningUnderEmacs) {
+      printf("\n*** Task stack maxsize exceeded. Increasing from %d to %d.\n",
+             ozconf.stackMaxSize,newMaxSize);
+      prefixError();
+      fflush(stdout);
     }
-    switch (buf[0]) {
-    case 'n':
-      am.exitOz(1);
-    case 'u':
-      ozconf.stackMaxSize = -1;
-      break;
-    case 'y':
-      ozconf.stackMaxSize = newMaxSize;
-      break;
 
-    case '?':
-    case 'h':
-      printf("\nOptions:\n");
-      printf(  "=======\n");
-      printf("y = yes, increase stack maxsize\n");
-      printf("n = no (will exit Oz)\n");
-      printf("b = print a stack dump\n");
-      printf("u = unlimited stack size (no further questions)\n");
-
-      goto loop;
-
-    case 'b':
-      printTaskStack(ozconf.errorThreadDepth);
-      goto loop;
-    default:
-      goto loop;
-    }
+    ozconf.stackMaxSize = newMaxSize;
   }
 
   resize(n);
