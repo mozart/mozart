@@ -22,13 +22,15 @@
 
 declare
 fun {ChangeMoney BillAndCoins Amount}
-   Available    = {Record.map BillAndCoins fun {$ A#D} A end}
-   Denomination = {Record.map BillAndCoins fun {$ A#D} D end}
+   Available    = {Record.map BillAndCoins fun {$ A#_} A end}
+   Denomination = {Record.map BillAndCoins fun {$ _#D} D end}
    NbDenoms     = {Width Denomination}
 in
    proc {$ Change}
       {FD.tuple change NbDenoms 0#Amount Change}
-      {For 1 NbDenoms 1 proc {$ I} Change.I =<: Available.I end}
+      {For 1 NbDenoms 1 proc {$ I}
+                           Change.I =<: Available.I
+                        end}
       {FD.sumC Denomination Change '=:' Amount}
       {FD.distribute generic(order:naive value:max) Change}
    end

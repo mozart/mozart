@@ -30,19 +30,20 @@ fun {Plug RackSpecs CardSpecs NbRacks Cards}
    CardType        = {List.number 1 {Length CardSpecs} 1}
    CardPower       = {Map CardSpecs fun {$ T} T.power end}
    proc {Rack R}
-      Type
-      Power         = {FD.int RackPower} = {FD.sumC CardPower NbCards '=<:'}
-      NbCards
-      Price
-      NbSlots       = {FD.int RackNbSlots}
+      Type    = {FD.int RackType}
+      Power   = {FD.int RackPower}
+      NbCards = {FD.record type CardType 0#RackMaxNbSlots}
+      Price   = {FD.int RackPrice}
+      NbSlots = {FD.int RackNbSlots}
    in
-      R = rack(type: Type = {FD.int RackType}
-               cards: NbCards = {FD.record type CardType 0#RackMaxNbSlots}
-               price: Price = {FD.int RackPrice}
-              )
+      R = rack(type:  Type
+               cards: NbCards
+               price: Price)
+      {FD.sumC CardPower NbCards '=<:' Power}
       thread
-         if Type==0 then Power=0  Price=0  NbSlots=0
-         else Spec = {Nth RackSpecs Type} in
+         if Type==0 then
+            Power=0  Price=0  NbSlots=0
+         else Spec={Nth RackSpecs Type} in
             Power=Spec.power  Price=Spec.price  NbSlots=Spec.slots
          end
       end
