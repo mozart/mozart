@@ -742,9 +742,14 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				   strip('\'');
 				   char *fullname = scExpndFileName(xytext,xyFileName);
 				   if (fullname != NULL) {
+				     OZ_Term coord =
+				       OZ_mkTupleC("pos",3,xyFileNameAtom,
+						   OZ_int(xylino),
+						   OZ_int(xycharno()));
 				     xy_errorMessages =
-				       OZ_cons(OZ_mkTupleC("logInsert",1,
-							   OZ_atom(fullname)),
+				       OZ_cons(OZ_mkTupleC("logInsert",2,
+							   OZ_atom(fullname),
+							   coord),
 					       xy_errorMessages);
 				     FILE *filep = fopen(fullname, "r");
 				     push_insert(filep, fullname);
@@ -1162,6 +1167,8 @@ int xy_init_from_file(char *file, OZ_Term defines) {
   char *fullname = scExpndFileName(file, NULL);
   if (fullname == NULL)
     return 0;
+  xy_errorMessages = OZ_cons(OZ_mkTupleC("logInsert",1,OZ_atom(fullname)),
+			     xy_errorMessages);
   xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
