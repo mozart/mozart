@@ -10,13 +10,23 @@ import
    FS
    Config(paramColour paramNodeShape edgeColour)
 
+\ifdef DEBUG
+   System
+\endif
+
 define
 
    fun {ShareProps PropTable S1 S2}
+\ifdef DEBUG
+      {System.show shareProps}
+\endif
       {FS.reflect.lowerBoundList {FS.intersect S1 S2}}
    end
 
    fun {MakeEdges Hist PropTable H T}
+\ifdef DEBUG
+      {System.show makeEdges}
+\endif
       if T == nil then ""
       else
          SharedProps = {ShareProps PropTable H.propagators T.1.propagators}
@@ -59,6 +69,9 @@ define
    end
 
    fun {MakeNode Ignore Hist VarTable PropTable H}
+\ifdef DEBUG
+      {System.show makeNode}
+\endif
       VarStr = {Hist get_sol_var(H.id $)}
       #H.nameconstraint
 \ifdef SHOW_ID
@@ -91,6 +104,9 @@ define
    end
 
    fun {MakeNodes IgnoreIn Hist VarTable PropTable L}
+\ifdef DEBUG
+      {System.show makeNodes}
+\endif
       if L == nil then ""
       else
          Ignore = {FS.union {FS.value.make L.1.id} IgnoreIn}

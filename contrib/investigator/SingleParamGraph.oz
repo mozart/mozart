@@ -14,12 +14,19 @@ import
           eventNodeShape)
    FS
 
+\ifdef DEBUG
+   System
+\endif
+
 define
 
    IdCounter = {New Aux.counterClass init}
 
    fun {MakePropagatorEdge
         Hist PropTable Event PropId AllPs MenuAllReachablePs}
+\ifdef DEBUG
+      {System.show makePropagatorEdge}
+\endif
       P = PropTable.PropId
       LocP = P.location
       Location = if LocP == unit then ""
@@ -50,7 +57,7 @@ define
        end
       #"\")"
 
-      #","#MenuAllReachablePs
+      #if MenuAllReachablePs \= "" then ","#MenuAllReachablePs else "" end
 
       #if AllPs == nil then ""
        else
@@ -70,6 +77,9 @@ define
    end
 
    fun {MakePropagatorEdges Hist PropTable Event Ps AllPs MenuAllReachablePs}
+\ifdef DEBUG
+      {System.show makePropagatorEdges}
+\endif
       case Ps
       of A|B|T then
          {MakePropagatorEdge
@@ -82,6 +92,9 @@ define
    end
 
    fun {MakeEventEdge Hist PropTable V Event MenuAllReachablePs}
+\ifdef DEBUG
+      {System.show makeEventEdge}
+\endif
       Filtered = {FS.reflect.lowerBoundList V.susplists.Event}
       PropsOnEvent = {MakePropagatorEdges Hist PropTable Event Filtered Filtered MenuAllReachablePs}
    in
@@ -104,14 +117,17 @@ define
           #">\",\"Propagator graph of propagators reachable by that variable at event ["#Event#"]\"),"
        end
 
-      #MenuAllReachablePs
-      #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
+      #if MenuAllReachablePs \= "" then MenuAllReachablePs#"," else "" end
+      #"menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
 
 
       #"])],["#PropsOnEvent#"]))))"
    end
 
    fun {MakeEventEdges Hist PropTable V Events MenuAllReachablePs}
+\ifdef DEBUG
+      {System.show makeEventEdges}
+\endif
       case Events
       of A|B|T then
          {MakeEventEdge Hist PropTable V A MenuAllReachablePs}#","
@@ -156,7 +172,7 @@ define
               #"menu_entry(\"vg<solvar>\",\"Variable graph of only root variables\")"
               #",menu_entry(\"vg<all>\",\"Variable graph of all variables\")"
               #",blank"
-              #","#MenuAllReachablePs
+              #if MenuAllReachablePs \= "" then ","#MenuAllReachablePs else "" end
               #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
               #"])"
               #"],["

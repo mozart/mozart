@@ -1,4 +1,3 @@
-\define DEBUG
 functor
 
 export
@@ -76,11 +75,30 @@ define
       NextArgsType
       NextAction =
       case {Label C}
-      of     cg  then NextArgsType = c Skip = no  ConstrGraph.make
-      elseof scg then NextArgsType = c Skip = no  SingleConstrGraph.make
-      elseof vg  then NextArgsType = v Skip = no  ParamGraph.make
-      elseof svg then NextArgsType = v Skip = no  SingleParamGraph.make
+      of     cg  then
+\ifdef DEBUG
+         {System.show mainAction_cg}
+\endif
+         NextArgsType = c Skip = no  ConstrGraph.make
+      elseof scg then
+\ifdef DEBUG
+         {System.show mainAction_scg}
+\endif
+         NextArgsType = c Skip = no  SingleConstrGraph.make
+      elseof vg  then
+\ifdef DEBUG
+         {System.show mainAction_vg}
+\endif
+         NextArgsType = v Skip = no  ParamGraph.make
+      elseof svg then
+\ifdef DEBUG
+         {System.show mainAction_svg}
+\endif
+         NextArgsType = v Skip = no  SingleParamGraph.make
       elseof cn  then
+\ifdef DEBUG
+         {System.show mainAction_cn}
+\endif
          LocationProp  = PropTable.(C.1).location
       in
          if LocationProp \= unit then
@@ -96,6 +114,9 @@ define
          Skip         = yes
          unit
       elseof markparam then
+\ifdef DEBUG
+         {System.show mainAction_markparam}
+\endif
          MarkParam = {Hist get_mark_param($)}
       in
          NextArgsType = unit
@@ -108,6 +129,9 @@ define
          {Hist markup_param(DaVin C.1)}
          unit
       elseof unmarkparam then
+\ifdef DEBUG
+         {System.show mainAction_unmarkparam}
+\endif
          MarkParam = {Hist get_mark_param($)}
       in
          NextArgsType = unit
@@ -120,6 +144,9 @@ define
          {Hist unmark_param}
          unit
       elseof markprop then
+\ifdef DEBUG
+         {System.show mainAction_markprop}
+\endif
          MarkProp = {Hist get_mark_prop($)}
       in
          if MarkProp == unit then skip else
@@ -132,6 +159,9 @@ define
          {Hist markup_prop(DaVin C.1)}
          unit
       elseof unmarkprop then
+\ifdef DEBUG
+         {System.show mainAction_unmarkprop}
+\endif
          MarkProp = {Hist get_mark_prop($)}
       in
          NextArgsType = unit
@@ -144,14 +174,23 @@ define
          {Hist unmark_prop}
          unit
       elseof prev then
+\ifdef DEBUG
+         {System.show mainAction_prev}
+\endif
          NextArgsType = unit
          Skip         = display
          {Hist get_prev_action($ NextArgs)}
       elseof next then
+\ifdef DEBUG
+         {System.show mainAction_next}
+\endif
          NextArgsType = unit
          Skip         = display
          {Hist get_next_action($ NextArgs)}
       elseof corrcg then
+\ifdef DEBUG
+         {System.show mainAction_corrcg}
+\endif
          CurrVars = {Hist get_curr_action(_ $)} % add assertion
          NextAction = ConstrGraph.make
       in
@@ -161,6 +200,9 @@ define
          {Hist add_action(NextAction NextArgs)}
          NextAction
       elseof corrvg then
+\ifdef DEBUG
+         {System.show mainAction_corrvg}
+\endif
          CurrProps = {Hist get_curr_action(_ $)} % add assertion
          NextAction = ParamGraph.make
       in
@@ -170,6 +212,9 @@ define
          {Hist add_action(NextAction NextArgs)}
          NextAction
       elseof addconcg then
+\ifdef DEBUG
+         {System.show mainAction_addconcg}
+\endif
          CurrProps    = {Hist get_curr_action(_ $)} % add assertion
          NextAction   = ConstrGraph.make
          ConnectProps = PropTable.(C.1).connected_props
@@ -179,6 +224,9 @@ define
          {Hist add_action(NextAction NextArgs)}
          NextAction
       elseof addconvg then
+\ifdef DEBUG
+         {System.show mainAction_addconvg}
+\endif
          CurrVars    = {Hist get_curr_action(_ $)} % add assertion
          NextAction  = ParamGraph.make
          ConnectVars = VarTable.(C.1).connected_vars
@@ -231,15 +279,16 @@ define
 \ifdef IGNORE_REFERENCE
                  {Arity VarTable}
 \else
-                 {Map {VectorToList Root}
-                  fun {$ E}
-                     {Record.foldL VarTable
-                      fun {$ L var(reference: Ref id: Id ...)}
-                         if L == unit then
-                            if {VarEq Ref E} then Id else unit end
-                         else L end
-                      end unit}
-                  end}
+                 {Filter {Map {VectorToList Root}
+                          fun {$ E}
+                             {Record.foldL VarTable
+                              fun {$ L var(reference: Ref id: Id ...)}
+                                 if L == unit then
+                                    if {VarEq Ref E} then Id else unit end
+                                 else L end
+                              end unit}
+                          end}
+                  fun {$ E} E \= unit end}
 \endif
                 }
    in
