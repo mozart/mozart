@@ -1,0 +1,175 @@
+/* -*-c-*- */
+
+BODY,TH,TD,TR,P,CAPTION,H1,H2,H3,IMG,TABLE {
+  font-family           :sans-serif;
+}
+
+PRE {
+  font-family           :monospace;
+}
+
+BODY {
+  background-color      :white;
+  margin-left           :160px;
+  background-image      :url(./demo.gif);
+}
+
+H1 {
+  color                 :#9b0000;
+}
+
+H2 {
+  color                 :#ff9933;
+  font-size             :medium;
+}
+
+H3 {
+  color                 :#999999;
+  font-size             :medium;
+}
+
+CODE,.CODE {
+  color                 :#663366;
+  font-family           :monospace;
+  font-size             :12pt;
+}
+
+PRE.CODE {
+  margin-left           :1.5cm;
+}
+
+CODE.KEYWORD,CODE.KW,SPAN.KEYWORD,SPAN.KW {
+  font-weight           :bold;
+}
+
+.MARGIN {
+  position              :absolute;
+  left                  :10px;
+  width                 :130px;
+}
+
+A:LINK {
+  color                 :#666666;
+}
+
+A:VISITED {
+  color                 :black;
+}
+
+.MARGIN A:LINK {
+  color                 :black;
+}
+
+MENU.MARGIN LI {
+  list-style-type       :none;
+}
+
+MENU.MARGIN MENU {
+  font-size             :small;
+}
+
+MENU.MARGIN P {
+  display               :inline;
+  text-indent           :-10px;
+  font-weight           :bold;
+}
+
+MENU.MARGIN MENU P {
+  text-indent           :-30px;
+  font-weight           :normal;
+}
+
+.SMALLMENU {
+  text-align            :center;
+  font-size             :small;
+}
+
+.SMALLMENU A.HILITE {
+  color                 :#ff9933;
+  font-weight           :bold;
+}
+
+DL.MENU P {
+  display               :inline;
+  margin-left           :50px;
+  text-indent           :-50px;
+}
+
+.NAVIG {
+  position              :absolute;
+  left                  :10px;
+  width                 :130px;
+  font-weight           :bold;
+}
+
+.NAVIG A:LINK {
+  color                 :black;
+}
+
+MENU.MARGIN P.MENUTITLE {
+  color                 :red;
+}
+
+.RIGHTSMALL {
+  float                 :right;
+  font-size             :small;
+}
+
+.SUBTITLE {
+  font-size             :small;
+  text-align            :right;
+}
+
+.MARGINNOTE {
+  position              :absolute;
+  left                  :10px;
+  width                 :130px;
+  font-size             :small;
+}
+
+.META {
+  font-style            :italic;
+}
+
+.COMMENT {
+  font-size             :small;
+  font-style            :italic;
+}
+
+.CHUNK,.CODECHUNK {
+  font-family           :sans-serif;
+  font-style            :italic;
+  font-weight           :bold;
+}
+
+.CODECHUNK {
+  text-indent           :-1cm;
+}
+
+.IGNORE {
+  display               :none;
+}
+
+.PAPERYEAR,.PAPERAUTHOR {
+  font-weight           :bold;
+}
+
+MENU.PAPERLINKS LI {
+  list-style-type       :none;
+}
+
+.PAPERLINKS P {
+  display               :inline;
+  text-indent           :-40px;
+  font-weight           :normal;
+  font-style            :italic;
+}
+
+SPAN.BIBAUTHOR {
+  font-size             :small;
+  font-style            :italic;
+}
+
+SPAN.NOLINEBREAK {
+  white-space           :normal;
+}

@@ -1,0 +1,63 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl    Christian Schulte (schulte@dfki.de)
+dnl
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation
+dnl  of Oz 3:
+dnl     $MOZARTURL$
+dnl
+dnl  See the file "LICENSE" or
+dnl     $LICENSEURL$
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(demo.css)
+
+OZ_INIT
+
+dnl *****************************************************************
+dnl Checks for programs.
+dnl *****************************************************************
+
+AC_PROG_INSTALL
+
+AC_CHECK_PROGS(SH, sh bash ksh)
+AC_CHECK_PROGS(RM, rm)
+AC_CHECK_PROGS(MKDIR, mkdir)
+AC_CHECK_PROGS(ECHO, echo)
+AC_CHECK_PROGS(M4, gm4 m4)
+AC_CHECK_PROGS(TRUE, true)
+AC_CHECK_PROGS(LN, ln)
+
+OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
+OZ_PATH_PROG(OZBATCH, ozbatch)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_OUTPUT(Makefile)
+
+
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
