@@ -340,6 +340,9 @@ ifneq ($(STDLIB),)
 install:: installstd
 endif
 
+CYGPATH		= $(SRCDIR)/share/lib/cygpath.sh
+CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
+
 installstd:
 	test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
-	(cd $(STDLIB) && $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(PREFIX) --nosavedb)
+	(cd $(STDLIB) && $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(CYG_PREFIX) --nosavedb)
