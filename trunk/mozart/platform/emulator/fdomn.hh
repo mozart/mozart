@@ -18,18 +18,6 @@
 #include "bignum.hh"
 
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-#define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
-#define AssertFD(C) \
-   if (!(C)) error("FD assertion '%s':%s:%d failed", #C, __FILE__, __LINE__); 
-#else
-#define DEBUG_FD_IR(COND, CODE)
-#define AssertFD(C)
-#endif
-
-inline int div32(int n) {return n >> 5;}
-inline int mod32(int n) {return n & 0x1f;}
-
 enum FDPropState {fd_det = 0, fd_bounds, fd_size, fd_any};
 enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
 
