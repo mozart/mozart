@@ -1,38 +1,59 @@
-TOOL            = gdbm
+prefix          = @prefix@
+PLATFORM        = @PLATFORM@
+PACKAGE         = @PACKAGE@
+PROTOCOL        = @PROTOCOL@
+DIR_LOAD        = $(prefix)/cache/$(PROTOCOL)/$(PACKAGE)
+DIR_DLOAD       = $(prefix)/platform/$(PLATFORM)/cache/$(PACKAGE)
 
-DYNLD           = @DYNLD@
+OZBATCH         = @OZBATCH@
+OZDYNLD         = @OZDYNLD@
+MKINSTALLDIRS   = @MKINSTALLDIRS@
+
 CXX             = @CXX@
-CPPFLAGS        = -I../../Emulator @CPPFLAGS@
+CPPFLAGS        = -I../../platform/emulator @CPPFLAGS@
 CXXFLAGS        = $(CFLAGS)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
-OZBATCH         = @OZBATCH@
 
 INSTALL         = @INSTALL@
-INSTALL_DIR     = $(INSTALL) -m 775 -d
+INSTALL_DIR     = $(MKINSTALLDIRS)
 INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_LIB     = $(INSTALL) -m 444
 
-prefix          = @prefix@
-bindir          = $(prefix)/platform/@platform@/tools/$(TOOL)
-libdir          = $(prefix)/tools/$(TOOL)
+FILES_LOAD      = gdbm.ozc
+FILES_DLOAD     = gdbm.so
+
+LIB_FILES_LOAD  = $(addprefix $(DIR_LOAD)/,$(FILES_LOAD))
+LIB_FILES_DLOAD = $(addprefix $(DIR_DLOAD)/,$(FILES_DLOAD))
+
+.PHONY: all install install-load install-dload clean distclean
 
 all: gdbm.so gdbm.ozc
 
-install:
-        $(INSTALL_DIR) $(bindir)
-        $(INSTALL_BIN) gdbm.so  $(bindir)
-        $(INSTALL_DIR) $(libdir)
-        $(INSTALL_LIB) gdbm.ozc $(libdir)
+install: install-load install-dload
+install-load:   $(DIR_LOAD)  $(LIB_FILES_LOAD)
+install-dload:  $(DIR_DLOAD) $(LIB_FILES_DLOAD)
 
-clean:
-        $(RM) *~ *.bak gdbm.o gdbm.so gdbm.ozc
+$(DIR_LOAD) $(DIR_DLOAD):
+        $(INSTALL_DIR) $@
+
+$(subst %,\%,$(DIR_LOAD))/%: %
+        $(INSTALL_LIB) $< $@
+
+$(subst %,\%,$(DIR_DLOAD))/%: %
+        $(INSTALL_LIB) $< $@
 
 gdbm.o: gdbm.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 gdbm.so: gdbm.o
-        $(DYNLD) -o gdbm.so gdbm.o $(LDFLAGS) $(LIBS)
+        $(OZDYNLD) -o gdbm.so gdbm.o $(LDFLAGS) $(LIBS)
 
 gdbm.ozc: gdbm.oz
         $(OZBATCH) -c gdbm.oz
+
+clean:
+        -$(RM) *~ *.bak *.o *.so *.ozc *.oz
+
+distclean: clean
+        -$(RM) config.*
