@@ -1318,7 +1318,7 @@ fi
 : ${oz_doc_dirs=}
 echo "$ac_t""$oz_doc_dirs" 1>&6
 
-test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop"
+test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel"
 
 DOC_DIRS=$oz_doc_dirs
 
@@ -1479,7 +1479,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1581,7 +1581,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
