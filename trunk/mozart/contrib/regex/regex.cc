@@ -16,7 +16,6 @@
 #include "mozart.h"
 #include <sys/types.h>
 #include <regex.h>
-#include <assert.h>
 #include <string.h>
 
 class REGEX: public OZ_Extension {
@@ -54,7 +53,7 @@ inline int oz_isRegex(OZ_Term t)
 
 inline REGEX* tagged2Regex(OZ_Term t)
 {
-  assert(oz_isRegex(t));
+  Assert(oz_isRegex(t));
   return (REGEX*) OZ_getExtension(OZ_deref(t));
 }
 
