@@ -121,6 +121,9 @@ cd tmp-doc
 gzip -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.gz | tar xf -
 mv mozart/doc ..
 cd ..
+chown -R root doc
+chgrp -R root doc
+chmod -R a+rX,g-w,o-w doc
 rm -rf tmp-doc
 %setup -c -D -T -a 2
 
@@ -136,7 +139,7 @@ rm -rf \$PREFIX
 mkdir -p \$PREFIX
 # install docs
 rm -rf doc/demo/applets
-cp -R doc \$PREFIX
+cp -a doc \$PREFIX
 # Generic install
 (cd mozart && make install)
 
