@@ -534,7 +534,7 @@ The point is moved to the end of the line."
 ;; Start/Stop Oz
 ;;------------------------------------------------------------
 
-(defun run-oz (toggle-new-compiler)
+(defun run-oz (&optional toggle-new-compiler)
   "Run the Oz Compiler and Oz Emulator.
 Handle input and output via buffers whose names are found in
 variables oz-compiler-buffer and oz-emulator-buffer."
@@ -1355,7 +1355,9 @@ With argument, do it that many times. Negative ARG means backwards."
 				    (or (looking-at
 					 oz-gump-class-between-pattern)
 					(looking-at
-					 oz-gump-between-pattern))))
+					 oz-gump-between-pattern)
+					(looking-at
+					 oz-gump-middle-pattern))))
 			   (goto-char (match-end 0))
 			   (setq arg (1+ arg)))
 			  ((looking-at oz-end-pattern)
@@ -1379,11 +1381,12 @@ With argument, do it that many times. Argument must be positive."
 	  (goto-char pos)
 	  (cond ((looking-at oz-end-pattern)
 		 (oz-backward-begin))
-		((looking-at oz-expr-between-pattern)
-		 (setq arg (1+ arg)))
-		((and oz-gump-indentation
-		      (or (looking-at oz-gump-between-pattern)
-			  (looking-at oz-gump-middle-pattern)))
+		((or (looking-at oz-class-between-pattern)
+		     (looking-at oz-middle-pattern)
+		     (and oz-gump-indentation
+			  (or (looking-at oz-gump-class-between-pattern)
+			      (looking-at oz-gump-between-pattern)
+			      (looking-at oz-gump-middle-pattern))))
 		 (setq arg (1+ arg)))
 		((looking-at oz-begin-pattern)
 		 (error "Containing expression ends prematurely")))
