@@ -1616,15 +1616,9 @@ The naive distribution can also be defined as follows using the <<value>>
 feature.
 <<<
 {FD.distribute 
-generic(value: proc{$ D Ds Cont}
-		  Min={FD.reflect.min D}
- 	       in
-		  choice D=Min
-		     choice {Cont Ds} end
-		  [] {`Nec` D Min}
-		     choice {Cont Ds} end
-	  	  end
-		end) Ds}
+generic(value: fun {$ D}
+		  {FD.reflect.min D}
+	       end) Ds}
 >>>
 
 <entry>
