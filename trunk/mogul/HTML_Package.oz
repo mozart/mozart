@@ -57,6 +57,18 @@ define
 			      {self categoriesToHrefs($)}
 			      $)}
 		  end
+		  if @format==nil then
+		     {self formatHeader(
+			      'format'
+			      ['mozart=<1.2.5']
+			      $)}
+		  else
+		     {self formatHeader(
+			      'format'
+			      {Map @format
+			       fun {$ F} {self format(F $)} end}
+			      $)}
+		  end
 		  /*
 		  if @keywords==nil then '' else
 		     {self formatHeader(
@@ -102,6 +114,12 @@ define
 	       )
 	 catch mogul(...)=E then
 	    raise {Adjoin E mogul(formatHeaders(@id))} end
+	 end
+      end
+      %%
+      meth format(F $)
+	 case F
+	 of '1.3.0' then 'mozart>=1.3.0 ozmake>=0.88'
 	 end
       end
       %%
