@@ -1923,7 +1923,6 @@ Board* Board::gcGetNotificationBoard()
   if (GCISMARKED(*bb->getGCField()) || bb->isRoot())  return nb;
   Assert(!bb->isCommitted());
   Actor *aa=bb->getActor();
-  if (GCISMARKED(*aa->getGCField())) return nb;
   if (bb->isFailed() || aa->isCommitted()) {
     /*
      * notification board must be changed
@@ -1932,6 +1931,7 @@ Board* Board::gcGetNotificationBoard()
     nb = bb;   // probably not dead;
     goto loop;
   }
+  if (GCISMARKED(*aa->getGCField())) return nb;
   bb = aa->getBoardFast();
   goto loop;
 }
