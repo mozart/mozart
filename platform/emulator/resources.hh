@@ -59,7 +59,7 @@ error include resources.hh before mozart.h
 /* task manager */
 /* 4 tasks are needed by virtual sites, see virtual.cc */
 /* 1 needed by ports se perdio.cc */
-/* 1 for tcpCache, see network.cc */
+/* 1 for timers, see network.cc/timers.hh */
 #define	MAXTASKS	        6
 
 /* how to prefix errors/warnings, etc. for emacs */
@@ -147,7 +147,7 @@ error include resources.hh before mozart.h
 #define PERDIO_TEMP_RETRY_FLOOR      500
 #define PERDIO_TEMP_RETRY_FACTOR     50
 #define PERDIO_MAX_TCP_CACHE         30
-#define PERDIO_CHECK_ALIVE_INTERVAL  30000
+#define PERDIO_CHECK_ALIVE_INTERVAL  5000
 
 //
 // Distributed Oz - virtual sites
@@ -244,7 +244,7 @@ error include resources.hh before mozart.h
 // don't create UVAR's
 //#define DEBUG_NO_UVAR
 
-// #define DEBUG_PERDIO
+//#define DEBUG_PERDIO
 
 //#define DEBUG_PROP_STABILTY_TEST 
 
@@ -269,14 +269,6 @@ error include resources.hh before mozart.h
 #ifdef RS_PROFILE
 #define OUTLINE
 #define PROFILE_INSTR
-#endif
-
-
-// avoid inlining some functions
-#if defined(OUTLINE)
-#define INLINE
-#else
-#define INLINE inline
 #endif
 
 #ifdef DEBUG_CHECK

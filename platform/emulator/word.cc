@@ -21,6 +21,7 @@
 
 #include "base.hh"
 #include "builtins.hh"
+#include "pickle.hh"
 
 //
 // Word Extension
@@ -30,15 +31,13 @@
 #define TRUNCATE(v, n) \
 	(((unsigned int) (v << (MAXWIDTH - n))) >> (MAXWIDTH - n))
 
-class MsgBuffer;
-void marshalNumber(unsigned int i, MsgBuffer *bs);
+class MarshalerBuffer;
+void marshalNumber(MarshalerBuffer *bs, unsigned int i);
 
-#define ROBUST
-
-#ifdef ROBUST
-unsigned int unmarshalNumberRobust(MsgBuffer *, int *);
+#ifdef USE_FAST_UNMARSHALER   
+unsigned int unmarshalNumber(MarshalerBuffer *);
 #else
-unsigned int unmarshalNumber(MsgBuffer *);
+unsigned int unmarshalNumberRobust(MarshalerBuffer *, int *);
 #endif
 
 class Word: public OZ_Extension {
@@ -102,9 +101,9 @@ public:
   void sCloneRecurseV(void) {}
 
   OZ_Boolean marshalV(void *p) {
-    MsgBuffer *bs = (MsgBuffer *) p;
-    marshalNumber(size, bs);
-    marshalNumber(value, bs);
+    MarshalerBuffer *bs = (MarshalerBuffer *) p;
+    marshalNumber(bs, size);
+    marshalNumber(bs, value);
     return OZ_TRUE;
   }
 };
@@ -126,14 +125,14 @@ inline static Word *OZ_WordToC(OZ_Term t) {
 #define OZ_RETURN_WORD(size, value) OZ_RETURN(OZ_word(size, value))
 
 OZ_Term unmarshalWord(void *p) {
-  MsgBuffer *bs = (MsgBuffer *) p;
-#ifdef ROBUST
+  MarshalerBuffer *bs = (MarshalerBuffer *) p;
+#ifdef USE_FAST_UNMARSHALER   
+  int size = unmarshalNumber(bs);
+  int value = unmarshalNumber(bs);
+#else
   int e;
   int size = unmarshalNumberRobust(bs, &e);
   int value = unmarshalNumberRobust(bs, &e);
-#else
-  int size = unmarshalNumber(bs);
-  int value = unmarshalNumber(bs);
 #endif
   return OZ_word(size, value);
 }

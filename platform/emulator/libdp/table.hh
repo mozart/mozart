@@ -153,9 +153,7 @@ public:
   void setTert(Tertiary * t) {
     u.tert = t ? makeTaggedConst(t) : makeTaggedNULL();
   }
-  Tertiary * getTert(void) {
-    return u.tert ? (Tertiary *) tagged2Const(u.tert) : (Tertiary *) NULL;
-  }
+
   void mkTertiary(Tertiary *t,unsigned short f){ 
     type = PO_Tert; setTert(t); flags=f; }
 
@@ -191,16 +189,31 @@ public:
   void removeFlags(unsigned short f) {flags = flags & (~f);}
   void addFlags(unsigned short f)    {flags = flags | f;}
 
-  Tertiary *getTertiary() { Assert(isTertiary()); return getTert(); }
-  TaggedRef getRef()      { Assert(isRef()||isVar()); return u.ref; }
-  TaggedRef *getPtr()     { Assert(isVar()); return tagged2Ref(getRef()); }
-  TaggedRef *getAnyPtr()  { return tagged2Ref(getRef()); }
+  Tertiary *getTertiary() {
+    Assert(isTertiary()); 
+    return ((Tertiary *) (u.tert ? tagged2Const(u.tert) : 0));
+  }
+  TaggedRef getTertTerm(void) {
+    Assert(isTertiary()); 
+    return (u.tert);
+  }
+  TaggedRef getRef() {
+    Assert(isRef()||isVar());
+    return (u.ref);
+  }
+  TaggedRef *getPtr() {
+    Assert(isVar());
+    return (tagged2Ref(getRef()));
+  }
+  TaggedRef *getAnyPtr() {
+    return tagged2Ref(getRef());
+  }
 
   TaggedRef getValue() {
     if (isTertiary()) 
-      return u.tert;
+      return (u.tert);
     else
-      return getRef();
+      return (getRef());
   }
 };
 
@@ -728,15 +741,15 @@ public:
     addSecondaryCredit(1,creditSiteIn);
     creditSiteIn=NULL;}
 
-  void getOneMsgCredit(){
+  DSite* getOneMsgCredit(){
     if(getOnePrimaryCredit()){
       PD((CREDIT,"Got one primary"));
       Assert(creditSiteOut==NULL);
-      return;}
-    creditSiteOut=getOneSecondaryCredit();
-    PD((CREDIT,"Got one secondary %s",oz_site2String(creditSiteOut)));
-    Assert(creditSiteOut);
-    return;}
+      return NULL;}
+    DSite *s=getOneSecondaryCredit();
+    PD((CREDIT,"Got one secondary %s",oz_site2String(s)));
+    Assert(s);
+    return s;}
 
   void removeGCMark(){
     removeFlags(PO_GC_MARK);

@@ -39,6 +39,7 @@ class VirtualInfo;
 class VirtualSite;
 class RemoteSite;
 class DSiteHashTable;
+class TransController;
 class Watcher;
 class Twin;
 class InformElem;
@@ -47,7 +48,6 @@ class BorrowEntry;
 class OwnerEntry;
 class DSite;
 class ChainElem;
-class ObjectFields;
 class GName;
 class ProxyVar;
 #endif 

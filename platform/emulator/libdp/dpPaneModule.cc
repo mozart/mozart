@@ -34,7 +34,7 @@
 
 #include "builtins.hh"
 #include "os.hh"
-#include "newmarshaler.hh"
+#include "dpMarshaler.hh"
 
 
 OZ_BI_define(BItablesExtract,0,1)
@@ -67,8 +67,8 @@ OZ_BI_define(BIsiteStatistics,0,1)
   while(node!=NULL){
     GenCast(node->getBaseKey(),GenHashBaseKey*,found,DSite*);  
     if(found->remoteComm() && found->isConnected()){
-      received = getNORM_RemoteSite(found->getRemoteSite());
-      sent     = getNOSM_RemoteSite(found->getRemoteSite());}
+      received = getNORM_ComObj(found->getComObj());
+      sent     = getNOSM_ComObj(found->getComObj());}
     else{
       received = 0;
       sent = 0;}
@@ -114,22 +114,19 @@ OZ_Term makeMemRec(OZ_Term type, int size, int nr){
 OZ_BI_define(BI_DistMemInfo,0,1)
 {
   initDP();
-  int netmsgbSz, netmsgbNr, bytebSz, bytebNr,
-    wrcoSz, wrcoNr, recoSz, recoNr, messSz, messNr,
-    resiSz, resiNr;
+  int comObjNr, comObjSz, transObjNr, transObjSz, 
+      msgContainerNr, msgContainerSz;
   
-  netmsgbNr =  getNetMsgBufferManagerInfo(netmsgbSz);
-  bytebNr   =  getNetByteBufferManagerInfo(bytebSz);
-  wrcoNr    =  getWriteConnectionManagerInfo(wrcoSz);
-  recoNr    =  getReadConnectionManagerInfo(recoSz);
-  messNr    =  getMessageManagerInfo(messSz);
-  resiNr    =  getRemoteSiteManagerInfo(resiSz);
-  OZ_RETURN(oz_cons(makeMemRec(oz_atom("netmsgb"), netmsgbSz,netmsgbNr),
-		    oz_cons(makeMemRec(oz_atom("netbyteb"),bytebSz, bytebNr),
-			    oz_cons(makeMemRec(oz_atom("writc"),wrcoSz, wrcoNr),
-				    oz_cons(makeMemRec(oz_atom("readc"),recoSz, recoNr),
-					    oz_cons(makeMemRec(oz_atom("messa"),messSz, messNr),
-						    oz_cons(makeMemRec(oz_atom("remsi"),resiSz, resiNr),oz_nil())))))));
+  comObjNr = getComControllerInfo(comObjSz);
+  transObjNr = getTransControllerInfo(transObjSz);
+  msgContainerNr = getMsgContainerManagerInfo(msgContainerSz);
+
+  OZ_RETURN(oz_cons(makeMemRec(oz_atom("ComObjects"),comObjSz,comObjNr),
+    	      oz_cons(makeMemRec(oz_atom("TransObjects"),transObjSz,
+				 transObjNr),
+		oz_cons(makeMemRec(oz_atom("MsgContainers"),msgContainerSz,
+				   msgContainerNr),
+		  oz_nil()))));
 } OZ_BI_end
 
 

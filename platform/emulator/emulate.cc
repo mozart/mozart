@@ -3137,6 +3137,7 @@ Case(GETVOID)
       goto LBLpopTaskNoPreempt;
     }
 
+  Case(ENDOFCHUNK)
   Case(OZERROR)
     {
       return T_ERROR;

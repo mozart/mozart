@@ -38,10 +38,11 @@
 #include "port.hh"
 #include "table.hh"
 #include "controlvar.hh"
-#include "dpMarshaler.hh"
+//#include "dpMarshaler.hh"
 #include "dpInterface.hh"
 #include "flowControl.hh"
 #include "ozconfig.hh"
+#include "msgContainer.hh"
 
 /**********************************************************************/
 /*   SECTION Port protocol                                       */
@@ -54,26 +55,28 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   DSite* site     = na->site;
   int index      = na->index;
   
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
-  b->getOneMsgCredit();
-  marshal_M_PORT_SEND(bs,index,msg);
-  
-  OZ_Term nogoods = bs->getNoGoods();
-  if (!oz_eq(oz_nil(),nogoods)) {
-  /*
-    int portIndex;
-    OZ_Term t;
-    unmarshal_M_PORT_SEND(bs,portIndex,t);
-    dumpRemoteMsgBuffer(bs);
-    */
-    return raiseGeneric("portSend:resources",
-			"Resources found during send to port",
-			oz_mklist(OZ_pairA("Resources",nogoods),
-				  OZ_pairA("Port",makeTaggedConst(p))));
-  }
-  
+// AN What should be done about this?
+//  OZ_Term nogoods = bs->getNoGoods();
+//    if (!oz_eq(oz_nil(),nogoods)) {
+//    /*
+//      int portIndex;
+//      OZ_Term t;
+//      unmarshal_M_PORT_SEND(bs,portIndex,t);
+//      dumpRemoteMsgBuffer(bs);
+//      */
+//      return raiseGeneric("portSend:resources",
+//  			"Resources found during send to port",
+//  			oz_mklist(OZ_pairA("Resources",nogoods),
+//  				  OZ_pairA("Port",makeTaggedTert(p))));
+//    }
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+  msgC->put_M_PORT_SEND(index,msg);
+  msgC->setImplicitMessageCredit(b->getOneMsgCredit());
+
   PD((PORT,"sendingTo %s %d",site->stringrep(),index));
-  SendTo(site,bs,M_PORT_SEND,site,index);
+  SendTo(site,msgC,3);
+
   return PROCEED;
 }
 
@@ -115,6 +118,7 @@ void gcDistPortRecurseImpl(Tertiary *p)
   } else {
     gcManagerRecurseImpl(p);
     PortWithStream *pws = (PortWithStream *) p;
+    
     oz_gCollectTerm(pws->strm,pws->strm);
   }
 }
@@ -146,11 +150,13 @@ void  PortProxy::wakeUp(){
 	flowControler->addElement(makeTaggedConst(this));
 	return;}
     
-    ret = portSendInternal(this, pending->nw);
-    if(ret!=PROCEED)
-      ControlVarRaise(pending->controlvar, ret);
-    else
-      ControlVarResume(pending->controlvar);
+    if (pending->thread != NULL){
+      ret = portSendInternal(this, pending->nw);
+      if(ret!=PROCEED)
+	ControlVarRaise(pending->controlvar, ret);
+      else
+	ControlVarResume(pending->controlvar);
+    }
     old = pending;
     pending = pending->next;
     old->dispose();

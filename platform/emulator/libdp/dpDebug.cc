@@ -153,26 +153,3 @@ void _PD(int i,char *format,...)
   }
 }
 
-
-#ifdef DEBUG_PERDIO
-
-#ifdef DEBUG_CHECK
-void maybeDebugBufferGetImpl(BYTE b){
-  PD((MARSHAL_CT,"one char got c:%d",b));}
-
-void maybeDebugBufferPutImpl(BYTE b){
-  PD((MARSHAL_CT,"one char put c:%d",b));}
-#endif
-
-#else
-
-#ifdef DEBUG_CHECK
-void maybeDebugBufferGetImpl(BYTE b) {}
-void maybeDebugBufferPutImpl(BYTE b) {}
-#endif
-
-
-#endif
-
-
-

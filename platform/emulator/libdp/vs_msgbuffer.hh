@@ -37,7 +37,7 @@
 
 #include "genhashtbl.hh"
 #include "dsite.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 #include "vs_aux.hh"
 
 #include <sys/types.h>
@@ -59,7 +59,7 @@
 Bool isLocalKey(key_t key);
 
 //
-// Pieces of memory composing a 'VSMsgBuffer'.
+// Pieces of memory composing a 'VSMarshalerBuffer'.
 // These objects are located in the shared memory page containing 
 // outgoing messages;
 // They are designed to fit into a 'VS_BLOCKSIZE' block;
@@ -473,7 +473,7 @@ public:
   // Put if it is not yet in there (choosing a nearest free slot). An
   // alternative implementation would be to mark the manager itself
   // that it has been put already; bur i (kost@) think there should
-  // not be a lot of msgbuffer segments imported from a given site
+  // not be a lot of mbuffer segments imported from a given site
   // (just a couple), so this is a better way.
   void put(key_t key, VSMsgChunkPoolSegmentManagerImported *sm) {
     int free = -1;
@@ -620,7 +620,7 @@ private:
 private:
   // 
   // 'getSegmentManager()' yields the segment manager that is to be
-  // used in the next 'getMsgBuffer' operation. This can include
+  // used in the next 'getMarshalerBuffer' operation. This can include
   // allocation of a new one, or(and) scavenging of existing ones. The
   // segment returned contains at least one free chunk;
   VSMsgChunkPoolSegmentManagerOwned* allocateSegmentManager();
@@ -836,46 +836,29 @@ public:
 // Objects of this (and inherited) class(es) reside in the private
 // memory and used for constructing/reading message buffers.
 //
-class VSMsgBuffer : public MsgBuffer {
+class VSMarshalerBuffer : public MarshalerBuffer {
 protected:
   //
   int firstChunkNum;
   key_t firstSegSHMKey;
-  // 'BYTE *posMB' and BYTE *endMB' are inherited from 'MsgBuffer';
+  // 'BYTE *posMB' and BYTE *endMB' are inherited from 'MarshalerBuffer';
 
   //
 public:
-  VSMsgBuffer() {
+  VSMarshalerBuffer() {
     DebugCode(firstChunkNum = -1);
     DebugCode(firstSegSHMKey = (key_t) -1);
-    // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
-    // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
-    // $**#& !!!!!!!!!!!!!
-    // RS: nein, da ist Per dran schuld: siehe bufferManager->getByteStream();
-    MsgBuffer::init();
-    // this should be in MsgBuffer's constructor (or initializer, 
+    // this should be in MarshalerBuffer's constructor (or initializer, 
     // whichever is preferred);
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
-  VSMsgBuffer(key_t shmKey, int chunkIndex) 
+  VSMarshalerBuffer(key_t shmKey, int chunkIndex) 
     : firstChunkNum(chunkIndex), firstSegSHMKey(shmKey) {
-    // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
-    // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
-    // $**#& !!!!!!!!!!!!!
-    // RS: nein, da ist Per dran schuld: siehe bufferManager->getByteStream();
-    MsgBuffer::init();
-    // this should be in MsgBuffer's constructor (or initializer, 
+    // this should be in MarshalerBuffer's constructor (or initializer, 
     // whichever is preferred);
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
-  virtual ~VSMsgBuffer() { OZ_error("VSMsgBuffer destroyed?"); }
-
-  //
-  // Various special (weird) stuff;
-  // SB guys changed the interface without notifying us:
-  Bool isPersistentBuffer() { return (NO); }
-  // ... EK???
-  void unmarshalReset() {}
+  virtual ~VSMarshalerBuffer() { OZ_error("VSMarshalerBuffer destroyed?"); }
 };
 
 //
@@ -888,7 +871,7 @@ public:
 // These objects are allocated from a special "free list" (defined in
 // virtual.cc);
 //
-class VSMsgBufferOwned : public VSMsgBuffer {
+class VSMarshalerBufferOwned : public VSMarshalerBuffer {
 private:
   //
   DSite *site;			// has to know the site when marshaling;
@@ -958,7 +941,7 @@ private:
 public:
   //
   void* operator new(size_t size) {
-    OZ_error("VSMsgBufferOwned allocated using 'new(size_t)'");
+    OZ_error("VSMarshalerBufferOwned allocated using 'new(size_t)'");
     return ((void *) -1);	// gcc warning;
   }
   void* operator new(size_t, void *place) { return (place); }
@@ -966,7 +949,7 @@ public:
   //
   // kost@ : Note the 'owned' buffer is initialized when created
   // since virtual sites put (at least) a "vs" header into it;
-  VSMsgBufferOwned(VSMsgChunkPoolManagerOwned *cpmIn, DSite *siteIn)
+  VSMarshalerBufferOwned(VSMsgChunkPoolManagerOwned *cpmIn, DSite *siteIn)
     : cpm(cpmIn), site(siteIn) { 
     if (siteIn) {
       vs = siteIn->getVirtualSite();
@@ -986,8 +969,8 @@ public:
     posMB = currentAddr->getDataAddr();
     endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
   }
-  virtual ~VSMsgBufferOwned() {
-    OZ_error("VSMsgBufferOwned destroyed?");
+  virtual ~VSMarshalerBufferOwned() {
+    OZ_error("VSMarshalerBufferOwned destroyed?");
   }
 
   //
@@ -1052,8 +1035,6 @@ public:
   key_t getFirstChunkSHMKey() { return (firstSegSHMKey); }
 
   //
-  // ('siteStringrep' exists just for debugging;)
-  char* siteStringrep();
   // The reasons for having 'getSite()' are:
   // (a) the marshaling routine has to know sometimes where the 
   //     stuff is to be sent;
@@ -1069,7 +1050,7 @@ public:
 // (There is a single object of this type, which is re-initialized
 // each time a message arrives);
 //
-class VSMsgBufferImported : public VSMsgBuffer {
+class VSMarshalerBufferImported : public VSMarshalerBuffer {
 private:
   //
   // The site we get the message from is not known from the beginning
@@ -1124,14 +1105,14 @@ private:
     return (*posMB++);
   }
   void putNext(BYTE) { 
-    OZ_error("there is no 'putNext' for VSMsgBufferImported!");
+    OZ_error("there is no 'putNext' for VSMarshalerBufferImported!");
   }
 
   //
 public:
   //
   void* operator new(size_t size) {
-    OZ_error("VSMsgBufferImported allocated using 'new(size_t)'");
+    OZ_error("VSMarshalerBufferImported allocated using 'new(size_t)'");
     return ((void *) -1);	// gcc warning;
   }
   void* operator new(size_t, void *place) { return (place); }
@@ -1140,9 +1121,9 @@ public:
   // kost@ : Note the 'imported' buffer is initialized when created
   // (imported) since virtual sites put (at least) a "vs" header into
   // it;
-  VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn,
+  VSMarshalerBufferImported(VSMsgChunkPoolManagerImported *cpmIn,
 		      key_t shmKey, int chunkIndex)
-    : VSMsgBuffer(shmKey, chunkIndex),
+    : VSMarshalerBuffer(shmKey, chunkIndex),
       keysRegister((VSSegKeysRegister *) 0), cpm(cpmIn)
   {
     DebugCode(setVoid(););
@@ -1150,8 +1131,8 @@ public:
     DebugCode(endMB = (BYTE *) 0);
     DebugCode(site = (DSite *) 0);
   }
-  virtual ~VSMsgBufferImported() {
-    OZ_error("VSMsgBufferImported destroyed?");
+  virtual ~VSMarshalerBufferImported() {
+    OZ_error("VSMarshalerBufferImported destroyed?");
   }
 
   //
@@ -1238,8 +1219,8 @@ public:
 
   //
   // "to be provided" methods;
-  void marshalBegin() { OZ_error("VSMsgBufferImported::marshalBegin?"); }
-  void marshalEnd()   { OZ_error("VSMsgBufferImported::marshalBegin?"); }
+  void marshalBegin() { OZ_error("VSMarshalerBufferImported::marshalBegin?"); }
+  void marshalEnd()   { OZ_error("VSMarshalerBufferImported::marshalBegin?"); }
   // 
   void unmarshalBegin() {
     VSMsgChunkPoolSegmentManagerImported *fsm;
@@ -1285,10 +1266,6 @@ public:
     // don't touch 'currentAddr' - it is used for 'isVoid()';
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
-
-  //
-  // ('siteStringrep' exists just for debugging;)
-  char* siteStringrep();
 
   //
   DSite* getSite() { 

@@ -33,30 +33,15 @@
 #include "msgType.hh"
 #include "comm.hh"
 
+#include "msgContainer.hh"
+
 #ifdef INTERFACE  
 #pragma interface
 #endif
 
-class RemoteSite;
-
-RemoteSite* createRemoteSite(DSite*, int readCtr);
-void zeroRefsToRemote(RemoteSite *);
-int sendTo_RemoteSite(RemoteSite*, MsgBuffer*, MessageType, DSite*, int);
-void sendAck_RemoteSite(RemoteSite*);
-int discardUnsentMessage_RemoteSite(RemoteSite*,int);
-int getQueueStatus_RemoteSite(RemoteSite*);  // return size in bytes
-SiteStatus siteStatus_RemoteSite(RemoteSite*); 
-void monitorQueue_RemoteSite(RemoteSite*,int size);
-void demonitorQueue_RemoteSite(RemoteSite*);
-void *getMonitorQueue_RemoteSite(RemoteSite*);
-// frequency is in seconds (but remote sites do not use it);
-ProbeReturn installProbe_RemoteSite(RemoteSite*,ProbeType,int frequency);
-ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
-ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
-GiveUpReturn giveUp_RemoteSite(RemoteSite*);
-void discoveryPerm_RemoteSite(RemoteSite*);
-void siteAlive_RemoteSite(RemoteSite*);
-void dumpRemoteMsgBuffer(MsgBuffer*);
+class ComObj;
+ComObj* createComObj(DSite*, int recCtr);
+void comController_gcComObjs();
 
 //
 // Run this when starting;
@@ -64,18 +49,14 @@ void initNetwork();
 
 
 //
-// Usaed by distpane
+// Used by distpane
 
-int getNORM_RemoteSite(RemoteSite*);
-int getNOSM_RemoteSite(RemoteSite*);
+int getNORM_ComObj(ComObj*);
+int getNOSM_ComObj(ComObj*);
 
-int getNetMsgBufferManagerInfo(int &size);
-int getNetByteBufferManagerInfo(int &size);
-int getWriteConnectionManagerInfo(int &size);
-int getReadConnectionManagerInfo(int &size);
-int getMessageManagerInfo(int &size);
-int getRemoteSiteManagerInfo(int &size);
-
+int getComControllerInfo(int &size);
+int getTransControllerInfo(int &size);
+int getMsgContainerManagerInfo(int &size);
 
 //
 // Used when "disconnecting" a site
@@ -85,7 +66,6 @@ int openclose(int Type);
 // ShutDwn stuff
 int startNiceClose();
 int niceCloseProgress();
-
 
 #endif // __NETWORK_HH
 

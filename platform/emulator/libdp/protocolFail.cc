@@ -32,7 +32,7 @@
 #include "protocolFail.hh"
 #include "table.hh"
 #include "perdio.hh"
-#include "dpMarshaler.hh"
+//#include "dpMarshaler.hh"
 #include "chain.hh"
 #include "state.hh"
 #include "var.hh"
@@ -40,17 +40,22 @@
 
 void sendAskError(BorrowEntry* be,EntityCond ec){ 
   NetAddress* na=be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  be->getOneMsgCredit();
-  marshal_M_ASK_ERROR(bs,na->index,myDSite,ec);
-  SendTo(na->site,bs,M_ASK_ERROR,na->site,na->index);}
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_UNASK_ERROR(na->index,myDSite,ec);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+
+  SendTo(na->site,msgC,3);
+}
 
 void sendUnAskError(BorrowEntry *be,EntityCond ec){
   NetAddress* na=be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  be->getOneMsgCredit();
-  marshal_M_UNASK_ERROR(bs,na->index,myDSite,ec);
-  SendTo(na->site,bs,M_UNASK_ERROR,na->site,na->index);
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_UNASK_ERROR(na->index,myDSite,ec);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+
+  SendTo(na->site,msgC,3);
 }
 
 void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){  
@@ -115,11 +120,11 @@ void  receiveTellErrorVar(BorrowEntry*b,EntityCond ec,Bool set){
     else{
       GET_VAR(b,Proxy)->subEntityCond(ec);}
     return;}
-  Assert(typeOfBorrowVar(b)==VAR_OBJECT);
+  Assert(typeOfBorrowVar(b)==VAR_LAZY);
   if(set){
-    GET_VAR(b,Object)->addEntityCond(ec);}
+    GET_VAR(b, Lazy)->addEntityCond(ec);}
   else{
-    GET_VAR(b,Object)->subEntityCond(ec);}
+    GET_VAR(b, Lazy)->subEntityCond(ec);}
 }
 
 void receiveTellError(BorrowEntry* b,EntityCond ec,Bool set){
@@ -136,9 +141,11 @@ void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
     return;}
   if(SEND_SHORT(toS)) {return;}
   oe->getOneCreditOwner();
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_TELL_ERROR(bs,myDSite,mI,ec,set);
-  SendTo(toS,bs,M_TELL_ERROR,myDSite,mI);}
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_TELL_ERROR(myDSite,mI,ec,set);
+
+  SendTo(toS,msgC,3);}
 
     
 

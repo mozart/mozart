@@ -273,4 +273,8 @@ instruction(taskCatch)
 instruction(taskEmptyStack)
 instruction(taskProfileCall)
 
+dnl '!' to move! (will require complete bootstrapping)
+dnl   Pseudo-instruction to mark the end of a code chunk
+instruction(endOfChunk)
+
 divert

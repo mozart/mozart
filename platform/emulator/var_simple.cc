@@ -37,7 +37,7 @@ OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t)
   return PROCEED;
 }
 
-// from marshaler.cc
+// '!' SB-model - to remove;
 OZ_Return oz_export(OZ_Term t);
 
 OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
