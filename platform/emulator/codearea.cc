@@ -836,8 +836,8 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	AssRegArray *list = (AssRegArray*) getAdressArg(PC+5);
 	fprintf(ofile,"(x(%d) %d pid(%s ",reg,next,toC(predName));
 	fprintf(ofile,"%d %s ",predd->getArity(),toC(file));
-	fprintf(ofile,"%s %s ",toC(line),predd->isCopyOnce?"copyonce":"nocopyonce");
-	fprintf(ofile," %s) ",predd->isNative?"native":"exportable");
+	fprintf(ofile,"%s %s ",toC(line),predd->isCopyOnce()?"copyonce":"nocopyonce");
+	fprintf(ofile," %s) ",predd->isNative()?"native":"exportable");
 	if (predEntry)
 	  fprintf(ofile,"%p ",predEntry);
 	else
