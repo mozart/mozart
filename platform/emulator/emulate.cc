@@ -1695,8 +1695,6 @@ void engine() {
 		   solveBB->isFailed () == OK), 
 		  error ("Solve board in solve continuation builtin is gone"));
        SolveActor *solveAA = SolveActor::Cast (solveBB->getActor ()); 
-//        DebugCheck((solveAA->getBoard () != NULL),
-// 		  error ("SolveCont: actors's board is linked to computation tree?"));
 
        // link and commit the board (actor will be committed too); 
        solveBB->setCommitted (CBB);
@@ -1777,14 +1775,11 @@ void engine() {
 		     solveBB->isDiscarded () == OK ||
 		     solveBB->isFailed () == OK), 
 		    error ("Solve board in solve continuation builtin is gone"));
-// 	 DebugCheck((solveBB->getParentBoard () != NULL),
-// 		    error ("SolveCont: taken board is linked to computation tree?"));
 
 	 SolveActor::Cast (solveBB->getActor ())->setBoard (CBB);
 
 	 Bool isGround;
 	 Board *newSolveBB = (Board *) e->copyTree (solveBB, &isGround);
-//	 SolveActor::Cast (solveBB->getActor ())->unsetBoard ();
 	 SolveActor *solveAA = SolveActor::Cast (newSolveBB->getActor ());
 
 	 if (isGround == OK) {
@@ -2161,6 +2156,8 @@ void engine() {
     DebugCheck ((CBB->isReflected () == OK),
 		error ("trying to reduce an already reflected solve actor"));
     if (SolveActor::Cast (CBB->getActor ())->isStable () == OK) {
+      DebugCheck ((e->trail.isEmptyChunk () == NO),
+		  error ("non-empty trail chunk for solve board"));
       // all possible reduction steps require this; 
       e->trail.popMark ();
       CBB->unsetInstalled ();
@@ -2171,7 +2168,7 @@ void engine() {
 
       if (solveBB->hasSuspension () == NO) {
 	// 'solved';
-// 	solveAA->unsetBoard ();   // unlink from the computation tree;
+	// don't unlink the subtree from the computation tree; 
 	DebugCheckT (solveBB->setReflected ());
 	if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
 	  warning ("unification of solved tuple with variable has failed");
@@ -2182,7 +2179,7 @@ void engine() {
 	WaitActor *wa = solveAA->getDisWaitActor ();
 	if (wa == (WaitActor *) NULL) {
 	  // "stuck" (stable without distributing waitActors);
-// 	  solveAA->unsetBoard ();   // unlink from the computation tree; 
+	  // don't unlink the subtree from the computation tree; 
 	  DebugCheckT (solveBB->setReflected ());
 	  if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
 	    warning ("unification of solved tuple with variable has failed");
@@ -2211,6 +2208,11 @@ void engine() {
 	  // and all the tree from solve blackboard (*solveBB) will be now copied.
 	  // Moreover, the copy has already the 'boardToInstall' setted properly;
 	  Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
+/*
+ *  Fuck!
+ *  We are trying here to detect the unit-commit failure by the application of
+ * the copy. So, just make new one and try to perform unit commit without
+ * propagation ...
 #ifdef DEBUG_CHECK
 	  Board *tmpSolveBB = e->copyTree (solveBB, (Bool *) NULL);
 	  Board *bbti =
@@ -2226,11 +2228,12 @@ void engine() {
 	  e->setCurrent (cb);
 	  e->dontPropagate = NO;
 #endif
-	  // ... and now set the original waitActor backward;
+ */
+          // ... and now set the original waitActor backward;
 	  waitBoard->flags |= Bo_Failed;   // this subtree is discarded;
-	  wa->setBoard (solveBB);   // original waitActor;
-// 	  SolveActor::Cast (newSolveBB->getActor ())->unsetBoard ();
-// 	  solveAA->unsetBoard ();
+	  wa->setBoard (solveBB);          // original waitActor;
+	  // the subtrees (new and old ones) are still linked to the
+	  // computation tree; 
 	  if (wa->hasOneChild () == OK) {
 	    solveAA->setBoardToInstall (wa->getChild ());
 	  } else {
