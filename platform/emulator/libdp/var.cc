@@ -815,11 +815,16 @@ void ManagerVar::addEntityCond(EntityCond ec){
 }
 
 void ManagerVar::subEntityCond(EntityCond ec){
-  Assert(info!=NULL);
-  info->subEntityCond(ec);
-  int i=getIndex();
-  OwnerEntry* oe=OT->getOwner(i);
-  triggerInforms(&inform,oe,i,ec);
+  // Hack! must be further investigated
+  // It sems as ManagerVars can receive PROBE_OK
+  // without being in the state TEMP_SOME
+  // Erik
+  if (info != NULL) {
+    info->subEntityCond(ec);
+    int i=getIndex();
+    OwnerEntry* oe=OT->getOwner(i);
+    triggerInforms(&inform,oe,i,ec);
+  }
 }
 
 Bool ManagerVar::siteInProxyList(DSite* s){
