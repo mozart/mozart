@@ -100,6 +100,8 @@
   "Feed `{Panel.open}' to the Oz Compiler." t)
 (autoload 'oz-open-compiler-panel "mozart"
   "Feed `{Panel.open}' to the Oz Compiler." t)
+(autoload 'oz-open-distribution-panel "mozart"
+  "Feed `{DistributionPanel.open}' to the Oz Compiler." t)
 (autoload 'oz-debugger "mozart"
   "Start the Oz debugger." t)
 (autoload 'oz-debug-application "mozart"
@@ -993,6 +995,7 @@ buffer."
   ;;(oz-define-key `[,@prefix ?i (control ?p)] 'oz-inspect-paragraph)
   ;;
   (oz-define-key `[,@prefix ,@prefix ?s] 'oz-open-panel)
+  (oz-define-key `[,@prefix ,@prefix ?n] 'oz-open-distribution-panel)
   (oz-define-key `[,@prefix ,@prefix ?c] 'oz-open-compiler-panel)
   (oz-define-key `[,@prefix ,@prefix ?p] 'oz-profiler)
   (oz-define-key `[,@prefix ,@prefix ?d] 'oz-debugger))
@@ -1135,6 +1138,7 @@ buffer."
 ;;      ("Paragraph"          oz-inspect-paragraph t))
     ("Open Panel"          oz-open-panel t)
     ("Open Compiler Panel" oz-open-compiler-panel t)
+    ("Open Distribution Panel" oz-open-distribution-panel t)
     ("Start Debugger"      oz-debugger t)
     ("Debug Application"   oz-debug-application (not (oz-is-running)))
     ("Start Profiler"      oz-profiler t)
