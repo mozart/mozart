@@ -408,6 +408,13 @@ define
 			  %% Gtk Arg Handling
 			  makeArg              : GOZSignal.makeArg
 			  getArg               : GOZSignal.getArg
+			  %% String Handling
+			  allocStr             : GOZSignal.allocStr
+			  getStr               : GOZSignal.getStr
+			  %% String Arr Handling
+			  allocStrArr          : GOZSignal.allocStrArr
+			  makeStrArr           : GOZSignal.makeStrArr
+			  getStrArr            : GOZSignal.getStrArr
 			  %% GDK Event Import
 			  getGdkEvent          : GetGdkEvent
 			  %% GTK Canvas Helper
