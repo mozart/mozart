@@ -169,4 +169,10 @@
           This allows to identify the <<ping>> query with its <<pong>>
           notification.
       </List>
+    <Para class=apropos><Title/Custom Front-Ends/
+      <List>
+        <Entry><<setFrontEnd(?+{P1} ?+{P2})>>
+        <Item>
+          <P.silent><!--**-->
+      </List>
 </Section>
