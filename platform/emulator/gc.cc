@@ -1449,6 +1449,13 @@ void gc_finalize()
 }
 
 
+//
+// HYPER_OPTIMIZE_GC blows the codesize and does not seem to be profitable yet,
+// so it is disbaled by now
+//
+
+#undef HYPE_OPTIMIZE_GC
+
 inline
 void gcTagged(TaggedRef & frm, TaggedRef & to,
               Bool isInGc, Bool hasDirectVars, Bool allVarsAreLocal) {
@@ -1673,6 +1680,7 @@ void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
+#ifdef HYPER_OPTIMIZE_GC
   if (isInGc) {
     for (int i=sz; i--; )
       gcTagged(frm[i], to[i], OK, OK, NO);
@@ -1680,6 +1688,10 @@ void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
     for (int i=sz; i--; )
       gcTagged(frm[i], to[i], NO, OK, NO);
   }
+#else
+  for (int i=sz; i--; )
+    gcTagged(frm[i], to[i], isInGc, OK, NO);
+#endif
 }
 
 /*
@@ -1691,6 +1703,7 @@ void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
  */
 
 void OZ_collectLocalHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
+#ifdef HYPER_OPTIMIZE_GC
   if (isInGc) {
     for (int i=sz; i--; )
       gcTagged(frm[i], to[i], OK, OK, OK);
@@ -1698,6 +1711,10 @@ void OZ_collectLocalHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
     for (int i=sz; i--; )
       gcTagged(frm[i], to[i], NO, OK, OK);
   }
+#else
+  for (int i=sz; i--; )
+    gcTagged(frm[i], to[i], isInGc, OK, OK);
+#endif
 }
 
 void OZ_updateLocalHeapTerm(TaggedRef & to) {
