@@ -889,7 +889,7 @@ define
 		 '<HTML>\n'#
 		 '<HEAD>\n'#
 		 '<TITLE>'#Title#'</TITLE>\n'#
-		 '<LINK rel=stylesheet href="/css/page.css">\n'#
+		 '<LINK rel=stylesheet href="http://www.ps.uni-sb.de/www/css/page.css">\n'#
 		 '</HEAD>\n'#
 		 '<BODY>\n')
 	 %--** navigation panel
