@@ -246,7 +246,6 @@ OZ_C_proc_begin(BIstoreGRegRef,2)
 
   AssRegArray *gregs = new AssRegArray(numglobals);
 
-  unsigned int reg;
   for (int i = 0; i < numglobals; i++) {
     SRecord *rec = tagged2SRecord(deref(head(globals)));
     globals = deref(tail(globals));
