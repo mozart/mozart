@@ -139,6 +139,24 @@ int BIfdBodyManager::initCache(void) {
   
 }
 
+inline
+void BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
+  killPropagatedCurrentTaskSusp();
+
+  Assert(FDcurrentTaskSusp == NULL);
+  
+  Suspension * s = NULL;
+
+  for (int i = curr_num_of_vars; i--; )
+    if (!bifdbm_is_local[i] &&  isTouched(i)) {
+      if (s == NULL)
+      (s = FDcurrentTaskSusp = new Suspension(am.currentBoard))
+        ->anyGlobalInit();
+      addSuspAnyVar(bifdbm_varptr[i], new SuspList(s, NULL));
+    }
+}
+
+
 //-----------------------------------------------------------------------------
 // Inlined functions
 
