@@ -689,6 +689,8 @@ Bool checkAtom(char *s)
 	&& strcmp(t, "orelse")? OK: NO;
   case 'p':
     return strcmp(t, "proc") && strcmp(t, "prop")? OK: NO;
+  case 'r':
+    return strcmp(t, "raise")? OK: NO;
   case 's':
     return strcmp(t, "self") && strcmp(t, "skip")? OK: NO;
   case 't':
@@ -1535,7 +1537,14 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
     OZ_warning("OZ_putSubtree: invalid feature");
     return;
   }
-  (void) tagged2SRecord(term)->replaceFeature(feature,value);
+  if (!isSRecord(term)) {
+    OZ_warning("OZ_putSubtree: invalid record");
+    return;
+  }
+  if (!tagged2SRecord(term)->setFeature(feature,value)) {
+    OZ_warning("OZ_putSubtree: invalid feature");
+    return;
+  }
 }
 
 OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
