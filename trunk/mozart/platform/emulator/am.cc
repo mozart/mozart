@@ -1180,10 +1180,11 @@ unsigned int AM::waitTime()
 #else
   if (taskMinInterval)
     sleepTime = min(nextUser(), taskMinInterval);
-  else 
+  else
     sleepTime = nextUser();
+
   // don't sleep less than 'CLOCK_TICK/1000' ms;
-  sleepTime = max(sleepTime, CLOCK_TICK/1000);
+  sleepTime =sleepTime==0 ? 0 : max(sleepTime, CLOCK_TICK/1000);
 #endif
 
   return (sleepTime);
