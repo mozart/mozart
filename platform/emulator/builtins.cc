@@ -4553,7 +4553,7 @@ OZ_Return closePort(OZ_Term prt)
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
     
   if (OZ_unify(nil(),old)!=PROCEED) {
-    OZ_fail("OZ_close failed\n");
+    return am.raise(E_SYSTEM,E_KERNEL,"portClosed",1,prt);	\
   }
   return PROCEED;
 }
