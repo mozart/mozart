@@ -163,3 +163,116 @@ OZ_BI_define(weakdict_close,0,0)
   return PROCEED;
 }
 OZ_BI_end
+
+inline OZ_Term WeakDictionary::getKeys()
+{
+  return (table)?table->getKeys():AtomNil;
+}
+
+OZ_BI_define(weakdict_keys,1,1)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_RETURN(d->getKeys());
+}
+OZ_BI_end
+
+inline OZ_Term WeakDictionary::getPairs()
+{
+  return (table)?table->getPairs():AtomNil;
+}
+
+OZ_BI_define(weakdict_entries,1,1)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_RETURN(d->getPairs());
+}
+OZ_BI_end
+
+inline OZ_Term WeakDictionary::getItems()
+{
+  return (table)?table->getItems():AtomNil;
+}
+
+OZ_BI_define(weakdict_items,1,1)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_RETURN(d->getItems());
+}
+OZ_BI_end
+
+inline bool WeakDictionary::isEmpty()
+{
+  return (table==0 || table->numelem==0);
+}
+
+OZ_BI_define(weakdict_isempty,1,1)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_RETURN_BOOL(d->isEmpty());
+}
+OZ_BI_end
+
+inline OZ_Term WeakDictionary::toRecord(OZ_Term label)
+{
+  return (table)?table->toRecord(label):label;
+}
+
+#define OZ_declareLiteral(ARG,VAR)
+
+OZ_BI_define(weakdict_torecord,2,1)
+{
+  OZ_expectType(0,"Literal",OZ_isLiteral);
+  OZ_Term label = OZ_in(0);
+  OZ_declareWeakDict(1,d);
+  OZ_RETURN(d->toRecord(label));
+}
+OZ_BI_end
+
+inline void WeakDictionary::remove(OZ_Term key)
+{
+  if (table) {
+    DynamicTable *aux = table->remove(key);
+    if (aux!=table) {
+      table->dispose();
+      table=aux;
+    }
+  }
+}
+
+OZ_BI_define(weakdict_remove,2,0)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_declareFeature(1,key);
+  d->remove(key);
+  return PROCEED;
+}
+OZ_BI_end
+
+inline void WeakDictionary::remove_all()
+{
+  if (table) {
+    table->dispose();
+    table = DynamicTable::newDynamicTable(DictDefaultSize);
+  }
+}
+
+OZ_BI_define(weakdict_remove_all,1,0)
+{
+  OZ_declareWeakDict(0,d);
+  d->remove_all();
+  return PROCEED;
+}
+OZ_BI_end
+
+inline bool WeakDictionary::member(OZ_Term key)
+{
+  return (table->lookup(key) != makeTaggedNULL());
+}
+
+OZ_BI_define(weakdict_member,2,1)
+{
+  OZ_declareWeakDict(0,d);
+  OZ_declareFeature(1,key);
+  OZ_RETURN_BOOL(d->member(key));
+}
+OZ_BI_end
