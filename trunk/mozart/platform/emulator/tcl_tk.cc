@@ -1048,7 +1048,7 @@ OZ_C_proc_begin(BIsetTclFD,2) {
 
 
 OZ_C_proc_begin(BItclWrite,1) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1061,7 +1061,7 @@ OZ_C_proc_begin(BItclWrite,1) {
     tcl_buffer.put('\n');
 
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
   
   exit:
@@ -1074,7 +1074,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteReturn, 3) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1097,7 +1097,7 @@ OZ_C_proc_begin(BItclWriteReturn, 3) {
     tcl_rets = tail(newt);
 			    
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
     }
   exit:
@@ -1116,14 +1116,14 @@ OZ_C_proc_begin(BItclWriteReturnMess, 4) {
    * OZ_args[2]: modifier to be put after arg 1 of above (may be unit)
    * OZ_args[3]: type cast for return value
    */
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK;
     OZ_Return s;
-    TaggedRef ret = makeTaggedNULL();
+    TaggedRef ret = NameTclClosed;
     TaggedRef mess = deref(OZ_args[1]);
     TaggedRef frst;
 
@@ -1163,7 +1163,7 @@ OZ_C_proc_begin(BItclWriteReturnMess, 4) {
     tcl_rets = tail(newt);
     
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write(); 
     }
   
@@ -1178,7 +1178,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteBatch,1) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1191,7 +1191,7 @@ OZ_C_proc_begin(BItclWriteBatch,1) {
     tcl_buffer.put('\n');
 
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
   
   exit:
@@ -1204,7 +1204,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteTuple,2) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1236,7 +1236,7 @@ OZ_C_proc_begin(BItclWriteTuple,2) {
     tcl_buffer.put('\n');
 
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
   
   exit:
@@ -1251,7 +1251,7 @@ OZ_C_proc_end
 
 
 OZ_C_proc_begin(BItclWriteTagTuple,3) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1286,7 +1286,7 @@ OZ_C_proc_begin(BItclWriteTagTuple,3) {
     tcl_buffer.put('\n');
 
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
     
   exit:
@@ -1298,7 +1298,7 @@ OZ_C_proc_begin(BItclWriteTagTuple,3) {
 OZ_C_proc_end
 
 OZ_C_proc_begin(BItclWriteFilter,5) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1317,7 +1317,7 @@ OZ_C_proc_begin(BItclWriteFilter,5) {
     tcl_buffer.put('\n');
 
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
   
   exit:
@@ -1378,7 +1378,7 @@ OZ_Return close_hierarchy(Object * o) {
 
   
 OZ_C_proc_begin(BItclClose,2) {  
-  if (OZ_args[0] == makeTaggedNULL()) {
+  if (OZ_args[0] == NameTclClosed) {
     return tcl_buffer.write();
   } else {
     CHECK_TOPLEVEL;
@@ -1437,7 +1437,7 @@ OZ_C_proc_begin(BItclClose,2) {
     close_hierarchy(o);
 
     tcl_buffer.start_write();
-    OZ_args[0] = makeTaggedNULL();
+    OZ_args[0] = NameTclClosed;
     return tcl_buffer.write();
     
   exit:
