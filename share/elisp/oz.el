@@ -34,6 +34,7 @@
 ;; - 10thread is not recognized as a keyword as it should be.
 ;; - An ampersand as the last character in a string or before a
 ;;   backslash-escaped double quote in a string messes up fontification.
+;;   Partial fix: write [&&] instead of "&".
 ;; - Writing e.g., C == &\\andthen ... confuses fontification.
 ;; - The use of non-escaped double quotes in Oz-Gump regular expression
 ;;   tokens confuses fontification.
@@ -854,7 +855,7 @@ If FORCE is non-nil, kill it immediately."
 	    (funcall oz-emulator-hook)
 	  (setq oz-emulator-buffer "*Oz Emulator*")
 	  (setq oz-read-emulator-output t)
-	  (make-comint "Oz Emulator" "ozengine" nil 
+	  (make-comint "Oz Emulator" "ozengine" nil
 		       "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc")
 	  (oz-create-buffer oz-emulator-buffer 'emulator)
 	  (set-process-filter (get-buffer-process oz-emulator-buffer)
@@ -2104,20 +2105,20 @@ and is used for fontification.")
     'identity
     '("move" "moveMoveXYXY" "moveMoveYXYX" "moveMoveXYYX" "moveMoveYXXY"
       "allocateL" "createNamedVariable" "createVariable" "createVariableMove"
-      "putConstant" "putNumber" "putLiteral" "putList" "putRecord"
-      "setConstant" "setNumber" "setLiteral" "setValue" "setVariable"
-      "setVoid" "getNumber" "getLiteral" "getList" "getListValVar"
-      "getRecord" "unifyNumber" "unifyLiteral" "unifyValue" "unifyVariable"
+      "putConstant" "putList" "putRecord" "setConstant" "setPredicateRef"
+      "setValue" "setVariable" "setVoid" "getNumber" "getLiteral" "getList"
+      "getListValVar" "getListVarVar" "getRecord" "getRecordVars"
+      "unifyNumber" "unifyLiteral" "unifyValue" "unifyVariable"
       "unifyValVar" "unifyVoid" "unify" "branch" "branchOnNonVar"
-      "callBuiltin" "inlineFun[1-3]" "inlinePlus1?" "inlineMinus1?"
-      "inlineRel[1-3]" "inlineEqEq" "inlineDot" "inlineUparrow" "inlineAt"
-      "inlineAssign" "genCall" "call" "tailCall" "fastCall" "fastTailCall"
-      "genFastCall" "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth"
-      "tailApplMeth" "thread" "threadX" "exHandler" "createCond" "nextClause"
-      "shallowGuard" "testLiteral" "testNumber" "testBool" "shallowTest[12]"
-      "testLess" "testLessEq" "switchOnTerm" "getVariable" "getVarVar"
-      "getVoid" "lockThread" "getSelf" "det" "weakDet" "debugEntry"
-      "debugExit" "globalVarname" "localVarname" "clearY") "\\|")
+      "callBI" "inlinePlus1?" "inlineMinus1?" "inlineDot" "inlineUparrow"
+      "inlineAt" "inlineAssign" "genCall" "call" "tailCall" "fastCall"
+      "fastTailCall" "genFastCall" "marshalledFastCall" "sendMsg"
+      "tailSendMsg" "applMeth" "tailApplMeth" "thread" "threadX" "exHandler"
+      "createCond" "nextClause" "shallowGuard" "testLiteral" "testNumber"
+      "testBool" "testBI" "testLT" "testLE" "switchOnTerm" "match"
+      "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
+      "weakDet" "debugEntry" "debugExit" "globalVarname" "localVarname"
+      "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
@@ -2145,8 +2146,7 @@ and is used for fontification.")
   "<N: [^>]+>")
 
 (defconst ozm-builtin-name-matcher
-  (concat "\t\\(callBuiltin\\|inlineRel[1-3]\\|inlineFun[1-3]\\|inlineEqEq\\|"
-	  "shallowTest[12]\\)(\\([A-Za-z0-9_]+\\|'[^'\n]'\\)"))
+  "\t\\(callBI\\|testBI\\)(\\([A-Za-z0-9_]+\\|'[^'\n]'\\)")
 
 (defconst ozm-font-lock-keywords-1
   (list (cons ozm-keywords-matcher 1)
