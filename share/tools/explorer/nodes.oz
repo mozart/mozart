@@ -7,9 +7,6 @@
 
 local
 
-   class EmptyClass
-   end
-
    \insert layout-nodes.oz
 
    \insert tk-nodes.oz
@@ -26,7 +23,6 @@ local
 
    class FailedNode
       from
-         BaseObject
          LayoutNodes.failed
          HideNodes.failed
          MoveNodes.failed
@@ -50,7 +46,6 @@ local
    in
       class BlockedNode
          from
-            BaseObject
             LayoutNodes.blocked
             HideNodes.blocked
             MoveNodes.blocked
@@ -84,7 +79,6 @@ local
    local
       class SucceededNode
          from
-            BaseObject
             LayoutNodes.succeeded
             MoveNodes.succeeded
             SearchNodes.succeeded
@@ -94,45 +88,31 @@ local
          feat
             kind: succeeded
             mom
+         meth init(Mom Depth S AllocateCopy)
+            self.mom = Mom
+            copy <- case
+                       case self.order==false then AllocateCopy
+                       else persistent
+                       end
+                    of transient  then transient(S)
+                    [] flushable  then flushable(S)
+                    [] persistent then persistent(S)
+                    else false
+                    end
+            {self.status addSolution(Depth)}
+         end
       end
    in
       class EntailedNode from SucceededNode TkNodes.entailed
-         meth init(Mom Depth S AllocateCopy)
-            self.mom = Mom
-            copy <- case
-                       case self.order==false then AllocateCopy
-                       else persistent
-                       end
-                    of transient  then transient(S)
-                    [] flushable  then flushable(S)
-                    [] persistent then persistent(S)
-                    else false
-                    end
-            {self.status addSolution(Depth)}
-         end
       end
 
       class SuspendedNode from SucceededNode TkNodes.suspended
-         meth init(Mom Depth S AllocateCopy)
-            self.mom = Mom
-            copy <- case
-                       case self.order==false then AllocateCopy
-                       else persistent
-                       end
-                    of transient  then transient(S)
-                    [] flushable  then flushable(S)
-                    [] persistent then persistent(S)
-                    else false
-                    end
-            {self.status addSolution(Depth)}
-         end
       end
    end
 
 
    class ChooseNode
       from
-         BaseObject
          HideNodes.choose
          MoveNodes.choose
          SearchNodes.choose
@@ -171,19 +151,14 @@ local
 in
 
    Sentinel=
-   {New
-    class
-      from
-         BaseObject
-         LayoutNodes.sentinel
-         HideNodes.sentinel
-         MoveNodes.sentinel
-         SearchNodes.sentinel
-         StatNodes.sentinel
-         ActionNodes.sentinel
-         TkNodes.sentinel
-    end
-    noop}
+   {New class $ from
+                   HideNodes.sentinel
+                   MoveNodes.sentinel
+                   SearchNodes.sentinel
+                   TkNodes.sentinel
+           prop final
+        end
+    dirtyUp}
 
    fun {MakeRoot Manager Query Order}
       class Features
