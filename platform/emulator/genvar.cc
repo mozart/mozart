@@ -35,7 +35,7 @@ Bool GenCVariable::isLocalVariable(void)
 }
 
 void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term,
-                             Bool unifyVars)
+                             PropCaller unifyVars)
 {
   sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term, NULL, unifyVars);
 }

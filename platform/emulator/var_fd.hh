@@ -70,7 +70,7 @@ public:
   void relinkSuspListTo(GenFDVariable * lv);
 
   void propagate(TaggedRef var, FDPropState state,
-                 TaggedRef term, Bool prop_eq = FALSE);
+                 TaggedRef term, PropCaller prop_eq = pc_propagator);
 
   int getSuspListLength(void) {
     return suspList->length() +

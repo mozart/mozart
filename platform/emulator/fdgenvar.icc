@@ -29,7 +29,7 @@ void GenFDVariable::dispose(void) {
 
 inline
 void GenFDVariable::propagate(TaggedRef var, FDPropState state,
-                              TaggedRef term, Bool prop_eq)
+                              TaggedRef term, PropCaller prop_eq)
 {
   switch (state) {
   case fd_det:

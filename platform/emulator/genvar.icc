@@ -30,8 +30,14 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
   switch (getType()){
   default:
   case FDVariable:
-    return ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
-                                            tptr2, term2, ttag2);
+    {
+      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
+                                             tptr2, term2, ttag2))
+        return FALSE;
+      LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
+                        if (! localPropStore.do_propagation()) return FALSE;)
+    }
+    return TRUE;
   }
   return FALSE;
 }
