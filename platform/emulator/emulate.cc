@@ -3083,13 +3083,18 @@ LBLdispatcher:
   Case(MARSHALLEDFASTCALL)
     {
       TaggedRef pred = getTaggedArg(PC+1);
-      Bool tailcall  = getPosIntArg(PC+2);
+      int tailcallAndArity  = getPosIntArg(PC+2);
+
+      DEREF(pred,predPtr,_1);
+      if (isAnyVar(pred)) {
+        SUSP_PC(predPtr,tailcallAndArity>>1,PC);
+      }
 
       Abstraction *abstr = tagged2Abstraction(pred);
 
       OZ_unprotect((TaggedRef*)(PC+1));
       AbstractionEntry *entry = AbstractionTable::add(abstr);
-      CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
+      CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
       CodeArea::writeAddress(entry, PC+1);
       DISPATCH(0);
     }
