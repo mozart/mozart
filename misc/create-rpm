@@ -240,7 +240,7 @@ mkdir -p \$PREFIX
 # Generic install
 make install
 # inspect the emulator.exe for being dynamically linked against
-# libgcc_s.so, and if so - copy the library into
+# libstdc++.so.5 and libgcc_s.so, and if so - copy the library(s) into
 # $PREFIX/platform/$PLTFRM/lib:
 PLTFRM=\`\$PREFIX/bin/ozplatform\`
 found=""
@@ -258,7 +258,27 @@ if [ "\$found" != "" ]; then
     done
     mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
     /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib/\$found
+    unset lib
+fi
+unset found
+unset dynlib
+found=""
+dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep "libstdc++.so" && eval '' || eval ''\`
+for e in \$dynlib ; do
+    match=\`echo \$e | grep "/.*libstdc++.so" && eval '' || eval ''\`
+    if [ "\$match" != "" ]; then
+        found=\$match
+        break
+    fi
+done
+if [ "\$found" != "" ]; then
+    for e in `echo \$found | tr '/' ' '` ; do
+        lib=\$e
+    done
+    mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
+    /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib/\$found
     unset lib
 fi
 unset found

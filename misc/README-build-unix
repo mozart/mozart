@@ -94,9 +94,35 @@ The following packages supporting Mozart are known to work:
        j2sdk-1.4.1_02-fcs (Sun's "Java Runtime Environment")
 
 . solaris-sparc
-    . gnu find (for building from sources)
-    kost (806) ldd emulator.exe
-    kost (809) ldd tk.exe
+    . gcc 3.3.2, gnu find (for building from sources)
+    kost (272) ldd emulator.exe
+            libdl.so.1 =>    /usr/lib/libdl.so.1
+            libsocket.so.1 =>        /usr/lib/libsocket.so.1
+            libnsl.so.1 =>   /usr/lib/libnsl.so.1
+            libm.so.1 =>     /usr/lib/libm.so.1
+            libgcc_s.so.1 =>         /opt/local/lib/libgcc_s.so.1
+            libc.so.1 =>     /usr/lib/libc.so.1
+            libmp.so.2 =>    /usr/lib/libmp.so.2
+            /usr/platform/SUNW,Ultra-Enterprise/lib/libc_psr.so.1
+    kost (273) ldd tk.exe
+            libdl.so.1 =>    /usr/lib/libdl.so.1
+            libsocket.so.1 =>        /usr/lib/libsocket.so.1
+            libnsl.so.1 =>   /usr/lib/libnsl.so.1
+            libm.so.1 =>     /usr/lib/libm.so.1
+            libgcc_s.so.1 =>         /opt/local/lib/libgcc_s.so.1
+            libc.so.1 =>     /usr/lib/libc.so.1
+            libmp.so.2 =>    /usr/lib/libmp.so.2
+            /usr/platform/SUNW,Ultra-Enterprise/lib/libc_psr.so.1
+    kost (275) ldd flex.exe
+            libc.so.1 =>     /usr/lib/libc.so.1
+            libdl.so.1 =>    /usr/lib/libdl.so.1
+            /usr/platform/SUNW,Ultra-Enterprise/lib/libc_psr.so.1
+    kost (276) ldd text2pickle.exe
+            libm.so.1 =>     /usr/lib/libm.so.1
+            libgcc_s.so.1 =>         /opt/local/lib/libgcc_s.so.1
+            libc.so.1 =>     /usr/lib/libc.so.1
+            libdl.so.1 =>    /usr/lib/libdl.so.1
+            /usr/platform/SUNW,Ultra-Enterprise/lib/libc_psr.so.1
 
 NOTE: the official 1.3.0 Release RPM"s for RedHat 9.0 were built on
 regurarly maintained RH9.0 box (ibm thinkpad x31) with manually installed

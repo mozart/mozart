@@ -42,33 +42,29 @@ build=$PREFIX/build-$PLAT
 build-stdlib=$PREFIX/build-stdlib-$PLAT
 
 case $PLAT in
-    linux-i486)
-        LDFLAGS=-s
-        moreargs="--enable-opt=yes --with-documents=all --enable-index --enable-chm"
+linux-i486)
+    LDFLAGS=-s
+    moreargs="--enable-opt=yes --with-documents=all --enable-index --enable-chm"
     ;;
-    solaris-sparc)
-        LDFLAGS=-s
-        moreargs="--enable-opt=yes"
+
+solaris-sparc)
+    LDFLAGS=-s
+    moreargs="--enable-opt=yes --disable-doc"
     ;;
-    freebsdelf-i486)
-        LDFLAGS=-s
-        moreargs="--enable-opt=yes"
+
+freebsdelf-i486)
+    LDFLAGS=-s
+    moreargs="--enable-opt=yes --disable-doc"
     ;;
-    openbsd-sparc)
-        LDFLAGS=-s
-        moreargs="--enable-opt=yes"
+
+openbsd-sparc)
+    LDFLAGS=-s
+    moreargs="--enable-opt=yes --disable-doc "
     ;;
-    win32-i486)
-        LDFLAGS=-s
-        windlldir="$packageroot/dlls"
-        moreargs="--enable-opt=yes --target=i386-mingw32"
-        use_src=$PREFIX/build-$PLAT/mozart
-        build=$PREFIX/build-$PLAT/mozart
-        export windlldir
-    ;;
-    *)
-        echo "Unknown platform: $PLAT" 2>& 1
-        exit 1
+
+*)
+    echo "Unknown platform: $PLAT" 2>& 1
+    exit 1
     ;;
 esac
 
@@ -119,7 +115,7 @@ $use_src/configure $moreargs --with-stdlib=$use_src-stdlib --prefix=$PREFIX/inst
 make depend bootstrap install
 
 # inspect the emulator.exe for being dynamically linked against
-# libgcc_s.so, and if so - copy the library into
+# libstdc++.so.5 and libgcc_s.so, and if so - copy the library(s) into
 # install/platform/$PLAT/lib:
 found=""
 dynlib=`ldd $PREFIX/install/platform/$PLAT/emulator.exe | grep libgcc_s.so`
@@ -136,7 +132,27 @@ if [ "$found" != "" ]; then
     done
     mkdir -p $PREFIX/install/platform/$PLAT/lib
     /bin/cp $found $PREFIX/install/platform/$PLAT/lib/$lib
-    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib
+    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib/$found
+    unset lib
+fi
+unset found
+unset dynlib
+found=""
+dynlib=`ldd $PREFIX/install/platform/$PLAT/emulator.exe | grep "libstdc++.so"`
+for e in $dynlib ; do
+    match=`echo $e | grep "/.*libstdc++.so"`
+    if [ "$match" != "" ]; then
+        found=$match
+        break
+    fi
+done
+if [ "$found" != "" ]; then
+    for e in `echo $found | tr '/' ' '` ; do
+        lib=$e
+    done
+    mkdir -p $PREFIX/install/platform/$PLAT/lib
+    /bin/cp $found $PREFIX/install/platform/$PLAT/lib/$lib
+    /bin/chmod a+x $PREFIX/install/platform/$PLAT/lib/$lib/$found
     unset lib
 fi
 unset found
