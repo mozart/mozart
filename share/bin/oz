@@ -35,7 +35,7 @@ fi
 
 setOZE() {
 if [ ${OZEMULATOR-xx} = xx ]; then
-        OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.machine.bin
+        OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
 else
         echo "Using Oz Emulator: $OZEMULATOR"
 fi
@@ -101,7 +101,7 @@ case "$cmd" in
         fi
         echo "Using emacs '${OZEMACS}'"
 
-        exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@
+        $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $@ &
    ;;
 
    oz.compiler)
@@ -116,7 +116,7 @@ case "$cmd" in
         fi
    ;;
 
-   oz.machine|oz.emulator)
+   oz.emulator)
         setOZE
         if [ X$1 = X"-emacs" ]; then
                 shift
