@@ -223,7 +223,7 @@ sub OZTABLE {
 
 sub BUILTINS {
     foreach $mod (@ARGV) {
-        require "mod$mod.spec";
+        require "$srcdir/mod$mod.spec";
         $builtins = {};
         while (($k,$v) = each %builtins_all) {
             $k = "\\'$k\\'" unless $k =~ /^[a-zA-Z]/;
@@ -262,6 +262,7 @@ while (@ARGV) {
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
     elsif ($option eq '-file')       { push @files,shift; }
+    elsif ($option eq '-srcdir')     { $srcdir=shift; }
     elsif ($option eq '-builtins')   {  &BUILTINS; }
     else { die "unrecognized option: $option"; }
 }

@@ -181,7 +181,7 @@ BIMODFILES = $(BIMODSPECS:%=mod%.spec)
 $(MODINTERS): bidecl.perl
 
 Builtins.oz: $(BIMODFILES) bidecl.perl
-        perl $(SRCDIR)/bidecl.perl -builtins $(BIMODSPECS) > $@
+        perl $(SRCDIR)/bidecl.perl -srcdir $(SRCDIR) -builtins $(BIMODSPECS) > $@
 
 .PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
 libFDP.a FDP.so libSchedule.a Schedule.so:
