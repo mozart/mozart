@@ -4,8 +4,6 @@
 ;; $Id$
 
 ;; BUGS
-;; - only enable menu items when a region is active:
-;;   (put 'comment-region 'menu-enable 'mark-active)
 ;; - oz-directive-on-region should write a \line directive at the start
 ;;   of the file.
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
@@ -49,7 +47,7 @@
 
 
 ;;------------------------------------------------------------
-;; lemacs and gnu19 Support
+;; lucid and gnu19 Support
 ;;------------------------------------------------------------
 
 (defvar oz-lucid nil)
@@ -59,12 +57,6 @@
        (setq oz-lucid t))
       ((string-match "19" emacs-version)
        (setq oz-gnu19 t)))
-
-(if oz-gnu19
-    (progn
-      (require 'lucid)
-      (defalias 'delete-extent 'delete-overlay)
-      (defalias 'make-extent 'make-overlay)))
 
 
 ;;------------------------------------------------------------
@@ -184,6 +176,12 @@ All strings matching this regular expression are removed.")
 (defvar oz-error-intro-pattern "\\(error\\|warning\\) \\*\\*\\*\\*\\*"
   "Regular expression for finding error messages.")
 
+(defvar oz-error-pattern-1
+  "in file \"\\([^\"\n]+\\)\", line \\([0-9]+\\), column \\([0-9]+\\)")
+
+(defvar oz-error-pattern-2
+  "in line \\([0-9]+\\), column \\([0-9]+\\)")
+
 
 ;;------------------------------------------------------------
 ;; Setting the Frame Title
@@ -192,53 +190,31 @@ All strings matching this regular expression are removed.")
 ;;    see function mode-line-format
 ;; gnu19 supports frame-title as constant string
 
-(defvar oz-old-frame-title
-  (if oz-lucid
-      (setq oz-old-frame-title
-	    frame-title-format)
-    (if oz-gnu19
-	(setq oz-old-frame-title
-	      (cdr (assoc 'name (frame-parameters))))))
-  "Saved Emacs window title.")
-
-(defun oz-get-title ()
-  (if oz-gnu19
-      (cdr (assoc 'name (frame-parameters (car (visible-frame-list)))))
-      (if oz-lucid
-	frame-title-format
-	"")))
-
-(defvar oz-title-format
-  (concat "Oz Programming Interface ("
-	  (oz-get-title) ")")
-  "Format string for Emacs window title while Oz is running.")
-
 (defvar oz-change-title t
   "*If non-nil, change the title of the Emacs window while Oz is running.")
 
-(defun oz-set-title ()
-  "Set the title of the Emacs window."
-  (if oz-change-title
-      (if oz-gnu19
-	  (mapcar '(lambda (scr)
-		     (modify-frame-parameters
-		      scr
-		      (list (cons 'name oz-title-format))))
-		  (visible-frame-list)))
-    (if oz-lucid
-	(setq frame-title-format oz-title-format))))
+(defvar oz-old-frame-title
+  (cond (oz-gnu19
+	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
+	(oz-lucid
+	 frame-title-format))
+  "Saved Emacs window title.")
 
-(defun oz-reset-title ()
-  "Restore the initial Emacs window title."
-  (if oz-change-title
-      (if oz-lucid
-	  (setq frame-title-format oz-old-frame-title))
-    (if oz-gnu19
-	(mapcar '(lambda (scr)
-		   (modify-frame-parameters
-		    scr
-		    (list (cons 'name oz-old-frame-title))))
-		(visible-frame-list)))))
+(defvar oz-frame-title
+  (concat "Oz Programming Interface (" oz-old-frame-title ")")
+  "Format string for Emacs window title while Oz is running.")
+
+(defun oz-set-title (frame-title)
+  "Set the title of the Emacs window."
+  (cond ((not oz-change-title) t)
+	(oz-gnu19
+	 (mapcar '(lambda (scr)
+		    (modify-frame-parameters
+		     scr
+		     (list (cons 'name frame-title))))
+		 (visible-frame-list)))
+	(oz-lucid
+	 (setq frame-title-format frame-title))))
 
 
 ;;------------------------------------------------------------
@@ -272,11 +248,11 @@ The point is moved to the end of the line."
   "Oz Menubar for Lucid Emacs.")
 
 (defun oz-make-menu (list)
-  (if oz-lucid
-      (setq oz-menubar (oz-make-menu-lucid list)))
-  (if oz-gnu19
-      (oz-make-menu-gnu19 oz-mode-map
-			  (list (cons "menu-bar" list)))))
+  (cond (oz-lucid
+	 (setq oz-menubar (oz-make-menu-lucid list)))
+	(oz-gnu19
+	 (oz-make-menu-gnu19 oz-mode-map
+			     (list (cons "menu-bar" (cons nil list)))))))
 
 (defun oz-make-menu-lucid (list)
   (if (null list)
@@ -284,98 +260,95 @@ The point is moved to the end of the line."
     (cons
      (let* ((entry (car list))
 	    (name (car entry))
-	    (rest (cdr entry)))
-       (if (null rest)
-	   (vector name nil nil)
-	 (if (atom rest)
-	     (vector name rest t)
-	   (cons name (oz-make-menu-lucid rest)))))
+	    (command (car (cdr entry)))
+	    (rest (cdr (cdr entry))))
+       (cond ((null rest)
+	      (vector name nil nil))
+	     ((null command)
+	      (cons name (oz-make-menu-lucid rest)))
+	     (t
+	      (vector name command (car rest)))))
      (oz-make-menu-lucid (cdr list)))))
 
-(defun oz-dup-list (l)
-  (if (or (null l)
-	  (not (listp l)))
-      l
-    (cons (oz-dup-list (car l)) (oz-dup-list (cdr l)))))
-
 (defun oz-make-menu-gnu19 (map list)
-  ;; for some unknown reason Emacs corrupts the input list
-  (oz-make-menu-gnu19-1 map (oz-dup-list list)))
-
-(defun oz-make-menu-gnu19-1 (map list)
-  (if (null list)
-      nil
-    (let* ((entry (car list))
-	   (name (car entry))
-	   (aname (intern name))
-	   (rest (cdr entry)))
-      (if (null rest)
-	  (define-key map (vector (intern (oz-make-temp-name name))) entry)
-	(if (atom rest)
-	    (define-key map (vector aname) entry)
-	  (let ((newmap (make-sparse-keymap name)))
-	    (define-key map (vector aname)
-	      (cons name newmap))
-	    (oz-make-menu-gnu19-1 newmap (reverse rest))))))
-    (oz-make-menu-gnu19-1 map (cdr list))))
+  (if list
+      (progn
+	(let* ((entry (car list))
+	       (name (car entry))
+	       (aname (intern name))
+	       (command (car (cdr entry)))
+	       (rest (cdr (cdr entry))))
+	  (cond ((null rest)
+		 (define-key map (vector (intern (oz-make-temp-name name)))
+		   (cons name nil)))
+		((null command)
+		 (let ((newmap (make-sparse-keymap name)))
+		   (define-key map (vector aname)
+		     (cons name newmap))
+		   (oz-make-menu-gnu19 newmap (reverse rest))))
+		(t
+		 (define-key map (vector aname) (cons name command))
+		 (put command 'menu-enable (car rest)))))
+	(oz-make-menu-gnu19 map (cdr list)))))
 
 (defvar oz-menu
- '(("Oz"
-    ("Feed Buffer"            . oz-feed-buffer)
-    ("Feed Region"            . oz-feed-region)
-    ("Feed Line"              . oz-feed-line)
-    ("Feed Paragraph"         . oz-feed-paragraph)
-    ("Feed File"              . oz-feed-file)
-    ("Compile File"           . oz-precompile-file)
+ '(("Oz" nil
+    ("Feed Buffer"    oz-feed-buffer t)
+    ("Feed Region"    oz-feed-region (mark))
+    ("Feed Line"      oz-feed-line t)
+    ("Feed Paragraph" oz-feed-paragraph t)
+    ("Feed File"      oz-feed-file t)
+    ("Compile File"   oz-precompile-file t)
     ("-----")
-    ("Find"
-     ("Documentation Demo"      . oz-find-docdemo-file)
-     ("Stand-alone Demo"        . oz-find-standdemo-file)
-     ("Example Demo"            . oz-find-exdemo-file)
-     ("Other Demo"              . oz-find-demo-file)
-     ("Modules File"            . oz-find-modules-file)
+    ("Find" nil
+     ("Documentation Demo" oz-find-docdemo-file t)
+     ("Stand-alone Demo"   oz-find-standdemo-file t)
+     ("Example Demo"       oz-find-exdemo-file t)
+     ("Other Demo"         oz-find-demo-file t)
+     ("Modules File"       oz-find-modules-file t)
      )
-    ("Print"
-     ("Region"                  . ps-print-region-with-faces)
-     ("Buffer"			. ps-print-buffer-with-faces)
+    ("Print" nil
+     ("Region" ps-print-region-with-faces (mark))
+     ("Buffer" ps-print-buffer-with-faces t)
      )
-    ("Core Syntax"
-     ("Buffer"      . oz-to-coresyntax-buffer)
-     ("Region"      . oz-to-coresyntax-region)
-     ("Line"        . oz-to-coresyntax-line)
-     ("Paragraph"   . oz-to-coresyntax-paragraph)
+    ("Core Syntax" nil
+     ("Buffer"    oz-to-coresyntax-buffer t)
+     ("Region"    oz-to-coresyntax-region (mark))
+     ("Line"      oz-to-coresyntax-line t)
+     ("Paragraph" oz-to-coresyntax-paragraph t)
      )
-    ("Emulator Code"
-     ("Buffer"      . oz-to-emulatorcode-buffer)
-     ("Region"      . oz-to-emulatorcode-region)
-     ("Line"        . oz-to-emulatorcode-line)
-     ("Paragraph"   . oz-to-emulatorcode-paragraph)
+    ("Emulator Code" nil
+     ("Buffer"    oz-to-emulatorcode-buffer t)
+     ("Region"    oz-to-emulatorcode-region (mark))
+     ("Line"      oz-to-emulatorcode-line t)
+     ("Paragraph" oz-to-emulatorcode-paragraph t)
      )
-    ("Indent"
-     ("Line"   . oz-indent-line)
-     ("Region" . oz-indent-region)
-     ("Buffer" . oz-indent-buffer)
+    ("Indent" nil
+     ("Line"      oz-indent-line t)
+     ("Region"    oz-indent-region (mark))
+     ("Buffer"    oz-indent-buffer t)
      )
-    ("Comment"
-     ("Comment Region"   . oz-comment-region)
-     ("Uncomment Region" . oz-un-comment-region)
+    ("Comment" nil
+     ("Comment Region"   oz-comment-region (mark))
+     ("Uncomment Region" oz-uncomment-region (mark))
      )
-    ("Browse"
-     ("Region" . oz-feed-region-browse)
-     ("Line"   . oz-feed-line-browse))
-    ("Panel"   . oz-view-panel)
+    ("Browse" nil
+     ("Region" oz-feed-region-browse (mark))
+     ("Line"   oz-feed-line-browse t)
+     )
+    ("Panel"          oz-view-panel t)
     ("-----")
-    ("Next Oz Buffer"         . oz-next-buffer)
-    ("Previous Oz Buffer"     . oz-previous-buffer)
-    ("New Oz Buffer"          . oz-new-buffer)
-    ("Fontify Buffer"         . oz-fontify)
-    ("Show/Hide"
-     ("Compiler"      . oz-toggle-compiler)
-     ("Emulator"      . oz-toggle-emulator)
+    ("Next Oz Buffer"     oz-next-buffer t)
+    ("Previous Oz Buffer" oz-previous-buffer t)
+    ("New Oz Buffer"      oz-new-buffer t)
+    ("Fontify Buffer"     oz-fontify t)
+    ("Show/Hide" nil
+     ("Compiler" oz-toggle-compiler t)
+     ("Emulator" oz-toggle-emulator t)
      )
     ("-----")
-    ("Start Oz" . run-oz)
-    ("Halt Oz"  . oz-halt)
+    ("Start Oz" run-oz t)
+    ("Halt Oz"  oz-halt t)
     ))
   "Contents of the Oz menu.")
 
@@ -409,7 +382,9 @@ after this delay, the processes are simply killed if still living.
 If FORCE is non-nil, kill the processes immediately."
   (interactive "P")
   (message "Halting Oz ...")
-  (if (get-buffer oz-temp-buffer) (kill-buffer oz-temp-buffer))
+  (cond ((get-buffer oz-temp-buffer)
+	 (delete-windows-on oz-temp-buffer)
+	 (kill-buffer oz-temp-buffer)))
   (if (and (not force)
 	   (get-buffer-process oz-compiler-buffer)
 	   (or oz-win32 (get-buffer-process oz-emulator-buffer)))
@@ -430,7 +405,7 @@ If FORCE is non-nil, kill the processes immediately."
   (if (get-buffer-process oz-emulator-buffer)
       (delete-process oz-emulator-buffer))
   (message "Oz halted.")
-  (oz-reset-title))
+  (oz-set-title oz-old-frame-title))
 
 (defun oz-check-running (start-flag)
   (let ((running t))
@@ -464,9 +439,7 @@ If FORCE is non-nil, kill the processes immediately."
 	  (save-excursion
 	    (set-buffer oz-compiler-buffer)
 	    (set (make-local-variable 'compilation-error-regexp-alist)
-		 '(("at line \\([0-9]+\\) in file \"\\([^ \n]+[^. \n]\\)\\.?\""
-		    2 1)
-		   ("at line \\([0-9]+\\)" 1 1)))
+		 '((oz-error-pattern-1 1 2 3)))
 	    (set (make-local-variable 'compilation-parsing-end)
 		 (point))
 	    (set (make-local-variable 'compilation-error-list)
@@ -492,7 +465,7 @@ If FORCE is non-nil, kill the processes immediately."
 
 	  (bury-buffer oz-emulator-buffer)
 
-	  (oz-set-title)
+	  (oz-set-title oz-frame-title)
 	  (message "Oz started.")))))
 
 
@@ -599,8 +572,8 @@ and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
 	(init-str (concat "set args -S " file "\n")))
-    (if oz-gnu19 (gdb (concat "gdb " oz-emulator)))
-    (if oz-lucid (gdb oz-emulator))
+    (cond (oz-gnu19 (gdb (concat "gdb " oz-emulator)))
+	  (oz-lucid (gdb oz-emulator)))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
     (comint-send-string
      (get-buffer-process oz-emulator-buffer)
@@ -999,9 +972,10 @@ to handle lines like 'attr a:'."
 If variable `oz-auto-indent' is non-nil, indent the terminated line
 and the following line."
   (interactive)
+  (open-line 1)
   (cond (oz-auto-indent (oz-indent-line)))
   (delete-horizontal-space) ; Removes trailing whitespace
-  (newline)
+  (forward-line 1)
   (cond (oz-auto-indent (oz-indent-line))))
 
 (defun oz-indent-buffer ()
@@ -2021,7 +1995,7 @@ If it is, then remove it."
   (interactive "r\np")
   (comment-region beg end arg))
 
-(defun oz-un-comment-region (beg end arg)
+(defun oz-uncomment-region (beg end arg)
   (interactive "r\np")
   (comment-region beg end (if (= arg 0) -1 (- 0 arg))))
 
@@ -2183,165 +2157,12 @@ of the procedure Browse."
 	    (define-key map [(shift button2)] 'oz-mouse-goto-error)
 	  (define-key map [(shift mouse-2)] 'oz-mouse-goto-error)))))
 
-
-(defun fetch-next-error-data ()
-  (let (infoline posx posy lineno file limit error-marker column)
-    (if (and (setq posx (re-search-forward oz-error-intro-pattern nil t))
-	     (setq posy (search-forward "\tat line " nil t)))
-	(progn
-	  (goto-char posx)
-	  (beginning-of-line)
-	  (setq error-marker (point-marker))
-	  (forward-line 2)
-	  (goto-char posy)
-	  (end-of-line)
-	  (setq limit (point))
-	  (goto-char posy)
-	  (if (looking-at "[0-9]+")
-	      (setq lineno (car (read-from-string
-				 (buffer-substring
-				  posy (match-end 0)))))
-	    (error "Error format not recognized"))
-	  (if (setq posx (search-forward "in file" limit t))
-	      (setq file (car (read-from-string
-			       (buffer-substring posx limit)))))
-	  (setq posx (re-search-forward "^$" nil t)) ;; matches also a
-						     ;; final \n
-	  (if (setq posy (search-backward "^-- *** here" limit t))
-	      (setq column (- posy
-			      (progn (beginning-of-line) (point))
-			      3)))
-	  (goto-char posx)
-	  (setq oz-next-error-marker (point-marker))
-	  (list error-marker file lineno column))
-      (goto-char (point-max))
-      (message "No next error")
-      (sit-for 1)
-      nil)))
-
-(defun fetch-next-callst-data ()
-  (let (posx posy lineno file limit error-marker)
-    (beginning-of-line)
-    (if (setq posy (search-forward "File:" nil t))
-	(progn
-	  (beginning-of-line)
-	  (setq posx (point))
-	  (end-of-line)
-	  (setq limit (point))
-	  (search-backward "\n*** *")
-	  (forward-char 1)
-	  (setq error-marker (point-marker))
-	  (goto-char posy)
-	  (setq posy (re-search-forward "[ \t]*" limit t)) ;; skip blanks
-	  (setq posx (search-forward "Line:" limit t))
-	  (setq file (buffer-substring posy (- posx 6)))
-	  (setq lineno (car (read-from-string
-			     (buffer-substring posx limit))))
-	  (forward-line 1)
-	  (list error-marker file lineno))
-      (message "No file and line information found")
-      (sit-for 1)
-      nil)))
-
-(defun oz-goto-next-error ()
-  "Visit next compilation error message and corresponding source code.
-Applies to most recent compilation, started with one of the feed
-commands.
-When in compiler buffer, visit next error message following point.
-When in emulator buffer, visit place indicated in next callstack
-line."
-  (interactive)
-  (let ((old-buffer (current-buffer))
-	(comp-buffer (get-buffer oz-compiler-buffer))
-	(emu-buffer (get-buffer oz-emulator-buffer))
-	error-data)
-    (cond
-     ((eq old-buffer emu-buffer)
-      (setq error-data (fetch-next-callst-data))
-      (oz-err-moveto-other old-buffer))
-     ((eq old-buffer comp-buffer)
-      (oz-goto-error-start)
-      (setq error-data (fetch-next-error-data))
-      (oz-err-moveto-other old-buffer))
-     ((bufferp comp-buffer)
-      (switch-to-buffer-other-window comp-buffer)
-      (cond
-       ((and oz-next-error-marker
-	     (eq (marker-buffer oz-next-error-marker) comp-buffer))
-	(goto-char oz-next-error-marker))
-       ;; else new compilation
-       ((and (<= oz-compiler-output-start (point-max))
-	     (<= (point-min) oz-compiler-output-start))
-	(goto-char oz-compiler-output-start)
-	(setq oz-next-error-marker (point-marker)))
-       (t (error "No compilation found")))
-      (setq error-data (fetch-next-error-data))
-      (switch-to-buffer-other-window old-buffer))
-     (t (error "No Oz compiler buffer found")))
-    (and error-data
-	 (let ((errfile (car (cdr error-data)))
-	       (line (nth 1 (cdr error-data)))
-	       (column (nth 2 (cdr error-data)));; if at all
-	       errfile-buffer)
-	   (if (not errfile)
-	       (if (not oz-last-fed-region-start)
-		   (error "No source buffer found")
-		 (set-buffer (marker-buffer oz-last-fed-region-start))
-		 (save-excursion
-		   (goto-char oz-last-fed-region-start)
-		   (if (> line 1) (forward-line (1- line)))
-		   (if (and column (> column 0))
-		       ;; Columns in error msgs are 1-origin.
-		       (if (= line 1)
-			   (move-to-column
-			    (+ (current-column) (1- column)))
-			 (move-to-column (1- column)))
-		     (beginning-of-line))
-		   (setcdr error-data (point-marker))))
-	     ;; else
-	     (set-buffer
-	      (compilation-find-file (car error-data) errfile nil))
-	     (save-excursion
-	       (save-restriction
-		 (widen)
-		 (goto-line line)
-		 (if (and column (> column 0))
-		     ;; Columns in error msgs are 1-origin.
-		     (move-to-column (1- column))
-		   (beginning-of-line))
-		 (setcdr error-data (point-marker)))))
-	   (compilation-goto-locus error-data)))))
-
-
-;; when in compiler buffer in the middle of an error msg, we need to
-;; find its first line
-(defun oz-goto-error-start ()
-  (let ((errstart
-	(save-excursion
-	  (beginning-of-line)
-	  (if (looking-at "%\\*\\*")
-	      (re-search-backward oz-error-intro-pattern nil t)))))
-    (if errstart (goto-char errstart))))
-
-;; Move to another window, so that next-error's window changes
-;; result in the desired setup.
-(defun oz-err-moveto-other (buffer)
-  (or (one-window-p)
-      (progn
-	(other-window -1)
-	;; other-window changed the selected buffer,
-	;; but we didn't want to do that.
-	(set-buffer buffer))))
-
-
 (defun oz-mouse-goto-error (event)
   (interactive "e")
   (let ((buf (if oz-lucid
 		 (event-buffer event)
 	       (window-buffer (posn-window (event-end event))))))
     (or (eq buf (current-buffer))
-	;; click not in current buffer -> need other window, so that
-	;; window switching in oz-goto-next-error comes out right
 	(switch-to-buffer-other-window buf)))
   (goto-char (if oz-lucid
 		 (event-closest-point event)
@@ -2350,6 +2171,145 @@ line."
       (eq (current-buffer) (get-buffer oz-emulator-buffer))
       (error "Neither in compiler buffer nor in emulator buffer"))
   (oz-goto-next-error))
+
+
+(defun oz-goto-next-error ()
+  "Visit next compilation error message and corresponding source code.
+Applies to most recent compilation, started with one of the feed
+commands.
+
+When in compiler buffer, visit error message surrounding point.
+When in emulator buffer, visit place indicated in next callstack line."
+  (interactive)
+  (let ((old-buffer (current-buffer))
+	(comp-buffer (get-buffer oz-compiler-buffer))
+	(emu-buffer (get-buffer oz-emulator-buffer))
+	error-data)
+    (cond ((eq old-buffer comp-buffer)
+	   (oz-goto-error-start)
+	   (setq error-data (oz-fetch-next-error-data))
+	   (switch-to-buffer-other-window old-buffer))
+	  ((eq old-buffer emu-buffer)
+	   (setq error-data (oz-fetch-next-callstack-data))
+	   (if error-data
+	       (switch-to-buffer-other-window old-buffer)))
+	  ((bufferp comp-buffer)
+	   (save-excursion
+	     (set-buffer comp-buffer)
+	     (cond ((and oz-next-error-marker
+			 (eq (marker-buffer oz-next-error-marker) comp-buffer))
+		    (goto-char oz-next-error-marker))
+		   ;; else new compilation
+		   ((and (<= (point-min) oz-compiler-output-start)
+			 (<= oz-compiler-output-start (point-max)))
+		    (goto-char oz-compiler-output-start)
+		    (setq oz-next-error-marker (point-marker)))
+		   (t (error "No compilation found")))
+	     (setq error-data (oz-fetch-next-error-data)))))
+    (if error-data
+	(let ((error-marker (car error-data))
+	      (file (nth 1 error-data))
+	      (lineno (nth 2 error-data))
+	      (column (nth 3 error-data))
+	      source-marker buf)
+	  (if (string-equal file "nofile")
+	      (if (not oz-last-fed-region-start)
+		  (error "No source buffer found")
+		(save-excursion
+		  (set-buffer (marker-buffer oz-last-fed-region-start))
+		  (goto-char oz-last-fed-region-start)
+		  (if (> lineno 1) (forward-line (1- lineno)))
+		  (if (> column 0) (forward-char column))
+		  (setq source-marker (point-marker))))
+	    (setq buf (compilation-find-file error-marker file nil))
+	    (if (null buf)
+		(error "No source buffer found"))
+	    (set-buffer buf)
+	    (save-excursion
+	      (save-restriction
+		(widen)
+		(goto-line lineno)
+		(if (> column 0) (forward-char column))
+		(setq source-marker (point-marker)))))
+	  (compilation-goto-locus (cons error-marker source-marker)))
+      (message "No next error")
+      (sit-for 1))))
+
+(defun oz-fetch-next-error-data ()
+  (cond ((re-search-forward oz-error-intro-pattern nil t)
+	 (beginning-of-line)
+	 (let ((error-marker (point-marker)))
+	   (cond ((re-search-forward oz-error-pattern-1 nil t)
+		  (let ((file (buffer-substring (match-beginning 1)
+						(match-end 1)))
+			(lineno (car (read-from-string
+				      (buffer-substring (match-beginning 2)
+							(match-end 2)))))
+			(column (car (read-from-string
+				      (buffer-substring (match-beginning 3)
+							(match-end 3))))))
+		    (setq oz-next-error-marker (point-marker))
+		    (list error-marker file lineno column)))
+		 ((re-search-forward oz-error-pattern-2 nil t)
+		  (let ((file "nofile")
+			(lineno (car (read-from-string
+				      (buffer-substring (match-beginning 1)
+							(match-end 1)))))
+			(column (car (read-from-string
+				      (buffer-substring (match-beginning 2)
+							(match-end 2))))))
+		    (setq oz-next-error-marker (point-marker))
+		    (list error-marker file lineno column)))
+		 (t
+		  (let ((win (get-buffer-window oz-compiler-buffer nil)))
+		    (if win
+			(set-window-point win (point-max))))
+		  nil))))
+	(t
+	 (let ((win (get-buffer-window oz-compiler-buffer nil)))
+	   (if win
+	       (set-window-point win (point-max))))
+	 nil)))
+
+(defun oz-fetch-next-callstack-data ()
+  (let (posx posy lineno file limit error-marker)
+    (beginning-of-line)
+    (cond ((setq posy (search-forward "File: " nil t))
+	   (beginning-of-line)
+	   (setq error-marker (point-marker))
+	   (end-of-line)
+	   (setq limit (point))
+	   (goto-char posy)
+	   (search-forward " " limit t)
+	   (setq file (buffer-substring posy (1- (point))))
+	   (setq posx (search-forward "Line: " limit t))
+	   (setq lineno (car (read-from-string
+			      (buffer-substring posx limit))))
+	   (list error-marker file lineno 0))
+	  ((setq posy (search-forward "File '" nil t))
+	   (beginning-of-line)
+	   (setq error-marker (point-marker))
+	   (end-of-line)
+	   (setq limit (point))
+	   (goto-char posy)
+	   (search-forward "'" limit t)
+	   (setq file (buffer-substring posy (1- (point))))
+	   (setq posx (search-forward ", line " limit t))
+	   (setq lineno (car (read-from-string
+			      (buffer-substring posx limit))))
+	   (list error-marker file lineno 0))
+	  (t
+	   nil))))
+
+;; if point is in the middle of an error message (in the compiler buffer),
+;; then it is moved to the start of the message.
+(defun oz-goto-error-start ()
+  (let ((errstart
+	 (save-excursion
+	   (beginning-of-line)
+	   (if (looking-at "%\\*\\*")
+	       (re-search-backward oz-error-intro-pattern nil t)))))
+    (if errstart (goto-char errstart))))
 
 
 (provide 'oz)
