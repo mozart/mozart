@@ -68,7 +68,7 @@ n????Include directories:
 17
 WString
 43
-$(%watcom)\h;$(%watcom)\h\nt;d:\tcl\include
+$(%watcom)\h;$(%watcom)\h\nt;c:\tcl\include
 0
 18
 MRState
@@ -199,8 +199,8 @@ WVList
 0
 48
 MItem
-20
-d:\tcl\bin\tcl76.dll
+29
+c:\winnt35\system32\tcl76.dll
 49
 WString
 3
@@ -217,8 +217,8 @@ WVList
 0
 52
 MItem
-19
-d:\tcl\bin\tk42.dll
+28
+c:\winnt35\system32\tk42.dll
 53
 WString
 3
