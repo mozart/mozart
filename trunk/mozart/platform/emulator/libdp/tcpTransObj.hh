@@ -41,19 +41,17 @@ public:
 
 class TCPTransController: public TransController {
 public:
-  // AN: kostja why?
-  virtual ~TCPTransController() {}
-
+  int getInfo(int &size);
+  
 protected:
-  // AN: kostja why virtual?
-  virtual TransObj *newTransObj();  
-  virtual void deleteTransObj(TransObj* transObj);
+  TransObj *newTransObj();  
+  void deleteTransObj(TransObj* transObj);
 
-  virtual int getMaxNumOfResources() {
+  int getMaxNumOfResources() {
     return ozconf.perdioMaxTCPCache*2;
   }
 
-  virtual int getWeakMaxNumOfResources() {
+  int getWeakMaxNumOfResources() {
     return ozconf.perdioMaxTCPCache;
   }
 }; 
