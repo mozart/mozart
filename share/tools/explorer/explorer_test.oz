@@ -81,8 +81,8 @@ end
 
 proc {Picture X}
    choice X=1
-   [] false
-   [] choice choice false [] false end [] X=2 end
+   [] fail
+   [] choice choice fail [] fail end [] X=2 end
    end
 end
 	 
@@ -107,7 +107,7 @@ fun {P1 U V}
 	 if U=1 then skip
 	 [] U=2 then choice X=3 [] X=4 end
 	 [] U=3 then V=1
-	 else false
+	 else fail
 	 end
       [] X=2
       end
@@ -119,7 +119,7 @@ fun {P2 U V}
       if U=1 then skip
       [] U=2 then choice X=3 [] X=4 end
       [] U=3 then V=1
-      else false
+      else fail
       end
    end
 end
@@ -173,17 +173,17 @@ declare U
 	       choice
 		  case {IsFree U} then
 		     choice X=11 [] X=12 end
-		  else false
+		  else fail
 		  end
 	       []
 		  case {IsFree U} then
 		     choice X=11 [] X=12 end
-		  else false
+		  else fail
 		  end
 	       []
 		  case {IsFree U} then
 		     choice X=11 [] X=12 end
-		  else false
+		  else fail
 		  end
 	       end
 	    end}
