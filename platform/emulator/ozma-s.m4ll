@@ -197,7 +197,7 @@ g\({DIGIT}+\)                  { setRegisterIndex(); return GREGISTER; }
 changequote(`,')
 define(instruction,$1 { return `T_$1'; })
 define(instructionsUnneededForNewCompiler,`divert(-1)')
-include(`../include/instrDefs.m4')
+include(OZINCDIR/instrDefs.m4)
 undefine(`instruction')
 
 "<N: "[^>]+">" {
