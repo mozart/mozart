@@ -51,30 +51,6 @@ void LocalPropagationQueue::resize () {
   maxsize = new_maxsize;
 }
 
-void LocalPropagationQueue::printDebug () {
-  int psize = size, phead = head;
-
-  for (; psize; psize --) {
-    cout << "lpqueue[" << phead << "]="
-         << "@" << queue[phead].thr << endl;
-
-    phead = (phead + 1) & (maxsize - 1);
-  }
-}
-
-void LocalPropagationQueue::printDebugLong () {
-  int psize = size, phead = head;
-
-  for (; psize; psize --) {
-    cout << "lpqueue[" << phead << "]="
-         << "@" << queue[phead].thr << "(";
-    queue[phead].thr->print(cout);
-    cout << ")" << endl;
-
-    phead = (phead + 1) & (maxsize - 1);
-  }
-}
-
 #ifdef DEBUG_CHECK
 Bool LocalPropagationStore::checkIsPropagator (Thread *thr)
 {

@@ -6,6 +6,7 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef PRINT_LONG
 #include "ozostream.hh"
 
 #include "am.hh"
@@ -480,12 +481,6 @@ PRINTLONG(OzArray)
 {
   CHECKDEPTHLONG;
   print(stream,depth+1,offset);
-}
-
-PRINT(FSetValue)
-{
-  CHECKDEPTH;
-  print2stream(stream);
 }
 
 PRINTLONG(FSetValue)
@@ -1493,121 +1488,6 @@ void printX(FILE *fd, RefsArray X)
   }
 }
 
-void printStack()
-{
-  am.currentThread->getTaskStackRef()->printTaskStack(NOCODE,OK,1000);
-}
-
-void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
-{
-  message("\n");
-  message("Stack dump:\n");
-  message("-----------\n");
-
-  Assert(this);
-  if (pc == NOCODE && isEmpty()) {
-    message("\tEMPTY\n");
-    return;
-  }
-
-  if (pc != NOCODE) {
-    CodeArea::printDef(pc);
-  }
-
-  Frame *auxtos = getTop();
-
-  while (depth-- > 0) {
-    GetFrame(auxtos,PC,Y,G);
-    if (PC==C_EMPTY_STACK)
-      return;
-    CodeArea::printDef(PC);
-    if (verbose) { message("\t\tPC=0x%x, Y=0x%x, G=0x%x\n",PC, Y, G); }
-  }
-  message("\t ...\n");
-}
-
-TaggedRef TaskStack::dbgFrameVariables(int frameId)
-{
-  int     depth = 10000;
-  Bool    match = NO;
-
-  Frame *auxtos = getTop();
-
-  while (depth-- > 0) {
-    GetFrame(auxtos,PC,Y,G);
-
-    if (PC==C_EMPTY_STACK)
-      break;
-
-    if (PC==C_DEBUG_CONT_Ptr) {
-      if (match) continue;
-      OzDebug *ozdeb = (OzDebug *) Y;
-      int curId = OZ_intToC(OZ_head(ozdeb->info));
-      if (frameId == curId)
-        match = OK;
-      continue;
-    }
-
-    if (match)
-      return CodeArea::varNames(PC,G,Y);
-  }
-  return nil();
-}
-
-TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
-{
-  Assert(this);
-
-  TaggedRef out = nil();
-
-  if (pc != NOCODE) {
-    out = cons(CodeArea::dbgGetDef(pc),out);
-  }
-
-  Frame *auxtos = getTop();
-
-  while (depth-- > 0) {
-    GetFrame(auxtos,PC,Y,G);
-    if (PC==C_EMPTY_STACK)
-      break;
-
-    if (PC==C_DEBUG_CONT_Ptr) {
-      OzDebug *ozdeb = (OzDebug *) Y;
-      out = cons(OZ_mkTupleC("debug",1,ozdeb->info), out);
-      continue;
-    }
-
-    if (PC==C_CFUNC_CONT_Ptr) {
-      OZ_CFun biFun    = (OZ_CFun) (void*) Y;
-      RefsArray X      = (RefsArray) G;
-      TaggedRef args = nil();
-
-      if (X)
-        for (int i=getRefsArraySize(X)-1; i>=0; i--)
-          args = cons(X[i],args);
-      else
-        args = nil();
-
-      TaggedRef pairlist =
-        cons(OZ_pairA("name", OZ_atom(builtinTab.getName((void *) biFun))),
-             cons(OZ_pairA("args", args),
-                  nil()));
-      TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
-      out = cons(entry, out);
-      continue;
-    }
-
-    TaggedRef def = CodeArea::dbgGetDef(PC);
-    if (def != nil())
-      out = cons(def,out);
-    else
-      // definitionStart(PC) == NOCODE_GLOBALVARNAME
-      ;
-  }
-  return reverseC(out);
-}
-
-
 void ThreadQueueImpl::print(void)
 {
   if (isEmpty()) {
@@ -1624,30 +1504,6 @@ void ThreadQueueImpl::print(void)
   }
 }
 
-
-#define RANGESTR "#"
-
-void printFromTo(ostream &ofile, int f, int t)
-{
-  if (f == t)
-    ofile << f;
-  else if ((t - f) == 1)
-    ofile << f << ' ' << t;
-  else
-    ofile << f << RANGESTR << t;
-}
-
-void FDIntervals::print(ostream &ofile, int idnt) const
-{
-  Bool flag = FALSE;
-
-  ofile << indent(idnt) << '{';
-  for (int i = 0; i < high; i += 1) {
-    if (flag) ofile << ' '; else flag = TRUE;
-    printFromTo(ofile, i_arr[i].left, i_arr[i].right);
-  }
-  ofile << "}";
-}
 
 void FDIntervals::printLong(ostream &ofile, int idnt) const
 {
@@ -1672,25 +1528,6 @@ void FDIntervals::printDebugLong(void) const
   printLong(cerr, 0);
   cerr << endl;
   cerr.flush();
-}
-
-void FDBitVector::print(ostream &ofile, int idnt) const
-{
-  Bool flag = FALSE;
-
-  ofile << indent(idnt) << '{';
-
-  int len = mkRawOutline(fd_bv_left_conv, fd_bv_right_conv);
-  for (int i = 0; i < len; i += 1) {
-    if (flag) ofile << ' '; else flag = TRUE;
-    ofile << fd_bv_left_conv[i];
-    if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
-      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
-        ofile << ' ' << fd_bv_right_conv[i];
-      else
-        ofile << RANGESTR << fd_bv_right_conv[i];
-  }
-  ofile << '}';
 }
 
 void FDBitVector::printLong(ostream &ofile, int idnt) const
@@ -1719,29 +1556,6 @@ void FDBitVector::printDebugLong(void) const
   printLong(cerr, 0);
   cerr << endl;
   cerr.flush();
-}
-
-void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
-{
-  if (getSize() == 0)
-    ofile << indent(idnt) << "{ empty }";
-  else switch (getType()) {
-  case fd_descr:
-      ofile << indent(idnt) << '{';
-      printFromTo(ofile, min_elem, max_elem);
-      ofile << "}";
-    break;
-  case bv_descr:
-    get_bv()->print(ofile, idnt);
-    break;
-  case iv_descr:
-    get_iv()->print(ofile, idnt);
-    break;
-  default:
-    error("unexpected case");
-  }
-  //  DEBUG_FD_IR(FALSE, ((getType() == fd_descr) ? 'f' :
-  //          (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
 }
 
 void OZ_FiniteDomainImpl::printLong(ostream &ofile, int idnt) const
@@ -1877,3 +1691,29 @@ void printWhere(ostream &stream,ProgramCounter PC)
            << toC(line);
   }
 }
+
+void LocalPropagationQueue::printDebug () {
+  int psize = size, phead = head;
+
+  for (; psize; psize --) {
+    cout << "lpqueue[" << phead << "]="
+         << "@" << queue[phead].thr << endl;
+
+    phead = (phead + 1) & (maxsize - 1);
+  }
+}
+
+void LocalPropagationQueue::printDebugLong () {
+  int psize = size, phead = head;
+
+  for (; psize; psize --) {
+    cout << "lpqueue[" << phead << "]="
+         << "@" << queue[phead].thr << "(";
+    queue[phead].thr->print(cout);
+    cout << ")" << endl;
+
+    phead = (phead + 1) & (maxsize - 1);
+  }
+}
+
+#endif

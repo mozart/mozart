@@ -191,7 +191,9 @@ void AM::init(int argc,char **argv)
       continue;
     }
     if (strcmp(argv[i],"-d")==0) {
+#ifdef MM_DEBUG
       tracerOn();
+#endif
       continue;
     }
     if (strcmp(argv[i],"-quiet")==0) {
@@ -1662,7 +1664,9 @@ void handlerUSR1()
 
   CodeArea::writeInstr();
 
+#ifdef MM_DEBUG
   tracerOn(); trace("halt");
+#endif
   message("Error handler exit ****\n");
 }
 
