@@ -78,13 +78,6 @@ OZ_BI_define(BIsetTraceFlag,2,0)
   return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(BIcheckStopped,1,1)
-{
-  oz_declareThread(0,thread);
-
-  OZ_RETURN(oz_bool(thread->isStop()));
-} OZ_BI_end
-
 // ------------------
 
 OZ_BI_define(BIbreakpointAt, 3,1)
