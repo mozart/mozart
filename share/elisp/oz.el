@@ -467,13 +467,11 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 
   (let ((i oz-halt-timeout))
     (oz-send-string "!halt \n")
-    (sleep-for 1)
     (while (and (or (get-process "Oz Compiler")
 		    (get-process "Oz Machine"))
 		(> i 0))
-      (if (get-process "Oz Compiler")
-	  (message "compiler %s" i))
       (sit-for 1)
+      (sleep-for 1)
       (setq i (1- i)))
 
     (if (get-process "Oz Compiler")
