@@ -181,24 +181,21 @@ Board *SolveActor::clone(Board *bb) {
 }
 
 inline
-Thread *SolveActor::select(int left, int right) 
+WaitActor *SolveActor::select(int left, int right) 
 {
   ozstat.incSolveAlt();
 
   if (cpb==0)
     return 0;
 
-  WaitActor *wa = cpb->access();
+  WaitActor * wa = cpb->access();
   
   if (!wa)
     return 0;
 
-  int n = wa->selectOrFailChildren(left, right);
+  wa->selectOrFailChildren(left, right);
 
-  if (n==1)
-    this->removeChoice();
-
-  return wa->getThread();
+  return wa;
 }
 
 
