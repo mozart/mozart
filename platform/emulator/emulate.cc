@@ -1651,7 +1651,7 @@ void engine() {
 	   !(tagged2SRecord (x0)->getType () == R_ABSTRACTION ||
 	     tagged2SRecord (x0)->getType () == R_BUILTIN)) {
 	 HF_FAIL (,
-		  message("Application failed: no abstraction or builtin in solve\n"));
+		  message("Application failed: no abstraction or builtin in solve combinator\n"));
 
        }
 
@@ -1688,7 +1688,7 @@ void engine() {
      {
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
 	 HF_FAIL(,
-		 message("not first call of solve continuation\n"));
+		 message("once-only abstraction applied more than once\n"));
        }
 
        Board *solveBB =
@@ -1766,7 +1766,6 @@ void engine() {
        //    CBB can not become reducible after the applying of solveCont,
        //    since its childCount can not become smaller. 
        if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-	 warning ("unification of variable in solveCont failed");
 	 HF_NOMSG;
        }
 
@@ -1826,12 +1825,10 @@ void engine() {
 	 }
 	 
 	 if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-	   warning ("unification of variable in solved failed");
 	   HF_NOMSG;
 	 }
        } else {
 	 if ( !e->fastUnifyOutline(valueIn, X[0], OK) ) {
-	   warning ("unification of variable in solved failed");
 	   HF_NOMSG;
 	 }
        }
@@ -2197,7 +2194,6 @@ void engine() {
 	// don't unlink the subtree from the computation tree;
 	DebugCheckT (solveBB->setReflected ());
 	if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
-	  warning ("unification of solved tuple with variable has failed");
 	  HF_NOMSG;
 	}
       } else {
@@ -2208,7 +2204,6 @@ void engine() {
 	  // don't unlink the subtree from the computation tree; 
 	  DebugCheckT (solveBB->setReflected ());
 	  if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genStuck(), OK) ) {
-	    warning ("unification of solved tuple with variable has failed");
 	    HF_NOMSG;
 	  }
 	} else {
@@ -2233,7 +2228,6 @@ void engine() {
 	    solveAA->setBoardToInstall (waitBoard);
 	    DebugCheckT (solveBB->setReflected ());
 	    if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
-	      warning ("unification of distributed tuple with variable has failed");
 	      HF_NOMSG;
 	    }
 	  } else {
@@ -2296,7 +2290,6 @@ void engine() {
 	    if ( !e->fastUnifyOutline(solveAA->getResult(),
 				      solveAA->genEnumed(newSolveBB),
 				      OK)) {
-	      warning ("unification of distributed tuple with variable has failed");
 	      HF_NOMSG;
 	    }
 	  }
@@ -2414,7 +2407,6 @@ void engine() {
       if ( !e->fastUnifyOutline(SolveActor::Cast(aa)->getResult(),
 				SolveActor::Cast(aa)->genFailed(),
 				OK) ) {
-	warning ("unification of atom 'failed' with variable has failed");
 	HF_NOMSG;
       }
     }
