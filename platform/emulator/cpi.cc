@@ -55,9 +55,9 @@ void OZ_CPIVar::dropParameter(void)
 {
   if (oz_isVariable(var)) {
     OzVariable * cvar    = tagged2CVar(var);
-    void * cpi_raw       = cvar->getRawAndUntag();
     int isNonEncapTagged = cvar->isParamNonEncapTagged();
     int isEncapTagged    = cvar->isParamEncapTagged();
+    void * cpi_raw       = cvar->getRawAndUntag();
 
     OZ_CPIVar * forward = (OZ_CPIVar *) cpi_raw;
 #ifdef DEBUG_REMOVE_PARAMS
