@@ -949,6 +949,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "define"/\(                    { return T_define; }
 "dis"                          { return T_dis; }
 "dis"/\(                       { return T_dis; }
+"do"                           { return T_do; }
+"do"/\(                        { return T_do; }
 "else"                         { return T_else; }
 "else"/\(                      { return T_else; }
 "elsecase"                     { return T_elsecase; }
@@ -968,6 +970,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "feat"/\(                      { return T_feat; }
 "finally"                      { return T_finally; }
 "finally"/\(                   { return T_finally; }
+"for"                          { return T_for; }
+"for"/\(                       { return T_for; }
 "from"                         { return T_from; }
 "from"/\(                      { return T_from; }
 "fun"                          { return T_fun; }
@@ -1030,8 +1034,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "try"                          { return T_try; }
 "try"/\(                       { return T_try; }
 "unit"                         { return T_unit; }
-"for"			       { return T_for; }
-"do"			       { return T_do; }
 
 {OZATOM}                       { stripTrans('\''); return T_OZATOM; }
 "'"[^']*"'"                    { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_OZATOM;}
