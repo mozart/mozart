@@ -45,10 +45,12 @@
 ;;         7
 ;;   The 7 should be underneath the 5.  You can circumvent this problem
 ;;   by using parentheses around the expression.
-;; - {Tk.batch [tk(self.CurrentQuery configure state: normal)
-;;              tk(self.CurrentQuery delete '0' 'end')
-;;              tk(self.CurrentQuery configure state:
-;;                    disabled)]}
+;; - {Tk.send tk(self.CurrentQuery configure state:
+;;                  disabled)}
+;;   gives questionable indentation on the second line.
+;; - Method name fontification should respect keywords, e. g., in
+;;   `meth lock' the word `lock' should not be font-lock-function-name-face
+;;   but font-lock-keyword-face.
 
 (require 'comint)
 (require 'compile)
@@ -63,8 +65,7 @@
 
 (or (assoc "\\.oz$" auto-mode-alist)
     (setq auto-mode-alist
-	  (append '(("/\\.ozrc$" . oz-mode)
-		    ("\\.oz$" . oz-mode)
+	  (append '(("\\.oz$" . oz-mode)
 		    ("\\.ozm$" . ozm-mode)
 		    ("\\.ozg$" . oz-gump-mode))
 		  auto-mode-alist)))
@@ -163,7 +164,8 @@ Note that this variable is only checked once when oz.el is loaded."
 
 (eval-and-compile
   (eval '(defcustom oz-emulator
-	   (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
+	   (or (getenv "OZEMULATOR")
+	       (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin"))
 	   "*Path to the Oz Emulator for gdb mode and for \\[oz-other]."
 	   :type 'string
 	   :group 'oz)))
@@ -172,7 +174,8 @@ Note that this variable is only checked once when oz.el is loaded."
 
 (eval-and-compile
   (eval '(defcustom oz-components-url
-	   (concat (getenv "HOME") "/Oz/lib/")
+	   (or (getenv "OZCOMPONENTS")
+	       (concat (getenv "HOME") "/Oz/lib/"))
 	   "*URL base of the Oz Components (used by \\[oz-other])."
 	   :type 'string
 	   :group 'oz)))
@@ -1222,7 +1225,10 @@ Point is left at the first character of the keyword."
 (defconst oz-directive-pattern
   "\\\\[a-zA-Z]+")
 (defconst oz-directives-to-indent
-  "\\\\\\(in\\|ins\\|inse\\|inser\\|insert\\|l\\|li\\|lin\\|line\\)\\>")
+  (concat "\\\\\\("
+	  "in\\|ins\\|inse\\|inser\\|insert\\|l\\|li\\|lin\\|line\\|"
+	  "gumpscannerprefix\\|gumpparserexpect"
+	  "\\)\\>"))
 
 (defun oz-is-quoted ()
   "Return non-nil iff the position of the point is quoted.
