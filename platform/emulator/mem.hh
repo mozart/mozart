@@ -110,7 +110,7 @@ char *getMemFromOS(size_t size);
  * Assertion heapTop is alway aligned to int32 boundaries
  */
 
-#ifndef DEBUG_CHECK
+#if !defined(DEBUG_CHECK) && !defined(HEAP_PROFILE)
 #define int32Malloc(s)				\
  ((heapEnd > heapTop - (s)) 			\
  ? (int32 *) getMemFromOS(s)			\
