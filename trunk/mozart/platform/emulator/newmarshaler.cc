@@ -304,11 +304,11 @@ OZ_Term Marshaler::processCVar(OZ_Term *cvarTerm)
   if((*triggerVariable)(cvarTerm))
     return (makeTaggedRef(cvarTerm));
   if((*marshalVariable)(cvarTerm, bs)) {
-    rememberNode(cvarTerm, bs);
+    rememberNode(*cvarTerm, bs); // kost@24.08.99: we remembered ptr!!!
     return (0);
   }
   processNoGood(makeTaggedRef(cvarTerm), OK);
-  rememberNode(cvarTerm, bs);
+  rememberNode(*cvarTerm, bs);	// kost@24.08.99: we remembered ptr!!!
   return (0);
 }
 
