@@ -42,6 +42,7 @@
 #include "perdio.hh"
 #include "marshaler.hh"
 #include "copycode.hh"
+#include "trace.hh"
 
 #ifdef OUTLINE
 #define inline
