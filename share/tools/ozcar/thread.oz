@@ -460,39 +460,35 @@ in
       end
 
       meth DoSwitch(I PrintStack)
-	 case I == 1 then skip else
-	    Stack = {Dictionary.get self.ThreadDic I}
-	    T     = {Stack getThread($)}
-	    S     = {CheckState T}
-	 in
-
-	    case @currentStack == unit then skip else
-	       Gui,resetLastSelectedFrame
-	    end
-
-	    {OzcarMessage 'switching to thread #' # I}
-
-	    currentThread <- T
-	    currentStack  <- Stack
-
-	    case PrintStack then
-	       case S == terminated then
-		  {SendEmacs removeBar}
-		  Gui,printStack(id:I frames:nil depth:0)
-	       else
-		  F L C Exc = {Stack getException($)}
-	       in
-		  {Stack print}
-		  {Stack getPos(file:?F line:?L column:?C)}
-		  case Exc == nil then
-		     {SendEmacs bar(file:F line:L column:C state:S)}
-		  else
-		     {SendEmacs bar(file:F line:L column:C state:blocked)}
-		     Gui,doStatus(Exc clear BlockedThreadColor)
-		  end
-	       end
-	    else skip end
+	 Stack = {Dictionary.get self.ThreadDic I}
+	 T     = {Stack getThread($)}
+	 S     = {CheckState T}
+      in
+	 case @currentStack == unit then skip else
+	    Gui,resetLastSelectedFrame
 	 end
+
+	 {OzcarMessage 'switching to thread #' # I}
+	 currentThread <- T
+	 currentStack  <- Stack
+
+	 case PrintStack then
+	    case S == terminated then
+	       {SendEmacs removeBar}
+	       Gui,printStack(id:I frames:nil depth:0)
+	    else
+	       F L C Exc = {Stack getException($)}
+	    in
+	       {Stack print}
+	       {Stack getPos(file:?F line:?L column:?C)}
+	       case Exc == nil then
+		  {SendEmacs bar(file:F line:L column:C state:S)}
+	       else
+		  {SendEmacs bar(file:F line:L column:C state:blocked)}
+		  Gui,doStatus(Exc clear BlockedThreadColor)
+	       end
+	    end
+	 else skip end
       end
 
       meth toggleEmacsThreads
