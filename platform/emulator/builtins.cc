@@ -949,15 +949,14 @@ OZ_BI_define(BIthreadIs,1,1)
  * raise exception on thread
  */
 OZ_BI_proto(BIraise);
-OZ_BI_proto(BIraiseDebug);
 
-void threadRaise(Thread *th,OZ_Term E,int debug) {
+static void threadRaise(Thread *th,OZ_Term E) {
   Assert(oz_currentThread() != th);
 
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
 
-  th->pushCFun(debug?BIraiseDebug:BIraise, args, 1);
+  th->pushCFun(BIraise, args, 1);
 
   th->setStop(NO);
 
@@ -976,7 +975,7 @@ OZ_BI_define(BIthreadRaise,2,0)
   oz_declareNonvarIN(1,E);
 
   if (oz_currentThread() == th) {
-    return OZ_raise(E);
+    return OZ_raiseDebug(E);
   }
 
   threadRaise(th,E);
@@ -1075,22 +1074,6 @@ OZ_BI_define(BIthreadCreate,1,0)
   tt->setAbstr(a->getPred());
 
   return PROCEED;
-} OZ_BI_end
-
-// ------------------ explore a thread's taskstack ---------------------------
-
-OZ_BI_define(BIexceptionTaskStackError,0,1)
-{
-  Thread * thread = oz_currentThread();
-
-  TaskStack *taskstack = thread->getTaskStackRef();
-  OZ_RETURN(taskstack->getTaskStack(thread,NO,ozconf.errorThreadDepth));
-} OZ_BI_end
-
-OZ_BI_define(BIexceptionLocation,0,1)
-{
-  OZ_RETURN(oz_getLocation(GETBOARD(oz_currentThread())));
-
 } OZ_BI_end
 
 // ---------------------------------------------------------------------
@@ -3994,11 +3977,12 @@ OZ_BI_define(BIgetReturn,0,1)
 /********************************************************************
  * Exceptions
  ******************************************************************** */
+
 OZ_BI_define(BIraise,1,0)
 {
   oz_declareIN(0,exc);
 
-  return OZ_raise(exc);
+  return OZ_raiseDebug(exc);
 } OZ_BI_end
 
 OZ_BI_define(BIraiseError,1,0)
@@ -4006,27 +3990,6 @@ OZ_BI_define(BIraiseError,1,0)
   oz_declareIN(0,exc);
 
   return OZ_raiseError(exc);
-} OZ_BI_end
-
-OZ_BI_define(BIraiseDebug,1,0)
-{
-  oz_declareIN(0,exc);
-
-  return OZ_raiseDebug(exc);
-} OZ_BI_end
-
-OZ_BI_define(BIraiseDebugCheck, 1, 1) {
-  oz_declareIN(0,exc);
-
-  exc = oz_deref(exc);
-
-  TaggedRef df;
-
-  OZ_RETURN(oz_bool(ozconf.errorDebug &&
-                    oz_isSRecord(exc) &&
-                    (df = tagged2SRecord(exc)->getFeature(AtomDebug)) &&
-                    oz_isSRecord(oz_deref(df))));
-
 } OZ_BI_end
 
 

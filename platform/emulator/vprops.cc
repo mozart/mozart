@@ -740,8 +740,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_PERDIO_USEALTVARPROTOCOL,ozconf.perdioUseAltVarProtocol);
     CASE_BOOL_DO(PROP_PERDIO_MINIMAL,
                  if ((*isPerdioInitialized)())
-                   return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
-                                                    "modelChoose",0));
+                   return OZ_raiseDebug(OZ_makeException(E_ERROR,OZ_atom("dp"),
+                                                         "modelChoose",0));
                  ozconf.perdioMinimal=INT__);
     CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
@@ -756,8 +756,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
                       ozconf.perdioUseAltVarProtocol);
              DO_BOOL(oz_atom("minimal"),
                  if ((*isPerdioInitialized)())
-                   return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
-                                                    "modelChoose",0));
+                   return OZ_raiseDebug(OZ_makeException(E_ERROR,OZ_atom("dp"),
+                                                         "modelChoose",0));
                  ozconf.perdioMinimal=INT__));
     // DPTABLE
     CASE_NAT_DO(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,{

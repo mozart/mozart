@@ -421,7 +421,6 @@ void displayDef(ProgramCounter from, int ssize);
 
 // see builtins.cc
 Builtin *BIinit();
-void threadRaise(Thread *th,OZ_Term E,int debug=0);
 extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 extern OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea,
                                        TaggedRef &out);

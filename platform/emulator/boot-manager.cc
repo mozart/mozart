@@ -553,5 +553,4 @@ void initBuiltins() {
 
   bi_raise      = getBuiltin_c("Exception.raise");
   bi_raiseError = getBuiltin_c("Exception.raiseError");
-  bi_raiseDebug = getBuiltin_c("Exception.raiseDebug");
 }

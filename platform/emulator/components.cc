@@ -225,7 +225,7 @@ OZ_Term makeGenericExc(char *id,char *msg, OZ_Term arg)
 
 OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 {
-  return OZ_raise(makeGenericExc(id,msg,arg));
+  return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
 
 
