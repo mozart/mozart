@@ -86,7 +86,13 @@
         <<Inspector.reflect>>
       <ITEM>
         exports the reflection function used by the inspector to reflect
-        deep space values. Use on your own risk.
+        deep space values. Use at your own risk.
+      <ENTRY><<reflect>>
+      <SYNOPSIS>
+        <<Inspector.unreflect>>
+      <ITEM>
+        exports the unreflection function used by the inspector.
+        Use at your own risk.
     </LIST>
   <SECTION id="section.configure.methods"><TITLE/Inspector object methods/
    <P>
