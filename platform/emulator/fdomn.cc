@@ -2590,7 +2590,7 @@ char *OZ_FiniteDomain::toString() const
   str.reset();
   CASTCONSTTHIS->print(str, 0);
 
-#ifdef DEBUG_FSET_CONSTRREP
+#ifdef DEBUG_FD_CONSTRREP
   static ozstrstream tmp_str;
   tmp_str.reset();
   tmp_str << "fd(" << str.str() << ")" << flush;
