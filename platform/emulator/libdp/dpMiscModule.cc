@@ -146,6 +146,8 @@ Bool oz_eqeq(TaggedRef Ain,TaggedRef Bin)
   return (NO);
 }
 
+#ifdef NEWMARSHALER
+
 //
 OZ_BI_define(BImarshalerPerf,2,0)
 {
@@ -301,6 +303,8 @@ OZ_BI_define(BImarshalerPerf,2,0)
   //
   return (PROCEED);
 } OZ_BI_end
+
+#endif
 
 /*
  * The builtin table

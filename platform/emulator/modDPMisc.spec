@@ -45,6 +45,7 @@
 
      'marshalerPerf'    => { in  => ['+value', '+int'],
                              out => [],
-                             bi  => BImarshalerPerf},
+                             bi  => BImarshalerPerf,
+                             ifdef => NEWMARSHALER },
 
      );
