@@ -271,7 +271,7 @@ in
 	 
 	 {ForAll {Ditems Stack}
 	  proc{$ Frame}
-	     FrameNr    = Size - Frame.nr + 1      % frame number
+	     FrameNr    = Size - Frame.nr + 1      % frame number (swapped)
 	     FrameName  = Frame.name               % procedure/builtin name
 	     FrameArgs  = {FormatArgs Frame.args}  % argument list
 	     FrameFile  = {StripPath  Frame.file}
@@ -317,6 +317,7 @@ in
 	     case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
 		LastSelectedFrame <- undef
 		Gui,SelectStackFrame(LineTag)
+		Gui,printEnv(frame:FrameNr vars:Frame.env)
 	     else skip end
 	  end}
 	 Gui,Disable(W)
