@@ -502,8 +502,9 @@ PRINT(Builtin)
 {
   CHECKDEPTH;
   stream << "B:"
-	 << getPrintName() << "/" << getArity();
-//	 << "@" << (void*) getId();
+	 << getPrintName() << "/" << getArity() << "[+ ";
+  getRecord()->print(stream,depth,offset);
+  stream << " ]";
 }
 
 
