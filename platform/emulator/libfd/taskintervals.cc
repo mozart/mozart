@@ -36,8 +36,6 @@
   used for cumulative in the reification loop
 */
 
-#define CONSTRUCTIVEDISJ
-
 
 static inline int intMin(int a, int b) { return a < b ? a : b; }
 static inline int intMax(int a, int b) { return a > b ? a : b; }
@@ -126,6 +124,105 @@ class Min_max {
 public:
   int min, max;
 };
+
+
+static int reifiedPropagation(Min_max * MinMaxStruct, int * dur, int ts, 
+			      OZ_FDIntVar * x) {
+  int i,j;
+  int flag=0; 
+  for (i=0; i<ts; i++)
+    for (j=i+1; j<ts; j++) {
+      int xui = MinMaxStruct[i].max, di = dur[i], xlj = MinMaxStruct[j].min;
+      if (xui + di <= xlj) continue;
+      int xuj = MinMaxStruct[j].max, dj = dur[j], xli = MinMaxStruct[i].min;
+      if (xuj + dj <= xli) continue;
+      if (xli + di > xuj) {
+	int val1 = xui - dj;
+	if (xuj > val1) {
+	  flag = 1;
+	  if ((*x[j] <= val1) == 0) return -1;
+	  MinMaxStruct[j].max = x[j]->getMaxElem();
+	}
+	int val2 = xlj + dj;
+	if (xli < val2) {
+	  flag = 1;
+	  if ((*x[i] >= val2) == 0) return -1;
+	  MinMaxStruct[i].min = x[i]->getMinElem();
+	}
+      }
+      if (xlj + dj > xui) {
+	int val1 = xuj - di;
+	if (xui > val1) {
+	  flag = 1;
+	  if ((*x[i] <= val1) == 0) return -1;
+	  MinMaxStruct[i].max = x[i]->getMaxElem();
+	}
+	int val2 = xli + di;
+	if (xlj < val2) {
+	  flag = 1;
+	  if ((*x[j] >= val2) == 0) return -1;
+	  MinMaxStruct[j].min = x[j]->getMinElem();
+	}
+      }
+    }
+  return flag;
+}
+
+static int reifiedPropagationCum(Min_max * MinMaxStruct, int * dur, int * use, 
+				 int capacity, int ts, OZ_FDIntVar * x) {
+  int i,j; 
+  int flag = 0;
+  for (i=0; i<ts; i++)
+    for (j=i+1; j<ts; j++) {
+      if (use[i] + use[j] > capacity) {
+	int xui = MinMaxStruct[i].max, di = dur[i], xlj = MinMaxStruct[j].min;
+	if (xui + di <= xlj) continue;
+	int xuj = MinMaxStruct[j].max, dj = dur[j], xli = MinMaxStruct[i].min;
+	if (xuj + dj <= xli) continue;
+	// constructive disjunction
+	     int lowx = xuj-di+1, lowy = xui-dj+1;
+	int upx = xlj+dj-1, upy = xli+di-1;
+	if (lowx <= upx) {
+	  OZ_FiniteDomain la;
+	  la.initRange(lowx,upx);
+	  if ((*x[i] -= la) == 0) return -1;
+	}
+	if (lowy <= upy) {
+	  OZ_FiniteDomain la;
+	  la.initRange(lowy,upy);
+	  if ((*x[j] -= la) == 0) return -1;
+	}
+	
+	if (xli + di > xuj) {
+	  if (xuj > xui - dj) {
+	    flag = 1;
+	    if ((*x[j] <= xui - dj) == 0) return -1;
+	    MinMaxStruct[j].max = x[j]->getMaxElem();
+	  }
+	  if (xli < xlj + dj) {
+	    flag = 1;
+	    if ((*x[i] >= xlj + dj) == 0) return -1;
+	    MinMaxStruct[i].min = x[i]->getMinElem();
+	  }
+	}
+	if (xlj + dj > xui) {
+	  if (xui > xuj - di) {
+	    flag = 1;
+	    if ((*x[i] <= xuj - di) == 0) return -1;
+	    MinMaxStruct[i].max = x[i]->getMaxElem();
+	  }
+	  if (xlj < xli + di) {
+	    flag = 1;
+	    if ((*x[j] >= xli + di) == 0) return -1;
+	    MinMaxStruct[j].min = x[j]->getMinElem();
+	  }
+	}
+      }
+    }
+  return flag;
+}
+
+
 
 OZ_Return TaskIntervalsPropagator::propagate(void)
 {
@@ -416,46 +513,14 @@ tiloop:
   }
 
 reifiedloop:
-
    //////////
-   // do the reification in a loop
+   // do reified propagation for all task pairs
    //////////
-   for (i=0; i<ts; i++)
-     for (j=i+1; j<ts; j++) {
-       int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-       if (xui + di <= xlj) continue;
-       int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-       if (xuj + dj <= xli) continue;
-       if (xli + di > xuj) {
-	 if (xuj > xui - dj) {
-	   disjFlag = 1;
-	   FailOnEmpty(*x[j] <= xui - dj);
-	   MinMax[j].max = x[j]->getMaxElem();
-	 }
-	 if (xli < xlj + dj) {
-	   disjFlag = 1;
-	   FailOnEmpty(*x[i] >= xlj + dj);
-	   MinMax[i].min = x[i]->getMinElem();
-	 }
-       }
-       if (xlj + dj > xui) {
-	 if (xui > xuj - di) {
-	   disjFlag = 1;
-	   FailOnEmpty(*x[i] <= xuj - di);
-	   MinMax[i].max = x[i]->getMaxElem();
-	 }
-	 if (xlj < xli + di) {
-	   disjFlag = 1;
-	   FailOnEmpty(*x[j] >= xli + di);
-	   MinMax[j].min = x[j]->getMinElem();
-	 }
-       }
-     }
-
-  if (disjFlag == 1) {
-    disjFlag = 0;
-    goto reifiedloop;
-  }
+   switch (reifiedPropagation((Min_max *)GET_ARRAY(MinMax), dur, ts, 
+			      (OZ_FDIntVar *)GET_ARRAY(x))) {
+   case -1: goto failure;
+   case  1: goto reifiedloop;
+   }
 
 
   for (i=0; i<ts; i++) 
@@ -701,46 +766,15 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   
   int left,right,tiFlag;
 
-
   // memory is automatically disposed when propagator is left
 
   //////////  
-  // do the reified stuff for task pairs.
+  // do the reified propagation for all task pairs
   //////////  
-  for (i=0; i<ts; i++)
-    for (j=i+1; j<ts; j++) {
-      if (use[i] + use[j] > capacity) {
-	int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-	if (xui + di <= xlj) continue;
-	int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-	if (xuj + dj <= xli) continue;
-	if (xli + di > xuj) {
-	  int val1 = xui - dj;
-	  if (xuj > val1) {
-	    FailOnEmpty(*x[j] <= val1);
-	    MinMax[j].max = x[j]->getMaxElem();
-	  }
-	  int val2 = xlj + dj;
-	  if (xli < val2) {
-	    FailOnEmpty(*x[i] >= val2);
-	    MinMax[i].min = x[i]->getMinElem();
-	  }
-	}
-	if (xlj + dj > xui) {
-	  int val1 = xuj - di;
-	  if (xui > val1) {
-	    FailOnEmpty(*x[i] <= val1);
-	    MinMax[i].max = x[i]->getMaxElem();
-	  }
-	  int val2 = xli + di;
-	  if (xlj < val2) {
-	    FailOnEmpty(*x[j] >= val2);
-	    MinMax[j].min = x[j]->getMinElem();
-	  }
-	}
-      }
-    }
 
+  if (reifiedPropagationCum((Min_max *)GET_ARRAY(MinMax), dur, use, 
+			    capacity, ts, (OZ_FDIntVar *)GET_ARRAY(x)) == -1) 
+    goto failure;
 
 tiloop:
 
@@ -932,65 +966,18 @@ tiloop:
 
 reifiedloop:
 
-   for (i=0; i<ts; i++)
-     for (j=i+1; j<ts; j++) {
-       if (use[i] + use[j] > capacity) {
-	 int xui = MinMax[i].max, di = dur[i], xlj = MinMax[j].min;
-	 if (xui + di <= xlj) continue;
-	 int xuj = MinMax[j].max, dj = dur[j], xli = MinMax[i].min;
-	 if (xuj + dj <= xli) continue;
-#ifdef CONSTRUCTIVEDISJ
-	 // constructive disjunction
-         int lowx = xuj-di+1, lowy = xui-dj+1;
-	 int upx = xlj+dj-1, upy = xli+di-1;
-	 if (lowx <= upx) {
-	   OZ_FiniteDomain la;
-	   la.initRange(lowx,upx);
-	   FailOnEmpty(*x[i] -= la);
-	 }
-	 if (lowy <= upy) {
-	   OZ_FiniteDomain la;
-	   la.initRange(lowy,upy);
-	   FailOnEmpty(*x[j] -= la);
-	 }
-#endif
-	 if (xli + di > xuj) {
-	   if (xuj > xui - dj) {
-	     disjFlag = 1;
-	     FailOnEmpty(*x[j] <= xui - dj);
-	     MinMax[j].max = x[j]->getMaxElem();
-	   }
-	   if (xli < xlj + dj) {
-	     disjFlag = 1;
-	     FailOnEmpty(*x[i] >= xlj + dj);
-	     MinMax[i].min = x[i]->getMinElem();
-	   }
-	 }
-	 if (xlj + dj > xui) {
-	   if (xui > xuj - di) {
-	     disjFlag = 1;
-	     FailOnEmpty(*x[i] <= xuj - di);
-	     MinMax[i].max = x[i]->getMaxElem();
-	   }
-	   if (xlj < xli + di) {
-	     disjFlag = 1;
-	     FailOnEmpty(*x[j] >= xli + di);
-	     MinMax[j].min = x[j]->getMinElem();
-	   }
-	 }
-       }
-     }
-
-  if (disjFlag == 1) {
-    disjFlag = 0;
-    goto reifiedloop;
-  }
+  // do reified propgation enhanced by constructive disjunction
+   switch (reifiedPropagationCum((Min_max *)GET_ARRAY(MinMax), dur, use,
+				 capacity, ts, (OZ_FDIntVar *)GET_ARRAY(x))) {
+   case -1: goto failure;
+   case  1: goto reifiedloop;
+   }
 
 
 capLoop:
 
   //////////
-  // do the capacity checking
+  // do the histogram propagation
   //////////
   {
     int interval_nb = 0;	  
