@@ -231,7 +231,11 @@ GName *unmarshalGName(TaggedRef *ret, MarshalerBuffer *bs)
     if (ret) *ret = aux; // ATTENTION
     return 0;
   }
-  return new GName(gname);
+
+  //
+  GName *nn = new GName(gname);
+  nn->setValue((TaggedRef) 0);
+  return (nn);
 }
 
 #else // USE_FAST_UNMARSHALER
@@ -337,7 +341,11 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MarshalerBuffer *bs, int *error)
     if (ret) *ret = aux; // ATTENTION
     return 0;
   }
-  return new GName(gname);
+
+  //
+  GName *nn = new GName(gname);
+  nn->setValue((TaggedRef) 0);
+  return (nn);
 }
 
 #endif
