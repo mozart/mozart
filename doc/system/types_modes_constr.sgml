@@ -92,9 +92,9 @@ to="sect.fs.distribution">) and are defined as follows.
 	  <Grammar.Alt type=or>[?{ElemDescr}]+</Grammar.Alt>
 
 	<Grammar.Rule>?{ElemDescr}
-	  <Grammar.Alt type=def>?_{Int}<<#>>?_{Int}</Grammar.Alt>
-	  <Grammar.Alt type=or><<(>>?_{Int}<<#>>?_{Int}<<)#>>?_{Int}</Grammar.Alt>
-	  <Grammar.Alt type=or><<default#>>?_{Int}</Grammar.Alt>
+	  <Grammar.Alt type=def>?{Int}<<#>>?{Int}</Grammar.Alt>
+	  <Grammar.Alt type=or><<(>>?{Int}<<#>>?{Int}<<)#>>?{Int}</Grammar.Alt>
+	  <Grammar.Alt type=or><<default#>>?{Int}</Grammar.Alt>
 
 
 </Section>
@@ -114,13 +114,13 @@ to="type-abbrev-ps">.
  <Caption>Type Abbreviations</Caption>
 <Table>
  <TR/<TH/Abbreviation/<TH/Type//
- <TR/<TD/?_{D}/<TD/finite domain integer//
- <TR/<TD/?_{M}/<TD/finite set of integers//
- <TR/<TD/?_{Xr}/<TD/records of type ?_{X}//
- <TR/<TD/?_{Xt}/<TD/tuples of type ?_{X}//
- <TR/<TD/?_{Xv}/<TD/vectors of type ?_{X}//
- <TR/<TD/?_{Xvv}/<TD/vectors of vectors of type ?_{X}//
- <TR/<TD/?_{Xrr}/<TD/records of records of type ?_{X}//
+ <TR/<TD/?{D}/<TD/finite domain integer//
+ <TR/<TD/?{M}/<TD/finite set of integers//
+ <TR/<TD/?{Xr}/<TD/records of type ?{X}//
+ <TR/<TD/?{Xt}/<TD/tuples of type ?{X}//
+ <TR/<TD/?{Xv}/<TD/vectors of type ?{X}//
+ <TR/<TD/?{Xvv}/<TD/vectors of vectors of type ?{X}//
+ <TR/<TD/?{Xrr}/<TD/records of records of type ?{X}//
 </Table>
 </Figure>
 
