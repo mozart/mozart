@@ -28,9 +28,9 @@ common:
         (cd $(OZHOME)/..; \
         tar -cf - oz/bin oz/demo oz/include oz/lib oz/README oz/doc \
                 oz/ozwish/tcl ) | \
-        compress > $@.tar.Z
+        compress > oz-$(VERS)-$@.tar.Z
 
-PLATFORMS = sunos-sparc solaris-sparc ultrix-mips linux-i496 hpux-700 \
+PLATFORMS = sunos-sparc solaris-sparc ultrix-mips linux-i486 hpux-700 \
         irix-mips
 
 $(PLATFORMS):
