@@ -32,6 +32,9 @@
 #include "builtins.hh"
 #include "os.hh"
 #include "am.hh"
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 // print  name -> builtin       (for unmarshalling)
 // module name -> module
@@ -436,8 +439,19 @@ OZ_BI_define(BIloadNative,1,1)
 
   TaggedRef hdl;
   TaggedRef res = osDlopen(filename,hdl);
-  if (res) return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
-                           oz_atom(filename),res);
+  if (res) {
+    struct stat buf;
+  retry:
+    if (stat(filename,&buf)<0)
+      if (errno==EINTR) goto retry;
+      else
+        // file does not exist (or would need searching LD_LIBRARY_PATH
+        // which we don't attempt here - too bad)
+        return oz_raise(E_SYSTEM,AtomForeign,"dlOpen",1,OZ_in(0));
+    // file presumed to exist
+    return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
+                    oz_atom(filename),res);
+  }
 
   void* handle = OZ_getForeignPointer(hdl);
 
