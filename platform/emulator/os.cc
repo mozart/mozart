@@ -530,9 +530,7 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
 
 
 
-#define EMULATOR
 #include "winselect.cc"
-#undef EMULATOR
 
 void registerSocket(int fd)
 {
