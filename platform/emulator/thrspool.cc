@@ -45,11 +45,11 @@ void ThreadsPool::initThreads ()
 }
 
 //
-Bool ThreadsPool::isScheduled (Thread *thr)
+Bool ThreadsPool::isScheduledSlow(Thread *thr)
 {
-  if (midQueue.isScheduled(thr)) return OK;
-  if (hiQueue.isScheduled(thr)) return OK;
-  return lowQueue.isScheduled(thr);
+  if (midQueue.isScheduledSlow(thr)) return OK;
+  if (hiQueue.isScheduledSlow(thr)) return OK;
+  return lowQueue.isScheduledSlow(thr);
 }
 
 void ThreadsPool::deleteThread(Thread *th)
@@ -115,7 +115,7 @@ lowMid:
 
 void ThreadsPool::scheduleThread(Thread *th,int pri)
 {
-  Assert(!isScheduled(th));
+  Assert(!isScheduledSlow(th));
   if (pri < 0) pri = th->getPriority();
 
   if (pri == MID_PRIORITY) {

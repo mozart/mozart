@@ -85,7 +85,7 @@ class ThreadQueue : public ThreadQueueImpl {
 public:
   ThreadQueue(void) : ThreadQueueImpl() {}
 
-  Bool isScheduled (Thread * thr);
+  Bool isScheduledSlow(Thread * thr);
   void gc();
   void printThreads(void);
 };

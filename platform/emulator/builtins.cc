@@ -2720,7 +2720,7 @@ void threadRaise(Thread *th,OZ_Term E) {
   if (th->isSuspended())
     th->suspThreadToRunnable();
 
-  if (!am.isScheduled(th))
+  if (!am.isScheduledSlow(th))
     am.scheduleThread(th);
 }
 
@@ -2768,7 +2768,7 @@ void threadResume(Thread *th) {
 
   if (th->isDeadThread()) return;
 
-  if (th->isRunnable() && !am.isScheduled(th)) {
+  if (th->isRunnable() && !am.isScheduledSlow(th)) {
     am.scheduleThread(th);
   }
 }

@@ -1484,7 +1484,8 @@ void AM::pushToplevel(ProgramCounter pc)
   // kost@ : MOD!!! TODO?
   // rootBoard->incSuspCount();
   rootThread->getTaskStackRef()->pushCont(pc,toplevelVars,NULL);
-  if (rootThread!=currentThread && !isScheduled(rootThread)) {
+  if (rootThread!=currentThread && !isScheduledSlow(rootThread)) {
+    Assert(rootThread->isRunnable());
     scheduleThread(rootThread);
   }
 }
@@ -1509,7 +1510,7 @@ void AM::checkToplevel()
 
 void AM::addToplevel(ProgramCounter pc)
 {
-  if (rootThread->isEmpty()) {
+  if (rootThread->isEmpty() && rootThread->isRunnable()) {
     // Verbose((VERB_THREAD,"addToplevel: push\n"));
     pushToplevel(pc);
   } else {
@@ -1767,7 +1768,7 @@ void AM::resumeThread(Thread *th) {
         unsetSFlag(StopThread);
       } else {
         th->suspThreadToRunnable();
-        if (!isScheduled(th))
+        if (!isScheduledSlow(th))
           scheduleThread(th);
       }
     }
@@ -1776,6 +1777,53 @@ void AM::resumeThread(Thread *th) {
 
 
 Board *rootBoard() { return am.rootBoard; }
+
+OZ_C_proc_proto(BIfail);     // builtins.cc
+int AM::commit(Board *bb, Thread *tt)
+{
+  Assert(!currentBoard->isCommitted());
+  Assert(bb->getParent()==currentBoard);
+
+  AWActor *aw = AWActor::Cast(bb->getActor());
+
+  Assert(!tt || tt==aw->getThread());
+
+  Continuation *cont=bb->getBodyPtr();
+
+  bb->setCommitted(currentBoard);
+  currentBoard->incSuspCount(bb->getSuspCount()-1);
+
+  if (bb->isWait()) {
+    Assert(bb->isWaiting());
+
+    WaitActor *wa = WaitActor::Cast(aw);
+
+    if (currentBoard->isWait()) {
+      WaitActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
+    } else if (currentBoard->isSolve()) {
+      SolveActor::Cast(currentBoard->getActor())->mergeChoices(wa->getCpb());
+    } else {
+      // forget the choice stack when committing to a conditional
+    }
+
+    if (!installScriptOutline(bb->getScriptRef())) {
+      return 0;
+    }
+  }
+
+  if (!tt) {
+    tt=aw->getThread();
+    Assert(tt->isSuspended());
+    tt->suspThreadToRunnable();
+    scheduleThread(tt);
+    DebugCheckT(aw->setThread(0));
+  }
+
+  tt->getTaskStackRef()->pushCont(cont->getPC(),cont->getY(),cont->getG());
+  if (cont->getX()) tt->getTaskStackRef()->pushX(cont->getX());
+
+  return 1;
+}
 
 #ifdef OUTLINE
 #define inline

@@ -62,7 +62,7 @@ public:
   void rescheduleThread(Thread *th);
   void deleteThread(Thread *th);
 
-  Bool isScheduled (Thread *thr);
+  Bool isScheduledSlow(Thread *thr);
 
   Board * getHighestSolveDebug(void); // TMUELLER
 
