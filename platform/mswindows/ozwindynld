@@ -1,0 +1,90 @@
+#! /bin/sh
+
+# script to create a DLL from *.o files under Win32 (adapted from
+# some script found on the net)
+# so far works only with mingw32
+# usage: ozwindynld -o mylib foo1.o foo2.o ...
+
+# Exit immediately if a  command exits with a non-zero status.
+set -e
+
+: ${OZHOME=/usr/local/oz}
+: ${CC=gcc}
+
+: ${NM=`$CC -print-prog-name=nm`}
+: ${AS=`$CC -print-prog-name=as`}
+: ${LD=`$CC -print-prog-name=ld`}
+: ${DLLTOOL=`$CC -print-prog-name=dlltool`}
+
+
+dll=ozdll
+syslib="libcrtdll.a"
+while [ $# -gt 0 ]; do
+    case $1 in
+    --cygwin32) syslib="libcygwin.a";;
+    -o)         shift; dll=$1;;
+    *)          objs="$objs $1";;
+    esac
+    shift
+done
+
+
+# the output file must end in that strange name (ask Denys)
+dll=$dll.so-win32-i486
+
+# some temporary files
+base=$$.base
+exp=$$.exp
+def=$$.def
+entry=_dll_entry@12
+fixup=fixup$$.c
+initc=initc$$.cc
+extraobjs="fixup$$.o initc$$.o mozart.o"
+objs="$objs $extraobjs"
+
+trap "rm -f $base $exp $def $fixup $initc $extraobjs" 0 1 15
+
+clib="`${CC} -print-file-name=$syslib` `${CC} -print-file-name=libkernel32.a`"
+
+
+# Make fixup.c:
+cat > $fixup <<EOF
+/* This is needed to terminate the list of import stuff */
+/* Copied from winsup/dcrt0.cc in the cygwin32 source distribution. */
+    asm(".section .idata$3\n" ".long 0,0,0,0, 0,0,0,0");
+EOF
+
+# Make init.cc:
+cat > $initc <<EOF
+#include <windows.h>
+extern "C" { int WINAPI dll_entry (HANDLE h, DWORD reason, void *ptr); };
+int WINAPI dll_entry (HANDLE , DWORD reason, void *)
+{
+  switch (reason) {
+    case DLL_PROCESS_ATTACH: break;
+    case DLL_PROCESS_DETACH: break;
+    case DLL_THREAD_ATTACH:  break;
+    case DLL_THREAD_DETACH:  break;
+  }
+  return 1;
+}
+EOF
+
+
+# Compile source files:
+${CC} -I$OZHOME/include -o mozart.o -c $OZHOME/include/mozart.c
+${CC} -c $fixup
+${CC} -c $initc
+
+
+# Make .def file:
+echo EXPORTS > $def
+${NM} $objs | grep '^........ [T] _' | sed 's/[^_]*_//' >> $def
+
+
+# Link DLL.
+${LD} --dll --base-file $base -o $dll $objs $clib -e $entry
+${DLLTOOL} --as=${AS} --dllname $dll --def $def --base-file $base --output-exp $exp
+${LD} -dll --base-file $base $exp -o $dll $objs $clib -e $entry
+${DLLTOOL} --as=${AS} --dllname $dll --def $def --base-file $base --output-exp $exp
+${LD} -dll $exp -o $dll $objs $clib -e $entry
