@@ -466,7 +466,7 @@ public:
     return PROBE_PERM;}
 
   ProbeReturn installProbe(ProbeType pt){// ERIK-LOOK
-    installProbe(pt,PROBE_INTERVAL);}
+    return installProbe(pt,PROBE_INTERVAL);}
 
   ProbeReturn deinstallProbe(ProbeType pt){
     unsigned short t=getType();

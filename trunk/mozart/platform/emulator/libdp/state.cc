@@ -79,7 +79,7 @@ PendThread* getPendThreadStartFromCellLock(Tertiary* t){
   if(t->getType()==Co_Cell){
     getCellSecFromTert(t)->getPending();}
   Assert(t->getType()==Co_Lock);
-  getLockSecFromTert(t)->getPending();}
+  return getLockSecFromTert(t)->getPending();}
 
 /**********************************************************************/
 /*  Utility                       */
@@ -200,7 +200,9 @@ OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, ExKind exKind){
     return oz_unify(tr,old);}
 
   default: 
-    Assert(0);}}
+    Assert(0);}
+  return PROCEED; // stupid compiler
+}
 
 void CellSec::dummyExchange(CellManager* c){
   Assert(state==Cell_Lock_Invalid);
@@ -281,8 +283,8 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
     Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
     sendPrepOwner(index);
     cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
-		       myDSite,index,myDSite);}
-
+		       myDSite,index,myDSite);
+}
   pendThreadAddToEnd(&pending,val,fea,fea ? DEEPAT : ACCESS);
   if(!errorIgnore(c)){
     if(entityCondMeToBlocked(c)) deferEntityProblem(c);}
@@ -395,6 +397,7 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
 
 void LockSec::lockComplex(Thread *th,Tertiary* t){
   PD((LOCK,"lockComplex in state:%d",state));
+  Assert(th==oz_currentThread());
   Assert(t->getBoardInternal()==oz_rootBoard());
   switch(state){
   case Cell_Lock_Valid|Cell_Lock_Next:{
@@ -404,16 +407,16 @@ void LockSec::lockComplex(Thread *th,Tertiary* t){
   case Cell_Lock_Valid:{
     Assert(getLocker()!=th);  
     Assert(getLocker()!=NULL);
-    pendThreadAddToEnd(getPendBase(),th);
+    pendThreadAddToEnd(getPendBase());
     if(errorIgnore(t)) return; 
     break;}
   case Cell_Lock_Next|Cell_Lock_Requested:
   case Cell_Lock_Requested:{
-    pendThreadAddToEnd(getPendBase(),th);
+    pendThreadAddToEnd(getPendBase());
     if(errorIgnore(t)) return;
     break;}
   case Cell_Lock_Invalid:{
-    pendThreadAddToEnd(getPendBase(),th);
+    pendThreadAddToEnd(getPendBase());
     secLockGet(this,t,th);
     if(errorIgnore(t)) return;
     break;}
