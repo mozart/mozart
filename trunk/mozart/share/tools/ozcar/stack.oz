@@ -114,9 +114,6 @@ in
 
    class StackManager
 
-      prop
-	 locking
-
       feat
 	 T                 % the thread...
 	 I                 % ...with it's ID

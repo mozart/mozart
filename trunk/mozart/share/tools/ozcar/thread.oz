@@ -38,7 +38,7 @@ local
       of H|T then
 	 {OzcarMessage 'readloop:'} {OzcarShow H}
 	 {Ozcar PrivateSend(readStreamMessage(H))}
-	 {OzcarMessage 'preparing for next stream message...'}
+	 {OzcarMessage 'waiting for next stream message...'}
 	 {OzcarReadEvalLoop T}
       end
    end
@@ -108,6 +108,8 @@ in
       end
 
       meth readStreamMessage(M)
+
+	 lock UserActionLock then skip end %% don't process messages too fast..
 
 	 case M
 
@@ -249,21 +251,20 @@ in
       end
 
       meth add(T I Q Exc<=unit)
+	 IsFirstThread = ThreadManager,EmptyTree($)
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
+	 {OzcarMessage 'add ' # I # '/' # Q}
 	 case Exc of exc(X) then   %% exception
 	    Gui,addNode(I Q)
 	    ThreadManager,switch(I false)
 	    {Stack printException(X)}
-	 else                      %% Q is the ID of the parent thread
-	    {OzcarMessage 'add ' # I # '/' # Q}
+	 else
 	    Gui,addNode(I Q)
 	    {Stack rebuild(true)}
-	    case Q == 1 then       %% all compiler threads have id #1
-	       ThreadManager,switch(I)
-	       Gui,status('Got new query, selecting thread #' # I)
-	    elsecase @currentThread == unit then
+	    case Q == 1 orelse       %% all compiler threads have id #1
+	       IsFirstThread then    %% there's no other attached thread
 	       ThreadManager,switch(I)
 	       Gui,status('Selecting new thread #' # I)
 	    else skip end
@@ -276,6 +277,7 @@ in
 	 ThreadManager,removeSkippedProcs(I)
 	 case Mode == kill then
 	    Gui,killNode(I Next)
+	    {OzcarMessage 'next tree node is #' # Next}
 	    {Dictionary.remove self.ThreadDic I}
 	    case ThreadManager,EmptyTree($) then
 	       currentThread <- unit
@@ -308,15 +310,13 @@ in
       end
 
       meth kill(T I Select<=true)
-	 lock
-	    {Dbg.trace T false}
-	    {Dbg.step T false}
-	    {Thread.terminate T}
-	    case Select then
-	       Gui,doStatus('Thread #' # I # ' has been terminated')
-	    else skip end
-	    ThreadManager,remove(T I kill Select)
-	 end
+	 {Dbg.trace T false}
+	 {Dbg.step T false}
+	 {Thread.terminate T}
+	 case Select then
+	    Gui,doStatus('Thread #' # I # ' has been terminated')
+	 else skip end
+	 ThreadManager,remove(T I kill Select)
       end
 
       meth killAll($)
@@ -350,13 +350,11 @@ in
       end
 
       meth detach(T I)
-	 lock
-	    {Dbg.trace T false}      %% thread is not traced anymore
-	    {Dbg.step T false}       %% no step mode, run as you like!
-	    {Thread.resume T}        %% run, run to freedom!! :-)
-	    Gui,doStatus('Thread #' # I # ' is not traced anymore')
-	    ThreadManager,remove(T I kill)
-	 end
+	 {Dbg.trace T false}      %% thread is not traced anymore
+	 {Dbg.step T false}       %% no step mode, run as you like!
+	 {Thread.resume T}        %% run, run to freedom!! :-)
+	 Gui,doStatus('Thread #' # I # ' is not traced anymore')
+	 ThreadManager,remove(T I kill)
       end
 
       meth entry(thr: T ...)=Frame
@@ -410,11 +408,9 @@ in
 	 Gui,selectNode(I)
 
 	 thread
-	    lock
-	       {WaitOr New {Alarm TimeoutToSwitch}}
-	       case {IsDet New} then skip else
-		  ThreadManager,DoSwitch(I PrintStack)
-	       end
+	    {WaitOr New {Alarm TimeoutToSwitch}}
+	    case {IsDet New} then skip else
+	       ThreadManager,DoSwitch(I PrintStack)
 	    end
 	 end
       end
@@ -429,6 +425,8 @@ in
 	    case @currentStack == unit then skip else
 	       Gui,resetLastSelectedFrame
 	    end
+
+	    {OzcarMessage 'switching to thread #' # I}
 
 	    currentThread <- T
 	    currentStack  <- Stack

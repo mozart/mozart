@@ -262,18 +262,20 @@ in
       end
 
       meth selectPrevious
-	 N = {TreeNext @nodes @nodes @Selected}
+	 Old = @Selected
+	 New = {TreeNext @nodes @nodes Old}
       in
-	 case N == nil then skip else
-	    Tree,SwitchToThread({N get($)}.i)
+	 case New == nil orelse New == Old then skip else
+	    Tree,SwitchToThread({New get($)}.i)
 	 end
       end
 
       meth selectNext
-	 N = {TreePrev @nodes @Selected}
+	 Old = @Selected
+	 New = {TreePrev @nodes Old}
       in
-	 case N == nil then skip else
-	    Tree,SwitchToThread({N get($)}.i)
+	 case New == nil orelse New == Old then skip else
+	    Tree,SwitchToThread({New get($)}.i)
 	 end
       end
 
