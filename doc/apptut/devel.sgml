@@ -234,16 +234,30 @@ end
        
 </chunk>
     
-  <Section id="Section.Development.OPI">
-    <Title/Exploration: The Oz Programming Interface/
+
+  <section id="section.development.compile">
+    <title/Compilation/
+
+    <p>
+      Functors also are compilation unit.
+  </section>
+
+  <section id="section.development.execution">
+    <title/Execution/
+
+    <p>
+      Just as before.
+
+    <p>
+      Explained later.
+
+  </section>
+
+
+  <Section id="Section.sevelopment.make" proglang=sh>
+    <Title/Using <<make>> for Functor Compilation/
 
   </Section>
-
-
-<!--
-- compilation unit
-
--->
 
 </Chapter>
 
