@@ -743,7 +743,7 @@ prefix</p>
 It makes it easy for you to maintain a database of your contributions
 and to export them so that the MOGUL librarian may automatically
 find them.  In fact, the simplest way is to use
-<opt>ozmake --mogul=publish</opt> which will take take care of all
+<opt>ozmake --publish</opt> which will take take care of all
 defails for you.</p>
 
 <usagelist>
@@ -757,13 +757,13 @@ defails for you.</p>
   from the user's database of own contribution</item>
   <usage>ozmake --mogul=delete</usage>
   <item>remove entry for current contribution</item>
-  <usage>ozmake --list</usage>
+  <usage>ozmake --mogul=list</usage>
   <item>show the recorded data for all entries in the user's database of own
   mogul contributions</item>
-  <usage>ozmake --list <meta>MOG1</meta> ... <meta>MOGn</meta></usage>
+  <usage>ozmake --mogul=list <meta>MOG1</meta> ... <meta>MOGn</meta></usage>
   <item>show the recorded data for entries <meta>MOG1</meta> through <meta>MOGn</meta>
   in the user's database of own mogul contributions</item>
-  <usage>ozmake --export</usage>
+  <usage>ozmake --mogul=export</usage>
   <item>write all necessary mogul entries for the user's own mogul contributions.
   These are the entries which will be read by the MOGUL librarian to automatically
   assemble the full MOGUL database.</item>
