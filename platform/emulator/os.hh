@@ -167,7 +167,7 @@ char *osfgets(char *s, int n, FILE *stream);
 extern int _hdopen(int, int flags);
 #endif
 
-#ifdef MINGW32
+#ifdef __MINGW32__
 #define SIGUSR1 SIGQUIT
 #define h_errno errno
 #define O_NONBLOCK 0

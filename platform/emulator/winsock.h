@@ -137,7 +137,7 @@ extern int PASCAL FAR __WSAFDIsSet(SOCKET, fd_set FAR *);
  * returned in network order (suitable for use in system calls).
  */
 
-#if !defined(GNUWIN32) || defined(MINGW32)
+#if !defined(GNUWIN32) || defined(__MINGW32__)
 struct  hostent {
         char    FAR * h_name;           /* official name of host */
         char    FAR * FAR * h_aliases;  /* alias list */
@@ -647,7 +647,7 @@ struct  linger {
  * These are commented out in Windows NT to avoid conflicts with errno.h.
  * Use the WSA constants instead.
  */
-#if 0
+#ifdef __MINGW32__
 #define EWOULDBLOCK             WSAEWOULDBLOCK
 #define EINPROGRESS             WSAEINPROGRESS
 #define EALREADY                WSAEALREADY
@@ -678,12 +678,13 @@ struct  linger {
 #define ENAMETOOLONG            WSAENAMETOOLONG
 #define EHOSTDOWN               WSAEHOSTDOWN
 #define EHOSTUNREACH            WSAEHOSTUNREACH
-#define ENOTEMPTY               WSAENOTEMPTY
+#define xxENOTEMPTY               WSAENOTEMPTY
 #define EPROCLIM                WSAEPROCLIM
 #define EUSERS                  WSAEUSERS
 #define EDQUOT                  WSAEDQUOT
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
+#define EADDRNOTAVAIL           WSAEADDRNOTAVAIL
 #endif
 
 
@@ -936,20 +937,13 @@ typedef struct timeval FAR *LPTIMEVAL;
 
 
 
-#ifdef MINGW32
+#ifdef __MINGW32__
 
 struct hostent PASCAL FAR * gethostbyname (const char FAR * name);
 struct protoent PASCAL FAR * FAR getprotobyname(const char FAR * name);	
 struct hostent PASCAL FAR * gethostbyaddr (const char FAR * addr,	
 				    int len,	
 				    int type);	
-
-#define EINPROGRESS   WSAEINPROGRESS
-#define ECONNREFUSED  WSAECONNREFUSED
-#define EADDRNOTAVAIL WSAEADDRNOTAVAIL
-#define ENOBUFS       WSAENOBUFS
-#define EWOULDBLOCK   WSAEWOULDBLOCK
-
 #endif
 
 
