@@ -7003,6 +7003,10 @@ OZ_C_proc_begin(BIisClosed,2)
 
   Object *obj = (Object *) tagged2Const(tobj);
 
+  if (obj->isLocked()) {
+    OZ_suspendOn(obj->attachThread());
+  }
+
   return OZ_unify(OZ_getCArg(1),
 		  obj->isClosed() ? NameTrue : NameFalse);
 }
