@@ -510,10 +510,10 @@ void marshalNoGood(TaggedRef term, MsgBuffer *bs)
 void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 {
   if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
-  trailCycle(o->getCycleRef(),bs);
   Assert(o->hasGName());
   marshalGName(o->hasGName(),bs);
   marshalGName(gnclass,bs);
+  trailCycle(o->getCycleRef(),bs);
 }
 
 /* *********************************************************************/
