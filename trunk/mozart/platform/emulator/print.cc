@@ -1376,217 +1376,40 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     CodeArea::printDef(pc);
   }
 
-  TaskStackEntry *p = getTop();
+  TaskStackEntry *auxtos = getTop();
 
-  while (!isEmpty() && depth-- > 0) {
-    TaggedPC topElem = ToInt32(pop());
-    ContFlag flag = getContFlag(topElem);
-    switch (flag){
-
-    case C_LOCK:
-      message("\tIn lock\n");
-      pop();
+  while (depth-- > 0) {
+    PopFrame(auxtos,PC,Y,G);
+    if (PC==C_EMPTY_STACK)
       break;
-
-    case C_CONT:
-      {
-        ProgramCounter PC = getPC(C_CONT,topElem);
-        RefsArray Y = (RefsArray) pop();
-        RefsArray G = (RefsArray) pop();
-        if (verbose) {
-          message("\tC_CONT: PC=0x%x, Y=0x%x, G=0x%x\n\t",
-                  PC, Y, G);
-        }
-        CodeArea::printDef(PC);
-      }
-      break;
-
-    case C_XCONT:
-      {
-        ProgramCounter PC = getPC(C_XCONT,topElem);
-        RefsArray Y = (RefsArray) pop();
-        RefsArray G = (RefsArray) pop();
-        RefsArray X = (RefsArray) pop();
-        if (verbose) {
-          message("\tC_XCONT: PC=0x%x, Y=0x%x, G=0x%x\n",
-                  PC, Y, G);
-          printX(stdout,X);
-        }
-        CodeArea::printDef(PC);
-        break;
-      }
-
-    case C_ACTOR:
-      {
-	AWActor *aa = (AWActor *) pop();
-	message("\tActor\n");
-        if (verbose)
-          message("\tActor @0x%x\n", aa);
-	break;
-      }
-
-    case C_CFUNC_CONT:
-      {
-        OZ_CFun biFun    = (OZ_CFun) pop();
-        RefsArray X      = (RefsArray) pop();
-        message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
-        for(int i=0; i<getRefsArraySize(X); i++) {
-          printf(" ");    
-          printf(toC(X[i]));
-        }
-        printf("}\n");
-        break;
-      }
-
-    case C_DEBUG_CONT:
-      {
-        OzDebug *deb = (OzDebug*) pop();
-        deb->printCall();
-        break;
-      }
-
-    case C_CALL_CONT:
-      {
-        TaggedRef pred = (TaggedRef) ToInt32(pop());
-        RefsArray X = (RefsArray) pop();
-        message("\tApplication of %s\n", toC(pred));
-        printX(stdout,X);
-        break;
-      }
-
-    case C_CATCH:
-      message("\tCatch\n");
-      break;
-
-    case C_SET_SELF:
-      { 
-        pop();
-        if (verbose)
-          message("\tSET_SELF\n");
-        break;
-      }
-
-    case C_LTQ:
-      {
-        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-        message("\tLocal thread queue @0x%x\n", ltq);
-        if (verbose) {
-          ltq->print();
-        }
-        break;
-      }
-    default:
-      Assert(0);
-    } // switch
-  } // while
-
-  setTop(p);
+    if (verbose) {
+      message("\tC_CONT: PC=0x%x, Y=0x%x, G=0x%x\n\t",
+	      PC, Y, G);
+    }
+    CodeArea::printDef(PC);
+  }
 }
 
 TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 {
-  TaggedRef out = nil();
-
   Assert(this);
-  if (pc == NOCODE && isEmpty()) {
-    return out;
-  }
+
+  TaggedRef out = nil();
 
   if (pc != NOCODE) {
     out = cons(CodeArea::dbgGetDef(pc),out);
   }
 
-  TaskStackEntry *p = getTop();
+  TaskStackEntry *auxtos = getTop();
 
-  while (!isEmpty() && depth-- > 0) {
-    TaggedPC topElem = ToInt32(pop());
-    ContFlag flag = getContFlag(topElem);
-    switch (flag){
-
-    case C_LOCK:
-      out = cons(OZ_atom("lock"),out);
-      pop();
+  while (depth-- > 0) {
+    PopFrame(auxtos,PC,Y,G);
+    if (PC==C_EMPTY_STACK)
       break;
 
-    case C_CONT:
-      {
-        ProgramCounter PC = getPC(C_CONT,topElem);
-        RefsArray Y = (RefsArray) pop();
-        RefsArray G = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
-      }
-      break;
+    out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
+  }
 
-    case C_XCONT:
-      {
-        ProgramCounter PC = getPC(C_XCONT,topElem);
-        RefsArray Y = (RefsArray) pop();
-        RefsArray G = (RefsArray) pop();
-        RefsArray X = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
-        break;
-      }
-
-    case C_ACTOR:
-      pop();
-      out = cons(OZ_atom("actor"),out);
-      break;
-
-    case C_CFUNC_CONT:
-      {
-        OZ_CFun biFun    = (OZ_CFun) pop();
-        RefsArray X      = (RefsArray) pop();
-        TaggedRef args = nil();
-        for(int i=getRefsArraySize(X)-1; i>=0; i--) {
-          args = cons(X[i],args);
-        }
-        out = cons(OZ_mkTupleC("builtin",2,
-                               OZ_atom(builtinTab.getName((void *) biFun)),
-                               OZ_toList(getRefsArraySize(X),X)),
-		   out);
-        break;
-      }
-
-    case C_DEBUG_CONT:
-      {
-        OzDebug *deb = (OzDebug*) pop();
-        out = cons(OZ_atom("debug"),out);
-        break;
-      }
-
-    case C_CALL_CONT:
-      {
-        TaggedRef pred = (TaggedRef) ToInt32(pop());
-        RefsArray X = (RefsArray) pop();
-        out = cons(OZ_mkTupleC("apply",2,pred,
-			       OZ_toList(getRefsArraySize(X),X)),
-		   out);
-        break;
-      }
-
-    case C_CATCH:
-      out = cons(OZ_atom("catch"),out);
-      break;
-
-    case C_SET_SELF:
-      { 
-        pop();
-        out = cons(OZ_atom("setSelf"),out);
-        break;
-      }
-
-    case C_LTQ:
-      {
-        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-        out = cons(OZ_atom("ltq"),out);
-        break;
-      }
-    default:
-      Assert(0);
-    } // switch
-  } // while
-
-  setTop(p);
   return reverseC(out);
 }
 

@@ -77,7 +77,7 @@ enum BoardFlags {
 
 
 class Board : public ConstTerm {
-friend void engine();
+friend void engine(Bool init);
 private:
   int flags;
   int suspCount;

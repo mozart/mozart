@@ -41,7 +41,7 @@ HashTable CodeArea::atomTab(HT_CHARKEY,10000);
 HashTable CodeArea::nameTab(HT_CHARKEY,1000);
 int CodeArea::totalSize = 0; /* in bytes */
 char **CodeArea::opToString = initOpToString();
-CodeAreaList *CodeArea::allBlocks = NULL;
+CodeArea *CodeArea::allBlocks = NULL;
 
 #ifdef THREADED
 void **CodeArea::globalInstrTable = NULL;
@@ -330,6 +330,16 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
     case CREATENAMEDVARIABLEX: 
     case CREATENAMEDVARIABLEY: 
     case CREATENAMEDVARIABLEG: 
+    case TASKXCONT:
+    case TASKCFUNCONT:
+    case TASKDEBUGCONT:
+    case TASKCALLCONT:
+    case TASKLOCK:
+    case TASKACTOR:
+    case TASKSETSELF:
+    case TASKLTQ:
+    case TASKCATCH:
+    case TASKEMPTYSTACK:
       return NOCODE;
 
     case DEFINITION:
@@ -432,6 +442,16 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEENUMOR:
     case CREATECHOICE:
     case POPEX:
+    case TASKXCONT:
+    case TASKCFUNCONT:
+    case TASKDEBUGCONT:
+    case TASKCALLCONT:
+    case TASKLOCK:
+    case TASKACTOR:
+    case TASKSETSELF:
+    case TASKLTQ:
+    case TASKCATCH:
+    case TASKEMPTYSTACK:
           /* Commands with no args.   */
       fprintf(ofile, "\n");       
       DISPATCH();
@@ -927,4 +947,42 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 }
 
 #undef DISPATCH
+
+ProgramCounter
+  C_XCONT_Ptr,
+  C_CFUNC_CONT_Ptr,
+  C_DEBUG_CONT_Ptr,
+  C_CALL_CONT_Ptr,
+  C_LOCK_Ptr,
+  C_ACTOR_Ptr,
+  C_SET_SELF_Ptr,
+  C_LTQ_Ptr,
+  C_CATCH_Ptr,
+  C_EMPTY_STACK;
+
+
+
+CodeArea::CodeArea(int sz)
+{
+  allocateBlock(sz);
+  C_XCONT_Ptr = wPtr;
+  C_CFUNC_CONT_Ptr = writeOpcode(TASKXCONT,C_XCONT_Ptr);
+  C_DEBUG_CONT_Ptr = writeOpcode(TASKCFUNCONT,C_CFUNC_CONT_Ptr);
+  C_CALL_CONT_Ptr  = writeOpcode(TASKDEBUGCONT,C_DEBUG_CONT_Ptr);
+  C_LOCK_Ptr       = writeOpcode(TASKCALLCONT,C_CALL_CONT_Ptr);
+  C_ACTOR_Ptr      = writeOpcode(TASKLOCK,C_LOCK_Ptr);
+  C_SET_SELF_Ptr   = writeOpcode(TASKACTOR,C_ACTOR_Ptr);
+  C_LTQ_Ptr        = writeOpcode(TASKSETSELF,C_SET_SELF_Ptr);
+  C_CATCH_Ptr      = writeOpcode(TASKLTQ,C_LTQ_Ptr);
+  C_EMPTY_STACK    = writeOpcode(TASKCATCH,C_CATCH_Ptr);
+  (void) writeOpcode(TASKEMPTYSTACK,C_EMPTY_STACK);
+}
+
+void CodeArea::init(void **instrTable)
+{
+#ifdef THREADED
+  globalInstrTable = instrTable;
+#endif
+  new CodeArea(20);
+}
 
