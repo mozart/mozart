@@ -161,7 +161,7 @@
 	    <grammar.alt or/<code/?{X} = ?={boolean}//
 	    <grammar.alt or/<code/{NewName ?{X}}//
 	    <grammar.alt or/<code/?{X} = ?{Y}//
-	    <grammar.alt or/<code/local ?{X1} ... ?{Xn} then ?{S1} end//
+	    <grammar.alt or/<code/local ?{X1} ... ?{Xn} in ?{S1} end//
 	    <grammar.alt or/<code/proc {?{X} ?{Y1} ... ?{Yn}} ?{S1} end//
 	    <grammar.alt or/<code/{X ?{Y1} ... ?{Yn}}//
 	    <grammar.alt or/<code/{NewCell Y X}//

@@ -114,10 +114,6 @@ given as argument. This functor is defined for its effect, therefore
 it does not export any interface. When this functor is linked
 the statement between <<define ... end>> is executed.
  
-<P CLASS=WARNING>You can investigate the system modules accompanying 
-the system in the EMACS OZ menu. Click on the entry Find, and select
-Modules File.
-
 <P CLASS=WARNING>Given 
 a file <<'x.oz'>> defining a functor, you may
 create the corresponding functor <<'x.ozf'>> from
