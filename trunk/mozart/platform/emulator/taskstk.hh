@@ -78,22 +78,11 @@ public:
   void dispose () { deallocate(array,getMaxSize()); }
   virtual void resize(int newSize);
 
-  OZPRINT;
-  OZPRINTLONG;
-
   void printDebug(ProgramCounter pc, Bool verbose, int depth = 10000);
   
-  void checkNode (Board *n)
-  {
-    Assert(n != NULL);
-  }
-
-  Bool isEmpty(TaskStackEntry t)
-  {
-    return (t == emptyTaskStackEntry);
-  }
-
-  Bool isEmpty() { return isEmpty(*(tos-1)); }
+  void checkNode (Board *n)      { Assert(n != NULL); }
+  Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
+  Bool isEmpty()                 { return isEmpty(*(tos-1)); }
 
   void makeEmpty()
   {
