@@ -762,7 +762,9 @@ define
 		  i(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       [] env then HTML in
 		  HTML = code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
-		  if @AutoIndex then Kind HTML1 HTML2 in
+		  if @AutoIndex andthen {Not {SGML.isOfClass M noindex}} then
+		     Kind HTML1 HTML2
+		  in
 		     Kind = 'environment variable'
 		     OzDocToHTML, Index(M [PCDATA(Kind) HTML] ?HTML1)
 		     OzDocToHTML, Index(M [SEQ([HTML PCDATA(' '#Kind)])]
@@ -833,8 +835,15 @@ define
 		  SEQ([HTML1 HTML])
 	       else HTML
 	       end
-	    [] def then
-	       em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    [] def then HTML in
+	       HTML = em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	       if @AutoIndex andthen {Not {SGML.isOfClass M noindex}} then
+		  HTML1
+	       in
+		  OzDocToHTML, Index(M [HTML] ?HTML1)
+		  SEQ([HTML1 HTML])
+	       else HTML
+	       end
 	    %-----------------------------------------------------------
 	    % Figure
 	    %-----------------------------------------------------------
