@@ -255,7 +255,7 @@ install-cache: \
 $(CACHEDIR):
 	$(INSTALL_DIR) $(CACHEDIR)
 	-rm -rf $(CACHEDIR)
-	$(LN_S) $(PREFIX) $(CACHEDIR)
+	$(LN_S) ../../.. $(CACHEDIR)
 
 #---------------------------------------------------------------------
 # Cleaning up
