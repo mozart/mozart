@@ -5,7 +5,6 @@ Makefile.vars
 conf.h
 scancode.cc instrtab.hh  opcodes.hh optostr.hh register.hh
 opcodes.cc
-marshallcode.cc
 scanner.cc parser.cc parser.hh
 ozlib.lnk
 oz.c
