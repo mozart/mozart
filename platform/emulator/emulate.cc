@@ -27,6 +27,49 @@
 
 
 /*
+ * Inline caching
+ */
+
+class RecordCache {
+  Arity *ar;
+  int index;
+
+public:
+  int lookup(SRecord *rec, TaggedRef feature)
+  {
+    if (ar!=rec->getArity()) {
+      ar = rec->getArity();
+      index = rec->getIndex(feature); // is ok even if index==-1 !
+    }
+    return index;
+  }
+};
+
+int xCalled = 0;
+int xMiss = 0;
+
+class MethodCache {
+  ObjectClass *cl;
+  Abstraction *abstr;
+
+public:
+  Abstraction *lookup(Object *obj, TaggedRef meth, int arity)
+  {
+    // xCalled++;
+
+    ObjectClass *cla = obj->getClass();
+    if (cla==cl)
+      return abstr;  /* cache hit */
+
+    // xMiss++;
+    cl    = cla;
+    abstr = obj->getMethod(meth,arity);  /* is ok even if we find no method */
+    return abstr;
+  }
+};
+
+
+/*
  * Object stuff
  */
 
@@ -34,67 +77,28 @@ extern TaggedRef methApplHdl;
 
 #define StateLocked ((Abstraction*) -1l)
 
-Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, TaggedRef *X)
+inline
+Abstraction *getSendMethod(Object *obj, TaggedRef label, int arity, MethodCache *cache)
 {
   Assert(isFeature(label));
 
-  SRecord *methods  = obj->getMethods();
-
-  if (obj->isClosed() || obj->isClass()) {
-    return NULL;
+  if (obj->isClosedOrClassOrDeepOrLocked()) {
+    /* send to object in guard */
+    if (obj->getDeepness()!=0 || obj->isClosed() || obj->isClass() ||
+        am.currentBoard != obj->getBoardFast())
+      return NULL;
   }
 
-  /* send to object in guard */
-  if (am.currentBoard != obj->getBoardFast()) {
-    return NULL;
-  }
+  Assert(obj->getDeepness()==0 && !obj->isClosed() && !obj->isClass());
 
-  if (obj->deepness>0)
-    return StateLocked;
-
-  TaggedRef method = methods ? methods->getFeature(label)
-                             : makeTaggedNULL();
-  if (method == makeTaggedNULL())
-    return NULL;
-
-  Assert(!isRef(method) && isAbstraction(method));
-
-  Abstraction *abstr = (Abstraction*) tagged2Const(method);
-  if (abstr->getArity() != arity+3) {
-    return NULL;
-  }
-
-  TaggedRef state    = makeInt(4712);
-  TaggedRef newState = makeInt(4712);
-
-  X[0] = state;
-  X[1] = makeTaggedConst(obj);
-  X[2] = newState;
-  return abstr;
+  return cache->lookup(obj,label,arity);
 }
 
-
-Abstraction *getApplyMethod(Object *obj, TaggedRef label, int arity, TaggedRef state)
+inline
+Abstraction *getApplyMethod(Object *obj, TaggedRef label, int arity)
 {
   Assert(isFeature(label));
-
-  DEREF(state,_1,_2);
-  if (isAnyVar(state))
-    return NULL;
-
-  SRecord *methods  = obj->getMethods();
-  TaggedRef method = methods ? methods->getFeature(label)
-                             : makeTaggedNULL();
-  if (method == makeTaggedNULL())
-    return NULL;
-
-  Assert(!isRef(method) && isAbstraction(method));
-
-  Abstraction *abstr = (Abstraction*) tagged2Const(method);
-  if (abstr->getArity() != arity)
-    return NULL;
-
-  return abstr;
+  return obj->getMethod(label,arity);
 }
 
 // -----------------------------------------------------------------------
@@ -291,7 +295,7 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
         NULL == (abstr = getApplyMethod((Object *) tagged2Const(pred),
-                                        gci->lit,arity,X[0]))) {
+                                        gci->lit,arity))) {
       ApplMethInfoClass *ami = new ApplMethInfoClass(gci->lit,arity);
       CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
       CodeArea::writeAddress(ami, PC+1);
@@ -391,6 +395,7 @@ Bool AM::hookCheckNeeded()
  * we have to save as cont address Pred->getPC() and NOT PC
  */
 #define CallDoChecks(Pred,gRegs,Arity)                          \
+     Y = NULL;                                                  \
      G = gRegs;                                                 \
      if (emulateHookCall(e,Pred,Arity,X)) {                     \
         e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);       \
@@ -634,17 +639,17 @@ void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C)
 
 
 static
-TaggedRef makeMethod(int arity, TaggedRef label, TaggedRef *X)
+TaggedRef makeMessage(int arity, TaggedRef label, TaggedRef *X)
 {
   if (arity == 0) {
     return label;
   } else {
     if (arity == 2 && sameLiteral(label,AtomCons)) {
-      return makeTaggedLTuple(new LTuple(X[3],X[4]));
+      return makeTaggedLTuple(new LTuple(X[0],X[1]));
     } else {
       OZ_Term tt = OZ_tuple(label,arity);
       for (int i = arity-1;i >= 0; i--) {
-        OZ_putArg(tt,i+1,X[i+3]);
+        OZ_putArg(tt,i+1,X[i]);
       }
       return tt;
     }
@@ -1970,11 +1975,8 @@ LBLsuspendThread:
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
-      CallDoChecks(entry->getAbstr(),entry->getGRegs(),
-                   entry->getAbstr()->getArity());
+      CallDoChecks(entry->getAbstr(),entry->getGRegs(), entry->getAbstr()->getArity());
 
-      Y = NULL; // allocateL(0);
-      // set pc
       IHashTable *table = entry->indexTable;
       if (table) {
         DoSwitchOnTerm(X[0],table);
@@ -2188,18 +2190,11 @@ LBLsuspendThread:
       DEREF(rec,_1,_2);
       if (isSRecord(rec)) {
         SRecord *srec = tagged2SRecord(rec);
-        Arity *ar = srec->getArity();
-        if (ar==getAdressArg(PC+5)) {
-          XPC(3)=srec->getArg(getPosIntArg(PC+6));
-        } else {
-          int i = srec->getIndex(feature);
-          if (i<0) {
-            goto dotFailed;
-          }
-          XPC(3) = srec->getArg(i);
-          CodeArea::writeAddress(ar, PC+5);
-          CodeArea::writeInt(i, PC+6);
+        int index = ((RecordCache*)(PC+5))->lookup(srec,feature);
+        if (index<0) {
+          goto dotFailed;
         }
+        XPC(3) = srec->getArg(index);
         DISPATCH(7);
       }
       {
@@ -2238,6 +2233,39 @@ LBLsuspendThread:
                               OZ_CToAtom("`.`"),XPC(1),feature,AtomVoid)));
     }
 
+  Case(INLINEAT)
+    {
+      TaggedRef fea = getLiteralArg(PC+1);
+
+      SRecord *rec = e->getCurrentObject()->getState();
+      if (rec) {
+        int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
+        if (index>=0) {
+          XPC(2) = rec->getArg(index);
+          DISPATCH(6);
+        }
+      }
+      RAISE_BI(OZ_mkTupleC("proc",4,
+                           OZ_CToAtom("`@`"),makeTaggedSRecord(rec),fea,AtomVoid));
+    }
+
+  Case(INLINEASSIGN)
+    {
+      TaggedRef fea = getLiteralArg(PC+1);
+
+      SRecord *rec = e->getCurrentObject()->getState();
+      if (rec) {
+        int index = ((RecordCache*)(PC+4))->lookup(rec,fea);
+        if (index>=0) {
+          Assert(isRef(*rec->getRef(index)) || !isAnyVar(*rec->getRef(index)));
+          rec->setArg(index,XPC(2));
+          DISPATCH(6);
+        }
+      }
+
+      RAISE_BI(OZ_mkTupleC("proc",4,
+                           OZ_CToAtom("`<-`"),makeTaggedSRecord(rec),fea,XPC(2)));
+    }
 
   Case(INLINEUPARROW)
     {
@@ -2592,47 +2620,42 @@ LBLsuspendThread:
 
     /* compiler ensures: if object is in X[n], then n == arity+1,
      * so in case we have to suspend we save one additional argument */
-    Assert(HelpReg!=X || arity+3+1-1==regToInt(getRegArg(PC+2)));
+    Assert(HelpReg!=X || arity==regToInt(getRegArg(PC+2)));
 
     DEREF(object,objectPtr,_2);
     if (!isObject(object)) {
       if (isAnyVar(object)) {
-        SUSP_PC(objectPtr,arity+3+1,PC);
+        SUSP_PC(objectPtr,arity+1,PC);
       }
 
       if (isProcedure(object))
         goto bombSend;
 
-
       DORAISE(OZ_mkTupleC("applyFailure",1,
                       OZ_mkTupleC("proc",2,object,
-                              makeMethod(arity,label,X))));
+                              makeMessage(arity,label,X))));
     }
 
     {
-      Object *obj       = (Object *) tagged2Const(object);
-      Abstraction *def = getSendMethod(obj,label,arity,X);
-      if (def == StateLocked) {
-        goto bombSend;
-      }
+      Object *obj      = (Object *) tagged2Const(object);
+      Abstraction *def = getSendMethod(obj,label,arity,(MethodCache*)(PC+4));
       if (def == NULL) {
         goto bombSend;
       }
 
       if (!isTailCall) {
-        CallPushCont(PC+4);
+        CallPushCont(PC+6);
       }
       SaveCurObject(e,obj);
-      Assert(obj->deepness==0);
-      obj->deepness = 1;
-      CallDoChecks(def,def->getGRegs(),arity+3);
-      Y = NULL; // allocateL(0);
+      Assert(obj->getDeepness()==0);
+      obj->incDeepness();
+      CallDoChecks(def,def->getGRegs(),arity);
       JUMP(def->getPC());
     }
 
   bombSend:
-    PC = isTailCall ? PC : PC+4;
-    X[0] = makeMethod(arity,label,X);
+    PC = isTailCall ? PC : PC+6;
+    X[0] = makeMessage(arity,label,X);
     predArity = 1;
     predicate = tagged2Const(object);
     goto LBLcall;
@@ -2662,14 +2685,13 @@ LBLsuspendThread:
     if (!isObject(object)) {
       goto bombApply;
     }
-    def = getApplyMethod((Object *) tagged2Const(object),label,arity-3+3,X[0]);
+    def = getApplyMethod((Object *) tagged2Const(object),label,arity);
     if (def==NULL) {
       goto bombApply;
     }
 
     if (!isTailCall) { CallPushCont(PC); }
     CallDoChecks(def,def->getGRegs(),arity);
-    Y = NULL; // allocateL(0);
     JUMP(def->getPC());
 
 
@@ -2678,14 +2700,10 @@ LBLsuspendThread:
       error("no apply handler");
     }
 
-    TaggedRef method = makeMethod(arity-3,label,X);
-    X[4] = X[2];   // outState
-    X[3] = X[1];   // ooSelf
-    X[2] = method;
-    X[1] = X[0];   // inState
+    X[1] = makeMessage(arity,label,X);
     X[0] = origObject;
 
-    predArity = 5;
+    predArity = 2;
     predicate = tagged2Const(methApplHdl);
     goto LBLcall;
   }
@@ -2741,7 +2759,7 @@ LBLsuspendThread:
          {
            Abstraction *def;
            if (typ==Co_Object) {
-             /* {Obj Msg} --> {Obj Msg Methods Self} */
+             /* {Obj Msg} --> {Obj Msg Methods} */
              Object *o = (Object*) predicate;
              if (o->isClass()) {
                DORAISE(OZ_mkTupleC("applyFailure",1,
@@ -2751,20 +2769,18 @@ LBLsuspendThread:
              CheckArity(1,o->getPrintName());
              def = o->getAbstraction();
              X[predArity++] = o->getSlowMethods();
-             X[predArity++] = makeTaggedConst(predicate);
+             X[predArity++] = makeTaggedConst(o);
              if (!isTailCall) {
                CallPushCont(PC);
              }
              SaveCurObject(e,o);
-             // o->deepness = 1;
+             // o->deepness handelt by 'objectIsFree'
            } else {
              def = (Abstraction *) predicate;
              CheckArity(def->getArity(), def->getPrintName());
              if (!isTailCall) { CallPushCont(PC); }
            }
            CallDoChecks(def,def->getGRegs(),def->getArity());
-           Y = NULL; // allocateL(0);
-
            JUMP(def->getPC());
          }
 
@@ -3406,14 +3422,11 @@ LBLsuspendThread:
   Case(SETMODETODEEP)
     {
       Object *o = e->getCurrentObject();
-      o->deepness++;
+      o->incDeepness();
       // am.currentThread->pushSetModeTop();
       // am.currentThread->pushSetCurObject(am.getCurrentObject());
       DISPATCH(2);
     }
-
-  Case(INLINEAT)
-  Case(INLINEASSIGN)
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)

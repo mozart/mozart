@@ -1383,29 +1383,8 @@ DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 #define CheckCurObj                             \
      Assert(am.getCurrentObject() != NULL);     \
      { Object *o = am.getCurrentObject();       \
-       Assert(1 || o->deepness>=1);             \
+       Assert(1 || o->getDeepness()>=1);        \
      }
-
-
-/* Sometimes the compiler optimizes {@ InState Attr Val OutState} to
- * {. InState Attr Val} iff InState=OutState
- * so atOptimizedInline essentially is the same as dotInline
- */
-State atOptimizedInline(TaggedRef fea, TaggedRef &out)
-{
-  Assert(!isRef(fea) && isFeature(fea));
-  CheckCurObj;
-  SRecord *rec = am.getCurrentObject()->getState();
-  if (rec) {
-    TaggedRef t = rec->getFeature(fea);
-    if (t) {
-      out = t;
-      return PROCEED;
-    }
-  }
-  TypeError2("@ (optimized)",1,"Feature (and the name of a field)",makeTaggedSRecord(rec),fea);
-}
-DECLAREBI_USEINLINEFUN1(BIatOptimized,atOptimizedInline)
 
 
 State atInline(TaggedRef fea, TaggedRef &out)
@@ -2683,27 +2662,6 @@ void assignError(TaggedRef rec, TaggedRef fea, char *name)
   message("attribute found  : %s\n", OZ_toC(fea));
   message("state found      : %s\n", OZ_toC(rec));
 }
-
-
-State assignOptimizedInline(TaggedRef fea, TaggedRef value)
-{
-  Assert(!isRef(fea) && isFeature(fea));
-
-  SRecord *r = am.getCurrentObject()->getState();
-  if (r) {
-    CheckCurObj;
-    if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
-      goto bomb;
-    }
-    return PROCEED;
-  }
-
- bomb:
-  assignError(makeTaggedSRecord(r),fea,"<- (optimized)");
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEREL2(BIassignOptimized,assignOptimizedInline)
 
 
 State assignInline(TaggedRef fea, TaggedRef value)
@@ -5472,24 +5430,6 @@ State getClassInline(TaggedRef t, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIgetClass,getClassInline)
 
 
-OZ_C_proc_begin(BImethApply,5)
-{
-  return SUSPEND;
-}
-OZ_C_proc_end
-
-
-State BIisClosedInline(TaggedRef obj,OZ_Term &out)
-{
-  DEREF(obj,objPtr,_2);
-  if (isAnyVar(obj)) return SUSPEND;
-  if (!isObject(obj)) return FAILED;
-  Object *oo = (Object *)tagged2Const(obj);
-  out = oo->isClosed() ? NameTrue : NameFalse;
-  return PROCEED;
-}
-DECLAREBI_USEINLINEFUN1(BIisClosed,BIisClosedInline)
-
 OZ_C_proc_begin(BIsetClosed,1)
 {
   OZ_Term obj=OZ_getCArg(0);
@@ -5505,48 +5445,38 @@ OZ_C_proc_begin(BIsetClosed,1)
 OZ_C_proc_end
 
 
-State exchangeObjectInline(TaggedRef tobj, TaggedRef instate, TaggedRef &outstate)
+State objectIsFreeInline(TaggedRef tobj, TaggedRef &out)
 {
   DEREF(tobj,_1,_2);
-
   Assert(isObject(tobj));
 
   Object *obj = (Object *) tagged2Const(tobj);
 
   if (am.currentBoard != obj->getBoardFast()) {
-    warning("exchangeObjectCell(%s): in local computation space not allowed",
+    warning("object application(%s): in local computation space not allowed",
             OZ_toC(tobj));
     am.currentBoard->incSuspCount();
     am.currentThread->printTaskStack(NOCODE);
     return FAILED;
   }
 
-#ifdef RS
-!!!!!!!!!!!!
-  TaggedRef oldval = obj->getCell();
-  if (!obj->isClosed()) {
-    outstate = makeTaggedRef(newTaggedUVar(am.currentBoard));
-    obj->setCell(outstate);
-  }
-#endif
-
-  TaggedRef oldval;
-  outstate = makeInt(4712);
-  if (obj->deepness>=1) {
-    oldval = obj->attachThread();
+  if (obj->isClosed()) {
+    out = NameTrue;
+  } else if (obj->getDeepness()>=1) {
+    out = obj->attachThread();
   } else {
-    oldval = outstate;
-    obj->deepness++;
+    obj->incDeepness();
+    out = NameFalse;
   }
-  return am.fastUnify(instate,oldval,OK) ? PROCEED : FAILED;
+  return PROCEED;
 }
 
-DECLAREBI_USEINLINEFUN2(BIexchangeObject,exchangeObjectInline)
+DECLAREBI_USEINLINEFUN1(BIobjectIsFree,objectIsFreeInline)
 
 
 
 /* is sometimes explicitely called within Object.oz */
-OZ_C_proc_begin(BIreleaseObject,2)
+OZ_C_proc_begin(BIreleaseObject,0)
 {
   am.getCurrentObject()->release();
   return PROCEED;
@@ -5554,13 +5484,34 @@ OZ_C_proc_begin(BIreleaseObject,2)
 OZ_C_proc_end
 
 
-State getSelfInline(TaggedRef in, TaggedRef &out)
+OZ_C_proc_begin(BIgetSelf,1)
 {
-  Assert(0);
+  return OZ_unify(makeTaggedConst(am.getCurrentObject()),
+                  OZ_getCArg(0));
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIsetSelf,1)
+{
+  TaggedRef o = OZ_getCArg(0);
+  DEREF(o,_1,_2);
+  if (!isObject(o)) {
+    OZ_warning("setSelf(%s): object expected",OZ_toC(OZ_getCArg(0)));
+    return FAILED;
+  }
+
+  Object *obj = (Object *) tagged2Const(o);
+  /* same code as in emulate.cc !!!!! */
+  if (am.getCurrentObject()!=obj) {
+    am.currentThread->pushSetCurObject(am.getCurrentObject());
+    am.setCurrentObject(obj);
+  }
+
   return PROCEED;
 }
+OZ_C_proc_end
 
-DECLAREBI_USEINLINEFUN1(BIgetSelf,getSelfInline)
 
 OZ_C_proc_begin(BIsetModeToDeep,0)
 {
@@ -5728,9 +5679,7 @@ BIspec allSpec[] = {
   {"makeRecord",      3,BImakeRecord,      NO, 0},
   {"arity",           2,BIarity,           NO, (IFOR) BIarityInline},
   {"adjoinAt",        4,BIadjoinAt,        NO, 0},
-  {"@ (optimized)",   2,BIatOptimized,     NO, (IFOR) atOptimizedInline},
   {"@",               2,BIat,              NO, (IFOR) atInline},
-  {"<- (optimized)",  2,BIassignOptimized, NO, (IFOR) assignOptimizedInline},
   {"<-",              2,BIassign,          NO, (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,      NO, 0},
   {"/",  3,BIfdiv,   NO, (IFOR) BIfdivInline},
@@ -5896,16 +5845,15 @@ BIspec allSpec[] = {
   {"cloneObjectRecord",4,BIcloneObjectRecord,  NO,0},
   {"setModeToDeep",    0,BIsetModeToDeep,  NO,0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     NO,0},
-  {"<<>>",             5,BImethApply,          NO,0},
   {"getClass",         2,BIgetClass,           NO,(IFOR) getClassInline},
   {"hasFastBatch",     1,BIhasFastBatch,       NO,(IFOR) hasFastBatchInline},
-  {"exchangeObject",   3,BIexchangeObject,     NO,(IFOR) exchangeObjectInline},
-  {"releaseObject",    2,BIreleaseObject,      NO,0},
-  {"getSelf",          2,BIgetSelf,            NO,(IFOR) getSelfInline},
+  {"objectIsFree",     2,BIobjectIsFree,       NO,(IFOR) objectIsFreeInline},
+  {"releaseObject",    0,BIreleaseObject,      NO,0},
+  {"getSelf",          1,BIgetSelf,            NO,0},
+  {"setSelf",          1,BIsetSelf,            NO,0},
   {"Object.is",        2,BIisObjectB,          NO,(IFOR) BIisObjectBInline},
   {"isClass",          1,BIisClass,            NO,(IFOR) BIisClassInline},
   {"isClassB",         2,BIisClassB,           NO,(IFOR) BIisClassBInline},
-  {"isClosed",         2,BIisClosed,           NO,(IFOR) BIisClosedInline},
   {"setClosed",        1,BIsetClosed,          NO,0},
 
   {0,0,0,0,0}

@@ -166,30 +166,33 @@ TaggedRef Object::getArityList()
 }
 
 
-void Object::wakeThreads()
-{
-  if (isNil(threads)) {
-    deepness = 0;
-    return;
-  }
-
-  deepness = 1;
-
-  TaggedRef var = head(threads);
-  if (OZ_unify(var,makeInt(4712))==FAILED) {
-    warning("Object::wakeThreads: unify failed");
-  }
-  threads = tail(threads);
-}
-
 TaggedRef Object::attachThread()
 {
+  Assert(!isClosed());
   TaggedRef *aux = &threads;
   while(!isNil(*aux)) {
     aux = tagged2LTuple(*aux)->getRefTail();
   }
   *aux = cons(makeTaggedUVar(am.currentBoard),nil());
   return head(*aux);
+}
+
+Abstraction *Object::getMethod(TaggedRef label, int arity)
+{
+  SRecord *methods = getMethods();
+  TaggedRef method = methods ? methods->getFeature(label)
+                             : makeTaggedNULL();
+  if (method == makeTaggedNULL())
+    return NULL;
+
+  Assert(!isRef(method) && isAbstraction(method));
+
+  Abstraction *abstr = (Abstraction*) tagged2Const(method);
+  if (abstr->getArity() != arity) {
+    return NULL;
+  }
+
+  return abstr;
 }
 
 /*===================================================================
