@@ -16,6 +16,10 @@
 #pragma interface
 #endif
 
+#if defined(OUTLINE) || defined(FDOUTLINE)
+#define inline
+#endif
+
 #include "genvar.hh"
 #include "fdomn.hh"
 #include "fdhook.hh"
@@ -28,7 +32,7 @@
 class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
-friend void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
+friend inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
   
 private:
   FiniteDomain finiteDomain;
@@ -74,13 +78,15 @@ public:
   }
 };
 
-Bool isGenFDVar(TaggedRef term);
-Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
-GenFDVariable * tagged2GenFDVar(TaggedRef term);
-void addSuspFDVar(TaggedRef, SuspList *, FDPropState = fd_any);
+inline Bool isGenFDVar(TaggedRef term);
+inline Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
+inline GenFDVariable * tagged2GenFDVar(TaggedRef term);
+inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState = fd_any);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"
+#else
+#undef inline
 #endif
 
 #endif
