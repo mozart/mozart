@@ -36,8 +36,7 @@ import
 	    qTkClass:           QTkClass
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    redirector:         Redirector)
+	    globalUngetType:    GlobalUngetType)
 
 export
    Register
@@ -142,7 +141,7 @@ define
 			     else
 				NC={self.toplevel.Builder
 				    MapLabelToObject({Record.adjoinAt V parent self} $)}
-				Children<-NC.Redirector|@Children
+				Children<-NC|@Children
 			     end
 			     if {IsFree NC} then {Exception.raiseError qtk(badParameter V self.widgetType M)} end
 			     NC

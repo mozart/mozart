@@ -23,12 +23,24 @@
 %  the Université catholique de Louvain.
 
 
+%declare
+%
+%T={New Tk.toplevel tkInit}
+%C={New Tk.canvas tkInit(parent:T)}
+%
+%{Tk.send pack(C)}
+%
+%{Browse {C tkReturn(create(rectangle 10 10 100 100) $)}}
+%
+%{C tk(itemconfigure 1 fill:red)}
+
 functor
 
 import
    Tk
    QTkDevel(splitParams:        SplitParams
 	    tkInit:             TkInit
+	    lastInt:            LastInt
 	    init:               Init
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
@@ -38,8 +50,7 @@ import
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
-	    globalUngetType:    GlobalUngetType
-	    redirector:         Redirector)
+	    globalUngetType:    GlobalUngetType)
    
 export
    Register
@@ -48,7 +59,203 @@ define
 
    WidgetType=canvas
    Feature=scroll
+   Bind={NewName}
+   This={NewName}
 
+   class Noop end
+   
+   fun{NewTagOrId From Parent}
+      %% FromClass is either Tk.canvasTag
+      %% or a number
+      FromClass=if {Int.is From} then Noop else From end
+      class TagOrId
+	 from FromClass QTkClass
+	 feat
+	    cvtType:r(extent:natural
+		      fill:colortrans
+		      outline:color
+		      outlinestipple:bitmap
+		      start:natural
+		      stipple:bitmap
+		      style:atom
+		      width:natural
+		      anchor:nswe
+		      background:color
+		      bitmap:bitmap
+		      foreground:color
+		      image:image
+		      arrow:atom
+		      arrowshape:listInt
+		      capstyle:atom
+		      joinstyle:atom
+		      smooth:boolean
+		      splinesteps:natural
+		      justify:atom
+		      text:vs
+		      height:natural)
+	    widgetType:canvasTag
+	    !This
+	 meth !Init(...)=M
+	    lock
+	       QTkClass,M
+	       if {Int.is From} then
+		  self.This=From
+	       else
+		  self.This=self
+		  Tk.canvasTag,{Record.adjoin M tkInit}
+	       end
+	    end
+	 end
+	 meth set(...)=M
+	    lock
+	       if {Record.someInd M
+		   fun{$ I _}
+		      {Int.is I}
+		   end}
+	       then
+		  {Exception.raiseError qtk(badParameter 1 canvasTag M)}
+	       else
+		  {ExecTk Parent {Record.adjoin M itemconfigure(self.This)}}
+	       end
+	    end
+	 end
+	 meth get(...)=M
+	    lock
+	       {Record.forAllInd M
+		proc{$ I R}
+		   if {HasFeature self.cvtType I} then
+		      R={ReturnTk Parent itemcget(self.This "-"#I $) self.cvtType.I}
+		   elseif I==blackbox then
+		      QTkCanvas,get(I:R)
+		   else
+		      {Exception.raiseError qtk(ungettableParameter I canvasTag M)}
+		   end
+		end}
+	    end
+	 end
+	 meth TExecTk(M)
+	    Lb={Label M}
+	 in
+	    if Lb==M then
+	       {ExecTk Parent b([Lb self.This])}
+	    else
+	       {ExecTk Parent b([Lb self.This d(M)])}
+	    end
+	 end
+	 meth TReturnTk(M Type)
+	    L={LastInt M}
+	    Lb={Label M}
+	    R={Record.subtract M L}
+	 in
+	    if R==Lb then
+	       {ReturnTk Parent o(Lb self.This M.L) Type}
+	    else
+	       {ReturnTk Parent o(Lb self.This d({Record.subtract M L}) M.L) Type}
+	    end
+	 end
+	 meth TMapExecTk(M)
+	    {self TExecTk({Record.map M
+			   fun{$ P}
+			      if {IsDet P} andthen {HasFeature P This} then P.This else P end
+			   end})}
+	 end
+	 meth TMapReturnTk(M Type)
+	    {self TReturnTk({Record.map M
+			     fun{$ P}
+				if {IsDet P} andthen {HasFeature P This} then P.This else P end
+			     end} Type)}
+	 end
+	 meth addtag(...)=M
+	    lock
+	       {self TMapExecTk(M)}
+	    end
+	 end
+	 meth bbox(...)=M
+	    lock
+	       {self TMapReturnTk(M listInt)}
+	    end
+	 end
+	 meth bind(...)=M
+	    lock
+	       {Parent Bind(self.This M)}
+	    end
+	 end
+	 meth delete(...)=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end
+	 %% coords split in two to reflect whether we want to get or to set the coords
+	 meth getCoords(...)=M
+	    lock
+	       {self TReturnTk({Record.adjoin M coords} listFloat)}
+	    end
+	 end
+	 meth setCoords(...)=M
+	    lock
+	       {self TExecTk({Record.adjoin M coords})}
+	    end
+	 end
+	 meth dchars(...)=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end
+	 meth focus=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end
+	 meth blur
+	    lock
+	       {self TExecTk(focus('""'))}
+	    end
+	 end
+	 meth icursor(...)=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end
+	 meth index(...)=M
+	    lock
+	       {self TReturnTk(M int)}
+	    end
+	 end
+	 meth insert(...)=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end	    
+	 meth lower(...)=M
+	    lock
+	       {self TMapExecTk(M)}
+	    end
+	 end
+	 meth move(...)=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end
+	 meth 'raise'(...)=M
+	    lock
+	       {self TMapExecTk(M)}
+	    end
+	 end
+	 meth scale(...)=M
+	    lock
+	       {self TExecTk(M)}
+	    end
+	 end
+	 meth type(...)=M
+	    lock
+	       {self TReturnTk(M atom)}
+	    end
+	 end
+      end
+   in	    
+      {New TagOrId Init(parent:Parent)}
+   end
+   
    class QTkCanvas
 
       feat
@@ -103,7 +310,7 @@ define
 	 end
       end
 
-      meth Bind(What M)
+      meth !Bind(What M)
 	 if {HasFeature M event}==false then
 	    {Exception.raiseError qtk(missingParameter event canvas M)}
 	 else skip end
@@ -121,170 +328,7 @@ define
 	 
       meth newTag(Tag)
 	 lock
-	    Self=self
-	    fun{TAdd M}
-	       {List.toRecord
-		{Label M}
-		1#Tag|{List.map
-		       {Record.toListInd M}
-		       fun{$ R}
-			  case R of I#V then if {IsInt I} then I+1#V else I#V end end
-		       end}}
-	    end
-	    proc{TExecTk M}
-	       {ExecTk Self {TAdd M}}
-	    end
-	    proc{TReturnTk M Type}
-	       {ReturnTk Self {TAdd M} Type}
-	    end
-	    class CanvasTag
-	       from Tk.canvasTag QTkClass
-	       feat
-		  cvtType:r(extent:natural
-			    fill:colortrans
-			    outline:color
-			    outlinestipple:bitmap
-			    start:natural
-			    stipple:bitmap
-			    style:atom
-			    width:natural
-			    anchor:nswe
-			    background:color
-			    bitmap:bitmap
-			    foreground:color
-			    image:image
-			    arrow:atom
-			    arrowshape:listInt
-			    capstyle:atom
-			    joinstyle:atom
-			    smooth:boolean
-			    splinesteps:natural
-			    justify:atom
-			    text:vs
-			    height:natural)
-		  widgetType:canvasTag
-	       meth !Init(...)=M
-		  lock
-		     QTkClass,M
-		     Tk.canvasTag,{Record.adjoin M tkInit}
-		  end
-	       end
-	       meth set(...)=M
-		  lock
-		     if {Record.someInd M
-			 fun{$ I _}
-			    {Int.is I}
-			 end}
-		     then
-			{Exception.raiseError qtk(badParameter 1 canvasTag M)}
-		     else
-			{ExecTk Self{Record.adjoin M itemconfigure(self)}}
-		     end
-		  end
-	       end
-	       meth get(...)=M
-		  lock
-		     {Record.forAllInd M
-		      proc{$ I R}
-			 if {HasFeature self.cvtType I} then
-			    R={ReturnTk Self itemcget(self "-"#I $) self.cvtType.I}
-			 elseif I==blackbox then
-			    QTkCanvas,get(I:R)
-			 else
-			    {Exception.raiseError qtk(ungettableParameter I canvasTag M)}
-			 end
-		      end}
-		  end
-	       end
-	       meth addtag(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth bbox(...)=M
-		  lock
-		     {TReturnTk M listInt}
-		  end
-	       end
-	       meth bind(...)=M
-		  lock
-		     {Self Bind(self M)}
-		  end
-	       end
-	       meth delete(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       %% coords split in two to reflect whether we want to get or to set the coords
-	       meth getCoords(...)=M
-		  lock
-		     {TReturnTk {Record.adjoin M coords} listFloat}
-		  end
-	       end
-	       meth setCoords(...)=M
-		  lock
-		     {TExecTk {Record.adjoin M coords}}
-		  end
-	       end
-	       meth dchars(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth focus=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth blur
-		  lock
-		     {TExecTk focus('""')}
-		  end
-	       end
-	       meth icursor(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth index(...)=M
-		  lock
-		     {TReturnTk M int}
-		  end
-	       end
-	       meth insert(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end	    
-	       meth lower(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth move(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth 'raise'(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth scale(...)=M
-		  lock
-		     {TExecTk M}
-		  end
-	       end
-	       meth type(...)=M
-		  lock
-		     {TReturnTk M atom}
-		  end
-	       end
-	    end
-	 in	    
-	    Tag={New CanvasTag Init(parent:self)}.Redirector
+	    Tag={NewTagOrId Tk.canvasTag self}
 	 end
       end
       
@@ -304,14 +348,23 @@ define
 
       meth create(...)=M
 	 lock
-%	    {Show create#M}
-	    if {HasFeature M 1} andthen M.1==window andthen
-	       {HasFeature M 2} andthen {HasFeature M 3} andthen
-	       {HasFeature M window} then
-	       %% window creation is a bit different
-	       {ExecTk self {Record.adjoinAt M window {self.toplevel.Builder MapLabelToObject({Record.adjoinAt M.window parent self} $)}}}
+	    Mx=if {HasFeature M 1} andthen M.1==window andthen
+		  {HasFeature M 2} andthen {HasFeature M 3} andthen
+		  {HasFeature M window} then
+		  %% window creation is a bit different
+		  {Record.adjoinAt M window {self.toplevel.Builder MapLabelToObject({Record.adjoinAt M.window parent self} $)}}
+	       else
+		  M
+	       end
+	 in
+	    if {HasFeature Mx handle} then
+	       N={LastInt Mx}
+	       H
+	       {ReturnTk self {Record.adjoinAt {Record.subtract Mx handle} N+1 H} int}
+	    in
+	       Mx.handle={NewTagOrId H self}
 	    else
-	       {ExecTk self M}
+	       {ExecTk self Mx}
 	    end
 	 end
       end

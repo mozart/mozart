@@ -23,8 +23,9 @@
 %  the Université catholique de Louvain.
 
 local
+   Init={NewName}
    class DialogBoxC
-      meth init skip end
+      meth !Init skip end
       meth Diag(cmd:_
 		defaultextension:_ <= _
 		filetypes:_        <= _
@@ -73,10 +74,17 @@ local
 		{Exception.raiseError qtk(typeError I dialogbox Err M)}
 	     end
 	  end}
-	 {ReturnTk unit {Record.adjoin M tk_chooseColor} color}
+	 try
+	    {ReturnTk unit {Record.adjoin M tk_chooseColor} color}
+	 catch _ then M.1=nil end
+      end
+      meth printcanvas(1:_ ...)=M
+	 R={PrintCanvas.getPSOptions {Record.subtract M 1}}
+      in
+	 M.1=if R=='' then nil else R end
       end
 	 
    end
 in
-   DialogBox={New DialogBoxC init}
+   DialogBox={New DialogBoxC Init}
 end
