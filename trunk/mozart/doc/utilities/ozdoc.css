@@ -16,12 +16,20 @@ P {
   text-align: justify;
 }
 
-P.MARGIN {
+P.margin {
   text-align: left;
+}
+
+H1.title {
+  text-align: center;
 }
 
 H1 {
   color: #9B0000;
+}
+
+H2.authors {
+  text-align: center;
 }
 
 H2 {
@@ -44,32 +52,32 @@ CODE {
   font-size: 12pt;
 }
 
-SPAN.COMMENT      { color: #B22222; }
-SPAN.KEYWORD      { color: #A020F0; }
-SPAN.STRING       { color: #BC8F8F; }
-SPAN.FUNCTIONNAME { color: #0000FF; }
-SPAN.TYPE         { color: #228B22; }
-SPAN.VARIABLENAME { color: #B8860B; }
-SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.comment      { color: #B22222; }
+SPAN.keyword      { color: #A020F0; }
+SPAN.string       { color: #BC8F8F; }
+SPAN.functionname { color: #0000FF; }
+SPAN.type         { color: #228B22; }
+SPAN.variablename { color: #B8860B; }
+SPAN.reference    { color: #5F9EA0; }
 
-.MARGIN {
+.margin {
   position: absolute;
   left: 10px;
   width: 130px;
 }
 
-A:LINK {
+A:link {
   color: #666666;
 }
 
-A:VISITED {
+A:visited {
   color: black;
 }
 
-.MARGIN A:LINK {
+.margin A:link {
   color: black;
 }
 
-.IGNORE {
+.ignore {
   display: none;
 }
