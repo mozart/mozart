@@ -103,6 +103,11 @@ define
        [] daVinci(unexpectedResponse) then
           error(kind: T
                 msg: 'unexpected response')
+       [] daVinci(parseError Msg VS Col) then
+          error(kind: 'DaVinci parse error'
+                msg: Msg
+                items: [hint(l: 'Output' m: VS)
+                        hint(l: 'Column' m: Col)])
        else
           error(kind: T
                 items: [line(oz(E))])

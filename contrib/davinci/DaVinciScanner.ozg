@@ -38,8 +38,13 @@ define
    \gumpscannerprefix daVinciAnswerToValueScannerClass
 
    scanner DaVinciAnswerToValueScannerClass from GumpScanner.'class'
+      attr Col
       meth init()
+         Col <- 0
          GumpScanner.'class', init()
+      end
+      meth getCol($)
+         @Col
       end
 
       lex charsequ = <[ _,0-9A-Za-z-]+> end
@@ -48,34 +53,38 @@ define
       lex charseqint = <[0-9]+> end
 
       lex <"("|")"|"["|"]"|","|\"|"[]"|"<"|">"|"|"> A in
+         Col <- @Col + GumpScanner.'class', getLength($)
          GumpScanner.'class', getAtom(A)
          GumpScanner.'class', putToken1(A)
       end
 
       lex <error|ok|node_selections_labels|communication_error|edge_selection_labels|node_double_click|edge_selection_label|edge_double_click|open_window|create_node|disconnect|close|quit|menu_selection|icon_selection|popup_selection_node|popup_selection_edge|context_id|context_window|close_window|tcl_answer|browser_answer|create_node_and_edge|create_edge|drop_node> A in
+         Col <- @Col + GumpScanner.'class', getLength($)
          GumpScanner.'class', getAtom(?A)
          GumpScanner.'class', putToken1(A)
       end
 
       lex <{charseqatom}> A in
+         Col <- @Col + GumpScanner.'class', getLength($)
          GumpScanner.'class', getAtom(A)
          GumpScanner.'class', putToken('charseqatom' A)
       end
 
       lex <{charseqint}> A in
+         Col <- @Col + GumpScanner.'class', getLength($)
          GumpScanner.'class', getAtom(A)
          GumpScanner.'class', putToken('charseqint' A)
       end
 
       lex <{charsequ}> A in
+         Col <- @Col + GumpScanner.'class', getLength($)
          GumpScanner.'class', getAtom(A)
          GumpScanner.'class', putToken('charsequ' A)
       end
 
       lex <.> A in
          GumpScanner.'class', getAtom(A)
-         {System.showInfo 'scanner error: unrecognized character:'#A#'.'}
-         GumpScanner.'class', putToken('error' 'error')
+         {Raise error('unrecognized character '#oz(A))}
       end
 
       lex <\n>
@@ -88,6 +97,10 @@ define
    end
 
    parser DaVinciAnswerToValueParserClass from GumpParser.'class'
+      meth error(V)
+         {Raise error(V)}
+      end
+
       token
          'charsequ' 'charseqatom' 'charseqint'
          '(' ')' '[' ']' ',' '"' '[]' '<' '>' '|'
@@ -186,7 +199,6 @@ define
    end
 
    fun {DaVinciAnswerToValue VS}
-      Status V
       DaVinciAnswerToValueScanner =
       {New DaVinciAnswerToValueScannerClass init()}
       DaVinciAnswerToValueParser =
@@ -194,10 +206,13 @@ define
    in
       {DaVinciAnswerToValueScanner scanVirtualString(VS)}
       try
-         {DaVinciAnswerToValueParser parse(answer(V) Status)}
+         {DaVinciAnswerToValueParser parse(answer($) _)}
+      catch error(Msg) then
+         {Exception.raiseError
+          daVinci(parseError Msg VS {DaVinciAnswerToValueScanner getCol($)})}
+         unit
+      finally
          {DaVinciAnswerToValueScanner close()}
-         if Status then V else parse_error(VS) end
-      catch _ then parse_error(VS)
       end
    end
 end
