@@ -33,6 +33,7 @@
 #include "base.hh"
 #include "ozostream.hh"
 #include "fdomn.hh"
+#include "sort.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -1272,6 +1273,13 @@ int intcompare(const void * ii, const void  * jj) {
   return(**i - **j);
 }
 
+typedef int* int_ptr;
+
+inline
+Bool order_int_ptr_inc(const int_ptr& ip, const int_ptr& jp) {
+  return *ip < *jp;
+}
+
 inline
 int OZ_FiniteDomainImpl::simplify(int list_len, 
 				  int * list_left, 
@@ -1284,7 +1292,10 @@ int OZ_FiniteDomainImpl::simplify(int list_len,
   for (i = list_len; i--; ) {
     fd_iv_ptr_sort[i] = list_left + i;
   }
-  qsort(fd_iv_ptr_sort, list_len, sizeof(int **), intcompare);
+
+  fastsort<int_ptr,order_int_ptr_inc>(fd_iv_ptr_sort, list_len);
+
+  //  qsort(fd_iv_ptr_sort, list_len, sizeof(int **), intcompare);
 
   // copy sorted arrays (copy needed, otherwise overwriting might occur!)
   for (i = list_len; i--; ) {
