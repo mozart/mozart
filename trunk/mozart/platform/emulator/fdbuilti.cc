@@ -1210,12 +1210,14 @@ BIspec fdSpec[] = {
   {"fdp_distinct", 1, fdp_distinct},
   {"fdp_distinctOffset", 2, fdp_distinctOffset},
   {"fdp_disjoint", 4, fdp_disjoint},
+  {"fdp_disjoint_card", 4, fdp_disjoint_card},
   {"fdp_disjointC", 5, fdp_disjointC},
   {"fdp_distanceEq", 3, fdp_distanceEq},
   {"fdp_distanceLeq", 3, fdp_distanceLeq},
   {"fdp_distanceGeq", 3, fdp_distanceGeq},
   {"fdp_distanceNeq", 3, fdp_distanceNeq},
   {"fdp_cpIterate", 2, fdp_cpIterate},
+  {"fdp_disjunctive", 2, fdp_disjunctive},
 #endif
 #ifdef DEBUG_STABLE
   {"debugStable", 0, debugStable},
@@ -1224,6 +1226,8 @@ BIspec fdSpec[] = {
   // Distribution builtins: fddist.cc
   {"fddistribute", 5, BIfdDistribute},
   {"fddistributeMinPairs", 5, BIfdDistributeMinPairs},
+  {"fddistributeTaskIntervals", 7, BIfdDistributeTaskIntervals},
+  {"fddistributeTaskIntervalsOpt", 7, BIfdDistributeTaskIntervalsOpt},
 
   {0,0,0,0}
 };
