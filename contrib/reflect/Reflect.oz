@@ -42,6 +42,7 @@ export
    IsPropagator
    IsDiscardedPropagator
    DiscardPropagator
+   IdentifyParameter
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
@@ -66,6 +67,7 @@ define
    IsDiscardedPropagator = ReflectExport.isDiscardedPropagator
    DiscardPropagator     = ReflectExport.discardPropagator
    BIspaceReflect        = ReflectExport.spaceReflect
+   IdentifyParameter     = ReflectExport.identifyParameter
 
    GetCtVarNameAsAtom       = CTB.getNameAsAtom
    GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom
@@ -174,20 +176,24 @@ define
                    end}
 
 \ifdef VERBOSE
-      {System.showInfo '\t preparing procedures ...'}
+      {System.printInfo '\t preparing '}
 \endif
       local
+         % list of all propagator ids
          PropList = {Record.toList PropTable}
+         % list all procedure ids
+         ProcList = {FS.reflect.lowerBoundList
+                     {FS.value.make
+                      {Map PropList
+                       fun {$ P}
+                          P.location.propInvoc.invoc
+                       end}}
+                    }
       in
-         ProcTable = {MakeRecord procTable
-                      {FS.reflect.lowerBoundList
-                       {FS.value.make
-                        {Map PropList
-                         fun {$ P}
-                            P.location.propInvoc.invoc
-                         end}}
-                      }
-                     }
+         ProcTable = {MakeRecord procTable ProcList}
+\ifdef VERBOSE
+      {System.showInfo {Width ProcTable}#' procedures ...'}
+\endif
          {ForAll PropList
           proc {$ P}
              Proc = P.location.propInvoc
@@ -211,6 +217,11 @@ define
                             {FS.var.lowerBound
                              {FS.reflect.lowerBound
                               P.connected_props}}
+                         connected_procs: _
+                         subsumed_props: {FS.var.lowerBound P.id}
+
+                         called_by:
+                            Proc.callerInvoc
                         )
           end}
          {Record.forAll ProcTable
@@ -219,6 +230,20 @@ define
              = {FS.value.make {FS.reflect.lowerBound Proc.parameters}}
              Proc.connected_props
              = {FS.value.make {FS.reflect.lowerBound Proc.connected_props}}
+             Proc.subsumed_props
+             = {FS.value.make {FS.reflect.lowerBound Proc.subsumed_props}}
+          end}
+         {ForAll ProcList
+          proc {$ ProcId}
+             ProcTable.ProcId.connected_procs =
+             {FS.diff
+              {FS.value.make
+               {Map
+                {Map PropList fun {$ P} P.id end}
+                fun {$ PropId}
+                   PropTable.PropId.location.propInvoc.invoc
+                end}}
+              {FS.value.make ProcId}}
           end}
       end
    in

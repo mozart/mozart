@@ -412,7 +412,7 @@ OZ_Term reflect_space(OZ_Term v)
       {
         Propagator * prop = (Propagator *) ptr;
 
-        DEBUG_ASSERT (!prop->isDeadPropagator());
+        DEBUG_ASSERT (!prop->isDead());
 
         (void) reflect_space_prop(rec_stack,
                                   prop_list,
