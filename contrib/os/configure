@@ -1310,6 +1310,87 @@ fi
     fi
     
 
+
+  echo $ac_n "checking for gmp.h""... $ac_c" 1>&6
+echo "configure:1316: checking for gmp.h" >&5
+if eval "test \"`echo '$''{'oz_cv_header_gmp_h'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    
+      oz_tmp_cppflags="$CPPFLAGS"
+      oz_tmp_ok=no
+      cat > conftest.$ac_ext <<EOF
+#line 1325 "configure"
+#include "confdefs.h"
+#include "gmp.h"
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1330: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  
+        oz_tmp_ok=yes
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  
+        for oz_tmp in $oz_inc_path; do
+          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
+          cat > conftest.$ac_ext <<EOF
+#line 1345 "configure"
+#include "confdefs.h"
+#include "gmp.h"
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1350: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  
+            oz_tmp_ok="-I$oz_tmp"
+            break
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+        done
+fi
+rm -f conftest*
+      CPPFLAGS=$oz_tmp_cppflags
+oz_cv_header_gmp_h="$oz_tmp_ok"
+
+    
+fi
+
+echo "$ac_t""$oz_cv_header_gmp_h" 1>&6
+
+  oz_tmp_val=$oz_cv_header_gmp_h
+
+  if test "$oz_tmp_val" != no; then
+    if test "$oz_tmp_val" != yes; then
+      
+  if test "$oz_tmp_val" != yes && test "$oz_tmp_val" != no; then
+    oz_tmp_ok=yes
+    for oz_tmp in $CPPFLAGS NONE; do
+      if test "$oz_tmp" = "$oz_tmp_val"; then
+        oz_tmp_ok=no
+        break
+      fi
+    done
+    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }$oz_tmp_val"
+  fi
+
+    fi
+    
+  else
+    { echo "configure: error: required GNU MP include file not found" 1>&2; exit 1; }
+  fi
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
