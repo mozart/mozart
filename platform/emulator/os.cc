@@ -319,6 +319,10 @@ void handlerDefault(int sig)
   am.exitOz(1);
 }
 
+#ifdef WINDOWS
+#define SIGHUP SIGTERM
+#endif
+
 
 #define SIGLAST -1
 
@@ -584,7 +588,7 @@ extern "C" void __builtin_vec_delete (void *ptr)
 
 #ifdef WINDOWS
 
-const int wrappedHDStart = 1000; /* hope that's enough (RS) */
+const int wrappedHDStart = 10000; /* hope that's enough (RS) */
 
 class WrappedHandle {
 public:
@@ -706,6 +710,9 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
 
 void registerSocket(int fd)
 {
+  if (fd>=wrappedHDStart) {
+    OZ_error("registerSocket: %d >= wrappedHDStart(=%d)\n",fd,wrappedHDStart);
+  }
   OZ_FD_SET(fd,&socketFDs);
   maxSocket = max(fd,maxSocket);
 }
@@ -974,6 +981,43 @@ int osdup(int fd)
   return fd==STDIN_FILENO ? wrappedStdin : fd;
 }
 
+unsigned __stdcall watchParentThread(void *arg)
+{
+  HANDLE handle = (HANDLE) arg;
+  DWORD ret = WaitForSingleObject(handle,INFINITE);
+  if (ret != WAIT_OBJECT_0) {
+    OZ_warning("WaitForSingleObject(0x%x) failed: %d (error=%d)",
+               handle,ret,GetLastError());
+    ExitThread(0);
+  }
+  ExitProcess(0);
+  return 1;
+}
+
+/* there are no process groups under Win32
+ * so Emulator hands its pid via envvar OZPPID to emulator
+ * it then creates a thread watching whether the Emulator is still living
+ * and terminates otherwise
+ */
+void watchParent()
+{
+  char buf[100];
+  if (GetEnvironmentVariable("OZPPID",buf,sizeof(buf)) == 0) {
+    OZ_warning("getenv OZPPID failed");
+    return;
+  }
+
+  int pid = atoi(buf);
+  HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
+  if (handle==0) {
+    OZ_warning("OpenProcess(%d) failed",pid);
+  } else {
+    unsigned thrid;
+    CreateThread(0,0,watchParentThread,handle,0,&thrid);
+  }
+}
+
+
 #else
 
 char *ostmpnam(char *s) { return tmpnam(s); }
@@ -1049,6 +1093,18 @@ void osInit()
 
   //  fprintf(stderr, "szDescription = \"%s\"", wsa_data.szDescription);
   //  fprintf(stderr, "szSystemStatus = \"%s\"", wsa_data.szSystemStatus);
+
+
+  watchParent(); // check whether ozengine still lives
+
+  /* win32 does not support process groups,
+   * so we set OZPPID such that subprocess can check whether
+   * its father still lives
+   */
+  char auxbuf[100];
+  int ppid = GetCurrentProcessId();
+  sprintf(auxbuf,"%d",ppid);
+  SetEnvironmentVariable("OZPPID",strdup(auxbuf));
 
 #else
 
@@ -1284,8 +1340,6 @@ int osread(int fd, void *buf, unsigned int len)
   IOChannel *ch = lookupChannel(fd);
   if (ch!=NULL) {
     Assert(ch->thrd);
-    WaitForSingleObject(ch->char_avail, INFINITE);
-
     if (ch->status==ST_ERROR) return -1;
     if (ch->status==ST_EOF)   return 0;
     Assert(ch->status==ST_AVAIL);

@@ -125,7 +125,12 @@ unsigned __stdcall readerThread(void *arg)
 
   while(1) {
     sr->status=ST_NOTAVAIL;
-    int ret = rawread(sr->fd, &sr->chr, sizeof(char));
+
+    HANDLE hd = WrappedHandle::find(sr->fd)->hd;
+    Assert(hd!=0);
+    unsigned int ret;
+    if (ReadFile(hd,&sr->chr, sizeof(char),&ret,0)==FALSE)
+      ret = (unsigned)-1;
     if (ret < 0) {
       sr->status = ST_ERROR;
       break;
@@ -187,12 +192,12 @@ Bool createReader(int fd)
 
 
 static
-int splitFDs(int nfds, fd_set *in, fd_set *out)
+int splitFDs(fd_set *in, fd_set *out)
 {
   FD_ZERO(out);
 
   int ret=0;
-  for (int i=0; i<nfds; i++) {
+  for (int i=0; i <= maxSocket; i++) {
     if (isSocket(i) && FD_ISSET(i,in)) {
       ret++;
       FD_CLR(i,in);
@@ -205,46 +210,29 @@ int splitFDs(int nfds, fd_set *in, fd_set *out)
 
 
 static
-void orFDs(int nfds, fd_set *out, fd_set *other)
-{
-  for (int i=0; i<nfds; i++) {
-    if (FD_ISSET(i,other)) {
-      OZ_FD_SET(i,out);
-    }
-  }
-}
-
-static
 int getAvailFDs(fd_set *rfds, fd_set *wfds)
 {
-  int nfds = max(maxSocket,maxfd)+1;
-  int ret=0;
-
   fd_set rselectfds, wselectfds;
 
-  int numsockets = splitFDs(nfds,rfds,&rselectfds);
-  numsockets    += splitFDs(nfds,wfds,&wselectfds);
+  int numsockets = splitFDs(rfds,&rselectfds);
+  numsockets    += splitFDs(wfds,&wselectfds);
 
+  int ret = 0;
   if (numsockets>0) {
-    ret += nonBlockSelect(nfds,&rselectfds,&wselectfds);
+    ret += nonBlockSelect(maxSocket+1,&rselectfds,&wselectfds);
   }
 
-  for (int i=0; i<maxfd; i++) {
-    if (FD_ISSET(i,rfds)) {
-      IOChannel *c = lookupChannel(i);
-      /* RS: i might be a socket, don't know why */
-      if (c && c->status==ST_AVAIL) {
-        ret++;
-      } else {
-        FD_CLR(i,rfds);
-      }
+  IOChannel *aux = channels;
+  while(aux != NULL) {
+    if (FD_ISSET(aux->fd,rfds) && aux->status==ST_AVAIL) {
+      OZ_FD_SET(aux->fd,&rselectfds);
+      ret++;
     }
+    aux = aux->next;
   }
 
-  if (numsockets>0) {
-    orFDs(nfds,rfds,&rselectfds);
-    orFDs(nfds,wfds,&wselectfds);
-  }
+  *rfds = rselectfds;
+  *wfds = wselectfds;
 
   return ret;
 }
@@ -290,7 +278,7 @@ unsigned __stdcall selectThread(void *arg)
     fd_set rfds = origrfds;
     fd_set wfds = origwfds;
 
-    int ret = select(maxSocket,&rfds,&wfds,NULL,&tv);
+    int ret = select(maxSocket+1,&rfds,&wfds,NULL,&tv);
 
     if (ret<0 || ret>0 || ret==0 && timeout<=0 || si->timestamp!=timestamp) {
       origrfds = rfds;
@@ -318,8 +306,6 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 
   int wait = (*timeout==0) ? INFINITE : *timeout;
 
-  int nfds = max(maxSocket,maxfd)+1;
-
   fd_set copyrfds = *rfds;
   fd_set copywfds = *wfds;
 
@@ -329,8 +315,8 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
   HANDLE wait_hnd[OPEN_MAX+1];
   int nh = 0;
 
-  int numsockets = splitFDs(nfds,&copyrfds,&si->rfds);
-  numsockets    += splitFDs(nfds,&copywfds,&si->wfds);
+  int numsockets = splitFDs(&copyrfds,&si->rfds);
+  numsockets    += splitFDs(&copywfds,&si->wfds);
 
   if (numsockets > 0) {
     ResetEvent(si->event);
@@ -341,18 +327,27 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
     Assert(ret!=0);
   }
 
-  int i;
-  for (i=0; i < maxfd; i++) {
-    IOChannel *ch = lookupChannel(i);
-    if (FD_ISSET(i,&copyrfds) && ch && ch->thrd!=0) {
-      wait_hnd[nh++] = ch->char_avail;
+  IOChannel *aux = channels;
+  while(aux != NULL) {
+    if (FD_ISSET(aux->fd,&copyrfds) && aux->thrd!=0) {
+      wait_hnd[nh++] = aux->char_avail;
     }
+    aux = aux->next;
   }
+
+#if 0
+  static int xnh = 0;
+  if (nh!=xnh) {
+    message("Achanged nh: %d --> %d\n",xnh,nh);
+    printfds(rfds);
+    xnh = nh;
+  }
+#endif
 
   if (nh == 0) {
     /* Nothing to wait on, so fail */
     errno = ECHILD;
-    return -1;
+    return 0;
   }
 
   unsigned int startTime = getTime();
@@ -383,7 +378,7 @@ int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 void printfds(fd_set *fds)
 {
   fprintf(stderr,"FDS: ");
-  for(int i=0; i<10000; i++) {
+  for(int i=0; i<max(maxSocket,maxfd)+1; i++) {
     if (FD_ISSET(i,fds)) {
       fprintf(stderr,"%d,",i);
     }
