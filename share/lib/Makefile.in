@@ -204,7 +204,7 @@ ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
 %.ozf: wp/%.oz Base.ozf
         $(COMPILE) $< -o $@
 
-%.ozf: gtk/%.oz
+%.ozf: gtk/%.oz Base.ozf
         $(COMPILE) $< -o $@
 
 %.ozf: %.oz Base.ozf
@@ -227,13 +227,9 @@ Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
 TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies
-GTK.ozf: gtk/GTK.oz \
-         gtk/constdeclarations.oz gtk/constdefinitions.oz
+GTK.ozf: constdeclarations.oz
 
-gtk/constdeclarations.oz: gtk/genconstants.pl
-         $(PERL) $(VPATH)/gtk/genconstants.pl
-
-gtk/constdefinitions.oz: gtk/genconstants.pl
+constdeclarations.oz: gtk/genconstants.pl
          $(PERL) $(VPATH)/gtk/genconstants.pl
 
 # compiler dependencies
