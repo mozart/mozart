@@ -32,7 +32,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameUnit,
   AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
   // Atoms for System.get and System.set
-  AtomActive, AtomAtoms, AtomBuiltins, AtomCommitted,
+  AtomActive, AtomAtoms, AtomBuiltins, AtomCache, AtomCommitted,
   AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth,
   AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh,
   AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad,
@@ -113,6 +113,7 @@ void initLiterals()
   AtomActive                = makeTaggedAtom("active");
   AtomAtoms                 = makeTaggedAtom("atoms");
   AtomBuiltins              = makeTaggedAtom("builtins");
+  AtomCache                 = makeTaggedAtom("cache");
   AtomCommitted             = makeTaggedAtom("committed");
   AtomCloned                = makeTaggedAtom("cloned");
   AtomCode                  = makeTaggedAtom("code");
