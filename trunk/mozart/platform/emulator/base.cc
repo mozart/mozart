@@ -115,7 +115,8 @@ void ozperror(const char *msg)
 
 void ozpwarning(const char *msg)
 {
-  OZ_warning("UNIX ERROR: %s: %s",msg,OZ_unixError(errno));
+  int err = ossockerrno();
+  OZ_warning("OS ERROR: %s: %s (%d)",msg,OZ_unixError(err),err);
 }
 
 
