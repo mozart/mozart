@@ -566,6 +566,17 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
  * The builtin table
  */
 
+extern void (*OZ_sCloneBlockDynamic)(OZ_Term *,OZ_Term *,const int);
+extern Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
+extern Suspendable * suspendableSCloneSuspendable(Suspendable *);
+
+void space_init(void) {
+  OZ_sCloneBlockDynamic = 
+    &OZ_sCloneBlock;
+  suspendableSCloneSuspendableDynamic =
+    &suspendableSCloneSuspendable;
+}
+
 #ifndef MODULES_LINK_STATIC
 
 #include "modSpace-if.cc"
