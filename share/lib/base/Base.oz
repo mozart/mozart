@@ -324,7 +324,6 @@ prepare
    \insert 'Array.oz'
    \insert 'Space.oz'
    \insert 'Object.oz'
-   \insert 'Class.oz'
    \insert 'BitArray.oz'
    \insert 'ForeignPointer.oz'
    \insert 'Thread.oz'
@@ -524,4 +523,7 @@ export
    'IsBitString'	: IsBitString
    'IsByteString'	: IsByteString
 
+   %% Will be removed by the compiler
+   'OoExtensions': OoExtensions
+   
 end
