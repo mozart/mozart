@@ -61,20 +61,8 @@
 
 
 
-/* define if libwif is linked statically */
-#undef STATIC_LIBWIF
-
-/* define if libfd and libschedule are linked statically */
-#undef STATIC_LIBFD
-
-/* define if libfset is linked statically */
-#undef STATIC_LIBFSET
-
-/* define if libparser is linked statically */
-#undef STATIC_LIBPARSER
-
-/* define if libozma is linked statically */
-#undef STATIC_LIBOZMA
+/* define if modules are linked statically */
+#undef MODULES_LINK_STATIC
 
 /* debugging */
 #undef DEBUG_EMULATOR
