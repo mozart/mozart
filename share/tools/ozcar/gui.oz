@@ -169,7 +169,11 @@ in
 				 bitmap:           LocalBitMapDir # Bitmap #
 				                               BitmapExtension
 				 fg:               ForegroundColor
-				 activeforeground: ForegroundColor
+				 activeforeground: case UseColors then
+						      ForegroundColor
+						   else
+						      SelectedForeground
+						   end
 				 padx:             PadXButton
 				 pady:             PadYButton
 				 relief:           raised
@@ -194,7 +198,11 @@ in
 			    %indicatoron:      false
 			    %selectcolor:      CheckButtonSelectColor
 			    fg:               ButtonForeground
-			    activeforeground: ButtonForeground
+			    activeforeground: case UseColors then
+						 ButtonForeground
+					      else
+						 SelectedForeground
+					      end
 			    variable:         V
 			    bitmap:           LocalBitMapDir # Xbm
 			    relief:           flat %raised
