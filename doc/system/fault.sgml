@@ -128,7 +128,7 @@ a reference to the object.
 
 <P>The <<Fault>> module contains the following operations.
 All operations return a boolean flag <<B>> that is <<true>>
-iff the operation succeeds.
+if the operation succeeds and <<false>> otherwise.
 All <<enable>> and <<install>> operations
 succeed if nothing was enabled or installed
 at that level.
@@ -188,15 +188,16 @@ the operation after they return.
 <item>Deinstalls a handler for fault detection on a given
 entity at a given level.
 
-<entry/<code/{Fault.installWatcher Entity FStates WatcherProc}//
+<entry/<code/{Fault.installWatcher Entity FStates WatcherProc ??{B}}//
 <item>Installs a watcher for fault detection on a given entity
 for a given set of fault states.
 Any number of watchers can be installed on an entity.
-Therefore this call always succeeds.
+It is always possible to install a watcher,
+so therefore this always succeeds.
 The watcher <<{WatcherProc Entity AFStates}>> is called
 in its own thread as soon as the site detects a fault.
 
-<entry/<code/{Fault.deInstallWatcher Entity WatcherProc}//
+<entry/<code/{Fault.deInstallWatcher Entity WatcherProc ??{B}}//
 <item>Deinstalls the given watcher on a given entity.
 This call succeeds if <<WatcherProc>> was installed
 on the entity.
