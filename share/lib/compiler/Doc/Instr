@@ -615,10 +615,9 @@ YRegister = y(RegisterIndex).
 RegisterIndex = int.
 Label = int.
 PredId = pid(PrintName Arity Coord Flags NLiveRegs).
-Coord = pos(FileName Line Column) 
-      | pos(FileName Line Column FileName Line Column)
-      | unit.
-Flags = [atom].   % sited, copyOnce, native ???
+Coord = pos(FileName Line Column)
+      | pos('' 1 0).
+Flags = [atom].   % only sited is recognized
 NLiveRegs = int.
 PredicateRef = int.
 GRegRef = [Register].
