@@ -8,18 +8,18 @@ OZLIB		= $(OZHOME)/lib
 BITMAPDIR	= $(OZLIB)/bitmaps
 
 SHELL		= @SH@
-SED		= @SED@
 RM		= @RM@ -f
-EGREP		= @EGREP@
+MKDIR		= @MKDIR@
+RMDIR		= @RMDIR@
+ECHO		= @ECHO@
 M4		= @M4@
+TRUE		= @TRUE@
 
 INSTALL		= @INSTALL@
 INSTALLFILE	= $(INSTALL) -m 444
 INSTALLPRG	= $(INSTALL) -m 555
 INSTALLSRC	= @INSTALLSRC@
 INSTALLDIR	= $(INSTALL) -m 775 -d
-
-TOUCH		= @TOUCH@
 
 ENV2TYPE	= @ENV2TYPE@
 
@@ -31,18 +31,14 @@ OZPATH		= .:compiler:ozcar:$(SRCDIR)
 export OZPATH
 OZ_PI		= 1
 export OZ_PI
-OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/:root=$(OZLIB)
+OZ_LOAD		= root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/:root=$(OZLIB)
 export OZ_LOAD
-#OZBATCH1	= OZPATH=.:compiler:ozcar:$(SRCDIR) OZ_PI=1 $(OZBATCH)
-OZBATCH1	= $(OZBATCH)
-COMPILE		= $(OZBATCH1) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
-EXEC		= $(OZBATCH1) $(OZFLAGS)
-EXECWITHSTD	= $(OZBATCH1) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
-OZMA		= $(OZBATCH1) $(OZFLAGS) --ozma
+COMPILE		= $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
+EXEC		= $(OZBATCH) $(OZFLAGS)
+EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
+OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
 
 OZVERSION	= $(TOPDIR)/OZVERSION
-
-ECHO		= @ECHO@
 
 OZLIBDIRS = \
 	$(OZLIB)/Standard $(OZLIB)/Init $(OZLIB)/SP $(OZLIB)/OP \
@@ -143,17 +139,17 @@ DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
 DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
 
 ENVS1 = \
-	Base.env Standard.env SP.env OP.env AP.env CP.env WP.env DP.env \
+	SP.env OP.env AP.env CP.env WP.env DP.env \
 	Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
 	Emacs.env Ozcar.env Profiler.env
-ENVS = $(ENVS1:%=$(SRCDIR)/%)
+ENVS = $(ENVS1:%=$(SRCDIR)/%) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env
 TYPS = $(ENVS1:%.env=%.typ)
-TYCS = $(TYPS:%.typ=%.tyc)
+TYCS = $(TYPS:%.typ=tyc/%.tyc)
 
 LIBFILES = \
 	$(ALLSRCS:$(SRCDIR)/%=$(OZLIB)/%) \
-	$(ENVS:$(SRCDIR)/%=$(OZLIB)/%) \
-	$(TYCS:%=$(OZLIB)/%)
+	$(ENVS1:$(SRCDIR)/%=$(OZLIB)/%) \
+	$(TYCS:tyc/%=$(OZLIB)/%)
 
 HELPCOMPONENTS = Base.ozc Standard.ozc
 
@@ -214,6 +210,7 @@ clean:
 	$(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
 	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
 	$(RM) TAGS
+	$(RMDIR) tyc 2> /dev/null || $(TRUE)
 
 realclean: clean
 
@@ -241,7 +238,7 @@ $(OZCARBITMAPDIR)/%: $(SRCDIR)/ozcar/bitmaps/%
 $(OZLIB)/%.env: $(SRCDIR)/%.env
 	$(INSTALLSRC) $< $@
 
-$(OZLIB)/%.tyc: %.tyc
+$(OZLIB)/%.tyc: tyc/%.tyc
 	$(INSTALLFILE) $< $@
 
 $(OZBIN)/ozbatch: ozbatch
@@ -250,11 +247,14 @@ $(OZBIN)/ozbatch: ozbatch
 %.typ: $(SRCDIR)/%.env
 	$(ENV2TYPE) $< > $@
 
-%.tyc: %.typ $(DUMPINTRO)
+tyc/%.tyc: %.typ $(DUMPINTRO)
 	$(COMPILE) $< -o $@
 
 %.ozc:
 	$(COMPILE) $*
+
+tyc compiler ozcar:
+	$(MKDIR) $@
 
 Init.ozc: $(DUMPINTRO) $(INITSRC)
 	OZMAINIT="" $(COMPILE) Init.oz
@@ -279,9 +279,6 @@ DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
 	$(SRCDIR)/CP.env $(SRCDIR)/Compiler.env Init.ozc
-
-compiler:
-	$(INSTALLDIR) compiler
 
 compiler/Version.oz: compiler $(COMPILERSRCNOVER) $(OZVERSION) \
 	$(SRCDIR)/compiler/Opcodes.m4oz
@@ -312,9 +309,6 @@ Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) $(SRCDIR)/SP.env $(SRCDIR)/WP.env \
 	$(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env $(SRCDIR)/Compiler.env \
 	$(SRCDIR)/Ozcar.env Init.ozc
-
-ozcar:
-	$(INSTALLDIR) ozcar
 
 ozcar/version.oz: ozcar $(OZCARSRCNOVER)
 	cd ozcar && $(SRCDIRA)/ozcar/version.sh
