@@ -69,7 +69,7 @@ void OZ_error(const char *format, ...)
 #endif
   fprintf(stderr, "\n*** Internal Error: "
 #ifndef DEBUG_CHECK
-          "Please send a bug report to mozart-bugs@ps.uni-sb.de ***\n"
+          "Please send a bug report to bugs@mozart-oz.org ***\n"
           "*** with the following information:\n"
           "*** version:  %s\n"
           "*** platform: %s\n"
