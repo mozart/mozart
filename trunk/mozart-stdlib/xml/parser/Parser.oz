@@ -104,11 +104,10 @@ prepare
    proc {NOOP} skip end
 
    MakeBS = ByteString.make
-   DictClone = Dictionary.clone
+   DictRemove = Dictionary.remove
    RecToDict = Record.toDictionary
    VS2A = VirtualString.toAtom
    VS2S = VirtualString.toString
-
    CharIsAlNum = Char.isAlNum
    CharIsSpace = Char.isSpace
 
@@ -174,11 +173,11 @@ prepare
    %% ================================================================
 
    DefaultEntityRecord =
-   o(amp : string("\&")
-     lt  : string("<")
-     gt  : string(">")
-     apos: string("'")
-     quot: string("\""))
+   o(amp : text("\&")
+     lt  : text("<")
+     gt  : text(">")
+     apos: text("'")
+     quot: text("\""))
 
    %% ================================================================
    %% it's extremely annoying, but XML says that attribute xmlns can
@@ -273,6 +272,8 @@ prepare
 	 COORD       : unit
 	 TRAIL       : nil
 	 PREFIXTABLE : unit
+	 ALIST       : nil
+	 TAGS        : nil
 	 KeepComments : false
 	 KeepNamespaceDeclarations : false
 
@@ -312,8 +313,8 @@ prepare
       end
 
       meth Parse(?L)
-	 if @SKIP==unit then
-	    SKIP<-{New SpaceManager unit}
+	 if @STRIP==unit then
+	    STRIP<-{New SpaceManager init}
 	 end
 	 TAG <- unit
 	 CONTENTS <- L
@@ -549,8 +550,8 @@ prepare
 	 of nil     then Parser,TERROR(alistEOF)
 	 [] &/|&>|L then Buffer<-L Alist=nil Empty=true
 	 [] &>|L    then Buffer<-L Alist=nil Empty=false
-	 else Name Value Alist2 in
-	    Alist=(Name|Value)|Alist2
+	 else Name Value Alist2 Coord=Parser,GetCoord($) in
+	    Alist=(Name#Value#Coord)|Alist2
 	    Parser,ScanAttr(Name Value)
 	    Parser,ScanAlist(Alist2 Empty)
 	 end
@@ -789,9 +790,9 @@ prepare
       %%--------------------------------------------------------------
       %% ProcessAlist(+IN ?OUT)
       %%
-      %%     IN is a list of elements of the form (Attr|Value) where
-      %% both are strings, and corresponds to the attributes of an
-      %% element.  OUT is a list of attribute(s) and
+      %%     IN is a list of elements of the form (Attr#Value#Coord)
+      %% where both are strings, and corresponds to the attributes of
+      %% an element.  OUT is a list of attribute(s) and
       %% namespaceDeclaration(s).  Additionally, a namespaceDeclaration
       %% causes an update to the PREFIXTABLE for the duration of the
       %% element.  In order to back the PREFIXTABLE to its original
@@ -800,14 +801,18 @@ prepare
       %%--------------------------------------------------------------
 
       meth ProcessAlist(IN ?OUT)
-	 Parser,PreProcessAlist(IN OUT)
-	 Parser,PostProcessAlist(OUT)
+	 ALIST<-OUT
+	 TAGS<-nil
+	 Parser,PreProcessAlist(IN)
+	 @ALIST=nil
+	 Parser,PostProcessAlist(@TAGS)
+	 TAGS<-nil
       end
 
-      meth PreProcessAlist(IN $)
+      meth PreProcessAlist(IN)
 	 case IN
-	 of nil then nil
-	 [] (Attr|Value)|IN then
+	 of nil then skip
+	 [] (Attr#Value#Coord)|IN then
 	    PrefixA SuffixA ValueA={StringToAtom Value}
 	 in
 	    if {HasColon Attr}
@@ -819,44 +824,37 @@ prepare
 	    if PrefixA==unit then
 	       if {HasFeature XMLNS SuffixA} then
 		  %% default namespace declaration
-	       in
 		  TRAIL<-(unit|{CondSelect @PREFIXTABLE unit unit})|@TRAIL
-		  PREFIXTABLE.unit := ValueA
-		  if @KeepNamespaceDeclarations then
-		     namespaceDeclaration(prefix:'' uri:ValueA)
-		     |Parser,PreProcessAlist(IN $)
-		  else
-		     Parser,PreProcessAlist(IN $)
-		  end
+		  @PREFIXTABLE.unit := ValueA
+		  {self onNamespaceDeclaration('' ValueA)}
 	       else
 		  %% attribute in no-namespace
-		  attribute(
-		     name      : SuffixA
-		     prefix    : unit
-		     localname : SuffixA
-		     uri       : unit
-		     value     : ValueA)
-		  |Parser,PreProcessAlist(IN $)
+		  {self onAttribute(
+			   tag(
+			      qname  : SuffixA
+			      prefix : unit
+			      name   : SuffixA
+			      uri    : unit
+			      coord  : Coord)
+			   ValueA)}
+		  Parser,PreProcessAlist(IN)
 	       end
 	    elseif {HasFeature XMLNS PrefixA} then
 	       %% namespace declaration
 	       TRAIL<-(SuffixA|{CondSelect @PREFIXTABLE SuffixA unit})|@TRAIL
-	       PREFIXTABLE.SuffixA := ValueA
-	       if @KeepNamespaceDeclarations then
-		  namespaceDeclaration(prefix:SuffixA uri:ValueA)
-		  |Parser,PreProcessAlist(IN $)
-	       else
-		  Parser,PreProcessAlist(IN $)
-	       end
-	    else
+	       @PREFIXTABLE.SuffixA := ValueA
+	       {self onNamespaceDeclaration(SuffixA ValueA)}
+	    else Tag = tag(
+			  qname  : {StringToAtom Attr}
+			  prefix : PrefixA
+			  name   : SuffixA
+			  uri    : _  % need to delay lookup until all local ns decls have been seen
+			  coord  : Coord)
+	    in
+	       TAGS<-Tag|@TAGS
 	       %% qualified attribute
-	       attribute(
-		  name      : {StringToAtom Attr}
-		  prefix    : PrefixA
-		  localname : SuffixA
-		  uri       : _ % need to delay lookup until all local ns decls have been seen
-		  value     : ValueA)
-	       |Parser,PreProcessAlist(IN $)
+	       {self onAttribute(Tag ValueA)}
+	       Parser,PreProcessAlist(IN)
 	    end
 	 end
       end
@@ -866,9 +864,7 @@ prepare
 	 case L
 	 of nil then skip
 	 [] H|T then
-	    if {Label H}==attribute andthen H.prefix\=unit then
-	       H.uri = {CondSelect @PREFIXTABLE H.prefix unit}
-	    end
+	    H.uri = {CondSelect @PREFIXTABLE H.prefix unit}
 	    Parser,PostProcessAlist(T)
 	 end
       end   
@@ -885,7 +881,7 @@ prepare
 	    TRAIL<-T
 	    case H
 	    of unit then skip
-	    [] (Key|Val)|T then
+	    [] Key|Val then
 	       if Val==unit then
 		  {DictRemove @PREFIXTABLE Key}
 	       else
@@ -896,11 +892,11 @@ prepare
 	 end
       end
 
-      meth AskSkipSpace($)
+      meth AskStripSpace($)
 	 case @TAG
 	 of unit then true
 	 [] Tag then
-	    {@SKIP askSkipSpace(Tag.uri Tag.name $)}
+	    {@STRIP askStripSpace(Tag.uri Tag.name $)}
 	 end
       end
 
@@ -908,13 +904,34 @@ prepare
 	 @CONTENTS=X|L
 	 CONTENTS<-L
       end
+
+      meth attributeAppend(X) L in
+	 @ALIST=X|L
+	 ALIST<-L
+      end
+
+      meth onAttribute(Tag Value)
+	 {self attributeAppend(
+		  attribute(
+		     uri   : Tag.uri
+		     name  : Tag.name
+		     value : Value))}
+      end
+      meth onNamespaceDeclaration(Prefix URI)
+	 if @KeepNamespaceDeclarations then
+	    {self attributeAppend(
+		     namespaceDeclaration(
+			prefix : Prefix
+			uri    : URI))}
+	 end
+      end
 	 
       meth onStartDocument() skip end
       meth onEndDocument() skip end
       meth onStartElement(Tag Alist Children)
 	 {self append(
 		  element(
-		     prefix     : Tag.prefix
+		     uri        : Tag.uri
 		     name       : Tag.name
 		     attributes : Alist
 		     children   : Children))}
@@ -938,10 +955,10 @@ prepare
 	 case Parser,GetToken($)
 	 of unit then
 	    @CONTENTS=nil
-	    if @name\=unit then
+	    if @TAG\=unit then
 	       Parser,ERROR(nonTerminatedElement(
-			       name : @name
-			       uri  : @uri))
+			       name : @TAG.name
+			       uri  : @TAG.uri))
 	    end
 	 [] stag(Name Alist Empty Coord) then
 	    Alist2 Fullname Prefix Localname URI
@@ -953,7 +970,7 @@ prepare
 	    %% now that we have all the namespaces, process
 	    %% the tag itself
 	    Parser,Intern(Name Fullname Prefix Localname URI)
-	    Children Elem Tail
+	    Children
 	    Tag = tag(qname    : Fullname
 		      name     : Localname
 		      prefix   : Prefix
@@ -973,12 +990,12 @@ prepare
 	    end
 	    Parser,PARSE()
 	 [] etag(Name Coord) then
-	    Fullname Prefix Localname URI
+	    Fullname Localname URI
 	 in
-	    Parser,Intern(Name Fullname Prefix Localname URI)
+	    Parser,Intern(Name Fullname _ Localname URI)
 	    case @STACK of (Tail|Tag)|L then
 	       STACK <- L
-	       if URI\=@TAG.uri orelse Localname\=@TAG.name then
+	       if URI\=@TAG.uri orelse Localname\=@TAG.name orelse Fullname\=@TAG.qname then
 		  Parser,ERROR(mismatchedEtag(
 				  wanted:Tag.qname
 				  found :Fullname
@@ -995,11 +1012,11 @@ prepare
 	    else
 	       Parser,ERROR(unexpectedEndOfSTACK)
 	    end
-	 [] pi(Target Args Coord) then L in
+	 [] pi(Target Args Coord) then
 	    {self onProcessingInstruction({StringToAtom Target} Args Coord)}
 	    Parser,PARSE()
 	 [] text(Chars Coord) then
-	    if Parser,AskSkipSpace($) andthen {AllSpaces Chars}
+	    if Parser,AskStripSpace($) andthen {AllSpaces Chars}
 	    then skip else
 	       {self onCharacters(Chars Coord)}
 	    end
@@ -1062,15 +1079,15 @@ define
    end
 
    fun {ParseVS VS}
-      {{New UserParser init} parseVS(VS $)}
+      {{New XMLParser init} parseVS(VS $)}
    end
 
    fun {ParseFile F}
-      {{New UserParser init} parseFile(F $)}
+      {{New XMLParser init} parseFile(F $)}
    end
    
    fun {ParseURL F}
-      {{New UserParser init} parseURL(F $)}
+      {{New XMLParser init} parseURL(F $)}
    end
 
 end
