@@ -986,11 +986,18 @@ inline void AM::reviveCurrentTaskSusp(void)
   Board::GetCurrent()->addSuspension();
 }
 
-inline void AM::killCurrentTaskSusp(void) {
+inline void AM::killPropagatedCurrentTaskSusp(void) {
   if (currentTaskSusp == NULL) return;
+  if (currentTaskSusp->isPropagated() == NO) return;
+
   DebugCheck(currentTaskSusp->isResistant() == NO,
              error("Cannot kill non-resistant suspension."));
   currentTaskSusp->markDead();
+}
+
+void AM::dismissCurrentTaskSusp(void) {
+  currentTaskSusp->cContToNode(Board::GetCurrent());
+  currentTaskSusp = NULL;
 }
 
 inline Bool AM::entailment ()
