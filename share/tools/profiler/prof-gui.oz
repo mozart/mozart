@@ -291,33 +291,35 @@ in
 	    Gui,DeleteBars(false)
 	    {List.forAllInd SortedData
 	     proc {$ I S}
-		CTag   = {New Tk.canvasTag tkInit(parent:C)}
-		Length = {Int.toFloat S.@SortBy}
-	     in
-		Gui,Enqueue(o(C crea rectangle
-			      7                             {YStretch I}+18
-			      7.0+(Length/Max)*XStretch     {YStretch I}+32
-			      fill: SelectedBackground
-			      tags: CTag))
-		Gui,Enqueue(o(C crea text
-			      7.0+(Length/Max)*XStretch+5.0 {YStretch I}+19
-			      text:   case @SortBy
-				      of heap then {FormatSize S.heap}
-				      [] X    then S.X
-				      end
-			      anchor: nw
-			      tags:   CTag
-			      font:   BoldFont))
-		Gui,Enqueue(o(C crea text
-			      8                             {YStretch I}+4
-			      text:   {CheckName S.name}
-			      anchor: nw
-			      tags:   CTag
-			      font:   DefaultFont))
-		{CTag tkBind(event:  '<1>'
-			     action: self # UpdateProcInfo(S))}
-		TagList <- CTag | @TagList
-		StatsCount <- I
+		case I > 100 then skip else
+		   CTag   = {New Tk.canvasTag tkInit(parent:C)}
+		   Length = {Int.toFloat S.@SortBy}
+		in
+		   Gui,Enqueue(o(C crea rectangle
+				 7                             {YStretch I}+18
+				 7.0+(Length/Max)*XStretch     {YStretch I}+32
+				 fill: SelectedBackground
+				 tags: CTag))
+		   Gui,Enqueue(o(C crea text
+				 7.0+(Length/Max)*XStretch+5.0 {YStretch I}+19
+				 text:   case @SortBy
+					 of heap then {FormatSize S.heap}
+					 [] X    then S.X
+					 end
+				 anchor: nw
+				 tags:   CTag
+				 font:   BoldFont))
+		   Gui,Enqueue(o(C crea text
+				 8                             {YStretch I}+4
+				 text:   {CheckName S.name}
+				 anchor: nw
+				 tags:   CTag
+				 font:   DefaultFont))
+		   {CTag tkBind(event:  '<1>'
+				action: self # UpdateProcInfo(S))}
+		   TagList <- CTag | @TagList
+		   StatsCount <- I
+		end
 	     end}
 	    Gui,Enqueue(o(C conf
 			  scrollregion: q(7 3 XStretch
