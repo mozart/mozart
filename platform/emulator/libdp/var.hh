@@ -36,7 +36,7 @@
 #include "dpBase.hh"
 #include "table.hh"
 
-
+#define USE_ALT_VAR_PROTOCOL ozconf.perdioUseAltVarProtocol
 
 class ProxyManagerVar : public ExtVar {
 protected:
