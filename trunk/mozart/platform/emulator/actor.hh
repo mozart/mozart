@@ -31,8 +31,7 @@ enum ActorFlags {
   Ac_Solve      = 0x04,
   Ac_Committed	= 0x08,
   Ac_WaitTop	= 0x10,
-  Ac_DisWait	= 0x20,
-  Ac_SolveDet   = 0x40		// it means, that there is more seq. work in solve;
+  Ac_DisWait	= 0x20
 };
 
 class Actor : public ConstTerm {
@@ -168,8 +167,6 @@ public:
 
   void incThreads ();
   void decThreads ();
-  Bool isSolveDet () { return ((flags & Ac_SolveDet) ? OK : NO); }
-  void unsetSolveDet () { flags &= ~Ac_SolveDet; }
   Bool isStable ();  // so simple!
   void addSuspension (Suspension *susp); 
   void addSuspension (SuspList *l);
