@@ -109,11 +109,11 @@ local
 	 end
       end
 
-      fun {InvokeFlex FlexFile Rep} T RaiseOnBlock P Ss in
+      fun {InvokeFlex FlexFile Rep} T RaiseOnBlock in
 	 T = {Thread.this}
 	 RaiseOnBlock = {Debug.getRaiseOnBlock T}
 	 {Debug.setRaiseOnBlock T false}
-	 try
+	 try P Ss in
 	    P = {New TextPipe init(cmd: {OZFLEX}
 				   args: ['-Cem' FlexFile])}
 	    {P getAll(?Ss)}
@@ -138,6 +138,48 @@ local
 	    {Debug.setRaiseOnBlock T RaiseOnBlock}
 	 end
       end
+
+      class TextFile from Open.file Open.text
+	 prop final
+	 meth readAll($)
+	    case TextFile, getS($) of false then ""
+	    elseof S then S#'\n'#TextFile, readAll($)
+	    end
+	 end
+      end
+
+      proc {ReadFile File ?VS} F in
+	 F = {New TextFile init(name: File flags: [read])}
+	 {F readAll(?VS)}
+	 {F close()}
+      end
+
+      fun {GetTargetPlatform Rep} Tmp Cmd in
+	 Tmp = {OS.tmpnam}
+	 Cmd = {OZTOOL}#' platform > '#Tmp
+	 try Exit VS in
+	    Exit = {OS.system Cmd}
+	    VS = {ReadFile Tmp}
+	    if Exit == 0 then
+	       {Filter {VirtualString.toString VS}
+		fun {$ C} {Not {Char.isSpace C}} end}
+	    else
+	       {Rep error(kind: 'scanner generator'
+			  msg: 'invocation of oztool failed'
+			  items: [hint(l: 'Command' m: Cmd)
+				  hint(l: 'Exit code' m: Exit)])}
+	       false
+	    end
+	 catch E then
+	    {Error.printException E}
+	    {Rep error(kind: 'scanner generator'
+		       msg: 'invocation of oztool failed'
+		       items: [hint(l: 'Command' m: Cmd)])}
+	    false
+	 finally
+	    {OS.unlink Tmp}
+	 end
+      end
    in
       fun {CompileScanner Flex T Rep}
 	 case Flex of noLexer then noLexer
@@ -149,22 +191,29 @@ local
 	       LIBC = if {Property.get 'platform.os'} == win32 then ''
 		      else ' -lc'
 		      end
+	       PLATFORM = {GetTargetPlatform Rep}
+	       Cmd1 = ({OZTOOL}#' c++ '#{OZTOOLINC}#
+		       ' -c '#{MakeFileName T ".C"}#
+		       ' -o '#{MakeFileName T ".o"})
+	       Cmd2 = ({OZTOOL}#' ld '#
+		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#' '#
+		       {MakeFileName T ".o"}#LIBC)
+	       Exit1 Exit2
 	    in
 	       {Rep startSubPhase('compiling scanner')}
-	       if {OS.system
-		   {OZTOOL}#' c++ '#{OZTOOLINC}#
-		   ' -c '#{MakeFileName T ".C"}#
-		   ' -o '#{MakeFileName T ".o"}} \= 0
-	       then
-		  {Rep error(kind: 'system error'
-			     msg: 'invocation of g++ failed')}
+	       case PLATFORM of false then
 		  stop
-	       elseif {OS.system {OZTOOL}#' ld '#
-		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#' '#
-		      {MakeFileName T ".o"}#LIBC} \= 0
-	       then
+	       elseif (Exit1 = {OS.system Cmd1}) \= 0 then
 		  {Rep error(kind: 'system error'
-			     msg: 'invocation of oztool failed')}
+			     msg: 'invocation of oztool failed'
+			     items: [hint(l: 'Command' m: Cmd1)
+				     hint(l: 'Exit code' m: Exit1)])}
+		  stop
+	       elseif (Exit2 = {OS.system Cmd2}) \= 0 then
+		  {Rep error(kind: 'system error'
+			     msg: 'invocation of oztool failed'
+			     items: [hint(l: 'Command' m: Cmd2)
+				     hint(l: 'Exit code' m: Exit2)])}
 		  stop
 	       else continue
 	       end
