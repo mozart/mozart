@@ -6,6 +6,26 @@
 #include "tagged.hh"
 #include "term.hh"
 #include "genvar.hh"
+#include "misc.hh"
+
+
+void DynamicTable::print(ostream& ofile, int idnt) const {
+    ofile << indent(idnt) << '(' << ' ';
+    Bool first=TRUE;
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident) {
+            if (!first) ofile << ' ';
+            first=FALSE;
+            ofile << tagged2Atom(table[i].ident)->getPrintName() << ':';
+        }
+    }
+    ofile << ' ' << ')';
+}
+
+void DynamicTable::printLong(ostream& ofile, int idnt) const {
+    print(ofile, idnt);
+}
+
 
 // (Arguments are dereferenced)
 Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
@@ -75,6 +95,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
       {
         if (tagged2CVar(term)->getType() != OFSVariable) return FALSE;
 
+        // Terms are identical; can return immediately
+        // Should be redundant:
+        Assert(term!=var);
+        // if (term==var) return TRUE;
+
         // Get the GenOFSVariable corresponding to term:
         GenOFSVariable* termVar=tagged2GenOFSVar(term);
 
@@ -85,6 +110,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
         TaggedRef* nvRefPtr=NULL;
+        Bool globConstrained=TRUE;
         if (vLoc && tLoc) {
             // Reuse the var:
             newVar=this;
@@ -95,11 +121,13 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
             newVar=this;
             nvRefPtr=vPtr;
             otherVar=termVar;
+            globConstrained = otherVar->dynamictable.extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && tLoc) {
             // Reuse the term:
             newVar=termVar;
             nvRefPtr=tPtr;
             otherVar=this;
+            globConstrained = otherVar->dynamictable.extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && !tLoc) {
             // Make a copy of the var's DynamicTable.
             DynamicTable* dt=new DynamicTable(dynamictable);
@@ -120,15 +148,21 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
 
         // Bind both var and term to the (possibly reused) newVar:
         // Because of cycles, these bindings must be done _before_ the unification
+        // If in glob/loc unification, the global is not constrained, then bind
+        // the local to the global and relink the local's suspension list
         if (vLoc && tLoc) {
             // bind to var without trailing:
-            doBind(tPtr, makeTaggedRef(nvRefPtr));
+            doBind(tPtr, makeTaggedRef(vPtr));
         } else if (vLoc && !tLoc) {
-            // bind to var with trailing:
-            doBindAndTrail(term, tPtr, makeTaggedRef(nvRefPtr));
+            if (globConstrained)
+                doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+            else
+                doBind(vPtr, makeTaggedRef(tPtr));
         } else if (!vLoc && tLoc) {
-            // bind to term with trailing:
-            doBindAndTrail(var, vPtr, makeTaggedRef(nvRefPtr));
+            if (globConstrained)
+                doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
+            else
+                doBind(tPtr, makeTaggedRef(vPtr));
         } else if (!vLoc && !tLoc) {
             // bind to new term with trailing:
             doBindAndTrail(var, vPtr, makeTaggedRef(nvRefPtr));
@@ -166,13 +200,21 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,  TypeOfTerm vTag,
         if (vLoc && tLoc) {
             termVar->relinkSuspListTo(this);
         } else if (vLoc && !tLoc) {
-            Suspension* susp=new Suspension(am.currentBoard);
-            Assert(susp!=NULL);
-            termVar->addSuspension(susp);
+            if (globConstrained) {
+                Suspension* susp=new Suspension(am.currentBoard);
+                Assert(susp!=NULL);
+                termVar->addSuspension(susp);
+            } else {
+                relinkSuspListTo(termVar);
+            }
         } else if (!vLoc && tLoc) {
-            Suspension* susp=new Suspension(am.currentBoard);
-            Assert(susp!=NULL);
-            addSuspension(susp);
+            if (globConstrained) {
+                Suspension* susp=new Suspension(am.currentBoard);
+                Assert(susp!=NULL);
+                addSuspension(susp);
+            } else {
+                termVar->relinkSuspListTo(this);
+            }
         } else if (!vLoc && !tLoc) {
             Suspension* susp=new Suspension(am.currentBoard);
             Assert(susp!=NULL);

@@ -179,8 +179,12 @@ PRINT(GenCVariable){
 
   case OFSVariable:
     {
-      GenOFSVariable * me = (GenOFSVariable *) this;
+      GenOFSVariable* me = (GenOFSVariable *) this;
       stream << " ofs(" << me->getNumOfFeatures() << ')';
+
+      stream << ' ';
+      me->getLabel().print(stream, 0);
+      me->getTable().print(stream, 0);
       break;
     }
 
@@ -804,6 +808,15 @@ PRINTLONG(GenCVariable){
     ((GenFDVariable*)this)->getDom().printLong(stream, offset);
     break;
   case OFSVariable:
+    {
+      GenOFSVariable* me = (GenOFSVariable *) this;
+      stream << " ofs(" << me->getNumOfFeatures() << ')';
+
+      stream << ' ';
+      me->getLabel().print(stream, 0);
+      me->getTable().print(stream, 0);
+      stream << endl;
+    }
     break;
   default:
     error("Unexpected type generic variable at %s:%d.",
