@@ -898,7 +898,9 @@ void ComObj::msgPartlySent(MsgContainer *msgC) {
 }
 
 void ComObj::msgPartlyReceived(MsgContainer *msgC) { 
-  //  printf("msgPartlyReceived invoked at %d\n",myDSite->getTimeStamp()->pid);
+  PD((TCP_INTERFACE,"---msgPartlyReceived: %s nr:%d from %d",
+      mess_names[msgC->getMessageType()],lastReceived+1,
+      site!=NULL?site->getTimeStamp()->pid:-1));
   if(msgC->getMsgNum()==-1)
     msgC->setMsgNum(lastReceived+1);
   queues.putRec(msgC);
