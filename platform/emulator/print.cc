@@ -425,9 +425,9 @@ void OzVariable::printLongStream(ostream &stream, int depth, int offset)
 
 } // printLongStream(OzVariable)
 
-inline
+static inline
 Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
-  return featureCmp(a,b) <= 0;
+  return featureCmp(a,b) < 0;
 }
 
 
