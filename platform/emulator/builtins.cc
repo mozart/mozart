@@ -4986,16 +4986,6 @@ OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
 
 
-OZ_Return dictionaryDeepPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
-{
-  GetDictAndKey(d,k,dict,key,NO);
-  dict->setArg(key,value);
-  return PROCEED;
-}
-
-DECLAREBI_USEINLINEREL3(BIdictionaryDeepPut,dictionaryDeepPutInline)
-
-
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
 {
   GetDictAndKey(d,k,dict,key,OK);
@@ -7507,7 +7497,6 @@ BIspec allSpec[] = {
   {"Dictionary.get",     3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
   {"Dictionary.condGet", 4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
   {"Dictionary.put",     3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
-  {"Dictionary.deepPut", 3, BIdictionaryDeepPut,(IFOR) dictionaryDeepPutInline},
   {"Dictionary.remove",  2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
   {"Dictionary.removeAll",1, BIdictionaryRemoveAll, 0},
   {"Dictionary.member",  3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
