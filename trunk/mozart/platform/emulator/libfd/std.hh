@@ -165,6 +165,7 @@ public:
   
   void simplify_on_equality(void);
   void simplify(void);
+  void simplifySingletons(void);
 };
 
 inline 
@@ -195,10 +196,36 @@ void Propagator_VI_VD_I::simplify(void)
 }
 
 inline 
+void Propagator_VI_VD_I::simplifySingletons(void)
+{
+  if (reg_sz == 0) return;
+  int * is = OZ_findSingletons(reg_sz, reg_x);
+  
+  for (int i = 0; i < reg_sz; i += 1) {
+    if (is[i] > 0) {        // singleton in x
+      reg_c += int(double(is[i]) * reg_a[i]);
+      reg_x[i] = 0; 
+    } 
+  }
+  int from = 0, to = 0;
+  for (; from < reg_sz; from += 1) {
+    if (reg_x[from] == 0 || reg_a[from] == 0) continue;
+    if (from != to) {
+      reg_a[to] = reg_a[from];
+      reg_x[to] = reg_x[from];
+    }
+    to += 1;
+  }
+  reg_sz = to;
+}
+
+inline 
 void Propagator_VI_VD_I::simplify_on_equality(void)
 {
   if (mayBeEqualVars()) {
     simplify();
+  } else {
+    simplifySingletons();
   }
   OZ_DEBUGCODE(int * is = OZ_findEqualVars(reg_sz, reg_x);
 	       for (int i = reg_sz; i--; ) {
