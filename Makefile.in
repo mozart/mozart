@@ -89,7 +89,7 @@ oz-win::
         rm -rf oz oz3 oz-`$(OZVERSION)`
         ( cd $(PREFIX)/..; \
           tar cf - oz/?*.exe oz/demo oz/include oz/lib \
-                   oz/README* oz/LICENSE oz/BUGS oz/ChangeLog \
+                   oz/LICENSE \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/tcldoc \
@@ -98,5 +98,5 @@ oz-win::
         mkdir -p $(CACHEDIR)
         mv oz/lib/?*.ozc $(CACHEDIR)
         mv $(CACHEDIR)/Init.ozc oz/lib
-        (cd oz/lib/wish; rm -rf tk tcl tcl8.0 tk8.0; mv tcl7.6 tcl; mv tk4.2 tk)
+        (cd oz/lib/wish; rm -rf tk tcl; mv tcl8.0 tcl; mv tk8.0 tk)
         mv oz oz3
