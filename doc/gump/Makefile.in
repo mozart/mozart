@@ -37,10 +37,10 @@ Makefile: Makefile.in config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
         $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ --type=html-stylesheets
-        cp -p $(GIFSRCS) $@
+        cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=gump-tex --type=latex
+        $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ --type=latex
 
 validate: gump-html
         nsgmls -cHTML4.soc -sB gump-html/*.html
