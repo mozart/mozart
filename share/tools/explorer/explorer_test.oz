@@ -195,7 +195,7 @@ U=1
 %% Test options
 %%
 
-{Explorer option(search search:4 information:8 order:true)}
+{Explorer option(search search:4 information:8 failed:true)}
 
 {Explorer option(search search:0 information:1)}
 {Explorer option(search search:none information:full)}
@@ -215,7 +215,6 @@ U=1
 
 {Explorer option(search search:a)}
 {Explorer option(search information:a)}
-{Explorer option(search order:a)}
 {Explorer option(search wuff:c)}
 
 {Explorer option(drawing hide:a)}
@@ -294,13 +293,13 @@ proc {P2 _ _} skip end
 %% Check reset, clear, or close
 %%
 declare
-create ShowCloseInfo from UrObject
+create ShowCloseInfo from BaseObject
    meth close {Show close_info} end
 end
-create ShowCloseCmp from UrObject
+create ShowCloseCmp from BaseObject
    meth close {Show close_compare} end
 end
-create ShowCloseStat from UrObject
+create ShowCloseStat from BaseObject
    meth close {Show close_stat} end
 end
 
@@ -308,19 +307,19 @@ end
 			     proc {$} {Show get_rid_info} end
 			  end)}
 {Explorer add(information fun {$ _ _}
-			     ShowCloseInfo
+			     ShowCloseInfo # close
 			  end)}
 {Explorer add(compare fun {$ _ _ _ _}
 			 proc {$} {Show get_rid_compare} end
 		      end)}
 {Explorer add(compare fun {$ _ _ _ _}
-			 ShowCloseCmp
+			 ShowCloseCmp # close
 		      end)}
 {Explorer add(statistics fun {$ _ _}
 			    proc {$} {Show get_rid_statistics} end
 			  end)}
 {Explorer add(information fun {$ _ _}
-			     ShowCloseStat
+			     ShowCloseStat # close
 			  end)}
 
 

@@ -33,6 +33,7 @@ local
 
    class Status
       from Tk.frame
+      prop final		
       attr
 	 MaxDepth:        0
 	 CurNodes:        0
@@ -65,7 +66,7 @@ local
 	 BabField   = {New Tk.label tkInit(parent: self
 					   text:   ''
 					   font:   BoldStatusFont)}
-
+	 
 	 TimeFrame = {New Tk.frame tkInit(parent: self)}
 	 
 	 TimeLabel = {New Tk.label tkInit(parent: TimeFrame
@@ -74,7 +75,7 @@ local
 	 TimeField = {New Tk.label tkInit(parent: TimeFrame
 					  text:   {FormatTime 0 0}
 					  font:   BoldStatusFont)}
-
+	 
 	 NodeFrame      = {New Tk.frame tkInit(parent: self)}
 	 ChooseIm       = {New Images.choose init(parent: NodeFrame)}
 	 ChooseNumber   = {New Tk.label tkInit(parent: NodeFrame

@@ -20,7 +20,7 @@ local
 	 Title = {New Tk.label tkInit(parent:     self
 				      font:       AboutFont
 				      text:       TitleName
-				      foreground: ChooseTermColor)}
+				      foreground: blue)}
 
 	 Author = {New Tk.label tkInit(parent: self
 				       text: ('Christian Schulte\n' #
@@ -314,12 +314,10 @@ in
 				    height:    {Dictionary.get O height}
 				    width:     {Dictionary.get O width})}
 	 end
-	 touch
       end
 
       meth about
 	 {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
-	 touch
       end
 
       meth error(M)
@@ -327,7 +325,6 @@ in
 		tkInit(master:  self.toplevel
 		       text:    M
 		       title:   TitleName#': Error Message')}.tkClosed}
-	 touch
       end
 
       meth close

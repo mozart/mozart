@@ -73,7 +73,8 @@ local
 
    
    class TagCounter
-      from UrObject
+      from BaseObject
+      prop final
       attr n:0
 
       meth clear  n<-0 end
@@ -124,10 +125,10 @@ local
 	 self.connection = {New Tk.canvasTag tkInit(parent:self)}
 	 self.numbers    = {New Tk.canvasTag tkInit(parent:self)}
 	 self.actions    = ActionTag
-	 {ActionTag tkBind(event:'<1>'
+	 {ActionTag tkBind(event:  '<1>'
 			   args:   FloatXY
 			   action: Manager # setByXY )}
-	 {ActionTag tkBind(event:'<Double-1>'
+	 {ActionTag tkBind(event:  '<Double-1>'
 			   args:   FloatXY
 			   action: Manager # selInfo)}
 	 {ActionTag tkBind(event:  '<2>'
@@ -298,18 +299,17 @@ in
       
       meth configurePointer(Status)
 	 {Wait {self.canvas
-		tkReturn(conf(cursor:case Status
+		tkReturn(conf cursor:case Status
 				     of drawing   then pencil
 				     [] searching then watch
 				     [] idle      then top_left_arrow
-				     end) $)}}
-	 touch
+				     end $)}}
       end
 
       meth scale(Scale)
-	 Font     = {PickFont NumberFonts Scale}
-	 Canvas   = self.canvas
-	 Numbers  = Canvas.numbers
+	 Font    = {PickFont NumberFonts Scale}
+	 Canvas  = self.canvas
+	 Numbers = Canvas.numbers
       in
 	 scale <- Scale
 	 {Canvas scale(Scale)}
