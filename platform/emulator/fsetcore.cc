@@ -60,8 +60,8 @@ OZ_BI_define(BIfsIsVarB, 1,1)
 OZ_BI_define(BIfsIsValueB, 1, 1)
 {
   OZ_Term term = OZ_in(0);
-  DEREF(term, term_ptr, term_tag);
-  if (isVariableTag(term_tag))
+  DEREF(term, term_ptr);
+  if (oz_isVar(term))
     oz_suspendOnPtr(term_ptr);
 
   OZ_RETURN(oz_bool(oz_isFSetValue(term)));
@@ -115,7 +115,7 @@ OZ_BI_define(BIfsClone, 2, 0)
   EXPECT_BLOCK(pe, 0, expectFSetVar, "");
 
   TaggedRef fs = OZ_in(0);
-  DEREF(fs, arg0ptr, arg0tag);
+  DEREF(fs, arg0ptr);
 
   return oz_isFSetValue(fs) ? OZ_unify(OZ_in(0), OZ_in(1))
     : tellBasicConstraint(OZ_in(1),
@@ -130,7 +130,7 @@ OZ_BI_define(BIfsGetKnownIn, 1, 1)
   ExpectedTypes(OZ_EM_FSET ","  OZ_EM_FSETDESCR);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_RETURN(tagged2FSetValue(v)->getKnownInList());
@@ -149,7 +149,7 @@ OZ_BI_define(BIfsGetNumOfKnownIn, 1, 1)
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
@@ -171,7 +171,7 @@ OZ_BI_define(BIfsGetKnownNotIn, 1, 1)
   ExpectedTypes(OZ_EM_FSET ","  OZ_EM_FSETDESCR);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
@@ -191,7 +191,7 @@ OZ_BI_define(BIfsGetNumOfKnownNotIn, 1, 1)
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
@@ -213,7 +213,7 @@ OZ_BI_define(BIfsGetUnknown, 1, 1)
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSETDESCR);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_RETURN(oz_nil());
@@ -232,7 +232,7 @@ OZ_BI_define(BIfsGetNumOfUnknown, 1, 1)
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_RETURN(makeTaggedSmallInt(0));
@@ -253,7 +253,7 @@ OZ_BI_define(BIfsGetLub, 1, 1)
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSETDESCR);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
@@ -273,7 +273,7 @@ OZ_BI_define(BIfsGetCard, 1, 1)
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
 
   OZ_Term v = OZ_in(0);
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
 
   if (oz_isFSetValue(v)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
@@ -295,11 +295,11 @@ OZ_BI_define(BIfsCardRange, 3, 0)
   int l = -1;
   {
     OZ_Term lt = OZ_in(0);
-    DEREF(lt, ltptr, lttag);
+    DEREF(lt, ltptr);
 
-    if (isSmallIntTag(lttag)) {
+    if (oz_isSmallInt(lt)) {
       l = tagged2SmallInt(lt);
-    } else if (isVariableTag(lttag)) {
+    } else if (oz_isVar(lt)) {
       oz_suspendOnPtr(ltptr);
     } else {
       TypeError(0, "");
@@ -309,11 +309,11 @@ OZ_BI_define(BIfsCardRange, 3, 0)
   int u = -1;
   {
     OZ_Term ut = OZ_in(1);
-    DEREF(ut, utptr, uttag);
+    DEREF(ut, utptr);
 
-    if (isSmallIntTag(uttag)) {
+    if (oz_isSmallInt(ut)) {
       u = tagged2SmallInt(ut);
-    } else if (isVariableTag(uttag)) {
+    } else if (oz_isVar(ut)) {
       oz_suspendOnPtr(utptr);
     } else {
       TypeError(1, "");
@@ -326,7 +326,7 @@ OZ_BI_define(BIfsCardRange, 3, 0)
   {
     OZ_Term v = OZ_in(2);
 
-    DEREF(v, vptr, vtag)
+    DEREF(v, vptr)
 
     if (oz_isFSetValue(v)) {
       int card = tagged2FSetValue(v)->getCard();

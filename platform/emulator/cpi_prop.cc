@@ -56,8 +56,8 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       o << ' ';
     not_first = 1;
     //
-    DEREF(h, hptr, htag);
-    switch (htag) {
+    DEREF(h, hptr);
+    switch (tagTypeOf(h)) {
 
     case TAG_LITERAL:
       o << tagged2Literal(h)->getPrintName();
@@ -183,8 +183,8 @@ OZ_Return OZ_Propagator::postpone(void)
 
 OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
-  DEREF(t, tptr, ttag);
-  if (isVariableTag(ttag)) {
+  DEREF(t, tptr);
+  if (oz_isVar(t)) {
     oz_var_addSusp(tptr, Propagator::getRunningPropagator());
     return OZ_TRUE;
   } 
@@ -193,8 +193,8 @@ OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 
 OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 {
-  DEREF(v, vptr, vtag);
-  if (!isVariableTag(vtag))
+  DEREF(v, vptr);
+  if (!oz_isVar(v))
     return FALSE;
   Assert(vptr);
 
@@ -204,8 +204,8 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 
 OZ_Boolean OZ_Propagator::addImpose(OZ_FSetPropState s, OZ_Term v)
 {
-  DEREF(v, vptr, vtag);
-  if (!isVariableTag(vtag))
+  DEREF(v, vptr);
+  if (!oz_isVar(v))
     return FALSE;
   Assert(vptr);
 
@@ -218,8 +218,8 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_CtWakeUp e,
 				    OZ_CtDefinition * d,
 				    OZ_Term v)
 {
-  DEREF(v, vptr, vtag);
-  if (!isVariableTag(vtag))
+  DEREF(v, vptr);
+  if (!oz_isVar(v))
     return FALSE;
   Assert(vptr);
 
@@ -241,9 +241,9 @@ int OZ_Propagator::impose(OZ_Propagator * p)
 
   for (int i = staticSpawnVarsNumberProp; i--; ) {
     OZ_Term v = makeTaggedRef(staticSpawnVarsProp[i].var);
-    DEREF(v, vptr, _vtag);
+    DEREF(v, vptr);
     //
-    Assert(oz_isVariable(v));
+    Assert(oz_isVar(v));
     //
     void * cpi_raw = (void *) NULL;
     int isNonEncapTagged = 0, isEncapTagged = 0;

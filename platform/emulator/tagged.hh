@@ -49,11 +49,10 @@ enum TypeOfTerm {
   TAG_REF3      =  8,   // 1000
   TAG_REF4      = 12,   // 1100
 
-  // oz_isVariable checks for last two bits.
   TAG_UNUSED_UVAR   =  1,   // 0001
   TAG_UNUSED_SVAR   =  9,   // 1001
   TAG_VAR       =  5,   // 0101
-  TAG_GCMARK    = 13,   // 1101    --> !!! oz_isVariable(TAG_GCMARK) = 1 !!!
+  TAG_GCMARK    = 13,   // 1101
 	    
   TAG_LTUPLE    =  2,   // 0010
   TAG_UNUSED_FSETVALUE = 14,   // 1110
@@ -102,9 +101,6 @@ enum TypeOfTerm {
  * contain a pointer in the value part */
 #define _makeTaggedSmallInt(s) ((s << TAG_SIZE) | TAG_SMALLINT)
 // kost@ : both generic traverser and builder exploit 'TAG_GCMARK':
-#define makeGCTaggedInt(i) ((i << TAG_SIZE) | TAG_GCMARK)
-#define getGCTaggedInt(t)  ((int32) (t >> TAG_SIZE))
-#define isGCTaggedInt(t)   (_tagTypeOf(t) == TAG_GCMARK)
 
 #define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
 #define _isRef(term)      ((term & TAG_LOWERMASK) == 0)
@@ -132,38 +128,17 @@ enum TypeOfTerm {
 #define TaggedOzMinInt _makeTaggedSmallInt(OzMinInt)
 
 
-/*
- * Debugging of GC_TAG
- *
- */
-
-#ifdef DEBUG_GC  
-
-extern Bool isCollecting;
-
-#define GCDEBUG(X) \
-  if (!isCollecting && (_tagTypeOf(X)==TAG_GCMARK))	\
-   OZ_error("GcTag unexpectedly found.");
-#else
-
-#define GCDEBUG(X)
-
-#endif
-
-
-#ifdef DEBUG_CHECK
-
 inline void * tagValueOf(TaggedRef ref) { 
-  GCDEBUG(ref); return _tagValueOf(ref);
+  return _tagValueOf(ref);
 }
 inline void * tagValueOf2(TypeOfTerm tag, TaggedRef ref) {
-  GCDEBUG(ref); return _tagValueOf2(tag,ref);
+  return _tagValueOf2(tag,ref);
 }
 inline void * tagValueOfVerbatim(TaggedRef ref) { 
-  GCDEBUG(ref); return _tagValueOfVerbatim(ref);
+  return _tagValueOfVerbatim(ref);
 }
 inline TypeOfTerm tagTypeOf(TaggedRef ref) { 
-  GCDEBUG(ref); return _tagTypeOf(ref);
+  return _tagTypeOf(ref);
 }
 inline TaggedRef makeTaggedRef2i(TypeOfTerm tag, int32 i) {
   Assert((i&3) == 0); return _makeTaggedRef2(tag,i);
@@ -172,118 +147,9 @@ inline TaggedRef makeTaggedRef2p(TypeOfTerm tag, void *ptr) {
   return _makeTaggedRef2i(tag,ptr);
 }
 
-#else
-
-#define tagValueOf(ref)         _tagValueOf((TaggedRef)ref)
-#define tagValueOf2(tag,ref)    _tagValueOf2(tag,(TaggedRef)ref)
-#define tagValueOfVerbatim(ref) _tagValueOfVerbatim((TaggedRef)ref)
-#define tagTypeOf(ref)          _tagTypeOf((TaggedRef)ref)
-#define makeTaggedRef2i(tag,i)  _makeTaggedRef2(tag,i)
-#define makeTaggedRef2p(tag,i)  _makeTaggedRef2i(tag,i)
-
-#endif
-
-
-/*
- * Consistency checks
- *
- */
-
-
-#define CHECK_NONVAR(term) Assert(oz_isRef(term) || !oz_isVariable(term))
-#define CHECK_ISVAR(term)  Assert(oz_isVariable(term))
-#define CHECK_DEREF(term)  Assert(!oz_isRef(term) && !oz_isVariable(term))
-#define CHECK_POINTER(s)   Assert(!(ToInt32(s) & 3))
-#define CHECK_POINTER_N(s) Assert(s != NULL && !(ToInt32(s) & 3))
-#define CHECK_STRPTR(s)    Assert(s != NULL)
-#define CHECK_TAG(Tag)     Assert(tagTypeOf(ref) == Tag)
-
-
-/*
- * TAG_REF
- *
- */
-
-#ifdef DEBUG_CHECK
-
-inline TaggedRef makeTaggedRef(TaggedRef * s) {
-  CHECK_POINTER_N(s); return _makeTaggedRef(s);
-}
-inline Bool oz_isRef(TaggedRef term) {
-  GCDEBUG(term); return _isRef(term);
-}
-inline TaggedRef * tagged2Ref(TaggedRef ref) {
-  GCDEBUG(ref); Assert(oz_isRef(ref));
-  return _tagged2Ref(ref);
-}
-
-#else
-
-#define makeTaggedRef(s) _makeTaggedRef(s)
-#define oz_isRef(t)      _isRef(t)
-#define tagged2Ref(ref)  _tagged2Ref(ref)
-
-#endif
-
-
-
-
-/*
- * TAG TESTS
- *
- */
-
-
-// The following tests are specially optimized
-#define _isLTuple(val)      (((TaggedRef) val&13)==0)      /* mask = 1101 */
-#define _isVariable(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
 
 // This is the normal tag test
 #define _hasTag(term,tag)   (tagTypeOf(term)==(tag))
-
-
-
-#ifdef DEBUG_CHECK
-
-inline Bool isVariableTag(TypeOfTerm tag) { 
-  return _isVariable(tag);
-}
-inline Bool isVarTag(TypeOfTerm tag) { 
-  return tag == TAG_VAR; 
-}
-inline Bool isLTupleTag(TypeOfTerm tag) {   
-  return _isLTuple(tag);
-}
-inline Bool isLiteralTag(TypeOfTerm tag) {  
-  return tag==TAG_LITERAL;
-}
-inline Bool isSRecordTag(TypeOfTerm tag) {
-  return tag==TAG_SRECORD;
-}
-inline Bool isSmallIntTag(TypeOfTerm tag) {
-  return tag==TAG_SMALLINT;
-}
-inline Bool isConstTag(TypeOfTerm tag) {
-  return tag==TAG_CONST;
-}
-inline Bool isGcMarkTag(TypeOfTerm tag) {
-  return tag==TAG_GCMARK;
-}
-
-#else
-
-#define isVariableTag(tag)  _isVariable(tag)
-#define isVarTag(tag)      ((tag) == TAG_VAR)
-#define isLTupleTag(tag)    _isLTuple(tag)
-#define isLiteralTag(tag)   ((tag)==TAG_LITERAL)
-#define isSRecordTag(tag)   ((tag)==TAG_SRECORD)
-#define isSmallIntTag(tag)  ((tag)==TAG_SMALLINT)
-#define isConstTag(tag)     ((tag)==TAG_CONST)
-#define isGcMarkTag(tag)    ((tag)==TAG_GCMARK)
-
-#endif
-
-
 
 
 /*
@@ -291,45 +157,30 @@ inline Bool isGcMarkTag(TypeOfTerm tag) {
  *
  */
 
-#ifdef DEBUG_CHECK
-
-inline Bool oz_isVariable(TaggedRef term) {
-  GCDEBUG(term); Assert(!oz_isRef(term)); return _isVariable(term);
+inline Bool oz_isRef(TaggedRef term) {
+  return _isRef(term);
 }
 inline Bool oz_isVar(TaggedRef term) {
-  GCDEBUG(term); Assert(!oz_isRef(term)); return _hasTag(term,TAG_VAR);
+  return _hasTag(term,TAG_VAR);
 }
 inline Bool oz_isLTuple(TaggedRef term) {
-  GCDEBUG(term); return _isLTuple(term);
+  return _hasTag(term,TAG_LTUPLE);
 }
 inline Bool oz_isLiteral(TaggedRef term) {
-  GCDEBUG(term); return _hasTag(term,TAG_LITERAL);
+  return _hasTag(term,TAG_LITERAL);
 }
 inline Bool oz_isSRecord(TaggedRef term) {
-  GCDEBUG(term); return _hasTag(term,TAG_SRECORD);
+  return _hasTag(term,TAG_SRECORD);
 }
 inline Bool oz_isSmallInt(TaggedRef term) {
   return _hasTag(term,TAG_SMALLINT);
 }
 inline Bool oz_isConst(TaggedRef term) {
-  GCDEBUG(term); return _hasTag(term,TAG_CONST);
+  return _hasTag(term,TAG_CONST);
 }
 inline Bool oz_isGcMark(TaggedRef term) {
   return _hasTag(term,TAG_GCMARK);
 }
-
-#else
-
-#define oz_isVariable(term)    _isVariable(term)
-#define oz_isVar(term)         _hasTag(term,TAG_VAR)
-#define oz_isLTuple(term)      _isLTuple(term)
-#define oz_isLiteral(term)     _hasTag(term,TAG_LITERAL)
-#define oz_isSRecord(term)     _hasTag(term,TAG_SRECORD)
-#define oz_isSmallInt(term)    _hasTag(term,TAG_SMALLINT)
-#define oz_isConst(term)       _hasTag(term,TAG_CONST)
-#define oz_isGcMark(term)      _hasTag(term,TAG_GCMARK)
-
-#endif
 
 /*
  * UNTAGGING
@@ -348,32 +199,35 @@ inline Bool oz_isGcMark(TaggedRef term) {
 
 #define WE_DO_ARITHMETIC_SHIFTS (1||(-1>>1) == -1)
 
-#ifdef DEBUG_CHECK
-
+inline TaggedRef * tagged2Ref(TaggedRef ref) {
+  Assert(oz_isRef(ref));
+  return _tagged2Ref(ref);
+}
 inline OzVariable * tagged2Var(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_VAR);
+  Assert(oz_isVar(ref));
   return (OzVariable *) tagValueOf2(TAG_VAR,ref);
 }
 inline SRecord * tagged2SRecord(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_SRECORD);
+  Assert(oz_isSRecord(ref));
   return (SRecord *) tagValueOf2(TAG_SRECORD,ref);
 }
 inline LTuple * tagged2LTuple(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_LTUPLE);
+  Assert(oz_isLTuple(ref));
   return (LTuple *) tagValueOf2(TAG_LTUPLE,ref);
 }
 inline Literal * tagged2Literal(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_LITERAL);
+  Assert(oz_isLiteral(ref));
   return (Literal *) tagValueOf2(TAG_LITERAL,ref);
 }
 inline ConstTerm * tagged2Const(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_CONST);
+  Assert(oz_isConst(ref));
   return (ConstTerm *) tagValueOf2(TAG_CONST,ref);
 }
-inline void * tagged2GcUnmarked(TaggedRef ref) {
-  CHECK_TAG(TAG_GCMARK);
+inline void * tagged2UnmarkedPtr(TaggedRef ref) {
+  Assert(oz_isGcMark(ref));
   return (void *) tagValueOf2(TAG_GCMARK,ref);
 }
+#define tagged2UnmarkedInt(t) ((int32) ((t) >> TAG_SIZE))
 
 inline int tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
@@ -387,54 +241,6 @@ inline int tagged2SmallInt(TaggedRef t) {
   }
 }
 
-inline TaggedRef tagged2NonVariable(TaggedRef *term) {
-  GCDEBUG(*term);
-  TaggedRef ret = *term;
-  if (_isVariable(ret) && !oz_isRef(ret)) {
-    ret = makeTaggedRef(term);
-  }
-  return ret;
-}
-
-
-#else
-
-
-#define tagged2Var(ref) \
-  ((OzVariable *) tagValueOf2(TAG_VAR,((TaggedRef) (ref))))
-#define tagged2SRecord(ref) \
-  ((SRecord *) tagValueOf2(TAG_SRECORD,((TaggedRef) (ref))))
-#define tagged2LTuple(ref) \
-  ((LTuple *) tagValueOf2(TAG_LTUPLE,((TaggedRef) (ref))))
-#define tagged2Literal(ref) \
-  ((Literal *) tagValueOf2(TAG_LITERAL,((TaggedRef) (ref))))
-#define tagged2Const(ref) \
-  ((ConstTerm *) tagValueOf2(TAG_CONST,((TaggedRef) (ref))))
-#define tagged2GcUnmarked(ref) \
-  ((void *) tagValueOf2(TAG_GCMARK,((TaggedRef) (ref))))
-
-#if WE_DO_ARITHMETIC_SHIFTS
-
-#define tagged2SmallInt(t) ((int (t))>>TAG_SIZE)
-
-#else
-
-#define tagged2SmallInt(t) (((int (t)) >= 0) ? ((int (t)) >> TAG_SIZE) : ~(~(int (t)) >> TAG_SIZE))
-
-#endif
-
-#define tagged2NonVariable(t) \
-          ((_isVariable(*(t)) && !oz_isRef(*(t))) ? makeTaggedRef(t) : *(t))
-
-
-#endif
-
-/* 
- * The C++ standard does not specify whether shifting right negative values
- * means shift logical or shift arithmetical. So we test what this C++ compiler
- * does.
- *
- */
 
 
 /*
@@ -442,90 +248,47 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
  *
  */
 
-#ifdef DEBUG_CHECK
-
+inline TaggedRef makeTaggedRef(TaggedRef * s) {
+  Assert(s != NULL); 
+  return _makeTaggedRef(s);
+}
 inline TaggedRef makeTaggedVar(OzVariable *s) {
-  CHECK_POINTER_N(s); 
-  CHECK_ALIGNMENT(s);
+  Assert(s != NULL && oz_isHeapAligned(s));
   return makeTaggedRef2p(TAG_VAR, s);
 }
 inline TaggedRef makeTaggedLTuple(LTuple *s) {
-  CHECK_POINTER_N(s); 
-  CHECK_ALIGNMENT(s);
+  Assert(s != NULL && oz_isHeapAligned(s));
   return makeTaggedRef2p(TAG_LTUPLE,s);
 }
 inline TaggedRef makeTaggedSRecord(SRecord *s) {
-  CHECK_POINTER_N(s); 
-  CHECK_ALIGNMENT(s);
+  Assert(s != NULL && oz_isHeapAligned(s));
   return makeTaggedRef2p(TAG_SRECORD,s);
 }
 inline TaggedRef makeTaggedLiteral(Literal *s) {
-  CHECK_POINTER_N(s); 
-  CHECK_DOUBLEALIGNMENT(s);
+  Assert(s != NULL && oz_isDoubleHeapAligned(s));
   return makeTaggedRef2p(TAG_LITERAL,s);
 }
 inline TaggedRef makeTaggedConst(ConstTerm *s) {
-  CHECK_POINTER_N(s); 
-  CHECK_ALIGNMENT(s);
+  Assert(s != NULL && oz_isHeapAligned(s));
   return makeTaggedRef2p(TAG_CONST,s);
 }
-inline TaggedRef makeTaggedGcMark(void * s) {
+inline TaggedRef makeTaggedMarkPtr(void * s) {
+  Assert(oz_isHeapAligned(s));
   return makeTaggedRef2p(TAG_GCMARK,s);
 }
+#define makeTaggedMarkInt(s) (((s) << TAG_SIZE) | TAG_GCMARK)
 
 inline TaggedRef makeTaggedSmallInt(int s) {
   Assert(s >= OzMinInt && s <= OzMaxInt);
   return _makeTaggedSmallInt(s);
 }
-
-inline TaggedRef makeTaggedMiscp(void * s) {
+inline TaggedRef makeTaggedVerbatim(void * s) {
   return makeTaggedRef2p((TypeOfTerm)0,s);
 }
-
-#else
-
-#define makeTaggedVar(s)       makeTaggedRef2p(TAG_VAR,      s)
-#define makeTaggedLTuple(s)    makeTaggedRef2p(TAG_LTUPLE,    s)
-#define makeTaggedSRecord(s)   makeTaggedRef2p(TAG_SRECORD,   s)
-#define makeTaggedLiteral(s)   makeTaggedRef2p(TAG_LITERAL,   s)
-#define makeTaggedConst(s)     makeTaggedRef2p(TAG_CONST,     s)
-#define makeTaggedGcMark(s)    makeTaggedRef2p(TAG_GCMARK,    s)
-#define makeTaggedSmallInt(s)  _makeTaggedSmallInt(s) 
-#define makeTaggedMiscp(s)     makeTaggedRef2p((TypeOfTerm)0, s)
-
-#endif
 
 
 #define makeTaggedNULL()       ((TaggedRef) 0)
 #define taggedVoidValue        _makeTaggedSmallInt(0)
-#define taggedInvalidVar       makeTaggedRef2p(TAG_VAR, (TaggedRef *) -1)
-
-
-
-/*
- * Construction of variables and refererences
- *
- */
-
-inline TaggedRef * newTaggedRef(TaggedRef *t) {
-  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
-  *ref = makeTaggedRef(t);
-  return ref;
-}
-
-inline TaggedRef * newTaggedOptVar(TaggedRef proto) {
-  Assert(proto != taggedInvalidVar);
-  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
-  *ref = proto;
-  return (ref);
-}
-
-inline TaggedRef * newTaggedVar(OzVariable * c) {
-  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
-  *ref = makeTaggedVar(c);
-  return ref;
-}
-
 
 
 /*
@@ -533,39 +296,33 @@ inline TaggedRef * newTaggedVar(OzVariable * c) {
  *
  */
 
-#define __DEREF(term, termPtr, tag)			\
-  while(oz_isRef(term)) {				\
-    termPtr = tagged2Ref(term);				\
-    term = *termPtr;					\
-  }							\
-  tag = tagTypeOf(term);
+#define _DEREF(term, termPtr)		               \
+  while(oz_isRef(term)) {			       \
+    termPtr = tagged2Ref(term);			       \
+    term    = *termPtr;				       \
+  }
 
-#define _DEREF(term, termPtr, tag)		\
-  register TypeOfTerm tag;			\
-   __DEREF(term, termPtr, tag);
+#define DEREF(term, termPtr)		               \
+  register TaggedRef *termPtr = NULL;		       \
+  _DEREF(term,termPtr);
 
+#define DEREF0(term, termPtr)		               \
+  register TaggedRef *termPtr;			       \
+  _DEREF(term,termPtr);
 
-#define DEREF(term, termPtr, tag)		\
-  register TaggedRef *termPtr = NULL;		\
-  _DEREF(term,termPtr,tag);
+#define DEREFPTR(term, termPtr)		               \
+  register TaggedRef term = *termPtr;		       \
+  _DEREF(term,termPtr);
 
-#define DEREF0(term, termPtr, tag)		\
-  register TaggedRef *termPtr;			\
-  _DEREF(term,termPtr,tag);
-
-#define DEREFPTR(term, termPtr, tag)		\
-  register TaggedRef term = *termPtr;		\
-  _DEREF(term,termPtr,tag);
-
-#define SAFE_DEREF(term)				\
-if (oz_isRef(term)) {					\
-  DEREF(term,SAFE__PTR__,SAFE__TAG__);			\
-  if (oz_isVariable(term)) term=makeTaggedRef(SAFE__PTR__);	\
+#define SAFE_DEREF(term)			       \
+if (oz_isRef(term)) {				       \
+  DEREF(term,SAFE__PTR__);			       \
+  if (oz_isVar(term)) term=makeTaggedRef(SAFE__PTR__); \
 }
 
 inline
 TaggedRef oz_deref(TaggedRef t) {
-  DEREF(t,_1,_2);
+  DEREF(t,_1);
   return t;
 }
 
@@ -583,9 +340,40 @@ TaggedRef oz_safeDeref(TaggedRef t) {
 
 inline
 TaggedRef oz_derefPtr(TaggedRef t) {
-  DEREF(t,tptr,_2);
+  DEREF(t,tptr);
   return (TaggedRef) tptr;
 }
+
+
+
+/*
+ * Derived abstractions for variables
+ *
+ */
+
+inline 
+TaggedRef tagged2NonVariable(TaggedRef * t) {
+  return oz_isVar(*t) ? makeTaggedRef(t) : *t;
+}
+
+inline TaggedRef * newTaggedRef(TaggedRef *t) {
+  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
+  *ref = makeTaggedRef(t);
+  return ref;
+}
+
+inline TaggedRef * newTaggedOptVar(TaggedRef proto) {
+  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
+  *ref = proto;
+  return (ref);
+}
+
+inline TaggedRef * newTaggedVar(OzVariable * c) {
+  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
+  *ref = makeTaggedVar(c);
+  return ref;
+}
+
 
 
 /*
@@ -680,13 +468,14 @@ RefsArray copyRefsArray(RefsArray a, int n)  {
   return (RefsArray) memcpy(allocateRefsArray(n), a, n * sizeof(TaggedRef));
 }
 
-/*===================================================================
- * 
- *=================================================================== */
 
-// 
-// identity test
-//
+
+
+/*
+ * Safe identity test 
+ *
+ */
+
 #ifdef DEBUG_CHECK
 
 inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
@@ -702,21 +491,22 @@ inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
 #endif
 
 
-/*===================================================================
- * Tagged Pointer classes
- *=================================================================== */
+
 
 /*
+ * Tagged Pointer class
+ *
  * class Tagged2:
  *  32 bit word to store
  *    word aligned pointer + 2 tag bits or
  *    30 bit value + 2 tag bits
+ *
  */
 
 #define tagged2Mask 3
 #define tagged2Bits 2
-class Tagged2
-{
+
+class Tagged2 {
 private:
   uint32 tagged;
   void checkTag(int tag)       { Assert(tag >=0 && tag <=tagged2Mask); }
@@ -765,9 +555,13 @@ public:
 
 };
 
-/*===================================================================
- * 
- *=================================================================== */
+
+
+
+/*
+ * This guy just hangs around here
+ *
+ */
 
 inline 
 int nextPowerOf2(int n)
@@ -776,20 +570,6 @@ int nextPowerOf2(int n)
     if (i>=n) return i;
   }
 }
-
-/*===================================================================
- * Alternate DEREF interface
- * Idea: only if the unit is a ref it can be a variable
- *=================================================================== */
-
-#define DerefIfVarDo(v,Block)			\
- if (oz_isRef(v)) {				\
-   v=oz_safeDeref(v);				\
-   if (oz_isRef(v)) { Block; }			\
- }
-
-#define DerefIfVarReturnIt(v)   DerefIfVarDo(v, return v);
-#define DerefIfVarSuspend(v)    DerefIfVarDo(v, return SUSPEND);
 
 
 #endif

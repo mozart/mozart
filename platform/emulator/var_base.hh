@@ -378,14 +378,13 @@ OZ_Return oz_var_cast(TaggedRef *&, Board *, TypeOfVariable);
 
 inline
 Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
-  Assert(oz_isVariable(v) && !oz_isRef(v));
+  Assert(oz_isVar(v) && !oz_isRef(v));
   return oz_isOptVar(v) ? NO : tagged2Var(v)->getSuspList()->hasSuspAt(b);
 }
 
 inline
 Bool isFuture(TaggedRef term)
 {
-  GCDEBUG(term);
   return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FUTURE);
 }
 
@@ -398,7 +397,6 @@ Future *tagged2Future(TaggedRef t) {
 inline
 Bool isSimpleVar(TaggedRef term)
 {
-  GCDEBUG(term);
   return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_SIMPLE);
 }
 
@@ -480,7 +478,7 @@ int oz_isFuture(TaggedRef r)
 inline
 int oz_isNonKinded(TaggedRef r)
 {
-  return oz_isVariable(r) && !oz_isKinded(r);
+  return oz_isVar(r) && !oz_isKinded(r);
 }
 
 /* -------------------------------------------------------------------------

@@ -108,7 +108,7 @@ public:
   }
 
   ExtRefNode *protect(TaggedRef *el) {
-    Assert(oz_isRef(*el) || !oz_isVariable(*el));
+    Assert(oz_isRef(*el) || !oz_isVar(*el));
     Assert(!find(el));
     return add(el);
   }

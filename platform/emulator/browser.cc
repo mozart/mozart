@@ -42,11 +42,11 @@ OZ_BI_define(BIaddr,1,1)
 {
   oz_declareIN(0,val);
 
-  DEREF(val,valPtr,valTag);
+  DEREF(val,valPtr);
 
-  OZ_RETURN_INT((isVariableTag(valTag) && valPtr) ? 
+  OZ_RETURN_INT((oz_isVar(val) && valPtr) ? 
 		ToInt32(valPtr) :
-		ToInt32(tagValueOf2(valTag,val)));
+		ToInt32(tagValueOf(val)));
 } OZ_BI_end
 
 
@@ -54,9 +54,9 @@ OZ_BI_define(BIchunkWidth, 1,1)
 {
   OZ_Term ch =  OZ_in(0);
 
-  DEREF(ch, chPtr, chTag);
+  DEREF(ch, chPtr);
 
-  switch(chTag) {
+  switch(tagTypeOf(ch)) {
   case TAG_VAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
@@ -81,8 +81,8 @@ OZ_BI_define(BIchunkWidth, 1,1)
 OZ_BI_define(BIisRecordVarB,1,1)
 {
   TaggedRef t = OZ_in(0); 
-  DEREF(t, tPtr, tag);
-  switch (tag) {
+  DEREF(t, tPtr);
+  switch (tagTypeOf(t)) {
   case TAG_LTUPLE:
   case TAG_LITERAL:
   case TAG_SRECORD:
@@ -116,7 +116,7 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
 {
   oz_declareDerefIN(0,v);
   
-  if (isVariableTag(vTag)){
+  if (oz_isVar(v)){
     RefsArray args = allocateRefsArray(1, NO);
     args[0] = OZ_in(1);
 
@@ -135,9 +135,9 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
 {
   OZ_Term ch =  OZ_in(0);
 
-  DEREF(ch, chPtr, chTag);
+  DEREF(ch, chPtr);
 
-  switch(chTag) {
+  switch(tagTypeOf(ch)) {
   case TAG_VAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
@@ -172,9 +172,9 @@ OZ_BI_define(BIvarSpace,1,1)
   oz_declareIN(0,v);
   void *addr;
 
-  DEREF(v,vPtr,vTag);
+  DEREF(v,vPtr);
 
-  if (isVariableTag(vTag)) {
+  if (oz_isVar(v)) {
     OzVariable *ov = tagged2Var(v);
     addr = ov->getBoardInternal();
   } else {
@@ -188,7 +188,7 @@ OZ_BI_define(BIvarSpace,1,1)
 OZ_BI_define(BIprocLoc,1,3)
 {
   oz_declareIN(0,v);
-  DEREF(v,vPtr,vTag);
+  DEREF(v,vPtr);
 
   if (oz_isAbstraction(v)) {
     Abstraction *a = tagged2Abstraction(v);

@@ -384,12 +384,12 @@ DefFdAssignClass(FdAssign_Max,selectValMax);
 
 #define TestElement(v) \
   {                                         \
-    DEREF(v, v_ptr, v_tag);                 \
+    DEREF(v, v_ptr);                        \
     if (isGenFDVar(v) || isGenBoolVar(v)) { \
       n++;                                  \
     } else if (oz_isSmallInt(v)) {          \
       ;                                     \
-    } else if (oz_isVariable(v)) {          \
+    } else if (oz_isVar(v)) {               \
       oz_suspendOnPtr(v_ptr);               \
     } else {                                \
       goto bomb;                            \
@@ -433,8 +433,8 @@ OZ_BI_define(fdd_distribute, 3, 1) {
       TaggedRef v = oz_head(vs);
       TestElement(v);
       vs = oz_tail(vs);
-      DEREF(vs, vs_ptr, vs_tag);
-      if (isVariableTag(vs_tag))
+      DEREF(vs, vs_ptr);
+      if (oz_isVar(vs))
 	oz_suspendOnPtr(vs_ptr);
     }
     
@@ -547,8 +547,8 @@ OZ_BI_define(fdd_assign, 2, 1) {
       TaggedRef v = oz_head(vs);
       TestElement(v);
       vs = oz_tail(vs);
-      DEREF(vs, vs_ptr, vs_tag);
-      if (isVariableTag(vs_tag))
+      DEREF(vs, vs_ptr);
+      if (oz_isVar(vs))
 	oz_suspendOnPtr(vs_ptr);
     }
     

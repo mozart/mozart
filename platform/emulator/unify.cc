@@ -43,7 +43,7 @@
 static
 Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = oz_deref(*vPtr);
-  return (!oz_isVariable(val) ||
+  return (!oz_isVar(val) ||
 	  oz_isBelow(oz_currentBoard(), GETBOARD(tagged2Var(val))));
 }
 #endif
@@ -72,7 +72,7 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   Assert(oz_isLocalVar(ov));
   Assert(!am.inEqEq());
   oz_checkSuspensionList(ov, pc_std_unif);
-  DEREF(term,termPtr,_);
+  DEREF(term,termPtr);
   if (oz_isVar(term)) {
     OzVariable *sv=tagged2Var(term);
     Assert(sv!=ov);
@@ -93,11 +93,11 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 
 void oz_bind_global(TaggedRef var, TaggedRef term)
 {
-  DEREF(var,varPtr,_);
+  DEREF(var,varPtr);
   if (!oz_isOptVar(var)) {
     OzVariable *ov=tagged2Var(var);
     oz_checkSuspensionList(ov, pc_all);
-    DEREF(term,termPtr,_);
+    DEREF(term,termPtr);
     if (oz_isVar(term)) {
       OzVariable *sv=tagged2Var(term);
       Assert(sv!=ov);
@@ -116,17 +116,10 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
  * -------------------------------------------------------------------------*/
 
 inline
-Board *getVarBoard(TaggedRef var)
-{
-  CHECK_ISVAR(var);
-  return tagged2Var(var)->getBoardInternal();
-}
-
-inline
 Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 {
-  Board *board1 = getVarBoard(var1);
-  Board *board2 = getVarBoard(var2)->derefBoard();
+  Board *board1 = tagged2Var(var1)->getBoardInternal();
+  Board *board2 = tagged2Var(var2)->getBoardInternal()->derefBoard();
   return oz_isBelow(board1,board2);
 }
 
@@ -164,7 +157,7 @@ void rebind(TaggedRef *refPtr, TaggedRef term2)
 OZ_Return oz_unify(TaggedRef t1, TaggedRef t2)
 {
   unifyStack.pushMark();
-  CHECK_NONVAR(t1); CHECK_NONVAR(t2);
+  Assert(!oz_isVar(t1) && !oz_isVar(t2));
 
   OZ_Return result = FAILED;
 
@@ -172,29 +165,29 @@ OZ_Return oz_unify(TaggedRef t1, TaggedRef t2)
   TaggedRef term2 = t2;
   TaggedRef *termPtr1 = &term1;
   TaggedRef *termPtr2 = &term2;
+  TypeOfTerm tag1, tag2;
 
 loop:
   int argSize;
 
-  _DEREF(term1,termPtr1,tag1);
-  _DEREF(term2,termPtr2,tag2);
+  _DEREF(term1,termPtr1);
+  _DEREF(term2,termPtr2);
 
   // identical terms ?
   if (oz_isVar(term1) ? termPtr1 == termPtr2 : term1 == term2) {
     goto next;
   }
 
-  if (oz_isVariable(term1)) {
-    if (oz_isVariable(term2)) {
+  if (oz_isVar(term1)) {
+    if (oz_isVar(term2)) {
       goto var_var;
     } else {
       goto var_nonvar;
     }
   } else {
-    if (oz_isVariable(term2)) {
+    if (oz_isVar(term2)) {
       Swap(term1,term2,TaggedRef);
       Swap(termPtr1,termPtr2,TaggedRef*);
-      Swap(tag1,tag2,TypeOfTerm);
       goto var_nonvar;
     } else {
       goto nonvar_nonvar;
@@ -253,8 +246,8 @@ loop:
    */
 
   {
-    Board * tb1 = getVarBoard(term1)->derefBoard();
-    Board * tb2 = getVarBoard(term2)->derefBoard();
+    Board * tb1 = tagged2Var(term1)->getBoardInternal()->derefBoard();
+    Board * tb2 = tagged2Var(term2)->getBoardInternal()->derefBoard();
 
     if (oz_isBelow(tb2, tb1)) {
       // t2 should be bound to t1
@@ -289,6 +282,9 @@ loop:
 
  /*************/
  nonvar_nonvar:
+
+  tag1 = tagTypeOf(term1);
+  tag2 = tagTypeOf(term2);
 
   if (tag1 != tag2)
     goto fail;

@@ -1075,13 +1075,13 @@ Bool distHandlerInstallImpl(unsigned short kind,unsigned short ec,
 				 TaggedRef proc){
   if(entity==0){
     return installGlobalWatcher(ec,proc,kind);}
-  if(!oz_isVariable(oz_deref(entity))){
+  if(!oz_isVar(oz_deref(entity))){
     entity=oz_deref(entity);
     if(!isWatcherEligible(entity)) return TRUE;
     Tertiary * tert = (Tertiary *) tagged2Const(entity);
     return installWatcher(tert,ec,proc,th,kind);}
 
-  DEREF(entity,vs_ptr,vs_tag);
+  DEREF(entity,vs_ptr);
   return installWatcher(vs_ptr,ec,proc,th,kind);
 }
 
@@ -1090,13 +1090,13 @@ Bool distHandlerDeInstallImpl(unsigned short kind,unsigned short ec,
 				 TaggedRef proc){
   if(entity==0){
     return deInstallGlobalWatcher(ec,proc,kind);}
-  if(!oz_isVariable(oz_deref(entity))){
+  if(!oz_isVar(oz_deref(entity))){
     entity=oz_deref(entity);
     if(!isWatcherEligible(entity)) return TRUE;
     Tertiary* tert = (Tertiary *) tagged2Const(entity);
     return deinstallWatcher(tert,ec,proc,th,kind);}
 
-  DEREF(entity,vs_ptr,vs_tag);
+  DEREF(entity,vs_ptr);
   return deinstallWatcher(vs_ptr,ec,proc,th,kind);
 }
 
@@ -1297,8 +1297,8 @@ void maybeHandOver(EntityInfo* oldE, TaggedRef t){
   if(oldE==NULL) return;
   if(oldE->watchers==NULL) return;
   EntityInfo *newE;
-  DEREF(t,vs_ptr,vs_tag);
-  if(isVariableTag(vs_tag)){
+  DEREF(t,vs_ptr);
+  if(oz_isVar(t)){
     newE=varMakeOrGetEntityInfo(vs_ptr);
     newE->watchers=mergeWatchers(oldE->watchers,newE->watchers);
     return;}

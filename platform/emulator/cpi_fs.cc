@@ -31,9 +31,9 @@
 
 void OZ_FSetVar::ask(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var = v;
   varPtr = _vptr;
   //
@@ -61,9 +61,9 @@ void OZ_FSetVar::ask(OZ_Term v)
 
 void OZ_FSetVar::read(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var    = v;
   varPtr = _vptr;
   //
@@ -157,9 +157,9 @@ void OZ_FSetVar::read(OZ_Term v)
 
 void OZ_FSetVar::readEncap(OZ_Term v)
 {
-  Assert(oz_isRef(v) || !oz_isVariable(v));
+  Assert(oz_isRef(v) || !oz_isVar(v));
   //
-  DEREF(v, _vptr, vtag);
+  DEREF(v, _vptr);
   var    = v;
   varPtr = _vptr;
   //
@@ -222,7 +222,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
   //
   // this parameter has become an integer by a previous tell
   //
-  if (!oz_isVariable(*varPtr)) {
+  if (!oz_isVar(*varPtr)) {
     //
     goto oz_false;
     //

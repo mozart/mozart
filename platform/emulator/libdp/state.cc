@@ -372,7 +372,7 @@ OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw){
 
 OZ_Return objectExchangeImpl(Tertiary* c,TaggedRef fea,TaggedRef ov, TaggedRef nv){
   maybeConvertCellProxyToFrame(c);
-  Assert(!(oz_isVariable(fea)));
+  Assert(!(oz_isVar(fea)));
   if((!errorIgnore(c))){
     TaggedRef proc;
     EntityCond ec;

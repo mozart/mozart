@@ -373,7 +373,6 @@ public:
   // space and cannot have suspensions. All OptVar"s in a space share
   // one single var body, whose "master copy" is stored in the space:
   TaggedRef getOptVar() {
-    Assert(optVar != taggedInvalidVar);
     return (optVar);
   }
 
