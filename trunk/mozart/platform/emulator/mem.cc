@@ -51,6 +51,7 @@ extern "C" {
 
 // allocate 1000 kilo byte chunks of memory
 
+
 MemChunks *MemChunks::list = NULL;
 
 unsigned int heapTotalSize;
@@ -69,8 +70,6 @@ void initMemoryManagement(void) {
   initLinkedQueueFreeList();
 #endif
 
-  nextChopSize = 8; // Do not change until you know what you are doing!
-
   // init heap memory
   heapTotalSizeBytes = heapTotalSize = 0;
   heapTop       = NULL;
@@ -79,106 +78,9 @@ void initMemoryManagement(void) {
   MemChunks::list = NULL;
   (void) getMemFromOS(0);
 
-  // init free store list
-  {
-    for (int i = freeListMaxSize; i--; ) 
-      FreeList[i] = NULL;
-  }
-
-  /*
-   * Ensure that the proper slots are filled with blocks
-   */
-  {
-    for(int i=sizeof(FreeListMem); i < freeListMaxSize; i+=sizeof(FreeListMem))
-      freeListRefill(&(FreeList[i]));
-  }
-
-}
-
-
-// ----------------------------------------------------------------
-// free list memory
-
-FreeListMem* FreeList[freeListMaxSize];
-size_t nextChopSize;
-
-// count bytes free in FreeList memory
-unsigned int getMemoryInFreeList() {
-  unsigned int sum = 0;
-  FreeListMem *ptr;
-
-  for (int i=0; i<freeListMaxSize; i++) {
-    ptr = FreeList[i];
-    while (ptr != NULL) {
-      sum += i;
-      ptr = (FreeListMem*) ToPointer(ptr->next);
-    }
-  }
-
-  return sum;
-}
-
-#ifdef DEBUG_MEM
-// this function is intended to check the consistency of the free list
-// memory
-void scanFreeList(void) {
-  for (int i = freeListMaxSize; i--; ) 
-    for (FreeListMem *ptr = FreeList[i];
-	 ptr;
-	 ptr = (FreeListMem *) ToPointer(ptr->next))
-	;
-}
-#endif
-
-#define FreeListRefillQuantity 16
-
-void freeListRefill(FreeListMem ** fl) {
-  int sz = fl - FreeList;
-  Assert(sz >= (int) sizeof(FreeListMem) && sz <= (int) freeListMaxSize);
-
-  /*
-   * With how much entries should be the guy refilled?
-   * Could be dynamic, but let's just take a fixed number.
-   */
-
-  char * block = 
-    (char *) heapMalloc(sz * FreeListRefillQuantity);
-
-  *fl = (FreeListMem *) block;
-
-  for (int i=FreeListRefillQuantity-1; i--; ) {
-    ((FreeListMem *) block)->next = ToInt32(block+sz);
-    block += sz;
-  }
-
-  ((FreeListMem *) (block))->next = ToInt32(NULL);
-
-}
-
-
-void freeListChop(void * addr, size_t size) {
-  // Chop the chunk into pieces of the likely sizes
-  // Likely sizes are between 8 and 32.
-
-  register size_t cs = nextChopSize;
-
-  if (nextChopSize > 32) 
-    nextChopSize = 2*sizeof(void*);
-  else
-    nextChopSize += sizeof(void*);
-
-  register size_t s     = size;
-  register FreeListMem * prev  = FreeList[cs];
-  register FreeListMem * ozsmall = (FreeListMem*) addr;
-
-  do {
-    ozsmall->next = ToInt32(prev);
-    prev = ozsmall;
-    ozsmall = (FreeListMem*) ((char *) ozsmall + cs);
-    s     -= cs; 
-  } while (s > cs);
+  // init free memory list
+  FLM.init();
   
-  FreeList[cs] = prev;
 }
 
 
@@ -864,10 +766,83 @@ char *getMemFromOS(size_t sz) {
   return heapTop;
 }
 
+/*
+ * Free List Management
+ *
+ */
 
-#ifdef OUTLINE
-#define inline
-#include "mem.icc"
-#undef inline
-#endif
+FL_Manager FLM;
+
+void FL_Manager::init(void) {
+  large    = (FL_Large *) NULL;
+  small[0] = NULL;
+
+  for (int i = FL_SizeToIndex(FL_MaxSize); i>0; i--) {
+    FL_Small * f = (FL_Small *) heapMalloc(FL_IndexToSize(i));
+    f->setNext(NULL);
+    small[i] = f;
+  }
+}
+
+#define FL_RFL_Small 24
+#define FL_RFL_N1    4
+#define FL_RFL_N2    32
+
+void FL_Manager::refill(const size_t sz) {
+  register char * block;
+  register size_t n;
+
+  /*
+   * Take a large block, if available
+   *
+   */
+
+  if (large != NULL) {
+    FL_Large * l = large;
+    large = l->getNext();
+    block = (char *) l;
+    n     = l->getSize();
+  } else {
+    n     = ((sz > FL_RFL_Small) ? FL_RFL_N1 : FL_RFL_N2) * sz;
+    block = (char *) heapMalloc(n);
+  }
+
+  ((FL_Small *) block)->setNext(NULL);
+
+  small[FL_SizeToIndex(sz)] = (FL_Small *) block;
+
+  n -= sz;
+  
+  while (n >= sz) {
+    block += sz;
+    n     -= sz;
+    ((FL_Small *) block)->setNext((FL_Small *) (block-sz));
+  }
+  
+  if (n > 0)
+    free(block+sz,n);
+  
+}
+
+unsigned int FL_Manager::getSize(void) {
+  unsigned int s = 0;
+
+  for (int i = 1; i <= FL_SizeToIndex(FL_MaxSize); i++) {
+    FL_Small * f = small[i];
+    while (f) {
+      s += FL_IndexToSize(i); f = f->getNext();
+    }
+  }
+
+  FL_Large * f = large;
+
+  while (f) {
+    s += f->getSize(); f = f->getNext();
+  }
+
+  return s;
+}
+
+
+
 
