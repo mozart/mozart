@@ -85,6 +85,7 @@
     <Meta name="html.split" value="r_prop">
     <Meta name="html.split" value="r_fdint">
     <Meta name="html.split" value="r_fd">
+    <Meta name="html.split" value="r_fsvar">
     <Meta name="html.split" value="r_fs">
     <Meta name="html.split" value="r_fsc">
     <Meta name="html.split" value="r_aux">
