@@ -154,7 +154,7 @@ public:
   }
 
   Bool isSetSFlag(StatusBit flag) { return ( statusReg & flag ) ? OK : NO; }
-  Bool isSetSFlag() { return statusReg ? OK : NO; }
+  int isSetSFlag()                { return statusReg; }
 
   void print();
 
