@@ -29,6 +29,12 @@
 #define DebugMem(Code)
 #endif
 
+/* like malloc(3): return pointer aligned to void* */
+#define heapMalloc(chunk_size) (mallocBody(chunk_size,WordSize))
+
+extern void *heapMallocOutline(size_t chunk_size);
+
+
 class MemChunks {
 public:
   static MemChunks *list;
@@ -100,8 +106,6 @@ inline unsigned int getAllocatedMemory() {
  */
 
 
-void *heapMallocOutline(size_t chunk_size);
-
 
 /* Assert: heapTop grows to LOWER address */
 #define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
@@ -172,7 +176,6 @@ void printChunkChain(void *);
 #else
 void * freeListMalloc(size_t chunk_size);
 void freeListDispose(void *addr, size_t chunk_size);
-void *heapMalloc(size_t chunk_size);
 #endif
 
 #endif

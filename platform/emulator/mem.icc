@@ -16,13 +16,6 @@
 #pragma interface
 #endif
 
-/* like malloc(3): return pointer aligned to void* */
-inline
-void *heapMalloc(size_t chunk_size)
-{
-  return mallocBody(chunk_size,WordSize);
-}
-
 
 inline
 void * freeListMalloc(size_t chunk_size)
