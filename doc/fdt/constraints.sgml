@@ -1,0 +1,745 @@
+
+<chapter id=chapter.constraints><title/Propagate and Distribute/<p>
+
+This section presents the architecture of
+constraint-based problem solving at the concrete
+instance of finite domain problems.  We will often
+refer to the underlying solution method with the
+slogan <q/propagate and distribute/.  The slogan
+recalls the two inference rules of the method,
+constraint propagation and constraint
+distribution.
+
+<section id="subsecFDP"><title/Finite Domains and Constraints/<p>
+
+A <def/finite domain/ is a finite set of
+nonnegative integers.  The notation m#n stands
+for the finite domain m,&ellipsis;,n.
+<p>
+A <def/constraint/ is a formula of predicate logic.
+Here are typical examples of constraints occurring
+with finite domain problems:
+<p><math>
+~$
+\begin{eqnarray*}
+&ampersand;X=67
+\qquad
+X\in0\#9
+\qquad
+X=Y\\
+&ampersand;X^2-Y^2=Z^2
+\qquad
+X+Y+Z<U
+\qquad
+X+Y\neq5\cdot Z\\
+&ampersand;X_1,\ldots,X_9\;\hbox{are pairwise distinct}
+\end{eqnarray*}$~
+</math><p>
+
+<para><title/domain constraints/
+A <def/domain constraint/ 
+takes the form <math/x\in D/, where ?{D}
+is a finite domain.  Domain constraints can
+express constraints of the form <math/x=n/ since <math/x=n/
+is equivalent to <math/x\in n\#n/.
+
+<para><title/basic constraints/
+A <def/basic constraint/ takes one of the following forms:
+<math/x=n/, <math/x=y/, or <math/x\in D/, where ?{D} is a finite
+domain.
+
+<para><title/finite domain problems/
+A <def/finite domain problem/ is a finite set ?{P} of
+quantifier-free constraints such that&fsp;?{P} contains a
+domain constraint for every variable occurring in
+a constraint of ?{P}.  A <def/variable assignment/
+is a function mapping variables to integers.  
+
+<para><title/solutions/
+A <def/solution/  of a finite
+domain problem ?{P} is a variable assignment that
+satisfies every constraint in&nbsp;?{P}.
+<p>
+Notice that a finite domain problem has at most
+finitely many solutions, provided we consider
+only variables that occur in the problem (since
+the problem contains a finite domain constraint
+for every variable occurring in it).
+</section>
+<section id="subsecFDCP"><title/Constraint Propagation/<p>
+
+Constraint propagation is an inference rule for
+finite domain problems that narrows the domains
+of variables.  For instance, given the inequation
+<p><math/X<Y/<p>
+and the domain constraints
+<p><math/X\in23\#100
+\qquad
+\hbox{and} 
+\qquad 
+Y\in1\#33,
+/<p>
+constraint propagation can narrow the domains of
+?{X} and ?{Y} to
+<p><math/
+X\in23\#32
+\qquad
+\hbox{and} 
+\qquad 
+ Y\in24\#33.
+/<p>
+
+</section>
+<section><title/Spaces, Propagators, and Constraint Stores/
+<p>
+The computational architecture for constraint
+propagation is called a <def/space/ and consists
+of a number of propagators connected to a
+constraint store:
+<picture latex>
+\begin{pspicture}(6,3)\footnotesize
+\rput(1,2.6){\rnode{ta}{\bf \large Propagator}}
+\rput(5,2.6){\rnode{tz}{\bf \large Propagator}}
+\rput(3,2.6){\rnode{bla}{\bf .$\;$.$\;$.}}
+\rput(3,1){\ovalnode{store}{\bf \large Constraint Store}}
+\ncline[nodesep=3pt]{<-}{store}{ta}\ncline[nodesep=3pt]{<-}{store}{tz}
+\end{pspicture}
+</picture>
+The <def/contraint store/ stores a conjunction of
+basic constraints up to logical equivalence.  An
+example for such a conjunction is
+<p><math/
+X\in0\#5
+\;\land\;
+Y=8
+\;\land\;
+Z\in13\#23.
+/<p><p>
+The <def/popagators/ impose nonbasic constraints,
+for instance, <math/X<Y/ or <math/{X^2+Y^2=Z^2}/.  A
+propagator for a constraint&nbsp;?{C} is a concurrent
+computational agent that tries to narrow the
+domains of the variables occurring in&nbsp;?{C}.
+<p>
+
+<para><title/example of communicating propagators/
+Two propagators that share a variable ?{X} can
+communicate with each other through the
+constraint store.  To see an example for
+communicating propagators, suppose we have two
+propagators imposing the constraints
+<p><math/
+X+Y=9
+\qquad
+2\cdot X+4\cdot Y=24
+/<p>
+over a constraint store containing the following
+information about ?{X} and ?{Y}:
+<p><math/
+X\in0\#9
+\qquad
+Y\in0\#9.
+/<p><p>
+As is, the first propagator cannot do anything.  The
+second propagator, however, can narrow the domains of
+both ?{X} and ?{Y}:
+<p><math/
+X\in0\#8
+\qquad
+Y\in2\#6.
+/<p><p>
+Now the first propagator can narrow the domain of
+?{X}:
+<p><math/
+X\in3\#7
+\qquad
+Y\in2\#6.
+/<p><p>
+Now the second propagator can narrow the domains of
+both ?{X} and ?{Y}:
+<p><math/
+X\in4\#6
+\qquad
+Y\in3\#4.
+/<p><p>
+This once more activates the first propagator,
+which narrows the domain of&nbsp;?{X}:
+<p><math/
+X\in5\#6
+\qquad
+Y\in3\#4.
+/<p><p>
+Now the second propagator gets active once more and
+determines the values of ?{X} and ?{Y}:
+<p><math/
+X=6
+\qquad
+Y=3.
+/<p>
+<para><title/telling a constraint/
+Given a constraint store storing a constraint ?{S}
+and a propagator imposing a constraint ?{P}, the
+propagator can tell to the constraint store a
+basic constraint ?{B} if the conjunction <math/S\land
+P/ entails ?{B} and ?{B} adds new and consistent
+information to the store.  To <def/tell/ a constraint ?{B}
+to a constraint store storing the constraint ?{S}
+means to update the store so that it holds the
+conjunction <math/S\land B/.
+
+<para><title/operational and declarative semantics of
+propagators/
+The <def/operational semantics/
+of a propagator determines whether
+the propagator can tell the store a basic
+constraint or not.  The operational semantics of
+a propagator must of course respect the <def/declarative semantics/ of the propagator, which
+is given by the constraint the propagator
+imposes.
+
+We require that the constraint store be always
+consistent; that is, there must always be at least
+one variable assignment that satisfies all
+constraints in the constraint store.
+
+We say that the constraint store <def/determines/
+\marginpar{determined variables} a variable ?{x} if
+the constraint store knows the value of ?{x}, that
+is, if there exists an integer ?{n} such that&fsp;the
+constraint store entails <math/x=n/.
+
+We say that a propagator is <def/inconsistent/ if
+\marginpar{failed propagators} there is no variable
+assignment that satisfies both the constraint
+store and the constraint imposed by the
+propagator (e.g., <math/X+Y=6/ over <math/X\in3\#9/ and
+<math/Y\in4\#9/).  We say that a propagator is <def/failed/ if its operational semantics realizes
+that it is inconsistent.
+
+We say that a propagator is <def/entailed/
+\marginpar{entailed propagators} if every variable
+assignment that satisfies the constraint store
+also satisfies the constraint imposed by the
+propagator (e.g., <math/X<Y/ over <math/X\in3\#5/ and
+<math/Y\in6\#9/).  As soon as the operational
+semantics of a propagator realizes that the
+propagator is entailed, the propagator ceases to
+exist.
+
+We require that the operational semantics of a
+propagator detects inconsistency and entailment at
+the latest when the store determines all variables
+of the propagator.
+
+We say that a propagator is {\em stable}
+\marginpar{stable propagators} if it is either
+failed or its operational semantics cannot tell
+new information to the constraint store.
+
+We say that a space is <def/failed/
+\marginpar{failed, stable and solved spaces} if
+one of its propagators is failed.  We say that a
+space is <def/stable/ if all of its propagators
+are stable.  We say that a space is <def/solved/
+if it is not failed and there are no propagators
+left.
+
+When a space is created, its propagators start to
+\marginpar{order of propagation does not matter}
+tell basic constraints to the constraint store.
+This propagation activity continues until the
+space becomes stable.  An important property of
+constraint propagation as we consider it here is
+the fact that the order in which the propagators
+tell information to the store does not matter.
+When we start a space repeatedly from the same
+state, it will either always fail or always
+arrive at the same constraint store (up to
+logical equivalence).
+
+A variable assignment is called a <def/solution/
+\marginpar{solutions of a space} of a space if it
+satisfies the constraints in the constraint store
+and all constraints imposed by the propagators.
+The solutions of a space stay invariant under
+constraint propagation and deletion of entailed
+propagators.
+
+<section id="SecFDIntDomProp"><title/Interval and Domain Propagation/<p>
+
+There are two established schemes for the
+operational semantics of a propagator.  <def/Domain
+propagation/ narrows the domains of the variables
+as much as possible; <def/interval propagation/
+only narrows the bounds of a domain.
+
+Consider a propagator for the constraint
+<p><math>
+{2\cdot X}=Y
+</math><p>
+over a constraint store
+<p><math>
+X\in1\#10
+\qquad
+Y\in1\#7.
+</math><p>
+Under domain propagation, the propagator can narrow
+the domains to
+<p><math>
+X\in1\#3
+\qquad
+Y\in\{2,4,6\}.
+</math><p>
+Under interval propagation, the propagator can
+narrow only the domain bounds, which yields
+<p><math>
+X\in1\#3
+\qquad
+Y\in2\#6.
+</math><p>
+
+It practice, interval propagation is usually
+preferable over domain propagation because of its
+lower computational costs.  We will see later that
+Oz offers for some constraints two propagators, one
+for interval and one for domain propagation.
+
+<section><title/Incompleteness of Propagation/<p>
+
+Constraint propagation is not a complete solution
+method.  It may happen that a space has a unique
+solution and that constraint propagation does not
+find it.  It may also happen that a space has no
+solution and that constraint propagation does not
+lead to a failed propagator.
+
+A straightforward example for the second case
+consists of three propagators for
+<p><math>
+X\neq Y
+\qquad
+X\neq Z
+\qquad
+Y\neq Z
+</math><p>
+and a constraint store
+<p><math>
+X\in 0\#1
+\qquad
+Y\in 0\#1
+\qquad
+Z\in 0\#1.
+</math><p>
+This space has no solution. Nevertheless, none of the
+propagators is inconsistent or can tell something to
+the constraint store.
+
+To see an example for the case where a unique
+solution is not found by constraint propagation,
+suppose we have interval propagators for the
+constraints
+<p><math/
+ {3\cdot X}+{3\cdot Y}=5\cdot Z
+\qquad
+ X-Y=Z
+\qquad
+ X+Y=Z+2
+/<p>
+and a constraint store
+<p>
+<math>
+X\in 4\#10
+\qquad
+Y\in 1\#7
+\qquad
+Z\in 3\#9.
+</math>
+This space has the unique solution <math/X=4/, <math/Y=1/,
+<math/Z=3/.  Nevertheless, none of the propagators can
+narrow a variable domain.
+
+If we narrow the domains to
+<p><math>
+X\in 5\#10
+\qquad
+Y\in 1\#6
+\qquad
+Z\in 4\#9,
+</math>
+the space becomes unsatisfiable.  Still, none of the
+above propagators is inconsistent or can narrow a
+variable domain.
+
+
+<section id="sec.dast"><title/Distribution and Search Trees/<p>
+
+To solve a finite domain problem ?{P}, we can always
+choose a constraint ?{C} and solve both <math/P\cup\{C\}/
+and <math/P\cup\{\neg C\}/.  We say that we have {\em
+distributed ?{P} with} ?{C}.
+
+We can apply the idea to spaces.  Suppose ?{S} is a
+stable space that is neither failed nor solved.  Then
+we can choose a constraint ?{C} and <def/distribute
+?{S} with ?{C}/.  Distribution yields two spaces, one
+obtained by adding a propagator for ?{C}, and one
+obtained by adding a propagator for <math/\neg C/.
+
+The combination of constraint propagation and
+distribution yields a complete solution method
+for finite domain problems.  Given a problem, we
+set up a space whose store contains the basic
+constraints and whose propagators impose the
+nonbasic constraints of the problem.  Then we run
+the propagators until the space becomes stable.
+If the space is failed or solved, we are done.
+Otherwise, we choose a not yet determined
+variable ?{x} and an integer ?{n} such that&fsp;<math/x=n/ is
+consistent with the constraint store and
+distribute the space with the constraint <math/x=n/.
+Since we can tell both <math/x=n/ and <math/x\neq n/ to the
+constraint store (the store already knows a
+domain for ?{x}), chances are that constraint
+propagation can restart in both spaces.
+<p>
+By proceeding this way we obtain a <def/search tree/ as 
+shown in <Ptr to="figFD1">.  Each node
+of the tree corresponds to a space.  Each leaf of
+the tree corresponds to a space that is either
+solved or failed.  The search tree is always finite
+since there are only finitely many variables all a
+priori constrained to finite domains.
+<p>
+<figure class="Figure" id="figFD1">
+<caption/A search tree.  Diamonds <!--**<math/\Diamond/-->
+represent solved spaces and boxes <!--**<math/\Box/--> represent
+failed spaces./
+<!--** Achtung, wild: Diamond und Box in LaTeX2e uncool oben und unten!-->
+<picture latex>
+\vspace*{-6mm}
+\begin{center}
+\newcommand{\myLine}[2]{%
+{\ncline[nodesep=0.05cm]{-}{#1}{#2}}}
+\newcommand{\myDiamond}[1]{bla}
+%{\rnode[t]{#1}{\psframebox[linecolor=white]{\LARGE $\Diamond$}}}}
+\newcommand{\myBox}[1]{blubb}%
+%{\rnode[t]{#1}{\psframebox[linecolor=white]{\LARGE $\Box$}}}}
+\newcommand{\myCirc}[1]{%
+{\circlenode{#1}{\hspace*{1.2mm}}}}
+
+\begin{center}
+\hspace*{2.9cm}
+\begin{pspicture}(15,8)
+\psset{xunit=.7cm,yunit=.7cm,runit=.7cm,framearc=0,linewidth=1pt}%
+
+\rput(7,7){\myCirc{top}}
+\rput(3,5){\myCirc{leftmid}}   \rput(11,5){\myCirc{rightmid}}
+\rput(0.9,3.5){\myDiamond{leftleft}}  \rput(5.1,3.5){\myBox{leftright}}
+\rput(8.9,3.5){\myCirc{rightleft}}   
+\rput(13.1,3.5){\myBox{rightright}}
+\rput(7,1.8){\myBox{leftbottom}}   
+\rput(10.9,1.8){\myDiamond{rightbottom}}
+
+\myLine{top}{leftmid}
+\Bput{$C_1$}
+\myLine{top}{rightmid}
+\Aput{$\neg C_1$}
+\myLine{leftmid}{leftleft}
+\Bput{$C_2$}
+\myLine{leftmid}{leftright}
+\Aput{$\neg C_2$}
+\myLine{rightmid}{rightleft}
+\Bput{$C_3$}
+\myLine{rightmid}{rightright}
+\rput(12.8,4.7){$\neg C_3$}
+\myLine{rightleft}{leftbottom}
+\Bput{$C_4$}
+\myLine{rightleft}{rightbottom}
+\Aput{$\neg C_4$}
+\end{pspicture}
+\end{center}
+\medskip
+\end{center}
+\vspace*{-11mm}
+\hrule
+</picture>
+</figure>
+</section>
+
+<section><title/An Example/<p>
+
+To see the outlined propagate and distribute
+method at a concrete example, consider the
+problem specified by the following constraints:
+<p><math>
+~$\begin{eqnarray*}
+X\neq7
+\qquad
+Z\neq2
+\qquad
+X-Z = {3\cdot Y}.
+\\
+X\in1\#8
+\qquad
+Y\in1\#10
+\qquad
+Z\in1\#10
+\end{eqnarray*}$~
+</math><p>
+To solve the problem, we start with a space whose
+store constrains the variables ?{X}, ?{Y}, and ?{Z} to
+the given domains.  We also create three
+propagators imposing the constraints <math/X\neq7/,
+<math/Z\neq2/, and <math/X-Z={3\cdot Y}/.  We assume that the
+propagator for <math/X-Z={3\cdot Y}/ realizes interval
+propagation, and that the propagators for the
+disequations <math/X\neq7/ and <math/Z\neq2/ realize domain
+propagation.
+<p>
+The propagators for the disequations immediatedly
+write all their information into the store and
+disappear.  The store then knows the domains
+<p><math/
+X\in[1\#6\;\;8]
+\qquad
+Y\in1\#10
+\qquad
+Z\in[1\;\;3\#10]
+/<p>
+<p><math/[1\;\;3\#10]/<p> denotes the finite domain
+<math/\{1\}\cup\{3,\ldots,10\}/).  The interval propagator for
+<math/
+X-Z = {3\cdot Y}
+/
+can now further narrow the domains to
+<p><math/
+X\in[4\#6\;\;8]
+\qquad
+Y\in1\#2
+\qquad
+Z\in[1\;\;3\#5].
+/<p><p>
+Now the space is stable but neither failed nor
+solved.  Thus, we continue with a first
+distribution step.  We choose to distribute with
+the constraint <math/X=4/.  <Ptr to="figFD2"> shows
+the resulting search tree.
+
+<figure class="Figure" id="figFD2">
+<caption/A search tree containing 3 choice nodes,
+1 failure node, and 3 solution nodes./
+<picture latex>
+\newcommand{\myNode}[4]{%
+\rput(#1,#2){\rnode{#3}{\psframebox[fillstyle=solid,boxsep=false,framearc=.3,framesep=0.5]{#4}}}}
+\newcommand{\myLine}[2]{%
+{\ncline[nodesep=0.55]{#1}{#2}}}
+%
+\psset{xunit=.45cm,yunit=.45cm,runit=.45cm,framearc=0,linewidth=1pt,arcangle=15}%
+\begin{pspicture}(29,18)\footnotesize
+%
+\myNode{8}{16}{top}{\texttt{[X[4\#6 8]\ \  Y[1\#2]\ \  Z[1 3\#5]]}}
+\myNode{15}{11}{inright}{\texttt{[X[5\#6 8]\ \  Y[1\#2]\ \  Z[1 3\#5]]}}
+\myNode{4}{11}{left} {\texttt{[4 1 1]}}
+\myNode{11}{6}{failure} {\texttt{failure}}
+\myNode{21}{6}{inrightright}{\texttt{[X[6\#8]\ \  Y[1\#2]\ \  Z[1 3\#5]]}}
+\myNode{16}{1}{botleft} {\texttt{[6 1 3]}}
+\myNode{26}{1}{botright} {\texttt{[8 1 5]}}
+\myLine{top}{left}
+\Bput{\texttt{X$=$4}}
+\myLine{top}{inright}
+\Aput{\texttt{X$\neq$4}}
+\myLine{inright}{inrightright}
+\Aput{\texttt{X$\neq$5}}
+\myLine{inright}{failure}
+\Bput{\texttt{X$=$5}}
+\myLine{inrightright}{botleft}
+\Bput{\texttt{X$=$6}}
+\myLine{inrightright}{botright}
+\Aput{\texttt{X$\neq$6}}
+\end{pspicture}
+\label{figFD2}
+</picture>
+</figure>
+<p>
+The space obtained by adding a propagator for <math/X=4/
+can be solved by propagation and yields the
+solution
+<p><math/
+X=4
+\qquad
+Y=1
+\qquad
+Z=1.
+/<p>
+<p>
+The space obtained by adding a propagator for
+<math/X\neq4/ becomes stable immediately after this
+propagator has written its information into the
+constraint store, which then looks as follows:
+<p><math/
+X\in[5\#6\;\;8]
+\qquad
+Y\in1\#2
+\qquad
+Z\in[1\;\;3\#5].
+/<p><p>
+This time we distribute with respect to the
+constraint <math/X=5/.
+<p>
+The space obtained by adding a propagator for <math/X=5/
+fails since <math/X-Z={3\cdot Y}/ is inconsistent with the store
+obtained by adding <math/X=5/.
+<p>
+The space obtained by adding a propagator for
+<math/X\neq5/ becomes stable immediately after this
+propagator has written its information into the
+constraint store, which then looks as follows:
+<p><math/
+X\in[6\;\;8]
+\qquad
+Y\in1\#2
+\qquad
+Z\in[1\;\;3\#5].
+/<p><p>
+Now we distribute with respect to the constraint <math/X=6/.
+<p>
+The space obtained by adding a propagator for <math/X=6/
+can be solved by propagation and yields the solution
+<p><math/
+X=6
+\qquad
+Y=1
+\qquad
+Z=3.
+/<p>
+<p>
+Finally, the space obtained by adding a propagator
+for <math/X\neq6/ can also be solved by propagation,
+yielding the third and final solution
+<p><math/
+X=8
+\qquad
+Y=1
+\qquad
+Z=5.
+/<p><p>
+
+An alternative to the propagate and distribute
+method is a naive enumerate and test method, which
+would enumerate all triples <math/(X,Y,Z)/ admitted by
+the initial domain constraints and test the
+constraints <math/X\neq7/, <math/Z\neq2/, and <math/X-Z={3\cdot Y}/ for
+each triple.  There are <math/8*10*10=800/ candidates.
+This shows that constraint propagation can reduce
+the size of the search tree considerably.
+</section>
+
+<section><title/Distribution Strategies/<p>
+
+A <def/distributor/ is a computational agent
+implementing a <def/distribution strategy/.  If a
+thread creates a distributor, the thread is
+blocked until the distributor has done its job.
+If a distribution step is needed, the distributor
+becomes active and generates the constraint with
+which the space will be distributed.  If there is
+more than one distributor in existence, one of
+them is chosen indeterministically whenever a
+distribution step is needed.
+<p>
+Usually, a distribution strategy is defined on a
+sequence <math/x_1,\ldots,x_n/ of variables.  When a
+distribution step is necessary, the strategy
+selects a not yet determined variable in the
+sequence and distributes on this variable.
+<para><title/standard possibilities to distribute
+on a variable/
+There are a few standard possibilities to distribute on a variable ?{x}:
+<list>
+<item>
+distribute with <math/x=l/, where ?{l} is the least
+possible value for ?{x}.
+<item>
+distribute with <math/x=u/, where ?{u} is the largest
+possible value for ?{x}.
+<item>
+distribute with <math/x=m/, where ?{m} is a possible
+value for ?{x} that is in the middle of the least
+and largest possible value for ?{x}.
+<item class="Page" id="page.domainsplitting">
+distribute with <math/x\le m/, where ?{m} is a possible
+value for ?{x} that is in the middle of the least
+and largest possible value for ?{x} (so called
+<def/domain splitting/).
+</list>
+<para><title/naive distribution/
+A <def/naive distribution strategy/ will select the leftmost
+undetermined variable in the sequence.
+
+<para><title/first-fail distribution/
+A <def/first-fail distribution strategy/ will
+select the leftmost undetermined variable in the
+sequence whose domain in the constraint store has
+minimal size.  In other words, it will select the
+leftmost undetermined variable for which the
+number of different possible values is minimal.
+<p>
+For most problems, first-fail strategies yield
+much smaller search trees than naive strategies.
+</section>
+
+<section><title/Search Order/<p>
+
+So far we have not specified in which order
+search trees are explored.  Although this order
+has no impact on the shape and size of a search
+tree, it does have an impact on the time and
+memory resources needed to find one or all
+solutions:
+<list>
+<item>
+If we are only interested in one solution, there is
+no need to explore the entire search tree.
+Ideally, we would just explore the path leading
+from the root to the solution.
+<item>
+If we are interested in all solutions, we need to
+explore the entire search tree.  However, whether
+we explore the tree in depth-first or
+breadth-first manner will make a big difference
+in the memory needed.  The memory requirements of
+breadth-first exploration are typically
+exponentially larger than those of depth-first
+exploration.
+</list>
+We will assume that the search engine explores
+the search trees always in a depth-first fashion.
+Moreover, when the engine distributes with a
+constraint ?{C}, it explores the space obtained
+with ?{C} first and the space obtained with <math/\neg
+C/ second.
+<p>
+The above assumptions ensure that the exploration
+of a search tree is a deterministic process,
+provided the distribution strategy generating the
+constraints to distribute with is deterministic.
+</section>
+
+<section><title/Models/<p>
+
+A <def/model/ of a problem is a representation of
+the problem as a finite domain problem (as
+defined in <Ptr to="subsecFDP">).  A model
+specifies the variables and the constraints
+representing the problem.
+<p>
+Nontrivial problems will admit different models
+and different distribution strategies, coming
+with different computational properties and
+search trees of different size.  The art of
+constraint programming consists in finding for a
+problem a model and a distribution strategy that
+yield a computationally feasible search tree.
+</section>
+</chapter>
+
