@@ -956,4 +956,73 @@
 	  <<List.takeDropWhile>> but the binary boolean function&nbsp;?_{P}
 	  is applied with the current index as first actual argument.
       </List>
+
+  <Section>
+    <title/Feature Constraints/
+
+    <p>
+    This section contains  procedures dedicated to feature constraints.
+
+      <List>
+	<Entry><Span class=index/<<^>>/
+	  <Index class=tails/<<Record>><And><<'^'>>/
+	<Synopsis>
+	  <<{Record.'^' ?_{R} ?+{LI} ?_{X}}>>
+	<Item>
+          tells the constraint store that ?_{R} is a record having field 
+          ?_{X} at feature ?_{LI}.
+	<P>
+          Is supported by the infix operator <<^>>, that is 
+          <<<{Record.'^' ?_{R} ?_{LI} ?_{X}}>>>
+          can also be written as
+          <<<?_{R}^?_{LI}=?_{X}>>>
+
+	<Entry><Span class=index/<<IsRecordC>>/
+	  <Index class=tails/<<Record>><And><<isC>>/
+	<Synopsis>
+          <<{IsRecordC ?*{X} ??{B}}>>
+	<Item>
+          tests whether ?_{X} has kind record.
+
+	<Entry><Span class=index/<<TellRecord>>/
+	  <Index class=tails/<<Record>><And><<tell>>/
+	<Synopsis>
+          <<{TellRecord ?+{L} ??{R}}>>
+	<Item>
+          tells the constraint store that ?_{R} is a record with label ?_{L}.
+
+	<Entry><Span class=index/<<WidthC>>/
+	  <Index class=tails/<<Record>><And><<widthC>>/
+	<Synopsis>
+          <<{WidthC ?*{R} ??{D}}>>
+	<Item>
+           posts a propagator for the constraint that ?_{D} is the
+           width of ?_{R}. Also tells the constraint store that ?_{D}
+           is a finite domain integer.
+
+	<Entry><<reflectArity>>
+	  <Index class=tails/<<Record>><And><<reflectArity>>/
+	<Synopsis>
+          <<{Record.reflectArity ?*{R} ??{LIs}}>>
+	<Item>
+           returns a list ?_{LIs} containing
+           the currently known features of ?_{R}.  
+
+	<Entry><<monitorArity>>
+	  <Index class=tails/<<Record>><And><<monitorArity>>/
+	<Synopsis>
+          <<{Record.monitorArity ?*{R} ??{P} ??{LIs}}>>
+	<Item>
+          returns a nullary procedure ?_{P} and a stream ?_{LIs}
+          containing the currently known features of ?_{R}.  
+          <p>
+          Features appear in the stream as soon as they become known
+          to the constraint store. Application of ?_{P} closes the
+          stream and deletes the propagator. The stream is
+          automatically closed once the constraint store determines
+          ?_{R}.
+       </List>
+     </Section>
+
+
 </Chapter>
