@@ -44,7 +44,8 @@
       gets us a local copy of the Mozart license file.
 
     <p>
-      In addition to taking input from the shell, <kbd/Webget.oza/ should
+      In addition to taking arguments from the command line,
+      <kbd/Webget.oza/ should
       report problems by returning an error status to the operating
       system shell. The error status is a number, where the value
       <<0>> means okay. Any other values signals an error.
@@ -61,7 +62,7 @@
     <list>
       <entry>Definition
       <item>
-        The first step is of course, is to program our
+        The first step, of course, is to program our
         application. For this purpose, we will create a file
         <file/Webget.oz/ that contains the Oz program implementing
         <kbd/webget/. More specifically, the file <file/Webget.oz/
@@ -72,13 +73,13 @@
         Next, we compile the functor definition contained in
         <file/Webget.oz/. The compiler takes the functor definition
         and executes it. By this it creates a <def/functor/. Then the
-        functor is written to a file <file/Webget.oza/. We call the
-        now persistent functor a <def/pickled functor/.
+        functor is written to a file <file/Webget.oza/. This persistent
+        representation of a functor value is called a <def/pickled functor/.
 
       <entry>Execution
       <item>
         The pickled functor <file/Webget.oza/ is executed by the Oz
-        virtual engine <file/ozengine/. The engine takes a pickled
+        virtual machine <file/ozengine/. The engine takes a pickled
         functor (<file/Webget.oza/ in our case), unpickles the
         functor, runs the functor, and supplies it with application
         arguments. After execution terminates, it reports the
@@ -103,7 +104,7 @@ end
 
     <para class=apropos><title/Importing modules/
       Our application requires the system module <<Application>> to
-      both process the commandline arguments as well as for
+      both process the command line arguments as well as for
       terminating the application. In addition, the module <<Open>>
       provides the class <<Open.file>> required for reading and
       writing files.
@@ -122,14 +123,15 @@ import
     <p>
       The import specification serves two purposes: firstly, the
       variable identifiers <<Application>> and <<Open>> are introduced
-      in the body of the functor. Secondly, the identifiers also serve
+      with a lexical scope that extends over the entire
+      body of the functor. Secondly, the identifiers also serve
       as <def/module names/. When the functor corresponding to this
-      definition is executed, the variable refer to system modules.
+      definition is executed, these variables are given as values the
+      system modules with the same names.
 
     <p>
-      The module names of system modules can be abbreviated. The full
-      story is as follows:
-<p>
+      More precisely, the import specification above is a convenient
+      abbreviation for the more verbose specification below:
 <chunk><title/Module import (no convenience)/
 import
    Application at 'x-oz://system/Application'
@@ -137,7 +139,7 @@ import
 </chunk>
       In <ptr to="section.modman.import"> we will discuss system
       modules in more detail. In particular, <ptr
-      to="table.modman.system"> lists all availabel system modules.
+      to="table.modman.system"> lists all available system modules.
 
     <para class=apropos><title/Functor body/
       The <def/body of a functor/ is a statement that is executed
@@ -147,9 +149,9 @@ import
 define
    <chunk.ref/Argument processing/
    Status = try
-               <chunk.ref/Opening the files/
+               <chunk.ref/Opening input and output files/
             in
-               <chunk.ref/Copying the file/
+               <chunk.ref/Copying input file to output file/
                0
             catch _ then 1
             end
@@ -158,7 +160,7 @@ define
 
     <p>
       The structure for our application is straightforward: after
-      processing the commandline arguments, file objects for source and
+      processing the command line arguments, file objects for source and
       destination are created and the content is copied from the
       source file to the
       destination file.
@@ -184,14 +186,15 @@ define
       The following application of <<Application.getCmdArgs>>
 <p>
 <chunk><title/Argument processing/
-Args = {Application.getCmdArgs record('in'(single type:string)
-                                      'out'(single type:string))}
+Args = {Application.getArgs record('in'(single type:string)
+                                   'out'(single type:string))}
 </chunk>
       computes <<Args>> to be a record (as signalled by the label
       <<record>> of the single argument to
-      <<Application.getCmdArgs>>. The features of the record are
-      <<'in'>> and <<'out'>> where both have fields are of type string
-      and both are allowed to be given only once on the commandline
+      <ref.extern key="section.application.module" to="ozdoc:system"
+      /<<Application.getArgs>>/. The features of the record are
+      <<'in'>> and <<'out'>> where both fields are of type string
+      and both are allowed to be given only once on the command line
       (that is specified by <<single>>).
 
     <p>
@@ -199,24 +202,24 @@ Args = {Application.getCmdArgs record('in'(single type:string)
       processed see <ptr.extern to="ozdoc:system"
       key="chapter.application">.
 
-    <para class=apropos><title/Opening files/
+    <para class=apropos><title/Opening input &amp; output/
       The two files are opened as follows:
 <p>
-<chunk><title/Opening the files/
+<chunk><title/Opening input and output files/
 I={New Open.file init(url:  Args.'in')}
 O={New Open.file init(name: Args.'out'
                       flags:[write create truncate])}
 </chunk>
-      Note that the strings as computed by argument processing are
+      Note how the strings <code/Args.'in'/ and <code/Args.'out'/
+      computed by argument processing are
       used for the source URL and the destination filename.
 
-    <para class=apropos><title/Copying the file/
+    <para class=apropos><title/Copying input to output/
       Copying the file from source to destination is straightforward:
-      As long as the read string <<S>> contains characters (that is,
-      it is different from the empty string) it is written to the
-      destination file.
+      As long as we can read a non-empty string <<S>> from the source file,
+      we write it to the destination file and repeat the procedure.
 <p>
-<chunk><title/Copying the file/
+<chunk><title/Copying input file to output file/
 local
    proc {Copy}
       S={I read(list:$)}
@@ -231,10 +234,10 @@ end
 </chunk>
 
     <para class=apropos><title/Terminating the application/
-      Termination of the application uses the procedure
+      Termination of the application is effected by invocation of
       <<Application.exit>> which takes the application status as
       single integer argument. In our case a exit value of <<1>>
-      signals an error, otherwise <<0>> is returned to the operating
+      indicates an error, otherwise <<0>> is returned to the operating
       system shell.
 <p>
 <chunk><title/Terminating the application/
@@ -249,39 +252,47 @@ end
     <title/Compilation/
 
     <p>
-      As sketched before, the functor definition must be
-      compiled. This is done with the program <<ozc>> as follows:
+      As is the case for many programming languages, the functor
+      definition must be compiled before it can be executed.  This is
+      achieved by invoking the Oz compiler <<ozc>> as follows:
 <<<ozc -c Webget.oz -o Webget.oza>>>
 
     <p>
-      The compiler <<ozc>> offers a variety of different options that
-      control compilation. An overview of them can be found in
+      Note the intentional similarity between the options
+      illustrated above and those accepted by a C compiler.
+      The compiler <<ozc>> offers a variety of other options that
+      control compilation, an overview of which can be found in
       <ptr.extern to="ozdoc:tools" key="chapter.compiler">.
 
   <section id="section.hello.exec" proglang=sh>
     <title/Execution/
 
     <p>
-      The created functor <file/Webget.oza/ can be executed by
+      The functor pickled into <file/Webget.oza/ can be executed by
       applying the program <file/ozengine/ to the functor and the
-      application arguments. To copy the Mozart license file at URL
+      application arguments. For example, to copy the Mozart license
+      file at URL
       <file>http://mozart.ps.uni-sb.de/LICENSE</file> to the local
-      file <file/LICENSE/ just run at the commandline shell
+      file <file/LICENSE/, simply enter the command line below at your
+      shell promt:
 <<<ozengine Webget.oza --in http://mozart.ps.uni-sb.de/LICENSE --out LICENSE>>>
 
     <p>
-      Execution of an application works as follows:
+      Execution of an application proceeds as follows:
       <list enum>
-        <item> The virtual Oz machine <<ozengine>> is started by the
+        <item> <<ozengine>>, the Oz virtual machine, is started by the
         operating system.
-        <item> The <<ozengine>> starts to execute a <def/module manager/.
+        <item> <<ozengine>> starts to execute a <def/module manager/.
         <item> The module manager loads the pickled functor
-        <file/Webget.oza/. The functor
-        loaded first, we call <def/root functor/.
+        <file/Webget.oza/. This initial application functor is called
+        the <def/root functor/.
         <item> The module manager <def/links/ the functor by applying the functor body to
         the imported system modules <code proglang=oz/Application/ and
         <code proglang=oz/Open/.
-        <item> It <def/executes/ the functor by ?
+        <item> It <def/instantiates/ the functor executing its body.
+<!--
+<def/executes/ the functor by
+-->
       </list>
 
     <p>

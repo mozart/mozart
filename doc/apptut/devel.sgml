@@ -25,38 +25,39 @@
   <Title/Application Development/
 
   <p>
-    The last chapter (<ptr to="chapter.hello">) used a rather simple
-    application as example. This chapter shows how to use functors for
-    the modular development of larger applications.
+    <ptr to="chapter.hello"> used a rather simple
+    application as example. This present chapter shows how to use
+    functors for the modular development of larger applications.
 
   <section id="section.development.functors">
     <title/Functors for Modular Applications/
 
     <p>
-      Larger applications are usually decomposed in several
-      modules. Oz supports modular programs by applications that are
-      implemented by multiple functor definitions.
+      Principles of good software engineering suggest that larger
+      applications should be designed and assembled from a collection
+      of smaller modules.  In Oz, this decomposition can be realized
+      in terms of several functor definitions.
 
     <p>
-      A functor is a function computing with modules: It takes modules
+      The primary purpose of a functor is to compute a module: It takes modules
       as input and computes a new module as output. As we have seen
-      already, the <<import>> part of a functor defines its inputs by
-      a list of module names. In addition, functors also allow for an
-      <<export>> part. The <<export>> part of functor is basically a
-      list of feature value pairs that describe the module computed by
+      already, the <<import>> section of a functor specifies its inputs as
+      a list of module names. In addition, functors may also have an
+      <<export>> section which is basically a
+      list of feature value pairs that describes the module computed by
       the functor.
 
     <p>
-      As we have already seen in <ptr to="section.hello.exec"> an
+      As demonstrated in <ptr to="section.hello.exec"> an
       application is run by executing the root functor. In
-      our particular example, the root functor restricted itself by
-      only importing system modules. However, larger applications will
-      import modules computed by other functors.
+      our particular example, the root functor was rather simple in that
+      it only imported system modules. However, larger applications will
+      typically import modules computed by other application functors.
 
     <p>
-      The module names internet wide
+      **** The module names internet wide ****
 
-      dynamic linking
+      dynamic linking ****
 
 
   <section id="section.devel.lmf">
@@ -71,8 +72,9 @@
         <item>
           A data base server: It maintains a data base that contains
           available flights, where each flight as a unique id by which
-          it can be identified. In the beginning, the data base will
-          be not even persistent, but as this documents goes along,
+          it can be identified. At first, the data base is
+          not even persistent, but as we incrementally refine and improve
+          our application,
           the data base evolves into a persistent and distributed data
           base server.
 
@@ -126,15 +128,13 @@ export
     <p>
       The specification determines that the functor's module provides the
       features <<add>>, <<get>>, <<getAll>>, and <<remove>>, where the
-      fields at that features are given by the respective variables
-      following the feature after the colons. The values for the
-      fields are then computed by the functors body.
+      value of each feature is given by the variable after the
+      following colon. The values of these vaiables are then computed
+      by the functor's body.
 
     <p>
-      Using syntactics sugar, we can write the export specification as
-      follows:
-
-    <p>
+      For convenience, the export specification above may also be written
+      more succinctly as follows:
 <chunk><title/Export specification for DB.oz (with syntactic sugar)/
 export
    Add
@@ -152,29 +152,39 @@ export
     <p>
       The functor body is of less importance to us here, however, you
       can find it in <ptr to="section.code.development">. One
-      advantage of modular programs is that during design of an
-      application one is concerned first with finding the right
-      interfaces, and only then provide implementations.
+      advantage of modular program development is that during the design of an
+      application one may concentrate first on finding the right
+      interfaces, and only then provide corresponding implementations.
 
     <p>
       Even though the functor does not import any module, it uses
       predefined procedures (for example, <<Dictionary.new>> to
       create a new dictionary). The compiler provides a set
       of variable identifiers, that refer to the basic operations on
-      data structures Oz provides. This set of identifiers is referred
-      to as the <def/base environment/. The base environment is
+      all primitive Oz data types. This set of identifiers is known
+      as the <def/base environment/ and is
       documented in detail in <ptr.extern to="ozdoc:base">.
 
     <p>
-      When a functor definition is compiled all free variable
-      identifiers must be bound by the base environment. Pickling the
+      When a functor definition is compiled, all free variable
+      identifiers must be bound by the base environment.
+<!--
+DENYS: I don't think this bit is useful at this point. the sentence
+above says precisely what is important here.
+
+Pickling the
       functor created by compilation then includes all values referred
       to by the free identifiers. We are going to discuss the issue of
       pickling in more detail in ????.
+-->
 
   <section id="section.development.form">
     <title/The Graphical Input Form/
-
+<!--
+DENYS:
+the code comment below makes no sense to me.
+a better explanation (intuitive) is needed.
+-->
     <p>
       The functor that implements the graphical form to book flights
       has the following structure:
@@ -239,7 +249,7 @@ end
     <title/Compilation/
 
     <p>
-      Functors also are compilation unit.
+      Functors also are compilation units.
   </section>
 
   <section id="section.development.execution">
