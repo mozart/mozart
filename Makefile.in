@@ -213,7 +213,6 @@ oz3:
 
 
 win32-i486: $(PACKDIR) $(PACKDIR)/mozart
-        rm -rf /tmp/pack/mozart
         ( cd $(PREFIX); \
           $(TAR) cf - \
                    $(FILES) \
@@ -255,6 +254,7 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
          $(TAR) cf - $(FILES) bin cache/$(HOMECACHE)/share \
                      include share/Init.ozf share/elisp platform) | \
          (cd mozart-win32/base; $(TAR) xf -)
+        rm -rf /tmp/pack/mozart
 
 files.base:
         (cd $(PREFIX); \
