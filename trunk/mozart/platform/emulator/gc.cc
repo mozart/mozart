@@ -2491,12 +2491,22 @@ void AM::doGC()
   /* do gc */
   gc(ozconf.gcVerbosity);
 
-  /* calc upper limits for next gc */
-  int used = getUsedMemory();
-  if (used > (ozconf.heapThreshold*ozconf.heapMargin)/100) {
-    ozconf.setHeapThreshold(ozconf.heapThreshold*(100+ozconf.heapIncrement)/100);
-  }
-
+  /* calc limits for next gc */
+  int used   = getUsedMemory();
+  int wanted = ((ozconf.heapFree == 100) 
+		? ozconf.heapMaxSize 
+		: max(min(used * (100 / (100 - ozconf.heapFree)),
+			  ozconf.heapMaxSize),
+		      ozconf.heapMinSize));
+  
+  // Should I resize, what does tolerance say?
+  if (100 * abs(used - wanted) / wanted > ozconf.heapTolerance)
+    ozconf.setHeapThreshold(wanted);
+   
+  // But! Provide for at least HEAPSAFETY free heap
+  if (ozconf.heapThreshold < used + HEAPSAFETY) 
+    ozconf.setHeapThreshold(used + HEAPSAFETY);
+    
   unsetSFlag(StartGC);
   osUnblockSignals();
 }

@@ -51,6 +51,7 @@ private:
   unsigned int gcStartmem;
 
 public:
+  unsigned int gcLastActive;
   StatCounter gcCollected;
   StatCounter timeForCopy;
   StatCounter timeForLoading;
@@ -81,6 +82,7 @@ public:
   OZ_Term getFD();
   OZ_Term getTime();
   OZ_Term getThreads();
+  OZ_Term getMemory();
 
   void print(FILE *fd);
   void printIdle(FILE *fd);
@@ -91,8 +93,6 @@ public:
   void initGcMsg(int level);
   void printGcMsg(int level);
 
-  OZ_Term getStatistics();
-  
 #ifdef PROFILE
   /* these should alos use class StatCounter */
   int allocateCounter, deallocateCounter, procCounter,
