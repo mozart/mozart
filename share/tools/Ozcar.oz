@@ -26,7 +26,7 @@ proc
 \endif
 \else
 local
-\endif   
+\endif
 
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
@@ -39,7 +39,7 @@ local
 
    \insert 'ozcar/menu'
    \insert 'ozcar/dialog'
-   \insert 'ozcar/help'	     
+   \insert 'ozcar/help'
    \insert 'ozcar/gui'
 
 in
