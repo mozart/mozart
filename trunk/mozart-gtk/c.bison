@@ -47,17 +47,17 @@ int lookupType(OZ_Term id) {
 
 #if defined(DEBUG)
 static int isTypedef(OZ_Term id) {
-  printf("isTypedef: %s\n", OZ_toC(id, 10, 10));
+  fprintf(stderr,"isTypedef: %s\n", OZ_toC(id, 10, 10));
   if (OZ_isTuple(id)) {
-      printf("isTypedef: checking for stor_spec/decl_spec\n");
+      fprintf(stderr,"isTypedef: checking for stor_spec/decl_spec\n");
     if (atomEq(OZ_label(id), "stor_spec/decl_spec")) {
       if (atomEq(OZ_getArg(id, 0), "typedef")) {
-        printf("isTypedef: found typedef\n");
+        fprintf(stderr,"isTypedef: found typedef\n");
         return 1;
       }
     }
   }
-  printf("isTypedef: Hmm, no typedef\n");
+  fprintf(stderr,"isTypedef: Hmm, no typedef\n");
   return 0;
 }
 #else
@@ -73,7 +73,7 @@ static int isTypedef(OZ_Term id) {
 
 static OZ_Term getTypeName(OZ_Term id) {
 #if defined(DEBUG)
-  printf("getTypeName: %s\n", OZ_toC(id, 10, 10));
+  fprintf(stderr,"getTypeName: %s\n", OZ_toC(id, 10, 10));
 #endif
   if (OZ_isAtom(id)) {
     return id;
@@ -102,11 +102,11 @@ static void verifyTypeList() {
 
   while (OZ_isCons(cons)) {
     if (atomEq(OZ_head(cons), "unknown type name")) {
-      printf("verifyTypeList: type_list has unknown types; check it\n");
+      fprintf(stderr,"verifyTypeList: type_list has unknown types; check it\n");
     }
     cons = OZ_tail(cons);
   }
-  printf ("verifyTypeList: type_list is clean\n");
+  fprintf (stderr,"verifyTypeList: type_list is clean\n");
 }
 #endif
 
@@ -1059,7 +1059,7 @@ declaration_list
 identifier
 	: IDENTIFIER {
 #if defined(DEBUG)
-/*		printf("consuming id: %s\n", OZ_virtualStringToC($1, NULL)); */
+/*		fprintf(stderr,"consuming id: %s\n", OZ_virtualStringToC($1, NULL)); */
 #endif 
 		$$ = $1;
 	}
@@ -1099,7 +1099,7 @@ OZ_BI_define (parse_tree, 1, 1) {
       enter = 1;
       yyparse();
 #if defined(DEBUG)
-      printf("parse_tree: line_num = %d\n", line_num);
+      fprintf(stderr,"parse_tree: line_num = %d\n", line_num);
       verifyTypeList();
 #endif
       OZ_out(0) = anchor;
