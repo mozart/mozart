@@ -16,19 +16,30 @@
 #include "../include/config.h"
 #include "am.hh"
 
+int ThreadsPool::getRunnableNumber()
+{
+  return hiQueue.getRunnableNumber()
+    +midQueue.getRunnableNumber()
+    +lowQueue.getRunnableNumber()
+    +1; // for am.currentThread!
+}
+
 //  Note that this can be called only after 'ozconf.init ()';
 // (so, it's not a constructor of the 'ThreadsPool' class;)
 void ThreadsPool::initThreads ()
 {
   // private;
-  nextPrioInd = -1;
-  currentPriority = -1;
-  currentQueue = (ThreadQueue *) NULL;
+  hiQueue.allocate(THREAD_QUEUE_SIZE);
+  midQueue.allocate(THREAD_QUEUE_SIZE);
+  lowQueue.allocate(THREAD_QUEUE_SIZE);
+
+  hiCounter = -1;
+  lowCounter = -1;
 
   // public part;
   currentThread = (Thread *) NULL;
   ozstat.createdThreads.incf();
-  rootThread = am.mkRunnableThread (ozconf.systemPriority, am.rootBoard,0);
+  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard,0);
 
   //
   threadBodyFreeList = NULL;
@@ -37,120 +48,16 @@ void ThreadsPool::initThreads ()
 //
 Bool ThreadsPool::isScheduled (Thread *thr)
 {
-  return (queues[thr->getPriority ()].isScheduled (thr));
+  if (midQueue.isScheduled(thr)) return OK;
+  if (hiQueue.isScheduled(thr)) return OK;
+  return lowQueue.isScheduled(thr);
 }
 
-//
-void ThreadsPool::scheduleThreadOutline(Thread *th, int pri)
+void ThreadsPool::deleteThread(Thread *th)
 {
-  ThreadQueue *insQueue = &queues[pri];
-
-  if (!insQueue->isAllocated ()) {
-    insQueue->allocate (THREAD_QUEUE_SIZE);
-  }
-  insQueue->enqueue (th);
-
-  if (pri > currentPriority) {
-    if (currentPriority != -1) {
-      nextPrio[++nextPrioInd] = currentPriority;
-    }
-    currentPriority = pri;
-    currentQueue = insQueue;
-  } else {
-    // look through the stack (nextPrio) and insert when necessary;
-    int ix, jx;
-
-    for (ix = nextPrioInd; ix >= 0; ix--) {
-      if (nextPrio[ix] > pri) continue; // not yet;
-
-      if (nextPrio[ix] == pri) return;
-      // i.e. it's O.k. already - it will be taken anyway;
-
-      //  otherwise (nextPrio[ix] < pri) - insert a new entry;
-      break;
-    }
-
-    Assert (ix < 0 || nextPrio[ix] < pri);
-    // invariants: ix indexes the queue _before_ inserted one;
-    //  (ix's entry stays at the place;)
-    for (jx = nextPrioInd; jx > ix; jx--)
-      nextPrio[jx+1] = nextPrio[jx];
-
-    nextPrio[ix+1] = pri;
-    nextPrioInd++;
-  }
-}
-
-void ThreadsPool::scheduleThread (Thread *th) {
-  int pri = th->getPriority ();
-
-  Assert (!th->isDeadThread ());
-  Assert (th->isRunnable ());
-  Assert (!(isScheduled (th)));
-
-  if (pri == currentPriority) {
-    currentQueue->enqueue (th);
-  } else {
-    scheduleThreadOutline (th, pri);
-  }
-}
-
-void ThreadsPool::updateCurrentQueue()
-{
-  Assert(currentQueue->isEmpty());
-  if (nextPrioInd != -1) {
-    //  pick up the next one;
-    int npri = nextPrio[nextPrioInd--];
-    Assert ((npri < currentPriority));
-    currentPriority = npri;
-    currentQueue = &queues[npri];
-  } else {
-    //  reset 'currentQueue' and 'currentPriority';
-    //  Note that already allocated queues stay allocated, of course.
-    currentPriority = -1;
-    currentQueue = (ThreadQueue *) NULL;
-  }
-}
-
-void ThreadsPool::deleteThread(Thread *th1)
-{
-  Bool found=NO;
-  ThreadQueue *thq = currentQueue;
-  int prioInd = nextPrioInd;
-  while (thq && !found) {
-    int size=thq->getSize();
-    while (size--) {
-      Thread *th = thq->dequeue();
-      if (th == th1) {
-        found = OK;
-      } else {
-        thq->enqueue(th);
-      }
-    }
-
-    if (found) {
-      if (thq->isEmpty()) {
-
-        // invariants: prioInd indexes the empty queue;
-        for (int i = prioInd; i < nextPrioInd; i++)
-          nextPrio[i] = nextPrio[i+1];
-
-        nextPrioInd--;
-        if (thq == currentQueue) {
-          updateCurrentQueue();
-        }
-      }
-      break; //while
-    }
-
-    if (prioInd >= 0) {
-      int pri = nextPrio[prioInd--];
-      thq = &queues[pri];
-    } else {
-      thq = 0;
-    }
-
-  }
+  midQueue.deleteThread(th);
+  hiQueue.deleteThread(th);
+  lowQueue.deleteThread(th);
 }
 
 void ThreadsPool::rescheduleThread(Thread *th)
@@ -162,12 +69,108 @@ void ThreadsPool::rescheduleThread(Thread *th)
 
 Board * ThreadsPool::getHighestSolveDebug(void)
 {
-  for (int i = TAB_SIZE; i--; ) {
-    Board * b = queues[i].getHighestSolveDebug();
-    if (b)
-      return b;
+  Board *b;
+  b = hiQueue.getHighestSolveDebug();
+  if (b) return b;
+  b = midQueue.getHighestSolveDebug();
+  if (b) return b;
+  return lowQueue.getHighestSolveDebug();
+}
+
+Thread *ThreadsPool::getFirstThreadOutline()
+{
+  /*
+   * empty hiQueue
+   */
+  if (hiCounter < 0) {
+    Assert(lowCounter > 0); /* other case inline version */
+
+    Assert(!lowQueue.isEmpty() || !midQueue.isEmpty());
+    lowCounter--;
+    if (lowCounter == 0 || midQueue.isEmpty()) {
+      if (!lowQueue.isEmpty()) {
+        lowCounter=ozconf.midLowRatio;
+        return lowQueue.dequeue();
+      } else {
+        lowCounter=-1;
+        return midQueue.dequeue();
+      }
+    }
+    return midQueue.dequeue();
   }
-  return NULL;
+
+  /*
+   * use hiQueue, else mid/low
+   */
+  hiCounter--;
+  if (hiCounter > 0) {
+    if (!hiQueue.isEmpty()) { return hiQueue.dequeue(); }
+    hiCounter = -1;
+    goto mid;
+  }
+
+  /*
+   * use midQueue, else hiQueue
+   */
+  hiCounter=ozconf.hiMidRatio;
+mid:
+  if (lowCounter < 0) {
+    return !midQueue.isEmpty() ? midQueue.dequeue() : hiQueue.dequeue();
+  }
+
+  /*
+   * use midQueue, else lowQueue, else hiQueue
+   */
+  lowCounter--;
+  if (lowCounter > 0) {
+    if (!midQueue.isEmpty()) return midQueue.dequeue();
+
+    if (!lowQueue.isEmpty()) {
+      lowCounter = ozconf.midLowRatio;
+      return lowQueue.dequeue();
+    } else {
+      lowCounter = -1;
+      return hiQueue.dequeue();
+    }
+  }
+
+  /*
+   * use lowQueue, else midQueue, else hiQueue
+   */
+  if (!lowQueue.isEmpty()) {
+    lowCounter = ozconf.midLowRatio;
+    return lowQueue.dequeue();
+  } else {
+    lowCounter = -1;
+    return !midQueue.isEmpty() ? midQueue.dequeue() : hiQueue.dequeue();
+  }
+}
+
+void ThreadsPool::scheduleThread(Thread *th,int pri)
+{
+  if (pri < 0) pri = th->getPriority();
+
+  if (pri == MID_PRIORITY) {
+    midQueue.enqueue(th);
+  } else if (pri == HI_PRIORITY) {
+    hiQueue.enqueue(th);
+    if (hiCounter<0) hiCounter=ozconf.hiMidRatio;
+  } else {
+    lowQueue.enqueue(th);
+    if (lowCounter<0) lowCounter=ozconf.midLowRatio;
+  }
+}
+
+Bool ThreadsPool::threadQueuesAreEmptyOutline()
+{
+  if (!midQueue.isEmpty()) return NO;
+  if (hiCounter > 0) {
+    if (!hiQueue.isEmpty()) return NO;
+  }
+  if (lowCounter > 0) {
+    if (!lowQueue.isEmpty()) return NO;
+  }
+  return OK;
 }
 
 #ifdef OUTLINE

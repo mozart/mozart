@@ -8,6 +8,11 @@
   State: $State$
 
   $Log$
+  Revision 1.356  1996/08/30 11:33:30  mehl
+  counter for runnable threads
+  new scheduling
+  new keyword skip
+
   Revision 1.355  1996/08/27 07:34:58  scheidhr
   removed old distribution stuff
 
@@ -20,12 +25,6 @@
 
   Revision 1.352  1996/07/31 12:55:34  scheidhr
   new machine instructions
-
-  Revision 1.351  1996/07/29 15:37:40  mehl
-  more perdio work
-
-  Revision 1.350  1996/07/26 15:17:33  mehl
-  perdio communication: see ~mehl/perdio.oz
 
   Revision 1.349  1996/07/26 14:28:39  schulte
   bug fix in exception handling of inlined functions
@@ -41,27 +40,8 @@
    commit a space.
   Added macro CTT to emulate.cc: CTT == e->currentThread
 
-  Revision 1.347  1996/07/18 16:17:25  wuertz
-  improved edge-finding and prepared for new distribution
-
-  Revision 1.346  1996/07/18 15:27:17  scheidhr
-  no warnings
-
-  Revision 1.345  1996/07/15 10:23:26  tmueller
-  added streams to cpi
-
   Revision 1.344  1996/07/12 16:19:18  schulte
   Scaled down default error handler; removed error verbosity
-
-  Revision 1.343  1996/07/11 12:03:08  scheidhr
-  BIwaitIdle removed again
-
-  Revision 1.342  1996/07/09 05:44:36  scheidhr
-  BIwaitIdle for Christians Panel
-
-  Revision 1.341  1996/07/04 12:05:58  mehl
-  adding Log to the start of the file
-
 
   The main engine
   ------------------------------------------------------------------------
@@ -392,8 +372,7 @@ Bool AM::emulateHookOutline(Abstraction *def, int arity, TaggedRef *arguments)
 {
   // without signal blocking;
   if (isSetSFlag(ThreadSwitch)) {
-    if (threadQueueIsEmpty()
-        || getNextThPri () < currentThread->getPriority()) {
+    if (threadQueuesAreEmpty()) {
       restartThread();
     } else {
       return TRUE;
@@ -414,7 +393,7 @@ inline
 Bool AM::isNotPreemtiveScheduling(void)
 {
   if (isSetSFlag(ThreadSwitch)) {
-    if (threadQueueIsEmpty() || getNextThPri() < currentThread->getPriority())
+    if (threadQueuesAreEmpty())
       restartThread();
     else
       return FALSE;
@@ -759,8 +738,6 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
  */
 void AM::checkEntailment()
 {
-
-loop:
   DebugTrace(trace("check entailment",currentBoard));
 
   currentBoard->unsetNervous();
@@ -828,8 +805,8 @@ loop:
       Board *waitBoard = wa->getChildRef();
 
       int ret=commit(waitBoard);
-
       Assert(ret);
+
       DebugCode (currentThread = (Thread *) NULL);
 
       wa->dispose();
@@ -893,7 +870,7 @@ void engine()
 // ------------------------------------------------------------------------
 // *** Global Variables
 // ------------------------------------------------------------------------
-  /* ordered by iomportance: first variables will go into machine registers
+  /* ordered by importance: first variables will go into machine registers
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
@@ -958,7 +935,7 @@ void engine()
 
   SaveSelf(e,NULL,NO);
   CTT->setBoard (CBB);
-  e->scheduleThread(CTT, CPP);
+  e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
  LBLerror:
@@ -988,12 +965,14 @@ void engine()
   }
 
   /* process switch */
-  if (e->threadQueueIsEmpty()) {
+  if (e->threadQueuesAreEmpty()) {
     e->suspendEngine();
   }
 
 LBLinstallThread:
-  CTT = e->getFirstThread ();
+  CTT = e->getFirstThread();
+  Assert(CTT);
+
   PC = NOCODE; // this is necessary for printing stacks (mm)
 
   DebugTrace (trace("new thread"));
@@ -1288,7 +1267,7 @@ LBLpopTask:
 
     case C_CATCH:
       {
-        TaskStackPop(--topCache);
+        (void) TaskStackPop(--topCache);
         goto next_task;
       }
 
@@ -1518,8 +1497,6 @@ LBLkillThread:
   {
     Thread *tmpThread = CTT;
     Board *nb = 0;
-    Continuation *cont;
-    Actor *aa;
 
     DebugTrace (trace ("kill thread", CBB));
     Assert (tmpThread);
@@ -1676,19 +1653,16 @@ LBLdiscardThread:
    */
 LBLsuspendThread:
   {
-    Thread *tmpThread = CTT;
     Board *nb = 0;
-    Continuation *cont;
-    Actor *aa;
 
     DebugTrace (trace("suspend runnable thread", CBB));
-    Assert (tmpThread);
-    Assert (tmpThread->isSuspended ());
+    Assert (CTT);
+    Assert (CTT->isSuspended ());
     Assert (CBB);
     Assert (!(CBB->isFailed ()));
     //  see the note for the 'LBLkillThread';
-    Assert (tmpThread->isInSolve () || !e->currentSolveBoard);
-    Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
+    Assert (CTT->isInSolve () || !e->currentSolveBoard);
+    Assert (e->currentSolveBoard || !(CTT->isInSolve ()));
 
     asmLbl(suspendThread);
 
@@ -2213,6 +2187,7 @@ LBLdispatcher:
         DISPATCH(6);
       case SUSPEND:
         {
+          // mm2: bug?
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
           e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
@@ -2965,10 +2940,9 @@ LBLdispatcher:
       ProgramCounter contPC = getLabelArg(PC+1);
 
       int prio = CPP;
-      int defPrio = ozconf.defaultPriority;
 
-      if (prio > defPrio) {
-        prio = defPrio;
+      if (prio > DEFAULT_PRIORITY) {
+        prio = DEFAULT_PRIORITY;
       }
 
       Thread *tt = e->mkRunnableThread(prio, CBB,CTT->getValue());

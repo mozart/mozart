@@ -900,11 +900,6 @@ PRINTLONG(SolveActor)
 
 void ThreadsPool::printThreads()
 {
-  int pri, prioInd = nextPrioInd;
-  ThreadQueue *thq;
-  Thread *th;
-  int size;
-
   cout << "Threads" << endl
        << "  running: ";
   currentThread->print(cout,-1,0);
@@ -914,31 +909,34 @@ void ThreadsPool::printThreads()
   cout << endl
        << "  runnable:" << endl;
 
-  thq = currentQueue;
-  pri = currentPriority;
-  while (thq) {
-    cout << "  prio = " << pri << endl;
-    size = thq->getSize ();
-    cout << "    there are " << size << " threads" << endl;
+  if (!hiQueue.isEmpty()) {
+    cout << "  prio = HI" << endl;
+    hiQueue.printThreads();
+  }
+  if (!midQueue.isEmpty()) {
+    cout << "  prio = MID" << endl;
+    midQueue.printThreads();
+  }
+  if (!lowQueue.isEmpty()) {
+    cout << "  prio = LOW" << endl;
+    lowQueue.printThreads();
+  }
+}
 
-    while (size) {
-      th = thq->dequeue ();
-      th->print (cout,-1,4);
-      if (th == currentThread)
-        cout << " RUNNING ";
-      if (th == rootThread)
-        cout << " ROOT ";
-      cout << endl;
-      thq->enqueue (th);
-      size--;
-    }
+void ThreadQueue::printThreads()
+{
+  int i = getSize();
+  cout << "    there are " << i << " threads" << endl;
 
-    if (prioInd >= 0) {
-      pri = nextPrio[prioInd--];
-      thq = &queues[pri];
-    } else {
-      thq = (ThreadQueue *) NULL;
-    }
+  for (; i; i--) {
+    Thread *th = dequeue();
+    th->print (cout,-1,4);
+    if (th == am.currentThread)
+      cout << " RUNNING ";
+    if (th == am.rootThread)
+      cout << " ROOT ";
+    cout << endl;
+    enqueue(th);
   }
 }
 

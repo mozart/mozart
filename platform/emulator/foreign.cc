@@ -692,7 +692,7 @@ Bool checkAtom(char *s)
   case 'p':
     return strcmp(t, "proc")? OK: NO;
   case 's':
-    return strcmp(t, "self")? OK: NO;
+    return strcmp(t, "self") && strcmp(t, "skip")? OK: NO;
   case 't':
     return strcmp(t, "then") && strcmp(t, "thread")
         && strcmp(t, "touch") && strcmp(t, "true")
@@ -1764,7 +1764,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   printf("\n");
 #endif
 
-  thr = am.mkSuspendedThread(am.currentBoard, ozconf.defaultPriority,0);
+  thr = am.mkSuspendedThread(am.currentBoard, DEFAULT_PRIORITY,0);
   thr->pushCFunCont (fun, args, arity, OK);
 
   return ((OZ_Thread) thr);
@@ -1772,7 +1772,7 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  Thread *tt = am.mkRunnableThread(ozconf.defaultPriority, am.currentBoard,0);
+  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard,0);
   tt->pushCFunCont (fun, args, arity, OK);
   am.scheduleThread (tt);
 }

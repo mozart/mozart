@@ -21,6 +21,8 @@ typedef Thread* ThreadPtr;
 //
 //  A queue a'la 'LocalPropagationQueue' by Tobias;
 
+#define INC(a)  ((a) = ((a) + 1) & (maxsize - 1))
+
 class ThreadQueueImpl {
 protected:
   int head, tail, size, maxsize;
@@ -52,21 +54,23 @@ public:
 
   void enqueue (Thread * th) {
     if (size == maxsize) resize ();
-    tail = (tail + 1) & (maxsize - 1);
+    INC(tail);
     queue[tail] = th;
     size++;
   }
 
-  Thread * dequeue (void) {
-    Assert (!isEmpty ());
+  Thread * dequeue(void) {
+    Assert(!isEmpty());
     Thread * th = queue[head];
-    head = (head + 1) & (maxsize - 1);
+    INC(head);
     size--;
     return (th);
   }
   void print(void);
 
   Board * getHighestSolveDebug(void); // TMUELLER
+  int getRunnableNumber();
+  void deleteThread(Thread *th);
 };
 
 class ThreadQueue : public ThreadQueueImpl {
@@ -75,6 +79,7 @@ public:
 
   Bool isScheduled (Thread * thr);
   void doGC ();
+  void printThreads(void);
 };
 
 class LocalThreadQueue : public ThreadQueueImpl {

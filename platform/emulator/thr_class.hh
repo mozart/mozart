@@ -595,6 +595,7 @@ public:
   // wake up cconts and board conts
   Bool wakeUp (Board *home, PropCaller calledBy);
 
+  int getRunnableNumber();
 };
 
 //

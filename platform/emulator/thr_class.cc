@@ -237,3 +237,30 @@ void Thread::propagatorToNormal()
   setBody(am.allocateBody());
   state.flags |= S_RTHREAD;
 }
+
+int Thread::getRunnableNumber()
+{
+  switch (getThrType()) {
+  case S_RTHREAD:
+    {
+      TaskStack * taskstack = getTaskStackRef();
+      if (taskstack->isEmpty()) return 0;
+      TaskStackEntry * topCache = taskstack->getTop();
+      TaskStackEntry topElem = TaskStackPop(topCache-1);
+      int cFlag   = getContFlag (ToInt32 (topElem));
+      if (cFlag != C_LTQ) return 1;
+
+      topElem = TaskStackPop(topCache-2);
+      SolveActor *sa = (SolveActor *) topElem;
+      ThreadQueueImpl *ltq = sa->getLocalThreadQueue();
+      return ltq->getSize();
+    }
+  case S_WAKEUP:
+    return 0;
+  case S_PR_THR:
+    return 1;
+  default:
+    error("Thread::getRunnableNumber()");
+    return 0;
+  }
+}
