@@ -35,6 +35,8 @@
 #include "base.hh"
 #include "oz.h"
 #include "os.hh"
+#include "dictionary.hh"
+#include "am.hh"
 
 #include "parser.hh"
 
@@ -104,96 +106,6 @@ static void xy_input(char *buf, int &result, const int max_size) {
 #define YY_DECL static int xymylex()
 
 
-//******************
-// HASHING
-// for \define etc.
-//******************
-
-#define PRIME 11987 // has to be a prime number
-
-class ScannerListNode {
-public:
-  char *key;
-  ScannerListNode *next;
-
-  ScannerListNode(char *k, ScannerListNode *n) {
-    key = new char[strlen(k) + 1];
-    strcpy(key, k);
-    next = n;
-  }
-  ~ScannerListNode() {
-    delete[] key;
-  }
-};
-
-typedef ScannerListNode *ScannerListNodePtr;
-
-class XyScannerHashTable {
-private:
-  int TableSize;
-  ScannerListNode **Table;
-
-  int hashFunc(char *s) {
-    // taken from 'Aho, Sethi, Ullman: Compilers ...', page 436
-    char *p;
-    unsigned h = 0, g;
-    for(p = s; *p; p++) {
-      h = (h << 4) + (*p);
-      if ((g = h & 0xf0000000)) {
-        h = h ^ (g >> 24);
-        h = h ^ g;
-      }
-    }
-    return h % TableSize;
-  }
-
-public:
-
-  XyScannerHashTable(int size = PRIME) {
-    TableSize = size;
-    Table = new ScannerListNodePtr[TableSize];
-    for (int i = 0; i < TableSize; i++)
-      Table[i] = (ScannerListNode *) 0;
-  }
-
-  ~XyScannerHashTable() {
-    for (int i = 0; i < TableSize; i++) {
-      ScannerListNode *next;
-      for (ScannerListNode *l = Table[i]; l != 0; l = next) {
-        next = l->next;
-        delete l;
-      }
-    }
-    delete [] Table;
-  }
-
-  void insert(char *key) {
-    int hashkey = hashFunc(key);
-    Table[hashkey] = new ScannerListNode(key, Table[hashkey]);
-  }
-
-  int find(char *key) {
-    for (ScannerListNode *l = Table[hashFunc(key)]; l != 0; l = l->next)
-      if (!strcmp(l->key, key))
-        return 1;
-    return 0;
-  }
-
-  int remove(char *key) {
-    ScannerListNode **prev = &Table[hashFunc(key)];
-    for (ScannerListNode *l = *prev; l != 0; prev = &l->next, l = l->next)
-      if (!strcmp(l->key, key)) {
-        *prev = l->next;
-        delete l;
-        return 1;
-      }
-    return 0;
-  }
-};
-
-static XyScannerHashTable *hashTable;
-
-
 //*************************
 // CONDITIONAL COMPILATION
 // uses a stack of flags;
@@ -201,6 +113,8 @@ static XyScannerHashTable *hashTable;
 // \else toggles top
 // \endif pops.
 //*************************
+
+static OzDictionary *defines;
 
 #define CONDITIONALMAXDEPTH 1000
 
@@ -800,8 +714,10 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 <DEFINE>{
   {VARIABLE}                   { if (get_cond()) {
-                                   if (!hashTable->find(xytext))
-                                     hashTable->insert(xytext);
+                                   trans('`');
+                                   OZ_Term key = OZ_atom(xytext);
+                                   if (!OZ_isTrue(defines->member(key)))
+                                     defines->setArg(key, OZ_true());
                                    BEGIN(DIRECTIVE);
                                  } else
                                    BEGIN(INITIAL);
@@ -828,7 +744,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 }
 <UNDEF>{
   {VARIABLE}                   { if (get_cond()) {
-                                   hashTable->remove(xytext);
+                                   trans('`');
+                                   defines->remove(OZ_atom(xytext));
                                    BEGIN(DIRECTIVE);
                                  } else
                                    BEGIN(INITIAL);
@@ -854,10 +771,9 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                }
 }
 <IFDEF>{
-  {VARIABLE}                   { if (hashTable->find(xytext))
-                                   push_cond(1);
-                                 else
-                                   push_cond(0);
+  {VARIABLE}                   { trans('`');
+                                 OZ_Term key = OZ_atom(xytext);
+                                 push_cond(OZ_isTrue(defines->member(key)));
                                  BEGIN(DIRECTIVE);
                                }
   {BLANK}                      ;
@@ -881,7 +797,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                }
 }
 <IFNDEF>{
-  {VARIABLE}                   { if (hashTable->find(xytext))
+  {VARIABLE}                   { trans('`');
+                                 if (defines->member(OZ_atom(xytext)))
                                    push_cond(0);
                                  else
                                    push_cond(1);
@@ -965,7 +882,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "<-"                           { return OOASSIGN; }
 "<="                           { return DEFAULT; }
 "=>"                           { return REDUCE; }
-"!!"                           { return DEREF; }
+"!!"                           { return DEREFF; }
 "//"                           { return SEP; }
 {ADD}                          { return ADD; }
 {FDMUL}                        { return FDMUL; }
@@ -1154,19 +1071,13 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 %%
 
-static void xy_init(OZ_Term defines) {
+static void xy_init(OZ_Term defines0) {
   xylino = 1;
   errorFlag = 0;
 
   bufferStack = NULL;
 
-  hashTable = new XyScannerHashTable;
-  while (OZ_isCons(defines)) {
-    char *x = OZ_virtualStringToC(OZ_head(defines),0);
-    hashTable->insert(x);
-    defines = OZ_tail(defines);
-  }
-
+  defines = tagged2Dictionary(defines0);
   conditional_p = 0;
   conditional_basep = 0;
   commentdepth = 0;
@@ -1208,7 +1119,6 @@ char *xy_expand_file_name(char *file) {
 
 void xy_exit() {
   xy_delete_buffer(YY_CURRENT_BUFFER);
-  delete hashTable;
   while (bufferStack != NULL) {
     XyFileEntry *old = bufferStack;
     bufferStack = bufferStack->previous;
