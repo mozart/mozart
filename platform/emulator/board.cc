@@ -150,6 +150,9 @@ Board::Board(Actor *a,int typ)
   flags = typ;
   suspCount = 0;
   u.actor = a;
+#ifdef PROP_MERGING
+  pq = (PropagatorQueue *) 0;
+#endif
 }
 
 
