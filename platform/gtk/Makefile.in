@@ -22,7 +22,6 @@ PERL            = @PERL@
 ENABLE_CANVAS   = @have_canvas@
 HAVE_GTK_CANVAS = @have_gtk_canvas@
 CANVAS_HEADER   = @canvas_header@
-CANVAS_LIB      = @canvas_lib@
 
 SHAREDIR	= $(PREFIX)/share
 
@@ -57,11 +56,11 @@ BUILD_SCRIPT         = $(VPATH)/goz_build_native.perl
 BUILD                = $(PERL) $(BUILD_SCRIPT)
 BUILD_GTK            = $(BUILD) --includes="gtk/gtk.h"
 ifeq ($(HAVE_GTK_CANVAS),yes)
-   GTK_CANVAS_RENAMER = --includes=gnome-gtk-canvas-renamer.h
+   GTK_CANVAS_RENAMER = gnome-gtk-canvas-renamer.h
 else
    GTK_CANVAS_RENAMER =
 endif
-BUILD_CANVAS         = $(BUILD) --includes=$(CANVAS_HEADER) $(GTK_CANVAS_RENAMER)
+BUILD_CANVAS         = $(BUILD) --includes="$(CANVAS_HEADER) $(GTK_CANVAS_RENAMER)"
 
 # specs
 SPECS_PATH           = $(VPATH)/../../share/lib/gtk/specs
@@ -104,7 +103,7 @@ goz_gtk_interface.c: goz_gtk_wrappers.c goz_support.c
 	$(BUILD_GTK) --interface $^ > $@
 
 GTK.so-$(PLATFORM): $(GTK_OBJECTS) goz_support.o
-	$(OZTOOL) ld $(LDFLAGS) $(GTK_OBJECTS) goz_support.o -o $@
+	$(OZTOOL) ld $(LDFLAGS) $(GTK_OBJECTS) goz_support.o $(LIBS) -o $@
 
 ### end of GTK
 
@@ -117,7 +116,7 @@ goz_gdk_interface.c: goz_gdk_wrappers.c
 	$(BUILD_GTK) --interface $^ > $@
 
 GDK.so-$(PLATFORM): $(GDK_OBJECTS) goz_support.o
-	$(OZTOOL) ld $(LDFLAGS) $(GDK_OBJECTS) goz_support.o -o $@
+	$(OZTOOL) ld $(LDFLAGS) $(GDK_OBJECTS) goz_support.o $(LIBS) -o $@
 
 ### end of GDK
 
@@ -126,11 +125,11 @@ GDK.so-$(PLATFORM): $(GDK_OBJECTS) goz_support.o
 goz_gnome_canvas_wrappers.c: $(CANVAS_SPECS)
 	 $(BUILD_CANVAS) --c-wrappers $^ > $@
 
-goz_gnome_canvas_interface.c: goz_gnome_canvas_wrappers.c
-	$(BUILD_CANVAS) --interface $^ > $@
+goz_gnome_canvas_interface.c: goz_gnome_canvas_wrappers.c $(GTK_CANVAS_RENAMER)
+	$(BUILD_CANVAS) --interface $< > $@
 
 GnomeCanvas.so-$(PLATFORM): $(CANVAS_OBJECTS) goz_support.o
-	$(OZTOOL) ld $(LDFLAGS) `gnome-config --libs gnomeui` $(CANVAS_OBJECTS) goz_support.o -o $@
+	$(OZTOOL) ld $(LDFLAGS) $(CANVAS_OBJECTS) goz_support.o $(LIBS) -o $@
 
 gnome-gtk-canvas-renamer.h: $(CANVAS_SPECS)
 	$(BUILD_CANVAS) --gnome $^ > $@

@@ -109,95 +109,86 @@ dnl *********************************************************************
 dnl ** Gnome/GTK+ Canvas Stuff
 dnl *********************************************************************
 
-have_gnome=yes
-have_canvas=yes
+have_gnome_config=yes
+OZ_PATH_PROG(gnome_config,gnome-config,[have_gnome_config=no])
 
-dnl Check if we have the gnome-config tool so that we can use it to
-dnl get the right paths, otherwise iterate through a list of standard
-dnl locations
-AC_PATH_PROG(gnome_config, gnome-config)
-if test -z $gnome_config; then
-    have_gnome_config="no"
-else
-    have_gnome_config="yes"
-fi
-
-dnl Check for the Gnome headers
-gnome_header="libgnomeui/gnome-canvas.h"
+have_canvas=no
+have_gtk_canvas=no
+AC_CHECKING([for Gnome/canvas header])
 gnome_header_paths="/usr/include /usr/local/include /opt/include /opt/gnome/include /usr/local/gnome/include"
-AC_MSG_CHECKING(for Gnome headers)
-if test x$have_gnome_config = xyes; then
-    gnome_header_path=`$gnome_config --includedir gnomeui`
-	AC_CHECK_FILE(${gnome_header_path}/${gnome_header},,
-		      have_gnome=no)
-else
-    for path in $gnome_headers_paths ; do
-	AC_CHECK_FILE(${path}/${gnome_header},
-	    [gnome_header_path=$path; break])
-    done
-    if test -z $gnome_header_path; then
-	have_gnome=no
-    fi
-fi
-
-dnl Check for the Gnome libraries
-gnome_lib="libgnomeui.so"
 gnome_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib"
-AC_MSG_CHECKING(for Gnome libraries)
-if test x$have_gnome_config = xyes; then
-    gnome_lib_path=`$gnome_config --libdir gnomeui`
-    AC_CHECK_FILE(${gnome_lib_path}/${gnome_lib},, have_gnome=no)
+if test "$have_gnome_config" = yes; then
+  oz_tmp=`$gnome_config --includedir gnomeui`
+  if test -n "$oz_tmp"; then
+    gnome_header_paths="$oz_tmp $gnome_header_paths"
+  fi
+  oz_tmp=`$gnome_config --libdir gnomeui`
+  if test -n "$oz_tmp"; then
+    gnome_lib_paths="$oz_tmp $gnome_lib_paths"
+  fi
+fi
+oz_inc_path_sav=$oz_inc_path
+for dir in $gnome_header_paths; do
+  oz_inc_path="$oz_inc_path $dir/libgnomeui $dir"
+done
+OZ_CHECK_HEADER_PATH(gnome-canvas.h,[canvas_header="gnome-canvas.h"])
+oz_inc_path=$oz_inc_path_sav
+if test -n "$canvas_header"; then
+  AC_CHECKING([for Gnome/canvas library])
+  oz_lib_path_sav=$oz_lib_path
+  oz_lib_path="$oz_lib_path $gnome_lib_paths"
+  canvas_ok=no
+  OZ_CHECK_LIB_PATH(gnomeui,gnome_canvas_new,[canvas_ok=yes])
+  oz_lib_path=$oz_lib_path_sav
+fi
+if test "$canvas_ok" = yes; then
+  canvas_type=gnome
+  have_canvas=yes
 else
-    for path in $gnome_lib_paths ; do
-	AC_CHECK_FILE(${path}/${gnome_lib},
-	    [gnome_lib_path=$path; break])
-    done
-    if test -z $gnome_lib_path; then
-	have_gnome=no
+  canvas_header=
+fi
+if test -z "$canvas_type"; then
+  AC_CHECKING([for GTK/canvas header])
+  gtk_canvas_inc_paths="/usr/include /usr/local/include /opt/include"
+  oz_inc_path_sav=$oz_inc_path
+  oz_inc_path="$oz_inc_path /usr/include /usr/local/include /opt/include"
+  oz_inc_path="$oz_inc_path /usr/include/gdk /usr/local/include/gdk /opt/include/gdk"
+  oz_inc_path="$oz_inc_path /usr/lib/glib/include /usr/local/lib/glib/include /opt/lib/glib/include"
+  canvas_ok=no
+  OZ_CHECK_HEADER_PATH(glibconfig.h,[canvas_ok=yes])
+  if test "$canvas_ok" = yes; then
+    OZ_CHECK_HEADER_PATH(gtk-canvas.h,[canvas_header="gtk-canvas.h"])
+  fi
+  oz_inc_path=$oz_inc_path_sav
+  if test -n "$canvas_header"; then
+    AC_CHECKING([for GTK/canvas library])
+    gtk_canvas_lib_paths="/usr/lib /usr/lib/gtk-canvas /usr/local/lib /usr/local/lib/gtk-canvas /opt/lib /opt/lib/gtk-canvas /opt/gnome/lib /opt/gnome/lib/gtk-canvas /usr/local/gnome/lib /usr/local/gnome/lib/gtk-canvas"
+    oz_lib_path_sav=$oz_lib_path
+    oz_lib_path="$gtk_canvas_lib_paths $oz_lib_path"
+    canvas_ok=no
+    OZ_CHECK_LIB_PATH(art_lgpl,art_uta_from_svp,[canvas_ok=yes])
+    if test "$canvas_ok" = yes; then
+      canvas_ok=no
+      OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,[canvas_ok=yes])
     fi
+    oz_lib_path=$oz_lib_path_sav
+  fi
+  if test "$canvas_ok" = yes; then
+    canvas_type=gtk
+    have_canvas=yes
+    have_gtk_canvas=yes
+  else
+    canvas_header=
+  fi
 fi
 
-dnl Check for GTK+ Canvas if we have not found Gnome
-if test x$have_gnome = xno; then
-
-    AC_MSG_CHECKING(for GTK+ canvas library)
-    gtk_canvas_lib="libgtkcanvas.so"
-    gtk_canvas_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib /usr/lib/gtk-canvas /usr/local/lib/gtk-canvas /opt/lib/gtk-canvas"
-    for path in $gtk_canvas_lib_paths ; do
-	AC_CHECK_FILE(${path}/${gtk_canvas_lib},
-	    [gtk_canvas_lib_path=$path; break])
-    done
-    if test -z $gtk_canvas_lib_path; then
-	have_canvas=no
-    fi
-
-    AC_CHECK_HEADER(gtk-canvas.h,, have_canvas=no)
-fi
-
-if test -z x$have_canvas=xno; then
+if test -z "$canvas_type"; then
     AC_MSG_WARN(Canvas support will be disabled)
 fi
 
-dnl Substitutions
-if test x$have_canvas = xyes; then
-    if test x$have_gnome = xyes; then
-	canvas_header=${gnome_header_path}/${gnome_header}
-	canvas_lib=${gnome_lib_path}/${gnome_lib}
-	have_gtk_canvas=no
-    else
-	have_gtk_canvas=yes
-	canvas_header="gtk-canvas.h"
-	canvas_lib=${gtk_canvas_lib_path}/${gtk_canvas_lib}
-    fi
-else
-    canvas_header=
-    canvas_lib=
-    have_gtk_canvas=
-fi
 AC_SUBST(have_canvas)
 AC_SUBST(have_gtk_canvas)
 AC_SUBST(canvas_header)
-AC_SUBST(canvas_lib)
 
 dnl *********************************************************************
 dnl ** Glade
