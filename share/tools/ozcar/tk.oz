@@ -73,16 +73,20 @@ in
 	 ScrolledTitleWidget,M
       end
       
+      meth newTag($)
+	 CurTag <- @CurTag + 1
+      end
+      
       meth resetTags
 	 ScrolledTitleText,DeleteTags(CurTag <- self.TagBase)
       end
 
+      meth resetReservedTag(N)
+	 {self tk(tag delete N)}
+      end
+
       meth resetReservedTags(N)
 	 ScrolledTitleText,DeleteTags(N 0)
-      end
-      
-      meth newTag($)
-	 CurTag <- @CurTag + 1
       end
       
       meth DeleteTags(N Base<=self.TagBase)
