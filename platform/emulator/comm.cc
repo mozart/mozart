@@ -268,7 +268,41 @@ Site *unmarshalPSite(MsgBuffer *buf){
   return s;}
 
 
+Site *findRemoteSite(ip_address a,int port,time_t stamp)
+{
+  Site tryS(a,port,stamp);
+  int hvalue=tryS.hashPrimary();
+  Site *s;
+  FindType rc=primarySiteTable->findPrimary(&tryS,hvalue,s);
 
+  switch(rc) {
+  case SAME:
+    if(!s->ActiveSite()) {
+      s->makeActiveRemote();
+    }
+    return s;
+  case NONE:
+    s=siteManager.allocSite(&tryS);
+    primarySiteTable->insertPrimary(s,hvalue);
+    s->initRemote();
+    return s;
+  case I_AM_YOUNGER:
+    {
+      int hvalue=tryS.hashSecondary();
+      s = secondarySiteTable->findSecondary(&tryS,hvalue);
+      if(s) return s;
+      s = siteManager.allocSite(&tryS,PERM_SITE);
+      secondarySiteTable->insertSecondary(s,hvalue);
+      return s;
+    }
+  case I_AM_OLDER:
+    primaryToSecondary(s,hvalue);
+    return s;
+  default:
+    error("impossible");
+    return 0;
+  }
+}
 
 Site* unmarshalSite(MsgBuffer *buf){
   PD((UNMARSHAL,"site"));

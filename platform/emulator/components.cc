@@ -36,6 +36,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strings.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "runtime.hh"
 #include "codearea.hh"
 #include "indexing.hh"
@@ -819,6 +822,123 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
   return loadDatum(d,t);
 }
 
+OZ_Term gatePort=0;
+
+OZ_C_proc_begin(BIGateId,1)
+{
+  oz_declareArg(0,out);
+
+  // ozgate://hostname:port/timestamp";
+  static char url[100];
+  ip_address a = mySite->getAddress();
+  short unsigned int port = mySite->getPort();
+  time_t stamp = mySite->getTimeStamp();
+
+  sprintf(url,"ozgate://%lu.%lu.%lu.%lu:%u/",
+          (a/(256*256*256))%256,
+          (a/(256*256))%256,
+          (a/256)%256,
+          a%256,
+          port
+          );
+  char *s=url+strlen(url);
+  while (stamp) {
+    *s++ = 'a'+(stamp % 26);
+    stamp = stamp/26;
+  }
+  *s++ = 0;
+  return OZ_unifyAtom(out,url);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIOpenGate,1)
+{
+  oz_declareArg(0,stream);
+
+  if (gatePort) return oz_raise(E_ERROR,E_SYSTEM,"gateAlreadyOpen",0);
+
+  gatePort = oz_newPort(stream);
+  OZ_protect(&gatePort);
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BICloseGate,0)
+{
+  if (gatePort) {
+    OZ_unprotect(&gatePort);
+    gatePort = 0;
+  }
+  return PROCEED;
+}
+OZ_C_proc_end
+
+extern sendPort(OZ_Term port, OZ_Term val);
+
+void sendGate(OZ_Term t) {
+  if (gatePort) {
+    sendPort(gatePort,t);
+  }
+}
+
+
+extern Site *findRemoteSite(ip_address a,int port,time_t stamp);
+
+OZ_C_proc_begin(BISendGate,2)
+{
+  oz_declareVirtualStringArg(0,url);
+  oz_declareArg(1,val);
+
+  if (strncmp(url,"ozgate://",9)!=0)
+    goto bomb;
+  url += 9;
+
+  char *p;
+  p = strchr(url,':');
+  if (!p) goto bomb;
+  *p = 0;
+
+  struct hostent *hostaddr;
+  hostaddr = gethostbyname(url);
+  struct in_addr tmp;
+  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
+  ip_address addr;
+  addr = ntohl(tmp.s_addr);
+  url = p+1;
+
+  int port;
+  port = strtol(url,&p,10);
+  if (*p!='/') goto bomb;
+  url = p+1;
+
+  time_t stamp;
+  stamp=0;
+  unsigned char *s;
+  s = (unsigned char *)(url+strlen(url));
+  while (s>url) {
+    int c = *(--s)-'a';
+    if (c<0||c>25) goto bomb;
+    stamp = stamp*26+c;
+  }
+
+  Site *site;
+  site = findRemoteSite(addr,port,stamp);
+
+  if (!site) goto bomb;
+
+  MsgBuffer *bs;
+  bs = msgBufferManager->getMsgBuffer(site);
+  marshal_M_SEND_GATE(bs,val);
+  int ret;
+  ret = site->sendTo(bs,M_SEND_GATE,0,0);
+  // ignore ret;
+  return PROCEED;
+
+bomb:
+  return oz_raise(E_ERROR,E_SYSTEM,"sendGate",2,OZ_getCArg(0),val);
+}
+OZ_C_proc_end
 
 
 
@@ -831,10 +951,15 @@ BIspec componentsSpec[] = {
 
   {"Wget",         2, BIWget, 0},
 
+  {"GateId",       1, BIGateId},
+  {"OpenGate",     1, BIOpenGate},
+  {"CloseGate",    0, BICloseGate},
+  {"SendGate",     2, BISendGate},
   {0,0,0,0}
 };
 
-void initComponents(){
+void initComponents() {
   OZ_protect(&url_map);
   OZ_protect(&OZ_Cache_Path);
-  BIaddSpec(componentsSpec);}
+  BIaddSpec(componentsSpec);
+}

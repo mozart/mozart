@@ -248,7 +248,9 @@ char *mess_names[M_LAST] = {
   "send_object",
   "send_objectandclass",
   "register virtual site",
-  "init virtual site"
+  "init virtual site",
+
+  "send_gate",
 };
 
 /* *********************************************************************/
@@ -3170,6 +3172,17 @@ void Site::msgReceived(MsgBuffer* bs)
       break;
     }
 
+  case M_SEND_GATE:    /* term */
+    {
+      OZ_Term t;
+      unmarshal_M_SEND_GATE(bs,t);
+      PD((MSG_RECEIVED,"SEND_GATE: v:%s",toC(t)));
+
+      extern void sendGate(OZ_Term t);
+      sendGate(t);
+      break;
+    }
+
   case M_ASK_FOR_CREDIT:
     {
       int na_index;
@@ -5153,6 +5166,9 @@ void Site::communicationProblem(MessageType mt,Site*
       NOT_IMPLEMENTED;}
 
     case M_SEND_OBJECTANDCLASS:{
+      NOT_IMPLEMENTED;}
+
+    case M_SEND_GATE:{
       NOT_IMPLEMENTED;}
 
     default:{

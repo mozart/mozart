@@ -64,3 +64,5 @@ message(M_SEND_OBJECTANDCLASS,Site,Index,ObjectAndClass)
 message(M_FILE,String,Term)
 message(M_REGISTER_VS,Site)
 message(M_INIT_VS,Term)
+
+message(M_SEND_GATE,Term)
