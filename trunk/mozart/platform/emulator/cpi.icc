@@ -1,0 +1,32 @@
+inline
+void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state = ps;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  Assert(staticSpawnVarsNumberProp < MAXFDBIARGS);
+}
+
+inline
+void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state = ps;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  Assert(staticSpawnVarsNumber < MAXFDBIARGS);
+}
+
+inline
+void * heap_new(size_t s)  // aligned to 8
+{
+  char * tmp = ctHeap;
+  ctHeap += (s + (8 - (s & 7)));
+  return tmp;
+}
+
+inline
+void heap_delete(void *, size_t)
+{
+  // reserved for future extensions
+}
+

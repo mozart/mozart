@@ -17,6 +17,8 @@
 #include "fset.hh"
 #include "tagged.hh"
 
+#define FSETGLBLUB
+
 inline int div32(int n) { return n >> 5; }
 inline int mod32(int n) { return n & 0x1f; }
 
@@ -34,21 +36,31 @@ int findBitsSet(int high, int * bv)
 }
 
 static
-void setBits(OZ_Term t, int high, int * bv)
+void setBits(OZ_Term t, int high, int * bv, int neg = 0)
 {
   for (; OZ_isCons(t); t = OZ_tail(t)) {
       int v = OZ_intToC(OZ_head(t));
       if (0 <= v && v < 32 * high)
 	bv[div32(v)] |= (1 << mod32(v));
   }
+  if (neg) 
+    for (int i = high; i--; )
+      bv[i] = ~bv[i];
 }
 
 static
-void printBits(ostream &o, int high, const int * bv) 
+void printBits(ostream &o, int high, const int * bv, int neg = 0) 
 {
-  for (int first = 1, i = 0; i < 32 * high; i++) {
-    if (bv[div32(i)] & (1 << mod32(i))) 
-      o << (first ? first = 0, "" : ",") << i;
+  if (neg) {
+    for (int first = 1, i = 0; i < 32 * high; i++) {
+      if (!(bv[div32(i)] & (1 << mod32(i)))) 
+	o << (first ? first = 0, "" : " ") << i;
+    }      
+  } else {
+    for (int first = 1, i = 0; i < 32 * high; i++) {
+      if ((bv[div32(i)] & (1 << mod32(i)))) 
+	o << (first ? first = 0, "" : " ") << i;
+    }
   }
 }
 
@@ -81,9 +93,9 @@ OZ_Boolean FSetValue::unify(OZ_Term t)
 
 ostream &FSetValue::print(ostream &o) const
 {
-  o << '{';
+  o << "{[";
   printBits(o, fset_high, _in);
-  o << "}#" << _card;
+  o << "]}#" << _card;
   return o;
 }
 
@@ -123,18 +135,61 @@ OZ_FSetImpl::OZ_FSetImpl(int c_min, int c_max, OZ_Term ins, OZ_Term outs)
     _card_min = -1;
 }
 
+
+OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs) 
+{
+  for (int i = fset_high; i--; )
+    _in[i] = _not_in[i] = 0;
+  
+  setBits(ins, fset_high, _in);
+  setBits(outs, fset_high, _not_in, 1);
+
+  for (int i = fset_high; i--; )
+    if (_in[i] & _not_in[i]) {
+      _card_min = -1;
+      return;
+    }
+  
+  _card_min = _known_in = findBitsSet(fset_high, _in);
+  _known_not_in = findBitsSet(fset_high, _not_in);
+  _card_max = 32*fset_high - _known_not_in;
+
+  Assert(_card_min <= _card_max);
+}
+
+
+void OZ_FSetImpl::printGlb(ostream &o) const 
+{
+  printBits(o, fset_high, _in);
+}
+
+void OZ_FSetImpl::printLub(ostream &o) const
+{
+  printBits(o, fset_high, _not_in, 1);
+}
+
 ostream &OZ_FSetImpl::print(ostream &o) const
 {
+#ifdef FSETGLBLUB
+  o << "{[";
+  printGlb(o);
+  o << "]..[";
+  printLub(o);
+  o << "]}";
+#else
   o << "{in(";
   printBits(o, fset_high, _in);
   o << ") not_in(";
   printBits(o, fset_high, _not_in);
-  o << ")}#";
+  o << ")}";
+#endif
+
+  o << '#';
   if (_card_min == _card_max) 
     o << _card_min;
   else 
-    o << '[' << _card_min << ',' << _card_max << ']';
-  
+    o << '[' << _card_min << '#' << _card_max << ']';
+
   return o;
 }
 
