@@ -37,6 +37,11 @@ void reviveCurrentTaskSusp(void);
 void killPropagatedCurrentTaskSusp(void);
 void dismissCurrentTaskSusp(void);
 
+inline 
+Bool isUnifyCurrentTaskSusp(void) {
+  return FDcurrentTaskSusp->isUnifySusp();
+}
+
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 
 Suspension * makeHeadSuspension(OZ_Bool (* fun)(int, OZ_Term[]),
