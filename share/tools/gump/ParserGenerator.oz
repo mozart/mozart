@@ -392,7 +392,8 @@ local
       meth init(Symbol Rep)
 	 case Symbol of fAtom(_ _) then
 	    GrammarSymbol, init(Symbol)
-	 [] (Sym2=fAtom(_ _))#fRecord(fAtom(Assoc APos) [fInt(Prec IPos)]) then
+	 elseof (Sym2=fAtom(_ _))#fRecord(fAtom(Assoc APos) [fInt(Prec IPos)])
+	 then
 	    GrammarSymbol, init(Sym2)
 	    case Prec > 0 then
 	       case Assoc of leftAssoc then assoc <- leftAssoc#Prec
@@ -406,7 +407,7 @@ local
 	       {Rep error(coord: IPos kind: 'parser generator error'
 			  msg: 'precedence must be > 0')}
 	    end
-	 [] Sym2#fRecord(Label [fColon(fInt(1 _) I)]) then
+	 elseof Sym2#fRecord(Label [fColon(fInt(1 _) I)]) then
 	    % allow for e. g. `leftAssoc(1: 6)'
 	    Terminal, init(Sym2#fRecord(Label [I]) Rep)
 	 elseof fAtom(_ Pos)#_ then
@@ -593,13 +594,13 @@ local
       end
       meth classifyAttributes(Globals Rep) As in
 	 As = {FoldL {@formalParameterList getParameters($)}
-	       fun {$ In P}
-		  case P of fVar(X _)#Attr then
+	       fun {$ In P#Attr}
+		  case P of fVar(X _) then
 		     case {IsFree Attr} orelse Attr == synthesized then
 			(X#Attr)|In
 		     else In
 		     end
-		  [] fDollar(_)#_ then In
+		  [] fDollar(_) then In
 		  end
 	       end nil}
 	 {@synExpression classifyAttributes(Globals Rep As _)}
@@ -615,10 +616,10 @@ local
       end
       meth generate(Globals PTG) Is Ss Ps in
 	 Is#Ss#Ps#_ = {FoldL {@formalParameterList getParameters($)}
-		       fun {$ Is#Ss#Ps#I P}
-			  case P of Variable#inherited then
+		       fun {$ Is#Ss#Ps#I Variable#Attr}
+			  case Attr of inherited then
 			     (Variable|Is)#Ss#((I#inherited)|Ps)#(I + 1)
-			  [] Variable#synthesized then
+			  [] synthesized then
 			     Is#(Variable|Ss)#((I#synthesized)|Ps)#(I + 1)
 			  end
 		       end nil#nil#nil#1}
@@ -877,14 +878,14 @@ local
 					 getValue($)})}
 	 elsecase {Entry getEntryType($)} of nonterminal then Ts Vs in
 	    _#Ts#Vs = {FoldL {Entry getParameters($)}
-		       fun {$ I#Ts#Vs P} Actual in
+		       fun {$ I#Ts#Vs _#Attr} Actual in
 			  case {{Actuals getParameter(I $)} getValue($)}
 			  of fEscape(V _) then Actual = V
 			  elseof T then Actual = T
 			  end
-			  case P of _#inherited then
+			  case Attr of inherited then
 			     (I + 1)#(Actual|Ts)#Vs
-			  [] _#synthesized then
+			  [] synthesized then
 			     (I + 1)#Ts#(Actual|Vs)
 			  end
 		       end 0#nil#nil}
@@ -1336,7 +1337,7 @@ local
 	 Template = {LookupProductionTemplate TemplI.1 @key ?NewVisibles}
 	 case Template of notFound then Key in
 	    case @key of none#S then S
-	    [] fAtom(X _)#S then X#':'#S
+	    elseof fAtom(X _)#S then X#':'#S
 	    end = Key
 	    {Rep error(coord: @pos kind: 'parser generator error'
 		       msg: 'unknown production template with key `'#Key#'\'')}
