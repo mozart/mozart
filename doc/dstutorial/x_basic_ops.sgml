@@ -42,7 +42,17 @@ stays within a method.
 If many sites use the object, then it will travel
 among the sites, giving everyone a fair share of the object use.
 
-<P>The class of a cached object is copied to each
+<P> The site where the object is created
+is called its <EM>owner site</EM>.
+A site requesting the object
+first sends a message to the owner site.
+The owner site then
+sends a forwarding request to the site currently
+hosting the object.
+This hosting site then sends the object's
+state pointer to the requesting site.
+
+<P> The class of a cached object is copied to each
 site that calls the object.
 This is done lazily, i.e., the class is only
 copied when the object is called for the first time.
@@ -100,7 +110,8 @@ as is explained later in the tutorial.
 <ITEM> <EM>Port</EM>:
 A port is an asynchronous many-to-one channel
 that respects FIFO for messages sent from within the same thread.
-A port is stationary on the site it is created.
+A port is stationary on the site it is created,
+which is called its <EM>owner site</EM>.
 The messages are appended to a stream
 on the port's site.
 Messages from the same thread appear
@@ -128,9 +139,9 @@ updates do not use the network any more.
 <ITEM> <EM>Thread-reentrant lock</EM>:
 A thread-reentrant lock allows only a single
 thread to enter a given program region.
-The locks can be created dynamically
+Locks can be created dynamically
 and nested recursively.
-The locks have the same distribution behavior
+Locks have the same distribution behavior
 as cached objects and cells.
 This implements a standard distributed mutual
 exclusion algorithm.
@@ -156,15 +167,16 @@ they will be assigned only once.
 It would be highly inefficient in a distributed system
 to create a cell for that case.
 <P> When a logic variable is bound,
-the value is sent to its owner site
-(the site on which it was created),
-which then multicasts it to all the
+the value is sent to its <EM>owner site</EM>,
+namely the site on which it was created.
+The owner site
+then multicasts the value to all the
 sites that have the variable.
 The current release implements
 the multicast as a sequence of message sends.
 That is, if the variable is on <EM>n</EM> sites,
 then a maximum of <EM>n</EM>+1 messages are
-used to bind the variable.
+needed to bind the variable.
 When a variable arrives on a site
 for the first time, it is immediately
 registered with the owner site.
@@ -664,7 +676,7 @@ proc {MakeStat PO ?StatP}
    S P={NewPort S}
    N={NewName}
 in
-   proc {StatProc M}
+   proc {StatP M}
    R in
       {Send P M#R}
       if R==N then skip else raise R end end
@@ -673,7 +685,7 @@ in
       {ForAll S
        proc {$ M#R}
           thread
-             try {ProcOrObj M} R=N catch X then R=X end
+             try {PO M} R=N catch X then R=X end
           end
        end}
    end
