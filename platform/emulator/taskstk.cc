@@ -86,6 +86,7 @@ static Bool isUninterestingTask(ProgramCounter PC) {
     PC == C_EMPTY_STACK;
 }
 
+
 TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
 {
   int frameId = verbose? -1: getFrameId(frame);
@@ -99,10 +100,7 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
   if (PC == C_DEBUG_CONT_Ptr) {
     OzDebug *dbg = (OzDebug *) Y;
     OzDebugDoit dothis = (OzDebugDoit) (int) G;
-    if (dothis == DBG_EXIT)
-      return dbg->toRecord("exit",thread,frameId);
-    else
-      return dbg->toRecord("entry",thread,frameId);
+    return dbg->toRecord((dothis == DBG_EXIT)?"exit":"entry",thread,frameId);
   }
 
   if (PC == C_CATCH_Ptr) {
