@@ -60,7 +60,7 @@ CXXEXTRAFLAGS = $(CXXPLAFLAGS) $(GTKFLAGS) $(GTKCANVASFLAGS) -I$(SRCDIR) -I.
 
 NATEXTRAFLAGS = -s $(GTKCANVASLIBS) $(GTKLIBS)
 
-GTKGENERATED = $(shell ls GDK.oz)
+GTKGENERATED = $(wildcard GDK.oz)
 
 #---------------------------------------------------------------------
 # C99 Parser
@@ -177,9 +177,6 @@ $(CCMPS):%.so-$(PLATFORM): $(COBJS)
 $(NATCMPS):%.so-$(PLATFORM): %.o
         $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(NATEXTRAFLAGS)
 
-Generator.ozf: $(GENOBJS)
-        $(LINK) Main.ozf -o $@
-
 #---------------------------------------------------------------------
 # Building
 #---------------------------------------------------------------------
@@ -215,6 +212,9 @@ gtkraw.c: gtkdefs.c
 #---------------------------------------------------------------------
 # Create Binding Files
 #---------------------------------------------------------------------
+
+Generator.ozf: $(GENOBJS)
+        $(LINK) Main.ozf -o $@
 
 binding:
 ifeq ($(GTKGENERATED), GDK.oz)

@@ -105,7 +105,7 @@ define
             GtkConstants, writeConstants(Cr)
          [] nil  then
             TextFile, putS({ToS "  }"})
-            TextFile, putS("  return OZ_atom(\"unknown type\");")
+            TextFile, putS("  return OZ_makeForeignPointer(arg->d.object_data);")
          end
       end
       meth isEnum(C $)
