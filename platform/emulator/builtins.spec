@@ -12,6 +12,13 @@ $cmode='stat';
 		     native => false},
     #* NATIVE IS HERE ONLY TEMPORARYLY FALSE IN ORDER TO DEBUG THE SYSTEM!
 
+    'BootManager' => { in     => ['+virtualString'],
+		       out    => ['+record'],
+		       BI     => BIBootManager,
+		       native => true},
+
+    #* NATIVE IS HERE ONLY TEMPORARYLY FALSE IN ORDER TO DEBUG THE SYSTEM!
+
     #* Core
 
     ##* Type Tests
@@ -1375,10 +1382,6 @@ $cmode='stat';
 			     BI  => BIdlLoad,
 			     native => true},
 
-    'dlStaticLoad'	=> { in  => ['+virtualString'],
-			     out => ['+record'],
-			     BI  => BIdlStaticLoad,
-			     native => true},
 
     #* Distribution
 

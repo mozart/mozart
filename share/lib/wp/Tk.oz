@@ -25,8 +25,8 @@
 functor $ prop once
 
 import
-   Foreign.{staticLoad}
-
+   WIF from 'x-oz-boot:Wif'
+	  
    Property.{get}
    
    System.{apply
@@ -115,38 +115,29 @@ body
 		     toListFloat:  TkStringToListFloat)
 
    %%
-   %% Load & link wish interface
+   %% Sending tickles
    %%
-
-   local
-      WIF = {Foreign.staticLoad 'libWif.so'}
-   in
-      %%
-      %% Sending tickles
-      %%
-      TkInit         = WIF.wifInit
-      TkGetNames     = WIF.wifGetNames
-      
-      TkSend         = WIF.wifWrite
-      TkBatch        = WIF.wifWriteBatch
-      TkReturn       = WIF.wifWriteReturn
-      TkReturnMess   = WIF.wifWriteReturnMess
-      TkSendTuple    = WIF.wifWriteTuple
-      TkSendTagTuple = WIF.wifWriteTagTuple
-      TkSendFilter   = WIF.wifWriteFilter
-
-      TkClose        = WIF.wifClose
-
-      %%
-      %% Generation of Identifiers
-      %%
-      GenTopName    = WIF.wifGenTopName
-      GenWidgetName = WIF.wifGenWidgetName
-      GenTagName    = WIF.wifGenTagName
-      GenVarName    = WIF.wifGenVarName
-      GenImageName  = WIF.wifGenImageName
-      
-   end
+   TkInit         = WIF.init
+   TkGetNames     = WIF.getNames
+   
+   TkSend         = WIF.write
+   TkBatch        = WIF.writeBatch
+   TkReturn       = WIF.writeReturn
+   TkReturnMess   = WIF.writeReturnMess
+   TkSendTuple    = WIF.writeTuple
+   TkSendTagTuple = WIF.writeTagTuple
+   TkSendFilter   = WIF.writeFilter
+   
+   TkClose        = WIF.close
+   
+   %%
+   %% Generation of Identifiers
+   %%
+   GenTopName    = WIF.genTopName
+   GenWidgetName = WIF.genWidgetName
+   GenTagName    = WIF.genTagName
+   GenVarName    = WIF.genVarName
+   GenImageName  = WIF.genImageName
    
 
    VoidEntry = {NewName}
