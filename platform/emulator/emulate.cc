@@ -342,8 +342,10 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
   if (CBB != bb) {                                                            \
     switch (e->installPath(bb)) {                                             \
     case INST_REJECTED:                                                       \
+      currentTaskSusp = NULL;                                                 \
       goto LBLpopTask;                                                        \
     case INST_FAILED:                                                         \
+      currentTaskSusp = NULL;                                                 \
       goto LBLfailure;                                                        \
     }                                                                         \
   }
@@ -629,6 +631,7 @@ void engine() {
         }
         taskStack->setTop(topCache);
         if (!tmpBB) {
+          currentTaskSusp = NULL;
           goto LBLpopTask;
         }
         DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
@@ -813,8 +816,9 @@ void engine() {
                        );
       case PROCEED:
         killPropagatedCurrentTaskSusp();
-      default:
         DISPATCH(3);
+      default:
+        error("Unexpected return value at CALLBUILTIN.");
       }
     }
 
@@ -1568,6 +1572,8 @@ void engine() {
             if (e->isSetSFlag(DebugMode)) {
               exitBuiltin(res,bi,predArity,X);
             }
+
+            killPropagatedCurrentTaskSusp();
 
             switch (res) {
 
