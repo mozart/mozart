@@ -34,7 +34,6 @@
 #include "prop_int.hh"
 #include "builtins.hh"
 #include "debug.hh"
-#include "solve.hh"
 #include "space.hh"
 
 # define CBB (oz_currentBoard())
@@ -48,20 +47,19 @@ static
 void oz_checkStability()
 {
   // try to reduce a solve board;
-  SolveActor *solveAA = SolveActor::Cast(oz_currentBoard()->getActor());
-  Board      *solveBB = oz_currentBoard();
+  Board * solveBB = oz_currentBoard();
  
-  if (oz_isStableSolve(solveAA)) {
+  if (oz_isStableSolve(solveBB)) {
     Assert(am.trail.isEmptyChunk());
     // all possible reduction steps require this; 
 
     // check for nonmonotonic propagators
-    oz_solve_scheduleNonMonoSuspList(solveAA);
-    if (!oz_isStableSolve(solveAA))
+    oz_solve_scheduleNonMonoSuspList(solveBB);
+    if (!oz_isStableSolve(solveBB))
       return;
     
     // Check whether there are registered distributors
-    Distributor * d = solveAA->getDistributor();
+    Distributor * d = solveBB->getDistributor();
     
     if (d) {
       
@@ -73,11 +71,11 @@ void oz_checkStability()
       } else {
 	// don't decrement counter of parent board!
 	am.trail.popMark();
-	oz_currentBoard()->unsetInstalled();
-	am.setCurrent(oz_currentBoard()->getParent());
+	solveBB->unsetInstalled();
+	am.setCurrent(solveBB->getParent());
       
-	int ret = oz_unify(solveAA->getResult(), 
-			   solveAA->genChoice(d->getAlternatives()));
+	int ret = oz_unify(solveBB->getResult(), 
+			   solveBB->genChoice(d->getAlternatives()));
 	Assert(ret==PROCEED);
 
 	return;
@@ -89,11 +87,11 @@ void oz_checkStability()
       // 'solved';
       // don't unlink the subtree from the computation tree;
       am.trail.popMark();
-      oz_currentBoard()->unsetInstalled();
-      am.setCurrent(oz_currentBoard()->getParent());
+      solveBB->unsetInstalled();
+      am.setCurrent(solveBB->getParent());
       // don't decrement counter of parent board!
 
-      int ret = oz_unify(solveAA->getResult(), solveAA->genSolved());
+      int ret = oz_unify(solveBB->getResult(), solveBB->genSolved());
       // VIOLATED ASSERTION!!!! CS-SPECIAL
       //   Assert(ret==PROCEED);
       return;
@@ -104,22 +102,22 @@ void oz_checkStability()
     oz_currentBoard()->unsetInstalled();
     am.setCurrent(oz_currentBoard()->getParent());
     
-    int ret = oz_unify(solveAA->getResult(), solveAA->genStuck());
+    int ret = oz_unify(solveBB->getResult(), solveBB->genStuck());
     Assert(ret==PROCEED);
     return;
   }
 
-  if (solveAA->getThreads() == 0) {
+  if (solveBB->getThreads() == 0) {
     // There are some external suspensions: blocked
 
     oz_deinstallCurrent();
 
     TaggedRef newVar = oz_newVariable();
-    TaggedRef result = solveAA->getResult();
+    TaggedRef result = solveBB->getResult();
 
-    solveAA->setResult(newVar);
+    solveBB->setResult(newVar);
 
-    int ret = oz_unify(result, solveAA->genUnstable(newVar));
+    int ret = oz_unify(result, solveBB->genUnstable(newVar));
     Assert(ret==PROCEED);
     return;
   }
@@ -251,8 +249,6 @@ LBLrunThread:
       goto LBLpreemption;
     case T_SUSPEND:
       goto LBLsuspend;
-    case T_SUSPEND_ACTOR:
-      goto LBLsuspendActor;
     case T_RAISE:
       goto LBLraise;
     case T_TERMINATE:
@@ -292,7 +288,7 @@ LBLerror:
    * ----------------------------------------------------------------------- */
   /*
    *  Kill the thread - decrement 'suspCounter'"s and counters of 
-   * runnable threads in solve actors if any
+   * runnable threads in solve if any
    */
 LBLterminate:
   {
@@ -327,7 +323,7 @@ LBLcheckEntailmentAndStability:
      *  In the case when the thread was originated in a solve board, 
      * we have to update the (runnable) threads counter there manually, 
      * check stability there ('oz_checkStability ()'), and proceed 
-     * with further solve actors upstairs by means of 
+     * with further solve upstairs by means of 
      * 'AM::decSolveThreads ()' as usually.
      *  This is because the 'AM::decSolveThreads ()' just generates 
      * wakeups for solve boards where stability is suspected. But 
@@ -335,8 +331,8 @@ LBLcheckEntailmentAndStability:
      * and this (and 'LBLsuspendThread') labels are exactly the 
      * right places where it should be done!
      *  Note also that the order of decrementing (runnable) threads 
-     * counters in solve actors is also essential: if some solve actor 
-     * can be reduced, solve actors above it are getting *instable*
+     * counters in solve  is also essential: if some solve  
+     * can be reduced, solve above it are getting *instable*
      * because of a new thread!
      *
      */ 
@@ -345,23 +341,19 @@ LBLcheckEntailmentAndStability:
     if (oz_onToplevel()) 
       goto LBLstart;
 
-    Board *nb = 0; // notification board
-
-    // 
     //  First, look at the current board, and if it's a solve one, 
     // decrement the (runnable) threads counter manually _and_
     // skip the 'AM::decSolveThreads ()' for it; 
     
     Assert(!CBB->isRoot() && !CBB->isFailed() && !CBB->isCommitted());
 
-    SolveActor *sa = SolveActor::Cast(CBB->getActor ());
-
     //  'nb' points to some board above the current one,
-    nb = GETBOARD(sa);
+    Board * nb = CBB->getParent();
 
     //  kost@ : optimize the most probable case!
-    if (sa->decThreads () != 0) {
-      DECSOLVETHREADS (nb, "a");
+
+    if (CBB->decThreads () != 0) {
+      oz_decSolveThreads(nb);
       goto LBLstart;
     }
     
@@ -377,8 +369,11 @@ LBLcheckEntailmentAndStability:
     oz_checkStability();
     
     //  deref nb, because it maybe just committed!
+
+    Assert(nb);
+    
     if (nb) 
-      DECSOLVETHREADS(nb->derefBoard(), "b");
+      oz_decSolveThreads(nb->derefBoard());
 
     goto LBLstart;
   }
@@ -408,22 +403,11 @@ LBLdiscardThread:
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable());
 
-#ifdef DEBUG_THREADCOUNT
-    GETBOARD(CTT)->resetLocalPropagatorQueue();
-#endif
-
     Board *tmpBB = GETBOARD(CTT);
 
-    if (!tmpBB->isRoot()) {
-
-      SolveActor *sa = SolveActor::Cast (tmpBB->getActor ());
-      Assert (sa);
-	
-      Assert (sa->getSolveBoard()==tmpBB);
-
-      DECSOLVETHREADS(GETBOARD(sa), "c");
-    }
-
+    if (!tmpBB->isRoot())
+      oz_decSolveThreads(tmpBB->getParent());
+    
     oz_disposeThread(CTT);
     am.threadsPool.unsetCurrentThread();
 
@@ -446,28 +430,18 @@ LBLdiscardThread:
    *  - CBB must be alive;
    *
    */
-LBLsuspendActor:
-  DebugTrace(ozd_trace("thread suspend on actor"));
-  if (e->debugmode() && CTT->getTrace()) {
-    debugStreamBlocked(CTT);
-  }
-  goto LBLsuspend1;
-
 LBLsuspend:
-  DebugTrace(ozd_trace("thread suspended"));
-  if (e->debugmode() && CTT->getTrace()) {
-    debugStreamBlocked(CTT);
-  }
-  // fall through
-
-LBLsuspend1:
   {
+    DebugTrace(ozd_trace("thread suspended"));
+    if (e->debugmode() && CTT->getTrace()) {
+      debugStreamBlocked(CTT);
+    }
+    
     CTT->unmarkRunnable();
 
     Assert(CBB);
     Assert(!CBB->isFailed());
 
-    //
     //  First, set the board and self, and perform special action for 
     // the case of blocking the root thread;
     Assert(GETBOARD(CTT)==CBB);
@@ -479,7 +453,7 @@ LBLsuspend1:
     if (oz_onToplevel()) {
       //
       //  Note that in this case no (runnable) thread counters 
-      // in solve actors can be affected, just because this is 
+      // in solve can be affected, just because this is 
       // a top-level thread;
       goto LBLstart;
     }
@@ -506,29 +480,27 @@ LBLfailure:
      Assert(CTT);
      Assert(CTT->isRunnable());
 
-#ifdef DEBUG_THREADCOUNT
-     GETBOARD(CTT)->resetLocalPropagatorQueue();
-#endif
+     Board * b = CBB;
+     Board * p = b->getParent();
 
-     Actor *aa=CBB->getActor();
+     Assert(!b->isRoot());
+     
+     b->setFailed();
+     
+     oz_reduceTrailOnFail();
 
-     oz_failBoard();
+     b->unsetInstalled();
+     
+     am.setCurrent(p);
 
-     //  Reduce (i.e. with failure in this case) the solve actor;
-     //  The solve actor goes simply away, and the 'failed' atom is bound to
-     // the result variable; 
-     aa->setCommittedActor();
-     SolveActor *saa=SolveActor::Cast(aa);
-     // don't decrement parent counter
-
-     if (!oz_unify(saa->getResult(),saa->genFailed())) { // mm_u
+     if (!oz_unify(b->getResult(),b->genFailed())) { // mm_u
        // this should never happen?
        Assert(0);
      }
+     
+     oz_decSolveThreads(CBB);
 
-     DECSOLVETHREADS(CBB, "e");
-
-
+     
      // tmueller: this experimental
 #ifdef NAME_PROPAGATORS
      if (!e->isPropagatorLocation()) {

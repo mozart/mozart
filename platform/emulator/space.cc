@@ -259,13 +259,11 @@ int oz_incSolveThreads(Board *bb) {
 
     ret = OK;
 
-    SolveActor *sa = SolveActor::Cast(bb->getActor());
+    bb->incThreads();
 
-    sa->incThreads();
+    Assert(!(oz_isStableSolve(bb)));
 
-    Assert(!(oz_isStableSolve (sa)));
-
-    bb = bb->getParent()->derefBoard();
+    bb = bb->getParent();
   }
   
   return ret;
@@ -283,24 +281,19 @@ void oz_decSolveThreads(Board *bb)
 
     Assert(!bb->isCommitted());
 
-    SolveActor *sa = SolveActor::Cast(bb->getActor());
-
     // local optimization - check for threads first;
-    if (sa->decThreads () == 0) {
+    if (bb->decThreads()==0) {
 
       // ... first - notification board below the failed solve board; 
-      if (!(sa->isCommitted ()) && oz_isStableSolve (sa)) {
+      if (oz_isStableSolve(bb)) {
 	oz_newThreadInject(bb);
       }
-    } else {
-      Assert (sa->getThreads () > 0);
+      
     }
-
+    
     bb = bb->getParent();
   }
-#ifdef DEBUG_THREADCOUNT
-  //printf("(AM::decSolveThreads LTQs=%d) ", existingLTQs); fflush(stdout);
-#endif
+  
 }
 
 static
@@ -352,9 +345,10 @@ Bool extParameters(OZ_Term list, Board * solve_board)
 }
 
 static
-void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
-{
-  SuspList * tmpSuspList = sa->unlinkSuspList();
+void solve_clearSuspList(Board *sb, Suspension killSusp) {
+  Assert(!sb->isRoot());
+  
+  SuspList * tmpSuspList = sb->unlinkSuspList();
 
   while (tmpSuspList) {
     // Traverse suspension list and copy all valid suspensions
@@ -370,29 +364,32 @@ void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
 
     Board * bb = GETBOARDOBJ(susp);
 
+    Bool isAlive = OK;
+    
     // find suspensions, which occured in a failed nested search space
     while (1) {
-      bb = bb->getSolveBoard();
-      if (bb == sa->getSolveBoard()) 
+      Assert(!bb->isCommitted() && !bb->isRoot());
+      
+      if (bb->isFailed()) {
+	isAlive = NO;
 	break;
-      if (bb == 0) 
+      }
+		     
+      if (bb == sb)
 	break;
 
-      bb = bb->getParentAndTest();
-      if (bb == 0) 
-	break;
+      bb = bb->getParent();
     }
 
     if (susp.isPropagator()) {
       Propagator * prop = susp.getPropagator();
       
-      if (bb) {
+      if (isAlive) {
 
 	// if propagator suspends on external variable then keep its
 	// thread in the list to avoid stability
-	if (extParameters(prop->getPropagator()->getParameters(), 
-			  sa->getSolveBoard())) {
-	  sa->addSuspension(susp);
+	if (extParameters(prop->getPropagator()->getParameters(), sb)) {
+	  sb->addSuspension(susp);
 	} 
 
       }
@@ -402,44 +399,45 @@ void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
       
       Thread * thr = susp.getThread();
 
-      if (bb == 0) {
-	oz_disposeThread(thr);
+      if (isAlive) {
+	bb->addSuspension(susp);
       } else {
-	sa->addSuspension(susp);
+	oz_disposeThread(thr);
       }
       
     }
   }
 }
 
-void oz_removeExtThread(Thread *tt)
-{
+void oz_removeExtThread(Thread *tt) {
   Assert(tt->wasExtThread());
   
-  Board *sb = GETBOARD(tt)->getSolveBoard ();
+  Board *sb = GETBOARD(tt);
   
-  while (sb) {
-    
-    SolveActor *sa = SolveActor::Cast(sb->getActor());
-    solve_clearSuspList(sa,tt);
-    sb = GETBOARD(sa)->getSolveBoard();
+  while (!sb->isRoot()) {
+    solve_clearSuspList(sb,tt);
+    sb = sb->getParent();
   }
+  
 }
 
-void oz_checkExtSuspension(Suspension susp, Board * varHome)
-{
+void oz_checkExtSuspension(Suspension susp, Board * varHome) {
+
   if (!oz_onToplevel()) {
+  
     varHome=varHome->derefBoard();
+
     Board * bb = oz_currentBoard();
+
     Bool wasFound = NO;
+
     Assert (!varHome->isCommitted());
 
     while (bb != varHome) {
       Assert (!oz_isRootBoard(bb));
       Assert (!bb->isCommitted() && !bb->isFailed());
 
-      SolveActor *sa = SolveActor::Cast(bb->getActor());
-      sa->addSuspension(susp);
+      bb->addSuspension(susp);
       wasFound = OK;
       
       bb = bb->getParent();
@@ -450,76 +448,44 @@ void oz_checkExtSuspension(Suspension susp, Board * varHome)
   }
 }
 
-void _checkExtSuspension(Suspension susp)
-{
+void _checkExtSuspension(Suspension susp) {
   Assert(susp.wasExtSuspension());
 
-  Board *sb = GETBOARDOBJ(susp)->getSolveBoard();
+  Board *sb = GETBOARDOBJ(susp);
 
-  while (sb) {
+  while (!sb->isRoot()) {
     
-    SolveActor * sa = SolveActor::Cast(sb->getActor());
-    if (oz_isStableSolve(sa)) {
-      oz_newThreadInject(sb); // mm2: maybe OPT
+    if (oz_isStableSolve(sb)) {
+      oz_newThreadInject(sb);
     }
-    sb = GETBOARD(sa)->getSolveBoard();
+
+    sb = sb->getParent();
   }
 }
 
 inline
-Bool solve_checkExtSuspList (SolveActor *sa)
-{
+Bool solve_checkExtSuspList(Board *sb) {
   // Kostja: Christian's; (no spaces!);
-  solve_clearSuspList(sa,(Thread *) NULL);
-  return sa->isEmptySuspList();
+  solve_clearSuspList(sb, (Thread *) NULL);
+  return sb->isEmptySuspList();
 }
 
 inline
-Bool solve_areNoExtSuspensions(SolveActor *sa)
+Bool solve_areNoExtSuspensions(Board *sb)
 {
-  if (sa->isEmptySuspList())
-    return (OK);
+  if (sb->isEmptySuspList())
+    return OK;
   else
-    return (solve_checkExtSuspList(sa));
+    return (solve_checkExtSuspList(sb));
 }
 
-Bool oz_isStableSolve(SolveActor *sa)
-{
-  if (sa->getThreads() != 0) 
+Bool oz_isStableSolve(Board *sb) {
+  if (sb->getThreads() != 0) 
     return NO;
-  if (oz_isCurrentBoard(sa->getSolveBoard()) &&
-      !am.trail.isEmptyChunk())
+  
+  if (oz_isCurrentBoard(sb) && !am.trail.isEmptyChunk())
     return NO;
-  // simply "don't worry" if in all other cases it is too weak;
-  return solve_areNoExtSuspensions(sa); 
+  
+  return solve_areNoExtSuspensions(sb); 
 }
 
-/*
- * when failure occurs
- *  mark the actor
- *  clean the trail
- *  update the current board
- */
-void oz_failBoard()
-{
-  Assert(!oz_onToplevel());
-  Board *bb=oz_currentBoard();
-  Assert(bb->isInstalled());
-
-  Actor *aa=bb->getActor();
-
-  Assert(!bb->isFailed());
-  bb->setFailed();
-
-  oz_reduceTrailOnFail();
-  bb->unsetInstalled();
-  am.setCurrent(GETBOARD(aa));
-}
-
-void oz_merge(Board *bb, Board *to,int inc)
-{
-  to->setLocalPropagatorQueue(bb->getLocalPropagatorQueue()->merge(to->getLocalPropagatorQueue()));
-  bb->getActor()->setCommittedActor();
-  bb->setCommittedBoard(to);
-  to->incSuspCount(inc);
-}

@@ -31,7 +31,6 @@
 #include "base.hh"
 #include "am.hh"
 #include "board.hh"
-#include "solve.hh"
 
 Bool oz_installScript(Script &script);
 
@@ -42,10 +41,7 @@ void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
 void oz_reduceTrailOnEqEq();
 
-void oz_failBoard();
-void oz_merge(Board *bb, Board *to,int inc);
-
-Bool oz_isStableSolve(SolveActor *sa);
+Bool oz_isStableSolve(Board *sb);
 
 int oz_incSolveThreads(Board *bb);
 #ifdef DEBUG_THREADCOUNT

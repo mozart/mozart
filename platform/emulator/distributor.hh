@@ -28,41 +28,21 @@
 #pragma interface
 #endif
 
-#include "base.hh"
 #include "mem.hh"
-#include "unify.hh"
-#include "thr_int.hh"
-#include "value.hh"
-#include "builtins.hh"
 
 class Distributor {
 public:
   USEFREELISTMEMORY;
-
+  
   virtual int isAlive(void) = 0;
   virtual int getAlternatives(void) = 0;
   virtual int commit(Board *, int, int) = 0;
-
-  void dispose(void) {
-    freeListDispose(this, sizeOf());
-  }
   
   virtual int sizeOf(void) = 0;
-
   virtual Distributor * gc(void) = 0;
-  
+
+  void dispose(void);
 };
-
-inline
-void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = a;
-  args[1] = b;
-
-  Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_Unify,args,2);
-}
-
 
 class BaseDistributor : public Distributor {
 protected:
@@ -70,12 +50,8 @@ protected:
   TaggedRef var;
 public:
 
-  BaseDistributor(Board * bb, const int n) {
-    offset = 0; 
-    num    = n;
-    var    = oz_newVar(bb);
-  }
-
+  BaseDistributor(Board * bb, const int n);
+  
   TaggedRef getVar(void) {
     return var;
   }
@@ -88,22 +64,7 @@ public:
     return num;
   }
 
-  virtual int commit(Board * bb, const int l, const int r) {
-    if (l > num+1) {
-      num = 0;
-    } else {
-      offset += l-1;
-      num     = min(num,min(r,num+1)-l+1);
-    
-      if (num == 1) {
-	num = 0;
-      
-	telleq(bb,var,makeTaggedSmallInt(offset + 1));
-	return 1;
-      }
-    }
-    return num;
-  }
+  virtual int commit(Board * bb, const int l, const int r);
   
   virtual int sizeOf(void) {
     return sizeof(BaseDistributor);

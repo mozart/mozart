@@ -117,7 +117,7 @@ RUNSRCS=\
 	thr_queue.cc thr_int.cc
 
 SPACESRCS=\
-	board.cc solve.cc distributor.cc space.cc
+	board.cc distributor.cc space.cc
 
 MEMSRCS=\
 	gc.cc mem.cc liveness.cc

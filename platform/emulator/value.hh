@@ -2337,7 +2337,6 @@ public:
   Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
   Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
 
-  SolveActor *getSolveActor();
   Board *getSolveBoard() { return solve; }
   void  merge() { solve = (Board *) 1; } 
   Bool isFailed();

@@ -47,7 +47,6 @@
 #include "var_ext.hh"
 #include "var_of.hh"
 #include "var_future.hh"
-#include "solve.hh"
 #include "mozart_cpi.hh"
 #include "dictionary.hh"
 #include "dpInterface.hh"
