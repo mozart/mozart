@@ -77,7 +77,7 @@ define
 \endif
 
       AFirstSol AOptimize
-      AIntrOpt ADispGraphical ADispBrowsing
+      AIntrOpt ADispGraphical ADispInspecting
       ADispTextual
 
       fun {TkAction What Parent P1 P2}
@@ -206,7 +206,7 @@ define
                [AOptimize TimeTable optimizeProblem none]
                [AIntrOpt TimeTable anyTime none]
                [ADispGraphical TimeTable graphic none]
-               [ADispBrowsing TimeTable browse none]
+               [ADispInspecting TimeTable inspect none]
                [ADispTextual TimeTable text none]
               ]
        proc {$ Action}
@@ -245,7 +245,7 @@ define
            end
         end}
        {ForAll [ ["  Display graphically " ADispGraphical]
-                 ["  Display with Browser " ADispBrowsing]
+                 ["  Display with Inspector " ADispInspecting]
                  ["  Display textually " ADispTextual]
                ]
         proc{$ C}
