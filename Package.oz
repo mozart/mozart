@@ -19,7 +19,7 @@ define
       feat type : package
       attr id pid url blurb provides requires content_type
 	 url_pkg url_doc body author contact keywords
-	 format
+	 format:nil
 	 categories url_doc_extra title version:unit
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Package '#Id)}
