@@ -54,7 +54,7 @@
 
 #define PUSH(offset)    todo = new Segment(PC+offset,todo,current->writer);
 
-#define CONTINUE(newpc) PUSH(newpc); goto outerLoop2;
+#define CONTINUE(newpc) PUSH(newpc); BREAK;
 
 
 class Writer {
