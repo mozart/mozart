@@ -12,7 +12,6 @@
 	  ( AtomPair,      "#"),
 	  ( AtomVoid,      "_"),
  
-	  ( AtomBool,      "bool"),
 	  ( AtomSup,	   "sup"),
 	  ( AtomCompl,	   "compl"),
 
@@ -81,7 +80,6 @@
 	  ( AtomHigh,        "high"),
 	  ( AtomHints,       "hints"),
 	  ( AtomIdle,        "idle"),
-	  ( AtomInt,         "int"),
 	  ( AtomInvoked,     "invoked"),
 	  ( AtomLimits,      "limits"),
 	  ( AtomLoad,        "load"),
@@ -96,7 +94,6 @@
 	  ( AtomShowSuspension, "showSuspension"),
 	  ( AtomStopOnToplevelFailure, "stopOnToplevelFailure"),
 	  ( AtomSystem,      "system"),
-	  ( AtomThread,      "thread"),
 	  ( AtomThreshold,   "threshold"),
 	  ( AtomTolerance,   "tolerance"),
 	  ( AtomTotal,       "total"),
@@ -110,8 +107,6 @@
 
 	  ( AtomKinded,      "kinded"),
 	  ( AtomDet,         "det"),
-	  ( AtomRecord,      "record"),
-	  ( AtomFSet,        "fset"),
   
 	  ( AtomDebugIP,     "debugIP"),
 	  ( AtomDebugPerdio, "debugPerdio"),
@@ -143,6 +138,29 @@
 	  ( AtomWatcher,	"watcher"),
 	  ( AtomAny,		"any"),
 	  ( AtomAll,		"all"),
+
+	# Types
+	  ( AtomBool,        "bool"),
+	  ( AtomInt,         "int"),
+	  ( AtomThread,      "thread"),
+	  ( AtomRecord,      "record"),
+	  ( AtomFSet,        "fset"),
+          ( AtomVariable,    "variable"),
+          ( AtomFloat,       "float" ),
+          ( AtomName,        "name" ),
+          ( AtomAtom,        "atom" ),
+          ( AtomTuple,       "tuple" ),
+          ( AtomForeignPointer, "foreignPointer" ),
+          ( AtomProcedure,      "procedure" ),
+          ( AtomCell,           "cell" ),
+          ( AtomSpace,          "space" ),
+          ( AtomObject,         "object" ),
+          ( AtomPort,           "port" ),
+          ( AtomChunk,          "chunk" ),
+          ( AtomArray,          "array" ),
+          ( AtomDictionary,     "dictionary" ),
+          ( AtomLock,           "lock" ),
+          ( AtomClass,          "class" ),
 
 	  ( E_ERROR, 		"error"),
 	  ( E_KERNEL,		"kernel"),
