@@ -298,7 +298,9 @@ text2pickle.exe: $(TEXT2PICKLEOBJS)
 install:: install-bin install-inc
 
 install-bin: $(TARGETS) $(BINDIR)
-        $(INSTALL_BIN) oztool.sh $(TARGETS) $(BINDIR)
+        for exe in oztool.sh $(TARGETS); do\
+          $(INSTALL_BIN) $$exe $(BINDIR) || exit 1;\
+        done
 
 install-inc: $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
