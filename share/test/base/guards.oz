@@ -359,7 +359,13 @@ define
 			   X=2
 			   {Assert Y 1}
 			end)
-	       keys: ['cond'])])
-
+	       keys: ['cond'])
+	   g29(stuck(proc {$} X Y in
+			{Wait cond X = Y then unit
+			      else unit
+			      end}
+		     end)
+	       keys: ['cond'])
+	  ])
 end
 
