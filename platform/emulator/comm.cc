@@ -215,6 +215,21 @@ void gcSiteTable(){
   secondarySiteTable->cleanup();}
 
 /**********************************************************************/
+/*   SECTION ::  NetworkStatistics                                   */
+/**********************************************************************/
+
+GenHashNode *getPrimaryNode(GenHashNode* node, int &indx){
+  if(node == NULL)
+    return primarySiteTable->getFirst(indx);
+  return primarySiteTable->getNext(node,indx);}
+
+GenHashNode *getSecondaryNode(GenHashNode* node, int &indx){
+  if(node == NULL)
+    return secondarySiteTable->getFirst(indx);
+  return secondarySiteTable->getNext(node,indx);}
+
+
+/**********************************************************************/
 /*   SECTION ::  General unmarshaling routines                        */
 /**********************************************************************/
 

@@ -137,7 +137,7 @@ public:
     Assert(last != NULL);
     return last->site;}
 
-  Site* setCurrent(Site*);
+  Site* setCurrent(Site*, Tertiary*);
 
   Bool hasInform(){
     return inform!=NULL;}
