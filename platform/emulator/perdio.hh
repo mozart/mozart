@@ -40,8 +40,6 @@ void networkSiteDec(int sd);
 
 void gcOwnerTable();
 void gcBorrowTable();
-void gcPortProxy(PortProxy* );
-void gcPortManager(PortManager* );
 
 #endif /* __PERDIOHH */
 

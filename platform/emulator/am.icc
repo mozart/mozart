@@ -267,6 +267,15 @@ Board *ConstTermWithHome::getBoard() {
 }
 
 
+inline
+Board *Tertiary::getBoard()
+{
+  if (getTertType() == Te_Local)
+    return ((Board*)getPointer())->derefBoard();
+  return am.rootBoard;
+}
+
+
 /*
  * Threads
  */
