@@ -342,17 +342,21 @@ int AM::commit(Board *bb, Thread *tt)
   if (!tt) {
     tt=aw->getThread();
     DebugCheckT(aw->setThread(0));
+    if (tt->isDeadThread()) goto noThread;
     if (tt->isSuspended()) {
       tt->suspThreadToRunnable();
       scheduleThread(tt);
     }
 
     // remove the actor task
+    if (!tt->getTaskStackRef()->checkFrame(C_ACTOR_Ptr)) goto noThread;
+
     tt->getTaskStackRef()->discardFrame(C_ACTOR_Ptr);
   }
 
   tt->pushCont(bb->getBodyPtr());
 
+noThread:
   bb->setCommitted(currentBoard);
   currentBoard->incSuspCount(bb->getSuspCount()-1);
 

@@ -48,5 +48,7 @@ Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
 void tracerOn();
 void tracerOff();
 
+OZ_C_proc_proto(BIhalt)
+
 
 #endif
