@@ -53,103 +53,6 @@
 #define inline
 #endif
 
-/*
- * new builtins support
- */
-
-OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
-{
-  Assert(am.isEmptySuspendVarList());
-
-  const int inAr = bi->getInArity();
-  const int outAr = bi->getOutArity();
-
-  OZ_Term savedX[outAr];
-  for (int i=outAr; i--; ) savedX[i]=X[inAr+i];
-
-  OZ_Return ret1 = bi->getFun()(X,OZ_ID_MAP);
-  if (ret1!=PROCEED) {
-    switch (ret1) {
-    case FAILED:
-    case RAISE:
-    case BI_TYPE_ERROR:
-    case SUSPEND:
-      // restore X
-      for (int j=outAr; j--; ) {
-	X[inAr+j]=savedX[j];
-      }
-      return ret1;
-    case PROCEED:
-    case BI_PREEMPT:
-    case BI_REPLACEBICALL:
-      break;
-    default:
-      error("oz_bi_wrapper: return not handled: %d",ret1);
-      return FAILED;
-    }
-  }
-  for (int i=outAr;i--;) {
-    OZ_Return ret2 = oz_unify(X[inAr+i],savedX[i]);
-    if (ret2!=PROCEED) {
-      switch (ret2) {
-      case FAILED:
-      case RAISE:
-      case BI_TYPE_ERROR:
-	// restore X in case of error
-	for (int j=outAr; j--; ) {
-	  X[inAr+j]=savedX[j];
-	}
-	return ret2;
-      case SUSPEND:
-	DebugCheckT(printf("oz_bi_wrapper: unify suspend\n"));
-	am.emptySuspendVarList();
-	am.prepareCall(BI_Unify,X[inAr+i],savedX[i]);
-	ret1=BI_REPLACEBICALL;
-	break;
-      case BI_REPLACEBICALL:
-	DebugCheckT(printf("oz_bi_wrapper: unify replcall\n"));
-	ret1=BI_REPLACEBICALL;
-	break;
-      default:
-	Assert(0);
-      }
-    }
-  }
-  return ret1;
-}
-
-static
-void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
-{
-  if (bi==bi_raise||bi==bi_raiseError||bi==bi_raiseDebug) return;
-
-  int iarity = bi->getInArity();
-  int oarity = bi->getOutArity();
-
-  OZ_Term tt=OZ_tupleC("apply",iarity+oarity+1);
-
-  OZ_Term args=oz_nil();
-  for (int j = iarity; j--;) {
-    args=oz_cons(X[map == OZ_ID_MAP? j : map[j]],args);
-  }
-  am.setExceptionInfo(OZ_mkTupleC("fapply",3,
-				  makeTaggedConst(bi),
-				  args,
-				  OZ_int(oarity)));
-}
-
-static
-OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
-  OZ_Term out=oz_nil();
-  for (int i=loc->getOutArity(); i--; ) {
-    out=oz_cons(oz_newVariable(),out);
-  }
-  for (int i=loc->getInArity(); i--; ) {
-    out=oz_cons(X[loc->in(i)],out);
-  }
-  return out;
-}
-
 // -----------------------------------------------------------------------
 // Object stuff
 // -----------------------------------------------------------------------
@@ -331,6 +234,7 @@ void bindOPT(OZ_Term *varPtr, OZ_Term term, ByteCode *scp)
       am.trail.pushRef(varPtr,*varPtr);
     }
   }
+  COUNT(varOptUnify);
   doBind(varPtr,term);
 }
 
@@ -353,17 +257,18 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B, ByteCode *scp=0)
 
     if (!oz_isVariable(term2)) {
       if (am.currentUVarPrototypeEq(term1)) {
-	COUNT(varNonvarUnify);
+	COUNT(varOptUnify);
 	doBind(term1Ptr,term2);
 	goto exit;
       }
       if (term1==term2) {
+	COUNT(varOptUnify);
 	goto exit;
       }
     } else if (!oz_isVariable(term1) && am.currentUVarPrototypeEq(term2)) {
-      COUNT(varNonvarUnify);
-      doBind(term2Ptr,term1);
-      goto exit;
+	COUNT(varOptUnify);
+	doBind(term2Ptr,term1);
+	goto exit;
     }
   }
 
@@ -371,8 +276,104 @@ fallback:
   return oz_unify(A,B,scp);
 
  exit:
-  COUNT(totalUnify);
   return PROCEED;
+}
+
+/*
+ * new builtins support
+ */
+
+OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
+{
+  Assert(am.isEmptySuspendVarList());
+
+  const int inAr = bi->getInArity();
+  const int outAr = bi->getOutArity();
+
+  OZ_Term savedX[outAr];
+  for (int i=outAr; i--; ) savedX[i]=X[inAr+i];
+
+  OZ_Return ret1 = bi->getFun()(X,OZ_ID_MAP);
+  if (ret1!=PROCEED) {
+    switch (ret1) {
+    case FAILED:
+    case RAISE:
+    case BI_TYPE_ERROR:
+    case SUSPEND:
+      // restore X
+      for (int j=outAr; j--; ) {
+	X[inAr+j]=savedX[j];
+      }
+      return ret1;
+    case PROCEED:
+    case BI_PREEMPT:
+    case BI_REPLACEBICALL:
+      break;
+    default:
+      error("oz_bi_wrapper: return not handled: %d",ret1);
+      return FAILED;
+    }
+  }
+  for (int i=outAr;i--;) {
+    OZ_Return ret2 = fastUnify(X[inAr+i],savedX[i]);
+    if (ret2!=PROCEED) {
+      switch (ret2) {
+      case FAILED:
+      case RAISE:
+      case BI_TYPE_ERROR:
+	// restore X in case of error
+	for (int j=outAr; j--; ) {
+	  X[inAr+j]=savedX[j];
+	}
+	return ret2;
+      case SUSPEND:
+	DebugCheckT(printf("oz_bi_wrapper: unify suspend\n"));
+	am.emptySuspendVarList();
+	am.prepareCall(BI_Unify,X[inAr+i],savedX[i]);
+	ret1=BI_REPLACEBICALL;
+	break;
+      case BI_REPLACEBICALL:
+	DebugCheckT(printf("oz_bi_wrapper: unify replcall\n"));
+	ret1=BI_REPLACEBICALL;
+	break;
+      default:
+	Assert(0);
+      }
+    }
+  }
+  return ret1;
+}
+
+static
+void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
+{
+  if (bi==bi_raise||bi==bi_raiseError||bi==bi_raiseDebug) return;
+
+  int iarity = bi->getInArity();
+  int oarity = bi->getOutArity();
+
+  OZ_Term tt=OZ_tupleC("apply",iarity+oarity+1);
+
+  OZ_Term args=oz_nil();
+  for (int j = iarity; j--;) {
+    args=oz_cons(X[map == OZ_ID_MAP? j : map[j]],args);
+  }
+  am.setExceptionInfo(OZ_mkTupleC("fapply",3,
+				  makeTaggedConst(bi),
+				  args,
+				  OZ_int(oarity)));
+}
+
+static
+OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
+  OZ_Term out=oz_nil();
+  for (int i=loc->getOutArity(); i--; ) {
+    out=oz_cons(oz_newVariable(),out);
+  }
+  for (int i=loc->getInArity(); i--; ) {
+    out=oz_cons(X[loc->in(i)],out);
+  }
+  return out;
 }
 
 // -----------------------------------------------------------------------
@@ -1056,7 +1057,7 @@ LBLdispatcher:
 
   Case(CALLBI)
     {
-      COUNT(bicalls);
+      COUNT(optbicalls);
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
 
@@ -1096,7 +1097,7 @@ LBLdispatcher:
 
   Case(TESTBI)
     {
-      COUNT(bicalls);
+      COUNT(optbicalls);
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
 
@@ -1728,7 +1729,6 @@ LBLdispatcher:
 
       Abstraction *p = Abstraction::newAbstraction(predd, CBB);
 
-      COUNT1(sizeClosures,sizeof(Abstraction)+size*sizeof(TaggedRef));
       COUNT(numClosures);
       COUNT1(sizeGs,size);
 
