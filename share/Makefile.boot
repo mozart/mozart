@@ -41,7 +41,7 @@ boot-%:
         OZEMULATOR=$(BOOTEMU) \
         OZENGINE=$(BOOTENG) \
         OZC="$(BOOTCOM)" \
-        OZINIT=$(BUILDLIB)/Init.ozc \
+        OZINIT=$(BUILDLIB)/Init.ozp \
         OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
         OZ_LOAD=root=.:prefix=/=/:prefix=$(URL)/lib/=$(BUILDLIB)/:prefix=$(URL)/tools/=$(BUILDTOOLS)/:=
 
@@ -51,5 +51,5 @@ STAGE1_TOOLS=$(BUILDTOOLS)/stage1
 stage1-%:
         $(MAKE) $* \
         OZ_LOAD=root=.:prefix=$(URL)=$(STAGE1_LIB):prefix=/=/:= \
-        OZINIT=$(STAGE1_LIB)/lib/Init.ozc \
+        OZINIT=$(STAGE1_LIB)/lib/Init.ozp \
         OZC=$(STAGE1_LIB)/bin/ozc
