@@ -1,0 +1,32 @@
+.PHONY: tags clean+ clean realclean veryclean
+
+realclean:: clean
+        $(RM) Makefile
+
+clean::
+        $(RM) *.o *~  *.bak *.obj
+
+veryclean: realclean
+
+tags::
+        etags --regex='/OZ_C[^(]+([     ]*\([^  ,)]+\)/\1/' -l c++ \
+        *c *h */*c */*h
+
+.SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
+
+.cc.s:
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -o $@ $<
+
+.cc.E:
+        $(CXXCPP) $(CPPFLAGS) -o $@ $<
+
+.m4cc.cc:
+        $(M4_S) $< > $@
+
+.m4hh.hh:
+        $(M4_S) $< > $@
+
+@tmphack_target@:
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
+                rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
+                rm -f /tmp/$$$$.o

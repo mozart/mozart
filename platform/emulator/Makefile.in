@@ -55,7 +55,7 @@ export DEFS             = @DEFS@
 export CWARN            = @CWARN@
 export INCS             = -I. -I$(OZDIR) -I$(OZINCDIR)
 export CPPFLAGS         = @CPPFLAGS@ $(INCS) $(DEFS)
-export CFLAGS           = @CFLAGS@ $(CPPFLAGS) $(CWARN) $(CUSR)
+export CFLAGS           = @CFLAGS@ $(CWARN) $(CUSR)
 export CXXFLAGS         = $(CFLAGS)
 export DEPEND           = @DEPEND@ $(CPPFLAGS)
 
@@ -280,7 +280,7 @@ parser.cc parser.hh: parser.yy
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
 parser.o: parser.cc
-        $(CXX) $(CXXFLAGS) -w -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
 
 ozma-s.cc: ozma-s.ll
         $(LEX) $(LFLAGS) -Pozma -t $< > ozma-s.cc
@@ -291,7 +291,7 @@ ozma-p.cc ozma.hh: ozma-p.yy
         @$(MV) y.tab.h ozma.hh
 
 ozma-p.o: ozma-p.cc
-        $(CXX) $(CXXFLAGS) -w -c $< -o $@
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
 
 ozma-s.ll: ozma-s.m4ll
         $(M4) $< > $@
@@ -303,9 +303,9 @@ ozma-p.yy: ozma-p.m4yy
 #os.cc: In function `void osBlockSignals(int = 0)':
 #os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
 #os.o: os.cc
-#       $(CXX) $(CXXFLAGS) -w -c $< -o $@
+#       $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
 
-include $(OZDIR)/Makefile.rules
+include Makefile.rules
 
 # dependencies
 marshaler.hh marshalMsg.cc: $(OZDIR)/msgFormat.m4

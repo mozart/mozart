@@ -59,4 +59,4 @@ depend: $(FSETLIBSRCS)
 realclean::
         $(RM) *.a *.so
 
-include $(FSETDIR)/../Makefile.rules
+include ../Makefile.rules
