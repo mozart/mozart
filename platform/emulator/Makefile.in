@@ -48,11 +48,18 @@ LIBS=           $(CORE_LIBS) @LIBS@
 
 INCS=           -I. -I$(SRCDIR)
 M4_D=           -DEMUDIR=$(SRCDIR)
-TARGETS=        @TARGETS@ text2pickle
+TARGETS=        @TARGETS@ text2pickle Builtins.oz
 MODULETARGETS=  @MODULETARGETS@
 MODULEINSTALL=  @MODULEINSTALL@
 SUBDIRS=        libfd libfset
 OZVERSION=      $(SRCTOP)/OZVERSION
+
+# these are the builtin modules: non-sited primitives
+BIMODSPECS = \
+        Boot Array Atom BitArray Bool Cell Char Chunk Class \
+        Dictionary Exception Float ForeignPointer Int Literal \
+        Lock Name Number Object Port Procedure Record Space \
+        String Thread Time Tuple Unit Value VirtualString
 
 MODSPECS= \
         FDP FSP Schedule Wif Parser OS Property Pickle \
@@ -60,7 +67,8 @@ MODSPECS= \
         CompilerSupport Profile \
         Debug Fault Foreign Browser Misc Distribution \
         Builtins VirtualSite \
-        BitString ByteString
+        BitString ByteString \
+        $(BIMODSPECS)
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
@@ -72,7 +80,7 @@ CREATEDFILES= \
         atoms.hh atoms.cc\
         config.h scanner.cc parser.cc \
         version.cc initffuns.cc copycode.cc opcodes.cc\
-        $(MODINTERS)
+        $(MODINTERS) Builtins.oz
 
 OTHERSRCS= \
         main.cc \
@@ -168,7 +176,12 @@ all: $(TARGETS)
 
 bootstrap:: all
 
+BIMODFILES = $(BIMODSPECS:%=mod%.spec)
+
 $(MODINTERS): bidecl.perl
+
+Builtins.oz: $(BIMODFILES) bidecl.perl
+        perl $(SRCDIR)/bidecl.perl -builtins $(BIMODSPECS) > $@
 
 .PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
 libFDP.a FDP.so libSchedule.a Schedule.so:

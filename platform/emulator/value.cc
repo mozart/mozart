@@ -1384,13 +1384,14 @@ OZ_Term oz_list(OZ_Term t1, ...)
  *=================================================================== */
 
 Builtin * cfunc2Builtin(void * f) {
-  SRecord * sr = tagged2SRecord(builtinRecord);
-
-  for (int i = sr->getWidth(); i--; ) {
-    Builtin * bi = tagged2Builtin(sr->getArg(i));
-
-    if (bi->getFun() == (OZ_CFun) f)
-      return bi;
+  extern TaggedRef dictionary_of_builtins;
+  OzDictionary * d = tagged2Dictionary(dictionary_of_builtins);
+  for (int i=d->getFirst(); i>=0; i=d->getNext(i)) {
+    TaggedRef v = d->getValue(i);
+    if (v && oz_isBuiltin(v)) {
+      Builtin * bi = tagged2Builtin(v);
+      if (bi->getFun() == (OZ_CFun) f) return bi;
+    }
   }
   return tagged2Builtin(BI_unknown);
 }
