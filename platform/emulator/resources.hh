@@ -147,7 +147,7 @@ error include resources.hh before mozart.h
 #define DP_RETRYTIMEFLOOR            500
 #define DP_RETRYTIMEFACTOR           50
 #define DP_TCPHARDLIMIT              60
-#define DP_TCPWEAKLIMIT              60
+#define DP_TCPWEAKLIMIT              30
 #define DP_PROBEINTERVAL             5000
 #define DP_PROBETIMEOUT              30000 /* ms */
 
