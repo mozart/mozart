@@ -122,12 +122,10 @@ a stationary object is created with <<NewStat>>,
 and an sequential asynchronous stationary object
 is created with <<NewSASO>>.
 A stationary object is a good abstraction to
-build servers--this is explained later in
-the tutorial.
+build servers (see <ptr="making.stationary.objects">).
 It is easy to program other distribution
 semantics in Oz.
-We give examples of some of them
-later in the tutorial.
+<ptr to="chapter.examples"> gives some examples.
 
 <SUBSECTION><TITLE>Other stateful entities</TITLE>
 
@@ -141,8 +139,7 @@ Threads communicate through shared data and
 block when the data is unavailable, i.e.,
 when trying to access unbound logic variables.
 This makes Oz a dataflow language.
-Threads are <EM>sited</EM> entities,
-as is explained later in the tutorial.
+Threads are <EM>sited</EM> entities (see <ptr="sited.entities">).
 
 <ITEM> <EM>Port</EM>:
 A port is an asynchronous many-to-one channel
@@ -436,7 +433,7 @@ by <<{Application.exit I}>>, where <<I>> is
 the return status (see the module <<Application>>).
 The abnormal way is a site crash
 triggered by an external problem.
-The failure model (explained later) is used
+The failure model (see <ptr id="chapter.failure">) is used
 to survive site crashes.
 Here we explain what a controlled shutdown means
 in the distribution model.
