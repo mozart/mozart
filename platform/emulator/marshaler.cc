@@ -800,7 +800,6 @@ loop:
 	t = makeTaggedRef(tPtr);
 	goto bomb;
       }
-      pvar->markExported();
       bs->addRes(makeTaggedRef(tPtr));
       marshalVariable(pvar,bs);
       break;
@@ -1263,22 +1262,21 @@ void unmarshalUnsentTerm(MsgBuffer *bs) {
 
 void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
 {
-  if((pvar->isProxy()) || pvar->isManager()) {
-    marshalVar(pvar,bs);
-    return;}
+  pvar->marshalV(bs);
+}
 
-  Assert(pvar->isObject());
-
+void marshalObjVar(OldPerdioVar *pv,MsgBuffer *bs)
+{
+  Assert(pv->isObject());
   PD((MARSHAL,"var objectproxy"));
 
-  if (checkCycle(*(pvar->getObject()->getCycleRef()),bs,OZCONST))
+  if (checkCycle(*(pv->getObject()->getCycleRef()),bs,OZCONST))
     return;
 
-  GName *classgn =  pvar->isObjectClassAvail() ?
-                      pvar->getClass()->getGName() : pvar->getGNameClass();
+  GName *classgn =  pv->isObjectClassAvail()
+    ? pv->getClass()->getGName() : pv->getGNameClass();
 
-  marshalObject(pvar->getObject(),bs,classgn);
-  return;
+  marshalObject(pv->getObject(),bs,classgn);
 }
 
 /* *********************************************************************/

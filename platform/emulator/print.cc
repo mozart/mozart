@@ -392,7 +392,7 @@ void GenCVariable::printStream(ostream &stream, int depth)
       break;
 
   default:
-    stream << " unknown type: " << getType();
+    stream << " unknown type: " << (int) getType();
     break;
   }
   stream << ">";
@@ -471,7 +471,7 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
     stream << indent(offset) << "<PerdioVariable *" << this << ">" << endl;
       break;
   default:
-    stream << indent(offset) << " unknown type: " << getType() << endl;
+    stream << indent(offset) << " unknown type: " << (int) getType() << endl;
     break;
   }
 

@@ -1056,8 +1056,8 @@ GenCVariable * GenCVariable::gcG(void) {
 
   case OZ_VAR_SIMPLE:   to = ((SimpleVar *)this)->gc(); break;
   case OZ_VAR_FUTURE:   to = ((Future *)this)->gc(); break;
-  case OFSVariable:    to = new GenOFSVariable(*(GenOFSVariable*) this); break;
-  case PerdioVariable:  to = new PerdioVar(*(PerdioVar*) this); break;
+  case OFSVariable:     to = new GenOFSVariable(*(GenOFSVariable*) this);break;
+  case PerdioVariable:  to = ((PerdioVar*)this)->gcV(); break;
   case CtVariable:      to = ((GenCtVariable*)this)->gc(); break;
   case OZ_VAR_EXTENTED: to = ((ExtentedVar *)this)->gcV(); break;
   default: 
@@ -1113,7 +1113,7 @@ void GenCVariable::gcRecurseG(void) {
   switch (getType()) {
   case OZ_VAR_SIMPLE:   ((SimpleVar *)this)->gcRecurse(); break;
   case OZ_VAR_FUTURE:   ((Future *)this)->gcRecurse(); break;
-  case PerdioVariable:  ((PerdioVar *)this)->gcRecurse(); break;
+  case PerdioVariable:  ((PerdioVar *)this)->gcRecurseV(); break;
   case BoolVariable:    Assert(0); break;
   case FDVariable:      Assert(0); break;
   case OFSVariable:     ((GenOFSVariable*)this)->gcRecurse(); break;
