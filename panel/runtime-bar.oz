@@ -9,7 +9,7 @@ local
    BackColor    = white
    OutlineColor = black
    Width        = 240
-   Height       = 30
+   Height       = 20
    Gap          = 2
    Border       = 2
    Y0           = Gap + 1
