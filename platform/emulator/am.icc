@@ -219,11 +219,7 @@ RunnableThreadBody* AM::allocateBody()
   if (body) {
     threadBodyFreeList = threadBodyFreeList->next;
   } else {
-#ifdef NEW_STACK
-    body = new RunnableThreadBody();
-#else
     body = new RunnableThreadBody(ozconf.stackMinSize);
-#endif
   }
 
   body->taskStack.init();
@@ -309,7 +305,9 @@ int AM::commit(Board *bb, Thread *tt)
 
   {
     Continuation *cont=bb->getBodyPtr();
-    tt->pushCont(cont->getPC(),cont->getY(),cont->getG(),cont->getX());
+    tt->getTaskStackRef()->pushCont(cont->getPC(),cont->getY(),cont->getG());
+    RefsArray X = cont->getX();
+    if (X) tt->getTaskStackRef()->pushX(X);
   }
 
   bb->setCommitted(currentBoard);

@@ -18,14 +18,9 @@
 int TaskStack::tasks()
 {
   /* we do not count the empty task */
-#ifdef NEW_STACK
-  return tos->count()-1;
-#else
   return (tos-array)/frameSz - 1;
-#endif
 }
 
-#ifndef NEW_STACK
 void TaskStack::checkMax(int n)
 {
   int maxSize = getMaxSize();
@@ -73,7 +68,6 @@ loop:
 
   resize(n);
 }
-#endif
 
 Bool TaskStack::findCatch(TaggedRef *out, Bool verbose) 
 {

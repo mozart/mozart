@@ -5972,10 +5972,8 @@ OZ_C_proc_begin(BISystemGetThreads,1) {
   GetRecord;
   SetIntArg(AtomCreated,  ozstat.createdThreads.total);
   SetIntArg(AtomRunnable, am.getRunnableNumber());
-#ifndef NEW_STACK
   SetIntArg(AtomMin,      ozconf.stackMinSize / TASKFRAMESIZE);
   SetIntArg(AtomMax,      ozconf.stackMaxSize / TASKFRAMESIZE);
-#endif
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6204,13 +6202,11 @@ OZ_C_proc_begin(BISystemSetThreads,1) {
   DoNatFeature(minsize, t, AtomMin);
   DoNatFeature(maxsize, t, AtomMax);
   
-#ifndef NEW_STACK
   SetIfPos(ozconf.stackMaxSize, maxsize, TASKFRAMESIZE);
   SetIfPos(ozconf.stackMinSize, minsize, TASKFRAMESIZE);
   
   if (ozconf.stackMinSize > ozconf.stackMaxSize) 
     ozconf.stackMinSize = ozconf.stackMaxSize;
-#endif
   
   return PROCEED;
 } OZ_C_proc_end
@@ -7777,9 +7773,7 @@ BuiltinTabEntry *BIinit()
   BIinitUnix();
   BIinitTclTk();
 
-#ifdef PERDIO
   BIinitPerdio();
-#endif
 
   BIinitLazy();
 
