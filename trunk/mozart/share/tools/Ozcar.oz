@@ -42,8 +42,8 @@ import
    System
    Tk
    TkTools
-   BaseEvalDialog at 'x-oz://system/EvalDialog'
-   
+   BaseEvalDialog(dialog) at 'x-oz://system/EvalDialog'
+   OPIEnv(base)
 export
    'object':     Ozcar
    'open':       OpenOzcar
