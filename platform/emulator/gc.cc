@@ -1943,7 +1943,9 @@ void Thread::gcThreadRecurse()
 #ifdef NEWCOUNTER
   if (!newHome) {
     newHome=home->gcGetNotificationBoard()->gcBoard();
-    markDead();
+    //  virtually the new thread, because in LBLkillThread a suspension
+    // counter will be decremented for 'newHome';
+    newHome->incSuspCount ();
   }
 #endif
   home=newHome;

@@ -1349,7 +1349,7 @@ void engine() {
 #ifdef NEWCOUNTER
         e->currentThread=(Thread *) NULL;
         Board *bb=tmpThread->getBoardFast();
-        if (!tmpThread->isDead() && !bb->isFailed()) {
+        if (!bb->isFailed()) {
           bb->decSuspCount();
         }
         Board *nb=0;
