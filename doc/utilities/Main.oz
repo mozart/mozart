@@ -50,7 +50,7 @@ prepare
 		 %% HTML options
 		 'link'(multiple type: string default:nil)
 		 'stylesheet'(single type: string default: unit)
-		 'latextogif'(rightmost type: bool default: true)
+		 'latextopng'(rightmost type: bool default: true)
 		 'latexdb'(single type: string default: unit)
 		 'split'(rightmost type: bool default: true)
 		 'abstract'(rightmost type: bool default: false)
@@ -269,11 +269,11 @@ define
 	  '--link=<Text>,<RelURL>\n'#
 	  '                    Include a link in the margin of each page.\n'#
 	  '--stylesheet=<RURL> What style sheet to use for generated pages.\n'#
-	  '--(no)latextogif    Generate GIF files from LaTeX code.\n'#
-	  '--latexdb=<File>    Reuse GIFs generated from LaTeX code.\n'#
+	  '--(no)latextopng    Generate PNG files from LaTeX code.\n'#
+	  '--latexdb=<File>    Reuse PNGs generated from LaTeX code.\n'#
 	  '--(no)split         Split the document into several nodes.\n'#
 	  '--(no)abstract      Generate an abstract.html auxiliary file.\n'#
-	  '--keeppictures      Do no recreate GIF from PS if already there.\n'#
+	  '--keeppictures      Do no recreate PNG from PS if already there.\n'#
 	  '\n'#
 	  'Inter-Document Cross-Referencing\n'#
 	  '--xrefdb=<File>     Where to look up resp. store references.\n'#
