@@ -50,7 +50,7 @@ AC_SUBST(CED)
 
 AC_MSG_CHECKING(for --with-documents)
 AC_ARG_WITH(documents,
-  [--with-documents="DIR1 ... DIRN" (or all)      
+  [--with-documents='DIR1 ... DIRN' (or all)      
        document subdirectories (default=none)],
   oz_doc_dirs=${with_documents})
 : ${oz_doc_dirs=}
