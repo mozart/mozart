@@ -286,7 +286,7 @@ messages from different threads.
 
 </LIST>
 
-<SUBSECTION><TITLE>Stateless entities</TITLE>
+<SUBSECTION id="stateless.entities"><TITLE>Stateless entities</TITLE>
 
 <P>Stateless entities never
 change, i.e., they do not have any internal state whatsoever.
@@ -335,6 +335,10 @@ create a different procedure each time around.
 This is part of the Oz language semantics;
 one way to think of it is that a new Oz name is created
 for every procedure instance.
+This is true for functions, classes, functors,
+chunks, and of course for names too.
+This is not true for atoms; two atoms with the
+same print name are identical, even if created separately.
 
 <ITEM> <EM>Object-records</EM>:
 An object is a composite entity consisting

@@ -653,7 +653,29 @@ define
    % ... code for the collaborative tool
 end
 >>>
-<P>Do you see why?
+<P>Do you see why?  Think first before
+reading the next paragraph!
+For a hint read <ptr to="stateless.entities">.
+
+<P>In both solutions, the functor is applied when
+the application starts up.
+In the second solution,
+this defines a new and different
+class <<C>> on each site.
+If an object of class <<C>> is passed to a site,
+then the site will ask for the class code
+to be passed too.
+This can be very slow if the class is big--for TransDraw
+it makes a difference of several minutes on a typical
+Internet connection.
+In the first solution, the class <<C>> is defined
+<em>before</em> the functor is applied.
+When the functor is applied, the class already exists!
+This means that all sites have exactly the same class,
+which is part of the binary on each site.
+Objects passed between the sites will never cause
+class code to be sent.
+
 
 </CHAPTER>
 
