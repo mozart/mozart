@@ -78,7 +78,7 @@ private:
 
   int msgNum;
   int def_priority;
-  int sendTime;
+  LongTime sendTime;
 
 public:
   DSite *destination;
@@ -102,12 +102,12 @@ public:
     return def_priority;
   }
 
-  inline void setSendTime(int sendTime) {
-    this->sendTime = sendTime;
+  inline void setSendTime(LongTime *sendTime) {
+    this->sendTime = *sendTime;
   }
 
-  inline int getSendTime() {
-    return sendTime;
+  inline LongTime * getSendTime() {
+    return &sendTime;
   }
 
   inline MessageType getMessageType() {
