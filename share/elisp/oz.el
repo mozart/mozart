@@ -1644,6 +1644,17 @@ Negative arg -N means kill N Oz expressions after the cursor."
 (modify-syntax-entry ?* ". 23b" oz-mode-syntax-table)
 (modify-syntax-entry ?. "_" oz-mode-syntax-table)
 
+;; add the accented characters:
+(defun oz-modify-syntax-entries (start end s)
+  (let ((i start))
+    (while (<= i end)
+      (modify-syntax-entry i s oz-mode-syntax-table)
+      (setq i (1+ i)))))
+(oz-modify-syntax-entries 192 214 "w")
+(oz-modify-syntax-entries 216 222 "w")
+(oz-modify-syntax-entries 223 246 "w")
+(oz-modify-syntax-entries 248 255 "w")
+
 (defun oz-mode-variables ()
   (set-syntax-table oz-mode-syntax-table)
   (set (make-local-variable 'paragraph-start)
@@ -1899,7 +1910,7 @@ Used only for fontification.")
   "Regular expression matching any keyword at the beginning of a line.")
 
 (defconst oz-keywords-matcher-2
-  (concat "[^\\A-Za-z0-9_]\\("
+  (concat "[^\\A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]\\("
 	  (mapconcat 'identity oz-keywords "\\|") "\\)\\>")
   "Regular expression matching any keyword not preceded by a backslash.
 This serves to distinguish between the directive `\\else' and the keyword
@@ -1912,21 +1923,25 @@ The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-proc-fun-matcher
   (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
-	  "\\([A-Z][A-Za-z0-9_.]*\\|`[^`\n]*`\\)")
+	  "\\([A-Z\300-\326\330-\336]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
 
 (defconst oz-class-matcher
   (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
-	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
+	  "\\([A-Z\300-\326\330-\336]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching class definitions.
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
 
 (defconst oz-meth-matcher
   (concat "\\<meth\\([ \t]+\\|[ \t]*!\\)"
-	  "\\([A-Za-z][A-Za-z0-9_]*\\|`[^`\n]*`\\|'[^'\n]*'\\)")
+	  "\\([A-Z\300-\326\330-\336a-z\337-\366\370-\377]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|"
+	  "`[^`\n]*`\\|'[^'\n]*'\\)")
   "Regular expression matching method definitions.
 The second subexpression matches the definition's identifier
 and is used for fontification.")
@@ -2091,7 +2106,8 @@ and is used for fontification.")
 
 (defconst oz-gump-regex-matcher
   (concat
-   "\\<lex[^A-Za-z0-9_<\n][^<\n]*\\(<" "\\("
+   "\\<lex[^A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_<\n][^<\n]*"
+   "\\(<\\("
    "\\[\\([^]\\]\\|\\\\.\\)+\\]" "\\|"
    "\"[^\"\n]+\"" "\\|"
    "\\\\." "\\|"
@@ -2103,7 +2119,7 @@ and is used for fontification.")
   "Regular expression matching any keyword at the beginning of a line.")
 
 (defconst oz-gump-keywords-matcher-2
-  (concat "[^\\A-Za-z0-9_]\\("
+  (concat "[^\\A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]\\("
 	  (mapconcat 'identity oz-gump-keywords "\\|") "\\)\\>")
   "Regular expression matching any keyword not preceded by a backslash.
 This serves to distinguish between the directive `\\else' and the keyword
@@ -2116,21 +2132,26 @@ The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-gump-scanner-parser-matcher
   (concat "\\<\\(parser\\|scanner\\)[ \t]+"
-	  "\\([A-Z][A-Za-z0-9_]*\\|`[^`\n]*`\\)")
+	  "\\([A-Z\300-\326\330-\336]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|`[^`\n]*`\\)")
   "Regular expression matching parser or scanner definitions.
 The second subexpression matches the definition's identifier
 \(if it is a variable) and is used for fontification.")
 
 (defconst oz-gump-lex-matcher
   (concat "\\<lex[ \t]+"
-	  "\\([a-z][A-Za-z0-9_]*\\|'[^'\n]*'\\)[ \t]*=")
+	  "\\([a-z\337-\366\370-\377]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|"
+	  "'[^'\n]*'\\)[ \t]*=")
   "Regular expression matching lexical abbreviation definitions.
 The first subexpression matches the definition's identifier
 \(if it is an atom) and is used for fontification.")
 
 (defconst oz-gump-syn-matcher
   (concat "\\<syn[ \t]+"
-	  "\\([A-Za-z][A-Za-z0-9_]*\\|`[^`\n]*`\\|'[^'\n]*'\\)")
+	  "\\([A-Z\300-\326\330-\336a-z\337-\366\370-\377]"
+	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_]*\\|"
+	  "`[^`\n]*`\\|'[^'\n]*'\\)")
   "Regular expression matching syntax rule definitions.
 The first subexpression matches the definition's identifier
 and is used for fontification.")
