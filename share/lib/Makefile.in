@@ -309,7 +309,7 @@ WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 DP.ozc: $(DUMPINTRO) $(DPSRC) OP.env AP.env DP.env Init.ozc
 
-Misc.ozc: $(DUMPINTRO) $(MISCSRC) SP.env OP.env AP.env WP.env DP.env Init.ozc
+Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
