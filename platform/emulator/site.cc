@@ -114,7 +114,8 @@ void BaseSite::unmarshalBaseSiteGName(MarshalerBuffer* buf)
 void BaseSite::unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error)
 {
   address = unmarshalNumberRobust(buf, error);
-  if(*error || (address <= NON_BROADCAST_MIN)) { // address should be of int32
+  // address should be of int32
+  if(*error || (address <= NON_BROADCAST_MIN)) {
     return;
   }
   port = unmarshalShort(buf);  
@@ -246,7 +247,7 @@ Site* unmarshalSiteRobust(MarshalerBuffer *buf, int *error)
 
   //
   tryS.unmarshalBaseSiteGNameRobust(buf, error);
-  if(*error) return NULL;
+  if (*error) return ((Site *) 0);
 
   //
   int hvalue = tryS.hash();

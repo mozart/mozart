@@ -478,42 +478,48 @@ Bool pickle2text()
 // class ByteSource
 // ===================================================================
 
+//
+typedef enum {
+  CLT_OK = 0,
+  CLT_NOPICKLE,
+  CLT_WRONGVERS,
+  CLT_FORMATERR
+} LoadTermRet;
+
 static
-Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
+LoadTermRet loadTerm(ByteStream *buf, char* &vers, OZ_Term &t)
 {
 #ifndef USE_FAST_UNMARSHALER   
-  int e;
-  vers = unmarshalVersionStringRobust(buf,&e);
-  if(e)
-    OZ_error("Unmarshal error!"); 
+  int error;
+  vers = unmarshalVersionStringRobust(buf, &error);
+  if (error)
+    return (CLT_NOPICKLE);
 #else
   vers = unmarshalVersionString(buf);
 #endif
 
-  if (vers==0)
-    return NO;
+  if (vers == 0)
+    return (CLT_NOPICKLE);
 
-  int major,minor;
-  if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
-    return NO;
-  }
-  if (major != MARSHALERMAJOR || minor != MARSHALERMINOR) {
-    return NO;
-  }
+  int major, minor;
+  if (sscanf(vers,"%d#%d", &major, &minor) != 2)
+    return (CLT_NOPICKLE);
+  if (major != MARSHALERMAJOR || minor != MARSHALERMINOR)
+    return (CLT_WRONGVERS);
 
   buf->setVersion(major,minor);
 
 #ifndef USE_FAST_UNMARSHALER   
   t = unpickleTermRobust(buf);
-  if(t == 0)
-    OZ_error("Unmarshal error!"); 
+  if (t == (OZ_Term) 0)
+    return (CLT_FORMATERR);
 #else
   t = unpickleTerm(buf);
 #endif
 
   buf->unmarshalEnd();
 
-  return OK;
+  return (CLT_OK);
 }
 
 
@@ -575,16 +581,19 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   ByteStream * stream;
    
   OZ_Return result = makeByteStream(stream,compname);
-  if (result!=PROCEED) return result;
-  // EK fast fix
+  if (result != PROCEED) return (result);
 
   stream->beforeInterpret(0);
   stream->unmarshalBegin();	
 
   char *versiongot = 0;
   OZ_Term val;
+  LoadTermRet ret;
 
-  if(loadTerm(stream,versiongot,val)){
+  ret = loadTerm(stream, versiongot, val);
+
+  switch (ret) {
+  case CLT_OK:
     stream->afterInterpret();    
     bufferManager->dumpByteStream(stream);
     delete versiongot;
@@ -599,28 +608,44 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
       Assert(ret == PROCEED || ret == FAILED);
       return (ret);
     }
-  }
-      
-  bufferManager->dumpByteStream(stream);
-  if (versiongot) {
-    OZ_Term vergot = oz_atom(versiongot);
-    char *vs = mv2ov(versiongot);
-    OZ_Term ozvergot = oz_atom(vs);
-    char s1[80];
-    sprintf(s1, "Pickle version %s correspnds Oz version", versiongot);
-    delete versiongot;
-    delete vs;
-    return raiseGeneric("load:versionmismatch",
-			"Version mismatch during loading of pickle",
-			oz_mklist(OZ_pairA("File",oz_atom(compname)),
-				  OZ_pairA("Expected",oz_atom(MARSHALERVERSION)),
-				  OZ_pairA("Got",vergot),
-				  OZ_pairA(s1,ozvergot)));
-  } else {
-    return raiseGeneric("load:nonpickle",
-			"Trying to load a non-pickle",
+    Assert(0);
+
+  case CLT_NOPICKLE:
+    bufferManager->dumpByteStream(stream);
+    return raiseGeneric("load:nonpickle", "Trying to load a non-pickle",
 			oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
+    Assert(0);
+
+  case CLT_WRONGVERS:
+    bufferManager->dumpByteStream(stream);
+    {
+      OZ_Term vergot = oz_atom(versiongot);
+      char *vs = mv2ov(versiongot);
+      OZ_Term ozvergot = oz_atom(vs);
+      char s1[80];
+      sprintf(s1, "Pickle version %s correspnds Oz version", versiongot);
+      delete versiongot;
+      delete vs;
+      return raiseGeneric("load:versionmismatch",
+			  "Version mismatch during loading of pickle",
+			  oz_mklist(OZ_pairA("File",oz_atom(compname)),
+				    OZ_pairA("Expected",oz_atom(MARSHALERVERSION)),
+				    OZ_pairA("Got",vergot),
+				    OZ_pairA(s1,ozvergot)));
+    }
+    Assert(0);
+
+  case CLT_FORMATERR:
+    bufferManager->dumpByteStream(stream);
+    return raiseGeneric("load:formaterr", "Error during unmarshaling",
+			oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
+    Assert(0);
+
+  default:
+    Assert(0);
+    return (PROCEED);
   }
+  Assert(0);
 }
 
 OZ_Return

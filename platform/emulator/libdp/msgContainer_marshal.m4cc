@@ -214,17 +214,17 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
       case FT_NUMBER:
 #ifdef USE_FAST_UNMARSHALER   
 	msgFields[i].arg = (void *) unmarshalNumber(bb);
-	msgFields[i].ft=FT_NONE;
+	msgFields[i].ft = FT_NONE;
 #else
 	{
-	  int e;
-	  msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &e);
-	  if (e) {
+	  int error;
+	  msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &error);
+	  if (error) {
 	    messageError(mt, "MsgContainer::unmarshal: bad Number");
 	    return (FALSE);
+	  } else {
+	    msgFields[i].ft = FT_NONE;
 	  }
-	  else
-	    msgFields[i].ft=FT_NONE;
 	}
 #endif
 	break;
@@ -232,17 +232,17 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
       case FT_CREDIT:
 #ifdef USE_FAST_UNMARSHALER   
         msgFields[i].arg = (void *) unmarshalNumber(bb);
-	msgFields[i].ft=FT_NONE;
+	msgFields[i].ft = FT_NONE;
 #else
 	{
-	  int e;
-	  msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &e);
-	  if (e) {
+	  int error;
+	  msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &error);
+	  if (error) {
 	    messageError(mt, "MsgContainer::unmarshal: bad Credit");
 	    return (FALSE);
+	  } else {
+	    msgFields[i].ft = FT_NONE;
 	  }
-	  else
-	    msgFields[i].ft=FT_NONE;
 	}
 #endif
 	break;
@@ -291,17 +291,17 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
       case FT_STRING:
 #ifdef USE_FAST_UNMARSHALER   
         msgFields[i].arg = (void *) unmarshalString(bb);
-	msgFields[i].ft=FT_NONE;
+	msgFields[i].ft = FT_NONE;
 #else
 	{
-	  int e;
-	  msgFields[i].arg = (void *) unmarshalStringRobust(bb, &e);
-	  if (e) {
+	  int error;
+	  msgFields[i].arg = (void *) unmarshalStringRobust(bb, &error);
+	  if (error) {
 	    messageError(mt, "MsgContainer::unmarshal: bad string");
 	    return (FALSE);
+	  } else {
+	    msgFields[i].ft = FT_NONE;
 	  }
-	  else
-	    msgFields[i].ft=FT_NONE;
 	}
 #endif
 	break;
@@ -309,17 +309,17 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
       case FT_SITE:
 #ifdef USE_FAST_UNMARSHALER   
 	msgFields[i].arg = (void *) unmarshalDSite(bb);
-	msgFields[i].ft=FT_NONE;
+	msgFields[i].ft = FT_NONE;
 #else
 	{
-	  int e;
-	  msgFields[i].arg = (void *) unmarshalDSiteRobust(bb, &e);
-	  if (e) {
+	  int error;
+	  msgFields[i].arg = (void *) unmarshalDSiteRobust(bb, &error);
+	  if (error) {
 	    messageError(mt, "MsgContainer::unmarshal: bad site");
 	    return (FALSE);
+	  } else {
+	    msgFields[i].ft = FT_NONE;
 	  }
-	  else	  
-	    msgFields[i].ft=FT_NONE;
 	}
 #endif
 	break;
