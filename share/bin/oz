@@ -21,8 +21,8 @@ if test -z "${OZHOME}"
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
-  export OZHOME
 fi
+export OZHOME
 
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
 : ${OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe}
