@@ -388,6 +388,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
       } else {
 	if (*bifdbm_dom[i] == fd_singleton) {
 	  if (bifdbm_is_local[i]) {
+	    glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
 	    tagged2GenFDVar(bifdbm_var[i])->
 	      becomesSmallIntAndPropagate(bifdbm_varptr[i]);
 	  } else {
@@ -403,10 +404,15 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  if (! bifdbm_is_local[i]) {
 	    GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	    TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-	    doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-			   makeTaggedRef(newtaggedfdvar));
+	    doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
+				makeTaggedRef(newtaggedfdvar),
+				newfdvar, tagged2GenFDVar(bifdbm_var[i]));
+	    newfdvar->setTag();
 	    glob_vars_touched = TRUE;
+	  } else {
+	    glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
 	  }
+	  
 	  vars_left = TRUE;
 	}
 	PROFILE_CODE1(
@@ -427,8 +433,10 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
 	am.checkSuspensionList(bifdbm_var[i], makeTaggedRef(newtaggedfdvar));
-	doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-		       makeTaggedRef(newtaggedfdvar));
+	doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
+			    makeTaggedRef(newtaggedfdvar),
+			    newfdvar, tagged2GenFDVar(bifdbm_var[i]));
+	newfdvar->setTag();
 	vars_left = TRUE;
       }
       PROFILE_CODE1(
@@ -455,6 +463,7 @@ void BIfdBodyManager::processNonRes(void)
   if (vartag == CVAR && isTouched(0)) {
     if (*bifdbm_dom[0] == fd_singleton) {
       if (bifdbm_is_local[0]) {
+	glob_vars_touched |= tagged2GenFDVar(bifdbm_var[0])->isTagged();
 	tagged2GenFDVar(bifdbm_var[0])->
 	  becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
@@ -466,6 +475,7 @@ void BIfdBodyManager::processNonRes(void)
 	
 	doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
 		       newSmallInt(bifdbm_dom[0]->singl()));
+	glob_vars_touched = TRUE;
       }
     } else {
       tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_bounds,
@@ -476,9 +486,13 @@ void BIfdBodyManager::processNonRes(void)
 	
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-	doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
-		       makeTaggedRef(newtaggedfdvar));
+	doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
+			    makeTaggedRef(newtaggedfdvar),
+			    newfdvar, tagged2GenFDVar(bifdbm_var[0]));
+	newfdvar->setTag();
 	glob_vars_touched = TRUE;
+      } else {
+	glob_vars_touched |= tagged2GenFDVar(bifdbm_var[0])->isTagged();
       }
     }
     PROFILE_CODE1(
@@ -489,7 +503,9 @@ void BIfdBodyManager::processNonRes(void)
     DebugCheck(bifdbm_is_local[0], error("Global SVAR expected."));
     
     if (susp == NULL) susp = new Suspension(am.currentBoard); 
-    
+
+    glob_vars_touched = TRUE;
+
     if (*bifdbm_dom[0] == fd_singleton) {
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
       am.checkSuspensionList(bifdbm_var[0], newsmallint);
@@ -500,7 +516,10 @@ void BIfdBodyManager::processNonRes(void)
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar));
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
-      doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], makeTaggedRef(newtaggedfdvar));
+      doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
+			  makeTaggedRef(newtaggedfdvar),
+			  newfdvar, tagged2GenFDVar(bifdbm_var[0]));
+      newfdvar->setTag();
       vars_left = TRUE;
     }
     PROFILE_CODE1(
@@ -824,8 +843,6 @@ void BIinitFD()
   BIadd("fdGenNonLinLessEq", 3, BIfdGenNonLinLessEq);
   BIadd("fdGenNonLinLessEq1", 3, BIfdGenNonLinLessEq1);
   BIadd("fdGenNonLinLessEq_body", 3, BIfdGenNonLinLessEq_body);
-  BIadd("fdGenLinAbs", 4, BIfdGenLinAbs);
-  BIadd("fdGenLinAbs_body", 4, BIfdGenLinAbs_body);
   
 // fdcount.cc
   BIadd("fdElement", 3, BIfdElement);

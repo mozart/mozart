@@ -32,14 +32,17 @@
 
 
 enum TypeOfGenCVariable {
-  FDVariable,
-  OFSVariable,
-  MetaVariable
+  BeingTagged  = 0x1, // needs to occupy different bits than the rest
+  FDVariable   = 0x2,
+  OFSVariable  = 0x4,
+  MetaVariable = 0x6
 };
 
 class GenCVariable: public SVariable {
+private:
+  TypeOfGenCVariable var_type;
+
 protected:
-  TypeOfGenCVariable type;
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
   void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE);
@@ -52,10 +55,21 @@ public:
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable, Board * = NULL);
 
-  TypeOfGenCVariable getType(void){return type;}
-
-  void setType(TypeOfGenCVariable t){ type = t;}  
-
+  TypeOfGenCVariable getType(void){
+    return TypeOfGenCVariable(var_type & ~BeingTagged);
+  }
+  void setType(TypeOfGenCVariable t){
+    Assert(t == FDVariable || t == OFSVariable || t == MetaVariable);
+    var_type = t;
+  }  
+  
+  void setTag(void) {
+    var_type = TypeOfGenCVariable(var_type | BeingTagged);
+  }
+  Bool isTagged(void) {
+    return (var_type & BeingTagged);
+  }
+  
   Bool isLocalVariable(void);
 
   // methods relevant for term copying (gc and solve)  
@@ -76,6 +90,7 @@ public:
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 
+  void installPropagators(GenCVariable *);
 };
 
 #include "fdgenvar.hh"
