@@ -33,6 +33,40 @@ dnl *****************************************************************
 dnl This will check that we are in the Oz directory and initiate
 AC_INIT(ozMain.c)
 
+
+dnl *****************************************************************
+dnl windows cross compilation
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --enable-wincross)
+AC_ARG_ENABLE(wincross,
+  [--enable-wincross  Windows cross compilation (default=no)])
+if test "${enable_wincross}" = yes; then
+    if test -n "$oz_wincross_dir" && test -n "$oz_wincross_prefix"
+    then
+        AC_MSG_RESULT(yes)
+	CC=$oz_wincross_dir/$oz_wincross_prefix-gcc
+	EXTRALDFLAGS="-mwindows -s"
+	platform="win32-i486"
+	OZWISH="ozwish.exe"
+	SRCS="winMain.c"
+	oz_tcl_inc_dir=$oz_wincross_tcl_inc_dir
+	oz_tcl_lib_dir=$oz_wincross_tcl_lib_dir
+    else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR("oz_wincross_dir and oz_wincross_prefix must be set")
+    fi
+else
+    AC_MSG_RESULT(no)
+    OZWISH="oz.wish.bin"
+    SRCS="ozMain.c ozAppInit.c"
+fi
+
+AC_SUBST(OZWISH)
+AC_SUBST(SRCS)
+AC_SUBST(EXTRALDFLAGS)
+
+dnl ******************************************************************
 OZ_INIT
 
 BUILDTOP=`cd ../.. && pwd`
@@ -129,11 +163,14 @@ fi
 oz_inc_path="$oz_x11_inc_dir $oz_inc_path"
 oz_lib_path="$oz_x11_lib_dir $oz_lib_path"
 
-OZ_CHECK_HEADER_PATH(X11/Xlib.h,,
-	AC_MSG_ERROR(required X include files not found))
+if test "${enable_wincross}" != yes
+then
+    OZ_CHECK_HEADER_PATH(X11/Xlib.h,,
+	    AC_MSG_ERROR(required X include files not found))
 
-OZ_CHECK_LIB_PATH(X11, XOpenDisplay,,
-	AC_MSG_ERROR(required lib X11 not found))
+    OZ_CHECK_LIB_PATH(X11, XOpenDisplay,,
+	    AC_MSG_ERROR(required lib X11 not found))
+fi
 
 dnl *****************************************************************
 dnl *** Tcl/Tk
