@@ -245,7 +245,6 @@ class MessageManager;
 class TcpCache;
 class TcpOpenMsgBuffer;
 class NetMsgBuffer;
-class TSCQueue;
 
 ipReturn tcpSend(int,Message *,Bool);
 int intifyUnique(BYTE *);
@@ -278,8 +277,10 @@ RemoteSiteManager *remoteSiteManager;
 ByteBufferManager *byteBufferManager;
 MessageManager *messageManager;
 TcpCache *tcpCache;
+#ifdef SLOWNET
+class TSCQueue;
 TSCQueue *TSC;
-
+#endif
 
 
 class Message{
@@ -382,6 +383,7 @@ public:
 /**********************************************************************/
 /*   SECTION 3b:  Transfer speed control                             */
 /**********************************************************************/
+#ifdef SLOWNET
 
 int  TSC_LATENCY;
 int TSC_TOTAL_A;
@@ -476,7 +478,7 @@ public:
 
 
 
-
+#endif
 /* ************************************************************************ */
 /*  SECTION 4:  Network MsgBuffer and friends                                       */
 /* ************************************************************************ */
@@ -3726,7 +3728,6 @@ void initNetwork()
   messageManager = new MessageManager();
   tcpCache = new TcpCache();
   tcpOpenMsgBuffer= new TcpOpenMsgBuffer();
-  TSC = new TSCQueue();
 
   ipReturn ret=createTcpPort(OZReadPortNumber,ip,p,tcpFD);
   if (ret<0){
@@ -3744,6 +3745,7 @@ void initNetwork()
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
   tcpCache->nowAccept();  // can be removed ??
 #ifdef SLOWNET
+  TSC = new TSCQueue();
   if(!am.registerTask(NULL, checkIncTimeSlice, incTimeSlice))
     error("Unable to registertask");
   TSC_LATENCY = 300;
@@ -3773,6 +3775,7 @@ int timeCtr = 0;
 /**********************************************************************/
 /*   SECTION 30: SLOWNET method, dependent of writeconnection     */
 /**********************************************************************/
+#ifdef SLOWNET
 void TSCQueue::incTime(unsigned long aTime){
 
   if(transferAmount){
@@ -3827,6 +3830,7 @@ void TSCQueue::incTime(unsigned long aTime){
 }
 
 
+
 /* ************************************************************************ */
 /*  SECTION 42: Procerdures used for "Signals"                                            */
 /* ************************************************************************ */
@@ -3838,13 +3842,19 @@ Bool incTimeSlice(unsigned long time, void *v){
 Bool checkIncTimeSlice(unsigned long time, void* v){
   return TSC->hasTask(time);}
 
+#endif
 
 OZ_BI_define(BIslowNet,2,0)
 {
   oz_declareIntIN(0,arg0);
   oz_declareIntIN(1,arg1);
+#ifdef SLOWNET
   TSC_LATENCY = arg0;
   TSC_TOTAL_A = arg1;
   printf("New slownetvals ms:%d buff:%d \n", TSC_LATENCY, TSC_TOTAL_A);
+#else
+  printf("Slownet not installed\n");
+#endif
   return PROCEED;
+
 } OZ_BI_end

@@ -3383,16 +3383,6 @@ void msgReceived(MsgBuffer* bs)
       break;
     }
 
-  case M_SEND_GATE:    /* term */
-    {
-      OZ_Term t;
-      unmarshal_M_SEND_GATE(bs,t);
-      PD((MSG_RECEIVED,"SEND_GATE: v:%s",toC(t)));
-      //sendGate(t);
-      Assert(0);
-      break;
-    }
-
   case M_ASK_FOR_CREDIT:
     {
       int na_index;
@@ -6308,6 +6298,14 @@ void BIinitPerdio()
   borrowTable = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
   msgBufferManager= new MsgBufferManager();
   idCounter  = new FatInt();
+
+  //
+  // The gate is implemented as a Port reciding at location 0 in
+  // the ownertable. The gateStream is keept alive, the Connection
+  // library will fetch it later.
+  // The port is made persistent so it should not disapear.
+  //
+
   GateStream = oz_newVariable();
   OZ_protect(&GateStream);
   {

@@ -358,7 +358,6 @@ void gcGName(GName *);
 
 int loadURL(TaggedRef url, OZ_Term out, Thread *th);
 int loadURL(const char *,OZ_Term,Thread *th);
-void sendGate(OZ_Term t);
 void initComponents();
 OZ_Term getGatePort(Site*);
 /* ************************************************************************ */
