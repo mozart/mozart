@@ -26,6 +26,10 @@ debugger.
 other possibility is <code/-p/ to start the profiler (see
 <ptr to=chapter.profiler>)./
 
+      <entry/<code/-r/, <code/--remotedebugger/, <code/--mode=remotedebugger//
+      <item/In this mode of operation, a debugger client is started
+and connects to a debugger server.  The <code/--ticket/ option is required./
+
       <entry/<code/-p/, <code/--profiler/, <code/--mode=profiler//
       <item/This is the other mode of operation: it starts the
 profiler instead (see <ptr to=chapter.profiler>)./
@@ -38,6 +42,10 @@ able to set breakpoints easily on source lines./
       <entry/<code/--emacs=?{FILE}//
       <item/Specifies the Emacs binary to run for option <code/-E/.
 The default is $<var env/OZEMACS/ if set, else <file/emacs/./
+
+      <entry/<code/--ticket=?{TICKET}//
+      <item/Specifies the ticket to use for option <code/-r/ to
+connect to the server./
     </list></p>
 </chapter>
 <!--
