@@ -263,7 +263,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
     if (OZ_isForeignPointer(key)) {
       AbstractionEntry *oldentry =
         (AbstractionEntry *) OZ_getForeignPointer(key);
-      Assert(oldentry->copyable);
+      Assert(oldentry->isCopyable());
       AbstractionEntry *newentry = new AbstractionEntry(NO);
       ht->htAdd(ToInt32(oldentry),newentry);
     } else {

@@ -29,12 +29,27 @@
 #include "codearea.hh"
 
 /*
- * Forward reference for code garbage collection
+ * Entry points for code garbage collection
  *
  */
 
-static void gCollectCode(CodeArea *block);
-static void gCollectCode(ProgramCounter PC);
+static int codeGCgeneration = CODE_GC_CYLES;
+
+inline
+void gCollectCode(CodeArea *block) {
+  if (codeGCgeneration)
+    return;
+
+  block->gCollectCodeBlock();
+}
+
+inline
+void gCollectCode(ProgramCounter PC) {
+  if (codeGCgeneration)
+    return;
+
+  CodeArea::findBlock(PC)->gCollectCodeBlock();
+}
 
 
 /*
@@ -187,11 +202,19 @@ void Arity::gCollect(void) {
   }
 }
 
+inline
 void ArityTable::gCollect(void) {
   for (int i = size; i--; ) {
     if (table[i] != NULL)
       (table[i])->gCollect();
   }
+}
+
+inline
+void ThreadsPool::gCollect(void) {
+  _q[ HI_PRIORITY].gCollect();
+  _q[MID_PRIORITY].gCollect();
+  _q[LOW_PRIORITY].gCollect();
 }
 
 
@@ -201,24 +224,23 @@ void ArityTable::gCollect(void) {
  */
 
 
-static int codeGCgeneration = CODE_GC_CYLES;
-
+inline
 void PrTabEntry::gCollectPrTabEntries(void) {
   for (PrTabEntry *aux = allPrTabEntries; aux; aux=aux->next)
     OZ_gCollectBlock(&(aux->printname),&(aux->printname),3);
 }
 
+inline
 void AbstractionEntry::freeUnusedEntries() {
   AbstractionEntry *aux = allEntries;
   allEntries = NULL;
   while (aux) {
-    AbstractionEntry *aux1 = aux->next;
-    if (aux->collected ||
-        aux->abstr==makeTaggedNULL()) {
+    AbstractionEntry *aux1 = aux->getNext();
+    if (aux->isCollected() || aux->abstr==makeTaggedNULL()) {
       // RS: HACK alert: compiler might have reference to
       // abstraction entries: how to detect them??
-      aux->collected = NO;
-      aux->next  = allEntries;
+      aux->unsetCollected();
+      aux->setNext(allEntries);
       allEntries = aux;
     } else {
       delete aux;
@@ -229,46 +251,27 @@ void AbstractionEntry::freeUnusedEntries() {
 
 inline
 void AbstractionEntry::gCollectAbstractionEntry(void) {
-  if (this==NULL || collected) return;
+  if (this==NULL || isCollected()) return;
 
-  collected = OK;
+  setCollected();
   oz_gCollectTerm(abstr,abstr);
 }
 
-
-void CodeArea::gCollectCodeBlock(void) {
-  if (referenced == NO) {
-    referenced = OK;
-    gclist->collectGClist();
-  }
-}
-
-void gCollectCode(CodeArea *block) {
-  if (codeGCgeneration!=0)
-    return;
-
-  block->gCollectCodeBlock();
-}
-
-
-void gCollectCode(ProgramCounter PC) {
-  gCollectCode(CodeArea::findBlock(PC));
-}
-
+inline
 void CodeGCList::collectGClist(void) {
   CodeGCList *aux = this;
   while(aux) {
     for (int i=aux->nextFree; i--; ) {
-      switch (aux->block[i].tag) {
+      switch (aux->block[i].getTag()) {
       case C_TAGGED:
-        oz_gCollectTerm(*(TaggedRef*)aux->block[i].pc,
-                        *(TaggedRef*)aux->block[i].pc);
+        oz_gCollectTerm(*(TaggedRef*)aux->block[i].getPtr(),
+                        *(TaggedRef*)aux->block[i].getPtr());
         break;
       case C_ABSTRENTRY:
-        ((AbstractionEntry*)*(aux->block[i].pc))->gCollectAbstractionEntry();
+        (*((AbstractionEntry**) (aux->block[i].getPtr())))->gCollectAbstractionEntry();
         break;
       case C_INLINECACHE:
-        ((InlineCache*)aux->block[i].pc)->invalidate();
+        ((InlineCache*)aux->block[i].getPtr())->invalidate();
         break;
       case C_FREE:
         break;
@@ -280,6 +283,15 @@ void CodeGCList::collectGClist(void) {
   }
 }
 
+void CodeArea::gCollectCodeBlock(void) {
+  if (referenced == NO) {
+    referenced = OK;
+    gclist->collectGClist();
+  }
+}
+
+
+inline
 void CodeArea::gCollectCodeAreaStart(void) {
   if (ozconf.codeGCcycles == 0) {
     codeGCgeneration = 1;
@@ -297,6 +309,7 @@ void CodeArea::gCollectCodeAreaStart(void) {
   }
 }
 
+inline
 void CodeArea::gCollectCollectCodeBlocks(void) {
   CodeArea *code = allBlocks;
   allBlocks = NULL;

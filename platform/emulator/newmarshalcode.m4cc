@@ -80,7 +80,7 @@ inline static
 void marshalProcedureRef(Marshaler *m,
                          AbstractionEntry *entry, MsgBuffer *bs)
 {
-  Bool copyable = entry && entry->copyable;
+  Bool copyable = entry && entry->isCopyable();
   marshalNumber(copyable, bs);
   if (copyable) {
     int ind = m->find(entry);
@@ -273,7 +273,7 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
     // instructioNs.
     if (op==FASTCALL || op==FASTTAILCALL) {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
-      if (!entry->copyable) {
+      if (!entry->isCopyable()) {
         marshalOpCode(instrstart-start,CALLCONSTANT,bs);
         Abstraction *abstr = entry->getAbstr();
 
@@ -283,7 +283,7 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
 
         //
         Bool istailcall = (op==FASTTAILCALL);
-        marshalNumber((entry->getArity()<<1)|istailcall,bs);
+        marshalNumber((abstr->getArity()<<1)|istailcall,bs);
         PC++; // skip (AbstractionEntry *)
         PC++; // skip unused second arg
         continue;

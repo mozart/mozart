@@ -1623,16 +1623,6 @@ void SuspQueue::_cac(void) {
 
 }
 
-#ifdef G_COLLECT
-
-void ThreadsPool::gCollect(void) {
-  _q[ HI_PRIORITY].gCollect();
-  _q[MID_PRIORITY].gCollect();
-  _q[LOW_PRIORITY].gCollect();
-}
-
-#endif
-
 /****************************************************************************
  * Board collection
  ****************************************************************************/

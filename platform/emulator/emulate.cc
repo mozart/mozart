@@ -1788,7 +1788,7 @@ Case(GETVOID)
 
       CallDoChecks(entry->getAbstr());
 
-      IHashTable *table = entry->indexTable;
+      IHashTable *table = entry->getIndexTable();
       if (table) {
         PC = entry->getPC();
         DoSwitchOnTerm(XREGS[0],table);
