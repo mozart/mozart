@@ -143,8 +143,8 @@ local
 		     {@CurComp
 		      enqueue(feedVirtualString('{`send` eval($) ' #
 						'class meth eval($)\n' #
-						V # '\nend end `self`}')
-			      return(result: ?R))}
+						V # '\nend end `self`}'
+						return(result: ?R)))}
 		  end
 		  {Wait {@CurComp enqueue(ping($))}}
 		  Sync = unit
