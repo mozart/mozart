@@ -78,6 +78,8 @@ problem is, depending on the type of the entity.
 cause the distribution exception <<system(dp(F))>>
 to be raised when an operation is attempted on the entity.
 
+<SUBSECTION><TITLE>Temporary fault states</TITLE>
+
 <P> The fault state <<tempFail>> exists to allow the
 application to react quickly to temporary network problems.
 It is raised by the system as soon as a network problem
@@ -89,7 +91,9 @@ approximating infinity from the viewpoint of the
 network connection.
 After the time-out,
 one can be sure that the connection is no longer working.
-The purpose of <<tempFail>> is quite different:
+
+<P> The purpose of <<tempFail>> is quite different from
+a time-out:
 it is to <EM>inform</EM> the application
 of network problems, not to mark the <EM>end</EM> of a connection.
 For example, an application might be connected to a given server.
@@ -100,12 +104,12 @@ The <<tempFail>> exceptions will therefore be relatively frequent,
 much more frequent than time-outs.
 
 <P> It is possible for
-a temporary network error to be effectively permanent.
+a temporary network failure to be effectively permanent.
 In general, the distinction between the two cannot be made from inside
 the application.
 For example, if a user disconnects the network connection of a laptop
 machine, then only he or she knows whether the problem is permanent.
-The decision whether to continue waiting on a temporary error
+The decision whether to continue waiting on a temporary failure
 or whether to interrupt the wait can cut through all levels of
 abstraction to appear at the top level.
 The application then pops up a window to ask the user whether
