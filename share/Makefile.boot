@@ -8,6 +8,7 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 BUILDSHARE=$(BUILDTOP)/share
 BUILDLIB=$(BUILDSHARE)/lib
 BUILDTOOLS=$(BUILDSHARE)/tools
+BUILDDOC=$(BUILDTOP)/contrib/doc
 
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
@@ -68,13 +69,13 @@ boot-%:
         OZC="$(BOOTCOM)" \
         OZINIT=$(BUILDLIB)/Init.ozf \
         OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:= \
+        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:prefix=$(URL)/contrib/doc/=$(BUILDDOC)/:= \
         OZAR="$(BOOTAR)" \
         OZDOC_HOME="$(SRCTOP)/doc/utilities" \
         OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
         OZDOC_BIB_PATH="$(SRCDIR)" \
         OZDOC_BST_PATH="$(SRCDIR):$(SRCTOP)/doc/utilities" \
-        OZDOC_ELISP_PATH="$(BUILDDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp" \
+        OZDOC_ELISP_PATH="$(BUILDDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
         OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities"
 
 # stage1-all: create the components using the BUILDTOP/share/lib/stage1
