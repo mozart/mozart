@@ -41,8 +41,9 @@ enum FDState {fd_empty, fd_full, fd_discrete, fd_bool, fd_singleton};
 #define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
 
 const int fd_iv_max_high = FD_NOI;
-const int fd_iv_max_elem = OzMaxInt - 1;
-const int fd_full_size = fd_iv_max_elem + 1;
+const int fd_inf = 0;
+const int fd_sup = OzMaxInt - 1;
+const int fd_full_size = fd_sup + 1;
 
 
 struct i_arr_type {int left; int right;};
@@ -252,8 +253,8 @@ public:
 
   int setFull(void) {
     setType(fd_descr, NULL);
-    min_elem = 0;
-    max_elem = fd_iv_max_elem;
+    min_elem = fd_inf;
+    max_elem = fd_sup;
     return size = fd_full_size;
   }
 
