@@ -83,13 +83,13 @@
 
   <P>A very good starting point is to ask why Oz. Well, one rough short
   answer is that, compared to other existing languages, it is magic! It
-  provides the programmers and system developers with a wide range of
+  provides programmers and system developers with a wide range of
   programming abstractions to enable them to develop complex
   applications quickly and robustly. Oz merges several
-  directions of programming language designs into a single coherent
-  one. Yet, Oz is a simple and coherent design. Most of us know the
-  benefits of the various programming paradigms whether object-oriented,
-  functional or constraint logic programming. When we start writing
+  directions of programming language designs into a single coherent design.
+  Most of us know the benefits of the various programming paradigms
+  whether object-oriented, functional, or constraint logic programming.
+  When we start writing
   programs in any existing language, we quickly find ourselves confined
   by the concepts of the underlying paradigm. Oz solves this
   problem by a coherent design that combines the programming
@@ -97,7 +97,7 @@
 
   <P>So, before answering the above question, let us see what Oz
   is. This is again a difficult question to answer in a few
-  sentences. So, here is the first shot. It is a high level programming
+  sentences. So, here is the first shot. It is a high-level programming
   language that is designed for modern advanced, concurrent,
   intelligent, networked, soft real-time, parallel, interactive and
   pro-active applications. As you see, it is still hard to know what all
@@ -105,7 +105,7 @@
 
   <LIST>
   <ITEM>Oz combines the salient features of object-oriented programming,
-  by providing state, abstract data types, classes, objects and
+  by providing state, abstract data types, classes, objects, and
   inheritance.
 
   <ITEM>Oz provides the salient features of functional programming by
@@ -115,19 +115,19 @@
 
   <ITEM>Oz provides the salient features of logic and constraint
   programming by providing logic variables, disjunctive constructs,
-  programmable search strategies and constraint programming.
+  programmable search strategies, and constraint programming.
 
   <ITEM>Oz is a concurrent language where users can create dynamically any
   number of sequential threads that can interact with each
   other. However, in contrast to conventional concurrent languages, each
-  Oz thread is a data-flow thread. Executing a statement in Oz proceeds
-  only when all <EM>real</EM> data-flow dependencies on the variables
+  Oz thread is a dataflow thread. Executing a statement in Oz proceeds
+  only when all <EM>real</EM> dataflow dependencies on the variables
   involved are resolved.
 
-  <ITEM>The Mozart platform supports network-transparent distribution of
+  <ITEM>The Mozart system supports network-transparent distribution of
   Oz computations. Multiple Oz sites can connect together and
   automatically behave like a single Oz computation, sharing variables,
-  objects, classes and procedures. Sites disconnect automatically when
+  objects, classes, and procedures. Sites disconnect automatically when
   references between entities on different sites cease to exist.
 
   <ITEM>In a distributed environment Oz provides language security. That
@@ -135,20 +135,19 @@
   application cannot forge references nor access references that have
   not been explicitly given to it. The underlying representation of the
   language entities is inaccessible to the programmer. This is a
-  consequence of the abstract store and a language with lexical scoping
-  and first-class procedures. These are essential to implement a
-  capability-based security policy, which is important in open
-  distributed computing.
+  consequence of having an abstract store and lexical scoping.
+  Along with first-class procedures, these concepts are essential to
+  implement a capability-based security policy,
+  which is important in open distributed computing.
 
   </LIST>
 
   <SECTION><TITLE>The Kernel Language</TITLE>
-  <P>In this section we are going to give a short and terse
-  introduction to the kernel language of Oz. Oz is constructed in two
-  steps. The first is the kernel language and thereafter the full
-  language. The kernel language represents the essential part of the
-  language, whereas the rest may be regarded as syntactic sugar to
-  support useful abstractions.
+  <P>This section gives a short but precise
+  introduction to the Oz kernel language.
+  The full Oz language can be regarded as syntactic sugar to
+  a small kernel language.
+  The kernel language represents the essential part of the language.
 
 <P><FIGURE ID="CoreLang" CLASS="Figure">
 <CAPTION>The Oz kernel language</CAPTION>
