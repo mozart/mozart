@@ -3488,7 +3488,8 @@ EOF
             if test -n "$PGXX"
             then
                 CFLAGS="$CFLAGS -mpentium"
-                CFLAGS="$CFLAGS -frisc -fno-rtti -Wno-sign-compare"
+                CFLAGS="$CFLAGS -fno-exceptions -frisc -fno-rtti -Wno-sign-compare"
+                LIBS="$LIBS -lstdc++"
             else
                 CFLAGS="$CFLAGS -m486"
                 CFLAGS="$CFLAGS -malign-loops=4 -malign-jumps=4 -malign-functions=4"
@@ -3498,7 +3499,7 @@ EOF
 esac
 
 echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:3502: checking for --enable-linkprop" >&5
+echo "configure:3503: checking for --enable-linkprop" >&5
 # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -3525,7 +3526,7 @@ fi
 
 
 echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:3529: checking for --enable-peanuts" >&5
+echo "configure:3530: checking for --enable-peanuts" >&5
 # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
@@ -3546,7 +3547,7 @@ fi
 if test "x$platform" = xlinux-i486
 then
     echo $ac_n "checking if local gmalloc.o found""... $ac_c" 1>&6
-echo "configure:3550: checking if local gmalloc.o found" >&5
+echo "configure:3551: checking if local gmalloc.o found" >&5
     if test -r $PSDIR/lib/$platform/gmalloc.o
     then
         echo "$ac_t""yes" 1>&6
@@ -3558,7 +3559,7 @@ fi
 
 
 echo $ac_n "checking for --enable-tmphack""... $ac_c" 1>&6
-echo "configure:3562: checking for --enable-tmphack" >&5
+echo "configure:3563: checking for --enable-tmphack" >&5
 # Check whether --enable-tmphack or --disable-tmphack was given.
 if test "${enable_tmphack+set}" = set; then
   enableval="$enable_tmphack"
@@ -3584,7 +3585,7 @@ fi
 
 
 echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:3588: checking for --enable-finalization" >&5
+echo "configure:3589: checking for --enable-finalization" >&5
 # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"
@@ -3603,7 +3604,7 @@ fi
 
 
 echo $ac_n "checking for --enable-foreign-pointer""... $ac_c" 1>&6
-echo "configure:3607: checking for --enable-foreign-pointer" >&5
+echo "configure:3608: checking for --enable-foreign-pointer" >&5
 # Check whether --enable-foreign-pointer or --disable-foreign-pointer was given.
 if test "${enable_foreign_pointer+set}" = set; then
   enableval="$enable_foreign_pointer"
