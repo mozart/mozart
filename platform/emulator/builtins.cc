@@ -1926,6 +1926,9 @@ LBLagain:
       case Co_Object:
 	t = tagged2Object(term)->getFeature(fea);
 	break;
+      case Co_Class:
+	t = tagged2ObjectClass(term)->classGetFeature(fea);
+	break;
       case Co_Array:
       case Co_Dictionary:
       default:
@@ -2481,6 +2484,8 @@ OZ_C_proc_begin(BIchunkArity,2)
     if (!isChunk(ch)) oz_typeError(0,"Chunk");
     //
     switch (tagged2Const(ch)->getType()) {
+    case Co_Class:
+      return oz_unify(out,tagged2ObjectClass(ch)->getArityList());
     case Co_Object:
       return oz_unify(out,tagged2Object(ch)->getArityList());
     case Co_Chunk:
@@ -2513,12 +2518,12 @@ OZ_C_proc_begin(BIchunkWidth, 2)
     if (!isChunk(ch)) oz_typeError(0,"Chunk");
     //
     switch (tagged2Const(ch)->getType()) {
+    case Co_Class:
+      return oz_unify(out, makeTaggedSmallInt(tagged2ObjectClass(ch)->getWidth()));
     case Co_Object:
-      return
-	oz_unify(out, makeTaggedSmallInt (tagged2Object(ch)->getWidth ()));
+      return oz_unify(out, makeTaggedSmallInt(tagged2Object(ch)->getWidth()));
     case Co_Chunk:
-      return
-	oz_unify(out, makeTaggedSmallInt (tagged2SChunk(ch)->getWidth ()));
+      return oz_unify(out, makeTaggedSmallInt(tagged2SChunk(ch)->getWidth()));
     default:
       // no features
       return oz_unify(out,makeTaggedSmallInt (0));
@@ -5700,9 +5705,10 @@ OZ_C_proc_begin(BIgetPrintName,2)
     if (isConst(t)) {
       ConstTerm *rec = tagged2Const(t);
       switch (rec->getType()) {
-      case Co_Builtin:      return oz_unify(out, ((BuiltinTabEntry *) rec)->getName());
-      case Co_Abstraction:  return oz_unify(out, ((Abstraction *) rec)->getName());
-      case Co_Object:  	    return oz_unifyAtom(out, ((Object*) rec)->getPrintName());
+      case Co_Builtin:     return oz_unify(out, ((BuiltinTabEntry *) rec)->getName());
+      case Co_Abstraction: return oz_unify(out, ((Abstraction *) rec)->getName());
+      case Co_Object:  	   return oz_unifyAtom(out, tagged2Object(t)->getPrintName());
+      case Co_Class:       return oz_unifyAtom(out, tagged2ObjectClass(t)->getPrintName());
 
       case Co_Cell:
       case Co_Dictionary:
@@ -6525,8 +6531,7 @@ int sizeOf(SRecord *sr)
   return sr ? sr->sizeOf() : 0;
 }
 
-Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, 
-		  Bool iscl, Board *b)
+Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 {
   COUNT1(sizeObjects,sizeof(Object)+sizeOf(feat)+sizeOf(st));
   COUNT1(sizeRecords,-sizeOf(feat)-sizeOf(st));
@@ -6535,7 +6540,7 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
     lck = new LockLocal(am.currentBoard);
     COUNT1(sizeObjects,sizeof(LockLocal));
   }
-  return new Object(b,st,cla,feat,iscl,lck);
+  return new Object(b,st,cla,feat,lck);
 }
 
 
@@ -6548,8 +6553,6 @@ OZ_C_proc_begin(BImakeClass,6)
   OZ_Term locking    = OZ_getCArg(4); { DEREF(locking,_1,_2); }
   OZ_Term out        = OZ_getCArg(5);
 
-  SRecord *methods = NULL;
-
   if (!isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
   if (!isRecord(features))       { oz_typeError(4,"record"); }
   if (!isRecord(ufeatures))      { oz_typeError(5,"record"); }
@@ -6557,19 +6560,14 @@ OZ_C_proc_begin(BImakeClass,6)
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
-  ObjectClass *cl = new ObjectClass(tagged2Dictionary(fastmeth),
+  ObjectClass *cl = new ObjectClass(tagged2SRecord(features),
+				    tagged2Dictionary(fastmeth),
 				    uf,
 				    tagged2Dictionary(defmethods),
-				    locking==NameTrue);
+				    locking==NameTrue,
+				    am.currentBoard);
 
-  Object *reto = newObject(tagged2SRecord(features),
-			   NULL, // initState
-			   cl,
-			   OK,
-			   am.currentBoard);
-  cl->setOzClass(reto); // mm2: should be done in newObject?
-  reto->setClass();     // mm2 obsolete?
-  return oz_unify(out,makeTaggedConst(reto));
+  return oz_unify(out,makeTaggedConst(cl));
 }
 OZ_C_proc_end
 
@@ -6640,10 +6638,7 @@ OZ_Return BIisObjectInline(TaggedRef t)
 { 
   DEREF(t,_1,_2);
   if (isAnyVar(t)) return SUSPEND;
-  if (!isObject(t)) {
-    return FAILED;
-  }
-  return tagged2Object(t)->isClass() ? FAILED : PROCEED;
+  return isObject(t) ?  PROCEED : FAILED;
 }
 
 DECLAREBI_USEINLINEREL1(BIisObject,BIisObjectInline)
@@ -6658,10 +6653,11 @@ OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
   DEREF(t,_,tag);
   if (isAnyVar(tag)) return SUSPEND;
   if (!isObject(t)) {
-    out = t;
-    return PROCEED;
+    oz_typeError(0,"Object");
+    //    out = t;
+    // return PROCEED;
   }
-  out = makeTaggedConst(tagged2Object(t)->getOzClass());
+  out = makeTaggedConst(tagged2Object(t)->getClass());
   return PROCEED;
 }
 
@@ -6716,7 +6712,6 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
     newObject(isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
 	      tagged2SRecord(initState),
 	      clas,
-	      NO,
 	      am.currentBoard);
   
   return makeTaggedConst(out);
@@ -6727,24 +6722,23 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 { 
   { DEREF(cla,_1,_2); }
   if (isAnyVar(cla)) return SUSPEND;
-  if (!isObject(cla)) {
+  if (!isClass(cla)) {
     oz_typeError(0,"Class");
   }
 
-  Object *obj = tagged2Object(cla);
-  Object *realclass = obj->getOzClass();
-  TaggedRef attr = realclass->getFeature(NameOoAttr);
+  ObjectClass *realclass = tagged2ObjectClass(cla);
+  TaggedRef attr = realclass->classGetFeature(NameOoAttr);
   { DEREF(attr,_1,_2); }
   if (isAnyVar(attr)) return SUSPEND;
   
   TaggedRef attrclone = cloneObjectRecord(attr,NO);
 
-  TaggedRef freefeat = realclass->getFeature(NameOoFreeFeatR);
+  TaggedRef freefeat = realclass->classGetFeature(NameOoFreeFeatR);
   { DEREF(freefeat,_1,_2); }
   Assert(!isAnyVar(freefeat));
   TaggedRef freefeatclone = cloneObjectRecord(freefeat,OK);
 
-  out = makeObject(attrclone, freefeatclone, obj->getClass());
+  out = makeObject(attrclone, freefeatclone, realclass);
 
   return PROCEED;
 }
