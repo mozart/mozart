@@ -160,6 +160,7 @@ enum EmulatorPropertyIndex {
   PROP_DP_FLOWBUFFERTIME,
   PROP_DP_DEBUG,
   PROP_DP_VERSION,
+  PROP_DP_CLOCKTICK,
   PROP_DP_USEALTVARPROTOCOL,
   PROP_DP_RETRYTIMECEILING,
   PROP_DP_RETRYTIMEFLOOR,
@@ -496,10 +497,11 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 
   case PROP_DP_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
 					    oz_int(PERDIOMINOR));
+  case PROP_DP_CLOCKTICK: return (oz_int(CLOCK_TICK/1000));
 
   CASE_BOOL(PROP_DP_USEALTVARPROTOCOL,ozconf.dpUseAltVarProtocol);
   CASE_REC(PROP_DP,"dp",
-	   (21,oz_atomNoDup("useAltVarProtocol"),
+	   (22,oz_atomNoDup("useAltVarProtocol"),
 	    oz_atomNoDup("seifHandler"),oz_atomNoDup("debug"),
 	    oz_atomNoDup("flowBufferSize"),oz_atomNoDup("flowBufferTime"),
 	    oz_atomNoDup("version"),oz_atomNoDup("retryTimeCeiling"),
@@ -512,7 +514,8 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	    oz_atomNoDup("defaultBufferSize"),
 	    oz_atomNoDup("defaultMaxBufferSize"),
 	    oz_atomNoDup("bufferSize"),
-	    oz_atomNoDup("maxBufferSize")),
+	    oz_atomNoDup("maxBufferSize"),
+	    oz_atomNoDup("clockTick")),
 	   SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		    ozconf.dpUseAltVarProtocol);
 	   SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.dpSeifHandler);
@@ -547,7 +550,8 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_INT(oz_atomNoDup("maxBufferSize"),
 		   ozconf.dpMaxBufferSize);
 	   SET_REC(oz_atomNoDup("version"), OZ_pair2(oz_int(PERDIOMAJOR),
-						oz_int(PERDIOMINOR)));
+						     oz_int(PERDIOMINOR)));
+	   SET_INT(oz_atomNoDup("clockTick"), CLOCK_TICK/1000);
 	   );
   CASE_INT(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
 	   ozconf.dpTableDefaultOwnerTableSize);
@@ -1212,6 +1216,7 @@ static const struct prop_entry prop_entries[] = {
   {"dp.useAltVarProtocol", 
 		       PROP_DP_USEALTVARPROTOCOL},
   {"dp.version",PROP_DP_VERSION},
+  {"dp.clockTick",PROP_DP_CLOCKTICK},
   {"dp.flowBufferSize",PROP_DP_FLOWBUFFERSIZE},
   {"dp.flowBufferTime",PROP_DP_FLOWBUFFERTIME},
   {"dp.seifHandler",PROP_DP_SEIFHANDLER},
