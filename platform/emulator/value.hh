@@ -2722,4 +2722,36 @@ inline void registry_put(char*s,OZ_Term v)
   registry_put(oz_atom(s),v);
 }
 
+/*
+ * Macros for easy record construction
+ *
+ */
+
+
+/*
+ * Needed because literal commas (,) are interpreted as argument
+ * separators
+ */
+
+#define OZ_COMMA ,
+
+#define OZ_MAKE_RECORD_S(LABEL,WIDTH,ARITY_S,FIELDS,REC) \
+  OZ_Term REC;                                                            \
+  {                                                                       \
+    extern Arity * __OMR_static(const int,const char**,int*);             \
+    extern OZ_Term __OMR_dynamic(const int,OZ_Term,Arity*,int*,OZ_Term*); \
+    static Bool      __once  = OK;                                        \
+    static TaggedRef __label = makeTaggedNULL();                          \
+    static Arity *   __arity = (Arity *) NULL;                            \
+    static const char * __c_feat[WIDTH] = ARITY_S;                        \
+    static int       __i_feat[WIDTH];                                     \
+    if (__once) {                                                         \
+      __once = NO;                                                        \
+      __label = oz_atomNoDup(LABEL);                                      \
+      __arity = __OMR_static(WIDTH,__c_feat,__i_feat);                    \
+    }                                                                     \
+    TaggedRef __fields[WIDTH] = FIELDS;                                   \
+    REC = __OMR_dynamic(WIDTH,__label,__arity,__i_feat,__fields);         \
+  }
+
 #endif

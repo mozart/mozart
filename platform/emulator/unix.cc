@@ -566,16 +566,17 @@ OZ_BI_iodefine(unix_stat,1,1)
   else
     fileType = "unknown";
 
-  OZ_Term pairlist=
-    oz_mklist(oz_pairAA("type",fileType),
-              oz_pairAI("size",buf.st_size),
-              oz_pairAI("mtime",buf.st_mtime));
-  OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
+  OZ_MAKE_RECORD_S("stat",3,
+                   {"type" OZ_COMMA "size" OZ_COMMA "mtime"},
+                   {oz_atom(fileType) OZ_COMMA
+                      oz_int(buf.st_size) OZ_COMMA
+                      oz_int(buf.st_mtime)}, r);
+
+  OZ_RETURN(r);
 } OZ_BI_ioend
 
 
-OZ_BI_iodefine(unix_uName,0,1)
-{
+OZ_BI_iodefine(unix_uName,0,1) {
 #ifdef WINDOWS
   OZ_Term t2=OZ_pairAS("machine","unknown");
   OZ_Term t3=OZ_pairAS("nodename",oslocalhostname());
@@ -1645,12 +1646,14 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
     RETURN_NET_ERROR("gethostbyname");
   }
 
-  OZ_Term t1=OZ_pairAS("name", hostaddr->h_name);
-  OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
-  OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
-  OZ_Term pairlist= oz_mklist(t1,t2,t3);
+  OZ_MAKE_RECORD_S("hostent",3,
+                   {"name" OZ_COMMA "aliases" OZ_COMMA "addrList"},
+                   {OZ_string(hostaddr->h_name) OZ_COMMA
+                      mkAliasList(hostaddr->h_aliases) OZ_COMMA
+                      mkAddressList(hostaddr->h_addr_list)},
+                   r);
 
-  OZ_RETURN(OZ_recordInit(OZ_atom("hostent"),pairlist));
+  OZ_RETURN(r);
 } OZ_BI_ioend
 
 
@@ -1752,21 +1755,28 @@ OZ_BI_iodefine(unix_putEnv,2,0)
 } OZ_BI_ioend
 
 
-OZ_Term make_time(const struct tm* tim)
-{
-  OZ_Term t1=OZ_pairAI("hour",tim->tm_hour);
-  OZ_Term t2=OZ_pairAI("isDst",tim->tm_isdst);
-  OZ_Term t3=OZ_pairAI("mDay",tim->tm_mday);
-  OZ_Term t4=OZ_pairAI("min",tim->tm_min);
-  OZ_Term t5=OZ_pairAI("mon",tim->tm_mon);
-  OZ_Term t6=OZ_pairAI("sec",tim->tm_sec);
-  OZ_Term t7=OZ_pairAI("wDay",tim->tm_wday);
-  OZ_Term t8=OZ_pairAI("yDay",tim->tm_yday);
-  OZ_Term t9=OZ_pairAI("year",tim->tm_year);
+OZ_Term make_time(const struct tm* tim) {
+  OZ_MAKE_RECORD_S("time",9,
+                   {"hour" OZ_COMMA
+                      "isDst" OZ_COMMA
+                      "mDay" OZ_COMMA
+                      "min" OZ_COMMA
+                      "mon" OZ_COMMA
+                      "sec" OZ_COMMA
+                      "wDay" OZ_COMMA
+                      "yDay" OZ_COMMA
+                      "year"},
+                   { oz_int(tim->tm_hour) OZ_COMMA
+                       oz_int(tim->tm_isdst) OZ_COMMA
+                       oz_int(tim->tm_mday) OZ_COMMA
+                       oz_int(tim->tm_min) OZ_COMMA
+                       oz_int(tim->tm_mon) OZ_COMMA
+                       oz_int(tim->tm_sec) OZ_COMMA
+                       oz_int(tim->tm_wday) OZ_COMMA
+                       oz_int(tim->tm_yday) OZ_COMMA
+                       oz_int(tim->tm_year) },r);
 
-  OZ_Term l1=oz_cons(t6,oz_cons(t7,oz_cons(t8,oz_cons(t9,oz_nil()))));
-  OZ_Term l2=oz_cons(t1,oz_cons(t2,oz_cons(t3,oz_cons(t4,oz_cons(t5,l1)))));
-  return OZ_recordInit(OZ_atom("time"),l2);
+  return r;
 }
 
 OZ_BI_iodefine(unix_time, 0,1)
@@ -1885,17 +1895,15 @@ retry:
     if (errno==EINTR) goto retry;
     return raiseUnixError("getpwnam",errno,OZ_unixError(errno),"os");
   } else {
-    // return only POSIX fields
-    OZ_Term N1 = oz_pairAA("name"  ,p->pw_name  );
-    OZ_Term N2 = oz_pairAI("uid"   ,p->pw_uid   );
-    OZ_Term N3 = oz_pairAI("gid"   ,p->pw_gid   );
-    OZ_Term N4 = oz_pairAA("dir"   ,p->pw_dir   );
-    OZ_Term N5 = oz_pairAA("shell" ,p->pw_shell );
-    OZ_Term R =
-      OZ_recordInit(
-        oz_atom("passwd"),
-        oz_cons(N1,oz_cons(N2,oz_cons(N3,oz_cons(N4,oz_cons(N5,oz_nil()))))));
-    OZ_RETURN(R);
+    OZ_MAKE_RECORD_S("passwd",5,
+                     {"name" OZ_COMMA "uid" OZ_COMMA
+                        "gid" OZ_COMMA "dir" OZ_COMMA
+                        "shell" },
+                     {oz_atom(p->pw_name) OZ_COMMA oz_int(p->pw_uid) OZ_COMMA
+                        oz_int(p->pw_gid) OZ_COMMA oz_atom(p->pw_dir) OZ_COMMA
+                        oz_atom(p->pw_shell)},
+                     r);
+    OZ_RETURN(r);
   }
 } OZ_BI_end
 
