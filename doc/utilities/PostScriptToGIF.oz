@@ -62,11 +62,11 @@ define
       end
 
       meth convertPostScript(InName Info $)
-	 OutName = @DirName#'/'#InName#'.gif'
+	 OutName = InName#'.gif'
 	 PpmName = {OS.tmpnam}
       in
 	 {PsToPpm InName PpmName}
-	 {PpmToGif PpmName Info OutName}
+	 {PpmToGif PpmName Info @DirName#'/'#OutName}
 	 {OS.unlink PpmName}
 	 OutName
       end
