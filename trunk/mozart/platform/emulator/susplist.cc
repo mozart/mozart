@@ -126,7 +126,6 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
   return NULL;
 }
 
-#ifdef TMUELLER
 // drop every list entry referring to `prop'
 SuspList *  SuspList::dropPropagator(Propagator * prop) {
   SuspList * new_list = (SuspList *) NULL; // head of new list
@@ -174,7 +173,6 @@ SuspList *  SuspList::dropPropagator(Propagator * prop) {
   }
   return new_list;
 }	
-#endif
 
 //-----------------------------------------------------------------------------
 
