@@ -141,7 +141,6 @@ SYSLETS = ozd
 .PHONY: all install bootstrap check depend
 .PHONY: install-main install-images install-cache
 .PHONY: clean veryclean distclean tags
-.PHONY: stage1
 
 all: Makefile $(FUNCTORS) $(SYSLETS)
 
@@ -266,7 +265,7 @@ clean:
 	rm -f $(FUNCTORS) $(INSPECTOROBJS)
 
 veryclean: clean
-	rm -f -r $(STAGE1) TAGS
+	rm -f -r TAGS
 
 distclean: veryclean
 	@echo To really make distclean, please use \"cd ..\; make distclean\".
@@ -280,12 +279,6 @@ Makefile: Makefile.in ../config.status
 
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
-
-STAGE1=./stage1
-
-# stage1: create the components using the installed ones
-stage1:
-	$(MAKE) install-main PREFIX=$(STAGE1)
 
 check:
 
