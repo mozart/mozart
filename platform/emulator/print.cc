@@ -139,8 +139,7 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   case BIGINT:
   case SMALLINT:
     {
-      char *s = OZ_intToCString(ref);
-      stream << s;
+      stream << toC(ref);
     }
     break;
   case OZCONST:
@@ -376,79 +375,16 @@ PRINT(LTuple)
 }
 
 
-static void ppLiteral(ostream &stream, char *s) {
-  stream << "'";
-  char c;
-  while ((c = *s)) {
-    switch (c) {
-    case '\'':
-      stream << "\\'";
-      break;
-    case '\n':
-      stream << "\\n";
-      break;
-    case '\r':
-      stream << "\\r";
-      break;
-    case '\\':
-      stream << "\\\\";
-      break;
-    case '\t':
-      stream << "\\t";
-      break;
-    default:
-      stream << c;
-      break;
-    }
-    s++;
-  }
-  stream << "'";
-}
-
-
-#define WELLFORMED
-
-static Bool isWellFormed(char *s)
-{
-#ifdef WELLFORMED
-  if (!islower(*s)) {
-    return NO;
-  }
-  s++;
-  while (*s) {
-    if (!isalnum(*s) && *s != '_') {
-      return NO;
-    }
-    s++;
-  }
-#endif
-  return OK;
-}
-
-extern
-char *literalToC(OZ_Term term);
-
 PRINT(Literal)
 {
   CHECKDEPTH;
-  if (!isAtom()) {
-    stream << literalToC(makeTaggedLiteral(this));
-    return;
-  }
-
-  char *s = getPrintName();
-  if (isWellFormed(s)) {
-    stream << s;
-  } else {
-    ppLiteral(stream,s);
-  }
+  stream << toC(makeTaggedLiteral(this));
 }
 
 PRINT(Float)
 {
   CHECKDEPTH;
-  char *s = OZ_floatToCString(makeTaggedFloat(this));
-  stream << s;
+  stream << toC(makeTaggedFloat(this));
 }
 
 PRINT(Cell)
@@ -1324,7 +1260,10 @@ PRINTLONG(SChunk)
          << "Chunk@id" << this << endl
          << indent(offset)
          << " value:"<<endl;
-  getRecord()->printLong(stream,depth,offset+2);
+  tagged2StreamLong(value,stream,depth,offset+2);
+  stream << indent(offset)
+    << " home:"<<endl;
+  ((Board *)getPtr())->printLong(stream,depth,offset);
 }
 
 PRINTLONG(SRecord)
@@ -1761,8 +1700,8 @@ void printWhere(ostream &stream,ProgramCounter PC)
     stream << "procedure "
            << (pred ? pred->getPrintName() : "(NULL)")
            << " in file "
-           << OZ_atomToC(file)
+           << toC(file)
            << " at line "
-           << OZ_intToC(line);
+           << toC(line);
   }
 }

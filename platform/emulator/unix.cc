@@ -277,7 +277,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
 OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
                  OZ_Term *rest, OZ_Term *susp)
 {
-  char *string = OZ_toC(ozint,1);
+  char *string = OZ_toC(ozint,0,0);
   if (*string == '~') *string='-';
   char c;
 
@@ -302,7 +302,7 @@ OZ_Return int2buff(OZ_Term ozint, char **write_buff, int *len,
 OZ_Return float2buff(OZ_Term ozfloat, char **write_buff, int *len,
                    OZ_Term *rest, OZ_Term *susp)
 {
-  char *string = OZ_toC(ozfloat,1);
+  char *string = OZ_toC(ozfloat,0,0);
   for (char *p=string; *p; p++) {
     if (*p == '~') *p='-';
   }

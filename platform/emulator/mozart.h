@@ -86,9 +86,35 @@ extern int OZ_isTuple      _PROTOTYPE((OZ_Term));
 extern int OZ_isValue      _PROTOTYPE((OZ_Term));
 extern int OZ_isVariable   _PROTOTYPE((OZ_Term));
 
-extern OZ_Return OZ_isList          _PROTOTYPE((OZ_Term));
-extern OZ_Return OZ_isString        _PROTOTYPE((OZ_Term));
-extern OZ_Return OZ_isVirtualString _PROTOTYPE((OZ_Term));
+extern int OZ_isList          _PROTOTYPE((OZ_Term, OZ_Term *));
+extern int OZ_isString        _PROTOTYPE((OZ_Term, OZ_Term *));
+extern int OZ_isVirtualString _PROTOTYPE((OZ_Term, OZ_Term *));
+
+#define OZ_assertList(t)                        \
+  {                                             \
+    OZ_Term var;                                \
+    if (!OZ_isList(t,&var)) {                   \
+      if (var == 0) return FAILED;              \
+      OZ_suspendOn(var);                        \
+    }                                           \
+  }
+
+#define OZ_assertString(t)                      \
+  {                                             \
+    OZ_Term var;                                \
+    if (!OZ_isString(t,&var)) {                 \
+      if (var == 0) return FAILED;              \
+      OZ_suspendOn(var);                        \
+    }                                           \
+  }
+#define OZ_assertVirtualString(t)               \
+  {                                             \
+    OZ_Term var;                                \
+    if (!OZ_isVirtualString(t,&var)) {          \
+      if (var == 0) return FAILED;              \
+      OZ_suspendOn(var);                        \
+    }                                           \
+  }
 
 /*
  * mm2: should we support this ?
@@ -109,7 +135,6 @@ extern OZ_Term  OZ_int             _PROTOTYPE((int));
 extern int      OZ_getMinPrio      _PROTOTYPE((void));
 extern int      OZ_getMaxPrio      _PROTOTYPE((void));
 extern int      OZ_intToC          _PROTOTYPE((OZ_Term));
-extern char *   OZ_intToCString    _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CStringToInt    _PROTOTYPE((char *str));
 extern char *   OZ_parseInt        _PROTOTYPE((char *s));
 
@@ -117,17 +142,18 @@ extern OZ_Term  OZ_float           _PROTOTYPE((double));
 extern double   OZ_floatToC        _PROTOTYPE((OZ_Term));
 
 extern OZ_Term  OZ_CStringToFloat  _PROTOTYPE((char *s));
-extern char *   OZ_floatToCString  _PROTOTYPE((OZ_Term term));
 extern char *   OZ_parseFloat      _PROTOTYPE((char *s));
 
 extern OZ_Term  OZ_CStringToNumber _PROTOTYPE((char *));
 
-extern char *   OZ_toC       _PROTOTYPE((OZ_Term, int));
+extern char *   OZ_toC       _PROTOTYPE((OZ_Term, int, int));
 
 extern OZ_Term  OZ_string    _PROTOTYPE((char *));
 extern char *   OZ_stringToC _PROTOTYPE((OZ_Term t));
 
-extern void     OZ_printVS   _PROTOTYPE((OZ_Term t));
+extern void     OZ_printVirtualString   _PROTOTYPE((OZ_Term t));
+#define OZ_printVS(t) OZ_printVirtualString(t)
+
 
 /* mm2: impl? */
 extern OZ_Term  OZ_termToVS  _PROTOTYPE((OZ_Term t));
@@ -352,14 +378,15 @@ OZ_C_proc_begin(Name,Arity)                                                   \
 #define OZ_declareStringArg(ARG,VAR)            \
  char *VAR;                                     \
  {                                              \
-   OZ_Return ret = OZ_isString(OZ_getCArg(ARG));        \
-   if (ret == PROCEED) {                        \
-     VAR = OZ_stringToC(OZ_getCArg(ARG));       \
-   } else if (ret == FAILED) {                  \
-     return OZ_typeError(ARG,"Atom");           \
-   } else {                                     \
-     return ret;                                \
+   OZ_Term OZ_avar;                             \
+   if (!OZ_isString(OZ_getCArg(ARG),&OZ_avar)) {        \
+     if (OZ_avar == 0) {                        \
+       return OZ_typeError(ARG,"Atom");         \
+     } else {                                   \
+       OZ_suspendOn(OZ_avar);                   \
+     }                                          \
    }                                            \
+   VAR = OZ_stringToC(OZ_getCArg(ARG));         \
  }
 
 /* ------------------------------------------------------------------------ *
