@@ -1006,8 +1006,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "at"/\(                        { return at; }
 "attr"                         { return attr; }
 "attr"/\(                      { return attr; }
-"body"                         { return body; }
-"body"/\(                      { return body; }
 "case"                         { return _case_; }
 "case"/\(                      { return _case_; }
 "catch"                        { return catch; }
