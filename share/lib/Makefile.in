@@ -49,7 +49,7 @@ export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
 OZLIBDIRS1 = \
-        Standard Init SP OP AP CP WP DP \
+        standard init sp op ap cp wp dp \
         compiler panel browser explorer ozcar profiler gump gump/examples
 OZLIBDIRS = $(OZLIBDIRS1:%=$(OZLIB)/%)
 OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
@@ -66,29 +66,29 @@ STANDARDSRC1 = \
 STANDARDSRC = $(STANDARDSRC1:%=Standard/%) Standard.oz
 
 INITSRC1 = URL.oz Prop.oz
-INITSRC = $(INITSRC1:%=Init/%) Init.oz
+INITSRC = $(INITSRC1:%=init/%) Init.oz
 
 SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
-SPSRC = $(SPSRC1:%=SP/%) SP.oz
+SPSRC = $(SPSRC1:%=sp/%) SP.oz
 
 OPSRC1 = OS.oz Open.oz Component.oz
-OPSRC = $(OPSRC1:%.oz=OP/%.oz) OP.oz
+OPSRC = $(OPSRC1:%.oz=op/%.oz) OP.oz
 
 APSRC1 = Application.oz StandardModules.oz StandardSubModules.oz \
         ArgParser.oz
-APSRC = $(APSRC1:%.oz=AP/%.oz) AP.oz
+APSRC = $(APSRC1:%.oz=ap/%.oz) AP.oz
 
 CPSRC1 = Search.oz FD.oz FS.oz
-CPSRC = $(CPSRC1:%=CP/%) CP.oz
+CPSRC = $(CPSRC1:%=cp/%) CP.oz
 
 DPSRC1 = Connection.oz Remote.oz RemoteServer.oz MakeAllLoader.oz
-DPSRC = $(DPSRC1:%=DP/%) DP.oz
+DPSRC = $(DPSRC1:%=dp/%) DP.oz
 
 MISCSRC1 = Agenda.oz Server.oz
-MISCSRC = $(MISCSRC1:%=Misc/%) Misc.oz
+MISCSRC = $(MISCSRC1:%=misc/%) Misc.oz
 
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
-WPSRC = $(WPSRC1:%=WP/%) WP.oz
+WPSRC = $(WPSRC1:%=wp/%) WP.oz
 
 COMPILERSRC1 = \
         InsertAll.oz CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
@@ -396,11 +396,11 @@ $(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
         $(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
 
-compiler-Builtins.oz: $(TOPDIR)/Emulator/bidecl.perl
+compiler-Builtins.oz: $(TOPDIR)/share/emulator/bidecl.perl
         $(PERL) $< -oztable > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/Emulator/instrDefs.m4
-        $(M4) -DEMUDIR=$(TOPDIR)/Emulator < $< > $@
+        $(M4) -DEMUDIR=$(TOPDIR)/share/emulator < $< > $@
 
 CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env OP.env WP.env \
         Compiler.env Browser.env CompilerPanel.env Init.ozc
