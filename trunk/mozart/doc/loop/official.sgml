@@ -28,13 +28,14 @@ Thus, a new statement is introduced in the Oz language and its syntax is:
 <code display/for ?{Declarations} do ... end/
 where ?{Declarations} is a sequence of 0 or more iterator and feature
 declarations.   An iterator has the form:
-<code>?{Pat} in ?{Generator}</code>
-where ?{Generator} describes how to generate the successive values for
-pattern ?{Pat} whose variables are local to the loop.  The loop
-terminates as soon as one of the generators runs out of values.
+<code>?{Pat} in ?{Generator}</code> where ?{Generator} describes how
+to generate the successive values for pattern ?{Pat} whose variables
+are local to the loop.  The generators are stepped in parallel and the
+loop terminates as soon as one of the generators runs out of values.
 </p>
   <section><title/Iterators/
-    <p>These are the iterators officially supported in Mozart&nbsp;1.1.1.
+    <p>These are the iterators officially supported starting in Mozart&nbsp;1.1.1.
+For simplicity below, we write <code/X/ rather than <code/Pat/.
 <list>
       <entry><code/X in ?{L}/
       <item>iterates over the elements of list ?{L}.  At each
