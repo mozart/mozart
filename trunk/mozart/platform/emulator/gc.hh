@@ -47,10 +47,6 @@ extern Bool isCollecting;
 
 void protectInlineCache(InlineCache *);
 
-OZ_C_proc_proto(BIprepareDumpThreads);
-OZ_C_proc_proto(BIdumpThreads);
-OZ_C_proc_proto(BIlistThreads);
-
 void gcSiteTable();
 
 Bool inToSpace(void *p);
