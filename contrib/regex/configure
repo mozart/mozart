@@ -2012,14 +2012,15 @@ else
 fi
 rm -f conftest*
       done
+      CPPFLAGS="$oz_tmp_cppflags"
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2018 "configure"
+#line 2019 "configure"
 #include "confdefs.h"
 #include "regex.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2023: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2024: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2032,7 +2033,6 @@ else
 fi
 rm -f conftest*
       fi
-      CPPFLAGS=$oz_tmp_cppflags
 oz_cv_header_regex_h="$oz_tmp_ok"
 
     
