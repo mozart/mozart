@@ -453,7 +453,7 @@ TaggedRef makeInt(int i)
 inline
 TaggedRef makeUnsignedInt(unsigned int i)
 {
-  if (i > OzMaxInt)
+  if (i > (unsigned int) OzMaxInt)
     return makeTaggedBigInt(new BigInt(i));
   else
     return newSmallInt(i);

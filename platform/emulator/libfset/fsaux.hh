@@ -34,6 +34,7 @@ extern "C" void oz_fsetdebugprint(char *format ...);
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",    \
             #C,__FILE__, __LINE__);                     \
     fflush(stderr);                                     \
+    abort();                                            \
   }
 #define _OZ_DEBUGRETURNPRINT(X) __debugReturnPrint(X)
 #define OZ_DEBUGRETURNPRINT(X)  X /* _OZ_DEBUGRETURNPRINT(X) */
@@ -70,6 +71,17 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 
 #define FailOnEmpty(X) if((X) == 0) goto failure;
 #define FailOnInvalid(X) if(!(X)) goto failure;
+#define FailOnInvalid3(L,OP,R)                  \
+{                                               \
+  int __aux = (L).getLubCard();                 \
+  if(!(L OP (R))) goto failure;                 \
+  if((L).getLubCard() < __aux)                  \
+    if (! (L).putCard(0, 0))                    \
+      goto failure;                             \
+  if((L).getGlbCard() > 0)                      \
+    if (! (L).putCard(__aux, __aux))            \
+      goto failure;                             \
+}
 
 #define SAMELENGTH_VECTORS(I, J)                                        \
   {                                                                     \
@@ -340,6 +352,29 @@ public:
    OZ_Return fail(void) {
     _s.fail();
     for (int i = _vs_size; i--; _vs[i].fail());
+    return OZ_FAILED;
+  }
+};
+
+class PropagatorController_VD {
+protected:
+  OZ_FDIntVar * _vd;
+  int _vd_size;
+public:
+  PropagatorController_VD(int vd_size, OZ_FDIntVar vd[])
+    : _vd_size(vd_size), _vd(vd){}
+
+  OZ_Return leave(void) {
+    OZ_Boolean vars_left = OZ_FALSE;
+    for (int i = _vd_size; i--; vars_left |= _vd[i].leave());
+    return vars_left ? OZ_SLEEP : OZ_ENTAILED;
+  }
+  OZ_Return vanish(void) {
+    for (int i = _vd_size; i--; _vd[i].leave());
+    return OZ_ENTAILED;
+  }
+   OZ_Return fail(void) {
+    for (int i = _vd_size; i--; _vd[i].fail());
     return OZ_FAILED;
   }
 };

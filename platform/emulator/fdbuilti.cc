@@ -1231,6 +1231,9 @@ BIspec fdSpec[] = {
 #ifdef ALLDIFF
   {"alldiff_complete", 1, fdtest_alldiff},
 #endif
+#ifdef INPROP
+  {"inqueens", 1, fdtest_inqueens},
+#endif
 #endif /* FOREIGNFDPROPS */
 
 #ifdef DEBUG_STABLE

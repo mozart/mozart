@@ -14,6 +14,7 @@
 
 #include "fsstd.hh"
 #include "telling.hh"
+#include "indexset.hh"
 
 class IncludeRPropagator : public Propagator_S_D_D {
 private:
@@ -44,7 +45,6 @@ public:
     return &spawner;
   }
 };
-
 
 //-----------------------------------------------------------------------------
 
@@ -152,6 +152,60 @@ public:
   }
 };
 
+//-----------------------------------------------------------------------------
+
+class PartitionReifiedPropagator : public OZ_Propagator {
+protected:
+  static OZ_CFunHeader header;
+
+  IndexSets * _i_sets;
+
+  OZ_FSetValue * _vs;
+  int _size;
+
+  int _u_max_elem;
+
+  OZ_Term * _vd;
+  int _first;
+public:
+  PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ_Term vd);
+
+  virtual OZ_Return propagate(void);
+
+  virtual size_t sizeOf(void) { return sizeof(PartitionReifiedPropagator); }
+
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
+  }
+
+  virtual void updateHeapRefs(OZ_Boolean) {
+    // copy index sets
+    _i_sets = _i_sets->copy();
+
+    // copy subsets
+    int vs_chars = _size * sizeof(OZ_FSetValue);
+
+    OZ_FSetValue * new_vs = (OZ_FSetValue *) (void *) OZ_hallocChars(vs_chars);
+
+    memcpy(new_vs, _vs, vs_chars);
+
+    _vs = new_vs;
+
+    // copy bools
+    OZ_Term * new_vd = OZ_hallocOzTerms(_size);
+
+    for (int i = _size; i--; ) {
+      new_vd[i] = _vd[i];
+      OZ_updateHeapTerm(new_vd[i]);
+    }
+    _vd = new_vd;
+
+  }
+  virtual OZ_Term getParameters(void) const {
+    return OZ_nil();
+  }
+
+};
 
 #endif /* __REIFIED_HH__ */
 

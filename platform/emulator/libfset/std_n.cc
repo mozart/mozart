@@ -12,6 +12,10 @@
 #include "std_n.hh"
 #include "standard.hh"
 
+#ifdef PROFILE
+#define inline
+#endif
+
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(fsp_disjointN, 1)

@@ -62,6 +62,8 @@ public:
   FSetValue operator += (const int);
   FSetValue operator -= (const int);
   FSetValue operator - (void) const;
+
+  OZ_Boolean isIn(int) const;
 };
 
 inline
@@ -124,10 +126,16 @@ public:
   FSetValue getUnknownSet(void) const;
   FSetValue getNotInSet(void) const;
 
+  int getGlbCard(void) const;
+  int getLubCard(void) const;
+  int getNotInCard(void) const;
+  int getUnknownCard(void) const;
+
   FSetConstraint operator - (void) const;
   OZ_Boolean operator += (int i); // assert i is in *this
   OZ_Boolean operator -= (int i); // assert i is in _not_ *this
   OZ_Boolean operator <<= (const FSetConstraint &);
+  OZ_Boolean operator %= (const FSetConstraint &);
   FSetConstraint operator & (const FSetConstraint &) const;
   FSetConstraint operator | (const FSetConstraint &) const;
   FSetConstraint operator - (const FSetConstraint &) const;
