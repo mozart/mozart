@@ -364,6 +364,9 @@ void AM::init(int argc,char **argv)
 
   //
   sleepQueue = (OzSleep *) 0;
+#ifdef DENYS_EVENTS
+  requestedTimer=0;
+#endif
   emulatorClock = 0;
   taskMinInterval = DEFAULT_MIN_INTERVAL;
 
@@ -862,10 +865,24 @@ exit:
   osUnblockSignals();
 }
 
+#ifdef DENYS_EVENTS
+void OZ_setTimer(int i)
+{
+  am.setTimer(i);
+}
+#endif
 
 int AM::nextUser()
 {
+#ifdef DENYS_EVENTS
+  int sleepTime = 0;
+  if (sleepQueue!=NULL) sleepTime = sleepQueue->time;
+  if (requestedTimer!=0 && (sleepTime==0 || requestedTimer<sleepTime))
+    sleepTime = requestedTimer;
+  return (sleepTime==0) ? 0 : max(1,sleepTime-osTotalTime());
+#else
   return (sleepQueue==NULL) ? 0 : max(1,sleepQueue->time - osTotalTime());
+#endif
 }
 
 //
@@ -887,13 +904,24 @@ unsigned int AM::waitTime()
 
 Bool AM::checkUser()
 {
+#ifdef DENYS_EVENTS
+  unsigned int now = osTotalTime();
+  return ((requestedTimer!=0 && requestedTimer<=now) ||
+	  (sleepQueue!=NULL && sleepQueue->time <= now));
+#else
   return (sleepQueue!=NULL && sleepQueue->time <= osTotalTime());
+#endif
 }
 
 void AM::wakeUser()
 {
   unsigned int now = osTotalTime();
-
+#ifdef DENYS_EVENTS
+  if (requestedTimer!=0 && requestedTimer<=now) {
+    requestedTimer=0;
+    OZ_eventPush(oz_atom("timer"));
+  }
+#endif
   while (sleepQueue && sleepQueue->time<=now) {
     oz_io_awakeVar(sleepQueue->node);
     OzSleep *aux = sleepQueue->next;
