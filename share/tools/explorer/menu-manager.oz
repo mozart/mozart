@@ -150,17 +150,6 @@ in
 					      end
 				     feature: quit)]
 		      feature: explorer)
-	   menubutton(text: 'Options'
-		      menu: [command(label:   'Search...'
-				     action:  self # guiOptions(search)
-				     feature: search)
-			     command(label:   'Drawing...'
-				     action:  self # guiOptions(drawing)
-				     feature: drawing)
-			     command(label:   'Postscript...'
-				     action:  self # guiOptions(postscript)
-				     feature: postscript)]
-		      feature: options)
 	   menubutton(text: 'Move'
 		      menu: [command(label:   'Center'
 				     action:  self # moveCurrent
@@ -285,7 +274,18 @@ in
 				     key:     ctrl(u)
 				     feature: all)
 			    ]
-		      feature: hide)]
+		      feature: hide)
+	  	   menubutton(text: 'Options'
+		      menu: [command(label:   'Search...'
+				     action:  self # guiOptions(search)
+				     feature: search)
+			     command(label:   'Drawing...'
+				     action:  self # guiOptions(drawing)
+				     feature: drawing)
+			     command(label:   'Postscript...'
+				     action:  self # guiOptions(postscript)
+				     feature: postscript)]
+		      feature: options)]
 	  nil}
 	 {Menu.explorer.menu tk(conf tearoff:false)}
 	 {Menu.options.menu  tk(conf tearoff:false)}
