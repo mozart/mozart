@@ -28,7 +28,6 @@ import
    Application(getCmdArgs exit)
    Property(get put)
    System(printError)
-   Error(printExc)
    OzDocToHTML(translate)
    OS(getEnv putEnv)
    URL
@@ -200,8 +199,7 @@ define
       elseof error then
 	 {Application.exit 1}
       else
-	 {Error.printExc E}
-	 {Application.exit 1}
+	 {Raise E}
       end
    end
 end
