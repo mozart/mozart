@@ -2178,36 +2178,15 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
     sendHelpX(mt,be);
     return;}
   
-  if (isObjectURL()) {
-    TaggedRef cl=deref(getClass());
-    if (isPerdioVar(cl)) {
-      PerdioVar *pv=tagged2PerdioVar(cl);
-      Assert(pv->isURL());
-      pv->addSuspPerdioVar(v,el,unstable);}
-    else {
-      Assert(isClass(cl));
-      BorrowEntry *be=BT->getBorrow(getObject()->getIndex());      
-      sendHelpX(M_GET_OBJECT,be);}
-    return;}
-
-  if (isURL()) {
-    OZ_Return ret = loadURL(getURL(),oz_newVariable(),makeTaggedRef(v),am.currentThread()); // ATTENTION
-    // BI_PREEMPT is returned when  we fall through to the default
-    // method of starting an independent loader process
-    switch (ret) {
-    case RAISE: {
-      prefixError();
-      warning("load URL %s raised exception:",toC(getURL()));
-      warning("%s",toC(am.getExceptionValue()));
-      break;
-    }
-    case PROCEED:
-    case BI_PREEMPT:
-      break;
-    default:
-      warning("mm2: load URL %s failed not impl",toC(getURL()));
-    }
- }
+  Assert(isObjectURL());
+  TaggedRef cl=deref(getClass());
+  if (isPerdioVar(cl)) {
+    Assert(0);
+  } else {
+    Assert(isClass(cl));
+    BorrowEntry *be=BT->getBorrow(getObject()->getIndex());      
+    sendHelpX(M_GET_OBJECT,be);}
+  return;
 }
 
 Site* getSiteFromTertiary(Tertiary* t){
@@ -2560,9 +2539,6 @@ void PerdioVar::gcPerdioVar(void)
       last = &newPL->next;
     }
     *last = 0;
-  } else if (isURL()) {
-    // u.url is atom (no gc necessary)
-    dogcGName(getGName());
   } else {
     Assert(isObjectURL() || isObjectGName());
     gcBorrowNow(getObject()->getIndex());
@@ -3784,10 +3760,6 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
     pv->primBind(lPtr,v);
     OT->getOwner(pv->getIndex())->mkRef();
     sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
-  } else if (pv->isURL()) {
-    PD((PD_VAR,"bind url u:%s",toC(pv->getURL())));
-    PD((PD_VAR,"bind url v:%s",toC(v)));
-    pv->primBind(lPtr,v);
   } else if (pv->isObjectURL() || pv->isObjectGName()) {
     PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(pv->getObject()))));
     pv->primBind(lPtr,v);

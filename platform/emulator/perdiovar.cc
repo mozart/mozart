@@ -82,8 +82,8 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
   if (isPerdioVar(rVal)) {
     PerdioVar *rVar = tagged2PerdioVar(rVal);
 
-    if (isObjectURL() || isObjectGName() || isURL()) {
-      if (rVar->isObjectURL() || rVar->isObjectGName() || rVar->isURL()) {
+    if (isObjectURL() || isObjectGName()) {
+      if (rVar->isObjectURL() || rVar->isObjectGName()) {
 	if (getGName() != rVar->getGName()) {
 	  // the following is completely legal
 	  // warning("mm2:gname mismatch (var-var)");
@@ -145,7 +145,7 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!isRef(v) && !isAnyVar(v));
 
-  if (isObjectURL() || isObjectGName() || isURL()) {
+  if (isObjectURL() || isObjectGName()) {
     if (getGName() != getGNameForUnify(v)) {
       return FALSE;
     }
