@@ -737,7 +737,7 @@ public:
 
   //
   BuilderTaskType getLastType() {
-    return ((BuilderTaskType) buf[current-4]);
+    return ((BuilderTaskType) int(buf[current-4]));
   }
 
   //
