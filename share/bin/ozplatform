@@ -54,6 +54,7 @@ case $system in
    ;;
    *i386*FreeBSD*)
        if [ -f /etc/objformat ]; then . /etc/objformat
+       elif [ -f /usr/bin/objformat ]; then OBJFORMAT=`/usr/bin/objformat`
        fi
        OZARCH=freebsd${OBJFORMAT}-i486
    ;;
