@@ -61,7 +61,7 @@ public:
   SuspQueue(int n = QUEUEMINSIZE)
     : head(0), size(0), maxsize(n), tail(n-1) {
     queue =
-      (Suspendable **) freeListMalloc(sizeof(Suspendable *) * n);
+      (Suspendable **) heapMalloc(sizeof(Suspendable *) * n);
   }
 
   ~SuspQueue(void) {}

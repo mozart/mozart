@@ -86,17 +86,6 @@ error include resources.hh before mozart.h
 /* how to mark EOF for scanner */
 #define OZEOF 4
 
-/* thread priorities */
-
-// Must be different from zero and in between 1 and 3,
-// Suspendable relies on that!
-
-#define HI_PRIORITY             3
-#define MID_PRIORITY            2
-#define LOW_PRIORITY            1
-
-#define DEFAULT_PRIORITY        MID_PRIORITY
-
 #define DEFAULT_HI_MID_RATIO    10
 #define DEFAULT_MID_LOW_RATIO   10
 

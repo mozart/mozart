@@ -53,8 +53,11 @@ public:
   USEFREELISTMEMORY;
   NO_DEFAULT_CONSTRUCTORS(SuspList);
 
-  SuspList(Suspendable * s, SuspList * n = NULL)
+  SuspList(Suspendable * s, SuspList * n)
     : _susp(s), _next(n) {}
+
+  SuspList(Suspendable * s)
+    : _susp(s) {}
 
 
   SuspList * getNext(void)   {
@@ -100,7 +103,6 @@ public:
   OrderedSuspList * insert(Propagator *);
   OrderedSuspList * merge(OrderedSuspList *);
   OZPRINT;
-  OrderedSuspList * gc(void);
   OrderedSuspList * getNext(void) const { return _n; }
   Propagator * getPropagator(void) const { return _p; }
 };

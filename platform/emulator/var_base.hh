@@ -170,6 +170,7 @@ public:
   }
 
   void           gcMark(Bool, TaggedRef *);
+  OzVariable *   gcVarInline();
   OzVariable *   gcVar();
   void           gcVarRecurse(void);
 

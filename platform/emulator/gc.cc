@@ -186,13 +186,18 @@ void * gcReallocStatic(void * p, size_t sz) {
  */
 
 enum TypeOfPtr {
-  PTR_LTUPLE,
-  PTR_SRECORD,
-  PTR_BOARD,
-  PTR_SUSPLIST,
-  PTR_CVAR,
-  PTR_CONSTTERM,
-  PTR_EXTENSION
+  PTR_LTUPLE    =  0,  // 0000
+  PTR_SRECORD   =  1,  // 0001
+  PTR_BOARD     =  2,  // 0010
+  PTR_CVAR      =  3,  // 0011
+  PTR_CONSTTERM =  4,  // 0100
+  PTR_EXTENSION =  5,  // 0101
+  PTR_UNUSED1   =  6,  // 0110
+  PTR_UNUSED2   =  7,  // 0111
+  PTR_SUSPLIST  =  8,  // 1000
+  // The remaining entries are reserved:
+  //  the lower three bits encode, how many suspenlists are to
+  //  be collected.
 };
 
 
@@ -672,23 +677,14 @@ Object *Object::gcObject() {
  */
 
 inline
-void gcSuspList(SuspList ** sl) {
-  if (*sl) {
-    gcStack.push(sl, PTR_SUSPLIST);
-  }
+void gcSuspList(SuspList ** sl, int n) {
+  Assert(n <= 8);
+  gcStack.push(sl, (TypeOfPtr) (PTR_SUSPLIST | (n - 1)));
 }
 
 inline
-SuspList * SuspList::gcRecurse(void) {
-  SuspList * ret = NULL;
-
-  for (SuspList * help = this; help != NULL; help = help->getNext()) {
-    Suspendable * to = help->getSuspendable()->gcSuspendable();
-    if (to)
-      ret = new SuspList(to, ret);
-  }
-
-  return (ret);
+void gcSuspList(SuspList ** sl) {
+  if (*sl) gcSuspList(sl,1);
 }
 
 inline
@@ -708,8 +704,7 @@ inline
 void OzFDVariable::gc(void) {
   ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
 
-  for (int i = fd_prop_any; i--; )
-    gcSuspList(&(fdSuspList[i]));
+  gcSuspList(&(fdSuspList[0]), fd_prop_any);
 }
 
 inline
@@ -719,8 +714,7 @@ void OzFSVariable::gc(void) {
   _fset.copyExtension();
 #endif
 
-  for (int i = fs_prop_any; i--; )
-    gcSuspList(&(fsSuspList[i]));
+  gcSuspList(&(fsSuspList[0]), fs_prop_any);
 }
 
 inline
@@ -731,8 +725,7 @@ void OzCtVariable::gc(void) {
   _susp_lists = (SuspList **)
     heapMalloc(sizeof(SuspList *) * noOfSuspLists);
   // collect
-  for (int i = noOfSuspLists; i--; )
-    gcSuspList(&(_susp_lists[i] ));
+  gcSuspList(&(_susp_lists[0]), noOfSuspLists);
 
 }
 
@@ -755,7 +748,8 @@ const int varSizes[] = {
 };
 
 
-OzVariable * OzVariable::gcVar(void) {
+inline
+OzVariable * OzVariable::gcVarInline(void) {
   GCDBG_INFROMSPACE(this);
 
   Assert(!gcIsMarked())
@@ -797,6 +791,10 @@ OzVariable * OzVariable::gcVar(void) {
 
   return to;
 
+}
+
+OzVariable * OzVariable::gcVar(void) {
+  gcVarInline();
 }
 
 inline
@@ -1293,7 +1291,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
             Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
             to = makeTaggedRef(cv->gcGetFwd());
           } else if (NEEDSCOPYING(cv->getBoardInternal())) {
-            OzVariable *new_cv=cv->gcVar();
+            OzVariable *new_cv=cv->gcVarInline();
 
             Assert(new_cv);
 
@@ -1389,7 +1387,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
         Assert(tagTypeOf(*(cv->gcGetFwd())) == CVAR);
         to = makeTaggedRef(cv->gcGetFwd());
       } else if (NEEDSCOPYING(cv->getBoardInternal())) {
-        to = makeTaggedCVar(cv->gcVar());
+        to = makeTaggedCVar(cv->gcVarInline());
         cv->gcMark(isInGc, &to);
       } else {
         // We cannot copy the variable, but we have already copied
@@ -1752,48 +1750,6 @@ void AbstractionEntry::gcAbstractionEntry()
   abstr = gcAbstraction(abstr);
 }
 
-
-SuspQueue * SuspQueue::gc(void) {
-  Assert(isInGc);
-
-  SuspQueue * to = new SuspQueue(suggestNewSize());
-
-  while (!isEmpty())
-    to->enqueue(dequeue()->gcSuspendable());
-
-  return to;
-}
-
-
-void ThreadsPool::gc(void) {
-  _q[ HI_PRIORITY] = _q[ HI_PRIORITY]->gc();
-  _q[MID_PRIORITY] = _q[MID_PRIORITY]->gc();
-  _q[LOW_PRIORITY] = _q[LOW_PRIORITY]->gc();
-}
-
-
-
-// Note: the order of the list must be maintained
-inline
-OrderedSuspList * OrderedSuspList::gc() {
-  OrderedSuspList * ret = NULL, * help = this, ** p = & ret;
-
-  while (help != NULL) {
-
-    Propagator * aux = help->_p->gcPropagator();
-
-    if (aux) {
-      *p = new OrderedSuspList(aux, NULL);
-      p = & (*p)->_n;
-    }
-
-    help = help->_n;
-  }
-
-  return (ret);
-}
-
-
 //*********************************************************************
 //                           NODEs
 //*********************************************************************
@@ -1962,7 +1918,7 @@ void ConstTerm::gcConstRecurse()
         LockLocal *ll = (LockLocal *) this;
         ll->setBoard(ll->getBoardInternal()->gcBoard());
         gcPendThreadEmul(&(ll->pending));
-        ll->setLocker(ll->getLocker()->gcThread());
+        ll->setLocker(SuspToThread(ll->getLocker()->gcSuspendable()));
         maybeGCForFailure(t);
         break;
       } else {
@@ -2277,7 +2233,7 @@ void Propagator::gcRecurse(Propagator * fr) {
 }
 
 inline
-Suspendable * Suspendable::gcSuspendable(void) {
+Suspendable * Suspendable::gcSuspendableInline(void) {
   Assert(this);
 
   if (isGcMarked())
@@ -2328,12 +2284,54 @@ Suspendable * Suspendable::gcSuspendable(void) {
   return to;
 }
 
-Propagator * Propagator::gcPropagator(void) {
-  return SuspToPropagator(gcSuspendable());
+Suspendable * Suspendable::gcSuspendable(void) {
+  return (this == NULL) ? NULL : gcSuspendableInline();
 }
 
-Thread * Thread::gcThread(void) {
-  return this ? SuspToThread(gcSuspendable()) : this;
+/*
+ * This routine MUST maintain the order, since it is also used
+ * for ordered susplists
+ *
+ */
+
+inline
+SuspList * SuspList::gcRecurse(void) {
+  SuspList * sl = this;
+
+  SuspList * ret;
+  SuspList ** p = &ret;
+
+  for (SuspList * sl = this; sl; sl=sl->getNext()) {
+    Suspendable * to = sl->getSuspendable()->gcSuspendableInline();
+
+    if (to) {
+      SuspList * n = new SuspList(to);
+      *p = n;
+      p  = &(n->_next);
+    }
+
+  }
+
+  *p = NULL;
+
+  return ret;
+}
+
+SuspQueue * SuspQueue::gc(void) {
+  Assert(isInGc);
+
+  SuspQueue * to = new SuspQueue(suggestNewSize());
+
+  while (!isEmpty())
+    to->enqueue(dequeue()->gcSuspendableInline());
+
+  return to;
+}
+
+void ThreadsPool::gc(void) {
+  _q[ HI_PRIORITY] = _q[ HI_PRIORITY]->gc();
+  _q[MID_PRIORITY] = _q[MID_PRIORITY]->gc();
+  _q[LOW_PRIORITY] = _q[LOW_PRIORITY]->gc();
 }
 
 
@@ -2381,7 +2379,7 @@ void Board::gcRecurse() {
 
   gcSuspList(&suspList);
   setDistBag(getDistBag()->gc());
-  nonMonoSuspList  = nonMonoSuspList->gc();
+  gcSuspList((SuspList **) &nonMonoSuspList);
 
 #ifdef CS_PROFILE
   if((copy_size>0) && copy_start && isInGc) {
@@ -2466,38 +2464,38 @@ void GcStack::recurse(void) {
     void * ptr    = tagValueOf(tp);
     TypeOfPtr how = (TypeOfPtr) tagTypeOf(tp);
 
-    switch(how) {
+    if (how & PTR_SUSPLIST) {
+      SuspList ** sl = (SuspList **) ptr;
 
-    case PTR_LTUPLE:
-      ((LTuple *) ptr)->gcRecurse();
-      break;
+      for (int i = how - PTR_SUSPLIST + 1; i--; )
+        sl[i] = sl[i]->gcRecurse();
 
-    case PTR_SRECORD:
-      ((SRecord *) ptr)->gcRecurse();
-      break;
+    } else {
 
-    case PTR_BOARD:
-      ((Board *) ptr)->gcRecurse();
-      break;
-
-    case PTR_SUSPLIST:
-      *((SuspList **) ptr) = (*((SuspList **) ptr))->gcRecurse();
-      break;
-
-    case PTR_CVAR:
-      ((OzVariable *) ptr)->gcVarRecurse();
-      break;
-
-    case PTR_CONSTTERM:
-      ((ConstTerm *) ptr)->gcConstRecurse();
-      break;
-
-    case PTR_EXTENSION:
-      gcExtensionRecurse((OZ_Extension *)ptr);
-      break;
-
-    default:
-      Assert(NO);
+      switch(how) {
+      case PTR_LTUPLE:
+        ((LTuple *) ptr)->gcRecurse();
+        break;
+      case PTR_SRECORD:
+        ((SRecord *) ptr)->gcRecurse();
+        break;
+      case PTR_BOARD:
+        ((Board *) ptr)->gcRecurse();
+        break;
+      case PTR_CVAR:
+        ((OzVariable *) ptr)->gcVarRecurse();
+        break;
+      case PTR_CONSTTERM:
+        ((ConstTerm *) ptr)->gcConstRecurse();
+        break;
+      case PTR_EXTENSION:
+        gcExtensionRecurse((OZ_Extension *)ptr);
+        break;
+      case PTR_UNUSED1:
+      case PTR_UNUSED2:
+      case PTR_SUSPLIST:
+        Assert(0);
+      }
     }
   }
 }

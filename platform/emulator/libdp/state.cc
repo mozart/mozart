@@ -678,7 +678,7 @@ void LockSec::gcLockSec(){
     getNext()->makeGCMarkSite();}
   PD((GC,"relocate Lock in state %d",state));
   if(state & Cell_Lock_Valid)
-    locker=locker->gcThread();
+    locker=SuspToThread(locker->gcSuspendable());
   if(pending!=NULL)
     gcPendThread(&pending);
   return;}

@@ -41,7 +41,7 @@
 void SuspQueue::resize(void) {
   int new_maxsize = (maxsize * 3) >> 1;
   Suspendable ** new_queue =
-    (Suspendable **) freeListMalloc(sizeof(Suspendable *) * new_maxsize);
+    (Suspendable **) heapMalloc(sizeof(Suspendable *) * new_maxsize);
 
   int h = head;
 

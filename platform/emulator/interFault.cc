@@ -271,7 +271,7 @@ void gcDeferWatchers(){
 
 void DeferWatcher::gc(){
   OZ_collectHeapTerm(proc,proc);
-  thread=thread->gcThread();
+  thread=SuspToThread(thread->gcSuspendable());
   OZ_collectHeapTerm(entity,entity);}
 
 
