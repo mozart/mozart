@@ -207,6 +207,7 @@ public:
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term, ...);
+  OZ_Bool spawnPropagatorStabil(FDPropState, OZ_CFun, int, OZ_Term, ...);
   static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
   static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
   static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
