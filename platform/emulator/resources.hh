@@ -181,9 +181,10 @@
 
 #define DEBUG_CHECK	// enable assertions
 
-#ifdef DEBUG_PRINT
-# define DEBUG_TRACE	// MM: enable low level debugging: step instructions
-#endif
+/* always define debug print for debugging */
+#define DEBUG_PRINT
+
+#define DEBUG_TRACE	// MM: enable low level debugging: step instructions
 
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC

@@ -2233,16 +2233,16 @@ TaggedRef getArityFromPairList(TaggedRef list)
   TaggedRef arity;
   TaggedRef *next=&arity;
   Bool updateFlag=NO;
-  DerefReturnVar(list);
+  DerefIfVarReturnIt(list);
   TaggedRef old = list;
 loop:
   if (oz_isLTuple(list)) {
     TaggedRef pair = oz_head(list);
-    DerefReturnVar(pair);
+    DerefIfVarReturnIt(pair);
     if (!oz_isPair2(pair)) return 0;
 
     TaggedRef fea = tagged2SRecord(pair)->getArg(0);
-    DerefReturnVar(fea);
+    DerefIfVarReturnIt(fea);
 
     if (!oz_isFeature(fea)) return 0;
 
@@ -2252,7 +2252,7 @@ loop:
     next=lt->getRefTail();
     
     list = oz_tail(list);
-    DerefReturnVar(list);
+    DerefIfVarReturnIt(list);
     if (list==old) return 0;
     if (updateFlag) {
       old=oz_deref(oz_tail(old));

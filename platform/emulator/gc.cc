@@ -506,9 +506,7 @@ public:
   void defer(TaggedRef * var, TaggedRef * ref) {
     Assert(var);
     Stack::push((StackEntry) ref);
-    // Do not use makeTaggedRef, because this expects references
-    // to to-space!
-    *ref = ToInt32(var); 
+    *ref = makeTaggedRef(var); 
   }
 
   void fix(void);
@@ -1169,7 +1167,7 @@ void Script::gc() {
       //  'Equations' with non-variable at the left side are figured out;
       TaggedRef auxTerm = first[i].left;
       TaggedRef *auxTermPtr;
-      if (!isInGc && IsRef(auxTerm)) {
+      if (!isInGc && oz_isRef(auxTerm)) {
 	do {
 	  if (auxTerm == makeTaggedNULL ())
 	    error ("NULL in script");
@@ -1402,12 +1400,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 
   switch (tagTypeOf(aux)) {
     
-  case REFTAG1:
+  case REF:
     /* initalized but unused cell in register array */
     if (aux == makeTaggedNULL()) {
       to = aux;
       return;
     }
+    // fall through
 
   case REFTAG2:
   case REFTAG3:
@@ -1418,11 +1417,11 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
       do {
 	aux_ptr = tagged2Ref(aux);
 	aux     = *aux_ptr;
-      } while (IsRef(aux));
+      } while (oz_isRef(aux));
       
       switch (tagTypeOf(aux)) {
 	// The following cases never occur, but to allow for better code 
-      case REFTAG1: case REFTAG2: case REFTAG3: case REFTAG4: {}
+      case REF: case REFTAG2: case REFTAG3: case REFTAG4: {}
 	// All the following jumps are resolved to jumps in the switch-table!
       case GCTAG:     goto DO_GCTAG;
       case SMALLINT:  goto DO_SMALLINT;
@@ -1545,7 +1544,14 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     return;
 
   case OZCONST: DO_OZCONST:
+#ifdef DEEP_GARBAGE
+    {
+      ConstTerm *ct = tagged2Const(aux)->gcConstTerm();
+      to = ct ? makeTaggedConst(ct) : 0;
+    }
+#else
     to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
+#endif
     return;
 
   case UNUSED_VAR:  // FUT
@@ -2362,8 +2368,14 @@ ConstTerm *ConstTerm::gcConstTerm() {
       CheckLocal(sp);
 
       Board *bb=GETBOARD(sp);
+#ifdef DEEP_GARBAGE
+      if (!isInGc && !bb->isInTree()) {
+	return 0;
+      }
+#else
       Assert(isInGc || bb->isInTree()); 
       Assert(!isInGc || !inToSpace(bb));
+#endif
 
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
       break;
