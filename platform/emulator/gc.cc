@@ -258,41 +258,101 @@ OZ_C_proc_end
  *
  */
 
+#define LD0(i) f0=frm[i];
+#define LD1(i) f1=frm[i];
+#define LD2(i) f2=frm[i];
+#define ST0(i) to[i]=f0;
+#define ST1(i) to[i]=f1;
+#define ST2(i) to[i]=f2;
+
 inline
 void * gcReallocStatic(void * p, size_t sz) {
   // Use for blocks where size is known statically at compile time
   DebugCheck(sz%sizeof(int) != 0,
              error("gcReallocStatic: can only handle word sized blocks"););
 
-  int32 * frm = (int32 *) p;
-  int32 * to  = (int32 *) heapMalloc(sz);
+  register int32 * frm = (int32 *) p;
+  register int32 * to  = (int32 *) heapMalloc(sz);
+
+  register int32 f0, f1, f2;
 
   switch(sz) {
-  case 64: to[15] = frm[15];
-  case 60: to[14] = frm[14];
-  case 56: to[13] = frm[13];
-  case 52: to[12] = frm[12];
-  case 48: to[11] = frm[11];
-  case 44: to[10] = frm[10];
-  case 40: to[9]  = frm[9];
-  case 36: to[8]  = frm[8];
-  case 32: to[7]  = frm[7];
-  case 28: to[6]  = frm[6];
-  case 24: to[5]  = frm[5];
-  case 20: to[4]  = frm[4];
-  case 16: to[3]  = frm[3];
-  case 12: to[2]  = frm[2];
-  case  8: to[1]  = frm[1];
-  case  4: to[0]  = frm[0];
-    break;
+  case 56:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
+      ST2(8)  LD2(11) ST0(9)  LD0(12) ST1(10) LD1(13)
+      ST2(11) ST0(12) ST1(13) break; }
+  case 52:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
+      ST2(8)  LD2(11) ST0(9)  LD0(12)
+      ST1(10) ST2(11) ST0(12)  break; }
+  case 48:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
+      ST2(8)  LD2(11)
+      ST0(9)  ST1(10) ST2(11)  break; }
+  case 44:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
+      ST2(8)  ST0(9)  ST1(10)  break; }
+  case 40:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)
+      ST1(7)  ST2(8)  ST0(9)  break; }
+  case 36:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)  ST2(5)  LD2(8)
+      ST0(6)  ST1(7)  ST2(8)  break; }
+  case 32:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  LD1(7)
+      ST2(5)  ST0(6)  ST1(7)  break; }
+  case 28:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
+      ST1(4)  ST2(5)  ST0(6)  break; }
+  case 24:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)
+      ST0(3)  ST1(4)  ST2(5)  break; }
+  case 20:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)  ST1(1)  LD1(4)
+      ST2(2)  ST0(3)  ST1(4)  break; }
+  case 16:
+    { LD0(0)  LD1(1)  LD2(2)
+      ST0(0)  LD0(3)
+      ST1(1)  ST2(2)  ST0(3)  break; }
+  case 12:
+    { LD0(0)  LD1(1)  LD2(2)  ST0(0)  ST1(1)  ST2(2)  break; }
+  case  8:
+    { LD0(0)  LD1(1)  ST0(0)  ST1(1)  break; }
+  case  4:
+    { LD0(0)  ST0(0)  break; }
 #ifdef DEBUG_CHECK
   default:
-    if (sz > 64)
+    if (sz > 56)
       { Assert(0); };
 #endif
   }
+
   return to;
 }
+
+#undef LD0
+#undef LD1
+#undef LD2
+#undef ST0
+#undef ST1
+#undef ST2
 
 /*
  * The garbage collector uses an explicit recursion stack. The stack
@@ -311,7 +371,6 @@ enum TypeOfPtr {
   PTR_ACTOR,
   PTR_THREAD,
   PTR_CONT,
-  PTR_PROPAGATOR,
   PTR_DYNTAB,
   PTR_CONSTTERM
 };
@@ -854,6 +913,64 @@ Object *Object::gcObject() {
   return (Object *) gcConstTerm();
 }
 
+inline
+Thread* isCollected(Thread *t,void *p) {
+  CHECKCOLLECTED(ToInt32(p), Thread*);
+  return NULL;
+}
+
+
+/*
+ *  Preserve runnable threads which home board is dead, because
+ * solve counters have to be updated (while, of course, discard
+ * non-runnable ones);
+ *  If threads is dead, returns (Thread *) NULL;
+ */
+
+inline
+Thread *Thread::gcThreadInline() {
+  if (!this)
+    return this;
+
+  Thread *ret = isCollected(this,item.threadBody);
+  if (ret) return ret;
+
+  if (isDeadThread()) return ((Thread *) NULL);
+
+  //  Some invariants:
+  // nothing can be copied (IN_TC) until stability;
+
+  // first class threads: must only copy thread when local to solve!!!
+  if (!isInGc && (GETBOARD(this))->isMarkedGlobal())
+    return this;
+
+  Assert(isInGc || !isRunnable());
+
+  //
+  //  Note that runnable threads can be also counted
+  // in solve actors (for stability check), and, therefore,
+  // might not just dissappear!
+  if (isSuspended() && !GETBOARD(this)->gcIsAlive()) {
+    return ((Thread *) NULL);
+  }
+
+  Thread *newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
+
+  if (isRunnable() || hasStack()) {
+    ThreadList::add(newThread);
+  }
+
+  gcStack.push(newThread, PTR_THREAD);
+
+  storeFwd(&item.threadBody, newThread);
+
+  return newThread;
+}
+
+Thread * Thread::gcThread(void) {
+  return gcThreadInline();
+}
+
 /*
  *  We reverse the order of the list, but this should be no problem.
  *
@@ -866,7 +983,7 @@ SuspList * SuspList::gc() {
   SuspList *ret = NULL;
 
   for (SuspList* help = this; help != NULL; help = help->next) {
-    Thread *aux = (help->getElem ())->gcThread ();
+    Thread *aux = (help->getElem())->gcThreadInline();
     if (!aux) {
       continue;
     }
@@ -901,34 +1018,31 @@ SVariable * SVariable::gcGetFwd(void) {
   return (SVariable *) UnMarkPointer(suspList);
 }
 
-inline
+
 SVariable * SVariable::gc() {
   Assert(!gcIsMarked())
 
   Board * bb = home->gcBoard();
 
-  Assert(bb);
-
-  isGround = NO;
+  if (!bb)
+    return (SVariable *) 0;
 
   SVariable * to = (SVariable *) heapMalloc(sizeof(SVariable));
 
   Assert(!isInGc || to->home != bb);
 
   to->suspList = suspList->gc();
-  to->home     = bb;
 
   storeFwdField(to);
 
+  to->home     = bb;
 
   return to;
 }
 
 
 inline
-void OZ_FiniteDomainImpl::gc(void)
-{
-
+void OZ_FiniteDomainImpl::gc(void) {
   copyExtension();
 }
 
@@ -960,7 +1074,7 @@ FSetValue * FSetValue::gc(void)
   return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
 }
 
-
+inline
 void GenLazyVariable::gc(void) {
   if (function!=0) {
     OZ_collectHeapTerm(function,function);
@@ -1009,8 +1123,6 @@ void DynamicTable::gcRecurse() {
 
 }
 
-
-
 void GenOFSVariable::gc(void) {
   OZ_collectHeapTerm(label,label);
   // Update the pointer in the copied block:
@@ -1046,13 +1158,14 @@ GenCVariable * GenCVariable::gc(void) {
 
   Board * bb = home->gcBoard();
 
-  Assert(bb);
+  if (!bb)
+    return (GenCVariable *) 0;
 
   SuspList * sl = suspList;
 
-  isGround = NO;
-
   GenCVariable * to;
+
+  int sz;
 
   switch (getType()){
   case FDVariable:
@@ -1060,44 +1173,53 @@ GenCVariable * GenCVariable::gc(void) {
     to->u = this->u;
     storeFwdField(to);
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
-    break;
+    to->suspList = sl->gc();
+    to->home     = bb;
+    return to;
+
   case BoolVariable:
     to = (GenCVariable *) heapMalloc(sizeof(GenBoolVariable));
     to->u = this->u;
     storeFwdField(to);
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
-    break;
+    to->suspList = sl->gc();
+    to->home     = bb;
+    return to;
+
   case OFSVariable:
-    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenOFSVariable));
-    storeFwdField(to);
-    ((GenOFSVariable *) to)->gc();
-    break;
+    sz = sizeof(GenOFSVariable);  break;
   case MetaVariable:
-    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenMetaVariable));
-    storeFwdField(to);
-    ((GenMetaVariable *) to)->gc();
-    break;
+    sz = sizeof(GenMetaVariable); break;
   case AVAR:
-    to = (GenCVariable *) OZ_hrealloc(this, sizeof(AVar));
-    storeFwdField(to);
-    ((AVar *) to)->gc();
-    break;
+    sz = sizeof(AVar);            break;
   case PerdioVariable:
-    to = (GenCVariable *) OZ_hrealloc(this, sizeof(PerdioVar));
-    storeFwdField(to);
-    ((PerdioVar *) to)->gc();
-    break;
+    sz = sizeof(PerdioVar);       break;
   case FSetVariable:
-    // TMUELLER: must be reset to `gcReallocStatic'
-    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenFSetVariable));
-    storeFwdField(to);
-    ((GenFSetVariable *) to)->gc();
-    break;
+    sz = sizeof(GenFSetVariable); break;
   case LazyVariable:
-    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenLazyVariable));
-    storeFwdField(to);
-    ((GenLazyVariable*) to)->gc();
-    break;
+    sz = sizeof(GenLazyVariable); break;
+  default:
+    Assert(0);
+  }
+
+  // The generic part
+
+  to = (GenCVariable *) OZ_hrealloc(this, sz);
+  storeFwdField(to);
+
+  switch (getType()) {
+  case OFSVariable:
+    ((GenOFSVariable *) to)->gc(); break;
+  case MetaVariable:
+    ((GenMetaVariable *) to)->gc(); break;
+  case AVAR:
+    ((AVar *) to)->gc(); break;
+  case PerdioVariable:
+    ((PerdioVar *) to)->gc(); break;
+  case FSetVariable:
+    ((GenFSetVariable *) to)->gc(); break;
+  case LazyVariable:
+    ((GenLazyVariable*) to)->gc(); break;
   default:
     Assert(0);
   }
@@ -1200,17 +1322,9 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody () {
   return (ret);
 }
 
-OZ_Propagator * OZ_Propagator::gc(void) {
-  OZ_Propagator * p = (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
-
-  gcStack.push(p, PTR_PROPAGATOR);
-
-  return p;
-}
-
 /* collect LTuple, SRecord */
 
-
+inline
 LTuple * LTuple::gc() {
   // Does basically nothing, the real stuff is in gcRecurse
 
@@ -1230,7 +1344,7 @@ LTuple * LTuple::gc() {
   return to;
 }
 
-
+inline
 SRecord *SRecord::gcSRecord() {
   if (this==NULL)
     return NULL;
@@ -1252,63 +1366,9 @@ SRecord *SRecord::gcSRecord() {
 }
 
 
-inline
-Thread* isCollected(Thread *t,void *p)
-{
-  CHECKCOLLECTED(ToInt32(p), Thread*);
-  return NULL;
-}
-
-
-/*
- *  Preserve runnable threads which home board is dead, because
- * solve counters have to be updated (while, of course, discard
- * non-runnable ones);
- *  If threads is dead, returns (Thread *) NULL;
- */
-
-Thread *Thread::gcThread () {
-  if (this == (Thread *) NULL)
-    return ((Thread *) NULL);
-
-  Thread *ret = isCollected(this,item.threadBody);
-  if (ret) return ret;
-
-  if (isDeadThread()) return ((Thread *) NULL);
-
-  //  Some invariants:
-  // nothing can be copied (IN_TC) until stability;
-
-  // first class threads: must only copy thread when local to solve!!!
-  if (!isInGc && (GETBOARD(this))->isMarkedGlobal())
-    return this;
-
-  Assert(isInGc || !isRunnable());
-
-  //
-  //  Note that runnable threads can be also counted
-  // in solve actors (for stability check), and, therefore,
-  // might not just dissappear!
-  if (isSuspended() && !GETBOARD(this)->gcIsAlive()) {
-    return ((Thread *) NULL);
-  }
-
-  Thread *newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
-
-  if (isRunnable() || hasStack()) {
-    ThreadList::add(newThread);
-  }
-
-  gcStack.push(newThread, PTR_THREAD);
-
-  storeFwd(&item.threadBody, newThread);
-
-  return newThread;
-}
 
 inline
-Abstraction *gcAbstraction(Abstraction *a)
-{
+Abstraction *gcAbstraction(Abstraction *a) {
   return (Abstraction *) a->gcConstTerm();
 }
 
@@ -1328,6 +1388,11 @@ Thread *Thread::gcDeadThread() {
   getAbstr()->gcPrTabEntry();
 
   return (newThread);
+}
+
+inline
+OZ_Propagator * OZ_Propagator::gc(void) {
+  return (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
 }
 
 inline
@@ -1374,9 +1439,15 @@ void Thread::gcRecurse () {
     break;
 
   case S_PR_THR:
-    item.propagator = item.propagator->gc();
-    Assert(item.propagator);
-    break;
+    {
+      OZ_Propagator * to_p = item.propagator->gc();
+
+      Assert(to_p);
+
+      to_p->updateHeapRefs(isInGc);
+      item.propagator = to_p;
+      break;
+    }
 
   default:
     Assert(0);
@@ -1386,6 +1457,7 @@ void Thread::gcRecurse () {
   getAbstr()->gcPrTabEntry();
 
   gcTertiary();
+
 }
 
 
@@ -1457,10 +1529,7 @@ inline
 void gcTagged(TaggedRef & frm, TaggedRef & to) {
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
 
-  TaggedRef aux       = frm;
-  TaggedRef * aux_ptr = NULL;
-
-update:
+  TaggedRef aux = frm;
 
   switch (tagTypeOf(aux)) {
 
@@ -1474,27 +1543,98 @@ update:
   case REFTAG2:
   case REFTAG3:
   case REFTAG4:
+    {
+      TaggedRef * aux_ptr;
 
-    do {
-      aux_ptr = tagged2Ref(aux);
-      aux     = *aux_ptr;
-    } while (IsRef(aux));
+      do {
+        aux_ptr = tagged2Ref(aux);
+        aux     = *aux_ptr;
+      } while (IsRef(aux));
 
-    goto update;
+      switch (tagTypeOf(aux)) {
+        // The following cases never occur, but to allow for better code
+      case REFTAG1: case REFTAG2: case REFTAG3: case REFTAG4: {}
+        // All the following jumps are resolved to jumps in the switch-table!
+      case GCTAG:     goto DO_GCTAG;
+      case SMALLINT:  goto DO_SMALLINT;
+      case FSETVALUE: goto DO_FSETVALUE;
+      case LITERAL:   goto DO_LITERAL;
+      case LTUPLE:    goto DO_LTUPLE;
+      case SRECORD:   goto DO_SRECORD;
+      case BIGINT:    goto DO_BIGINT;
+      case OZFLOAT:   goto DO_OZFLOAT;
+      case OZCONST:   goto DO_OZCONST;
+        // All variables are not direct!
+      case SVAR:
+        {
+          SVariable * sv = tagged2SVar(aux);
 
-  case GCTAG:
+          if (!sv->gcIsMarked()) {
+            if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
+              (void) sv->gc();
+            } else {
+              to = makeTaggedRef(aux_ptr);
+              return;
+            }
+          }
+          break;
+        }
+
+      case UVAR:
+        {
+          Board * bb = tagged2VarHome(aux)->derefBoard();
+
+          if (!isInGc && bb->isMarkedGlobal()) {
+            to = makeTaggedRef(aux_ptr);
+            return;
+          }
+
+          if (!bb->gcBoard()) {
+            to = makeTaggedNULL();
+            return;
+          }
+
+          break;
+        }
+
+      case CVAR:
+        // CVAR should be last, since this is the most often occuring case,
+        // that is, break does not compile to a jump!
+        {
+          GenCVariable * cv = tagged2CVar(aux);
+
+          if (!cv->gcIsMarked()) {
+            if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+              (void) cv->gc();
+            } else {
+              to = makeTaggedRef(aux_ptr);
+              return;
+            }
+          }
+        }
+
+      }
+
+      Assert(isCVar(aux) || isUVar(aux) || isSVar(aux));
+
+      varFix.defer(aux_ptr, &to);
+      return;
+
+    }
+
+  case GCTAG: DO_GCTAG:
     to = makeTaggedRef((TaggedRef*) GCUNMARK(aux));
-    // mm2: this can lead to not shortened ref chains together with
-    // the CONS forwarding: if a CONS cell is collected then every
+    // This can lead to not shortened ref chains together with
+    // the CONS forwarding: if a CONS cell is collected, then every
     // reference to the first element becomes a ref. May try this:
-    // if (!isVar(*to)) to=deref(to);
+    // if (!isVar(*to)) to=deref(to); (no, cycles... CS)
     return;
 
-  case SMALLINT:
+  case SMALLINT: DO_SMALLINT:
     to = aux;
     return;
 
-  case FSETVALUE:
+  case FSETVALUE: DO_FSETVALUE:
     if (isInGc) {
       to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc());
     } else {
@@ -1502,7 +1642,7 @@ update:
     }
     return;
 
-  case LITERAL:
+  case LITERAL: DO_LITERAL:
     {
       Literal * l = tagged2Literal(aux);
 
@@ -1514,15 +1654,15 @@ update:
       return;
     }
 
-  case LTUPLE:
+  case LTUPLE: DO_LTUPLE:
     to = makeTaggedLTuple(tagged2LTuple(aux)->gc());
     return;
 
-  case SRECORD:
+  case SRECORD: DO_SRECORD:
     to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord());
     return;
 
-  case BIGINT:
+  case BIGINT: DO_BIGINT:
     if (isInGc) {
       to = makeTaggedBigInt(tagged2BigInt(aux)->gc());
     } else {
@@ -1530,7 +1670,7 @@ update:
     }
     return;
 
-  case OZFLOAT:
+  case OZFLOAT: DO_OZFLOAT:
     if (isInGc) {
       to = makeTaggedFloat(tagged2Float(aux)->gc());
     } else {
@@ -1538,7 +1678,7 @@ update:
     }
     return;
 
-  case OZCONST:
+  case OZCONST: DO_OZCONST:
     to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
     return;
 
@@ -1546,66 +1686,25 @@ update:
     {
       SVariable * sv = tagged2SVar(aux);
 
-      if (sv->gcIsMarked()) {
-        if (aux_ptr) {
-          // This means the variable is not direct!
-          varFix.defer(aux_ptr, &to);
+      if (!sv->gcIsMarked()) {
+        if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
+          SVariable * sv_gc = sv->gc();
+          isGround = NO;
+          to = sv_gc ? makeTaggedSVar(sv_gc) : makeTaggedNULL();
         } else {
-          to = makeTaggedSVar(sv->gcGetFwd());
-          storeFwd(&frm, &to);
+          // We cannot copy the variable, but we have already copied
+          // their taggedref, so we change the original variable to a ref
+          // of the copy.
+          // After pushing on the update stack the
+          // the original variable is replaced by a reference!
+          frm = makeTaggedRef(&to);
+          to  = aux;
         }
-        return;
+      } else {
+        to = makeTaggedSVar(sv->gcGetFwd());
       }
-
-      if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
-        SVariable * sv_gc = sv->gc();
-
-        if (aux_ptr) {
-          // This means the variable is not direct!
-          varFix.defer(aux_ptr, &to);
-        } else {
-          to = makeTaggedSVar(sv_gc);
-          storeFwd(&frm, &to);
-        }
-
-        return;
-      }
-
-      break;
-
-    }
-
-  case CVAR:
-    {
-      GenCVariable * cv = tagged2CVar(aux);
-
-      if (cv->gcIsMarked()) {
-        if (aux_ptr) {
-          // This means the variable is not direct!
-          varFix.defer(aux_ptr, &to);
-        } else {
-          to = makeTaggedSVar(cv->gcGetFwd());
-          storeFwd(&frm, &to);
-        }
-        return;
-      }
-
-      if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
-        GenCVariable * cv_gc = cv->gc();
-
-        if (aux_ptr) {
-          // This means the variable is not direct!
-          varFix.defer(aux_ptr, &to);
-        } else {
-          Assert(isDirectVar(frm));
-          to = makeTaggedCVar(cv_gc);
-          storeFwd(&frm, &to);
-        }
-
-        return;
-      }
-
-      break;
+      storeFwd(&frm, &to);
+      return;
     }
 
   case UVAR:
@@ -1615,41 +1714,39 @@ update:
       Assert(bb);
 
       if (isInGc || !bb->isMarkedGlobal()) {
-
         bb = bb->gcBoard();
-
         isGround = NO;
-
-        if (aux_ptr) {
-          varFix.defer(aux_ptr, &to);
-        } else {
-          Assert(isDirectVar(frm));
-          to = makeTaggedUVar(bb);
-          storeFwd(&frm, &to);
-        }
-
-        return;
+        to = bb ? makeTaggedUVar(bb) : makeTaggedNULL();
+      } else {
+        frm = makeTaggedRef(&to);
+        to  = aux;
       }
-
-      break;
+      storeFwd(&frm, &to);
+      return;
     }
+
+  case CVAR:
+    {
+      GenCVariable * cv = tagged2CVar(aux);
+
+      if (!cv->gcIsMarked()) {
+        if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+          SVariable * cv_gc = cv->gc();
+          isGround = NO;
+          to = cv_gc ? makeTaggedSVar(cv_gc) : makeTaggedNULL();
+        } else {
+          frm = makeTaggedRef(&to);
+          to  = aux;
+        }
+      } else {
+        to = makeTaggedSVar(cv->gcGetFwd());
+      }
+      storeFwd(&frm, &to);
+      return;
+    }
+
   }
 
-  Assert(isUVar(aux) || isCVar(aux) || isSVar(aux));
-
-  if (aux_ptr) {
-    to = makeTaggedRef(aux_ptr);
-  } else {
-    Assert(isDirectVar(frm));
-    // We cannot copy the variable, but we have already copied
-    // their taggedref, so we change the original variable to a ref
-    // of the copy.
-    // After pushing on the update stack the
-    // the original variable is replaced by a reference!
-    to  = aux;
-    frm = makeTaggedRef(&to);
-    storeFwd(&frm, &to);
-  }
 
 }
 
@@ -1779,52 +1876,46 @@ void AM::gc(int msgLevel)
  */
 void VarFix::fix(void) {
 
-  while (!isEmpty()) {
+  if (isEmpty())
+    return;
+
+  isGround = NO;
+
+  do {
     TaggedRef * to = (TaggedRef *) pop();
 
     Assert(isRef(*to));
 
     TaggedRef * aux_ptr = tagged2Ref(*to);
+
+    INFROMSPACE(aux_ptr);
+
     TaggedRef   aux     = *aux_ptr;
 
+    TaggedRef * to_ptr;
+
     switch (tagTypeOf(aux)) {
-
     case UVAR:
-      {
-        Board * bb = tagged2VarHome(aux)->derefBoard();
-
-        bb = bb->gcBoard();
-
-        Assert(bb);
-
-        isGround = NO;
-
-        *to = makeTaggedRef(newTaggedUVar(bb));
-
-        break;
-      }
-
+      to_ptr = newTaggedUVar(tagged2VarHome(aux)->gcBoard());
+      break;
     case SVAR:
-      *to = makeTaggedRef(newTaggedSVar(tagged2SVar(aux)->gcGetFwd()));
+      to_ptr = newTaggedSVar(tagged2SVar(aux)->gcGetFwd());
       break;
-
     case CVAR:
-      *to = makeTaggedRef(newTaggedCVar(tagged2CVar(aux)->gcGetFwd()));
+      to_ptr = newTaggedCVar(tagged2CVar(aux)->gcGetFwd());
       break;
-
     case GCTAG:
-      *to = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
+      to_ptr = (TaggedRef *) GCUNMARK(aux);
       break;
-
     default:
       Assert(NO);
     }
 
-    INFROMSPACE(aux_ptr);
+    *to = makeTaggedRef(to_ptr);
 
-    storeFwd((int32 *) aux_ptr, ToPointer(*to));
+    storeFwd((int32 *) aux_ptr, to_ptr);
 
-  }
+  } while (!isEmpty());
 
 }
 
@@ -2051,7 +2142,7 @@ OrderedSuspList * OrderedSuspList::gc() {
 
   while (help != NULL) {
 
-    Thread * aux = help->t->gcThread();
+    Thread * aux = help->t->gcThreadInline();
 
     if (aux) {
       *p = new OrderedSuspList(aux, NULL);
@@ -2215,9 +2306,9 @@ void ConstTerm::gcConstRecurse()
         TaggedRef *newargs =
           (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
 
-        a->setPtr(newargs);
-
         OZ_collectHeapBlock(a->getArgs(), newargs, aw);
+
+        a->setPtr(newargs);
 
       }
 
@@ -2303,8 +2394,9 @@ void Tertiary::gcEntityInfo(){
 
 ConstTerm *ConstTerm::gcConstTerm() {
 
-  if (this == NULL)
+  if (this == NULL) {
     return NULL;
+  }
 
   if (gcIsMarked())
     return gcGetFwd();
@@ -2569,29 +2661,29 @@ Board* Board::gcGetNotificationBoard() {
 
   Board *nb = bb;
 
-loop:
+  while (1) {
 
-  if (bb->gcIsMarked() || bb->_isRoot())
-    return nb;
+    if (bb->gcIsMarked() || bb->_isRoot())
+      return nb;
 
-  Assert(!bb->isCommitted());
+    Assert(!bb->isCommitted());
 
-  Actor *aa=bb->getActor();
+    Actor * aa = bb->getActor();
 
-  if (bb->isFailed() || aa->isCommitted()) {
-    /*
-     * notification board must be changed
-     */
-    bb=GETBOARD(aa);
-    nb = bb;   // probably not dead;
-    goto loop;
+    if (bb->isFailed() || aa->isCommitted()) {
+      /*
+       * notification board must be changed
+       */
+      bb = GETBOARD(aa);
+      nb = bb;   // probably not dead;
+      continue;
+    }
+
+    if (aa->gcIsMarked())
+      return nb;
+
+    bb = GETBOARD(aa);
   }
-
-  if (aa->gcIsMarked())
-    return nb;
-
-  bb = GETBOARD(aa);
-  goto loop;
 }
 
 /****************************************************************************
@@ -2600,36 +2692,32 @@ loop:
 
 /*
  * gcIsAlive(bb):
- *   bb is marked collected, not failed
- *   and all parents are alive
+ *   bb is marked collected, not failed and all parents are alive
+ *
  */
 
-Bool Board::gcIsAlive()
-{
+Bool Board::gcIsAlive() {
   Board *bb = this;
-  Actor *aa;
 
- loop:
-  // must be applied to a result of 'getBoard()';
-  Assert (!(bb->isCommitted ()));
+  while (1) {
+    bb = bb->derefBoard();
 
-  if (bb->isFailed ())
-    return (NO);
+    if (bb->isFailed())
+      return NO;
 
-  if (bb->_isRoot () || bb->gcIsMarked())
-    return (OK);
+    if (bb->_isRoot() || bb->gcIsMarked())
+      return OK;
 
-  aa=bb->getActor();
+    Actor *aa = bb->getActor();
 
-  if (aa->isCommitted())
-    return (NO);
+    if (aa->isCommitted())
+      return (NO);
 
-  if (aa->gcIsMarked())
-    return OK;
+    if (aa->gcIsMarked())
+      return OK;
 
-  bb = GETBOARD(aa);
-
-  goto loop;
+    bb = aa->getBoardInternal();
+  }
 }
 
 inline
@@ -2770,7 +2858,7 @@ void LTuple::gcRecurse() {
     // Collect element
     OZ_collectHeapTerm(frm->args[0], to->args[0]);
 
-    // Store forward, order is important, since gcTagged might already
+    // Store forward, order is important, since collection might already
     // have done a storeFwd, which means that this one will be overwritten
     storeFwd(frm->args, to->args);
 
@@ -2834,10 +2922,6 @@ void GcStack::recurse(void) {
 
     case PTR_CONT:
       ((Continuation*) ptr)->gcRecurse();
-      break;
-
-    case PTR_PROPAGATOR:
-      ((OZ_Propagator *) ptr)->updateHeapRefs(isInGc);
       break;
 
     case PTR_DYNTAB:
@@ -2969,11 +3053,24 @@ void * OZ_hrealloc(void * p, size_t sz) {
 
   register int32 f0, f1, f2, f3;
 
-  while (sz > 16) {
-    f0 = frm[3]; f1 = frm[2]; f2 = frm[1]; f3 = frm[0];
-    sz -= 16; frm += 4;
-    to[3] = f0;  to[2] = f1; to[1] = f2;  to[0] = f3;
+  if (sz > 16) {
+    f0 = frm[0]; f1 = frm[1]; f2 = frm[2]; f3 = frm[3];
+
+    sz -= 16;
+
+    frm += 4;
+
+    while (sz > 16) {
+      to[0] = f0; f0 = frm[0]; to[1] = f1; f1 = frm[1];
+      sz -= 16;
+      to[2] = f2; f2 = frm[2]; to[3] = f3; f3 = frm[3];
+      frm += 4; to  += 4;
+    }
+
+    to[0] = f0;  to[1] = f1; to[2] = f2;  to[3] = f3;
+
     to += 4;
+
   }
 
   switch(sz) {
