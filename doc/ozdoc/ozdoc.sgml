@@ -988,13 +988,15 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
               <CODE DISPLAY><![ RCDATA [
 <INDEX CLASS=PERSON>Maupassant</INDEX>
 <INDEX CLASS=PROCEDURE>FoldL</INDEX>]]></CODE>
+<!-- not supported by translator yet:
               For a <Q/see/ reference:
               <CODE DISPLAY><![ RCDATA [
 <INDEX>un<AND>deux<SEE>one<AND>two<AND>french</INDEX>]]></CODE>
+-->
               <LIST CLASS=ATTRIBS>
                 <ENTRY><ATTRIB/SEE/
                 <ITEM>allows one index to refer to another by ID, and
-                    is another way to mark up a <Q/see/ reference:
+                    is a way to mark up a <Q/see/ reference:
                     <CODE DISPLAY><![ RCDATA [
 <INDEX ID=one.two.fr>one<AND>two<AND>french</INDEX>
 ...
