@@ -54,6 +54,7 @@
 #ifdef WINDOWS
 #include <time.h>
 #include <process.h>
+
 extern "C" int _fmode;
 extern "C" void setmode(int,mode_t);
 

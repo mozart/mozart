@@ -37,6 +37,9 @@
 
 /* defines */
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
 
 #ifdef WINDOWS
 #define EINPROGRESS WSAEINPROGRESS
@@ -58,10 +61,6 @@
               to 0 otherwise 
 	      */
 #define URLC_RESOLVER 0
-
-#ifndef LINUX
-#define herror(x) perror(x)
-#endif
 
 #ifndef URLC_DEBUG
 #define URLC_PERROR(s)

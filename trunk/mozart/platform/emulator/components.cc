@@ -25,9 +25,19 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
 
+#ifdef WINDOWS
 #include "wsock.hh"
+#else
 #include <sys/types.h>
+#include <sys/time.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#endif
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -37,8 +47,6 @@
 #include <errno.h>
 #include <strings.h>
 #include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include "runtime.hh"
 #include "codearea.hh"
 #include "indexing.hh"
