@@ -617,11 +617,11 @@ in
 	 Compiler.genericInterface, init(CompilerObject Serve)
 	 CompilerPanel, DoInit(Iconified)
       end
-      meth exit()
+      meth close()
 	 thread   % so that we don't kill ourselves ;-)
 	    lock
 	       self.isClosed = unit
-	       Compiler.genericInterface, exit()
+	       Compiler.genericInterface, close()
 	       {self.TopLevel tkClose()}
 	    end
 	 end
@@ -795,7 +795,7 @@ in
 	 self.TopLevel = {New Tk.toplevel
 			  tkInit(title: 'Oz Compiler Panel'
 				 'class': 'OzTools'
-				 delete: {MkAction exit()}
+				 delete: {MkAction close()}
 				 highlightthickness: 0
 				 withdraw: true)}
 	 TextFont        = {Options get(compilerTextFont $)}
@@ -845,7 +845,7 @@ in
 				    separator
 				    command(label: 'Close window'
 					    key: ctrl(x)
-					    action: {MkAction exit()})])
+					    action: {MkAction close()})])
 		  menubutton(text: 'Options'
 			     feature: options
 			     menu: [command(label: 'Update environment display'
