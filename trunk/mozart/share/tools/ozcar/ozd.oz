@@ -25,7 +25,6 @@
 %% TODO:
 %% -- is it possible to attach to a running Emacs instead of starting
 %%    a new one?
-%% -- provide for a means to start ozd from the OPI
 %% -- synchronize environment of created compiler with Ozcar's stack display?
 %%
 
@@ -38,7 +37,7 @@ import
    Module(manager)
    OPIEnv(full)
    OS(getEnv system)
-   Open(socket)
+   Open(file socket)
    Ozcar(object)
    Pickle(load)
    Property(get put)
@@ -46,8 +45,10 @@ import
 prepare
    ArgSpec = record(help(rightmost char: [&h &?] default: false)
 		    useemacs(rightmost char: &E type: bool default: false)
-		    emacs(single type: string default: unit))
+		    emacs(single type: string default: unit)
+		    opi(rightmost default: false))
 
+   %% Note: The opi option is not documented here on purpose.
    UsageString =
    '--help, -h, -?  Display this message.\n'#
    '--useemacs, -E  Start a subordinate Emacs process.\n'#
@@ -84,31 +85,46 @@ define
 	 {Ozcar.object on()}
 	 {Property.put 'errors.toplevel' proc {$} skip end}
 	 {Property.put 'errors.subordinate' proc {$} fail end}
-	 if Args.useemacs then Socket Port E EMACS I in
-	    thread
-	       Socket = {New Open.socket server(port: ?Port)}
-	    end
+	 if Args.useemacs then File E EMACS I in
 	    E = {New Compiler.engine init()}
 	    {E enqueue(mergeEnv(OPIEnv.full))}
-	    EMACS = case Args.emacs of unit then
-		       case {OS.getEnv 'OZEMACS'} of false then 'emacs'
+	    if Args.opi then
+	       local
+		  OZVERSION = {Property.get 'oz.version'}
+		  DATE      = {Property.get 'oz.date'}
+		  OZCARDATE = \insert ozcar-version.oz
+	       in
+		  {System.printError
+		   'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n'#
+		   'Ozcar Version of '#OZCARDATE#'\n\n'}
+	       end
+	       File = {New Open.file init(name: stdout flags: [write])}
+	    else Port in
+	       thread
+		  File = {New Open.socket server(port: ?Port)}
+	       end
+	       EMACS = case Args.emacs of unit then
+			  case {OS.getEnv 'OZEMACS'} of false then 'emacs'
+			  elseof X then X
+			  end
 		       elseof X then X
 		       end
-		    elseof X then X
-		    end
-	    {OS.system
-	     EMACS#' -L '#{Property.get 'oz.home'}#
-	     '/share/elisp -l oz -f oz-attach '#Port#' \&' _}
+	       {OS.system
+		EMACS#' -L '#{Property.get 'oz.home'}#
+		'/share/elisp -l oz -f oz-attach '#Port#' \&' _}
+	    end
 	    I = {New Emacs.interface
 		 init(E unit
 		      proc {$ V}
-			 {Socket write(vs: V)}
+			 {File write(vs: V)}
 		      end)}
 	    {Property.put 'opi.compiler' I}
 	    {Ozcar.object conf(emacsInterface: I)}
 	    thread {I readQueries()} end
 	    proc {CloseAction}
-	       {I exit()}
+	       if Args.opi then skip
+	       else {I exit()}
+	       end
 	       {Application.exit 0}
 	    end
 	 else
