@@ -44,7 +44,7 @@ Bool isUnifyCurrentPropagator () {
 inline
 Thread *makeHeadThread (OZ_Propagator * p, int prio)
 {
-  return new Thread (am.currentBoard, prio, p);
+  return am.mkPropagator(am.currentBoard, prio, p);
 }
 
 #endif

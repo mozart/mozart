@@ -28,7 +28,7 @@ void ThreadsPool::initThreads ()
   // public part;
   currentThread = (Thread *) NULL;
   ozstat.createdThreads.incf();
-  rootThread = new Thread (ozconf.defaultPriority, am.rootBoard);
+  rootThread = am.mkRunnableThread (ozconf.systemPriority, am.rootBoard,0);
 
   // 
   threadBodyFreeList = NULL;
@@ -119,7 +119,7 @@ void ThreadsPool::deleteThread(Thread *th1)
   int prioInd = nextPrioInd;
   while (thq && !found) {
     int size=thq->getSize();
-    while (size) {
+    while (size--) {
       Thread *th = thq->dequeue();
       if (th == th1) {
 	found = OK;
@@ -127,15 +127,29 @@ void ThreadsPool::deleteThread(Thread *th1)
 	thq->enqueue(th);
       }
     }
+
+    if (found) {
+      if (thq->isEmpty()) {
+    
+	// invariants: prioInd indexes the empty queue;
+	for (int i = prioInd; i < nextPrioInd; i++) 
+	  nextPrio[i] = nextPrio[i+1];
+    
+	nextPrioInd--;
+	if (thq == currentQueue) {
+	  updateCurrentQueue();
+	}
+      }
+      break; //while
+    }
+
     if (prioInd >= 0) {
       int pri = nextPrio[prioInd--];
       thq = &queues[pri];
     } else {
       thq = 0;
     }
-  }
-  if (currentQueue->isEmpty()) {
-    updateCurrentQueue();
+
   }
 }
 

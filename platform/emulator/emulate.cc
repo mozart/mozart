@@ -828,7 +828,9 @@ loop:
 	    }
 
 	    DebugCode (currentThread = (Thread *) NULL);
-	    Thread *tt = new Thread (wa->getPriority (), currentBoard);
+	    Thread *tt = mkRunnableThread(wa->getPriority (),
+					  currentBoard,
+					  0);
 	    tt->pushCont(waitBoard->getBodyPtr());
 	    scheduleThread (tt);
 	    wa->dispose();
@@ -1343,12 +1345,8 @@ LBLpopTask:
 	DebugTrace(trace("cfunc cont task",CBB));
 
 	switch (biFun(predArity, X)) {
-	default:
 	case FAILED:
 	  HF_BI;
-
-	case SLEEP:
-	  error ("popTask: CFunCont returns 'SLEEP'!");
 
 	case PROCEED:
 	  goto LBLpopTask;
@@ -1363,6 +1361,10 @@ LBLpopTask:
 
 	case RAISE:
 	  RAISE_BI;
+
+	case SLEEP:
+	default:
+	  error("unhandler BI return");
 	} // switch
       }
 
@@ -1575,7 +1577,7 @@ LBLkillThread:
 	  }
 	} else {
 	  //  any other actor;
-	  tt = new Thread (aa->getPriority (), CBB);
+	  tt = e->mkRunnableThread(aa->getPriority (), CBB,0);
 	  tt->pushCont (cont);
 	  e->scheduleThread (tt);
 	}
@@ -1703,7 +1705,7 @@ LBLsuspendThread:
     if (e->currentThread == e->rootThread) {
 #ifdef RESTART_ROOT
       e->rootThread = 
-	new Thread (e->currentThread->getPriority (), e->rootBoard);
+	e->mkRunnableThread (e->currentThread->getPriority (), e->rootBoard,0);
       e->checkToplevel ();
       e->currentThread->markPropagated();
       DORAISE(OZ_atom("toplevelBlocked"));
@@ -1864,17 +1866,25 @@ LBLsuspendThread:
 	e->suspendOnVarList(e->mkSuspThread ());
 	CHECK_CURRENT_THREAD;
 
-      default:
       case FAILED:
 	HF_BI;
 
-      case SLEEP: // no break
-	error ("'CALLBUILTIN' has got 'SLEEP' back!\n");
       case PROCEED:
 	DISPATCH(3);
 
       case RAISE:
 	RAISE_BI;
+
+      case BI_PREEMPT:
+	e->pushTask(PC+3,Y,G);
+	goto LBLpreemption;
+
+      case BI_TERMINATE:
+	goto LBLpopTask;
+
+      case SLEEP:
+      default:
+	error("unhandler BI return");
       }
     }
 
@@ -2723,6 +2733,15 @@ LBLsuspendThread:
 	       case RAISE:
 		 RAISE_BI;
 
+	       case BI_PREEMPT:
+		 if (!isTailCall) {
+		   e->pushTask(PC,Y,G);
+		 }
+		 goto LBLpreemption;
+
+	       case BI_TERMINATE:
+		 goto LBLpopTask;
+
 	       default:
 		 error("builtin: bad return value");
 		 goto LBLerror;
@@ -2749,44 +2768,31 @@ LBLsuspendThread:
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
-       TaggedRef traceBack = nil();
-
-       if (e->currentThread) {
-	 traceBack=e->currentThread->dbgGetTaskStack(PC);
-       }
-       Thread *tt = new Thread (ozconf.systemPriority,am.currentBoard);
-       tt->setGroup(0);
-       am.scheduleThread(tt);
-
-       Group *gr = e->currentThread ? e->currentThread->getGroup() : 0;
-       TaggedRef pred = gr ? gr->getExceptionHandler() : 0;
+       TaggedRef traceBack = e->currentThread->dbgGetTaskStack(PC);
+       TaggedRef pred = e->currentThread->getValue();
 
        if (!pred || !isProcedure(pred)) {
 	 pred = e->defaultExceptionHandler;
+	 e->currentThread->setValue(0);
        }
 
-       /* exception is already in X[0],
-	  but should somehow be reflected !!! */
-       RefsArray argsArray = allocateRefsArray(3,NO);
-       argsArray[0]=X[0];
-       argsArray[1]=e->dbgGetSpaces();
-       argsArray[2]=traceBack;
-       tt->pushCall(pred,argsArray,3);
+       /* mm2: exception is already in X[0],
+	*   TODO: should somehow be reflected !!! */
 
-       if (e->currentThread == e->rootThread) {
-#ifdef RESTART_ROOT
-	 e->rootThread = 
-	   new Thread (e->currentThread->getPriority (), e->rootBoard);
-	 e->checkToplevel ();
-	 DORAISE(OZ_atom("toplevelBlocked"));
-#else
-	 if (ozconf.errorVerbosity>1) {
-	   warning("The toplevel thread is blocked.");
-	 }
-#endif
+       int arity = tagged2Const(pred)->getArity();
+       if (arity == 1) {
+	 RefsArray argsArray = allocateRefsArray(1,NO);
+	 argsArray[0]=X[0];
+	 e->currentThread->pushCall(pred,argsArray,1);
+       } else {
+	 if (arity != 3) pred = e->defaultExceptionHandler;
+	 RefsArray argsArray = allocateRefsArray(3,NO);
+	 argsArray[0]=X[0];
+	 argsArray[1]=e->dbgGetSpaces();
+	 argsArray[2]=traceBack;
+	 e->currentThread->pushCall(pred,argsArray,3);
        }
-       e->currentThread=(Thread *) NULL;
-       goto LBLstart;
+       goto LBLpopTask;
      }
    }
 
@@ -3052,7 +3058,7 @@ LBLsuspendThread:
 	prio = defPrio;
       }
 
-      Thread *tt = new Thread (prio, CBB);
+      Thread *tt = e->mkRunnableThread(prio, CBB,e->currentThread->getValue());
       ozstat.createdThreads.incf();
       tt->pushCont(newPC,Y,G,NULL,0);
       e->scheduleThread (tt);
@@ -3067,7 +3073,7 @@ LBLsuspendThread:
 
 	OZ_Term debugInfo =
 	  OZ_mkTupleC("#", 2, 
-		      makeTaggedConst(new OzThread(e->currentBoard, tt)),
+		      makeTaggedConst(tt),
 		      streamForNewThread);
 
 	OZ_Term newTail = OZ_newVariable();
@@ -3222,7 +3228,7 @@ LBLsuspendThread:
 
       //
       if (!e->currentThread) {
-	Thread *thr = new Thread (aa->getPriority (), CBB);
+	Thread *thr = e->mkRunnableThread(aa->getPriority (), CBB,0);
 	thr->pushCont (cont);
 	thr->pushSetCaa ((AskActor *) aa);;
 	e->scheduleThread (thr);
@@ -3252,6 +3258,7 @@ LBLsuspendThread:
     case CE_RAISE:
       PC=NOCODE;
       X[0] = e->exception;
+      DebugCheckT(currentDebugBoard=e->currentBoard);
       goto LBLraise;
 
     case CE_SUSPEND:
@@ -3508,7 +3515,7 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 	  if (!currentThread && currentBoard != rootBoard) {
 	    // mm2: entailment check ???
 	    // kost@:  Yes! This can happen;
-	    Thread *thr = new Thread (currentBoard);
+	    Thread *thr = mkWakeupThread (currentBoard);
 	    thr->wakeupToRunnable ();
 
 	    //  fairness: don't go there directly, but:
@@ -3539,7 +3546,7 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
     return CE_NOTHING;
   }
   if (!currentThread && currentBoard != rootBoard) {
-    Thread *thr = new Thread (currentBoard);
+    Thread *thr = mkWakeupThread (currentBoard);
     thr->wakeupToRunnable ();
 
     //
