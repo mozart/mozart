@@ -1061,8 +1061,9 @@ void AM::checkIO()
  * NOTE:
  *   there may be failed board in between which must be simply ignored
  */
-void AM::incSolveThreads(Board *bb,int n)
+void AM::incSolveThreads(Board *nb,int n)
 {
+  Board *bb=nb;
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
@@ -1071,6 +1072,9 @@ void AM::incSolveThreads(Board *bb,int n)
       if (!sa->isCommitted()) { // notification board below failed solve
 	sa->incThreads(n);
 	if (isStableSolve(sa)) {
+#ifdef NEWCOUNTER
+	  if (nb!=bb)
+#endif
 	  scheduleSolve(bb);
 	}
       }
@@ -1250,6 +1254,9 @@ void AM::scheduleSolve(Board *bb)
 
   Actor *aa=bb->getActor();
   Thread *th = newThread(aa->getPriority(),bb);
+#ifdef NEWCOUNTER
+  bb->incSuspCount();
+#endif
   Board *nb = aa->getBoardFast()->getSolveBoard();
   if (nb) incSolveThreads(nb);
   th->setNotificationBoard(nb);
