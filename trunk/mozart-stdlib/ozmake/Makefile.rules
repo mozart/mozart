@@ -11,6 +11,9 @@ OZMAKE_FILES = \
 ozmake: ozmake.ozf
 	$(OZL) $(OZLFLAGS) -x $< -o $@
 
+ozmake.exe: ozmake.ozf
+	$(OZL) $(OZLFLAGS) --target=windows -x $< -o $@
+
 ozmake.ozf: $(OZMAKE_FILES)
 	$(OZL) $(OZLFLAGS) Main.ozf -o $@
 
