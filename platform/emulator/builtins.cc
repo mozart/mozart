@@ -5271,7 +5271,7 @@ OZ_C_proc_begin(BIunlinkObjectFile,1)
   OZ_declareAtomArg(0,fileName);
 
 #ifdef WINDOWS
-  FreeLibrary(GetModuleHandle(f));
+  FreeLibrary(GetModuleHandle(fileName));
 #endif
 
   return PROCEED;
