@@ -60,7 +60,7 @@ TaskIntervalsPropagator::TaskIntervalsPropagator(OZ_Term tasks,
 
 OZ_C_proc_begin(sched_taskIntervals, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," \
 		   OZ_EM_RECORD OZ_EM_FD "," OZ_EM_RECORD OZ_EM_INT);
   
   {
@@ -553,8 +553,8 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
 OZ_C_proc_begin(sched_cumulativeTI, 5)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD 
-		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT 
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_RECORD OZ_EM_FD \
+		   "," OZ_EM_RECORD OZ_EM_INT "," OZ_EM_RECORD OZ_EM_INT \
 		   "," OZ_EM_VECT OZ_EM_INT);
   
   {
