@@ -100,7 +100,6 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <pwd.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -109,12 +108,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pwd.h>
 #ifndef IRIX6
 #include <sys/uio.h>
 #endif
 #endif
 #include <netdb.h>
-#include <sys/utsname.h>
+
 
 #if 1 <= URLC_RESOLVER
 #include <arpa/nameser.h>
@@ -727,13 +727,16 @@ urlc::parse_ftp(const char* line)
         strcpy(host, p_at);
     }
     if((NULL == p_at) && (NULL == p_collon)) { // no user/pass
-        struct passwd* pp = NULL;
         user = (char*)malloc(1 + strlen("anonymous"));
         if(NULL == user)
             th1(URLC_EALLOC);
         strcpy(user, "anonymous"); // hardwired by RFC1738
-        pp = getpwuid(getuid());
+#ifdef WINDOWS
+        char *username = "unknown";
+#else
+        struct passwd* pp = getpwuid(getuid());
         char *username = pp ? pp->pw_name : "unknown";
+#endif
 
 #if 1 <= URLC_RESOLVER
         extern struct __res_state _res;
@@ -965,12 +968,10 @@ urlc::get_ftp(char *file)
     // PORT. the trickiest part. really!
     // we must send bytes in decimal for local IP addr and listening port
     // "ip3,ip2,ip1,ip0,p1,p0"
-    struct hostent* hp;
-    struct utsname unp;
-    n = uname(&unp);
-    if(0 > n) /* braindead Solaris, returns >0 if OK. POSIX says 0 */
-        return (URLC_EINVAL);
-    hp = gethostbyname(unp.nodename);
+
+    char *nodename = oslocalhostname();
+    struct hostent* hp = gethostbyname(nodename);
+    free(nodename);
     if(NULL == hp)
         return (URLC_EINVAL);
     char port_val[25] = ""; // space for constructing the PORT parameter

@@ -60,7 +60,6 @@
 #include <sys/types.h>
 #undef _POSIX_SOURCE
 
-#include <sys/times.h>
 #include <fcntl.h>
 
 extern "C" {

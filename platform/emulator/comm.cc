@@ -37,14 +37,12 @@
 #endif
 
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <strings.h>
 
 #include "comm.hh"
 #include "msgbuffer.hh"

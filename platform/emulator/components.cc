@@ -52,17 +52,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #endif
 
-#include <sys/wait.h>
 #include <sys/stat.h>
-#include <sys/utsname.h>
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <strings.h>
 #include <netdb.h>
 
 #include "zlib.h"
@@ -871,10 +869,10 @@ OZ_BI_define(BIGetPID,0,1)
 {
   // pid = pid(host:String port:Int time:Int#Int)
 
-  struct utsname auname;
-  if(uname(&auname)<0) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
-  struct hostent *hostaddr;
-  hostaddr=gethostbyname(auname.nodename);
+  char *nodename = oslocalhostname();
+  if(nodename==NULL) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
+  struct hostent *hostaddr=gethostbyname(nodename);
+  free(nodename);
   struct in_addr tmp;
   memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
 

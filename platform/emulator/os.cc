@@ -87,14 +87,20 @@ extern "C" int dlclose(void *);
 #include <sys/time.h>
 #include <process.h>
 
+#ifdef MINGW32
+// RS: HACK !!!!!!!!!!!!!
+char     _ctype_[1000];
+#else
 extern "C" int _fmode;
 extern "C" void setmode(int,mode_t);
+#endif
 
 #else
 #include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <sys/utsname.h>
 #endif
 
 #if !defined(ultrix) && !defined(WINDOWS)
@@ -297,7 +303,7 @@ static
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
-  signal(signo,(_sig_func_ptr)fun);
+  signal(signo,(void(*)(int))fun);
   return NULL;
 #else
   struct sigaction act, oact;
@@ -518,7 +524,6 @@ int _hdopen(int handle, int flags)
 
 #endif
 
-
 static
 int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
 {
@@ -692,6 +697,7 @@ void osInitSignals()
   osSignal(SIGALRM,handlerALRM);
   // 'SIGUSR2' notifies about presence of tasks. Right now these are
   // only virtual site messages;
+  osSignal(SIGUSR1,handlerUSR1);
   osSignal(SIGUSR2,handlerUSR2);
 #endif
   // kost@ : virtual sites need to be cleaned up - otherwise some
@@ -700,7 +706,6 @@ void osInitSignals()
   osSignal(SIGINT,handlerINT);
   osSignal(SIGTERM,handlerTERM);
   osSignal(SIGSEGV,handlerSEGV);
-  osSignal(SIGUSR1,handlerUSR1);
   osSignal(SIGFPE,handlerFPE);
 #ifndef WINDOWS
   osSignal(SIGBUS,handlerBUS);
@@ -736,6 +741,15 @@ int osOpenMax()
 
 #ifdef WINDOWS
 
+char *oslocalhostname()
+{
+  DWORD len;
+  char buf[MAX_COMPUTERNAME_LENGTH + 1];
+  GetComputerNameA(buf,&len);
+  return strdup(buf);
+}
+
+
 char *ostmpnam(char *s)
 {
   /* make sure that temporary files are allways located under C: */
@@ -769,6 +783,15 @@ int osdup(int fd)
 #else
 
 char *ostmpnam(char *s) { return tmpnam(s); }
+
+char *oslocalhostname()
+{
+  struct utsname unp;
+  int n = uname(&unp);
+  if(0 > n) /* braindead Solaris, returns >0 if OK. POSIX says 0 */
+    return 0;
+  return strdup(unp.nodename);
+}
 
 int osdup(int fd) { return dup(fd); }
 

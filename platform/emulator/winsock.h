@@ -137,7 +137,7 @@ extern int PASCAL FAR __WSAFDIsSet(SOCKET, fd_set FAR *);
  * returned in network order (suitable for use in system calls).
  */
 
-#ifndef GNUWIN32
+#if !defined(GNUWIN32) || defined(MINGW32)
 struct  hostent {
         char    FAR * h_name;           /* official name of host */
         char    FAR * FAR * h_aliases;  /* alias list */
@@ -932,5 +932,26 @@ typedef struct timeval FAR *LPTIMEVAL;
  * to a WSAAsyncSelect().
  */
 #define WSAGETSELECTERROR(lParam)           HIWORD(lParam)
+
+
+
+
+#ifdef MINGW32
+
+struct hostent PASCAL FAR * gethostbyname (const char FAR * name);
+struct protoent PASCAL FAR * FAR getprotobyname(const char FAR * name);
+struct hostent PASCAL FAR * gethostbyaddr (const char FAR * addr,
+                                    int len,
+                                    int type);
+
+#define EINPROGRESS   WSAEINPROGRESS
+#define ECONNREFUSED  WSAECONNREFUSED
+#define EADDRNOTAVAIL WSAEADDRNOTAVAIL
+#define ENOBUFS       WSAENOBUFS
+#define EWOULDBLOCK   WSAEWOULDBLOCK
+
+#endif
+
+
 
 #endif  /* _WINSOCKAPI_ */

@@ -26,9 +26,11 @@
 
 %{
 #include <string.h>
-#include <pwd.h>
-#include <sys/param.h>
 #include <sys/stat.h>
+
+#ifndef WINDOWS
+#include <pwd.h>
+#endif
 
 #include "base.hh"
 #include "oz.h"
