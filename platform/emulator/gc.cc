@@ -32,6 +32,13 @@
 /****************************************************************************
  ****************************************************************************/
 
+// loeckelt (for big fsets)
+#include "oz_cpi.hh"
+
+#ifdef LINUX
+/* FD_ISSET missing */
+#include <sys/time.h>
+#endif
 
 #include "gc.hh"
 #include "genvar.hh"
@@ -968,6 +975,10 @@ inline
 void GenFSetVariable::gc(GenFSetVariable * frm) {
   _fset = frm->_fset;
 
+#ifdef BIGFSET
+  _fset.copyExtensions();
+#endif
+
   for (int i = fs_prop_any; i--; )
     fsSuspList[i] = frm->fsSuspList[i]->gc();
 }
@@ -1142,7 +1153,13 @@ inline
 FSetValue * FSetValue::gc(void) {
   Assert(isInGc);
 
+#ifdef BIGFSET
+  FSetValue *retval = (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
+  retval->_IN.copyExtension();
+  return retval;
+#else
   return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
+#endif
 }
 
 

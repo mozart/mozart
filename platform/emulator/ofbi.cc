@@ -1,20 +1,14 @@
 /*
  *  Authors:
- *    Michael Mehl (mehl@dfki.de)
- *    Kostja Popow (popow@ps.uni-sb.de)
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
- *    Christian Schulte (schulte@dfki.de)
+ *    Peter van Roy (pvr@info.ucl.ac.be)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
- *    Peter van Roy (pvr@info.ucl.ac.be)
- *    Denys Duchier (duchier@ps.uni-sb.de)
- *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Michael Mehl, 1997
- *    Kostja Popow, 1997
- *    Ralf Scheidhauer, 1997
- *    Christian Schulte, 1997
+ *    Peter van Roy (1996)
+ *    Tobias Mueller (1996)
  * 
  *  Last change:
  *    $Date$ by $Author$
