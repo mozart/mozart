@@ -64,8 +64,7 @@ OZCARSRC = $(OZCARSRCNOVER) ozcar-version.oz
 
 OZCARIMAGESDIR = $(IMAGESDIR)/ozcar
 OZCARIMAGES1 = \
-	ozcar.xbm children.xbm detach.xbm line.xbm next.xbm queries.xbm \
-	step.xbm stop.xbm term.xbm unleash.xbm
+	step.xbm next.xbm unleash.xbm stop.xbm detach.xbm term.xbm 
 OZCARIMAGES = $(OZCARIMAGES1:%=$(OZCARIMAGESDIR)/%)
 
 PROFILERSRC1 = \
