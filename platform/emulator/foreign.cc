@@ -823,7 +823,7 @@ int listWidth = 0;
 
 inline
 Bool isNiceHash(TaggedRef t, int width) {
-  if (width <= 0) return OK;
+  if (width <= 0) return NO;
 
   if (!isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair)) 
     return NO;
@@ -835,7 +835,7 @@ Bool isNiceHash(TaggedRef t, int width) {
 
 inline
 Bool isNiceList(TaggedRef l, int width) {
-  if (width <= 0) return OK;
+  if (width <= 0) return NO;
 
   while (isCons(l) && width--> 0) {
     l = deref(tail(l));
@@ -848,6 +848,7 @@ Bool isNiceList(TaggedRef l, int width) {
 
 inline
 void record2buffer(ostream &out, SRecord *sr,int depth) {
+
   if (isNiceHash(makeTaggedSRecord(sr), listWidth)) {
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
@@ -868,7 +869,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 
   value2buffer(out,sr->getLabel());
   out << '(';
-  if (depth <= 0) {
+  if (depth <= 0 || listWidth <= 0) {
     out << ",,,";
   } else {
     if (sr->isTuple()) {
