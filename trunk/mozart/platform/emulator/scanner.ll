@@ -1,6 +1,11 @@
 %option noyywrap noreject nodefault
 
 %{
+///  Programming Systems Lab,
+///  Stuhlsatzenhausweg 3, 66123 Saarbruecken, Phone (+49) 681 302-5609
+///  Original Author: Martin Henz
+///  Extensive modifications by Leif Kornstaedt <kornstae@ps.uni-sb.de>
+
 #include <string.h>
 #ifndef WINDOWS
 #include <pwd.h>
@@ -37,7 +42,7 @@ int xylino;                              // current line number
 char *xylastline;                        // remember where we have put the input
 
 static inline int xycharno() {
-  int n = (xytext - xylastline) + 1;
+  int n = xytext - xylastline;
   if (n > 0)
     return n;
   else
@@ -184,7 +189,8 @@ char SCANNERMajorVersion[100];
 #define CONDITIONALMAXDEPTH 1000
 
 static int conditional[CONDITIONALMAXDEPTH];
-static int conditional_p;   // points to top of stack
+static int conditional_p;       // points to top of stack
+static int conditional_basep;   // points to bottom of stack
 
 static void push_cond(int flag) {
   if (conditional_p < CONDITIONALMAXDEPTH - 1)
@@ -196,7 +202,7 @@ static void push_cond(int flag) {
 }
 
 static void pop_cond() {
-  if (conditional_p > 0)
+  if (conditional_p > conditional_basep)
     conditional_p--;
   else
     xyreportError("macro directive error",
@@ -206,7 +212,7 @@ static void pop_cond() {
 
 static int cond() {
   int i = conditional_p;
-  while (i > 0)
+  while (i > conditional_basep)
     if (!conditional[i--])
       return 0;
   return 1;
@@ -223,27 +229,29 @@ public:
   YY_BUFFER_STATE buffer;
   CTerm fileNameAtom;
   int lino;
+  int conditional_basep;
   XyFileEntry *previous;
 
-  XyFileEntry(YY_BUFFER_STATE b, CTerm f, int l, XyFileEntry *p):
-      buffer(b), fileNameAtom(f), lino(l), previous(p) {}
+  XyFileEntry(YY_BUFFER_STATE b, CTerm f, int l, int c, XyFileEntry *p):
+      buffer(b), fileNameAtom(f), lino(l), conditional_basep(c), previous(p) {}
 };
 
 static XyFileEntry *bufferStack;
 
 static void push_insert(FILE *filep, char *fileName) {
   bufferStack = new XyFileEntry(YY_CURRENT_BUFFER, xyFileNameAtom, xylino,
-				bufferStack);
+				conditional_basep, bufferStack);
   strncpy(xyFileName, fileName, 99);
   xyFileNameAtom = OZ_atom(fileName);
   xyin = filep;
   BEGIN(INITIAL);
   xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
   xylino = 0;
+  conditional_basep = conditional_p;
 }
 
 static int pop_insert() {
-  if (conditional_p)
+  if (conditional_p > conditional_basep)
     xyreportError("macro directive error",
 		  "unterminated \\ifdef or \\ifndef",
 		  xyFileName,xylino,xycharno());
@@ -255,6 +263,7 @@ static int pop_insert() {
     char *fileName = OZ_atomToC(xyFileNameAtom);
     strncpy(xyFileName, fileName, 99);
     xylino = bufferStack->lino;
+    conditional_basep = bufferStack->conditional_basep;
     XyFileEntry *old = bufferStack;
     bufferStack = bufferStack->previous;
     delete old;
@@ -602,15 +611,13 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\core(t(r(ee?)?)?)?           { BEGIN(INPUTFILE); return CORETREE; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
 \\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return MACHINE; }
-\\p(r(e(c(o(m(p(i(le?)?)?)?)?)?)?)?)? {
-                                 BEGIN(INPUTFILE); return PRECOMPILE; }
 \\t(o(p(v(a(rs?)?)?)?)?)?      { BEGIN(OUTPUTFILE); return TOPVARS; }
 
 \\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
 \\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
 \\ifd(ef?)?                    { BEGIN(IFDEF); }
 \\ifn(d(ef?)?)?                { BEGIN(IFNDEF); }
-\\el(se?)?                     { if (conditional_p > 0) {
+\\el(se?)?                     { if (conditional_p > conditional_basep) {
 				   // toggle top of flag stack
 				   if (conditional[conditional_p])
 				     conditional[conditional_p] = 0;
@@ -627,6 +634,25 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 \\u(n(d(ef?)?)?)?              { BEGIN(UNDEF);}
 
+<DIRECTIVE>{
+  {BLANK}                      ;
+  .                            { errorFlag = 1; }
+  \n                           { if (errorFlag) {
+				   xyreportError("directive error",
+						 "illegal directive syntax",
+						 xyFileName,xylino,xycharno());
+				   errorFlag = 0;
+				 }
+                                 BEGIN(INITIAL);
+			       }
+  <<EOF>>                      { xyreportError("directive error",
+					       "unterminated directive",
+					       xyFileName,xylino,xycharno());
+				 BEGIN(DIRECTIVE);
+				 if (pop_insert())
+				   return ENDOFFILE;
+			       }
+}
 <LINE>{
   [0-9]+                       { xylino = atol(xytext) - 1; }
   {FILENAME}                   { strip('\'');
@@ -658,8 +684,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 }
 <SWITCHDIR>{
-  "+"                          { return ON; }
-  "-"                          { return OFF; }
+  "+"                          { return '+'; }
+  "-"                          { return '-'; }
   [A-Za-z0-9]+                 { return SWITCHNAME; }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
@@ -745,7 +771,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				   char *fullname = scExpndFileName(xytext,xyFileName);
 				   if (fullname != NULL) {
 				     if (xy_showInsert) {
-				       printf("\n%%%%%%\tinserting file \"%s\"",fullname);
+				       printf("%%%%%%\tinserting file \"%s\"\n",fullname);
 				       fflush(stdout);
 				     }
 				     FILE *filep = fopen(fullname, "r");
@@ -782,7 +808,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 <DEFINE>{
   {VARIABLE}                   { if (cond()) {
-				   if (hashTable->find(xytext))
+				   if (!hashTable->find(xytext))
 				     hashTable->insert(xytext);
 				   BEGIN(DIRECTIVE);
 				 } else
@@ -947,26 +973,33 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "fun"/\(?                      { return _fun_; }
 "if"/\(?                       { return _if_; }
 "in"/\(?                       { return _in_; }
-"lex"/\(?                      { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
+"lex"                          { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
+"lex"/\(                       { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return ATOM_LABEL; }
 "local"/\(?                    { return local; }
-"lock"/\(?                     { return LOCK; }
+"lock"/\(?                     { return _lock_; }
 "meth"/\(?                     { return _meth_; }
-"mode"/\(?                     { return xy_gumpSyntax? _mode_: OZATOM; }
+"mode"                         { return xy_gumpSyntax? _mode_: OZATOM; }
+"mode"/\(                      { return xy_gumpSyntax? _mode_: ATOM_LABEL; }
 "not"/\(?                      { return not; }
 "of"/\(?                       { return of; }
 "or"/\(?                       { return or; }
 "orelse"/\(?                   { return orelse; }
-"parser"/\(?                   { return xy_gumpSyntax? _parser_: OZATOM; }
+"parser"                       { return xy_gumpSyntax? _parser_: OZATOM; }
+"parser"/\(                    { return xy_gumpSyntax? _parser_: ATOM_LABEL; }
 "proc"/\(?                     { return proc; }
-"prod"/\(?                     { return xy_gumpSyntax? prod: OZATOM; }
+"prod"                         { return xy_gumpSyntax? prod: OZATOM; }
+"prod"/\(                      { return xy_gumpSyntax? prod: ATOM_LABEL; }
 "prop"/\(?                     { return prop; }
 "raise"/\(?                    { return raise; }
-"scanner"/\(?                  { return xy_gumpSyntax? _scanner_: OZATOM; }
+"scanner"                      { return xy_gumpSyntax? _scanner_: OZATOM; }
+"scanner"/\(                   { return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
 "self"/\(?                     { return self; }
 "skip"/\(?                     { return skip; }
-"syn"/\(?                      { return xy_gumpSyntax? syn: OZATOM; }
+"syn"                          { return xy_gumpSyntax? syn: OZATOM; }
+"syn"/\(                       { return xy_gumpSyntax? syn: ATOM_LABEL; }
 "then"/\(?   	               { return then; }
-"token"/\(?                    { return xy_gumpSyntax? token: OZATOM; }
+"token"                        { return xy_gumpSyntax? token: OZATOM; }
+"token"/\(                     { return xy_gumpSyntax? token: ATOM_LABEL; }
 "thread"/\(?                   { return thread; }
 "true"		               { return true; }
 "try"/\(?                      { return try; }
@@ -1062,6 +1095,7 @@ static void xy_init() {
   hashTable->insert(SCANNERMajorVersion);   // general Oz release
 
   conditional_p = 0;
+  conditional_basep = 0;
   commentdepth = 0;
 
   BEGIN(INITIAL);
