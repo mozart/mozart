@@ -177,7 +177,6 @@ in
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
 	 ThreadManager,setThrPos(id:I name:undef)
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:both)
-	 Gui,printAppl(name:undef args:undef builtin:false)
 	 Gui,printStack(id:0 stack:nil)
 	 case Mode == kill then
 	    currentThread <- undef
@@ -234,7 +233,7 @@ in
 	 else
 	    SourceManager,scrollbar(file:F line:L
 				    color:ScrollbarApplColor what:appl)
-	    Gui,printAppl(name:N args:A builtin:IsBuiltin)
+	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	 end
 	 SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
@@ -253,7 +252,7 @@ in
 	    currentThread <- T
 	    
 	    Gui,status(I S)
-	    Gui,printAppl(name:N args:A builtin:B)
+	    %Gui,printAppl(id:I name:N args:A builtin:B)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	    
 	    Gui,selectNode(I)
