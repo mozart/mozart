@@ -71,7 +71,7 @@ enum TypeOfTerm {
   OZCONST          = 10,   // 1010
 
   SMALLINT         =  6,   // 0110
-  UNUSED           =  7,   // 0111 // was BIGINT
+  PROMISE          =  7,   // 0111
   OZFLOAT          = 11    // 1011
 };  
 
@@ -347,6 +347,17 @@ Bool oz_isLiteral(TaggedRef term) {
 }
 
 inline
+Bool isPromiseTag(TypeOfTerm tag) {
+  return tag == PROMISE;
+}
+
+inline
+Bool oz_isPromise(TaggedRef term) {
+  GCDEBUG(term);
+  return isPromiseTag(tagTypeOf(term));
+}
+
+inline
 Bool isSRecordTag(TypeOfTerm tag) {
   return tag == SRECORD;
 }
@@ -462,6 +473,13 @@ TaggedRef makeTaggedLiteral(Literal *s)
 }
 
 inline
+TaggedRef makeTaggedPromise(TaggedRef *s)
+{
+  CHECK_POINTER_N(s);
+  return makeTaggedRef2p(PROMISE,s);
+}
+
+inline
 TaggedRef makeTaggedSmallInt(int32 s)
 {
 #ifdef LARGEADRESSES
@@ -507,6 +525,7 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(LTUPLE,s)
 #define makeTaggedSRecord(s)   makeTaggedRef2p(SRECORD,s)
 #define makeTaggedLiteral(s)   makeTaggedRef2p(LITERAL,s)
+#define makeTaggedPromise(s)   makeTaggedRef2p(PROMISE,s)
 #define makeTaggedFloat(s)     makeTaggedRef2p(OZFLOAT,s)
 #define makeTaggedConst(s)     makeTaggedRef2p(OZCONST,s)
 #define makeTaggedTert(s)      makeTaggedRef2p(OZCONST,s)
@@ -549,6 +568,14 @@ TaggedRef tagged2NonVariable(TaggedRef *term)
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: allocate on heap, an return a ref to it
+
+inline
+TaggedRef *newTaggedRef(TaggedRef *t)
+{
+  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
+  *ref = makeTaggedRef(t);
+  return ref;
+}
 
 inline
 TaggedRef *newTaggedSVar(SVariable *c)
@@ -650,6 +677,14 @@ Literal *tagged2Literal(TaggedRef ref)
   GCDEBUG(ref);
   CHECKTAG(LITERAL);
   return (Literal *) tagValueOf2(LITERAL,ref);
+}
+
+inline
+TaggedRef *tagged2Promise(TaggedRef ref)
+{
+  GCDEBUG(ref);
+  CHECKTAG(PROMISE);
+  return (TaggedRef *) tagValueOf2(PROMISE,ref);
 }
 
 inline
