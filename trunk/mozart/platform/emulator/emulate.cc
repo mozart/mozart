@@ -418,13 +418,24 @@ void pushContX(TaskStack *stk,
 #define INCFPC(N) PC += N
 
 #if !defined(DEBUG_EMULATOR) && !defined(DISABLE_INSTRPROFILE) && defined(__GNUC__)
-#define asmLbl(INSTR) asm(" " #INSTR ":");
+#define asmLbl(INSTR) asm volatile(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
 #endif
 
+#ifdef INLINEOPCODEMAP
+#define INSERTOPCODE(INSTR) \
+        INSTR##FAKE: \
+        asm volatile(OPCODEALIGNINSTR); \
+        asm volatile(OPM_##INSTR); \
+        asm volatile(OPCODEALIGNINSTR);
+#else
+#define INSERTOPCODE(INSTR)
+#endif
+
 #ifdef THREADED
-#define Case(INSTR) INSTR##LBL : asmLbl(INSTR); 
+
+#define Case(INSTR) INSERTOPCODE(INSTR); INSTR##LBL : asmLbl(INSTR); 
 
 #ifdef DELAY_SLOT
 // let gcc fill in the delay slot of the "jmp" instruction:
@@ -691,6 +702,13 @@ int engine(Bool init)
   if (init) {
 #include "instrtab.hh"
     CodeArea::init(instrTable);
+#ifdef DEBUG_INLINEOPCODES
+    for (int i=0; i<OZERROR; i++)
+      if (CodeArea::adressToOpcode(CodeArea::opcodeToAdress((Opcode) i)) != i) {
+	printf("Aaargh: %s\n", opcodeToString((Opcode) i));
+      }
+	
+#endif
     return 0;
   }
 #else
