@@ -3,8 +3,12 @@
  *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  *    Ralf Scheidhauer <scheidhr@dfki.de>
  *
+ *  Contributors:
+ *    Thorsten Brunklaus <brunklaus@ps.uni-sb.de>
+ *
  *  Copyright:
- *    Leif Kornstaedt, 1999
+ *    Thorsten Brunklaus, 2002-2003
+ *    Leif Kornstaedt, 1999-2003
  *    Ralf Scheidhauer, 1999
  * 
  *  Last change:
@@ -36,14 +40,12 @@
 // Summary of how oztool behaves:
 //
 // oztool -gnu c++ -c <cfile> [ -o <ofile> ]
-//    g++ -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
+//    g++-2 -mno-cygwin -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
 // oztool -gnu cc -c <cfile> [ -o <ofile> ]
-//    gcc -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
+//    gcc-2 -mno-cygwin -I"$OZHOME/include" -c <cfile> [ -o <ofile> ]
 // oztool -gnu ld -o <target> <file1> ... <filen>
-//    dlltool --def $OZHOME/include/emulator.def --output-lib <tmpfile>.a
-//    dllwrap -s -o <target> --dllname <target> <file1> ... <filen> \
-//       <tmpfile>.a -lmsvcrt
-//    rm <tmpfile>.a
+//    g++-2 -mno-cygwin -shared <args> \
+//       $OZHOME/platform/win32-i486/emulator.dll -lmsvcrt
 //
 // oztool -msvc c++ -c <cfile> [ -o <ofile> ]
 //    cl -nologo -TP -I"$OZHOME\include" -c <cfile> [ -Fo<ofile> ]
@@ -165,12 +167,12 @@ int execute(char **argv, bool dontQuote)
 {
   char buffer[4096];
   char *aux = buffer;
-  while (*argv) {
-    if (!dontQuote)
+  for (int i = 0; argv[i]; i++) {
+    if (!dontQuote && i > 0)
       *aux++ = '\"';
-    strcpy(aux,*argv);
-    aux += strlen(*argv++);
-    if (!dontQuote)
+    strcpy(aux,argv[i]);
+    aux += strlen(argv[i]);
+    if (!dontQuote && i > 0)
       *aux++ = '\"';
     *aux++ = ' ';
   }
@@ -214,7 +216,7 @@ int execute(char **argv, bool dontQuote)
 }
 
 static char *getIncDir(int &argc, char **argv) {
-  char *incdir = concat(getOzHome(true),"/include");
+  char *incdir = NULL;
   for (int i = 1; i < argc; i++)
     if (!strcmp(argv[i],"-inc")) {
       if (i + 1 == argc)
@@ -276,7 +278,15 @@ int main(int argc, char **argv)
     argv++; argc--;
   }
 
+  char *gccProg = ozGetenv("OZTOOL_CC");
+  gccProg = gccProg? strdup(gccProg): const_cast<char *>("gcc-2 -mno-cygwin");
+  char *gxxProg = ozGetenv("OZTOOL_CXX");
+  gxxProg = gxxProg? strdup(gxxProg): const_cast<char *>("g++-2 -mno-cygwin");
+  char *gldProg = ozGetenv("OZTOOL_LD");
+  gldProg = gldProg? strdup(gldProg): const_cast<char *>("g++-2 -mno-cygwin");
   char *incdir = getIncDir(argc,argv);
+  bool hasIncdir = incdir != NULL;
+  if (!hasIncdir) incdir = concat(getOzHome(true),"/include");
 
   if (!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++")) {
     int cxx = !strcmp(argv[1],"c++");
@@ -286,12 +296,11 @@ int main(int argc, char **argv)
     bool dontQuote = false;
     switch (sys) {
     case SYS_GNU:
-      ccCmd = new char*[argc + 3];
+      ccCmd = new char *[argc + 3];
       if (cxx)
-	ccCmd[r++] = "g++";
+	ccCmd[r++] = gxxProg;
       else
-	ccCmd[r++] = "gcc";
-      ccCmd[r++] = "-mno-cygwin";
+	ccCmd[r++] = gccProg;
       ccCmd[r++] = concat("-I",toUnix(incdir));
       while (k < argc) {
 	if (!strcmp(argv[k],"-c") || !strcmp(argv[k],"-o")) {
@@ -306,7 +315,7 @@ int main(int argc, char **argv)
       }
       break;
     case SYS_MSVC:
-      ccCmd = new char*[argc + 6];
+      ccCmd = new char *[argc + 6];
       ccCmd[r++] = "cl";
       ccCmd[r++] = "-nologo";
       if (cxx)
@@ -372,60 +381,17 @@ int main(int argc, char **argv)
   } else if (!strcmp(argv[1],"ld")) {
     switch (sys) {
     case SYS_GNU: {
-      char *target = NULL;
-      char *tmpfile_a = concat(toUnix(ostmpnam()),".a");
-      char *tmpfile_def = concat(toUnix(ostmpnam()),".def");
-      char **dlltoolCmd = new char*[7+argc+1];
+      char *ozhome =
+	hasIncdir? incdir: concat(getOzHome(true),"/platform/win32-i486");
+      char **gccSharedCmd = new char *[4+argc+1];
       int index = 0;
-      int k = 2;
-      dlltoolCmd[index++] = "dlltool";
-      dlltoolCmd[index++] = "--def";
-      dlltoolCmd[index++] = toUnix(concat(incdir,"/emulator.def"));
-      dlltoolCmd[index++] = "--output-def";
-      dlltoolCmd[index++] = tmpfile_def;
-      dlltoolCmd[index++] = "--output-lib";
-      dlltoolCmd[index++] = tmpfile_a;
-      while (k < argc) {
-	if (!strncmp(argv[k],"-l",2) || !strncmp(argv[k],"-L",2)) {
-	  // do not pass to dlltool
-	  k++;
-	} else if (!strcmp(argv[k],"-s")) {
-	  // do not pass to dlltool
-	  k++;
-	} else if (!strcmp(argv[k],"-o")) {
-	  if (argc == k + 1)
-	    usage("Missing argument to `-o'.\n");
-	  target = argv[k + 1];
-	  k += 2;
-	} else {
-	  dlltoolCmd[index++] = argv[k++];
-	}
-      }
-      dlltoolCmd[index] = NULL;
-      if (target == NULL)
-	usage("Missing option `-o'.\n");
-      int r = execute(dlltoolCmd,false);
-      if (!r) {
-	char **dllwrapCmd = new char*[8+argc+3];
-	index = 0;
-	dllwrapCmd[index++] = "dllwrap";
-	dllwrapCmd[index++] = "--target";
-	dllwrapCmd[index++] = "i386-mingw32";
-	dllwrapCmd[index++] = "-mno-cygwin";
-	dllwrapCmd[index++] = "--def";
-	dllwrapCmd[index++] = tmpfile_def;
-	dllwrapCmd[index++] = "--dllname";
-	dllwrapCmd[index++] = target;
-	for (int i = 2; i < argc; i++)
-	  dllwrapCmd[index++] = argv[i];
-	dllwrapCmd[index++] = tmpfile_a;
-	dllwrapCmd[index++] = "-lmsvcrt";
-	dllwrapCmd[index] = NULL;
-	r = execute(dllwrapCmd,false);
-      }
-      unlink(tmpfile_a);
-      unlink(tmpfile_def);
-      doexit(r);
+      gccSharedCmd[index++] = gldProg;
+      gccSharedCmd[index++] = "-shared";
+      for (int k = 2; k < argc; k++)
+	gccSharedCmd[index++] = argv[k];
+      gccSharedCmd[index++] = concat(ozhome,"/emulator.dll");
+      gccSharedCmd[index] = NULL;
+      doexit(execute(gccSharedCmd,false));
     }
     case SYS_MSVC: {
       char *tmpfile = toWindows(ostmpnam());
@@ -482,7 +448,7 @@ int main(int argc, char **argv)
 	}
 	char *target = argv[3];
 	char *tmpfile_lib = toDos(concat(ostmpnam(),".lib"));
-	char **wlibCmd = new char*[6];
+	char **wlibCmd = new char *[6];
 	wlibCmd[0] = "wlib";
 	wlibCmd[1] = "/q";
 	wlibCmd[2] = "/n";
@@ -491,7 +457,7 @@ int main(int argc, char **argv)
 	wlibCmd[5] = NULL;
 	int r = execute(wlibCmd,true);
 	if (!r) {
-	  char **wlinkCmd = new char*[10];
+	  char **wlinkCmd = new char *[10];
 	  wlinkCmd[0] = "wlink";
 	  wlinkCmd[1] = "system";
 	  wlinkCmd[2] = "nt_dll";
