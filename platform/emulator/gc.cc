@@ -317,9 +317,15 @@ public:
   static void gc()
   {
     ExtRefNode *help = extRefs;
+#ifdef PROFILE
+    am.stat.protectedCounter = 0;
+#endif
     while(help) {
       gcTagged(*(TaggedRef*)help->elem, *(TaggedRef*)help->elem);
       help = (ExtRefNode*) help->next;
+#ifdef PROFILE
+      am.stat.protectedCounter++;
+#endif
     }
   }
 };
