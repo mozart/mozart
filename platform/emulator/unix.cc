@@ -49,18 +49,28 @@
 extern int h_errno;
 #endif
 
-
-#ifdef WINDOWS
-#define S_IWGRP 0
-#define S_IXGRP 0
-#define S_IROTH 0
-#define S_IWOTH 0
-#define S_IXOTH 0
-#define S_IRGRP 0
-#endif
-
 #include <time.h>
 #include <sys/stat.h>
+
+// The following is an approximation under Windows.
+#ifndef S_IRGRP
+#define S_IRGRP _S_IREAD
+#endif
+#ifndef S_IWGRP
+#define S_IWGRP _S_IWRITE
+#endif
+#ifndef S_IXGRP
+#define S_IXGRP _S_IEXEC
+#endif
+#ifndef S_IROTH
+#define S_IROTH _S_IREAD
+#endif
+#ifndef S_IWOTH
+#define S_IWOTH _S_IWRITE
+#endif
+#ifndef S_IXOTH
+#define S_IXOTH _S_IEXEC
+#endif
 
 #if !defined(OS2_I486) && !defined(WINDOWS)
 #include <sys/param.h>
