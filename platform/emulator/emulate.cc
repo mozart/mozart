@@ -1041,6 +1041,55 @@ void engine() {
     }
 
 
+  INSTRUCTION(INLINEEQEQ)
+    {
+      BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
+      InlineFun2 fun = (InlineFun2)entry->getInlineFun();
+      TaggedRef &Out = Xreg(getRegArg(PC+4));
+
+      TaggedRef A      = Xreg(getRegArg(PC+2));
+      TaggedRef B      = Xreg(getRegArg(PC+3));
+
+      OZ_Bool res = fun(A,B,Out);
+
+      switch(res) {
+
+      case PROCEED:
+        DISPATCH(6);
+
+      case SUSPEND:
+        {
+          TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
+          int argsToSave = getPosIntArg(PC+5);
+
+          Xreg(getRegArg(PC+4)) = newVar;
+
+          e->pushTask(CBB,PC+6,Y,G,X,argsToSave);
+
+          X[0] = A;
+          X[1] = B;
+          X[2] = newVar;
+
+          extern TaggedRef suspHandlerEqEq;
+          if (suspHandlerEqEq != makeTaggedNULL() && isSRecord(suspHandlerEqEq)) {
+            isExecute = OK;
+            predArity = 3;
+            predicate = tagged2SRecord(suspHandlerEqEq);
+            goto LBLcall;
+          }
+
+          HANDLE_FAILURE(PC+6,
+                         message("==F must call susp handler: no predicate: %s",
+                                 tagged2String(suspHandlerEqEq)));
+        }
+      case FAILED:
+        error("{`%s` %s %s} unexpectedly failed",
+              entry->getPrintName(), tagged2String(A),tagged2String(B));
+        break;
+      }
+    }
+
+
   INSTRUCTION(INLINEFUN3)
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
@@ -1519,24 +1568,24 @@ void engine() {
 
    {
      {
-       TaggedRef functor = RegAccess(HelpReg1,getRegArg(PC+1));
+       TaggedRef taggedPredicate = RegAccess(HelpReg1,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
        PC = isExecute ? 0 : PC+3;
 
-       DEREF(functor,functorPtr,functorTag);
-       if (!isSRecord(functorTag)) {
-         if (isAnyVar(functorTag)) {
-           X[predArity++] = (TaggedRef) functorPtr;
+       DEREF(taggedPredicate,predPtr,predTag);
+       if (!isSRecord(predTag)) {
+         if (isAnyVar(predTag)) {
+           X[predArity++] = (TaggedRef) predPtr;
            extern TaggedRef suspCallHandler; // mm2
            predicate = tagged2SRecord(suspCallHandler);
            goto LBLcall;
          }
          HANDLE_FAILURE1(PC,("call: no abstraction or builtin: %s",
-                                  tagged2String(functor)));
+                                  tagged2String(taggedPredicate)));
        }
 
-       predicate = tagged2SRecord(functor);
+       predicate = tagged2SRecord(taggedPredicate);
      }
 
 // -----------------------------------------------------------------------
