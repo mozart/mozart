@@ -31,7 +31,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
   case SMALLINT:
     {
       if (! finiteDomain.contains(smallIntValue(term))) return FALSE;
-      propagate(var, fd_det, term, TRUE);
+      propagate(var, fd_det, term, pc_cv_unif);
 
       if (isLocalVariable()) {
 	doBind(vPtr, term);
@@ -65,16 +65,16 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  if (tPtr < vPtr) { // bind var to term
 	    if (intsct == fd_singleton) {
 	      TaggedRef int_term = newSmallInt(intsct.singl());
-	      propagate(var, left_dom, int_term, TRUE);
-	      termVar->propagate(term, right_dom, int_term, TRUE);
+	      propagate(var, left_dom, int_term, pc_cv_unif);
+	      termVar->propagate(term, right_dom, int_term, pc_cv_unif);
 	      doBind(tPtr, int_term);
 	      doBind(vPtr, TaggedRef(tPtr));
 	      dispose();
 	      termVar->dispose();
 	    } else {
 	      termVar->setDom(intsct);
-	      propagate(var, left_dom, TaggedRef(tPtr), TRUE);
-	      termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
+	      propagate(var, left_dom, TaggedRef(tPtr), pc_cv_unif);
+	      termVar->propagate(term, right_dom, TaggedRef(vPtr), pc_cv_unif);
 	      relinkSuspListTo(termVar);
 	      doBind(vPtr, TaggedRef(tPtr));
 	      dispose();
@@ -82,16 +82,16 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  } else { // bind term to var
 	    if (intsct == fd_singleton) {
 	      TaggedRef int_var = newSmallInt(intsct.singl());
-	      termVar->propagate(term, right_dom, int_var, TRUE);
-	      propagate(var, left_dom, int_var, TRUE);
+	      termVar->propagate(term, right_dom, int_var, pc_cv_unif);
+	      propagate(var, left_dom, int_var, pc_cv_unif);
 	      doBind(vPtr, int_var);
 	      doBind(tPtr, TaggedRef(vPtr));
 	      dispose();
 	      termVar->dispose();
 	    } else {
 	      setDom(intsct);
-	      termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
-	      propagate(var, left_dom, TaggedRef(vPtr), TRUE);
+	      termVar->propagate(term, right_dom, TaggedRef(vPtr), pc_cv_unif);
+	      propagate(var, left_dom, TaggedRef(vPtr), pc_cv_unif);
 	      termVar->relinkSuspListTo(this);
 	      doBind(tPtr, TaggedRef(vPtr));
 	      termVar->dispose();
@@ -104,22 +104,22 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  if (intsct.getSize() != termDom.getSize()){
 	    if (intsct == fd_singleton) {
 	      TaggedRef int_var = newSmallInt(intsct.singl());
-	      termVar->propagate(term, right_dom, int_var, TRUE);
-	      propagate(var, left_dom, int_var, TRUE);
+	      termVar->propagate(term, right_dom, int_var, pc_cv_unif);
+	      propagate(var, left_dom, int_var, pc_cv_unif);
 	      termVar->addSuspension(new Suspension(am.currentBoard));
 	      doBind(vPtr, int_var);
 	      doBindAndTrail(term, tPtr, TaggedRef(vPtr));
 	      dispose();
 	    } else {
 	      setDom(intsct);
-	      termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
-	      propagate(var, left_dom, TaggedRef(vPtr), TRUE);
+	      termVar->propagate(term, right_dom, TaggedRef(vPtr), pc_cv_unif);
+	      propagate(var, left_dom, TaggedRef(vPtr), pc_cv_unif);
 	      termVar->addSuspension(new Suspension(am.currentBoard));
 	      doBindAndTrail(term, tPtr, TaggedRef(vPtr));
 	    }
 	  } else {
-	    termVar->propagate(term, right_dom, TaggedRef(tPtr), TRUE);
-	    propagate(var, left_dom, TaggedRef(tPtr), TRUE);
+	    termVar->propagate(term, right_dom, TaggedRef(tPtr), pc_cv_unif);
+	    propagate(var, left_dom, TaggedRef(tPtr), pc_cv_unif);
 	    relinkSuspListTo(termVar);
 	    doBind(vPtr, TaggedRef(tPtr));
 	    dispose();
@@ -131,22 +131,22 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	  if (intsct.getSize() != finiteDomain.getSize()){
 	    if(intsct == fd_singleton) {
 	      TaggedRef int_term = newSmallInt(intsct.singl());
-	      propagate(var, left_dom, int_term, TRUE);
-	      termVar->propagate(term, right_dom, int_term, TRUE);
+	      propagate(var, left_dom, int_term, pc_cv_unif);
+	      termVar->propagate(term, right_dom, int_term, pc_cv_unif);
 	      addSuspension(new Suspension(am.currentBoard));
 	      doBind(tPtr, int_term);
 	      doBindAndTrail(var, vPtr, TaggedRef(tPtr));
 	      termVar->dispose();
 	    } else {
 	      termVar->setDom(intsct);
-	      propagate(var, left_dom, TaggedRef(tPtr), TRUE);
-	      termVar->propagate(term, right_dom, TaggedRef(tPtr), TRUE);
+	      propagate(var, left_dom, TaggedRef(tPtr), pc_cv_unif);
+	      termVar->propagate(term, right_dom, TaggedRef(tPtr), pc_cv_unif);
 	      addSuspension(new Suspension(am.currentBoard));
 	      doBindAndTrail(var, vPtr, TaggedRef(tPtr));
 	    }
 	  } else {
-	    termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
-	    propagate(var, left_dom, TaggedRef(vPtr), TRUE);
+	    termVar->propagate(term, right_dom, TaggedRef(vPtr), pc_cv_unif);
+	    propagate(var, left_dom, TaggedRef(vPtr), pc_cv_unif);
 	    termVar->relinkSuspListTo(this);
 	    doBind(tPtr, TaggedRef(vPtr));
 	    termVar->dispose();
@@ -157,15 +157,15 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 	{
 	  if (intsct == fd_singleton){
 	    TaggedRef int_val = newSmallInt(intsct.singl());
-	    propagate(var, left_dom, int_val, TRUE);
-	    termVar->propagate(term, right_dom, int_val, TRUE);
+	    propagate(var, left_dom, int_val, pc_cv_unif);
+	    termVar->propagate(term, right_dom, int_val, pc_cv_unif);
 	    doBindAndTrail(var, vPtr, int_val);
 	    doBindAndTrail(term, tPtr, TaggedRef(vPtr));
 	  } else {
 	    TaggedRef pn = tagged2CVar(var)->getName();
 	    TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct, pn));
-	    propagate(var, left_dom, TaggedRef(var_val), TRUE);
-	    termVar->propagate(term, right_dom, TaggedRef(var_val), TRUE);
+	    propagate(var, left_dom, TaggedRef(var_val), pc_cv_unif);
+	    termVar->propagate(term, right_dom, TaggedRef(var_val), pc_cv_unif);
 	    doBindAndTrail(var, vPtr, TaggedRef(var_val));
 	    doBindAndTrail(term, tPtr, TaggedRef(var_val));
 	  }
