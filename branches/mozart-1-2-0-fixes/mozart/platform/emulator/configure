@@ -3101,11 +3101,11 @@ fi
       case `$CXX -dumpversion` in
       2.95.*)
           oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
-	  oz_om="-mcpu=v8 -fdelayed-branch"
+	  oz_om=""
           ;;
       *)
           oz_opt="-O3 -pipe -fstrict-aliasing"
-	  oz_om="-mv8 -fdelayed-branch"
+	  oz_om=""
           ;;
       esac
       ;;
