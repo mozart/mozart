@@ -69,6 +69,8 @@ Bool osBlockSignals()
 //  return sigblock(~0) == 0;
   sigset_t s,sOld;
   sigfillset(&s);
+  /* SOME SIGNALS SHOULD NOT BE BLOCKED (RS) */
+//  sigdelset(&s,SIGINT);
   sigprocmask(SIG_SETMASK,&s,&sOld);
   sigemptyset(&s);
   return memcmp(&s,&sOld,sizeof(sigset_t)) == 0;
