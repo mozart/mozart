@@ -68,11 +68,11 @@
 #endif
 
 
-#if defined(MIPS) || defined(sparc) || defined(OSF1_ALPHA)
+#if defined(ARCH_MIPS) || defined(ARCH_SPARC) || defined(OSF1_ALPHA)
 #define DELAY_SLOT
 #endif
 
-#if !defined(LINUX_I486) && !defined(FREEBSD_I486) && !defined(SOLARIS_I486)
+#ifndef ARCH_I486
 #define MANY_REGISTERS
 #endif
 
