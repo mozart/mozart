@@ -7024,16 +7024,7 @@ OZ_C_proc_begin(BINew,3) {
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIgetSelf,1)
-{
-  return oz_unify(makeTaggedConst(am.getSelf()),
-		  OZ_getCArg(0));
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIsetSelf,1)
-{
+OZ_C_proc_begin(BIsetSelf,1) {
   oz_declareNonvarArg(0,obj);
   obj = deref(obj);
   if (!isObject(obj)) {
@@ -7767,7 +7758,6 @@ BIspec allSpec[] = {
   {"ooGetLock",       1,BIooGetLock, 	       (IFOR) ooGetLockInline},
   {"newObject",       2,BInewObject, 	       (IFOR) newObjectInline},
   {"New",             3,BINew,                0},
-  {"getSelf",         1,BIgetSelf,            0},
   {"setSelf",         1,BIsetSelf,            0},
   {"ooExch",          3,BIooExch,             (IFOR) ooExchInline},
 
