@@ -717,6 +717,7 @@ in
 		  {New SourceWindow init(self.TopLevel Title VS) _}
 	       [] toTop() then
 		  {self.Book toTop(self.Messages)}
+	       [] unsuccessful() then skip
 	       [] pong() then skip
 	       else {self M}
 	       end
