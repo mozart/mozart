@@ -1161,6 +1161,29 @@ OZ_BI_define(BInewUniqueName,1,1)
   OZ_RETURN(oz_uniqueName(name));
 } OZ_BI_end
 
+OZ_BI_define(BInameLess,2,1)
+{
+  oz_declareNonvarIN(0,name1);
+  oz_declareNonvarIN(1,name2);
+  if (!oz_isName(name1)) {
+    oz_typeError(0,"Name");
+  } else if (!oz_isName(name2)) {
+    oz_typeError(1,"Name");
+  } else {
+    OZ_RETURN_BOOL(atomcmp(tagged2Literal(name1),tagged2Literal(name2)) < 0);
+  }
+} OZ_BI_end
+
+OZ_BI_define(BInameHash,1,1)
+{
+  oz_declareNonvarIN(0,name);
+  if (!oz_isName(name)) {
+    oz_typeError(0,"Name");
+  } else {
+    OZ_RETURN_INT(tagged2Literal(name)->hash());
+  }
+} OZ_BI_end
+
 // ---------------------------------------------------------------------
 // term type
 // ---------------------------------------------------------------------
