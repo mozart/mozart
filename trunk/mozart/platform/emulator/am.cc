@@ -98,7 +98,6 @@ void usage(int /* argc */,char **argv) {
 	  argv[0]);
   fprintf(stderr, " -E           : running under emacs\n");
   fprintf(stderr, " -d           : debugging on\n");
-  fprintf(stderr, " -quiet       : no banner\n");
   fprintf(stderr, " -c <compiler>: start the compiler\n");
   fprintf(stderr, " -S <fifo>    : connect to compiler via FIFO\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
@@ -125,78 +124,59 @@ char *getOptArg(int &i, int argc, char **argv)
 }
 
 
-static void motd() {
-  fprintf(stderr,"-----------------------------------------------\n");
-  fprintf(stderr,"MOTD\n\n");
-  fprintf(stderr,"25 Feb 1998, mehl@dfki.de\n");
-  fprintf(stderr,"The foreign function interface was changed.\n");
-  fprintf(stderr,"User defined builtins have to be recompiled.\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"The interface will change again soon...\n");
-  fprintf(stderr,"-----------------------------------------------\n");
-}
-
 static
 void printBanner(char*initFile)
 {
-  version();
-
-  motd();
 #ifdef NO_LTQ
   warning("LTQ is turned off.");
 #endif
 
 #ifdef DEBUG_CHECK
-  printf("Compile Flags:"
-	 " DEBUG_CHECK"
+  fprintf(stderr,
+	  "Compile Flags:"
+	  " DEBUG_CHECK"
 #ifdef DEBUG_DET
-	 " DEBUG_DET"
+	  " DEBUG_DET"
 #endif
 #ifdef DEBUG_TRACE
-	 " DEBUG_TRACE"
+	  " DEBUG_TRACE"
 #endif
 #ifdef DEBUG_GC
-         " DEBUG_GC"
+	  " DEBUG_GC"
 #endif
 #ifdef DEBUG_FD
-         " DEBUG_FD"
+	  " DEBUG_FD"
 #endif
 #ifdef DEBUG_FSET
-         " DEBUG_FSET"
+	  " DEBUG_FSET"
 #endif
 #ifdef PROFILE_FD
-         " PROFILE_FD"
+	  " PROFILE_FD"
 #endif
 #ifdef RECINSTRFETCH
-         " RECINSTRFETCH=%d", RECINSTRFETCH
+	  " RECINSTRFETCH=%d", RECINSTRFETCH
 #endif
 	 );
 #endif
 
-  printf("\n");
-  
 #ifdef PROFILE_EMULATOR
-  printf("Compiled to support gprof-profiling.\n");
+  fprintf(stderr, "Compiled to support gprof-profiling.\n");
 #ifdef DEBUG_DET
-  printf("Deterministic scheduling.\n");
+  fprintf(stderr, "Deterministic scheduling.\n");
 #else
-  printf("Time-slice scheduling.\n");
-#endif  
+  fprintf(stderr, "Time-slice scheduling.\n");
+#endif
 #endif
 
 #ifdef THREADED
-  // printf("Using threaded code (abs jumps).\n");
+  // fprintf(stderr, "Using threaded code (abs jumps).\n");
 #else
-  printf("Not using threaded code.\n");
+  fprintf(stderr, "Not using threaded code.\n");
 #endif
 
 #ifdef PROFILE_FD
-  printf("Compiled to support fd-profiling.\n");
+  fprintf(stderr, "Compiled to support fd-profiling.\n");
 #endif
-  if (initFile)
-    printf("Init file: %s\n",initFile);
-  else
-    printf("No init file\n");
 }
 
 
@@ -240,7 +220,6 @@ void AM::init(int argc,char **argv)
   char *initFile = getenv("OZINIT");
   char *assemblyCodeFile = NULL;
   char *ozmaLib = NULL;
-  Bool quiet = FALSE;
   int moreThanOne = 0;
   
   /* process command line arguments */
@@ -256,10 +235,6 @@ void AM::init(int argc,char **argv)
 #ifdef DEBUG_TRACE
       ozd_tracerOn();
 #endif
-      continue;
-    }
-    if (strcmp(argv[i],"-quiet")==0) {
-      quiet = TRUE;
       continue;
     }
     if (strcmp(argv[i],"-c")==0) {
@@ -322,8 +297,7 @@ void AM::init(int argc,char **argv)
    }
 
 #ifdef DEBUG_CHECK
-  if (!quiet)
-    ozconf.showIdleMessage=1;
+  ozconf.showIdleMessage=1;
 #endif
 
   if (!initFile) {
@@ -338,11 +312,12 @@ void AM::init(int argc,char **argv)
   }
   if (initFile && *initFile=='\0') initFile=0;
 
-  if (quiet == FALSE) {
-    printBanner(initFile);
-  } else if (initFile && getenv("OZ_TRACE_LOAD")) {
-    fprintf(stderr,"Init file: %s\n",initFile);
-  }
+  printBanner(initFile);
+  if (getenv("OZ_TRACE_LOAD"))
+    if (initFile)
+      fprintf(stderr,"Init file: %s\n",initFile);
+    else
+      fprintf(stderr,"No init file\n");
 
   isStandaloneF=NO;  // mm2 seems to be OLD_COMPILER only?
 #ifdef OLD_COMPILER
