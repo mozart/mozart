@@ -3994,6 +3994,7 @@ OZ_Return printTerm(OZ_Term t, int fd, Bool newline)
  loop:
   int written = write(fd,s,n);
   if (written < 0) {
+    if (ossockerrno()==EINTR) goto loop;
     return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_unixError(ossockerrno()));
   }
   if (written<n) {
