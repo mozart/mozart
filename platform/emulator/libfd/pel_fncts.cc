@@ -56,12 +56,13 @@ public:
   pf_return_t operator ()() { return pf_return_t(_r); }
 };
 
-pf_return_t PEL_LessEqOffset::propagate(PEL_Engine &e)
+template <class ENGINE, class FDVAR, class PFDVAR>
+pf_return_t PEL_LessEqOffset<ENGINE, FDVAR, PFDVAR>::propagate(PEL_Engine &e)
 {
   //
-  PEL_FDIntVar &x = *(PEL_FDIntVar *) e[_x];
+  FDVAR &x = *(FDVAR *) e[_x];
   int c = _c;
-  PEL_FDIntVar &y = *(PEL_FDIntVar *) e[_y];
+  FDVAR &y = *(FDVAR *) e[_y];
   //
   PEL_ParamIterator_V_V iter(x, y);
   PEL_Service s(iter);
