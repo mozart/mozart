@@ -83,7 +83,10 @@
          applet and can by this join into the existing drawing board.
 
        <p>
-         Mailing applets relies on the program <file/metasend/, which
+         Note that mailing applets is currently not possible on
+         windows platforms at all.
+         In addition, mailing applets relies on the program
+         <file/metasend/, which
          is part of the <file/metamail/ package. A discussion of the
          software package you can find in <ptr to="Peek.95">. The
          package is available at
