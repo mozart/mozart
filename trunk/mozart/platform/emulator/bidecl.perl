@@ -148,10 +148,378 @@
 
 
 $builtins = {
+    #* Access to all of them: the Builtin 'builtin'
+
     'builtin'	=> { in  => ['+virtualString','+int'],
 		     out => ['+procedure'],
 		     BI  => BIbuiltin,
 		     native => true},
+
+
+    #* Core
+
+    ##* Type Tests
+
+    'IsNumber'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisNumberB,
+			     ibi => BIisNumberBInline,
+			     shallow => isNumberRel,
+			     native => false},
+
+    'IsInt'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisIntB,
+			     ibi => BIisIntBInline,
+			     shallow => isIntRel,
+			     native => false},
+
+    'IsFloat'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisFloatB,
+			     ibi => BIisFloatBInline,
+			     shallow => isFloatRel,
+			     native => false},
+
+    'IsRecord'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisRecordB,
+			     ibi => isRecordBInline,
+			     shallow => isRecordRel,
+			     native => false},
+
+    'IsTuple'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisTupleB,
+			     ibi => isTupleBInline,
+			     shallow => isTupleRel,
+			     native => false},
+
+    'IsLiteral'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisLiteralB,
+			     ibi => isLiteralBInline,
+			     shallow => isLiteralRel,
+			     native => false},
+
+    'IsLock'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisLockB,
+			     ibi => isLockBInline,
+			     shallow => isLockRel,
+			     native => false},
+
+    'IsCell'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisCellB,
+			     ibi => isCellBInline,
+			     shallow => isCellRel,
+			     native => false},
+
+    'IsPort'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisPortB,
+			     ibi => isPortBInline,
+			     shallow => isPortRel,
+			     native => false},
+
+    'IsProcedure'	=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisProcedureB,
+			     ibi => isProcedureBInline,
+			     shallow => isProcedureRel,
+			     native => false},
+
+    'IsName'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisNameB,
+			     ibi => isNameBInline,
+			     shallow => isNameRel,
+			     native => false},
+
+    'IsAtom'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisAtomB,
+			     ibi => isAtomBInline,
+			     shallow => isAtomRel,
+			     native => false},
+
+    'IsBool'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisBoolB,
+			     ibi => isBoolBInline,
+			     shallow => isBoolRel,
+			     native => false},
+
+    'IsUnit'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisUnitB,
+			     ibi => isUnitBInline,
+			     shallow => isUnitRel,
+			     native => false},
+
+    'IsChunk'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisChunkB,
+			     ibi => isChunkBInline,
+			     shallow => isChunkRel,
+			     native => false},
+
+    'IsRecordC'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisRecordCB,
+			     ibi => isRecordCBInline,
+			     shallow => isRecordCRel,
+			     native => false},
+
+    'IsObject'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisObjectB,
+			     ibi => BIisObjectBInline,
+			     shallow => isObjectRel,
+			     native => false},
+
+    'IsDictionary' 	=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisDictionary,
+			     ibi => isDictionaryInline,
+			     native => false},
+
+
+    'IsArray'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     bi  => BIisArray,
+			     ibi => isArrayInline,
+			     native => false},
+
+    'IsChar'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     BI  => BIcharIs,
+			     native => false},
+
+    'IsString'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     BI  => BIisString,
+			     native => false},
+
+    'IsVirtualString'	=> { in  => ['!+value'],
+			     out => ['+bool'],
+			     BI  => BIvsIs,
+			     native => false},
+
+    'IsFree'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisFree,
+			     ibi => isFreeInline,
+			     shallow => IsFreeRel,
+			     native => false},
+
+    'IsKinded'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisKinded,
+			     ibi => isKindedInline,
+			     shallow => IsKindedRel,
+			     native => false},
+
+    'IsDet'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisDet,
+			     ibi => isDetInline,
+			     shallow => IsDetRel,
+			     native => false},
+
+    'isNumberRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisNumber,
+			     ibi => BIisNumberInline,
+			     native => false},
+
+    'isIntRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisInt,
+			     ibi => BIisIntInline,
+			     native => false},
+
+    'isFloatRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisFloat,
+			     ibi => BIisFloatInline,
+			     native => false},
+
+    'isRecordRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisRecord,
+			     ibi => isRecordInline,
+			     native => false},
+
+    'isTupleRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisTuple,
+			     ibi => isTupleInline,
+			     native => false},
+
+    'isLiteralRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisLiteral,
+			     ibi => isLiteralInline,
+			     native => false},
+
+    'isCellRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisCell,
+			     ibi => isCellInline,
+			     native => false},
+
+    'isPortRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisPort,
+			     ibi => isPortInline,
+			     native => false},
+
+    'isProcedureRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisProcedure,
+			     ibi => isProcedureInline,
+			     native => false},
+
+    'isNameRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisName,
+			     ibi => isNameInline,
+			     native => false},
+
+    'isAtomRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisAtom,
+			     ibi => isAtomInline,
+			     native => false},
+
+    'isLockRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisLock,
+			     ibi => isLockInline,
+			     native => false},
+
+    'isBoolRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisBool,
+			     ibi => isBoolInline,
+			     native => false},
+
+    'isUnitRel'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisUnit,
+			     ibi => isUnitInline,
+			     native => false},
+
+    'isChunkRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisChunk,
+			     ibi => isChunkInline,
+			     native => false},
+
+    'isRecordCRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisRecordC,
+			     ibi => isRecordCInline,
+			     native => false},
+
+    'isObjectRel'	=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisObject,
+			     ibi => BIisObjectInline,
+			     native => false},
+
+    'IsFreeRel'		=> { in  => ['value'],
+			     out => [],
+			     bi  => BIisFreeRel,
+			     ibi => isFreeRelInline,
+			     native => false},
+
+    'IsKindedRel'	=> { in  => ['value'],
+			     out => [],
+			     bi  => BIisKindedRel,
+			     ibi => isKindedRelInline,
+			     native => false},
+
+    'IsDetRel'		=> { in  => ['value'],
+			     out => [],
+			     bi  => BIisDetRel,
+			     ibi => isDetRelInline,
+			     native => false},
+
+    'Type.ofValue'	=> { in  => ['+value'],
+			     out => ['+atom'],
+			     bi  => BItermType,
+			     ibi => BItermTypeInline,
+			     native => false},
+
+
+    ##* Type Conversion
+
+    'AtomToString'	=> { in  => ['+atom'],
+			     out => ['+string'],
+			     bi  => BIatomToString,
+			     ibi => atomToStringInline,
+			     native => false},
+
+    'StringToAtom'	=> { in  => ['+string'],
+			     out => ['+atom'],
+			     BI  => BIstringToAtom,
+			     native => false},
+
+    'IntToFloat'	=> { in  => ['+int'],
+			     out => ['+float'],
+			     bi  => BIintToFloat,
+			     ibi => BIintToFloatInline,
+			     native => false},
+
+    'FloatToInt'	=> { in  => ['+float'],
+			     out => ['+int'],
+			     bi  => BIfloatToInt,
+			     ibi => BIfloatToIntInline,
+			     native => false},
+
+    'IntToString'	=> { in  => ['+int'],
+			     out => ['+string'],
+			     BI  => BIintToString,
+			     native => false}, # new style builtin
+
+    'FloatToString'	=> { in  => ['+float'],
+			     out => ['+string'],
+			     BI  => BIfloatToString,
+			     native => false},
+
+    'StringToInt'	=> { in  => ['+string'],
+			     out => ['+int'],
+			     BI  => BIstringToInt,
+			     native => false},
+
+    'StringToFloat'	=> { in  => ['+string'],
+			     out => ['+float'],
+			     BI  => BIstringToFloat,
+			     native => false},
+
+
+    'String.isInt'	=> { in  => ['+string'],
+			     out => ['+bool'],
+			     BI  => BIstringIsInt,
+			     native => false},
+
+    'String.isFloat'	=> { in  => ['+string'],
+			     out => ['+bool'],
+			     BI  => BIstringIsFloat,
+			     native => false},
+
+    'String.isAtom'	=> { in  => ['+string'],
+			     out => ['+bool'],
+			     BI  => BIstringIsAtom,
+			     native => false},
+
+
+    ##* Operations on different units
+
+    ###* Numbers (arithmetics)
 
     '/'		=> { in  => ['+float','+float'],
 		     out => ['+float'],
@@ -361,60 +729,7 @@ $builtins = {
 		     ibi => BIfPowInline,
 		     native => false},
 
-    # conversion: float <-> int <-> virtualStrings
-
-    'IntToFloat'	=> { in  => ['+int'],
-			     out => ['+float'],
-			     bi  => BIintToFloat,
-			     ibi => BIintToFloatInline,
-			     native => false},
-
-    'FloatToInt'	=> { in  => ['+float'],
-			     out => ['+int'],
-			     bi  => BIfloatToInt,
-			     ibi => BIfloatToIntInline,
-			     native => false},
-
-    'IntToString'	=> { in  => ['+int'],
-			     out => ['+string'],
-			     BI  => BIintToString,
-			     native => false}, # new style builtin
-
-    'FloatToString'	=> { in  => ['+float'],
-			     out => ['+string'],
-			     BI  => BIfloatToString,
-			     native => false},
-
-    'StringToInt'	=> { in  => ['+string'],
-			     out => ['+int'],
-			     BI  => BIstringToInt,
-			     native => false},
-
-    'StringToFloat'	=> { in  => ['+string'],
-			     out => ['+float'],
-			     BI  => BIstringToFloat,
-			     native => false},
-
-    'String.isInt'	=> { in  => ['+string'],
-			     out => ['+bool'],
-			     BI  => BIstringIsInt,
-			     native => false},
-
-    'String.isFloat'	=> { in  => ['+string'],
-			     out => ['+bool'],
-			     BI  => BIstringIsFloat,
-			     native => false},
-
-    'String.isAtom'	=> { in  => ['+string'],
-			     out => ['+bool'],
-			     BI  => BIstringIsAtom,
-			     native => false},
-
-    'IsArray'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisArray,
-			     ibi => isArrayInline,
-			     native => false},
+    ###* Array/Dictionaries
 
     'NewArray'		=> { in  => ['+int','+int','value'],
 			     out => ['+array'],
@@ -451,12 +766,6 @@ $builtins = {
 			     BI  => BIdictionaryNew,
 			     native => false},
     
-    'IsDictionary' 	=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisDictionary,
-			     ibi => isDictionaryInline,
-			     native => false},
-
     'Dictionary.isEmpty'=> { in  => ['+dictionary'],
 			     out => ['+bool'],
 			     bi  => BIdictionaryIsMt,
@@ -541,6 +850,8 @@ $builtins = {
 			       BI  => BIdictionaryMarkSafe,
 			       native => false},
 
+    ###* Locks, Cells, Ports
+
     'NewLock'		=> { in  => [],
 			     out => ['+lock'],
 			     BI  => BInewLock,
@@ -590,49 +901,7 @@ $builtins = {
 			     ibi => BIassignCellInline,
 			     native => false},
 
-    # perdio  HERE
-
-    'probe'		=> { in  => ['value'],
-			     out => [],
-			     BI  => BIprobe,
-			     native => dontknow},
-
-    'perdioRestop'	=> { in  => ['value'],
-			     out => [],
-			     BI  => BIrestop,
-			     native => dontknow},
-
-    'crash'		=> { in  => [],
-			     out => [],
-			     BI  => BIcrash,
-			     doesNotReturn=>1,
-			     native => dontknow},
-
-    'InstallHandler'	=> { in  => ['+value','+value','value'],
-			     out => [],
-			     BI  => BIhandlerInstall,
-			     native => dontknow},
-
-    'InstallWatcher'	=> { in  => ['+value','+value','value'],
-			     out => [],
-			     BI  => BIwatcherInstall,
-			     native => dontknow},
-
-    'controlVarHandler'	=> { in  => ['+value'],
-			     out => [],
-			     BI  => BIcontrolVarHandler,
-			     native => dontknow},
-    'checkCVH'	        => { in  => ['+value'],
-			     out => [],
-			     BI  => BIcheckCVH,
-			     native => dontknow},
-
-    # characters
-
-    'IsChar'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIcharIs,
-			     native => false},
+    ###* Characters
 
     'Char.isAlNum'	=> { in  => ['+char'],
 			     out => ['+bool'],
@@ -709,7 +978,8 @@ $builtins = {
 			     BI  => BIcharType,
 			     native => false},
 
-    # records
+    ###* Tuples, Records, OFS
+
 
     'Adjoin'		=> { in  => ['+record','+record'],
 			     out => ['+record'],
@@ -738,364 +1008,6 @@ $builtins = {
 			     BI  => BIadjoinAt,
 			     native => false},
 
-    # types tests
-
-    'IsNumber'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisNumberB,
-			     ibi => BIisNumberBInline,
-			     shallow => isNumberRel,
-			     native => false},
-
-    'IsInt'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisIntB,
-			     ibi => BIisIntBInline,
-			     shallow => isIntRel,
-			     native => false},
-
-    'IsFloat'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisFloatB,
-			     ibi => BIisFloatBInline,
-			     shallow => isFloatRel,
-			     native => false},
-
-    'IsRecord'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisRecordB,
-			     ibi => isRecordBInline,
-			     shallow => isRecordRel,
-			     native => false},
-
-    'IsTuple'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisTupleB,
-			     ibi => isTupleBInline,
-			     shallow => isTupleRel,
-			     native => false},
-
-    'IsLiteral'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisLiteralB,
-			     ibi => isLiteralBInline,
-			     shallow => isLiteralRel,
-			     native => false},
-
-    'IsLock'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisLockB,
-			     ibi => isLockBInline,
-			     shallow => isLockRel,
-			     native => false},
-
-    'IsCell'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisCellB,
-			     ibi => isCellBInline,
-			     shallow => isCellRel,
-			     native => false},
-
-    'IsPort'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisPortB,
-			     ibi => isPortBInline,
-			     shallow => isPortRel,
-			     native => false},
-
-    'IsProcedure'	=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisProcedureB,
-			     ibi => isProcedureBInline,
-			     shallow => isProcedureRel,
-			     native => false},
-
-    'IsName'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisNameB,
-			     ibi => isNameBInline,
-			     shallow => isNameRel,
-			     native => false},
-
-    'IsAtom'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisAtomB,
-			     ibi => isAtomBInline,
-			     shallow => isAtomRel,
-			     native => false},
-
-    'IsBool'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisBoolB,
-			     ibi => isBoolBInline,
-			     shallow => isBoolRel,
-			     native => false},
-
-    'IsUnit'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisUnitB,
-			     ibi => isUnitBInline,
-			     shallow => isUnitRel,
-			     native => false},
-
-    'IsChunk'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisChunkB,
-			     ibi => isChunkBInline,
-			     shallow => isChunkRel,
-			     native => false},
-
-    'IsRecordC'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisRecordCB,
-			     ibi => isRecordCBInline,
-			     shallow => isRecordCRel,
-			     native => false},
-
-    'IsObject'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     bi  => BIisObjectB,
-			     ibi => BIisObjectBInline,
-			     shallow => isObjectRel,
-			     native => false},
-
-    'IsString'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIisString,
-			     native => false},
-
-    'IsVirtualString'	=> { in  => ['!+value'],
-			     out => ['+bool'],
-			     BI  => BIvsIs,
-			     native => false},
-
-    'IsFree'		=> { in  => ['value'],
-			     out => ['+bool'],
-			     bi  => BIisFree,
-			     ibi => isFreeInline,
-			     shallow => IsFreeRel,
-			     native => false},
-
-    'IsKinded'		=> { in  => ['value'],
-			     out => ['+bool'],
-			     bi  => BIisKinded,
-			     ibi => isKindedInline,
-			     shallow => IsKindedRel,
-			     native => false},
-
-    'IsDet'		=> { in  => ['value'],
-			     out => ['+bool'],
-			     bi  => BIisDet,
-			     ibi => isDetInline,
-			     shallow => IsDetRel,
-			     native => false},
-
-    'isNumberRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisNumber,
-			     ibi => BIisNumberInline,
-			     native => false},
-
-    'isIntRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisInt,
-			     ibi => BIisIntInline,
-			     native => false},
-
-    'isFloatRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisFloat,
-			     ibi => BIisFloatInline,
-			     native => false},
-
-    'isRecordRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisRecord,
-			     ibi => isRecordInline,
-			     native => false},
-
-    'isTupleRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisTuple,
-			     ibi => isTupleInline,
-			     native => false},
-
-    'isLiteralRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisLiteral,
-			     ibi => isLiteralInline,
-			     native => false},
-
-    'isCellRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisCell,
-			     ibi => isCellInline,
-			     native => false},
-
-    'isPortRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisPort,
-			     ibi => isPortInline,
-			     native => false},
-
-    'isProcedureRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisProcedure,
-			     ibi => isProcedureInline,
-			     native => false},
-
-    'isNameRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisName,
-			     ibi => isNameInline,
-			     native => false},
-
-    'isAtomRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisAtom,
-			     ibi => isAtomInline,
-			     native => false},
-
-    'isLockRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisLock,
-			     ibi => isLockInline,
-			     native => false},
-
-    'isBoolRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisBool,
-			     ibi => isBoolInline,
-			     native => false},
-
-    'isUnitRel'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisUnit,
-			     ibi => isUnitInline,
-			     native => false},
-
-    'isChunkRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisChunk,
-			     ibi => isChunkInline,
-			     native => false},
-
-    'isRecordCRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisRecordC,
-			     ibi => isRecordCInline,
-			     native => false},
-
-    'isObjectRel'	=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisObject,
-			     ibi => BIisObjectInline,
-			     native => false},
-
-    'IsFreeRel'		=> { in  => ['value'],
-			     out => [],
-			     bi  => BIisFreeRel,
-			     ibi => isFreeRelInline,
-			     native => false},
-
-    'IsKindedRel'	=> { in  => ['value'],
-			     out => [],
-			     bi  => BIisKindedRel,
-			     ibi => isKindedRelInline,
-			     native => false},
-
-    'IsDetRel'		=> { in  => ['value'],
-			     out => [],
-			     bi  => BIisDetRel,
-			     ibi => isDetRelInline,
-			     native => false},
-
-    'Wait'		=> { in  => ['+value'],
-			     out => [],
-			     bi  => BIisValue,
-			     ibi => isValueInline,
-			     native => false},
-
-    'WaitOr'		=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BIwaitOr,
-			     native => false},
-
-    'virtualStringLength'=> { in  => ['!virtualString','!+int'],
-			      out => ['+int'],
-			      BI  => BIvsLength,
-			      native => false},
-
-
-    'Length'		=> { in  => ['+[value]'],
-			     out => ['+int'],
-			     BI  => BIlength,
-			     native => false},
-
-    'Not'		=> { in  => ['+bool'],
-			     out => ['+bool'],
-			     bi  => BInot,
-			     ibi => notInline,
-			     native => false},
-
-    'And'		=> { in  => ['+bool','+bool'],
-			     out => ['+bool'],
-			     bi  => BIand,
-			     ibi => andInline,
-			     native => false},
-
-    'Or'		=> { in  => ['+bool','+bool'],
-			     out => ['+bool'],
-			     bi  => BIor,
-			     ibi => orInline,
-			     native => false},
-
-    'Type.ofValue'	=> { in  => ['+value'],
-			     out => ['+atom'],
-			     bi  => BItermType,
-			     ibi => BItermTypeInline,
-			     native => false},
-
-    'Value.status'	=> { in  => ['value'],
-			     out => ['+tuple'],
-			     bi  => BIstatus,
-			     ibi => BIstatusInline,
-			     native => false},
-
-    # deep magic for procedures  HERE
-
-    'procedureEnvironment'=> { in  => ['+procedure'],
-			       out => ['+tuple'],
-			       BI  => BIprocedureEnvironment,
-			       native => dontknow},
-
-    'getProcInfo'	=> { in  => ['+procedure'],
-			     out => ['value'],
-			     BI  => BIgetProcInfo,
-			     native => dontknow},
-
-    'setProcInfo'	=> { in  => ['+procedure','value'],
-			     out => [],
-			     BI  => BIsetProcInfo,
-			     native => dontknow},
-
-    'getProcNames'	=> { in  => ['+procedure'],
-			     out => ['+[name]'],
-			     BI  => BIgetProcNames,
-			     native => dontknow},
-
-    'setProcNames'	=> { in  => ['+procedure','+[name]'],
-			     out => [],
-			     BI  => BIsetProcNames,
-			     native => dontknow},
-
-    'getProcPos'	=> { in  => ['+procedure'],
-			     out => ['+literal','+int'],
-			     BI  => BIgetProcPos,
-			     native => dontknow},
-
-    # tuples and records and OFS
-
     'MakeTuple'		=> { in  => ['+literal','+int'],
 			     out => ['+tuple'],
 			     bi  => BItuple,
@@ -1112,12 +1024,6 @@ $builtins = {
 			     out => ['+bool'],
 			     bi  => BIhasLabel,
 			     ibi => hasLabelInline,
-			     native => false},
-
-    'ProcedureArity'	=> { in  => ['+procedure'],
-			     out => ['+int'],
-			     bi  => BIprocedureArity,
-			     ibi => procedureArityInline,
 			     native => false},
 
     'TellRecord'	=> { in  => ['+literal','record'],
@@ -1145,7 +1051,7 @@ $builtins = {
 			     BI  => BIisRecordCVarB,
 			     native => dontknow},
 
-    # records and chunks
+    ###* Records and Chunks
 
     '.'			=> { in  => ['*recordCOrChunk','+feature'],
 			     out => ['value'],
@@ -1177,20 +1083,7 @@ $builtins = {
 			     ibi => widthInline,
 			     native => false},
 
-    # atoms
-
-    'AtomToString'	=> { in  => ['+atom'],
-			     out => ['+string'],
-			     bi  => BIatomToString,
-			     ibi => atomToStringInline,
-			     native => false},
-
-    'StringToAtom'	=> { in  => ['+string'],
-			     out => ['+atom'],
-			     BI  => BIstringToAtom,
-			     native => false},
-
-    # chunks
+    ###* Chunks
 
     'NewChunk'		=> { in  => ['+record'],
 			     out => ['+chunk'],
@@ -1212,7 +1105,7 @@ $builtins = {
 			     BI  => BIrecordWidth,
 			     native => false},
 
-    # names
+    ###* Names
 
     'NewName'		=> { in  => [],
 			     out => ['+name'],
@@ -1224,259 +1117,160 @@ $builtins = {
 			     BI  => BInewUniqueName,
 			     native => false},
 
-    # equalities
+    ###* Procedures
 
-    '=='		=> { in  => ['*value','*value'],
-			     out => ['+bool'],
-			     bi  => BIeqB,
-			     ibi => eqeqInline,
-			     eqeq => 1,
-			     native => false},
-
-    '\\\\='		=> { in  => ['*value','*value'],
-			     out => ['+bool'],
-			     bi  => BIneqB,
-			     ibi => neqInline,
-			     eqeq => 1,
-			     native => false},
-
-    '==Rel'		=> { in  => ['*value','*value'],
-			     out => [],
-			     BI  => BIeq,
-			     native => false},
-
-    '\\\\=Rel'		=> { in  => ['*value','*value'],
-			     out => [],
-			     BI  => BIneq,
-			     native => false},
-
-    # dynamic libraries HERE
-
-    'isForeignPointer'	=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIisForeignPointer ,
-			     native => dontknow},
-
-    'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
-			      out => ['+int'],
-			      BI  => BIForeignPointerToInt,
-			      native => dontknow},
-
-
-    'dlOpen'		=> { in  => ['+virtualString'],
-			     out => ['+foreignPointer'],
-			     BI  => BIdlOpen,
-			     native => dontknow},
-
-    'dlClose'		=> { in  => ['+foreignPointer'],
-			     out => [],
-			     BI  => BIdlClose,
-			     native => dontknow},
-
-    'findFunction'	=> { in  => ['+virtualString','+int',
-				     '+foreignPointer'],
-			     out => [],
-			     BI  => BIfindFunction,
-			     native => dontknow},
-
-    'dlLoad'		=> { in  => ['+virtualString'],
-			     out => ['+foreignPointer#record'],
-			     BI  => BIdlLoad,
-			     native => dontknow},
-
-    # miscellaneous system things
-
-    'shutdown'		=> { in  => ['+int'],
-			     out => [],
-			     BI  => BIshutdown,
-			     native => true},
-
-    'Alarm'		=> { in  => ['+int','unit'],
-			     out => [],
-			     BI  => BIalarm,
-			     native => false},
-
-    'Delay'		=> { in  => ['!+int'],
-			     out => [],
-			     BI  => BIdelay,
-			     native => false},
-
-    'System.gcDo'	=> { in  => [],
-			     out => [],
-			     BI  => BIgarbageCollection,
-			     native => true},
-
-    'System.apply'	=> { in  => ['+procedureOrObject','+[value]'],
-			     out => [],
-			     BI  => BIapply,
-			     native => false},
-
-    'System.eq'		=> { in  => ['value','value'],
-			     out => ['+bool'],
-			     BI  => BIsystemEq,
-			     native => false},
-
-    '='			=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BIunify,
-			     native => false},
-
-    'fail'		=> { in  => [],
-			     out => [],
-			     BI  => BIfail,
-			     native => false},
-
-    'nop'		=> { in  => [],
-			     out => [],
-			     BI  => BInop,
-			     native => false},
-
-    'deepFeed'		=> { in  => ['+cell','value'],
-			     out => [],
-			     BI  => BIdeepFeed,
-			     native => dontknow},
-
-    # browser primitives
-
-    'getsBoundB'	=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BIgetsBoundB,
-			     native => false},
-
-    # useless
-
-    'setAbstractionTabDefaultEntry' => { in  => ['value'],
-      out => [],
-      BI  => BIsetAbstractionTabDefaultEntry,
-					 native => dontknow},
-
-    # printing
-
-    'showBuiltins'	=> { in  => [],
-			     out => [],
-			     BI  => BIshowBuiltins,
-			     native => true},
-
-    'Print'		=> { in  => ['value'],
-			     out => [],
-			     bi  => BIprint,
-			     ibi => printInline,
-			     native => true},
-
-    'Show'		=> { in  => ['value'],
-			     out => [],
-			     bi  => BIshow,
-			     ibi => showInline,
-			     native => true},
-
-    # constraints
-
-    'System.nbSusps'	=> { in  => ['value'],
+    'ProcedureArity'	=> { in  => ['+procedure'],
 			     out => ['+int'],
-			     BI  => BIconstraints,
+			     bi  => BIprocedureArity,
+			     ibi => procedureArityInline,
 			     native => false},
 
-    # miscellaneous
+    'procedureEnvironment'=> { in  => ['+procedure'],
+			       out => ['+tuple'],
+			       BI  => BIprocedureEnvironment,
+			       native => dontknow},
 
-    'onToplevel'	=> { in  => [],
-			     out => ['+bool'],
-			     BI  => BIonToplevel,
-			     native => false},
-
-    # browser
-
-    'addr'		=> { in  => ['value'],
-			     out => ['+int'],
-			     BI  => BIaddr,
-			     native => false},
-
-    # source level debugger
-
-    'Debug.mode'	=> { in  => [],
-			     out => ['+bool'],
-			     BI  => BIdebugmode,
-			     native => true},
-
-    'Debug.getStream'	=> { in  => [],
+    'getProcInfo'	=> { in  => ['+procedure'],
 			     out => ['value'],
-			     BI  => BIgetDebugStream,
-			     native => true},
-
-    'Debug.setStepFlag'	=> { in  => ['+thread','+bool'],
-			     out => [],
-			     BI  => BIsetStepFlag,
-			     native => true},
-
-    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
-			     out => [],
-			     BI  => BIsetTraceFlag,
-			     native => true},
-
-    'Debug.checkStopped'=> { in  => ['+thread'],
-			     out => ['+bool'],
-			     BI  => BIcheckStopped,
-			     native => true},
-
-    # Debug module
-
-    'Debug.prepareDumpThreads'	=> { in  => [],
-				     out => [],
-				     BI  => BIprepareDumpThreads,
-				     native => true},
-    
-    'Debug.dumpThreads'	=> { in  => [],
-			     out => [],
-			     BI  => BIdumpThreads,
-			     native => true},
-
-    'Debug.listThreads'	=> { in  => [],
-			     out => ['+[thread]'],
-			     BI  => BIlistThreads,
-			     native => true},
-
-    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
-			     out => ['+bool'],
-			     BI  => BIbreakpointAt,
-			     native => true},
-
-    'Debug.breakpoint'	=> { in  => [],
-			     out => [],
-			     BI  => BIbreakpoint,
-			     native => true},
-
-    'Debug.displayCode'	=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIdisplayCode,
-			     native => true},
-
-    'Debug.procedureCode'=> { in  => ['+procedure'],
-			      out => ['+int'],
-			      BI  => BIprocedureCode,
-			      native => true},
-    
-    'Debug.procedureCoord'=> { in  => ['+procedure'],
-			       out => ['+record'],
-			       BI  => BIprocedureCoord,
-			       native => true},
-
-    'Debug.livenessX'	=> { in  => ['+int'],
-			     out => ['+int'],
-			     BI  => BIlivenessX,
-			     native => true},
-
-    'index2Tagged'	=> { in  => ['int'],
-			     out => ['value'],
-			     BI  => BIindex2Tagged,
-			     ifdef=>'UNUSED',
+			     BI  => BIgetProcInfo,
 			     native => dontknow},
 
-    'time2localTime'	=> { in  => ['int'],
-			     out => ['value'],
-			     BI  => BItime2localTime,
-			     ifdef=>'UNUSED',
+    'setProcInfo'	=> { in  => ['+procedure','value'],
+			     out => [],
+			     BI  => BIsetProcInfo,
 			     native => dontknow},
 
-    # Builtins for the Thread module
+    'getProcNames'	=> { in  => ['+procedure'],
+			     out => ['+[name]'],
+			     BI  => BIgetProcNames,
+			     native => dontknow},
+
+    'setProcNames'	=> { in  => ['+procedure','+[name]'],
+			     out => [],
+			     BI  => BIsetProcNames,
+			     native => dontknow},
+
+    'getProcPos'	=> { in  => ['+procedure'],
+			     out => ['+literal','+int'],
+			     BI  => BIgetProcPos,
+			     native => dontknow},
+
+
+
+
+    ###* Object-Oriented Primitives
+
+    '@'			=> { in  => ['+feature'],
+			     out => ['value'],
+			     bi  => BIat,
+			     ibi => atInline,
+			     native => false},
+
+    '<-'		=> { in  => ['+feature','value'],
+			     out => [],
+			     bi  => BIassign,
+			     ibi => assignInline,
+			     native => false},
+
+    'copyRecord'	=> { in  => ['+record'],
+			     out => ['+record'],
+			     BI  => BIcopyRecord,
+			     native => false},
+
+    'makeClass'		=> { in  => ['+dictionary','+record','+record',
+				     '+dictionary','+bool'],
+			     out => ['+class'],
+			     BI  => BImakeClass,
+			     native => false},
+
+    ','			=> { in  => ['+class','+record'],
+			     out => [],
+			     bi  => BIcomma,
+			     native => false},
+
+    'send'		=> { in  => ['+record','+class','+object'],
+			     out => [],
+			     bi  => BIsend,
+			     native => false},
+
+    'getClass'		=> { in  => ['+object'],
+			     out => ['+class'],
+			     bi  => BIgetClass,
+			     ibi => getClassInline,
+			     native => false},
+
+    'ooGetLock'		=> { in  => ['lock'],
+			     out => [],
+			     bi  => BIooGetLock,
+			     ibi => ooGetLockInline,
+			     native => false},
+
+    'newObject'		=> { in  => ['+class'],
+			     out => ['+object'],
+			     bi  => BInewObject,
+			     ibi => newObjectInline,
+			     native => false},
+
+    'New'		=> { in  => ['+class','+record'],
+			     out => ['+object'],
+			     bi  => BINew,
+			     native => false},
+
+    'setSelf'		=> { in  => ['+object'],
+			     out => [],
+			     BI  => BIsetSelf,
+			     native => false},
+
+    'ooExch'		=> { in  => ['+feature','value'],
+			     out => ['value'],
+			     bi  => BIooExch,
+			     ibi => ooExchInline,
+			     native => false},
+
+    ###* Spaces
+
+    'Space.new'		=> { in  => ['+procedure/1'],
+			     out => ['+space'],
+			     BI  => BInewSpace,
+			     native => false},
+
+    'IsSpace'		=> { in  => ['+value'],
+			     out => ['+bool'],
+			     BI  => BIisSpace,
+			     native => false},
+
+    'Space.ask'		=> { in  => ['+space'],
+			     out => ['+tuple'],
+			     BI  => BIaskSpace,
+			     native => false},
+
+    'Space.askVerbose'	=> { in  => ['+space','!value'],
+			     out => [],
+			     BI  => BIaskVerboseSpace,
+			     native => false},
+
+    'Space.merge'	=> { in  => ['+space'],
+			     out => ['+value'],
+			     BI  => BImergeSpace,
+			     native => false},
+
+    'Space.clone'	=> { in  => ['+space'],
+			     out => ['+space'],
+			     BI  => BIcloneSpace,
+			     native => false},
+
+    'Space.commit'	=> { in  => ['+space','+value'],
+			     out => [],
+			     BI  => BIcommitSpace,
+			     native => false},
+
+    'Space.inject'	=> { in  => ['+space','+procedure/1'],
+			     out => [],
+			     BI  => BIinjectSpace,
+			     native => false},
+
+
+    ###* Threads
 
     'Thread.is'		=> { in  => ['+value'],
 			     out => ['+bool'],
@@ -1573,21 +1367,287 @@ $builtins = {
 			     BI  => BIthreadLocation,
 			     native => false},
 
-    # printing primitives for debugging
 
-    'Debug.print'	=> { in  => ['value','+int'],
+    ###* Foreign Pointers
+
+    'isForeignPointer'	=> { in  => ['+value'],
+			     out => ['+bool'],
+			     BI  => BIisForeignPointer ,
+			     native => dontknow},
+
+    'ForeignPointerToInt'=> { in  => ['+foreignPointer'],
+			      out => ['+int'],
+			      BI  => BIForeignPointerToInt,
+			      native => dontknow},
+
+
+    ##* Misc Operations
+    ###* Equalities
+
+    '=='		=> { in  => ['*value','*value'],
+			     out => ['+bool'],
+			     bi  => BIeqB,
+			     ibi => eqeqInline,
+			     eqeq => 1,
+			     native => false},
+
+    '\\\\='		=> { in  => ['*value','*value'],
+			     out => ['+bool'],
+			     bi  => BIneqB,
+			     ibi => neqInline,
+			     eqeq => 1,
+			     native => false},
+
+    '==Rel'		=> { in  => ['*value','*value'],
 			     out => [],
-			     BI  => BIdebugPrint,
-			     ifdef=>'DEBUG_PRINT',
+			     BI  => BIeq,
+			     native => false},
+
+    '\\\\=Rel'		=> { in  => ['*value','*value'],
+			     out => [],
+			     BI  => BIneq,
+			     native => false},
+
+    ###* Other Misc Operations
+
+    'Wait'		=> { in  => ['+value'],
+			     out => [],
+			     bi  => BIisValue,
+			     ibi => isValueInline,
+			     native => false},
+
+    'WaitOr'		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIwaitOr,
+			     native => false},
+
+    'virtualStringLength'=> { in  => ['!virtualString','!+int'],
+			      out => ['+int'],
+			      BI  => BIvsLength,
+			      native => false},
+
+    'Length'		=> { in  => ['+[value]'],
+			     out => ['+int'],
+			     BI  => BIlength,
+			     native => false},
+
+    'Not'		=> { in  => ['+bool'],
+			     out => ['+bool'],
+			     bi  => BInot,
+			     ibi => notInline,
+			     native => false},
+
+    'And'		=> { in  => ['+bool','+bool'],
+			     out => ['+bool'],
+			     bi  => BIand,
+			     ibi => andInline,
+			     native => false},
+
+    'Or'		=> { in  => ['+bool','+bool'],
+			     out => ['+bool'],
+			     bi  => BIor,
+			     ibi => orInline,
+			     native => false},
+
+    'Value.status'	=> { in  => ['value'],
+			     out => ['+tuple'],
+			     bi  => BIstatus,
+			     ibi => BIstatusInline,
+			     native => false},
+
+    ##* Exceptions
+
+    'biExceptionHandler'=> { in  => ['value'],
+			     out => [],
+			     BI  => BIbiExceptionHandler,
 			     native => true},
 
-    'Debug.printLong'	=> { in  => ['value','+int'],
+    'setDefaultExceptionHandler'=> { in  => ['+procedure/1'],
+				     out => [],
+				     BI  => BIsetDefaultExceptionHandler,
+				     native => true},
+
+    'getDefaultExceptionHandler'=> { in  => [],
+				     out => ['+procedure/1'],
+				     BI  => BIgetDefaultExceptionHandler,
+				     native => true},
+
+    'raise'		=> { in  => ['value'],
 			     out => [],
-			     BI  => BIdebugPrintLong,
-			     ifdef=>'DEBUG_PRINT',
+			     BI  => BIraise,
+			     doesNotReturn => 1,
+			     native => false},
+
+    'raiseError'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIraiseError,
+			     doesNotReturn => 1,
+			     native => false},
+
+    'raiseDebug'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIraiseDebug,
+			     doesNotReturn => 1,
+			     native => false},
+
+
+    ##* Finalization
+
+    'Finalize.register'	=> { in  => ['+value','+value'],
+			     out => [],
+			     BI  => BIfinalize_register,
+			     native => dontknow},
+
+    'Finalize.setHandler'=> { in  => ['+value'],
+			      out => [],
+			      BI  => BIfinalize_setHandler,
+			      native => dontknow},
+
+    'GetCloneDiff'	=> { in  => ['+space'],
+			     out => ['+value'],
+			     BI  => BIgetCloneDiff,
+			     ifdef=>'CS_PROFILE',
+			     native => dontknow},
+
+
+
+    ##* Diffent Kinds of Special Variables
+
+    ###* Lazy
+
+    'Lazy.new'		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BILazyNew,
+			     module=>'lazy',
+			     native => dontknow},
+
+    'Lazy.is'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BILazyIs,
+			     module=>'lazy',
+			     native => dontknow},
+
+    ###* Metavar
+
+    'metaIsVar'		=> { in  => ['value'],
+			     out => [],
+			     BI  => BImetaIsVar,
+			     module=>'metavar',
+			     native => dontknow},
+
+    'metaIsVarB'	=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BImetaIsVarB,
+			     module=>'metavar',
+			     native => dontknow},
+
+    'metaWatchVar'	=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BImetaWatchVar,
+			     module=>'metavar',
+			     native => dontknow},
+    
+    'metaWatchVarB'	=> { in  => ['value','value','+bool'],
+			     out => [],
+			     BI  => BImetaWatchVarB,
+			     module=>'metavar',
+			     native => dontknow},
+
+    'metaGetDataAsAtom'	=> { in  => ['value','atom'],
+			     out => [],
+			     BI  => BImetaGetDataAsAtom,
+			     module=>'metavar',
+			     native => dontknow},
+
+    'metaGetNameAsAtom'	=> { in  => ['value','atom'],
+			     out => [],
+			     BI  => BImetaGetNameAsAtom,
+			     module=>'metavar',
+			     native => dontknow},
+
+    'metaGetStrength'	=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BImetaGetStrength,
+			     module=>'metavar',
+			     native => dontknow},
+
+    ###* Attributed Variables
+
+    'isAVarB'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => BIisAVarB,
+			     module=>'avar',
+			     native => dontknow},
+
+    'newAVar'		=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BInewAVar,
+			     module=>'avar',
+			     native => dontknow},
+
+    'readAVar'		=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIreadAVar,
+			     module=>'avar',
+			     native => dontknow},
+
+    'aVarHandler'	=> { in  => ['+procedure','+procedure'],
+			     out => [],
+			     BI  => BIaVarHandler,
+			     module=>'avar',
+			     native => dontknow},
+
+    '==='		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIaVarBind,
+			     module=>'avar',
+			     native => dontknow},
+
+
+    #* System Stuff
+
+    ##* Virtual Properties
+
+    'GetProperty'	=> { in  => ['+literal'],
+			     out => ['value'],
+			     BI  => BIgetProperty,
+			     module=>'vprop',
+			     native => dontknow},
+
+    'CondGetProperty'	=> { in  => ['+literal','value'],
+			     out => ['value'],
+			     BI  => BIcondGetProperty,
+			     module=>'vprop',
+			     native => dontknow},
+
+    'PutProperty'	=> { in  => ['+literal','value'],
+			     out => [],
+			     BI  => BIputProperty,
+			     module=>'vprop',
+			     native => dontknow},
+
+
+
+    ##* Printing
+
+    'showBuiltins'	=> { in  => [],
+			     out => [],
+			     BI  => BIshowBuiltins,
 			     native => true},
 
-    # statistics
+    'Print'		=> { in  => ['value'],
+			     out => [],
+			     bi  => BIprint,
+			     ibi => printInline,
+			     native => true},
+
+    'Show'		=> { in  => ['value'],
+			     out => [],
+			     bi  => BIshow,
+			     ibi => showInline,
+			     native => true},
+
+    ##* Statistics
 
     'statisticsReset'	=> { in  => [],
 			     out => [],
@@ -1632,7 +1692,7 @@ $builtins = {
 			     ifdef=>'DEBUG_TRACE',
 			     native => true},
 
-    # system primitives
+    ##* System Printing Primitives
 
     'System.printName'	=> { in  => ['value'],
 			     out => ['+atom'],
@@ -1659,161 +1719,737 @@ $builtins = {
 			     BI  => BIgetTermSize,
 			     native => false},
 
-    # FD linking info HERE
+    ##* Browser Support
 
-    'foreignFDProps'	=> { in  => [],
-			     out => ['+bool'],
-			     BI  => BIforeignFDProps,
-			     native => dontknow},
-
-    # object-oriented primitives
-
-    '@'			=> { in  => ['+feature'],
-			     out => ['value'],
-			     bi  => BIat,
-			     ibi => atInline,
-			     native => false},
-
-    '<-'		=> { in  => ['+feature','value'],
+    'getsBoundB'	=> { in  => ['value','value'],
 			     out => [],
-			     bi  => BIassign,
-			     ibi => assignInline,
+			     BI  => BIgetsBoundB,
 			     native => false},
 
-    'copyRecord'	=> { in  => ['+record'],
-			     out => ['+record'],
-			     BI  => BIcopyRecord,
+    'addr'		=> { in  => ['value'],
+			     out => ['+int'],
+			     BI  => BIaddr,
 			     native => false},
 
-    'makeClass'		=> { in  => ['+dictionary','+record','+record',
-				     '+dictionary','+bool'],
-			     out => ['+class'],
-			     BI  => BImakeClass,
-			     native => false},
+    ##* Misc. System Procs
 
-    ','			=> { in  => ['+class','+record'],
+    'shutdown'		=> { in  => ['+int'],
 			     out => [],
-			     bi  => BIcomma,
-			     native => false},
-
-    'send'		=> { in  => ['+record','+class','+object'],
-			     out => [],
-			     bi  => BIsend,
-			     native => false},
-
-    'getClass'		=> { in  => ['+object'],
-			     out => ['+class'],
-			     bi  => BIgetClass,
-			     ibi => getClassInline,
-			     native => false},
-
-    'ooGetLock'		=> { in  => ['lock'],
-			     out => [],
-			     bi  => BIooGetLock,
-			     ibi => ooGetLockInline,
-			     native => false},
-
-    'newObject'		=> { in  => ['+class'],
-			     out => ['+object'],
-			     bi  => BInewObject,
-			     ibi => newObjectInline,
-			     native => false},
-
-    'New'		=> { in  => ['+class','+record'],
-			     out => ['+object'],
-			     bi  => BINew,
-			     native => false},
-
-    'setSelf'		=> { in  => ['+object'],
-			     out => [],
-			     BI  => BIsetSelf,
-			     native => false},
-
-    'ooExch'		=> { in  => ['+feature','value'],
-			     out => ['value'],
-			     bi  => BIooExch,
-			     ibi => ooExchInline,
-			     native => false},
-
-    # spaces
-
-    'Space.new'		=> { in  => ['+procedure/1'],
-			     out => ['+space'],
-			     BI  => BInewSpace,
-			     native => false},
-
-    'IsSpace'		=> { in  => ['+value'],
-			     out => ['+bool'],
-			     BI  => BIisSpace,
-			     native => false},
-
-    'Space.ask'		=> { in  => ['+space'],
-			     out => ['+tuple'],
-			     BI  => BIaskSpace,
-			     native => false},
-
-    'Space.askVerbose'	=> { in  => ['+space','!value'],
-			     out => [],
-			     BI  => BIaskVerboseSpace,
-			     native => false},
-
-    'Space.merge'	=> { in  => ['+space'],
-			     out => ['+value'],
-			     BI  => BImergeSpace,
-			     native => false},
-
-    'Space.clone'	=> { in  => ['+space'],
-			     out => ['+space'],
-			     BI  => BIcloneSpace,
-			     native => false},
-
-    'Space.commit'	=> { in  => ['+space','+value'],
-			     out => [],
-			     BI  => BIcommitSpace,
-			     native => false},
-
-    'Space.inject'	=> { in  => ['+space','+procedure/1'],
-			     out => [],
-			     BI  => BIinjectSpace,
-			     native => false},
-
-    # exceptions
-
-    'biExceptionHandler'=> { in  => ['value'],
-			     out => [],
-			     BI  => BIbiExceptionHandler,
+			     BI  => BIshutdown,
 			     native => true},
 
-    'setDefaultExceptionHandler'=> { in  => ['+procedure/1'],
+    'Alarm'		=> { in  => ['+int','unit'],
+			     out => [],
+			     BI  => BIalarm,
+			     native => false},
+
+    'Delay'		=> { in  => ['!+int'],
+			     out => [],
+			     BI  => BIdelay,
+			     native => false},
+
+    'System.gcDo'	=> { in  => [],
+			     out => [],
+			     BI  => BIgarbageCollection,
+			     native => true},
+
+    'System.apply'	=> { in  => ['+procedureOrObject','+[value]'],
+			     out => [],
+			     BI  => BIapply,
+			     native => false},
+
+    'System.eq'		=> { in  => ['value','value'],
+			     out => ['+bool'],
+			     BI  => BIsystemEq,
+			     native => false},
+
+    '='			=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIunify,
+			     native => false},
+
+    'fail'		=> { in  => [],
+			     out => [],
+			     BI  => BIfail,
+			     native => false},
+
+    'nop'		=> { in  => [],
+			     out => [],
+			     BI  => BInop,
+			     native => false},
+
+    'deepFeed'		=> { in  => ['+cell','value'],
+			     out => [],
+			     BI  => BIdeepFeed,
+			     native => dontknow},
+
+
+    'onToplevel'	=> { in  => [],
+			     out => ['+bool'],
+			     BI  => BIonToplevel,
+			     native => false},
+
+
+    #* OS interface
+
+    'OS.getDir'		=> { in  => ['+virtualString'],
+			     out => ['+[string]'],
+			     BI  => unix_getDir,
+			     module=>'os',
+			     native => OK,
+			     native => true},
+
+    'OS.stat'		=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_stat,
+			     module=>'os',
+			     native => true},
+
+    'OS.getCWD'		=> { in  => [],
+			     out => ['+atom'],
+			     BI  => unix_getCWD,
+			     module=>'os',
+			     native => true},
+
+    'OS.open'		=> { in  => ['+virtualString','+[atom]','+[atom]'],
+			     out => ['+int'],
+			     BI  => unix_open,
+			     module=>'os',
+			     native => true},
+
+    'OS.fileDesc'	=> { in  => ['+atom'],
+			     out => ['+int'],
+			     BI  => unix_fileDesc,
+			     module=>'os',
+			     native => true},
+
+    'OS.close'		=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_close,
+			     module=>'os',
+			     native => true},
+
+    'OS.write'		=> { in  => ['+int','+virtualString'],
+			     out => ['+value'],
+			     BI  => unix_write,
+			     module=>'os',
+			     native => true},
+
+    'OS.read'		=> { in  => ['+int','+int','value','value','int'],
+			     out => [],
+			     BI  => unix_read,
+			     module=>'os',
+			     native => true},
+
+    'OS.lSeek'		=> { in  => ['+int','+int','+atom'],
+			     out => ['+int'],
+			     BI  => unix_lSeek,
+			     module=>'os',
+			     native => true},
+
+    'OS.unlink'		=> { in  => ['+virtualString'],
+			     out => [],
+			     BI  => unix_unlink,
+			     module=>'os',
+			     native => true},
+
+    'OS.readSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_readSelect,
+			     module=>'os',
+			     native => true},
+
+    'OS.writeSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_writeSelect,
+			     module=>'os',
+			     native => true},
+
+    'OS.acceptSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_acceptSelect,
+			     module=>'os',
+			     native => true},
+
+    'OS.deSelect'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_deSelect,
+			     module=>'os',
+			     native => true},
+
+    'OS.system'		=> { in  => ['+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_system,
+			     module=>'os',
+			     native => true},
+
+    'OS.getEnv'		=> { in  => ['+virtualString'],
+			     out => ['+value'],
+			     BI  => unix_getEnv,
+			     module=>'os',
+			     native => true},
+
+    'OS.putEnv'		=> { in  => ['+virtualString','+virtualString'],
+			     out => [],
+			     BI  => unix_putEnv,
+			     module=>'os',
+			     native => true},
+
+    'OS.time'		=> { in  => [],
+			     out => ['+int'],
+			     BI  => unix_time,
+			     module=>'os',
+			     native => true},
+
+    'OS.gmTime'		=> { in  => [],
+			     out => ['+record'],
+			     BI  => unix_gmTime,
+			     module=>'os',
+			     native => true},
+
+    'OS.localTime'	=> { in  => [],
+			     out => ['+record'],
+			     BI  => unix_localTime,
+			     module=>'os',
+			     native => true},
+
+    'OS.srand'		=> { in  => ['+int'],
+			     out => [],
+			     BI  => unix_srand,
+			     module=>'os',
+			     native => true},
+
+    'OS.rand'		=> { in  => [],
+			     out => ['+int'],
+			     BI  => unix_rand,
+			     module=>'os',
+			     native => true},
+
+    'OS.randLimits'	=> { in  => [],
+			     out => ['+int','+int'],
+			     BI  => unix_randLimits,
+			     module=>'os',
+			     native => true},
+
+    'OS.socket'		=> { in  => ['+atom','+atom','+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_socket,
+			     module=>'os',
+			     native => true},
+
+    'OS.bind'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => unix_bindInet,
+			     module=>'os',
+			     native => true},
+
+    'OS.listen'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => unix_listen,
+			     module=>'os',
+			     native => true},
+
+    'OS.connect'	=> { in  => ['+int','+virtualString','+int'],
+			     out => [],
+			     BI  => unix_connectInet,
+			     module=>'os',
+			     native => true},
+
+    'OS.accept'		=> { in  => ['+int'],
+			     out => ['+int','+string','+int'],
+			     BI  => unix_acceptInet,
+			     module=>'os',
+			     native => true},
+
+    'OS.shutDown'	=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => unix_shutDown,
+			     doesNotReturn=>1,
+			     module=>'os',
+			     native => true},
+
+    'OS.send'		=> { in  => ['+int','+virtualString','+[atom]'],
+			     out => ['+value'],
+			     BI  => unix_send,
+			     module=>'os',
+			     native => true},
+
+    'OS.sendTo'		=> { in  => ['+int','+virtualString','+[atom]',
+				     '+virtualString','+int'],
+			     out => ['+value'],
+			     BI  => unix_sendToInet,
+			     module=>'os',
+			     native => true},
+
+    'OS.receiveFrom'	=> { in  => ['+int','+int','+[atom]','value','value'],
+			     out => ['+string','+int','+int'],
+			     BI  => unix_receiveFromInet,
+			     module=>'os',
+			     native => true},
+
+    'OS.getSockName'	=> { in  => ['+int'],
+			     out => ['+int'],
+			     BI  => unix_getSockName,
+			     module=>'os',
+			     native => true},
+
+    'OS.getHostByName'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_getHostByName,
+			     module=>'os',
+			     native => true},
+
+    'OS.pipe'		=> { in  => ['+virtualString','value'],
+			     out => ['+int','+int#int'],
+			     BI  => unix_pipe,
+			     module=>'os',
+			     native => true},
+
+    'OS.tmpnam'		=> { in  => [],
+			     out => ['+string'],
+			     BI  => unix_tmpnam,
+			     module=>'os',
+			     native => true},
+
+    'OS.wait'		=> { in  => [],
+			     out => ['+int','+int'],
+			     BI  => unix_wait,
+			     module=>'os',
+			     native => true},
+
+    'OS.getServByName'	=> { in  => ['+virtualString','+virtualString'],
+			     out => ['+int'],
+			     BI  => unix_getServByName,
+			     module=>'os',
+			     native => true},
+
+    'OS.uName'		=> { in  => [],
+			     out => ['+record'],
+			     BI  => unix_uName,
+			     module=>'os',
+			     native => true},
+
+    'OS.getpwnam'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => unix_getpwnam,
+			     module=>'os',
+			     native => true},
+
+    #* Dynamic Linking
+
+    'dlOpen'		=> { in  => ['+virtualString'],
+			     out => ['+foreignPointer'],
+			     BI  => BIdlOpen,
+			     native => true},
+
+    'dlClose'		=> { in  => ['+foreignPointer'],
+			     out => [],
+			     BI  => BIdlClose,
+			     native => true},
+
+    'findFunction'	=> { in  => ['+virtualString','+int',
+				     '+foreignPointer'],
+			     out => [],
+			     BI  => BIfindFunction,
+			     native => true},
+
+    'dlLoad'		=> { in  => ['+virtualString'],
+			     out => ['+foreignPointer#record'],
+			     BI  => BIdlLoad,
+			     native => true},
+
+    #* Distribution
+
+    'PerdioVar.is'	=> { in  => ['value'],
+			     out => ['+bool'],
+			     BI  => PerdioVar_is,
+			     module=>'perdiovar',
+			     native => dontknow},
+    'probe'		=> { in  => ['value'],
+			     out => [],
+			     BI  => BIprobe,
+			     native => dontknow},
+
+    'perdioRestop'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIrestop,
+			     native => dontknow},
+
+    'crash'		=> { in  => [],
+			     out => [],
+			     BI  => BIcrash,
+			     doesNotReturn=>1,
+			     native => dontknow},
+
+    'InstallHandler'	=> { in  => ['+value','+value','value'],
+			     out => [],
+			     BI  => BIhandlerInstall,
+			     native => dontknow},
+
+    'InstallWatcher'	=> { in  => ['+value','+value','value'],
+			     out => [],
+			     BI  => BIwatcherInstall,
+			     native => dontknow},
+
+    'controlVarHandler'	=> { in  => ['+value'],
+			     out => [],
+			     BI  => BIcontrolVarHandler,
+			     native => dontknow},
+    'checkCVH'	        => { in  => ['+value'],
+			     out => [],
+			     BI  => BIcheckCVH,
+			     native => dontknow},
+
+    'dvset'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIdvset,
+			     ifdef=>DEBUG_PERDIO,
+			     module=>'perdio',
+			     native => dontknow},
+
+    'NetCloseCon'	=> { in  => ['+int'],
+			     out => [],
+			     BI  => BIcloseCon,
+			     module=>'perdio',
+			     native => dontknow},
+
+    'startTmp'		=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIstartTmp,
+			     module=>'perdio',
+			     native => dontknow},
+
+    'siteStatistics'	=> { in  => [],
+			     out => ['+[value]'],
+			     BI  => BIsiteStatistics,
+			     module=>'perdio',
+			     native => dontknow},
+
+    'printBorrowTable'	=> { in  => [],
+			     out => [],
+			     BI  => BIprintBorrowTable,
+			     module=>'perdio',
+			     native => true},
+
+    'printOwnerTable'	=> { in  => [],
+			     out => [],
+			     BI  => BIprintOwnerTable,
+			     module=>'perdio',
+			     native => true},
+
+
+    'portWait'         =>  { in  => ['+port','+int'],
+			     out => [],
+			     BI  => BIportWait,
+			     module=>'perdio',
+			     native => dontknow},
+
+
+    'perdioStatistics'	=> { in  => [],
+			     out => ['+record'],
+			     BI  => BIperdioStatistics,
+			     module=>'perdio' ,
+			     native => true},
+
+
+     'atRedo'		=> { in  => ['+feature', 'value'],
+			     out => [],
+			     bi  => BIatRedo,
+			     ibi => atInlineRedo,
+			     native => dontknow},
+
+    #* Pickles
+
+    'smartSave'		=> { in  => ['value','value','+virtualString'],
+			     out => [],
+			     BI  => BIsmartSave,
+			     module=>components,
+			     native => dontknow},
+
+    'load'		=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIload,
+			     module=>components,
+			     native => dontknow},
+
+    'PID.get'		=> { in  => [],
+			     out => ['+record'],
+			     BI  => BIGetPID,
+			     module=>components,
+			     native => dontknow},
+
+    'PID.received'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIReceivedPID,
+			     module=>components,
+			     native => dontknow},
+
+    'PID.close'		=> { in  => [],
+			     out => [],
+			     BI  => BIClosePID,
+			     module=>components,
+			     native => dontknow},
+
+    'PID.send'		=> { in  => ['+virtualString','+int','+int','value'],
+			     out => [],
+			     BI  => BISendPID,
+			     module=>components,
+			     native => dontknow},
+
+    'URL.localize'	=> { in  => ['+virtualString'],
+			     out => ['+record'],
+			     BI  => BIurl_localize,
+			     module=>components,
+			     native => dontknow},
+
+    'URL.open'		=> { in  => ['+virtualString'],
+			     out => ['+int'],
+			     BI  => BIurl_open,
+			     module=>components,
+			     native => dontknow},
+
+    'URL.load'		=> { in  => ['+virtualString'],
+			     out => ['value'],
+			     BI  => BIurl_load,
+			     module=>components,
+			     native => dontknow},
+
+    #* Tools
+
+    ##* TCL_TK
+
+    'getTclNames'	=> { in  => [],
+			     out => ['value','value','value'],
+			     BI  => BIgetTclNames,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'initTclSession'	=> { in  => ['value','value','value'],
+			     out => ['value'],
+			     BI  => BIinitTclSession,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'closeTclSession'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIcloseTclSession,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'Tk.send'		=> { in  => ['value','!value'],
+			     out => [],
+			     BI  => BItclWrite,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclWriteReturn'	=> { in  => ['!value','value','value','value'],
+			     out => [],
+			     BI  => BItclWriteReturn,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclWriteReturnMess'=> { in  => ['!value','value','value','value','value'],
+			     out => [],
+			     BI  => BItclWriteReturnMess,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'Tk.batch'		=> { in  => ['value','!value'],
+			     out => [],
+			     BI  => BItclWriteBatch,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclWriteTuple'	=> { in  => ['value','!value','value'],
+			     out => [],
+			     BI  => BItclWriteTuple,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclWriteTagTuple'	=> { in  => ['value','!value','value','value'],
+			     out => [],
+			     BI  => BItclWriteTagTuple,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclWriteFilter'	=> { in  => ['value','!value','value','value',
+				     'value','value'],
+			     out => [],
+			     BI  => BItclWriteFilter,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclClose'		=> { in  => ['value','!value','value'],
+			     out => [],
+			     BI  => BItclClose,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'tclCloseWeb'	=> { in  => ['value','!value'],
+			     out => [],
+			     BI  => BItclCloseWeb,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'addFastGroup'	=> { in  => ['+value','value'],
+			     out => ['value'],
+			     BI  => BIaddFastGroup,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'delFastGroup'	=> { in  => ['value'],
+			     out => [],
+			     BI  => BIdelFastGroup,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'getFastGroup'	=> { in  => ['+value'],
+			     out => ['+value'],
+			     BI  => BIgetFastGroup,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'delAllFastGroup'	=> { in  => ['+value'],
+			     out => ['+value'],
+			     BI  => BIdelAllFastGroup,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'genTopName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenTopName,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'genWidgetName'	=> { in  => ['value','value'],
+			     out => ['value'],
+			     BI  => BIgenWidgetName,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'genTagName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenTagName,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'genVarName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenVarName,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    'genImageName'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgenImageName,
+			     module=>'tcl_tk',
+			     native => dontknow},
+
+    ##* Debugger
+
+
+    ###* Debugger Internal
+
+    'Debug.mode'	=> { in  => [],
+			     out => ['+bool'],
+			     BI  => BIdebugmode,
+			     native => true},
+
+    'Debug.getStream'	=> { in  => [],
+			     out => ['value'],
+			     BI  => BIgetDebugStream,
+			     native => true},
+
+    'Debug.setStepFlag'	=> { in  => ['+thread','+bool'],
+			     out => [],
+			     BI  => BIsetStepFlag,
+			     native => true},
+
+    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
+			     out => [],
+			     BI  => BIsetTraceFlag,
+			     native => true},
+
+    'Debug.checkStopped'=> { in  => ['+thread'],
+			     out => ['+bool'],
+			     BI  => BIcheckStopped,
+			     native => true},
+
+    'Debug.print'	=> { in  => ['value','+int'],
+			     out => [],
+			     BI  => BIdebugPrint,
+			     ifdef=>'DEBUG_PRINT',
+			     native => true},
+
+    'Debug.printLong'	=> { in  => ['value','+int'],
+			     out => [],
+			     BI  => BIdebugPrintLong,
+			     ifdef=>'DEBUG_PRINT',
+			     native => true},
+
+    ###* Debugger External
+
+    'Debug.prepareDumpThreads'	=> { in  => [],
 				     out => [],
-				     BI  => BIsetDefaultExceptionHandler,
+				     BI  => BIprepareDumpThreads,
 				     native => true},
-
-    'getDefaultExceptionHandler'=> { in  => [],
-				     out => ['+procedure/1'],
-				     BI  => BIgetDefaultExceptionHandler,
-				     native => true},
-
-    'raise'		=> { in  => ['value'],
+    
+    'Debug.dumpThreads'	=> { in  => [],
 			     out => [],
-			     BI  => BIraise,
-			     doesNotReturn => 1,
-			     native => false},
+			     BI  => BIdumpThreads,
+			     native => true},
 
-    'raiseError'	=> { in  => ['value'],
+    'Debug.listThreads'	=> { in  => [],
+			     out => ['+[thread]'],
+			     BI  => BIlistThreads,
+			     native => true},
+
+    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
+			     out => ['+bool'],
+			     BI  => BIbreakpointAt,
+			     native => true},
+
+    'Debug.breakpoint'	=> { in  => [],
 			     out => [],
-			     BI  => BIraiseError,
-			     doesNotReturn => 1,
-			     native => false},
+			     BI  => BIbreakpoint,
+			     native => true},
 
-    'raiseDebug'	=> { in  => ['value'],
+    'Debug.displayCode'	=> { in  => ['+int','+int'],
 			     out => [],
-			     BI  => BIraiseDebug,
-			     doesNotReturn => 1,
-			     native => false},
+			     BI  => BIdisplayCode,
+			     native => true},
 
-    # builtins for the new compiler
-    # (OPI and environment handling):
+    'Debug.procedureCode'=> { in  => ['+procedure'],
+			      out => ['+int'],
+			      BI  => BIprocedureCode,
+			      native => true},
+    
+    'Debug.procedureCoord'=> { in  => ['+procedure'],
+			       out => ['+record'],
+			       BI  => BIprocedureCoord,
+			       native => true},
+
+    'Debug.livenessX'	=> { in  => ['+int'],
+			     out => ['+int'],
+			     BI  => BIlivenessX,
+			     native => true},
+
+    'index2Tagged'	=> { in  => ['int'],
+			     out => ['value'],
+			     BI  => BIindex2Tagged,
+			     ifdef=>'UNUSED',
+			     native => true},
+
+    'time2localTime'	=> { in  => ['int'],
+			     out => ['value'],
+			     BI  => BItime2localTime,
+			     ifdef=>'UNUSED',
+			     native => true},
+
+
+
+    ##* Compiler
+    ###* Compiler Misc
 
     'setOPICompiler'	=> { in  => ['+object'],
 			     out => [],
@@ -1860,6 +2496,7 @@ $builtins = {
 				     BI  => BIconcatenateAtomAndInt,
 				     native => false},
 
+    ###* RegSets for the Compiler
     'RegSet.new'	=> { in  => ['+int','+int'],
 			     out => ['+chunk'],
 			     BI  => BIregSet_new,
@@ -1910,7 +2547,7 @@ $builtins = {
 				     BI  => BIregSet_complementToList,
 				     native => false},
 
-    # Oz parser
+    ###* Oz Parser
 
     'ozparser_parseFile'	=> { in  => ['+virtualString','+record'],
 				     out => ['+value'],
@@ -1932,37 +2569,13 @@ $builtins = {
 			     BI  => BIcopyCode,
 			     native => dontknow},
 
-    # Finalization
 
-    'Finalize.register'	=> { in  => ['+value','+value'],
-			     out => [],
-			     BI  => BIfinalize_register,
+    ###* CodeArea: Allocation, Modification
+
+    'newCodeBlock'	=> { in  => ['+int'],
+			     out => ['+int'],
+			     BI  => BInewCodeBlock,
 			     native => dontknow},
-
-    'Finalize.setHandler'=> { in  => ['+value'],
-			      out => [],
-			      BI  => BIfinalize_setHandler,
-			      native => dontknow},
-
-    'GetCloneDiff'	=> { in  => ['+space'],
-			     out => ['+value'],
-			     BI  => BIgetCloneDiff,
-			     ifdef=>'CS_PROFILE',
-			     native => dontknow},
-
-#    'SystemRegistry'	=> { in  => [],
-#			     out => ['+dictionary'],
-#			     BI  => BIsystem_registry,
-#                            native => dontknow},
-#
-#    'ServiceRegistry'	=> { in  => [],
-#			     out => ['+dictionary'],
-#			     BI  => BIsystem_registry,
-#                            native => dontknow},
-
-    #-----------------------------------------------------------------
-    # ASSEMBLE.CC
-    #-----------------------------------------------------------------
 
     'getOpcode'		=> { in  => ['+atom'],
 			     out => ['+int'],
@@ -1972,11 +2585,6 @@ $builtins = {
     'getInstructionSize'=> { in  => ['+atom'],
 			     out => ['+int'],
 			     BI  => BIgetInstructionSize,
-			     native => dontknow},
-
-    'newCodeBlock'	=> { in  => ['+int'],
-			     out => ['+int'],
-			     BI  => BInewCodeBlock,
 			     native => dontknow},
 
     'makeProc'		=> { in  => ['+int','+[value]'],
@@ -2101,9 +2709,12 @@ $builtins = {
 			     BI  => BIstoreCache,
 			     native => dontknow},
 
-    #-----------------------------------------------------------------
-    # FD
-    #-----------------------------------------------------------------
+    #* Finite Domains
+
+    'foreignFDProps'	=> { in  => [],
+			     out => ['+bool'],
+			     BI  => BIforeignFDProps,
+			     native => dontknow},
 
     'fdReset'		=> { in  => [],
 			     out => [],
@@ -2253,336 +2864,336 @@ $builtins = {
 			     bi  => fdp_init,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sum'		=> { in  => ['+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_sum,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumC'		=> { in  => ['+value','+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_sumC,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumCN'		=> { in  => ['+value','+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_sumCN,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumR'		=> { in  => ['+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumR,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumCR'		=> { in  => ['+value','+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCR,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumCNR'	=> { in  => ['+value','+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCNR,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumCD'		=> { in  => ['+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCD,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumCCD'	=> { in  => ['+value','+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCCD,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumCNCD'	=> { in  => ['+value','+value','+atom','*int','*int'],
 			     out => [],
 			     bi  => fdp_sumCNCD,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_plus_rel'	=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_plus_rel,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_plus'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_plus,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_minus'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_minus,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_times'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_times,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-                             native => dontknow},
+                             native => true},
 
     'fdp_times_rel'	=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_times_rel,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_power'		=> { in  => ['int','+int','int'],
 			     out => [],
 			     bi  => fdp_power,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_divD'		=> { in  => ['int','+int','int'],
 			     out => [],
 			     bi  => fdp_divD,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_divI'		=> { in  => ['int','+int','int'],
 			     out => [],
 			     bi  => fdp_divI,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_modD'		=> { in  => ['int','+int','int'],
 			     out => [],
 			     bi  => fdp_modD,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_modI'		=> { in  => ['int','+int','int'],
 			     out => [],
 			     bi  => fdp_modI,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_conj'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_conj,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_disj'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_disj,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_exor'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_exor,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_impl'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_impl,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_equi'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_equi,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_nega'		=> { in  => ['int','int'],
 			     out => [],
 			     bi  => fdp_nega,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_intR'		=> { in  => ['int','+value','int'],
 			     out => [],
 			     bi  => fdp_intR,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_card'		=> { in  => ['+value','int','int','int'],
 			     out => [],
 			     bi  => fdp_card,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_exactly'	=> { in  => ['int','+value','+int'],
 			     out => [],
 			     bi  => fdp_exactly,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_atLeast'	=> { in  => ['int','+value','+int'],
 			     out => [],
 			     bi  => fdp_atLeast,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_atMost'	=> { in  => ['int','+value','+int'],
 			     out => [],
 			     bi  => fdp_atMost,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_element'	=> { in  => ['int','+value','int'],
 			     out => [],
 			     bi  => fdp_element,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_notEqOff'	=> { in  => ['int','int','+int'],
 			     out => [],
 			     bi  => fdp_notEqOff,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_lessEqOff'	=> { in  => ['int','int','+int'],
 			     out => [],
 			     bi  => fdp_lessEqOff,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_minimum'	=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_minimum,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_maximum'	=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_maximum,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_inter'	=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_inter,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-		     native => dontknow},
+		     native => true},
 
     'fdp_union'	=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdp_union,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-		     native => dontknow},
+		     native => true},
 
     'fdp_distinct'	=> { in  => ['+value'],
 			     out => [],
 			     bi  => fdp_distinct,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_distinctD'	=> { in  => ['+value'],
 			     out => [],
 			     bi  => fdp_distinctD,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_distinctStream'=> { in  => ['+value','value'],
 			     out => [],
 			     bi  => fdp_distinctStream,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_distinctOffset'=> { in  => ['+value','+value'],
 			     out => [],
 			     bi  => fdp_distinctOffset,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_disjoint'=> { in  => ['int','+int','int','+int'],
 			     out => [],
 			     bi  => fdp_disjoint,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-		       native => dontknow},
+		       native => true},
 
     'sched_disjoint_card'=> { in  => ['int','+int','int','+int'],
 			     out => [],
 			     bi  => sched_disjoint_card,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			      native => dontknow},
+			      native => true},
 
     'fdp_disjointC'=> { in  => ['int','+int','int','+int','int'],
 			     out => [],
 			     bi  => fdp_disjointC,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			native => dontknow},
+			native => true},
 
     'fdp_distance'	=> { in  => ['int','int','+atom','int'],
 			     out => [],
 			     bi  => fdp_distance,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_distinct2'	=> { in  => ['+value','+value','+value','+value'],
 			     out => [],
 			     bi  => fdp_distinct2,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sched_cpIterate'	=> { in  => ['+value','+value','+value'],
 			     out => [],
 			     bi  => sched_cpIterate,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sched_cpIterateCap'=> { in  => ['+value','+value','+value',
 				     '+value','+value','+int'],
@@ -2590,7 +3201,7 @@ $builtins = {
 			     bi  => sched_cpIterateCap,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sched_cumulativeTI'=> { in  => ['+value','+value','+value',
 				     '+value','+value'],
@@ -2598,7 +3209,7 @@ $builtins = {
 			     bi  => sched_cumulativeTI,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sched_cpIterateCapUp'=> { in  => ['+value','+value','+value',
 				       '+value','+value'],
@@ -2606,84 +3217,84 @@ $builtins = {
 			     bi  => sched_cpIterateCapUp,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			       native => dontknow},
+			       native => true},
 
     'sched_taskIntervals'=> { in  => ['+value','+value','+value'],
 			     out => [],
 			     bi  => sched_taskIntervals,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			      native => dontknow},
+			      native => true},
 
     'sched_disjunctive'	=> { in  => ['+value','+value','+value'],
 			     out => [],
 			     bi  => sched_disjunctive,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sched_disjunctiveStream'=> { in  => ['+value','+value','value'],
 			     out => [],
 			     bi  => sched_disjunctiveStream,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-				  native => dontknow},
+				  native => true},
 
     'fdp_twice'		=> { in  => ['int','int'],
 			     out => [],
 			     bi  => fdp_twice,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_square'	=> { in  => ['int','int'],
 			     out => [],
 			     bi  => fdp_square,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_subset'	=> { in  => ['int','int'],
 			     out => [],
 			     bi  => fdp_subset,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_dsum'		=> { in  => ['+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_dsum,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_dsumC'		=> { in  => ['+value','+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_dsumC,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fdp_sumAC'		=> { in  => ['+value','+value','+atom','int'],
 			     out => [],
 			     bi  => fdp_sumAC,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'counter'		=> { in  => ['int','value'],
 			     out => [],
 			     bi  => fdtest_counter,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'firstFail'		=> { in  => ['+value','value'],
 			     out => [],
 			     bi  => fdtest_firstFail,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sched_taskIntervalsProof'=> { in  => ['value','value','value','value',
 					   'value'],
@@ -2691,7 +3302,7 @@ $builtins = {
 			     bi  => sched_taskIntervalsProof,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-				   native => dontknow},
+				   native => true},
 
     'sched_firstsLasts'	=> { in  => ['value','value','value','value',
 				     'value'],
@@ -2699,35 +3310,35 @@ $builtins = {
 			     bi  => sched_firstsLasts,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'spawnLess'		=> { in  => ['int','int'],
 			     out => [],
 			     bi  => fdtest_spawnLess,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'dplus'		=> { in  => ['int','int','int'],
 			     out => [],
 			     bi  => fdtest_plus,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'sumac'		=> { in  => ['value','value','int'],
 			     out => [],
 			     bi  => fdtest_sumac,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'testgensum'	=> { in  => ['value','int'],
 			     out => [],
 			     bi  => fdtest_gensum,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'testsum'		=> { in  => ['value','int'],
 			     out => [],
@@ -2735,7 +3346,7 @@ $builtins = {
 			     ifdef =>ALLDIFF,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'inqueens'		=> { in  => ['value'],
 			     out => [],
@@ -2743,657 +3354,29 @@ $builtins = {
 			     ifdef =>INPROP,
 			     ifndef=>FOREIGNFDPROPS,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'debugStable'	=> { in  => [],
 			     out => [],
 			     bi  => debugStable,
 			     ifdef =>DEBUG_STABLE,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'resetStable'	=> { in  => [],
 			     out => [],
 			     bi  => resetStable,
 			     ifdef =>DEBUG_STABLE,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
     'fddistribute'	=> { in  => ['value','value','value','value','value',],
 			     out => [],
 			     bi  => BIfdDistribute,
 			     module=>fd,
-			     native => dontknow},
+			     native => true},
 
-    #-----------------------------------------------------------------
-    # METAVAR
-    #-----------------------------------------------------------------
-
-    'metaIsVar'		=> { in  => ['value'],
-			     out => [],
-			     BI  => BImetaIsVar,
-			     module=>'metavar',
-			     native => dontknow},
-
-    'metaIsVarB'	=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => BImetaIsVarB,
-			     module=>'metavar',
-			     native => dontknow},
-
-    'metaWatchVar'	=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BImetaWatchVar,
-			     module=>'metavar',
-			     native => dontknow},
-    
-    'metaWatchVarB'	=> { in  => ['value','value','+bool'],
-			     out => [],
-			     BI  => BImetaWatchVarB,
-			     module=>'metavar',
-			     native => dontknow},
-
-    'metaGetDataAsAtom'	=> { in  => ['value','atom'],
-			     out => [],
-			     BI  => BImetaGetDataAsAtom,
-			     module=>'metavar',
-			     native => dontknow},
-
-    'metaGetNameAsAtom'	=> { in  => ['value','atom'],
-			     out => [],
-			     BI  => BImetaGetNameAsAtom,
-			     module=>'metavar',
-			     native => dontknow},
-
-    'metaGetStrength'	=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BImetaGetStrength,
-			     module=>'metavar',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # AVAR
-    #-----------------------------------------------------------------
-
-    'isAVarB'		=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => BIisAVarB,
-			     module=>'avar',
-			     native => dontknow},
-
-    'newAVar'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BInewAVar,
-			     module=>'avar',
-			     native => dontknow},
-
-    'readAVar'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIreadAVar,
-			     module=>'avar',
-			     native => dontknow},
-
-    'aVarHandler'	=> { in  => ['+procedure','+procedure'],
-			     out => [],
-			     BI  => BIaVarHandler,
-			     module=>'avar',
-			     native => dontknow},
-
-    '==='		=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BIaVarBind,
-			     module=>'avar',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # PERDIOVAR
-    #-----------------------------------------------------------------
-
-    'PerdioVar.is'	=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => PerdioVar_is,
-			     module=>'perdiovar',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # UNIX
-    #-----------------------------------------------------------------
-
-    'OS.getDir'		=> { in  => ['+virtualString'],
-			     out => ['+[string]'],
-			     BI  => unix_getDir,
-			     module=>'os',
-			     native => OK,
-			     native => dontknow},
-
-    'OS.stat'		=> { in  => ['+virtualString'],
-			     out => ['+record'],
-			     BI  => unix_stat,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.getCWD'		=> { in  => [],
-			     out => ['+atom'],
-			     BI  => unix_getCWD,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.open'		=> { in  => ['+virtualString','+[atom]','+[atom]'],
-			     out => ['+int'],
-			     BI  => unix_open,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.fileDesc'	=> { in  => ['+atom'],
-			     out => ['+int'],
-			     BI  => unix_fileDesc,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.close'		=> { in  => ['+int'],
-			     out => [],
-			     BI  => unix_close,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.write'		=> { in  => ['+int','+virtualString'],
-			     out => ['+value'],
-			     BI  => unix_write,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.read'		=> { in  => ['+int','+int','value','value','int'],
-			     out => [],
-			     BI  => unix_read,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.lSeek'		=> { in  => ['+int','+int','+atom'],
-			     out => ['+int'],
-			     BI  => unix_lSeek,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.unlink'		=> { in  => ['+virtualString'],
-			     out => [],
-			     BI  => unix_unlink,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.readSelect'	=> { in  => ['+int'],
-			     out => [],
-			     BI  => unix_readSelect,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.writeSelect'	=> { in  => ['+int'],
-			     out => [],
-			     BI  => unix_writeSelect,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.acceptSelect'	=> { in  => ['+int'],
-			     out => [],
-			     BI  => unix_acceptSelect,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.deSelect'	=> { in  => ['+int'],
-			     out => [],
-			     BI  => unix_deSelect,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.system'		=> { in  => ['+virtualString'],
-			     out => ['+int'],
-			     BI  => unix_system,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.getEnv'		=> { in  => ['+virtualString'],
-			     out => ['+value'],
-			     BI  => unix_getEnv,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.putEnv'		=> { in  => ['+virtualString','+virtualString'],
-			     out => [],
-			     BI  => unix_putEnv,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.time'		=> { in  => [],
-			     out => ['+int'],
-			     BI  => unix_time,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.gmTime'		=> { in  => [],
-			     out => ['+record'],
-			     BI  => unix_gmTime,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.localTime'	=> { in  => [],
-			     out => ['+record'],
-			     BI  => unix_localTime,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.srand'		=> { in  => ['+int'],
-			     out => [],
-			     BI  => unix_srand,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.rand'		=> { in  => [],
-			     out => ['+int'],
-			     BI  => unix_rand,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.randLimits'	=> { in  => [],
-			     out => ['+int','+int'],
-			     BI  => unix_randLimits,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.socket'		=> { in  => ['+atom','+atom','+virtualString'],
-			     out => ['+int'],
-			     BI  => unix_socket,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.bind'		=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => unix_bindInet,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.listen'		=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => unix_listen,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.connect'	=> { in  => ['+int','+virtualString','+int'],
-			     out => [],
-			     BI  => unix_connectInet,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.accept'		=> { in  => ['+int'],
-			     out => ['+int','+string','+int'],
-			     BI  => unix_acceptInet,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.shutDown'	=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => unix_shutDown,
-			     doesNotReturn=>1,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.send'		=> { in  => ['+int','+virtualString','+[atom]'],
-			     out => ['+value'],
-			     BI  => unix_send,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.sendTo'		=> { in  => ['+int','+virtualString','+[atom]',
-				     '+virtualString','+int'],
-			     out => ['+value'],
-			     BI  => unix_sendToInet,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.receiveFrom'	=> { in  => ['+int','+int','+[atom]','value','value'],
-			     out => ['+string','+int','+int'],
-			     BI  => unix_receiveFromInet,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.getSockName'	=> { in  => ['+int'],
-			     out => ['+int'],
-			     BI  => unix_getSockName,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.getHostByName'	=> { in  => ['+virtualString'],
-			     out => ['+record'],
-			     BI  => unix_getHostByName,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.pipe'		=> { in  => ['+virtualString','value'],
-			     out => ['+int','+int#int'],
-			     BI  => unix_pipe,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.tmpnam'		=> { in  => [],
-			     out => ['+string'],
-			     BI  => unix_tmpnam,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.wait'		=> { in  => [],
-			     out => ['+int','+int'],
-			     BI  => unix_wait,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.getServByName'	=> { in  => ['+virtualString','+virtualString'],
-			     out => ['+int'],
-			     BI  => unix_getServByName,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.uName'		=> { in  => [],
-			     out => ['+record'],
-			     BI  => unix_uName,
-			     module=>'os',
-			     native => dontknow},
-
-    'OS.getpwnam'	=> { in  => ['+virtualString'],
-			     out => ['+record'],
-			     BI  => unix_getpwnam,
-			     module=>'os',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # TCL_TK
-    #-----------------------------------------------------------------
-
-    'getTclNames'	=> { in  => [],
-			     out => ['value','value','value'],
-			     BI  => BIgetTclNames,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'initTclSession'	=> { in  => ['value','value','value'],
-			     out => ['value'],
-			     BI  => BIinitTclSession,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'closeTclSession'	=> { in  => ['value'],
-			     out => [],
-			     BI  => BIcloseTclSession,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'Tk.send'		=> { in  => ['value','!value'],
-			     out => [],
-			     BI  => BItclWrite,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclWriteReturn'	=> { in  => ['!value','value','value','value'],
-			     out => [],
-			     BI  => BItclWriteReturn,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclWriteReturnMess'=> { in  => ['!value','value','value','value','value'],
-			     out => [],
-			     BI  => BItclWriteReturnMess,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'Tk.batch'		=> { in  => ['value','!value'],
-			     out => [],
-			     BI  => BItclWriteBatch,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclWriteTuple'	=> { in  => ['value','!value','value'],
-			     out => [],
-			     BI  => BItclWriteTuple,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclWriteTagTuple'	=> { in  => ['value','!value','value','value'],
-			     out => [],
-			     BI  => BItclWriteTagTuple,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclWriteFilter'	=> { in  => ['value','!value','value','value',
-				     'value','value'],
-			     out => [],
-			     BI  => BItclWriteFilter,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclClose'		=> { in  => ['value','!value','value'],
-			     out => [],
-			     BI  => BItclClose,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'tclCloseWeb'	=> { in  => ['value','!value'],
-			     out => [],
-			     BI  => BItclCloseWeb,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'addFastGroup'	=> { in  => ['+value','value'],
-			     out => ['value'],
-			     BI  => BIaddFastGroup,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'delFastGroup'	=> { in  => ['value'],
-			     out => [],
-			     BI  => BIdelFastGroup,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'getFastGroup'	=> { in  => ['+value'],
-			     out => ['+value'],
-			     BI  => BIgetFastGroup,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'delAllFastGroup'	=> { in  => ['+value'],
-			     out => ['+value'],
-			     BI  => BIdelAllFastGroup,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'genTopName'	=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIgenTopName,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'genWidgetName'	=> { in  => ['value','value'],
-			     out => ['value'],
-			     BI  => BIgenWidgetName,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'genTagName'	=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIgenTagName,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'genVarName'	=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIgenVarName,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    'genImageName'	=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIgenImageName,
-			     module=>'tcl_tk',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # PERDIO
-    #-----------------------------------------------------------------
-
-    'dvset'		=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIdvset,
-			     ifdef=>DEBUG_PERDIO,
-			     module=>'perdio',
-			     native => dontknow},
-
-    'NetCloseCon'	=> { in  => ['+int'],
-			     out => [],
-			     BI  => BIcloseCon,
-			     module=>'perdio',
-			     native => dontknow},
-
-    'startTmp'		=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIstartTmp,
-			     module=>'perdio',
-			     native => dontknow},
-
-    'siteStatistics'	=> { in  => [],
-			     out => ['+[value]'],
-			     BI  => BIsiteStatistics,
-			     module=>'perdio',
-			     native => dontknow},
-
-    'printBorrowTable'	=> { in  => [],
-			     out => [],
-			     BI  => BIprintBorrowTable,
-			     module=>'perdio',
-			     native => dontknow},
-
-    'printOwnerTable'	=> { in  => [],
-			     out => [],
-			     BI  => BIprintOwnerTable,
-			     module=>'perdio',
-			     native => dontknow},
-
-
-    'portWait'         =>  { in  => ['+port','+int'],
-			     out => [],
-			     BI  => BIportWait,
-			     module=>'perdio',
-			     native => dontknow},
-
-
-    'perdioStatistics'	=> { in  => [],
-			     out => ['+record'],
-			     BI  => BIperdioStatistics,
-			     module=>'perdio' ,
-			     native => dontknow},
-
-
-     'atRedo'		=> { in  => ['+feature', 'value'],
-			     out => [],
-			     bi  => BIatRedo,
-			     ibi => atInlineRedo,
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # LAZY
-    #-----------------------------------------------------------------
-
-    'Lazy.new'		=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BILazyNew,
-			     module=>'lazy',
-			     native => dontknow},
-
-    'Lazy.is'		=> { in  => ['value'],
-			     out => ['+bool'],
-			     BI  => BILazyIs,
-			     module=>'lazy',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # VPROPS
-    #-----------------------------------------------------------------
-
-    'GetProperty'	=> { in  => ['+literal'],
-			     out => ['value'],
-			     BI  => BIgetProperty,
-			     module=>'vprop',
-			     native => dontknow},
-
-    'CondGetProperty'	=> { in  => ['+literal','value'],
-			     out => ['value'],
-			     BI  => BIcondGetProperty,
-			     module=>'vprop',
-			     native => dontknow},
-
-    'PutProperty'	=> { in  => ['+literal','value'],
-			     out => [],
-			     BI  => BIputProperty,
-			     module=>'vprop',
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # COMPONENTS
-    #-----------------------------------------------------------------
-
-    'smartSave'		=> { in  => ['value','value','+virtualString'],
-			     out => [],
-			     BI  => BIsmartSave,
-			     module=>components,
-			     native => dontknow},
-
-    'load'		=> { in  => ['value','value'],
-			     out => [],
-			     BI  => BIload,
-			     module=>components,
-			     native => dontknow},
-
-    'PID.get'		=> { in  => [],
-			     out => ['+record'],
-			     BI  => BIGetPID,
-			     module=>components,
-			     native => dontknow},
-
-    'PID.received'	=> { in  => ['value'],
-			     out => [],
-			     BI  => BIReceivedPID,
-			     module=>components,
-			     native => dontknow},
-
-    'PID.close'		=> { in  => [],
-			     out => [],
-			     BI  => BIClosePID,
-			     module=>components,
-			     native => dontknow},
-
-    'PID.send'		=> { in  => ['+virtualString','+int','+int','value'],
-			     out => [],
-			     BI  => BISendPID,
-			     module=>components,
-			     native => dontknow},
-
-    'URL.localize'	=> { in  => ['+virtualString'],
-			     out => ['+record'],
-			     BI  => BIurl_localize,
-			     module=>components,
-			     native => dontknow},
-
-    'URL.open'		=> { in  => ['+virtualString'],
-			     out => ['+int'],
-			     BI  => BIurl_open,
-			     module=>components,
-			     native => dontknow},
-
-    'URL.load'		=> { in  => ['+virtualString'],
-			     out => ['value'],
-			     BI  => BIurl_load,
-			     module=>components,
-			     native => dontknow},
-
-    #-----------------------------------------------------------------
-    # FSET
-    #-----------------------------------------------------------------
+    #* Finite Sets
 
     'fsValueToString'	=> { in  => ['+fset'],
 			     out => ['+string'],
@@ -3502,154 +3485,154 @@ $builtins = {
 			     BI  => fsp_init,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS,
-			     native => dontknow},
+			     native => true},
 
     'fsp_isIn'		=> { in  => ['int','fset','bool'],
 			     out => [],
 			     bi  => fsp_isIn,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_isInR'		=> { in  => ['int','fset','int'],
 			     out => [],
 			     bi  => fsp_isInR,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_include'	=> { in  => ['int','fset'],
 			     out => [],
 			     bi  => fsp_include,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_exclude'	=> { in  => ['int','fset'],
 			     out => [],
 			     bi  => fsp_exclude,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_match'		=> { in  => ['fset','+value'],
 			     out => [],
 			     bi  => fsp_match,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_seq'		=> { in  => ['+value'],
 			     out => [],
 			     bi  => fsp_seq,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_minN'		=> { in  => ['fset','+value'],
 			     out => [],
 			     bi  => fsp_minN,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_maxN'		=> { in  => ['fset','+value'],
 			     out => [],
 			     bi  => fsp_maxN,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_card'		=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => fsp_card,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_union'		=> { in  => ['fset','fset','fset'],
 			     out => [],
 			     bi  => fsp_union,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_intersection'	=> { in  => ['fset','fset','fset'],
 			     out => [],
 			     bi  => fsp_intersection,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_subsume'	=> { in  => ['fset','fset'],
 			     out => [],
 			     bi  => fsp_subsume,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_disjoint'	=> { in  => ['fset','fset'],
 			     out => [],
 			     bi  => fsp_disjoint,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_distinct'	=> { in  => ['fset','fset'],
 			     out => [],
 			     bi  => fsp_distinct,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_monitorIn'	=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => fsp_monitorIn,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_min'		=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => fsp_min,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_max'		=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => fsp_max,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_convex'	=> { in  => ['fset'],
 			     out => [],
 			     bi  => fsp_convex,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_diff'		=> { in  => ['fset','fset','fset'],
 			     out => [],
 			     bi  => fsp_diff,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_includeR'	=> { in  => ['int','fset','int'],
 			     out => [],
 			     bi  => fsp_includeR,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_bounds'	=> { in  => ['+fset','fset','int','int','int'],
 			     out => [],
 			     bi  => fsp_bounds,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_boundsN'	=> { in  => ['+value','+value','+value',
 				     '+value','+value'],
@@ -3657,49 +3640,78 @@ $builtins = {
 			     bi  => fsp_boundsN,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_disjointN'	=> { in  => ['+value'],
 			     out => [],
 			     bi  => fsp_disjointN,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_unionN'	=> { in  => ['+value','fset'],
 			     out => [],
 			     bi  => fsp_unionN,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_partition'	=> { in  => ['+value','fset'],
 			     out => [],
 			     bi  => fsp_partition,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS ,
-			     native => dontknow},
+			     native => true},
 
     'fsp_partitionReified'=> { in  => ['+value','fset','+value'],
 			     out => [],
 			     bi  => fsp_partitionReified,
 			     module=>fset,
 			     ifndef=>FOREIGNFDPROPS,
-			     native => dontknow},
+			     native => true},
 
     'fsp_partitionProbing'=> { in  => ['+value','fset','+value'],
 			       out => [],
 			       bi  => fsp_partitionProbing,
 			       module=>fset,
 			       ifndef=>FOREIGNFDPROPS ,
-			       native => dontknow},
+			       native => true},
 
     'fsp_partitionReified1'=> { in  => ['+value','fset','+value','int'],
 				out => [],
 				bi  => fsp_partitionReified1,
 				module=>fset,
 				ifndef=>FOREIGNFDPROPS ,
-				native => dontknow},
+				native => true},
+
+
+    
+    #* Unclassified
+
+    ##* setAbstractionTabDefaultEntry not used any more ???
+
+    'setAbstractionTabDefaultEntry' => { in  => ['value'],
+      out => [],
+      BI  => BIsetAbstractionTabDefaultEntry,
+					 native => true},
+
+    ##* Constraints
+
+    'System.nbSusps'	=> { in  => ['value'],
+			     out => ['+int'],
+			     BI  => BIconstraints,
+			     native => false},
+
+#    'SystemRegistry'	=> { in  => [],
+#			     out => ['+dictionary'],
+#			     BI  => BIsystem_registry,
+#                            native => dontknow},
+#
+#    'ServiceRegistry'	=> { in  => [],
+#			     out => ['+dictionary'],
+#			     BI  => BIsystem_registry,
+#                            native => dontknow},
+
 
 };
 
@@ -3855,18 +3867,23 @@ sub checkNative {
     printf "Builtins with nativeness: '$value'\n";
     printf "**************************************\n";
     my ($key,$info);
-    while (($key,$info) = each %$builtins) {
+    foreach $key (sort keys %$builtins) {
+	my $info = $builtins->{$key};
 	if ( $info->{native} eq $value) {
-	    print "$key\n";
+	    print "   $key\n";
 	}
     }
     print "\n\n";
 }
 
-sub NATIVENESS {
+sub SORTNATIVENESS {
     &checkNative("dontknow");
     &checkNative("true");
     &checkNative("false");
+}
+
+sub STRUCTURE {
+    exec "grep '#\\*' $0 | sed -e 's/[ \t]*#/  /'g";
 }
 
 my %include = ();
@@ -3888,7 +3905,8 @@ while (@ARGV) {
     if    ($option eq '-ctable' )    { $choice='ctable';  }
     elsif ($option eq '-cdecl'  )    { $choice='cdecl';   }
     elsif ($option eq '-oztable')    { $choice='oztable'; }
-    elsif ($option eq '-nativeness') { $choice='nativeness'; }
+    elsif ($option eq '-sortnativeness') { $choice='sortnativeness'; }
+    elsif ($option eq '-structure')   { $choice='structure'; }
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
     elsif ($option eq '-style'  )    { $style=int(shift); }
@@ -3907,5 +3925,6 @@ $includedefault = 0 if @include!=0;
 if    ($choice eq 'ctable' )    { &CTABLE;  }
 elsif ($choice eq 'cdecl'  )    { &CDECL;   }
 elsif ($choice eq 'oztable')    { &OZTABLE; }
-elsif ($choice eq 'nativeness') { &NATIVENESS; }
-else { die "must specify one of: -ctable -cdecl -oztable"; }
+elsif ($choice eq 'sortnativeness') { &SORTNATIVENESS; }
+elsif ($choice eq 'structure')   { &STRUCTURE; }
+else { die "must specify one of: -ctable -cdecl -oztable -structure -sortnativeness"; }
