@@ -54,6 +54,7 @@ private:
     Board *board;
   } u;
   int priority;
+  Board *notificationBoard;
 public:
   Thread(int prio);
 
@@ -70,8 +71,9 @@ public:
   Bool isNervous();
   Bool isSuspCont();
   Bool isSuspCCont();
-  Bool isSolve ();
-  Bool isSolveReduce ();
+  Bool isSolve () { return ((notificationBoard == (Board *) NULL) ? NO : OK); }
+  void setNotificationBoard (Board *b) { notificationBoard = b; }
+  Board* getNotificationBoard () { return (notificationBoard); }
   TaskStack *makeTaskStack();
   Board *popBoard();
   SuspContinuation *popSuspCont();

@@ -31,7 +31,8 @@ enum ActorFlags {
   Ac_Solve      = 0x04,
   Ac_Committed  = 0x08,
   Ac_WaitTop    = 0x10,
-  Ac_DisWait    = 0x20
+  Ac_DisWait    = 0x20,
+  Ac_SolveDet   = 0x40          // it means, that there is more seq. work in solve;
 };
 
 class Actor : public ConstTerm {
@@ -158,20 +159,22 @@ public:
 
   void incThreads ();
   void decThreads ();
+  Bool isSolveDet () { return ((flags & Ac_SolveDet) ? OK : NO); }
+  void unsetSolveDet () { flags &= ~Ac_SolveDet; }
   Bool isStable ();  // so simple!
   void addSuspension (Suspension *susp);
   void addSuspension (SuspList *l);
   Bool areNoExtSuspensions ();
-  TaggedRef* getSolveVarRef ();
-  TaggedRef getSolveVar ();
-  TaggedRef getResult ();
+  TaggedRef* getSolveVarRef () { return (&solveVar); }
+  TaggedRef getSolveVar () { return (solveVar); }
+  TaggedRef getResult () { return (result); }
   void pushWaitActor (WaitActor *a);
   void pushWaitActorsStackOf (SolveActor *sa);
   WaitActor *getDisWaitActor ();
-  void unsetBoard ();
-  void setBoard (Board *bb);
-  void setBoardToInstall (Board *bb);
-  Board* getBoardToInstall ();
+  void unsetBoard () { board = (Board *) NULL; }
+  void setBoard (Board *bb) { board = bb; }
+  void setBoardToInstall (Board *bb) { boardToInstall = bb; }
+  Board* getBoardToInstall () { return (boardToInstall); }
   TaggedRef genSolved ();
   TaggedRef genStuck ();
   TaggedRef genEnumed (Board *newSolveBB);

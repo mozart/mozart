@@ -58,7 +58,6 @@
    SuspCCont: thread has no taskStack,
              but 'suspCCont' contains a CFuncContinuation
    Nervous: thread has no taskStack, but 'board' contains the board to visit
-   Solve: thread was created inside a search problem;
    */
 
 enum ThreadFlags
@@ -66,12 +65,8 @@ enum ThreadFlags
   T_Normal =      0x01,
   T_SuspCont =    0x02,
   T_SuspCCont =   0x04,
-  T_Nervous =     0x08,
-  T_Solve =       0x10,
-  T_SolveReduce = 0x20
+  T_Nervous =     0x08
 };
-
-static int T_No_State = ~(T_Normal | T_SuspCont | T_SuspCCont | T_Nervous);
 
 /* class Thread
    static variables
@@ -125,11 +120,11 @@ Thread *Thread::GetTail()
 void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 {
   Thread *t=new Thread;
+  t->flags = T_SuspCont;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    t->flags = (T_SuspCont|T_Solve);
-    am.incSolveThreads (c->getNode ());
-  } else {
-    t->flags = T_SuspCont;
+    Board *nb = c->getNode ();
+    am.incSolveThreads (nb);
+    t->setNotificationBoard (nb);
   }
   t->priority = c->getPriority();
   t->u.suspCont = c;
@@ -139,11 +134,11 @@ void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp)
 {
   Thread *t=new Thread;
+  t->flags = T_SuspCCont;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    t->flags = (T_SuspCCont|T_Solve);
-    am.incSolveThreads (c->getNode ());
-  } else {
-    t->flags = T_SuspCCont;
+    Board *nb = c->getNode ();
+    am.incSolveThreads (nb);
+    t->setNotificationBoard (nb);
   }
   t->priority = c->getPriority();
   t->u.suspCCont = c;
@@ -173,11 +168,10 @@ void Thread::queueCont(Board *bb,ProgramCounter PC,RefsArray y) {
 void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
 {
   Thread *t = new Thread;
+  t->flags = T_Nervous;
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    t->flags = (T_Nervous|T_Solve);
     am.incSolveThreads (b);
-  } else {
-    t->flags = T_Nervous;
+    t->setNotificationBoard (b);
   }
   t->priority = b->getActor()->getPriority();
   t->u.board = b;
@@ -192,8 +186,10 @@ void Thread::ScheduleSolve (Board *b)
               error ("no solve board in Thread::ScheduleSolve ()"));
   // DebugCheckT (message("Thread::ScheduleSolve (@0x%x)\n", (void *) b->getActor ()));
   Thread *t = new Thread;
-  t->flags = (T_Nervous|T_Solve|T_SolveReduce);
-  am.incSolveThreads (b->getParentBoard ());
+  t->flags = T_Nervous;
+  Board *nb = (b->getParentBoard ())->getSolveBoard ();
+  am.incSolveThreads (nb);
+  t->setNotificationBoard (nb);
   t->priority = b->getActor()->getPriority();
   t->u.board = b;
   b->setNervous();
@@ -214,37 +210,28 @@ Thread::Thread(int prio)
 void Thread::init()
 {
   prev=next= (Thread *) NULL;
+  notificationBoard = (Board *) NULL;
   DebugCheckT(priority = -1; u.taskStack = (TaskStack *) -1; flags = -1);
 }
 
 Bool Thread::isNormal()
 {
-  return ((flags & T_Normal) ? OK : NO);
+  return ((flags == T_Normal) ? OK : NO);
 }
 
 Bool Thread::isSuspCont()
 {
-  return flags & T_SuspCont ? OK : NO;
+  return ((flags == T_SuspCont) ? OK : NO);
 }
 
 Bool Thread::isSuspCCont()
 {
-  return flags & T_SuspCCont ? OK : NO;
+  return ((flags == T_SuspCCont) ? OK : NO);
 }
 
 Bool Thread::isNervous()
 {
-  return ((flags & T_Nervous) ? OK : NO);
-}
-
-Bool Thread::isSolve ()
-{
-  return ((flags & T_Solve) ? OK : NO);
-}
-
-Bool Thread::isSolveReduce ()
-{
-  return ((flags & T_SolveReduce) ? OK : NO);
+  return ((flags == T_Nervous) ? OK : NO);
 }
 
 // mm2: not yet enabled
@@ -441,7 +428,7 @@ Board *Thread::popBoard()
 {
   Assert(isNervous());
   Board *ret = u.board;
-  flags = (T_Normal | (flags & T_No_State));
+  flags = T_Normal;
   u.taskStack = (TaskStack *) NULL;
   return ret;
 }
@@ -450,7 +437,7 @@ SuspContinuation *Thread::popSuspCont()
 {
   Assert(isSuspCont());
   SuspContinuation *ret = u.suspCont;
-  flags = T_Normal | (flags & T_No_State);
+  flags = T_Normal;
   u.taskStack = (TaskStack *) NULL;
   return ret;
 }
@@ -459,7 +446,7 @@ CFuncContinuation *Thread::popSuspCCont()
 {
   Assert(isSuspCCont());
   CFuncContinuation *ret = u.suspCCont;
-  flags = (T_Normal | (flags & T_No_State));
+  flags = T_Normal;
   u.taskStack = (TaskStack *) NULL;
   return ret;
 }

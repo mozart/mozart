@@ -390,7 +390,6 @@ void engine() {
   Suspension* &currentTaskSusp = FDcurrentTaskSusp;
   AWActor *CAA = NULL;
   Board *tmpBB = NULL;
-  Board *boardForNotification = NULL;
 
 #define CBB (e->currentBoard)
 
@@ -479,6 +478,7 @@ void engine() {
  LBLfindWork:
 // third: do work
   {
+    DebugCheckT(Board *fsb);
     switch (emulateHook(e,NULL,0,NULL)) {
     case HOOK_SCHEDULE:
       goto LBLschedule;
@@ -493,17 +493,18 @@ void engine() {
       {
         Thread *c = e->currentThread;
         if (c->isNervous()) {
-          boardForNotification = c->popBoard();
-          tmpBB = boardForNotification->getBoardDeref();
+          tmpBB = c->popBoard()->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
+          DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                      fsb->isReflected () == OK),
+                      error ("activity under reduced solve actor"));
           goto LBLTaskNervous;
         }
         if (c->isSuspCont()) {
           SuspContinuation *cont = c->popSuspCont();
-          boardForNotification = cont->getNode();
-          tmpBB = boardForNotification->getBoardDeref();
+          tmpBB = cont->getNode()->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
@@ -512,12 +513,14 @@ void engine() {
           G = cont->getG();
           XSize = cont->getXSize();
           cont->getX(X);
+          DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                      fsb->isReflected () == OK),
+                      error ("activity under reduced solve actor"));
           goto LBLTaskCont;
         }
         if (c->isSuspCCont()) {
           CFuncContinuation *ccont = c->popSuspCCont();
-          boardForNotification = ccont->getNode();
-          tmpBB = boardForNotification->getBoardDeref();
+          tmpBB = ccont->getNode()->getBoardDeref();
           if (!tmpBB) {
             goto LBLTaskEmpty;
           }
@@ -525,6 +528,9 @@ void engine() {
           // mm2: tm ??? currentTaskSusp = susp;
           XSize = ccont->getXSize();
           ccont->getX(X);
+          DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                      fsb->isReflected () == OK),
+                      error ("activity under reduced solve actor"));
           goto LBLTaskCFuncCont;
         }
         Assert(c->isNormal() && (!c->u.taskStack || c->u.taskStack->isEmpty()));
@@ -538,8 +544,7 @@ void engine() {
         goto LBLTaskEmpty;
       }
       ContFlag cFlag = getContFlag(tb);
-      boardForNotification = getBoard(tb,cFlag);
-      tmpBB = boardForNotification->getBoardDeref();
+      tmpBB = getBoard(tb,cFlag)->getBoardDeref();
 
       switch (cFlag){
       case C_CONT:
@@ -550,6 +555,9 @@ void engine() {
         if (!tmpBB) {
           goto LBLfindWork;
         }
+        DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                     fsb->isReflected () == OK),
+                    error ("activity under reduced solve actor"));
         goto LBLTaskCont;
       case C_XCONT:
         PC = (ProgramCounter) TaskStackPop(--topCache);
@@ -567,6 +575,9 @@ void engine() {
         if (!tmpBB) {
           goto LBLfindWork;
         }
+        DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                     fsb->isReflected () == OK),
+                    error ("activity under reduced solve actor"));
         goto LBLTaskCont;
 
       case C_DEBUG_CONT:
@@ -617,6 +628,9 @@ void engine() {
         if (!tmpBB) {
           goto LBLfindWork;
         }
+        DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                     fsb->isReflected () == OK),
+                    error ("activity under reduced solve actor"));
         goto LBLTaskNervous;
       case C_CFUNC_CONT:
         // by kost@ : 'solve actors' are represented via the c-function;
@@ -638,6 +652,9 @@ void engine() {
         if (!tmpBB) {
           goto LBLfindWork;
         }
+        DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
+                     fsb->isReflected () == OK),
+                    error ("activity under reduced solve actor"));
         goto LBLTaskCFuncCont;
       default:
         error("engine: POPTASK: unexpected task found.");
@@ -645,20 +662,9 @@ void engine() {
     }
 
   LBLTaskEmpty:
-    if (boardForNotification != (Board *) NULL &&    // if it was 'empty' thread;
-        e->currentThread->isSolve () == OK) {
-      if (e->currentThread->isSolveReduce () == OK) {
-        if (boardForNotification != e->rootBoard) {
-          if (boardForNotification->isCommitted () == NO) {
-            e->decSolveThreads (boardForNotification->getParentBoard ());
-          } else {
-            e->decSolveThreads (boardForNotification->getBoard ());
-          }
-        }
-      } else {
-        e->decSolveThreads (boardForNotification);
-      }
-      boardForNotification = (Board *) NULL;
+    if (e->currentThread->isSolve () == OK) {
+      Board *nb = e->currentThread->getNotificationBoard ();
+      e->decSolveThreads (nb);
     }
     e->currentThread->dispose();
     e->currentThread=(Thread *) NULL;
@@ -1847,6 +1853,8 @@ void engine() {
 
          // link and commit the board;
          newSolveBB->setCommitted (CBB);
+         CBB->incSuspCount (newSolveBB->getSuspCount ());
+         // similar to the 'unit commit'
          DebugCheck (((newSolveBB->getScriptRef ()).getSize () != 0),
                      error ("non-empty script in solve blackboard"));
 
@@ -2060,6 +2068,10 @@ void engine() {
       }
 
       Thread *tt = new Thread(prio);
+      if (e->currentSolveBoard != (Board *) NULL) {
+        e->incSolveThreads (e->currentSolveBoard);
+        tt->setNotificationBoard (e->currentSolveBoard);
+      }
       IncfProfCounter(procCounter,sizeof(Thread)+TaskStack::DefaultSize*4);
       tt->pushTask(CBB,newPC,Y,G);
       tt->schedule();
@@ -2213,6 +2225,7 @@ void engine() {
       if (solveBB->hasSuspension () == NO) {
         // 'solved';
         solveAA->unsetBoard ();   // unlink from the computation tree;
+        DebugCheckT (solveBB->setReflected ());
         if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
           warning ("unification of solved tuple with variable has failed");
           HANDLE_FAILURE (NULL, ;);
@@ -2223,6 +2236,7 @@ void engine() {
         if (wa == (WaitActor *) NULL) {
           // "stuck" (stable without distributing waitActors);
           solveAA->unsetBoard ();   // unlink from the computation tree;
+          DebugCheckT (solveBB->setReflected ());
           if ( !e->fastUnify (solveAA->getResult (), solveAA->genStuck ()) ) {
             warning ("unification of solved tuple with variable has failed");
             HANDLE_FAILURE (NULL, ;);
@@ -2264,6 +2278,8 @@ void engine() {
             //  If this waitActor has yet more than one clause, it can be
             // distributed again ... Moreover, it must be considered first.
           }
+          DebugCheckT (solveBB->setReflected ());
+          DebugCheckT (newSolveBB->setReflected ());
           // ... and now there are two proper branches of search problem;
 
           if ( !e->fastUnify (solveAA->getResult (),
