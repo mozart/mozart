@@ -78,13 +78,15 @@ enum DEBUGType {
   LOCK_MGR,    
   CHAIN,        // 45
   PORT,
+  TCP_HERROR,
+  TCP_CONNECTIONH,
   LAST
 
 };
 
 #ifdef DEBUG_PERDIO 
 
-#include <stdarg.h>
+#include <stdarg.h> 
 
 extern char *debugTypeStr[];
 

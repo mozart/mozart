@@ -93,7 +93,7 @@
 #include "runtime.hh"
 #include "codearea.hh"
 #include "indexing.hh"
-
+ 
 #include "perdio.hh"
 #include "perdio_debug.hh"  
 #include "perdio_debug.cc"  
@@ -295,18 +295,20 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
   TaggedRef aux1 = val1; DEREF(aux1,_1,_2);
   TaggedRef aux2 = val2; DEREF(aux2,_3,_4);
   
-  if (isUVar(aux1) || isUVar(aux2)) {
-    // cannot fail --> do it in current thread
+    if (isUVar(aux1) || isUVar(aux2)) {
+      // cannot fail --> do it in current thread
     OZ_unify(val1,val2); // mm2: should be bind?
     return;
-  }
+    }
+  
   Assert(am.onToplevel());
   Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.currentBoard());
 #ifdef PERDIO_DEBUG
-  PD((SITE_OP,"SITE_OP: site unify called"));
+  PD((SITE_OP,"SITE_OP: site unify called %d %d",val1, val2));
   if(DV->on(SITE_OP)){
     th->pushCall(BI_Show,oz_atom("SITE_OP: site unify complete"));
   }
+  Assert(MemChunks::isInHeap(val1) && MemChunks::isInHeap(val1));
 #endif
   pushUnify(th,val1,val2);
   am.scheduleThread(th);
@@ -453,7 +455,7 @@ public:
 
 int GNameTable::hash(GName *gname)
 {
-  int ret = gname->site->hashSecondary();
+ int ret = gname->site->hashSecondary();
   for(int i=0; i<fatIntDigits; i++) {
     ret += gname->id.number[i];
   }
@@ -3286,6 +3288,7 @@ void Site::msgReceived(MsgBuffer* bs)
       LTuple *lt = new LTuple(t,am.currentUVarPrototype());
       OZ_Term old = pm->exchangeStream(lt->getTail());
       PD((SPECIAL,"just after send port"));
+      Assert(MemChunks::isInHeap(makeTaggedConst(pm)));
       SiteUnify(makeTaggedLTuple(lt),old); // ATTENTION
       break;
       }
