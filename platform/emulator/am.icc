@@ -258,7 +258,7 @@ void updateExtSuspension(Board *varHome, Suspension *susp)
 
 inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-                                    SVariable *rightVar)
+                             SVariable *rightVar)
 {
   SVariable* var = tagged2SuspVar(taggedvar);
   SuspList *from = var->getSuspList();

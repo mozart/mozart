@@ -32,37 +32,9 @@ Bool GenCVariable::isLocalVariable(void){
 }
 
 
-void GenCVariable::bind(TaggedRef * vPtr, TaggedRef var, Bool varIsLocal,
-                        TaggedRef * tPtr, TaggedRef term)
-{
-  if (varIsLocal == NO)
-    am.trail.pushRef(vPtr, var);
-
-  if (isCVar(term) == OK)
-    term = makeTaggedRef(tPtr);
-
-  *vPtr = term;
-}
-
-
-void GenCVariable::bind(TaggedRef * vPtr, TaggedRef var,
-                        TaggedRef * tPtr, TaggedRef term)
-{
-  bind(vPtr, var,
-       tagged2CVar(var)->isLocalVariable(),
-       tPtr, term);
-}
-
-
 void GenCVariable::propagate(TaggedRef var, TaggedRef term){
-  am.checkSuspensionList(var, term);
+  am.checkSuspensionList(var, term, NULL);
 }
-
-
-void GenCVariable::propagate(TaggedRef var, TaggedRef *tPtr){
-  am.checkSuspensionList(var, makeTaggedRef(tPtr));
-}
-
 
 void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term)
 {

@@ -31,146 +31,143 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
   switch (tTag){
   case SMALLINT:
     {
-      if (finiteDomain.contains(smallIntValue(term)) == NO)
-        return NO;
+      if (! finiteDomain.contains(smallIntValue(term))) return FALSE;
       propagate(var, fd_det, term, TRUE);
       Bool varIsLocal = isLocalVariable();
-      if (varIsLocal == NO) {
-        Suspension * susp = new Suspension(am.currentBoard);
-        addSuspension(susp);
-      }
-      bind(vPtr, var, varIsLocal, tPtr, term);
-      return OK;
+      if (! varIsLocal) addSuspension(new Suspension(am.currentBoard));
+
+      doBindAndTrail(var, vPtr, term, varIsLocal);
+      return TRUE;
     }
   case CVAR:
     {
-      if (tagged2CVar(term)->getType() != FDVariable)
-        return NO;
+#ifndef CVAR_ONLY_FDVAR
+      if (tagged2CVar(term)->getType() != FDVariable) return FALSE;
+#endif
 
 // compute intersection of domains ...
       GenFDVariable* termVar = tagged2GenFDVar(term);
       FiniteDomain &termDom = termVar->finiteDomain;
-      LocalFD intersection;
-      // don't change the order of the args
-      intersection = finiteDomain & termDom;
-// ... and check if resulting domain is empty -> failure
-      if (intersection == fd_empty)
-        return NO;
-      FDPropState left_dom = intersection.checkAgainst(finiteDomain);
-      FDPropState right_dom = intersection.checkAgainst(termDom);
+      LocalFD intsct;
+
+      if ((intsct = finiteDomain & termDom) == fd_empty) return FALSE;
+      FDPropState left_dom = intsct.checkAgainst(finiteDomain);
+      FDPropState right_dom = intsct.checkAgainst(termDom);
 
 // bind - trail - propagate
       Bool varIsLocal = isLocalVariable();
       Bool termIsLocal = termVar->isLocalVariable();
       switch (varIsLocal + 2 * termIsLocal) {
-      case OK + 2 * OK:
+      case TRUE + 2 * TRUE: // var and term are local
         {
-          // var and term are local
-          if (tPtr < vPtr){
-            // bind  var to term
-            TaggedRef auxterm = term;
-            if (intersection == fd_singleton)
-              term = *tPtr = newSmallInt(intersection.singl());
-            else
-              termVar->setDom(intersection);
-            propagate(var, left_dom, tPtr, TRUE);
-            termVar->propagate(auxterm, right_dom, tPtr, TRUE);
-            if (isCVar(term) == OK)
+          if (tPtr < vPtr) { // bind var to term
+            if (intsct == fd_singleton) {
+              TaggedRef int_term = newSmallInt(intsct.singl());
+              propagate(var, left_dom, int_term, TRUE);
+              termVar->propagate(term, right_dom, int_term, TRUE);
+              doBind(vPtr, int_term);
+            } else {
+              termVar->setDom(intsct);
+              propagate(var, left_dom, TaggedRef(tPtr), TRUE);
+              termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
               relinkSuspList(termVar);
-            bind(vPtr, var, varIsLocal, tPtr, term);
-          } else {
-            // bind term to  var
-            TaggedRef auxvar = var;
-            if (intersection == fd_singleton)
-              var = *vPtr = newSmallInt(intersection.singl());
-            else
-              setDom(intersection);
-            termVar->propagate(term, right_dom, vPtr, TRUE);
-            propagate(auxvar, left_dom, vPtr, TRUE);
-            if (isCVar(var) == OK)
+              doBind(vPtr, TaggedRef(tPtr));
+            }
+          } else { // bind term to var
+            if (intsct == fd_singleton) {
+              TaggedRef int_var = newSmallInt(intsct.singl());
+              termVar->propagate(term, right_dom, int_var, TRUE);
+              propagate(var, left_dom, int_var, TRUE);
+              doBind(tPtr, int_var);
+            } else {
+              setDom(intsct);
+              termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
+              propagate(var, left_dom, TaggedRef(vPtr), TRUE);
               termVar->relinkSuspList(this);
-            bind(tPtr, term, termIsLocal, vPtr, var);
+              doBind(tPtr, TaggedRef(vPtr));
+            }
           }
           break;
         }
-      case OK + 2 * NO:
+      case TRUE + 2 * FALSE: // var is local and term is global
         {
-          // var is local and term is global
-          if (intersection.getSize() != termDom.getSize()){
-            TaggedRef auxvar = var;
-            if (intersection == fd_singleton)
-              var = *vPtr = newSmallInt(intersection.singl());
-            else
-              setDom(intersection);
-            termVar->propagate(term, right_dom, vPtr, TRUE);
-            propagate(auxvar, left_dom, vPtr, TRUE);
-            termVar->addSuspension(new Suspension(am.currentBoard));
-            bind(tPtr, term, termIsLocal, vPtr, var);
+          if (intsct.getSize() != termDom.getSize()){
+            if (intsct == fd_singleton) {
+              TaggedRef int_var = newSmallInt(intsct.singl());
+              termVar->propagate(term, right_dom, int_var, TRUE);
+              propagate(var, left_dom, int_var, TRUE);
+              termVar->addSuspension(new Suspension(am.currentBoard));
+              doBindAndTrail(term, tPtr, int_var);
+            } else {
+              setDom(intsct);
+              termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
+              propagate(var, left_dom, TaggedRef(vPtr), TRUE);
+              termVar->addSuspension(new Suspension(am.currentBoard));
+              doBindAndTrail(term, tPtr, TaggedRef(vPtr));
+            }
           } else {
-            termVar->propagate(term, right_dom, tPtr, TRUE);
-            propagate(var, left_dom, tPtr, TRUE);
-            if (isCVar(term) == OK)
-              relinkSuspList(termVar);
-            bind(vPtr, var, varIsLocal, tPtr, term);
+            termVar->propagate(term, right_dom, TaggedRef(tPtr), TRUE);
+            propagate(var, left_dom, TaggedRef(tPtr), TRUE);
+            doBind(vPtr, TaggedRef(tPtr));
           }
           break;
         }
-      case NO + 2 * OK:
+      case FALSE + 2 * TRUE: // var is global and term is local
         {
-          // var is global and term is local
-          if (intersection.getSize() != finiteDomain.getSize()){
-            TaggedRef auxterm = term;
-            if(intersection == fd_singleton)
-              term = *tPtr = newSmallInt(intersection.singl());
-            else
-              termVar->setDom(intersection);
-            propagate(var, left_dom, tPtr, TRUE);
-            termVar->propagate(auxterm, right_dom, tPtr, TRUE);
-            addSuspension(new Suspension(am.currentBoard));
-            bind(vPtr, var, varIsLocal, tPtr, term);
+          if (intsct.getSize() != finiteDomain.getSize()){
+            if(intsct == fd_singleton) {
+              TaggedRef int_term = newSmallInt(intsct.singl());
+              propagate(var, left_dom, int_term, TRUE);
+              termVar->propagate(term, right_dom, int_term, TRUE);
+              addSuspension(new Suspension(am.currentBoard));
+              doBindAndTrail(var, vPtr, int_term);
+            } else {
+              termVar->setDom(intsct);
+              propagate(var, left_dom, TaggedRef(tPtr), TRUE);
+              termVar->propagate(term, right_dom, TaggedRef(tPtr), TRUE);
+              addSuspension(new Suspension(am.currentBoard));
+              doBindAndTrail(var, vPtr, TaggedRef(tPtr));
+            }
           } else {
-            termVar->propagate(term, right_dom, vPtr, TRUE);
-            propagate(var, left_dom, vPtr, TRUE);
-            if (isCVar(var) == OK)
-              termVar->relinkSuspList(this);
-            bind(tPtr, term, termIsLocal, vPtr, var);
+            termVar->propagate(term, right_dom, TaggedRef(vPtr), TRUE);
+            propagate(var, left_dom, TaggedRef(vPtr), TRUE);
+            termVar->relinkSuspList(this);
+            doBind(tPtr, TaggedRef(vPtr));
           }
           break;
         }
-      case NO + 2 * NO:
+      case FALSE + 2 * FALSE: // var and term is global
         {
-          // var and term is global
-          TaggedRef *aPtr, aux;
-          if (intersection == fd_singleton){
-            aPtr = NULL;
-            aux = newSmallInt(intersection.singl());
-            propagate(var, left_dom, aux, TRUE);
-            termVar->propagate(term, right_dom, aux, TRUE);
+          if (intsct == fd_singleton){
+            TaggedRef int_val = newSmallInt(intsct.singl());
+            propagate(var, left_dom, int_val, TRUE);
+            termVar->propagate(term, right_dom, int_val, TRUE);
+            doBindAndTrail(var, vPtr, int_val);
+            doBindAndTrail(term, tPtr, int_val);
           } else {
             TaggedRef pn = tagged2CVar(var)->getName();
-            aPtr = newTaggedCVar(new GenFDVariable(intersection, pn));
-            aux = *aPtr;
-            propagate(var, left_dom, aPtr, TRUE);
-            termVar->propagate(term, right_dom, aPtr, TRUE);
+            TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct, pn));
+            propagate(var, left_dom, TaggedRef(var_val), TRUE);
+            termVar->propagate(term, right_dom, TaggedRef(var_val), TRUE);
+            doBindAndTrail(var, vPtr, TaggedRef(var_val));
+            doBindAndTrail(term, tPtr, TaggedRef(var_val));
           }
-          Suspension* susp = new Suspension(am.currentBoard);
+          Suspension * susp = new Suspension(am.currentBoard);
           termVar->addSuspension(susp);
           addSuspension(susp);
-          bind(vPtr, var,  varIsLocal, aPtr, aux);
-          bind(tPtr, term, termIsLocal, aPtr, aux);
           break;
         }
       default:
-        error("Unexpected case at %s:%d.", __FILE__, __LINE__);
+        error("unexpected case in unifyFD");
         break;
       } // switch
-      return OK;
+      return TRUE;
     }
   default:
     break;
-  } // switch(tTag)
+  } // switch
 
-  return NO;
+  return FALSE;
 } // GenFDVariable::unify
 
 

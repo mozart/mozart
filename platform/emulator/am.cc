@@ -467,7 +467,7 @@ void AM::setExtSuspension (Board *varHome, Suspension *susp)
 
 Bool AM::checkExtSuspension (Suspension *susp)
 {
-  if (susp->isExtSusp () == OK) {
+  if (susp->isExtSusp()) {
     Board *sb = susp->getNode ();
     DebugCheck ((sb == (Board *) NULL),
                 error ("no board is found in AM::checkExtSuspension"));
@@ -577,11 +577,11 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
     }
 
     // already propagated susps remain in suspList
-    if (susp->isPropagated() == NO) {
-      if ((suspList->checkCondition(taggedvar, term) == OK) &&
-          (susp->wakeUp(var, rightVar) == OK)){
+    if (! susp->isPropagated()) {
+      if ((suspList->checkCondition(taggedvar, term)) &&
+          (susp->wakeUp(var, rightVar))){
         // dispose only non-resistant susps
-        if (susp->isResistant() == NO) {
+        if (! susp->isResistant()) {
           suspList = suspList->dispose();
           continue;
         }
@@ -589,10 +589,10 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
     }
 #ifdef DEBUG_CHECK
     else
-      if (susp->isResistant() == NO)
+      if (! susp->isResistant())
         error("Propagated susp has to be resistant.");
 
-    if (susp->isDead() == OK)
+    if (susp->isDead())
       error("Unexpected dead suspension.");
 #endif
 

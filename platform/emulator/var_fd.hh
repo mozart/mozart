@@ -70,8 +70,6 @@ public:
 
   void propagate(TaggedRef var, FDPropState state,
                  TaggedRef term, Bool prop_eq = FALSE);
-  void propagate(TaggedRef var, FDPropState state,
-                 TaggedRef * tPtr, Bool prop_eq = FALSE);
 
   int getSuspListLength(void) {
     return suspList->length() +
