@@ -4237,14 +4237,7 @@ OZ_BI_define(BIat,1,1)
     if (oz_isVariable(fea)) {
       oz_suspendOnPtr(feaPtr);
     }
-    if (oz_isCell(fea)) {
-      OZ_Term out;
-      int ret = accessCell(fea,out);
-      OZ_result(out);
-      return ret;
-    }
-    // mm2
-    oz_typeError(0,"Feature|Cell");
+    oz_typeError(0,"Feature");
   }
 
   RecOrCell state = am.getSelf()->getState();
@@ -4283,12 +4276,7 @@ OZ_BI_define(BIassign,2,0)
     if (oz_isVariable(fea)) {
       oz_suspendOnPtr(feaPtr);
     }
-    if (oz_isCell(fea)) {
-      OZ_Term oldIgnored;
-      return exchangeCell(fea,value,oldIgnored);
-    }
-    // mm2
-    oz_typeError(0,"Feature|Cell"); // mm2: new name: assignable
+    oz_typeError(0,"Feature");
   }
 
   Object *self = am.getSelf();
@@ -4339,14 +4327,7 @@ OZ_BI_define(BIexchange,2,1)
       oz_suspendOnPtr(feaPtr);
       return SUSPEND;
     }
-    if (oz_isCell(fea)) {
-      OZ_Term oldVal; 
-      OZ_Return ret = exchangeCell(fea,newVal,oldVal);
-      OZ_result(oldVal);
-      return ret;
-    }
-    // mm2
-    oz_typeError(1,"Feature|Cell");
+    oz_typeError(1,"Feature");
   }
 
   RecOrCell state = am.getSelf()->getState();
