@@ -105,7 +105,8 @@ STANDARDSRC1 = \
 	Literal.oz Value.oz Cell.oz Lock.oz Char.oz String.oz \
 	VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
 	Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
-	Exception.oz Functor.oz BitArray.oz
+	Exception.oz Functor.oz BitArray.oz BitString.oz \
+	ByteString.oz
 STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
 
 Standard.ozf: $(STANDARDSRC) StandardBuiltins.ozf
