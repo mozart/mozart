@@ -351,8 +351,6 @@ oz_warn=$oz_a
 OZ_CXX_OPTIONS($oz_warn_error,oz_a)
 oz_warn_error=$oz_a
 
-CXXFLAGS="$CXXFLAGS $oz_a"
-
 dnl *****************************************************************
 dnl Checks for libraries.
 dnl *****************************************************************
@@ -463,14 +461,8 @@ then
     fi
 
     OZ_CHECK_HEADER_PATH(zlib.h,
-        OZ_CHECK_LIB_PATH(z, zlibVersion,
-            AC_DEFINE(USE_ZLIB)
-            ,
-            AC_MSG_WARN(libz not found)
-            )
-        ,
-        AC_MSG_WARN(zlib.h not found)
-        )
+        OZ_CHECK_LIB_PATH(z, zlibVersion, AC_DEFINE(USE_ZLIB) ,)
+        , )
 else
     AC_MSG_RESULT(no)
 fi
