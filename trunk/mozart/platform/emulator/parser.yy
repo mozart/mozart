@@ -26,8 +26,8 @@ static unsigned int parseVirtualString(char *str);
 
 #include "../include/config.h"
 #include "oz.h"
-
 #include "types.hh"
+#include "error.hh"
 
 typedef OZ_Term CTerm;
 
@@ -65,8 +65,10 @@ OZ_C_proc_begin(ozparser_parseFile, 3)
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
-      if (xy_errorMessages != OZ_nil())
-	printf("%s%c", OZ_virtualStringToC(xy_errorMessages), MSG_ERROR);
+      if (!OZ_isNil(xy_errorMessages)) {
+	prefixError();	
+	printf("%s", OZ_virtualStringToC(xy_errorMessages));
+      }
       return PROCEED;
     } else
       return OZ_unify(x, xy_errorMessages);
@@ -88,8 +90,10 @@ OZ_C_proc_begin(ozparser_parseVirtualString, 3)
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
-      if (xy_errorMessages != OZ_nil())
-	printf("%s%c", OZ_virtualStringToC(xy_errorMessages), MSG_ERROR);
+      if (!OZ_isNil(xy_errorMessages)) {
+	prefixError();	
+	printf("%s", OZ_virtualStringToC(xy_errorMessages));
+      }
       return PROCEED;
     } else
       return OZ_unify(x, xy_errorMessages);
