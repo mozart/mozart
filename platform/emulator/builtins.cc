@@ -4648,8 +4648,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
 
   if(tt==Te_Proxy) {
     int ret=remoteSend((PortProxy*) port,val);  
-    if(ret==0) return PROCEED;
-    return OZ_raiseC("sending to PortProxy",1);
+    return ret;
   } 
   LTuple *lt = new LTuple(val,am.currentUVarPrototype);
     

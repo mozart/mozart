@@ -1188,6 +1188,15 @@ void AM::handleIO()
   }
 }
 
+void checkIO(){
+  AM &e=am;
+  if(e.isSetSFlag(IOReady)){
+    osBlockSignals();
+    e.handleIO();
+    osUnblockSignals();}
+}
+
+
 // called from signal handler
 void AM::checkIO()
 {
