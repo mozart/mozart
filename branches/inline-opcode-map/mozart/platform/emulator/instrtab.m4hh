@@ -57,7 +57,8 @@ asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))
 #define LOAD_LABEL(instr) \
 { void*reg; asm("sethi %%hi(TRUE_"#instr"), %0\n\tor %0, %%lo(TRUE_"#instr"), %0" : "=r" (reg)); *ptr=reg; }
 #elif defined(ARCH_PPC) || defined(ARCH_DARWIN)
-{ void* reg; asm("lis %0, $TRUE_"#instr"@ha\n\taddi %0,%0,$TRUE_"#instr"@l" : "=r" (reg)); *ptr=reg; }
+#define LOAD_LABEL(instr) \
+{ void* reg; asm("addis %0,0,hi16($TRUE_"#instr")\n\tori %0,%0,lo16($TRUE_"#instr")" : "=r" (reg)); *ptr=reg; }
 #else
 #error this platform does not currently support the inline opcode map trick
 #endif
