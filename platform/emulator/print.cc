@@ -1132,10 +1132,11 @@ PRINTLONG(Literal)
 {
   CHECKDEPTHLONG;
   if (isAtom()) {
-    stream << indent(offset) << "Atom @" << this << ": ";
+    stream << indent(offset) << "Atom";
   } else {
-    stream << indent(offset) << "Name @" << this << ": ";
+    stream << indent(offset) << "Name";
   }
+  stream << " #" << this->hash() << " @" << this << ": ";
   this->print(stream,depth,offset);
   stream << endl;
 }
