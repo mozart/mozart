@@ -32,7 +32,7 @@ OZ_Term reflect_space(OZ_Term v)
 {
   TableClass<OZ_Term>      var_table;
   TableClass<Propagator *> prop_table;
-  ReflectStackClass rec_stack((OzVariable *) NULL); //!!! tmueller
+  ReflectStackClass rec_stack;
 
   while (!rec_stack.isEmpty()) {
     OZ_Term se = (OZ_Term) rec_stack.pop();
