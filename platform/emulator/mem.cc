@@ -23,27 +23,18 @@ extern "C" void *sbrk(int incr);
 // ----------------------------------------------------------------
 // heap memory
 
+// allocate 2000 kilo byte chuncks of memory
+const heapMaxSize = 2 * MB;
 
-class MemBlocks {
-public:
-  static MemBlocks *list;
-  char *block;
-  MemBlocks *next;
-  MemBlocks(char *bl, MemBlocks *n) : block(bl), next(n) {};
-};
+MemChunks *MemChunks::list = NULL;
 
-MemBlocks *MemBlocks::list = NULL;
-
-
-
-int   heapTotalSize;
+int heapTotalSize;
 
 #ifndef HEAPTOPINTOREGISTER
 char *heapTop;
 #endif
 
 char *heapEnd;
-char *heapStart;
 
 int initMemoryManagement(void)
 {
@@ -54,10 +45,9 @@ int initMemoryManagement(void)
   // init heap memory
   heapTotalSize = 0;
   heapTop       = NULL;
-  heapStart     = NULL;
 
   // allocate first chunck of memory;
-  MemBlocks::list = NULL;
+  MemChunks::list = NULL;
   getMemFromOS(0);
 
   return 4711;
@@ -315,42 +305,37 @@ void ozFree(void *p)
 
 
 
-void deleteChunkChain(char *oldChain) {
-  while (oldChain){
-    char **aux1 = ((char**) (void*)&oldChain[heapMaxSize]) - 1;
-    char *aux2  =  *aux1;
-#ifdef DEBUG_GC
-//    memset(oldChain,0x14,heapMaxSize);
-    memset(oldChain,-1,heapMaxSize);
-#endif
-    ozFree(oldChain);
-    oldChain = aux2;
-  } // while
-} // deleteChunkChain
-
-// 'inChunkChain' returns 1 if value points into chunk chain otherwise 0.
-int inChunkChain(void *Chain, void *value)
+void MemChunks::deleteChunkChain()
 {
-  char *Chain1 = (char*) Chain;
-  while (Chain1){
-    char **aux1 = ((char**) (void*)&Chain1[heapMaxSize]) - 1;
-    char *aux2  =  *aux1;
-    if ((Chain1 <= (char *) value) && ((char*) value <= Chain1 + heapMaxSize))
-      return 1;
-    Chain1 = aux2;
-  } // while
-  return 0;
+  MemChunks *aux = this;
+  while (aux) {
+#ifdef DEBUG_GC
+//    memset(aux->block,0x14,aux->size);
+    memset(aux->block,-1,aux->size);
+#endif
+    ozFree(aux->block);
+
+    MemChunks *aux1 = aux;
+    aux = aux->next;
+    delete aux1;
+  }
 }
 
-void printChunkChain(void *Chain)
+// 'inChunkChain' returns 1 if value points into chunk chain otherwise 0.
+Bool MemChunks::inChunkChain(void *value)
 {
-  char *Chain1 = (char*) Chain;
-  while (Chain1){
-    char **aux1 = ((char**) (void*)&Chain1[heapMaxSize]) - 1;
-    char *aux2  =  *aux1;
-    printf("chunk( from: 0x%x, to: 0x%x )\n", Chain1, Chain1 + heapMaxSize);
-    Chain1 = aux2;
-  } // while
+  for (MemChunks *aux = this; aux != NULL; aux = aux->next) {
+    if ((aux->block <= (char *) value) && ((char*) value <= aux->block + aux->size))
+      return OK;
+  }
+  return NO;
+}
+
+void MemChunks::print()
+{
+  for (MemChunks *aux = this; aux != NULL; aux = aux->next) {
+    printf("chunk( from: 0x%x, to: 0x%x )\n", aux->block, aux->block + aux->size);
+  }
 }
 
 
@@ -368,7 +353,6 @@ void getMemFromOS(size_t sz)
     IO::exitOz(1);
   }
 
-
   heapTotalSize += heapMaxSize;
 
   heapTop = (char *) ozMalloc(heapMaxSize);
@@ -377,26 +361,18 @@ void getMemFromOS(size_t sz)
     error("heapMalloc: Virtual memory exceeded");
   }
 
-#ifdef DEBUG_CHECK
-  // initialize with zeros
-  memset(heapTop,0,heapMaxSize);
-#endif
+  /* initialize with zeros */
+  DebugCheckT(memset(heapTop,0,heapMaxSize));
 
-  // link blocks
-  char *oldStart = heapStart;
-  heapStart = heapTop;
-  heapEnd = &heapStart[heapMaxSize];
+  heapEnd = &heapTop[heapMaxSize];
 
-//  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
+  //  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
   if (heapEnd > (char*)maxPointer) {
     message("Virtual memory exhausted");
     IO::exitOz(1);
   }
 
-  heapEnd -= sizeof(char *);
-  *(char **)(void*)heapEnd = oldStart;
-
-  MemBlocks::list = new MemBlocks(heapStart,MemBlocks::list);
+  MemChunks::list = new MemChunks(heapTop,MemChunks::list,heapMaxSize);
 
   DebugCheck(heapTotalSize > heapMaxSize,
              message("Increasing heap memory to %d kilo bytes\n",
@@ -407,9 +383,9 @@ void getMemFromOS(size_t sz)
 
 int inTospace(void *p)
 {
-  for(MemBlocks *help=MemBlocks::list; help!=NULL; help=help->next) {
+  for(MemChunks *help=MemChunks::list; help!=NULL; help=help->next) {
     char *ptr = help->block;
-    if ((char *) p <= ptr+heapMaxSize && (char*) p >= ptr) {
+    if ((char *) p <= ptr+help->size && (char*) p >= ptr) {
       return 1;
     }
   }

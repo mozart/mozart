@@ -23,6 +23,20 @@
 #include "error.hh"
 
 
+
+class MemChunks {
+public:
+  static MemChunks *list;
+  char *block;
+  MemChunks *next;
+  int size;
+  MemChunks(char *bl, MemChunks *n, int sz) : block(bl), next(n), size(sz) {};
+  void deleteChunkChain();
+  Bool inChunkChain(void *value);
+  void print();
+};
+
+
 /*     Redefine the operator "new" in every class, that shall use memory
     from the free list.  The same holds for memory used from heap. */
 
@@ -47,8 +61,6 @@
 //           free with garbage collection
 
 
-// allocate 2000 kilo byte chuncks of memory
-const heapMaxSize = 2 * MB;
 #if __GNUC__ >= 2 && defined(sparc) && defined(REGOPT)
 #define HEAPTOPINTOREGISTER 1
 #endif
@@ -61,11 +73,6 @@ extern char *heapTop;         // pointer to next free memory block
 
 extern char *heapEnd;
 extern int   heapTotalSize;   // # bytes allocated
-extern char *heapStart;       // pointer start of free memory
-
-inline char *heapGetStart(void) {return heapStart;}
-inline int heapGetMaxSize(void) {return heapMaxSize;}
-
 
 void getMemFromOS(size_t size);
 

@@ -428,7 +428,7 @@ inline
 TaggedRef makeTaggedRef(TaggedRef *s)
 {
   CHECK_POINTER(s);
-  DebugGC(gcing == 0 && !inChunkChain (heapGetStart (), (void *)s),
+  DebugGC(gcing == 0 && !MemChunks::list->inChunkChain ((void *)s),
           error ("making TaggedRef pointing to 'from' space"));
   return (TaggedRef)s;
 }

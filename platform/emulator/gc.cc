@@ -79,28 +79,29 @@ Bool isInTree(Board *b);
 
 
 #ifdef CHECKSPACE
-   void *from;
+   MemChunks *from;
 #   define INITCHECKSPACE printf("FROM-SPACE:\n");                            \
-                          printChunkChain(from = heapGetStart());
+                          from = MemChunks::list;                             \
+                          from->print();
 #   define INFROMSPACE(P)                                                     \
-      if (opMode == IN_GC && P != NULL && !inChunkChain(from, (void*)P))      \
+      if (opMode == IN_GC && P != NULL && !from->inChunkChain((void*)P))      \
            error("NOT taken from heap.");
 #   define INTOSPACE(P)                                                       \
-      if (opMode == IN_GC && P != NULL && inChunkChain(heapGetStart(), (void*)P)) \
+      if (opMode == IN_GC && P != NULL && MemChunks::list->inChunkChain((void*)P)) \
                              error("Taken from TO-SPACE 0x%x %d", P, __LINE__);
 #   define TOSPACE(P)                                                         \
-      if (opMode == IN_GC && P != NULL && !inChunkChain(heapGetStart(), (void*)P)) \
+      if (opMode == IN_GC && P != NULL && !MemChunks::list->inChunkChain((void*)P)) \
                         error("Not taken from TO-SPACE 0x%x %d", P, __LINE__);
 
 #   define TAGINTOSPACE(T) if(!(isRef(T) || isAnyVar(T) ||                   \
                                 tagTypeOf(T) == ATOM || tagTypeOf(T) == SMALLINT || \
                                 tagTypeOf(T) == FLOAT || tagTypeOf(T) == BIGINT))   \
                           if (opMode == IN_GC &&                              \
-                              inChunkChain(heapGetStart(), tagValueOf(T)))    \
+                              MemChunks::list->inChunkChain(tagValueOf(T)))    \
                               error("Taken from TO-SPACE 0x%x %d",            \
                                    tagValueOf(T), __LINE__);
 #   define PRINTTOSPACE   printf("TO:\n");                                    \
-                          printChunkChain(heapGetStart());
+                          MemChunks::list->print();
 #else
 #   define INITCHECKSPACE
 #   define INFROMSPACE(P)
@@ -420,11 +421,11 @@ void setHeapCell (int* ptr, int newValue)
     savedPtrStack.pushPtr(ptr, (int) *ptr);
   }
   DebugGC(opMode == IN_GC
-           && inChunkChain (heapGetStart (), (void *)ptr)
+           && MemChunks::list->inChunkChain((void *)ptr)
            && GCISMARKED (newValue),
            error ("storing marked value in 'TO' space"));
   DebugGC(opMode == IN_GC
-          && inChunkChain (from, (void *) GCUNMARK (newValue)),
+          && from->inChunkChain ((void *) GCUNMARK (newValue)),
           error ("storing (marked) ref in to FROM-space"));
   *ptr = newValue;
 }
@@ -1050,7 +1051,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
 #ifdef DEBUG_GC
   auxTermPtr = NULL;
-  if (opMode == IN_GC && inChunkChain (from, &toTerm))
+  if (opMode == IN_GC && from->inChunkChain(&toTerm))
     error ("having toTerm in FROM space");
 #endif
 
@@ -1166,7 +1167,7 @@ void AM::gc(int msgLevel)
 
   stat.initGcMsg(msgLevel);
 
-  char *oldChain = heapGetStart();
+  MemChunks *oldChain = MemChunks::list;
 
   INITCHECKSPACE;
   initMemoryManagement();
@@ -1240,7 +1241,7 @@ void AM::gc(int msgLevel)
     error("ptrStack should be empty");
   PRINTTOSPACE;
 
-  deleteChunkChain(oldChain);
+  oldChain->deleteChunkChain();
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
@@ -1953,6 +1954,7 @@ void performCopying(void){
 //             AM methods to launch gc under certain conditions
 //*****************************************************************************
 
+/*
 #ifdef DEBUG_GC
 #  define InitialBigGCLimit   (1 * (1<<20))
 #  define InitialSmallGCLimit (1<<20)
@@ -1960,45 +1962,46 @@ void performCopying(void){
 #  define InitialBigGCLimit   (9 * (1<<20))  // 9 * 2^10 = 9 MB
 #  define InitialSmallGCLimit (1<<20)        // 1 * 2^10 = 1 MB
 #endif
+*/
 
-int bigGCLimit   = InitialBigGCLimit;
-int smallGCLimit = InitialSmallGCLimit;
 
 // signal handler
-void checkGC() {
-  if (getUsedMemory() > bigGCLimit && am.conf.gcFlag) {
+void checkGC()
+{
+  if (getUsedMemory() > am.conf.heapMaxSize && am.conf.gcFlag) {
     am.setSFlagInt(StartGC);
   }
 }
 
 void AM::doGC()
 {
-  //  --> empty trail
+  /*  --> empty trail */
   deinstallPath(rootBoard);
 
-  // do gc
-  gc(am.conf.gcVerbosity);
+  /* do gc */
+  gc(conf.gcVerbosity);
 
-  // calc upper limits for next gc
-  smallGCLimit  = getUsedMemory();
-  bigGCLimit    = smallGCLimit + InitialBigGCLimit;
-  smallGCLimit += InitialSmallGCLimit;
+  /* calc upper limits for next gc */
+  int used = getUsedMemory();
+  if ((used*conf.heapMargin)/100 > conf.heapMaxSize) {
+    conf.heapMaxSize *= (100+conf.heapIncrement)/100;
+  }
+
   unsetSFlag(StartGC);
 }
 
 
 // pre-condition: root node is installed
-Bool AM::smallGC()
+Bool AM::idleGC()
 {
-  // if machine is idle
-  if (getUsedMemory() > smallGCLimit && am.conf.gcFlag) {
-    if (am.conf.showIdleMessage) {
-        message("gc ... ");
-      }
-    int save = am.conf.gcVerbosity;
-    am.conf.gcVerbosity = 0;
+  if (getUsedMemory() > (conf.heapIdleMargin*conf.heapMaxSize)/100 && conf.gcFlag) {
+    if (conf.showIdleMessage) {
+      message("gc ... ");
+    }
+    int save = conf.gcVerbosity;
+    conf.gcVerbosity = 0;
     doGC();
-    am.conf.gcVerbosity = save;
+    conf.gcVerbosity = save;
     return OK;
   }
   return NO;
@@ -2009,7 +2012,7 @@ Bool AM::smallGC()
 void checkInToSpace(TaggedRef term)
 {
   if (isRef (term) && term != makeTaggedNULL() &&
-      !inChunkChain (heapGetStart (), (void *)term))
+      !MemChunks::list->inChunkChain((void *)term))
     error ("reference to 'from' space");
   if (!isRef (term)) {
     switch (tagTypeOf (term)) {
@@ -2019,7 +2022,7 @@ void checkInToSpace(TaggedRef term)
     case STUPLE:
     case CONST:
     case SRECORD:
-      if (!inChunkChain (heapGetStart (), (void *)tagValueOf (term)))
+      if (!MemChunks::list->inChunkChain((void *)tagValueOf (term)))
         error ("reference to 'from' space");
       break;
     default:
