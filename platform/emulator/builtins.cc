@@ -12,7 +12,7 @@
 #pragma implementation "builtins.hh"
 #endif
 
-#include "assembler.hh"
+#include "assemble.hh"
 #include "builtins.hh"
 
 // BuiltinTab

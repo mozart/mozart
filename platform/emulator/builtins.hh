@@ -15,7 +15,7 @@
 #endif
 
 #include "records.hh"
-#include "hashTable.hh"
+#include "hashtbl.hh"
 
 // special builtins known in emulate
 enum BIType {

@@ -44,8 +44,8 @@
 #include "alarm.hh"
 #include "am.hh"
 #include "io.hh"
-#include "suspension.hh"
-#include "taskstack.hh"
+#include "suspensi.hh"
+#include "taskstk.hh"
 #include "thread.hh"
 
 #ifdef OUTLINE
