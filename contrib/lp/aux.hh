@@ -27,7 +27,7 @@
 #ifndef __AUX_HH__
 #define __AUX_HH__
 
-#include "mozart_cpi.hh"
+#include "/home/tmueller/mozart/platform/emulator/mozart_cpi.hh"
 #include <math.h>
 #include <values.h>
 

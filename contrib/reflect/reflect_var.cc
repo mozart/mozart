@@ -43,7 +43,7 @@ OZ_Term reflect_variable(OZ_Term var)
     type = atom_any;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any, (isCVar(vartag) ?
+      {OZ_pair2(atom_any, (isCVarTag(vartag) ?
                            reflect_susplist(tagged2CVar(var)->getSuspList())
                            : OZ_nil()))},
       {(OZ_Term) 0}
@@ -52,7 +52,7 @@ OZ_Term reflect_variable(OZ_Term var)
     MKARITY(susp_arity, susp_arity_def);
 
     sl = OZ_recordInit(atom_susplists, susp_arity);
-  } else if (isGenFDVar(var,vartag)) {
+  } else if (isGenFDVar(var)) {
     type = atom_fd;
 
     OZ_Term susp_arity_def[] = {
@@ -71,7 +71,7 @@ OZ_Term reflect_variable(OZ_Term var)
     MKARITY(susp_arity, susp_arity_def);
 
     sl = OZ_recordInit(atom_susplists, susp_arity);
-  } else if (isGenBoolVar(var,vartag)) {
+  } else if (isGenBoolVar(var)) {
     type = atom_bool;
 
     OZ_Term susp_arity_def[] = {
@@ -83,7 +83,7 @@ OZ_Term reflect_variable(OZ_Term var)
     MKARITY(susp_arity, susp_arity_def);
 
     sl = OZ_recordInit(atom_susplists, susp_arity);
-  } else if (isGenFSetVar(var,vartag)) {
+  } else if (isGenFSetVar(var)) {
     type = atom_fs;
 
     OZ_Term susp_arity_def[] = {
@@ -104,7 +104,7 @@ OZ_Term reflect_variable(OZ_Term var)
     MKARITY(susp_arity, susp_arity_def);
 
     sl = OZ_recordInit(atom_susplists, susp_arity);
-  } else if (isGenCtVar(var, vartag)) {
+  } else if (isGenCtVar(var)) {
     type = atom_ct;
 
     OzCtVariable * v = tagged2GenCtVar(var);
