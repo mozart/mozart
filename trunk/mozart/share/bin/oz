@@ -147,7 +147,7 @@ case "$cmd" in
    ;;
 
    ozwindowmanager)
-	: ${OZWINDOWMANAGER=$OZHOME/platform/$OZPLATFORM/ozwindowmanager}
+	: ${OZWINDOWMANAGER=$OZHOME/unsupported/platform/$OZPLATFORM/ozwindowmanager}
 	exec $OZWINDOWMANAGER "$@"
    ;;
 
