@@ -487,7 +487,10 @@ OZ_BI_define(BIObtainNative, 2, 1) {
     mod_name = (char *)  osDlsym(handle,name_sym);
   }
 
-  OZ_RETURN(ozInterfaceToRecord((*init_function)(), ozstrdup(mod_name), OK));
+  if (mod_name)
+    mod_name = ozstrdup(mod_name);
+
+  OZ_RETURN(ozInterfaceToRecord((*init_function)(), mod_name, OK));
 
 } OZ_BI_end
 
