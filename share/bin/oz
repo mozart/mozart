@@ -17,7 +17,7 @@ then
 fi
 
 # determine machine architecture and OS version
-OZPLATFORM=`$OZHOME/bin/ozplatform`
+: ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
 #echo $OZPLATFORM
 export OZPLATFORM
 
