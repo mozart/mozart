@@ -47,14 +47,6 @@ if [ ${OZCOMPILER-xx} = xx ]; then
    OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin
 fi
 
-setOZEMULATOR() {
-if [ ${OZEMULATOR-xx} = xx ]; then
-   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-else
-   echo "Using $OZEMULATOR"
-fi
-}
-
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
   # where Oz searches for files:
@@ -170,7 +162,11 @@ case "$cmd" in
    ;;
 
    oz.emulator)
-	setOZEMULATOR
+        if [ ${OZEMULATOR-xx} = xx ]; then
+	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
+	else
+	   echo "Using $OZEMULATOR"
+	fi
 	if [ X$1 = X"-emacs" ]; then
 		shift
 		exec $OZEMULATOR -E "$@" -a $OZARGV
@@ -182,7 +178,11 @@ case "$cmd" in
    ;;
 
    ozsa)  # standalone system
-	setOZEMULATOR
+	if [ ${OZEMULATOR-xx} = xx ]; then
+	   OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
+	else
+	   echo "Using $OZEMULATOR"
+	fi
         exec $OZEMULATOR -E "$@"
    ;;
 
