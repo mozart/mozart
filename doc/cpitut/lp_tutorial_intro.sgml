@@ -14,6 +14,11 @@ import RI at 'x-oz://contrib/RI'
        LP at 'x-oz://contrib/LP'>>>
 as part of a functor definition.
 
+<p class=danger>
+Currently they are only supported on the following platforms:
+<table display>
+<tr/<td/<<linux-i486>>/<td/<<solaris-sparc>>//
+</table>
 
 <P>
 Linear programming solver (LP solver) handle problems of the following
