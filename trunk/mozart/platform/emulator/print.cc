@@ -997,6 +997,7 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
     stream << indent(offset) << "Actor:" << endl;
     u.actor->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   }
+  stream << "Local thread queue: " << localThreadQueue << endl;
 }
 
 void Script::printStream(ostream &stream, int depth)
@@ -1071,7 +1072,7 @@ void SolveActor::printLongStreamSolve(ostream &stream, int depth, int offset)
   stream << indent(offset) << "threads=" << threads << endl;
   stream << indent(offset) << "SuspList:" << endl;
   suspList->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  stream << "Local thread queue: " << localThreadQueue << endl;
+  stream << endl;
 }
 
 void ThreadsPool::printThreads()

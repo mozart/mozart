@@ -1922,7 +1922,7 @@ void AM::checkDebugOutline(Thread *tt)
 }
 
 //  Make a runnable thread with a single task stack entry <local thread queue>
-Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
+Thread *AM::mkLTQ(Board *bb, int prio)
 {
   Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb,newId());
   th->setBody(allocateBody());
@@ -1934,7 +1934,7 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   incSolveThreads(bb);
   th->setInSolve();
 
-  th->pushLTQ(sa);
+  th->pushLTQ(bb);
 
   return th;
 }

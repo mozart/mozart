@@ -124,26 +124,6 @@ public:
 #endif
 
 //-----------------------------------------------------------------------------
-// local thread queue
-private:
-  LocalThreadQueue * localThreadQueue;
-public:
-  void pushToLTQ(Thread * thr, Board * b);
-
-  void resetLocalThreadQueue(void) {
-    localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
-    Assert(localThreadQueue);
-    localThreadQueue->dispose ();
-    localThreadQueue = NULL;
-  }
-  LocalThreadQueue * getLocalThreadQueue(void) {
-    return localThreadQueue;
-  }
-  void setLocalThreadQueue(LocalThreadQueue * ltq) {
-    localThreadQueue = ltq;
-  }
-
-//-----------------------------------------------------------------------------
 // support for nonmonotonic propagators
 private:
   OrderedSuspList * nonMonoSuspList;
