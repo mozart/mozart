@@ -238,7 +238,7 @@ void Statistics::initCount() {
   maxEnvSize = 0;
   sizeClosures = numClosures = sizeGs = 0;
   sizeObjects = sizeRecords = sizeLists = 0;
-  sizeStackVars = sizeEnvs = numEnvAllocs = 0;
+  sizeHeapChunks = sizeStackVars = sizeEnvs = numEnvAllocs = 0;
   numDerefs = longestDeref = 0;
   for(int i=0; i<=maxDerefLength; i++) {
     lengthDerefs[i] = 0;
@@ -362,6 +362,7 @@ void Statistics::printCount() {
   int freeListSize = getMemoryInFreeList();
   PrintVarPercent(freeListSize,totalAllocated);
 
+  PrintVarPercent(sizeHeapChunks,totalAllocated);
   PrintVarPercent(sizeStackVars,totalAllocated);
 
   double avrgEnvSize = ((double) sizeEnvs) / (double) numEnvAllocs;
@@ -420,6 +421,5 @@ void Statistics::derefChain(int n)
   n = min(n,maxDerefLength);
   lengthDerefs[n]++;    
 }
-
 
 #endif
