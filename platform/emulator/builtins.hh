@@ -36,6 +36,7 @@
 #include "base.hh"
 #include "oz.h"
 #include "oz_cpi.hh"
+#include "gc.hh"
 
 BuiltinTabEntry *BIinit();
 

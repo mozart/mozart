@@ -75,7 +75,7 @@ OZ_Term * OZ_copyOzTerms(int n, OZ_Term * frm) {
 
   OZ_Term * to = OZMALLOC(OZ_Term, n);
 
-  OZ_collectHeapBlock(frm, to, n);
+  OZ_collectLocalHeapBlock(frm, to, n);
 
   return to;
 }

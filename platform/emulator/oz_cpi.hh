@@ -557,13 +557,13 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-extern void   OZ_collectHeapBlock(OZ_Term *, OZ_Term *, int);
-extern void   OZ_collectHeapTerm(OZ_Term &, OZ_Term &);
-extern void * OZ_hrealloc(void *, size_t);
+extern void OZ_updateLocalHeapTerm(OZ_Term &);
 
-inline void OZ_updateHeapTerm(OZ_Term & to) {
-  OZ_collectHeapTerm(to,to);
+inline void OZ_updateHeapTerm(OZ_Term &t) {
+  OZ_updateLocalHeapTerm(t);
 }
+
+extern void * OZ_hrealloc(void *, size_t);
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 
