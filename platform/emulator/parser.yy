@@ -206,6 +206,8 @@ OZ_Term _PA_AtomTab[106];
 #define PA_pos                                  _PA_AtomTab[103]
 #define PA_warn                                 _PA_AtomTab[104]
 #define PA_zy                                   _PA_AtomTab[105]
+#define PA_fLoop                                _PA_AtomTab[106]
+#define PA_fMacro                               _PA_AtomTab[107]
 
 const char * _PA_CharTab[] = {
         "allowdeprecated",                      //0
@@ -314,10 +316,12 @@ const char * _PA_CharTab[] = {
         "pos",                                  //103
         "warn",                                 //104
         "zy",                                   //105
+        "fLoop",                                //106
+        "fMacro",                               //107
 };
 
 void parser_init(void) {
-   for (int i = 106; i--; )
+   for (int i = 108; i--; )
      _PA_AtomTab[i] = oz_atomNoDup(_PA_CharTab[i]);
 }
 
@@ -523,7 +527,7 @@ void xy_setParserExpect() {
 %token T_false T_FALSE_LABEL T_feat T_finally T_from T_fun T_functor
 %token T_if T_import T_in T_local T_lock T_meth T_not T_of T_or
 %token T_prepare T_proc T_prop T_raise T_require T_self T_skip T_then
-%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL
+%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_loop
 
 %token T_ENDOFFILE
 
@@ -534,7 +538,7 @@ void xy_setParserExpect() {
 %right    T_OOASSIGN
 %right    T_orelse
 %right    T_andthen
-%nonassoc T_COMPARE T_FDCOMPARE
+%nonassoc T_COMPARE T_FDCOMPARE T_LMACRO T_RMACRO
 %nonassoc T_FDIN
 %right    '|'
 %right    '#'
@@ -870,6 +874,12 @@ phrase2         : phrase2 add coord phrase2 %prec T_ADD
                   { $$ = $1; }
                 | parserSpecification
                   { $$ = $1; }
+                | T_loop coord phraseList T_in sequence T_end coord
+                  { $$ = newCTerm(PA_fLoop,$3,$5,makeLongPos($2,$7)); }
+                | T_loop coord sequence T_end coord
+                  { $$ = newCTerm(PA_fLoop,AtomNil,$3,makeLongPos($2,$5)); }
+                | T_LMACRO coord phraseList T_RMACRO coord
+                  { $$ = newCTerm(PA_fMacro,$3,makeLongPos($2,$5)); }
                 ;
 
 procFlags       : /* empty */
