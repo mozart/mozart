@@ -43,8 +43,8 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-peanuts   use peanuts file (default=yes)"
 ac_help="$ac_help
---with-malloc=<dir>
-        search malloc library <dir> (default: NONE)"
+--with-malloc=<obj>
+        use malloc from object file <obj> (default: NONE)"
 ac_help="$ac_help
 --enable-tmphack   link and compile in /tmp (default=no)"
 ac_help="$ac_help
