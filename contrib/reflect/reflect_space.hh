@@ -76,8 +76,6 @@ private:
 public:
   TableClass(void) : HashTable(HT_INTKEY, 2000), id_counter(0) {}
 
-  Bool isIn(T_WHAT k) { return HashTable::htFind((intlong) k) != htEmpty; }
-
   int add(T_WHAT k, Bool &is_reflected) {
     int i = (int) HashTable::htFind((intlong) k);
     is_reflected = ((i != (int) htEmpty) && (i >= 0));
@@ -106,11 +104,13 @@ OZ_Term reflect_space_variable(ReflectStack &,
 			       VarTable &, 
 			       PropTable &, 
 			       OZ_Term);
+
 OZ_Term reflect_space_prop(ReflectStack &, 
 			   OZ_Term &, 
 			   VarTable &, 
 			   PropTable &, 
 			   Propagator *);
+
 OZ_Term reflect_space_susplist(ReflectStack &, 
 			       VarTable &vt, 
 			       PropTable &pt, 
