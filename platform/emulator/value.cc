@@ -317,7 +317,7 @@ void Tertiary::setBoard(Board *b)
 TaggedRef ProcProxy::getSuspvar()
 {
   if (suspVar==makeTaggedNULL()) {
-    suspVar = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    suspVar = makeTaggedRef(newTaggedUVar(am.rootBoard));
     Bool getCode = (getPC()==NOCODE);
     getClosure(this,getCode);
   }

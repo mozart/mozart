@@ -215,6 +215,7 @@ extern OZ_Term  _FUNDECL(OZ_adjoinAt,(OZ_Term, OZ_Term, OZ_Term));
 
 /* unification */
 extern OZ_Return _FUNDECL(OZ_unify,(OZ_Term, OZ_Term));
+extern void      _FUNDECL(OZ_unifyInThread,(OZ_Term,OZ_Term));
 extern int       _FUNDECL(OZ_eq,(OZ_Term, OZ_Term));
 
 #define OZ_unifyFloat(t1,f)      OZ_unify(t1, OZ_float(f))
@@ -296,9 +297,11 @@ extern OZ_Return _FUNDECL(OZ_raiseA,(char*, int, int));
 
 /* Suspending builtins */
 
-void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
-OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
-void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
+extern void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
+extern OZ_Thread _FUNDECL(OZ_makeSuspendedThread,(OZ_CFun, OZ_Term *, int));
+extern void      _FUNDECL(OZ_addThread,(OZ_Term, OZ_Thread));
+extern void      _FUNDECL(OZ_pushCFun,(OZ_Thread,OZ_CFun,OZ_Term *,int));
+extern void      _FUNDECL(OZ_pushCall,(OZ_Thread,OZ_Term,OZ_Term *,int));
 
 #define OZ_makeSelfSuspendedThread() \
   OZ_makeSuspendedThread(OZ_self, OZ_args,OZ_arity)

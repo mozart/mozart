@@ -30,9 +30,8 @@ X();  \
 (X&); 
 
 
-
-void remoteSend(PortProxy *p, TaggedRef msg);
-void remoteClose(PortProxy *p);
+OZ_Return remoteApplication(char *biName, Tertiary *th, TaggedRef arg);
+OZ_Return remoteApplication(char *biName, Tertiary *th);
 
 void networkSiteDec(int sd);
 
@@ -322,8 +321,3 @@ PrTabEntry *findCodeGName(GName *);
 
 /* __PERDIOHH */
 #endif 
-
-
-
-
-
