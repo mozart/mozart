@@ -1049,6 +1049,7 @@ Thread *Thread::gcThread ()
     ThreadList::add (newThread);
   }
 
+  gcTagged(name,newThread->name);
   gcTagged(cell,newThread->cell);
 
   ptrStack.push (newThread, PTR_THREAD);

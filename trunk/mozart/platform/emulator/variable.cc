@@ -88,6 +88,7 @@ void VariableNamer::addName(TaggedRef v, char *nm)
   while(aux) {
     if (strcmp(aux->name,nm)==0) {
       aux->var=v;
+      OZ_warning("Redeclaration of toplevel variable `%s'", nm);
       return;
     }
     aux = aux->next;
