@@ -378,15 +378,15 @@ void getMemFromOS(size_t sz)
 
   //  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
   if (heapEnd > (char*)maxPointer) {
-    message("Virtual memory exhausted");
+    error("Oz adress space exhausted");
     IO::exitOz(1);
   }
   
   MemChunks::list = new MemChunks(heapTop,MemChunks::list,heapBlockSize);
   
   DebugCheck(heapTotalSize > heapBlockSize/KB,
-	     printf("Increasing heap memory to %d kilo bytes\n", 
-		    heapTotalSize));
+	     message("Increasing heap memory to %d kilo bytes\n", 
+		     heapTotalSize));
 }
 
 
