@@ -209,40 +209,39 @@
 	defined in <Ptr to="appendix.notation">.
       <P>
 	A scanner specification is allowed anywhere as an &Oz; statement:
-	<Grammar.Rule>?={phrase}
-	  <Grammar.Alt type=add>?={scanner specification}</Grammar.Alt>
+	<Grammar.Rule/?={statement}
+	  <Grammar.Alt type=add/?={scanner specification}//
       <P>
 	It is similar to a class definition, except that it is introduced
 	by the keyword <<scanner>>, must be named by a variable (and not an
 	arbitrary term), since this is used for assigning file names, and
 	allows for additional descriptors after the usual class descriptors.
-	<Grammar.Rule>?={scanner specification}
-	  <Grammar.Alt type=def><<scanner>> ?={variable}</Grammar.Alt>
-	  <Grammar.Alt type=space>{ ?={class descriptor} }</Grammar.Alt>
-	  <Grammar.Alt type=space>{ ?={method} }</Grammar.Alt>
-	  <Grammar.Alt type=space>{ ?={scanner descriptor} }+</Grammar.Alt>
-	  <Grammar.Alt type=space><<end>></Grammar.Alt>
+	<Grammar.Rule/?={scanner specification}
+	  <Grammar.Alt/<<scanner>> ?={variable}/
+	  <Grammar.Alt type=space/{ ?={class descriptor} }/
+	  <Grammar.Alt type=space/{ ?={method} }/
+	  <Grammar.Alt type=space/{ ?={scanner descriptor} }+/
+	  <Grammar.Alt type=space/<<end>>//
       <P>
 	A <Def>lexical abbreviation</Def> associates an identifier with a
 	regular expression, which can then be referenced in subsequent lexical
 	abbreviations or any lexical rules by enclosing the identifier in
 	curly brackets.  The regular expression is additionally parenthesized
 	when it is expanded.
-	<Grammar.Rule>?={lexical abbreviation}
-	  <Grammar.Alt type=def><<lex>> ?={atom} <Q
-	    class=terminal/<<=>>/ ?={regex} <<end>></Grammar.Alt>
-	  <Grammar.Alt type=or><<lex>> ?={variable} <Q
-	    class=terminal/<<=>>/ ?={regex} <<end>></Grammar.Alt>
+	<Grammar.Rule/?={lexical abbreviation}
+	  <Grammar.Alt/<<lex>> ?={atom}
+	    <Q class=terminal/<<=>>/ ?={regex} <<end>>/
+	  <Grammar.Alt/<<lex>> ?={variable}
+	    <Q class=terminal/<<=>>/ ?={regex} <<end>>//
       <P>
 	The definition of a <Def>lexical rule</Def> is similar to the
 	definition of a method.  However, its head consists of a regular
 	expression; when this is matched, the body of the lexical rule is
 	executed (as a method).
-	<Grammar.Rule>?={lexical rule}
-	  <Grammar.Alt type=def><<lex>> ?={regex}</Grammar.Alt>
-	  <Grammar.Alt type=space
-	    >[ ?={phrase} <<in>> ] ?={phrase}</Grammar.Alt>
-	  <Grammar.Alt type=space><<end>></Grammar.Alt>
+	<Grammar.Rule/?={lexical rule}
+	  <Grammar.Alt/<<lex>> ?={regex}/
+	  <Grammar.Alt type=space/?={in statement}/
+	  <Grammar.Alt type=space/<<end>>//
       <P>
 	Regular expressions may be annotated with <Def>lexical modes</Def>.
 	Each lexical mode constitutes an independent sub-scanner:  At any time
@@ -254,14 +253,13 @@
 	inheriting lexical mode as well.  Lexical modes inherit from all
 	lexical modes they are nested in.  Lexical rules written at top-level
 	are annotated with the implicitly declared mode <<INITIAL>>.
-	<Grammar.Rule>?={lexical mode}
-	  <Grammar.Alt type=def
-	    ><<mode>> ?={variable} [ <<from>> { ?={variable} }+ ]</Grammar.Alt>
-	  <Grammar.Alt type=space>{ ?={mode descriptor} }</Grammar.Alt>
-	  <Grammar.Alt type=space><<end>></Grammar.Alt>
-	<Grammar.Rule>?={mode descriptor}
-	  <Grammar.Alt type=def>?={lexical rule}</Grammar.Alt>
-	  <Grammar.Alt type=or>?={lexical mode}</Grammar.Alt>
+	<Grammar.Rule/?={lexical mode}
+	  <Grammar.Alt/<<mode>> ?={variable} [ <<from>> { ?={variable} }+ ]/
+	  <Grammar.Alt type=space/{ ?={mode descriptor} }/
+	  <Grammar.Alt type=space/<<end>>//
+	<Grammar.Rule/?={mode descriptor}
+	  <Grammar.Alt/?={lexical rule}/
+	  <Grammar.Alt/?={lexical mode}//
       <SubSubSection>
 	<Title/Syntax of Regular Expressions/
 	<P>
