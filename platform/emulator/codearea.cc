@@ -256,33 +256,10 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 
   // if we are lucky there's some debuginfo and we can determine
   // the exact position inside the procedure application
-  TaggedRef dbgFile=nil(), dbgComment;
-  int dbgLine=0, dbgAbspos;
-  ProgramCounter dbgPC = PC - sizeOf(DEBUGINFO);
-
-  TaggedRef tmpFile;
-  int       tmpLine;
-  char      *cs;
-
-  do {
-    dbgPC += sizeOf(DEBUGINFO);
-    dbgPC = CodeArea::nextDebugInfo(dbgPC);
-    if (dbgPC != NOCODE) {
-      CodeArea::getDebugInfoArgs(dbgPC,tmpFile,tmpLine,dbgAbspos,dbgComment);
-      cs = toC(dbgComment);
-      if (!strstr(cs,"Thread")) {
-        dbgFile = tmpFile;
-        dbgLine = tmpLine;
-      }
-    }
-    else
-      break;
-  } while (strstr(cs," exit") || strstr(cs," end"));
-
-  if (dbgFile != nil()) {
-    file = dbgFile;
-    line = dbgLine;
-  }
+  TaggedRef _dbgComment; int _dbgAbspos;
+  ProgramCounter dbgPC = CodeArea::nextDebugInfo(PC);
+  if (dbgPC != NOCODE)
+    CodeArea::getDebugInfoArgs(dbgPC,file,line,_dbgAbspos,_dbgComment);
 
   TaggedRef pairlist =
     OZ_cons(OZ_pairA("vars", vars),

@@ -261,8 +261,6 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     for (int i=def->getArity()-1; i>=0; i--) {
       dinfo = cons(arguments[i],dinfo);
     }
-    dinfo = cons(OZ_int(++lastStackFrameID % MAX_ID),dinfo);
-
     if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
       debugStreamCall(PC, def->getPrintName(), def->getArity(), arguments, 0);
       dbg = new OzDebug(DBG_STEP,dinfo);
@@ -2421,6 +2419,14 @@ LBLdispatcher:
          debugStreamCall(PC, name, predArity, X, 1);
 
          if (!isTailCall) e->pushTask(PC,Y,G);
+
+         OZ_Term dinfo = nil();
+         for (int i=predArity-1; i>=0; i--) {
+           dinfo = cons(X[i],dinfo);
+         }
+         OzDebug *dbg = new OzDebug(DBG_STEP,dinfo);
+
+         e->currentThread->pushDebug(dbg);
          e->pushCFun(bi->getFun(),X,predArity);
 
          goto LBLpreemption;
@@ -2796,8 +2802,6 @@ LBLdispatcher:
       OzDebug *ozdeb = (OzDebug *) Y;
       Y = NULL;
 
-      //message("exit call: %s\n",toC(ozdeb->info));
-
       switch (ozdeb->dothis) {
       case DBG_NOOP : {
         break;
@@ -2808,8 +2812,10 @@ LBLdispatcher:
         break;
       }
       case DBG_STEP : {
-        if (CTT->isTraced() && !CTT->contFlag())
-          CTT->startStepMode();
+        if (CTT->isTraced() && !CTT->contFlag()) {
+          debugStreamExit(ozdeb->info);
+          goto LBLpreemption;
+        }
         break;
       }
       default:
