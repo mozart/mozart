@@ -290,7 +290,7 @@ a single object.
 But the idea of functors goes much beyond this.
 Functors have an optional <<import>> clause that specifies
 which <em>resources</em> to use on the remote site.
-This makes functors the basic building block for mobile computations.
+This makes functors a basic building block for mobile computations.
 
 <P>Now let's create a remote site and make an instance
 of <<Counter>> called <<StatObj>>.
