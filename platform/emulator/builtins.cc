@@ -2665,6 +2665,12 @@ FLOATFUN(atan,BIatan,BIinlineAtan)
 FLOATFUN(ceil,BIceil,BIinlineCeil)
 FLOATFUN(floor,BIfloor,BIinlineFloor)
 FLOATFUN(ozround, BIround, BIinlineRound)
+FLOATFUN(sinh, BIsinh, BIinlineSinh)
+FLOATFUN(cosh, BIcosh, BIinlineCosh)
+FLOATFUN(tanh, BItanh, BIinlineTanh)
+FLOATFUN(asinh, BIasinh, BIinlineAsinh)
+FLOATFUN(acosh, BIacosh, BIinlineAcosh)
+FLOATFUN(atanh, BIatanh, BIinlineAtanh)
 #undef FLOATFUN
 
 
