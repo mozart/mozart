@@ -79,9 +79,27 @@ clean::
 veryclean::
 	-rm -f *~
 	-rm -f $(CED) xref.db index.db
+	-rm -f global-xref-db.xml
 
 distclean::
 	-rm -f *~
 	-rm -f $(CED) xref.db index.db
 	-rm -f ced.el catalog
 	-rm -f Makefile Makefile.common config.log config.status config.cache
+
+PSDOCDIRS	= apptut base browser bugs changes compiler \
+	contrib cpiref cpitut demo dstutorial explorer fdt \
+	foreign fst gump install limitations macro notation op \
+	opi ozcar ozdoc panel profiler system tools \
+	tutorial wp
+
+global-xref-db.xml:
+	dirs="$(PSDOCDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) $$i-xref-db.xml) || exit 1; done; \
+	echo '<OZDOC.DB>' > $@; \
+	for i in $$dirs; do \
+		echo "<OZDOC.DOCUMENT NAME='ozdoc:$$i'>" >> $@; \
+		cat $$i/$$i-xref-db.xml >> $@; \
+		echo "</OZDOC.DOCUMENT>" >> $@; \
+	done; \
+	echo '</OZDOC.DB>' >> $@
