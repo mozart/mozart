@@ -341,17 +341,17 @@ void OzFSVariable::propagate(OZ_FSetPropState state,
     case fs_prop_val: { // no break
       for (int i = fs_prop_any; i--; )
 	if (fsSuspList[i])
-	  OzVariable::propagate(fsSuspList[i], prop_eq);
+	  OzVariable::propagateLocal(fsSuspList[i], prop_eq);
     }
- 	   case fs_prop_lub: case fs_prop_glb:
+    case fs_prop_lub: case fs_prop_glb:
       if (fsSuspList[state])
-	OzVariable::propagate(fsSuspList[state], prop_eq);
+	OzVariable::propagateLocal(fsSuspList[state], prop_eq);
       break;
     case fs_prop_bounds:
       if (fsSuspList[fs_prop_lub])
-	OzVariable::propagate(fsSuspList[fs_prop_lub], prop_eq);
+	OzVariable::propagateLocal(fsSuspList[fs_prop_lub], prop_eq);
       if (fsSuspList[fs_prop_glb])
-	OzVariable::propagate(fsSuspList[fs_prop_glb], prop_eq);
+	OzVariable::propagateLocal(fsSuspList[fs_prop_glb], prop_eq);
       break;      
     default:
       break;
@@ -359,7 +359,7 @@ void OzFSVariable::propagate(OZ_FSetPropState state,
   } else {
     for (int i = fs_prop_any; i--; )
       if (fsSuspList[i])
-	OzVariable::propagate(fsSuspList[i], prop_eq);
+	OzVariable::propagateLocal(fsSuspList[i], prop_eq);
   }
   if (suspList) 
     OzVariable::propagate(suspList, prop_eq);
