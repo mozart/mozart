@@ -131,17 +131,18 @@ in
       end
 
       meth init
+	 MinX # MinY = ToplevelMinSize
+      in
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
 		    wm(iconbitmap self.toplevel IconBitMap)
+		    wm(minsize    self.toplevel MinX MinY)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
 
 	 Menu,init
-	 Dialog,init
-	 Help,init
 
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
@@ -158,7 +159,6 @@ in
 			 sticky:we columnspan:3)
 		   ]}
 
-	 %% the buttons
 	 local
 	    Bs = {Map [StepButtonBitmap   # StepButtonColor
 		       NextButtonBitmap   # NextButtonColor
@@ -239,7 +239,6 @@ in
 	    {Tk.send grid(F row:2 column:0 sticky:we columnspan:3)}
 	 end
 
-	 %% status line
 	 self.StatusText =
 	 {New Tk.text tkInit(parent: self.StatusFrame
 			     state:  disabled
