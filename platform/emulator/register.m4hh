@@ -508,7 +508,7 @@ Case(CREATEVARIABLEMOVEY)
                    DISPATCH(3);
                  }
 
-                 if ( isLiteralTag(tag) && oz_eq(term,atm) ) {
+                 if (oz_eq(term,atm)) {
                    DISPATCH(3);
                  }
 
@@ -705,9 +705,13 @@ Case(GETVOID)
                    sPointer++;
                    DISPATCH(2);
                  } else {
-                   tmpRet=fastUnify(Reg1(reg),makeTaggedRef(sPointer++),NOFLATGUARD);
+                   tmpRet=fastUnify(tagged2NonVariable(sPointer),Reg1(reg),
+                                    NOFLATGUARD);
+                   sPointer++;
                    if (tmpRet==PROCEED) { DISPATCH(2); }
-                   if (tmpRet!=FAILED)  { PC = lastGetRecord; goto LBLunifySpecial; }
+                   if (tmpRet!=FAILED)  {
+                     PC = lastGetRecord; goto LBLunifySpecial;
+                   }
 
                    SHALLOWFAIL;
                    HF_TELL(*(sPointer-1), Reg1(reg));
@@ -742,7 +746,8 @@ Case(GETVOID)
       DISPATCH(3);
     }
 
-    tmpRet=fastUnify(RegAccess(HelpReg1,reg),makeTaggedRef(sPointer),NOFLATGUARD);
+    tmpRet=fastUnify(RegAccess(HelpReg1,reg),makeTaggedRef(sPointer),
+                     NOFLATGUARD);
     if (tmpRet==PROCEED) {
       RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
       sPointer += 2;
@@ -779,7 +784,7 @@ Case(UNIFYLITERAL)
          DISPATCH(2);
        }
 
-       if ( isLiteralTag(tag) && oz_eq(term,atm) ) {
+       if ( oz_eq(term,atm) ) {
          DISPATCH(2);
        }
 
