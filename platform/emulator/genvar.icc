@@ -115,5 +115,33 @@ Bool GenCVariable::valid(TaggedRef val)
   return FALSE;
 }
 
+// this is supposed to be the local variable 
+inline
+void GenCVariable::installPropagators(GenCVariable * glob_var)
+{
+  Assert(getType()==FDVariable ||
+	 getType()==OFSVariable ||
+	 getType()==MetaVariable );
+
+  Assert(getType() == glob_var->getType());
+  Assert(isLocalVariable() && ! glob_var->isLocalVariable());
+  
+  Board * glob_home = glob_var->getHome();
+  suspList = ::installPropagators(suspList, glob_var->getSuspList(),
+				  glob_home);
+				
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
+    break;
+  case MetaVariable:
+  case OFSVariable:
+    break;
+  default:
+    break;
+  }
+}
+
 #endif //__genvar_icc__
+
 
