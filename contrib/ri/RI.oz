@@ -24,6 +24,8 @@
  *
  */
 
+%\define THREEFOLD_CHOICE
+
 functor
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,13 +77,21 @@ define
                          in
                             Mid = L + (U - L) / 2.0
                             % not yet tested
-                            dis
-%                              V = Mid
-%                           []
-                               {LessEq V Mid} then {Distribute V}
+\ifdef THREEFOLD_CHOICE
+                            choice
+                               V = Mid
                             []
-                               {Greater V Mid} then {Distribute V}
+                               {Greater Mid V} {Distribute V}
+                            []
+                               {Greater V Mid} {Distribute V}
                             end
+\else
+                            choice
+                               {LessEq V Mid} {Distribute V}
+                            []
+                               {Greater V Mid} {Distribute V}
+                            end
+\endif
                          end
                       end
                    end
