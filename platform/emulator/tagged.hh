@@ -721,6 +721,12 @@ TaggedRef oz_deref(TaggedRef t) {
 }
 
 inline
+TaggedRef oz_derefOne(TaggedRef t) {
+  Assert(oz_isRef(t));
+  return *tagged2Ref(t);
+}
+
+inline
 TaggedRef oz_safeDeref(TaggedRef t) {
   SAFE_DEREF(t);
   return t;

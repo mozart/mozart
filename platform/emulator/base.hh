@@ -411,7 +411,8 @@ extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 OZ_Return BIarityInline(TaggedRef, TaggedRef &);
 OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 			     Bool recordFlag);
-OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out);
+OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out);
+OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out);
 OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
 
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X);
