@@ -478,8 +478,8 @@ Bool AM::checkExtSuspension (Suspension *susp)
         // Note:
         //  The observation is that some actors which have imposed instability
         // could be discarded by reduction of other such actors. It means,
-        // that the stability condition can be COMPLETELY controlled by the absence
-        // of active threads;
+        // that the stability condition can not be COMPLETELY controlled by the
+        // absence of active threads;
       }
       sb = (sb->getParentBoard ())->getSolveBoard ();
     }
@@ -502,7 +502,8 @@ void AM::incSolveThreads (Board *bb)
 
 void AM::decSolveThreads (Board *bb)
 {
-  bb = bb->getBoardDeref ();
+  while (bb->isCommitted () == OK)
+    bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
     if (bb->isSolve () == OK) {
       SolveActor *sa = CastSolveActor (bb->getActor ());
@@ -511,7 +512,9 @@ void AM::decSolveThreads (Board *bb)
         Thread::ScheduleWakeup (bb, NO);
       }
     }
-    bb = (bb->getParentBoard ())->getBoardDeref ();
+    while (bb->isCommitted () == OK)
+      bb = bb->getBoard ();           // no getBoardDeref () !!!
+    bb = bb->getParentBoard ();
   }
 }
 
