@@ -69,9 +69,11 @@ void * freeListMalloc(size_t size) {
 void freeListChop(void * addr, size_t size);
 
 inline
-void freeListDisposeNoClean(void * addr, size_t size) {
+void freeListDispose(void * addr, size_t size) {
   Assert((size & 3) == 0);
   Assert(size > 0);
+
+  DebugCode(memset((char *)addr,0x5A,size));
 
   register FreeListMem** fl;
 
@@ -94,15 +96,6 @@ void freeListDisposeNoClean(void * addr, size_t size) {
     freeListChop(addr, size);
   }
 }
-
-inline
-void freeListDispose(void * addr, size_t chunk_size) {
-
-  DebugCode(memset((char *)addr,0x5A,chunk_size));
-
-  freeListDisposeNoClean(addr, chunk_size);
-}
-
 
 // return used kilo bytes on the heap
 inline 

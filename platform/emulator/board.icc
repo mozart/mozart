@@ -52,38 +52,20 @@ void Board::addToNonMono(Propagator * prop) {
   setNonMono(getNonMono()->insert(prop));
 }
 
-
 inline
-void Board::patchChoiceResult(int i) {
-  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
-  stuple->setArg(0, makeTaggedSmallInt(i));
-  result = makeTaggedSRecord(stuple);
+void Board::addToDistBag(Distributor * d) {
+  setDistBag(getDistBag()->add(d));
 }
 
-inline
-void Board::clearResult() {
-  if (OZ_isVariable(result))
-    return;
 
-  result = oz_newVar(getParent());
-}
-
-inline
-Distributor * Board::getDistributor(void) {
-  setDistBag(getDistBag()->clean());
-
-  if (!getDistBag())
-    return (Distributor *) 0;
-  
-  // Find unary distributor, if any
-  for (DistBag * db = getDistBag(); db; db=db->getNext()) {
-    if (db->getDist()->getAlternatives() == 1)
-      return db->getDist();
-  }
-
-  return getDistBag()->getDist();
-}
-
+/*
+ * increment/decrement the thread counter
+ * in every solve board above
+ * if "stable" generate a new thread "solve waker"
+ * NOTE:
+ *   there may be failed board in between which must be simply ignored
+ *
+ */
 
 inline
 Bool Board::isStable(void) {
@@ -100,20 +82,6 @@ Bool Board::isStable(void) {
 
   return isEmptySuspList();
 }
-
-inline
-Bool Board::isBlocked(void) {
-  return (getThreads()==0) && !isStable();
-}
-
-/*
- * increment/decrement the thread counter
- * in every solve board above
- * if "stable" generate a new thread "solve waker"
- * NOTE:
- *   there may be failed board in between which must be simply ignored
- *
- */
 
 inline
 void Board::incSolveThreads(void) {
@@ -163,6 +131,13 @@ void Board::checkSolveThreads(void) {
   } while (!bb->isRoot());
   
 }
+
+inline
+TaggedRef Board::genFailed() {
+  ozstat.incSolveFailed();
+  return AtomFailed;
+}
+
 
 #ifdef OUTLINE
 #undef inline

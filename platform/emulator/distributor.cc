@@ -27,19 +27,92 @@
 
 #include "distributor.hh"
 
-// PERFORMANCE PROBLEMS
-DistBag * DistBag::clean(void) {
+DistBag * DistBag::addIt(Distributor * d, Bool isUnary) {
+  // Gives preferences to unary distributors: they are inserted
+  // at the head
 
-  if (!this)
-    return this;
-  
-  if (getDist()->isAlive()) {
-    setNext(getNext()->clean());
-    return this;
+  if (isUnary || !this || dist->getAlternatives()>1) {
+
+    return new DistBag(d,this,isUnary);
+    
   } else {
-    return getNext()->clean();
+    
+    DistBag * pb = this;
+    DistBag * db = pb->next;
+    
+    while (db && db->isUnary) {
+      pb = db; db = db->next;
+    }
+
+    pb->next = new DistBag(d,db,NO);
+
+    return this;
+
   }
-  
+
 }
 
-  
+inline
+void DistBag::dispose(void) {
+  freeListDispose(this,sizeof(DistBag));
+}
+
+DistBag * DistBag::get(Distributor ** gd) {
+
+  if (this) {
+    DistBag * db = this;
+
+    while (db) {
+      
+      Distributor * d = db->dist;
+      DistBag * t;
+
+      if (db->isUnary) {
+	t = db;
+	db = db->next;
+	t->dispose();
+	*gd=d;
+	return db;
+      }
+      
+      if (d->getAlternatives()>1) {
+	*gd=d;
+	return db;
+      } 
+	
+      d->dispose(); 
+
+      t = db;
+      db = db->next;
+
+      t->dispose();
+
+    }
+
+    return db;
+    
+  } else {
+    return this;
+  }
+
+}
+
+DistBag * DistBag::merge(DistBag * db) {
+  if (this) {
+
+    DistBag * m = this;
+    DistBag * t;
+
+    while (db) {
+      m  = m->addIt(db->dist, db->isUnary);
+      t = db;
+      db = db->next;
+      t->dispose();
+    }
+
+    return m;
+
+  } else {
+    return db;
+  }
+}
