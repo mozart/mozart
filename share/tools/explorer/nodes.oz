@@ -63,11 +63,11 @@ in
 		 order:     Order
 		 status:    Manager.status
 		 manager:   Manager)
-      Classes =c(failed:    {Class.extendFeatures FailedNode Features nil}
-		 blocked:   {Class.extendFeatures BlockedNode Features nil}
-		 entailed:  {Class.extendFeatures EntailedNode Features nil}
-		 suspended: {Class.extendFeatures SuspendedNode Features nil}
-		 choose:    {Class.extendFeatures ChooseNode Features nil})
+      Classes =c(failed:    {Class.extendFeatures FailedNode Features}
+		 blocked:   {Class.extendFeatures BlockedNode Features}
+		 entailed:  {Class.extendFeatures EntailedNode Features}
+		 suspended: {Class.extendFeatures SuspendedNode Features}
+		 choose:    {Class.extendFeatures ChooseNode Features})
       S = {Space.new Query}
    in   
       case thread {Space.askVerbose S} end
