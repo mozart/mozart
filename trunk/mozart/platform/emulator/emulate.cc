@@ -611,7 +611,7 @@ void printArg(OZ_Term arg)
 	printf("\n");
       }
     } else if (lab==OZ_CToAtom("pos")) {
-      printf("For Argument #%s.\n",OZ_toC(st->getArg(0)));
+      message("For Argument #%s.\n",OZ_toC(st->getArg(0)));
     } else if (lab==OZ_CToAtom("type")) {
       message("Expected type '%s'.\n",OZ_toC(st->getArg(0)));
     } else {
