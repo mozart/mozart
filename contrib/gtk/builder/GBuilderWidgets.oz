@@ -175,7 +175,16 @@ prepare
                               default: false
                               get: generic
                               set: setHomogeneous)]
-           add: [packStart#BoxAddOptions#packStart
+           add: [pack#(atEnd(type: boolean
+                             default: false)|BoxAddOptions)#
+                 proc {$ Me Child AtEnd Expand Fill Padding}
+                    case AtEnd of 0 then
+                       {Me packStart(Child Expand Fill Padding)}
+                    [] 1 then
+                       {Me packEnd(Child Expand Fill Padding)}
+                    end
+                 end
+                 packStart#BoxAddOptions#packStart
                  packEnd#BoxAddOptions#packEnd])
 
       button:
@@ -1086,9 +1095,9 @@ prepare
            new: [[nRows nColumns homogeneous]#new]
            set: [[nRows nColumns]#resize]
            add: [attach#[left(type: int)
-                         right(type: int)
+                         right(type: int default: unit)
                          top(type: int)
-                         bottom(type: int)
+                         bottom(type: int default: unit)
                          xoptions(type: attachOptions
                                   default: [expand fill])
                          yoptions(type: attachOptions
@@ -1096,7 +1105,13 @@ prepare
                          xpadding(type: int
                                   default: 0)
                          ypadding(type: int
-                                  default: 0)]#attach])
+                                  default: 0)]#
+                 proc {$ Me Child L R T B XO YO XP YP}
+                    {Me attach(Child
+                               L case R of unit then L + 1 else R end
+                               T case B of unit then T + 1 else B end
+                               XO YO XP YP)}
+                 end])
 
       tearoffMenuItem:
          o(api: gtk
@@ -1329,14 +1344,23 @@ prepare
                        default: toplevel
                        get: generic
                        set: generic)
-                  position(type: windowPosition
-                           set: setPosition)
                   title(type: string
                         get: generic
                         set: setTitle)
+                  autoShrink(type: boolean
+                             get: generic
+                             set: generic)
+                  allowShrink(type: boolean
+                              get: generic
+                              set: generic)
+                  allowGrow(type: boolean
+                            get: generic
+                            set: generic)
                   modal(type: boolean
                         get: generic
                         set: setModal)
+                  windowPosition(type: windowPosition
+                                 set: setPosition)
                   wmclassName(type: string
                               get: windowGetFieldWmclassName)
                   wmclassClass(type: string
