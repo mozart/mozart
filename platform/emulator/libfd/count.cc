@@ -92,7 +92,7 @@ OZ_Return ExactlyPropagator::propagate(void)
 	if (l[i]->isIn(v))
 	  FailOnEmpty(*l[i] &= v);
       FailOnEmpty(*n_var &= oldSize - tnn);
-      P.vanish();
+      return P.vanish();
     } else if ( (oldSize - tnn < n_var->getMinElem()) || (tn > n_var->getMaxElem()) ) {
       goto failure;
     }   
