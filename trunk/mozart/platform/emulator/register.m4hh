@@ -176,6 +176,7 @@ CaseOneReg(GETRETURN,``
 CaseOneReg(FUNRETURN,``
      {
        SetFunReturn(Reg1(getRegArg(PC+1)));
+       if (Y) { deallocateY(Y); Y = NULL; }
        goto LBLpopTaskNoPreempt;
      }'')
 
