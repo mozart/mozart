@@ -225,13 +225,12 @@ inline
 void bindOPT(OZ_Term *varPtr, OZ_Term term)
 {
   Assert(isUVar(*varPtr));
-  if (!am.currentUVarPrototypeEq(*varPtr)) {
-    if (!oz_isLocalUVar(varPtr)) {
-      am.trail.pushRef(varPtr,*varPtr);
-    }
+  if (!am.currentUVarPrototypeEq(*varPtr) && !oz_isLocalUVar(varPtr)) {
+    DoBindAndTrail(varPtr,term);
+  } else {
+    COUNT(varOptUnify);
+    doBind(varPtr,term);
   }
-  COUNT(varOptUnify);
-  doBind(varPtr,term);
 }
 
 /* specially optimized unify: test two most probable cases first:

@@ -97,79 +97,124 @@ OZ_Return oz_installScript(Script &script)
 // unconstrained global var G1 -> unconstrained global var G2
 //    ==> add susp to G1 and G2
 
-void oz_reduceTrailOnSuspend()
-{
+void oz_reduceTrailOnSuspend() {
+
   if (!am.trail.isEmptyChunk()) {
+
     int numbOfCons = am.trail.chunkSize();
+
     Board * bb = oz_currentBoard();
+
     bb->newScript(numbOfCons);
 
-    //
     // one single suspended thread for all;
     Thread *thr = oz_newThreadPropagate(bb);
 
     for (int index = 0; index < numbOfCons; index++) {
       TaggedRef * refPtr, value;
 
-      am.trail.popRef(refPtr, value);
+      switch (am.trail.getTeType()) {
+      case Te_Bind: {
+        am.trail.popBind(refPtr, value);
+        Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
+        Assert(oz_isVariable(value));
 
-      Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
-      Assert(oz_isVariable(value));
+        bb->setScript(index,refPtr,*refPtr);
 
-      bb->setScript(index,refPtr,*refPtr);
+        TaggedRef vv= *refPtr;
+        DEREF(vv,vvPtr,_vvTag);
+        if (oz_isVariable(vv)) {
+          oz_var_addSusp(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
+        }
 
-      TaggedRef vv= *refPtr;
-      DEREF(vv,vvPtr,_vvTag);
-      if (oz_isVariable(vv)) {
-        oz_var_addSusp(vvPtr,thr,NO);  // !!! Makes space *not* unstable !!!
+        unBind(refPtr, value);
+
+        // value is always global variable, so add always a thread;
+        if (oz_var_addSusp(refPtr,thr)!=SUSPEND) {
+          Assert(0);
+        }
+
+        break;
       }
-
-      unBind(refPtr, value);
-
-      // value is always global variable, so add always a thread;
-      if (oz_var_addSusp(refPtr,thr)!=SUSPEND) {
-        Assert(0);
+      case Te_Variable:
+        am.trail.popVariable();
+        break;
+      case Te_Cast:
+        am.trail.popCast();
+        break;
+      default:
+        break;
       }
+    }
 
-    } // for
-  } // if
-  am.trail.popMark();
-}
-
-
-void oz_reduceTrailOnFail()
-{
-  while(!am.trail.isEmptyChunk()) {
-    TaggedRef *refPtr;
-    TaggedRef value;
-    am.trail.popRef(refPtr,value);
-    unBind(refPtr,value);
   }
+
   am.trail.popMark();
 }
 
-void oz_reduceTrailOnEqEq()
-{
+
+void oz_reduceTrailOnFail(void) {
+
+  while(!am.trail.isEmptyChunk()) {
+
+    switch (am.trail.getTeType()) {
+    case Te_Bind: {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      am.trail.popBind(refPtr,value);
+      unBind(refPtr,value);
+      break;
+    }
+    case Te_Variable:
+      am.trail.popVariable();
+      break;
+    case Te_Cast:
+      am.trail.popCast();
+      break;
+    default:
+      break;
+    }
+
+  }
+
+  am.trail.popMark();
+}
+
+void oz_reduceTrailOnEqEq(void) {
   am.emptySuspendVarList();
 
   while(!am.trail.isEmptyChunk()) {
-    TaggedRef *refPtr;
-    TaggedRef value;
-    am.trail.popRef(refPtr,value);
 
-    Assert(oz_isVariable(value));
+    switch (am.trail.getTeType()) {
+    case Te_Bind: {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      am.trail.popBind(refPtr,value);
 
-    TaggedRef oldVal = makeTaggedRef(refPtr);
-    DEREF(oldVal,ptrOldVal,_1);
+      Assert(oz_isVariable(value));
 
-    unBind(refPtr,value);
+      TaggedRef oldVal = makeTaggedRef(refPtr);
+      DEREF(oldVal,ptrOldVal,_1);
 
-    if (oz_isVariable(oldVal)) {
-      am.addSuspendVarList(ptrOldVal);
+      unBind(refPtr,value);
+
+      if (oz_isVariable(oldVal))
+        am.addSuspendVarList(ptrOldVal);
+
+      am.addSuspendVarList(refPtr);
+    }
+    case Te_Variable:
+      am.trail.popVariable();
+      break;
+    case Te_Cast:
+      am.trail.popCast();
+      break;
+    default:
+      break;
     }
 
-    am.addSuspendVarList(refPtr);
   }
+
   am.trail.popMark();
 }
 
