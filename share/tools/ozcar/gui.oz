@@ -200,19 +200,17 @@ in
 		  end}
 	 in
 	    {ForAll
-	     [{Cget emacsThreads} #
-	      self.emacsThreadsButton #
+	     [self.emacsThreadsButton #
 	      AddQueriesBitmap #
 	      toggleEmacsThreads #
 	      ConfigEmacsThreads
 
-	      {Cget subThreads} #
 	      self.subThreadsButton #
 	      AddSubThreadsBitmap #
 	      toggleSubThreads #
 	      ConfigSubThreads]
 	     proc {$ B}
-		V # C # Xbm # Action # Default = B
+		C # Xbm # Action # Default = B
 	     in
 		C = {New Tk.checkbutton
 		     tkInit(parent:           self.ButtonFrame
@@ -224,12 +222,12 @@ in
 					      else
 						 SelectedForeground
 					      end
-			    variable:         V
 			    bitmap:           LocalBitMapDir # Xbm
 			    relief:           flat %raised
 			    width:            CheckButtonWidth
 			    height:           CheckButtonHeight
-			    action:           self # Action(V))}
+			    variable:         {New Tk.variable tkInit(Default)}
+			    action:           self # Action)}
 		{C tkBind(event:  HelpEvent
 			  action: self # help(Xbm))}
 	     end}
@@ -263,6 +261,7 @@ in
 	 %% create the thread tree object...
 	 self.ThreadTree =
 	 {New Tree tkInit(parent: self.toplevel
+			  ozcar:  self
 			  title:  TreeTitle
 			  relief: sunken
 			  bd:     1
@@ -894,13 +893,8 @@ in
 	    in
 	       case T == unit then skip else
 		  I = {Thread.id T}
-		  S = {CheckState T}
 	       in
-		  case S
-		  of terminated then Gui,TerminatedStatus(T A)
-		  else
-		     ThreadManager,kill(T I)
-		  end
+		  ThreadManager,kill(T I)
 	       end
 
 	    elsecase A == StackAction then
