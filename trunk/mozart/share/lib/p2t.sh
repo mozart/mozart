@@ -47,4 +47,10 @@ then
     exit 1
 fi
 
+if test "x$OZMAKE_VERBOSE" = xyes
+then
+    echo "Using OZEMULATOR:  $OZEMULATOR" 1>&2
+    echo "Using TEXT2PICKLE: $TEXT2PICKLE" 1>&2
+fi
+
 exec $OZEMULATOR --pickle2text "$@" | $TEXT2PICKLE --textmode
