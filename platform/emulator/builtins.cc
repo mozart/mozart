@@ -11,6 +11,7 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 
 #include "dldwrap.h"
@@ -2815,6 +2816,25 @@ OZ_C_proc_begin(BIthreadState,2)
   return OZ_unifyAtom(out,"blocked");
 }
 OZ_C_proc_end 
+
+OZ_C_proc_begin(BIthreadGetName,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,out);
+
+  return OZ_unify(out, th->getName());
+}
+OZ_C_proc_end 
+
+OZ_C_proc_begin(BIthreadSetName,2)
+{
+  OZ_declareThreadArg(0,th);
+  OZ_declareArg(1,in);
+  th->setName(in);
+  
+  return PROCEED;
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIthreadPreempt,1)
 {
@@ -6408,9 +6428,84 @@ OZ_C_proc_begin(BIqueryDebugState,2)
 }
 OZ_C_proc_end
 
-/* -------------------------------------------------------------------------
- * 
- * ------------------------------------------------------------------------- */
+
+/* ------- Builtins to handle toplevel variables in the debugger ---------- */
+
+OZ_C_proc_begin(BItopVarInfo,2) // needs work --BL
+{
+  OZ_Term in  = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+  
+  char *name = OZ_atomToC(in);
+  return OZ_unify(out, OZ_nil());
+}
+OZ_C_proc_end   
+
+OZ_C_proc_begin(BItopVars,2) // needs work --BL
+{
+  OZ_Term in = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+  OZ_Term VarList = OZ_nil();
+
+  return OZ_unify(out, VarList);
+}
+OZ_C_proc_end   
+
+OZ_C_proc_begin(BIindex2Tagged,2)
+{
+  OZ_Term in  = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  if (!OZ_isSmallInt(in)) {
+    OZ_warning("Invalid index for builtin `index2Tagged'");
+    return OZ_unify(out, OZ_nil());
+  }
+  if (OZ_intToC(in) > am.toplevelVarsCount) {
+    OZ_warning("Index too big for builtin `index2Tagged'");
+    return OZ_unify(out, OZ_nil());
+  }
+  return OZ_unify(out, am.toplevelVars[OZ_intToC(in)]);
+}
+OZ_C_proc_end   
+
+
+extern OZ_Term make_time(const struct tm*);  // defined in unix.cc
+
+OZ_C_proc_begin(BItime2localTime,2)
+{
+  OZ_Term in  = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+  
+  if (!OZ_isInt(in)) {
+    OZ_warning("Invalid first argument for builtin `time2localTime'");
+    return OZ_unify(out, OZ_nil());
+  }
+  else {
+    time_t time = time_t(OZ_intToC(in));
+    return OZ_unify(out, make_time(localtime(&time)));
+  }
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIglobalVarNames,2)
+{
+  OZ_Term in  = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  ProgramCounter PC = ProgramCounter(OZ_intToC(in));
+
+  //TaskStackEntry *p = getTop();
+  //TaggedPC topElem = ToInt32(pop());
+  //am.currentThread->printTaskStack(NOCODE);
+
+  TaggedRef globals = CodeArea::globalVarNames(PC);
+
+  return OZ_unify(out, globals);
+}
+OZ_C_proc_end   
+
+// ---------------------------------------------------------------------------
+
 
 OZ_C_proc_begin(BIshowBuiltins,0)
 {
@@ -7206,6 +7301,13 @@ BIspec allSpec2[] = {
   {"contThread",1,BIcontThread},
   {"queryDebugState",2,BIqueryDebugState},
 
+  {"topVarInfo",2,BItopVarInfo},
+  {"topVars",2,BItopVars},
+  {"index2Tagged",2,BIindex2Tagged},
+  {"time2localTime",2,BItime2localTime},
+  {"globalVarNames",2,BIglobalVarNames},
+  //
+
   {"Thread.is",2,BIthreadIs},
   {"Thread.this",1,BIthreadThis},
   {"Thread.suspend",1,BIthreadSuspend},
@@ -7217,6 +7319,8 @@ BIspec allSpec2[] = {
   {"Thread.getPriority",2,BIthreadGetPriority},
   {"Thread.isSuspended",2,BIthreadIsSuspended},
   {"Thread.state",2,BIthreadState},
+  {"Thread.getName",2,BIthreadGetName},
+  {"Thread.SetName",2,BIthreadSetName},
 
   {"printLong",1,BIprintLong},
 

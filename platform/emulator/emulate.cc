@@ -8,6 +8,10 @@
   State: $State$
 
   $Log$
+  Revision 1.354  1996/08/11 14:53:38  lorenz
+  threads have a name now
+  some work on toplevel vars and global vars
+
   Revision 1.353  1996/08/08 17:39:55  tmueller
   removed too nervous assertion
 
@@ -726,6 +730,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
 TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
 {
   Assert(isLiteral(name));
+  toplevelVarsCount = regIndex;
   int size = getRefsArraySize(toplevelVars);
   if (LessIndex(size,regIndex)) {
     int newSize = int(size*1.5);
@@ -3009,6 +3014,7 @@ LBLdispatcher:
       int absPos         = smallIntValue(getNumberArg(PC+3));
       TaggedRef comment  = getLiteralArg(PC+4);
       int noArgs         = smallIntValue(getNumberArg(PC+5));
+      TaggedRef globals  = CodeArea::globalVarNames(PC);
 
       if (!CTT->traceMode())
 	{
@@ -3022,10 +3028,11 @@ LBLdispatcher:
       
       TaggedRef tail = CTT->getStreamTail();
 
-      OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
-				      3,
+      OZ_Term debugInfo = OZ_mkTupleC("debug",
+				      4,
 				      filename,
 				      makeInt(line),
+				      globals,
 				      comment
 				      );
       

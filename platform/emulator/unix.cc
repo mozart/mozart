@@ -1722,7 +1722,7 @@ OZ_C_ioproc_begin(unix_putEnv,2)
 OZ_C_proc_end
 
 
-static OZ_Term make_time(const struct tm* tim)
+OZ_Term make_time(const struct tm* tim)
 {
   OZ_Term t1=OZ_pairAI("sec",tim->tm_sec);
   OZ_Term t2=OZ_pairAI("min",tim->tm_min);
