@@ -20,6 +20,9 @@ Version                = '3.0.0-2 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
+NameOfBenni            = 'Benjamin Lorenz'
+EmailOfBenni           = 'lorenz@ps.uni-sb.de'
+
 SourceWindowTitle      = 'Ozcar Source Window'
 SourceWindowIcon       = 'Ozcar Source'
 
@@ -84,6 +87,11 @@ BracketRight           = ']'
 
 DotEnd                 = '.end'
 
+StepButtonText         = ' step'
+NextButtonText         = ' next'
+ContButtonText         = ' cont'
+ForgetButtonText       = ' forget'
+TermButtonText         = ' term'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Types, Names and Atoms
@@ -157,7 +165,7 @@ ThreadTreeBoldFont     = BoldFont
 ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 StatusFont             = TitleFont
-HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-20-*-*-*-*-*-*-*'
+HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-18-*-*-*-*-*-*-*'
 HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
