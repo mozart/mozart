@@ -24,18 +24,6 @@ local
 
    \insert action-nodes.oz
 
-   create Sentinel
-      from
-         UrObject
-         LayoutNodes.sentinel
-         HideNodes.sentinel
-         MoveNodes.sentinel
-         SearchNodes.sentinel
-         StatNodes.sentinel
-         ActionNodes.sentinel
-         TkNodes.sentinel
-   end
-
    class FailedNode
       from
          UrObject
@@ -181,6 +169,18 @@ local
 
 
 in
+
+   create Sentinel
+      from
+         UrObject
+         LayoutNodes.sentinel
+         HideNodes.sentinel
+         MoveNodes.sentinel
+         SearchNodes.sentinel
+         StatNodes.sentinel
+         ActionNodes.sentinel
+         TkNodes.sentinel
+   end
 
    fun {MakeRoot Manager Query Order}
       class Features
