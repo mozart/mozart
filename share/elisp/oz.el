@@ -378,7 +378,7 @@ Point is left at the first character of the keyword."
 
 (defconst oz-gump-regex-matcher
   (concat
-   "\\<lex[^" oz-atom-or-variable-char "<\n][^<\n]*"
+   "\\<lex[^" oz-atom-or-variable-char "\n][^<\"\n]*"
    "\\(<\\("
    "\\[\\([^]\\]\\|\\\\.\\)+\\]" "\\|"
    "\"[^\"\n]+\"" "\\|"
@@ -819,7 +819,7 @@ With argument, do it that many times.  Negative ARG means backwards."
 	(backward-oz-expr (- arg))
       (while (> arg 0)
 	(if (oz-is-quoted)
-	    (goto-char (match-end 0))
+	    (progn (goto-char (match-end 0)) (setq arg (1- arg)))
 	  (let ((pos (scan-sexps (point) 1)))
 	    (if (not pos)
 		(progn (goto-char (point-max)) (setq arg 0))
