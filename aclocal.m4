@@ -1148,7 +1148,10 @@ AC_DEFUN(OZ_CONTRIB_INIT,[
 
 AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     OZ_CONTRIB_INIT
-    : ${CXXFLAGS="-O"}
+dnl we actually need the c++ compiler to test for libraries
+dnl just oztool does not suffice since configure doesn't use
+dnl oztool but calls the compiler directly
+    OZ_CXX_CHOOSE
     AC_SUBST(CPPFLAGS)
     AC_SUBST(CXXFLAGS)
     AC_LANG_CPLUSPLUS
