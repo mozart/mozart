@@ -88,10 +88,7 @@ extern unsigned int heapTotalSize;   // # kilo bytes allocated
 void getMemFromOS(size_t size);
 
 // return free used kilo bytes on the heap
-inline unsigned int getUsedMemory()
-{
-  return heapTotalSize - (heapTop - heapEnd)/KB;
-}
+unsigned int getUsedMemory(void);
 
 inline unsigned int getAllocatedMemory() {
   return heapTotalSize;
@@ -125,6 +122,7 @@ inline void *mallocBody(size_t chunk_size, int align)
 #endif
     return heapTop;
   }
+
   getMemFromOS(chunk_size);
   goto retry;
 }
