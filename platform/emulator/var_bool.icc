@@ -65,7 +65,7 @@ void OzBoolVariable::installPropagators(OzFDVariable * glob_var)
   for (int i = 0; i < fd_prop_any; i += 1)
     suspList= oz_installPropagators(suspList,
                                     glob_var->fdSuspList[i],
-                                    GETBOARD(glob_var));
+                                    glob_var->getBoardInternal());
 }
 
 inline

@@ -126,26 +126,33 @@ Bool Suspendable::wakeup(Board * bb, PropCaller calledBy) {
   return _wakeup(bb, calledBy);
 }
 
-SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
-                                     PropCaller calledBy) {
+
+void oz_checkAnySuspensionList(SuspList ** suspList,
+                               Board * home,
+                               PropCaller calledBy) {
   if (am.inEqEq())
-    return suspList;
+    return;
 
-  SuspList * retSuspList = NULL;
+  home = home->derefBoard();
 
-  while (suspList) {
+  SuspList ** p  = suspList;
 
-    if (suspList->getSuspendable()->_wakeup(home,calledBy)) {
-      suspList = suspList->dispose();
-      continue;
+  SuspList * sl = *suspList;
+
+  while (sl) {
+
+    SuspList ** n = sl->getNextRef();
+
+    if (sl->getSuspendable()->_wakeup(home,calledBy)) {
+      *p = *n;
+      sl->dispose();
+      sl = *p;
+    } else {
+      sl = *n;
+      p  = n;
     }
 
-    SuspList * first = suspList;
-    suspList = suspList->getNext();
-    first->setNext(retSuspList);
-    retSuspList = first;
 
   }
 
-  return retSuspList;
 }
