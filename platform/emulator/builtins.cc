@@ -44,8 +44,6 @@
 #include "debug.hh"
 #include "copycode.hh"
 
-#include "wsock.hh"
-
 #include "iso-ctype.hh"
 #include <string.h>
 #include <time.h>
