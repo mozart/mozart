@@ -20,7 +20,7 @@
 // debug macros
 
 #ifdef DEBUG_FSET
-//#define OZ_DEBUG
+#define OZ_DEBUG
 #endif
 
 #ifdef OZ_DEBUG
@@ -35,7 +35,7 @@ extern "C" void oz_fsetdebugprint(char *format ...);
     fflush(stderr);					\
   }
 #define _OZ_DEBUGRETURNPRINT(X) __debugReturnPrint(X)
-#define OZ_DEBUGRETURNPRINT(X) X /*_OZ_DEBUGRETURNPRINT(X) */
+#define OZ_DEBUGRETURNPRINT(X)  X /* _OZ_DEBUGRETURNPRINT(X) */
 inline
 OZ_Return __debugReturnPrint(OZ_Return r) 
 {
@@ -63,7 +63,7 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 #define _OZ_DEBUGPRINTTHIS(string) 		\
    _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
 
-#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string) 
+#define OZ_DEBUGPRINTTHIS(string) /* _OZ_DEBUGPRINTTHIS(string) */
 
 //-----------------------------------------------------------------------------
 
@@ -145,7 +145,7 @@ public:
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
     int r3 = v3.leave() ? 1 : 0;
-    return (r1 + r2 + r3 <= 0) ? OZ_ENTAILED : OZ_SLEEP; // TMUELLER
+    return (r1 + r2 + r3 <= 1) ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     v1.leave();
