@@ -166,7 +166,7 @@ protected:
   void sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:
   ManagerVar(OzVariable *ov, int index)
-    :  ProxyManagerVar(ov->getHome1(),index), inform(NULL),
+    :  ProxyManagerVar(ov->getBoardInternal(),index), inform(NULL),
        proxies(0),origVar(ov) {}
 
   int getIdV() { return OZ_EVAR_MANAGER; }

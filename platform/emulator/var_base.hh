@@ -72,26 +72,6 @@ extern const int varSizes[];
 #define OZ_VAR_INVALID ((TypeOfVariable) -1)
 #endif
 
-#define AddSuspToList(List, Susp, Home)         \
-{                                                       \
-  if ((List) && ((List)->getSuspendable() == Susp)) {   \
-  } else {                                              \
-    List = new SuspList(Susp, List);                    \
-    if (Home && !oz_onToplevel())                       \
-      (Home)->checkExtSuspension(Susp);                 \
-  }                                                     \
-}
-
-
-#define AddSuspToListLocal(List, Susp) \
-{                                                       \
-  if ((List) && ((List)->getSuspendable() == Susp)) {   \
-  } else {                                              \
-    List = new SuspList(Susp, List);                    \
-  }                                                     \
-}
-
-
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
@@ -134,7 +114,9 @@ public:
 
   USEFREELISTMEMORY;
 
-  Board *getHome1()        { return (Board *)(homeAndFlags&~SVAR_FLAGSMASK); }
+  Board *getBoardInternal() {
+    return (Board *)(homeAndFlags&~SVAR_FLAGSMASK);
+  }
   void setHome(Board *h) {
     homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h); }
 
@@ -146,7 +128,6 @@ public:
     DebugCode(suspList=0);
   }
 
-  Board *getBoardInternal() { return getHome1(); }
   Bool isEmptySuspList() { return suspList==0; }
   int getSuspListLengthS() { return suspList->length(); }
 
@@ -220,9 +201,10 @@ public:
     return r;
   }
 
-  void addSuspSVar(Suspendable * susp, int unstable)
-  {
-    AddSuspToList(suspList, susp, unstable ? getHome1() : 0);
+  void addSuspSVar(Suspendable * susp, int markExternal = TRUE) {
+    suspList = new SuspList(susp, suspList);
+    if (markExternal && !oz_onToplevel())
+      getBoardInternal()->checkExtSuspension(susp);
   }
 
   OZPRINTLONG;

@@ -145,7 +145,7 @@ Board *getVarBoard(TaggedRef var)
 
   if (isUVar(var))
     return tagged2VarHome(var);
-  return tagged2SVarPlus(var)->getHome1();
+  return tagged2SVarPlus(var)->getBoardInternal();
 }
 
 inline

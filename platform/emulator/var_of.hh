@@ -258,8 +258,7 @@ OzOFVariable* tagged2GenOFSVar(TaggedRef term)
 inline
 void addSuspOFSVar(TaggedRef v, Suspendable * susp)
 {
-  OzOFVariable * ofs = tagged2GenOFSVar(v);
-  AddSuspToList(ofs->suspList, susp, ofs->getHome1());
+  tagged2GenOFSVar(v)->addSuspSVar(susp);
 }
 
 

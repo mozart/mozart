@@ -78,7 +78,7 @@ inline
 Bool oz_isLocalVar(OzVariable *var) {
   ShallowCheckLocal();
 
-  Board * bb = var->getHome1();
+  Board * bb = var->getBoardInternal();
 
   Board * c  = oz_currentBoard();
 
