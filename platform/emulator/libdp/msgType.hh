@@ -37,14 +37,11 @@ enum MessageType {
   M_NONE = 0,
 
   M_PORT_SEND,	
-  M_ASK_FOR_CREDIT,     // OTI SITE
-  M_OWNER_CREDIT,	// OTI CREDIT
-  M_OWNER_SEC_CREDIT,	// NA CREDIT
+
+  M_UPDATE_REFERENCE, 	// NA CREDIT
+  M_OWNER_REF,           // OTI, INT,INT
+  M_BORROW_REF,          // SITE, OTI, INT, INT
   
-  M_OWNER_FW,           // OTI, INT,INT
-  M_BORROW_FW,          // SITE, OTI, INT, INT
-  
-  M_BORROW_CREDIT,      // NA  CREDIT
   M_REGISTER,           // OTI SITE
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA
