@@ -1,6 +1,15 @@
 #!/bin/sh
-TCL_LIBRARY=$OZHOME/lib/tcl/lib/tcl
-TK_LIBRARY=$OZHOME/lib/tcl/lib/tk
-export TCL_LIBRARY
-export TK_LIBRARY
-exec $OZHOME/platform/$OZPLATFORM/blt_wish "$@"
+if [ -x $OZHOME/platform/$OZPLATFORM/blt_wish ]
+then
+  TCL_LIBRARY=$OZHOME/lib/tcl/lib/tcl
+  TK_LIBRARY=$OZHOME/lib/tcl/lib/tk
+  export TCL_LIBRARY
+  export TK_LIBRARY
+  exec $OZHOME/platform/$OZPLATFORM/blt_wish "$@"
+fi
+
+# if ozwish failed
+exec blt_wish "$@"
+
+# if blt_wish failed
+exec wish "$@"
