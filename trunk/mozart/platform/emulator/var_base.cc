@@ -245,7 +245,7 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
 #define VARTP(T1,T2) ((T1<<3)|T2)
 #define VTP(T1,T2)   VARTP(OZ_VAR_ ## T1, OZ_VAR_ ## T2)
 
-// #define VAR_CAST_DEBUG
+#define VAR_CAST_DEBUG
 
 #ifdef VAR_CAST_DEBUG
 
