@@ -188,6 +188,8 @@ local
 	 M = {System.get messages}
       in
 	 {OE.'thread' set(E.'thread')}
+	 {OE.width    set(E.width)}
+	 {OE.depth    set(E.depth)}
 	 {OE.location set(E.location)}
 	 {OE.hints    set(E.hints)}
 	 {OP.width    set(P.width)}
@@ -458,14 +460,7 @@ in
 	 OPI =
 	 {MakePage OpiPage 'Programming Interface' Book False
 	  [frame(text:    'Errors'
-		 left:    [checkbutton(text:    'Show thread'
-				       feature: 'thread'
-				       state:  {System.get errors}.'thread'
-				       action:  proc {$ B}
-						   {System.set
-						    errors('thread':B)}
-						end)
-			   checkbutton(text:    'Show location'
+		 left:    [checkbutton(text:    'Show location'
 				       feature: location
 				       state:  {System.get errors}.location
 				       action:  proc {$ B}
@@ -478,13 +473,33 @@ in
 						   {System.set
 						    errors(hints:B)}
 						end
-				       feature: hints)]
+				       feature: hints)
+			   entry(text:    'Maximal tasks:'
+				 feature: 'thread'
+				 action:  proc {$ N}
+					     {System.set errors('thread': N)}
+					  end
+				 top:     self)
+			   entry(text:    'Maximal print depth:'
+				 feature: depth
+				 action:  proc {$ N}
+					     {System.set errors(depth: N)}
+					  end
+				 top:     self)
+			   entry(text:    'Maximal print width:'
+				 feature: width
+				 action:  proc {$ N}
+					     {System.set errors(width: N)}
+					  end
+				 top:     self)]
 		 right:   [button(text:   'Default'
 				  action: proc {$}
 					     {System.set
-					      errors('thread': True
+					      errors('thread': 10
 					             location: True
-						     hints:    True)}
+						     hints:    True
+					             width:    10
+						     depth:    2)}
 					     {OPI update}
 					  end)])
 	   frame(text:    'Output'
@@ -502,8 +517,8 @@ in
 				 top:     self)]
 		 right:   [button(text:  'Default'
 				  action: proc {$}
-					     {System.set print(width: 100
-							       depth: 10)}
+					     {System.set print(width: 10
+							       depth: 2)}
 					     {OPI update}
 					  end)])
 	   frame(text:    'Status Messages'
