@@ -2327,8 +2327,8 @@ LBLsuspendThread:
 	}
 
       case RAISE:
-	RAISE_BI(entry->getPrintName(),
-		 cons(XPC(1),cons(XPC(2),nil())));
+	RAISE_BI1(entry->getPrintName(),
+		  cons(XPC(1),cons(XPC(2),nil())));
 
       case SLEEP:
       default:
