@@ -1108,7 +1108,7 @@ TaggedRef gcVariable(TaggedRef var)
     if (gv->getType() == FDVariable &&
         ((GenFDVariable *) gv)->getDom().isBool()) {
       FDProfiles.inc_item(fd_bool);
-      FDProfiles.inc_item(fd_bool_saved, gv_size-12);
+      FDProfiles.inc_item(fd_bool_saved, gv_size-sizeof(GenCVariable));
     }
   });
 

@@ -245,7 +245,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       if (isEffectiveList(suspList))
         stream << " a" << suspList->length();
 
-      stream << ' ' << me->toString() << '>';
+      stream << ' ' << me->toString(DEC(depth)) << '>';
       break;
     }
   default:
@@ -1089,7 +1089,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
     {
       GenMetaVariable* me = (GenMetaVariable *) this;
       stream << indent(offset)
-             << "<<MV: '" << me->getName() << "' " << me->toString()
+             << "<<MV: '" << me->getName() << "' " << me->toString(DEC(depth))
              << endl;
       tagged2Stream(me->data, stream, DEC(depth), offset + 2);
       stream << endl << indent(offset) << ">>" << endl;

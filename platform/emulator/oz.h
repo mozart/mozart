@@ -98,6 +98,7 @@ extern char *   OZ_parseFloat      _PROTOTYPE((char *s));
 extern OZ_Term  OZ_CStringToNumber _PROTOTYPE((char *));
 
 extern char *   OZ_toC       _PROTOTYPE((OZ_Term));
+extern char *   OZ_toC1      _PROTOTYPE((OZ_Term, int));
 
 extern OZ_Term  OZ_CToString _PROTOTYPE((char *));
 extern char *   OZ_stringToC _PROTOTYPE((OZ_Term t));
@@ -349,7 +350,7 @@ typedef void * OZ_MetaType;
 typedef mur_t (* OZ_UnifyMetaDet) (OZ_Term, OZ_Term, OZ_Term, OZ_TermType, OZ_Term *);
 typedef mur_t (* OZ_UnifyMetaMeta) (OZ_Term, OZ_Term, OZ_Term, OZ_Term, OZ_MetaType, OZ_Term *);
 
-typedef char * (* OZ_PrintMeta) (OZ_Term);
+typedef char * (* OZ_PrintMeta) (OZ_Term, int);
 typedef int (* OZ_IsSingleValue) (OZ_Term);
 
 
