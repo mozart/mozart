@@ -29,28 +29,32 @@
 
 
 <Chapter id="chapter.text">
-  <Title/The Text Widget/
+  <Title/Text Widgets/
 
-<p>
- A text widget displays (as suggested by its name) one or more lines
-of text, where the text can be edited. It offers commands to
-manipulate segments of text and to embed other widgets into the flow
-of text.
+  <p>
+    Text widgets display (as suggested by the name) one or more lines
+    of text, where the text can be edited. It offers commands to
+    manipulate segments of text and to embed other widgets into the
+    flow of text.
 
   <section id="section.text.widget">
-    <title/Text Widgets/
+    <title/Getting Started/
+
   </section>
 
   <section id="section.text.tags">
     <title/Text Tags/
+
   </section>
 
   <section id="section.text.marks">
     <title/Text Marks/
+
   </section>
 
   <section id="section.text.events">
     <title/Events and Actions/
+
   </section>
 
 <![ %EXTRA; [
@@ -58,32 +62,11 @@ of text.
 <p>
 <chunk><title/EXAMPLES/
 %%%
-%%% Chapter: Geometry Managers
-%%%
-
-
-
-%%%
-%%% Chapter: More Widgets
-%%%
-
-
-
-%%%
-%%% Chapter: Canvas Widgets
-%%%
-
-
-
-%%%
 %%% Chapter: Text Widgets
 %%%
 
 
 
-%%%
-%%% Chapter: Tools for Tk
-%%%
 </chunk>
 ]]>
 
