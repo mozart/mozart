@@ -111,6 +111,7 @@ local
 	    in
 	       try
 		  Self
+		  R
 	       in
 		  EvalThread <- {Thread.this}
 		  {OzcarMessage 'Doit: ' # V}
@@ -120,13 +121,13 @@ local
 		  end
 		  {EvalInit}
 		  Self = {CondSelect @CurEnv 'self' unit}
+		  {@CurComp enqueue(setSwitch(expression true))}
 		  {@CurComp enqueue(setSwitch(threadedqueries false))}
 		  {@CurComp enqueue(setSwitch(debuginfovarnames true))}
 		  {@CurComp enqueue(setSwitch(debuginfocontrol true))}
 		  case Self of unit then
 		     {@CurComp
-		      enqueue(feedVirtualString('declare `result` = (\n' #
-						V # '\n)'))}
+		      enqueue(feedVirtualString(V return(result: ?R)))}
 		  else
 		     %% declare `result` in
 		     %% local
@@ -140,10 +141,10 @@ local
 		     %% end
 		     {@CurComp enqueue(mergeEnv(env('`self`': Self)))}
 		     {@CurComp
-		      enqueue(feedVirtualString('declare `result` =\n' #
-						'{`send` eval($) ' #
+		      enqueue(feedVirtualString('{`send` eval($) ' #
 						'class meth eval($)\n' #
-						V # '\nend end `self`}'))}
+						V # '\nend end `self`}')
+			      return(result: ?R))}
 		  end
 		  {Wait {@CurComp enqueue(ping($))}}
 		  Sync = unit
@@ -159,14 +160,7 @@ local
 		     {self.Result tk(conf fg:BlockedThreadColor
 				     text:ResultText)}
 		  else
-		     R = {@CurComp enqueue(getEnv($))}.'`result`'
-		  in
-		     case {IsFree R} andthen
-			{System.printName R} == '`result`' then
-			{self.Result tk(conf text:'_')}
-		     else
-			{self.Result tk(conf text:{V2VS R})}
-		     end
+		     {self.Result tk(conf text:{V2VS R})}
 		  end
 		  EvalThread <- unit
 	       catch E=kernel(terminate) then
