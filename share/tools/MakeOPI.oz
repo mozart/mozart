@@ -73,6 +73,10 @@ in
 	     thread
 		Sock = {New TextSocket server(port: ?Port)}
 	     end
+\define NODENAME_USE_ADDR
+\ifdef NODENAME_USE_ADDR
+	     NodeName = {OS.getHostByName {OS.uName}.nodename}.addrList.1
+\else
 \ifdef NODENAME_USE_UNAME
 	     NodeName = {OS.uName}.nodename
 \else
@@ -80,6 +84,7 @@ in
 	     NodeName = {OS.getEnv 'HOST'}
 \else
 	     NodeName = 'localhost'
+\endif
 \endif
 \endif
 	     {Print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
