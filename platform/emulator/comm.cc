@@ -12,6 +12,19 @@
 */
 
 
+#if defined(INTERFACE)
+#pragma implementation "perdio.hh"
+#endif
+
+#if defined(INTERFACE)
+#pragma implementation "msgbuffer.hh"
+#endif
+
+#if defined(INTERFACE)
+#pragma implementation "comm.hh"
+#endif
+
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
