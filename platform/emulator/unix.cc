@@ -1552,17 +1552,20 @@ OZ_BI_define(unix_exec,3,1){
   SECURITY_ATTRIBUTES sa;
   sa.nLength = sizeof(sa);
   sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
+  sa.bInheritHandle = FALSE;
 
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
-  si.dwFlags = STARTF_FORCEOFFFEEDBACK;
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+  si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
 
   PROCESS_INFORMATION pinf;
-  
-  if (!CreateProcess(NULL,buf,&sa,NULL,FALSE,0,
-		     NULL,NULL,&si,&pinf)) {
+
+  if (!CreateProcess(NULL,buf,&sa,NULL,TRUE,
+		     0,NULL,NULL,&si,&pinf)) {
     return raiseUnixError("exec",0, "Cannot exec process.", 
 			  "os");
   }
