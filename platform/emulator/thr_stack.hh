@@ -69,12 +69,12 @@ public:
     CountMax(maxStackDepth,(tos-array)*sizeof(StackEntry));
   }
 
-  int getFrameId() {
-    return getFrameId(tos);
-  }
-
   int getFrameId(Frame *frame) {
     return frame - array;
+  }
+
+  int getFrameId() {
+    return getFrameId(tos);
   }
 
   USEFREELISTMEMORY;
