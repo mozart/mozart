@@ -263,10 +263,13 @@ OZ_C_proc_begin(Name,Arity)                                                   \
  }
 
 #define OZ_declareStringArg(FUN,ARG,VAR)                                      \
+        OZ_declareAtomArg(FUN,ARG,VAR)
+
+#define OZ_declareAtomArg(FUN,ARG,VAR)                                        \
  char *VAR;                                                                   \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isAtom(OZ_getCArg(ARG))) {                                          \
-   OZ_typeError(FUN,ARG,"String",OZ_getCArg(ARG));                            \
+   OZ_typeError(FUN,ARG,"Atom",OZ_getCArg(ARG));                              \
    return FAILED;                                                             \
  } else {                                                                     \
    VAR = OZ_atomToC(OZ_getCArg(ARG));                                         \
