@@ -3564,7 +3564,7 @@ OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
   if (isFloat(tagA) && isFloat(tagB)) {
-    out = makeTaggedFloat(floatValue(A) / floatValue(B));
+    out = oz_float(floatValue(A) / floatValue(B));
     return PROCEED;
   }
   return suspendOnFloats(A,B);
@@ -3679,7 +3679,7 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
   
   if (isFloat(tagA) && isFloat(tagB)) {
-    out = makeTaggedFloat(floatValue(A) * floatValue(B));
+    out = oz_float(floatValue(A) * floatValue(B));
     return PROCEED;
   }
   
@@ -3699,7 +3699,7 @@ OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   } 
 
   if (isFloat(A) && isFloat(B)) {
-    out = makeTaggedFloat(floatValue(A) - floatValue(B));
+    out = oz_float(floatValue(A) - floatValue(B));
     return PROCEED;
   }
 
@@ -3721,7 +3721,7 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   } 
 
   if (isFloat(A) && isFloat(B)) {
-    out = makeTaggedFloat(floatValue(A) + floatValue(B));
+    out = oz_float(floatValue(A) + floatValue(B));
     return PROCEED;
   }
 
@@ -3744,7 +3744,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
   switch(tagA) {
 
   case OZFLOAT:
-    out = makeTaggedFloat(-floatValue(A));
+    out = oz_float(-floatValue(A));
     return PROCEED;
 
   case SMALLINT:
@@ -3776,7 +3776,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
 
   if (isFloat(tagA)) {
     double f = floatValue(A);
-    out = (f >= 0.0) ? A : makeTaggedFloat(fabs(f));
+    out = (f >= 0.0) ? A : oz_float(fabs(f));
     return PROCEED;
   }
 
@@ -4066,7 +4066,7 @@ OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1,_2);
   if (isSmallInt(A)) {
-    out = makeTaggedFloat((double)smallIntValue(A));
+    out = oz_float((double)smallIntValue(A));
     return PROCEED;
   }
   if (isBigInt(A)) {
@@ -4286,7 +4286,7 @@ OZ_Return InlineName(TaggedRef AA, TaggedRef &out)	\
   }							\
 							\
   if (isFloat(tag)) {					\
-    out = makeTaggedFloat(Fun(floatValue(AA)));		\
+    out = oz_float(Fun(floatValue(AA)));		\
     return PROCEED;					\
   }							\
   oz_typeError(0,"Float");				\
@@ -4315,7 +4315,7 @@ OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if (isFloat(tagA) && isFloat(tagB)) {
-    out = makeTaggedFloat(pow(floatValue(A),floatValue(B)));
+    out = oz_float(pow(floatValue(A),floatValue(B)));
     return PROCEED;
   }
   return suspendOnFloats(A,B);
@@ -4327,7 +4327,7 @@ OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if (isFloat(tagA) && isFloat(tagB)) {
-    out = makeTaggedFloat(atan2(floatValue(A),floatValue(B)));
+    out = oz_float(atan2(floatValue(A),floatValue(B)));
     return PROCEED;
   }
   return suspendOnFloats(A,B);
@@ -6219,7 +6219,7 @@ OZ_C_proc_begin(BIaddr,2)
   if (valPtr) {
     return oz_unifyInt(out,ToInt32(valPtr));
   }
-  return oz_unifyInt(out,ToInt32(tagValueOf(valTag,val)));
+  return oz_unifyInt(out,ToInt32(tagValueOf2(valTag,val)));
 }
 OZ_C_proc_end
 
