@@ -148,6 +148,8 @@ instruction(exHandler,Label)
 instruction(popEx)
 
 instruction(return)
+instruction(getReturn,writeArg(Register))
+instruction(funReturn,readArg(Register))
 
 instruction(nextClause,Label)
 instruction(lastClause)

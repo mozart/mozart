@@ -416,6 +416,7 @@ outerLoop2:
       case SETSELF:
         ISREAD(GETREGARG(PC+1));
         break;
+      case GETRETURNX:
       case CREATEVARIABLEX:
         ISWRITE(GETREGARG(PC+1));
         break;
@@ -450,6 +451,7 @@ outerLoop2:
       case SETVARIABLEX:
         ISWRITE(GETREGARG(PC+1));
         break;
+      case FUNRETURNX:
       case SETVALUEX:
         ISREAD(GETREGARG(PC+1));
         break;

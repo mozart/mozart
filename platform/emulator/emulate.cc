@@ -409,22 +409,6 @@ bombGenCall:
      FALSE: can continue
    */
 
-Bool AM::emulateHookOutline() {
-  // without signal blocking;
-  if (isSetSFlag(ThreadSwitch)) {
-    if (threadQueuesAreEmpty()) {
-      restartThread();
-    } else {
-      return TRUE;
-    }
-  }
-  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady))) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 inline
 Bool AM::isNotPreemptiveScheduling(void)
 {
@@ -476,12 +460,12 @@ Bool AM::hookCheckNeeded()
 
 /* macros are faster ! */
 #define emulateHookCall(e,Code)                 \
-    if (e->hookCheckNeeded()) {                 \
-      if (e->emulateHookOutline()) {            \
-        Code;                                   \
-        return T_PREEMPT;                       \
-      }                                         \
-    }
+   if (e->hookCheckNeeded()) {                  \
+     if (e->emulateHookOutline()) {             \
+       Code;                                    \
+       return T_PREEMPT;                        \
+     }                                          \
+   }
 
 #define emulateHookPopTask(e) emulateHookCall(e,)
 
@@ -647,7 +631,9 @@ void pushContX(TaskStack *stk,
 #define Reg6
 #define Reg7
 
-#endif/*
+#endif
+
+/*
  * Handling of the READ/WRITE mode bit:
  * last significant bit of sPointer set iff in WRITE mode
  */
@@ -658,6 +644,12 @@ void pushContX(TaskStack *stk,
 #define InWriteMode (((long)sPointer)&1)
 
 #define GetSPointerWrite(ptr) (TaggedRef*)(((long)ptr)-1)
+
+
+/* spointer also abused for return values of functions */
+#define SetFunReturn(val) sPointer = (TaggedRef*) val
+#define GetFunReturn()    (TaggedRef)sPointer
+
 
 #ifdef DEBUG_LIVENESS
 extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);

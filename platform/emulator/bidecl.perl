@@ -876,6 +876,20 @@ $builtins = {
                              bi  => BIprocedureArity,
                              native => false},
 
+    ###* Functions
+
+    'funReturn'         => { in  => ['+value'],
+                             out => [],
+#                            doesNotReturn => 1,
+                             BI  => BIfunReturn,
+                             native => false},
+
+    'getReturn'         => { in  => [],
+                             out => ['+value'],
+                             BI  => BIgetReturn,
+                             native => false},
+
+
     ###* Object-Oriented Primitives
 
     '@'                 => { in  => ['value'],
