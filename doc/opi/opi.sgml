@@ -734,29 +734,20 @@
               <Item>
                 If non-nil, pop up Compiler &resp; Emulator buffer upon an
                 error message.
-              <Entry class=command><Span class=index/<<oz-goto-next-error>>/
-                (<Key/C-x `/)
+              <Entry class=command><Span class=index/<<next-error>>/
+                <<&amp;optional ?_{ARG}>> (<Key/C-x `/)
               <Item>
-                If in an Oz mode buffer, visit next compilation error
-                message and corresponding source code.  Applies to most
-                recent compilation, started with one of the feed commands.
+                Visit next compilation error message and corresponding
+                source code.
               <P>
-                <Index/emulator<And>buffer/<Index/buffer<And>emulator/
-                When in Emulator buffer, visit place indicated in next
-                <Span class=index/call stack/ frame.
+                A prefix arg specifies how many error messages to move;
+                negative means move back to previous error messages.
+                Just <Key/C-u/ as a prefix means reparse the error message
+                buffer and start at the first error.
               <P>
-                <Index/compiler<And>buffer/<Index/buffer<And>compiler/
-                When in Compiler buffer, visit error message surrounding
-                point.
-              <Entry class=command><Span class=index/<<oz-mouse-goto-error>>/
-                <<?_{EVENT}>> (<Key/S-&lt;button-2>/)
-              <Item>
-                <P.silent>
-                  Visit the error coordinates associated with the error message
-                  <Index/mouse<And>visiting errors/clicked on, either a call
-                  stack frame (if the click went into the Emulator buffer) or
-                  a compilation error message (if the click went into the
-                  Compiler buffer).
+                This normally uses the most recently started compilation.
+                To specify use of a particular buffer for error messages,
+                type <Key/C-x `/ in that buffer.
             </List>
       <Section proglang=oz id="section.mozart">
         <Title/Seeing the &OPI; from Mozart/
