@@ -36,7 +36,7 @@
     buttons to invoke actions, entries to enter text, scales to enter
     numbers, and listboxes to choose elements of lists.
 
-  <Section>
+  <Section id="section.widgets-2.button">
     <Title/Buttons and Actions/
 
     <P>
@@ -92,7 +92,7 @@ B2 = {New Tk.button tkInit(parent: T
       Actions can be deleted or changed by the method <<tkAction>>.  For
       example, deleting the action for button <<B1>> and changing the action
       for <<B2>> can be done by executing:
-<chunk class=anonymous><title/button/
+<chunk class=anonymous><title/button action/
 {B1 tkAction}
 {B2 tkAction(action: B1 # tkClose)}
 </chunk>
@@ -101,7 +101,7 @@ B2 = {New Tk.button tkInit(parent: T
       More information on buttons can be found in
       <ref.extern to="&tkcmd/button.htm"/<kbd/button//.
 
-  <Section>
+  <Section id="section.widgets-2.otherbuttons">
     <Title/Checkbuttons, Radiobuttons, and Variables/
 
     <P>
@@ -140,8 +140,8 @@ Rs = {Map ['Times' 'Helvetica' 'Courier']
                                     variable:V2 value:F
                                     text:F anchor:w)}
       end}
-{Tk.batch [pack(C     side:left padx:2#m)
-           pack(b(Rs) fill:x    padx:2#m)]}
+{Tk.batch [grid(C     padx:2#m columnspan:3)
+           grid(b(Rs) padx:2#m)]}
 </chunk>
       </Figure>
 
@@ -153,8 +153,9 @@ Rs = {Map ['Times' 'Helvetica' 'Courier']
 {Browse state(bold:   {V1 tkReturnInt($)}==1
               family: {V2 tkReturnAtom($)})}
 </chunk>
-      displays the values of the variables in the browser.  See the next
-      section for a detailed explanation of the <<tkReturnInt>> and
+      displays the values of the variables in the browser.  See the
+      <ref to="section.widgets-2.return"/next
+      section/ for a detailed explanation of the <<tkReturnInt>> and
       <<tkReturnAtom>> messages.
 
     <P>
@@ -172,24 +173,25 @@ Rs = {Map ['Times' 'Helvetica' 'Courier']
 	<P>
 	  <Picture.Extern to="check-and-radio-action.gif" type=gif>
 <chunk class=anonymous><title/LC/
-class LC from Tk.label
-   attr IsBold:false Family:'Helvetica'
-   meth init
-      {self tkInit(parent:T text:'A test text')}
-      {self Configure}
-   end
-   meth bold
-      IsBold<-{Not @IsBold} {self Configure}
-   end
-   meth family(F)
-      Family<-F {self Configure}
-   end
-   meth Configure
-      {self tk(configure font:{New Tk.font 
-                               tkInit(family:@Family bold:@Bold)})}
-   end
+fun {GetWeight}
+   if {V1 tkReturnInt($)}==1 then bold else normal end
 end
-L ={New LC init}
+F = {New Tk.font tkInit(size:24
+			family: {V2 tkReturn($)}
+			weight: {GetWeight})}
+L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
+
+{C  tkAction(action: proc {$}
+			{F tk(configure weight:{GetWeight})}
+			{L tk(configure font:F)}
+		     end)}
+{List.forAllInd ['Times' 'Helvetica' 'Courier']
+ proc {$ I Family}
+    {{Nth Rs I} tkAction(action: proc {$}
+				    {F tk(configure family:Family)}
+				    {L tk(configure font:F)}
+				 end)}
+ end}
 </chunk>
       </Figure>
 
@@ -282,8 +284,8 @@ L ={New LC init}
       The Tk Module provides also for a set of procedures that can transform
       strings into atoms, integers, floats and lists of these three types.
       With these procedures it is possible to transform return strings in
-      a user defined fashion.  For more information see ???? (strings
-      in tk ref).
+      a user defined fashion.  For more information see <ptr.extern
+      to="ozdoc:system" key="section.tk.strings">.
 
     <SubSection>
       <Title/Querying Configuration Options/
@@ -294,10 +296,8 @@ L ={New LC init}
 	is to be set, we give the tickle <<unit>> as value.  The tickle
 	<<unit>> expands to just nothing, meaning that the value is not to
 	be set but to be queried.  For example, to query the value of the
-	<<bg>> option of a widget&nbsp;<<T>>, we can feed
-<chunk class=anonymous><title/query bg/
-{Browse {T tkReturnListAtom(configure bg:unit $)}}
-</chunk>
+	<<bg>> option of a widget&nbsp;?_{T}, we can feed
+<<<{Browse {?_{T} tkReturnListAtom(configure bg:unit $)}}>>
 
       <P>
 	This displays a list of atoms, usually it suffices to know that the
@@ -309,12 +309,13 @@ L ={New LC init}
 
       <P>
 	The command <<winfo>> is helpful to query parameters of widgets.  For
-	instance, to query the positon and geometry of a widget&nbsp;<<T>>, we
+	instance, to query the positon and geometry of a widget&nbsp;?_{T}, we
 	can use the following:
-<chunk class=anonymous><title/winfo/
-{Browse {Map [rootx width rooty height]
-         fun {$ A} {Tk.returnInt winfo(A T)} end}}
-</chunk>
+<<<{Browse {Map [rootx width rooty height]
+         fun {$ A} 
+            {Tk.returnInt winfo(A ?_{T})} 
+         end}}>>>
+
 	The <<winfo>> commands provides more options than those used above,
 	for the details please consult <ref.extern
 	to="&tkcmd/winfo.htm"/<kbd/winfo//.
@@ -393,8 +394,8 @@ CEs={Map Cs fun {$ C}
       as arguments the menu widget and the coordinates where the widget should
       appear on the screen.  Ideally, we want the menu widget to appear after
       pressing the mouse button when the mouse pointer is over some widget.
-      The next section introduces events which allows to attach actions to
-      abitrary widgets.
+      The <ref to="section.widgets-2.events"/next section/ introduces
+      events which allows to attach actions to abitrary widgets.
 
   <Section id="section.widgets-2.events">
     <Title/Events/
@@ -809,7 +810,7 @@ S = {New Tk.scrollbar tkInit(parent:T)}
       information on scrollbars in
        <ref.extern to="&tkcmd/scrollbar.htm"/<kbd/scrollbar//.
 
-  <Section>
+  <Section id="section.widgets-2.wm">
     <Title/Toplevel Widgets and Window Manager Commands/
 
     <P>
@@ -900,7 +901,7 @@ of nil then skip
 elseof S then {Show file({String.toAtom S})} 
 end>>>
 
-  <Section>
+  <Section id="section.widgets-2.help">
     <Title/Example: Help Popups/
 
     <P>
@@ -1054,6 +1055,98 @@ Bs = {Map ['Okay'   # noop    # 'Do nothing meaningful.'
 %%%
 %%% Chapter: More Widgets
 %%%
+
+%%
+%% Buttons and Actions
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/button/
+
+<chunk.ref/button action/
+
+{T tkClose}
+
+
+
+%%
+%% Checkbuttons, Radiobuttons, and Variables
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/check and radio/
+
+<chunk.ref/return check and radio/
+
+declare
+<chunk.ref/LC/
+{Tk.send grid(L padx:2#m pady:2#m sticky:ew columnspan:3)}
+
+
+{T tkClose}
+
+
+
+%%
+%% Menus, Menuitems and Menubuttons
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/menu/
+
+<chunk.ref/post/
+
+
+
+%%
+%% Events
+%%
+
+
+
+%%
+%% More on Actions: Listeners
+%%
+
+
+
+%%
+%% Entries and Focus
+%%
+
+
+
+%%
+%% Scales
+%%
+
+
+
+%%
+%% Listboxes and Scrollbars
+%%
+
+
+
+%%
+%% Toplevel Widgets and Window Manager Commands
+%%
+
+
+
+%%
+%% Selecting Files
+%%
+
+
+
+%%
+%% Example: Help Popups
+%%
+
 
 
 
