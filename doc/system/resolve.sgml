@@ -29,7 +29,8 @@
   <Title/Resolving URLs: <<Resolve>>/
   <p>The <code/Resolve/ module generalizes the idea of a <em/search
 path/ and simplifies read-oriented operations on arbitrary files and
-urls.</p>
+urls.  The reader should be warned that this module has not yet reached
+full maturity.</p>
   <section proglang=sh>
     <title/From search paths to search methods/
     <p>A search path is a list of directores sequentially searched
@@ -163,9 +164,13 @@ message.  Furthermore, all messages are prefixed by the virtual string
 identifying the resolver in which these methods are being invoked.
         <entry/<code/Resolve.expand/
 <index/<code/Resolve/<and><code/expand///
-        <item>THIS SUCKS AND SHOULD BE IN THE URL MODULE.
-SEPARATE THE URL-BASICS FROM THE URL MODULE, THE LATTER NEEDS TO
-BE INSTANTIATED WITH MODULE OS.
+        <synopsis/<code/{Resolve.expand ?+{Url}}//
+        <item>Takes a Url or virtual string as input and returns a Url
+with <code/"~"/ expanded to the full user's home directory path,
+<code/"~john"/ expanded to <code/john/'s home directory, <code/"."/ and
+<code/".."/ expanded to the current directory and parent directory.  This
+functionality really belongs in the <code/URL/ module, but is put here
+instead to keep module <code/URL/ stateless.
         <entry/<code/Resolve.handler/
 <index/<code/Resolve/<and><code/handler///
         <item>You don't have to specify your methods as virtual
