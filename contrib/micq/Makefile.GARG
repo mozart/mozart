@@ -57,14 +57,23 @@ log.ozf: log.oz
 sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
         ozc -c sysadm.oz -o sysadm.ozf
 
-client : client.ozf startclient.oz newaccountgui.ozf
+MozartPower.ozf : MozartPower.oz
+        ozc -c MozartPower.oz
+
+client : client.ozf startclient.oz newaccountgui.ozf MozartPower.ozf
         ozc -x startclient -o client
 
-client.ozf : methods.ozf clientgui.ozf newfriendsgui.ozf defaultsettings.ozf dialoggui.ozf mobility.ozf client.oz
-        ozc -c client.oz -o client.ozf
+client.ozf : methods.ozf clientgui.ozf newfriendsgui.ozf defaultsettings.ozf dialoggui.ozf mobility.ozf client.oz Makefile.GARG
+        ozc -c client.oz --define MOZART_POWER
 
-clientgui.ozf : messagedisplay.ozf manager.ozf defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf draganddrop.ozf addapplicationgui.ozf configureclient.ozf clientgui.oz editapplicationgui.ozf
-        ozc -c clientgui.oz -o clientgui.ozf
+FaqEdit.ozf : FaqEdit.oz
+        ozc -c FaqEdit.oz
+
+ScrollFrame.ozf : ScrollFrame.oz
+        ozc -c ScrollFrame.oz
+
+clientgui.ozf : messagedisplay.ozf manager.ozf defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf draganddrop.ozf addapplicationgui.ozf configureclient.ozf clientgui.oz editapplicationgui.ozf FaqEdit.ozf ScrollFrame.ozf Makefile.GARG
+        ozc -c clientgui.oz --define SCROLLFRAME
 
 addapplicationgui.ozf: addapplicationgui.oz
         ozc -c addapplicationgui.oz -o addapplicationgui.ozf
