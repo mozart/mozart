@@ -9,5 +9,5 @@ RDEPEND="$RDEPEND
   =dev-lang/mozart-stdlib-1.2.5-r1
   =dev-lang/mozart-doc-1.2.5-r1
   =dev-lang/mozart-ozmake-0.82
-  gtk? ( =dev-lang/mozart-gtk-1.1-r1 )
+  gtk? ( =dev-lang/mozart-gtk-1.1 )
 "
