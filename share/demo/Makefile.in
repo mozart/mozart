@@ -99,7 +99,7 @@ LOCALAPPLETS = \
 
 APPLETS = $(LOCALAPPLETS:%=$(OZDEMO)/%)
 
-all: Makefile $(LOCALAPPLETS)
+all: $(LOCALAPPLETS)
 
 $(OZDEMO) $(OZDEMODIRS) $(OZIMGDIRS):
         $(INSTALLDIR) $@
@@ -182,11 +182,6 @@ distributed/travel/tdb.ozc: distributed/travel/make-database.oz
         (cd distributed/travel && $(OZCA) ../../$<)
 
 
-Makefile: Makefile.in config.status
-        ./config.status
-
-config.status: configure
-        ./config.status --recheck
 
 FDEXAMPLES = \
         bin-packing bridge-naive bridge cars change \
