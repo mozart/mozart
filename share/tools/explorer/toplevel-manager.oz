@@ -140,12 +140,9 @@ local
 	   pack(Box     o(side:right  fill:none  padx:Pad))
 	   pack(self    o('in':CanScrY
 			    fill:both   expand:yes padx:BigPad pady:BigPad))]}
-	 <<Tk.canvas tkBind(event: '<Configure>'
-			    action: proc {$ H W}
-				       {self Resized({Tk.string.toFloat H}
-						     {Tk.string.toFloat W})}
-				    end
-			    args:   [h w]
+	 <<Tk.canvas tkBind(event:  '<Configure>'
+			    action: self # Resized
+			    args:   [float(h) float(w)]
 			    append: True)>>
 	 self.manager   = Manager
 	 self.genTagId  = {New TagCounter clear}
@@ -156,35 +153,18 @@ local
 	 self.actions    = {New Tk.canvasTag
 			    [tkInit(parent:self)
 			     tkBind(event:  '<1>'
-				    args:   [x y]
-				    action: proc {$ X Y}
-					       {Manager 
-						setByXY({Tk.string.toFloat X}
-							{Tk.string.toFloat Y})}
-					    end)
+				    args:   [float(x) float(y)]
+				    action: Manager # setByXY )
 			     tkBind(event:  '<Double-1>'
-				    args:   [x y]
-				    action: proc {$ X Y}
-					       {Manager
-						selInfo({Tk.string.toFloat X}
-							{Tk.string.toFloat Y})}
-					    end)
-			     tkBind(event: '<2>'
-				    args:  [x y]
-				    action: proc {$ X Y}
-					       {Manager
-						nodesByXY(hide
-							  {Tk.string.toFloat X}
-							  {Tk.string.toFloat Y})}
-					    end)
+				    args:   [float(x) float(y)]
+				    action: Manager # selInfo)
+			     tkBind(event:  '<2>'
+				    args:   [float(x) float(y)]
+				    action: Manager # nodesByXY(hide))
 			     tkBind(event:  '<Double-2>'
-				    args:   [x y]
-				    action: proc {$ X Y}
-					       {Manager
-						nodesByXY(hideFailed
-							  {Tk.string.toFloat X}
-							  {Tk.string.toFloat Y})}
-					    end)]}
+				    args:   [float(x) float(y)]
+				    action: Manager # nodesByXY(hideFailed))]}
+
       end
 
       meth clear
