@@ -1429,7 +1429,7 @@ void AM::gc(int msgLevel)
   threadsHead=threadsHead->gcThread();
   threadsTail=threadsTail->gcThread();
 
-  Assert(suspendVarList==makeTaggedNULL());
+  suspendVarList=makeTaggedNULL(); /* no valid data */
   gcTagged(suspCallHandler,suspCallHandler);
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {

@@ -44,23 +44,23 @@ TypeOfTerm tag;                                                               \
   DEREF(V, VPTR, VTAG);
 
 #define CREATE_SUSP_SELF(S)                                                   \
-  Suspension *S = (Suspension *) OZ_makeSelfSuspension();
+  Suspension *S = (Suspension *) OZ_makeSelfThread();
 
 #define CREATE_SUSP_SELF_IF(C, S)                                             \
   Suspension *S=NULL;                                                         \
   if (C) {                                                                    \
-    S = (Suspension *) OZ_makeSelfSuspension();                               \
+    S = (Suspension *) OZ_makeSelfThread();                                   \
   }
 
 #define CREATE_SUSP(S, F, X, A)                                               \
-  Suspension *S = (Suspension *) OZ_makeSuspension(F,X,A);
+  Suspension *S = (Suspension *) OZ_makeThread(F,X,A);
 
 
 
 #define CREATE_SUSP_IF(C, S, F, X, A)                                         \
   Suspension *S=NULL;                                                         \
   if (C) {                                                                    \
-    S = OZ_makeSuspension(F, X ,A);                                           \
+    S = OZ_makeThread(F, X ,A);                                               \
   }
 
 
@@ -70,9 +70,7 @@ OZ_C_proc_begin(Name,1)                                                       \
   OZ_Term arg1 = OZ_getCArg(0);                                               \
   State state = InlineName(arg1);                                             \
   if (state == SUSPEND) {                                                     \
-    OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    OZ_addSuspension(arg1,susp);                                                      \
-    return PROCEED;                                                           \
+    return OZ_suspendOnVar(arg1);                                             \
   } else {                                                                    \
     return state;                                                             \
   }                                                                           \
@@ -87,10 +85,7 @@ OZ_C_proc_begin(Name,2)                                                       \
   OZ_Term arg1 = OZ_getCArg(1);                                               \
   State state = InlineName(arg0,arg1);                                        \
   if (state == SUSPEND) {                                                     \
-    OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    if (OZ_isVariable(arg0)) OZ_addSuspension(arg0,susp);                     \
-    if (OZ_isVariable(arg1)) OZ_addSuspension(arg1,susp);                     \
-    return PROCEED;                                                           \
+    return OZ_suspendOnVar2(arg0,arg1);                                       \
   } else {                                                                    \
     return state;                                                             \
   }                                                                           \
@@ -106,11 +101,8 @@ OZ_C_proc_begin(Name,2)                                                       \
   OZ_Term arg1 = OZ_getCArg(0);                                               \
   State state = InlineName(arg1,help);                                        \
   switch (state) {                                                            \
-  case SUSPEND: {                                                             \
-    OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    OZ_addSuspension(arg1,susp);                                              \
-    return PROCEED;                                                           \
-   }                                                                          \
+  case SUSPEND:                                                               \
+    return OZ_suspendOnVar(arg1);                                             \
   case FAILED:                                                                \
     return FAILED;                                                            \
   case PROCEED:                                                               \
@@ -132,12 +124,8 @@ OZ_C_proc_begin(Name,3)                                                       \
   OZ_Term arg1 = OZ_getCArg(1);                                               \
   State state=InlineName(arg0,arg1,help);                                     \
   switch (state) {                                                            \
-  case SUSPEND: {                                                             \
-    OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    if (OZ_isVariable(arg0)) OZ_addSuspension(arg0,susp);                     \
-    if (OZ_isVariable(arg1)) OZ_addSuspension(arg1,susp);                     \
-    return PROCEED;                                                           \
-    }                                                                         \
+  case SUSPEND:                                                               \
+    return OZ_suspendOnVar2(arg0,arg1);                                       \
   case FAILED:                                                                \
     return state;                                                             \
   case PROCEED:                                                               \
@@ -159,13 +147,8 @@ OZ_C_proc_begin(Name,4)                                                       \
   OZ_Term arg2 = OZ_getCArg(2);                                               \
   State state=InlineName(arg0,arg1,arg2,help);                                \
   switch (state) {                                                            \
-  case SUSPEND: {                                                             \
-    OZ_Suspension susp = OZ_makeSelfSuspension();                             \
-    if (OZ_isVariable(arg0)) OZ_addSuspension(arg0,susp);                     \
-    if (OZ_isVariable(arg1)) OZ_addSuspension(arg1,susp);                     \
-    if (OZ_isVariable(arg2)) OZ_addSuspension(arg2,susp);                     \
-    return PROCEED;                                                           \
-    }                                                                         \
+  case SUSPEND:                                                               \
+    return OZ_suspendOnVar3(arg0,arg1,arg2);                                  \
   case FAILED:                                                                \
     return state;                                                             \
   case PROCEED:                                                               \

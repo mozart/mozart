@@ -589,6 +589,9 @@ void OZ_printVS(OZ_Term t)
   if (isLTuple(t)) {
     OZ_printString(t);
   } else if (isAtom(t)) {
+    if (isNil(t) || t == AtomPair) {
+      return;
+    }
     OZ_printAtom(t);
   } else if (isInt(t)) {
     OZ_printInt(t);
@@ -939,15 +942,12 @@ int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
  * Suspending builtins
  * -----------------------------------------------------------------*/
 
-OZ_Suspension OZ_makeThreadSuspension() {
-#ifndef NEWCOUNTER
-  am.currentBoard->incSuspCount();
-#endif
-  return (OZ_Suspension) new Suspension(am.currentThread);
-}
+OZ_Thread OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
+                        OZ_Term *args,int arity)
+{ return OZ_makeThread(fun,args,arity); }
 
-OZ_Suspension OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
-                                 OZ_Term *args,int arity)
+OZ_Thread OZ_makeThread(OZ_Bool (*fun)(int,OZ_Term[]),
+                        OZ_Term *args,int arity)
 {
 #ifdef SHOW_SUSPENSIONS
   static int xxx=0;
@@ -962,17 +962,20 @@ OZ_Suspension OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
   am.currentBoard->incSuspCount();
 #endif
   /* create a CFuncContinuation */
-  return (OZ_Suspension)
+  return (OZ_Thread)
     new Suspension(am.currentBoard,
                    am.currentThread->getPriority(),
                    fun, args, arity);
 }
 
-void OZ_addSuspension(OZ_Term var, OZ_Suspension susp)
+void OZ_addSuspension(OZ_Term var, OZ_Thread susp)
+{ OZ_addThread(var,susp); }
+
+void OZ_addThread(OZ_Term var, OZ_Thread susp)
 {
   DEREF(var, varPtr, varTag);
   if (!isAnyVar(varTag)) {
-    OZ_warning("OZ_addSuspension(%s): var arg expected",
+    OZ_warning("OZ_addThread(%s): var arg expected",
                OZ_toC(var));
     return;
   }
@@ -981,6 +984,47 @@ void OZ_addSuspension(OZ_Term var, OZ_Suspension susp)
   Suspension *s = (Suspension *) susp;
 
   svar->addSuspension(s);
+}
+
+OZ_Bool OZ_suspendOnVar(OZ_Term var)
+{
+  DEREF(var,varPtr,_1);
+  Assert(isAnyVar(var));
+  am.suspendVarList=makeTaggedNULL();
+  am.addSuspendVarList(makeTaggedRef(varPtr));
+  return SUSPEND;
+}
+
+OZ_Bool OZ_suspendOnVar2(OZ_Term var1,OZ_Term var2)
+{
+  am.suspendVarList=makeTaggedNULL();
+  DEREF(var1,varPtr1,_1);
+  if (isAnyVar(var1)) {
+    am.addSuspendVarList(makeTaggedRef(varPtr1));
+  }
+  DEREF(var2,varPtr2,_2);
+  if (isAnyVar(var2)) {
+    am.addSuspendVarList(makeTaggedRef(varPtr2));
+  }
+  return SUSPEND;
+}
+
+OZ_Bool OZ_suspendOnVar3(OZ_Term var1,OZ_Term var2,OZ_Term var3)
+{
+  am.suspendVarList=makeTaggedNULL();
+  DEREF(var1,varPtr1,_1);
+  if (isAnyVar(var1)) {
+    am.addSuspendVarList(makeTaggedRef(varPtr1));
+  }
+  DEREF(var2,varPtr2,_2);
+  if (isAnyVar(var2)) {
+    am.addSuspendVarList(makeTaggedRef(varPtr2));
+  }
+  DEREF(var3,varPtr3,_3);
+  if (isAnyVar(var3)) {
+    am.addSuspendVarList(makeTaggedRef(varPtr3));
+  }
+  return SUSPEND;
 }
 
 /* -----------------------------------------------------------------

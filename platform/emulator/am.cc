@@ -822,9 +822,11 @@ void AM::reduceTrailOnFail()
 
 /*
  * shallow guards sometimes do not bind variables but only push them
+ * return the list of variable in am.suspendVarList
  */
-void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
+void AM::reduceTrailOnShallow(int numbOfCons)
 {
+  am.suspendVarList=makeTaggedNULL();
   for (int i = 0; i < numbOfCons; i++) {
     TaggedRef *refPtr;
     TaggedRef value;
@@ -840,11 +842,11 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
     /* test if only trailed to create suspension and not bound ? */
     if (refPtr!=ptrOldVal) {
       if (isAnyVar(oldVal)) {
-        taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
+        addSuspendVarList(makeTaggedRef(ptrOldVal));
       }
     }
 
-    taggedBecomesSuspVar(refPtr)->addSuspension(susp);
+    addSuspendVarList(makeTaggedRef(refPtr));
   }
   trail.popMark();
 }
