@@ -3,7 +3,7 @@
 <!-- Extension to the DTD -->
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
-<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % proglang.values.local "|lambda|sh">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
 
@@ -29,6 +29,7 @@
   <Front>
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
+    <Meta name="proglang.mode" arg1="sh" arg2="sh-mode">
     <Meta name=latex.package value="oz">
     <Meta name=latex.package value="pstricks">
     <Meta name=latex.package value="rotate">
@@ -219,16 +220,37 @@ will be explained in <ptr to=sec.foreignLink>.
 
 </chapter>
 
-    <chapter id=chapter.unixdll>
+    <chapter id=chapter.unixdll proglang=sh>
       <title/Creating a DLL/
-<section id=chapter.compiling><title>Compiling the C program</title>
-<p>
-TODO: need to provide special options to the C compiler
-
+<section id=chapter.compiling><title>Compiling the C++ program</title>
+<p>The Mozart system provides <ref.extern to="ozdoc:tools"
+key="chapter.oztool"/<code/oztool// which we recommend you invoke instead
+of calling the C/C++ compiler directly:
+<code display/oztool c++ getenv.cc -o getenv.o/
+<code/oztool/ takes care a many unpleasant details for you; for example,
+it supplies the compiler with the appropriate option for the generation of
+position independent code.
 </section>
 <section id=chapter.linking><title>Creating a dynamic library</title>
-<p>
-TODO: need to provide special options to the linker
+<p>Now, we create a shared object from the compiled object file obtained
+above.  Again you should invoke <code/oztool/ rather than call the
+linker directly:
+<code display/oztool ld getenv.o -o getenv.so/
+This takes care of many ugly details (especially on Windows where
+they could easily drive you nuts).  Actually, you should really
+create a shared object file with, as suffix, the platform for which it
+was created.  For example:
+<code display/oztool ld getenv.o -o getenv.so-linux-i486/
+The reason is that the Oz module manager was designed to support
+platform independent module import specifications, but, of course,
+native modules
+must be resolved to platform dependent implementations.  The default
+resolution strategy achieves this by means of platform suffixes.
+<p>In order to write portable makefiles, you can use <code/oztool/
+to print out the platform name:
+<code display/oztool platform/
+Thus a portable way to create the shared object is:
+<code display/oztool ld getenv.o -o getenv.so-`oztool platform`/
 
 </section>
 <section id=sec.foreignLink><title>Linking a native module</title>
@@ -253,7 +275,7 @@ typedef struct {
 ]]>
 </code>
 
-<code /name/ is string describing the name by which the native
+<code /name/ is a string naming the feature under which the native
 function will be accessible from Oz (see below). <code /inArity/ and
 <code /outArity/ specify the number of input and output
 arguments. <code /func/ is a pointer to the function being exported.
@@ -274,6 +296,19 @@ it like this:
 <code display proglang=oz>
 {Browse {Goodies.getenv 'HOME'}}
 </code>
+
+The module can also be imported by any Oz module:
+<code display proglang=oz/
+functor
+import G at 'getenv.so{native}'
+define
+   ... {G.getenv ...} ...
+end/
+
+Note that the url used in the import specification does not supply the
+platform suffix, but adds the <code/{native}/ annotation.  The module
+manager (or more precisely the resolver) will remove the annotation and
+replace it with the suffix appropriate for the current platform.
 
 <p>
 </section>
