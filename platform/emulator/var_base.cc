@@ -55,6 +55,7 @@ Bool oz_var_valid(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->validV(val);
   ExhaustiveSwitch();
   }
+  return NO;
 }
 
 OZ_Return oz_var_unify(OzVariable *ov,TaggedRef *ptr,TaggedRef *val) {
@@ -69,6 +70,7 @@ OZ_Return oz_var_unify(OzVariable *ov,TaggedRef *ptr,TaggedRef *val) {
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->unifyV(ptr,val);
   ExhaustiveSwitch();
   }
+  return FAILED;
 }
 
 OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
@@ -83,6 +85,7 @@ OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->bindV(ptr,val);
   ExhaustiveSwitch();
   }
+  return FAILED;
 }
 
 OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
@@ -97,6 +100,7 @@ OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   case OZ_VAR_EXT:     return ((ExtVar *) ov)->forceBindV(ptr,val);
   ExhaustiveSwitch();
   }
+  return FAILED;
 }
 
 OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp, int unstable)

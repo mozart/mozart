@@ -162,7 +162,8 @@ if (Cond) {					\
 #define DebugCheck(Cond,Then) 
 #define DebugCheckT(Then)
 #define DebugCode(C)
-#define ExhaustiveSwitch()
+#define ExhaustiveSwitch() \
+   default: break;
 #endif
 
 
