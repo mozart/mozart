@@ -1186,25 +1186,8 @@ void engine()
 	  goto LBLemulate;
 
 	case CE_CONT:
-	  DebugCode (e->currentThread = savedCT);
-	  {
-	    Thread *tt=0;
-	    if (aa->isAsk()) {
-	      tt=AskActor::Cast(aa)->getThread();
-	      if (tt) {
-		Assert(tt!=e->currentThread);
-		e->cleanUpThread(tt);
-	      } else {
-		tt = e->createThread(aa->getPriority(),
-				     aa->getCompMode());
-	      }
-	    } else {
-	      tt = e->createThread(aa->getPriority(),
-				   aa->getCompMode());
-	    }
-	    tt->pushCont(cont);
-	    goto LBLpopTask;
-	  }
+	  error ("CE_CONT after a C_SOLVE task???\n");
+	  goto LBLfailure;
 
 	case CE_NOTHING:
 	  DebugCode (e->currentThread = savedCT);
