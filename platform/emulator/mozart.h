@@ -69,16 +69,27 @@ extern OZ_Term OZ_termType _PROTOTYPE((OZ_Term));
 /* convert: C from/to Oz datastructure */
 
 extern char *   OZ_atomToC   _PROTOTYPE((OZ_Term));
-extern float    OZ_floatToC  _PROTOTYPE((OZ_Term));
-extern int      OZ_intToC    _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CToAtom   _PROTOTYPE((char *));
-extern OZ_Term  OZ_CToFloat  _PROTOTYPE((float));
-extern OZ_Term  OZ_CToInt    _PROTOTYPE((int));
 
-extern OZ_Term  OZ_CToNumber _PROTOTYPE((char *));
+extern OZ_Term  OZ_CToInt        _PROTOTYPE((int));
+extern int      OZ_intToC        _PROTOTYPE((OZ_Term));
+extern OZ_Term  OZ_CStringToInt  _PROTOTYPE((char *str));
+extern char *   OZ_intToCString  _PROTOTYPE((OZ_Term term));
+extern char *   OZ_intFloat      _PROTOTYPE((char *s));
+extern char *   OZ_normInt       _PROTOTYPE((char *s));
+
+extern OZ_Term  OZ_CToFloat        _PROTOTYPE((OZ_Float));
+extern OZ_Float OZ_floatToC        _PROTOTYPE((OZ_Term));
+extern OZ_Term  OZ_CStringToFloat  _PROTOTYPE((char *s));
+extern char *   OZ_floatToCString  _PROTOTYPE((OZ_Term term));
+extern char *   OZ_normFloat       _PROTOTYPE((char *s));
+
+extern OZ_Term  OZ_CStringToNumber _PROTOTYPE((char *));
+
 extern char *   OZ_toC       _PROTOTYPE((OZ_Term));
 
 extern OZ_Term  OZ_CToString _PROTOTYPE((char *));
+extern char *   OZ_stringToC _PROTOTYPE((OZ_Term t));
 
 /* tuples */
 extern OZ_Term OZ_label     _PROTOTYPE((OZ_Term));
@@ -92,6 +103,7 @@ extern OZ_Term OZ_nil       _PROTOTYPE(());
 extern OZ_Term OZ_cons      _PROTOTYPE((OZ_Term ,OZ_Term));
 extern OZ_Term OZ_head      _PROTOTYPE((OZ_Term));
 extern OZ_Term OZ_tail      _PROTOTYPE((OZ_Term));
+extern int     OZ_length    _PROTOTYPE((OZ_Term list));
 
 /* records */
 extern OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term, OZ_Term));
@@ -233,7 +245,7 @@ OZ_C_proc_proto(Name)                                                         \
  }
 
 #define OZ_declareFloatArg(FUN,ARG,VAR)                                       \
- float VAR;                                                                   \
+ OZ_float VAR;                                                                \
  OZ_nonvarArg(ARG);                                                           \
  if (! OZ_isFloat(OZ_getCArg(ARG))) {                                         \
    OZ_warning("%s : arg %d must be float",FUN,ARG+1);                         \

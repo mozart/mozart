@@ -20,6 +20,11 @@
 #include "thread.hh"
 #include "suspension.hh"
 
+
+/* TmpBuffer with at LEAST 100 characters,
+   must be sufficiently large to convert smallInts and floats to strings */
+char TmpBuffer[100];
+
 /* ------------------------------------------------------------------------ *
  * tests
  * ------------------------------------------------------------------------ */
@@ -143,28 +148,18 @@ OZ_Term OZ_termType(OZ_Term term)
  * convert: C from/to Oz datastructure
  * -----------------------------------------------------------------*/
 
-char *OZ_atomToC(OZ_Term term)
+/*
+ * Ints
+ */
+
+OZ_Term OZ_CToInt(int i)
 {
-  DEREF(term,_1,tag);
-  if (isXAtom(term)) {
-//    return ozstrdup(tagged2Atom(term)->getPrintName());
-    return tagged2Atom(term)->getPrintName();
+  if (i > OzMaxInt || i < OzMinInt)
+    return makeTaggedBigInt(new BigInt(i));
+  else {
+    return newSmallInt(i);
   }
-  OZ_warning("atomToC(%s): atom arg expected",tagged2String(term));
-  return NULL;
 }
-
-float OZ_floatToC(OZ_Term term)
-{
-  DEREF(term,_1,tag);
-
-  if (isFloat(tag)) {
-    return floatValue(term);
-  }
-  OZ_warning("floatToC(%s): float arg expected",tagged2String(term));
-  return 0.0;
-}
-
 
 int OZ_intToC(OZ_Term term)
 {
@@ -178,6 +173,128 @@ int OZ_intToC(OZ_Term term)
   OZ_warning("intToC(%s): int arg expected",tagged2String(term));
   return 0;
 }
+
+OZ_Term OZ_CStringToInt(char *str)
+{
+  char *help = ozstrdup(str);
+  replChar(help,'~','-');
+
+  OZ_Term ret = (new BigInt(help))->shrink();
+  delete [] help;
+  return ret;
+}
+
+char *OZ_normInt(char *s)
+{
+  if (s[0] == '-') {
+    s[0] = '~';
+  }
+  return s;
+}
+
+char *OZ_normFloat(char *s)
+{
+  replChar(s,'-','~');
+  delChar(s,'+');
+}
+
+char *OZ_intToCString(OZ_Term term)
+{
+  DEREF(term,_,tag);
+  switch (tag) {
+  case SMALLINT:
+    {
+      sprintf(TmpBuffer,"%d",smallIntValue(term));
+      return ozstrdup(TmpBuffer);
+    }
+  case BIGINT:
+    {
+      BigInt *bb = tagged2BigInt(term);
+      char *str = new char[bb->stringLength()+1];
+      bb->getString(str);
+      return str;
+    }
+  default:
+    OZ_warning("intToCString(%s): expecting int arg",OZ_toC(term));
+    return NULL;
+  }
+}
+
+/*
+ * Floats
+ */
+
+OZ_Term OZ_CToFloat(OZ_Float i)
+{
+  return makeTaggedFloat(new Float(i));
+}
+
+OZ_Float OZ_floatToC(OZ_Term term)
+{
+  DEREF(term,_1,tag);
+
+  if (isFloat(tag)) {
+    return floatValue(term);
+  }
+  OZ_warning("floatToC(%s): float arg expected",tagged2String(term));
+  return 0.0;
+}
+
+OZ_Term OZ_CStringToFloat(char *s)
+{
+  char *help = ozstrdup(s);
+  replChar(help,'~','-');
+  char *end;
+  OZ_Float res = strtod(help,&end);
+  if (*end != '\0') {
+    OZ_warning("CStringToCFloat(%s): couldn't parse the end of %s",s,end);
+  }
+  return OZ_CToFloat(res);
+}
+
+char *OZ_floatToCString(OZ_Term term)
+{
+  OZ_Float f = OZ_floatToC(term);
+  sprintf(TmpBuffer,"%e",f);
+  return ozstrdup(TmpBuffer);
+}
+
+/*
+ * Numbers
+ */
+
+OZ_Term OZ_CStringToNumber(char *s)
+{
+  if (strchr(s, '.') != NULL) {
+    return OZ_CStringToFloat(s);
+  }
+  return OZ_CStringToInt(s);
+}
+
+
+/*
+ * Atoms
+ */
+
+char *OZ_atomToC(OZ_Term term)
+{
+  DEREF(term,_1,tag);
+  if (isXAtom(term)) {
+//    return ozstrdup(tagged2Atom(term)->getPrintName());
+    return tagged2Atom(term)->getPrintName();
+  }
+  OZ_warning("atomToC(%s): atom arg expected",tagged2String(term));
+  return NULL;
+}
+
+OZ_Term OZ_CToAtom(char *s)
+{
+  return makeTaggedAtom(s);
+}
+
+/*
+ * Any
+ */
 
 char *OZ_toC(OZ_Term term)
 {
@@ -216,31 +333,19 @@ char *OZ_toC(OZ_Term term)
       Atom *a = tagged2Atom(term);
       char *s = a->getPrintName();
       if (a->isXName()) {
-        sprintf(TmpBuffer,"*%s-0x%x*",s,a);
-        return ozstrdup(TmpBuffer);
+        char *tmp = new char[strlen(s)+20];
+        sprintf(tmp,"*%s-0x%x*",s,a);
+        return tmp;
       } else {
 //      return ozstrdup(s);
         return s;
       }
     }
   case FLOAT:
-    {
-      float f = floatValue(term);
-      sprintf(TmpBuffer,"%e",f);
-      return ozstrdup(TmpBuffer);
-    }
+    return OZ_floatToCString(term);
   case BIGINT:
-    {
-      BigInt *b = tagged2BigInt(term);
-      return b->stringMinus();
-    }
   case SMALLINT:
-    {
-      int value = smallIntValue(term);
-      sprintf(TmpBuffer,"%d",value);
-      return ozstrdup(TmpBuffer);
-    }
-    break;
+    return OZ_intToCString(term);
   case CONST:
     return tagged2String(term);
 //    tagged2Const(term)->print(stream,depth,offset);
@@ -253,28 +358,6 @@ char *OZ_toC(OZ_Term term)
 
   warning("OZ_toC: failed");
   return ozstrdup("unknown term");
-}
-
-
-OZ_Term OZ_CToFloat (float i)
-{
-  return floatToTerm(i);
-}
-
-OZ_Term OZ_CToInt(int i)
-{
-  return intToTerm(i);
-}
-
-OZ_Term OZ_CToAtom(char *s)
-{
-  return makeTaggedAtom(s);
-}
-
-/* NOTE: sign can be '-' or '~' */
-OZ_Term OZ_CToNumber(char *s)
-{
-  return numberToTerm(s);
 }
 
 /* -----------------------------------------------------------------
@@ -295,13 +378,45 @@ OZ_Term OZ_CToString(char *s)
   return ret;
 }
 
+/* convert an Oz string to a C string */
+char *OZ_stringToC(OZ_Term list)
+{
+  int len = OZ_length(list);
+  if (len < 0) {
+    return (char *) len;
+  }
+
+  char *s = new char[len+1];
+  char *p = s;
+
+  for (OZ_Term tmp = list; OZ_isCons(tmp); tmp=OZ_tail(tmp)) {
+    OZ_Term hh = OZ_head(tmp);
+    int i;
+    if (!OZ_isInt(hh)) {
+      delete [] s;
+      if (OZ_isVariable(hh)){
+        return (char *) -1; // SUSPENDED
+      }
+      return (char *) -2; // FAILED
+    }
+    i = OZ_intToC(hh);
+    if (i < 0 || i > 255) {
+      delete [] s;
+      return (char *) -2; // FAILED
+    }
+    *p++ = i;
+  }
+  *p = 0;
+  return s;
+}
+
 /* -----------------------------------------------------------------
  * tuple
  * -----------------------------------------------------------------*/
 
 OZ_Term OZ_label(OZ_Term term)
 {
-  DEREF(term,_,tag);
+  DEREF(term,_1,tag);
 
   switch (tag) {
   case LTUPLE:
@@ -322,7 +437,7 @@ OZ_Term OZ_label(OZ_Term term)
 
 int OZ_width(OZ_Term term)
 {
-  DEREF(term,_,tag);
+  DEREF(term,_1,tag);
 
   switch (tag) {
   case LTUPLE:
@@ -424,6 +539,32 @@ OZ_Term OZ_head(OZ_Term list)
 OZ_Term OZ_tail(OZ_Term list)
 {
   return tail(list);
+}
+
+/*
+ * Compute the length of a list and check for determination.
+ * Returns:
+ *  -1, if the list end is not determined (SUSPENDED)
+ *  -2, if it is not a proper list (FAILED)
+ *  else the length of the list
+ */
+int OZ_length(OZ_Term list)
+{
+  int len = 0;
+
+  for (OZ_Term tmp= list; OZ_isCons(tmp); tmp=OZ_tail(tmp)) {
+    len++;
+  }
+
+  if (OZ_isNil(tmp)) {
+    return len;
+  }
+
+  if (OZ_isVariable(tmp)) {
+    return -1; // SUSPENDED
+  }
+
+  return -2; // FAILED
 }
 
 /* -----------------------------------------------------------------
