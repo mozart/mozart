@@ -5,8 +5,9 @@
 of the Internet,
 distributed programming is becoming more and more popular.
 The Internet provides the first steps towards
-a global infrastructure for distributed applications,
-namely a global namespace (URLs) and global communications (TCP/IP).
+a global infrastructure for distributed applications:
+a global namespace (URLs) and
+a global communications protocol (TCP/IP).
 Platforms such as Java and CORBA that take advantage
 of this infrastructure have become widely-used.
 On first glance, one might think that distributed
@@ -37,7 +38,9 @@ and provides primitives for fault-tolerance,
 open computing, and partial support for security.
 Current research is focused on completing
 the separation for fault tolerance and open computing,
-which will be offered in future releases.
+which will be offered in upcoming releases.
+Future research will be focused on security
+and other issues.
 
 <P>This tutorial presents many examples
 of practical programs and techniques of distributed
@@ -61,7 +64,7 @@ for active applications to connect with each other.
 <ITEM> The module <ref.extern to="ozdoc:system"
 key="chapter.remote"/<<Remote>>/
 allows an active application to create
-a new site (OS process) and connect with it.
+a new site (local or remote operating system process) and connect with it.
 The site may be on the same machine or a remote machine.
 <ITEM> The module <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/ allows an application
@@ -76,7 +79,7 @@ key="chapter.connection"/<<Connection>>/, <ref.extern to="ozdoc:system"
 key="chapter.remote"/<<Remote>>/,
 and <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/, are extremely simple to use.
-In each case, there are just one or two basic operations.
+In each case, there are just a few basic operations.
 For example, <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/ has just two basic operations:
 offering a ticket and taking a ticket.
@@ -91,7 +94,7 @@ abstractions within the Oz language.
 This release provides a few of the most useful abstractions
 to get you started.
 The development of more powerful ones is still ongoing research.
-They will be provided in future releases.
+They will be provided in upcoming releases.
 
 <P>This tutorial gives an informal but precise specification
 of both the distribution model and the failure model.
@@ -100,7 +103,8 @@ is incomplete with respect to the specification
 (this is called a <EM>limitation</EM>)
 or has a different behavior (this is called a <EM>modification</EM>).
 All limitations and modifications are explained where they occur
-and they are also listed together at the end of the tutorial.
+and they are also listed together at the end of the tutorial
+(see <ptr to="chapter.limits">).
 
 <P>We say two or more applications are <EM>connected</EM>
 if they share a reference to a language entity that allows
@@ -120,7 +124,7 @@ It provides an interactive development environment
 with incremental compiler,
 many tools including a browser, debugger, and parser-generator,
 a C++ interface for developing dynamically-linked libraries,
-and state-of-the-art constraint programming support.
+and state-of-the-art constraint and logic programming support.
 We refer the reader to the other tutorials and the extensive
 system documentation.
 
