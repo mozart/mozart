@@ -3,7 +3,7 @@ declare N V L [A B C D] = L in
 
 
 /*
-{PrintL FD_PROP.add}
+{Show FD_PROP.add}
 
 {FD_PROP.element N L V}
 
