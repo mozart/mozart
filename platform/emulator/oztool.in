@@ -5,7 +5,20 @@
 # oztool ld  ...        creates DLLs
 # oztool platform       echoes the oz platform
 
-: ${oztool_includes="-I@prefix@/include"}
+# determine oztool includes
+if test "${oztool_includes-NONE}" = NONE; then
+  if test -n "$OZHOME" && test -e "$OZHOME/include/mozart.h"; then
+    oztool_includes="-I$OZHOME/include"
+  else
+    oz_tmp=`dirname $0`
+    oz_tmp=`cd $oz_tmp/.. & pwd`
+    if test -e "$oz_tmp/include/mozart.h"; then
+      oztool_includes="-I$oz_tmp/include"
+    else
+      oztool_includes="-I@prefix@/include";
+    fi
+  fi
+fi
 
 : ${oztool_cxx="@OZTOOL_CXX@ @CDYNOPT@ $oztool_includes"}
 : ${oztool_cc="cc @CDYNOPT@ $oztool_includes"}
