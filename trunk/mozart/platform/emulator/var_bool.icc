@@ -98,7 +98,7 @@ OzBoolVariable * tagged2GenBoolVar(TaggedRef term)
 }
 
 inline
-void addSuspBoolVar(TaggedRef v, Suspension susp)
+void addSuspBoolVar(TaggedRef v, Suspendable * susp)
 {
   OzBoolVariable * bv = tagged2GenBoolVar(v);
 

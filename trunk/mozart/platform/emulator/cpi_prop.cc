@@ -220,7 +220,7 @@ void OZ_Propagator::impose(OZ_Propagator * p)
   oz_sleepPropagator(prop);
 
   prop->setRunnable();
-  oz_pushToLPQ(oz_currentBoard(),prop);
+  oz_pushToLPQ(prop);
 
   OZ_Boolean all_local = OZ_TRUE;
 

@@ -44,7 +44,7 @@
 class OzBoolVariable : public OzVariable {
   
   friend class OzVariable;
-  friend inline void addSuspBoolVar(TaggedRef, Suspension);
+  friend inline void addSuspBoolVar(TaggedRef, Suspendable *);
   
 private:
   OZ_FiniteDomain * store_patch;
@@ -103,7 +103,7 @@ public:
 inline Bool isGenBoolVar(TaggedRef term);
 inline Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag);
 inline OzBoolVariable * tagged2GenBoolVar(TaggedRef term);
-inline void addSuspBoolVar(TaggedRef, Suspension);
+inline void addSuspBoolVar(TaggedRef, Suspendable *);
 OZ_Return tellBasicBoolConstraint(OZ_Term);
 
 #ifndef OUTLINE 

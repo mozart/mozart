@@ -34,12 +34,12 @@
 #pragma interface
 #endif
 
-#include "distributor.hh"
 #include "thr_class.hh"
+#include "distributor.hh"
+#include "suspendable.hh"
 #include "pointer-marks.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
-#define GETBOARDOBJ(v) ((v).getBoardInternal()->derefBoard())
 
 struct Equation {
 friend class Script;
@@ -220,6 +220,7 @@ public:
   void decSolveThreads(void);
   void checkSolveThreads(void);
   void checkStability(void);
+  void checkExtSuspension(Suspendable *);
   
   //
   // Thread counter
@@ -262,7 +263,7 @@ private:
   SuspList  *suspList;
 
 public:
-  void addSuspension(Suspension); 
+  void addSuspension(Suspendable *); 
   SuspList * getSuspList(void) { 
     return suspList; 
   }
@@ -272,7 +273,7 @@ public:
   Bool isEmptySuspList() { 
     return suspList==0; 
   }
-  void clearSuspList(Suspension);
+  void clearSuspList(Suspendable *);
 
   //
   // local thread queue
@@ -390,13 +391,6 @@ public:
 
 
 };
-
-void oz_checkExtSuspension(Suspension, Board *);
-
-#define CheckExtSuspension(susp)               \
-  if (((Suspension)susp).isExternal()) { \
-    GETBOARDOBJ((Suspension) susp)->checkSolveThreads();   \
-  }
 
 #ifndef OUTLINE
 #include "board.icc"

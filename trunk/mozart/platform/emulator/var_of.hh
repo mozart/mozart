@@ -51,7 +51,7 @@ void addFeatOFSSuspensionList(TaggedRef var, SuspList * suspList,
 class OzOFVariable: public OzVariable {
 
     friend class OzVariable;
-    friend inline void addSuspOFSVar(TaggedRef, Suspension);
+    friend inline void addSuspOFSVar(TaggedRef, Suspendable *);
 
 private:
     TaggedRef label;
@@ -256,7 +256,7 @@ OzOFVariable* tagged2GenOFSVar(TaggedRef term)
 }
 
 inline
-void addSuspOFSVar(TaggedRef v, Suspension susp)
+void addSuspOFSVar(TaggedRef v, Suspendable * susp)
 {
   OzOFVariable * ofs = tagged2GenOFSVar(v);
   AddSuspToList(ofs->suspList, susp, ofs->getHome1());

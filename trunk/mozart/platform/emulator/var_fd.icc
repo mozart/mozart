@@ -96,7 +96,7 @@ OzFDVariable * tagged2GenFDVar(TaggedRef term)
 }
 
 inline
-void addSuspFDVar(TaggedRef v, Suspension susp, OZ_FDPropState list_index)
+void addSuspFDVar(TaggedRef v, Suspendable * susp, OZ_FDPropState list_index)
 {
   OzFDVariable * fv = tagged2GenFDVar(v);
 
