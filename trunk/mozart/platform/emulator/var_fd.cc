@@ -34,7 +34,7 @@
 #include "am.hh"
 #include "unify.hh"
 
-OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
+OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term)
 {
   Assert(!oz_isRef(term));
   if (!oz_isSmallInt(term)) return FAILED;
@@ -49,7 +49,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
   printf("fd-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
 #endif
 
-  if (scp==0 && (isNotInstallingScript || isLocalVar)) 
+  if (!am.inEqEq() && (isNotInstallingScript || isLocalVar)) 
     propagate(fd_prop_singl);
 
   if (isLocalVar) {
@@ -68,7 +68,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
+OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript()
@@ -228,7 +228,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 #endif
       if (intsct == fd_singl){
 	TaggedRef int_val = newSmallInt(intsct.getSingleElem());
-	if (scp==0) {
+	if (!am.inEqEq()) {
 	  if (varIsConstrained) propagateUnify();
 	  if (termIsConstrained) termVar->propagateUnify();
 	}
@@ -239,7 +239,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 	  OzBoolVariable * c_var
 	    = new OzBoolVariable(oz_currentBoard());
 	  TaggedRef * var_val = newTaggedCVar(c_var);
-	  if (scp==0) {
+	  if (!am.inEqEq()) {
 	    if (varIsConstrained) propagateUnify();
 	    if (termIsConstrained) termVar->propagateUnify();
 	  }
@@ -251,7 +251,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr, ByteCode *scp)
 	  OzFDVariable * c_var
 	    = new OzFDVariable(intsct,oz_currentBoard());
 	  TaggedRef * var_val = newTaggedCVar(c_var);
-	  if (scp==0) {
+	  if (!am.inEqEq()) {
 	    if (varIsConstrained) propagateUnify();
 	    if (termIsConstrained) termVar->propagateUnify();
 	  }

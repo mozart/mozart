@@ -232,7 +232,7 @@ private:
   TaggedRef xRegs[NumberOfXRegisters];
   TaskStack *cachedStack;
   Object *cachedSelf;
-  char *_shallowHeapTop;
+  Bool _inEqEq;
   TaggedRef _currentUVarPrototype; // opt: cache
 
   TaggedRef _suspendVarList;
@@ -299,12 +299,11 @@ public:
 
   AM() {};
 
-  Board *currentBoard()             { return _currentBoard; }
-  Board *rootBoard()                { return _rootBoard; }
+  Board *currentBoard()  { return _currentBoard; }
+  Board *rootBoard()     { return _rootBoard; }
 
-  Bool inShallowGuard()             { return _shallowHeapTop!=0; }
-  void setShallowHeapTop(char *sht) { _shallowHeapTop=sht; }
-  char* getShallowHeapTop()         { return _shallowHeapTop; }
+  Bool inEqEq()          { return _inEqEq; }
+  void setInEqEq(Bool b) { _inEqEq=b; }
 
   TaggedRef getX(int i) { return xRegs[i]; }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }

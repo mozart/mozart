@@ -376,7 +376,7 @@ void handlerUSR2(int);
 
 void oz_checkExtSuspension(Suspension susp, Board *varHome);
 
-OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
+OZ_Return oz_unify(OZ_Term t1, OZ_Term t2);
 
 // printing (see foreign.cc)
 void oz_printStream(OZ_Term term, ostream &out,

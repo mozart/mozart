@@ -131,9 +131,9 @@ Bool oz_eqeq(TaggedRef Ain,TaggedRef Bin)
 {
   // simulate a shallow guard
   am.trail.pushMark();
-  am.setShallowHeapTop(heapTop);
-  OZ_Return ret = oz_unify(Ain,Bin,(ByteCode*)1);
-  am.setShallowHeapTop(NULL);
+  am.setInEqEq(TRUE);
+  OZ_Return ret = oz_unify(Ain,Bin);
+  am.setInEqEq(FALSE);
 
   if (ret == PROCEED) {
     if (am.trail.isEmptyChunk()) {
