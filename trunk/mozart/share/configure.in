@@ -58,6 +58,7 @@ AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
 
 OZ_PATH_PROG(OZPLATFORM, ozplatform)
 OZ_PATH_PROG(OZC, ozc, OZC=`pwd`/lib/ozc)
+OZ_PATH_PROG(OZENGINE, ozengine, OZENGINE=`pwd`/ozengine.sh)
 
 AC_MSG_CHECKING(for --enable-fun)
 AC_ARG_ENABLE(fun,
