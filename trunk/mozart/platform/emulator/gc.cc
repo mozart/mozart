@@ -27,6 +27,7 @@
 #include "am.hh"
 #include "board.hh"
 #include "cell.hh"
+#include "debug.hh"
 #include "dllist.hh"
 #include "fdgenvar.hh"
 #include "fdhook.hh"
@@ -35,7 +36,6 @@
 #include "objects.hh"
 #include "stack.hh"
 #include "thread.hh"
-#include "ozdebug.hh"
 #include "verbose.hh"
 
 #ifdef OUTLINE
