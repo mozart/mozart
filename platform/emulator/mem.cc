@@ -128,12 +128,12 @@ void freeListChop(void * addr, size_t size) {
 
   register size_t s     = size;
   register FreeListMem * prev  = FreeList[cs];
-  register FreeListMem * small = (FreeListMem*) addr;
+  register FreeListMem * ozsmall = (FreeListMem*) addr;
 
   do {
-    small->next = ToInt32(prev);
-    prev = small;
-    small = (FreeListMem*) ((char *) small + cs);
+    ozsmall->next = ToInt32(prev);
+    prev = ozsmall;
+    ozsmall = (FreeListMem*) ((char *) ozsmall + cs);
     s     -= cs; 
   } while (s > cs);
   
