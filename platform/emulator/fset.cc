@@ -410,7 +410,7 @@ void OZ_FSetImpl::init(void)
 {
   _known_in = _known_not_in = 0;
   _card_min = 0;
-  _card_max = fset_sup;
+  _card_max = fset_sup + 1;
 
   for (int i = fset_high; i--; )
     _in[i] = _not_in[i] = 0;
