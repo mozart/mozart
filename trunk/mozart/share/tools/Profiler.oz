@@ -28,8 +28,3 @@ in
    \insert 'profiler/profiler'
 
 end
-
-\ifdef SAVE
-Profiler = {NewProfiler Compile Tk TkTools Browse}
-\endif
-
