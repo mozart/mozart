@@ -27,6 +27,7 @@ local
    \insert Bison
 
    ParserGeneratorError = 'parser generator error'
+   ParserGeneratorWarning = 'parser generator warning'
 
    %--------------------------------------------------------------------
    % Auxiliary Functions and Classes
@@ -1538,7 +1539,7 @@ local
       meth hasStartSymbols($)
 	 @startSymbols \= nil
       end
-      meth generateTables(Globals VerboseFile Rep ?Meth ?Tables)
+      meth generateTables(Globals VerboseFile P Rep ?Meth ?Tables)
 	 case @startSymbols of nil then
 	    Meth = nil
 	    Tables = '#'()
@@ -1561,16 +1562,34 @@ local
 			  fCase(X [CaseClauses]
 				fNoElse(unit) unit) unit)]
 	    Grammar = (ParseTableGenerator, ConvertSymbol(@start $)#@tokens#
-		       @assocs#@rules#{Globals getFlag(expect $)})
+		       @assocs#@rules)
 	    try
 	       Tables0 = {Bison {Length @symbols} Grammar VerboseFile Rep}
-	       StartSymbols = {AdjoinList synStartSymbols @startSymbols}
-	       Tables = {AdjoinAt Tables0 synStartSymbols StartSymbols}
 	    catch ozbison(VS) then
-	       {Rep error(kind: ParserGeneratorError
+	       {Rep error(kind: ParserGeneratorError coord: P
 			  msg: 'parse table generator exited abnormally'
 			  items: [hint(l: 'Fatal error' m: VS)])}
+	       Tables0 = ozbisonTables
 	    end
+	    case {CondSelect Tables0 conflicts unit} of unit then skip
+	    elseof SR#RR then
+	       case SR == {Globals getFlag(expect $)} andthen RR == 0 then skip
+	       else
+		  {Rep warn(kind: ParserGeneratorWarning coord: P
+			    msg: 'parser specification contains conflicts'
+			    items: [hint(l: 'Shift/reduce' m: SR)
+				    hint(l: 'Reduce/reduce' m: RR)])}
+	       end
+	    end
+	    case {CondSelect Tables0 useless unit} of unit then skip
+	    elseof R#N then
+	       {Rep warn(kind: ParserGeneratorWarning coord: P
+			 msg: 'parser specification contains useless items'
+			 items: [hint(l: 'Useless rules' m: R)
+				 hint(l: 'Useless nonterminals' m: N)])}
+	    end
+	    StartSymbols = {AdjoinList synStartSymbols @startSymbols}
+	    Tables = {AdjoinAt Tables0 synStartSymbols StartSymbols}
 	 end
       end
 
@@ -1824,7 +1843,7 @@ in
 		{MakeFileName T ".output"}
 	     else ''
 	     end
-	 {PTG generateTables(Globals F Rep ?SynMeth ?Tables)}
+	 {PTG generateTables(Globals F P Rep ?SynMeth ?Tables)}
 	 case {Rep hasSeenError($)} then fSkip(unit)
 	 else Descrs Meths in
 	    {Rep logSubPhase('building class definition ...')}
