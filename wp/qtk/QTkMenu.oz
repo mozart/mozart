@@ -128,7 +128,11 @@ define
 			   tkInit(padx:{CondSelect B ipadx 2}
 				  pady:{CondSelect B ipady 2})}
 	    if {HasFeature B menu} then
-	       Menu<-{MakeMenu {Record.adjoinAt B.menu parent self}}
+	       if {Record.is B.menu} then
+		  Menu<-{MakeMenu {Record.adjoinAt B.menu parent self}}
+	       else
+		  Menu<-B.menu
+	       end
 	       Tk.menubutton,tk(configure menu:@Menu)
 	    else
 	       Menu<-nil
