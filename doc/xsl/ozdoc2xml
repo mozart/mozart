@@ -4,32 +4,8 @@
 
 sub encode {
     my $txt = shift;
-    $txt =~ s/([<>&üö])/&encodeChar($1)/ge;
+    $txt =~ s/([<>&\000-\010\013-\037\177-\377])/'&#'.ord($1).';'/ge;
     return $txt;
-}
-
-sub encodeChar {
-    my $c = shift;
-    if    ($c eq '<') { '&lt;';  }
-    elsif ($c eq '>') { '&gt;';  }
-    elsif ($c eq '&') { '&amp;'; }
-    elsif ($c eq 'ä') { '&#228;';}
-    elsif ($c eq 'ë') { '&#235;';}
-    elsif ($c eq 'ï') { '&#239;';}
-    elsif ($c eq 'ö') { '&#246;';}
-    elsif ($c eq 'ü') { '&#252;';}
-    elsif ($c eq 'á') { '&#225;';}
-    elsif ($c eq 'é') { '&#233;';}
-    elsif ($c eq 'í') { '&#237;';}
-    elsif ($c eq 'ó') { '&#243;';}
-    elsif ($c eq 'ú') { '&#250;';}
-    elsif ($c eq 'à') { '&#224;';}
-    elsif ($c eq 'è') { '&#232;';}
-    elsif ($c eq 'ì') { '&#236;';}
-    elsif ($c eq 'ò') { '&#242;';}
-    elsif ($c eq 'ù') { '&#249;';}
-    elsif ($c eq 'ß') { '&#223;';}
-    else { die "bad encodeChar($c)"; }
 }
 
 sub decode {
