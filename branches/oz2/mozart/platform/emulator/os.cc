@@ -456,7 +456,11 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
   struct timeval timeout;
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
+#ifdef HPUX_700
+  return select(nfds,(int*)readfds,(int*)writefds,NULL,&timeout);
+#else
   return select(nfds,readfds,writefds,NULL,&timeout);
+#endif
 }
 
 
