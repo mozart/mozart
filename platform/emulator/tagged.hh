@@ -46,7 +46,7 @@ enum TypeOfTerm {
   GCTAG            =  13,  // 1101    --> !!! isAnyVar(GCTAG) = 1 !!!
 
   LTUPLE           =  2,   // 0010
-  FREEE            = 14,   // 1110
+  FREE             = 14,   // 1110
   SRECORD          =  3,   // 0011
 
   LITERAL          = 15,   // 1111

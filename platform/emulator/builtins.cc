@@ -43,6 +43,7 @@
 #include "fdbuilti.hh"
 #include "fdhook.hh"
 #include "solve.hh"
+#include "../FDLib/aux.hh"
 
 /*===================================================================
  * Macros
@@ -135,6 +136,37 @@ OZ_C_proc_begin(Name,3)                                 \
   }                                                     \
                                                         \
 }                                                       \
+OZ_C_proc_end
+
+
+// When InlineName suspends, then Name creates thread containing BlockName
+#define DECLAREBINOBLOCK_USEINLINEFUN2(Name,BlockName,InlineName) \
+OZ_C_proc_begin(Name,3)                                           \
+{                                                                 \
+  OZ_Term help;                                                   \
+                                                                  \
+  OZ_Term arg0 = OZ_getCArg(0);                                   \
+  OZ_Term arg1 = OZ_getCArg(1);                                   \
+  State state=InlineName(arg0,arg1,help);                         \
+  switch (state) {                                                \
+  case SUSPEND:                                                   \
+    {                                                             \
+      RefsArray x=allocateRefsArray(3, NO);                       \
+      x[0]=OZ_getCArg(0);                                         \
+      x[1]=OZ_getCArg(1);                                         \
+      x[2]=OZ_getCArg(2);                                         \
+      OZ_Thread thr=OZ_makeThread(BlockName,x,3);                 \
+      OZ_addThread(arg0,thr);                                     \
+      OZ_addThread(arg1,thr);                                     \
+      return PROCEED;                                             \
+    }                                                             \
+  case PROCEED:                                                   \
+    return(OZ_unify(help,OZ_getCArg(2)));                         \
+  default:                                                        \
+    return state;                                                 \
+  }                                                               \
+                                                                  \
+}                                                                 \
 OZ_C_proc_end
 
 
@@ -444,22 +476,21 @@ OZ_C_proc_begin(BIrecordC,1)
 OZ_C_proc_end
 
 
-// Constrain term to a record, with a given initial size of hash table.
-// Never suspend.  If term is already a record, do nothing.
+// Constrain term to a record, with an initial size sufficient for at least
+// tNumFeats features.  Never suspend.  If term is already a record, do nothing.
 OZ_C_proc_begin(BIrecordCSize,2)
 {
-  TaggedRef tSize = OZ_getCArg(0);
+  TaggedRef tNumFeats = OZ_getCArg(0);
   TaggedRef t = OZ_getCArg(1);
 
-  DEREF(tSize, sPtr, stag);
+  DEREF(tNumFeats, nPtr, ntag);
   DEREF(t, tPtr, tag);
 
-  /* Get initial size of hash table */
-  if (!isSmallInt(stag)) TypeError2("recordCSize",0,"Int",tSize,t);
-  dt_index size=smallIntValue(tSize);
-  if (size!=0 && !isPwrTwo(size))
-      TypeError2("recordCSize",0,"Zero or power of 2",tSize,t);
-
+  /* Calculate initial size of hash table */
+  if (!isSmallInt(tNumFeats)) TypeError2("recordCSize",0,"Int",tNumFeats,t);
+  dt_index numFeats=smallIntValue(tNumFeats);
+  dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
+                                                 : (int)ceil((double)numFeats/FILLFACTOR));
   switch (tag) {
   case LTUPLE:
   case LITERAL:
@@ -809,28 +840,132 @@ State labelInline(TaggedRef term, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
 
 
-     // Used by BIwidthC and BIpropWidth built-ins
+// This propagator is installed by the WidthC built-in (BIwidthC):
+class WidthPropagator : public OZ_Propagator {
+protected:
+  OZ_Term rawrec, rawwid;
+public:
+  WidthPropagator(OZ_Term r, OZ_Term w)
+    : rawrec(r), rawwid(w) {}
+
+  virtual void gcRecurse(void) {
+    OZ_gcTerm(rawrec);
+    OZ_gcTerm(rawwid);
+  }
+  virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
+  virtual OZ_Bool run(void);
+  virtual ostream &print(ostream& o) const {
+    return o << "widthC propagator";
+  }
+};
+
+
+// {RecordC.widthC X W} -- builtin that constrains number of features of X to be
+// equal to finite domain variable W.  Will constrain X to a record and W to a
+// finite domain.  This built-in installs a WidthPropagator.
+OZ_C_proc_begin(BIwidthC, 2)
+{
+    EXPECTED_TYPE("record,finite domain");
+
+    TaggedRef rawrec=OZ_getCArg(0);
+    TaggedRef rawwid=OZ_getCArg(1);
+    TaggedRef rec=OZ_getCArg(0);
+    TaggedRef wid=OZ_getCArg(1);
+    DEREF(rec, recPtr, recTag);
+    DEREF(wid, widPtr, widTag);
+
+    // Ensure that first argument rec is an OFS, SRECORD, or LITERAL:
+    switch (recTag) {
+    case UVAR:
+    case SVAR:
+      {
+        // Create new ofsvar:
+        GenOFSVariable *ofsvar=new GenOFSVariable();
+        // Unify ofsvar and rec:
+        Bool ok=am.unify(makeTaggedRef(newTaggedCVar(ofsvar)),rawrec);
+        Assert(ok);
+        break;
+      }
+    case CVAR:
+      if (tagged2CVar(rec)->getType()!=OFSVariable) return FAILED;
+      break;
+    case SRECORD:
+    case LITERAL:
+    case LTUPLE:
+      break;
+    default:
+      return FAILED;
+    }
+
+    // Ensure that second argument wid is a FD or integer:
+    switch (widTag) {
+    case UVAR:
+    case SVAR:
+    {
+        // Create new fdvar:
+        GenFDVariable *fdvar=new GenFDVariable(); // Variable with maximal domain
+        // Unify fdvar and wid:
+        Bool ok=am.unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
+        Assert(ok);
+        break;
+    }
+    case CVAR:
+        if (tagged2CVar(wid)->getType()!=FDVariable) return FAILED;
+        break;
+    case BIGINT:
+    case SMALLINT:
+        break;
+    default:
+        return FAILED;
+    }
+
+    // This completes the propagation abilities of widthC.  However, entailment is
+    // still hard, so this rule will not be added now--we'll wait until people need it.
+    //   // If propagator exists already on the variable, just unify the widths
+    //   // Implements rule: width(x,w1)/\width(x,w2) -> width(x,w1)/\(w1=w2)
+    //   if (recTag==CVAR) {
+    //       TaggedRef otherwid=am.getWidthSuspension((void*)BIpropWidth,rec);
+    //       if (otherwid!=makeTaggedNULL()) {
+    //           return (am.unify(otherwid,rawwid) ? PROCEED : FAILED);
+    //       }
+    //   }
+
+    PropagatorExpect pe;
+    EXPECT(pe, 0, expectRecordVar);
+    EXPECT(pe, 1, expectIntVarAny);
+
+    return pe.spawn(new WidthPropagator(rawrec, rawwid)); // OZ_args[0], OZ_args[1]));
+}
+OZ_C_proc_end
+
+
+
+// Used by BIwidthC built-in
 // {PropWidth X W} where X is OFS and W is FD width.
-// Assume: X is OFS or SRECORD or LITERAL.
-// Assume: W is FD or SMALLINT or BIGINT.
+// Assume: rec is OFS or SRECORD or LITERAL.
+// Assume: wid is FD or SMALLINT or BIGINT.
 // This is the simplest most straightforward possible
 // implementation and it can be optimized in many ways.
-OZ_Bool internPropWidth(TaggedRef rawrec, TaggedRef rawwid)
+OZ_Bool WidthPropagator::run(void)
 {
     int res;
     int recwidth;
+    OZ_Bool result = SLEEP;
+
     TaggedRef rec=rawrec;
     TaggedRef wid=rawwid;
-    DEREF(rec,_1,recTag);
-    DEREF(wid,_2,widTag);
-    OZ_Bool result = SLEEP;
+    DEREF(rec, recptr, recTag);
+    DEREF(wid, widptr, widTag);
+
     switch (recTag) {
     case SRECORD:
     record:
     case LITERAL:
+    case LTUPLE:
     {
         // Impose width constraint
-        recwidth=(recTag==SRECORD) ? tagged2SRecord(rec)->getWidth() : 0;
+        recwidth=(recTag==SRECORD) ? tagged2SRecord(rec)->getWidth() :
+                 ((recTag==LTUPLE) ? 2 : 0);
         if (isGenFDVar(wid)) {
             // GenFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
@@ -859,7 +994,6 @@ OZ_Bool internPropWidth(TaggedRef rawrec, TaggedRef rawwid)
             // Build fd with domain recwidth..fd_sup:
             OZ_FiniteDomain slice=new OZ_FiniteDomain();
             slice.init(recwidth,fd_sup);
-
             OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
             if (dom.getSize() > (dom & slice).getSize()) {
                 GenFDVariable *fdcon=new GenFDVariable(slice);
@@ -903,12 +1037,15 @@ OZ_Bool internPropWidth(TaggedRef rawrec, TaggedRef rawwid)
                     res=am.unify(rawrec,lbl);
                     if (res==FAILED) error("unexpected failure of Literal conversion");
                 } else {
-                    // Convert to SRECORD:
-                    TaggedRef arity=tagged2GenOFSVar(rec)->getTable()->getArityList();
-                    Arity *atable=aritytable.find(arity);
-                    SRecord *newrec = SRecord::newSRecord(lbl,atable);
+                    // Convert to SRECORD or LTUPLE:
+                    // (Two efficiency problems: 1. Creates record & then unifies,
+                    // instead of creating & only binding.  2. Rec->normalize()
+                    // wastes the space of the original record.)
+                    TaggedRef alist=tagged2GenOFSVar(rec)->getTable()->getArityList();
+                    Arity *arity=aritytable.find(alist);
+                    SRecord *newrec = SRecord::newSRecord(lbl,arity);
                     newrec->initArgs(am.currentUVarPrototype);
-                    res=am.unify(rawrec,makeTaggedSRecord(newrec));
+                    res=am.unify(rawrec,newrec->normalize());
                     Assert(res!=FAILED);
                 }
             }
@@ -923,118 +1060,6 @@ OZ_Bool internPropWidth(TaggedRef rawrec, TaggedRef rawwid)
 
     return (result);
 }
-
-
-
-// This propagator is installed by the WidthC built-in (BIwidthC):
-// This is a stub to internPropWidth which does the work.
-OZ_C_proc_begin(BIpropWidth,2)
-{
-    TaggedRef rec=OZ_getCArg(0);
-    TaggedRef wid=OZ_getCArg(1);
-    return (internPropWidth(rec, wid));
-}
-OZ_C_proc_end
-
-
-
-// {RecordC.widthC X W} -- builtin that constrains number of features of X to be
-// equal to finite domain variable W.  Will constrain X to a record and W to a
-// finite domain.  This built-in installs the propagator BIpropWidth.
-OZ_C_proc_begin(BIwidthC, 2)
-{
-    OZ_Term rawrec = OZ_getCArg(0);
-    OZ_Term rawwid = OZ_getCArg(1);
-    OZ_Term rec=rawrec;
-    OZ_Term wid=rawwid;
-
-    // Ensure that first argument rec is an OFS, SRECORD, or LITERAL:
-    DEREF(rec,_1,recTag);
-    switch (recTag) {
-    case UVAR:
-    case SVAR:
-      {
-        // Create new ofsvar:
-        GenOFSVariable *ofsvar=new GenOFSVariable();
-        // Unify ofsvar and rec:
-        Bool ok=am.unify(makeTaggedRef(newTaggedCVar(ofsvar)),rawrec);
-        Assert(ok);
-        break;
-      }
-    case CVAR:
-      if (tagged2CVar(rec)->getType()!=OFSVariable) return FAILED;
-      break;
-    case SRECORD:
-    case LITERAL:
-      break;
-    default:
-      return FAILED;
-    }
-
-    // Ensure that second argument wid is a FD or integer:
-    DEREF(wid,_2,widTag);
-    switch (widTag) {
-    case UVAR:
-    case SVAR:
-    {
-        // Create new fdvar:
-        GenFDVariable *fdvar=new GenFDVariable(); // Variable with maximal domain
-        // Unify fdvar and wid:
-        Bool ok=am.unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
-        Assert(ok);
-        break;
-    }
-    case CVAR:
-        if (tagged2CVar(wid)->getType()!=FDVariable) return FAILED;
-        break;
-    case BIGINT:
-    case SMALLINT:
-        break;
-    default:
-        return FAILED;
-    }
-
-    // Execute propagator once and create suspension if necessary:
-    OZ_Bool result;
-    result = internPropWidth(rawrec, rawwid);
-    switch (result) {
-    case FAILED:
-        return FAILED;
-
-    case SLEEP:
-    {
-        // Create a 'BIpropWidth' propagator;
-        Thread *thr =
-            createPropagator (BIpropWidth, 2, allocateRegs (rawrec, rawwid));
-        thr->suspendPropagator ();
-        Assert(OZ_isVariable(rawrec));
-        OZ_addThread (rawrec, thr);
-        if (OZ_isVariable (rawwid)) OZ_addThread (rawwid, thr);
-        // This could be optimized to add the lbl suspension only when the
-        // conditions are satisfied (inside internPropWidth):
-        rec=rawrec;
-        DEREF(rec,_3,_4);
-        if (isCVar(rec)) {
-            TaggedRef lbl=tagged2GenOFSVar(rec)->getLabel();
-            if (OZ_isVariable (lbl)) OZ_addThread (lbl, thr);
-        }
-
-        result = PROCEED;
-        break;
-    }
-
-    case SUSPEND:
-    case PROCEED:
-        break;
-
-    default:
-        error ("unknown value returned from the 'internPropWidth'\n");
-        break;
-    }
-
-    return result;
-}
-OZ_C_proc_end
 
 
 
@@ -1088,14 +1113,14 @@ OZ_C_proc_begin(BIlabelC,2)
   // At this point, thelabel is term's label
   // Constrain the term's label to be lbl:
   Assert(thelabel!=makeTaggedNULL());
-  TaggedRef thelabeldrf=thelabel;
-  DEREF(thelabeldrf,_1,_2);
-  // one of the two must be a literal:
+  // TaggedRef thelabeldrf=thelabel;
+  // DEREF(thelabeldrf,_1,_2);
+  // One of the two must be a literal:
+  // if (!isLiteral(thelabeldrf) && !isLiteral(lbldrf)) {
+  //     // Suspend if at least one of the two is a variable:
+  //     return OZ_suspendOnVar2(thelabel,lbl);
+  // }
   if (!isAnyVar(lbltag) && !isLiteral(lbldrf)) return FAILED;
-  if (!isLiteral(thelabeldrf) && !isLiteral(lbldrf)) {
-      // Suspend if at least one of the two is a variable:
-    return OZ_suspendOnVar2(thelabel,lbl);
-  }
   return (am.unify(thelabel,lbl)? PROCEED : FAILED);
 }
 OZ_C_proc_end
@@ -1103,63 +1128,27 @@ OZ_C_proc_end
 // DECLAREBI_USEINLINEREL2(BIlabelC,labelCInline);
 
 
-// The propagator for the built-in RecordC.monitorArity
-// {PropFeat X K L FH FT} -- propagate features from X to the list L, and go
-// away when K is determined.  L is closed when K is determined.  X is used to
-// check in addFeatOFSSuspList that the suspension is waiting for the right
-// variable.  FH and FT are a difference list that holds the features that
-// have been added.
-OZ_C_proc_begin(BIpropFeat,5)
-{
-    // This test is unnecessary:
-    // Check type of X: (must be OFS)
-    // TaggedRef rec=OZ_getCArg(0);
-    // DEREF(rec,_1,recTag);
-    // if (!(recTag==CVAR && tagged2CVar(rec)->getType()==OFSVariable)) {
-    //     TypeError1("RecordC.monitorArity",0,"Record",rec);
-    //     return FAILED;
-    // }
+class MonitorArityPropagator : public OZ_Propagator {
+protected:
+  OZ_Term X, K, L, FH, FT;
+public:
+  MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
+                         OZ_Term FH1, OZ_Term FT1)
+    : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
 
-    // Check if killed:
-    TaggedRef kill=OZ_getCArg(1);
-    TaggedRef tmpkill=kill;
-    DEREF(tmpkill,_2,killTag);
-    Bool isKilled = !isAnyVar(killTag);
-
-    TaggedRef tmptail=OZ_getCArg(4);
-    DEREF(tmptail,_3,_4);
-
-    // Get featlist (a difference list stored in the arguments):
-    TaggedRef fhead = OZ_getCArg(3);
-    TaggedRef ftail = OZ_getCArg(4);
-
-    if (tmptail!=AtomNil) {
-        // The record is not determined, so reinitialize the featlist:
-        // The home board of uvar must be taken from outside propFeat!
-        // Get the home board for any new variables:
-        Board* home=tagged2VarHome(tmptail);
-        TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
-        OZ_args[3]=uvar;
-        OZ_args[4]=uvar;
-    } else {
-        // Precaution for the GC?
-        OZ_args[3]=makeTaggedNULL();
-        OZ_args[4]=makeTaggedNULL();
-    }
-
-    // Add the features to L (the tail of the output list)
-    TaggedRef arity=OZ_getCArg(2);
-    if (!am.unify(fhead,arity)) return FAILED; // No further updating of the suspension
-    OZ_args[2]=ftail; // 'ftail' is the new CArg(2) in the suspension
-
-    if (tmptail!=AtomNil) {
-        // The record is not determined, so the suspension is revived:
-        if (!isKilled) return (SLEEP);
-        else return (am.unify(ftail,AtomNil)? PROCEED : FAILED);
-    }
-    return PROCEED;
-}
-OZ_C_proc_end // BIpropFeat
+  virtual void gcRecurse(void) {
+    OZ_gcTerm(X);
+    OZ_gcTerm(K);
+    OZ_gcTerm(L);
+    OZ_gcTerm(FH);
+    OZ_gcTerm(FT);
+  }
+  virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
+  virtual OZ_Bool run(void);
+  virtual ostream &print(ostream& o) const {
+    return o << "monitorArity propagator";
+  }
+};
 
 
 // {RecordC.monitorArity X K L} -- builtin that tracks features added to OFS X
@@ -1168,6 +1157,8 @@ OZ_C_proc_end // BIpropFeat
 // RecordC) and hence fails if X is not a record.
 OZ_C_proc_begin(BImonitorArity, 3)
 {
+    EXPECTED_TYPE("any(record),any,any(list)");
+
     OZ_Term rec = OZ_getCArg(0);
     OZ_Term kill = OZ_getCArg(1);
     OZ_Term arity = OZ_getCArg(2);
@@ -1197,11 +1188,6 @@ OZ_C_proc_begin(BImonitorArity, 3)
           // Unify newofsvar and rec:
           Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),rec);
           Assert(ok);
-          // Previously:
-          // // *** suspend this call until rec becomes a record
-          // OZ_Suspension susp = OZ_makeSelfSuspension();
-          // OZ_addThread (rec,susp);
-          // return PROCEED;
           break;
         }
     case CVAR:
@@ -1218,7 +1204,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
     tmprec=OZ_getCArg(0);
     DEREF(tmprec,_3,_4);
 
-    // At this point, rec is OFS and tmprec is dereferenced
+    // At this point, rec is OFS and tmprec is dereferenced and unbound
 
     if (isKilled) {
         TaggedRef featlist;
@@ -1233,21 +1219,68 @@ OZ_C_proc_begin(BImonitorArity, 3)
 
         if (!am.unify(featlist,arity)) return FAILED;
 
-        // Create CFunc suspension BIpropFeat
-        // Use two arguments of xRegs to hold the featlist as a dlist
+        PropagatorExpect pe;
+        EXPECT(pe, 0, expectRecordVar);
+        EXPECT(pe, 1, expectVar);
+
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
-        Thread *thr =
-            createPropagator (BIpropFeat, 5,
-                              allocateRegs(rec, kill, feattail, uvar, uvar));
-        thr->setOFSThread ();
-        thr->suspendPropagator ();
-        OZ_addThread (rec, thr);
-        OZ_addThread (kill, thr);
+        return pe.spawn(
+            new MonitorArityPropagator(rec,kill,feattail,uvar,uvar));
     }
 
     return PROCEED;
 }
 OZ_C_proc_end // BImonitorArity
+
+
+// The propagator for the built-in RecordC.monitorArity
+// {PropFeat X K L FH FT} -- propagate features from X to the list L, and go
+// away when K is determined.  L is closed when K is determined.  X is used to
+// check in addFeatOFSSuspList that the suspension is waiting for the right
+// variable.  FH and FT are a difference list that holds the features that
+// have been added.
+OZ_Bool MonitorArityPropagator::run(void)
+{
+    // Check if killed:
+    TaggedRef kill=K;
+    TaggedRef tmpkill=kill;
+    DEREF(tmpkill,_2,killTag);
+    Bool isKilled = !isAnyVar(killTag);
+
+    TaggedRef tmptail=FT;
+    DEREF(tmptail,_3,_4);
+
+    // Get featlist (a difference list stored in the arguments):
+    TaggedRef fhead = FH;
+    TaggedRef ftail = FT;
+
+    if (tmptail!=AtomNil) {
+        // The record is not determined, so reinitialize the featlist:
+        // The home board of uvar must be taken from outside propFeat!
+        // Get the home board for any new variables:
+        Board* home=tagged2VarHome(tmptail);
+        TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
+        FH=uvar;
+        FT=uvar;
+    } else {
+        // Precaution for the GC?
+        FH=makeTaggedNULL();
+        FT=makeTaggedNULL();
+    }
+
+    // Add the features to L (the tail of the output list)
+    TaggedRef arity=L;
+    if (!am.unify(fhead,arity)) return FAILED; // No further updating of the suspension
+    L=ftail; // 'ftail' is the new L in the suspension
+
+    if (tmptail!=AtomNil) {
+        // The record is not determined, so the suspension is revived:
+        if (!isKilled) return (SLEEP);
+        else return (am.unify(ftail,AtomNil)? PROCEED : FAILED);
+    }
+    return PROCEED;
+}
+
 
 
 /*
@@ -1690,6 +1723,11 @@ typeError1t:
 typeError2:
     TypeError2("subtreeC",1,"Feature",term,fea);
 }
+// Block on suspension:
+// DECLAREBI_USEINLINEFUN2(BIBlockuparrow,uparrowInline)
+// Create thread on suspension:
+// DECLAREBINOBLOCK_USEINLINEFUN2(BIuparrow,BIBlockuparrow,uparrowInline)
+
 DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
 
 
@@ -5647,9 +5685,7 @@ BIspec allSpec[] = {
   {"setC",         3, BIsetC,           NO,0},
   {"removeC",      2, BIremoveC,        NO,0},
   {"testCB",       3, BItestCB,         NO,0},
-  {"propWidth",    2, BIpropWidth,      NO,0},
   {"monitorArity", 3, BImonitorArity,   NO,0},
-  {"propFeat",     5, BIpropFeat,       NO,0},
   {".",            3,BIdot,             NO, (IFOR) dotInline},
   {"subtree",      3,BIsubtree,         NO, (IFOR) subtreeInline},
   {"^",            3,BIuparrow,         NO, (IFOR) uparrowInline},

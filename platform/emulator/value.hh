@@ -951,7 +951,7 @@ inline
 Bool isRecord(TaggedRef term) {
   GCDEBUG(term);
   TypeOfTerm tag = tagTypeOf(term);
-  return isSRecord(tag) || isLiteral(tag);
+  return isSRecord(tag) || isLTuple(tag) || isLiteral(tag);
 }
 
 
