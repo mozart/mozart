@@ -77,13 +77,11 @@ MODSPECS= \
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
-CREATEDSRCS=scanner.cc parser.cc
-
 CREATEDFILES=                                           \
         instrtab.hh opcodes.hh                          \
         marshalcode.cc register.hh mozart.c             \
         atoms.hh atoms.cc                               \
-        config.h scanner.cc parser.cc                   \
+        config.h                                        \
         version.cc initffuns.cc copycode.cc opcodes.cc  \
         $(MODINTERS)
 
@@ -93,7 +91,8 @@ OTHERSRCS= \
         statisti.cc trace.cc \
         print.cc base.cc ozconfig.cc \
         foreign.cc dpInterface.cc boot-manager.cc \
-        builtins.cc vprops.cc debug.cc interFault.cc
+        builtins.cc vprops.cc debug.cc interFault.cc \
+        scanner.cc parser.cc
 
 SUPPORTSRCS=\
         stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
@@ -176,7 +175,7 @@ ALLSRCS= $(SRCS) \
 ############################################################################
 
 .NOEXPORT: emulate.o emulator.exe
-.PHONY: all win win-install first install install-bin install-inc \
+.PHONY: all first install install-bin install-inc \
         install-dir depend tags clean distclean veryclean
 
 all: $(TARGETS)
@@ -280,8 +279,6 @@ libPickle.a: $(PICKLESRCS:%.cc=%.o)
 libOther.a: $(OTHERSRCS:%.cc=%.o)
         $(AR) -rc $@ $(OTHERSRCS:%.cc=%.o) && $(RANLIB) $@
 
-win: ozlib.lnk $(CREATEDFILES)
-
 PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
 
 # mm2
@@ -319,7 +316,7 @@ version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
-depend:: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
+depend:: version.cc initffuns.cc $(ALLSRCS)
         $(MAKE) first
         $(DEPEND) $^ > Makefile.deps
 
@@ -335,20 +332,15 @@ tags:   $(CREATEDFILES) version.cc
 clean::
         -rm -f gmon.out  fetchedInstr.dump verb_out.txt
 
-ozlib.lnk: mozart.h
-        grep FUNDECL mozart.h | grep -v typedef | grep -v define | \
-        sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
 
-scanner.cc: scanner.ll
-        $(LEX) $(LFLAGS) -Pxy -o$@ $<
+new-scanner:
+        $(LEX) $(LFLAGS) -Pxy -oscanner.cc scanner.ll
 
-parser.cc: parser.hh
-        @echo > /dev/null
+new-parser:
+        $(YACC) $(YFLAGS) -p xy parser.yy
+        @mv y.tab.c $(SRCDIR)/parser.cc
+        @mv y.tab.h $(SRCDIR)/parser.hh
 
-parser.hh: parser.yy
-        $(YACC) $(YFLAGS) -p xy $<
-        @mv y.tab.c parser.cc
-        @mv y.tab.h parser.hh
 
 PARSEROBJS = parser.lo scanner.lo parsertable.lo
 Parser.so: $(PARSEROBJS)
@@ -456,8 +448,8 @@ atoms.hh: atoms.perl
 # should be after make in subdirs (see Makefiles.rules)
 
 veryclean::
-        -rm -f version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
-                ozlib.lnk *.exe *.map *.imp *.sym \
+        -rm -f version.cc $(TARGETS) \
+                *.exe *.map *.imp *.sym \
                 $(CREATEDFILES) TAGS Makefile.deps
 
 distclean::
