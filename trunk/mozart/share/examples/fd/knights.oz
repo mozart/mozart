@@ -26,7 +26,8 @@
 %%
 
 declare
-[Graphics]={Module.link [{Property.get 'oz.home'}#'/examples/Knights.ozf']}
+[Graphics]={Module.link [({Property.get 'oz.home'}#
+			  '/examples/fd/graphics/Knights.ozf')]}
 {Graphics.add}
 
 declare
