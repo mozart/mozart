@@ -28,6 +28,11 @@
 			     out    => [],
 			     BI     => BIsave},
 
+    'saveCompressed'	=> { in     => ['value','+virtualString',
+			                '+int'],
+			     out    => [],
+			     BI     => BIsaveCompressed},
+
     'saveWithHeader'	=> { in     => ['value','+virtualString',
 			                '+virtualString','+int'],
 			     out    => [],
