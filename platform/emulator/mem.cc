@@ -361,19 +361,21 @@ void getMemFromOS(size_t sz)
 
   heapTotalSize += ozconf.heapBlockSize/KB;
 
-  if (ozconf.heapMaxSize != -1 && heapTotalSize >= (unsigned int) ozconf.heapMaxSize) {
-    int newSize = (heapTotalSize*3)/2;
+  if (ozconf.heapMaxSize != -1 &&
+      ((gc_is_running == NO) ?
+       (heapTotalSize > ((100 + ozconf.heapTolerance) *
+                         (unsigned long) ozconf.heapMaxSize) / 100) :
+       (heapTotalSize > (unsigned) ozconf.heapMaxSize))) {
+    int newSize = (heapTotalSize * 3) / 2;
     prefixError();
     printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
            ozconf.heapMaxSize,newSize);
     fflush(stdout);
     char buf[1000];
-    fgets(buf,1000,stdin);
-    if (strcmp(buf,"y\n") != 0 &&
-        strcmp(buf,"ye\n") != 0 &&
-        strcmp(buf,"yes\n") != 0) {
+
+    if (fgets(buf, 1000, stdin) && buf[0] == 'n')
       am.exitOz(1);
-    }
+
     ozconf.heapMaxSize = newSize;
   }
 

@@ -6262,8 +6262,16 @@ OZ_C_proc_begin(BISystemSetGC,1) {
   SetIfPos(ozconf.heapTolerance,  tolerance, 1);
   SetIfPos(ozconf.gcFlag,         active,    1);
 
+  if (ozconf.heapMinSize > ozconf.heapMaxSize)
+    ozconf.heapMinSize = ozconf.heapMaxSize;
+
   if (ozconf.heapMinSize > ozconf.heapThreshold)
-    ozconf.setHeapThreshold(ozconf.heapMinSize);
+    ozconf.heapThreshold = ozconf.heapMinSize;
+
+  if (ozconf.heapThreshold > ozconf.heapMaxSize) {
+    am.setSFlag(StartGC);
+    return BI_PREEMPT;
+  }
 
   return PROCEED;
 }

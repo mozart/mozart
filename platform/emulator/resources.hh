@@ -33,12 +33,13 @@
 #define GC_VERBOSITY    1
 
 #define STACKMAXSIZE    10000
-#define HEAPMAXSIZE     -1
-#define HEAPMINSIZE     1024    /* kByte   */
-#define HEAPFREE        70      /* percent */
-#define HEAPTOLERANCE   25      /* percent */
-#define HEAPSAFETY      256     /* kByte   */
-#define INITIALHEAPFREE 4096    /* kByte   */
+
+#define HEAPMAXSIZE          1048576 /* kByte   */
+#define HEAPMINSIZE             1024 /* kByte   */
+#define HEAPFREE                  75 /* percent */
+#define HEAPTOLERANCE             20 /* percent */
+#define INITIALHEAPTHRESHOLD    4096 /* kByte   */
+#define HEAPBLOCKSIZE        1048576 /* byte    */
 
 #define CLOCK_TICK      10000   /* usec */
 #define TASK_STACK_SIZE         10

@@ -287,6 +287,9 @@ OZ_C_proc_end
  *     IN_TC: term copying
  ****************************************************************************/
 
+Bool gc_is_running = NO;
+
+
 typedef enum {IN_GC = 0, IN_TC} GcMode;
 
 GcMode opMode;
@@ -1493,6 +1496,7 @@ void AM::gc(int msgLevel)
   GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
   gcing = 0;
+  gc_is_running = OK;
 
   ozstat.initGcMsg(msgLevel);
 
@@ -1593,6 +1597,7 @@ void AM::gc(int msgLevel)
 
   ozstat.printGcMsg(msgLevel);
 
+  gc_is_running = NO;
   gcing = 1;
 } // AM::gc
 
@@ -2506,17 +2511,21 @@ void AM::doGC()
   int used   = getUsedMemory();
   int wanted = ((ozconf.heapFree == 100)
                 ? ozconf.heapMaxSize
-                : max(min(used * (100 / (100 - ozconf.heapFree)),
+                : max(min(((long) used) * (100 / (100 - ozconf.heapFree)),
                           ozconf.heapMaxSize),
                       ozconf.heapMinSize));
 
-  // Should I resize, what does tolerance say?
-  if (100 * abs(used - wanted) / wanted > ozconf.heapTolerance)
-    ozconf.setHeapThreshold(wanted);
+  /* Try to align as much as possible to end of blocksize */
+  int block_size = ozconf.heapBlockSize / KB;
+  int block_dist = wanted % block_size;
 
-  // But! Provide for at least HEAPSAFETY free heap
-  if (ozconf.heapThreshold < used + HEAPSAFETY)
-    ozconf.setHeapThreshold(used + HEAPSAFETY);
+  if (block_dist > 0)
+    block_dist = block_size - block_dist;
+
+  wanted += min(block_dist,
+                (((long) wanted) * ozconf.heapTolerance / 100));
+
+  ozconf.heapThreshold = min(wanted, ozconf.heapMaxSize);
 
   unsetSFlag(StartGC);
   osUnblockSignals();
