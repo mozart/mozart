@@ -140,39 +140,37 @@ form <math>x+c=y</math> (this will be needed later).
   <title>Script</title>
 
 <p>
-The problem specification which is a direct
-implementation of <ptr to=table.hausbau> is given in
-<ptr to=fig.data.hausbau>.
-The field under the feature <<taskSpec>> contains the
-specification as a list of tuples. Each tuple  contains a task name, its
-duration, the list of preceding tasks and the company
- in charge (or <<noResource>> if no
-company is in charge). We will ignore the company here.
-The task <<pe>> denotes the additional task representing the
-project end.
+The problem specification which is a direct implementation of <ptr
+to=table.hausbau> is given in <ptr to=fig.data.hausbau>.  The field
+under the feature <<tasks>> contains the specification as a list of
+records. The label of each record gives the task name, the field at
+feature <<dur>> the duration, the field at feature <<pre>> the list of
+preceding tasks, and the field at feature <<res>> the resource
+name. The features <<pre>> and <<res>> are optional, if they are
+missing no preceding tasks and no resource are required.  The task
+with name <<pe>> denotes the additional task representing the project
+end.
 
 <figure id=fig.data.hausbau>
 <caption/The specification to build a house./
 <chunk class=anonymous><title/House/
-House = house(taskSpec:
-                 [a  # 7 # nil   # constructionInc
-                  b  # 3 # [a]   # houseInc
-                  c  # 1 # [b]   # houseInc
-                  d  # 8 # [a]   # constructionInc
-                  e  # 2 # [c d] # constructionInc
-                  f  # 1 # [c d] # houseInc
-                  g  # 1 # [c d] # houseInc
-                  h  # 3 # [a]   # constructionInc
-                  i  # 2 # [f h] # builderCorp
-                  j  # 1 # [i]   # builderCorp
-                  pe # 0 # [j]   # noResource
-                 ])
+House = house(tasks: [a(dur:7            res:constructionInc)
+                      b(dur:3  pre:[a]   res:houseInc)
+                      c(dur:1  pre:[b]   res:houseInc)
+                      d(dur:8  pre:[a]   res:constructionInc)
+                      e(dur:2  pre:[c d] res:constructionInc)
+                      f(dur:1  pre:[c d] res:houseInc)
+                      g(dur:1  pre:[c d] res:houseInc)
+                      h(dur:3  pre:[a]   res:constructionInc)
+                      i(dur:2  pre:[f h] res:builderCorp)
+                      j(dur:1  pre:[i]   res:builderCorp)
+                      pe(dur:0 pre:[j])])
 </chunk>
 </figure>
 
 
 <para class=apropos><title/scheduling compiler/
-<ptr to=fig.script1.hausbau> shows a procedure is that returns a
+<ptr to=fig.script1.hausbau> shows a procedure that returns a
 script according to our scheduling specification. The used procedures
 <<GetDur>> and <<GetStart>> are shown in <Ptr
 to="figure.scheduling.help">. Such a procedure is called a
@@ -185,7 +183,7 @@ script/.
 <caption/Scheduling compiler./
 <chunk class=anonymous><title/Compile1/
 fun {Compile Spec}
-   TaskSpec = Spec.taskSpec
+   TaskSpec = Spec.tasks
    Dur      = {GetDur TaskSpec}
 in
    proc {$ Start}
@@ -202,17 +200,15 @@ end
 <caption/Procedures to compute duration and start records./
 <chunk class=anonymous><title/ScheduleHelp/
 fun {GetDur TaskSpec}
-   {List.toRecord dur {Map TaskSpec fun {$ T#D#_#_}
-                                       T#D
+   {List.toRecord dur {Map TaskSpec fun {$ T}
+                                       {Label T}#T.dur
                                     end}}
 end
 fun {GetStart TaskSpec}
-   MaxTime = {FoldL TaskSpec fun {$ Time _#D#_#_}
-                                Time+D
+   MaxTime = {FoldL TaskSpec fun {$ Time T}
+                                Time+T.dur
                              end 0}
-   Tasks   = {Map TaskSpec fun {$ T#_#_#_}
-                                T
-                           end}
+   Tasks   = {Map TaskSpec Label}
 in
    {FD.record start Tasks 0#MaxTime}
 end
@@ -232,10 +228,10 @@ determined. This is shown in <Ptr to="figure.scheduling.starttimes">.
 <caption/Posting precedence constraints./
 <chunk><title/Post precedence constraints/
 {ForAll TaskSpec
- proc {$ Task#_#Preds#_}
-    {ForAll Preds
-     proc {$ Pred}
-        Start.Pred + Dur.Pred =<: Start.Task
+ proc {$ T}
+    {ForAll {CondSelect T pre nil}
+     proc {$ P}
+        Start.P + Dur.P =<: Start.{Label T}
      end}
  end}
 </chunk>
@@ -325,9 +321,9 @@ fun {GetTasksOnResource TaskSpec}
    D={Dictionary.new}
 in
    {ForAll TaskSpec
-    proc {$ Task#_#_#Res}
-       if Res\=noResource then
-          {Dictionary.put D Res Task|{Dictionary.condGet D Res nil}}
+    proc {$ T}
+       if {HasFeature T res} then R=T.res in
+          {Dictionary.put D R {Label T}|{Dictionary.condGet D R nil}}
        end
     end}
    {Dictionary.toRecord tor D}
@@ -350,7 +346,7 @@ capacity constraints as described in the model above.
 <caption/A scheduling compiler with resource constraints./
 <chunk class=anonymous><title/Compile2/
 fun {Compile Spec}
-   TaskSpec   = Spec.taskSpec
+   TaskSpec   = Spec.tasks
    Dur        = {GetDur TaskSpec}
    TasksOnRes = {GetTasksOnResource TaskSpec}
 in
@@ -374,8 +370,8 @@ A possible solution is as follows.
 <<<
 proc {CapacityConstraints TasksOnRes Start Dur}
    {Record.forAll TasksOnRes
-    proc {$ Tasks}
-       {ForAllTail Tasks
+    proc {$ Ts}
+       {ForAllTail Ts
         proc {$ T1|Tr}
            {ForAll Tr
             proc {$ T2}
@@ -491,7 +487,7 @@ end}
 <caption/A scheduling compiler with task ordering./
 <chunk class=anonymous><title/Compile3/
 fun {Compile Spec}
-   TaskSpec   = Spec.taskSpec
+   TaskSpec   = Spec.tasks
    Dur        = {GetDur TaskSpec}
    TasksOnRes = {GetTasksOnResource TaskSpec}
 in
@@ -635,7 +631,7 @@ This procedure will be applied by the scheduling script.
 <figure id=fig.bridgeSpec>
 <caption/Specification for bridge construction./
 <chunk class=anonymous><title/Bridge specification/
-bridge(taskSpec:
+bridge(tasks:
           <chunk.ref/Bridge task specification/
        constraints:
           proc {$ Start Dur}
@@ -722,8 +718,8 @@ where the sum of durations is maximal.
 <caption/A scheduling compiler for the bridge problem./
 <chunk class=anonymous><title/CompileBridge/
 fun {Compile Spec Capacity Serializer}
-   TaskSpec    = Spec.taskSpec
-   Constraints = Spec.constraints
+   TaskSpec    = Spec.tasks
+   Constraints = <chunk.ref/Extract additional constraints/
    Dur         = {GetDur TaskSpec}
    TasksOnRes  = {GetTasksOnResource TaskSpec}
 in
@@ -741,8 +737,23 @@ end
 
 <p>
 <ptr to=fig.bridgeCompiler> shows the scheduling
-we will employ for the remaining problems. Note that we have
-additionally parameterized the scheduling compiler with procedures
+we will employ for the remaining problems. The variable
+<<Constraints>> refers to a binary procedure possibly containing
+additional constraints for a scheduling problem, it is computed as
+follows:
+<chunk><title/Extract additional constraints/
+if {HasFeature Spec constraints} then
+   Spec.constraints
+else
+   proc {$ _ _}
+      skip
+   end
+end
+</chunk>
+
+<p>
+Note that we have
+parameterized the scheduling compiler with procedures
 to post the capacity constraints and the serializer. This makes it
 straightforward to solve the bridge problem with stronger techniques.
 
@@ -1475,6 +1486,7 @@ declare
 declare
 ABZ6 =
 <chunk.ref/ABZ6 Specification/
+declare
 <chunk.ref/OptABZ6/
 
 %% Finding and proving optimality
@@ -1495,6 +1507,7 @@ ABZ6 =
 declare
 MT10 =
 <chunk.ref/MT10 Specification/
+declare
 <chunk.ref/Definition of OptMT10/
 
 %% Proving optimality

@@ -135,7 +135,8 @@ large ?{N}.
 <chunk class=anonymous><title/Queens/
 fun {Queens N}
    proc {$ Row}
-      L1N LM1N
+      L1N ={MakeTuple c N}
+      LM1N={MakeTuple c N}
    in
       {FD.tuple queens N 1#N Row}
       {For 1 N 1 proc {$ I}

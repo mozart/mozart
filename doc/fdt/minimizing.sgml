@@ -372,6 +372,7 @@ declare
 %% Example: Conference
 %%
 
+declare
 <chunk.ref/Conference/
 
 {ExploreOne {Conference Data}}
