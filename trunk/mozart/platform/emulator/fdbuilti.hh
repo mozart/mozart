@@ -175,6 +175,7 @@ OZ_C_proc_proto(BIfdAtMost);
 
 // fdcore.cc
 OZ_C_proc_proto(BIisFdVar);
+OZ_C_proc_proto(BIfdIs);
 OZ_C_proc_proto(BIgetFDLimits);
 OZ_C_proc_proto(BIfdMin);
 OZ_C_proc_proto(BIfdMax);
