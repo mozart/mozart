@@ -759,7 +759,7 @@ define
          Self     = if HasSelf then "@object " else "" end
       in
          case Name
-         of "gtkwidgetGet" then
+         of "gtkWidgetGet" then
             {ForAll WidgetGetCode
              proc {$ Line}
                 TextFile, putS(Line)

@@ -21,7 +21,6 @@
 
 functor $
 import
-   Application(exit)
    System(show)
    GTK at 'x-oz://system/gtk/GTK.ozf'
 define
@@ -29,17 +28,8 @@ define
    class MyToplevel from GTK.window
       meth new
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-         GTK.window, signalConnect('delete-event' deleteEvent _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Hello GTK")
-      end
-      meth deleteEvent(Args)
-         %% Caution: At this time, the underlying GTK object
-         %% Caution: has been destroyed already
-         %% Caution: Destruction also includes all attached child objects.
-         %% Caution: This event is solely intended to do OZ side cleanups.
-         {System.show 'delete Event occured'}
-         {Application.exit 0}
       end
    end
 

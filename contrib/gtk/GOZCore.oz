@@ -64,6 +64,10 @@ define
       end
    end
 
+   %% Cleanup related method names
+   CanCleanup     = {NewName}
+   DisableCleanup = {NewName}
+
    %% Create Object from incoming Pointer (Difficult)
    local
       Stream ObjectTable
@@ -85,13 +89,21 @@ define
       thread
          proc {Finalize Stream}
             case Stream
-            of (_#Object)|Sr then
+            of (Key#Object)|Sr then
                %% Decreases Reference count by one if applicable
                %% and removes all registered Handlers
 \ifdef DEBUG
                {System.show 'finalizing '#{String.toAtom {Object toString($)}}}
 \endif
-               {Object unref}
+               %% Object's cleanup handler will be invoked once.
+               %% It may prevent the object from beeing freed.
+               %% In this case, register again for finalisation.
+               if {Object CanCleanup($)} andthen {Object cleanup($)}
+               then
+                  {Object DisableCleanup}
+                  {WeakDictionary.put ObjectTable Key Object}
+               else {Object unref}
+               end
                {Finalize Sr}
             [] nil then skip
             end
@@ -304,6 +316,7 @@ define
       attr
          object  : unit %% Native Object Ptr
          signals : unit %% Cell containing Connected Signals List
+         cleanup : true %% Indicates whether cleanup is possible or not
       meth wrapperNew
          Signals = {Cell.new nil}
       in
@@ -371,6 +384,15 @@ define
       end
       meth getType($)
          unit
+      end
+      meth !CanCleanup($)
+         @cleanup
+      end
+      meth !DisableCleanup
+         cleanup <- false
+      end
+      meth cleanup($)
+         false
       end
    end
 
