@@ -4,8 +4,8 @@ SRCDIR		= @srcdir@
 WHAT = opi
 MAIN = opi.sgml
 SGMLSRCS = \
-	oz.el opi.bib menu.gif
-HTMLEXTRAFILES =
+	oz.el opi.bib
+HTMLEXTRAFILES = menu.gif
 OZDOCHTMLFLAGS = --autoindex
 
 include $(SRCDIR)/../Makefile.common
