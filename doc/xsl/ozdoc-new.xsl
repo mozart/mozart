@@ -177,7 +177,7 @@
   <txt:usemap>\documentclass{ozdoc}
 </txt:usemap>
   <if test=".//INDEX">
-    <txt:usemap>\DOINDEX
+    <txt:usemap>\mozartDOINDEX
 </txt:usemap>
   </if>
   <apply-templates select="FRONT"/>
@@ -212,7 +212,7 @@
 </txt:usemap>
   </if>
   <if test="ABSTRACT">
-    <txt:usemap>\mozAbstract{</txt:usemap>
+    <txt:usemap>\mozartAbstract{</txt:usemap>
     <apply-templates select="ABSTRACT" mode="abstract"/>
     <txt:usemap>}
 </txt:usemap>
@@ -246,13 +246,13 @@
 
 <template match="*" priority="-1.0">
   <if test="msg:say('UNMATCHED ELEMENT: ') and msg:saynl((local-part(.)))"/>
-  <txt:usemap>\UNMATCHED{<value-of select="local-part(.)"/>}</txt:usemap>
+  <txt:usemap>\mozartUNMATCHED{<value-of select="local-part(.)"/>}</txt:usemap>
 </template>
 
 <!-- processing instructions -->
 
 <template match="processing-instruction()">
-  <txt:usemap>\usepi{<value-of select="local-part(.)"/>}</txt:usemap>
+  <txt:usemap>\mozartPI{<value-of select="local-part(.)"/>}</txt:usemap>
 </template>
 
 <!-- format author. for the time being, we don't actually
@@ -261,7 +261,7 @@
      the period by a space -->
 
 <template match="AUTHOR.EXTERN">
-  <if test="not(position()=1)"><txt:usemap>\EOLN
+  <if test="not(position()=1)"><txt:usemap>\mozartEOLN
 </txt:usemap></if>
   <variable name="key"><value-of select="@KEY"/></variable>
   <variable name="author"
@@ -283,7 +283,7 @@
 </template>
 
 <template match="AUTHOR">
-  <if test="not(position()=1)"><txt:usemap>\EOLN
+  <if test="not(position()=1)"><txt:usemap>\mozartEOLN
 </txt:usemap></if>
   <apply-templates/>
 </template>
@@ -296,7 +296,7 @@
 <template match="PART|CHAPTER|APPENDIX|SECTION|SUBSECTION|SUBSUBSECTION|PARA">
   <txt:usemap><text>
 
-</text>\<value-of select="local-part(.)"/></txt:usemap>
+</text>\mozart<value-of select="local-part(.)"/></txt:usemap>
   <if test="@CLASS='UNNUMBERED'">
     <txt:usemap>*</txt:usemap>
   </if>
@@ -398,22 +398,22 @@
 <!-- 4. itemized description -->
 
 <template match="LIST[not(@ENUM) and ENTRY]">
-  <txt:usemap>\begin{DESCRIPTION}
+  <txt:usemap>\begin{mozartDESCRIPTION}
 </txt:usemap>
   <apply-templates mode="list.desc"/>
-  <txt:usemap>\end{DESCRIPTION}
+  <txt:usemap>\end{mozartDESCRIPTION}
 </txt:usemap>
 </template>
 
 <template mode="list.desc" match="ENTRY">
   <choose>
     <when test="@CLASS and meta:entryCategoryExists(string(@CLASS))">
-      <txt:usemap>\ENTRYWITHCATEGORY{</txt:usemap>
+      <txt:usemap>\mozartENTRYWITHCATEGORY{</txt:usemap>
       <value-of select="meta:entryCategoryGet(string(@CLASS))"/>
       <txt:usemap>}{</txt:usemap>
     </when>
     <otherwise>
-      <txt:usemap>\ENTRY{</txt:usemap>
+      <txt:usemap>\mozartENTRY{</txt:usemap>
     </otherwise>
   </choose>
   <apply-templates/>
@@ -424,33 +424,33 @@
     <txt:usemap>}</txt:usemap>
   </if>
   <if test=".//CODE|.//MENU">
-    <txt:usemap>\ENTRYHASCODE</txt:usemap>
+    <txt:usemap>\mozartENTRYHASCODE</txt:usemap>
   </if>
   <txt:usemap><text>
 </text></txt:usemap>
 </template>
 
 <template mode="list.desc" match="ITEM">
-  <txt:usemap>\ITEM </txt:usemap>
+  <txt:usemap>\mozartITEM </txt:usemap>
   <apply-templates/>
 </template>
 
 <template mode="list.desc" match="SYNOPSIS">
-  <txt:usemap>\begin{SYNOPSIS}
+  <txt:usemap>\begin{mozartSYNOPSIS}
 </txt:usemap>
   <apply-templates/>
-  <txt:usemap>\end{SYNOPSIS}
+  <txt:usemap>\end{mozartSYNOPSIS}
 </txt:usemap>
 </template>
 
 <!-- menu/mouse -->
 
 <template match="MENU">
-  <txt:usemap>\MENU{</txt:usemap>
+  <txt:usemap>\mozartMENU{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}{</txt:usemap>
   <if test="@KEY">
-    <txt:usemap>\KEY{</txt:usemap>
+    <txt:usemap>\mozartKEY{</txt:usemap>
     <txt:usemap name="code">
       <value-of select="@KEY"/>
     </txt:usemap>
@@ -458,7 +458,7 @@
   </if>
   <txt:usemap>}{</txt:usemap>
   <if test="@MOUSE">
-    <txt:usemap>\MOUSE{<value-of select="@MOUSE"/>}</txt:usemap>
+    <txt:usemap>\mozartMOUSE{<value-of select="@MOUSE"/>}</txt:usemap>
   </if>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -472,7 +472,7 @@
 </template>
 
 <template match="CODE[@DISPLAY='INLINE']">
-  <txt:usemap>\CODEINLINE{</txt:usemap>
+  <txt:usemap>\mozartCODEINLINE{</txt:usemap>
   <txt:usemap name="code">
     <apply-templates/>
   </txt:usemap>
@@ -480,15 +480,15 @@
 </template>
 
 <template match="CODE.EXTERN[@DISPLAY='DISPLAY']">
-  <txt:usemap>\CODEEXTERN{<value-of select="@TO"/>}</txt:usemap>
+  <txt:usemap>\mozartCODEEXTERN{<value-of select="@TO"/>}</txt:usemap>
 </template>
 
 <template match="CODE[@DISPLAY='DISPLAY']">
-  <txt:usemap>\begin{CODEDISPLAY}</txt:usemap>
+  <txt:usemap>\begin{mozartCODEDISPLAY}</txt:usemap>
   <txt:usemap name="code">
     <apply-templates/>
   </txt:usemap>
-  <txt:usemap>\end{CODEDISPLAY}
+  <txt:usemap>\end{mozartCODEDISPLAY}
 </txt:usemap>
 </template>
 
@@ -497,7 +497,7 @@
 </template>
 
 <template match="HILITE.FACE">
-  <txt:usemap>\FACE<value-of select="@NAME"/>{</txt:usemap>
+  <txt:usemap>\mozartFACE<value-of select="@NAME"/>{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -516,9 +516,9 @@
 <template match="VAR">
   <variable name="type"><value-of select="@TYPE"/></variable>
   <if test="$type='PROG' and @MODE">
-    <txt:usemap>\MODE{<value-of select="@MODE"/>}</txt:usemap>
+    <txt:usemap>\mozartMODE{<value-of select="@MODE"/>}</txt:usemap>
   </if>
-  <txt:usemap>\<value-of select="$type"/>VAR{</txt:usemap>
+  <txt:usemap>\mozart<value-of select="$type"/>VAR{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -542,7 +542,7 @@
 
 <template match="FILE | SAMP | KBD | KEY">
   <call-template name="maybe.display.begin"/>
-  <txt:usemap>\<value-of select="local-part(.)"/>{</txt:usemap>
+  <txt:usemap>\mozart<value-of select="local-part(.)"/>{</txt:usemap>
   <txt:usemap name="code">
     <apply-templates/>
   </txt:usemap>
@@ -553,7 +553,7 @@
 
 <template match="EM">
   <call-template name="maybe.display.begin"/>
-  <txt:usemap>\<value-of select="local-part(.)"/>{</txt:usemap>
+  <txt:usemap>\mozart<value-of select="local-part(.)"/>{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
   <call-template name="maybe.display.end"/>
@@ -588,7 +588,7 @@
       <choose>
         <when test="@KEY">
           <variable name="key"><value-of select="translate(string(@KEY),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/></variable>
-          <txt:usemap>\OZDOCREF{</txt:usemap>
+          <txt:usemap>\mozartOZDOCREF{</txt:usemap>
           <value-of select="$to"/>
           <txt:usemap>}{</txt:usemap>
           <value-of select="$key"/>
@@ -597,7 +597,7 @@
           <txt:usemap>}</txt:usemap>
         </when>
         <otherwise>
-          <txt:usemap>\OZDOCREFTOP{</txt:usemap>
+          <txt:usemap>\mozartOZDOCREFTOP{</txt:usemap>
           <value-of select="$to"/>
           <txt:usemap>}{</txt:usemap>
           <apply-templates
@@ -608,7 +608,7 @@
       </choose>
     </when>
     <otherwise>
-      <txt:usemap>\DEFAULTREFEXT{</txt:usemap>
+      <txt:usemap>\mozartDEFAULTREFEXT{</txt:usemap>
       <value-of select="$to"/>
       <txt:usemap>}</txt:usemap>
     </otherwise>
@@ -678,7 +678,7 @@
 </template>
 
 <template mode="ptr.ref" match="KEY">
-  <txt:usemap>\KEY{</txt:usemap>
+  <txt:usemap>\mozartKEY{</txt:usemap>
   <txt:usemap name="code">
     <value-of select="."/>
   </txt:usemap>
@@ -697,7 +697,7 @@
 </template>
 
 <template name="ref.to.id">
-  <txt:usemap>~\REF{</txt:usemap>
+  <txt:usemap>~\mozartREF{</txt:usemap>
   <value-of select="@ID"/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -713,7 +713,7 @@
 </template>
 
 <template name="pageref.to.id">
-  <txt:usemap> (page~\PAGEREF{</txt:usemap>
+  <txt:usemap> (page~\mozartPAGEREF{</txt:usemap>
   <value-of select="@ID"/>
   <txt:usemap>})</txt:usemap>
 </template>
@@ -767,7 +767,7 @@
   <if test="@DISPLAY='DISPLAY'">
     <choose>
       <when test="@ID and meta:fullwidthGet(string(@ID))">
-        <txt:usemap>\begin{FULLWIDTHLEFT}</txt:usemap>
+        <txt:usemap>\begin{mozartFULLWIDTHLEFT}</txt:usemap>
       </when>
       <otherwise>
         <txt:usemap>\begin{center}</txt:usemap>
@@ -780,7 +780,7 @@
   <if test="@DISPLAY='DISPLAY'">
     <choose>
       <when test="@ID and meta:fullwidthGet(string(@ID))">
-        <txt:usemap>\end{FULLWIDTHLEFT}</txt:usemap>
+        <txt:usemap>\end{mozartFULLWIDTHLEFT}</txt:usemap>
       </when>
       <otherwise>
         <txt:usemap>\end{center}</txt:usemap>
@@ -791,20 +791,20 @@
 
 <template name="maybe.really.display.begin">
   <if test="@DISPLAY='DISPLAY'">
-    <txt:usemap>\begin{DISPLAY}</txt:usemap>
+    <txt:usemap>\begin{mozartDISPLAY}</txt:usemap>
   </if>
 </template>
 
 <template name="maybe.really.display.end">
   <if test="@DISPLAY='DISPLAY'">
-    <txt:usemap>\end{DISPLAY}</txt:usemap>
+    <txt:usemap>\end{mozartDISPLAY}</txt:usemap>
   </if>
 </template>
 
 <template match="TR">
   <apply-templates/>
   <if test="not(position()=last())">
-    <txt:usemap>\EOLN
+    <txt:usemap>\mozartEOLN
 </txt:usemap>
   </if>
 </template>
@@ -878,20 +878,20 @@
 
 <template match="FIGURE">
   <if test="msg:saynl('FOUND NON LEIF EXAMPLE')"/>
-  <txt:usemap>\begin{FIGURE}</txt:usemap>
+  <txt:usemap>\begin{mozartFIGURE}</txt:usemap>
   <apply-templates/>
   <if test="@ID and not(CAPTION)">
-    <txt:usemap>\CAPTIONID{</txt:usemap>
+    <txt:usemap>\mozartCAPTIONID{</txt:usemap>
     <value-of select="@ID"/>
     <txt:usemap>}</txt:usemap>
   </if>
-  <txt:usemap>\end{FIGURE}</txt:usemap>
+  <txt:usemap>\end{mozartFIGURE}</txt:usemap>
 </template>
 
 <template match="FIGURE/TITLE">
-  <txt:usemap>\begin{FIGTITLE}</txt:usemap>
+  <txt:usemap>\begin{mozartFIGTITLE}</txt:usemap>
   <apply-templates/>
-  <txt:usemap>\end{FIGTITLE}</txt:usemap>
+  <txt:usemap>\end{mozartFIGTITLE}</txt:usemap>
 </template>
 
 <template match="FIGURE/CAPTION">
@@ -923,14 +923,14 @@
             msg:say(string(@ID)) and
             msg:say(' CAPTION: ') and
             msg:saynl(string(CAPTION))"/>
-  <txt:usemap>\begin{FIGURENODISPLAY}</txt:usemap>
+  <txt:usemap>\begin{mozartFIGURENODISPLAY}</txt:usemap>
   <apply-templates/>
   <if test="@ID and not(CAPTION)">
-    <txt:usemap>\CAPTIONID{</txt:usemap>
+    <txt:usemap>\mozartCAPTIONID{</txt:usemap>
     <value-of select="@ID"/>
     <txt:usemap>}</txt:usemap>
   </if>
-  <txt:usemap>\end{FIGURENODISPLAY}</txt:usemap>
+  <txt:usemap>\end{mozartFIGURENODISPLAY}</txt:usemap>
 </template>
 
 <!-- comic pictures -->
@@ -941,7 +941,7 @@
 </template>
 
 <template match="PICTURE.EXTERN[@TYPE='PS']" mode="comic">
-  <txt:usemap>\mozComic{</txt:usemap>
+  <txt:usemap>\mozartComic{</txt:usemap>
   <value-of select="@TO"/>
   <txt:usemap>}
 </txt:usemap>
@@ -975,7 +975,7 @@
 </template>
 
 <template match="PICTURE.EXTERN[@TYPE='PS']" mode="pic.choice">
-  <txt:usemap>\PICEXT</txt:usemap>
+  <txt:usemap>\mozartPICEXT</txt:usemap>
   <if test="@ID and meta:pictureWidthExists(string(@ID))">
     <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
   </if>
@@ -986,7 +986,7 @@
 
 <template match="PICTURE.EXTERN[@TYPE='GIF']" mode="pic.choice">
   <!-- for foo.gif, we will create foo.gif.ps -->
-  <txt:usemap>\PICEXTGIF</txt:usemap>
+  <txt:usemap>\mozartPICEXTGIF</txt:usemap>
   <if test="@ID and meta:pictureWidthExists(string(@ID))">
     <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
   </if>
@@ -996,7 +996,7 @@
 </template>
 
 <template match="PICTURE.EXTERN[@DISPLAY='INLINE']|TD/P.SILENT/PICTURE.EXTERN" priority="2.0">
-  <txt:usemap>\PICEXTINLINE</txt:usemap>
+  <txt:usemap>\mozartPICEXTINLINE</txt:usemap>
   <if test="@ID and meta:pictureWidthExists(string(@ID))">
     <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
   </if>
@@ -1012,7 +1012,7 @@
 <template match="PICTURE.EXTERN[@DISPLAY='DISPLAY']">
   <variable name="type"><value-of select="@TYPE"/></variable>
   <variable name="to"><value-of select="@TO"/></variable>
-  <txt:usemap>\begin{PICEXTDISPLAY}</txt:usemap>
+  <txt:usemap>\begin{mozartPICEXTDISPLAY}</txt:usemap>
   <choose>
     <when test="$type='LATEX'">
       <txt:usemap>\input{</txt:usemap>
@@ -1020,7 +1020,7 @@
       <txt:usemap>}</txt:usemap>
     </when>
     <when test="$type='GIF' or $type='PS'">
-      <txt:usemap>\PICEXTFULL</txt:usemap>
+      <txt:usemap>\mozartPICEXTFULL</txt:usemap>
       <if test="@ID and meta:pictureWidthExists(string(@ID))">
         <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
       </if>
@@ -1035,7 +1035,7 @@
       <text>!!!</text>
     </otherwise>
   </choose>
-  <txt:usemap>\end{PICEXTDISPLAY}</txt:usemap>
+  <txt:usemap>\end{mozartPICEXTDISPLAY}</txt:usemap>
 </template>
 
 <!-- grammar thingies -->
@@ -1051,7 +1051,7 @@
 </template>
 
 <template match="GRAMMAR/GRAMMAR.RULE" priority="2.0">
-  <if test="position()>1"><txt:usemap>\EOLN
+  <if test="position()>1"><txt:usemap>\mozartEOLN
 </txt:usemap></if>
   <apply-templates/>
 </template>
@@ -1060,10 +1060,10 @@
   <txt:usemap>&amp;</txt:usemap>
   <txt:usemap>
     <choose>
-      <when test="not(@TYPE) and position()=2 or @TYPE='DEF'">\GRAMDEF</when>
-      <when test="@TYPE='ADD'">\GRAMADD</when>
-      <when test="not(@TYPE) and position()>2 or @TYPE='OR'">\GRAMOR</when>
-      <when test="@TYPE='SPACE'">\GRAMSPACE</when>
+      <when test="not(@TYPE) and position()=2 or @TYPE='DEF'">\mozartGRAMDEF</when>
+      <when test="@TYPE='ADD'">\mozartGRAMADD</when>
+      <when test="not(@TYPE) and position()>2 or @TYPE='OR'">\mozartGRAMOR</when>
+      <when test="@TYPE='SPACE'">\mozartGRAMSPACE</when>
     </choose>
   </txt:usemap>
   <txt:usemap>&amp;</txt:usemap>
@@ -1071,12 +1071,12 @@
   <if test="not(child::GRAMMAR.NOTE)">
     <txt:usemap>&amp;</txt:usemap>
   </if>
-  <if test="not(position()=last())"><txt:usemap>\EOLN
+  <if test="not(position()=last())"><txt:usemap>\mozartEOLN
 </txt:usemap></if>
 </template>
 
 <template match="GRAMMAR.NOTE">
-  <txt:usemap>&amp;\GRAMMARNOTE{</txt:usemap>
+  <txt:usemap>&amp;\mozartGRAMMARNOTE{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -1113,7 +1113,7 @@
       <otherwise>CHUNK</otherwise>
     </choose>
   </variable>
-  <txt:usemap>\begin{<value-of select="$env"/>}{</txt:usemap>
+  <txt:usemap>\begin{mozart<value-of select="$env"/>}{</txt:usemap>
   <apply-templates select="TITLE"/>
   <txt:usemap>}{</txt:usemap>
   <value-of select="@CHUNK.ID"/>
@@ -1124,11 +1124,11 @@
   <txt:usemap name="code">
     <apply-templates select="CHUNK.SILENT"/>
   </txt:usemap>
-  <txt:usemap>\end{<value-of select="$env"/>}</txt:usemap>
+  <txt:usemap>\end{mozart<value-of select="$env"/>}</txt:usemap>
 </template>
 
 <template match="CHUNK.REF">
-  <txt:usemap>\CHUNKREF{</txt:usemap>
+  <txt:usemap>\mozartCHUNKREF{</txt:usemap>
   <txt:usemap name="text">
     <apply-templates/>
   </txt:usemap>
@@ -1169,7 +1169,7 @@
 </template>
 
 <template match="NOTE.GUI">
-  <txt:usemap>\NOTEGUI{</txt:usemap>
+  <txt:usemap>\mozartNOTEGUI{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}{</txt:usemap>
   <choose>
@@ -1193,11 +1193,11 @@
 <!-- exercises -->
 
 <template match="EXERCISE[@ID]">
-  <txt:usemap>\begin{EXERCISE}{</txt:usemap>
+  <txt:usemap>\begin{mozartEXERCISE}{</txt:usemap>
   <value-of select="@ID"/>
   <txt:usemap>}</txt:usemap>
   <apply-templates/>
-  <txt:usemap>\end{EXERCISE}
+  <txt:usemap>\end{mozartEXERCISE}
 </txt:usemap>
 </template>
 
@@ -1208,18 +1208,18 @@
 <template name="answers.to.exercises">
   <if test="//ANSWER">
     <txt:usemap><text>
-\APPENDIX{Answers To Exercises}
+\mozartAPPENDIX{Answers To Exercises}
 </text></txt:usemap>
     <apply-templates select="//ANSWER" mode="answer"/>
   </if>
 </template>
 
 <template match="ANSWER" mode="answer">
-  <txt:usemap>\begin{ANSWER}{</txt:usemap>
+  <txt:usemap>\begin{mozartANSWER}{</txt:usemap>
     <value-of select="@TO"/>
     <txt:usemap>}</txt:usemap>
     <apply-templates/>
-    <txt:usemap>\end{ANSWER}
+    <txt:usemap>\end{mozartANSWER}
 </txt:usemap>
 </template>
 
@@ -1238,9 +1238,9 @@
 <!-- rewrite elements -->
 
 <template match="REWRITE">
-  <txt:usemap>\begin{REWRITE}</txt:usemap>
+  <txt:usemap>\begin{mozartREWRITE}</txt:usemap>
   <for-each select="VAR">
-    <txt:usemap>\REWRITEVAR{</txt:usemap>
+    <txt:usemap>\mozartREWRITEVAR{</txt:usemap>
     <apply-templates select="."/>
     <txt:usemap>}
 </txt:usemap>
@@ -1248,23 +1248,23 @@
   <apply-templates select="REWRITE.FROM[1]"/>
   <apply-templates select="REWRITE.TO[1]"/>
   <apply-templates select="REWRITE.CONDITION[1]"/>
-  <txt:usemap>\end{REWRITE}</txt:usemap>
+  <txt:usemap>\end{mozartREWRITE}</txt:usemap>
 </template>
 
 <template match="REWRITE.FROM">
-  <txt:usemap>\REWRITEFROM{</txt:usemap>
+  <txt:usemap>\mozartREWRITEFROM{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="REWRITE.TO">
-  <txt:usemap>\REWRITETO{</txt:usemap>
+  <txt:usemap>\mozartREWRITETO{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="REWRITE.CONDITION">
-  <txt:usemap>\REWRITECONDITION{</txt:usemap>
+  <txt:usemap>\mozartREWRITECONDITION{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -1275,20 +1275,20 @@
                  NAME[@CLASS and meta:equal(string(@CLASS),'TAG')]|
                  NAME[@TYPE and meta:equal(string(@TYPE),'TAG')]"
           priority="2.0">
-  <txt:usemap>\DTDTAG{</txt:usemap>
+  <txt:usemap>\mozartDTDTAG{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="ATTRIB">
-  <txt:usemap>\DTDATTRIB{</txt:usemap>
+  <txt:usemap>\mozartDTDATTRIB{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="NAME[@TYPE and meta:equal(string(@TYPE),'PI')]"
           priority="2.0">
-  <txt:usemap>\DTDPI{</txt:usemap>
+  <txt:usemap>\mozartDTDPI{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
 </template>
@@ -1297,7 +1297,7 @@
 
 <template match="NAME[@TYPE and meta:equal(string(@TYPE),'BUFFER')]"
           priority="2.0">
-  <txt:usemap>\OPINAMEBUFFER{</txt:usemap>
+  <txt:usemap>\mozartOPINAMEBUFFER{</txt:usemap>
   <txt:usemap name="code">
     <apply-templates/>
   </txt:usemap>
@@ -1311,7 +1311,7 @@
 </template>
 
 <template name="process.as.index">
-  <txt:usemap>\INDEX{</txt:usemap>
+  <txt:usemap>\mozartINDEX{</txt:usemap>
   <txt:alias from="text" to="index.text">
     <txt:alias from="code" to="index.code">
       <txt:usemap name="text">
