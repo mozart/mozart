@@ -35,7 +35,15 @@ define
 	    contact      <- {Msg condGet('contact' nil $)}
 	    keywords     <- {Append {Msg getSplit('keyword' $)}
 			     {Msg getSplit('keywords' $)}}
-	    categories   <- {self getCategories($)}
+	    local Table={NewDictionary} in
+	       for C in {Msg condGet('category' nil $)} do
+		  Table.{VirtualString.toAtom C} := unit
+	       end
+	       for A in {self getCategories($)} do
+		  Table.A := unit
+	       end
+	       categories <- {Sort {Dictionary.keys Table} Value.'<'}
+	    end
 	    url_doc_extra<- {Msg condGet('url-doc-extra' nil $)}
 	    title        <- {Msg condGet1('title' unit $)}
 	    version      <- {Msg condGet1('version' unit $)}
