@@ -461,7 +461,7 @@ public:
     return item.propagator->propagate();
   }
   OZ_Propagator * getPropagator(void) {
-    //    Assert(isPropagator()); TMUELLER
+    Assert(isPropagator());
     return item.propagator;
   }
 

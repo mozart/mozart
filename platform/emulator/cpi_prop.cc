@@ -247,12 +247,6 @@ OZ_NonMonotonic::order_t OZ_NonMonotonic::_next_order = 1;
 
 OZ_NonMonotonic::OZ_NonMonotonic(void) : _order(_next_order++)
 {
-
-#ifdef DEBUG_NONMONOTONIC
-  cout << "Constructing nonmonotonic prop: order=" << _order
-       << endl << flush;
-#endif
-
   Assert(_next_order);
 }
 
