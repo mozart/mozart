@@ -54,8 +54,10 @@ mozart.el: mozart.el.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
+mozart.elc: oz.elc
+
 oz.elc mozart.elc oz-extra.elc: %.elc : %.el
-	$(EMACS) -q -batch -f batch-byte-compile $<
+	$(EMACS) -L . -q -batch -f batch-byte-compile $<
 
 install: all $(ELISPDIR) $(LIBFILES)
 
