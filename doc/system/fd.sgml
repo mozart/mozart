@@ -1419,15 +1419,19 @@ condis
 [] 
    D1 + I1 =&lt;: D2   
    D3 =: 0
-[] D2 + I2 =&lt;: D1
+[] 
+   D2 + I2 =&lt;: D1
    D3 =: 0
 end
 >>>
 </list>
 
-Informally, in case <<B>> is 0 the propagator behaves like
-<<FD.disjoint>>, i.e., in context of task scheduling two tasks must
-not overlap. Otherwise, if <<B>> is 1, the two tasks must overlap.
+Note that the disjunction is <ref
+to="section.fd.condis">constructive</ref>. Informally, in case <<D3>> is 0 the
+propagator behaves like <<FD.disjoint>>, i.e., in context of task
+scheduling two tasks must not overlap. Otherwise, if <<D3>> is 1, the
+two tasks must overlap. This propagator is used in applications which
+shall be able to deal with overlapping tasks.
 
 </section>
 
