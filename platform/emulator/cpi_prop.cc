@@ -115,6 +115,8 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       }
 
       not_first = TRUE;
+    default:
+      break;
     }
   }
   if (!OZ_isNil(args))
