@@ -99,6 +99,8 @@ local
 	       SlashList <- Sr
 	       {Spinner W X SpinnerDone}
 	    else
+	       {self.Result tk(conf fg:DefaultForeground)}
+	       {self.Result tk(conf text:'')}
 	       SpinnerDone = unit
 	    end
 	 end
@@ -149,7 +151,12 @@ local
 		  else
 		     R = {@CurComp enqueue(getEnv($))}.'`result`'
 		  in
-		     {self.Result tk(conf text:{V2VS R})}
+		     case {IsFree R} andthen
+			{System.printName R} == '`result`' then
+			{self.Result tk(conf text:'_')}
+		     else
+			{self.Result tk(conf text:{V2VS R})}
+		     end
 		  end
 		  EvalThread <- unit
 	       catch E=kernel(terminate) then
@@ -191,9 +198,6 @@ local
 		  {Thread.terminate @EvalThread}
 		  EvalThread <- unit
 	       end
-	       {Delay 120}
-	       {self.Result tk(conf fg:DefaultForeground)}
-	       {self.Result tk(conf text:'')}
 	    end
 	 end
 
@@ -209,9 +213,7 @@ local
 					 'Exec'  # Exec
 					 'Reset' # Kill
 					 'Done'  # Close]
-			       pack:    false
-			       default: 1 /* <Return> calls 'Eval' */)
-
+			       pack:    false)
 	 Frame = {New TkTools.textframe tkInit(parent: self
 					       text: 'Eval Expression' #
 						     ' / Exec Statement')}
@@ -243,6 +245,9 @@ local
 	 %% resetting (kill eval/exec thread)
 	 {ExprEntry tkBind(event: '<Control-r>'
 			   action: Kill)}
+	 %% eval expression
+	 {ExprEntry tkBind(event: '<Return>'
+			   action: Eval)}
 	 %% exec statement
 	 {ExprEntry tkBind(event: '<Meta-Return>'
 			   action: Exec)}
