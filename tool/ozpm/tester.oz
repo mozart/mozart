@@ -1,6 +1,6 @@
 functor
 import
-   LS(fileTree)
+   FileUtils(fileTree)
    Application(getArgs exit)
    System(showInfo)
 define
