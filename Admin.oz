@@ -10,7 +10,7 @@ import
    Category(updateCatPages updatePkgListPage)
    MogulID(normalizeID:NormalizeID)
    HTML_ByAuthor(updatePage)
-   Pickle(save)
+   Pickle(saveCompressed)
    Regex(make compile search) at 'x-oz://contrib/regex'
 export
    Manager Trace Indent Dedent RelativeTo Admin
