@@ -391,8 +391,14 @@ exit:
 
   while (!rebindTrail.isEmpty ()) {
     PopRebindTrail(value,refPtr);
-    doBind(refPtr,value);
+    // kost@ : no need to restore temporary bindings if terms were
+    //         successfully unified. Moreover, they should not be
+    //         restored: that compactifies store and speeds up
+    //         subsequent unifications!
+    //         The credit for this optimization goes to Per (Brand).
+    if (result != PROCEED)
+      doBind(refPtr, value);
   }
 
-  return result;
+  return (result);
 }
