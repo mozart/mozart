@@ -121,7 +121,10 @@ ThreadTreeOffset       = 4
 StackTextWidth         = 0
 EnvTextWidth           = 24
 EnvVarWidth            = fun {$}
-			    if {Cget envPrintTypes} then 14 else 6 end
+			    if {Cget envPrintTypes} then
+			       if Platform == WindowsPlatform
+			       then 12 else 14 end
+			    else 6 end
 			 end
 
 ScrollbarWidth         = 10
@@ -131,27 +134,25 @@ ScrollbarWidth         = 10
 %% Fonts
 %%
 
-SmallFont # SmallBoldFont #
-DefaultFont # BoldFont =
+DefaultFont # BoldFont # ButtonFont # TitleFont # HelpTitleFont # HelpFont =
 if Platform == WindowsPlatform then
-   {New Tk.font tkInit(family:courier size:12)} #
-   {New Tk.font tkInit(family:courier weight:bold size:12)} #
-   SmallFont #
-   SmallBoldFont
+   {New Tk.font tkInit(family:courier size:10)} #
+   {New Tk.font tkInit(family:courier weight:bold size:10)} #
+   {New Tk.font tkInit(family:helvetica size:8)} #
+   {New Tk.font tkInit(family:helvetica size:8 weight:bold)} #
+   {New Tk.font tkInit(family:helvetica size:14 weight:bold)} #
+   {New Tk.font tkInit(family:helvetica size:10)}
 else
-   '6x13' # '6x13bold' # '7x13' # '7x13bold'
+   '7x13' # '7x13bold' #
+   {New Tk.font tkInit(family:helvetica size:10)} #
+   {New Tk.font tkInit(family:helvetica size:10 weight:bold)} #
+   {New Tk.font tkInit(family:helvetica size:18 weight:bold)} #
+   {New Tk.font tkInit(family:helvetica size:12)}
 end
 
 ThreadTreeFont         = DefaultFont
 ThreadTreeBoldFont     = BoldFont
-ButtonFont             = {New Tk.font tkInit(family:helvetica size:10)}
-TitleFont              = {New Tk.font tkInit(family:helvetica size:10
-					     weight:bold)}
 StatusFont             = TitleFont
-HelpTitleFont          = {New Tk.font tkInit(family:helvetica size:18
-					     weight:bold)}
-HelpFont               = {New Tk.font tkInit(family:helvetica size:12)}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
