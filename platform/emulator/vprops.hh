@@ -43,7 +43,7 @@ public:
   virtual OZ_Return set(OZ_Term);
   void              add(char*);
 private:
-  static void       add(char*,int);
+  static void       add(const char*,const int);
   friend void initVirtualProperties();
 };
 
