@@ -664,6 +664,11 @@ void initVirtualProperties()
   system_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
   OZ_protect(&vprop_registry);
   OZ_protect(&system_registry);
+  // POPULATE THE SYSTEM REGISTRY
+  {
+    OzDictionary * dict = tagged2Dictionary(system_registry);
+    dict->setArg(oz_atom("platform"),oz_pairAA(ozconf.osname,ozconf.cpu));
+  }
   BIaddSpec(vpropSpecs);
   // THREADS
   VirtualProperty::add("threads.created",PROP_THREADS_CREATED);
