@@ -617,8 +617,12 @@ OZ_Return TaskIntervalsProof::propagate(void)
 
 
           //    Assert( (count_firsts > 0) && (count_lasts > 0) );
-
-          if (count_firsts <= count_lasts) {
+          int test;
+          if (reg_flag == 0) test = (count_firsts < count_lasts);
+          else test = (count_firsts <= count_lasts);
+//        if (count_firsts <= count_lasts) {
+//  if (count_firsts < count_lasts) {
+  if (test) {
             int deltaS = OZ_getFDSup();
             for (l=0; l < count_firsts; l++)
               deltaS = intMin(deltaS, all_vars[best_resource][firsts[l]].min);
