@@ -264,7 +264,7 @@ void AM::init(int argc,char **argv)
   statusReg    = (StatusBit)0;
   criticalFlag = NO;
 
-  _rootBoard = new Board(NULL);
+  _rootBoard = new Board();
   _currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;

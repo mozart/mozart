@@ -170,18 +170,23 @@ public:
  *
  */
 
+Board::Board() 
+  : localPropagatorQueue(0), suspCount(0), bag(0),
+    threads(0), suspList(0), nonMonoSuspList(0),
+    status(taggedVoidValue), rootVar(taggedVoidValue)
+{
+  parentAndFlags.set((void *) 0, (int) BoTag_Root);
+}
+
+
 Board::Board(Board * p) 
   : localPropagatorQueue(0), suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0)
 {
-  Assert(p==NULL || !p->isCommitted());
-  setParentInternal(p);
-  if (p) {
-    status  = oz_newVar(p);
-    rootVar = oz_newVar(this);
-  } else {
-    rootVar = status = taggedVoidValue;
-  }
+  Assert(!p->isCommitted());
+  status  = oz_newVar(p);
+  rootVar = oz_newVar(this);
+  parentAndFlags.set((void *) p, 0);
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
   copy_start  = (int32 *) NULL;
@@ -522,8 +527,7 @@ TaggedRef Board::merge(Board *bb, Bool sibling) {
 			      merge(bb->getLocalPropagatorQueue()));
 
   // Mark as merged
-  setParentInternal(bb);
-  setCommitted();
+  setCommitted(bb);
 
   // Must be before script installation
   bb->incSuspCount(getSuspCount());
