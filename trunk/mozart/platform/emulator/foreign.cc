@@ -693,7 +693,7 @@ Bool checkAtom(const char *s)
   case 'c':
     return strcmp(t, "case") && strcmp(t, "catch")
 	&& strcmp(t, "choice") && strcmp(t, "class")
-	&& strcmp(t, "condis")? OK: NO;
+	&& strcmp(t, "condis") && strcmp(t, "condis")? OK: NO;
   case 'd':
     return strcmp(t, "declare") && strcmp(t, "dis")
 	&& strcmp(t, "div")? OK: NO;
