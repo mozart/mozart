@@ -16,11 +16,12 @@ proc {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
          DupMaxProfit = MaxProfit
          DupVs        = Vs
       else
-         dis {RI.lessEq {Ceil DupV} V} then
-            {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
-         [] {RI.lessEq V {Floor DupV}} then
-            {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
+         choice
+            {RI.lessEq {Ceil DupV} V}
+         []
+            {RI.lessEq V {Floor DupV}}
          end
+         {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
       end
    end
 end
