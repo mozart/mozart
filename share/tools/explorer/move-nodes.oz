@@ -207,7 +207,7 @@ local
       
    end
    
-   class FailedOrBlockedNode
+   class FailedOrSuspendedNode
       
       meth back($)
 	 {self.mom Back(self $)}
@@ -233,8 +233,8 @@ in
 
    MoveNodes = classes(choose:    ChooseNode
 		       succeeded: SucceededNode
-		       failed:    FailedOrBlockedNode
-		       blocked:   FailedOrBlockedNode
+		       failed:    FailedOrSuspendedNode
+		       suspended: FailedOrSuspendedNode
 		       sentinel:  Sentinel)
 		       
 end

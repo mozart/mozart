@@ -51,13 +51,13 @@ local
 	 CurNodes:        0
 	 CurSolutions:    0
 	 CurFailures:     0
-	 CurBlocked:      0
+	 CurSuspended:      0
 	 BreakFlag:       nil
 	 BreakStatus:     none
 	 BrokenNodes:     nil
 	 KillFlag:        true
 	 KillId:          0
-	 IsPackedBlocked: false
+	 IsPackedSuspended: false
 
       feat
 	 Time
@@ -67,8 +67,8 @@ local
 	 Depth
 	 Solution
 	 Failure
-	 Blocked
-	 BlockedImage
+	 Suspended
+	 SuspendedImage
       
       meth init(Parent)
 	 Tk.frame,tkInit(parent:             Parent
@@ -100,8 +100,8 @@ local
 	 FailedNumber   = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
-	 BlockedIm      = {New Images.blocked init(parent: NodeFrame)}
-	 BlockedNumber  = {New Tk.label tkInit(parent: NodeFrame
+	 SuspendedIm      = {New Images.suspended init(parent: NodeFrame)}
+	 SuspendedNumber  = {New Tk.label tkInit(parent: NodeFrame
 					       font:   BoldStatusFont
 					       text:   '0')}
 	 DepthFrame = {New Tk.frame tkInit(parent: self)}
@@ -127,8 +127,8 @@ local
 	 self.ChooseImage   = ChooseIm
 	 self.Solution      = SolNumber
 	 self.Failure       = FailedNumber
-	 self.Blocked       = BlockedNumber
-	 self.BlockedImage  = BlockedIm
+	 self.Suspended       = SuspendedNumber
+	 self.SuspendedImage  = SuspendedIm
       end
 
       meth setBAB(IsBAB)
@@ -144,13 +144,13 @@ local
 	 CurNodes      <- 0
 	 CurSolutions  <- 0
 	 CurFailures   <- 0
-	 CurBlocked    <- 0
+	 CurSuspended    <- 0
 	 @KillFlag     = true
 	 KillFlag      <- _
 	 KillId        <- @KillId + 1
-	 if @IsPackedBlocked then
-	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
-	    IsPackedBlocked <- false 
+	 if @IsPackedSuspended then
+	    {Tk.send pack(forget self.Suspended self.SuspendedImage)}
+	    IsPackedSuspended <- false 
 	 end
 	 Status,update
 	 Status,start
@@ -158,8 +158,8 @@ local
 	 {self.ChooseImage clear}
       end
 
-      meth hasBlocked($)
-	 @CurBlocked>0
+      meth hasSuspended($)
+	 @CurSuspended>0
       end
       
       meth halt
@@ -220,23 +220,23 @@ local
 	 GetNodes     = @CurNodes
 	 GetSolutions = @CurSolutions
 	 GetFailures  = @CurFailures
-	 GetBlocked   = @CurBlocked
+	 GetSuspended   = @CurSuspended
       in
-	 if (GetBlocked==0) == (@IsPackedBlocked) then
-	    if @IsPackedBlocked then
-	       IsPackedBlocked <- false
-	       {Tk.send pack(forget self.Blocked self.BlockedImage)}
+	 if (GetSuspended==0) == (@IsPackedSuspended) then
+	    if @IsPackedSuspended then
+	       IsPackedSuspended <- false
+	       {Tk.send pack(forget self.Suspended self.SuspendedImage)}
 	    else
-	       IsPackedBlocked <- true
-	       {Tk.send pack(self.BlockedImage self.Blocked side:left)}
+	       IsPackedSuspended <- true
+	       {Tk.send pack(self.SuspendedImage self.Suspended side:left)}
 	    end
 	 end
 	 {self.Depth    tk(conf text:GetDepth)}
 	 {self.Choose   tk(conf
-			   text:GetNodes-(GetSolutions+GetFailures+GetBlocked))}
+			   text:GetNodes-(GetSolutions+GetFailures+GetSuspended))}
 	 {self.Solution tk(conf text:GetSolutions)}
 	 {self.Failure  tk(conf text:GetFailures)}
-	 {self.Blocked  tk(conf text:GetBlocked)}
+	 {self.Suspended  tk(conf text:GetSuspended)}
       end
       
       meth addSolution(Depth)
@@ -248,18 +248,18 @@ local
 	 if IncNodes mod StatusUpdateCnt==0 then Status,update end
       end
 
-      meth addBlocked(Depth)
+      meth addSuspended(Depth)
 	 IncNodes = @CurNodes + 1
       in
 	 MaxDepth    <- {Max @MaxDepth Depth}
-	 CurBlocked  <- @CurBlocked + 1
+	 CurSuspended  <- @CurSuspended + 1
 	 CurNodes    <- IncNodes
 	 if IncNodes mod StatusUpdateCnt==0 then Status,update end
       end
 
-      meth removeBlocked
+      meth removeSuspended
 	 CurNodes    <- @CurNodes - 1
-	 CurBlocked  <- @CurBlocked - 1
+	 CurSuspended  <- @CurSuspended - 1
       end
       
       meth addFailed(Depth)
@@ -340,8 +340,8 @@ in
 	 {self.status getBrokenNodes($)}
       end
 
-      meth hasBlocked($)
-	 {self.status hasBlocked($)}
+      meth hasSuspended($)
+	 {self.status hasSuspended($)}
       end
       
       meth finish

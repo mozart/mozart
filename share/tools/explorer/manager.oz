@@ -111,8 +111,8 @@ in
 	 if {@root isFinished($)} then
 	    StatusManager,finish
 	 end
-	 if CurNode.kind==failed orelse CurNode.kind==blocked then
-	    %% Can only happen if there is a single failed or blocked node
+	 if CurNode.kind==failed orelse CurNode.kind==suspended then
+	    %% Can only happen if there is a single failed or suspended node
 	    MenuManager,disable([move([top cur]) nodes(stat)])
 	 else
 	    %% Move: Top, Current, and stat are always possible
@@ -128,7 +128,7 @@ in
 	       MenuManager,disable(move([prevSol nextSol]))
 	    end
 	    %% Search
-	    if StatusManager,hasBlocked($) then
+	    if StatusManager,hasSuspended($) then
 	       MenuManager,disable(search([next all step]))
 	    else
 	       MenuManager,state({CurNode isNextPossible($)}
@@ -519,7 +519,7 @@ in
 	       else
 		  {Mom  removeLast(Manager,GetPrevSol($))}
 		  {Node deleteTree}
-		  {self.status removeBlocked}
+		  {self.status removeSuspended}
 		  curNode <- Mom
 		  Manager,step
 	       end

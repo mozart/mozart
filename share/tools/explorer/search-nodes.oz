@@ -168,12 +168,12 @@ local
 	       choices  <- @choices + 1
 	       {New self.classes.choose
 		init(self NextDepth PrevSol AllocateCopy Space MaxAlt)}
-	    [] blocked(Ctrl) then
+	    [] suspended(Ctrl) then
 	       %% Count the possibility of a choice below _and_
 	       %% the case where toDo is already nil
 	       choices <- @choices + if @toDo==nil then 2 else 1 end
 	       {self.status halt}
-	       {New self.classes.blocked init(self NextDepth Ctrl)}
+	       {New self.classes.suspended init(self NextDepth Ctrl)}
 	    end
 	 end
 	 
@@ -417,7 +417,7 @@ local
 	 end
 	 
 	 meth removeLast(PrevSol)
-	    %% Has at least a single kid, and that kid was blocked
+	    %% Has at least a single kid, and that kid was suspended
 	    choices <- @choices - 1 
 	    toDo    <- case @toDo
 		       of Sol#NextAlt#MaxAlt then
@@ -471,7 +471,7 @@ local
       end
    end
       
-   class Blocked from Leaf
+   class Suspended from Leaf
       meth isFinished($)
 	 false
       end
@@ -491,7 +491,7 @@ in
    SearchNodes = classes(choose:    Choose
 			 succeeded: Succeeded
 			 failed:    Leaf
-			 blocked:   Blocked
+			 suspended:   Suspended
 			 sentinel:  Sentinel)
 
 end

@@ -28,8 +28,8 @@ local
       from CombineNodes.failed TkNodes.failed
    end
 
-   class BlockedNode
-      from CombineNodes.blocked TkNodes.blocked
+   class SuspendedNode
+      from CombineNodes.suspended TkNodes.suspended
    end
 
    class EntailedNode
@@ -48,8 +48,8 @@ local
       from CombineNodes.sentinel TkNodes.sentinel
    end
 
-   fun {DerefBlocked S}
-      case S of blocked(S) then {DerefBlocked S} else S end
+   fun {DerefSuspended S}
+      case S of suspended(S) then {DerefSuspended S} else S end
    end
    
 in
@@ -62,7 +62,7 @@ in
 		 status:    Manager.status
 		 manager:   Manager)
       Classes =c(failed:   {Class.new [FailedNode] a Features [final]}
-		 blocked:  {Class.new [BlockedNode] a Features [final]}
+		 suspended:{Class.new [SuspendedNode] a Features [final]}
 		 entailed: {Class.new [EntailedNode] a Features [final]}
 		 stuck:    {Class.new [StuckNode] a Features [final]}
 		 choose:   {Class.new [ChooseNode] a Features [final]})
@@ -77,8 +77,8 @@ in
 	 {New Classes.SA init(Sentinel 1 S persistent)}
       [] alternatives(MaxAlt) then
 	 {New Classes.choose  init(Sentinel 1 false persistent S MaxAlt)}
-      [] blocked(Ctrl) then
-	 {New Classes.blocked init(Sentinel 1 Ctrl)}
+      [] suspended(Ctrl) then
+	 {New Classes.suspended init(Sentinel 1 Ctrl)}
       end
    end
 			

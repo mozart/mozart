@@ -289,7 +289,7 @@ in
    HideNodes = c(choose:    Inner
 		 failed:    Leaf
 		 succeeded: Leaf
-		 blocked:   Leaf
+		 suspended: Leaf
 		 sentinel:  Sentinel)
    
 end

@@ -31,7 +31,7 @@ local
 	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI+1 FNT=FNI UNT=UNI  s
 	 [] failed then
 	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI+1 UNT=UNI  f
-	 [] blocked then
+	 [] suspended then
 	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI UNT=UNI+1  b
 	 [] choose then
 	    c({GetStat {N getKids($)} D+1 MDI ?MDT
@@ -82,10 +82,10 @@ in
 			       b:     0)
 		       end
 		    end
-		 blocked:
+		 suspended:
 		    class $
 		       meth stat($)
-			  stat(shape: blocked
+			  stat(shape: suspended
 			       start: {self.mom findDepth(1 $)}
 			       depth: 1
 			       c:     0

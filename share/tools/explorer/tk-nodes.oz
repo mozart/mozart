@@ -390,7 +390,7 @@ local
 	 
       end
 
-      class BlockedNode
+      class SuspendedNode
 	 from LeafNode
 	 
 	 meth getMoveIds(Is $)
@@ -433,7 +433,7 @@ local
 				       wi:LinkWidth) $)}
 	    {Canvas
 	     tkCreate(po(X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
-			 fill: BlockedColor
+			 fill: SuspendedColor
 			 width: NodeBorderWidth
 			 outline: LineColor))}
 	 end
@@ -564,7 +564,7 @@ in
 
    TkNodes=c(choose:    ChooseNode
 	     failed:    FailedNode
-	     blocked:   BlockedNode
+	     suspended: SuspendedNode
 	     stuck:     StuckNode
 	     entailed:  EntailedNode
 	     sentinel:  Sentinel)
