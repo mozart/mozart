@@ -62,6 +62,7 @@
   enum BoardFlags
     Bo_Ask: is an conditional board
     Bo_Wait: is a disjunctive board
+    Bo_Solve: is a solve board; 
     Bo_Root: is the root board
       Bo_WaitTop
     Bo_Installed: board is installed
@@ -71,13 +72,13 @@
     Bo_Discarded
     */    
 
-
-void Board::Init()
-{
+void Board::Init() {
   am.rootBoard = new Board(NULL,Bo_Root);
   am.rootBoard->setInstalled();
   am.currentBoard = NULL;
   SetCurrent(am.rootBoard,OK);
+  am.currentSolveBoard = (Board *) NULL; 
+  am.wasSolveSet = NO; 
 }
 
 void Board::NewCurrentAsk(Actor *a)
@@ -94,9 +95,18 @@ void Board::NewCurrentWait(Actor *a)
   SetCurrent(b,OK);
 }
 
+void Board::NewCurrentSolve (Actor *a)
+{
+  Board *b = new Board (a, Bo_Solve);
+  b->setInstalled ();
+  SetCurrent (b, OK);
+}
+
 #ifdef DEBUG_CHECK
 static Board *oldBoard = (Board *) NULL;
+static Board *oldSolveBoard = (Board *) NULL; 
 #endif
+
 void Board::SetCurrent(Board *c, Bool checkNotGC)
 {
   DebugCheck(!c,error("Board::SetCurrent"));
@@ -105,6 +115,29 @@ void Board::SetCurrent(Board *c, Bool checkNotGC)
   am.currentBoard = c;
   am.currentUVarPrototype = makeTaggedUVar(c);
   DebugCheckT(oldBoard=c);
+
+  if (c->isSolve () == OK) {
+    DebugCheck ((checkNotGC && oldSolveBoard != am.currentSolveBoard),
+		error ("somebody has changed 'am.currentSolveBoard'"));
+    am.currentSolveBoard = c;
+    am.wasSolveSet = OK; 
+    DebugCheckT (oldSolveBoard = c); 
+  } else if (am.wasSolveSet == OK) {
+    am.currentSolveBoard = GetSolveBoard ();
+    am.wasSolveSet = NO;
+  }
+}
+
+Board* Board::GetSolveBoard ()
+{
+  Board *b = am.currentBoard;
+  Board *rb = am.rootBoard;
+  while (b != rb) {
+    if (b->isSolve () == OK)
+      return (b);
+    b = (b->getBoardDeref ())->getParentBoard ();
+  }
+  return ((Board *) NULL); 
 }
 
 Board::Board(Actor *a,int typ)
@@ -114,8 +147,8 @@ Board::Board(Actor *a,int typ)
   DebugCheck(typ!=Bo_Root && typ!=Bo_Ask && typ!=Bo_Wait,
 	     error("Board::Board"));
   flags=typ;
-  if (a) {
-    a->addChild(this);
+  if (a != (Actor *) NULL && a->isAskWait () == OK) {
+    (CastAWActor (a))->addChild(this);
   }
   suspCount=0;
   u.actor=a;
@@ -130,7 +163,8 @@ Actor *Board::FailCurrent()
   Board *bb = am.currentBoard;
   DebugCheck(!bb->isInstalled(),error("Board::FailCurrent"));
   Actor *ret=bb->getActor();
-  ret->failChild(bb);
+  if (ret->isAskWait () == OK) 
+    (CastAWActor (ret))->failChild(bb);
   bb->flags |= Bo_Failed;
   am.reduceTrailOnFail();
   bb->unsetInstalled();
