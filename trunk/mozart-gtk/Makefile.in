@@ -7,7 +7,7 @@ LIB_DIR		= $(PREFIX)/cache/x-oz/system/gtk
 DOC_DIR		= $(PREFIX)/doc/add-ons/gtk
 EXAMPLES_DIR	= $(PREFIX)/examples/gtk
 
-VERSION		= 1.0
+VERSION		= 1.1
 
 OZC		= @OZC@
 OZL             = @OZL@
