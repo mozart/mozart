@@ -48,7 +48,6 @@ in
 	 lock
 	    PackAll = ToplevelManager,init($)
 	 in
-	    DialogManager,init
 	    MenuManager,init
 	    StatusManager,init
 	    self.explorer = EXPLORER
