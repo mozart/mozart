@@ -294,7 +294,7 @@ OZ_Term OZ_getMetaVarData(OZ_Term v)
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
     return ((GenMetaVariable *) tagged2CVar(v))->getData();
-  return NULL;
+  return makeTaggedNULL();
 }
 
 int OZ_isUnique(OZ_Term v)
