@@ -275,7 +275,6 @@ void cellReceiveRemoteRead(BorrowEntry *be,DSite* mS,int mI,DSite* fS){
   Assert(t->getType()==Co_Cell);
   CellSec *sec=((CellFrame*)t)->getCellSec();
   be->getOneMsgCredit();
-  TaggedRef val;
   if(sec->secReceiveRemoteRead(fS,mS,mI)) return;
   PD((WEIRD,"miss on read"));
   be->getOneMsgCredit();
@@ -412,7 +411,6 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,DSite* toS){
   PD((CHAIN,"%d",printChain(ch)));
   if(current==myDSite){                             // shortcut
     PD((LOCK," shortcut in lockReceiveGet"));
-    TaggedRef val;
     if(lm->getLockSec()->secForward(toS)){
       oe->getOneCreditOwner();
       lockSendToken(myDSite,lm->getIndex(),toS);}

@@ -541,8 +541,8 @@ public:
   ConstTerm() { Assert(0); }
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
-  Bool gcIsMarked(void)        { return tag&1; }
-  void gcMark(ConstTerm * fwd) { tag |= 1; }
+  Bool gcIsMarked(void)    { return tag&1; }
+  void gcMark(ConstTerm *) { tag |= 1; }
   void ** gcGetMarkField(void) { return (void **) &tag; }
   ConstTerm * gcGetFwd(void) {
     Assert(gcIsMarked());
@@ -769,7 +769,7 @@ TaggedRef oz_ulong(unsigned long l) {
   if (l > (unsigned long) OzMaxInt)
     return makeTaggedConst(newBigInt(l));
   else
-    return newSmallInt(l);
+    return newSmallInt((int)l);
 }
 
 inline

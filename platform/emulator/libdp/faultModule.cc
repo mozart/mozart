@@ -57,8 +57,6 @@ OZ_BI_define(BIdistHandlerDeInstall,2,1){
 
   NONVAR(c0, c);
 
-  TaggedRef thread;
-
   SRecord  *condStruct;
   if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
   else return IncorrectFaultSpecification;

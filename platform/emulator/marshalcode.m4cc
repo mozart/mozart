@@ -178,7 +178,7 @@ ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs, CodeArea *
       Assert(tag==DIF_ABSTRENTRY);
       int refTag = unmarshalRefTag(bs);
       entry      = new AbstractionEntry(OK);
-      gotRef(bs,ToInt32(entry),refTag);
+      gotRef(ToInt32(entry),refTag);
     }
   }
   return PC ? code->writeAbstractionEntry(entry,PC) : PC;

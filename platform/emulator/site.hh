@@ -239,4 +239,4 @@ extern Site *mySite;
 // kost@ : that's a part of the boot-up procedure ('AM::init()');
 void initSite();
 
-#endif __SITE_HH
+#endif /* __SITE_HH */

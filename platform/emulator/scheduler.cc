@@ -152,7 +152,7 @@ TaggedRef formatError(TaggedRef info,TaggedRef val,
 
 // check if failure has to be raised as exception on thread
 static
-int canOptimizeFailure(AM *e, Thread *tt)
+int canOptimizeFailure(Thread *tt)
 {
   if (tt->hasCatchFlag() || oz_onToplevel()) { // catch failure
     if (tt->isSuspended()) {
@@ -580,7 +580,7 @@ LBLfailure:
          WaitActor *wa = WaitActor::Cast(aw);
          /* test bottom commit */
          if (wa->hasNoChildren()) {
-           if (canOptimizeFailure(e,tt)) goto LBLfailure;
+           if (canOptimizeFailure(tt)) goto LBLfailure;
          } else {
            Assert(!am.threadsPool.isScheduledSlow(tt));
            /* test unit commit */
@@ -588,7 +588,7 @@ LBLfailure:
              Board *waitBoard = wa->getLastChild();
              int succeeded = oz_commit(waitBoard);
              if (!succeeded) {
-               if (canOptimizeFailure(e,tt)) goto LBLfailure;
+               if (canOptimizeFailure(tt)) goto LBLfailure;
              }
            }
          }
@@ -608,7 +608,7 @@ LBLfailure:
            /* rule: if fi --> false */
            if (aa->getElsePC() == NOCODE) {
              aa->disposeAsk();
-             if (canOptimizeFailure(e,tt)) goto LBLfailure;
+             if (canOptimizeFailure(tt)) goto LBLfailure;
            } else {
              Continuation *tmpCont = aa->getNext();
              ts->pushCont(aa->getElsePC(),

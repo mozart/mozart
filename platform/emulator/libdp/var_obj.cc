@@ -207,7 +207,6 @@ Bool ObjectVar::failurePreemption(){
 }
 
 void ObjectVar::addEntityCond(EntityCond ec){
-  Bool hit=FALSE;
   if(info==NULL) info=new EntityInfo();
   if(!info->addEntityCond(ec)) return;
   if(isInjectorCondition(ec)){

@@ -163,7 +163,6 @@ Bool ThreadQueue::isScheduledSlow(Thread *thr)
 {
   int currentSize = size;
   int currentHead = head;
-  int mod = maxsize - 1;
 
   while (currentSize) {
     if (queue[currentHead] == thr) return (OK);

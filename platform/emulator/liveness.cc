@@ -149,7 +149,6 @@ outerLoop2:
     // terminate if stack is empty
     if (!todo) {
       int nextI=0;
-      int deleted=0;
       if (X) {
         for (int i=0; i<maxX; i++) {
           if (xUsage[i]==1) {

@@ -300,11 +300,13 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     case RAISE:
     case BI_TYPE_ERROR:
     case SUSPEND:
-      // restore X
-      for (int j=outAr; j--; ) {
-        X[inAr+j]=savedX[j];
+      {
+        // restore X
+        for (int j=outAr; j--; ) {
+          X[inAr+j]=savedX[j];
+        }
+        return ret1;
       }
-      return ret1;
     case PROCEED:
     case BI_PREEMPT:
     case BI_REPLACEBICALL:
@@ -321,11 +323,13 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
       case FAILED:
       case RAISE:
       case BI_TYPE_ERROR:
-        // restore X in case of error
-        for (int j=outAr; j--; ) {
-          X[inAr+j]=savedX[j];
+        {
+          // restore X in case of error
+          for (int j=outAr; j--; ) {
+            X[inAr+j]=savedX[j];
+          }
+          return ret2;
         }
-        return ret2;
       case SUSPEND:
         DebugCheckT(printf("oz_bi_wrapper: unify suspend\n"));
         am.emptySuspendVarList();
@@ -380,8 +384,7 @@ OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
 // -----------------------------------------------------------------------
 
 static
-Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
-                 TaggedRef *X)
+Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
 {
   Assert(!oz_isRef(pred));
 
@@ -1542,7 +1545,6 @@ LBLdispatcher:
                     OZ_int(1),
                     OZ_string(""));
     RAISE_TYPE1("lock",oz_cons(aux,oz_nil()));
-    RAISE_THREAD;
   }
 
   OzLock *t = (OzLock*)tagged2Tert(aux);
@@ -2363,8 +2365,6 @@ LBLdispatcher:
          if (ozconf.timeDetailed)
            starttime = osUserTime();
 
-         Thread * backup_currentThread = CTT;
-
          while (!lpq->isEmpty() && isNotPreemptiveScheduling()) {
            Propagator * prop = lpq->dequeue();
            Propagator::setRunningPropagator(prop);
@@ -2667,7 +2667,7 @@ LBLdispatcher:
         SUSP_PC(predPtr,PC);
       }
 
-      if (genCallInfo(gci,pred,PC,X)) {
+      if (genCallInfo(gci,pred,PC)) {
         gci->dispose();
         DISPATCH(0);
       }

@@ -1217,12 +1217,6 @@ void Script::gc() {
 //  RunnableThreadBody;
 
 
-inline
-ChachedOORegs gcChachedOORegs(ChachedOORegs regs) {
-  Object *o = getObject(regs)->gcObject();
-  return setObject(regs,o);
-}
-
 RunnableThreadBody *RunnableThreadBody::gcRTBody () {
   RunnableThreadBody *ret =
     (RunnableThreadBody *) gcReallocStatic(this, sizeof(RunnableThreadBody));

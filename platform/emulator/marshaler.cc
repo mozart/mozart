@@ -634,7 +634,7 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
   Assert(oz_onToplevel());
   OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
   *ret = makeTaggedConst(aux);
-  gotRef(bs,*ret,refTag);
+  gotRef(*ret,refTag);
 
   if (size < 0) {
     aux->markCache();
@@ -729,7 +729,7 @@ loop:
         *ret = makeTaggedLiteral(aux);
         addGName(gname,*ret);
       }
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       delete printname;
       return;
     }
@@ -741,7 +741,7 @@ loop:
 
       NamedName *aux = NamedName::newCopyableName(ozstrdup(printname));
       *ret = makeTaggedLiteral(aux);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       delete printname;
       return;
     }
@@ -752,7 +752,7 @@ loop:
       char *printname = unmarshalString(bs);
 
       *ret = oz_uniqueName(printname);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       delete printname;
       return;
     }
@@ -762,7 +762,7 @@ loop:
       int refTag = unmarshalRefTag(bs);
       char *aux  = unmarshalString(bs);
       *ret = OZ_atom(aux);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       delete aux;
       return;
     }
@@ -780,7 +780,7 @@ loop:
       LTuple *l = new LTuple();
       *ret = makeTaggedLTuple(l);
       int refTag = unmarshalRefTag(bs);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       unmarshalTerm(bs,l->getRefHead());
       // tail recursion optimization
       ret = l->getRefTail();
@@ -793,7 +793,7 @@ loop:
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,argno);
       *ret = makeTaggedSRecord(rec);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
 
       for(int i=0; i<argno-1; i++) {
         unmarshalTerm(bs,rec->getRef(i));
@@ -816,7 +816,7 @@ loop:
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec    = SRecord::newSRecord(label,aritytable.find(sortedarity));
       *ret = makeTaggedSRecord(rec);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
 
       while(oz_isCons(arity)) {
         TaggedRef val = unmarshalTerm(bs);
@@ -861,7 +861,7 @@ loop:
     {
       *ret = (*unmarshalTertiary)(bs, tag);
       int refTag = unmarshalRefTag(bs);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       return;
     }
   case DIF_RESOURCE_N:
@@ -887,7 +887,7 @@ loop:
         Assert(oz_isSChunk(oz_deref(*ret)));
         sc = 0;
       }
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       TaggedRef value = unmarshalTerm(bs);
       if (sc) sc->import(value);
       return;
@@ -908,7 +908,7 @@ loop:
         Assert(oz_isClass(oz_deref(*ret)));
         cl = 0;
       }
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       unmarshalClass(cl,bs);
       return;
     }
@@ -955,7 +955,7 @@ loop:
         *ret = makeTaggedConst(pp);
         pp->setGName(gname);
         addGName(gname,*ret);
-        gotRef(bs,*ret,refTag);
+        gotRef(*ret,refTag);
         for (int i=0; i<gsize; i++) {
           pp->initG(i, unmarshalTerm(bs));
         }
@@ -963,7 +963,7 @@ loop:
         pr->patchFileAndLine();
       } else {
         Assert(oz_isAbstraction(oz_deref(*ret)));
-        gotRef(bs,*ret,refTag);
+        gotRef(*ret,refTag);
         for (int i=0; i<gsize; i++) {
           (void) unmarshalTerm(bs);
         }
@@ -1001,7 +1001,7 @@ loop:
 
       delete name;
       *ret = makeTaggedConst(found);
-      gotRef(bs,*ret,refTag);
+      gotRef(*ret,refTag);
       return;
     }
 

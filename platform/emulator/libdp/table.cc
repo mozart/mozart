@@ -55,7 +55,6 @@ int NetHashTable::hashFunc(NetAddress *na){
 
 int NetHashTable::findNA(NetAddress *na){
   GenHashNode *ghn;
-  int bindex;
   int hvalue=hashFunc(na);
   if(findPlace(hvalue,na,ghn)){
     int bindex= GenHashNode2BorrowIndex(ghn);

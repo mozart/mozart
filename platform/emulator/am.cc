@@ -71,7 +71,7 @@ char *getOptArg(int &i, int argc, char **argv)
 
 
 static
-void printBanner(char*initFile)
+void printBanner()
 {
 #ifdef NO_LTQ
   OZ_warning("LTQ is turned off.");
@@ -243,7 +243,7 @@ void AM::init(int argc,char **argv)
     usage(argc,argv);
   }
 
-  printBanner(initFile);
+  printBanner();
   if (getenv("OZ_TRACE_LOAD"))
     if (initFile)
       fprintf(stderr,"Init file: %s\n",initFile);

@@ -856,7 +856,6 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite, *ssite;
       int OTI;
-      TaggedRef val;
       unmarshal_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
       PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",
           OTI,rsite->stringrep()));
@@ -865,7 +864,7 @@ void msgReceived(MsgBuffer* bs)
     }
   case M_CHAIN_QUESTION:
    {
-      DSite* site,*rsite,*deadS;
+      DSite* site,*deadS;
       int OTI;
       unmarshal_M_CHAIN_QUESTION(bs,OTI,site,deadS);
       PD((MSG_RECEIVED,"M_CHAIN_QUESTION index:%d site:%s",
@@ -966,8 +965,8 @@ enum CommCase{
 void DSite::communicationProblem(MessageType mt, DSite* storeSite,
                                  int storeIndex, FaultCode fc,
                                  FaultInfo fi) {
-  int OTI,Index;
-  DSite* s1,*s2;
+  int OTI;
+  DSite* s1;
   TaggedRef tr;
   CommCase flag;
 

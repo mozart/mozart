@@ -52,7 +52,6 @@ void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c){
   SendTo(cs,bs,M_OWNER_SEC_CREDIT,sd,OTI);}
 
 void sendCreditBack(DSite* sd,int OTI,Credit c){
-  int ret;
   if(creditSiteIn==NULL){
     sendPrimaryCredit(sd,OTI,c);
     return;}

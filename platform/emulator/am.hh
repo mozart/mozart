@@ -225,8 +225,6 @@ int oz_clockTickToMs(int cl)
 class AM  {
 friend int engine(Bool init);
 friend void scheduler();
-friend inline Board *oz_rootBoard();
-friend inline Board *oz_currentBoard();
 
 private:
   Board *_currentBoard;

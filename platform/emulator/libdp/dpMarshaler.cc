@@ -434,7 +434,7 @@ OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt){
 }
 
 void unmarshalUnsentTerm(MsgBuffer *bs) {
-  OZ_Term t=unmarshalTerm(bs);}
+  (void) unmarshalTerm(bs);}
 
 void unmarshalUnsentSRecord(MsgBuffer *bs){
   unmarshalUnsentTerm(bs);}
