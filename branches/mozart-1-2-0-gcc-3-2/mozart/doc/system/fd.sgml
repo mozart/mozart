@@ -1098,6 +1098,7 @@ reifies <<{FD.distance D1 D2 A D3}>> into ?_{D4}.
 {FD.reified.card ?*{D1} ?*{Dv} ?*{D2} ?_{D3}}
 >>>
 <item>
+?{Dv} is a vector of Boolean variables. <code/FD.reified.card/
 creates a propagator for
 <p><math>(({\tt D1}\leq{\tt D}_1+\ldots+{\tt D}_n\leq{\tt D2}) \leftrightarrow
 ({\tt D3}=1))\;\wedge\;{\tt D3} \in \{0,1\}.</math><p>
