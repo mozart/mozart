@@ -36,22 +36,10 @@ enum TypeOfGenCVariable {
 
 class GenCVariable: public SVariable {
 protected:
-
-#ifdef CVAR_ONLY_FDVAR
-public:
-  TypeOfGenCVariable getType(void){return FDVariable;}
-  void setType(TypeOfGenCVariable t){;}
-#else
   TypeOfGenCVariable type;
-public:
-  TypeOfGenCVariable getType(void){return type;}
-  void setType(TypeOfGenCVariable t){ type=t;}
-#endif
-
-protected:
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  void relinkSuspListTo(GenCVariable * leftVar);
+  void relinkSuspListTo(GenCVariable * lv);
 
   void propagate(TaggedRef, SuspList * &, TaggedRef, Bool);
 
@@ -61,7 +49,10 @@ public:
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable , TaggedRef = AtomVoid, Board * = NULL);
 
-  // return OK, if var is local to the current node
+  TypeOfGenCVariable getType(void){return type;}
+
+  void setType(TypeOfGenCVariable t){ type = t;}
+
   Bool isLocalVariable(void);
 
   // methods relevant for term copying (gc and solve)
