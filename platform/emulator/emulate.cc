@@ -1300,7 +1300,7 @@ LBLsuspendThread:
 
       if (debugPC==C_ACTOR_Ptr) {
         // actors save the REAL program counter in G:
-        TaggedRef name = OZ_atom("cond");
+        TaggedRef name = OZ_atom("actor");
         TaggedRef args = nil();
         debugStreamSuspend((ProgramCounter) G,CTT,name,args,1);
       }
