@@ -34,10 +34,6 @@
                      out => ['+number'],
                      bi  => BIabs},
 
-     '/'        => { in  => ['+float','+float'],
-                     out => ['+float'],
-                     bi  => BIfdiv},
-
      '*'        => { in  => ['+number','+number'],
                      out => ['+number'],
                      bi  => BImult},
