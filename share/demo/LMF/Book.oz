@@ -33,14 +33,14 @@ prepare
 
    Url = "/tmp/ticket.ozp"
 
-   ArgSpec = list(url(single type:string default:"/tmp/ticket.ozp"))
+   ArgSpec = record(url(single type:string default:"/tmp/ticket.ozp"))
 
 
 define
 
    Argv = {Application.getCgiArgs ArgSpec}
 
-   {System.show url(Argv)}
+%   {System.show url(Argv)}
 
    {HTML.out
     'Last Minute Flights'
@@ -89,9 +89,10 @@ define
             table(tr(th('URL')
                      td(input(type:hidden name:url value:Argv.url)
                         Argv.url))))
-    catch _ then
+    catch E then
        font(size:'+2' color:red
-            'Sorry, could not connect to server')
+            {Value.toVirtualString E 100 100})
+%           'Sorry, could not connect to server')
     end}
 
    {Application.exit 0}

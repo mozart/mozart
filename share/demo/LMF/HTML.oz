@@ -32,13 +32,8 @@ prepare
 
    fun {HtmlStd Title Body}
       '#'('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">'
-          html(head(title(Title)
-                    link(rel:  stylesheet
-                         type: 'text/css'
-                         href: '/css/page.css'))
+          html(head(title(Title))
                'body'(h1(Title)
-                      menu('class':margin
-                           li(p('Powered by ' b('Oz'))))
                       br
                       Body)))
    end
