@@ -2567,9 +2567,8 @@ void MsgTermSnapshotImpl::gcStart()
   Assert(!(flags&MTS_SET));
   SntVarLocation* l = locs;
   while(l) {
-    OZ_Term hvr = l->getLoc();
-    OZ_Term *hvp = tagged2Ref(hvr);
-    OZ_Term hv = *hvp;
+    OZ_Term hv = l->getLoc();
+    DEREF(hv,hvp,_tag)
     DebugCode(OZ_Term v = l->getVar(););
     Assert(oz_isExtVar(v));
     Assert(l->getSavedValue() == (OZ_Term) -1);
