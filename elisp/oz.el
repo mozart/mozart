@@ -1153,11 +1153,10 @@ OZ compiler, emulator and error window")
   (if (get-buffer-window buffer)
       t
     (save-excursion
-      (let* ((edges (window-edges (selected-window)))
-	     (win (or (get-buffer-window oz-emulator-buffer)
+      (let* ((win (or (get-buffer-window oz-emulator-buffer)
 		      (get-buffer-window oz-compiler-buffer)
 		      (split-window (selected-window)
-				    (/ (* (- (nth 3 edges) (nth 1 edges))
+				    (/ (* (window-height (selected-window))
 					  (- 100 oz-other-buffer-percent))
 				       100)))))
 	(set-window-buffer win buffer)
