@@ -1,5 +1,5 @@
 # -*-perl-*-
-$module_init_fun_name = "ByteString_init";
+#$module_init_fun_name = "ByteString_init";
 
 %builtins_all =
     (
@@ -9,26 +9,26 @@ $module_init_fun_name = "ByteString_init";
                      bi  => BIByteString_is},
 
      'make'     => { in  => ['+string'],
-                     out => ['+bytestring'],
+                     out => ['+byteString'],
                      bi  => BIByteString_make},
 
-     'get'      => { in  => ['+bytestring','+int'],
+     'get'      => { in  => ['+byteString','+int'],
                      out => ['+int'],
                      bi  => BIByteString_get},
 
-     'append'   => { in  => ['+bytestring','+bytestring'],
-                     out => ['+bytestring'],
+     'append'   => { in  => ['+byteString','+byteString'],
+                     out => ['+byteString'],
                      bi  => BIByteString_append},
 
-     'slice'    => { in  => ['+bytestring','+int','+int'],
-                     out => ['+bytestring'],
+     'slice'    => { in  => ['+byteString','+int','+int'],
+                     out => ['+byteString'],
                      bi  => BIByteString_slice},
 
-     'width'    => { in  => ['+bytestring'],
+     'width'    => { in  => ['+byteString'],
                      out => ['+int'],
                      bi  => BIByteString_width},
 
-     'toString' => { in  => ['+bytestring'],
+     'toString' => { in  => ['+byteString'],
                      out => ['+string'],
                      bi  => BIByteString_toString}
      );

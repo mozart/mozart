@@ -1,5 +1,5 @@
 # -*-perl-*-
-$module_init_fun_name = "BitString_init";
+#$module_init_fun_name = "BitString_init";
 
 %builtins_all =
     (
@@ -8,34 +8,34 @@ $module_init_fun_name = "BitString_init";
                      bi  => BIBitString_is},
 
      'make'     => { in  => ['+int','+[int]'],
-                     out => ['+bitstring'],
+                     out => ['+bitString'],
                      bi  => BIBitString_make},
 
-     'conj'     => { in  => ['+bitstring','+bitstring'],
-                     out => ['+bitstring'],
+     'conj'     => { in  => ['+bitString','+bitString'],
+                     out => ['+bitString'],
                      bi  => BIBitString_conj},
 
-     'disj'     => { in  => ['+bitstring','+bitstring'],
-                     out => ['+bitstring'],
+     'disj'     => { in  => ['+bitString','+bitString'],
+                     out => ['+bitString'],
                      bi  => BIBitString_disj},
 
-     'nega'     => { in  => ['+bitstring'],
-                     out => ['+bitstring'],
+     'nega'     => { in  => ['+bitString'],
+                     out => ['+bitString'],
                      bi  => BIBitString_nega},
 
-     'get'      => { in  => ['+bitstring','+int'],
+     'get'      => { in  => ['+bitString','+int'],
                      out => ['+bool'],
                      bi  => BIBitString_get},
 
-     'put'      => { in  => ['+bitstring','+int','+bool'],
-                     out => ['+bitstring'],
+     'put'      => { in  => ['+bitString','+int','+bool'],
+                     out => ['+bitString'],
                      bi  => BIBitString_put},
 
-     'width'    => { in  => ['+bitstring'],
+     'width'    => { in  => ['+bitString'],
                      out => ['+int'],
                      bi  => BIBitString_width},
 
-     'toList'   => { in  => ['+bitstring'],
+     'toList'   => { in  => ['+bitString'],
                      out => ['+[int]'],
                      bi  => BIBitString_toList}
      );

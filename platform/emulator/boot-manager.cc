@@ -58,8 +58,6 @@ TaggedRef dictionary_of_modules;
 #include "modForeign-if.cc"
 #include "modFault-if.cc"
 #include "modDistribution-if.cc"
-#include "modBitString-if.cc"
-#include "modByteString-if.cc"
 
 /*
  * Builtins that are possibly dynamically loaded
@@ -114,8 +112,6 @@ static ModuleEntry module_table[] = {
   {"PID",             mod_int_PID},
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
-  {"BitString",       mod_int_BitString},
-  {"ByteString",      mod_int_ByteString},
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
@@ -325,6 +321,8 @@ OZ_BI_proto(BIportWait);
 #include "modUnit-if.cc"
 #include "modValue-if.cc"
 #include "modVirtualString-if.cc"
+#include "modBitString-if.cc"
+#include "modByteString-if.cc"
 
 static ModuleEntry bi_module_table[] = {
   {"Boot",              mod_int_Boot},
@@ -357,6 +355,8 @@ static ModuleEntry bi_module_table[] = {
   {"Unit",              mod_int_Unit},
   {"Value",             mod_int_Value},
   {"VirtualString",     mod_int_VirtualString},
+  {"BitString",         mod_int_BitString},
+  {"ByteString",        mod_int_ByteString},
   {0,0}
 };
 
