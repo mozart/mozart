@@ -7,7 +7,7 @@ PREFIX		= @prefix@
 
 OZBIN		= $(PREFIX)/bin
 OZTOOLS		= $(PREFIX)/tools
-OZPATH		= $(PREFIX)/lib:$(PREFIX)/tools
+OZPATH		= .:$(PREFIX)/lib:$(PREFIX)/tools
 IMAGESDIR	= $(OZTOOLS)/images
 CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
 CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
