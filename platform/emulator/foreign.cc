@@ -892,17 +892,6 @@ OZ_Bool OZ_readSelect(int fd,OZ_Term l,OZ_Term r)
   return am.readSelect(fd,l,r);
 }
 
-int OZ_openIO(int fd)
-{
-  DebugCheckT(warning("openIO is obsolete"));
-  return 1;
-}
-
-int OZ_closeIO(int fd)
-{
-  DebugCheckT(warning("close IO is obsolete"));
-  return 1;
-}
 
 /* -----------------------------------------------------------------
  * garbage collection
