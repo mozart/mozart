@@ -5429,6 +5429,18 @@ OZ_BI_define(BIinstructionsPrint, 0,0)
   ozstat.printInstr();
   return PROCEED;
 } OZ_BI_end
+
+OZ_BI_define(BIinstructionsPrintCollapsable, 0,0)
+{
+  ozstat.printInstrCollapsable();
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIinstructionsPrintReset, 0,0)
+{
+  ozstat.printInstrReset();
+  return PROCEED;
+} OZ_BI_end
 #endif
 
 #ifdef PROFILE_BI
