@@ -30,26 +30,29 @@ computer :-)). The next best thing (on PCs) is to use VMWare
 (www.vmware.com), with a fresh installation of your favorite Linux on
 its virtual computer.
 
-. Have an empty build directory $BUILD, e.g. BUILD=/tmp/build-1.2.0
+. Have an empty build directory $BUILD, e.g. BUILD=/tmp/build-1.3.0
   Have the Mozart source tree, e.g. as ${HOME}/mozart
 
 . Copy the following sources into $BUILD:
--r--r--r--    1 kost     dsl       7284401 May 10 14:42 binutils-2.10.1.tar.gz
--r--r--r--    1 kost     dsl        420341 May 11 12:00 bison-1.28.tar.gz
--r--r--r--    1 kost     dsl        380995 May 11 12:06 flex-2.5.4a.tar.gz
--r--r--r--    1 kost     dsl      12911721 May 10 14:42 gcc-2.95.3.tar.gz
--r--r--r--    1 kost     dsl        134080 May 10 14:42 gdbm-1.8.0.tar.gz
--r--r--r--    1 kost     dsl       1033780 May 10 14:42 gmp-3.1.1.tar.gz
--r--r--r--    1 kost     dsl        317588 May 10 14:42 m4-1.4.tar.gz
--r--r--r--    1 kost     dsl       3679040 May 10 14:42 perl5.005_03.tar.gz
--r--r--r--    1 kost     dsl        297790 May 10 14:42 regex-0.12.tar.gz
--r--r--r--    1 kost     dsl       2502194 May 10 14:42 tcl8.2.3.tar.gz
--r--r--r--    1 kost     dsl       2336472 May 10 14:42 tk8.2.3.tar.gz
--r--r--r--    1 kost     dsl        168463 May 10 14:42 zlib-1.1.3.tar.gz
+
+ -r--r--r--    2 kost      14269432 Mar  1 00:44 binutils-2.14.tar.gz
+ -r--r--r--    3 kost        420341 Mar  4 11:04 bison-1.28.tar.gz
+ -r--r--r--    3 kost        380995 Mar  4 10:57 flex-2.5.4a.tar.gz
+ -r--r--r--    2 kost      31242089 Oct 20 15:21 gcc-3.3.2.tar.gz
+ -r--r--r--    3 kost        134080 Mar  4 10:57 gdbm-1.8.0.tar.gz
+ -r--r--r--    2 kost      18115189 Mar  1 00:47 glibc-2.3.2.tar.gz
+ -r--r--r--    2 kost       2159329 Mar  1 01:52 gmp-4.1.2.tar.gz
+ -r--r--r--    3 kost        317588 Mar  4 10:57 m4-1.4.tar.gz
+ -r--r--r--    2 kost      12002329 Mar  1 01:57 perl-5.8.3.tar.gz
+ -r--r--r--    3 kost        297790 Mar  4 10:57 regex-0.12.tar.gz
+ -r--r--r--    2 kost       2863381 Mar  1 02:06 tcl8.3.5-src.tar.gz
+ -r--r--r--    2 kost       2598030 Mar  1 02:07 tk8.3.5-src.tar.gz
+ -r--r--r--    2 kost        345833 Mar  1 02:17 zlib-1.2.1.tar.gz
 
 . Copy mozart source tree into the $BUILD, e.g.:
 
     cd ${HOME}; tar cf - ./mozart | (cd $BUILD; tar xf -)
+    cd ${HOME}; tar cf - ./mozart-stdlib | (cd $BUILD; tar xf -)
 
 . Run
 
@@ -69,7 +72,6 @@ its virtual computer.
 . On Linux, optionally, in order to include the ps/pdf docs run:
 
     cd $BUILD/build-$PLAT/doc; make ps installps;
-    cd $BUILD/build-$PLAT; make doc;
 
 . On Linux (or when just using rpm), 'su' to root, run
 
@@ -82,46 +84,20 @@ its virtual computer.
 
 The following packages supporting Mozart are known to work:
 
-. linux-i486
-    . glibc-devel-2.1.3-21 (RedHat 6.2 with recommended patches)
-    . XFree86-3.3.6-20 (running on RedHat 6.2)
+. linux-i486 (RedHat 9.0)
+    . binutils-2.13.90.0.18-9
+    . glibc-2.3.2-27.9.7 and company
+    . XFree86-4.3.0-2.90.55
+    . gcc-3.3.2 (built from sources)
     . for building 'ps' documentation -
-       Sun's "Java Runtime Environment" 1.2.2 (jre1.2.2)
-       NOTE: Kaffe does not work (maybe - yet)
+       openjade-1.3.1-12 (nsgmls)
+       j2sdk-1.4.1_02-fcs (Sun's "Java Runtime Environment")
 
 . solaris-sparc
+    . gnu find (for building from sources)
     kost (806) ldd emulator.exe
-        libdl.so.1 =>    /usr/lib/libdl.so.1
-        libsocket.so.1 =>        /usr/lib/libsocket.so.1
-        libnsl.so.1 =>   /usr/lib/libnsl.so.1
-        libm.so.1 =>     /usr/lib/libm.so.1
-        libc.so.1 =>     /usr/lib/libc.so.1
-        libmp.so.2 =>    /usr/lib/libmp.so.2
-        /usr/platform/SUNW,Ultra-Enterprise/lib/libc_psr.so.1
     kost (809) ldd tk.exe
-        libX11.so.6.1 =>         /opt/local/X11R6/lib/libX11.so.6.1
-        libdl.so.1 =>    /usr/lib/libdl.so.1
-        libsocket.so.1 =>        /usr/lib/libsocket.so.1
-        libnsl.so.1 =>   /usr/lib/libnsl.so.1
-        libm.so.1 =>     /usr/lib/libm.so.1
-        libc.so.1 =>     /usr/lib/libc.so.1
-        libmp.so.2 =>    /usr/lib/libmp.so.2
-        /usr/platform/SUNW,Ultra-Enterprise/lib/libc_psr.so.1
 
-The following gcc compilers can be used (courtesy Christian Schulte, with
-my updates):
-
- - egcs 1.1.2:
-        Very stable, compiles everything like a charm. But code is slow.
-        Do not use:
-                -ffast-math
-
- - gcc 2.95.*:
-        Do not use (the code is incorrect):
-                -ffastmath
-                -march=i686 (or its equivalents), instead: -march=i586 -mcpu=i
-        Note that on Intel"s '-fstrict-aliasing' does work for Mozart now;
-
-NOTE: the official 1.2.0 Release RPM"s for RedHat 7.0 are made on
-RedHat 6.2 using rpm-4.0 (installation of which, in turn, required
-manuall installation of the db3 package) and gcc-2.95.3/glibc-2.1.3-21.
+NOTE: the official 1.3.0 Release RPM"s for RedHat 9.0 were built on
+regurarly maintained RH9.0 box (ibm thinkpad x31) with manually installed
+gcc-3.3.2.
