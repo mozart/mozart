@@ -433,7 +433,7 @@ by <<{Application.exit I}>>, where <<I>> is
 the return status (see the module <<Application>>).
 The abnormal way is a site crash
 triggered by an external problem.
-The failure model (see <ptr id="chapter.failure">) is used
+The failure model (see <ptr to="chapter.failure">) is used
 to survive site crashes.
 Here we explain what a controlled shutdown means
 in the distribution model.
