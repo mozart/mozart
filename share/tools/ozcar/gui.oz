@@ -668,16 +668,23 @@ in
 	       {OzcarMessage 'action:' # A}
 	    end
 
-	    case A == ResetAction then
+	    case A == RemoveAllAction then
 	       N in
-	       Gui,doStatus('Resetting...')
+	       Gui,doStatus('Killing and removing all threads...')
 	       ThreadManager,killAll(N)
 	       {Delay 200} %% just to look nice... ;)
-	       Gui,doStatus(case N == 1 then
-			       ' 1 thread killed'
-			    else
-			       ' ' # N # ' threads killed'
-			    end append)
+%	       Gui,doStatus(case N == 1 then
+%			       ' 1 thread collected'
+%			    else
+%			       ' ' # N # ' threads collected'
+%			    end append)
+	       Gui,doStatus(' done' append)
+
+	    elsecase A == RemoveAllDeadAction then
+	       Gui,doStatus('Removing all dead threads...')
+	       ThreadManager,removeAllDead
+	       {Delay 200}
+	       Gui,doStatus(' done' append)
 
 	    elsecase A == StepButtonBitmap then
 	       T = @currentThread

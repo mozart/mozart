@@ -32,12 +32,12 @@ in
 		    action:  self # about
 		    key:     ctrl(i))
 		  separator
-		  C(label:   'Status'
-		    action:  self # checkMe
-		    key:     ctrl(s))
-		  C(label:   'Reset'
-		    action:  self # action(ResetAction)
+		  C(label:   'Remove All'
+		    action:  self # action(RemoveAllAction)
 		    key:     ctrl(r))
+		  C(label:   'Remove All Dead'
+		    action:  self # action(RemoveAllDeadAction)
+		    key:     ctrl(u))
 		  separator
 		  C(label:   'Suspend'
 		    action:  self # off
@@ -56,10 +56,10 @@ in
 		    key:    'Right'
 		    event:  '<Right>')
 		  separator
-		  C(label:  'Step'
+		  C(label:  'Step Into'
 		    action: self # action(StepButtonBitmap)
 		    key:    s)
-		  C(label:  'Next'
+		  C(label:  'Step Over'
 		    action: self # action(NextButtonBitmap)
 		    key:    n)
 		  separator
@@ -75,7 +75,11 @@ in
 		    key:    f)
 		  C(label:  'Terminate'
 		    action: self # action(TermButtonBitmap)
-		    key:    t)])
+		    key:    t)
+		  separator
+		  C(label:   'Status'
+		    action:  self # checkMe
+		    key:     ctrl(s))])
 	   MB(text: 'Stack'
 	      menu:
 		 [C(label:  'Previous Frame'
