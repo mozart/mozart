@@ -7024,7 +7024,7 @@ OZ_C_proc_begin(BIbiExceptionHandler,1)
             message("Ups: %s\n",toC(val));
           }
         } else if (literalEq(lab,OZ_atom("."))) {
-          message("ERROR: Illtype application\n");
+          message("ERROR: Illtyped application\n");
           if (OZ_width(val) != 2) {
             message("Ups: %s\n",toC(val));
           } else {
