@@ -313,12 +313,12 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_BOOL(PROP_MESSAGES_CACHE,ozconf.showCacheLoad);
     CASE_REC(PROP_MESSAGES,"messages",
              (6,AtomGC,AtomIdle,AtomFeed,AtomForeign,AtomLoad,AtomCache),
-             SET_INT(AtomGC,ozconf.gcVerbosity);
-             SET_INT(AtomIdle,ozconf.showIdleMessage);
-             SET_INT(AtomFeed,ozconf.showFastLoad);
-             SET_INT(AtomForeign,ozconf.showForeignLoad);
-             SET_INT(AtomLoad,ozconf.showLoad);
-             SET_INT(AtomCache,ozconf.showCacheLoad););
+             SET_BOOL(AtomGC,ozconf.gcVerbosity);
+             SET_BOOL(AtomIdle,ozconf.showIdleMessage);
+             SET_BOOL(AtomFeed,ozconf.showFastLoad);
+             SET_BOOL(AtomForeign,ozconf.showForeignLoad);
+             SET_BOOL(AtomLoad,ozconf.showLoad);
+             SET_BOOL(AtomCache,ozconf.showCacheLoad););
     // MEMORY
     CASE_INT(PROP_MEMORY_ATOMS,ozstat.getAtomMemory());
     CASE_INT(PROP_MEMORY_NAMES,ozstat.getNameMemory());
