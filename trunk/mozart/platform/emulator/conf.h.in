@@ -96,3 +96,6 @@
 
 /* Define if dlopen needs a leading underscore. */
 #undef DLOPEN_UNDERSCORE
+
+/* for virtual sites */
+#undef key_t
