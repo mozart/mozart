@@ -1,0 +1,38 @@
+TOOL		= gdbm
+OZC		= oznc
+
+DYNLD		= @DYNLD@
+CXX		= @CXX@
+CPPFLAGS	= -I../../Emulator @CPPFLAGS@
+CXXFLAGS	= $(CFLAGS)
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= $(INSTALL) -m 775 -d
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_LIB	= $(INSTALL) -m 444
+
+prefix		= @prefix@
+bindir		= $(prefix)/oz/platform/@platform@/tools/$(TOOL)
+libdir		= $(prefix)/oz/tools/$(TOOL)
+
+all: gdbm.dl gdbm.ozc
+
+install:
+	$(INSTALL_DIR) $(bindir)
+	$(INSTALL_BIN) gdbm.dl  $(bindir)
+	$(INSTALL_DIR) $(libdir)
+	$(INSTALL_LIB) gdbm.ozc $(libdir)
+
+clean:
+	$(RM) *~ *.bak gdbm.o gdbm.dl ozrc.oz save.oz halt.oz gdbm.ozc
+
+gdbm.o: gdbm.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+gdbm.dl: gdbm.o
+	$(DYNLD) -o gdbm.dl gdbm.o $(LDFLAGS) $(LIBS)
+
+gdbm.ozc: gdbm.oz
+	cat $< | $(OZC)
