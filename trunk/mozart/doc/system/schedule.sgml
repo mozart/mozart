@@ -383,7 +383,7 @@ instants <math/x/, the resource is at least as large as the available capacity:
 <<disjoint>>
 <synopsis>
 <<<
-{Schedule.disjoint ?+{D1} ?+{I1} ?+{D2} ?+{I2}}
+{Schedule.disjoint ?*{D1} ?+{I1} ?*{D2} ?+{I2}}
 >>>
 <item>
 creates a propagator for <math/D1+I1\leq D2 \;\vee\;
