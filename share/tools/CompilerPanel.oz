@@ -56,6 +56,8 @@ export
 
 body
 
+   UrlDefaults = \insert '../url-defaults.oz'
+
    \insert compilerPanel/CompilerPanelClass
 
 end
