@@ -52,8 +52,10 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 
   for (; OZ_isCons(args); args = OZ_tail(args)) {
     OZ_Term h = OZ_head(args);
-    if (not_first) o << ' ';
-
+    if (not_first) 
+      o << ' ';
+    not_first = 1;
+    //
     DEREF(h, hptr, htag);
     switch (htag) {
 
