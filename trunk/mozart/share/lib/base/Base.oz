@@ -277,9 +277,8 @@ prepare
    %%
    %% Exception
    %%
-   `RaiseError`	= Boot_Exception.raiseError
    Raise	= Boot_Exception.'raise'
-   
+
    %%
    %% Time
    %%
@@ -292,6 +291,7 @@ prepare
    IsBitString	= Boot_BitString.is
    IsByteString	= Boot_ByteString.is
    
+   \insert 'Exception.oz'
    \insert 'Value.oz'
    \insert 'Literal.oz'
    \insert 'Unit.oz'
@@ -320,7 +320,6 @@ prepare
    \insert 'BitArray.oz'
    \insert 'ForeignPointer.oz'
    \insert 'Thread.oz'
-   \insert 'Exception.oz'
    \insert 'Time.oz'
    \insert 'Functor.oz'
    \insert 'BitString.oz'
