@@ -1,10 +1,10 @@
 <!--
   - Authors:
-  -   Seif Haridi (seif@sics.se)
   -   Nils Franzen (nilsf@sics.se)
+  -   Simon Lindblom (simon@sics.se)
   -
   - Copyright:
-  -   Seif Haridi, Nils Franzen, 1998
+  -   Nils Franzen, Simon Lindblom, 1998
   -
   - Last change:
   -   $Date$ by $Author$
@@ -26,10 +26,12 @@
 
 
 <!-- Extension to the DTD -->
+<!--
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
+-->
 <!ENTITY amp "&">
-<!ENTITY micq "MICQ">
+<!ENTITY micq "MIM">
 <!ENTITY % proglang.values.local "|lambda">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
@@ -62,7 +64,7 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
 
-    <TITLE>Mozart ICQ</TITLE>
+    <TITLE>Mozart Instant Messenger</TITLE>
     <Author.Extern to="author.db" key="Nils.Franzen">
     <Author.Extern to="author.db" key="Simon.Lindblom">
     <ABSTRACT>
@@ -70,9 +72,7 @@
     One of &micq; main advantages over existing groupware, is the open interface to add custom
     (platform-independent) programs written in Mozart.
 
-    <P CLASS=WARNING>This document is far from finished!
-    <P CLASS=WARNING>This software is not compability with the widley used
-    <REF.EXTERN TO="http://www.icq.com">ICQ (www.icq.com)</REF.EXTERN>
+    <P CLASS=WARNING>This document is far from finished and is a bit old!
     </ABSTRACT>
   <BODY>
     &intro;

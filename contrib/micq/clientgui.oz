@@ -596,7 +596,7 @@ define
       {Tk.send bell} {Wait E.tkClosed}
    end
 
-   proc{Shutdown} if {IsDet GUIisStarted} then {T tkClose} end end
+   proc{Shutdown} if {IsDet GUIisStarted} then {Delay 500} {T tkClose} end end
 
  %   fun {GetAllMessages} E Tmp in
 %       {Dictionary.items DB E}
