@@ -53,7 +53,7 @@
       the tools used in the build process and how to obtain them.  We explain
       how to configure and build both the packages Mozart depends upon and
       Mozart itself.  We conclude by a description of how to create an
-      installer.
+      installer, should you want to do so.
     </Abstract>
   <Body>
     <Chapter>
@@ -66,12 +66,12 @@
 	be obtained for free at <Ref.Extern to="http://www.cygwin.com/"
 	>http://www.cygwin.com/</Ref.Extern>.
       <P>
-	Take yourself to a Windows machine (Windows 2000 or NT&nbsp;4 are
-	preferred, though others may work) and install Cygwin (full
-	installation preferred), then start a shell.  Make sure that
-	<<uname -r>> displays at least version 1.3.5.  It is a good idea
-	that you familiarize yourself with this environment, as you'll
-	be using it for a while before your Mozart build is finished.
+	Take yourself to a Windows machine (Windows XP Professional, Windows
+	2000 or Windows NT&nbsp;4 are preferred, though others may work) and
+	install Cygwin (full installation preferred), then start a shell.
+	Make sure that <<uname -r>> displays at least version 1.3.5.  It is
+	a good idea that you familiarize yourself with this environment, as
+	you'll be using it for a while before your Mozart build is finished.
 	I recommend that you read the <Ref.Extern
 	to="http://cygwin.com/cygwin-ug-net/cygwin-ug-net.html"/<Q
 	/Cygwin User's Guide//.
@@ -343,18 +343,27 @@ cd compat-build
 export PATH=?{install}/bin:$PATH
 ?{mozart}/contrib/compat/configure --prefix=?{install}
 mkdir share
-touch share/Makefile.boot
+cp ?{build}/mozart-build/share/Makefile.boot share
 make
 make install>>>
 	And yeah, verily, thus and so&emdash;we're done.
+      <Para class=apropos><Title/Using Mozart/
+	To use Mozart, you simply have to extend your <Var type=env/PATH/:
+	<<<export PATH=?{install}/bin:$PATH>>>
+	Then you can start <<oz>>, <<ozc>> and so on, as you would expect.
     <Chapter>
       <Title/Building Documentation/
       <P>
-	Documentation currently cannot be built under Windows alone.  For
-	Windows, we deliver documentation not as a big bunch of HTML files,
-	but as an HTML Help file (also called a CHM file).  This section
-	explains how to obtain this file.  Take yourself to a Unix machine
-	and say something like:
+	Documentation currently cannot be built under Windows alone.  Luckily,
+	this step is optional.  If you don't do it, then you simply have a
+	system without documentation, but it runs.
+      <P>
+	For Windows, we deliver documentation not as a big bunch of HTML files,
+	but as an HTML Help file (also called a CHM file).  HTML Help files
+	provide full-text search capabilities, a full table of contents, and
+	are much smaller than all the HTML sources.  This section explains
+	how to obtain this file.  Take yourself to a Unix machine and say
+	something like:
 <<<unset OZHOME OZPATH OZEMULATOR TEXT2PICKLE
 export PATH=/opt/gcc-2.95.3/bin:/opt/jdk/bin:/usr/bin:/bin:/usr/X11R6/bin:/usr/local/bin
 mkdir /tmp/build
@@ -368,11 +377,13 @@ make install>>>
 <<<cd ?{linux-install}/doc
 /cygdrive/c/Program\ Files/HTML\ Help\ Workshop/hcc Mozart>>>
 	(assuming that you have ?{linux-install} on a network shared file
-	system.  If not, you'll have to find another way).  <File/hhc/ is
-	the HTML Help Compiler from Microsoft's HTML Help Workshop, available
-	for download at <Ref.Extern to="http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"><File>http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp</File></Ref.Extern>.
+	system.  If not, you'll have to somehow copy this directory to
+	your Windows machine).  <File/hhc/ is the HTML Help Compiler from
+	Microsoft's HTML Help Workshop, available freely for download at
+	<Ref.Extern to="http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"><File>http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp</File></Ref.Extern>.
 	The current version is 1.31.  (If the URL is invalid, search
-	Microsoft's site for <Q/download html help workshop/.)
+	Microsoft's site for <Q/download html help workshop/.  It seems
+	Microsoft tends to reorganize every so often.)
       <P>
 	This process will leave behind a file <File/Mozart.chm/, which we
 	can copy to a sensible place:
@@ -381,11 +392,25 @@ make install>>>
 	directory all files except <File/Mozart.chm/ and the <File
 	>demo/applets</File> directory.
     <Chapter>
-      <Title/Creating the Installer/
+      <Title/Creating an Installer/
       <P>
-	We build our installer with InstallShield Developer, which you
-	can purchase (yes, these things cost real money!) on their Web
-	site, <Ref.Extern to="http://www.installshield.com/isd/"><File
+	Windows applications are typically distributed as an installer,
+	which not only creates the file system structure, but also adds
+	the command line tools to the <Var type=env/PATH/, creates Start
+	Menu entries, and establishes associations for file extensions
+	(in our case, <File/.oz/ and <File/.ozg/ files are associated with
+	<File/oz.exe/, and <File/.oza/ files are associated with <File
+	/ozenginew.exe/).  Installers also provide a clean way of removing
+	applications from your system.  The only reason I see why you would
+	want to remove Mozart is to install a new release.
+      <P>
+	Creating an installer is not necessary if you do not plan to
+	redistribute your Mozart build.  You can run Mozart from your
+	?{install} directory directly.
+      <P>
+	We build our installer with InstallShield Developer, which you can
+	purchase (yes, these things cost real money!) on InstallShield's
+	Web site at <Ref.Extern to="http://www.installshield.com/isd/"><File
 	>http://www.installshield.com/isd/</File></Ref.Extern>.  Start
 	up InstallShield Developer and open the project ?{mozart}<File
 	>/misc/Mozart.ism</File>.  Under <Q/Advanced Views&emdash;Path
@@ -398,33 +423,34 @@ make install>>>
 	    ?{install} above, but in Windows syntax here).
 	</Table>
       <Para class=apropos><Title/Release Adjustments/
-	When making a new release, you want the installer to correctly
-	document which Mozart version it installs.  Therefore, take care
-	to set it correctly.  Navigate to <Q/Organize Your Setup&emdash;General
-	Information&emdash;Summary Information Stream/ and set the <Q/Title/
-	field correctly.  It is imperative that you generate a new GUID
-	(Globally Unique Identifier) for the package that you're going to
-	create:  Select the <Q/Package Code/ field and click on the
+	When making a new release, you want the installer to document
+	which Mozart version it installs.  Therefore, take care to set
+	the following properties correctly.  Navigate to <Q/Organize Your
+	Setup&emdash;General Information&emdash;Summary Information Stream/
+	and update the <Q/Title/ field.  It is imperative that you generate
+	a new GUID (Globally Unique Identifier) for the package that you're
+	going to create:  Select the <Q/Package Code/ field and click on the
 	<Q/Generate GUID/ button.  Next, find <Q/Product Properties/ (also
 	under <Q/General Information/) and update the <Q/Product Version/
 	field.
       <Para class=apropos><Title/Check Files/
 	Before building, you should make sure that you didn't screw up and
 	actually have all the files you need (and none you don't want).
-	Run <<cd ?{install} && find . -type f>> and <<diff>> the result with
-	the file <Ref.Extern to="FILES"/<File/FILES//, which contains a list
-	of all the files.
+	Run <<cd ?{install} && find . -type f | sort>> and <<diff>> the
+	result with the file <Ref.Extern to="FILES"/<File/FILES//, which
+	contains a list of all the files.
       <Para class=apropos><Title/Building/
 	Now you're clear to build the release.  Start the
 	<Q/Build&emdash;Release Wizard/ and select your options.  Choose
 	a <Q/Product Configuration/ and a <Q/Release Name/ at random; it's
 	fine to just accept the defaults.  Click <Q/Next/ until you can
-	select a <Q/Network Image/ as <Q/Media Type/.  Next, select
+	set the <Q/Media Type/ to <Q/Network Image/.  Next, select
 	<Q/Compress all files/.  From Release 1.2.3, we deliver Mozart
-	both as an <File/EXE/ and as an <File/MSI/&emdash;the only
-	difference in the Release Wizard is whether you select
-	<Q/Create installation launcher/ or not.  A couple of questions
-	later, you can actually get the beast to work.
+	both as an <File/EXE/ and as an <File/MSI/, for the convenience of
+	people who know that they already have Windows Installer on their
+	machine&emdash;the only difference in the Release Wizard is whether
+	you select <Q/Create installation launcher/ or not.  A couple of
+	questions later, you can actually get the beast to work.
       <Para class=apropos><Title/The End/
 	Congratulations!  You're the proud owner of a Mozart installer!
 </Book>
