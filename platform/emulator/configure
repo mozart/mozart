@@ -3229,7 +3229,7 @@ EOF
 EOF
 
         TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
-        oz_enable_modules_static=yes
+        : ${oz_enable_modules_static=no}
     ;;
     *)
         echo "configure: warning: Unknown platform "$platform"" 1>&2

@@ -333,7 +333,7 @@ case $platform in
     *rhapsody | *darwin)
         AC_DEFINE(RHAPSODY)
         TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
-        oz_enable_modules_static=yes
+        : ${oz_enable_modules_static=no}
     ;;
     *)
         AC_MSG_WARN(Unknown platform "$platform")
