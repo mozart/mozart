@@ -6532,8 +6532,8 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
   }
 
   if (am.methApplHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"internal",1,
-	     oz_atom("setMethApplHdlCalledTwice"));
+    oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+	     oz_atom("setMethApplHdl"));
   }
 
   am.methApplHdl = preed;
@@ -6544,7 +6544,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIcomma,2)
 {
   if (!am.methApplHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"internal",1,oz_atom("noMethApplHdl"));
+    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,oz_atom("setMethApplHdl"));
   }
 
   oz_currentThread->pushCall(am.methApplHdl,OZ_args,2);
@@ -6562,8 +6562,8 @@ OZ_C_proc_begin(BIsetSendHdl,1)
   }
 
   if (am.sendHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"internal",1,
-	     oz_atom("setSendHdlCalledTwice"));
+    oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
+	     oz_atom("setSendHdl"));
   }
 
   am.sendHdl = preed;
@@ -6571,13 +6571,13 @@ OZ_C_proc_begin(BIsetSendHdl,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIsend,2)
+OZ_C_proc_begin(BIsend,3)
 {
   if (!am.sendHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"internal",1,oz_atom("noSendHdl"));
+    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,oz_atom("methSendHdl"));
   }
 
-  oz_currentThread->pushCall(am.sendHdl,OZ_args,2);
+  oz_currentThread->pushCall(am.sendHdl,OZ_args,3);
 
   am.emptySuspendVarList();  
   return BI_REPLACEBICALL;
@@ -6748,8 +6748,8 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   if (tagged2Const(hdl)->getArity() != 1) oz_typeError(0,"Procedure/1");
 
   if (am.defaultExceptionHandler) {
-    oz_raise(E_ERROR,E_KERNEL,"internal",1,
-	     oz_atom("setDefaultExceptionHandlerCalledTwice"));
+    oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
+	     oz_atom("setDefaultExceptionHandler"));
   }
 
   am.defaultExceptionHandler = hdl;
@@ -6760,8 +6760,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIhandleException,1)
 {
   if (!am.sendHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"internal",1,
-	     oz_atom("noDefaultExceptionHandler"));
+    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+	     oz_atom("setDefaultExceptionHandler"));
   }
 
   oz_currentThread->pushCall(am.defaultExceptionHandler,OZ_args,2);
@@ -7170,7 +7170,7 @@ BIspec allSpec[] = {
   {"setMethApplHdl",  1,BIsetMethApplHdl,      0},
   {"setSendHdl",      1,BIsetSendHdl,          0},
   {",",               2,BIcomma,               0},
-  {"send",            2,BIsend,                0},
+  {"send",            3,BIsend,                0},
   {"getClass",        2,BIgetClass, 	       (IFOR) getClassInline},
   {"ooGetLock",       1,BIooGetLock, 	       (IFOR) ooGetLockInline},
   {"newObject",       2,BInewObject, 	       (IFOR) newObjectInline},
