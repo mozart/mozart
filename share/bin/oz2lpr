@@ -1,67 +1,71 @@
-#! /bin/csh -f
-
+#! /bin/sh
 # this file is maintained by CVS in module 'Oz/bin'
 
 # drucke oz dateien aus
 # prinzip: oz2tex --> latex --> dvips
 # Argumente: oz-files
 
-if ($#argv < 1) then
+if [ $# -lt 1 ]; then
   echo "usage: $0 <oz-files>"
   exit 1
-endif
+fi
 
 
+cleanup() { rm -f /tmp/$tmpfile* /tmp/$ozfile* /tmp/oz2tex_preamble*; }
 
-set tmpfile     = `mktemp oz2lpr-tex-`
-set ozfile      = `mktemp oz2lpr-oz-`
+trap cleanup 0 1 2 15
 
-foreach i ($*)
+tmpfile=oz2lpr-tex-$$
+ozfile=oz2lpr-oz-$$
 
-if ("$i" == "-") then    # input from stdin?
-   set file = "stdin"
-   cat >! /tmp/$ozfile.oz
+for i in $@
+do
+
+if [ "$i" = "-" ]; then    # input from stdin?
+   file="stdin"
+   cat > /tmp/$ozfile.oz
 else
-   if ( -f $i ) then
-     set file   = $i
+   if [ -f "$i" ]; then
+     file=$i
    else
-     set file   = $i.oz
-   endif
-
-   if (! -f $file ) then
+     file=$i.oz
+   fi
+   if [ ! -f $file ]; then
      echo "file not found: $file"
      continue
-  endif
+  fi
 
   cp $file /tmp/$ozfile.oz
-endif
+fi
 
-oz2tex /tmp/$ozfile.oz >& /dev/null
+oz2tex /tmp/$ozfile.oz > /dev/null 2>&1
 
-if ($status) then
+if [ $? != 0 ]; then
   echo "oz2tex failed: $file"
   continue
-endif
+fi
 
-echo "\documentstyle[dina4]{article}\
-\include{oz2tex_preamble}\
-\pagestyle{empty}\
-\begin{document}\
-\input{/tmp/$ozfile.tex}\
-\end{document}\
-" >> /tmp/$tmpfile.tex
+cat >> /tmp/$tmpfile.tex << EOF
+\documentstyle[dina4]{article}
+\include{oz2tex_preamble}
+\pagestyle{empty}
+\begin{document}
+\input{/tmp/$ozfile.tex}
+\end{document}
+EOF
 
+echo "latex $tmpfile ..."
 (cd /tmp; latex $tmpfile > /dev/null < /dev/null)
 
-if ($status) then
+if [ $? != 0 ]; then
   echo "latex failed: $file"
   egrep '^\!' /tmp/$tmpfile.log
-  goto next
-endif
+  cleanup
+  continue
+fi
 
-dvips /tmp/$tmpfile >& /dev/null
+echo "dvips $tmpfile ..."
+dvips /tmp/$tmpfile > /dev/null 2>&1
+cleanup
 
-next:
-rm /tmp/$tmpfile* /tmp/$ozfile* /tmp/oz2tex_preamble*
-
-end # foreach
+done # for
