@@ -254,7 +254,9 @@ DictHashTable* DictHashTable::copy()
   //
   for (int i = tableSize; i--; ) {
     DictNode *n = &table[i];
-    if (!n->isEmpty()) {
+    if (n->isEmpty()) {
+      (void) new (&an[i]) DictNode();
+    } else {
       if (!n->isPointer()) {
         (void) new (&an[i]) DictNode(*n); // maybe empty;
       } else {
