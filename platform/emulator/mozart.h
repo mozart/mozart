@@ -49,9 +49,10 @@ typedef unsigned int OZ_Term;
 
 typedef unsigned int OZ_Return;
 
-#define FAILED      0
-#define PROCEED     1
-#define ENTAILED    PROCEED
+#define OZ_FAILED      0
+#define FAILED         OZ_FAILED
+#define PROCEED        1
+#define OZ_ENTAILED    PROCEED
 #define SUSPEND     2
 #define SLEEP       3
 #define SCHEDULED   4
@@ -329,7 +330,8 @@ OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
  * ------------------------------------------------------------------------ */
 
 /* variable arity is marked as follows: */
-#define VarArity -1
+#define OZ_VarArity -1
+#define VarArity OZ_VarArity
 
 #if defined(__GNUC__) || defined(__cplusplus)
 #define OZStringify(Name) #Name
@@ -360,7 +362,7 @@ OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
     OZ_C_proc_proto(Name)                                       \
     OZ_C_proc_header(Name)                                      \
        OZ_CFun OZ_self = Name;                                  \
-       if (OZ_arity != Arity && Arity != VarArity) {            \
+       if (OZ_arity != Arity && Arity != OZ_VarArity) {         \
          return OZ_raiseA(OZStringify(Name),OZ_arity,Arity);    \
        }
 
