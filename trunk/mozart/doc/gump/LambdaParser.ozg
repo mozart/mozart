@@ -1,0 +1,36 @@
+\switch +gumpparseroutputsimplified +gumpparserverbose
+
+declare
+parser LambdaParser from GumpParser.'class'
+   meth error(VS) Scanner in
+      GumpParser.'class', getScanner(?Scanner)
+      {System.showInfo 'line '#{Scanner getLineNumber($)}#': '#VS}
+   end
+
+   token
+      'define' ';' '=' ')'
+      '.': leftAssoc(1)
+      'APPLY': leftAssoc(2)
+      'lambda': leftAssoc(2)
+      '(': leftAssoc(2)
+      'id': leftAssoc(2)
+      'int': leftAssoc(2)
+
+   syn program(?Definitions ?Terms)
+      !Definitions={ Definition($) }*
+      !Terms={ Term($) // ';' }+
+   end
+   syn Definition($)
+      'define' 'id'(I) '=' Term(T) ';' => definition(I T)
+   end
+   syn Term($)
+      'lambda' 'id'(I) '.' Term(T)     => lambda(I T)
+   [] Term(T1) Term(T2) prec('APPLY')  => apply(T1 T2)
+   [] '(' Term(T) ')'                  => T
+   [] 'id'(I) Line(L)                  => id(I L)
+   [] 'int'(I)                         => int(I)
+   end
+   syn Line($)
+      skip => {GumpParser.'class', getScanner($) getLineNumber($)}
+   end
+end

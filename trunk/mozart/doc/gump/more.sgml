@@ -1,3 +1,0 @@
-<!ENTITY % inline.mix.local "|cite|em">
-<!ELEMENT cite - - (#PCDATA)>
-<!ELEMENT em - - (#PCDATA)>
