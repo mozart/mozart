@@ -65,6 +65,7 @@ public:
   // or a non-variable
   // invariant: left term == *this
   Bool unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
+  Bool unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
 
   int getSuspListLength(void);
 
