@@ -91,6 +91,8 @@ namely <<ipcs>> and <<ipcrm>>.
 even though they are in base modules.
 In future releases, it is likely that
 dictionaries and arrays will be made unsited.
+Threads and spaces will be made stationary entities
+that can be called remotely (like ports).
 
 <item>When a reference to a constrained variable
 (finite domain, finite set, or free record)
