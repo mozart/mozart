@@ -1371,7 +1371,7 @@ void engine() {
     TaggedRef object  = origObj;
     int arity         = getPosIntArg(PC+3);
 
-    isExecute ? PC = 0 : PC+=4;
+    PC = isExecute ? 0 : PC+4;
 
     DEREF(object,_1,objectTag);
     if (!isSRecord(objectTag)) {
@@ -1436,7 +1436,7 @@ void engine() {
     int arity              = getPosIntArg(PC+3);
     Abstraction *def;
 
-    isExecute ? PC=0 : PC+=4;
+    PC = isExecute ? 0 : PC+4;
 
     DEREF(object,objectPtr,objectTag);
     if (!isSRecord(objectTag) ||
@@ -1499,7 +1499,7 @@ void engine() {
        TaggedRef functor = RegAccess(HelpReg1,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
-       isExecute ? PC=0 : PC+=3;
+       PC = isExecute ? 0 : PC+3;
 
        DEREF(functor,functorPtr,functorTag);
        if (!isSRecord(functorTag)) {
