@@ -56,26 +56,28 @@ local
    class EvalDialog from BaseEvalDialog.dialog
       prop final
       meth init(master: Master)
-	 AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
-	 Self
-	 Env = {Record.adjoinList
-		case {Cget emacsInterface} of false then env
-		elseof I then
-		   {{I getNarrator($)} enqueue(getEnv($))}
-		end
-		{Filter {Append AuxEnv.'G' AuxEnv.'Y'}
-		 fun {$ V#W}
-		    case V of 'self' then Self = W false
-		    else true
-		    end
-		 end}}
+	 proc {AcquireEnv ?Env ?Self}
+	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
+	 in
+	    Env = {Record.adjoinList
+		   case {Cget emacsInterface} of false then OPIEnv.base
+		   elseof I then
+		      {{I getNarrator($)} enqueue(getEnv($))}
+		   end
+		   {Filter {Append AuxEnv.'G' AuxEnv.'Y'}
+		    fun {$ V#W}
+		       case V of 'self' then Self = W false
+		       else true
+		       end
+		    end}}
+	    if {IsFree Self} then
+	       Self = unit
+	    end
+	 end
       in
 	 BaseEvalDialog.dialog, tkInit(master:   Master
 				       root:     pointer
-				       env:      Env
-				       'self':   if {IsFree Self} then unit
-						 else Self
-						 end)
+				       acquireEnvProc: AcquireEnv)
 	 {BaseEvalDialog.dialog, getCompiler($)
 	  enqueue([setSwitch(controlflowinfo true)
 		   setSwitch(staticvarnames true)])}
