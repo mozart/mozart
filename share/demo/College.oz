@@ -48,8 +48,7 @@ import
    OS
    Open
    Compiler
-   Show
-   Browse
+   Browser(browse: Browse)
 
 define
 
