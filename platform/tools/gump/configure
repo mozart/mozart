@@ -1210,8 +1210,46 @@ fi
 
     fi
 
-: ${platform=`$PLATFORMSCRIPT`}
+ : ${platform=`$PLATFORMSCRIPT`}
 
+if test "${GXX}" = yes; then
+  : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
+fi
+
+
+        ozm_out=
+        echo 'void f(){}' > oz_conftest.c
+        for ozm_opt in ""$oz_copt_disable_extension""
+        do
+            echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
+echo "configure:1226: checking compiler option $ozm_opt" >&5
+            ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
+            if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+                    eval "oz_cv_gxxopt_$ozm_ropt=yes"
+                else
+                    eval "oz_cv_gxxopt_$ozm_ropt=no"
+                fi
+fi
+
+            if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+                ozm_out="$ozm_out $ozm_opt"
+                echo "$ac_t""yes" 1>&6
+            else
+                echo "$ac_t""no" 1>&6
+            fi
+        done
+        rm -f oz_conftest*
+        oz_a="$ozm_out"
+
+if test "$ac_test_CXXFLAGS" != set
+then
+    CXXFLAGS=
+fi
+
+CXXFLAGS="$CXXFLAGS $oz_a"
 subdirs="ozflex"
 
 trap '' 1 2 15
