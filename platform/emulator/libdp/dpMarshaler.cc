@@ -258,6 +258,7 @@ void DPMarshaler::processExtension(OZ_Term t)
   if (bs->availableSpace() >= 
       2*DIFMaxSize + MNumberMaxSize + dpMinNeededSpaceExt(oe)) {
     marshalDIFcounted(bs, DIF_EXTENSION);
+    rememberNode(this, bs, t);
     marshalNumber(bs, oe->getIdV());
     //
     if (!dpMarshalExt(bs, this, t, oe)) {
@@ -2174,9 +2175,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	{
 #ifndef USE_FAST_UNMARSHALER
 	  int e;
+	  int refTag = unmarshalRefTagRobust(bs, b, &e);
+	  RETURN_ON_ERROR(e);
 	  int type = unmarshalNumberRobust(bs, &e);
 	  RETURN_ON_ERROR(e);
 #else
+	  int refTag = unmarshalRefTag(bs);
 	  int type = unmarshalNumber(bs);
 #endif
 
@@ -2200,6 +2204,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
 	  default:		// got it!
 	    b->buildValue(value);
+	    b->set(value, refTag);
 	    break;
 	  }
 	  break;
