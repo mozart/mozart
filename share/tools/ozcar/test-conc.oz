@@ -3,13 +3,7 @@
 
 declare
 
-fun {AllGreen T}
-   Green Red
-in
-   {Scan T unit Green Red}
-   {WaitOr Green Red}
-   {IsDet Green}
-end
+\insert test-conc2
 
 proc {Scan T G1 G2 R}
    {WaitOr T R}
@@ -21,7 +15,6 @@ proc {Scan T G1 G2 R}
 	 thread {Debug.breakpoint} {Scan A G1 G R} end
 	 thread {Debug.breakpoint} {Scan B G G2 R} end
       end
-      {Show gaga}
    end
 end
 

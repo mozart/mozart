@@ -82,17 +82,21 @@ in
       end
       
       meth scrollbar(file:F line:L color:C)
-         E = {self lookup(file:F entry:$)}
-      in
-         case {IsDet E} then
-	    {self ToTop(entry:E line:L color:C)}
-         else
-	    {self NewFile(file:F line:L color:C)}
-         end
-	 case @WithDrawn then
-	    {Tk.send wm(deiconify self)}
-	    WithDrawn <- false
-	 else skip end
+	 case F == undef orelse L == undef then
+	    skip
+	 else
+	    E = {self lookup(file:F entry:$)}
+	 in
+	    case {IsDet E} then
+	       {self ToTop(entry:E line:L color:C)}
+	    else
+	       {self NewFile(file:F line:L color:C)}
+	    end
+	    case @WithDrawn then
+	       {Tk.send wm(deiconify self)}
+	       WithDrawn <- false
+	    else skip end
+	 end
       end
       
       meth NewFile(file:F line:L color:C)

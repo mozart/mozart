@@ -45,10 +45,8 @@ end
 
 %% send a warning/error message
 
-proc {Message M}
-   Prefix = "Message from Ozcar: "
-in
-   {System.showInfo Prefix # M}
+proc {OzcarMessage M}
+   {System.showInfo OzcarMessagePrefix # M}
 end
 
 fun {VS2A X}
@@ -59,31 +57,35 @@ end
 fun {FormatArgs A}
    {List.mapInd A
     fun {$ N X}
-       case {IsDet X} then
-	  case     {IsUnit X}       then N # '<unit>'       # X
-	  elsecase {IsArray X}      then N # '<array>'      # X
-	  elsecase {IsAtom X}       then N # '<atom>'       # X
-	  elsecase {IsBool X}       then N # '<bool>'       # X
-	  elsecase {IsCell X}       then N # '<cell>'       # X
-	  elsecase {IsClass X}      then N # '<class>'      # X
-	  elsecase {IsDictionary X} then N # '<dictionary>' # X
-	  elsecase {IsFloat X}      then N # '<float>'      # X
-	  elsecase {IsInt   X}      then N # '<int>'        # X
-	  elsecase {IsList X}       then N # '<list>'       # X
-	  elsecase {IsLiteral X}    then N # '<literal>'    # X
-	  elsecase {IsLock X}       then N # '<lock>'       # X
-	  elsecase {IsName X}       then N # '<name>'       # X
-	  elsecase {IsObject X}     then N # '<object>'     # X
-	  elsecase {IsPort X}       then N # '<port>'       # X
-	  elsecase {IsProcedure X}  then N # '<procedure>'  # X
-	  elsecase {IsTuple X}      then N # '<tuple>'      # X
-	  elsecase {IsRecord X}     then N # '<record>'     # X
-	  elsecase {IsChunk X}      then N # '<chunk>'      # X
-	  else                           N # '<???>'        # X
-	  end
-       else                              N # '_'            # X
-       end
-    end $}
+       N # {ArgType X} # X
+    end}
+end
+
+fun {ArgType X}
+   case {IsDet X} then
+      case     {IsUnit X}       then '<unit>'
+      elsecase {IsArray X}      then '<array>'
+      elsecase {IsAtom X}       then '<atom>'
+      elsecase {IsBool X}       then '<bool>'
+      elsecase {IsCell X}       then '<cell>'
+      elsecase {IsClass X}      then '<class>'
+      elsecase {IsDictionary X} then '<dictionary>'
+      elsecase {IsFloat X}      then '<float>'
+      elsecase {IsInt   X}      then '<int>'
+      elsecase {IsList X}       then '<list>'
+      elsecase {IsLiteral X}    then '<literal>'
+      elsecase {IsLock X}       then '<lock>'
+      elsecase {IsName X}       then '<name>'
+      elsecase {IsObject X}     then '<object>'
+      elsecase {IsPort X}       then '<port>'
+      elsecase {IsProcedure X}  then '<procedure>'
+      elsecase {IsTuple X}      then '<tuple>'
+      elsecase {IsRecord X}     then '<record>'
+      elsecase {IsChunk X}      then '<chunk>'
+      else                           '<???>'
+      end
+   else                              '_'
+   end
 end
 
 TagCounter =

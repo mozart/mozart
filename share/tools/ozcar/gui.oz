@@ -33,7 +33,7 @@ class Gui from Menu Dialog
       
       %% buttons and status line
       self.StatusLabel = {New Tk.label tkInit(parent:self.ButtonFrame
-					      text:'No current Thread')}
+					      text:StatusInitText)}
       local
 	 Bs = {Map [step cont stack]
 	       fun {$ B}
@@ -48,12 +48,12 @@ class Gui from Menu Dialog
 
       %% create the thread tree object...
       self.ThreadTree = {New Tree tkInit(parent: self.toplevel
-					 title:  'Thread Tree'
+					 title:  TreeTitle
 					 width:  ThreadTreeWidth
 					 bg:     DefaultBackground)}
       %% ...and the text widgets for stack and environment
-      {ForAll [self.StackText # 'Stack'
-	       self.EnvText   # 'Environment']
+      {ForAll [self.StackText # StackTitle
+	       self.EnvText   # EnvTitle  ]
        proc {$ T}
 	  T.1 = {New ScrolledTitleText tkInit(parent: self.toplevel
 					      title:  T.2
@@ -74,30 +74,71 @@ class Gui from Menu Dialog
 		]}
    end
 
-   meth stackText($)
-      self.StackText
+   meth printStackFrame(nr:Nr name:N args:A)
+      case N == undef orelse A == undef then
+	 skip
+      else
+	 W = self.StackText
+	 Args = {FormatArgs A}
+      in
+	 {ForAll [tk(conf state:normal)
+		  tk(delete '0.0' 'end')
+		  tk(insert 'end' Nr # ' {' # N)
+		  tk(conf state:disabled)] W}
+	  
+	  {ForAll Args
+	   proc {$ A}
+	      T = {TagCounter get($)}
+	      Ac = {New Tk.action
+		    tkInit(parent:{W w($)}
+			   action:proc{$}
+				     S = A.3
+				  in
+				     {Browse S}
+				  end)}
+	   in
+	      {ForAll [tk(conf state:normal)
+		       tk(insert 'end' ' ')
+		       tk(insert 'end' A.2 T)
+		       tk(conf state:disabled)
+		       tk(tag bind T '<1>' Ac)
+		       tk(tag conf T font:BoldFont)] W}
+	   end}
+	  
+	  {ForAll [tk(conf state:normal)
+		   tk(insert 'end' '}\n') 
+	   tk(conf state:disabled)
+	   tk(yview 'end')] W}
+      end
    end
    
-   meth selectNode(T)
-      {self.ThreadTree select(T)}
+   meth selectNode(I)
+      {self.ThreadTree select(I)}
    end
    
-   meth addNode(T I)
-      {self.ThreadTree add(T I)}
+   meth markNode(I How)
+      {self.ThreadTree mark(I How)}
+   end
+
+   meth addNode(I Q)
+      {self.ThreadTree add(I Q)}
    end
    
-   meth removeNode(T)
-      {self.ThreadTree remove(T)}
+   meth removeNode(I)
+      {self.ThreadTree remove(I)}
    end
 
    meth displayTree
       {self.ThreadTree display}
    end
    
-   meth status(S)
-      {self.StatusLabel tk(conf text:S)}
+   meth status(I S<=nil)
+      {self.StatusLabel tk(conf text:
+			      case S == nil then StatusInitText
+			      else 'Current Thread:  #' # I # '  (' # S # ')'
+			      end)}
    end
-
+   
    meth stackTitle(S)
       {self.StackText title(S)}
    end
