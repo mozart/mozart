@@ -47,11 +47,13 @@ public:
 
   void setArg(TaggedRef key, TaggedRef value)
   { 
-    if (table->fullTest()) {
+    if (table->fullTest()) table = table->doubleDynamicTable();
+    Bool valid=table->add(key,value);
+    if (!valid) {
       table = table->doubleDynamicTable();
+      valid = table->add(key,value);
     }
-    Bool ret = table->add(key,value);
-    Assert(ret==OK);
+    Assert(valid);
   }
 
   void remove(TaggedRef key) 
