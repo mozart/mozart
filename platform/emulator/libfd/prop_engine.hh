@@ -33,7 +33,7 @@
 //-----------------------------------------------------------------------------
 // debug macros
 
-#define DEBUG_COMPOUND
+//#define DEBUG_COMPOUND
 
 #ifdef DEBUG_COMPOUND
 #define CDM(A) printf A; fflush(stdout)
@@ -294,10 +294,31 @@ public:
 
 class OZ_FSetProfile {
 private:
-  int i;
+  int _known_in, _known_not_in, _card_size;
 
 public:
-  OZ_FSetProfile(OZ_FSetConstraint &);
+  OZ_FSetProfile(void) {};
+
+  void init(OZ_FSetConstraint &fset) {
+    _known_in     = fset.getKnownIn();
+    _known_not_in = fset.getKnownNotIn();
+    _card_size    = fset.getCardSize();
+  }
+
+  int isTouched(OZ_FSetConstraint &fset) {
+    return ((_known_in < fset.getKnownIn()) ||
+            (_known_not_in < fset.getKnownNotIn()) ||
+            (_card_size > fset.getCardSize()));
+  }
+  int isTouchedSingleValue(OZ_FSetConstraint &fset) {
+    return (_known_in +_known_not_in < fs_sup + 1) && fset.isValue();
+  }
+  int isTouchedLowerBound(OZ_FSetConstraint &fset) {
+    return _known_in < fset.getKnownIn();
+  }
+  int isTouchedUpperBound(OZ_FSetConstraint &fset) {
+    return _known_not_in < fset.getKnownNotIn();
+  }
 };
 
 class FSetEventLists {
@@ -364,10 +385,6 @@ public:
 };
 
 //--------------------------------------------------
-class CtEventLists {
-};
-
-//--------------------------------------------------
 class SuspVar {
 public:
 
@@ -375,12 +392,86 @@ public:
 };
 
 class SuspFSetVar : public SuspVar {
-public:
-  SuspFSetVar(OZ_FSetVar &, OZ_FSetProfile &, FSetEventLists &, PropQueue &);
-  SuspFSetVar(OZ_FSetVar &, OZ_FSetConstraint &, FSetEventLists &, PropQueue &);
+private:
+  OZ_FSetProfile _profile;
+  PropQueue * _prop_queue;
+  FSetEventLists * _event_list;
 
-  OZ_FSetConstraint &operator * (void);
-  OZ_FSetConstraint * operator -> (void);
+  OZ_FSetConstraint * _fset;
+
+  PropFnctTable * _prop_fnct_table;
+
+  void _init(FSetEventLists &fsetel, PropQueue &pq) {
+    _prop_queue = &pq;
+    _event_list = &fsetel;
+  }
+public:
+  SuspFSetVar(void) {}
+  //---------------------------------------------------------------------------
+  // store variable and propagation variable are identical,
+  // initialization and propagation are conjoined in a single function
+  SuspFSetVar * init(OZ_FSetProfile &fsetp, OZ_FSetConstraint &fset,
+                     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
+                     int first = 1) {
+    _init(fsetel, pq);
+    //
+    _profile = fsetp;
+    _fset = & fset;
+    _prop_fnct_table = &pft;
+    wakeUp();
+    return this;
+  }
+  //
+  SuspFSetVar(OZ_FSetProfile &fsetp, OZ_FSetConstraint &fset,
+                     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
+                     int first = 1) {
+    (void) init(fsetp, fset, fsetel, pq, pft, first);
+  }
+  //---------------------------------------------------------------------------
+  // store variable and propagation variable are separate,
+  // initialization and propagation are separate functions
+  SuspFSetVar * init(OZ_FSetConstraint &fsetl,
+                     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
+                     int first = 1) {
+    _init(fsetel, pq);
+    //
+    _profile.init(fsetl);
+    _fset = & fsetl;
+    _prop_fnct_table = &pft;
+    return this;
+  }
+  //
+  SuspFSetVar(OZ_FSetConstraint &fsetl,
+                     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
+                     int first = 1) {
+    (void) init(fsetl, fsetel, pq, pft, first);
+  }
+  //
+  int propagate_to(OZ_FSetConstraint &fset, int first = 0) {
+    int r = (*_fset <<= fset);
+    if (r == 0)
+      return 0;
+    wakeUp(first);
+    return 1;
+  }
+  //
+  virtual OZ_Boolean wakeUp(int first = 0) {
+    if (first || _profile.isTouchedSingleValue(*_fset))
+      _event_list->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
+    //
+    if (first || _profile.isTouchedLowerBound(*_fset))
+      _event_list->getLowerBound().wakeup(_prop_queue, _prop_fnct_table);
+    //
+    if (first || _profile.isTouchedUpperBound(*_fset))
+      _event_list->getUpperBound().wakeup(_prop_queue, _prop_fnct_table);
+    //
+    _profile.init(*_fset);
+    //
+    return _fset->isValue();
+  }
+  //
+  OZ_FSetConstraint &operator * (void) { return *_fset; }
+  OZ_FSetConstraint * operator -> (void) { return _fset; }
 };
 
 class SuspFDIntVar : public SuspVar {
@@ -400,8 +491,8 @@ private:
 public:
   SuspFDIntVar(void) {}
   //---------------------------------------------------------------------------
-  //store variable and propagation variable are identical,
-  //initialization and propagation are conjoined in a single function
+  // store variable and propagation variable are identical,
+  // initialization and propagation are conjoined in a single function
   SuspFDIntVar * init(OZ_FDProfile &fdp, OZ_FiniteDomain &fd,
                       FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft,
                       int first = 1)
@@ -417,11 +508,11 @@ public:
   SuspFDIntVar(OZ_FDProfile &fdp, OZ_FiniteDomain &fdv,
                FDEventLists &fdel, PropQueue &pd, PropFnctTable &pft,
                int first = 1) {
-    init(fdp, fdv, fdel, pd, pft, first);
+    (void) init(fdp, fdv, fdel, pd, pft, first);
   }
   //---------------------------------------------------------------------------
-  //store variable and propagation variable are separate,
-  //initialization and propagation are separate functions
+  // store variable and propagation variable are separate,
+  // initialization and propagation are separate functions
   SuspFDIntVar * init(OZ_FiniteDomain &fdl,
                       FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft)
   {
@@ -432,6 +523,12 @@ public:
     _prop_fnct_table = &pft;
     return this;
   }
+  //
+  SuspFDIntVar(OZ_FiniteDomain &fdl, FDEventLists &fdel,
+               PropQueue &pd, PropFnctTable &pft) {
+    (void) init(fdl, fdel, pd, pft);
+  }
+
   // propagate store constraints to encapsulated constraints
   int propagate_to(OZ_FiniteDomain &fd, int first = 0) {
     int r = (*_fd &= fd);
@@ -441,14 +538,6 @@ public:
     return 1;
   }
   //
-  SuspFDIntVar(OZ_FiniteDomain &fdl, FDEventLists &fdel,
-               PropQueue &pd, PropFnctTable &pft) {
-    init(fdl, fdel, pd, pft);
-  }
-
-  OZ_FiniteDomain &operator * (void) { return *_fd; }
-  OZ_FiniteDomain * operator -> (void) { return _fd; }
-
   virtual OZ_Boolean wakeUp(int first  = 0) {
     if (first || _profile.isTouchedSingleValue(*_fd))
       _event_list->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
@@ -460,6 +549,9 @@ public:
     //
     return _fd->getSize() != 1;
   }
+  //
+  OZ_FiniteDomain &operator * (void) { return *_fd; }
+  OZ_FiniteDomain * operator -> (void) { return _fd; }
 };
 
 #endif
