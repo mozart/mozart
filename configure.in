@@ -32,10 +32,16 @@ fi
 
 AC_MSG_CHECKING([for tricky preprocessor options])
 if test "${GXX}" = yes; then
+   case "$PLATFORM" in
+     win32*)
+         MOZART_GTK_CPPFLAGS="-undef -D__GNUC__ -std=c99"
+	 ;;
+     *)
+         MOZART_GTK_CPPFLAGS="-D__GNUC__"
+	 ;;
+   esac
    echo > oz_conftest.c
-   if test -z "`${CPP} -undef -D__GNUC__ -std=c99 oz_conftest.c 2>&1 1>/dev/null`"; then
-      MOZART_GTK_CPPFLAGS="-undef -D__GNUC__ -std=c99"
-   else
+   if ! test -z "`${CPP} ${MOZART_GTK_CPPFLAGS} oz_conftest.c 2>&1 1>/dev/null`"; then
       MOZART_GTK_CPPFLAGS=
    fi
    rm -f oz_conftest.c
