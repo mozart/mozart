@@ -170,17 +170,17 @@ Note that this variable is only checked once when oz.el is loaded."
 	   :type 'string
 	   :group 'oz)))
 (put 'oz-emulator 'variable-interactive
-     "fChoose Oz Emulator binary: ")
+     "fOz Emulator binary: ")
 
 (eval-and-compile
-  (eval '(defcustom oz-components-url
-	   (or (getenv "OZCOMPONENTS")
-	       (concat (getenv "HOME") "/Oz/lib/"))
-	   "*URL base of the Oz Components (used by \\[oz-other])."
+  (eval '(defcustom oz-components-path
+	   (or (getenv "OZ_LOAD")
+	       "prefix=http\\://www.ps.uni-sb.de/ozhome/lib/=~/Oz/lib/")
+	   "*Search path for the Oz Components (used by \\[oz-other])."
 	   :type 'string
 	   :group 'oz)))
-(put 'oz-components-url 'variable-interactive
-     "sBase URL of the Oz components: ")
+(put 'oz-components-path 'variable-interactive
+     "sOz components search path: ")
 
 (eval-and-compile
   (eval '(defcustom oz-gdb-autostart t
@@ -855,11 +855,8 @@ If FORCE is non-nil, kill it immediately."
 	  (setq oz-emulator-buffer "*Oz Emulator*")
 	  (cond (oz-win32
 		 (setq oz-read-emulator-output t)
-		 (let ((components
-			(or (getenv "OZCOMPONENTS")
-			    (concat "file:" (oz-home) "/lib/"))))
-		   (make-comint "Oz Emulator" "ozemulator" nil "-E"
-				"-u" (concat components "OPI.ozc"))))
+		 (make-comint "Oz Emulator" "ozemulator" nil "-E" "-u"
+			      "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc"))
 		(t
 		 (setq oz-read-emulator-output t)
 		 (make-comint "Oz Emulator" "oznc" nil "-E")))
@@ -886,13 +883,13 @@ If FORCE is non-nil, kill it immediately."
 ;;------------------------------------------------------------
 
 (defun oz-set-other (set-components)
-  "Set the value of environment variables OZEMULATOR or OZCOMPONENTS.
-If SET-COMPONENTS is non-nil, set the Components base URL (can also
+  "Set the value of environment variables OZEMULATOR or OZ_LOAD.
+If SET-COMPONENTS is non-nil, set the Components search path (can also
 be done via \\[oz-set-components]); if it is nil, set the emulator
 binary (can also be done via \\[oz-set-emulator]."
   (interactive "P")
   (if set-components
-      (oz-set-components)
+      (call-interactively 'oz-set-components)
     (oz-set-emulator)))
 
 (defun oz-set-emulator ()
@@ -908,21 +905,17 @@ Can be selected by \\[oz-other-emulator]."
   (if (getenv "OZEMULATOR")
       (setenv "OZEMULATOR" oz-emulator)))
 
-(defun oz-set-components ()
-  "Set the value of variable `oz-components-url'.
+(defun oz-set-components (arg)
+  "Set the value of variable `oz-components-path'.
 Can be selected by \\[oz-other-components]."
-  (interactive)
-  (setq oz-components-url
-	(expand-file-name
-	 (read-file-name (format "Oz components base URL (default %s): "
-				 oz-components-url)
-			 nil oz-components-url t nil)))
-  (if (getenv "OZCOMPONENTS")
-      (setenv "OZCOMPONENTS" oz-components-url)))
+  (interactive "sOz components search path: ")
+  (setq oz-components-path arg)
+  (if (getenv "OZ_LOAD")
+      (setenv "OZ_LOAD" oz-components-path)))
 
 (defun oz-other (set-components)
   "Switch between global and local Oz Emulator or Oz Components.
-If SET-COMPONENTS is non-nil, switch the Components base URL (via
+If SET-COMPONENTS is non-nil, switch the Components search path (via
 \\[oz-other-components]); if it is nil, switch the emulator binary
 \(via \\[oz-other-emulator])."
   (interactive "P")
@@ -943,15 +936,15 @@ or can be set by \\[oz-set-emulator]."
 	 (message "Oz Emulator: %s" oz-emulator))))
 
 (defun oz-other-components ()
-  "Switch between global and local Oz Components base URL.
+  "Switch between global and local Oz Components search path.
 These can be set by \\[oz-set-components]."
   (interactive)
-  (cond ((getenv "OZCOMPONENTS")
-	 (setenv "OZCOMPONENTS" nil)
-	 (message "Oz Components base URL: global"))
+  (cond ((getenv "OZ_LOAD")
+	 (setenv "OZ_LOAD" nil)
+	 (message "Oz Components search path: global"))
 	(t
-	 (setenv "OZCOMPONENTS" oz-components-url)
-	 (message "Oz Components base URL: %s" oz-components-url))))
+	 (setenv "OZ_LOAD" oz-components-path)
+	 (message "Oz Components search path: %s" oz-components-path))))
 
 (defun oz-gdb ()
   "Toggle debugging of the Oz Emulator with gdb.
@@ -988,10 +981,7 @@ The directory containing FILE becomes the initial working directory
 and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
-	(init-str (concat "set args -u "
-			  (or (getenv "OZCOMPONENTS")
-			      (concat "file:" (oz-home) "/lib/"))
-			  "OPI.ozc\n")))
+	(init-str "set args -u http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc\n"))
     (cond ((get-buffer oz-emulator-buffer)
 	   (delete-windows-on oz-emulator-buffer)
 	   (kill-buffer oz-emulator-buffer)))
