@@ -23,6 +23,15 @@ OZ_C_proc_begin(BIisFdVar, 1)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIisFdVarB, 2)
+{ 
+  return (OZ_unify
+	  (OZ_getCArg (1),
+	   (isGenFDVar(deref(OZ_getCArg(0))) || 
+	    isGenBoolVar(deref(OZ_getCArg(0)))) ? NameTrue : NameFalse));
+}
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BIgetFDLimits,2)
 { 
