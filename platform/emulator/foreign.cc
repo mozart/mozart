@@ -14,6 +14,7 @@
 #include "oz.h"
 
 #include "am.hh"
+#include "bignum.hh"
 
 
 /* TmpBuffer with at LEAST 512 characters,
@@ -138,6 +139,20 @@ OZ_Term OZ_termType(OZ_Term term)
   }
 
   return AtomUnknown;
+}
+
+/* -----------------------------------------------------------------
+ * providing constants
+ *------------------------------------------------------------------*/
+
+int OZ_getMinInt(void) 
+{
+  return OzMinInt;
+}
+
+int OZ_getMaxInt(void) 
+{
+  return OzMaxInt;
 }
 
 /* -----------------------------------------------------------------
