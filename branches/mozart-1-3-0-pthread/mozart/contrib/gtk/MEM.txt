@@ -1,0 +1,4 @@
+GTK+/GNOME Memory Management
+
+GTK+ safely handles its widgets automaticly. It uses
+reference counting based GC.

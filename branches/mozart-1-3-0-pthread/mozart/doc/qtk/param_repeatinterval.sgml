@@ -1,0 +1,1 @@
+<ITEM> <<repeatinterval:I>> : Used in conjunction with <<repeatdelay>>: once auto-repeat begins, this option determines the number of milliseconds between auto-repeats. 

@@ -1,0 +1,46 @@
+<section ID="chapter.widgets.space">
+  <TITLE>Tdspace and lrspace widgets</TITLE>
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+These widgets skip blank spaces. <<tdspace>> skips vertical space while <<lrspace>> skips horizontal space. They naturally only take one pixel of size in the opposite direction, so they are often glued to take all available space (<<tdspace(glue:we)>> and <<lrspace(glue:ns)>>.
+
+<subsection> <TITLE>Parameters</TITLE>
+
+<P>
+<LIST>
+&param_background;
+
+<ITEM> <<width:I>> : Specifies the amount of vertical or horizontal space to skip. <<I>> must be a valid screen distance (see <ptr to="misc.distance">).
+
+&param_glue;
+&param_padx;
+&param_pady;
+&param_feature;
+&param_handle;
+&param_tooltips;
+
+</LIST>
+
+</P>
+
+<subsection> <TITLE>Interface</TITLE>
+
+<P>
+The object you get by an handle on the widget implements the following methods :
+
+<LIST>
+
+&interface_set;
+&interface_get;
+&interface_bind;
+&interface_getFocus;
+&interface_setGrab;
+&interface_releaseGrab;
+&interface_getGrabStatus;
+&interface_raise;
+&interface_lower;
+&interface_winfo;
+
+</LIST>
+</section>

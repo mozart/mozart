@@ -1,0 +1,53 @@
+<chapter id=chapter.profiler proglang=sh>
+  <title/The Oz Profiler: <code/ozd -p//
+  <p>The Oz profiler is extensively documented in
+<ptr.extern to="ozdoc:profiler">.  We describe it here merely in its
+incarnation as a command line application.  Furthermore, we only
+document its options.</p>
+  <p>If you have created an Oz application which you normally start
+from the shell as follows:
+<code display/Foo ?{Args} ... /
+Then you can run it under control of the Oz profiler by using the
+following command instead:
+<code display/ozd -p Foo -- ?{Args} .../
+Any Oz application can be run in the profiler, but you only get the
+full benefit of the profiling interface when the code being executed
+was compiled with the <code/-p/ option to include profiling
+instrumentation code.  The profiler and the debugger share the same
+interface.</p>
+  <p>The double dash <code/--/ separates the arguments intended for
+<code/ozd/ from those intended for the application being run under the
+profiler.
+<list>
+      <entry/<code/--help/, <code/-h/, <code/-?//
+      <item/Display information on legal options, then exit/
+
+      <entry/<code/-p/, <code/--profiler/, <code/--mode=profiler//
+      <item/You must supply this option in order to start the profiler;
+otherwise the debugger is started instead (see
+<ptr to=chapter.debugger>)./
+
+      <entry/<code/-g/, <code/--debugger/, <code/--mode=debugger//
+      <item/This is the default option: it starts the debugger
+(see <ptr to=chapter.debugger>). As mentioned above, in order to
+actually start the profiler, you must supply the <code/-p/ option./
+
+      <entry/<code/-E/, <code/--(no)useemacs//
+      <item/Starts a subordinate Emacs process.  This will be used to
+display the source code corresponding to the profile data being
+examined./
+
+      <entry/<code/--emacs=?{FILE}//
+      <item/Specifies the Emacs binary to run for option <code/-E/.
+The default is $<var env/OZEMACS/ if set, else <file/emacs/./
+    </list></p>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../apptut/chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

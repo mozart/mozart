@@ -1,0 +1,110 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.lift">
+  <Title/Lift/
+    <Author.Extern to="author.db" key="Martin.Mueller">
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Lift.oza"/Start Applet/
+      <Item>
+	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+    </List>
+  </P>
+
+  <P>
+    This demo performs a simple simulation of lifts. It can be operated
+    both in an interactive (<Ptr to="section.lift.interactive">) mode
+    or fully automatically (<Ptr to="section.lift.automatic">).
+  </P>
+
+  <Section class=unnumbered id="section.lift.interactive">
+    <Title/Interactive Mode/
+
+    <P>
+      <List>
+        <Entry>
+          Request
+        <Item>
+	  Clicking one of the triangles on the left
+	  issues a request for a lift to the respective floor
+	  for service in the indicated direction. The lift that
+	  can serve the request quickest (according to its current
+	  schedule)
+	  will be sent to the requesting floor.
+	
+        <Entry>
+          Send
+        <Item>
+	  On arrival of a lift, a console will pop up requesting the user
+	  to indicate the goal.
+	  While the console is visible, the corresponding lift is not
+	  available for other requests. 
+	  Once the user clicks one of the circles, 
+	  the lift will add the corresponding request into its schedule and 
+	  serve it.
+      </List>
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered id="section.lift.automatic">
+    <Title/Automatic Mode/
+
+    <P>
+      <List>
+        <Entry>
+          Start
+        <Item>
+	  Clicking the button marked <Em/start/ generates
+	  a random sequence of lift requests and serves them just as the
+	  requests generated interactively.
+	
+        <Entry>
+	  Stop
+        <Item>
+	  Clicking the button again, now marked <Em/stop/,
+	  stops the automatic generation of lift requests.
+      </List>
+    </P>
+
+    <P>
+      Interactive lift requests can be
+      issued in addition.
+    </P>
+
+  </Section>
+
+  <section class=unnumbered id="section.lift.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.lift>
+      <title>Root functor: <file/Lift.oz/</title>
+      <para><title><ref.extern to="Lift.oz">Source
+File</ref.extern></title>
+<code.extern display to="Lift.oz" proglang=oz></para>
+    </subsection>
+
+
+</Chapter>

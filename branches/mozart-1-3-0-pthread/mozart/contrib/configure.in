@@ -1,0 +1,208 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Denys Duchier, (duchier@ps.uni-sb.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(gdbm)
+
+AC_CHECK_PROGS(RM, rm)
+
+OZ_INIT
+
+CONTRIBDIRS="tk ap"
+
+AC_DEFUN(OZ_ADDTO_CONTRIBDIRS,[
+  if test "$oz_cv_enable_contrib_$1" = yes; then
+    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }$1"
+  fi])
+
+AC_MSG_CHECKING([for --enable-contrib-gdbm])
+AC_ARG_ENABLE(contrib-gdbm,
+  [--enable-contrib-gdbm
+	whether to build the gdbm contribution (default: yes)],
+  [oz_cv_enable_contrib_gdbm=$enableval],
+  [: ${oz_cv_enable_contrib_gdbm:=$oz_enable_contrib_gdbm}
+   : ${oz_cv_enable_contrib_gdbm:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_gdbm)
+OZ_ADDTO_CONTRIBDIRS(gdbm)
+
+AC_MSG_CHECKING([for --enable-contrib-regex])
+AC_ARG_ENABLE(contrib-regex,
+  [--enable-contrib-regex
+	whether to build the regex contribution (default: yes)],
+  [oz_cv_enable_contrib_regex=$enableval],
+  [: ${oz_cv_enable_contrib_regex:=$oz_enable_contrib_regex}
+   : ${oz_cv_enable_contrib_regex:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_regex)
+OZ_ADDTO_CONTRIBDIRS(regex)
+
+AC_MSG_CHECKING([for --enable-contrib-doc])
+AC_ARG_ENABLE(contrib-doc,
+  [--enable-contrib-doc
+	whether to build the doc contribution (default: yes)],
+  [oz_cv_enable_contrib_doc=$enableval],
+  [: ${oz_cv_enable_contrib_doc:=$oz_enable_contrib_doc}
+   : ${oz_cv_enable_contrib_doc:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_doc)
+OZ_ADDTO_CONTRIBDIRS(doc)
+
+AC_MSG_CHECKING([for --enable-contrib-os])
+AC_ARG_ENABLE(contrib-os,
+  [--enable-contrib-os
+	whether to build the os contribution (default: yes)],
+  [oz_cv_enable_contrib_os=$enableval],
+  [: ${oz_cv_enable_contrib_os:=$oz_enable_contrib_os}
+   : ${oz_cv_enable_contrib_os:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_os)
+OZ_ADDTO_CONTRIBDIRS(os)
+
+AC_MSG_CHECKING([for --enable-contrib-micq])
+AC_ARG_ENABLE(contrib-micq,
+  [--enable-contrib-micq,
+	whether to build the Mozart instant messenger (default: yes)],
+  [oz_cv_enable_contrib_micq=$enableval],
+  [: ${oz_cv_enable_contrib_micq:=$oz_enable_contrib_micq}
+   : ${oz_cv_enable_contrib_micq:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_micq)
+OZ_ADDTO_CONTRIBDIRS(micq)
+
+AC_SUBST(CONTRIBDIRS)
+AC_CONFIG_SUBDIRS($CONTRIBDIRS)
+
+AC_MSG_CHECKING([for --enable-contrib-ri])
+AC_ARG_ENABLE(contrib-ri,
+  [--enable-contrib-ri
+	whether to build the ri contribution (default: no)],
+  [oz_cv_enable_contrib_ri=$enableval],
+  [: ${oz_cv_enable_contrib_ri:=$oz_enable_contrib_ri}
+   : ${oz_cv_enable_contrib_ri:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_ri)
+OZ_ADDTO_CONTRIBDIRS(ri)
+
+AC_MSG_CHECKING([for --enable-contrib-lp])
+AC_ARG_ENABLE(contrib-lp,
+  [--enable-contrib-lp
+	whether to build the lp contribution (default: no)],
+  [oz_cv_enable_contrib_lp=$enableval],
+  [: ${oz_cv_enable_contrib_lp:=$oz_enable_contrib_lp}
+   : ${oz_cv_enable_contrib_lp:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_lp)
+OZ_ADDTO_CONTRIBDIRS(lp)
+
+AC_MSG_CHECKING([for --enable-contrib-davinci])
+AC_ARG_ENABLE(contrib-davinci,
+  [--enable-contrib-davinci
+	whether to build the davinci contribution (default: no)],
+  [oz_cv_enable_contrib_davinci=$enableval],
+  [: ${oz_cv_enable_contrib_davinci:=$oz_enable_contrib_davinci}
+   : ${oz_cv_enable_contrib_davinci:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_davinci)
+OZ_ADDTO_CONTRIBDIRS(davinci)
+
+AC_MSG_CHECKING([for --enable-contrib-reflect])
+AC_ARG_ENABLE(contrib-reflect,
+  [--enable-contrib-reflect
+	whether to build the reflect contribution (default: no)],
+  [oz_cv_enable_contrib_reflect=$enableval],
+  [: ${oz_cv_enable_contrib_reflect:=$oz_enable_contrib_reflect}
+   : ${oz_cv_enable_contrib_reflect:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_reflect)
+OZ_ADDTO_CONTRIBDIRS(reflect)
+
+AC_MSG_CHECKING([for --enable-contrib-investigator])
+AC_ARG_ENABLE(contrib-investigator,
+  [--enable-contrib-investigator
+	whether to build the investigator contribution (default: no)],
+  [oz_cv_enable_contrib_investigator=$enableval],
+  [: ${oz_cv_enable_contrib_investigator:=$oz_enable_contrib_investigator}
+   : ${oz_cv_enable_contrib_investigator:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_investigator)
+OZ_ADDTO_CONTRIBDIRS(investigator)
+
+AC_MSG_CHECKING([for --enable-contrib-fcp])
+AC_ARG_ENABLE(contrib-fcp,
+  [--enable-contrib-fcp
+	whether to build the fcp contribution (default: no)],
+  [oz_cv_enable_contrib_fcp=$enableval],
+  [: ${oz_cv_enable_contrib_fcp:=$oz_enable_contrib_fcp}
+   : ${oz_cv_enable_contrib_fcp:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_fcp)
+OZ_ADDTO_CONTRIBDIRS(fcp)
+
+AC_MSG_CHECKING([for --enable-contrib-psql])
+AC_ARG_ENABLE(contrib-psql,
+  [--enable-contrib-psql
+	whether to build the psql contribution (default: no)],
+  [oz_cv_enable_contrib_psql=$enableval],
+  [: ${oz_cv_enable_contrib_psql:=$oz_enable_contrib_psql}
+   : ${oz_cv_enable_contrib_psql:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_psql)
+OZ_ADDTO_CONTRIBDIRS(psql)
+
+AC_MSG_CHECKING([for --enable-contrib-gtk])
+AC_ARG_ENABLE(contrib-gtk,
+  [--enable-contrib-gtk
+	whether to build the gtk contribution (default: no)],
+  [oz_cv_enable_contrib_gtk=$enableval],
+  [: ${oz_cv_enable_contrib_gtk:=$oz_enable_contrib_gtk}
+   : ${oz_cv_enable_contrib_gtk:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_gtk)
+OZ_ADDTO_CONTRIBDIRS(gtk)
+
+AC_MSG_CHECKING([for --enable-contrib-compat])
+AC_ARG_ENABLE(contrib-compat,
+  [--enable-contrib-compat
+	whether to build the compat contribution (default: yes)],
+  [oz_cv_enable_contrib_compat=$enableval],
+  [: ${oz_cv_enable_contrib_compat:=$oz_enable_contrib_compat}
+   : ${oz_cv_enable_contrib_compat:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_compat)
+OZ_ADDTO_CONTRIBDIRS(compat)
+
+AC_MSG_CHECKING([for --enable-contrib-directory])
+AC_ARG_ENABLE(contrib-directory,
+  [--enable-contrib-directory
+	whether to build the directory contribution (default: yes)],
+  [oz_cv_enable_contrib_directory=$enableval],
+  [: ${oz_cv_enable_contrib_directory:=$oz_enable_contrib_directory}
+   : ${oz_cv_enable_contrib_directory:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_directory)
+OZ_ADDTO_CONTRIBDIRS(directory)
+
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
+

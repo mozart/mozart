@@ -1,0 +1,223 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.actions">
+  <Title/User-defined Actions/
+
+  <P>
+  Actions for the Explorer can be user-defined.  They must be provided
+  as procedures to the <<Explorer.object>>.
+  </P>
+
+  <section id="section.actions.information">
+    <Title/Information Actions/
+
+    <P>
+      <List>
+        <Entry><<add>>
+          <Index/<<Explorer>><AND><<object>><AND><<add>>/
+        <Synopsis>
+	  <<<{Explorer.object add(information ?+{PA}
+                     label: ?+{V} <= _
+                     type:  ?+{A} <= root>>>
+        <Item>
+          If ?{PA} is the atom ?{separator}, a separator entry is
+          added as last entry of the <Em/Information Action/ sub menu.
+	<P>
+          Otherwise, an entry with label ?{V} (a virtual string) is
+          added to the <Em/Information Action/ sub menu, from which
+          ?{PA} can be selected.  If the <<label>> feature is missing,
+          the printname of ?{PA} is taken as label instead. ?{PA} must
+          be either a binary or ternary procedure. 
+	<P>
+	  When the information action is invoked, ?{PA} is
+	  applied with the integer tagging the current node as
+	  first actual argument. The second actual argument depends on
+	  ?{A}. If ?{A} is <<root>> (the default) the argument is the root
+	  variable of the space attached to the current node. If ?{A} is
+	  <<space>> the argument is the space itself. If ?{A} is <<procedure>>
+	  the argument is a unary procedure ?{P}. On application, ?{P}
+	  returns the root variable of a copy of the space.
+	<P>
+	  If ?{PA} is a ternary procedure, it must return either a nullary
+	  procedure ?{P} or a pair <<?{O}#?{M}>> of an object
+	  ?{O} and a message ?{M}. When the Explorer is cleared, reset, or
+	  closed, a new thread is created that runs either <<{?{P}}>> or 
+	  <<{?{O} ?{M}}>> is executed.
+	<P>
+	  For example, the default information action can be defined
+	  as follows: 
+<<<{Explorer.object add(information proc {$ I X}
+                                    {Inspector.inspect I#X}
+                                 end
+                     label: 'Inspect')}>>>
+
+        <Entry><<delete>>
+          <Index/<<Explorer>><AND><<object>><AND><<delete>>/
+        <Synopsis>
+	  <<<{Explorer.object delete(information ?+{PA})}>>>
+        <Item>
+	  Deletes the information action ?{PA} from the <Em/Information
+	  Action/ submenu. If ?{PA} is the atom <<all>>, all but the default
+	  information actions are deleted from the submenu.
+	<P>
+	  For example, after adding an information action ?{P} by
+	  <<<{Explorer add(information ?{P})}>>>
+	  it can be deleted by
+          <<<{Explorer delete(information ?{P})}>>>
+      </List>
+    </P>
+  </section>
+
+  <section id="section.actions.compare">
+    <Title/Compare Actions/
+
+    <P>
+      <List>
+        <Entry><<add>>
+          <Index/<<Explorer>><AND><<object>><AND><<add>>/
+        <Synopsis>
+	  <<<{Explorer.object add(compare ?+{PA}
+                     label: ?+{V} <= _
+                     type:  ?+{A} <= root>>>
+        <Item>
+	  If ?{PA} is the atom <<separator>>, a separator entry is
+	  added to the bottom of the <Em/Compare Action/ submenu.
+	<P>
+	  Otherwise, an entry with label ?{V} (a virtual string) is
+	  added to the <Em/Compare Action/ submenu, from which ?{PA}
+	  can be selected.  If the <<label>> feature is missing, the
+	  printname of ?{PA} is taken as label instead. ?{PA} must be
+	  either a $4$-ary or $5$-ary procedure. When the compare
+	  action is invoked, ?{PA} is applied with the integer tagging
+	  the compare (current) node as first (third) actual argument.
+	  The second (fourth) actual argument is the computation space
+	  attached to the compare (current) node. These arguments
+	  depend on ?{A} as explained for adding information actions. 
+	<P>
+	  If ?{PA} is a $5$-ary procedure, it must return either a nullary
+	  procedure ?{P} or a pair <<?{O}#?{M}>> of an object
+	  ?{O} and a message ?{M}. When the Explorer is cleared, reset, or
+	  closed, a new thread is created that runs either <<{?{P}}>> or 
+	  <<{?{O} ?{M}}>> is executed.
+	<P>
+	  For example, the default compare action can be defined as
+	  follows: 
+<<<{Explorer.object add(compare proc {$ I1 X1 I2 X2}
+                                {Inspector.inspect I1#I2#X1#X2}
+                             end
+                             label: 'Inspect')}>>>
+
+        <Entry><<delete>>
+          <Index/<<Explorer>><AND><<object>><AND><<delete>>/
+        <Synopsis>
+	  <<<{Explorer.object delete(compare ?+{PA})}>>>
+        <Item>
+	  Deletes the compare action ?{P} from the <Em/Compare
+	  Action/ submenu. If ?{PA} is the atom <<all>>, all but the 
+	  default compare actions are deleted from the submenu.
+
+      </List>
+    </P>
+  </section>
+
+
+  <section id="section.actions.statistics">
+    <Title/Statistics Actions/
+
+    <P>
+      <List>
+        <Entry><<add>>
+          <Index/<<Explorer>><AND><<object>><AND><<add>>/
+        <Synopsis>
+	  <<<{Explorer.object add(statistics ?+{PA}
+                     label: ?+{V} <= _)>>>
+        <Item>
+          If ?{PA} is the atom <<separator>>, a separator entry is
+	  added to the bottom of the <Em/Statistics Action/ sub menu.
+	<P>
+	  Otherwise, an entry with label ?{V} (a virtual string) is
+          added to the <Em/Statistics Action/ sub menu, from which
+	  ?{PA} can be selected.  If the <<label>> feature is missing,
+	  the printname of ?{PA} is taken as label instead. ?{PA} must
+	  be either a binary or ternary procedure.  When the
+	  information action is invoked, ?{PA} is applied with the
+	  integer tagging the current node as first actual
+	  argument. The second actual argument is a record as follows:
+<<<stat(c: &ellipsis; % number of choice nodes
+     s: &ellipsis; % number of solved nodes
+     f: &ellipsis; % number of failed nodes
+     b: &ellipsis; % number of suspended nodes
+     start: &ellipsis; % depth of current node
+     depth: &ellipsis; % depth of current subtree
+     shape: &ellipsis; % describes current subtree
+    )>>>
+	<P>
+	  The value for the feature <<shape>> is either <<s>>, <<f>>,
+	  or <<b>> with the meaning from above or a unary tuple with
+	  label <<c>>. The argument of the tuple is a list where the
+	  elements recursively describe the shapes of the choice
+	  node's subtrees. 
+	<P>
+	  For example, invoking a statistics action on the following subtree;
+	<P>
+	  <Picture.extern id="pic.stat-ex"
+			  to="pictures/stat-ex.ps" type=ps info="-width 70">
+	<P>
+	  the second actual argument is as follows:
+<<<stat(c:4 s:1 f:1 b:1 
+     start:1  
+     depth:4 
+     shape: c([c([s f]) 
+               c([c([b])])]) 
+    )>>>
+	<P>
+	  If ?{PA} is a ternary procedure, it must return either a
+	  nullary procedure ?{P} or a pair <<?{O}#?{M}>> of an object
+	  ?{O} and a message ?{M}. When the Explorer is cleared, reset, or
+	  closed, a new thread is created that runs either <<{?{P}}>> or 
+	  <<{?{O} ?{M}}>> is executed.
+	<P>
+	  For example, the default statistics action can be defined as
+	  follows: 
+<<<{Explorer.object add(statistics 
+                     proc {$ I R}
+                        {Inspector.inspect I#{Record.subtract R shape}}
+                     end
+                     label: 'Inspect')>>>
+
+        <Entry><<delete>>
+          <Index/<<Explorer>><AND><<object>><AND><<delete>>/
+        <Synopsis>
+	  <<<{Explorer.object delete(statistics ?+{PA})}>>>
+        <Item>
+	  Deletes the statistics action ?{P} from the <Em/Statistics
+          Action/ submenu. If ?{PA} is the atom <<all>>, all but the
+          default statistics actions are deleted from the submenu. 
+
+      </List>
+    </P>
+  </section>
+
+</chapter>
+

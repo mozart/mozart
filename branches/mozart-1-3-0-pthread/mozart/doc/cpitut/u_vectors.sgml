@@ -1,0 +1,215 @@
+<Section id="u_vectors">
+<Title/Using Vectors in Propagators/
+
+<p>
+This section explains how propagators with vectors as parameters can be
+implemented by the &cpi .
+
+<p>
+<SubSection id="u_vector.element">
+<Title/The <Em/element/ Constraint/
+
+<p>
+The previous section explained techniques of how to handle propagator
+parameters which are vectors. This section implements the constraint
+<Math/element(n, [d_1,\ldots,d_m], v)/, whose declarative semantics is
+defined by <Math/d_n=v/.
+
+<p>
+All parameters of the <Math/element/ propagator are allowed to be finite
+domain variables &resp a vector of finite domain variables. We have the
+following propagation rules, which determine the operational semantics
+of the propagator for the constraint <Math/element/.
+
+<para id=u_vector.rule_e1><title//
+Rule 1: <Math/n := dom(n) \cap \{i \; | \; \exists j \in dom(v): j \in
+dom(d_i)\}/
+
+<para id=u_vector.rule_e2><title//
+Rule 2: <Math/v := dom(v) \cap \left(\bigcup_{i \in (dom(n) \cap
+\{1,\ldots,m\})} dom(d_i) \right)/
+
+<para id=u_vector.rule_e3><title//
+Rule 3: <Math/\mbox{if}  \;\;\; dom(n) = \{o\} \;\;\; \mbox{then}  \;\;\; d_o
+:= dom(v)/ 
+
+<p>
+Note that <Math/dom(x)/ denotes the current domain of <Math/x/
+and <Math/x := d/
+denotes the update of <Math/dom(x)/ with <Math/d/.
+
+<p>
+The first rule states that the domain of <Math/n/ can only
+contain values <Math/i/ such that <Math/dom(d_i)/ and 
+<Math/dom(v)/ share at least one
+value.  The propagation rule (Rule 2) states that the domain
+of <Math/v/ cannot contain any value which does not occur in at least one
+<Math/d_i/ indexed by the values <Math/i/ of the domain of <Math/n/, 
+&ie <Math/i \in dom(n)/. 
+The third rule says that as soon as <Math/n/ is
+a singleton containing <Math/o/, the <Math/o/th element of <Math/d/
+is equal to
+<Math/v/. The implementation of these rules is given in 
+<ptr to="u_vector.rules">.
+
+<p>
+<Subsection id="u_vector.class">
+<Title/The Class Definition of <<ElementProp>>/
+
+<p>
+The state of an instance of the class <<ElementProp>> contains a
+pointer to an array of <<OZ_Term>>s, namely <<_d>>. This is
+necessary, since it is not known beforehand how many elements are contained
+in the vector <Math/d/. The size of the vector is stored in
+<<_d_size>>. Using a dynamic array in the state has some significant
+implications to the implementation of the member functions. The first
+function concerned is the constructor which has to allocate sufficient
+heap memory for the vector. The &cpi provides the function
+<<OZ_vectorSize()>>, which computes the size of a vector passed as
+<<OZ_Term>>. This size is used to allocate an appropriately sized
+chunk of memory using the &cpi function
+<<OZ_hallocOzTerms()>>. Finally, the vector as Oz data structure has to
+be converted to a &ccpp; array. For convenience, the &cpi provides the
+function <<OZ_getOzTermVector()>> which does this conversion. The
+following code gives the class definition described so far.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.2.cc" class=linenumbers>
+
+<p>
+The function <<getParameters()>> returns the arguments of the propagator
+in a list. Thereby, the vector <Math/d/ is represented in a sublist. The
+local &ccpp; variable <<list>> is used to build up the list from the
+end of the vector. Therefore it is initialised as empty list and
+extended element-wise.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.3.cc" class=linenumbers>
+
+<p>
+The member functions <<gCollect()>> and <<sClone()>> update the
+propagator's references to the heap after the propagator has been
+copied by garbage collection or space cloning.  Updating the data
+members <<_n>> and <<_v>> is done by applying <<OZ_gCollectTerm()>>
+resp. <<OZ_sCloneTerm>> to them.  Updating the array <<_d>> requires
+to duplicate the array and then to update all elements. This
+funtionality is provided by <<OZ_gCollectAllocBlock()>>
+(<<OZ_sCloneAllocBlock()>>) for garbage collection (space
+cloning). Here comes the code of that member function.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.4.cc" class=linenumbers>
+
+<p>
+<Subsection id="u_vector.header">
+<Title/The Header Function/
+
+<p>
+The implementation of the &ccpp; function to impose the <Math/element/
+propagator is straightforward with the techniques presented in
+<ptr to="u_nesting">. Note that this &ccpp; function
+treats empty 
+vectors separately, since an empty list (&resp literal) is a valid
+vector, but the <Math/element/ constraint is not defined on empty
+vectors. Therefore, the header function is left via the member function
+<<fail()>> in case a vector of length <Math/0/ is detected.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.5.cc" class=linenumbers>
+
+<p>
+The implementation uses the class <<ExtendedExpect>> (as explained in
+<ptr to="u_nesting.customize"> since the imposition of this
+propagator requires to check if the second argument is a vector of
+finite domain variables and this functionality is not directly provided
+by the &cpi class <<OZ_Expect>>.
+
+<p>
+<Subsection id="u_vector.iterators">
+<Title/Iterators Make Life Easier/
+
+<p>
+The propagator for the <Math/element/ constraint operates on a vector, which
+is represented by an array in the state of the propagator. The
+member function <<propagate()>> has to apply certain functions, like
+<<leave()>> and <<fail()>>, to all elements of the array at once and
+not to an individual elements. Therefore, it makes sense to define an
+<Em/iterator/ for such data structures.
+
+<p>
+The following code presents an iterator class for an <<OZ_FDIntVar>>
+array, which will be used by the member function <<propagate()>> of the
+<Math/element/ propagator.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.6.cc" class=linenumbers>
+
+<p>
+The iterator class provides the member functions <<leave()>> and
+<<fail()>> which call in turn the corresponding member functions of all
+elements of the array <<l>>. The function <<leave()>> returns <Math/1/ if
+there is at least one non-singleton domain left.
+
+<p>
+<Subsection id="u_vector.rules">
+<Title/Implementing the Propagation Rules/
+
+<p>
+The <<propagate()>> member function implements the propagation rules
+presented in <ptr to="u_vector.element"> for the constraint 
+<Math/element(n, [d_1,\ldots,d_m], v)/.
+
+<p>
+The function <<propagate()>> defines local variables of type
+<<OZ_FDIntVar>>. Then it initializes the iterator object
+<<D>>. That avoids to apply a member function to every individual
+element of <<d>> by hand if all elements have to be considered. The
+following <<for>>-loop initializes the elements of <<d>>.
+
+<p>
+The code coming after the implementation of the propagation rules (see
+below) checks if there is a non-singleton domain left, and if so it
+returns <<OZ_SLEEP>>. Otherwise the propagator is entailed and
+consequently returns <<OZ_ENTAILED>>. The label <<failure>> is
+provided because of the use of the macro <<FailOnEmpty>> (see
+<ptr to="u_getting_started.propagation">) and corresponding code applies
+<<fail>> to all variables of type <<OZ_FDIntVar>>.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.7.cc" class=linenumbers>
+
+<p>
+The propagation rules are implemented in the same order as they are
+presented in <ptr to="u_vector.element">.  That ensures that the
+values for <Math/i/ in rule 2 <ptr to="u_vector.rule_e2"> are always
+in the index range of the vector <<d>>, since rule 1 <ptr
+to="u_vector.rule_e1"> makes sure that only
+valid indices are contained in the domain of <Math/n/.  Note that the
+indices of vectors in Oz range over <Math/1 \ldots n/ and the
+corresponding indices of &ccpp; arrays over <Math/0 \ldots n-1/.
+
+<para class=apropos><title/Implementation of propagation rules/ The
+implementation of the propagation rule 1 <ptr to="u_vector.rule_e1">
+starts with an initially empty auxiliary domain <<aux_n>>. It collects
+all integers <Math/i/ in the auxiliary domain, where the intersection
+of <Math/d_i/ and <Math/v/ is not empty. That is equivalent to finding
+at least one <Math/j/ being contained in <Math/d_i/ and <Math/v/.  The
+domain of <Math/n/, &ie <<n>>, is constrained by <<aux_n>>.
+
+<p>
+The second rule 2 <ptr to="u_vector.rule_e2"> states that the domain
+of <Math/v/ cannot contain more values than occurring in all yet
+possible elements of the vector <Math/d/. The implementation uses
+again an initially empty auxiliary domain <<aux_v>> and collects in a
+loop all elements of <Math/d_i/ in <<aux_v>> by iterating over all
+<Math/i/ being contained in <Math/n/.  The implementation of this rule
+closes with constraining <<v>> by <<aux_v>>.
+
+<p>
+The last rule, rule 3 <ptr to="u_vector.rule_e3">, is only applied if
+<Math/n/ is determined, &ie <<n->getSize()>> returns <Math/1/.  Then
+it retrieves the value <Math/o/, applies <<leave()>> to all variables
+of type <<OZ_FDIntVar>> and replaces the <Math/element/ propagator by
+the equality <Math/v = d_o/ using the member function <<replaceBy()>>
+of class <<OZ_Propagator>> (see <ptr to="u_replacing">).
+<p>

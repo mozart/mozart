@@ -1,0 +1,8 @@
+#! /usr/bin/env perl
+undef $/;
+my $code = <>;
+if ($code =~ /^((\%.*\n)*)\n*/) {
+    $head = $1;
+    $code = $';
+}
+print $code;

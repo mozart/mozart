@@ -1,0 +1,121 @@
+<!--
+  - Authors:
+  -   Nils Franzen (nilsf@sics.se)
+  -   Simon Lindblom (simon@sics.se)
+  -
+  - Copyright:
+  -   Nils Franzen, Simon Lindblom, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER ID="chapter.apps">
+<TITLE/Applications/
+<P>bla..
+<SECTION><TITLE/Existing Applicatinos/
+<P>Here follows a list of precompiled applications
+<TABLE><TR><TH/Name/ <TH/Status/ <TH/Author/</TR>
+<TR><TD/GO - a japanese borad game/ <TD/comming soon/ <TD/Lars Rasmusson/</TR>
+<TR><TD/Chat/ <TD/comming soon/ <TD/Lars Rasmusson/</TR>
+<TR><TD/Chess/ <TD/comming soon/ <TD/Nils Franzen/</TR>
+<TR><TD/Multi-worms/ <TD/comming soon/ <TD/Simon Lindblom/</TR>
+</TABLE>
+
+<SECTION><TITLE/How to write Applications/
+<P>This section describes the interface for writing your own
+applications. The code for an application consists of two parts, a server-part
+and a client-part. The design of the application interface was to keep it small and
+clean. We do not force the application programmer to adapt to some to
+distribution scheme, rather we use the most basic primitives for
+distribution that the system provides: <<Tickets>>.
+
+<P>The &micq; system provides a way to distributing tickets and starting
+functors on different sites.
+
+<P>I will show a small program, which demonstrate the interface. This
+program can be used as a skeleton for your own applications later.
+
+<SECTION><TITLE/Server/
+<P>The server will start in a separate thread
+<<<
+functor
+import
+   Connection
+export
+   start:Start
+   stop:Stop
+define
+   Gate
+   proc{Start U Ticket}
+      fun{P C} U.name#" say, Hello "#C.name end
+   in
+      Gate={New Connection.gate init(P Ticket)}
+   end
+   proc{Stop}
+      {Gate close()}
+   end
+end
+>>>
+
+
+<SECTION><TITLE/Client/
+<P>The &micq;-client will call application client module with an instaciated ticket <<Ticket>> and the name of the person 
+<<<
+functor
+import
+   Browser(browse)
+   Connection(take)
+export
+   start:Start
+   stop:Stop
+define
+   proc{Start U T}
+      S={Connection.take T}
+   in
+      {Browser.browse {S U}}
+   end
+   proc{Stop}
+      skip
+   end
+end
+>>>
+
+<SECTION><TITLE/How to test Applications/
+<P>Testing is allways necessary:)
+<P CLASS=WARNING>Rewrite the test, using module managers instead...
+
+<<<
+functor
+import
+   Application
+   Server at './server.ozf'
+   Client at './client.ozf'
+define
+   U1=user(name:"Nils Franzen" id:nilsf)
+   U2=user(name:"Simon Lindblom" id:simon)
+   Ticket
+in
+   Ticket={Server.start U1}
+   {Client.start U2 Ticket}
+   
+   {Delay 10000}
+
+   {Client.stop}
+   {Server.stop}
+   {Application.exit 0}
+end
+>>>
+</CHAPTER>

@@ -1,0 +1,128 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -   Ralf Scheidhauer, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.Pickle">
+    <Title/Persistent Values: <<Pickle>>/
+    <P>
+    The <<Pickle>> module provides procedures to store and retrieve
+    stateless values on persistent storage.
+
+<p>
+<list>
+
+<Entry> <<save>> <Synopsis>
+<<<
+{Pickle.save ?+{X} ?+{PathV}}
+>>>
+<item>
+<Index class=module/Pickle<and>save/
+Stores ?_{X} in a file named ?_{PathV}.
+<p>
+Note that ?_{X} can be any <EM/stateless/ value. So it is possible to save
+for example records, procedures or classes. However an exception is
+raised if for example ?_{X} contains an object or a logic variable.
+
+<Entry> <<saveCompressed>> <Synopsis>
+<<<
+{Pickle.saveCompressed ?_{X} ?+{PathV} ?+{LevelI}}
+>>>
+<item>
+<Index class=module/Pickle<and>saveCompressed/
+Works like <<save>> but additionally compresses its output. ?_{LevelI}
+is an integer between <<0>> and <<9>> specifying the compression
+level: the higher the value the better the compression factor, but the
+longer compression takes. A value of <<0>> gives no compression, so
+<<{Pickle.save X Value}>> is equivalent to <<{Pickle.saveCompressed X Value 0}>>. 
+<p>
+Compression time and ratio depend on the type of input. The
+compression ratio might vary between 20 and 80 percent, while
+compression at level 9 is usually less than 2 times slower than using
+no compression.
+
+<Entry> <<saveWithHeader>> <Synopsis>
+<<<
+{Pickle.saveWithHeader ?_{X} ?+{PathV} ?+{HeaderV} ?+{LevelI}}
+>>>
+<item>
+<Index class=module/Pickle<and>saveWithHeader/ This procedure is a
+generalization of the above builtins. It saves ?_{X} in file ?+{PathV}
+with compression level ?+{LevelI} and additionally prepends the
+virtual string ?_{HeaderV} at the beginning. So ?_{HeaderV} can be
+used for example to prepend a comment in front of the pickle or to
+prepend a shell startup script to load and execute the pickle.
+
+<Entry> <<loadWithHeader>> <Synopsis>
+<<<
+{Pickle.loadWithHeader ?+{UrlV} ??{Pair}}
+>>>
+<item>
+<Index class=module/Pickle<and>loadWithHeader/
+<p>
+This procedure retrieves a value from URL ?_{UrlV} that has been
+previously saved with one of the above procedures. It returns a pair
+?_{HeaderV}<<#>>?_{Value}, where ?_{HeaderV} is the (possibly empty)
+header and ?_{Value} the value that was retrieved.
+
+<Entry> <<load>> <Synopsis>
+<<<
+{Pickle.load ?+{UrlV} ??{Value}}
+>>>
+<item>
+<Index class=module/Pickle<and>load/
+<p>
+This is just a shortcut for <<<{Pickle.loadWithHeader ?_{UrlV} _#?_{Value}}>>>
+
+<Entry> <<pack>> <Synopsis>
+<<<
+{Pickle.pack ?+{X} ??{ByteString}}
+>>>
+<item>
+<Index class=module/Pickle<and>pack/
+<p>
+Takes a value ?_{X} and pickles it to a bytestring.
+
+<Entry> <<unpack>> <Synopsis>
+<<<
+{Pickle.unpack ?+{PickleV} ??{Value}}
+>>>
+<item>
+<Index class=module/Pickle<and>unpack/
+<p>
+Unpacks a virtual string ?_{PickleV} that has
+created by pickling (e.g., by <<Pickle.pack>>).
+</p>
+<p class=danger>
+<<Pickle.unpack>> may crash the Oz Engine if given a
+corrupt pickle.
+</p>
+
+</list>
+
+  </Chapter>
+
+

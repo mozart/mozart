@@ -1,0 +1,75 @@
+#!/bin/sh
+
+target=@target@
+
+if test $# -eq 0
+then
+  cat <<EOF
+Usage:
+	oztool c++ -c SourceFile
+	oztool cc  -c SourceFile
+	oztool ld  -o TargetLib FileList
+	oztool platform [-o file]
+EOF
+  exit 2
+fi
+
+cmd=$1
+shift
+
+# determine oztool includes
+if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
+  if test -n "$OZHOME" && test -r "$OZHOME/include/mozart.h"; then
+    OZTOOL_INCLUDES="-I$OZHOME/include"
+  else
+    oz_tmp=`dirname $0`
+    oz_tmp=`cd $oz_tmp/.. & pwd`
+    if test -r "$oz_tmp/include/mozart.h"; then
+      OZTOOL_INCLUDES="-I$oz_tmp/include"
+    else
+      OZTOOL_INCLUDES="-I@prefix@/include";
+    fi
+  fi
+fi
+
+case "$cmd" in
+  c++)      exec ${target}-g++ $OZTOOL_INCLUDES "$@" ;;
+  cc)       exec ${target}-gcc $OZTOOL_INCLUDES "$@" ;;
+  platform)
+    case "$1" in
+    -o) echo "win32-i486" > "$2";;
+    * ) echo "win32-i486";;
+    esac
+    exit 0;;
+
+  ld) ;;  # see below
+
+  *) echo "$0: unknown command $cmd" 1>&2; exit 1 ;;
+esac
+
+
+while [ $# != 0 ]
+do
+    case "$1" in
+    -o)  shift; libname=$1;;
+    -s) ;;  # just ignore it
+    -lc) ;;  # just ignore it
+    -mno-cygwin) ;;  # just ignore it
+    -L*) libdirs="$libdirs $1";;
+    *)   args="$args $1";;
+    esac
+    shift
+done
+
+defname=${libname}.def
+
+${target}-dlltool --as ${target}-as --output-def $defname \
+		  --dllname $libname $args || exit 1
+
+exec \
+${target}-dllwrap --dlltool-name ${target}-dlltool \
+		  --driver-name ${target}-gcc \
+		  --as ${target}-as -s -o $libname --def $defname \
+		  --dllname $libname $args \
+		  @BUILDTOP@/platform/emulator/libemulator.a \
+		  $libdirs
