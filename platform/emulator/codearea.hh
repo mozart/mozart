@@ -32,6 +32,7 @@
 #include "hashtbl.hh"
 #include "opcodes.hh"
 #include "value.hh"
+#include "am.hh"
 
 class AbstractionEntry {
 private:  
@@ -215,7 +216,7 @@ public:
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 			     int frameId, RefsArray Y, Abstraction *G);
   static TaggedRef getFrameVariables(ProgramCounter, RefsArray, Abstraction *);
-  static void getDefinitionArgs(ProgramCounter PC, Reg &reg, int &next, 
+  static void getDefinitionArgs(ProgramCounter PC, XReg &reg, int &next, 
 				TaggedRef &file, int &line, int &colum,
 				TaggedRef &predName);
 
@@ -313,10 +314,44 @@ public:
     return writeWord(opcodeToAdress(oc),ptr);    
   }
 
-  static ProgramCounter writeRegIndex(int index, ProgramCounter ptr)
+  static ProgramCounter writeXRegIndex(int index, ProgramCounter ptr)
+  {
+#ifdef FASTREGACCESS
+#ifdef FASTERREGACCESS
+    return writeWord((ByteCode) am.getXRef(index),ptr);    
+#else
+    index *= sizeof(TaggedRef); 
+    return writeWord((ByteCode)index,ptr);    
+#endif
+#else
+#ifdef CHECKREGACCESS
+    return writeWord((ByteCode) ((index << 2) | 1),ptr);    
+#else
+    return writeWord((ByteCode)index,ptr);    
+#endif
+#endif
+  }
+
+  static ProgramCounter writeYRegIndex(int index, ProgramCounter ptr)
   {
 #ifdef FASTREGACCESS
     index *= sizeof(TaggedRef); 
+#else
+#ifdef CHECKREGACCESS
+    index = ((index << 2) | 2);
+#endif
+#endif
+    return writeWord((ByteCode)index,ptr);    
+  }
+
+  static ProgramCounter writeGRegIndex(int index, ProgramCounter ptr)
+  {
+#ifdef FASTREGACCESS
+    index *= sizeof(TaggedRef); 
+#else
+#ifdef CHECKREGACCESS
+    index = ((index << 2) | 3);
+#endif
 #endif
     return writeWord((ByteCode)index,ptr);    
   }
@@ -372,7 +407,9 @@ public:
   void writeOpcode(Opcode oc)            { CheckWPtr; curInstr=wPtr; wPtr=writeOpcode(oc,wPtr); }
   void writeSRecordArity(SRecordArity ar){ CheckWPtr; wPtr=writeSRecordArity(ar,wPtr); }
   void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }
-  void writeReg(int i)                   { CheckWPtr; wPtr=writeRegIndex(i,wPtr); }
+  void writeXReg(int i)                   { CheckWPtr; wPtr=writeXRegIndex(i,wPtr); }
+  void writeYReg(int i)                   { CheckWPtr; wPtr=writeYRegIndex(i,wPtr); }
+  void writeGReg(int i)                   { CheckWPtr; wPtr=writeGRegIndex(i,wPtr); }
   void writeLabel(int lbl) { CheckWPtr; wPtr=writeLabel(lbl,curInstr-codeBlock,wPtr); }
   int computeLabel(int lbl) { return lbl-(curInstr-codeBlock); }
   void writeDebugInfo(TaggedRef file, int line) {
@@ -413,7 +450,31 @@ inline void printNameTab()
  * with "CodeArea::"
  */
 
-#define getRegArg(PC)    ((Reg) getWord(PC))
+#ifdef CHECKREGACCESS
+inline 
+XReg getXRegArg(ProgramCounter PC) {
+  int w = getWord(PC);
+  Assert((w & 3) == 1);
+  return w >> 2;
+}
+inline 
+YReg getYRegArg(ProgramCounter PC) {
+  int w = getWord(PC);
+  Assert((w & 3) == 2);
+  return w >> 2;
+}
+inline 
+GReg getGRegArg(ProgramCounter PC) {
+  int w = getWord(PC);
+  Assert((w & 3) == 3);
+  return w >> 2;
+}
+#else
+#define getXRegArg(PC)    ((XReg) getWord(PC))
+#define getYRegArg(PC)    ((YReg) getWord(PC))
+#define getGRegArg(PC)    ((GReg) getWord(PC))
+#endif
+
 #define getPosIntArg(PC) ((int) getWord(PC))
 #define getTaggedArg(PC) ((TaggedRef) getWord(PC))
 #define getNumberArg(PC)  getTaggedArg(PC)
@@ -531,11 +592,46 @@ public:
 
 
 #ifdef FASTREGACCESS
-inline Reg regToInt(Reg N) { return (N / sizeof(TaggedRef)); }
-inline Reg intToReg(Reg N) { return N * sizeof(TaggedRef); }
+
+#ifdef FASTERREGACCESS
+
+#define XRegToInt(N) (((TaggedRef*) (N)) - am.getXRef())
+#define XRegToPtr(N) ((TaggedRef *) (N))
+
 #else
-inline Reg regToInt(Reg N) { return N; }
-inline Reg intToReg(Reg N) { return N; }
+
+#define XRegToInt(N) ((N) / sizeof(TaggedRef))
+#define XRegToPtr(N) ((TaggedRef *) (((intlong) am.getXRef()) + (N)))
+
+#endif
+
+#define YRegToInt(N) ((N) / sizeof(TaggedRef))
+#define YRegToPtr(Y,N) ((TaggedRef *) (((intlong) (Y)) + (N)))
+
+#define GRegToInt(N) ((N) / sizeof(TaggedRef))
+#define GRegToPtr(G,N) ((TaggedRef *) (((intlong) (G)) + (N)))
+
+#else
+
+inline 
+int  XRegToInt(XReg N) { return N; }
+inline 
+int  YRegToInt(YReg N) { return N; }
+inline 
+int  GRegToInt(GReg N) { return N; }
+inline
+TaggedRef * XRegToPtr(XReg N) {
+  return am.getXRef(N);
+}
+inline
+TaggedRef * YRegToPtr(RefsArray Y, YReg N) {
+  return Y+N;
+}
+inline
+TaggedRef * GRegToPtr(RefsArray G, GReg N) {
+  return G+N;
+}
+
 #endif
 
 

@@ -60,6 +60,11 @@
 /* define if optimized register access (pre-shifted) */
 #undef FASTREGACCESS
 
+/* define if optimized X-register access (resolved to direct address) */
+#ifdef FASTREGACCESS
+#undef FASTERREGACCESS
+#endif
+
 /* define if use native register for am registers (requires GCC) */
 #undef REGOPT
 

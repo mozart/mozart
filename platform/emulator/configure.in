@@ -484,6 +484,7 @@ case $enable_opt in
 	OZ_CXX_OPTIONS($oz_copt_debug, COPT)
 	oz_enable_threaded=no
 	oz_enable_fastreg=no
+	oz_enable_fasterreg=no
 	oz_enable_regopt=no
 	;;
     p*)
@@ -520,6 +521,11 @@ OZ_ENABLE(threaded,[ threaded code emulator],yes,
 OZ_ENABLE(fastreg,[  fast register access],yes,
 	AC_MSG_RESULT(yes (-DFASTREGACCESS))
 	AC_DEFINE(FASTREGACCESS)
+	)
+
+OZ_ENABLE(fasterreg,[  even faster temporary register access],yes,
+	AC_MSG_RESULT(yes (-DFASTERREGACCESS))
+	AC_DEFINE(FASTERREGACCESS)
 	)
 
 OZ_ENABLE(regopt,[   register optimization],yes,

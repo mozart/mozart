@@ -32,21 +32,7 @@
 define(readArg,$1)
 define(writeArg,$1)
 define(instruction,
-	`ifelse(numOfRegs($2,$3,$4),1,
-                    case TOUPPER($1)X: 
-		    case TOUPPER($1)Y: 
-		    case TOUPPER($1)G:,
-	 numOfRegs($2,$3,$4),2,
-            case TOUPPER($1)XX:
-            case TOUPPER($1)XY:
-            case TOUPPER($1)XG:
-            case TOUPPER($1)YX:
-            case TOUPPER($1)YY:
-            case TOUPPER($1)YG:
-            case TOUPPER($1)GX:
-            case TOUPPER($1)GY:
-            case TOUPPER($1)GG:,
-         case TOUPPER($1):)
+	`case TOUPPER($1):
 	   opAction($2)
 	   opAction($3)
 	   opAction($4)
@@ -292,7 +278,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
   int sizeOfDef = sizeOf(DEFINITION);
   start -= sizeOfDef; // copy DEFINITION instructions as well (for debugging)
 
-  Reg reg;
+  XReg reg;
   int nxt,line,colum;
   TaggedRef file,predName;
   CodeArea::getDefinitionArgs(start,reg,nxt,file,line,colum,predName);
