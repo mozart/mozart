@@ -71,7 +71,7 @@ private:
 public:
   MemChunks(char *bl, MemChunks *n, int sz) : xsize(sz), block(bl), next(n) {};
   void deleteChunkChain();
-  Bool isInBlock(void *value) { return (block<=value && value<=block + xsize); }
+  Bool isInBlock(void *value) { return (block<=(char*)value && (char*)value<=block + xsize); }
 
   Bool inChunkChain(void *value);
   MemChunks *getNext() { return next; }

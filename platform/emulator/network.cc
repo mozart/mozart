@@ -1677,7 +1677,7 @@ private:
 public:
   MessageManager():FreeListManager(MESSAGE_CUTOFF){Msgs = 0;};
 
-  Message * allocMessage(NetMsgBuffer *bs, int msgNum = 0,
+  Message * allocMessage(NetMsgBuffer *bs, int msgNum,
                          Site *s, MessageType b, int i){
     Message*m = newMessage();
     PD((MESSAGE,"allocate  nr:%d", ++Msgs));
