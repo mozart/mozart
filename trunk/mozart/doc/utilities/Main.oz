@@ -192,6 +192,7 @@ define
 	  'html-color html-mono html-stylesheets chunk).\n'#
 	  '--out=<Dir>         The output directory.\n'#
 	  '--(no)autoindex     Automatically generate index entries.\n'#
+	  '--include=A1,...,An Assume `<!ENTITY & Ai "INCLUDE">\'.\n'#
 	  '\n'#
 	  'HTML options\n'#
 	  '--stylesheet=<URL>  What style sheet to use for generated pages.\n'#
