@@ -44,11 +44,13 @@ private:
   GenBoolVariable * becomesBool(void);
 public:  
   GenFDVariable(OZ_FiniteDomain &fd) : GenCVariable(FDVariable) {
+    ozstat.fdvarsCreated.incf();
     finiteDomain = fd;
     fdSuspList[fd_singl] = fdSuspList[fd_bounds] = NULL;
   }
 
   GenFDVariable() : GenCVariable(FDVariable) {
+    ozstat.fdvarsCreated.incf();
     finiteDomain.initFull();
     fdSuspList[fd_singl] = fdSuspList[fd_bounds] = NULL;
   }
