@@ -45,6 +45,12 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(FSetDisjointNPropagator); }
 
+  virtual void updateHeapRefs(OZ_Boolean dup) {
+    Propagator_VS::updateHeapRefs(dup);
+    
+    _u.copyExtension();
+  }
+
   virtual OZ_PropagatorProfile * getProfile(void) const {
     return &profile;
   }
@@ -103,7 +109,7 @@ public:
     
     _aux = new_aux;
   }
-  };
+};
 
 
 //-----------------------------------------------------------------------------

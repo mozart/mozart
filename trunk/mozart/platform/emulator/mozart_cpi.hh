@@ -328,9 +328,11 @@ public:
 
   void gc(void) { 
 #ifdef BIGFSET
-    _IN.copyExtension(); 
+    copyExtension(); 
 #endif
   }
+
+  void copyExtension(void);
 
   int getCard(void) const { return _card; }
   int getKnownNotIn(void) const { return fsethigh32 - _card; }
