@@ -1063,7 +1063,7 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
  * MISC
  * -------------------------------------------------------------------------*/
 
-int AM::awakeIO(int fd, void *var) {
+int AM::awakeIO(void *var) {
   am.awakeIOVar((TaggedRef) var);
   return 1;
 }
