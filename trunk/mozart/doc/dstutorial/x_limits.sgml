@@ -95,7 +95,7 @@ then the attempted object operation cannot be retried.
 
 <SECTION><TITLE>Modifications</TITLE>
 
-<P>There is currently only one modification:
+<P>There is currently only one modification.
 <list>
 <item>A handler installed on a <EM>variable</EM> will retry
 the operation (i.e., bind or wait) after it returns.
