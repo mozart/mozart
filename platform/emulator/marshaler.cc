@@ -549,7 +549,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       Builtin *bi= (Builtin *)t;
       if (bi->isNative()) {
 	warning("marshaling native builtin, now expired: %s", bi->getPrintName());
-	// goto bomb;
+	goto bomb;
       }
       marshalString(bi->getPrintName(),bs);
       break;
