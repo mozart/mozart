@@ -426,10 +426,12 @@ found or <<Search.one.bound>> returns <<nil>>.
 <entry><<all>>
 <index class=module/Search<and>all/
 <synopsis><<{Search.all ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Xs}}>>
-<entry><<allS>>{Search.allS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<allS>>
 <index class=module/Search<and>allS/
-<entry><<allP>>{Search.allP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<synopsis><<{Search.allS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<allP>>
 <index class=module/Search<and>allP/
+<synopsis><<{Search.allP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
 <item>
 returns the list of all solutions of the script ?+{ScriptP} (a unary
 procedure) obtained by depth-first search.  
