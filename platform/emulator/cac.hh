@@ -58,7 +58,7 @@ public:
 
   void defer(TaggedRef * var, TaggedRef * ref) {
     Assert(var);
-    Stack::push((StackEntry) ref);
+    Stack::push((StackEntry) ref, NO);
     *ref = makeTaggedRef(var);
   }
 
@@ -102,13 +102,13 @@ public:
   CacStack() : Stack(1024, Stack_WithMalloc) {}
   ~CacStack() {}
 
-  void push(void * ptr, TypeOfPtr type) {
+  void push(void * ptr, TypeOfPtr type, Bool check = NO) {
     Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) type, ptr));
   }
 
   void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
     Assert(n<8);
-    Stack::ensureFree(2);
+    ensureFree(2);
     Stack::push((StackEntry) bb, NO);
     Stack::push((StackEntry)
                 makeTaggedRef2p((TypeOfTerm) (PTR_LOCAL_SUSPLIST | n),
@@ -123,8 +123,8 @@ public:
 extern CacStack cacStack;
 
 inline
-void cacSuspList(SuspList ** sl) {
-  cacStack.push(sl, PTR_SUSPLIST);
+void cacSuspList(SuspList ** sl, Bool check) {
+  cacStack.push(sl, PTR_SUSPLIST, check);
 }
 
 inline

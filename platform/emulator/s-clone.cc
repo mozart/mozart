@@ -24,25 +24,27 @@
 #undef  G_COLLECT
 #define S_CLONE
 
-#define OZ_cacBlock OZ_sCloneBlock
-#define oz_cacTerm  oz_sCloneTerm
+#define OZ_cacBlock      OZ_sCloneBlock
+#define oz_cacTerm       oz_sCloneTerm
 
 #define _cacRecurse      sCloneRecurse
 #define _cac             sClone
 #define _cacRecurseV     sCloneRecurseV
 #define _cacV            sCloneV
 
+#define _cacFix          sCloneFix
 #define _cacMark         sCloneMark
 
 #define _cacConstTerm    sCloneConstTerm
 #define _cacConstTermWithHome    sCloneConstTermWithHome
+#define _cacTertiary   sCloneTertiary
 #define _cacConstRecurse sCloneConstRecurse
 
 #define _cacBoard        sCloneBoard
 
 #define _cacName         sCloneName
 
-#define _cacClass       sCloneClass
+#define _cacClass        sCloneClass
 #define _cacObject       sCloneObject
 #define _cacObjectInline sCloneObjectInline
 
@@ -65,10 +67,10 @@
 
 #define _cacPendThreadEmul sClonePendThreadEmul
 
-#define _cacFix sCloneFix
 
 #define _cacReallocStatic        sCloneReallocStatic
-#define _cacStoreFwd             sCloneStoreFwd
+#define _cacStoreFwdMark         sCloneStoreFwdMark
+#define _cacStoreFwdNoMark       sCloneStoreFwdNoMark
 
 #define _cacRefsArray            sCloneRefsArray
 #define _cacRefsArrayIsMarked    sCloneRefsArrayIsMarked

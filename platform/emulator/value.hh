@@ -640,6 +640,11 @@ public:
     return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
   }
 
+  Board *getSubBoardInternal() {
+    Assert(!hasGName());
+    return (Board*)boardOrGName.getPtr();
+  }
+
   void gCollectConstTermWithHome(void);
   void sCloneConstTermWithHome(void);
 
@@ -896,6 +901,10 @@ public:
       setPointer(b);
     }
   }
+  void setBoardLocal(Board *b) {
+    Assert(getTertType() == Te_Local);
+    setPointer(b);
+  }
 
   NO_DEFAULT_CONSTRUCTORS(Tertiary)
   Tertiary() { Assert(0); }     // keep gcc happy;
@@ -920,6 +929,14 @@ public:
 
   Board *getBoardInternal() {
     return isLocal() ? (Board*)getPointer() : oz_rootBoardOutline();}
+
+  Board *getBoardLocal() {
+    Assert(isLocal());
+    return (Board*) getPointer();
+  }
+
+  void gCollectTertiary(void);
+  void sCloneTertiary(void);
 
 };
 
@@ -2070,6 +2087,7 @@ protected:
 public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Abstraction)
+
   static Abstraction *newAbstraction(PrTabEntry *prd,Board *bb)
   {
     Assert(prd->getGSize()>=0);
@@ -2079,6 +2097,10 @@ public:
     ab->pred=prd;
     DebugCheckT(for (int i=prd->getGSize(); i--; ) ab->globals[i]=0);
     return ab;
+  }
+
+  int getAllocSize(void) {
+    return sizeof(Abstraction)+sizeof(TaggedRef)*(pred->getGSize()-1);
   }
 
   void initG(int i, TaggedRef val) {
@@ -2398,8 +2420,8 @@ inline Port *tagged2Port(TaggedRef term)
  *=================================================================== */
 
 class Space: public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
+  friend void ConstTerm::gCollectConstTerm(void);
+  friend void ConstTerm::sCloneConstTerm(void);
 private:
   Board *solve;
   // The solve pointer can be:
