@@ -291,7 +291,7 @@ main(int argc, char **argv)
     exit(1);
 
 error:
-    msg = Tcl_GetVar(interp, CONST_CAST(const char*,"errorInfo"), TCL_GLOBAL_ONLY);
+    msg = Tcl_GetVar(interp, const_cast<char*>("errorInfo"), TCL_GLOBAL_ONLY);
     if (msg == NULL) {
 	msg = interp->result;
     }
@@ -413,7 +413,7 @@ static void
 Prompt(Tcl_Interp *interp, int partial)
 {
     char *promptCmd = Tcl_GetVar(interp,
-	CONST_CAST(const char *,partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
+	const_cast<char*>(partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY);
     if (promptCmd == NULL) {
 	defaultPrompt:
 	if (!partial) {
