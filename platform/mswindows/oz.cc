@@ -30,20 +30,76 @@
 
 bool console = false;
 
-static char *getEmacsHome()
+#define APP_PATHS "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths"
+
+static char *gnuEmacsKey = "SOFTWARE\\GNU\\Emacs";
+
+static char *xEmacsAppPathKey = APP_PATHS "\\xemacs.exe";
+
+static char *concat(const char *s1, const char *s2)
 {
-  char *ehome = getRegistry("SOFTWARE\\GNU\\Emacs","emacs_dir");
-  if (ehome==NULL) {
-    panic(1,"Cannot find GNU Emacs.\n");
+  int i = strlen(s1) + strlen(s2) + 1;
+  char *ret = new char[i];
+  strcpy(ret,s1);
+  strcat(ret,s2);
+  return ret;
+}
+
+static bool check(char *s)
+{
+  // return true iff file s exists
+  HINSTANCE hInstance = LoadLibraryEx(s,NULL,LOAD_LIBRARY_AS_DATAFILE);
+  if (hInstance == NULL)
+    return false;
+  else {
+    FreeLibrary(hInstance);
+    return true;
+  }
+}
+
+static char *getEmacs()
+{
+  char *emacs;
+
+  // look at OZEMACS environment variable:
+  emacs = ozGetenv("OZEMACS");
+  if (emacs) {
+    if (check(emacs))
+      return strdup(emacs);
+    else
+      panic(false,"Could not execute \"%s\".",emacs);
   }
 
-  char buffer[1000];
-  normalizePath(ehome,true);
-  sprintf(buffer,"%s/bin/runemacs.exe",ehome);
-  if (access(buffer,0)) {
-    panic(0,"Emacs binary '%s' does not exist.",buffer);
+  // look for installed GNU Emacs:
+  emacs = getRegistry(gnuEmacsKey,"emacs_dir");
+  if (emacs) {
+    emacs = concat(emacs,"\\bin\\runemacs.exe");
+    if (check(emacs))
+      return emacs;
   }
-  return ehome;
+
+  // look for installed XEmacs:
+  emacs = getRegistry(xEmacsAppPathKey,NULL);
+  if (emacs && check(emacs))
+    return emacs;
+
+  char *path = getRegistry(xEmacsAppPathKey,"Path");
+  if (path)
+    while (path[0] != '\0') {
+      char *s = strchr(path,';');
+      if (s)
+	*s = '\0';
+      emacs = concat(path,"\\runemacs.exe");
+      if (check(emacs))
+	return emacs;
+      if (!s)
+	break;
+      path = s + 1;
+    }
+
+  panic(false,"Cannot find GNU Emacs or XEmacs.");
+
+  return NULL;
 }
 
 int WINAPI
@@ -54,10 +110,12 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 
   initEnv();
 
-  char *emacshome  = getEmacsHome();
+  char *emacs  = getEmacs();
+  char *ozhome = ozGetenv("OZHOME");
   sprintf(buffer,
-	  "%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz %s",
-	  emacshome,ozGetenv("OZHOME"),getCmdLine());
+	  "\"%s\" -l \"%s/share/elisp/oz.elc\" "
+	  "-l \"%s/share/elisp/mozart.elc\" -f run-oz %s",
+	  emacs,ozhome,ozhome,getCmdLine());
 
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
@@ -67,7 +125,7 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 			   0,NULL,NULL,&si,&pi);
 
   if (ret == FALSE) {
-    panic(1,"Cannot run '%s'.",buffer);
+    panic(true,"Cannot run '%s'.\n",buffer);
   }
 
   return 0;
