@@ -68,9 +68,13 @@ public:
   }
 
   void restoreFrame() { tos += frameSz; Assert(tos<stackEnd); }
+  Bool checkFrame(ProgramCounter pc) 
+  { 
+    return (ProgramCounter)*(tos-1)==pc;
+  }
   void discardFrame(ProgramCounter pc) 
   { 
-    Assert(pc==NOCODE || (ProgramCounter)*(tos-1)==pc);
+    Assert(pc==NOCODE || checkFrame(pc));
     tos -= frameSz; 
   }
 
