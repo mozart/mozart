@@ -7,6 +7,7 @@ PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
 LIB_DIR		= $(PREFIX)/contrib
 HOMEURL         = @HOMEURL@
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib
 
 OZC		= @OZC@
 COMPILE		= $(OZC) -z 9 -c
@@ -25,19 +26,26 @@ INSTALL_DLL	= $(INSTALL) -m 555
 
 TARGETS		= gdbm.ozf gdbm.so-$(PLATFORM)
 LIB_TARGETS	= $(LIB_DIR)/gdbm.ozf $(LIB_DIR)/gdbm.so-$(PLATFORM)
+NEW_TARGETS	= $(TARGETS:%=$(NEWCACHEDIR)/%)
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 all:		$(TARGETS)
-install:	$(LIB_DIR) $(LIB_TARGETS)
+install:	$(NEWCACHEDIR) $(NEW_TARGETS)
 
-$(LIB_DIR):
+$(LIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
 
 $(LIB_DIR)/gdbm.ozf: gdbm.ozf
 	$(INSTALL_LIB) $< $@
 
 $(LIB_DIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+$(NEWCACHEDIR)/gdbm.ozf: gdbm.ozf
+	$(INSTALL_LIB) $< $@
+
+$(NEWCACHEDIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
 	$(INSTALL_DLL) $< $@
 
 gdbm.ozf: gdbm.oz

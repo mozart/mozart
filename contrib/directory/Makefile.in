@@ -7,6 +7,7 @@ PREFIX		= @prefix@
 PLATFORM	= @PLATFORM@
 LIB_DIR		= $(PREFIX)/contrib/directory
 HOMEURL         = @HOMEURL@
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/directory
 
 OZC		= @OZC@
 OZL		= @OZL@
@@ -47,20 +48,24 @@ OZFNCTS		= $(OZSRCS:.oz=.ozf)
 
 TARGETS		= ExampleDirectory.oz ExampleDirectory.ozf
 LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
+NEW_TARGETS	= $(TARGETS:%=$(NEWCACHEDIR)/%)
 
 .PHONY: depend clean distclean bootstrap
 .PRECIOUS: %.o 
 
 all:     $(TARGETS)
-install: $(LIB_DIR) $(LIB_TARGETS)
+install: $(NEWCACHEDIR) $(NEW_TARGETS)
 
-$(LIB_DIR):
+$(LIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
 
 $(LIB_DIR)/%.ozf: %.ozf
 	$(INSTALL_LIB) $< $@
 
 $(LIB_DIR)/%.oz: %.oz
+	$(INSTALL_LIB) $< $@
+
+$(NEWCACHEDIR)/%: %
 	$(INSTALL_LIB) $< $@
 
 #----------------------------------------------------------------------

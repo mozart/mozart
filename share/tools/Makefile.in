@@ -5,11 +5,13 @@ SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
 HOMEURL         = @HOMEURL@
 PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
 
 OZBIN		= $(PREFIX)/bin
 OZTOOLS		= $(PREFIX)/share
 OZPATH		= .:$(PREFIX)/share
 IMAGESDIR	= $(OZTOOLS)/images
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/system
 
 SHELL		= /bin/sh
 
@@ -82,6 +84,9 @@ OZCARIMAGES1 = \
 	step.xbm next.xbm unleash.xbm stop.xbm detach.xbm term.xbm 
 OZCARIMAGES = $(OZCARIMAGES1:%=$(OZCARIMAGESDIR)/%)
 
+NEWOZCARIMAGESDIR = $(NEWCACHEDIR)/images/ozcar
+NEWOZCARIMAGES = $(OZCARIMAGES1:%=$(NEWOZCARIMAGESDIR)/%)
+
 PROFILERSRC1 = \
 	prof-gui.oz prof-prelude.oz prof-tk.oz \
 	prof-config.oz prof-help.oz profiler.oz \
@@ -151,12 +156,19 @@ INSPECTORIMAGES1 = \
 	depth.xbm width.xbm stop.xbm sep.xbm
 INSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(INSPECTORIMAGESDIR)/%)
 
+NEWINSPECTORIMAGESDIR = $(NEWCACHEDIR)/images/inspector
+NEWINSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(NEWINSPECTORIMAGESDIR)/%)
+
 TOOLSDIRS1 = gump gump/examples
 TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
+
+NEWTOOLSDIRS = $(TOOLSDIRS1:%=$(NEWCACHEDIR)/%)
 
 
 TOOLSFILES = \
 	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%)
+NEWTOOLSFILES = \
+	$(GUMPEXAMPLES:%=$(NEWCACHEDIR)/gump/examples/%)
 
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
@@ -166,12 +178,15 @@ FUNCTORS = \
 	DistributionPanelSrc.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
+NEWTOOLSFUNCTORS = $(FUNCTORS:%=$(NEWCACHEDIR)/%)
 
 IMAGES1 = \
 	compiler.xbm compilermask.xbm \
 	lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
 	browserMIcon.xbm browserIcon.xbm stop.xbm
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+NEWIMAGESDIR = $(NEWCACHEDIR)/images
+NEWIMAGES = $(IMAGES1:%=$(NEWIMAGESDIR)/%)
 
 SYSLETS = ozd
 
@@ -257,12 +272,13 @@ BINFILES = \
 install: install-main install-images install-cache
 
 install-main: all \
-	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS) \
 	$(OZBIN) $(BINFILES)
 
-install-images: \
-	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
-	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
+install-images:
+
+#install-images: \
+#	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
+#	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
 
 $(OZTOOLS) $(TOOLSDIRS) $(OZBIN):
 	$(INSTALL_DIR) $@
@@ -295,7 +311,32 @@ HOMECACHE = @HOMECACHE@
 CACHEDIR  = $(PREFIX)/cache/$(HOMECACHE)
 
 install-cache: \
-	$(CACHEDIR)
+	$(NEWCACHEDIR) \
+	$(NEWOZCARIMAGESDIR) $(NEWOZCARIMAGES) \
+	$(NEWINSPECTORIMAGESDIR) $(NEWINSPECTORIMAGES) \
+	$(NEWTOOLSDIRS) $(NEWTOOLSFILES) $(NEWTOOLSFUNCTORS) \
+	$(NEWIMAGESDIR) $(NEWIMAGES)
+
+$(NEWCACHEDIR) $(NEWOZCARIMAGESDIR) $(NEWINSPECTORIMAGESDIR) $(NEWTOOLSDIRS) $(NEWIMAGESDIR):
+	$(INSTALL_DIR) $@
+
+$(NEWCACHEDIR)/% : %
+	$(INSTALL_FILE) $< $@
+
+$(NEWOZCARIMAGESDIR)/%: ozcar/images/%
+	$(INSTALL_FILE) $< $@
+
+$(NEWINSPECTORIMAGESDIR)/%: inspector/images/%
+	$(INSTALL_FILE) $< $@
+
+$(NEWCACHEDIR)/gump/% : %
+	$(INSTALL_FILE) $< $@
+
+$(NEWCACHEDIR)/ozcar/% : ozcar/images/%
+	$(INSTALL_FILE) $< $@
+
+$(NEWCACHEDIR)/inspector/% : inspector/images/%
+	$(INSTALL_FILE) $< $@
 
 $(CACHEDIR):
 	$(INSTALL_DIR) $(CACHEDIR)
