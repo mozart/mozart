@@ -5,16 +5,23 @@
 \insert tk
 
 %% some builtins...
-Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
-	   emacsThreads: {`Builtin` debugEmacsThreads 1}
-	   subThreads  : {`Builtin` debugSubThreads 1}
-	   frameVars   : {`Builtin` frameVariables 3}
-	   stream      : {`Builtin` globalThreadStream 1}
-	   contflag    : {`Builtin` setContFlag 2}
-	   stepmode    : {`Builtin` setStepMode 2}
-	   trace       : {`Builtin` traceThread 2}
-	   checkStopped: {`Builtin` checkStopped 2}
+Dbg = dbg(on:           proc {$}
+			   {System.set internal(debug:true)}
+			end
+	  off:          proc {$}
+			   {System.set internal(debug:false)}
+			end
+	  mode:         {`Builtin` 'Debug.mode' 1}
+	  emacsThreads: {`Builtin` 'Debug.addEmacsThreads' 1}
+	  subThreads:   {`Builtin` 'Debug.addSubThreads' 1}
+	  stream:       {`Builtin` 'Debug.getStream' 1}
+	  contflag:     {`Builtin` 'Debug.setContFlag' 2}
+	  stepmode:     {`Builtin` 'Debug.setStepFlag' 2}
+	  trace:        {`Builtin` 'Debug.setTraceFlag' 2}
+	  checkStopped: {`Builtin` 'Debug.checkStopped' 2}
 	 )
+
+IsBuiltin = {`Builtin` 'isBuiltin' 2}
 
 fun {NewCompiler}
    %% return true when using new compiler, false otherwise
@@ -22,9 +29,6 @@ fun {NewCompiler}
    catch error(...) then false
    end
 end
-
-%% some constants
-NL = [10]  %% newline
 
 %% send a warning/error message
 proc {OzcarShow X}
@@ -45,14 +49,16 @@ end
 NullObject = {New class meth otherwise(M) skip end end ''}
 
 %% Dictionary.xxx is too long, really...
-Dput     = Dictionary.put
-Dentries = Dictionary.entries
-Dkeys    = Dictionary.keys
-Dget     = Dictionary.get
-Ditems   = Dictionary.items
-Dremove  = Dictionary.remove
-Dmember  = Dictionary.member
-DcondGet = Dictionary.condGet
+Dnew       = Dictionary.new
+Dput       = Dictionary.put
+Dentries   = Dictionary.entries
+Dkeys      = Dictionary.keys
+Dget       = Dictionary.get
+Ditems     = Dictionary.items
+Dremove    = Dictionary.remove
+Dmember    = Dictionary.member
+DcondGet   = Dictionary.condGet
+DremoveAll = Dictionary.removeAll
 
 fun {V2VS X}
    P = {System.get errors}
@@ -78,11 +84,11 @@ local
    end
 in
    fun {PrintF S N}  %% Format S to have length N, fill up with spaces
-                     %% break up line if S is too long
+		     %% break up line if S is too long
       SpaceCount = N - {VirtualString.length S}
    in
       case SpaceCount < 1 then
-	 S # NL # {MakeSpace N}
+	 S # '\n' # {MakeSpace N}
       else
 	 S # {MakeSpace SpaceCount}
       end
@@ -138,7 +144,8 @@ in
 end
 
 fun {UnknownFile F}
-   F == undef orelse F == '' orelse F == noDebugInfo orelse F == nofile
+   case F == '' then {OzcarError 'Warning: empty file name'} else skip end
+   F == nofile orelse F == ''
 end
 
 fun {StripPath File}
@@ -147,8 +154,8 @@ fun {StripPath File}
    else
       S = {Str.rchr {Atom.toString File} &/}
    in
-      case {List.length S} > 1 then
-	 S.2
+      case S of _|Rest then
+	 Rest
       else
 	 '???'
       end

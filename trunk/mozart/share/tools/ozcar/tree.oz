@@ -14,7 +14,7 @@ local
 	 end
       end
    end
-   
+
    fun {TreePrev Xs I}
       case Xs of nil then nil
       [] X|Xr then
@@ -45,7 +45,7 @@ local
 	 else {Reverse R} # N.1 end
       end
    end
-   
+
    fun {GetColor State}
       case State
       of runnable then RunnableThreadColor # RunnableThreadText
@@ -54,7 +54,7 @@ local
       [] dead     then DeadThreadColor     # DeadThreadText
       end
    end
-   
+
    class Node
       attr
 	 x  : 1                   %% xpos
@@ -65,13 +65,13 @@ local
 
 	 i  : undef               %% thread id
 	 q  : undef               %% parent id
-      
+
       meth init(I Q S)
 	 i <- I
 	 q <- Q
 	 s <- S
       end
-      
+
       meth setXY(X Y DY)
 	 x  <- X
 	 y  <- Y
@@ -89,12 +89,12 @@ local
       meth setParent(Q)
 	 q <- Q
       end
-      
+
       meth get($)
 	 node(x:@x y:@y s:@s ct:@ct dy:@dy i:@i q:@q)
       end
    end
-   
+
    WC =
    {New class
 	   attr w
@@ -103,13 +103,13 @@ local
 	   meth get($) @w end
 	end init}
 
-   
+
    class BaseTree
 
       attr
 	 nodes
 	 width
-      
+
       meth init
 	 nodes <- nil
 	 width <- 0
@@ -131,7 +131,7 @@ local
       meth find(I $)
 	 {List.filter @nodes fun {$ N} {N get($)}.i == I end}.1
       end
-	 
+
       meth reorg(I)
 	 NC = BaseTree,Nodegroup(I $)
 	 NI = BaseTree,find(I $)
@@ -140,7 +140,7 @@ local
 	 {ForAll NC
 	  proc {$ N} {N setParent(NQ)} end}
       end
-      
+
       meth Nodegroup(Q $)
 	 {Reverse {List.filter @nodes
 		   fun{$ N}
@@ -171,30 +171,30 @@ local
 	    end
 	 end
       end
-      
+
       meth print
 	 {ForAll @nodes proc{$ N} {Show {N get($)}} end}
       end
    end
 
 in
-   
+
    class Tree from BaseTree ScrolledTitleCanvas
 
       prop
 	 locking
-      
+
       attr
 	 Selected       : undef
 	 LastSelected   : undef
 
 	 SyncCalc       : _
-      
+
       meth tkInit(...)=M
 	 BaseTree,init
 	 ScrolledTitleCanvas,M
       end
-      
+
       meth add(I Q)
 	 %% each new thread is runnable, initially... (hope so?)
 	 lock
@@ -202,7 +202,7 @@ in
 	    Tree,syncCalc
 	 end
       end
-      
+
       meth remove(I)
 	 Tree,mark(I dead)
       end
@@ -220,7 +220,7 @@ in
 	    end
 	 end
       end
-      
+
       meth kill(I Next)
 	 R # N = {TreeRemoveAndNext @nodes fun {$ N} {N get($)}.i \= I end}
       in
@@ -237,7 +237,7 @@ in
 	    Tree,SwitchToThread({N get($)}.i)
 	 end
       end
-      
+
       meth selectNext
 	 N = {TreePrev @nodes @Selected}
       in
@@ -245,7 +245,7 @@ in
 	    Tree,SwitchToThread({N get($)}.i)
 	 end
       end
-      
+
       meth select(I)
 	 case I == 0 then
 	    LastSelected <- undef
@@ -262,7 +262,7 @@ in
 		  ScrolledTitleCanvas,tk(itemconfigure OldCT
 					 font:ThreadTreeFont)
 	       else skip end
-	       
+
 	       node(ct:CT ...) = {@Selected get($)}
 	       ScrolledTitleCanvas,tk(itemconfigure CT font:ThreadTreeBoldFont)
 	    else
@@ -270,7 +270,7 @@ in
 	    end
 	 end
       end
-      
+
       meth mark(I How)
 	 CT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
@@ -288,7 +288,7 @@ in
       meth display
 	 SFX = ThreadTreeStretchX
 	 SFY = ThreadTreeStretchY
-         OS  = ThreadTreeOffset
+	 OS  = ThreadTreeOffset
 	 Sel = @Selected
       in
 	 {self tk(delete all)}
@@ -298,12 +298,12 @@ in
 	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
 	  in
 	     node(x:X y:Y s:S dy:DY i:I q:Q ...) = {N get($)}
-             {ForAll [tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
-                         width:1 fill:TrunkColor)] self}
-             case Q > 0 then
-                {self tk(crea line (X-1)*SFX-OS Y*SFY (X-1)*SFX-OS (Y-DY)*SFY
-                         width:1 fill:TrunkColor)}
-             else skip end
+	     {ForAll [tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
+			 width:1 fill:TrunkColor)] self}
+	     case Q > 0 then
+		{self tk(crea line (X-1)*SFX-OS Y*SFY (X-1)*SFX-OS (Y-DY)*SFY
+			 width:1 fill:TrunkColor)}
+	     else skip end
 
 	     local
 		CL = {GetColor S}
