@@ -59,12 +59,12 @@ All comments and suggestions for improvements are welcome.
 
 <SECTION><TITLE>Fault states</TITLE>
 
+<index/fault state<and>/
 <P>All failure modes are defined with respect to
 both a language entity and a particular site.
 For example, one would like to send a message
 to a port from a given site.
 The site may or may not be able to send the message.
-<index/fault states/
 A language entity can be in three fault states
 on a given site:
 <LIST>
@@ -433,6 +433,7 @@ object-record is fetched over the network, which might fail.
 
 <SUBSECTION id="levels"><TITLE>Levels of fault detection</TITLE>
 
+<index/fault level<and>/
 <index/fault detection<and>level/
 <index/level of fault detection/
 <P>There are three levels of fault detection, namely
@@ -607,7 +608,7 @@ the operation after they return.
 
 <SUBSECTION><TITLE>Eager detection with watchers</TITLE>
 
-<index/failure model<and>watcher (asynchronous detection)/
+<index/failure<and>watcher (asynchronous detection)/
 <index/fault watcher/
 <index/watcher/
 <P>Fault handlers detect failure synchronously,
