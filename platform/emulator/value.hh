@@ -1526,31 +1526,13 @@ public:
   ProgramCounter PC;
   TaggedRef file;
   int line;
-  DbgInfo(ProgramCounter pc, TaggedRef f, int l) : PC(pc), file(f), line(l) {};
+  DbgInfo *next;
+
+  DbgInfo(ProgramCounter pc, TaggedRef f, int l, DbgInfo *nxt)
+    : PC(pc), file(f), line(l), next(nxt) {};
 };
 
-const int dbgcount = 100;
-
-class DbgInfoList {
-  DbgInfo *elems[dbgcount];
-  DbgInfoList *next;
-  int nextfree;
-public:
-  DbgInfoList(DbgInfoList *nxt) : next(nxt), nextfree(0) {};
-  DbgInfoList *add(DbgInfo *elem)
-  {
-    if (this==NULL || nextfree>=dbgcount) {
-      DbgInfoList *aux = new DbgInfoList(this);
-      return aux->add(elem);
-    }
-    elems[nextfree++] = elem;
-    return this;
-  }
-
-  ProgramCounter find(char *file, int line);
-};
-
-extern DbgInfoList *allDbgInfos;
+extern DbgInfo *allDbgInfos;
 
 // ---------------------------------------------
 

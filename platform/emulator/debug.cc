@@ -351,20 +351,31 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIbreakpointAt, 4)
 {
-  OZ_declareAtomArg (0,file)
-  OZ_declareIntArg  (1,line);
-  OZ_declareArg     (2,what);
-  OZ_declareArg     (3,out);
+  OZ_declareArg    (0,file)
+  OZ_declareIntArg (1,line);
+  OZ_declareArg    (2,what);
+  OZ_declareArg    (3,out);
 
-  ProgramCounter PC = allDbgInfos->find(file,line);
+  DEREF(file,_1,_2);
 
-  if (PC != NOCODE) {
-    if (OZ_isTrue(what))
-      CodeArea::writeTagged(OZ_int(-line),PC+2);
-    else
-      CodeArea::writeTagged(OZ_int(line),PC+2);
-    OZ_unify(out,OZ_true());
+  DbgInfo *info = allDbgInfos;
+  Bool    ok    = NO;
+
+  while(info) {
+    //Assert(!isRef(info->file));
+    if (!atomcmp(file,info->file))
+      if (line == info->line) {
+        ok = OK;
+        if (OZ_isTrue(what))
+          CodeArea::writeTagged(OZ_int(-line),info->PC+2);
+        else
+          CodeArea::writeTagged(OZ_int( line),info->PC+2);
+      }
+    info = info->next;
   }
+
+  if (ok)
+    OZ_unify(out,OZ_true());
   else
     OZ_unify(out,OZ_false());
 
