@@ -49,10 +49,9 @@ Unix or <code/?{FILE}.exe/ under Windows.
 Additionally, it makes the output file executable.  Thus, if
 <file/Foo.oz/ contains an application functor:
 <code display/ozc -x Foo.oz/
-creates the file <file/Foo/, which is executable and can be invoked
-directly from the shell.  Unfortunately, this convenience cannot be
-achieved on Windows platforms.  On all platforms, however, you can always
-run an application functor as follows:
+creates the file <file/Foo/ (<file/Foo.exe/ under Windows), which is
+executable and can be invoked directly from the shell.  However, you can
+always run an application functor as follows:
 <code display/ozengine ?{url} ?{args} .../
 where ?{url} is a URL or pathname that references the application
 functor./
@@ -78,14 +77,33 @@ stdout/
 
 	<entry/<code/--execheader=?{STRING}//
 	<item>When invoked with option <code/-x/ the compiler first
-outputs a script header so that the output file may be interpreted by
-the operating system as an executable script.  The default header is:
+outputs a header so that the output file may be interpreted by
+the operating system as an executable.  Under Unix, the default behaviour
+is to use the following as header:
 <code display>
 #!/bin/sh
 exec ozengine $0 "$@"
 </code>
 The <code/--execheader/ option allows you to specify a different
 header.</item>
+
+	<entry/<code/--execpath=?{STRING}//
+	<item>Uses the header given above in the description of
+<<--execheader>>, except that <file/ozengine/ is replaced by ?{STRING}.
+
+	<entry/<code/--execfile=?{FILE}//
+	<item>Reads in ?{FILE} and uses this as header.
+Under Windows, the default behaviour is to use the file provided in
+?{ozhome}<file>/bin/ozwrapper.bin</file>, where ?{ozhome} is Mozart's
+installation folder.  <file/ozwrapper.bin/ is a Windows executable
+that launches <file/ozengine/.
+
+	<entry/<code/--execwrapper=?{FILE}//
+	<item>Reads in ?{ozhome}<file>/bin/</file>?{FILE} and uses it
+as header for executable files.  Apart from <file/ozwrapper.bin/,
+an <file/ozwrapperw.bin/ is supplied that launches <file/ozenginew/
+instead of <file/ozengine/.  This option provides a convenient way to
+use this alternative wrapper.
 
 	<entry/<code/-z ?{N}/, <code/--compress=?{N}//
 	<item>Pickles may be written in a compressed format.  By
