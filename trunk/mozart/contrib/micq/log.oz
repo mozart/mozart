@@ -59,11 +59,29 @@ define
 	 {@fileHandler close}
       end
 
-      meth log( Msg )
-	 lock 
-	    {@fileHandler write(vs:{GetDate}#Msg#"\n")}
+      meth log(Msg)
+	 thread
+	    {self Log2(Msg {GetDate})}
+	 end
+      end
+      
+      meth Log2(Msg Date resend:R<=0)
+	 lock
+	    try
+	       if R==0 then
+		  {@fileHandler write(vs:Date#Msg#"\n")}%
+	       else
+		  {@fileHandler write(vs:"["#R#"] "#Date#Msg#"\n")}%
+	       end
+	    catch X then
+	       {System.show X}
+	       {System.showInfo "* Failed to send ["#R#"]: "#Date#Msg#"\n"}
+	       {Delay 1000}
+	       {self Log2(Msg Date resend:R+1)}
+	    end
 	 end
       end
    end
 end
+
 	    
