@@ -1,0 +1,34 @@
+<!doctype book system "ozdoc.dtd" [
+<!-- $Id$ -->
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!-- Abbreviations -->
+<!-- Processing Instructions -->
+
+]>
+
+<book proglang=oz>
+  <front>
+    <meta name=ozversion value="3.0">
+    <meta name=status value=draft>
+    <title/The Mozart Profiler/
+    <author.extern to="author.db" key="Benjamin.Lorenz">
+    <abstract>
+
+      This manual describes the profiler for the Mozart programming
+      system. With its help you can optimize your Oz applications.  It
+      mainly counts procedure applications and measures their memory
+      consumption, presenting its calculations using nice,
+      clickable bar charts.
+
+    </abstract>
+  <body>
+    <chapter>
+      <title/Getting Started/
+      <p>
+      More to come soon...
+</book>
