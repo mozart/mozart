@@ -24,6 +24,7 @@
 #define SAFETY_MARGIN   256
 #define TCL_BUFFER_SIZE 1024
 
+static char tcl_static_buffer[TCL_BUFFER_SIZE+SAFETY_MARGIN];
 static char * tcl_buffer;
 static char * tcl_buffer_start;
 static char * tcl_buffer_end;
@@ -32,7 +33,7 @@ static char * protect_start;
 
 inline
 void init_tcl_buffer(void) {
-  tcl_buffer_start = new char[TCL_BUFFER_SIZE + SAFETY_MARGIN];
+  tcl_buffer_start = tcl_static_buffer;
   tcl_buffer_end   = tcl_buffer_start + TCL_BUFFER_SIZE;
   tcl_buffer       = tcl_buffer_start;
 }
@@ -49,7 +50,8 @@ void resize_tcl_buffer(void) {
   for (char *j=tcl_buffer_start; j<tcl_buffer ; new_tcl_buffer++, j++)
     *new_tcl_buffer = *j;
 
-  delete tcl_buffer_start;
+  if (tcl_buffer_start!=tcl_static_buffer)
+    delete tcl_buffer_start;
 
   tcl_buffer       = (tcl_buffer - tcl_buffer_start) + new_tcl_buffer_start;
   tcl_buffer_start = new_tcl_buffer_start;
@@ -58,7 +60,8 @@ void resize_tcl_buffer(void) {
 
 inline
 void delete_tcl_buffer(void) {
-  delete tcl_buffer_start;
+  if (tcl_buffer_start!=tcl_static_buffer)
+    delete tcl_buffer_start;
 }
 
 
