@@ -15,10 +15,10 @@ install:: $(ELISPDIR) $(ELCS)
 	install -m 444 $(ELS) $(ELCS) $(ELISPDIR)
 
 .el.elc:
-	@echo "(setq load-path (cons \".\" load-path))\
-               (byte-compile-file \"$<\")" > compile
-	emacs -batch -f batch-byte-compile $<
-	rm -f compile
+	@echo "(setq byte-compile-compatibility t) \
+               (byte-compile-file \"$<\")" > compile.el
+	emacs -q -batch -l compile.el $<
+	rm -f compile.el
 
 clean::
 	rm -f $(ELCS) *~
