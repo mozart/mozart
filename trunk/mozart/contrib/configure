@@ -830,7 +830,7 @@ if test -z "${enable_contrib}"; then
 else
     case "${enable_contrib}" in
     no)		oz_enable_contrib=;;
-    yes)	oz_enable_contrib=gdbm,regex,doc,io;;
+    yes)	oz_enable_contrib=gdbm,regex,doc,os;;
     *)		oz_enable_contrib=${enable_contrib};;
     esac
 fi
