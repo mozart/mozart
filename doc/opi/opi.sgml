@@ -203,10 +203,28 @@
         <Title/Invoking the &OPI; Under Windows/
           <P>
             <Index/Windows/
-            <!--** add a reference to the installation manual -->
             The installation procedure will have created a <Span class=index
             /program group/ for the Mozart system.  The &OPI; is started
-            by launching the <Name type=program/Mozart/ item.
+            by launching the <Name type=program/Mozart/ item.  This item
+            is a shortcut to the <File/oz.exe/ program within the <File/bin/
+            subfolder of the installation folder; as under Unix, any arguments
+            given to it are passed on to the invoked Emacs.
+          <Para class=apropos><Title/Which Emacs to Use/
+            <Index/GNU Emacs/<Index/Emacs<And>GNU/
+            <Index/XEmacs/<Index/Emacs<And>XEmacs/
+            The command used to invoke Emacs is determined through the
+            following steps:
+            <List enum>
+              <Item>
+                If the environment variable <Var type=env/OZEMACS/ is set,
+                its contents is used.
+              <Item>
+                Else, if the registry indicates where GNU Emacs is installed,
+                this is used.
+              <Item>
+                Else, if the registry indicates where XEmacs is installed,
+                this is used.
+            </List>
       <Section>
         <Title/Invoking the &OPI; From Within Emacs/
           <P>
