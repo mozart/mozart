@@ -50,17 +50,16 @@ SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
 all: $(FDTARGETS)
 
-
-libfd.so: $(FDLIBOBJS)
+../libfd.so: $(FDLIBOBJS)
         $(DYNLD) -o $@ $(FDLIBOBJS)
 
-libfd.a: $(FDLIBOBJS)
+../libfd.a: $(FDLIBOBJS)
         $(AR) -rc $@ $(FDLIBOBJS) && $(RANLIB) $@
 
-libschedule.so: $(SCHEDLIBOBJS)
+../libschedule.so: $(SCHEDLIBOBJS)
         $(DYNLD) -o $@ $(SCHEDLIBOBJS)
 
-libschedule.a: $(SCHEDLIBOBJS)
+../libschedule.a: $(SCHEDLIBOBJS)
         $(AR) -rc $@ $(SCHEDLIBOBJS) && $(RANLIB) $@
 
 install:: @FDINSTALL@

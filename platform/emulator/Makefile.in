@@ -121,10 +121,12 @@ OBJS = $(SRCS:.cc=.o)
 .NOEXPORT: emulate.o @PROGRAMNAME@ peanuts.o
 .PHONY: all win win-install first install install-bin install-inc \
         install-dir version depend tags clean distclean veryclean \
-        libfd.a libschedule.a libfset.a libfd.so libschedule.so libfset.so \
+        ../libfd.a ../libschedule.a ../libfset.a \
+        ../libfd.so ../libschedule.so ../libfset.so \
         install-wif install-fd install-fset install-parser
 
-all: $(TARGETS)
+all: $(TARGETS) $(FDTARGETS) $(FSETTARGETS) \
+        $(PARSERTARGETS) $(OZMATARGETS) $(WIFTARGETS)
 
 bootstrap:: all
 

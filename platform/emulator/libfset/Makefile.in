@@ -39,10 +39,12 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
 all: $(FSETTARGETS)
 
-libfset.so: $(FSETLIBOBJS)
+.PHONY: libfset.a libfset.so
+
+../libfset.so: $(FSETLIBOBJS)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
 
-libfset.a: $(FSETLIBOBJS)
+../libfset.a: $(FSETLIBOBJS)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
 install:: @FSETINSTALL@

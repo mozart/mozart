@@ -561,11 +561,11 @@ AC_SUBST(WIFINSTALL)
 OZ_ENABLE_YES(linkfd,[ link libfd and libschedule statically],
         AC_MSG_RESULT(yes (-DSTATIC_LIBFD))
         AC_DEFINE(STATIC_LIBFD)
-        FDTARGETS="libfd.a libschedule.a"
-        LIBS="-L./libfd -lfd -lschedule $LIBS"
+        FDTARGETS="../libfd.a ../libschedule.a"
+        LIBS="-L. -lfd -lschedule $LIBS"
         ,
         AC_MSG_RESULT(no (-USTATIC_LIBFD))
-        FDTARGETS="libfd.so libschedule.so"
+        FDTARGETS="../libfd.so ../libschedule.so"
         FDINSTALL="install-fd"
         )
 AC_SUBST(FDTARGETS)
@@ -574,11 +574,11 @@ AC_SUBST(FDINSTALL)
 OZ_ENABLE_YES(linkfset,[ link libfset statically],
         AC_MSG_RESULT(yes (-DSTATIC_LIBFSET))
         AC_DEFINE(STATIC_LIBFSET)
-        FSETTARGETS="libfset.a"
-        LIBS="-L./libfset -lfset $LIBS"
+        FSETTARGETS="../libfset.a"
+        LIBS="-L. -lfset $LIBS"
         ,
         AC_MSG_RESULT(no (-USTATIC_LIBFSET))
-        FSETTARGETS="libfset.so"
+        FSETTARGETS="../libfset.so"
         FSETINSTALL="install-fset"
         )
 AC_SUBST(FSETTARGETS)

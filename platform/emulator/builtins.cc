@@ -5660,29 +5660,73 @@ OZ_BI_define(BIdlStaticLoad,1,1)
   OZ_C_proc_interface * I = 0;
 
 #ifdef STATIC_LIBWIF
-  if (!strcmp(basename, "libwif.so"))
+  if (!strcmp(basename, "libwif.so")) {
      I = libwif_interface;
+     goto success;
+  }
 #endif
 
 #ifdef STATIC_LIBFD
-  if (!strcmp(basename, "libfd.so"))
+  if (!strcmp(basename, "libfd.so")) {
      I = libfd_interface;
+     goto success;
+  }
 
-  if (!strcmp(basename, "libschedule.so"))
+  if (!strcmp(basename, "libschedule.so")) {
      I = libschedule_interface;
+     goto success;
+  }
 #endif
 
 #ifdef STATIC_LIBFSET
-  if (!strcmp(basename, "libfset.so"))
+  if (!strcmp(basename, "libfset.so")) {
      I = libset_interface;
+     goto success;
+  }
 #endif
 
 #ifdef STATIC_LIBPARSER
-  if (!strcmp(basename, "libparser.so"))
+  if (!strcmp(basename, "libparser.so")) {
      I = libparser_interface;
+     goto sucess;
+  }
 #endif
 
-  OZ_RETURN(I ? ozInterfaceToRecord(I) : NameUnit);
+  Assert(!I);
+
+  {
+    TaggedRef hdl;
+
+    int n = strlen(ozconf.emuhome);
+
+    char * libfile = new char[n + strlen(basename) + 2];
+
+    strcpy(libfile, ozconf.emuhome);
+
+    libfile[n] = '/';
+
+    strcpy(libfile + n + 1, basename);
+
+    OZ_Return res = osDlopen(libfile,hdl);
+
+    delete[] libfile;
+
+    if (res!=PROCEED)
+      return res;
+
+    void* handle = OZ_getForeignPointer(hdl);
+
+    I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
+
+  }
+
+  if (!I)
+    return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
+                    OZ_in(0));
+
+ success:
+
+  OZ_RETURN(ozInterfaceToRecord(I));
 
 } OZ_BI_end
 

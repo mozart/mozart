@@ -2675,12 +2675,12 @@ fi
 #define STATIC_LIBFD 1
 EOF
 
-        FDTARGETS="libfd.a libschedule.a"
-        LIBS="-L./libfd -lfd -lschedule $LIBS"
+        FDTARGETS="../libfd.a ../libschedule.a"
+        LIBS="-L. -lfd -lschedule $LIBS"
 
     else
         echo "$ac_t""no (-USTATIC_LIBFD)" 1>&6
-        FDTARGETS="libfd.so libschedule.so"
+        FDTARGETS="../libfd.so ../libschedule.so"
         FDINSTALL="install-fd"
 
     fi
@@ -2706,12 +2706,12 @@ fi
 #define STATIC_LIBFSET 1
 EOF
 
-        FSETTARGETS="libfset.a"
-        LIBS="-L./libfset -lfset $LIBS"
+        FSETTARGETS="../libfset.a"
+        LIBS="-L. -lfset $LIBS"
 
     else
         echo "$ac_t""no (-USTATIC_LIBFSET)" 1>&6
-        FSETTARGETS="libfset.so"
+        FSETTARGETS="../libfset.so"
         FSETINSTALL="install-fset"
 
     fi
