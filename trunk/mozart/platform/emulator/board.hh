@@ -96,6 +96,7 @@ public:
   Board *gcBoard();
   void gcRecurse(void);
   Bool gcIsAlive();
+  Bool checkAlive();
   Board *gcGetNotificationBoard ();
 
   OZPRINT;
