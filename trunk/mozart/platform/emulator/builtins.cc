@@ -6873,13 +6873,6 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
     oz_typeError(0,"Procedure/1");
   }
 
-  if (am.defaultExceptionHandler && am.defaultExceptionHandler!=hdl) {
-    OZ_warning("reinstalling defaultExceptionHandler");
-    return PROCEED;
-    //     return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-    //		    oz_atom("setDefaultExceptionHandler"));
-  }
-
   am.defaultExceptionHandler = hdl;
   return PROCEED;
 }
