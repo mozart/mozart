@@ -80,6 +80,7 @@ enum MessageType {
 
   M_ISDET,              // OTI DIF (implicit 1 credit)
 
+  M_REQUESTED,
   M_LAST
 };
 
