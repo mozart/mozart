@@ -1,4 +1,5 @@
-OZHOME          = @prefix@
+PREFIX=         @prefix@
+
 PLATFORM        = @PLATFORM@
 INSTALL         = @INSTALL@
 INSTALL_BIN     = $(INSTALL) -m 555
@@ -32,8 +33,8 @@ realclean: veryclean
 distclean: veryclean
         $(RM) config.* Makefile
 
-install: $(OZHOME)/platform/$(PLATFORM) $(OZWISH)
-        $(INSTALL_BIN) $(OZWISH) $(OZHOME)/platform/$(PLATFORM)
+install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH)
+        $(INSTALL_BIN) $(OZWISH) $(PREFIX)/platform/$(PLATFORM)
 
-$(OZHOME)/platform/$(PLATFORM):
+$(PREFIX)/platform/$(PLATFORM):
         $(MKINSTALLDIRS) $@
