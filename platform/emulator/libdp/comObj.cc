@@ -501,10 +501,12 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
           // is to be used. What transObj to use needs to be
           // decided on.
           PD((TCP_INTERFACE,"Other comObj found in state %d",other->state));
-          merge(other,this,channelinfo);
+          Bool ret=merge(other,this,channelinfo);
           msgContainerManager->deleteMsgContainer(msgC);
-          comController->deleteComObj(this); // Is this consistent? AN
-          return TRUE; // !This object may not do anything more, but the trO!
+          Assert(state==CLOSED && transObj==NULL);
+          comController->deleteComObj(this);
+          return ret; // !This object may not do anything more, but the trO
+                      // has to continue if it was adopted.
         }
         adoptCI(channelinfo);
         state=WORKING;
@@ -721,7 +723,7 @@ void ComObj::adoptCI(OZ_Term channelinfo){
   send(newmsgC,-1);
 }
 
-void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
+Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
   switch(old->state) {
   case CLOSED:
     goto adopt_anon;
@@ -737,19 +739,21 @@ void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
       goto adopt_anon;
     }
     else {
+      printf("closing anon 1\n");
       anon->close(CLOSED,TRUE);
-      return;
+      return FALSE;
     }
   case WORKING:
   case CLOSING_HARD: // Resources are poor, wait in line...?
+      printf("closing anon 2\n");
     anon->close(CLOSED,TRUE);
-    return;
+    return FALSE;
   case CLOSING_WF_DISCONNECT:
     goto adopt_anon;
   default:
     DebugCode(printf("PROBLEM (state %d %d)\n",old->state,state);)
     Assert(0);
-    return;
+    return FALSE;
   }
 
  adopt_anon:
@@ -759,10 +763,12 @@ void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
   PD((TCPCACHE,"Switch running anon: %d old: %d",anon->state,old->state));
   transObj->getTransController()->switchRunning(anon,old);
   anon->transObj=NULL;
+  anon->state=CLOSED;
   old->state=ANONYMOUS_WF_NEGOTIATE; // Being in the correct
                                      // state makes send behave
   old->adoptCI(channelinfo);
   old->state=WORKING;
+  return TRUE;
 }
 
 void ComObj::msgAcked(int num) {
