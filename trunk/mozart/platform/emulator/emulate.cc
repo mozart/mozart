@@ -447,24 +447,33 @@ Bool hookCheckNeeded(AM *e)
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
+inline
+Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
+			 RefsArray Y, RefsArray G,
+			 RefsArray X, int argsToSave)
+{
+  switch (am.currentThread->getCompMode()) {
+  case ALLSEQMODE:
+    am.pushTask(b,PC,Y,G,X,argsToSave);
+    return new Suspension(am.currentThread);
+  case SEQMODE:
+    am.pushTask(b,PC,Y,G,X,argsToSave);
+    return new Suspension(am.currentThread->newSeqThread());
+  case PARMODE:
+    return new Suspension(b,prio,PC,Y,G,X,argsToSave);
+  default:
+    Assert(0);
+    return 0;
+  }
+}
+
 static
 void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
 		  RefsArray X, RefsArray Y, RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag);
   Assert(isAnyVar(ATag));
-  Suspension *susp;
-  switch (am.currentThread->getCompMode()) {
-  case ALLSEQMODE:
-    am.pushTask(b,PC,Y,G,X,argsToSave);
-    susp = new Suspension(am.currentThread);
-    break;
-  case SEQMODE:
-    warning("mixed seq/par not impl\n");
-  case PARMODE:
-    susp = new Suspension(b,prio,PC,Y,G,X,argsToSave);
-    break;
-  }
+  Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
   b->incSuspCount();
   taggedBecomesSuspVar(APtr)->addSuspension(susp);
 
@@ -549,18 +558,7 @@ void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
 			 ProgramCounter PC, RefsArray X, RefsArray Y, RefsArray G, int prio)
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-  Suspension *susp;
-  switch (am.currentThread->getCompMode()) {
-  case ALLSEQMODE:
-    am.pushTask(b,PC,Y,G,X,argsToSave);
-    susp = new Suspension(am.currentThread);
-    break;
-  case SEQMODE:
-    warning("mixed seq/par not impl\n");
-  case PARMODE:
-    susp = new Suspension(b,prio,PC,Y,G,X,argsToSave);
-    break;
-  }
+  Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
   b->incSuspCount();
 
   Assert(isAnyVar(ATag) || isAnyVar(BTag));
@@ -1294,19 +1292,8 @@ void engine() {
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      Suspension *susp;
-      switch (am.currentThread->getCompMode()) {
-      case ALLSEQMODE:
-	am.pushTask(CBB,shallowCP,Y,G,X,argsToSave);
-	susp = new Suspension(am.currentThread);
-	break;
-      case SEQMODE:
-	warning("mixed seq/par not impl\n");
-      case PARMODE:
-	susp=new Suspension(CBB, GET_CURRENT_PRIORITY(),
-			    shallowCP, Y, G, X, argsToSave);
-	break;
-      }
+      Suspension *susp=mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+				    shallowCP,Y,G,X,argsToSave);
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
       inShallowGuard = NO;
@@ -1440,9 +1427,8 @@ void engine() {
       if (e->currentThread->getCompMode() == ALLSEQMODE) {
 	e->currentThread=0;
 	goto LBLstart;
-      } else {
-	goto LBLcheckEntailment; // mm2 ???
       }
+      goto LBLcheckEntailment; // mm2 ???
     } else {
       DISPATCH(3);
     }
