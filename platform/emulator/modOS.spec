@@ -169,6 +169,10 @@
                              out => ['+int','+int#int'],
                              BI  => unix_pipe},
 
+    'exec'              => { in  => ['+virtualString','value'],
+                             out => ['+int'],
+                             BI  => unix_exec},
+
     'tmpnam'            => { in  => [],
                              out => ['+string'],
                              BI  => unix_tmpnam},
