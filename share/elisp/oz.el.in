@@ -946,6 +946,7 @@ feed that many preceding paragraphs as well as the current paragraph."
   "Feed STRING to the Oz Compiler, restarting it if it died.
 If SYSTEM is non-nil, it is a command for the system and is to be
 compiled using a default set of switches."
+  (interactive "sString to feed: \nP")
   (oz-check-running t)
   (if (not (get-buffer-process oz-compiler-buffer))
       (setq oz-buffered-send-string
@@ -2693,14 +2694,14 @@ feed that many preceding paragraphs as well as the current paragraph."
 
 (defun oz-browse-buffer ()
   "Feed the current buffer to the Oz Compiler.
-Assuming it to contain an expression, it is enclosed by an application
+Assuming it to contain an expression, enclose it by an application
 of the procedure Browse."
   (interactive)
   (oz-browse-region (point-min) (point-max)))
 
 (defun oz-browse-region (start end)
   "Feed the current region to the Oz Compiler.
-Assuming it to contain an expression, it is enclosed by an application
+Assuming it to contain an expression, enclose it by an application
 of the procedure Browse."
   (interactive "r")
   (let ((contents (oz-get-region start end)))
@@ -2709,7 +2710,7 @@ of the procedure Browse."
 
 (defun oz-browse-line (arg)
   "Feed the current line to the Oz Compiler.
-Assuming it to contain an expression, it is enclosed by an application
+Assuming it to contain an expression, enclose it by an application
 of the procedure Browse.
 With ARG, feed that many lines.  If ARG is negative, feed that many
 preceding lines as well as the current line."
@@ -2719,7 +2720,7 @@ preceding lines as well as the current line."
 
 (defun oz-browse-paragraph (arg)
   "Feed the current paragraph to the Oz Compiler.
-Assuming it to contain an expression, it is enclosed by an application
+Assuming it to contain an expression, enclose it by an application
 of the procedure Browse.
 If the point is exactly between two paragraphs, feed the preceding
 paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
