@@ -4800,7 +4800,7 @@ void cellReceiveDump(CellManager *cm,Site *fromS){
     return;}
   Assert(cf->getState()==Cell_Invalid);
   networkSiteCheck(fromS);
-  TaggedRef tr=makeTaggedRef(newTaggedUVar(am.currentBoard));
+  TaggedRef tr=oz_newVariable();
   cellDoExchange((Tertiary *)cf,tr,tr,NULL); /* ATTENTION */
   return;
 }
