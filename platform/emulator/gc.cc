@@ -1189,10 +1189,6 @@ void AM::gc(int msgLevel)
 
   performCopying();
 
-  // X regs initialization;
-  for(i = 0; i < NumberOfXRegisters; i++)
-    xRegs[i] = (TaggedRef) NULL;
-
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
   GCPROCMSG("updating references");
