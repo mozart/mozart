@@ -1062,9 +1062,9 @@ OZ_Term getArityList(OZ_Term term)
 
 class ObjectClass {
 private:
-  SRecord *fastMethods;
+  OzDictionary *fastMethods;
   Literal *printName;
-  TaggedRef slowMethods;
+  OzDictionary *slowMethods;
   Abstraction *send;
   SRecord *unfreeFeatures;
   TaggedRef ozclass;    /* the class as seen by the Oz user */
@@ -1074,7 +1074,7 @@ public:
 
   Bool hasFastBatch;    /* for optimized batches */
 
-  ObjectClass(SRecord *fm, Literal *pn, TaggedRef sm, 
+  ObjectClass(OzDictionary *fm, Literal *pn, OzDictionary *sm, 
 	      Abstraction *snd, Bool hfb, SRecord *uf)
   {
     fastMethods    = fm;
@@ -1086,12 +1086,12 @@ public:
     ozclass        = AtomNil;
 
   }
-  TaggedRef getslowMethods()    { return slowMethods; }
-  SRecord *getfastMethods()     { return fastMethods; }
-  Abstraction *getAbstraction() { return send; }
-  char *getPrintName()          { return printName->getPrintName(); }
-  TaggedRef getOzClass()        { return ozclass; }
-  void setOzClass(TaggedRef cl) { ozclass = cl; }
+  OzDictionary *getSlowMethods() { return slowMethods; }
+  OzDictionary *getfastMethods() { return fastMethods; }
+  Abstraction *getAbstraction()  { return send; }
+  char *getPrintName()           { return printName->getPrintName(); }
+  TaggedRef getOzClass()         { return ozclass; }
+  void setOzClass(TaggedRef cl)  { ozclass = cl; }
 
   TaggedRef getFeature(TaggedRef lit) 
   {
@@ -1165,12 +1165,12 @@ public:
   Bool getFastBatch()     { return getClass()->hasFastBatch; }
 
   char *getPrintName()          { return getClass()->getPrintName(); }
-  SRecord *getMethods()         { return getClass()->getfastMethods(); }
+  OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
   Abstraction *getMethod(TaggedRef label, SRecordArity arity);
   SRecord *getState()           { return (SRecord*) ToPointer(state); }
   void setState(SRecord *s)     { state = ToInt32(s); }
   Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
-  TaggedRef getSlowMethods()    { return getClass()->getslowMethods(); }
+  OzDictionary *getSlowMethods() { return getClass()->getSlowMethods(); }
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }
   Board *getBoardFast();
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
