@@ -42,7 +42,7 @@ in
 
       TkTools
 
-      Browser(browse)
+      Inspector(inspect)
 
       Space
 
