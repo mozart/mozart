@@ -230,6 +230,10 @@ public:
     
     memcpy(new_vs, _vs, vs_chars);
 
+    for (int i = _size; i --; ) {
+      new_vs[i].copyExtension();
+    }
+
     _vs = new_vs;
 
     // copy bools
@@ -246,6 +250,10 @@ public:
     OZ_FSetValue * new_vs = (OZ_FSetValue *) (void *) OZ_hallocChars(vs_chars);
     
     memcpy(new_vs, _vs, vs_chars);
+
+    for (int i = _size; i --; ) {
+      new_vs[i].copyExtension();
+    }
 
     _vs = new_vs;
 
