@@ -82,7 +82,7 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a, Bool prop)
     genericBind(varPtr,var,NULL,a,prop);
   }
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-                           localPropStore.isInLocalPropagation()));
+                           localPropStore.isInLocalPropagation()););
 
 }
 

@@ -6,6 +6,8 @@
   Version: $Revision$
   */
 
+#include "wsock.hh"
+
 #include "oz.h"
 
 #include <stdlib.h>
@@ -14,8 +16,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef WINDOWS
+#include <direct.h>
+#else
 #include <dirent.h>
 #include <netdb.h>
+#endif
 
 #include "os.hh"
 
@@ -24,23 +30,27 @@ extern int h_errno;
 #endif
 
 #include <time.h>
-#include <sys/param.h>
 #include <sys/stat.h>
 
+#if !defined(OS2_I486) && !defined(WINDOWS)
+#include <sys/param.h>
 #include <sys/socket.h>
-#ifndef OS2_I486
 #ifndef LINUX
 #include <sys/uio.h>
 #endif
 #include <sys/un.h>
-#endif
 #include <sys/time.h>
 #include <sys/times.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
+#endif
+
 #include <signal.h>
+
+#ifndef WINDOWS
 #include <sys/utsname.h>
+#endif
 
 #ifdef IRIX5_MIPS
 #include <bstring.h>
@@ -126,7 +136,11 @@ while ((RET = CALL) < 0) {                          \
 { RETURN_ANY_ERROR(OUT,errno,OZ_unixError(errno),"unix"); }
 
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000) || defined(OSF1_ALPHA)
+#if defined(ULTRIX_MIPS) || defined(OS2_I486)
+
+#define RETURN_NET_ERROR(OUT) { RETURN_ANY_ERROR(OUT,0,"Host lookup failure.","host"); }
+
+#else
 
 static char* h_strerror(const int err) {
   switch (err) {
@@ -151,11 +165,6 @@ static char* h_strerror(const int err) {
 #define RETURN_NET_ERROR(OUT) \
 { RETURN_ANY_ERROR(OUT,h_errno,h_strerror(errno),"host"); }
 
-#endif
-
-#if defined(ULTRIX_MIPS) || defined(OS2_I486)
-#define RETURN_NET_ERROR(OUT) \
-{ RETURN_ANY_ERROR(OUT,0,"Host lookup failure.","host"); }
 #endif
 
 
@@ -191,16 +200,16 @@ static char* h_strerror(const int err) {
 // check file descriptors
 // -------------------------------------------------
 
-#define CHECK_READ(FD,OUT)                                                    \
-{ int ret = osTestSelect(FD,SEL_READ);                                        \
-  if (ret < 0)  { RETURN_UNIX_ERROR(OUT); }                                   \
-  if (ret == 0) { RETURN_UNABLE(OUT); }                                       \
+#define CHECK_READ(FD,OUT)                      \
+{ int ret = osTestSelect(FD,SEL_READ);          \
+  if (ret < 0)  { RETURN_UNIX_ERROR(OUT); }     \
+  if (ret == 0) { RETURN_UNABLE(OUT); }         \
 }
 
-#define CHECK_WRITE(FD,OUT,REST)                                              \
-{ int ret = osTestSelect(FD,SEL_WRITE);                                       \
-  if (ret < 0)  { RETURN_UNIX_ERROR(OUT); }                                   \
-  if (ret == 0) { RETURN_UNABLE_REST(OUT,REST); }                             \
+#define CHECK_WRITE(FD,OUT,REST)                        \
+{ int ret = osTestSelect(FD,SEL_WRITE);                 \
+  if (ret < 0)  { RETURN_UNIX_ERROR(OUT); }             \
+  if (ret == 0) { RETURN_UNABLE_REST(OUT,REST); }       \
 }
 
 
@@ -243,7 +252,7 @@ inline OZ_Term buff2list(int len, const char *s)
 
 
 OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
-                         OZ_Term *rest, OZ_Term *susp)
+                  OZ_Term *rest, OZ_Term *susp)
 {
   char c;
 
@@ -276,7 +285,7 @@ OZ_Bool atom2buff(OZ_Term atom, char **write_buff, int *len,
 
 
 OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
-                        OZ_Term *rest, OZ_Term *susp)
+                 OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_intToCString(ozint);
   char c;
@@ -302,7 +311,7 @@ OZ_Bool int2buff(OZ_Term ozint, char **write_buff, int *len,
 }
 
 OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
-                          OZ_Term *rest, OZ_Term *susp)
+                   OZ_Term *rest, OZ_Term *susp)
 {
   char *string = OZ_floatToCString(ozfloat);
   char c;
@@ -329,7 +338,7 @@ OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
 
 
 OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
-                         OZ_Term *rest, OZ_Term *susp)
+                  OZ_Term *rest, OZ_Term *susp)
 {
   OZ_Term hd, tl;
 
@@ -531,6 +540,7 @@ OZ_C_proc_begin(unix_stat,2)
 }
 OZ_C_proc_end
 
+#ifndef WINDOWS
 OZ_C_proc_begin(unix_uName,1)
 {
   OZ_declareArg(0, out);
@@ -550,6 +560,7 @@ OZ_C_proc_begin(unix_uName,1)
   return OZ_unify(out,OZ_recordInit(OZ_CToAtom("utsname"),pairlist));
 }
 OZ_C_proc_end
+#endif
 
 
 OZ_C_proc_begin(unix_getCWD,1)
@@ -576,6 +587,12 @@ OZ_C_proc_begin(unix_getCWD,1)
   }
 }
 OZ_C_proc_end
+
+#ifdef WINDOWS
+#define O_NOCTTY   0
+#define O_NONBLOCK 0
+#define O_SYNC     0
+#endif
 
 OZ_C_ioproc_begin(unix_open,4)
 {
@@ -822,8 +839,6 @@ OZ_C_proc_end
 // sockets
 // -------------------------------------------------
 
-
-
 OZ_C_ioproc_begin(unix_socket,4)
 {
   OZ_declareAtomArg("socket", 0, OzDomain);
@@ -898,7 +913,9 @@ OZ_C_ioproc_begin(unix_bindInet,3)
 OZ_C_proc_end
 
 
+
 #ifndef OS2_I486
+#ifndef WINDOWS
 OZ_C_ioproc_begin(unix_bindUnix,3)
 {
   OZ_declareIntArg("bindUnix",0,s);
@@ -916,6 +933,56 @@ OZ_C_ioproc_begin(unix_bindUnix,3)
   return OZ_unifyInt(out,ret);
 }
 OZ_C_proc_end
+
+
+OZ_C_ioproc_begin(unix_connectUnix,3)
+{
+  OZ_declareIntArg("connectUnix",0,s);
+  OZ_declareVsArg("connect",1,path);
+  OZ_declareArg(2, out);
+
+  struct sockaddr_un addr;
+
+  addr.sun_family = AF_UNIX;
+  strcpy(addr.sun_path, path);
+
+// critical region
+  osBlockSignals();
+
+  int ret;
+  while ((ret = connect(s,(struct sockaddr *) &addr,
+                        sizeof(struct sockaddr_un)))<0) {
+    if (errno != EINTR) {
+      osUnblockSignals();
+      RETURN_UNIX_ERROR(out);
+    }
+  }
+
+// end of critical region
+  osUnblockSignals();
+
+  return OZ_unifyInt(out,ret);
+}
+OZ_C_proc_end
+
+
+OZ_C_ioproc_begin(unix_acceptUnix,3)
+{
+  OZ_declareIntArg("acceptUnix", 0, sock);
+  OZ_declareArg(1, path);
+  OZ_declareArg(2, out);
+
+  struct sockaddr_un from;
+  int fromlen = sizeof from;
+
+  WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen), fd, out);
+
+  return (OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
+    && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
+}
+OZ_C_proc_end
+
+#endif  /* WINDOWS */
 
 OZ_C_ioproc_begin(unix_getSockName,2)
 {
@@ -943,11 +1010,8 @@ OZ_C_ioproc_begin(unix_listen,3)
   return OZ_unifyInt(out,ret);
 }
 OZ_C_proc_end
-#endif
 
 
-
-#ifndef OS2_I486
 OZ_C_ioproc_begin(unix_connectInet,4)
 {
   OZ_declareIntArg("connectInet", 0, s);
@@ -986,36 +1050,6 @@ OZ_C_ioproc_begin(unix_connectInet,4)
 OZ_C_proc_end
 
 
-OZ_C_ioproc_begin(unix_connectUnix,3)
-{
-  OZ_declareIntArg("connectUnix",0,s);
-  OZ_declareVsArg("connect",1,path);
-  OZ_declareArg(2, out);
-
-  struct sockaddr_un addr;
-
-  addr.sun_family = AF_UNIX;
-  strcpy(addr.sun_path, path);
-
-// critical region
-  osBlockSignals();
-
-  int ret;
-  while ((ret = connect(s,(struct sockaddr *) &addr,
-                        sizeof(struct sockaddr_un)))<0) {
-    if (errno != EINTR) {
-      osUnblockSignals();
-      RETURN_UNIX_ERROR(out);
-    }
-  }
-
-// end of critical region
-  osUnblockSignals();
-
-  return OZ_unifyInt(out,ret);
-}
-OZ_C_proc_end
-
 
 OZ_C_ioproc_begin(unix_acceptInet,4)
 {
@@ -1043,22 +1077,6 @@ OZ_C_ioproc_begin(unix_acceptInet,4)
 }
 OZ_C_proc_end
 
-
-OZ_C_ioproc_begin(unix_acceptUnix,3)
-{
-  OZ_declareIntArg("acceptUnix", 0, sock);
-  OZ_declareArg(1, path);
-  OZ_declareArg(2, out);
-
-  struct sockaddr_un from;
-  int fromlen = sizeof from;
-
-  WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen), fd, out);
-
-  return (OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
-    && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED: FAILED;
-}
-OZ_C_proc_end
 
 static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
 {
@@ -1212,7 +1230,7 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
 }
 OZ_C_proc_end
 
-
+#ifndef WINDOWS
 OZ_C_ioproc_begin(unix_sendToUnix, 5)
 {
   OZ_declareIntArg("sendToUnix", 0, sock);
@@ -1268,6 +1286,7 @@ OZ_C_ioproc_begin(unix_sendToUnix, 5)
 
 }
 OZ_C_proc_end
+#endif  /* WINDOWS */
 
 
 OZ_C_ioproc_begin(unix_shutDown, 3)
@@ -1328,6 +1347,7 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 }
 OZ_C_proc_end
 
+#ifndef WINDOWS
 OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 {
   OZ_declareIntArg("receiveFromUnix",0,sock);
@@ -1364,7 +1384,6 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 
 }
 OZ_C_proc_end
-
 
 const int maxArgv = 100;
 static char* argv[maxArgv];
@@ -1470,7 +1489,9 @@ OZ_C_ioproc_begin(unix_pipe,4)
   return FAILED;
 }
 OZ_C_proc_end
-#endif
+#endif   /* WINDOWS */
+#endif   /* OS2 */
+
 
 
 static OZ_Term mkAliasList(char **alias)
@@ -1516,7 +1537,6 @@ OZ_C_proc_end
 
 
 
-
 // Misc stuff
 
 OZ_C_ioproc_begin(unix_unlink, 2)
@@ -1541,6 +1561,7 @@ OZ_C_ioproc_begin(unix_system,2)
 }
 OZ_C_proc_end
 
+#ifndef WINDOWS
 OZ_C_ioproc_begin(unix_wait,2)
 {
   OZ_declareArg(0, rpid);
@@ -1553,40 +1574,6 @@ OZ_C_ioproc_begin(unix_wait,2)
           && OZ_unifyInt(rstat,status) == PROCEED) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
-
-OZ_C_ioproc_begin(unix_getEnv,2)
-{
-  OZ_declareVsArg("getEnv", 0, envVar);
-
-  char *envValue;
-
-  envValue = getenv(envVar);
-  if (envValue == 0)
-    return OZ_unify(OZ_getCArg(1),OZ_getNameFalse());
-
-  return OZ_unify(OZ_getCArg(1),OZ_CToString(envValue));
-}
-OZ_C_proc_end
-
-
-/* putenv is NOT POSIX !!! */
-OZ_C_ioproc_begin(unix_putEnv,2)
-{
-  OZ_declareVsArg("putEnv", 0, envVar);
-  OZ_declareVsArg("putEnv", 1, envValue);
-
-  char *buf = new char[strlen(envVar)+strlen(envValue)+2];
-  sprintf(buf,"%s=%s",envVar,envValue);
-  int ret = putenv(buf);
-  if (ret != 0) {
-    delete buf;
-    return FAILED;
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
 
 OZ_C_ioproc_begin(unix_tempName, 3)
 {
@@ -1623,6 +1610,41 @@ OZ_C_ioproc_begin(unix_getServByName, 3)
     return OZ_unify(out, OZ_getNameFalse());
 
   return OZ_unifyInt(out, ntohs(serv->s_port));
+}
+OZ_C_proc_end
+#endif
+
+
+OZ_C_ioproc_begin(unix_getEnv,2)
+{
+  OZ_declareVsArg("getEnv", 0, envVar);
+
+  char *envValue;
+
+  envValue = getenv(envVar);
+  if (envValue == 0)
+    return OZ_unify(OZ_getCArg(1),OZ_getNameFalse());
+
+  return OZ_unify(OZ_getCArg(1),OZ_CToString(envValue));
+}
+OZ_C_proc_end
+
+
+/* putenv is NOT POSIX !!! */
+OZ_C_ioproc_begin(unix_putEnv,2)
+{
+  OZ_declareVsArg("putEnv", 0, envVar);
+  OZ_declareVsArg("putEnv", 1, envValue);
+
+  char *buf = new char[strlen(envVar)+strlen(envValue)+2];
+  sprintf(buf,"%s=%s",envVar,envValue);
+  int ret = putenv(buf);
+  if (ret != 0) {
+    delete buf;
+    return FAILED;
+  }
+
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -1712,11 +1734,35 @@ OZ_C_proc_begin(unix_randLimits, 2)
 }
 OZ_C_proc_end
 
+
+
+
+#define NotAvail(Name,Arity,Fun)                                \
+OZ_C_ioproc_begin(Fun,Arity)                                    \
+{                                                               \
+  OZ_warning("procedure %s not available under Windows",Name);  \
+  return FAILED;                                                \
+}                                                               \
+OZ_C_proc_end
+
+
+#ifdef WINDOWS
+NotAvail("bindUnix",3,unix_bindUnix);
+NotAvail("sendToUnix",5,unix_sendToUnix);
+NotAvail("connectUnix",3,unix_connectUnix);
+NotAvail("acceptUnix",3,unix_acceptUnix);
+NotAvail("receiveFromUnix",7,unix_receiveFromUnix);
+NotAvail("pipe",4,unix_pipe);
+NotAvail("tempName",3,unix_tempName);
+NotAvail("wait",2,unix_wait);
+NotAvail("getServByName",3,unix_getServByName);
+NotAvail("uName",1,unix_uName);
+#endif
+
 void BIinitUnix()
 {
   OZ_addBuiltin("unix_getDir",2,unix_getDir);
   OZ_addBuiltin("unix_stat",2,unix_stat);
-  OZ_addBuiltin("unix_uName",1,unix_uName);
   OZ_addBuiltin("unix_getCWD",1,unix_getCWD);
   OZ_addBuiltin("unix_open",4,unix_open);
   OZ_addBuiltin("unix_fileDesc",2,unix_fileDesc);
@@ -1725,15 +1771,12 @@ void BIinitUnix()
   OZ_addBuiltin("unix_read",5,unix_read);
   OZ_addBuiltin("unix_lSeek",4,unix_lSeek);
   OZ_addBuiltin("unix_unlink",2,unix_unlink);
-  OZ_addBuiltin("unix_getServByName",3,unix_getServByName);
   OZ_addBuiltin("unix_readSelect",2,unix_readSelect);
   OZ_addBuiltin("unix_writeSelect",2,unix_writeSelect);
   OZ_addBuiltin("unix_deSelect",1,unix_deSelect);
   OZ_addBuiltin("unix_system",2,unix_system);
-  OZ_addBuiltin("unix_wait",2,unix_wait);
   OZ_addBuiltin("unix_getEnv",2,unix_getEnv);
   OZ_addBuiltin("unix_putEnv",2,unix_putEnv);
-  OZ_addBuiltin("unix_tempName",3,unix_tempName);
   OZ_addBuiltin("unix_gmTime",1,unix_gmTime);
   OZ_addBuiltin("unix_localTime",1,unix_localTime);
   OZ_addBuiltin("unix_srand",1,unix_srand);
@@ -1741,21 +1784,23 @@ void BIinitUnix()
   OZ_addBuiltin("unix_randLimits",2,unix_randLimits);
   OZ_addBuiltin("unix_socket",4,unix_socket);
   OZ_addBuiltin("unix_bindInet",3,unix_bindInet);
-#ifndef OS2_I486
-  OZ_addBuiltin("unix_bindUnix",3,unix_bindUnix);
   OZ_addBuiltin("unix_listen",3,unix_listen);
   OZ_addBuiltin("unix_connectInet",4,unix_connectInet);
-  OZ_addBuiltin("unix_connectUnix",3,unix_connectUnix);
   OZ_addBuiltin("unix_acceptInet",4,unix_acceptInet);
-  OZ_addBuiltin("unix_acceptUnix",3,unix_acceptUnix);
   OZ_addBuiltin("unix_shutDown",3,unix_shutDown);
   OZ_addBuiltin("unix_send",4,unix_send);
   OZ_addBuiltin("unix_sendToInet",6,unix_sendToInet);
-  OZ_addBuiltin("unix_sendToUnix",5,unix_sendToUnix);
-  OZ_addBuiltin("unix_receiveFromUnix",7,unix_receiveFromUnix);
   OZ_addBuiltin("unix_receiveFromInet",8,unix_receiveFromInet);
   OZ_addBuiltin("unix_getSockName",2,unix_getSockName);
-  OZ_addBuiltin("unix_pipe",4,unix_pipe);
   OZ_addBuiltin("unix_getHostByName",2,unix_getHostByName);
-#endif
+  OZ_addBuiltin("unix_bindUnix",3,unix_bindUnix);
+  OZ_addBuiltin("unix_sendToUnix",5,unix_sendToUnix);
+  OZ_addBuiltin("unix_connectUnix",3,unix_connectUnix);
+  OZ_addBuiltin("unix_acceptUnix",3,unix_acceptUnix);
+  OZ_addBuiltin("unix_receiveFromUnix",7,unix_receiveFromUnix);
+  OZ_addBuiltin("unix_pipe",4,unix_pipe);
+  OZ_addBuiltin("unix_tempName",3,unix_tempName);
+  OZ_addBuiltin("unix_wait",2,unix_wait);
+  OZ_addBuiltin("unix_getServByName",3,unix_getServByName);
+  OZ_addBuiltin("unix_uName",1,unix_uName);
 }

@@ -22,10 +22,9 @@
 
 /* ***common trail;                         */
 
-class  Trail: public Stack {
-private:
-  const StackEntry trailMark = (StackEntry) -1l;
+const StackEntry trailMark = (StackEntry) -1l;
 
+class  Trail: public Stack {
 public:
   void gc();
 

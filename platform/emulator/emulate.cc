@@ -1255,7 +1255,7 @@ void engine()
 
         DebugTrace(trace("cfunc cont task",CBB));
 
-        LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+        LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
         switch (biFun(XSize, X)) {
         case FAILED:
@@ -1459,7 +1459,7 @@ LBLkillThread:
 
       CheckArity(arityGot,arity,entry,PC+3);
 
-      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
       switch (fun(arity, X)){
       case SUSPEND:
@@ -2096,7 +2096,7 @@ LBLkillThread:
 
         case BIDefault:
           {
-            LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+            LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
             if (e->isSetSFlag(DebugMode)) {
               enterCall(CBB,bi,predArity,X);
@@ -2112,7 +2112,7 @@ LBLkillThread:
             switch (res) {
 
             case SUSPEND:
-              LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+              LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
 
               predicate = bi->getSuspHandler();
               if (!predicate) {
@@ -2124,7 +2124,7 @@ LBLkillThread:
               }
               goto LBLcall;
             case FAILED:
-              LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+              LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
               LOCAL_PROPAGATION(localPropStore.reset());
             localHack0:
               HF_FAIL(applFailure(bi), printArgs(X,predArity));

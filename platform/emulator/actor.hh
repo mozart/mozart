@@ -17,6 +17,10 @@
 #pragma interface
 #endif
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 // ------------------------------------------------------------------------
 //  all 'proper' actors;
 
@@ -110,7 +114,6 @@ public:
   AskActor(Board *s,int prio,int compMode,
            ProgramCounter elsepc,
            ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
-  ~AskActor();
 
   void gcRecurse();
 
@@ -131,7 +134,6 @@ public:
   WaitActor(Board *s,int prio,int compMode,
             ProgramCounter p,RefsArray y,RefsArray g,RefsArray x,int i);
   WaitActor (WaitActor *wa);  // without childs;
-  ~WaitActor();
 
   void gcRecurse();
 
@@ -157,7 +159,9 @@ public:
 
 // ------------------------------------------------------------------------
 
-#ifndef OUTLINE
+#ifdef OUTLINE
+#undef inline
+#else
 #include "board.hh"
 #include "actor.icc"
 #endif

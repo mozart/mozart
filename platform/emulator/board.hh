@@ -16,6 +16,10 @@
 #pragma interface
 #endif
 
+#ifdef OUTLINE
+#define inline
+#endif
+
 struct Equation {
 friend class Script;
 private:
@@ -135,7 +139,7 @@ public:
   Bool isReflected () { return ((flags & Bo_Reflected) ? OK : NO); }
   void newScript(int size);
   void setBody(ProgramCounter p,RefsArray y,
-                       RefsArray g,RefsArray x,int i);
+               RefsArray g,RefsArray x,int i);
   void setInstalled() { flags |= Bo_Installed; }
   void setNervous() { flags |= Bo_Nervous; }
   void setFailed() { flags |= Bo_Failed; }
@@ -155,7 +159,9 @@ public:
   Bool isFailureInBody ();
 };
 
-#ifndef OUTLINE
+#ifdef OUTLINE
+#undef inline
+#else
 #include "actor.hh"
 #include "board.icc"
 #endif

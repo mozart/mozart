@@ -652,7 +652,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     checkSuspensionList(var, pc_std_unif);
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-                             localPropStore.isInLocalPropagation()));
+                             localPropStore.isInLocalPropagation()););
     DebugCheckT(Board *hb=tagged2SuspVar(var)->getBoardFast());
     Assert(!hb->isReflected());
     Assert(!hb->getSolveBoard() ||

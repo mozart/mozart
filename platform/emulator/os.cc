@@ -14,6 +14,8 @@
 #pragma implementation "os.hh"
 #endif
 
+#include "wsock.hh"
+
 #include <errno.h>
 #include <limits.h>
 #include <malloc.h>
@@ -22,11 +24,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifndef WINDOWS
 #include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#endif
 
-#ifndef ultrix
+#if !defined(ultrix) && !defined(WINDOWS)
 # include <sys/socket.h>
 #endif
 
@@ -48,24 +52,33 @@
 // return current usertime in milliseconds
 unsigned int osUserTime()
 {
+#ifdef WINDOWS
+  return 0;
+#else
   struct tms buffer;
 
   times(&buffer);
   return (unsigned int)(buffer.tms_utime*1000.0/(double)sysconf(_SC_CLK_TCK));
+#endif
 }
 
 // return current systemtime in milliseconds
 unsigned int osSystemTime()
 {
+#ifdef WINDOWS
+  return 0;
+#else
   struct tms buffer;
 
   times(&buffer);
   return (unsigned int)(buffer.tms_stime*1000.0/(double)sysconf(_SC_CLK_TCK));
+#endif
 }
 
 
 void osBlockSignals(Bool check)
 {
+#ifndef WINDOWS
   sigset_t s,sOld;
   sigfillset(&s);
 
@@ -84,13 +97,16 @@ void osBlockSignals(Bool check)
     }
   }
 #endif
+#endif
 }
 
 void osUnblockSignals()
 {
+#ifndef WINDOWS
   sigset_t s;
   sigemptyset(&s);
   sigprocmask(SIG_SETMASK,&s,NULL);
+#endif
 }
 
 
@@ -101,6 +117,10 @@ void osUnblockSignals()
     */
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
+#ifdef WINDOWS
+  signal(signo,fun);
+  return NULL;
+#else
   struct sigaction act, oact;
 
   /* type of act.sa_handler ist not the same on all platforms,
@@ -126,6 +146,7 @@ OsSigFun *osSignal(int signo, OsSigFun *fun)
   }
   /* HERE */
   return (OsSigFun *) oact.sa_handler;
+#endif
 }
 
 
@@ -136,8 +157,12 @@ OsSigFun *osSignal(int signo, OsSigFun *fun)
  * own one, stolen from Stevens.0
  */
 
+
 int osSystem(char *cmd)
 {
+#ifdef WINDOWS
+  return system(cmd);
+#else
   if (cmd == NULL) {
     return 1;
   }
@@ -160,6 +185,7 @@ int osSystem(char *cmd)
   }
 
   return status;
+#endif
 }
 
 
@@ -194,7 +220,6 @@ extern "C" void __builtin_delete (void *ptr)
 #endif
 
 /* The prototypes for select are wrong on HP-UX 9.x */
-
 static int osSelect(int nfds, fd_set *readfds, fd_set *writefds,
                     fd_set *exceptfds, struct timeval *timeout)
 {
@@ -277,11 +302,15 @@ static fd_set globalFDs[2];     // mask of active read/write FDs
 
 int osOpenMax()
 {
+#ifdef WINDOWS
+  return OPEN_MAX;
+#else
   int ret = sysconf(_SC_OPEN_MAX);
   if (ret == -1) {
     ret = _POSIX_OPEN_MAX;
   }
   return ret;
+#endif
 }
 
 void osInit()
@@ -294,6 +323,7 @@ void osInit()
   }
 #endif
 
+#ifndef WINDOWS
   if (osHasJobControl()) {
     /* start a new process group */
     if (setpgid(0,0)<0) {
@@ -302,6 +332,7 @@ void osInit()
   } else {
     DebugCheckT(warning("OS does not support POSIX job control\n"));
   }
+#endif
 
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
 
@@ -340,7 +371,9 @@ Bool osIsWatchedFD(int fd, int mode)
  */
 int osBlockSelect(int ticks)
 {
-  fd_set copyFDs[2]  = globalFDs;
+  fd_set copyFDs[2];
+  copyFDs[SEL_READ]  = globalFDs[SEL_READ];
+  copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
   int wait = osClockTickToMs(ticks);
   osSetAlarmTimer(wait,NO);
   osUnblockSignals();
@@ -407,7 +440,8 @@ int osFirstSelect()
   struct timeval timeout;
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
-  tmpFDs  = globalFDs;
+  tmpFDs[SEL_READ]  = globalFDs[SEL_READ];
+  tmpFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 
   int numbOfFDs = osSelect(openMax,&tmpFDs[SEL_READ],&tmpFDs[SEL_WRITE], NULL,&timeout);
 
@@ -449,7 +483,10 @@ int osCheckIO()
   timeout.tv_sec = 0;
   timeout.tv_usec = 0;
 
-  fd_set copyFDs[2]  = globalFDs;
+  fd_set copyFDs[2];
+  copyFDs[SEL_READ]  = globalFDs[SEL_READ];
+  copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
+
   int numbOfFDs = osSelect(openMax,&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],NULL,&timeout);
   if (numbOfFDs < 0) {
     if (errno == EINTR) goto loop;
@@ -467,9 +504,11 @@ void osKillChildren()
   if (osHasJobControl()) {
     // terminate all our children
     OsSigFun *save=osSignal(SIGTERM,(OsSigFun*)SIG_IGN);
+#ifndef WINDOWS
     if (kill(-getpid(),SIGTERM) < 0) {
       ozpwarning("kill");
     }
+#endif
     osSignal(SIGTERM,save);
   }
 }
