@@ -35,12 +35,19 @@
 #define __EXTENSIONHH
 
 #include "config.h"
+#include "base.hh"
 #include "opcodes.cc"
 
+// kost@ : that's broken 'cause of 'scanInt()'.
 static int line=1, col=0;
 
 void OZ_error(const char *format, ...)
 {
+#if defined(DEBUG_CHECK)
+//    fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", getpid());
+//    fflush(stderr);
+//    sleep(10);
+#endif
   va_list ap;
   va_start(ap,format);
   fprintf(stderr,"*** Error in line %d column %d\n",line,col);
@@ -64,18 +71,24 @@ public:
   TextBlock(): next(0) {}
 };
 
-class MsgBuffer {
-  int mode;
+//
+// MarshalerBuffer is needed to make the compiler happy (PickleBuffer
+// is inherited from it), as well as to have additional debug checkss;
+class MarshalerBuffer {
+protected:
   TextBlock *first, *last;
   int pos;
 public:
   int fd;
 
-  MsgBuffer(int f, int m): fd(f), mode(m), pos(0) {
+  //
+public:
+  MarshalerBuffer(int f)
+    : fd(f), pos(0) {
     first = last = new TextBlock();
   }
-  int textmode()   { return mode!=0; }
-  void put(unsigned char c) {
+
+  void put(BYTE c) {
     if (pos==TBSize){
       last->next = new TextBlock();
       last = last->next;
@@ -84,8 +97,26 @@ public:
     last->text[pos++] = c;
   }
 
-  void dump()
-  {
+  BYTE get() {
+    OZ_error("no 'MarshalerBuffer::get()' in text2pickle!");
+    return ((BYTE) 0);
+  }
+};
+
+//
+// Here (in 'text2pickle'), the 'marshal*(PickleBuffer *bs, ...)'
+// functions are made to see this definition of PickleBuffer instead
+// of the 'pickeBase.hh's one!
+class PickleBuffer : public MarshalerBuffer {
+private:
+  int mode;
+
+public:
+  PickleBuffer(int f, int m)
+    : MarshalerBuffer(f), mode(m) {}
+
+  int textmode() { return mode!=0; }
+  void dump() {
     while(first->next) {
       write(fd,first->text,TBSize);
       first = first->next;
@@ -97,10 +128,35 @@ public:
 
 
 #define TEXT2PICKLE
-#include "pickle.cc"
+//
+#include "marshalerBase.cc"
+#include "pickleBase.cc"
 
+//
+static
+void marshalComment(PickleBuffer *bs, char *s)
+{
+  if (bs->textmode()) {
+    putTag(bs, TAG_COMMENT);
+    while (*s) {
+      bs->put(*s);
+      s++;
+    }
+    bs->put('\n');
+  }
+}
 
-unsigned long MsgBuffer::crc()
+//
+static
+void marshalLabelDef(PickleBuffer *bs, char *lbl)
+{
+  if (bs->textmode()) {
+    putTag(bs, TAG_LABELDEF);
+    putString(bs, lbl);
+  }
+}
+
+unsigned long PickleBuffer::crc()
 {
   TextBlock *aux = first;
   unsigned long i = init_crc();
@@ -472,7 +528,7 @@ public:
 
 /************************************************************/
 
-void pickle(TaggedPair *aux, MsgBuffer *out)
+void pickle(TaggedPair *aux, PickleBuffer *out)
 {
   /* write new version number */
   // kost@ : i don't get: why new version number??! Say when a lexical
@@ -481,7 +537,7 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
   Assert(aux->tag==TAG_STRING);
 
   // marshalString(PERDIOVERSION,out);
-  marshalString(aux->val.string, out);
+  marshalString(out, aux->val.string);
   aux = aux->next;
 
   while(aux) {
@@ -490,7 +546,7 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
 
     case TAG_LABELDEF:
       if (aux->val.labelDef->used) {
-        marshalLabelDef(aux->val.labelDef->label,out);
+        marshalLabelDef(out, aux->val.labelDef->label);
       }
       break;
 
@@ -498,36 +554,29 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
       {
         Label *lbl = aux->val.labelRef.label;
         Assert(lbl->defined);
+        // Assert(aux->val.labelRef.lastPC);
         if (out->textmode()) {
-          putTag(TAG_LABELREF,out);
-          putString(lbl->label,out);
+          putTag(out, TAG_LABELREF);
+          putString(out, lbl->label);
         } else {
-          marshalLabel(0, lbl->addr - aux->val.labelRef.lastPC, out);
+          marshalLabel(out, 0, lbl->addr - aux->val.labelRef.lastPC);
         }
         break;
       }
 
     case TAG_CODESTART:
-      {
-        int codesize = (aux->val.pc-(ProgramCounter)0)*sizeof(ByteCode);
-        marshalCodeStart(codesize,out);
-        break;
-      }
-
-    case TAG_NEWCODESTART:
-      newMarshalCodeStart(out);
+      marshalCodeStart(out);
       break;
 
-    case TAG_INT:       marshalNumber(aux->val.num,out); break;
+    case TAG_INT:       marshalNumber(out, aux->val.num); break;
     case TAG_CODEEND:   marshalCodeEnd(out); break;
-    case TAG_NEWCODEEND:newMarshalCodeEnd(out); break;
-    case TAG_BYTE:      marshalByte(aux->val.num,out); break;
-    case TAG_OPCODE:    marshalOpCode(0,aux->val.opcode,out,0); break;
-    case TAG_STRING:    marshalString(aux->val.string,out); break;
-    case TAG_COMMENT:   putComment(aux->val.string,out); break;
-    case TAG_DIF:       marshalDIF(out,aux->val.mtag); break;
-    case TAG_TERMDEF:   marshalTermDef(aux->val.ttag->value,out); break;
-    case TAG_TERMREF:   marshalTermRef(aux->val.ttag->value,out); break;
+    case TAG_BYTE:      marshalByte(out, aux->val.num); break;
+    case TAG_OPCODE:    marshalOpCode(out, 0, aux->val.opcode, 0); break;
+    case TAG_STRING:    marshalString(out, aux->val.string); break;
+    case TAG_COMMENT:   marshalComment(out, aux->val.string); break;
+    case TAG_DIF:       marshalDIF(out, aux->val.mtag); break;
+    case TAG_TERMDEF:   marshalTermDef(out, aux->val.ttag->value); break;
+    case TAG_TERMREF:   marshalTermRef(out, aux->val.ttag->value); break;
     default:            Assert(0);
     }
     aux = aux->next;
@@ -620,13 +669,11 @@ TaggedPair *unpickle(FILE *in)
       break;
 
     case TAG_CODESTART:
-    case TAG_NEWCODESTART:
       enterBlock(PC,lastPair);
       PC     = 0;
       val.pc = 0; /* leaveBlock will update to contain address of last instr */
       break;
 
-    case TAG_NEWCODEEND:
     case TAG_CODEEND:
       val.pc = PC;
       PC     = leaveBlock(lastPC);
@@ -667,6 +714,6 @@ int main(int argc, char **argv)
 
   TaggedPair *aux = unpickle(stdin);
 
-  MsgBuffer fbuf(STDOUT_FILENO,textmode);
+  PickleBuffer fbuf(STDOUT_FILENO,textmode);
   pickle(aux,&fbuf);
 }

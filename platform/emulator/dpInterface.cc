@@ -102,64 +102,6 @@ void unlockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
   OZD_error("'unlockLockFrameOutline' called without DP library?");
 }
 
-//
-void marshalTertiaryStub(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
-{
-  OZD_error("'marshalTertiary' called without DP library?");
-}
-#ifdef USE_FAST_UNMARSHALER
-OZ_Term unmarshalTertiaryStub(MsgBuffer *bs, MarshalTag tag)
-{
-  OZD_error("'unmarshalTertiary' called without DP library?");
-  return ((OZ_Term) 0);
-}
-OZ_Term unmarshalOwnerStub(MsgBuffer *bs,MarshalTag mt)
-{
-  OZD_error("'unmarshalOwner' called without DP library?");
-  return ((OZ_Term) 0);
-}
-OZ_Term unmarshalVarStub(MsgBuffer*,Bool, Bool)
-{
-  OZD_error("'unmarshalVar' called without DP library?");
-  return ((OZ_Term) 0);
-}
-#else
-OZ_Term unmarshalTertiaryRobustStub(MsgBuffer *bs, MarshalTag tag, int *error)
-{
-  OZ_error("'unmarshalTertiaryRobust' called without DP library?");
-  return ((OZ_Term) 0);
-}
-OZ_Term unmarshalOwnerRobustStub(MsgBuffer *bs,MarshalTag mt, int *error)
-{
-  OZ_error("'unmarshalOwnerRobust' called without DP library?");
-  return ((OZ_Term) 0);
-}
-//
-OZ_Term unmarshalVarRobustStub(MsgBuffer*,Bool, Bool, int *error)
-{
-  OZ_error("'unmarshalVarRobust' called without DP library?");
-  return ((OZ_Term) 0);
-}
-#endif
-Bool marshalVariableStub(TaggedRef*, MsgBuffer*)
-{
-  OZD_error("'marshalVariable' called without DP library?");
-  return (NO);
-}
-Bool triggerVariableStub(TaggedRef*){
-  OZD_error("'triggerVariable' called without DP library?");
-  return (NO);
-}
-
-void marshalObjectStub(ConstTerm *t, MsgBuffer *bs)
-{
-  OZD_error("'marshalObject' called without DP library?");
-}
-void marshalSPPStub(TaggedRef term, MsgBuffer *bs,Bool trail)
-{
-  OZD_error("'marshalSPP' called without DP library?");
-}
-
 // interface for GC;
 void gCollectProxyRecurseStub(Tertiary *t)
 {
@@ -227,12 +169,6 @@ void gCollectEntityInfoStub(Tertiary *t)
 void dpExitStub() {;}
 
 
-// Debug stuff;
-#ifdef DEBUG_CHECK
-void maybeDebugBufferGetStub(BYTE b) {}
-void maybeDebugBufferPutStub(BYTE b) {}
-#endif
-
 Bool distHandlerInstallStub(unsigned short x,unsigned short y,
                                  Thread* th,TaggedRef a,TaggedRef b){
   OZD_error("'distHandlerInstall' called without DP library?");
@@ -278,33 +214,6 @@ LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = lockLockFrameOutlineStub;
 void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = unlockLockFrameOutlineStub;
-//
-void (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
-  = marshalTertiaryStub;
-#ifdef USE_FAST_UNMARSHALER
-OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag)
-  = unmarshalTertiaryStub;
-OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt)
-  = unmarshalOwnerStub;
-//
-OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool)
-  = unmarshalVarStub;
-#else
-OZ_Term (*unmarshalTertiaryRobust)(MsgBuffer *bs, MarshalTag tag,int *error)
-  = unmarshalTertiaryRobustStub;
-OZ_Term (*unmarshalOwnerRobust)(MsgBuffer *bs,MarshalTag mt,int *error)
-  = unmarshalOwnerRobustStub;
-OZ_Term (*unmarshalVarRobust)(MsgBuffer*,Bool,Bool,int*)
-  = unmarshalVarRobustStub;
-#endif
-Bool (*marshalVariable)(TaggedRef*, MsgBuffer*)
-  = marshalVariableStub;
-Bool (*triggerVariable)(TaggedRef*)
-  = triggerVariableStub;
-void (*marshalObject)(ConstTerm *t, MsgBuffer *bs)
-  = marshalObjectStub;
-void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail)
-  = marshalSPPStub;
 
 //
 void (*gCollectProxyRecurse)(Tertiary *t)
@@ -339,14 +248,6 @@ void (*gCollectEntityInfo)(Tertiary*)
 // exit hook;
 void (*dpExit)()
   = dpExitStub;
-
-// Debug stuff;
-#ifdef DEBUG_CHECK
-void (*maybeDebugBufferGet)(BYTE b)
-  = maybeDebugBufferGetStub;
-void (*maybeDebugBufferPut)(BYTE b)
-  = maybeDebugBufferPutStub;
-#endif
 
 // distribution handlers
 

@@ -299,7 +299,7 @@ void VirtualSite::drop()
       site->communicationProblem(vsm->getMessageType(),
                                  vsm->getSite(), vsm->getStoreIndex(),
                                  COMM_FAULT_PERM_NOT_SENT,
-                                 (FaultInfo) vsm->getMsgBuffer());
+                                 (FaultInfo) vsm->getMarshalerBuffer());
       fmp->dispose(vsm);
     }
   }
@@ -326,12 +326,12 @@ void VirtualSite::drop()
 //
 // The message type, store site and store index parameters
 // are opaque data (just stored);
-int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
+int VirtualSite::sendTo(VSMarshalerBufferOwned *mb, MessageType mt,
                         DSite *storeSite, int storeIndex,
-                        FreeListDataManager<VSMsgBufferOwned> *freeMBs)
+                        FreeListDataManager<VSMarshalerBufferOwned> *freeMBs)
 {
   //
-  // 'mb' must be indeed an object of the 'VSMsgBufferOwned' type;
+  // 'mb' must be indeed an object of the 'VSMarshalerBufferOwned' type;
   Assert(mb->getSite()->virtualComm());
 
   //
@@ -412,7 +412,7 @@ int VirtualSite::sendTo(VSMsgBufferOwned *mb, MessageType mt,
 // 'sendTo()'). It says 'TRUE' if we got it;
 Bool
 VirtualSite::tryToSendToAgain(VSMessage *vsm,
-                              FreeListDataManager<VSMsgBufferOwned> *freeMBs)
+                              FreeListDataManager<VSMarshalerBufferOwned> *freeMBs)
 {
   //
   if (!isConnected()) connect();
@@ -432,12 +432,12 @@ VirtualSite::tryToSendToAgain(VSMessage *vsm,
       //
       // First, let's try to deliver it *now*.
       // If it fails, a message (job) for delayed delivery is created;
-      VSMsgBufferOwned *mb;
+      VSMarshalerBufferOwned *mb;
       VSMailboxImported *mbox;
       VirtualInfo *myVI;
 
       //
-      mb = vsm->getMsgBuffer();
+      mb = vsm->getMarshalerBuffer();
       if (isConnected())
         mbox = mboxMgr->getMailbox();
       myVI = myDSite->getVirtualInfo();
@@ -466,7 +466,7 @@ VirtualSite::tryToSendToAgain(VSMessage *vsm,
 }
 
 //
-void VirtualSite::marshalLocalResources(MsgBuffer *mb,
+void VirtualSite::marshalLocalResources(MarshalerBuffer *mb,
                                         VSMailboxManagerOwned *mbm,
                                         VSMsgChunkPoolManagerOwned *cpm)
 {
@@ -477,19 +477,19 @@ void VirtualSite::marshalLocalResources(MsgBuffer *mb,
 
   //
   num = cpm->getSegsNum();
-  marshalNumber(num+1, mb);     // mailbox key;
+  marshalNumber(mb, num+1);     // mailbox key;
   //
-  marshalNumber(mbKey, mb);
+  marshalNumber(mb, mbKey);
   for (int i = 0; i < num; i++)
-    marshalNumber(cpm->getSegSHMKey(i), mb);
+    marshalNumber(mb, cpm->getSegSHMKey(i));
 }
 
 //
 // The 'segKeys' array is allocated with "
 #ifndef USE_FAST_UNMARSHALER
-void VirtualSite::unmarshalResourcesRobust(MsgBuffer *mb, int *error)
+void VirtualSite::unmarshalResourcesRobust(MarshalerBuffer *mb, int *error)
 #else
-void VirtualSite::unmarshalResources(MsgBuffer *mb)
+void VirtualSite::unmarshalResources(MarshalerBuffer *mb)
 #endif
 {
 #ifndef USE_FAST_UNMARSHALER
@@ -795,7 +795,7 @@ Bool VSProbingObject::processProbes(unsigned long clock,
         } else {
           //
           // if it seems to be alive, init a new round...
-          VSMsgBufferOwned *mb = composeVSSiteIsAliveMsg(s);
+          VSMarshalerBufferOwned *mb = composeVSSiteIsAliveMsg(s);
           if (sendTo_VirtualSiteImpl(vs, mb, /* messageType */ M_NONE,
                                      /* storeSite */ (DSite *) 0,
                                      /* storeIndex */ 0) != ACCEPTED) {

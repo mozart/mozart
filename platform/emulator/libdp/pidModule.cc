@@ -37,6 +37,7 @@
 #include "table.hh"
 #include "os.hh"
 #include "builtins.hh"
+#include "pickleBase.hh"
 
 #ifndef WINDOWS
 #include <sys/socket.h>

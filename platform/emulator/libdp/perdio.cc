@@ -52,10 +52,12 @@
 #include "protocolState.hh"
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
+#include "dpMarshalExt.hh"
 #include "flowControl.hh"
 #include "ozconfig.hh"
 
 #include "os.hh"
+#include "connection.hh"
 
 // from builtins.cc
 void doPortSend(PortWithStream *port,TaggedRef val,Board*);
@@ -64,9 +66,12 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 /*   global variables                                                  */
 /* *********************************************************************/
 
-MsgBufferManager* msgBufferManager = new MsgBufferManager();
+
+MsgContainerManager* msgContainerManager;
+
 int  globalWriteCounter = 0;
 int  globalReadCounter  = 0;
+
 
 /* *********************************************************************/
 /*   init;                                                             */
@@ -113,6 +118,7 @@ void initDP()
   if (perdioInitialized)
     return;
   perdioInitialized = OK;
+  msgContainerManager = new MsgContainerManager();
 
 #ifdef DEBUG_CHECK
 //   fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
@@ -122,36 +128,30 @@ void initDP()
 
   //
   initDPCore();
-
 }
 
 /* *********************************************************************/
 /*   Utility routines                                      */
 /* *********************************************************************/
 
-// PER-LOOK simplify
-void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
-{
-#ifdef PERDIOLOGHIGH
-  printf("sendingperdio: to:%s type:%s site:%s index:%d\n",
-         toS->stringRep(),mess_names[mt],sS->stringRep(),sI);
-#endif
-  //  printf("sending msg:%d %s\n",mt, mess_names[mt]);
-  int ret=toS->sendTo(bs,mt,sS,sI);
-  if(ozconf.perdioMinimal){
-    OZ_Term nogoods = bs->getNoGoods();
-    if (!oz_eq(oz_nil(),nogoods)) {
-      OZ_warning("send message '%s' contains nogoods: %s",
-                 mess_names[mt],toC(nogoods));
-    }}
-  if(ret==ACCEPTED) {globalWriteCounter++; return;}
+void SendTo(DSite* toS,MsgContainer *msgC,int priority) {
+  int ret=toS->sendTo(msgC,priority);
+
+  if(ret==ACCEPTED) return;
+
+  // What should be done about this?? AN
+  //    if(ozconf.perdioMinimal){
+  //      OZ_Term nogoods = bs->getNoGoods();
+  //      if (!oz_eq(oz_nil(),nogoods)) {
+  //        OZ_warning("send message '%s' contains nogoods: %s",
+  //             mess_names[mt],toC(nogoods));
+  //      }}
+
   if(ret==PERM_NOT_SENT){
-    toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,
-                              (FaultInfo) bs);
-    msgBufferManager->dumpMsgBuffer(bs);
+    toS->communicationProblem(msgC,COMM_FAULT_PERM_NOT_SENT);
+    msgContainerManager->deleteMsgContainer(msgC);
   }
 }
-
 
 //
 // mm2: should be OZ_unifyInThread???
@@ -289,11 +289,14 @@ void gCollectPendThread(PendThread **pt){
 void gcPerdioRootsImpl()
 {
   if (isPerdioInitializedImpl()) {
+    comController_gcComObjs();
     OT->gcOwnerTableRoots();
     BT->gcBorrowTableRoots();
     gcGlobalWatcher();
     flowControler->gcEntries();
     gcDeferEvents();
+    // marshalers are not collected here, but through allocated
+    // continuations ('MsgContainer::gcMsgC()');
   }
 }
 
@@ -385,7 +388,9 @@ void globalizeTert(Tertiary *t)
   int i = ownerTable->newOwner(oe);
   PD((GLOBALIZING,"GLOBALIZING port/object index:%d",i));
   if(t->getType()==Co_Object)
-    {PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));}
+    {
+//  printf("globalizingObject  index:%d %s\n",i,toC(makeTaggedConst(t)));
+    PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));}
   oe->mkTertiary(t);
   t->setIndex(i);
   if(t->getType()==Co_Object)
@@ -500,21 +505,31 @@ inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
   return be;
 }
 
-void msgReceived(MsgBuffer* bs)
+void msgReceived(MarshalerBuffer *mb) {printf("VS should not be used!!!\n");}
+
+void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
 {
   Assert(oz_onToplevel());
   Assert(creditSiteIn==NULL);
   Assert(creditSiteOut==NULL);
-  MessageType mt = (MessageType) unmarshalHeader(bs);
+
+  MessageType mt = msgC->getMessageType();
+  creditSiteIn=msgC->getImplicitMessageCredit();
+  //  if(creditSiteIn!=NULL) printf("creditSiteIn: %x",creditSiteIn);
+
   globalReadCounter++;
+
   // this is a necessary check - you should never receive
   // a message from a site that you think is PERM or TEMP
   // this can happen - though it is very rare
   // for virtual sites we do not know, for now, the sending site so
   // we can do nothing
-  DSite *ds=bs->getSite();
-  if(ds!=NULL && ds->siteStatus()!=SITE_OK){
-    return;}
+
+  // AN this question should be asked to the comObj, which is not available
+  // here. Save this for later.
+//      DSite *ds=bs->getSite();
+//      if(ds!=NULL && ds->siteStatus()!=SITE_OK){
+//        return;}
 
   PD((MSG_RECEIVED,"msg type %d",mt));
   //printf("receiving msg:%d %s\n",mt,mess_names[mt]);
@@ -523,7 +538,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int portIndex;
       OZ_Term t;
-      unmarshal_M_PORT_SEND(bs,portIndex,t);
+      msgC->get_M_PORT_SEND(portIndex,t);
       OwnerEntry *oe=receiveAtOwner(portIndex);
       Assert(oe);
       PortManager *pm=(PortManager*)(oe->getTertiary());
@@ -532,19 +547,21 @@ void msgReceived(MsgBuffer* bs)
       doPortSend(pm,t,NULL);
 
       break;
-      }
+    }
   case M_ASK_FOR_CREDIT:
     {
       int na_index;
       DSite* rsite;
-      unmarshal_M_ASK_FOR_CREDIT(bs,na_index,rsite);
+      msgC->get_M_ASK_FOR_CREDIT(na_index,rsite);
       PD((MSG_RECEIVED,"ASK_FOR_CREDIT index:%d site:%s",
           na_index,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(na_index);
       Credit c= oe->giveMoreCredit();
-      MsgBuffer *bs=msgBufferManager->getMsgBuffer(rsite);
-      marshal_M_BORROW_CREDIT(bs,myDSite,na_index,c);
-      SendTo(rsite,bs,M_BORROW_CREDIT,myDSite,na_index);
+
+      MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
+      newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c);
+
+      SendTo(rsite,newmsgC,3);
       break;
     }
 
@@ -552,7 +569,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int index;
       Credit c;
-      unmarshal_M_OWNER_CREDIT(bs,index,c);
+      msgC->get_M_OWNER_CREDIT(index,c);
       PD((MSG_RECEIVED,"OWNER_CREDIT index:%d credit:%d",index,c));
       receiveAtOwnerNoCredit(index)->returnCreditOwner(c,index);
       break;
@@ -563,7 +580,7 @@ void msgReceived(MsgBuffer* bs)
       int index;
       Credit c;
       DSite* s;
-      unmarshal_M_OWNER_SEC_CREDIT(bs,s,index,c);
+      msgC->get_M_OWNER_SEC_CREDIT(s,index,c);
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
           s->stringrep(),index,c));
       //printf("receiving sec si:%xd indx:%d \n",(int)s, index);
@@ -577,7 +594,7 @@ void msgReceived(MsgBuffer* bs)
       int si;
       Credit c;
       DSite* sd;
-      unmarshal_M_BORROW_CREDIT(bs,sd,si,c);
+      msgC->get_M_BORROW_CREDIT(sd,si,c);
       PD((MSG_RECEIVED,"BORROW_CREDIT site:%s index:%d credit:%d",
           sd->stringrep(),si,c));
       //The entry might have been gc'ed. If so send the
@@ -597,7 +614,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-      unmarshal_M_REGISTER(bs,OTI,rsite);
+      msgC->get_M_REGISTER(OTI,rsite);
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
@@ -612,7 +629,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-      unmarshal_M_REGISTER(bs,OTI,rsite);
+      msgC->get_M_REGISTER(OTI,rsite);
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
@@ -620,52 +637,108 @@ void msgReceived(MsgBuffer* bs)
       } else {
         if(USE_ALT_VAR_PROTOCOL){
           recDeregister(OT->getOwner(OTI)->getRef(),rsite);}
-        }
+      }
       break;
     }
 
-  case M_GET_OBJECT:
-  case M_GET_OBJECTANDCLASS:
+  case M_GET_LAZY:
     {
       int OTI;
       DSite* rsite;
-      unmarshal_M_GET_OBJECT(bs,OTI,rsite);
-      PD((MSG_RECEIVED,"M_GET_OBJECT(ANDCLASS) index:%d site:%s",
-          OTI,rsite->stringrep()));
-      //      OwnerEntry *oe=receiveAtOwner(OTI);
-      OwnerEntry *oe=OT->getOwner(OTI);
-      Tertiary *t = oe->getTertiary();
-      Assert(isObject(t));
-      PD((SPECIAL,"object get %x %x",t,((Object *)t)->getClass()));
-      sendObject(rsite,(Object *)t, mt==M_GET_OBJECTANDCLASS);
+      int lazyFlag;
+      //
+      msgC->get_M_GET_LAZY(OTI, lazyFlag, rsite);
+      PD((MSG_RECEIVED,"M_GET_LAZY index:%d site:%s",
+          OTI, rsite->stringrep()));
+//        printf("M_GET_LAZY index:%d site:%s\n",
+//           OTI, rsite->stringrep());
+      //
+      OwnerEntry *oe = OT->getOwner(OTI);
+
+      //
+      OZ_Term t = oe->getTertTerm();
+      Assert(oz_isObject(t));
+
+      //
+      if (lazyFlag == OBJECT_AND_CLASS) {
+        Object *o = (Object *) tagged2Const(t);
+        // kost@: 'SEND_LAZY' message with the class is associated
+        // with the object itself, so object's credits will be handed
+        // back when borrow entry is freed by 'ObjectVar::transfer()';
+        oe->getOneCreditOwner();
+        //
+        MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
+
+        //
+        newmsgC->put_M_SEND_LAZY(myDSite, OTI, o->getClassTerm());
+
+//      printf("Class: %s\n",toC(o->getClassTerm()));
+        // here - accounted to the same OTI;
+        //      SendTo(rsite, newmsgC, M_SEND_LAZY, myDSite, OTI);
+        SendTo(rsite, newmsgC, 3);
+      }
+
+      //
+      oe->getOneCreditOwner();
+      //
+      MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
+
+      //
+      msgC->put_M_SEND_LAZY(myDSite, OTI, t);
+      //      SendTo(rsite, msgC, M_SEND_LAZY, myDSite, OTI);
+      SendTo(rsite, msgC, 3);
       break;
     }
-  case M_SEND_OBJECT:
+
+  case M_SEND_LAZY:
     {
-      ObjectFields of;
       DSite* sd;
       int si;
-      unmarshal_M_SEND_OBJECT(bs,sd,si,&of);
-      PD((MSG_RECEIVED,"M_SEND_OBJECT site:%s index:%d",sd->stringrep(),si));
-      BorrowEntry *be=receiveAtBorrow(sd,si);
-      Assert(be->isVar()); // check for duplicate object requests
+      OZ_Term t;
 
-      GET_VAR(be,Object)->sendObject(sd,si,of,be);
-      break;
-    }
+      msgC->get_M_SEND_LAZY(sd, si, t);
 
-  case M_SEND_OBJECTANDCLASS:
-    {
-      ObjectFields of;
-      DSite* sd;
-      int si;
-      unmarshal_M_SEND_OBJECTANDCLASS(bs,sd,si,&of);
-      PD((MSG_RECEIVED,"M_SEND_OBJECTANDCLASS site:%s index:%d",
-          sd->stringrep(),si));
-      BorrowEntry *be=receiveAtBorrow(sd,si);
-      Assert(be->isVar());// check for duplicate object requests
+      PD((MSG_RECEIVED,"M_SEND_LAZY site:%s index:%d", sd->stringrep(), si));
+      BorrowEntry *be = receiveAtBorrow(sd, si);
+      Assert(be->isVar()); // check for duplicate requests;
 
-      GET_VAR(be,Object)->sendObjectAndClass(of,be);
+      //
+      // Currently, there is only "lazy object" protocol, but later
+      // there will be other types of lazy structures and, therefore,
+      // we'll need to distinguish between different types of
+      // LazyVar"s:
+      ObjectVar *ov = (ObjectVar *) GET_VAR(be, Lazy);
+      Assert(ov->getType() == OZ_VAR_EXT);
+      Assert(ov->getIdV() == OZ_EVAR_LAZY);
+      Assert(ov->getLazyType() == LT_OBJECT);
+
+      //
+      Assert(oz_isConst(t));
+      ConstTerm *ct = tagged2Const(t);
+      //
+      switch (ct->getType()) {
+      case Co_Object:
+        {
+          Assert(oz_isObject(t));
+          Object *o = (Object *) ct;
+          Assert(o->getGName1() == ov->getGName());
+          o->setClassTerm(ov->getClass());
+          ov->transfer(o, be);
+          break;
+        }
+
+      case Co_Class:
+        {
+          Assert(oz_isClass(t));
+          ov->setClassTerm(t);
+          break;
+        }
+
+      default:
+        Assert(0);
+      }
+
+      //
       break;
     }
 
@@ -674,7 +747,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* sd;
       int si;
       TaggedRef val;
-      unmarshal_M_REDIRECT(bs,sd,si,val);
+      msgC->get_M_REDIRECT(sd,si,val);
       PD((MSG_RECEIVED,"M_REDIRECT site:%s index:%d val%s",
           sd->stringrep(),si,toC(val)));
       BorrowEntry* be=maybeReceiveAtBorrow(sd,si);
@@ -693,7 +766,7 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       DSite* rsite;
       TaggedRef v;
-      unmarshal_M_SURRENDER(bs,OTI,rsite,v);
+      msgC->get_M_SURRENDER(OTI,rsite,v);
       PD((MSG_RECEIVED,"M_SURRENDER index:%d site:%s val%s",
           OTI,rsite->stringrep(),toC(v)));
       OwnerEntry *oe = receiveAtOwner(OTI);
@@ -713,7 +786,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* site;
       int OTI;
-      unmarshal_M_GETSTATUS(bs,site,OTI);
+      msgC->get_M_GETSTATUS(site,OTI);
       PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
 
@@ -727,7 +800,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* site;
       int OTI;
       TaggedRef status;
-      unmarshal_M_SENDSTATUS(bs,site,OTI,status);
+      msgC->get_M_SENDSTATUS(site,OTI,status);
       PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
           site->stringrep(),OTI,status));
       NetAddress na=NetAddress(site,OTI);
@@ -746,7 +819,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* sd;
       int si;
-      unmarshal_M_ACKNOWLEDGE(bs,sd,si);
+      msgC->get_M_ACKNOWLEDGE(sd,si);
       PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sd->stringrep(),si));
 
       NetAddress na=NetAddress(sd,si);
@@ -763,7 +836,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-      unmarshal_M_CELL_LOCK_GET(bs,OTI,rsite);
+      msgC->get_M_CELL_LOCK_GET(OTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_GET index:%d site:%s",OTI,rsite->stringrep()));
       cellLockReceiveGet(receiveAtOwner(OTI),rsite);
       break;
@@ -773,7 +846,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite;
       int OTI;
       TaggedRef val;
-      unmarshal_M_CELL_CONTENTS(bs,rsite,OTI,val);
+      msgC->get_M_CELL_CONTENTS(rsite,OTI,val);
       PD((MSG_RECEIVED,"M_CELL_CONTENTS index:%d site:%s val:%s",
           OTI,rsite->stringrep(),toC(val)));
 
@@ -789,16 +862,16 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* fS;
-      unmarshal_M_CELL_READ(bs,OTI,fS);
+      msgC->get_M_CELL_READ(OTI,fS);
       PD((MSG_RECEIVED,"M_CELL_READ"));
-      cellReceiveRead(receiveAtOwner(OTI),fS);
+      cellReceiveRead(receiveAtOwner(OTI),fS,NULL);
       break;
     }
   case M_CELL_REMOTEREAD:
     {
       int OTI;
       DSite* fS,*mS;
-      unmarshal_M_CELL_REMOTEREAD(bs,mS,OTI,fS);
+      msgC->get_M_CELL_REMOTEREAD(mS,OTI,fS);
       PD((MSG_RECEIVED,"CELL_REMOTEREAD %s",fS->stringrep()));
       cellReceiveRemoteRead(receiveAtBorrow(mS,OTI),mS,OTI,fS);
       break;
@@ -808,7 +881,7 @@ void msgReceived(MsgBuffer* bs)
       int index;
       DSite*mS;
       TaggedRef val;
-      unmarshal_M_CELL_READANS(bs,mS,index,val);
+      msgC->get_M_CELL_READANS(mS,index,val);
       PD((MSG_RECEIVED,"CELL_READANS"));
       OwnerEntry *oe=maybeReceiveAtOwner(mS,index);
       if(oe==NULL){
@@ -821,7 +894,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* site,*rsite;
       int OTI;
-      unmarshal_M_CELL_LOCK_FORWARD(bs,site,OTI,rsite);
+      msgC->get_M_CELL_LOCK_FORWARD(site,OTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_FORWARD index:%d site:%s rsite:%s",
           OTI,site->stringrep(),rsite->stringrep()));
 
@@ -832,7 +905,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-      unmarshal_M_CELL_LOCK_DUMP(bs,OTI,rsite);
+      msgC->get_M_CELL_LOCK_DUMP(OTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_DUMP index:%d site:%s",
           OTI,rsite->stringrep()));
       cellLockReceiveDump(receiveAtOwner(OTI),rsite);
@@ -843,7 +916,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite, *ssite;
       int OTI;
       TaggedRef val;
-      unmarshal_M_CELL_CANTPUT(bs, OTI, rsite, val, ssite);
+      msgC->get_M_CELL_CANTPUT( OTI, rsite, val, ssite);
       PD((MSG_RECEIVED,"M_CELL_CANTPUT index:%d site:%s val:%s",
           OTI,rsite->stringrep(),toC(val)));
       cellReceiveCantPut(receiveAtOwner(OTI),val,OTI,ssite,rsite);
@@ -853,7 +926,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite;
       int OTI;
-      unmarshal_M_LOCK_TOKEN(bs,rsite,OTI);
+      msgC->get_M_LOCK_TOKEN(rsite,OTI);
       PD((MSG_RECEIVED,"M_LOCK_TOKEN index:%d site:%s",
           OTI,rsite->stringrep()));
       OwnerEntry *oe=maybeReceiveAtOwner(rsite,OTI);
@@ -867,7 +940,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-      unmarshal_M_CHAIN_ACK(bs,OTI,rsite);
+      msgC->get_M_CHAIN_ACK(OTI,rsite);
       PD((MSG_RECEIVED,"M_CHAIN_ACK index:%d site:%s",
           OTI,rsite->stringrep()));
       chainReceiveAck(receiveAtOwner(OTI),rsite);
@@ -877,7 +950,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite, *ssite;
       int OTI;
-      unmarshal_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
+      msgC->get_M_LOCK_CANTPUT( OTI, rsite, ssite);
       PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",
           OTI,rsite->stringrep()));
       lockReceiveCantPut(receiveAtOwner(OTI),OTI,ssite,rsite);
@@ -887,7 +960,7 @@ void msgReceived(MsgBuffer* bs)
    {
       DSite* site,*deadS;
       int OTI;
-      unmarshal_M_CHAIN_QUESTION(bs,OTI,site,deadS);
+      msgC->get_M_CHAIN_QUESTION(OTI,site,deadS);
       PD((MSG_RECEIVED,"M_CHAIN_QUESTION index:%d site:%s",
           OTI,site->stringrep()));
       BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
@@ -900,7 +973,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite,*deadS;
       int OTI;
       int ans;
-      unmarshal_M_CHAIN_ANSWER(bs,OTI,rsite,ans,deadS);
+      msgC->get_M_CHAIN_ANSWER(OTI,rsite,ans,deadS);
       PD((MSG_RECEIVED,"M_CHAIN_ANSWER index:%d site:%s val:%d",
           OTI,rsite->stringrep(),ans));
       chainReceiveAnswer(receiveAtOwner(OTI),rsite,ans,deadS);
@@ -912,7 +985,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* site;
       int OTI;
       int ec,flag;
-      unmarshal_M_TELL_ERROR(bs,site,OTI,ec,flag);
+      msgC->get_M_TELL_ERROR(site,OTI,ec,flag);
       PD((MSG_RECEIVED,"M_TELL_ERROR index:%d site:%s ec:%d",
           OTI,site->stringrep(),ec));
       BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
@@ -926,7 +999,7 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       int ec;
       DSite* toS;
-      unmarshal_M_ASK_ERROR(bs,OTI,toS,ec);
+      msgC->get_M_ASK_ERROR(OTI,toS,ec);
       PD((MSG_RECEIVED,"M_ASK_ERROR index:%d ec:%d toS:%s",
           OTI,ec,toS->stringrep()));
       receiveAskError(receiveAtOwner(OTI),toS,ec);
@@ -937,7 +1010,7 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       int ec;
       DSite* toS;
-      unmarshal_M_UNASK_ERROR(bs,OTI,toS,ec);
+      msgC->get_M_UNASK_ERROR(OTI,toS,ec);
       PD((MSG_RECEIVED,"M_UNASK_ERROR index:%d ec:%d toS:%s",
           OTI,ec,toS->stringrep()));
       receiveUnAskError(receiveAtOwner(OTI),toS,ec);
@@ -948,7 +1021,13 @@ void msgReceived(MsgBuffer* bs)
       // the information received is not of any interest.
       int unused;
       DSite* fromS;
-      unmarshal_M_SEND_PING(bs,fromS,unused);
+      msgC->get_M_SEND_PING(fromS,unused);
+      break;
+    }
+  case M_PING:
+    {
+      // Nothing specific needs to be done, the acknowledgement
+      // that is or will be sent is enough.
       break;
     }
   default:
@@ -978,46 +1057,37 @@ enum CommCase{
     USUAL_BORROW_CASE
   };
 
-#define ResetCP(buf,mt) {                               \
-  buf->unmarshalReset();                                \
-  buf->unmarshalBegin();                                \
-  MessageType mt1=unmarshalHeader(buf);                 \
-  Assert(mt1==mt);                                      \
-}
-
-void DSite::communicationProblem(MessageType mt, DSite* storeSite,
-                                 int storeIndex, FaultCode fc,
-                                 FaultInfo fi) {
+void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc) {
   int OTI;
   DSite* s1;
   TaggedRef tr;
   CommCase flag;
 
-  switch(mt){
-  case M_CELL_CONTENTS:{
-    if(fc == COMM_FAULT_PERM_NOT_SENT){
-      ResetCP(((MsgBuffer*)fi),M_CELL_CONTENTS);
-      unmarshal_M_CELL_CONTENTS((MsgBuffer*)fi,s1,OTI,tr);
-      Assert(s1==storeSite);
-      Assert(OTI=storeIndex);
+  switch(msgC->getMessageType()) {
+  case M_CELL_CONTENTS: {
+    if(fc == COMM_FAULT_PERM_NOT_SENT) {
+      msgC->get_M_CELL_CONTENTS(s1,OTI,tr);
       returnSendCredit(s1,OTI);
-      cellSendContentsFailure(tr,this,storeSite,OTI);
-      return;}
+      cellSendContentsFailure(tr,this,s1,OTI);
+      return;
+    }
     flag=USUAL_BORROW_CASE;
-    break;}
+    break;
+  }
 
-  case M_LOCK_TOKEN:{
-    if(fc == COMM_FAULT_PERM_NOT_SENT){
-      ResetCP(((MsgBuffer*)fi),M_LOCK_TOKEN);
-      unmarshal_M_LOCK_TOKEN((MsgBuffer*)fi,s1,OTI);
-      Assert(s1==storeSite);
-      Assert(OTI=storeIndex);
+  case M_LOCK_TOKEN: {
+    if(fc == COMM_FAULT_PERM_NOT_SENT) {
+      msgC->get_M_LOCK_TOKEN(s1,OTI);
       returnSendCredit(s1,OTI);
-      lockSendTokenFailure(this,storeSite,OTI);
-      return;}
-    return;}
+      lockSendTokenFailure(this,s1,OTI);
+      return;
+    }
+    return;
+  }
 
   default:
+    //    printf("perdio.cc communicationProblem with %s?!\n",
+    //    mess_names[msgC->getMessageType()]);
     return;
   }
 }
@@ -1047,20 +1117,6 @@ void initDPCore()
   unlockLockManagerOutline = unlockLockManagerOutlineImpl;
   lockLockFrameOutline = lockLockFrameOutlineImpl;
   unlockLockFrameOutline = unlockLockFrameOutlineImpl;
-  marshalTertiary = marshalTertiaryImpl;
-#ifdef USE_FAST_UNMARSHALER
-  unmarshalTertiary = unmarshalTertiaryImpl;
-  unmarshalOwner = unmarshalOwnerImpl;
-  unmarshalVar = unmarshalVarImpl;
-#else
-  unmarshalTertiaryRobust = unmarshalTertiaryRobustImpl;
-  unmarshalOwnerRobust = unmarshalOwnerRobustImpl;
-  unmarshalVarRobust = unmarshalVarRobustImpl;
-#endif
-  marshalVariable = marshalVariableImpl;
-  triggerVariable = triggerVariableImpl;
-  marshalObject = marshalObjectImpl;
-  marshalSPP = marshalSPPImpl;
   gCollectProxyRecurse = gcProxyRecurseImpl;
   gCollectManagerRecurse = gcManagerRecurseImpl;
   gCollectDistResource = gcDistResourceImpl;
@@ -1073,15 +1129,13 @@ void initDPCore()
   gCollectPerdioRoots = gcPerdioRootsImpl;
   gCollectEntityInfo = gcEntityInfoImpl;
   dpExit = dpExitImpl;
-#ifdef DEBUG_CHECK
-  maybeDebugBufferGet = maybeDebugBufferGetImpl;
-  maybeDebugBufferPut = maybeDebugBufferPutImpl;
-#endif
   distHandlerInstall = distHandlerInstallImpl;
   distHandlerDeInstall = distHandlerDeInstallImpl;
   //
   DV = new DebugVector();
 
+  dpAddExtensions();
+  dpmInit();
   initNetwork();
 
   creditSiteIn = NULL;
@@ -1090,7 +1144,7 @@ void initDPCore()
   ownerTable       = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
   resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   flowControler    = new FlowControler();
-  msgBufferManager = new MsgBufferManager();
+  //  msgBufferManager = new MarshalerBufferManager();
 
 #ifndef DENYS_EVENTS
   if(!am.registerTask((void*)flowControler, FlowControlCheck, FlowControlExecute))
@@ -1138,12 +1192,14 @@ void initDPCore()
 /**********************************************************************/
 
 void sendPing(DSite* s){
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(s);
-  marshal_M_SEND_PING(bs,myDSite,42);
-  SendTo(s,bs,M_SEND_PING,myDSite,0);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(s);
+  msgC->put_M_SEND_PING(myDSite,42);
+
+  SendTo(s,msgC,3);
 }
 
-void marshalDSite(DSite* s,MsgBuffer *buf){
+void marshalDSite(MarshalerBuffer *buf, DSite* s)
+{
   s->marshalDSite(buf);
 }
 
@@ -1219,6 +1275,7 @@ OZ_Term getGatePort(DSite* sd){
 
 
 void dpExitWithTimer(unsigned int timeUntilClose) {
+  //  printf("dpExit in pid %d\n",getpid());
   //  printf("Close started at %s\n", myDSite->stringrep());
   //printf("tiden:%d\n", timeUntilClose);
   //printf("tiden:%d\n", ozconf.closetime);

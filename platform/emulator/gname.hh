@@ -93,7 +93,11 @@ public:
   }
 
   TaggedRef getValue()       { return value; }
-  void setValue(TaggedRef v) { value = v; }
+  void setValue(TaggedRef v) {
+    if (tagTypeOf(oz_deref(v)) == TAG_CVAR)
+      value = 0;                // '!'
+    value = v;
+  }
 
   Bool same(GName *other) {
     return (site==other->site && id.same(other->id));
@@ -138,6 +142,7 @@ private:
   TaggedRef find(GName *name);
 public:
   void add(GName *name);
+  void remove(GName *name);
   GNameTable():GenHashTable(GNAME_HASH_TABLE_DEFAULT_SIZE) {}
 
   void gCollectGNameTable();
@@ -154,6 +159,3 @@ void deleteGName(GName *gn);
 inline void gCollectGName(GName* name) { if (name) name->gCollectGName(); }
 
 #endif
-
-//
-Site *unmarshalGNameSite(MsgBuffer*);

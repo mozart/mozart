@@ -66,15 +66,10 @@ enum MessageType {
   M_ASK_ERROR,
 
   M_TELL_ERROR,
-  M_GET_OBJECT,         // OTI* SITE
-  M_GET_OBJECTANDCLASS, // OTI* SITE
-  M_SEND_OBJECT,        //
-  M_SEND_OBJECTANDCLASS,//
+  M_GET_LAZY,           // OTI* LazyFlag SITE
+  M_SEND_LAZY,          // SITE OTI* DIF
 
-  M_FILE_XXXUNUSED,
-  M_EXPORT,
   M_UNASK_ERROR,
-  M_SEND_GATE,
 
   M_GETSTATUS,              // OTI DIF (implicit 1 credit)
   M_SENDSTATUS,
@@ -82,6 +77,25 @@ enum MessageType {
   M_REQUESTED,
   M_DEREGISTER,
   M_SEND_PING,              // Used by network to ping other network sites.
+  M_PING,
+
+  // Communication layer messages:
+  C_FIRST,                  // Just for the index, must be first of C_-msgs
+
+  C_PRESENT,
+  C_NEGOTIATE,
+  C_NEGOTIATE_ANS,
+
+  C_ACK,
+  C_SET_ACK_PROP,
+
+  C_CLOSE_HARD,
+  C_CLOSE_WEAK,
+  C_CLOSE_ACCEPT,
+  C_CLOSE_REJECT,
+
+  C_CLEAR_REFERENCE,
+
   M_LAST
 };
 

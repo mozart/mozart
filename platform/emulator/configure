@@ -54,7 +54,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-malloc=<obj>      use malloc from object file <obj> (default: NONE)"
 ac_help="$ac_help
---enable-virtualsites    provide support for virtual sites (default=$ac_cv_can_vs)"
+--enable-virtualsites    provide support for virtual sites (default=no)"
 ac_help="$ac_help
 --enable-miscbuiltins    include misc builtins (default=no)"
 
@@ -6812,7 +6812,7 @@ if test "${enable_virtualsites+set}" = set; then
   :
 fi
 
-    : ${oz_enable_virtualsites=$ac_cv_can_vs}
+    : ${oz_enable_virtualsites=no}
     if test -n "${enable_virtualsites}"; then
         oz_enable_virtualsites=$enable_virtualsites
     fi

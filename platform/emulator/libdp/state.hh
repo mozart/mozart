@@ -71,7 +71,7 @@ public:
   OZ_Return access(Tertiary*,TaggedRef,TaggedRef);
   OZ_Return exchangeVal(TaggedRef,TaggedRef,ExKind);
 
-  Bool secReceiveRemoteRead(DSite*,DSite*,int);
+  Bool secReceiveRemoteRead(DSite*,DSite*,int,DSite*);
   void secReceiveReadAns(TaggedRef);
   Bool secReceiveContents(TaggedRef,DSite* &,TaggedRef &);
   Bool secForward(DSite*,TaggedRef&);

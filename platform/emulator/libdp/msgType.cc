@@ -28,7 +28,7 @@
 
 #include "base.hh"
 #include "msgType.hh"
-#include "newmarshaler.hh"
+#include "dpMarshaler.hh"
 
 SendRecvCounter mess_counter[M_LAST];
 
@@ -65,16 +65,32 @@ char *mess_names[M_LAST] = {
   "ask_error",
 
   "tell_error",
-  "get_object",
-  "get_objectandclass",
-  "send_object",
-  "send_objectandclass",
+  "get_lazy",
+  "send_lazy",
 
-  "file",
-  "export",
-  "unask error",
-  "send gate",
-  "isdet",
+  "unask_error",
+
+  "get_status",
+  "send_status",
+
   "requested",
-  "send ping"
+  "deregister",
+  "send_ping",
+  "ping",
+
+  "conn_first_NOT_A_VALID_MESSAGETYPE",
+
+  "conn_present",
+  "conn_negotiate",
+  "conn_negotiate_answer",
+
+  "conn_ack",
+  "conn_set_ack_properties",
+
+  "conn_close_hard",
+  "conn_close_weak",
+  "conn_close_accept",
+  "conn_close_reject",
+
+  "conn_clearreference"
 };

@@ -121,39 +121,29 @@ OZ_Return BitString::eqV(OZ_Term t) {
     ? PROCEED : FAILED;
 }
 
-int BitString::marshalV(void* bs1) {
-  MsgBuffer*bs=(MsgBuffer*)bs1;
-  marshalNumber(getWidth(),bs);
-  int size = getSize();
-  for (int i=0; i<size; i++) marshalByte(data[i],bs);
+int BitString::marshalV(MarshalerBuffer *mb)
+{
+  marshalNumber(mb, getWidth());
+  for (int i = 0; i < getSize(); i++)
+    marshalByte(mb, data[i]);
   return OK;
 }
 
-OZ_Term unmarshalBitString(void*bs1) {
-  MsgBuffer*bs=(MsgBuffer*)bs1;
+OZ_Term unmarshalBitString(MarshalerBuffer *mb)
+{
 #ifdef USE_FAST_UNMARSHALER
-  int width = unmarshalNumber(bs);
+  int width = unmarshalNumber(mb);
 #else
+  // kost@ : TODO: exploit the return code!
   int trash;
-  int width = unmarshalNumberRobust(bs, &trash);
+  int width = unmarshalNumberRobust(mb, &trash);
 #endif
-  BitString*s = new BitString(width);
+  BitString *s = new BitString(width);
   int size = s->getSize();
-  for (int i=0; i<size; i++)
-    s->getByte(i) = unmarshalByte(bs);
+  for (int i = 0; i < size; i++)
+    s->getByte(i) = mb->get();
   return makeTaggedExtension(s);
 }
-#ifndef USE_FAST_UNMARSHALER
-OZ_Term unmarshalBitStringRobust(void*bs1, int *overflow) {
-  MsgBuffer*bs=(MsgBuffer*)bs1;
-  int width = unmarshalNumberRobust(bs, overflow);
-  BitString*s = new BitString(width);
-  int size = s->getSize();
-  for (int i=0; i<size; i++)
-    s->getByte(i) = unmarshalByte(bs);
-  return makeTaggedExtension(s);
-}
-#endif
 
 OZ_Term BitString::printV(int depth) {
   int w = getWidth();
@@ -346,37 +336,28 @@ OZ_Return ByteString::eqV(OZ_Term t) {
     ? PROCEED : FAILED;
 }
 
-int ByteString::marshalV(void*bs1) {
-  MsgBuffer*bs=(MsgBuffer*)bs1;
+int ByteString::marshalV(MarshalerBuffer *mb)
+{
   int size = getWidth();
-  marshalNumber(size,bs);
-  for (int i=0; i<size; i++) marshalByte(data[i],bs);
+  marshalNumber(mb, size);
+  for (int i = 0; i < size; i++)
+    marshalByte(mb, data[i]);
   return OK;
 }
 
-OZ_Term unmarshalByteString(void*bs1) {
-  MsgBuffer*bs=(MsgBuffer*)bs1;
+OZ_Term unmarshalByteString(MarshalerBuffer *mb)
+{
 #ifdef USE_FAST_UNMARSHALER
-  int width = unmarshalNumber(bs);
+  int width = unmarshalNumber(mb);
 #else
   int e;
-  int width = unmarshalNumberRobust(bs, &e);
+  int width = unmarshalNumberRobust(mb, &e);
 #endif
-  ByteString*s = new ByteString(width);
-  for (int i=0; i<width; i++)
-    s->getByte(i) = unmarshalByte(bs);
+  ByteString *s = new ByteString(width);
+  for (int i = 0; i < width; i++)
+    s->getByte(i) = mb->get();
   return makeTaggedExtension(s);
 }
-#ifndef USE_FAST_UNMARSHALER
-OZ_Term unmarshalByteStringRobust(void*bs1, int *overflow) {
-  MsgBuffer*bs=(MsgBuffer*)bs1;
-  int width = unmarshalNumberRobust(bs, overflow);
-  ByteString*s = new ByteString(width);
-  for (int i=0; i<width; i++)
-    s->getByte(i) = unmarshalByte(bs);
-  return makeTaggedExtension(s);
-}
-#endif
 
 void ByteString_init() {
   static int done = 0;

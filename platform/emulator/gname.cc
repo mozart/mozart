@@ -64,6 +64,22 @@ TaggedRef GNameTable::find(GName *name)
   return makeTaggedNULL();
 }
 
+void GNameTable::remove(GName *name)
+{
+  int hvalue = hash(name);
+  GenHashNode *aux = htFindFirst(hvalue);
+  while(aux) {
+    GName *gn = (GName *) aux->getBaseKey();
+    if (name->same(gn)) {
+      htSub(hvalue, aux);
+      break;
+    }
+    aux = htFindNext(aux, hvalue);
+  }
+}
+
+
+
 
 inline TaggedRef findGName(GName *gn) {
   return GT.find(gn);
@@ -93,6 +109,7 @@ GName *newGName(TaggedRef t, GNameType gt)
 
 void deleteGName(GName *gn)
 {
+  GT.remove(gn);
   delete gn;
 }
 

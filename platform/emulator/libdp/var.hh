@@ -105,7 +105,7 @@ public:
 
   void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
-  void marshal(MsgBuffer*);
+  void marshal(ByteBuffer *);
 
   Bool isFuture(){ return is_future;}
   void addEntityCond(EntityCond);
@@ -224,7 +224,7 @@ public:
   void deregisterSite(DSite* sd);
   void deAutoSite(DSite*);
   void surrender(TaggedRef*, TaggedRef);
-  void marshal(MsgBuffer*);
+  void marshal(ByteBuffer *);
 
   inline void localize(TaggedRef *vPtr);
   Bool isFuture(){ // mm3
@@ -262,26 +262,27 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 
 void sendRedirect(DSite*, int, TaggedRef);
 #ifdef USE_FAST_UNMARSHALER
-OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
+OZ_Term unmarshalVar(MarshalerBuffer*,Bool,Bool);
 #else
-OZ_Term unmarshalVarRobustImpl(MsgBuffer*,Bool,Bool,int*);
+OZ_Term unmarshalVarRobust(MarshalerBuffer*,Bool,Bool,int*);
 #endif
-Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
-Bool triggerVariableImpl(TaggedRef *);
+// kost@ : 'marshalVariable' gets 'ByteBuffer' since we need 'DSite'
+// for marshaling!
+Bool marshalVariable(TaggedRef *tPtr, ByteBuffer *bs);
+Bool triggerVariable(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */
 
 enum VarKind{
   VAR_PROXY,
   VAR_MANAGER,
-  VAR_OBJECT,
+  VAR_LAZY,
   VAR_FREE,
   VAR_FUTURE,
   VAR_KINDED,
 };
 
 VarKind classifyVar(TaggedRef *);
-VarKind classifyVarLim(TaggedRef);
 
 inline ManagerVar* getManagerVar(TaggedRef *tPtr){
   Assert(classifyVar(tPtr)==VAR_MANAGER);

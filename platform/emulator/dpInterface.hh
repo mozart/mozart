@@ -31,7 +31,6 @@
 #endif
 
 #include "base.hh"
-#include "pickle.hh"
 
 #define SIZEOFPORTPROXY (4*sizeof(void*))
 
@@ -57,28 +56,6 @@ extern LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 extern void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 
 //
-// An invariant is that all the 'marshal*' procedures build a
-// representation with a corresponding 'DIF' tag, e.g. 'marshalObject'
-// puts 'DIF_OBJECT' into stream.  In the current implementation,
-// however, there is a limitation: marshaling tertiaries/object
-// variables could yield 'DIF_OWNER*'.  This means that those entries
-// must either be all remembered or not remembered;
-extern void (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
-#ifdef USE_FAST_UNMARSHALER
-extern OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag);
-extern OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt);
-extern OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool);
-#else
-extern OZ_Term (*unmarshalTertiaryRobust)(MsgBuffer *bs,MarshalTag tag,int *);
-extern OZ_Term (*unmarshalOwnerRobust)(MsgBuffer *bs,MarshalTag mt,int *error);
-extern OZ_Term (*unmarshalVarRobust)(MsgBuffer*,Bool,Bool,int*);
-#endif
-extern Bool (*marshalVariable)(TaggedRef*, MsgBuffer*);
-extern Bool (*triggerVariable)(TaggedRef*);
-extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs);
-extern void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail);
-
-//
 extern void (*gCollectProxyRecurse)(Tertiary *t);
 extern void (*gCollectManagerRecurse)(Tertiary *t);
 extern ConstTerm* (*gCollectDistResource)(ConstTerm*);
@@ -98,12 +75,6 @@ extern void (*gCollectEntityInfo)(Tertiary*);
 
 // exit hook;
 extern void (*dpExit)();
-
-// Debug stuff;
-#ifdef DEBUG_CHECK
-extern void (*maybeDebugBufferGet)(BYTE b);
-extern void (*maybeDebugBufferPut)(BYTE b);
-#endif
 
 // distribution handlers
 extern Bool (*distHandlerInstall)(unsigned short,unsigned short,

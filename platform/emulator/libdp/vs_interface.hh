@@ -45,7 +45,7 @@ extern void (*zeroRefsToVirtual)(VirtualSite *vs);
 // communication layer reports a problem with a message which has
 // been previously accepted for delivery;
 extern int
-(*sendTo_VirtualSite)(VirtualSite *vs, MsgBuffer *mb,
+(*sendTo_VirtualSite)(VirtualSite *vs, MarshalerBuffer *mb,
                       MessageType mt, DSite *storeSite, int storeIndex);
 
 //
@@ -79,10 +79,10 @@ extern GiveUpReturn (*giveUp_VirtualSite)(VirtualSite* vs);
 extern void (*discoveryPerm_VirtualSite)(VirtualSite *vs);
 
 //
-extern MsgBuffer* (*getVirtualMsgBuffer)(DSite* site);
+extern MarshalerBuffer* (*getVirtualMarshalerBuffer)(DSite* site);
 
 //
-extern void (*dumpVirtualMsgBuffer)(MsgBuffer* m);
+extern void (*dumpVirtualMarshalerBuffer)(MarshalerBuffer* m);
 
 //
 extern void (*siteAlive_VirtualSite)(VirtualSite *vs);

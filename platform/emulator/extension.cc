@@ -111,20 +111,23 @@ static int unmarshalRoutineArraySize = 0;
 
 OZ_Term oz_extension_unmarshal(int type,void*bs) {
   oz_unmarshalProcType f = unmarshalRoutine[type];
-  if (f==0) return 0;
-  else return f(bs);
+  // kost@ : what is that??! I've commented it away!
+  // if (f==0) return 0;
+  Assert(f);
+  return f(bs);
 }
 
 void oz_registerExtension(int type, oz_unmarshalProcType f)
 {
-  if (unmarshalRoutineArraySize<type) {
-    oz_unmarshalProcType *n=new oz_unmarshalProcType[type+100];
+  if (unmarshalRoutineArraySize <= type) {
+    int newsize = type + 1;
+    oz_unmarshalProcType *n=new oz_unmarshalProcType[newsize];
     for (int i=unmarshalRoutineArraySize; i--;) {
       n[i]=unmarshalRoutine[i];
     }
     if (unmarshalRoutine) delete [] unmarshalRoutine;
     unmarshalRoutine = n;
-    unmarshalRoutineArraySize = type+100;
+    unmarshalRoutineArraySize = newsize;
   }
   unmarshalRoutine[type] = f;
 }

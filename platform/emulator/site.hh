@@ -33,7 +33,7 @@
 
 #include "base.hh"
 #include "genhashtbl.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 
 // time_t
 #include <time.h>
@@ -97,67 +97,14 @@ public:
   int hash();
 
   //
-  // Debug stuff;
-  char* stringrep();
-  char* stringrep_notype();
-
-  //
-  void marshalBaseSite(MsgBuffer* buf){
-    marshalNumber(address,buf);
-    marshalShort(port,buf);
-    marshalNumber(timestamp.start,buf);
-    marshalNumber(timestamp.pid,buf);
-  }
-  void marshalBaseSiteForGName(MsgBuffer* buf){
-    marshalNumber(address,buf);
-    Assert(port == 0); // kost@ : otherwise hashing will be broken;
-    marshalNumber(timestamp.start,buf);
-    marshalNumber(timestamp.pid,buf);
-  }
+  void marshalBaseSite(MarshalerBuffer* buf);
+  void marshalBaseSiteForGName(MarshalerBuffer* buf);
 #ifdef USE_FAST_UNMARSHALER
-  void unmarshalBaseSite(MsgBuffer* buf){
-    address=unmarshalNumber(buf);
-    port=unmarshalShort(buf);
-    timestamp.start=unmarshalNumber(buf);
-    timestamp.pid=unmarshalNumber(buf);
-  }
+  void unmarshalBaseSite(MarshalerBuffer* buf);
+  void unmarshalBaseSiteGName(MarshalerBuffer* buf);
 #else
-  void unmarshalBaseSiteRobust(MsgBuffer* buf, int *error){
-    int o;
-    address=unmarshalNumberRobust(buf, &o);
-    if(o || (address <= NON_BROADCAST_MIN)) { // address should be of int32
-      *error = OK;
-      return;
-    }
-    port=unmarshalShort(buf);
-    timestamp.start=unmarshalNumberRobust(buf, &o);
-    if(o || timestamp.start < 0) {
-      *error = OK;
-      return;
-    }
-    timestamp.pid=unmarshalNumberRobust(buf, &o);
-    // andreas & kost@ : Windows* return arbitrary pid_t"s,
-    // so no MAX_PID whatsoever!
-    *error = o;
-  }
-#endif
-
-#ifdef USE_FAST_UNMARSHALER
-  void unmarshalBaseSiteGName(MsgBuffer* buf, int minor){
-    address=unmarshalNumber(buf);
-    port = 0;
-    timestamp.start=unmarshalNumber(buf);
-    timestamp.pid=unmarshalNumber(buf);
-  }
-#else
-  void unmarshalBaseSiteGNameRobust(MsgBuffer* buf, int minor, int *error){
-    int o1, o2, o3;
-    address=unmarshalNumberRobust(buf, &o1);
-    port = 0;
-    timestamp.start=unmarshalNumberRobust(buf, &o2);
-    timestamp.pid=unmarshalNumberRobust(buf, &o3);
-    *error= o1 || o2 || o3;
-  }
+  void unmarshalBaseSiteRobust(MarshalerBuffer* buf, int *error);
+  void unmarshalBaseSiteGNameRobust(MarshalerBuffer* buf, int *error);
 #endif
 
   int checkTimeStamp(time_t t){
@@ -213,8 +160,8 @@ public:
   void setGCFlag() { flags |= NSITE_GC_MARK; }
   void resetGCFlag() { flags &= ~NSITE_GC_MARK; }
   Bool hasGCFlag() { return (flags & NSITE_GC_MARK); }
-  void marshalSite(MsgBuffer *buf) { marshalBaseSite(buf); }
-  void marshalSiteForGName(MsgBuffer *buf) { marshalBaseSiteForGName(buf); }
+  void marshalSite(MarshalerBuffer *buf) { marshalBaseSite(buf); }
+  void marshalSiteForGName(MarshalerBuffer *buf) { marshalBaseSiteForGName(buf); }
 };
 
 //
@@ -265,9 +212,9 @@ void gCollectSiteTable();
 //
 // Marshaller uses that;
 #ifdef USE_FAST_UNMARSHALER
-Site* unmarshalSite(MsgBuffer *);
+Site* unmarshalSite(MarshalerBuffer *);
 #else
-Site* unmarshalSiteRobust(MsgBuffer *, int *);
+Site* unmarshalSiteRobust(MarshalerBuffer *, int *);
 #endif
 
 //
@@ -276,7 +223,7 @@ Site* unmarshalSiteRobust(MsgBuffer *, int *);
 extern Site *mySite;
 
 //
-// kost@ : that's a part of the boot-up procedure ('AM::init()');
+// kost@ : that's a part of the boot procedure ('AM::init()');
 void initSite();
 
 #endif /* __SITE_HH */

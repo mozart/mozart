@@ -32,21 +32,21 @@
 #pragma interface
 #endif
 
-#include "dpBase.hh"
-#include "var_ext.hh"
-#include "var.hh"
+#include "var_lazy.hh"
+
+typedef enum {
+  OBJECT,
+  OBJECT_AND_CLASS
+} LazyFlag ;
 
 enum PV_TYPES {
   PV_OBJECTCLASSAVAIL,     // class available
   PV_OBJECTCLASSNOTAVAIL   // only the class's gname known
 };
 
-class ObjectVar : public ExtVar {
+class ObjectVar : public LazyVar {
 protected:
-  short pvtype;
-  short requested;
-  TaggedRef obj;
-  EntityInfo* info;
+  short pvtype;                 // object class types (from above);
   union {
     TaggedRef aclass;
     GName *gnameClass;
@@ -57,49 +57,42 @@ protected:
   PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
 
 public:
-  ObjectVar(Board *bb,Object *o,ObjectClass *cl) : ExtVar(bb) {
+  ObjectVar(Board *bb, int indexIn, GName *gobjIn, ObjectClass *cl)
+    : LazyVar(bb, indexIn, gobjIn)
+  {
     setpvType(PV_OBJECTCLASSAVAIL);
-    Assert(o);
-    obj   = makeTaggedConst(o);
-    info=NULL;
     Assert(cl);
     u.aclass= makeTaggedConst(cl);
-    requested = 0;
   }
-  ObjectVar(Board *bb,Object *o,GName *gn) : ExtVar(bb) {
+  ObjectVar(Board *bb, int indexIn, GName *gobjIn, GName *gn)
+    : LazyVar(bb, indexIn, gobjIn)
+  {
     setpvType(PV_OBJECTCLASSNOTAVAIL);
-    Assert(o);
-    obj   = makeTaggedConst(o);
-    info=NULL;
     u.gnameClass=gn;
-    requested = 0;
   }
 
-  EntityInfo* getInfo(){return info;}
-  void setInfo(EntityInfo* ei){info=ei;}
-
-  int getIdV() { return OZ_EVAR_OBJECT; }
-  OZ_Term statusV();
-  VarStatus checkStatusV();
-  OZ_Return addSuspV(TaggedRef *v, Suspendable * susp);
-  Bool validV(TaggedRef v) { return FALSE; }
+  virtual LazyType getLazyType();
+  // 'sendRequest' defines what is to be done for a particular lazy
+  // var type:
+  virtual void sendRequest();
+  // New (extended) format;
   OzVariable * gCollectV() { return new ObjectVar(*this); }
-  OzVariable * sCloneV() { Assert(0); return NULL; }
   void gCollectRecurseV(void);
-  void sCloneRecurseV(void) { Assert(0); }
-  void printStreamV(ostream &out,int depth = 10) { out << "<dist:oprxy>"; }
-  OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
-  OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
+
   void disposeV(void);
 
-private:
-  Bool isObjectClassAvail()    { return getpvType()==PV_OBJECTCLASSAVAIL; }
-  Bool isObjectClassNotAvail() { return getpvType()==PV_OBJECTCLASSNOTAVAIL; }
+  Bool isObjectClassAvail() {
+    return getpvType()==PV_OBJECTCLASSAVAIL;
+  }
+  Bool isObjectClassNotAvail() {
+    return getpvType()==PV_OBJECTCLASSNOTAVAIL;
+  }
 
-  void setClass(ObjectClass *cl) {
-    Assert(isObjectClassAvail());
-    Assert(cl)
-    u.aclass=makeTaggedConst(cl);
+  void setClassTerm(OZ_Term cl) {
+    Assert(isObjectClassNotAvail());
+    Assert(cl);
+    setpvType(PV_OBJECTCLASSAVAIL);
+    u.aclass = cl;
   }
 
   GName *getGNameClass() {
@@ -107,48 +100,20 @@ private:
     return u.gnameClass;
   }
 
-  ObjectClass *getClass() {
+  OZ_Term getClass() {
     Assert(isObjectClassAvail());
     Assert(u.aclass);
-    return (ObjectClass *) tagged2Const(u.aclass);
+    return (u.aclass);
   }
 
 public:
-  Object * getObject(void) {
-    Assert(obj);
-    return (Object *) tagged2Const(obj);
-  }
-  void marshal(MsgBuffer *);
-  void sendObject(DSite*, int, ObjectFields&, BorrowEntry*);
-  void sendObjectAndClass(ObjectFields&, BorrowEntry*);
-
-  // failure
-  void probeFault(int);
-  void addEntityCond(EntityCond);
-  void subEntityCond(EntityCond);
-  Bool errorIgnore();
-  void wakeAll();
-  Bool failurePreemption();
-  void newWatcher(Bool);
-  TaggedRef getTaggedRef();
+  virtual void marshal(ByteBuffer *);
+  //
+  void transfer(Object *o, BorrowEntry *be);
 };
 
-inline
-Bool oz_isObjectVar(TaggedRef v) {
-  return oz_isExtVar(v) && oz_getExtVar(v)->getIdV()==OZ_EVAR_OBJECT;
-}
-
-inline
-ObjectVar *oz_getObjectVar(TaggedRef v) {
-  Assert(oz_isObjectVar(v));
-  return (ObjectVar*) oz_getExtVar(v);
-}
-
-
-TaggedRef newObjectProxy(Object*, GName*, GName*, TaggedRef);
-
-inline ObjectVar* getObjectVar(TaggedRef *tPtr){
-  Assert(classifyVar(tPtr)==VAR_OBJECT);
-  return oz_getObjectVar(*tPtr);}
+//
+TaggedRef newObjectProxy(int bi, GName *gnobj, GName *gnclass);
+TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef clas);
 
 #endif

@@ -24,6 +24,7 @@
  *
  */
 
+// Strings are limited to MAX_DP_STRING
 message(M_PORT_SEND,Index,Term)
 
 message(M_ASK_FOR_CREDIT,Index,Site)
@@ -58,13 +59,25 @@ message(M_CHAIN_ANSWER,Index,Site,Index2,Site2)
 message(M_ASK_ERROR,Index,Site,Index2);
 message(M_TELL_ERROR,Site,Index,Index2,Index3);
 
-message(M_GET_OBJECT,Index,Site)
-message(M_GET_OBJECTANDCLASS,Index,Site)
-message(M_SEND_OBJECT,Site,Index,Object)
-message(M_SEND_OBJECTANDCLASS,Site,Index,ObjectAndClass)
+message(M_GET_LAZY,Index,Index2,Site)
+message(M_SEND_LAZY,Site,Index,FullTopTerm)
 
 message(M_UNASK_ERROR,Index,Site,Index2)
-message(M_SEND_GATE,Term)
 
 message(M_REQUESTED,Index)
 message(M_SEND_PING,Site,Index)
+message(M_PING)
+
+message(C_PRESENT,String,Site)        //String is Version
+message(C_NEGOTIATE,String,Site,Term)
+message(C_NEGOTIATE_ANS,Term)
+
+message(C_ACK)
+message(C_SET_ACK_PROP,Index,Index2)  // time, length
+
+message(C_CLOSE_HARD)
+message(C_CLOSE_WEAK)
+message(C_CLOSE_ACCEPT)
+message(C_CLOSE_REJECT)
+
+message(C_CLEAR_REFERENCE)

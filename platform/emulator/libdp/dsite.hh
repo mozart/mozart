@@ -32,6 +32,7 @@
 #endif
 
 #include "dpBase.hh"
+#include "marshalerBase.hh"
 #include "site.hh"
 #include "msgType.hh"
 #include "comm.hh"
@@ -40,6 +41,7 @@
 #include "network.hh"
 #include "vs_interface.hh"
 #include "os.hh"
+#include "comObj.hh"
 
 /**********************************************************************/
 /*   SECTION :: Site                                                  */
@@ -90,24 +92,31 @@
 */
 
 //
-void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb);
-VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb);
-void unmarshalUselessVirtualInfo(MsgBuffer *);
+void marshalVirtualInfo(VirtualInfo *vi, MarshalerBuffer *mb);
+VirtualInfo* unmarshalVirtualInfo(MarshalerBuffer *mb);
+void unmarshalUselessVirtualInfo(MarshalerBuffer *);
 void dumpVirtualInfo(VirtualInfo* vi);
 
 //
 // Managing free list: cutoff on
 #define DSITE_FREE_LIST_CUTOFF  16
 
+//
+// There is one perdio-wide known "distribition" site object.
+// This is like 'mySite', but provides communication peers for
+// accessing (addressing) 'mySite';
+extern DSite *myDSite;
+
 
 class DSite: public BaseSite {
 friend class DSiteHashTable;
 friend class RemoteSite;
+friend class ComObj;
 private:
   unsigned short flags;
   VirtualInfo *info;
   union {
-    RemoteSite* rsite;
+    ComObj* rsite;
     VirtualSite* vsite;
     int readCtr;
   } u;
@@ -136,7 +145,9 @@ private:
     if(t & CONNECTED) return OK;
     if(t & (PERM_SITE)) return NO;
     if(t & REMOTE_SITE){
-      RemoteSite *rs=createRemoteSite(this,u.readCtr);
+      ComObj *rs=createComObj(this,u.readCtr);
+      // AN this instantiation makes latter changes of perdioCh... unused
+      rs->installProbe(0,PROBE_WAIT_TIME,ozconf.perdioCheckAliveInterval);
       Assert(rs!=NULL);
       u.rsite=rs;
       PD((SITE,"connect; not connected yet, connecting to remote %d",rs));}
@@ -151,12 +162,27 @@ private:
     return OK;}
 
 public:
-  RemoteSite* getRemoteSite() {
-    if(!connect()) {PD((SITE,"getRemoteSite not connected"));return NULL;}
+  // If this site allready has a comObj that one is returned,
+  // else the incoming is used and the state is set to connected.
+  // AN - neither PERM nor VIRTUAL_SITE considered
+  ComObj *setComObj(ComObj *comObj) {
+    unsigned int t=getType();
+    if(t & CONNECTED)
+      return u.rsite;
+    else {
+      setType(CONNECTED|REMOTE_SITE);
+      comObj->installProbe(0,PROBE_WAIT_TIME,PERDIO_CHECK_ALIVE_INTERVAL);
+      u.rsite=comObj;
+      return NULL;
+    }
+  }
+
+  ComObj* getComObj() {
+    if(!connect()) {PD((SITE,"getComObj not connected"));return NULL;}
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
-    RemoteSite *rs = u.rsite;
-    PD((SITE,"getRemoteSite returning the remote %d",rs));
+    ComObj *rs = u.rsite;
+    PD((SITE,"getComObj returning the remote %d",rs));
     Assert(rs!=NULL);
     return  rs;}
 
@@ -171,10 +197,11 @@ public:
 
 private:
 // hopefully this is used to tell comm layer that the site is garbage for closing connection early
+  // AN never called!
   void zeroActive(){
     if(getType() & CONNECTED){
       if(getType() & REMOTE_SITE){
-        zeroRefsToRemote(getRemoteSite());
+//      zeroRefsToRemote(getComObj());
         return;}
       Assert(getType() & VIRTUAL_SITE);
       (*zeroRefsToVirtual)(getVirtualSite());
@@ -273,10 +300,19 @@ public:
     if(flags & MY_SITE) {return NO;}
     unsigned short t=getType();
     if(ActiveSite() && !isPerm() &&
-       ((t & CONNECTED) || u.readCtr!=0)){
-      zeroActive();
-      return NO;}
-    return OK;}
+       ((t & CONNECTED) || u.readCtr!=0)){ // Check over tests AN
+      Assert(u.rsite!=NULL);
+      if(u.rsite->canBeFreed()) {
+        comController->deleteComObj(u.rsite);
+        disconnect();
+        return OK;
+      }
+      else {
+        return NO;
+      }
+    }
+    return OK;
+  }
 
   //
   void initMyDSite() {
@@ -290,7 +326,7 @@ public:
   // upon 'M_INIT_VS');
   void makeMySiteVirtual(VirtualInfo *v) {
     info = v;
-    Assert(u.rsite == (RemoteSite *) 0);
+    Assert(u.rsite == (ComObj *) 0);
     Assert(u.vsite == (VirtualSite *) 0);
     Assert(u.readCtr == 0);
     setType(getType() | VIRTUAL_INFO);
@@ -409,51 +445,66 @@ public:
 
   // for use by the protocol-layer
 
-  int sendTo(MsgBuffer *buf,MessageType mt,DSite* storeSite,int storeIndex){
-    PD((MSG_SENT,"to_site:%s type:%s",this->stringrep(),mess_names[(int) mt]));
-    if(connect()){
-      if(getType() & REMOTE_SITE){
-        return sendTo_RemoteSite(getRemoteSite(),buf,mt,storeSite,storeIndex);}
-      Assert(getType() & VIRTUAL_SITE);
-      return (*sendTo_VirtualSite)(getVirtualSite(),buf,mt,storeSite,storeIndex);}
-    // MsgNot sent, discovered at Site level
+  int sendTo(MsgContainer *msgC,MessageType mt,DSite* storeSite,int storeIndex)
+    {printf("dsite.hh: OLD sendTo used\n");
     return PERM_NOT_SENT;}
 
+  int sendTo(MsgContainer *msgC,int priority) {
+    if(connect()){
+      if(getType() & REMOTE_SITE){
+        Assert(priority<5 && priority>1);
+        getComObj()->send(msgC,priority);
+        return ACCEPTED;
+      }
+      Assert(0);
+      return PERM_NOT_SENT;
+    }
+    return PERM_NOT_SENT;
+  }
+
+  // AN this is no longer defined
   int discardUnsentMessage(int msgNum){
     Assert(getType() & CONNECTED);
     if(getType() & VIRTUAL_SITE) {
       return (*discardUnsentMessage_VirtualSite)(getVirtualSite(),msgNum);
     }
     Assert(getType() & REMOTE_SITE);
-    return discardUnsentMessage_RemoteSite(getRemoteSite(),msgNum);}
+    //    return discardUnsentMessage_RemoteSite(getComObj(),msgNum);
+    return 4711;
+  }
 
+  // Should this be redefined for ComObjects? AN
   int getQueueStatus(int &noMsgs){
     unsigned short t=getType();
     if(!(t & CONNECTED)){
       noMsgs=0;
       return 0;}
-    if(t & REMOTE_SITE){
-      noMsgs = 0;
-      return getQueueStatus_RemoteSite(getRemoteSite());}
+      if(t & REMOTE_SITE){
+        noMsgs = 0;
+        return 0;//getQueueStatus_RemoteSite(getComObj());
+      }
     Assert(t & VIRTUAL_SITE);
     return (*getQueueStatus_VirtualSite)(getVirtualSite(),noMsgs);}
 
-  SiteStatus siteStatus(){
+  SiteStatus siteStatus() {
     unsigned short t=getType();
     if(!(t & CONNECTED)) {
-      if(t & PERM_SITE) {return SITE_PERM;}
-      return SITE_OK;}
-    if(t & REMOTE_SITE){
-      return siteStatus_RemoteSite(getRemoteSite());}
+      if(t & PERM_SITE)
+        return SITE_PERM;
+      return SITE_OK;
+    }
+    if(t & REMOTE_SITE)
+      return SITE_OK;//AN siteStatus_RemoteSite(getComObj());
     Assert(t & VIRTUAL_SITE);
-    return (*siteStatus_VirtualSite)(getVirtualSite());}
+    return (*siteStatus_VirtualSite)(getVirtualSite());
+  }
 
   MonitorReturn demonitorQueue(){
     unsigned short t=getType();
     if(!(t & CONNECTED)) {
       return NO_MONITOR_EXISTS;}
     if(t & REMOTE_SITE){
-      demonitorQueue_RemoteSite(getRemoteSite());
+//        demonitorQueue_RemoteSite(getComObj());
       return MONITOR_OK;}
     Assert(t & VIRTUAL_SITE);
     return (*demonitorQueue_VirtualSite)(getVirtualSite());}
@@ -461,49 +512,44 @@ public:
   MonitorReturn monitorQueue(int size,int noMsgs,void *storePtr){
     if(connect()){
       if(getType() & REMOTE_SITE){
-        monitorQueue_RemoteSite(getRemoteSite(),size); return MONITOR_OK;}
+        //monitorQueue_RemoteSite(getComObj(),size);
+          return MONITOR_OK;}
       Assert(getType() & VIRTUAL_SITE);
       return (*monitorQueue_VirtualSite)(getVirtualSite(),size,noMsgs,storePtr);}
     return MONITOR_PERM;}
-
-  ProbeReturn installProbe(ProbeType pt, int frequency) {
-    return (PROBE_INSTALLED);
-  }
-  ProbeReturn installProbe(ProbeType pt) { // ERIK-LOOK
-    return installProbe(pt,PROBE_INTERVAL);
-  }
-  ProbeReturn deinstallProbe(ProbeType pt) {
-    return (PROBE_DEINSTALLED);
-  }
-  ProbeReturn probeStatus(ProbeType &pt, int &frequency, void* &storePtr) {
-    return (PROBE_NONEXISTENT);
-  }
 
   GiveUpReturn giveUp(GiveUpInput flag){ // PERM case 1 user initiated
     unsigned short t=getType();
     if(t & PERM_SITE) {return SITE_NOW_PERM;}
     if(flag==ALL_GIVEUP){
       if(t & CONNECTED){
-        makePermConnected();
-        if(t & REMOTE_SITE){
-          return giveUp_RemoteSite(getRemoteSite());}
-        Assert(t & VIRTUAL_SITE);
-        return (*giveUp_VirtualSite)(getVirtualSite());}
-      makePerm();}
+        if(t & REMOTE_SITE) {
+          comController->deleteComObj(getComObj());
+          makePermConnected();
+        }
+        else
+          Assert(0);
+      }
+      makePerm();
+    }
     if(siteStatus()==SITE_OK){ return SITE_NOW_NORMAL;}
     if(t & CONNECTED){
-      makePermConnected();
       if(t & REMOTE_SITE){
-        return giveUp_RemoteSite(getRemoteSite());}
-      Assert(t & VIRTUAL_SITE);
-      return (*giveUp_VirtualSite)(getVirtualSite());}
+        comController->deleteComObj(getComObj());
+        makePermConnected();
+      }
+      Assert(0);
+    }
     makePerm();
-    return GIVES_UP;}
+    return GIVES_UP;
+  }
 
-  void marshalDSite(MsgBuffer *);
+  void marshalDSite(MarshalerBuffer *);
 
 // PERM case 2) discovered in unmarshaling or 3) in network
   void discoveryPerm(){
+    PD((TCP_INTERFACE,"discoveryPerm of %d type %d",
+        this->getTimeStamp()->pid,flags));
     unsigned short t=getType();
     if(t==0) {
       flags |= PERM_SITE;
@@ -512,29 +558,36 @@ public:
     if(t & PERM_SITE) return;
     if(t & CONNECTED){
       if(t & REMOTE_SITE){
+        PD((TCP_INTERFACE,"discoveryPerm REMOTE_SITE"));
         if(t & VIRTUAL_INFO) {
           dumpVirtualInfo(info);
-          info=NULL;}
-        discoveryPerm_RemoteSite(getRemoteSite());
+          info=NULL;
+        }
+        comController->deleteComObj(getComObj());
         makePermConnected();
-        return;}
+        return;
+      }
       Assert(t & VIRTUAL_SITE);
       dumpVirtualInfo(info);
       info=NULL;
       (*discoveryPerm_VirtualSite)(getVirtualSite());
       makePermConnected();
-      return;}
+      return;
+    }
     makePerm();
-    if(t & VIRTUAL_INFO){
-      dumpVirtualInfo(info);}}
+    if(t & VIRTUAL_INFO) {
+      dumpVirtualInfo(info);
+    }
+  }
 
+  // AN: left only for VS
   //
   // kost@ : applied whenever an "alive acknowledgement"
   // (e.g. virtual site's 'VS_M_SITE_ALIVE') message is received;
   void siteAlive() {
     if(connect()) {
       if(getType() & REMOTE_SITE) {
-        siteAlive_RemoteSite(getRemoteSite());
+        //      siteAlive_RemoteSite(getComObj());
       } else {
         Assert(getType() & VIRTUAL_SITE);
         (*siteAlive_VirtualSite)(getVirtualSite());
@@ -545,6 +598,9 @@ public:
   //
   // provided for network and virtual site comm-layers
   //
+  void communicationProblem(MsgContainer *msgC, FaultCode fc);
+
+  // Remove after VS
   void communicationProblem(MessageType mt, DSite* storeSite,
                             int storeIndex, FaultCode fc, FaultInfo fi);
 
@@ -654,7 +710,7 @@ public:
 #ifdef USE_FAST_UNMARSHALER
   //
   // Another type of initialization - unmarshaliing:
-  VirtualInfo(MsgBuffer *mb) {
+  VirtualInfo(MarshalerBuffer *mb) {
     Assert(sizeof(ip_address) <= sizeof(unsigned int));
     Assert(sizeof(port_t) <= sizeof(unsigned short));
     Assert(sizeof(time_t) <= sizeof(unsigned int));
@@ -675,7 +731,7 @@ public:
 #else
   //
   // Another type of initialization - robust unmarshaling:
-  VirtualInfo(MsgBuffer *mb) {
+  VirtualInfo(MarshalerBuffer *mb) {
     Assert(sizeof(ip_address) <= sizeof(unsigned int));
     Assert(sizeof(port_t) <= sizeof(unsigned short));
     Assert(sizeof(time_t) <= sizeof(unsigned int));
@@ -698,7 +754,7 @@ public:
   //
   // NOTE: marshaling must be complaint with
   // '::unmarshalUselessVirtualInfo()';
-  void marshal(MsgBuffer *mb) {
+  void marshal(MarshalerBuffer *mb) {
     Assert(sizeof(ip_address) <= sizeof(unsigned int));
     Assert(sizeof(port_t) <= sizeof(unsigned short));
     Assert(sizeof(time_t) <= sizeof(unsigned int));
@@ -709,12 +765,12 @@ public:
 #endif
 
     //
-    marshalNumber(address, mb);
-    marshalShort(port, mb);
-    marshalNumber(timestamp.start, mb);
-    marshalNumber(timestamp.pid, mb);
+    marshalNumber(mb, address);
+    marshalShort(mb, port);
+    marshalNumber(mb, timestamp.start);
+    marshalNumber(mb, timestamp.pid);
     //
-    marshalNumber(mailboxKey, mb);
+    marshalNumber(mb, mailboxKey);
   }
 
   //
@@ -739,20 +795,14 @@ char *oz_site2String(DSite *s);
 //
 // Marshaller uses that;
 #ifdef USE_FAST_UNMARSHALER
-DSite* unmarshalDSite(MsgBuffer *);
+DSite* unmarshalDSite(MarshalerBuffer *);
 #else
-DSite* unmarshalDSiteRobust(MsgBuffer *, int *);
+DSite* unmarshalDSiteRobust(MarshalerBuffer *, int *);
 #endif
 
 //
 // Faking a port from a ticket;
 DSite *findDSite(ip_address a,int port, TimeStamp &stamp);
-
-//
-// There is one perdio-wide known "distribition" site object.
-// This is like 'mySite', but provides communication peers for
-// accessing (addressing) 'mySite';
-extern DSite *myDSite;
 
 //
 // kost@ : that's a part of the boot-up procedure ('perdioInit()');
@@ -766,12 +816,5 @@ GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
 
 //
 void gcDSiteTable();
-
-// ERIK-LOOK  PROBE_INTERVAL
-inline void installProbeNoRet(DSite *s,ProbeType pt){
-  (void) s->installProbe(pt);}
-
-inline ProbeReturn installProbe(DSite *s,ProbeType pt){
-  return s->installProbe(pt);}
 
 #endif // __DSITE_HH

@@ -35,10 +35,11 @@
 #include "genhashtbl.hh"
 #include "urlc.hh"
 #include "site.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 #include "builtins.hh"
 #include "os.hh"
 #include "var_simple.hh"
+#include "pickle.hh"
 
 #ifndef WINDOWS
 #include <sys/types.h>
@@ -55,8 +56,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <errno.h>
-
-#include "newmarshaler.hh"
 
 #include "zlib.h"
 
@@ -206,20 +205,11 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
   return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
 
-
-//
-inline static
-void marshalTermRT(OZ_Term t, MsgBuffer *bs)
-{
-  newMarshalTerm(t,bs);
-}
-
-
 void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
   char *version  =  PERDIOVERSION;
-  marshalString(version, buf);
-  marshalTermRT(t, buf);
+  marshalString(buf, version);
+  pickleTerm(buf, t);
   buf->marshalEnd();
   return;
 }
@@ -242,22 +232,35 @@ OZ_Return
 ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen,
                   Bool textmode, Bool cloneCells)
 {
-  ByteStream* bs=bufferManager->getByteStream();
-  if (textmode)
-    bs->setTextmode();
-  if (cloneCells)
-    bs->setCloneCells();
-  saveTerm(bs,in);
+  OZ_Term resources, nogoods;
 
-  OZ_Return ret=onlyFutures(bs->getResources());
-
-  if (ret != PROCEED) {
-    bufferManager->dumpByteStream(bs);
+  //
+  extractResources(in, cloneCells, resources, nogoods);
+  OZ_Return ret = onlyFutures(resources);
+  if (ret != PROCEED)
     return ret;
+
+  //
+  if (!oz_isNil(resources)) {
+    return raiseGeneric("pickle:resources",
+                        "Resources found during pickling",
+                        oz_mklist(OZ_pairA("Resources", resources),
+                                  OZ_pairA("Filename", oz_atom(filename))));
   }
 
-  CheckNogoods(in,bs,"pickle:nogoods","Non-exportables found during pickling",
-               bufferManager->dumpByteStream(bs));
+  //
+  if (!oz_isNil(nogoods)) {
+    return raiseGeneric("pickle:nogoods",
+                        "Non-exportables found during pickling",
+                        oz_mklist(OZ_pairA("Resources", nogoods),
+                                  OZ_pairA("Contained in", in)));
+  }
+
+  //
+  ByteStream* bs = bufferManager->getByteStream();
+  if (textmode)
+    bs->setTextmode();
+  saveTerm(bs, in);
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -278,17 +281,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen,
     bs->sentFirst();
   }
   bs->writeCheck();
-  TaggedRef res = bs->getResources();
   bufferManager->freeByteStream(bs);
-
-  //  return oz_unify(resources,bs->resources);
-  if (!oz_isNil(res)) {
-    return raiseGeneric("pickle:resources",
-                        "Resources found during pickling",
-                        oz_mklist(OZ_pairA("Resources",res),
-                                  OZ_pairA("Filename",oz_atom(filename))));
-  }
-
   return PROCEED;
 }
 
@@ -480,47 +473,39 @@ Bool pickle2text()
 
 #endif
 
+//
 OZ_Return oz_export(OZ_Term t)
 {
   if (ozconf.perdioMinimal) {
-    Exporter bs;
-    marshalTermRT(t,&bs);
-    CheckNogoods(t,(&bs),"export:nogoods","Non-exportables found during export",;);
-
-    OZ_Term vars = bs.getVars();
+    // kost@
+    OZ_warning("exportation of resources does not work currently!");
+    // if at all, then '::extractVars()' from libdp is to be used,
+    // and this stuff should be moved to libdp as well:
+    /*
+    OZ_Term vars, nogoods;
+    extractVars(t, vars, nogoods);
+    if (!oz_isNil(nogoods)) {
+      return raiseGeneric("export:nogoods",
+                          "Non-exportables found during export",
+                          oz_mklist(OZ_pairA("Resources", nogoods),
+                                    OZ_pairA("Contained in", t)));
+    }
     while (!oz_isNil(vars)) {
       OZ_Term t = oz_head(vars);
       DEREF(t,tPtr,_2);
       oz_getVar(tPtr)->markExported();
       vars = oz_tail(vars);
     }
-
+    */
   }
-  return PROCEED;
+  return (PROCEED);
 }
 
 OZ_BI_define(BIexport,1,0)
 {
   OZ_declareTerm(0,in);
-
   return oz_export(in);
 } OZ_BI_end
-
-// ===================================================================
-// pb2 used for perdio but put here as needs componentBuffer.cc data
-// structures - to be removed when marshaler rebuilt
-// ===================================================================
-
-OZ_Term digOutVars(OZ_Term t)
-{
-  int cached=ozconf.perdioMinimal;
-  ozconf.perdioMinimal=TRUE;
-  Exporter bs;
-  marshalTermRT(t,&bs);
-  OZ_Term vars=bs.getVars();
-  ozconf.perdioMinimal=cached;
-  return vars;
-}
 
 // ===================================================================
 // class ByteSource
@@ -551,11 +536,11 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
   buf->setVersion(major,minor);
 
 #ifndef USE_FAST_UNMARSHALER
-  t = newUnmarshalTermRobust(buf);
+  t = unpickleTermRobust(buf);
   if(t == 0)
     OZ_error("Unmarshal error!");
 #else
-  t = newUnmarshalTerm(buf);
+  t = unpickleTerm(buf);
 #endif
 
   buf->unmarshalEnd();
@@ -1150,7 +1135,7 @@ OZ_BI_define(BIpickleUnpack, 2, 0) {
 } OZ_BI_end
 
 #ifdef DENYS_XML
-typedef void (*marshalFun)(OZ_Term,MsgBuffer*);
+typedef void (*marshalFun)(OZ_Term,MarshalerBuffer*);
 OZ_Term toXML(OZ_Term t,marshalFun f)
 {
   ByteStream* bs=bufferManager->getByteStream();

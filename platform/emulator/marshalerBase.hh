@@ -1,0 +1,642 @@
+/*
+ *  Authors:
+ *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+ *    Konstantin Popov <kost@sics.se>
+ *
+ *  Contributors:
+ *    Per Brand <perbrand@sics.se>
+ *    Michael Mehl <mehl@dfki.de>
+ *    Denys Duchier <duchier@ps.uni-sb.de>
+ *    Andreas Sundstroem <andreas@sics.se>
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ *
+ *  This file is part of Mozart, an implementation
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ *
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
+//
+// kost@: The whole thing is moved around now, so this file contains
+// declarations of primitives for "standard" marshaling format of
+// basic data types.  etc.  These are primitives from the point of
+// view that they do not care whether the data structure should be
+// marshaled at all, whether there is enough space in the buffer etc.
+
+#ifndef __MARSHALERBASE_H
+#define __MARSHALERBASE_H
+
+#if defined(INTERFACE)
+#pragma interface
+#endif
+
+#include "base.hh"
+#if !defined(TEXT2PICKLE)
+#include "mbuffer.hh"
+#include "gentraverser.hh"
+#endif
+
+//
+#if defined(TEXT2PICKLE)
+#define EmulatorOnly(Code)
+#else
+#define EmulatorOnly(Code) Code
+#endif
+
+//
+#define MAX_DP_STRING        4
+#define PERDIOVERSION     "3#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOMAJOR          3
+#define PERDIOMINOR          0
+
+//
+// the DIFs
+// the protocol layer needs to know about some of these
+typedef enum {
+  DIF_UNUSED0,
+  DIF_SMALLINT,
+  DIF_BIGINT,
+  DIF_FLOAT,
+  DIF_ATOM,
+  DIF_NAME,
+  DIF_UNIQUENAME,
+  DIF_RECORD,
+  DIF_TUPLE,
+  DIF_LIST,
+  DIF_REF,
+  DIF_REF_DEBUG,
+  DIF_OWNER,
+  DIF_OWNER_SEC,
+  DIF_PORT,
+  DIF_CELL,
+  DIF_LOCK,
+  DIF_VAR,
+  DIF_BUILTIN,
+  DIF_DICT,
+  DIF_OBJECT,           // full object;
+  DIF_THREAD_UNUSED,
+  DIF_SPACE,
+  DIF_CHUNK,            // SITE INDEX NAME value
+  DIF_PROC,             // SITE INDEX NAME ARITY globals code
+  DIF_CLASS,            // SITE INDEX NAME obj class
+  DIF_ARRAY,
+  DIF_FSETVALUE,        // finite set constant
+  DIF_ABSTRENTRY,       // AbstractionEntry (code instantiation)
+  DIF_PRIMARY,
+  DIF_SECONDARY,
+  DIF_SITE,
+  DIF_SITE_VI,
+  DIF_SITE_PERM,
+  DIF_PASSIVE,
+  DIF_COPYABLENAME,
+  DIF_EXTENSION,
+  DIF_RESOURCE_T,
+  DIF_RESOURCE_N,
+  DIF_FUTURE,
+  DIF_VAR_AUTO,
+  DIF_FUTURE_AUTO,
+  DIF_EOF,
+  DIF_CODEAREA,
+  DIF_VAR_OBJECT,               // var object exported;
+  DIF_SYNC,
+  DIF_CLONEDCELL,
+  DIF_STUB_OBJECT,              // object exported (lazy objects);
+  DIF_SUSPEND,
+  DIF_LIT_CONT,
+  DIF_EXT_CONT,
+  DIF_LAST
+} MarshalTag;
+
+//
+const struct {
+  MarshalTag tag;
+  char *name;
+} dif_names[] = {
+  { DIF_UNUSED0,      "UNUSED0"},
+  { DIF_SMALLINT,     "SMALLINT"},
+  { DIF_BIGINT,       "BIGINT"},
+  { DIF_FLOAT,        "FLOAT"},
+  { DIF_ATOM,         "ATOM"},
+  { DIF_NAME,         "NAME"},
+  { DIF_UNIQUENAME,   "UNIQUENAME"},
+  { DIF_RECORD,       "RECORD"},
+  { DIF_TUPLE,        "TUPLE"},
+  { DIF_LIST,         "LIST"},
+  { DIF_REF,          "REF"},
+  { DIF_REF_DEBUG,    "REF_DEBUG"},
+  { DIF_OWNER,        "OWNER"},
+  { DIF_OWNER_SEC,    "OWNER_SEC"},
+  { DIF_PORT,         "PORT"},
+  { DIF_CELL,         "CELL"},
+  { DIF_LOCK,         "LOCK"},
+  { DIF_VAR,          "VAR"},
+  { DIF_BUILTIN,      "BUILTIN"},
+  { DIF_DICT,         "DICT"},
+  { DIF_OBJECT,       "OBJECT"},
+  { DIF_THREAD_UNUSED,"THREAD"},
+  { DIF_SPACE,        "SPACE"},
+  { DIF_CHUNK,        "CHUNK"},
+  { DIF_PROC,         "PROC"},
+  { DIF_CLASS,        "CLASS"},
+  { DIF_ARRAY,        "ARRAY"},
+  { DIF_FSETVALUE,    "FSETVALUE"},
+  { DIF_ABSTRENTRY,   "ABSTRENTRY"},
+  { DIF_PRIMARY,      "PRIMARY"},
+  { DIF_SECONDARY,    "SECONDARY"},
+  { DIF_SITE,         "SITE"},
+  { DIF_SITE_VI,      "SITE_VI"},
+  { DIF_SITE_PERM,    "SITE_PERM"},
+  { DIF_PASSIVE,      "PASSIVE"},
+  { DIF_COPYABLENAME, "COPYABLENAME"},
+  { DIF_EXTENSION,    "EXTENSION"},
+  { DIF_RESOURCE_T,   "RESOURCE_T"},
+  { DIF_RESOURCE_N,   "RESOURCE_N"},
+  { DIF_FUTURE,       "FUTURE"},
+  { DIF_VAR_AUTO,     "AUTOMATICALLY_REGISTERED_VAR"},
+  { DIF_FUTURE_AUTO,  "AUTOMATICALLY_REGISTERED_FUTURE"},
+  { DIF_EOF,          "EOF"},
+  { DIF_CODEAREA,     "CODE_AREA_SEGMENT"},
+  { DIF_VAR_OBJECT,   "VAR_OBJECT_EXPORTED"},
+  { DIF_SYNC,         "SYNC"},
+  { DIF_CLONEDCELL,   "CLONEDCELL"},
+  { DIF_STUB_OBJECT,  "OBJECT_EXPORTED"},
+  { DIF_SUSPEND,      "MARSHALING_SUSPENDED"},
+  { DIF_LIT_CONT,     "DIF_LITERAL_CONTINUATION"},
+  { DIF_EXT_CONT,     "DIF_EXTENSION_CONTINUATION"},
+  { DIF_LAST,         "LAST"}
+};
+
+// the names of the difs for statistics
+enum {
+  MISC_STRING,
+  MISC_GNAME,
+  MISC_SITE,
+  //
+  MISC_LAST
+};
+
+#if !defined(TEXT2PICKLE)
+
+//
+// statistics (e.g. for the "pane module");
+class SendRecvCounter {
+private:
+  long c[2];
+public:
+  SendRecvCounter() { c[0]=0; c[1]=0; }
+  void send() { c[0]++; }
+  long getSend() { return c[0]; }
+  void recv() { c[1]++; }
+  long getRecv() { return c[1]; }
+};
+
+//
+extern SendRecvCounter dif_counter[];
+extern SendRecvCounter misc_counter[];
+
+#endif
+
+//
+// common with the 'text2pickle' functions;
+const unsigned int SBit = 1<<7;
+const int shortSize = 2;
+
+//
+inline void marshalDIF(MarshalerBuffer *bs, MarshalTag tag) {
+  EmulatorOnly(dif_counter[tag].send());
+  bs->put(tag);
+}
+
+inline void marshalByte(MarshalerBuffer *bs, unsigned char c) {
+  bs->put(c);
+}
+
+inline void marshalShort(MarshalerBuffer *bs, unsigned short i) {
+  for (int k=0; k<shortSize; k++) {
+    bs->put(i&0xFF);
+    i = i>>8;
+  }
+}
+
+inline void marshalNumber(MarshalerBuffer *bs, unsigned int i) {
+  while(i >= SBit) {
+    bs->put((i%SBit)|SBit);
+    i /= SBit;
+  }
+  bs->put(i);
+}
+
+inline void marshalString(MarshalerBuffer *bs, const char *s) {
+  EmulatorOnly(misc_counter[MISC_STRING].send());
+  marshalNumber(bs, strlen(s));
+  while(*s) {
+    bs->put(*s);
+    s++;
+  }
+}
+
+inline void marshalLabel(MarshalerBuffer *bs, int start, int lbl) {
+  // fprintf(stderr,"Label: %d\n",lbl);
+  marshalNumber(bs, lbl);
+}
+
+inline void marshalOpCode(MarshalerBuffer *bs, int lbl, Opcode op,
+                          Bool showLabel = 1) {
+  bs->put(op);
+}
+
+inline void marshalCodeStart(MarshalerBuffer *bs) {}
+
+inline void marshalCodeEnd(MarshalerBuffer *bs) {}
+
+inline void marshalTermDef(MarshalerBuffer *bs, int lbl) {
+  marshalNumber(bs, lbl);
+}
+
+inline void marshalTermRef(MarshalerBuffer *bs, int lbl) {
+  marshalNumber(bs, lbl);
+}
+
+#if !defined(TEXT2PICKLE)
+//
+// Globalization - needed for both pickling & distribution;
+GName *globalizeConst(ConstTerm *t, MarshalerBuffer *bs);
+
+//
+void initRobustMarshaler();
+
+//
+// Constants needed for checking that no overflow occurs in unmarshalNumber()
+
+// Biggest number dividable with 7 and less then sizeof(int)
+extern unsigned int RobustMarshaler_Max_Shift;
+// (sizeof(int)-RobustMarshaler_Max_Shift)^2
+extern unsigned int RobustMarshaler_Max_Hi_Byte;
+
+//
+// '*MaxSize' constants are for the suspendable marshaler;
+#define DIFMaxSize 1
+#define OpcodeMaxSize 1
+#define MNumberMaxSize 5
+#define MShortMaxSize 2
+#define MFloatMaxSize (MNumberMaxSize*2)
+#define MBaseSiteForGNameMaxSize (3*MNumberMaxSize + MShortMaxSize)
+#define MGNameMaxSize (MBaseSiteForGNameMaxSize + MNumberMaxSize*(fatIntDigits + 1))
+
+//
+void marshalFloat(MarshalerBuffer *bs, double d);
+void marshalGName(MarshalerBuffer *bs, GName *gname);
+
+//
+inline
+//
+// Dump 'num' characters; 'num' should not be larger than the real
+// string length. It returns the remaining portion of the string if
+// any, an zero otherwise. Observe that the marshaled string fragment
+// looks exactly as a 'marshalString's string;
+void marshalStringNum(MarshalerBuffer *bs, const char *s, int num) {
+  marshalNumber(bs, num);
+  while (num--) {
+    Assert(*s);
+    bs->put(*s);
+    s++;
+  }
+}
+
+//
+inline
+void rememberNode(GenTraverser *gt, MarshalerBuffer *bs, OZ_Term node) {
+  int ind = gt->rememberTerm(node);
+  marshalTermDef(bs, ind);
+}
+inline
+void rememberNode(GenTraverser *gt, MarshalerBuffer *bs, void *p) {
+  int ind = gt->rememberPtr(p);
+  marshalTermDef(bs, ind);
+}
+
+//
+void skipNumber(MarshalerBuffer *bs);
+
+//
+// Basic data structures;
+// Primitive:
+void marshalSmallInt(MarshalerBuffer *bs, OZ_Term siTerm);
+void marshalFloat(MarshalerBuffer *bs, OZ_Term floatTerm);
+void marshalLiteral(MarshalerBuffer *bs, OZ_Term litTerm, int litTermInd);
+void marshalBigInt(MarshalerBuffer *bs, OZ_Term biTerm, ConstTerm *biConst);
+void marshalBuiltin(MarshalerBuffer *bs,
+                    OZ_Term biTerm, ConstTerm *biConst, int biTermInd);
+
+void marshalExtension(MarshalerBuffer *bs, OZ_Term extTerm);
+// "nogoods", objects, tertiaries and variables are of no interest here;
+void marshalRepetition(MarshalerBuffer *bs, int repNumber);
+// Compound:
+void marshalLTupleHead(MarshalerBuffer *bs, OZ_Term ltupleTerm, int ltupleTermInd);
+void marshalSRecordHead(MarshalerBuffer *bs,
+                        OZ_Term srecordTerm, int srecordTermInd);
+void marshalChunk(MarshalerBuffer *bs, OZ_Term chunkTerm,
+                  ConstTerm *chunkConst, int chunkTermInd);
+
+//
+// Marshaling/unmarshaling of record arity also requires some special
+// machinery... The problem is that the surrounding context must know
+// sometimes (aka when unmarshaling hash tables from code area) how
+// many subtrees are there, and what to do with them;
+enum RecordArityType {
+  RECORDARITY,
+  TUPLEWIDTH
+};
+
+//
+// Code area;
+//
+void marshalBuiltin(GenTraverser *gt, Builtin *entry);
+void marshalProcedureRef(GenTraverser *gt,
+                         AbstractionEntry *entry, MarshalerBuffer *bs);
+void marshalRecordArity(GenTraverser *gt,
+                        SRecordArity sra, MarshalerBuffer *bs);
+void marshalPredId(GenTraverser *gt, PrTabEntry *p, MarshalerBuffer *bs);
+void marshalCallMethodInfo(GenTraverser *gt,
+                           CallMethodInfo *cmi, MarshalerBuffer *bs);
+void marshalGRegRef(AssRegArray *gregs, MarshalerBuffer *bs);
+void marshalLocation(Builtin *bi, OZ_Location *loc, MarshalerBuffer *bs);
+void marshalHashTableRef(GenTraverser *gt,
+                         int start, IHashTable *table, MarshalerBuffer *bs);
+//
+enum { ATOMTAG, NUMBERTAG, RECORDTAG};
+
+//
+// Scanning for certain data structures (ResourceExcavator etc.)
+// needs just to traverse nodes without writing anything into the
+// stream:
+void traverseBuiltin(GenTraverser *gt, Builtin *entry);
+void traversePredId(GenTraverser *gt, PrTabEntry *p);
+void traverseRecordArity(GenTraverser *gt, SRecordArity sra);
+void traverseHashTableRef(GenTraverser *gt, int start, IHashTable *table);
+void traverseCallMethodInfo(GenTraverser *gt, CallMethodInfo *cmi);
+
+
+//
+// Unmarshaling;
+//
+inline
+unsigned short unmarshalShort(MarshalerBuffer *bs) {
+  unsigned short sh;
+  unsigned int i1 = bs->get();
+  unsigned int i2 = bs->get();
+  sh= (i1 + (i2<<8));
+  return (sh);
+}
+
+//
+#ifdef USE_FAST_UNMARSHALER
+
+//
+unsigned int unmarshalNumber(MarshalerBuffer *bs);
+double unmarshalFloat(MarshalerBuffer *bs);
+char *unmarshalString(MarshalerBuffer *);
+
+//
+inline
+int unmarshalRefTag(MarshalerBuffer *bs) {
+  return unmarshalNumber(bs);
+}
+
+//
+GName* unmarshalGName(TaggedRef*,MarshalerBuffer*);
+
+#else
+
+unsigned int unmarshalNumberRobust(MarshalerBuffer *bs, int *overflow);
+double unmarshalFloatRobust(MarshalerBuffer *bs, int *overflow);
+char *unmarshalStringRobust(MarshalerBuffer *, int *error);
+
+//
+inline
+int unmarshalRefTagRobust(MarshalerBuffer *bs, Builder *builder, int *error) {
+  int e;
+  int rt = unmarshalNumberRobust(bs, &e);
+  *error = e || !builder->checkNewIndex(rt); // RefTags are found in order?
+  return rt;
+}
+
+//
+GName* unmarshalGNameRobust(TaggedRef*,MarshalerBuffer*,int*);
+
+#endif
+
+//
+// Memory management for arguments of marshaler's
+// 'BinaryAreaProcessor' and builder's 'OzValueProcessor'.
+//
+#define NMMM_SIZE       12
+//
+class NMMemoryManager {
+  static int32* freelist[NMMM_SIZE];
+
+  //
+public:
+
+  //
+  void operator delete(void *obj, size_t size) {
+    int index = size / sizeof(int32);
+    Assert(index);              // must contain at least one word;
+    Assert(index * sizeof(int32) == size);
+    Assert(index < NMMM_SIZE);
+    //
+    *((int32 **) obj) = freelist[index];
+    freelist[index] = (int32 *) obj;
+  }
+
+  // must be empty;
+  NMMemoryManager() {}
+  ~NMMemoryManager() {}
+
+  //
+  static void init() {
+    for (int i = 0; i < NMMM_SIZE; i++)
+      freelist[i] = (int32 *) 0;
+  }
+
+  //
+  void *operator new(size_t size) {
+    int index = size / sizeof(int32);
+    int32 *ptr;
+    Assert(index);              // must contain at least one word;
+    Assert(index * sizeof(int32) == size);
+    Assert(index < NMMM_SIZE);
+
+    //
+    ptr = freelist[index];
+    if (ptr) {
+      freelist[index] = (int32 *) *ptr;
+      return (ptr);
+    } else {
+      return (malloc(size));
+    }
+  }
+};
+
+//
+// 'CodeAreaProcessor' argument: keeps the location of a code area
+// being processed;
+class MarshalerCodeAreaDescriptor : public NMMemoryManager {
+private:
+  ProgramCounter start, end, current;
+public:
+  MarshalerCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn)
+    : start(startIn), end(endIn), current(startIn) {}
+  //
+  ProgramCounter getStart() { return (start); }
+  ProgramCounter getEnd() { return (end); }
+  ProgramCounter getCurrent() { return (current); }
+  void setCurrent(ProgramCounter pc) { current = pc; }
+};
+
+//
+class BuilderCodeAreaDescriptor : public NMMemoryManager {
+private:
+  ProgramCounter start, end, current;
+  CodeArea *code;
+public:
+  BuilderCodeAreaDescriptor(ProgramCounter startIn, ProgramCounter endIn,
+                            CodeArea *codeIn)
+    : start(startIn), end(endIn), current(startIn), code(codeIn) {}
+  //
+  ProgramCounter getStart() { return (start); }
+  ProgramCounter getEnd() { return (end); }
+  ProgramCounter getCurrent() { return (current); }
+  void setCurrent(ProgramCounter pc) { current = pc; }
+  //
+  CodeArea* getCodeArea() { return (code); }
+};
+
+//
+ProgramCounter writeAddress(void *ptr, ProgramCounter pc);
+ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code);
+
+//
+ProgramCounter unmarshalOzValue(Builder *b,
+                                ProgramCounter pc, CodeArea *code);
+ProgramCounter unmarshalBuiltin(Builder *b, ProgramCounter pc);
+
+//
+void handleDEBUGENTRY(void *arg);
+
+#ifdef USE_FAST_UNMARSHALER
+
+//
+inline ProgramCounter unmarshalNum(ProgramCounter pc, MarshalerBuffer *bs) {
+  int num = unmarshalNumber(bs);
+  return (pc ? CodeArea::writeInt(num,pc) : (ProgramCounter) 0);
+}
+inline ProgramCounter unmarshalXReg(ProgramCounter pc, MarshalerBuffer *bs) {
+  int idx = unmarshalNumber(bs);
+  return (pc ? CodeArea::writeXRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+inline ProgramCounter unmarshalYReg(ProgramCounter pc, MarshalerBuffer *bs) {
+  int idx = unmarshalNumber(bs);
+  return (pc ? CodeArea::writeYRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+inline ProgramCounter unmarshalGReg(ProgramCounter pc, MarshalerBuffer *bs) {
+  int idx = unmarshalNumber(bs);
+  return (pc ? CodeArea::writeGRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+
+//
+inline ProgramCounter unmarshalLabel(ProgramCounter PC, MarshalerBuffer *bs) {
+  int offset = unmarshalNumber(bs);
+  return (PC ? CodeArea::writeLabel(offset,0,PC) : (ProgramCounter) 0);
+}
+
+//
+ProgramCounter unmarshalGRegRef(ProgramCounter PC, MarshalerBuffer *bs);
+ProgramCounter unmarshalLocation(ProgramCounter PC, MarshalerBuffer *bs);
+ProgramCounter unmarshalRecordArity(Builder *b,
+                                    ProgramCounter pc, MarshalerBuffer *bs);
+ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
+                               ProgramCounter lastPC, MarshalerBuffer *bs);
+ProgramCounter unmarshalCallMethodInfo(Builder *b,
+                                       ProgramCounter pc, MarshalerBuffer *bs);
+ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
+                                     MarshalerBuffer *bs);
+ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
+                                     MarshalerBuffer *bs, CodeArea *code);
+
+#else
+
+//
+inline ProgramCounter unmarshalNumRobust(ProgramCounter pc,
+                                         MarshalerBuffer *bs, int *error) {
+  int num = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ?
+          CodeArea::writeInt(num,pc) : (ProgramCounter) 0);
+}
+
+//
+inline ProgramCounter unmarshalXRegRobust(ProgramCounter pc,
+                                          MarshalerBuffer *bs, int *error) {
+  int idx = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ?
+          CodeArea::writeXRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+inline ProgramCounter unmarshalYRegRobust(ProgramCounter pc,
+                                          MarshalerBuffer *bs, int *error) {
+  int idx = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ?
+          CodeArea::writeYRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+inline ProgramCounter unmarshalGRegRobust(ProgramCounter pc,
+                                          MarshalerBuffer *bs, int *error) {
+  int idx = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ?
+          CodeArea::writeGRegIndex(idx, pc) : (ProgramCounter) 0);
+}
+
+//
+inline ProgramCounter unmarshalLabelRobust(ProgramCounter pc,
+                                           MarshalerBuffer *bs, int *error) {
+  int offset = unmarshalNumberRobust(bs, error);
+  return ((pc && !(*error)) ?
+          CodeArea::writeLabel(offset,0,pc) : (ProgramCounter) 0);
+}
+
+//
+ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,
+                                      MarshalerBuffer *bs, int *error);
+ProgramCounter unmarshalLocationRobust(ProgramCounter PC, MarshalerBuffer *bs,
+                                       int *error);
+ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
+                                     ProgramCounter lastPC, MarshalerBuffer *bs,
+                                     int *error);
+ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc,
+                                          MarshalerBuffer *bs, int *error);
+ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc,
+                                             MarshalerBuffer *bs, int *error);
+ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
+                                           MarshalerBuffer *bs, int *error);
+ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
+                                           MarshalerBuffer *bs, CodeArea *code,
+                                           int *error);
+
+// A return value from unmarshalCodeRobust
+#define ERR 123
+
+#endif // defined(USE_FAST_UNMARSHALER)
+
+#endif // !defined(TEXT2PICKLE)
+
+#endif

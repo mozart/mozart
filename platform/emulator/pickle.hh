@@ -1,9 +1,10 @@
 /*
  *  Authors:
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+ *    Kostja Popov <kost@sics.se>
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Andreas Sundstroem <andreas@sics.se>
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -24,198 +25,174 @@
  *
  */
 
+#ifndef __PICKLE_H
+#define __PICKLE_H
 
-#ifndef __PICKLEH
-#define __PICKLEH
+#if defined(INTERFACE)
+#pragma interface
+#endif
 
-#include "opcodes.hh"
+#include "base.hh"
+#include "pickleBase.hh"
+#include "var_base.hh"
 
+//
+// init stuff - must be called.  Actually, the pickling initializer
+// initializes also certain generic marshaling stuff (memory
+// management and robust marshaler's constants);
+void initPickleMarshaler();
 
-/* magic marker for start of saved components */
-const char SYSLETHEADER = 2;
-
-
-#define PERDIOVERSION     "3#0" /* PERDIOMAJOR "#" PERDIOMINOR */
-#define PERDIOMAJOR          3
-#define PERDIOMINOR          0
-
-// the DIFs
-// the protocol layer needs to know about some of these
-
-typedef enum {
-  DIF_UNUSED0,
-  DIF_SMALLINT,
-  DIF_BIGINT,
-  DIF_FLOAT,
-  DIF_ATOM,
-  DIF_NAME,
-  DIF_UNIQUENAME,
-  DIF_RECORD,
-  DIF_TUPLE,
-  DIF_LIST,
-  DIF_REF,
-  DIF_REF_DEBUG,
-  DIF_OWNER,
-  DIF_OWNER_SEC,
-  DIF_PORT,
-  DIF_CELL,
-  DIF_LOCK,
-  DIF_VAR,
-  DIF_BUILTIN,
-  DIF_DICT,
-  DIF_OBJECT,
-  DIF_THREAD_UNUSED,
-  DIF_SPACE,
-  DIF_CHUNK,            // SITE INDEX NAME value
-  DIF_PROC,             // SITE INDEX NAME ARITY globals code
-  DIF_CLASS,            // SITE INDEX NAME obj class
-  DIF_ARRAY,
-  DIF_FSETVALUE,        // finite set constant
-  DIF_ABSTRENTRY,       // AbstractionEntry (code instantiation)
-  DIF_PRIMARY,
-  DIF_SECONDARY,
-  DIF_SITE,
-  DIF_SITE_VI,
-  DIF_SITE_PERM,
-  DIF_PASSIVE,
-  DIF_COPYABLENAME,
-  DIF_EXTENSION,
-  DIF_RESOURCE_T,
-  DIF_RESOURCE_N,
-  DIF_FUTURE,
-  DIF_VAR_AUTO,
-  DIF_FUTURE_AUTO,
-  DIF_EOF,
-  DIF_CODEAREA,
-  DIF_VAR_OBJECT,
-  DIF_SYNC,
-  DIF_CLONEDCELL,
-  DIF_LAST
-} MarshalTag;
-
-
-const struct {MarshalTag tag; char *name;} dif_names[] = {
-  { DIF_UNUSED0,      "UNUSED0"},
-  { DIF_SMALLINT,     "SMALLINT"},
-  { DIF_BIGINT,       "BIGINT"},
-  { DIF_FLOAT,        "FLOAT"},
-  { DIF_ATOM,         "ATOM"},
-  { DIF_NAME,         "NAME"},
-  { DIF_UNIQUENAME,   "UNIQUENAME"},
-  { DIF_RECORD,       "RECORD"},
-  { DIF_TUPLE,        "TUPLE"},
-  { DIF_LIST,         "LIST"},
-  { DIF_REF,          "REF"},
-  { DIF_REF_DEBUG,    "REF_DEBUG"},
-  { DIF_OWNER,        "OWNER"},
-  { DIF_OWNER_SEC,    "OWNER_SEC"},
-  { DIF_PORT,         "PORT"},
-  { DIF_CELL,         "CELL"},
-  { DIF_LOCK,         "LOCK"},
-  { DIF_VAR,          "VAR"},
-  { DIF_BUILTIN,      "BUILTIN"},
-  { DIF_DICT,         "DICT"},
-  { DIF_OBJECT,       "OBJECT"},
-  { DIF_THREAD_UNUSED,"THREAD"},
-  { DIF_SPACE,        "SPACE"},
-  { DIF_CHUNK,        "CHUNK"},
-  { DIF_PROC,         "PROC"},
-  { DIF_CLASS,        "CLASS"},
-  { DIF_ARRAY,        "ARRAY"},
-  { DIF_FSETVALUE,    "FSETVALUE"},
-  { DIF_ABSTRENTRY,   "ABSTRENTRY"},
-  { DIF_PRIMARY,      "PRIMARY"},
-  { DIF_SECONDARY,    "SECONDARY"},
-  { DIF_SITE,         "SITE"},
-  { DIF_SITE_VI,      "SITE_VI"},
-  { DIF_SITE_PERM,    "SITE_PERM"},
-  { DIF_PASSIVE,      "PASSIVE"},
-  { DIF_COPYABLENAME, "COPYABLENAME"},
-  { DIF_EXTENSION,    "EXTENSION"},
-  { DIF_RESOURCE_T,   "RESOURCE_T"},
-  { DIF_RESOURCE_N,   "RESOURCE_N"},
-  { DIF_FUTURE,       "LAZY_MAN!"},
-  { DIF_VAR_AUTO,     "LAZY_MAN!"},
-  { DIF_FUTURE_AUTO,  "LAZY_MAN!"},
-  { DIF_EOF,          "EOF"},
-  { DIF_CODEAREA,     "CODE_AREA_SEGMENT"},
-  { DIF_VAR_OBJECT,   "VAR_OBJECT"},
-  { DIF_SYNC,         "SYNC"},
-  { DIF_CLONEDCELL,   "CLONEDCELL"},
-  { DIF_LAST,         "LAST"}
+//
+class Pickler : public GenTraverser {
+public:
+  virtual ~Pickler() {}
+  //
+  virtual void processSmallInt(OZ_Term siTerm);
+  virtual void processFloat(OZ_Term floatTerm);
+  virtual void processLiteral(OZ_Term litTerm);
+  virtual void processExtension(OZ_Term extensionTerm);
+  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
+  virtual void processResource(OZ_Term resTerm, Tertiary *tert);
+  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm);
+  virtual OZ_Term processCVar(OZ_Term cv, OZ_Term *cvarTerm);
+  virtual void processRepetition(OZ_Term t, int repNumber);
+  virtual Bool processLTuple(OZ_Term ltupleTerm);
+  virtual Bool processSRecord(OZ_Term srecordTerm);
+  virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
+  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  virtual void processSync();
 };
 
+//
+// Resource filtering business;
+inline
+Bool isResource(OZ_Term t)
+{
+  if (oz_isFree(t) || oz_isKinded(t) || oz_isFuture(t) || oz_isPort(t))
+    return OK;
+  return ozconf.perdioMinimal
+    ? NO
+    : oz_isObject(t) || oz_isLock(t) || oz_isCell(t);
+}
 
-#define TAG_STRING    'S'
-#define TAG_INT       'I'
-#define TAG_DIF       'D'
-#define TAG_OPCODE    'O'
-#define TAG_LABELREF  'L'
-#define TAG_LABELDEF  'l'
-#define TAG_BYTE      'B'
-#define TAG_COMMENT   '#'
-#define TAG_CODESTART 'C'
-#define TAG_CODEEND   'c'
-#define TAG_NEWCODESTART 'E'
-#define TAG_NEWCODEEND   'e'
-#define TAG_TERMREF   'T'
-#define TAG_TERMDEF   't'
-#define TAG_EOF       -1
+//
+// Extract resources & nogoods from a term into lists;
+class ResourceExcavator : public GenTraverser {
+private:
+  Bool cc;                      // cloneCells;
+  OZ_Term resources;
+  OZ_Term nogoods;
 
+  //
+private:
+  void addResource(OZ_Term r) { resources = oz_cons(r, resources); }
+  void addNogood(OZ_Term ng) { nogoods = oz_cons(ng, nogoods); }
 
-class MsgBuffer;
+  //
+public:
+  virtual ~ResourceExcavator() {}
+  void init(Bool ccIn) {
+    cc = ccIn;
+    resources = nogoods = oz_nil();
+  }
 
-void marshalNumber(unsigned int i, MsgBuffer *bs);
+  //
+  virtual void processSmallInt(OZ_Term siTerm);
+  virtual void processFloat(OZ_Term floatTerm);
+  virtual void processLiteral(OZ_Term litTerm);
+  virtual void processExtension(OZ_Term extensionTerm);
+  virtual void processBigInt(OZ_Term biTerm, ConstTerm *biConst);
+  virtual void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
+  virtual void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
+  virtual void processResource(OZ_Term resTerm, Tertiary *tert);
+  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual void processUVar(OZ_Term uv, OZ_Term *uvarTerm);
+  virtual OZ_Term processCVar(OZ_Term cv, OZ_Term *cvarTerm);
+  virtual void processRepetition(OZ_Term t, int repNumber);
+  virtual Bool processLTuple(OZ_Term ltupleTerm);
+  virtual Bool processSRecord(OZ_Term srecordTerm);
+  virtual Bool processFSETValue(OZ_Term fsetvalueTerm);
+  virtual Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
+  virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
+  virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
+  virtual Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  virtual Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
+  virtual Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
+  virtual void processSync();
+
+  // (from former MarshalerBuffer's 'visit()' business;)
+  Bool cloneCells() { return (cc); }
+  OZ_Term getResources()      { return (resources); }
+  OZ_Term getNoGoods()        { return (nogoods); }
+};
+
+//
+// Blocking factor for binary areas: how many Oz values a binary area
+// may contain (in fact, modulo a constant factor: code area"s, for
+// instance, count instruction fields with Oz values but not values
+// themselves);
+const int ozValuesBAPickles = 1024;
+//
+// These are the 'CodeAreaProcessor'"s for the pickling and plain
+// traversing of code areas:
+Bool pickleCode(GenTraverser *m, void *arg);
+Bool traverseCode(GenTraverser *m, void *arg);
+
+//
+extern Pickler pickler;
+extern ResourceExcavator re;
+extern Builder unpickler;
+
+//
+inline
+void extractResources(OZ_Term in, Bool cloneCells,
+                      OZ_Term &resources, OZ_Term &nogoods)
+{
+  re.init(cloneCells);
+  re.prepareTraversing((Opaque *) 0);
+  re.traverse(in);
+  re.finishTraversing();
+  resources = re.getResources();
+  nogoods = re.getNoGoods();
+}
+
+//
+// Interface procedures;
+inline
+void pickleTerm(PickleBuffer *bs, OZ_Term term)
+{
+  pickler.prepareTraversing((Opaque *) bs);
+  pickler.traverse(term);
+  pickler.finishTraversing();
+  marshalDIF(bs, DIF_EOF);
+}
+
+//
+OZ_Term unpickleTermInternal(PickleBuffer *);
+
+//
+// Interface procedures.
+inline
 #ifdef USE_FAST_UNMARSHALER
-unsigned int unmarshalNumber(MsgBuffer *bs);
+OZ_Term unpickleTerm(PickleBuffer *bs)
 #else
-unsigned int unmarshalNumberRobust(MsgBuffer *bs, int *overflow);
+OZ_Term unpickleTermRobust(PickleBuffer *bs)
 #endif
-void skipNumber(MsgBuffer *bs);
-BYTE unmarshalByte(MsgBuffer *bs);
-void marshalCode(ProgramCounter,MsgBuffer*);
-void marshalLabel(ProgramCounter,int,MsgBuffer*);
-void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, int showLabel = 1);
-// old (recursive) marshaler:
-void marshalCodeStart(int codesize, MsgBuffer *bs);
-void marshalCodeEnd(MsgBuffer *bs);
-// new (iterative) marshaler:
-void newMarshalCodeStart(MsgBuffer *bs);
-void newMarshalCodeEnd(MsgBuffer *bs);
-void putComment(char *s,MsgBuffer *bs);
-void putString(const char *s, MsgBuffer *bs);
-void putTag(char tag, MsgBuffer *bs);
-void marshalByte(unsigned char c, MsgBuffer *bs);
-void marshalString(const char *s, MsgBuffer *bs);
-void marshalLabel(int start, int lbl, MsgBuffer *bs);
-void marshalLabelDef(char *lbl, MsgBuffer *bs);
-void marshalTermDef(int lbl, MsgBuffer *bs);
-void marshalTermRef(int lbl, MsgBuffer *bs);
+{
+  unpickler.prepareBuild();
+  return unpickleTermInternal(bs);
+}
 
-
-void marshalShort(unsigned short,MsgBuffer*);
-void marshalDIF(MsgBuffer *bs, MarshalTag tag) ;
-void marshalFloat(double d, MsgBuffer *bs);
-
-unsigned short unmarshalShort(MsgBuffer*);
-#ifdef USE_FAST_UNMARSHALER
-char *unmarshalVersionString(MsgBuffer *);
-double unmarshalFloat(MsgBuffer *bs);
-char *unmarshalString(MsgBuffer *);
-#else
-char *unmarshalVersionStringRobust(MsgBuffer *, int *error);
-double unmarshalFloatRobust(MsgBuffer *bs, int *overflow);
-char *unmarshalStringRobust(MsgBuffer *, int *error);
-#endif
-
-typedef unsigned int32 crc_t;
-
-char *makeHeader(crc_t crc, int *headerSize);
-
-
-OZ_Term digOutVars(OZ_Term);
-
-crc_t update_crc(crc_t crc, unsigned char *buf, int len);
-inline crc_t init_crc() { return 0; }
-
-#endif /* __PICKLEH */
+#endif /* __PICKLE_H */

@@ -768,8 +768,14 @@ else
     AC_MSG_RESULT([... sorry, we cannot do virtual sites.])
 fi
 
+dnl OZ_ENABLE(virtualsites,[   provide support for virtual sites],
+dnl         $ac_cv_can_vs,
+dnl         AC_DEFINE(VIRTUALSITES)
+dnl         AC_MSG_RESULT(yes)
+dnl         ,
+dnl         )
 OZ_ENABLE(virtualsites,[   provide support for virtual sites],
-        $ac_cv_can_vs,
+        no,
         AC_DEFINE(VIRTUALSITES)
         AC_MSG_RESULT(yes)
         ,

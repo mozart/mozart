@@ -150,6 +150,18 @@ public:
   void htAdd(intlong k, void *val);
   void *htFind(intlong k);
   void mkEmpty();
+
+  //
+  // for e.g. garbage collection:
+  HashNodeLinked *getNext(HashNodeLinked *hn) {
+    for (hn++; hn < table+tableSize; hn++) {
+      if (!hn->isEmpty())
+        return (hn);
+    }
+    return ((HashNodeLinked *) 0);
+  }
+  HashNodeLinked *getFirst() { return (getNext(table-1)); }
+
   //
   DebugCode(void print(););
   DebugCode(void printStatistics(););

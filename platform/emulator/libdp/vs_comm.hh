@@ -43,33 +43,33 @@
 
 //
 // defined in virtual.cc (require static memory managers, etc.);
-VSMsgBufferOwned* composeVSInitMsg();
-VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *s);
-VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *s, VirtualSite *vs);
-VSMsgBufferOwned* composeVSSiteDeadMsg(DSite *dest, DSite *ds);
-VSMsgBufferOwned* composeVSYourIndexHereMsg(DSite *s, int index);
-VSMsgBufferOwned* composeVSUnusedShmIdMsg(DSite *s, key_t shmid);
+VSMarshalerBufferOwned* composeVSInitMsg();
+VSMarshalerBufferOwned* composeVSSiteIsAliveMsg(DSite *s);
+VSMarshalerBufferOwned* composeVSSiteAliveMsg(DSite *s, VirtualSite *vs);
+VSMarshalerBufferOwned* composeVSSiteDeadMsg(DSite *dest, DSite *ds);
+VSMarshalerBufferOwned* composeVSYourIndexHereMsg(DSite *s, int index);
+VSMarshalerBufferOwned* composeVSUnusedShmIdMsg(DSite *s, key_t shmid);
 
 //
-VSMsgType getVSMsgType(VSMsgBufferImported *mb);
+VSMsgType getVSMsgType(VSMarshalerBufferImported *mb);
 //
 #ifdef USE_FAST_UNMARSHALER
-void decomposeVSInitMsg(VSMsgBuffer *mb, DSite* &s);
-void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &s);
-void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs);
-void decomposeVSSiteDeadMsg(VSMsgBuffer *mb, DSite* &ds, VirtualSite* &dvs);
-void decomposeVSYourIndexHereMsg(VSMsgBuffer *mb, int &index);
-void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid);
+void decomposeVSInitMsg(VSMarshalerBuffer *mb, DSite* &s);
+void decomposeVSSiteIsAliveMsg(VSMarshalerBuffer *mb, DSite* &s);
+void decomposeVSSiteAliveMsg(VSMarshalerBuffer *mb, DSite* &s, VirtualSite* &vs);
+void decomposeVSSiteDeadMsg(VSMarshalerBuffer *mb, DSite* &ds, VirtualSite* &dvs);
+void decomposeVSYourIndexHereMsg(VSMarshalerBuffer *mb, int &index);
+void decomposeVSUnusedShmIdMsg(VSMarshalerBuffer *mb, DSite* &s, key_t &shmid);
 #else
-void decomposeVSInitMsgRobust(VSMsgBuffer *mb, DSite* &s, int* error);
-void decomposeVSSiteIsAliveMsgRobust(VSMsgBuffer *mb, DSite* &s, int* error);
-void decomposeVSSiteAliveMsgRobust(VSMsgBuffer *mb, DSite* &s,
+void decomposeVSInitMsgRobust(VSMarshalerBuffer *mb, DSite* &s, int* error);
+void decomposeVSSiteIsAliveMsgRobust(VSMarshalerBuffer *mb, DSite* &s, int* error);
+void decomposeVSSiteAliveMsgRobust(VSMarshalerBuffer *mb, DSite* &s,
                                    VirtualSite* &vs, int* error);
-void decomposeVSSiteDeadMsgRobust(VSMsgBuffer *mb, DSite* &ds,
+void decomposeVSSiteDeadMsgRobust(VSMarshalerBuffer *mb, DSite* &ds,
                                   VirtualSite* &dvs, int* error);
-void decomposeVSYourIndexHereMsgRobust(VSMsgBuffer *mb,
+void decomposeVSYourIndexHereMsgRobust(VSMarshalerBuffer *mb,
                                        int &index, int* error);
-void decomposeVSUnusedShmIdMsgRobust(VSMsgBuffer *mb, DSite* &s,
+void decomposeVSUnusedShmIdMsgRobust(VSMarshalerBuffer *mb, DSite* &s,
                                      key_t &shmid, int* error);
 #endif
 
@@ -120,7 +120,7 @@ class VSMessage : public VSMsgQueueNode {
   friend class VSFreeMessagePool;
   friend class VSMsgQueue;
 private:
-  VSMsgBufferOwned *mb;
+  VSMarshalerBufferOwned *mb;
   MessageType msgType;
   // 'DSite*' is not needed (stored in the message buffer);
   int storeIndex;
@@ -135,13 +135,13 @@ public:
   void* operator new(size_t, void *place) { return (place); }
 
   //
-  VSMessage(VSMsgBufferOwned *mbIn, MessageType mtIn, DSite *sIn, int stIn)
+  VSMessage(VSMarshalerBufferOwned *mbIn, MessageType mtIn, DSite *sIn, int stIn)
     : mb(mbIn), msgType(mtIn), storeIndex(stIn)
   {}
   ~VSMessage() { OZ_error("VSMessage destroyed??"); }
 
   //
-  VSMsgBufferOwned* getMsgBuffer() { return (mb); }
+  VSMarshalerBufferOwned* getMarshalerBuffer() { return (mb); }
   MessageType getMessageType() { return (msgType); }
   DSite *getSite() { return (mb->getSite()); }
   int getStoreIndex() { return (storeIndex); }
@@ -500,7 +500,7 @@ private:
   // Keeps track of imported mailboxes' shm keys. These keys are used
   // for unmapping corresponding shm pages when the (low-level)
   // connection is taken down. The register is updated whenever a new
-  // msgbuffer segment is imported, and when an 'UNUSED_SHMID' message
+  // mbuffer segment is imported, and when an 'UNUSED_SHMID' message
   // is received;
   VSSegKeysRegister keysRegister;
 
@@ -603,12 +603,12 @@ public:
   //
   // The message type, store site and store index parameters
   // are opaque data (just stored);
-  int sendTo(VSMsgBufferOwned *mb, MessageType mt,
+  int sendTo(VSMarshalerBufferOwned *mb, MessageType mt,
              DSite *storeSite, int storeIndex,
-             FreeListDataManager<VSMsgBufferOwned> *freeMBs);
+             FreeListDataManager<VSMarshalerBufferOwned> *freeMBs);
   // ... resend it ('TRUE' if we succeeded);
   Bool tryToSendToAgain(VSMessage *vsm,
-                        FreeListDataManager<VSMsgBufferOwned> *freeMBs);
+                        FreeListDataManager<VSMarshalerBufferOwned> *freeMBs);
 
   //
   void zeroReferences() {
@@ -652,7 +652,7 @@ public:
   }
 
   //
-  // Drop an imported msgbuffer's segment manager from the register;
+  // Drop an imported mbuffer's segment manager from the register;
   VSSegKeysRegister* getKeysRegister() { return (&keysRegister); }
   // There is no "add" method: an "imported" message buffer gets hold
   // of the VS's 'VSSegKeysRegister' directly;
@@ -666,11 +666,11 @@ public:
   // 'alive ack' message contains also a list of ipc keys - of shared
   // memory pages (mailboxes, chunk pool segments, may be even
   // something else?). These are maintained using these methods:
-  void marshalLocalResources(MsgBuffer *mb,
+  void marshalLocalResources(MarshalerBuffer *mb,
                              VSMailboxManagerOwned *mbm,
                              VSMsgChunkPoolManagerOwned *cpm);
-  void unmarshalResources(MsgBuffer *mb);
-  void unmarshalResourcesRobust(MsgBuffer *mb, int *error);
+  void unmarshalResources(MarshalerBuffer *mb);
+  void unmarshalResourcesRobust(MarshalerBuffer *mb, int *error);
 };
 
 //

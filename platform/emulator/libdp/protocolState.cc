@@ -62,21 +62,6 @@ inline void receiveGet_TokenLost(OwnerEntry* oe,DSite* toS,Tertiary* t){
   return;}
 
 /**********************************************************************/
-/*   Object protocol                                     */
-/**********************************************************************/
-
-void sendObject(DSite* sd, Object *o, Bool sendClass){ // holding one credit
-  int OTI = o->getIndex();
-  OT->getOwner(OTI)->getOneCreditOwner();
-  MsgBuffer *bs= msgBufferManager->getMsgBuffer(sd);
-  if(sendClass){
-    marshal_M_SEND_OBJECTANDCLASS(bs,myDSite,OTI,o);
-    SendTo(sd,bs,M_SEND_OBJECTANDCLASS,myDSite,OTI);}
-  else{
-    marshal_M_SEND_OBJECT(bs,myDSite,OTI,o);
-    SendTo(sd,bs,M_SEND_OBJECT,myDSite,OTI);}}
-
-/**********************************************************************/
 /*   Cell lock protocol common  STATE                         */
 /**********************************************************************/
 
@@ -99,19 +84,20 @@ void cellLockReceiveForward(BorrowEntry *be,DSite* toS,DSite* mS,int mI){
     return;}
   lockReceiveForward(be,toS,mS,mI);}
 
-void cellLockSendGet(BorrowEntry *be){
+void cellLockSendGet(BorrowEntry *be,DSite *cS){
   NetAddress *na=be->getNetAddress();
   DSite *toS=na->site;
-  installProbeNoRet(toS,PROBE_TYPE_ALL);
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
+  //  installProbeNoRet(toS,PROBE_TYPE_ALL);
   PD((CELL,"M_CELL_LOCK_GET indx:%d site:%s",na->index,toS->stringrep()));
-  marshal_M_CELL_LOCK_GET(bs,na->index,myDSite);
-  SendTo(toS,bs,M_CELL_LOCK_GET,toS,na->index);}
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_LOCK_GET(na->index,myDSite);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);}
 
 void cellLockSendForward(DSite *toS,DSite *fS,int mI){
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CELL_LOCK_FORWARD(bs,myDSite,mI,fS);
-  SendTo(toS,bs,M_CELL_LOCK_FORWARD,myDSite,mI);}
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_LOCK_FORWARD(myDSite,mI,fS);
+  SendTo(toS,msgC,3);}
 
 void cellLockReceiveDump(OwnerEntry *oe,DSite* fromS){
   Tertiary *t=oe->getTertiary();
@@ -125,10 +111,11 @@ void cellLockSendDump(BorrowEntry *be){
   PD((GC,"CLDump %d ",na->index));
   DSite *toS=na->site;
   if(SEND_SHORT(toS)){return;}
-  be->getOneMsgCredit();
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CELL_LOCK_DUMP(bs,na->index,myDSite);
-  SendTo(toS,bs,M_CELL_LOCK_DUMP,toS,na->index);}
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_LOCK_DUMP(na->index,myDSite);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  SendTo(toS,msgC,3);}
 
 /**********************************************************************/
 /*   Cell protocol - receive                            */
@@ -149,7 +136,8 @@ Bool CellSec::secReceiveContents(TaggedRef val,DSite* &toS,TaggedRef &outval){
   PendThread *pt=pending;
   TaggedRef tmp=val;
   while(pt!=NULL){
-    tmp=unpendCell(pt,tmp);
+    if (pt->thread != NULL) { // if the thread has done an exception
+      tmp=unpendCell(pt,tmp); }
     pending=pt->next;
     pt->dispose();
     pt=pending;}
@@ -183,12 +171,12 @@ void CellSec::secReceiveReadAns(TaggedRef val){
   Assert(secReceiveReadAnsCheck(pending));
 }
 
-Bool CellSec::secReceiveRemoteRead(DSite* toS,DSite* mS, int mI){
+Bool CellSec::secReceiveRemoteRead(DSite* toS,DSite* mS, int mI, DSite *cS){
   switch(state){
   case Cell_Lock_Invalid:
     return NO;
   case Cell_Lock_Valid:{
-    cellSendReadAns(toS,mS,mI,contents);
+    cellSendReadAns(toS,mS,mI,contents,cS);
     return TRUE;}
   case Cell_Lock_Requested:{
     pendThreadAddRAToEnd(&pending,toS,mS,mI);
@@ -209,7 +197,7 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,DSite* toS){
     TaggedRef val;
     if(cm->getCellSec()->secForward(toS,val)){
       oe->getOneCreditOwner();
-      cellSendContents(val,toS,myDSite,cm->getIndex());}
+      cellSendContents(val,toS,myDSite,cm->getIndex(),NULL);}
     return;}
   oe->getOneCreditOwner();
   cellLockSendForward(current,toS,cm->getIndex());
@@ -235,8 +223,8 @@ void cellReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
   CellSec *sec=cf->getCellSec();
   TaggedRef val;
   if(!sec->secForward(toS,val)) return;
-  be->getOneMsgCredit();
-  cellSendContents(val,toS,mS,mI);
+  DSite *cS=be->getOneMsgCredit();
+  cellSendContents(val,toS,mS,mI,cS);
   return;
 }
 
@@ -251,7 +239,7 @@ void cellReceiveContentsManager(OwnerEntry *oe,TaggedRef val,int mI){
   TaggedRef outval;
   if(!sec->secReceiveContents(val,toS,outval)) return;
   oe->getOneCreditOwner();
-  cellSendContents(outval,toS,myDSite,mI);
+  cellSendContents(outval,toS,myDSite,mI,NULL);
   return;
 }
 
@@ -260,14 +248,14 @@ void cellReceiveContentsFrame(BorrowEntry *be,TaggedRef val,DSite *mS,int mI){
   Assert(cf->getType()==Co_Cell);
   Assert(cf->isFrame());
   if(tokenLostCheckProxy(cf)) return; // FAIL-HOOK
-  be->getOneMsgCredit();
-  chainSendAck(mS,mI);
+  DSite *cS1=be->getOneMsgCredit();
+  chainSendAck(mS,mI,cS1);
   CellSec *sec=cf->getCellSec();
   TaggedRef outval;
   DSite *toS;
   if(!sec->secReceiveContents(val,toS,outval)) return;
-  be->getOneMsgCredit();
-  cellSendContents(outval,toS,mS,mI);
+  DSite *cS=be->getOneMsgCredit();
+  cellSendContents(outval,toS,mS,mI,cS);
 }
 
 void cellReceiveRemoteRead(BorrowEntry *be,DSite* mS,int mI,DSite* fS){
@@ -276,14 +264,14 @@ void cellReceiveRemoteRead(BorrowEntry *be,DSite* mS,int mI,DSite* fS){
   Assert(t->isFrame());
   Assert(t->getType()==Co_Cell);
   CellSec *sec=((CellFrame*)t)->getCellSec();
-  be->getOneMsgCredit();
-  if(sec->secReceiveRemoteRead(fS,mS,mI)) return;
+  DSite *cS=be->getOneMsgCredit();
+  if(sec->secReceiveRemoteRead(fS,mS,mI,cS)) return;
   PD((WEIRD,"miss on read"));
-  be->getOneMsgCredit();
-  cellSendRead(be,fS);
+  DSite *cS2=be->getOneMsgCredit();
+  cellSendRead(be,fS,cS2);
 }
 
-void cellReceiveRead(OwnerEntry *oe,DSite* fS){
+void cellReceiveRead(OwnerEntry *oe,DSite* fS,DSite *cS){
   PD((CELL,"Recevie READ toS:%s",fS->stringrep()));
   CellManager* cm=(CellManager*) oe->getTertiary();
   Assert(cm->isManager());
@@ -293,9 +281,9 @@ void cellReceiveRead(OwnerEntry *oe,DSite* fS){
   Chain* ch=cm->getChain();
   if(ch->getCurrent()==myDSite){
     PD((CELL,"Token at mgr site short circuit"));
-    sec->secReceiveRemoteRead(fS,myDSite,cm->getIndex());
+    sec->secReceiveRemoteRead(fS,myDSite,cm->getIndex(),cS);
     return;}
-  cellSendRemoteRead(ch->getCurrent(),myDSite,cm->getIndex(),fS);
+  cellSendRemoteRead(ch->getCurrent(),myDSite,cm->getIndex(),fS,cS);
 }
 
 void cellReceiveReadAns(Tertiary* t,TaggedRef val){
@@ -307,7 +295,7 @@ void cellReceiveReadAns(Tertiary* t,TaggedRef val){
 /*   cell send                        */
 /**********************************************************************/
 
-void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val){
+void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val,DSite *cS){
   if(toS == myDSite) {
     OwnerEntry *oe=maybeReceiveAtOwner(mS,mI);
     if(mS!=myDSite)
@@ -315,40 +303,45 @@ void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val){
     else
       cellReceiveReadAns(maybeReceiveAtOwner(mS,mI)->getTertiary(),val);
     return;}
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CELL_READANS(bs,mS,mI,val);
-  SendTo(toS,bs,M_CELL_READANS,mS,mI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_READANS(mS,mI,val);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);
 }
 
-void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS){
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CELL_REMOTEREAD(bs,mS,mI,fS);
-  SendTo(toS,bs,M_CELL_REMOTEREAD,mS,mI);
+void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS,DSite *cS){
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_REMOTEREAD(mS,mI,fS);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);
 }
 
-void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI){
+void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI,DSite *cS){
   PD((CELL,"Cell Send Contents to:%s",toS->stringrep()));
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CELL_CONTENTS(bs,mS,mI,tr);
   PD((SPECIAL,"CellContents %s",toC(tr)));
-  SendTo(toS,bs,M_CELL_CONTENTS,mS,mI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_CONTENTS(mS,mI,tr);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);
 }
 
-void cellSendRead(BorrowEntry *be,DSite *dS){
+void cellSendRead(BorrowEntry *be,DSite *dS,DSite *cS){
   NetAddress *na=be->getNetAddress();
   DSite *toS=na->site;
-  installProbeNoRet(toS,PROBE_TYPE_ALL);
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CELL_READ(bs,na->index,dS);
-  SendTo(toS,bs,M_CELL_READ,na->site,na->index);
+  // installProbeNoRet(toS,PROBE_TYPE_ALL);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_READ(na->index,dS);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);
 }
 
-void chainSendAck(DSite* toS, int mI){
+void chainSendAck(DSite* toS, int mI, DSite *cS){
   if(SEND_SHORT(toS)) {return;}
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
   PD((CHAIN,"M_CHAIN_ACK indx:%d site:%s",mI,toS->stringrep()));
-  marshal_M_CHAIN_ACK(bs,mI,myDSite);
-  SendTo(toS,bs,M_CHAIN_ACK,toS,mI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CHAIN_ACK(mI,myDSite);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);
 }
 
 /**********************************************************************/
@@ -415,7 +408,7 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,DSite* toS){
     PD((LOCK," shortcut in lockReceiveGet"));
     if(lm->getLockSec()->secForward(toS)){
       oe->getOneCreditOwner();
-      lockSendToken(myDSite,lm->getIndex(),toS);}
+      lockSendToken(myDSite,lm->getIndex(),toS,NULL);}
     return;}
   oe->getOneCreditOwner();
   cellLockSendForward(current,toS,lm->getIndex());
@@ -448,7 +441,7 @@ void lockReceiveTokenManager(OwnerEntry* oe,int mI){
   if(sec->secReceiveToken(t,toS)) return;
   PD((CHAIN,"%d",printChain(lm->getChain())));
   oe->getOneCreditOwner();
-  lockSendToken(myDSite,mI,toS);
+  lockSendToken(myDSite,mI,toS,NULL);
 }
 
 void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS,int mI){
@@ -456,13 +449,13 @@ void lockReceiveTokenFrame(BorrowEntry* be, DSite *mS,int mI){
   Assert(lf->getType()==Co_Lock);
   Assert(lf->isFrame());
   if(tokenLostCheckProxy(lf)) return; // FAIL-HOOK
-  be->getOneMsgCredit();
-  chainSendAck(mS,mI);
+  DSite *cS=be->getOneMsgCredit();
+  chainSendAck(mS,mI,cS);
   LockSec *sec=lf->getLockSec();
   DSite* toS;
   if(sec->secReceiveToken(lf,toS)) return;
-  be->getOneMsgCredit();
-  lockSendToken(mS,mI,toS);
+  DSite *cS2=be->getOneMsgCredit();
+  lockSendToken(mS,mI,toS,cS2);
 }
 
 void lockReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
@@ -471,18 +464,19 @@ void lockReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
   Assert(lf->getType()==Co_Lock);
   LockSec* sec=lf->getLockSec();
   if(!sec->secForward(toS)) return;
-  be->getOneMsgCredit();
-  lockSendToken(mS,mI,toS);
+  DSite *cS=be->getOneMsgCredit();
+  lockSendToken(mS,mI,toS,cS);
 }
 
 /**********************************************************************/
 /*  Lock protocol - send                                */
 /**********************************************************************/
 
-void lockSendToken(DSite *mS,int mI,DSite* toS){
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_LOCK_TOKEN(bs,mS,mI);
-  SendTo(toS,bs,M_LOCK_TOKEN,mS,mI);
+void lockSendToken(DSite *mS,int mI,DSite* toS,DSite *cS){
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_LOCK_TOKEN(mS,mI);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(toS,msgC,3);
 }
 
 /**********************************************************************/
@@ -575,9 +569,9 @@ void lockManagerIsDown(DSite* mS,int mI){
 void cellSendCantPut(TaggedRef tr,DSite* toS, DSite *mS, int mI){
   PD((ERROR_DET,"Proxy cant put to %s site: %s:%d",
       toS->stringrep(), mS->stringrep(),mI));
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(mS);
-  marshal_M_CELL_CANTPUT(bs, mI, toS, tr, myDSite);
-  SendTo(mS,bs,M_CELL_CANTPUT,mS,mI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CELL_CANTPUT(mI, toS, tr, myDSite);
+  SendTo(mS,msgC,3);
 }
 
 void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){
@@ -594,10 +588,9 @@ void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){
 void lockSendCantPut(DSite* toS, DSite *mS, int mI){
   PD((ERROR_DET,"Proxy cant put - to %s site: %s:%d Nr %d",
       toS->stringrep(),mS->stringrep(),mI));
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(mS);
-  marshal_M_LOCK_CANTPUT(bs, mI, toS, myDSite);
-  SendTo(mS,bs,M_LOCK_CANTPUT,mS,mI);
-  return;
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(mS);
+  msgC->put_M_LOCK_CANTPUT(mI, toS, myDSite);
+  SendTo(mS,msgC,3);
 }
 
 void lockSendTokenFailure(DSite* toS,DSite *mS, int mI){
@@ -642,14 +635,14 @@ void cellReceiveCantPut(OwnerEntry* oe,TaggedRef val,int mI,DSite* rsite,
 void chainSendQuestion(DSite* toS,int mI,DSite *deadS){
   OT->getOwner(mI)->getOneCreditOwner();
   PD((ERROR_DET,"chainSendQuestion  %s",toS->stringrep()));
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CHAIN_QUESTION(bs,mI,myDSite,deadS);
-  SendTo(toS,bs,M_CHAIN_QUESTION,myDSite,mI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CHAIN_QUESTION(mI,myDSite,deadS);
+  SendTo(toS,msgC,3);
 }
 
 void chainSendAnswer(BorrowEntry* be,DSite* toS, int mI, int ans, DSite *deadS){
-  be->getOneMsgCredit();
-  MsgBuffer* bs=msgBufferManager->getMsgBuffer(toS);
-  marshal_M_CHAIN_ANSWER(bs,mI,myDSite,ans,deadS);
-  SendTo(toS,bs,M_CHAIN_ANSWER,toS,mI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  msgC->put_M_CHAIN_ANSWER(mI,myDSite,ans,deadS);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  SendTo(toS,msgC,3);
 }

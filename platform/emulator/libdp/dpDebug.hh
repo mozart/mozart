@@ -114,7 +114,7 @@ extern void resize_hash();
 // cannot include perdio.hh;
 Bool isPerdioInitializedImpl();
 
-void next50(MsgBuffer*);
+void next50(MarshalerBuffer*);
 
 void _PD(int i,char *format,...);
 
@@ -131,7 +131,3 @@ void networkTimer(int);
 #endif
 
 #endif
-
-//
-void maybeDebugBufferGetImpl(BYTE b);
-void maybeDebugBufferPutImpl(BYTE b);

@@ -31,13 +31,72 @@
 #include "base.hh"
 #include "gentraverser.hh"
 #include "pickle.hh"
+#include "cac.hh"
+
+//
+// Just 'gCollectTerm' all the entries in it;
+void GTIndexTable::gCollectGTIT()
+{
+  HashNodeLinked *n = getFirst();
+  while (n) {
+    OZ_Term &t = (OZ_Term &) n->key.fint;
+    oz_gCollectTerm(t, t);
+    n = getNext(n);
+  }
+}
+
+//
+void GenTraverser::gCollect()
+{
+  StackEntry *top = getTop();
+  StackEntry *bottom = getBottom();
+  StackEntry *ptr = top;
+
+  //
+  gCollectGTIT();
+
+  //
+  while (--ptr >= bottom) {
+    OZ_Term& t = (OZ_Term&) *ptr;
+    DEREF(t, tPtr, tTag);
+
+    //
+    switch (tTag) {
+    case TAG_GCMARK:
+      //
+      switch (t) {
+      case taggedBATask:
+        --ptr;
+        --ptr;
+        break;
+
+      case taggedSyncTask:
+        break;
+
+      case taggedContTask:
+        {
+          // there are two arguments: processor and its argument;
+          GTAbstractEntity *desc = (GTAbstractEntity *) *(--ptr);
+          desc->gc();
+          --ptr;
+        }
+        break;
+      }
+      break;
+
+    default:
+      oz_gCollectTerm(t, t);
+      break;
+    }
+  }
+}
 
 //
 // A different one because of effeciency reasons. A 'ProcessNodeProc'
 // could well be supplied...
 void GenTraverser::doit()
 {
-  while (!isEmpty()) {
+  while (keepRunning && !isEmpty()) {
     OZ_Term t = get();
     // a push-pop pair for the topmost entry is saved:
   bypass:
@@ -45,7 +104,7 @@ void GenTraverser::doit()
     DEREF(t, tPtr, tTag);
 
     //
-    switch(tTag) {
+    switch (tTag) {
 
     case TAG_SMALLINT:
       processSmallInt(t);
@@ -57,9 +116,9 @@ void GenTraverser::doit()
 
     case TAG_LITERAL:
       {
-        int ind = find(t);
+        int ind = findTerm(t);
         if (ind >= 0) {
-          (void) processRepetition(ind);
+          processRepetition(t, ind);
           continue;
         }
         processLiteral(t);
@@ -68,9 +127,9 @@ void GenTraverser::doit()
 
     case TAG_LTUPLE:
       {
-        int ind = find(t);
+        int ind = findTerm(t);
         if (ind >= 0) {
-          (void) processRepetition(ind);
+          processRepetition(t, ind);
           continue;
         }
 
@@ -79,17 +138,20 @@ void GenTraverser::doit()
           LTuple *l = tagged2LTuple(t);
           ensureFree(1);
           put(l->getTail());
-          t = l->getHead();
-          goto bypass;
+          if (keepRunning) {
+            t = l->getHead();
+            goto bypass;
+          } else
+            put(l->getHead());
         }
         break;
       }
 
     case TAG_SRECORD:
       {
-        int ind = find(t);
+        int ind = findTerm(t);
         if (ind >= 0) {
-          (void) processRepetition(ind);
+          processRepetition(t, ind);
           continue;
         }
 
@@ -109,8 +171,11 @@ void GenTraverser::doit()
             putSync();          // will appear after the arity list;
             put(rec->getArityList());
           }
-          t = rec->getLabel();
-          goto bypass;
+          if (keepRunning) {
+            t = rec->getLabel();
+            goto bypass;
+          } else
+            put(rec->getLabel());
         }
         break;
       }
@@ -121,9 +186,9 @@ void GenTraverser::doit()
 
   case TAG_CONST:
     {
-      int ind = find(t);
+      int ind = findTerm(t);
       if (ind >= 0) {
-        (void) processRepetition(ind);
+        processRepetition(t, ind);
         continue;
       }
 
@@ -168,8 +233,11 @@ void GenTraverser::doit()
       case Co_Chunk:
         if (!processChunk(t, ct)) {
           SChunk *ch = (SChunk *) ct;
-          t = ch->getValue();
-          goto bypass;
+          if (keepRunning) {
+            t = ch->getValue();
+            goto bypass;
+          } else
+            put(ch->getValue());
         }
         break;
 
@@ -177,11 +245,11 @@ void GenTraverser::doit()
         if (!processClass(t, ct)) {
           ObjectClass *cl = (ObjectClass *) ct;
           SRecord *fs = cl->getFeatures();
-          if (fs)
-            t = makeTaggedSRecord(fs);
-          else
-            t = oz_nil();
-          goto bypass;
+          if (keepRunning) {
+            t = fs ? makeTaggedSRecord(fs) : oz_nil();
+            goto bypass;
+          } else
+            put(fs ? makeTaggedSRecord(fs) : oz_nil());
         }
         break;
 
@@ -203,7 +271,26 @@ void GenTraverser::doit()
         break;
 
       case Co_Object:
-        processObject(t, ct);
+        if (!processObject(t, ct)) {
+          //
+          Object *o = (Object *) tagged2Const(t);
+          SRecord *sr = o->getFreeRecord();
+          OZ_Term tsr;
+          if (sr)
+            tsr = makeTaggedSRecord(sr);
+          else
+            tsr = oz_nil();
+          put(tsr);
+          //
+          put(makeTaggedConst(getCell(o->getState())));
+          //
+          OZ_Term tlck;
+          if (o->getLock())
+            tlck = makeTaggedConst(o->getLock());
+          else
+            tlck = oz_nil();
+          put(tlck);
+        }
         break;
 
       case Co_Lock:
@@ -235,35 +322,41 @@ void GenTraverser::doit()
       if (!processFSETValue(t)) {
         ensureFree(1);
         putSync();              // will appear after the list;
-        t = tagged2FSetValue(t)->getKnownInList();
-        goto bypass;
+        if (keepRunning) {
+          t = tagged2FSetValue(t)->getKnownInList();
+          goto bypass;
+        } else
+          put(tagged2FSetValue(t)->getKnownInList());
       }
       break;
 
     case TAG_UVAR:
-      processUVar(tPtr);
+      processUVar(t, tPtr);
       break;
 
     case TAG_CVAR:
       {
-        int ind = find(t);
+        int ind = findTerm(t);
         if (ind >= 0) {
-          (void) processRepetition(ind);
+          processRepetition(t, ind);
           continue;
         }
 
         //
         OZ_Term value;
-        if ((value = processCVar(tPtr))) {
-          t = value;
-          goto bypass;
+        if ((value = processCVar(t, tPtr))) {
+          if (keepRunning) {
+            t = value;
+            goto bypass;
+          } else
+            put(value);
         }
         break;
       }
 
     case TAG_GCMARK:
       //
-      switch(t) {
+      switch (t) {
       case taggedBATask:
         {
           // If the argument is zero then the task is empty:
@@ -271,9 +364,9 @@ void GenTraverser::doit()
 
           //
           if (arg) {
-            MarshalerBinaryAreaProcessor proc =
-              (MarshalerBinaryAreaProcessor) lookupPtr();
-            Assert(proc > (MarshalerBinaryAreaProcessor) 0xf);
+            TraverserBinaryAreaProcessor proc =
+              (TraverserBinaryAreaProcessor) lookupPtr();
+            Assert(proc > (TraverserBinaryAreaProcessor) 0xf);
             // 'proc' is preserved in stack;
             StackEntry *se = putPtrSERef(0);
             putInt(taggedBATask);       // pre-cooked;
@@ -296,6 +389,18 @@ void GenTraverser::doit()
       case taggedSyncTask:
         processSync();
         break;
+
+      case taggedContTask:
+        {
+          GTAbstractEntity *arg;
+          TraverserContProcessor proc;
+
+          //
+          arg = (GTAbstractEntity *) getPtr();
+          proc = (TraverserContProcessor) getPtr();
+          (*proc)(this, arg);
+          break;
+        }
       }
       break;
 
@@ -305,6 +410,9 @@ void GenTraverser::doit()
     }
   }
 }
+
+//
+//
 
 //
 // Code fragments that create particular data structures should be
@@ -320,6 +428,10 @@ void GenTraverser::doit()
 //
 // Handling proper subtrees is done by the builder, symmetrically to the
 // GenTraverser.
+
+//
+// Exception handling for robust unmarshaler
+jmp_buf unmarshal_error_jmp;
 
 //
 // kost@ : there is no 'fsetcore.hh';
@@ -422,7 +534,6 @@ repeat:
       } else {
         //
         ReplaceBTTask1stArg(frame, BT_buildValue, recTerm);
-
         //
         OZ_Term *args = rec->getRef();
         EnsureBTSpace(frame, arity);
@@ -650,6 +761,52 @@ repeat:
       goto repeat;
     }
 
+  case BT_takeObjectLock:
+    ReplaceBTTask1stArg(frame, BT_takeObjectState, value);
+    break;
+
+  case BT_takeObjectLockMemo:
+    ReplaceBTTask1stArg(frame, BT_takeObjectStateMemo, value);
+    break;
+
+  case BT_takeObjectState:
+    ReplaceBTTask2ndArg(frame, BT_makeObject, value);
+    break;
+
+  case BT_takeObjectStateMemo:
+    ReplaceBTTask2ndArg(frame, BT_makeObjectMemo, value);
+    break;
+
+  case BT_makeObjectMemo:
+    doMemo = OK;
+  case BT_makeObject:
+    {
+      GetBTTaskArg1(frame, OZ_Term, lockTerm);
+      GetBTTaskArg2(frame, OZ_Term, state);
+      DiscardBTFrame(frame);
+      //
+      GetBTFramePtr1(frame, GName*, gname);
+
+      // 'value' is the free record:
+      SRecord *feat = oz_isNil(value) ?
+        (SRecord *) NULL : tagged2SRecord(value);
+      OzLock *lock = oz_isNil(lockTerm) ?
+        (OzLock *) NULL : (OzLock *) tagged2Const(lockTerm);
+      Object *o = new Object(oz_rootBoard(), gname, state, feat, lock);
+      OZ_Term objTerm = makeTaggedConst(o);
+      if (doMemo) {
+        GetBTFrameArg2(frame, int, memoIndex);
+        set(objTerm, memoIndex);
+        doMemo = NO;
+      }
+      DiscardBTFrame(frame);
+
+      //
+      value = objTerm;
+      GetBTTaskTypeNoDecl(frame, type);
+      goto repeat;
+    }
+
   case BT_procFile:
     ReplaceBTTask1stArg(frame, BT_proc, value);
     break;
@@ -742,6 +899,12 @@ repeat:
       goto repeat;
     }
 
+    //
+    // 'BT_abstractEntity' is decomposed by 'buildAbstractEntity':
+  case BT_abstractEntity:
+    OZ_error("Builder: never fetch BT_abstractEntity by 'buildValue?!");
+    break;
+
   //
   // 'BT_binary' is transient here: it must be either saved or
   // discarded if it's already done;
@@ -827,8 +990,9 @@ BTFrame* Builder::liftTask(int sz)
   case BT_fsetvalue:
   case BT_fsetvalueMemo:
   case BT_closureElem:
+  case BT_abstractEntity:
   case BT_nop:
-    CopyBTFrame(frame ,newTop);
+    CopyBTFrame(frame, newTop);
     break;
 
     // single frame iterate:
@@ -857,11 +1021,22 @@ BTFrame* Builder::liftTask(int sz)
   case BT_takeRecordArityMemo:
   case BT_makeRecordMemoSync:
   case BT_makeRecordSync:
+  case BT_takeObjectLock:
+  case BT_takeObjectLockMemo:
+  case BT_takeObjectState:
+  case BT_takeObjectStateMemo:
   case BT_binary_getValue:
   case BT_binary_getValueSync:
     CopyBTFrame(frame, newTop);
     CopyBTFrame(frame, newTop);
     break;
+
+    // two frames iterate:
+  case BT_makeObjectMemo:
+  case BT_makeObject:
+    CopyBTFrame(frame, newTop);
+    CopyBTFrame(frame, newTop);
+    goto repeat;
 
     // four frames:
   case BT_procFile:
@@ -926,6 +1101,7 @@ BTFrame* Builder::findBinary(BTFrame *frame)
   case BT_fsetvalue:
   case BT_fsetvalueMemo:
   case BT_closureElem:
+  case BT_abstractEntity:
   case BT_nop:
     // single frame iterate:
   case BT_spointer_iterate:
@@ -948,6 +1124,12 @@ BTFrame* Builder::findBinary(BTFrame *frame)
   case BT_takeRecordArityMemo:
   case BT_makeRecordMemoSync:
   case BT_makeRecordSync:
+  case BT_takeObjectLock:
+  case BT_takeObjectLockMemo:
+  case BT_takeObjectState:
+  case BT_takeObjectStateMemo:
+  case BT_makeObjectMemo:
+  case BT_makeObject:
   case BT_binary_getValue:
   case BT_binary_getValueSync:
     NextBTFrame(frame);

@@ -35,7 +35,6 @@
 #include "var_ext.hh"
 #include "var_obj.hh"
 #include "dpMarshaler.hh"
-#include "newmarshaler.hh"
 #include "unify.hh"
 #include "var_simple.hh"
 #include "var_future.hh"
@@ -149,11 +148,11 @@ void ProxyVar::gCollectRecurseV(void)
 
 static
 void sendSurrender(BorrowEntry *be,OZ_Term val){
-  be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  marshal_M_SURRENDER(bs,na->index,myDSite,val);
-  SendTo(na->site,bs,M_SURRENDER,na->site,na->index);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_SURRENDER(na->index,myDSite,val);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  SendTo(na->site,msgC,3);
 }
 
 Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit,TaggedRef term){
@@ -311,20 +310,22 @@ void ManagerVar::gCollectRecurseV(void)
 
 static void sendAcknowledge(DSite* sd,int OTI){
   PD((PD_VAR,"sendAck %s",sd->stringrep()));
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
-  marshal_M_ACKNOWLEDGE(bs,myDSite,OTI);
-  SendTo(sd,bs,M_ACKNOWLEDGE,myDSite,OTI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
+  msgC->put_M_ACKNOWLEDGE(myDSite,OTI);
+
+  SendTo(sd,msgC,3);
 }
 
 // extern
 void sendRedirect(DSite* sd,int OTI,TaggedRef val)
 {
   PD((PD_VAR,"sendRedirect %s",sd->stringrep()));
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
-  marshal_M_REDIRECT(bs,myDSite,OTI,val);
-  SendTo(sd,bs,M_REDIRECT,myDSite,OTI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
+  msgC->put_M_REDIRECT(myDSite,OTI,val);
+
+  SendTo(sd,msgC,3);
 }
 
 inline Bool queueTrigger(DSite* s){
@@ -400,10 +401,11 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
   return bindVInternal(lPtr,r,myDSite);}
 
 void varGetStatus(DSite* site,int OTI, TaggedRef tr){
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   OT->getOwner(OTI)->getOneCreditOwner();
-  marshal_M_SENDSTATUS(bs,myDSite,OTI,tr);
-  SendTo(site,bs,M_SENDSTATUS,myDSite,OTI);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+  msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
+
+  SendTo(site,msgC,3);
 }
 
 void ProxyVar::receiveStatus(TaggedRef tr){
@@ -444,36 +446,36 @@ void requested(TaggedRef*);
 
 /* --- Marshal --- */
 
-void ManagerVar::marshal(MsgBuffer *bs)
+void ManagerVar::marshal(ByteBuffer *bs)
 {
   int i=getIndex();
   PD((MARSHAL,"var manager o:%d",i));
   if((USE_ALT_VAR_PROTOCOL) && globalRedirectFlag==AUT_REG){
     if(isFuture()){
-      marshalOwnHead(DIF_FUTURE_AUTO,i,bs);}
+      marshalOwnHead(bs, DIF_FUTURE_AUTO, i);}
     else{
-      marshalOwnHead(DIF_VAR_AUTO,i,bs);}
+      marshalOwnHead(bs, DIF_VAR_AUTO, i);}
     registerSite(bs->getSite());
     return;}
   if(isFuture()){
-    marshalOwnHead(DIF_FUTURE,i,bs);}
+    marshalOwnHead(bs, DIF_FUTURE, i);}
   else{
-    marshalOwnHead(DIF_VAR,i,bs);}
+    marshalOwnHead(bs, DIF_VAR, i);}
 }
 
 //
-void ProxyVar::marshal(MsgBuffer *bs)
+void ProxyVar::marshal(ByteBuffer *bs)
 {
   DSite *sd=bs->getSite();
   int i=getIndex();
   PD((MARSHAL,"var proxy o:%d",i));
   if (sd && borrowTable->getOriginSite(i) == sd) {
-    marshalToOwner(i, bs);
+    marshalToOwner(bs, i);
   } else {
     if (isFuture()) {
-      marshalBorrowHead(DIF_FUTURE, i, bs);
+      marshalBorrowHead(bs, DIF_FUTURE, i);
     } else {
-      marshalBorrowHead(DIF_VAR, i, bs);
+      marshalBorrowHead(bs, DIF_VAR, i);
     }
   }
 }
@@ -492,20 +494,16 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
 }
 
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs)
+Bool marshalVariable(TaggedRef *tPtr, ByteBuffer *bs)
 {
   const TaggedRef var = *tPtr;
   if (oz_isManagerVar(var)) {
-    if (!bs->globalize()) return TRUE;
     oz_getManagerVar(var)->marshal(bs);
   } else if (oz_isProxyVar(var)) {
-    if (!bs->globalize()) return TRUE;
     oz_getProxyVar(var)->marshal(bs);
-  } else if (oz_isObjectVar(var)) {
-    Assert(bs->globalize());
-    oz_getObjectVar(var)->marshal(bs);
+  } else if (oz_isLazyVar(var)) {
+    oz_getLazyVar(var)->marshal(bs);
   } else if (oz_isFree(var) || isFuture(var)) {
-    if (!bs->globalize()) return TRUE;
     Assert(perdioInitialized);
     globalizeFreeVariable(tPtr)->marshal(bs);
   } else {
@@ -514,11 +512,22 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs)
   return TRUE;
 }
 
-Bool triggerVariableImpl(TaggedRef *tPtr){
+// Return 'TRUE' if successful (that is, the variable is bound)
+Bool triggerVariable(TaggedRef *tPtr){
+  Assert(tPtr!=NULL);
   const TaggedRef var = *tPtr;
-  if(isFuture(var)){
-    return ((Future*) oz_getVar(tPtr))->kick(tPtr);}
-  return FALSE;
+  if (isFuture(var)) {
+    switch (((Future*) oz_getVar(tPtr))->kick(tPtr)) {
+    case PROCEED: return (TRUE);
+    case SUSPEND: return (FALSE);
+      // kost@ : I dunno how to handle it. Those who introduced
+      // 'RAISE' as a return value of 'Future::kick' should have fixed
+      // this part as well.
+    case RAISE: return (FALSE);
+    }
+  } else {
+    return (FALSE);
+  }
 }
 
 /* --- Unmarshal --- */
@@ -526,21 +535,22 @@ Bool triggerVariableImpl(TaggedRef *tPtr){
 static void sendRegister(BorrowEntry *be) {
   PD((PD_VAR,"sendRegister"));
   Assert(creditSiteOut == NULL);
-  be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  marshal_M_REGISTER(bs,na->index,myDSite);
-  SendTo(na->site,bs,M_REGISTER,na->site,na->index);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_REGISTER(na->index,myDSite);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  SendTo(na->site,msgC,3);
 }
 
 static void sendDeRegister(BorrowEntry *be) {
   PD((PD_VAR,"sendDeRegister"));
   Assert(creditSiteOut == NULL);
-  be->getOneMsgCredit();
+
   NetAddress *na = be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  marshal_M_DEREGISTER(bs,na->index,myDSite);
-  SendTo(na->site,bs,M_DEREGISTER,na->site,na->index);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_DEREGISTER(na->index,myDSite);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  SendTo(na->site,msgC,3);
 }
 
 void ProxyVar::nowGarbage(BorrowEntry* be){
@@ -549,7 +559,7 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
 
 #ifdef USE_FAST_UNMARSHALER
 // extern
-OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
+OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto){
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
@@ -585,7 +595,7 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
 }
 #else
 // extern
-OZ_Term unmarshalVarRobustImpl(MsgBuffer* bs, Bool isFuture,
+OZ_Term unmarshalVarRobust(MarshalerBuffer* bs, Bool isFuture,
                              Bool isAuto, int *error){
   OB_Entry *ob;
   int bi;
@@ -626,11 +636,11 @@ OZ_Term unmarshalVarRobustImpl(MsgBuffer* bs, Bool isFuture,
 
 static
 void sendGetStatus(BorrowEntry *be){
-  be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  marshal_M_GETSTATUS(bs,myDSite,na->index);
-  SendTo(na->site,bs,M_GETSTATUS,na->site,na->index);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_GETSTATUS(myDSite,na->index);
+  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
+  SendTo(na->site,msgC,3);
 }
 
 OZ_Term ProxyVar::statusV()
@@ -673,21 +683,7 @@ void oz_dpvar_localize(TaggedRef *vPtr) {
   oz_getManagerVar(*vPtr)->localize(vPtr);
 }
 
-
 // FAILURE structure fundamentals
-
-// mm3 tPtr comes from DEREF(_,_,tPtr)
-
-VarKind classifyVarLim(TaggedRef tr){
-  if(oz_isProxyVar(tr)){
-    return VAR_PROXY;}
-  if(oz_isManagerVar(tr)){
-    return VAR_MANAGER;}
-  if(oz_isObjectVar(tr)){
-    return VAR_OBJECT;}
-  Assert(0);
-  return VAR_FREE;
-}
 
 VarKind classifyVar(TaggedRef* tPtr){
   TaggedRef tr= *tPtr;
@@ -695,8 +691,8 @@ VarKind classifyVar(TaggedRef* tPtr){
     return VAR_PROXY;}
   if(oz_isManagerVar(tr)){
     return VAR_MANAGER;}
-  if(oz_isObjectVar(tr)){
-    return VAR_OBJECT;}
+  if(oz_isLazyVar(tr)){
+    return VAR_LAZY;}
   if(oz_isFree(tr)){
     return VAR_FREE;}
   if(isFuture(tr)){
@@ -711,8 +707,8 @@ EntityInfo* varGetEntityInfo(TaggedRef* tPtr){
     return oz_getManagerVar(*tPtr)->getInfo();
   case VAR_PROXY:
     return oz_getProxyVar(*tPtr)->getInfo();
-  case VAR_OBJECT:
-    return oz_getObjectVar(*tPtr)->getInfo();
+  case VAR_LAZY:
+    return oz_getLazyVar(*tPtr)->getInfo();
   default:
     Assert(0);}
   return NULL;}
@@ -726,8 +722,8 @@ EntityInfo* varMakeEntityInfo(TaggedRef* tPtr){
   case VAR_PROXY:
     oz_getProxyVar(*tPtr)->setInfo(ei);
     return ei;
-  case VAR_OBJECT:
-    oz_getObjectVar(*tPtr)->setInfo(ei);
+  case VAR_LAZY:
+    oz_getLazyVar(*tPtr)->setInfo(ei);
     return ei;
   default:
     Assert(0);}
@@ -828,8 +824,8 @@ VarKind typeOfBorrowVar(BorrowEntry* b){
   switch(ev->getIdV()){
   case OZ_EVAR_PROXY:
     return VAR_PROXY;
-  case OZ_EVAR_OBJECT:
-    return VAR_OBJECT;
+  case OZ_EVAR_LAZY:
+    return VAR_LAZY;
   default:
     Assert(0);}
   return VAR_PROXY; // stupid compiler
@@ -842,8 +838,8 @@ Bool errorIgnoreVar(BorrowEntry* b){
     ie = GET_VAR(b,Proxy)->getInfo();
     if(ie==NULL) return TRUE;
     return FALSE;
-  case VAR_OBJECT:
-    ie= GET_VAR(b,Object)->getInfo();
+  case VAR_LAZY:
+    ie= GET_VAR(b, Lazy)->getInfo();
     if(ie==NULL) return TRUE;
     return FALSE;
   default:
@@ -860,10 +856,10 @@ void maybeUnaskVar(BorrowEntry* b){
     varAdjustPOForFailure(GET_VAR(b,Proxy)->getIndex(),
                           ie->getEntityCond(),ENTITY_NORMAL);
     return;
-  case VAR_OBJECT:{
-    ie= GET_VAR(b,Object)->getInfo();
+  case VAR_LAZY:{
+    ie = GET_VAR(b, Lazy)->getInfo();
     if(ie==NULL) return;
-    int i=GET_VAR(b,Object)->getObject()->getIndex();
+    int i = GET_VAR(b, Lazy)->getIndex();
     varAdjustPOForFailure(i,ie->getEntityCond(),ENTITY_NORMAL);
     return;}
   default:
@@ -885,7 +881,7 @@ void ManagerVar::wakeAll(){
 }
 
 void recDeregister(TaggedRef tr,DSite* s){
-  OZ_Term vars=digOutVars(tr);
+  OZ_Term vars = extractVars(tr);
   while(!oz_isNil(vars)){
     OZ_Term t=oz_head(vars);
     DEREF(t,tPtr,_2);

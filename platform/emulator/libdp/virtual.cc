@@ -33,7 +33,7 @@
 #ifdef VIRTUALSITES
 
 #include "perdio.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 #include "vs_mailbox.hh"
 #include "vs_msgbuffer.hh"
 #include "vs_comm.hh"
@@ -50,8 +50,8 @@
 //
 // Free bodies of "message buffers" (message buffers are used for
 // storing incoming/outgoing messages while marshaling&sending;
-static FreeListDataManager<VSMsgBufferOwned> freeMsgBufferPool(malloc);
-static VSMsgBufferImported *myVSMsgBufferImported;
+static FreeListDataManager<VSMarshalerBufferOwned> freeMarshalerBufferPool(malloc);
+static VSMarshalerBufferImported *myVSMarshalerBufferImported;
 
 //
 // Free bodies of "messages" (which are used for keeping unsent
@@ -167,12 +167,12 @@ void zeroRefsToVirtualImpl(VirtualSite *vs)
 // The 'mt', 'storeSite' and 'storeIndex' parameters are used whenever a
 // communication layer reports a problem with a message which has
 // been previously accepted for delivery;
-int sendTo_VirtualSiteImpl(VirtualSite *vs, MsgBuffer *mb,
+int sendTo_VirtualSiteImpl(VirtualSite *vs, MarshalerBuffer *mb,
                            MessageType mt, DSite *storeSite, int storeIndex)
 {
   DebugVSMsgs(vsSRCounter.send(););
-  return (vs->sendTo((VSMsgBufferOwned *) mb, mt, storeSite, storeIndex,
-                     &freeMsgBufferPool));
+  return (vs->sendTo((VSMarshalerBufferOwned *) mb, mt, storeSite, storeIndex,
+                     &freeMarshalerBufferPool));
 }
 
 //
@@ -259,27 +259,27 @@ void discoveryPerm_VirtualSiteImpl(VirtualSite *vs)
 // This method gives us a virtual sites message buffer without
 // the header;
 static inline
-VSMsgBufferOwned* getBasicVirtualMsgBufferImpl(DSite* site)
+VSMarshalerBufferOwned* getBasicVirtualMarshalerBufferImpl(DSite* site)
 {
-  VSMsgBufferOwned *voidBUF = freeMsgBufferPool.allocate();
-  VSMsgBufferOwned *buf =
-    new (voidBUF) VSMsgBufferOwned(myVSChunksPoolManager, site);
+  VSMarshalerBufferOwned *voidBUF = freeMarshalerBufferPool.allocate();
+  VSMarshalerBufferOwned *buf =
+    new (voidBUF) VSMarshalerBufferOwned(myVSChunksPoolManager, site);
   return (buf);
 }
 
 //
 // The non-interface method: a virtual message buffer that is not
 // supposed for the actual transmitting (aka for 'BImarshalerPerf');
-MsgBuffer* getCoreVirtualMsgBuffer(DSite* site)
+MarshalerBuffer* getCoreVirtualMarshalerBuffer(DSite* site)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(site);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(site);
   return (buf);                 // upcast (actually, even 2 steps);
 }
 
 //
 // The header is decomposed by the 'readVSMessges';
 static inline
-void putVSMsgHeader(VSMsgBufferOwned *buf, VSMsgType type, DSite *dest)
+void putVSMsgHeader(VSMarshalerBufferOwned *buf, VSMsgType type, DSite *dest)
 {
   Assert(sizeof(BYTE) > ((int) VS_M_LAST)/256);
   buf->put(type);
@@ -291,19 +291,19 @@ void putVSMsgHeader(VSMsgBufferOwned *buf, VSMsgType type, DSite *dest)
   VirtualSite *vs = dest->getVirtualSite();
   int vsIndex = vs->getVSIndex();
   if (vsIndex >= 0) {
-    marshalNumber((unsigned int) vsIndex, buf); // why bother with shorts?
+    marshalNumber(buf, (unsigned int) vsIndex); // why bother with shorts?
   } else {
     // '-1' takes some place but the whole thing happens at least seldom;
-    marshalNumber((unsigned int) -1, buf);
+    marshalNumber(buf, (unsigned int) -1);
     myDSite->marshalDSite(buf);
   }
 }
 
 //
 // The interface method: a message buffer for perdio messages;
-MsgBuffer* getVirtualMsgBufferImpl(DSite* dest)
+MarshalerBuffer* getVirtualMarshalerBufferImpl(DSite* dest)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(dest);
   putVSMsgHeader(buf, VS_M_PERDIO, dest);
   return (buf);                 // upcast (actually, even 2 steps);
 }
@@ -316,9 +316,9 @@ MsgBuffer* getVirtualMsgBufferImpl(DSite* dest)
 // 'init' message does not contain the header (it does not need to nor
 // it can since the destination site is unknown (an may be even is not
 // existing yet));
-VSMsgBufferOwned* composeVSInitMsg()
+VSMarshalerBufferOwned* composeVSInitMsg()
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl((DSite *) 0);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl((DSite *) 0);
   //
   Assert(sizeof(BYTE) > ((int) VS_M_LAST)/256);
   buf->put(VS_M_INIT_VS);
@@ -330,9 +330,9 @@ VSMsgBufferOwned* composeVSInitMsg()
 //
 // It contains the destination site, so that site can compare itself
 // with the marshaled site and report an error if they mismatch;
-VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *dest)
+VSMarshalerBufferOwned* composeVSSiteIsAliveMsg(DSite *dest)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(dest);
   //
   putVSMsgHeader(buf, VS_M_SITE_IS_ALIVE, dest);
   dest->marshalDSite(buf);
@@ -341,9 +341,9 @@ VSMsgBufferOwned* composeVSSiteIsAliveMsg(DSite *dest)
 }
 
 //
-VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *dest, VirtualSite *vs)
+VSMarshalerBufferOwned* composeVSSiteAliveMsg(DSite *dest, VirtualSite *vs)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(dest);
   //
   putVSMsgHeader(buf, VS_M_SITE_ALIVE, dest);
   //
@@ -355,9 +355,9 @@ VSMsgBufferOwned* composeVSSiteAliveMsg(DSite *dest, VirtualSite *vs)
 }
 
 //
-VSMsgBufferOwned* composeVSSiteDeadMsg(DSite *dest, DSite *ds)
+VSMarshalerBufferOwned* composeVSSiteDeadMsg(DSite *dest, DSite *ds)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(dest);
   //
   putVSMsgHeader(buf, VS_M_SITE_DEAD, dest);
   ds->marshalDSite(buf);
@@ -366,31 +366,31 @@ VSMsgBufferOwned* composeVSSiteDeadMsg(DSite *dest, DSite *ds)
 }
 
 //
-VSMsgBufferOwned* composeVSYourIndexHereMsg(DSite *dest, int index)
+VSMarshalerBufferOwned* composeVSYourIndexHereMsg(DSite *dest, int index)
 {
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(dest);
   //
   putVSMsgHeader(buf, VS_M_YOUR_INDEX_HERE, dest);
   //
-  marshalNumber((unsigned int) index, buf);
+  marshalNumber(buf, (unsigned int) index);
   return (buf);
 }
 
 //
-VSMsgBufferOwned* composeVSUnusedShmIdMsg(DSite *dest, key_t shmid)
+VSMarshalerBufferOwned* composeVSUnusedShmIdMsg(DSite *dest, key_t shmid)
 {
   Assert(sizeof(key_t) <= sizeof(unsigned int));
-  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(dest);
+  VSMarshalerBufferOwned *buf = getBasicVirtualMarshalerBufferImpl(dest);
   //
   putVSMsgHeader(buf, VS_M_UNUSED_SHMID, dest);
   //
   myDSite->marshalDSite(buf);
-  marshalNumber((unsigned int) shmid, buf);
+  marshalNumber(buf, (unsigned int) shmid);
   return (buf);
 }
 
 //
-VSMsgType getVSMsgType(VSMsgBufferImported *mb)
+VSMsgType getVSMsgType(VSMarshalerBufferImported *mb)
 {
   Assert(sizeof(BYTE) > ((int) VS_M_LAST)/256);
   return ((VSMsgType) mb->get());
@@ -398,13 +398,13 @@ VSMsgType getVSMsgType(VSMsgBufferImported *mb)
 
 #ifdef USE_FAST_UNMARSHALER
 //
-void decomposeVSInitMsg(VSMsgBuffer *mb, DSite* &s)
+void decomposeVSInitMsg(VSMarshalerBuffer *mb, DSite* &s)
 {
   s = unmarshalDSite(mb);
 }
 #else
 //
-void decomposeVSInitMsgRobust(VSMsgBuffer *mb, DSite* &s, int *error)
+void decomposeVSInitMsgRobust(VSMarshalerBuffer *mb, DSite* &s, int *error)
 {
   s = unmarshalDSiteRobust(mb, error);
 }
@@ -412,13 +412,13 @@ void decomposeVSInitMsgRobust(VSMsgBuffer *mb, DSite* &s, int *error)
 
 #ifdef USE_FAST_UNMARSHALER
 //
-void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &src)
+void decomposeVSSiteIsAliveMsg(VSMarshalerBuffer *mb, DSite* &src)
 {
   src = unmarshalDSite(mb);
 }
 #else
 //
-void decomposeVSSiteIsAliveMsgRobust(VSMsgBuffer *mb, DSite* &src,int *error)
+void decomposeVSSiteIsAliveMsgRobust(VSMarshalerBuffer *mb, DSite* &src,int *error)
 {
   src = unmarshalDSiteRobust(mb, error);
 }
@@ -426,7 +426,7 @@ void decomposeVSSiteIsAliveMsgRobust(VSMsgBuffer *mb, DSite* &src,int *error)
 
 #ifdef USE_FAST_UNMARSHALER
 //
-void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs)
+void decomposeVSSiteAliveMsg(VSMarshalerBuffer *mb, DSite* &s, VirtualSite* &vs)
 {
   s = unmarshalDSite(mb);
   Assert(s->virtualComm());
@@ -435,7 +435,7 @@ void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs)
 }
 #else
 //
-void decomposeVSSiteAliveMsgRobust(VSMsgBuffer *mb, DSite* &s,
+void decomposeVSSiteAliveMsgRobust(VSMarshalerBuffer *mb, DSite* &s,
                              VirtualSite* &vs, int *error)
 {
   int e1,e2;
@@ -451,10 +451,10 @@ void decomposeVSSiteAliveMsgRobust(VSMsgBuffer *mb, DSite* &s,
 // 'dvs' may be zero - when the site has been recognized locally as
 // dead and GC'ed after that;
 #ifndef USE_FAST_UNMARSHALER
-void decomposeVSSiteDeadMsgRobust(VSMsgBuffer *mb, DSite* &ds,
+void decomposeVSSiteDeadMsgRobust(VSMarshalerBuffer *mb, DSite* &ds,
                                   VirtualSite* &dvs, int *error)
 #else
-void decomposeVSSiteDeadMsg(VSMsgBuffer *mb, DSite* &ds, VirtualSite* &dvs)
+void decomposeVSSiteDeadMsg(VSMarshalerBuffer *mb, DSite* &ds, VirtualSite* &dvs)
 #endif
 {
   // Note that the 's' is not marked in the stream as 'PERM',
@@ -481,12 +481,12 @@ void decomposeVSSiteDeadMsg(VSMsgBuffer *mb, DSite* &ds, VirtualSite* &dvs)
 }
 
 #ifdef USE_FAST_UNMARSHALER
-void decomposeVSYourIndexHereMsg(VSMsgBuffer *mb, int &index)
+void decomposeVSYourIndexHereMsg(VSMarshalerBuffer *mb, int &index)
 {
   index = (int) unmarshalNumber(mb);
 }
 #else
-void decomposeVSYourIndexHereMsgRobust(VSMsgBuffer *mb, int &index, int *error)
+void decomposeVSYourIndexHereMsgRobust(VSMarshalerBuffer *mb, int &index, int *error)
 {
   index = (int) unmarshalNumberRobust(mb, error);
 }
@@ -494,7 +494,7 @@ void decomposeVSYourIndexHereMsgRobust(VSMsgBuffer *mb, int &index, int *error)
 
 #ifdef USE_FAST_UNMARSHALER
 //
-void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid)
+void decomposeVSUnusedShmIdMsg(VSMarshalerBuffer *mb, DSite* &s, key_t &shmid)
 {
   Assert(sizeof(key_t) <= sizeof(unsigned int));
   s = unmarshalDSite(mb);
@@ -502,7 +502,7 @@ void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid)
 }
 #else
 //
-void decomposeVSUnusedShmIdMsgRobust(VSMsgBuffer *mb, DSite* &s,
+void decomposeVSUnusedShmIdMsgRobust(VSMarshalerBuffer *mb, DSite* &s,
                                    key_t &shmid, int *error)
 {
   Assert(sizeof(key_t) <= sizeof(unsigned int));
@@ -554,45 +554,45 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       DSite *sS;
 
       //
-      myVSMsgBufferImported = new (myVSMsgBufferImported)
-        VSMsgBufferImported(importedVSChunksPoolManager,
+      myVSMarshalerBufferImported = new (myVSMarshalerBufferImported)
+        VSMarshalerBufferImported(importedVSChunksPoolManager,
                             msgChunkPoolKey, chunkNumber);
       //
-      myVSMsgBufferImported->unmarshalBegin();
+      myVSMarshalerBufferImported->unmarshalBegin();
 
       //
-      if (myVSMsgBufferImported->isVoid()) {
+      if (myVSMarshalerBufferImported->isVoid()) {
         // We cannot do much here, since it's not even known where the
         // message came from. However, we *must* guarantee that this
         // message loss is NOT due to resource problems; otherwise the
         // PERDIO layer will be confused;
-        myVSMsgBufferImported->dropVoid();
-        myVSMsgBufferImported->cleanup();
+        myVSMarshalerBufferImported->dropVoid();
+        myVSMarshalerBufferImported->cleanup();
         // next message (if any could be processed??)
         continue;
       }
       //
-      msgType = getVSMsgType(myVSMsgBufferImported);
+      msgType = getVSMsgType(myVSMarshalerBufferImported);
 
       //
       // Take the site info out of the stream:
 #ifndef USE_FAST_UNMARSHALER
-      vsIndex = (int) unmarshalNumberRobust(myVSMsgBufferImported, &e1);
+      vsIndex = (int) unmarshalNumberRobust(myVSMarshalerBufferImported, &e1);
 #else
-      vsIndex = (int) unmarshalNumber(myVSMsgBufferImported);
+      vsIndex = (int) unmarshalNumber(myVSMarshalerBufferImported);
 #endif
       if (vsIndex >= 0) {
         sVS = vsTable[vsIndex];
         sS = sVS->getSite();
         //
-        myVSMsgBufferImported->setSite(sS);
-        myVSMsgBufferImported->setKeysRegister(sVS->getKeysRegister());
+        myVSMarshalerBufferImported->setSite(sS);
+        myVSMarshalerBufferImported->setKeysRegister(sVS->getKeysRegister());
         vsResourceManager.startMsgReceived(sVS);
       } else {
 #ifndef USE_FAST_UNMARSHALER
-        sS = unmarshalDSiteRobust(myVSMsgBufferImported, &e2);
+        sS = unmarshalDSiteRobust(myVSMarshalerBufferImported, &e2);
 #else
-        sS = unmarshalDSite(myVSMsgBufferImported);
+        sS = unmarshalDSite(myVSMarshalerBufferImported);
 #endif
         sVS = sS->getVirtualSite();
         //
@@ -600,15 +600,15 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
         // message buffer, notify the resource manager that we are
         // unmarshalling a message, and then - compose the 'your index
         // here' message:
-        myVSMsgBufferImported->setSite(sS);
-        myVSMsgBufferImported->setKeysRegister(sVS->getKeysRegister());
+        myVSMarshalerBufferImported->setSite(sS);
+        myVSMarshalerBufferImported->setKeysRegister(sVS->getKeysRegister());
         vsResourceManager.startMsgReceived(sVS);
 
         //
         // Now, assign the index and send it out:
         int vsIndex = vsTable.put(sVS);
         //
-        VSMsgBufferOwned *bs = composeVSYourIndexHereMsg(sS, vsIndex);
+        VSMarshalerBufferOwned *bs = composeVSYourIndexHereMsg(sS, vsIndex);
         if (sendTo_VirtualSiteImpl(sVS, bs, /* messageType */ M_NONE,
                                    /* storeSite */ (DSite *) 0,
                                    /* storeIndex */ 0) != ACCEPTED)
@@ -622,7 +622,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
         //
         DebugVSMsgs(vsSRCounter.recv(););
         fflush(stdout);
-        msgReceived(myVSMsgBufferImported);
+        msgReceived(myVSMarshalerBufferImported);
         fflush(stdout);
         break;
 
@@ -640,14 +640,14 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
           //
           // 'myS' is supposed to be 'myDSite' - otherwise it is dead;
 #ifndef USE_FAST_UNMARSHALER
-          decomposeVSSiteIsAliveMsgRobust(myVSMsgBufferImported, myS, &e3);
+          decomposeVSSiteIsAliveMsgRobust(myVSMarshalerBufferImported, myS, &e3);
 #else
-          decomposeVSSiteIsAliveMsg(myVSMsgBufferImported, myS);
+          decomposeVSSiteIsAliveMsg(myVSMarshalerBufferImported, myS);
 #endif
 
           //
           if (myS == myDSite) {
-            VSMsgBufferOwned *bs = composeVSSiteAliveMsg(sS, sVS);
+            VSMarshalerBufferOwned *bs = composeVSSiteAliveMsg(sS, sVS);
             if (sendTo_VirtualSiteImpl(sVS, bs, /* messageType */ M_NONE,
                                        /* storeSite */ (DSite *) 0,
                                        /* storeIndex */ 0) != ACCEPTED)
@@ -659,7 +659,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
             // processes with the same pid. Pid"s are the same because
             // of the mailboxes naming scheme - two keys can be equal
             // only if their sites' pid"s are equal.
-            VSMsgBufferOwned *bs = composeVSSiteDeadMsg(sS, myS);
+            VSMarshalerBufferOwned *bs = composeVSSiteDeadMsg(sS, myS);
             if (!myS->isPerm() && myS->isConnected()) {
               VirtualSite *vs = myS->getVirtualSite();
               Assert(vs);
@@ -678,9 +678,9 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
           DSite *s;
           VirtualSite *vs;
 #ifndef USE_FAST_UNMARSHALER
-          decomposeVSSiteAliveMsgRobust(myVSMsgBufferImported, s, vs, &e3);
+          decomposeVSSiteAliveMsgRobust(myVSMarshalerBufferImported, s, vs, &e3);
 #else
-          decomposeVSSiteAliveMsg(myVSMsgBufferImported, s, vs);
+          decomposeVSSiteAliveMsg(myVSMarshalerBufferImported, s, vs);
 #endif
           s->siteAlive();
           break;
@@ -691,9 +691,9 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
           DSite *ds;
           VirtualSite *dvs;
 #ifndef USE_FAST_UNMARSHALER
-          decomposeVSSiteDeadMsgRobust(myVSMsgBufferImported, ds, dvs, &e3);
+          decomposeVSSiteDeadMsgRobust(myVSMarshalerBufferImported, ds, dvs, &e3);
 #else
-          decomposeVSSiteDeadMsg(myVSMsgBufferImported, ds, dvs);
+          decomposeVSSiteDeadMsg(myVSMarshalerBufferImported, ds, dvs);
 #endif
           // effectively dead;
           if (dvs)
@@ -707,9 +707,9 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
         {
           int index;
 #ifndef USE_FAST_UNMARSHALER
-          decomposeVSYourIndexHereMsgRobust(myVSMsgBufferImported, index, &e3);
+          decomposeVSYourIndexHereMsgRobust(myVSMarshalerBufferImported, index, &e3);
 #else
-          decomposeVSYourIndexHereMsg(myVSMsgBufferImported, index);
+          decomposeVSYourIndexHereMsg(myVSMarshalerBufferImported, index);
 #endif
           sVS->setVSIndex(index);
           break;
@@ -720,9 +720,9 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
           DSite *s;
           key_t shmid;
 #ifndef USE_FAST_UNMARSHALER
-          decomposeVSUnusedShmIdMsgRobust(myVSMsgBufferImported, s, shmid, &e3);
+          decomposeVSUnusedShmIdMsgRobust(myVSMarshalerBufferImported, s, shmid, &e3);
 #else
-          decomposeVSUnusedShmIdMsg(myVSMsgBufferImported, s, shmid);
+          decomposeVSUnusedShmIdMsg(myVSMarshalerBufferImported, s, shmid);
 #endif
           importedVSChunksPoolManager->removeSegmentManager(shmid);
           // kill the segment from the virtual site's 'keys' register:
@@ -736,9 +736,9 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       }
 
       //
-      myVSMsgBufferImported->unmarshalEnd();
-      myVSMsgBufferImported->releaseChunks();
-      myVSMsgBufferImported->cleanup();
+      myVSMarshalerBufferImported->unmarshalEnd();
+      myVSMarshalerBufferImported->releaseChunks();
+      myVSMarshalerBufferImported->cleanup();
 
       //
       vsResourceManager.finishMsgReceived();
@@ -785,7 +785,7 @@ static Bool processMessageQueue(unsigned long clock, void *sqi)
     Assert(vsm);
     while (vsm) {
       // spin up to the first message that cannot be delivered;
-      if (vs->tryToSendToAgain(vsm, &freeMsgBufferPool)) {
+      if (vs->tryToSendToAgain(vsm, &freeMarshalerBufferPool)) {
         vsm = vs->getNext();
       } else {
         siteReady = FALSE;
@@ -845,13 +845,13 @@ static Bool processGCMsgChunks(unsigned long clock, void *poi)
 }
 
 //
-void dumpVirtualMsgBufferImpl(MsgBuffer* m)
+void dumpVirtualMarshalerBufferImpl(MarshalerBuffer* m)
 {
-  VSMsgBufferOwned *buf = (VSMsgBufferOwned *) m;
+  VSMarshalerBufferOwned *buf = (VSMarshalerBufferOwned *) m;
 
   buf->releaseChunks();
   buf->cleanup();
-  freeMsgBufferPool.dispose(buf);
+  freeMarshalerBufferPool.dispose(buf);
 }
 
 //
@@ -898,9 +898,9 @@ void virtualSitesExitImpl()
   }
 
   //
-  if (myVSMsgBufferImported) {
-    free(myVSMsgBufferImported);
-    myVSMsgBufferImported = (VSMsgBufferImported *) 0;
+  if (myVSMarshalerBufferImported) {
+    free(myVSMarshalerBufferImported);
+    myVSMarshalerBufferImported = (VSMarshalerBufferImported *) 0;
   }
 
   //
@@ -953,14 +953,14 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   // probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
   giveUp_VirtualSite = giveUp_VirtualSiteImpl;
   discoveryPerm_VirtualSite = discoveryPerm_VirtualSiteImpl;
-  getVirtualMsgBuffer = getVirtualMsgBufferImpl;
-  dumpVirtualMsgBuffer = dumpVirtualMsgBufferImpl;
+  getVirtualMarshalerBuffer = getVirtualMarshalerBufferImpl;
+  dumpVirtualMarshalerBuffer = dumpVirtualMarshalerBufferImpl;
   siteAlive_VirtualSite = siteAlive_VirtualSiteImpl;
   virtualSitesExit = virtualSitesExitImpl;
 
   //
   VSMailboxManagerCreated *mbm;
-  VSMsgBufferOwned *buf;
+  VSMarshalerBufferOwned *buf;
   char keyChars[sizeof(key_t)*2 + 3]; // in the form "0xNNNNNNNN";
 
   //
@@ -1003,8 +1003,8 @@ OZ_BI_define(BIVSnewMailbox,0,1)
     importedVSChunksPoolManager =
       new VSMsgChunkPoolManagerImported(&vsResourceManager,
                                         VS_REGISTER_HT_SIZE);
-    myVSMsgBufferImported =
-      (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
+    myVSMarshalerBufferImported =
+      (VSMarshalerBufferImported *) malloc(sizeof(VSMarshalerBufferImported));
 
     //
     vsResourceManager.init(&vsRegister,
@@ -1077,8 +1077,8 @@ OZ_BI_define(BIVSnewMailbox,0,1)
     OZ_error("Virtual sites: unable to put the M_INIT_VS message");
   buf->passChunks();
   buf->cleanup();
-  freeMsgBufferPool.dispose(buf);
-  DebugCode(buf = (VSMsgBufferOwned *) 0);
+  freeMarshalerBufferPool.dispose(buf);
+  DebugCode(buf = (VSMarshalerBufferOwned *) 0);
 
   //
   mbm->unmap();                 // we don't need that object now anymore;
@@ -1124,8 +1124,8 @@ OZ_BI_define(BIVSinitServer,1,0)
   // probeStatus_VirtualSite = probeStatus_VirtualSiteImpl;
   giveUp_VirtualSite = giveUp_VirtualSiteImpl;
   discoveryPerm_VirtualSite = discoveryPerm_VirtualSiteImpl;
-  getVirtualMsgBuffer = getVirtualMsgBufferImpl;
-  dumpVirtualMsgBuffer = dumpVirtualMsgBufferImpl;
+  getVirtualMarshalerBuffer = getVirtualMarshalerBufferImpl;
+  dumpVirtualMarshalerBuffer = dumpVirtualMarshalerBufferImpl;
   siteAlive_VirtualSite = siteAlive_VirtualSiteImpl;
   virtualSitesExit = virtualSitesExitImpl;
 
@@ -1187,25 +1187,25 @@ OZ_BI_define(BIVSinitServer,1,0)
   }
 
   //
-  myVSMsgBufferImported =
-    (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
-  myVSMsgBufferImported = new (myVSMsgBufferImported)
-    VSMsgBufferImported(importedVSChunksPoolManager,
+  myVSMarshalerBufferImported =
+    (VSMarshalerBufferImported *) malloc(sizeof(VSMarshalerBufferImported));
+  myVSMarshalerBufferImported = new (myVSMarshalerBufferImported)
+    VSMarshalerBufferImported(importedVSChunksPoolManager,
                         msgChunkPoolKey, chunkNumber);
   // (we must read-in the type field);
-  myVSMsgBufferImported->unmarshalBegin();
+  myVSMarshalerBufferImported->unmarshalBegin();
 
   //
   // Check if something went wrong just from scratch:
-  if (myVSMsgBufferImported->isVoid()) {
-    myVSMsgBufferImported->dropVoid();
-    myVSMsgBufferImported->cleanup();
+  if (myVSMarshalerBufferImported->isVoid()) {
+    myVSMarshalerBufferImported->dropVoid();
+    myVSMarshalerBufferImported->cleanup();
     // "exit hook" should clean up everthing...
     return oz_raise(E_ERROR, E_SYSTEM, "VS: no init message", 1,
                     oz_atom(mbKeyChars));
   }
   //
-  msgType = getVSMsgType(myVSMsgBufferImported);
+  msgType = getVSMsgType(myVSMarshalerBufferImported);
   if (msgType != VS_M_INIT_VS)
     OZ_error("Virtual sites: malformed init message");
 
@@ -1215,12 +1215,12 @@ OZ_BI_define(BIVSinitServer,1,0)
   // (since 'myDSite' has not been yet initialized - a
   // bootstrapping problem! :-))
 #ifdef USE_FAST_UNMARSHALER
-  decomposeVSInitMsg(myVSMsgBufferImported, ms);
+  decomposeVSInitMsg(myVSMarshalerBufferImported, ms);
 #else
   int trash;
-  decomposeVSInitMsgRobust(myVSMsgBufferImported, ms, &trash);
+  decomposeVSInitMsgRobust(myVSMarshalerBufferImported, ms, &trash);
 #endif
-  myVSMsgBufferImported->unmarshalEnd();
+  myVSMarshalerBufferImported->unmarshalEnd();
 
   //
   Assert(!myDSite->hasVirtualInfo());
@@ -1237,8 +1237,8 @@ OZ_BI_define(BIVSinitServer,1,0)
   ms->makeActiveVirtual();
 
   //
-  myVSMsgBufferImported->releaseChunks();
-  myVSMsgBufferImported->cleanup();
+  myVSMarshalerBufferImported->releaseChunks();
+  myVSMarshalerBufferImported->cleanup();
 
 #ifndef DENYS_EVENTS
   //
