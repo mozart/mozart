@@ -185,7 +185,6 @@ in
 		      {IfAtThen O solutions IsBool}
 		   [] drawing then
 		      {IfAtThen O hide   IsBool} andthen
-		      {IfAtThen O wait   IsBool} andthen
 		      {IfAtThen O update IsNat}
 		   [] postscript then
 		      {IfAtThen O mode

@@ -16,6 +16,8 @@ local
    \insert dialog-manager.oz
 
    \insert status-manager.oz
+
+   Solve = Search.combinator.debug
    
 in
 
@@ -229,7 +231,6 @@ in
 	 PrevBABSol <- False
 	 {self.status setBAB(@IsBAB)}
 	 Classes    <- {MakeClasses 
-			<<DialogManager getDisplayWaits($)>>
 			@IsBAB
 			<<DialogManager getKeepSolutions($)>>
 			<<DialogManager getInfoDistance($)>>

@@ -528,7 +528,6 @@ local
 			     close(proc {$}
 				      Options =
 				      options(hide:  {IsHide tkReturnInt($)}==1
-					      wait:  {IsWait tkReturnInt($)}==1
 					      update:
 						 {Tk.string.toInt
 						  case {Filter
@@ -555,16 +554,6 @@ local
 				 onvalue:  1
 				 offvalue: 0
 				 text:     'Hide failed subtrees')}
-	    IsWait     = {New Tk.variable
-			  tkInit(case Previous.wait then 1 else 0 end)}
-	    WaitButton = {New Tk.checkbutton
-			  tkInit(parent:   self
-				 width:    TextWidth
-				 anchor:   w
-				 onvalue:  1
-				 offvalue: 0
-				 variable: IsWait
-				 text:     'Draw wait nodes')}
 	    RedrawFrame = {New Tk.frame tkInit(parent:self)}
 	    RedrawFirst = {New Tk.label tkInit(parent:RedrawFrame
 					       anchor:w
@@ -579,7 +568,7 @@ local
 	 in
 	    {Tk.batch [pack(RedrawFirst RedrawEntry RedrawSnd
 			    o(side:left fill:x))
-		       pack(HideButton WaitButton RedrawFrame
+		       pack(HideButton RedrawFrame
 			    o(side:top fill:x))
 		       focus(RedrawEntry)]}		
 	 end
@@ -884,14 +873,9 @@ local
       end
       meth setLayoutOptions(O)
 	 Options <- {UpdateOption O hide
-		     {UpdateOption O wait
-		      {UpdateOption O update @Options
-		       update Id}
-		      wait Id}
+		     {UpdateOption O update @Options
+		      update Id}
 		     hide Id}
-      end
-      meth getDisplayWaits(?Waits)
-	 Waits = @ClearOptions.wait
       end
       meth getAutoHide(?Hide)
 	 Hide  = @ClearOptions.hide

@@ -118,7 +118,7 @@ local
 	       end
 	       UseNs = NextNs = NextAlt|CurNs
 	    end
-	    Information = {self.solve CopyToUse {Reverse UseNs}}
+	    Information = {Solve CopyToUse {Reverse UseNs}}
 	    <<CreateNode(Information CurDepth+1 NextDist ?NewNode)>> 
 	    isDirty <- True
 	    <<addKid(NewNode)>>
