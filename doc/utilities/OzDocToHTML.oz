@@ -935,7 +935,7 @@ define
                                end
                   code(COMMON: @Common
                        PCDATA(Annotation)
-                       OzDocToHTML, Batch(M 1 $))
+                       i(OzDocToHTML, Batch(M 1 $)))
                [] meta then
                   i(COMMON: @Common OzDocToHTML, Batch(M 1 $))
                [] env then HTML in
