@@ -87,7 +87,7 @@ unsigned long update_crc(unsigned long crc, unsigned char *buf, int len) {
   return c;
 }
 
-OZ_BI_define(BIgetCRC,1,2) {
+OZ_BI_define(BIgetCRC,1,1) {
   oz_declareVirtualStringIN(0,s);
 
   int l = strlen(s);
@@ -96,14 +96,7 @@ OZ_BI_define(BIgetCRC,1,2) {
   unsigned long crc = update_crc(0xffffffffL, (unsigned char *) s, 
 				 strlen(s)) ^ 0xffffffffL;
   
-  int hi = (int) ((crc & 0xffff0000L) >> 16);
-  int lo = (int) (crc & 0x0000ffffL);
-  
-  OZ_out(0) = oz_int(lo);
-  OZ_out(1) = oz_int(hi);
-    
-  return PROCEED;
-  
+  OZ_RETURN(oz_ulong(crc));
 } OZ_BI_end
 
 //

@@ -39,7 +39,7 @@
 		     BI  => BITicket2Port},
 
     'getCRC'	=> { in  => ['+virtualString'],
-		     out => ['+int','+int'],
+		     out => ['+int'],
 		     BI  => BIgetCRC},
 
  );
