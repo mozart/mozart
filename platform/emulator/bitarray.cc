@@ -51,7 +51,7 @@ public:
   int getIdV() { return OZ_E_BITARRAY; }
 
   virtual
-  OZ_Term printV(int depth = 10) { return typeV(); }
+  OZ_Term printV(int depth = 10) { return oz_atom("<BitArray>"); }
 
   virtual
   OZ_Term typeV() { return oz_atom("bitArray"); }
