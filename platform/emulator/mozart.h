@@ -38,7 +38,8 @@ typedef enum {
   FAILED,
   PROCEED,
   SUSPEND,
-  SLEEP
+  SLEEP,
+  RAISE
 } OZ_Bool;
   
 typedef int OZ_Boolean;
@@ -57,6 +58,7 @@ typedef OZ_Bool (*OZ_CFun) _PROTOTYPE((int, OZ_Term *));
 /* tests */
 extern int OZ_isAtom       _PROTOTYPE((OZ_Term));
 extern int OZ_isCell       _PROTOTYPE((OZ_Term));
+extern int OZ_isChunk      _PROTOTYPE((OZ_Term));
 extern int OZ_isCons       _PROTOTYPE((OZ_Term));
 extern int OZ_isFloat      _PROTOTYPE((OZ_Term));
 extern int OZ_isInt        _PROTOTYPE((OZ_Term));
@@ -72,8 +74,7 @@ extern int OZ_isVariable   _PROTOTYPE((OZ_Term));
 
 extern OZ_Term OZ_termType _PROTOTYPE((OZ_Term));
 
-extern void OZ_typeError   _PROTOTYPE((char *fun,int pos,char *type,
-				       OZ_Term val));
+extern OZ_Bool OZ_typeError   _PROTOTYPE((int pos,char *type));
 
 /* convert: C from/to Oz datastructure */
 
@@ -158,6 +159,8 @@ extern OZ_Bool OZ_unify       _PROTOTYPE((OZ_Term, OZ_Term));
 /* create a new oz variable */
 extern OZ_Term OZ_newVariable();
 
+extern OZ_Term OZ_newChunk ();
+
 /* cell */
 extern OZ_Term OZ_newCell ();
 /* exchangeCell, deepFeed */
@@ -190,10 +193,14 @@ extern void    OZ_deSelect    _PROTOTYPE((int));
 extern int OZ_protect         _PROTOTYPE((OZ_Term *));
 extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
+/* raise exception */
+
+OZ_Bool OZ_raise	      _PROTOTYPE((OZ_Term));
+
 /* Suspending builtins */
 
-OZ_Thread  OZ_makeThread   _PROTOTYPE((OZ_CFun, OZ_Term *, int));
-void       OZ_addThread    _PROTOTYPE((OZ_Term, OZ_Thread));
+OZ_Thread  OZ_makeThread      _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+void       OZ_addThread       _PROTOTYPE((OZ_Term, OZ_Thread));
 
 /* for example
    OZ_Thread s = OZ_makeThread(BIplus,OZ_args,OZ_arity);
@@ -204,9 +211,9 @@ void       OZ_addThread    _PROTOTYPE((OZ_Term, OZ_Thread));
 /* suspend self */
 #define OZ_makeSelfThread()   OZ_makeThread(OZ_self,OZ_args,OZ_arity)
 
-OZ_Bool OZ_suspendOnVar  _PROTOTYPE((OZ_Term var));
-OZ_Bool OZ_suspendOnVar2 _PROTOTYPE((OZ_Term var1,OZ_Term var2));
-OZ_Bool OZ_suspendOnVar3 _PROTOTYPE((OZ_Term var1,OZ_Term var2,OZ_Term var3));
+OZ_Bool OZ_suspendOnVar  _PROTOTYPE((OZ_Term));
+OZ_Bool OZ_suspendOnVar2 _PROTOTYPE((OZ_Term,OZ_Term));
+OZ_Bool OZ_suspendOnVar3 _PROTOTYPE((OZ_Term,OZ_Term,OZ_Term));
 
 /* ------------------------------------------------------------------------ *
  * III. macros
@@ -283,8 +290,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
  int VAR; 								      \
  OZ_nonvarArg(ARG); 							      \
  if (! OZ_isInt(OZ_getCArg(ARG))) {					      \
-   OZ_typeError(FUN,ARG,"Int",OZ_getCArg(ARG));				      \
-   return FAILED;							      \
+   return OZ_typeError(ARG,"Int");					      \
  } else {								      \
    VAR = OZ_intToC(OZ_getCArg(ARG));					      \
  }
@@ -293,7 +299,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
  OZ_Float VAR; 								      \
  OZ_nonvarArg(ARG); 							      \
  if (! OZ_isFloat(OZ_getCArg(ARG))) {					      \
-   OZ_typeError(FUN,ARG,"Float",OZ_getCArg(ARG));			      \
+   return OZ_typeError(ARG,"Float");					      \
    return FAILED;							      \
  } else {								      \
    VAR = OZ_floatToC(OZ_getCArg(ARG));					      \
@@ -304,8 +310,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
  char *VAR; 								      \
  OZ_nonvarArg(ARG); 							      \
  if (! OZ_isAtom(OZ_getCArg(ARG))) {					      \
-   OZ_typeError(FUN,ARG,"Atom",OZ_getCArg(ARG));			      \
-   return FAILED;							      \
+   return OZ_typeError(ARG,"Atom");					      \
  } else {								      \
    VAR = OZ_atomToC(OZ_getCArg(ARG));					      \
  }
@@ -340,6 +345,7 @@ typedef enum {
 
 typedef enum {
   OZ_Type_Cell,
+  OZ_Type_Chunk,
   OZ_Type_Cons,
   OZ_Type_HeapChunk,
   OZ_Type_CVar,
