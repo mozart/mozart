@@ -32,7 +32,7 @@ void MsgContainer::init(DSite *site) {
   msgTS = (MsgTermSnapshot *) 0;
   next = NULL;
   msgNum=-1;
-  sendTime=-1;
+  //  sendTime=-1; AN!
   cont = (void *) 0;
   DebugCode(for (int i=0;i<MAX_NOF_FIELDS;i++)
 	       msgFields[i].arg=NULL;)

@@ -368,7 +368,6 @@ void AM::init(int argc,char **argv)
 #ifdef DENYS_EVENTS
   requestedTimer=0;
 #endif
-  emulatorClock = 0;
   taskMinInterval = DEFAULT_MIN_INTERVAL;
 
   unsetProfileMode();
@@ -393,9 +392,18 @@ void AM::exitOz(int status)
 // mm2: missing ifdef VIRTUAL_SITE?
 
 //
-Bool NeverDo_CheckProc(unsigned long, void*)
+Bool NeverDo_CheckProc(LongTime *, void*)
 {
   return (NO);
+}
+
+char * LongTime::toString() {
+  static char s[2*sizeof(unsigned long)*8+2];
+  if(high==0)
+    sprintf(s,"%ld",low);
+  else
+    sprintf(s,"%ld%032ld",high,low);
+  return s;
 }
 
 //
@@ -416,7 +424,7 @@ void AM::handleTasks()
     // Apply 'checkProc' from a task with the corresponding argument;
     if (tn->isReady()) {
       tn->dropReady();
-      ready = ready && (tn->getProcessProc())(emulatorClock, tn->getArg());
+      ready = ready && (tn->getProcessProc())(&emulatorClock, tn->getArg());
     }
   }
 
@@ -710,7 +718,7 @@ void AM::checkTasks()
 
     //
     // Apply 'checkProc' from a task with the corresponding argument;
-    if ((*(tn->getCheckProc()))(emulatorClock, tn->getArg())) {
+    if ((*(tn->getCheckProc()))(&emulatorClock, tn->getArg())) {
       tn->setReady();
       tasks = TRUE;
     }
@@ -773,7 +781,7 @@ void handlerCHLD(int)
 // Signal handler;
 void handlerALRM(int)
 {
-  am.emulatorClock += CLOCK_TICK/1000;
+  am.emulatorClock.increaseTime(CLOCK_TICK/1000);
 
   if (am.isCritical()) /* wait for next ALRM signal */
     return;
@@ -800,7 +808,7 @@ void handlerUSR2(int)
 void AM::handleAlarm(int ms)
 {
   if (ms>0) 
-    emulatorClock += (unsigned long) ms;
+    emulatorClock.increaseTime((unsigned long) ms);
 
   if (am.profileMode()) {
     if (ozstat.currPropagator) {

@@ -26,6 +26,7 @@
 #define __TIMER_HH
 
 #include "base.hh"
+#include "am.hh"
 
 /*
   class Timers contains an abstraction on top of the task manager to make
@@ -46,7 +47,7 @@ class Timers {
 private:
   TimerElement *elems;
   int minint;
-  unsigned long prevtime;
+  LongTime prevtime;
 
 public:
   Timers();
@@ -65,8 +66,8 @@ public:
   void clearTimer(TimerElement *&te);
 
   // Internal methods, public for technical reasons.
-  Bool checkTimers(unsigned long time);
-  Bool wakeUpTimers(unsigned long time);
+  Bool checkTimers(LongTime *time);
+  Bool wakeUpTimers(LongTime *time);
 };
 
 class TimerElement {
