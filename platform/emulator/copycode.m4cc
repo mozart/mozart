@@ -322,6 +322,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
   ProgramCounter ende = ret+size;
 
   while (PC<ende) {
+    ProgramCounter lastPC = PC;
     Opcode op = CodeArea::getOpcode(PC++);
 
     switch(op) {
@@ -329,6 +330,11 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
     include(EMUDIR/instrDefs.m4)
 
     default: Assert(0); break;
+    }
+    if (op == DEBUGENTRY) {
+      TaggedRef file = getTaggedArg(lastPC+1);
+      int line = smallIntValue(getNumberArg(lastPC+2));
+      CodeArea::writeDebugInfo(lastPC,file,line);
     }
   }
 
