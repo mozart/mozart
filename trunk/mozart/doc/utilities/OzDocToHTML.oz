@@ -37,7 +37,7 @@ import
    Indexer('class')
    Fontifier('class' noProgLang)
    Thumbnails('class')
-   MathToGIF('class')
+   LaTeXToGIF('class')
    PostScriptToGIF('class')
    HTML(empty: EMPTY
 	seq: SEQ
@@ -301,7 +301,7 @@ define
 	 Labels: unit ToGenerate: unit
 	 % for Math and Math.Choice:
 	 MathDisplay: unit
-	 MyMathToGIF: unit
+	 MyLaTeXToGIF: unit
 	 % for Picture:
 	 MyPostScriptToGIF: unit
 	 PictureDisplay: unit
@@ -346,10 +346,10 @@ define
 	    OutputDirectory <- Args.'out'
 	    {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
 	    MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
-	    MyMathToGIF <- if Args.'latexmath' then
-			      {New MathToGIF.'class' init(@OutputDirectory)}
-			   else unit
-			   end
+	    MyLaTeXToGIF <- if Args.'latextogif' then
+			       {New LaTeXToGIF.'class' init(@OutputDirectory)}
+			    else unit
+			    end
 	    MyPostScriptToGIF <- {New PostScriptToGIF.'class'
 				  init(@OutputDirectory)}
 	    CurrentNode <- 'index.html'
@@ -875,10 +875,10 @@ define
 			 elseof X then X
 			 end
 	       case M.type of 'LATEX' then FileName in
-		  case @MyMathToGIF of unit then
+		  case @MyLaTeXToGIF of unit then
 		     HTML = code(PCDATA(M.1))
 		  else
-		     {@MyMathToGIF convertLaTeX(M.1 Display ?FileName)}
+		     {@MyLaTeXToGIF convertMath(M.1 Display ?FileName)}
 		     HTML = img(src: FileName alt: M.1)
 		  end
 	       [] 'HTML' then
