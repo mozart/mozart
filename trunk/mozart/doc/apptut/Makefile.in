@@ -5,14 +5,16 @@ VPATH		= @srcdir@
 WHAT = apptut
 MAIN = main.sgml
 SGMLSRCS = \
-	deploy.sgml devel.sgml hello.sgml link.sgml \
-	module.sgml cs-intro.sgml cs-db.sgml \
+	deploy.sgml devel.sgml hello.sgml \
+	cs-intro.sgml cs-db.sgml \
 	cs-ozc.sgml native-celloid.sgml native-counter.sgml \
 	native-counter-obj.sgml chat.sgml \
-	conc-cheap.sgml conc-patterns.sgml
-HTMLEXTRAFILES =
+	conc-cheap.sgml conc-patterns.sgml app.sgml \
+	mof.sgml pickle.sgml
+HTMLEXTRAFILES = pictures/netscape.gif
 CHUNKFILES = \
-	chat-server.oz chat-client.oz chat-gui.oz Webget.oz
+	chat-server.oz chat-client.oz chat-gui.oz \
+	Webget.oz DB.oz Form.oz LMF.oz
 
 include ../Makefile.common
 
@@ -25,8 +27,8 @@ chat-client.oz: $(MAIN) $(SGMLSRCS)
 	$(DOCIFY) --type=chunk --in=$< --out='Chat Client' >$@
 chat-gui.oz: $(MAIN) $(SGMLSRCS)
 	$(DOCIFY) --type=chunk --in=$< --out='Chat GUI' >$@
-Webget.oz: $(MAIN) $(SGMLSRCS)
-	$(DOCIFY) --type=chunk --in=$< --out='Webget.oz' >$@
+%.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --type=chunk --in=$< --out=$@ >$@
 
 install:: $(CHUNKFILES)
 	for i in $(CHUNKFILES); do $(INSTALL_FILE) $$i $(DOCDIR); done
