@@ -173,8 +173,6 @@ in
 						   else
 						      SelectedForeground
 						   end
-				 padx:             PadXButton
-				 pady:             PadYButton
 				 relief:           raised
 				 action:           self # action(Bitmap))}
 		  in
@@ -217,7 +215,7 @@ in
 		{C tkBind(event:  HelpEvent
 			  action: self # help(Xbm))}
 	     end}
-	    {Tk.batch [pack(b(Bs) side:left  padx:1)
+	    {Tk.batch [pack(b(Bs) side:left padx:1 pady:1)
 		       pack(self.emacsThreadsButton self.subThreadsButton
 			    side:right padx:0)]}
 	 end
@@ -359,7 +357,7 @@ in
 					{Browse Value} LastClicked <- Value
 				     end)}
 	     in
-		{ForAll [tk(insert 'end' {PrintF ' ' # Name EnvVarWidth})
+		{ForAll [tk(insert 'end' {PrintF ' ' # Name {EnvVarWidth}})
 			 tk(insert 'end' Print # '\n' T)
 			 tk(tag bind T '<1>' Ac)
 			 tk(tag conf T font:BoldFont)] Widget}

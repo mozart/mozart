@@ -3,12 +3,6 @@
 
 local
 
-   TkVerbose             = {New Tk.variable tkInit(ConfigVerbose)}
-
-   TkStepDotBuiltin      = {New Tk.variable tkInit(ConfigStepDotBuiltin)}
-   TkStepNewNameBuiltin  = {New Tk.variable tkInit(ConfigStepNewNameBuiltin)}
-
-   TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
    TkEnvPrintTypes       = {New Tk.variable tkInit(ConfigEnvPrintTypes)}
 
    TkUpdateEnv           = {New Tk.variable tkInit(ConfigUpdateEnv)}
@@ -106,15 +100,7 @@ in
 		    key:    e)])
 	   MB(text: 'Options'
 	      menu:
-		 [CC(label: 'Step on Builtin'
-		     menu:
-			[CB(label:    '\'.\''
-			    variable: TkStepDotBuiltin
-			    action:   Config # toggle(stepDotBuiltin))
-			 CB(label:    '\'NewName\''
-			    variable: TkStepNewNameBuiltin
-			    action:   Config # toggle(stepNewNameBuiltin))])
-		  CC(label:   'Value Printing'
+		 [CC(label:   'Value Printing'
 		     menu:
 			[RB(label:    'Types Only'
 			    variable: TkEnvPrintTypes
@@ -125,22 +111,18 @@ in
 			    value:    false
 			    action:   Config # set(envPrintTypes false))])
 		  separator
-		  CB(label:    'Show System Variables'
-		     variable: TkEnvSystemVariables
-		     action:   Config # toggle(envSystemVariables))
-		  CB(label:    'Auto Update of Environment'
-		     variable: TkUpdateEnv
-		     action:   self # toggleUpdateEnv
-		     key:      ctrl(a))
 		  CB(label:    'Use Emacs'
 		     variable: TkUseEmacsBar
 		     action:   self # toggleEmacs
 		     key:      ctrl(e))
+		  CB(label:    'Env Auto Update'
+		     variable: TkUpdateEnv
+		     action:   self # toggleUpdateEnv
+		     key:      ctrl(a))
 		  separator
-		  CB(label:   'Debug Debugger'
-		     variable: TkVerbose
-		     action:   Config # toggle(verbose)
-		     feature:  verbose)])]
+		  C(label:    'Other Settings...'
+		    action:   self # settings
+		    key:      ctrl(o))])]
 	  [MB(text: 'Help'
 	      menu:
 		 [C(label:   'Help on Help'
