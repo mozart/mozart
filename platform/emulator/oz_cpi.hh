@@ -150,7 +150,7 @@ public:
   OZ_FSetValue(void) {}
   OZ_FSetValue(const OZ_FSetConstraint&);
   OZ_FSetValue(const OZ_Term);
-  OZ_FSetValue(OZ_FSetState);
+  OZ_FSetValue(const OZ_FSetState);
 
   int getCard(void) const { return _card; }
   int getKnownNotIn(void) const { return 32 * fset_high - _card; }
