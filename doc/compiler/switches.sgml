@@ -43,8 +43,8 @@
 	<Entry><Code><Span class=ignore/\switch +/warnredecl</Code>
 	  (default: <<false>>)
 	<Item>
-	  Output warnings about <<declare>>s of variables already contained
-	  in the top-level environment.
+	  Output warnings about redeclarations of top-level variables,
+	  either by <<declare>> or locally.
 	<Entry><Code><Span class=ignore/\switch +/warnunused</Code>
 	  (default: <<false>>)
 	<Item>
