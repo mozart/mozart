@@ -133,8 +133,25 @@ error include resources.hh before mozart.h
 #ifdef CS_PROFILE
 #define HEAPBLOCKSIZE        8*1048576 /* byte    */
 #else
+#ifdef WINDOWS
+/* Under Windows (at leaster under NT 4.0) calling
+
+     void *p1 = malloc(n);
+     free(p1)
+     void *p2 = malloc(n);
+
+   does not mean that p1==p2: p2 usually gets a higher address. Thus
+   after some time we run into an address space that has the top most
+   bits set. The reason seems to be that if heap blocks are larger
+   than the magic value gelow (approx 480kB) then windows calls
+   VirtualMalloc
+*/
+#define HEAPBLOCKSIZE 0x75558
+#else
 #define HEAPBLOCKSIZE        512*1024  /* byte    */
 #endif
+#endif
+
 
 #define QUEUEMINSIZE            32
 
