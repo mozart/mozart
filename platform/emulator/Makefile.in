@@ -32,13 +32,15 @@ SRCDIR= @srcdir@
 
 include Makefile.vars
 
-DYN_MODULE_NAMES =                                                      \
+MODULE_NAMES =                                                  \
         DPB PID Fault DPMisc VirtualSite Wif Schedule FDP FSP Parser    \
         CompilerSupport Browser Debug
 
-STATIC_MODULELIBS=      -L. ${DYN_MODULE_NAMES:%=-l%}
-STATIC_MODULETARGETS=   $(DYN_MODULE_NAMES:%=lib%.a)
-DYNAMIC_MODULETARGETS=  $(DYN_MODULE_NAMES:%=%.so)
+STATIC_MODULES=         @STATIC_MODULES@
+DYNAMIC_MODULES=        @DYNAMIC_MODULES@
+STATIC_MODULELIBS=      -L. ${STATIC_MODULES:%=-l%}
+STATIC_MODULETARGETS=   $(STATIC_MODULES:%=lib%.a)
+DYNAMIC_MODULETARGETS=  $(DYNAMIC_MODULES:%=%.so)
 
 CORE_MODULE_NAMES=      Run OF FS FD CPI OS Space Store Mem Pickle Support
 # mm2: spliting emulator into different libraries does not work,
@@ -48,13 +50,11 @@ CORE_MODULE_NAMES=      Run OF FS FD CPI OS Space Store Mem Pickle Support
 CORE_TARGETS=   ${CORE_MODULE_NAMES:%=lib%.a}
 
 CORE_LIBS=
-LIBS=           $(CORE_LIBS) @LIBS@
+LIBS=           $(CORE_LIBS) $(STATIC_MODULELIBS) @LIBS@
 
 INCS=           -I. -I$(SRCDIR)
 M4_D=           -DEMUDIR=$(SRCDIR)
-TARGETS=        @TARGETS@ text2pickle
-MODULETARGETS=  @MODULETARGETS@
-MODULEINSTALL=  @MODULEINSTALL@
+TARGETS=        emulator.exe text2pickle $(DYNAMIC_MODULETARGETS)
 SUBDIRS=        libdp libfd libfset
 OZVERSION=      $(SRCTOP)/OZVERSION
 
@@ -173,7 +173,7 @@ ALLSRCS= $(SRCS) \
 ### TARGETS
 ############################################################################
 
-.NOEXPORT: emulate.o @PROGRAMNAME@
+.NOEXPORT: emulate.o emulator.exe
 .PHONY: all win win-install first install install-bin install-inc \
         install-dir depend tags clean distclean veryclean \
         install-module
@@ -276,7 +276,7 @@ libOther.a: $(OTHERSRCS:%.cc=%.o)
 
 win: ozlib.lnk $(CREATEDFILES)
 
-PRGDEP=$(CREATEDFILES) $(MODULETARGETS) $(OBJS)
+PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
 
 # mm2
 # PRGDEP+=$(CORE_TARGETS)
@@ -285,13 +285,13 @@ libs: $(CORE_TARGETS)
 
 first: $(CREATEDFILES)
 
-@PROGRAMNAME@: $(PRGDEP)
+emulator.exe: $(PRGDEP)
         $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
 text2pickle: $(TEXT2PICKLEOBJS)
         $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
-install:: install-bin install-inc $(MODULEINSTALL)
+install:: install-bin install-inc install-modules
 
 install-bin: $(TARGETS) $(BINDIR)
         $(INSTALL_BIN) oztool.sh $(TARGETS) $(BINDIR)
@@ -303,7 +303,10 @@ install-inc: $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/mozart_cpi.hh $(INCDIR)
 
 install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
-        $(INSTALL_BIN) $(DYNAMIC_MODULETARGETS) $(BINDIR)
+        mods="$(DYNAMIC_MODULETARGETS)"; \
+        for i in $$mods; do \
+          $(INSTALL_BIN) $$mod $(BINDIR) \
+        done
 
 $(BINDIR) $(INCDIR):
         $(INSTALL_DIR) $@

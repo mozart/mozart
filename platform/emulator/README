@@ -44,9 +44,7 @@ p CodeArea::writeInstr()
 p displayCode(PC,10,1)
 p CodeArea::printDef(PC)
 
-p am.currentThread->printTaskStack(PC,0,10)
-p am.currentThread->printTaskStack((ProgramCounter) -1,0,10)
-p printStack()
+p oz_currentThread()->printTaskStack(10)
 
 p board->printDebug()
 p board->printLongDebug()
