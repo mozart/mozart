@@ -19,13 +19,6 @@
 \renewcommand{\encodingdefault}{T1}
 \RequirePackage{times}
 
-% \DeclareFontShape{T1}{pcr}{c}{n}{
-%   <-> pcrr8rn
-% }
-% \DeclareFontShape{T1}{pcr}{c}{sl}{
-%   <->
-% }
-
 % pass options down to book class
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 \ProcessOptions
@@ -1142,7 +1135,7 @@
 \newcommand{\mozart@printindex}{}
 \newcommand{\DOINDEX}{%
   \usepackage{makeidx}\makeindex
-  \def\mozart@printindex{\clearpage\printindex}}
+  \def\mozart@printindex{\clearpage\let\@mkboth\markboth\printindex}}
 
 %% opi support
 
