@@ -1,6 +1,6 @@
 OZDOC = ozdoc
 
-DOCDIR          = /www/mozart/gump/manual
+DOCDIR          = /www/mozart/gump
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
