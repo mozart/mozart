@@ -114,7 +114,7 @@ class C from A B end>>>
           Scheduling support is now provided by the system module
           <<Schedule>> rather than <<FD.schedule>>. See also
           <ptr.extern to="ozdoc:fdt" key="chapter.scheduling">  and
-          <ptr.extern to="ozdoc:system" key="chapter.scheduling">.
+          <ptr.extern to="ozdoc:system" key="chapter.schedule">.
 
 
 </Book>
