@@ -22,12 +22,12 @@
 #include "fddebug.hh"
 
 //*****************************************************************************
-#undef DEBUG_FSET
+//#undef DEBUG_FSET
 #ifdef DEBUG_FSET
 
 
 #define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
-#define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE)
+#define DEBUG_FSETIR(CODE) /* _DEBUG_FSETIR(CODE) */
 
 #else
 
@@ -79,7 +79,7 @@ inline
 OZ_Boolean testBit(const int * bv, int i)
 {
 
-  if (i >= 32 * fset_high)
+  if (i >= 32 * fset_high || i < 0)
     return 0;
 
   return (bv[div32(i)] & (1 << mod32(i)));
@@ -89,6 +89,12 @@ inline
 void setBit(int * bv, int i)
 {
   bv[div32(i)] |= (1 << mod32(i));
+}
+
+inline
+void resetBit(int * bv, int i)
+{
+  bv[div32(i)] &= ~(1 << mod32(i));
 }
 
 static
@@ -201,14 +207,14 @@ void printBits(ostream &o, int high, const int * bv, int neg = 0)
 
 void FSetValue::init(const OZ_FSetImpl &fs)
 {
-  Assert(fs.isFSetValue());
+  Assert(fs.isValue());
 
   _card = fs._card_min;
   for (int i = fset_high; i--; )
     _in[i] = fs._in[i];
 }
 
-FSetValue::FSetValue(OZ_Term t)
+void FSetValue::init(const OZ_Term t)
 {
   for (int i = fset_high; i--; )
     _in[i] = 0;
@@ -218,6 +224,40 @@ FSetValue::FSetValue(OZ_Term t)
   _card = findBitsSet(fset_high, _in);
 }
 
+void FSetValue::init(OZ_FSetState s)
+{
+  switch(s) {
+  case fs_empty: {
+    for (int i = fset_high; i--; )
+      _in[i] = 0;
+    _card = 0;
+    break;
+  }
+  case fs_full: {
+    for (int i = fset_high; i--; )
+      _in[i] = ~0;
+    _card = 32*fset_high;
+    break;
+  }
+  default:
+    error("Unexpected case (%d) in \"FSetValue::init(OZ_FSetState\".", s);
+  }
+}
+
+FSetValue::FSetValue(OZ_Term t)
+{
+  init(t);
+}
+
+FSetValue::FSetValue(OZ_FSetState s)
+{
+  init(s);
+}
+
+FSetValue::FSetValue(const OZ_FSetImpl &s)
+{
+  init(s);
+}
 
 FSetValue::FSetValue(const int * in)
 {
@@ -252,6 +292,98 @@ OZ_Boolean FSetValue::operator == (const FSetValue &fs) const
   }
 
   return TRUE;
+}
+
+FSetValue FSetValue::operator & (const FSetValue &y) const
+{
+  FSetValue z;
+
+  for (int i = fset_high; i--; )
+    z._in[i] = _in[i] & y._in[i];
+
+  z._card = findBitsSet(fset_high, z._in);
+  return z;
+}
+
+FSetValue FSetValue::operator | (const FSetValue &y) const
+{
+  FSetValue z;
+
+  for (int i = fset_high; i--; )
+    z._in[i] = _in[i] | y._in[i];
+
+  z._card = findBitsSet(fset_high, z._in);
+  return z;
+}
+
+FSetValue FSetValue::operator - (const FSetValue &y) const
+{
+  FSetValue z;
+
+  for (int i = fset_high; i--; )
+    z._in[i] = _in[i] & ~y._in[i];
+
+  z._card = findBitsSet(fset_high, z._in);
+  return z;
+}
+
+FSetValue FSetValue::operator &= (const FSetValue &y)
+{
+  for (int i = fset_high; i--; )
+    _in[i] &= y._in[i];
+
+  _card = findBitsSet(fset_high, _in);
+  return *this;
+}
+
+FSetValue FSetValue::operator |= (const FSetValue &y)
+{
+  for (int i = fset_high; i--; )
+    _in[i] |= y._in[i];
+
+  _card = findBitsSet(fset_high, _in);
+  return *this;
+}
+
+FSetValue FSetValue::operator &= (const int y)
+{
+  OZ_Boolean tb = testBit(_in, y);
+  init(fs_empty);
+
+  if (tb) {
+    setBit(_in, y);
+    _card =1;
+  }
+  return *this;
+}
+
+FSetValue FSetValue::operator += (const int y)
+{
+  if (0 <= y && y < 32*fset_high)
+    setBit(_in, y);
+
+  _card = findBitsSet(fset_high, _in);
+  return *this;
+}
+
+FSetValue FSetValue::operator -= (const int y)
+{
+  if (0 <= y && y < 32*fset_high)
+    resetBit(_in, y);
+
+  _card = findBitsSet(fset_high, _in);
+  return *this;
+}
+
+FSetValue FSetValue::operator - (void) const
+{
+  FSetValue z;
+
+  for (int i = fset_high; i--; )
+    z._in[i] = ~_in[i];
+
+  z._card = findBitsSet(fset_high, z._in);
+  return *this;
 }
 
 OZ_Term FSetValue::getKnownInList(void) const
@@ -436,6 +568,55 @@ void OZ_FSetImpl::printDebug(void) const
   cout << endl << flush;
 }
 
+OZ_Boolean OZ_FSetImpl::normalize(void)
+{
+  OZ_Boolean retval = OZ_FALSE;
+
+  if (!isValid())
+      goto end;
+
+  // check if a value is in and out at the same time
+  {
+    for (int i = fset_high; i--; )
+      if (_in[i] & _not_in[i]) {
+        _card_min = -1;
+        goto end;
+      }
+  }
+
+  _known_in = findBitsSet(fset_high, _in);
+  _known_not_in = findBitsSet(fset_high, _not_in);
+
+  if (_known_in > _card_min)
+    _card_min = _known_in;
+  if ((32 * fset_high - _known_not_in) < _card_max)
+    _card_max = (32 * fset_high - _known_not_in);
+
+  // actually redundant, but ...
+  if ((_card_max < _known_in) ||
+      (_card_min > (32 * fset_high - _known_not_in)) ||
+      (_card_max < _card_min)) {
+    _card_min = -1;
+    goto end;
+  }
+  // but we can do better
+  if (_card_max == _known_in) {
+     _card_min = _card_max;
+     _known_not_in = (32 * fset_high - _known_in);
+     for (int i = fset_high; i--; )
+       _not_in[i] = ~_in[i];
+  }
+  if (_card_min == (32 * fset_high - _known_not_in)) {
+     _known_in = _card_max = _card_min;
+     for (int i = fset_high; i--; )
+       _in[i] = ~_not_in[i];
+  }
+  retval = OZ_TRUE;
+end:
+  DEBUG_FSETIR(*this << endl);
+  return retval;
+}
+
 OZ_Boolean OZ_FSetImpl::valid(const FSetValue &fs) const
 {
   DEBUG_FSETIR("( " << *this << " valid " << fs << " ) = ");
@@ -537,7 +718,7 @@ void OZ_FSetImpl::init(OZ_FSetState s)
     break;
   }
   default:
-    error("Unexpected case in \"OZ_FSetImpl::init(OZ_FSetState\".");
+    error("Unexpected case (%d) in \"OZ_FSetImpl::init(OZ_FSetState\".", s);
   }
 }
 
@@ -547,6 +728,10 @@ void OZ_FSetImpl::init(const OZ_FSetImpl &s)
     _in[i] = s._in[i];
     _not_in[i] = s._not_in[i];
   }
+
+  _known_in = s._known_in;
+  _known_not_in = s._known_not_in;
+
   _card_min = s._card_min;
   _card_max = s._card_max;
 }
@@ -626,55 +811,6 @@ OZ_Term OZ_FSetImpl::getCardTuple(void) const
   return ((_card_min == _card_max)
           ? OZ_int(_card_min)
           : mkTuple(_card_min, _card_max));
-}
-
-OZ_Boolean OZ_FSetImpl::normalize(void)
-{
-  OZ_Boolean retval = OZ_FALSE;
-
-  if (!isValid())
-      goto end;
-
-  // check if a value is in and out at the same time
-  {
-    for (int i = fset_high; i--; )
-      if (_in[i] & _not_in[i]) {
-        _card_min = -1;
-        goto end;
-      }
-  }
-
-  _known_in = findBitsSet(fset_high, _in);
-  _known_not_in = findBitsSet(fset_high, _not_in);
-
-  if (_known_in > _card_min)
-    _card_min = _known_in;
-  if ((32 * fset_high - _known_not_in) < _card_max)
-    _card_max = (32 * fset_high - _known_not_in);
-
-  // actually redundant, but ...
-  if ((_card_max < _known_in) ||
-      (_card_min > (32 * fset_high - _known_not_in)) ||
-      (_card_max < _card_min)) {
-    _card_min = -1;
-    goto end;
-  }
-  // but we can do better
-  if (_card_max == _known_in) {
-     _card_min = _card_max;
-     _known_not_in = (32 * fset_high - _known_in);
-     for (int i = fset_high; i--; )
-       _not_in[i] = ~_in[i];
-  }
-  if (_card_min == (32 * fset_high - _known_not_in)) {
-     _known_in = _card_max = _card_min;
-     for (int i = fset_high; i--; )
-       _in[i] = ~_not_in[i];
-  }
-  retval = OZ_TRUE;
-end:
-  DEBUG_FSETIR(*this << endl);
-  return retval;
 }
 
 OZ_Boolean OZ_FSetImpl::putCard(int min_card, int max_card)
@@ -852,6 +988,33 @@ end:
   return z;
 }
 
+OZ_FSetImpl OZ_FSetImpl::operator - (const OZ_FSetImpl& y) const
+{
+  DEBUG_FSETIR(*this << " - " << y << " = ");
+
+  OZ_FSetImpl z;
+
+  if (!isValid() || !y.isValid()) {
+    z._card_min = -1;
+    goto end;
+  }
+
+  {
+    for (int i = fset_high; i--; ) {
+      z._in[i] = _in[i] & y._not_in[i];
+      z._not_in[i] = _not_in[i] | y._in[i];
+    }
+  }
+
+  z._card_min = 0;
+  z._card_max = _card_max;
+
+end:
+  z.normalize();
+  DEBUG_FSETIR(z << endl << flush);
+  return z;
+}
+
 FSetValue OZ_FSetImpl::getGlbSet(void) const
 {
   return FSetValue(_in);
@@ -916,6 +1079,16 @@ OZ_FSetValue::OZ_FSetValue(const OZ_FSetConstraint &s)
   CASTTHIS->init(* (OZ_FSetImpl *) &s);
 }
 
+OZ_FSetValue::OZ_FSetValue(const OZ_Term t)
+{
+  CASTTHIS->init(t);
+}
+
+OZ_FSetValue::OZ_FSetValue(const OZ_FSetState s)
+{
+  CASTTHIS->init(s);
+}
+
 OZ_Term OZ_FSetValue::getKnownInList(void) const
 {
   return CASTTHIS->getKnownInList();
@@ -956,6 +1129,50 @@ int OZ_FSetValue::getNextSmallerElem(int i) const
   return CASTTHIS->getNextSmallerElem(i);
 }
 
+OZ_FSetValue OZ_FSetValue::operator & (const OZ_FSetValue &y) const
+{
+  return CASTTHIS->operator & (CASTREF y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator | (const OZ_FSetValue &y) const
+{
+  return CASTTHIS->operator | (CASTREF y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator &= (const OZ_FSetValue &y)
+{
+  return CASTTHIS->operator &= (CASTREF y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator |= (const OZ_FSetValue &y)
+{
+  return CASTTHIS->operator |= (CASTREF y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator - (const OZ_FSetValue &y) const
+{
+  return CASTTHIS->operator - (CASTREF y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator &= (const int y)
+{
+  return CASTTHIS->operator &= (y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator += (const int y)
+{
+  return CASTTHIS->operator += (y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator -= (const int y)
+{
+  return CASTTHIS->operator -= (y);
+}
+
+OZ_FSetValue OZ_FSetValue::operator - (void) const
+{
+  return CASTTHIS->operator - ();
+}
 
 char * OZ_FSetValue::toString() const
 {
@@ -994,6 +1211,11 @@ OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetConstraint &s)
 OZ_FSetConstraint &OZ_FSetConstraint::operator = (const OZ_FSetConstraint &s)
 {
   return CASTTHIS->operator = (* (OZ_FSetImpl *) &s);
+}
+
+void OZ_FSetConstraint::init(OZ_FSetState s)
+{
+  CASTTHIS->init(s);
 }
 
 void OZ_FSetConstraint::init(void)
@@ -1076,6 +1298,11 @@ OZ_FSetConstraint OZ_FSetConstraint::operator | (const OZ_FSetConstraint& y) con
   return CASTTHIS->operator | (CASTREF y);
 }
 
+OZ_FSetConstraint OZ_FSetConstraint::operator - (const OZ_FSetConstraint& y) const
+{
+  return CASTTHIS->operator - (CASTREF y);
+}
+
 OZ_Term OZ_FSetConstraint::getLubList(void) const
 {
   return CASTTHIS->getLubList();
@@ -1148,3 +1375,6 @@ OZ_Boolean OZ_FSetConstraint::operator >= (const int i)
 {
   return CASTTHIS->operator >= (i);
 }
+
+// eof
+//-----------------------------------------------------------------------------

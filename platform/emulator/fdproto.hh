@@ -143,4 +143,8 @@ OZ_C_proc_proto(fsp_max)
 OZ_C_proc_proto(fsp_convex)
 OZ_C_proc_proto(fsp_diff)
 OZ_C_proc_proto(fsp_includeR)
+OZ_C_proc_proto(fsp_bounds)
+OZ_C_proc_proto(fsp_disjointN)
+OZ_C_proc_proto(fsp_unionN)
+OZ_C_proc_proto(fsp_boundsN)
 #endif

@@ -177,6 +177,19 @@ public:
   virtual OZ_Term getParameters(void) const;
 };
 
+//-----------------------------------------------------------------------------
+class Propagator_VS_S : public Propagator_VS {
+protected:
+  OZ_Term  _s;
+
+public:
+  Propagator_VS_S(OZ_Term vs, OZ_Term s);
+
+  virtual size_t sizeOf(void) { return sizeof(Propagator_VS_S); }
+  virtual void updateHeapRefs(OZ_Boolean);
+  virtual OZ_Term getParameters(void) const;
+};
+
 
 #endif /* __FSSTD_HH__ */
 

@@ -542,7 +542,7 @@ OZ_CFun FSetSeqPropagator::header = fsp_seq;
 
 OZ_Return FSetSeqPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINTTHIS("in ");
+  OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   PropagatorController_VS P(_vs_size, vs);
@@ -569,7 +569,7 @@ OZ_Return FSetSeqPropagator::propagate(void)
     OZ_DEBUGPRINT(("%i %s > %i\n", i, vs[i]->toString(),glb_max));
   }
 
-  _OZ_DEBUGPRINTTHIS("after #1 ");
+  OZ_DEBUGPRINTTHIS("after #1 ");
 
   for (i = _vs_size - 1; i > 0; i -= 1) {
     // assumes min/max element of empty set to be sup+1
@@ -581,21 +581,22 @@ OZ_Return FSetSeqPropagator::propagate(void)
                            (gm == -1 ? OZ_getFSetSup() + 1 : gm)));
     lub_max = (lub_max_tmp == -1 ? lub_max : lub_max_tmp);
 
-    _OZ_DEBUGPRINT(("#2 %i", lub_max));
+    OZ_DEBUGPRINT(("#2 %i", lub_max));
 
     if (lub_max == -1) // there is no maximum
       continue;
 
     FailOnInvalid(*vs[i-1] <= (lub_max - 1));
 
-    _OZ_DEBUGPRINT(("#2 %i %s < %i\n", i, vs[i]->toString(),lub_max));
+    OZ_DEBUGPRINT(("#2 %i %s < %i\n", i, vs[i]->toString(),lub_max));
   }
 
-  _OZ_DEBUGPRINTTHIS("out ");
+  OZ_DEBUGPRINTTHIS("out ");
 
   return P.leave();
 
 failure:
+  OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }
 

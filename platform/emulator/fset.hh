@@ -27,13 +27,14 @@ friend class OZ_FSetImpl;
 
 public:
   FSetValue(void) {}
-  FSetValue(const OZ_FSetImpl &s) {
-    init(s);
-  }
+  FSetValue(const OZ_FSetImpl &s);
   FSetValue(OZ_Term);
   FSetValue(const int *);
+  FSetValue(OZ_FSetState s);
 
   void init(const OZ_FSetImpl &);
+  void init(const OZ_Term);
+  void init(OZ_FSetState);
 
   ostream &print2stream(ostream &) const;
 
@@ -51,6 +52,16 @@ public:
   int getMaxElem(void) const;
   int getNextLargerElem(int) const;
   int getNextSmallerElem(int) const;
+
+  FSetValue operator & (const FSetValue &) const;
+  FSetValue operator | (const FSetValue &) const;
+  FSetValue operator - (const FSetValue &) const;
+  FSetValue operator &= (const FSetValue &);
+  FSetValue operator |= (const FSetValue &);
+  FSetValue operator &= (const int);
+  FSetValue operator += (const int);
+  FSetValue operator -= (const int);
+  FSetValue operator - (void) const;
 };
 
 inline
@@ -93,9 +104,7 @@ public:
     return (_card_min == _card_max) && (_card_min == _known_in);
   }
   OZ_Boolean isWeakerThan(const OZ_FSetImpl &) const;
-  OZ_Boolean isFSetValue(void) const {
-    return _card_min == _card_max && _card_min == _known_in;
-  }
+
   ostream &print(ostream &) const;
   void printDebug(void) const;
   OZ_FSetImpl &operator =(const FSetValue &);
@@ -121,6 +130,7 @@ public:
   OZ_Boolean operator <<= (const OZ_FSetImpl &);
   OZ_FSetImpl operator & (const OZ_FSetImpl &) const;
   OZ_FSetImpl operator | (const OZ_FSetImpl &) const;
+  OZ_FSetImpl operator - (const OZ_FSetImpl &) const;
   OZ_Boolean operator <= (const OZ_FSetImpl &);
   OZ_Boolean operator >= (const OZ_FSetImpl &);
   OZ_Boolean operator != (const OZ_FSetImpl &);

@@ -76,10 +76,14 @@ OZ_C_proc_begin(BIfsClone, 2)
 
   EXPECT_BLOCK(pe, 0, expectFSetVar);
 
-  return tellBasicConstraint(OZ_getCArg(1),
-                             (OZ_FSetImpl *) &tagged2GenFSetVar(deref(OZ_getCArg(0)))->getSet());
+  DEREF(OZ_getCArg(0), arg0ptr, arg0tag);
+
+  return arg0tag == FSETVALUE ? OZ_unify(OZ_getCArg(0), OZ_getCArg(1))
+    : tellBasicConstraint(OZ_getCArg(1),
+                          (OZ_FSetImpl *) &tagged2GenFSetVar(deref(OZ_getCArg(0)))->getSet());
 }
 OZ_C_proc_end
+
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIfsGetKnownIn, 2)
@@ -359,6 +363,9 @@ BIspec fdSpec[] = {
   {"fsp_convex",       1, fsp_convex},
   {"fsp_diff",         3, fsp_diff},
   {"fsp_includeR",     3, fsp_includeR},
+  {"fsp_bounds",       5, fsp_bounds},
+  {"fsp_disjointN",    1, fsp_disjointN},
+  {"fsp_unionN",       2, fsp_unionN},
 #endif /* FOREIGNFDPROPS */
 
   {0,0,0,0}
@@ -368,3 +375,6 @@ void BIinitFSet(void)
 {
   BIaddSpec(fdSpec);
 }
+
+// eof
+//-----------------------------------------------------------------------------

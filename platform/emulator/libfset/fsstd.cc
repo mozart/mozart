@@ -77,4 +77,23 @@ OZ_Term Propagator_VS::getParameters(void) const
 }
 
 //-----------------------------------------------------------------------------
+
+Propagator_VS_S::Propagator_VS_S(OZ_Term vs, OZ_Term s)
+  : Propagator_VS(vs), _s(s)
+{
+}
+
+void Propagator_VS_S::updateHeapRefs(OZ_Boolean dup)
+{
+  Propagator_VS::updateHeapRefs(dup);
+  OZ_updateHeapTerm(_s);
+}
+
+OZ_Term Propagator_VS_S::getParameters(void) const
+{
+  TERMVECTOR2LIST(_vs, _vs_size, vs);
+  RETURN_LIST2(vs,_s);
+}
+
+//-----------------------------------------------------------------------------
 // eof
