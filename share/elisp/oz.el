@@ -252,7 +252,7 @@ Note that this variable is only checked once when oz.el is loaded."
 
 (defconst oz-begin-pattern
   (oz-make-keywords-for-match
-   '("local" "proc" "fun" "case" "if" "cond" "or" "dis" "choice" "condis" "not"
+   '("local" "proc" "fun" "case" "if" "cond" "or" "dis" "choice" "not"
      "thread" "try" "raise" "lock")))
 
 (defconst oz-gump-between-pattern
@@ -279,7 +279,7 @@ Note that this variable is only checked once when oz.el is loaded."
 
 (defconst oz-any-pattern
   (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
-	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
+	  "declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|prepare\\|"
 	  "proc\\|prop\\|raise\\|require\\|then\\|thread\\|try\\)\\>\\|"
@@ -287,7 +287,7 @@ Note that this variable is only checked once when oz.el is loaded."
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
   (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
-	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
+	  "declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
 	  "if\\|in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
 	  "or\\|parser\\|prepare\\|proc\\|prod\\|prop\\|raise\\|require\\|"
@@ -1333,7 +1333,7 @@ and initial percent signs."
     "class" "from" "prop" "attr" "feat" "meth" "self"
     "true" "false" "unit"
     "div" "mod" "andthen" "orelse"
-    "cond" "or" "dis" "choice" "condis" "not"
+    "cond" "or" "dis" "choice" "not"
     "thread" "try" "catch" "finally" "raise" "lock"
     "skip" "fail")
   "List of all Oz keywords with identifier syntax.")
