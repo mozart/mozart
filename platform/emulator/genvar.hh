@@ -93,23 +93,62 @@ public:
 
   void addDetSusp (Thread *thr);
   void dispose(void);
+
+  // needed to catch multiply occuring reified vars in propagators
+  void patchReified(OZ_FiniteDomain * d, Bool isBool) {
+    var_type = (TypeOfGenCVariable) d;
+    if (isBool) var_type = (TypeOfGenCVariable) (var_type | 1);
+    setReifiedFlag();
+  }
+  void unpatchReified(Bool isBool) {
+    setType(isBool ? BoolVariable : FDVariable);
+    resetReifiedFlag();
+  }
+  OZ_Boolean isBoolPatched(void) { return (var_type & 1); }
+  OZ_FiniteDomain * getReifiedPatch(void) {
+    return (OZ_FiniteDomain *)  (var_type & ~1);
+  }
 };
 
 // only SVar and their descendants can be exclusive
 inline
-void setExclusive(OZ_Term t)
+void setStoreFlag(OZ_Term t)
 {
   Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
 
-  ((SVariable *) tagValueOf(t))->setExclusive();
+  ((SVariable *) tagValueOf(t))->setStoreFlag();
 }
 
 inline
-OZ_Boolean testResetExclusive(OZ_Term t)
+void setReifiedFlag(OZ_Term t)
 {
   Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
 
-  return ((SVariable *) tagValueOf(t))->testResetExclusive();
+  ((SVariable *) tagValueOf(t))->setReifiedFlag();
+}
+
+inline
+OZ_Boolean testReifiedFlag(OZ_Term t)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  return ((SVariable *) tagValueOf(t))->testReifiedFlag();
+}
+
+inline
+OZ_Boolean testResetStoreFlag(OZ_Term t)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  return ((SVariable *) tagValueOf(t))->testResetStoreFlag();
+}
+
+inline
+void unpatchReified(OZ_Term t, Bool isBool)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  ((GenCVariable *) tagValueOf(t))->unpatchReified(isBool);
 }
 
 inline

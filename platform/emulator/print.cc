@@ -103,8 +103,7 @@ inline Bool isEffectiveList(SuspList* sl) {
 // PRINT
 // ----------------------------------------------------------------
 
-static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
-                          int depth = 10,int offset = 0)
+void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
 {
   CHECKDEPTH;
   if (ref == makeTaggedNULL()) {
@@ -972,7 +971,7 @@ PRINT(Thread)
     break;
 
   case S_PR_THR:
-    stream << " 'new prop'" << *getPropagator();
+    stream << ' ' << *getPropagator();
     break;
 
   default:

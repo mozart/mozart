@@ -34,8 +34,11 @@ class GenBoolVariable : public GenCVariable {
   friend inline void addSuspBoolVar(TaggedRef, SuspList *);
   friend inline void addSuspBoolVar(TaggedRef, Thread *);
 
+private:
+  OZ_FiniteDomain * store_patch;
+
 public:
-  GenBoolVariable(void) : GenCVariable(BoolVariable) { }
+  GenBoolVariable(void) : GenCVariable(BoolVariable) {}
 
   // methods relevant for term copying (gc and solve)
   size_t getSize(void){return sizeof(GenBoolVariable);}
@@ -44,7 +47,7 @@ public:
   Bool unifyBool(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
                  Bool, Bool = TRUE);
 
-  // is X=val still valid, i.e. is val an smallint and either 0 ro 1.
+  // is X=val still valid, i.e. is val an smallint and either 0 or 1.
   Bool valid(TaggedRef val);
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr, OZ_FiniteDomain & fd);
@@ -59,6 +62,10 @@ public:
   void propagateUnify(TaggedRef var) {
     propagate(var, pc_cv_unif);
   }
+
+  // needed to catch multiply occuring bool vars in propagators
+  void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
+  OZ_FiniteDomain * getStorePatchBool(void) { return store_patch; }
 };
 
 inline Bool isGenBoolVar(TaggedRef term);
