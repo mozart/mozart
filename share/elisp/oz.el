@@ -91,17 +91,17 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-compiler "oz.compiler"
-  "Oz system used by run-oz")
-
-(defvar oz-machine "oz.machine"
-  "Oz machine used by run-oz")
+(defvar oz-compiler "oz.compiler")
+(defvar oz-machine "oz.machine")
 
 (defvar oz-machine-hook nil
   "Hook used if non nil for starting machine.
-for example
+For example
   (setq oz-machine-hook 'gdb-machine)
 ")
+
+(defvar oz-wait-for-compiler 5
+  "Wait between startup of compiler and engine")
 
 (defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/soft/oz") "/")
   "The directory where oz is installed")
@@ -429,6 +429,7 @@ if that value is non-nil."
 
 	(if oz-machine-hook
 	    (funcall oz-machine-hook file)
+	  (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
 	  (oz-set-state 'oz-machine-state "booting")
 	  (make-comint "Oz Machine" oz-machine nil "-S" file)
 	  (oz-create-buffer "*Oz Machine*")
@@ -463,6 +464,7 @@ the GDB commands `cd DIR' and `directory'."
   (let* ((path (expand-file-name gdb-oz-machine))
 	(file (file-name-nondirectory path)))
     (setq default-directory (file-name-directory path))
+
     (make-comint "Oz Machine" gdb-command-name nil "-fullname"
 		 "-cd" default-directory file)
     (save-excursion
