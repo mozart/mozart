@@ -968,6 +968,8 @@ public:
 
 };
 
+typedef OZ_CtDefinition OZ_CtDescr;
+
 /*
 class ozdeclspec OZ_CtDefinition {
 public:
