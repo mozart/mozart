@@ -287,7 +287,7 @@ void osBlockSignals(Bool check)
 
   sigprocmask(SIG_SETMASK,&s,&sOld);
 
-#ifdef DEBUG_CHECK
+#ifdef DEBUG_CHECK_SIGNALS
   if (check) {
     sigemptyset(&s);
     if (memcmp(&s,&sOld,sizeof(sigset_t)) != 0) {
