@@ -1,8 +1,8 @@
 functor
 export
-   Expand FileTree Mkdir Rmtree Exists WithSlash
+   Expand FileTree Mkdir Rmtree Exists WithSlash FullName
 import
-   URL(toVirtualStringExtended) Resolve(expand)
+   URL(toVirtualStringExtended isAbsolute make) Resolve(expand)
    OS(getDir stat system unlink)
    Shell(shellCommand isWindows:IsWindows rmdir)
    Property(get)
@@ -111,5 +111,18 @@ define
       else
 	 V
       end
+   end
+   %%
+   %%
+   %%
+   fun{FullName File Home}
+      {VirtualString.toString
+       if {URL.isAbsolute {URL.make File}} then
+	  File
+       else
+	  if Home==nil then File
+	  else {WithSlash Home}#File
+	  end
+       end}
    end
 end
