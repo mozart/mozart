@@ -777,7 +777,7 @@ public:
   
   Message* current;
 
-  void init(RemoteSite *s);
+
   void setFlag(int f){flags |= f;}
   void clearFlag(int f){flags &= ~f;}
   Bool testFlag(int f){return f & flags;}
@@ -861,14 +861,11 @@ public:
     remoteSite->receivedNewSize(s);}
   
 
-   void addCurQueue(Message *m){
-    PD((TCPQUEUE,"add readCur m:%x r:%x",m,this));
-    setIncomplete();
-    current = m;}
 
   void init(RemoteSite *s){
     next = prev = NULL;
     flags=0;
+    current = NULL;
     remoteSite=s;
     current=NULL;}
   
@@ -1002,6 +999,7 @@ public:
   
   void init(RemoteSite *s){
     next = prev = NULL;
+    current = NULL;
     flags=0;
     writeCtr=0;
     remoteSite=s;
@@ -1445,9 +1443,9 @@ void ReadConnection::prmDwn(){
   // EK what to do with the handler?
   OZ_unregisterRead(fd);
   osclose(fd);
-  if(current!=NULL) 
+  if(current!=NULL) {
     messageManager->freeMessage(current);
-}
+    current = NULL;}}
 void WriteConnection::prmDwn(){
     Message *m;
     OZ_unregisterRead(fd);
@@ -1455,11 +1453,13 @@ void WriteConnection::prmDwn(){
     osclose(fd);
     //EK 
     // What to do with the close handler?
-    if(current!=NULL) {
+    if(isIncomplete()) {
+      Assert(current != NULL);
       remoteSite->site->communicationProblem(current->msgType, current->site,
 			   current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
 			   (FaultInfo) current->bs);
-      messageManager->freeMessage(current);}
+      messageManager->freeMessage(current);
+      current = NULL;}
 
     while((m = writeQueue.removeFirst()) && m != NULL) {
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
