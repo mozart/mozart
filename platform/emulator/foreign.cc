@@ -447,7 +447,11 @@ long OZ_intToCL(OZ_Term term)
 
 unsigned long OZ_intToCulong(OZ_Term term)
 {
-  return tagged2BigInt(oz_deref(term))->getUnsignedLong();
+  term = oz_deref(term);
+  if (oz_isSmallInt(term))
+    return (unsigned long) tagged2SmallInt(term);
+  else
+    return tagged2BigInt(term)->getUnsignedLong();
 }
 
 OZ_Term OZ_CStringToInt(char *str)
