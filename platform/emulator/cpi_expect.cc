@@ -71,7 +71,7 @@ void OZ_Expect::addSuspend(OZ_Term * v)
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber++] = v;
     
-    Assert(staticSuspendVarsNumber < MAXFDBIARGS);
+    staticSuspendVars.request(staticSuspendVarsNumber);
   }
 }
 

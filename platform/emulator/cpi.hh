@@ -31,9 +31,10 @@ struct _spawnVars_t {
   union {OZ_FDPropState fd;} state;
 };
 
-extern _spawnVars_t * staticSpawnVars;
-extern _spawnVars_t * staticSpawnVarsProp;
-extern OZ_Term ** staticSuspendVars;
+extern EnlargeableArray<_spawnVars_t> staticSpawnVars;
+extern EnlargeableArray<_spawnVars_t> staticSpawnVarsProp;
+extern EnlargeableArray<OZ_Term *> staticSuspendVars;
+
 extern int staticSpawnVarsNumber, 
            staticSpawnVarsNumberProp, 
            staticSuspendVarsNumber;

@@ -53,8 +53,7 @@ void OZ_hfreeChars(char * is, int n)
 #define MAKETAGGEDINDEX(I)  makeTaggedRef(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
 
-static int _is_size = 1024;
-static int * is = (int *) malloc(_is_size * sizeof(int));
+static EnlargeableArray<int> is(1024);
 
 int * OZ_findEqualVars(int sz, OZ_Term * ts)
 {
@@ -69,8 +68,8 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
 #endif
   int i;
 
-  if (sz > _is_size) 
-    is = (int *) realloc(is, sizeof(int) * (_is_size = sz));
+  is.request(sz);
+
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
@@ -98,15 +97,14 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   return is;
 }
 
-static int _sgl_size = 1024;
-static int * sgl = (int *) malloc(_sgl_size * sizeof(int));
+static EnlargeableArray<int> sgl(1024);
 
 int * OZ_findSingletons(int sz, OZ_Term * ts)
 {
   int i;
 
-  if (sz > _sgl_size) 
-    sgl = (int *) realloc(is, sizeof(int) * (_sgl_size = sz));
+  sgl.request(sz);
+
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
