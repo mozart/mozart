@@ -14,6 +14,7 @@
 #endif
 
 #include "fdomn.hh"
+#include "fdomn1.hh"
 
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
@@ -21,12 +22,113 @@
 #undef inline
 #endif
 
-#include "tagged.hh"
 
+//-----------------------------------------------------------------------------
+// Miscellaneous --------------------------------------------------------------
 
-// Debugging Stuff ------------------------------------------------------------
+extern unsigned char numOfBitsInByte[];
+extern int toTheLowerEnd[];
+extern int toTheUpperEnd[];
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+int fd_bv_left_conv[fd_bv_conv_max_high];
+int fd_bv_right_conv[fd_bv_conv_max_high];
+
+intptr fd_iv_left_sort[MAXFDBIARGS];
+intptr fd_iv_right_sort[MAXFDBIARGS];
+
+inline
+int div32(int n) {
+  return n >> 5;
+}
+
+inline
+int mod32(int n) {
+  return n & 0x1f;
+}
+
+inline
+int word32(int n) {
+  return mod32(n) ? div32(n) + 1 : div32(n);
+}
+
+//-----------------------------------------------------------------------------
+// FDInterval -----------------------------------------------------------------
+
+inline
+FDIntervals * newIntervals(int max_index) {
+  return (max_index > fd_iv_max_high)
+    ? new (max_index) FDIntervals(max_index) : new FDIntervals(max_index);
+}
+
+inline
+int FDIntervals::findSize(void) {
+  int s, i;
+  for (s = 0, i = high; i--; )
+    s += (i_arr[i].right - i_arr[i].left + 1);
+
+  return s;
+}
+
+inline
+int FDIntervals::findMinElem(void) {
+  return high ? i_arr[0].left : 0;
+}
+
+inline
+int FDIntervals::findMaxElem(void) {
+  return high ? i_arr[high - 1].right : 0;
+}
+
+inline
+FDIntervals * FDIntervals::copy(void)
+{
+  FDIntervals * new_item = (high > fd_iv_max_high)
+    ? new (high) FDIntervals(high) : new FDIntervals(high);
+
+  for (int i = high; i--; )
+    new_item->i_arr[i] = i_arr[i];
+
+  return new_item;
+}
+
+inline
+void FDIntervals::copy(FDIntervals * source)
+{
+  AssertFD(high >= source->high);
+
+  high = source->high;
+  for (int i = high; i--; )
+    i_arr[i] = source->i_arr[i];
+}
+
+inline
+void FDIntervals::init(int l0, int r0, int l1, int r1)
+{
+  i_arr[0].left = l0;
+  i_arr[0].right = r0;
+  i_arr[1].left = l1;
+  i_arr[1].right = r1;
+
+  AssertFD(isConsistent());
+}
+
+inline
+const FDIntervals &FDIntervals::operator = (const FDIntervals &iv)
+{
+  AssertFD(high >= iv.high);
+
+  high = iv.high;
+  for (int i = high; i--; )
+    i_arr[i] = iv.i_arr[i];
+
+  return *this;
+}
+
+inline
+FDIntervals::FDIntervals(const FDIntervals &iv) {
+  *this = iv;
+}
+
 
 Bool FDIntervals::isConsistent(void) const {
   if (high < 0) return FALSE;
@@ -40,33 +142,11 @@ Bool FDIntervals::isConsistent(void) const {
   return TRUE;
 }
 
-Bool FiniteDomain::isConsistent(void) const {
-  if (size == 0) return TRUE;
-  descr_type type = getType();
-  if (type == fd_descr)
-    return findSize() == size;
-  else if (type == bv_descr)
-    return get_bv()->findSize() == size;
-  else
-    return get_iv()->findSize() == size;
-}
 
-#endif
+//-----------------------------------------------------------------------------
+// class FDInterval -----------------------------------------------------------
 
-// Miscellaneous --------------------------------------------------------------
-
-extern unsigned char numOfBitsInByte[];
-extern int toTheLowerEnd[];
-extern int toTheUpperEnd[];
-
-int fd_bv_left_conv[fd_bv_conv_max_high];
-int fd_bv_right_conv[fd_bv_conv_max_high];
-
-intptr fd_iv_left_sort[MAXFDBIARGS];
-intptr fd_iv_right_sort[MAXFDBIARGS];
-
-// FDInterval -----------------------------------------------------------------
-
+inline
 void FDIntervals::initList(int list_len,
                            int * list_left, int * list_right)
 {
@@ -80,6 +160,7 @@ void FDIntervals::initList(int list_len,
   AssertFD(isConsistent());
 }
 
+inline
 int FDIntervals::nextBiggerElem(int v, int max_elem) const
 {
   for (int i = 0; i < high; i += 1) {
@@ -90,6 +171,29 @@ int FDIntervals::nextBiggerElem(int v, int max_elem) const
   return -1;
 }
 
+// taken from stubbs&webre page 168
+inline
+int FDIntervals::findPossibleIndexOf(int i) const
+{
+  int lo, hi;
+  for (lo = 0, hi = high - 1; lo < hi; ) {
+    int mid = (lo + hi + 1) / 2;
+    if (i < i_arr[mid].left)
+      hi = mid - 1;
+    else
+      lo = mid;
+  }
+  return lo;
+}
+
+inline
+Bool FDIntervals::contains(int i) const
+{
+  int index = findPossibleIndexOf(i);
+  return (i_arr[index].left <= i && i <= i_arr[index].right);
+}
+
+inline
 Bool FDIntervals::next(int i, int &n) const
 {
   if (contains(i)) {
@@ -115,7 +219,7 @@ Bool FDIntervals::next(int i, int &n) const
 }
 
 inline
-LTuple * mkListEl(LTuple * &h, LTuple * a, TaggedRef el)
+LTuple * mkListEl(LTuple * &h, LTuple * a, OZ_Term el)
 {
   if (h == NULL) {
     return h = new LTuple(el, AtomNil);
@@ -126,7 +230,8 @@ LTuple * mkListEl(LTuple * &h, LTuple * a, TaggedRef el)
   }
 }
 
-TaggedRef FDIntervals::getAsList(void) const
+inline
+OZ_Term FDIntervals::getAsList(void) const
 {
   LTuple * hd = NULL, * l_ptr = NULL;
 
@@ -138,28 +243,8 @@ TaggedRef FDIntervals::getAsList(void) const
   return makeTaggedLTuple(hd);
 }
 
-// taken from stubbs&webre page 168
-inline
-int FDIntervals::findPossibleIndexOf(int i) const
-{
-  int lo, hi;
-  for (lo = 0, hi = high - 1; lo < hi; ) {
-    int mid = (lo + hi + 1) / 2;
-    if (i < i_arr[mid].left)
-      hi = mid - 1;
-    else
-      lo = mid;
-  }
-  return lo;
-}
-
-Bool FDIntervals::contains(int i) const
-{
-  int index = findPossibleIndexOf(i);
-  return (i_arr[index].left <= i && i <= i_arr[index].right);
-}
-
 // fd_inf <= leq <= fd_sup
+inline
 int FDIntervals::operator <= (const int leq)
 {
   int index = findPossibleIndexOf(leq);
@@ -180,6 +265,7 @@ int FDIntervals::operator <= (const int leq)
 }
 
 // fd_inf <= geq <= fd_sup
+inline
 int FDIntervals::operator >= (const int geq)
 {
   int index = findPossibleIndexOf(geq);
@@ -199,6 +285,7 @@ int FDIntervals::operator >= (const int geq)
   return findSize();
 }
 
+inline
 FDIntervals * FDIntervals::operator -= (const int take_out)
 {
   int index = findPossibleIndexOf(take_out);
@@ -245,6 +332,7 @@ FDIntervals * FDIntervals::operator -= (const int take_out)
   return this;
 }
 
+inline
 FDIntervals * FDIntervals::operator += (const int put_in)
 {
   int index = findPossibleIndexOf(put_in);
@@ -291,6 +379,7 @@ FDIntervals * FDIntervals::operator += (const int put_in)
   return this;
 }
 
+inline
 FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
 {
   int c_i = 0, i = 0;
@@ -313,6 +402,7 @@ FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
   return this;
 }
 
+inline
 FDIntervals * FDIntervals::complement(int a_high, int * x_left, int * x_right)
 {
   int c_i = 0, i = 0;
@@ -335,6 +425,7 @@ FDIntervals * FDIntervals::complement(int a_high, int * x_left, int * x_right)
   return this;
 }
 
+inline
 int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
 {
   int x_c, y_c, z_c, r;
@@ -385,6 +476,7 @@ int FDIntervals::union_iv(const FDIntervals &x, const FDIntervals &y)
   return findSize();
 }
 
+inline
 int FDIntervals::intersect_iv(FDIntervals &z, const FDIntervals &y)
 {
   int x_c, y_c, z_c;
@@ -415,6 +507,7 @@ int FDIntervals::intersect_iv(FDIntervals &z, const FDIntervals &y)
   return z.findSize();
 }
 
+inline
 int FDIntervals::subtract_iv(FDIntervals &z, const FDIntervals &y)
 {
   int x_c, y_c, z_c;
@@ -458,8 +551,62 @@ int FDIntervals::subtract_iv(FDIntervals &z, const FDIntervals &y)
   return z.findSize();
 }
 
-// FDBitVector ----------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// calls FDBitVector ----------------------------------------------------------
+
+inline
+Bool FDBitVector::contains(int i) const {
+  return (i > fd_bv_max_elem || i < 0)
+    ? FALSE : (b_arr[div32(i)] & (1 << (mod32(i))));
+}
+
+// 0 <= i <= fd_bv_max_elem
+inline
+void FDBitVector::setBit(int i) {
+  b_arr[div32(i)] |= (1 << (mod32(i)));
+}
+
+// 0 <= i <= fd_bv_max_elem
+inline
+void FDBitVector::resetBit(int i) {
+  b_arr[div32(i)] &= ~(1 << (mod32(i)));
+}
+
+inline
+void FDBitVector::setEmpty(void) {
+  for (int i = fd_bv_max_high; i--; )
+    b_arr[i] = 0;
+}
+
+inline
+FDBitVector * FDBitVector::copy(void)
+{
+  FDBitVector * new_item = new FDBitVector;
+
+  *new_item = *this;
+  return new_item;
+}
+
+inline
+void FDBitVector::addFromTo(int from, int to)
+{
+  AssertFD(0 <= from && from <= to && to <= fd_bv_max_elem);
+
+  int low_word = div32(from), low_bit = mod32(from);
+  int up_word = div32(to), up_bit = mod32(to);
+
+  if (low_word == up_word) {
+    b_arr[low_word] |= toTheLowerEnd[up_bit] & toTheUpperEnd[low_bit];
+  } else {
+    b_arr[low_word] |= toTheUpperEnd[low_bit];
+    for (int i = low_word + 1; i < up_word; i++)
+      b_arr[i] = int(~0);
+    b_arr[up_word] |= toTheLowerEnd[up_bit];
+  }
+}
+
+inline
 void FDBitVector::initList(int list_len,
                            int * list_left, int * list_right)
 {
@@ -468,6 +615,7 @@ void FDBitVector::initList(int list_len,
     addFromTo(list_left[i], list_right[i]);
 }
 
+inline
 int FDBitVector::findSize(void)
 {
   int s, i;
@@ -479,6 +627,7 @@ int FDBitVector::findSize(void)
   return s;
 }
 
+inline
 int FDBitVector::findMinElem(void)
 {
   int v, i;
@@ -507,6 +656,7 @@ int FDBitVector::findMinElem(void)
   return v;
 }
 
+inline
 int FDBitVector::findMaxElem(void)
 {
   int v, i;
@@ -535,6 +685,7 @@ int FDBitVector::findMaxElem(void)
   return v;
 }
 
+inline
 void FDBitVector::setFromTo(int from, int to)
 {
   AssertFD(0 <= from && from <= to && to <= fd_bv_max_elem);
@@ -558,23 +709,7 @@ void FDBitVector::setFromTo(int from, int to)
   }
 }
 
-void FDBitVector::addFromTo(int from, int to)
-{
-  AssertFD(0 <= from && from <= to && to <= fd_bv_max_elem);
-
-  int low_word = div32(from), low_bit = mod32(from);
-  int up_word = div32(to), up_bit = mod32(to);
-
-  if (low_word == up_word) {
-    b_arr[low_word] |= toTheLowerEnd[up_bit] & toTheUpperEnd[low_bit];
-  } else {
-    b_arr[low_word] |= toTheUpperEnd[low_bit];
-    for (int i = low_word + 1; i < up_word; i++)
-      b_arr[i] = int(~0);
-    b_arr[up_word] |= toTheLowerEnd[up_bit];
-  }
-}
-
+inline
 int FDBitVector::nextBiggerElem(int v, int max_elem) const
 {
   for (int new_v = v + 1; new_v <= max_elem; new_v += 1)
@@ -585,6 +720,7 @@ int FDBitVector::nextBiggerElem(int v, int max_elem) const
   return -1;
 }
 
+inline
 Bool FDBitVector::next(int i, int &n) const
 {
   if (contains(i)) {
@@ -619,44 +755,7 @@ Bool FDBitVector::next(int i, int &n) const
   return FALSE;
 }
 
-TaggedRef FDBitVector::getAsList(void) const
-{
-  LTuple * hd = NULL, * l_ptr = NULL;
-  int len = mkRaw(fd_bv_left_conv, fd_bv_right_conv);
-
-  for (int i = 0; i < len; i += 1)
-    if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
-      l_ptr = mkListEl(hd, l_ptr, newSmallInt(fd_bv_left_conv[i]));
-    else
-      l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
-                                          fd_bv_right_conv[i]));
-
-  return makeTaggedLTuple(hd);
-}
-
-// fd_inf <= leq <= fd_bv_max_elem
-int FDBitVector::operator <= (const int leq)
-{
-  int upper_word = div32(leq), upper_bit = mod32(leq);
-
-  for (int i = upper_word + 1; i < fd_bv_max_high; i += 1)
-    b_arr[i] = 0;
-  b_arr[upper_word] &= toTheLowerEnd[upper_bit];
-
-  return findSize();
-}
-
-// fd_inf <= geq <= fd_bv_max_elem
-int FDBitVector::operator >= (const int geq)
-{
-  int lower_word = div32(geq), lower_bit = mod32(geq);
-
-  for (int i = 0; i < lower_word; i += 1)
-    b_arr[i] = 0;
-  b_arr[lower_word] &= toTheUpperEnd[lower_bit];
-  return findSize();
-}
-
+inline
 int FDBitVector::mkRaw(int * list_left, int * list_right) const
 {
   int i, r, l, len;
@@ -681,6 +780,54 @@ int FDBitVector::mkRaw(int * list_left, int * list_right) const
   return len;
 }
 
+int FDBitVector::mkRawOutline(int * list_left, int * list_right) const
+{
+  return mkRaw(list_left, list_right);
+}
+
+
+inline
+OZ_Term FDBitVector::getAsList(void) const
+{
+  LTuple * hd = NULL, * l_ptr = NULL;
+  int len = mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+
+  for (int i = 0; i < len; i += 1)
+    if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
+      l_ptr = mkListEl(hd, l_ptr, newSmallInt(fd_bv_left_conv[i]));
+    else
+      l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
+                                          fd_bv_right_conv[i]));
+
+  return makeTaggedLTuple(hd);
+}
+
+// fd_inf <= leq <= fd_bv_max_elem
+inline
+int FDBitVector::operator <= (const int leq)
+{
+  int upper_word = div32(leq), upper_bit = mod32(leq);
+
+  for (int i = upper_word + 1; i < fd_bv_max_high; i += 1)
+    b_arr[i] = 0;
+  b_arr[upper_word] &= toTheLowerEnd[upper_bit];
+
+  return findSize();
+}
+
+// fd_inf <= geq <= fd_bv_max_elem
+inline
+int FDBitVector::operator >= (const int geq)
+{
+  int lower_word = div32(geq), lower_bit = mod32(geq);
+
+  for (int i = 0; i < lower_word; i += 1)
+    b_arr[i] = 0;
+  b_arr[lower_word] &= toTheUpperEnd[lower_bit];
+  return findSize();
+}
+
+inline
 int FDBitVector::union_bv(const FDBitVector &x, const int x_upper,
                           const FDBitVector &y, const int y_upper)
 {
@@ -690,6 +837,7 @@ int FDBitVector::union_bv(const FDBitVector &x, const int x_upper,
   return findSize();
 }
 
+inline
 int FDBitVector::intersect_bv(FDBitVector &z, const FDBitVector &y)
 {
   if (this == &z)
@@ -702,6 +850,7 @@ int FDBitVector::intersect_bv(FDBitVector &z, const FDBitVector &y)
   return z.findSize();
 }
 
+inline
 int FDBitVector::operator -= (const FDBitVector &y)
 {
   for (int i = fd_bv_max_high; i--; )
@@ -709,42 +858,349 @@ int FDBitVector::operator -= (const FDBitVector &y)
   return findSize();
 }
 
-// FD -------------------------------------------------------------------------
-
-
-// expects valid intervals, ie fd_inf <= left <= right <= fd_sup
-int FiniteDomain::initList(int list_len,
-                           int * list_left, int * list_right,
-                           int list_min, int list_max)
-{
-  if (list_len == 0) {
-    return initEmpty();
-  } else if (list_len == 1) {
-    min_elem = list_min;
-    max_elem = list_max;
-    size = max_elem - min_elem + 1;
-    setType(fd_descr);
-  } else {
-    min_elem = list_min;
-    max_elem = list_max;
-
-    if (list_max <= fd_bv_max_elem) {
-      FDBitVector * bv = provideBitVector();
-      bv->initList(list_len, list_left, list_right);
-      size = bv->findSize();
-      setType(bv);
-    } else {
-      int new_len = simplify(list_len, list_left, list_right);
-      FDIntervals * iv = provideIntervals(new_len);
-      iv->initList(new_len, list_left, list_right);
-      size = iv->findSize();
-      setType(iv);
-    }
-  }
-  if (isSingleInterval()) setType(fd_descr);
-  return size;
+inline
+size_t FDBitVector::memory_required(void) { // used for profiling
+  return 4 * size_t(ceil(float(findMaxElem())/32));
 }
 
+
+//-----------------------------------------------------------------------------
+// class FiniteDomain ---------------------------------------------------------
+
+// private methods ------------------------------------------------------------
+
+inline
+FiniteDomain::descr_type FiniteDomain::getType(void) const {
+  return (descr_type)ToInt32(andPointer(descr,3));
+}
+
+inline
+void FiniteDomain::setType(descr_type t) {
+  descr = orPointer(andPointer(descr,~3),t);
+}
+
+inline
+void FiniteDomain::setType(descr_type t, void * p) {
+  descr = orPointer(p,t);
+}
+
+inline
+void FiniteDomain::setType(FDBitVector * p) {
+  descr = orPointer(p,bv_descr);
+}
+
+inline
+void FiniteDomain::setType(FDIntervals * p) {
+  descr = orPointer(p,iv_descr);
+}
+
+inline
+void FiniteDomain::set_iv(void * p) {
+  descr = orPointer(p,iv_descr);
+}
+
+inline
+FDIntervals * FiniteDomain::get_iv(void) const {
+  return (FDIntervals *)andPointer(descr,~3);
+}
+
+inline
+void FiniteDomain::set_bv(void * p) {
+  descr = p;
+}
+
+inline
+FDBitVector * FiniteDomain::get_bv(void) const {
+  return (FDBitVector *)andPointer(descr,~3);
+}
+
+inline
+int FiniteDomain::findSize(void) const {
+  return max_elem - min_elem + 1;
+}
+
+inline
+Bool FiniteDomain::isSingleInterval(void) const {
+  return size == (max_elem - min_elem + 1);
+}
+
+inline
+FDBitVector * FiniteDomain::provideBitVector(void) const
+{
+  FDBitVector * bv = get_bv();
+
+  return bv == NULL ? new FDBitVector : bv;
+}
+
+inline
+FDBitVector * FiniteDomain::asBitVector(void) const
+{
+  descr_type type = getType();
+  if (type == bv_descr) {
+    return get_bv();
+  } else if (type == fd_descr) {
+    FDBitVector * bv = provideBitVector();
+    if (min_elem > fd_bv_max_elem)
+      bv->setEmpty();
+    else
+      bv->setFromTo(min_elem, min(fd_bv_max_elem, max_elem));
+    return bv;
+  } else {
+    FDBitVector * bv = new FDBitVector;
+    FDIntervals &iv = *get_iv();
+    bv->setEmpty();
+    for (int i = 0; i < iv.high && iv.i_arr[i].left <= fd_bv_max_elem; i++)
+      bv->addFromTo(iv.i_arr[i].left, min(iv.i_arr[i].right, fd_bv_max_elem));
+    return bv;
+  }
+}
+
+inline
+FDIntervals * FiniteDomain::provideIntervals(int max_index) const
+{
+  FDIntervals * iv = get_iv();
+  if (max_index > fd_iv_max_high)
+    return new (max_index) FDIntervals(max_index);
+  else if (iv == NULL)
+    return new FDIntervals(max_index);
+  else
+    iv->high = max_index;
+
+  return iv;
+}
+
+inline
+FDIntervals * FiniteDomain::asIntervals(void) const
+{
+  descr_type type = getType();
+  if (type == iv_descr) {
+    return get_iv();
+  } else if (type == bv_descr) {
+    if (isSingleInterval()) {
+      FDIntervals * iv = provideIntervals(1);
+      iv->init(min_elem, max_elem);
+      return iv;
+    } else {
+      int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+      FDIntervals * iv = newIntervals(s);
+      iv->initList(s, fd_bv_left_conv, fd_bv_right_conv);
+      return iv;
+    }
+  } else {
+    FDIntervals * iv = provideIntervals(1);
+    iv->init(min_elem, max_elem);
+    return iv;
+  }
+}
+
+Bool FiniteDomain::isConsistent(void) const {
+  if (size == 0) return TRUE;
+  descr_type type = getType();
+  if (type == fd_descr)
+    return findSize() == size;
+  else if (type == bv_descr)
+    return get_bv()->findSize() == size;
+  else
+    return get_iv()->findSize() == size;
+}
+
+// public methods -------------------------------------------------------------
+
+inline
+int FiniteDomain::setEmpty(void) {
+  setType(fd_descr, NULL);
+  return size = 0;
+}
+
+inline
+int FiniteDomain::setFull(void) {
+  setType(fd_descr, NULL);
+  min_elem = fd_inf;
+  max_elem = fd_sup;
+  return size = fd_full_size;
+}
+
+FiniteDomain::FiniteDomain(FDState state) {
+  switch (state) {
+  case fd_empty:
+    setEmpty();
+    break;
+  case fd_full:
+    setFull();
+    break;
+  default:
+      error("Unexpected FDState.");
+      break;
+  }
+}
+
+FiniteDomain::FiniteDomain(const FiniteDomain &fd) {
+  *this = fd;
+}
+
+void FiniteDomain::FiniteDomainInit(void * d) {
+  setType(fd_descr, d);
+}
+
+
+FiniteDomain::FiniteDomain(void * d) {
+  FiniteDomainInit(d);
+}
+
+FiniteDomain::FiniteDomain(void) {
+  FiniteDomainInit(NULL);
+}
+
+inline
+void FiniteDomain::dispose(void) {
+  switch (getType()) {
+  case iv_descr: get_iv()->dispose(); return;
+  case bv_descr: get_bv()->dispose(); return;
+  default: return;
+  }
+}
+
+unsigned FiniteDomain::getDescrSize() {
+  switch (getType()) {
+  case iv_descr:
+    return sizeof(FDIntervals) + 2 * (get_iv()->getHigh() - fd_iv_max_high) * sizeof(int);
+    case bv_descr: return sizeof(FDBitVector);
+  default: return 0;
+  }
+}
+
+inline
+Bool FiniteDomain::contains(int i) const
+{
+  if (size == 0) {
+    return FALSE;
+  } else {
+    descr_type type = getType();
+    if (type == fd_descr)
+      return (min_elem <= i && i <= max_elem);
+    else if (type == bv_descr)
+      return get_bv()->contains(i);
+    else
+      return get_iv()->contains(i);
+  }
+}
+
+inline
+int FiniteDomain::setSingleton(int n)
+{
+  if (n < fd_inf || fd_sup < n)
+    return setEmpty();
+  setType(fd_descr, NULL);
+  min_elem = max_elem = n;
+  return size = 1;
+}
+
+inline
+int FiniteDomain::setBool(void)
+{
+  setType(fd_descr, NULL);
+  min_elem = 0;
+  max_elem = 1;
+  return size = 2;
+}
+
+inline
+int FiniteDomain::init(int l, int r)
+{
+  l = max(l, fd_inf);
+  r = min(r, fd_sup);
+
+  setType(fd_descr);
+
+  if (l > r) return size = 0;
+
+  min_elem = l;
+  max_elem = r;
+  return size = findSize();
+}
+
+inline
+int FiniteDomain::initFull(void)
+{
+  setType(fd_descr);
+  min_elem = fd_inf;
+  max_elem = fd_sup;
+  return size = fd_full_size;
+}
+
+inline
+int FiniteDomain::initEmpty(void)
+{
+  setType(fd_descr);
+  return size = 0;
+}
+
+inline
+int FiniteDomain::initSingleton(int n)
+{
+  if (n < fd_inf || fd_sup < n)
+    return initEmpty();
+  setType(fd_descr);
+  min_elem = max_elem = n;
+  return size = 1;
+}
+
+inline
+int FiniteDomain::singl(void) const
+{
+  AssertFD(size == 1);
+  return min_elem;
+}
+
+int FiniteDomain::constrainBool(void)
+{
+  setType(fd_descr);
+  min_elem = contains(0) ? 0 : 1;
+  max_elem = contains(1) ? 1 : 0;
+  return size = findSize();
+}
+
+inline
+int FiniteDomain::intersectWithBool(void)
+{
+  if (contains(0))
+    if (contains(1))
+      return -1; // boolean
+    else
+      return 0; // 0
+  else
+    if (contains(1))
+      return 1; // 1
+    else
+      return -2; // empty
+}
+
+const FiniteDomain &FiniteDomain::operator = (const FiniteDomain &fd)
+{
+  if (this != &fd) {
+    min_elem = fd.min_elem;
+    max_elem = fd.max_elem;
+    size = fd.size;
+
+    descr_type type = fd.getType();
+    if (type == fd_descr) {
+      setType(fd_descr);
+    } else if (type == bv_descr) {
+      FDBitVector * item = new FDBitVector /*provideBitVector()*/;
+      *item = *fd.get_bv();
+      setType(item);
+    } else {
+      int max_index = fd.get_iv()->high;
+      FDIntervals * item = (max_index > fd_iv_max_high)
+        ? new (max_index) FDIntervals(max_index)
+        : new FDIntervals(max_index);
+      /*provideIntervals(fd.get_iv()->high);*/
+      *item = *fd.get_iv();
+      setType(item);
+    }
+  }
+  return *this;
+}
 
 /* gcc-2.6.3 on solaris has problems ...*/
 int intcompare(const void * ii, const void  * jj) {
@@ -753,7 +1209,7 @@ int intcompare(const void * ii, const void  * jj) {
   return(**i - **j);
 }
 
-
+inline
 int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
 {
   // producing list of sorted pointers in terms of this list
@@ -790,9 +1246,42 @@ int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
   return len;
 }
 
+// expects valid intervals, ie fd_inf <= left <= right <= fd_sup
+int FiniteDomain::initList(int list_len,
+                           int * list_left, int * list_right,
+                           int list_min, int list_max)
+{
+  if (list_len == 0) {
+    return initEmpty();
+  } else if (list_len == 1) {
+    min_elem = list_min;
+    max_elem = list_max;
+    size = max_elem - min_elem + 1;
+    setType(fd_descr);
+  } else {
+    min_elem = list_min;
+    max_elem = list_max;
+
+    if (list_max <= fd_bv_max_elem) {
+      FDBitVector * bv = provideBitVector();
+      bv->initList(list_len, list_left, list_right);
+      size = bv->findSize();
+      setType(bv);
+    } else {
+      int new_len = simplify(list_len, list_left, list_right);
+      FDIntervals * iv = provideIntervals(new_len);
+      iv->initList(new_len, list_left, list_right);
+      size = iv->findSize();
+      setType(iv);
+    }
+  }
+  if (isSingleInterval()) setType(fd_descr);
+  return size;
+}
+
 extern int static_int_a[MAXFDBIARGS], static_int_b[MAXFDBIARGS];
 
-int FiniteDomain::init(TaggedRef d)
+int FiniteDomain::init(OZ_Term d)
 {
   DEREF(d, d_ptr, d_tag);
 
@@ -802,7 +1291,7 @@ int FiniteDomain::init(TaggedRef d)
     return initSingleton(fd_sup);
   } else if (isSTuple(d_tag)) {
     STuple &t = *tagged2STuple(d);
-    TaggedRef t0 = deref(t[0]), t1 = deref(t[1]);
+    OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
     return init(AtomSup == t0 ? fd_sup : smallIntValue(t0),
                 AtomSup == t1 ? fd_sup : smallIntValue(t1));
   } else if (AtomBool == d) {
@@ -816,7 +1305,7 @@ int FiniteDomain::init(TaggedRef d)
     int len_arr;
     for (len_arr = 0; isLTuple(d) && len_arr < MAXFDBIARGS; ) {
       LTuple &list = *tagged2LTuple(d);
-      TaggedRef val = list.getHead();
+      OZ_Term val = list.getHead();
 
       DEREF(val, valptr, valtag);
 
@@ -843,7 +1332,7 @@ int FiniteDomain::init(TaggedRef d)
         len_arr ++;
       } else if (isSTuple(valtag)) {
         STuple &t = *tagged2STuple(val);
-        TaggedRef t0 = deref(t[0]), t1 = deref(t[1]);
+        OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
 
         int l = max(0, AtomSup == t0 ? fd_sup : smallIntValue(t0));
         int r = min(fd_sup, AtomSup == t1 ? fd_sup : smallIntValue(t1));
@@ -911,7 +1400,7 @@ Bool FiniteDomain::next(int i, int &n) const
   }
 }
 
-TaggedRef FiniteDomain::getAsList(void) const
+OZ_Term FiniteDomain::getAsList(void) const
 {
   if (size == 0) return AtomNil;
 
@@ -1188,7 +1677,7 @@ FiniteDomain FiniteDomain::operator ~ (void) const
 
   if (*this == fd_empty) {
     y.initFull();
-  } else if (*this == fd_full) {
+  } else if (size == fd_full_size) {
     y.initEmpty();
   } else {
     descr_type type = getType();
@@ -1267,51 +1756,6 @@ FiniteDomain FiniteDomain::operator | (const FiniteDomain &y) const
   DEBUG_FD_IR(FALSE, cout << z << endl);
 
   return z;
-}
-
-FDBitVector * FiniteDomain::asBitVector(void) const
-{
-  descr_type type = getType();
-  if (type == bv_descr) {
-    return get_bv();
-  } else if (type == fd_descr) {
-    FDBitVector * bv = provideBitVector();
-    if (min_elem > fd_bv_max_elem)
-      bv->setEmpty();
-    else
-      bv->setFromTo(min_elem, min(fd_bv_max_elem, max_elem));
-    return bv;
-  } else {
-    FDBitVector * bv = new FDBitVector;
-    FDIntervals &iv = *get_iv();
-    bv->setEmpty();
-    for (int i = 0; i < iv.high && iv.i_arr[i].left <= fd_bv_max_elem; i++)
-      bv->addFromTo(iv.i_arr[i].left, min(iv.i_arr[i].right, fd_bv_max_elem));
-    return bv;
-  }
-}
-
-FDIntervals * FiniteDomain::asIntervals(void) const
-{
-  descr_type type = getType();
-  if (type == iv_descr) {
-    return get_iv();
-  } else if (type == bv_descr) {
-    if (isSingleInterval()) {
-      FDIntervals * iv = provideIntervals(1);
-      iv->init(min_elem, max_elem);
-      return iv;
-    } else {
-      int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
-      FDIntervals * iv = newIntervals(s);
-      iv->initList(s, fd_bv_left_conv, fd_bv_right_conv);
-      return iv;
-    }
-  } else {
-    FDIntervals * iv = provideIntervals(1);
-    iv->init(min_elem, max_elem);
-    return iv;
-  }
 }
 
 int FiniteDomain::operator &= (const FiniteDomain &y)
@@ -1402,4 +1846,16 @@ FiniteDomain FiniteDomain::operator & (const FiniteDomain &y) const
   DEBUG_FD_IR(FALSE, cout << z << endl);
 
   return z;
+}
+
+void FiniteDomain::copyExtension(void)
+{
+  descr_type type = getType();
+  if (type == fd_descr) {
+    setType(fd_descr, NULL);
+  } else if (type == bv_descr) {
+    setType(get_bv()->copy());
+  } else {
+    setType(get_iv()->copy());
+  }
 }
