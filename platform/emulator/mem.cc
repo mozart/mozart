@@ -185,6 +185,17 @@ private:
   MappedMemChunkEntry *next, *prev;
 
   //
+protected:
+#ifdef DEBUG_CHECK
+  void cleanup() {
+    Assert(addr == (caddr_t) 0);    
+    Assert(size == (size_t) 0);
+    next = (MappedMemChunkEntry *) -1;
+    prev = (MappedMemChunkEntry *) -1;
+  }
+#endif
+
+  //
 public:
   // Make a "core" entry linked to itself:
   MappedMemChunkEntry()
@@ -240,10 +251,19 @@ public:
     top = (caddr_t) 
       (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
 #if defined(HIGH_ADDRESSES_BUG_WORKAROUND)
-    top -= (size_t) 0x10000000;
+    top -= (size_t) 0x20000000;
 #endif
   }
-  ~MappedMemChunks() {}	// only when exit();
+  ~MappedMemChunks() {
+    MappedMemChunkEntry *entry = MappedMemChunkEntry::getNext();
+    while (entry != this) {
+      MappedMemChunkEntry *next = entry->getNext();
+      entry->unlink();
+      delete entry;
+      entry = next;
+    }
+    DebugCode(cleanup(););
+  }
 
   //
   // Yields&reserves a largest address that would accept a page of

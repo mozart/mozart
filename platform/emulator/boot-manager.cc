@@ -48,16 +48,17 @@ TaggedRef dictionary_of_modules;
 #include "modOS-if.cc"
 #include "modPickle-if.cc"
 #include "modURL-if.cc"
-#include "modPID-if.cc"
 #include "modFDB-if.cc"
 #include "modFSB-if.cc"
 #include "modSystem-if.cc"
 #include "modCTB-if.cc"
 #include "modFinalize-if.cc"
 #include "modProfile-if.cc"
-#include "modFault-if.cc"
 #include "modDistribution-if.cc"
 #include "modNative-if.cc"
+// kost@ : linked so far statically;
+#include "modPID-if.cc"
+#include "modFault-if.cc"
 
 /*
  * Builtins that are possibly dynamically loaded
@@ -73,6 +74,16 @@ TaggedRef dictionary_of_modules;
 #include "modCompilerSupport-if.cc"
 #include "modBrowser-if.cc"
 #include "modDebug-if.cc"
+// kost@ : linked so far statically;
+// #include "modPID-if.cc"
+// #include "modFault-if.cc"
+#ifdef MISC_BUILTINS
+#include "modDPMisc-if.cc"
+#endif
+
+#ifdef VIRTUALSITES
+#include "modVirtualSite-if.cc"
+#endif
 
 #endif
 
@@ -83,10 +94,6 @@ TaggedRef dictionary_of_modules;
 
 #ifdef MISC_BUILTINS
 #include "modMisc-if.cc"
-#endif
-
-#ifdef VIRTUALSITES
-#include "modVirtualSite-if.cc"
 #endif
 
 #ifdef CS_PROFILE
@@ -122,12 +129,13 @@ static ModuleEntry module_table[] = {
   {"System",          mod_int_System},
   {"Finalize",        mod_int_Finalize},
   {"Profile",         mod_int_Profile},
-  {"Fault",           mod_int_Fault},
   {"Distribution",    mod_int_Distribution},
   {"CTB",             mod_int_CTB},
-  {"PID",             mod_int_PID},
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
+// kost@ : linked so far statically;
+  {"PID",             mod_int_PID},
+  {"Fault",           mod_int_Fault},
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
@@ -138,6 +146,15 @@ static ModuleEntry module_table[] = {
   {"Wif",             mod_int_Wif},
   {"Schedule",        mod_int_Schedule},
   {"Debug",           mod_int_Debug},
+// kost@ : linked so far statically;
+//   {"PID",             mod_int_PID},
+//   {"Fault",           mod_int_Fault},
+#ifdef MISC_BUILTINS
+  {"DPMisc",          mod_int_DPMisc},
+#endif
+#ifdef VIRTUALSITES
+  {"VirtualSite",  mod_int_VirtualSite},
+#endif
 #endif
 
 #ifdef MISC_BUILTINS
@@ -146,10 +163,6 @@ static ModuleEntry module_table[] = {
 
 #ifdef CS_PROFILE
   {"CloneDiff", mod_int_CloneDiff},
-#endif
-
-#ifdef VIRTUALSITES
-  {"VirtualSite",  mod_int_VirtualSite},
 #endif
 
   {0, 0},
@@ -278,16 +291,11 @@ OZ_BI_define(BIBootManager, 1, 1) {
 } OZ_BI_end
 
 
-extern void BIinitPerdio();
-
 OZ_BI_proto(BIcontrolVarHandler);
 OZ_BI_proto(BIatRedo);
 OZ_BI_proto(BIfail);
 OZ_BI_proto(BIurl_load);
 OZ_BI_proto(BIload);
-OZ_BI_proto(BIprobe);
-OZ_BI_proto(BIstartTmp);
-OZ_BI_proto(BIportWait);
 
 // include all builtin modules
 //
@@ -793,20 +801,7 @@ void initBuiltins() {
     makeTaggedConst(new Builtin("controlVarHandler", 
 				1, 0, BIcontrolVarHandler, OK));
 
-
-  BIinitPerdio();
-  
-  
   // Exclusively used (not in builtin table)
-  BI_probe     = 
-    makeTaggedConst(new Builtin("probe", 
-				1, 0, BIprobe, OK));
-  BI_startTmp  = 
-    makeTaggedConst(new Builtin("startTmp",
-				2, 0, BIstartTmp, OK));
-  BI_portWait  = 
-    makeTaggedConst(new Builtin("portWait", 
-				2, 0, BIportWait, OK));
   BI_atRedo    =
     makeTaggedConst(new Builtin("atRedo", 
 				2, 0, BIatRedo, OK));

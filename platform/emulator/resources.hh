@@ -226,7 +226,7 @@
 // don't create UVAR's
 //#define DEBUG_NO_UVAR
 
-#define DEBUG_PERDIO
+// #define DEBUG_PERDIO
 
 //#define DEBUG_PROP_STABILTY_TEST 
 

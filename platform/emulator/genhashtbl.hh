@@ -32,6 +32,7 @@
 #endif
 
 #include "base.hh"
+#include "resources.hh"
 
 #define GenCast(X,XType,Y,NewType)\
 { XType tmp=X; Y= (NewType) tmp;}
@@ -215,6 +216,18 @@ public:
 
 
 
+class Construct_7{
+  void* one;
+  void* two;
+  void* three;
+  void* four;
+  void* five;
+  void* six;
+  void* seven;
+public:
+  Construct_7(){one=two=three=four=five=six=seven=NULL;}
+};
+
 class Construct_5{
   void* one;
   void* two;
@@ -249,28 +262,36 @@ public:
   Construct_2(){one=NULL;two=NULL;}
 };
 
+#define CUTOFF_7  500
 #define CUTOFF_5  500
 #define CUTOFF_4  500
 #define CUTOFF_3  500
 #define CUTOFF_2  500
 
 class GenFreeListManager{
+  FreeListManager* flm_7;
   FreeListManager* flm_5;
-
   FreeListManager* flm_4;
-
   FreeListManager* flm_3; // used for OwnerCreditExtennsion,BorrowCreditExtension, 
                           // InformElem, Chain
   FreeListManager* flm_2; // used for ChainElem
-  
+
+  // 
 public:
   
   GenFreeListManager(){
+    flm_7=new FreeListManager(CUTOFF_7);
     flm_5=new FreeListManager(CUTOFF_5);
     flm_4=new FreeListManager(CUTOFF_4);
     flm_3=new FreeListManager(CUTOFF_3);
     flm_2=new FreeListManager(CUTOFF_2);}
-  
+
+  void putOne_7(FreeListEntry *f){
+    if(flm_7->putOne(f)) return;
+    Construct_7 *tmp=(Construct_7*) f;
+    delete tmp;
+    return;}
+
   void putOne_5(FreeListEntry *f){
     if(flm_5->putOne(f)) return;
     Construct_5 *tmp=(Construct_5*) f;
@@ -295,6 +316,11 @@ public:
     delete tmp;
     return;}
 
+  FreeListEntry *getOne_2(){
+    FreeListEntry* tmp=flm_2->getOne();
+    if(tmp!=NULL) return tmp;
+    return (FreeListEntry*) new Construct_2();}
+
   FreeListEntry *getOne_3(){
     FreeListEntry* tmp=flm_3->getOne();
     if(tmp!=NULL) return tmp;
@@ -310,10 +336,10 @@ public:
     if(tmp!=NULL) return tmp;
     return (FreeListEntry*) new Construct_5();}
 
-  FreeListEntry *getOne_2(){
-    FreeListEntry* tmp=flm_2->getOne();
+  FreeListEntry *getOne_7(){
+    FreeListEntry* tmp=flm_7->getOne();
     if(tmp!=NULL) return tmp;
-    return (FreeListEntry*) new Construct_2();}
+    return (FreeListEntry*) new Construct_7();}
 };
 
 extern GenFreeListManager *genFreeListManager;
