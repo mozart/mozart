@@ -1114,3 +1114,23 @@ OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]) {
   return SUSPEND;
 }
 
+#ifdef __GNUC__
+#if __GNUC__>2
+void AM::setExceptionInfo(TaggedRef inf) {
+    if (exception.info == NameUnit) {
+      exception.info=oz_nil();
+    }
+    exception.info = oz_cons(inf,exception.info);
+  }
+Bool AM::hf_raise_failure()
+{
+  if (!oz_onToplevel() && !oz_currentThread()->isCatch())
+    return OK;
+
+  exception.info  = NameUnit;
+  exception.value = RecordFailure;
+  exception.debug = ozconf.errorDebug;
+  return NO;
+}
+#endif
+#endif

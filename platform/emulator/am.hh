@@ -397,12 +397,19 @@ public:
     exception.info = NameUnit;
     exception.debug = d;
   }
-  void setExceptionInfo(TaggedRef inf) {
+  void setExceptionInfo(TaggedRef inf)
+#ifdef __GNUC__
+#if __GNUC__>2
+    ;
+#else
+  {
     if (exception.info == NameUnit) {
       exception.info=oz_nil();
     }
     exception.info = oz_cons(inf,exception.info);
   }
+#endif
+#endif
   TaggedRef getExceptionValue() { return exception.value; }
   Bool hf_raise_failure();
 
