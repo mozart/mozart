@@ -129,7 +129,7 @@ public:
   // RS
   long freeListAllocated, freeListDisposed;
   long totalAllocated;
-  long varVarUnify, recRecUnify,totalUnify;
+  long varVarUnify, nonvarNonvarUnify, recRecUnify, varNonvarUnify, totalUnify;
   long maxStackDepth;
   long sizeClosures, numClosures, sizeGs;
   long sizeObjects,sizeRecords,sizeLists;
