@@ -678,7 +678,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
         Assert(0); //Not an error just want to see AN
         break;
       }
-      perdio_msgReceived(msgC,NULL);
+      perdio_msgReceived(msgC,this->site);
 
       if(!msgAckLength || // avoid division with zero
          lastReceived%msgAckLength==0)  // Time for explicit acknowledgement

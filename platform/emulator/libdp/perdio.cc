@@ -76,8 +76,8 @@ int  globalOSWriteCounter = 0;
 int  globalOSReadCounter = 0;
 int  globalContCounter = 0;
 
-extern OZ_Term defaultAcceptProcedure;
-extern OZ_Term defaultConnectionProcedure ;
+OZ_Term defaultAcceptProcedure = 0;
+OZ_Term defaultConnectionProcedure = 0;
 /* *********************************************************************/
 /*   init;                                                             */
 /* *********************************************************************/
@@ -519,7 +519,7 @@ inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
 
 void msgReceived(MarshalerBuffer *mb) {printf("VS should not be used!!!\n");}
 
-void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
+void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
 {
   Assert(oz_onToplevel());
   Assert(creditSiteIn==NULL);
@@ -536,12 +536,10 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
   // this can happen - though it is very rare
   // for virtual sites we do not know, for now, the sending site so
   // we can do nothing
+  // Is that still true??? AN!
 
-  // AN this question should be asked to the comObj, which is not available
-  // here. Save this for later.
-//      DSite *ds=bs->getSite();
-//      if(ds!=NULL && ds->siteStatus()!=SITE_OK){
-//        return;}
+  if(dsite!=NULL && dsite->siteStatus()!=SITE_OK){
+    return;}
 
   PD((MSG_RECEIVED,"msg type %d",mt));
   //printf("receiving msg:%d %s\n",mt,mess_names[mt]);

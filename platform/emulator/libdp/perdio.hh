@@ -56,7 +56,7 @@ void SendTo(DSite* toS,MsgContainer *msgC,int priority);
 // course, communication layer for remote site do know, but that's
 // another story).
 void msgReceived(MarshalerBuffer *); // Not to be used, only needed during devel
-void msgReceived(MsgContainer *,ByteBuffer *);
+void msgReceived(MsgContainer *,DSite *);
 
 // Used by networklayer to do pinging.
 void sendPing(DSite*);
@@ -162,8 +162,8 @@ extern OZ_Term ConnectPortStream;
 extern OZ_Term ConnectPort;
 
 // AN
-inline void perdio_msgReceived(MsgContainer *msgC,ByteBuffer *bb) {
-  msgReceived(msgC,bb);
+inline void perdio_msgReceived(MsgContainer *msgC,DSite *dsite) {
+  msgReceived(msgC,dsite);
 }
 
 // Message Statistics:
