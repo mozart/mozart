@@ -94,9 +94,9 @@ int partition(T * x, int l, int r) {
     while (lt(x[++i],v));
     while (lt(v,x[--j])) if (j == l) break;
     if (i >= j) break;
-    sort_swap_d(x[i], x[j]);
+    sort_swap(x[i], x[j]);
   }
-  sort_swap_d(x[i],x[r]);
+  sort_swap(x[i],x[r]);
   return i;
 }
 
@@ -110,7 +110,7 @@ void quicksort(T * x, int l, int r) {
   nopush:
     if (r-l <= QuickSortCutoff)
       continue;
-    swap(x[(l+r)/2],x[r-1]);
+    sort_swap(x[(l+r)/2],x[r-1]);
     sort_exchange<T,lt>(x[l],x[r-1]);
     sort_exchange<T,lt>(x[l],x[r]);
     sort_exchange<T,lt>(x[r-1],x[r]);
