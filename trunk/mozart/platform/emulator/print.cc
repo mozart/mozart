@@ -1028,7 +1028,7 @@ PRINT(Thread)
     return;
   }
 
-  stream << indent(offset) << "Thread @" << this;
+  stream << indent(offset) << "Thread @c" << this;
   
   switch (getPriority()) {
   case LOW_PRIORITY:
@@ -1044,7 +1044,8 @@ PRINT(Thread)
     stream << " (unknown Priority " << getPriority() << ")";
     break;
   }
-  stream << (isSuspended() ? " (susp)" : " (run)");
+
+  stream << (isSuspended() ? " (susp)" : " (run)") << endl << indent(offset+1);
 
   switch (getThrType ()) {
   case S_RTHREAD:
@@ -1063,6 +1064,8 @@ PRINT(Thread)
     stream << "(unknown)";
   }
 
+  stream << endl << indent(offset+1);
+
   if ((getFlags ()) & T_solve)     stream << " S";
   if ((getFlags ()) & T_ext)       stream << " E";
   if ((getFlags ()) & T_loca)      stream << " L";
@@ -1071,7 +1074,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_tag)       stream << " T";
   if ((getFlags ()) & T_ltq)       stream << " Q";
   stream << " <";
-  getBoard()->printLong(stream, DEC(depth));
+  getBoard()->print(stream, DEC(depth));
   stream << ">";
 }
 

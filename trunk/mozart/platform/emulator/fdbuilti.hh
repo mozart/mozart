@@ -20,7 +20,6 @@
 #include "fdprofil.hh"
 
 #include "fdproto.hh"
-#include "fddebug.hh"
 
 enum Recalc_e {lower, upper};
 

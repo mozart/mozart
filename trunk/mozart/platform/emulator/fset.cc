@@ -19,19 +19,17 @@
 #include "value.hh"
 
 //*****************************************************************************
+//#define DEBUG_FSET
 #ifdef DEBUG_FSET
 
-#ifdef FSET_FILE_PRINT
+#ifdef CPI_FILE_PRINT
 #include <fstream.h>
-#endif
-
-#ifdef FSET_FILE_PRINT
-extern ofstream * fscout;
+extern ofstream * cpi_cout;
 #else
-extern ostream * fscout;
+extern ostream * cpi_cout;
 #endif
 
-#define _DEBUG_FSETIR(CODE) (*fscout) << CODE << flush;
+#define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
 #define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE) 
 
 #else
@@ -310,17 +308,21 @@ OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs)
 void OZ_FSetImpl::printGlb(ostream &o) const 
 {
   printBits(o, fset_high, _in);
+  /*
 #ifdef DEBUG_FSET
   o << '#' << _known_in;
 #endif
+*/
 }
 
 void OZ_FSetImpl::printLub(ostream &o) const
 {
   printBits(o, fset_high, _not_in, 1);
+  /*
 #ifdef DEBUG_FSET
   o << '#' << _known_not_in;
 #endif
+*/
 }
 
 ostream &OZ_FSetImpl::print(ostream &o) const
@@ -400,8 +402,7 @@ OZ_Boolean OZ_FSetImpl::isWeakerThan(OZ_FSetImpl const &y) const
 
   OZ_Boolean ret_val = ((_known_in < y._known_in) || 
 			(_known_not_in < y._known_not_in) ||
-			(_card_min < y._card_min) ||
-			(_card_max > y._card_max));
+			(getCardSize() > y.getCardSize()));
   DEBUG_FSETIR((ret_val ? "TRUE" : "FALSE") << endl);
   return ret_val;
 }
