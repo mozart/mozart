@@ -393,14 +393,24 @@ public:
   Board *rootBoard()      { return _rootBoard; }
 
   Bool inEqEq()          { return _inEqEq; }
-  void setInEqEq(Bool b) {
-    _inEqEq=b;
-    if (b) {
-      _saveCurrentOptVar = _currentOptVar;
-      _currentOptVar     = makeTaggedNULL();
-    } else {
-      _currentOptVar = _saveCurrentOptVar;
-    }
+  void setEqEqMode() {
+    _inEqEq = TRUE;
+    _saveCurrentOptVar = _currentOptVar;
+    _currentOptVar     = makeTaggedNULL();
+  }
+  void unsetEqEqMode() {
+    _inEqEq = FALSE;
+    _currentOptVar = _saveCurrentOptVar;
+  }
+  void escapeEqEqMode() {
+    Assert(_inEqEq);
+    _inEqEq = FALSE;
+    _currentOptVar = _saveCurrentOptVar;
+  }
+  void restoreEqEqMode() {
+    Assert(_inEqEq == FALSE);
+    _inEqEq = TRUE;
+    _currentOptVar = makeTaggedNULL();
   }
 
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }

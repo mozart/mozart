@@ -280,7 +280,7 @@ void AM::init(int argc,char **argv)
   cachedSelf   = NULL;
   gcStep = OddGCStep;
   copyStep = 0;
-  setInEqEq(FALSE);
+  unsetEqEqMode();
   setCurrent(_rootBoard, _rootBoard->getOptVar());
 
   lastThreadID    = 0;

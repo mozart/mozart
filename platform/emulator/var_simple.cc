@@ -63,10 +63,16 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
 // suspension list and change the variable's type.
 OZ_Return SimpleVar::becomeNeeded()
 {
-  // release the current suspension list
-  oz_checkSuspensionList(this, pc_all);
   // mutate into a needed variable
   setType(OZ_VAR_SIMPLE);
+  // release the current suspension list
+  if (am.inEqEq()) {
+    am.escapeEqEqMode();
+    oz_forceWakeUp(getSuspListRef());
+    am.restoreEqEqMode();
+  } else {
+    oz_forceWakeUp(getSuspListRef());
+  }
   // disposeS();
   return PROCEED;
 }

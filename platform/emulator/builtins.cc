@@ -1645,9 +1645,9 @@ OZ_Return oz_eqeq(TaggedRef Ain,TaggedRef Bin)
 {
   // simulate a shallow guard
   trail.pushMark();
-  am.setInEqEq(TRUE);
+  am.setEqEqMode();
   OZ_Return ret = oz_unify(Ain,Bin);
-  am.setInEqEq(FALSE);
+  am.unsetEqEqMode();
 
   if (ret == PROCEED) {
     if (trail.isEmptyChunk()) {
