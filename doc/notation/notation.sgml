@@ -945,7 +945,7 @@
       <Para class=apropos><Title/Introduced Variables/
 	Some transformation steps require the introduction of fresh variables
 	such that no capturing can occur.  When an introduced variable is
-	supposed to be fresh, we indicate this by using a font like&nbsp;<<X>>.
+	supposed to be fresh, we write <<X>>, <<Y>> or&nbsp;<<Z>>.
       <P>
 	Furthermore, references to so-called <Def/Core variables/ can be made.
 	We indicate this by writing them in backquotes; they are not bound
@@ -963,13 +963,16 @@
 	    <TH/Meta Variables/
 	    <TH/Corresponding Terminals and Nonterminals/
 	  <TR>
+	    <TD/?{x}/
+	    <TD/?={variable}/
+	  <TR>
 	    <TD/?{D}/
 	    <TD/?={declaration part}/
 	  <TR>
 	    <TD/?{S}/
 	    <TD/?={statement}/
 	  <TR>
-	    <TD/?{E}, ?{E1}, &ellipsis;/
+	    <TD/?{E}, ?{E1}, &ellipsis;, ?{En}/
 	    <TD/?={expression}/
 	  <TR>
 	    <TD/?{SE}/
@@ -978,8 +981,11 @@
 	    <TD/?{P}, ?{P1}, &ellipsis;, ?{Pk}, ?{Pn}/
 	    <TD/?={pattern}/
 	  <TR>
-	    <TD/?{C}, ?{C1}, &ellipsis;/
+	    <TD/?{C}, ?{C1}, &ellipsis;, ?{Cn}/
 	    <TD/?={case statement clause} or ?={case expression clause}/
+	  <TR>
+	    <TD/?{L}, ?{L1}, &ellipsis;, ?{Ln}/
+	    <TD/?={cond statement clause} or ?={cond expression clause}/
 	</Table>
       <Section>
 	<Title/The Base Language/
@@ -1097,11 +1103,20 @@ end>>/
 		are implementation-dependent./
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
+	      <Rewrite.From/<<case ?{E} of &ellipsis; end>>/
+	      <Rewrite.To
+/<<local X in
+   X = E
+   case X of &ellipsis; end
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
-/<<case ?{C1} [] &ellipsis; [] ?{Cn}
+/<<case ?{E} of ?{C1} [] &ellipsis; [] ?{Cn}
 end>>/
 	      <Rewrite.To
-/<<case ?{C1} [] &ellipsis; [] ?{Cn}
+/<<case ?{E} of ?{C1} [] &ellipsis; [] ?{Cn}
 else
    raise error(kernel(noElse &ellipsis;) &ellipsis;) end
 end>>/
@@ -1109,12 +1124,45 @@ end>>/
 		are implementation-dependent./
 	    </Rewrite>
 	    <!--** missing: expansion of case statement to conds -->
+	    <!--** missing: case expressions -->
 	<SubSection class=unnumbered>
 	  <Title/Exception Handling/
 	  <P>
 	    <Rewrite>?={statement} ?={expression}
-	      <Rewrite.From/<<try ?{SE} end>>/
-	      <Rewrite.To/?{SE}/
+	      <Rewrite.From
+/<<try ?{SE}
+catch ?{C1} [] &ellipsis; [] ?{Cn}
+<Span/[ /finally ?{S1}<Span/ ]/
+end>>/
+	      <Rewrite.To
+/<<try ?{SE}
+catch X then
+   case X of ?{C1} [] &ellipsis; [] ?{Cn}
+   else
+      raise X end
+   end
+<Span/[ /finally ?{S1}<Span/ ]/
+end>>/
+	      <Rewrite.Condition/if <<?{C1} [] &ellipsis; [] ?{Cn}>>
+		does not have the form <<?{x} then ?{S2}>>./
+	    </Rewrite>
+	    <Rewrite>?={expression}
+	      <!--** fix this: -->
+	      <Rewrite.From
+/<<try ?{E}
+<Span/[ /catch ?{x} then ?{E}<Span/ ]/
+<Span/[ /finally ?{S}<Span/ ]/
+end>>/
+	      <!--** fix this: -->
+	      <Rewrite.To
+/<<local X in
+   try Y in
+      Y = ?{E}
+      X = Y
+   <Span/[ /catch ?{x} then X = ?{E}<Span/ ]/
+   <Span/[ /finally ?{S}<Span/ ]/
+   end
+end>>/
 	    </Rewrite>
 	    <Rewrite>?={statement}
 	      <Rewrite.From
@@ -1129,14 +1177,42 @@ end>>/
        catch Y then ex(Y)
        end
    ?{S}
-   case X of ex(Y) then
-      raise Y end
+   case X of ex(Z) then
+      raise Z end
    else skip
    end
 end>>/
 	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<try ?{SE} end>>/
+	      <Rewrite.To/?{SE}/
+	    </Rewrite>
 	<SubSection class=unnumbered>
 	  <Title/Exception Raising/
+	  <P>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<raise ?{E} end>>/
+	      <Rewrite.To/<<{`Exception.raise` ?{E}}>>/
+	    </Rewrite>
+	    <Rewrite>?={expression}
+	      <Rewrite.From/<<raise ?{E} end>>/
+	      <Rewrite.To
+/<<{`Exception.raise` ?{E}}
+unit>>/
+	    </Rewrite>
+	    <Rewrite>?={statement} ?={expression}
+	      <Rewrite.From/<<raise ?{E1} with ?{E2} end>>/
+	      <Rewrite.To
+/<<local X in
+   X = ?{E1}
+   if {`RaiseDebugCheck` X} then
+      raise {`RaiseDebugExtend` X ?{E2}} end
+   else
+      raise X end
+   end
+end>>/
+	    </Rewrite>
+	    <!--** missing: definitions of `RaiseDebug{Check,Extend}` -->
 	<SubSection class=unnumbered>
 	  <Title/Operators/
 	<SubSection class=unnumbered>
@@ -1153,6 +1229,33 @@ end>>/
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From/<<fail>>/
 	      <Rewrite.To/<<raise failure(&ellipsis;) end>>/
+	      <Rewrite.Condition/where the left-out parts of the exception
+		are implementation-dependent./
+	    </Rewrite>
+	<SubSection class=unnumbered>
+	  <Title/Negation/
+	  <P>
+	    <Rewrite>?={statement} ?={expression}
+	      <Rewrite.From/<<not ?{S} end>>/
+	      <Rewrite.To
+/<<thread
+   cond ?{S} then fail
+   else skip
+   end
+end>>/
+	    </Rewrite>
+	<SubSection class=unnumbered>
+	  <Title/Combinators/
+	  <P>
+	    <Rewrite>?={statement} ?={expression}
+	      <Rewrite.From
+/<<cond ?{L1} [] &ellipsis; [] ?{Ln}
+end>>/
+	      <Rewrite.To
+/<<cond ?{L1} [] &ellipsis; [] ?{Ln}
+else
+   raise error(kernel(noElse &ellipsis;) &ellipsis;) end
+end>>/
 	      <Rewrite.Condition/where the left-out parts of the exception
 		are implementation-dependent./
 	    </Rewrite>
