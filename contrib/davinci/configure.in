@@ -3,13 +3,13 @@ AC_INIT(DaVinciObject.oz)
 OZ_CONTRIB_INIT_CXX
 OZ_LIB_GMP
 
-OZ_PATH_PROG(DAVINCI,daVinci, AC_MSG_ERROR([
-  
-  Configure is not able to find the program \"daVinci\". 
-  Either it is not in the search path or it is not installed.
-  To obtain a copy check http://www.tzi.de/~davinci/.
-
-]))
+dnl OZ_PATH_PROG(DAVINCI,daVinci, AC_MSG_ERROR([
+dnl   
+dnl   Configure is not able to find the program \"daVinci\". 
+dnl   Either it is not in the search path or it is not installed.
+dnl   To obtain a copy check http://www.tzi.de/~davinci/.
+dnl 
+dnl ]))
 
 AC_OUTPUT(Makefile)
 
