@@ -271,8 +271,7 @@ then the class only exists there once.
 <ITEM> <EM>Object-records</EM>:
 An object is a composite entity consisting
 of an object-record that references
-the object's features,
-a cell, a class, and optionally a lock.
+the object's features, a cell, and a class.
 It's important to distinguish the distribution
 behaviors of an object and a class.
 An object-record is a chunk that is copied lazily.
