@@ -169,9 +169,8 @@ int BIfdBodyManager::initCache(void) {
 
 inline
 Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
-#ifdef NEWCOUNTER
-  killPropagatedCurrentTaskSusp();
-#endif
+  Assert(FDcurrentTaskSusp==0);
+
   Suspension * s = NULL;
   
   for (int i = curr_num_of_vars; i--; )
