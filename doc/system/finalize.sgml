@@ -62,7 +62,7 @@ When this ?_{Value} is no longer referenced except by the guardian,
 <code/{?_{Handler} ?_{Value}}/ is eventually executed in a new
 thread.  We say <em/eventually/ because the finalization thread is
 subject to the same fair scheduling as any other thread. Note that
-the ?_{Value} has still not be garbage collected; only at the next
+the ?_{Value} has still not been garbage collected; only at the next
 garbage collection after the call to ?_{Handler} has returned, and
 ?_{Value} is no longer referenced at all, not even by the guardian,
 will it really be garbage collected.  It is possible for a ?_{Value} to be

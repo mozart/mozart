@@ -30,8 +30,8 @@
   <Title/Emulator Properties: <<Property>>/
 
   <P>
-    The property module provides operations to query and possibly
-    update Mozart system related parameters that control various
+    The <<Property>> module provides operations to query and possibly
+    update Mozart system-related parameters that control various
     aspects of the Mozart engine and system modules.
   </P>
 
@@ -45,7 +45,7 @@
     The properties are accessible to the programmer by operations
     resembling the operations on dictionaries: <<Property.put>> sets a
     property, whereas <<Property.get>> and <<Property.condGet>> access
-    properties. The operations are describeb <Ref
+    properties. The operations are described <Ref
     to="section.property.interface"/here/ in more detail.
   </P>
 
@@ -62,8 +62,8 @@
 
   <P>
     For convenience, most
-    properties are organized into groups. They be accessed by an
-    atom giving the group's name (<<'threads'>>, for example), and
+    properties are organized into groups. A group is accessed by an
+    atom giving the group's name (<<'threads'>>, for example), and it
     returns a record containing the
     properties of that group. For example,
     <<<{Property.get 'threads'}>>> returns a record that has several
@@ -71,9 +71,10 @@
   </P>
 
   <P>
-    Some properties are readonly in that they just provide access to
+    Some properties are read-only.  They provide access to
     statistical information (as the property <<'threads.runnable'>> in
-    our previous example). Other properties are mutable:
+    our previous example), but cannot be used to update that information.
+    Other properties are mutable:
     changing their values customizes the engine's behaviour. For
     example, the property
     <<'threads.medium'>> gives the ratio between the number of time slices
@@ -83,16 +84,16 @@
   </P>
 
   <P>
-    <<Property.put>> supports groups as well, for example to customize
-    time slices for threads of all priorities, we can use:
+    <<Property.put>> supports groups as well.  For example, to customize
+    time slices for threads of all priorities, we can do:
 <<<{Property.put 'threads' foo('medium': 2
                             'high':   2)}>>>
     The record's label is not significant.
   </P>
 
   <P>
-    The properties sorted according to their group are listed in the
-    following sections.
+    All properties are listed in the
+    following sections, which are sorted by group.
   <P>
 
 
@@ -668,7 +669,7 @@
       <Item>
         Stores the property ?_{X} under key ?_{LI} (a literal or
         an integer). Raises an exception, if the property is
-        readonly.
+        read-only.
 
     </List>
   </P>
