@@ -169,7 +169,7 @@ Explorer.ozf: $(EXPLORERSRC)
 
 Emacs.ozf: $(EMACSSRC)
 
-ozcar-version.oz: $(OZCARSRCNOVER)
+ozcar-version.oz: $(OZCARSRCNOVER) ozcar/ozd.oz
 	echo \'`date '+%b %d %H:%M'`\' > $@
 
 Ozcar.ozf: $(OZCARSRC)
@@ -199,7 +199,7 @@ Inspector.ozf: $(INSPECTOROBJS)
 # Syslets
 #---------------------------------------------------------------------
 
-ozd: ozcar/ozd.oz
+ozd: ozcar/ozd.oz ozcar-version.oz
 	$(COMPILEEXEC) $< -o $@
 
 #---------------------------------------------------------------------
