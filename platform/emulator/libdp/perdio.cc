@@ -611,6 +611,17 @@ void msgReceived(MsgBuffer* bs)
       break;
     }
 
+  case M_ISDET:
+    {
+      int OTI;
+      TaggedRef v;
+      unmarshal_M_ISDET(bs,OTI,v);
+      PD((MSG_RECEIVED,"M_ISDET index:%d val:%s",OTI,toC(v)));
+      OwnerEntry *oe = receiveAtOwner(OTI);
+      SiteUnify(v,oe->isVar()?OZ_false():OZ_true());
+      break;
+    }
+
   case M_ACKNOWLEDGE:
     {
 

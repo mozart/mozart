@@ -41,5 +41,6 @@ OZ_Return sendRedirectToProxies(OldPerdioVar *pv, OZ_Term val,
 OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val);
 void sendRegister(BorrowEntry*);
 void sendAcknowledge(DSite* sd,int OTI);
+OZ_Term sendIsDet(BorrowEntry *be);
 
 #endif

@@ -82,6 +82,16 @@ OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   return PROCEED;
 }
 
+OZ_Term sendIsDet(BorrowEntry *be){
+  be->getOneMsgCredit();
+  NetAddress *na = be->getNetAddress();
+  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
+  OZ_Term var = OZ_newVariable();
+  marshal_M_ISDET(bs,na->index,var);
+  SendTo(na->site,bs,M_ISDET,na->site,na->index);
+  return var;
+}
+
 OZ_Return sendRedirect(DSite* sd,int OTI,TaggedRef val){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();

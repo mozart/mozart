@@ -387,6 +387,17 @@ void OldPerdioVar::marshalV(MsgBuffer *bs)
   }
 }
 
+OZ_Term OldPerdioVar::isDetV()
+{
+  if (isObject())  return OZ_true();
+  if (isManager()) return OZ_false(); // RS: CHECK THIS
+  Assert(isProxy());
+  if (hasVal())  return OZ_true();
+  BorrowEntry *be=BT->getBorrow(getIndex());
+  return sendIsDet(be);
+}
+
+
 
 void perdioVarAddSusp(GenCVariable *cv, TaggedRef *v,
                       Suspension susp, int unstable)
@@ -410,4 +421,9 @@ Bool perdioVarValid(GenCVariable* cv, TaggedRef val){
 
 VariableStatus perdioVarStatus(GenCVariable *cv) {
   return ((OldPerdioVar*) cv)->statusV();
+}
+
+
+OZ_Term perdioVarIsDet(GenCVariable *cv) {
+  return ((OldPerdioVar*) cv)->isDetV();
 }

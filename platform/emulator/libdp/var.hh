@@ -83,6 +83,7 @@ public:
   PerdioVar(Board *bb) : GenCVariable(PerdioVariable,bb) {}
 
   virtual VariableStatus statusV() = 0;
+  virtual OZ_Term isDetV() = 0;
 
   virtual PerdioVar *gcV(void) = 0;
   virtual void gcRecurseV(void) = 0;
@@ -172,6 +173,8 @@ public:
 
   // mm2: OZ_DISTRIBUTED! and OZ_LAZY!
   VariableStatus statusV() { return isObject()?OZ_OTHER:OZ_FREE; }
+
+  OZ_Term isDetV();
 
   int getIndex() { return ToInt32(ptr); }
 
