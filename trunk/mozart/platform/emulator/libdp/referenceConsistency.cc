@@ -38,7 +38,7 @@
 void marshalCredit(MarshalerBuffer *buf, RRinstance *r){
   int len = 0;
   RRinstance *tmp;
-  for(RRinstance *tmp = r;tmp!=NULL; tmp = tmp->next,len ++); 
+  for(tmp = r;tmp!=NULL; tmp = tmp->next,len ++); 
   buf->put(DIF_PRIMARY);
   marshalNumber(buf, len);
   while(r!=NULL){
@@ -93,7 +93,7 @@ RRinstance *unmarshalCredit(MarshalerBuffer *buf)
 void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti){
   int len= 0 ;
   RRinstance *tmp;
-  for(RRinstance *tmp = r;tmp!=NULL; tmp = tmp->next,len ++); 
+  for(tmp = r;tmp!=NULL; tmp = tmp->next,len ++); 
   buf->put(DIF_OWNER);
   marshalNumber(buf, oti);
   marshalNumber(buf, len);
@@ -221,11 +221,11 @@ Bool HomeReference::mergeReference(RRinstance *r){
 	  return TRUE;
 	}
     }
-  RRinstance *tmp;
+  RRinstance *tmpR;
   while(r!=NULL){
-    tmp = r;
+    tmpR = r;
     r = r->next;
-    delete tmp;
+    delete tmpR;
   }
   return FALSE;
 }
