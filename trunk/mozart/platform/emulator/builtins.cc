@@ -197,6 +197,8 @@ OZ_BI_define(BIisDet,1,1)
   CheckStatus(var,EVAR_STATUS_DET,AtomDet);
 } OZ_BI_end
 
+#undef CheckStatus
+
 OZ_BI_define(BIisName, 1,1)
 {
   oz_declareNonvarIN(0,term);
