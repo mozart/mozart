@@ -35,16 +35,16 @@
 #include <process.h>
 #include "misc.cc"
 
-int PASCAL
-WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
+int WINAPI
+WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 	LPSTR lpszCmdLine, int /*nCmdShow*/)
 {
   char buffer[5000];
-  sprintf(buffer,"ozenginew.exe ");
+  sprintf(buffer,"ozenginew.exe \"");
   int len = strlen(buffer);
   GetModuleFileName(NULL, buffer+len, sizeof(buffer)-len);
 
-  strcat(buffer," ");
+  strcat(buffer,"\" ");
   strcat(buffer,lpszCmdLine);
 
   STARTUPINFO si;
@@ -54,9 +54,9 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   PROCESS_INFORMATION pinf;
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,DETACHED_PROCESS,
 			   NULL,NULL,&si,&pinf);
-  if (ret!=TRUE) {
-    OzPanic(1,"Cannot run '%s' Oz.\nError = %d.\nDid you run setup?",buffer,errno);
-    exit(1);
+  if (ret == FALSE) {
+    panic(1,"Cannot run '%s'.\n",buffer);
   }
-  exit(0);
+
+  return 0;
 }
