@@ -59,7 +59,7 @@
 ]>
 
 
-<BOOK>
+<BOOK  proglang=oz>
 <Title/System Modules/
     <!-- Splitting the document into different HTML nodes -->
     <Meta name=latex.package value="pstricks">
