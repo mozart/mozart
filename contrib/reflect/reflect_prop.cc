@@ -35,11 +35,11 @@ OZ_Term reflect_propagator(Suspendable * susp)
   Board * b = GETBOARD(susp);
   
   OZ_Term arity_def[] = {
-    {OZ_pair2(atom_type, atom_prop)},
-    {OZ_pair2(atom_params, p->getParameters())},
-    {OZ_pair2(atom_name, prop_name(p->getProfile()->getPropagatorName()))},
-    {OZ_pair2(atom_ref, propagator2Term(prop))},
-    {(OZ_Term) 0}
+    OZ_pair2(atom_type, atom_prop),
+    OZ_pair2(atom_params, p->getParameters()),
+    OZ_pair2(atom_name, prop_name(p->getProfile()->getPropagatorName())),
+    OZ_pair2(atom_ref, propagator2Term(prop)),
+    (OZ_Term) 0
   };
   
   MKARITY(arity, arity_def);
@@ -54,8 +54,8 @@ OZ_Term reflect_thread(Suspendable * susp)
   Board * b = GETBOARD(susp);
 
   OZ_Term arity_def[] = {
-    {OZ_pair2(atom_type, atom_thread)},
-    {(OZ_Term) 0}
+    OZ_pair2(atom_type, atom_thread),
+    (OZ_Term) 0
   };
   
   MKARITY(arity, arity_def);

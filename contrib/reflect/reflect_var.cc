@@ -42,10 +42,10 @@ OZ_Term reflect_variable(OZ_Term var)
     type = atom_any;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any, (oz_isVar(var) ? 
-			   reflect_susplist(tagged2Var(var)->getSuspList()) 
-			   : OZ_nil()))},      
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any, (oz_isVar(var) ? 
+			  reflect_susplist(tagged2Var(var)->getSuspList()) 
+			  : OZ_nil())),      
+      (OZ_Term) 0
     };
     
     MKARITY(susp_arity, susp_arity_def);
@@ -55,16 +55,16 @@ OZ_Term reflect_variable(OZ_Term var)
     type = atom_fd;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any, 
-		reflect_susplist(tagged2Var(var)->
-				 getSuspList()))},
-      {OZ_pair2(atom_bounds, 
-		reflect_susplist(tagged2GenFDVar(var)->
-				 getSuspList(fd_prop_bounds)))},
-      {OZ_pair2(atom_val, 
-		reflect_susplist(tagged2GenFDVar(var)->
-				 getSuspList(fd_prop_singl)))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any, 
+	       reflect_susplist(tagged2Var(var)->
+				getSuspList())),
+      OZ_pair2(atom_bounds, 
+	       reflect_susplist(tagged2GenFDVar(var)->
+				getSuspList(fd_prop_bounds))),
+      OZ_pair2(atom_val, 
+	       reflect_susplist(tagged2GenFDVar(var)->
+				getSuspList(fd_prop_singl))),
+      (OZ_Term) 0
     };
     
     MKARITY(susp_arity, susp_arity_def);
@@ -74,9 +74,9 @@ OZ_Term reflect_variable(OZ_Term var)
     type = atom_bool;
     
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any, 
-		reflect_susplist(tagged2Var(var)->getSuspList()))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any, 
+	       reflect_susplist(tagged2Var(var)->getSuspList())),
+      (OZ_Term) 0
     };
     
     MKARITY(susp_arity, susp_arity_def);
@@ -86,18 +86,18 @@ OZ_Term reflect_variable(OZ_Term var)
     type = atom_fs;
 
     OZ_Term susp_arity_def[] = {
-      {OZ_pair2(atom_any, 
-		reflect_susplist(tagged2Var(var)->getSuspList()))},
-      {OZ_pair2(atom_glb, 
-		reflect_susplist(tagged2GenFSetVar(var)->
-				 getSuspList(fs_prop_glb)))},
-      {OZ_pair2(atom_lub, 
-		reflect_susplist(tagged2GenFSetVar(var)->
-				 getSuspList(fs_prop_lub)))},
-      {OZ_pair2(atom_val, 
-		reflect_susplist(tagged2GenFSetVar(var)->
-				 getSuspList(fs_prop_val)))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_any, 
+	       reflect_susplist(tagged2Var(var)->getSuspList())),
+      OZ_pair2(atom_glb, 
+	       reflect_susplist(tagged2GenFSetVar(var)->
+				getSuspList(fs_prop_glb))),
+      OZ_pair2(atom_lub, 
+	       reflect_susplist(tagged2GenFSetVar(var)->
+				getSuspList(fs_prop_lub))),
+      OZ_pair2(atom_val, 
+	       reflect_susplist(tagged2GenFSetVar(var)->
+				getSuspList(fs_prop_val))),
+      (OZ_Term) 0
     };
     
     MKARITY(susp_arity, susp_arity_def);
@@ -130,11 +130,11 @@ OZ_Term reflect_variable(OZ_Term var)
 
   if (type != OZ_nil()) {
     OZ_Term arity_def[] = {
-      {OZ_pair2(atom_var,  var_itself)},
-      {OZ_pair2(atom_type, type)},      
-      {OZ_pair2(atom_susplists, sl)},
-      {OZ_pair2(atom_name, OZ_atom(oz_varGetName(var_itself)))},
-      {(OZ_Term) 0}
+      OZ_pair2(atom_var,  var_itself),
+      OZ_pair2(atom_type, type),      
+      OZ_pair2(atom_susplists, sl),
+      OZ_pair2(atom_name, OZ_atom(oz_varGetName(var_itself))),
+      (OZ_Term) 0
     };
     
     MKARITY(arity, arity_def);
