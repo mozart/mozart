@@ -161,12 +161,16 @@ void debugStreamCall(ProgramCounter PC, char *name, int arity,
   
     TaggedRef file, comment;
     int line, abspos;
+
+    time_t feedtime;
   
     am.currentThread->stop();
 
     CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
     TaggedRef arglist = CodeArea::argumentList(arguments, arity);
   
+    feedtime = CodeArea::findTimeStamp(debugPC);
+
     TaggedRef pairlist = 
       cons(OZ_pairA("thr",
 		    OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
@@ -177,7 +181,8 @@ void debugStreamCall(ProgramCounter PC, char *name, int arity,
 			  cons(OZ_pairA("args", arglist),
 			       cons(OZ_pairA("builtin", 
 					     builtin ? OZ_true() : OZ_false()),
-				    OZ_nil()))))));
+				    cons(OZ_pairAI("time", feedtime),
+				    OZ_nil())))))));
     
     TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
     OZ_unify(tail, OZ_cons(entry, newTail));
