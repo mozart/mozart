@@ -787,14 +787,7 @@ char *getMemFromOS(size_t sz) {
   // thisBlockSz -= (thisBlockSz%WordSize);  // round down to next word
 
   /* initialize with zeros */
-#ifdef WINDOWS
-  /* if we don't do that, the MIM (at least)
-   * gets a memory leak (have to debug this) (RS)
-   */
-  memset(heapEnd,0,thisBlockSz);
-#else
   DebugCheckT(memset(heapEnd,0,thisBlockSz));
-#endif
 
   heapTop = heapEnd+thisBlockSz;
 
