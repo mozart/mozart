@@ -20,11 +20,48 @@
 %%% WARRANTIES.
 %%%
 
-local
-   Inject     = Boot_Space.inject
-   BootChoose = Boot_Space.choose
+functor
 
-   proc {Fail _} fail end
+import
+   BootSpace(is:         Is
+	     new:        New
+	     ask:        Ask
+	     askVerbose: AskVerbose
+	     clone:      Clone
+	     merge:      Merge
+	     inject:     Inject
+	     commit:     Commit
+	     choose:     BootChoose)
+   at 'x-oz://boot/Space'
+
+prepare
+   
+   proc {Fail _}
+      fail
+   end
+
+export
+   Is
+   New
+   Ask
+   AskVerbose
+   Clone
+   Merge
+   Inject
+   Commit
+   Discard
+   WaitStable
+   Choose
+
+define
+
+   proc {Discard S}
+      {Inject S Fail}
+   end
+
+   proc {WaitStable}
+      {Wait {BootChoose 1}}
+   end
 
    fun {Choose X}
       if {IsInt X} then {BootChoose X}
@@ -32,22 +69,4 @@ local
       end
    end
    
-in
-
-   Space = space(is:         IsSpace
-		 new:        Boot_Space.new
-		 ask:        Boot_Space.ask
-		 askVerbose: Boot_Space.askVerbose
-		 clone:      Boot_Space.clone
-		 merge:      Boot_Space.merge
-		 inject:     Inject
-		 commit:     Boot_Space.commit
-		 discard:    proc {$ S}
-				{Inject S Fail}
-			     end
-		 waitStable: proc {$}
-				{Wait {BootChoose 1}}
-			     end
-		 choose:     Choose)
-
 end

@@ -85,7 +85,7 @@ local
 	 elseif {IsTuple X}            then TupleType
 	 elseif {IsRecord X}           then RecordType
 	 elseif {IsChunk X}            then ChunkType
-	 elseif {IsSpace X}            then SpaceType
+	 elseif {Space.is X}            then SpaceType
 	 elseif {FS.value.is X}        then FSValueType
 	 elseif {ForeignPointer.is X}  then ForeignPointerType
 	 else                                 UnknownType

@@ -55,9 +55,9 @@ OZVERSION=	$(SRCTOP)/OZVERSION
 BIMODSPECS = \
 	Array Atom BitArray Bool Cell Char Chunk Class \
 	Dictionary Exception Float ForeignPointer Int List Literal \
-	Lock Name Number Object Port Procedure Record Space \
+	Lock Name Number Object Port Procedure Record \
 	String Thread Time Tuple Unit Value VirtualString \
-	BitString ByteString InterFault Combinators \
+	BitString ByteString InterFault \
 	INTERNAL # do not include this at compiler (things will blow up!)
 
 MODSPECS= \
