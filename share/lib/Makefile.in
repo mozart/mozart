@@ -226,7 +226,7 @@ ozserver: Standard.ozf MakeOzServer.oz
 ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
 	$(COMPILESYSLET) MakeOzVSServer.oz -o $@
 
-ozar: URL.ozf ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
+ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
 	../url-defaults.oz
 	$(COMPILESYSLET) -l URL=URL.ozf ar/Main.oz -o $@
 
