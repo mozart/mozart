@@ -96,10 +96,9 @@ int SolveActor::choose(int left, int right) {
   int n = wa->selectOrFailChildren(left, right);
 
   if (n==0) {
-    wa->dispose();
     return 0;
   } else if (n==1) {
-    Board *waitBoard = wa->getChildRefAt(0);
+    Board *waitBoard = wa->getChildRef();
 
     waitBoard->setCommitted(solveBoard);
     Assert(!solveBoard->isCommitted());
