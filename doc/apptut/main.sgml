@@ -35,24 +35,30 @@
 <!ENTITY chapter.linking     SYSTEM "link.sgml">
 <!ENTITY chapter.module      SYSTEM "module.sgml">
 
+<!ENTITY % proglang.values.local "|sh|makefile">
+<!ENTITY % p.mix.local "|em">
+<!ELEMENT em - - (#PCDATA)>
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
 <!ENTITY eg PI "eg">
 ]>
 <BOOK>
+<meta name="html.split" value="part.getting.started">
+<meta name="html.split" value="part.foreign.extensions">
+<meta name="html.split" value="part.managing.modules">
 <Title/Application Programming/
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
 <Author.Extern to="author.db" key="Christian.Schulte">
-<PART>
+<PART id=part.getting.started>
   <Title/Getting Started/
   &chapter.hello;
   &chapter.development;
   &chapter.deployment;
 </PART>
 &part.native;
-<PART>
+<PART id=part.managing.modules>
   <Title/Managing Modules/
   &chapter.linking;
   &chapter.module;

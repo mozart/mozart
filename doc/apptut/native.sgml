@@ -25,21 +25,84 @@
   -
   -->
 
-<PART>
-  <TITLE/Foreign Extensions/
-  <CHAPTER>
-    <TITLE/Introduction/
+<part id=part.foreign.extensions proglang=cc>
+  <title/Foreign Extensions/
+  <chapter>
+    <title/Introduction/
 
-    <P>Oz can be very simply extended with new functionality and
+    <p>Oz can be very simply extended with new functionality and
 datatypes implemented in C or C++.  This capability is often used to
-interface Oz to existing libraries: for example, the <NAME
-type="library"/regex/ and <NAME type="library"/gdbm/ modules are
-implemented in this fashion.</P>
+interface Oz to existing libraries: for example, the <name
+type="library"/regex/ and <name type="library"/gdbm/ modules are
+implemented in this fashion.</p>
 
-    <PARA CLASS=APROPOS><TITLE/Native Functors/
+    <para class=apropos><title/Native Functors/
 Every extension is presented to the system in the form of a
-<DEF/native functor/, &ie; a functor which happens to be implemented
-in C or C++ rather than in Oz.</PARA>
+<def/native functor/, &ie; a functor which happens to be implemented
+in C or C++ rather than in Oz.</para>
+
+    <section>
+      <title/Global Counter Example/
+      <p>We now define a native functor that exports a
+<code/<span class=ignore/ /next/
+function which returns the next value of a global counter each time it
+is called.</p>
+      <subsection>
+	<title/Implementation/
+<p><code.extern display to="counter.cc">
+<code/OZ_BI_define(counter_next,0,1)/ indicates that we are defining a
+procedure <code/<span class=ignore/ /counter_next/ that implements a new builtin which
+takes 0 input arguments and returns 1 output value. <code/OZ_BI_end/
+is required to finish this definition.</p>
+
+<p><code/<span class=ignore/ /OZ_RETURN_INT(?{d})/ is a macro that causes
+the builtin to return integer ?{d} as an Oz integer.  This should only
+be used when the builtin has one unique output value.</p>
+
+<p>Finally <code/extern "C" { ... }/ defines the native functor.  It
+must contain the definition of procedure
+<code/<span class=ignore/ /oz_init_module/ whose purpose is to perform
+arbitrary initializations and then return a table of builtins.  Each
+entry in this table consists of (1) the name of the export, (2) the
+input arity, (3) the output arity, (4) the procedure implementing the
+builtin.  The table must be terminated by an entry whose fields are
+all zero.</p>
+      </subsection>
+
+      <subsection>
+	<title/Compilation/
+	<p>We must now make this native module available as a
+<em/shared object library/.  First we must compile it and create
+<file/counter.o/:
+<code display proglang=sh>c++ -I${OZHOME}/include -c counter.cc</code>
+Then we must produce a platform specific shared object library:
+<code display proglang=sh>ozdynld counter.o -o counter.so-`ozplatform`</code>
+You may find it useful to create a <file/Makefile/ of the form:
+<code.extern display proglang=makefile to="mkfile.xmp">
+</p>
+      </subsection>
+      <subsection>
+	<title/Deployment/
+<p>Normally, you will then place the resulting shared object file, e.g.
+<file/counter.so-linux-i486/ on a Linux system, in an installation
+directory; let's call it ?{install}.  If your site has several
+platforms sharing one file system, then you can place all platform
+specific shared object libraries that you create from
+<file/counter.cc/ in the same ?{install} directory.  They all have
+distinct names since the platform name is appended.</p>
+	<p>In an Oz functor, you then write an import of the form:
+<code display proglang=oz>Cnt at '?{install}/counter.so{native}'</code>
+The <code/<span class=ignore/'/{native}<span class=ignore/'// suffix
+indicates to the system that this denotes a native functor whose
+platform independent basename is <file>?{install}/counter.so</file>.
+The module manager dynamically links the appropriate platform specific
+shared object library (by appending the platform specific extension to
+the basename) and makes available the module it defines as the
+value of <code proglang=oz/Cnt/.  The body of your functor can invoke
+<code proglang=oz/{Cnt.next}/ to get the next value of the global
+counter.</p>
+      </subsection>
+
 </PART>
 
 <!--
