@@ -19,13 +19,13 @@
  * Dictionaries
  *=================================================================== */
 
-class OzDictionary: public ConstTerm {
+class OzDictionary: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   DynamicTable *table;
 
 public:
-  OzDictionary() : ConstTerm(Co_Dictionary) 
+  OzDictionary(Board *b) : ConstTermWithHome(b,Co_Dictionary) 
   {
     table = DynamicTable::newDynamicTable();
   }
