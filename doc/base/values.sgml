@@ -109,7 +109,7 @@
           a future, the atom <<future>> is returned.  If ?_{X} is free,
           the atom <<free>> is returned.  If ?_{X} is kinded, the tuple
           <<kinded(?{Y})>> is returned, where ?{Y} is bound to either the
-          atom <<int>> or <<record>>, depending on the type of&nbsp;?_{X}.
+          atoms <<int>>, <<fset>> or <<record>>, depending on the type of&nbsp;?_{X}.
           If ?_{X} is determined, the tuple <<det(?{Y})>> is returned, where
           ?{Y} is bound to the atom as returned by <<{Value.type ?_{X}}>>.
 
