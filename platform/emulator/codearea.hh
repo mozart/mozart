@@ -181,6 +181,8 @@ private:
   void scanPredicateRef(CompStream *fd);
   void scanGenCallInfo(CompStream *fd);
   void scanApplMethInfo(CompStream *fd);
+  void scanMethodName(CompStream *fd);
+  void parseMethodName(CompStream *fd, TaggedRef &rn, TaggedRef &cn);
   void scanLabel(CompStream *fd, ProgramCounter start);
   SRecordArity parseRecordArity(CompStream *fd);
   void scanRecordArity(CompStream *fd);
@@ -334,38 +336,51 @@ void displayCode(ProgramCounter from, int ssize);
 
 
 
+class MethodName {
+public:
+  TaggedRef realName;
+  TaggedRef codedName;
+  MethodName(TaggedRef rn, TaggedRef cn) : realName(rn), codedName(cn)
+  {
+    gcProtect(&realName);
+    gcProtect(&codedName);
+  }
+};
+
+
 class GenCallInfoClass {
 public:
   int regIndex;
   Bool isMethAppl, isTailCall;
-  TaggedRef lit;
+  MethodName mn;
   SRecordArity arity;
 
-  GenCallInfoClass(int ri, Bool ism, TaggedRef l, Bool ist, SRecordArity ar)
+  GenCallInfoClass(int ri, Bool ism, TaggedRef rn, TaggedRef cn,
+                   Bool ist, SRecordArity ar) : mn(rn,cn)
   {
     regIndex   = ri;
     isMethAppl = ism;
-    lit = l;
-    gcProtect(&lit);
     isTailCall = ist;
     arity = ar;
   }
 
   void dispose()
   {
-    gcUnprotect(&lit);
+    // gcUnprotect(&mn.realName);
+    // gcUnprotect(&mn.codedName);
+
     delete this;
   }
 };
 
 class ApplMethInfoClass {
 public:
-  TaggedRef methName;
+  MethodName methName;
   SRecordArity arity;
-  ApplMethInfoClass(TaggedRef m, SRecordArity i) {
-    methName = m;
+  ApplMethInfoClass(TaggedRef rn, TaggedRef cn, SRecordArity i) :
+  methName(rn,cn)
+  {
     arity = i;
-    gcProtect(&methName);
   }
 };
 

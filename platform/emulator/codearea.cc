@@ -601,10 +601,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TAILAPPLMETHG:
       {
         ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
-        TaggedRef literal       = ami->methName;
         int arity               = ami->arity;
         Reg reg                 = regToInt(getRegArg(PC+2));
-        fprintf(ofile, "(%s,%d,%d)\n", toC(literal),arity,reg);
+        fprintf(ofile, "(%s#%s,%d,%d)\n",
+                toC(ami->methName.realName),toC(ami->methName.codedName),arity,reg);
         DISPATCH();
       }
     case SENDMSGX:
@@ -614,10 +614,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TAILSENDMSGY:
     case TAILSENDMSGG:
       {
-        TaggedRef literal = getLiteralArg(PC+1);
+        MethodName *mn = (MethodName *) getAdressArg(PC+1);
         Reg reg        = regToInt(getRegArg(PC+2));
         int arity      = getPosIntArg(PC+3);
-        fprintf(ofile, "(%s,%d,%d)\n", toC(literal),reg,arity);
+        fprintf(ofile, "(%s#%s,%d,%d)\n",
+                toC(mn->realName),toC(mn->codedName),reg,arity);
         DISPATCH();
       }
     case CALLX:
