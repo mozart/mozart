@@ -1024,8 +1024,12 @@ inline void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a)
 }
 
 void AM::undoTrailing(int n) {
-  while(n--)
-    trail.popRef();
+  while(n--) {
+    TrailEntry *eq = trail.popRef();
+    TaggedRef *refPtr = eq->getRefPtr();
+    TaggedRef value = eq->getValue();
+    *refPtr = value;
+  }
 }
 
 #ifdef OUTLINE
