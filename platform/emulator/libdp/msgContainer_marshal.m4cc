@@ -199,7 +199,7 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
     switch(mt) {
       include(EMUDIR/msgFormat.m4)
 	default:
-	  PD((TCP_INTERFACE,"unmarshal got unknown message: %d",mt));
+	  PD((TCP_INTERFACE,"unmarshal got unknown `message': %d",mt));
     }
   }
 
@@ -414,7 +414,7 @@ void MsgContainer::gcMsgC() {
   switch(mt) {
 include(EMUDIR/msgFormat.m4)
   default:
-    PD((TCP_INTERFACE,"marshal got unknown message: %d",mt));
+    PD((TCP_INTERFACE,"marshal got unknown `message': %d",mt));
   }
 }
 
