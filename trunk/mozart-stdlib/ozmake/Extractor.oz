@@ -130,8 +130,12 @@ define
       end
 
       meth Load(PKG $)
+	 IS_MOGULID
+	 PKG_URL
+      in
 	 try
 	    if {Utils.isMogulID PKG} then
+	       !IS_MOGULID=unit
 	       %% if the package is given as a mogul id, then we
 	       %% download the appropriate file from the mogul
 	       %% archive
@@ -146,6 +150,7 @@ define
 		       {Utils.mogulToRelative PKG} FilenameVer}}
 	       UrlStr = {URL.toString Url}
 	    in
+	       PKG_URL=UrlStr
 	       {self xtrace('downloading '#UrlStr)}
 	       local
 		  LOC =
@@ -196,7 +201,27 @@ define
 		  VAL
 	       end
 	    end
-	 catch _ then raise ozmake(extract:load(PKG)) end end
+	 catch error(url(localize U) ...) then
+	    if {IsDet IS_MOGULID} then
+	       raise ozmake(extract:localize(U PKG)) end
+	    else
+	       raise ozmake(extract:localize(U)) end
+	    end
+	 [] urlbad then
+	    if {IsDet IS_MOGULID} andthen {IsDet PKG_URL} then
+	       raise ozmake(extract:badurl(PKG PKG_URL)) end
+	    else
+	       raise ozmake(extract:badurl(PKG)) end
+	    end
+	 [] urlbug then
+	    if {IsDet IS_MOGULID} andthen {IsDet PKG_URL} then
+	       raise ozmake(extract:badurl(PKG PKG_URL)) end
+	    else
+	       raise ozmake(extract:badurl(PKG)) end
+	    end
+	 [] _ then
+	    raise ozmake(extract:unpickle(PKG)) end
+	 end
       end
 
       meth load_extract_mogulid(PKG $)

@@ -157,10 +157,30 @@ prepare
 	 error(kind : TITLE_EXTRACT
 	       msg  : 'expected FILENAME#CONTENTS in list on package value `data\' feature'
 	       items: [hint(l:'Found' m:oz(X))])
-      [] ozmake(extract:load(P)) then
+      [] ozmake(extract:localize(U P)) then
 	 error(kind : TITLE_EXTRACT
-	       msg  : 'cannot read or download package'
-	       items: [hint(l:'Package' m:P)])
+	       msg  : 'package file could not be found or downloaded'
+	       items: [hint(l:'Package' m:P)
+		       hint(l:'Location' m:U)])
+      [] ozmake(extract:localize(U)) then
+	 error(kind : TITLE_EXTRACT
+	       msg  : 'package file could not be found or downloaded'
+	       items: [hint(l:'Location' m:U)])
+      [] ozmake(extract:badurl(U P)) then
+	 error(kind : TITLE_EXTRACT
+	       msg  : 'ill-formed URL'
+	       items: [hint(l:'Package' m:P)
+		       hint(l:'URL' m:U)])
+      [] ozmake(extract:badurl(U)) then
+	 error(kind : TITLE_EXTRACT
+	       msg  : 'ill-formed URL or pathname'
+	       items: [hint(l:'URL' m:U)])
+      [] ozmake(extract:unpickle(P)) then
+	 error(kind : TITLE_EXTRACT
+	       msg  : 'package could not be unpickled'
+	       items: [hint(l:'Package' m:P)
+		       line('')
+		       line('possibly corrupted or pickled in the wrong format')])
       [] ozmake(extract:dir(D)) then
 	 error(kind : TITLE_EXTRACT
 	       msg  : 'default directory for extraction already exists'
