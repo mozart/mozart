@@ -239,7 +239,11 @@
   \renewcommand{\@oddfoot}{}%
   \renewcommand{\@evenfoot}{}}
 
-\newcommand{\mozartComic}[1]{\renewcommand{\@comic}{\mozart@comic{#1}}}
+\newcommand{\mozartComic}[1]{%
+  \renewcommand{\@comic}{\mozart@comic{#1}}%
+  \renewcommand{\@comicauthor}{Cover illustration
+    by Andreas Schoch\\}}
+\newcommand{\@comicauthor}{}
 \newcommand{\@comic}{}
 \let\@author\@empty
 \let\@title\@empty
@@ -278,7 +282,7 @@
   \mozart@day,
   \mozart@year}
 
-\newcommand{\@mozartstyle}{I}
+\newcommand{\@mozartstyle}{J}
 \newcommand{\mozartstyle}[1]{%
   \renewcommand{\@mozartstyle}{#1}}
 
@@ -357,6 +361,14 @@
       \pstriangle[fillstyle=solid,fillcolor=I@color,linestyle=none](14,-9)(0.5,23)%
     \end{pspicture}}}
 
+% no frills, just the logo and the comic
+\newcommand{\mozartstyle@J}{%
+  \renewcommand{\mozart@logo@color}{color}%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+    \end{pspicture}}}
+
 %\mozartstyle{I}
 
 \newcommand{\mozart@titlepage}{%
@@ -393,6 +405,7 @@
 \newcommand{\mozart@logo}{%
   \lower10mm\hbox{\@PICEXT{mozart-\mozart@logo@color}{5cm}}%
 }
+\newcommand{\@logoauthor}{Mozart logo by Christian Lindig}
 
 \newlength{\mozart@quote@indent}
 \setlength{\mozart@quote@indent}{1cm}
@@ -403,6 +416,8 @@
    \item[]\ignorespaces}
   {\end{list}}
 
+\newif\if@mozartcredits
+
 \newcommand{\mozart@license}{%
   \clearpage
   \pagestyle{empty}\thispagestyle{empty}%
@@ -412,11 +427,22 @@
       \begin{mozart@quote}\@abstract\end{mozart@quote}%
     \fi
     \vspace*{\fill}%
+    \@mozartcreditsfalse
+    \ifx\@comicauthor\long@empty\else\@mozartcreditstrue\fi
+    \ifx\@logoauthor\long@empty\else\@mozartcreditstrue\fi
+    \if@mozartcredits
+    \begin{center}\mozart@section@font\Large Credits\end{center}%
+    \begin{center}\footnotesize
+      \@comicauthor
+      \@logoauthor
+    \end{center}%
+    \fi
     \begin{center}\mozart@section@font
       \Large License Agreement%
     \end{center}%
     \begin{mozart@quote}\footnotesize%
-      This software is copyrighted by the German Research Center for
+      This software and its documentation are copyrighted by the
+      German Research Center for
       Artificial Intelligence (DFKI), the Swedish Institute of
       Computer Science (SICS), and other parties.  The following terms
       apply to all files associated with the software unless
@@ -442,7 +468,8 @@
       THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY
       WAR\-RAN\-TIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
       WAR\-RAN\-TIES OF MER\-CHAN\-TA\-B\-ILI\-TY, FITNESS FOR A
-      PARTICULAR PURPOSE, AND NON-IN\-FRIN\-GE\-MENT.  THIS SOFTWARE IS
+      PARTICULAR PURPOSE, AND NON-IN\-FRIN\-GE\-MENT.  THIS SOFTWARE
+      AND ITS DOCUMENTATION ARE
       PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS
       HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
       ENHANCEMENTS, OR MODIFICATIONS.
