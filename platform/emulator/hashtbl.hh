@@ -12,7 +12,7 @@
 #ifndef __HASHTABLEH
 #define __HASHTABLEH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

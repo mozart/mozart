@@ -10,7 +10,7 @@
 #ifndef __STACK_H__
 #define __STACK_H__
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

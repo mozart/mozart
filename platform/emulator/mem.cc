@@ -7,7 +7,7 @@
   State: $State$
 */
 
-#if defined(__GNUC__) && !defined(NOPRAGMA)
+#if defined(INTERFACE)
 #pragma implementation "mem.hh"
 #endif
 

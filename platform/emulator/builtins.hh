@@ -10,7 +10,7 @@
 #ifndef __BUILTINSH
 #define __BUILTINSH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

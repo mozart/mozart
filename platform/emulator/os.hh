@@ -13,7 +13,7 @@
 #ifndef __MISCH
 #define __MISCH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

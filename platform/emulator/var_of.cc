@@ -1,5 +1,5 @@
   
-#if defined(__GNUC__)
+#if defined(INTERFACE)
 #pragma implementation "ofgenvar.hh"
 #endif
 

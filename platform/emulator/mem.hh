@@ -10,7 +10,7 @@
 #ifndef __MEMORYH
 #define __MEMORYH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 

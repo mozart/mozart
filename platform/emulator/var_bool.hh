@@ -12,7 +12,7 @@
 #ifndef __GENBOOLVAR__H__
 #define __GENBOOLVAR__H__
 
-#if defined(__GNUC__)
+#if defined(INTERFACE)
 #pragma interface
 #endif
 

@@ -12,7 +12,7 @@
 #ifndef __BOARDH
 #define __BOARDH
 
-#ifdef __GNUC__
+#ifdef INTERFACE
 #pragma interface
 #endif
 
