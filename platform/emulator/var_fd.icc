@@ -20,11 +20,6 @@ inline
 void GenFDVariable::propagate(TaggedRef var, FDPropState state,
                               TaggedRef term, Bool prop_eq)
 {
-#ifdef DEBUG_FD
-  if ((int)this != var >> 4)
-    error("variable expected");
-#endif
-
   switch (state) {
   case fd_det:
     GenCVariable::propagate(var, fdSuspList[fd_det], term, prop_eq);
@@ -70,11 +65,6 @@ void GenFDVariable::relinkSuspList(GenFDVariable * leftVar)
 inline
 void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
-#ifdef DEBUG_FD
-  if (! (finiteDomain == fd_singleton))
-    error("singleton expected");
-#endif
-
   TaggedRef si_val = newSmallInt(finiteDomain.singl());
   propagate(*trPtr, fd_det, si_val);
   *trPtr = si_val;
@@ -109,10 +99,6 @@ inline
 GenFDVariable * tagged2GenFDVar(TaggedRef term)
 {
   GCDEBUG(term);
-#ifdef DEBUG_FD
-  if(isGenFDVar(term) == NO)
-    error("fd variable expected");
-#endif
   return (GenFDVariable*) tagged2CVar(term);
 }
 
