@@ -181,7 +181,7 @@ oz-win::
         mv oz3/share/images oz3/share/?*.ozf $(WINCACHEDIR)/share
         mv oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
         find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
-        rm -rf oz3/share/doc
+        rm -rf oz3/share/doc oz3/platform/win32-i486/oztool.sh
         mv $(WINCACHEDIR)/share/Init.ozf oz3/share
         for i in ozc ozd ozl; do \
           cat oz3/platform/winbin/ozwrapper.exe \
