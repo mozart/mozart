@@ -85,6 +85,7 @@ extern OZ_Term 	_FUNDECL(OZ_deref,(OZ_Term term));
 extern int _FUNDECL(OZ_isAtom,(OZ_Term));
 extern int _FUNDECL(OZ_isBigInt,(OZ_Term));
 extern int _FUNDECL(OZ_isCell,(OZ_Term));
+extern int _FUNDECL(OZ_isThread,(OZ_Term));
 extern int _FUNDECL(OZ_isPort,(OZ_Term));
 extern int _FUNDECL(OZ_isChunk,(OZ_Term));
 extern int _FUNDECL(OZ_isCons,(OZ_Term));
