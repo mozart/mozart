@@ -17,10 +17,12 @@ case $system in
     ;;
     s390\ Linux\ *)	OZARCH=linux-s390
     ;;
-    armv4l\ Linux\ *)	OZARCH=linux-arm
-    ;;
-    parisc32\ Linux\ *)	OZARCH=linux-hppa32
-    ;;
+    #-----------------------------------------------------------------
+    # I am turning off the following since they have not been confirmed
+    #armv4l\ Linux\ *)	OZARCH=linux-arm
+    #;;
+    #parisc32\ Linux\ *)	OZARCH=linux-hppa32
+    #;;
     #-----------------------------------------------------------------
    ppc\ Linux\ 2.*)	OZARCH=linux-ppc
    ;;
