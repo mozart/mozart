@@ -38,6 +38,12 @@ int OZ_isCell(OZ_Term term)
   return (isCell(term) == OK) ? 1 : 0;
 }
 
+int OZ_isChunk(OZ_Term term)
+{
+  DEREF(term,_1,_2);
+  return (isChunk(term) == OK) ? 1 : 0;
+}
+
 int OZ_isCons(OZ_Term term)
 {
   return (isCons(term) == OK) ? 1 : 0;
@@ -126,12 +132,16 @@ OZ_Term OZ_termType(OZ_Term term)
     return AtomTuple;
   }
 
-  if (isProcedure(term)) { // before isSRecord test !!
+  if (isProcedure(term)) {
     return AtomProcedure;
   }
 
-  if (isCell(term)) { // before isSRecord test !!
+  if (isCell(term)) {
     return AtomCell;
+  }
+
+  if (isChunk(term)) {
+    return AtomChunk;
   }
 
   if (isSRecord(tag)) {
@@ -961,6 +971,12 @@ int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
   return BIadd(name,arity,fun,OK) == NULL ? 0 : 1;
 }
 
+OZ_Bool OZ_raise(OZ_Term exc)
+{
+  am.exception=exc;
+  return RAISE;
+}
+
 /* -----------------------------------------------------------------
  * Suspending builtins
  * -----------------------------------------------------------------*/
@@ -1043,6 +1059,18 @@ OZ_Bool OZ_suspendOnVar3(OZ_Term var1,OZ_Term var2,OZ_Term var3)
  *
  * -----------------------------------------------------------------*/
 
+OZ_Term OZ_newCell(OZ_Term val)
+{
+  return makeTaggedConst(new Cell(am.currentBoard, val));
+}
+
+OZ_Term OZ_newChunk(OZ_Term val)
+{
+  val=deref(val);
+  if (!isSRecord(val)) return makeTaggedNULL();
+  return makeTaggedConst(new SChunk(am.currentBoard, tagged2SRecord(val)));
+}
+
 int OZ_onToplevel()
 {
   return am.isToplevel() ? 1 : 0;
@@ -1061,8 +1089,8 @@ char *OZ_unixError(int aErrno) {
 #endif
 }
 
-
-void OZ_typeError(char *f,int pos,char *typeStr, OZ_Term val)
+OZ_Bool OZ_typeError(int pos,char *type)
 {
-  TYPE_ERROR(typeErrorBI(f,pos,typeStr),printArgs(1,val));
+  return OZ_raise(mkTuple("typeError",1,
+                          mkTuple("pos",2,OZ_CToInt(pos),OZ_CToAtom(type))));
 }
