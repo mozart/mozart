@@ -143,7 +143,7 @@ void AM::init(int argc,char **argv)
   methApplHdl             = makeTaggedNULL();
   sendHdl                 = makeTaggedNULL();
   newHdl                  = makeTaggedNULL();
-  defaultExceptionHandler = makeTaggedNULL();
+  defaultExceptionHdl     = makeTaggedNULL();
   opiCompiler             = makeTaggedNULL();
 
   char *compilerName = OzCompiler;
@@ -470,6 +470,7 @@ Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
 
 /* return -1 (v1=<v2), +1 (v1>=v2), 0 (dont care) */
 
+static
 int cmpCVar(GenCVariable *v1, GenCVariable *v2)
 {
   TypeOfGenCVariable t1 = v1->getType();
@@ -482,10 +483,12 @@ int cmpCVar(GenCVariable *v1, GenCVariable *v2)
 }
 
 
+// global vars!!!
 static Stack unifyStack(100,Stack_WithMalloc);
 static Stack rebindTrail(100,Stack_WithMalloc);
 
 inline
+static
 void rebind(TaggedRef *refPtr, TaggedRef *ptr2)
 {
   rebindTrail.ensureFree(2);
@@ -944,6 +947,8 @@ PROFILE_CODE1
 }
 
 
+#ifdef DEBUG_CHECK
+static
 Board *varHome(TaggedRef val) {
   if (isUVar(val)) {
     return tagged2VarHome(val);
@@ -954,19 +959,18 @@ Board *varHome(TaggedRef val) {
   }
 }
 
+static
 Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = deref(*vPtr);
 
   return !isAnyVar(val) ||
     am.isBelow(am.currentBoard,varHome(val));
 }
+#endif
 
-
-// exception from general rule that arguments are never variables!
-//  term may be an
+/* bind var to term */
 void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
                      TaggedRef *termPtr, TaggedRef term)
-     /* bind var to term;         */
 {
   Assert(!isCVar(var) && !isRef(term));
 
@@ -975,8 +979,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     checkSuspensionList(var, pc_std_unif);
   }
 
-  /* second step: mark binding for non-local variable in trail;     */
-  /* also mark such (i.e. this) variable in suspention list;        */
+  /* second step: push binding for non-local variable on trail;     */
   if ( !isLocalVariable(var,varPtr)) {
     Assert(shallowHeapTop || checkHome(varPtr));
     trail.pushRef(varPtr,var);
@@ -1746,7 +1749,7 @@ public:
   TaggedRef node;
 public:
   OzSleep(int t, TaggedRef n,OzSleep *a)
-  : time(t), node(n), next(a)
+    : next(a), time(t), node(n)
   {
     OZ_protect(&node);
     Assert(t>=0);

@@ -2941,7 +2941,30 @@ DECLAREBI_USEINLINEFUN1(BIstatus,BIstatusInline)
 // Builtins ==, \=, ==B and \=B
 // ---------------------------------------------------------------------
 
-inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
+inline
+OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
+{
+  trail.pushMark();
+  shallowHeapTop = heapTop;
+  Bool ret = unify(Ain,Bin,(ByteCode*)1);
+  shallowHeapTop = NULL;
+  if (ret == NO) {
+    reduceTrailOnFail();
+    return FAILED;
+  }
+
+  if (trail.isEmptyChunk()) {
+    trail.popMark();
+    return PROCEED;
+  }
+
+  reduceTrailOnShallow(NULL);
+
+  return SUSPEND;
+}
+
+inline
+OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 {
   TaggedRef A = Ain, B = Bin;
   DEREF(A,aPtr,tagA); DEREF(B,bPtr,tagB);
@@ -2963,25 +2986,8 @@ inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   if (isConst(tagA))    return tagged2Const(A)->unify(B,0) ? PROCEED : FAILED;
 
  dontknow:
-  am.trail.pushMark();
-  am.shallowHeapTop = heapTop;
-  Bool ret = am.unify(Ain,Bin,(ByteCode*)1);
-  am.shallowHeapTop = NULL;
-  if (ret == NO) {
-    am.reduceTrailOnFail();
-    return FAILED;
-  }
-
-  if (am.trail.isEmptyChunk()) {
-    am.trail.popMark();
-    return PROCEED;
-  }
-
-  am.reduceTrailOnShallow(NULL);
-
-  return SUSPEND;
+  return am.eqeq(Ain,Bin);
 }
-
 
 OZ_C_proc_begin(BIeq,2)
 {
@@ -4361,39 +4367,6 @@ OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 
 /* -----------------------------------
-   EXCEPTION HANDLERS
-   ----------------------------------- */
-
-static void invalid_handler(int /* sig */,
-                     int /* code */,
-                     struct sigcontext* /* scp */,
-                     char* /* addr */) {
-  OZ_warning("signal: arithmethic exception: invalid argument");
-}
-
-static void overflow_handler(int /* sig */,
-                      int /* code */,
-                      struct sigcontext* /* scp */,
-                      char* /* addr */) {
-  OZ_warning("signal: arithmethic exception: overflow");
-}
-
-static void underflow_handler(int /* sig */,
-                       int /* code */,
-                       struct sigcontext* /* scp */,
-                       char* /* addr */) {
-  OZ_warning("signal: arithmethic exception: underflow");
-}
-
-static void divison_handler(int /* sig */,
-                     int /* code */,
-                     struct sigcontext* /* scp */,
-                     char* /* addr */) {
-  OZ_warning("signal: arithmethic exception: divison by zero");
-}
-
-
-/* -----------------------------------
    make non inline versions
    ----------------------------------- */
 
@@ -5004,7 +4977,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsetProfileMode, 1)
 {
   oz_declareArg(0,onoff);
-  am.profileMode = literalEq(deref(onoff),NameTrue);
+  am.setProfileMode(literalEq(deref(onoff),NameTrue));
   return PROCEED;
 }
 OZ_C_proc_end
@@ -5823,7 +5796,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetLingRefFd,1)
 {
   oz_declareArg(0,out);
-  return oz_unifyInt(out,am.compStream->getLingRefFd());
+  return oz_unifyInt(out,am.getCompStream()->getLingRefFd());
 }
 OZ_C_proc_end
 
@@ -5831,7 +5804,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetLingEof,1)
 {
   oz_declareArg(0,out);
-  return oz_unifyInt(out,am.compStream->getLingEOF());
+  return oz_unifyInt(out,am.getCompStream()->getLingEOF());
 }
 OZ_C_proc_end
 
@@ -6431,7 +6404,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIglobalThreadStream,1)
 {
-  return oz_unify(OZ_getCArg(0), am.threadStreamTail);
+  return oz_unify(OZ_getCArg(0), am.getThreadStreamTail());
 }
 OZ_C_proc_end
 
@@ -6494,6 +6467,7 @@ OZ_C_proc_begin(BItopVars,2) // needs work --BL
 }
 OZ_C_proc_end
 
+#ifdef UNUSED
 OZ_C_proc_begin(BIindex2Tagged,2)
 {
   OZ_Term in  = OZ_getCArg(0);
@@ -6510,9 +6484,10 @@ OZ_C_proc_begin(BIindex2Tagged,2)
   return oz_unify(out, am.toplevelVars[OZ_intToC(in)]);
 }
 OZ_C_proc_end
+#endif
 
 
-// mm2
+#ifdef UNUSED
 extern OZ_Term make_time(const struct tm*);  // defined in unix.cc
 
 OZ_C_proc_begin(BItime2localTime,2)
@@ -6530,6 +6505,7 @@ OZ_C_proc_begin(BItime2localTime,2)
   }
 }
 OZ_C_proc_end
+#endif
 
 // ---------------------------------------------------------------------------
 
@@ -6811,31 +6787,30 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetMethApplHdl,1)
 {
-  OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
-  if (!isAbstraction(preed) || tagged2Const(preed)->getArity()!=2) {
+  OZ_Term pred = OZ_getCArg(0); DEREF(pred,_1,_2);
+  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=2) {
     oz_typeError(0,"Procedure/2 (no builtin)");
   }
 
-  if (am.methApplHdl && am.methApplHdl!=preed) {
-    OZ_warning("reinstalling methApplHandler");
+  if (!am.setMethApplHdl(pred)) {
+    OZ_warning("reinstalling methApplHandler ignored");
     return PROCEED;
     //    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
     //              oz_atom("setMethApplHdl"));
   }
 
-  am.methApplHdl = preed;
   return PROCEED;
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIcomma,2)
 {
-  if (!am.methApplHdl) {
+  if (!am.getMethApplHdl()) {
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("setMethApplHdl"));
   }
 
-  oz_currentThread->pushCall(am.methApplHdl,OZ_args,2);
+  oz_currentThread->pushCall(am.getMethApplHdl(),OZ_args,2);
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }
@@ -6844,31 +6819,30 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetSendHdl,1)
 {
-  OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
-  if (!isAbstraction(preed) || tagged2Const(preed)->getArity()!=3) {
+  OZ_Term pred = OZ_getCArg(0); DEREF(pred,_1,_2);
+  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=3) {
     oz_typeError(0,"Procedure/3 (no builtin)");
   }
 
-  if (am.sendHdl && am.sendHdl!=preed) {
+  if (!am.setSendHdl(pred)) {
     OZ_warning("reinstalling sendHandler");
     return PROCEED;
     //return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
     //      oz_atom("setSendHdl"));
   }
 
-  am.sendHdl = preed;
   return PROCEED;
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIsend,3)
 {
-  if (!am.sendHdl) {
+  if (!am.getSendHdl()) {
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("methSendHdl"));
   }
 
-  oz_currentThread->pushCall(am.sendHdl,OZ_args,3);
+  oz_currentThread->pushCall(am.getSendHdl(),OZ_args,3);
 
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
@@ -6982,31 +6956,30 @@ DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
 OZ_C_proc_begin(BIsetNewHdl,1)
 {
-  OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
-  if (!isAbstraction(preed) || tagged2Const(preed)->getArity()!=3) {
+  OZ_Term pred = OZ_getCArg(0); DEREF(pred,_1,_2);
+  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=3) {
     oz_typeError(0,"Procedure/3 (no builtin)");
   }
 
-  if (am.newHdl && am.newHdl!=preed) {
+  if (!am.setNewHdl(pred)) {
     OZ_warning("reinstalling newHandler");
     return PROCEED;
     //    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
     //              oz_atom("setNewHdl"));
   }
 
-  am.newHdl = preed;
   return PROCEED;
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BINew,3)
 {
-  if (!am.newHdl) {
+  if (!am.getNewHdl()) {
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("setNewHdl"));
   }
 
-  oz_currentThread->pushCall(am.newHdl,OZ_args,3);
+  oz_currentThread->pushCall(am.getNewHdl(),OZ_args,3);
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }
@@ -7057,7 +7030,7 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
     oz_typeError(0,"Procedure/1");
   }
 
-  am.defaultExceptionHandler = hdl;
+  am.setDefaultExceptionHdl(hdl);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7065,7 +7038,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetDefaultExceptionHandler,1)
 {
   OZ_declareArg(0,ret);
-  OZ_Term hdl = am.defaultExceptionHandler;
+  OZ_Term hdl = am.getDefaultExceptionHdl();
 
   if (hdl==makeTaggedNULL()) {
     return am.raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
@@ -7118,11 +7091,11 @@ OZ_C_proc_begin(BIsetOPICompiler,1)
   oz_declareNonvarArg(0,obj);
   if (!isObject(obj)) {
     oz_typeError(0,"Object");
-  } else if (am.opiCompiler!=makeTaggedNULL()) {
+  } else if (am.getOpiCompiler()!=makeTaggedNULL()) {
     return am.raise(E_ERROR,E_SYSTEM,"opiCompilerAlreadySet",1,
                     oz_atom("setOPICompiler"));
   } else {
-    am.opiCompiler = obj;
+    am.setOpiCompiler(obj);
     return PROCEED;
   }
 }
@@ -7131,7 +7104,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetOPICompiler,1)
 {
   OZ_declareArg(0,ret);
-  OZ_Term obj = am.opiCompiler;
+  OZ_Term obj = am.getOpiCompiler();
 
   if (obj==makeTaggedNULL()) {
     return am.raise(E_ERROR,E_SYSTEM,"opiCompilerNotInstalled",1,
@@ -7698,8 +7671,11 @@ BIspec allSpec[] = {
 
   {"topVarInfo",2,BItopVarInfo},
   {"topVars",2,BItopVars},
+
+#ifdef UNUSED
   {"index2Tagged",2,BIindex2Tagged},
   {"time2localTime",2,BItime2localTime},
+#endif
 
   //
 

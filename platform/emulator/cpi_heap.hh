@@ -25,8 +25,8 @@ private:
   } * _aux_heaps;
 public:
   CpiHeapClass(int size = CPIHEAPINITSIZE)
-    : _heap_size(size), _heap_left(size), _aux_heaps(NULL),
-      _init_heap_size(size)
+    : _init_heap_size(size),
+      _heap_size(size), _heap_left(size), _aux_heaps(NULL)
   {
     _heap = _heap_top = new char[_heap_size];
   }

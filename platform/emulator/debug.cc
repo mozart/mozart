@@ -577,7 +577,7 @@ Bool trace(char *s,Board *board,Actor *actor,
   while (1) {
     printf("\nBREAK");
     if (am.isSetSFlag()) {
-      printf("[S:0x%x=");
+      printf("[S:0x%x=",board);
       if (am.isSetSFlag(ThreadSwitch)) {
         printf("P");
       }
@@ -631,10 +631,10 @@ Bool trace(char *s,Board *board,Actor *actor,
       am.currentThread->printLong(cout,10,0);
       break;
     case 'A':
-      am.print();
+      ozd_printAM();
       break;
     case 'B':
-      am.printBoards();
+      ozd_printBoards();
       break;
     case 'D':
       {
@@ -706,7 +706,7 @@ Bool trace(char *s,Board *board,Actor *actor,
         case 'g':
           {
             int numb=0;
-            sscanf(&command[1],"%d %d",&numb);
+            sscanf(&command[1],"%d",&numb);
             printf ("G[%d] = ", numb);
             printShort(G[numb]);
             printf ("\n");
@@ -726,7 +726,7 @@ Bool trace(char *s,Board *board,Actor *actor,
             int numb=0,depth=0;
             sscanf(&command[1],"%d %d",&numb,&depth);
             printf ("X[%d] = ", numb);
-            printShort(am.xRegs[numb]);
+            printShort(am.getX(numb));
             printf ("\n");
           }
           break;
@@ -735,7 +735,7 @@ Bool trace(char *s,Board *board,Actor *actor,
             int numb=0,depth=0;
             sscanf(&command[1],"%d %d",&numb,&depth);
             printf ("X[%d]:\n", numb);
-            printLong(am.xRegs[numb],depth);
+            printLong(am.getX(numb),depth);
           }
           break;
         case 'y':

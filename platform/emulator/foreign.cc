@@ -1894,9 +1894,7 @@ void OZ_addBISpec(OZ_BIspec *spec)
 }
 
 OZ_Return OZ_raise(OZ_Term exc) {
-  am.exception.value=exc;
-  am.exception.info=NameUnit;
-  am.exception.debug=FALSE;
+  am.setException(exc,NameUnit,FALSE);
   return RAISE;
 }
 
@@ -1932,9 +1930,7 @@ OZ_Return OZ_raiseError(OZ_Term exc)
   OZ_putSubtree(ret,oz_int(1),exc);
   OZ_putSubtree(ret,oz_atom("debug"),NameUnit);
 
-  am.exception.info = NameUnit;
-  am.exception.value = ret;
-  am.exception.debug = TRUE;
+  am.setException(ret,NameUnit,TRUE);
   return RAISE;
 }
 

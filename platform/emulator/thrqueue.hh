@@ -43,9 +43,9 @@ public:
   }
 
   ThreadQueueImpl(void)
-    : maxsize(0), size(0), head(0), tail(-1), queue (NULL)  {}
+    : head(0), tail(-1), size(0), maxsize(0), queue(NULL)  {}
 
-  ~ThreadQueueImpl (void) {
+  ~ThreadQueueImpl(void) {
   }
 
   Bool isEmpty () { return (size == 0); }

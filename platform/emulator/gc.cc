@@ -256,7 +256,7 @@ public:
   static ThreadList *allthreads;
   ThreadList *next;
   Thread *elem;
-  ThreadList(Thread *el, ThreadList *nxt): elem(el), next(nxt) {};
+  ThreadList(Thread *el, ThreadList *nxt): next(nxt), elem(el) {};
 
   static void add(Thread *t)
   {
@@ -287,7 +287,6 @@ public:
   static OZ_Term list()
   {
     OZ_Term out = OZ_nil();
-    AM *e = &am;
 
     for (ThreadList *aux = allthreads; aux; aux=aux->next) {
       out = OZ_cons(makeTaggedConst(aux->elem),
@@ -1652,7 +1651,7 @@ void AM::gc(int msgLevel)
   gcTagged(sendHdl,sendHdl);
   gcTagged(newHdl,newHdl);
 
-  gcTagged(defaultExceptionHandler,defaultExceptionHandler);
+  gcTagged(defaultExceptionHdl,defaultExceptionHdl);
   gcTagged(opiCompiler,opiCompiler);
   gcTagged(threadStreamTail,threadStreamTail);
 

@@ -108,6 +108,7 @@ union ThreadBodyItem {
 // <stopCount>
 
 class Thread : public Tertiary {
+  friend void engine(Bool);
   friend void ConstTerm::gcConstRecurse(void);
 private:
   //  Sparc, for instance, has a ldsb/stb instructions -
@@ -422,14 +423,6 @@ public:
     Assert(isPropagator());
     return item.propagator;
   }
-
-  //
-  //  Note that the stack is allocated now in "lazy fashion", i.e.
-  // that it is created only when a thread is getting "running";
-  //  This can be simply switched off when the stack is allocated
-  // in '<something>ToRunnable ()'; 'makeRunning ()' is getting
-  // empty in this case;
-  void makeRunning();
 
   void pushLTQ(SolveActor * sa) {
     item.threadBody->taskStack.pushLTQ(sa);

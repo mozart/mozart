@@ -135,21 +135,21 @@ void AM::enrichTypeException(char *fun, OZ_Term args)
  * Handle Failure macros (HF)
  */
 
-Bool hf_raise_failure(AM *e, TaggedRef t)
+Bool AM::hf_raise_failure(TaggedRef t)
 {
-  if (!e->isToplevel() &&
-      (!e->currentThread->hasCatchFlag() ||
-       e->currentBoard!=GETBOARD(e->currentThread))) {
+  if (!isToplevel() &&
+      (!currentThread->hasCatchFlag() ||
+       currentBoard!=GETBOARD(currentThread))) {
     return OK;
   }
-  e->exception.info  = ozconf.errorDebug?t:NameUnit;
-  e->exception.value = RecordFailure;
-  e->exception.debug = ozconf.errorDebug;
+  exception.info  = ozconf.errorDebug?t:NameUnit;
+  exception.value = RecordFailure;
+  exception.debug = ozconf.errorDebug;
   return NO;
 }
 
 #define HF_RAISE_FAILURE(T)                     \
-   if (hf_raise_failure(e,T))                   \
+   if (e->hf_raise_failure(T))                  \
      goto LBLfailure;                           \
    goto LBLraise;
 
@@ -226,7 +226,8 @@ TaggedRef fastnewTaggedUVar(AM *e)
 // -----------------------------------------------------------------------
 
 static
-Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
+Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
+                 TaggedRef *X)
 {
   Assert(!isRef(pred));
 
@@ -236,7 +237,7 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
 
     Bool defaultsUsed;
     abstr = tagged2ObjectClass(pred)->getMethod(gci->mn,gci->arity,
-                                                am.xRegs,defaultsUsed);
+                                                X,defaultsUsed);
     /* fill cache and try again later */
     if (abstr==NULL) return NO;
     if (defaultsUsed) goto insertMethApply;
@@ -430,54 +431,6 @@ void AM::checkStatus()
     osBlockSignals();
     handleIO();
     osUnblockSignals();
-  }
-}
-
-
-// -----------------------------------------------------------------------
-// ???
-// -----------------------------------------------------------------------
-
-//
-//  As said (in thread.hh), lazy allocation of stack can be toggled
-// just by moving the code to the '<something>ToRunnable ()';
-inline
-void Thread::makeRunning()
-{
-  Assert(isRunnable());
-
-  //
-  //  Note that this test covers also the case when a runnable thread
-  // was suspended in a sequential mode: it had already a stack,
-  // so we don't have to do anything now;
-  switch (getThrType()) {
-
-  case S_WAKEUP:
-    //
-    //  Wakeup;
-    //  No regions were pre-allocated, - so just make a new one;
-    setHasStack();
-    item.threadBody = am.allocateBody();
-
-    GETBOARD(this)->setNervous();
-    // no break here
-
-  case S_RTHREAD:
-    am.cachedStack = getTaskStackRef();
-    am.cachedSelf = getSelf();
-    setSelf(0);
-    ozstat.leaveCall(abstr);
-    abstr=0;
-    break;                      // nothing to do;
-
-  case S_PR_THR:
-    warning("Thread::makeRunning hits a propagator");
-    //  This case is intentially moved back, since normally it has
-    // to be catched already in the emulator;
-    break;
-
-  default:
-    Assert(0);
   }
 }
 
@@ -903,10 +856,10 @@ void engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
-  register TaggedRef *X             = am.xRegs;
+  register TaggedRef * const X      = am.xRegs;
   register RefsArray Y         Reg2 = NULL;
   register TaggedRef *sPointer Reg3 = NULL;
-  register AM *e               Reg4 = &am;
+  register AM * const e        Reg4 = &am;
   register RefsArray G         Reg5 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
@@ -935,7 +888,6 @@ void engine(Bool init)
     CodeArea::init(instrTable);
     return;
   }
-# define op (Opcode) -1
 #else
   if (init) {
     CodeArea::init(NULL);
@@ -1020,62 +972,85 @@ LBLstart:
   // Constraints are implicitly propagated
   CBB->unsetNervous();
 
-  if (!CTT->isPropagator()) {
+  if (CTT->isPropagator()) {
+    // Propagator
+    //    unsigned int starttime = osUserTime();
+    switch (e->runPropagator(CTT)) {
+    case SLEEP:
+      e->suspendPropagator(CTT);
+      if (e->currentSolveBoard != (Board *) NULL) {
+        e->decSolveThreads (e->currentSolveBoard);
+        //  but it's still "in solve";
+      }
+      CTT = 0;
+
+      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+      goto LBLstart;
+
+    case SCHEDULED:
+      e->scheduledPropagator(CTT);
+      if (e->currentSolveBoard != (Board *) NULL) {
+        e->decSolveThreads (e->currentSolveBoard);
+        //  but it's still "in solve";
+      }
+      CTT = 0;
+
+      //      ozstat.timeForPropagation.incf(osUserTime()-starttime);
+      goto LBLstart;
+
+    case PROCEED:
+      // Note: CTT must be reset in 'LBLkillXXX';
+
+      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+      goto LBLterminateThread;
+
+      //  Note that *propagators* never yield 'SUSPEND';
+    case FAILED:
+      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+      // propagator failure never catched
+      if (!e->isToplevel()) goto LBLfailure;
+
+      {
+        OZ_Propagator *prop = CTT->getPropagator();
+        CTT = e->mkRunnableThreadOPT(PROPAGATOR_PRIORITY, CBB);
+        CTS = CTT->getTaskStackRef();
+        e->restartThread();
+        HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()
+                                                     ->getHeaderFunc()))),
+                 prop->getParameters());
+      }
+    }
+  } else {
     DebugCheckT(currentDebugBoard=CBB);
 
-    CTT->makeRunning(); // convert to a full-fledged thread with a task stack
+    Assert(CTT->isRunnable());
+
+    //
+    //  Note that this test covers also the case when a runnable thread
+    // was suspended in a sequential mode: it had already a stack,
+    // so we don't have to do anything now;
+    if (CTT->getThrType() == S_WAKEUP) {
+      //
+      //  Wakeup;
+      //  No regions were pre-allocated, - so just make a new one;
+      CTT->setHasStack();
+      CTT->item.threadBody = e->allocateBody();
+
+      GETBOARD(CTT)->setNervous();
+    } else {
+      Assert(CTT->getThrType() == S_RTHREAD);
+    }
+
+    e->cachedStack = CTT->getTaskStackRef();
+    e->cachedSelf  = CTT->getSelf();
+    CTT->setSelf(0);
+    ozstat.leaveCall(CTT->abstr);
+    CTT->abstr = 0;
     e->restartThread(); // start a new time slice
     goto LBLpopTask;
   }
 
-  // Propagator
-  //    unsigned int starttime = osUserTime();
-  switch (e->runPropagator(CTT)) {
-  case SLEEP:
-    e->suspendPropagator(CTT);
-    if (e->currentSolveBoard != (Board *) NULL) {
-      e->decSolveThreads (e->currentSolveBoard);
-      //  but it's still "in solve";
-    }
-    CTT = 0;
-
-    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-    goto LBLstart;
-
-  case SCHEDULED:
-    e->scheduledPropagator(CTT);
-    if (e->currentSolveBoard != (Board *) NULL) {
-      e->decSolveThreads (e->currentSolveBoard);
-      //  but it's still "in solve";
-    }
-    CTT = 0;
-
-    //      ozstat.timeForPropagation.incf(osUserTime()-starttime);
-    goto LBLstart;
-
-  case PROCEED:
-    // Note: CTT must be reset in 'LBLkillXXX';
-
-    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-    goto LBLterminateThread;
-
-    //  Note that *propagators* never yield 'SUSPEND';
-  case FAILED:
-    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-
-    // propagator failure never catched
-    if (!e->isToplevel()) goto LBLfailure;
-
-    {
-      OZ_Propagator *prop = CTT->getPropagator();
-      CTT = e->mkRunnableThreadOPT(PROPAGATOR_PRIORITY, CBB);
-      CTS = CTT->getTaskStackRef();
-      e->restartThread();
-      HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()->getHeaderFunc()))),
-               prop->getParameters());
-    }
-
-  }
 
   goto LBLerror;
 
@@ -2548,8 +2523,8 @@ LBLdispatcher:
        // else
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = e->exception.value;
-       if (e->defaultExceptionHandler) {
-         CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
+       if (e->defaultExceptionHdl) {
+         CTT->pushCall(e->defaultExceptionHdl,argsArray,1);
        } else {
          if (!am.isStandalone())
            printf("\021");
@@ -2744,7 +2719,7 @@ LBLdispatcher:
       Board *bb;
       if (CAA->isAsk()) {
         bb = new Board(CAA,Bo_Ask);
-        AskActor::Cast(CAA)->addAskChild(bb);
+        AskActor::Cast(CAA)->addAskChild();
       } else {
         bb = new Board(CAA,Bo_Wait);
         WaitActor::Cast(CAA)->addWaitChild(bb);
@@ -3156,7 +3131,7 @@ LBLdispatcher:
         SUSP_PC(predPtr,getWidth(gci->arity),PC);
       }
 
-      if (genCallInfo(gci,pred,PC)) {
+      if (genCallInfo(gci,pred,PC,X)) {
         gci->dispose();
         DISPATCH(0);
       }
@@ -3283,7 +3258,7 @@ LBLfailure:
   Assert(!aa->isCommitted());
 
   if (aa->isAsk()) {
-    (AskActor::Cast(aa))->failAskChild(CBB);
+    (AskActor::Cast(aa))->failAskChild();
   }
   if (aa->isWait()) {
     (WaitActor::Cast(aa))->failWaitChild(CBB);
