@@ -108,7 +108,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   sprintf(buffer,"%s;%s/share", ozpath,ozhome);
   ozSetenv("OZPATH",buffer);
 
-  sprintf(buffer,"%s/bin;%s/platform/%s;%s",
+  sprintf(buffer,"%s/winbin;%s/bin;%s/platform/%s;%s",
 	  ozhome,ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
 
