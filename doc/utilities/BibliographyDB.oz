@@ -45,7 +45,7 @@ define
       case {File getS($)} of false then ""
       elseof S then
          case S of &%|S1 then Key Text in
-            {List.takeDropWhile S1 fun {$ C} C \= &: end ?Key &:|?Text}
+            {List.takeDropWhile S1 fun {$ C} C \= &" end ?Key &"|?Text}
             {Dictionary.get Keys {String.toAtom Key}} = Text
             {ReadBib File Keys}
          else
