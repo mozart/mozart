@@ -1034,7 +1034,8 @@ define
 		 '<HTML>\n'#
 		 '<HEAD>\n'#
 		 '<TITLE>'#Title#'</TITLE>\n'#
-		 '<LINK rel=stylesheet href='#{MakeCDATA @StyleSheet}#'>\n'#
+		 '<LINK rel=stylesheet type="text/css" '#
+		 'href='#{MakeCDATA @StyleSheet}#'>\n'#
 		 '</HEAD>\n'#
 		 '<BODY>\n')
 	 %--** navigation panel
