@@ -1674,6 +1674,7 @@ void Board::printTree()
   cout << endl;
 }
 
+// for debugging
 void printWhere(ostream &stream,ProgramCounter PC)
 {
   PC = CodeArea::definitionStart(PC);
@@ -1687,9 +1688,9 @@ void printWhere(ostream &stream,ProgramCounter PC)
 	
     stream << "procedure "
 	   << (pred ? pred->getPrintName() : "(NULL)")
-	   << " in file "
+	   << " in file \""
 	   << toC(file)
-	   << " at line "
+	   << "\", line "
 	   << toC(line);
   }
 }
