@@ -131,6 +131,31 @@ AC_DEFUN(OZ_BUILD_DATE,[
 
 AC_DEFUN(OZ_INIT, [
   AC_PREFIX_DEFAULT(/usr/local/oz)
+  case "$target" in
+    i386-mingw32) 
+	PLATFORM=win32-i486
+	platform="win32-i486"
+	ozplatform=$platform
+
+	cross_compiling=yes
+
+	CXX=${target}-gcc
+	CC=${CXX}
+	RANLIB=${target}-ranlib
+	AR=${target}-ar
+	STRIP=${target}-strip
+	OZTOOL=${target}-oztool
+	enable_contrib_psql=no
+	enable_contrib_gdbm=yes
+	enable_contrib_regex=yes
+	enable_contrib_os=no
+    ;;
+
+    *)
+      OZ_PATH_PROG(OZPLATFORM,ozplatform)
+      PLATFORM=`$OZPLATFORM`
+    ;;
+  esac
   OZ_PATH_SRCDIR
   OZ_PATH_SRCTOP
   OZ_PATH_BUILDTOP
@@ -149,13 +174,6 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(LDFLAGS)
   OZ_BUILD_DATE
   OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
-  case "$target" in
-    i386-mingw32) PLATFORM=win32-i486;;
-    *)
-      OZ_PATH_PROG(OZPLATFORM,ozplatform)
-      PLATFORM=`$OZPLATFORM`
-    ;;
-  esac
   AC_SUBST(PLATFORM)
 ])
 
