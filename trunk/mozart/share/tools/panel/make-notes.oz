@@ -52,7 +52,7 @@ local
 			    font:MediumFont)
       end
       meth set(N)
-	 case N==@Saved then skip else
+	 if N\=@Saved then
 	    Saved <- N
 	    PrintNumber,tk(conf text:(N-@Clear))
 	 end
@@ -73,12 +73,12 @@ local
 			  width:LabelWidth)
       end
       meth set(N)
-	 case @Saved==N then skip else
+	 if @Saved\=N then
 	    C    = (N - @Clear) * 100 div 1000
 	    Head = C div 100
 	    Tail = C mod 100
 	 in
-	    PrintTime,tk(conf text:Head#'.'#case Tail<10 then '0'#Tail
+	    PrintTime,tk(conf text:Head#'.'#if Tail<10 then '0'#Tail
 					    else Tail
 					    end)
 	    Saved <- N
@@ -115,7 +115,7 @@ local
 	 {self.Action @Saved}
       end
       meth set(N)
-	 case N==@Saved then skip else
+	 if N\=@Saved then
 	    Saved <- N
 	    {self.Var tkSet(N)}
 	 end
@@ -153,8 +153,8 @@ local
 	 SetMode <- M
       end
       meth set(V)
-	 case @SetMode then TkTools.numberentry,tkSet(V)
-	 else skip
+	 if @SetMode then
+	    TkTools.numberentry,tkSet(V)
 	 end
       end
       meth get($)
@@ -194,7 +194,7 @@ local
 				      font:   MediumFont
 				      anchor: w)}
 	    L2 = {New PrintNumber init(parent:P)}
-	    L3 = case {HasFeature L color} orelse {HasFeature L stipple} then
+	    L3 = if {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
 		    S = {CondSelect L stipple ''}
 		 in {New Square init(parent:P color:C stipple:S)}
@@ -215,7 +215,7 @@ local
 				      anchor: e
 				      font:   MediumFont
 				      text:   {CondSelect L dim 'KB'})}
-	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
+	    L4 = if {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
 		    S = {CondSelect L stipple ''}
 		 in {New Square init(parent:P color:C stipple:S)}
@@ -236,7 +236,7 @@ local
 				       text:s anchor:e
 				       font:MediumFont)}
 	    L2 = {New PrintTime init(parent:P)}
-	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
+	    L4 = if {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
 		    S = {CondSelect L stipple ''}
 		 in {New Square init(parent:P color:C stipple:S)}
@@ -314,7 +314,7 @@ local
 	  {MakeSide F.right 0 Right FR
 	   pack(Left   side:left  anchor:nw) |
 	   pack(Right  side:right anchor:se) |
-	   case {CondSelect F pack true} then
+	   if {CondSelect F pack true} then
 	      pack(Border fill:x side:top padx:3) | {MakeFrames Fr P R TclT}
 	   else {MakeFrames Fr P R TclT}
 	   end}}
@@ -328,7 +328,9 @@ in
       Page = {New Class init(parent:Book top:Top options:R text:' '#Mark#' ')}
    in
       {Tk.batch {MakeFrames PageSpec Page R nil}}
-      case Add then {Book add(Page)} else skip end
+      if Add then
+	 {Book add(Page)}
+      end
       Page
    end
 

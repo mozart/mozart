@@ -43,7 +43,7 @@ local
        fun {$ T#D TA#_}
 	  ND = {Abs TA - NT}
        in
-	  case ND<D then TA#ND else T#D end
+	  if ND<D then TA#ND else T#D end
        end
        ST#{Abs ST - NT}}.1
    end
@@ -67,13 +67,12 @@ in
 
       meth open
 	 lock
-	    case @ThisPanelTop==unit then
+	    if @ThisPanelTop==unit then
 	       ThisPanelTop <- thread
 				  {Thread.setThisPriority high}
 				  {New PanelTop init(manager:self
 						     options:self.Options)}
 			       end
-	    else skip
 	    end
 	 end
       end
@@ -98,12 +97,12 @@ in
 	    O = self.Options
 	 in
 	    {Wait @ThisPanelTop}
-	    case
-	       case
+	    if
+	       if
 		  What==update andthen {List.sub {Arity OM} [1 mouse time]}
 	       then
-		  case {HasFeature OM time} then T=OM.time in
-		     case {IsNat T} then
+		  if {HasFeature OM time} then T=OM.time in
+		     if {IsNat T} then
 			{Dictionary.put O time {PickClosest T UpdateTimes}}
 			true
 		     else false
@@ -111,36 +110,36 @@ in
 		  else true
 		  end
 		  andthen
-		  case {HasFeature OM mouse} then M=OM.mouse in
-		     case {IsBool M} then {Dictionary.put O mouse M} true
+		  if {HasFeature OM mouse} then M=OM.mouse in
+		     if {IsBool M} then {Dictionary.put O mouse M} true
 		     else false
 		     end
 		  else true
 		  end
-	       elsecase
+	       elseif
 		  What==history andthen {List.sub {Arity OM} [1 range]}
 	       then
-		  case {HasFeature OM range} then R=OM.range in
-		     case {IsNat R} then
+		  if {HasFeature OM range} then R=OM.range in
+		     if {IsNat R} then
 			{Dictionary.put O history {PickClosest R HistoryRanges}}
 			true
 		     else false
 		     end
 		  else true
 		  end
-	       elsecase
+	       elseif
 		  What==configure andthen {List.sub {Arity OM} [1 2]}
 	       then
-		  case {HasFeature OM 2} then C=OM.2 in
-		     case {IsBool C} then {Dictionary.put O config C} true
+		  if {HasFeature OM 2} then C=OM.2 in
+		     if {IsBool C} then {Dictionary.put O config C} true
 		     else false
 		     end
 		  else true
 		  end
 	       else false
 	       end
-	    then
-	       case @ThisPanelTop of unit then skip elseof T then
+	    then T=@ThisPanelTop in
+	       if T\=unit then
 		  {T updateAfterOption}
 	       end
 	    else

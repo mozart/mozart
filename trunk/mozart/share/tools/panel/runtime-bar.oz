@@ -94,19 +94,19 @@ in
       end
 
       meth display(T)
-	 case T==@Saved then skip else
+	 if T\=@Saved then
 	    C           = @Clear
 	    GcTime      = T.gc   - C.gc
 	    CopyTime    = T.copy - C.copy
 	    PropTime    = T.propagate - C.propagate
 	    RunTime     = T.user - C.user
 	 in
-	    case RunTime==0 then
+	    if RunTime==0 then
 	       RuntimeBar,displayZero
 	    else
-	       GcZero    = case GcTime==0   then 0 else 1 end
-	       CopyZero  = case CopyTime==0 then 0 else 1 end
-	       PropZero  = case PropTime==0 then 0 else 1 end
+	       GcZero    = if GcTime==0   then 0 else 1 end
+	       CopyZero  = if CopyTime==0 then 0 else 1 end
+	       PropZero  = if PropTime==0 then 0 else 1 end
 	       HalfTime  = RunTime div 2
 	       ThisWidth = Width -
 			   (GcZero + CopyZero + PropZero + 1) * Gap
@@ -124,21 +124,21 @@ in
 	    in
 	       Saved <- T
 	       RuntimeBar,tk(coords self.RunTag  RunStart  Y0 RunEnd  Y1)
-	       RuntimeBar,case GcTime==0 then
-			     tk(coords self.GcTag  Home Y0 Home Y1)
-			  else
-			     tk(coords self.GcTag   GcStart   Y0 GcEnd   Y1)
-			  end
-	       RuntimeBar,case CopyTime==0 then
-			     tk(coords self.CopyTag Home Y0 Home Y1)
-			  else
-			     tk(coords self.CopyTag CopyStart Y0 CopyEnd Y1)
-			  end
-	       RuntimeBar,case PropTime==0 then
-			     tk(coords self.PropTag Home Y0 Home Y1)
-			  else
-			     tk(coords self.PropTag PropStart Y0 PropEnd Y1)
-			  end
+	       if GcTime==0 then
+		  RuntimeBar,tk(coords self.GcTag  Home Y0 Home Y1)
+	       else
+		  RuntimeBar,tk(coords self.GcTag   GcStart   Y0 GcEnd   Y1)
+	       end
+	       if CopyTime==0 then
+		  RuntimeBar,tk(coords self.CopyTag Home Y0 Home Y1)
+	       else
+		  RuntimeBar,tk(coords self.CopyTag CopyStart Y0 CopyEnd Y1)
+	       end
+	       if PropTime==0 then
+		  RuntimeBar,tk(coords self.PropTag Home Y0 Home Y1)
+	       else
+		  RuntimeBar,tk(coords self.PropTag PropStart Y0 PropEnd Y1)
+	       end
 	    end
 	 end
       end

@@ -33,7 +33,7 @@ SizeColor        # SizeStipple      #
 ActiveColor      # ActiveStipple    #
 TimeColors       # TimeStipple      #
 AboutColor       # CurLoadColor     =
-case Tk.isColor then
+if Tk.isColor then
    gray80 #
    lightslateblue   # '' #
    lightslateblue   # '' #
