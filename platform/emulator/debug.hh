@@ -99,20 +99,20 @@ void debugStreamEntry(OzDebug*, int);
 void debugStreamExit(OzDebug*, int);
 void debugStreamUpdate(Thread*);
 
-OZ_C_proc_proto(BIgetDebugStream);
-OZ_C_proc_proto(BIthreadUnleash);
-OZ_C_proc_proto(BIsetContFlag);
-OZ_C_proc_proto(BIsetStepFlag);
-OZ_C_proc_proto(BIsetTraceFlag);
-OZ_C_proc_proto(BIcheckStopped);
+OZ_BI_proto(BIgetDebugStream);
+OZ_BI_proto(BIthreadUnleash);
+OZ_BI_proto(BIsetContFlag);
+OZ_BI_proto(BIsetStepFlag);
+OZ_BI_proto(BIsetTraceFlag);
+OZ_BI_proto(BIcheckStopped);
 
-OZ_C_proc_proto(BIbreakpointAt);
-OZ_C_proc_proto(BIbreakpoint);
-OZ_C_proc_proto(BIdisplayDef);
-OZ_C_proc_proto(BIdisplayCode);
-OZ_C_proc_proto(BIprocedureCode);
-OZ_C_proc_proto(BIprocedureCoord);
-OZ_C_proc_proto(BIlivenessX);
+OZ_BI_proto(BIbreakpointAt);
+OZ_BI_proto(BIbreakpoint);
+OZ_BI_proto(BIdisplayDef);
+OZ_BI_proto(BIdisplayCode);
+OZ_BI_proto(BIprocedureCode);
+OZ_BI_proto(BIprocedureCoord);
+OZ_BI_proto(BIlivenessX);
 
 
 #endif /* __DEBUGH */

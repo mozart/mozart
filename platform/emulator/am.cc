@@ -127,7 +127,7 @@ void printBanner(char*initFile)
 
 
 #ifdef MODULES_LINK_STATIC
-OZ_C_proc_proto(ozma_readProc);
+OZ_BI_proto(ozma_readProc);
 #endif
 
 extern void initBuiltins();
