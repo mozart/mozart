@@ -79,7 +79,7 @@ MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
 CREATEDFILES=						\
 	instrtab.hh opcodes.hh				\
-	marshalcode.cc register.hh mozart.c		\
+	marshalcode.cc mozart.c		\
 	atoms.hh atoms.cc				\
 	config.h					\
 	version.cc initffuns.cc copycode.cc opcodes.cc	\
