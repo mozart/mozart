@@ -184,15 +184,12 @@ then the constraint <Math/C/ or <Math/\neg C/, respectively,
 is imposed to the store.
 
 <p>
-The implementation of a reified constraint is explained for
-<Math/(x \leq y) \leftrightarrow  r/, which will be implemented by the class
-<<ReifiedLessEqProp>>. We assume that the constraints
-<Math/x \leq y/ and
-<Math/x > y/ are implemented by the classes <<LessEqProp>> &resp
-<<GreaterProp>>. The code for the complete implementation can be
-found in <ptr to="anhang.lesseq">. This
-section focuses on the
-implementation of the function <<ReifiedLessEqProp::propagate()>>.
+The implementation of a reified constraint is explained for <Math/(x
+\leq y) \leftrightarrow r/, which will be implemented by the class
+<<ReifiedLessEqProp>>. We assume that the constraints <Math/x \leq y/
+and <Math/x > y/ are implemented by the classes <<LessEqProp>> &resp
+<<GreaterProp>>. This section focuses on the implementation of the
+function <<ReifiedLessEqProp::propagate()>>.
 
 <p>
 There are basically two cases to be regarded. The first case is that the
