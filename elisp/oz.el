@@ -1164,8 +1164,10 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\M-\C-k" 'kill-oz-expr)
   (define-key map "\M-\C-@" 'mark-oz-expr)
   ;;  (define-key oz-mode-map [C-M-SPC] 'mark-oz-expr)
-  (define-key map [C-M-backspace] 'backward-kill-oz-expr)
-  (define-key map [C-M-delete] 'backward-kill-oz-expr)
+  (if oz-lucid
+      t
+    (define-key map [C-M-backspace] 'backward-kill-oz-expr)
+    (define-key map [C-M-delete] 'backward-kill-oz-expr))
   (define-key map "\M-\C-t" 'transpose-oz-exprs)
 
   ;; error location
