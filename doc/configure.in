@@ -53,7 +53,7 @@ AC_ARG_WITH(documents,
   [--with-documents='DIR1 ... DIRN' (or all)      
        document subdirectories (default=none)],
   oz_doc_dirs=${with_documents})
-: ${oz_doc_dirs=}
+: ${oz_doc_dirs=all}
 AC_MSG_RESULT($oz_doc_dirs)
 
 test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq"
