@@ -5,7 +5,7 @@ SRCDIR=`cd $srcdir && pwd`
 AC_SUBST(SRCDIR)
 SRCTOP="$SRCDIR"
 OZ_PATH_PROG(OZTOOL,oztool,AC_MSG_ERROR([oztool not found]))
-OZ_PATH_PROG(OZDOC,ozdoc,AC_MSG_ERROR([ozdoc not found]))
+dnl OZ_PATH_PROG(OZDOC,ozdoc,AC_MSG_ERROR([ozdoc not found]))
 PLATFORM=`$OZTOOL platform || exit 1`
 AC_SUBST(PLATFORM)
 OZ_PROG_MAKE
@@ -155,70 +155,6 @@ AC_ARG_WITH(gtk_canvas_dir,
     HAVE_CANVAS=no
     AC_MSG_RESULT(no))
 AC_SUBST(HAVE_CANVAS)
-
-AC_MSG_CHECKING(for gtk-canvas.h)
-if test "$EXPLICIT_CANVAS" = no; then
-   CANVASDIR="/NONE"
-   OZ_CHECK_HEADER_PATH(gtk-canvas.h,
-     HAVE_CANVAS=yes,
-     oz_inc_path_sav=$oz_inc_path
-     oz_inc_path="$oz_inc_path /usr/local/include"
-     OZ_CHECK_HEADER_PATH(gtk-canvas.h,
-       HAVE_CANVAS=yes,
-       HAVE_CANVAS=no
-       oz_inc_path=$oz_inc_path_sav))
-else
-   CPPFLAGS_sav="$CPPFLAGS"
-   CPPFLAGS="-I$CANVASDIR/include $CPPFLAGS"
-   OZ_CHECK_HEADER_PATH(gtk-canvas.h,
-     HAVE_CANVAS=yes,
-     HAVE_CANVAS=no
-     CPPFLAGS="$CPPFLAGS_sav")
-fi
-AC_MSG_RESULT($HAVE_CANVAS)
-
-if test "$HAVE_CANVAS" = no; then
-  AC_MSG_ERROR([gtk-canvas is required for mozart-gtk])
-fi
-
-if test "$EXPLICIT_CANVAS" = no; then
-   OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
-     HAVE_CANVAS=yes,
-     oz_lib_path_sav=$oz_lib_path
-     oz_lib_path="$oz_lib_path /usr/local/lib"
-     OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
-       HAVE_CANVAS=yes,
-       HAVE_CANVAS=no
-       oz_lib_path=$oz_lib_path_sav))
-else
-   LDFLAGS_sav="$LDFLAGS"
-   LDFLAGS="-L$CANVASDIR/lib $LDFLAGS"
-   OZ_CHECK_LIB_PATH(gtk-canvas,gtk_canvas_new,
-     HAVE_CANVAS=yes,
-     HAVE_CANVAS=no
-     LDFLAGS="$LDFLAGS_sav")
-fi
-
-if test "$HAVE_CANVAS" = no; then
-  AC_MSG_CHECKING([for libart.h])
-  OZ_CHECK_HEADER_PATH(libart.h,
-    ERR_HAVE_LIBART=yes,
-    ERR_HAVE_LIBART=no)
-  AC_MSG_RESULT($ERR_HAVE_LIBART)
-  if test "$ERR_HAVE_LIBART" = no; then
-    AC_MSG_ERROR([
-You do not seem to have include file libart.h.  This means that the GNOME
-development support files are probably not installed on your system.  If
-your distribution is RPM-based, the GNOME development support files should
-be available in a RPM named something like gnome-libs-devel.  Install these
-support files, then try building mozart-gtk again.
-])
-  fi
-  AC_MSG_ERROR([
-You do not seem to have gtk-canvas installed.  Please download it from
-the Mozart site and install it first, then try building mozart-gtk again.
-])
-fi
 
 AC_SUBST(CANVASDIR)
 

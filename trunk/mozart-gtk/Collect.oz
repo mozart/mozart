@@ -105,6 +105,7 @@ define
       fun {CollectStars S}
 	 case S
 	 of '*'    then '*'
+	 [] '[]'   then '[]'
 	 [] '*'(S) then '*'#{CollectStars S}
 	 end
       end
