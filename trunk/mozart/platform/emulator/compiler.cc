@@ -126,7 +126,7 @@ OZ_BI_define(BIallocateCodeBlock,2,2)
 #define OZ_declareCodeBlockIN(num,name)			\
   CodeArea *name;					\
   {							\
-    OZ_declareForeignPointerIN(num,__aux);		\
+    OZ_declareForeignPointer(num,__aux);		\
     name = (CodeArea *) __aux;				\
   }
 
@@ -213,7 +213,7 @@ OZ_BI_define(BIstoreConstant,2,0)
 OZ_BI_define(BIstoreBuiltinname,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
-  OZ_declareVirtualStringIN(1,name);
+  OZ_declareVirtualString(1,name);
   Builtin *bi = string2Builtin(name);
   if (!bi) {
     return oz_raise(E_ERROR,OZ_atom("assembler"),
@@ -263,7 +263,7 @@ OZ_BI_define(BIstorePredicateRef,2,0)
     Assert(lastOpcode==DEFINITION || lastOpcode==DEFINITIONCOPY);
     code->writeAddress(NULL);
   } else {
-    OZ_declareForeignPointerIN(1,predId);
+    OZ_declareForeignPointer(1,predId);
     Assert(predId);
     code->writeAbstractionEntry((AbstractionEntry *) predId);
   }
@@ -317,7 +317,7 @@ OZ_BI_define(BInewHashTable,3,1)
 #define OZ_declareHashTableIN(num,name)			\
   IHashTable *name;					\
   {							\
-    OZ_declareForeignPointerIN(num,__aux);		\
+    OZ_declareForeignPointer(num,__aux);		\
     name = (IHashTable *) __aux;			\
   }
 
@@ -589,7 +589,7 @@ OZ_BI_define(BInewCopyablePredicateRef,0,1)
 
 OZ_BI_define(BIisCopyablePredicateRef,1,1)
 {
-  OZ_declareForeignPointerIN(0,p);
+  OZ_declareForeignPointer(0,p);
   AbstractionEntry *entry = (AbstractionEntry *) p;
   OZ_RETURN(oz_bool(entry->copyable));
 } OZ_BI_end
