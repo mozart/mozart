@@ -370,11 +370,10 @@ void * gcReallocStatic(void * p, size_t sz) {
   return to;
 }
 
-
-void * gcReallocDynamic(void * const p, size_t sz) {
+void * OZ_hrealloc(void * p, size_t sz) {
   // Use for blocks where size is not known at compile time
   DebugCheck(sz%sizeof(int) != 0,
-	     error("gcReallocDynamic: can only handle word sized blocks"););
+	     error("OZ_hrealloc: can only handle word sized blocks"););
 
   int32 * frm = (int32 *) p;
   int32 * to  = (int32 *) heapMalloc(sz);
@@ -976,7 +975,7 @@ void GenFSetVariable::gc()
 
 FSetValue * FSetValue::gc(void) 
 {
-  return (FSetValue *) gcReallocDynamic(this, sizeof(FSetValue));
+  return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
 }
 
 
@@ -1143,7 +1142,7 @@ GenCVariable * GenCVariable::gc(void) {
     break;
   case FSetVariable:
     // TMUELLER: must be reset to `gcReallocStatic'
-    to = (GenCVariable *) gcReallocDynamic(this, sizeof(GenFSetVariable));
+    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenFSetVariable));
     storeFwdField(to);
     ((GenFSetVariable *) to)->gc();
     break;
@@ -1424,7 +1423,7 @@ OZ_Propagator * OZ_Propagator::gc(void)
   GCMETHMSG("OZ_Propagator::gc");
   GCOLDADDRMSG(this);
 
-  OZ_Propagator * p = (OZ_Propagator *) gcReallocDynamic(this, sizeOf());
+  OZ_Propagator * p = (OZ_Propagator *) OZ_hrealloc(this, sizeOf());
 
   GCNEWADDRMSG (p);
 
