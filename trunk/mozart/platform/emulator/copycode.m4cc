@@ -194,61 +194,16 @@ void handleRecordArity(ProgramCounter PC, HashTable *ht)
 }
 
 
-HTEntry *getNext(HTEntry *e)
-{
-  HTEntry *ret = e->getNext();
-  return ret;
-}
-
 static
-void handleHashTable(ProgramCounter PC, HashTable *ht)
-{
-  IHashTable *table    = (IHashTable *) getAdressArg(PC);
-  int sz               = table->size;
-  IHashTable *newtable = new IHashTable(sz,table->elseLabel);
-
-	
-  newtable->addList(table->listLabel);
-
-  int entries = table->numentries;
-
-  if (table->literalTable) {
-    for(int i=0; i<sz; i++) {
-      HTEntry *aux = table->literalTable[i];
-      while(aux) {
-	entries--;
-	newtable->add(checkLiteral(aux->getLiteral(),ht),aux->getLabel());
-	aux = getNext(aux);
-      }
+void handleHashTable(ProgramCounter PC, HashTable * ht) {
+  IHashTable * table    = ((IHashTable *) getAdressArg(PC))->clone();
+  for (int i = table->getSize(); i--; ) 
+    if (table->entries[i].val && oz_isLiteral(table->entries[i].val)) {
+      table->entries[i].val = 
+	makeTaggedLiteral(checkLiteral(tagged2Literal(table->entries[i].val),ht));
+      table->entries[i].sra = checkSRA(table->entries[i].sra,ht);
     }
-  }
-
-  if (table->numberTable) {
-    for(int i=0; i<sz; i++) {
-      HTEntry *aux = table->numberTable[i];
-      while(aux) {
-	entries--;
-	newtable->add(aux->getNumber(),aux->getLabel());
-	aux = getNext(aux);
-       }
-    }
-  }
-
-  if (table->functorTable) {
-    for(int i=0; i<sz; i++) {
-      HTEntry *aux = table->functorTable[i];
-      while(aux) {
-	entries--;
-        SRecordArity sra;
-        Literal *label = aux->getFunctor(sra);
-	newtable->add(checkLiteral(label,ht),checkSRA(sra,ht),aux->getLabel());
-	aux = getNext(aux);
-      }
-    }
-  }
-
-  Assert(entries==0);
-  CodeArea::writeIHashTable(newtable, PC);
+  CodeArea::writeIHashTable(table, PC);
 }
 
 

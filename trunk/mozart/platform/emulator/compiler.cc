@@ -326,67 +326,44 @@ OZ_BI_define(BIstorePredId,6,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BInewHashTable,3,1)
-{
+OZ_BI_define(BInewHashTable,4,0) {
   OZ_declareCodeBlockIN(0,code);
-  oz_declareIntIN(1,size);
-  oz_declareIntIN(2,elseLabel);
+  oz_declareIntIN(1,elbl);
+  oz_declareIntIN(2,size);
 
-  IHashTable *ht = new IHashTable(size,code->computeLabel(elseLabel));
+  IHashTable * ht = IHashTable::allocate(size,code->computeLabel(elbl));
+  
+  TaggedRef tes = oz_deref(OZ_in(3));
 
+  while (oz_isCons(tes)) {
+    LTuple * es = tagged2LTuple(tes);
+    SRecord * e = tagged2SRecord(oz_deref(es->getHead()));
+    
+    TaggedRef e1 = oz_deref(e->getArg(0));
+    TaggedRef e2 = oz_deref(e->getArg(1));
+
+    if (oz_eq(e->getLabel(),AtomRecord)) {
+      TaggedRef e3 = oz_deref(e->getArg(2));
+      Assert(oz_isLiteral(e1));
+      SRecordArity ari = getArity(e2);
+      int lbl = code->computeLabel(tagged2SmallInt(e3));
+      if (oz_eq(e1,AtomCons) && sraIsTuple(ari) &&
+	  getTupleWidth(ari) == 2) {
+	ht->addLTuple(lbl);
+      } else {
+	ht->addRecord(e1,ari,lbl);
+      }
+    } else {
+      Assert(oz_eq(e->getLabel(),OZ_atom("scalar")));
+      int lbl = code->computeLabel(tagged2SmallInt(e2));
+      ht->addScalar(e1,lbl);
+    }
+    tes = oz_deref(es->getTail());
+  }
+
+  Assert(oz_isNil(es));
+  
   code->writeAddress(ht);
-  OZ_RETURN(OZ_makeForeignPointer(ht));
-} OZ_BI_end
-
-
-#define OZ_declareHashTableIN(num,name)			\
-  IHashTable *name;					\
-  {							\
-    OZ_declareForeignPointer(num,__aux);		\
-    name = (IHashTable *) __aux;			\
-  }
-
-
-OZ_BI_define(BIstoreHTScalar,4,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  OZ_declareHashTableIN(1,ht);
-  oz_declareNonvarIN(2,value);
-  oz_declareIntIN(3,label);
-
-  if (oz_isLiteral(value)) {
-    ht->add(tagged2Literal(value),code->computeLabel(label));
-  } else if (oz_isNumber(value)) {
-    ht->add(value,code->computeLabel(label));
-  } else {
-    oz_typeError(2,"NumberOrLiteral");
-  }
-
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIstoreHTRecord,5,0)
-{
-  OZ_declareCodeBlockIN(0,code);
-  OZ_declareHashTableIN(1,ht);
-  oz_declareNonvarIN(2,reclabel);
-  if (!oz_isLiteral(reclabel)) {
-    oz_typeError(2,"Literal");
-  }
-  OZ_declareRecordArityIN(3,arity);
-  if (sraIsTuple(arity) && getTupleWidth(arity) == 0) {
-    oz_typeError(3,"NonemptyRecordArity");
-  }
-  oz_declareIntIN(4,label);
-
-  if (oz_eq(reclabel,AtomCons) && sraIsTuple(arity) &&
-      getTupleWidth(arity) == 2) {
-    ht->addList(code->computeLabel(label));
-  } else {
-    ht->add(tagged2Literal(reclabel),arity,code->computeLabel(label));
-  }
-
   return PROCEED;
 } OZ_BI_end
 
