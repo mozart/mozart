@@ -83,7 +83,7 @@
       Instead of creating an atom from the cleaned string, the browser offers
       functionality to display strings directly in a convenient form.  The
       functionality can be selected in the <Span class=menu/Representation,
-      Type/ option, see also <Ptr.extern to="ozdoc:tools" key="chapter.browser">.  For Example,
+      Type/ option, see also <Ptr.extern to="ozdoc:browser">.  For Example,
 <chunk class=anoymous><title/{Browse S}/
 {Browse {Filter S Char.isAlpha}}
 </chunk>
@@ -135,7 +135,7 @@
     <P>
       Note that in order to display virtual strings in readable form in the
       &Oz; Browser, you have to configure the <Span class=menu/Representation,
-      Type/ option, see also <Ptr.extern to="ozdoc:tools" key="chapter.browser">.  In the following we
+      Type/ option, see also <Ptr.extern to="ozdoc:browser">.  In the following we
       assume that the Browser is configured for displaying virtual strings.
 
 <![ %EXTRA; [
