@@ -671,6 +671,7 @@ public:
     return (s==getType() && t==getTertType());}
 
   Board *getBoard();
+  Board *getBoardInternal();
   void setBoard(Board *b);
 
   Bool isLocal()   { return (getTertType() == Te_Local); }
@@ -1831,7 +1832,7 @@ inline Port *tagged2Port(TaggedRef term)
  * Space
  *=================================================================== */
 
-class Space: public ConstTermWithHome {
+class Space: public Tertiary {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   Board *solve;
@@ -1841,7 +1842,11 @@ private:
   // - 1 (the space has been merged)
   // or a valid pointer
 public:
-  Space(Board *h, Board *s) : ConstTermWithHome(h,Co_Space), solve(s) {};
+  Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
+  Space(int i, TertType t) : Tertiary(0,Co_Space,t)
+  {
+    setIndex(i);
+  };
 
   OZPRINT;
   OZPRINTLONG;

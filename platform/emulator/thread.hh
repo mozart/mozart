@@ -130,7 +130,15 @@ union ThreadBodyItem {
 //                    |                               |
 //                    `-------------------------------'
 //
-class Thread : public ConstTerm {
+// memory layout
+// <self> | <Secondary Tags>      from class ConstTerm
+// <board|index> | <Tertiary Tag> from class Tertiary
+// <prio> | <flags>
+// <id>
+// <name>
+// <stack>
+
+class Thread : public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   //  Sparc, for instance, has a ldsb/stb instructions -
@@ -143,7 +151,6 @@ private:
   unsigned long id;
 
   TaggedRef name;
-  Object *self;
   ThreadBodyItem item;          // NULL if it's a deep 'unify' suspension;
 
 #ifdef PERDIO
@@ -182,7 +189,10 @@ public:
   Thread &operator = (const Thread& tt);
 
   Thread(int flags, int prio, Board *bb);
-
+  Thread(int i, TertType tertType) : Tertiary(0,Co_Thread,tertType)
+  {
+    setIndex(i);
+  }
   USEHEAPMEMORY;
   OZPRINT;
   OZPRINTLONG;
@@ -197,7 +207,8 @@ public:
 
   unsigned long getID() { return id; }
 
-  void setSelf(Object *o) { self = o; }
+  void setSelf(Object *o) { setPtr(o); }
+  Object *getSelf() { return (Object *) getPtr(); }
 
   TaggedRef getName() { return name; }
   void setName(TaggedRef n) { name = n; }
@@ -414,11 +425,6 @@ public:
   //  Zeroth: constructors for various cases;
   void reInit (int prio, Board *home);  // for the root thread only;
 
-  //  Second - get/set the home board;
-  Board *getBoard();
-  Board *getBoardInternal() { return (Board *) getPtr(); }
-  void setBoardInternal(Board *bp) { setPtr(bp); }
-
   TaggedRef getStreamTail();
   void setStreamTail(TaggedRef v);
 
@@ -453,7 +459,7 @@ public:
   void wakeupToRunnable ();
   void propagatorToRunnable ();
 
-  Bool terminate();
+  void terminate();
   void propagatorToNormal();
 
   //
@@ -593,6 +599,7 @@ Thread *tagged2Thread(TaggedRef term)
   Assert(isThread(term));
   return (Thread *) tagged2Const(term);
 }
+
 
 #ifndef OUTLINE
 #include "thread.icc"

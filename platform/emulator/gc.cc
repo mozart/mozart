@@ -1097,14 +1097,14 @@ Thread *Thread::gcDeadThread()
   Thread *newThread = (Thread *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (newThread);
 
-  newThread->setBoardInternal(am.rootBoard->gcBoard());
+  newThread->setBoard(am.rootBoard->gcBoard());
   newThread->state.flags=0;
   newThread->item.threadBody=0;
 
   storeForward (&item.threadBody, newThread);
 
   gcTagged(name,newThread->name);
-  self = self->gcObject();
+  setSelf(getSelf()->gcObject());
 
   return (newThread);
 }
@@ -1126,9 +1126,9 @@ void Thread::gcRecurse ()
     // a taskstack, and without it (note that the last case covers
     // also the GC'ing of propagators);
     Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
-    setBoardInternal(notificationBoard->gcBoard());
+    setBoard(notificationBoard->gcBoard());
 
-    getBoardInternal()->incSuspCount ();
+    getBoard()->incSuspCount ();
 
     //
     //  Convert the thread to a 'wakeup' type, and just throw away
@@ -1136,7 +1136,7 @@ void Thread::gcRecurse ()
     setWakeUpTypeGC ();
     item.threadBody = (RunnableThreadBody *) NULL;
   } else {
-    setBoardInternal(newBoard);
+    setBoard(newBoard);
   }
 
   //
@@ -1160,7 +1160,9 @@ void Thread::gcRecurse ()
   }
 
   gcTagged(name,name);
-  self = self->gcObject();
+  setSelf(getSelf()->gcObject());
+
+  gcTertiary();
 }
 
 /*
@@ -1992,8 +1994,9 @@ void ConstTerm::gcConstRecurse()
       if (a->isProxy()) {
         ProcProxy *pp = (ProcProxy*) a;
         gcTagged(pp->suspVar,pp->suspVar);
+      } else if (a->isLocal()) {
+        a->setBoard(a->getBoard()->gcBoard());
       }
-
       break;
     }
 
@@ -2012,16 +2015,22 @@ void ConstTerm::gcConstRecurse()
       if (!p->isProxy()) {
         PortWithStream *pws = (PortWithStream *) this;
         gcTagged(pws->strm,pws->strm);
+        if (p->isLocal()) {
+          p->setBoard(p->getBoard()->gcBoard());
+        }
       }
       break;
     }
   case Co_Space:
     {
       Space *s = (Space *) this;
-      if (s->solve != (Board *) 1)
+      if (!s->isProxy()) {
+        if (s->solve != (Board *) 1)
         s->solve = s->solve->gcBoard();
-      s->home  = s->home->gcBoard();
-
+        if (s->isLocal()) {
+          s->setBoard(s->getBoard()->gcBoard());
+        }
+      }
       break;
     }
 

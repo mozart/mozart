@@ -800,7 +800,7 @@ static
 int listWidth = 0;
 
 inline
-Bool isNiceHash(TaggedRef t, int width) {
+Bool isNiceHash(OZ_Term t, int width) {
   if (width <= 0) return OK;
 
   if (!isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair))
@@ -812,7 +812,7 @@ Bool isNiceHash(TaggedRef t, int width) {
 }
 
 inline
-Bool isNiceList(TaggedRef l, int width) {
+Bool isNiceList(OZ_Term l, int width) {
   if (width <= 0) return OK;
 
   while (isCons(l) && width--> 0) {
@@ -829,7 +829,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
   if (isNiceHash(makeTaggedSRecord(sr), listWidth)) {
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
-      TaggedRef arg = deref(sr->getArg(i));
+      OZ_Term arg = deref(sr->getArg(i));
       if (isNiceHash(arg,listWidth) ||
           (isCons(arg) && !isNiceList(arg,listWidth))) {
         out << '(';
@@ -860,7 +860,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
       if (sr->getWidth() > listWidth)
         out << " ,,,";
     } else {
-      TaggedRef as = sr->getArityList();
+      OZ_Term as = sr->getArityList();
       Assert(isCons(as));
 
       int next    = 1;
@@ -903,7 +903,7 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
 
     if (isNiceList(makeTaggedLTuple(list),width)) {
       out << '[';
-      TaggedRef l = makeTaggedLTuple(list);
+      OZ_Term l = makeTaggedLTuple(list);
       while (isCons(l)) {
         value2buffer(out, head(l), depth-1);
         l = deref(tail(l));
@@ -938,7 +938,7 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
 ostream &DynamicTable::newprint(ostream &out, int depth)
 {
   // Count Atoms & Names in dynamictable:
-  TaggedRef tmplit,tmpval;
+  OZ_Term tmplit,tmpval;
   dt_index di;
   long ai;
   long nAtomOrInt=0;
@@ -952,7 +952,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
     }
   }
   // Allocate array on heap, put Atoms in array:
-  TaggedRef *arr = new TaggedRef[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
+  OZ_Term *arr = new OZ_Term[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
   for (ai=0,di=0; di<size; di++) {
     tmplit=table[di].ident;
     tmpval=table[di].value;
@@ -1910,11 +1910,32 @@ OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
   return ((OZ_Thread) thr);
 }
 
+void OZ_pushCFun(OZ_Thread thr,OZ_CFun fun,OZ_Term *args,int arity)
+{
+  ((Thread *)thr)->pushCFunCont (fun, args, arity, OK);
+}
+
+void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
+{
+  ((Thread *)thr)->pushCall(fun, args, arity);
+}
+
+
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
   Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard);
   tt->pushCFunCont (fun, args, arity, OK);
   am.scheduleThread (tt);
+}
+
+OZ_C_proc_proto(BIunify);
+
+void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
+{
+  RefsArray args = allocateRefsArray(2,NO);
+  args[0]=val1;
+  args[1]=val2;
+  OZ_makeRunnableThread(BIunify,args,2);
 }
 
 void OZ_addThread(OZ_Term var, OZ_Thread thr)

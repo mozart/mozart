@@ -1357,12 +1357,17 @@ OZ_C_proc_begin(BIisSpace, 2) {
 
 OZ_C_proc_begin(BIaskSpace, 2) {
   declareSpace();
+  oz_declareArg(1,out);
+
+  if (space->isProxy()) {
+    return remoteApplication("Space.ask",space,out);
+  }
 
   if (space->isFailed())
-    return oz_unify(OZ_args[1], AtomFailed);
+    return oz_unify(out, AtomFailed);
 
   if (space->isMerged())
-    return oz_unify(OZ_args[1], AtomMerged);
+    return oz_unify(out, AtomMerged);
 
   TaggedRef answer = space->getSolveActor()->getResult();
 
@@ -1371,7 +1376,7 @@ OZ_C_proc_begin(BIaskSpace, 2) {
   if (isAnyVar(answer_tag))
     oz_suspendOn(makeTaggedRef(answer_ptr));
 
-  return oz_unify(OZ_args[1],
+  return oz_unify(out,
                   (isSTuple(answer) &&
                    literalEq(tagged2SRecord(answer)->getLabel(),
                              AtomSucceeded))
@@ -1381,18 +1386,23 @@ OZ_C_proc_begin(BIaskSpace, 2) {
 
 OZ_C_proc_begin(BIaskVerboseSpace, 2) {
   declareSpace();
+  oz_declareArg(1,out);
+
+  if (space->isProxy()) {
+    return remoteApplication("Space.askVerbose",space,out);
+  }
 
   if (space->isFailed())
-    return oz_unify(OZ_args[1], AtomFailed);
+    return oz_unify(out, AtomFailed);
 
   if (space->isMerged())
-    return oz_unify(OZ_args[1], AtomMerged);
+    return oz_unify(out, AtomMerged);
 
   if (space->getSolveActor()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
-    if (oz_unify(OZ_args[1], makeTaggedSRecord(stuple)) == FAILED)
+    if (oz_unify(out, makeTaggedSRecord(stuple)) == FAILED)
       return FAILED;
 
     OZ_args[1] = stuple->getArg(0);
@@ -1411,6 +1421,11 @@ OZ_C_proc_begin(BIaskVerboseSpace, 2) {
 
 OZ_C_proc_begin(BImergeSpace, 2) {
   declareSpace();
+  oz_declareArg(1,out);
+
+  if (space->isProxy()) {
+    return remoteApplication("Space.merge",space,out);
+  }
 
   if (space->isMerged())
     return am.raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -1479,12 +1494,18 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   if (root == makeTaggedNULL())
     return FAILED;
 
-  return OZ_unify(root, OZ_getCArg(1));
+  return OZ_unify(root, out);
 } OZ_C_proc_end
 
 
 OZ_C_proc_begin(BIcloneSpace, 2) {
   declareSpace();
+
+  oz_declareArg(1,out);
+
+  if (space->isProxy()) {
+    return remoteApplication("Space.clone",space,out);
+  }
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -1492,7 +1513,7 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
   Board* CBB = am.currentBoard;
 
   if (space->isFailed())
-    return oz_unify(OZ_getCArg(1),
+    return oz_unify(out,
                     makeTaggedConst(new Space(CBB, (Board *) 0)));
 
   TaggedRef result = space->getSolveActor()->getResult();
@@ -1501,7 +1522,7 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
   if (isAnyVar(result_tag))
     oz_suspendOn(makeTaggedRef(result_ptr));
 
-  return oz_unify(OZ_getCArg(1),
+  return oz_unify(out,
                   makeTaggedConst(new Space(CBB,
                                             space->getSolveActor()->clone(CBB))));
 
@@ -1528,6 +1549,11 @@ OZ_C_proc_begin(contChooseInternal, 2) {
 
 OZ_C_proc_begin(BIchooseSpace, 2) {
   declareSpace();
+  oz_declareArg(1,choice);
+
+  if (space->isProxy()) {
+    return remoteApplication("Space.choose",space,choice);
+  }
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -1540,8 +1566,6 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   DEREF(result, result_ptr, result_tag);
   if (isAnyVar(result_tag))
     oz_suspendOn(makeTaggedRef(result_ptr));
-
-  TaggedRef choice = OZ_getCArg(1);
 
   DEREF(choice, choice_ptr, choice_tag);
 
@@ -1593,8 +1617,14 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 } OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIinjectSpace, 2) {
+OZ_C_proc_begin(BIinjectSpace, 2)
+{
   declareSpace();
+  oz_declareArg(1,proc);
+
+  if (space->isProxy()) {
+    return remoteApplication("Space.inject",space,proc);
+  }
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -1605,8 +1635,6 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
 
   if (am.currentBoard != space->getSolveBoard()->getParent())
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent", 1, tagged_space);
-
-  OZ_Term proc = OZ_getCArg(1);
 
   DEREF(proc, proc_ptr, proc_tag);
 
@@ -1629,6 +1657,14 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   return PROCEED;
 } OZ_C_proc_end
 
+
+void call(OZ_CFun fun,Space *sp, OZ_Term val)
+{
+  RefsArray args = allocateRefsArray(2,NO);
+  args[0]=makeTaggedConst(sp);
+  args[1]=val;
+  OZ_makeRunnableThread(fun,args,2);
+}
 
 #undef declareSpace
 
@@ -2524,6 +2560,11 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareNonvarArg(1,atom_prio);
+
+  if (th->isProxy()) {
+    return remoteApplication("Thread.setPriority",th,atom_prio);
+  }
+
   int prio;
 
   if (!isAtom(atom_prio))
@@ -2563,19 +2604,26 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
 }
 OZ_C_proc_end
 
+OZ_Term threadGetPriority(Thread *th) {
+  switch (th->getPriority()) {
+  case LOW_PRIORITY: return AtomLow;
+  case MID_PRIORITY: return AtomMedium;
+  case HI_PRIORITY:  return AtomHigh;
+  default: Assert(0); return AtomHigh;
+  }
+}
+
 OZ_C_proc_begin(BIthreadGetPriority,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareArg(1,out);
-  TaggedRef prio;
 
-  switch (th->getPriority()) {
-  case LOW_PRIORITY: prio = AtomLow;    break;
-  case MID_PRIORITY: prio = AtomMedium; break;
-  case HI_PRIORITY:  prio = AtomHigh;   break;
-  default: prio = AtomHigh; Assert(0);
+  if (th->isProxy()) {
+    return remoteApplication("Thread.getPriority",th,out);
   }
-  return oz_unify(prio,out);
+
+
+  return oz_unify(threadGetPriority(th),out);
 }
 OZ_C_proc_end
 
@@ -2583,6 +2631,9 @@ OZ_C_proc_begin(BIthreadID,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareArg(1,out);
+
+  if (th->isProxy())
+    return oz_raise(E_ERROR,E_KERNEL,"threadId Proxy not impl",0);
 
   return oz_unifyInt(out, th->getID());
 }
@@ -2602,16 +2653,8 @@ OZ_C_proc_end
  */
 OZ_C_proc_proto(BIraise);
 
-OZ_C_proc_begin(BIthreadRaise,2)
-{
-  oz_declareThreadArg(0,th);
-  oz_declareNonvarArg(1,E);
-
-  if (th->isDeadThread()) return PROCEED;
-
-  if (am.currentThread == th) {
-    return OZ_raise(E);
-  }
+void threadRaise(Thread *th,OZ_Term E) {
+  if (th->isDeadThread()) return;
 
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
@@ -2622,30 +2665,52 @@ OZ_C_proc_begin(BIthreadRaise,2)
     th->suspThreadToRunnable();
     am.scheduleThread(th);
   }
+}
+
+OZ_C_proc_begin(BIthreadRaise,2)
+{
+  oz_declareThreadArg(0,th);
+  oz_declareNonvarArg(1,E);
+
+  if (th->isProxy()) {
+    return remoteApplication("Thread.raise",th,E);
+  }
+
+  if (am.currentThread == th) {
+    return OZ_raise(E);
+  }
+
+  threadRaise(th,E);
   return PROCEED;
 }
 OZ_C_proc_end
 
 /*
  * terminate a thread
- *   in deep guard == failed
  */
+void threadTerminate(Thread *th) {
+  if (th->isDeadThread()) return;
+
+  th->terminate();
+
+  if (!th->isRunnable()) {
+    am.scheduleThread(th);
+  }
+}
+
 OZ_C_proc_begin(BIthreadTerminate,1)
 {
   oz_declareThreadArg(0,th);
 
-  if (th->isDeadThread()) return PROCEED;
-
-  Bool isLocal=th->terminate();
-
-  if (am.currentThread == th) {
-    if (isLocal) return FAILED;
-    return BI_TERMINATE;
+  if (th->isProxy()) {
+    return remoteApplication("Thread.terminate",th);
   }
 
-  if (isLocal) th->getBoard()->setFailed();
-  if (!th->isRunnable()) {
-    am.scheduleThread(th);
+
+  threadTerminate(th);
+
+  if (am.currentThread == th) {
+    return BI_TERMINATE;
   }
   return PROCEED;
 }
@@ -2659,6 +2724,11 @@ OZ_C_proc_begin(BIthreadSuspend,1)
 {
   oz_declareThreadArg(0,th);
 
+  if (th->isProxy()) {
+    return remoteApplication("Thread.suspend",th);
+  }
+
+
   th->stop();
   if (th == am.currentThread) {
     return BI_PREEMPT;
@@ -2667,17 +2737,26 @@ OZ_C_proc_begin(BIthreadSuspend,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIthreadResume,1)
-{
-  oz_declareThreadArg(0,th);
-
+void threadResume(Thread *th) {
   th->cont();
 
-  if (th->isDeadThread()) return PROCEED;
+  if (th->isDeadThread()) return;
 
   if (th->isRunnable() && !am.isScheduled(th)) {
     am.scheduleThread(th);
   }
+}
+
+OZ_C_proc_begin(BIthreadResume,1)
+{
+  oz_declareThreadArg(0,th);
+
+  if (th->isProxy()) {
+    return remoteApplication("Thread.resume",th);
+  }
+
+
+  threadResume(th);
 
   return PROCEED;
 }
@@ -2688,25 +2767,36 @@ OZ_C_proc_begin(BIthreadIsSuspended,2)
   oz_declareThreadArg(0,th);
   oz_declareArg(1,out);
 
+  if (th->isProxy()) {
+    return remoteApplication("Thread.isSuspended",th,out);
+  }
+
+
   return oz_unify(out,th->stopped()?NameTrue:NameFalse);
 }
 OZ_C_proc_end
+
+OZ_Term threadState(Thread *th) {
+  if (th->isDeadThread()) {
+    return oz_atom("terminated");
+  }
+  if (th->isRunnable()) {
+    return oz_atom("runnable");
+  }
+  return oz_atom("blocked");
+}
 
 OZ_C_proc_begin(BIthreadState,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareArg(1,out);
 
-  if (th->isDeadThread()) {
-    return oz_unifyAtom(out,"terminated");
+  if (th->isProxy()) {
+    return remoteApplication("Thread.state",th,out);
   }
-  if (th->isRunnable()) {
-    /* terminated but not yet removed from scheduler */
-    if (th!=am.currentThread && th->isEmpty() && th!=am.rootThread)
-        return oz_unifyAtom(out,"terminated");
-    return oz_unifyAtom(out,"runnable");
-  }
-  return oz_unifyAtom(out,"blocked");
+
+
+  return oz_unify(out,threadState(th));
 }
 OZ_C_proc_end
 
@@ -2714,6 +2804,9 @@ OZ_C_proc_begin(BIthreadGetName,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareArg(1,out);
+
+  if (th->isProxy())
+    return oz_raise(E_ERROR,E_KERNEL,"threadGetName Proxy not impl",0);
 
   return oz_unify(out, th->getName());
 }
@@ -2723,6 +2816,10 @@ OZ_C_proc_begin(BIthreadSetName,2)
 {
   oz_declareThreadArg(0,th);
   oz_declareArg(1,in);
+
+  if (th->isProxy())
+    return oz_raise(E_ERROR,E_KERNEL,"threadSetName Proxy not impl",0);
+
   th->setName(in);
   return PROCEED;
 }
@@ -2731,6 +2828,9 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIthreadPreempt,1)
 {
   oz_declareThreadArg(0,th);
+
+  if (th->isProxy())
+    return oz_raise(E_ERROR,E_KERNEL,"threadPreempt Proxy not impl",0);
 
   if (th == am.currentThread) {
     return BI_PREEMPT;
@@ -4381,14 +4481,12 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   Assert(isPort(prt));
 
   Port *port  = tagged2Port(prt);
-  TertType tt = port->getTertType();
+
+  if (port->isProxy()) {
+    return remoteApplication("Port.send",port,val);
+  }
 
   CheckLocalBoard(port,"port");
-
-  if(tt==Te_Proxy) {
-    remoteSend((PortProxy*) port,val);
-    return PROCEED;
-  }
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
 
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
@@ -4417,14 +4515,13 @@ OZ_Return closePort(OZ_Term prt)
   Assert(isPort(prt));
 
   Port *port  = tagged2Port(prt);
-  TertType tt = port->getTertType();
+
+  if(port->isProxy()) {
+    return remoteApplication("Port.close",port);
+  }
 
   CheckLocalBoard(port,"port");
 
-  if(tt==Te_Proxy) {
-    remoteClose((PortProxy*) port);
-    return PROCEED;
-  }
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(nil());
 
   if (oz_unify(nil(),old)!=PROCEED) {
