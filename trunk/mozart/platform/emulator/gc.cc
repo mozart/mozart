@@ -31,6 +31,8 @@
 /****************************************************************************
  ****************************************************************************/
 
+#define NO_REALLOC_VARS
+
 #undef TURNED_OFF
 // #define TURNED_OFF
 
@@ -383,6 +385,11 @@ void fastmemcpy_static(int32 *to, int32 *frm, size_t sz)
   fprintf(verbOut,"(gc) \tcopy %d bytes from 0x%p to 0x%p\n",sz,frm,to);
 #endif
   switch(sz) {
+  case 64: to[15] = frm[15];
+  case 60: to[14] = frm[14];
+  case 56: to[13] = frm[13];
+  case 52: to[12] = frm[12];
+  case 48: to[11] = frm[11];
   case 44: to[10] = frm[10];
   case 40: to[9]  = frm[9];
   case 36: to[8]  = frm[8];
@@ -394,9 +401,10 @@ void fastmemcpy_static(int32 *to, int32 *frm, size_t sz)
   case 12: to[2]  = frm[2];
   case  8: to[1]  = frm[1];
   case  4: to[0]  = frm[0];
+    break;
 #ifdef DEBUG_CHECK
   default:
-    if (sz > 44) 
+    if (sz > 64) 
       { Assert(0); };
 #endif
   }
@@ -1443,7 +1451,7 @@ void GenMetaVariable::gc(void)
 }
 
 inline
-void AVar::gcAVar(void)
+void AVar::gc(void)
 { 
   GCMETHMSG("AVar::gc");
   OZ_updateHeapTerm(value);
@@ -1514,45 +1522,57 @@ GenCVariable * GenCVariable::gc(void) {
   if (opMode == IN_TC && !isLocalBoard(bb))
     return this;
   
+  bb = bb->gcBoard();
+
+  if (!bb)
+    return 0;
+  
   setVarCopied;
 
-  bb = bb->gcBoard();
+  GenCVariable * to;
     
-  if (!bb) 
-    return 0;
-    
-  GenCVariable * to = (GenCVariable *) gcReallocDynamic(this, getSize());
-    
-  storeForward(&suspList, to);
-   
-  to->suspList = sl->gc();
-    
-  switch (to->getType()){
+  switch (getType()){
   case FDVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenFDVariable));
+    storeForward(&suspList, to);
     ((GenFDVariable *) to)->gc();
     FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
     break;
   case OFSVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenOFSVariable));
+    storeForward(&suspList, to);
     ((GenOFSVariable *) to)->gc();
     FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
     break;
   case MetaVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenMetaVariable));
+    storeForward(&suspList, to);
     ((GenMetaVariable *) to)->gc();
     FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
     break;
   case BoolVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenBoolVariable));
+    storeForward(&suspList, to);
     FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case AVAR:
-    ((AVar *) to)->gcAVar();
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(AVar));
+    storeForward(&suspList, to);
+    ((AVar *) to)->gc();
     break;
   case PerdioVariable:
-    ((PerdioVar *) to)->gcPerdioVar();
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(PerdioVar));
+    storeForward(&suspList, to);
+    ((PerdioVar *) to)->gc();
     break;
   case FSetVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenFSetVariable));
+    storeForward(&suspList, to);
     ((GenFSetVariable *) to)->gc();
     break;
   case LazyVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenLazyVariable));
+    storeForward(&suspList, to);
     ((GenLazyVariable*) to)->gc();
     break;
   default:
@@ -1561,8 +1581,9 @@ GenCVariable * GenCVariable::gc(void) {
 
   Assert(opMode != IN_GC || to->home != bb);
     
-  to->home = bb;
-
+  to->suspList = sl->gc();
+  to->home     = bb;
+    
   return to;
 }
   
@@ -1579,13 +1600,13 @@ SVariable * SVariable::gc() {
   if (opMode == IN_TC && !isLocalBoard(bb))
     return this;
   
-  setVarCopied;
-
   bb = bb->gcBoard();
     
   if (!bb) 
     return 0;
-  
+    
+  setVarCopied;
+
   SVariable * to = (SVariable *) gcReallocStatic(this, sizeof(SVariable));
   
   to->suspList = suspList->gc();
@@ -1632,16 +1653,19 @@ TaggedRef gcDirectVar(TaggedRef var) {
   GCPROCMSG("gcDirectVar");
   GCOLDADDRMSG(var);
 
-  if (isCVar(var))
+  switch (tagTypeOf(var)) {
+  case CVAR:
     return makeTaggedCVar(tagged2CVar(var)->gc());
-  
-  if (isUVar(var))
+  case UVAR:
     return gcUVar(var);
-
-  Assert(isSVar(var));
-
-  return makeTaggedSVar(tagged2SVar(var)->gc());
-
+  case SVAR:
+    return makeTaggedSVar(tagged2SVar(var)->gc());
+  case GCTAG:
+    return makeTaggedRef((TaggedRef*) GCUNMARK(var));
+  default:
+    Assert(0);
+    return makeTaggedNULL();
+  }
 }
 
 #ifdef FOREIGN_POINTER
@@ -1795,12 +1819,47 @@ update:
     break;
 
   case SVAR:
+#ifdef NO_REALLOC_VARS
     (void) tagged2SVar(aux)->gc();
     updateStack.push(&to);
     to = makeTaggedRefToFromSpace(aux_ptr);
     break;
-    
+#else
+    {
+      Assert(aux_ptr);
+      
+      SVariable * sv = tagged2SVar(aux)->gc();
+
+      if (!sv)
+	to = makeTaggedNULL();
+      else
+	to = makeTaggedRef(newTaggedSVar(sv));
+
+      storeForward(aux_ptr, ToPointer(to));
+      break;
+    }
+#endif
   case CVAR:
+#ifdef NO_REALLOC_VARS
+    (void) tagged2CVar(aux)->gc();
+    updateStack.push(&to);
+    to = makeTaggedRefToFromSpace(aux_ptr);
+    break;
+#else
+    {
+      Assert(aux_ptr);
+      
+      GenCVariable * cv = tagged2CVar(aux)->gc();
+
+      if (!cv)
+	to = makeTaggedNULL();
+      else
+	to = makeTaggedRef(newTaggedCVar(cv));
+
+      storeForward(aux_ptr, ToPointer(to));
+      break;
+    }
+#endif
     (void) tagged2CVar(aux)->gc();
     updateStack.push(&to);
     to = makeTaggedRefToFromSpace(aux_ptr);
@@ -1816,7 +1875,7 @@ update:
       if (opMode == IN_TC && !isLocalBoard(bb))
 	return;
       
-      bb = bb->gcBoard();
+      (void) bb->gcBoard();
       
       setVarCopied;
       
@@ -1996,6 +2055,8 @@ void processUpdateStack(void) {
       }
     break;
 
+#ifdef NO_REALLOC_VARS
+    
     case SVAR:
       { 
 	SVariable *sv = tagged2SVar(aux);
@@ -2023,6 +2084,8 @@ void processUpdateStack(void) {
     COUNT(cvar);
     break;
     
+#endif
+
     case GCTAG:
       *tt = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
       break;

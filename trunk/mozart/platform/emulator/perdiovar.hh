@@ -134,8 +134,6 @@ public:
 
   Bool valid(TaggedRef *varPtr, TaggedRef v);
   
-  size_t getSize(void) { return sizeof(PerdioVar); }
-  
   Object *getObject() { Assert(isObject() || isObjectGName()); return (Object*)ptr; }
   ObjectClass *getClass() { Assert(isObject()); return u.aclass; }
 
@@ -177,7 +175,7 @@ public:
 
   void addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable);
 
-  void gcPerdioVar(void);
+  void gc(void);
 };
 
 inline
