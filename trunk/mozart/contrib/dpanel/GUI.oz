@@ -138,29 +138,44 @@ define
 			S
 		     end}
       in
-	 {self Draw(R)}
+	 if Ks \= nil then 
+	    {self Draw(R)}
+	 end
       end
       
       meth deleteSite(Ks)=M
+	 {System.show M}
 	 {ForAll Ks proc{$ K}
-		    if {Dictionary.member self.entryDict K} then
-		       E = self.entryDict.K in
-		       {self.listbox tk(delete E.fgtag )}
-		       {self putEntry(E.line)}
-		       {Dictionary.remove self.entryDict K} 
-		    end
-		 end}
+		       if {Dictionary.member self.entryDict K} then
+			  E = self.entryDict.K in
+			  {System.show member(K)#E}
+			  {self.listbox tk(delete E.fgtag )}
+			  {self putEntry(E.line)}
+			  {Dictionary.remove self.entryDict K} 
+		       else
+			  {System.show notMember(K)}
+		       end
+		    end}
+      end
+
+      meth updateEntry(K T)
+	 if {Dictionary.member self.entryDict K} then
+	    E = self.entryDict.K in
+	    {self.listbox tk(itemconfig E.fgtag text:T)}
+	 end
       end
       
       meth Draw(Ss)
 	 DC=self.listbox
-	 X0 Y0 X1 Y1
+	 Y1
       in
 	 {ForAll Ss proc{$ X}
+		       T = {New Tk.canvasTag tkInit(parent:DC)}
+		    in
 		       {DC tk(crea text 5 X.line * @lineSize + 5 
-			      text:X.text anchor:nw fill:X.fg tags:q(X.fgtag self.entryTag))}
+			      text:X.text anchor:nw fill:X.fg tags:T)}
 		    end}
-	 % [X0 Y0 X1 Y1]={DC tkReturnListInt(bbox self.entryTag $)}   
+	 Y1 = (({List.sort  @nextFree Value.'>'}.1)  +1) *  @lineSize 
 	 {self.listbox tk(configure scrollregion:q(0 0 1000  Y1 + 5 ))}
       end
 
