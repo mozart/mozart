@@ -6,7 +6,7 @@
  * State: $State$
  */
 
-#if defined(INTERFACE)
+#if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "dictionary.hh"
 #endif
 
