@@ -721,7 +721,7 @@ Board *varHome(TaggedRef val) {
   }
 }
 
-bool checkHome(TaggedRef *vPtr) {
+Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = deref(*vPtr);
 
   return !isAnyVar(val) ||
