@@ -954,6 +954,7 @@ static void urlDecode(const char*s1,char*s2)
 OZ_Return URL_get(const char*url,OZ_Term& out,URLAction act)
 {
   char *urlDecoded = new char [strlen(url)+1];
+  char *urlDecStart = urlDecoded;
   urlDecode(url,urlDecoded);
   OZ_Return ret;
 #ifdef WINDOWS
@@ -1006,7 +1007,7 @@ kaboom:
                   oz_atom(url)));
 
  exit:
-  delete urlDecoded;
+  delete urlDecStart;
   return ret;
 }
 
