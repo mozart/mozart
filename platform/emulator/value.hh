@@ -1262,11 +1262,13 @@ public:
   }
 
   Bool hasFeature(TaggedRef feature) { return getIndex(feature) >= 0; }
-  TaggedRef getFeature(TaggedRef feature)
+
+  TaggedRef getFeatureInline(TaggedRef feature)
   {
     int i = getIndex(feature);
     return i < 0 ? makeTaggedNULL() : getArg(i);
   }
+  TaggedRef getFeature(TaggedRef);
 
   Bool setFeature(TaggedRef feature,TaggedRef value);
   TaggedRef replaceFeature(TaggedRef feature,TaggedRef value);

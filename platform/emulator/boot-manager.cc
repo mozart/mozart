@@ -48,10 +48,8 @@ static TaggedRef dictionary_of_modules;
 #include "modOS-if.cc"
 #include "modPickle-if.cc"
 #include "modURL-if.cc"
-#include "modSystem-if.cc"
 #include "modApplication-if.cc"
 #include "modFinalize-if.cc"
-#include "modProfile-if.cc"
 #include "modDistribution-if.cc"
 #include "modWeakDictionary-if.cc"
 #ifdef DENYS_EVENTS
@@ -120,6 +118,8 @@ static TaggedRef dictionary_of_modules;
 #include "modFault-if.cc"
 #include "modDPMisc-if.cc"
 #include "modVirtualSite-if.cc"
+#include "modSystem-if.cc"
+#include "modProfile-if.cc"
 
 // Here comes the faked DPB interface
 extern "C"
@@ -179,10 +179,8 @@ static ModuleEntry ext_module_table[] = {
   {"OS",              mod_int_OS},
   {"URL",             mod_int_URL},
   {"Pickle",          mod_int_Pickle},
-  {"System",          mod_int_System},
   {"Application",     mod_int_Application},
   {"Finalize",        mod_int_Finalize},
-  {"Profile",         mod_int_Profile},
   {"Distribution",    mod_int_Distribution},
   {"WeakDictionary",  mod_int_WeakDictionary},
   {"INTERNAL",        mod_int_INTERNAL},
@@ -211,6 +209,8 @@ static ModuleEntry ext_module_table[] = {
   {"DPMisc",          mod_int_DPMisc},
   {"VirtualSite",     mod_int_VirtualSite},
   {"Compat",          mod_int_Compat},
+  {"System",          mod_int_System},
+  {"Profile",         mod_int_Profile},
 #endif
 
 #ifdef MISC_BUILTINS

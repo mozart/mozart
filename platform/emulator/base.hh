@@ -212,8 +212,6 @@ if (Cond) {                                     \
    Forward declarations of classes and procedures
 */
 
-struct Equation;
-
 class OzVariable;
 class OzFDVariable;
 class OzBoolVariable;

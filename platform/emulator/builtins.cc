@@ -37,7 +37,6 @@
 
 #include "builtins.hh"
 
-#include "os.hh"
 #include "codearea.hh"
 #include "thr_int.hh"
 #include "debug.hh"
@@ -305,19 +304,17 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
     switch (termTag) {
     case LTUPLE:
     case SRECORD:
-      // FUT
     case UVAR:
       return SUSPEND;
     case CVAR:
       switch (tagged2CVar(term)->getType()) {
       case OZ_VAR_FD:
       case OZ_VAR_BOOL:
+      case OZ_VAR_FS:
           goto typeError0;
       default:
           return SUSPEND;
       }
-      // if (tagged2CVar(term)->getType() == OZ_VAR_OF) return SUSPEND;
-      // goto typeError0;
     case LITERAL:
       goto typeError0;
     default:
@@ -350,7 +347,7 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
 
   case SRECORD:
     {
-      TaggedRef t = tagged2SRecord(term)->getFeature(fea);
+      TaggedRef t = tagged2SRecord(term)->getFeatureInline(fea);
       if (t == makeTaggedNULL()) {
         if (dot) goto raise; else return FAILED;
       }
@@ -409,7 +406,7 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
           TaggedRef cfs;
           cfs = oz_deref(tagged2ObjectClass(term)->classGetFeature(NameOoFeat));
           if (oz_isSRecord(cfs)) {
-            t = tagged2SRecord(cfs)->getFeature(fea);
+            t = tagged2SRecord(cfs)->getFeatureInline(fea);
             if (t) {
               TaggedRef dt = oz_deref(t);
 
@@ -3020,13 +3017,6 @@ bomb:
    ----------------------------------------------------------------- */
 
 
-OZ_BI_define(BIstatisticsReset, 0,0)
-{
-  ozstat.initCount();
-  return PROCEED;
-} OZ_BI_end
-
-
 #ifdef MISC_BUILTINS
 
 OZ_BI_define(BIstatisticsPrint, 1,0)
@@ -3085,22 +3075,6 @@ OZ_BI_define(BIstatisticsPrintProcs, 0,0)
 } OZ_BI_end
 
 #endif
-
-OZ_BI_define(BIstatisticsGetProcs, 0,1)
-{
-  OZ_RETURN(PrTabEntry::getProfileStats());
-} OZ_BI_end
-
-OZ_BI_define(BIsetProfileMode, 1,0)
-{
-  oz_declareIN(0,onoff);
-  if (oz_isTrue(oz_deref(onoff))) {
-    am.setProfileMode();
-  } else {
-    am.unsetProfileMode();
-  }
-  return PROCEED;
-} OZ_BI_end
 
 /* -----------------------------------------------------------------
    dynamic link objects files
@@ -3187,26 +3161,8 @@ OZ_BI_define(BItimeTime,0,1) {
 } OZ_BI_end
 
 /* ------------------------------------------------------------
- * Garbage Collection
- * ------------------------------------------------------------ */
-
-OZ_BI_define(BIgarbageCollection,0,0)
-{
-  am.setSFlag(StartGC);
-
-  return BI_PREEMPT;
-} OZ_BI_end
-
-/* ------------------------------------------------------------
  * System specials
  * ------------------------------------------------------------ */
-
-OZ_BI_define(BIsystemEq,2,1) {
-  oz_declareSafeDerefIN(0,a);
-  oz_declareSafeDerefIN(1,b);
-  OZ_RETURN(oz_bool(oz_eq(a,b)));
-} OZ_BI_end
-
 
 OZ_BI_define(BIunify,2,0)
 {
@@ -3239,70 +3195,6 @@ OZ_BI_define(BIapply,2,0)
 } OZ_BI_end
 
 
-/* ---------------------------------------------------------------------
- * ???
- * --------------------------------------------------------------------- */
-
-int oz_var_getSuspListLength(OzVariable *cv);
-
-OZ_BI_define(BIconstraints,1,1)
-{
-  oz_declareDerefIN(0,in);
-
-  int len = 0;
-  if (isCVar(inTag)) {
-    len=oz_var_getSuspListLength(tagged2CVar(in));
-  }
-  OZ_RETURN_INT(len);
-} OZ_BI_end
-
-
-/* ---------------------------------------------------------------------
- * System
- * --------------------------------------------------------------------- */
-
-static
-OZ_Return printVS(char*s,int n, int fd, Bool newline)
-{
-  char c = '\n';
-  if ((ossafewrite(fd,s,n) < 0) ||
-      (newline && (ossafewrite(fd,&c,1) < 0))) {
-    if (isDeadSTDOUT())
-      //am.exitOz(1);
-      return PROCEED;
-    else
-      return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_string(OZ_unixError(ossockerrno())));
-  }
-  return PROCEED;
-}
-
-OZ_BI_define(BIprintInfo,1,0)
-{
-  OZ_declareVS(0,s,n);
-  return printVS(s,n,STDOUT_FILENO,NO);
-} OZ_BI_end
-
-
-OZ_BI_define(BIshowInfo,1,0)
-{
-  OZ_declareVS(0,s,n);
-  return printVS(s,n,STDOUT_FILENO,OK);
-} OZ_BI_end
-
-OZ_BI_define(BIprintError,1,0)
-{
-  OZ_declareVS(0,s,n);
-  prefixError(); // print popup code for opi
-  return printVS(s,n,STDERR_FILENO,NO);
-} OZ_BI_end
-
-OZ_BI_define(BIshowError,1,0)
-{
-  OZ_declareVS(0,s,n);
-  prefixError(); // print popup code for opi
-  return printVS(s,n,STDERR_FILENO,OK);
-} OZ_BI_end
-
 OZ_BI_define(BItermToVS,3,1)
 {
   oz_declareIN(0,t);
@@ -3319,27 +3211,6 @@ OZ_BI_define(BIvalueNameVariable,2,0)
   return PROCEED;
 } OZ_BI_end
 
-/*
- * print and show are inline,
- * because it prevents the compiler from generating different code
- */
-
-OZ_Return printInline(TaggedRef term, Bool newline = NO)
-{
-  char *s = OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
-  return printVS(s,strlen(s),STDOUT_FILENO,newline);
-}
-
-OZ_DECLAREBI_USEINLINEREL1(BIprint,printInline)
-
-
-OZ_Return showInline(TaggedRef term)
-{
-  return printInline(term,OK);
-}
-
-OZ_DECLAREBI_USEINLINEREL1(BIshow,showInline)
-
 // ---------------------------------------------------------------------------
 // ???
 // ---------------------------------------------------------------------------
@@ -3352,46 +3223,6 @@ TaggedRef Abstraction::DBGgetGlobals() {
   }
   return t;
 }
-
-OZ_BI_define(BIgetPrintName,1,1)
-{
-  oz_declareDerefIN(0,t);
-  switch (tTag) {
-  case OZCONST:
-    {
-      ConstTerm *rec = tagged2Const(t);
-      switch (rec->getType()) {
-      case Co_Builtin:
-        OZ_RETURN(((Builtin *) rec)->getName());
-      case Co_Abstraction:
-        OZ_RETURN(((Abstraction *) rec)->getName());
-      case Co_Class:
-        OZ_RETURN_ATOM((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
-      default:
-        break;
-      }
-      break;
-    }
-  case UVAR: case CVAR: // FUT
-    OZ_RETURN_ATOM((OZ_CONST char*)oz_varGetName(OZ_in(0)));
-  case LITERAL:
-    {
-      const char *s = tagged2Literal(t)->getPrintName();
-      OZ_RETURN(s? oz_atom(s): AtomEmpty);
-    }
-  default:
-    break;
-  }
-  OZ_RETURN(AtomEmpty);
-} OZ_BI_end
-
-// ---------------------------------------------------------------------------
-
-OZ_BI_define(BIonToplevel,0,1)
-{
-
-  OZ_RETURN(oz_bool(OZ_onToplevel()));
-} OZ_BI_end
 
 
 // ---------------------------------------------------------------------
