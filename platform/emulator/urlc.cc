@@ -13,7 +13,7 @@
 /* defines */
 
 #ifndef URL_CLIENT
-  #include  "urlc.h"
+  #include  "urlc.hh"
 #endif
 
 /* ## define to 2 if debugging messages and perror wanted;
