@@ -323,19 +323,6 @@ extern char * _FUNDECL(OZ_unixError,(int err));
 /* check for toplevel */
 extern int _FUNDECL(OZ_onToplevel,());
 
-extern int _FUNDECL(OZ_addBuiltin,(CONST char *, int, int, OZ_CFun));
-
-/* replace new builtins */
-typedef struct {
-  char *name;
-  int inArity;
-  int outArity;
-  OZ_CFun fun;
-} OZ_BIspec;
-
-/* add specification to builtin table */
-extern void _FUNDECL(OZ_addBISpec,(OZ_BIspec *spec));
-
 /* IO */
 
 extern OZ_Return _FUNDECL(OZ_readSelect,(int, OZ_Term, OZ_Term));
@@ -659,10 +646,10 @@ extern int	_FUNDECL(OZ_isForeignPointer,(OZ_Term));
 
 
 struct OZ_C_proc_interface {
-  const char* name;
-  int         inArity;
-  int	      outArity;
-  OZ_CFun     func;
+  const char * name;
+  short        inArity;
+  short	       outArity;
+  OZ_CFun      func;
 };
 
 /* Perdio related things */
