@@ -449,16 +449,10 @@ public:
 
 #ifdef __GNUC__
 #define USE_GCCALLOCA
-#else
-#ifdef __XXWATCOMC__
+#elif defined(_MSC_VER)
 #define USE_INTVAR_NEW
 #else
-#ifdef _MSC_VER
 #define USE_TEMPLATE_ARRAY
-#else
-#define USE_TEMPLATE_ARRAY
-#endif
-#endif
 #endif
 
 
@@ -496,9 +490,17 @@ public:
 #endif
 
 
+/* literally copied from fdaux.hh */
 #ifdef USE_INTVAR_NEW
-#define _DECL_DYN_ARRAY(Type,Var,Size) \
-     Type *Var = (Type *) OZ_FDIntVar::operator new(sizeof(Type) * Size)
+#define _DECL_DYN_ARRAY(Type,Var,Size)					\
+     Type *Var;								\
+     {  Type __aux;							\
+        int __sz = Size;						\
+        Var = (Type *) OZ_FDIntVar::operator new(sizeof(Type) * __sz);	\
+        for(int __i=0; __i<__sz; __i++) {				\
+	  memcpy(Var+__i,&__aux,sizeof(__aux));				\
+	}								\
+     }
 #endif
 
 #ifdef USE_ALLOCA
