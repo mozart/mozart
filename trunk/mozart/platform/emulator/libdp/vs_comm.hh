@@ -657,6 +657,7 @@ public:
 			     VSMailboxManagerOwned *mbm,
 			     VSMsgChunkPoolManagerOwned *cpm);
   void unmarshalResources(MsgBuffer *mb); 
+  void unmarshalResourcesRobust(MsgBuffer *mb, int *error);
 };
 
 //

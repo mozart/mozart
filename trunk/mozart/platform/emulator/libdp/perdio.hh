@@ -40,6 +40,8 @@
 #include "msgType.hh"
 #include "dsite.hh"
 
+//#define PERDIO_USE_ROBUST_UNMARSHALER
+
 //
 void initDP();
 

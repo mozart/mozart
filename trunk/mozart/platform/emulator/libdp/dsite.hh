@@ -91,6 +91,7 @@
 //
 void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb);
 VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb); 
+VirtualInfo* unmarshalVirtualInfoRobust(MsgBuffer *mb, int *error); 
 void unmarshalUselessVirtualInfo(MsgBuffer *);
 void dumpVirtualInfo(VirtualInfo* vi);
 
@@ -670,6 +671,27 @@ public:
     //
     mailboxKey = (key_t) unmarshalNumber(mb);
   }
+  //
+  // Another type of initialization - safe unmarshaliing:
+  VirtualInfo(MsgBuffer *mb, int *error) {
+    Assert(sizeof(ip_address) <= sizeof(unsigned int));
+    Assert(sizeof(port_t) <= sizeof(unsigned short));
+    Assert(sizeof(time_t) <= sizeof(unsigned int));
+    Assert(sizeof(int) <= sizeof(unsigned int));
+    Assert(sizeof(key_t) <= sizeof(unsigned int));
+#ifndef VIRTUALSITES
+    Assert(sizeof(key_t) == sizeof(unsigned int));
+#endif
+    //
+    int e1,e2,e3,e4;
+    address = (ip_address) unmarshalNumberRobust(mb, &e1);
+    port = (port_t) unmarshalShort(mb);  
+    timestamp.start = (time_t) unmarshalNumberRobust(mb, &e2);
+    timestamp.pid = (int) unmarshalNumberRobust(mb, &e3);
+    //
+    mailboxKey = (key_t) unmarshalNumberRobust(mb, &e4);
+    *error = e1 || e2 || e3 || e4;
+  }
 
   // 
   // NOTE: marshaling must be complaint with
@@ -715,10 +737,12 @@ char *oz_site2String(DSite *s);
 //
 // Marshaller uses that;
 DSite* unmarshalDSite(MsgBuffer *);
+DSite* unmarshalDSiteRobust(MsgBuffer *, int *);
 
 //
 // Faking a port from a ticket;
 DSite *findDSite(ip_address a,int port, TimeStamp &stamp);
+DSite *findDSite(ip_address a,int port, TimeStamp &stamp, int *error);
 
 //
 // There is one perdio-wide known "distribition" site object.  

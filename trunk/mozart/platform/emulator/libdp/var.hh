@@ -262,6 +262,7 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 
 void sendRedirect(DSite*, int, TaggedRef);
 OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
+OZ_Term unmarshalVarRobustImpl(MsgBuffer*,Bool,Bool,int*);
 Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
 Bool triggerVariableImpl(TaggedRef *);
 
@@ -312,8 +313,6 @@ void varGetStatus(DSite*, int,TaggedRef);
 #define BAD_BORROW_INDEX (0-1)
 
 #endif
-
-
 
 
 

@@ -520,9 +520,16 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 
   buf->setVersion(major,minor);
 
+#ifdef USE_ROBUST_UNMARSHALER   
+  t = newUnmarshalTermRobust(buf);
+  if(t == 0)
+    OZ_error("Unmarshal error!"); 
+#else
   t = newUnmarshalTerm(buf);
+#endif
 
   buf->unmarshalEnd();
+
   return OK;
 }
 
