@@ -157,7 +157,7 @@
   {\end{list}}
 
 % \begin{explain}{label}...\end{explain}
-% has "label" hanging half way in the left margin.  If there is enough
+% has "label" flushed left in the left margin.  If there is enough
 % space the body of the environment starts on the same line. You can use
 % \\ in the label to obtain multiple lines.
 \newcommand{\explain@par}{\egroup\hbox\bgroup\strut}
