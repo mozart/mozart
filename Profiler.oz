@@ -42,8 +42,10 @@ import
           condSend}
 
 export
-   'Profiler': Profiler
    'object':   Profiler
+
+   'open':     OpenProfiler
+   'close':    CloseProfiler
 
 body
    \insert 'profiler/prof-config'
@@ -54,4 +56,13 @@ body
    \insert 'profiler/prof-help'
    \insert 'profiler/prof-gui'
    \insert 'profiler/profiler'
+
+   proc {OpenProfiler}
+      {Profiler on}
+   end
+
+   proc {CloseProfiler}
+      {Profiler off}
+   end
+
 end
