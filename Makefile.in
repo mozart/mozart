@@ -254,6 +254,7 @@ files.base:
         (cd $(PREFIX); \
          find . \( -type f -or -type l \) -and \( \
                 ! -path './platform/*' -and \
+                ! -path './winbin/*' -and \
                 ! -path './contrib/*' -and  \
                 ! -path './doc/*' -and  \
                 ! -path './examples/*' -and  \
