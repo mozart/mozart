@@ -2,11 +2,17 @@
 # this file was provided by ozskel - read the ozskel documentation
 # Here you may provide additional make rules for use in Makefile.in
 
-ozmake: Main.ozf Utils.ozf Path.ozf Shell.ozf Executor.ozf Attribs.ozf \
+OZMAKE_FILES = \
+	Main.ozf Utils.ozf Path.ozf Shell.ozf Executor.ozf Attribs.ozf \
 	Builder.ozf Makefile.ozf Manager.ozf Installer.ozf Database.ozf \
 	Cleaner.ozf Creator.ozf Extractor.ozf Lister.ozf Help.ozf \
 	Uninstaller.ozf
-	$(OZL) $(OZLFLAGS) -x Main.ozf -o $@
+
+ozmake ozmake.exe: ozmake.ozf
+	$(OZL) $(OZLFLAGS) -x $< -o $@
+
+ozmake.ozf: $(OZMAKE_FILES)
+	$(OZL) $(OZLFLAGS) Main.ozf -o $@
 
 Help.ozf: Help.oz HELP.txt Utils.ozf
 
