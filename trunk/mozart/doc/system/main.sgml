@@ -1,0 +1,69 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!ENTITY chapter.application SYSTEM "application.sgml">
+<!ENTITY chapter.constraints SYSTEM "constraints.sgml">
+<!ENTITY chapter.distributed SYSTEM "distributed.sgml">
+<!ENTITY chapter.open        SYSTEM "open.sgml">
+<!ENTITY chapter.system      SYSTEM "system.sgml">
+<!ENTITY chapter.window      SYSTEM "window.sgml">
+
+
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+]>
+<BOOK>
+<Title/System Modules/
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split"       value="chapter.application">
+    <Meta name="html.split"       value="chapter.constraints">
+    <Meta name="html.split"       value="chapter.distributed">
+    <Meta name="html.split"       value="chapter.open">
+    <Meta name="html.split"       value="chapter.system">
+    <Meta name="html.split"       value="chapter.window">
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+    <Author.Extern to="author.db" key="Denys.Duchier">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+    <Author.Extern to="author.db" key="Konstantin.Popov">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Abstract>
+      <P.silent><!--**-->
+      Cool stuff.
+    </Abstract>
+  &chapter.application;
+  &chapter.constraints;
+  &chapter.distributed;
+  &chapter.open;
+  &chapter.system;
+  &chapter.window;
+</BOOK>
