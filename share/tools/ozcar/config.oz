@@ -79,9 +79,15 @@ TextCursor             = left_ptr
 %% TODO: distinguish between color & monochrome scheme
 
 DefaultBackground      = '#f0f0f0'
+SourceTextForeground   = '#000000'
+SourceTextInvForeground= '#ffffff'
 SourceTextBackground   = '#ffffff'
-ScrollbarDefaultColor  = '#c05050'
 
+ScrollbarApplColor     = '#f07070'
+ScrollbarStackColor    = '#7070f0'
+ScrollbarColors        = colors(appl  : ScrollbarApplColor
+				stack : ScrollbarStackColor)
+				
 RunningThreadColor     = '#90e0a0'  % some nice green
 BlockedThreadColor     = '#f09090'  %  ~    ~   red
 DeadThreadColor        = '#404040'  %  ~    ~   black
