@@ -28,7 +28,7 @@ class  Trail: public Stack {
 public:
   void gc();
 
-  Trail (int sizeInit = 200): Stack(sizeInit) { }
+  Trail (int sizeInit = 200): Stack(sizeInit,Stack_WithMalloc) { }
 
   void pushRef(TaggedRef *val, TaggedRef old)
   {
@@ -64,7 +64,7 @@ public:
     return ret;
   }
   Bool isEmptyChunk() { return (trailMark == *(tos-1)); }
-  virtual void resize(int newSize);
+
   void popMark()
   {
     Assert(isEmptyChunk());
