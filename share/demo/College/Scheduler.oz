@@ -465,7 +465,9 @@ define
 	       L1S = L1.start
 	       L2S = L2.start
 
-	       dis
+	       /* That is the (operational) semantics of FD.tasksOverlap.
+	          FD.tasksOverlap implements constructive disjunction.
+	       condis
 		  B=:1
 		  L1S + L1Dur >: L2S
 		  L2S + L2Dur >: L1S
@@ -476,7 +478,8 @@ define
 		  B=:0
 		  L2S + L2Dur =<: L1S
 	       end
-
+	       */
+	       {FD.tasksOverlap L1S L1Dur L2S L2Dur B}
 	       B|{SumUpOverlaps L1 Lr}
 	    end
 	 end
