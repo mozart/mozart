@@ -455,7 +455,7 @@ public:
   }
 
   void printTaskStack(Bool verbose = NO, int depth = 10000) {
-    if (hasStack()) {
+    if (!isDeadThread() && hasStack()) {
       item.threadBody->taskStack.printTaskStack(verbose, depth);
     }
   }
