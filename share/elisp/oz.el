@@ -442,11 +442,9 @@ if that value is non-nil."
    (set-buffer-menubar (append current-menubar oz-menubar)))
 
   ; font lock stuff
+  (setq font-lock-keywords (list oz-keywords))
   (if oz-want-font-lock
-      (setq font-lock-keywords (list oz-keywords)))
-
-  (font-lock-mode t)
-  (font-lock-fontify-buffer)
+      (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
 ;;------------------------------------------------------------
@@ -962,6 +960,8 @@ the GDB commands `cd DIR' and `directory'."
 ;;------------------------------------------------------------
 ;; Fontification
 ;;------------------------------------------------------------
+
+(require 'font-lock)
 
 (defconst oz-keywords
    (concat
