@@ -38,6 +38,8 @@
 #include "dictionary.hh"
 static TaggedRef dictionary_of_modules;
 
+// don't define oz_init_module for statically included modules
+#define STATICALLY_INCLUDED
 
 /*
  * Modules that are always in the emulator: Extensions
@@ -50,6 +52,7 @@ static TaggedRef dictionary_of_modules;
 #include "modURL-if.cc"
 #include "modApplication-if.cc"
 #include "modWeakDictionary-if.cc"
+#include "modSystem-if.cc"
 #ifdef DENYS_EVENTS
 #include "modEvent-if.cc"
 #include "modTimer-if.cc"
@@ -123,7 +126,6 @@ static TaggedRef dictionary_of_modules;
 #include "modDPMisc-if.cc"
 #include "modDPStatistics-if.cc"
 #include "modVirtualSite-if.cc"
-#include "modSystem-if.cc"
 #include "modProfile-if.cc"
 #include "modAssembler-if.cc"
 
@@ -187,6 +189,7 @@ static ModuleEntry ext_module_table[] = {
   {"Pickle",          mod_int_Pickle},
   {"Application",     mod_int_Application},
   {"INTERNAL",        mod_int_INTERNAL},
+  {"System",          mod_int_System}, // now needs to be static
 #ifdef DENYS_EVENTS
   {"Event",           mod_int_Event},
   {"Timer",           mod_int_Timer},
@@ -215,7 +218,6 @@ static ModuleEntry ext_module_table[] = {
   {"VirtualSite",     mod_int_VirtualSite},
   {"Compat",          mod_int_Compat},
   {"Win32",           mod_int_Win32},
-  {"System",          mod_int_System},
   {"Profile",         mod_int_Profile},
   {"Assembler",       mod_int_Assembler},
 #endif
@@ -438,107 +440,49 @@ Builtin * string2CBuiltin(const char * Name) {
 #define USC ""
 #endif
 
-OZ_BI_define(BIObtainNative, 2, 1) {
-  oz_declareIN(0, is_boot_tagged);
-  oz_declareVirtualStringIN(1, name);
-
-  Bool is_boot = oz_isTrue(oz_deref(is_boot_tagged));
-
-  init_fun_t init_function = 0;
-  char * if_identifier;
-  char * filename;
-  char * mod_name = (char *) 0;
-
+OZ_BI_define(BIObtainGetInternal,1,1) {
+  oz_declareVirtualStringIN(0,name);
+  TaggedRef module;
  retry_mod:
-
-  if (is_boot) {
-    // Might be something linked in statically, so try to find it in table
-
-    TaggedRef module;
-
-    if (tagged2Dictionary(dictionary_of_modules)
-        ->getArg(oz_atom(name), module) == PROCEED)
+  if (tagged2Dictionary(dictionary_of_modules)
+      ->getArg(oz_atom(name), module) == PROCEED)
       OZ_RETURN(module);
-
-    // Check whether it is a base module
+  // Check whether it is a base module
+  {
     ModuleEntry * E = find_module(base_module_table, name);
-
-    if (E) {
-      link_module(E,NO);
-      goto retry_mod;
-    }
-
-    // Okay, later we will need a filename!
-    int n = strlen(ozconf.emuhome);
-    int m = strlen(name);
-
-    mod_name = name;
-
-    filename = new char[n + m + 64];
-
-    strcpy(filename, ozconf.emuhome);
-    strcat(filename, "/");
-    strcat(filename, name);
-    strcat(filename, ".so");
-
-    // We have to set the interface identifier
-    if_identifier = new char[m + 16];
-
-    strcpy(if_identifier, USC "mod_int_");
-    strcat(if_identifier, name);
-  } else {
-    // Here the identifier is always the same
-    if_identifier = USC "oz_init_module";
-    filename      = name;
+    if (E) { link_module(E,NO); goto retry_mod; }
   }
+  return oz_raise(E_ERROR,AtomForeign,"cannotFindBootModule",1,oz_atom(name));
+}
+OZ_BI_end
 
+OZ_BI_define(BIObtainGetNative,1,1) {
+  oz_declareVirtualStringIN(0,filename);
 
   void *handle;
   TaggedRef res = osDlopen(filename,&handle);
 
   if (res) {
+    // osDlopen failed
     struct stat buf;
-    TaggedRef file_atom = oz_atom(filename);
-    if (is_boot)
-      free(if_identifier);
   retry:
     if (stat(filename,&buf)<0)
-      if (errno==EINTR) {
-        goto retry;
-      } else {
-        // file does not exist (or would need searching LD_LIBRARY_PATH
-        // which we don't attempt here - too bad)
-        if (is_boot) free(filename);
-        return oz_raise(E_SYSTEM,AtomForeign,"dlOpen",1,file_atom);
-      }
-    // file presumed to exist
-    if (is_boot)
-      free(filename);
-    return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
-                    file_atom,res);
+      if (errno==EINTR) goto retry;
+      else
+        return oz_raise(E_SYSTEM,AtomForeign,"dlOpen",1,oz_atom(filename));
+    else
+      return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,oz_atom(filename),res);
+  } else {
+    // osDlopen succeeded
+    static char * if_identifier = USC "oz_init_module";
+    init_fun_t init_function = (init_fun_t) osDlsym(handle,if_identifier);
+    if (init_function == 0)
+      return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,
+                      OZ_in(0));
+    char * modname =(char*) osDlsym(handle,USC "oz_module_name");
+    OZ_RETURN(ozInterfaceToRecord((*init_function)(), modname, OK));
   }
-
-  init_function = (init_fun_t) osDlsym(handle,if_identifier);
-
-  // oops, there is no `init_function()'
-  if (init_function == 0) {
-    return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,
-                    OZ_in(1));
-  }
-
-  if (!mod_name) {
-    char * name_sym = USC "oz_module_name";
-    mod_name = (char *)  osDlsym(handle,name_sym);
-  }
-
-  if (mod_name)
-    mod_name = strdup(mod_name);
-
-  OZ_RETURN(ozInterfaceToRecord((*init_function)(), mod_name, OK));
-
 } OZ_BI_end
-
-
 
 void initBuiltins() {
 
@@ -576,7 +520,8 @@ void initBuiltins() {
   BI_dot           = string2Builtin("Value", ".");
   BI_load          = string2Builtin("INTERNAL", "load");
   BI_url_load      = string2Builtin("URL", "load");
-  BI_obtain_native = string2Builtin("INTERNAL", "native");
+  BI_get_internal  = string2Builtin("INTERNAL", "getInternal");
+  BI_get_native    = string2Builtin("INTERNAL", "getNative");
 
   // Exception stuff
   bi_raise      = string2CBuiltin("Exception.raise");

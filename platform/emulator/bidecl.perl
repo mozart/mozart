@@ -197,6 +197,13 @@ sub INTERFACE {
 
     print ("    return i_table;\n");
     print ("  \} /* mod_int_$mod_name(void) */\n");
+    print ("#ifndef STATICALLY_INCLUDED\n");
+    print ("  OZ_C_proc_interface * oz_init_module(void) {\n");
+    print ("    return " . (($init_fun)?$init_fun:"mod_int_$mod_name") . "(); }\n");
+    if (!$module_name) {
+        print ("  char oz_module_name[] = \"$mod_name\";\n");
+    }
+    print ("#endif\n");
     print ("\} /* extern \"C\" */\n\n");
 
 }

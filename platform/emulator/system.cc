@@ -143,8 +143,8 @@ OZ_BI_define(BIonToplevel,0,1)
 } OZ_BI_end
 
 
-#ifndef MODULES_LINK_STATIC
-
-#include "modSystem-if.cc"
-
-#endif
+//#ifndef MODULES_LINK_STATIC
+//
+//#include "modSystem-if.cc"
+//
+//#endif

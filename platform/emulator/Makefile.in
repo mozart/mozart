@@ -36,7 +36,7 @@ MODULE_NAMES =                                                  \
         PID Fault DPMisc DPB VirtualSite DPStatistics Tk Schedule FDP FSP \
         Parser \
         CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-        Win32 System Profile OsTime Assembler
+        Win32 Profile OsTime Assembler
 
 STATIC_MODULES=         @STATIC_MODULES@
 DYNAMIC_MODULES=        @DYNAMIC_MODULES@
@@ -48,7 +48,7 @@ LIBS=           $(STATIC_MODULELIBS) @LIBS@
 
 INCS=           -I. -I$(SRCDIR)
 M4_D=           -DEMUDIR=$(SRCDIR)
-TARGETS=        $(EMULATOR_EXE) text2pickle.exe $(DYNAMIC_MODULETARGETS)
+TARGETS=        $(EMULATOR_EXE) text2pickle.exe
 SUBDIRS=        libdp libfd libfset
 OZVERSION=      $(SRCTOP)/OZVERSION
 
@@ -89,7 +89,8 @@ OTHERSRCS= \
         statisti.cc trace.cc \
         print.cc base.cc ozconfig.cc \
         foreign.cc dpInterface.cc boot-manager.cc \
-        builtins.cc vprops.cc debug.cc interFault.cc
+        builtins.cc vprops.cc debug.cc interFault.cc \
+        system.cc
 
 SUPPORTSRCS=\
         stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
@@ -177,8 +178,8 @@ COMPATSRCS = \
         compat.cc
 WIN32SRCS=\
         win32.cc
-SYSTEMSRCS = \
-        system.cc
+SYSTEMSRCS =
+#       system.cc
 PROFILESRCS = \
         profile.cc
 ASSEMSRCS = \
@@ -223,7 +224,7 @@ ALLOBJS= $(OBJS) \
 .PHONY: all first install install-bin install-inc \
         install-dir depend tags clean cleaner distclean veryclean
 
-all: $(TARGETS)
+all: $(TARGETS) $(DYNAMIC_MODULETARGETS)
 
 bootstrap:: all
 
@@ -380,12 +381,23 @@ emulator.dll: $(PRGDEP)
 text2pickle.exe: $(TEXT2PICKLEOBJS)
         $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
-install:: install-bin install-inc
+install:: install-bin install-inc install-cache
 
 install-bin: $(TARGETS) $(BINDIR)
         for exe in oztool.sh $(TARGETS); do\
           $(INSTALL_BIN) $$exe $(BINDIR) || exit 1;\
         done
+
+NEWCACHEDIR = $(PREFIX)/cache/x-oz/boot
+NEWTARGETS = $(DYNAMIC_MODULETARGETS:%=$(NEWCACHEDIR)/%-$(PLATFORM))
+
+install-cache: $(NEWCACHEDIR) $(NEWTARGETS)
+
+$(NEWCACHEDIR):
+        $(INSTALL_DIR) $@
+
+$(NEWCACHEDIR)/%-$(PLATFORM) : %
+        $(INSTALL_FILE) $< $@
 
 install-inc: $(INCDIR)
         $(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
