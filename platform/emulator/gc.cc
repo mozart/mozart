@@ -435,14 +435,13 @@ public:
 inline
 Bool needsNoCollection(TaggedRef t)
 {
-  Assert(t!=makeTaggedNULL());
+  Assert(t != makeTaggedNULL());
 
   TypeOfTerm tag = tagTypeOf(t);
-  return (tag == SMALLINT ||
-          (tag == LITERAL && (tagged2Literal(t)->isDynName ()) == NO))
-         ? OK
-         : NO;
+  return isSmallInt(tag) ||
+         isLiteral(tag) && !tagged2Literal(t)->isDynName();
 }
+
 
 Bool gcProtect(TaggedRef *ref)
 {
@@ -461,7 +460,7 @@ Bool gcUnprotect(TaggedRef *ref)
   ExtRefNode *aux = (ExtRefNode*) extRefs->find(ref);
 
   if (aux == NULL)
-    return needsNoCollection(*ref) ? OK : NO;
+    return needsNoCollection(*ref);
 
   extRefs = (ExtRefNode*) extRefs->remove(aux);
   return OK;
