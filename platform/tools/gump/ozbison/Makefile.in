@@ -1,0 +1,50 @@
+#
+# Makefile for ozbison
+#
+
+TOPDIR          = @TOPDIRA@
+
+RM              = @RM@ -f
+DYNLD           = @DYNLD@
+
+CC              = @CC@
+CFLAGS          = -O6
+INCLUDES        = -I$(TOPDIR)/Emulator @CPPFLAGS@
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@ -lc
+
+OBJS =  LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
+        lalr.o main.o nullable.o output.o print.o reader.o reduce.o \
+        symtab.o warshall.o version.o alloca.o
+
+all: ozbison.dl
+
+%.o: %.c
+        $(CC) $(CFLAGS) $(INCLUDES) -c $< -o $*.o
+
+ozbison.dl: $(OBJS)
+        $(DYNLD) -o ozbison.dl $(OBJS) $(LDFLAGS) $(LIBS)
+
+clean veryclean realclean:
+        $(RM) *~ *.o *.dl
+
+distclean:
+        $(RM) Makefile config.*
+
+LR0.o:          LR0.c system.h machine.h new.h gram.h state.h
+allocate.o:     allocate.c
+closure.o:      closure.c system.h machine.h new.h gram.h
+conflicts.o:    conflicts.c system.h machine.h new.h gram.h state.h
+derives.o:      derives.c system.h new.h types.h gram.h
+gram.o:         gram.c
+lalr.o:         lalr.c system.h machine.h types.h state.h new.h gram.h
+main.o:         main.c system.h machine.h
+nullable.o:     nullable.c system.h types.h gram.h new.h
+output.o:       output.c system.h machine.h new.h gram.h state.h
+print.o:        print.c system.h machine.h new.h gram.h state.h
+reader.o:       reader.c system.h new.h symtab.h gram.h
+reduce.o:       reduce.c system.h machine.h new.h gram.h
+symtab.o:       symtab.c system.h new.h symtab.h gram.h
+warshall.o:     warshall.c system.h machine.h
+version.o:      version.c
+alloca.o:       alloca.c

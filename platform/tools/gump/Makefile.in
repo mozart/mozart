@@ -1,0 +1,75 @@
+### NOTES:
+###     configure should really look for oz.h and substitute the
+###     appropriate dependency
+
+@SET_MAKE@
+
+SRCDIR          = @srcdir@
+TOPDIR          = @TOPDIR@
+SUBDIRS         = ozflex ozbison
+
+RM              = @RM@ -f
+DYNLD           = @DYNLD@
+CXX             = @CXX@
+CPPFLAGS        = -I. -I$(TOPDIR)/Emulator @CPPFLAGS@
+CXXFLAGS        = $(CFLAGS)
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@ -lc
+CFLAGS          = -O6
+
+OZHOME          = @prefix@
+DYNLDIR         = $(OZHOME)/platform/@platform@/tools/gump
+INCDIR          = $(OZHOME)/include
+
+INSTALL         = @INSTALL@
+INSTALLPRG      = $(INSTALL) -m 555
+INSTALLFILE     = $(INSTALL) -m 444
+INSTALLSRC      = @INSTALLSRC@
+INSTALLDIR      = $(INSTALL) -m 775 -d
+
+HEADERS1 = FlexLexer.h lexer.h
+HEADERS = $(HEADERS1:$(SRCDIR)/%=$(INCDIR)/%)
+
+all: Makefile subdirs GumpScanner.dl
+
+subdirs:
+        for i in $(SUBDIRS); do (cd $$i && $(MAKE) all); done
+
+GumpScanner.dl: $(SRCDIR)/GumpScanner.C $(TOPDIR)/Emulator/oz.h
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(SRCDIR)/GumpScanner.C \
+        -o GumpScanner.o
+        $(DYNLD) -o GumpScanner.dl GumpScanner.o $(LDFLAGS) $(LIBS)
+
+install: all \
+        $(DYNLDIR) $(DYNLDIR)/GumpScanner.dl \
+        $(DYNLDIR)/flex $(DYNLDIR)/ozbison.dl \
+        $(INCDIR) $(HEADERS)
+
+$(DYNLDIR) $(INCDIR):
+        $(INSTALLDIR) $@
+
+$(DYNLDIR)/GumpScanner.dl: GumpScanner.dl
+        $(INSTALLFILE) $< $@
+
+$(DYNLDIR)/flex: ozflex/flex
+        $(INSTALLPRG) $< $@
+
+$(DYNLDIR)/ozbison.dl: ozbison/ozbison.dl
+        $(INSTALLFILE) $< $@
+
+$(INCDIR)/%: %
+        $(INSTALLSRC) $< $@
+
+clean veryclean realclean:
+        $(RM) *~ *.o *.dl
+        for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean); done
+
+distclean: clean
+        $(RM) Makefile config.*
+        for i in $(SUBDIRS); do (cd $$i && $(MAKE) distclean); done
+
+Makefile: $(SRCDIR)/Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck
