@@ -71,3 +71,4 @@ veryclean::
 
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
 
+$(DPLIBOBJS): dpMarshaler.hh
