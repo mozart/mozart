@@ -604,6 +604,7 @@ AC_CACHE_VAL(ac_cv_can_vs,
  #include <unistd.h>
  #include <sys/ipc.h>
  #include <sys/shm.h>
+ #include <errno.h>
 
  #define VS_KEYTYPE_SIZE                4
  #define VS_SEQ_SIZE            12
@@ -665,6 +666,10 @@ AC_CACHE_VAL(ac_cv_can_vs,
 
    if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
      exit(-12);
+   if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) == 0)
+     exit(-13);
+   if (errno != EIDRM && errno != EINVAL)
+     exit(-14);
 
    exit(0);
      }],
