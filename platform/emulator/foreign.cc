@@ -716,8 +716,6 @@ Bool checkAtom(const char *s)
   case 'a':
     return strcmp(t, "andthen") && strcmp(t, "at")
         && strcmp(t, "attr")? OK: NO;
-  case 'b':
-    return strcmp(t, "body")? OK: NO;
   case 'c':
     return strcmp(t, "case") && strcmp(t, "catch")
         && strcmp(t, "choice") && strcmp(t, "class")
