@@ -319,7 +319,7 @@ OZ_Bool checkDomDescr(TaggedRef descr,
       return FAILED;
     }
     for (int i = 0; i < 2; i++) {
-      OZ_Bool r = checkDomDescr(TaggedRef(&tuple[i]), cfun, args, arity, 1);
+      OZ_Bool r = checkDomDescr(makeTaggedRef(&tuple[i]), cfun, args, arity, 1);
       if (r != PROCEED)
 	return r;
     }
@@ -330,17 +330,17 @@ OZ_Bool checkDomDescr(TaggedRef descr,
     
     do {
       LTuple &list = *tagged2LTuple(descr);
-      OZ_Bool r = checkDomDescr(TaggedRef(list.getRefHead()),
+      OZ_Bool r = checkDomDescr(makeTaggedRef(list.getRefHead()),
 				cfun, args, arity, 2);
       if (r != PROCEED)
 	return r;
-      descr = TaggedRef(list.getRefTail());
+      descr = makeTaggedRef(list.getRefTail());
       
       deref(descr, descr_ptr, descr_tag);
     } while (isLTuple(descr_tag));
     
     if (isNil(descr)) return PROCEED;
-    return checkDomDescr(TaggedRef(descr_ptr), cfun, args, arity, 0);
+    return checkDomDescr(makeTaggedRef(descr_ptr), cfun, args, arity, 0);
   } 
   return FAILED;
 }
