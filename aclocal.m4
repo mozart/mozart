@@ -26,7 +26,6 @@ AC_DEFUN(OZ_INIT, [
     AC_PROG_MAKE_SET
     AC_PROG_INSTALL
     OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)
-    OZ_PATH_PROG(INSTALL_SRC,  ozinstallsrc)
     #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
     #OZ_PATH_PROG(DYNLD,          ozdynld)
     ])
