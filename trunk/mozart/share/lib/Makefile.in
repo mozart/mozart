@@ -26,7 +26,7 @@ OZENGINE        = @OZENGINE@
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
-OZCFLAGS	= $(COMPRESSFLAGS)
+OZCFLAGS	= $(COMPRESSFLAGS) --noallowdeprecated
 OZC		= @OZC@
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base -b $(BUILDDIR)/
@@ -118,7 +118,7 @@ BASESRC1 = \
 BASESRC = $(BASESRC1:%=base/%.oz)
 
 Base.ozf: $(BASESRC)
-	$(OZC) $(OZFLAGS) -c base/Base.oz -o $@
+	$(OZC) $(OZCFLAGS) -c base/Base.oz -o $@
 
 #---------------------------------------------------------------------
 # Remaining functors
