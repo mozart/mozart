@@ -486,7 +486,6 @@ OZ_BI_define (native_free_data, 1, 0) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
-
 /*
  * Lowlevel GtkArg Handling
  */
@@ -542,7 +541,6 @@ OZ_BI_define (native_get_arg, 1, 1) {
  * GtkObject Type Functions
  */
 
-
 OZ_BI_define(native_is_object, 1, 1) {
   GOZ_declareObject(0, obj);
   OZ_out(0) = (GTK_IS_OBJECT(obj) ? OZ_true() : OZ_false());
@@ -588,6 +586,7 @@ OZ_BI_define (native_get_str_arr, 1, 1) {
   GOZ_declareForeignType(char **, 0, arr);
   int i = 0;
   OZ_Term t = OZ_atom("nil");
+  while (arr[i++] != NULL);
   if (i > 0) {
     i--;
   }
@@ -595,6 +594,16 @@ OZ_BI_define (native_get_str_arr, 1, 1) {
     t = OZ_cons(OZ_string(arr[i--]), t);
   }
   OZ_out(0) = t;
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (native_free_str_arr, 1, 0) {
+  GOZ_declareForeignType(char **, 0, arr);
+  int i = 0;
+  while (arr[i] != NULL) {
+    free(arr[i++]);
+  }
+  free(arr);
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -651,6 +660,7 @@ static OZ_C_proc_interface oz_interface[] = {
   {"getObjectType", 1, 1, native_get_object_type},
   {"allocStrArr", 1, 1, native_alloc_str_arr},
   {"getStrArr", 1, 1, native_get_str_arr},
+  {"freeStrArr", 1, 0, native_free_str_arr},
   {"makeStrArr", 2, 1, native_make_str_arr},
   {"makeColorArr", 1, 1, native_make_color_array},
   {"getColorList", 1, 1, native_get_color_list},

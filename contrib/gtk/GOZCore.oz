@@ -679,6 +679,7 @@ define
                           %% String Handling
                           allocStr             : GOZSignal.allocStr
                           getStr               : GOZSignal.getStr
+                          freeStrArr           : GOZSignal.freeStrArr
                           %% String Arr Handling
                           allocStrArr          : GOZSignal.allocStrArr
                           makeStrArr           : GOZSignal.makeStrArr
