@@ -9,6 +9,11 @@
   their MOGUL id in the makefile.oz "requires" feature. option --norequires
   may be used to turn off this behaviour
 
+  added option --binary to create a purely binary package (i.e. nothing needs
+  to be compiled at installation time).  This is primarily intended for Windows
+  users who typically do not have cygwin and thus cannot install packages that
+  provide native functors.
+
 * version 0.88
   protect against build circularities. added ExpandInCWD functionality -
   used it to make e.g. src and build dir absolute so that when added to
