@@ -86,7 +86,7 @@ public:
 
   TaggedRef getURL() { return url; }
   void markURL(TaggedRef u) {
-    if (u && !literalEq(u,NameUnit))
+    if (u && !oz_eq(u,NameUnit))
       url = u;
   }
 

@@ -389,7 +389,7 @@ OZ_BI_define(BIIsGenCtVarB, 1,1)
 {
   OZ_getINDeref(0, v, vptr, vtag);
 
-  OZ_RETURN(isGenCtVar(v, vtag) ? NameTrue : NameFalse);
+  OZ_RETURN(oz_bool(isGenCtVar(v, vtag)));
 } OZ_BI_end
 
 OZ_C_proc_begin(BIGetCtVarConstraintAsAtom, 2)

@@ -80,7 +80,7 @@ OZ_BI_define(BIcheckStopped,1,1)
 {
   oz_declareThread(0,thread);
 
-  OZ_RETURN(thread->getStop() ? NameTrue : NameFalse);
+  OZ_RETURN(oz_bool(thread->getStop()));
 } OZ_BI_end
 
 // ------------------
@@ -192,7 +192,7 @@ OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
 {
   oz_declareThread(0,thread);
 
-  OZ_RETURN(thread->getNoBlock()? NameTrue: NameFalse);
+  OZ_RETURN(oz_bool(thread->getNoBlock()));
 } OZ_BI_end
 
 

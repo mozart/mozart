@@ -127,8 +127,8 @@ OZ_BI_define(BIfun,1,1)                         \
 {                                               \
   OZ_Return r = irel(OZ_in(0));                 \
   switch (r) {                                  \
-  case PROCEED: OZ_RETURN(NameTrue);            \
-  case FAILED : OZ_RETURN(NameFalse);           \
+  case PROCEED: OZ_RETURN(oz_true());           \
+  case FAILED : OZ_RETURN(oz_false());          \
   case SUSPEND: oz_suspendOn(OZ_in(0));         \
   default     : return r;                       \
   }                                             \
@@ -231,6 +231,7 @@ TT VAR;                                         \
 
 #define oz_declareIntIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,int,Int)
 #define oz_declareFloatIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,double,Float)
+#define oz_declareBoolIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,Bool,Bool)
 #define oz_declareAtomIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,const char*,Atom)
 
 #define oz_declareThreadIN(ARG,VAR)                             \
@@ -389,6 +390,7 @@ char *VAR;                                      \
 #define oz_DictionaryToC(v) tagged2Dictionary(v)
 #define oz_SRecordToC(v) tagged2SRecord(v)
 #define oz_STupleToC(v) tagged2SRecord(v)
+#define oz_BoolToC(t)   oz_isTrue(t)
 
 /* -----------------------------------------------------------------------
  * exceptions

@@ -171,8 +171,6 @@ static OZ_Term getApplicationArgs(void) {
   return out;
 }
 
-#define oz_bool(i) ((i)?NameTrue:NameFalse)
-
 // Handle the case of indexed property P whose value can be
 // found at location L.  Return the corresponding Oz term.
 
@@ -464,8 +462,8 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 // local integer variable INT__
 
 #define CHECK_BOOL                              \
-if      (literalEq(val,NameTrue )) INT__ = 1;   \
-else if (literalEq(val,NameFalse)) INT__ = 0;   \
+if      (oz_isTrue(val )) INT__ = 1;            \
+else if (oz_isFalse(val)) INT__ = 0;            \
 else oz_typeError(1,"Bool");
 
 // Handle a particular indexed property P, check that the specified
@@ -545,16 +543,16 @@ if (INT__) {                                    \
 #define SET_INT(F,L) DO_INT(F,L=INT__);
 
 // Feature F should be a boolean, then DO something
-#define DO_BOOL(F,DO)                           \
-INT__ = REC__->getFeature(F);                   \
-if(INT__) {                                     \
-  DEREF(INT__,PTR__,TAG__);                     \
+#define DO_BOOL(F,DO)                                   \
+INT__ = REC__->getFeature(F);                           \
+if(INT__) {                                             \
+  DEREF(INT__,PTR__,TAG__);                             \
   if (oz_isVariable(TAG__)) oz_suspendOnPtr(PTR__);     \
-  if (!isLiteralTag(TAG__)) BAD_FEAT(F,"Bool"); \
-  if      (literalEq(INT__,NameTrue )) INT__=1; \
-  else if (literalEq(INT__,NameFalse)) INT__=0; \
-  else BAD_FEAT(F,"Bool");                      \
-  DO;                                           \
+  if (!isLiteralTag(TAG__)) BAD_FEAT(F,"Bool");         \
+  if      (oz_isTrue(INT__)) INT__=1;                   \
+  else if (oz_isFalse(INT__)) INT__=0;                  \
+  else BAD_FEAT(F,"Bool");                              \
+  DO;                                                   \
 }
 
 // set location L to boolean value on feature F

@@ -374,7 +374,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
   oz_declareIN(0, is_boot_tagged);
   oz_declareVirtualStringIN(1, name);
 
-  Bool is_boot = literalEq(oz_deref(is_boot_tagged),NameTrue);
+  Bool is_boot = oz_isTrue(oz_deref(is_boot_tagged));
 
   init_fun_t init_function = 0;
   char * if_identifier;

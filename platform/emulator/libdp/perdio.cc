@@ -130,7 +130,7 @@ void initDP()
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
-  if (!literalEq(oz_nil(),nogoods)) {
+  if (!oz_eq(oz_nil(),nogoods)) {
     OZ_warning("send message '%s' contains nogoods: %s",
                mess_names[mt],toC(nogoods));
   }

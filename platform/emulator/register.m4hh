@@ -368,7 +368,7 @@ Case(CREATEVARIABLEMOVEY)
           SUSP_PC(termPtr,PC);
         }
 
-        if (literalEq(term,atm)) {
+        if (oz_eq(term,atm)) {
           DISPATCH(4);
         }
 
@@ -382,11 +382,11 @@ Case(CREATEVARIABLEMOVEY)
         TaggedRef term = Reg1(getRegArg(PC+1));
         DEREF(term,termPtr,tag);
 
-        if (literalEq(term,NameTrue)) {
+        if (oz_eq(term,oz_true())) {
           DISPATCH(4);
         }
 
-        if (literalEq(term,NameFalse)) {
+        if (oz_eq(term,oz_false())) {
           JUMPRELATIVE(getLabelArg(PC+2));
         }
 
@@ -523,7 +523,7 @@ Case(CREATEVARIABLEMOVEY)
                    DISPATCH(3);
                  }
 
-                 if ( isLiteralTag(tag) && literalEq(term,atm) ) {
+                 if ( isLiteralTag(tag) && oz_eq(term,atm) ) {
                    DISPATCH(3);
                  }
 
@@ -794,7 +794,7 @@ Case(UNIFYLITERAL)
          DISPATCH(2);
        }
 
-       if ( isLiteralTag(tag) && literalEq(term,atm) ) {
+       if ( isLiteralTag(tag) && oz_eq(term,atm) ) {
          DISPATCH(2);
        }
 

@@ -914,11 +914,8 @@ RefsArray resize(RefsArray r, int s)
 inline
 Bool oz_eq(TaggedRef t1, TaggedRef t2)
 {
-  DEREF(t1,t1Ptr,_1);
-  DEREF(t2,t2Ptr,_2);
-  if (oz_isVariable(t1) || oz_isVariable(t2)) {
-    return t1Ptr==t2Ptr;
-  }
+  Assert(t1==oz_safeDeref(t1));
+  Assert(t2==oz_safeDeref(t2));
   return t1==t2;
 }
 

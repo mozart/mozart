@@ -236,11 +236,11 @@ OZ_BI_define(BIsystemTellSize,3,0)
   // Create record:
   switch (tag) {
   case LTUPLE:
-    return literalEq(label, AtomCons) ? PROCEED : FAILED;
+    return oz_eq(label, AtomCons) ? PROCEED : FAILED;
   case LITERAL:
-    return literalEq(label, t) ? PROCEED : FAILED;
+    return oz_eq(label, t) ? PROCEED : FAILED;
   case SRECORD:
-    return literalEq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
+    return oz_eq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
   case CVAR:
     if (tagged2CVar(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
@@ -323,11 +323,11 @@ OZ_BI_define(BIrecordTell,2,0)
   // Create record:
   switch (tag) {
   case LTUPLE:
-    return literalEq(label, AtomCons) ? PROCEED : FAILED;
+    return oz_eq(label, AtomCons) ? PROCEED : FAILED;
   case LITERAL:
-    return literalEq(label, t) ? PROCEED : FAILED;
+    return oz_eq(label, t) ? PROCEED : FAILED;
   case SRECORD:
-    return literalEq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
+    return oz_eq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
   case CVAR:
     if (tagged2CVar(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
@@ -363,14 +363,14 @@ OZ_BI_define(BIisRecordCB,1,1)
   case LTUPLE:
   case LITERAL:
   case SRECORD:
-    OZ_RETURN(NameTrue);
+    OZ_RETURN(oz_true());
   case CVAR:
     switch (tagged2CVar(t)->getType()) {
     case OZ_VAR_OF:
-      OZ_RETURN(NameTrue);
+      OZ_RETURN(oz_true());
     case OZ_VAR_FD:
     case OZ_VAR_BOOL:
-      OZ_RETURN(NameFalse);
+      OZ_RETURN(oz_false());
     default:
       oz_suspendOnPtr(tPtr);
     }
@@ -379,7 +379,7 @@ OZ_BI_define(BIisRecordCB,1,1)
     // FUT
     oz_suspendOnPtr(tPtr);
   default:
-    OZ_RETURN(NameFalse);
+    OZ_RETURN(oz_false());
   }
 } OZ_BI_end
 

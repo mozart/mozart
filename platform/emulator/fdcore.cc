@@ -93,8 +93,8 @@ OZ_BI_define(BIisFdVar, 1,0)
 
 OZ_BI_define(BIisFdVarB, 1,1)
 {
-  OZ_RETURN((isGenFDVar(oz_deref(OZ_in(0))) ||
-             isGenBoolVar(oz_deref(OZ_in(0)))) ? NameTrue : NameFalse);
+  OZ_RETURN(oz_bool(isGenFDVar(oz_deref(OZ_in(0))) ||
+                    isGenBoolVar(oz_deref(OZ_in(0)))));
 } OZ_BI_end
 
 OZ_BI_define(BIgetFDLimits, 0,2)
@@ -112,9 +112,9 @@ OZ_C_proc_begin(BIfdIs, 2)
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
 
   return oz_unify(OZ_getCArg(1), // mm_u
-                  (isPosSmallFDInt(fd) ||
-                   isGenFDVar(fd, fdtag) ||
-                   isGenBoolVar(fd, fdtag)) ? NameTrue : NameFalse);
+                  oz_bool(isPosSmallFDInt(fd) ||
+                          isGenFDVar(fd, fdtag) ||
+                          isGenBoolVar(fd, fdtag)));
 }
 OZ_C_proc_end
 
@@ -347,7 +347,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
 
   OZ_getCArgDeref(2, t, tptr, ttag);
   if (!isVariableTag(ttag)) {
-    if (t == NameTrue || t == NameFalse)
+    if (oz_isBool(t))
       return PROCEED;
     return FAILED;
   }
@@ -381,8 +381,8 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
   }
 
 // compute return value
-  if (vsize < size) return OZ_unify (OZ_getCArg(2), NameTrue);
-  if (size < 1) return (OZ_unify (OZ_getCArg(2), NameFalse));
+  if (vsize < size) return OZ_unify (OZ_getCArg(2), oz_true());
+  if (size < 1) return (OZ_unify (OZ_getCArg(2), oz_false()));
 
   if (isVariableTag(vtag)){
     //  must return SUSPEND;
@@ -392,7 +392,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
 
-  return (OZ_unify (OZ_getCArg(2), NameFalse));
+  return (OZ_unify (OZ_getCArg(2), oz_false()));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdWatchMin, 3)
@@ -401,7 +401,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
 
   OZ_getCArgDeref(2, t, tptr, ttag);
   if (!isVariableTag(ttag)) {
-    if (t == NameTrue || t == NameFalse)
+    if (oz_isBool(t))
       return PROCEED;
     return FAILED;
   }
@@ -436,8 +436,8 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
     TypeError(1, "");
   }
 
-  if (min < 0) return (OZ_unify (OZ_getCArg(2), NameFalse));
-  if (vmin > min) return OZ_unify (OZ_getCArg(2), NameTrue);
+  if (min < 0) return (OZ_unify (OZ_getCArg(2), oz_false()));
+  if (vmin > min) return OZ_unify (OZ_getCArg(2), oz_true());
 
   if (isVariableTag(vtag) && min < vmax){
     //  must return SUSPEND;
@@ -447,7 +447,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
 
-  return (OZ_unify (OZ_getCArg(2), NameFalse));
+  return (OZ_unify (OZ_getCArg(2), oz_false()));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdWatchMax, 3)
@@ -456,7 +456,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
 
   OZ_getCArgDeref(2, t, tptr, ttag);
   if (!isVariableTag(ttag)) {
-    if (t == NameTrue || t == NameFalse)
+    if (oz_isBool(t))
       return PROCEED;
     return FAILED;
   }
@@ -491,8 +491,8 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
     TypeError(1, "");
   }
 
-  if (vmax < max) return OZ_unify (OZ_getCArg(2), NameTrue);
-  if (max < 0) return (OZ_unify (OZ_getCArg(2), NameFalse));
+  if (vmax < max) return OZ_unify (OZ_getCArg(2), oz_true());
+  if (max < 0) return (OZ_unify (OZ_getCArg(2), oz_false()));
 
   if (isVariableTag(vtag) && vmin < max){
     //  must return SUSPEND;
@@ -502,7 +502,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
 
-  return (OZ_unify (OZ_getCArg(2), NameFalse));
+  return (OZ_unify (OZ_getCArg(2), oz_false()));
 } OZ_C_proc_end
 
 //-----------------------------------------------------------------------------

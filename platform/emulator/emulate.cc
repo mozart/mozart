@@ -764,7 +764,7 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
     return label;
   }
 
-  if (width == 2 && literalEq(label,AtomCons))
+  if (width == 2 && oz_eq(label,AtomCons))
     return makeTaggedLTuple(new LTuple(X[0],X[1]));
 
   SRecord *tt;
@@ -1014,7 +1014,7 @@ LBLdispatcher:
 #endif
       int ret = bi->getFun()(X,loc->mapping());
       if (ret==PROCEED) {
-        if (literalEq(X[loc->out(0)],oz_true())) {
+        if (oz_isTrue(X[loc->out(0)])) {
           DISPATCH(4);
         } else {
           JUMPRELATIVE(getLabelArg(PC+3));
@@ -2420,8 +2420,8 @@ LBLdispatcher:
         OzDebug *dbg = new OzDebug(PC,Y,CAP);
 
         TaggedRef kind = getTaggedArg(PC+4);
-        if (literalEq(kind,AtomDebugCallC) ||
-            literalEq(kind,AtomDebugCallF)) {
+        if (oz_eq(kind,AtomDebugCallC) ||
+            oz_eq(kind,AtomDebugCallF)) {
           // save abstraction and arguments:
           int arity = -1;
           switch (CodeArea::getOpcode(PC+5)) {
@@ -2476,8 +2476,8 @@ LBLdispatcher:
             }
             dbg->arguments[arity] = makeTaggedNULL();
           }
-        } else if (literalEq(kind,AtomDebugLockC) ||
-                   literalEq(kind,AtomDebugLockF)) {
+        } else if (oz_eq(kind,AtomDebugLockC) ||
+                   oz_eq(kind,AtomDebugLockF)) {
           // save the lock:
           switch (CodeArea::getOpcode(PC+5)) {
           case LOCKTHREAD:
@@ -2486,8 +2486,8 @@ LBLdispatcher:
           default:
             break;
           }
-        } else if (literalEq(kind,AtomDebugCondC) ||
-                   literalEq(kind,AtomDebugCondF)) {
+        } else if (oz_eq(kind,AtomDebugCondC) ||
+                   oz_eq(kind,AtomDebugCondF)) {
           // look whether we can determine the arbiter:
           switch (CodeArea::getOpcode(PC+5)) {
           case TESTLITERALX:
@@ -2517,8 +2517,8 @@ LBLdispatcher:
           default:
             break;
           }
-        } else if (literalEq(kind,AtomDebugNameC) ||
-                   literalEq(kind,AtomDebugNameF)) {
+        } else if (oz_eq(kind,AtomDebugNameC) ||
+                   oz_eq(kind,AtomDebugNameF)) {
           switch (CodeArea::getOpcode(PC+5)) {
           case PUTCONSTANTX:
           case PUTCONSTANTY:
@@ -2554,12 +2554,12 @@ LBLdispatcher:
       CTT->popDebug(dbg, dothis);
 
       if (dbg != (OzDebug *) NULL) {
-        Assert(literalEq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
+        Assert(oz_eq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
         Assert(dbg->Y == Y && dbg->CAP == CAP);
 
         if (dothis != DBG_EXIT
-            && (literalEq(getLiteralArg(PC+4),AtomDebugCallC) ||
-                literalEq(getLiteralArg(PC+4),AtomDebugCallF))
+            && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||
+                oz_eq(getLiteralArg(PC+4),AtomDebugCallF))
             && CodeArea::getOpcode(dbg->PC+5) == CALLBI) {
           Builtin *bi = GetBI(dbg->PC+6);
           int iarity = bi->getInArity(), oarity = bi->getOutArity();

@@ -45,7 +45,7 @@
 extern TaggedRef
   RecordFailure,
 
-  NameTrue, NameFalse,
+  _NameTrue, _NameFalse,
 
   BI_Unify,BI_send,BI_Delay,
   BI_load,BI_fail,BI_url_load, BI_obtain_native,
@@ -176,22 +176,28 @@ Bool oz_isName(TaggedRef term) {
   return oz_isLiteral(term) && tagged2Literal(term)->isName();
 }
 
-inline OZ_Term oz_true()  { return NameTrue; }
-inline OZ_Term oz_false() { return NameFalse; }
+inline OZ_Term oz_true()  { return _NameTrue; }
+inline OZ_Term oz_false() { return _NameFalse; }
 inline OZ_Term oz_unit()  { return NameUnit; }
 
-//mm2: one argument is guarantueed to be a literal ???
 inline
-Bool literalEq(TaggedRef a, TaggedRef b)
-{
-  Assert(oz_isLiteral(a) || oz_isLiteral(b));
-  return (a==b);
+OZ_Term oz_bool(int i) {
+  return i ? oz_true() : oz_false();
+}
+
+inline
+Bool oz_isTrue(OZ_Term t) {
+  return oz_eq(t,oz_true());
+}
+
+inline
+Bool oz_isFalse(OZ_Term t) {
+  return oz_eq(t,oz_false());
 }
 
 inline
 Bool oz_isBool(TaggedRef term) {
-  term = oz_deref(term);
-  return literalEq(term,NameTrue) || literalEq(term,NameFalse);
+  return oz_isTrue(term) || oz_isFalse(term);
 }
 
 /*
@@ -402,6 +408,10 @@ public:
   TaggedRef *getRefHead()      { return args; }
 };
 
+
+inline
+TaggedRef oz_nil() { return AtomNil; }
+
 inline
 Bool oz_isCons(TaggedRef term) {
   return oz_isLTuple(term);
@@ -409,11 +419,8 @@ Bool oz_isCons(TaggedRef term) {
 
 inline
 Bool oz_isNil(TaggedRef term) {
-  return literalEq(term,AtomNil);
+  return oz_eq(term,oz_nil());
 }
-
-inline
-TaggedRef oz_nil() { return AtomNil; }
 
 inline
 TaggedRef oz_cons(TaggedRef head, TaggedRef tail)
@@ -1198,7 +1205,7 @@ public:
   void gcRecurse();
 
   Bool compareSortAndArity(TaggedRef lbl, SRecordArity arity) {
-    return literalEq(getLabel(),lbl) &&
+    return oz_eq(getLabel(),lbl) &&
            sameSRecordArity(getSRecordArity(),arity);
   }
 
@@ -1278,11 +1285,11 @@ Arity *oz_makeArity(OZ_Term list)
 inline
 int oz_isPair(OZ_Term term)
 {
-  if (oz_isLiteral(term)) return literalEq(term,AtomPair);
+  if (oz_isLiteral(term)) return oz_eq(term,AtomPair);
   if (!oz_isSRecord(term)) return 0;
   SRecord *sr = tagged2SRecord(term);
   if (!sr->isTuple()) return 0;
-  return literalEq(sr->getLabel(),AtomPair);
+  return oz_eq(sr->getLabel(),AtomPair);
 }
 
 inline
@@ -1291,7 +1298,7 @@ int oz_isPair2(OZ_Term term)
   if (!oz_isSRecord(term)) return 0;
   SRecord *sr = tagged2SRecord(term);
   if (!sr->isTuple()) return 0;
-  if (!literalEq(sr->getLabel(),AtomPair)) return 0;
+  if (!oz_eq(sr->getLabel(),AtomPair)) return 0;
   return sr->getWidth()==2;
 }
 
@@ -1336,19 +1343,21 @@ OZ_Term oz_pair2(OZ_Term t1,OZ_Term t2) {
  * -----------------------------------------------------------------------*/
 
 /*
- * list checking
- *   checkChar:
- *     0 = any list
- *     1 = list of char
- *     2 = list of char != 0
- * return
- *     OZ_true
- *     OZ_false
- *     var
+ * list checking returns
+ *     name false, if no list or has cycle
+ *     int length, if finite list, and conditions
+ *     ref var, if var found
  */
 
+enum OzCheckList {
+  OZ_CHECK_ANY,                 // any list
+  OZ_CHECK_CHAR,                // list of char
+  OZ_CHECK_CHAR_NONZERO,        // list of char != 0
+  OZ_CHECK_FEATURE              // list of features
+};
+
 inline
-OZ_Term oz_isList(OZ_Term l, int checkChar=0)
+OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
 {
   DerefIfVarReturnIt(l);
   OZ_Term old = l;
@@ -1356,17 +1365,22 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
   int len = 0;
   while (oz_isCons(l)) {
     len++;
-    if (checkChar) {
+    if (check != OZ_CHECK_ANY) {
       OZ_Term h = oz_head(l);
       DerefIfVarReturnIt(h);
-      if (!oz_isSmallInt(h)) return NameFalse;
-      int i=smallIntValue(h);
-      if (i<0 || i>255) return NameFalse;
-      if (checkChar>1 && i==0) return NameFalse;
+      if (check == OZ_CHECK_FEATURE) {
+        if (!oz_isFeature(h)) return oz_false();
+      } else {
+        Assert(check==OZ_CHECK_CHAR || check==OZ_CHECK_NONZERO);
+        if (!oz_isSmallInt(h)) return oz_false();
+        int i=smallIntValue(h);
+        if (i<0 || i>255) return oz_false();
+        if (check == OZ_CHECK_CHAR_NONZERO && i==0) return oz_false();
+      }
     }
     l = oz_tail(l);
     DerefIfVarReturnIt(l);
-    if (l==old) return NameFalse; // cyclic
+    if (l==old) return oz_false(); // cyclic
     if (updateF) {
       old=oz_deref(oz_tail(old));
     }
@@ -1375,7 +1389,7 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
   if (oz_isNil(l)) {
     return oz_int(len);
   } else {
-    return NameFalse;
+    return oz_false();
   }
 }
 

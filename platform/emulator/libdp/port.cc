@@ -75,7 +75,7 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   marshal_M_PORT_SEND(bs,index,msg);
 
   OZ_Term nogoods = bs->getNoGoods();
-  if (!literalEq(oz_nil(),nogoods)) {
+  if (!oz_eq(oz_nil(),nogoods)) {
   /*
     int portIndex;
     OZ_Term t;

@@ -92,21 +92,21 @@ OZ_BI_define(BIisRecordCVarB,1,1)
     break;
   case CVAR:
     if (tagged2CVar(t)->getType()!=OZ_VAR_OF)
-      OZ_RETURN(NameFalse);
+      OZ_RETURN(oz_false());
     break;
   case UVAR:
     // SVAR
-    OZ_RETURN(NameFalse);
+    OZ_RETURN(oz_false());
   default:
-    OZ_RETURN(NameFalse);
+    OZ_RETURN(oz_false());
   }
-  OZ_RETURN(NameTrue);
+  OZ_RETURN(oz_true());
 } OZ_BI_end
 
 
 OZ_BI_define(_getsBound_dummyB, 2,0)
 {
-  return oz_unify(OZ_in(1),NameTrue);
+  return oz_unify(OZ_in(1),oz_true());
 } OZ_BI_end
 
 
