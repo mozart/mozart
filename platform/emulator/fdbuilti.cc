@@ -263,7 +263,7 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, SRecord &at, SRecord &xt,
     am.addSuspendVarList(last_fdvarptr);
 #else
     {
-      OZ_Thread th = OZ_makeThread(f, x, a);
+      OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
       OZ_addThread(makeTaggedRef(prev_fdvarptr), th);
       OZ_addThread(makeTaggedRef(last_fdvarptr), th);
     }
@@ -274,7 +274,7 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, SRecord &at, SRecord &xt,
 #ifdef FDBISTUCK
     am.addSuspendVarList(varptr);
 #else
-    OZ_addThread(makeTaggedRef(varptr), OZ_makeThread(f, x, a));
+    OZ_addThread(makeTaggedRef(varptr), OZ_makeSuspendedThread(f, x, a));
 #endif
     return OZ_TRUE;
   case 4:
@@ -282,7 +282,7 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, SRecord &at, SRecord &xt,
 #ifdef FDBISTUCK
     am.addSuspendVarList(varptr);
 #else
-    OZ_addThread(makeTaggedRef(varptr), OZ_makeThread(f, x, a));
+    OZ_addThread(makeTaggedRef(varptr), OZ_makeSuspendedThread(f, x, a));
 #endif
     return OZ_TRUE;
   case 5:
@@ -345,7 +345,7 @@ Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun, OZ_Term *, int)
 #else
 
 OZ_Return BIfdHeadManager::addSuspFDish(OZ_CFun f, OZ_Term * x, int a) {
-  OZ_Thread th = OZ_makeThread(f, x, a);
+  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_noncvar(bifdhm_vartag[i])) {
@@ -357,7 +357,7 @@ OZ_Return BIfdHeadManager::addSuspFDish(OZ_CFun f, OZ_Term * x, int a) {
 }
 
 OZ_Return BIfdHeadManager::addSuspSingl(OZ_CFun f, OZ_Term * x, int a) {
-  OZ_Thread th = OZ_makeThread(f, x, a);
+  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_var(bifdhm_vartag[i])) {
@@ -371,7 +371,7 @@ OZ_Return BIfdHeadManager::addSuspSingl(OZ_CFun f, OZ_Term * x, int a) {
 Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun f, OZ_Term * x, int a)
 {
   if (pm_is_var(bifdhm_vartag[0]) && pm_is_var(bifdhm_vartag[1])) {
-    OZ_Thread th = OZ_makeThread(f, x, a);
+    OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
     OZ_addThread(makeTaggedRef(bifdhm_varptr[0]), th);
     OZ_addThread(makeTaggedRef(bifdhm_varptr[1]), th);
     return OZ_FALSE;
@@ -678,14 +678,14 @@ OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
 OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
                                       OZ_Term * t)
 {
-  OZ_addThread(makeTaggedRef(t), OZ_makeThread(f, x, a));
+  OZ_addThread(makeTaggedRef(t), OZ_makeSuspendedThread(f, x, a));
   return PROCEED;
 }
 
 OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
                                       OZ_Term * t1, OZ_Term * t2)
 {
-  OZ_Thread th = OZ_makeThread(f, x, a);
+  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
   OZ_addThread(makeTaggedRef(t1), th);
   OZ_addThread(makeTaggedRef(t2), th);
   return PROCEED;
@@ -694,7 +694,7 @@ OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
                                       OZ_Term * t1, OZ_Term * t2, OZ_Term * t3)
 {
-  OZ_Thread th = OZ_makeThread(f, x, a);
+  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
   OZ_addThread(makeTaggedRef(t1), th);
   OZ_addThread(makeTaggedRef(t2), th);
   OZ_addThread(makeTaggedRef(t3), th);
@@ -722,7 +722,7 @@ OZ_Return checkDomDescr(OZ_Term descr,
     am.addSuspendVarList(descr_ptr);
 #else
     OZ_addThread(makeTaggedRef(descr_ptr),
-                     OZ_makeThread(cfun, args, arity));
+                     OZ_makeSuspendedThread(cfun, args, arity));
 #endif
     return SUSPEND; // checkDomDescr
   } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
@@ -734,7 +734,7 @@ OZ_Return checkDomDescr(OZ_Term descr,
     am.addSuspendVarList(descr_ptr);
 #else
     OZ_addThread(makeTaggedRef(descr_ptr),
-                     OZ_makeThread(cfun, args, arity));
+                     OZ_makeSuspendedThread(cfun, args, arity));
 #endif
     return SUSPEND; // checkDomDescr
   } else if (AtomBool == descr && (expect >= 2)) { // (1)

@@ -172,7 +172,7 @@ OZ_C_proc_begin(Name,3)                                           \
       x[0]=OZ_getCArg(0);                                         \
       x[1]=OZ_getCArg(1);                                         \
       x[2]=OZ_getCArg(2);                                         \
-      OZ_Thread thr=OZ_makeThread(BlockName,x,3);                 \
+      OZ_Thread thr=OZ_makeSuspendedThread(BlockName,x,3);        \
       OZ_addThread(arg0,thr);                                     \
       OZ_addThread(arg1,thr);                                     \
       return PROCEED;                                             \
@@ -4987,7 +4987,7 @@ OZ_C_proc_begin(BIgetsBound, 1)
 
   if (isAnyVar(vTag)){
     Thread *thr =
-      (Thread *) OZ_makeThread (_getsBound_dummy, NULL, 0);
+      (Thread *) OZ_makeSuspendedThread (_getsBound_dummy, NULL, 0);
     SuspList *vcsl = new SuspList(thr, NULL);
     addSuspAnyVar(vPtr, vcsl);
   }
@@ -5012,7 +5012,7 @@ OZ_C_proc_begin(BIgetsBoundB, 2)
 
   if (isAnyVar(vTag)){
     Thread *thr =
-      (Thread *) OZ_makeThread (_getsBound_dummyB, OZ_args, OZ_arity);
+      (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, OZ_args, OZ_arity);
     SuspList *vcsl = new SuspList (thr, NULL);
     addSuspAnyVar(vPtr, vcsl);
   }
@@ -5145,7 +5145,8 @@ OZ_C_proc_begin(BItermToVS,2)
 {
   OZ_Term t=OZ_getCArg(0);
   OZ_Term out=OZ_getCArg(1);
-  return OZ_unify(out,OZ_termToVS(t));
+  return OZ_unify(out,
+                  OZ_string(OZ_toC(t,ozconf.printDepth,ozconf.printWidth)));
 }
 OZ_C_proc_end
 

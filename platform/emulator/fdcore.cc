@@ -273,7 +273,7 @@ OZ_C_proc_begin(BIfdPutList, 3) // TMUELLER; 3rd arg is redundant soon
   if (pe.isFailing(r)) {
     TypeError(1, "");
   } else if (pe.isSuspending(r)) {
-    return pe.suspend(OZ_makeSelfThread());
+    return pe.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));
   }
 
   BIfdBodyManager x;
