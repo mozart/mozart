@@ -2508,7 +2508,7 @@ fi
 fi
 
 
-  if `$LEX -S --version 2>/dev/null >/dev/null`; then
+  if `$LEX -S/dev/null --version 2>/dev/null >/dev/null`; then
     GNU_LEX=yes
   else
     GNU_LEX=no
