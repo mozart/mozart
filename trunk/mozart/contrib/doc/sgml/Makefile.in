@@ -39,8 +39,8 @@ bootstrap: boot-all
 # Automatic Makefile update
 #---------------------------------------------------------------------
 
-Makefile: Makefile.in ../../config.status
-	../../config.status
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
 
-config.status: ../../configure
-	../../config.status --recheck
+config.status: ../configure
+	cd .. && ./config.status --recheck
