@@ -56,4 +56,7 @@ $module_init_fun_name = "browser_init";
     'procLoc'		=> { in  => ['value'],
 			     out => ['atom','int','int'],
 			     BI  => BIprocLoc},
+    'shortName'		=> { in  => ['atom'],
+			     out => ['atom'],
+			     BI  => BIshortName},
  );
