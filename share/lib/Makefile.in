@@ -7,7 +7,7 @@ OZPREFIX	= $(PREFIX)
 
 OZBIN		= $(PREFIX)/bin
 OZLIB		= $(PREFIX)/lib
-BITMAPDIR	= $(OZLIB)/bitmaps
+IMAGESDIR	= $(OZLIB)/bitmaps
 
 SHELL		= @SH@
 RM		= @RM@ -f
@@ -48,12 +48,6 @@ export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
-OZLIBDIRS1 = \
-	standard init sp op ap cp wp dp \
-	compiler panel browser explorer ozcar profiler gump gump/examples
-OZLIBDIRS = $(OZLIBDIRS1:%=$(OZLIB)/%)
-OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
-
 STANDARDSRC1 = \
 	Forward.oz \
 	Record.oz Unit.oz Tuple.oz Atom.oz Name.oz Procedure.oz \
@@ -84,9 +78,6 @@ CPSRC = $(CPSRC1:%=cp/%) CP.oz
 DPSRC1 = Connection.oz Remote.oz RemoteServer.oz MakeAllLoader.oz
 DPSRC = $(DPSRC1:%=dp/%) DP.oz
 
-MISCSRC1 = Agenda.oz Server.oz
-MISCSRC = $(MISCSRC1:%=misc/%) Misc.oz
-
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
 WPSRC = $(WPSRC1:%=wp/%) WP.oz
 
@@ -101,67 +92,13 @@ COMPILERSRCNOVER = $(COMPILERSRC1:%=compiler/%) compiler-Builtins.oz \
 	compiler-Opcodes.oz Compiler.oz
 COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
 
-COMPILERPANELSRC1 = CompilerPanelClass.oz
-COMPILERPANELSRC = $(COMPILERPANELSRC1:%=compiler/%) \
-	CompilerPanel.oz
+MISCSRC1 = Agenda.oz Server.oz
+MISCSRC = $(MISCSRC1:%=misc/%) Misc.oz
 
-PANELSRC1 = \
-	configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
-	main.oz dialogs.oz
-PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
-
-BROWSERSRC1 = \
-	XResources.oz browserObject.oz browserTerm.oz \
-	bufsAndStreams.oz constants.oz controlObject.oz core.oz \
-	errors.oz managerObject.oz reflect.oz repManager.oz \
-	store.oz tcl-interface.oz termObject.oz \
-	termsStore.oz undefs.oz windowManager.oz
-BROWSERSRC = $(BROWSERSRC1:%=browser/%) Browser.oz
-
-EXPLORERSRC1 = \
-	main.oz misc.oz action-nodes.oz hide-nodes.oz \
-	layout-nodes.oz manager.oz \
-	menu-manager.oz move-nodes.oz tk-nodes.oz \
-	configure.oz nodes.oz toplevel-manager.oz \
-	default-actions.oz search-nodes.oz stat-nodes.oz \
-	dialog-manager.oz shapes-and-images.oz status-manager.oz
-EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
-
-EMACSSRC = Emacs.oz
-
-OZCARSRC1 = \
-	prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
-	stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
-OZCARSRCNOVER = $(OZCARSRC1:%=ozcar/%) Ozcar.oz
-OZCARSRC = $(OZCARSRCNOVER) ozcar-version.oz
-
-PROFILERSRC1 = \
-	prof-gui.oz prof-prelude.oz prof-tk.oz \
-	prof-config.oz prof-help.oz profiler.oz \
-	prof-dialog.oz prof-menu.oz prof-string.oz
-PROFILERSRC = $(PROFILERSRC1:%=profiler/%) Profiler.oz
-
-GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
-GUMPSRC = $(GUMPSRC1:%=gump/%) Gump.oz
-
-GUMPSCANNERSRC1 = GumpScannerClass.oz
-GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
-
-GUMPPARSERSRC1 = GumpParserClass.oz
-GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
-
-GUMPEXAMPLES = \
-	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
-	OzParser.ozg OzScanner.ozg
-
-ENVS = \
-	SP.env OP.env AP.env CP.env WP.env DP.env \
-	Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
-	Emacs.env Ozcar.env Profiler.env Gump.env GumpScanner.env \
-	GumpParser.env Misc.env
+ENVS = SP.env OP.env AP.env CP.env WP.env DP.env Compiler.env Misc.env
 ENVS1 = Base.env Standard.env $(ENVS)
-TYPS = $(ENVS:%.env=%.typ)
-TYCS = $(TYPS:%.typ=tyc/%.tyc)
+TYPS = $(ENVS:%.env=tyc/%.typ)
+TYCS = $(TYPS:%.typ=%.tyc)
 
 # This ensures that the $(TYCS) are not removed after, e.g., `make stage2',
 # so that we can `make install' directly afterwards.
@@ -170,70 +107,58 @@ TYCS = $(TYPS:%.typ=tyc/%.tyc)
 ALLSRCS = \
 	$(STANDARDSRC) $(INITSRC) \
 	$(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
-	$(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
-	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
-	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC)
-
-STANDARD = Base.ozc Standard.ozc Base.env Standard.env
-DUMPINTRO = DumpIntro.oz $(STANDARD)
+	$(COMPILERSRC) $(MISCSRC)
 
 LIBFILES = \
-	$(GUMPEXAMPLES:%=$(OZLIB)/gump/examples/%) \
-	$(OZLIB)/gump/ProductionTemplates.oz \
-	$(ENVS1:%=$(OZLIB)/%) \
+	$(ENVS1:ap/%=$(OZLIB)/%) \
 	$(TYCS:tyc/%=$(OZLIB)/%)
 
 COMPONENTS = \
 	Init.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
-	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
-	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
-	GumpScanner.ozc GumpParser.ozc Misc.ozc \
-	StandardModules.ozc StandardSubModules.ozc
+	Compiler.ozc Misc.ozc StandardModules.ozc StandardSubModules.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
+
 STAGEEXTRAFILES = $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc $(OZLIB)/ozbatch.ozm
 
-SYSLETS = opi ozbatch ozserver
+SYSLETS = ozbatch ozserver
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
-BITMAPS1 = \
-	mini-dec.xbm mini-inc.xbm \
-	compiler.xbm compilermask.xbm \
-	lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
-	browserMIcon.xbm browserIcon.xbm stop.xbm \
-	debugger.xbm
-BITMAPS = $(BITMAPS1:%=$(BITMAPDIR)/%) \
+IMAGES1 = mini-dec.xbm mini-inc.xbm
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
-OZCARBITMAPS1 = \
-	children.xbm detach.xbm line.xbm next.xbm queries.xbm \
-	step.xbm stop.xbm term.xbm unleash.xbm
-OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
+STANDARD = Base.ozc Standard.ozc Base.env Standard.env
+DUMPINTRO = DumpIntro.oz $(STANDARD)
 
-.PHONY: all install install-stage install-main install-bitmaps
-.PHONY: install-src install-cache
-.PHONY: clean realclean veryclean tags
+.PHONY: all
 
 all: Makefile $(COMPONENTS) $(SYSLETS)
 
-ozbatch.ozm: MakeAssembly.oz \
-	$(STANDARDSRC) Base.env Standard.env \
-	$(SPSRC) SP.env $(CPSRC) CP.env \
-	$(OPSRC) OP.env $(GUMPSRC) Gump.env \
-	$(COMPILERSRC) Compiler.env BatchCompile.oz
-	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
-	$(MV) -f /tmp/$$$$.ozm $@
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
 
-opi: MakeOPI.oz $(DUMPINTRO) \
-	Init.ozc SP.ozc SP.env OP.ozc OP.env Compiler.env AP.ozc $(TYCS)
-	$(EXECWITHSTD) $<
+../config.status: ../configure
+	cd .. && ./config.status --recheck
 
-ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
-	Init.ozc SP.ozc SP.env OP.ozc OP.env AP.ozc AP.env $(TYCS)
-	$(EXECWITHSTD) $<
+#---------------------------------------------------------------------
+# Components
+#---------------------------------------------------------------------
 
-ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) \
-	Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
-	$(EXECWITHSTD) $<
+tyc/%.typ: %.env
+	@$(MKDIR) tyc 2> /dev/null || $(TRUE)
+	$(ENV2TYPE) $< > $@
+
+tyc/%.tyc: tyc/%.typ $(DUMPINTRO) Init.ozc
+	$(COMPILE) $< -o $@
+
+%.ozc: %.oz
+	$(COMPILE) $< -o $@
+
+%.ozc: compiler/%.oz
+	$(COMPILE) $< -o $@
+
+Init.ozc: $(DUMPINTRO) $(INITSRC)
+	OZMAINIT="" $(COMPILE) Init.oz
 
 Base.ozc: Standard.ozc
 	@$(ECHO) > /dev/null
@@ -246,94 +171,6 @@ StandardModules.ozc: ap/StandardModules.oz
 
 StandardSubModules.ozc: ap/StandardSubModules.oz
 	$(COMPILE)  $< -o $@
-
-tycs: $(TYCS)
-
-install: install-main install-bitmaps install-cache
-
-install-stage: install-main $(STAGEEXTRAFILES)
-
-install-main: all \
-	$(OZLIB) $(OZLIB)/gump/examples $(LIBFILES) $(LIBCOMPONENTS) \
-	$(OZBIN) $(BINFILES)
-
-install-bitmaps: \
-	$(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS)
-
-install-cache: \
-	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
-
-$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
-	$(PREFIX)/cache/http/www.ps.uni-sb.de
-	cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN) ../../.. ozhome
-
-$(PREFIX)/cache/http/www.ps.uni-sb.de:
-	$(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
-
-install-src: $(OZLIB) $(OZLIBDIRS) $(ALLSRCS:%=$(OZLIB)/%)
-
-clean:
-	$(RM) *~ *.bak
-	$(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
-	$(RM) ozcar-version.oz
-	$(RM) -r $(TYPS) tyc
-	$(RM) Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc
-	$(RM) ozbatch ozserver
-
-realclean: clean
-	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
-
-veryclean: realclean
-	$(RM) TAGS
-
-distclean: veryclean
-	$(RM) Makefile
-
-$(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
-	$(INSTALLDIR) $@
-
-$(OZLIB)/%.oz: %.oz
-	$(INSTALLSRC) $< $@
-
-$(OZLIB)/%.ozc: %.ozc
-	$(INSTALLFILE) $< $@
-
-$(OZLIB)/%.ozm: %.ozm
-	$(INSTALLFILE) $< $@
-
-$(OZLIB)/gump/examples/%: gump/examples/%
-	$(INSTALLSRC) $< $@
-
-$(BITMAPDIR)/%: bitmaps/%
-	$(INSTALLFILE) $< $@
-
-$(OZCARBITMAPDIR)/%: ozcar/bitmaps/%
-	$(INSTALLFILE) $< $@
-
-$(OZLIB)/%.env: %.env
-	$(INSTALLSRC) $< $@
-
-$(OZLIB)/%.tyc: tyc/%.tyc
-	$(INSTALLFILE) $< $@
-
-$(OZBIN)/%: %
-	$(INSTALLPRG) $< $@
-
-%.typ: %.env
-	$(ENV2TYPE) $< > $@
-
-tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
-	@$(MKDIR) tyc 2> /dev/null || $(TRUE)
-	$(COMPILE) $< -o $@
-
-%.ozc: %.oz
-	$(COMPILE) $< -o $@
-
-%.ozc: compiler/%.oz
-	$(COMPILE) $< -o $@
-
-Init.ozc: $(DUMPINTRO) $(INITSRC)
-	OZMAINIT="" $(COMPILE) Init.oz
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
 
@@ -349,9 +186,23 @@ WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
 Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 
+ozbatch.ozm: MakeAssembly.oz \
+	$(STANDARDSRC) Base.env Standard.env \
+	$(SPSRC) SP.env $(CPSRC) CP.env \
+	$(OPSRC) OP.env $(COMPILERSRC) Compiler.env BatchCompile.oz
+	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
+	$(MV) -f /tmp/$$$$.ozm $@
+
+ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
+	Init.ozc SP.ozc SP.env OP.ozc OP.env AP.ozc AP.env $(TYCS)
+	$(EXECWITHSTD) $<
+
+ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) \
+	Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
+	$(EXECWITHSTD) $<
+
 #---------------------------------------------------------------------
-# COMPILER
-#---------------------------------------------------------------------
+# Compiler
 
 FunMisc.ozc: compiler/Misc.oz $(STANDARD)
 
@@ -374,63 +225,103 @@ FunUnnest.ozc: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
 FunAssembler.ozc: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
 	$(STANDARD)
 
-FunCompiler.ozc: SP-new.env compiler/Misc-new.env compiler/FormatStrings.oz \
-	compiler/Reporter.oz compiler/ParseOz.oz compiler/Interface.oz \
-	compiler/CompilerClass.oz compiler/GenericInterface.oz \
-	compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
+FunCompiler.ozc: SP-new.env compiler/Misc-new.env \
+	compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
+	compiler/Interface.oz compiler/CompilerClass.oz \
+	compiler/GenericInterface.oz compiler/QuietInterface.oz \
+	compiler-Version.oz $(STANDARD)
 
 COMPILER_BIG = @COMPILER_BIG@
 COMPILER_FUN = @COMPILER_FUN@
 
-$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env \
-	CP.env Gump.env Compiler.env Init.ozc
+$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env CP.env \
+	../tools/Gump.env Compiler.env Init.ozc
 
-$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
-	FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc FunCore.ozc \
-	FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc compiler/FunMake.oz \
-	$(TYCS)
+$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env ../tools/Gump.env Compiler.env \
+	Init.ozc FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc \
+	FunCore.ozc FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc \
+	compiler/FunMake.oz $(TYCS)
 	$(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -l OP \
 	-c compiler/FunMake.oz -o Compiler.ozc
 
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
 
-compiler-Builtins.oz: $(SRCDIR)/../../platform/emulator/bidecl.perl
+compiler-Builtins.oz: ../../platform/emulator/bidecl.perl
 	$(PERL) $< -oztable > $@
 
-compiler-Opcodes.oz: compiler/Opcodes.m4oz $(SRCDIR)/../../platform/emulator/instrDefs.m4
+compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@
 
-CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env OP.env WP.env \
-	Compiler.env Browser.env CompilerPanel.env Init.ozc
+#---------------------------------------------------------------------
+# Installation
+#---------------------------------------------------------------------
 
-Panel.ozc: $(DUMPINTRO) $(PANELSRC) SP.env OP.env \
-	WP.env Panel.env Init.ozc
+.PHONY: install install-stage install-main install-images install-cache
 
-Browser.ozc: $(DUMPINTRO) $(BROWSERSRC) SP.env CP.env \
-	WP.env Browser.env Init.ozc
+install: install-main install-images install-cache
 
-Explorer.ozc: $(DUMPINTRO) $(EXPLORERSRC) SP.env WP.env \
-	Browser.env Explorer.env Init.ozc
+install-stage: install-main $(STAGEEXTRAFILES)
 
-Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) SP.env OP.env Emacs.env Init.ozc
+install-main: all \
+	$(OZLIB) $(LIBFILES) $(LIBCOMPONENTS) \
+	$(OZBIN) $(BINFILES)
 
-Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) SP.env WP.env \
-	Browser.env Emacs.env Compiler.env Ozcar.env Init.ozc
+install-images: \
+	$(IMAGESDIR) $(IMAGES)
 
-ozcar-version.oz: $(OZCARSRCNOVER)
-	echo \'`date '+%b %d'`\' > $@
+install-cache: \
+	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
 
-Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) SP.env OP.env \
-	WP.env Browser.env Emacs.env \
-	Compiler.env Profiler.env Init.ozc
+$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome: \
+	$(PREFIX)/cache/http/www.ps.uni-sb.de
+	cd $(PREFIX)/cache/http/www.ps.uni-sb.de && $(LN) ../../.. ozhome
 
-Gump.ozc: $(DUMPINTRO) $(GUMPSRC) compiler/TupleSyntax.oz compiler/Misc.oz \
-	compiler/FormatStrings.oz SP.env OP.env Gump.env
+$(PREFIX)/cache/http/www.ps.uni-sb.de:
+	$(MKINSTALLDIRS) $(PREFIX)/cache/http/www.ps.uni-sb.de
 
-GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) SP.env GumpScanner.env
+$(OZLIB) $(IMAGESDIR) $(OZBIN):
+	$(INSTALLDIR) $@
 
-GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env GumpParser.env
+$(OZLIB)/%.ozc: %.ozc
+	$(INSTALLFILE) $< $@
+
+$(OZLIB)/%.ozm: %.ozm
+	$(INSTALLFILE) $< $@
+
+$(IMAGESDIR)/%: images/%
+	$(INSTALLFILE) $< $@
+
+$(OZLIB)/%.env: %.env
+	$(INSTALLSRC) $< $@
+
+$(OZLIB)/%.tyc: tyc/%.tyc
+	$(INSTALLFILE) $< $@
+
+$(OZBIN)/%: %
+	$(INSTALLPRG) $< $@
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+.PHONY: clean realclean veryclean distclean tags
+
+clean:
+	$(RM) *~ *.bak
+	$(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
+	$(RM) -r tyc
+	$(RM) Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc
+	$(RM) ozbatch ozserver
+
+realclean: clean
+	$(RM) -r $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
+
+veryclean: realclean
+	$(RM) TAGS
+
+distclean: veryclean
+	$(RM) Makefile
 
 tags:
 	etags --language=none \
@@ -440,22 +331,22 @@ tags:
 	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
 	$(ALLSRCS)
 
-#
-# testing components locally
+#---------------------------------------------------------------------
+# Testing Components Locally
+#---------------------------------------------------------------------
 #    make check   or   make thorough-check
-# test a new emulator with
+# Test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
-#
 
 .PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check thorough-check
 
 # use Ozma to create the components
 bootstrap:
 	$(MAKE) all \
-		OZBATCH=$(SRCDIR)/ozbatch.sh \
-		OZINIT=Init.ozc \
-		OZ_LIB=. \
-		OZ_LOAD=root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./:=
+	OZBATCH=$(SRCDIR)/ozbatch.sh \
+	OZINIT=Init.ozc \
+	OZ_LIB=. \
+	OZ_LOAD=root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
@@ -507,21 +398,3 @@ thorough-check:
 	$(MAKE) clean stage2b
 	$(MAKE) clean stage3
 	$(MAKE) clean stage3b
-
-# haeh?
-.PHONY: denys install-denys denys2
-
-denys: SP.ozc CP.ozc OP.ozc Compiler.ozc Gump.ozc AP.ozc tycs ozbatch
-
-install-denys:
-	-$(MKDIR) stage1
-	-$(MKDIR) stage1/lib
-	-$(MKDIR) stage1/bin
-	$(MV) *ozc tyc/*tyc stage1/lib/
-	$(MV) ozbatch stage1/bin/
-
-denys2:
-	$(MAKE) denys \
-	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
-	OZBATCH=$(STAGE1)/bin/ozbatch \
-	OZINIT=$(STAGE1)/lib/Init.ozc

@@ -36,7 +36,7 @@ fun instantiate {$ IMPORT}
    = IMPORT.'Emacs'
 in
    local
-      \insert compiler/CompilerPanelClass
+      \insert compilerPanel/CompilerPanelClass
    in
       \insert 'CompilerPanel.env'
    end
