@@ -182,7 +182,7 @@ public:
 
   // those are also counted during GC
   long lenDeref, numDerefs, longestDeref;
-  const int maxDerefLength = 10;
+#define maxDerefLength 10
   long lengthDerefs[maxDerefLength+1];
 
   void derefChain(int n);
