@@ -88,9 +88,9 @@ extern unsigned int heapTotalSize;   // # kilo bytes allocated
 void getMemFromOS(size_t size);
 
 // return free used kilo bytes on the heap
-inline unsigned int getUsedMemory() {
-  return heapTotalSize - 
-    (heapTop - heapEnd)/KB;
+inline unsigned int getUsedMemory()
+{
+  return heapTotalSize - (heapTop - heapEnd)/KB;
 }
 
 inline unsigned int getAllocatedMemory() {

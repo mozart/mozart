@@ -348,11 +348,10 @@ void MemChunks::print()
 }
 
 
-void *heapMallocOutline
-(size_t chunk_size)
+void *heapMallocOutline(size_t chunk_size)
 {
   Assert(chunk_size <= heapBlockSize);
-  
+
   return heapMalloc(chunk_size);
 }
 
@@ -360,7 +359,7 @@ void *heapMallocOutline
 void getMemFromOS(size_t sz)
 {
   if (sz > heapBlockSize) {
-    message("memory exhausted: required chunk bigger than max size\n");
+    message("required chunk bigger than max size\n");
     message(" hint: look for an endless recursion\n");
     IO::exitOz(1);
   }
@@ -392,8 +391,7 @@ void getMemFromOS(size_t sz)
   MemChunks::list = new MemChunks(heapEnd,MemChunks::list,heapBlockSize);
   
   DebugCheck(heapTotalSize > heapBlockSize/KB,
-	     message("Increasing heap memory to %d kilo bytes\n", 
-		     heapTotalSize));
+	     message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
 }
 
 
