@@ -1,5 +1,18 @@
 #include "misc.cpp"
 
+char *splitFirstArg(char *s)
+{
+  while (*s && (*s)!=' ') {
+    s++;
+  }
+
+  if (*s==0)
+    return s;
+  *s=0;
+  return s+1;
+}
+
+
 #ifdef CONSOLEAPP
 int main(int argc, char **argv)
 #else
@@ -65,8 +78,9 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
     sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
             ozhome,ozplatform,ozhome);
   } else if (stricmp(progname,"ozsa.exe")==0) {
-    sprintf(buffer,"%s/platform/%s/ozemulator -E -quiet -f %s",
-            ozhome,ozplatform,lpszCmdLine);
+    char *rest = splitFirstArg(lpszCmdLine);
+    sprintf(buffer,"%s/platform/%s/ozemulator -E -quiet -f %s %s %s",
+            ozhome,ozplatform,lpszCmdLine,((*rest)==0) ? "" : "-a", rest);
     // console = CREATE_NEW_CONSOLE;
   } else {
     OzPanic(1,"Unknown invocation: %s", progname);
