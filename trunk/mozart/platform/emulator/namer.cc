@@ -102,7 +102,7 @@ Bool isGcMarkedNamer(Propagator * p)
 }
 void GcIndexNamer(Propagator * &p) 
 {
-  p = p->gcPropagator();
+  p = SuspToPropagator(p->gcSuspendable());
 }
 
 Propagator *  getGcForward(Propagator * p) 

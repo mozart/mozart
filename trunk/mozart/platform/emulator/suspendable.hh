@@ -30,7 +30,6 @@
 
 #include "base.hh"
 #include "mem.hh"
-#include "pointer-marks.hh"
 
 /*
  * A suspendable provides the interface that is common to
@@ -38,33 +37,45 @@
  *
  */
 
-enum SuspendableFlags {
+/* thread priorities */
 
-  // Thread priorities reserve the lower two bits
-  SF_PriMask  = 0x000003,
+#define HI_PRIORITY             3
+#define MID_PRIORITY            2
+#define LOW_PRIORITY            1
+
+#define DEFAULT_PRIORITY	MID_PRIORITY
+
+#define PRIORITY_SHIFT 15
+
+enum SuspendableFlags {
+  // THIS MUST BE IN THE LOWEST TWO BITS!
+  SF_GcMark   = 1 << 0,
+
+  // Flags common to both threads and propagators
+  SF_Dead     = 1 << 1,
+  SF_Tagged   = 1 << 2,
+  SF_Runnable = 1 << 3,
+  SF_External = 1 << 4,
+
+  // Flags for propagators
+  SF_NMO      = 1 << 5,
+  SF_Local    = 1 << 6,
+  SF_OFS      = 1 << 7,
+  SF_Unify    = 1 << 8,
+  SF_Failed   = 1 << 9,
+
+  // Flags for threads
+  SF_Catch    = 1 << 10,
+  SF_Trace    = 1 << 11,
+  SF_Step     = 1 << 12,
+  SF_Stop     = 1 << 13,
+  SF_NoBlock  = 1 << 14,
+  
+  // Thread priorities reserve two bits
+  SF_PriMask  = 3 << PRIORITY_SHIFT,
   // Encoding is as follows:
   // 0:  this is a propagator
   // >0: this is a thread
-  
-  // Flags common to both threads and propagators
-  SF_Dead     = 0x000004,
-  SF_Tagged   = 0x000008,
-  SF_Runnable = 0x000010,
-  SF_External = 0x000020,
-
-  // Flags for propagators
-  SF_NMO      = 0x000040,
-  SF_Local    = 0x000080,
-  SF_OFS      = 0x000100,
-  SF_Unify    = 0x000200,
-  SF_Failed   = 0x000400,
-
-  // Flags for threads
-  SF_Catch    = 0x000800,
-  SF_Trace    = 0x001000,
-  SF_Step     = 0x002000,
-  SF_Stop     = 0x004000,
-  SF_NoBlock  = 0x008000,
   
 };
 
@@ -81,46 +92,45 @@ enum SuspendableFlags {
 
 class Suspendable {
 protected:
-  int    flags;
-  void * board;
+  int     flags;
+  Board * board;
 
 public:
   NO_DEFAULT_CONSTRUCTORS(Suspendable);
   USEFREELISTMEMORY;
 
-  Suspendable(int f, Board * b) : flags(f), board((Board *) b) {}
+  Suspendable(int f, Board * b) : flags(f), board(b) {}
 
 
   /*
    * Generic garbage collection part
    */
   int isGcMarked(void) {
-    return IsMarkedPointer(board,1);
+    return flags & SF_GcMark;
   }
   void gcMark(Suspendable * fwd) {
     Assert(!isGcMarked());
-    board = MarkPointer(fwd,1); 
+    flags = ((int32) fwd) | SF_GcMark ; 
   }
   Suspendable * gcGetFwd() {
     Assert(isGcMarked());
-    return (Suspendable *) UnMarkPointer(board,1);
+    return (Suspendable *) (flags & ~SF_GcMark);
   }
   void ** gcGetMarkField() { 
-    return &board; 
+    return (void **) (void *) &flags; 
   };
 
+  Suspendable * gcSuspendableInline(void);
   Suspendable * gcSuspendable(void);
 
   /*
    * Board handling
    */
   Board * getBoardInternal(void) {
-    Assert(!isGcMarked());
-    return (Board *) board;
+    return board;
   }
   void setBoardInternal(Board * b) {
-    Assert(!isGcMarked());
-    board = (void *) b;
+    board = b;
   }
 
 
@@ -171,11 +181,11 @@ public:
    */
   int getPriority(void) {
     Assert(isThread());
-    return flags & SF_PriMask;
+    return flags >> PRIORITY_SHIFT;
   }
   void setPriority(int p) {
     Assert(isThread());
-    flags = (flags & ~SF_PriMask) | p;
+    flags = (flags & ~SF_PriMask) | (p << PRIORITY_SHIFT);
   }
 
 

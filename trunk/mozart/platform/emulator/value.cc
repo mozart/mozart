@@ -1468,7 +1468,7 @@ void gcPendThreadEmul(PendThread **pt)
 {
   PendThread *tmp;
   while (*pt!=NULL) {
-    tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
+    tmp=new PendThread(SuspToThread((*pt)->thread->gcSuspendable()),(*pt)->next);
     tmp->exKind = (*pt)->exKind;
     OZ_collectHeapTermUnsafe((*pt)->old,tmp->old);
     OZ_collectHeapTermUnsafe((*pt)->nw,tmp->nw);
