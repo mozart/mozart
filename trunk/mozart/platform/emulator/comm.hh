@@ -148,6 +148,7 @@ ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
 GiveUpReturn giveUp_RemoteSite(RemoteSite*);
 void discoveryPerm_RemoteSite(RemoteSite*);
+void siteAlive_RemoteSite(RemoteSite*);
 void dumpRemoteMsgBuffer(MsgBuffer*);
 
 //
@@ -174,13 +175,13 @@ SiteStatus siteStatus_VirtualSite(VirtualSite*);
 MonitorReturn monitorQueue_VirtualSite(VirtualSite*,int size,int no_msgs,void*);
 MonitorReturn demonitorQueue_VirtualSite(VirtualSite*);
 // frequency is in seconds;
-ProbeReturn installProbe_VirtualSite(VirtualSite*,ProbeType,int frequency,void*);
+ProbeReturn installProbe_VirtualSite(VirtualSite*,ProbeType,int frequency);
 ProbeReturn deinstallProbe_VirtualSite(VirtualSite*,ProbeType);
 ProbeReturn probeStatus_VirtualSite(VirtualSite*,ProbeType &pt,int &frequncey,void* &storePtr);
 GiveUpReturn giveUp_VirtualSite(VirtualSite*);
 void discoveryPerm_VirtualSite(VirtualSite*);
-
 void dumpVirtualInfo(VirtualInfo*);
+void siteAlive_VirtualSite(VirtualSite*);
 
 /**********************************************************************/
 /*   SECTION :: class BaseSite                                       */
@@ -364,7 +365,7 @@ private:
   void disconnect(){
     flags &= (~CONNECTED);
     return;}
-  
+
   Bool connect(){
     unsigned int t=getType();
     PD((SITE,"connect, the type of this site: %d",t));
@@ -445,6 +446,9 @@ public:
   Bool isInSecondary(){
     if(getType() & SECONDARY_TABLE_SITE) return OK;
     return NO;}
+
+  //
+  Bool isConnected() { return ((getType() & CONNECTED)); }
 
   Bool isPerm(){return getType() & PERM_SITE;}                   
 
@@ -669,7 +673,7 @@ public:
       if(getType() & REMOTE_SITE){
 	return installProbe_RemoteSite(getRemoteSite(),pt,frequency);}
       Assert(getType() & VIRTUAL_SITE);
-      return installProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL,frequency,NULL);}
+      return installProbe_VirtualSite(getVirtualSite(),PROBE_TYPE_ALL,frequency);}
     return PROBE_PERM;}
     
   ProbeReturn deinstallProbe(ProbeType pt){
@@ -740,9 +744,23 @@ public:
     if(t & VIRTUAL_INFO){
       dumpVirtualInfo(info);}}
 
+  //
+  // kost@ : applied whenever a "alive acknowledgement" ('M_SITE_ALIVE')
+  // message is received;
+  void siteAlive() {
+    if(connect()) {
+      if(getType() & REMOTE_SITE) {
+	siteAlive_RemoteSite(getRemoteSite());
+      } else {
+	Assert(getType() & VIRTUAL_SITE);
+	siteAlive_VirtualSite(getVirtualSite());
+      }
+    }
+  }
 
-// provided for network and virtual site comm-layers
-
+  //
+  // provided for network and virtual site comm-layers
+  //
   void communicationProblem(MessageType mt,Site* 
 			    storeSite,int storeIndex
 			    ,FaultCode fc,FaultInfo fi);
