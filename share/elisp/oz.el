@@ -432,13 +432,15 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
-  (let ((old-buffer (current-buffer)))
-;    (oz-set-state 'oz-emulator-state "gdb")
+  (let ((old-buffer (current-buffer))
+	(init-str (concat "set args -S " tmpfile "\n")))
     (if oz-gnu19 (gdb (concat "gdb " oz-emulator)))
     (if oz-lucid (gdb oz-emulator))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
-    (comint-send-string (get-buffer-process oz-emulator-buffer)
-			(concat "run -S " tmpfile "\n"))
+    (process-send-string
+     (get-buffer-process oz-emulator-buffer)
+     init-str)
+;    (..)
     (switch-to-buffer old-buffer)))
 
 ;;------------------------------------------------------------
@@ -932,6 +934,7 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\C-co"       'oz-other)
   (define-key map "\C-cd"       'oz-gdb)
   (define-key map "\r"		'oz-electric-terminate-line)
+  (define-key map "\C-cp"       'oz-view-panel)
   )
 
 (oz-mode-commands oz-mode-map)
