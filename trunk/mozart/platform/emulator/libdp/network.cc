@@ -2916,8 +2916,6 @@ start:
     if(tcpError() == IP_TEMP_BLOCK)
       r->close();
     else{
-      OZ_warning("Connection Site Has Crashed error: %d %s\n ", ossockerrno(),
-		 r->remoteSite->site->stringrep());
       r->connectionLost();}
     return 0;}
 
