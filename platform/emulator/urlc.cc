@@ -103,19 +103,19 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #ifndef WINDOWS
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <pwd.h>
+#include <netdb.h>
 #ifndef IRIX6
 #include <sys/uio.h>
 #endif
 #endif
-#ifndef __MINGW32__
-#include <netdb.h>
-#endif
+
 
 
 #if 1 <= URLC_RESOLVER

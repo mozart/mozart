@@ -138,17 +138,9 @@ void _PD(int i,char *format,...)
 {
   if (isPerdioInitializedImpl() && DV->on(i)) {
     printf("%s: ",debugTypeStr[i]);
-#ifndef WINDOWS_EMULATOR
     va_list ap;
-#else
-    __gnuc_va_list ap;
-#endif
     va_start(ap,format);
-#ifndef WINDOWS_EMULATOR
     vprintf(format,ap);
-#else
-    vprintf(format, (va_list) ap);
-#endif
     printf("\n");
   }
 }
