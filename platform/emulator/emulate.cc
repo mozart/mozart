@@ -43,7 +43,9 @@
 #include "marshaler.hh"
 #include "copycode.hh"
 
-OZ_C_proc_proto(BIfail);     // builtins.cc
+#ifdef OUTLINE
+#define inline
+#endif
 
 // -----------------------------------------------------------------------
 // Object stuff
@@ -69,49 +71,9 @@ Abstraction *getApplyMethod(ObjectClass *cl, ApplMethInfoClass *ami,
 // *** EXCEPTION stuff
 // -----------------------------------------------------------------------
 
-
-// check if failure has to be raised as exception on thread
-int canOptimizeFailure(AM *e, Thread *tt)
-{
-  if (tt->hasCatchFlag() || e->onToplevel()) { // catch failure
-    if (tt->isSuspended()) {
-      tt->pushCFun(BIfail,0,0,NO);
-      e->suspThreadToRunnableOPT(tt);
-      e->scheduleThread(tt);
-    } else {
-      printf("WEIRD: failure detected twice");
-#ifdef DEBUG_CHECK
-      PopFrame(tt->getTaskStackRef(),PC,Y,G);
-      Assert(PC==C_CFUNC_CONT_Ptr);
-      Assert(((OZ_CFun)(void*)Y)==BIfail);
-      tt->pushCFun(BIfail,0,0,NO);
-#endif
-    }
-    return NO;
-  } else {
-    return OK;
-  }
-}
-
-static
-TaggedRef formatError(TaggedRef info,TaggedRef val,
-		      OZ_Term traceBack,OZ_Term loc)
-{
-  OZ_Term d = OZ_record(OZ_atom("d"),
-			cons(OZ_atom("info"),
-			     cons(OZ_atom("stack"),
-				  cons(OZ_atom("loc"),
-				       nil()))));
-  OZ_putSubtree(d,OZ_atom("stack"),traceBack);
-  OZ_putSubtree(d,OZ_atom("loc"),loc);
-  OZ_putSubtree(d,OZ_atom("info"),info);
-
-  return OZ_adjoinAt(val,OZ_atom("debug"),d);
-}
-
-
-#define RAISE_APPLY(fun,args)						\
-  (void) oz_raise(E_ERROR,E_KERNEL,"apply",2,fun,args); goto LBLraise;
+#define RAISE_APPLY(fun,args)				\
+  (void) oz_raise(E_ERROR,E_KERNEL,"apply",2,fun,args);	\
+  RAISE_THREAD;
 
 
 static
@@ -122,8 +84,9 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   OZ_putArg(e,2,args);
 }
 
-#define RAISE_TYPE1(fun,args)			\
-  enrichTypeException(e->exception.value,fun,args); goto LBLraise;
+#define RAISE_TYPE1(fun,args)				\
+  enrichTypeException(e->exception.value,fun,args);	\
+  RAISE_THREAD;
 
 #define RAISE_TYPE1_FUN(fun,args)				\
   RAISE_TYPE1(fun,						\
@@ -137,23 +100,26 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
  * Handle Failure macros (HF)
  */
 
-Bool AM::hf_raise_failure(TaggedRef t)
+Bool AM::hf_raise_failure()
 {
   if (!onToplevel() &&
       (!currentThread()->hasCatchFlag() || 
        !isCurrentBoard(GETBOARD(currentThread())))) {
     return OK;
   }
-  exception.info  = ozconf.errorDebug?t:NameUnit;
+  exception.info  = NameUnit;
   exception.value = RecordFailure;
   exception.debug = ozconf.errorDebug;
   return NO;
 }
 
-#define HF_RAISE_FAILURE(T)			\
-   if (e->hf_raise_failure(T))			\
-     goto LBLfailure;				\
-   goto LBLraise;
+// mm: this macro is optimized such that the term T is only created
+//  when needed, so don't pass it as argument to functions.
+#define HF_RAISE_FAILURE(T)				\
+   if (e->hf_raise_failure())				\
+     goto LBLfailure;					\
+   if (ozconf.errorDebug) e->exception.info  = (T);	\
+   RAISE_THREAD;
 
 
 #define HF_FAIL       HF_RAISE_FAILURE(OZ_atom("fail"))
@@ -168,8 +134,12 @@ Bool AM::hf_raise_failure(TaggedRef t)
 #define CheckArity(arityExp,proc)					   \
 if (predArity != arityExp) {						   \
   (void) oz_raise(E_ERROR,E_KERNEL,"arity",2,proc,OZ_toList(predArity,X)); \
-  goto LBLraise;							   \
+  RAISE_THREAD;							   \
 }
+
+// -----------------------------------------------------------------------
+// *** ???
+// -----------------------------------------------------------------------
 
 /*
  * make an record
@@ -234,18 +204,13 @@ void deallocateY(RefsArray a)
 	TaggedRef *sp = sPointer;					\
 	int offset = switchOnTermOutline(term,termPtr,table,sp);	\
 	sPointer = sp;							\
-	JUMPRELATIVE(offset);							\
+	JUMPRELATIVE(offset);						\
       }									\
 									\
       int offset = table->listLabel;					\
       sPointer = tagged2LTuple(term)->getRef();				\
       JUMPRELATIVE(offset);
 
-
-
-#ifdef OUTLINE
-#define inline
-#endif
 
 inline
 TaggedRef fastnewTaggedUVar(AM *e)
@@ -373,13 +338,24 @@ Bool AM::hookCheckNeeded()
 // ??? <- Bob, Justus und Peter
 // -----------------------------------------------------------------------
 
+// failure in shallow guard can never be handled
+#define RAISE_THREAD_NO_PC			\
+  e->exception.pc=NOCODE;			\
+  e->shallowHeapTop = 0;			\
+  return T_RAISE;
+
+#define RAISE_THREAD				\
+  e->exception.pc=PC;				\
+  e->shallowHeapTop = 0;			\
+  return T_RAISE;
+
 /* macros are faster ! */
-#define emulateHookCall(e,Code)				\
-    if (e->hookCheckNeeded()) {				\
-      if (e->emulateHookOutline()) {			\
-	Code;						\
-        goto LBLpreemption;				\
-      }							\
+#define emulateHookCall(e,Code)			\
+    if (e->hookCheckNeeded()) {			\
+      if (e->emulateHookOutline()) {		\
+	Code;					\
+        return T_PREEMPT;			\
+      }						\
     }
 
 #define emulateHookPopTask(e) emulateHookCall(e,)
@@ -387,12 +363,6 @@ Bool AM::hookCheckNeeded()
 
 #define ChangeSelf(obj)				\
       e->changeSelf(obj);
-
-#define SaveSelf				\
-      CTT->setAbstr(ozstat.currAbstr);		\
-      ozstat.leaveCall(NULL);			\
-      e->saveSelf();
-
 
 #define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G);
 #define PushContX(PC,Y,G,X,n)  pushContX(CTS,PC,Y,G,X,n)
@@ -574,7 +544,7 @@ extern void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int max);
    CheckLiveness(PC,RegsToSave);		\
    PushContX(PC,Y,G,X,RegsToSave);		\
    addSusp(TermPtr,CTT);			\
-   goto LBLsuspendThread;
+   return T_SUSPEND;
 
 
 void addSusp(TaggedRef *varPtr, Thread *thr)
@@ -603,7 +573,7 @@ void addSusp(TaggedRef var, Thread *thr)
 {						\
   suspendOnVarList(e->suspendVarList,CTT);	\
   e->suspendVarList=0;				\
-  goto LBLsuspendThread;			\
+  return T_SUSPEND;			\
 }
 
 static
@@ -669,14 +639,6 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
   TaggedRef ret = oz_newVariable();
   VariableNamer::addName(ret,tagged2Literal(name)->getPrintName());
   return ret;
-}
-
-
-inline
-Bool AM::entailment()
-{
-  return (!currentBoard()->hasSuspension()  // threads?
-	  && trail.isEmptyChunk());       // constraints?
 }
 
 /*
@@ -799,7 +761,13 @@ void AM::checkStability()
 
 #define NoReg(Var) { void *p = &Var; }
 
-void engine(Bool init) 
+// short names
+# define CBB (e->currentBoard())
+# define CTT (e->currentThread())
+# define CPP (CTT->getPriority())
+# define CTS (e->cachedStack)
+
+int engine(Bool init) 
 {  
 // ------------------------------------------------------------------------
 // *** Global Variables
@@ -820,7 +788,7 @@ void engine(Bool init)
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
   AWActor *CAA                 = NULL;
-  DebugCheckT(Board *currentDebugBoard=0);
+  DebugCheckT(Board *currentDebugBoard=CBB);
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
   #define HelpReg sPointer  /* more efficient */
@@ -835,440 +803,39 @@ void engine(Bool init)
   int auxInt;
   char *auxString;
 
-  // short names
-# define CBB (e->currentBoard())
-# define CTT (e->currentThread())
-# define CPP (CTT->getPriority())
-# define CTS (e->cachedStack)
-
-
 #ifdef THREADED
 # include "instrtab.hh"
   if (init) {
     CodeArea::init(instrTable);
-    return;
+    return 0;
   }
 #else
   if (init) {
     CodeArea::init(NULL);
-    return;
+    return 0;
   }
   Opcode op = (Opcode) -1;
 #endif
 
-  goto LBLstart;
+  // no preemption required, because of exception handling impl.
+  goto LBLpopTaskNoPreempt;
 
 // ------------------------------------------------------------------------
-// *** Error
+// *** leaving emulation mode returning to scheduler
 // ------------------------------------------------------------------------
 
-LBLerror:
-  error("impossible state in emulator: LBLerror");
-  goto LBLstart;
-
-
-// ------------------------------------------------------------------------
-// *** preempt current thread
-// ------------------------------------------------------------------------
-
-LBLpreemption:
-  asmLbl(PREEMPT_THREAD);
-  SaveSelf;
-  Assert(GETBOARD(CTT)==CBB);
-  /*  Assert(CTT->isRunnable()|| (CTT->isStopped())); ATTENTION */
-  e->scheduleThreadInline(CTT, CPP);
-  e->unsetCurrentThread();
-
-  // fall through
-
-// ------------------------------------------------------------------------
-// *** execute runnable thread
-// ------------------------------------------------------------------------
-LBLstart:
-  asmLbl(GET_THREAD);
-  Assert(CTT==0);
-
-  // check status register
-  if (e->isSetSFlag()) {
-    e->checkStatus();
-  }
-
-  if (e->threadQueuesAreEmpty()) {
-    e->suspendEngine();
-  }
-  e->setCurrentThread(e->getFirstThread());
-  Assert(CTT);
-
-  PC = NOCODE; // this is necessary for printing stacks (mm)
-
-  DebugTrace(trace("runnable thread->running"));
-
-  // source level debugger & Thread.suspend
-  if (CTT->getStop() || CTT->getPStop()) {
-    e->unsetCurrentThread();  // byebye...
-    goto LBLstart;
-  }
-
-  //  Every runnable thread must be terminated through 
-  // 'LBL{discard,kill}Thread', and it should not appear 
-  // more than once in the threads pool;
-  Assert(!CTT->isDeadThread() && CTT->isRunnable());
-
-  asmLbl(INSTALL_BOARD);
-  // Install board
+LBLfailure: // mm2: eventually merge with raise?
   {
-    Board *bb=GETBOARD(CTT);
-    if (CBB != bb) {
-      switch (e->installPath(bb)) {
-      case INST_OK:
-	break;
-      case INST_REJECTED:
-	DebugCode (if (CTT->isPropagator()) CTT->removePropagator());
-	goto LBLdiscardThread;
-      case INST_FAILED:
-	DebugCode (if (CTT->isPropagator()) CTT->removePropagator());
-	goto LBLfailure;
-      }
-    }
-  }
-
-  // Constraints are implicitly propagated
-  CBB->unsetNervous();
-
-  if (CTT->isPropagator()) {
-    // Propagator
-    //    unsigned int starttime = osUserTime();
-    switch (e->runPropagator(CTT)) {
-    case SLEEP: 
-      e->suspendPropagator(CTT);
-      if (e->isBelowSolveBoard()) {
-	e->decSolveThreads(e->_currentSolveBoard);
-	//  but it's still "in solve";
-      }
-      e->unsetCurrentThread();
-
-      goto LBLstart;
-
-    case SCHEDULED:
-      e->scheduledPropagator(CTT);
-      if (e->isBelowSolveBoard()) {
-	e->decSolveThreads (e->_currentSolveBoard);
-	//  but it's still "in solve";
-      }
-      e->unsetCurrentThread();
-
-      goto LBLstart;
-
-    case PROCEED:
-      // Note: CTT must be reset in 'LBLkillXXX';
-
-      goto LBLterminateThread;
-
-      //  Note that *propagators* never yield 'SUSPEND';
-    case FAILED:
-      // propagator failure never catched
-      if (!e->onToplevel()) goto LBLfailure;
-
-      {
-	OZ_Propagator *prop = CTT->getPropagator();
-	e->setCurrentThread(e->mkRunnableThreadOPT(PROPAGATOR_PRIORITY, CBB));
-	CTS = CTT->getTaskStackRef();
-	e->restartThread();
-	HF_APPLY(OZ_atom(builtinTab.getName((void *)(prop->getHeader()
-						     ->getHeaderFunc()))),
-		 prop->getParameters());
-      }
-    }
-  } else {
-    DebugCheckT(currentDebugBoard=CBB);
-
-    Assert(CTT->isRunnable());
-
-    //
-    //  Note that this test covers also the case when a runnable thread
-    // was suspended in a sequential mode: it had already a stack, 
-    // so we don't have to do anything now;
-    if (CTT->getThrType() == S_WAKEUP) {
-      //
-      //  Wakeup;
-      //  No regions were pre-allocated, - so just make a new one;
-      CTT->setHasStack();
-      CTT->item.threadBody = e->allocateBody();
-      
-      GETBOARD(CTT)->setNervous();
-    } else {
-      Assert(CTT->getThrType() == S_RTHREAD);
+    // check for 'pseudo flat guard'
+    Actor *aa=CBB->getActor();
+    if (aa->isAskWait() && CTT == AWActor::Cast(aa)->getThread()) {
+      Assert(CAA==aa);
+      e->failBoard();
+      DebugCheckT(currentDebugBoard=CBB);
+      goto LBLcheckFlat2;
     }
 
-    e->cachedStack = CTT->getTaskStackRef();
-    e->cachedSelf  = CTT->getSelf();
-    CTT->setSelf(0);
-    ozstat.leaveCall(CTT->abstr);
-    CTT->abstr = 0;
-    e->restartThread(); // start a new time slice
-    goto LBLpopTask;
-  }
-
-
-  goto LBLerror;
-
-
-// ------------------------------------------------------------------------
-// *** Thread is terminated
-// ------------------------------------------------------------------------
-
-  /*
-   *  Kill the thread - decrement 'suspCounter'"s and counters of 
-   * runnable threads in solve actors if any
-   */
-LBLterminateThread:
-  {
-    asmLbl(TERMINATE_THREAD);
-
-    DebugTrace(trace("kill thread", CBB));
-    Assert(CTT);
-    Assert(!CTT->isDeadThread());
-    Assert(CTT->isRunnable());
-    Assert(CTT->isPropagator() || CTT->isEmpty());
-
-    //  Note that during debugging the thread does not carry 
-    // the board pointer (== NULL) wenn it's running;
-    // Assert (CBB == CTT->getBoard());
-
-    Assert(CBB != (Board *) NULL);
-    Assert(!CBB->isFailed());
-
-    Assert(e->onToplevel() ||
-	   ((CTT->isInSolve() || !e->isBelowSolveBoard()) &&
-	    (e->isBelowSolveBoard() || !CTT->isInSolve())));
-
-    if (CTT == e->rootThread()) {
-      e->rootThread()->reInit();
-      e->checkToplevel();
-      if (e->rootThread()->isEmpty()) {
-	e->unsetCurrentThread();
-	goto LBLstart;
-      } else {
-	goto LBLpreemption;
-      }
-    }
-
-    CBB->decSuspCount();
-
-    e->disposeRunnableThread(CTT);
-    e->unsetCurrentThread();
-
-    // fall through to checkEntailmentAndStability
-  }
-
-// ------------------------------------------------------------------------
-// *** Check entailment and stability
-// ------------------------------------------------------------------------
-
-LBLcheckEntailmentAndStability:
-  {
-    /*     *  General comment - about checking for stability:
-     *  In the case when the thread was originated in a solve board, 
-     * we have to update the (runnable) threads counter there manually, 
-     * check stability there ('AM::checkStability ()'), and proceed 
-     * with further solve actors upstairs by means of 
-     * 'AM::decSolveThreads ()' as usually.
-     *  This is because the 'AM::decSolveThreads ()' just generates 
-     * wakeups for solve boards where stability is suspected. But 
-     * finally the stability check for them should be performed, 
-     * and this (and 'LBLsuspendThread') labels are exactly the 
-     * right places where it should be done!
-     *  Note also that the order of decrementing (runnable) threads 
-     * counters in solve actors is also essential: if some solve actor 
-     * can be reduced, solve actors above it are getting *instable*
-     * because of a new thread!
-     *
-     */ 
-
-    // maybe optimize?
-    if (e->onToplevel()) goto LBLstart;
-
-    Board *nb = 0; // notification board
-
-    // 
-    //  First, look at the current board, and if it's a solve one, 
-    // decrement the (runnable) threads counter manually _and_
-    // skip the 'AM::decSolveThreads ()' for it; 
-    if (e->isBelowSolveBoard()) {
-      if (CBB->isSolve ()) {
-	SolveActor *sa;
-
-	//
-	sa = SolveActor::Cast (CBB->getActor ());
-	//  'nb' points to some board above the current one,
-	// so, 'decSolveThreads' will start there!
-	nb = GETBOARD(sa);
-
-	//
-	//  kost@ : optimize the most probable case!
-	if (sa->decThreads () != 0) {
-	  e->decSolveThreads (nb);
-	  goto LBLstart;
-	}
-      } else {
-	nb = CBB;
-      }
-    }
-
-    // 
-    //  ... and now, check the entailment here!
-    //  Note again that 'decSolveThreads' should be done from 
-    // the 'nb' board which is probably modified above!
-    // 
-    DebugCode(e->unsetCurrentThread());
-
-    DebugTrace(trace("check entailment",CBB));
-
-#ifdef DEBUG_NONMONOTONIC
-    cout << "checkEntailment" << endl << flush;
-#endif
-
-    CBB->unsetNervous();
-
-  // check for entailment of ASK and WAITTOP
-    if ((CBB->isAsk() || CBB->isWaitTop()) && e->entailment()) {
-      Board *bb = CBB;
-      e->deinstallCurrent();
-      int ret=e->commit(bb);
-      Assert(ret);
-    } else if (CBB->isSolve()) {
-      e->checkStability();
-    }
-
-    // 
-    //  deref nb, because it maybe just committed!
-    if (nb) e->decSolveThreads (nb->derefBoard());
-    goto LBLstart;
-  }
-
-// ------------------------------------------------------------------------
-// *** Discard Thread
-// ------------------------------------------------------------------------
-
-  /*
-   *  Discard the thread, i.e. just decrement solve thread counters 
-   * everywhere it is needed, and dispose the body; 
-   *  The main difference to the 'LBLterminateThread' is that no 
-   * entailment can be reached here, because it's tested already 
-   * when the failure was processed;
-   * 
-   *  Invariants:
-   *  - a runnable thread must be there;
-   *  - the task stack must be empty (for proper ones), or
-   *    it must be already marked as not having the propagator
-   *    (in dedug mode, for propagators);
-   *  - the home board of the thread must be failed;
-   *
-   */
-LBLdiscardThread:
-  {
-    asmLbl(DISCARD_THREAD);
-
-    Assert(CTT);
-    Assert(!CTT->isDeadThread());
-    Assert(CTT->isRunnable());
-
-    //
-    //  Note that we may not use the 'currentSolveBoard' test here,
-    // because it may point to an irrelevant board!
-    if (CTT->isInSolve()) {
-      Board *tmpBB = GETBOARD(CTT);
-
-      if (tmpBB->isSolve()) {
-	//
-	//  The same technique as by 'LBLterminateThread';
-	SolveActor *sa = SolveActor::Cast (tmpBB->getActor ());
-	Assert (sa);
-	Assert (sa->getSolveBoard () == tmpBB);
-
-	e->decSolveThreads(GETBOARD(sa));
-      } else {
-	e->decSolveThreads (tmpBB);
-      }
-    }
-    e->disposeRunnableThread(CTT);
-    e->unsetCurrentThread();
-
-    goto LBLstart;
-  }
-
-// ------------------------------------------------------------------------
-// *** Suspend Thread
-// ------------------------------------------------------------------------
-
-  /*
-   *  Suspend the thread in a generic way. It's used when something 
-   * suspends in the sequential mode;
-   *  Note that the thread stack should already contain the 
-   * "suspended" task; 
-   *
-   *  Note that this code might be entered not only from within 
-   * the toplevel, so, it has to handle everything correctly ...
-   *   *  Invariants:
-   *  - CBB must be alive;
-   *
-   */
-LBLsuspendThread:
-  {
-    asmLbl(SUSPEND_THREAD);
-
-    DebugTrace(trace("suspend runnable thread", CBB));
-
-    Assert(CTT);
-    CTT->unmarkRunnable();
-
-    Assert(CBB);
-    Assert(!CBB->isFailed());
-    //  see the note for the 'LBLterminateThread';
-    Assert(CTT->isInSolve() || !e->isBelowSolveBoard());
-    Assert(e->isBelowSolveBoard() || !CTT->isInSolve());
-
-    //
-    //  First, set the board and self, and perform special action for 
-    // the case of blocking the root thread;
-    Assert(GETBOARD(CTT)==CBB);
-
-#ifdef DEBUG_ROOT_THREAD
-    // this can happen if \sw -threadedqueries,
-    // or in non-threaded \feeds, e.g. suspend for I/O
-    if (CTT==e->rootThread()) {
-      printf("root blocked\n");
-    }
-#endif
-
-    if (e->debugmode() && CTT->getTrace()) {
-      SaveSelf;
-      debugStreamBlocked(CTT);
-    } else if (CTT->getNoBlock() && CAA == NULL) {
-      (void) oz_raise(E_ERROR,E_KERNEL,"block",1,makeTaggedConst(CTT));
-      CTT->markRunnable();
-      goto LBLraise;
-    } else {
-      SaveSelf;
-    }
-
-    e->unsetCurrentThread();
-
-    //  No counter decrement 'cause the thread is still alive!
-
-    if (e->onToplevel()) {
-      //
-      //  Note that in this case no (runnable) thread counters 
-      // in solve actors can be affected, just because this is 
-      // a top-level thread;
-      goto LBLstart;
-    }
-
-    // 
-    //  So, from now it's somewhere in a deep guard;
-    Assert (!(e->onToplevel ()));
-
-    goto LBLcheckEntailmentAndStability;
+    return T_FAILURE;
   }
 
 // ------------------------------------------------------------------------
@@ -1354,7 +921,9 @@ LBLdispatcher:
 
       case PROCEED:	  DISPATCH(3);
       case FAILED:	  HF_BI;
-      case RAISE:	  goto LBLraise;
+      case RAISE:	  
+	RAISE_THREAD;
+
       case BI_TYPE_ERROR: RAISE_TYPE;
 	 
       case SUSPEND:
@@ -1365,7 +934,7 @@ LBLdispatcher:
       case BI_PREEMPT:
 	predArity = getPosIntArg(PC+2);
 	PushContX(PC+3,Y,G,X,predArity);
-	goto LBLpreemption;
+	return T_PREEMPT;
 
       case BI_REPLACEBICALL: 
 	predArity = getPosIntArg(PC+2);
@@ -1406,10 +975,10 @@ LBLdispatcher:
 	CheckLiveness(PC,getPosIntArg(PC+3));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+3));
 	suspendInline(CTT,XPC(2));
-	goto LBLsuspendThread;
+	return T_SUSPEND;
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
@@ -1451,15 +1020,15 @@ LBLdispatcher:
 	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	suspendInline(CTT,XPC(2),XPC(3));
-	goto LBLsuspendThread;
+	return T_SUSPEND;
 
       case BI_PREEMPT:
 	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC+5,Y,G,X,getPosIntArg(PC+4));
-	goto LBLsuspendThread;
+	return T_SUSPEND;
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_REPLACEBICALL: 
 	predArity = getPosIntArg(PC+4);
@@ -1505,15 +1074,15 @@ LBLdispatcher:
 	CheckLiveness(PC,getPosIntArg(PC+5));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	suspendInline(CTT,XPC(2),XPC(3),XPC(4));
-	goto LBLsuspendThread;
+	return T_SUSPEND;
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_PREEMPT:
 	CheckLiveness(PC,getPosIntArg(PC+5));
 	PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
-	goto LBLsuspendThread;
+	return T_SUSPEND;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
@@ -1650,7 +1219,7 @@ LBLdispatcher:
 	  CheckLiveness(PC,getPosIntArg(PC+auxInt));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+auxInt));
 	  suspendInline(CTT,auxTaggedA,auxTaggedB);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
       default:    Assert(0);
       }
@@ -1684,10 +1253,11 @@ LBLdispatcher:
 	  CheckLiveness(PC,getPosIntArg(PC+4));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	  suspendInline(CTT,A);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
-      case RAISE:            goto LBLraise;
+      case RAISE:
+	RAISE_THREAD;
 
 
 /* Must save output register too !!! (RS) */
@@ -1742,12 +1312,11 @@ LBLdispatcher:
 	  CheckLiveness(PC,getPosIntArg(PC+5));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	  suspendInline(CTT,A,B);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
       case RAISE:
-	goto LBLraise;
-
+	RAISE_THREAD;
 
       case BI_REPLACEBICALL: 
 	predArity = MaxToSave(4,5);
@@ -1775,7 +1344,7 @@ LBLdispatcher:
 	int index = ((InlineCache*)(PC+5))->lookup(srec,feature);
 	if (index<0) {
 	  (void) oz_raise(E_ERROR,E_KERNEL,".", 2, XPC(1), feature);
-	  goto LBLraise;
+	  RAISE_THREAD;
 	}
 	XPC(3) = srec->getArg(index);
 	DISPATCH(7);	
@@ -1795,11 +1364,11 @@ LBLdispatcher:
 	    CheckLiveness(PC,getPosIntArg(PC+4));
 	    PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	    suspendInline(CTT,A);
-	    goto LBLsuspendThread;
+	    return T_SUSPEND;
 	  }
 
 	case RAISE:
-	  goto LBLraise;
+	  RAISE_THREAD;
 
 	case BI_TYPE_ERROR:
 	  RAISE_TYPE1_FUN(".", cons(XPC(1), cons(feature, nil())));
@@ -1836,7 +1405,7 @@ LBLdispatcher:
 	DISPATCH(6);
       }
       (void) oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedSRecord(rec),fea);
-      goto LBLraise;
+      RAISE_THREAD;
     }
 
   Case(INLINEASSIGN)
@@ -1847,7 +1416,7 @@ LBLdispatcher:
 
       if (!e->onToplevel() && !e->isCurrentBoard(GETBOARD(self))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
-	goto LBLraise;
+	RAISE_THREAD;
      }
 
       RecOrCell state = self->getState();
@@ -1870,8 +1439,9 @@ LBLdispatcher:
 	DISPATCH(6);
       }
       
-      (void) oz_raise(E_ERROR,E_OBJECT,"<-",3, makeTaggedSRecord(rec), fea, XPC(2));
-      goto LBLraise;
+      (void) oz_raise(E_ERROR,E_OBJECT,"<-",3,
+		      makeTaggedSRecord(rec), fea, XPC(2));
+      RAISE_THREAD;
     }
 
   Case(INLINEUPARROW)
@@ -1892,7 +1462,7 @@ LBLdispatcher:
 		 cons(XPC(1),cons(XPC(2),nil())));
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN("^",cons(XPC(1),cons(XPC(2),nil())));
@@ -1934,11 +1504,11 @@ LBLdispatcher:
 	  CheckLiveness(PC,getPosIntArg(PC+6));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+6));
 	  suspendInline(CTT,A,B,C);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
@@ -2001,10 +1571,10 @@ LBLdispatcher:
 	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	addSusp (XPC(2), CTT);
-	goto LBLsuspendThread;
+	return T_SUSPEND;
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),cons(XPC(2),nil()));
@@ -2035,11 +1605,11 @@ LBLdispatcher:
 	  CheckLiveness(PC,getPosIntArg(PC+5));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	  suspendInline(CTT,XPC(2),XPC(3));
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
       case RAISE:
-	goto LBLraise;
+	RAISE_THREAD;
 
       case BI_TYPE_ERROR:
 	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
@@ -2147,7 +1717,7 @@ LBLdispatcher:
 	  CheckLiveness(PC,getPosIntArg(PC+4));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	  suspendInline(CTT,XPC(1),XPC(2));
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
       
       case BI_TYPE_ERROR:
@@ -2176,7 +1746,7 @@ LBLdispatcher:
 	shallowCP = NULL;
 	e->shallowHeapTop = NULL;
 	e->reduceTrailOnShallow();
-	goto LBLsuspendThread;
+	return T_SUSPEND;
       }
     }
 
@@ -2265,7 +1835,7 @@ LBLdispatcher:
     OZ_int(1),
     OZ_string(""));
     RAISE_TYPE1("lock",cons(aux,nil()));
-    goto LBLraise;
+    RAISE_THREAD;
   }
   
   OzLock *t = (OzLock*)tagged2Tert(aux);
@@ -2275,7 +1845,7 @@ LBLdispatcher:
     if(!e->onToplevel()){
       if (!e->isCurrentBoard(GETBOARD((LockLocal*)t))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
-	goto LBLraise;}}
+	RAISE_THREAD;}}
     if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
     if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
     goto no_lock;}
@@ -2312,7 +1882,7 @@ LBLdispatcher:
     CTS->pushLock(t);
     CheckLiveness(PC+4,toSave);
     PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
-    goto LBLsuspendThread;
+    return T_SUSPEND;
   }
 
   Case(RETURN)
@@ -2358,7 +1928,7 @@ LBLdispatcher:
       
       if (predd->numClosures > 1 && predd->copyOnce) {
 	(void) oz_raise(E_ERROR,E_SYSTEM,"onceOnlyFunctor",0);
-	goto LBLraise;
+	RAISE_THREAD;
       }
 
       if (isTailCall) {
@@ -2629,7 +2199,8 @@ LBLdispatcher:
 	 JUMPABSOLUTE(PC);
 	 
        case SLEEP:         Assert(0);
-       case RAISE:         goto LBLraise;
+       case RAISE:
+         RAISE_THREAD;
        case BI_TYPE_ERROR: RAISE_TYPE;
        case FAILED:        HF_BI;
 
@@ -2637,7 +2208,7 @@ LBLdispatcher:
 	 if (!isTailCall) {
 	   PushCont(PC,Y,G);
 	 }
-	 goto LBLpreemption;
+	 return T_PREEMPT;
 	 
       case BI_REPLACEBICALL: 
 	if (isTailCall) {
@@ -2760,7 +2331,7 @@ LBLdispatcher:
 	}
 
 	// suspend wait actor
-	goto LBLsuspendThread;
+	return T_SUSPEND;
       }
 
       Assert(CAA->isAsk());
@@ -2787,7 +2358,7 @@ LBLdispatcher:
 	  goto LBLemulate;
 	}
 
-	goto LBLsuspendThread;
+	return T_SUSPEND;
       }
     }
 
@@ -2946,8 +2517,9 @@ LBLdispatcher:
   Case(TASKEMPTYSTACK)  
     {
       Assert(Y==0 && G==0);
-      CTS->pushEmpty();   // mm2?
-      goto LBLterminateThread;
+      CTS->pushEmpty();   // mm2: is this really needed?
+      DebugCode(e->cachedSelf=0);
+      return T_TERMINATE;
     }
 
   Case(TASKACTOR)  
@@ -2956,7 +2528,7 @@ LBLdispatcher:
       WaitActor *wa = WaitActor::Cast((Actor *) Y);
       CTS->restoreFrame();
       if (wa->getChildCount() != 1) {
-	goto LBLsuspendThread;
+	return T_SUSPEND;
       }
       Board *bb = wa->getChildRef();
       Assert(bb->isWait());
@@ -2984,7 +2556,7 @@ LBLdispatcher:
 	if (isAnyVar(predTag)) {
 	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),G);
 	  addSusp(predPtr,CTT);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 	RAISE_APPLY(taggedPredicate,OZ_toList(predArity,G));
       }
@@ -3016,7 +2588,7 @@ LBLdispatcher:
 	break;
       case Te_Proxy:
 	oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
-	goto LBLraise;
+	RAISE_THREAD_NO_PC;
       case Te_Manager:
 	((LockManager*)lck)->unlock(am.currentThread());
 	break;}
@@ -3046,7 +2618,7 @@ LBLdispatcher:
   Case(TASKDEBUGCONT)
     {
       error("Emulate: TASKDEBUGCONT instruction executed");
-      goto LBLerror;
+      return T_ERROR;
     }
   
   Case(TASKCFUNCONT)
@@ -3072,7 +2644,8 @@ LBLdispatcher:
        switch (biFun(predArity, X)) {
        case FAILED:        HF_BI;
        case PROCEED:       goto LBLpopTask;
-       case RAISE:         goto LBLraise;
+       case RAISE:
+         RAISE_THREAD_NO_PC;
        case BI_TYPE_ERROR: RAISE_TYPE;
 
        case BI_REPLACEBICALL: 
@@ -3084,7 +2657,7 @@ LBLdispatcher:
 	 SUSPENDONVARLIST;
 
       case BI_PREEMPT:
-	goto LBLpreemption;
+	return T_PREEMPT;
 
        case SLEEP:
        default:
@@ -3163,14 +2736,14 @@ LBLdispatcher:
 #endif
 	 CTS->pushLTQ(sa);
 	 Assert(sa->getLocalThreadQueue());
-	 goto LBLpreemption;
+	 return T_PREEMPT;
        }
      }
     
   Case(OZERROR)
     {
       error("Emulate: OZERROR instruction executed");
-      goto LBLerror;
+      return T_ERROR;
     }
 
   Case(DEBUGENTRY)
@@ -3287,7 +2860,7 @@ LBLdispatcher:
 	  int regsToSave = getPosIntArg(PC+5);
 	  INCFPC(6);
 	  PushContX(PC,Y,G,X,regsToSave);
-	  goto LBLpreemption;
+	  return T_PREEMPT;
 	} else {
 	  CTT->pushDebug(dbg,DBG_NOSTEP);
 	}
@@ -3313,7 +2886,7 @@ LBLdispatcher:
 	    CTT->pushDebug(dbg,DBG_EXIT);
 	    debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());
 	    PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	    goto LBLpreemption;
+	    return T_PREEMPT;
 	  }
 	  break;
 	case DBG_NOSTEP:
@@ -3334,7 +2907,7 @@ LBLdispatcher:
 
       if (entry->getAbstr() == 0) {
 	(void) oz_raise(E_ERROR,E_SYSTEM,"inconsistentFastcall",0);
-	goto LBLraise;
+	RAISE_THREAD;
       }
       CodeArea::writeOpcode(tailcall ? FASTTAILCALL : FASTCALL, PC);
       DISPATCH(0);
@@ -3431,13 +3004,13 @@ LBLdispatcher:
   Case(ENDOFFILE)
     {
       error("Emulate: ENDOFFILE instruction executed");
-      goto LBLerror;
+      return T_ERROR;
     }
 
   Case(ENDDEFINITION)
     {
       error("Emulate: ENDDEFINITION instruction executed");
-      goto LBLerror;
+      return T_ERROR;
     }
 
 
@@ -3479,201 +3052,17 @@ LBLshallowFail:
     e->shallowHeapTop  = NULL;
     JUMPRELATIVE(getLabelArg(PC+1));
   }
-
-  /*
-   *  kost@ : There are now the following invariants:
-   *  - Can be entered only in a deep guard;
-   *  - current thread must be runnable.
-   */
-LBLfailure:
-   {
-  asmLbl(DEEP_FAIL);
-  DebugTrace(trace("fail",CBB));
-
-  Assert(!e->onToplevel());
-  Assert(CTT);
-  Assert(CTT->isRunnable());
-  Assert(CBB->isInstalled());
-
-  Actor *aa=CBB->getActor();
-  Assert(!aa->isCommitted());
-
-  if (aa->isAsk()) {
-    (AskActor::Cast(aa))->failAskChild();
-  }
-  if (aa->isWait()) {
-    (WaitActor::Cast(aa))->failWaitChild(CBB);
-  }
-
-  Assert(!CBB->isFailed());
-  CBB->setFailed();
-
-  e->reduceTrailOnFail();
-  CBB->unsetInstalled();
-  e->setCurrent(GETBOARD(aa));
-  DebugCheckT(currentDebugBoard=CBB);
-
-
-  // currentThread is a thread forked in a local space or a propagator
-  if (aa->isSolve()) {
-
-    //  Reduce (i.e. with failure in this case) the solve actor;
-    //  The solve actor goes simply away, and the 'failed' atom is bound to
-    // the result variable; 
-    aa->setCommitted();
-    SolveActor *saa=SolveActor::Cast(aa);
-    // don't decrement parent counter
-
-    if (!e->fastUnifyOutline(saa->getResult(),saa->genFailed(),0)) {
-      // this should never happen?
-      Assert(0);
-    }
-
-    saa->dealloc();
-
-  } else if (CTT == AWActor::Cast(aa)->getThread()) {
-    // pseudo flat guard
-    Assert(CAA==aa);
-    goto LBLcheckFlat2;
-  } else {
-    AWActor *aw = AWActor::Cast(aa);
-    Thread *tt = aw->getThread();
-
-    Assert(CTT != tt && GETBOARD(tt) == CBB);
-    Assert(!aw->isCommitted() && !aw->hasNext());
-
-    if (aw->isWait()) {
-      WaitActor *wa = WaitActor::Cast(aw);
-      /* test bottom commit */
-      if (wa->hasNoChildren()) {
-	if (canOptimizeFailure(e,tt)) goto LBLfailure;
-      } else {
-	Assert(!e->isScheduledSlow(tt));
-	/* test unit commit */
-	if (wa->hasOneChildNoChoice()) {
-	  Board *waitBoard = wa->getLastChild();
-	  int succeeded = e->commit(waitBoard);
-	  if (!succeeded) {
-	    if (canOptimizeFailure(e,tt)) goto LBLfailure;
-	  }
-	}
-      }
-    } else {
-      Assert(!e->isScheduledSlow(tt));
-      Assert(aw->isAsk());
-
-      AskActor *aa = AskActor::Cast(aw);
-
-      //  should we activate the 'else' clause?
-      if (aa->isLeaf()) {  // OPT commit()
-	aa->setCommitted();
-	CBB->decSuspCount();
-	TaskStack *ts = tt->getTaskStackRef();
-	ts->discardActor();
-
-	/* rule: if fi --> false */
-	if (aa->getElsePC() == NOCODE) {
-	  aa->disposeAsk();
-	  if (canOptimizeFailure(e,tt)) goto LBLfailure;
-	} else {
-	  Continuation *tmpCont = aa->getNext();
-	  ts->pushCont(aa->getElsePC(),
-		       tmpCont->getY(), tmpCont->getG());
-	  if (tmpCont->getX()) ts->pushX(tmpCont->getX());
-	  aa->disposeAsk();
-	  e->suspThreadToRunnableOPT(tt);
-	  e->scheduleThread(tt);
-	}
-      }
-    }
-  }
-
-#ifdef DEBUG_CHECK
-  if (CTT==e->rootThread()) {
-    printf("fail root thread\n");
-  }
-#endif
-
-  e->decSolveThreads(CBB);
-  e->disposeRunnableThread(CTT);
-  e->unsetCurrentThread();
-
-  goto LBLstart;
-   }
-
-// ------------------------------------------------------------------------
-// --- Call: Builtin: raise
-// ------------------------------------------------------------------------
-
-   LBLraise:
-     {
-       DebugCheck(ozconf.stopOnToplevelFailure,
-		  DebugTrace(tracerOn();trace("raise")));
-
-       Assert(CTT && !CTT->isPropagator());
-
-       shallowCP         = 0; // failure in shallow guard can never be handled
-       e->shallowHeapTop = 0;
-
-       Bool foundHdl;
-
-       if (e->exception.debug) {
-
-	 OZ_Term traceBack;
-	 foundHdl =
-	   CTT->getTaskStackRef()->findCatch(PC,&traceBack,e->debugmode());
-	 
-	 OZ_Term loc = oz_getLocation(CBB);
-	 e->exception.value = formatError(e->exception.info,e->exception.value,
-					  traceBack,loc);
-
-       } else {
-	 foundHdl = CTT->getTaskStackRef()->findCatch();
-       }
-       
-       if (foundHdl) {
-	 if (e->debugmode() && CTT->getTrace())
-	   debugStreamUpdate(CTT);
-	 X[0] = e->exception.value;
-	 goto LBLpopTaskNoPreempt;
-       }
-
-       if (!e->onToplevel() &&
-	   OZ_eq(OZ_label(e->exception.value),OZ_atom("failure"))) {
-	 goto LBLfailure;
-       }
-
-       if (e->debugmode()) {
-	 OZ_Term exc = e->exception.value;
-	 // ignore system(kernel(terminate)) exception:
-	 if (OZ_isRecord(exc) &&
-	     OZ_eq(OZ_label(exc),OZ_atom("system")) &&
-	     OZ_subtree(exc,OZ_int(1)) != makeTaggedNULL() &&
-	     OZ_eq(OZ_label(OZ_subtree(exc,OZ_int(1))),OZ_atom("kernel")) &&
-	     OZ_eq(OZ_subtree(OZ_subtree(exc,OZ_int(1)),OZ_int(1)),
-		   OZ_atom("terminate")))
-	   ;
-	 else {
-	   CTT->setTrace(OK);
-	   CTT->setStep(OK);
-	   debugStreamException(CTT,e->exception.value);
-	   goto LBLpreemption;
-	 }
-       }
-       // else
-       RefsArray argsArray = allocateRefsArray(1,NO);
-       argsArray[0] = e->exception.value;
-       if (e->defaultExceptionHdl) {
-	 CTT->pushCall(e->defaultExceptionHdl,argsArray,1);
-       } else {
-	 if (!am.isStandalone()) 
-	   printf("\021");
-	 printf("Exception raise:\n   %s\n",toC(argsArray[0]));
-	 fflush(stdout);
-       }
-       goto LBLpopTask; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
-     }
 } // end engine
+
+
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
 #ifdef OUTLINE
 #undef inline

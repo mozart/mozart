@@ -2198,3 +2198,30 @@ char flagChar(StatusBit flag)
   }
 }
 #endif
+
+/*
+ * when failure occurs
+ *  mark the actor
+ *  clean the trail
+ *  update the current board
+ */
+void AM::failBoard()
+{
+  Assert(!onToplevel());
+  Board *bb=currentBoard();
+  Assert(bb->isInstalled());
+
+  Actor *aa=bb->getActor();
+  if (aa->isAsk()) {
+    (AskActor::Cast(aa))->failAskChild();
+  } else if (aa->isWait()) {
+    (WaitActor::Cast(aa))->failWaitChild(bb);
+  }
+
+  Assert(!bb->isFailed());
+  bb->setFailed();
+
+  reduceTrailOnFail();
+  bb->unsetInstalled();
+  setCurrent(GETBOARD(aa));
+}

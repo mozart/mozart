@@ -357,7 +357,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	      addSusp (labPtr, CTT);
 	    }
 	  }
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
 	JUMPRELATIVE( getLabelArg(PC+4) );
@@ -380,7 +380,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
         if (isAnyVar(term)) {
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	  addSusp (termPtr, CTT);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
 	JUMPRELATIVE( getLabelArg(PC+4) );
@@ -407,7 +407,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	    isCVar(term) && tagged2CVar(term)->valid(termPtr,i)) {
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	  addSusp (termPtr, CTT);
-	  goto LBLsuspendThread;
+	  return T_SUSPEND;
 	}
 
 	JUMPRELATIVE( getLabelArg(PC+4) );
