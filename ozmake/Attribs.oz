@@ -36,6 +36,7 @@ define
 	 InfoText   : unit
 	 InfoHtml   : unit
 	 Verbose    : false
+	 Quiet      : false
 	 JustPrint  : false
 	 OptLevel   : optimize
 	 Grade      : none
@@ -43,7 +44,15 @@ define
 	 KeepZombies: false
 	 SaveDB     : true
 	 IncludeDocs: true
+	 IncludeLibs: true
+	 IncludeBins: true
 	 ExtendPkg  : false
+	 GNU        : unit
+	 Package    : unit
+	 PackageGiven:false
+	 PublishDir : unit
+	 Archive    : 'http://www.mozart-oz.org/mogul/pkg'
+	 LineWidth  : 70
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -97,6 +106,7 @@ define
 	    LibDir<-{Path.resolve Attribs,get_libroot($)
 		     {Path.toCache Attribs,get_uri($)}}
 	 end
+	 @LibDir
       end
 
       meth set_bindir(D) BinDir<-{Path.expand D} end
@@ -210,6 +220,8 @@ define
 
       meth set_verbose(B) Verbose<-B end
       meth get_verbose($) @Verbose end
+      meth set_quiet(B) Quiet<-B end
+      meth get_quiet($) @Quiet end
       meth set_justprint(B) JustPrint<-B end
       meth get_justprint($) @JustPrint end
       meth set_optlevel(O) OptLevel<-O end
@@ -227,8 +239,46 @@ define
 
       meth set_includedocs(B) IncludeDocs<-B end
       meth get_includedocs($) @IncludeDocs end
+      meth set_includelibs(B) IncludeLibs<-B end
+      meth get_includelibs($) @IncludeLibs end
+      meth set_includebins(B) IncludeBins<-B end
+      meth get_includebins($) @IncludeBins end
 
       meth set_extendpackage(B) ExtendPkg<-B end
       meth get_extendpackage($) @ExtendPkg end
+
+      meth set_gnu(B) GNU<-B end
+      meth get_gnu($)
+	 if @GNU==unit then
+	    GNU<-{self exec_check_for_gnu($)}
+	 end
+	 @GNU
+      end
+
+      meth set_package(F)
+	 PackageGiven<-true
+	 Package<-{Path.expand F}
+      end
+      meth get_package($)
+	 if @Package==unit then
+	    raise ozmake(get_package) end
+	 else @Package end
+      end
+      meth get_package_given($) @PackageGiven end
+
+      meth set_publishdir(D) PublishDir<-{Path.expand D} end
+      meth get_publishdir($)
+	 if @PublishDir==unit then
+	    PublishDir<-{Path.expand
+			 {Path.resolve {self get_prefix($)} 'pkg'}}
+	 end
+	 @PublishDir
+      end
+
+      meth set_archive(U) Archive<-U end
+      meth get_archive($) @Archive end
+
+      meth set_linewidth(N) LineWidth<-N end
+      meth get_linewidth($) @LineWidth end
    end
 end

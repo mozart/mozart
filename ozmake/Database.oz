@@ -2,7 +2,12 @@ functor
 export
    'class' : Database
 import
+   Pickle
+   Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
+prepare
+   VSToString = VirtualString.toString
+   MakeByteString = ByteString.make
 define
    class Database
 
@@ -12,10 +17,6 @@ define
 
       meth file_to_package(F $)
 	 {CondSelect @File2Package F unit}
-      end
-
-      meth package_to_files(Mog $)
-	 {CondSelect {CondSelect @Mogul2Package Mog unit} files nil}
       end
 
       meth database_read
@@ -29,7 +30,8 @@ define
 		   catch error(...) then
 		      {self trace('...failed')}
 		      {self trace('retrying with text database '#F#'.txt')}
-		      {Utils.readTextDB F#'.txt'}
+		      {Map {Utils.readTextDB F#'.txt'}
+		       fun {$ E} Database,ByteStringify(E $) end}
 		   end
 	    in
 	       Database,Init(L)
@@ -43,7 +45,7 @@ define
       end
 
       meth Init(L)
-	 Mogul2PackageList<-{NewDictionary}
+	 Mogul2Package<-{NewDictionary}
 	 File2Package<-{NewDictionary}
 	 for PKG in L do MOG=PKG.mogul in
 	    @Mogul2Package.MOG := PKG
@@ -57,7 +59,6 @@ define
 	 Grade={self get_grade($)}
       in
 	 if Grade==any then skip else
-	    Database,database_read
 	    MOG = {self get_mogul($)}
 	    PKG = {CondSelect @Mogul2Package MOG unit}
 	 in
@@ -100,26 +101,100 @@ define
 	 end
       end
 
-      meth database_lost(F)
-	 Mog=@File2Package.F
-	 Pkg=@Mogul2Package.Mog
-	 Files={CondSelect Pkg files nil}
-	 Lost={CondSelect Pkg lost nil}
-	 NewFiles={Filter Files fun {$ FF} FF\=F end}
-	 NewLost=F|Lost
-	 NewPkg={AdjointAt {AdjoinAt Pkg files NewFiles} lost NewLost}
-      in
-	 Pkg.files := NewFiles
-	 Pkg.lost := NewLost
-      end
-
-      meth database_entry(MOG $)
+      meth database_mutable_entry(MOG $)
 	 Pkg={CondSelect @Mogul2Package MOG unit}
       in
 	 if Pkg==unit then D={NewDictionary} in
+	    D.mogul := MOG
 	    @Mogul2Package.MOG := D
 	    D
-	 else Pkg end
+	 elseif {IsDictionary Pkg} then Pkg
+	 else D={Record.toDictionary Pkg} in
+	    @Mogul2Package.MOG := D
+	    D
+	 end
+      end
+
+      %% replace byte strings by strings for textual output
+
+      meth Stringify(E $)
+	 Author = {CondSelect E author    unit}
+	 Blurb  = {CondSelect E blurb     unit}
+	 IText  = {CondSelect E info_text unit}
+	 IHtml  = {CondSelect E info_html unit}
+      in
+	 if (Author\=unit andthen Author\=nil) orelse
+	    Blurb\=unit orelse IText\=unit orelse IHtml\=unit
+	 then
+	    D={Record.toDictionary E}
+	 in
+	    if Author\=unit andthen Author\=nil then
+	       D.author := {Map Author VSToString}
+	    end
+	    if Blurb\=unit then D.blurb     := {VSToString Blurb} end
+	    if IText\=unit then D.info_text := {VSToString IText} end
+	    if IHtml\=unit then D.info_html := {VSToString IHtml} end
+	    {Dictionary.toRecord package D}
+	 else
+	    E
+	 end
+      end
+
+      %% replace strings by byte strings when reading textual input
+
+      meth ByteStringify(E $)
+	 Author = {CondSelect E author    unit}
+	 Blurb  = {CondSelect E blurb     unit}
+	 IText  = {CondSelect E info_text unit}
+	 IHtml  = {CondSelect E info_html unit}
+      in
+	 if (Author\=unit andthen Author\=nil) orelse
+	    Blurb\=unit orelse IText\=unit orelse IHtml\=unit
+	 then
+	    D={Record.toDictionary E}
+	 in
+	    if Author\=unit andthen Author\=nil then
+	       D.author := {Map Author MakeByteString}
+	    end
+	    if Blurb\=unit then D.blurb     := {MakeByteString Blurb} end
+	    if IText\=unit then D.info_text := {MakeByteString IText} end
+	    if IHtml\=unit then D.info_html := {MakeByteString IHtml} end
+	    {Dictionary.toRecord package D}
+	 else
+	    E
+	 end
+      end
+
+      meth database_save
+	 if {self get_savedb($)} then
+	    Entries =
+	    {Map {Dictionary.items @Mogul2Package}
+	     fun {$ E}
+		if {IsDictionary E}
+		then {Dictionary.toRecord package E} else E end
+	     end}
+	    DB = {self get_database($)}
+	 in
+	    {self trace('writing pickled database '#DB#'.ozf')}
+	    if {self get_justprint($)} then skip else
+	       {Pickle.save Entries DB#'.ozf'}
+	    end
+	    {self trace('writing textual database '#DB#'.txt')}
+	    if {self get_justprint($)} then skip else
+	       {Utils.writeTextDB
+		{Map Entries fun {$ E} Database,Stringify(E $) end}
+		DB#'.txt'}
+	    end
+	 end
+      end
+
+      meth database_get_packages($)
+	 Database,database_read
+	 {Dictionary.items @Mogul2Package}
+      end
+
+      meth database_get_package(MOG $)
+	 {CondSelect @Mogul2Package MOG unit}
       end
    end
 end
