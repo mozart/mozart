@@ -16,7 +16,7 @@
 
 // BuiltinTab
 
-BuiltinTab builtinTab(1193);  // size should be prime number
+BuiltinTab builtinTab(500);
 
 
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun, Bool replace,
