@@ -1,7 +1,4 @@
-!/bin/sh
-# Oz startup script.
-
-
+#!/bin/sh
 
 # uncomment and adapt the following line if you want
 # to draw links from say /usr/local/bin to OZHOME/bin
