@@ -947,26 +947,12 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
 
 void AM::awakeIOVar(TaggedRef var)
 {
-#ifdef SEQIMPL
-  DEREF(var,varPtr,varTag);
-  Assert(isSVar(var));
-
-  SVariable *sv=tagged2SuspVar(var);
-  SuspList *sl = sv->getSuspList();
-  Assert(sl->length()==1);
-  Suspension *susp = sl->getElem();
-  Assert(!susp->isDead());
-  Assert(susp->wakeUp(rootBoard,pc_std_unif));
-  sl = sl->dispose();
-  Assert(!sl);
-#else
   Assert(isToplevel());
   Assert(isCons(var));
 
   if (OZ_unify(head(var),tail(var)) != PROCEED) {
     warning("select or sleep failed");
   }
-#endif
 }
 
 #ifdef DEBUG_CHECK
