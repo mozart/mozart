@@ -58,7 +58,7 @@ APSRC   = Application
 CPSRC   = Search FD Schedule FS
 DPSRC   = Connection Remote RemoteServer Fault URL
 WPSRC   = Tk TkTools
-SUPPSRC = Type Narrator Listener ErrorListener DefaultURL
+SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 
 RUNFUNCTORS = \
         $(SPSRC:%=%.ozf) \
@@ -112,7 +112,7 @@ BASESRC1 = \
         Record Unit Tuple Atom Name Procedure \
         Int Float Number Bool List Chunk \
         Literal Value Cell Lock Char String \
-        VirtualString Object Class Loop Port \
+        VirtualString Object Loop Port \
         Time Thread Space Array Dictionary \
         Exception Functor BitArray BitString \
         ByteString ForeignPointer Base
