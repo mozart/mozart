@@ -225,7 +225,7 @@ void AM::init(int argc,char **argv)
 #endif
 
   if (!initFile && !assemblyCodeFile) {
-    char* ini = "/lib/Init.ozf";
+    char* ini = "/share/Init.ozf";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
     char*s = new char[n];
