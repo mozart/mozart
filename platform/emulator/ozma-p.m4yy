@@ -359,9 +359,6 @@ Count		: Integer
 NLiveRegs	: Integer
 		;
 
-IsTail		: Integer
-		;
-
 ArityAndIsTail	: Integer
 		;
 
