@@ -39,48 +39,93 @@
 #include "tagged.hh"
 #include "stack.hh"
 
-
-const StackEntry trailMark = (StackEntry) -1l;
+enum TeType {
+  Te_Mark     = 1,
+  Te_Bind     = 2,
+  Te_Variable = 3,
+  Te_Cast     = 4,
+  Te_Mask     = 7
+};
 
 class  Trail: public Stack {
 public:
   Trail(): Stack(DEFAULT_TRAIL_SIZE,Stack_WithMalloc) {}
   Trail(int sizeInit): Stack(sizeInit,Stack_WithMalloc) {}
-  
-  void pushRef(TaggedRef *val, TaggedRef old)
-  {
-    ensureFree(2);
-    Assert(trailMark != val && trailMark != ToPointer(old));
-    Stack::push((StackEntry) val,NO);
-    Stack::push((StackEntry) ToPointer(old),NO);
+
+  /*
+   * Tests
+   *
+   */
+
+  TeType getTeType(void) {
+    return (TeType) (((int) *(tos-1)) & Te_Mask);
   }
 
-  void popRef(TaggedRef *&val, TaggedRef &old)
-  {
+  Bool isEmptyChunk() { 
+    return getTeType() == Te_Mark;
+  }
+
+  int chunkSize(void) { 
+    int ret = 0;
+
+    StackEntry * top = tos-1;
+
+    while (((TeType) ((int) *top)) != Te_Mark) {
+      top = top-3;
+      ret++;
+      Assert(top>=array);  /* there MUST be a mark on the trail! */
+    }
+
+    return ret;
+  }
+
+  /*
+   * Pushing
+   *
+   */
+
+  void pushMark(void) {
+    Stack::push((StackEntry) Te_Mark); 
+  }
+
+  void pushBind(TaggedRef *val, TaggedRef old) {
+    ensureFree(3);
+    Stack::push((StackEntry) val,            NO);
+    Stack::push((StackEntry) ToPointer(old), NO);
+    Stack::push((StackEntry) Te_Bind,        NO);
+  }
+
+  void pushVariable(TaggedRef var) {
+    ensureFree(3);
+    Stack::push((StackEntry) Te_Variable, NO);
+  }
+
+  void pushCast(TaggedRef var) {
+    ensureFree(3);
+    Stack::push((StackEntry) Te_Cast, NO);
+  }
+
+
+  /*
+   * Popping
+   *
+   */
+
+  void popMark(void) {
+    Assert(isEmptyChunk());
+    (void) Stack::pop();
+  }
+
+  void popBind(TaggedRef *&val, TaggedRef &old) {
+    Assert(getTeType() == Te_Bind);
+    (void) Stack::pop();
     old = (TaggedRef)  ToInt32(Stack::pop());
     val = (TaggedRef*) Stack::pop();
   }
 
-  void pushMark() { Stack::push(trailMark); }
+  void popVariable(void) {}
 
-  int chunkSize()     
-  { 
-    int ret = 0;
-    StackEntry *top = tos-1;
-    while(*top != trailMark) {
-      top = top-2;
-      ret++;
-      Assert(top>=array);  /* there MUST be a mark on the trail! */
-    }
-    return ret;
-  }
-  Bool isEmptyChunk() { return (trailMark == *(tos-1)); }
-
-  void popMark() 
-  {
-    Assert(isEmptyChunk());
-    (void)Stack::pop();
-  }
+  void popCast(void) {}
 
 };
 
