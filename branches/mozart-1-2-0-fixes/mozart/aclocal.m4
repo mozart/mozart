@@ -558,7 +558,7 @@ AC_DEFUN(OZ_PROG_YACC,[OZ_PROG_BISON])
 AC_DEFUN(OZ_VERSION_BISON,[1.25])
 AC_DEFUN(OZ_PROG_YACC_GNU,[
   if oz_tmp=`$YACC --version 2>/dev/null` && \
-     oz_tmp=`expr "$oz_tmp" : GNU`; then
+     oz_tmp=`expr "$oz_tmp" : '.*GNU'`; then
     GNU_YACC=yes;
   else
     GNU_YACC=no
@@ -587,10 +587,10 @@ It can be retrieved from:
 
 	ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is 1.28 and is available
+The latest version at this time is 1.30 and is available
 packaged as the following archive:
 
-	bison-1.28.tar.gz
+	bison-1.30.tar.gz
 
 
 You may find a mirror archive closer to you by consulting:
