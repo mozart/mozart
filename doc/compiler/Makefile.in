@@ -14,7 +14,7 @@ SGMLSRCS = \
 OZSRCS = \
 	QuietInterface.oz EmacsInterface.oz CompilerPanel.oz
 
-.PHONY: all install clean veryclean distclean
+.PHONY: all validate install clean veryclean distclean
 
 all: compiler-html
 
@@ -26,6 +26,9 @@ compiler-html: $(OZGSRCS) $(SGMLSRCS)
 
 compiler-tex: $(OZGSRCS) $(SGMLSRCS)
 	$(OZDOC) $(OZDOCFLAGS) --in=compiler.sgml --out=compiler-tex --type=latex
+
+validate: compiler-html
+	nsgmls -cHTML4.soc -sB compiler-html/*.html
 
 install: compiler-html $(DOCDIR)
 	cp -p compiler-html/* $(DOCDIR)

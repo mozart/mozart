@@ -17,7 +17,7 @@ MISCSRCS = \
 GIFSRCS = \
 	gump.gif
 
-.PHONY: all install clean veryclean distclean
+.PHONY: all validate install clean veryclean distclean
 
 all: gump-html
 
@@ -30,6 +30,9 @@ gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
 	$(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=gump-tex --type=latex
+
+validate: gump-html
+	nsgmls -cHTML4.soc -sB gump-html/*.html
 
 install: gump-html $(DOCDIR)
 	cp -p gump-html/* $(DOCDIR)
