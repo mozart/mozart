@@ -22,9 +22,11 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 			 TaggedRef * tptr2, TaggedRef term2,
 			 Bool prop)
 {
-  Assert(getType()==FDVariable ||
-	 getType()==OFSVariable ||
-	 getType()==MetaVariable);
+  Assert(getType() == FDVariable ||
+	 getType() == OFSVariable ||
+	 getType() == MetaVariable || 
+	 getType() == BoolVariable);
+
   LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
 			   localPropStore.isInLocalPropagation()));
 
@@ -46,6 +48,12 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 	return FALSE;
     }
     break;
+  case BoolVariable:
+    {
+      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
   default:
     return FALSE;
   }
@@ -58,12 +66,15 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 inline
 int GenCVariable::getSuspListLength(void)
 {
-  Assert(getType()==FDVariable ||
-	 getType()==OFSVariable ||
-	 getType()==MetaVariable );
+  Assert(getType() == FDVariable ||
+	 getType() == OFSVariable ||
+	 getType() == MetaVariable ||
+	 getType() == BoolVariable);
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable *)this)->getSuspListLength();
+  case BoolVariable:
+    return ((GenBoolVariable *)this)->getSuspListLength();
   case OFSVariable:
     return ((GenOFSVariable *)this)->getSuspListLength();
   default:
@@ -77,7 +88,8 @@ size_t GenCVariable::getSize(void)
 {
   Assert(getType() == FDVariable ||
 	 getType() == OFSVariable ||
-	 getType() == MetaVariable);
+	 getType() == MetaVariable || 
+	 getType() == BoolVariable);
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable*)this)->getSize();
@@ -85,6 +97,8 @@ size_t GenCVariable::getSize(void)
     return ((GenOFSVariable*)this)->getSize();
   case MetaVariable:
     return ((GenMetaVariable*)this)->getSize();
+  case BoolVariable:
+    return ((GenBoolVariable*)this)->getSize();
   default:
     break;
   }
@@ -94,9 +108,10 @@ size_t GenCVariable::getSize(void)
 inline
 Bool GenCVariable::valid(TaggedRef val)
 {
-  Assert(getType()==FDVariable ||
-	 getType()==OFSVariable ||
-	 getType()==MetaVariable);
+  Assert(getType() == FDVariable ||
+	 getType() == OFSVariable ||
+	 getType() == MetaVariable ||
+	 getType() == BoolVariable);
   switch (getType()){
   case FDVariable:
     return ((GenFDVariable*)this)->valid(val);
@@ -104,6 +119,8 @@ Bool GenCVariable::valid(TaggedRef val)
     return ((GenOFSVariable*)this)->valid(val);
   case MetaVariable:
     return ((GenMetaVariable*)this)->valid(val);
+  case BoolVariable:
+    return ((GenBoolVariable*)this)->valid(val);
   default:
     break;
   }  
@@ -114,11 +131,13 @@ Bool GenCVariable::valid(TaggedRef val)
 inline
 void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
 {
-  Assert(getType()==FDVariable ||
-	 getType()==OFSVariable ||
-	 getType()==MetaVariable );
+  Assert(getType() == FDVariable ||
+	 getType() == OFSVariable ||
+	 getType() == MetaVariable ||
+	 getType() == BoolVariable);
 
-  Assert(getType() == glob_var->getType());
+  Assert(getType() == glob_var->getType() || 
+	 (getType() == BoolVariable && glob_var->getType() == FDVariable));
   Assert(prop==NO || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
   
   Board * glob_home = glob_var->getBoardFast();
@@ -129,8 +148,10 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
   case FDVariable:
     ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
     break;
-  case MetaVariable:
-  case OFSVariable:
+  case BoolVariable:     
+    ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
+    break;
+  case OFSVariable: case MetaVariable:
     break;
   default:
     break;
@@ -150,6 +171,21 @@ void GenCVariable::addDetSusp(Suspension *susp)
   default:
     addSuspension(susp);
     return;
+  }
+}
+
+inline
+void GenCVariable::dispose(void) 
+{ 
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable *)this)->dispose();
+    break;
+  case BoolVariable:
+    ((GenBoolVariable *)this)->dispose();
+    break;
+  default:
+    break;
   }
 }
 
