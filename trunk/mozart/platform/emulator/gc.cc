@@ -473,7 +473,7 @@ Bool gcUnprotect(TaggedRef *ref)
  ****************************************************************************/
 
 
-DebugGCT(static int updateStackCount = 0)
+DebugGCT(static int updateStackCount = 0;)
 
 class UpdateStack: public Stack {
 public:
