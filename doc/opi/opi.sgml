@@ -46,6 +46,7 @@
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.intro">
     <Meta name="html.split" value="chapter.start">
+    <Meta name="html.split" value="chapter.keybdgs">
     <Meta name="html.split" value="chapter.editing">
     <Meta name="html.split" value="chapter.running">
     <Meta name="html.split" value="chapter.tools">
@@ -314,6 +315,67 @@
 	    only the first of these.  However, some terminals may not be
 	    able to generate <Key/C-./; this is why the second one is
 	    provided.
+    <Chapter id=chapter.keybdgs>
+	<Title/Emacs Key Bindings For The Impatient/
+      <P>In this chapter, we simply present a table of all Oz specific Emacs
+key bindings.  This is merely intended as a convenient reference; more detailed
+explanations are given in subsequent chapters.</P>
+      <P><Key/C-./ is the short Oz specific prefix.  <Key/C-c ./ is the long
+equivalent prefix and is only useful on tty terminals where <Key/C-./ cannot
+be generated.  <Key/C-. C-./ is the short Oz specific tool prefix and
+<Key/C-c . C-c ./ is the equivalent long version.  The table below documents
+only the short prefix.
+<table display>
+	  <tr><th colspan=2>Editing Code</th></tr>
+	  <tr/<td/<key/M-C-f//<td/forward expression//
+	  <tr/<td/<key/M-C-b//<td/backward expression//
+	  <tr/<td/<key/M-C-k//<td/kill expression//
+	  <tr/<td/<key/M-C-DEL//<td/backward kill expression//
+	  <tr/<td/<key/M-C-@//<td/mark expression//
+	  <tr/<td/<key/M-C-SPC//<td/mark expression//
+	  <tr/<td/<key/M-C-q//<td/indent expression//
+	  <tr/<td/<key/M-C-a//<td/beginning of defun//
+	  <tr/<td/<key/M-C-e//<td/end of defun//
+	  <tr/<td/<key/M-C-t//<td/transpose expressions//
+	  <tr/<td/<key/C-x `//<td/next error//
+	  <tr/<th colspan=2/Managing Buffers//
+	  <tr/<td/<key/M-n//<td/next Oz buffer//
+	  <tr/<td/<key/M-p//<td/previous Oz buffer//
+	  <tr/<td/<key/C-. n//<td/new Oz buffer//
+	  <tr/<th colspan=2/Interacting With Oz Subprocess//
+	  <tr/<td/<key/C-. e//<td/toggle emulator buffer//
+	  <tr/<td/<key/C-. c//<td/toggle compiler buffer//
+	  <tr/<td/<key/C-. t//<td/toggle temporary buffer//
+	  <tr/<td/<key/C-. r//<td/start Oz subprocess//
+	  <tr/<td/<key/C-. h//<td/halt Oz subprocess//
+	  <tr/<td/<key/C-u C-. h//<td/halt Oz subprocess (forced)//
+	  <tr/<td/<key/C-. d//<td/toggle gdb//
+	  <tr/<td/<key/C-. o//<td>toggle global&slash;local emulator/
+	  <tr/<td/<key/C-. m//<td/set path to local emulator//
+	  <tr/<th colspan=2/Executing Code//
+	  <tr/<td/<key/C-. C-b//<td/feed buffer//
+	  <tr/<td/<key/C-. C-r//<td/feed region//
+	  <tr/<td/<key/C-. C-l//<td/feed line//
+	  <tr/<td/<key/C-. C-p//<td/feed paragraph//
+	  <tr/<th colspan=2/Evaluating Expression &amp; Browsing Result//
+	  <tr/<td/<key/C-. b C-b//<td/browse buffer//
+	  <tr/<td/<key/C-. b C-r//<td/browse region//
+	  <tr/<td/<key/C-. b C-l//<td/browse line//
+	  <tr/<td/<key/C-. b C-p//<td/browse paragraph//
+	  <tr/<th colspan=2/Evaluating Expression &amp; Showing Result//
+	  <tr/<td/<key/C-. s C-b//<td/show buffer//
+	  <tr/<td/<key/C-. s C-r//<td/show region//
+	  <tr/<td/<key/C-. s C-l//<td/show line//
+	  <tr/<td/<key/C-. s C-p//<td/show paragraph//
+	  <tr/<th colspan=2/Interacting With Tools//
+	  <tr/<td/<key/C-. C-. s//<td/open system panel//
+	  <tr/<td/<key/C-. C-. c//<td/open compiler panel//
+	  <tr/<td/<key/C-. C-. p//<td/start profiler//
+	  <tr/<td/<key/C-. C-. d//<td/start debugger//
+	  <tr/<td/<key/C-x SPC//<td/set breakpoint on current line//
+	</table>
+</P>
+    </Chapter>
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
       <P>
