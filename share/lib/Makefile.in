@@ -78,7 +78,7 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPMisc $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
-GTKSRC  = GTK GDK
+GTKSRC  = GTK GDK Glade
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC  = Macro BackquoteMacro LoopMacro
 
