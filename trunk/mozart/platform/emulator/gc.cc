@@ -10,7 +10,7 @@
 */
 
 #undef TURNED_OFF
-#define TURNED_OFF
+// #define TURNED_OFF
 
 #include <ctype.h>
 
@@ -53,16 +53,10 @@ void performCopying(void);
   if (GCISMARKED((int)elem)) return (type) GCUNMARK((int) elem);
 
 
-#ifdef DEBUG_GC
-#define DebugGc(Code) Code
-#else
-#define DebugGc(Code)
-#endif
-
 //// switches for debug macros
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk) 
-//#define INITFROM    // initialise copied object
-//#define VERBOSE     // inform user about current state of gc
+// #define INITFROM    // initialise copied object
+// #define VERBOSE     // inform user about current state of gc
 
 // the debug macros themselves
 #ifndef DEBUG_GC
@@ -414,7 +408,7 @@ static TypedPtrStack ptrStack;
 
 static SavedPtrStack savedPtrStack;
 
-DebugGc(static int updateStackCount);
+DebugGCT(static int updateStackCount);
 
 
 //*****************************************************************************
@@ -433,15 +427,13 @@ inline void setHeapCell (int* ptr, int newValue)
   if (opMode == IN_TC) {
     savedPtrStack.pushPtr(ptr, (int) *ptr);
   }
-#ifdef DEBUG_GC
-  if (opMode == IN_GC &&
-      inChunkChain (heapGetStart (), (void *)ptr) && GCISMARKED (newValue))
-    error ("storing marked value in 'TO' space");
-#endif
-#ifdef DEBUG_GC
-  if (opMode == IN_GC && inChunkChain (from, (void *) GCUNMARK (newValue)))
-    error ("storing (marked) ref in to FROM-space");
-#endif
+  DebugGC(opMode == IN_GC
+	   && inChunkChain (heapGetStart (), (void *)ptr)
+	   && GCISMARKED (newValue),
+	   error ("storing marked value in 'TO' space"));
+  DebugGC(opMode == IN_GC
+	  && inChunkChain (from, (void *) GCUNMARK (newValue)),
+	  error ("storing (marked) ref in to FROM-space"));
   *ptr = newValue;
 }
 
@@ -515,10 +507,8 @@ inline SuspContinuation *SuspContinuation::gcCont()
   SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
   ptrStack.push(ret, PTR_SUSPCONT);
   
-#ifdef DEBUG_GC
-  if (opMode == IN_TC && !isLocalBoard(node))
-    error ("non-local board in TC mode is being copied");
-#endif
+  DebugGC(opMode == IN_TC && !isLocalBoard(node),
+	  error ("non-local board in TC mode is being copied"));
   
   setHeapCell((int *)&pc, GCMARK(ret));
   return ret;
@@ -564,7 +554,7 @@ RefsArray gcRefsArray(RefsArray r)
 void CFuncContinuation::gcRecurse(void)
 {
   xRegs = gcRefsArray(xRegs);
-  GCREF(node);
+  node = node->gcBoard();
 }
 
 CFuncContinuation *CFuncContinuation::gcCont(void)
@@ -595,7 +585,7 @@ inline void Continuation::gcRecurse(){
 }
 
 inline void SuspContinuation::gcRecurse(){
-  GCREF(node);
+  node=node->gcBoard();
   Continuation::gcRecurse();
 }
 
@@ -675,25 +665,6 @@ inline SRecord *SRecord::gc()
   return ret;
 }
 
-ConstTerm *ConstTerm::gc()
-{
-  CHECKCOLLECTED(type, ConstTerm *);
-
-  switch (typeOf()) {
-  case Co_Board:
-    return ((Board *) this)->gc();
-  case Co_Actor:
-    return ((Actor *) this)->gc();
-  case Co_Thread:
-    return ((Thread *) this)->gc();
-
-  default:
-    error("ConstTerm::gc: unknown tag 0x%x", typeOf());
-    return NULL;
-  }
-}
-
-
 // mm2: what shall we check here ???
 inline Bool isInTree (Board *b)
 {
@@ -706,20 +677,22 @@ inline Bool isInTree (Board *b)
 }
 
 
-/* return NULL if either is marked as dead
- * or contains pointer to dead node;
+/* return NULL if contains pointer to dead node.
+   the check for a dead suspension is done in SuspList::gc
+   because Threads contain Suspensions which are marked dead
  */
-inline Suspension *Suspension::gc(Bool tcFlag){
+inline Suspension *Suspension::gcSuspension(Bool tcFlag){
   if (this == NULL) return NULL;
   
   CHECKCOLLECTED(flag, Suspension*);
   
   Board *el = getNode()->gcGetBoardDeref();
 
-  if (isDead() || !el) {
+  if (!el) {
     return NULL;
   }
- 
+
+  // mm2: el may be a GCMARK'ed board
   if (tcFlag && !isInTree(el)) {
     return NULL;
   }
@@ -728,7 +701,7 @@ inline Suspension *Suspension::gc(Bool tcFlag){
 
   switch (flag & (cont|cfun)){
   case null:
-    newSusp->item.node = (Board*)item.node->gc();
+    newSusp->item.node = item.node->gcBoard();
     break;
   case cont:
     newSusp->item.cont = item.cont->gcCont();
@@ -753,13 +726,19 @@ inline Suspension *Suspension::gc(Bool tcFlag){
  */
 SuspList *SuspList::gc(Bool tcFlag)
 {
+  GCPROCMSG("SuspList::gc");
+
   SuspList *ret = NULL;
 
   for(SuspList* help = this; help != NULL; help = help->next) {
-    Suspension *aux = help->getSusp()->gc(tcFlag);
-    if (aux == NULL)
+    Suspension *aux1 = help->getSusp();
+    if (aux1->isDead()) {
       continue;
-
+    }
+    Suspension *aux = aux1->gcSuspension(tcFlag);
+    if (!aux) {
+      continue;
+    }
     if (help->isCondSusp()){
       Condition *auxConds = ((CondSuspList*)help)->getConds();
       unsigned int auxNumOfConds = ((CondSuspList*)help)->getCondNum();
@@ -777,35 +756,6 @@ SuspList *SuspList::gc(Bool tcFlag)
   return ret;
 }
 
-Board *Board::gcGetBoardDeref()
-{
-  Board *bb = this;
-  while (OK) {
-    if (GCISMARKED(*(int*)bb)) {
-      return (Board*) GCUNMARK(*(int*)bb);
-    }
-    if (bb->isDiscarded() || bb->isFailed()) {
-      return NULL;
-    } else if (bb->isCommitted()) {
-      bb = bb->board;
-    } else {
-      return bb;
-    }
-  }
-  error("Board::gcGetBoardDeref");
-}
-
-// This procedure derefences cluster chains and collects only the object at 
-// the end of such a chain.
-Board *gcBoardChain(Board* bb)
-{
-  GCPROCMSG("gcBoardChain");
-
-  bb=bb->gcGetBoardDeref();
-  
-  return bb ? bb->gc() : bb;
-}
-
 // This procedure collects the entry points into heap provided by variables, 
 // without copying the tagged reference of the variable itself.
 TaggedRef gcVariable(TaggedRef var)
@@ -818,9 +768,9 @@ TaggedRef gcVariable(TaggedRef var)
     {
       Board *home = tagged2VarHome(var);
       INFROMSPACE(home);
-      home = gcBoardChain(home);
+      home = home->gcBoard();
       TOSPACE (home);
-      return makeTaggedUVar(home);
+      return home ? makeTaggedUVar(home) : makeTaggedNULL();
     }
     
   case SVAR:
@@ -829,7 +779,12 @@ TaggedRef gcVariable(TaggedRef var)
       INFROMSPACE(cv);
       if (GCISMARKED(*(int*)cv))
 	return makeTaggedSVar((SVariable*)GCUNMARK(*(int*)cv));
-      
+
+      Board *newBoard = cv->clusterNode->gcBoard();
+      if (!newBoard) {
+	return makeTaggedNULL();
+      }
+
       int cv_size;
       cv_size = sizeof(SVariable);
       
@@ -842,17 +797,10 @@ TaggedRef gcVariable(TaggedRef var)
       else
 	new_cv->suspList = new_cv->suspList->gc(NO);
       
-#ifdef DEBUG_GC
-      {
-	Board *newBoard = gcBoardChain(new_cv->clusterNode);
-	if (new_cv->clusterNode == newBoard)
-	  error ("home node of variable is not copied");
-	new_cv->clusterNode = newBoard;
-      }
-#else
-      new_cv->clusterNode = gcBoardChain(new_cv->clusterNode);
-#endif
-      
+      DebugGC(new_cv->clusterNode == newBoard,
+	      error ("home node of variable is not copied"));
+
+      new_cv->clusterNode = newBoard;
       return makeTaggedSVar(new_cv);
     }
   case CVAR:
@@ -863,6 +811,11 @@ TaggedRef gcVariable(TaggedRef var)
       if (GCISMARKED(*(int*)gv))
 	return makeTaggedCVar((GenCVariable*)GCUNMARK(*(int*)gv));
       
+      Board *newBoard = gv->clusterNode->gcBoard();
+      if (!newBoard) {
+	return makeTaggedNULL();
+      }
+
       int gv_size = gv->getSize();
       
       GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
@@ -875,17 +828,10 @@ TaggedRef gcVariable(TaggedRef var)
 	new_gv->suspList = new_gv->suspList->gc(NO);
       new_gv->gc();
 
-#ifdef DEBUG_GC
-      {
-	Board *newBoard = gcBoardChain(new_gv->clusterNode);
-	if (new_gv->clusterNode == newBoard)
-	  error ("home node of variable is not copied");
-	new_gv->clusterNode = newBoard;
-      }
-#else
-      new_gv->clusterNode = gcBoardChain(new_gv->clusterNode);
-#endif //DEBUG_GC
-      
+      DebugGC(new_gv->clusterNode == newBoard,
+	      error ("home node of variable is not copied"));
+
+      new_gv->clusterNode = newBoard;
       return makeTaggedCVar(new_gv);
     }
   default:
@@ -981,7 +927,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
 
   TypeOfTerm auxTermTag = tagTypeOf(auxTerm);
 
-  DebugGc(INTOSPACE(auxTermPtr));
+  DebugGCT(INTOSPACE(auxTermPtr));
 
   switch (auxTermTag) {
 
@@ -1003,7 +949,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     return;
 
   case CONST:
-    toTerm = makeTaggedConst(tagged2Const(auxTerm)->gc());
+    toTerm = makeTaggedConst(tagged2Const(auxTerm)->gcConstTerm());
     return;
 
   case BIGINT:
@@ -1020,7 +966,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     varCount++;
     if (auxTerm == fromTerm) {   // (fd-)variable is component of this block
       
-      DebugGc(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
+      DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
       if (updateVar(auxTerm)) {
 	setHeapCell((int*) &fromTerm, GCMARK(makeTaggedRef(&toTerm)));
 
@@ -1035,7 +981,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     // put address of ref cell to be updated onto update stack    
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
-      DebugGc(updateStackCount++);
+      DebugGCT(updateStackCount++);
       gcVariable(auxTerm);
       toTerm = (TaggedRef) auxTermPtr;
     } else {
@@ -1061,7 +1007,7 @@ int gcing = 1;
 void AM::gc(int msgLevel) {
   opMode = IN_GC;
   gcing = 0;
-  DebugGc(updateStackCount = 0);
+  DebugGCT(updateStackCount = 0);
 #ifdef TURNED_OFF
   fprintf(stdout, "I'm terribly sorry, but gc is currently turned off.\n"); 
   fflush(stdout);
@@ -1109,7 +1055,7 @@ void AM::gc(int msgLevel) {
   for(i = 0; i < FD_SETSIZE; i++)
     if(FD_ISSET(i,&globalReadFDs)) {
       if (i != fileno(QueryFILE)) {
-	GCREF(ioNodes[i]);
+	ioNodes[i] = ioNodes[i]->gcBoard();
       }
     } 
   performCopying();
@@ -1135,6 +1081,7 @@ void AM::gc(int msgLevel) {
   PRINTTOSPACE;
 
   deleteChunkChain(oldChain);
+
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
@@ -1175,7 +1122,7 @@ void processUpdateStack(void)
   while (!updateStack.empty())
     {
       TaggedRef *Term = updateStack.pop();
-      DebugGc(updateStackCount--;);
+      DebugGCT(updateStackCount--;);
       TaggedRef auxTerm     = *Term;
       TaggedRef *auxTermPtr = NULL;
 
@@ -1188,36 +1135,33 @@ void processUpdateStack(void)
 	auxTerm = *auxTermPtr;
       }
 
-      switch(tagTypeOf(auxTerm)){
-      case UVAR:
-	{
-	  TaggedRef newVar = gcVariable(auxTerm);
+      TaggedRef newVar = gcVariable(auxTerm);
+
+      if (newVar == makeTaggedNULL()) {
+	*Term = newVar;
+	setHeapCell((int*) auxTermPtr,newVar);
+      } else {
+	switch(tagTypeOf(auxTerm)){
+	case UVAR:
 	  *Term = makeTaggedRef(newTaggedUVar(tagged2VarHome(newVar)));
-	}
-	break;
-      case SVAR:
-	{
-	  TaggedRef newVar = gcVariable(auxTerm);
+	  break;
+	case SVAR:
 	  *Term = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
-	}
-	break;
-      case CVAR:
-	{
-	  TaggedRef newVar = gcVariable(auxTerm);
+	  break;
+	case CVAR:
 	  *Term = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
-	}
-	break;
-      default:
-	error("processUpdateStack: variable expected here.");
-      } // switch
-      INFROMSPACE(auxTermPtr);
-      setHeapCell((int*) auxTermPtr, GCMARK(makeTaggedRef(tagged2Ref(*Term))));
+	  break;
+	default:
+	  error("processUpdateStack: variable expected here.");
+	} // switch
+	INFROMSPACE(auxTermPtr);
+	setHeapCell((int*) auxTermPtr,
+		    GCMARK((int) *Term));
+      }
     } // while
 
-#ifdef DEBUG_GC
-  if (updateStackCount != 0)
-    error ("updateStackCount != 0");
-#endif
+  DebugGC(updateStackCount != 0,
+	  error ("updateStackCount != 0"));
 }
 
 // all nodes but node self
@@ -1251,11 +1195,11 @@ Board* AM::copyTree (Board* bb,Bool *isGround)
   varCount=0;
   timeForCopy -= usertime();
 
-  DebugGc(updateStackCount = 0);
+  DebugGCT(updateStackCount = 0);
 
   fromCopyBoard = bb;
   setPathMarks(fromCopyBoard);
-  toCopyBoard = (Board *) fromCopyBoard->gc();
+  toCopyBoard = fromCopyBoard->gcBoard();
 
   performCopying();
 
@@ -1346,7 +1290,7 @@ TaskStack *TaskStack::gc()
 
     switch (cFlag){
       case C_NERVOUS:
-      newBB = bb->gc();
+      newBB = bb->gcBoard();
       if (newBB) {
 	newStack->gcQueue(setContFlag(newBB,cFlag));
       }
@@ -1355,7 +1299,7 @@ TaskStack *TaskStack::gc()
     case C_XCONT:
     case C_CONT: 
       // Continuation to continue at codearea PC
-      newBB = bb->gc();
+      newBB = bb->gcBoard();
       if (!newBB) {
 	pop(); // pc
 	pop(); // Y
@@ -1386,7 +1330,7 @@ TaskStack *TaskStack::gc()
     case C_CFUNC_CONT:
       {
 	// Continuation to continue at c codeaddress
-	newBB = bb->gc();
+	newBB = bb->gcBoard();
 	if (!newBB) {
 	  pop(); // BIFun
 	  pop(); // Suspension
@@ -1399,7 +1343,7 @@ TaskStack *TaskStack::gc()
 	newStack->gcQueue(pop()); // BIFun
 	
 	Suspension* susp = (Suspension*) pop();
-	newStack->gcQueue(susp->gc(NO));
+	newStack->gcQueue(susp->gcSuspension());
 	
 	ra = (RefsArray) pop();
 	newStack->gcQueue(gcRefsArray(ra));
@@ -1470,16 +1414,35 @@ int TaskStack::gcGetUsedSize()
 //                           NODEs
 //*****************************************************************************
 
+ConstTerm *ConstTerm::gcConstTerm()
+{
+  CHECKCOLLECTED(type, ConstTerm *);
+
+  switch (typeOf()) {
+  case Co_Board:
+    return ((Board *) this)->gcBoard();
+  case Co_Actor:
+    return ((Actor *) this)->gc();
+  case Co_Thread:
+    return ((Thread *) this)->gc();
+
+  default:
+    error("ConstTerm::gcConstTerm: unknown tag 0x%x", typeOf());
+    return NULL;
+  }
+}
+
 void Thread::GC()
 {
   GCREF(Head);
   GCREF(Tail);
   GCREF(Current);
   GCREF(Root);
-  if (am.currentTaskStack && Current) {
-    am.currentTaskStack=Current->taskStack;
+
+  if (Current && Current->isNormal()) {
+    am.currentTaskStack = Current->u.taskStack;
   } else {
-    am.currentTaskStack=(TaskStack *) NULL;
+    am.currentTaskStack = (TaskStack *) NULL;
   }
 }
 
@@ -1502,11 +1465,16 @@ void Thread::gcRecurse()
   GCREF(prev);
 
   if (isNormal()) {
-    GCREF(taskStack);
+    GCREF(u.taskStack);
   } else if (isWarm()) {
-    suspension=suspension->gc(OK); // mm2 ???
+    u.suspension=u.suspension->gcSuspension();
+    // suspension may be dead
+    if (!u.suspension) {
+      error("mm2: never be here");
+      flags=0; // == T_Normal
+    }
   } else if (isNervous()) {
-    GCREF(board);
+    u.board=u.board->gcBoard();
   } else {
     error("Thread::gcRecurse");
   }
@@ -1514,18 +1482,49 @@ void Thread::gcRecurse()
 
 void Board::GC()
 {
-  GCREF(Root);
-  Board::SetCurrent(Current->gc(),NO);
+  Root=Root->gcBoard();
+  Board::SetCurrent(Current->gcBoard(),NO);
 }
 
-Board *Board::gc()
+
+Board *Board::gcGetBoardDeref()
 {
-  CHECKCOLLECTED(flags, Board *);
+  Board *bb = this;
+  while (OK) {
+    if (GCISMARKED(bb->suspCount)) {
+      return bb;
+    }
+    if (bb->isDiscarded() || bb->isFailed()) {
+      return NULL;
+    } else if (bb->isCommitted()) {
+      bb = bb->u.board;
+    } else {
+      return bb;
+    }
+  }
+  error("Board::gcGetBoardDeref");
+}
+
+// This procedure derefences cluster chains and collects only the object at 
+// the end of such a chain.
+Board *Board::gcBoard()
+{
+  GCPROCMSG("Board::gcBoard");
+  Board *bb;
+  bb=this->gcGetBoardDeref();
+  
+  return bb ? bb->gcBoard1() : bb;
+}
+
+Board *Board::gcBoard1()
+{
+  GCPROCMSG("Board::gcBoard1");
+  CHECKCOLLECTED(suspCount, Board *);
   size_t size;
   size = sizeof(Board);
   Board *ret = (Board *) gcRealloc(this,size);
   ptrStack.push(ret,PTR_BOARD);
-  setHeapCell((int *)&flags, GCMARK(ret));
+  setHeapCell((int *)&suspCount, GCMARK(ret));
   return ret;
 }
 
@@ -1533,11 +1532,12 @@ void Board::gcRecurse()
 {
   GCMETHMSG("Board::gc");
   if (isCommitted()) {
-    body.defeat();
-    GCREF(board);
+    error("Board::gcRecurse:: never collect committed nodes");
+//    body.defeat();
+//    GCREF(u.board);
   } else {
     body.gcRecurse();
-    GCREF(actor);
+    GCREF(u.actor);
   }
   script.gc();
 }
@@ -1561,7 +1561,7 @@ void Actor::gcRecurse()
 {
   GCMETHMSG("Actor::gc");
   next.gcRecurse();
-  GCREF(board);
+  board=board->gcBoard();
   if (isWait()) {
     ((WaitActor *)this)->gcRecurse();
   }
@@ -1574,7 +1574,7 @@ void WaitActor::gcRecurse()
   *newChilds++ = (Board *) no;
   for (int i=0; i < no; i++) {
     if (childs[i]) {
-      newChilds[i] = childs[i]->gc();
+      newChilds[i] = childs[i]->gcBoard();
     } else {
       newChilds[i] = (Board *) NULL;
     }
@@ -1613,7 +1613,7 @@ void SRecord::gcRecurse()
   case R_CELL:
     {
       Cell *c = (Cell *) this;
-      c->clusterNode = gcBoardChain(c->clusterNode);
+      c->clusterNode = c->clusterNode->gcBoard();
       gcTagged(c->val,c->val);
       break;
     }
