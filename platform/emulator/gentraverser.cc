@@ -75,6 +75,7 @@ void GenTraverser::doit()
     case LTUPLE:
       if (!processLTuple(t)) {
 	LTuple *l = tagged2LTuple(t);
+	ensureFree(1);
 	put(l->getTail());
 	t = l->getHead();
 	goto bypass;
@@ -90,6 +91,7 @@ void GenTraverser::doit()
 	// 
 	// The order is: label, [arity], subrees...
 	// Both tuple and record args appear in a reverse order;
+	ensureFree(argno+2);	// pessimistic approximation;
 	for(int i = 0; i < argno; i++)
 	  put(rec->getArg(i));
 	if (!rec->isTuple())
@@ -121,6 +123,7 @@ void GenTraverser::doit()
 	  int i = d->getFirst();
 	  i = d->getNext(i);
 	  // (pairs will be added on the receiver site in reverse order);
+	  ensureFree(i+i);
 	  while(i>=0) {
 	    put(d->getValue(i));
 	    put(d->getKey(i));
@@ -157,6 +160,7 @@ void GenTraverser::doit()
 	if (!processAbstraction(t, ct)) {
 	  Abstraction *pp = (Abstraction *) t;
 	  int gs = pp->getPred()->getGSize();
+	  ensureFree(gs);
 	  for (int i=0; i < gs; i++)
 	    put(pp->getG(i));
 	}
@@ -255,7 +259,7 @@ repeat:
       *spointer = value;
       DebugCode(debugNODES++;);
       CrazyDebug(debugNODES++;);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -263,7 +267,7 @@ repeat:
   case BT_buildValue:
     {
       GetBTTaskArg1NoDecl(frame, OZ_Term, value);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -364,7 +368,7 @@ repeat:
 	set(recTerm, memoIndex);
 	doMemo = NO;
       }
-      DiscardSetBT2Frames(frame);
+      DiscardBT2Frames(frame);
 
       //
       GetBTTaskType(frame, nt);
@@ -373,7 +377,7 @@ repeat:
 	CrazyDebug(debugNODES++;);
 	GetBTTaskPtr1(frame, OZ_Term*, spointer);
 	*spointer = recTerm;
-	DiscardSetBTFrame(frame);
+	DiscardBTFrame(frame);
 
 	//
 	while (oz_isCons(arity)) {
@@ -411,7 +415,7 @@ repeat:
     {
       GetBTTaskPtr1(frame, SRecord*, rec);
       GetBTTaskArg2(frame, OZ_Term, fea);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       rec->setFeature(fea, value);
       //
       DebugCode(debugNODES++;);
@@ -441,7 +445,7 @@ repeat:
   case BT_fsetvalue:
     {
       OZ_Term *ret;
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       makeFSetValue(value, ret);
       value = *ret;
       GetBTTaskTypeNoDecl(frame, type);
@@ -451,7 +455,7 @@ repeat:
   case BT_fsetvalueMemo:
     {
       GetBTTaskArg1(frame, int, memoIndex);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       OZ_Term *ret;
       makeFSetValue(value, ret);
       value = *ret;
@@ -467,7 +471,7 @@ repeat:
     {
       Assert(oz_onToplevel());
       GetBTTaskPtr1(frame, GName*, gname);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
 
       //
       OZ_Term chunkTerm;
@@ -495,7 +499,7 @@ repeat:
     {
       Assert(oz_isSRecord(value));
       GetBTTaskPtr1(frame, GName*, gname);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
 
       //      
       OZ_Term classTerm;
@@ -534,13 +538,13 @@ repeat:
       Assert(oz_onToplevel());
       GetBTTaskPtr1(frame, GName*, gname);
       GetBTTaskArg2(frame, int, maybeMemoIndex);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       GetBTFrameArg1(frame, int, arity);
       GetBTFrameArg2(frame, int, gsize);
       GetBTFrameArg3(frame, int, maxX);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       GetBTFramePtr1(frame, ProgramCounter, pc);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       OZ_Term name  = value;
       OZ_Term procTerm;
 
@@ -592,7 +596,7 @@ repeat:
     {
       GetBTTaskPtr1(frame, Abstraction*, pp);
       GetBTTaskArg2(frame, int, ind);
-      DiscardSetBTFrame(frame);
+      DiscardBTFrame(frame);
       pp->initG(ind, value);
       //
       DebugCode(debugNODES++;);
@@ -605,4 +609,7 @@ repeat:
   default:
     OZ_error("Builder: unknown task!");
   }
+
+  //
+  SetBTFrame(frame);
 }
