@@ -4,20 +4,6 @@ $cmode='dyn';
 (
 
     ###
-    ### Connection
-    ###
-
-    'close'		=> { in  => [],
-			     out => [],
-			     BI  => BIClosePID,
-			     native => true},
-
-    'send'		=> { in  => ['+virtualString','+int','+int','+int','+int','value'],
-			     out => [],
-			     BI  => BISendPID,
-			     native => true},
-
-    ###
     ### Perdio
     ###
 
@@ -56,13 +42,6 @@ $cmode='dyn';
     'printOwnerTable'	=> { in  => [],
 			     out => [],
 			     BI  => BIprintOwnerTable,
-			     module=>'perdio',
-			     native => true},
-
-
-    'portWait'         =>  { in  => ['+port','+int'],
-			     out => [],
-			     BI  => BIportWait,
 			     module=>'perdio',
 			     native => true},
 

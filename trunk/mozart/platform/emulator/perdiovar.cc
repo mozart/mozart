@@ -28,6 +28,10 @@
 #pragma implementation "perdiovar.hh"
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #include "am.hh"
 #include "genvar.hh"
 #include "perdio.hh"
@@ -137,7 +141,11 @@ void PerdioVar::dispose(void)
 //-----------------------------------------------------------------------------
 // Implementation of interface functions
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(PerdioVar_is, 1,1)
 {
   OZ_RETURN(isPerdioVar(oz_deref(OZ_in(0)))?NameTrue:NameFalse);
 } OZ_BI_end
+
+#endif

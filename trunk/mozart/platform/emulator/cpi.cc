@@ -28,6 +28,11 @@
 #pragma implementation "cpi.hh"
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
+
 #include <math.h>
 
 #include "cpi.hh"
@@ -146,6 +151,8 @@ OZ_Term getConstraintsList(SuspList * sl)
   return cl;
 }
 
+#ifdef MISC_BUILTINS
+
 OZ_C_proc_begin(BIgetConstraints, 2)
 {
 #ifdef DEBUG_CHECK
@@ -255,5 +262,8 @@ OZ_C_proc_begin(BIgetConstraints, 2)
 }
 OZ_C_proc_end     
 
+#endif
+
 // End of File
 //-----------------------------------------------------------------------------
+
