@@ -34,6 +34,9 @@
 
 #define OLDEMU
 
+#ifdef INTERFACE
+#pragma implementation "complalldist.hh"
+#endif
 #include "complalldist.hh"
 
 #include <stdlib.h>
