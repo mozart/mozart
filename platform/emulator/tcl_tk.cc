@@ -186,7 +186,7 @@ OZ_C_proc_begin(BIgetTclNames,3) {
     am.addSuspendVarList(t_ptr);                                  \
     return SUSPEND;                                               \
   } else {                                                        \
-    (TS)->setLock(makeTaggedRef(newTaggedUVar(am.currentBoard))); \
+    (TS)->setLock(oz_newVariable()); \
   }                                                               \
 }
 
@@ -247,7 +247,7 @@ public:
 
   void enterReturn(TaggedRef ret, TaggedRef cast) {
     TaggedRef newt = OZ_cons(OZ_cons(ret,cast),
-			     makeTaggedRef(newTaggedUVar(am.currentBoard)));
+			     oz_newVariable());
     
     (void) OZ_unify(newt,tcl_rets);
     tcl_rets = tail(newt);
@@ -618,7 +618,7 @@ redo:
   
   write_start += ret;
 wait_select:
-  TaggedRef var = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  TaggedRef var = oz_newVariable();
   
   (void) am.select(tcl_fd, SEL_WRITE, NameUnit, var);
   DEREF(var, var_ptr, var_tag);
