@@ -6,7 +6,7 @@ declare
 fun {NewEmacs IMPORT}
    \insert Standard.env
        = IMPORT.'Standard'
-   
+
    TimeoutToUpdateBar = 430
    TimeoutToConfigBar = 70
 
@@ -109,10 +109,9 @@ fun {NewEmacs IMPORT}
    end
 
    Emacs =
-   {New class
+   {New class $
 
 	   prop
-	      locking
 	      final
 
 	   attr
@@ -123,13 +122,9 @@ fun {NewEmacs IMPORT}
 	      skip
 	   end
 
-	   meth setVerbose(B)
-	      Verbose <- B
-	   end
-
-	   meth checkVerbose($)
-	      @Verbose
-	   end
+	   %% should we print debugging code?
+	   meth setVerbose(B) Verbose <- B end
+	   meth checkVerbose($) @Verbose end
 
 	   meth bar(file:F line:L column:C state:S)
 	      BarSync <- _ = unit
@@ -171,10 +166,5 @@ fun {NewEmacs IMPORT}
 in
 
    \insert 'Emacs.env'
-   
+
 end
-
-
-
-
-
