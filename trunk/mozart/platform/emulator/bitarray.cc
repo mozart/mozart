@@ -27,6 +27,7 @@
 
 #include "base.hh"
 #include "builtins.hh"
+#include "bits.hh"
 
 /*===================================================================
  * BitArray
@@ -103,7 +104,7 @@ public:
   void bor(const BitArray *);
   void band(const BitArray *);
   Bool disjoint(const BitArray *);
-  int card();
+  int card(void);
   void nimpl(const BitArray *);
   TaggedRef toList(void);
   TaggedRef complementToList(void);
@@ -135,66 +136,60 @@ OZ_Extension *BitArray::sCloneV(void) {
   return ret;
 }
 
+inline
 void BitArray::set(int i) {
   Assert(checkBounds(i));
   int relative = i - lowerBound;
   array[relative / BITS_PER_INT] |= 1 << (relative % BITS_PER_INT);
 }
 
+inline
 void BitArray::clear(int i) {
   Assert(checkBounds(i));
   int relative = i - lowerBound;
   array[relative / BITS_PER_INT] &= ~(1 << (relative % BITS_PER_INT));
 }
 
+inline
 Bool BitArray::test(int i) {
   Assert(checkBounds(i));
   int relative = i - lowerBound;
   return array[relative / BITS_PER_INT] & 1 << (relative % BITS_PER_INT);
 }
 
+inline
 void BitArray::bor(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
-  int size = getSize();
-  for (int i = 0; i < size; i++)
+  for (int i = getSize(); i--; )
     array[i] |= b->array[i];
 }
 
+inline
 void BitArray::band(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
-  int size = getSize();
-  for (int i = 0; i < size; i++)
+  for (int i = getSize(); i--; )
     array[i] &= b->array[i];
 }
 
+inline
 void BitArray::nimpl(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
-  int size = getSize();
-  for (int i = 0; i < size; i++)
+  for (int i = getSize(); i--; )
     array[i] &= ~b->array[i];
 }
 
+inline
 Bool BitArray::disjoint(const BitArray *b) {
   Assert(lowerBound == b->lowerBound && upperBound == b->upperBound);
-  int size = getSize();
-  for (int i = 0; i < size; i++) {
+  for (int i = getSize(); i--; )
     if ((array[i] & b->array[i]) != 0)
       return NO;
-  }
   return OK;
 }
 
-int BitArray::card() {
-  int ret = 0;
-  int size = getSize();
-  for (int i = 0; i < size; i++) {
-    unsigned int aux = array[i];
-    while(aux) {
-      if (aux&1) ret++;
-      aux = aux>>1;
-    }
-  }
-  return ret;
+inline
+int BitArray::card(void) {
+  return get_num_of_bits(getSize(),array);
 }
 
 
@@ -208,7 +203,7 @@ TaggedRef BitArray::toList(void) {
     word = array[i];
     for (j = BITS_PER_INT - 1; j >= 0; j--)
       if (word & (1 << j))
-	list = OZ_cons(OZ_int(offset + j),list);
+	list = oz_cons(makeTaggedSmallInt(offset + j),list);
     offset -= BITS_PER_INT;
   }
   return list;
@@ -223,7 +218,7 @@ TaggedRef BitArray::complementToList(void) {
     word = array[i];
     for (j = BITS_PER_INT - 1; j >= 0; j--)
       if (!(word & (1 << j)))
-	list = OZ_cons(OZ_int(offset + j),list);
+	list = oz_cons(makeTaggedSmallInt(offset + j),list);
     offset -= BITS_PER_INT;
   }
   return list;
@@ -237,10 +232,10 @@ TaggedRef BitArray::complementToList(void) {
 BitArray *VAR;                                  \
 {                                               \
   oz_declareNonvarIN(ARG,_VAR);                 \
-  if (!oz_isBitArray(oz_deref(_VAR))) {         \
+  if (!oz_isBitArray(_VAR)) {                   \
     oz_typeError(ARG,"BitArray");               \
   } else {                                      \
-    VAR = tagged2BitArray(oz_deref(_VAR));      \
+    VAR = tagged2BitArray(_VAR);                \
   }                                             \
 }
 
