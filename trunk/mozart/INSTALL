@@ -17,22 +17,22 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 * Fast installation
 
 Recommendations:
-	OZHOME should not be set in your environment
-	your PATH should not include a directory in which Oz executables
-		or scripts may be found
+ - OZHOME should not be set in your environment
+ - your PATH should not include a directory in which Oz executables
+   or scripts may be found
 
-./configure
-make
-make install
+    mkdir <builddir>
+    cd <builddir>
+    $srcdir/configure
+    make
+    make install
 
-* Multi platform installation
+optionally the targets
 
-# for every platform
-mkdir <platformdir>
-cd <platformdir>
-../configure
-make
-make install
+    make platform
+    make platform-install
+
+allow to build and install only the platform depended binaries.
 
 * configuration parameters
 
