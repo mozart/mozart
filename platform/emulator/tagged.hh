@@ -796,7 +796,11 @@ int getRefsArraySize(RefsArray a)
 }
 
 
+#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+static
+#else
 inline
+#endif
 Bool initRefsArray(RefsArray a, int size, Bool init)
 {
   setRefsArraySize(a,size);
