@@ -53,7 +53,7 @@ dnl check for -s option to oztool ld
 AC_MSG_CHECKING([for -s option to oztool ld])
 echo > oz_conftest.c
 if test -z "`${OZTOOL} c++ -c oz_conftest.c -o oz_conftest.o 2>&1 1>/dev/null`" &&
-   test -z "`${OZTOOL} ld -s oz_conftest.c -o oz_conftest.so 2>&1 1>/dev/null`"; then
+   test -z "`${OZTOOL} ld -s oz_conftest.c -o oz_conftest.so 2>&1`" && test -r oz_conftest.so; then
    MOZART_GTK_STRIP=-s
    AC_MSG_RESULT(yes)
 else
