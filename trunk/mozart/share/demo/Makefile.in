@@ -15,7 +15,7 @@ INSTALL_SRC	= @INSTALL_SRC@
 INSTALL_DIR	= @INSTALL_DIR@
 
 OZC		= @OZC@
-OZCA		= $(OZC) -l Application,Open
+OZCA		= $(OZC) #-l Application,Open
 
 
 #
@@ -69,7 +69,7 @@ WEBC = \
 all:: $(WEBPAGES) $(WEBC)
 
 ozp2html: make-ozp2html.oz
-	$(OZCA) $<
+	$(OZCA) -x $< -o $@
 
 $(WEBPAGES): ozp2html
 
@@ -138,13 +138,13 @@ all:: $(APPLETS)
 
 constraints/%.oza: constraints/%.oz
 	@mkdir constraints 2> /dev/null || true
-	(cd constraints && $(OZCA) ../$<)
+	(cd constraints && $(OZCA) -c ../$< -o ../$@)
 concurrent/%.oza: concurrent/%.oz
 	@mkdir concurrent 2> /dev/null || true
-	(cd concurrent && $(OZCA) ../$<)
+	(cd concurrent && $(OZCA) -c ../$< -o ../$@)
 distributed/%.oza: distributed/%.oz
 	@mkdir distributed 2> /dev/null || true
-	(cd distributed && $(OZCA) ../$<)
+	(cd distributed && $(OZCA) -c ../$< -o ../$@)
 
 JOBSHOP = \
 	compiler configure duration-tool examples job \
