@@ -376,10 +376,8 @@ int OZ_intToC(OZ_Term term)
 
 OZ_Term OZ_CStringToInt(char *str)
 {
-  if (!str || str[0] == '\0') {
-    OZ_warning("OZ_CStringToInt: empty string");
+  if (!str || str[0] == '\0')
     return 0;
-  }
 
   char *aux = str;
   int sign = 1;
