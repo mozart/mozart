@@ -313,7 +313,7 @@ in
 	       node(ct:CT ...) = {@Selected get($)}
 	       ScrolledTitleCanvas,tk(itemconfigure CT font:ThreadTreeBoldFont)
 	    else
-	       {OzcarMessage 'Select unknown node?!'}
+	       {OzcarError 'attempt to select unknown node #' # I}
 	    end
 	 end
       end
@@ -322,7 +322,7 @@ in
 	 CT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
 	 case N == nil then
-	    {OzcarMessage 'Mark unknown node?!'}
+	    {OzcarError 'attempt to mark unknown node #' # I}
 	 else
 	    CL = {GetColor How}
 	 in

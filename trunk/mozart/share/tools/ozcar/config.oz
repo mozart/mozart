@@ -68,9 +68,6 @@ OzcarMessagePrefix     = fun {$}
 			    {Thread.parentId ThisThread} # ']: '
 			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
-
-NoFileInfo             = ('step message without line number information, ' #
-			  'continuing thread #')
 NoThreads              = 'There is no thread attached'
 
 

@@ -38,7 +38,7 @@ local
       of H|T then
 	 {OzcarMessage 'readloop:'} {OzcarShow H}
 	 {Ozcar PrivateSend(readStreamMessage(H))}
-	 {OzcarMessage 'waiting for next stream message...'}
+	 {OzcarMessage 'ready for next message'}
 	 {OzcarReadEvalLoop T}
       end
    end
@@ -104,7 +104,7 @@ in
 	 Key = FrameId # I
       in
 	 SkippedProcs <- Key | @SkippedProcs
-	 {OzcarMessage 'Skipping procedure \'' # Name # '\''}
+	 {OzcarMessage 'skipping procedure \'' # Name # '\''}
 	 {OzcarShow @SkippedProcs}
 	 {Thread.resume T}
       end
@@ -122,9 +122,13 @@ in
 	       M = 'Thread #' # I # ' has reached a breakpoint'
 	       S = {Dictionary.get self.ThreadDic I}
 	    in
+	       {OzcarMessage 'breakpoint reached by attached thread #' # I}
 	       Gui,status(M)
 	       {S rebuild(true)}
-	    else skip end
+	    else
+	       {OzcarMessage ('`breakpoint\' message of unattached' #
+			      ' thread -- ignoring')}
+	    end
 
 	 [] entry(thr:T ...) then
 	    I = {Thread.id T}
@@ -146,13 +150,13 @@ in
 	       case {Cget subThreads} orelse
 		  {Not ThreadManager,Exists(Q $)} then
 		  case {UnknownFile M.file} then %% don't attach!
-		     {OzcarMessage 'Ignoring new thread'}
+		     {OzcarMessage 'ignoring new thread'}
 		     {Detach T}
 		  else %% yes, do attach!
 		     ThreadManager,add(T I Q)
 		  end
 	       else
-		  {OzcarMessage 'Ignoring new subthread'}
+		  {OzcarMessage 'ignoring new subthread'}
 		  {Detach T}
 	       end
 	    end
@@ -164,7 +168,7 @@ in
 	 in
 	    {OzcarShow @SkippedProcs # Key # Found}
 	    case Found then
-	       {OzcarMessage 'ignoring exit message for ignored application'}
+	       {OzcarMessage 'ignoring `exit\' message of ignored application'}
 	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
 	       {Thread.resume T}
 	    else
@@ -229,7 +233,7 @@ in
 	    else
 	       Q = {Thread.parentId T}
 	    in
-	       {OzcarMessage 'exception of unattached thread -- adding...'}
+	       {OzcarMessage 'exception of unattached thread'}
 	       ThreadManager,add(T I Q exc(X))
 	    end
 
@@ -241,7 +245,8 @@ in
 	    in
 	       {Stack rebuild(true)}
 	    else
-	       {OzcarMessage 'ignoring update of unknown thread'}
+	       {OzcarMessage
+		'`update\' message of unattached thread -- ignoring'}
 	    end
 
 	 else
@@ -269,7 +274,7 @@ in
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
-	 {OzcarMessage 'add ' # I # '/' # Q}
+	 {OzcarMessage 'adding thread #' # I # '/' # Q}
 	 case Exc of exc(X) then   %% exception
 	    Gui,addNode(I Q)
 	    ThreadManager,switch(I false)
@@ -291,7 +296,7 @@ in
 	 ThreadManager,removeSkippedProcs(I)
 	 case Mode == kill then
 	    Gui,killNode(I Next)
-	    {OzcarMessage 'next tree node is #' # Next}
+	    {OzcarMessage 'next node is #' # Next}
 	    {Dictionary.remove self.ThreadDic I}
 	    case ThreadManager,emptyForest($) then
 	       currentThread <- unit
@@ -421,7 +426,8 @@ in
 	    F = {CondSelect Frame file nofile}
 	 in
 	    case {UnknownFile F} then
-	       {OzcarMessage NoFileInfo # I}
+	       {OzcarMessage
+		'no position information -- continuing thread #' # I}
 	       {SendEmacs removeBar}
 	       {Thread.resume T}
 	    else
