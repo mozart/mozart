@@ -68,14 +68,13 @@ public:
   USEFREELISTMEMORY;
 
   Thread(int flags, int prio, Board * bb, int i)
-    : Suspendable(flags | prio, bb), id(i), abstr(0) {
+    : Suspendable(flags | (prio << PRIORITY_SHIFT), bb), id(i), abstr(0) {
     taskStack = new TaskStack(ozconf.stackMinSize); 
     ozstat.createdThreads.incf();
   }
 
   OZPRINTLONG;
 
-  Thread * gcThread(void);
   void gcRecurse(Thread *);
 
   unsigned int getID() { 

@@ -52,7 +52,7 @@ public:
   // mm2: possible bug: eqV may fail when dead thread is compared!
   virtual
   void gcRecurseV(void) {
-    Thread *tmpThread = thread->gcThread();
+    Thread *tmpThread = SuspToThread(thread->gcSuspendable());
     if (!tmpThread) {
       tmpThread=new Thread(thread->getFlags(),thread->getPriority(),
 			   oz_rootBoard(),thread->getID());
