@@ -64,7 +64,11 @@ define
    %% for execution, use the platform specific quote
 
    fun {ToProgramVS CMD} {QuoteUsing CMD QUOTE} end
-   fun {ToCommandVS CMD} SHELL#{ToProgramVS CMD} end
+   fun {ToCommandVS CMD|ARGS}
+      QARGS={QuoteUsing ARGS QUOTE}
+   in
+      SHELL#' '#CMD#if QARGS==nil then nil else ' '#QARGS end
+   end
 
    proc {ExecuteCommand CMD} VS={ToCommandVS CMD} in
       if {OS.system VS}\=0 then
