@@ -109,6 +109,7 @@ local
    class Button
       from Tk.button
       prop final
+
       meth init(parent:P text:T action:A)
 	 Tk.button,tkInit(parent:             P
 			  highlightthickness: 0
@@ -122,7 +123,9 @@ local
 
    class NumberEntry
       from TkTools.numberentry
+      prop final
       attr SetMode:true
+	 
       meth tkInit(...) = M
 	 TkTools.numberentry,M
 	 NumberEntry,tkBind(event:  '<FocusIn>'

@@ -78,8 +78,12 @@ local
 
    in
 
-      class ChooseImage from Image
+      class ChooseImage
+	 from Image
+	 prop final
+	    
 	 feat Tag
+	    
 	 meth init(parent:Parent)
 	    self.Tag = {Tk.getId}
 	    Image,init(parent: Parent
@@ -100,7 +104,10 @@ local
 	 end
       end
       
-      class FailedImage from Image
+      class FailedImage
+	 from Image
+	 prop final
+
 	 meth init(parent:Parent)
 	    Image,init(parent: Parent
 		       tcl:    o({FailedShape ImageCenter ImageCenter
@@ -111,7 +118,10 @@ local
 	 end
       end
 
-      class SucceededImage from Image
+      class SucceededImage
+	 from Image
+	 prop final
+
 	 meth init(parent:Parent)
 	    Image,init(parent: Parent
 		       tcl:    o({SucceededShape ImageCenter ImageCenter
@@ -122,7 +132,10 @@ local
 	 end
       end
 
-      class BlockedImage from Image
+      class BlockedImage
+	 from Image
+	 prop final
+	    
 	 meth init(parent:Parent)
 	    Image,init(parent: Parent
 		       tcl:    o({BlockedShape ImageCenter ImageCenter

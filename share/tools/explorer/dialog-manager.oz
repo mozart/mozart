@@ -9,6 +9,7 @@ local
 
    class AboutDialog 
       from TkTools.dialog
+      prop final
 
       meth init(master:Master)
 	 TkTools.dialog,tkInit(master:  Master
@@ -35,6 +36,7 @@ local
 
    class PostscriptDialog
       from TkTools.dialog
+      prop final
       
       meth init(master:M options:O)
 
@@ -107,6 +109,7 @@ local
 
    class DrawingDialog
       from TkTools.dialog
+      prop final
 
       meth init(master:M options:O)
 
@@ -182,6 +185,7 @@ local
 
       class SearchDialog
 	 from TkTools.dialog
+	 prop final
 
 	 meth init(master:M options:O)
 
