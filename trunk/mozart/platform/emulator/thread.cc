@@ -105,7 +105,10 @@ Bool Thread::discardLocalTasks()
   TaskStackEntry *tos = TaskStack::getTop();
   while (TRUE) {
     TaskStackEntry entry=*(--tos);
-    if (TaskStack::isEmpty(entry)) break;
+    if (TaskStack::isEmpty(entry)) {
+      TaskStack::setTop(tos+1);
+      return NO;
+    }
 
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
@@ -122,7 +125,5 @@ Bool Thread::discardLocalTasks()
       break;
     }
   }
-  TaskStack::setTop(tos);
-  return NO;
 }
 
