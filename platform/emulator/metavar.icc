@@ -22,7 +22,7 @@ inline
 Bool isHeapChunk(TaggedRef term)
 {
   term = deref(term);
-  return tagTypeOf(term) == CONST
+  return isConst(term)
     ? tagged2Const(term)->getType() == Co_HeapChunk
     : FALSE;
 }

@@ -68,7 +68,7 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 
   switch (tagTypeOf(number)) {
 
-  case FLOAT:
+  case OZFLOAT:
     hsh = tagged2Float(number)->hash() % size;
     break;
 
