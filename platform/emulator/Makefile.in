@@ -40,7 +40,8 @@ OZVERSION	= $(TOPDIR)/OZVERSION
 CREATEDOTHERS = \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
-	config.h builtins.tbl builtins.dcl
+	config.h builtins.tbl builtins.dcl \
+	fdbuilti.tbl fdbuilti.dcl
 
 CREATEDSRCS = \
 	scancode.cc copycode.cc opcodes.cc\
@@ -169,10 +170,15 @@ parser.hh: parser.yy
 	@$(MV) y.tab.h parser.hh
 
 builtins.o: builtins.tbl builtins.dcl
+fdbuilti.o: fdbuilti.tbl fdbuilti.dcl
 builtins.tbl: bidecl.perl
-	$(SRCDIR)/bidecl.perl -ctable > $@
+	$(SRCDIR)/bidecl.perl -ctable -exclude fd > $@
 builtins.dcl: bidecl.perl
-	$(SRCDIR)/bidecl.perl -cdecl > $@
+	$(SRCDIR)/bidecl.perl -cdecl -exclude fd > $@
+fdbuilti.tbl: bidecl.perl
+	$(SRCDIR)/bidecl.perl -ctable -include fd > $@
+fdbuilti.dcl: bidecl.perl
+	$(SRCDIR)/bidecl.perl -cdecl -include fd > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
