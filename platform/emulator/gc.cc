@@ -1491,7 +1491,7 @@ void AM::gc(int msgLevel)
 
   MemChunks *oldChain = MemChunks::list;
 
-  VariableNamer::cleanup();  /* drop bound variables */
+//  VariableNamer::cleanup();  /* drop bound variables */
 
   INITCHECKSPACE;
   initMemoryManagement();
@@ -1919,6 +1919,9 @@ void Thread::gcRecurse()
 
 Board* Board::gcGetNotificationBoard ()
 {
+  /* Kostja please check: Board::flags may contain forward reference */
+  return this;
+
   GCMETHMSG("Board::gcGetNotificationBoard");
   Board *bb = this;
   if (bb == (Board *) NULL)
