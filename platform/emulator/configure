@@ -7378,7 +7378,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in i386-mingw32-oztool .gdbinit conf.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in i386-mingw32-oztool .gdbinit conf-others.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -7594,7 +7594,7 @@ ac_eD='%g'
 if test "${CONFIG_HEADERS+set}" != set; then
 EOF
 cat >> $CONFIG_STATUS <<EOF
-  CONFIG_HEADERS="conf.h"
+  CONFIG_HEADERS="conf-others.h"
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 fi
