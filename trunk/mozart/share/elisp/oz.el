@@ -4,6 +4,8 @@
 ;; $Id$
 
 ;; BUGS
+;; - only enable menu items when a region is active:
+;;   (put 'comment-region 'menu-enable 'mark-active)
 ;; - oz-directive-on-region should write a \line directive at the start
 ;;   of the file.
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
@@ -1160,6 +1162,7 @@ to handle lines like 'attr a:'."
 		  ((looking-at "\\[\\]")
 		   (goto-char (match-end 0)))
 		  (t
+		   (forward-char)
 		   (setq nesting (1+ nesting)))))
 	(error "No matching closing parenthesis")))))
 
@@ -1206,8 +1209,7 @@ save for whitespace, then its indentation is not changed.  If the
 point was inside the line's leading whitespace, then it is moved to
 the end of this whitespace after indentation."
   (interactive)
-  (let ((old-case-fold-search case-fold-search))
-    (setq case-fold-search nil)   ; respect case
+  (let ((case-fold-search nil))   ; respect case
     (unwind-protect
 	(save-excursion
 	  (beginning-of-line)
@@ -1219,8 +1221,7 @@ the end of this whitespace after indentation."
 		     (delete-horizontal-space)
 		     (indent-to col))))))
       (if (oz-is-left)
-	  (skip-chars-forward " \t"))
-      (setq case-fold-search old-case-fold-search))))
+	  (skip-chars-forward " \t")))))
 
 (defun oz-calc-indent ()
   "Calculate the required indentation for the current line.
@@ -1343,8 +1344,7 @@ If there is none until the end of line, return the column of point."
   "Move forward one balanced Oz expression.
 With argument, do it that many times. Negative ARG means backwards."
   (interactive "p")
-  (let ((old-case-fold-search case-fold-search) pos)
-    (setq case-fold-search nil)
+  (let ((case-fold-search nil) pos)
     (or arg (setq arg 1))
     (if (< arg 0)
 	(backward-oz-expr (- arg))
@@ -1383,15 +1383,13 @@ With argument, do it that many times. Negative ARG means backwards."
 			   (error "Containing expression ends prematurely"))
 			  (t
 			   (forward-word 1)))))
-	      (setq arg (1- arg)))))))
-    (setq case-fold-search old-case-fold-search)))
+	      (setq arg (1- arg)))))))))
 
 (defun backward-oz-expr (&optional arg)
   "Move backward one balanced Oz expression.
 With argument, do it that many times. Argument must be positive."
   (interactive "p")
-  (let ((old-case-fold-search case-fold-search))
-    (setq case-fold-search nil)
+  (let ((case-fold-search nil))
     (or arg (setq arg 1))
     (while (> arg 0)
       (let ((pos (scan-sexps (point) -1)))
@@ -1409,8 +1407,7 @@ With argument, do it that many times. Argument must be positive."
 		 (setq arg (1+ arg)))
 		((looking-at oz-begin-pattern)
 		 (error "Containing expression ends prematurely")))
-	  (setq arg (1- arg)))))
-    (setq case-fold-search old-case-fold-search)))
+	  (setq arg (1- arg)))))))
 
 (defun mark-oz-expr (arg)
   "Set mark ARG balanced Oz expressions from point.
