@@ -151,6 +151,7 @@ public:
   }
 
   Bool _wakeup(Board *, PropCaller);
+  Bool _wakeup_outline(Board *, PropCaller);
   Bool _wakeupLocal(Board *, PropCaller);
 
   /*
