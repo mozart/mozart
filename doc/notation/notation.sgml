@@ -521,8 +521,7 @@
             <Grammar.Alt/<<unit>> | <<true>> | <<false>>/
             <!--** describe what omitted features mean -->
             <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
-              { [ ?={feature} <Q class=terminal/<<:>>/ ] ?={expression} }
-              [ <Q class=terminal/<<...>>/ ]
+              { ?={subtree} } [ <Q class=terminal/<<...>>/ ]
               <Q class=terminal/<<)>>//
             <Grammar.Alt/<Q class=terminal/<<[>>/ { ?={expression} }+
               <Q class=terminal/<<]>>//
@@ -537,6 +536,9 @@
           <Grammar.Rule/?={feature}
             <Grammar.Alt/?={variable} | ?={atom} | ?={int}/
             <Grammar.Alt/<<unit>> | <<true>> | <<false>>//
+          <Grammar.Rule/?={subtree}
+            <Grammar.Alt/[ ?={feature} <Q class=terminal/<<:>>/ ]
+              ?={expression}//
         <Para class=apropos><Title/Operators/
           Note that expressions with operators need additional disambiguating
           rules introduced in&nbsp;<Ptr to="section.context-free.operators">.
@@ -587,8 +589,7 @@
           bindings.
           <Grammar.Rule/?={pattern}
             <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
-              { [ ?={feature} <Q class=terminal/<<:>>/ ] ?={pattern} }
-              [ <Q class=terminal/<<...>>/ ]
+              { ?={subpattern} } [ <Q class=terminal/<<...>>/ ]
               <Q class=terminal/<<)>>//
             <Grammar.Alt/<Q class=terminal/<<[>>/ { ?={pattern} }+
               <Q class=terminal/<<]>>//
@@ -601,6 +602,8 @@
             <Grammar.Alt/?={pattern} <Q class=terminal/<<=>>/ ?={pattern}/
             <Grammar.Alt/<Q class=terminal/<<(>>/ ?={pattern}
               <Q class=terminal/<<)>>///
+          <Grammar.Rule/?={subpattern}
+            <Grammar.Alt/[ ?={feature} <Q class=terminal/<<:>>/ ] ?={pattern}//
         <P>
           Following the pattern an additional side condition can be given.
           It is only evaluated if the pattern matched, in the environment
@@ -1082,8 +1085,11 @@
             <TD/?{l}/
             <TD/?={label}/
           <TR>
-            <TD/?{f1}, &ellipsis; ?{fn}/
+            <TD/?{f1}, &ellipsis;, ?{fn}/
             <TD/?={feature}/
+          <TR>
+            <TD/?{s1}, &ellipsis;, ?{sn}/
+            <TD/?={subtree} or ?={subpattern}/
         </Table>
       <Para class=apropos><Title/Core Variables/
         The result of the transformation may have references to so-called
@@ -1206,6 +1212,14 @@
                 and ?{D'} is ?{D} with singleton variables and escapes
                 removed./
             </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
+              <Rewrite.To
+/<<local X in
+   X = ?{x}
+   local ?{D} in >>[ ?{S} ]<< X = ?{E} end
+end>>/
+            </Rewrite>
         <SubSection class=unnumbered>
           <Title/Grouping/
           <P>
@@ -1275,20 +1289,27 @@ end>>/
             <Rewrite>?={statement} ?={expression}
               <Rewrite.From
 /<<proc &ellipsis; {?{E} ?{P1} &ellipsis; ?{Pn}}
-   ?{SE}
+   ?{S}
 end>>/
               <Rewrite.To
 /<<proc &ellipsis; {?{E} X1 &ellipsis; X?{n}}
-   case X1#&ellipsis;#X?{n} of ?{P1}#&ellipsis;#?{Pn} then SE
+   case X1#&ellipsis;#X?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{S}
    end
 end>>/
               <Rewrite.Condition/if ?{P1} &ellipsis; ?{Pn} are
                 not distinct variables and no <<$>> occurs in
                 ?{P1} &ellipsis; ?{Pn}./
             </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From
+/<<?{x} = proc &ellipsis; {$ &ellipsis;} ?{SE} end>>/
+              <Rewrite.To/<<proc &ellipsis; {?{x} &ellipsis;} ?{SE} end>>/
+            </Rewrite>
         <SubSection class=unnumbered>
           <Title/Applications/
           <P>
+            Actual arguments are evaluated from left to right and after
+            the designator expression.
             <Rewrite>?={statement}
               <Rewrite.From/<<{?{E1} &ellipsis; ?{Ek} &ellipsis; ?{En}}>>/
               <Rewrite.To
@@ -1296,7 +1317,24 @@ end>>/
    X = ?{Ek}
    {?{E1} &ellipsis; X &ellipsis; ?{En}}
 end>>/
-              <Rewrite.Condition/if ?{Ek} is no variable./
+              <Rewrite.Condition/if ?{Ek} is no variable and all ?{Ei} with
+                ?{i} &lt; ?{k} are variables./
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = {?{E} ?{E1} &ellipsis; ?{En}}>>/
+              <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{En} X}>>/
+              <Rewrite.Condition/if no <<$>> occurs in ?{E1} &ellipsis; ?{En}
+                in pattern position./
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From
+/<<?{x} = {?{E} ?{E1} &ellipsis; ?{Ek} &ellipsis; ?{En}}>>/
+              <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{Ek'} &ellipsis; ?{En}}>>/
+              <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Ek} in
+                pattern position and no other&nbsp;<<$>> occurs in
+                ?{E1} &ellipsis; ?{En} in pattern position.
+                ?{Ek'} is the result of replacing the&nbsp;<<$>>
+                in pattern position in&nbsp;?{Ek} by&nbsp;?{x}./
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Boolean and Pattern-Matching Conditionals/
@@ -1366,65 +1404,54 @@ end>>/
 end>>/
               <Rewrite.Condition/if ?{E} is no variable./
             </Rewrite>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<lock ?{E1} then ?{E2} end>>/
-              <Rewrite.To
-/<<local X in
-   lock ?{E1} then X = ?{E2} end
-   X
-end>>/
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = lock ?{E1} then ?{E2} end>>/
+              <Rewrite.To/<<lock ?{E1} then ?{x} = ?{E2} end>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Threads/
           <P>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<thread ?{E} end>>/
-              <Rewrite.To
-/<<local X in
-   thread X = ?{E} end
-   X
-end>>/
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = thread ?{E} end>>/
+              <Rewrite.To/<<thread ?{x} = ?{E} end>>/
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Exception Handling/
           <P>
             <Rewrite>?={statement} ?={expression}
-              <!--** fix this: -->
               <Rewrite.From
-/<<try ?{SE}
+/<<try ?{SE1}
 catch ?{C1} [] &ellipsis; [] ?{Cn}
-<Span/[ /finally ?{S1}<Span/ ]/
+<Span//>>[ <<finally ?{S}>> ]<Code><Span//
 end>>/
-              <!--** fix this: -->
               <Rewrite.To
-/<<try ?{SE}
+/<<try ?{SE1}
 catch X then
    case X of ?{C1} [] &ellipsis; [] ?{Cn}
    else
       raise X end
    end
-<Span/[ /finally ?{S1}<Span/ ]/
+<Span//>>[ <<finally ?{S}>> ]<Code><Span//
 end>>/
               <Rewrite.Condition/if <<?{C1} [] &ellipsis; [] ?{Cn}>>
-                does not have the form <<?{x} then ?{S2}>>./
+                does not have the form <<?{x} then ?{SE2}>>./
             </Rewrite>
-            <Rewrite>?={expression}
-              <!--** fix this: -->
+          <P>
+            In the following rule, the intermediate variable&nbsp;<<Y>>
+            ensures that ?{x} is only bound iff evaluation of ?{E} does
+            not raise an exception.
+            <Rewrite>?={statement}
               <Rewrite.From
-/<<try ?{E}
-<Span/[ /catch ?{x} then ?{E}<Span/ ]/
-<Span/[ /finally ?{S}<Span/ ]/
-end>>/
-              <!--** fix this: -->
+/<<?{x} = try ?{E}
+    <Span//>>[ <<catch ?{x} then ?{E}>> ]<Code><Span//
+    <Span//>>[ <<finally ?{S}>> ]<Code><Span//
+    end>>/
               <Rewrite.To
-/<<local X in
-   try Y in
-      Y = ?{E}
-      X = Y
-   <Span/[ /catch ?{x} then X = ?{E}<Span/ ]/
-   <Span/[ /finally ?{S}<Span/ ]/
-   end
-   X
+/<<try Y in
+   Y = ?{E}
+   ?{y} = Y
+<Span//>>[ <<catch ?{x} then ?{y} = ?{E}>> ]<Code><Span//
+<Span//>>[ <<finally ?{S}>> ]<Code><Span//
 end>>/
             </Rewrite>
             <Rewrite>?={statement}
@@ -1457,11 +1484,9 @@ end>>/
               <Rewrite.From/<<raise ?{E} end>>/
               <Rewrite.To/<<{`Exception.raise` ?{E}}>>/
             </Rewrite>
-            <Rewrite>?={expression}
-              <Rewrite.From/<<raise ?{E} end>>/
-              <Rewrite.To
-/<<{`Exception.raise` ?{E}}
-unit>>/
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = raise ?{E} end>>/
+              <Rewrite.To/<<raise ?{E} end>>/
             </Rewrite>
             <Rewrite>?={statement} ?={expression}
               <Rewrite.From/<<raise ?{E1} with ?{E2} end>>/
@@ -1487,35 +1512,6 @@ end>>/
    X = ?{E2}
 end>>/
               <Rewrite.Condition/if ?{E1} is no variable./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x} = local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
-              <Rewrite.To
-/<<local X in
-   X = ?{x}
-   local ?{D} in >>[ ?{S} ]<< X = ?{E} end
-end>>/
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From
-/<<?{x} = proc &ellipsis; {$ &ellipsis;} ?{SE} end>>/
-              <Rewrite.To/<<proc &ellipsis; {?{x} &ellipsis;} ?{SE} end>>/
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From/<<?{x} = {?{E} ?{E1} &ellipsis; ?{En}}>>/
-              <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{En} X}>>/
-              <Rewrite.Condition/if no <<$>> occurs in ?{E1} &ellipsis; ?{En}
-                in pattern position./
-            </Rewrite>
-            <Rewrite>?={statement}
-              <Rewrite.From
-/<<?{x} = {?{E} ?{E1} &ellipsis; ?{Ek} &ellipsis; ?{En}}>>/
-              <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{Ek'} &ellipsis; ?{En}}>>/
-              <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Ek} in
-                pattern position and no other&nbsp;<<$>> occurs in
-                ?{E1} &ellipsis; ?{En} in pattern position.
-                ?{Ek'} is the result of replacing the&nbsp;<<$>>
-                in pattern position in&nbsp;?{Ek} by&nbsp;?{x}./
             </Rewrite>
         <SubSection class=unnumbered>
           <Title/Operators/
@@ -1709,6 +1705,7 @@ end>>/
                 and ?{D'} is ?{D} with singleton variables and escapes
                 removed./
             </Rewrite>
+            <!--** missing: ?{x} = cond/or/dis/choice => statement -->
         <SubSection class=unnumbered>
           <Title/Constructive Disjunction/
           <P>
