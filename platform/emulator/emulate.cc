@@ -9,27 +9,12 @@
 
   ------------------------------------------------------------------------
 
-  exported variables/s: no
-
-  exported procedures: for class AM;
-
-  ------------------------------------------------------------------------
-
-  internal static variables: no
-
-  internal procedures: no
-
   ------------------------------------------------------------------------
 */
 
 #ifdef __GNUC__
 #pragma implementation "emulate.hh"
 #endif
-
-
-// experimental feature to check if all branches are correctly reached
-// #define CheckBranch(X) printf(X); printf("\n")
-#define CheckBranch(X)
 
 #include "../include/config.h"
 #include "types.hh"
@@ -171,21 +156,27 @@ static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
 
 #define GET_CURRENT_PRIORITY() e->currentThread->getPriority()
 
-HookValue emulateHookOutline(AM *e, Abstraction *def,
-			     int arity,
-			     TaggedRef *arguments)
+/* the hook functions return:
+     TRUE: must reschedule
+     FALSE: can continue
+   */
+
+static
+Bool emulateHookOutline(AM *e, Abstraction *def=NULL,
+			     int arity=0,
+			     TaggedRef *arguments=NULL)
 {
   // without signal blocking;
   if (e->isSetSFlag(ThreadSwitch)) {
     if (Thread::QueueIsEmpty()
-	|| Thread::GetHead()->getPriority() < e->currentThread->getPriority()) {
+	|| Thread::GetHead()->getPriority() < e->currentThread->getPriority()){
       Alarm::RestartProcess();
     } else {
-      return HOOK_SCHEDULE;
+      return TRUE;
     }
   }
   if (e->isSetSFlag(StartGC)) {
-    return HOOK_SCHEDULE;
+    return TRUE;
   }
 
   blockSignals();
@@ -203,7 +194,7 @@ HookValue emulateHookOutline(AM *e, Abstraction *def,
     enterCall(e->currentBoard,def,arity,arguments);
   }
 
-  return HOOK_OK;
+  return FALSE;
 }
 
 
@@ -219,20 +210,20 @@ Bool hookCheckNeeded(AM *e)
 }
 
 inline
-HookValue emulateHook(AM * e,
-		      Abstraction * def,
-		      int arity,
-		      TaggedRef * arguments)
+Bool emulateHook(AM * e,
+		 Abstraction * def=NULL,
+		 int arity=0,
+		 TaggedRef * arguments=NULL)
 {
   if (!hookCheckNeeded(e)) {
-    return HOOK_OK;
+    return FALSE;
   }
   return emulateHookOutline(e, def, arity, arguments);
 }
 
 
 
-
+static
 TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 {
   if (arity == 0) {
@@ -259,13 +250,9 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
      if (! IsEx) {e->pushTask(CBB,ContAdr,Y,G);}			      \
      G = gRegs;								      \
 									      \
-     if (hookCheckNeeded(e)) {						      \
-       switch (emulateHookOutline(e,Pred,Arity,X)) {			      \
-       case HOOK_SCHEDULE:						      \
-	 e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);		      \
-	 goto LBLschedule;						      \
-       default: break;							      \
-       }								      \
+     if (emulateHook(e,Pred,Arity,X)) {					      \
+	e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);		      \
+	goto LBLschedule;						      \
      }
 
 // load a continuation into the machine registers PC,Y,G,X
@@ -472,11 +459,8 @@ void engine() {
  LBLpopTask:
   {
     DebugCheckT(Board *fsb);
-    switch (emulateHook(e,NULL,0,NULL)) {
-    case HOOK_SCHEDULE:
+    if (emulateHook(e)) {
       goto LBLschedule;
-    default:
-      break;
     }
 
     DebugCheckT(CAA = NULL);
@@ -596,7 +580,7 @@ void engine() {
 	  }
 
 	  exitCall(PROCEED,ozdeb);
-	  goto LBLreduce;
+	  goto LBLcheckEntailment;
 	}
 
       case C_CALL_CONT:
@@ -654,6 +638,7 @@ void engine() {
 	goto LBLTaskCFuncCont;
       default:
 	error("engine: POPTASK: unexpected task found.");
+	goto LBLerror;
       }
     }
 
@@ -676,7 +661,7 @@ void engine() {
 
     INSTALLPATH(tmpBB);
 
-    goto LBLreduce;
+    goto LBLcheckEntailment;
 
   LBLTaskCFuncCont:
 
@@ -700,9 +685,10 @@ void engine() {
 		     );
     case PROCEED:
       killPropagatedCurrentTaskSusp();
-      goto LBLreduce;
+      goto LBLcheckEntailment;
     default:
       error("Unexpected return value by c-function.");
+      goto LBLerror;
     } // switch
 
 
@@ -714,7 +700,21 @@ void engine() {
     goto LBLemulate;
   }
 
+  error("never here");
+  goto LBLerror;
+
 // ----------------- end popTask -----------------------------------------
+
+// ------------------------------------------------------------------------
+// *** Emulate if no task
+// ------------------------------------------------------------------------
+
+ LBLemulateHook:
+  if (emulateHook(e)) {
+    e->pushTaskOutline(CBB,PC,Y,G,X,XSize);
+    goto LBLschedule;
+  }
+  goto LBLemulate;
 
 // ------------------------------------------------------------------------
 // *** Emulate: execute continuation
@@ -829,6 +829,7 @@ void engine() {
 	DISPATCH(3);
       default:
 	error("Unexpected return value at CALLBUILTIN.");
+	goto LBLerror;
       }
     }
 
@@ -1138,7 +1139,7 @@ void engine() {
 	    CBB->incSuspCount();
 	    taggedBecomesSuspVar(APtr)->addSuspension(susp);
 	  }
-	  goto LBLreduce;
+	  goto LBLcheckEntailment;
 	}
 
       case FAILED:
@@ -1179,7 +1180,7 @@ void engine() {
 	  if (isAnyVar(BTag)) {
 	    taggedBecomesSuspVar(BPtr)->addSuspension(susp);
 	  }
-	  goto LBLreduce;
+	  goto LBLcheckEntailment;
 	}
       case FAILED:
 	JUMP( getLabelArg(PC+4) );
@@ -1206,7 +1207,7 @@ void engine() {
       CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
       shallowCP = NULL;
-      goto LBLreduce;
+      goto LBLcheckEntailment;
     }
 
 
@@ -1259,7 +1260,7 @@ void engine() {
 
   INSTRUCTION(RETURN)
   {
-    goto LBLreduce;
+    goto LBLcheckEntailment;
   }
 
 
@@ -1346,7 +1347,7 @@ void engine() {
 					    PC, Y, G, X, argsToSave));
       CBB->incSuspCount();
       taggedBecomesSuspVar(termPtr)->addSuspension (susp);
-      goto LBLreduce; // mm2 ???
+      goto LBLcheckEntailment; // mm2 ???
     } else {
       DISPATCH(3);
     }
@@ -1605,15 +1606,14 @@ void engine() {
 			     { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
 			     );
 	    case PROCEED:
-	      if (isExecute) {
-		goto LBLreduce;
-	      }
-	      switch (emulateHook(e,NULL,0,NULL)) {
-	      case HOOK_SCHEDULE:
-		e->pushTaskOutline(CBB,PC,Y,G);
+	      if (emulateHook(e)) {
+		if (!isExecute) {
+		  e->pushTaskOutline(CBB,PC,Y,G);
+		}
 		goto LBLschedule;
-	      case HOOK_OK:
-		break;
+	      }
+	      if (isExecute) {
+		goto LBLcheckEntailment;
 	      }
 	      JUMP(PC);
 	    default:
@@ -1763,7 +1763,7 @@ void engine() {
        }
 
        if (isExecute) {
-	 goto LBLreduce;
+	 goto LBLcheckEntailment;
        }
        goto LBLemulate;
      }
@@ -1820,7 +1820,7 @@ void engine() {
        }
 
        if (isExecute) {
-	 goto LBLreduce;
+	 goto LBLcheckEntailment;
        }
        JUMP(PC);
      }
@@ -1873,7 +1873,7 @@ void engine() {
 	 tmpBB->setCommitted(CBB);
 	 CBB->removeSuspension();
 
-	 goto LBLreduce;
+	 goto LBLcheckEntailment;
        }
 
       /* unit commit for WAITTOP */
@@ -1889,7 +1889,7 @@ void engine() {
 	Assert(ret != NO);
 	CBB->incSuspCount(bb->getSuspCount());
 	CBB->removeSuspension();
-	goto LBLreduce;
+	goto LBLcheckEntailment;
       }
 
       /* suspend WAITTOP */
@@ -1930,7 +1930,7 @@ void engine() {
 
 	LOADCONT(CAA->getNext());
 
-	goto LBLemulate;
+	goto LBLemulate; // no thread switch allowed here (CAA)
       }
 
       // suspend a actor
@@ -2083,7 +2083,7 @@ void engine() {
   INSTRUCTION(ENDOFFILE)
   INSTRUCTION(LABEL)
     warning("emulate: Unimplemented command");
-    goto LBLreduce;
+    goto LBLcheckEntailment;
 
 #if ! defined THREADED || THREADED == 0
   default:
@@ -2097,24 +2097,10 @@ void engine() {
 
 
 // ------------------------------------------------------------------------
-// *** Emulate if process node is ok
-// ------------------------------------------------------------------------
- LBLemulateCheckSwitch:
-  if (e->isSetSFlag(ThreadSwitch)) {
-    CheckBranch("emulateIf");
-    e->pushTaskOutline(CBB,PC,Y,G,X,XSize);
-    goto LBLschedule;
-  }
-  goto LBLemulate;
-
-// ----------------- end emulate if process -------------------------------
-
-
-// ------------------------------------------------------------------------
 // *** REDUCE Board
 // ------------------------------------------------------------------------
 
- LBLreduce:
+ LBLcheckEntailment:
   DebugTrace(trace("reduce board",CBB));
 
   /* optimize: builtin called on toplevel mm (29.8.94) */
@@ -2138,7 +2124,7 @@ void engine() {
 
       CBB->removeSuspension();
 
-      goto LBLemulateCheckSwitch;
+      goto LBLemulateHook;
     }
   } else if (CBB->isWait ()) {
 // WAITTTOP
@@ -2150,8 +2136,7 @@ void engine() {
       }
 
       DebugCheck(WaitActor::Cast(CBB->getActor())->hasOneChild(),
-		 error("reduce: waittop: can not happen");
-		 goto LBLerror;);
+		 error("reduce: waittop: can not happen"));
 
 // WAITTOP: no rule
       goto LBLpopTask;
@@ -2159,8 +2144,7 @@ void engine() {
 
     DebugCheck((CBB->isWaiting () == OK &&
 		WaitActor::Cast(CBB->getActor())->hasOneChild()),
-	       error("reduce: wait: unit commit can not happen");
-	       goto LBLerror;);
+	       error("reduce: wait: unit commit can not happen"));
     goto LBLpopTask;
 
 // WAIT: no rule
@@ -2330,7 +2314,7 @@ void engine() {
 	PC = AskActor::Cast(aa)->getElsePC();
 	if (PC != NOCODE) {
 	  CBB->removeSuspension();
-	  goto LBLemulateCheckSwitch;
+	  goto LBLemulateHook;
 	}
 
 /* rule: if fi --> false */
@@ -2347,7 +2331,7 @@ void engine() {
 	HANDLE_FAILURE(NULL,
 		       message("bottom commit");
 		       CBB->removeSuspension();
-		       goto LBLreduce;
+		       goto LBLcheckEntailment;
 		       );
       }
 /* rule: or <sigma> ro (unit commit rule) */
@@ -2360,7 +2344,7 @@ void engine() {
 	    HANDLE_FAILURE(NULL,
 			   message("unit commit failed");
 			   CBB->removeSuspension();
-			   goto LBLreduce;
+			   goto LBLcheckEntailment;
 			   );
 	  }
 
@@ -2371,7 +2355,7 @@ void engine() {
 	  /* unit commit & WAITTOP */
 	  if (waitBoard->isWaitTop()) {
 	    if (!waitBoard->hasSuspension()) {
-	      goto LBLreduce;
+	      goto LBLcheckEntailment;
 	    }
 
 	    /* or guard not completed:  e.g. or task X = 1 end [] false ro */
@@ -2382,7 +2366,7 @@ void engine() {
 	  LOADCONT(waitBoard->getBodyPtr());
 	  Assert(PC != NOCODE);
 
-	  goto LBLemulateCheckSwitch;
+	  goto LBLemulateHook;
 	}
       }
     } else {
