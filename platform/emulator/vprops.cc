@@ -127,6 +127,7 @@ enum EmulatorPropertyIndex {
   // LIMITS
   PROP_LIMITS_INT_MIN,
   PROP_LIMITS_INT_MAX,
+  PROP_LIMITS_BYTECODE_XREGISTERS,
   PROP_LIMITS,
   // APPLICATION
   PROP_APPLICATION_ARGS,
@@ -402,8 +403,12 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // LIMITS
     CASE_INT(PROP_LIMITS_INT_MIN,OzMinInt);
     CASE_INT(PROP_LIMITS_INT_MAX,OzMaxInt);
-  case PROP_LIMITS:
-    return oz_pair2(oz_int(OzMinInt),oz_int(OzMaxInt));
+    CASE_INT(PROP_LIMITS_BYTECODE_XREGISTERS,NumberOfXRegisters);
+    CASE_REC(PROP_LIMITS,"limits",
+             (3,AtomIntMin,AtomIntMax,AtomBytecodeXRegisters),
+             SET_INT(AtomIntMin,OzMinInt);
+             SET_INT(AtomIntMax,OzMaxInt);
+             SET_INT(AtomBytecodeXRegisters,NumberOfXRegisters););
     // APPLICATION
   case PROP_APPLICATION_ARGS: { return getApplicationArgs(); }
     CASE_ATOM(PROP_APPLICATION_URL,ozconf.url);
@@ -1011,6 +1016,8 @@ void initVirtualProperties()
   // LIMITS
   VirtualProperty::add("limits.int.min",PROP_LIMITS_INT_MIN);
   VirtualProperty::add("limits.int.max",PROP_LIMITS_INT_MAX);
+  VirtualProperty::add("limits.bytecode.xregisters",
+                       PROP_LIMITS_BYTECODE_XREGISTERS);
   VirtualProperty::add("limits",PROP_LIMITS);
   // APPLICATION
   VirtualProperty::add("application.args",PROP_APPLICATION_ARGS);
