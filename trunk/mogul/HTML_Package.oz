@@ -61,12 +61,14 @@ define
 		     {self formatHeader(
 			      'format'
 			      ['mozart=<1.2.5']
+			      'class':'headerdoc'
 			      $)}
 		  else
 		     {self formatHeader(
 			      'format'
 			      {Map @format
 			       fun {$ F} {self format(F $)} end}
+			      'class':'headerdoc'
 			      $)}
 		  end
 		  /*
