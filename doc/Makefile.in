@@ -25,7 +25,8 @@
 
 PREFIX          = @prefix@
 VPATH           = @srcdir@
-DOCDIR          = $(PREFIX)/share/doc
+SHDOCDIR        = $(PREFIX)/share/doc
+DOCDIR          = $(PREFIX)/doc
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -33,8 +34,8 @@ INSTALL_DIR     = @INSTALL_DIR@
 CED             = @CED@
 
 FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db \
-                  mozart.bib index.html
-LIBFILES        = $(addprefix $(DOCDIR)/,$(FILES))
+                  mozart.bib
+LIBFILES        = $(addprefix $(SHDOCDIR)/,$(FILES))
 
 EMACS           = emacs
 
@@ -53,12 +54,15 @@ depend:
 Makefile: Makefile.in config.status
         ./config.status
 
-install: all $(DOCDIR) $(LIBFILES)
+install: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(LIBFILES)
 
-$(DOCDIR):
+$(SHDOCDIR) $(DOCDIR):
         $(INSTALL_DIR) $@
 
-$(LIBFILES): $(DOCDIR)/% : %
+$(DOCDIR)/index.html: index.html
+        $(INSTALL_FILE) $< $@
+
+$(LIBFILES): $(SHDOCDIR)/% : %
         $(INSTALL_FILE) $< $@
 
 ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
