@@ -202,7 +202,11 @@ in
 	 {Thread.resume T}        %% run, run to freedom!! :-)
 	 ThreadManager,remove(T I kill)
       end
-      
+
+      meth gc   %% remove terminated threads
+	 skip
+      end
+	 
       meth remove(T I Mode)
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
 	 ThreadManager,setThrPos(id:I name:undef)
