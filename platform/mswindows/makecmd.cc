@@ -50,15 +50,23 @@ char *getCmdLine() {
 char *makeCmdLine(bool isWrapper) {
   static char buffer[1024];
 
+  char *args = getCmdLine();
   if (isWrapper) {
     sprintf(buffer,"ozengine.exe \"");
     int len = strlen(buffer);
     GetModuleFileName(NULL, buffer+len, sizeof(buffer)-len);
-    strcat(buffer,"\" ");
+    strcat(buffer,"\"");
+    if (args[0] != '\0') {
+      strcat(buffer," ");
+      strcat(buffer,args);
+    }
   } else {
     sprintf(buffer,"ozengine.exe ");
+    if (args[0] == '\0') {
+      panic(false,"Usage: ozengine <url> <args>");
+    }
+    strcat(buffer,getCmdLine());
   }
-  strcat(buffer,getCmdLine());
 
   return buffer;
 }
