@@ -11,20 +11,23 @@ Mozart supports three basic kinds of global names:
 structure inside a running application.
 Tickets can be created by Mozart and
 used by active applications to connect themselves
-(see module <<Connection>>).
+(see module <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/).
 <ITEM> A <EM>URL</EM> is a string that references
 a file across the network.
 The string follows the standard URL syntax.
 In Mozart the file can be a <EM>pickle</EM>, in which case
 it can hold any kind of stateless data--procedures,
 classes, functors, records, strings, and so forth
-(see module <<Pickle>>).
+(see module <ref.extern to="ozdoc:system"
+key="chapter.pickle"/<<Pickle>>/).
 <ITEM> A <EM>hostname</EM> is a string that
 refers to a host (another machine) across the network.
 The string follows the standard DNS syntax.
 An application can use the hostname to start up a
 Mozart process on the host
-(see module <<Remote>>).
+(see module <ref.extern to="ozdoc:system"
+key="chapter.remote"/<<Remote>>/).
 </LIST>
 <P>For maximum flexibility,
 these three types can be represented as
@@ -39,7 +42,8 @@ that references the stream.
 Other applications then just need to know
 the ticket to get access to the stream.
 Tickets are implemented by
-the module <<Connection>>,
+the module <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/,
 which has the following three operations:
 <LIST>
 <ITEM> <<{Connection.offer X T}>> creates a ticket <<T>>
@@ -177,21 +181,19 @@ The module should not reference any resources.
 If it does, an exception will be raised in the thread
 doing the <<apply>>.
 
-<P>Any Oz statement <EM>S</EM> can be executed
+<P>Any Oz statement ?{S} can be executed
 remotely by creating a functor:
-<LIST>
-<ITEM> <<F=functor import>> <EM>ResourceList</EM>
-<<export>> <EM>Results</EM> <<define>> <EM>S</EM> <<end>>
-</LIST>
-<P>To evaluate this functor remotely,
+<code display
+/F=functor import ?{ResourceList} export ?{Results} define ?{S} end/
+To evaluate this functor remotely,
 the client executes <<M={R apply(F $)}>>.
-The <EM>ResourceList</EM> must list all the resources used by <EM>S</EM>.
+The ?{ResourceList} must list all the resources used by ?{S}.
 If not all are listed then an exception will be raised in the
 thread doing the <<apply>>.
 The remote execution will use the resources of the remote site
 and return a module <<M>> that contains all the fields mentioned
-in <EM>Results</EM>.
-If <EM>S</EM> does not use any resources, then there is
+in ?{Results}.
+If ?{S} does not use any resources, then there is
 a slightly simpler way to do remote computations.
 The next section shows how when it talks
 about compute servers.
@@ -411,16 +413,15 @@ This is how the client gets a result from the server
 <P>Any Oz statement <EM>S</EM> that does not use resources
 can be executed remotely by making a procedure out
 of it:
-<LIST>
-<ITEM><<P=proc {$}>> <EM>S</EM> <<end>>
-</LIST>
-<P>To run this, the client just executes <<{C run(P)}>>.
+<code display
+/P=proc {$} ?{S} end/
+To run this, the client just executes <<{C run(P)}>>.
 Because Mozart is fully network-transparent,
-<EM>S</EM> can be any statement
+?{S} can be any statement
 in the language: for example,
-<EM>S</EM> can define new classes
+?{S} can define new classes
 inheriting from client classes.
-If <EM>S</EM> uses resources, then it can be
+If ?{S} uses resources, then it can be
 executed remotely by means of functors.
 This is shown in the previous section.
 

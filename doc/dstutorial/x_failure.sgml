@@ -24,7 +24,8 @@ to program with language entities that are subject
 to failures.
 
 <P>The Mozart failure model is accessed
-through the module <<Fault>>.
+through the module <ref.extern to="ozdoc:system"
+key="chapter.fault"/<<Fault>>/.
 This chapter explains and justifies this
 functionality, and gives examples
 showing how to use it.
@@ -165,7 +166,8 @@ completes normally.
 The following operations are provided to do other
 kinds of fault detection:
 <LIST>
-<ITEM> <<fun {Fault.defaultEnable FStates}>> enables the default
+<ENTRY> <<fun {Fault.defaultEnable FStates}>>
+<ITEM> enables the default
 fault states for the <<global>> level.
 If a new entity <<E>> is declared when the default is enabled,
 then it is as if the call <<{Fault.enable E global FStates}>>
@@ -174,10 +176,12 @@ were done at its declaration.
 When the system starts up, the defaults are set up as if
 the call <<{Fault.defaultEnable [tempFail permFail]}>> had been done.
 
-<ITEM> <<fun {Fault.defaultDisable}>> disables the default
+<ENTRY> <<fun {Fault.defaultDisable}>>
+<ITEM> disables the default
 for the <<global>> level.
 
-<ITEM> <<fun {Fault.enable Entity Level FStates}>> is a more targeted
+<ENTRY> <<fun {Fault.enable Entity Level FStates}>>
+<ITEM> is a more targeted
 way to do fault detection.
 It enables fault detection on a given entity at a given
 level for a given set of fault states.
@@ -187,12 +191,12 @@ then an exception is raised instead of doing the operation.
 The <<Entity>> is a reference to
 a particular object, cell, port, lock, or logic variable.
 The <<Level>> is <<global>>, <<site>>, or <<'thread'(T)>>
-(where <<T>> is a thread identifier, e.g., <<{Thread.this T}>>).
-
-<NOTE FOOT>Since <<thread>> is already used as keyword in the language,
+(where <<T>> is a thread identifier, e.g., <<{Thread.this T}>>).<NOTE
+FOOT>Since <<thread>> is already used as keyword in the language,
 it has to be quoted.</NOTE>
 
-<ITEM> <<fun {Fault.disable Entity Level}>> disables
+<ENTRY> <<fun {Fault.disable Entity Level}>>
+<ITEM> disables
 fault detection on the given entity at the given level.
 </LIST>
 <P>The functions <<Fault.defaultEnable>> and <<Fault.enable>> return
@@ -209,7 +213,7 @@ do not have the correct type.
 <SUBSECTION><TITLE>Exception formats</TITLE>
 
 <P>The exceptions raised have the format
-<<system(dp(entity:E conditions:FS op:OP) ...)>>,
+<<<system(dp(entity:E conditions:FS op:OP) ...)>>>
 where the four arguments are defined as follows:
 <LIST>
 <ITEM> <<E>> is the entity on which the operation was attempted.
@@ -336,15 +340,16 @@ are the same.
 <P>Handlers are installed and deinstalled with the
 following two built-in operations:
 <LIST>
-<ITEM> <<fun {Fault.install Entity Level FStates HandlerProc}>>
-<ITEM> <<fun {Fault.deInstall Entity Level}>>
-</LIST>
-<P>The function <<Fault.install>> returns <<true>> if and only if the
+<ENTRY> <<fun {Fault.install Entity Level FStates HandlerProc}>>
+<ITEM>The function <<Fault.install>> returns <<true>> if and only if the
 installation was successful, i.e., the entity did not already
 have an installation or an enable for that level.
-The function <<Fault.deInstall>> returns <<true>> if and only if the
+<ENTRY> <<fun {Fault.deInstall Entity Level}>>
+<ITEM>The function <<Fault.deInstall>> returns <<true>> if and only if the
 disable was successful, i.e., the entity was already
 enabled for that level.
+</LIST>
+<P>
 Both functions raise a type error exception if their arguments
 do not have the correct type.
 A temporary limitation of the current release is that
@@ -363,16 +368,15 @@ The advanced model allows the application to be informed
 as soon as the site finds out about the failure.
 Two operations are provided:
 <LIST>
-<ITEM> <<proc {Fault.installWatcher Entity FStates WatcherProc}>>
-<ITEM> <<proc {Fault.deInstallWatcher Entity WatcherProc}>>
-</LIST>
-<P>The procedure <<Fault.installWatcher>> creates a new thread
+<ENTRY> <<proc {Fault.installWatcher Entity FStates WatcherProc}>>
+<ITEM>The procedure <<Fault.installWatcher>> creates a new thread
 on the current site, in which <<WatcherProc>> will be invoked
 as soon as the site detects that
 a fault state in <<FStates>> occurs.
-The procedure <<Fault.deInstallWatcher>> removes the given
+<ENTRY> <<proc {Fault.deInstallWatcher Entity WatcherProc}>>
+<ITEM>The procedure <<Fault.deInstallWatcher>> removes the given
 watcher from the current site.
-
+</LIST>
 <P>A watcher <<WatcherProc>> is a two-argument
 procedure that is called as <<{WatcherProc E FS}>>.
 The arguments <<E>> and <<FS>>
