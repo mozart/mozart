@@ -116,6 +116,10 @@
 		      out => ['+float'],
 		      bi  => BIfPow},
 
+     'fMod'	 => { in  => ['+float','+float'],
+		      out => ['+float'],
+		      bi  => BIfMod},
+
      'toString'  => { in  => ['+float'],
 		      out => ['+string'],
 		      BI  => BIfloatToString},
