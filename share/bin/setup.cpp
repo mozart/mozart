@@ -25,22 +25,10 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   /*
    * Emacs
    */
-  char *ehome = getRegistry("SOFTWARE\\GNU\\Emacs","emacs_dir");
-  if (ehome==NULL) {
-    OzPanic(1,"Cannot find Emacs: did you correctly install GNU Emacs?");
-  }
-
-  normalizePath(ehome);
-  sprintf(buffer,"%s/bin/runemacs.exe",ehome);
-  char *ebin = strdup(buffer);
-
-  if (access(ebin,X_OK)) {
-    OzPanic(1,"Emacs binary '%s' does not exist.",ebin);
-  }
+  char *ehome = getEmacsHome();
 
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *ozhome = getOzHome(buffer);
-  normalizePath(ozhome);
 
   sprintf(buffer,"%s/platform/%s/ozemulator.exe",ozhome,ozplatform);
   if (access(buffer,X_OK)) {
@@ -86,8 +74,6 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   DdeUninitialize (idDde);
 
-  setRegistry("OZHOME",ozhome);
-  setRegistry("EMACSHOME",ehome);
   Sleep(2000);
 
   if (!quiet) {

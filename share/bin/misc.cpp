@@ -49,15 +49,6 @@ char *getParent(char *path, int levelsup)
   return ret;
 }
 
-char *getOzHome(char *path)
-{
-  char *ret = getParent(path,1);
-  if (ret == NULL) {
-    OzPanic(1,"Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
-  }
-  return ret;
-}
-
 char *getProgname(char *path)
 {
   char *aux = path+strlen(path)-1;
@@ -75,7 +66,6 @@ void ozSetenv(const char *var, const char *value)
     OzPanic(1,"setenv %s=%s failed",var,value);
   }
 }
-
 
 char *reg_path = "SOFTWARE\\DFKI\\Oz\\" OZVERSION;
 
@@ -134,3 +124,34 @@ int setRegistry(char *var, const char *value)
 }
 
 const char *ozplatform = "win32-i486";
+
+char *getOzHome(char *path)
+{
+  char *ret = getenv("OZHOME");
+  if (ret==NULL) {
+    ret = getParent(path,1);
+    if (ret == NULL) {
+      OzPanic(1,"Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
+    }
+  }
+  normalizePath(ret);
+  return ret;
+}
+
+char *getEmacsHome()
+{
+  char *ehome = getRegistry("SOFTWARE\\GNU\\Emacs","emacs_dir");
+  if (ehome==NULL) {
+    OzPanic(1,"Cannot find Emacs: did you correctly install GNU Emacs?");
+    return NULL;
+  }
+
+  char buffer[1000];
+  normalizePath(ehome);
+  sprintf(buffer,"%s/bin/runemacs.exe",ehome);
+  if (access(buffer,X_OK)) {
+    OzPanic(1,"Emacs binary '%s' does not exist.",buffer);
+    return NULL;
+  }
+  return ehome;
+}
