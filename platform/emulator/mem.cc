@@ -321,7 +321,9 @@ void ozFree(char *addr, size_t size)
 #if !defined(USE_AUTO_PLACEMENT)
   mappedChunks.markFree(addr, size);
 #endif
-  munmap(addr, size);
+  if (munmap(addr, size)) {
+    ozperror("munmap");
+  }
 }
 
 void *ozMalloc(size_t size)
@@ -333,7 +335,7 @@ void *ozMalloc(size_t size)
   //
   if (devZeroFD == -1) {
     devZeroFD = open("/dev/zero", O_RDWR);
-    if (devZeroFD < 0) { perror("mmap: open /dev/zero"); }
+    if (devZeroFD < 0) { ozperror("mmap: open /dev/zero"); }
   }
 #endif
 
@@ -359,7 +361,7 @@ void *ozMalloc(size_t size)
                    (MAP_PRIVATE|MAP_FIXED),
                    devZeroFD, (off_t) 0);
 #endif
-  if (ret < 0) { perror("mmap"); }
+  if (ret < 0) { ozperror("mmap"); }
 #ifdef DEBUG_CHECK
   //
   // make test of the created page: write, read, write, read!
@@ -659,6 +661,7 @@ void *heapMallocOutline(size_t chunk_size)
 
   return heapMalloc(chunk_size);
 }
+
 
 
 char *getMemFromOS(size_t sz) {
