@@ -22,9 +22,7 @@
 functor $
 import
    Application(exit)
-   GDK    at 'x-oz://system/gtk/GDK.ozf'
-   GTK    at 'x-oz://system/gtk/GTK.ozf'
-   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GTK GTKCANVAS
 define
    %% Create Toplevel window class
    class CanvasToplevel from GTK.window
@@ -39,45 +37,58 @@ define
          {Application.exit 0}
       end
    end
-
    Toplevel = {New CanvasToplevel new}
 
-   %% Setup the Colors
-   Black = {GDK.makeColor '#000000'}
-   White = {GDK.makeColor '#FFFFFF'}
-
-   %% Setup canvas without item support
-   MyCanvas = {New Canvas.canvas new(false)}
-   {MyCanvas setUsize(400 400)}
-   {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
+   %% Setup canvas without image support
+   Canvas = {New GTKCANVAS.canvas new(false)}
+   %% Set canvas dimensions
+   {Canvas setUsize(400 400)}
+   {Canvas setScrollRegion(0.0 0.0 400.0 400.0)}
    %% Make Canvas child of toplevel
-   {Toplevel add(MyCanvas)}
+   {Toplevel add(Canvas)}
 
-   %% Setup Canvas Items
-   %% Create a text item (member of root group) and ignore item obj
-   TextItemPars = ['x'#10.0 'y'#10.0
-                   'text'#"Press Button to move canvas item below"
-                   'font'#
-                   '-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1'
-                   'fill_color_gdk'#Black
-                   'anchor'#GTK.'ANCHOR_NORTH_WEST']
-   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
-                         TextItemPars $)}
+   %% Setup the Item Colors
+   Black = {Canvas itemColor('#000000' $)}
+   White = {Canvas itemColor('#FFFFFF' $)}
 
-   %% Create a rectangle item
-   RectItemPars = ['x1'#200.0 'y1'#60.0 'x2'#400.0 'y2'#180.0
-                   'fill_color_gdk'#Black 'outline_color_gdk'#White]
-   RectItem = {MyCanvas newItem({MyCanvas root($)} {MyCanvas rectGetType($)}
-                                RectItemPars $)}
+   %% Create a text item (member of root group)
+   RootItem = {Canvas rootItem($)}
+   local
+      Font = '-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1'
+   in
+      TextDesc = text(parent         : RootItem
+                      text           : "Press Button to move canvas item below"
+                      x              : 10.0
+                      y              : 10.0
+                      font           : Font
+                      fill_color_gdk : Black
+                      anchor         : GTK.'ANCHOR_NORTH_WEST')
+   end
+   _ = {Canvas newItem(TextDesc $)}
 
-   %% Create Rectangle Item Event Handler
+   %% Create a rectangle item (member of root group)
+   RectDesc = rectangle(parent            : RootItem
+                        x1                : 200.0
+                        y1                : 60.0
+                        x2                : 400.0
+                        y2                : 180.0
+                        fill_color_gdk    : Black
+                        outline_color_gdk : White)
+
+   %% Canvas items are unwrapped by default.
+   %% However, event connection requires an Oz object.
+   %% The resulting object must be freed explicitly
+   %% (i.e. {RectObject gtkClose}).
+   RectItem#RectObject = {Canvas newWrappedItem(RectDesc $)}
+
+   %% Create Rectangle Event Handler
    local
       proc {ToggleColor Item Fill Outline}
-         {Item set('fill_color_gdk' Fill)}
-         {Item set('outline_color_gdk' Outline)}
+         {Canvas configureItem(Item options(fill_color_gdk : Fill))}
+         {Canvas configureItem(Item options(outline_color_gdk : Outline))}
       end
    in
-      fun {MakeRectEvent Item}
+      fun {MakeRectangleEvent Item}
          ButtonX = {Cell.new 0.0}
          ButtonY = {Cell.new 0.0}
          Pressed = {Cell.new false}
@@ -99,10 +110,7 @@ define
             [] 'GDK_MOTION_NOTIFY'(x:X y:Y ...) then
                if {Cell.access Pressed}
                then
-                  NewX = X - {Cell.access ButtonX}
-                  NewY = Y - {Cell.access ButtonY}
-               in
-                  {Item move(NewX NewY)}
+                  {Canvas moveItemTo(Item {Float.toInt X} {Float.toInt Y})}
                   {Cell.assign ButtonX X}
                   {Cell.assign ButtonY Y}
                end
@@ -111,7 +119,9 @@ define
          end
       end
    end
-   {RectItem signalConnect('event' {MakeRectEvent RectItem} _)}
+   %% Items only have the generic 'event' signal which contains
+   %% all appropriate events
+   {RectObject signalConnect('event' {MakeRectangleEvent RectItem} _)}
 
    %% Make it all visible
    {Toplevel showAll}

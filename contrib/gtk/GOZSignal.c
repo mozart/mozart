@@ -43,7 +43,6 @@ OZ_BI_define (native_initialize_signal_port, 1, 0) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
-
 /*
  * Process all events in the queue and tell the host side
  * whether there were events or not.

@@ -22,9 +22,7 @@
 functor $
 import
    Application(exit)
-   GDK    at 'x-oz://system/gtk/GDK.ozf'
-   GTK    at 'x-oz://system/gtk/GTK.ozf'
-   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GTK GTKCANVAS
 define
    %% Create Toplevel window class
    class CanvasToplevel from GTK.window
@@ -35,43 +33,35 @@ define
          {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
-         %% CAUTION: At this time, the underlying objects has been destroyed.
-         %% CAUTION: This event is solely intended for oz side cleanup code.
-         %% CAUTION: If you want eager finalisation of object wrappers then
-         %% CAUTION: connect the delete event handler using a procedure
-         %% CAUTION: rather than a object method.
+         {self gtkClose}
          {Application.exit 0}
       end
    end
    Toplevel = {New CanvasToplevel new}
 
-   %% Set up the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors,
-   %%    non-writeable and with best-match
-   %% 4. Use color black
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   {Colormap allocColor(Black 0 1 _)}
-
-   %% This will be our canvasItem
-   TextItem = ["text"#"Hallo, schöne Canvas Welt!"
-               "x"#100.0
-               "y"#100.0
-               "font"#
-               "-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1"
-               "fill_color_gdk"#Black]
-
    %% Setup canvas without image support
-   MyCanvas = {New Canvas.canvas new(false)}
-   {MyCanvas setUsize(400 400)}
-   {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
+   Canvas = {New GTKCANVAS.canvas new(false)}
+   %% Set Canvas dimension
+   {Canvas setUsize(400 400)}
+   {Canvas setScrollRegion(0.0 0.0 400.0 400.0)}
+
+   %% This will be our CanvasItem (member of root group)
+   local
+      Font = '-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1'
+   in
+      TextDesc = text(parent         : {Canvas rootItem($)}
+                      text           : "Hallo, schöne Canvas Welt!"
+                      x              : 100.0
+                      y              : 100.0
+                      anchor         : GTK.'ANCHOR_NW'
+                      font           : Font
+                      fill_color_gdk : {Canvas itemColor('#FF0000' $)})
+   end
+
    %% Make Canvas child of toplevel
-   {Toplevel add(MyCanvas)}
-   %% Create our item (member of root group); ignore item object
-   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
-                         TextItem $)}
+   {Toplevel add(Canvas)}
+   %% Create our item and ignore item object
+   _ = {Canvas newItem(TextDesc $)}
 
    %% Make it all visible
    {Toplevel showAll}

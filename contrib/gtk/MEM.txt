@@ -36,19 +36,18 @@ Any unary procedure can be connected to a signal. Since the procedure
 does not need to be closed over the object it refers to, it is necessary
 to maintain a handler list within the object wrapper.
 
-Since oz finalisation is not equivalent to c side death, it is safe
-but invalid to disconnect all registered handlers during finalisation.
-The objects might be still alive for a long time. Therefore a different
-approach has been chosen: All objects provide a default delete event handler
-which will be called on object deletion.
+The delete handler is a special case. The marshaller makes sure that
+the c side keeps the object alive. The callback then is given the
+change either to delete the object explicitly or to do nothing.
 
-The default delete handler iteratively calls all user connected delete
-handlers and then removes all signal bindings, possibly releasing the
-object wrapper.
+2.3 Canvas Items
 
-Known obstacle: If the user decides to make the deletion handler a method
-of the object wrapper, finalisation will be delayed
-until object deletion has occured.
+Canvas items are available in two fashions: native and wrapped.
+Native creation is the default.
+This is due to the fact that items are linked
+to a group upon creation making it unecessary to register them using
+the heavy object wrapper.
 
-Implementation note: This is the reason why the handlers list is kept
-within a cell.
+Connecting signal handlers, however, require wrapper objects. Therefore
+the item may be created with a additional wrapper shipped.
+This wrapper must be deleted explicitly using the gtkClose call.

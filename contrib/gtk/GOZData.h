@@ -149,6 +149,11 @@ static inline gchar *goz_import_string(gchar *source) {
   OZ_isUnit (GOZ_(val)) ? \
   val = NULL : val = GOZ_importString((gchar *) OZ_virtualStringToC(GOZ_(val), NULL));
 
+#define GOZ_declareSimpleString(i, val) \
+  gchar *val; \
+  OZ_declareTerm(i, GOZ_(val)) \
+  val = GOZ_importString((gchar *) OZ_virtualStringToC(GOZ_(val), NULL));
+
 static inline gchar *GOZ_stringToC(OZ_Term val) {
   return GOZ_importString((gchar *) OZ_virtualStringToC(val, NULL));
 }

@@ -115,6 +115,7 @@ define
                            "\tgdk_init(0, 0);"
                            "\tgtk_init(0, 0);"
                            "\tgtk_canvas_init();"
+                           "\tnative_system_type_init();"
                            "\treturn oz_interface;"
                            "}"]
 
