@@ -343,7 +343,7 @@ define
 	 of unit then skip
 	 [] S then Table.url := {VS2A S} end
 	 case {CondSelect E www unit}
-	 of unit of skip
+	 of unit then skip
 	 [] S then Table.www := {VS2A S} end
 	 case {CondSelect E name unit}
 	 of unit then skip
