@@ -1,0 +1,17 @@
+$Id$
+
+debugEntry
+   Literal          file name
+   Number           line number
+   Number           column number
+   Literal          kind
+   Posint           number of live registers
+
+debugExit
+   Literal          file name
+   Number           line number
+   Number           column number
+   Literal          kind
+   Posint           number of live registers
+
+kind = call, cond, handler, lock
