@@ -232,7 +232,7 @@ void displayCode(ProgramCounter from, int ssize) {
 
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
                                  Reg &reg, ProgramCounter &next, TaggedRef &file,
-                                 TaggedRef &line, PrTabEntry *& pred, int &mode)
+                                 TaggedRef &line, PrTabEntry *& pred)
 {
   Assert(adressToOpcode(getOP(PC)) == DEFINITION);
   reg  = regToInt(getRegArg(PC+1));
@@ -240,7 +240,6 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   file = getLiteralArg(PC+3);
   line = getNumberArg(PC+4);
   pred = getPredArg(PC+5);
-  mode = getPosIntArg(PC+7);
 }
 
 
@@ -445,7 +444,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
 
     case FASTCALL:
-    case FASTEXECUTE:
+    case FASTTAILCALL:
       {
         /* type: OP PredicateRef */
         AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
@@ -457,18 +456,18 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         }
         DISPATCH();
       }
-    case METHAPPLX:
-    case METHAPPLY:
-    case METHAPPLG:
-    case SENDMETHODX:
-    case SENDMETHODY:
-    case SENDMETHODG:
-    case METHEXECUTEX:
-    case METHEXECUTEY:
-    case METHEXECUTEG:
-    case EXECUTEMETHODX:
-    case EXECUTEMETHODY:
-    case EXECUTEMETHODG:
+    case APPLMETHX:
+    case APPLMETHY:
+    case APPLMETHG:
+    case TAILAPPLMETHX:
+    case TAILAPPLMETHY:
+    case TAILAPPLMETHG:
+    case SENDMSGX:
+    case SENDMSGY:
+    case SENDMSGG:
+    case TAILSENDMSGX:
+    case TAILSENDMSGY:
+    case TAILSENDMSGG:
       {
         TaggedRef literal = getLiteralArg(PC+1);
         Reg reg        = regToInt(getRegArg(PC+2));
@@ -479,9 +478,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CALLX:
     case CALLY:
     case CALLG:
-    case EXECUTEX:
-    case EXECUTEY:
-    case EXECUTEG:
+    case TAILCALLX:
+    case TAILCALLY:
+    case TAILCALLG:
     case DETX:
     case DETY:
     case DETG:
@@ -589,8 +588,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         ProgramCounter next;
         TaggedRef file, line;
         PrTabEntry *pred;
-        int mode;
-        getDefinitionArgs(PC,reg,next,file,line,pred,mode);
+        getDefinitionArgs(PC,reg,next,file,line,pred);
 
         fprintf(ofile, "(X%d,0x%x,%s,%s,%s,[",reg,next,
                 pred ? pred->getPrintName() : "(NULL)",
@@ -612,7 +610,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
           }
         }
 
-        fprintf(ofile, "], %s)\n", mode==SEQMODE ? "seq" : "par");
+        fprintf(ofile, "])\n");
       }
       DISPATCH();
 
