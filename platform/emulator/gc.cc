@@ -245,15 +245,23 @@ public:
 
 ThreadList *ThreadList::allthreads = NULL;
 
-OZ_C_proc_begin(BIlistThreads, 1)
-{
+static collectThreads = 0;
+
+OZ_C_proc_begin(BIprepareDumpThreads, 0) {
+  collectThreads++;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIlistThreads, 1) {
+  collectThreads--;
   return (OZ_unify(OZ_getCArg(0), ThreadList::list()));
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIdumpThreads, 0)
-{
+OZ_C_proc_begin(BIdumpThreads, 0) {
   ThreadList::print();
+  collectThreads--;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -937,7 +945,7 @@ Thread *Thread::gcThreadInline() {
 
   Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
 
-  if (isInGc && (isRunnable() || hasStack()))
+  if ((collectThreads > 0) && (isRunnable() || hasStack()))
     ThreadList::add(newThread);
 
   gcStack.push(newThread, PTR_THREAD);

@@ -7683,6 +7683,7 @@ BIspec allSpec[] = {
   {"Debug.checkStopped",    2, BIcheckStopped},
 
   // Debug module
+  {"Debug.prepareDumpThreads", 0, BIprepareDumpThreads},
   {"Debug.dumpThreads", 0, BIdumpThreads},
   {"Debug.listThreads", 1, BIlistThreads},
   {"Debug.breakpointAt",4, BIbreakpointAt},
