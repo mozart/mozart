@@ -78,4 +78,4 @@ distclean::
 	-rm -f Makefile
 
 veryclean::
-	-rm -f *.a *.so
+	-rm -f *.a *.so Makefile.deps
