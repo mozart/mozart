@@ -172,7 +172,7 @@ make install>>>
       <P>
 	Unpack it, configure it, build it, and install it thus:
 <<<cd ?{build}
-tar zxvf zlib-1.1.4.tar.gz
+tar zxvf zlib.tar.gz
 cd zlib-1.1.4
 CFLAGS="?{CFLAGS}" ./configure --prefix=?{packages}
 make
