@@ -60,14 +60,14 @@
         <P>
           <Picture.Extern to="button.gif" type=gif>
 <chunk class=anonymous><title/button/
-B1 = {New Tk.button tkInit(parent: T 
-                           text:   'Press me!'
-                           action: proc {$}
-                                      {Browse pressed}
-                                   end)}
-B2 = {New Tk.button tkInit(parent: T 
-                           bitmap: error
-                           action: T # tkClose)}
+B1={New Tk.button tkInit(parent: W 
+                         text:   'Press me!'
+                         action: proc {$}
+                                    {Browse pressed}
+                                 end)}
+B2={New Tk.button tkInit(parent: W 
+                         bitmap: error
+                         action: W#tkClose)}
 {Tk.send pack(B1 B2 fill:x padx:1#m pady:1#m)}
 </chunk>
       </Figure>
@@ -99,6 +99,7 @@ B2 = {New Tk.button tkInit(parent: T
       More information on buttons can be found in
       <ref.extern to="&tkcmd/button.htm"/<kbd/button//.
 
+
   <Section id="section.widgets-2.otherbuttons">
     <Title/Checkbuttons, Radiobuttons, and Variables/
 
@@ -111,7 +112,7 @@ B2 = {New Tk.button tkInit(parent: T
 
     <P>
       Radiobuttons are used for non-binary choices.  Several radiobuttons
-      are linked together to a group. Selecting a radio button deselects all
+      are linked together to a group. Selecting a radio button de-selects all
       buttons belonging to the same group and displays a mark in an indicator
       to the left.  Radiobuttons are linked together by tickle variables: all
       buttons belonging to the same group share the same variable.
@@ -128,16 +129,16 @@ B2 = {New Tk.button tkInit(parent: T
         <P>
           <Picture.Extern to="check-and-radio.gif" type=gif>
 <chunk class=anonymous><title/check and radio/
-V1 = {New Tk.variable tkInit(false)}
-C  = {New Tk.checkbutton tkInit(parent:T variable:V1
-                                text:'Bold' anchor:w)}
-V2 = {New Tk.variable tkInit('Helvetica')}
-Rs = {Map ['Times' 'Helvetica' 'Courier']
-      fun {$ F}
-         {New Tk.radiobutton tkInit(parent:T 
-                                    variable:V2 value:F
-                                    text:F anchor:w)}
-      end}
+V1={New Tk.variable tkInit(false)}
+C ={New Tk.checkbutton tkInit(parent:W variable:V1
+                              text:'Bold' anchor:w)}
+V2={New Tk.variable tkInit('Helvetica')}
+Rs={Map ['Times' 'Helvetica' 'Courier']
+    fun {$ F}
+       {New Tk.radiobutton tkInit(parent:W 
+                                  variable:V2 value:F
+                                  text:F anchor:w)}
+    end}
 {Tk.batch [grid(C     padx:2#m columnspan:3)
            grid(b(Rs) padx:2#m)]}
 </chunk>
@@ -174,11 +175,10 @@ Rs = {Map ['Times' 'Helvetica' 'Courier']
 fun {GetWeight}
    if {V1 tkReturnInt($)}==1 then bold else normal end
 end
-F = {New Tk.font tkInit(size:24
-                        family: {V2 tkReturn($)}
-                        weight: {GetWeight})}
-L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
-
+F={New Tk.font tkInit(size:24
+                      family: {V2 tkReturn($)}
+                      weight: {GetWeight})}
+L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
 {C  tkAction(action: proc {$}
                         {F tk(configure weight:{GetWeight})}
                         {L tk(configure font:F)}
@@ -192,6 +192,14 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
  end}
 </chunk>
       </Figure>
+
+
+    <p>
+      Reference information on radiobuttons and checkbuttons can be
+      found in <ref.extern
+      to="&tkcmd;/radiobutton.htm"/<kbd/radiobutton// and <ref.extern
+      to="&tkcmd;/checkbutton.htm"/<kbd/checkbutton//.
+
 
   <Section id="section.widgets-2.return">
     <Title/Querying Tickle Objects/
@@ -285,6 +293,7 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
       a user defined fashion.  For more information see <ptr.extern
       to="ozdoc:system" key="section.tk.strings">.
 
+
     <SubSection>
       <Title/Querying Configuration Options/
 
@@ -295,7 +304,7 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
         <<unit>> expands to just nothing, meaning that the value is not to
         be set but to be queried.  For example, to query the value of the
         <<bg>> option of a widget&nbsp;?_{T}, we can feed
-<<<{Browse {?_{T} tkReturnListAtom(configure bg:unit $)}}>>
+<<<{?_{T} tkReturnListAtom(configure bg:unit $)}>>
 
       <P>
         This displays a list of atoms, usually it suffices to know that the
@@ -307,14 +316,14 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
 
       <P>
         The command <<winfo>> is helpful to query parameters of widgets.  For
-        instance, to query the positon and geometry of a widget&nbsp;?_{T}, we
+        instance, to query the position and geometry of a widget&nbsp;?_{T}, we
         can use the following:
 <<<{Browse {Map [rootx width rooty height]
          fun {$ A} 
             {Tk.returnInt winfo(A ?_{T})} 
          end}}>>>
 
-        The <<winfo>> commands provides more options than those used above,
+        The <<winfo>> command provides more options than those used above,
         for the details please consult <ref.extern
         to="&tkcmd/winfo.htm"/<kbd/winfo//.
 
@@ -352,18 +361,18 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
           <Picture.Extern to="menu.gif" type=gif>
 <chunk class=anonymous><title/menu/
 Cs =['Wheat' 'Firebrick' 'Navy' 'Darkorange']
-M1 ={New Tk.menu tkInit(parent:T  tearoff:false)}
+M1 ={New Tk.menu tkInit(parent:W  tearoff:false)}
 M2 ={New Tk.menu tkInit(parent:M1 tearoff:false)}
 E1 ={New Tk.menuentry.cascade
      tkInit(parent:M1 label:'Background Color' menu:M2)}
 E2 ={New Tk.menuentry.separator tkInit(parent:M1)}
 E3 ={New Tk.menuentry.command
-     tkInit(parent:M1 label:'Quit' action: T # tkClose)}
+     tkInit(parent:M1 label:'Quit' action: W#tkClose)}
 V  ={New Tk.variable tkInit(Cs.1)}
 CEs={Map Cs fun {$ C}
                {New Tk.menuentry.radiobutton
                 tkInit(parent:M2 label:C var:V val:C
-                       action: T # tk(configure bg:C))}
+                       action: W#tk(configure bg:C))}
             end}
 </chunk>
       </Figure>
@@ -394,6 +403,12 @@ CEs={Map Cs fun {$ C}
       pressing the mouse button when the mouse pointer is over some widget.
       The <ref to="section.widgets-2.events"/next section/ introduces
       events which allows to mattach actions to abitrary widgets.
+
+    <p>
+      Reference information on menus and menubuttons can be found in
+      <ref.extern to="&tkcmd;/menu.htm"/<kbd/menu// and <ref.extern
+      to="&tkcmd;/menubutton.htm"/<kbd/menubutton//.
+
 
   <Section id="section.widgets-2.events">
     <Title/Events/
@@ -433,11 +448,11 @@ CEs={Map Cs fun {$ C}
       <Figure id="figure.widgets-2.event-menu">
         <Caption/Action to popup menu./
 <chunk class=anonymous><title/popup/
-{T tkBind(event:  '&lt;Button-1&gt;'
+{W tkBind(event:  '&lt;Button-1&gt;'
           args:   [int(x) int(y)]
           action: proc {$ X Y}
-                     TX={Tk.returnInt winfo(rootx T)}
-                     TY={Tk.returnInt winfo(rooty T)}
+                     TX={Tk.returnInt winfo(rootx W)}
+                     TY={Tk.returnInt winfo(rooty W)}
                   in
                      {Tk.send tk_popup(M1 X+TX Y+TY)}
                   end)}
@@ -524,7 +539,7 @@ CEs={Map Cs fun {$ C}
       <P>
         For example, the event pattern
         <<<'&lt;Shift-Double-Button&gt;'>>>
-        matches the event that a mouse button is double-klicked while
+        matches the event that a mouse button is double-clicked while
         the shift key is pressed.
 
       <P proglang=none>
@@ -539,7 +554,7 @@ CEs={Map Cs fun {$ C}
 
       <P proglang=none>
         If the event is <<KeyPress>> or <<KeyRelease>>, ?_{Detail} may be
-        the specification of a keysymbol, &eg;, <<comma>> for the
+        the specification of a key-symbol, &eg;, <<comma>> for the
         <Key/,/&nbsp;key.  For more information please consult
         <ref.extern to="&tkcmd/bind.htm"/<kbd/bind//.
 
@@ -626,7 +641,7 @@ CEs={Map Cs fun {$ C}
         For instance, if we do not only want to popup the menu but also to
         display <<pop>> in the Browser, we can create an additional binding by
 <chunk class=anonymous><title/event append/
-{T tkBind(event:  '<1>' 
+{W tkBind(event:  '<1>' 
           append: true
           action: proc {$} {Browse pop} end)}
 </chunk>
@@ -653,8 +668,8 @@ L ={New class $ from Tk.listener
             meth b1 {Browse b1} end
             meth b2 {Browse b2} end
          end tkInit}
-B1={New Tk.button tkInit(parent:T text:'One' action: L # b1)}
-B2={New Tk.button tkInit(parent:T text:'Two' action: L # b2)}
+B1={New Tk.button tkInit(parent:W text:'One' action: L#b1)}
+B2={New Tk.button tkInit(parent:W text:'Two' action: L#b2)}
 {Tk.send pack(B1 B2 side:left)}
 </chunk>
       the methods <<b1>> and <<b2>> are always executed in the same
@@ -698,8 +713,8 @@ B2={New Tk.button tkInit(parent:T text:'Two' action: L # b2)}
         <P>
           <Picture.Extern to="entry.gif" type=gif>
 <chunk class=anonymous><title/entry/
-L = {New Tk.label tkInit(parent:T text:'File name:')}
-E = {New Tk.entry tkInit(parent:T width:20)}
+L={New Tk.label tkInit(parent:W text:'File name:')}
+E={New Tk.entry tkInit(parent:W width:20)}
 {Tk.batch [pack(L E side:left pady:1#m padx:1#m)
            focus(E)]}
 </chunk>
@@ -728,7 +743,7 @@ E = {New Tk.entry tkInit(parent:T width:20)}
 
      <P>
        The string entered in an entry can be deleted, additional characters can
-       be inserted, and so on.  More in entry widgets you can find in
+       be inserted, and so on.  More on entry widgets you can find in
        <ref.extern to="&tkcmd/entry.htm"/<kbd/entry//.
 
   <Section id="section.widgets-2.scale">
@@ -754,16 +769,16 @@ E = {New Tk.entry tkInit(parent:T width:20)}
         <P>
           <Picture.Extern to="scale.gif" type=gif>
 <chunk class=anonymous><title/scale/
-L = {New class $ from Tk.listener
-            attr red:0 green:0 blue:0
-            meth bg(C I)
-               C <- I {F tk(configure bg:c(@red @green @blue))}
-            end
-         end tkInit}
-F ={New Tk.frame tkInit(parent:T height:2#c)}
+L ={New class $ from Tk.listener
+           attr red:0 green:0 blue:0
+           meth bg(C I)
+              C <- I {F tk(configure bg:c(@red @green @blue))}
+           end
+        end tkInit}
+F ={New Tk.frame tkInit(parent:W height:2#c)}
 Ss={Map [red green blue]
     fun {$ C}
-       {New Tk.scale tkInit(parent:T orient:horizontal length:8#c
+       {New Tk.scale tkInit(parent:W orient:horizontal length:8#c
                             label:C 'from':0 to:255
                             action: L # bg(C)
                             args:   [int])}
@@ -822,7 +837,7 @@ Ss={Map [red green blue]
         <P>
           <Picture.Extern to="listbox.gif" type=gif>
 <chunk class=anonymous><title/listbox/
-L = {New Tk.listbox tkInit(parent:T height:6)}
+L={New Tk.listbox tkInit(parent:W height:6)}
 {L tkBind(event:  '&lt;1&gt;'
           action: proc {$}
                      I={L tkReturn(curselection $)}
@@ -830,7 +845,7 @@ L = {New Tk.listbox tkInit(parent:T height:6)}
                   in
                      {L tk(configure bg:C)}
                   end)}
-S = {New Tk.scrollbar tkInit(parent:T)}
+S={New Tk.scrollbar tkInit(parent:W)}
 {ForAll <chunk.ref/Color names/ 
  proc {$ C}
     {L tk(insert 'end' C)}
@@ -877,7 +892,7 @@ S = {New Tk.scrollbar tkInit(parent:T)}
     <P>
       For example
 <chunk class=anonymous><title/wm title/
-T={New Tk.toplevel tkInit(title:'Something different')}
+W={New Tk.toplevel tkInit(title:'Something different')}
 </chunk>
       creates a toplevel widget with the title <Samp/Something different/
       rather than <Samp/Oz Window/.
@@ -890,15 +905,20 @@ T={New Tk.toplevel tkInit(title:'Something different')}
       make the toplevel widget appear on the screen.  A toplevel widget can
       be created in withdrawn state by
 <chunk class=anonymous><title/wm withdraw/
-T={New Tk.toplevel tkInit(withdraw:true)}
+W={New Tk.toplevel tkInit(withdraw:true)}
 </chunk>
 
     <P>
       To make the toplevel widget appear, the window manager command
 <chunk class=anonymous><title/wm deiconify/
-{Tk.send wm(deiconify T)}
+{Tk.send wm(deiconify W)}
 </chunk>
       can be used.
+
+    <p>
+      Reference information on the window manager command can be found in
+      <ref.extern to="&tkcmd;/wm.htm"/<kbd/wm//.
+
 
   <Section id="section.widgets-2.file">
     <Title/Selecting Files/
@@ -909,11 +929,11 @@ T={New Tk.toplevel tkInit(withdraw:true)}
 
     <P>
       Selecting a file to be opened can be done with the command
-      <<tk_getOpenFile>>.  For example, an abitrary file can be selected as
+      <<tk_getOpenFile>>.  For example, an arbitrary file can be selected as
       shown in <Ptr to="figure.widgets-2.file">.  If the command returns the
       empty string (that is <<nil>>), the selection dialog has been canceled.
       Otherwise, the string&nbsp;<<S>> gives the filename of the file to be
-      openend.
+      opened.
       <Figure id="figure.widgets-2.file">
         <Caption/Selecting files./
         <P>
@@ -937,10 +957,9 @@ end
       used in the same way as above.  The difference is that this command
       does not require that a file with the selected filename already exists.
 
-    <P>
-      Both commands can take various options.  The most important ones (for
-      the rest see        <ref.extern to="&tkcmd/tk_getOpenFile.htm"/<kbd/tk_getOpenFile//) allow to specify a
-      title and special filetypes.
+    <p>
+      Reference information on both commands can be found in
+      <ref.extern to="&tkcmd;/tk_getOpenFile.htm"/<kbd/tk_getOpenFile//.
 
 
   <Section id="section.widgets-2.help">
@@ -984,15 +1003,15 @@ fun {MakePopup Parent Text}
                  fun {$ WI}
                     {Tk.returnInt winfo(WI Parent)}
                  end}
-      T = {New Tk.toplevel tkInit(withdraw:true bg:black)}
+      W = {New Tk.toplevel tkInit(withdraw:true bg:black)}
       M = {New Tk.message
-           tkInit(parent:T text:Text bg:khaki aspect:400)}
+           tkInit(parent:W text:Text bg:khaki aspect:400)}
    in
-      {Tk.batch [wm(overrideredirect T true)
-                 wm(geometry T '+'#X+10#'+'#Y+H)
+      {Tk.batch [wm(overrideredirect W true)
+                 wm(geometry W '+'#X+10#'+'#Y+H)
                  pack(M padx:2 pady:2)
-                 wm(deiconify T)]}
-      T
+                 wm(deiconify W)]}
+      W
    end
 end
 </chunk>
@@ -1042,8 +1061,8 @@ class HelpListener from Tk.listener
       cancel <- C
       thread A={Alarm 1000} in
          {WaitOr C A}
-         if {IsDet A} then T={@popup} in
-            {Wait C} {T tkClose}
+         if {IsDet A} then W={@popup} in
+            {Wait C} {W tkClose}
          end
       end
    end
@@ -1112,14 +1131,14 @@ end
           <P>
             <Picture.Extern to="help.gif" type=gif>
 <chunk class=anonymous><title/help/
-Bs = {Map ['Okay'   # 'Do nothing meaningful.'
-           'Cancel' # 'Do nothing at all.'
-           'Quit'   # 'Close the window.']
-      fun {$ Text # Help}
-         B={New Tk.button tkInit(parent:T text:Text)}
-      in
-         {AttachHelp B Help} B
-      end}
+Bs={Map ['Okay'   # 'Do nothing meaningful.'
+         'Cancel' # 'Do nothing at all.'
+         'Quit'   # 'Close the window.']
+    fun {$ Text # Help}
+       B={New Tk.button tkInit(parent:W text:Text)}
+    in
+       {AttachHelp B Help} B
+    end}
 {Tk.send pack(b(Bs) side:left padx:2#m pady:2#m)}
 </chunk>
         </Figure>
@@ -1139,12 +1158,12 @@ Bs = {Map ['Okay'   # 'Do nothing meaningful.'
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/button/
 
 <chunk.ref/button action/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1153,7 +1172,7 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/check and radio/
 
 <chunk.ref/return check and radio/
@@ -1163,7 +1182,7 @@ declare
 {Tk.send grid(L padx:2#m pady:2#m sticky:ew columnspan:3)}
 
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1172,7 +1191,7 @@ declare
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W  ={New Tk.toplevel tkInit}
 <chunk.ref/menu/
 
 <chunk.ref/post/
@@ -1187,7 +1206,7 @@ T={New Tk.toplevel tkInit}
 
 <chunk.ref/event append/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1196,12 +1215,12 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T ={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/listener/
 
 <chunk.ref/tkServe/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1210,12 +1229,12 @@ T ={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/entry/
 
 <chunk.ref/entry get/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1224,10 +1243,10 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/scale/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1236,10 +1255,10 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/listbox/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1250,7 +1269,7 @@ T={New Tk.toplevel tkInit}
 declare
 <chunk.ref/wm title/
 
-{T tkClose}
+{W tkClose}
 
 
 declare
@@ -1258,7 +1277,7 @@ declare
 
 <chunk.ref/wm deiconify/
 
-{T tkClose}
+{W tkClose}
 
 
 
@@ -1278,8 +1297,11 @@ declare
 <chunk.ref/Definition of AttachHelp/
 
 declare 
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/help/
+
+
+{W tkClose}
 
 
 
