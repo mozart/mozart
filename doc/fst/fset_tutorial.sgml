@@ -41,7 +41,7 @@ bound is equal to the lower bound of the cardinality constraint.
 Non-basic set constraints, as intersection <Math>\cap</Math>, union
 <Math>\cup</Math>, disjointness <Math>\|</Math>, and the like, are
 provided as propagators. For details on the provided set propagators
-see [tmueller:set reference manual].
+see <Ptr.Extern to="ozdoc:system" key="chapter.fs">.
 
 <Para><Title/Set Constraint Propagation./ To explain constraint
 propagation, assume the basic set constraints:<Math>\emptyset
@@ -77,12 +77,13 @@ is to provide reified versions for various set constraints as
 containment and the like. But there are further possiblies if the fact
 that the elements of a set are <Em>integers</Em> is exploited. For
 example, a finite domain can be constrained to be the minimal &resp;
-maximal element of a set (see in [tmueller:set reference manual]
-<<FS.int.min>> &resp; <<FS.int.max>> for details). Another possibility
-is to match the elements of a set of a certain cardinality
-<Math>c</Math> with a tuple of <Math>c</Math> finite domains (see in
-[tmueller:set reference manual] <<FS.int.match>> for details) that is
-used in <Ptr to="fset.examples.steiner">.
+maximal element of a set (see <Ptr.Extern to="ozdoc:system"
+key="chapter.fs"> for details on <<FS.int.min>> &resp;
+<<FS.int.max>>). Another possibility is to match the elements of a set
+of a certain cardinality <Math>c</Math> with a tuple of <Math>c</Math>
+finite domains (see <Ptr.Extern to="ozdoc:system" key="chapter.fs">
+for details on <<FS.int.match>>) that is used in <Ptr
+to="fset.examples.steiner">.
 
 <Para><Title/Distribution./
 Due to the fact that constraint propagation is incomplete, expectedly
