@@ -761,13 +761,47 @@
 		  a compilation error message (if the click went into the
 		  Compiler buffer).
 	    </List>
-      <Section>
+      <Section proglang=oz>
 	<Title/Seeing the &OPI; from Mozart/
-	<P>
-	  <!--** special extended environment -->
-	  <!--** {Property.get 'opi.compiler'} -->
-	  <!--** {Property.get 'standalone'} -->
-	  <!--** describe the Emacs module -->
+	<Para class=apropos><Title/Compiler Environment/
+	  The environment available when running Mozart from the &OPI;
+	  is an enriched base environment&nbsp;<Ptr to="Mozart-Base">.
+	  All of Mozarts system modules and tools are available under
+	  variables named like the corresponding modules, &eg;, the
+	  functionality of the open programming component is available
+	  as <<Open>>.  Additionally, the following aliases are
+	  introduced:
+	  <Table>
+	    <TR/<TH/Alias/<TH/Long Form//
+	    <TR/<TD/<<Show>>/<TD/<<System.show>>//
+	    <TR/<TD/<<Print>>/<TD/<<System.print>>//
+	    <TR/<TD/<<Browse>>/<TD/<<Browser.browse>>//
+	    <TR/<TD/<<Inspect>>/<TD/<<Inspector.inspect>>//
+	    <TR/<TD/<<Load>>/<TD/<<Pickle.load>>//
+	    <TR/<TD/<<Save>>/<TD/<<Pickle.save>>//
+	    <TR/<TD/<<SearchOne>>/<TD/<<Search.base.one>>//
+	    <TR/<TD/<<SearchAll>>/<TD/<<Search.base.all>>//
+	    <TR/<TD/<<SearchBest>>/<TD/<<Search.base.best>>//
+	    <TR/<TD/<<ExploreOne>>/<TD/<<Explorer.one>>//
+	    <TR/<TD/<<ExploreAll>>/<TD/<<Explorer.all>>//
+	    <TR/<TD/<<ExploreBest>>/<TD/<<Explorer.best>>//
+	  </Table>
+	<Para class=apropos><Title/Compiler Interface/
+	  When Mozart is started from the &OPI;, an instance of the Mozart
+	  compiler is created that listens for queries from the interactive
+	  development environment.  This interaction is handled via a compiler
+	  interface called <<Emacs.interface>>&nbsp;<Ptr to="mozart-compiler">.
+	  <!--** be more verbose about the Emacs.interface -->
+	<Para class=apropos><Title/System Properties/
+	  It is possible to test whether Mozart is currently running under
+	  the &OPI; or as a standalone system via the following system
+	  property:
+	  <<<{Property.get 'oz.standalone' ??{B}}>>>
+	  This returns <<false>> when Mozart has been started from the &OPI;.
+	  When this is the case, a reference to the compiler interface via
+	  which the interaction with the Emacs development environment takes
+	  place can be obtained via
+	  <<<{Property.get 'opi.compiler' ??{O}}>>>
     <Chapter id="chapter.tools">
       <Title/Interacting With the Development Tools/
       <P>
@@ -1022,6 +1056,8 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	Please send any interesting commands you formulate using these
 	functions to the author.
   <Back>
+    <Bib.Extern id="mozart-base" to="mozart.bib" key="Mozart-Base">
+    <Bib.Extern id="mozart-compiler" to="mozart.bib" key="Mozart-Compiler">
     <Bib.Extern id="mozart-gump" to="mozart.bib" key="Mozart-Gump">
     <Bib.Extern id="stallman91" to="opi.bib" key="stallman91">
 </Book>
