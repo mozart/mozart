@@ -69,7 +69,7 @@ In the case of <<remoteProblem>>, it is usually
 possible to find out something about what the
 problem is, depending on the type of the entity.
 
-<SUBSECTION><TITLE>Eager Stateless data</TITLE>
+<SUBSECTION><TITLE>Eager stateless data</TITLE>
 
 <P> Eager stateless data are
 copied immediately in messages.
