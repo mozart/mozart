@@ -133,11 +133,7 @@ in
 	     elsecase Nr > S    then S
 	     else                    Nr end
       in
-	 try
-	    {Dictionary.get self.D N}
-	 catch
-	    system(kernel(dict ...) ...) then nil
-	 end
+	 {Dictionary.condGet self.D N unit}
       end
 
       meth rebuild(Flag)
