@@ -44,7 +44,7 @@ OZ_BI_define(BItablesExtract,0,1)
   OZ_Term ownerlist;
   OZ_Term ret;
 
-  borrowlist = BT -> extract_info();
+  borrowlist = BT->extract_info();
   ownerlist =OT->extract_info();
   ret=oz_cons(borrowlist,oz_cons(ownerlist, oz_nil()));
   OZ_RETURN(ret);
