@@ -96,6 +96,7 @@ public:
   void unlinkSuspList() { suspList = NULL; }
 
   SVariable * gc();
+  Bool gcNeeded(void);
 
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);

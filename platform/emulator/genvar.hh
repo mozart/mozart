@@ -104,6 +104,7 @@ public:
 
   // methods relevant for term copying (gc and solve)
   GenCVariable * gc(void);
+  Bool gcNeeded(void);
 
   // unifies a generic variable with another generic variable
   // or a non-variable
