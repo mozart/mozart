@@ -28,6 +28,7 @@ PREFIX          = @prefix@
 VPATH           = @srcdir@
 SHDOCDIR        = $(PREFIX)/share/doc
 DOCDIR          = $(PREFIX)/doc
+SRCTOP          = @SRCTOP@
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -111,6 +112,7 @@ global-xref-db.xml:
                 cat $$i/$$i-xref-db.xml >> $@; \
                 echo "</OZDOC.DOCUMENT>" >> $@; \
         done; \
+        cat $(SRCTOP)/doc/global-author-db.xml >> $@; \
         echo '</OZDOC.DB>' >> $@
 
 ps:
