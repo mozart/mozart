@@ -2060,6 +2060,9 @@ OrderedSuspList * OrderedSuspList::gc() {
 //                           NODEs
 //*********************************************************************
 
+// failure interface for local tertiarys
+inline void maybeGCForFailure(Tertiary *t){
+  if(t->getInfo()!=NULL) (*gcEntityInfo)(t);}
 
 inline
 void ConstTermWithHome::gcConstTermWithHome()
@@ -2078,12 +2081,20 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      (*gcEntityInfo)(o);
 
       switch(o->getTertType()) {
-      case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
-      case Te_Proxy:   (*gcProxyRecurse)(o); break;
-      case Te_Manager: (*gcManagerRecurse)(o); break;
+      case Te_Local:
+        o->setBoard(GETBOARD(o)->gcBoard());
+        maybeGCForFailure(o);
+        break;
+      case Te_Proxy:   // PER-LOOK is this possible?
+        (*gcProxyRecurse)(o);
+        (*gcEntityInfo)(o);
+        break;
+      case Te_Manager:
+        (*gcManagerRecurse)(o);
+        (*gcEntityInfo)(o);
+        break;
       default:         Assert(0);
       }
 
@@ -2131,6 +2142,7 @@ void ConstTerm::gcConstRecurse()
         CellLocal *cl=(CellLocal*)t;
         cl->setBoard(GETBOARD(cl)->gcBoard());
         OZ_collectHeapTerm(cl->val,cl->val);
+        maybeGCForFailure(t);
       } else {
         (*gcDistCellRecurse)(t);
       }
@@ -2144,6 +2156,7 @@ void ConstTerm::gcConstRecurse()
         p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
         PortWithStream *pws = (PortWithStream *) this;
         OZ_collectHeapTerm(pws->strm,pws->strm);
+        maybeGCForFailure(p);
         break;
       } else {
         (*gcDistPortRecurse)(p);
@@ -2202,6 +2215,7 @@ void ConstTerm::gcConstRecurse()
         ll->setBoard(GETBOARD(ll)->gcBoard());  /* maybe getBoardInternal() */
         gcPendThreadEmul(&(ll->pending));
         ll->setLocker(ll->getLocker()->gcThread());
+        maybeGCForFailure(t);
         break;
       } else {
         (*gcDistLockRecurse)(t);

@@ -2474,6 +2474,7 @@ public:
     return NO;}
 
   PendThread** getPendBase() { return &pending; }
+  void unlockPending(Thread* th);
 };
 
 class LockManagerEmul : public OzLock {
@@ -2500,18 +2501,7 @@ public:
 
   void unlock(Thread *t){
     if (sec->getLocker()!=t){
-      // Assert(0);
-      // kost@ : PER-LOOK : I don't understand how it can happen...
-
-      // erik knows why: When a thread is pending on a lock the
-      // 'unlock' task is already pushed on its stack.  When an
-      // exception is raised on this pending thread the findCatch
-      // tries to unlock it.  The thread should be removed from the
-      // pending list.  Per will look at this.
-
-      // see also LockFrameEmul::unlock
-
-      // sec->unlockPending(t);
+      sec->unlockPending(t);
       return;}
     Assert(sec->state & Cell_Lock_Valid);
     sec->locker=NULL;
@@ -2547,10 +2537,7 @@ public:
 
   void unlock(Thread *t){
     if (sec->getLocker() != t){
-      // Assert(0);
-      // kost@ : PER-LOOK : I don't understand how it can happen...
-      // see also LockManagerEmul::unlock
-      // sec->unlockPending(t);
+      sec->unlockPending(t);
       return;}
     sec->locker=NULL;
     if((sec->state==Cell_Lock_Valid) && (sec->pending==NULL)){
