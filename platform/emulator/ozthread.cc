@@ -37,8 +37,10 @@ public:
   int getIdV() { return OZ_E_THREAD; }
 
   virtual
-  void printStreamV(ostream &out,int depth = 10) {
-    out << "<Thread " << (thread->getID() & THREAD_ID_MASK) << ">";
+  OZ_Term printV(int depth = 10) {
+    return oz_pair2(oz_atom("<Thread "),
+                    oz_pair2(oz_int(thread->getID() & THREAD_ID_MASK),
+                             oz_atom(">")));
   }
 
   virtual

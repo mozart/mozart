@@ -67,7 +67,7 @@ void oz_removeExtThread(Thread *tt)
 static
 inline
 Thread * _newThread(int prio, Board *bb) {
-  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,am.newId());
+  Thread *th = new Thread(S_RTHREAD | T_runnable,prio,bb,oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
@@ -120,7 +120,7 @@ inline
 Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
 {
   Board *bb = oz_currentBoard();
-  Thread *th = new Thread(S_RTHREAD,prio,bb,am.newId());
+  Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
 
@@ -132,7 +132,7 @@ Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
 inline
 Thread * oz_newThreadPropagate(Board *bb)
 {
-  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,am.newId());
+  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,oz_newId());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
   return th;
