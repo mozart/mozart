@@ -115,6 +115,17 @@ value returned by the environment variable lookup out of a static buffer.</item>
       <item>Many holes have been filled in the compiler documentation.
 In particular, the main chapters are all complete; only
 the appendices lack explanation.</item>
+      <item>Constraint Programming: <code/FD.atLeast/ and <code/FD.atMost/ performed
+incorrect propagation when their first argument was a FD variable.  The implementation
+was completely overhauled.  All of <code/FD.exactly/, <code/FD.atLeast/ and <code/FD.atMost/
+are now implemented as instantiations of the same template class.</item>
+      <item>The <code/Application/ module now exports <code/Application.processArgv/ which
+permits to invoke argument processing on a list of strings explicitly provided as a
+parameter.</item>
+      <item>The compiler's Gump support was modified so that generated native functor and parser
+state description are placed in by default in the directory of the source file.  This can be
+explicitly overridden by option <code/gumpDirectory/, or by command-line option
+<code proglang=sh/--gumpdirectory/.</item>
     </list>
   </chapter>
 
