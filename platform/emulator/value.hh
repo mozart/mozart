@@ -2375,6 +2375,7 @@ enum ExKind{
   DUMMY       = 9
 };
 
+
 //
 // 
 class PendThread{
@@ -2504,18 +2505,19 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LockManagerEmul)
   LockManagerEmul() { Assert(0); }
 
-  Bool hasLock(Thread *t) { return (sec->locker==t) ? TRUE : FALSE;}
-
-  void lock(Thread *t){
-    if(sec->secLockB(t)) return;
-    (*lockLockManagerOutline)(this, t);
-  }
+  Bool hasLock(Thread *t) { 
+    if(getInfo()!=NULL) return FALSE;
+    return (sec->locker==t) ? TRUE : FALSE;}
 
   LockSecEmul *getSec(){return sec;}
 
-  Bool lockB(Thread *t){
+  LockRet lockB(Thread *t){
+    if(getInfo()==NULL){
+      if(sec->secLockB(t)) return LOCK_GOT;}
+    return (*lockLockManagerOutline)(this, t);}
+
+  Bool lockImm(Thread *t){
     if(sec->secLockB(t)) return TRUE;
-    (*lockLockManagerOutline)(this, t);
     return FALSE;}
 
   void unlock(Thread *t){
@@ -2540,18 +2542,24 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LockFrameEmul)
   LockFrameEmul() { Assert(0); }
 
-  Bool hasLock(Thread *t){ return (t==sec->getLocker()) ? TRUE : FALSE;}
+  Bool hasLock(Thread *t){ 
+    if(getInfo()!=NULL) return FALSE;
+    return (t==sec->getLocker()) ? TRUE : FALSE;}
 
   unsigned int getState(){return sec->state;}
-
+  /*
   void lock(Thread *t){
     if(sec->secLockB(t)) return;
     (*lockLockFrameOutline)(this, t);
   }
+  */
+  LockRet lockB(Thread *t){
+    if(getInfo()==NULL){
+      if(sec->secLockB(t)) return LOCK_GOT;}
+    return (*lockLockFrameOutline)(this, t);}
 
-  Bool lockB(Thread *t){
+  Bool lockImm(Thread *t){
     if(sec->secLockB(t)) return TRUE;
-    (*lockLockFrameOutline)(this, t);
     return FALSE;}
 
   void unlock(Thread *t){

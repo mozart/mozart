@@ -7,7 +7,7 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$

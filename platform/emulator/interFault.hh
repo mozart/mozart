@@ -40,21 +40,20 @@ enum WatcherKind{
   WATCHER_PERSISTENT = 2,
   WATCHER_SITE_BASED = 4,
   WATCHER_INJECTOR   = 8,
-  WATCHER_CELL       = 16
+  WATCHER_CELL       = 16,
+  WATCHER_GLOBAL     = 32
 };
 
 enum EntityCondFlags{
   ENTITY_NORMAL = 0,
-  PERM_BLOCKED  = 2,       
-  TEMP_BLOCKED  = 1,
+  PERM_FAIL  = 2,       
+  TEMP_FAIL  = 1,
   PERM_ALL      = 4,
   TEMP_ALL      = 8,
   PERM_SOME     = 16,
   TEMP_SOME     = 32,
-  PERM_ME       = 64,
-  TEMP_ME       = 128,  
-  UNREACHABLE   = 256,
-  TEMP_FLOW     = 512
+  UNREACHABLE   = 64,
+  ANY_COND      = 128
 };
 
 #define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
@@ -107,7 +106,7 @@ Bool remDeferWatcher(short, EntityCond, Thread*,
 
 OZ_Return distHandlerInstallHelp(SRecord*, EntityCond&, Thread* &,TaggedRef &,
 				 short&);
-
+Bool isWatcherEligible(TaggedRef);
 
 /* __INTERFAULTHH */
 #endif 

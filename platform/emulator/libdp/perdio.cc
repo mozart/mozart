@@ -8,7 +8,7 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -97,7 +97,7 @@ static void initGateStream()
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
     globalizeTert(t);
     int ind = t->getIndex();
-    Assert(ind == 0);
+    Assert(ind==0);
     OwnerEntry* oe=OT->getOwner(ind);
     oe->makePersistent();
   }
@@ -121,7 +121,7 @@ void initDP()
 
   //
   initDPCore();
-  initGateStream();
+
 }
 
 /* *********************************************************************/
@@ -1175,10 +1175,11 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
 /**********************************************************************/
 /*   Initialization                                      */
 /**********************************************************************/
+
 //
 OZ_BI_proto(BIstartTmp);
 OZ_BI_proto(BIdefer);
-OZ_BI_proto(BIseifHandler);
+OZ_BI_proto(BIfailureDefault);
 
 void initDPCore()
 {
@@ -1247,9 +1248,9 @@ void initDPCore()
 
 
   if(ozconf.perdioSeifHandler)
-    installGlobalWatcher(PERM_BLOCKED|TEMP_BLOCKED,
-		   makeTaggedConst(new Builtin("seifHandler",
-					       2, 0, BIseifHandler, OK)),
+    installGlobalWatcher(PERM_FAIL|TEMP_FAIL,
+	          makeTaggedConst(new Builtin("failureDefault",
+					       3, 0, BIfailureDefault, OK)),
 	 WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
   
   Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
@@ -1269,6 +1270,7 @@ void initDPCore()
   Assert(sizeof(CellSecEmul)==sizeof(CellSec));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
   Assert(sizeof(PortProxy)==SIZEOFPORTPROXY);
+  initGateStream();
   dealWithDeferredWatchers();
 }
 

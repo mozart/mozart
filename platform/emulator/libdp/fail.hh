@@ -7,7 +7,7 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -79,8 +79,6 @@ public:
 
   void gcWatchers();
 
-  Bool meToBlocked();
-
   Watcher** getWatcherBase(){return &watchers;}
 };
 
@@ -147,9 +145,13 @@ public:
     kind=k;}
   
   Bool matches(TaggedRef p,Thread* t,EntityCond wc, short k){
-    if(oz_deref(p)!=oz_deref(proc)) return FALSE;
+    if((k & WATCHER_INJECTOR)){
+      if(p!=AtomAny){
+	if(oz_deref(p)!=oz_deref(proc)) return FALSE;}}
+    else{
+      if(oz_deref(p)!=oz_deref(proc)) return FALSE;}      
     if(t!=thread) return FALSE;
-    if(watchcond!=wc) return FALSE;
+    if(watchcond!=wc && wc!=ANY_COND) return FALSE;
     if(kind!=k) return FALSE;
     return TRUE;}
 
@@ -189,8 +191,8 @@ public:
 
   Watcher* getNext(){return next;}
 
-  void varInvokeInjector(TaggedRef t,EntityCond);
-  void invokeInjector(TaggedRef t,EntityCond,TaggedRef,Thread*);
+  void varInvokeInjector(TaggedRef t,EntityCond,TaggedRef);
+  void invokeInjector(Tertiary* t,EntityCond,TaggedRef,Thread*,TaggedRef);
   void invokeWatcher(TaggedRef t,EntityCond);
 
   Thread* getThread(){Assert(thread!=NULL);return thread;}
@@ -220,6 +222,13 @@ inline EntityCond getEntityCond(Tertiary *t) {
   if (info == NULL) return ENTITY_NORMAL;
   return info->getEntityCond();}
 
+inline Bool maybeProblem(Tertiary* t){
+  EntityInfo* info = t->getInfo();
+  if (info == NULL) return FALSE;
+  EntityCond ec=info->getEntityCond();
+  if(ec != ENTITY_NORMAL) return TRUE;
+  return FALSE;}
+
 inline Watcher** getWatcherBase(Tertiary *t){
   EntityInfo* info = t->getInfo();
   if(info==NULL) return NULL;
@@ -230,13 +239,10 @@ void insertWatcherAtProxy(Tertiary *t, Watcher* w);
 void insertWatcherAtManager(Tertiary *t, Watcher* w);
 
 inline Bool someTempCondition(EntityCond ec){
-  return ec & (TEMP_SOME|TEMP_BLOCKED|TEMP_ME|TEMP_ALL);}
-
-inline Bool isInjectorCondition(EntityCond ec){
-  return ec & (TEMP_BLOCKED|PERM_BLOCKED|UNREACHABLE);}  
+  return ec & (TEMP_SOME|TEMP_FAIL|TEMP_ALL);}
 
 inline Bool somePermCondition(EntityCond ec){
-  return ec & (PERM_SOME|PERM_BLOCKED|PERM_ME|PERM_ALL);}
+  return ec & (PERM_SOME|PERM_FAIL|PERM_ALL);}
 
 inline Bool addEntityCond(Tertiary *t, EntityCond c){
   EntityInfo* info = t->getInfo();
@@ -266,9 +272,8 @@ void deferEntityProblem(Tertiary *t);
 void managerProbeFault(Tertiary *t, DSite*, int);
 void proxyProbeFault(Tertiary *t, int);
 
-Bool entityCondMeToBlocked(Tertiary* t);
-
 TaggedRef listifyWatcherCond(EntityCond);
+TaggedRef listifyWatcherCond(EntityCond,Tertiary*);
 
 void entityProblem(Tertiary*);
 void gcTwins();
@@ -332,6 +337,13 @@ Bool distHandlerDeInstallImpl(unsigned short,unsigned short,
 				   Thread*,TaggedRef,TaggedRef);
 
 void dealWithDeferredWatchers();
+
+TaggedRef mkOp1(char*,TaggedRef);
+TaggedRef mkOp2(char*,TaggedRef,TaggedRef);
+TaggedRef mkOp3(char*,TaggedRef,TaggedRef,TaggedRef);
+
+OZ_Return tertiaryFailHandle(Tertiary*, TaggedRef,EntityCond,TaggedRef);
+Bool tertiaryFail(Tertiary*, EntityCond &, TaggedRef&);
 
 /* __FAILHH */
 #endif 

@@ -2799,7 +2799,7 @@ OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
     oldVal = cellLocal->exchangeValue(newVal);
     return PROCEED;
   } else {
-    if(!tert->isProxy()){
+    if(!tert->isProxy() && (tert->getInfo()==NULL)){
       CellSecEmul* sec;
       if(tert->getTertType()==Te_Frame){
 	sec=((CellFrameEmul*)tert)->getSec();}
