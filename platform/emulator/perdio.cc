@@ -73,13 +73,8 @@
  *     IDEA: create OS threads
  *           communicate via shared memory
  *   FAILURE handling
- *   statistics
- *     average message size
- *     #messages
- *     #var send
- *     #proc send
- *     #classes send
- *     #content moves
+ *   perdio prelude
+ *     setMethHdl, setSendHdl, ....
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
