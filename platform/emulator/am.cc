@@ -758,8 +758,6 @@ void AM::reduceTrailOnUnitCommit()
 }
 
 // only used in deinstall
-#ifdef NEW_SUSP_SCHEME
-
 // Three cases may occur:
 // any global var G -> ground ==> add susp to G
 // any global var G -> constrained local var ==> add susp to G
@@ -805,60 +803,7 @@ void AM::reduceTrailOnSuspend()
   } // if
   trail.popMark();
 }
-#else
-void AM::reduceTrailOnSuspend()
-{
-  int numbOfCons = trail.chunkSize();
 
-  if (numbOfCons > 0) {
-    Board *bb = currentBoard;
-    bb->newScript(numbOfCons);
-
-    Bool used = NO;
-    // one single suspension for all
-    Suspension *susp = new Suspension(bb);
-
-    for (int index = 0; index < numbOfCons; index++) {
-      TaggedRef *refPtr;
-      TaggedRef value;
-      trail.popRef(refPtr,value);
-
-      Assert(isRef(*refPtr) || !isAnyVar(*refPtr));
-      Assert(isAnyVar(value));
-
-      bb->setScript(index,refPtr,*refPtr);
-
-      TaggedRef oldVal = makeTaggedRef(refPtr);
-      DEREF(oldVal,ptrOldVal,tagOldVal);
-
-      unBind(refPtr,value);
-
-      // this is a global variable, so add always a suspension
-      if (isNotCVar(value)) {
-        taggedBecomesSuspVar(refPtr)->addSuspension(susp);
-        used = OK;
-      }
-
-      // this might be a global unconstrained variable; in this case
-      // add a suspension
-      if (isAnyVar(oldVal)) {
-        // local generic variables are allowed to occure here
-        Assert(!isLocalVariable (oldVal) || !isNotCVar(oldVal));
-
-        // add susps to global non-cvars
-        if(!isLocalVariable(oldVal) && isNotCVar(tagOldVal)) {
-          taggedBecomesSuspVar(ptrOldVal)->addSuspension (susp);
-          used = OK;
-        }
-      }
-    }
-    if (!used) {
-      susp->killSusp();
-    }
-  }
-  trail.popMark();
-}
-#endif
 
 void AM::reduceTrailOnFail()
 {

@@ -341,7 +341,6 @@ int * BIfdBodyManager::cache_to;
 
 int BIfdBodyManager::curr_num_of_vars;
 Bool BIfdBodyManager::vars_left;
-Bool BIfdBodyManager::glob_vars_touched;
 int * BIfdBodyManager::index_offset;
 int * BIfdBodyManager::index_size;
 Bool BIfdBodyManager::only_local_vars;
@@ -414,13 +413,11 @@ void BIfdBodyManager::processLocalFromTo(int from, int to)
     } else if (bifdbm_vartag[i] == pm_bool) {
       Assert(*bifdbm_dom[i] == fd_singleton);
 
-      glob_vars_touched |= tagged2GenBoolVar(bifdbm_var[i])->isTagged();
       tagged2GenBoolVar(bifdbm_var[i])->
         becomesSmallIntAndPropagate(bifdbm_varptr[i], *bifdbm_dom[i]);
     } else {
       Assert(bifdbm_vartag[i] == pm_fd);
 
-      glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
       if (*bifdbm_dom[i] == fd_singleton) {
         tagged2GenFDVar(bifdbm_var[i])->
           becomesSmallIntAndPropagate(bifdbm_varptr[i]);
@@ -534,7 +531,7 @@ OZ_Bool BIfdBodyManager::checkAndIntroduce(int i, TaggedRef v)
 
 void BIfdBodyManager::processFromTo(int from, int to)
 {
-  vars_left = glob_vars_touched = FALSE;
+  vars_left = FALSE;
 
   for (int i = from; i < to; i += 1) {
 
@@ -550,19 +547,16 @@ void BIfdBodyManager::processFromTo(int from, int to)
     } else if (vartag == pm_fd) {
       if (*bifdbm_dom[i] == fd_singleton) {
         if (bifdbm_var_state[i] == fdbm_local) {
-          glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
           tagged2GenFDVar(bifdbm_var[i])->
             becomesSmallIntAndPropagate(bifdbm_varptr[i]);
         } else {
           tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_det);
           am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
                             newSmallInt(bifdbm_dom[i]->singl()));
-          glob_vars_touched = TRUE;
         }
       } else if (*bifdbm_dom[i] == fd_bool) {
 
         if (bifdbm_var_state[i] == fdbm_local) {
-          glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
           tagged2GenFDVar(bifdbm_var[i])->
             becomesBoolVarAndPropagate(bifdbm_varptr[i]);
         } else {
@@ -573,8 +567,6 @@ void BIfdBodyManager::processFromTo(int from, int to)
                                  makeTaggedRef(newtaggedboolvar),
                                  newboolvar, tagged2GenBoolVar(bifdbm_var[i]),
                                  NO);
-          newboolvar->setTag();
-          glob_vars_touched = TRUE;
         }
 
       } else {
@@ -586,10 +578,6 @@ void BIfdBodyManager::processFromTo(int from, int to)
           am.doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
                                  makeTaggedRef(newtaggedfdvar),
                                  newfdvar, tagged2GenFDVar(bifdbm_var[i]), NO);
-          newfdvar->setTag();
-          glob_vars_touched = TRUE;
-        } else {
-          glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
         }
 
         vars_left = TRUE;
@@ -599,19 +587,15 @@ void BIfdBodyManager::processFromTo(int from, int to)
       Assert(*bifdbm_dom[i] == fd_singleton);
 
       if (bifdbm_var_state[i] == fdbm_local) {
-        glob_vars_touched |= tagged2GenBoolVar(bifdbm_var[i])->isTagged();
         tagged2GenBoolVar(bifdbm_var[i])->
           becomesSmallIntAndPropagate(bifdbm_varptr[i], *bifdbm_dom[i]);
       } else {
         tagged2GenBoolVar(bifdbm_var[i])->propagate(bifdbm_var[i]);
         am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
                           newSmallInt(bifdbm_dom[i]->singl()));
-        glob_vars_touched = TRUE;
       }
     } else {
       Assert(vartag == pm_svar && bifdbm_var_state[i] == fdbm_global);
-
-      glob_vars_touched = TRUE;
 
       if (*bifdbm_dom[i] == fd_singleton) {
         TaggedRef newsmallint = newSmallInt(bifdbm_dom[i]->singl());
@@ -660,54 +644,33 @@ void BIfdBodyManager::processNonRes(void)
 
     if (*bifdbm_dom[0] == fd_singleton) {
       if (bifdbm_var_state[0] == fdbm_local) {
-        glob_vars_touched |= tagged2GenFDVar(bifdbm_var[0])->isTagged();
         tagged2GenFDVar(bifdbm_var[0])->
           becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
         tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_det);
-#ifndef NEW_SUSP_SCHEME
-        if (susp == NULL) susp = new Suspension(am.currentBoard);
-        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
-#endif
         am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                           newSmallInt(bifdbm_dom[0]->singl()));
-        glob_vars_touched = TRUE;
       }
     } else if (*bifdbm_dom[0] == fd_bool) {
       tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
-#ifndef NEW_SUSP_SCHEME
-        if (susp == NULL) susp = new Suspension(am.currentBoard);
-        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
-#endif
         GenBoolVariable * newboolvar = new GenBoolVariable();
         TaggedRef * newtaggedboolvar = newTaggedCVar(newboolvar);
         am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
                                makeTaggedRef(newtaggedboolvar),
                                newboolvar, tagged2GenFDVar(bifdbm_var[0]), NO);
-        newboolvar->setTag();
-        glob_vars_touched = TRUE;
       } else {
         tagged2GenFDVar(bifdbm_var[0])->
           becomesBoolVarAndPropagate(bifdbm_varptr[0]);
-        glob_vars_touched |= tagged2GenFDVar(bifdbm_var[0])->isTagged();
       }
     } else {
       tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
-#ifndef NEW_SUSP_SCHEME
-        if (susp == NULL) susp = new Suspension(am.currentBoard);
-        addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
-#endif
         GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
         am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
                                makeTaggedRef(newtaggedfdvar),
                                newfdvar, tagged2GenFDVar(bifdbm_var[0]), NO);
-        newfdvar->setTag();
-        glob_vars_touched = TRUE;
-      } else {
-        glob_vars_touched |= tagged2GenFDVar(bifdbm_var[0])->isTagged();
       }
     }
 
@@ -715,34 +678,19 @@ void BIfdBodyManager::processNonRes(void)
     Assert(*bifdbm_dom[0] == fd_singleton);
 
     if (bifdbm_var_state[0] == fdbm_local) {
-      glob_vars_touched |= tagged2GenBoolVar(bifdbm_var[0])->isTagged();
       tagged2GenBoolVar(bifdbm_var[0])->
         becomesSmallIntAndPropagate(bifdbm_varptr[0], *bifdbm_dom[0]);
     } else {
       tagged2GenBoolVar(bifdbm_var[0])->propagate(bifdbm_var[0]);
-#ifndef NEW_SUSP_SCHEME
-      if (susp == NULL) susp = new Suspension(am.currentBoard);
-      addSuspBoolVar(bifdbm_var[0], new SuspList(susp));
-#endif
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                         newSmallInt(bifdbm_dom[0]->singl()));
-      glob_vars_touched = TRUE;
     }
   } else {
     Assert(bifdbm_var_state[0] == fdbm_local && vartag == pm_svar);
 
-#ifndef NEW_SUSP_SCHEME
-    if (susp == NULL) susp = new Suspension(am.currentBoard);
-#endif
-
-    glob_vars_touched = TRUE;
-
     if (*bifdbm_dom[0] == fd_singleton) {
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
       am.checkSuspensionList(bifdbm_var[0]);
-#ifndef NEW_SUSP_SCHEME
-      addSuspSVar(bifdbm_var[0], new SuspList(susp, NULL));
-#endif
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], newsmallint);
     } else if (*bifdbm_dom[0] == fd_bool) {
       GenBoolVariable * newboolvar = new GenBoolVariable();
@@ -755,9 +703,6 @@ void BIfdBodyManager::processNonRes(void)
       GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0]);
-#ifndef NEW_SUSP_SCHEME
-      addSuspSVar(bifdbm_var[0], new SuspList(susp, NULL));
-#endif
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                         makeTaggedRef(newtaggedfdvar));
       vars_left = TRUE;

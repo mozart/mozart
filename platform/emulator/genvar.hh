@@ -28,13 +28,7 @@
 //-----------------------------------------------------------------------------
 
 
-enum TypeOfGenCVariable {
-  BeingTagged  = 0x1, // needs to occupy different bits than the rest
-  FDVariable   = 0x2,
-  OFSVariable  = 0x4,
-  MetaVariable = 0x6,
-  BoolVariable = 0x8
-};
+enum TypeOfGenCVariable {FDVariable, OFSVariable, MetaVariable, BoolVariable};
 
 class GenCVariable: public SVariable {
 
@@ -53,20 +47,11 @@ public:
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable, Board * = NULL);
 
-  TypeOfGenCVariable getType(void){
-    return TypeOfGenCVariable(var_type & ~BeingTagged);
-  }
+  TypeOfGenCVariable getType(void){ return var_type; }
   void setType(TypeOfGenCVariable t){
     Assert(t == FDVariable || t == OFSVariable ||
            t == MetaVariable || t == BoolVariable );
     var_type = t;
-  }
-
-  void setTag(void) {
-    var_type = TypeOfGenCVariable(var_type | BeingTagged);
-  }
-  Bool isTagged(void) {
-    return (var_type & BeingTagged);
   }
 
   // methods relevant for term copying (gc and solve)

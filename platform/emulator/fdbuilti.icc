@@ -149,9 +149,6 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
     processLocalFromTo(from, to+1);
   } else {
     processFromTo(from, to+1);
-#ifndef NEW_SUSP_SCHEME
-    if (glob_vars_touched) dismissCurrentTaskSusp();
-#endif
   }
 
   processLocalFromTo(from_b, to_b+1);
@@ -199,44 +196,6 @@ int BIfdBodyManager::initCache(void) {
 
 }
 
-#ifndef NEW_SUSP_SCHEME
-inline
-Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
-  Assert(FDcurrentTaskSusp==0);
-
-  Suspension * s = NULL;
-
-  for (int i = curr_num_of_vars; i--; )
-    if (bifdbm_var_state[i] == fdbm_global &&  isTouched(i)) {
-      if (s == NULL)
-        (s = FDcurrentTaskSusp = new Suspension(am.currentBoard))->anyGlobalInit();
-      addSuspAnyVar(bifdbm_varptr[i], new SuspList(s, NULL));
-    }
-
-  return s != NULL;
-}
-
-inline
-OZ_Bool BIfdBodyManager::entailmentAndSuspOnAny(void) {
-  Assert(FDcurrentTaskSusp);
-  killPropagatedCurrentTaskSusp();
-
-  Bool a = FALSE;
-
-  if (only_local_vars) {
-    processLocal();
-  } else {
-    a = addAnySuspToTouchedGlobalVars();
-    process();
-  }
-
-  if (a)
-    activateCurrentTaskSusp();
-
-  return EntailFD;
-}
-#endif
-
 
 inline
 void BIfdBodyManager::backup(void)
@@ -245,7 +204,6 @@ void BIfdBodyManager::backup(void)
 
   backup_curr_num_of_vars1 = curr_num_of_vars;
   backup_vars_left1 = vars_left;
-  backup_glob_vars_touched1 = glob_vars_touched;
   backup_only_local_vars1 = only_local_vars;
   backup_FDcurrentTaskSusp1 = FDcurrentTaskSusp;
 
@@ -282,7 +240,6 @@ void BIfdBodyManager::restore(void)
 
   curr_num_of_vars = backup_curr_num_of_vars1;
   vars_left = backup_vars_left1;
-  glob_vars_touched = backup_glob_vars_touched1;
   only_local_vars = backup_only_local_vars1;
   FDcurrentTaskSusp = backup_FDcurrentTaskSusp1;
 }
