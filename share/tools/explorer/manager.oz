@@ -183,6 +183,7 @@ in
 	    {Root hideUndrawn}
 	    {Root layout(_ Scale Font)}
 	    <<ToplevelManager refreshNumbers>>
+	    <<StatusManager getBrokenNodes(_)>>
 	 else
 	    <<StatusManager unbreak>>
 	    {Root layout(<<StatusManager getBreakFlag($)>> Scale Font)}
@@ -273,7 +274,9 @@ in
 			   case @IsBAB then PrevBABSol <- {Sol getSol($)}
 			   else true
 			   end
-			   Sol
+			   case {Sol isHidden($)} then @curNode
+			   else Sol
+			   end
 			end
 		     else Cursor
 		     end
