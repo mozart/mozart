@@ -93,7 +93,7 @@ to create new sites (i.e., OS processes).
 This is especially effective if communication
 to the new processes is by shared memory.
 For more information on <<Remote>>,
-see <ptr.extern to="ozdoc:system" key="Chapter.Remote">.
+see <ptr.extern to="ozdoc:system" key="chapter.remote">.
 
 <section class=unnumbered><title/Garbage Collection/
 
