@@ -55,12 +55,19 @@ extern "C" int dlclose(void *);
  * Macros
  ******************************************************************** */
 
-#define NONVAR(X,term,tag)			\
+#define NONVAR(X,term)				\
 TaggedRef term = X;				\
-TypeOfTerm tag;					\
-{ DEREF(term,_myTermPtr,myTag);			\
-  tag = myTag;					\
-  if (isAnyVar(tag)) return SUSPEND;		\
+{ DEREF(term,_myTermPtr,_myTag);		\
+  if (isAnyVar(_myTag)) return SUSPEND;		\
+}
+
+#define NONVAR1(X,term)				\
+TaggedRef term = X;				\
+{ DEREF(term,_myTermPtr,_myTag);		\
+  if (isAnyVar(_myTag)) {			\
+    OZ_suspendOn(X);				\
+    return SUSPEND;				\
+  }						\
 }
 
 // mm2
@@ -336,7 +343,7 @@ OZ_C_proc_end
 
 OZ_Return isValueInline(TaggedRef val)
 { 
-  NONVAR( val, _1, tag );
+  NONVAR( val, _1);
   return PROCEED;
 }
 DECLAREBI_USEINLINEREL1(BIisValue,isValueInline)
@@ -534,7 +541,7 @@ DECLAREBOOLFUN1(BIisRecordB,isRecordBInline,isRecordInline)
 
 OZ_Return isProcedureInline(TaggedRef t)
 {
-  NONVAR( t, term, tag );
+  NONVAR( t, term);
   return isProcedure(term) ? PROCEED : FAILED;
 }
 
@@ -561,7 +568,7 @@ DECLAREBOOLFUN1(BIisChunkB,isChunkBInline,isChunkInline)
 
 OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
 {
-  NONVAR( procedure, pterm, ptag );
+  NONVAR( procedure, pterm );
 
   if (isProcedure(pterm)) {
     int arity;
@@ -591,7 +598,7 @@ DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
 
 OZ_Return isCellInline(TaggedRef cell)
 {
-  NONVAR( cell, term, _ );
+  NONVAR( cell, term);
   return isCell(term) ? PROCEED : FAILED;
 }
 DECLAREBI_USEINLINEREL1(BIisCell,isCellInline)
@@ -599,7 +606,7 @@ DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
 
 OZ_Return isPortInline(TaggedRef port)
 {
-  NONVAR( port, term, _ );
+  NONVAR( port, term );
   return isPort(term) ? PROCEED : FAILED;
 }
 DECLAREBI_USEINLINEREL1(BIisPort,isPortInline)
@@ -2150,7 +2157,7 @@ DECLAREBOOLFUN1(BIisBoolB,isBoolBInline,isBoolInline)
 
 OZ_Return notInline(TaggedRef A, TaggedRef &out)
 {
-  NONVAR(A,term,tag);
+  NONVAR(A,term);
 
   if (literalEq(term,NameTrue)) {
     out = NameFalse;
@@ -4598,7 +4605,7 @@ OZ_C_proc_end
 
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
 {
-  NONVAR(c,rec,_1);
+  NONVAR(c,rec);
   outState = OZ_newVariable();
 
   if (!isCell(rec)) {
@@ -4636,7 +4643,7 @@ OZ_C_proc_end
 
 OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
 {
-  NONVAR(c,rec,_1);
+  NONVAR(c,rec);
 
   if (!isCell(rec)) {
     TypeErrorT(0,"Cell");
@@ -4651,7 +4658,7 @@ DECLAREBI_USEINLINEFUN1(BIaccessCell,BIaccessCellInline)
 
 OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
 {
-  NONVAR(c,rec,_1);
+  NONVAR(c,rec);
 
   if (!isCell(rec)) {
     TypeErrorT(0,"Cell");
@@ -4697,7 +4704,7 @@ OZ_C_proc_end
 
 OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
 {
-  NONVAR( t, term, tag );
+  NONVAR( t, term );
   out = isArray(term) ? NameTrue : NameFalse;
   return PROCEED;
 }
@@ -4706,7 +4713,7 @@ DECLAREBI_USEINLINEFUN1(BIisArray,isArrayInline)
 
 OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
 {
-  NONVAR( t, term, tag );
+  NONVAR( t, term );
   if (!isArray(term)) {
     TypeErrorT(0,"Array");
   }
@@ -4717,7 +4724,7 @@ DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
 
 OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
 {
-  NONVAR( t, term, tag );
+  NONVAR( t, term );
   if (!isArray(term)) {
     TypeErrorT(0,"Array");
   }
@@ -4729,8 +4736,8 @@ DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
 
 OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
 {
-  NONVAR( t, array, _1 );
-  NONVAR( i, index, _2 );
+  NONVAR( t, array );
+  NONVAR( i, index );
 
   if (!isArray(array)) {
     TypeErrorT(0,"Array");
@@ -4749,8 +4756,8 @@ DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
 OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 {
-  NONVAR( t, array, _1 );
-  NONVAR( i, index, _2 );
+  NONVAR( t, array );
+  NONVAR( i, index );
 
   if (!isArray(array)) {
     TypeErrorT(0,"Array");
@@ -4788,7 +4795,7 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
   OZ_Term d   = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  NONVAR( d, dict, _1 );
+  NONVAR1( d, dict );
   if (!isDictionary(dict)) {
     TypeErrorT(0,"Dictionary");
   }
@@ -4803,7 +4810,7 @@ OZ_C_proc_begin(BIdictionaryEntries,2)
   OZ_Term d   = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  NONVAR( d, dict, _1 );
+  NONVAR1( d, dict );
   if (!isDictionary(dict)) {
     TypeErrorT(0,"Dictionary");
   }
@@ -4815,7 +4822,7 @@ OZ_C_proc_end
 
 OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
 {
-  NONVAR( t, term, tag );
+  NONVAR( t, term);
   out = isDictionary(term) ? NameTrue : NameFalse;
   return PROCEED;
 }
@@ -4823,8 +4830,8 @@ DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
 
 
 #define GetDictAndKey(d,k,dict,key,checkboard)			\
-  NONVAR(d,dictaux,_1);						\
-  NONVAR(k,key, _2);						\
+  NONVAR(d,dictaux);						\
+  NONVAR(k,key);						\
   if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
   if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
   OzDictionary *dict = tagged2Dictionary(dictaux);		\
@@ -4896,11 +4903,11 @@ OZ_C_proc_begin(BIdictionaryToRecord,3)
   OZ_Term l = OZ_getCArg(1);
   OZ_Term r = OZ_getCArg(2);
 
-  NONVAR( d, dict, _1 );
+  NONVAR1( d, dict); 
   if (!isDictionary(dict)) {
     TypeErrorT(0,"Dictionary");
   }
-  NONVAR( l, lbl, _2);
+  NONVAR1( l, lbl);
   if (!isLiteral(lbl)) {
     TypeErrorT(1,"Literal");
   }
@@ -5531,7 +5538,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
   OZ_Term c = OZ_getCArg(0);
   OZ_Term val = OZ_getCArg(1);
 
-  NONVAR(c,rec,_1);
+  NONVAR1(c,rec);
   if (!isCell(rec)) {
     TypeErrorT(0,"Cell");
   }
@@ -5570,7 +5577,7 @@ OZ_C_proc_begin(BIdeepReadCell,2)
 {
   OZ_Term c = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
-  NONVAR(c,rec,_1);
+  NONVAR1(c,rec);
   if (!isCell(rec)) {
     TypeErrorT(0,"Cell");
   }
@@ -6488,9 +6495,10 @@ OZ_C_proc_begin(BIcopyRecord,2)
 {
   OZ_Term in = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
-  NONVAR(in,rec,tag);
+  NONVAR1(in,rec);
 
-  switch (tag) {
+  
+  switch (tagTypeOf(rec)) {
   case SRECORD:
     {
       SRecord *rec0 = tagged2SRecord(rec);
