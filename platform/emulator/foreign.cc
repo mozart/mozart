@@ -1298,7 +1298,7 @@ char* OZ_vsToC(OZ_Term t,int*n)
     s = dropConst(OZ_atomToC(t));
     if (n!=0) *n = strlen(s);
   } else if (OZ_isByteString(t)) {
-    ByteString*bs = tagged2ByteString(t);
+    ByteString*bs = tagged2ByteString(oz_deref(t));
     s = (char*) bs->getData();
     if (n!=0) *n = bs->getWidth();
   } else {
