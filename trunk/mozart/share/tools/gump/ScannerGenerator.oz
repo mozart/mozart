@@ -111,7 +111,7 @@ local
 	 RaiseOnBlock = {Debug.getRaiseOnBlock T}
 	 {Debug.setRaiseOnBlock T false}
 	 try
-	    P = {New TextPipe init(cmd: PLATFORMDIR#'/oz.flex.bin'
+	    P = {New TextPipe init(cmd: PLATFORMDIR#'/flex.exe'
 				   args: ['-Cem' FlexFile])}
 	    {P getAll(?Ss)}
 	    {P close()}
@@ -125,7 +125,7 @@ local
 	    end
 	 catch _ then
 	    {Rep error(kind: 'scanner generator'
-		       msg: 'invocation of oz.flex.bin failed')}
+		       msg: 'invocation of flex.exe failed')}
 	 finally
 	    {Debug.setRaiseOnBlock T RaiseOnBlock}
 	 end
@@ -162,7 +162,7 @@ local
 	       if {Rep hasSeenError($)} then skip
 	       else
 		  {Rep error(kind: 'system error'
-			     msg: 'invocation of oz.flex.bin failed'
+			     msg: 'invocation of flex.exe failed'
 			     items: [hint(l: 'Exit code' m: I)])}
 	       end
 	       stop
