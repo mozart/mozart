@@ -306,10 +306,17 @@ Bool SolveActor::checkExtSuspList ()
     }
 
     Board *b = (susp->getNode ())->getBoardDeref ();
-    Board *sb = b->getSolveBoard (); 
-    SuspList *helpList;
 
-    if (b == (Board *) NULL || sb == (Board *) NULL) {
+    if (b == (Board *) NULL) {
+      susp->markDead ();
+      tmpSuspList = tmpSuspList->dispose ();
+      continue;
+    }
+
+    Board *sb = b->getSolveBoard ();
+    while (sb != (Board *) NULL && sb != solveBoard)
+      sb = (sb->getParentBoard ())->getSolveBoard ();
+    if (sb == (Board *) NULL) {
       // note that the board *b could be discarded; therefore
       // it is needed to try to find its solve board; 
       susp->markDead ();
@@ -317,6 +324,7 @@ Bool SolveActor::checkExtSuspList ()
       continue;
     }
 
+    SuspList *helpList;
     helpList = tmpSuspList;
     tmpSuspList = tmpSuspList->getNext ();
     addSuspension (helpList);
