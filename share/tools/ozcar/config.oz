@@ -76,10 +76,10 @@ FalseName              = 'false'
 %% Geometry
 %%
 ToplevelGeometry       = '590x420+7+100'
-SourceWindowGeometry   = '501x549+612+100'  %% I really hate hardcoding this
+SourceWindowGeometry   = '496x564+612+100'  %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
-SourceWindowTextSize   = 80 # 50
+SourceWindowTextSize   = 80 # 40
 
 ThreadTreeWidth        = 0
 ThreadTreeStretchX     = 11
@@ -92,10 +92,12 @@ EnvTextWidth           = 24
 SmallBorderSize        = 0
 BorderSize             = 2
 
+/* end */
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
 %%
-SmallFont              = '6x10'
+SmallFont              = '6x13'
+SmallBoldFont          = '6x13bold'
 DefaultFont            = '7x13'
 BoldFont               = '7x13bold'
 ThreadTreeFont         = DefaultFont
