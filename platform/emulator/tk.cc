@@ -371,24 +371,22 @@ public:
 
   }
 
-  OZ_Return put_byteString(TaggedRef term) {
-    Assert(oz_isByteString(term))
+  void put_byteString(TaggedRef term) {
+    Assert(oz_isByteString(term));
     // term must already be derefed
     ByteString*bs = tagged2ByteString(term);
     int n = bs->getWidth();
     ensure(n);
     for (int i=0;i<n;i++) *buffer++ = bs->get(i);
-    return PROCEED;
   }
 
-  OZ_Return put_byteString_quote(TaggedRef term) {
-    Assert(oz_isByteString(term))
-    // term must already be derefed
-    ByteString*bs = tagged2ByteString(term);
+  void put_byteString_quote(TaggedRef term) {
+    Assert(oz_isByteString(term));
+      // term must already be derefed
+      ByteString*bs = tagged2ByteString(term);
     int n = bs->getWidth();
     ensure(4*n);
     for (int i=0;i<n;i++) put_quote(bs->get(i));
-    return PROCEED;
   }
 
   OZ_Return put_string_quote(TaggedRef list) {
@@ -692,7 +690,8 @@ OZ_Return TK::put_vs(TaggedRef vs) {
   } else if (isLTupleTag(vs_tag)) {
     return put_string(vs);
   } else if (oz_isByteString(vs)) {
-    return put_byteString(vs);
+    put_byteString(vs);
+    return PROCEED;
   } else {
     return raise_type_error(vs);
   }
@@ -731,7 +730,8 @@ OZ_Return TK::put_vs_quote(TaggedRef vs) {
   } else if (isLTupleTag(vs_tag)) {
     return put_string_quote(vs);
   } else if (oz_isByteString(vs)) {
-    return put_byteString_quote(vs);
+    put_byteString_quote(vs);
+    return PROCEED;
   } else {
     return raise_type_error(vs);
   }
@@ -937,6 +937,11 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
   } else if (isLTupleTag(tcl_tag)) {
     start_protect();
     StateReturn(put_string_quote(tcl));
+    stop_protect();
+    return PROCEED;
+  } else if (oz_isByteString(tcl)) {
+    start_protect();
+    put_byteString_quote(tcl);
     stop_protect();
     return PROCEED;
   }
