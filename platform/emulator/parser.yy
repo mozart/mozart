@@ -1390,9 +1390,13 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
     return;
   }
 
-  append("%**     in file \"");
-  append(file);
-  append("\", line ");
+  append("%**     in ");
+  if (strcmp(file,"nofile")) {
+    append("file \"");
+    append(file);
+    append("\", ");
+  }
+  append("line ");
   append(line);
   append(", column ");
   append(offset);

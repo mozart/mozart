@@ -1142,7 +1142,7 @@ void xy_init_from_string(char *str) {
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
   xy_init();
   xylino = 1;
-  strcpy(xyFileName,"");
+  strcpy(xyFileName,"nofile");
   xyFileNameAtom = OZ_atom(xyFileName);
 }
 
