@@ -92,7 +92,7 @@
 
 #define DEFAULT_HI_MID_RATIO    10
 #define DEFAULT_MID_LOW_RATIO   10
-#define DEFAULT_CLOSE_TIME      0
+#define DEFAULT_CLOSE_TIME      1000
 
 #define DEFAULT_TRAIL_SIZE      200
 
