@@ -661,18 +661,8 @@ WrappedHandle *WrappedHandle::allHandles = NULL;
 
 int rawread(int fd, void *buf, int sz)
 {
-  if (isSocket(fd)) {
-    /* bug workaround: should be done in libdp/network.cc: setting
-     * sockets to non-blocking mode doesn't work under Windows
-     */
-    if (osTestSelect(fd,SEL_READ) != 1) {
-      WSASetLastError(WSAEWOULDBLOCK);
-      errno = EWOULDBLOCK;
-      return -1;
-    }
-
+  if (isSocket(fd))
     return recv(fd,((char*)buf),sz,0);
-  }
 
   if (fd < wrappedHDStart)
     return read(fd,buf,sz);
@@ -689,17 +679,8 @@ int rawread(int fd, void *buf, int sz)
 
 int rawwrite(int fd, void *buf, int sz)
 {
-  if (isSocket(fd)) {
-    /* bug workaround: should be done in libdp/network.cc: setting
-     * sockets to non-blocking mode doesn't work under Windows
-     */
-    if (osTestSelect(fd,SEL_WRITE) != 1) {
-      WSASetLastError(WSAEWOULDBLOCK);
-      errno = EWOULDBLOCK;
-      return -1;
-    }
+  if (isSocket(fd))
     return send(fd, (char *)buf, sz, 0);
-  }
 
   if (fd < wrappedHDStart)
     return write(fd,buf,sz);
@@ -744,6 +725,7 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
 
 
 #include "winselect.cc"
+
 
 void registerSocket(int fd)
 {
