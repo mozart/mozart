@@ -162,8 +162,7 @@ ozlib.lnk: oz.h
         sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
 
 scanner.cc: scanner.ll
-        $(LEX) $(LFLAGS) -Pxy $<
-        @$(MV) lex.xy.c scanner.cc
+        $(LEX) $(LFLAGS) -Pxy -o$@ $<
 
 parser.cc: parser.hh
         @echo > /dev/null
