@@ -425,6 +425,9 @@ void unmarshalUselessVirtualInfo(MsgBuffer *mb)
   Assert(sizeof(time_t) <= sizeof(unsigned int));
   Assert(sizeof(int) <= sizeof(unsigned int));
   Assert(sizeof(key_t) <= sizeof(unsigned int));
+#ifndef VIRTUALSITES
+    Assert(sizeof(key_t) == sizeof(unsigned int));
+#endif
 
   //
   (void) unmarshalNumber(mb);

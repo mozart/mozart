@@ -40,8 +40,16 @@
 #include "network.hh"
 #include "vs_interface.hh"
 
+#ifdef VIRTUALSITES
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#else
+// kost@ : distributed Oz sites should be capable to accept, store
+// and (re-)transmit virtual info, thus, 'key_t' data.
+// The following definition is safe in the current implementation
+// since marshaler/unmarshaler already assumes that;
+typedef unsigned int key_t;
+#endif
 
 /**********************************************************************/
 /*   SECTION :: Site                                                  */
@@ -670,6 +678,9 @@ public:
     Assert(sizeof(time_t) <= sizeof(unsigned int));
     Assert(sizeof(int) <= sizeof(unsigned int));
     Assert(sizeof(key_t) <= sizeof(unsigned int));
+#ifndef VIRTUALSITES
+    Assert(sizeof(key_t) == sizeof(unsigned int));
+#endif
 
     //
     address = (ip_address) unmarshalNumber(mb);
@@ -689,6 +700,9 @@ public:
     Assert(sizeof(time_t) <= sizeof(unsigned int));
     Assert(sizeof(int) <= sizeof(unsigned int));
     Assert(sizeof(key_t) <= sizeof(unsigned int));
+#ifndef VIRTUALSITES
+    Assert(sizeof(key_t) == sizeof(unsigned int));
+#endif
 
     //
     marshalNumber(address, mb);
