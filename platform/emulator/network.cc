@@ -1,6 +1,7 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Per Brand (perbrand@sics.se)
+ *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -23,19 +24,8 @@
  *  WARRANTIES.
  *
  */
-/*
-  PERDIO Project, DFKI & SICS,
-  Universit"at des Saarlandes
-  Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
-  Author: brand,scheidhr, mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
-  abstract interface to the ip network
-  ------------------------------------------------------------------------*/
-
-
+// abstract interface to the ip network
 
 #ifdef WINDOWS
 #include "wsock.hh"
