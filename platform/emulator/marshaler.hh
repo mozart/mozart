@@ -30,6 +30,7 @@
 #define __MARSHALER_HH
 
 #include "base.hh"
+#include "hashtbl.hh"
 #include "msgbuffer.hh"
 
 //  provided by marshaler to protocol-layer.
@@ -152,19 +153,21 @@ inline void gotRef(MsgBuffer *bs, TaggedRef val, int index)
   --> we might have REF cells pointing to the beginning of the list, so we
   run into problems if the list is _first_ marshalled.
   Solution: for lists we do not mark the datastructure but remember a 
-  pointer to it on the refTrail together with its counter value.
+  pointer to it in a hash table
 
  */
 
-#define RT_LISTTAG 0x1
 
 class RefTrail: public Stack {
   int counter;
-
+  HashTable *lists;
 public:
   int getCounter() { return counter; }
 
-  RefTrail() : Stack(200,Stack_WithMalloc) { counter=0; } 
+  RefTrail() : Stack(200,Stack_WithMalloc) { 
+    lists = new HashTable(HT_INTKEY,2000);
+    counter=0; 
+  } 
   void pushInt(int i) { push(ToPointer(i)); }
   int trail(OZ_Term *t)
   {
@@ -175,36 +178,25 @@ public:
   int trail(LTuple *l)
   {
     Assert(find(l)==-1);
-    pushInt(counter++);
-    pushInt(ToInt32(l)|RT_LISTTAG);
+    lists->htAdd((intlong)l,ToPointer(counter++));
     return counter-1;
   }
 
   int find(LTuple *l) 
   {
-    int ret = -1;
-    StackEntry *savedTop = tos;
-
-    while(!isEmpty()) {
-      unsigned int l1 = ToInt32(pop());
-      int n = ToInt32(pop());
-      if ((l1&RT_LISTTAG) && l1==(ToInt32(l)|RT_LISTTAG)) {
-	ret = n;
-	break;
-      }
-    }
-    tos = savedTop;
-    return ret;
+    void *ret = lists->htFind((intlong)l);
+    return (ret==htEmpty) ? -1 : (int)ToInt32(ret);
   }
 
   void unwind()
   {
+    counter -= lists->getSize();
+    lists->mkEmpty();
+
     while(!isEmpty()) {
       OZ_Term *loc = (OZ_Term*) pop();
       OZ_Term oldval = ToInt32(pop());
-      if ((ToInt32(loc)&RT_LISTTAG)==0) {
-	*loc = oldval;
-      }
+      *loc = oldval;
       counter--;
     }
     Assert(counter==0);
