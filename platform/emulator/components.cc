@@ -694,7 +694,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   ControlVarNew(var);
   PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,var,act);
   OZ_registerReadHandler(rfd,pipeHandler,pi);
-  return BI_CONTROL_VAR;
+  SuspendOnControlVar;
 }
 
 
@@ -785,7 +785,7 @@ OZ_C_proc_begin(BIload,2)
   OZ_Term loader = registry_get(AtomLoad);
   if (loader==0) 
     loader = BI_url_load;
-  am.currentThread()->pushCall(loader,OZ_getCArg(0),OZ_getCArg(1));
+  am.prepareCall(loader,OZ_getCArg(0),OZ_getCArg(1));
   return BI_REPLACEBICALL;
 }
 OZ_C_proc_end

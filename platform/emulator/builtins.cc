@@ -4488,7 +4488,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(port->isProxy()) {
-    return portSend(port,val,am.currentThread());
+    return portSend(port,val);
   } 
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
     
@@ -4635,7 +4635,7 @@ OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef newVal)
 	TaggedRef old=sec->getContents();
 	sec->setContents(newVal);
 	return oz_unify(old,oldVal);}}
-    return cellDoExchange(tert,oldVal,newVal,am.currentThread());
+    return cellDoExchange(tert,oldVal,newVal);
   }
 
   CellLocal *cell=(CellLocal*)tert;
@@ -4690,7 +4690,7 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
   Tertiary *tert = tagged2Tert(rec);
   if(!tert->isLocal()){
     TaggedRef oldIgnored = oz_newVariable();
-    return cellDoExchange(tert,oldIgnored,in,am.currentThread());
+    return cellDoExchange(tert,oldIgnored,in);
   }
 
   CellLocal *cell=(CellLocal*)tert;
@@ -5076,8 +5076,15 @@ OZ_Return applyProc(TaggedRef proc, TaggedRef args)
     oz_typeError(0,"Procedure or Object");
   }
   
-  am.currentThread()->pushCall(proc,argsArray,len);
-  disposeRefsArray(argsArray);
+  am.prepareCall(proc,argsArray);
+  return BI_REPLACEBICALL;
+}
+
+
+OZ_Return suspendOnControlVar()
+{
+  am.prepareCall(BI_controlVarHandler,am.getSuspendVarList());
+  am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }
 
@@ -5085,6 +5092,24 @@ OZ_Return applyProc(TaggedRef proc, TaggedRef args)
 OZ_BI_define(BIcontrolVarHandler,1,0)
 {
   OZ_Term varlist = deref(OZ_in(0));
+
+  {
+    TaggedRef aux = varlist;
+    while (isCons(aux)) {
+      TaggedRef car = head(aux);
+      if (isAnyVar(deref(car))) {
+	am.addSuspendVarList(car);
+	aux = tail(aux);
+      } else {
+	am.emptySuspendVarList();
+	goto no_suspend;
+      }
+    }
+    /* only unbound variables found */
+    return SUSPEND;
+  }
+
+no_suspend:
   for ( ; isCons(varlist); varlist = deref(tail(varlist))) {
     TaggedRef car = deref(head(varlist));
     if (oz_isVariable(car))
@@ -5141,7 +5166,7 @@ OZ_BI_define(BIcheckCVH,1,0)
 {
   ControlVarNew(var);
   oz_unify(var,OZ_in(0)); // mm_u
-  return BI_CONTROL_VAR;
+  SuspendOnControlVar;
 } OZ_BI_end
 
 
@@ -5911,10 +5936,10 @@ SRecord *getStateInline(RecOrCell state, Bool isAssign, Bool newVar,
 
   if (am.onToplevel()) {
     if(isAssign) {
-      EmCode = cellAssignExchange(t,fea,val,am.currentThread());
+      EmCode = cellAssignExchange(t,fea,val);
     } else {
       if(newVar) val = oz_newVariable();
-      EmCode = cellAtExchange(t,fea,val,am.currentThread());
+      EmCode = cellAtExchange(t,fea,val);
     }
   } else {
     if(!isAssign) val = oz_newVariable();
@@ -6124,13 +6149,10 @@ OZ_C_proc_begin(BIcomma,2)
     oz_typeError(0,"Class");
   }
 
-  ObjectClass * oc = tagged2ObjectClass(cl);
-
-  TaggedRef fb = oc->getFallbackApply();
-
+  TaggedRef fb = tagged2ObjectClass(cl)->getFallbackApply();
   Assert(fb);
 
-  am.currentThread()->pushCall(fb,OZ_args,2);
+  am.prepareCall(fb,OZ_args[0],OZ_args[1]);
   am.emptySuspendVarList();  
   return BI_REPLACEBICALL;
 }
@@ -6145,14 +6167,10 @@ OZ_C_proc_begin(BIsend,3)
     oz_typeError(0,"Class");
   }
 
-  ObjectClass * oc = tagged2ObjectClass(cl);
-
-  TaggedRef fb = oc->getFallbackSend();
-
+  TaggedRef fb = tagged2ObjectClass(cl)->getFallbackSend();
   Assert(fb);
 
-  am.currentThread()->pushCall(fb,OZ_args,3);
-
+  am.prepareCall(fb,OZ_args[0],OZ_args[1],OZ_args[2]);
   am.emptySuspendVarList();  
   return BI_REPLACEBICALL;
 }
@@ -6278,7 +6296,7 @@ OZ_C_proc_begin(BINew,3)
 
   Assert(fb);
 
-  am.currentThread()->pushCall(fb,OZ_args,3);
+  am.prepareCall(fb,OZ_args[0],OZ_args[1],OZ_args[2]);
   am.emptySuspendVarList();  
   return BI_REPLACEBICALL;
 }
