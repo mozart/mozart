@@ -779,7 +779,7 @@ nil to revert to the defaults."
   (oz-snapshot-revert)
   (setq oz-current-profile name)
   (oz-snapshot-take)
-  (when (not (equal name ""))
+  (when (and name (not (equal name "")))
     (let ((profile (assq (intern name) oz-profiles)))
       (if profile (oz-profile-install profile)
 	(error "Unknown profile: %s" name)))))
