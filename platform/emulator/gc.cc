@@ -1574,6 +1574,7 @@ void AM::gc(int msgLevel)
   gcTagged(aVarBindHandler,aVarBindHandler);
 
   gcTagged(methApplHdl,methApplHdl);
+  gcTagged(sendHdl,sendHdl);
 
   gcTagged(defaultExceptionHandler,defaultExceptionHandler);
 
@@ -2068,9 +2069,10 @@ void ConstTerm::gcConstRecurse()
       SChunk *c = (SChunk *) this;
 
       c->gcTertiary();
-      if (c->value)
-	gcTagged(c->value,c->value);
-      c->setPtr(((Board *) c->getPtr())->gcBoard());
+      gcTagged(c->value,c->value);
+      if (c->isLocal()) {
+	c->setBoard(c->getBoard()->gcBoard());
+      }
 
       break;
     }
@@ -2199,22 +2201,15 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       COUNT(port);   
       switch(((Tertiary *)this)->getTertType()) {
-      case Te_Local:{
+      case Te_Local:
 	CheckLocal((PortLocal *) this);
 	sz = sizeof(PortLocal);
-	break;}
+	break;
 
-      case Te_Manager:{
-	sz = sizeof(PortManager);
-	break;}
-
-      case Te_Proxy:{
-	sz = sizeof(PortProxy);
-	break;}
-      
-      default:{
-	Assert(0);
-	break;}}
+      case Te_Manager:	sz = sizeof(PortManager); break;
+      case Te_Proxy:	sz = sizeof(PortProxy);   break;
+      default: Assert(0);           	          break;
+      }
       
       break;
     }
@@ -2228,6 +2223,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     CheckLocal((SChunk *) this);
     sz = sizeof(SChunk);
     COUNT(chunk);
+    dogcGName(((SChunk *) this)->getGName());
     break;
 
   case Co_Array:
@@ -2420,10 +2416,8 @@ ObjectClass *ObjectClass::gcClass()
   OzDictionary *fastm = fastMethods;
   storeForward(&fastMethods, ret);
   ret->fastMethods    = (OzDictionary*) fastm->gcConstTerm();
-  ret->slowMethods    = (OzDictionary*) slowMethods->gcConstTerm();
   ret->defaultMethods = (OzDictionary*) defaultMethods->gcConstTerm();
   ret->printName      = printName->gc();
-  ret->send           = (Abstraction *) send->gcConstTerm();
   ret->unfreeFeatures = ret->unfreeFeatures->gcSRecord();
   gcTagged(ozclass,ret->ozclass);
   return ret;

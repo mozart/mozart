@@ -129,11 +129,6 @@ public:
   }
 };
 
-inline
-void addSuspCVar(TaggedRef v, Thread *el)
-{
-  tagged2CVar(v)->addSuspSVar(el);
-}
 
 // only SVar and their descendants can be exclusive
 inline
@@ -209,7 +204,9 @@ OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
 #include "avar.hh"
 #include "perdiovar.hh"
 
-#ifndef OUTLINE
+#ifdef OUTLINE
+void addSuspCVar(TaggedRef v, Thread *el);
+#else
 #include "genvar.icc"
 #endif
 

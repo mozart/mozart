@@ -208,6 +208,18 @@ void GenCVariable::dispose(void)
 }
 
 
+inline
+void addSuspCVar(TaggedRef v, Thread *el)
+{
+  GenCVariable *cv = tagged2CVar(v);
+  switch(cv->getType()) {
+  case PerdioVariable:
+    ((PerdioVar*)cv)->addSuspPerdioVar();
+    break;
+  }
+  cv->addSuspSVar(el);
+}
+
 #endif //__genvar_icc__
 
 
