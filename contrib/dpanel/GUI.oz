@@ -45,6 +45,7 @@ define
          final locking
       feat
          listbox
+         InternalHelpFun1
       attr
          cy:1
          width:18*8
@@ -67,6 +68,21 @@ define
          {Tk.addYScrollbar LB SY}
          {Tk.batch [grid(LB row:0 column:0)
                     grid(SY row:0 column:1 sticky:ns)]}
+
+         self.InternalHelpFun1 = proc{$ X} Y0 Y1
+                                    DC=self.listbox
+                                 in
+
+                                    {X.bgtag tk(delete)}
+                                    {X.fgtag tk(delete)}
+                                    {DC tk(crea text 5 @cy text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
+                                    [_ Y0 _ Y1]={DC tkReturnListInt(bbox X.fgtag $)}
+                                    cy<-Y1+1
+                               {DC tk(crea rect 0 Y0 1000 Y1+1 fill:X.bg tags:X.bgtag outline:X.bg)}
+                               {DC tk('raise' X.fgtag)}
+                            end
+
+
       end
 
       meth setAction(P)
@@ -85,23 +101,23 @@ define
          else
             skip
          end
-         {ForAll Ks proc{$ K}
-                       T1={New Tk.canvasTag tkInit(parent:DC)}
-                       T2={New Tk.canvasTag tkInit(parent:DC)}
-                       S=site(text:K.text
-                              key:K.key
-                              fg:{CondSelect K fg black}
-                              bg:{CondSelect K bg lightgrey}
-                              bgtag:T1
-                              fgtag:T2)
-                    in
-                       sites<-{Append @sites [S]}
-                       {DC tk(crea line 0 0 0 1 tags:q(T1 T2))}
-                       {T1 tkBind(event:'<1>'
-                                  action:self#Action(K.key))}
-                       {T2 tkBind(event:'<1>'
-                                  action:self#Action(K.key))}
-                    end}
+         sites <- {Append @sites {Map Ks proc{$ K O}
+                                            T1={New Tk.canvasTag tkInit(parent:DC)}
+                                            T2={New Tk.canvasTag tkInit(parent:DC)}
+                                            S=site(text:K.text
+                                                   key:K.key
+                                                   fg:{CondSelect K fg black}
+                                                   bg:{CondSelect K bg lightgrey}
+                                                   bgtag:T1
+                                                   fgtag:T2)
+                                         in
+                                            O = S
+                                            {DC tk(crea line 0 0 0 1 tags:q(T1 T2))}
+                                            {T1 tkBind(event:'<1>'
+                                                       action:self#Action(K.key))}
+                                            {T2 tkBind(event:'<1>'
+                                                       action:self#Action(K.key))}
+                                         end}}
          {self Redraw(@sites)}
       end
 
@@ -123,20 +139,11 @@ define
          {self Redraw(@sites)}
       end
 
+
       meth Redraw(Ss)
-         DC=self.listbox
-      in
          cy<-1
-         {ForAll Ss proc{$ X} Y0 Y1 in
-                       {X.bgtag tk(delete)}
-                       {X.fgtag tk(delete)}
-                       {DC tk(crea text 5 @cy text:X.text anchor:nw fill:X.fg tags:X.fgtag)}
-                       [_ Y0 _ Y1]={DC tkReturnListInt(bbox X.fgtag $)}
-                       cy<-Y1+1
-                       {DC tk(crea rect 0 Y0 1000 Y1+1 fill:X.bg tags:X.bgtag outline:X.bg)}
-                       {DC tk('raise' X.fgtag)}
-                    end}
-         {DC tk(configure scrollregion:q(0 1 1000 @cy))}
+         {ForAll Ss self.InternalHelpFun1}
+         {self.listbox tk(configure scrollregion:q(0 1 1000 @cy))}
       end
 
 
