@@ -1,12 +1,42 @@
 #!/bin/sh -x
+#
+#  Authors:
+#    Christian Schulte <schulte@dfki.de>
+#
+#  Copyright:
+#    Christian Schulte, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+#
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+#
 
-RPMROOT=/usr/src/redhat
+RPMROOT=/tmp/rpmroot # usr/src/redhat
 RPMSRC=$RPMROOT/SOURCES
 RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
 CVSROOT=munchkin:/CVS
 OZDOCHOME=/usr/local/oz/doc
 
+#
+# Dinf destination dir
+#
+if test $# -lt 1
+then
+   echo "usage: create-rpm <destination-dir>" 1>&2;
+   exit 1;
+fi
+DESTDIR=$1
 
 #
 # First step: Generate sources
@@ -91,7 +121,6 @@ make
 
 %install
 PREFIX=\$RPM_BUILD_ROOT/usr/local/mozart
-DOC=mozart-doc-${VERSION}.tar.gz
 rm -rf \$PREFIX
 mkdir -p \$PREFIX
 # install docs
@@ -122,6 +151,19 @@ rm -rf \$RPM_BUILD_ROOT
 /usr/local/mozart
 EOF
 
+#
+# No we have all what we need, go and build rpms
+#
 
-# No we have all what we need, go and build
-# rpm -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rpm -ba --clean ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rm -f ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rm -f ${RPMSRC}/mozart-$VERSION.tar.gz
+rm -f ${RPMSRC}/mozart-doc-$VERSION.tar.gz
+rm -f ${RPMSRC}/mozart-profiles.tar.gz
+
+#
+# Move the created rpms to destination
+#
+
+mv ${RPMROOT}/RPMS/i386/mozart-$VERSION-$BUILD.i386.rpm ${DESTDIR}
+mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DESTDIR}
