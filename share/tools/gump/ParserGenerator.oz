@@ -1693,7 +1693,7 @@ local
 	 rulePrecedence <- '_'   % meaning none specified
       end
    end
-in
+
    class ProductionTemplatesClass
       prop final
       attr productionTemplates: nil
@@ -1723,10 +1723,6 @@ in
       meth get($)
 	 @productionTemplates
       end
-   end
-
-   fun {MakeProductionTemplates}
-      {New ProductionTemplatesClass init()}
    end
 
    %--------------------------------------------------------------------
@@ -1762,9 +1758,13 @@ in
 	 end
       end
    end
-
+in
    %--------------------------------------------------------------------
    % Expansion of Parser Specifications
+
+   fun {MakeProductionTemplates}
+      {New ProductionTemplatesClass init()}
+   end
 
    fun {TransformParser T From Prop Attr Feat Ms Tokens Rules P Flags
 	ProdTempl Rep}

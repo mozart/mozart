@@ -199,11 +199,7 @@ local
 	 @Meth
       end
    end
-
+in
    \insert ScannerGenerator
    \insert ParserGenerator
-in
-   Gump = gump(makeProductionTemplates: MakeProductionTemplates
-	       transformScanner: TransformScanner
-	       transformParser: TransformParser)
 end
