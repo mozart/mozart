@@ -388,7 +388,7 @@ static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
     return OZ_isNil(vs) ? PROCEED : atom2buff(vs, write_buff, len, rest, susp);
   }
 
-  char *label;  
+  char *label = NULL;  
   if (OZ_isTuple(vs) && (label = OZ_atomToC(OZ_label(vs)))) {
     int width = OZ_width(vs);
     if (IsPair(label) && width > 0) {
