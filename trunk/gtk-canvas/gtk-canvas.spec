@@ -12,6 +12,7 @@ Group: Development/Languages
 Packager: Denys Duchier
 Source: ftp://ftp.mozart-oz.org/pub/extras/gtk-canvas-0.1.tar.gz
 Prefix: /usr/local
+BuildRoot: /var/tmp/gtk-canvas
 
 %description
 This package provides a powerful canvas for GTK 1.2 which extends
@@ -28,6 +29,8 @@ export CFLAGS CXXFLAGS
 make
 
 %install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/local
 make install
 
 %files
