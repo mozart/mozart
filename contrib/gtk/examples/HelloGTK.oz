@@ -21,6 +21,7 @@
 
 functor $
 import
+   Application
    System(show)
    GTK at 'x-oz://system/gtk/GTK.ozf'
 define
@@ -30,6 +31,16 @@ define
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("Hello GTK")
+	 {self signalConnect('delete-event' deleteEvent _)}
+      end
+      meth deleteEvent(Args)
+	 %% CAUTION: At this time, the underlying objects has been destroyed.
+	 %% CAUTION: This event is solely intended for oz side cleanup code.
+	 %% CAUTION: If you want eager finalisation of object wrappers then
+	 %% CAUTION: connect the delete event handler using a procedure
+	 %% CAUTION: rather than a object method.
+	 {System.show 'deleteEvent occured'}
+	 {Application.exit 0}
       end
    end
 

@@ -23,6 +23,7 @@
 #ifndef __GOZ_DATA_H__
 #define __GOZ_DATA_H__
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #define GOZ_(name) name ## _
@@ -131,7 +132,8 @@
 #if defined(__CYGWIN32__) || defined(__MINGW32__)
 static inline gchar *goz_import_string(gchar *source) {
   GError *res;
-  return g_locale_to_utf8(g_strdup(source), &res);
+  /* To be discussed: g_strdup(source) <-> source  */
+  return g_locale_to_utf8(source, &res);
 }
 
 #define GOZ_importString(str) \
