@@ -299,12 +299,13 @@ Bool AM::hookCheckNeeded()
 
 /* threaded code broken on linux, leads to memory leek,
  * this is a workaround
+ * seems to work under 2.7.x
  */
 
 #ifdef THREADED
 #define Case(INSTR) INSTR##LBL : asmLbl(INSTR); 
 
-#ifdef LINUX
+#ifdef XXLINUX
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 #else
 
@@ -1455,7 +1456,7 @@ void engine()
 
  LBLdispatcher:
 
-#if defined(THREADED) && defined(LINUX)
+#if defined(THREADED) && defined(XXLINUX)
   /* threaded code broken under linux */
   goto* (void*) (*PC);
 #endif
