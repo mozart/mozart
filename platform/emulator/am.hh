@@ -48,6 +48,7 @@
 #include "debug.hh"
 #include "os.hh"
 #include "thread.hh"
+#include "thrspool.hh"
 #include "verbose.hh"
 #include "cell.hh"
 #include "objects.hh"
@@ -86,7 +87,7 @@ enum InstType {
 };
 
 // this class contains the central global data
-class AM {
+class AM : public ThreadsPool {
 friend void engine();
 public:
   int threadSwitchCounter;
@@ -127,20 +128,12 @@ public:
                      OZ_Term A,OZ_Term B=makeTaggedNULL(),
                      OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
 
-  /* Threads */
-  Thread *currentThread;
-  Thread *threadsHead;
-  Thread *threadsTail;
-
-  Thread *rootThread;
   Toplevel *toplevelQueue;
 
-  Thread *threadsFreeList;
-
-  void initThreads();
-  void printThreads();
   void printBoards();
 
+  //
+  //  schedule various kinds of jobs;
   void scheduleSuspCont(Board *bb, int prio, Continuation *c,
                         Bool wasExtSusp);
   void scheduleSuspCCont(Board *bb, int prio,
@@ -152,20 +145,7 @@ public:
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
-
   Thread *createThread(int prio);
-  Thread *newThread(int p,Board *h);
-  void disposeThread(Thread *th);
-  Bool isScheduled(Thread *th);
-  void checkThreadsAssertion();
-  void scheduleThread(Thread *th);
-  Bool threadQueueIsEmpty();
-  Thread *getFirstThread();
-  Thread *unlinkThread(Thread *th);
-  void insertFromHead(Thread *th);
-  void insertAfter(Thread *th,Thread *here);
-  void insertFromTail(Thread *th);
-  void insertBefore(Thread *th, Thread *here);
 
   int catchError() { return setjmp(engineEnvironment); }
 public:
@@ -220,6 +200,10 @@ public:
   Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
                            RefsArray X, int argsToSave);
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
+
+
+
+
 
   Bool isToplevel();
 

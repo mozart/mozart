@@ -231,6 +231,7 @@ void AM::init(int argc,char **argv)
   initLiterals();
 
   initThreads();
+  toplevelQueue = (Toplevel *) NULL;
 
   // builtins
   BuiltinTabEntry *entry = BIinit();
@@ -1195,23 +1196,10 @@ Bool AM::isStableSolve(SolveActor *sa)
 /* ------------------------------------------------------------------------
  * Threads
  *
- * runnable queue: threadsHead, threadsTail
  * memory optimization: threadsFreeList
  * running thread: currentThread
  * toplevel: rootThread and toplevelQueue
  * ------------------------------------------------------------------------ */
-
-void AM::initThreads()
-{
-  threadsHead     = (Thread *) NULL;
-  threadsTail     = (Thread *) NULL;
-  threadsFreeList = (Thread *) NULL;
-
-  currentThread   = (Thread *) NULL;
-
-  rootThread      = newThread(ozconf.defaultPriority,rootBoard);
-  toplevelQueue   = (Toplevel *) NULL;
-}
 
 void AM::pushDebug(Board *n, Chunk *def, int arity, RefsArray args)
 {
@@ -1278,7 +1266,6 @@ void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
   bb->setNervous();
   scheduleThread(th);
 }
-
 
 Thread *AM::createThread(int prio)
 {
