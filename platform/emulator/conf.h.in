@@ -36,3 +36,10 @@
 
 /* define if propagator are linked statically */
 #undef FOREIGNFDPROPS
+
+
+/* debugging */
+#undef DEBUG_EMULATOR
+
+/* profiling */
+#undef PROFILE_EMULATOR

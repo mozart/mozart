@@ -152,11 +152,13 @@ case $enable_opt in
     ;;
     d*)
         AC_MSG_RESULT(debug)
-        COPT="\$(DEBUG_DEFS) -g3"
+        AC_DEFINE(DEBUG_EMULATOR)
+        COPT="-g3"
     ;;
     p*)
         AC_MSG_RESULT(profile)
-        COPT="\$(PROF_DEFS) -pg -O3"
+        AC_DEFINE(PROFILE_EMULATOR)
+        COPT="-pg -O3"
         LDFLAGS="-pg $LDFLAGS"
     ;;
     *)

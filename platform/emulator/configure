@@ -2764,11 +2764,19 @@ case $enable_opt in
     ;;
     d*)
         echo "$ac_t""debug" 1>&6
-        COPT="\$(DEBUG_DEFS) -g3"
+        cat >> confdefs.h <<\EOF
+#define DEBUG_EMULATOR 1
+EOF
+
+        COPT="-g3"
     ;;
     p*)
         echo "$ac_t""profile" 1>&6
-        COPT="\$(PROF_DEFS) -pg -O3"
+        cat >> confdefs.h <<\EOF
+#define PROFILE_EMULATOR 1
+EOF
+
+        COPT="-pg -O3"
         LDFLAGS="-pg $LDFLAGS"
     ;;
     *)
@@ -2782,7 +2790,7 @@ case $enable_opt in
                 ;;
         esac
         echo $ac_n "checking for   --enable-threaded""... $ac_c" 1>&6
-echo "configure:2786: checking for   --enable-threaded" >&5
+echo "configure:2794: checking for   --enable-threaded" >&5
         # Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -2800,7 +2808,7 @@ EOF
         fi
 
         echo $ac_n "checking for   --enable-fastreg""... $ac_c" 1>&6
-echo "configure:2804: checking for   --enable-fastreg" >&5
+echo "configure:2812: checking for   --enable-fastreg" >&5
         # Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -2817,7 +2825,7 @@ EOF
                 echo "$ac_t""no" 1>&6
         fi
         echo $ac_n "checking for   --enable-regopt""... $ac_c" 1>&6
-echo "configure:2821: checking for   --enable-regopt" >&5
+echo "configure:2829: checking for   --enable-regopt" >&5
         # Check whether --enable-regopt or --disable-regopt was given.
 if test "${enable_regopt+set}" = set; then
   enableval="$enable_regopt"
@@ -2837,7 +2845,7 @@ EOF
         if test $PLATFORM = LINUX_I486
         then
           echo $ac_n "checking for   --enable-pgcc""... $ac_c" 1>&6
-echo "configure:2841: checking for   --enable-pgcc" >&5
+echo "configure:2849: checking for   --enable-pgcc" >&5
           # Check whether --enable-pgcc or --disable-pgcc was given.
 if test "${enable_pgcc+set}" = set; then
   enableval="$enable_pgcc"
@@ -2859,7 +2867,7 @@ esac
 
 
 echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:2863: checking for --enable-linkprop" >&5
+echo "configure:2871: checking for --enable-linkprop" >&5
 # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -2879,7 +2887,7 @@ else
 fi
 
 echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:2883: checking for --enable-peanuts" >&5
+echo "configure:2891: checking for --enable-peanuts" >&5
 # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
