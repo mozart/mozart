@@ -22,6 +22,7 @@ local
 
    class Square
       from Tk.canvas
+      prop final
       meth init(parent:P color:C stipple:S)
 	 Square,tkInit(parent:             P
 		       width:              SquareSize
@@ -36,7 +37,8 @@ local
    
    class PrintNumber
       from Tk.label
-      attr Saved:~1 Clear:0
+      prop final
+      attr Saved:0 Clear:0
       meth init(parent:P)
 	 PrintNumber,tkInit(parent:P text:0 anchor:e width:LabelWidth)
       end
@@ -48,7 +50,7 @@ local
       end
       meth clear
 	 Clear <- @Saved
-	 Saved <- ~1
+	 Saved <- 0
 	 PrintNumber,tk(conf text:0)
       end
    end
@@ -62,14 +64,15 @@ local
    
    class PrintTime
       from Tk.label
+      prop final
       feat Dim
-      attr Saved:~1 Clear:0
+      attr Saved:0 Clear:0
       meth init(parent:P dim:D)
 	 PrintTime,tkInit(parent:P text:0 anchor:e width:LabelWidth)
 	 self.Dim = D
       end
       meth set(N)
-	 case N==@Saved then skip else
+	 case @Saved==N then skip else
 	    C = N - @Clear
 	    DimText
 	    PrintText
@@ -96,12 +99,13 @@ local
 	 {self.Dim tk(conf text:ms)}	       
 	 PrintTime,tk(conf text:0)
 	 Clear <- @Saved
-	 Saved <- ~1
+	 Saved <- 0
       end
    end
 
    class Scale
       from Tk.scale
+      prop final
       attr Saved:0
       meth init(parent:P range:R action:A state:S)
 	 Tk.scale,tkInit(parent:             P
@@ -131,6 +135,7 @@ local
    
    class Checkbutton
       from Tk.checkbutton
+      prop final
       feat Var Action
       attr Saved:false
       meth init(parent:P text:T action:A state:S)
@@ -160,6 +165,7 @@ local
    
    class Button
       from Tk.button
+      prop final
       meth init(parent:P text:T action:A)
 	 Tk.button,tkInit(parent:             P
 			  highlightthickness: 0
@@ -172,6 +178,7 @@ local
 
    class Entry
       from Tk.entry
+      prop final
       feat Action Top
       attr Save:unit
       meth init(parent:P action:A top:T)
@@ -357,9 +364,9 @@ local
 
 in
    
-   fun {MakePage Class Mark Book Add PageSpec}
+   fun {MakePage Class Mark Book Top Add PageSpec}
       R    = {MakeRecord a {Map PageSpec GetFeature}}
-      Page = {New Class init(parent:Book options:R text:' '#Mark#' ')}
+      Page = {New Class init(parent:Book top:Top options:R text:' '#Mark#' ')}
    in
       {Tk.batch {MakeFrames PageSpec Page R nil}}
       case Add then {Book add(Page)} else skip end

@@ -10,18 +10,20 @@ local
    class UpdatePage from TkTools.note
       feat
 	 options
-      meth init(parent:P options:O text:T)
+	 top
+      meth init(parent:P top:Top options:O text:T)
 	 TkTools.note,tkInit(parent:P text:T)
 	 self.options = O
+	 self.top     = Top
       end
       meth toTop
-	 {self update(nosample)}
+	 {self.top update(false)}
       end
    end
 	 
    class ThreadPage from UpdatePage
-      attr
-	 InfoVisible:  false
+      prop final
+      attr InfoVisible: false
 
       meth update(What)
 	 O   = self.options
@@ -50,7 +52,6 @@ local
 	    {OR.propagation set(R.propagate)}
 	    {OR.load        set(R.load)}
 	 end
-	 touch
       end
       meth clear
 	 O  = self.options
@@ -65,7 +66,6 @@ local
 	 {OR.copy        clear}
 	 {OR.propagation clear}
 	 {OR.load        clear}
-	 touch
       end
       meth toggleInfo
 	 O = self.options
@@ -80,8 +80,8 @@ local
    
    class MemoryPage
       from UpdatePage
-      attr
-	 InfoVisible:  false
+      prop final
+      attr InfoVisible:  false
       
       meth update(What)
 	 O   = self.options
@@ -114,11 +114,9 @@ local
 	       {OP.maxSize    set(G.max div MegaByteI)}
 	    end
 	 end
-	 touch
       end
       meth clear
 	 {self.options.usage.load clear}
-	 touch
       end
       meth toggleInfo
 	 O = self.options
@@ -139,6 +137,7 @@ local
 
    class PsPage
       from UpdatePage
+      prop final
 
       meth update(...)
 	 O  = self.options
@@ -155,7 +154,6 @@ local
 	 {OF.propc     set(F.propagators)}
 	 {OF.propi     set(F.invoked)}
 	 {OF.var       set(F.variables)}
-	 touch
       end
       meth clear
 	 O  = self.options
@@ -170,13 +168,13 @@ local
 	 {OF.propc     clear}
 	 {OF.propi     clear}
 	 {OF.var       clear}
-	 touch
       end
 
    end
    
    class OpiPage
       from UpdatePage
+      prop final
 
       meth update(...)
 	 O  = self.options
@@ -196,7 +194,6 @@ local
 	 {OP.depth    set(P.depth)}
 	 {OM.gc       set(M.gc)}
 	 {OM.time     set(M.idle)}
-	 touch
       end
 
    end
@@ -205,7 +202,9 @@ in
    
    class PanelTop
       from Tk.toplevel
-
+      prop
+	 locking
+	 final
       feat
 	 manager
 	 notebook
@@ -221,484 +220,508 @@ in
 	 IsClosed:      false
       
       meth init(manager:Manager)
-	 Tk.toplevel,tkInit(title:              TitleName
-			    highlightthickness: 0
-			    withdraw:           true)
-	 {Tk.batch [wm(iconname   self TitleName)
-		    wm(iconbitmap self BitMap)
-		    wm(resizable self 0 0)]}
-	 EventFrame = {New Tk.frame tkInit(parent:             self
-					   highlightthickness: 0)}
-	 Menu  = {TkTools.menubar EventFrame self
-		  [menubutton(text: ' Panel '
-			      menu: [command(label:   'About...'
-					     action:  self # about
-					     feature: about)
-				     separator
-				     command(label:   'Clear'
-					     action:  self # clear)
-				     separator
-				     command(label:   'Shutdown System...'
-					     action:  self # shutdown
-					     feature: shutdown)
-				     separator
-				     command(label:   'Close'
-					     action:  self # close)]
-			      feature: panel)
-		   menubutton(text:    ' Options '
-			      feature: options
-			      menu: [checkbutton(label: 'Configurable'
-						 variable: {New Tk.variable
-							    tkInit(false)}
-						 action: self # toggleInfo)
-				     separator
-				     command(label:  'Update...'
-					     action:  self # optionUpdate
-					     feature: update)
-				     command(label:  'History...'
-					     action:  self # optionHistory
-					     feature: history)])
-		  ]
-		  nil}
-	 {Menu.panel.menu   tk(conf tearoff:false)}
-	 {Menu.options.menu tk(conf tearoff:false)}
-	 Frame = {New Tk.frame tkInit(parent: EventFrame
-				      highlightthickness: 0
-				      bd:                 4)}
-	 Book  = {New TkTools.notebook tkInit(parent: Frame)}
-	 Threads =
-	 {MakePage ThreadPage 'Threads' Book true
-	  [frame(text:    'Threads'
-		 left:    [number(text:    'Created:')
-			   number(text:    'Runnable:'
-				  color:   RunnableColor
-				  stipple: RunnableStipple)]
-		 right:   [load(feature: load
-				colors:  [RunnableColor]
-				stipple: [RunnableStipple])])
-	   frame(text:    'Priorities'
-		 pack:    false
-		 left:    [scale(text:    'High / Medium:'
-				 state:   {System.get priorities}.high
-				 feature: high
-				 action:  proc {$ N}
-					     {System.set
-					      priorities(high:N)}
-					  end)
-			   scale(text: 'Medium / Low:'
-				 state:   {System.get priorities}.medium
-				 feature: medium
-				 action:  proc {$ N}
-					     {System.set
-					      priorities(medium:N)}
-					  end)]
-		 right:   [button(text: 'Default'
-				  action: proc {$}
-					     {System.set
-					      priorities(high:   10
-							 medium: 10)}
-					     {Threads update(nosample)}
-					  end)])
-	   frame(text:    'Runtime'
-		 left:    [time(text:    'Run:'
-				color:   TimeColors.run
-				stipple: TimeStipple.run)
-			   time(text:    'Garbage collection:'
-				color:   TimeColors.gc
-				feature: gc
-				stipple: TimeStipple.gc)
-			   time(text:    'Copy:'
-				color:   TimeColors.copy
-				stipple: TimeStipple.copy)
-			   time(text:    'Propagation:'
-				color:   TimeColors.'prop'
-				stipple: TimeStipple.'prop')
-			   time(text:    'Load:'
-				color:   TimeColors.load
-				stipple: TimeStipple.load)]
-		 right:   [timebar(feature: timebar)])]}
-	 Memory =
-	 {MakePage MemoryPage 'Memory' Book true
-	  [frame(text:    'Heap Usage'
-		 feature: usage
-		 left:    [size(text:    'Threshold:'
-				color:   ThresholdColor
-				stipple: ThresholdStipple)
-			   size(text:    'Size:'
-				color:   SizeColor
-				stipple: SizeStipple)
-			   size(text:    'Active size:'
-				color:   ActiveColor
-				feature: active
-				stipple: ActiveStipple)]
-		 right:   [load(feature: load
-				colors:  [ThresholdColor SizeColor
-					  ActiveColor]
-				stipple: [ThresholdStipple SizeStipple
-					  ActiveStipple]
-				dim:     'MB')])
-	   frame(text:    'Heap Parameters'
-		 feature: parameter
-		 pack:    false
-		 left:    [scale(text:    'Maximal size limit:'
-				 range:   1#1024
-				 dim:     'MB'
-				 feature: maxSize
-				 state:   local MS={System.get gc}.max in
-					     case MS=<0 then 1024
-					     else MS div MegaByteI
-					     end
+	 lock
+	    Tk.toplevel,tkInit(title:              TitleName
+			       highlightthickness: 0
+			       withdraw:           true)
+	    {Tk.batch [wm(iconname   self TitleName)
+		       wm(iconbitmap self BitMap)
+		       wm(resizable self 0 0)]}
+	    EventFrame = {New Tk.frame tkInit(parent:             self
+					      highlightthickness: 0)}
+	    Menu  = {TkTools.menubar EventFrame self
+		     [menubutton(text:    ' Panel '
+				 feature: panel
+				 menu:
+		        [command(label:   'About...'
+				 action:  self # about
+				 feature: about)
+			 separator
+			 command(label:   'Clear'
+				 action:  self # clear)
+			 separator
+			 command(label:   'Shutdown System...'
+				 action:  self # shutdown
+				 feature: shutdown)
+			 separator
+			 command(label:   'Close'
+				 action:  self # close)])
+		      menubutton(text:    ' Options '
+				 feature: options
+				 menu:
+		         [checkbutton(label: 'Configurable'
+				      variable: {New Tk.variable tkInit(false)}
+				      action: self # toggleInfo)
+			  separator
+			  command(label:  'Update...'
+				  action:  self # optionUpdate
+				  feature: update)
+			  command(label:  'History...'
+				  action:  self # optionHistory
+				  feature: history)])
+		     ]
+		     nil}
+	    {Menu.panel.menu   tk(conf tearoff:false)}
+	    {Menu.options.menu tk(conf tearoff:false)}
+	    Frame = {New Tk.frame tkInit(parent: EventFrame
+					 highlightthickness: 0
+					 bd:                 4)}
+	    Book  = {New TkTools.notebook tkInit(parent: Frame)}
+	    Threads =
+	    {MakePage ThreadPage 'Threads' Book self true
+	     [frame(text:    'Threads'
+		    left:
+		       [number(text:    'Created:')
+			number(text:    'Runnable:'
+			       color:   RunnableColor
+			       stipple: RunnableStipple)]
+		    right:
+		       [load(feature: load
+			     colors:  [RunnableColor]
+			     stipple: [RunnableStipple])])
+	      frame(text:    'Priorities'
+		    pack:    false
+		    left:
+		       [scale(text:    'High / Medium:'
+			      state:   {System.get priorities}.high
+			      feature: high
+			      action:  proc {$ N}
+					  {System.set priorities(high:N)}
+				       end)
+			scale(text: 'Medium / Low:'
+			      state:   {System.get priorities}.medium
+			      feature: medium
+			      action:  proc {$ N}
+					  {System.set priorities(medium:N)}
+				       end)]
+		    right:
+		       [button(text: 'Default'
+			       action: proc {$}
+					  {System.set priorities(high:   10
+								 medium: 10)}
+					  {self update(false)}
+				       end)])
+	      frame(text:    'Runtime'
+		    left:
+		       [time(text:    'Run:'
+			     color:   TimeColors.run
+			     stipple: TimeStipple.run)
+			time(text:    'Garbage collection:'
+			     color:   TimeColors.gc
+			     feature: gc
+			     stipple: TimeStipple.gc)
+			time(text:    'Copy:'
+			     color:   TimeColors.copy
+			     stipple: TimeStipple.copy)
+			time(text:    'Propagation:'
+			     color:   TimeColors.'prop'
+			     stipple: TimeStipple.'prop')
+			time(text:    'Load:'
+			     color:   TimeColors.load
+			     stipple: TimeStipple.load)]
+		    right:
+		       [timebar(feature: timebar)])]}
+	    Memory =
+	    {MakePage MemoryPage 'Memory' Book self true
+	     [frame(text:    'Heap Usage'
+		    feature: usage
+		    left:
+		       [size(text:    'Threshold:'
+			     color:   ThresholdColor
+			     stipple: ThresholdStipple)
+			size(text:    'Size:'
+			     color:   SizeColor
+			     stipple: SizeStipple)
+			size(text:    'Active size:'
+			     color:   ActiveColor
+			     feature: active
+			     stipple: ActiveStipple)]
+		    right:
+		       [load(feature: load
+			     colors:  [ThresholdColor   SizeColor
+				       ActiveColor]
+			     stipple: [ThresholdStipple SizeStipple
+				       ActiveStipple]
+			     dim:     'MB')])
+	      frame(text:    'Heap Parameters'
+		    feature: parameter
+		    pack:    false
+		    left:
+		       [scale(text:    'Maximal size limit:'
+			      range:   1#1024
+			      dim:     'MB'
+			      feature: maxSize
+			      state:   local MS={System.get gc}.max in
+					  case MS=<0 then 1024
+					  else MS div MegaByteI
 					  end
-				 action:  proc {$ N}
-					     S = Memory.options.
-					            parameter.minSize
-					  in
-					     case {S get($)}>N then
-						{S set(N)}
-					     else skip end
-					     {System.set 
-					      gc(max: N * MegaByteI)}
-					  end)
-			   scale(text:    'Minimal size limit:'
-				 range:   1#1024
-				 dim:     'MB'
-				 feature: minSize
-				 state:   {System.get gc}.min div MegaByteI
-				 action:  proc {$ N}
-					     S = Memory.options.
-					            parameter.maxSize
-					  in
-					     case {S get($)}<N then
-						{S set(N)}
-					     else skip end
-					     {System.set
-					      gc(min: N * MegaByteI)}
-					  end)
-			   scale(text:    'Free:'
-				 state:   {System.get gc}.free
-				 action:  proc {$ N}
-					     {System.set gc(free: N)}
-					  end
-				 dim:     '%')
-			   scale(text:    'Tolerance:'
-				 dim:     '%'
-				 state:   {System.get gc}.tolerance
-				 action:  proc {$ N}
-					     {System.set
-					      gc(tolerance: N)}
-					  end)]
-		 right:   [button(text:   'Small'
-				  action: proc {$}
-					     {System.set
-					      gc(max:       4 * MegaByteI
-						 min:       1 * MegaByteI
-						 free:      75
-						 tolerance: 20)}
-					     {Memory update(nosample)}
-					  end)
-			   button(text:'Medium'
-				  action: proc {$}
-					     {System.set
-					      gc(max:       16 * MegaByteI
-						 min:       2  * MegaByteI
-						 free:      80
-						 tolerance: 15)}
-					     {Memory update(nosample)}
-					  end)
-			   button(text:'Large'
-				  action: proc {$}
-					     {System.set
-					      gc(max:       64 * MegaByteI
-						 min:       8 * MegaByteI
-						 free:      90
-						 tolerance: 10)}
-					     {Memory update(nosample)}
-					  end)])
-	   frame(text:    'Heap Parameters'
-		 feature: showParameter
-		 left:    [size(text:    'Maximal size limit:'
-				feature: maxSize
-				dim:     'MB')
-			   size(text:    'Minimal size limit:'
-				feature: minSize
-				dim:     'MB')]
-		 right:   nil)
-	   frame(text:    'Garbage Collector'
-		 feature: gc
-		 pack:    false
-		 left:    [checkbutton(text:   'Active'
-				       state:  {System.get gc}.on
-				       action: proc {$ OnOff}
-						  {System.set gc(on:OnOff)}
-					       end)]
-		 right:   [button(text: 'Invoke'
-				  action: proc {$}
-					     {System.gcDo}
-					  end)])]}
-	 PS =
-	 {MakePage PsPage 'Problem Solving' Book true
-	  [frame(text:    'Finite Domain Constraints'
-		 feature: fd
-		 left:    [number(text: 'Variables created:'
-				  feature: var)
-			   number(text:    'Propagators created:'
-				  feature: propc)
-			   number(text:    'Propagators invoked:'
-				  feature: propi)]
-		 right:   nil)
-	   frame(text:    'Spaces'
-		 left:    [number(text:    'Spaces created:'
-				  feature: created)
-			   number(text:    'Spaces cloned:'
-				  feature: cloned)
-			   number(text:    'Spaces failed:'
-				  feature: failed)
-			   number(text:    'Spaces succeeded:'
-				  feature: succeeded)
-			   number(text:    'Alternatives chosen:'
-				  feature: chosen)]
-		 right:   nil)]}
-	 OPI =
-	 {MakePage OpiPage 'Programming Interface' Book false
-	  [frame(text:    'Errors'
-		 left:    [checkbutton(text:    'Show location'
-				       feature: location
-				       state:  {System.get errors}.location
-				       action:  proc {$ B}
-						   {System.set
-						    errors(location:B)}
-						end)
-			   checkbutton(text: 'Show hints'
-				       state:  {System.get errors}.hints
-				       action:  proc {$ B}
-						   {System.set
-						    errors(hints:B)}
-						end
-				       feature: hints)
-			   entry(text:    'Maximal tasks:'
-				 feature: 'thread'
-				 action:  proc {$ N}
-					     {System.set errors('thread': N)}
-					  end
-				 top:     self)
-			   entry(text:    'Maximal print depth:'
-				 feature: depth
-				 action:  proc {$ N}
-					     {System.set errors(depth: N)}
-					  end
-				 top:     self)
-			   entry(text:    'Maximal print width:'
-				 feature: width
-				 action:  proc {$ N}
-					     {System.set errors(width: N)}
-					  end
-				 top:     self)]
-		 right:   [button(text:   'Default'
-				  action: proc {$}
-					     {System.set
-					      errors('thread': 10
-					             location: true
-						     hints:    true
-					             width:    10
-						     depth:    2)}
-					     {OPI update}
-					  end)])
-	   frame(text:    'Output'
-		 left:    [entry(text:    'Maximal print width:'
-				 feature: width
-				 action:  proc {$ N}
-					     {System.set print(width: N)}
-					  end
-				 top:     self)
-			   entry(text:    'Maximal print depth:'
-				 feature: depth
-				 action:  proc {$ N}
-					     {System.set print(depth: N)}
-					  end
-				 top:     self)]
-		 right:   [button(text:  'Default'
-				  action: proc {$}
-					     {System.set print(width: 10
-							       depth: 2)}
-					     {OPI update}
-					  end)])
-	   frame(text:    'Status Messages'
-		 feature: messages
-		 left:    [checkbutton(text:    'Idle'
-				       feature: time
-				       state:  {System.get messages}.idle
-				       action: proc {$ B}
-						  {System.set
-						   messages(idle: B)}
-					       end)
-			   checkbutton(text:    'Garbage collection'
-				       feature: gc
-				       state:  {System.get messages}.gc
-				       action: proc {$ B}
-						  {System.set
-						   messages(gc: B)}
-					       end)]
-		 right:   [button(text:  'Default'
-				  action: proc {$}
-					     {System.set
-					      messages(idle: false
-						       gc:   true)}
-					     {OPI update}
-					  end)])]}
+				       end
+			      action:  proc {$ N}
+					  S = Memory.options.parameter.minSize
+				       in
+					  case {S get($)}>N then {S set(N)}
+					  else skip end
+					  {System.set gc(max: N * MegaByteI)}
+				       end)
+			scale(text:    'Minimal size limit:'
+			      range:   1#1024
+			      dim:     'MB'
+			      feature: minSize
+			      state:   {System.get gc}.min div MegaByteI
+			      action:  proc {$ N}
+					  S = Memory.options.parameter.maxSize
+				       in
+					  case {S get($)}<N then {S set(N)}
+					  else skip end
+					  {System.set gc(min: N * MegaByteI)}
+				       end)
+			scale(text:    'Free:'
+			      state:   {System.get gc}.free
+			      action:  proc {$ N}
+					  {System.set gc(free: N)}
+				       end
+			      dim:     '%')
+			scale(text:    'Tolerance:'
+			      dim:     '%'
+			      state:   {System.get gc}.tolerance
+			      action:  proc {$ N}
+					  {System.set gc(tolerance: N)}
+				       end)]
+	            right:
+		       [button(text:   'Small'
+			       action: proc {$}
+					  {System.set
+					   gc(max:       4 * MegaByteI
+					      min:       1 * MegaByteI
+					      free:      75
+					      tolerance: 20)}
+					  {self update(false)}
+				       end)
+			button(text:'Medium'
+			       action: proc {$}
+					  {System.set
+					   gc(max:       16 * MegaByteI
+					      min:       2  * MegaByteI
+					      free:      80
+					      tolerance: 15)}
+					  {self update(false)}
+				       end)
+			button(text:'Large'
+			       action: proc {$}
+					  {System.set
+					   gc(max:       64 * MegaByteI
+					      min:       8 * MegaByteI
+					      free:      90
+					      tolerance: 10)}
+					  {self update(false)}
+				       end)])
+	      frame(text:    'Heap Parameters'
+		    feature: showParameter
+		    left:
+		       [size(text:    'Maximal size limit:'
+			     feature: maxSize
+			     dim:     'MB')
+			size(text:    'Minimal size limit:'
+			     feature: minSize
+			     dim:     'MB')]
+		    right:
+		       nil)
+	      frame(text:    'Garbage Collector'
+		    feature: gc
+		    pack:    false
+		    left:
+		       [checkbutton(text:   'Active'
+				    state:  {System.get gc}.on
+				    action: proc {$ OnOff}
+					       {System.set gc(on:OnOff)}
+					    end)]
+		    right:   [button(text: 'Invoke'
+				     action: proc {$}
+						{System.gcDo}
+					     end)])]}
+	     PS =
+	     {MakePage PsPage 'Problem Solving' Book self true
+	      [frame(text:    'Finite Domain Constraints'
+		     feature: fd
+		     left:    [number(text: 'Variables created:'
+				      feature: var)
+			       number(text:    'Propagators created:'
+				      feature: propc)
+			       number(text:    'Propagators invoked:'
+				      feature: propi)]
+		     right:   nil)
+	       frame(text:    'Spaces'
+		     left:    [number(text:    'Spaces created:'
+				      feature: created)
+			       number(text:    'Spaces cloned:'
+				      feature: cloned)
+			       number(text:    'Spaces failed:'
+				      feature: failed)
+			       number(text:    'Spaces succeeded:'
+				      feature: succeeded)
+			       number(text:    'Alternatives chosen:'
+				      feature: chosen)]
+		     right:   nil)]}
+	     OPI =
+	     {MakePage OpiPage 'Programming Interface' Book self false
+	      [frame(text:    'Errors'
+		     left:
+			[checkbutton(text:    'Show location'
+				     feature: location
+				     state:  {System.get errors}.location
+				     action:  proc {$ B}
+						 {System.set
+						  errors(location:B)}
+					      end)
+			 checkbutton(text: 'Show hints'
+				     state:  {System.get errors}.hints
+				     action:  proc {$ B}
+						 {System.set errors(hints:B)}
+					      end
+				     feature: hints)
+			 entry(text:    'Maximal tasks:'
+			       feature: 'thread'
+			       action:  proc {$ N}
+					   {System.set errors('thread': N)}
+					end
+			       top:     self)
+			 entry(text:    'Maximal print depth:'
+			       feature: depth
+			       action:  proc {$ N}
+					   {System.set errors(depth: N)}
+					end
+			       top:     self)
+			 entry(text:    'Maximal print width:'
+			       feature: width
+			       action:  proc {$ N}
+					   {System.set errors(width: N)}
+					end
+			       top:     self)]
+		     right:
+			[button(text:   'Default'
+				action: proc {$}
+					   {System.set
+					    errors('thread': 10
+						   location: true
+						   hints:    true
+						   width:    10
+						   depth:    2)}
+					   {self update(false)}
+					end)])
+	       frame(text:    'Output'
+		     left:
+			[entry(text:    'Maximal print width:'
+			       feature: width
+			       action:  proc {$ N}
+					   {System.set print(width: N)}
+					end
+			       top:     self)
+			 entry(text:    'Maximal print depth:'
+			       feature: depth
+			       action:  proc {$ N}
+					   {System.set print(depth: N)}
+					end
+			       top:     self)]
+		     right:
+			[button(text:  'Default'
+				action: proc {$}
+					   {System.set print(width: 10
+							     depth: 2)}
+					   {self update(false)}
+					end)])
+	       frame(text:    'Status Messages'
+		     feature: messages
+		     left:
+			[checkbutton(text:    'Idle'
+				     feature: time
+				     state:  {System.get messages}.idle
+				     action: proc {$ B}
+						{System.set messages(idle:B)}
+					     end)
+			 checkbutton(text:    'Garbage collection'
+				     feature: gc
+				     state:  {System.get messages}.gc
+				     action: proc {$ B}
+						{System.set messages(gc:B)}
+					     end)]
+		     right:
+			[button(text:  'Default'
+				action: proc {$}
+					   {System.set messages(idle: false
+								gc:   true)}
+					   {self update(false)}
+					end)])]}
 	  
-      in
-	 {Tk.batch [pack(Menu side:top fill:x)
-		    pack(Book)
-		    pack(Frame side:bottom)
-		    pack(EventFrame)]}
-	 self.manager  = Manager
-	 self.threads  = Threads
-	 self.memory   = Memory
-	 self.opi      = OPI
-	 self.ps       = PS
-	 self.notebook = Book
-	 self.menu     = Menu
-	 {EventFrame tkBind(event:'<Enter>'
-			    action:self # enter)}
-	 {EventFrame tkBind(event:'<Leave>'
-			    action:self # leave)}
-	 PanelTop,tkWM(deiconify)
-	 PanelTop,update(@DelayStamp)
+         in
+	    {Tk.batch [pack(Menu side:top fill:x)
+		       pack(Book)
+		       pack(Frame side:bottom)
+		       pack(EventFrame)]}
+	    self.manager  = Manager
+	    self.threads  = Threads
+	    self.memory   = Memory
+	    self.opi      = OPI
+	    self.ps       = PS
+	    self.notebook = Book
+	    self.menu     = Menu
+	    {EventFrame tkBind(event:'<Enter>' action:self # enter)}
+	    {EventFrame tkBind(event:'<Leave>' action:self # leave)}
+	    PanelTop, tkWM(deiconify)
+	 end
+	 PanelTop, delay(0)
       end
 
-      meth update(Stamp)
-	 case @IsClosed then skip else
-	    case Stamp==@DelayStamp then
+      meth update(Regular)
+	 lock
+	    case @IsClosed then skip else
 	       TopNote = {self.notebook getTop($)}
 	       Threads = self.threads
 	       Memory  = self.memory
 	    in
-	       case TopNote
-	       of !Threads then
-		  {Threads update(both)}
-		  {Memory  update(sample)}
-	       [] !Memory  then
-		  {Threads update(sample)}
-		  {Memory  update(both)}
-	       else
-		  {Threads update(sample)}
-		  {Memory  update(sample)}
-		  {TopNote update}
+	       case Regular then
+		  case TopNote
+		  of !Threads then
+		     {Threads update(both)}
+		     {Memory  update(sample)}
+		  [] !Memory  then
+		     {Threads update(sample)}
+		     {Memory  update(both)}
+		  else
+		     {Threads update(sample)}
+		     {Memory  update(sample)}
+		     {TopNote update}
+		  end
+	       else {TopNote update(nosample)}
 	       end
-	       PanelTop,delay
-	    else skip
 	    end
 	 end
       end
 
       meth shutdown
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
-	 thread
-	    case {DoShutdown self} then {System.shutDown exit}
-	    else skip
-	    end
-	    {self.menu.panel.shutdown tk(entryconf state:normal)}
+	 case {DoShutdown self} then {System.shutDown exit}
+	 else skip
 	 end
+	 {self.menu.panel.shutdown tk(entryconf state:normal)}
       end
 
       meth about
 	 {self.menu.panel.about tk(entryconf state:disabled)}
-	 thread
-	    {Wait {DoAbout self}}
-	    {self.menu.panel.about tk(entryconf state:normal)}
-	 end
+	 {Wait {DoAbout self}}
+	 {self.menu.panel.about tk(entryconf state:normal)}
       end
 
       meth toggleInfo
-	 InfoVisible <- {Not @InfoVisible}
-	 case @InfoVisible then {self.notebook add(self.opi)}
-	 else {self.notebook remove(self.opi)}
+	 lock
+	    InfoVisible <- {Not @InfoVisible}
+	    case @InfoVisible then {self.notebook add(self.opi)}
+	    else {self.notebook remove(self.opi)}
+	    end
+	    {self.threads toggleInfo}
+	    {self.memory  toggleInfo}
 	 end
-	 {self.threads toggleInfo}
-	 {self.memory  toggleInfo}
       end
       
-      meth delay
-	 DS = @DelayStamp
-      in
-	 {Delay @UpdateTime}
-	 {self update(DS)}
+      meth delay(ODS)
+	 case
+	    lock
+	       case @DelayStamp==ODS then {self update(true)} true
+	       else false
+	       end
+	    end
+	 then {Delay @UpdateTime} {self delay(ODS)}
+	 else skip
+	 end
       end
 
       meth stop
-	 DelayStamp <- @DelayStamp + 1
+	 lock
+	    DelayStamp <- @DelayStamp + 1
+	 end
       end
       
       meth enter
-	 case @IsClosed then skip else
-	    MouseInside <- true
-	    case @RequireMouse then
-	       PanelTop,stop
-	       PanelTop,delay
-	    else skip
+	 case
+	    lock
+	       case @IsClosed then ~1 else
+		  MouseInside <- true
+		  case @RequireMouse then
+		     PanelTop,stop
+		     @DelayStamp
+		  else ~1
+		  end
+	       end
 	    end
+	 of ~1 then skip
+	 elseof DS then {self delay(DS)}
 	 end
       end
 
       meth leave
-	 case @IsClosed then skip else
-	    MouseInside <- false
-	    case @RequireMouse then
-	       PanelTop,stop
-	    else skip
+	 lock
+	    case @IsClosed then skip else
+	       MouseInside <- false
+	       case @RequireMouse then
+		  PanelTop,stop
+	       else skip
+	       end
 	    end
 	 end
       end
       
       meth setUpdate(time:T mouse:M)
 	 case
-	    {Or case @RequireMouse==M then false
-		else
-		   RequireMouse <- M
-		   case M then
-		      case @MouseInside then true
-		      else PanelTop,stop false
-		      end
-		   else PanelTop,stop true
-		   end
-		end
-	        case @UpdateTime==T then false
-		else
-		   UpdateTime <- T
-		   PanelTop,stop
-		   PanelTop,setSlice
-		   true
-		end}
-	 then PanelTop,delay
-	 else skip
+	    lock
+	       {Max case @RequireMouse==M then ~1
+		    else
+		       RequireMouse <- M
+		       case M then
+			  case @MouseInside then @DelayStamp
+			  else PanelTop,stop ~1
+			  end
+		       else PanelTop,stop @DelayStamp
+		       end
+		    end
+	            case @UpdateTime==T then ~1
+		    else
+		       UpdateTime <- T
+		       PanelTop,stop
+		       PanelTop,setSlice
+		       @DelayStamp
+		    end}
+	    end
+	 of ~1 then skip
+	 elseof DS then {self delay(DS)}
 	 end
       end
 
       meth optionUpdate
-	 T = @UpdateTime
-	 M = @RequireMouse
+	 T    = @UpdateTime
+	 M    = @RequireMouse
+	 Next
       in
 	 {self.menu.options.update tk(entryconf state:disabled)}
-	 thread
-	    Next = {DoOptionUpdate self setUpdate(time:T mouse:M)}
-	 in
-	    {Wait Next}
-	    {self.menu.options.update tk(entryconf state:normal)}
-	    {self Next}
-	 end
+	 Next = {DoOptionUpdate self setUpdate(time:T mouse:M)}
+	 {Wait Next}
+	 {self.menu.options.update tk(entryconf state:normal)}
+	 {self Next}
       end
 
       meth setSlice
-	 S = (LoadWidth * @UpdateTime) div @HistoryRange
-      in
-	 {self.memory.options.usage.load    slice(S)}
-	 {self.threads.options.threads.load slice(S)}
+	 lock
+	    S = (LoadWidth * @UpdateTime) div @HistoryRange
+	 in
+	    {self.memory.options.usage.load    slice(S)}
+	    {self.threads.options.threads.load slice(S)}
+	 end
       end
 
       meth setHistory(H)
-	 case H==@HistoryRange then skip else
-	    HistoryRange <- H
-	    PanelTop,setSlice
+	 lock
+	    case H==@HistoryRange then skip else
+	       HistoryRange <- H
+	       PanelTop,setSlice
+	    end
 	 end
       end
 
@@ -716,10 +739,11 @@ in
       end
 
       meth clear
-	 {self.threads clear}
-	 {self.memory  clear}
-	 {self.ps      clear}
-	 touch
+	 lock
+	    {self.threads clear}
+	    {self.memory  clear}
+	    {self.ps      clear}
+	 end
       end
       
       meth close

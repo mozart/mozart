@@ -81,7 +81,16 @@ in
 
       meth clear
 	 Clear <- @Saved
-	 Saved <- unit
+	 Saved <- ZeroTime
+	 RuntimeBar, displayZero
+      end
+
+      meth displayZero	       
+	 RuntimeBar,tk(coords self.RunTag  Home Y0 Home Y1)
+	 RuntimeBar,tk(coords self.GcTag   Home Y0 Home Y1)
+	 RuntimeBar,tk(coords self.CopyTag Home Y0 Home Y1)
+	 RuntimeBar,tk(coords self.PropTag Home Y0 Home Y1)
+	 RuntimeBar,tk(coords self.LoadTag Home Y0 Home Y1)
       end
       
       meth display(T)
@@ -94,11 +103,7 @@ in
 	    LoadTime    = T.load - C.load
 	 in
 	    case RunTime==0 then
-	       RuntimeBar,tk(coords self.RunTag  Home Y0 Home Y1)
-	       RuntimeBar,tk(coords self.GcTag   Home Y0 Home Y1)
-	       RuntimeBar,tk(coords self.CopyTag Home Y0 Home Y1)
-	       RuntimeBar,tk(coords self.PropTag Home Y0 Home Y1)
-	       RuntimeBar,tk(coords self.LoadTag Home Y0 Home Y1)
+	       RuntimeBar,displayZero
 	    else
 	       GcZero    = case GcTime==0   then 0 else 1 end
 	       CopyZero  = case CopyTime==0 then 0 else 1 end
