@@ -390,7 +390,8 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
     DEREF(v, vptr, vtag);
     
     if (isNotCVar(vtag)) {
-      // tellBasicConstraint()
+      tellBasicConstraint(makeTaggedRef(vptr));
+      /*
       GenFDVariable * fv = new GenFDVariable();
       OZ_Term * tfv = newTaggedCVar(fv);
       
@@ -411,6 +412,7 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
 	  am.doBindAndTrail(v, vptr, makeTaggedRef(tfv));
 	}
       }
+      */
     }
   }
   
@@ -459,7 +461,7 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
 	     (!testResetStoreFlag(v) && !testResetReifiedFlag(v)));
       
       if (isGenFDVar(v, vtag)) {
-	addSuspFDVar(v, thr, staticSpawnVars[i].state);
+	addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
 	all_local &= am.isLocalCVar(v);
       } else if (isGenOFSVar(v, vtag)) {
 	addSuspOFSVar(v, thr);
