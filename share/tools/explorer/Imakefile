@@ -1,0 +1,47 @@
+OZLIB     = $(OZHOME)/lib
+BITMAPDIR = $(OZLIB)/bitmaps
+OZEXPLORER  = $(OZLIB)/explorer
+
+
+LOCALFILES = \
+	main.oz misc.oz \
+	action-nodes.oz hide-nodes.oz \
+	bab-nodes.oz layout-nodes.oz \
+	basic-nodes.oz manager.oz \
+	menues.oz menu-manager.oz \
+	move-nodes.oz tk-nodes.oz \
+	configure.oz nodes.oz toplevel-manager.oz \
+	default-actions.oz search-nodes.oz \
+	df-nodes.oz stat-nodes.oz \
+	dialog-manager.oz shapes-and-images.oz status-manager.oz \
+	debug-nodes.oz
+
+BITMAPS = \
+	explorer.xbm
+
+
+BITMAPFILES = ${BITMAPS:%=$(BITMAPDIR)/%}
+LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
+
+LIBFILES = ${LOCALFILES:%.oz=$(OZEXPLORER)/%.oz}
+
+all::	../Explorer.oz
+
+../Explorer.oz:: $(LOCALFILES)
+	touch ../Explorer.oz
+
+clean::
+	rm -f *~ *.oz?
+
+install:: $(OZEXPLORER) $(LIBFILES) bitmaps
+
+
+bitmaps: $(BITMAPFILES)
+	$(INSTALL) -m 444 $(LOCALBITMAPFILES) $(OZLIB)/bitmaps
+
+$(OZEXPLORER):
+	$(INSTALL) -m 775 -d $@
+
+$(OZEXPLORER)/%.oz: %.oz
+	$(INSTALL) -m 444 '$<' '$@'
+
