@@ -109,7 +109,8 @@ lowMid:
    */
   if (hiCounter > 0 || (lowCounter < 0 && midQueue.isEmpty())) {
     Thread *th = hiQueue.dequeue();
-    hiCounter = hiQueue.isEmpty() ? -1 : hiCounter-1;
+    hiCounter = hiQueue.isEmpty() ? -1 :
+      (hiCounter==0 ? ozconf.hiMidRatio : hiCounter-1);
     return th;
   }
   Assert(hiCounter==0);
