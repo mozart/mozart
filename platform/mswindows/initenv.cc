@@ -76,6 +76,20 @@ void initEnv(void)
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
 
+  char *homedrive = ozGetenv("HOMEDRIVE");
+  if (homedrive) homedrive = strdup(homedrive);
+
+  char *homepath = ozGetenv("HOMEPATH");
+  if (homedrive && homepath) {
+    homepath = strdup(homepath);
+  } else {
+    homedrive = "";
+    if (GetCurrentDirectory(sizeof(buffer),buffer) > sizeof(buffer) - 1)
+      panic(true,"Could not determine current directory.");
+    homepath = strdup(buffer);
+  }
+  normalizePath(homepath,true);
+
   char *ozpath = ozGetenv("OZPATH");
   if (ozpath == NULL) {
     ozpath = ".";
@@ -83,7 +97,16 @@ void initEnv(void)
   sprintf(buffer,"%s;%s/share",ozpath,ozhome);
   ozSetenv("OZPATH",buffer);
 
-  sprintf(buffer,"%s/bin;%s/platform/%s;%s",
-          ozhome,ozhome,ozplatform,ozGetenv("PATH"));
+  char *path = ozGetenv("PATH");
+  sprintf(buffer,"%s%s/.oz/platform/%s/lib;"
+          "%s/platform/%s/lib;"
+          "%s/bin;"
+          "%s/platform/%s"
+          "%s%s",
+          homedrive,homepath,ozplatform,
+          ozhome,ozplatform,
+          ozhome,
+          ozhome,ozplatform,
+          path? ";": "", path? path: "");
   ozSetenv("PATH",buffer);
 }
