@@ -225,6 +225,3 @@
 
 /* Define if you want support for finalization */
 #undef NOFINALIZATION
-
-/* Define if you want support for foreign pointers */
-#undef NOFOREIGN_POINTER
