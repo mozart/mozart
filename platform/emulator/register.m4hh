@@ -373,8 +373,12 @@ define(M4INSTRTWOREGS,``''
         TaggedRef term = Reg1(getRegArg(PC+1));
 	TaggedRef i = getNumberArg(PC+2);
 
-
 	DEREF(term,termPtr,tag);
+
+	/* optimized for integer case */
+	if (isSmallInt(tag)) {
+	  JUMP( getLabelArg(sameSmallInt(term,i) ? PC+3 : PC+4) );
+	}
 
 	if ( tag == tagTypeOf(i) && numberEq(i,term)) {
 	  JUMP( getLabelArg(PC+3) );
