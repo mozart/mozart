@@ -102,6 +102,7 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -c <compiler>: start the compiler\n");
   fprintf(stderr, " -S <fifo>    : connect to compiler via FIFO\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
+  fprintf(stderr, " -noinit      : don't (see above)\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
 #ifdef OZMA
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
@@ -127,7 +128,7 @@ char *getOptArg(int &i, int argc, char **argv)
 
 
 static
-void printBanner()
+void printBanner(char*initFile)
 {
   version();
 
@@ -182,6 +183,10 @@ void printBanner()
 #ifdef PROFILE_FD
   printf("Compiled to support fd-profiling.\n");
 #endif
+  if (initFile)
+    printf("Init file: %s\n",initFile);
+  else
+    printf("No init file\n");
 }
 
 
@@ -281,6 +286,11 @@ void AM::init(int argc,char **argv)
       continue;
     }
 
+    if (strcmp(argv[i],"-noinit")==0) {
+      initFile = 0;
+      continue;
+    }
+
     if (strcmp(argv[i],"-a")==0 ||
         strcmp(argv[i],"--")==0) {
       ozconf.argC = argc-i-1;
@@ -306,8 +316,20 @@ void AM::init(int argc,char **argv)
     ozconf.showIdleMessage=1;
 #endif
 
+  if (!initFile) {
+    char* ini = "/lib/Init.ozc";
+    int m = strlen(ozconf.ozHome);
+    int n = m+strlen(ini)+1;
+    char*s = new char[n];
+    strcpy(s,ozconf.ozHome);
+    strcpy(s+m,ini);
+    if (access(s,F_OK)==0) initFile = s;
+    else delete[] s;
+  }
+  if (initFile && *initFile=='\0') initFile=0;
+
   if (quiet == FALSE) {
-    printBanner();
+    printBanner(initFile);
   }
 
   isStandaloneF=NO;
@@ -398,19 +420,12 @@ void AM::init(int argc,char **argv)
     fprintf(stderr,"Perdio initialization failed\n");
   }
 
-  if (!initFile) {
-    char* ini = "/lib/Init.ozc";
-    int m = strlen(ozconf.ozHome);
-    int n = m+strlen(ini)+1;
-    char*s = new char[n];
-    strcpy(s,ozconf.ozHome);
-    strcpy(s+m,ini);
-    if (access(s,F_OK)==0) initFile = s;
-    else delete[] s;
-  }
-
   {
-    Thread *tt = (initFile||url)?
+    Thread *tt = (initFile||url
+#ifdef OZMA
+                  ||assemblyCodeFile
+#endif
+                  )?
       mkRunnableThread(DEFAULT_PRIORITY, _rootBoard):0;
     RefsArray args = allocateStaticRefsArray(2);
 
@@ -424,6 +439,14 @@ void AM::init(int argc,char **argv)
       tt->pushCFun(BIload,args,2,OK);
     }
 
+#ifdef OZMA
+    if (assemblyCodeFile) {
+      extern OZ_Term ozma_readProc(const char *filename);
+      OZ_Term v=ozma_readProc(assemblyCodeFile);
+      if (v!=makeTaggedNULL()) tt->pushCall(v, 0, 0);
+    }
+#endif
+
     if (initFile) {
       args[0] = oz_atom(initFile);
       args[1] = oz_newVariable();
@@ -434,17 +457,6 @@ void AM::init(int argc,char **argv)
     if (tt) scheduleThread(tt);
   }
 
-#ifdef OZMA
-  if (assemblyCodeFile) {
-    extern OZ_Term ozma_readProc(const char *filename);
-    OZ_Term v=ozma_readProc(assemblyCodeFile);
-    if (v!=makeTaggedNULL()) {
-      Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
-      tt->pushCall(v, 0, 0);
-      scheduleThread(tt);
-    }
-  }
-#endif
 
 #ifdef DEBUG_CHECK
   dontPropagate = NO;
