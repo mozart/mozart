@@ -1060,62 +1060,59 @@ public:
  * Object
  */
 
+typedef enum {
+  OFlagClosed = 0x1,
+  OFlagDeep   = 0x2,
+  OFlagClass  = 0x4
+} OFlag;
+
+#define DeepnessShift 3
+
 class Object: public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
   SRecord *state;
   ObjectClass *aclass;
-  TaggedRef threads;
-  Bool closed;
+  TaggedRef threads;  /* list of variables with threads attached to them */
+  int deepness;       /* deepnes plus OFlag */
 public:
-  int deepness;
 
-  Object(SRecord *s,ObjectClass *aclass,SRecord *feat,Bool iscl):
-    ConstTerm(Co_Object), state(s),aclass(aclass)
+  Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl):
+    ConstTerm(Co_Object), state(s), aclass(ac)
   {
     setFreeRecord(feat);
-    if (iscl) setClass();
     deepness = 0;
-    closed = NO;
-    threads = AtomNil;
+    threads = AtomNil;    
+    if (iscl) setClass();
   };
 
-  Bool isClass()        { return ((intlong)aclass)&1; }
-  void setClass()       { aclass = (ObjectClass *) (((intlong)aclass)|1); }
-  void setClass(ObjectClass *c) 
-  { 
-    Bool isd = isDeep();
-    Bool isc = isClass();
+  int getDeepness()     { return (deepness >> DeepnessShift);}
+  int incDeepness()     { deepness += (1<<DeepnessShift); return getDeepness();}
+  int decDeepness()     { deepness -= (1<<DeepnessShift); return getDeepness();}
 
-    aclass = c;
+  Bool isClosedOrClassOrDeepOrLocked() { return (deepness!=0); }
 
-    if (isd) setIsDeep();
-    if (isc) setClass();
-  }
+  void setFlag(OFlag f) { deepness |= (int) f; } 
 
-  void wakeThreads();
+  Bool isClass()        { return (deepness)&OFlagClass; }
+  void setClass()       { setFlag(OFlagClass); }
+  Bool isDeep()         { return (deepness)&OFlagDeep; }
+  void setIsDeep()      { setFlag(OFlagDeep); }
+  Bool isClosed()       { return (deepness)&OFlagClosed; }
+  void close()          { setFlag(OFlagClosed); }
+
+  void setClass(ObjectClass *c) { aclass = c; }
+
   TaggedRef attachThread();
-  void release()
-  {
-    deepness--;
-    if (deepness<=1) {
-      // !!! should be:
-      //  if (deepness==1) {
-    wakeThreads();
-    }
-  }
+  inline void release();
 
-  Bool isClosed() { return closed; }
-  void close() { closed=OK; }
+  ObjectClass *getClass() { return aclass; }
 
-  ObjectClass *getClass() { return (ObjectClass *) (((intlong)aclass)&~3); }
-
-  Bool isDeep()           { return ((intlong)aclass)&2; }
-  void setIsDeep()        { aclass = (ObjectClass *) (((intlong)aclass)|2); }
   Bool getFastBatch()     { return getClass()->hasFastBatch; }
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   SRecord *getMethods()         { return getClass()->getfastMethods(); }
+  Abstraction *getMethod(TaggedRef label, int arity);
   SRecord *getState()           { return state; }
   Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
   TaggedRef getSlowMethods()    { return getClass()->getslowMethods(); }
@@ -1135,6 +1132,27 @@ public:
   OZPRINTLONG;
 };
 
+
+inline
+void Object::release()
+{
+  if (getDeepness()==0) return; // !!!!!!!!
+  if (decDeepness()==0) {
+    /* wake threads */
+    Assert(!isRef(threads));
+    if (sameLiteral(threads,AtomNil)) {
+      Assert(getDeepness()==0);
+      return;
+    }
+    
+    incDeepness();
+    TaggedRef var = head(threads);
+    if (OZ_unify(var, isClosed() ? NameTrue : NameFalse)==FAILED) {
+      warning("Object::wakeThreads: unify failed");
+    }
+    threads = tail(threads);
+  }
+}
 
 /* objects not created on toplevel need a home pointer */
 
