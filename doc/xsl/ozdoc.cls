@@ -790,4 +790,4 @@
 \newcommand{\REWRITETO}[1]{#1\\\hline}
 \newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qqad}p{0.7\linewidth}|}{#1}\\\hline}
 
-\newcommand{\EOLN}{\\\relax\ignorespaces}
+\newcommand{\EOLN}{\\\mozartEMPTY}
