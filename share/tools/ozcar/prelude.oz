@@ -85,6 +85,7 @@ proc {SendEmacs M}
    else skip end
 end
 
+ValuesHelp             = {NewName}
 BreakpointStaticHelp   = {NewName}
 BreakpointDynamicHelp  = {NewName}
 StatusHelp             = {NewName}
