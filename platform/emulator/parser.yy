@@ -71,6 +71,7 @@ static inline int xycharno() {
 }
 
 void checkDeprecation(OZ_Term coord, Bool isBooleanCase);
+void xyreportWarning(char *kind, char *msg, OZ_Term coord);
 void xyreportError(char *kind, char *msg, OZ_Term coord);
 void xyreportError(char *kind, char *msg,
                    const char *file, int line, int column);
@@ -1428,15 +1429,25 @@ synProdCallParams
 %%
 
 void checkDeprecation(OZ_Term coord, Bool isBooleanCase) {
-  if (!xy_allowDeprecated) {
-    char *msg;
-    if (isBooleanCase) {
-      msg = "use `if' instead of `case' for boolean conditionals";
-    } else {
-      msg = "do not mix `case' and `if' conditionals";
-    }
+  char *msg;
+  if (isBooleanCase) {
+    msg = "use `if' instead of `case' for boolean conditionals";
+  } else {
+    msg = "do not mix `case' and `if' conditionals";
+  }
+  if (xy_allowDeprecated) {
+    xyreportWarning("deprecation warning",msg,coord);
+  } else {
     xyreportError("deprecation error",msg,coord);
   }
+}
+
+void xyreportWarning(char *kind, char *msg, OZ_Term coord) {
+  OZ_Term args = OZ_cons(OZ_pairA("coord",coord),
+                         OZ_cons(OZ_pairAA("kind",kind),
+                                 OZ_cons(OZ_pairAA("msg",msg),OZ_nil())));
+  xy_errorMessages = OZ_cons(OZ_recordInit(OZ_atom("warn"),args),
+                             xy_errorMessages);
 }
 
 void xyreportError(char *kind, char *msg, OZ_Term coord) {
