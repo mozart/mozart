@@ -17,6 +17,8 @@ local
       meth init(Manager Menu Canvas Status ?PackMe)
 	 <<Tk.toplevel tkInit(title:              TitleName
 			      relief:             sunken
+			      width:              MinSizeX
+			      height:             MinSizeY
 			      withdraw:           True
 			      highlightthickness: 0)>>
 	 {Tk.batch [focus(self)

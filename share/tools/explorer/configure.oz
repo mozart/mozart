@@ -34,7 +34,7 @@ TitleName    = 'Oz Explorer'
 BitMapDir    = System.ozHome # '/lib/bitmaps/'
 BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
-MinSizeX     = 500   CanvasWidth  = 500.0
+MinSizeX     = 500   CanvasWidth  = 440.0
 MinSizeY     = 300   CanvasHeight = 240.0 
 DepthWidth   = 120 
 DepthHeight  = 8
