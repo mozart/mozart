@@ -17,6 +17,8 @@ case $system in
    ;;
    *IRIX\ 5*)           OZARCH=irix5-`/bin/uname -p`
    ;;
+   *AIX*)               OZARCH=aix3-rs6000
+   ;;
    *)  echo "Cannot determine machine type and OS version" 1>&2 ; exit 1
 esac
 
