@@ -209,7 +209,7 @@ error include resources.hh before mozart.h
 #define DEBUG_TRACE	// MM: enable low level debugging: step instructions
 
 //#define SLOW_DEBUG_CHECK
-#define DEBUG_GC
+//#define DEBUG_GC
 //#define DEBUG_VERBOSE
 #define RECINSTRFETCH 500
 
