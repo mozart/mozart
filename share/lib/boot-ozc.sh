@@ -21,7 +21,6 @@ if test -z "$OZEMULATOR"
 then
     for d in \
         $BUILDTOP/platform/emulator \
-        $BUILDTOP/platform/emulator/$OZPLATFORM \
         $OZPREFIX/platform/$OZPLATFORM
     do
         if test -x $d/$exe
