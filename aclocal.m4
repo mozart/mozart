@@ -1,6 +1,8 @@
 AC_DEFUN(OZ_INIT, [
     AC_PREFIX_DEFAULT(/usr/local/oz)
 
+    srcdir=`cd $srcdir && pwd`
+
     AC_CANONICAL_HOST
 
     if test -z "$SRCTOP"
