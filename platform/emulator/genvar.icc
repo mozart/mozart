@@ -29,6 +29,12 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 	return FALSE;
     }
     break;
+  case FSetVariable:
+    {
+      if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, prop))
+	return FALSE;
+    }
+    break;
   case OFSVariable:
     if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop)) {
       return FALSE;
@@ -71,6 +77,8 @@ int GenCVariable::getSuspListLength(void)
     return ((GenBoolVariable *)this)->getSuspListLength();
   case OFSVariable:
     return ((GenOFSVariable *)this)->getSuspListLength();
+  case FSetVariable:
+    return ((GenFSetVariable *)this)->getSuspListLength();
   default:
     break;
   }
@@ -85,6 +93,7 @@ size_t GenCVariable::getSize(void)
   case OFSVariable:  return ((GenOFSVariable*)this)->getSize();
   case MetaVariable: return ((GenMetaVariable*)this)->getSize();
   case BoolVariable: return ((GenBoolVariable*)this)->getSize();
+  case FSetVariable: return ((GenFSetVariable*)this)->getSize();
   case AVAR:         return ((AVar *)this)->getSize();
   case DVAR:         return ((DVar *)this)->getSize();
   default:           Assert(0);
@@ -100,6 +109,7 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case OFSVariable:  return ((GenOFSVariable*)this)->valid(val);
   case MetaVariable: return ((GenMetaVariable*)this)->valid(val);
   case BoolVariable: return ((GenBoolVariable*)this)->valid(val);
+  case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
   case AVAR:         return ((AVar *)this)->valid(val);
   case DVAR:         return ((DVar *)this)->valid(ptr,val);
   default: Assert(0); break;
@@ -133,6 +143,7 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
     case MetaVariable: 
     case AVAR:
     case DVAR:
+    case FSetVariable:
       break;
     default:
       Assert(0);
@@ -168,6 +179,9 @@ void GenCVariable::dispose(void)
     break;
   case BoolVariable:
     ((GenBoolVariable *)this)->dispose();
+    break;
+  case FSetVariable:
+    ((GenFSetVariable *)this)->dispose();
     break;
   default:
     break;
