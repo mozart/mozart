@@ -852,7 +852,7 @@ loop:
           goto loop;
         }
 
-        WaitActor *wa = solveAA->getDisWaitActor();
+        WaitActor *wa = solveAA->topChoice();
 
         if (wa == NULL) {
           // "stuck" (stable without distributing waitActors);
@@ -873,6 +873,7 @@ loop:
           // to enumerate;
 
           if (wa->getChildCount()==1 && wa->isChoice()) {
+            solveAA->popChoice();
             Board *waitBoard = wa->getChildRef();
 
             waitBoard->setCommitted(solveBB);
@@ -892,8 +893,6 @@ loop:
             return CE_SOLVE_CONT;
           }
 
-          // put back wait actor
-          solveAA->pushWaitActor(wa);
           // give back number of clauses
           trail.popMark();
           currentBoard->unsetInstalled();
@@ -2949,6 +2948,13 @@ LBLsuspendThread:
 
         waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
         CBB->incSuspCount(waitBoard->getSuspCount()-1);
+        if (aa->hasChoices()) {
+          if (CBB->isWait()) {
+            WaitActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
+          } else if (CBB->isSolve()) {
+            SolveActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
+          }
+        }
 
         Bool ret = e->installScript(waitBoard->getScriptRef());
         if (!ret) {
@@ -2999,6 +3005,14 @@ LBLsuspendThread:
 
         bb->setCommitted(CBB);    // by kost@ 4.10.94
         CBB->incSuspCount(bb->getSuspCount()-1);
+
+        if (aa->hasChoices()) {
+          if (CBB->isWait()) {
+            WaitActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
+          } else if (CBB->isSolve()) {
+            SolveActor::Cast(CBB->getActor())->pushChoices(aa->getCps());
+          }
+        }
 
         Bool ret = e->installScript(bb->getScriptRef());
         if (!ret) {
@@ -3089,6 +3103,7 @@ LBLsuspendThread:
       int argsToSave = getPosIntArg(PC+2);
 
       CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, NO);
+
       DISPATCH(3);
     }
 
@@ -3096,12 +3111,16 @@ LBLsuspendThread:
     {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
+      Board *bb = CBB;
 
-      CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, NO);
-      if (e->currentSolveBoard != (Board *) NULL) {
-        SolveActor *sa = SolveActor::Cast(e->currentSolveBoard->getActor());
-        sa->pushWaitActor(WaitActor::Cast(CAA));
+      CAA = new WaitActor(bb, CPP, NOCODE, Y, G, X, argsToSave, NO);
+
+      if (bb->isWait()) {
+        WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
+      } else if (bb->isSolve()) {
+        SolveActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
       }
+
       DISPATCH(3);
     }
 
@@ -3109,12 +3128,16 @@ LBLsuspendThread:
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
+      Board *bb = CBB;
 
-      CAA = new WaitActor(CBB, CPP, NOCODE, Y, G, X, argsToSave, OK);
-      if (e->currentSolveBoard != (Board *) NULL) {
-        SolveActor *sa = SolveActor::Cast(e->currentSolveBoard->getActor());
-        sa->pushWaitActor(WaitActor::Cast(CAA));
+      CAA = new WaitActor(bb, CPP, NOCODE, Y, G, X, argsToSave, OK);
+
+      if (bb->isWait()) {
+        WaitActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
+      } else if (bb->isSolve()) {
+        SolveActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
       }
+
       DISPATCH(3);
     }
 
@@ -3568,6 +3591,14 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
         /* add the suspension from the committed board
            remove the suspension for the board itself */
         currentBoard->incSuspCount(waitBoard->getSuspCount()-1);
+
+        if (waa->hasChoices()) {
+          if (currentBoard->isWait()) {
+            WaitActor::Cast(currentBoard->getActor())->pushChoices(waa->getCps());
+          } else if (currentBoard->isSolve()) {
+            SolveActor::Cast(currentBoard->getActor())->pushChoices(waa->getCps());
+          }
+        }
 
         DebugCode (if (!currentThread)
                    currentThread = (Thread *) KOSTJA_MAGIC;);

@@ -16,7 +16,7 @@
 
 #include "am.hh"
 
-#include "dllstack.hh"
+#include "cpstack.hh"
 #include "solve.hh"
 
 /*
@@ -36,37 +36,6 @@
 /* ------------------------------------------------------------------------
    class SolveActor
    ------------------------------------------------------------------------ */
-
-void SolveActor::pushWaitActor (WaitActor *a)
-{
-  orActors.push ((DLLStackEntry *) a);
-}
-
-void SolveActor::pushWaitActorsStackOf (SolveActor *sa)
-{
-  orActors.pushStack (&(sa->orActors));
-}
-
-WaitActor* SolveActor::getDisWaitActor ()
-{
-  WaitActor *wa = getTopWaitActor ();
-  while (wa != (WaitActor *) NULL) {
-    if (wa->isCommitted()) {
-      unlinkLastWaitActor();
-      wa = getNextWaitActor();
-      continue;
-    }
-    Board *bb = wa->getBoardFast();
-
-    if (bb == solveBoard) {
-      unlinkLastWaitActor ();
-      return (wa);
-    } else {
-      wa = getNextWaitActor ();
-    }
-  }
-  return ((WaitActor *) NULL);
-}
 
 TaggedRef SolveActor::genSolved()
 {
@@ -115,22 +84,6 @@ TaggedRef SolveActor::genUnstable(TaggedRef arg)
   SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
   stuple->setArg(0, arg);
   return makeTaggedSRecord(stuple);
-}
-
-// private members;
-WaitActor* SolveActor::getTopWaitActor()
-{
-  return ((WaitActor *) orActors.getTop());
-}
-
-WaitActor* SolveActor::getNextWaitActor()
-{
-  return ((WaitActor *) orActors.getNext());
-}
-
-void SolveActor::unlinkLastWaitActor ()
-{
-  orActors.unlinkLast();
 }
 
 Bool SolveActor::isDebugBlocked() {
@@ -186,11 +139,9 @@ Bool SolveActor::checkExtSuspList()
   return (suspList == NULL);
 }
 
-// Note that there is one thread ALREADY AT THE CREATION TIME!
-
 SolveActor::SolveActor(Board *bb, int prio, Bool debug)
  : Actor (Ac_Solve, bb, prio),
-   suspList (NULL), threads (0), stable_sl(NULL)
+   suspList (NULL), threads (0), stable_sl(NULL), cps(NULL)
 {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
