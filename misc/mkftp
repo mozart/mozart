@@ -324,7 +324,7 @@ sub action_macosx {
     my $macdir = "$RELDIR/macosx";
     foreach $file (@ARGV) {
 	my $name = &nondirname($file);
-	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.pkg\.gz$/) {
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.pkg\.t?gz$/) {
 	    die "wrong release number on $name" unless $1 eq $RELEASE_NUMBER;
 	    &do_system("cp -f $file $macdir/$name");
 	} elsif ($name =~ /^README-(\d+\.\d+\.\d+)\.\d{8}-(.*)$/) {
