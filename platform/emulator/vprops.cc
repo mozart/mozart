@@ -114,11 +114,21 @@ enum EmulatorPropertyIndex {
   PROP__LAST
 };
 
-inline OZ_Term OZ_bool(int i) { return i?NameTrue:NameFalse; }
+#define oz_bool(i) ((i)?NameTrue:NameFalse)
 
-#define CASE_INT( P,L) case P: return OZ_int( L)
-#define CASE_BOOL(P,L) case P: return OZ_bool(L)
-#define CASE_ATOM(P,L) case P: return OZ_atom(L)
+// Handle the case of indexed property P whose value can be
+// found at location L.  Return the corresponding Oz term.
+
+#define CASE_INT( P,L) case P: return oz_int( L)
+#define CASE_BOOL(P,L) case P: return oz_bool(L)
+#define CASE_ATOM(P,L) case P: return oz_atom(L)
+
+// Construct an Arity given `n' atoms.  First argument is n
+// i.e. the number of features, the following arguments are
+// the n atoms.  Creating an arity is an expensive operation,
+// but we are going to cache the required arity in local
+// static variables.  Each arity is computed only the 1st time
+// it is needed.
 
 OZ_Arity mkArity(int n,...)
 {
@@ -130,24 +140,47 @@ OZ_Arity mkArity(int n,...)
   return OZ_makeArity(list);
 }
 
-#define DEFINE_REC(L,A)         \
-static OZ_Term  _Label = 0;     \
-static OZ_Arity _Arity;         \
-if (_Label==0) {                \
-  _Label = oz_atom(L);          \
-  _Arity = mkArity A;           \
-}                               \
-SRecord * _Record =             \
-SRecord::newSRecord(_Label,(Arity*)_Arity);
+// DEFINE_REC(L,A) puts in REC__ a record with label L and
+// arity A.  Both the record and arity are cached in local
+// static variables and are computed only the 1st time they
+// are needed.  L is specified as a C string, and A is of
+// the form (n,F1,...,Fn) where F1 to Fn are Atoms which we
+// assume are already initialized (they are expected to have
+// been created in value.cc)
 
-#define RETURN_REC return makeTaggedSRecord(_Record)
-#define SET_REC(F,V) _Record->setFeature(F,V)
-#define BLOCK_REC(L,A,B) { DEFINE_REC(L,A); B; RETURN_REC; }
-#define CASE_REC(P,L,A,B) case P: BLOCK_REC(L,A,B);
-#define SET_INT(F,I) SET_REC(F,oz_int(I))
-#define SET_BOOL(F,B) SET_REC(F,OZ_bool(B))
+#define DEFINE_REC(L,A)                         \
+static OZ_Term  LAB__ = 0;                      \
+static OZ_Arity ARY__;                          \
+if (LAB__==0) {                                 \
+  LAB__ = oz_atom(L);                           \
+  ARY__ = mkArity A ;                           \
+}                                               \
+REC__ = SRecord::newSRecord(LAB__,(Arity*)ARY__);
+
+// tag and return the result record REC__
+#define RETURN_REC return makeTaggedSRecord(REC__);
+
+// set feature F of the result record REC__
+#define SET_REC(F,V) REC__->setFeature(F,V)
+
+// create a result record REC__, DO something, an return
+// the tagged result
+
+#define DO_REC(L,A,DO) { DEFINE_REC(L,A); DO; RETURN_REC; }
+
+// Handle the case of indexed property P, whose result is
+// a record with label L and arity A, and DO something to
+// initialize its features before returning it.
+
+#define CASE_REC(P,L,A,DO) case P: DO_REC(L,A,DO);
+
+// set feature F or REC__ to appropriate term
+
+#define SET_INT( F,I) SET_REC(F,oz_int( I))
+#define SET_BOOL(F,B) SET_REC(F,oz_bool(B))
 
 OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
+  SRecord * REC__;
   switch (prop) {
     // THREADS
     CASE_INT(PROP_THREADS_CREATED,ozstat.createdThreads.total);
@@ -337,111 +370,173 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   }
 }
 
-#undef CASE_BOOL
 #undef CASE_INT
+#undef CASE_BOOL
 #undef CASE_ATOM
+#undef DEFINE_REC
+#undef RETURN_REC
+#undef SET_REC
+#undef DO_REC
 #undef CASE_REC
 #undef SET_INT
 #undef SET_BOOL
 
-#define CHECK_BOOL                      \
-if (OZ_isTrue(val)) VAL = 1;            \
-else if (OZ_isFalse(val)) VAL = 0;      \
-else oz_typeError(1,"Bool")
+// Macros for manipulating the `val' argument of SetEmulatorProperty
+// val has been DEREFed and there is also val_ptr and val_tag, and it
+// is guaranteed that val is determined.
+//
+// Here we check that it is a boolean.  And we put its value in the
+// local integer variable INT__
 
-#define CASE_BOOL_DO(P,DO) case P: CHECK_BOOL; DO   ; return PROCEED;
-#define CASE_BOOL(P,L)     case P: CHECK_BOOL; L=VAL; return PROCEED;
+#define CHECK_BOOL                              \
+if      (literalEq(val,NameTrue )) INT__ = 1;   \
+else if (literalEq(val,NameFalse)) INT__ = 0;   \
+else oz_typeError(1,"Bool");
 
-#define CHECK_NAT                       \
-if (!OZ_isInt(val) && (VAL=OZ_intToC(val))<0) oz_typeError(1,"Int>=0")
+// Handle a particular indexed property P, check that the specified
+// val is a boolean, and do something (presumably using variable INT__)
+// CASE_BOOL(P,L) is a specialization to update location L
 
-#define CASE_NAT(P,L)     case P: CHECK_NAT; L=VAL; return PROCEED;
-#define CASE_NAT_DO(P,DO) case P: CHECK_NAT; DO   ; return PROCEED;
+#define CASE_BOOL_DO(P,DO) case P: CHECK_BOOL; DO; return PROCEED;
+#define CASE_BOOL(P,L) CASE_BOOL_DO(P,L=INT__);
 
-#define CHECK_PERCENT                   \
-CHECK_NAT; if (VAL<1 || VAL>100) oz_typeError(1,"Int[1..100]");
+// Check that the value is a non-negative small integer
 
-#define CASE_PERCENT(P,L) case P: CHECK_PERCENT; L=VAL; return PROCEED;
+#define CHECK_NAT                               \
+if (!isSmallInt(val_tag) ||                     \
+    (INT__=smallIntValue(val))<0)               \
+  oz_typeError(1,"Int>=0");
+
+// Handle the case of indexed property P that should be an int>=0
+
+#define CASE_NAT_DO(P,DO) case P: CHECK_NAT; DO; return PROCEED;
+#define CASE_NAT(P,L) CASE_NAT_DO(P,L=INT__);
+
+// Check that the value is an integer in [1..100], i.e. a percentage
+
+#define CHECK_PERCENT                           \
+if (!isSmallInt(val_tag) ||                     \
+    (INT__=smallIntValue(val))<1 ||             \
+    (INT__>100))                                \
+  oz_typeError(1,"Int[1..100]");
+
+// Handle the case of indexed property P that should a percentage
+
+#define CASE_PERCENT_DO(P,DO) case P: CHECK_PERCENT; DO; return PROCEED;
+#define CASE_PERCENT(P,L) CASE_PERCENT_DO(P,L=INT__);
+
+// Check that the value is a record, if so untag it into REC__
 
 #define CHECK_REC                               \
-if (!isSRecord(val)){oz_typeError(1,"SRecord");}\
-else VAL=tagged2SRecord(val);
-#define CASE_REC(P,B)                           \
-case P: { SRecord*VAL; CHECK_REC; B; return PROCEED; }
-#define GET_FEAT(F,I) int I = VAL->getIndex(F)
+if (!isSRecord(val_tag))                        \
+{oz_typeError(1,"SRecord")}                     \
+else REC__=tagged2SRecord(val);
+
+// Handle the case of an indexed property P that should be a record,
+// and DO something (presumably using REC__)
+
+#define CASE_REC(P,DO)                          \
+case P: { CHECK_REC; DO; return PROCEED; }
+
+// Signal that feature F on the record value is not of the
+// expected type T
+
 #define BAD_FEAT(F,T)                           \
 return oz_raise(E_ERROR,E_KERNEL,"putProperty",2,F,oz_atom(T));
-#define DO_INT(F,V,DO)                          \
-{                                               \
-  int _IDX = VAL->getIndex(F);                  \
-  if (_IDX>=0) {                                \
-    OZ_Term _VAL = VAL->getArg(_IDX);           \
-    if (!OZ_isInt(_VAL)) BAD_FEAT(F,"Int");     \
-    int V = OZ_intToC(_VAL);                    \
-    DO;                                         \
-  }                                             \
-}
-#define SET_INT(F,L) DO_INT(F,_TMP,L=_TMP)
-#define DO_BOOL(F,V,DO)                         \
-{                                               \
-  int _IDX = VAL->getIndex(F);                  \
-  if (_IDX>=0) {                                \
-    OZ_Term _VAL = VAL->getArg(_IDX);           \
-    int V;                                      \
-    if (OZ_isTrue(_VAL)) V=1;                   \
-    else if (OZ_isFalse(_VAL)) V=0;             \
-    else BAD_FEAT(F,"Bool");                    \
-    DO;                                         \
-  }                                             \
-}
-#define SET_BOOL(F,L) DO_BOOL(F,_TMP,L=_TMP)
-#define DO_NAT(F,V,DO)                          \
-DO_INT(F,V,if (V<0) oz_typeError(1,"Int>=0"); DO);
 
-#define DO_PERCENT(F,V,DO)                      \
-DO_INT(F,V,if (V<1 || V>100) oz_typeError(1,"Int[1..100]"); DO);
+// Lookup feature F.  If it exists, make sure that it is a
+// determined integer, then DO something (presumably with INT__)
+// Note: we are using the equivalence between OZ_Term and int
+// to reuse variable INT__ both as the term which is the value
+// of the feature and as the corresonding integer value obtained
+// by untagging it.
+
+#define DO_INT(F,DO)                            \
+INT__ = REC__->getFeature(F);                   \
+if (INT__) {                                    \
+  DEREF(INT__,PTR__,TAG__);                     \
+  if (isAnyVar(TAG__)) oz_suspendOnPtr(PTR__);  \
+  if (!isSmallInt(TAG__)) BAD_FEAT(F,"Int");    \
+  INT__=smallIntValue(INT__);                   \
+  DO;                                           \
+}
+
+// set location L to integer value on feature F
+#define SET_INT(F,L) DO_INT(F,L=INT__);
+
+// Feature F should be a boolean, then DO something
+#define DO_BOOL(F,DO)                           \
+INT__ = REC__->getFeature(F);                   \
+if(INT__) {                                     \
+  DEREF(INT__,PTR__,TAG__);                     \
+  if (isAnyVar(TAG__)) oz_suspendOnPtr(PTR__);  \
+  if (!isLiteral(TAG__)) BAD_FEAT(F,"Bool");    \
+  if      (literalEq(INT__,NameTrue )) INT__=1; \
+  else if (literalEq(INT__,NameFalse)) INT__=0; \
+  else BAD_FEAT(F,"Bool");                      \
+  DO;                                           \
+}
+
+// set location L to boolean value on feature F
+#define SET_BOOL(F,L) DO_BOOL(F,L=INT__);
+
+// Feature F should be a non-negative integer, then DO something
+#define DO_NAT(F,DO)                            \
+DO_INT(F,if (INT__<0) {oz_typeError(1,"Int>=0");}; DO);
+
+// set location L to non-negative integer value on feature F
+#define SET_NAT(F,L) DO_NAT(F,L=INT__);
+
+// Feature F should be a percentage, then DO something
+#define DO_PERCENT(F,DO)                        \
+DO_INT(F,if (INT__<1||INT__>100) {oz_typeError(1,"Int[1..100]");}; DO);
+
+// set location L to percentage value on feature F
+#define SET_PERCENT(F,L) DO_PERCENT(F,L=INT__);
 
 // val is guaranteed to be determined and derefed
 OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
-  int VAL;
+  DEREF(val,val_ptr,val_tag);
+  int      INT__;
+  SRecord* REC__;
   switch (prop) {
     // TIME
     CASE_BOOL(PROP_TIME_DETAILED,ozconf.timeDetailed);
-    CASE_REC(PROP_TIME,DO_BOOL(AtomDetailed,X,ozconf.timeDetailed=X););
+    CASE_REC(PROP_TIME,SET_BOOL(AtomDetailed,ozconf.timeDetailed););
     // THREADS
     CASE_NAT_DO(PROP_THREADS_MIN,{
-      ozconf.stackMinSize=VAL/TASKFRAMESIZE;
+      ozconf.stackMinSize=INT__/TASKFRAMESIZE;
       if (ozconf.stackMinSize > ozconf.stackMaxSize)
         ozconf.stackMaxSize = ozconf.stackMinSize;});
     CASE_NAT_DO(PROP_THREADS_MAX,{
-      ozconf.stackMaxSize=VAL/TASKFRAMESIZE;
+      ozconf.stackMaxSize=INT__/TASKFRAMESIZE;
       if (ozconf.stackMinSize > ozconf.stackMaxSize)
         ozconf.stackMinSize = ozconf.stackMaxSize;});
     CASE_REC(PROP_THREADS,
-             DO_NAT(AtomMin,X,
-                    ozconf.stackMinSize=X/TASKFRAMESIZE;
+             DO_NAT(AtomMin,
+                    ozconf.stackMinSize=INT__/TASKFRAMESIZE;
                     if (ozconf.stackMinSize > ozconf.stackMaxSize)
                     ozconf.stackMinSize = ozconf.stackMaxSize;);
-             DO_NAT(AtomMax,X,
-                    ozconf.stackMaxSize=X/TASKFRAMESIZE;
+             DO_NAT(AtomMax,
+                    ozconf.stackMaxSize=INT__/TASKFRAMESIZE;
                     if (ozconf.stackMinSize > ozconf.stackMaxSize)
                     ozconf.stackMaxSize = ozconf.stackMinSize;););
     // PRIORITIES
     CASE_PERCENT(PROP_PRIORITIES_HIGH,ozconf.hiMidRatio);
     CASE_PERCENT(PROP_PRIORITIES_MEDIUM,ozconf.midLowRatio);
     CASE_REC(PROP_PRIORITIES,
-             DO_PERCENT(AtomHigh,X,ozconf.hiMidRatio=X;);
-             DO_PERCENT(AtomMedium,X,ozconf.midLowRatio=X;););
+             SET_PERCENT(AtomHigh,ozconf.hiMidRatio);
+             SET_PERCENT(AtomMedium,ozconf.midLowRatio););
     // GC
     CASE_NAT_DO(PROP_GC_MAX,{
-      ozconf.heapMaxSize=VAL/KB;
+      ozconf.heapMaxSize=INT__/KB;
       if (ozconf.heapMinSize > ozconf.heapMaxSize)
         ozconf.heapMinSize = ozconf.heapMaxSize;
       if (ozconf.heapThreshold > ozconf.heapMaxSize) {
         am.setSFlag(StartGC);
         return BI_PREEMPT;}});
     CASE_NAT_DO(PROP_GC_MIN,{
-      ozconf.heapMinSize=VAL/KB;
+      ozconf.heapMinSize=INT__/KB;
       if (ozconf.heapMinSize > ozconf.heapMaxSize)
         ozconf.heapMaxSize = ozconf.heapMinSize;
       if (ozconf.heapMinSize > ozconf.heapThreshold)
@@ -453,17 +548,17 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_PERCENT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_REC(PROP_GC,
-             DO_NAT(AtomMin,X,ozconf.heapMaxSize=X/KB);
+             DO_NAT(AtomMin,ozconf.heapMaxSize=INT__/KB);
              if (ozconf.heapMinSize > ozconf.heapMaxSize)
              ozconf.heapMaxSize = ozconf.heapMinSize;
-             DO_NAT(AtomMax,X,ozconf.heapMinSize=X/KB);
+             DO_NAT(AtomMax,ozconf.heapMinSize=INT__/KB);
              if (ozconf.heapMinSize > ozconf.heapMaxSize)
              ozconf.heapMinSize = ozconf.heapMaxSize;
              if (ozconf.heapMinSize > ozconf.heapThreshold)
              ozconf.heapThreshold = ozconf.heapMinSize;
-             DO_PERCENT(AtomFree,X,ozconf.heapFree=X);
-             DO_PERCENT(AtomTolerance,X,ozconf.heapTolerance=X);
-             DO_BOOL(AtomOn,X,ozconf.gcFlag=X);
+             SET_PERCENT(AtomFree,ozconf.heapFree);
+             SET_PERCENT(AtomTolerance,ozconf.heapTolerance);
+             SET_BOOL(AtomOn,ozconf.gcFlag);
              if (ozconf.heapThreshold > ozconf.heapMaxSize) {
                am.setSFlag(StartGC);
                return BI_PREEMPT;
@@ -472,12 +567,12 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_PRINT_WIDTH,ozconf.printWidth);
     CASE_NAT(PROP_PRINT_DEPTH,ozconf.printDepth);
     CASE_REC(PROP_PRINT,
-             DO_NAT(AtomWidth,X,ozconf.printWidth=X);
-             DO_NAT(AtomDepth,X,ozconf.printDepth=X););
+             SET_NAT(AtomWidth,ozconf.printWidth);
+             SET_NAT(AtomDepth,ozconf.printDepth););
     // FD
-    CASE_NAT_DO(PROP_FD_THRESHOLD,reInitFDs(VAL));
+    CASE_NAT_DO(PROP_FD_THRESHOLD,reInitFDs(INT__));
     CASE_REC(PROP_FD,
-             DO_NAT(AtomThreshold,X,reInitFDs(X)););
+             DO_NAT(AtomThreshold,reInitFDs(INT__)););
     // ERRORS
     CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
@@ -486,12 +581,12 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_NAT(PROP_ERRORS_WIDTH,ozconf.errorPrintWidth);
     CASE_NAT(PROP_ERRORS_DEPTH,ozconf.errorPrintDepth);
     CASE_REC(PROP_ERRORS,
-             DO_BOOL(AtomLocation,X,ozconf.errorLocation=X);
-             DO_BOOL(AtomHints,X,ozconf.errorHints=X);
-             DO_BOOL(AtomDebug,X,ozconf.errorDebug=X);
-             DO_NAT(AtomThread,X,ozconf.errorThreadDepth=X);
-             DO_NAT(AtomWidth,X,ozconf.errorPrintWidth=X);
-             DO_NAT(AtomDepth,X,ozconf.errorPrintDepth=X););
+             SET_BOOL(AtomLocation,ozconf.errorLocation);
+             SET_BOOL(AtomHints,ozconf.errorHints);
+             SET_BOOL(AtomDebug,ozconf.errorDebug);
+             SET_NAT(AtomThread,ozconf.errorThreadDepth);
+             SET_NAT(AtomWidth,ozconf.errorPrintWidth);
+             SET_NAT(AtomDepth,ozconf.errorPrintDepth););
     // MESSAGES
     CASE_BOOL(PROP_MESSAGES_GC,ozconf.gcVerbosity);
     CASE_BOOL(PROP_MESSAGES_IDLE,ozconf.showIdleMessage);
@@ -500,14 +595,16 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_MESSAGES_LOAD,ozconf.showLoad);
     CASE_BOOL(PROP_MESSAGES_CACHE,ozconf.showCacheLoad);
     CASE_REC(PROP_MESSAGES,
-             DO_BOOL(AtomGC,X,ozconf.gcVerbosity=X);
-             DO_BOOL(AtomIdle,X,ozconf.showIdleMessage=X);
-             DO_BOOL(AtomFeed,X,ozconf.showFastLoad=X);
-             DO_BOOL(AtomForeign,X,ozconf.showForeignLoad=X);
-             DO_BOOL(AtomLoad,X,ozconf.showLoad=X);
-             DO_BOOL(AtomCache,X,ozconf.showCacheLoad=X););
+             SET_BOOL(AtomGC,ozconf.gcVerbosity);
+             SET_BOOL(AtomIdle,ozconf.showIdleMessage);
+             SET_BOOL(AtomFeed,ozconf.showFastLoad);
+             SET_BOOL(AtomForeign,ozconf.showForeignLoad);
+             SET_BOOL(AtomLoad,ozconf.showLoad);
+             SET_BOOL(AtomCache,ozconf.showCacheLoad););
     // INTERNAL
-    CASE_BOOL_DO(PROP_INTERNAL_DEBUG,if (VAL) am.unsetSFlag(DebugMode); else am.setSFlag(DebugMode));
+    CASE_BOOL_DO(PROP_INTERNAL_DEBUG,
+                 if (INT__) am.unsetSFlag(DebugMode);
+                 else       am.setSFlag(DebugMode));
     CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
     CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
     CASE_NAT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
@@ -515,15 +612,15 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_INTERNAL_BROWSER,ozconf.browser);
     CASE_BOOL(PROP_INTERNAL_APPLET,ozconf.applet);
     CASE_REC(PROP_INTERNAL,
-             DO_BOOL(AtomDebug,X,
-                     if (X) am.setSFlag(DebugMode);
-                     else   am.unsetSFlag(DebugMode););
-             DO_BOOL(AtomShowSuspension,X,ozconf.showSuspension=X);
-             DO_BOOL(AtomStopOnToplevelFailure,X,ozconf.stopOnToplevelFailure=X);
-             DO_NAT(AtomDebugIP,X,ozconf.debugIP=X);
-             DO_NAT(AtomDebugPerdio,X,ozconf.debugPerdio=X);
-             DO_BOOL(AtomBrowser,X,ozconf.browser=X);
-             DO_BOOL(AtomApplet,X,ozconf.applet=X););
+             DO_BOOL(AtomDebug,
+                     if (INT__) am.setSFlag(DebugMode);
+                     else       am.unsetSFlag(DebugMode););
+             SET_BOOL(AtomShowSuspension,ozconf.showSuspension);
+             SET_BOOL(AtomStopOnToplevelFailure,ozconf.stopOnToplevelFailure);
+             SET_NAT(AtomDebugIP,ozconf.debugIP);
+             SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
+             SET_BOOL(AtomBrowser,ozconf.browser);
+             SET_BOOL(AtomApplet,ozconf.applet););
   default:
     return PROP__NOT__WRITABLE;
   }
@@ -563,16 +660,17 @@ void VirtualProperty::add(char*s,int p) {
 
 OZ_Return GetProperty(TaggedRef k,TaggedRef val)
 {
-  TaggedRef key = k; SAFE_DEREF(key);
-  if (OZ_isVariable(key)) OZ_suspendOn(key);
-  if (!OZ_isAtom(key)) oz_typeError(0,"Atom");
+  TaggedRef key = k;
+  DEREF(key,key_ptr,key_tag);
+  if (isAnyVar(key_tag)) oz_suspendOnPtr(key_ptr);
+  if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;
   dict = tagged2Dictionary(vprop_registry);
   if (dict->getArg(key,entry)==PROCEED)
-    if (OZ_isInt(entry)) {
+    if (oz_isInt(entry)) {
       entry = GetEmulatorProperty((EmulatorPropertyIndex)
-                                  OZ_intToC(entry));
+                                  oz_IntToC(entry));
       return entry?oz_unify(val,entry):PROP__NOT__READABLE;
     } else
       return oz_unify(val,((VirtualProperty*)
@@ -589,24 +687,22 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef val)
 OZ_Return PutProperty(TaggedRef k,TaggedRef v)
 {
   if (!am.onToplevel()) return PROP__NOT__GLOBAL;
-  TaggedRef key = k; SAFE_DEREF(key);
-  if (OZ_isVariable(key)) OZ_suspendOn(key);
-  if (!OZ_isAtom(key)) oz_typeError(0,"Atom");
-  TaggedRef val = v; SAFE_DEREF(val);
+  TaggedRef key = k;
+  DEREF(key,key_ptr,key_tag);
+  if (isAnyVar(key_tag)) oz_suspendOnPtr(key_ptr);
+  if (!oz_isAtom(key)) oz_typeError(0,"Atom");
   OzDictionary* dict;
   TaggedRef entry;
   dict = tagged2Dictionary(vprop_registry);
   if (dict->getArg(key,entry)==PROCEED)
     if (OZ_isInt(entry)) {
-      // Emulator properties must be determined
-      if (OZ_isVariable(val)) OZ_suspendOn(val);
       return SetEmulatorProperty((EmulatorPropertyIndex)
-                                 OZ_intToC(entry),val);
+                                 oz_IntToC(entry),v);
     } else
       return ((VirtualProperty*)
-              OZ_getForeignPointer(entry))->set(val);
+              OZ_getForeignPointer(entry))->set(v);
   dict = tagged2Dictionary(system_registry);
-  dict->setArg(key,val);
+  dict->setArg(key,v);
   return PROCEED;
 }
 
@@ -668,6 +764,7 @@ void initVirtualProperties()
   {
     OzDictionary * dict = tagged2Dictionary(system_registry);
     dict->setArg(oz_atom("platform"),oz_pairAA(ozconf.osname,ozconf.cpu));
+    dict->setArg(oz_atom("oz.home"),oz_atom(ozconf.ozHome));
   }
   BIaddSpec(vpropSpecs);
   // THREADS
@@ -752,7 +849,7 @@ void initVirtualProperties()
   VirtualProperty::add("argv",PROP_ARGV);
   // MISC
   VirtualProperty::add("oz.standalone",PROP_STANDALONE);
-  VirtualProperty::add("oz.home",PROP_HOME);
+  VirtualProperty::add("oz.conf.home",PROP_HOME);
   VirtualProperty::add("os.name",PROP_OS_NAME);
   VirtualProperty::add("os.cpu",PROP_OS_CPU);
   // INTERNAL

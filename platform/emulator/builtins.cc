@@ -2030,6 +2030,7 @@ raise:
 }
 
 
+// COMPILE(.) inline [*(recordCOrChunk) +feature] -> any
 OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,TRUE);
@@ -3711,6 +3712,7 @@ static OZ_Return suspendOnInts(TaggedRef A, TaggedRef B)
    Z = X op Y
    ----------------------------------- */
 
+// COMPILE(/) inline [+float +float] -> ?+float
 // Float x Float -> Float
 OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
@@ -3809,7 +3811,7 @@ int multOverflow(int a, int b)
   return ((b!=0) && (absa >= OzMaxInt / absb));
 }
 
-
+// COMPILE(*) inline [+number +number] -> ?+number
 OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
@@ -3841,6 +3843,7 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 
+// COMPILE(-) inline [+number +number] -> ?+number
 OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,_11);
@@ -3863,6 +3866,7 @@ OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnNumbers(A,B);
 }
 
+// COMPILE(+) inline [+number +number] -> ?+number
 OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,_11);
@@ -3954,6 +3958,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
   oz_typeError(0,"Number");
 }
 
+// COMPILE(+1) inline [+number] -> ?+number
 // add1(X) --> X+1
 OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 {
@@ -3971,6 +3976,7 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
   return BIplusInline(A,makeTaggedSmallInt(1),out);
 }
 
+// COMPILE(-1) inline [+number] -> ?+number
 // sub1(X) --> X-1
 OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
 {
@@ -4141,6 +4147,8 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
 }
 
 
+// COMPILE(<) inline shallow(<Rel) [+comparable +comparable] -> ?+bool
+// COMPILE(<Rel) inline [+comparable +comparable]
 OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   OZ_Return ret = BIlessInline(A,B);
@@ -5699,109 +5707,6 @@ OZ_C_proc_begin(BIgetPrintName,2)
 }
 OZ_C_proc_end
 
-//----------------------------------------------------------------------
-//  System set and get
-//----------------------------------------------------------------------
-
-#define GetRecord \
-  SRecord *r = tagged2SRecord(deref(OZ_getCArg(0)));
-
-#define SetTaggedArg(a, t) \
-  r->setFeature(a, t);
-
-#define SetIntArg(a, n) \
-  r->setFeature(a, makeInt(n));
-
-#define SetBoolArg(a, n) \
-  r->setFeature(a, (n) ? NameTrue : NameFalse);
-
-OZ_C_proc_begin(BISystemGetHome,1) {
-  return oz_unifyAtom(OZ_getCArg(0),ozconf.ozHome);
-}
-OZ_C_proc_end
-
-
-#undef GetRecord
-#undef SetTaggedArg
-#undef SetIntArg
-#undef SetBoolArg
-
-
-#define LookRecord(t)                           \
-  OZ_Term t = OZ_getCArg(0);                    \
-  DEREF(t, tPtr, tTag);                         \
-  if (isAnyVar(tTag))                           \
-    oz_suspendOnPtr(tPtr);                      \
-  if (isLiteral(tTag))                          \
-    return PROCEED;                             \
-  if (!isSRecord(t))                            \
-    oz_typeError(0, "Record");
-
-#define DoPercentFeature(var,term,atom)                         \
-  int     var = -1;                                             \
-  { OZ_Term out = tagged2SRecord(term)->getFeature(atom);       \
-    if (out) {                                                  \
-      DEREF(out, outPtr, outTag);                               \
-      if (isAnyVar(outTag)) oz_suspendOnPtr(outPtr);            \
-      if (!isSmallInt(outTag) ||                                \
-          (var=smallIntValue(out)) < 1 || var > 100)            \
-         oz_typeError(0, "Int");                                \
-    }                                                           \
-  }
-
-#define DoNatFeature(var,term,atom)                                     \
-  int     var = -1;                                                     \
-  { OZ_Term out = tagged2SRecord(term)->getFeature(atom);               \
-    if (out) {                                                          \
-      DEREF(out, outPtr, outTag);                                       \
-      if (isAnyVar(outTag)) oz_suspendOnPtr(outPtr);                    \
-      if (isSmallInt(outTag) && smallIntValue(out)>=0) {                \
-        var = smallIntValue(out);                                       \
-      } else if (isBigInt(outTag) && tagged2BigInt(out)->getInt()>=0) { \
-        var = tagged2BigInt(out)->getInt();                             \
-      } else {                                                          \
-        oz_typeError(0, "Int");                                         \
-      }                                                                 \
-    }                                                                   \
-  }
-
-#define DoBoolFeature(var,term,atom)                            \
-  int     var = -1;                                             \
-  { OZ_Term out = tagged2SRecord(term)->getFeature(atom);       \
-    if (out) {                                                  \
-      DEREF(out, outPtr, outTag);                               \
-      if (isAnyVar(outTag)) oz_suspendOnPtr(outPtr);            \
-      if (isLiteral(outTag))                                    \
-        if (literalEq(out,NameTrue)) {                          \
-          var = 1;                                              \
-        } else if (literalEq(out,NameFalse)) {                  \
-          var = 0;                                              \
-        } else {                                                \
-          oz_typeError(0, "Bool");                              \
-        }                                                       \
-    }                                                           \
-  }
-
-#define SetIfPos(left,right,scale) if (right >= 0) left = right / scale;
-
-OZ_C_proc_begin(BISystemSetTime,1) {
-  LookRecord(t);
-
-  DoBoolFeature(detailed, t, AtomDetailed);
-
-  SetIfPos(ozconf.timeDetailed, detailed, 1);
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-#undef LookRecord
-#undef DoPercentFeature
-#undef DoNatFeature
-#undef DoBoolFeature
-#undef SetIfPos
-
-
 // ---------------------------------------------------------------------------
 
 OZ_C_proc_begin(BIonToplevel,1)
@@ -6041,6 +5946,7 @@ OZ_Return doAssign(SRecord *r, TaggedRef fea, TaggedRef value)
   return PROCEED;
 }
 
+// COMPILE(<-) inline [+feature value]
 OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 {
   Object *self = am.getSelf();
@@ -6146,6 +6052,7 @@ OZ_C_proc_begin(BImakeClass,6)
 OZ_C_proc_end
 
 
+// COMPILE(,) [+class +record]
 OZ_C_proc_begin(BIcomma,2)
 {
   oz_declareNonvarArg(0,cl);
@@ -6921,6 +6828,85 @@ OZ_C_proc_end
 OZ_C_proc_proto(BIdebugPrint);
 OZ_C_proc_proto(BIdebugPrintLong);
 
+// These comments provide a declarative specification for the Oz compiler
+// You must keep them up to date!
+//
+// OZ COMPILER BEGIN
+//
+// fun /        (+float +float ?+float)                 inline
+// fun *        (+number +number ?+number)              inline
+// fun div      (+int +int ?+int)                       inline
+// fun mod      (+int +int ?+int)                       inline
+// fun -        (+number +number ?+number)              inline
+// fun +        (+number +number ?+number)              inline
+// fun Max      (+comparable +comparable ?+comparable)  inline
+// fun Min      (+comparable +comparable ?+comparable)  inline
+// fun <        (+comparable +comparable ?+bool)        inline shallow <Rel
+// fun =<       (+comparable +comparable ?+bool)        inline shallow =<Rel
+// fun >        (+comparable +comparable ?+bool)        inline shallow >Rel
+// fun >=       (+comparable +comparable ?+bool)        inline shallow >=Rel
+// prd <Rel     (+comparable +comparable)               inline
+// prd =<Rel    (+comparable +comparable)               inline
+// prd >Rel     (+comparable +comparable)               inline
+// prd >=Rel    (+comparable +comparable)               inline
+// fun ~        (+number ?+number)                      inline
+// fun +1       (+number +number ?+number)              inline
+// fun -1       (+number +number ?+number)              inline
+// fun Exp      (+float +float ?+float)                 inline
+// fun Log      (+float +float ?+float)                 inline
+// fun Sqrt     (+float +float ?+float)                 inline
+// fun Sin      (+float +float ?+float)                 inline
+// fun Asin     (+float +float ?+float)                 inline
+// fun Cos      (+float +float ?+float)                 inline
+// fun Acos     (+float +float ?+float)                 inline
+// fun Tan      (+float +float ?+float)                 inline
+// fun Atan     (+float +float ?+float)                 inline
+// fun Ceil     (+float +float ?+float)                 inline
+// fun Floor    (+float +float ?+float)                 inline
+// fun Abs      (+float +float ?+float)                 inline
+// fun Round    (+float +float ?+float)                 inline
+// fun Atan2    (+float +float ?+float)                 inline
+// fun fPow     (+float +float ?+float)                 inline
+// fun IntToFloat       (+int ?+float)                  inline
+// fun FloatToInt       (+float ?+int)                  inline
+// fun IntToString      (+int ?+string)
+// fun FloatToString    (+float ?+string)
+// fun StringToInt      (+string ?+int)
+// fun StringToFloat    (+string ?+float)
+// fun String.isInt     (+string ?+bool)
+// fun String.isFloat   (+string ?+bool)
+// fun String.isAtom    (+string ?+bool)
+// fun IsArray          (+value ?+bool)                 inline
+// fun NewArray         (+int +int ?+value ?+array)
+// fun Array.high       (+array ?+int)                  inline
+// fun Array.low        (+array ?+int)                  inline
+// fun Get              (+array +int value)             inline
+// fun Put              (+array +int value)             inline
+// fun NewDictionary    (?+dictionary)
+// fun IsDictionary     (+value ?+bool)                 inline
+// fun Dictionary.isEmpty       (+dictionary ?+bool)    inline
+// fun Dictionary.get   (+dictionary +feature value)    inline
+// fun Dictionary.condGet       (+dictionary +feature value value)      inline
+// fun Dictionary.put   (+dictionary +feature value)    inline
+// fun Dictionary.condPut       (+dictionary +feature value)    inline
+// fun Dictionary.exchange      (+dictionary +feature value value)
+// fun Dictionary.condExchange  (+dictionary +feature value value value)
+// fun Dictionary.remove        (+dictionary +feature)  inline
+// fun Dictionary.removeAll     (+dictionary)
+// fun Dictionary.member        (+dictionary +feature ?+bool)   inline
+// fun Dictionary.keys  (+dictionary ?+[feature])
+// fun Dictionary.entries       (+dictionary ?+[feature#value])
+// fun Dictionary.items (+dictionary ?+[value])
+// fun Dictionary.clone (+dictionary ?+dictionary)
+// fun Dictionary.markSafe      (+dictionary)
+// fun NewLock  (?+lock)
+// prd Lock     (+lock)
+// prd Unlock   (+lock)
+// fun NewPort  (?+[value] ?+port)
+// prd Send     (+port ?+value)
+//
+// OZ COMPILER END
+
 
 BIspec allSpec[] = {
   {"/",   3, BIfdiv,     (IFOR) BIfdivInline},
@@ -7178,7 +7164,7 @@ BIspec allSpec[] = {
   {"Show",  1, BIshow,   (IFOR) showInline},
 
   {"System.nbSusps", 2, BIconstraints,          0},
-  {"SystemGetHome",       1, BISystemGetHome},
+  //  {"SystemGetHome",       1, BISystemGetHome},
 
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
