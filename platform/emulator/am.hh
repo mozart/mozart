@@ -229,6 +229,10 @@ private:
   TaskStack *cachedStack;
   Object *cachedSelf;
 
+  //
+  int gcStep;
+  int copyStep;
+
 public:
   TaskStack * getCachedStack(void) {
     return cachedStack;
@@ -462,8 +466,17 @@ public:
     return _currentBoardIsRoot;
   }
 
+  //
   void gCollect(int msgLevel);  // ###
   void doGCollect();
+  //
+  void nextGCStep() {
+    gcStep ^= EvenGCStep;
+    copyStep = 0;
+  }
+  int getGCStep() { return (gcStep); }
+  void nextCopyStep() { copyStep++; }
+  int getCopyStep() { return (copyStep); }
 
   // unset the ThreadSwitch flag and reset the counter
   // only needed in emulate.cc
@@ -526,6 +539,8 @@ inline Bool oz_isRootBoard(Board *bb) { return oz_rootBoard() == bb; }
 inline Bool oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
 inline Bool oz_isOptVar(TaggedRef t) { return (am.isOptVar(t)); }
 inline int  oz_onToplevel() { return am.isCurrentRoot(); }
+inline int oz_getGCStep() { return am.getGCStep(); }
+inline int oz_getCopyStep() { return am.getCopyStep(); }
 inline Thread *oz_currentThread() { return am.currentThread(); }
 inline OZ_Term oz_newName()
 {
@@ -548,6 +563,8 @@ inline OZ_Term oz_newCell(OZ_Term val)
 #define oz_isCurrentBoard(bb) (oz_currentBoard() == (bb))
 #define oz_isOptVar(t)        (am.isOptVar(t))
 #define oz_onToplevel()       (am.isCurrentRoot())
+#define oz_getGCStep()        (am.getGCStep())
+#define oz_getCopyStep()      (am.getCopyStep())
 #define oz_currentThread()    (am.currentThread())
 
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
