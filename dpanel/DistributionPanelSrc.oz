@@ -1,0 +1,10 @@
+functor
+import
+   Main
+export
+   Open
+   OpenNetInfo
+define
+   Open=Main.open
+   OpenNetInfo=Main.openNetInfo
+end
