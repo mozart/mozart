@@ -4679,7 +4679,8 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   Bool Persistent = FALSE;
   
   if(condStruct->hasFeature(OZ_atom("cond"))){
-    TaggedRef co = condStruct->getFeature(OZ_atom("cond"));
+    TaggedRef coo = condStruct->getFeature(OZ_atom("cond"));
+    NONVAR(coo,co);
     if(co == AtomPermBlocked || co == AtomPerm)
       ec=PERM_BLOCKED;
     else{
@@ -4689,7 +4690,8 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
 	return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
   
   if(condStruct->hasFeature(OZ_atom("basis"))){
-    TaggedRef tht = condStruct->getFeature(OZ_atom("basis"));
+    TaggedRef thtt = condStruct->getFeature(OZ_atom("basis"));
+    NONVAR(thtt,tht);
     if(tht == AtomPerThread)
       th = am.currentThread();
     else{
@@ -4699,7 +4701,8 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
 	return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
   
   if(condStruct->hasFeature(OZ_atom("retry"))){
-    TaggedRef re = condStruct->getFeature(OZ_atom("retry"));
+    TaggedRef ree = condStruct->getFeature(OZ_atom("retry"));
+    NONVAR(ree,re);
     if(re == AtomYes)
       Continue = TRUE;
     else{
@@ -4709,7 +4712,8 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
 	return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 
   if(condStruct->hasFeature(OZ_atom("once_only"))){  
-    TaggedRef on = condStruct->getFeature(OZ_atom("once_only"));
+    TaggedRef onn = condStruct->getFeature(OZ_atom("once_only"));
+    NONVAR(onn,on);
     if(on == AtomYes)
       Persistent = FALSE;
     else{
@@ -4752,8 +4756,10 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
 OZ_Return HandlerDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   Thread *th      = am.currentThread();
   
+
   if(condStruct->hasFeature(OZ_atom("basis"))){
-    TaggedRef tht = condStruct->getFeature(OZ_atom("basis"));
+    TaggedRef thtt = condStruct->getFeature(OZ_atom("basis"));
+    NONVAR(thtt,tht);
     if(tht == AtomPerThread)
       th = am.currentThread();
     else{
@@ -4792,6 +4798,7 @@ OZ_Return HandlerDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc)
 }
 
 
+
 Bool translateWatcherCond(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
     if(tr==AtomPermHome){
       ec|=PERM_ME;
@@ -4824,11 +4831,17 @@ Bool translateWatcherCond(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
       return TRUE;}
     return NO;}
 
-Bool translateWatcherConds(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
+OZ_Return translateWatcherConds(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
   TaggedRef car;
-  TaggedRef cdr=tr;
   ec=ENTITY_NORMAL;
-
+  
+  NONVAR(tr,cdr);
+  
+  if(!oz_isCons(cdr)){
+    if(translateWatcherCond(cdr,ec,toc))
+      return PROCEED;
+    goto twexit;}
+  
   while(!oz_isNil(cdr)){
     if(oz_isVariable(cdr)) {
       return NO;}
@@ -4836,13 +4849,17 @@ Bool translateWatcherConds(TaggedRef tr,EntityCond &ec, TypeOfConst toc){
       return NO;
       return OK;}
     car=tagged2LTuple(cdr)->getHead();
-    if(oz_isVariable(car)) {
-      return NO;}
     cdr=tagged2LTuple(cdr)->getTail();
-    if(!translateWatcherCond(car,ec,toc))
-      return NO;}
-  if(ec==ENTITY_NORMAL) return NO;
-  return ec;}
+    NONVAR(cdr,tmp);
+    cdr = tmp;
+    OZ_Return or= translateWatcherCond(car,ec,toc);
+    if(translateWatcherCond(tr,ec,toc))
+      goto twexit;}
+  if(ec==ENTITY_NORMAL) goto twexit;
+  return PROCEED;
+twexit:
+  return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);
+}
 
 OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   EntityCond ec    = PERM_ME;  
@@ -4850,16 +4867,14 @@ OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   
   if(condStruct->hasFeature(OZ_atom("cond"))){
     TaggedRef cond = condStruct->getFeature(OZ_atom("cond"));
-    if(oz_isCons(cond)){
-      if(!translateWatcherConds(cond,ec,entity->getType()))
-	return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
-    else{
-      if(!translateWatcherCond(cond,ec,entity->getType()))
-	return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
-  }
+    OZ_Return tr = 
+      translateWatcherConds(cond,ec,entity->getType());
+    if(tr!=PROCEED)
+      return  tr;}
   
   if(condStruct->hasFeature(OZ_atom("once_only"))){
-    TaggedRef once = condStruct->getFeature(OZ_atom("once_only"));
+    TaggedRef oncee = condStruct->getFeature(OZ_atom("once_only"));
+    NONVAR(oncee,once);
     if(once == AtomYes)
       Persistent = FALSE;
     else
@@ -4899,13 +4914,10 @@ OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc)
 
   if(condStruct->hasFeature(OZ_atom("cond"))){
     TaggedRef cond = condStruct->getFeature(OZ_atom("cond"));
-    if(oz_isCons(cond)){
-      if(!translateWatcherConds(cond,ec,entity->getType()))
-	return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
-    else{
-      if(!translateWatcherCond(cond,ec,entity->getType()))
-	return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
-  }
+    OZ_Return tr = 
+      translateWatcherConds(cond,ec,entity->getType());
+    if(tr!=PROCEED)
+      return  tr;}
   
   switch(entity->getType()){
   case Co_Object:{
@@ -4930,8 +4942,6 @@ OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc)
   return oz_raise(E_ERROR,E_SYSTEM,"Watcher Not installed",0);
 }
 
-
-
 OZ_BI_define(BIhwInstall,3,0){
   OZ_Term e0        = OZ_in(0);
   OZ_Term c0        = OZ_in(1);
@@ -4946,7 +4956,7 @@ OZ_BI_define(BIhwInstall,3,0){
     condStruct = tagged2SRecord(c);
     label = condStruct->getLabel();}
   else
-    oz_raise(E_ERROR,E_SYSTEM,"???? is not a Srecord",0);
+    return oz_raise(E_ERROR,E_SYSTEM,"???? is not a Srecord",0);
   
   Tertiary *entity = tagged2Tert(e);
   
@@ -4955,8 +4965,7 @@ OZ_BI_define(BIhwInstall,3,0){
     return HandlerInstall(entity,condStruct,proc);
   if(type == AtomWatcher)
     return WatcherInstall(entity,condStruct,proc);
-  oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
-  return PROCEED;
+  return oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
 }OZ_BI_end
 
 
@@ -4984,6 +4993,8 @@ OZ_BI_define(BIhwDeInstall,3,0){
   oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
   return PROCEED;
 }OZ_BI_end
+
+
 
 
 
