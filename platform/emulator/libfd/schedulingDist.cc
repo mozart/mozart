@@ -618,8 +618,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	  
 	  //	Assert( (count_firsts > 0) && (count_lasts > 0) );  
 
-	  if (count_firsts < count_lasts) {
-	    
+	  if (count_firsts <= count_lasts) {
 	    int deltaS = OZ_getFDSup();
 	    for (l=0; l < count_firsts; l++) 
 	      deltaS = intMin(deltaS, all_vars[best_resource][firsts[l]].min);
@@ -649,7 +648,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      if (reg_flag == 0) {
 		v1 = funcG(min_left, max_left, dur_left, min_l, max_l, dur_l, upper);
 		v2 = intMin( funcG(min_l, max_l, dur_l, min_left, max_left, dur_left, upper), bonus);
-		if (v1 >= v2) {
+		if (v1 > v2) {
 		  side = 1; v = v1;
 		}
 		else {
@@ -659,14 +658,14 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      else {
 		v1 = funcGOpt(min_left, max_left, dur_left, min_l, max_l, dur_l, upper);
 		v2 = intMax( funcGOpt(min_l, max_l, dur_l, min_left, max_left, dur_left, upper), bonus);
-		if (v1 <= v2) {
+		if (v1 < v2) {
 		  side = 1; v = v1;
 		}
 		else {
 		  side = 0; v = v2;
 		}
 	      }
-	      if (v <= g_costs) {
+	      if (v < g_costs) {
 		g_costs = v;
 		p1 = best_left;
 		p2 = firsts_l;
@@ -750,7 +749,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      if (reg_flag == 0) {
 		v1 = funcG(min_l, max_l, dur_l, min_right, max_right, dur_right, upper);
 		v2 = intMin( funcG(min_right, max_right, dur_right, min_l, max_l, dur_l, upper), bonus);
-		if (v1 >= v2) {
+		if (v1 > v2) {
 		  side = 1; v = v1;
 		}
 		else {
@@ -760,14 +759,14 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      else {
 		v1 = funcGOpt(min_l, max_l, dur_l, min_right, max_right, dur_right, upper);
 		v2 = intMax( funcGOpt(min_right, max_right, dur_right, min_l, max_l, dur_l, upper), bonus);
-		if (v1 <= v2) {
+		if (v1 < v2) {
 		  side = 1; v = v1;
 		}
 		else {
 		  side = 0; v = v2;
 		}
 	      }
-	      if (v <= g_costs) {
+	      if (v < g_costs) {
 		g_costs = v;
 		p1 = lasts_l;
 		p2 = best_right;
