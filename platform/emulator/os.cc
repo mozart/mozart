@@ -30,6 +30,7 @@
 #include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <fcntl.h>
 #endif
 
 #if !defined(ultrix) && !defined(WINDOWS)
@@ -577,7 +578,7 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
   isSocket = new Bool[openMax];
-  for(int k=0; k<=openMax; k++) {
+  for(int k=0; k<openMax; k++) {
     isSocket[k] = NO;
   }
 
