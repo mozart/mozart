@@ -173,6 +173,7 @@ define
 	 {ReadFile @zfile F.size To}
       end
       meth ls($) {Arity @toc} end
+      meth lsla($) {Record.toList @toc} end
       meth close
 	 if @zfile\=unit then {ZFile.close @zfile} zfile<-unit end
       end
