@@ -110,6 +110,7 @@ typedef enum {
   DIF_SUSPEND,
   DIF_LIT_CONT,
   DIF_EXT_CONT,
+  DIF_SITE_SENDER,                // Sending a site representation
   DIF_LAST
 } MarshalTag;
 
@@ -169,6 +170,7 @@ const struct {
   { DIF_SUSPEND,      "MARSHALING_SUSPENDED"},
   { DIF_LIT_CONT,     "DIF_LITERAL_CONTINUATION"},
   { DIF_EXT_CONT,     "DIF_EXTENSION_CONTINUATION"},
+  { DIF_SITE_SENDER,  "SITE_OPT"},
   { DIF_LAST,         "LAST"}
 };
 

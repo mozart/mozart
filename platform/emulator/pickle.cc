@@ -43,7 +43,7 @@ static Bool isInitialized;
 void initPickleMarshaler()
 {
   isInitialized = OK;
-  Assert(DIF_LAST == 51);  /* new dif(s) added? */
+  Assert(DIF_LAST == 52);  /* new dif(s) added? */
   initRobustMarshaler();        // called once - from here;
 }
 
