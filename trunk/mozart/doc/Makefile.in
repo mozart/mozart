@@ -60,11 +60,13 @@ $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
 $(DOCDIR)/.htaccess: .htaccess
 	$(INSTALL_FILE) $< $@
 
+CSSFILES = $(SRCTOP)/doc/utilities/ozdoc.css $(SRCTOP)/doc/utilities/page.gif
+
 $(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
 	$(INSTALL_FILE) $< $@ && \
 	$(INSTALL_DIR) $(DOCDIR)/idx && \
-	(cd idx && for i in *; do \
-	$(INSTALL_FILE) $$i $(DOCDIR)/idx/$$i || exit 1; done)
+	(cd idx && for i in * $(CSSFILES); do \
+	$(INSTALL_FILE) $$i $(DOCDIR)/idx || exit 1; done)
 
 $(LIBFILES): $(SHDOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
@@ -105,7 +107,8 @@ PSDOCDIRS	= apptut base browser bugs changes compiler \
 idx/index.html:
 	mkdir idx 2> /dev/null; \
 	if [ -r index.db ]; \
-	then $(OZDOC) --in=index.db --out=idx --type=html-global-index; \
+	then $(OZDOC) --in=index.db --out=idx --type=html-global-index \
+	--stylesheet=ozdoc.css; \
 	else touch idx/index.html; fi
 
 global-xref-db.xml:
