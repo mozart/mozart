@@ -1,0 +1,11 @@
+dnl replace install-sh by the name of a real source file
+AC_INIT(install-sh)
+AC_PREFIX_DEFAULT(${HOME}/.oz)
+MOZART_INIT
+MOZART_PATH_PROG(VAR_OZDOC,ozdoc)
+AC_OUTPUT(Makefile)
+errprint(ifdef([MOZART_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ???' to include aclocal.m4.
+]))
