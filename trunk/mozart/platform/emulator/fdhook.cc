@@ -64,11 +64,11 @@ Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs)
   return (thr);
 }
 
-Thread * createNewPropagator (OZ_Propagator * p)
+Thread * createNewPropagator (OZ_Propagator * p, int prio)
 {
   Assert(!(am.currentThread->isNewPropagator ()));
   
-  Thread * thr = makeHeadThread (p);
+  Thread * thr = makeHeadThread (p, prio);
   thr->headInitNewPropagator();
 
   return thr;

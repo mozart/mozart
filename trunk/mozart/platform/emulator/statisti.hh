@@ -56,6 +56,7 @@ public:
   StatCounter timeForLoading;
   StatCounter timeForGC;
   StatCounter timeUtime;
+  StatCounter timeForPropagation;
 
   StatCounter heapUsed; /* total == memory used not including getUsedMemory() */
                         /* sinceIdle == memory reported during last idle */

@@ -134,6 +134,8 @@ extern OZ_Term  OZ_false 	   _PROTOTYPE((void));
 extern OZ_Term  OZ_true 	   _PROTOTYPE((void));
 extern OZ_Term  OZ_int             _PROTOTYPE((int));
 extern int      OZ_getMinPrio      _PROTOTYPE((void));
+extern int      OZ_getDefaultPrio  _PROTOTYPE((void));
+extern int      OZ_getPropagatorPrio  _PROTOTYPE((void));
 extern int      OZ_getMaxPrio      _PROTOTYPE((void));
 extern int      OZ_intToC          _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CStringToInt    _PROTOTYPE((char *str));
