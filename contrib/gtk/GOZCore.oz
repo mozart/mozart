@@ -22,7 +22,6 @@
 functor
 import
    Pickle(load)
-   System(show)
    Module(link)
    GdkNative       at 'GdkNative.so{native}'
    GtkNative       at 'GtkNative.so{native}'
@@ -31,6 +30,9 @@ import
    GDK             at 'GDK.ozf'
    GTK             at 'GTK.ozf'
    GTKCANVAS       at 'GTKCANVAS.ozf'
+\ifdef DEBUG
+   System(show)
+\endif
 export
    'GOZCore' : GOZCore
 define
@@ -51,8 +53,7 @@ define
 
    WrapPointer   = {NewName}
    UnwrapPointer = {NewName}
-   CloseObject   = {NewName}
-   
+
    %% Obtain Pointer from Oz Object or Pointer (Easy)
    fun {ObjectToPointer Object}
       if Object == unit
@@ -73,11 +74,9 @@ define
       %% Used by oz-side-called object constructors
       proc {RegisterObject Pointer Object}
 	 %% Increase Reference count by one if applicable
-	 try
-	    {Object ref}
-	 catch _ then
-	    {Object ref(_)}
-	 end
+	 %% The Gdk/Gtk ref functions have been made looking
+	 %% the same. The default ref is a 'skip'.
+	 {Object ref}
 	 {WeakDictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
       end
       
@@ -89,7 +88,10 @@ define
 	    of (_#Object)|Sr then
 	       %% Decreases Reference count by one if applicable
 	       %% and removes all registered Handlers
-	       {Object CloseObject}
+\ifdef DEBUG
+	       {System.show 'finalizing '#{String.toAtom {Object toString($)}}}
+\endif
+	       {Object unref}
 	       {Finalize Sr}
 	    [] nil then skip
 	    end
@@ -173,15 +175,8 @@ define
 	 %% Create New Wrapper and register it to ObjectTable
 	 fun {CreateClass Class Pointer}
 	    Object = {New Class WrapPointer(Pointer)}
-	    Key    = {ForeignPointer.toInt Pointer}
 	 in
-	    %% Increase Reference count by one if applicable
-	    try
-	       {Object ref}
-	    catch _ then
-	       {Object ref(_)}
-	    end
-	    {WeakDictionary.put ObjectTable Key Object}
+	    {RegisterObject Pointer Object}
 	    Object
 	 end
       in
@@ -215,61 +210,6 @@ define
       fun {ExportList Ls}
 	 {Map Ls ObjectToPointer}
       end
-   end
-
-   %%
-   %% Signal Handling Stubs (functional setup; used for Alice)
-   %%
-   
-   fun {SignalConnect Object ObjSignal Handler}
-      Id = {Dispatcher registerHandler(Handler $)}
-   in
-      {GOZSignal.signalConnect Object ObjSignal Id} Id
-   end
-   fun {SignalDisconnect Object SignalId}
-      {Dispatcher unregisterHandler(SignalId)}
-      {GOZSignal.signalConnect Object SignalId}
-      unit
-   end
-   fun {SignalHandlerBlock Object SignalId}
-      {GOZSignal.signalBlock Object SignalId}
-      unit
-   end
-   fun {SignalHandlerUnblock Object SignalId}
-      {GOZSignal.signalUnblock Object SignalId}
-      unit
-   end
-   fun {SignalEmit Object Name}
-      {GOZSignal.signalEmit Object Name}
-      unit
-   end
-
-   %%
-   %% Lowlevel Allocation Stubs
-   %%
-
-   fun {AllocInt InVal}
-      {GOZSignal.allocInt InVal}
-   end
-   fun {AllocDouble InVal}
-      {GOZSignal.allocDouble InVal}
-   end
-   fun {AllocColor Red Green Blue}
-      {GOZSignal.allocColor Red Green Blue}
-   end
-
-   fun {GetInt V}
-      {GOZSignal.getInt V}
-   end
-   fun {GetDouble V}
-      {GOZSignal.getDouble V}
-   end
-   fun {Null}
-      {GOZSignal.null}
-   end
-   fun {FreeData V}
-      {GOZSignal.freeData V}
-      unit
    end
 
    %%
@@ -354,13 +294,24 @@ define
    %%
    %% Gtk Oz Base Class (used for Oz Class Wrapper)
    %%
-   
+
+   %% It is necessary to separate the finalisation of the
+   %% object and its connected handlers since handlers
+   %% might be executed as long as the c side object lives.
+   %% In contrast, the oz object might have been finalized already.
+
    class OzBase from BaseObject
       attr
-	 object        %% Native Object Ptr
-	 signals : nil %% Connected Signals List
-      meth new
-	 @object = unit
+	 object  : unit %% Native Object Ptr
+	 signals : unit %% Cell containing Connected Signals List
+      meth wrapperNew
+	 Signals = {Cell.new nil}
+      in
+	 signals <- Signals
+	 OzBase, signalConnect('delete-event'
+			       proc {$ _}
+				  {Dispatcher killSignals(Signals)}
+			       end _)
       end
       meth signalConnect(Signal ProcOrMeth $)
 	 SigHandler = if {IsProcedure ProcOrMeth}
@@ -375,18 +326,21 @@ define
 			    unit
 			 end
 		      end
-	 SignalId   = {Dispatcher registerHandler(SigHandler $)}
+	 SignalId   = {Dispatcher signalConnect(SigHandler @object Signal $)}
+	 CurHs NewHs
       in
-	 signals <- SignalId|@signals
-	 {GOZSignal.signalConnect @object Signal SignalId}
+	 {Cell.exchange @signals CurHs NewHs}
+	 NewHs = SignalId|CurHs
 	 SignalId
-      end
+     end
       meth signalDisconnect(SignalId)
-	 signals <- {Filter @signals fun {$ Id}
-					SignalId \= Id
-				     end}
-	 {GOZSignal.signalDisconnect @object SignalId}
-	 {Dispatcher unregisterHandler(SignalId)}
+	 CurHs NewHs
+      in
+	 {Cell.exchange @signals CurHs NewHs}
+	 NewHs = {Filter CurHs fun {$ Id}
+				  SignalId \= Id
+			       end}
+	 {Dispatcher signalDisconnect(@object SignalId)}
       end
       meth signalBlock(SignalId)
 	 {GOZSignal.signalBlock @object SignalId}
@@ -398,25 +352,14 @@ define
 	 {GOZSignal.signalEmit @object Signal}
       end
       meth !WrapPointer(Ptr)
-	 @object = Ptr
+	 object <- Ptr
+	 {self wrapperNew}
       end
       meth !UnwrapPointer($)
 	 @object
       end
       meth addToObjectTable
 	 {RegisterObject @object self}
-      end
-      meth !CloseObject
-	 %% This method is called from the Finalisation
-	 %% Handler to remove all registered Handlers
-	 %% This is because a handler might be connected to several widgets
-	 %% We only remove Handler from dictionary since the Gtk finalizer
-	 %% disconnects all signals automaticly.
-	 {ForAll @signals proc {$ SignalId}
-			     {Dispatcher unregisterHandler(SignalId)}
-			  end}
-	 signals <- nil
-	 {self unref}
       end
       meth ref
 	 %% Presume unmanaged Object
@@ -481,6 +424,7 @@ define
    %%
 
    local
+      Start = {NewName}
       local
 	 NewSignalId = {NewName}
 	 FillStream  = {NewName}
@@ -488,6 +432,9 @@ define
 
 	 %% Dummy Handler to circumvent problems with event caching
 	 fun {EmptyHandler _}
+\ifdef DEBUG
+	    {System.show 'Empty Handler Called'}
+\endif
 	    unit
 	 end
 	 %% Maxium Polling Delay
@@ -495,36 +442,38 @@ define
       in
 	 class DispatcherObject
 	    attr
+	       stream      %% Event Stream
 	       signalId    %% SignalId Counter
 	       handlerDict %% SignalId -> Handler
 	       signalPort  %% Signal Port
-	       threadId    %% Thread Id of "Filler Thread"
+	       fillerId    %% Filler Thread Id
+	       dispatchId  %% Dispatch Thread Id
 	    meth create
 	       Stream SignalPort
 	    in
 	       SignalPort   = {Port.new Stream}
+	       @stream      = Stream
 	       @signalId    = 0
 	       @handlerDict = {Dictionary.new}
 	       @signalPort  = SignalPort
 	       %% Tell C side about signal port
 	       {GOZSignal.initializeSignalPort SignalPort}
-	       %% Fetch Events
+	       %% Fetch Events (Filler Thread)
 	       thread
-		  @threadId = {Thread.this}
+		  @fillerId = {Thread.this}
 		  DispatcherObject, FillStream(PollDelay)
 	       end
-	       %% Call Event Handlers
-	       thread
-		  try DispatcherObject, Dispatch(Stream)
-		  catch Ex then
-		     {System.show Ex}
-		     DispatcherObject, exit
-		  end
-	       end
 	    end
+	    %% FillStream runs on its own. It does not access any
+	    %% stateful data of the DispatcherObject.
+	    %% Just placed here for convenience.
 	    meth !FillStream(PollInterval)
-	       NewPollInterval = if {GOZSignal.handlePendingEvents}
-				 then 10 %% Rapid Event testing for reactivity
+	       NeedDispatch    = {GOZSignal.handlePendingEvents}
+	       NewPollInterval = if NeedDispatch
+				 then
+				    %% Enable Event Processing
+				    {Dispatcher Dispatch}
+				    10 %% Rapid Event testing for reactivity
 				 else {Min (PollInterval + 5) PollDelay}
 				 end
 	    in
@@ -534,38 +483,53 @@ define
 	    meth !NewSignalId($)
 	       signalId <- (@signalId + 1)
 	    end
-	    meth registerHandler(Handler $)
+	    meth signalConnect(Handler Object Signal $)
 	       SignalId = DispatcherObject, NewSignalId($)
 	    in
 	       {Dictionary.put @handlerDict SignalId Handler}
+	       {GOZSignal.signalConnect Object Signal SignalId}
 	       SignalId
 	    end
-	    meth unregisterHandler(SignalId)
+	    meth signalDisconnect(Object SignalId)
+	       {GOZSignal.signalDisconnect Object SignalId}
 	       {Dictionary.remove @handlerDict SignalId}
 	    end
-	    meth !Dispatch(Stream)
-	       case Stream
-	       of Event|Tail then
-		  Id   = Event.1
-		  %% Todo: Check for optimisations
-		  Data = {Record.toList Event}.2
-	       in
+	    meth killSignals(Signals)
+	       HandlerDict = @handlerDict
+	    in
+	       {ForAll {Cell.access Signals}
+		proc {$ SignalId}
+		   {Dictionary.remove HandlerDict SignalId}
+		end}
+	    end
+	    meth !Start
+	       @dispatchId = {Thread.this}
+	    end
+	    meth !Dispatch
+	       Stream = @stream
+	    in
+	       if {IsFuture Stream}
+	       then skip
+	       elsecase Stream
+	       of (Id|Data)|Tail then
 		  case {Dictionary.condGet @handlerDict Id EmptyHandler}
 		  of Handler then {Handler {ConvertArgs Data} _}
 		  end
-		  DispatcherObject, Dispatch(Tail)
-	       [] _ then skip
+		  stream <- Tail
+		  {Dispatcher Dispatch}
+	       [] nil then
+		  DispatcherObject, exit
 	       end
 	    end
 	    meth exit
-	       {Thread.terminate @threadId}     %% Terminate Event Fetching
-	       {Thread.terminate {Thread.this}} %% Terminate Dispatch Thread
+	       {GtkNative.exit}               %% Terminate C side system
+	       {Thread.terminate @fillerId}   %% Terminate Event Fetching
+	       {Thread.terminate @dispatchId} %% Terminate Dispatcher
 	    end
 	 end
       end
    in
       fun {Exit _}
-	 {GtkNative.gtkExit}
 	 {Dispatcher exit}
 	 unit
       end
@@ -577,20 +541,14 @@ define
 			  %% GList Import/Export
 			  importList           : ImportList
 			  exportList           : ExportList
-			  %% Signal Handling
-			  signalConnect        : SignalConnect
-			  signalDisconnect     : SignalDisconnect
-			  signalHandlerBlock   : SignalHandlerBlock
-			  signalHandlerUnblock : SignalHandlerUnblock
-			  signalEmit           : SignalEmit
 			  %% Lowlevel Allocation/Access
-			  allocInt             : AllocInt
-			  allocDouble          : AllocDouble
-			  allocColor           : AllocColor
-			  getInt               : GetInt
-			  getDouble            : GetDouble
-			  null                 : Null
-			  freeData             : FreeData
+			  allocInt             : GOZSignal.allocInt
+			  allocDouble          : GOZSignal.allocDouble
+			  allocColor           : GOZSignal.allocColor
+			  getInt               : GOZSignal.getInt
+			  getDouble            : GOZSignal.getDouble
+			  null                 : GOZSignal.null
+			  freeData             : GOZSignal.freeData
 			  %% Gtk Arg Handling
 			  makeEmptyArg         : GOZSignal.makeEmptyArg
 			  makeArg              : GOZSignal.makeArg
@@ -614,7 +572,19 @@ define
 			  %% Termination Function
 			  exit                 : Exit)
       
-      %% Start dispatcher
-      Dispatcher = {New DispatcherObject create}
+      %% Create & Start dispatcher
+      fun {NewServer O}
+	 S P
+      in
+	 P = {NewPort S}
+	 thread
+	    {ForAll S O}
+	 end
+	 proc {$ M}
+	    {Port.send P M}
+	 end
+      end
+      Dispatcher = {NewServer {New DispatcherObject create}}
+      {Dispatcher Start}
    end
 end
