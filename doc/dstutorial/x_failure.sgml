@@ -208,19 +208,11 @@ a per-site level or a per-thread level
 <P>Exceptions can be enabled on logic variables,
 ports, objects, cells, and locks.
 All other entities, e.g., records, procedures, classes,
-and functors, cannot have enabled exceptions.
+and functors, will never raise an exception
+since they have no fault states
+(see <ptr to="eager.stateless.data">).
 Attempting to enable an exception on such an
-entity is allowed but does nothing.
-If a logic variable is bound to a nonvariable
-entity that has no enabled exceptions,
-then the variable's enabled exceptions will be
-transferred to the entity.
-Otherwise, they are discarded.
-If two logic variables are bound together,
-then the result has the enabled exceptions
-of one of the original variables.
-Which one is not specified.
-The enabled exceptions of the other are discarded.
+entity is allowed but has no observable effect.
 
 <P>The advanced model allows to install or
 deinstall <EM>handlers</EM> and <EM>watchers</EM>
@@ -301,6 +293,61 @@ The functions <<Fault.defaultEnable>> and
 At its creation, an entity is not enabled at any level.
 All four functions raise a type error exception if their arguments
 do not have the correct type.
+
+<SUBSECTION><TITLE>Binding logic variables</TITLE>
+
+<P>A logic variable can be declared before it is bound.
+What happens to its enabled exceptions when it is bound?
+For example, let's say variable <<V>> is enabled with <<FS_v>>
+and port <<P>> is enabled with <<FS_p>>.
+What happens after the binding <<V=P>>?
+In this case, the binding gives <<P>>,
+which keeps the enabled exceptions <<FS_p>>.
+The enabled exceptions <<FS_v>> are discarded.
+
+<P>The following cases are possible.
+We assume that variable <<V>> is enabled with
+fault detection on fault states <<FS_v>>.
+<LIST>
+<ITEM><<V>> is bound to a nonvariable entity <<X>> that
+has no enabled exceptions.
+In this case, the enabled exceptions <<FS_v>>
+are transferred to <<X>>.
+
+<ITEM><<V>> is bound to a nonvariable entity <<X>> that
+already has enabled exceptions <<FS_x>>.
+In this case, <<X>> keeps its enabled
+exceptions and <<FS_v>> is discarded.
+
+<ITEM><<V>> is bound to another logic variable <<W>> that
+might have enabled exceptions.
+In this case, the resulting variable keeps <em>one</em> set
+of enabled exceptions, either <<FS_v>> or <<FS_w>>
+(if the latter exists).
+Which one is not specified.
+</LIST>
+
+<P>These cases follow from three basic principles:
+<LIST>
+<ITEM>A logic variable that is
+"observed", e.g., it has fault detection
+with enabled exceptions,
+will be "observed" at all instants of time.
+That is, it will keep some kind of fault detection
+even after it is bound.
+
+<ITEM>A nonvariable entity is never bothered by
+being bound to a variable.
+That is, the nonvariable's fault detection 
+(if there is any) can only be modified
+by explicit commands from <<Fault>>.
+
+<ITEM>Any language entity that is set up
+with a set of enabled exceptions will have exactly
+<em>one</em> set of enabled exceptions,
+even if it is bound.
+There is no attempt to "combine" the two sets.
+</LIST>
 
 <SUBSECTION><TITLE>Exception formats</TITLE>
 
@@ -560,7 +607,7 @@ will be a <<remoteProblem>>.
 If the owner site crashes, then
 all proxies will see a <<permFail>>.
 
-<SUBSECTION><TITLE>Eager stateless data</TITLE>
+<SUBSECTION id="eager.stateless.data"><TITLE>Eager stateless data</TITLE>
 
 <P>Eager stateless data, namely records, procedures,
 functions, classes, and functors, are
