@@ -214,7 +214,7 @@ int Thread::findExceptionHandler(TaggedRef &chunk, TaskStackEntry *&oldTos)
       break;
 
     case C_SET_CUROBJECT:
-      am.setCurrentObject((Object*) *(tos-1));
+      am.setCurrentObject((Object*) *(tos-2));
       break;
 
     default:
