@@ -68,7 +68,7 @@ prepare
 		 'elisp-path'(single type: string default: unit)
 		 'sbin-path'(single type: string default: unit)
 		 'catalog'(single type: string default: unit)
-		 'include'(multiple type: string default: nil)
+		 'include'(multiple type: list(string) default: nil)
 		)
 define
    try
