@@ -2168,7 +2168,6 @@ void SolveActor::gcRecurse ()
   solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
-  boardToInstall = boardToInstall->gcBoard ();
   gcTagged (solveVar, solveVar);
   gcTagged (guidance, guidance);
   gcTagged (result, result);
