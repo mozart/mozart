@@ -62,6 +62,7 @@ static TaggedRef dictionary_of_modules;
  * Modules that are always in the emulator: Base
  */
 
+#include "modAlice-if.cc"
 #include "modArray-if.cc"
 #include "modAtom-if.cc"
 #include "modBitArray-if.cc"
@@ -236,6 +237,7 @@ static ModuleEntry ext_module_table[] = {
  * Module table for base
  */
 static ModuleEntry base_module_table[] = {
+  {"Alice",		mod_int_Alice},
   {"Array",		mod_int_Array},
   {"Atom",		mod_int_Atom},
   {"BitArray",		mod_int_BitArray},
