@@ -19,7 +19,6 @@
 // heap memory
 
 // allocate 1000 kilo byte chuncks of memory
-const heapBlockSize = 1 * MB;
 
 MemChunks *MemChunks::list = NULL;
 
@@ -346,7 +345,7 @@ void MemChunks::print()
 
 void *heapMallocOutline(size_t chunk_size)
 {
-  Assert(chunk_size <= heapBlockSize);
+  Assert((int) chunk_size <= ozconf.heapBlockSize);
 
   return heapMalloc(chunk_size);
 }
@@ -354,13 +353,13 @@ void *heapMallocOutline(size_t chunk_size)
 
 void getMemFromOS(size_t sz)
 {
-  if (sz > heapBlockSize) {
-    error("memory chunk too big: look for an infinite recursion");
+  if ((int)sz > ozconf.heapBlockSize) {
+    error("memory chunk too big (size=%d): look for an infinite recursion",sz);
   }
 
-  heapTotalSize += heapBlockSize/KB;
+  heapTotalSize += ozconf.heapBlockSize/KB;
 
-  if (ozconf.heapMaxSize != -1 && heapTotalSize >= ozconf.heapMaxSize) {
+  if (ozconf.heapMaxSize != -1 && heapTotalSize >= (unsigned int) ozconf.heapMaxSize) {
     int newSize = (heapTotalSize*3)/2;
     prefixError();
     printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
@@ -376,7 +375,7 @@ void getMemFromOS(size_t sz)
     ozconf.heapMaxSize = newSize;
   }
 
-  heapEnd = (char *) ozMalloc(heapBlockSize);
+  heapEnd = (char *) ozMalloc(ozconf.heapBlockSize);
 
   if (heapEnd == NULL) {
     error("heapMalloc: Virtual memory exceeded");
@@ -388,18 +387,18 @@ void getMemFromOS(size_t sz)
   }
 
   /* initialize with zeros */
-  DebugCheckT(memset(heapEnd,0,heapBlockSize));
+  DebugCheckT(memset(heapEnd,0,ozconf.heapBlockSize));
 
-  heapTop = &heapEnd[heapBlockSize];
+  heapTop = &heapEnd[ozconf.heapBlockSize];
 
 //  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
   if (tagValueOf(makeTaggedMisc(heapTop)) != heapTop) {
     error("Oz adress space exhausted");
   }
 
-  MemChunks::list = new MemChunks(heapEnd,MemChunks::list,heapBlockSize);
+  MemChunks::list = new MemChunks(heapEnd,MemChunks::list,ozconf.heapBlockSize);
 
-  DebugCheck(heapTotalSize > heapBlockSize/KB,
+  DebugCheck(heapTotalSize > ozconf.heapBlockSize/KB,
              message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
 }
 
