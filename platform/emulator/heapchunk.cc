@@ -43,17 +43,20 @@ public:
   }
 
   virtual
-  OZ_Extension *gCollectV(void) {
+  OZ_Extension * gCollectV(void) {
     HeapChunk * ret = new HeapChunk(chunk_size);
     ret->chunk_data = copyChunkData();
     return ret;
   }
   virtual
-  OZ_Extension *sCloneV(void) {
+  OZ_Extension * sCloneV(void) {
     HeapChunk * ret = new HeapChunk(chunk_size);
     ret->chunk_data = copyChunkData();
     return ret;
   }
+
+  virtual void sCloneRecurseV(void) {}
+  virtual void gCollectRecurseV(void) {}
 
   virtual
   int getIdV() { return OZ_E_HEAPCHUNK; }
