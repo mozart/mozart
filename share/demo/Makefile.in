@@ -35,7 +35,8 @@ LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 APPLETNAMES = \
 	JobShop Cutting AnimatedQueens \
 	Bounce Trucks Transport Lift \
-	Board College DictClient
+	Board College DictClient \
+	Flowers Flowers3d
 
 APPLETS = \
 	$(APPLETNAMES:%=%.oza)
