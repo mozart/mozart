@@ -191,7 +191,7 @@ OZ_C_proc_begin(BIgetTclNames,3) {
 }
 
 #define LEAVE_TCL_LOCK(TS) \
-  (void) am.fastUnify((TS)->getLock(), NameUnit, OK);
+  (void) am.fastUnify((TS)->getLock(), NameUnit, 0);
 
 
 /*

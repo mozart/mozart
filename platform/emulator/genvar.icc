@@ -20,45 +20,45 @@
 inline
 Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
 			 TaggedRef * tptr2, TaggedRef term2,
-			 Bool prop)
+			 ByteCode *scp)
 {
   switch (getType()){
   case FDVariable:
     {
-      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, prop))
+      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, scp))
 	return FALSE;
     }
     break;
   case FSetVariable:
     {
-      if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, prop))
+      if (! ((GenFSetVariable *)this)->unifyFSet(tptr1, term1, tptr2, term2, scp))
 	return FALSE;
     }
     break;
   case OFSVariable:
-    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, prop)) {
+    if (! ((GenOFSVariable *)this)->unifyOFS(tptr1, term1, tptr2, term2, scp)) {
       return FALSE;
     }
     break;
   case MetaVariable:
     {
-      if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, prop))
+      if (! ((GenMetaVariable *)this)->unifyMeta(tptr1, term1, tptr2, term2, scp))
 	return FALSE;
     }
     break;
   case BoolVariable:
     {
-      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, prop))
+      if (! ((GenBoolVariable *)this)->unifyBool(tptr1, term1, tptr2, term2, scp))
 	return FALSE;
     }
     break;
   case AVAR:
-    if (! ((AVar *)this)->unifyAVar(tptr1, tptr2==0?&term2:tptr2, prop))
+    if (! ((AVar *)this)->unifyAVar(tptr1, tptr2==0?&term2:tptr2, scp))
       return FALSE;
     break;
   case PerdioVariable:
     if (! ((PerdioVar *)this)->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2,
-					      prop))
+					      scp))
       return FALSE;
     break;
   default:
@@ -133,11 +133,11 @@ int GenCVariable::hasFeature(TaggedRef fea,TaggedRef *out)
 
 // this is supposed to be the local variable 
 inline
-void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
+void GenCVariable::installPropagators(GenCVariable * glob_var, ByteCode *scp)
 {
   Assert(getType() == glob_var->getType() || 
 	 (getType() == BoolVariable && glob_var->getType() == FDVariable));
-  Assert(!prop || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
+  Assert(scp || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
   
   Board * glob_home = glob_var->getBoard();
   suspList = ::installPropagators(suspList, glob_var->getSuspList(),

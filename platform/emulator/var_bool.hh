@@ -46,7 +46,7 @@ public:
   void dispose(void);
   
   Bool unifyBool(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
-		 Bool, Bool = TRUE);
+		 ByteCode *, Bool = TRUE);
 
   // is X=val still valid, i.e. is val an smallint and either 0 or 1.
   Bool valid(TaggedRef val);
