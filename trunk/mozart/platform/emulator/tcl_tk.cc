@@ -344,9 +344,9 @@ public:
   
   void gc() {
     if (this) {
-      OZ_updateHeapTerm(tcl_lock);
-      OZ_updateHeapTerm(tcl_dict);
-      OZ_updateHeapTerm(tcl_rets);
+      OZ_collectHeapTerm(tcl_lock,tcl_lock);
+      OZ_collectHeapTerm(tcl_dict,tcl_dict);
+      OZ_collectHeapTerm(tcl_rets,tcl_rets);
     }
   }
 

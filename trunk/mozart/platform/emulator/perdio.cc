@@ -405,7 +405,7 @@ public:
     } else {
       Assert(isRef() || isVar());
       PD((GC,"OT var/ref"));
-      OZ_updateHeapTerm(u.ref);}
+      OZ_collectHeapTerm(u.ref,u.ref);}
   }
 
   ProtocolObject &operator =(ProtocolObject &n); // not used
@@ -2308,8 +2308,7 @@ void gcPendBindingList(PendBinding **last){
   PendBinding *newBL;
   for (; bl; bl = bl->next) {
     newBL = new PendBinding();
-    newBL->val = bl->val;
-    OZ_updateHeapTerm(newBL->val);
+    OZ_collectHeapTerm(bl->val,newBL->val);
     newBL->thread = bl->thread->gcThread();
     *last = newBL;
     last = &newBL->next;}
@@ -2322,8 +2321,8 @@ void CellSec::gcCellSec(){
   case Cell_Lock_Next|Cell_Lock_Requested:{
     next->makeGCMarkSite();}
   case Cell_Lock_Requested:{
-    OZ_updateHeapTerm(contents);
-    OZ_updateHeapTerm(head);
+    OZ_collectHeapTerm(contents,contents);
+    OZ_collectHeapTerm(head,head);
     gcPendThread(&pending);
     return;}
   case Cell_Lock_Next:{
@@ -2331,7 +2330,7 @@ void CellSec::gcCellSec(){
   case Cell_Lock_Invalid:{
     return;}
   case Cell_Lock_Valid:{
-    OZ_updateHeapTerm(contents);
+    OZ_collectHeapTerm(contents,contents);
   default: Assert(0);}}}
 
 void CellFrame::gcCellFrame(){
