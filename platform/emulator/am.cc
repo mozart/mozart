@@ -611,6 +611,9 @@ PROFILE_CODE1
       if ((susp->wakeUp(var->getBoardFast(), calledBy))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
+#ifdef NEWCOUNTER
+	  Assert(susp->isDead());
+#endif
 	  suspList = suspList->dispose();
 	  continue;
 	} else if (calledBy) {
@@ -1083,9 +1086,6 @@ void AM::incSolveThreads(Board *nb,int n)
       if (!sa->isCommitted()) { // notification board below failed solve
 	sa->incThreads(n);
 	if (isStableSolve(sa)) {
-#ifdef NEWCOUNTER
-	  if (nb!=bb)
-#endif
 	  scheduleSolve(bb);
 	}
       }
@@ -1251,11 +1251,14 @@ void AM::scheduleSolve(Board *bb)
   // message("ScheduleSolve (@0x%x)\n", (void *) bb->getActor ());
 
   Actor *aa=bb->getActor();
-  Thread *th = newThread(aa->getPriority(),bb);
 #ifdef NEWCOUNTER
-  bb->incSuspCount();
-#endif
+  Board *nb = bb;
+  Thread *th = newThread(aa->getPriority(),nb);
+  nb->incSuspCount();
+#else
+  Thread *th = newThread(aa->getPriority(),bb);
   Board *nb = aa->getBoardFast()->getSolveBoard();
+#endif
   if (nb) incSolveThreads(nb);
   th->setNotificationBoard(nb);
   th->pushNervous(bb);
