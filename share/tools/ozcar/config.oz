@@ -44,7 +44,7 @@ ByeBye                 = 'hm... seems as if this thread only ' # /* end end */
 
 UnknownSuspThread      = 'Unknown suspending thread' /* end */
 UnknownWokenThread     = 'Unknown woken thread' /* end */
-UnknownMessage         = 'Unknown message on stream' /* end */	
+UnknownMessage         = 'Unknown message on stream'
 UnknownTermThread      = 'Unknown terminating thread' /* end */
 
 WaitForThread          = 'waiting for thread to be added ' # /* end */
@@ -118,7 +118,6 @@ BorderSize             = 2
 
 ScrollbarWidth         = 12
 
-/* end */
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
 %%
@@ -167,7 +166,6 @@ TimeoutToMessage       = 500  % ms
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff
 %%
-/* hi, emacs! end*/
 
 DefaultBackground
 DefaultForeground
