@@ -18,7 +18,8 @@
 # If the name ALL appears as a regular expression it is always used
 # in addition to the first matching regex or DEFAULT.
 #
-ALL		/home/ps-home/hydra/CVS/CVSROOT/log.pl -m mehl %s
+ALL		mail -s "I have changed %s" mehl
+Oz		/home/ps-home/hydra/CVS/CVSROOT/log.pl -m mehl %s
 Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller
 Oz/TestFiles	mail -s "I have changed %s" tmueller
 Oz/FDLib	mail -s "I have changed %s" scheidhr,tmueller,wuertz
@@ -40,5 +41,4 @@ Misc/papers/Ines	mail -s "I have changed %s" mmueller niehren
 Misc/papers/Elephant	mail -s "I have changed %s" mmueller tmueller vanroy
 Misc/papers/FD-CDR	mail -s "I have changed %s" tmueller,wuertz
 Misc/papers/FD-JICSLP96-WS	mail -s "I have changed %s" tmueller,wuertz
-
 
