@@ -71,7 +71,7 @@ public:
   }
 
   void pushCFunCont(Board *b, OZ_CFun f, Suspension* s,
-		    RefsArray  x=NULL, int n=0, Bool copyF=OK)
+		    RefsArray  x, int n, Bool copyF)
   {
 #ifndef NEWCOUNTER
     if (copyF) b->incSuspCount();
@@ -80,8 +80,8 @@ public:
   }
 
   void pushCont(Board *b,ProgramCounter pc,
-		RefsArray y,RefsArray g=NULL,RefsArray x=NULL,int n=0,
-		Bool copyF=OK)
+		RefsArray y,RefsArray g,RefsArray x,int n,
+		Bool copyF)
   {
     Assert(pc!=0)
 #ifndef NEWCOUNTER
