@@ -206,7 +206,6 @@ public:
   int getSeqSize();
   int hasJob();
   void copySeq(TaskStack *newStack,int size);
-  Chunk *findExceptionHandler();
   static int frameSize(ContFlag);
 
 private:

@@ -76,7 +76,9 @@ public:
 
   void setPriority(int prio);
   Board *getBoardFast() { return board->getBoardFast(); }
+
   Bool discardLocalTasks();
+  int findExceptionHandler(Chunk *&pred, TaskStackEntry *&oldTos);
 };
 
 

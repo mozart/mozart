@@ -109,22 +109,6 @@ void TaskStack::copySeq(TaskStack *newStack,int len)
   }
 }
 
-Chunk *TaskStack::findExceptionHandler()
-{
-  while (!isEmpty()) {
-    ContFlag cFlag = getContFlag(ToInt32(*(tos-1)));
-
-    if (cFlag == C_EXCEPT_HANDLER) {
-      Chunk *ret = (Chunk*) *(tos-2);
-      tos -=2 ;
-      return ret;
-    }
-    tos = tos - frameSize(cFlag);
-  }
-  return NULL;
-}
-
-
 int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
