@@ -55,8 +55,8 @@ private:
     Board *board;
   } u;
   int priority;
-  Board *notificationBoard; // SOLVE
-  Suspension *resSusp; // resident suspension (mainly for finite domains)
+  Board *notificationBoard; // for search capabilities; 
+  Suspension *resSusp;      // resident suspension (mainly for finite domains)
 public:
   Thread(int prio);
 
