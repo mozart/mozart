@@ -301,15 +301,58 @@ OZ_Return FSetDistinctPropagator::propagate(void)
     return P.vanish();
   }
 
-  OZ_FSetConstraint aux = *x;
+  // glb(x) is_not_subseteq lub(y) -> entailed
+  {
+    OZ_FSetValue glb_x = x->getGlbSet();
+    OZ_FSetValue lub_y = y->getLubSet();
   
-  if(! (aux <<= *y)) 
-    return P.vanish();
+    if(!(glb_x <= lub_y)) 
+      return P.vanish();
+  }
 
-  if (x->isValue() && y->isValue() && *x == *y)
-    return P.fail();
+  // glb(y) is_not_subseteq lub(x) -> entailed
+  {
+    OZ_FSetValue glb_y = y->getGlbSet();
+    OZ_FSetValue lub_x = x->getLubSet();
+  
+    if(!(glb_y <= lub_x)) 
+      return P.vanish();
+  }
 
+  // x is value and x = glb(y) and glb(y) == union({e}, lub(y))
+  if (x->isValue()) {
+    OZ_FSetValue x_val = x->getGlbSet();
+    OZ_FSetValue glb_y = y->getGlbSet();
+    int card_glb_y = y->getGlbCard();
+    int card_lub_y = y->getLubCard();
+
+    if ((x_val == glb_y) && (card_glb_y + 1 == card_lub_y)) {
+      FailOnInvalid(y->putCard(card_lub_y, card_lub_y));
+      return P.vanish();
+    }
+  }
+
+  // y is value and y = glb(x) and glb(x) == union({e}, lub(x))
+  if (y->isValue()) {
+    OZ_FSetValue y_val = y->getGlbSet();
+    OZ_FSetValue glb_x = x->getGlbSet();
+    int card_glb_x = x->getGlbCard();
+    int card_lub_x = x->getLubCard();
+
+    if ((y_val == glb_x) && (card_glb_x + 1 == card_lub_x)) {
+      FailOnInvalid(x->putCard(card_lub_x, card_lub_x));
+      return P.vanish();
+    }
+  }
+
+  if (x->isValue() && y->isValue() && *x == *y) {
+    goto failure;
+  }
+  
   return P.leave();
+  
+ failure:
+  return P.fail();
 }
 
 //--------------------------------------------------------------------
