@@ -1738,6 +1738,7 @@ public:
       args = NULL; // mm2: attention if globalize gname!
     } else {
       args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
+      if (args==NULL) { width = -1; return; }
       for(int i=0; i<width; i++) {
         args[i] = initvalue;
       }
