@@ -547,4 +547,13 @@ extern "C" {
 void errorHeader();
 void errorTrailer();
 
+#ifdef __GNUC__
+#define NEW_TEMP_ARRAY(Type, Var, Size) Type Var[Size]
+
+#define DELETE_TEMP_ARRAY(Var) 
+#else
+#define NEW_TEMP_ARRAY(Type, Var, Size) Type * Var = new Type[Size]
+#define DELETE_TEMP_ARRAY(Var) delete [] Var
+#endif
+
 #endif

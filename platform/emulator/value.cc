@@ -648,7 +648,7 @@ Bool isSorted(TaggedRef list)
 // sort list using quicksort and duplicants
 TaggedRef sortlist(TaggedRef list,int len)
 {
-  TaggedRef** r = new TaggedRef*[len];
+  NEW_TEMP_ARRAY(TaggedRef*, r, len);
     
   // put pointers to elems of list in array r
   TaggedRef tmp = list;
@@ -677,7 +677,7 @@ TaggedRef sortlist(TaggedRef list,int len)
     cElem = cElemPtr->getTail();
   } // while
     
-  delete r;
+  DELETE_TEMP_ARRAY(r);
   return list;
 }
 
