@@ -1491,6 +1491,8 @@ void AM::gc(int msgLevel)
   
   MemChunks *oldChain = MemChunks::list;
 
+  VariableNamer::cleanup();  /* drop bound variables */
+
   INITCHECKSPACE;
   initMemoryManagement();
 
