@@ -357,11 +357,11 @@ void BorrowEntry::gcBorrowRoot(int i) {
   Assert(isTertiary());
   // AN: Copy also if this is a secondary credit master, i.e. check with
   // credithandler.
-  if(getTertiary()->cacIsMarked() || !bcreditHandler.canBeFreed()){
-    makeGCMark();    
-    oz_gCollectTerm(u.tert,u.tert);
-    return;}
-  if(isTertiaryPending(getTertiary())) gcPO();
+  if(getTertiary()->cacIsMarked() || !bcreditHandler.canBeFreed() ||
+     isTertiaryPending(getTertiary())){
+    gcPO();
+  }
+  return;
 }
 
 void BorrowTable::init(int beg,int end)
