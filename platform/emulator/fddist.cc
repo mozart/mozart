@@ -25,19 +25,26 @@
  */
 
 #include "fdbuilti.hh"
+#include "runtime.hh"
 
 // ---------------------------------------------------------------------
 //                  Finite Domains Distribution Built-ins
 // ---------------------------------------------------------------------
 
-#define getSize(var) \
-  (isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getSize() : 2)
+inline
+static int getSize(TaggedRef var) {
+  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getSize() : 2;
+}
 
-#define getMin(var) \
-  (isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMinElem() : 0)
+inline
+static int getMin(TaggedRef var) {
+  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMinElem() : 0;
+}
 
-#define getMax(var) \
-  (isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMaxElem() : 1)
+inline
+static int getMax(TaggedRef var) {
+  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMaxElem() : 1;
+}
 
 inline
 static int getMid(TaggedRef var) {
@@ -49,8 +56,11 @@ static int getMid(TaggedRef var) {
   }
 }
 
-#define getConstraints(var) \
-  (tagged2CVar(var)->getSuspListLength())
+inline
+static int getConstraints(TaggedRef var) {
+  return tagged2CVar(var)->getSuspListLength();
+}
+
 
 #define CheckVectorArg(i) \
   TaggedRef arg, d_arg;                             \
@@ -60,6 +70,181 @@ static int getMid(TaggedRef var) {
   if (oz_isSmallInt(t_arg)) continue;                  \
   vector->setArg(new_cur++, arg);                   \
   Assert(isGenFDVar(d_arg) || isGenBoolVar(d_arg));
+
+
+
+inline
+static int discard_determined(SRecord * vec) {
+  // Discard all elements which are small ints already
+  register int j = 0;
+  register int w = vec->getWidth();
+
+  for (int i = 0; i<w; i++) {
+    TaggedRef var   = vec->getArg(i);
+    TaggedRef d_var = oz_deref(var);
+
+    if (!oz_isSmallInt(d_var)) {
+      Assert(isGenFDVar(d_var) || isGenBoolVar(d_var));
+      vec->setArg(j++, var);
+    }
+
+  }
+
+  if (j)
+    vec->downSize(j);
+
+  return j;
+}
+
+
+OZ_BI_define(BIfdd_select_naive, 1, 1) {
+  oz_declareSTupleIN(0, vec);
+
+  int w = discard_determined(vec);
+
+  // No elements left
+  if (!w)
+    return OZ_raise(makeTaggedSmallInt(-1));
+
+  OZ_RETURN(vec->getArg(0));
+} OZ_BI_end
+
+
+OZ_BI_define(BIfdd_select_size, 1, 1) {
+  oz_declareSTupleIN(0, vec);
+
+  int w = discard_determined(vec);
+
+  // No elements left
+  if (!w)
+    return OZ_raise(makeTaggedSmallInt(-1));
+
+
+  TaggedRef var = vec->getArg(0);
+
+  int minsize = getSize(oz_deref(var));
+
+  for (int i=1; i<w; i++) {
+    TaggedRef arg   = vec->getArg(i);
+    TaggedRef d_arg = oz_deref(arg);
+
+    int cursize = getSize(d_arg);
+
+    if (cursize < minsize) {
+      minsize = cursize;
+      var     = arg;
+    }
+
+  }
+
+  OZ_RETURN(var);
+} OZ_BI_end
+
+
+OZ_BI_define(BIfdd_select_max, 1, 1) {
+  oz_declareSTupleIN(0, vec);
+
+  int w = discard_determined(vec);
+
+  // No elements left
+  if (!w)
+    return OZ_raise(makeTaggedSmallInt(-1));
+
+  TaggedRef var = vec->getArg(0);
+  int maxmax    = getMax(oz_deref(var));
+
+  for (int i=1; i<w; i++) {
+    TaggedRef arg   = vec->getArg(i);
+    TaggedRef d_arg = oz_deref(arg);
+
+    int curmax = getMax(d_arg);
+
+    if (curmax > maxmax) {
+      maxmax = curmax;
+      var    = arg;
+    }
+
+  }
+
+  OZ_RETURN(var);
+} OZ_BI_end
+
+
+OZ_BI_define(BIfdd_select_min, 1, 1) {
+  oz_declareSTupleIN(0, vec);
+
+  int w = discard_determined(vec);
+
+  // No elements left
+  if (!w)
+    return OZ_raise(makeTaggedSmallInt(-1));
+
+  TaggedRef var = vec->getArg(0);
+  int minmin    = getMin(oz_deref(var));
+
+  for (int i=1; i<w; i++) {
+    TaggedRef arg   = vec->getArg(i);
+    TaggedRef d_arg = oz_deref(arg);
+
+    int curmin = getMin(d_arg);
+
+    if (curmin > minmin) {
+      minmin = curmin;
+      var    = arg;
+    }
+
+  }
+
+  OZ_RETURN(var);
+} OZ_BI_end
+
+
+OZ_BI_define(BIfdd_select_nbSusps, 1, 1) {
+  oz_declareSTupleIN(0, vec);
+
+  int w = discard_determined(vec);
+
+  // No elements left
+  if (!w)
+    return OZ_raise(makeTaggedSmallInt(-1));
+
+  TaggedRef var   = vec->getArg(0);
+  TaggedRef d_var = oz_deref(var);
+
+  int minsize = getSize(d_var);
+  int maxcon  = getConstraints(d_var);
+
+  for (int i=1; i<w; i++) {
+    TaggedRef arg   = vec->getArg(i);
+    TaggedRef d_arg = oz_deref(arg);
+
+    int curcon  = getConstraints(d_arg);
+
+    if (curcon < maxcon)
+      continue;
+
+    if (curcon==maxcon) {
+      int cursize = getSize(d_arg);
+
+      if (cursize < minsize) {
+        minsize = cursize;
+      } else {
+        continue;
+      }
+    }
+
+    maxcon = curcon;
+    var    = arg;
+
+  }
+
+  OZ_RETURN(var);
+} OZ_BI_end
+
+
+
+
+
 
 OZ_C_proc_begin(BIfdDistribute, 5) {
   TaggedRef tagged_vector = oz_deref(OZ_getCArg(0));
