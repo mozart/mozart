@@ -70,19 +70,9 @@ protected:
 public:
   USEHEAPMEMORY;
 
-  Bool gcIsMarked(void) {
-    return (gcField != 0);
-  }
-  void gcMark(Actor * fwd) {
-    gcField = fwd;
-  }
-  void ** gcGetMarkField(void) {
-    return (void **) &gcField;
-  }
-  Actor * gcGetFwd(void) {
-    Assert(gcIsMarked());
-    return gcField;
-  }
+  Bool gcIsMarked(void);
+  void gcMark(Actor * fwd);
+  Actor * gcGetFwd(void);
 
   Bool isCommitted() { return flags & Ac_Committed;     }
   Bool isAsk()       { return flags & Ac_Ask;           }
