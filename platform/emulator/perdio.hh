@@ -354,7 +354,6 @@ void initComponents();
 /* ************************************************************************ */
 /*  SECTION ::  provided to engine                                      */
 /* ************************************************************************ */
-void networkTimer();
 extern int tempTimeCtr;
 #define TIME_CTR_THRESHOLD 100
 
@@ -364,8 +363,15 @@ extern int tempTimeCtr;
 
 #define NOT_IMPLEMENTED   {warning("not implemented - perdio");Assert(0);}
 
+/* ************************************************************************ */
+/*  SECTION ::  provided to builtins                                                        */
+/* ************************************************************************ */
+
+void startDangelingProbe();
+
 /* __PERDIOHH */
 #endif 
+
 
 
 
