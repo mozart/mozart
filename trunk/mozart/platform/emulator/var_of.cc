@@ -108,8 +108,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         GenOFSVariable* termVar=tagged2GenOFSVar(term);
   
         // Get local/global flags:
-        Bool vLoc=(prop==OK && isLocalVariable());
-        Bool tLoc=(prop==OK && termVar->isLocalVariable());
+        Bool vLoc=(prop && isLocalVariable());
+        Bool tLoc=(prop && termVar->isLocalVariable());
   
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
@@ -197,8 +197,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
   
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        propagate(var, suspList, makeTaggedRef(nvRefPtr), pc_cv_unif);
-        termVar->propagate(term, termVar->suspList, makeTaggedRef(nvRefPtr), pc_cv_unif);
+	if (prop) {
+	  propagate(var, suspList, makeTaggedRef(nvRefPtr), pc_cv_unif);
+	  termVar->propagate(term, termVar->suspList, makeTaggedRef(nvRefPtr),
+			     pc_cv_unif);
+	}
 
         // Take care of linking suspensions
         if (vLoc && tLoc) {
