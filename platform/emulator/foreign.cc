@@ -1892,7 +1892,7 @@ void OZ_fail(char *format, ...)
 
 OZ_Term OZ_newPort(OZ_Term val)
 {
-  return makeTaggedConst(new Port(am.currentBoard, val));
+  return makeTaggedConst(new PortWithStream(am.currentBoard, val));
 }
 
 void OZ_send(OZ_Term port, OZ_Term val)
@@ -1900,11 +1900,5 @@ void OZ_send(OZ_Term port, OZ_Term val)
   port = deref(port);
   if (!isPort(port)) return;
 
-  LTuple *lt = new LTuple(val,am.currentUVarPrototype);
-
-  OZ_Term old=tagged2Port(port)->exchangeStream(lt->getTail());
-
-  if (OZ_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
-    OZ_fail("OZ_send failed\n");
-  }
+  (void) sendPort(port,val);
 }

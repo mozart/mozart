@@ -43,6 +43,10 @@
 #define inline
 #endif
 
+#ifdef PERDIO
+extern OwnerTable *ownerTable;
+#endif
+
 /****************************************************************************
  * MACROS
  ****************************************************************************/
@@ -55,8 +59,7 @@
  *               Forward Declarations
  ****************************************************************************/
 
-static void processUpdateStack (void);
-void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm);
+static void processUpdateStack(void);
 void performCopying(void);
 
 
@@ -1387,6 +1390,7 @@ void DynamicTable::gcRecurse()
 }
 
 
+
 void GenOFSVariable::gc(void)
 {
     GCMETHMSG("GenOFSVariable::gc");
@@ -1433,6 +1437,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     toTerm = makeTaggedNULL();
     return;
   }
+
 
   DEREF(auxTerm,auxTermPtr,auxTermTag);
 
@@ -1546,6 +1551,7 @@ void AM::gc(int msgLevel)
   setCurrent(currentBoard->gcBoard(),NO);
 
   GCPROCMSG("Predicate table");
+
   CodeArea::gc();
 
   aritytable.gc ();
@@ -1558,6 +1564,9 @@ void AM::gc(int msgLevel)
 
   suspendVarList=makeTaggedNULL(); /* no valid data */
 
+#ifdef PERDIO
+  gcOwnerTable();
+#endif
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
   gcTagged(dVarHandler,dVarHandler);
@@ -1606,6 +1615,10 @@ void AM::gc(int msgLevel)
   EXITCHECKSPACE;
 
   oldChain->deleteChunkChain();
+
+#ifdef PERDIO
+  gcBorrowTable();
+#endif
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
@@ -1984,13 +1997,31 @@ void ConstTerm::gcConstRecurse()
     }
 
   case Co_Port:
-    {
-      Port *p = (Port *) this;
-      p->home = p->home->gcBoard();
-      gcTagged(p->strm,p->strm);
-      break;
+    switch(((Tertiary *)this)->getTertType()) {
+    case Te_Local:
+      {
+        PortLocal *pl= (PortLocal*)this;
+        pl->setBoard((pl->getBoard())->gcBoard());
+        gcTagged(pl->strm,pl->strm);
+        break;
+      }
+    case Te_Manager:
+      {
+        PortManager *pm= (PortManager*)this;
+        gcTagged(pm->strm,pm->strm);
+        break;
+      }
+    case Te_Proxy:
+      {
+        PortProxy *pp = (PortProxy*)this;
+        pp->markAsLive();
+        break;
+      }
+    default:
+        Assert(0);
+        break;
     }
-
+    break;
   case Co_Space:
     {
       Space *s = (Space *) this;
@@ -2055,7 +2086,6 @@ void ConstTerm::gcConstRecurse()
   }
 }
 
-
 #define CheckLocal(CONST)                                       \
 {                                                               \
    Board *bb=(CONST)->getBoard();                               \
@@ -2096,10 +2126,37 @@ ConstTerm *ConstTerm::gcConstTerm()
     COUNT(cell);
     break;
 
-  case Co_Port:
-    CheckLocal((Port *) this);
-    sz = sizeof(Port);
-    COUNT(port);
+  case Co_Port:  /* TODO: what to count TODO: no need for local check?? */
+
+    switch(((Tertiary *)this)->getTertType()) {
+    case Te_Local:
+      {
+        PortLocal *pl=(PortLocal*)this;
+        CheckLocal((PortLocal *) this);
+        sz = sizeof(PortLocal);
+        COUNT(port);
+        break;
+      }
+    case Te_Manager:
+      {
+        PortManager *pm=(PortManager*)this;
+        sz = sizeof(PortManager);
+        COUNT(port);
+        break;
+      }
+    case Te_Proxy:
+      {
+        PortProxy *pp=(PortProxy*)this;
+        sz = sizeof(PortProxy);
+        COUNT(port);
+        break;
+      }
+    default:
+      {
+        Assert(0);
+        break;
+      }
+    }
     break;
 
   case Co_Space:

@@ -15,6 +15,8 @@
 #pragma interface
 #endif
 
+/* #include perdio.hh" TODO: why not */
+
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -532,11 +534,11 @@ enum TypeOfConst {
   Co_HeapChunk,
   Co_Thread,
 
-  Co_Abstraction,
+  Co_Abstraction,  /* 4 */
   Co_Builtin,
   Co_Cell,
   Co_Space,
-  Co_Port,
+  Co_Port,        /* 8 */
 
   /* chunks must stay together and the first one
    * must be Co_Object
@@ -546,9 +548,20 @@ enum TypeOfConst {
   Co_Object,
   Co_Chunk,
   Co_Array,
-  Co_Dictionary,
-  Dummy      // GCTAG
+  Co_Dictionary,    /* 12 */
+  Dummy           // GCTAG
+  /* Co_PRec         14 - reserve for future use */
+  /* Co_PPort        15 - could optimize P[port] */
 };
+
+enum TertType {
+  Te_Local = 0,   // 0000
+  Te_Manager = 1, // 0001
+  Te_Proxy = 2,   // 0010
+                  // 0011 - 0111 - free for future use
+  Te_Mark= 8      // 1000 as gc-bit (marking live protocoll objects)
+};
+
 
 
 class ConstTerm {
@@ -562,8 +575,6 @@ public:
   int32 *getGCField() { return (int32*) &ctu.tagged; }
 public:
   USEHEAPMEMORY;
-  ConstTerm();
-  ConstTerm(const ConstTerm& ct);
 
   ConstTerm *gcConstTerm(void);
   void gcConstRecurse(void);
@@ -576,6 +587,7 @@ public:
   int getArity();
   void *getPtr()        { return isNullPtr(ctu.tagged) ? NULL : tagValueOf(ctu.tagged); }
   void setPtr(void *p)  { setTagged(getType(),p); }
+  TaggedRef *getRef(){return &ctu.tagged;}
 
   OZPRINT;
   OZPRINTLONG;
@@ -593,13 +605,63 @@ class ConstTermWithHome: public ConstTerm {
 protected:
   Board *home;
 public:
-  ConstTermWithHome();
-  ~ConstTermWithHome();
-  ConstTermWithHome(ConstTermWithHome&);
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t), home(b) {}
   Board *getBoard();
 };
 
+
+#define NO_ENTRY ((~0) << tagSize)
+#define NO_TYPE Te_Local
+#define MAX_INT_SIZE_WITH_TAG  (1<<(31-tagSize))
+
+typedef unsigned int u32;
+
+inline TertType basicGetTertType(u32 t) {return (TertType)(t&tagMask);}
+inline u32 basicSetTertType(u32 x,TertType t) {return ((x<<tagSize) & t);}
+inline u32 basicRemTertType(u32 x) {return ((x & (~tagMask))>>tagSize);}
+
+
+class Tertiary: public ConstTerm {
+  u32 ownerOrBorrow;
+public:
+  Tertiary(TypeOfConst s,TertType t) : ConstTerm(s) {
+    ownerOrBorrow=basicSetTertType(u32 NO_ENTRY,NO_TYPE);}
+
+  void setTertType(TertType t) {
+    ownerOrBorrow=basicSetTertType(ownerOrBorrow,t);}
+
+  TertType getTertType(){return (TertType) basicGetTertType(ownerOrBorrow);}
+
+  void setIndex(int i) {
+    TertType oldtype = basicGetTertType(ownerOrBorrow);
+    ownerOrBorrow = basicSetTertType(((u32) i) , oldtype);
+}
+
+  int getIndex() {return (int) basicRemTertType(ownerOrBorrow);}
+
+  void markAsLive() {setTertType(TertType (getTertType()|Te_Mark));}
+
+  void removeMark() {setTertType(TertType (getTertType()&(~Te_Mark)));}
+
+  Bool isMarked() {return getTertType()&Te_Mark;}
+
+  Bool checkTertiary(TypeOfConst s,TertType t){
+    return (s==getType() & t==getTertType());}
+
+  Board *getBoard();
+};
+
+inline
+Bool isLocal(Tertiary *t) {
+   return(Bool (!(t->getTertType() & ~Te_Mark))); }
+
+inline
+Bool isManager(Tertiary *t) {
+   return(Bool (t->getTertType() & Te_Manager)); }
+
+inline
+Bool isProxy(Tertiary *t) {
+   return(Bool (t->getTertType() & Te_Proxy)); }
 
 /*===================================================================
  * HeapChunk
@@ -619,8 +681,6 @@ private:
     return (char *) alignedMalloc(size, sizeof(double));
   }
 public:
-  HeapChunk();
-  ~HeapChunk();
   HeapChunk(HeapChunk&);
   HeapChunk(int size)
   : ConstTerm(Co_HeapChunk), chunk_size(size), chunk_data(allocate(size)) {
@@ -1292,9 +1352,6 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef value;
 public:
-  SChunk();
-  ~SChunk();
-  SChunk(SChunk&);
   SChunk(Board *b,TaggedRef v) : ConstTerm(Co_Chunk), value(v) {
     Assert(isRecord(v));
     Assert(b);
@@ -1344,9 +1401,7 @@ private:
   TaggedRef *getArgs() { return (TaggedRef*) getPtr(); }
 
 public:
-  OzArray();
-  ~OzArray();
-  OzArray(OzArray&);
+
   OzArray(Board *b, int low, int high, TaggedRef initvalue) : ConstTermWithHome(b,Co_Array)
   {
     Assert(isRef(initvalue) || !isAnyVar(initvalue));
@@ -1501,8 +1556,6 @@ private:
   RefsArray gRegs;
   PrTabEntry *pred;
 public:
-  Abstraction();
-  ~Abstraction();
   Abstraction(Abstraction&);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
   : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd)
@@ -1626,9 +1679,7 @@ private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend
 public:
-  Builtin();
-  ~Builtin();
-  Builtin(Builtin&);
+
   Builtin(BuiltinTabEntry *fn, TaggedRef handler)
     : suspHandler(handler), fun(fn), ConstTerm(Co_Builtin)
     {}
@@ -1673,9 +1724,6 @@ friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
 public:
-  Cell();
-  ~Cell();
-  Cell(Cell&);
   Cell(Board *b,TaggedRef v) : ConstTermWithHome(b, Co_Cell), val(v) {}
 
   OZPRINT;
@@ -1706,50 +1754,72 @@ Cell *tagged2Cell(TaggedRef term)
  * Ports
  *=================================================================== */
 
-class Port: public ConstTermWithHome {
+class Port: public Tertiary{
+friend void ConstTerm::gcConstRecurse(void);
+public:
+
+  Board *getBoard();
+  Port(TertType tt):Tertiary(Co_Port,tt){}
+};
+
+class PortWithStream: public Port {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef strm;
-  NetAddress *addr;
 public:
-  Port();
-  ~Port();
-  Port(Port&);
-
-  Port(Board *b,TaggedRef s) : ConstTermWithHome(b, Co_Port), strm(s), addr(0) {}
-  Port(NetAddress *na);
-
   TaggedRef exchangeStream(TaggedRef newStream)
   {
     TaggedRef ret = strm;
     strm = newStream;
-    return ret;
-  }
-
-  TaggedRef getStream() { return strm; }
-
-  TaggedRef *getStreamRef() { return &strm; }
-
-  NetAddress *getAddress() { return addr; }
-  void setAddress(NetAddress *na) { addr=na; }
-
-  OZPRINT;
-  OZPRINTLONG;
+    return ret;   }
+  PortWithStream(Board *b, TaggedRef s) : Port(Te_Local)  {
+    setPtr(b);
+    strm = s;}
 };
 
+class PortManager: public PortWithStream {
+friend void ConstTerm::gcConstRecurse(void);
+public:
+  PortLocal *localize();
+  OZPRINTLONG;
+  OZPRINT;
+  PortManager() : PortWithStream(0,0) { Assert(0); };
+};
+
+/* ----------------------------------------------------
+   PORTS    local               manager           proxy
+lst word:   Co_Port:board       Co_Port:_         Co_Port:_
+2nd word:   Te_Local:NO_ENTRY   Te_Manager:owner  Te_Proxy:borrow
+3rd word    <<stream>>          <<stream>>        _
+---------------------------------------------------- */
+
+class PortLocal: public PortWithStream {
+friend void ConstTerm::gcConstRecurse(void);
+public:
+  void setBoard(Board *b) {setPtr(b);}
+  PortManager *globalize();
+  Board *getBoard() {return (Board *) getPtr();}
+  OZPRINTLONG;
+  OZPRINT;
+  PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
+};
+
+class PortProxy: public Port {
+friend void ConstTerm::gcConstRecurse(void);
+public:
+  PortProxy(int i): Port(Te_Proxy){setIndex(i);}
+  OZPRINTLONG;
+  OZPRINT;
+};
 
 inline Bool isPort(TaggedRef term)
-{
-  return isConst(term) && tagged2Const(term)->getType() == Co_Port;
-}
+{ return isConst(term) && tagged2Const(term)->getType() == Co_Port;}
 
-inline
-Port *tagged2Port(TaggedRef term)
-{
-  Assert(isPort(term));
-  return (Port *) tagged2Const(term);
-}
+inline PortWithStream *tagged2PortWithStream(TaggedRef term)
+{ return (PortWithStream *) tagged2Const(term);}
 
+inline Port *tagged2Port(TaggedRef term)
+{ return (Port*) tagged2Const(term);}
 
 /*===================================================================
  * Space
@@ -1765,9 +1835,6 @@ private:
   // - 1 (the space has been merged)
   // or a valid pointer
 public:
-  Space();
-  ~Space();
-  Space(Space&);
   Space(Board *h, Board *s) : ConstTermWithHome(h,Co_Space), solve(s) {};
 
   OZPRINT;
