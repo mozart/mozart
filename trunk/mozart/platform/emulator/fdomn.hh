@@ -39,7 +39,7 @@ const int fd_sup = OZ_smallIntMax() - 1;
 const int fd_full_size = fd_sup + 1;
 
 // TMUELLER: MAXFDBIARGS twice
-#define MAXFDBIARGS 100000 // maximum number of arguments of fd built-ins
+#define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
 
 struct i_arr_type {int left; int right;};
   
