@@ -70,7 +70,7 @@ class CodeAreaList {
 };
 
 #ifdef THREADED
-  typedef unsigned int32 AdressOpcode;
+  typedef int32 AdressOpcode;
 #else
   typedef Opcode AdressOpcode;
 #endif
@@ -114,7 +114,7 @@ public:
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
   static Bool load(CompStream *fd, ProgramCounter &newPC);
 
-  static unsigned int getWord(ProgramCounter PC)  { return (*PC);}
+  static ByteCode getWord(ProgramCounter PC)  { return (*PC);}
 
 #ifdef THREADED
   static void **globalInstrTable;
