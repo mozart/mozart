@@ -81,7 +81,7 @@ local
       class ChooseImage from Image
 	 feat Tag
 	 meth init(parent:Parent)
-	    self.Tag = {Tk.server tkGet($)}
+	    self.Tag = {Tk.getId}
 	    Image,init(parent: Parent
 		       tcl:    o({ChooseShape ImageCenter ImageCenter
 				  ImageScale}
