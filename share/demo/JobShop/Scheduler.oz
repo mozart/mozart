@@ -24,7 +24,6 @@ functor
 
 import
    Search
-   FD
    Tk
    TkTools
    Explorer
