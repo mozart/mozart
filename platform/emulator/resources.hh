@@ -39,7 +39,12 @@
 #define GC_FLAG         1
 #define GC_VERBOSITY    1
 
-#define STACKMAXSIZE    10000
+#define TASKFRAMESIZE   3
+
+#define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
+
+#define STACKMAXSIZE  8192 /* tasks */
+#define STACKMINSIZE    3    /* tasks */
 
 #define HEAPMAXSIZE          1048576 /* kByte   */
 #define HEAPMINSIZE             1024 /* kByte   */
@@ -48,20 +53,12 @@
 #define INITIALHEAPTHRESHOLD    2048 /* kByte   */
 #define HEAPBLOCKSIZE        1048576 /* byte    */
 
-#define TASK_STACK_SIZE         10
+
+
 #define THREAD_QUEUE_SIZE       256
 #define NUM_TOPLEVEL_VARS       10000
 
 #define NumberOfXRegisters      10000
-
-#define NameOfNil       "nil"
-#define NameOfVoid      "_"
-#define NameOfCons      "|"
-#define NameOfPair      "#"
-#define NameOfBool      "bool"
-#define NameOfSup       "sup"
-#define NameOfCompl     "compl"
-#define NameOfUnknown   "unknown"
 
 #define OzCompiler      "oz.compiler"
 

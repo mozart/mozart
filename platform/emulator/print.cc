@@ -393,11 +393,10 @@ PRINT(LTuple)
   if (isLTuple(tag1) ) {
     stream << "(";
     tagged2Stream(headd,stream, DEC(depth),offset);
-    stream << ")"
-           << NameOfCons;
+    stream << ")|";
   } else {
     tagged2Stream(getHead(),stream, DEC(depth),offset);
-    stream << NameOfCons;
+    stream << '|';
   }
   tagged2Stream(getTail(),stream, DEC(depth), offset);
 }

@@ -263,7 +263,7 @@ RunnableThreadBody* AM::allocateBody()
   if (body) {
     threadBodyFreeList = threadBodyFreeList->next;
   } else {
-    body = new RunnableThreadBody(ozconf.taskStackSize);
+    body = new RunnableThreadBody(ozconf.stackMinSize);
   }
 
   body->taskStack.makeEmpty();

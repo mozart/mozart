@@ -21,7 +21,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomEntailed, AtomSuspended, AtomBlocked,
   AtomEmpty, AtomUpper, AtomLower, AtomDigit,
   AtomCharSpace, AtomPunct, AtomOther,
-  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
+  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomNbSusps,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
@@ -29,13 +29,13 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameUnit,
   AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
   // Atoms for System.get and System.set
-  AtomActive, AtomAtoms, AtomBuiltins, AtomCellHack, AtomCommitted,
+  AtomActive, AtomAtoms, AtomBuiltins, AtomCommitted,
   AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth,
   AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh,
   AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad,
   AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate,
   AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension,
-  AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread,
+  AtomStopOnToplevelFailure, AtomSystem, AtomThread,
   AtomTotal,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio,
@@ -47,14 +47,14 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
 // Some often used constants
 void initLiterals()
 {
-  AtomNil   = makeTaggedAtom(NameOfNil);
-  AtomCons  = makeTaggedAtom(NameOfCons);
-  AtomPair  = makeTaggedAtom(NameOfPair);
-  AtomVoid  = makeTaggedAtom(NameOfVoid);
+  AtomNil   = makeTaggedAtom("nil");
+  AtomCons  = makeTaggedAtom("|");
+  AtomPair  = makeTaggedAtom("#");
+  AtomVoid  = makeTaggedAtom("_");
 
-  AtomBool  = makeTaggedAtom(NameOfBool);
-  AtomSup   = makeTaggedAtom(NameOfSup);
-  AtomCompl = makeTaggedAtom(NameOfCompl);
+  AtomBool  = makeTaggedAtom("bool");
+  AtomSup   = makeTaggedAtom("sup");
+  AtomCompl = makeTaggedAtom("compl");
 
   AtomEmpty     = makeTaggedAtom("");
   AtomUpper     = makeTaggedAtom("upper");
@@ -96,7 +96,6 @@ void initLiterals()
   AtomActive                = makeTaggedAtom("active");
   AtomAtoms                 = makeTaggedAtom("atoms");
   AtomBuiltins              = makeTaggedAtom("builtins");
-  AtomCellHack              = makeTaggedAtom("cellHack");
   AtomCommitted             = makeTaggedAtom("committed");
   AtomCloned                = makeTaggedAtom("cloned");
   AtomCode                  = makeTaggedAtom("code");
@@ -129,7 +128,6 @@ void initLiterals()
   AtomRunnable              = makeTaggedAtom("runnable");
   AtomShowSuspension        = makeTaggedAtom("showSuspension");
   // AtomSize
-  AtomStackMaxSize          = makeTaggedAtom("stackMaxSize");
   AtomStopOnToplevelFailure = makeTaggedAtom("stopOnToplevelFailure");
   // AtomSucceeded
   AtomSystem                = makeTaggedAtom("system");
