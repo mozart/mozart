@@ -68,9 +68,9 @@ local
          OrientVar = {New Tk.variable tkInit({Dictionary.get O orientation})}
 
          Size      = {New TkTools.textframe tkInit(parent: self
+                                                   'class':'NumberEntry'
                                                    text:   'Size')}
          SizeEntry = {New Tk.entry tkInit(parent: Size.inner
-                                          back:   EntryColor
                                           width:  LargeEntryWidth)}
       in
          {SizeEntry tk(insert 0 {Dictionary.get O size})}
@@ -209,12 +209,11 @@ local
                                   buttons: ['Okay'#Okay 'Cancel'#tkClose])
             Recomp = {New TkTools.textframe tkInit(parent: self
                                                    text:   'Recomputation')}
-            Left   = {New Tk.frame tkInit(parent:Recomp.inner)}
+            Left   = {New Tk.frame tkInit(parent:Recomp.inner
+                                         'class':'NumberEntry')}
             Search = {New Tk.entry tkInit(parent:Left
-                                          back:  EntryColor
                                           width: SmallEntryWidth)}
             Info   = {New Tk.entry tkInit(parent:Left
-                                          back:  EntryColor
                                           width: SmallEntryWidth)}
             FailedVar = {New Tk.variable tkInit}
             Right  = {New Tk.frame tkInit(parent:Recomp.inner)}
@@ -242,7 +241,8 @@ local
                        grid(Info row:1 column:1 sticky:w)
                        grid({New Tk.checkbutton
                              tkInit(parent:Left
-                                    text:'Full Recomputation in Failed Subtrees'
+                                    text:
+                                       'Full Recomputation in Failed Subtrees'
                                     anchor:w
                                     var:FailedVar)}
                             row:2 column:0 columnspan:2 sticky:we)
