@@ -1,8 +1,6 @@
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % p.mix.local "|Em">
-<!ELEMENT Em - - (#PCDATA)>
 <!ENTITY % proglang.values.local "|lambda">
 
 <!-- Include Files -->
