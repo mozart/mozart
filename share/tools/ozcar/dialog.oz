@@ -15,14 +15,14 @@ local
 	 T = {New Tk.label tkInit(parent: self
 				  fg:     SelectedBackground
 				  font:   HelpTitleFont
-				  text:   'This is ' # IconName)}
+				  text:   'Oz Debugger')}
 
 	 V = {New Tk.label tkInit(parent: self
-				  text:   'Last updated on ' # Version)}
+				  text:   'Last updated on ' # Version # '\n' #
+				          'Current platform is ' # Platform)}
 
 	 A = {New Tk.label tkInit(parent: self
-				  text:   NameOfBenni # '\n' #
-				          '(' # EmailOfBenni # ')')}
+				  text:   NameOfBenni # '\n' # EmailOfBenni)}
       in
          {Tk.send pack(T V A side:top expand:1)}
          AboutDialog,tkPack

@@ -12,9 +12,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'Jun 22 1997'
-TitleName              = 'Oz Debugger Interface'
+Version                = 'Jul 6 1997'
+TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
+
+Platform               = local
+			    X#Y = {System.get platform}
+			 in
+			    {VS2A X#'-'#Y}
+			 end
 
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
@@ -228,7 +234,7 @@ DeadThreadText
 ProcColor
 BuiltinColor
 
-case Tk.isColor then
+case Tk.isColor andthen Platform \= 'win32-i486' then
    %% main window
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
