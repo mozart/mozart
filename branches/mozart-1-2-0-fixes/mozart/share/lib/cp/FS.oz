@@ -341,8 +341,10 @@ define
 	 SL = {VectorToList Vs}
       in
 	 {Space.waitStable}
-	 {Proc}
-	 {Space.waitStable}
+	 if Proc\=unit then
+	    {Proc}
+	    {Space.waitStable}
+	 end
 	 local
 	    SortedSL = {Order {Filter SL FCond}}
 	 in
@@ -380,7 +382,7 @@ define
 	       Element = {ElementFun {CondSelect K element element}
 			  Select Weights}
 	       RRobin  = {RRobinFun {CondSelect K rrobin false}}
-	       Proc    = {CondSelect K procedure proc {$} skip end}
+	       Proc    = {CondSelect K procedure unit}
 	    in
 	       {FSDistGeneric L Order Filter Element RRobin Select Proc}
 	    else
