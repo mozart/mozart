@@ -361,7 +361,7 @@ emulator.dll: $(PRGDEP)
 	--output-lib libemulator.a --dllname $@ $(ALLOBJS) && \
 	(echo 'LIBRARY emulator.dll'; \
 	 tail +2 emulator0.def | sed 's/ @.*//g') > emulator.def && \
-	tail +3 emulator.def | \
+	tail +3 emulator.def | tr -d '\015' | \
 	awk '{ print "++'\''"$$1"'\''.'\''emulator.dll'\''" }' \
 	> emulator.cmd && \
 	$(DLLWRAP) --target i386-mingw32 \

@@ -16,8 +16,8 @@ SUBDIRS		= ozflex ozbison
 RM		= @RM@ -f
 LNS             = @LN_S@
 OZTOOL		= @OZTOOL@
-DYNLD		= $(OZTOOL) ld
-CXX		= $(OZTOOL) c++
+DYNLD		= $(OZTOOL) ld $(WINOZTOOLLDFLAGS)
+CXX		= $(OZTOOL) c++ $(WINOZTOOLCXXFLAGS)
 CPPFLAGS	= -I$(SRCDIR) -I. -I$(BUILDTOP)/platform/emulator -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 CXXFLAGS	= @CXXFLAGS@ $(CFLAGS)
 

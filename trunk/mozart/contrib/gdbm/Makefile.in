@@ -20,8 +20,6 @@ CXXFLAGS	= @CXXFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 
-WINDLLDIR	= @WINDLLDIR@
-
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
@@ -36,10 +34,7 @@ CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 all:		$(TARGETS)
-install:	$(NEWCACHEDIR) $(NEW_TARGETS) @INSTALLWINDLLS@
-
-installwindlls: $(PLATFORMDIR)
-	$(INSTALL) $(WINDLLDIR)/gdbm.dll $(PLATFORMDIR)
+install:	$(NEWCACHEDIR) $(NEW_TARGETS)
 
 $(LIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
@@ -60,10 +55,10 @@ gdbm.ozf: gdbm.oz
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 gdbm.so-$(PLATFORM): gdbm.o
-	$(OZTOOL) ld -o $@ $< $(LDFLAGS) $(LIBS)
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 gdbm.o: gdbm.cc
-	$(OZTOOL) c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
+	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
 	-$(RM) *~ *.bak *.o *.so-* *.ozf
