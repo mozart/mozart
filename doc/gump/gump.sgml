@@ -37,7 +37,7 @@
 
 ]>
 
-<Book proglang="gump">
+<Book proglang=gump>
   <Front>
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.intro">
@@ -51,7 +51,7 @@
     <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
-    <Meta name=status value="revised">
+    <Meta name=status value=revised>
     <Title/Gump&emdash;A Front-End Generator for Oz/
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Comic>
