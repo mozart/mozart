@@ -43,14 +43,9 @@ EMACS           = emacs
 
 SUBDIRS         = @SUBDIRS@
 
-.PHONY: all bootstrap check install clean veryclean distclean depend
-
+.PHONY: all quick bootstrap check install clean veryclean distclean depend
 
 bootstrap all:: $(CED)
-
-check::
-
-depend::
 
 Makefile: Makefile.in config.status
         ./config.status
@@ -68,20 +63,20 @@ $(LIBFILES): $(SHDOCDIR)/% : %
 
 ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
         $(EMACS) -q -batch -l ced.el
+
+all quick bootstrap check install clean veryclean distclean depend::
+        dirs="$(SUBDIRS)"; \
+        for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
+
 clean::
         -rm -f *~
 
-veryclean:: clean
+veryclean::
+        -rm -f *~
         -rm -f $(CED) xref.db
 
-distclean:: veryclean
-        -rm -f Makefile ced.el catalog config.log config.status config.cache
-
-all quick bootstrap clean veryclean depend distclean check install::
-        dirs="$(SUBDIRS)"; \
-        for i in $$dirs; do \
-          if (cd $$i && $(MAKE) $@); \
-          then true; \
-          else exit 1; \
-          fi; \
-        done
+distclean::
+        -rm -f *~
+        -rm -f $(CED) xref.db
+        -rm -f ced.el catalog
+        -rm -f Makefile Makefile.common config.log config.status config.cache
