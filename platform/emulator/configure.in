@@ -66,6 +66,7 @@ if test "x$enable_wincross" = xyes; then
 	RANLIB="$WINCROSS/bin/i386-cygwin32-ranlib"
 	LDFLAGS="$LDFLAGS -L$WINCROSS/lib -L../winlibs"
 	platform="win32-i486"
+	PROGRAMNAME="ozemulator.exe"
 	AC_DEFINE(GNUWIN32)
 	AC_DEFINE(WINDOWS)
 else
@@ -133,10 +134,13 @@ dnl *****************************************************************
 
 if test "x$platform" = x
 then
-  platform=`$PLATFORMSCRIPT`
+    platform=`$PLATFORMSCRIPT`
 fi
 
-PROGRAMNAME=oz.emulator.bin
+if test "x$PROGRAMNAME" = x
+then
+    PROGRAMNAME=oz.emulator.bin
+fi
 TARGETS="$PROGRAMNAME"
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
