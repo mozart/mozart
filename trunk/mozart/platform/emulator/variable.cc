@@ -26,21 +26,6 @@
 #include "variable.hh"
 #include "genvar.hh"
 
-void addSuspAnyVar(TaggedRefPtr v, Thread *thr)
-{
-  SVariable * sv;
-  TaggedRef t = *v;
-  if (isSVar(t)) { 
-    addSuspSVar(t,thr);
-  } else if (isCVar(t)) {
-    addSuspCVar(t,thr);
-  } else {
-    sv = new SVariable(tagged2VarHome(t));
-    *v = makeTaggedSVar(sv);
-    addSuspSVar(*v,thr);
-  }
-}
-
 /*
  * Class VariableNamer: assign names to variables
  */
