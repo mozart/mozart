@@ -1063,6 +1063,7 @@ void AM::gCollect(int msgLevel) {
   // that still have stuff to do
 
   gCollectWeakDictionariesPreserve();
+  cacStack.gCollectRecurse();   // recurse on weak dicts
 
   // now everything that is locally not garbage
   // has been marked and copied - whatever remains in
