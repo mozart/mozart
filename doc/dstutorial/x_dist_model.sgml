@@ -328,6 +328,14 @@ If many objects of a given class
 exist on a site,
 then the class only exists there once.
 
+<P>Each instance of all the above (except atoms) is globally unique.
+For example, if the same source-code
+definition of a procedure is run more than once, then it will
+create a different procedure each time around.
+This is part of the Oz language semantics;
+one way to think of it is that a new Oz name is created
+for every procedure instance.
+
 <ITEM> <EM>Object-records</EM>:
 An object is a composite entity consisting
 of an object-record that references
@@ -469,6 +477,7 @@ an entity is no longer referenced.
 Mozart implements an efficient distributed garbage collection
 algorithm that reclaims all unused entities
 except those that form a cycle of references
+that exists
 on at least two different owner sites.
 For example, if two sites each own an object
 that references the other, then they will
