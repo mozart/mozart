@@ -1,30 +1,26 @@
 define(instruction,
-	`ifelse(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),1,oneReg(TOUPPER($1)),
-		eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),2,twoRegs(TOUPPER($1)),
-		&& TOUPPER($1)`'LBL`,')
+	`ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
+		numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
+		&& TOUPPER($1)LBL`,')
 ')
 
 
 define(oneReg,
-	`&& $1X`'LBL`,'
-	 && $1Y`'LBL`,'
-	 && $1G`'LBL`,'
+	`&& $1XLBL`,'
+	 && $1YLBL`,'
+	 && $1GLBL`,'
 ')
 
 define(twoRegs,
-	`&& $1XX`'LBL`,'
-	 && $1XY`'LBL`,'
-	 && $1XG`'LBL`,'
-	 && $1YX`'LBL`,'
-	 && $1YY`'LBL`,'
-	 && $1YG`'LBL`,'
-	 && $1GX`'LBL`,'
-	 && $1GY`'LBL`,'
-	 && $1GG`'LBL`,'
-')
-
-define(numOfRegs,
-	`ifelse($1,Register,1,0)
+	`&& $1XXLBL`,'
+	 && $1XYLBL`,'
+	 && $1XGLBL`,'
+	 && $1YXLBL`,'
+	 && $1YYLBL`,'
+	 && $1YGLBL`,'
+	 && $1GXLBL`,'
+	 && $1GYLBL`,'
+	 && $1GGLBL`,'
 ')
 
 
