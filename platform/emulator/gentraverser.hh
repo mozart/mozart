@@ -320,6 +320,7 @@ public:
 
   //
   int rememberTerm(OZ_Term l) {
+    Assert(!oz_isVariable(l));
     Assert(!oz_isRef(l));
     Assert(findTerm(l) == -1);
     int index = getSize();      // meets our needs...
@@ -327,6 +328,7 @@ public:
     return (index);
   }
   int findTerm(OZ_Term l) {
+    Assert(!oz_isVariable(l));
     Assert(!oz_isRef(l));
     void *ret = htFind((intlong) l);
     return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));

@@ -159,11 +159,20 @@ public:
   void mkTertiary(Tertiary *t){
     type = PO_Tert; setTert(t); flags=PO_NONE; }
 
-  void mkRef(TaggedRef v,unsigned short f){
-    type=PO_Ref; u.ref=v; flags=f; }
-
-  void mkRef(TaggedRef v){
-    type=PO_Ref; u.ref=v; flags=PO_NONE; }
+  //
+  // 'v' is an immediate value, or a reference to a variable.
+  // However, a variable can be bound later (so a ref chain can still
+  // emerge);
+  void mkRef(TaggedRef v, unsigned short f) {
+    Assert((!oz_isRef(v) && !oz_isVariable(v)) ||
+           (oz_isRef(v) && oz_isVariable(*tagged2Ref(v))));
+    type=PO_Ref; u.ref=v; flags=f;
+  }
+  void mkRef(TaggedRef v) {
+    Assert((!oz_isRef(v) && !oz_isVariable(v)) ||
+           (oz_isRef(v) && oz_isVariable(*tagged2Ref(v))));
+    type=PO_Ref; u.ref=v; flags=PO_NONE;
+  }
 
   void mkVar(TaggedRef v,unsigned short f){
     type=PO_Var; u.ref=v; flags=f; }

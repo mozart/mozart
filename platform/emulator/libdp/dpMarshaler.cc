@@ -394,6 +394,9 @@ void DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
     if (marshalVariable(cvarTerm, bs)) {
       rememberVarNode(this, bs, cvarTerm);
     } else {
+      // kost@ : this does not work currently: when a variable is
+      // bound, its 'ref' owner entry will never be found.
+      OZ_warning("marshaling a variable as a resource!");
       processNoGood(makeTaggedRef(cvarTerm), OK);
       rememberVarNode(this, bs, cvarTerm);
     }

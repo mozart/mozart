@@ -55,6 +55,7 @@ void GTIndexTable::gCollectGTIT()
       }
 #endif
       oz_gCollectTerm(t, t);
+      Assert(!oz_isVariable(t));
     }
     //
     n = getNext(n);
