@@ -42,8 +42,9 @@ in
       attr
 	 ReadLoopThread
 
-	 currentThread : undef
-	 currentStack  : undef
+	 currentThread : unit
+	 currentStack  : unit
+
 	 SkippedProcs  : nil
 	 SkippedThread : nil
 	 Breakpoint    : false
@@ -51,7 +52,7 @@ in
 	 SwitchSync    : _
 
       meth init
-	 self.ThreadDic = {Dnew}
+	 self.ThreadDic = {Dictionary.new}
 	 ThreadManager,reinit
       end
 
@@ -69,7 +70,7 @@ in
       meth checkMe
 	 T = @currentThread
       in
-	 case T == undef then
+	 case T == unit then
 	    Gui,doStatus('There is no thread selected')
 	 else
 	    I = {Thread.id T}
@@ -131,7 +132,8 @@ in
 		  {Dbg.trace T false}
 		  {Dbg.stepmode T false}
 		  {Thread.resume T}
-		  Gui,status(IgnoreNoFileStep)
+		  Gui,status('Ignoring new thread as there\'s' #
+			     ' no file information available.')
 
 	       else
 		  {OzcarMessage WaitForThread}
@@ -163,7 +165,7 @@ in
 	       Gui,markNode(I runnable) % thread is not running anymore
 	       Gui,markStack(active)    % stack view has up-to-date content
 	       case T == @currentThread then
-		  Stack = {Dget self.ThreadDic I}
+		  Stack = {Dictionary.get self.ThreadDic I}
 	       in
 		  {Stack exit(M)}
 		  {Emacs bar(file:{CondSelect M file nofile}
@@ -182,7 +184,7 @@ in
 	    E = ThreadManager,Exists(I $)
 	 in
 	    case E then
-	       Stack = {Dget self.ThreadDic I}
+	       Stack = {Dictionary.get self.ThreadDic I}
 	    in
 	       Gui,status('Thread #' # I # ' has reached a breakpoint') % #
 			  %' or woke up another thread')
@@ -236,7 +238,7 @@ in
 		  case ThreadManager,Exists(I $) then
 		     ThreadManager,blocked(thr:T id:I)
 		  else
-		     {OzcarError UnknownSuspThread}
+		     {OzcarError 'Unknown suspending thread'}
 		  end
 	       end
 	    end
@@ -255,14 +257,14 @@ in
 		  Gui,markNode(I running)
 	       end
 	    else
-	       {OzcarError UnknownWokenThread}
+	       {OzcarError 'Unknown woken thread'}
 	    end
 
 	 [] exception(thr:T exc:X) then
 	    I = {Thread.id T}
 	 in
 	    case ThreadManager,Exists(I $) then
-	       {{Dget self.ThreadDic I} printException(X)}
+	       {{Dictionary.get self.ThreadDic I} printException(X)}
 	    else
 	       thread
 		  {OzcarMessage 'exception of unknown thread -- waiting...'}
@@ -270,7 +272,7 @@ in
 		  case ThreadManager,Exists(I $) then
 		     {OzcarMessage 'ok, got it -- printException'}
 		     {Delay 140}
-		     {{Dget self.ThreadDic I} printException(X)}
+		     {{Dictionary.get self.ThreadDic I} printException(X)}
 		  else
 		     {OzcarMessage 'still not known -- adding...'}
 		     ThreadManager,add(T I exc(X) false)
@@ -282,7 +284,7 @@ in
 	    I = {Thread.id T}
 	 in
 	    case ThreadManager,Exists(I $) then
-	       Stack = {Dget self.ThreadDic I}
+	       Stack = {Dictionary.get self.ThreadDic I}
 	    in
 	       {Stack rebuild(true)}
 	    else
@@ -290,18 +292,18 @@ in
 	    end
 
 	 else
-	    {OzcarMessage UnknownMessage}
+	    {OzcarError 'Unknown message on stream'}
 	 end
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth Exists(I $)
-	 {Dmember self.ThreadDic I}
+	 {Dictionary.member self.ThreadDic I}
       end
 
       meth EmptyTree($)
-	 {Dkeys self.ThreadDic} == nil
+	 {Dictionary.keys self.ThreadDic} == nil
       end
 
       meth removeSkippedProcs(I)
@@ -312,7 +314,7 @@ in
       meth add(T I Q R)
 	 Stack = {New StackManager init(thr:T id:I)}
       in
-	 {Dput self.ThreadDic I Stack}
+	 {Dictionary.put self.ThreadDic I Stack}
 	 case R then
 	    {Stack rebuild(true)}
 	    Breakpoint <- true
@@ -344,10 +346,10 @@ in
 	 ThreadManager,removeSkippedProcs(I)
 	 case Mode == kill then
 	    Gui,killNode(I Next)
-	    {Dremove self.ThreadDic I}
+	    {Dictionary.remove self.ThreadDic I}
 	    case ThreadManager,EmptyTree($) then
-	       currentThread <- undef
-	       currentStack  <- undef
+	       currentThread <- unit
+	       currentStack  <- unit
 	       {Emacs removeBar}
 	       Gui,selectNode(0)
 	       Gui,clearStack
@@ -362,7 +364,7 @@ in
 	    case Mode == kill then
 	       case ThreadManager,EmptyTree($) then skip else
 		  case Select then
-		     currentThread <- undef % to ignore Gui actions temporarily
+		     currentThread <- unit % to ignore Gui actions temporarily
 		     ThreadManager,switch(Next)
 		     Gui,status(', new selected thread is #' # Next append)
 		  else skip end
@@ -380,14 +382,14 @@ in
 	    {Dbg.trace T false}
 	    {Thread.terminate T}
 	    case Select then
-	       Gui,doStatus(TerminateMessage # I # TerminateMessage2)
+	       Gui,doStatus('Thread #' # I # ' has been terminated')
 	    else skip end
 	    ThreadManager,remove(T I kill Select)
 	 end
       end
 
       meth killAll($)
-	 E = {Ditems self.ThreadDic}
+	 E = {Dictionary.items self.ThreadDic}
 	 DeleteCount = {Length E}
       in
 	 {ForAll E
@@ -406,14 +408,14 @@ in
 	    {Dbg.trace T false}      %% thread is not traced anymore
 	    {Dbg.stepmode T false}   %% no step mode, run as you like!
 	    {Thread.resume T}        %% run, run to freedom!! :-)
-	    Gui,doStatus(ForgetMessage # I # ForgetMessage2)
+	    Gui,doStatus('Thread #' # I # ' is not traced anymore')
 	    ThreadManager,remove(T I kill)
 	 end
       end
 
       meth entry(thr: T ...)=Frame
 	 I     = {Thread.id T}
-	 Stack = {Dget self.ThreadDic I}
+	 Stack = {Dictionary.get self.ThreadDic I}
       in
 	 Gui,markNode(I runnable) % thread is not running anymore
 	 Gui,markStack(active)    % stack view has up-to-date content
@@ -442,13 +444,14 @@ in
       meth rebuildCurrentStack
 	 Stack = @currentStack
       in
-	 case Stack == undef then
+	 case Stack == unit then
 	    Gui,doStatus(FirstSelectThread)
 	 else
-	    Gui,doStatus(RebuildMessage # {Thread.id @currentThread} # '...')
+	    Gui,doStatus('Re-calculating stack of thread #' #
+			 {Thread.id @currentThread} # '...')
 	    {Stack rebuild(true)}
 	    {Stack print}
-	    Gui,doStatus(DoneMessage append)
+	    Gui,doStatus(' done' append)
 	 end
       end
 
@@ -470,12 +473,12 @@ in
 
       meth DoSwitch(I PrintStack)
 	 case I == 1 then skip else
-	    Stack = {Dget self.ThreadDic I}
+	    Stack = {Dictionary.get self.ThreadDic I}
 	    T     = {Stack getThread($)}
 	    S     = {CheckState T}
 	 in
 
-	    case @currentStack == undef then skip else
+	    case @currentStack == unit then skip else
 	       Gui,resetReservedTags({@currentStack getSize($)})
 	    end
 

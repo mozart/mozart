@@ -38,8 +38,8 @@ Ozcar =
 	      {Compile '\\switch +debuginfo'}
 	   end
 	   {Dbg.on}
-	   case @currentThread == undef then
-	      Gui,status(InitStatus)
+	   case @currentThread == unit then
+	      Gui,status(TitleName # ' initialized')
 	   else skip end
 	end
 

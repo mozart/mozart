@@ -60,11 +60,11 @@ local
 	 x  : 1                   %% xpos
 	 y  : 1                   %% ypos
 	 s  : runnable            %% state
-	 ct : undef               %% canvas tag
+	 ct : unit                %% canvas tag
 	 dy : 0                   %% distance to upper sibling
 
-	 i  : undef               %% thread id
-	 q  : undef               %% parent id
+	 i  : unit                %% thread id
+	 q  : unit                %% parent id
 
       meth init(I Q S)
 	 i <- I
@@ -185,8 +185,8 @@ in
 	 locking
 
       attr
-	 Selected       : undef
-	 LastSelected   : undef
+	 Selected       : unit
+	 LastSelected   : unit
 
 	 SyncCalc       : _
 
@@ -248,8 +248,8 @@ in
 
       meth select(I)
 	 case I == 0 then
-	    LastSelected <- undef
-	    Selected     <- undef
+	    LastSelected <- unit
+	    Selected     <- unit
 	 else
 	    CT OldCT N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
 	 in
@@ -257,7 +257,7 @@ in
 	       LastSelected <- @Selected
 	       Selected <- N.1
 
-	       case @LastSelected \= undef then
+	       case @LastSelected \= unit then
 		  node(ct:OldCT ...) = {@LastSelected get($)}
 		  ScrolledTitleCanvas,tk(itemconfigure OldCT
 					 font:ThreadTreeFont)
@@ -328,7 +328,7 @@ in
       end
 
       meth SwitchToThread(I)
-	 {ForAll [status(SwitchMessage # I)
+	 {ForAll [status('You have selected thread #' # I)
 		  switch(I)] Ozcar}
       end
    end
