@@ -3,5 +3,5 @@ Hydra/Compiler   mail -s "I have changed %s" henz
 Oz	mail -s "I have changed %s" mehl,scheidhr
 Oz/lib	mail -s "I have changed %s" henz,wuertz
 Oz/lib/browser	mail -s "I have changed %s" latz
-Hydra	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s"
-Oz	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s"
+Hydra	/usr/share/gs/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s"
+Oz	/usr/share/gs/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s"
