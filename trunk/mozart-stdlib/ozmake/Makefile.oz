@@ -373,6 +373,10 @@ define
 			if {Not {IsVirtualString S}} then
 			   raise ozmake(makefile:illegaltooloptionarg(cc O)) end
 			end
+		     [] 'define'(S) then
+			if {Not {IsVirtualString S}} then
+			   raise ozmake(makefile:illegaltooloptionarg(cc O)) end
+			end
 		     else
 			raise ozmake(makefile:illegaltooloption(cc O)) end
 		     end
