@@ -1272,9 +1272,11 @@ ipReturn tcpWriteError()
   case EBADF:{
     OZ_warning("Connection socket lost: EBADF");
     return IP_PERM_BLOCK;}
+#ifndef WINDOWS
   case ETIMEDOUT:{
     OZ_warning("Connection socket temp: ETIMEDOUT");
     return IP_TEMP_BLOCK;}
+#endif
   default:{
     OZ_warning("Unhandled error: %d please inform erik@sics.se",
                errno);
