@@ -1,3 +1,4 @@
+Oz/Emulator	mail -s "I have changed %s" mehl,scheidhr,tmueller,popow
 Oz/AM		mail -s "I have changed %s" mehl,scheidhr,tmueller,popow
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/include	mail -s "I have changed %s" mehl,scheidhr,tmueller,popow,henz
