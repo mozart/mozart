@@ -106,22 +106,112 @@ void setBuf(int i,char c)
   }
 }
 
-inline
-char *scanString(FILE *in)
+static inline
+void scanQuotedString(FILE *in)
 {
+  int c = nextchar(in);
   int i = 0;
-  while(1) {
-    char c = nextchar(in);
-    if (c==EOF || isspace(c)) {
-      setBuf(i,0);
-      return buf;
-    }
-    if (c=='\\')
+  while (c != '\'') {
+    if (c == EOF) {
+      error("end-of-file in string");
+    } else if (c == '\\') {
       c = nextchar(in);
-    setBuf(i++,c);
+      switch (c) {
+      case 'a':
+	setBuf(i++,'\a');
+	break;
+      case 'b':
+	setBuf(i++,'\b');
+	break;
+      case 'f':
+	setBuf(i++,'\f');
+	break;
+      case 'n':
+	setBuf(i++,'\n');
+	break;
+      case 'r':
+	setBuf(i++,'\r');
+	break;
+      case 't':
+	setBuf(i++,'\t');
+	break;
+      case 'v':
+	setBuf(i++,'\v');
+	break;
+      case 'x':
+	{
+	  char hexstring[3];
+	  hexstring[0] = nextchar(in);
+	  c = nextchar(in);
+	  hexstring[1] = c;
+	  hexstring[2] = '\0';
+	  if (c == EOF)
+	    error("end-of-file in string");
+	  char *end;
+	  int hexnum = (int) strtol(hexstring, &end, 16);
+	  if (hexnum == 0 || *end != '\0')
+	    error("illegal number in hexadecimal notation");
+	  setBuf(i++,hexnum);
+	}
+	break;
+      case '\\':
+      case '`':
+      case '\"':
+      case '\'':
+      case '&':
+	setBuf(i++,c);
+	break;
+      case EOF:
+	error("end-of-file in string");
+      case '0': case '1': case '2': case '3':
+      case '4': case '5': case '6': case '7':
+	{
+	  char octstring[4];
+	  octstring[0] = c;
+	  octstring[1] = nextchar(in);
+	  c = nextchar(in);
+	  octstring[2] = c;
+	  octstring[3] = '\0';
+	  if (c == EOF)
+	    error("end-of-file in string");
+	  char *end;
+	  int octnum = (int) strtol(octstring, &end, 8);
+	  if (octnum == 0 || octnum > 255 || *end != '\0')
+	    error("illegal number in octal notation");
+	  setBuf(i++,octnum);
+	}
+	break;
+      default:
+	error("illegal character in string");
+      }
+    } else {
+      setBuf(i++,c);
+    }
+    c = nextchar(in);
   }
+  setBuf(i,'\0');
 }
 
+static inline
+char *scanString(FILE *in)
+{
+  int c = nextchar(in);
+  if (c == '\'') {
+    scanQuotedString(in);
+  } else if (oz_isalnum(c)) {
+    int i = 0;
+    while (oz_isalnum(c)) {
+      setBuf(i++,c);
+      c = nextchar(in);
+    }
+    if (!isspace(c))
+      error("illegal character in string");
+    setBuf(i,'\0');
+  } else {
+    error("string expected");
+  }
+  return buf;
+}
 
 inline
 char *scanComment(FILE *in)
@@ -335,7 +425,7 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
 {
   /* output header unchanged */
   Assert(aux->tag==TAG_STRING);
-  putString(aux->val.string,out);
+  putVerbatim(aux->val.string,out);
   aux = aux->next;
 
   /* write new version number */
