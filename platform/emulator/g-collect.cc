@@ -220,6 +220,14 @@ void ThreadsPool::gCollect(void) {
  *
  */
 
+void PrTabEntry::gCollect(void)
+{
+  gCollectCode(getCodeBlock());
+}
+
+void PrTabEntry::sClone(void)
+{
+}
 
 inline
 void PrTabEntry::gCollectPrTabEntries(void) {
