@@ -2857,23 +2857,8 @@ Case(GETVOID)
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
 
-  Case(DECONSCALLX)
-  Case(DECONSCALLY)
-  Case(DECONSCALLG)
-  Case(TAILDECONSCALLX)
-  Case(TAILDECONSCALLG)
-  Case(CONSCALLX)
-  Case(CONSCALLY)
-  Case(CONSCALLG)
-  Case(TAILCONSCALLX)
-  Case(TAILCONSCALLG)
-    {
-      Assert(0);
-      return T_ERROR;
-    }
-
-  /*
-   * kost@   Jan 15th, 2003
+// for kostja, until we can figure out a better way
+#ifndef EMULATE_NO_CONSCALL
   Case(DECONSCALLX)
     isTailCall = NO; SETAUX(XPC(1)); goto LBLdeconsCall;
   Case(DECONSCALLY)
@@ -3064,7 +3049,22 @@ Case(GETVOID)
       }
       RAISE_APPLY(taggedPredicate,OZ_toList(callerArity,XREGS));
     }
-  */
+#else
+  Case(DECONSCALLX)
+  Case(DECONSCALLY)
+  Case(DECONSCALLG)
+  Case(TAILDECONSCALLX)
+  Case(TAILDECONSCALLG)
+  Case(CONSCALLX)
+  Case(CONSCALLY)
+  Case(CONSCALLG)
+  Case(TAILCONSCALLX)
+  Case(TAILCONSCALLG)
+    {
+      Assert(0);
+      return T_ERROR;
+    }
+#endif
 
 // -------------------------------------------------------------------------
 // INSTRUCTIONS: MISC: ERROR/NOOP/default
