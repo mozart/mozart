@@ -303,6 +303,11 @@ void oz_var_restoreFromCopy(OzVariable *, OzVariable *);
 
 OZ_Return oz_var_cast(TaggedRef *&, Board *, TypeOfVariable);
 
+inline
+Bool oz_var_hasSuspAt(TaggedRef v, Board * b) {
+  Assert(oz_isVariable(v) && !oz_isRef(v));
+  return isUVar(v) ? NO : tagged2CVar(v)->getSuspList()->hasSuspAt(b);
+}
 
 inline
 Bool isFuture(TaggedRef term)

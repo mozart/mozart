@@ -148,6 +148,8 @@ void unBind(TaggedRef *p, TaggedRef t) {
   *p = t;
 }
 
+#define AssureThread \
+  if (!t) t=oz_newThreadPropagate(b);
 
 TaggedRef Trail::unwind(Board * b) {
 
@@ -155,7 +157,9 @@ TaggedRef Trail::unwind(Board * b) {
 
   if (!isEmptyChunk()) {
 
-    Thread * t = oz_newThreadPropagate(b);
+    Thread * t = (Thread *) NULL;
+
+    Bool   hasNoRunnable = (b->getThreads() == 0);
 
     do {
 
@@ -173,14 +177,20 @@ TaggedRef Trail::unwind(Board * b) {
 
         TaggedRef vv= *refPtr;
         DEREF(vv,vvPtr,_vvTag);
-        if (oz_isVariable(vv))
+
+        if (hasNoRunnable && oz_isVariable(vv) && !oz_var_hasSuspAt(vv,b)) {
+          AssureThread;
           oz_var_addSusp(vvPtr,t,NO);  // !!! Makes space *not* unstable !!!
+        }
 
         unBind(refPtr, value);
 
         // value is always global variable, so add always a thread;
-        if (oz_var_addSusp(refPtr,t)!=SUSPEND) {
-          Assert(0);
+        if (hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
+          AssureThread;
+          if (oz_var_addSusp(refPtr,t)!=SUSPEND) {
+            Assert(0);
+          }
         }
 
         break;
@@ -199,7 +209,10 @@ TaggedRef Trail::unwind(Board * b) {
 
         tagged2CVar(*varPtr)->unsetTrailed();
 
-        oz_var_addSusp(varPtr, t);
+        if (hasNoRunnable && !oz_var_hasSuspAt(*varPtr,b)) {
+          AssureThread;
+          oz_var_addSusp(varPtr, t);
+        }
 
         s = oz_cons(oz_cons(makeTaggedRef(varPtr),
                             makeTaggedRef(newTaggedCVar(copy))),
@@ -212,6 +225,7 @@ TaggedRef Trail::unwind(Board * b) {
         break;
       }
     } while (!isEmptyChunk());
+
   }
 
   popMark();
