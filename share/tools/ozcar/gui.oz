@@ -126,8 +126,13 @@ in
 
 	 LastClicked       : unit
 
-	 MsgList           : nil
-	 MsgListTl         : nil
+	 StackMsgList      : nil
+	 EnvMsgList        : nil
+	 StatusMsgList     : nil
+
+	 StackMsgListTl    : nil
+	 EnvMsgListTl      : nil
+	 StatusMsgListTl   : nil
 
       meth resetLastSelectedFrame
 	 LSF = @LastSelectedFrame
@@ -178,17 +183,23 @@ in
 		   ]}
 
 	 local
-	    Bs = {Map [StepButtonBitmap   # StepButtonColor
-		       NextButtonBitmap   # NextButtonColor
-		       UnleashButtonBitmap# UnleashButtonColor
-		       StopButtonBitmap   # StopButtonColor
-		       DetachButtonBitmap # DetachButtonColor
-		       TermButtonBitmap   # TermButtonColor]
+	    Bs = {Map [StepButtonBitmap    # StepButtonColor #
+		       'step into procedures'
+		       NextButtonBitmap    # NextButtonColor #
+		       'step over procedures'
+		       UnleashButtonBitmap # UnleashButtonColor #
+		       'unleash to selected frame'
+		       StopButtonBitmap    # StopButtonColor #
+		       'stop'
+		       DetachButtonBitmap  # DetachButtonColor #
+		       'detach'
+		       TermButtonBitmap    # TermButtonColor #
+		       'terminate and detach']
 		  fun {$ S}
-		     Bitmap # ForegroundColor = S
+		     Bitmap # ForegroundColor # BalloonHelpText = S
 		     B = {New Tk.button
 			  tkInit(parent:           self.ButtonFrame
-				 bitmap:           (LocalBitMapDir # Bitmap #
+				 bitmap:           (OzcarBitmapDir # Bitmap #
 						    BitmapExtension)
 				 fg:               ForegroundColor
 				 activeforeground: case UseColors then
@@ -201,6 +212,7 @@ in
 		  in
 		     {B tkBind(event:  HelpEvent
 			       action: self # help(Bitmap))}
+		     {Tk.send balloonhelp(B BalloonHelpText)}
 		     B
 		  end}
 	 in
@@ -208,14 +220,16 @@ in
 	     [self.emacsThreadsButton #
 	      AddQueriesBitmap #
 	      toggleEmacsThreads #
-	      ConfigEmacsThreads
+	      ConfigEmacsThreads #
+	      'attach queries'
 
 	      self.subThreadsButton #
 	      AddSubThreadsBitmap #
 	      toggleSubThreads #
-	      ConfigSubThreads]
+	      ConfigSubThreads #
+	      'attach subthreads']
 	     proc {$ B}
-		C # Xbm # Action # Default = B
+		C # Xbm # Action # Default # BalloonHelpText = B
 	     in
 		C = {New Tk.checkbutton
 		     tkInit(parent:           self.ButtonFrame
@@ -227,7 +241,7 @@ in
 					      else
 						 SelectedForeground
 					      end
-			    bitmap:           LocalBitMapDir # Xbm
+			    bitmap:           OzcarBitmapDir # Xbm
 			    relief:           flat %raised
 			    width:            CheckButtonWidth
 			    height:           CheckButtonHeight
@@ -235,6 +249,7 @@ in
 			    action:           self # Action)}
 		{C tkBind(event:  HelpEvent
 			  action: self # help(Xbm))}
+		{Tk.send balloonhelp(C BalloonHelpText)}
 	     end}
 	    {Tk.batch [pack(b(Bs) side:left padx:1 pady:1)
 		       pack(self.emacsThreadsButton self.subThreadsButton
@@ -380,11 +395,11 @@ in
 					{Browse Value} LastClicked <- Value
 				     end)}
 	     in
-		Gui,Enqueue(o(W insert 'end'
+		Gui,Enqueue(env o(W insert 'end'
 			      {PrintF ' ' # Name {EnvVarWidth}}))
-		Gui,Enqueue(o(W insert 'end' Print # '\n' T))
-		Gui,Enqueue(o(W tag bind T '<1>' Ac))
-		Gui,Enqueue(o(W tag conf T font:BoldFont))
+		Gui,Enqueue(env o(W insert 'end' Print # '\n' T))
+		Gui,Enqueue(env o(W tag bind T '<1>' Ac))
+		Gui,Enqueue(env o(W tag conf T font:BoldFont))
 	     else skip end
 	  end}
       end
@@ -400,46 +415,35 @@ in
 	       end
 	    end
 	 else
-	    {self.LocalEnvText  tk(conf foreground:DirtyColor)}
-	    {self.GlobalEnvText tk(conf foreground:DirtyColor)}
+	    Gui,markEnv(inactive)
 	 end
       end
 
       meth PrintEnv(vars:V)
-	 LE  = {self.LocalEnvText  w($)}
-	 GE  = {self.GlobalEnvText w($)}
+	 WL  = {self.LocalEnvText  w($)}
+	 WG  = {self.GlobalEnvText w($)}
 	 SV  = {Cget envSystemVariables}
 	 Y#G = case V == unit then
 		  nil # nil
 	       else
 		  {Reverse V.'Y'} # {Reverse V.'G'}
 	       end
-	 OldLTags = {self.LocalEnvText resetTags($)}
-	 OldGTags = {self.GlobalEnvText resetTags($)}
       in
-	 case OldLTags == nil then skip else
-	    Gui,Enqueue(OldLTags)
-	 end
-	 Gui,Enqueue(o(LE conf state:normal))
-	 Gui,Enqueue(o(LE delete p(0 0) 'end'))
-	 Gui,Enqueue(o(LE conf foreground:DefaultForeground))
+	 Gui,Enqueue(env {self.LocalEnvText resetTags($)})
+	 Gui,Clear(env WL)
 	 case V == unit then skip else
 	    Gui,DoPrintEnv(self.LocalEnvText Y SV)
 	 end
-	 Gui,Enqueue(o(LE conf state:disabled))
-	 Gui,ClearQueue
+	 Gui,Disable(env WL)
 
-	 case OldGTags == nil then skip else
-	    Gui,Enqueue(OldGTags)
-	 end
-	 Gui,Enqueue(o(GE conf state:normal))
-	 Gui,Enqueue(o(GE delete p(0 0) 'end'))
-	 Gui,Enqueue(o(GE conf foreground:DefaultForeground))
+	 Gui,Enqueue(env {self.GlobalEnvText resetTags($)})
+	 Gui,Clear(env WG)
 	 case V == unit then skip else
 	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
 	 end
-	 Gui,Enqueue(o(GE conf state:disabled))
-	 Gui,ClearQueue
+	 Gui,Disable(env WG)
+
+	 Gui,ClearQueue(env)
       end
 
       meth frameClick(frame:F highlight:Highlight<=true)
@@ -458,16 +462,22 @@ in
 	       Gui,SelectStackFrame(0)
 	    end
 	    Gui,printEnv(vars:Vars)
-	 else %% thread is running -- do nothing
-	    skip
+	 else %% thread is running
+	    Gui,markEnv(inactive)
 	 end
       end
 
       meth previousThread
+	 case {IsFree @switchDone} then skip else
+	    switchDone <- _
+	 end
 	 {self.ThreadTree selectPrevious}
       end
 
       meth nextThread
+	 case {IsFree @switchDone} then skip else
+	    switchDone <- _
+	 end
 	 {self.ThreadTree selectNext}
       end
 
@@ -511,7 +521,7 @@ in
       end
 
       meth printStackFrame(frame:Frame delete:Delete<=true)
-	 W          = self.StackText
+	 W          = {self.StackText w($)}
 	 FrameNr    = Frame.nr    %% frame number
 	 FrameName  = Frame.name  %% procedure/builtin name
 	 FrameArgs  = case Frame.args == unit then unit
@@ -526,33 +536,35 @@ in
 	 UpToDate    = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
       in
 	 case Delete then
-	    Gui,Enable(W)
-	    Gui,DeleteToEnd(W FrameNr+1)
-	    Gui,DeleteLine(W FrameNr)
+	    Gui,Enable(stack W)
+	    Gui,DeleteToEnd(stack W FrameNr+1)
+	    Gui,DeleteLine(stack W FrameNr)
 	 else skip end
-	 {W tk(insert LineEnd
-	       case Frame.dir == entry then ' -> ' else ' <- ' end #
-	       FrameNr #
-	       case {IsSpecialFrameName FrameName} then
-		  ' ' # FrameName
-	       else
-		  ' {' # case FrameName
-			 of ''  then '$'
-			 [] nil then "nil"
-			 [] '#' then "#"
-			 else FrameName end
-	       end
-	       q(StackTag LineActTag LineColTag))}
+	 Gui,Enqueue(stack
+		     o(W insert LineEnd
+		       case Frame.dir == entry then ' -> ' else ' <- ' end #
+		       FrameNr #
+		       case {IsSpecialFrameName FrameName} then
+			  ' ' # FrameName
+		       else
+			  ' {' # case FrameName
+				 of ''  then '$'
+				 [] nil then "nil"
+				 [] '#' then "#"
+				 else FrameName end
+		       end
+		       q(StackTag LineActTag LineColTag)))
 	 case FrameArgs of unit then
 	    case {IsSpecialFrameName FrameName} then skip
-	    else {W tk(insert LineEnd ' ...'
-		       q(StackTag LineActTag LineColTag))}
+	    else Gui,Enqueue(stack
+			     o(W insert LineEnd ' ...'
+			       q(StackTag LineActTag LineColTag)))
 	    end
 	 else
 	    {ForAll FrameArgs
 	     proc {$ Arg}
 		P # V     = Arg
-		ArgTag    = {W newTag($)}
+		ArgTag    = {self.StackText newTag($)}
 		ArgAction = {New Tk.action
 			     tkInit(parent: W
 				    action: proc {$}
@@ -560,53 +572,60 @@ in
 					       LastClicked <- V
 					    end)}
 	     in
-		{W tk(insert LineEnd ' '
-		      q(StackTag LineActTag LineColTag))}
-		{W tk(insert LineEnd P
-		      q(StackTag LineColTag ArgTag))}
-		{W tk(tag bind ArgTag '<1>' ArgAction)}
-		{W tk(tag conf ArgTag font:BoldFont)}
+		Gui,Enqueue(stack o(W insert LineEnd ' '
+				    q(StackTag LineActTag LineColTag)))
+		Gui,Enqueue(stack o(W insert LineEnd P
+				    q(StackTag LineColTag ArgTag)))
+		Gui,Enqueue(stack o(W tag bind ArgTag '<1>' ArgAction))
+		Gui,Enqueue(stack o(W tag conf ArgTag font:BoldFont))
 	     end}
 	 end
-	 {W tk(insert LineEnd
-	       case {IsSpecialFrameName FrameName} then '' else '}' end #
-	       case UpToDate then nil else ' (source has changed)' end #
-	       case Delete then '\n' else "" end
-	       q(StackTag LineActTag LineColTag))}
-	 {W tk(tag add  LineActTag LineEnd)} % extend tag to whole line
-	 {W tk(tag add  LineColTag LineEnd)} % dito
-	 {W tk(tag bind LineActTag '<1>' LineAction)}
+	 Gui,Enqueue(stack
+		     o(W insert LineEnd
+		       case {IsSpecialFrameName FrameName} then
+			  '' else '}'
+		       end # case UpToDate then nil else
+				' (source has changed)' end #
+		       case Delete then '\n' else "" end
+		       q(StackTag LineActTag LineColTag)))
+	 Gui,Enqueue(stack o(W tag add  LineActTag LineEnd))% extend tag to EOL
+	 Gui,Enqueue(stack o(W tag add  LineColTag LineEnd))% dito
+	 Gui,Enqueue(stack o(W tag bind LineActTag '<1>' LineAction))
 	 case Delete then
-	    Gui,Disable(W)
-	    {W tk(yview 'end')}
+	    Gui,Disable(stack W)
+	    Gui,Enqueue(stack o(W yview 'end'))
+	    Gui,ClearQueue(stack)
 	    Gui,frameClick(frame:Frame highlight:false)
 	 else skip end
       end
 
       meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
-	 W = self.StackText
+	 W = {self.StackText w($)}
       in
 	 {OzcarMessage 'printing complete stack (#' # I # '/' # Depth # ')'}
+	 Gui,Enqueue(stack {self.StackText resetTags($)})
+	 Gui,Clear(stack W)
 	 case I == 0 then   % clear stack and env windows; reset title
-	    {W title(StackTitle)}
-	    Gui,Clear(W)
-	    Gui,Disable(W)
+	    {self.StackText title(StackTitle)}
+	    Gui,Disable(stack W)
+	    Gui,ClearQueue(stack)
 	    Gui,clearEnv
 	 else
-	    {W title(AltStackTitle # I)}
-	    Gui,Clear(W)
+	    {self.StackText title(AltStackTitle # I)}
 	    case Depth == 0 then
-	       Gui,Append(W ' The stack is empty.')
-	       Gui,Disable(W)
+	       Gui,Append(stack W ' The stack is empty.')
+	       Gui,Disable(stack W)
+	       Gui,ClearQueue(stack)
 	       Gui,clearEnv
 	    else
-	       Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
+	       Gui,Append(stack W {MakeLines Depth}) % Tk is _really_ stupid...
 	       {ForAll Frames
 		proc{$ Frame}
 		   Gui,printStackFrame(frame:Frame delete:false)
 		end}
-	       {W tk(yview 'end')}
-	       Gui,Disable(W)
+	       Gui,Disable(stack W)
+	       Gui,Enqueue(stack o(W yview 'end'))
+	       Gui,ClearQueue(stack)
 	       case LastFrame == nil then
 		  {OzcarError 'printStack: LastFrame == nil ?!'}
 	       else
@@ -663,12 +682,13 @@ in
 	 W = self.StatusText
       in
 	 case M == clear then
-	    Gui,ClearNoTags(W)
+	    Gui,Clear(status W)
 	 else
-	    Gui,Enable(W)
+	    Gui,Enable(status W)
 	 end
-	 Gui,Append(W S C)
-	 Gui,Disable(W)
+	 Gui,Append(status W S C)
+	 Gui,Disable(status W)
+	 Gui,ClearQueue(status)
       end
 
       meth BlockedStatus(T A)
@@ -701,7 +721,20 @@ in
 	    {OzcarMessage 'deactivating stack'}
 	    {self.StackText tk(tag 'raise' StackTag)}
 	    {self.StackText tk(tag conf StackTag foreground:DirtyColor)}
-	 else skip end
+	 end
+      end
+
+      meth markEnv(How)
+	 case How
+	 of active then
+	    {OzcarMessage 'activating env'}
+	    {self.LocalEnvText  tk(conf foreground:DefaultForeground)}
+	    {self.GlobalEnvText tk(conf foreground:DefaultForeground)}
+	 [] inactive then
+	    {OzcarMessage 'deactivating env'}
+	    {self.LocalEnvText  tk(conf foreground:DirtyColor)}
+	    {self.GlobalEnvText tk(conf foreground:DirtyColor)}
+	 end
       end
 
       meth ContinueTo(T Frame)
@@ -719,199 +752,171 @@ in
 
       meth action(A)
 	 lock
-	    case {IsName A} then skip else
-	       {OzcarMessage 'action:' # A}
+	    {Wait @detachDone}
+	    {Wait @switchDone}
+	    case ThreadManager,emptyForest($) then
+	       Gui,doStatus(NoThreads)
+	    else
+	       Gui,DoAction(A)
+	    end
+	 end
+      end
+
+      meth DoAction(A)
+	 case {IsName A} then skip else
+	    {OzcarMessage 'action:' # A}
+	 end
+
+	 case A == TermAllAction then
+	    Gui,doStatus('Terminating all threads...')
+	    ThreadManager,termAll
+	    {Delay 200} %% just to look nice... ;)
+	    Gui,doStatus(' done' append)
+
+	 elsecase A == TermAllButCurAction then
+	    Gui,doStatus('Terminating all threads but current...')
+	    ThreadManager,termAllButCur
+	    {Delay 200} %% just to look nice... ;)
+	    Gui,doStatus(' done' append)
+
+	 elsecase A == DetachAllAction then
+	    Gui,doStatus('Detaching all threads...')
+	    ThreadManager,detachAll
+	    {Delay 200}
+	    Gui,doStatus(' done' append)
+
+	 elsecase A == DetachAllButCurAction then
+	    Gui,doStatus('Detaching all threads but current...')
+	    ThreadManager,detachAllButCur
+	    {Delay 200}
+	    Gui,doStatus(' done' append)
+
+	 elsecase A == DetachAllDeadAction then
+	    Gui,doStatus('Detaching all dead threads...')
+	    ThreadManager,detachAllDead
+	    {Delay 200}
+	    Gui,doStatus(' done' append)
+
+	 elsecase A == StepButtonBitmap then T I in
+	    T = @currentThread
+	    I = {Thread.id T}
+	    case {CheckState T}
+	    of running    then Gui,RunningStatus(I StepInto)
+%	    [] blocked    then Gui,BlockedStatus(T StepInto)
+	    [] terminated then Gui,TerminatedStatus(T StepInto)
+	    else
+	       TopFrame = {@currentStack getTop($)}
+	    in
+	       case TopFrame == unit then skip else
+		  case TopFrame.dir == exit then skip else
+		     N = {@currentStack incStep($)} in
+		     Gui,status(N # ' step' #
+				case N == 1 then '' else 's' end #
+				' into')
+		  end
+		  Gui,ContinueTo(T TopFrame)
+	       end
 	    end
 
-	    case A == TermAllAction then
-	       Gui,doStatus('Terminating all threads...')
-	       ThreadManager,termAll
-	       {Delay 200} %% just to look nice... ;)
-	       Gui,doStatus(' done' append)
-
-	    elsecase A == TermAllButCurAction then
-	       Gui,doStatus('Terminating all threads but current...')
-	       ThreadManager,termAllButCur
-	       {Delay 200} %% just to look nice... ;)
-	       Gui,doStatus(' done' append)
-
-	    elsecase A == DetachAllAction then
-	       Gui,doStatus('Detaching all threads...')
-	       ThreadManager,detachAll
-	       {Delay 200}
-	       Gui,doStatus(' done' append)
-
-	    elsecase A == DetachAllButCurAction then
-	       Gui,doStatus('Detaching all threads but current...')
-	       ThreadManager,detachAllButCur
-	       {Delay 200}
-	       Gui,doStatus(' done' append)
-
-	    elsecase A == DetachAllDeadAction then
-	       Gui,doStatus('Detaching all dead threads...')
-	       ThreadManager,detachAllDead
-	       {Delay 200}
-	       Gui,doStatus(' done' append)
-
-	    elsecase A == StepButtonBitmap then
-	       T = @currentThread
+	 elsecase A == NextButtonBitmap then T I in
+	    T = @currentThread
+	    I = {Thread.id T}
+	    case {CheckState T}
+	    of running    then Gui,RunningStatus(I StepOver)
+%	    [] blocked    then Gui,BlockedStatus(T StepOver)
+	    [] terminated then Gui,TerminatedStatus(T StepOver)
+	    else
+	       TopFrame = {@currentStack getTop($)}
 	    in
-	       case T == unit then skip else
-		  I = {Thread.id T}
-		  S = {CheckState T}
-	       in
-		  case S
-		  of running    then Gui,RunningStatus(I StepInto)
-		  [] blocked    then Gui,BlockedStatus(T StepInto)
-		  [] terminated then Gui,TerminatedStatus(T StepInto)
-		  else
-		     TopFrame = {@currentStack getTop($)}
-		  in
-		     case TopFrame == unit then skip else
-			case TopFrame.dir == exit then skip else
-			   N = {@currentStack incStep($)} in
-			   Gui,status(N # ' step' #
-				      case N == 1 then '' else 's' end #
-				      ' into')
-			end
-			Gui,ContinueTo(T TopFrame)
-		     end
+	       case TopFrame == unit then skip else
+		  case TopFrame.dir == exit then skip else
+		     N = {@currentStack incNext($)} in
+		     Gui,status(N # ' step' #
+				case N == 1 then '' else 's' end #
+				' over')
+		     {Dbg.step T false}
 		  end
+%		  Gui,markEnv(inactive)
+		  Gui,ContinueTo(T TopFrame)
 	       end
+	    end
 
-	    elsecase A == NextButtonBitmap then
-	       T = @currentThread
+	 elsecase A == UnleashButtonBitmap then T I in
+	    T = @currentThread
+	    I = {Thread.id T}
+	    case {CheckState T}
+	    of running    then Gui,RunningStatus(I A)
+%	    [] blocked    then Gui,BlockedStatus(T A)
+	    [] terminated then Gui,TerminatedStatus(T A)
+	    else
+	       Frame
+	       LSF = @LastSelectedFrame
+	       Stk = @currentStack
 	    in
-	       case T == unit then skip else
-		  I = {Thread.id T}
-		  S = {CheckState T}
-	       in
-		  case S
-		  of running    then Gui,RunningStatus(I StepOver)
-		  [] blocked    then Gui,BlockedStatus(T StepOver)
-		  [] terminated then Gui,TerminatedStatus(T StepOver)
-		  else
-		     TopFrame = {@currentStack getTop($)}
-		  in
-		     case TopFrame == unit then skip else
-			case TopFrame.dir == exit then skip else
-			   N = {@currentStack incNext($)} in
-			   Gui,status(N # ' step' #
-				      case N == 1 then '' else 's' end #
-				      ' over')
-			   {Dbg.step T false}
-			end
-			Gui,ContinueTo(T TopFrame)
-		     end
-		  end
-	       end
-
-	    elsecase A == UnleashButtonBitmap then
-	       T = @currentThread
-	    in
-	       case T == unit then skip else
-		  I = {Thread.id T}
-		  S = {CheckState T}
-	       in
-		  case S
-		  of running    then Gui,RunningStatus(I A)
-		  [] blocked    then Gui,BlockedStatus(T A)
-		  [] terminated then Gui,TerminatedStatus(T A)
-		  else
-		     Frame
-		     LSF = @LastSelectedFrame
-		     Stk = @currentStack
-		  in
-		     {Stk getFrame(LSF Frame)}
-		     case Frame == unit then skip
-%		     elsecase Frame.dir == exit then
-%			Gui,doStatus('Already at end of procedure ' #
-%				     'application -- unleash has no effect')
-		     else
-			{Dbg.step T false}
-			{Stk rebuild(true)}
-			case Frame.frameID of unit then
-			   {Dbg.unleash T 0}
-			elseof FrameID then
-			   {Dbg.unleash T FrameID}
-			end
-
-			%% delete all tags
-			{Tk.batch {self.StackText resetTags($)}}
-			Gui,resetLastSelectedFrame
-
-			Gui,markNode({Thread.id T} running)
-			Gui,markStack(inactive)
-			Gui,doStatus('Unleashing thread #' # I #
-				     ' to frame ' #
-				     case LSF == 0 then 1 else LSF end)
-			{SendEmacs configureBar(running)}
-			{Thread.resume T}
-		     end
-		  end
-	       end
-
-	    elsecase A == StopButtonBitmap then
-	       T = @currentThread
-	    in
-	       case T == unit then skip else
-		  S = {Thread.state T}
-	       in
-		  case S == terminated then Gui,TerminatedStatus(T A) else
-		     I         = {Thread.id T}
-		     ThreadDic = ThreadManager,getThreadDic($)
-		     Stack     = {Dictionary.condGet ThreadDic I nil}
-		  in
-		     case
-			Stack == nil then skip
-		     elsecase
-			{Dbg.checkStopped T} then Gui,StoppedStatus(I A)
-		     else
-			case S == blocked then
-			   F L C in
-			   {Thread.suspend T}
-			   {Stack rebuild(true)}
-			   {Stack print}
-			   {Stack getPos(file:F line:L column:C)}
-			   {SendEmacs bar(file:F line:L column:C state:S)}
-			else
-			   {Stack rebuild(true)}
-			end
-			{Dbg.step T true}
-			Gui,doStatus('You have stopped thread #' # I)
-		     end
-		  end
-	       end
-
-	    elsecase A == DetachButtonBitmap then
-	       T = @currentThread
-	    in
-	       case T == unit then skip else
-		  I = {Thread.id T}
-	       in
-		  lock UserActionLock then ThreadManager,detach(T I) end
-	       end
-
-	    elsecase A == TermButtonBitmap then
-	       T = @currentThread
-	    in
-	       case T == unit then skip else
-		  I = {Thread.id T}
-	       in
-		  ThreadManager,kill(T I)
-	       end
-
-	    elsecase A == BrowseStackAction then
-	       T = @currentThread
-	    in
-	       case T == unit then
-		  Gui,doStatus(FirstSelectThread)
+	       {Stk getFrame(LSF Frame)}
+	       case Frame == unit then skip
+%	       elsecase Frame.dir == exit then
+%		  Gui,doStatus('Already at end of procedure ' #
+%			       'application -- unleash has no effect')
 	       else
-		  P = {System.get errors}
-	       in
-		  {Browse {Thread.taskStack T P.'thread' false}}
+		  {Dbg.step T false}
+		  {Stk rebuild(true)}
+		  case Frame.frameID of unit then
+		     {Dbg.unleash T 0}
+		  elseof FrameID then
+		     {Dbg.unleash T FrameID}
+		  end
+
+		  Gui,resetLastSelectedFrame
+		  Gui,markNode({Thread.id T} running)
+		  Gui,markStack(inactive)
+		  Gui,markEnv(inactive)
+		  Gui,doStatus('Unleashing thread #' # I #
+			       ' to frame ' #
+			       case LSF == 0 then 1 else LSF end)
+		  {SendEmacs configureBar(running)}
+		  {Thread.resume T}
 	       end
 	    end
+
+	 elsecase A == StopButtonBitmap then T S in
+	    T = @currentThread
+	    S = {Thread.state T}
+	    case S == terminated then Gui,TerminatedStatus(T A) else
+	       I         = {Thread.id T}
+	       ThreadDic = ThreadManager,getThreadDic($)
+	       Stack     = {Dictionary.condGet ThreadDic I nil}
+	    in
+	       case
+		  Stack == nil then skip
+	       elsecase
+		  {Dbg.checkStopped T} then Gui,StoppedStatus(I A)
+	       else
+		  case S == blocked then
+		     F L C in
+		     {Thread.suspend T}
+		     {Stack rebuild(true)}
+		     {Stack print}
+		     {Stack getPos(file:F line:L column:C)}
+		     {SendEmacs bar(file:F line:L column:C state:S)}
+		  else
+		     {Stack rebuild(true)}
+		  end
+		  {Dbg.step T true}
+		  Gui,doStatus('You have stopped thread #' # I)
+	       end
+	    end
+
+	 elsecase A == DetachButtonBitmap then T I in
+	    T = @currentThread
+	    I = {Thread.id T}
+	    lock UserActionLock then ThreadManager,detach(T I) end
+
+	 elsecase A == TermButtonBitmap then T I in
+	    T = @currentThread
+	    I = {Thread.id T}
+	    ThreadManager,kill(T I)
+
 	 end
       end
 
@@ -934,13 +939,24 @@ in
 	 {Ctoggle updateEnv}
       end
 
-      meth Enqueue(Ticklet)
+      meth GetQueue(W $)
+	 case W
+	 of stack  then StackMsgList  # StackMsgListTl
+	 [] env    then EnvMsgList    # EnvMsgListTl
+	 [] status then StatusMsgList # StatusMsgListTl
+	 end
+      end
+
+      meth Enqueue(W Ticklet)
 	 case Ticklet
 	 of nil  then skip
 	 [] T|Tr then
-	    Gui,Enqueue(T)
-	    Gui,Enqueue(Tr)
-	 else NewTl in
+	    Gui,Enqueue(W T)
+	    Gui,Enqueue(W Tr)
+	 else
+	    NewTl
+	    MsgList # MsgListTl = Gui,GetQueue(W $)
+	 in
 	    case {IsDet @MsgListTl} then
 	       MsgList <- Ticklet|NewTl
 	    else
@@ -950,21 +966,12 @@ in
 	 end
       end
 
-      meth ClearQueue
+      meth ClearQueue(W)
+	 MsgList # MsgListTl = Gui,GetQueue(W $)
+      in
 	 @MsgListTl = nil
 	 {Tk.batch @MsgList}
 	 MsgList <- nil
-      end
-
-      meth Clear(Widget)
-	 {Tk.batch {Widget resetTags($)}}
-	 {Widget tk(conf state:normal)}
-	 {Widget tk(delete p(0 0) 'end')}
-      end
-
-      meth ClearNoTags(Widget)
-	 {Widget tk(conf state:normal)}
-	 {Widget tk(delete p(0 0) 'end')}
       end
 
       meth DeactivateLine(Tag)
@@ -984,25 +991,37 @@ in
 	 {self.StackText tk(see p(Tag 0))}
       end
 
-      meth Enable(Widget)
-	 {Widget tk(conf state:normal)}
+      meth Enable(W Widget)
+	 Gui,Enqueue(W o(Widget conf state:normal))
       end
 
-      meth Append(Widget Text Color<=DefaultForeground)
-	 {Widget tk(insert 'end' Text)}
-	 {Widget tk(conf fg:Color)}
+      meth Clear(W Widget)
+	 Gui,Enqueue(W o(Widget conf state:normal))
+	 Gui,Enqueue(W o(Widget delete p(0 0) 'end'))
+	 Gui,Enqueue(W o(Widget conf foreground:DefaultForeground))
       end
 
-      meth Disable(Widget)
-	 {Widget tk(conf state:disabled)}
+      meth Append(W Widget Text Color<=DefaultForeground)
+	 Gui,Enqueue(W o(Widget insert 'end' Text))
+	 Gui,Enqueue(W o(Widget conf fg:Color))
       end
 
-      meth DeleteLine(Widget Nr)
-	 {Widget tk(delete p(Nr 0) p(Nr 'end'))}
+      meth DeleteLine(W Widget Nr)
+	 Gui,Enqueue(W o(Widget delete p(Nr 0) p(Nr 'end')))
       end
 
-      meth DeleteToEnd(Widget Nr)
-	 {Widget tk(delete p(Nr 0) 'end')}
+      meth DeleteToEnd(W Widget Nr)
+	 Gui,Enqueue(W o(Widget delete p(Nr 0) 'end'))
+      end
+
+      meth Disable(W Widget)
+	 Gui,Enqueue(W o(Widget conf state:disabled))
+      end
+
+      meth toTop
+	 %% I am looking for a better method... 
+	 {Tk.batch [wm(iconify   self.toplevel)
+		    wm(deiconify self.toplevel)]}
       end
    end
 end

@@ -72,12 +72,12 @@ in
 			 C(label:  'All But Current'
 			   action: self # action(DetachAllButCurAction)
 			   key:    ctrl(d))
-			 C(label:  'All Dead'
-			   action: self # action(DetachAllDeadAction)
-			   key:    alt(d))
 			 C(label:  'All'
 			   action: self # action(DetachAllAction)
-			   key:    meta(d))])
+			   key:    meta(d))
+			 C(label:  'All Dead'
+			   action: self # action(DetachAllDeadAction)
+			   key:    meta(u))])
 		  CC(label: 'Terminate'
 		     menu:
 			[C(label:  'Current'
@@ -120,9 +120,6 @@ in
 		  C(label:  'Update Env'
 		    action: self # updateEnv
 		    key:    v)
-%		  C(label:  'Browse'
-%		    action: self # action(BrowseStackAction)
-%		    key:    ctrl(b))
 		  separator
 		  C(label:  'Query...'
 		    action: self # eval

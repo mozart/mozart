@@ -46,7 +46,7 @@ WindowsPlatform        = 'win32-i486'
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 
-TreeTitle              = 'Thread Tree'
+TreeTitle              = 'Thread Forest'
 StackTitle             = 'Stack'
 AltStackTitle          = 'Stack of Thread  #'
 
@@ -72,10 +72,8 @@ OzcarErrorPrefix       = 'Ozcar ERROR: '
 
 NoFileInfo             = ('step message without line number information, ' #
 			  'continuing thread #')
-FirstSelectThread      = 'You must select a thread first!'
+NoThreads              = 'There is no thread attached'
 
-
-BrowseStackAction      = {NewName}
 
 DetachAllAction        = {NewName}
 DetachAllButCurAction  = {NewName}
@@ -169,10 +167,11 @@ HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 %% Files
 %%
 
-GlobalBitMapDir        = '@' # {System.get home} # '/lib/bitmaps/'
-LocalBitMapDir         = GlobalBitMapDir # 'ozcar/'
+OzLibDir               = {System.get home} # '/lib/'
+OzBitmapDir            = '@' # OzLibDir # 'bitmaps/'
+OzcarBitmapDir         = OzBitmapDir # 'ozcar/'
+IconBitMap             = OzBitmapDir # 'debugger' # BitmapExtension
 BitmapExtension        = '.xbm'
-IconBitMap             = GlobalBitMapDir # debugger # BitmapExtension
 
 StepButtonBitmap       = step
 NextButtonBitmap       = next
@@ -195,8 +194,8 @@ TextCursor             = left_ptr
 %% you should know what you are doing when changing them...
 TimeoutToStatus        = 200 % ms
 TimeoutToSwitch        = 300
-TimeoutToCalcTree      = 400
-TimeoutToUpdateEnv     = 500
+TimeoutToUpdateEnv     = 400
+TimeoutToCalcTree      = 500
 
 HelpEvent              = '<3>'
 

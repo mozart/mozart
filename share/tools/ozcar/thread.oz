@@ -59,6 +59,8 @@ in
 	 SkippedProcs   : nil
 
 	 SwitchSync     : _
+	 detachDone     : unit
+	 switchDone     : unit
 
       meth init
 	 self.ThreadDic = {Dictionary.new}
@@ -79,17 +81,17 @@ in
       end
 
       meth checkMe
-	 T = @currentThread
-      in
-	 case T == unit then
-	    Gui,doStatus('There is no thread selected')
+	 case ThreadManager,emptyForest($) then
+	    Gui,doStatus(NoThreads)
 	 else
+	    T = @currentThread
 	    I = {Thread.id T}
 	    R = case {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
 	    S = {Thread.state T}
+	    N = {Length {Dictionary.items self.ThreadDic}}
 	 in
-	    Gui,doStatus('Currently selected thread: #' # I # '/' #
-			 {Thread.parentId T} #
+	    Gui,doStatus(N # ' attached threads, currently selected: #' #
+			 I # '/' # {Thread.parentId T} #
 			 ' (' # R # ', ' # S # ')')
 	 end
       end
@@ -242,7 +244,7 @@ in
 	 {Dictionary.member self.ThreadDic I}
       end
 
-      meth EmptyTree($)
+      meth emptyForest($)
 	 {Dictionary.keys self.ThreadDic} == nil
       end
 
@@ -252,7 +254,7 @@ in
       end
 
       meth add(T I Q Exc<=unit)
-	 IsFirstThread = ThreadManager,EmptyTree($)
+	 IsFirstThread = ThreadManager,emptyForest($)
 	 Stack = {New StackManager init(thr:T id:I)}
       in
 	 {Dictionary.put self.ThreadDic I Stack}
@@ -280,7 +282,7 @@ in
 	    Gui,killNode(I Next)
 	    {OzcarMessage 'next tree node is #' # Next}
 	    {Dictionary.remove self.ThreadDic I}
-	    case ThreadManager,EmptyTree($) then
+	    case ThreadManager,emptyForest($) then
 	       currentThread <- unit
 	       currentStack  <- unit
 	       {SendEmacs removeBar}
@@ -295,9 +297,9 @@ in
 	 end
 	 case T == @currentThread then
 	    case Mode == kill then
-	       case ThreadManager,EmptyTree($) then skip else
+	       case ThreadManager,emptyForest($) then skip else
 		  case Select then
-		     currentThread <- unit % to ignore Gui actions temporarily
+		     detachDone <- _
 		     ThreadManager,switch(Next)
 		     Gui,status(', new selected thread is #' # Next append)
 		  else skip end
@@ -422,11 +424,9 @@ in
 
       meth blocked(thr:T id:I)
 	 Gui,markNode(I blocked)
-/*
-	 case {CondSelect {@currentStack getTop($)} dir entry} of exit then
-	    ThreadManager,rebuildCurrentStack
-	 else skip end
- */
+%	 case {CondSelect {@currentStack getTop($)} dir entry} of exit then
+%	    ThreadManager,rebuildCurrentStack
+%	 else skip end
       end
 
       meth rebuildCurrentStack
@@ -448,6 +448,10 @@ in
       meth switch(I PrintStack<=true)
 	 New in
 	 SwitchSync <- New = unit
+
+	 case {IsFree @switchDone} then skip else
+	    switchDone <- _
+	 end
 
 	 Gui,selectNode(I)
 
@@ -489,6 +493,9 @@ in
 	       end
 	    end
 	 else skip end
+
+	 @switchDone = unit
+	 @detachDone = unit
       end
 
       meth toggleEmacsThreads
