@@ -94,7 +94,7 @@
       <Entry><<best>>
         <Index/<<Explorer>><AND><<best>>/
       <Synopsis>
-	<<{Explorer.best ?+{ScriptP}}>>
+	<<{Explorer.best ?+{ScriptP} ?+{OrderP}}>>
       <Item>
         Initializes the Explorer with the script <<?{ScriptP}>> (a
         unary procedure) and starts exploration of the entire search
