@@ -63,7 +63,7 @@ STANDARDSRC1 = \
         Time.oz Thread.oz Match.oz Type.oz Space.oz \
         Array.oz Dictionary.oz Exception.oz Lazy.oz Promise.oz
 
-STANDARDSRC = $(STANDARDSRC1:%=Standard/%) Standard.oz
+STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
 
 INITSRC1 = URL.oz Prop.oz
 INITSRC = $(INITSRC1:%=init/%) Init.oz
@@ -241,10 +241,10 @@ Base.ozc: Standard.ozc
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
         OZMAINIT="" $(EXEC) DumpInitial.oz
 
-StandardModules.ozc: AP/StandardModules.oz
+StandardModules.ozc: ap/StandardModules.oz
         $(COMPILE)  $< -o $@
 
-StandardSubModules.ozc: AP/StandardSubModules.oz
+StandardSubModules.ozc: ap/StandardSubModules.oz
         $(COMPILE)  $< -o $@
 
 tycs: $(TYCS)
@@ -396,11 +396,11 @@ $(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
         $(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@
 
-compiler-Builtins.oz: $(TOPDIR)/share/emulator/bidecl.perl
+compiler-Builtins.oz: $(TOPDIR)/platform/emulator/bidecl.perl
         $(PERL) $< -oztable > $@
 
-compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/Emulator/instrDefs.m4
-        $(M4) -DEMUDIR=$(TOPDIR)/share/emulator < $< > $@
+compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/platform/emulator/instrDefs.m4
+        $(M4) -DEMUDIR=$(TOPDIR)/platform/emulator < $< > $@
 
 CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env OP.env WP.env \
         Compiler.env Browser.env CompilerPanel.env Init.ozc
