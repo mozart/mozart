@@ -62,6 +62,9 @@
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
 #include "perdio.hh"
+#ifdef DEBUG_CHECK
+#include "os.hh"
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1069,6 +1072,13 @@ OZ_BI_proto(BIportWait);
 
 void initPerdio()
 {
+  //
+#ifdef DEBUG_CHECK
+  fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
+  fflush(stderr);
+  sleep(10);
+#endif
+
 #ifdef DEBUG_PERDIO
   DV = new DebugVector();
 #endif
@@ -1166,8 +1176,6 @@ ConstTerm *gcStatefulSpec(Tertiary *t)
 
 void dpExit()
 {
-#ifdef VIRTUALSITES
   (*virtualSitesExit)();
-#endif
 }
 
