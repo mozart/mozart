@@ -289,7 +289,6 @@ void handleHashTable(ProgramCounter PC, HashTable *ht)
 
 ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
 {
-#ifndef DISABLE_DEFINITIONCOPY
   HashTable *ht = new HashTable(HT_INTKEY,100);
   while(OZ_isCons(list)) {
     TaggedRef key = OZ_head(list);
@@ -350,16 +349,4 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list, Bool makecopy)
 
   delete ht;
   return ret+sizeOfDef;
-#else
-  while(OZ_isCons(list)) {
-    TaggedRef key = OZ_head(list);
-    if (OZ_isForeignPointer(key))
-      ((AbstractionEntry *) OZ_getForeignPointer(key))->copyable = NO;
-    else
-      ((NamedName *) tagged2Literal(key))->clearFlag(Lit_isCopyableName);
-    list = OZ_tail(list);
-  }
-  Assert(OZ_isNil(list));
-  return start;
-#endif
 }
