@@ -1937,15 +1937,15 @@ void engine() {
       /* unit commit */
       WaitActor *aa = CastWaitActor(CBB->getActor());
       if (aa->hasOneChild()) {
-	Board *bb = CBB;
+	Board *waitBoard = CBB;
 	e->reduceTrailOnUnitCommit();
-        bb->unsetInstalled();
+        waitBoard->unsetInstalled();
 	Board::SetCurrent(aa->getBoard()->getBoardDeref());
 
-	Bool ret = e->installScript(bb->getScriptRef());
+	Bool ret = e->installScript(waitBoard->getScriptRef());
 	DebugCheck(!ret,error("WAIT"));
-	bb->setCommitted(CBB);
-	CBB->addSuspension(bb->getSuspCount());
+	waitBoard->setCommitted(CBB);
+	CBB->addSuspension(waitBoard->getSuspCount()-1);
 	DISPATCH(1);
       }
 
