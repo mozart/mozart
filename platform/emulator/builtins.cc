@@ -254,6 +254,8 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t)
   return(builtin);
 }
 
+BuiltinTabEntry *BIEchooseInternal;
+
 /*===================================================================
  * `builtin`
  *=================================================================== */
@@ -692,57 +694,6 @@ typeError:
 DECLAREBI_USEINLINEFUN1(BIprocedureArity,procedureArityInline)
 
 
-OZ_C_proc_begin(BIcloneProcedure,2)
-{
-  TaggedRef master = OZ_getCArg(0);
-
-  DEREF(master, _m, mtag);
-  if (isAnyVar(mtag)) return SUSPEND;
-
-  if (isProcedure(master)) {
-    ConstTerm *rec = tagged2Const(master);
-    
-    switch (rec->getType()) {
-    case Co_Abstraction:
-      return OZ_unify(OZ_getCArg(1),master);
-    case Co_Builtin:
-      if (((Builtin *) rec)->getType() == BIsolveCont) {
-
-	if (((OneCallBuiltin *) rec)->isSeen()) {
-	  return OZ_unify(OZ_getCArg(1),master);
-	} else {
-	  RefsArray contGRegs;
-      
-	  Board *solveBB =
-	    (Board *) tagValueOf ((((OneCallBuiltin *) rec)->getGRegs ())[0]);
-      
-	  SolveActor::Cast (solveBB->getActor ())->setBoard (am.currentBoard);
-      
-	  Board *newSolveBB = (Board *) am.copyTree(solveBB, (Bool *) NULL);
-	  ozstat.incSolveClone();
-
-	  contGRegs = allocateRefsArray(1);
-	  contGRegs[0] = makeTaggedConst(newSolveBB);
-      
-	  return (OZ_unify(OZ_getCArg(1),
-			   makeTaggedConst
-			   (new OneCallBuiltin 
-			    (((Builtin *) rec)->getBITabEntry(), 
-			     contGRegs))));
-	}
-      } else if (((Builtin *) rec)->getType() == BIsolved) {
-	return OZ_unify(OZ_getCArg(1),master);
-      }
-    default:
-      goto typeError;
-    }
-  }
-  goto typeError;
-
-typeError:
-  TypeError1("cloneProcedure",0,"Procedure",master);
-}
-OZ_C_proc_end
 
 
 OZ_Return isCellInline(TaggedRef cell)
@@ -752,6 +703,268 @@ OZ_Return isCellInline(TaggedRef cell)
 }
 DECLAREBI_USEINLINEREL1(BIisCell,isCellInline)
 DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
+
+// ---------------------------------------------------------------------
+// Spaces
+// ---------------------------------------------------------------------
+
+
+#define declareSpace(BUILTIN)                           \
+  OZ_Term tagged_space = OZ_getCArg(0);                 \
+  DEREF(tagged_space, space_ptr, space_tag);            \
+  if (isAnyVar(space_tag))                              \
+    OZ_suspendOn(makeTaggedRef(space_ptr));             \
+  if (!isSpace(tagged_space))                           \
+    TypeError1(BUILTIN, 0, "Space", tagged_space);      \
+  Space *space = (Space *) tagged2Const(tagged_space);
+
+#define declareUnmergedSpace(BUILTIN)                             \
+  declareSpace(BUILTIN)                                           \
+  if (space->isMerged())                                          \
+    TypeError1(BUILTIN, 0, "Space already merged", tagged_space);
+  
+#define declareStableSpace(BUILTIN)                           \
+  declareUnmergedSpace(BUILTIN)                               \
+  { TaggedRef result = space->getSolveActor()->getResult();   \
+  if (OZ_isVariable(result)) OZ_suspendOn(result); }
+
+
+OZ_C_proc_begin(BInewSpace, 2) {
+  OZ_Term proc = OZ_getCArg(0);
+
+  DEREF(proc, proc_ptr, proc_tag);
+  if (isAnyVar(proc_tag)) 
+    OZ_suspendOn(makeTaggedRef(proc_ptr));
+
+  if (!isProcedure(proc))
+    TypeError1("Space.new", 0, "Procedure", proc);
+
+  Board* CBB = am.currentBoard;
+  int    CPP = am.currentThread->getPriority();
+
+  // creation of solve actor and solve board
+  SolveActor *sa = new SolveActor(CBB, CPP, NO);
+
+  // thread creation for {proc root}
+  sa->inject(CPP, proc);
+    
+  // create space   
+  return OZ_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BInewDebugSpace, 2) {
+  OZ_Term proc = OZ_getCArg(0);
+
+  DEREF(proc, proc_ptr, proc_tag);
+  if (isAnyVar(proc_tag)) 
+    OZ_suspendOn(makeTaggedRef(proc_ptr));
+
+  if (!isProcedure(proc))
+    TypeError1("Space.newDebug", 0, "Procedure", proc);
+
+  Board* CBB = am.currentBoard;
+  int    CPP = am.currentThread->getPriority();
+
+  // creation of solve actor and solve board
+  SolveActor *sa = new SolveActor(CBB, CPP, OK);
+
+  // thread creation for {proc root}
+  sa->inject(CPP, proc);
+    
+  // create space   
+  return OZ_unify(OZ_getCArg(1), makeTaggedConst(new Space(CBB,sa->getSolveBoard())));
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIisSpace, 2) {
+  OZ_Term tagged_space = OZ_getCArg(0);
+
+  DEREF(tagged_space, space_ptr, space_tag);
+
+  if (isAnyVar(space_tag))
+    OZ_suspendOn(makeTaggedRef(space_ptr));
+
+  return OZ_unify(OZ_getCArg(1), isSpace(tagged_space) ? NameTrue : NameFalse);
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIaskSpace, 2) {
+  declareSpace("Space.ask");
+  TaggedRef out = OZ_getCArg(1);
+
+  if (space->isFailed())
+    return OZ_unify(out, AtomFailed);
+  
+  if (space->isMerged())
+    return OZ_unify(out, AtomMerged);
+  
+  TaggedRef answer = space->getSolveActor()->getResult();
+  
+  if (space->getSolveActor()->isDebugBlocked()) {
+    SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+    stuple->setArg(0, answer);
+
+    if (OZ_unify(makeTaggedSRecord(stuple), out) == FAILED)
+      return FAILED;
+  } else {
+    if (OZ_unify(answer, out) == FAILED)
+      return FAILED;
+  }
+  return PROCEED;
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BImergeSpace, 2) {
+  declareUnmergedSpace("Space.merge");
+
+  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
+    TypeError1("Space.merge", 0, "current space is subordinated", 
+	       tagged_space);
+      
+  if (space->isFailed())
+    return FAILED;
+
+  Board *CBB = am.currentBoard;
+
+  // Check board
+  
+  TaggedRef result = space->getSolveActor()->getResult();
+
+  if (OZ_isVariable(result) && OZ_unify(result, AtomMerged) == FAILED)
+    return FAILED;
+
+  TaggedRef root = space->getSolveActor()->merge(CBB);
+  space->merge();
+
+  return OZ_unify(root, OZ_getCArg(1));
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIcloneSpace, 2) {
+  declareStableSpace("Space.clone");
+
+  Board* CBB = am.currentBoard;
+
+  if (space->isFailed())
+    return OZ_unify(OZ_getCArg(1),
+		    makeTaggedConst(new Space(CBB, (Board *) 0)));
+
+
+  return OZ_unify(OZ_getCArg(1),
+		  makeTaggedConst(new Space(CBB, 
+					    space->getSolveActor()->clone(CBB))));
+
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIchooseInternal, 2) {
+  int left  = smallIntValue(OZ_getCArg(0)) - 1;
+  int right = smallIntValue(OZ_getCArg(1)) - 1;
+
+  int status = 
+    SolveActor::Cast(am.currentBoard->getActor())->choose(left,right);
+
+  if (status==-1) {
+    TypeError1("Space.choose", 0, "Space: choice point stack is empty", 
+	       tagged_space);
+  } else if (status==0) {
+    return FAILED;
+  } 
+
+  return PROCEED;
+} OZ_C_proc_end
+
+
+
+OZ_C_proc_begin(BIchooseSpace, 2) {
+  declareStableSpace("Space.choose");
+  TaggedRef choice = OZ_getCArg(1);
+  
+  DEREF(choice, choice_ptr, choice_tag);
+
+  if (isAnyVar(choice_tag))
+    OZ_suspendOn(makeTaggedRef(choice_ptr));
+
+  TaggedRef left, right;
+
+  if (isSmallInt(choice_tag)) {
+    left  = choice;
+    right = choice;
+  } else if (isSTuple(choice) &&
+	     literalEq(AtomPair,
+		       tagged2SRecord(choice)->getLabel()) &&
+	     tagged2SRecord(choice)->getWidth() == 2) {
+    left  = tagged2SRecord(choice)->getArg(0);
+    DEREF(left, left_ptr, left_tag);
+
+    if (isAnyVar(left_tag))
+      OZ_suspendOn(makeTaggedRef(left_ptr));
+
+    right = tagged2SRecord(choice)->getArg(1);
+    
+    DEREF(right, right_ptr, right_tag);
+
+    if (isAnyVar(right_tag))
+      OZ_suspendOn(makeTaggedRef(right_ptr));
+  } else {
+    TypeError1("Space.choose", 1, "Integer or pair of integers", choice);
+  }
+
+  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
+    TypeError1("Space.inject", 0, "current space is subordinated", 
+	       tagged_space);
+        
+  space->getSolveActor()->clearResult(space->getBoardFast());
+
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = left;
+  args[1] = right;
+
+  Thread *it = new Thread(am.currentThread->getPriority(), 
+			  space->getSolveBoard(), OK);
+  it->pushCall(makeTaggedConst(new Builtin(BIEchooseInternal, 
+					   makeTaggedNULL())),
+	       args, 2);
+  am.scheduleThread(it);
+
+  return PROCEED;
+} OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIinjectSpace, 2) {
+  declareUnmergedSpace("Space.inject");
+
+  // Check whether space is failed!
+  if (space->isFailed())
+    return PROCEED;
+
+  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
+    TypeError1("Space.inject", 0, "current space is subordinated", 
+	       tagged_space);
+      
+  OZ_Term proc = OZ_getCArg(1);
+
+  DEREF(proc, proc_ptr, proc_tag);
+
+  if (isAnyVar(proc_tag)) 
+    OZ_suspendOn(makeTaggedRef(proc_ptr));
+
+  if (!isProcedure(proc))
+    TypeError1("Space.inject", 1, "Procedure", proc);
+
+  Board      *sb = space->getSolveBoard();
+  SolveActor *sa = space->getSolveActor();
+
+  // clear status
+  sa->clearResult(space->getBoardFast());
+
+  // inject
+  sa->inject(sa->getPriority(), proc);
+    
+  return PROCEED;
+} OZ_C_proc_end
+
 
 
 // ---------------------------------------------------------------------
@@ -5615,7 +5828,6 @@ BIspec allSpec[] = {
   {"termType",2,BItermType,       	 (IFOR) BItermTypeInline},
 
   {"procedureArity",2,BIprocedureArity,	 (IFOR)procedureArityInline},
-  {"cloneProcedure",2,BIcloneProcedure,  0},
   {"tuple",3,BItuple,              (IFOR) tupleInline},
   {"label",2,BIlabel,              (IFOR) labelInline},
 
@@ -5857,6 +6069,16 @@ BIspec allSpec[] = {
   {"isClassB",         2,BIisClassB,	       (IFOR) BIisClassBInline},
   {"setClosed",        1,BIsetClosed,          0},
 
+  {"Space.new",           2, BInewSpace,       0},
+  {"Space.newDebug",      2, BInewDebugSpace,  0},
+  {"Space.is",            2, BIisSpace,        0},
+  {"Space.ask",           2, BIaskSpace,       0},
+  {"Space.merge",         2, BImergeSpace,     0},
+  {"Space.clone",         2, BIcloneSpace,     0},
+  {"Space.choose",        2, BIchooseSpace,    0},
+  {"Space.choose (Task)", 2, BIchooseInternal, 0},
+  {"Space.inject",        2, BIinjectSpace,    0},
+
   {0,0,0,0}
 };
 
@@ -5879,10 +6101,6 @@ BuiltinTabEntry *BIinit()
   BIaddSpec(allSpec);
 
   /* see emulate.cc */
-  BIaddSpecial("solve",             3, BIsolve);
-  BIaddSpecial("solveEatWait",      3, BIsolveEatWait);
-  BIaddSpecial("solveDebug",        3, BIsolveDebug);
-  BIaddSpecial("solveDebugEatWait", 3, BIsolveDebugEatWait);
   BIaddSpecial("raise",             1, BIraise);
 
 #ifdef ASSEMBLER
@@ -5895,6 +6113,10 @@ BuiltinTabEntry *BIinit()
   BIinitAVar();
   BIinitUnix();
   BIinitTclTk();
+
+
+  BIEchooseInternal = (BuiltinTabEntry *) 
+    builtinTab.htFind("Space.choose (Task)");
 
   return bi;
 }

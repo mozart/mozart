@@ -118,8 +118,8 @@ public:
   long taskStack,taskStackLen;
   long cLocal,cJob,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
   long cCallCont, cCFuncCont;
-  long abstraction,deepObject,flatObject,cell,chunk;
-  long oneCallBuiltin,solvedBuiltin,builtin;
+  long abstraction,deepObject,flatObject,cell,space,chunk;
+  long builtin;
   long heapChunk,thread;
   long board,objectClass;
   long askActor,waitActor,solveActor,waitChild;
