@@ -399,7 +399,8 @@ void Thread::makeRunning ()
     am.cachedStack = getTaskStackRef();
     am.cachedSelf = getSelf();
     setSelf(0);
-    ProfileCode(ozstat.currAbstr=abstr; abstr=0);
+    ozstat.enterCall(abstr);
+    abstr=0;
     break;			// nothing to do;
 
   case S_PR_THR:
@@ -430,9 +431,9 @@ void Thread::makeRunning ()
 #define ChangeSelf(obj)				\
       e->changeSelf(obj);
 
-#define SaveSelf					\
-      ProfileCode(CTT->setAbstr(ozstat.currAbstr);	\
-                  ozstat.enterCall(NULL));		\
+#define SaveSelf				\
+      CTT->setAbstr(ozstat.currAbstr);		\
+      ozstat.leaveCall(NULL);			\
       e->saveSelf();
 
 
@@ -445,9 +446,6 @@ void Thread::makeRunning ()
 #define CallDoChecks(Pred,gRegs)						\
      Y = NULL;									\
      G = gRegs;									\
-     ProfileCode(Pred->getPred()->numCalled++);					\
-     ProfileCode(if (Pred!=ozstat.currAbstr) CTS->pushAbstr(ozstat.currAbstr);)	\
-     ProfileCode(ozstat.enterCall(Pred);)					\
      emulateHookCall(e,Pred,X,							\
 		     e->pushContX(Pred->getPC(),NULL,G,X,Pred->getArity()));
 
@@ -2214,7 +2212,7 @@ LBLdispatcher:
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+4);
       AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
       
-      ProfileCode(predd->numClosures++);
+      predd->numClosures++;
 
       if (predd->getPC()==NOCODE) {
         predd->PC = PC+sizeOf(DEFINITION);
@@ -2832,7 +2830,7 @@ LBLdispatcher:
 
       tt->pushCont(newPC,newY,G,NULL);
       tt->setSelf(e->getSelf());
-      ProfileCode(tt->setAbstr(ozstat.currAbstr));
+      tt->setAbstr(ozstat.currAbstr);
 
       e->scheduleThread (tt);
       
@@ -2857,7 +2855,8 @@ LBLdispatcher:
 
   Case(TASKPROFILECALL)
     {
-      ProfileCode(ozstat.leaveCall((Abstraction*)Y));
+      ozstat.leaveCall(ozstat.currAbstr);
+      ozstat.enterCall((PrTabEntry*)Y);
       goto LBLpopTaskNoPreempt;
     }
 
@@ -3184,12 +3183,21 @@ LBLdispatcher:
 	SUSP_PC(predPtr,tailcallAndArity>>1,PC);
       }
 
-      Abstraction *abstr = tagged2Abstraction(pred);
-
       OZ_unprotect((TaggedRef*)(PC+1));
-      AbstractionEntry *entry = AbstractionTable::add(abstr);
-      CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
-      CodeArea::writeAddress(entry, PC+1);
+
+      if (isAbstraction(pred)) {
+	Abstraction *abstr = tagged2Abstraction(pred);
+	AbstractionEntry *entry = AbstractionTable::add(abstr);
+	CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
+	CodeArea::writeAddress(entry, PC+1);
+      } else if (isBuiltin(pred)) {
+	Assert((tailcallAndArity&1)==0); // there is no tail version  for CALLBUILTIN
+	BuiltinTabEntry* entry = tagged2Builtin(pred);
+	CodeArea::writeBuiltin(entry,PC+1);
+	CodeArea::writeOpcode(CALLBUILTIN, PC);
+      } else {
+	RAISE_APPLY(pred,OZ_atom("proc or builtin expected."));
+      }
       DISPATCH(0);
     } 
       
@@ -3241,7 +3249,25 @@ LBLdispatcher:
 
   Case(PROFILEPROC)
     {
-      error("unimplemented");
+      static int sizeOfDef = -1;
+      if (sizeOfDef==-1) sizeOfDef = sizeOf(DEFINITION);
+      
+      Reg reg;
+      ProgramCounter next;
+      PrTabEntry *pred;
+      int line;
+      TaggedRef file;
+  
+      CodeArea::getDefinitionArgs(PC-sizeOfDef,reg,next,file,line,pred);
+
+      pred->numCalled++;
+      if (pred!=ozstat.currAbstr) {
+	CTS->pushAbstr(ozstat.currAbstr);
+	ozstat.leaveCall(ozstat.currAbstr);
+	ozstat.enterCall(pred);
+      }
+      
+      DISPATCH(1);
     }
 
   Case(TASKCATCH)

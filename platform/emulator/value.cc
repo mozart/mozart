@@ -1232,8 +1232,6 @@ char *toC(OZ_Term term)
 
 DbgInfo *allDbgInfos = NULL;
 
-#ifdef HEAP_PROFILE
-
 PrTabEntry *PrTabEntry::allPrTabEntries = NULL;
 
 void PrTabEntry::printPrTabEntries()
@@ -1246,17 +1244,58 @@ void PrTabEntry::printPrTabEntries()
     samplesTotal += aux->samples;
     if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
       char *name = ozstrdup(toC(aux->printname)); // cannot have 2 toC in one line
-      printf("%20.20s Created: %5d Called: %6d Heap: %5d KB, Samples: %5d %s(%d)\n",
-	     name,aux->numClosures,aux->numCalled,aux->heapUsed/KB,
+      printf("%20.20s Created: %5d Called: %6d Heap: %5d B, Samples: %5d %s(%d)\n",
+	     name,aux->numClosures,aux->numCalled,aux->heapUsed,
 	     aux->samples,toC(aux->fileName),aux->lineno);
       delete name;
     }
     aux = aux->next;
   }
-
+  
   printf("\n=============================================================\n\n");
   printf("    Total calls: %d, total heap: %d KB, samples: %d\n\n",
 	 callsTotal,heapTotal/KB,samplesTotal);
+}
+
+
+TaggedRef PrTabEntry::getProfileStats()
+{
+  TaggedRef ret      = nil();
+  TaggedRef ps       = oz_atom("profileStats");
+  TaggedRef samples  = oz_atom("samples");
+  TaggedRef heap     = oz_atom("heap");
+  TaggedRef calls    = oz_atom("calls");
+  TaggedRef closures = oz_atom("closures");
+  TaggedRef name     = oz_atom("name");
+  TaggedRef line     = oz_atom("line");
+  TaggedRef file     = oz_atom("file");
+
+  TaggedRef list = cons(file,
+			cons(line,
+			     cons(name,
+				  cons(samples,
+				       cons(heap,
+					    cons(calls,
+						 cons(closures,nil())))))));
+  Arity *arity = aritytable.find(sortlist(list,length(list)));
+
+  PrTabEntry *aux = allPrTabEntries;
+  while(aux) {    
+    if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
+      SRecord *rec = SRecord::newSRecord(ps,arity);
+      rec->setFeature(samples,oz_int(aux->samples));
+      rec->setFeature(calls,oz_int(aux->numCalled));
+      rec->setFeature(heap,oz_int(aux->heapUsed));
+      rec->setFeature(closures,oz_int(aux->numClosures));
+      rec->setFeature(line,oz_int(aux->lineno));
+      rec->setFeature(name,aux->printname);
+      rec->setFeature(file,aux->fileName);
+      ret = cons(makeTaggedSRecord(rec),ret);
+    }
+    aux = aux->next;
+  }
+
+  return ret;
 }
 
 
@@ -1271,5 +1310,3 @@ void PrTabEntry::profileReset()
     aux = aux->next;
   }
 }
-
-#endif

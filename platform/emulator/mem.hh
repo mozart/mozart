@@ -96,13 +96,10 @@ extern char *heapTop;         // pointer to next free memory block
 #endif
 
 extern char *heapEnd;
-extern unsigned int heapTotalSize;   // # kilo bytes allocated
+extern unsigned int heapTotalSize;        // # kilo bytes allocated
+extern unsigned int heapTotalSizeBytes;   // # bytes allocated
 
 void getMemFromOS(size_t size);
-
-inline unsigned int getAllocatedMemory() {
-  return heapTotalSize;
-}
 
 
 /* Allocation functions.
@@ -206,6 +203,7 @@ void freeListDispose(void *addr, size_t chunk_size);
 
 // return free used kilo bytes on the heap
 unsigned int getUsedMemory(void);
+unsigned int getUsedMemoryBytes(void);
 #endif
 
 #endif

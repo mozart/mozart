@@ -147,7 +147,7 @@ private:
   unsigned int id;
   ThreadBodyItem item;		// NULL if it's a deep 'unify' suspension;
 
-  ProfileCode(Abstraction *abstr);
+  PrTabEntry *abstr;
 
 #ifdef PERDIO
   int stopCount;
@@ -211,10 +211,8 @@ public:
 
   unsigned int getID() { return id; }
 
-  ProfileCode(
-  void setAbstr(Abstraction *a) { abstr = a; }
-  Abstraction *getAbstr() { return abstr; }
-  )
+  void setAbstr(PrTabEntry *a) { abstr = a; }
+  PrTabEntry *getAbstr() { return abstr; }
 
   void setSelf(Object *o) { setPtr(o); }
   Object *getSelf() { return (Object *) getPtr(); }
