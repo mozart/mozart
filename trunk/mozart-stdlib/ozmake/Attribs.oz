@@ -106,6 +106,9 @@ define
 	 MogulAction : unit
 	 Contact     : unit
 	 MogulRootID : unit
+	 MogulDir    : unit
+	 MogulUrl    : unit
+	 ConfigAction: unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -770,6 +773,9 @@ define
 	 {Path.resolve Attribs,get_prefix($) DB_CONFIG_OLDSTYLE}
       end
 
+      meth set_mogulurl(U)
+	 MogulUrl <- {URL.toAtom {URL.toBase U}}
+      end
       meth set_mogulpkgurl(U)
 	 MogulPkgURL <- {URL.toAtom {URL.toBase U}}
       end
@@ -782,48 +788,67 @@ define
 
       meth get_mogulpkgurl($)
 	 if @MogulPkgURL==unit then
-	    raise ozmake(mogul:nopkgurl) end
-	 else
-	    @MogulPkgURL
+	    if @MogulUrl==unit then
+	       raise ozmake(mogul:nopkgurl) end
+	    else
+	       MogulPkgURL <- {Path.resolveAtom @MogulUrl 'pkg'}
+	    end
 	 end
+	 @MogulPkgURL
       end
       meth get_moguldocurl($)
 	 if @MogulDocURL==unit then
-	    raise ozmake(mogul:nodocurl) end
-	 else
-	    @MogulDocURL
+	    if @MogulUrl==unit then
+	       raise ozmake(mogul:nodocurl) end
+	    else
+	       MogulDocURL <- {Path.resolveAtom @MogulUrl 'doc'}
+	    end
 	 end
+	 @MogulDocURL
       end
       meth get_moguldburl($)
 	 if @MogulDBURL==unit then
-	    raise ozmake(mogul:nodburl) end
-	 else
-	    @MogulDBURL
+	    if @MogulUrl==unit then
+	       raise ozmake(mogul:nodburl) end
+	    else
+	       MogulDBURL <- {Path.resolveAtom @MogulUrl 'db'}
+	    end
 	 end
+	 @MogulDBURL
       end
 
+      meth set_moguldir(D) MogulDir<-{Path.expand D} end
       meth set_mogulpkgdir(D) MogulPkgDir<-{Path.expand D} end
       meth set_moguldocdir(D) MogulDocDir<-{Path.expand D} end
       meth set_moguldbdir(D) MogulDBDir<-{Path.expand D} end
 
       meth get_mogulpkgdir($)
 	 if @MogulPkgDir==unit then
-	    MogulPkgDir<-{Path.expand
-			  {Path.resolve {self get_prefix($)} 'pkg'}}
+	    if @MogulDir==unit then
+	       raise ozmake(mogul:nomogulpkgdir) end
+	    else
+	       MogulPkgDir<-{Path.expand {Path.resolve @MogulDir 'pkg'}}
+	    end
 	 end
 	 @MogulPkgDir
       end
       meth get_moguldocdir($)
 	 if @MogulDocDir==unit then
-	    MogulDocDir<-{Path.expand
-			  {Path.resolve {self get_prefix($)} 'doc'}}
+	    if @MogulDir==unit then
+	       raise ozmake(mogul:nomoguldocdir) end
+	    else
+	       MogulDocDir<-{Path.expand {Path.resolve @MogulDir 'doc'}}
+	    end
 	 end
 	 @MogulDocDir
       end
       meth get_moguldbdir($)
 	 if @MogulDBDir==unit then
-	    MogulDBDir<-{Path.expand
-			 {Path.resolve {self get_prefix($)} 'mogul'}}
+	    if @MogulDir==unit then
+	       raise ozmake(mogul:nomoguldbdir) end
+	    else
+	       MogulDBDir<-{Path.expand {Path.resolve @MogulDir 'db'}}
+	    end
 	 end
 	 @MogulDBDir
       end
@@ -860,5 +885,8 @@ define
 	 end
       end
       meth get_mogulrootid($) @MogulRootID end
+
+      meth set_config_action(A) ConfigAction<-{self config_validate_action(A $)} end
+      meth get_config_action($) @ConfigAction end
    end
 end

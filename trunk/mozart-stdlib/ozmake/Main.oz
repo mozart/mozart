@@ -59,7 +59,7 @@ prepare
       checkneeded(      alias:[action#checkneeded grade#freshen])
       %% again(            alias:action#again)
 
-      config(single type:atom(set unset list)
+      config(single type:string
 	     validate:alt(when(action false) when(true optional)))
 
       grade(single type:atom(none up down same any freshen))
@@ -89,6 +89,7 @@ prepare
       sysincludedirs(single type:bool)
       syslibrarydirs(single type:bool)
 
+      mogul(      single type:string)
       mogulpkgurl(single type:string)
       moguldocurl(single type:string)
       moguldburl( single type:string)
@@ -96,14 +97,12 @@ prepare
       moguldocdir(single type:string)
       moguldbdir( single type:string)
       mogulrootid(single type:string)
+      moguldir(   single type:string)
+      mogulurl(   single type:string)
 
       exe(single type:atom(default no yes both multi))
       makepkgfile(single type:string)
 
-      %%mogulaction(single type:atom(package contact section list))
-      %%contact(single alias:[action#mogul mogulaction#contact])
-
-      mogul(single type:string)
       )
 
    OPTLIST =
@@ -159,6 +158,9 @@ prepare
     makepkgfile    # set_makepkgfile      # true
     mogul          # set_mogul_action     # false
     mogulrootid    # set_mogulrootid      # true
+    moguldir       # set_moguldir         # true
+    mogulurl       # set_mogulurl         # true
+    config         # set_config_action    # false
    ]
       
 define
@@ -199,7 +201,7 @@ define
       [] uninstall   then {Man uninstall}
       [] edit        then {Man makefileEdit}
       [] config      then {Man config(Args OPTLIST)}
-      [] mogul       then {Man mogul}
+      [] mogul       then {Man mogul(Targets)}
       [] checkneeded then {Application.exit {Man checkneeded($)}}
       %% [] again     then {Man again}
       end

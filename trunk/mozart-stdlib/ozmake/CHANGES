@@ -20,12 +20,21 @@
 ** ozmake --mogul=... now permits to manage the MOGUL entries associated with
    packages you provide.
 *** ozmake --mogul=put
-    creates all mogul entries associated with the package: this includes the
-    package entry (if it provides any targets) and the contact entries (if
-    any).
-*** ozmake --mogul=db
-    lists all your MOGUL entries made available to the MOGUL librarian for
-    download.
+    ozmake --mogul=put -p PKG
+    update the user's database of own MOGUL contributions with current or
+    given package
+*** ozmake --mogul=delete
+*** ozmake --mogul=delete -p PKG
+*** ozmake --mogul=delete MOG1 ... MOGn
+    delete some entries from the user's database of own MOGUL contributions
+*** ozmake --mogul=list
+*** ozmake --mogul=list MOG1 ... MOGn
+    list all or the specified entries from the user's database of own MOGUL
+    contributions
+*** ozmake --mogul=export
+    create all necessary MOGUL entries for download by the MOGUL librarian
+** ozmake --config=(put|delete|list)
+   the possible values were renamed to be similar to those for --mogul
 
 * version 0.72
 ** ozmake --config=... now permits to manage predefined defaults
