@@ -20,10 +20,15 @@ local
       case N == '' then '$' else N end
    end
 
-   fun {FormatSize B}
-      case     B < 1024      then B                 # 'b'
-      elsecase B < 1024*1024 then B div 1024        # 'k'
-      else                        B div (1024*1024) # 'm'
+   local
+      C = 10000
+      D =  1024
+   in
+      fun {FormatSize B}
+	 case     B < C   then B           # 'b'
+	 elsecase B < C*D then B div D     # 'k'
+	 else                  B div (D*D) # 'M'
+	 end
       end
    end
 
@@ -248,7 +253,7 @@ in
 	    RawData    = @Stats
 	    SortedData = {Sort RawData fun {$ X Y} X.@SortBy > Y.@SortBy end}
 	    Max        = {Int.toFloat SortedData.1.@SortBy}
-	    XStretch   = 210.0
+	    XStretch   = 207.0
 	 
 	    fun {YStretch I}
 	       (I-1)*32
@@ -313,7 +318,8 @@ in
       meth UpdateProcInfo(S)
 	 Gui,Clear(self.BarText)
 	 case S
-	 of nil then SourceManager,bar(file:'' line:0 state:runnable)
+	 of nil then
+	    case {Cget emacs} then SourceManager,removeBar else skip end
 	 [] ''  then skip
 	 else
 	    Gui,Append(self.BarText
@@ -324,7 +330,9 @@ in
 		       ' Clos: ' # S.closures # '\n' #
 		       ' Smpl: ' # S.samples # '\n' #
 		       ' Heap: ' # {FormatSize S.heap})
-	    SourceManager,bar(file:S.file line:S.line state:runnable)
+	    case {Cget emacs} then
+	       SourceManager,bar(file:S.file line:S.line state:runnable)
+	    else skip end
 	 end
 	 Gui,Disable(self.BarText)
       end
@@ -368,6 +376,16 @@ in
 	 Gui,Disable(W)
       end
 
+      meth toggleEmacs
+	 case {Cget emacs} then
+	    Gui,doStatus('Not using Emacs Bar')
+	    SourceManager,removeBar
+	 else
+	    Gui,doStatus('Using Emacs Bar')
+	 end
+	 {Config toggle(emacs)}
+      end
+      
       meth action(A)
 	 lock
 	    

@@ -3,7 +3,7 @@
 
 local
    
-   TkVerbose = {New Tk.variable tkInit(ConfigVerbose)}
+   TkEmacs = {New Tk.variable tkInit(ConfigEmacs)}
    
    C  = command
    MB = menubutton
@@ -27,10 +27,9 @@ in
 		    key:     ctrl(x))])
 	   MB(text: 'Options'
 	      menu:
-		 [CB(label:   'Verbose'
-		     variable: TkVerbose
-		     action:   Config # toggle(verbose)
-		     feature:  verbose)])]
+		 [CB(label:   'Use Emacs'
+		     variable: TkEmacs
+		     action:   self # toggleEmacs)])]
 	  [MB(text: 'Help'
 	      menu:
 		 [C(label:   'Help on Help'

@@ -130,14 +130,14 @@ end
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
 
-ConfigVerbose              = false
+ConfigEmacs = true
 
 Config =
 {New
  class
     
     attr
-       verbose :               ConfigVerbose
+       emacs : ConfigEmacs
     
     meth init
        skip
