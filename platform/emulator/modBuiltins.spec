@@ -749,27 +749,6 @@ $cmode='dyn';
 			     bi  => BINew,
 			     native => false},
 
-    'addFastGroup'	=> { in  => ['+value','value'],
-			     out => ['value'],
-			     BI  => BIaddFastGroup,
-			     native => false},
-
-    # Also used in tcl/tk interface!
-
-    'delFastGroup'	=> { in  => ['value'],
-			     out => [],
-			     BI  => BIdelFastGroup,
-			     native => false},
-
-    'getFastGroup'	=> { in  => ['+value'],
-			     out => ['+value'],
-			     BI  => BIgetFastGroup,
-			     native => false},
-
-    'delAllFastGroup'	=> { in  => ['+value'],
-			     out => ['+value'],
-			     BI  => BIdelAllFastGroup,
-			     native => false},
 
 
     ##
