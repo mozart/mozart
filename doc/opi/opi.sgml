@@ -1030,7 +1030,7 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	      The local functors are given by the user option
 	      <<oz-functor-path>>; see <<oz-set-functor-path>>.
 	  </List>
-      <Section>
+      <Section id="section.intro.gdb">
 	<Title/Running under gdb/
 	<P>
 	  <Index/emulator<And>debugging/
