@@ -22,13 +22,15 @@ HTMLSUPPORTFILES0 = \
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
-.PHONY: all bootstrap quick validate verify install clean veryclean distclean
+.PHONY: all bootstrap bootquick quick validate verify install clean veryclean distclean
 
 all:: Makefile ../Makefile.common $(WHAT)-html/index.html
 
 include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
+
+bootquick: boot-quick
 
 Makefile: $(SRCDIR)/Makefile.in ../config.status
         cd .. && ./config.status

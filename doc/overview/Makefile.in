@@ -23,6 +23,7 @@ depend:
 check:
 distclean:
 bootstrap:
+bootquick:
 boot-quick:
 
 install: $(DOCDIR) $(addprefix $(DOCDIR)/,$(FILES))

@@ -65,24 +65,20 @@ OZDOCHTMLFLAGS = --autoindex
 
 include ../Makefile.common
 
-$(SRCFILES): $(SUBDIRS)
 
-$(WHAT)-html/index.html: $(SRCFILES)
-
-
-JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
+JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz JobShop
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
-College/%.oz: $(SRCTOP)/share/demo/College/%.oz
+College/%.oz: $(SRCTOP)/share/demo/College/%.oz College
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
-College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt
+College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt College
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
-Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
+Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz Cutting
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
-Flowers/%.oz: $(SRCTOP)/share/demo/Flowers/%.oz
+Flowers/%.oz: $(SRCTOP)/share/demo/Flowers/%.oz Flowers
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
-Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
+Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz Transport
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
-DictClient/%.oz: $(SRCTOP)/share/demo/DictClient/%.oz
+DictClient/%.oz: $(SRCTOP)/share/demo/DictClient/%.oz DictClient
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
 %.oz: $(SRCTOP)/share/demo/%.oz
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
@@ -113,4 +109,4 @@ $(DOCDIR)/DictClient/%.oz: $(SRCTOP)/share/demo/DictClient/%.oz
         $(INSTALL_FILE) $< $@
 
 clean::
-        -rm -rf $(SUBDIRS)
+        -rm -rf $(SUBDIRS) $(ALL_SRC)

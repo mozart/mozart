@@ -32,9 +32,11 @@ INSTALL_DIR     = @INSTALL_DIR@
 HOMEURL         = @HOMEURL@
 
 
-.PHONY: all quick bootstrap boot-quick check install clean veryclean distclean depend
+.PHONY: all quick bootstrap bootquick check install clean veryclean distclean depend
 
-all quick bootstrap boot-quick:: $(TKDOCBASE)
+all quick bootstrap:: $(TKDOCBASE)
+
+bootquick:
 
 install:: all $(DOCDIR)/tcltk
 

@@ -51,12 +51,13 @@ BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
 
-.PHONY: bootstrap all clean veryclean distclean quick boot-quick
+.PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
 quick:
 depend:
+bootquick: boot-all
 boot-quick: boot-all
 
 include $(SRCTOP)/share/Makefile.boot
