@@ -98,8 +98,8 @@ protected:
   //
 public:
   //
-  VSMailbox() { error("VSMailbox allocated?"); }
-  ~VSMailbox() { error("VSMailbox deallocated?"); }
+  VSMailbox() { OZ_error("VSMailbox allocated?"); }
+  ~VSMailbox() { OZ_error("VSMailbox deallocated?"); }
 
   //
   int getMemSize() { return (memSize); }

@@ -72,8 +72,8 @@ protected:
   //
 public:
   // These objects are unusable;
-  VSMsgChunk()  { error("VSMsgChunk allocated???"); }
-  ~VSMsgChunk() { error("VSMsgChunk deallocated???"); }
+  VSMsgChunk()  { OZ_error("VSMsgChunk allocated???"); }
+  ~VSMsgChunk() { OZ_error("VSMsgChunk deallocated???"); }
 
   //
   BYTE *getDataAddr() { return (&buffer[0]); }
@@ -129,8 +129,8 @@ protected:
   //
 public:
   // These objects are unusable;
-  VSMsgChunkPoolSegment() { error("VSMsgChunkPoolSegment allocated?"); }
-  ~VSMsgChunkPoolSegment() { error("VSMsgChunkPoolSegment destroyed?"); }
+  VSMsgChunkPoolSegment() { OZ_error("VSMsgChunkPoolSegment allocated?"); }
+  ~VSMsgChunkPoolSegment() { OZ_error("VSMsgChunkPoolSegment destroyed?"); }
 
   //
 #ifdef DEBUG_CHECK
@@ -147,10 +147,10 @@ class VSMsgChunkPoolSegmentOwned : public VSMsgChunkPoolSegment {
 public:
   //
   VSMsgChunkPoolSegmentOwned() {
-    error("VSMsgChunkPoolSegmentOwned allocated?");
+    OZ_error("VSMsgChunkPoolSegmentOwned allocated?");
   }
   ~VSMsgChunkPoolSegmentOwned() {
-    error("VSMsgChunkPoolSegmentOwned destroyed?");
+    OZ_error("VSMsgChunkPoolSegmentOwned destroyed?");
   }
 
   //
@@ -162,10 +162,10 @@ class VSMsgChunkPoolSegmentImported : public VSMsgChunkPoolSegment {
 public:
   //
   VSMsgChunkPoolSegmentImported() {
-    error("VSMsgChunkPoolSegmentImported allocated?");
+    OZ_error("VSMsgChunkPoolSegmentImported allocated?");
   }
   ~VSMsgChunkPoolSegmentImported() {
-    error("VSMsgChunkPoolSegmentImported destroyed?");
+    OZ_error("VSMsgChunkPoolSegmentImported destroyed?");
   }
 
   //
@@ -649,7 +649,7 @@ public:
     // whichever is preferred);
     DebugCode(posMB = endMB = (BYTE *) 0);
   }
-  virtual ~VSMsgBuffer() { error("VSMsgBuffer destroyed?"); }
+  virtual ~VSMsgBuffer() { OZ_error("VSMsgBuffer destroyed?"); }
 
   //
   // Various special (weird) stuff;
@@ -738,7 +738,7 @@ private:
 public:
   //
   void* operator new(size_t size) {
-    error("VSMsgBufferOwned allocated using 'new(size_t)'");
+    OZ_error("VSMsgBufferOwned allocated using 'new(size_t)'");
     return ((void *) -1);	// gcc warning;
   }
   void* operator new(size_t, void *place) { return (place); }
@@ -767,7 +767,7 @@ public:
     endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
   }
   virtual ~VSMsgBufferOwned() {
-    error("VSMsgBufferOwned destroyed?");
+    OZ_error("VSMsgBufferOwned destroyed?");
   }
 
   //
@@ -879,14 +879,14 @@ private:
     return (*posMB++);
   }
   void putNext(BYTE) { 
-    error("there is no 'putNext' for VSMsgBufferImported!");
+    OZ_error("there is no 'putNext' for VSMsgBufferImported!");
   }
 
   //
 public:
   //
   void* operator new(size_t size) {
-    error("VSMsgBufferImported allocated using 'new(size_t)'");
+    OZ_error("VSMsgBufferImported allocated using 'new(size_t)'");
     return ((void *) -1);	// gcc warning;
   }
   void* operator new(size_t, void *place) { return (place); }
@@ -937,7 +937,7 @@ public:
     }
   }
   virtual ~VSMsgBufferImported() {
-    error("VSMsgBufferImported destroyed?");
+    OZ_error("VSMsgBufferImported destroyed?");
   }
 
   //
@@ -1001,8 +1001,8 @@ public:
 
   //
   // "to be provided" methods;
-  void marshalBegin() { error("VSMsgBufferImported::marshalBegin?"); }
-  void marshalEnd()   { error("VSMsgBufferImported::marshalBegin?"); }
+  void marshalBegin() { OZ_error("VSMsgBufferImported::marshalBegin?"); }
+  void marshalEnd()   { OZ_error("VSMsgBufferImported::marshalBegin?"); }
   void unmarshalBegin() {}	// already initialized (allocated);
   void unmarshalEnd() {}        // but the chunks need to be released yet;
 
@@ -1012,7 +1012,7 @@ public:
 
   //
   DSite* getSite() { 
-    error("there is no 'getSite' method for VSMsgBufferImported!");
+    OZ_error("there is no 'getSite' method for VSMsgBufferImported!");
     return ((DSite *) -1);
   }
 };
