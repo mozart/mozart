@@ -101,7 +101,7 @@ sub INTERFACE {
     while (($key,$info) = each %$builtins) {
         next unless &included($info);
         $bi = $info->{bi} || $info->{BI};
-        print "OZ_C_proc_proto($bi);\n";
+        print "OZ_BI_proto($bi);\n";
     }
 
     $init_fun_name = $_[1];

@@ -278,14 +278,14 @@ OZ_BI_define(BIdlLoad,1,1)
 
 extern void BIinitPerdio();
 
-OZ_C_proc_proto(BIcontrolVarHandler);
-OZ_C_proc_proto(BIatRedo);
-OZ_C_proc_proto(BIfail);
-OZ_C_proc_proto(BIurl_load);
-OZ_C_proc_proto(BIload);
-OZ_C_proc_proto(BIprobe);
-OZ_C_proc_proto(BIstartTmp);
-OZ_C_proc_proto(BIportWait);
+OZ_BI_proto(BIcontrolVarHandler);
+OZ_BI_proto(BIatRedo);
+OZ_BI_proto(BIfail);
+OZ_BI_proto(BIurl_load);
+OZ_BI_proto(BIload);
+OZ_BI_proto(BIprobe);
+OZ_BI_proto(BIstartTmp);
+OZ_BI_proto(BIportWait);
 
 // include all builtin modules
 //
