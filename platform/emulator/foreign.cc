@@ -661,7 +661,7 @@ Bool checkAtom(char *s)
   case 'c':
     return strcmp(t, "case") && strcmp(t, "catch")
 	&& strcmp(t, "choice") && strcmp(t, "class")
-	&& strcmp(t, "condis") && strcmp(t, "create")? OK: NO;
+	&& strcmp(t, "condis") ? OK: NO;
   case 'd':
     return strcmp(t, "declare") && strcmp(t, "dis")
 	&& strcmp(t, "div")? OK: NO;
@@ -793,63 +793,108 @@ inline
 void feature2buffer(ostream &out, SRecord *sr, OZ_Term fea, int depth)
 {
   value2buffer(out,fea);
-  out << ": ";
+  out << ":";
   value2buffer(out,sr->getFeature(fea),depth);
-}
-
-inline
-void record2buffer(ostream &out, SRecord *sr,int depth)
-{
-  value2buffer(out,sr->getLabel());
-  out << '(';
-  if (depth <= 0) {
-    out << ",,,";
-  } else {
-    if (sr->isTuple()) {
-      int len=sr->getWidth();
-      value2buffer(out,sr->getArg(0),depth-1);
-      for (int i=1; i < len; i++) {
-	out << ' ';
-	value2buffer(out,sr->getArg(i),depth-1);
-      }
-    } else {
-      TaggedRef as = sr->getArityList();
-      Assert(isCons(as));
-      feature2buffer(out,sr,head(as),depth-1);
-      as = tail(as);
-      while (isCons(as)) {
-	out << ' ';
-	feature2buffer(out,sr,head(as),depth-1);
-	as = tail(as);
-      }
-    }
-  }
-  out << ')';
 }
 
 static
 int listWidth = 0;
 
 inline
-void list2buffer(ostream &out, LTuple *list,int depth)
-{
-  int width = listWidth;
-  while (width-- > 0) {
-    OZ_Term a=deref(list->getHead());
-    if (isCons(a)) {
-      out << '(';
-      value2buffer(out,list->getHead(),depth-1);
-      out << ')';
+void record2buffer(ostream &out, SRecord *sr,int depth) {
+  value2buffer(out,sr->getLabel());
+  out << '(';
+  if (depth <= 0) {
+    out << ",,,";
+  } else {
+    if (sr->isTuple()) {
+      int len = min(listWidth, sr->getWidth());
+      value2buffer(out,sr->getArg(0), depth-1);
+      for (int i=1; i < len; i++) {
+	out << ' ';
+	value2buffer(out,sr->getArg(i),depth-1);
+      }
+      if (sr->getWidth() > listWidth)
+	out << " ,,,";
     } else {
-      value2buffer(out,list->getHead(),depth-1);
+      TaggedRef as = sr->getArityList();
+      Assert(isCons(as));
+
+      int next    = 1;
+
+      while (isCons(as) && next <= listWidth &&
+	     isSmallInt(head(as)) && 
+	     smallIntValue(head(as)) == next) {
+	value2buffer(out, sr->getFeature(head(as)), depth-1);
+	out << ' ';
+	as = tail(as);
+	next++;
+      }
+      Assert(isCons(as));
+
+      if (next <= listWidth) {
+	
+	feature2buffer(out,sr,head(as),depth-1);
+	next++;
+	as = tail(as);
+	while (next <= listWidth && isCons(as)) {
+	  out << ' ';
+	  feature2buffer(out,sr,head(as),depth-1);
+	  as = tail(as);
+	  next++;
+	}
+      }
+
+      if (sr->getWidth() > listWidth)
+	out << " ,,,";
     }
-    out << '|';
-    OZ_Term t=deref(list->getTail());
-    if (!isCons(t)) {
-      value2buffer(out,list->getTail(),depth);
+  }
+  out << ')';
+}
+
+
+inline
+void list2buffer(ostream &out, LTuple *list,int depth) {
+  int width = listWidth;
+
+  if (width > 0) {
+    TaggedRef l = deref(list->getTail());
+    width--;
+    while (isCons(l) && width-- > 0) {
+      l = deref(tail(l));
+    }
+
+    if (isNil(l)) {
+      out << '[';
+      l = makeTaggedLTuple(list);
+      while (isCons(l)) {
+	value2buffer(out, head(l), depth-1);
+	l = deref(tail(l));
+	if (isCons(l)) {
+	  out << ' ';
+	}
+      }
+      out << ']';
       return;
     }
-    list = tagged2LTuple(t);
+
+    width = listWidth;
+
+    while (width-- > 0) { 
+      OZ_Term a=deref(list->getHead());
+      if (isCons(a)) {
+	out << '('; value2buffer(out,a,depth-1); out << ')';
+      } else {
+	value2buffer(out,a,depth-1);
+      }
+      out << '|';
+      OZ_Term t=deref(list->getTail());
+      if (!isCons(t)) {
+	value2buffer(out,t,depth);
+	return;
+      }
+      list = tagged2LTuple(t);
+    }
   }
   out << ",,,|,,,";
 }
@@ -885,7 +930,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
   // Output the Atoms first, in order:
   for (ai=0; ai<nAtomOrInt; ai++) {
     value2buffer(out,arr[ai],0);
-    out << ": ";
+    out << ":";
     value2buffer(out,lookup(arr[ai]),depth);
     out << ' ';
   }
@@ -895,7 +940,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
     tmpval=table[di].value;
     if (tmpval!=makeTaggedNULL() && !(isAtom(tmplit)||isInt(tmplit))) {
       value2buffer(out,tmplit,0);
-      out << ": ";
+      out << ":";
       value2buffer(out,tmpval,depth);
       out << ' ';
     }
