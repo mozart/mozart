@@ -23,7 +23,6 @@ in
 
    class Manager
       from
-	 BaseObject
 	 DialogManager
 	 MenuManager
 	 StatusManager
