@@ -24,7 +24,9 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
+
+prepare
 
    %%
    %% Vector conversion
@@ -199,27 +201,18 @@ local
       end
    end
    
-in
-
-   functor
-
-   export
-      formatOrigin:  FormatOrigin
-
-      waitStable:    WaitStable
-
-      vectorToType:  VectorToType
-      vectorToList:  VectorToList
-      vectorsToLists: VectorsToLists
-      vectorToTuple: VectorToTuple
-
-      expand:        Expand
-
-      cloneList:     CloneList
-      
-   define
-      skip
-
-   end
+export
+   formatOrigin:   FormatOrigin
+   
+   waitStable:     WaitStable
+   
+   vectorToType:   VectorToType
+   vectorToList:   VectorToList
+   vectorsToLists: VectorsToLists
+   vectorToTuple:  VectorToTuple
+   
+   expand:         Expand
+   
+   cloneList:      CloneList
 
 end
