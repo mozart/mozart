@@ -106,11 +106,11 @@ void gcManager(Tertiary*);
 BorrowEntry *receiveAtBorrow(DSite*,int);
 OwnerEntry *maybeReceiveAtOwner(DSite*,int);
 
-#define NOT_IMPLEMENTED						\
-  {								\
-    warning("in file %s at line %d: not implemented - perdio",	\
-	    __FILE__,__LINE__);					\
-    Assert(0);							\
+#define NOT_IMPLEMENTED							\
+  {									\
+    OZ_warning("in file %s at line %d: not implemented - perdio",	\
+	       __FILE__,__LINE__);					\
+    Assert(0);								\
   }
 
 /* __PERDIOHH */

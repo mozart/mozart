@@ -1105,7 +1105,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 
   const int clauses = p.getWidth();
   if (clauses != b.getWidth()) {
-    warning("Tuples clauses and b differ in size.");
+    OZ_warning("Tuples clauses and b differ in size.");
     return FAILED;
   }
 
@@ -1138,7 +1138,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     SRecord &vp_i = *tagged2SRecord(vp[i]);
     
     if (vp_i.getWidth() != variables) {
-      warning("2-dim-array index incorrect in BIfdConstrDisjSetUp");
+      OZ_warning("2-dim-array index incorrect in BIfdConstrDisjSetUp");
       return FAILED;
     }
     
@@ -1535,7 +1535,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   
   if (! oz_isSTuple(b_tuple) || ! oz_isSTuple(v_tuple) || 
       ! oz_isSTuple(vp_tuple)) {
-    warning("Unexpected type in cd manager");
+    OZ_warning("Unexpected type in cd manager");
     return FAILED;
   }
 

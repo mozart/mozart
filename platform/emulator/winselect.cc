@@ -178,7 +178,7 @@ Bool createReader(int fd)
   }
 
   int id = GetLastError();
-  warning ("createReader(%d) failed: %d\n",fd,id);
+  OZ_warning ("createReader(%d) failed: %d\n",fd,id);
   CloseHandle(sr->char_consumed);
   CloseHandle(sr->char_avail);
   
