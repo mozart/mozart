@@ -1,7 +1,6 @@
 functor
 import
    Tk
-   System
 export
    FieldDisplayClass
 define

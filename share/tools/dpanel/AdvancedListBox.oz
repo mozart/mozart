@@ -3,7 +3,6 @@ export
    AdvancedListBox      
 import
    Tk
-   System
 define
    class AdvancedListBox  from Tk.frame
       prop
@@ -18,6 +17,7 @@ define
 	 width:30*8
 	 height:17*8
 	 action:proc{$ _} skip end
+	 raction:proc{$ _} skip end
 	 lineSize:14
 	 nextFree:[0]
       meth tkInit(...)=M
@@ -45,6 +45,21 @@ define
 						  end}
 					 case Found of [E] then
 					    {self Action(E.key)}
+					 else skip end 
+				      end)}
+	 {self.listbox tkBind(event:'<3>' args: [int(y)]
+			      action: proc{$  CY}
+					 Y={self.listbox tkReturnInt(canvasy CY $)}
+					 Line
+					 Found
+				      in
+					 Line = (Y -5)  div @lineSize
+					 Found = {Filter {Dictionary.items self.entryDict}
+						  fun{$ E}
+						     E.line == Line
+						  end}
+					 case Found of [E] then
+					    {self RightAction(E.key)}
 					 else skip end 
 				      end)}
 	 
@@ -81,18 +96,26 @@ define
 	 {@action A}
       end
    
-      meth addSite(Ks)
+      meth setRightAction(P)
+	 raction<-P
+      end
+
+      meth RightAction(A)
+	 {@raction A}
+      end
+   
+      meth addEntries(Ks)
 	 DC = self.listbox
 	 
 	 R = {Map Ks fun{$ K}
 			Line = {self getEntry($)}
-			S=site(text:K.text
-			       key:K.key
-			       fg:{CondSelect K fg black}
-			       bg:{CondSelect K bg white}
-			       line: Line 
-			       bgtag:{New Tk.canvasTag tkInit(parent:DC)}
-			       fgtag:{New Tk.canvasTag tkInit(parent:DC)})
+			S=entry(text:K.text
+				key:K.key
+				fg:{CondSelect K fg black}
+				bg:{CondSelect K bg white}
+				line: Line 
+				bgtag:{New Tk.canvasTag tkInit(parent:DC)}
+				fgtag:{New Tk.canvasTag tkInit(parent:DC)})
 		     in
 			self.entryDict.(K.key):=S
 			S
@@ -103,7 +126,7 @@ define
 	 end
       end
       
-      meth deleteSite(Ks)
+      meth deleteEntries(Ks)
 	 {ForAll Ks proc{$ K}
 		       if {Dictionary.member self.entryDict K} then
 			  E = self.entryDict.K in

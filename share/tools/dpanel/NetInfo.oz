@@ -62,7 +62,7 @@ define
 	 if New \= @string then
 	    Changed = true
 	    Delete = @key
-	    Add = site(key:@key fg:@color text:New)
+	    Add = entry(key:@key fg:@color text:New)
 	    string <- New
 	 else
 	    Changed = false
@@ -153,8 +153,8 @@ define
       in 
 	 {DisplayList {Dictionary.keys self.info} OldList NewList}
 	 if OldList \= nil then
-	    {self.guiList deleteSite(OldList)}
-	    {self.guiList addSite(NewList)}
+	    {self.guiList deleteEntries(OldList)}
+	    {self.guiList addEntries(NewList)}
 	 end
       end
       meth displayNumber

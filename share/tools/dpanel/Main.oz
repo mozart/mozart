@@ -46,8 +46,6 @@ import
    NetInfo(netInfo) 
    MessageInfo 
    Connection
-   Pickle
-   System
    Browser
 export
    open:Start
@@ -73,7 +71,6 @@ define
    
    %% Used by the distributed cntrl func
    ServerPort
-   ServerList = {NewCell nil}
    PickledPort = {Connection.offerUnlimited ServerPort}
 
    SelectSite
@@ -278,14 +275,16 @@ define
 
 
 
-	 {GUI.ssites setAction(proc{$ M} O S =  {SD getSite(M $)}in
-				  {ClientControler open(site(ip:S.info.ip port:S.info.port pid:S.info.pid))}
+	 {GUI.ssites setAction(proc{$ M} S =  {SD getSite(M $)}in
 				  {Browser.browse S.info#trafic(sent:{S getTotSent($)}
 								received:{S getTotReceived($)})}
 				  {SelectSite M}
 				  
 			       end)}
 	 {GCLineDraw}
+	 {GUI.ssites setRightAction(proc{$ M} S =  {SD getSite(M $)} in
+				       {ClientControler open(site(ip:S.info.ip port:S.info.port pid:S.info.pid))}
+				    end)}
 	 ClientControler = {New ClientCntrler init(SD)}
 	 
 	 thread {Updater ST OT BT NI MI} end
@@ -309,8 +308,6 @@ define
       {Updater ST OT BT NI MI}
    end
 
-   
-   
    fun{Server}
       PickledPort
    end

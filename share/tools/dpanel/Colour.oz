@@ -61,8 +61,8 @@ define
 
    fun{Comp _ _} true end
 
-   MixedList={Merge {Merge Blues {Append Greens Greys} Comp}
-	      {Merge Reds Yellows Comp} Comp}
+   MixedList=black|{Merge {Merge Blues {Append Greens Greys} Comp}
+		    {Merge Reds Yellows Comp} Comp}
    E
    List={Append MixedList E}
    E=List
