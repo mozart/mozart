@@ -21,6 +21,13 @@ listed here will be removed in future releases.
 even though they are in base modules.
 In future releases, they will be made unsited.
 
+<item>When a reference to a constrained variable
+(finite domain, finite set, or free record)
+is passed to another site, then this reference
+is converted to a <em>future</em>.
+The future will be bound when the constrained
+variable becomes determined.
+
 <item>The code of functions, procedures, classes, and functors
 (but not objects) is always inserted in messages,
 even if the code is already present at the destination.
