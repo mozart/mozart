@@ -99,7 +99,6 @@ local
          OS
          Application
          Pickle
-         Property
 
       define
 
@@ -254,17 +253,12 @@ local
                           grid(@page2  row:1 column:0 pady:4 sticky:ew)
                           grid(@canvas row:0 column:1 sticky:sn padx:2 pady:2
                                rowspan:4)
-
-                          if {Property.get 'platform.os'}==win then
-                             update
-                          else
-                             grid({New Tk.button
-                                   tkInit(parent: @top
-                                          text:  'Mail Applet'
-                                          action: Desc.mail)}
-                                  sticky:ew pady:4
-                                  row:2 column:0)
-                          end
+                          grid({New Tk.button
+                                tkInit(parent: @top
+                                       text:  'Mail Applet'
+                                       action: Desc.mail)}
+                               sticky:ew pady:4
+                               row:2 column:0)
                           grid({New Tk.button
                                 tkInit(parent: @top
                                        text:  'Save Applet'
