@@ -1193,7 +1193,7 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
 
   unsigned int timeToSleep;
 
-  oz_deinstallPath(oz_rootBoard());
+  oz_installPath(oz_rootBoard());
   osSetAlarmTimer(0);
 
   if((int) timeUntilClose > 0)

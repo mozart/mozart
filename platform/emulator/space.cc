@@ -128,6 +128,17 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome)
  *      'am.currentBoard' stays unchanged;
  *
  */
+
+inline
+void oz_deinstallPath(Board *top)
+{
+  Assert(!top->isCommitted() && !top->isFailed());
+
+  while (!oz_isCurrentBoard(top)) {
+    oz_deinstallCurrent();
+  }
+}
+
 InstType oz_installPath(Board *to)
 {
   if (to->isInstalled()) {
