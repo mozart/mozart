@@ -479,7 +479,7 @@ Bool trace(char *s,Board *board,Actor *actor,
     }
     printf(" %s> ",s);
     fflush(stdout);
-    if (fgets(command,MaxLine,stdin) == (char *) NULL) {
+    if (osfgets(command,MaxLine,stdin) == (char *) NULL) {
       printf("read no input\n");
       printf("exit\n");
       sprintf(command,"e\n");

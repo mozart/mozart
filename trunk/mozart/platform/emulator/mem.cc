@@ -373,7 +373,7 @@ void getMemFromOS(size_t sz)
     fflush(stdout);
     char buf[1000];
 
-    if (fgets(buf, 1000, stdin) && buf[0] == 'n') 
+    if (osfgets(buf, 1000, stdin) == 0 || buf[0] == 'n') 
       am.exitOz(1);
 
     ozconf.heapMaxSize = newSize;
