@@ -2570,7 +2570,7 @@ public:
   Bool isMarkedFailed(void) { 
     return !solve;
   }
- 
+
   Bool isMarkedMerged(void) {
     return (solve == (Board *) 1) ? OK : NO;
   }
@@ -2582,7 +2582,6 @@ public:
   void  markMerged(void) { 
     solve = (Board *) 1; 
   } 
-
 };
 
 

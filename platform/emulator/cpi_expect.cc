@@ -791,8 +791,8 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
   // do initial run with dummy thread
 
-  // Constrain all SVARs and UVARs in staticSuspendVars to FDVARs before
-  // OZ_Propagator::run is run.
+  // Constrain all SimpleVar"s and OptVar"s in staticSuspendVars to
+  // FDVARs before OZ_Propagator::run is run.
   int i;
   for (i = staticSuspendVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);
@@ -936,43 +936,44 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 	continue;
       }
       if (isGenFDVar(v)) {
-	if (oz_isLocalVar(tagged2CVar(v))) {
+	if (oz_isLocalVar(tagged2Var(v))) {
 	  addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
 	  continue;
 	}
       } else if (isGenFSetVar(v)) {
-	if (oz_isLocalVar(tagged2CVar(v))) {
+	if (oz_isLocalVar(tagged2Var(v))) {
 	  addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
 	  continue;
 	}
       } else if (isGenBoolVar(v)) {
-	if (oz_isLocalVar(tagged2CVar(v))) {
+	if (oz_isLocalVar(tagged2Var(v))) {
 	  addSuspBoolVar(v, prop);
 	  continue;
 	}
       } else if (isGenCtVar(v)) {
-	if (oz_isLocalVar(tagged2CVar(v))) {
+	if (oz_isLocalVar(tagged2Var(v))) {
 	  addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
 	  continue;
 	}
       }
       //    
       oz_var_addSusp(vptr, prop);
-      all_local &= oz_isLocalVar(tagged2CVar(*vptr));
+      all_local &= oz_isLocalVar(tagged2Var(*vptr));
       //
     }
   }
   //
-  // Note all SVARs and UVARs in staticSuspendVars are constrained to FDVARs.
+  // Note all SimpleVar"s and OptVar"s in staticSuspendVars are
+  // constrained to FDVARs.
   for (i = staticSuspendVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);
     DEREF(v, vptr, vtag);
 
     if (isVariableTag(vtag)) {
-      Assert(isCVarTag(vtag));
+      Assert(isVarTag(vtag));
 
       oz_var_addSusp(vptr, prop);
-      all_local &= oz_isLocalVar(tagged2CVar(v));
+      all_local &= oz_isLocalVar(tagged2Var(v));
     }
   }
 

@@ -695,7 +695,7 @@ void msgReceived(MsgContainer* msgC)
 	  OZ_Term cvt = ov->getClassProxy();
 	  DEREF(cvt, cvtp, _cptt);
 	  Assert(cvtp);
-	  ClassVar *cv = (ClassVar *) tagged2CVar(cvt);
+	  ClassVar *cv = (ClassVar *) tagged2Var(cvt);
 	  Assert(cv->getType() == OZ_VAR_EXT);
 	  Assert(cv->getIdV() == OZ_EVAR_LAZY);
 	  Assert(cv->getLazyType() == LT_CLASS);

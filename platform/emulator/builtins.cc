@@ -135,7 +135,7 @@ OZ_BI_define(BIwaitStatus,2,1)
 
 
 #define CheckStatus(var,varstatus,statusAtom)						\
-  OzVariable *cv   = tagged2CVar(var);							\
+  OzVariable *cv   = tagged2Var(var);							\
   VarStatus status = oz_check_var_status(cv);						\
   switch (status) {									\
   case varstatus:									\
@@ -155,10 +155,10 @@ OZ_BI_define(BIwaitStatus,2,1)
 OZ_BI_define(BIisFree, 1,1)
 {
   oz_declareDerefIN(0,var);
-  if (oz_isUVar(var))
+  if (oz_isOptVar(var))
     OZ_RETURN(oz_true());
 
-  if (!oz_isCVar(var))
+  if (!oz_isVar(var))
     OZ_RETURN(oz_false());
 
   CheckStatus(var,EVAR_STATUS_FREE,AtomFree);
@@ -167,7 +167,7 @@ OZ_BI_define(BIisFree, 1,1)
 OZ_BI_define(BIisKinded, 1,1)
 {
   oz_declareDerefIN(0,var);
-  if (!oz_isCVar(var))
+  if (!oz_isVar(var))
     OZ_RETURN(oz_false());
 
   CheckStatus(var,EVAR_STATUS_KINDED,AtomKinded);
@@ -176,7 +176,7 @@ OZ_BI_define(BIisKinded, 1,1)
 OZ_BI_define(BIisFuture, 1,1)
 {
   oz_declareDerefIN(0,var);
-  if (!oz_isCVar(var))
+  if (!oz_isVar(var))
     OZ_RETURN(oz_false());
 
   CheckStatus(var,EVAR_STATUS_FUTURE,AtomFuture);
@@ -185,10 +185,10 @@ OZ_BI_define(BIisFuture, 1,1)
 OZ_BI_define(BIisDet,1,1)
 {
   oz_declareDerefIN(0,var);
-  if (oz_isUVar(var))
+  if (oz_isOptVar(var))
     OZ_RETURN(oz_false());
 
-  if (!oz_isCVar(var))
+  if (!oz_isVar(var))
     OZ_RETURN(oz_true());
 
   CheckStatus(var,EVAR_STATUS_DET,AtomDet);
@@ -264,9 +264,8 @@ OZ_BI_define(BItuple, 2, 1)
 
   SRecord *sr = SRecord::newSRecord(label, i);
 
-  for (int j = 0; j < i; j++) {
-    sr->setArg(j, am.currentUVarPrototype());
-  }
+  for (int j = 0; j < i; j++)
+    sr->setArg(j, am.getCurrentOptVar());
 
   OZ_RETURN(sr->normalize());
 } OZ_BI_end
@@ -304,10 +303,9 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
     switch (termTag) {
     case TAG_LTUPLE:
     case TAG_SRECORD:
-    case TAG_UVAR:
       return SUSPEND;
-    case TAG_CVAR:
-      switch (tagged2CVar(term)->getType()) {
+    case TAG_VAR:
+      switch (tagged2Var(term)->getType()) {
       case OZ_VAR_FD:
       case OZ_VAR_BOOL:
       case OZ_VAR_FS:
@@ -354,16 +352,9 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
       if (out) *out = t;
       return PROCEED;
     }
-    
-  case TAG_UVAR:
-    // FUT
-    if (!oz_isFeature(fea)) {
-      oz_typeError(1,"Feature");
-    }
-    return SUSPEND;
 
-  case TAG_CVAR:
-    switch (tagged2CVar(term)->getType()) {
+  case TAG_VAR:
+    switch (tagged2Var(term)->getType()) {
     case OZ_VAR_OF:
       {
 	int ret = tagged2GenOFSVar(term)->hasFeature(fea,out);
@@ -375,6 +366,8 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
     case OZ_VAR_FS:
       goto typeError0;
     default:
+      if (!oz_isFeature(fea))
+	oz_typeError(1,"Feature");
       return SUSPEND;
     }
 
@@ -507,11 +500,8 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
   case TAG_LITERAL:
     out = makeTaggedSmallInt(0);
     return PROCEED;
-  case TAG_UVAR:
-    // FUT
-    return SUSPEND;
-  case TAG_CVAR:
-    switch (tagged2CVar(term)->getType()) {
+  case TAG_VAR:
+    switch (tagged2Var(term)->getType()) {
     case OZ_VAR_OF:
         return SUSPEND;
     case OZ_VAR_FD:
@@ -538,10 +528,9 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
     switch (termTag) {
     case TAG_LTUPLE:
     case TAG_SRECORD:
-    case TAG_UVAR:
       return SUSPEND;
-    case TAG_CVAR:
-      switch (tagged2CVar(term)->getType()) {
+    case TAG_VAR:
+      switch (tagged2Var(term)->getType()) {
       case OZ_VAR_FD:
       case OZ_VAR_BOOL:
       case OZ_VAR_FS:
@@ -564,11 +553,8 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
   case TAG_SRECORD:
     goto raise;
     
-  case TAG_UVAR:
-    return SUSPEND;
-
-  case TAG_CVAR:
-    switch (tagged2CVar(term)->getType()) {
+  case TAG_VAR:
+    switch (tagged2Var(term)->getType()) {
     case OZ_VAR_OF:
     case OZ_VAR_FD:
     case OZ_VAR_BOOL:
@@ -1200,12 +1186,9 @@ OZ_Term oz_status(OZ_Term term)
   DEREF(term, _1, tag);
 
   switch (tag) {
-  case TAG_UVAR: 
-    // FUT
-    return AtomFree;
-  case TAG_CVAR:
+  case TAG_VAR:
     {
-      OzVariable *cv = tagged2CVar(term);
+      OzVariable *cv = tagged2Var(term);
       VarStatus status = oz_check_var_status(cv);
       
       switch (status) {
@@ -1494,8 +1477,6 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   if (oz_isRef(arity)) { // must suspend
     out=arity;
     switch (tag0) {
-    case TAG_UVAR:
-      // FUT
     case TAG_LITERAL:
       return SUSPEND;
     case TAG_SRECORD:
@@ -1504,8 +1485,8 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
 	return SUSPEND;
       }
       goto typeError0;
-    case TAG_CVAR:
-      if (oz_isKinded(t0) && tagged2CVar(t0)->getType()!=OZ_VAR_OF)
+    case TAG_VAR:
+      if (oz_isKinded(t0) && tagged2Var(t0)->getType()!=OZ_VAR_OF)
 	goto typeError0;
       if (recordFlag) {
 	return SUSPEND;
@@ -1528,12 +1509,8 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     case TAG_LITERAL:
       out = t0;
       return PROCEED;
-    case TAG_UVAR:
-      // FUT
-      out=makeTaggedRef(t0Ptr);
-      return SUSPEND;
-    case TAG_CVAR:
-      if (oz_isKinded(t0) && tagged2CVar(t0)->getType()!=OZ_VAR_OF)
+    case TAG_VAR:
+      if (oz_isKinded(t0) && tagged2Var(t0)->getType()!=OZ_VAR_OF)
 	goto typeError0;
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
@@ -1565,12 +1542,8 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       return PROCEED;
     }
     goto typeError0;
-  case TAG_UVAR:
-    // FUT
-    out=makeTaggedRef(t0Ptr);
-    return SUSPEND;
-  case TAG_CVAR:
-    if (oz_isKinded(t0) && tagged2CVar(t0)->getType()!=OZ_VAR_OF)
+  case TAG_VAR:
+    if (oz_isKinded(t0) && tagged2Var(t0)->getType()!=OZ_VAR_OF)
         goto typeError0;
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
@@ -1632,7 +1605,9 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
   DEREF(t0,t0Ptr,tag0);
   if (oz_isRef(arity)) { // must suspend
     switch (tag0) {
-    case TAG_UVAR:
+    case TAG_VAR:
+      if (oz_isKinded(t0))
+	goto typeError0;
     case TAG_LITERAL:
       oz_suspendOn(arity);
     default:
@@ -1644,8 +1619,9 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
     switch (tag0) {
     case TAG_LITERAL:
       OZ_RETURN(t0);
-    case TAG_UVAR:
-      oz_suspendOnPtr(t0Ptr);
+    case TAG_VAR:
+      if (!oz_isKinded(t0))
+	oz_suspendOnPtr(t0Ptr);
     default:
       goto typeError0;
     }
@@ -1668,8 +1644,9 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
       
       OZ_RETURN(newrec->normalize());
     }
-  case TAG_UVAR:
-    oz_suspendOnPtr(t0Ptr);
+  case TAG_VAR:
+    if (!oz_isKinded(t0))
+      oz_suspendOnPtr(t0Ptr);
   default:
     goto typeError0;
   }
@@ -2788,7 +2765,7 @@ OZ_BI_define(BInewPort,1,1)
 
 void doPortSend(PortWithStream *port,TaggedRef val)
 {
-  LTuple *lt = new LTuple(am.currentUVarPrototype(),am.currentUVarPrototype());
+  LTuple *lt = new LTuple(am.getCurrentOptVar(), am.getCurrentOptVar());
     
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
 
@@ -2811,7 +2788,7 @@ OZ_BI_define(BInewPort,1,1)
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
   if (home != (Board *) NULL) {
     OZ_Term newFut = oz_newFuture(home);
-    OZ_Term newVar = oz_newVar(home);
+    OZ_Term newVar = oz_newVariable(home);
     OZ_Term lt     = oz_cons(newVar,newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
 
@@ -2826,7 +2803,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     t->pushCall(BI_bindFuture,args1,2);
   } else {
     OZ_Term newFut = oz_newFuture(oz_currentBoard());
-    OZ_Term lt     = oz_cons(am.currentUVarPrototype(),newFut);
+    OZ_Term lt     = oz_cons(am.getCurrentOptVar(), newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
 
     DEREF(oldFut,ptr,_);
@@ -2901,7 +2878,8 @@ OZ_BI_define(BIsendRecvPort,2,1)
     oz_typeError(0,"Port");
   }
 
-  TaggedRef rv = oz_newVar(tagged2Port(prt)->getBoardInternal()->derefBoard());
+  TaggedRef rv = 
+    oz_newVariable(tagged2Port(prt)->getBoardInternal()->derefBoard());
 
   TaggedRef ms = oz_pair2(val,rv);
 

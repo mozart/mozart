@@ -52,7 +52,7 @@ void ObjectVar::marshal(ByteBuffer *bs)
 TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef cl)
 {
   ObjectVar *pvar = new ObjectVar(oz_currentBoard(), bi, gnobj, cl);
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+  TaggedRef val = makeTaggedRef(newTaggedVar(pvar));
   return (val);
 }
 

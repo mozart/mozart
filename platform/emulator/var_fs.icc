@@ -39,14 +39,14 @@ inline
 OzFSVariable * tagged2GenFSetVar(OZ_Term term)
 {
   GCDEBUG(term);
-  return (OzFSVariable *) tagged2CVar(term);
+  return (OzFSVariable *) tagged2Var(term);
 }
 
 inline
 Bool isGenFSetVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FS);
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FS);
 }
 
 inline
@@ -55,7 +55,7 @@ void OzFSVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
   Assert(!oz_isFSetValue(*trPtr));
   if (oz_isFSetValue(*trPtr)) return;
 
-  Assert(this == tagged2CVar(*trPtr));
+  Assert(this == tagged2Var(*trPtr));
 
   OZ_Term set_val = makeTaggedFSetValue(new OZ_FSetValue(_fset));
 

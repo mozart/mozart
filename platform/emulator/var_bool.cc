@@ -35,17 +35,17 @@
 
 OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
 {
-  DEBUG_CONSTRAIN_CVAR(("bindBool "));
+  DEBUG_CONSTRAIN_VAR(("bindBool "));
 
   Assert(!oz_isRef(term));
 
   if (!oz_isSmallInt(term)) {
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FAILED;
   }
   int term_val = tagged2SmallInt(term);
   if (term_val < 0 || 1 < term_val) {
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FAILED;
   }
 
@@ -60,7 +60,7 @@ OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
     bindGlobalVarToValue(vPtr, term);
   }
 
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 }
 
@@ -72,20 +72,20 @@ OZ_Return OzBoolVariable::bind(OZ_Term * vPtr, OZ_Term term)
 // implicitely relinked.)
 OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
 {
-  DEBUG_CONSTRAIN_CVAR(("unifyBool "));
+  DEBUG_CONSTRAIN_VAR(("unifyBool "));
 
   OZ_Term right_var       = *right_varptr;
-  OzVariable * right_cvar = tagged2CVar(right_var);
+  OzVariable *right_ov = tagged2Var(right_var);
   
   // left variable is a boolean variable. index unification on type of
   // right variable (boolean and finite domain are allowed)
-  TypeOfVariable right_cvar_type = right_cvar->getType();
+  TypeOfVariable right_var_type = right_ov->getType();
 
-  if (right_cvar_type == OZ_VAR_BOOL) {
+  if (right_var_type == OZ_VAR_BOOL) {
     //
     // unify two boolean variables
     //
-    OzBoolVariable * right_boolvar = (OzBoolVariable *) right_cvar;
+    OzBoolVariable * right_boolvar = (OzBoolVariable *) right_ov;
     Bool left_var_is_local  = oz_isLocalVar(this);
     Bool right_var_is_local = oz_isLocalVar(right_boolvar);
 
@@ -136,11 +136,11 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
       //
       bindGlobalVar(left_varptr, right_varptr);
     }
-  } else if (right_cvar_type == OZ_VAR_FD) {
+  } else if (right_var_type == OZ_VAR_FD) {
     //
     // unify a boolean and a proper finite domain variable
     //
-    OzFDVariable * right_fdvar = (OzFDVariable *) right_cvar;
+    OzFDVariable * right_fdvar = (OzFDVariable *) right_ov;
     int intersection = right_fdvar->intersectWithBool();
 
     if (intersection == -2) {
@@ -199,7 +199,7 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
 	propagateUnify();
 	Board * rightvarhome = right_fdvar->getBoardInternal();
 	OzBoolVariable * right_boolvar = new OzBoolVariable(rightvarhome);
-	OZ_Term * right_varptr_bool = newTaggedCVar(right_boolvar);
+	OZ_Term * right_varptr_bool = newTaggedVar(right_boolvar);
 	castGlobalVar(right_varptr, right_varptr_bool);
 	bindLocalVar(left_varptr, right_varptr_bool);
 	dispose();
@@ -245,17 +245,17 @@ OZ_Return OzBoolVariable::unify(OZ_Term  * left_varptr, OZ_Term * right_varptr)
 	// tmueller: left variable is more local
 	Board * rightvarhome = right_fdvar->getBoardInternal();
 	OzBoolVariable * right_boolvar = new OzBoolVariable(rightvarhome);
-	OZ_Term * right_varptr_bool = newTaggedCVar(right_boolvar);
+	OZ_Term * right_varptr_bool = newTaggedVar(right_boolvar);
 	castGlobalVar(right_varptr, right_varptr_bool);
 	bindGlobalVar(left_varptr, right_varptr_bool);
       }
     }
   }
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 
  failed:
-  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+  DEBUG_CONSTRAIN_VAR(("FAILED\n"));
   return FALSE;
 } // OzBoolVariable::unify
 

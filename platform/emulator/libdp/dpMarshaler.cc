@@ -388,15 +388,9 @@ void DPMarshaler::processResource(OZ_Term term, Tertiary *tert)
 #undef HandleTert
 
 //
-void DPMarshaler::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
+void DPMarshaler::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
-  processCVar(uv, uvarTerm);
-}
-
-//
-void DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
-{
-  Assert(cvarTerm);
+  Assert(varTerm);
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   //
@@ -404,18 +398,18 @@ void DPMarshaler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
   // snapshot of a term is taken;
   if (bs->availableSpace() >= DIFMaxSize + MNumberMaxSize +
 	     max(MDistVarMaxSize, MDistSPPMaxSize)) {
-    if (marshalVariable(cvarTerm, bs)) {
-      rememberVarNode(this, bs, cvarTerm);
+    if (marshalVariable(varTerm, bs)) {
+      rememberVarNode(this, bs, varTerm);
     } else {
       // kost@ : this does not work currently: when a variable is
       // bound, its 'ref' owner entry will never be found.
       OZ_warning("marshaling a variable as a resource!");
-      processNoGood(makeTaggedRef(cvarTerm), OK);
-      rememberVarNode(this, bs, cvarTerm);
+      processNoGood(makeTaggedRef(varTerm), OK);
+      rememberVarNode(this, bs, varTerm);
     }
   } else {
     marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(makeTaggedRef(cvarTerm));
+    suspend(makeTaggedRef(varTerm));
   }
 }
 
@@ -715,17 +709,11 @@ void VariableExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 }
 
 //
-void VariableExcavator::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
-{
-  processCVar(uv, uvarTerm);
-}
-
-//
-void VariableExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
+void VariableExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
   Assert(oz_isVariable(cv));
-  rememberVarLocation(cvarTerm);
-  addVar(makeTaggedRef(cvarTerm));
+  rememberVarLocation(varTerm);
+  addVar(makeTaggedRef(varTerm));
 }
 
 //
@@ -1907,11 +1895,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	      b->set(value, refTag);
 	      break;
 
-	    case TAG_CVAR:
+	    case TAG_VAR:
 	      {
-		OzVariable *cvar = tagged2CVar(vd);
-		Assert(cvar->getType() == OZ_VAR_EXT);
-		ExtVar *evar = (ExtVar *) cvar;
+		OzVariable *var = tagged2Var(vd);
+		Assert(var->getType() == OZ_VAR_EXT);
+		ExtVar *evar = (ExtVar *) var;
 		Assert(evar->getIdV() == OZ_EVAR_LAZY);
 		LazyVar *lvar = (LazyVar *) evar;
 		Assert(lvar->getLazyType() == LT_CLASS);
@@ -2030,11 +2018,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	      b->set(value, refTag);
 	      break;
 
-	    case TAG_CVAR:
+	    case TAG_VAR:
 	      {
-		OzVariable *cvar = tagged2CVar(vd);
-		Assert(cvar->getType() == OZ_VAR_EXT);
-		ExtVar *evar = (ExtVar *) cvar;
+		OzVariable *var = tagged2Var(vd);
+		Assert(var->getType() == OZ_VAR_EXT);
+		ExtVar *evar = (ExtVar *) var;
 		Assert(evar->getIdV() == OZ_EVAR_LAZY);
 		LazyVar *lvar = (LazyVar *) evar;
 		Assert(lvar->getLazyType() == LT_OBJECT);
@@ -2448,7 +2436,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	  // make&save an "exported" manager;
 	  ManagerVar *mvp = oz_getManagerVar(v);
 	  ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
-	  OZ_Term emv = makeTaggedCVar(emvp);
+	  OZ_Term emv = makeTaggedVar(emvp);
 	  //
 	  svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
 	}
@@ -2459,7 +2447,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
 	  // make&save an "exported" proxy:
 	  ProxyVar *pvp = oz_getProxyVar(v);
 	  ExportedProxyVar *epvp = new ExportedProxyVar(pvp, dest);
-	  OZ_Term epv = makeTaggedCVar(epvp);
+	  OZ_Term epv = makeTaggedVar(epvp);
 	  //
 	  svl = new SntVarLocation(makeTaggedRef(vp), epv, svl);
 	}
@@ -2500,7 +2488,7 @@ SntVarLocation* takeSntVarLocsOutline(OZ_Term vars, DSite *dest)
       //
       ManagerVar *mvp = globalizeFreeVariable(vp);
       ExportedManagerVar *emvp = new ExportedManagerVar(mvp, dest);
-      OZ_Term emv = makeTaggedCVar(emvp);
+      OZ_Term emv = makeTaggedVar(emvp);
       //
       svl = new SntVarLocation(makeTaggedRef(vp), emv, svl);
     } else { 
@@ -2583,7 +2571,7 @@ void MsgTermSnapshotImpl::gcStart()
     // GC.
     if (oz_isRef(hv) || !oz_isVariable(hv)) {
       GCStubVar *svp = new GCStubVar(hv);
-      *hvp = makeTaggedCVar(svp);
+      *hvp = makeTaggedVar(svp);
     }
 
     //    

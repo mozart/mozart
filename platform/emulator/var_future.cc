@@ -62,7 +62,7 @@ OZ_Return Future::kick(TaggedRef *ptr)
   
   if (oz_isProcedure(function)) {
     Thread* thr    = oz_newThreadInject(bb);
-    OZ_Term newvar = oz_newVar(bb);
+    OZ_Term newvar = oz_newVariable(bb);
     thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
     thr->pushCall(function,newvar);
   } else {
@@ -94,7 +94,7 @@ OZ_Return Future::kick(TaggedRef *ptr)
 	// fall through
       }
 
-      OZ_Term newvar = oz_newVar(bb);
+      OZ_Term newvar = oz_newVariable(bb);
       Thread *thr = oz_newThreadInject(bb);
       thr->pushCall(BI_bindFuture,makeTaggedRef(ptr),newvar);
       thr->pushCall(BI_dot,fut,fea,newvar);
@@ -186,18 +186,18 @@ OZ_BI_define(BIfuture,1,1)
   if (oz_isRef(v)) {
     OZ_Term *vPtr = tagged2Ref(v);
     if (oz_isFuture(*vPtr)) OZ_RETURN(v);
-    OzVariable *ov=oz_getVar(vPtr);
-    Board *bb=GETBOARD(ov);
+    OzVariable *ov = tagged2Var(*vPtr);
+    Board *bb = GETBOARD(ov);
     OZ_Term f = oz_newFuture(bb);
     RefsArray args = allocateRefsArray(2, NO);
-    args[0]=v;
-    args[1]=f;
-    if (bb!=oz_currentBoard()) {
+    args[0] = v;
+    args[1] = f;
+    if (bb != oz_currentBoard()) {
       Thread *thr = oz_newThreadInject(bb);
-      thr->pushCall(BI_varToFuture,args,2);
+      thr->pushCall(BI_varToFuture, args, 2);
     } else { // optimize: immediately suspend thread
       Thread *thr = oz_newThreadSuspended();
-      thr->pushCall(BI_varToFuture,args,2);
+      thr->pushCall(BI_varToFuture, args, 2);
       OZ_Return ret = oz_var_addSusp(vPtr, thr);
       Assert(ret==SUSPEND);
     }
@@ -211,8 +211,8 @@ OZ_BI_define(BIwaitQuiet,1,0)
   oz_declareDerefIN(0,fut);
   if (oz_isVariable(fut)) {
     if (oz_isFuture(fut)) {
-      oz_getVar(futPtr)->addSuspSVar(oz_currentThread());
-      return SUSPEND;
+      oz_var_addSusp(futPtr, oz_currentThread());
+      return (SUSPEND);
     }
     oz_suspendOnPtr(futPtr);
   }
@@ -223,7 +223,7 @@ OZ_BI_define(BIbyNeed,1,1)
 {
   oz_declareNonvarIN(0,p);
   if (oz_isProcedure(p) && oz_procedureArity(p)==1) {
-      OZ_RETURN(makeTaggedRef(newTaggedCVar(new Future(oz_currentBoard(),p))));
+      OZ_RETURN(makeTaggedRef(newTaggedVar(new Future(oz_currentBoard(),p))));
   }
   oz_typeError(0,"Unary Procedure");
 } OZ_BI_end
@@ -236,7 +236,7 @@ OZ_BI_define(BIbyNeedDot,2,1)
   if (oz_isRef(fut)) {
     Future *newFut = new Future(oz_currentBoard(),
 				OZ_mkTuple(AtomDot,2,fut,fea));
-    OZ_RETURN(makeTaggedRef(newTaggedCVar(newFut)));
+    OZ_RETURN(makeTaggedRef(newTaggedVar(newFut)));
   } else {
     OZ_Term aux=0;
     OZ_Return ret=dotInline(fut,fea,aux);
@@ -250,5 +250,5 @@ OZ_BI_define(BIbyNeedFail,1,1)
 {
   Future *newFut = new Future(oz_currentBoard(),
 			      OZ_mkTuple(AtomFail,1,OZ_in(0)));
-  OZ_RETURN(makeTaggedRef(newTaggedCVar(newFut)));
+  OZ_RETURN(makeTaggedRef(newTaggedVar(newFut)));
 } OZ_BI_end

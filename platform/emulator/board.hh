@@ -223,7 +223,7 @@ public:
   // All taggedrefs in a row for garbage collection
   //
 private:
-  TaggedRef script, status, rootVar;
+  TaggedRef script, status, rootVar, optVar;
 
   //
   // Script and script installation
@@ -343,13 +343,21 @@ public:
   TaggedRef genFailed();
   TaggedRef genBlocked(TaggedRef arg);
 
-
   //
   // Root variable
   //
 public:
   TaggedRef getRootVar() {
     return makeTaggedRef(&rootVar);
+  }
+
+  //
+  // The template for optimized variables. OptVar"s are local to a
+  // space and cannot have suspensions. All OptVar"s in a space share
+  // one single var body, whose "master copy" is stored in the space:
+  TaggedRef getOptVar() {
+    Assert(optVar != taggedInvalidVar);
+    return (optVar);
   }
 
   // 

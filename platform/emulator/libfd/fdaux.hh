@@ -268,12 +268,12 @@ public:
   }
 };
 
-template<class RTYPE, class CVAR, int P, int F, int S>
+template<class RTYPE, class VAR, int P, int F, int S>
 class _PropagatorController_V_V : public _OZ_ParamIterator<RTYPE> {
 protected:
-  CVAR &v1, &v2;
+  VAR &v1, &v2;
 public:
-  _PropagatorController_V_V(CVAR &i1, CVAR &i2) 
+  _PropagatorController_V_V(VAR &i1, VAR &i2) 
     : v1(i1), v2(i2) {}
 
   RTYPE leave(int vars_left = 0) {
@@ -294,12 +294,12 @@ public:
 typedef _PropagatorController_V_V<OZ_Return,OZ_FDIntVar,PROCEED,FAILED,SLEEP> 
 PropagatorController_V_V;
 
-template<class RTYPE, class CVAR, int P, int F, int S>
+template<class RTYPE, class VAR, int P, int F, int S>
 class _PropagatorController_V_V_V : public _OZ_ParamIterator<RTYPE> {
 protected:
-  CVAR &v1, &v2, &v3;
+  VAR &v1, &v2, &v3;
 public:
-  _PropagatorController_V_V_V(CVAR &i1, CVAR &i2, CVAR &i3)
+  _PropagatorController_V_V_V(VAR &i1, VAR &i2, VAR &i3)
     : v1(i1), v2(i2), v3(i3) {}
 
   RTYPE leave(int vars_left = 0) {

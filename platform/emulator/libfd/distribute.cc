@@ -61,7 +61,7 @@ int getMid(TaggedRef var) {
 
 inline
 int getConstraints(TaggedRef var) {
-  return oz_var_getSuspListLength(tagged2CVar(var));
+  return oz_var_getSuspListLength(tagged2Var(var));
 }
 
 
@@ -109,7 +109,7 @@ public:
   FdDistributor(Board *bb, TaggedRef * vs, int n) {
     vars = vs;
     size = n;
-    sync = oz_newVar(bb);
+    sync = oz_newVariable(bb);
   }
 
   void dispose(void) {
@@ -476,7 +476,7 @@ OZ_BI_define(fdd_distribute, 3, 1) {
   }
 
   if (oz_onToplevel())
-    OZ_RETURN(oz_newVar(oz_rootBoard()));
+    OZ_RETURN(oz_newVariable(oz_rootBoard()));
 
   {
     Board * bb = oz_currentBoard();
@@ -590,7 +590,7 @@ OZ_BI_define(fdd_assign, 2, 1) {
   }
 
   if (oz_onToplevel())
-    OZ_RETURN(oz_newVar(oz_rootBoard()));
+    OZ_RETURN(oz_newVariable(oz_rootBoard()));
 
   {
     Board * bb = oz_currentBoard();

@@ -106,9 +106,13 @@ void addFeatOFSSuspensionList(TaggedRef var,
 	case TAG_LITERAL:
 	  Assert(tl==AtomNil);
 	  break;
-	case TAG_UVAR:
-	  DoBind(tailPtr, AtomNil);
-	  break;
+	case TAG_VAR:
+	  {
+	    // kost@ : there used to be a "case TAG_UVAR: DoBind(...);"
+	    OzVariable *ov = tagged2Var(tl);
+	    oz_bindVar(ov, tailPtr, AtomNil);
+	    break;
+	  }
 	default:
 	  Assert(FALSE);
 	}
@@ -306,7 +310,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   // var - var unification
   TaggedRef var  = *vPtr;
   TaggedRef term = *tPtr;
-  OzVariable *cv = tagged2CVar(term);
+  OzVariable *cv = tagged2Var(term);
   if (cv->getType()!=OZ_VAR_OF) {
     return FALSE;
   }
@@ -332,14 +336,14 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   if (vLoc && tLoc) {
     // Reuse the largest table (optimization to improve unification speed):
     if (varWidth > termWidth) {
-      DEBUG_CONSTRAIN_CVAR(("varWidth > termWidth\n"));
+      DEBUG_CONSTRAIN_VAR(("varWidth > termWidth\n"));
       newVar   = this;
       dt       = newVar->getTable();
       nvRefPtr = vPtr;
       otherVar = termVar; // otherVar must be smallest
       otherPtr = tPtr;
     } else {
-      DEBUG_CONSTRAIN_CVAR(("! (varWidth > termWidth)\n"));
+      DEBUG_CONSTRAIN_VAR(("! (varWidth > termWidth)\n"));
       newVar   = termVar;
       dt       = newVar->getTable();
       nvRefPtr = tPtr;
@@ -361,18 +365,18 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   } else if (!vLoc && !tLoc) {
     // Reuse the largest table (this improves unification speed):
     if (varWidth > termWidth) {
-      DEBUG_CONSTRAIN_CVAR(("varWidth > termWidth\n"));
+      DEBUG_CONSTRAIN_VAR(("varWidth > termWidth\n"));
       // Make a local copy of the var's DynamicTable:
       newVar   = this;
       dt       = newVar->getTable()->copyDynamicTable();
-      nvRefPtr = newTaggedCVar(newVar);
+      nvRefPtr = newTaggedVar(newVar);
       otherVar = termVar; // otherVar must be smallest
     } else {
-      DEBUG_CONSTRAIN_CVAR(("! (varWidth > termWidth)\n"));
+      DEBUG_CONSTRAIN_VAR(("! (varWidth > termWidth)\n"));
       // Same as above, but in opposite order:
       newVar   = termVar;
       dt       = newVar->getTable()->copyDynamicTable();
-      nvRefPtr = newTaggedCVar(newVar);
+      nvRefPtr = newTaggedVar(newVar);
       otherVar = this; // otherVar must be smallest
     }
   } else Assert(FALSE);
@@ -418,31 +422,31 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   // If in glob/loc unification, the global is not constrained, then bind
   // the local to the global and relink the local's suspension list
   if (vLoc && tLoc) {
-    DEBUG_CONSTRAIN_CVAR(("vLoc && tLoc\n"));
+    DEBUG_CONSTRAIN_VAR(("vLoc && tLoc\n"));
     Assert(otherPtr);
     // bind to var without trailing:
     bindLocalVar(otherPtr, nvRefPtr);
   } else if (vLoc && !tLoc) {
-    DEBUG_CONSTRAIN_CVAR(("vLoc && !tLoc\n"));
+    DEBUG_CONSTRAIN_VAR(("vLoc && !tLoc\n"));
     // Global term is constrained if result has more features than term:
     if (mergeWidth > termWidth) {
-      DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar\n"));
+      DEBUG_CONSTRAIN_VAR(("constrainGlobalVar\n"));
       constrainGlobalVar(tPtr, dt);
     }
     bindLocalVar(vPtr, tPtr);
   } else if (!vLoc && tLoc) {
-    DEBUG_CONSTRAIN_CVAR(("!vLoc && tLoc\n"));
+    DEBUG_CONSTRAIN_VAR(("!vLoc && tLoc\n"));
     // Global var is constrained if result has more features than var:
     if (mergeWidth > varWidth) {
-      DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar\n"));
+      DEBUG_CONSTRAIN_VAR(("constrainGlobalVar\n"));
       constrainGlobalVar(vPtr, dt);
     }
     bindLocalVar(tPtr, vPtr);
   } else if (!vLoc && !tLoc) {
-    DEBUG_CONSTRAIN_CVAR(("!vLoc && !tLoc\n"));
+    DEBUG_CONSTRAIN_VAR(("!vLoc && !tLoc\n"));
     // bind to new term with trailing:
     if (mergeWidth > varWidth) {
-      DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar\n"));
+      DEBUG_CONSTRAIN_VAR(("constrainGlobalVar\n"));
       constrainGlobalVar(vPtr, dt);
     }
     bindGlobalVar(tPtr, vPtr);

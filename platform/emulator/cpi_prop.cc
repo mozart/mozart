@@ -80,9 +80,6 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	}
       }
       break;
-    case TAG_UVAR:
-      o << '_';
-      break; 
 
     case TAG_SMALLINT:
       o << tagged2SmallInt(h);
@@ -92,13 +89,16 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       o << tagged2FSetValue(h)->toString();
       break;
 
-    case TAG_CVAR:
+    case TAG_VAR:
       {
 	o << oz_varGetName(makeTaggedRef(hptr));
 	
-	OzVariable * cv = tagged2CVar(h);
+	OzVariable * cv = tagged2Var(h);
 	
 	switch (cv->getTypeMasked()) {
+	case OZ_VAR_OPT:
+	  o << '_';
+	  break; 
 	case OZ_VAR_FD: 
 	  o << ((OzFDVariable *) cv)->getDom().toString();
 	  break;
@@ -249,43 +249,43 @@ int OZ_Propagator::impose(OZ_Propagator * p)
     void * cpi_raw = (void *) NULL;
     int isNonEncapTagged = 0, isEncapTagged = 0;
     //
-    if (oz_isCVar(v)) {
-      OzVariable * cvar = tagged2CVar(v);
-      isNonEncapTagged  = cvar->isParamNonEncapTagged();
-      isEncapTagged     = cvar->isParamEncapTagged();
-      cpi_raw           = cvar->getRawAndUntag();
+    if (oz_isVar(v)) {
+      OzVariable * var = tagged2Var(v);
+      isNonEncapTagged  = var->isParamNonEncapTagged();
+      isEncapTagged     = var->isParamEncapTagged();
+      cpi_raw           = var->getRawAndUntag();
     }
     //
     if (isGenFDVar(v)) {
       addSuspFDVar(v, prop, staticSpawnVarsProp[i].state.fd);
-      all_local &= oz_isLocalVar(tagged2CVar(v));
+      all_local &= oz_isLocalVar(tagged2Var(v));
     } else if (isGenOFSVar(v)) {
       addSuspOFSVar(v, prop);
-      all_local &= oz_isLocalVar(tagged2CVar(v));
+      all_local &= oz_isLocalVar(tagged2Var(v));
     } else if (isGenBoolVar(v)) {
       addSuspBoolVar(v, prop);  
-      all_local &= oz_isLocalVar(tagged2CVar(v));
+      all_local &= oz_isLocalVar(tagged2Var(v));
       // mm2:
       //    } else if (isSVar(vtag)) {
       //      addSuspSVar(v, prop);
       //      all_local &= isLocalVar(v);
     } else {
-      Assert(oz_isUVar(v));
+      Assert(oz_isOptVar(v));
       oz_var_addSusp(vptr, prop);
-      all_local &= oz_isLocalVar(tagged2CVar(*vptr));
+      all_local &= oz_isLocalVar(tagged2Var(*vptr));
     }
     //
     // undo everything
     //
-    if (oz_isCVar(v)) {
-      OzVariable * cvar = tagged2CVar(v);
+    if (oz_isVar(v)) {
+      OzVariable * var = tagged2Var(v);
       if (isNonEncapTagged) {
-	cvar->setStoreFlag();
+	var->setStoreFlag();
       }
       if (isEncapTagged) {
-	cvar->setReifiedFlag();
+	var->setReifiedFlag();
       }
-      cvar->putRawTag(cpi_raw);
+      var->putRawTag(cpi_raw);
     }
   } // for
   //
