@@ -421,13 +421,11 @@ void ByteStream::marshalBegin(){
   pos=first->head()+tcpHeaderSize;}
 
 void ByteStream::dumpByteBuffers(){
-  ByteBuffer *bb=first;
-  while(bb!=NULL){
-    ByteBuffer *bb1=bb;
-    bb=bb->next;
-    bufferManager->freeByteBuffer(bb1);
-  }}
-
+  while(first!=last) {
+    removeFirst();
+  }
+  removeSingle();
+}
 
 /* BufferManager */
 
