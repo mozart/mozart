@@ -108,7 +108,7 @@ local
    local
       UrlDefaults = \insert '../../url-defaults.oz'
    in
-      BitmapUrl = UrlDefaults.home#'tools/images/'
+      BitmapUrl = UrlDefaults.home#'images/'
    end
 
    Black = c(0 0 0)
