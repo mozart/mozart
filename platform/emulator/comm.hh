@@ -189,6 +189,7 @@ class TimeStamp {
 public:
   time_t start;
   int pid;
+  TimeStamp() { DebugCode(start = (time_t) 0; pid = 0;); }
   TimeStamp(time_t s, int p): start(s), pid(p) {}
 };
 
@@ -300,7 +301,7 @@ public:
 //
 /*
   //
-  NONE				// GName'd;
+  NONE				// GName'd, or "passive";
 
   //
   REMOTE_SITE			// remote site ...
@@ -460,6 +461,7 @@ public:
     info=NULL;
     uRVC.readCtr=0;
     setType(MY_SITE);}
+
   // 
   // Extending the 'mySite' to be a virtual one (to be used whenever 
   // a master creates its first child, or a child initializes itself
@@ -472,22 +474,7 @@ public:
     setType(getType() | VIRTUAL_INFO);
   }
 
-  //
-  void setVirtual() {
-    setType(VIRTUAL_SITE | VIRTUAL_INFO);
-  }
-  void initVirtual(VirtualInfo *vi) {
-    info = vi;
-    Assert(uRVC.readCtr == 0);
-    setVirtual();
-  }
-  //
-  Bool hasVirtualInfo() { return (getType() & VIRTUAL_INFO); }
-  VirtualInfo* getVirtualInfo() {
-    Assert(getType() & VIRTUAL_INFO);
-    return (info);
-  }
-
+#ifdef VIRTUALSITES
   //
   // Initializes 'VirtualInfo' object's address, port and timestamp
   // fields. This is to be used whenever a master virtual site 
@@ -496,14 +483,10 @@ public:
   // triple should not be exposed outside these classes. It is used
   // for the 'VirtualInfo' constructor;
   void initVirtualInfoArg(VirtualInfo *vi);
+#endif
 
   //
-  void initRemoteVirtual(VirtualInfo *vi) {
-    info = vi;
-    uRVC.readCtr = 0;
-    setType(REMOTE_SITE | VIRTUAL_INFO);
-  }
-
+  // kost@ : init's are for new(ly inserted) site objects;
   void initRemote(){
     info=NULL;
     uRVC.readCtr=0;
@@ -521,14 +504,56 @@ public:
     Assert(!(getType() & MY_SITE)); 
     setType(0);}
 
+  void initVirtual(VirtualInfo *vi) {
+    Assert(!((getType()) & VIRTUAL_INFO));
+    info = vi;
+    Assert(uRVC.readCtr == 0);
+    setType(VIRTUAL_SITE | VIRTUAL_INFO);
+  }
+
+  void initRemoteVirtual(VirtualInfo *vi) {
+    Assert(!((getType()) & VIRTUAL_INFO));
+    info = vi;
+    uRVC.readCtr = 0;
+    setType(REMOTE_SITE | VIRTUAL_INFO);
+  }
+
+  //
+  // kost@ : 'makeActive*()' are for former passive (GName'd) site
+  // objects, and - in the case of virtual sites - when we declare the
+  // master site to be virtual one wrt us (see M_INIT_VS);
   void makeActiveRemote(){
     uRVC.readCtr=0;
     Assert(!(getType() & MY_SITE)); 
     setType(REMOTE_SITE);}
 
-  void makeActiveVirtual(){
+  void makeActiveVirtual() {
+    // (in fact, it means that it was "(active) remote virtual";)
+    Assert((getType()) & VIRTUAL_INFO);
     Assert(uRVC.readCtr == 0);
-    setType(VIRTUAL_SITE);}
+    setType(VIRTUAL_SITE | VIRTUAL_INFO);
+  }
+
+  void makeActiveVirtual(VirtualInfo *vi) {
+    Assert(!((getType()) & VIRTUAL_INFO));
+    info = vi;
+    Assert(uRVC.readCtr == 0);
+    setType(VIRTUAL_SITE | VIRTUAL_INFO);
+  }
+
+  void makeActiveRemoteVirtual(VirtualInfo *vi) {
+    Assert(!((getType()) & VIRTUAL_INFO));
+    info = vi;
+    Assert(uRVC.readCtr == 0);
+    setType(REMOTE_SITE | VIRTUAL_INFO);
+  }
+
+  //
+  Bool hasVirtualInfo() { return (getType() & VIRTUAL_INFO); }
+  VirtualInfo* getVirtualInfo() {
+    Assert(getType() & VIRTUAL_INFO);
+    return (info);
+  }
 
 // provided to network-comm
   
@@ -564,12 +589,14 @@ public:
     uRVC.readCtr = 0;
   }
 
+#ifdef VIRTUALSITES
   //
   // Compare "virtual info"s of two sites.
   // Note that this is a metod of the 'Site' class since 
   // (a) it contains that virtual info, and (b) address/port/timestamp 
   // fields are private members of 'VirtualInfo' objects;
   Bool isInMyVSGroup(VirtualInfo *vi);
+#endif
 
   // for use by the network-comm and virtual-comm
   // ASSUMPTION: network-comm has reclaimed RemoteSite 

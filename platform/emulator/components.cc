@@ -211,7 +211,7 @@ ByteSink::putTerm(OZ_Term in, char *filename)
     bs->sentFirst();
   }
   bs->writeCheck();
-  TaggedRef res=bs->resources;
+  TaggedRef res = bs->getResources();
   bufferManager->freeByteStream(bs);
 
   //  return oz_unify(resources,bs->resources);

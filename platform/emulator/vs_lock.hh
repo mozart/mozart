@@ -26,6 +26,10 @@
 #ifndef __VS_LOCKHH
 #define __VS_LOCKHH
 
+#include "base.hh"
+
+#ifdef VIRTUALSITES
+
 #ifdef INTERFACE  
 #pragma interface
 #endif
@@ -126,5 +130,7 @@ protected:
 #define volatile
 #undef __volatile_f
 #endif
+
+#endif // VIRTUALSITES
 
 #endif __ASM_CORE_H

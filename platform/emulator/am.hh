@@ -112,50 +112,49 @@ private:
   //
 public:
   // There is no task if check==NULL;
-  TaskNode() : check((TaskCheckProc) NULL) {
+  TaskNode() {
     check = NeverDo_CheckProc;	// 
     DebugCode(arg = (void *) 0; ready = NO; process = (TaskProcessProc) 0);
   }
   ~TaskNode() {
-    check = NeverDo_CheckProc;
+    DebugCode(check = NeverDo_CheckProc);
     DebugCode(arg = (void *) 0; ready = NO; process = (TaskProcessProc) 0);
   }
 
   //
-  Bool isFree() { return (check == (TaskCheckProc) NULL); }
+  Bool isFree() { return (check == NeverDo_CheckProc); }
   void setTask(void *aIn, TaskCheckProc cIn, TaskProcessProc pIn) {
-    Assert(check == (TaskCheckProc) NULL);
+    Assert(check == NeverDo_CheckProc);
     arg = aIn;
     check = cIn;
     ready = FALSE;
     process = pIn;
   }
-  void dropTask() { check = (TaskCheckProc) NULL; }
+  void dropTask() { check = NeverDo_CheckProc; }
 
   //
   void *getArg() {
     return (arg);
   }
   TaskCheckProc getCheckProc() {
-    Assert(check != (TaskCheckProc) NULL);
     return (check);
   }
   TaskProcessProc getProcessProc() {
-    Assert(check != (TaskCheckProc) NULL);
+    Assert(check != NeverDo_CheckProc);
     return (process);
   }
 
   //
   void setReady() {
-    Assert(check != (TaskCheckProc) NULL);
+    Assert(check != NeverDo_CheckProc);
     ready = TRUE;
   }
   Bool isReady() { 
-    Assert(check != (TaskCheckProc) NULL);
+    Assert(check != NeverDo_CheckProc);
     return (ready);
   }
   void dropReady() {
-    Assert(check != (TaskCheckProc) NULL);
+    Assert(check != NeverDo_CheckProc);
     ready = FALSE;
   }
 };
@@ -562,6 +561,10 @@ public:
   void checkTasks();
 
   void handleAlarm();
+#ifdef VIRTUALSITES
+  // 'SIGUSR2' notifies a virtual site about pending messages;
+  void handleUSR2();
+#endif
   void handleUser();
   void insertUser(int t,TaggedRef node);
   void wakeUser();
