@@ -215,7 +215,7 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 
 (eval-and-compile
   (eval '(defcustom oz-profiles nil
-	   "*alist of profiles for multiple mozart versions"
+	   "*An alist of profiles for multiple Mozart versions"
 	   :group 'mozart
 	   :type '(alist :key-type symbol
 			 :value-type
@@ -241,7 +241,7 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 (defvar oz-profile-undo nil)
 
 (defun oz-profile-undo ()
-  "undo the bindings established by the current oz profile."
+  "Undo the bindings established by the current profile."
   (interactive)
   (let ((l oz-profile-undo))
     (while l
@@ -258,11 +258,11 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 	(cons `(setenv ',var ',(getenv var)) oz-profile-undo)))
 
 (defun oz-set-profile (name)
-  "select a profile from alist oz-profiles.  This makes it
-easy to run multiple Mozart versions in the same Emacs session,
-or the same version with different parameters.  A profile is
-an alist which provides specific bindings for variables (and
-possibly affecting also the environment variable OZHOME)."
+  "Select a profile from the alist oz-profiles.
+This makes it easy to run multiple Mozart versions in the same
+Emacs session, or the same version with different parameters.
+A profile is an alist which provides specific bindings for variables
+(and possibly affecting also the environment variable OZHOME)."
   (interactive
    (list (completing-read
 	  "Profile: "
