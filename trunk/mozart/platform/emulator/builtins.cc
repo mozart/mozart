@@ -5416,6 +5416,11 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
 
   while (I && I->name) {
     bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
+ 
+#ifdef DEBUG_PROPAGATORS
+   builtinTab.htAdd(I->name, bi);
+#endif
+
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
