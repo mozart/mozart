@@ -3,7 +3,6 @@ import
    Tk
    Widgets(cardFrame toplevel)
    Graph(graph:GraphClass)
-   System
 export
    Open
    ReOpen
@@ -55,7 +54,7 @@ define
          entryTag
       attr
          cy:1
-         width:18*8
+         width:30*8
          height:17*8
          action:proc{$ _} skip end
          lineSize:14
@@ -143,7 +142,7 @@ define
          end
       end
 
-      meth deleteSite(Ks)=M
+      meth deleteSite(Ks)
          {ForAll Ks proc{$ K}
                        if {Dictionary.member self.entryDict K} then
                           E = self.entryDict.K in
@@ -194,7 +193,7 @@ define
                                                            {T tkHide}
                                                            {Exchange RunSync unit _}
                                                         end)}
-         CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:900 height:190)}
+         CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:1000 height:190)}
          SiteF OwnerF BorrowF NetInfoF
       in
          %% Site frame
