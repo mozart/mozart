@@ -1996,12 +1996,12 @@ public:
 };
 
 
-#define Cell_Invalid     0
-#define Cell_Requested   1
-#define Cell_Next        2
-#define Cell_Valid       4
-#define Cell_Dump_Asked  8
-#define Cell_Access_Bit 16
+#define Cell_Lock_Invalid     0
+#define Cell_Lock_Requested   1
+#define Cell_Lock_Next        2
+#define Cell_Lock_Valid       4
+#define Cell_Lock_Dump_Asked  8
+#define Cell_Lock_Access_Bit 16
 
 class CellSec{
 friend class CellFrame;
@@ -2009,7 +2009,6 @@ friend class CellManager;
 private:
   USEHEAPMEMORY;
   int state;
-  int accessNr;
   TaggedRef head;
   PendThread* pending;
   Site* next;
@@ -2019,18 +2018,16 @@ private:
 
 public:
   CellSec(TaggedRef val){ // on globalize
-    state=Cell_Valid;
+    state=Cell_Lock_Valid;
     pending=NULL;
     next=NULL;
     contents=val;
-    accessNr= -1;
     pendBinding=NULL;
     chain=NULL;}
 
   CellSec(int nr){ // on Proxy becoming Frame
-    state=Cell_Invalid;
+    state=Cell_Lock_Invalid;
     pending=NULL;
-    accessNr=nr;
     pendBinding=NULL;
     chain=NULL;
     next=NULL;}
@@ -2049,7 +2046,7 @@ public:
   void setOwnCurrent();
   Bool isOwnCurrent();
   void init();
-  void setCurrent(Site *, int);
+  void setCurrent(Site *);
   Site* getCurrent();
   void localize();
   void gcCellManager();
@@ -2090,11 +2087,11 @@ public:
     sec->state=s;}
   
   Bool isAccessBit(){
-    if(getState() & Cell_Access_Bit) return TRUE;
+    if(getState() & Cell_Lock_Access_Bit) return TRUE;
     return FALSE;}
   void setAccessBit(){
-    setState(getState()| Cell_Access_Bit);}
-  void resetAccessBit(){setState(getState() & (~Cell_Access_Bit));}
+    setState(getState()| Cell_Lock_Access_Bit);}
+  void resetAccessBit(){setState(getState() & (~Cell_Lock_Access_Bit));}
 
   void myStoreForward(void* forward){setPtr(forward);}
   void* getForward(){return getPtr();}
@@ -2119,7 +2116,7 @@ public:
   Site* getNext(){return sec->next;}
 
   TaggedRef getContents(){
-    Assert(getState()&(Cell_Valid|Cell_Requested));return sec->contents;}
+    Assert(getState()&(Cell_Lock_Valid|Cell_Lock_Requested));return sec->contents;}
   void setContents(TaggedRef tr){sec->contents=tr;}    
 
   void initFromProxy(){
@@ -2131,21 +2128,10 @@ public:
     
   void convertToProxy(){
     setTertType(Te_Proxy);
-    int nr = sec->accessNr;
-    DebugCode(sec=NULL);
-    sec = (CellSec*)nr;} 
+    DebugCode(sec=NULL);}
   
   void gcCellFrame();
   void gcCellFrameSec(); 
-
-  int readAccessNr(){
-    return sec->accessNr;}
-  int incAccessNr(){
-    sec->accessNr = sec->accessNr+1;
-    return sec->accessNr;}
-
-  void probeFault(Site*, int);
-  Bool threadIsPending(Thread*);
 };
 
 
@@ -2319,13 +2305,6 @@ public:
     pending=pt;}
 };
 
-#define Lock_Invalid     0
-#define Lock_Requested   1
-#define Lock_Next        2
-#define Lock_Valid       4
-#define Lock_Dump_Asked  8
-#define Lock_Access     16
-
 class LockSec{
 friend class LockFrame;
 friend class LockManager;
@@ -2334,23 +2313,20 @@ private:
   PendThread* pending;
   Site* next;
   Thread *locker;
-  int accessNr;
   Chain* chain;
 
 public:
   LockSec(Thread *t,PendThread *pt){ // on globalize
-    state=Lock_Valid;
+    state=Cell_Lock_Valid;
     pending=pt;
     locker=t;
-    next=NULL; 
-    accessNr= -1;} // maybe not needed except for debug
+    next=NULL; }
 
   LockSec(int nr){ // on Proxy becoming Frame
-    state=Lock_Invalid;
+    state=Cell_Lock_Invalid;
     locker=NULL;
     pending=NULL;
-    next=NULL;
-    accessNr = nr;} // maybe not needed except for debug
+    next=NULL;}
 };
 
 class LockFrame:public OzLock{
@@ -2376,11 +2352,11 @@ public:
   Bool hasLock(Thread *t){if(t==getLocker()) return TRUE;return FALSE;}
   
   Bool isAccessBit(){
-    if(getState() & Cell_Access_Bit) return TRUE;
+    if(getState() & Cell_Lock_Access_Bit) return TRUE;
     return FALSE;}
   void setAccessBit(){
-    setState(getState()| Cell_Access_Bit);}
-  void resetAccessBit(){setState(getState() & (~Cell_Access_Bit));}
+    setState(getState()| Cell_Lock_Access_Bit);}
+  void resetAccessBit(){setState(getState() & (~Cell_Lock_Access_Bit));}
 
   void myStoreForward(void* forward){setPtr(forward);}
   void* getForward(){return getPtr();}
@@ -2401,9 +2377,7 @@ public:
     
   void convertToProxy(){
     setTertType(Te_Proxy);
-    int nr = sec->accessNr;
-    DebugCode(sec=NULL);
-    sec = (LockSec*)nr;} 
+    DebugCode(sec=NULL);}
   
   void gcLockFrame();
   void gcLockFrameSec();
@@ -2411,14 +2385,14 @@ public:
   void lockComplex(Thread *);
   void lock(Thread *t){
     if(getLocker()==t) return;
-    if((getLocker()==NULL) && (getState()==Lock_Valid)){
+    if((getLocker()==NULL) && (getState()==Cell_Lock_Valid)){
       Assert(getPending()==NULL);
       setLocker(t);
       return;}
     lockComplex(t);}
   Bool lockB(Thread *t){
     if(getLocker()==t) return TRUE;
-    if((getLocker()==NULL) && (getState()==Lock_Valid)){
+    if((getLocker()==NULL) && (getState()==Cell_Lock_Valid)){
       Assert(getPending()==NULL);
       setLocker(t);
       return TRUE;}
@@ -2430,23 +2404,12 @@ public:
       unlockComplexB(t);
       return;}
     setLocker(NULL);
-    if((getState()==Lock_Valid) && (getPending()==NULL)){
+    if((getState()==Cell_Lock_Valid) && (getPending()==NULL)){
       return;}
     unlockComplex();}
     
   void unlockComplex();
   void unlockComplexB(Thread *);
-
-  int readAccessNr(){
-    return sec->accessNr;}
-
-  int incAccessNr(){
-    sec->accessNr = sec->accessNr+1;
-    return sec->accessNr;}
-
-  void probeFault(Site*, int);
-
-  Bool threadIsPending(Thread*);
 };
 
 class LockManager:public OzLock{
@@ -2471,7 +2434,7 @@ public:
   void lock(Thread *t){
     LockFrame *lf=(LockFrame*)this;
     if(lf->getLocker()==t) return;
-    if((lf->getLocker()==NULL) && (lf->getState()==Lock_Valid)){
+    if((lf->getLocker()==NULL) && (lf->getState()==Cell_Lock_Valid)){
       Assert(lf->getPending()==NULL);
       lf->setLocker(t);
       return;}
@@ -2480,7 +2443,7 @@ public:
   Bool lockB(Thread *t){
     LockFrame *lf=(LockFrame*)this;
     if(lf->getLocker()==t) return TRUE;
-    if((lf->getLocker()==NULL) && (lf->getState()==Lock_Valid)){
+    if((lf->getLocker()==NULL) && (lf->getState()==Cell_Lock_Valid)){
       Assert(lf->getPending()==NULL);
       lf->setLocker(t);
       return TRUE;}
@@ -2493,7 +2456,7 @@ public:
       unlockComplexB(t);
       return;}
     lf->setLocker(NULL);
-    if((lf->getState()==Lock_Valid) && (lf->getPending()==NULL)){
+    if((lf->getState()==Cell_Lock_Valid) && (lf->getPending()==NULL)){
       return;}
     unlockComplex();}
     
@@ -2504,7 +2467,7 @@ public:
   Bool isOwnCurrent();
   
   void init();
-  void setCurrent(Site *, int);
+  void setCurrent(Site *);
   Site* getCurrent();
   void probeFault(Site*, int);
   Chain *getChain() {return sec->chain;}
