@@ -10,7 +10,7 @@ import
 
    FS
    System
-   Config(edgeColour) 
+   Config(propNodeShape edgeColour) 
 
 define
 
@@ -74,6 +74,7 @@ define
       #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
       #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.reference $)}#"\"),"
       #{Hist get_prop_node_attr(H.id $)}
+      #"a(\"_GO\",\""#Config.propNodeShape#"\"),"
       #"m(["
       #{Hist insert_menu($)}
       #{Hist insert_menu_mark_prop(H.id H.name#" ("#Location#")" $)}
