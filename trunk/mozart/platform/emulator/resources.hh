@@ -86,22 +86,21 @@ error include resources.hh before mozart.h
 /* how to mark EOF for scanner */
 #define OZEOF 4
 
+/* thread priorities */
+
 #define HI_PRIORITY             2
 #define MID_PRIORITY            1
 #define LOW_PRIORITY            0
 
 #define DEFAULT_PRIORITY	MID_PRIORITY
-#define SYSTEM_PRIORITY		HI_PRIORITY
-#define PROPAGATOR_PRIORITY	MID_PRIORITY
-
-#define OZMAX_PRIORITY		HI_PRIORITY
-#define OZMIN_PRIORITY		LOW_PRIORITY
 
 #define DEFAULT_HI_MID_RATIO    10
 #define DEFAULT_MID_LOW_RATIO   10
-#define DEFAULT_CLOSE_TIME      1000
 
 /* dp tables default values */
+
+#define DEFAULT_CLOSE_TIME      1000
+
 #define DEFAULT_OWNER_TABLE_SIZE    100
 #define DEFAULT_BORROW_TABLE_SIZE   100
 #define DP_TABLE_LOW_LIMIT          20
@@ -134,14 +133,12 @@ error include resources.hh before mozart.h
 #ifdef CS_PROFILE
 #define HEAPBLOCKSIZE	     8*1048576 /* byte    */
 #else
-#define HEAPBLOCKSIZE	     1048576 /* byte    */
+#define HEAPBLOCKSIZE	     512*1024  /* byte    */
 #endif
 
 #define QUEUEMINSIZE	        32
 
 #define TIMEDETAILED            0
-
-#define NUM_TOPLEVEL_VARS	10000
 
 #define NumberOfXRegisters	10000
 
