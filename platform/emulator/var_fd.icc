@@ -17,6 +17,17 @@
 #endif
 
 inline
+void GenFDVariable::dispose(void) {
+  finiteDomain.dispose();
+  fdSuspList[fd_det]->disposeList();
+  fdSuspList[fd_bounds]->disposeList();
+  fdSuspList[fd_size]->disposeList();
+  fdSuspList[fd_eqvar]->disposeList();
+  suspList->disposeList();
+  freeListDispose(this, sizeof(GenFDVariable));
+}
+
+inline
 void GenFDVariable::propagate(TaggedRef var, FDPropState state,
                               TaggedRef term, Bool prop_eq)
 {
@@ -53,13 +64,14 @@ SuspList * concSuspList(SuspList * list_a, SuspList * list_b)
   return list_b;
 }
 
-
 inline
 void GenFDVariable::relinkSuspListTo(GenFDVariable * leftVar)
 {
   GenCVariable::relinkSuspListTo(leftVar); // any
-  for (int i = 0; i < fd_any; i++)
-  leftVar->fdSuspList[i] = concSuspList(leftVar->fdSuspList[i], fdSuspList[i]);
+  for (int i = 0; i < fd_any; i++) {
+    leftVar->fdSuspList[i] = concSuspList(leftVar->fdSuspList[i], fdSuspList[i]);
+    fdSuspList[i] = NULL;
+  }
 }
 
 inline

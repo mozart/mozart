@@ -1367,9 +1367,11 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
       if (min_elem == 0) {
         y.min_elem = max_elem + 1;
         y.max_elem = fd_iv_max_elem;
+        y.size = y.findSize();
       } else if (max_elem == fd_iv_max_elem) {
         y.max_elem = min_elem - 1;
         y.min_elem = 0;
+        y.size = y.findSize();
       } else {
         FDIntervals * iv = newIntervals(2);
         iv->init(0, min_elem - 1, max_elem + 1, fd_iv_max_elem);
@@ -1378,8 +1380,7 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
         y.max_elem = fd_iv_max_elem;
         y.setType(iv_descr, iv);
       }
-    } else {
-      // reserve one interval too many !!!
+    } else {      // reserve one interval too many !!!
       FDIntervals * iv;
       if (type == bv_descr) {
         int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
