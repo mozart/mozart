@@ -232,8 +232,8 @@ Compiler.ozf: $(FUNFUNCTORS) ozar
 
 $(SYSLETS): $(RUNFUNCTORS)
 
-ozc: Base.ozf ozbatch/Main.oz ozbatch/Compile.oz
-	$(COMPILEEXEC) ozbatch/Main.oz -o $@
+ozc: Base.ozf ozbatch/Compile.oz
+	$(COMPILEEXEC) ozbatch/Compile.oz -o $@
 
 ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
 	../url-defaults.oz
