@@ -33,6 +33,8 @@ case $system in
    ;;
    *atari*NetBSD*)      OZARCH=netbsd-m68k
    ;;
+   *sparc*NetBSD*)      OZARCH=netbsd-sparc
+   ;;
    *)  echo "Cannot determine machine type and OS version" 1>&2 ; exit 1
 esac
 
