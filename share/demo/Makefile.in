@@ -35,7 +35,7 @@ LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 APPLETNAMES = \
         JobShop AnimatedQueens \
         Bounce Trucks Transport Lift \
-        Board
+        Board DictClient
 
 APPLETS = \
         $(APPLETNAMES:%=%.oza)
@@ -44,7 +44,7 @@ DEMOAPPLETS = \
         $(APPLETS:%=$(OZDEMO)/%)
 
 DIRS = \
-        JobShop Transport
+        JobShop Transport DictClient
 
 all: dirs $(APPLETS)
 
@@ -98,6 +98,18 @@ Transport/Country.ozf: Transport/Germany.oz
 Transport.oza: $(TRANSPORTFUN)
         $(LINK) Transport/Main.ozf -o $@
 
+
+# Dict Client application
+DictClient/%.ozf: DictClient/%.oz
+        $(COMPILE) -b $(BUILDDIR)/DictClient/ $< -o $@
+
+DICTCLIENT = Main NetDictionary TkDictionary
+DICTCLIENTFUN = $(DICTCLIENT:%=DictClient/%.ozf)
+
+DictClient.oza: $(DICTCLIENTFUN)
+        $(LINK) DictClient/Main.ozf -o $@
+
+
 DemoUrls.ozf: DemoUrls.oz
         $(ZCOMPILE) $< -o $@
 
@@ -118,7 +130,7 @@ $(APPLETS): DemoUrls.ozf
 OZIMG = $(OZDEMO)/images
 
 IMGDIRS = \
-        animated-queens diagnosis lift transport trucks
+        animated-queens diagnosis lift transport trucks dict-client
 
 OZIMGDIRS = $(IMGDIRS:%=$(OZIMG)/%)
 
@@ -144,12 +156,16 @@ TRANSPORTIMGS0 = \
 TRUCKSIMGS0 = \
         truck-left truck-right
 
+DICTCLIENTIMGS0 = \
+        dict
+
 OZIMAGES = \
         $(QUEENSIMGS0:%=$(OZIMG)/animated-queens/%.xbm) \
         $(DIAGIMGS0:%=$(OZIMG)/diagnosis/%.xbm) \
         $(LIFTIMGS0:%=$(OZIMG)/lift/%.xbm) \
         $(TRANSPORTIMGS0:%=$(OZIMG)/transport/%.xbm) \
-        $(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.ppm)
+        $(TRUCKSIMGS0:%=$(OZIMG)/trucks/%.ppm) \
+        $(DICTCLIENTIMGS0:%=$(OZIMG)/dict-client/%.gif)
 
 install:: $(OZIMGDIRS) $(OZIMAGES)
 
@@ -164,6 +180,8 @@ $(OZIMG)/lift/%.xbm: images/lift/%.xbm
 $(OZIMG)/transport/%.xbm: images/transport/%.xbm
         $(INSTALL_FILE) $< $@
 $(OZIMG)/trucks/%.ppm: images/trucks/%.ppm
+        $(INSTALL_FILE) $< $@
+$(OZIMG)/dict-client/%: images/dict-client/%
         $(INSTALL_FILE) $< $@
 
 
