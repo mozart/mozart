@@ -755,6 +755,15 @@ end>>>
             As a workaround, implement the top-level loop of server
             applications in a separate component compiled without debug
             information.
+          <Entry>Pickling and Garbage Collection
+          <Item>
+            Due to maintenance of the runtime environments, values may
+            be referenced from closures that would not be referenced in
+            production code.  This can lead to different dynamic behaviour
+            with respect to pickling and garbage collection:  Pickling may
+            produce larger pickles or fail due to resources or stateful
+            data structures.  Garbage collection may not be able to release
+            as much memory.  Finalizers may be called later.
           <Entry>Thread IDs
           <Item>
             Thread IDs are 16-bit integers, and as such wrap around pretty
