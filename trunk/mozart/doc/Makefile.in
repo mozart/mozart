@@ -45,7 +45,7 @@ EMACS		= emacs
 
 SUBDIRS		= @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend installps $(DOCDIR)/idx idx/index.html
+.PHONY: all quick bootstrap check install clean veryclean distclean depend ps installps $(DOCDIR)/idx idx/index.html xref clean-xref
 
 Makefile: Makefile.in config.status
 	./config.status
@@ -70,7 +70,7 @@ $(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
 $(LIBFILES): $(SHDOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
 
-all quick check install clean veryclean distclean installps depend::
+all quick check install clean veryclean distclean installps depend clean-xref::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
 
@@ -127,3 +127,7 @@ ps.veryclean:
 	-rm -f global-xref-db.xml;
 	dirs="$(PSDOCDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) veryclean) || exit 1; done
+
+clean-xref::
+	-rm -f global-xref-db.xml
+xref: global-xref-db.xml
