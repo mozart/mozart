@@ -62,7 +62,7 @@ Bool isInTree(Board *b);
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk)
 // #define INITFROM    // initialise copied object
 // #define VERBOSE     // inform user about current state of gc
-// Note: in VERBOSE modus big external file (gc-debug.txt) is produced.
+// Note: in VERBOSE modus big external file (verb-out.txt) is produced.
 // It contains very detailed debug (trace) information;
 
 // the debug macros themselves
@@ -1155,6 +1155,7 @@ void AM::gc(int msgLevel)
 
   GCPROCMSG("Predicate table");
   CodeArea::gc();
+  SRecord::aritytable.gc ();
 
   rootBoard=rootBoard->gcBoard();
   setCurrent(currentBoard->gcBoard(),NO);
@@ -1386,6 +1387,29 @@ void AbstractionTable::gc()
       aux->left->gc();
       aux = aux->right;    // tail recursion optimization
     }
+}
+
+void ArityTable::gc ()
+{
+  GCMETHMSG("ArityTable::gc");
+  Arity **aux = table;
+
+  for (int i = 0; i < size; i++) {
+    if (table[i] == (Arity *) NULL)
+      continue;
+    (table[i])->gc ();
+  }
+}
+
+void Arity::gc ()
+{
+  GCMETHMSG("Arity::gc");
+  // gcTagged (list, list);  // kost@ : don't work ???!!
+  for (int i = 0; i < size; i++) {
+    if (keytable[i] == (Atom *) NULL)
+      continue;
+    keytable[i] = (keytable[i])->gc ();
+  }
 }
 
 void CodeArea::gc()
@@ -1733,6 +1757,10 @@ void SRecord::gcRecurse()
                   error ("freed 'g' refs (abs) array in SRecord::gcRecurse ()"));
       a->gRegs = gcRefsArray(a->gRegs);
       a->name = a->name->gc ();
+      DebugGC((a->name->getHome () == (Board *) ALLBITS ||
+               a->name->getHome () == (Board *) NULL),
+              error ("non-dynamic name is met in Abstraction::gcRecurse"));
+      TOSPACE(a->name);
       break;
     }
 
