@@ -1,5 +1,5 @@
 %{Property.put 'internal.debug' true}
-declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP.ozf']}
+declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
 %[RI LP] = {Module.link ['RI.ozf' 'LP.ozf']}
 
 /*
