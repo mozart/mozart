@@ -54,6 +54,7 @@ private:
   int size;
   int used;
   int mode;
+  int framesize; // For unmarshaling
 
   inline void int2net(int i);
   inline int net2int();
@@ -96,6 +97,14 @@ public:
       return (used-(posMB-getptr))>=size;
     else
       return (used-(endMB-getptr)+(posMB-buf) +1)>=size;
+  }
+  void setFrameSize(int size);
+  inline Bool frameCanGet(int size) {
+    Assert(mode == BYTE_MODE_UNMARSHALING);
+    if (posMB>=getptr)
+      return (framesize-(posMB-getptr))>=size;
+    else
+      return (framesize-(endMB-getptr)+(posMB-buf) +1)>=size;
   }
   int getInt();
   BYTE getNext();

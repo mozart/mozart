@@ -34,7 +34,10 @@
 
 #define BYTE_DEF_SIZE 4096
 #define MIN_FOR_HEADER 200// Minimal size available to even consider marshaling
-static const int mustRead=9;
+
+#define HEADER 11
+#define TRAILER 1
+#define MUSTREAD 9
 
 #define CF_FIRST 0
 #define CF_CONT 1
@@ -260,7 +263,7 @@ inline unmarshalReturn TCPTransObj::unmarshal() {
   comObj->msgAcked(acknum);
   framesize=readBuffer->getInt();   // Framesize
   // ----------------------------------------- // Must read read
-  if(readBuffer->canGet(framesize-mustRead)) { // Can all be read?
+  if(readBuffer->canGet(framesize-MUSTREAD)) { // Can all be read?
     b=readBuffer->get();           // MessageType
     GenCast(b,BYTE,type,MessageType);
     cf=readBuffer->get();          // CF
@@ -278,7 +281,7 @@ inline unmarshalReturn TCPTransObj::unmarshal() {
 
     // Unmarshal data
     readBuffer->fixsite=site;
-    // kost@ : handle error conditions!
+    readBuffer->setFrameSize(framesize-TRAILER); // How much can be unm.
     if (msgC->unmarshal(readBuffer, tcptransController)) {
       // Frame contents successfully unmarshaled.
       t=readBuffer->get();
@@ -362,7 +365,7 @@ int TCPTransObj::readHandler(int fd) {
   readBuffer->getBegin();
   while(contin==U_MORE) {
     Assert(this->fd!=-1 && this->fd==fd);
-    if(readBuffer->canGet(mustRead))     // Includes previously read bytes
+    if(readBuffer->canGet(MUSTREAD))     // Includes previously read bytes
       contin=unmarshal();
     else
       break;

@@ -203,8 +203,9 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
 
   clearFlag(MSG_HAS_UNMARSHALCONT);
   for(int i=0;i<MAX_NOF_FIELDS;i++) {
-    if(!bb->canGet(1))
+    if(msgFields[i].ft!=FT_NONE && !bb->frameCanGet(1)) {
       setFlag(MSG_HAS_UNMARSHALCONT);
+    }
     else {
 
       switch(msgFields[i].ft) {
@@ -414,6 +415,8 @@ include(EMUDIR/msgFormat.m4)
   }
 }
 
+undefine(`message')
+undefine(`argEnc')
 
 define(message,`
        case $1:
