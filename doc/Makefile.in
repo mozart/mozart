@@ -50,6 +50,9 @@ SUBDIRS         = @SUBDIRS@
 Makefile: Makefile.in config.status
         ./config.status
 
+Makefile.vars: Makefile.vars.in config.status
+        ./config.status
+
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
         $(DOCDIR)/idx $(ENABLE_INDEX:%=$(DOCDIR)/%)
 
@@ -64,7 +67,7 @@ CSSFILES = $(SRCTOP)/doc/utilities/ozdoc.css $(SRCTOP)/doc/utilities/page.gif
 $(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
         $(INSTALL_FILE) $< $@ && \
         $(INSTALL_DIR) $(DOCDIR)/idx && \
-        (cd idx && for i in *; do \
+        (cd idx && for i in * $(CSSFILES); do \
         $(INSTALL_FILE) $$i $(DOCDIR)/idx || exit 1; done)
 
 $(LIBFILES): $(SHDOCDIR)/% : %

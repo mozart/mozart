@@ -1320,8 +1320,11 @@ echo "$ac_t""$oz_doc_dirs" 1>&6
 
 test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop"
 
+DOC_DIRS=$oz_doc_dirs
+
+
 echo $ac_n "checking for --enable-index""... $ac_c" 1>&6
-echo "configure:1325: checking for --enable-index" >&5
+echo "configure:1328: checking for --enable-index" >&5
 # Check whether --enable-index or --disable-index was given.
 if test "${enable_index+set}" = set; then
   enableval="$enable_index"
@@ -1341,7 +1344,7 @@ fi
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1345: checking for --enable-chm" >&5
+echo "configure:1348: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
@@ -1476,7 +1479,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile Makefile.common catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1533,6 +1536,7 @@ s%@OZENGINE@%$OZENGINE%g
 s%@OZDOC@%$OZDOC%g
 s%@JAVA_BIN@%$JAVA_BIN%g
 s%@JAVA_THREADS@%$JAVA_THREADS%g
+s%@DOC_DIRS@%$DOC_DIRS%g
 s%@ENABLE_INDEX@%$ENABLE_INDEX%g
 s%@SUBDIRS@%$SUBDIRS%g
 s%@subdirs@%$subdirs%g
@@ -1577,7 +1581,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

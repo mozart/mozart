@@ -10,12 +10,17 @@ INSTALL_DIR     = @INSTALL_DIR@
 
 AWK             = @AWK@
 
+include ../Makefile.vars
+
 DOCFILES0=Mozart.hhp Mozart.hhc
 DOCFILES=$(DOCFILES0:%=$(DOCDIR)/%)
 
 .PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick install installps
 
-all: Mozart.hhc
+all: Mozart.hhp Mozart.hhc
+
+Mozart.hhp: Mozart.hhp.in
+        (cat $<; for i in $(DOC_DIRS); do echo $$i/page.gif; done) > $@
 
 Mozart.hhc: Mozart.hhc.in
         $(AWK) -f $(SRCDIR)/preprocess.awk < $< > $@ || \
@@ -44,7 +49,7 @@ $(DOCDIR)/%: %
         $(INSTALL_FILE) $< $@
 
 clean:
-        rm -rf Mozart.hhc
+        rm -rf Mozart.hhp Mozart.hhc
 
 veryclean: clean
 
