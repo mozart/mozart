@@ -1744,10 +1744,8 @@ in
 	    end
 	    self.label = OFSLab
 
-	    %% 
-	    job 
-	       SelfClosed = {Object.closed self}
-	    end
+	    %%
+	    SelfClosed = self.closed
 
 	    %% 
 	    case {IsVar OFSLab} then

@@ -17,8 +17,8 @@ local
    fun {Id X} X end
    
 
-   class AboutDialog
-      from TkTools.dialog
+   class AboutDialog 
+      from TkTools.dialog Object.closedFeature
 
       meth init(master:Master)
 	 <<TkTools.dialog tkInit(master:  Master
@@ -41,7 +41,8 @@ local
 
    end
 
-
+   class ErrorTool from TkTools.error Object.closedFeature end
+   
    local
       RadioWidth = 12
       LabelWidth = 12      
@@ -498,7 +499,7 @@ in
       end
 
       meth Lock(O)
-	 case {Object.closed O} then <<UrObject nil>> end
+	 case O.closed then <<UrObject nil>> end
       end
 
       meth about
@@ -506,10 +507,10 @@ in
       end
 
       meth error(M)
-	 <<DialogManager Lock({New TkTools.error
+	 <<DialogManager Lock({New ErrorTool
 			       tkInit(master:  self.toplevel
 				      text:    M
-				      title:   TitleName#': Error Message')})>> 
+				      title:   TitleName#': Error Message')})>>
       end
 
    end
