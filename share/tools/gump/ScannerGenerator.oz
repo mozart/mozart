@@ -156,7 +156,7 @@ local
 
       fun {GetTargetPlatform Rep} Tmp Cmd in
 	 Tmp = {OS.tmpnam}
-	 Cmd = {OZTOOL}#' platform > '#Tmp
+	 Cmd = {OZTOOL}#' platform -o '#Tmp
 	 try Exit VS in
 	    Exit = {OS.system Cmd}
 	    VS = {ReadFile Tmp}
