@@ -118,6 +118,8 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
   }
 
+  return NO;
+
 }
 
 Bool Suspendable::wakeup(Board * bb, PropCaller calledBy) {
