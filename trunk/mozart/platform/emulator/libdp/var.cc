@@ -292,7 +292,7 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
 {
   int OTI=getIndex();
   PD((PD_VAR,"ManagerVar::doBind by thread: %x",oz_currentThread()));
-  PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(this)));
+  PD((PD_VAR,"bind manager o:%d v:%s",OTI,toC(*lPtr)));
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     // send redirect done first to check if r is exportable
