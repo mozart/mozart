@@ -881,17 +881,17 @@ void _oz_getNewHeapChunk(const size_t raw_sz) {
  *
  */
 
-FL_Small * FL_Manager::small[FL_SizeToIndex(FL_MaxSize) + 1];
+FL_Small * FL_Manager::smmal[FL_SizeToIndex(FL_MaxSize) + 1];
 FL_Large * FL_Manager::large;
 
 void FL_Manager::init(void) {
   large    = (FL_Large *) NULL;
-  small[0] = NULL;
+  smmal[0] = NULL;
 
   for (int i = FL_SizeToIndex(FL_MaxSize); i>0; i--) {
     FL_Small * f = (FL_Small *) heapMalloc(FL_IndexToSize(i));
     f->setNext(NULL);
-    small[i] = f;
+    smmal[i] = f;
   }
 }
 
@@ -918,7 +918,7 @@ void FL_Manager::refill(const size_t sz) {
     block = (char *) heapMalloc(n);
   }
 
-  small[FL_SizeToIndex(sz)] = (FL_Small *) block;
+  smmal[FL_SizeToIndex(sz)] = (FL_Small *) block;
 
   n -= sz;
 
@@ -939,7 +939,7 @@ unsigned int FL_Manager::getSize(void) {
   unsigned int s = 0;
 
   for (int i = 1; i <= FL_SizeToIndex(FL_MaxSize); i++) {
-    FL_Small * f = small[i];
+    FL_Small * f = smmal[i];
     while (f) {
       s += FL_IndexToSize(i); f = f->getNext();
     }
