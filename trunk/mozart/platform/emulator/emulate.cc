@@ -2781,10 +2781,10 @@ LBLsuspendThread:
        TaggedRef pred = 0;
        if (e->currentThread && !e->currentThread->isPropagator()) {
 	 pred = e->currentThread->findCatch(traceBack);
+	 traceBack = reverseC(traceBack);
 	 if (PC != NOCODE) {
 	   traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
 	 }
-	 traceBack = reverseC(traceBack);
        } else {
 	 e->currentThread = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB, 0);
 	 e->restartThread();
