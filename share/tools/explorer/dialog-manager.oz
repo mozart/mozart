@@ -279,11 +279,6 @@ local
 in
 
    class DialogManager
-      attr CurPath: nil
-
-      meth init
-	 CurPath <- {Unix.getCWD}
-      end
 
       meth guiOptions(What)
 	 {Wait {New case What
@@ -299,19 +294,13 @@ in
 	 case {Tk.return
 	       tk_getSaveFile(filetypes:  q(q('Postscript Files' q('.ps'))
 					    q('All Files'        '*'))
-			      initialdir: @CurPath
 			      parent:     self.toplevel
 			      title:      TitleName#': Export Postscript')}
 	 of nil then skip
-	 elseof Filename then
-	    O    = self.options.postscript 
-	    Path = {Reverse {List.dropWhile {Reverse Filename}
-			     fun {$ C} C\=&/ end}}
-	 in
-	    CurPath <- Path
+	 elseof S then O = self.options.postscript in
 	    {self.canvas postscript(colormode: {Dictionary.get O color}
 				    rotate:    {Dictionary.get O orientation}
-				    file:      Filename
+				    file:      S
 				    height:    {Dictionary.get O height}
 				    width:     {Dictionary.get O width})}
 	    
