@@ -2,7 +2,7 @@
 # Author: Denys Duchier, 2003
 # Copyright: Denys Duchier, 2003
 Name: mozart-gtk
-Version: 1.0
+Version: 1.1
 Release: 1
 Summary: GTK 1.2 bindings for Mozart and Alice
 Copyright: Free
