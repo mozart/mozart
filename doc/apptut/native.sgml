@@ -27,8 +27,8 @@
 
 <part id=part.foreign.extensions proglang=cc>
   <title/Foreign Extensions/
-  <chapter>
-    <title/Introduction/
+  <chapter id=chapter.counter.global>
+    <title/Global Counter Library/
 
     <p>Oz can be very simply extended with new functionality and
 datatypes implemented in C or C++.  This capability is often used to
@@ -36,19 +36,16 @@ interface Oz to existing libraries: for example, the <name
 type="library"/regex/ and <name type="library"/gdbm/ modules are
 implemented in this fashion.</p>
 
-    <para class=apropos><title/Native Functors/
-Every extension is presented to the system in the form of a
-<def/native functor/, &ie; a functor which happens to be implemented
-in C or C++ rather than in Oz.</para>
+    <p>Every extension is presented to the system in the form of a
+<def/native functor/<index/functor<and>native/, &ie; a functor which
+happens to be implemented in C or C++ rather than in Oz.</p>
 
-    <section>
-      <title/Global Counter Example/
-      <p>We now define a native functor that exports a
+    <p>In this chapter, we define a native functor that exports a
 <code/<span class=ignore/ /next/
 function which returns the next value of a global counter each time it
 is called.</p>
-      <subsection>
-	<title/Implementation/
+    <section>
+      <title/Implementation/
 <p><code.extern display to="counter.cc">
 <code/OZ_BI_define(counter_next,0,1)/ indicates that we are defining a
 procedure <code/<span class=ignore/ /counter_next/ that implements a new builtin which
@@ -67,11 +64,11 @@ entry in this table consists of (1) the name of the export, (2) the
 input arity, (3) the output arity, (4) the procedure implementing the
 builtin.  The table must be terminated by an entry whose fields are
 all zero.</p>
-      </subsection>
+      </section>
 
-      <subsection>
-	<title/Compilation/
-	<p>We must now make this native module available as a
+    <section>
+      <title/Compilation/
+      <p>We must now make this native module available as a
 <em/shared object library/.  First we must compile it and create
 <file/counter.o/:
 <code display proglang=sh>oztool c++ -I${OZHOME}/include -c counter.cc</code>
@@ -80,26 +77,27 @@ Then we must produce a platform specific shared object library:
 You may find it useful to create a <file/Makefile/ of the form:
 <code.extern display proglang=makefile to="mkfile.xmp">
 </p>
-	<p><code display proglang=sh/oztool/ is a script that invokes
+	<p><code proglang=sh/oztool/<index/<code proglang=sh/oztool//
+is a script that invokes
 the facility named as its first argument with appropriate options.
 For example, it is essential to invoke the same C++ compiler and with
 the same &eg; code generation options as were used for building the Oz
 emulator; otherwise it will not be possible to dynamically link your
 library into a running Oz process.  Normally, the Oz emulator is
-compiled without <EM/run time information/ (option <code display
+compiled without <em/run time information/ (option <code
 proglang=sh/-fno-rtti/ for g++) and without support for C++ exceptions
-(option <code display proglang=sh/-fno-exceptions/ for g++).
-<code display proglang=sh/oztool c++/ automatically invokes the right
+(option <code proglang=sh/-fno-exceptions/ for g++).
+<code proglang=sh/oztool c++/ automatically invokes the right
 compiler with the right options.</p>
 	<p>Even more complicated is how to create a DLL from a
 compiled object file: it varies depending on the system, compiler and
 linker used.  Under Windows, the sequence of necessary incantations is
 so arcane and highly magical, it could well endanger your sanity.
-Fortunately <code display proglang=sh/oztool ld/ automatically takes
+Fortunately <code proglang=sh/oztool ld/ automatically takes
 care of the details.</p>
-      </subsection>
-      <subsection>
-	<title/Deployment/
+      </section>
+    <section>
+      <title/Deployment/
 <p>Normally, you will then place the resulting shared object file, e.g.
 <file/counter.so-linux-i486/ on a Linux system, in an installation
 directory; let's call it ?{install}.  If your site has several
@@ -122,7 +120,19 @@ counter.</p>
 <code display proglang=oz
 >declare [M] = {Module.link ['?{install}/counter.so{native}']}</code>
 </p>
-      </subsection>
+    </section>
+  </chapter>
+
+  <chapter id=chapter.counter.object>
+    <title/Native Counter Objects/
+    <p>In this chapter, we are going to generalize the counter idea:
+instead of having just one global counter, we are going to have
+counter objects implemented as extensions.  Of course, this is
+intended purely as a didactic exercise: such counters could much more
+easily be defined as Oz objects directly.</p>
+    <section>
+      <title/Counter Class/
+  </chapter>
 
 </PART>
 
