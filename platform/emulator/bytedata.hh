@@ -81,6 +81,7 @@ public:
   BitData(BitData&);
   Bool checkIndex(int i) { return i>=0 && i<width; }
   Bool equal(BitData*);
+  void printStream(ostream &out);
   int  get(int);
   void put(int,Bool);
   void conj(BitData*);
@@ -106,18 +107,9 @@ public:
   virtual int getTypeV() { return type_id; }
   virtual Bool equalV(OZ_Term);
   virtual Bool marshalV(MsgBuffer*);
-  virtual void printStreamV(ostream &out,int depth = 10) {
-    out << "<BitString \"";
-    int w = getWidth();
-    for (int i=0;i<w;i++)
-      out << ((get(i))?"1":"0");
-    out << "\">";
-  }
+  virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
-                                int depth=10,int offset=0) {
-    out << "bit string: " << width
-        << " bits at " << this << '.' << endl;
-  }
+                                int depth=10,int offset=0);
   virtual ConstExtension* gcV() { return clone(); }
   BitString operator=(const BitString&);
   BitString() : ConstExtension() {}
@@ -169,6 +161,7 @@ public:
   ByteData(ByteData&);
   Bool checkIndex(int i) { return i>=0 && i<width; }
   Bool equal(ByteData*);
+  void printStream(ostream& out);
   BYTE get(int i) { Assert(checkIndex(i)); return data[i]; }
   void put(int i,BYTE b) {
     Assert(checkIndex(i));
@@ -196,17 +189,9 @@ public:
   virtual int getTypeV() { return type_id; }
   virtual Bool equalV(OZ_Term);
   virtual Bool marshalV(MsgBuffer*);
-  virtual void printStreamV(ostream &out,int depth = 10) {
-    int w = getWidth();
-    out << "<ByteString " << w << " \"";
-    for (int i=0;i<w;i++) out << get(i);
-    out << "\">";
-  }
+  virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
-                                int depth=10,int offset=0) {
-    out << "byte string: " << width
-        << " bytes at " << this << '.' << endl;
-  }
+                                int depth=10,int offset=0);
   virtual ConstExtension* gcV() { return clone(); }
   ByteString operator=(const ByteString&);
   ByteString() : ConstExtension() {}
