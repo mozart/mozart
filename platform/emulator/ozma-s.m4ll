@@ -23,6 +23,7 @@ dnl
 
 %{
 
+#include "conf.h"
 #include "resources.hh"
 
 #ifdef OZMA
