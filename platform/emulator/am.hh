@@ -379,6 +379,9 @@ public:
   // a space. Note that an OptVar from a merged space is not
   // recognized as such; instead, a regular binding routine is used.
   int isOptVar(TaggedRef t) {
+    // Important invariant:
+    //  In EqEq-mode, the _currentOptVar has been invalidated to NULL
+    //  Switching back restores _currentOptVar (see also setEqEq)
     Assert(_inEqEq || _currentOptVar);
     return t == _currentOptVar;
   }
