@@ -26,11 +26,11 @@
 \switch +gump
 
 \gumpscannerprefix lambda
-\insert gump/examples/LambdaScanner.ozg
+\insert LambdaScanner.ozg
 
 \switch +gumpparseroutputsimplified +gumpparserverbose
 \gumpparserexpect 0
-\insert gump/examples/LambdaParser.ozg
+\insert LambdaParser.ozg
 
 declare LambdaIn = 'Lambda.in'
 
