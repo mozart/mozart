@@ -1639,12 +1639,14 @@ void handlerUSR1()
 
 void handlerINT()
 {
+  prefixError();
   message("SIG INT ****\n");
   am.exitOz(1);
 }
 
 void handlerTERM()
 {
+  prefixError();
   message("SIG TERM ****\n");
   am.exitOz(0);
 }
@@ -1657,19 +1659,20 @@ void handlerMessage()
 void handlerSEGV()
 {
   CodeArea::writeInstr();
-  if (ozconf.runningUnderEmacs) printf("\021");
-  message("**** segmentation violation ****\n");
+  error("**** segmentation violation ****\n");
+  am.exitOz(0);
 }
 
 void handlerBUS()
 {
   CodeArea::writeInstr();
-  if (ozconf.runningUnderEmacs) printf("\021");
-  message("**** bus error ****\n");
+  error("**** bus error ****\n");
+  am.exitOz(0);
 }
 
 void handlerPIPE()
 {
+  prefixError();
   message("write on a pipe or other socket with no one to read it ****\n");
 }
 
