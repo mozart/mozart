@@ -16,7 +16,6 @@
 #pragma interface
 #endif
 
-#define OUTLINE
 #include <setjmp.h>
 
 #include "types.hh"
