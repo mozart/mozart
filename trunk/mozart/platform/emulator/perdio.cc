@@ -3442,6 +3442,7 @@ loop:
   case DIF_BUILTIN:
     {
       char *name = unmarshallString(bs);
+      PD((UNMARSHALL,"builtin: %s",name));
       BuiltinTabEntry *found = builtinTab.find(name);
 
       if (found == htEmpty) {
