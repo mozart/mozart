@@ -35,6 +35,7 @@
 #endif
 
 
+#include "wsock.hh"
 #include "base.hh"
 
 #include <stdio.h>
@@ -253,7 +254,11 @@ void registerSocket(int fd);
 char *osfgets(char *s, int n, FILE *stream);
 
 #ifdef WINDOWS
-extern int oshdopen(int file, int flags);
+
+void createReader(SOCKET s,HANDLE h);
+void createWriter(SOCKET s,HANDLE h);
+
+int ossocketpair(int, int type, int, int *sb);
 #define SIGUSR1 SIGINT
 #define O_NONBLOCK 0
 #define O_NOCTTY   0

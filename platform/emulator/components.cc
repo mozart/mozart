@@ -858,10 +858,11 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 
 #ifdef WINDOWS
 
-  HANDLE rh,wh;
-  CreatePipe(&rh,&wh,0,0);
-  int wfd = oshdopen((int)wh,O_WRONLY|O_BINARY);
-  int rfd = oshdopen((int)rh,O_RDONLY|O_BINARY);
+  int sv[2];
+  (void) ossocketpair(PF_UNIX,SOCK_STREAM,0,sv);
+
+  int wfd = sv[0];
+  int rfd = sv[1];
 
   URLInfo *ui = new URLInfo(tmpfile,url,wfd);
 
