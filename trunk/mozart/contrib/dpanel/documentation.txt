@@ -2,7 +2,7 @@
 
 The Distribution Panel
 
-The Distribution panel is a tool for monitoring the behavior of the distribution part of a Mozart engine. With its help it is possible to obtain a understanding of what is happening under the surface of your Mozart engine. Tuning of applications and unexpected behaviors can be detected. To fully understand the information that the Distribution panel displays the Mozart distribution must be understod, see seif and Peters documents. 
+The Distribution Panel is a tool for monitoring the behavior of the distribution part of a Mozart engine. With its help it is possible to obtain a understanding of what is happening under the surface of your Mozart engine. It is useful to tune applications and detect unexpected behavior. To fully understand the information that the Distribution panel displays, good comprehension of the Mozart distribution model is required. See Seif and Peter's upcoming book.
 
 
 
@@ -11,16 +11,21 @@ The Distribution panel is a tool for monitoring the behavior of the distribution
 
 Usage 
 
-The Distribution panel is started by feeding the line 
+The Distribution Panel is started in the OPI by feeding the line 
 
- {DistPanel.open} 
+ {DistributionPanel.open} 
 
-The Distribution panel monitors and displays important distribution data. The data is retreived through native interfaces that are not exposed to the user. Transforming the data into a viewable format can be a memory consuming task. In such a case it is advised to not use the Distribution panel to avoid unexpected behaviors.
+This opens a window that displays different data on the distributed work done by the current emulator.
 
-How to understand what you see.
+Keep in mind that producing and displaying the data is a memory consuming task. Do not use the Distribution Panel with too much load, or the behaviour of the entire emulator will be highly affected and the results will not be the same as without the Distribution Panel.
 
-The Distribution panel uses sampeling to get its information. The graphs that show information per sample displays what has happened since the last sample. 
-When the distribution behavior is affected by the garbage collector a red vertical bar is inserted in all graphs when garbage colelction ocours. With this garbage collection bar as "hållpunkt" some behaviors that are gc related can be observed.
+Understanding the output
+
+The Distribution panel polls information at regular intervals. Some data is accumulative, e.g. Message exchange. For this data the number of events since the last poll is displayed. This is interpreted as events per sample period. Other data is transient, e.g. Last RTT. Here the last known value is plotted.
+
+/* Make sample interval a parameter and define its default value. */
+
+Since the distribution behavior is affected by the garbage collector a red vertical bar is inserted in all graphs when garbage collection occurs. This allows garbage collection related behaviour to be understood.
 
 //** picture displaying the gc bar.
 
@@ -29,7 +34,17 @@ When the distribution behavior is affected by the garbage collector a red vertic
   
 Remote Communication 
 
-The Remote communication frame displays the status and history of the other Mozart sites that our site is connected to. Each site is given a separate color. The color is used in the graph windows to separate a sites graph from the other graphs. 
+The Remote communication frame displays the status and history of any other Mozart sites that our site currently has references too. Each site is given a separate color. The same color is used in the graph windows.
+
+As soon as distribution is initialized, there will be one site marked mine. That is a placeholder for the site representing the current emulator. The other sites present can be marked as follows:
+
+connected(N): A connection is established and the last measured Round Trip Time to that site was N.
+passive: A reference is present but the emulator is currently not connected to that site.
+perm: That site is known to be permanently down.
+
+Message exchange per sample period shows how many messages have been sent or received since the last poll for data.
+
+Last RTT (ms) shows the last measured Round Trip Time at each poll for data. The RTT is defined as the time between when a message is transferred and its acknowledgement is received back. This value includes the network RTT as well as any delays due to ongoing local or remote computation.
 
 ///*** picture and describing arrows....  
 
@@ -37,8 +52,11 @@ The Remote communication frame displays the status and history of the other Moza
 
 Exported Entities 
 
-The Exported Entities frame shows all entities that the current site has currntly exported to the other sites. Notice that entities exported by the Connection module does not show up as exported until they are taken by an other site.
+The Exported Entities frame shows all entities that the current site has currently exported to the other sites. Notice that entities exported by the Connection module do not show up as exported until they are taken by an other site.
 
+Number of imported/exported Entities shows how many times a reference to any exported entity has been sent or received by this site.
+
+Number of Entities shows how many entities are currently exported.
 
 ///*** picture and describing arrows....  
 
