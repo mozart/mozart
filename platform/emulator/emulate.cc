@@ -79,7 +79,7 @@ void AM::formatError(OZ_Term traceBack,OZ_Term loc)
   OZ_putSubtree(d,OZ_atom("loc"),loc);
   OZ_putSubtree(d,OZ_atom("info"),exception.info);
 
-  OZ_putSubtree(exception.value,OZ_atom("debug"),d);
+  exception.value=OZ_adjoinAt(exception.value,OZ_atom("debug"),d);
 }
 
 int AM::raise(int cat, int key, char *label,int arity,...)
