@@ -259,6 +259,20 @@ OZ_Boolean FDIntervals::contains(int i) const
   return (i_arr[index].left <= i && i <= i_arr[index].right);
 }
 
+// v is in domain
+inline 
+int FDIntervals::lowerBound(int v) const 
+{
+  return i_arr[findPossibleIndexOf(v)].left;
+}
+
+// v is in domain
+inline 
+int FDIntervals::upperBound(int v) const 
+{
+  return i_arr[findPossibleIndexOf(v)].right;
+}
+
 // i is not in the domain
 inline
 int FDIntervals::midElem(int i) const
@@ -803,6 +817,34 @@ int FDBitVector::nextLargerElem(int v, int max_elem) const
       return new_v;
   
   return -1;
+} 
+
+// v is in domain
+inline
+int FDBitVector::lowerBound(int v, int min_elem) const
+{
+  if (v == min_elem) 
+    return v;
+  else 
+    for (int new_v = v - 1; new_v >= min_elem; new_v -= 1)
+      if (! contains(new_v)) 
+	return new_v + 1;
+
+  return min_elem;
+} 
+
+// v is in domain
+inline
+int FDBitVector::upperBound(int v, int max_elem) const
+{
+  if (v == max_elem)
+    return v;
+  else 
+    for (int new_v = v + 1; new_v <= max_elem; new_v += 1)
+      if (! contains(new_v))
+	return new_v - 1;
+
+  return max_elem;
 } 
 
 inline
@@ -1565,6 +1607,60 @@ int OZ_FiniteDomainImpl::nextLargerElem(int v) const
 } 
 
 inline
+int OZ_FiniteDomainImpl::lowerBound(int v) const
+{
+  cout << "lowerBound(" << *this << ',' << v << ")=" << flush;
+
+  if (isIn(v)) {
+    descr_type type = getType();
+    if (type == fd_descr) {
+      return min_elem;
+    } else {
+//#ifdef DEBUG_CHECK
+      int r = type == bv_descr 
+	? get_bv()->lowerBound(v, min_elem) 
+	: get_iv()->lowerBound(v);
+      cout << r << endl << flush;
+      return r;
+/* #else
+      return type == bv_descr 
+	? get_bv()->lowerBound(v, min_elem) 
+	: get_iv()->lowerBound(v_elem);
+#endif */
+    }
+  } 
+  cout << -1 << endl << flush;
+  return -1;
+} 
+
+inline
+int OZ_FiniteDomainImpl::upperBound(int v) const
+{
+  cout << "upperBound(" << *this << ',' << v << ")=" << flush;
+
+  if (isIn(v)) {
+    descr_type type = getType();
+    if (type == fd_descr) {
+      return max_elem;
+    } else { 
+//#ifdef DEBUG_CHECK
+      int r = type == bv_descr
+	? get_bv()->upperBound(v, max_elem)
+	: get_iv()->upperBound(v);
+      cout << r << endl << flush;
+      return r;
+/*#else
+      return type == bv_descr
+	? get_bv()->upperBound(v, max_elem)
+	: get_iv()->upperBound(v);
+#endif*/
+    }
+  }
+  cout << -1 << endl << flush;
+  return -1;
+} 
+
+inline
 int OZ_FiniteDomainImpl::midElem(void) const
 {
   DEBUG_FD_IR(OZ_FALSE, "mid(" << *this << ")=");
@@ -2150,6 +2246,16 @@ int OZ_FiniteDomain::getNextSmallerEl(int v) const
 int OZ_FiniteDomain::getNextLargerEl(int v) const
 {
   return CASTTHIS->nextLargerElem(v);
+}
+
+int OZ_FiniteDomain::getLowerIntervalBd(int v) const
+{
+  return CASTTHIS->lowerBound(v);
+}
+
+int OZ_FiniteDomain::getUpperIntervalBd(int v) const
+{
+  return CASTTHIS->upperBound(v);
 }
 
 int OZ_FiniteDomain::constrainBool(void)
