@@ -61,7 +61,7 @@ void printBanner()
   version();
 
 #ifdef DEBUG_DET
-  warning("Sleep disabled.");
+  warning("DEBUG_DET implies eager weaking of sleep.");
 #endif
 
 #ifndef TM_LP
