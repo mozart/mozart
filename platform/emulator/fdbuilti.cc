@@ -667,11 +667,6 @@ void BIfdBodyManager::processFromTo(int from, int to)
                           makeTaggedRef(newtaggedfdvar));
         vars_left = OZ_TRUE;
       }
-      PROFILE_CODE1(
-                    if (FDVarsTouched.add(bifdbm_var[i]))
-                       FDProfiles.inc_item(no_touched_vars);
-                    )
-
     }
   } // for
 } // BIfdBodyManager::process

@@ -34,7 +34,7 @@ FDLIBSRCS = arith.cc fdaux.cc bool.cc \
             card.cc cd.cc count.cc \
             rel.cc disjoint.cc std.cc \
             sum.cc sumequal.cc \
-            distance.cc misc.cc streamProps.cc \
+            distance.cc streamProps.cc \
             sumd.cc sumabs.cc complalldist.cc diffn.cc \
             distribute.cc fdtable.cc
 

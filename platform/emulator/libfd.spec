@@ -309,47 +309,4 @@ $cmode='dyn';
                              module => libfd,
                              native => true},
 
-    'counter'           => { in  => ['int','value'],
-                             out => [],
-                             bi  => fdtest_counter,
-                             module => libfd,
-                             native => true},
-
-    'firstFail'         => { in  => ['+value','value'],
-                             out => [],
-                             bi  => fdtest_firstFail,
-                             module => libfd,
-                             native => true},
-
-    'spawnLess'         => { in  => ['int','int'],
-                             out => [],
-                             bi  => fdtest_spawnLess,
-                             module => libfd,
-                             native => true},
-
-    'dplus'             => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdtest_plus,
-                             module => libfd,
-                             native => true},
-
-    'sumac'             => { in  => ['value','value','int'],
-                             out => [],
-                             bi  => fdtest_sumac,
-                             module => libfd,
-                             native => true},
-
-    'testgensum'        => { in  => ['value','int'],
-                             out => [],
-                             bi  => fdtest_gensum,
-                             module => libfd,
-                             native => true},
-
-    'inqueens'          => { in  => ['value'],
-                             out => [],
-                             bi  => fdtest_inqueens,
-                             ifdef =>INPROP,
-                             module => libfd,
-                             native => true},
-
  );

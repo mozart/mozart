@@ -6,41 +6,6 @@ $cmode='stat';
 
     # Internal stuff (always included)
 
-    'fdReset'           => { in     => [],
-                             out    => [],
-                             bi     => BIfdReset,
-                             ifdef  => PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdDiscard'         => { in     => [],
-                             out    => [],
-                             bi     => BIfdDiscard,
-                             ifdef  => PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdGetNext'         => { in  => ['value'],
-                             out => [],
-                             bi  => BIfdGetNext,
-                             ifdef=>PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdPrint'           => { in  => [],
-                             out => [],
-                             bi  => BIfdPrint,
-                             ifdef=>PROFILE_FD,
-                             module => fd,
-                             native => true},
-
-    'fdTotalAverage'    => { in  => [],
-                             out => [],
-                             bi  => BIfdTotalAverage,
-                             ifdef=>PROFILE_FD,
-                             module => fd,
-                             native => true},
-
     'fdIs'              => { in  => ['*value','bool'],
                              out => [],
                              bi  => BIfdIs,
