@@ -18,6 +18,13 @@ local
 	 Tk.toplevel,tkInit(title:              TitleName
 			    withdraw:           true
 			    highlightthickness: 0)
+	 {Tk.send wm(protocol self 'WM_DELETE_WINDOW'
+		     {New Tk.action tkInit(parent:self
+					   action:proc {$}
+						     {self.manager.status kill}
+						     {self.manager close}
+						  end)})}
+
 	 ScrX  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
 					  bd:     Border
@@ -59,17 +66,6 @@ local
 		       grid(columnconfigure self 0 weight:1.0)
 		       grid(rowconfigure    self 1 weight:1.0)
 		       wm(deiconify self)]}
-	 end
-      end
-
-      meth doClose
-	 Tk.toplevel,close
-      end
-
-      meth close
-	 thread
-	    {self.manager.status kill}
-	    {self.manager close}
 	 end
       end
 
@@ -445,9 +441,7 @@ in
       end
       
       meth close
-	 thread
-	    {self.toplevel doClose}
-	 end
+	 {self.toplevel close}
       end
       
    end
