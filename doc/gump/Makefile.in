@@ -32,8 +32,8 @@ include $(SRCDIR)/../../share/Makefile.boot
 
 bootstrap: boot-all
 
-Makefile: Makefile.in config.status
-        ./config.status
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
         $(DOCIFY) --in=$(SRCDIR)/gump.sgml --out=$@ --type=html-stylesheets

@@ -1,5 +1,12 @@
-OZDOC = ozdoc
-OZDOCFLAGS =
+PREFIX          = @prefix@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+OZENGINE        = @OZENGINE@
+OZDOC           = @OZDOC@
+OZDOCFLAGS      =
+DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
 DOCDIR          = /www/mozart/compiler
 
@@ -18,14 +25,18 @@ OZSRCS = \
 
 all: compiler-html
 
-Makefile: Makefile.in config.status
-        ./config.status
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
 
 compiler-html: $(OZGSRCS) $(SGMLSRCS)
-        $(OZDOC) $(OZDOCFLAGS) --in=compiler.sgml --out=$@ --type=html-stylesheets
+        $(DOCIFY) --in=$(SRCDIR)/compiler.sgml --out=$@ --type=html-stylesheets
 
 compiler-tex: $(OZGSRCS) $(SGMLSRCS)
-        $(OZDOC) $(OZDOCFLAGS) --in=compiler.sgml --out=compiler-tex --type=latex
+        $(DOCIFY) --in=$(SRCDIR)/compiler.sgml --out=compiler-tex --type=latex
 
 validate: compiler-html
         nsgmls -cHTML4.soc -sB compiler-html/*.html

@@ -25,8 +25,8 @@ include $(SRCDIR)/../../share/Makefile.boot
 
 bootstrap: boot-all
 
-Makefile: Makefile.in config.status
-        ./config.status
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
 
 ozdoc-html: $(SGMLSRCS)
         $(DOCIFY) --in=$(SRCDIR)/ozdoc.sgml --out=$@ --type=html-stylesheets
