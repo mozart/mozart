@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 
+#include "wsock.hh"
 #include "statisti.hh"
 #include "ozconfig.hh"
 

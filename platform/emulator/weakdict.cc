@@ -6,7 +6,7 @@
 
 static WeakDictionary* gcLinkedList;
 
-OZ_Term WeakDictionary::printV(int depth = 10)
+OZ_Term WeakDictionary::printV(int depth)
 {
   return oz_pair2(oz_atom("<WeakDictionary n="),
                   oz_pair2(oz_int(table->numelem),

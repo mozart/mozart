@@ -41,15 +41,13 @@
 #define max winmax
 
 #include <windows.h>
+#include <winsock.h>
 
 #undef min
 #undef max
 #undef FAILED /* used in mozart.h as well */
 #undef Bool
 
-
-/* sockets: */
-#include <winsock.h>
 
 /* these errors were not defined */
 #define EINPROGRESS            WSAEINPROGRESS
