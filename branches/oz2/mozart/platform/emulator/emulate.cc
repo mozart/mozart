@@ -2581,6 +2581,8 @@ LBLdispatcher:
       ozstat.createdThreads.incf();
       RefsArray newY = Y==NULL ? (RefsArray) NULL : copyRefsArray(Y);
       tt->pushCont(newPC,newY,G,NULL);
+      tt->setSelf(e->getSelf());
+
       e->scheduleThread (tt);
 
 #ifdef LINKEDTHREADS
