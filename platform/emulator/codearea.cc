@@ -215,7 +215,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
   OZ_Term file=OZ_getArg(pos,0);
   OZ_Term line=OZ_getArg(pos,1);
   OZ_Term column=OZ_getArg(pos,2);
-  int iline = smallIntValue(line);
+  int iline = OZ_intToC(line);
   pairlist =
     cons(OZ_pairAI("time",findTimeStamp(PC)),
 	 cons(OZ_pairA("data",makeTaggedConst(CAP)),
