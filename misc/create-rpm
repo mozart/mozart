@@ -135,7 +135,8 @@ PREFIX=\$RPM_BUILD_ROOT$OZHOME
 rm -rf \$PREFIX
 mkdir -p \$PREFIX
 # install docs
-cp -a doc \$PREFIX
+rm -rf doc/demo/applets
+cp -R doc \$PREFIX
 # Generic install
 (cd mozart && make install)
 
