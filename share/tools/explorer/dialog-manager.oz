@@ -32,7 +32,7 @@ local
 				      foreground: ChooseTermColor)}
 
 	 Author = {New Tk.label tkInit(parent: self
-				       text: ('by Christian Schulte\n' #
+				       text: ('Christian Schulte\n' #
 					      '(schulte@dfki.uni-sb.de)\n'))}
       in
 	 {Tk.send pack(Title Author
