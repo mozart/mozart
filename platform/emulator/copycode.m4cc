@@ -298,6 +298,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
     alist = OZ_tail(alist);
   }
 
+#ifndef DISABLE_DEFINITIONCOPY
   int sizeOfDef = sizeOf(DEFINITION);
   start -= sizeOfDef; // copy DEFINITION instructions as well (for debugging)
 
@@ -340,4 +341,7 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
 
   delete ht;
   return ret+sizeOfDef;
+#else
+  return start;
+#endif
 }

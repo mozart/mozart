@@ -245,6 +245,7 @@ public:
 
   void init() { flagsAndOthers=0; }
   void setFlag(int flag) { flagsAndOthers |= flag; }
+  void clearFlag(int flag) { flagsAndOthers &= ~flag; }
   int getFlags() { return (flagsAndOthers&litFlagsMask); }
   int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
@@ -670,6 +671,7 @@ public:
 
   NO_DEFAULT_CONSTRUCTORS2(LTuple);
   LTuple(void) {
+    DebugCheckT(args[0]=0;args[1]=0);
     COUNT1(sizeLists,sizeof(LTuple));
   }
   LTuple(TaggedRef head, TaggedRef tail) {

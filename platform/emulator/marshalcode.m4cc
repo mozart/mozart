@@ -448,6 +448,7 @@ SRecordArity unmarshalRecordArity(MsgBuffer *bs)
   int prefix = unmarshalNumber(bs);
   if (prefix == RECORDARITY_PREFIX) {
     TaggedRef arity = unmarshalTerm(bs);
+    Assert(isSorted(arity));
     Arity *ari = aritytable.find(arity);
     Assert(!ari->isTuple());
     return mkRecordArity(ari);

@@ -74,6 +74,7 @@ public:
 
   int debugIP;
   int debugPerdio;
+  int perdiod0Compatiblity;
   int maxTcpCache;
   int maxUdpPacket;
   int tcpPacketSize;

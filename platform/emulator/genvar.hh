@@ -110,8 +110,8 @@ public:
   // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
-  OZ_Return unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
-  OZ_Return unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
+  OZ_Return unify(TaggedRef *, TaggedRef *, TaggedRef, ByteCode *);
+  OZ_Return unifyOutline(TaggedRef *, TaggedRef *, TaggedRef, ByteCode *);
 
   int getSuspListLength(void);
 

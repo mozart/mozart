@@ -587,11 +587,8 @@ loop:
 
   COUNT(varNonvarUnify);
 
-  if (isCVar(tag1)) {
-    result = tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, scp);
-    if (result==PROCEED) goto next;
-    goto fail;
-  }
+  if (isCVar(tag1))
+    goto cvar;
 
   oz_bindToNonvar(termPtr1, term1, term2, scp);
   goto next;
@@ -633,8 +630,12 @@ loop:
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);
   }
-  result = tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp);
-  if (result == PROCEED) goto next;
+
+
+cvar:
+  result = tagged2CVar(term1)->unify(termPtr1, termPtr2, term2, scp);
+  if (result== PROCEED)
+    goto next;
   goto fail;
 
 

@@ -55,7 +55,7 @@ OZ_Return Promise::waitRequest(TaggedRef *v)
   }
 }
 
-OZ_Return Promise::unifyPromise(TaggedRef* vPtr,TaggedRef* tPtr,ByteCode* scp)
+OZ_Return Promise::unifyPromise(TaggedRef* vPtr)
 {
   request();
 
