@@ -325,7 +325,7 @@ public:
     if (getGNameType()!=GNT_CODE && !getGCMark()) {
       setGCMark();
       gcMarkSite();
-      gcTagged(value,value);}}
+      OZ_updateHeapTerm(value);}}
 
   void gcMarkSite();
 };
