@@ -102,11 +102,13 @@ local
 				  text:'Compile Error')}
 		  {System.printInfo {C getVS($)}}
 	       else R Sync in
-		  thread try
-			    R = {{C getEnv($)}.'`result`' Self}
-			 finally
-			    Sync = unit
-			 end
+		  thread
+		     EvalThread <- {Thread.this}
+		     try
+			R = {{C getEnv($)}.'`result`' Self}
+		     finally
+			Sync = unit
+		     end
 		  end
 		  {Thread.preempt {Thread.this}}
 		  {Dots self.Result Sync}
@@ -131,6 +133,7 @@ local
 	       {Thread.terminate @EvalThread}
 	       EvalThread <- unit
 	    end
+	    {Thread.preempt {Thread.this}}
 	    {self.Result tk(conf fg:DefaultForeground)}
 	    {self.Result tk(conf text:'')}
 	    %{self.Expr   tk(delete 0 'end')}
