@@ -78,7 +78,7 @@ TaggedRef Board::genSucceeded(Bool isEntailed) {
   ozstat.incSolveSolved();
   SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
-  stuple->setArg(0, isEntailed ? AtomEntailed : AtomSuspended);
+  stuple->setArg(0, isEntailed ? AtomEntailed : AtomStuck);
 
   return makeTaggedSRecord(stuple);
 }

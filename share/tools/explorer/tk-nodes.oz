@@ -221,7 +221,7 @@ local
 				    tags:    Actions
 				    fill:    if @isSolBelow then
 						if @choices>0 then
-						   SuspendedColor
+						   StuckColor
 						else EntailedColor
 						end
 					     else
@@ -546,12 +546,12 @@ local
 	 end
 
    
-	 class SuspendedNode
+	 class StuckNode
 	    from SucceededNode
 
 	    meth drawTree(Break MomX MyY Scale Font)
 	       SucceededNode,drawTree(MomX MyY Scale Font
-				      SuspendedColor NodeBorderWidth)
+				      StuckColor NodeBorderWidth)
 	    end
 	    
 	 end
@@ -565,7 +565,7 @@ in
    TkNodes=c(choose:    ChooseNode
 	     failed:    FailedNode
 	     blocked:   BlockedNode
-	     suspended: SuspendedNode
+	     stuck:     StuckNode
 	     entailed:  EntailedNode
 	     sentinel:  Sentinel)
 

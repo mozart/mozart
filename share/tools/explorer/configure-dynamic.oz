@@ -46,7 +46,7 @@ ShadeScale          = if Tk.isColor then 1.05 else 1.10 end
 ChooseColor          #
 ChooseTermColor      #
 EntailedColor        #
-SuspendedColor       #
+StuckColor           #
 FailedColor          #
 BlockedColor         #
 PartialFailedColor   #
@@ -57,7 +57,7 @@ PopupBgColor         = if Tk.isColor then
 			  'lightskyblue3'   # % ChooseColor
 			  'LightSlateBlue'  # % ChooseTermColor
 			  'MediumSeaGreen'  # % EntailedColor
-			  'olivedrab1'      # % SuspendedColor
+			  'olivedrab1'      # % StuckColor
 			  'firebrick2'      # % FailedColor
 			  'orange'          # % BlockedColor
 			  'purple1'         # % PartialFailedColor
@@ -69,7 +69,7 @@ PopupBgColor         = if Tk.isColor then
 			  white # % ChooseColor
 			  white # % ChooseTermColor
 			  white # % EntailedColor
-			  white # % SuspendedColor
+			  white # % StuckColor
 			  white # % FailedColor
 			  white # % BlockedColor
 			  white # % PartialFailedColor

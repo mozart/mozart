@@ -87,7 +87,7 @@ If ?_{Space} is stable and:
 <entry>succeeded
 <item>and there are no threads in ?_{Space} synchronizing on
 choices,  the tuple <<succeeded(?{A})>> is returned.
-The atom ?{A} is either <<suspended>>, when ?_{Space} still contains threads, or <<entailed>> otherwise. 
+The atom ?{A} is either <<stuck>>, when ?_{Space} still contains threads, or <<entailed>> otherwise. 
 <entry>succeeded
 <item>and there is at least one thread in ?_{Space} which
 synchronizes on a choice the tuple <<alternatives(?{I})>> is returned,
