@@ -59,7 +59,7 @@ Usage:
 	oztool c++ -c SourceFile
 	oztool cc  -c SourceFile
 	oztool ld  -o TargetLib FileList
-	oztool platform
+	oztool platform [-o file]
 EOF
   exit 2
 fi
@@ -72,7 +72,10 @@ case "$cmd" in
   cc ) cmd=$oztool_cc;;
   ld ) cmd=$oztool_ld;;
   platform )
-    echo "$oztool_platform"
+    case "$1" in
+    -o) echo "$oztool_platform" > "$2";;
+    * ) echo "$oztool_platform";;
+    esac
     exit 0;;
   *  )
   echo "oztool: unknown command $cmd" 1>&2
