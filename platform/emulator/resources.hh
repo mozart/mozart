@@ -135,6 +135,10 @@
 //#define MM_DEBUG
 
 #define DEBUG_PERDIO
+
+// test if the liveness routine for X registers works
+// #define DEBUG_LIVENESS
+
 #endif
 
 #ifdef PROFILE_EMULATOR

@@ -2107,6 +2107,8 @@ void TaskStack::gc(TaskStack *newstack)
       return;
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_XCONT_Ptr) {
+      ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
+      (void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();

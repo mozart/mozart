@@ -501,13 +501,21 @@ void pushContX(TaskStack *stk,
 
 #define GetSPointerWrite(ptr) (TaggedRef*)(((long)ptr)-1)
 
+#ifdef DEBUG_LIVENESS
+extern void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int max);
+#define CheckLiveness(PC,n) checkLiveness(PC,n,X,NumberOfXRegisters)
+#else
+#define CheckLiveness(PC,n)
+#endif
+
 // ------------------------------------------------------------------------
 // ???
 // ------------------------------------------------------------------------
 
-#define SUSP_PC(TermPtr,RegsToSave,PC)			\
-   PushContX(PC,Y,G,X,RegsToSave);			\
-   addSusp(TermPtr,CTT);				\
+#define SUSP_PC(TermPtr,RegsToSave,PC)		\
+   CheckLiveness(PC,RegsToSave);		\
+   PushContX(PC,Y,G,X,RegsToSave);		\
+   addSusp(TermPtr,CTT);			\
    goto LBLsuspendThread;
 
 
@@ -1329,6 +1337,7 @@ LBLdispatcher:
 	  e->trail.pushIfVar(XPC(2));
 	  goto LBLsuspendShallow;
 	}
+	CheckLiveness(PC,getPosIntArg(PC+3));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+3));
 	suspendInline(CTT,XPC(2));
 	goto LBLsuspendThread;
@@ -1373,11 +1382,13 @@ LBLdispatcher:
 	  goto LBLsuspendShallow;
 	}
 	
+	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	suspendInline(CTT,XPC(2),XPC(3));
 	goto LBLsuspendThread;
 
       case BI_PREEMPT:
+	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC+5,Y,G,X,getPosIntArg(PC+4));
 	goto LBLsuspendThread;
 
@@ -1425,6 +1436,7 @@ LBLdispatcher:
 	  goto LBLsuspendShallow;
 	}
 	
+	CheckLiveness(PC,getPosIntArg(PC+5));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	suspendInline(CTT,XPC(2),XPC(3),XPC(4));
 	goto LBLsuspendThread;
@@ -1433,6 +1445,7 @@ LBLdispatcher:
 	goto LBLraise;
 
       case BI_PREEMPT:
+	CheckLiveness(PC,getPosIntArg(PC+5));
 	PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
 	goto LBLsuspendThread;
 
@@ -1472,6 +1485,7 @@ LBLdispatcher:
 	    e->trail.pushIfVar(A);
 	    goto LBLsuspendShallow;
 	  }
+	  CheckLiveness(PC,getPosIntArg(PC+4));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	  suspendInline(CTT,A);
 	  goto LBLsuspendThread;
@@ -1531,6 +1545,7 @@ LBLdispatcher:
 	    e->trail.pushIfVar(B);
 	    goto LBLsuspendShallow;
 	  }
+	  CheckLiveness(PC,getPosIntArg(PC+5));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	  suspendInline(CTT,A,B);
 	  goto LBLsuspendThread;
@@ -1583,6 +1598,7 @@ LBLdispatcher:
 	      e->trail.pushIfVar(A);
 	      goto LBLsuspendShallow;
 	    }
+	    CheckLiveness(PC,getPosIntArg(PC+4));
 	    PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	    suspendInline(CTT,A);
 	    goto LBLsuspendThread;
@@ -1673,6 +1689,7 @@ LBLdispatcher:
       case SUSPEND:
 	  Assert(!shallowCP);
 	  OZ_suspendOnInternal2(XPC(1),XPC(2));
+	  CheckLiveness(PC,getPosIntArg(PC+4));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	  SUSPENDONVARLIST;
 
@@ -1720,6 +1737,7 @@ LBLdispatcher:
 	    e->trail.pushIfVar(C);
 	    goto LBLsuspendShallow;
 	  }
+	  CheckLiveness(PC,getPosIntArg(PC+6));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+6));
 	  suspendInline(CTT,A,B,C);
 	  goto LBLsuspendThread;
@@ -1751,6 +1769,7 @@ LBLdispatcher:
       if (res==PROCEED) { DISPATCH(6); }
 
       Assert(res==SUSPEND);
+      CheckLiveness(PC,getPosIntArg(PC+5));
       PushContX(PC,Y,G,X,getPosIntArg(PC+5));
       SUSPENDONVARLIST;
     }
@@ -1785,6 +1804,7 @@ LBLdispatcher:
       switch(res) {
 
       case SUSPEND:
+	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
 	addSusp (XPC(2), CTT);
 	goto LBLsuspendThread;
@@ -1818,6 +1838,7 @@ LBLdispatcher:
 
       case SUSPEND:
 	{
+	  CheckLiveness(PC,getPosIntArg(PC+5));
 	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
 	  OZ_Term A=XPC(2);
 	  OZ_Term B=XPC(3);
@@ -1854,6 +1875,7 @@ LBLdispatcher:
       {
 	e->emptySuspendVarList();
 	int argsToSave = getPosIntArg(shallowCP+2);
+	CheckLiveness(shallowCP,argsToSave);
 	PushContX(shallowCP,Y,G,X,argsToSave);
 	shallowCP = NULL;
 	e->shallowHeapTop = NULL;
@@ -1992,6 +2014,7 @@ LBLdispatcher:
       no_lock:
         PushCont(lbl,Y,G);
         CTS->pushLock(t);
+	CheckLiveness(PC+4,toSave);
         PushContX((PC+4),Y,G,X,toSave);      /* ATTENTION */
 	goto LBLsuspendThread;
 
