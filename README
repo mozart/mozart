@@ -9,6 +9,7 @@ The Mozart repository structure is as follows:
   mozart/
     README
 
+
     share/
                 -- platform independent stuff
       demo/
@@ -58,11 +59,6 @@ The Mozart repository structure is as follows:
         profiler/
           images/
 
-      contrib/
-                -- Libraries and tools that can be there or not
-        gdbm/
-        regex/
-
 
     platform/
                 -- platform dependent stuff
@@ -76,10 +72,14 @@ The Mozart repository structure is as follows:
       tools/
         gump/
 
-      contrib/
-        gdbm/
 
     doc/
+
+
+    contrib/
+                -- Libraries and tools that can be there or not
+      gdbm/
+      regex/
 
 
 
