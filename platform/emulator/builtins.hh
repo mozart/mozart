@@ -335,4 +335,17 @@ public:
   inline RefsArray &getGRegs() { return(gRegs); }
 };
 
+/*
+char * OZ_normFloat(char *);
+char * OZ_stringToC(OZ_Term);
+char * OZ_normInt(char *);
+int OZ_length(OZ_Term);
+OZ_Term OZ_CStringToInt(char *);
+OZ_Term OZ_CStringToFloat(char *);
+OZ_Term OZ_CStringToNumber(char *);
+char * OZ_floatToCString(OZ_Term);
+char * OZ_intToCString(OZ_Term);
+char * OZ_parseInt(char *);
+char * OZ_parseFloat(char *);
+*/
 #endif
