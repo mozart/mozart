@@ -498,20 +498,20 @@ number of volvo's!
 <CAPTION>Producing Volvo's lazily</CAPTION>
 <<<
 local
-   proc {Producer L}
-      case L of X|Xs then X = volvo {Producer Xs}
+   proc {Producer Xs}
+      case Xs of X|Xr then X = volvo {Producer Xr}
       [] nil then {Browse 'end of line'}
       end
    end
-   proc {Consumer N L}
-      if N==0 then L = nil
-      else X|Xs = L in
-        case X of volvo then
+   proc {Consumer N Xs}
+      if N==0 then Xs = nil
+      else X|Xr = L in
+        if X == volvo then
           if N mod 1000 == 0 then
             {Browse 'riding a new volvo'}
           end
-          {Consumer N-1 Xs}
-        else {Consumer N Xs} end
+          {Consumer N-1 Xr}
+        else {Consumer N Xr} end
       end
    end
 in
@@ -567,8 +567,10 @@ local
    proc {Consumer N Xs}
       if N&gt;0 then
          case Xs of X|Xr then
-            if X==volvo andthen N mod 1000 == 0 then
-              {Browse 'riding a new volvo'}
+            if X==volvo then
+              if N mod 1000 == 0 then
+                 {Browse 'riding a new volvo'}
+              end
               {Consumer N-1 Xr}
             else {Consume N Xr} end
          end
