@@ -13,24 +13,22 @@ fun {$ IMPORT}
                 nosub   :NOSUB
                 notbol  :NOTBOL
                 noteol  :NOTEOL)
-   Free = {NewName}
-   proc {FINALIZE RE} {RE Free} end
+   IsRE = {NewName}
    DefaultInit = EXTENDED+NEWLINE
    DefaultExec = 0
    class Regex
-      feat !Free:!Free          %private feature identifies Regex
+      feat !IsRE:!IsRE          %private feature identifies Regex
       prop final
       attr re
       meth init(TXT flags:FLAGS<=DefaultInit)
          re<-{COMPILE TXT FLAGS}
-         {Register @re FINALIZE}
+         {Register @re FREE}
       end
       meth exec(TXT index:IDX<=0 flags:FLAGS<=DefaultExec $)
          {EXECUTE @re TXT IDX FLAGS $}
       end
-      meth !Free {FREE @re} re<-'regex_has_been_freed' end
    end
-   fun {Regex_Is X} {IsObject X} andthen {HasFeature X Free} end
+   fun {Regex_Is X} {IsObject X} andthen {HasFeature X IsRE} end
    fun {Regex_Compile Pattern} {New Regex init(Pattern)} end
    fun {Regex_Execute RE TXT} {RE exec(TXT $)} end
    fun {Regex_Match  PAT TXT}
