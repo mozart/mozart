@@ -33,6 +33,7 @@ require
 	 getUserName:S_getUserName
 	 getUserInfo:S_getUserInfo) at 'methods.ozf'
 import
+   Open(file)
    DP(open) at 'x-oz://contrib/tools/DistPanel'
    Tk TkTools(dialog error)
    Pop(popup:Popup) at 'popup.ozf'
@@ -81,7 +82,7 @@ define
    FontSeparator={New Tk.font tkInit(size:8 family:courier)}
    FontSystem={New Tk.font tkInit(size:10 family:times)}
    
-   UsingBrowser % A cell containing info if the client have netscape!
+   UsingBrowser={NewCell false} % A cell containing info if the client have netscape!
 
    ClientGUISettings={NewCell ui(fontsize:8
 				 foreground:nil
@@ -310,6 +311,7 @@ define
 	 {ReadMess {Record.adjoin M
 		    read(user:used(name:E.name id:E.id)
 			 browser:{Access UsingBrowser}
+			 su:({Access MyData}.userlevel==sysadm)
 			 send:proc{$ X} {self writeNewMessage(E.id message:X reply_to:M.mid)} end)}}
       end
 
@@ -769,7 +771,7 @@ define
 			     elseif E\=unit andthen E.online==others then
 				M=notify(id:X.id online:X.online)
 			     in
-				{Browse X#{Dictionary.entries DB}}
+%				{Browse X#{Dictionary.entries DB}}
 				{Others remove(id:E.id)}
 				{Online move(id:M.id entry:E)}
 				{ChangeStatus M}
@@ -790,7 +792,7 @@ define
 			      elseif E\=unit andthen E.online==others then
 				 M=notify(id:X.id online:X.online)
 			      in
-				 {Browse X#{Dictionary.entries DB}}
+%				 {Browse X#{Dictionary.entries DB}}
 				 {Others remove(id:E.id)}
 				 {Online move(id:M.id entry:E)}
 				 {ChangeStatus M}
@@ -863,7 +865,7 @@ define
 	 {Assign ClientGUISettings Settings}
 	 {FontLabel tk(config size:Settings.fontsize)}
 	 {Tk.send tk_setPalette(background(Settings.background) foreground(Settings.foreground))}
-	 UsingBrowser={NewCell {CondSelect Settings browser false}}
+	 {Assign UsingBrowser {CondSelect Settings browser false}}
       end
 
       LetterImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'letter.gif')}
@@ -918,10 +920,10 @@ define
 	   in
 	      {Popup ["Broadcast Message"#proc{$}
 					     {ComposeMess
-					      message(user:user(id:SysAdm_Broadcast name:"Broadcast")
+					      message(user:user(id:SysAdm_Broadcast name:"All Buddies")
 						      browser:false
 						      send:proc{$ IDs X} MID D 
-							      IDs2=if {Member IDs SysAdm_Broadcast} then
+							      IDs2=if {Member SysAdm_Broadcast IDs} then
 								      {Dictionary.keys DB}
 								   else
 								      IDs
@@ -964,27 +966,90 @@ define
 						if Change==true then {UpdateUISettings} end
 					     end
 		      separator
-		      "Applications"#["Start Application"#{Map {Access Applications}
-							   fun{$ X} (X.name#" ("#X.id#")")#
-							      proc{$} {Client startapplication(id:X.id)} end end}
-				      if SU then separator else ignore end
-				      if SU then
-					 "Add Application"#proc {$} {AddApplicationGUI.start ClientID Server} end
-				      else
-					 ignore
-				      end
-				      if Aps1==nil then ignore else "Remove Application"#Aps1 end
-				      if Aps2==nil then ignore else "Edit Application"#Aps2 end
-				     ]
+		      "Start Application"#{Map {Access Applications}
+					   fun{$ X} (X.name#" ("#X.id#")")#
+					      proc{$} {Client startapplication(id:X.id)} end end}
 		      separator
 		      if SU then
-			 "Debugging"#["Start Distribution Panel"#proc{$} skip {DP.open} end
-				      "Start Panel"#proc{$} {Panel.object open} end
-				      "Browse DB"#proc{$} {Browse {Dictionary.entries DB}} end
-				     ]
+			 "Administrate"#["Applications"#
+					 ["Add Application"#proc {$} {AddApplicationGUI.start ClientID Server} end
+					  if Aps1==nil then ignore else "Remove Application"#Aps1 end
+					  if Aps2==nil then ignore else "Edit Application"#Aps2 end
+					 ]
+					 separator
+					 "Broadcast Message (all)"#proc{$}
+								      {ComposeMess
+								       message(user:user(id:SysAdm_Broadcast name:"Everyone in the system")
+									       browser:false
+									       send:proc{$ IDs X} MID D 
+										       IDs2=if {Member SysAdm_Broadcast IDs} then
+											       D={Server dumpDB(uid:ClientID $)}.members
+											    in
+											 {Map D fun{$ X} X.id end}
+											    else
+											 IDs
+											    end
+										    in
+										       {Server S_message(sender:ClientID
+													 receiver:IDs2
+													 message:X
+													 reply_to:nil
+													 mid:MID
+													 date:D)}
+										       lock CLock then
+											  %% Store the message
+											  {ForAll IDs2 proc{$ I}
+													  try
+													     E={Dictionary.get DB I}
+													  in
+													     {E.widget saveSent(message:X
+																reply_to:nil
+																mid:MID
+																date:D
+																incCount:true
+															       )}
+													  catch X then {Browse X} end
+												       end}
+										       end
+										    end
+									       message:nil)}
+								   end
+					 separator
+					 "Get All Users (txt-file)"#proc{$}
+								       D={Server dumpDB(uid:ClientID $)}.members
+								       Str={FoldR D fun{$ N O}
+										       N.firstname#" "#N.lastname#"\t"#
+										       if N.extra==nil then "-" else N.extra end#"\t"#N.email#"\n"#O
+										    end nil}
+								    in
+								       case {Tk.return tk_getSaveFile(title:"Save Users"
+												      initialfile:"people.txt"
+												      filetypes:q(q('Text file' q('.txt'))
+														  q('All Files' '*')))}
+								       of nil then skip
+								       elseof S then
+									  File
+								       in
+									  try
+									     File={New Open.file init(name:S flags:[write create truncate])}
+									     {File write(vs:Str)}
+									     {File close}
+									  catch X then
+									     {Browse X}
+									  end
+								       end
+								    end
+					 separator
+					 "Start Distribution Panel"#proc{$} skip {DP.open} end
+					 "Start Panel"#proc{$} {Panel.object open} end
+					 separator
+					 "Browse Client DB"#proc{$} {Browse {Dictionary.entries DB}} end
+					 "Browse Server DB"#proc{$} {Browse {Server dumpDB(uid:ClientID $)}} end
+					]
 		      else ignore end
 		      
 		      if SU then separator else ignore end
+
 		      "Help"#proc{$}
 				{DisplayMess.display "Help"
 				 "This help will improve someday:)!\n\n"#
@@ -995,11 +1060,6 @@ define
 				 "\nEnjoy!\n\nSend feedback (and bug-reports) to nilsf@sics.se or simon@sics.se"
 				 "Close Help Window"}
 			     end
-		      if SU then
-			 "GetAll Users"#proc{$} skip end
-		      else
-			 ignore
-		      end
 		      separator
 		      "Logout"#Kill
 		     ] T}
