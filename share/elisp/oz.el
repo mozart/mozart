@@ -2113,15 +2113,15 @@ and is used for fontification.")
       "setVoid" "getNumber" "getLiteral" "getList" "getListValVar"
       "getRecord" "unifyNumber" "unifyLiteral" "unifyValue" "unifyVariable"
       "unifyValVar" "unifyVoid" "unify" "branch" "branchOnNonVar"
-      "callBuiltin" "inlineFun[1-3]" "inlineRel[1-3]" "inlineEqEq"
-      "inlineDot" "inlineUparrow" "inlineAt" "inlineAssign" "genCall"
-      "call" "tailCall" "fastCall" "fastTailCall" "genFastCall"
-      "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth" "tailApplMeth"
-      "thread" "threadX" "exHandler" "createCond" "nextClause" "shallowGuard"
-      "shallowTest[12]" "testLiteral" "testNumber" "testBool" "switchOnTerm"
-      "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
-      "weakDet" "debugEntry" "debugExit" "globalVarname" "localVarname"
-      "clearY") "\\|")
+      "callBuiltin" "inlineFun[1-3]" "inlinePlus1?" "inlineMinus1?"
+      "inlineRel[1-3]" "inlineEqEq" "inlineDot" "inlineUparrow" "inlineAt"
+      "inlineAssign" "genCall" "call" "tailCall" "fastCall" "fastTailCall"
+      "genFastCall" "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth"
+      "tailApplMeth" "thread" "threadX" "exHandler" "createCond" "nextClause"
+      "shallowGuard" "testLiteral" "testNumber" "testBool" "shallowTest[12]"
+      "testLess" "testLessEq" "switchOnTerm" "getVariable" "getVarVar"
+      "getVoid" "lockThread" "getSelf" "det" "weakDet" "debugEntry"
+      "debugExit" "globalVarname" "localVarname" "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
@@ -2137,7 +2137,7 @@ and is used for fontification.")
    "\\)$"))
 
 (defconst ozm-definition-matcher
-  "\t\\(definition\\|endDefinition\\)(")
+  "\t\\(definition\\|definitionCopy\\|endDefinition\\)(")
 
 (defconst ozm-register-matcher
   "\\<\\(x\\|y\\|g\\)([0-9]+)")
