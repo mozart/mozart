@@ -807,7 +807,7 @@
 	    <<START END>> (<Key/C-c C-i/)
 	  <Entry class=command><Span class=index/<<oz-inspect-line>>/
 	    <<COUNT>>
-	  <Entry class=command><Span class=index/<<oz-browse-paragraph>>/
+	  <Entry class=command><Span class=index/<<oz-inspect-paragraph>>/
 	    <<COUNT>>
 	  <Item>
 	    Feed the corresponding text region to the Oz Compiler.
