@@ -1,5 +1,5 @@
 DESCRIPTION="GTK 1.2 bindings for Mozart and Alice"
-SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5.2003-04-28/mozart-gtk-1.1.tar.gz"
+SRC_URI="http://www.mozart-oz.org/download/archive/1.2.5.2003-04-28/mozart-gtk-1.1.tar.gz"
 HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 DEPEND="
