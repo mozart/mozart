@@ -39,6 +39,15 @@
 #include "protocolState.hh"
 #include "table.hh"
 
+// GARBAGE COLLECTION HACK
+inline
+void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
+  if (frm)
+    OZ_collectHeapTerm(frm,to);
+  else
+    to=frm;
+}
+
 //
 
 /**********************************************************************/
@@ -640,7 +649,7 @@ void CellSec::gcCellSec(){
   case Cell_Lock_Invalid:{
     return;}
   case Cell_Lock_Valid:{
-    OZ_collectHeapTerm(contents,contents);
+    OZ_collectHeapTermUnsafe(contents,contents);
     return;}
   default: Assert(0);}}
 

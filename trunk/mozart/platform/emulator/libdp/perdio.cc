@@ -58,6 +58,15 @@
 #include "os.hh"
 #include "space.hh"
 
+// GARBAGE COLLECTION HACK
+inline
+void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
+  if (frm)
+    OZ_collectHeapTerm(frm,to);
+  else
+    to=frm;
+}
+
 // from builtins.cc
 void doPortSend(PortWithStream *port,TaggedRef val);
 
@@ -275,9 +284,9 @@ void gcPendThread(PendThread **pt){
       ((DSite* )tmp->old)->makeGCMarkSite();      
       ((DSite* )tmp->nw) ->makeGCMarkSite();}
     else{
-      OZ_collectHeapTerm((*pt)->old,tmp->old);
-      OZ_collectHeapTerm((*pt)->nw,tmp->nw);
-      OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);}
+      OZ_collectHeapTermUnsafe((*pt)->old,tmp->old);
+      OZ_collectHeapTermUnsafe((*pt)->nw,tmp->nw);
+      OZ_collectHeapTermUnsafe((*pt)->controlvar,tmp->controlvar);}
     *pt=tmp;
     pt=&(tmp->next);}
 }
