@@ -291,11 +291,18 @@ local
 		     tkInit(parent:   OtherFrame.inner
 			    text:     'Debug Debugger'
 			    variable: TkVerbose)}
+	 proc {FocusToTop}
+	    {Tk.send focus(self)}
+	 end
 
       in
 
 	 %% how to close the dialog
 	 {self.toplevel tkBind(event:'<Escape>' action:ApplyAndExit)}
+	 {StepDot tkBind(event:'<Return>' action:FocusToTop)}
+	 {StepNewName tkBind(event:'<Return>' action:FocusToTop)}
+	 {SystemVButton tkBind(event:'<Return>' action:FocusToTop)}
+	 {DDButton tkBind(event:'<Return>' action:FocusToTop)}
 
 	 {Tk.batch [grid(Title row:1 column:1 columnspan:2 sticky:we pady:2)
 		    grid(WidthDepthFrame row:2 column:1
