@@ -155,7 +155,7 @@ FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
 	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf \
-	EvalDialog.ozf Inspector.ozf
+	EvalDialog.ozf Inspector.ozf OPIServer.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
