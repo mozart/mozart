@@ -106,6 +106,7 @@ in
       {System.property.put 'oz.standalone' false}
 
       OPICompiler = {New Compiler.engine init()}
+      {OPICompiler enqueue(setSwitch(warnunused true))}
 
       local
 	 Env = {List.toRecord env
