@@ -69,7 +69,7 @@ void addSuspCtVar(OZ_Term v, Suspendable * susp, OZ_CtWakeUp w)
   
   for (int i = noOfSuspLists; i--; )
     if (w.isWakeUp(i))
-      AddSuspToListLocal(ctv->_susp_lists[i], susp);
+      ctv->_susp_lists[i] = new SuspList(susp,ctv->_susp_lists[i]);
 }
 
 #endif /* __CTGENVAR_ICC__ */
