@@ -32,6 +32,8 @@ local
       end
    end
 
+   SL = '/' | '-' | '\\' | '|' | SL
+
    class EvalDialog from TkTools.dialog
       prop
 	 final
@@ -42,6 +44,8 @@ local
 	 CurComp    : unit
 	 CurEnv     : unit
 	 EvalThread : unit
+
+	 SlashList  : SL
 
       meth init(master:Master)
 	 fun {EvalInit}
@@ -60,15 +64,19 @@ local
 	    {C mergeEnv(@CurEnv)}
 	    {C reset}
 
-	    {self.Result tk(conf fg:DefaultForeground)}
-	    {self.Result tk(delete 0 'end')}
+	    {self.Result tk(conf
+			    fg:DefaultForeground
+			    text:'')}
 	    C
 	 end
 
 	 proc {Dots W X}
 	    case {IsFree X} then
-	       {Delay 500}
-	       {W tk(insert 'end' '.')}
+	       S|Sr = @SlashList
+	    in
+	       {Delay 80}
+	       {W tk(conf text:S)}
+	       SlashList <- Sr
 	       {Dots W X}
 	    else skip end
 	 end
@@ -79,6 +87,7 @@ local
 	       C           = {EvalInit}
 	       Self        = {CondSelect @CurEnv 'self' unit}
 	    in
+	       {OzcarMessage 'Doit: ' # V}
 	       case Self of unit then
 		  {C feedVirtualString('declare fun {`result` _}\n' # V #
 				       '\nend')}
@@ -88,8 +97,9 @@ local
 				       '{`ooSetSelf` Self}' # V # '\nend')}
 	       end
 	       case {C hasErrors($)} then
-		  {self.Result tk(conf fg:BlockedThreadColor)}
-		  {self.Result tk(insert 0 'Compile Error')}
+		  {self.Result tk(conf
+				  fg:BlockedThreadColor
+				  text:'Compile Error')}
 		  {System.printInfo {C getVS($)}}
 	       else R in
 		  thread try
@@ -100,7 +110,7 @@ local
 		  end
 		  {Thread.preempt {Thread.this}}
 		  {Dots self.Result R}
-		  {self.Result tk(insert 0 {V2VS R})}
+		  {self.Result tk(conf text:{V2VS R})}
 	       end
 	       EvalThread <- unit
 	    else
@@ -112,8 +122,8 @@ local
 	    {Doit {self.Expr tkReturn(get $)}}
 	 end
 
-	 proc {DoBrowse}
-	    {Doit '{Browse ' # {self.Expr tkReturn(get $)} # '} unit'}
+	 proc {Exec}
+	    {Doit {self.Expr tkReturn(get $)} # ' unit'}
 	 end
 
 	 proc {Kill}
@@ -122,35 +132,37 @@ local
 	       EvalThread <- unit
 	    end
 	    {self.Result tk(conf fg:DefaultForeground)}
-	    {self.Result tk(delete 0 'end')}
-	    {self.Expr   tk(delete 0 'end')}
+	    {self.Result tk(conf text:'')}
+	    %{self.Expr   tk(delete 0 'end')}
 	 end
 
 	 TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
-			       title:   'Evaluate Expression'
-			       buttons: ['Eval'   # Eval
-					 'Browse' # DoBrowse
-					 'Reset'  # Kill
-					 'Done'   # tkClose]
+			       title:   'Query'
+			       buttons: ['Eval'  # Eval
+					 'Exec'  # Exec
+					 'Reset' # Kill
+					 'Done'  # tkClose]
 			       pack:    false
 			       default: 1)
-	 F1 = {New Tk.frame tkInit(parent: self)}
-	 F2 = {New Tk.frame tkInit(parent: self)}
 
-	 ExprLabel = {New Tk.label tkInit(parent: F1
-					  width:  6
+	 ExprLabel = {New Tk.label tkInit(parent: self
+					  width:  7
 					  anchor: w
-					  text:   'Expr: ')}
-	 ExprEntry = {New Tk.entry tkInit(parent:     F1
-					  font:       DefaultFont
-					  background: DefaultBackground
-					  width:      40)}
-	 ResultLabel = {New Tk.label tkInit(parent: F2
-					    width:  6
+					  text:   'Query: ')}
+	 ExprEntry = {New TkExtEntry tkInit(parent:     self
+					    bd:         1
+					    font:       DefaultFont
+					    background: DefaultBackground
+					    width:      40)}
+	 ResultLabel = {New Tk.label tkInit(parent: self
+					    width:  7
 					    anchor: w
 					    text:   'Result: ')}
-	 ResultEntry = {New Tk.entry tkInit(parent:     F2
+	 ResultEntry = {New Tk.label tkInit(parent:     self
+					    relief:     sunken
+					    bd:         1
+					    anchor:     w
 					    font:       DefaultFont
 					    background: DefaultBackground
 					    width:      40)}
@@ -158,9 +170,18 @@ local
       in
 	 self.Expr = ExprEntry
 	 self.Result = ResultEntry
-	 {Tk.batch [pack(F1 F2 side:top pady:2 expand:true)
-		    pack(ExprLabel ExprEntry side:left expand:true)
-		    pack(ResultLabel ResultEntry side:left expand:true)
+
+	 {ExprEntry tkBind(event: '<Control-x>'
+			   action: self # tkClose)}
+	 {ExprEntry tkBind(event: '<Control-r>'
+			   action: Kill)}
+	 {ExprEntry tkBind(event: '<Meta-Return>'
+			   action: Exec)}
+
+	 {Tk.batch [grid(ExprLabel    row:0 column:0)
+		    grid(ExprEntry    row:0 column:1)
+		    grid(ResultLabel  row:1 column:0)
+		    grid(ResultEntry  row:1 column:1)
 		    focus(ExprEntry)]}
 	 EvalDialog,tkPack
       end
