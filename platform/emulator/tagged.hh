@@ -818,17 +818,6 @@ TaggedRef deref(TaggedRef t) {
   return t;
 }
 
-inline
-TaggedRef deref(TaggedRef &tr, TaggedRef * &ptr, TypeOfTerm &tag)
-{
-  TaggedRef tr1=tr;
-  DEREF(tr1,ptr1,tag1);
-  tr=tr1;
-  ptr=ptr1;
-  tag=tag1;
-  return tr1;
-}
-
 #define OZ_getCArgDeref(N, V, VPTR, VTAG) \
   OZ_Term V = OZ_getCArg(N); \
   DEREF(V, VPTR, VTAG);
