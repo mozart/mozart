@@ -88,16 +88,17 @@ void ConfigData::init() {
   debugPerdio  = 0;
   debugIP = 0;
 
-  perdioSeifHandler = 1;
-  perdioFlowBufferSize  = FLOW_BUFFER_SiZE;
-  perdioFlowBufferTime  = FLOW_BUFFER_TIME;
-  perdioUseAltVarProtocol = FALSE;
-  perdioTimeout = PERDIO_TIMEOUT;
-  perdioTempRetryCeiling = PERDIO_TEMP_RETRY_CEILING;
-  perdioTempRetryFloor = PERDIO_TEMP_RETRY_FLOOR;
-  perdioTempRetryFactor = PERDIO_TEMP_RETRY_FACTOR;
-  perdioMaxTCPCache = PERDIO_MAX_TCP_CACHE;
-  perdioCheckAliveInterval = PERDIO_CHECK_ALIVE_INTERVAL;
+  dpSeifHandler = 1;
+  dpFlowBufferSize  = DP_FLOWBUFFERSIZE;
+  dpFlowBufferTime  = DP_FLOWBUFFERTIME;
+  dpUseAltVarProtocol = FALSE;
+  dpRetryTimeCeiling = DP_RETRYTIMECEILING;
+  dpRetryTimeFloor = DP_RETRYTIMEFLOOR;
+  dpRetryTimeFactor = DP_RETRYTIMEFACTOR;
+  dpTCPHardLimit = DP_TCPHARDLIMIT;
+  dpTCPWeakLimit = DP_TCPWEAKLIMIT;
+  dpProbeInterval = DP_PROBEINTERVAL;
+  dpProbeTimeout = DP_PROBETIMEOUT;
 
   dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
   dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;

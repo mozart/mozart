@@ -29,9 +29,9 @@
 #include "connection.hh"
 #include "timers.hh"
 
-#define OPEN_TIMEOUT PERDIO_TIMEOUT / 10
-#define CLOSE_TIMEOUT PERDIO_TIMEOUT
-#define WF_REMOTE_TIMEOUT PERDIO_TIMEOUT*10
+#define OPEN_TIMEOUT ozconf.dpProbeTimeout / 10
+#define CLOSE_TIMEOUT ozconf.dpProbeTimeout
+#define WF_REMOTE_TIMEOUT ozconf.dpProbeTimeout*10
 
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
@@ -63,7 +63,7 @@ void ComObj::init(DSite *site) {
   probeIntervalTimer=NULL;
   probeFaultTimer=NULL;
 
-  retryTimeout=ozconf.perdioTempRetryFloor;
+  retryTimeout=ozconf.dpRetryTimeFloor;
 
   nosm=norm=0;
   lastrtt=-1;
@@ -158,10 +158,10 @@ Bool ComObj::reopen() {
     Assert(hasNeed() || remoteRef);
     Assert(transObj==NULL);
     retryTimeout=(int) (((double) retryTimeout) * 
-			((100.0+ozconf.perdioTempRetryFactor)/100.0));
+			((100.0+ozconf.dpRetryTimeFactor)/100.0));
     if(/*hasBeenConnected && To be added...AN*/
-       retryTimeout>ozconf.perdioTempRetryCeiling)
-      retryTimeout=ozconf.perdioTempRetryCeiling;
+       retryTimeout>ozconf.dpRetryTimeCeiling)
+      retryTimeout=ozconf.dpRetryTimeCeiling;
     open();
 
     return TRUE;   // Cannot know yet if the problem is resolved or not
@@ -554,7 +554,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
 	  probeFired=FALSE;
 	}
       }
-      retryTimeout=ozconf.perdioTempRetryFloor;
+      retryTimeout=ozconf.dpRetryTimeFloor;
       timers->clearTimer(timer);
       if(queues.hasQueued())
 	transObj->deliver();
@@ -696,7 +696,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
 void ComObj::adoptCI(OZ_Term channelinfo){
   int bufferSize;
 
-  retryTimeout=ozconf.perdioTempRetryFloor;
+  retryTimeout=ozconf.dpRetryTimeFloor;
   // Whether the channel is ok now or not is to be decided by
   // the future fault-model. For now it has to be for ports etc 
   // to start working after temp&resource preemption.

@@ -72,11 +72,14 @@ protected:
   void deleteTransObj(TransObj* transObj);
 
   int getMaxNumOfResources() {
-    return ozconf.perdioMaxTCPCache*2;
+    return ozconf.dpTCPHardLimit;
   }
 
   int getWeakMaxNumOfResources() {
-    return ozconf.perdioMaxTCPCache;
+    int w, h;
+    w=ozconf.dpTCPWeakLimit;
+    h=ozconf.dpTCPHardLimit;
+    return w<=h?w:h;
   }
 }; 
 

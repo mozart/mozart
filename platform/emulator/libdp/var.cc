@@ -332,7 +332,7 @@ inline Bool queueTrigger(DSite* s){
 
 static inline Bool canSend(DSite* s){
   int msgs;
-  if(s->getQueueStatus()>ozconf.perdioFlowBufferSize) return FALSE;
+  if(s->getQueueStatus()>ozconf.dpFlowBufferSize) return FALSE;
   return TRUE;}
 
 Bool varCanSend(DSite* s){

@@ -69,7 +69,7 @@ void tcpListenPort(int port, char* nodename){
   Assert(myDSite!=NULL);
 }
 
-void changeMaxTCPCacheImpl() {
+void changeTCPLimitImpl() {
   tcptransController->changeNumOfResources();
 }
 
