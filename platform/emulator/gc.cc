@@ -456,6 +456,9 @@ void Atom::gcRecurse ()
   DebugGC((isDynXName () == NO),
           error ("non-dynamic name is found in gcRecurse"));
   home = home->gcBoard ();
+  if (home == (Board *) NULL)
+    home = am.rootBoard;
+  // kludge: 'home' mayn't be (Board *) NULL; therefore lets it be the rootBoard;
 }
 
 // WARNING: the value field of floats has no bit left for a gc mark
@@ -1152,10 +1155,10 @@ void AM::gc(int msgLevel)
 
   GCPROCMSG("Predicate table");
   CodeArea::gc();
-  SRecord::aritytable.gc ();
 
   rootBoard=rootBoard->gcBoard();
   setCurrent(currentBoard->gcBoard(),NO);
+  SRecord::aritytable.gc ();
 
   GCREF(currentThread);
   GCREF(rootThread);
@@ -1562,7 +1565,10 @@ void Thread::gcRecurse()
   } else {
     error("Thread::gcRecurse");
   }
+  DebugGCT(Board *sob = notificationBoard);
   notificationBoard = notificationBoard->gcBoard ();
+  DebugGC((sob != (Board *) NULL && notificationBoard == (Board *) NULL),
+          error ("notification Board is removed in Thread::gcRecurse"));
 }
 
 
