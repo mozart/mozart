@@ -74,16 +74,6 @@ results are returned back through logic variables. A client requesting
 an Item in the queue will call <<{Q.get I}>>. The server will
 eventually answer back by binding <<I>> to an item.
 
-
-<P> So how this program works? <<{Q.put I0} {Q.put I1} ... {Q.put In}>>
-will incrementally add the elements <<I0 I1 ... In>> to the
-stream <<Given>>, resulting in <<I0|I1|...|In|&lt;Future1&gt;>>.
-<<{Q.get X0} {Q.put X1} ... {Q.put Xn}>> will add the elements
-<<X0 X1 ... Xn>> to the stream <<Taken>> resulting in
-<<X0|X1|...|Xn|&lt;Future2&gt;>>. The equality constraint
-<<Given = Taken>>
-will bind <<Xi's>> to <<Ii's>>.
-
 <P><FIGURE ID="concurrentQueue" CLASS="Figure">
 <CAPTION>Concurrent Queue server, first attempt </CAPTION>
 <code display>
@@ -119,6 +109,16 @@ futures that can only be read and cannot be bound. So the thread
 corresponding to the queue server will suspend in
 the statement <<Given = Taken>>. This problem is remedied by running
 this statement in its own thread as shown in <ptr to="concurrentQueue1">
+
+<P> The program works as follows.
+<<{Q.put I0} {Q.put I1} ... {Q.put In}>>
+will incrementally add the elements <<I0 I1 ... In>> to the
+stream <<Given>>, resulting in <<I0|I1|...|In|&lt;Future1&gt;>>.
+<<{Q.get X0} {Q.put X1} ... {Q.put Xn}>> will add the elements
+<<X0 X1 ... Xn>> to the stream <<Taken>> resulting in
+<<X0|X1|...|Xn|&lt;Future2&gt;>>. The equality constraint
+<<Given = Taken>>
+will bind <<Xi's>> to <<Ii's>>.
 
 <P><FIGURE ID="concurrentQueue1" CLASS="Figure">
 <CAPTION>Concurrent Queue server</CAPTION>
