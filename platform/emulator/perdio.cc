@@ -378,6 +378,7 @@ char *dif_names[DIF_LAST] = {
   "class",
   "url",
   "array",
+  "fsetvalue",
 };
 
 void sendMessage(int bi, MessageType msg);
