@@ -83,6 +83,12 @@ OZ_Return IncludePropagator::propagate(void)
   OZ_FDIntVar d(_d);
   PropagatorController_S_D P(s, d);
 
+  // the set must have at least 1 element
+  // I don't know if the code below is sufficient:
+  // CardRange does all kinds of weird stuff that I don't
+  // understand and I don't know if I have to do this here too.
+  if (!s->putCard(1,s->getCardMax())) goto failure;
+
   FailOnEmpty(*d <= (fsethigh32 - 1));
 
   if (*d == fd_singl) {
@@ -95,6 +101,13 @@ OZ_Return IncludePropagator::propagate(void)
 
     if (*d == fd_singl)
       FailOnInvalid(*s += d->getSingleElem());
+
+    // if `s' has at most 1 element, then it must range at most over
+    // the domain of `d'
+    if (s->getCardMax()<2) {
+      OZ_FSetValue ds(*d);
+      FailOnInvalid(*s <= ds);
+    }
   }
 
   {
