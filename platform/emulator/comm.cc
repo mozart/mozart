@@ -233,6 +233,7 @@ Site* unmarshalSite(MsgBuffer *buf){
 
   switch(rc){
   case SAME: {
+    PD((SITE,"unmarshalsite SAME"));
     if(mt==DIF_PERM){
       if(s->isPerm()){return s;}
       s->discoveryPerm();
@@ -242,9 +243,11 @@ Site* unmarshalSite(MsgBuffer *buf){
     Assert(mt==DIF_REMOTE);
     return s;}
 
-  case NONE: break;
+  case NONE: {
+    PD((SITE,"unmsrahslsite NONE"));break;}
     
-  case I_AM_OLDER:{
+  case I_AM_YOUNGER:{
+    PD((SITE,"unmarshalsite I_AM_YOUNGER"));
     if(mt==DIF_VIRTUAL){unmarshalUselessVirtualInfo(buf);}
     int hvalue=tryS.hashSecondary();
     s=secondarySiteTable->findSecondary(&tryS,hvalue);
@@ -253,7 +256,8 @@ Site* unmarshalSite(MsgBuffer *buf){
     secondarySiteTable->insertSecondary(s,hvalue);
     return s;}
 
-  case I_AM_YOUNGER:{
+  case I_AM_OLDER:{
+    PD((SITE,"unmarshalsite I_AM_OLDER"));
     primaryToSecondary(s,hvalue);
     break;}
 
@@ -264,10 +268,12 @@ Site* unmarshalSite(MsgBuffer *buf){
   s=siteManager.allocSite(&tryS);    
   primarySiteTable->insertPrimary(s,hvalue);
   if(mt==DIF_PERM){
+    PD((SITE,"initsite DIF_PERM"));
     s->initPerm();
     return s;}
   SiteExtension *se=siteExtensionManager.allocSiteExtension();
   if(mt==DIF_VIRTUAL){
+    PD((SITE,"initsite DIF_VIRTUAL"));
     VirtualInfo * vi=unmarshalVirtualInfo(buf);
     if(inMyGroup(&tryS,vi)){
       s->initVirtual(se,vi);
@@ -275,6 +281,7 @@ Site* unmarshalSite(MsgBuffer *buf){
     s->initVirtualRemote(se,vi);      
     return s;}
   Assert(mt==DIF_REMOTE);
+  PD((SITE,"initsite DIF_REMOTE"));
   s->initRemote(se);
   return s;
 }

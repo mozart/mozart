@@ -113,7 +113,9 @@ enum ConnectionFlags{
   WANTS_TO_CLOSE=16,
   CURRENT=32,
   WRITE_QUEUE=64,
-  CAN_CLOSE = 128};
+  CAN_CLOSE = 128,
+  ACK_MSG_INCOMMING=256
+};
 
 enum ByteStreamType{
   BS_None,
@@ -125,7 +127,7 @@ enum ByteStreamType{
 
 #define REFERENCES     4 // ATTENTION
 
-#define MAXTCPCACHE 2
+#define MAXTCPCACHE 20
 
 enum ipReturn{
   IP_OK= 0,
@@ -169,7 +171,6 @@ class TcpOpenMsgBuffer;
 extern void dvset(int);
 */
 
-inline void  close_crashed_connection(int,Connection*);
 ipReturn tcpCloseWriter(WriteConnection *);
 int intifyUnique(BYTE *);
 TcpOpenMsgBuffer *tcpOpenMsgBuffer;
@@ -266,6 +267,7 @@ class NetMsgBuffer:public MsgBuffer{
 protected:
   ByteBuffer *first; 
   ByteBuffer *start;
+  ByteBuffer *stop;
   ByteBuffer *last;
   BYTE *pos; 
   BYTE *curpos;
@@ -288,9 +290,9 @@ protected:
 public:
   NetMsgBuffer(){}
   void init(){type=BS_None;first=NULL;start=NULL;last=NULL;
-  site=NULL;remotesite=NULL;}
+  site=NULL;remotesite=NULL;stop=NULL;}
   void init(Site *s){type=BS_None;first=NULL;start=NULL;last=NULL;
-  site=s;remotesite=NULL;}
+  site=s;remotesite=NULL;stop=NULL;}
   void setSite(Site *s){
   site = s;}
   Site* getSite(){
@@ -298,20 +300,19 @@ public:
   char *siteStringrep();
   int getTotLen();
   void removeFirst(){
-    // EK 
-    // should not be used
     Assert(first!=last);
     ByteBuffer *bb=first;
     first=bb->next;
-    byteBufferManager->deleteByteBuffer(bb);}
-  
+    byteBufferManager->deleteByteBuffer(bb);
+  }
+  void removeSingle(){
+    Assert(first==last);    
+    Assert(first!=NULL);
+    byteBufferManager->deleteByteBuffer(first);
+    last=first=NULL;}
+      
   ByteBuffer* getAnother();
-
   void getSingle();
-
-/* marshall    beg:first->head()  pos=next free slot OR null */
-  
-  
 
   void marshalBegin(){
     PD((MARSHAL_BE,"marshal begin"));
@@ -319,7 +320,9 @@ public:
     Assert(first==NULL);
     Assert(last==NULL);
     first=getAnother();
+    start=first;
     last=first;
+    stop=first;
     totlen= 0;
     type=BS_Marshal;
     pos=first->head()+tcpHeaderSize;}
@@ -331,6 +334,7 @@ public:
       ByteBuffer *bb=getAnother();
       last->next=bb;
       last=bb;
+      stop=bb;
       totlen += BYTEBUFFER_SIZE;
       pos=bb->head();
       *pos++=b;
@@ -341,8 +345,6 @@ public:
       return;}
     *pos++=b;}
 
-  /* INTERFACE  pos=first->head()  endpos= first free slot */
-
   void marshalEnd(){
     Assert(type==BS_Marshal);
     endpos=pos;
@@ -350,13 +352,11 @@ public:
     if(endpos==NULL) {totlen +=BYTEBUFFER_SIZE;}
     else {totlen +=endpos-last->head();}
     type=BS_None;}
-
-  /* write  pos=first to write  endpos= first free slot */
-
+  
   void beginWrite(RemoteSite*); /* putting end packet header */
   void PiggyBack();
-
-
+  
+  
   // EK
   //
   // Redo this implementation.
@@ -414,7 +414,7 @@ public:
       BYTE ch;
       Assert(first!=last);
       ch=*pos;
-      first=first->next;
+      removeFirst(); 
       pos=first->head();
       return ch;}
     return *pos++;}
@@ -427,14 +427,26 @@ public:
   int no_bufs();
 
   void dumpByteBuffers(){
-    while(first!=last) {
-      ByteBuffer *bb=first;
-      first=bb->next;
+    // EK 
+    // fix the star stop first last 
+    // thing. Right now is it very messy
+    if(type == BS_Write){
+    while(start!=stop) {
+      ByteBuffer *bb=start;
+      start=bb->next;
       byteBufferManager->deleteByteBuffer(bb);
     }
+    byteBufferManager->deleteByteBuffer(start);
+    start=stop=NULL;}
+    else{
+      while(first!=last) {
+	ByteBuffer *bb=first;
+	first=bb->next;
+	byteBufferManager->deleteByteBuffer(bb);
+	  }
     byteBufferManager->deleteByteBuffer(first);
-    first=last=NULL;
-  }
+    first=last=NULL;}}
+  
 };
 char* NetMsgBuffer::siteStringrep(){
   return site->stringrep();}
@@ -505,7 +517,11 @@ void NetMsgBuffer::getSingle(){
   Assert(first==NULL);
   Assert(last==NULL);
   ByteBuffer *bb=getAnother();
-  start = bb;
+  
+  if(type == BS_Write){
+    // EK 
+    // Must this be so?
+    start = bb;stop = bb;}
   first=bb;
   last=bb;}
 
@@ -532,8 +548,8 @@ public:
     return bb;}
   
   void deleteNetMsgBuffer(NetMsgBuffer* b){
-    Assert(b->first == b->last);
-    Assert(b->first == NULL);
+    Assert(b->start == b->stop);
+    Assert(b->start == NULL);
     FreeListEntry *f;
     GenCast(b,NetMsgBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
@@ -548,6 +564,9 @@ public:
     return newNetMsgBuffer(s);}
  
   void freeNetMsgBuffer(NetMsgBuffer* bs){
+    if(bs->first!=NULL){
+      Assert(bs->last==bs->first);
+      bs->removeSingle();}
     deleteNetMsgBuffer(bs);}
 };
 
@@ -589,8 +608,8 @@ public:
   void readConnectionRemoved();
   
   SiteStatus siteStatus(){return status;}
-  void sitePrmDwn();
   void siteTmpDwn();
+  void siteLost();
   int incMsgCtr(){
     return ++sentMsgCtr; }
   int getMsgCtr(){
@@ -752,6 +771,9 @@ public:
   int flags;
   RemoteSite *remoteSite;
   
+  void connectionLost(){
+    remoteSite->site->discoveryPerm();}
+  
   Message* current;
 
   void init(RemoteSite *s);
@@ -795,17 +817,6 @@ public:
     clearFlag(CLOSING);}
   Bool isWantsToOpen(){
     return testFlag(WANTS_TO_OPEN);} 
-  
-  /*
-    EK can we compile this so remove it...
- 
-    time_t getTimeStamp(){
-    return site->getTimeStamp();}
-    void setTimeStamp(time_t t){
-    Assert(site->getTimeStamp()==NO_TIMESTAMP);
-    site->setTimeStamp(t);}
-    */
-  
   Bool isRemovable(){
     return flags==0;}
   RemoteSite *getRemoteSite(){
@@ -857,7 +868,8 @@ public:
   void init(RemoteSite *s){
     next = prev = NULL;
     flags=0;
-    remoteSite=s;}
+    remoteSite=s;
+    current=NULL;}
   
   void disconnect(){
     Assert(next!=NULL);
@@ -919,12 +931,13 @@ public:
     clearFlag(OPENING);}
   
   Bool addByteToInt(BYTE msg){
-    if((bytePtr - intBuffer) > INT_IN_BYTES_LEN)
+    if(!testFlag(ACK_MSG_INCOMMING))
       return false;
     *bytePtr++ = msg;
     if((bytePtr - intBuffer) == INT_IN_BYTES_LEN)
       {
 	remoteSite->ackReceived(intifyUnique(intBuffer));
+	clearFlag(ACK_MSG_INCOMMING);
 	return false;
       }
     return true;
@@ -937,7 +950,7 @@ public:
   void addWriteQueue(Message* m){
     setInWriteQueue();
     remoteSite->queueMessage(m->bs->getTotLen());
-    writeQueue.dequeue(m);}
+    writeQueue.enqueue(m);}
   Bool isInWriteQueue(){
     Assert(!testFlag(CURRENT));
     return testFlag(WRITE_QUEUE);}
@@ -952,7 +965,8 @@ public:
   Bool isOpening(){
     return testFlag(OPENING);}
   void incommingAck(){
-    bytePtr = intBuffer;}
+    bytePtr = intBuffer;
+    setFlag(ACK_MSG_INCOMMING);}
   Bool isWritePending(){
     return testFlag(WRITE_QUEUE|CURRENT);}
   void setWantsToAckClose(){
@@ -1093,6 +1107,7 @@ class ReadConnectionManager: public FreeListManager{
     ReadConnection *r;
     if(f==NULL) {r=new ReadConnection();}
     else {GenCast(f,FreeListEntry*,r,ReadConnection*);}
+    r->Connection();
     r->init(s);
     r->fd=fd0;
     return r;}
@@ -1102,8 +1117,6 @@ public:
   void freeConnection(ReadConnection *r){ 
     PD((CONNECTION,"freed r:%x",r));
     Assert(r->isRemovable());
-    RemoteSite *s=r->remoteSite;
-    if(s!=NULL) {s->readConnectionRemoved();}
     deleteConnection(r);
     return;}
 
@@ -1126,6 +1139,7 @@ class WriteConnectionManager: public FreeListManager{
     WriteConnection *r;
     if(f==NULL) {r=new WriteConnection();}
     else {GenCast(f,FreeListEntry*,r,WriteConnection*);}
+    r->Connection();
     r->init(s);
     r->fd=fd0;
     return r;}
@@ -1135,8 +1149,6 @@ public:
   void freeConnection(WriteConnection *r){ 
     PD((CONNECTION,"freed r:%x",r));
     Assert(r->isRemovable());
-    RemoteSite *s=r->remoteSite;
-    if(s!=NULL) {s->writeConnectionRemoved();}
     deleteConnection(r);
     return;}
 
@@ -1422,15 +1434,18 @@ int WriteConnection::discardUnsentMessage(int msgNum){
 
 void ReadConnection::prmDwn(){
   // EK what to do with the handler?
+  OZ_unregisterRead(fd);
   osclose(fd);
   if(current!=NULL) 
     messageManager->freeMessage(current);
 }
 void WriteConnection::prmDwn(){
     Message *m;
-     osclose(fd);
-     //EK 
-     // What to do with the close handler?
+    OZ_unregisterRead(fd);
+    OZ_unregisterWrite(fd);
+    osclose(fd);
+    //EK 
+    // What to do with the close handler?
     if(current!=NULL) {
       remoteSite->site->communicationProblem(current->msgType, current->site,
 			   current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
@@ -1959,8 +1974,9 @@ retry:
   
   if(tcpOpen_RETRY_Old()) 
     {osclose(fd);return IP_TIMER;}
-  if (ossockerrno()==ECONNREFUSED) 
-    { close_crashed_connection(fd,r); return IP_NET_CRASH; }
+  if (ossockerrno()==ECONNREFUSED){
+    r->connectionLost();
+    return IP_NET_CRASH; }
   NETWORK_ERROR(("connect %d\n",errno));
   osclose(fd);
   tries--;
@@ -2017,11 +2033,6 @@ inline void close_read_connection(int fd,ReadConnection *r){
   tcpCache->unlinkRead(r);
   readConnectionManager->freeConnection(r);}
 
-inline void close_crashed_connection(int fd,Connection *r){
-  PD((TCP,"close crashed connection r:%x",r));
-  osclose(fd);
-  r->remoteSite->sitePrmDwn();
-}
 
 inline ipReturn write_ack_close(int fd,Connection *r){
   PD((TCP,"write_ack_close r:%x",r));
@@ -2055,34 +2066,20 @@ static int tcpCloseHandler(int fd,void *r0){
   WriteConnection *r=(WriteConnection *)r0;
   BYTE msg;
   ipReturn ret;
-
-
-close_handler_read:
   PD((TCP,"tcpCloseHandler invoked r:%x",r));
   ret=readI(fd,&msg);
   PD((TCP,"tcpCloseHandler read b:%d r:%d",msg, ret));
-
-
-  // EK
-  // I hope this will work. If The read is blocked 
-  // The close handler just suspends and waits for the next time
-  // it is invoked.
-  if(ret==IP_BLOCK){
-    PD((TCP,"Close-handler is blocked, do Nothing"));
-    return 0;}
+close_handler_read:
   if(ret!=IP_OK){  // crashed Connection site 
     PD((WEIRD,"crashed Connection site %s",r->remoteSite->site->stringrep()));
-    close_crashed_connection(fd,r);
+    r->connectionLost();
     return 0;}
   if(msg==TCP_MSG_ACK_FROM_READER){
+    // EK OPTIMIZING
+    // could check if more of the message has arrived
+    // and eat that out right now.
     PD((TCP,"Incomming Ack"));
-    r->incommingAck();
-    // EK This might be stupid. Just do the 
-    // Ack receive initialization and then suspend.
-    // Next time the closehandler is invoked
-    // should all info be in the buffer.
-    goto close_handler_read;
-  }
+    r->incommingAck();}
   if(msg==TCP_CLOSE_REQUEST_FROM_READER){
     if(r->isClosing()){ /* writer has precedence */
       PD((WEIRD,"tcpCloseHandler writer precedence"));
@@ -2109,8 +2106,10 @@ close_handler_read:
     PD((TCP,"tcpCloseHandler closes connection"));
     close_write_connection(fd,r);
     return 0;}
-  if(r->addByteToInt(msg))
-    goto close_handler_read;
+  if(r->addByteToInt(msg)){
+    ret=readI(fd,&msg);
+    if(ret!=IP_BLOCK)
+      goto close_handler_read;}
   PD((TCP,"Close Handler done..."));
   return 0;
 }
@@ -2162,7 +2161,7 @@ error_block:
     r->addCurQueue(m);
     return IP_BLOCK;}
   case IP_PERM_BLOCK:{
-    close_crashed_connection(r->getFD(),r);
+    r->connectionLost();
     messageManager->freeMessageAndMsgBuffer(m);
     return IP_PERM_BLOCK;}
   default:
@@ -2348,7 +2347,10 @@ int tcpConnectionHandler(int fd,void *r0){
       strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) {
     buf[bufSize-1] = 0;
     OZ_warning("Perioversion conflict with site");
-    r->remoteSite->sitePrmDwn();
+    // Ek here we have to abort the opening.
+    // Otherwise will we have an unknown connection
+    // to the new site running the wrong perdio version.
+    r->remoteSite->site->sitePermProblem();
     delete buf;
     return 0;
   }
@@ -2400,7 +2402,6 @@ inline ipReturn readI(int fd,BYTE *buf)
       if((errno==EWOULDBLOCK) || (errno==EAGAIN)) {
 	return IP_BLOCK;
       }
-      NETWORK_ERROR(("readI %s\n",OZ_unixError(ossockerrno())));
       return IP_NET_CRASH;
     }
   }
@@ -2624,8 +2625,8 @@ start:
       // EK
       // check if this is right....
 
-      netMsgBufferManager->freeNetMsgBuffer(bs);
-      close_crashed_connection(fd,r);
+      netMsgBufferManager->dumpNetMsgBuffer(bs);
+      r->connectionLost();
       return 0;
   }
 
@@ -2842,14 +2843,19 @@ static int acceptHandler(int fd,void *unused)
  *  class Site
  **********************************/
 
-void RemoteSite::sitePrmDwn(){
-  status = SITE_PERM;
+
+  
+
+void RemoteSite::siteLost(){
   if(writeConnection!=NULL){
     writeConnection->prmDwn();
-    writeConnectionManager->freeConnection(writeConnection);}
+    writeConnectionManager->freeConnection(writeConnection);
+    writeConnection = NULL;}
+  
   if(readConnection!=NULL){
     readConnection->prmDwn();
-    readConnectionManager->freeConnection(readConnection);}
+    readConnectionManager->freeConnection(readConnection);
+    readConnection=NULL;}
   Message *m = sentMsg;
   sentMsg = NULL;
   while(m != NULL){
@@ -2858,10 +2864,9 @@ void RemoteSite::sitePrmDwn(){
     Message *tmp = m;
     messageManager->freeMessageAndMsgBuffer(m);
     m = m->next;}
-  //site->lostRemoteSite();
-  remoteSiteManager->freeRemoteSite(this);
+  remoteSiteManager->freeRemoteSite(this);}
   
-}
+
   void RemoteSite::siteTmpDwn(){
     status = SITE_TEMP; 
     writeConnection->tmpDwn();
@@ -3151,10 +3156,11 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
       goto tmpdwnsend;}
     if(fd==IP_NET_CRASH){ return SITE_PERM;}
     PD((TCP,"is reopened %s",site->stringrep()));
-    tcpCache->addWrite(writeConnection);}
+    tcpCache->addWrite(writeConnection);
+    goto ipBlockSend;}
   else{
     if(!writeConnection->shouldSendFromUser())
-      goto sendblock;
+      goto ipBlockSend;
     tcpCache->touchWrite(writeConnection);}  
   
   fd=writeConnection->getFD();
@@ -3178,7 +3184,7 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
 	    return msgNum;}
 	case IP_PERM_BLOCK:{
 	    PD((TCP_INTERFACE,"reliableSend- perm failed"));
-	    sitePrmDwn();
+	    site->discoveryPerm();
 	    return PERM_NOT_SENT;}
 	default:{
 	  Assert(0); 
@@ -3188,11 +3194,15 @@ tmpdwnsend:
 	tcpWantsToOpen(writeConnection);
 tmpdwnsend2:
 	msgNum = getTmpMsgNum();
-	writeConnection->addWriteQueue(m,msgNum);
+	
 	return msgNum;
-sendblock:
-  	Assert(0);
-	return 0;
+ipBlockSend:
+	PD((TCP_INTERFACE,"sendTo IpBlock add to writeQueue %d",m));
+	writeConnection->addWriteQueue(m);
+	return ACCEPTED;
+
+
+
 }
 
 /**********************************************************************/
@@ -3225,7 +3235,7 @@ ProbeReturn probeStatus_RemoteSite(RemoteSite* site,ProbeType &pt,int &frequncey
 GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
   Assert(0);return GIVES_UP;}
 void discoveryPerm_RemoteSite(RemoteSite* site){
-  Assert(0);} 
+  site->siteLost();} 
 
 void initNetwork(){
   writeConnectionManager = new WriteConnectionManager();
