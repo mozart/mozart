@@ -15,10 +15,10 @@ Dbg = dbg(on:           proc {$}
 	  emacsThreads: {`Builtin` 'Debug.addEmacsThreads' 1}
 	  subThreads:   {`Builtin` 'Debug.addSubThreads' 1}
 	  stream:       {`Builtin` 'Debug.getStream' 1}
-	  contflag:     {`Builtin` 'Debug.setContFlag' 2}
 	  stepmode:     {`Builtin` 'Debug.setStepFlag' 2}
 	  trace:        {`Builtin` 'Debug.setTraceFlag' 2}
 	  checkStopped: {`Builtin` 'Debug.checkStopped' 2}
+	  unleash:      {`Builtin` 'Thread.unleash' 2}
 	 )
 
 IsBuiltin = {`Builtin` 'isBuiltin' 2}
