@@ -65,27 +65,26 @@ local
       end
    end
 
+   AtomToKindAndGranul = {NewDictionary}
+
    fun {S2F Nr Frame}
       Data = {CondSelect Frame data unit}
-      Kind#Granul = case Frame.kind of 'call/c' then 'call'#coarse
-		    [] 'call/f' then 'call'#fine
-		    [] 'lock/c' then 'lock'#coarse
-		    [] 'lock/f' then 'lock'#fine
-		    [] 'exception handler/c' then 'exception handler'#coarse
-		    [] 'exception handler/f' then 'exception handler'#fine
-		    [] 'conditional/c' then 'conditional'#coarse
-		    [] 'conditional/f' then 'conditional'#fine
-		    [] 'definition/c' then 'definition'#coarse
-		    [] 'definition/f' then 'definition'#fine
-		    [] 'skip/c' then 'skip'#coarse
-		    [] 'skip/f' then 'skip'#fine
-		    [] 'fail/c' then 'fail'#coarse
-		    [] 'fail/f' then 'fail'#fine
-		    [] 'thread/c' then 'thread'#coarse
-		    [] 'thread/f' then 'thread'#fine
-		    elseof K then K#unknown
-		    end
+      Kind Granul
    in
+      case {Dictionary.condGet AtomToKindAndGranul Frame.kind unit}
+      of unit then K Rest in
+	 {List.takeDropWhile {Atom.toString Frame.kind} fun {$ C} C \= &/ end
+	  ?K ?Rest}
+	 Kind = {String.toAtom K}
+	 Granul = case Rest of "/c" then coarse
+		  elseof "/f" then fine
+		  else unknown
+		  end
+	 {Dictionary.put AtomToKindAndGranul Frame.kind Kind#Granul}
+      elseof K#G then
+	 Kind = K
+	 Granul = G
+      end
       frame(nr:      Nr   % frame counter
 	    dir:     {Label Frame}   % 'entry' or 'exit'
 	    file:    {CondSelect Frame file nofile}
