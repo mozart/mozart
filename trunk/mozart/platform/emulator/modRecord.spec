@@ -86,5 +86,17 @@
 		       out => ['value'],
 		       BI  => BIwaitOrF},
 
+     'test'	  => { in  => ['value','+literal','+[feature]'],
+		       out => ['+bool'],
+		       bi  => BItestRecord},
+
+     'testLabel'  => { in  => ['value','+literal'],
+		       out => ['+bool'],
+		       bi  => BItestRecordLabel},
+
+     'testFeature'=> { in  => ['value','+feature'],
+		       out => ['+bool','value'],
+		       bi  => BItestRecordFeature},
+
      );
 1;;
