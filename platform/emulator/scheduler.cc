@@ -198,7 +198,7 @@ LBLterminate:
 
     CBB->decSuspCount();
 
-    am.disposeRunnableThread(CTT);
+    am.oz_disposeRunnableThread(CTT);
     //am.threadsPool.unsetCurrentThread(); // TMUELLER
 
     // fall through to checkEntailmentAndStability
@@ -336,7 +336,7 @@ LBLdiscardThread:
 	DECSOLVETHREADS (tmpBB, "d");
       }
     }
-    e->disposeRunnableThread(CTT);
+    e->oz_disposeRunnableThread(CTT);
     am.threadsPool.unsetCurrentThread();
 
     goto LBLstart;
@@ -502,7 +502,7 @@ LBLfailure:
      }
      
      DECSOLVETHREADS(CBB, "e");
-     am.disposeRunnableThread(CTT);
+     am.oz_disposeRunnableThread(CTT);
      am.threadsPool.unsetCurrentThread();
 
      goto LBLstart;
