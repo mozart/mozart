@@ -1,7 +1,7 @@
 makefile(
    uri     : 'x-oz://system'
    mogul   : 'mogul:/mozart/qtk'
-   lib     : ['QTk.ozf' 'QTkDevel.ozf']
+   lib     : ['QTk.ozf' 'QTkDevel.ozf' 'QTkBare.ozf']
    depends :
       o(
 	 'QTkDropdownbutton_bitmap.ozf'
