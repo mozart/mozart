@@ -24,6 +24,9 @@
  *
  */
 
+#ifndef __RESOURCES_H__
+#define __RESOURCES_H__
+
 #ifdef Assert
 error include resources.hh before mozart.h
 #endif
@@ -295,3 +298,5 @@ error include resources.hh before mozart.h
 
 // mm2: what is this
 #define PICKLE2TEXTHACK 1
+
+#endif
