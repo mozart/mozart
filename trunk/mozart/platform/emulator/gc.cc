@@ -426,13 +426,13 @@ public:
   {
     ExtRefNode *help = extRefs;
 #ifdef PROFILE
-    am.stat.protectedCounter = 0;
+    ozstat.protectedCounter = 0;
 #endif
     while(help) {
       gcTagged(*(TaggedRef*)help->elem, *(TaggedRef*)help->elem);
       help = (ExtRefNode*) help->next;
 #ifdef PROFILE
-      am.stat.protectedCounter++;
+      ozstat.protectedCounter++;
 #endif
     }
   }
@@ -1458,7 +1458,7 @@ void AM::gc(int msgLevel)
   opMode = IN_GC;
   gcing = 0;
 
-  stat.initGcMsg(msgLevel);
+  ozstat.initGcMsg(msgLevel);
   
   MemChunks *oldChain = MemChunks::list;
 
@@ -1541,7 +1541,7 @@ void AM::gc(int msgLevel)
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
 
-  stat.printGcMsg(msgLevel);
+  ozstat.printGcMsg(msgLevel);
   
   gcing = 1;
 } // AM::gc
@@ -1657,7 +1657,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   fromCopyBoard = NULL;
   gcing = 1;
 
-  stat.timeForCopy.incf(osUserTime()-starttime);
+  ozstat.timeForCopy.incf(osUserTime()-starttime);
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 
@@ -2342,7 +2342,7 @@ void performCopying(void)
 void checkGC()
 {
   Assert(!am.isCritical());
-  if (getUsedMemory() > am.conf.heapMaxSize && am.conf.gcFlag) {
+  if (getUsedMemory() > ozconf.heapMaxSize && ozconf.gcFlag) {
     am.setSFlag(StartGC);
   }
 }
@@ -2355,12 +2355,12 @@ void AM::doGC()
   deinstallPath(rootBoard);
 
   /* do gc */
-  gc(conf.gcVerbosity);
+  gc(ozconf.gcVerbosity);
 
   /* calc upper limits for next gc */
   unsigned int used = getUsedMemory();
-  if (used > (conf.heapMaxSize*conf.heapMargin)/100) {
-    conf.heapMaxSize = conf.heapMaxSize*(100+conf.heapIncrement)/100;
+  if (used > (ozconf.heapMaxSize*ozconf.heapMargin)/100) {
+    ozconf.heapMaxSize = ozconf.heapMaxSize*(100+ozconf.heapIncrement)/100;
   }
 
   unsetSFlag(StartGC);
@@ -2371,15 +2371,15 @@ void AM::doGC()
 // pre-condition: root node is installed
 Bool AM::idleGC()
 {
-  if (getUsedMemory() > (conf.heapIdleMargin*conf.heapMaxSize)/100 && conf.gcFlag) {
-    if (conf.showIdleMessage) {
+  if (getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapMaxSize)/100 && ozconf.gcFlag) {
+    if (ozconf.showIdleMessage) {
       printf("gc ... ");
       fflush(stdout);
     }
-    int save = conf.gcVerbosity;
-    conf.gcVerbosity = 0;
+    int save = ozconf.gcVerbosity;
+    ozconf.gcVerbosity = 0;
     doGC();
-    conf.gcVerbosity = save;
+    ozconf.gcVerbosity = save;
     return OK;
   }
   return NO;
