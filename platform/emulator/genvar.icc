@@ -123,21 +123,28 @@ void GenCVariable::installPropagators(GenCVariable * glob_var, Bool prop)
   Board * glob_home = glob_var->getBoardFast();
   suspList = ::installPropagators(suspList, glob_var->getSuspList(),
 				  glob_home);
-				
-  switch (getType()){
+			
+  switch (glob_var->getType()) {
   case FDVariable:
-    ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
+
+    switch (getType()){
+    case FDVariable:
+      ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
     break;
-  case BoolVariable:     
-    ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
+    case BoolVariable:     
+      ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var, glob_home);
     break;
-  case OFSVariable: 
-  case MetaVariable: 
-  case AVAR:
-  case DVAR:
+    case OFSVariable: 
+    case MetaVariable: 
+    case AVAR:
+    case DVAR:
+      break;
+    default:
+      Assert(0);
+    }
     break;
   default:
-    Assert(0);
+    break;
   }
 }
 
