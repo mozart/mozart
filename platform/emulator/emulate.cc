@@ -2749,8 +2749,10 @@ LBLdispatcher:
        }
 
        RefsArray argsArray = allocateRefsArray(1,NO);
-       argsArray[0] = OZ_mkTuple(X[0],3,
-                                 X[1],e->dbgGetSpaces(),traceBack);
+       argsArray[0] = OZ_eq(X[0],OZ_atom("user"))?
+         X[1] :
+         OZ_mkTuple(X[0],3,
+                    X[1],e->dbgGetSpaces(),traceBack);
        CTT->pushCall(pred,argsArray,1);
        goto LBLpopTask;
      }
