@@ -522,15 +522,9 @@ public:
   static void gc()
   {
     ExtRefNode *help = extRefs;
-#ifdef PROFILE
-    ozstat.protectedCounter = 0;
-#endif
     while(help) {
       gcTagged(*(TaggedRef*)help->elem, *(TaggedRef*)help->elem);
       help = (ExtRefNode*) help->next;
-#ifdef PROFILE
-      ozstat.protectedCounter++;
-#endif
     }
   }
 };
@@ -2224,7 +2218,6 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   case Co_Port:  
     {
-      COUNT(port);
       if(((Tertiary *)this)->getTertType()==Te_Local) {
 	CheckLocal((PortLocal *) this);}
       sz = sizeof(PortLocal);

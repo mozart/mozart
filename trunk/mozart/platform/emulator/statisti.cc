@@ -222,6 +222,7 @@ void Statistics::initCount() {
   askActor=waitActor=solveActor=waitChild=0;
 
   freeListAllocated = 0;
+  freeListDisposed = 0;
   totalAllocated = 0;  
   varVarUnify = recRecUnify = totalUnify = 0;
   applBuiltin = applProc =0;
@@ -233,12 +234,18 @@ void Statistics::initCount() {
   for(int i=0; i<=maxDerefLength; i++) {
     lengthDerefs[i] = 0;
   }
+
+  fastcalls=bicalls=nonoptcalls=inlinecalls=inlinedots=sendmsg=applmeth=0;
+  nonoptbicalls=nonoptsendmsg=0;
 }
 
 #include "ofgenvar.hh"
 
 #define PrintVar(Var) \
-  printf("%20s:          %d\n",OZStringify(Var),Var)
+  printf("%20s:          %8d\n",OZStringify(Var),Var)
+
+#define PrintVarPercent(Var,Total) \
+  printf("%15s:          %8d (%4.1f%%)\n",OZStringify(Var),Var,((double)Var*100.0)/(double)Total)
 
 void Statistics::printCount() {
   printf("Heap after last GC:\n\n");
@@ -294,6 +301,7 @@ void Statistics::printCount() {
 
   printf("\nRS\n");
   PrintVar(freeListAllocated);
+  PrintVar(freeListDisposed);
   PrintVar(totalAllocated);
   PrintVar(varVarUnify);
   PrintVar(recRecUnify);
@@ -306,6 +314,21 @@ void Statistics::printCount() {
   PrintVar(sizeStackVars);
   PrintVar(sizeEnvs);
   printDeref();
+
+  int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls
+                +inlinedots+sendmsg+applmeth;
+
+  printf("\nCalls\n");
+  PrintVar(totCalls);
+  PrintVarPercent(fastcalls,totCalls);
+  PrintVarPercent(bicalls,totCalls);
+  PrintVarPercent(inlinecalls,totCalls);
+  PrintVarPercent(inlinedots,totCalls);
+  PrintVarPercent(sendmsg,totCalls);
+  PrintVarPercent(applmeth,totCalls);
+  PrintVarPercent(nonoptcalls,totCalls);
+  PrintVar(nonoptbicalls);
+  PrintVar(nonoptsendmsg);
 }
 
 
@@ -314,13 +337,16 @@ void Statistics::printDeref()
   PrintVar(numDerefs);
   PrintVar(longestDeref);
   for(int i=0; i<maxDerefLength; i++) {
-    printf("lengthDerefs[%d]=%d\n",i,lengthDerefs[i]);
+    if (lengthDerefs[i])
+      printf("lengthDerefs[%d]=%d\n",i,lengthDerefs[i]);
   }
   printf("lengthDerefs[>=%d]=%d\n",maxDerefLength,lengthDerefs[maxDerefLength]);
 }
 
 void Statistics::derefChain(int n)
 {
+  if (n>8) 
+    warning("gotcha");
   numDerefs++;
   longestDeref = max(n,longestDeref);
   n = min(n,maxDerefLength);

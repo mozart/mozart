@@ -672,8 +672,7 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
     toplevelVars = resize(toplevelVars,newSize);
     // no deletion of old array --> GC does it
   }
-  SVariable *svar = new SVariable(currentBoard);
-  TaggedRef ret = makeTaggedRef(newTaggedSVar(svar));
+  TaggedRef ret = makeTaggedRef(newTaggedUVar(currentBoard));
   VariableNamer::addName(ret,tagged2Literal(name)->getPrintName());
   return ret;
 }
@@ -1476,6 +1475,7 @@ LBLdispatcher:
   Case(FASTTAILCALL)
   LBLFastTailCall:
     {
+      COUNT(fastcalls);
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
       CallDoChecks(entry->getAbstr(),entry->getGRegs());
@@ -1490,6 +1490,7 @@ LBLdispatcher:
 
   Case(CALLBUILTIN)
     {
+      COUNT(bicalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       biFun = entry->getFun();
       predArity = getPosIntArg(PC+2);
@@ -1525,6 +1526,7 @@ LBLdispatcher:
 
   Case(INLINEREL1)
     {
+      COUNT(inlinecalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel1 rel         = (InlineRel1)entry->getInlineFun();
 
@@ -1561,6 +1563,7 @@ LBLdispatcher:
 
   Case(INLINEREL2)
     {
+      COUNT(inlinecalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel2 rel         = (InlineRel2)entry->getInlineFun();
 
@@ -1605,6 +1608,7 @@ LBLdispatcher:
 
   Case(INLINEREL3)
     {
+      COUNT(inlinecalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineRel3 rel         = (InlineRel3)entry->getInlineFun();
 
@@ -1646,6 +1650,7 @@ LBLdispatcher:
 
   Case(INLINEFUN1)
     {
+      COUNT(inlinecalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
 
@@ -1688,6 +1693,7 @@ LBLdispatcher:
 
   Case(INLINEFUN2)
     {
+      COUNT(inlinecalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
@@ -1737,6 +1743,7 @@ LBLdispatcher:
 
   Case(INLINEDOT)
     {
+      COUNT(inlinedots);
       TaggedRef feature = getLiteralArg(PC+2);
       TaggedRef rec = XPC(1);
       DEREF(rec,_1,_2);
@@ -1876,6 +1883,7 @@ LBLdispatcher:
 
   Case(INLINEFUN3)
     {
+      COUNT(inlinecalls);
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun3 fun = (InlineFun3)entry->getInlineFun();
 
@@ -2288,6 +2296,7 @@ LBLdispatcher:
 
  SendMethod:
   {
+    COUNT(sendmsg);
     TaggedRef label    = getLiteralArg(PC+1);
     TaggedRef origObj  = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object   = origObj;
@@ -2339,6 +2348,7 @@ LBLdispatcher:
 
  ApplyMethod:
   {
+    COUNT(applmeth);
     ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
     SRecordArity arity     = ami->arity;
     TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
@@ -2407,6 +2417,7 @@ LBLdispatcher:
 // -----------------------------------------------------------------------
 
   LBLcall:
+     COUNT(nonoptcalls);
      BuiltinTabEntry *bi;
 
 // -----------------------------------------------------------------------
@@ -2419,6 +2430,7 @@ LBLdispatcher:
        if (typ==Co_Abstraction || typ==Co_Object) {
 	 Abstraction *def;
 	 if (typ==Co_Object) {
+	   COUNT(nonoptsendmsg);
 	   Object *o = (Object*) predicate;
 	   if (o->isClass()) {
 	     RAISE_APPLY(makeTaggedConst(predicate),
@@ -2443,7 +2455,8 @@ LBLdispatcher:
 // --- Call: Builtin
 // -----------------------------------------------------------------------
        Assert(typ==Co_Builtin);
-
+       COUNT(nonoptbicalls);
+     
        bi = (BuiltinTabEntry *) predicate;
 	   
        CheckArity(bi->getArity(),makeTaggedConst(bi));
