@@ -99,17 +99,25 @@ public:
 //                               class DynamicTable
 //-------------------------------------------------------------------------
 
-// A class implementing a hash table that can be expanded when
-// it becomes too full.  Several operations (merge, srecordcheck) are
-// added to facilitate unification of GenOFSVariables, which are built on
-// top of a DynamicTable.
+// A class implementing a hash table with insertion/deletion operations that
+// can be expanded when it becomes too full and reduced when it becomes too empty
+// (recovering memory), while keeping amortized constant-time insertion/deletion.
+// Several operations (merge, srecordcheck) are added to facilitate unification of
+// GenOFSVariables, which are built on top of a DynamicTable.
 
 // Three possibilities for an entry:
 // ident: fea value: val   filled entry
-// ident: fea value: 0     empty entry (emptied by removeC)
-// ident: 0   value: 0     empty entry (empty from the start)
-// Full emptiness check: table[i].value==makeTaggedNULL()
-// Hash termination condition: table[i].ident==makeTaggedNULL() || table[i].ident==id || s==0
+// ident: fea value: 0     empty entry (emptied by removeC--a restricted empty slot)
+// ident: 0   value: 0     empty entry (empty from the start--a fully empty slot)
+// With valid flag, full emptiness check is: table[i].value==makeTaggedNULL()
+// Hash termination condition is: table[i].ident==makeTaggedNULL() || table[i].ident==id || s==0
+
+// This implementation needs to be tuned for space & time.  Currently, in the worst-case,
+// a hash table may be doubled in size if it contains only FILLFACTOR/2 entries, if all
+// other entries are restricted empty slots.  The hash table will then be reduced in size
+// at the first remove operation, at the price of a large transient memory use.  However,
+// this method guarantees amortized constant-time access.  If, in a steady-state, there
+// is balance between the add and remove operations, then no extra space is used on average.
 
 typedef long dt_index;
 
@@ -189,6 +197,7 @@ public:
       return (numelem>=fullFunc(size));
     }
 
+    DynamicTable* copyDynamicTable(dt_index newSize=(dt_index)(-1L));
 
     // Return a table that is double the size of the current table and
     // that contains the same elements:
@@ -197,17 +206,12 @@ public:
       return copyDynamicTable(size?(size<<1):1);
     }
 
-
-    // Return a copy of the current table that has size newSize and all contents
-    // of the current table.  The current table's contents MUST fit in the copy!
-    DynamicTable* copyDynamicTable(dt_index newSize);
-
     // Insert val at index id 
-    // Return value is valid iff 'valid'==TRUE.  Otherwise, nothing is done.
-    // Return NULL if val is successfully inserted (id did not exist) 
-    // Return the value of the pre-existing element if id already exists
-    // User should test for and increase size of hash table if it becomes too full
+    // If valid==FALSE then nothing has been done.
+    // Otherwise, return NULL if val is successfully inserted (id did not exist) 
+    // or return the value of the pre-existing element if id already exists.
     // ATTENTION: insert must only be done if the table has room for a new element.
+    // User should test for and increase size of hash table if it becomes too full.
     TaggedRef insert(TaggedRef id, TaggedRef val, Bool *valid);
 
     // Look up val at index id
