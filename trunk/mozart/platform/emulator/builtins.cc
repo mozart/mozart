@@ -44,6 +44,7 @@
 #include "fdhook.hh"
 #include "solve.hh"
 #include "oz_cpi.hh"
+#include "dictionary.hh"
 
 /*===================================================================
  * Macros
@@ -3008,6 +3009,98 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 }
 
 DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
+
+
+/*===================================================================
+ *   Dictionaries
+ *=================================================================== */
+
+OZ_C_proc_begin(BIdictionaryNew,1)
+{
+  OZ_Term out       = OZ_getCArg(0);
+
+  return OZ_unify(makeTaggedConst(new OzDictionary()),out);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdictionaryKeys,2)
+{
+  OZ_Term d   = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  NONVAR( d, dict, _1 );
+  if (!isDictionary(dict)) {
+    TypeErrorT(0,"Dictionary");
+  }
+
+  return OZ_unify(tagged2Dictionary(dict)->keys(),out);
+}
+OZ_C_proc_end
+
+
+OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
+{
+  NONVAR( t, term, tag );
+  out = isDictionary(term) ? NameTrue : NameFalse;
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
+
+
+#define GetDictAndKey(d,k,dict,key)				\
+  NONVAR(d,dictaux,_1);						\
+  NONVAR(k,key, _2);						\
+  if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
+  if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
+  OzDictionary *dict = tagged2Dictionary(dictaux);
+
+
+OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key);
+  out = dict->member(key);
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
+
+
+OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key);
+  return dict->getArg(key,out);
+}
+DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
+
+
+OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key);
+  if (dict->getArg(key,out)!=PROCEED) {
+    out = deflt;
+  }
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN3(BIdictionaryGetIf,dictionaryGetIfInline)
+
+
+OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
+{
+  GetDictAndKey(d,k,dict,key);
+  dict->setArg(key,value);
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
+
+
+OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
+{
+  GetDictAndKey(d,k,dict,key);
+  dict->remove(key);
+  return PROCEED;
+}
+DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
 
 
 /* -----------------------------------------------------------------------
@@ -6091,6 +6184,15 @@ BIspec allSpec[] = {
   {"Array.low",  2, BIarrayLow,  (IFOR) arrayLowInline},
   {"Array.get",  3, BIarrayGet,  (IFOR) arrayGetInline},
   {"Array.put",  3, BIarrayPut,  (IFOR) arrayPutInline},
+
+  {"Dictionary.new",    1, BIdictionaryNew,	0},
+  {"Dictionary.is",     2, BIisDictionary,     (IFOR) isDictionaryInline},
+  {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
+  {"Dictionary.getIf",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
+  {"Dictionary.put",    3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
+  {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
+  {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
+  {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
