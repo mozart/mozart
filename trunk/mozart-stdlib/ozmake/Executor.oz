@@ -235,6 +235,30 @@ define
 	 end
       end
 
+      %% installing files
+
+      meth exec_install_file(From To)
+	 Executor,exec_mkdir({Path.dirname To})
+	 Executor,exec_cp(From To)
+      end
+
+      meth exec_install_exec(From To)
+	 Executor,exec_install_file(From To)
+	 Executor,exec_mkexec(To)
+      end
+
+      meth exec_mkexec(To)
+	 {self trace('chmod -x '#To)}
+	 if {self get_justprint($)} then skip else
+	    try {Shell.execute ['chmod' '-x' To]}
+	    catch _ then
+	       if {Property.get 'platform.os'}\=win32 then
+		  raise ozmake(mkexec:F) end
+	       end
+	    end
+	 end
+      end
+
    end
 
 end

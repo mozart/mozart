@@ -55,8 +55,8 @@ package(
   released  : DATE
   installed : DATE
   blurb     : TEXT
-  info-html : TEXT
-  info-text : TEXT
+  info_html : TEXT
+  info_text : TEXT
   files     : FILE
   lost      : FILES
   zombies   : FILES
@@ -89,7 +89,7 @@ just fine
 **** --replacefiles
 just fine
 **** all files are owned by an installed version of the package
-if --grade=none signal an error
+if --grade=none signal an error (already done earlier)
 **** else
 signal an error
 
@@ -99,6 +99,8 @@ signal an error
 move the affected files to their lost list
 *** if the package is installed
 take all the non-overwritten files of the previous installation
+**** if --extendpackage
+leave them alone, keep them in the new installation
 **** if --keepzombies
 move them to the zombie list of the new installation
 **** else

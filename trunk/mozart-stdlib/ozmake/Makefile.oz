@@ -34,6 +34,10 @@ define
 	 Target2Depends : unit
 	 TargetIsSource : unit
 
+      meth target_to_section(T $)
+	 {CondSelect @Target2Section {Path.toAtom T} unit}
+      end
+
       meth initFromRecord(R)
 
 	 Target2Section<-{NewDictionary}
@@ -430,5 +434,6 @@ define
 	 if InfoHtml \=unit then MAK.info_html := InfoHtml end
 	 {Dictionary.toRecord makefile MAK}
       end
+
    end
 end

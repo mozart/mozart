@@ -38,7 +38,12 @@ define
 	 Verbose    : false
 	 JustPrint  : false
 	 OptLevel   : optimize
-	 Grade      : unit
+	 Grade      : none
+	 ReplaceFiles : false
+	 KeepZombies: false
+	 SaveDB     : true
+	 IncludeDocs: true
+	 ExtendPkg  : false
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -212,5 +217,18 @@ define
 
       meth set_grade(G) Grade<-G end
       meth get_grade($) @Grade end
+
+      meth set_replacefiles(B) ReplaceFiles<-B end
+      meth get_replacefiles($) @ReplaceFiles end
+      meth set_keepzombies(B) KeepZombies<-B end
+      meth get_keepzombies($) @KeepZombies end
+      meth set_savedb(B) SaveDB<-B end
+      meth get_savedb($) @SaveDB end
+
+      meth set_includedocs(B) IncludeDocs<-B end
+      meth get_includedocs($) @IncludeDocs end
+
+      meth set_extendpackage(B) ExtendPkg<-B end
+      meth get_extendpackage($) @ExtendPkg end
    end
 end
