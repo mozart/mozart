@@ -1,0 +1,516 @@
+<CHAPTER ID="chapter.basics">
+  <TITLE>Basic Operations and Examples</TITLE>
+
+<SECTION><TITLE>Global naming</TITLE>
+
+<P>Global names are needed when an application
+wants to interact with the world outside it.
+Mozart supports three basic kinds of global names:
+<LIST>
+<ITEM> A <EM>ticket</EM> is a string that references a data
+structure inside a running application.
+Tickets are created by Mozart and
+can be used to connect running applications together.
+<ITEM> A <EM>URL</EM> is a string that references
+a file across the network.
+The string follows the standard URL syntax.
+In Mozart the file can be a <EM>pickle</EM>, in which case
+it can hold any kind of stateless data--procedures,
+classes, functors, records, strings, etc.
+<ITEM> A <EM>hostname</EM> is a string that
+refers to a host (another machine) across the network.
+The string follows the standard DNS syntax.
+An application can use the hostname to start up another
+Mozart process there.
+</LIST>
+
+<SUBSECTION><TITLE>Connecting applications by means of tickets</TITLE>
+
+<P>Let's say Application 1 has a stream that
+it wants others to access.
+It can do this by creating a ticket
+that references the stream.
+The module <<Connection>> implements tickets.
+Application 1 first creates a ticket for the stream
+by using <<Connection>> as follows:
+
+<<<
+declare Stream Tkt in
+{Connection.offer Stream Tkt}
+{Show Tkt}
+>>>
+
+<P>Then Application 1 publishes the ticket somewhere so that
+other applications can access it.
+Our example displays
+the ticket string in the emulator window.
+We will use copy and paste to communicate the ticket
+to another application.
+The ticket looks something like
+<<'x-ozticket://193.10.66.30:9002:SpGK0:U4v/y:s:f:xl'>>.
+Don't worry about exactly what's inside the ticket.
+Users don't normally see tickets:
+they are stored in files or passed across the network,
+e.g., in mail messages.
+Application 2 can use the ticket to get a reference
+to the stream:
+
+<<<
+declare Stream in
+{Connection.take 
+   'x-ozticket://193.10.66.30:9002:SpGK0:U4v/y:s:f:xl'
+   Stream}
+{Browse Stream}
+>>>
+
+<P>If Application 1 binds the stream
+by doing <<Stream=a|b|c|_>>
+then Application 2's browse window will show the bindings.
+
+<P>The operation <<Connection.offer>> creates
+a <EM>one-shot</EM> ticket, i.e., a ticket
+that can be taken only once.
+Within the module <<Connection>>,
+a ticket that can be taken any
+number of times can be defined
+easily as follows:
+<<<
+declare
+proc {Connection_many X ?Ticket ?Close}
+   G={New Connection.gate init(X Ticket)}
+in
+   proc {Close} {G close} end
+end
+>>>
+Given a reference <<X>>, <<Connection_many>>
+defines a many-shot ticket <<Ticket>>
+and a zero-argument procedure <<Close>>
+that is used to close the ticket, i.e.,
+to make the ticket invalid.
+Attempting to take a ticket after a
+close will raise an exception.
+
+
+<SUBSECTION><TITLE>Persistent data structures</TITLE>
+
+<P>An application can save
+any stateless data structure
+in a file and load it again from a file.
+The loading may be done from a URL, used as 
+a file's global name.
+The module <<Pickle>> implements the saving
+and loading, and the conversion to and from
+the file format.
+
+<P>For example, let's define a function and save it:
+
+<<<
+declare
+fun {Fact N}
+   if N=<1 then 1 else N*{Fact N-1} end
+end
+
+{Pickle.save Fact "~pvr/public_html/fact"}
+>>>
+
+<P>Since the function is in a <<public_html>> directory,
+anyone can load it by giving a URL that specifies
+the file:
+
+<<<
+declare
+Fact={Pickle.load "http://www.sics.se/~pvr/fact"}
+
+{Browse {Fact 10}}
+>>>
+
+<P>Anything stateless can be saved in a pickle,
+including functions, procedures, classes,
+functors, records, and atoms.
+Stateful entities, such as objects and variables,
+cannot be pickled.
+
+<SUBSECTION><TITLE>Remote computations</TITLE>
+
+<P>An application can start a computation
+on a given host that uses the resources
+of that host and
+that continues to interact with the
+application.
+The computation is specified as a functor,
+which is the standard way to
+define computations with the resources they need.
+
+<P>First we create a new Mozart process
+that is ready to accept new computations:
+<<<
+declare
+R={New Remote.manager init(host:"sinuhe.sics.se")}
+>>>
+
+<P>Let's make the process do some work.
+We define a functor that does the work
+when we evaluate it:
+<<<
+declare F M
+F=functor export x:X define X={Fact 30} end 
+
+M={R apply(url:'./' F $)}
+
+{Browse M.x}
+>>>
+
+<P>The answer is returned to the client site in the module <<M>>,
+which should not reference any resources.
+Module <<M>> is a record; the answer is at <<M.x>>.
+If it does, an exception will be raised in the thread
+doing the <<apply>>.
+
+<SUBSECTION><TITLE>Remote computations and functors</TITLE>
+
+<P>A better solution than the one given
+in the previous section is for the functor itself
+to install the compute server on the remote site.
+This completely <EM>separates</EM> the distribution aspect
+(setting up the remote site to do the right thing)
+from the computation(s) that we want to do.
+We give this solution later in the tutorial.
+
+<P>Another solution is to use a functor with
+an external reference:
+<<<
+declare F M X in
+F=functor define {Fact 30 X} end
+
+M={R apply(url:'./' F $)}
+{Browse X}
+>>>
+
+<P>This functor is not stateless,
+but it's all right since we are not pickling the functor.
+In fact, it's quite possible for
+functors to have external references.
+We discuss this later when we
+talk about computed functors.
+
+<SECTION><TITLE>Servers</TITLE>
+
+<P>A server is a long-lived computation that provides a service to clients.
+We will show progressively how to build different kinds of servers.
+
+<SUBSECTION><TITLE>The hello server</TITLE>
+
+<P>Let's build a basic server that returns the string <<"Hello world">>
+to clients.
+The first step is to create the server.
+Let's do this and also make the server available through a URL:
+<<<
+% Create server
+declare Str Prt Srv in
+{NewPort Str Prt}
+thread 
+   {ForAll Str proc {$ S} S="Hello world" end}
+end
+proc {Srv X}
+   {Send Prt X}
+end
+
+% Make server available through given URL:
+{Pickle.save 
+   {Connection_many Srv}
+   "http://www.sics.se/~pvr/hw"}
+>>>
+<P>All the above must be executed on the server site.
+Later on we will show how a client can create a
+server remotely.
+
+<P>Any client that knows the URL can access the server:
+<<<
+declare Srv in
+Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
+
+local X in
+   {Srv X}
+   {Browse X}
+end
+>>>
+<P>This will show <<"Hello world">> in the browser window.
+
+<P>What happens is that by taking the connection, the client
+gets in its computation space a reference to the server.
+This merges conceptually the client and server computation spaces
+into a single computation space.
+The client and server can then communicate as if
+they were in the same process.
+Later, when the client forgets the server reference,
+the computation spaces become separate again.
+
+<SUBSECTION><TITLE>Making stationary objects</TITLE>
+
+<P>Stationary entities are a very important abstraction.
+Mozart provides two primitive operations to
+make entities stationary.
+The first is creating a stationary object:
+<<<
+declare
+Object={NewStat Class Init}
+>>>
+<P>When executed on a site,
+the procedure <<NewStat>> takes a class and an initial message
+and creates an object that is stationary on that site.
+We define <<NewStat>> as follows:
+<<<
+declare
+proc {NewStat Class Init Object}
+   Object={MakeStat {New Class Init}}
+end
+>>>
+<P>The procedure <<MakeStat>> takes an object or a one-argument
+procedure and returns a one-argument procedure that
+obeys exactly the same language semantics and is stationary.
+We define <<{MakeStat PO StatP}>> as follows, where
+<<PO>> is an object or a one-argument procedure
+and <<StatP>> is a one-argument procedure:
+
+<<<
+declare
+proc {MakeStat PO ?StatP}
+   S P={NewPort S}
+   N={NewName}
+in
+   proc {StatP M}
+   R in
+      {Send P M#R}
+      if R==N then skip else raise R end end
+   end
+   thread
+      {ForAll S
+       proc {$ M#R}
+          thread
+             try {PO M} R=N catch X then R=X end
+          end
+       end}
+   end
+end
+>>>
+
+<P><<StatP>> preserves exactly the same language semantics
+as <<PO>>.  That is, it has the same concurrency
+behavior and it raises the same exceptions.
+The new name <<N>> is a globally-unique token.
+This ensures that
+there is no conflict with any exceptions
+raised by <<ProcOrObj>>.
+
+
+<NOTE FOOT>One-argument procedures are not exactly
+objects, since they do not have features.
+For all practical purposes, though, one-argument
+procedures and objects have identical calling patterns.</NOTE>
+
+
+<SUBSECTION><TITLE>The hello server with stationary objects</TITLE>
+
+<P>The previous section showed how to build a basic server
+using a port to collect messages.
+There is in fact a much cleaner way,
+namely by using stationary objects.
+Here's how to create the server:
+<<<
+declare
+class HelloWorld
+   meth hw(X) X="Hello world" end
+end
+
+Srv={NewStat HelloWorld hw(_)} % Requires an initial method
+>>>
+<P>The client calls the server
+by doing <<{Srv hw(X)}>>.
+The class <<HelloWorld>> can be replaced by any class.
+The only difference between this and creating
+a centralized object is that <<New>> is replaced by <<NewStat>>.
+This specifies the distributed behavior of the object.
+
+<SUBSECTION><TITLE>A compute server</TITLE>
+
+<P>One of the promises of distributed computing is making
+computations go faster by exploiting the parallelism
+inherent in networks of computers.
+A first step is to create a compute server, that is,
+a server that accepts any computation and uses
+its computational resources to do the computation.
+Here's one way to create a compute server:
+<<<
+declare
+class ComputeServer
+   meth init skip end
+   meth run(P) {P} end
+end
+
+C={NewStat ComputeServer init}
+>>>
+<P>The compute server can be made available through a URL
+as shown before.
+Here's how a client uses the compute server:
+<<<
+declare
+fun {Fibo N}
+   if N<2 then 1 else {Fibo N-1}+{Fibo N-2} end
+end
+
+% Do first computation remotely
+local F in
+   {C run(proc {$} F={Fibo 30} end)}
+   {Browse F}
+end
+
+% Do second computation locally
+local F in
+   F={Fibo 30}
+   {Browse F}
+end
+>>>
+<P>This first does the computation
+remotely and then repeats it locally.
+In the remote case, the variable <<F>>
+is shared between the client and server.
+When the server binds it, its value
+is immediately sent to the server.
+This is how the client gets a result from the server
+
+<P>Any Oz expression <EM>E</EM> can be executed
+remotely by prefixing it by
+<<{C run(proc {$}>> and suffixing it by <<end)}>>.
+Because Mozart is fully network-transparent,
+<EM>E</EM> can be almost any expression
+in the language: for example,
+<EM>E</EM> can define new classes
+inheriting from client classes.
+The only expressions not allowed are
+those using client resources.
+
+<SUBSECTION><TITLE>A compute server with functors</TITLE>
+
+<P>The solution of the previous section
+is reasonable when the client and server
+are independent computations that connect.
+Let's now see how the
+client itself can start up a compute
+server on a remote site.
+The client first creates a new Mozart process:
+<<<
+declare
+R={New Remote.manager init(host:"sinuhe.sics.se")}
+>>>
+
+<P>Then the client sends a functor
+to this process that, when evaluated,
+creates a compute server:
+<<<
+declare F C
+F=functor 
+  export cs:CS
+  define 
+     class ComputeServer
+        meth init skip end
+        meth run(P) {P} end
+     end
+     CS={NewStat ComputeServer init}
+  end
+
+C={R apply(url:'./' F $)}.cs  % Set up the compute server
+>>>
+
+<P>The client can use the compute server as before:
+<<<
+local F in
+   {C run(proc {$} F={Fibo 30} end)}
+   {Browse F}
+end
+>>>
+
+
+<SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
+
+<P>Sometimes a server has to be upgraded,
+for example
+to add extra functionality or to fix a bug.
+We show how to upgrade a server
+without stopping it.
+This cannot be done in Java.
+In practice, the upgrade can even
+be done interactively.
+A person sits down at a terminal anywhere
+in the world, starts up an interactive Mozart
+session, and upgrades the server while it is running.
+
+<P>Let's first define a generic upgradable server:
+<<<
+declare
+proc {NewUpgradableStat Class Init ?Upg ?Srv}
+   Obj={New Class Init}
+   C={NewCell Obj}
+in
+   Srv={MakeStat 
+          proc {$ M} {{Access C} M} end}
+   Upg={MakeStat
+          proc {$ Class2#Init2} {Assign C {New Class2 Init2}} end}
+end
+>>>
+<P>This definition must be executed 
+on the server site.
+It returns a server <<Srv>> and a stationary procedure
+<<Upg>> used for upgrading the server.
+The server is upgradable because it does
+all object calls indirectly through the cell <<C>>.
+
+<P>A client creates an upgradable compute server almost
+exactly as it creates a fixed compute server,
+by executing the following on the server site:
+<<<
+declare Srv Upg in
+Srv={NewUpgradableStat ComputeServer init Upg}
+>>>
+<P>Let's now upgrade the compute server while
+it is running.
+We first define a new class <<CComputeServer>>
+and then we upgrade the server with
+an object of the new class:
+<<<
+declare
+class CComputeServer from ComputeServer
+   meth run(P Prio<=medium)
+      thread
+         {Thread.setThisPriority Prio}
+         ComputeServer,run(P)
+      end
+   end
+end
+
+Srv2={Upg CComputeServer#init}
+>>>
+
+<P>That's all there is to it.
+The upgraded compute server overrides
+the <<run>> method with a new
+method that has a default.
+The new method supports the original call <<run(P)>>
+and adds a new call <<run(P Prio)>>, where <<Prio>>
+sets the priority of the thread doing computation <<P>>.
+
+<P>The compute server can be
+upgraded indefinitely
+since garbage collection will remove
+any unused old compute server code.
+For example, it would be nice if the client could
+find out how many active computations there
+are on the compute server
+before deciding whether or not to do
+a computation there.
+We leave it to the reader to upgrade
+the server to add a new
+method that returns the number of
+active computations at each priority level.
+
+</CHAPTER>
+
