@@ -1201,40 +1201,6 @@ char *OZ_stringToC(OZ_Term list,int*len)
   return tmpString;
 }
 
-void OZ_printString(OZ_Term term)
-{
-  ostrstream *out = new ostrstream;
-
-  string2buffer(*out,term);
-
-  char *tmpString = strAndDelete(out);
-  printf("%s",tmpString);
-  delete tmpString;
-}
-
-void OZ_printAtom(OZ_Term t)
-{
-  Literal *a = tagged2Literal(t);
-  printf("%s",a->getPrintName());
-}
-
-void OZ_printInt(OZ_Term t)
-{
-  t=oz_deref(t);
-  if (oz_isSmallInt(t)) {
-    printf("%d",smallIntValue(t));
-  } else {
-    char *s=toC(t);
-    printf("%s",s);
-  }
-}
-
-void OZ_printFloat(OZ_Term t)
-{
-  char *s=toC(t);
-  printf("%s",s);
-}
-
 
 
 inline
@@ -1344,49 +1310,6 @@ char* OZ_vsToC(OZ_Term t,int*n)
     s = OZ_virtualStringToC(t,n);
   }
   return s;
-}
-
-void OZ_printVirtualString(OZ_Term term)
-{
-  OZ_Term t=oz_deref(term);
-  if (oz_isCons(t)) {
-    OZ_printString(t);
-  } else if (oz_isAtom(t)) {
-    if (oz_isNil(t) || oz_isPair(t)) {
-      return;
-    }
-    OZ_printAtom(t);
-  } else if (oz_isSmallInt(t)) {
-      printf("%d",smallIntValue(t));
-  } else if (oz_isBigInt(t)) {
-    char *s=toC(t);
-    if (s[0] == '~') 
-      s[0] = '-';
-    printf("%s",s);
-  } else if (oz_isFloat(t)) {
-    char *s=toC(t);
-    char *p=s;
-    while (*p) {
-      if (*p == '~') 
-	*p='-';
-      p++;
-    }
-    printf("%s",s);
-  } else if (oz_isByteString(t)) {
-    ByteString* bs = tagged2ByteString(t);
-    int n = bs->getWidth();
-    for (int i=0;i<n;i++) putchar(bs->get(i));
-  } else {
-    if (!oz_isPair(t)) {
-      OZ_warning("OZ_printVirtualString: no virtual string: %s",toC(term));
-      return;
-    }
-    SRecord *sr=tagged2SRecord(t);
-    int len=sr->getWidth();
-    for (int i=0; i < len; i++) {
-      OZ_printVirtualString(sr->getArg(i));
-    }
-  }
 }
 
 OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)

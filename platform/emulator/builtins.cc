@@ -3984,46 +3984,57 @@ OZ_Return printInline(TaggedRef term)
 
 OZ_DECLAREBI_USEINLINEREL1(BIprint,printInline)
 
+
+static
+OZ_Return printTerm(OZ_Term t, int fd, Bool newline)
+{
+  int n;
+  char * s = OZ_virtualStringToC(t,&n);
+
+ loop:
+  int written = write(fd,s,n);
+  if (written < 0) {
+    return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_unixError(ossockerrno()));
+  }
+  if (written<n) {
+    s += written;
+    n -= written;
+    goto loop;
+  }
+
+  if (newline) {
+    char c = '\n';
+    write(fd,&c,1);
+  }
+
+  return PROCEED;
+}
+
 OZ_BI_define(BIprintInfo,1,0)
 {
   oz_declareIN(0,t);
-  OZ_printVirtualString(t);
-  fflush(stdout);
-  return PROCEED;
+  return printTerm(t,STDOUT_FILENO,NO);
 } OZ_BI_end
+
 
 OZ_BI_define(BIshowInfo,1,0)
 {
   oz_declareIN(0,t);
-  int n;
-  char * s = OZ_virtualStringToC(t,&n);
-  for (;n > 0;n--,s++) putc(*s,stdout);
-  putc('\n',stdout);
-  fflush(stdout);
-  return PROCEED;
+  return printTerm(t,STDOUT_FILENO,OK);
 } OZ_BI_end
 
 OZ_BI_define(BIprintError,1,0)
 {
   oz_declareIN(0,t);
   prefixError(); // print popup code for opi
-  int n;
-  char * s = OZ_virtualStringToC(t,&n);
-  for (;n > 0;n--,s++) putc(*s,stderr);
-  fflush(stderr);
-  return PROCEED;
+  return printTerm(t,STDERR_FILENO,NO);
 } OZ_BI_end
 
 OZ_BI_define(BIshowError,1,0)
 {
   oz_declareIN(0,t);
   prefixError(); // print popup code for opi
-  int n;
-  char * s = OZ_virtualStringToC(t,&n);
-  for (;n > 0;n--,s++) putc(*s,stderr);
-  putc('\n',stderr);
-  fflush(stderr);
-  return PROCEED;
+  return printTerm(t,STDERR_FILENO,OK);
 } OZ_BI_end
 
 OZ_BI_define(BItermToVS,3,1)
@@ -4033,6 +4044,7 @@ OZ_BI_define(BItermToVS,3,1)
   oz_declareIntIN(2,width);
   OZ_RETURN(OZ_string(OZ_toC(t,depth,width)));
 } OZ_BI_end
+
 
 OZ_Return showInline(TaggedRef term)
 {
