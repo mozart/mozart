@@ -31,17 +31,6 @@
 #include <stdio.h>
 #include "oz.h"
 
-//#define DEBUG_FSET
-//#define DEBUG_FD
-//#define DEBUG_NONMONOTONIC
-
-#if defined(DEBUG_FSET) || defined(DEBUG_FD)
-//#define CPI_FILE_PRINT
-#endif
-
-
-
-
 //-----------------------------------------------------------------------------
 // misc macros
 

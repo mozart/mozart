@@ -206,7 +206,7 @@ failure:
 
 OZ_Return FSetUnionNPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINTTHIS("in ");
+  OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   OZ_FSetVar s(_s);
@@ -223,13 +223,13 @@ OZ_Return FSetUnionNPropagator::propagate(void)
   if (_vs_size == 0) {
     FailOnInvalid(*s <<= OZ_FSetConstraint(fs_empty));
 
-    _OZ_DEBUGPRINTTHIS("_vs_size == 0 out ");
+    OZ_DEBUGPRINTTHIS("_vs_size == 0 out ");
 
     return P.vanish();
   } else if (_vs_size == 1) {
     P.vanish();
 
-    _OZ_DEBUGPRINTTHIS("_vs_size == 1 out");
+    OZ_DEBUGPRINTTHIS("_vs_size == 1 out");
 
     return replaceBy(_s, _vs[0]);
   }
@@ -266,12 +266,12 @@ OZ_Return FSetUnionNPropagator::propagate(void)
       _vs_size = j;
     }
 
-    _OZ_DEBUGPRINTTHIS("out ");
+    OZ_DEBUGPRINTTHIS("out ");
     return r;
   }
 
 failure:
-  _OZ_DEBUGPRINTTHIS("failed");
+  OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }
 
@@ -344,7 +344,7 @@ OZ_Return FSetPartitionPropagator::propagate(void)
   } else if (_vs_size == 1) {
     P.vanish();
 
-    _OZ_DEBUGPRINTTHIS("_vs_size == 1 out");
+    OZ_DEBUGPRINTTHIS("_vs_size == 1 out");
 
     return replaceBy(_s, _vs[0]);
   }

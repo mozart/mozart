@@ -219,65 +219,78 @@ OZ_Return FSetsConvexPropagator::propagate(void)
 
   OZ_FSetVar s(_s);
 
+  // an empty set is convex (per definition)
+  if (!s->isEmpty()) {
+
 #ifdef FSET_HIGH
-  int minelem, maxelem;
+    int minelem, maxelem;
 
-  for (int i = 0; i < fsethigh32; i++) {
-    if (s->isIn(i)) {
-      minelem = maxelem = i;
-      for(i++; i < fsethigh32; i++)
-        if (s->isIn(i))
-          maxelem = i;
+    for (int i = 0; i < fsethigh32; i++) {
+      if (s->isIn(i)) {
+        minelem = maxelem = i;
+        for(i++; i < fsethigh32; i++)
+          if (s->isIn(i))
+            maxelem = i;
 
-      // all ints between the smallest and largest known elements
-      // must also be in
-      for(int k = minelem + 1; k < maxelem; k++)
-        FailOnInvalid(*s += k);
+        // all ints between the smallest and largest known elements
+        // must also be in
+        for(int k = minelem + 1; k < maxelem; k++)
+          FailOnInvalid(*s += k);
 
-      // find a non-element below minelem: all ints below are out
-      for(i = minelem - 1; i >= 0; i--)
-        if (s->isNotIn(i)) {
-          while (i--)
-            FailOnInvalid(*s -= i);
-          break;
-        }
+        // find a non-element below minelem: all ints below are out
+        for(i = minelem - 1; i >= 0; i--)
+          if (s->isNotIn(i)) {
+            while (i--)
+              FailOnInvalid(*s -= i);
+            break;
+          }
 
-      // find a non-element above maxelem: all ints above are out
-      for(i = maxelem + 1; i < fsethigh32; i++)
-        if (s->isNotIn(i)) {
-          while (++i < fsethigh32)
-            FailOnInvalid(*s -= i);
-          break;
-        }
+        // find a non-element above maxelem: all ints above are out
+        for(i = maxelem + 1; i < fsethigh32; i++)
+          if (s->isNotIn(i)) {
+            while (++i < fsethigh32)
+              FailOnInvalid(*s -= i);
+            break;
+          }
 
-      break;
-    } // if
-  } // for
+        break;
+      } // if
+    } // for
 #else
-  // find minimal and maximal element in glb and fill it up
-  int min_in = s->getGlbMinElem();
-  int max_in = s->getGlbMaxElem();
-  OZ_FSetValue fillup(min_in, max_in);
-  FailOnInvalid(*s <<= *s | fillup);
+    OZ_DEBUGPRINT(("a"));
 
-  // find next smaller element to minimal element in glb not contained
-  // and remove all elements starting from this element to `inf'
-  {
-    int next_smaller = s->getNotInNextSmallerElem(min_in);
-    FailOnInvalid(*s >= next_smaller);
-  }
+    // find minimal and maximal element in glb and fill it up
+    int min_in = s->getGlbMinElem();
+    int max_in = s->getGlbMaxElem();
+    OZ_FSetValue fillup(min_in, max_in);
+    FailOnInvalid(*s <<= *s | fillup);
 
-  // find next larger element to maximal element in glb not contained
-  // and remove all elements starting from this element to `sup'
-  {
-    int next_larger = s->getNotInNextLargerElem(max_in);
-    FailOnInvalid(*s <= next_larger);
-  }
+    OZ_DEBUGPRINT(("b"));
+
+    // find next smaller element to minimal element in glb not contained
+    // and remove all elements starting from this element to `inf'
+    {
+      int next_smaller = s->getNotInNextSmallerElem(min_in);
+      FailOnInvalid(*s >= next_smaller);
+    }
+
+    OZ_DEBUGPRINT(("c"));
+
+    // find next larger element to maximal element in glb not contained
+    // and remove all elements starting from this element to `sup'
+    {
+      int next_larger = s->getNotInNextLargerElem(max_in);
+      FailOnInvalid(*s <= next_larger);
+    }
+
+    OZ_DEBUGPRINT(("d"));
+
 #endif
+  }
 
   OZ_DEBUGPRINTTHIS("out: ");
 
-  return s.leave() ? SLEEP : OZ_ENTAILED;
+  return s.leave() ? OZ_SLEEP : OZ_ENTAILED;
 
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");

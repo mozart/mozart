@@ -35,10 +35,8 @@
 
 //-----------------------------------------------------------------------------
 // debug macros
+
 //#define OZ_DEBUG
-#ifdef DEBUG_FSET
-#define OZ_DEBUG
-#endif
 
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
