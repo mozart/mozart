@@ -11,7 +11,7 @@ OZTOOL		= @VAR_OZTOOL@
 PLATFORM	= $(shell $(OZTOOL) platform)
 
 ifeq ($(PLATFORM),win32-i486)
-OZEMULATOR	= $(PREFIX)/bin/emulator.dll
+OZEMULATOR	= $(shell $(CYGPATH) $(PREFIX)/platform/win32-i486/emulator.dll)
 export OZEMULATOR
 endif
 
