@@ -1,4 +1,50 @@
 <CHAPTER ID="chapter.introduction">
   <TITLE>Introduction</TITLE>
-  <P>Bla bla
+
+<P>Distributed and fault-tolerant programming
+has become a popular subject, fueled by the
+development of the Internet, which provides
+a global infrastructure for distributed applications.
+Platforms such as Java and CORBA have become popular.
+On first glance, one might think that distributed
+programming has become a solved problem.
+But this is far from the case.
+Writing efficient, open, and robust distributed
+applications remains much harder than writing
+centralized applications.
+Making them secure increases the difficulty
+by another quantum leap.
+The abstractions offered by Java and CORBA,
+for example the notion of distributed object,
+provide only rudimentary help.
+The programmer must still
+keep distribution and fault-tolerance strongly in mind.
+
+<P>The Mozart platform is the result of three years
+of research into distributed programming and
+ten years of research into concurrent constraint programming.
+The driving goal is to separate the fundamental aspects
+of programming a distributed system:
+application functionality, distribution structure,
+fault-tolerance, security, and opennness.
+The current release completely separates
+application functionality and distribution structure,
+and provides primitives for fault-tolerance,
+openness, and partial support for security.
+Current research is focussed on completing
+the separation for fault-tolerance and openness
+and will be offered in future releases.
+
+<P>This tutorial presents many examples
+of practical programs and techniques of distributed
+programming and fault-tolerant programming.
+The tutorial also gives many examples of
+useful abstractions, such as cached objects,
+stationary objects,
+fault-tolerant stationary objects,
+mobile agents, and
+fault-tolerant mobile agents,
+and shows how easy it is to develop new abstractions
+in the Mozart platform.
+
 </CHAPTER>
