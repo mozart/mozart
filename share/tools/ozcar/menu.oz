@@ -25,7 +25,7 @@ in
    class Menu
       meth init
 	 self.menuBar =
-	 {MyMenuBar self.toplevel self.toplevel
+	 {TkTools.menubar self.toplevel self.toplevel
 	  [MB(text: IconName
 	      menu:
 		 [C(label:   'About...'
