@@ -18,8 +18,8 @@
 
 
 inline
-void GenCVariable::relinkSuspListTo(GenCVariable * lv) {
-  suspList = suspList->appendToAndUnlink(lv->suspList);
+void GenCVariable::relinkSuspListTo(GenCVariable * lv, Bool reset_local) {
+  suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
 }
 
 inline
@@ -31,6 +31,9 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
   switch (getType()){
   case FDVariable:
     {
+      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			       localPropStore.isInLocalPropagation()));
+
       if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, prop))
 	return FALSE;
       LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
