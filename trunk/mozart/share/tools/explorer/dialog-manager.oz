@@ -279,21 +279,12 @@ local
 in
 
    class DialogManager
-      feat fileSelector options
+      feat fileSelector
 
       meth init
 	 self.fileSelector =
 	 {New TkTools.file init(master: self.toplevel
 				title:  TitleName#': Select Postscript File')}
-	 self.options =
-	 {Record.map Options fun {$ O}
-				D = {Dictionary.new}
-			     in
-				{Record.forAllInd O proc {$ F V}
-						       {Dictionary.put D F V}
-						    end}
-				D
-			     end}
       end
 
       meth guiOptions(What)
