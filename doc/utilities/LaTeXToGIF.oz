@@ -24,17 +24,17 @@ import
    OS(tmpnam system unlink)
    Open(file)
 export
-   'class': MathToGIFClass
+   'class': LaTeXToGIFClass
 define
    LATEX2GIF = 'latex2gif'
 
-   class MathToGIFClass
+   class LaTeXToGIFClass
       attr DirName: unit N: unit
       meth init(Dir)
          DirName <- Dir
          N <- 0
       end
-      meth convertLaTeX(VS Display ?OutFileName) FileName File in
+      meth convertMath(VS Display ?OutFileName) FileName File in
          FileName = {OS.tmpnam}
          File = {New Open.file init(name: FileName
                                     flags: [write create truncate])}
@@ -54,7 +54,7 @@ define
                {OS.system LATEX2GIF#' '#FileName#' '#@DirName#'/'#OutFileName}
             of 0 then skip
             elseof I then
-               {Exception.raiseError ozDoc(mathToGif VS I)}
+               {Exception.raiseError ozDoc(latexToGif VS I)}
             end
          finally
             {OS.unlink FileName}
