@@ -32,10 +32,6 @@
 
 //-----------------------------------------------------------------------------
 
-#define INIT_FUNC(F_NAME) OZ_C_proc_interface * F_NAME(void)
-
-extern "C" INIT_FUNC(oz_init_module);
-
 OZ_BI_proto(ri_lpsolve);
 OZ_BI_proto(ri_lpsolve_conf);
 
