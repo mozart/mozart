@@ -121,14 +121,6 @@
           <Td/<<Int>>/
           <Td/Minimal size of a thread stack in number of tasks./
         </Tr>
-        <Tr>
-          <Td/<<max>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Maximal size of a thread stack in number of tasks. If
-          this limit is exceeded the user is prompted to increase the
-          limit./
-        </Tr>
       </Table>
     </P>
 
@@ -259,14 +251,6 @@
           <Td/Heap size in bytes after last garbage collection./
         </Tr>
         <Tr>
-          <Td/<<max>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Maximal allowed heap size in bytes. If the heap size exceeds this
-        limit by a percentage of <<tolerance>> before garbage collection
-        can take place, the user is prompted to increase the limit./
-        </Tr>
-        <Tr>
           <Td/<<min>>/
           <Td/yes/
           <Td/<<Int>>/
@@ -286,8 +270,7 @@
           <Td/yes/
           <Td/<<1>>&ellipsis;<<100>>/
           <Td/Gives the percentage by which the emulator is allowed for
-        purposes of better memory allocation to exceed
-        the maximal heap size <<max>> or to increase <<threshold>>./
+        purposes of better memory allocation to increase <<threshold>>./
         </Tr>
         <Tr>
           <Td/<<on>>/
