@@ -404,6 +404,8 @@ void proxyProbeFault(Tertiary *t, int pr) {
   case Co_Port:
     portProxyProbeFault(t,pr);
     return;   
+  case Co_Object:
+    return;
   default: Assert(0);
     return;}
 }
@@ -419,7 +421,10 @@ void managerProbeFault(Tertiary *t, DSite* s,int pr) {
     /* The portManager is not affected by 
        other sites. */
     return;
+  case Co_Object:
+    return;
   default:
+    printf("WARNING %d\n",t->getType());
     Assert(0);}
 }
 
@@ -444,7 +449,7 @@ void DSite::probeFault(ProbeReturn pr) {
     if(be==NULL) continue;
     if(be->isTertiary()){
       Tertiary *tr=be->getTertiary();
-      if(be->getSite()){
+      if(be->getSite()==this){
 	proxyProbeFault(tr,pr);}}}} // TO_BE_IMPLEMENTED vars
 
 /**********************************************************************/
@@ -1079,11 +1084,16 @@ void gcGlobalWatcher(){
 /**********************************************************************/
 /*   SeifHandler                                                      */
 /**********************************************************************/
-
+DSite* gBTI(int i){
+  return BT->getBorrow(i)->getNetAddress()->site;}
 
 OZ_BI_define(BIseifHandler,2,0){
   oz_declareIN(0,entity);
   oz_declareIN(1,what);
+  //  printf("Seif at:%s ent:%s\n",
+  //myDSite->stringrep(), toC(what));
+  //if(tagged2Const(what)->getType() == Co_Port)
+  //printf("from: %s\n", gBTI(((Tertiary*)tagged2Const(what))->getIndex())->stringrep());
   return oz_raise(E_ERROR,E_SYSTEM,"seifHandler",2,entity,what);
 }OZ_BI_end
 
