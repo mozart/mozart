@@ -80,6 +80,12 @@ class TaskStack: public Stack {
 public:
   USEFREELISTMEMORY;
 
+  void makeEmpty()
+  {
+    mkEmpty();
+    push(emptyTaskStackEntry,NO);
+  }
+
   TaskStack(int s): Stack(s,freeListMalloc) { makeEmpty(); }
   ~TaskStack()               { error("~TaskStack called"); }
 
@@ -93,12 +99,6 @@ public:
   
   Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
   Bool isEmpty()                 { return isEmpty(*(tos-1)); }
-
-  void makeEmpty()
-  {
-    mkEmpty();
-    push(emptyTaskStackEntry);
-  }
 
   void shift(int len)
   {
@@ -144,20 +144,19 @@ public:
     push(ToPointer(C_CFUNC_CONT), NO);
   }
   
-  void pushCont(ProgramCounter pc,
-		RefsArray y,RefsArray g,RefsArray x,int i, Bool copy)
+  void pushCont(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   {
     Assert(!isFreedRefsArray(y));
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
     /* cache top of stack in register since gcc does not do it */
-    TaskStackEntry *newTop = ensureFree(3);
+    TaskStackEntry *newTop = ensureFree(4);
 
     Assert(MemChunks::areRegsInHeap(x,i));
     Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
     Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
 	       
-    if (i > 0) { *newTop++ = copy ? copyRefsArray(x,i) : x; }
+    if (i > 0) { *newTop++ = x; }
     *newTop++   = g;
     *newTop++   = y; 
     *newTop++   = ToPointer(makeTaggedPC(i>0 ? C_XCONT : C_CONT, pc));
@@ -167,7 +166,7 @@ public:
 
   void pushCont(Continuation *cont) {
     pushCont(cont->getPC(),cont->getY(),cont->getG(),
-	     cont->getX(),cont->getXSize(),NO);
+	     cont->getX(),cont->getXSize());
   }
 
   void pushPair(void *p, ContFlag cf)
