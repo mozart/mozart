@@ -1,3 +1,5 @@
+<!-- -*-xml-*- -->
+
 <stylesheet xmlns="http://www.w3.org/XSL/Transform/1.0">
 
 <template match="/">
