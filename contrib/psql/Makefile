@@ -20,11 +20,7 @@
 # WARRANTIES.
 #
 #
-# oztool ld foo.o -o foo.so-`oztool platform`
-# oztool c++ -c foo.cc
-# oztool ld foo.o -o foo.so
-#
-#
+
 PSQLDIR = /usr/local/pgsql
 
 LDLIBPATH = -L/usr/lib -L$(PSQLDIR)/lib
