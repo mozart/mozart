@@ -73,8 +73,8 @@ proc {OzcarError M}
 end
 
 fun {V2VS X}
-   Width = {Cget printWidth}
    Depth = {Cget printDepth}
+   Width = {Cget printWidth}
 in
    {System.valueToVirtualString X Depth Width}
 end
