@@ -42,7 +42,7 @@ veryclean: clean
 	-rm -f $(OZWISH)
 
 distclean: veryclean
-	-rm -f config.* Makefile
+	-rm -f conf.h config.* Makefile
 	-rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
 install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
