@@ -17,6 +17,12 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_DIR	= @INSTALL_DIR@
 
+JAVA_BIN	= @JAVA_BIN@
+JAVA_THREADS	= @JAVA_THREADS@
+JAVA		= $(JAVA_BIN)java  $(JAVA_THREADS)
+JAVAC		= $(JAVA_BIN)javac $(JAVA_THREADS)
+JAR		= $(JAVA_BIN)jar   $(JAVA_THREADS)
+
 HTMLSUPPORTFILES0 = \
 	ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
 HTMLSUPPORTFILES = \
@@ -82,7 +88,7 @@ $(DOCDIR):
 	$(INSTALL_DIR) $@
 
 clean::
-	-rm -rf $(WHAT)-html $(WHAT)-tex *~
+	-rm -rf $(WHAT)-html $(WHAT)-tex *~ $(WHAT).{xml,tex,aux,dvi,ps,toc,log,idx}
 
 veryclean: clean
 	-rm -f latex.db
@@ -91,36 +97,76 @@ distclean: veryclean
 	-rm -f Makefile
 
 OZDOC2XML	= $(SRCTOP)/doc/xsl/ozdoc2xml
-CLASSPATH	= $(shell echo $$CLASSPATH)
-OZCLASSPATH	= $(SRCTOP)/doc/xsl/xt.jar:$(SRCTOP)/doc/xsl/xp.jar:$(SRCTOP)/doc/xsl/sax.jar:../xsl
+CLASSPATH	= $(SRCTOP)/doc/xsl/oz.jar
 
 $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 	nsgmls -c../catalog $< | $(OZDOC2XML) > $@
 $(WHAT).tex: $(WHAT).xml
-	java -oss10000000 -classpath $(CLASSPATH):$(OZCLASSPATH)  com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc.xml $@
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc.xsl $@
 
-TEXINPUTS	= $(shell echo $$TEXINPUTS)
-OZTEXINPUTS	= $(SRCDIR):$(TEXINPUTS)
-BSTINPUTS	= $(shell echo $$BSTINPUTS)
-OZBSTINPUTS	= .:$(SRCDIR):$(BSTINPUTS)
-BIBINPUTS	= $(shell echo $$BIBINPUTS)
-OZBIBINPUTS	= .:$(SRCDIR):$(BIBINPUTS)
+export TEXINPUTS = $(SRCDIR):$(SRCTOP)/doc/xsl:$(shell echo $$TEXINPUTS)
+export BSTINPUTS = .:$(SRCDIR):$(shell echo $$BSTINPUTS)
+export BIBINPUTS = .:$(SRCDIR):$(shell echo $$BIBINPUTS)
+
+WARN_REF= 'There were undefined references'
+WARN_LTX= 'Rerun to get cross-references right|There were undefined references'
 
 $(WHAT).dvi: $(WHAT).tex pspics
-	TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
-	TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
-	-TEXINPUTS=$(OZTEXINPUTS) BSTINPUTS=$(OZBSTINPUTS) BIBINPUTS=$(OZBIBINPUTS) bibtex $*
-	TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
-	-TEXINPUTS=$(OZTEXINPUTS) BSTINPUTS=$(OZBSTINPUTS) BIBINPUTS=$(OZBIBINPUTS) bibtex $*
-	TEXINPUTS=$(OZTEXINPUTS) latex $< || { rm $@; exit -1; }
+	latex $< || { rm $@; exit -1; }
+	if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
+	if egrep -s '\\bibdata{' $*.aux; then make $*.bbl; fi
+	if egrep -s $(WARN_LTX) $*.log; then latex $< || { rm $@; exit -1; } fi
+	if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
+	if egrep -s '\\bibdata{' $*.aux; then make $*.bbl; fi
+	if egrep -s $(WARN_LTX) $*.log; then latex $< || { rm $@; exit -1; } fi
+	if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
+	if egrep -s '\\bibdata{' $*.aux; then make $*.bbl; fi
+	if egrep -s $(WARN_LTX) $*.log; then latex $< || { rm $@; exit -1; } fi
 $(WHAT).ps: $(WHAT).dvi
-	TEXINPUTS=$(OZTEXINPUTS) dvips $< -o $@
+	dvips $< -o $@
 ps: $(WHAT).ps
 $(WHAT).pics: $(WHAT).xml
-	java -oss10000000 -classpath $(CLASSPATH):$(OZCLASSPATH)  com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozpic.xml $@
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-picture.xsl $@
 pspics: $(WHAT).pics
 	for f in `cat $(WHAT).pics`; do $(MAKE) $$f.ps; done
 %.gif.ps: %.gif
 	giftopnm $< | pnmtops -noturn > $@
 %.gif.ps: pictures/%.gif
 	giftopnm $< | pnmtops -noturn > $@
+
+$(WHAT).code: $(WHAT).xml
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/codereq.xsl $@
+
+# create an annotated version of the input
+
+$(WHAT)-annotated.xml: $(WHAT).xml
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-annotate.xsl $@ || { rm -f $@ }
+
+# extract file of elisp for performing hiliting
+
+$(WHAT)-hilite.el: $(WHAT)-annotated.xml
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-hilite.xsl $@ || { rm -f $@ }
+
+# generate hilited code
+
+$(WHAT)-hilite.xml: $(WHAT)-hilite.el
+	emacs --batch --load $(SRCDIR)/../xsl/ozdoc-fontify.el \
+		--load $(WHAT)-hilite.el > $@
+
+# create document with preface of hilited code
+
+$(WHAT)-prefaced.xml: $(WHAT)-hilite.xml $(WHAT)-annotated.xml
+	echo '<HILITE.BOOK><HILITE.PREFACE>'	> $@
+	cat $(WHAT)-hilite.xml			>> $@
+	echo '</HILITE.PREFACE>'		>> $@
+	cat $(WHAT)-annotated.xml		>> $@
+	echo '</HILITE.BOOK>'			>> $@
+
+# now replace code with hilited code
+
+$(WHAT)-defaced.xml: $(WHAT)-prefaced.xml
+	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-deface.xsl $@ || { rm -f $@ }
+
+clean::
+	-rm -f $(WHAT).xml $(WHAT)-annotated.xml $(WHAT)-hilite.el
+	-rm -f $(WHAT)-hilite.xml $(WHAT)-prefaced.xml $(WHAT)-defaced.xml
