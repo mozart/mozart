@@ -116,9 +116,7 @@ local
 			       showvalue: True)>>
 	 Saved <- S
 	 <<Tk.scale tk(set S)>>
-	 <<Tk.scale tkAction(proc {$ X}
-				{A {Tk.string.toInt X}}
-			     end)>>
+	 <<Tk.scale tkAction(action:A args:[int])>>
       end
       meth set(N)
 	 case N==@Saved then true else
