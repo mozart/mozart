@@ -104,3 +104,8 @@ boot-%:
         OZTOOL=$(BOOTOZTOOL) \
         OZTOOL_INCLUDES=$(BOOTOZTOOLINC) \
         OZFLEX=$(BOOTOZFLEX)
+
+cboot-%:
+        $(MAKE) $* \
+        OZTOOL=$(BOOTOZTOOL) \
+        OZTOOL_INCLUDES=$(BOOTOZTOOLINC)
