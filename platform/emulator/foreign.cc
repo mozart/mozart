@@ -1814,13 +1814,17 @@ OZ_Return OZ_raise(OZ_Term exc) {
 }
 
 // OZ_raiseDebug(E) raises exception E, but adds debuging information
-// if E is a record with feature `debug' and either (1) has label `error'
-// or (2) ozconf.errorDebug is true
+// if E is a record with feature `debug' and subtree `unit', and
+// E either (1) has label `error' or (2) ozconf.errorDebug is true
 
 OZ_Return OZ_raiseDebug(OZ_Term exc) {
-  int debug =
-    OZ_isRecord(exc) && OZ_subtree(exc,AtomDebug) &&
-    (oz_eq(OZ_label(exc),E_ERROR) || ozconf.errorDebug);
+  int debug = FALSE;
+  if (OZ_isRecord(exc)) {
+    OZ_Term x = OZ_subtree(exc,AtomDebug);
+    if (x && OZ_eq(x,oz_unit())) {
+      debug = oz_eq(OZ_label(exc),E_ERROR) || ozconf.errorDebug;
+    }
+  }
   am.setException(exc,debug);
   return RAISE;
 }
