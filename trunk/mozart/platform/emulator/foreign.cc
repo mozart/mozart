@@ -176,6 +176,12 @@ int OZ_isBitString(OZ_Term t)
   return oz_isBitString(t);
 }
 
+int OZ_isFSetValue(OZ_Term t)
+{
+  t = oz_deref(t);
+  return oz_isFSetValue(t);
+}
+
 
 OZ_Boolean OZ_BitStringGet(OZBitString bs,int index)
 {

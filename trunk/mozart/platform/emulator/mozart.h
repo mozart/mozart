@@ -152,6 +152,7 @@ _FUNDECL(int,OZ_isValue,(OZ_Term));
 _FUNDECL(int,OZ_isVariable,(OZ_Term));
 _FUNDECL(int,OZ_isBitString,(OZ_Term));
 _FUNDECL(int,OZ_isByteString,(OZ_Term));
+_FUNDECL(int,OZ_isFSetValue,(OZ_Term));
 
 _FUNDECL(int,OZ_isList,(OZ_Term, OZ_Term *));
 _FUNDECL(int,OZ_isString,(OZ_Term, OZ_Term *));
