@@ -210,8 +210,6 @@ Bool Board::isFailureInBody ()
 #define inline
 #endif
 
-#define GET_CURRENT_PRIORITY() e->currentThread->getPriority()
-
 /* the hook functions return:
      TRUE: must reschedule
      FALSE: can continue
@@ -449,6 +447,44 @@ Bool AM::hookCheckNeeded()
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
+#define CHECKSEQ							      \
+if (e->currentThread->compMode == ALLSEQMODE) {				      \
+  e->currentThread=0;							      \
+  goto LBLstart;							      \
+}									      \
+goto LBLcheckEntailment;
+
+inline
+void addSusp(TaggedRef var,Suspension *susp)
+{
+  DEREF(var,varPtr,_1);
+  taggedBecomesSuspVar(varPtr)->addSuspension(susp);
+}
+
+inline
+void addSusp(TaggedRef *varPtr,Suspension *susp)
+{
+  taggedBecomesSuspVar(varPtr)->addSuspension(susp);
+}
+
+/*
+ * create the suspension for builtins returning SUSPEND
+ *
+ * PRE: no reference chains !!
+ */
+void AM::suspendOnVarList(Suspension *susp)
+{
+  Assert(suspendVarList!=makeTaggedNULL());
+  TaggedRef varList=suspendVarList;
+  while (!isRef(varList)) {
+    Assert(isCons(varList));
+    addSusp(head(varList),susp);
+    varList=tail(varList);
+  }
+  addSusp(varList,susp);
+  suspendVarList=makeTaggedNULL();
+}
+
 inline
 Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
 			     RefsArray Y, RefsArray G,
@@ -502,143 +538,19 @@ Suspension *AM::mkSuspension(Board *b, int prio, OZ_CFun bi,
   }
 }
 
-/*
- * create the suspension for a builtin returning SUSPEND
- */
-void AM::suspendBI(Board *bb,int prio,OZ_CFun fun,RefsArray args,int nArgs)
-{
-  Suspension *susp = mkSuspension(bb,prio,fun,args,nArgs);
-  TaggedRef varList=suspendVarList;
-  while (!isRef(varList)) {
-    Assert(isCons(varList));
-    taggedBecomesSuspVar(tagged2Ref(head(varList)))->addSuspension(susp);
-    varList=tail(varList);
-  }
-  taggedBecomesSuspVar(tagged2Ref(varList))->addSuspension(susp);
-  suspendVarList=makeTaggedNULL();
-}
-
-
-void AM::suspendOnVar(TaggedRef A, int argsToSave, Board *b,
-		      ProgramCounter PC,
-		      RefsArray X, RefsArray Y, RefsArray G,
-		      int prio)
-{
-  DEREF(A,APtr,ATag);
-  Assert(isAnyVar(ATag));
-  Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
-  taggedBecomesSuspVar(APtr)->addSuspension(susp);
-
-  /* Bug fix:
-     declare Y Z
-     {RecLabel Y Z}
-     if Y=b then {Show yes36b} else {Show no36b} fi
-     Z=c
-     we must suspend on the label of OFS too!!
-     */
-
-  if (isCVar(A) && tagged2CVar(A)->getType() == OFSVariable) {
-    TaggedRef lab = ((GenOFSVariable*)tagged2CVar(A))->getLabel();
-    DEREF(lab,labPtr,labTag);
-    if (isAnyVar(labTag)) {
-      taggedBecomesSuspVar(labPtr)->addSuspension(susp);
-    }
-  }
-}
-
-void AM::suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
-		      OZ_CFun fun, ByteCode *shallowCP)
-{
-  Assert(noArgs==1 || noArgs==2);
-  
-  static RefsArray X = allocateStaticRefsArray(2);
-  
-  if (shallowCP) {
-    trail.pushIfVar(A);
-    if (noArgs>1) trail.pushIfVar(B);
-    return;
-  }
-
-  X[0] = A;
-  X[1] = B;
-
-  // mm2
-#ifndef NEWCOUNTER
-  currentBoard->incSuspCount();
-#endif
-  Suspension *susp=new Suspension(currentBoard,
-				  currentThread->getPriority(),
-				  fun,X,noArgs);
-
-  DEREF(A,APtr,ATag);
-  if (isAnyVar(ATag)) taggedBecomesSuspVar(APtr)->addSuspension(susp);
-  if (noArgs>1) {
-    DEREF(B,BPtr,BTag);
-    if (isAnyVar(BTag)) taggedBecomesSuspVar(BPtr)->addSuspension(susp);
-  }
-}
-
-
-void AM::suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C,
-			  TaggedRef &Out,
-			  int noArgs, OZ_CFun fun, InlineFun2 inFun,
-			  ByteCode *shallowCP)
+void AM::suspendInline(Board *bb,int prio,OZ_CFun fun,int n,
+		       OZ_Term A,OZ_Term B,OZ_Term C,OZ_Term D)
 {
   static RefsArray X = allocateStaticRefsArray(4);
+  X[0]=A;
+  X[1]=B;
+  X[2]=C;
+  X[3]=D;
 
-  TaggedRef newVar = makeTaggedRef(newTaggedUVar(currentBoard));
-  Out = newVar;
-  
-  if (shallowCP) {
-    trail.pushIfVar(A);
-    if (noArgs>=3) trail.pushIfVar(B);
-    if (noArgs>=4) trail.pushIfVar(C);
-    return;
-  }
-
-  int i=0;
-  X[i++] = A;
-  if (noArgs>=3) X[i++] = B;
-  if (noArgs>=4) X[i++] = C;
-  X[i] = newVar;
-
-  // mm2
-#ifndef NEWCOUNTER
-  currentBoard->incSuspCount();
-#endif
-  Suspension *susp=new Suspension(currentBoard,
-				  currentThread->getPriority(),
-				  fun,X,noArgs);
-
-  DEREF(A,APtr,ATag);
-  if (isAnyVar(ATag)) taggedBecomesSuspVar(APtr)->addSuspension(susp);
-  if (noArgs>=3) {
-    DEREF(B,BPtr,BTag);
-    if (isAnyVar(BTag)) taggedBecomesSuspVar(BPtr)->addSuspension(susp);
-    if (noArgs>=4) {
-      DEREF(C,CPtr,CTag);
-      if (isAnyVar(CTag)) taggedBecomesSuspVar(CPtr)->addSuspension(susp);
-    }
-  }
-}
-
-void AM::suspendShallowTest2(TaggedRef A, TaggedRef B,
-			     int argsToSave,
-			     Board *b,
-			     ProgramCounter PC, RefsArray X,
-			     RefsArray Y,
-			     RefsArray G, int prio)
-{
-  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-  Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
-
-  Assert(isAnyVar(ATag) || isAnyVar(BTag));
-  
-  if (isAnyVar(ATag)) {
-    taggedBecomesSuspVar(APtr)->addSuspension(susp);
-  }
-  if (isAnyVar(BTag)) {
-    taggedBecomesSuspVar(BPtr)->addSuspension(susp);
+  Suspension *susp=mkSuspension(bb,prio,fun,X,n);
+  while (--n>=0) {
+    DEREF(X[n],ptr,_1);
+    if (isAnyVar(X[n])) addSusp(ptr,susp);
   }
 }
 
@@ -721,6 +633,7 @@ void engine() {
   Board *tmpBB = NULL; NoReg(tmpBB);
 
 # define CBB (e->currentBoard)
+# define CPP (e->currentThread->getPriority())
 
   RefsArray HelpReg = NULL, HelpReg2 = NULL;
   OZ_CFun biFun = NULL;     NoReg(biFun);
@@ -987,14 +900,9 @@ void engine() {
 	    killPropagatedCurrentTaskSusp();
 	    LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 			      goto localhack0;);
-	    Assert(e->suspendVarList!=makeTaggedNULL());
-	    e->suspendBI(CBB,GET_CURRENT_PRIORITY(),
-			 biFun,X,XSize);
-	    if (e->currentThread->compMode == ALLSEQMODE) {
-	      e->currentThread=0;
-	      goto LBLstart;
-	    }
-	    goto LBLcheckEntailment;
+	    Suspension *susp = e->mkSuspension(CBB,CPP,biFun,X,XSize);
+	    e->suspendOnVarList(susp);
+	    CHECKSEQ;
 	  }
 	default:
 	  Assert(0);
@@ -1147,9 +1055,12 @@ void engine() {
 
       switch (fun(arity, X)){
       case SUSPEND:
-	e->pushTask(CBB,PC,Y,G,X,arity);
-	e->currentThread=0;
-	goto LBLstart;
+	{
+	  e->pushTask(CBB,PC+3,Y,G,0,0);
+	  Suspension *susp = e->mkSuspension(CBB,CPP,fun,X,arity);
+	  e->suspendOnVarList(susp);
+	  CHECKSEQ;
+	}
       case FAILED:
 	killPropagatedCurrentTaskSusp();
 	LOCAL_PROPAGATION(localPropStore.reset());
@@ -1176,13 +1087,17 @@ void engine() {
 	DISPATCH(3);
 
       case SUSPEND:
-	e->suspendInlineRel(XPC(2),makeTaggedNULL(),1,
-			    entry->getFun(),shallowCP);
-	DISPATCH(3);
-
+	if (shallowCP) {
+	  e->trail.pushIfVar(XPC(2));
+	  DISPATCH(3);
+	}
+	DebugCheckT(warning("big shit: saving 20 X registers"));
+	e->pushTask(CBB,PC+3,Y,G,X,20);
+	e->suspendInline(CBB,CPP,entry->getFun(),1,XPC(2));
+	CHECKSEQ;
       case FAILED:
-	  SHALLOWFAIL;
-	  HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
+	SHALLOWFAIL;
+	HF_FAIL(applFailure(entry), printArgs(1,XPC(2)));
       }
     }
 
@@ -1196,31 +1111,47 @@ void engine() {
 	DISPATCH(4);
 
       case SUSPEND:
-	e->suspendInlineRel(XPC(2),XPC(3),2,entry->getFun(),shallowCP);
-	DISPATCH(4);
+	{
+	  if (shallowCP) {
+	    e->trail.pushIfVar(XPC(2));
+	    e->trail.pushIfVar(XPC(3));
+	    DISPATCH(4);
+	  }
+
+	  DebugCheckT(warning("big shit: saving 20 X registers"));
+	  e->pushTask(CBB,PC+4,Y,G,X,20);
+	  e->suspendInline(CBB,CPP,entry->getFun(),2,XPC(2),XPC(3));
+	  CHECKSEQ;
+	}
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(applFailure(entry), printArgs(2,XPC(2),XPC(3)));
       }
     }
 
-  /* bug fixed 14.1.93:
-      if inline functions fail on toplevel a new variable has to be stored
-      into Out
-      */
   Case(INLINEFUN1):
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun1 fun         = (InlineFun1)entry->getInlineFun();
 
+      // XPC(3) maybe the same register as XPC(2)
       switch(fun(XPC(2),XPC(3))) {
       case PROCEED:
 	DISPATCH(4);
 
       case SUSPEND:
-	e->suspendInlineFun(XPC(2),makeTaggedNULL(),makeTaggedNULL(),XPC(3),2,
-			    entry->getFun(),(InlineFun2)fun,shallowCP);
-	DISPATCH(4);
+	{
+	  TaggedRef A=XPC(2);
+	  TaggedRef B=XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
+	  if (shallowCP) {
+	    e->trail.pushIfVar(A);
+	    DISPATCH(4);
+	  }
+	  DebugCheckT(warning("big shit: saving 20 X registers"));
+	  e->pushTask(CBB,PC+4,Y,G,X,20);
+	  e->suspendInline(CBB,CPP,entry->getFun(),2,A,B);
+	  CHECKSEQ;
+	}
 
       case FAILED:
 	SHALLOWFAIL;
@@ -1233,14 +1164,26 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
+      // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
       switch(fun(XPC(2),XPC(3),XPC(4))) {
       case PROCEED:
 	DISPATCH(5);
 
       case SUSPEND:
-	e->suspendInlineFun(XPC(2),XPC(3),makeTaggedNULL(),XPC(4),3,
-			    entry->getFun(),fun,shallowCP);
-	DISPATCH(5);
+	{
+	  TaggedRef A=XPC(2);
+	  TaggedRef B=XPC(3);
+	  TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
+	  if (shallowCP) {
+	    e->trail.pushIfVar(A);
+	    e->trail.pushIfVar(B);
+	    DISPATCH(5);
+	  }
+	  DebugCheckT(warning("big shit: saving 20 X registers"));
+	  e->pushTask(CBB,PC+5,Y,G,X,20);
+	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
+	  CHECKSEQ;
+	}
 
       case FAILED:
 	SHALLOWFAIL;
@@ -1254,14 +1197,28 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun3 fun = (InlineFun3)entry->getInlineFun();
 
+      // note XPC(5) is maybe the same as XPC(2) or XPC(3) or XPC(4) !!
       switch(fun(XPC(2),XPC(3),XPC(4),XPC(5))) {
       case PROCEED:
 	DISPATCH(6);
 
       case SUSPEND:
-	e->suspendInlineFun(XPC(2),XPC(3),XPC(4),XPC(5),4,
-			 entry->getFun(),(InlineFun2)fun,shallowCP);
-	DISPATCH(6);
+	{
+	  TaggedRef A=XPC(2);
+	  TaggedRef B=XPC(3);
+	  TaggedRef C=XPC(4);
+	  TaggedRef D=XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
+	  if (shallowCP) {
+	    e->trail.pushIfVar(A);
+	    e->trail.pushIfVar(B);
+	    e->trail.pushIfVar(C);
+	    DISPATCH(6);
+	  }
+	  DebugCheckT(warning("big shit: saving 20 X registers"));
+	  e->pushTask(CBB,PC+6,Y,G,X,20);
+	  e->suspendInline(CBB,CPP,entry->getFun(),4,A,B,C,D);
+	  CHECKSEQ;
+	}
 
       case FAILED:
 	SHALLOWFAIL;
@@ -1274,11 +1231,23 @@ void engine() {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       InlineFun2 fun = (InlineFun2)entry->getInlineFun();
 
-      OZ_Bool res = fun(XPC(2),XPC(3),XPC(4));
-      Assert(res == PROCEED);
-      DISPATCH(6);
+      // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
+      switch (fun(XPC(2),XPC(3),XPC(4))) {
+      case FAILED:  Assert(0);
+      case PROCEED:
+	DISPATCH(6);
+      case SUSPEND:
+	{
+	  TaggedRef A=XPC(2);
+	  TaggedRef B=XPC(3);
+	  TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
+	  DebugCheckT(warning("big shit: saving 20 X registers"));
+	  e->pushTask(CBB,PC+6,Y,G,X,20);
+	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
+	  CHECKSEQ;
+	}
+      }
     }
-
 
 #undef SHALLOWFAIL
 
@@ -1306,13 +1275,12 @@ void engine() {
       case FAILED:  JUMP( getLabelArg(PC+3) );
 
       case SUSPEND:
-	e->suspendOnVar(XPC(2),getPosIntArg(PC+4),
-			CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	if (e->currentThread->compMode == ALLSEQMODE) {
-	  e->currentThread=0;
-	  goto LBLstart;
+	{
+	  Suspension *susp = e->mkSuspension(CBB,CPP,
+					     PC,Y,G,X,getPosIntArg(PC+4));
+	  addSusp(XPC(2),susp);
 	}
-	goto LBLcheckEntailment;
+	CHECKSEQ;
       }
     }
 
@@ -1328,20 +1296,22 @@ void engine() {
       case FAILED:  JUMP( getLabelArg(PC+4) );
 
       case SUSPEND:
-      default:
-	e->suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),
-			       CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-	if (e->currentThread->compMode == ALLSEQMODE) {
-	  e->currentThread=0;
-	  goto LBLstart;
+	{
+	  Suspension *susp=e->mkSuspension(CBB,CPP,
+					   PC,Y,G,X,getPosIntArg(PC+5));
+	  OZ_Term A=XPC(2);
+	  OZ_Term B=XPC(3);
+	  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
+	  Assert(isAnyVar(ATag) || isAnyVar(BTag));
+	  if (isAnyVar(A)) addSusp(APtr,susp);
+	  if (isAnyVar(B)) addSusp(BPtr,susp);
+	  CHECKSEQ;
 	}
-	goto LBLcheckEntailment;
       }
     }
 
   Case(SHALLOWTHEN):
     {
-
       if (e->trail.isEmptyChunk()) {
 	inShallowGuard = NO;
 	shallowCP = NULL;
@@ -1358,16 +1328,13 @@ void engine() {
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      Suspension *susp=e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-				       shallowCP,Y,G,X,argsToSave);
+      Suspension *susp = e->mkSuspension(CBB,CPP,
+					 shallowCP,Y,G,X,argsToSave);
       inShallowGuard = NO;
       shallowCP = NULL;
-      e->reduceTrailOnShallow(susp,numbOfCons);
-      if (e->currentThread->compMode == ALLSEQMODE) {
-	e->currentThread=0;
-	goto LBLstart;
-      }
-      goto LBLcheckEntailment;
+      e->reduceTrailOnShallow(numbOfCons);
+      e->suspendOnVarList(susp);
+      CHECKSEQ;
     }
 
 
@@ -1443,7 +1410,7 @@ void engine() {
       int size = list.getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
-      Abstraction *p = new Abstraction (predd, gRegs, e->currentBoard);
+      Abstraction *p = new Abstraction (predd, gRegs, CBB);
 
       if (predEntry) {
 	predEntry->setPred(p);
@@ -1482,12 +1449,9 @@ void engine() {
                     now woken up always, even if variable is bound to another var */
 
       int argsToSave = getPosIntArg(PC+2);
-      e->suspendOnVar(origTerm,argsToSave,CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
-      if (e->currentThread->getCompMode() == ALLSEQMODE) {
-	e->currentThread=0;
-	goto LBLstart;
-      }
-      goto LBLcheckEntailment; // mm2 ???
+      Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
+      addSusp(makeTaggedRef(termPtr),susp);
+      CHECKSEQ;
     } else {
       DISPATCH(3);
     }
@@ -1686,7 +1650,7 @@ void engine() {
 	    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
 
 	    if (e->isSetSFlag(DebugMode)) {
-	      enterCall(e->currentBoard,bi,predArity,X);
+	      enterCall(CBB,bi,predArity,X);
 	    }
 
 	    OZ_Bool res = bi->getFun()(predArity, X);
@@ -1704,13 +1668,10 @@ void engine() {
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
 		if (!isTailCall) e->pushTask(CBB,PC,Y,G);
-		e->suspendBI(CBB,GET_CURRENT_PRIORITY(),
-			     bi->getFun(),X,predArity);
-		if (e->currentThread->getCompMode() == ALLSEQMODE) {
-		  e->currentThread=0;
-		  goto LBLstart;
-		}
-		goto LBLcheckEntailment;
+		Suspension *susp=e->mkSuspension(CBB,CPP,
+						 bi->getFun(),X,predArity);
+		e->suspendOnVarList(susp);
+		CHECKSEQ;
 	      }
 	      goto LBLcall;
 	    case FAILED:
@@ -1807,7 +1768,7 @@ void engine() {
 
        // create solve actor(x1);
        // Note: don't perform any derefencing on X[1];
-       SolveActor *sa = new SolveActor (CBB, GET_CURRENT_PRIORITY(),
+       SolveActor *sa = new SolveActor (CBB,CPP,
 					output, guidance);
 
        if (isSolveGuided)
@@ -2123,7 +2084,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB, GET_CURRENT_PRIORITY(),
+      CAA = new AskActor(CBB,CPP,
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
 
@@ -2135,7 +2096,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
+      CAA = new WaitActor(CBB,CPP,
 			  NOCODE, Y, G, X, argsToSave);
       DISPATCH(3);
     }
@@ -2145,7 +2106,7 @@ void engine() {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
+      CAA = new WaitActor(CBB,CPP,
 			  NOCODE, Y, G, X, argsToSave);
       if (e->currentSolveBoard != (Board *) NULL) {
 	SolveActor *sa= SolveActor::Cast (e->currentSolveBoard->getActor ());
@@ -2185,7 +2146,7 @@ void engine() {
       ProgramCounter newPC = PC+2;
       ProgramCounter contPC = getLabelArg(PC+1);
 
-      int prio = GET_CURRENT_PRIORITY();
+      int prio = CPP;
       int defPrio = ozconf.defaultPriority;
       if (prio > defPrio) {
 	prio = defPrio;

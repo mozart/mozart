@@ -118,9 +118,15 @@ public:
   // is used by consistency checking of a copy of a search tree; 
 #endif
 
-  TaggedRef suspCallHandler; 
+  TaggedRef suspCallHandler;
   TaggedRef suspendVarList;
+  void addSuspendVarList(TaggedRef t);
+  void suspendOnVarList(Suspension *susp);
 
+  void suspendInline(Board *bb,int prio,OZ_CFun fun,int n,
+		     OZ_Term A,OZ_Term B=makeTaggedNULL(),
+		     OZ_Term C=makeTaggedNULL(),OZ_Term D=makeTaggedNULL());
+       
   /* Threads */
   Thread *currentThread;
   Thread *threadsHead;
@@ -201,31 +207,18 @@ public:
   void reduceTrailOnUnitCommit();
   void reduceTrailOnSuspend();
   void reduceTrailOnFail();
-  void reduceTrailOnShallow(Suspension *susp,int numbOfCons);
+  void reduceTrailOnShallow(int numbOfCons);
 
   // in emulate.cc
   Bool emulateHookOutline(Abstraction *def=NULL,
 			  int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
-  void suspendBI(Board *bb,int prio,OZ_CFun fun,RefsArray args,int nArgs);
   Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
 			   RefsArray Y, RefsArray G,
 			   RefsArray X, int argsToSave);
   Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
 			   RefsArray X, int argsToSave);
-  void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
-		    RefsArray X, RefsArray Y, RefsArray G, int prio);
-  void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave,
-			   Board *b,
-			   ProgramCounter PC, RefsArray X, RefsArray Y,
-			   RefsArray G, int prio);
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
-  void suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
-			OZ_CFun fun, ByteCode *shallowCP);
-  void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C,
-			TaggedRef &Out,
-			int noArgs, OZ_CFun fun, InlineFun2 inFun,
-			ByteCode *shallowCP);
   
   Bool isToplevel();
 

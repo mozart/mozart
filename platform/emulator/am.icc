@@ -87,6 +87,14 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a, Bool prop)
 }
 
 inline
+void AM::deinstallCurrent()
+{
+  reduceTrailOnSuspend();
+  currentBoard->unsetInstalled();
+  setCurrent(currentBoard->getParentFast());
+}
+
+inline
 void AM::deinstallPath(Board *top)
 {
   Assert(!top->isCommitted() && !top->isFailed());
@@ -95,14 +103,6 @@ void AM::deinstallPath(Board *top)
     deinstallCurrent();
     Assert(currentBoard != rootBoard || top == rootBoard);
   }
-}
-
-inline
-void AM::deinstallCurrent()
-{
-  reduceTrailOnSuspend();
-  currentBoard->unsetInstalled();
-  setCurrent(currentBoard->getParentFast());
 }
 
 inline
@@ -288,28 +288,6 @@ Bool AM::isScheduled(Thread *th)
   return th->prev!=NULL || th->next!=NULL || threadsHead==th;
 }
 
-// add a thread to the thread queue
-inline
-void AM::scheduleThread(Thread *th)
-{
-  Assert(!isScheduled(th));
-
-  if (th != currentThread
-      && currentThread
-      && th->getPriority() > currentThread->getPriority()) {
-    insertFromHead(th);
-    setSFlag(ThreadSwitch);
-  } else {
-    insertFromTail(th); // or insertFromHead();
-  }
-}
-
-inline
-Bool AM::threadQueueIsEmpty()
-{
-  return threadsHead ? NO : OK;
-}
-
 inline
 void AM::checkThreadsAssertion()
 {
@@ -328,68 +306,6 @@ void AM::checkThreadsAssertion()
   }
   Assert(th==threadsTail);
 #endif
-}
-
-/* only usage in emulate */
-inline
-Thread *AM::getFirstThread()
-{
-  checkThreadsAssertion();
-  Assert(threadsHead!=0);
-  Thread *tt = threadsHead;
-  Verbose((VERB_THREAD,"Thread::GetFirst = 0x%x\n",tt));
-  threadsHead=tt->next;
-  if (threadsHead) {
-    Assert(threadsHead->prev == tt);
-    threadsHead->prev = 0;
-  } else {
-    Assert(threadsTail == tt);
-    threadsTail = 0;
-  }
-  tt->prev=tt->next=(Thread *) NULL;
-
-  checkThreadsAssertion();
-  return tt;
-}
-
-// unlink the thread from the thread queue
-inline
-Thread *AM::unlinkThread(Thread *th)
-{
-  checkThreadsAssertion();
-  if (th->prev) {
-    Assert(th->prev->next == th);
-    th->prev->next=th->next;
-  } else {
-    Assert(threadsHead==th);
-    threadsHead=th->next;
-  }
-  if (th->next) {
-    Assert(th->next->prev == th);
-    th->next->prev=th->prev;
-  } else {
-    Assert(threadsTail == th);
-    threadsTail=th->prev;
-  }
-  th->prev=th->next=0;
-  checkThreadsAssertion();
-  return th;
-}
-
-// insert into priority queue searching from head
-//  before the first one with a lower priority
-inline
-void AM::insertFromHead(Thread *th)
-{
-  checkThreadsAssertion();
-  Thread *here;
-  for (here = threadsHead; here; here=here->prev) {
-    if (here->getPriority() < th->getPriority()) {
-      break;
-    }
-  }
-  insertBefore(th,here);
-  checkThreadsAssertion();
 }
 
 // insert 'this' after 'here', if here = 0 then at head
@@ -461,6 +377,100 @@ void AM::insertBefore(Thread *th, Thread *here)
       Assert(threadsHead==0);
       threadsHead=th;
     }
+  }
+}
+
+// insert into priority queue searching from head
+//  before the first one with a lower priority
+inline
+void AM::insertFromHead(Thread *th)
+{
+  checkThreadsAssertion();
+  Thread *here;
+  for (here = threadsHead; here; here=here->prev) {
+    if (here->getPriority() < th->getPriority()) {
+      break;
+    }
+  }
+  insertBefore(th,here);
+  checkThreadsAssertion();
+}
+
+// add a thread to the thread queue
+inline
+void AM::scheduleThread(Thread *th)
+{
+  Assert(!isScheduled(th));
+
+  if (th != currentThread
+      && currentThread
+      && th->getPriority() > currentThread->getPriority()) {
+    insertFromHead(th);
+    setSFlag(ThreadSwitch);
+  } else {
+    insertFromTail(th); // or insertFromHead();
+  }
+}
+
+inline
+Bool AM::threadQueueIsEmpty()
+{
+  return threadsHead ? NO : OK;
+}
+
+/* only usage in emulate */
+inline
+Thread *AM::getFirstThread()
+{
+  checkThreadsAssertion();
+  Assert(threadsHead!=0);
+  Thread *tt = threadsHead;
+  Verbose((VERB_THREAD,"Thread::GetFirst = 0x%x\n",tt));
+  threadsHead=tt->next;
+  if (threadsHead) {
+    Assert(threadsHead->prev == tt);
+    threadsHead->prev = 0;
+  } else {
+    Assert(threadsTail == tt);
+    threadsTail = 0;
+  }
+  tt->prev=tt->next=(Thread *) NULL;
+
+  checkThreadsAssertion();
+  return tt;
+}
+
+// unlink the thread from the thread queue
+inline
+Thread *AM::unlinkThread(Thread *th)
+{
+  checkThreadsAssertion();
+  if (th->prev) {
+    Assert(th->prev->next == th);
+    th->prev->next=th->next;
+  } else {
+    Assert(threadsHead==th);
+    threadsHead=th->next;
+  }
+  if (th->next) {
+    Assert(th->next->prev == th);
+    th->next->prev=th->prev;
+  } else {
+    Assert(threadsTail == th);
+    threadsTail=th->prev;
+  }
+  th->prev=th->next=0;
+  checkThreadsAssertion();
+  return th;
+}
+
+inline
+void AM::addSuspendVarList(TaggedRef t)
+{
+  if (suspendVarList==makeTaggedNULL()) {
+    suspendVarList=t;
+  } else {
+    suspendVarList=cons(t,suspendVarList);
   }
 }
 
