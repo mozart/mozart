@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.failure">
-  <TITLE>Handling failure</TITLE>
+  <TITLE>Handling Failure</TITLE>
 
 <P>This chapter first introduces the Mozart failure model:
 what we assume can go wrong with the system
