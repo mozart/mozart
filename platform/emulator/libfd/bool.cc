@@ -40,18 +40,20 @@
 
 OZ_C_proc_begin(fdp_conj, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.impose(new ConjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ConjunctionPropagator(OZ_args[0], 
+					     OZ_args[1], 
+					     OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -62,10 +64,6 @@ OZ_Return ConjunctionPropagator::propagate(void)
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
 
-  FailOnEmpty(x->constrainBool());
-  FailOnEmpty(y->constrainBool());
-  FailOnEmpty(z->constrainBool());
-  
   if (*x == fd_singl) 
     if (x->getSingleElem() == 0) {
       FailOnEmpty(*z &= 0);
@@ -113,18 +111,20 @@ failure:
 
 OZ_C_proc_begin(fdp_disj, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.impose(new DisjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DisjunctionPropagator(OZ_args[0], 
+					     OZ_args[1], 
+					     OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -132,10 +132,6 @@ OZ_Return DisjunctionPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
-
-  FailOnEmpty(x->constrainBool());
-  FailOnEmpty(y->constrainBool());
-  FailOnEmpty(z->constrainBool());
 
   if (*x == fd_singl) 
     if (x->getSingleElem() == 1) {
@@ -176,18 +172,20 @@ failure:
 
 OZ_C_proc_begin(fdp_exor, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.impose(new XDisjunctionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new XDisjunctionPropagator(OZ_args[0], 
+					      OZ_args[1], 
+					      OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -195,10 +193,6 @@ OZ_Return XDisjunctionPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
-
-  FailOnEmpty(x->constrainBool());
-  FailOnEmpty(y->constrainBool());
-  FailOnEmpty(z->constrainBool());
 
   if (*x == fd_singl && *y == fd_singl) {
     FailOnEmpty(*z &= ((x->getSingleElem() == y->getSingleElem()) ? 0 : 1));
@@ -239,18 +233,20 @@ failure:
 
 OZ_C_proc_begin(fdp_impl, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.impose(new ImplicationPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new ImplicationPropagator(OZ_args[0], 
+					     OZ_args[1], 
+					     OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -258,10 +254,6 @@ OZ_Return ImplicationPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
-
-  FailOnEmpty(x->constrainBool());
-  FailOnEmpty(y->constrainBool());
-  FailOnEmpty(z->constrainBool());
 
   if (*x == fd_singl) 
     if (x->getSingleElem() == 0) {
@@ -302,18 +294,20 @@ failure:
 
 OZ_C_proc_begin(fdp_equi, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 2, expectBoolVar, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
-  return pe.impose(new EquivalencePropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new EquivalencePropagator(OZ_args[0], 
+					     OZ_args[1], 
+					     OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -322,10 +316,6 @@ OZ_Return EquivalencePropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y), z(reg_z);
   PropagatorController_V_V_V P(x, y, z);
-
-  FailOnEmpty(x->constrainBool());
-  FailOnEmpty(y->constrainBool());
-  FailOnEmpty(z->constrainBool());
 
   if (*x == fd_singl && *y == fd_singl) {
     FailOnEmpty(*z &= ((x->getSingleElem() == y->getSingleElem()) ? 1 : 0));
@@ -365,13 +355,13 @@ failure:
 
 OZ_C_proc_begin(fdp_nega, 2)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_FDBOOL "," OZ_EM_FDBOOL);
 
   PropagatorExpect pe;
   int susp_count = 0;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectBoolVar, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectBoolVar, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
 
@@ -383,9 +373,6 @@ OZ_Return NegationPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
   PropagatorController_V_V P(x, y);
-
-  FailOnEmpty(x->constrainBool());
-  FailOnEmpty(y->constrainBool());
 
   if (*x == fd_singl) {
     FailOnEmpty(*y &= (1 - x->getSingleElem()));

@@ -62,13 +62,11 @@ OZ_C_proc_begin(fsp_card, 2)
 
   PropagatorExpect pe;
 
-  int susp_count = 0;
+  int dummy;
 
-  OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarAny, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarAny, dummy);
+  OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, dummy);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
-
   return pe.impose(new FSetCardPropagator(OZ_args[0],
 					  OZ_args[1]));
 } 

@@ -1,10 +1,12 @@
 ###
 ### Authors:
 ###   Denys Duchier <duchier@ps.uni-sb.de>
+###   Tobias Mueller <tmueller@ps.uni-sb.de>
 ###   Christian Schulte <schulte@dfki.de>
 ###
 ### Copyright:
 ###   Denys Duchier, 1998
+###   Tobias Mueller, 1998
 ###   Christian Schulte, 1998
 ###
 ### Last change:
