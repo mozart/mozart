@@ -248,6 +248,11 @@ case $platform in
         then LD=gcc # otherwise it allways uses -lm which has reference to _errno
         fi
     ;;
+    *rhapsody)
+        AC_DEFINE(RHAPSODY)
+        TOOLLDCMD="ld"
+        oz_enable_modules_static=yes
+    ;;
     *)
         AC_MSG_WARN(Unknown platform "$platform")
         sleep 3
@@ -344,6 +349,8 @@ dnl *****************************************************************
 
 
 case "$platform" in
+*rhapsody)
+;;
 win32-i486)
     AC_CHECK_LIB(kernel32,main)
     AC_CHECK_LIB(wsock32,main)
