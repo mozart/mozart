@@ -60,19 +60,8 @@ void Thread::setExtThreadOutlined (Board *varHome)
     bb = bb->getParent();
   }
 
-  if (wasFound) {
+  if (wasFound)
     setExtThread ();
-
-    //  ... and again to the 'SolveActor::checkExtSuspList':
-    // we should not produce 'external' threads for propagators,
-    // because stability can be achieved only when the last such
-    // a propagator dissapears;
-    if (isPropagator()) {
-      warning ("'External' propagator thread: "
-               "stability check is implemented *partially*!");
-      warning ("(Explanation: no global variables may occur in propagators within a search problem)");
-    }
-  }
 }
 
 //
