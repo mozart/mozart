@@ -57,6 +57,25 @@ key="section.chunks.weakdictionaries">): each weak dictionary is
 associated with a <em/finalization stream/ on which pairs
 <code/Key#Value/ appear when <code/Value/ becomes unreachable except
 through one or more weak dictionaries.
+  <p>Note that since instances of the same stateless value are
+indistinguishable, we cannot
+tell the difference between one instance of the integer 7 and another one.
+Thus, the question of whether such an instance is unreachable or whether
+it is an identical copy of it which is unreachable can usually not be
+answered.  Also, since these values are indistinguishable, the engine
+is in principle licensed to either duplicate or merge them at its discretion
+(duplication
+actually occurs when such values are distributed to other sites).  For this
+reason,
+finalization only makes sense for datatypes with token equality, &ie; where
+the identity of an instance is unique.  Stateless values with structural
+equality are treated by the finalization mechanism as if they were
+unreachable (&ie; as if the weak dictionary contained a copy) and will be
+subjected to finalization at the very next garbage collection.  One exception
+are atoms: since they remain in the global atom table, they are currently
+considered to
+always be reachable.  This might change if we implement garbage collection
+of the atom table.
 <list>
       <entry/<code/Finalize.guardian/
       <index/<code/Finalize/<and><code/guardian///
