@@ -44,7 +44,9 @@ char *debugTypeStr[LAST] = {
   "SPECIAL",
   "PD_VAR",
   "CELL",
-  "SITE_OP"
+  "SITE_OP",      // 40
+  "MSG_QUEUED",
+  "REF_COUNTER",
 };
 
 void dvset(int i){

@@ -6527,8 +6527,8 @@ OZ_C_proc_begin(BImakeClass,6)
                            cl,
                            OK,
                            am.currentBoard);
-  cl->setOzClass(reto);
-  reto->setClass();
+  cl->setOzClass(reto); // mm2: should be done in newObject?
+  reto->setClass();     // mm2 obsolete?
   return oz_unify(out,makeTaggedConst(reto));
 }
 OZ_C_proc_end

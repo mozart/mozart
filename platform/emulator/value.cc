@@ -257,17 +257,18 @@ void Name::import(GName *name)
 }
 
 
-void Abstraction::globalize()
+GName *Abstraction::globalize()
 {
-  if (getGName()==NULL) {
+  if (!getPtr()) {
     setGName(newGName(makeTaggedConst(this),GNT_PROC));
   }
   getPred()->globalize();
+  return getGName();
 }
 
 void PrTabEntry::globalize()
 {
-  if (getGName()==NULL) {
+  if (gname==NULL) {
     setGName(newGName(this));
   }
 }
@@ -377,6 +378,31 @@ TaggedRef reverseC(TaggedRef l)
   }
   Assert(isNil(l));
   return out;
+}
+
+GName *SChunk::globalize() {
+  if (!getPtr()) {
+    setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
+  }
+  return getGName();
+}
+
+GName *Object::globalize() {
+  if (!getPtr()) {
+    setGName(newGName(makeTaggedConst(this),GNT_OBJECT));
+    if (!isClass()) {
+      RecOrCell state = getState();
+      Assert(!stateIsCell(state));
+      SRecord *r = getRecord(state);
+      Assert(r!=NULL);
+      Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+      cell->globalizeTert(); // mm2: ask ralf
+      setState(cell);
+      Object *cl = getOzClass();
+      cl->globalizeTert();   // mm2: ask ralf
+    }
+  }
+  return getGName();
 }
 
 TaggedRef Object::getArityList()
