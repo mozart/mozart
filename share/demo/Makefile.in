@@ -71,9 +71,9 @@ JobShop/%.ozf: JobShop/%.oz
 	$(COMPILE) -b $(BUILDDIR)/JobShop/ $< -o $@
 
 JOBSHOP1 = \
-	Configure Examples
+	Examples
 JOBSHOP2 = \
-	Main Scheduler Compiler TaskBoard Tools
+	Main Scheduler Compiler TaskBoard Tools Configure
 
 JOBSHOPFUN1 = $(JOBSHOP1:%=JobShop/%.ozf)
 JOBSHOPFUN2 = $(JOBSHOP2:%=JobShop/%.ozf)

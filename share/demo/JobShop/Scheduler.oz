@@ -22,10 +22,6 @@
 
 functor
 
-require
-   Configure(helv:     Helv
-	     helvBold: HelvBold)
-   
 import
    Search
    FD
@@ -33,6 +29,8 @@ import
    TkTools
    Explorer
    Compiler(smart: Compile) at 'Compiler.ozf'
+   Configure(text:Helv textBold:HelvBold)
+   
 
 export
    'class': Scheduler
