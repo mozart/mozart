@@ -45,32 +45,33 @@
 
 #define DEFAULT_PRIORITY        MID_PRIORITY
 
-#define PRIORITY_SHIFT 16
+#define PRIORITY_SHIFT 17
 
 enum SuspendableFlags {
   // THIS MUST BE IN THE LOWEST TWO BITS!
   SF_GcMark   = 1 << 0,
+  SF_MultiMark= 1 << 1,
 
   // Flags common to both threads and propagators
-  SF_Dead     = 1 << 1,
-  SF_Tagged   = 1 << 2,
-  SF_Runnable = 1 << 3,
-  SF_External = 1 << 4,
+  SF_Dead     = 1 << 2,
+  SF_Tagged   = 1 << 3,
+  SF_Runnable = 1 << 4,
+  SF_External = 1 << 5,
 
   // Flags for propagators
-  SF_NMO      = 1 << 5,
-  SF_Local    = 1 << 6,
-  SF_OFS      = 1 << 7,
-  SF_Unify    = 1 << 8,
-  SF_Failed   = 1 << 9,
-  SF_Active   = 1 << 10,
+  SF_NMO      = 1 << 6,
+  SF_Local    = 1 << 7,
+  SF_OFS      = 1 << 8,
+  SF_Unify    = 1 << 9,
+  SF_Failed   = 1 << 10,
+  SF_Active   = 1 << 11,
 
   // Flags for threads
-  SF_Catch    = 1 << 11,
-  SF_Trace    = 1 << 12,
-  SF_Step     = 1 << 13,
-  SF_Stop     = 1 << 14,
-  SF_NoBlock  = 1 << 15,
+  SF_Catch    = 1 << 12,
+  SF_Trace    = 1 << 13,
+  SF_Step     = 1 << 14,
+  SF_Stop     = 1 << 15,
+  SF_NoBlock  = 1 << 16,
 
   // Thread priorities reserve two bits
   SF_PriMask  = 3 << PRIORITY_SHIFT,
@@ -121,9 +122,9 @@ public:
     return (void **) (void *) &flags;
   };
 
-  Suspendable * gCollectSuspendableInline(void);
+  Suspendable * gCollectSuspendableInline(Bool);
   Suspendable * gCollectSuspendable(void);
-  Suspendable * sCloneSuspendableInline(void);
+  Suspendable * sCloneSuspendableInline(Bool);
   Suspendable * sCloneSuspendable(void);
 
   /*
@@ -158,6 +159,7 @@ public:
   /*
    * Common to threads and propagators
    */
+  FLAGTESTS(MultiMark)
   FLAGTESTS(Dead)
   FLAGTESTS(Tagged)
   FLAGTESTS(Runnable)

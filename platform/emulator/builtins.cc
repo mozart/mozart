@@ -71,19 +71,14 @@ OZ_BI_define(BIwait,1,0)
 OZ_BI_define(BIwaitOr,2,0)
 {
   oz_declareDerefIN(0,a);
+
+  if (!oz_isVar(a))
+    return PROCEED;
+
   oz_declareDerefIN(1,b);
 
-  if (!oz_isVar(a)) {
-    if (oz_isVar(b))
-      tagged2Var(b)->removeFromSuspList(oz_currentThread());
+  if (!oz_isVar(b))
     return PROCEED;
-  }
-
-  if (!oz_isVar(b)) {
-    if (oz_isVar(a))
-      tagged2Var(a)->removeFromSuspList(oz_currentThread());
-    return PROCEED;
-  }
 
   Assert(oz_isVar(a) && oz_isVar(b));
 
