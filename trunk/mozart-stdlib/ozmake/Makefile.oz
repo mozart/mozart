@@ -13,7 +13,7 @@ prepare
    RULE_EXISTS = rule(tool:unit file:unit options:nil)
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
-			      blurb info_text info_html subdirs submakefiles requires topics]
+			      blurb info_text info_html subdirs submakefiles requires topics version]
 
 define
 
@@ -114,6 +114,16 @@ define
 	       raise ozmake(makefile:badveryclean(R.veryclean)) end
 	    else
 	       {self set_veryclean(R.veryclean)}
+	    end
+	 end
+
+	 %% process version feature
+
+	 if {HasFeature R version} then
+	    if {Utils.isVersion R.version} then
+	       {self set_version(R.version)}
+	    else
+	       raise ozmake(makefile:badversion(R.version)) end
 	    end
 	 end
 
@@ -494,6 +504,7 @@ define
 	 InfoHtml  = {self get_info_html($)}
 	 Requires  = {self get_requires($)}
 	 Topics    = {self get_topics($)}
+	 Version   = {self get_version($)}
       in
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
@@ -514,6 +525,7 @@ define
 	 if InfoHtml \=unit then MAK.info_html := InfoHtml  end
 	 if Requires \=unit then MAK.requires  := Requires  end
 	 if Topics   \=nil  then MAK.topics    := Topics    end
+	 if Version  \=unit then MAK.version   := Version   end
 	 MAK.released:= {Utils.dateCurrentToAtom}
 	 %% grab also all the recursive makefiles
 	 MAK.subdirs := {self get_subdirs($)}

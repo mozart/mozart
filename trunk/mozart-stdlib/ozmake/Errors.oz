@@ -309,7 +309,11 @@ prepare
       [] ozmake(makefile:badtopics(V)) then
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'expected a virtual string or a list of virtual string on feature \'topics\''
-	       items: [hint('Value' m:oz(V))])
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:badversion(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'value of feature \'version\' must be a virtual string of ints separated by single dots'
+	       items: [hint(l:'Value' m:oz(V))])
       [] ozmake(uninstall:missingpackageormogul) then
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'no package or makefile'

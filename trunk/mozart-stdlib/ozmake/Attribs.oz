@@ -42,6 +42,7 @@ define
 	 InfoText   : unit
 	 InfoHtml   : unit
 	 Requires   : unit
+	 Version    : unit
 	 Verbose    : false
 	 VeryVerbose: false
 	 Quiet      : false
@@ -94,6 +95,7 @@ define
 	 MogulDocDir : unit
 	 MogulDBDir  : unit
 	 Topics      : nil
+	 Exe         : default
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -803,5 +805,11 @@ define
 
       meth set_topics(L) Topics<-L end
       meth get_topics($) @Topics end
+
+      meth set_version(V) Version<-V end
+      meth get_version($) @Version end
+
+      meth set_exe(A) Exe<-A end
+      meth get_exe($) @Exe end
    end
 end

@@ -2,7 +2,7 @@ functor
 export
    'class' : Executor
 import
-   OS Property System(showError:Print) Open(file:OpenFile) URL
+   OS Property System(showError:Print) Open(file:OpenFile) URL Pickle
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
    Shell at 'Shell.ozf'
@@ -44,6 +44,11 @@ define
       meth trace(Msg)
 	 if {self get_quiet($)} then skip
 	 elseif {self get_verbose($)} then {Print Executor,GetIndent($)#Msg} end
+      end
+      meth vtrace(Msg)
+	 if {self get_quiet($)} then skip
+	 elseif {self get_veryVerbose($)} then {Print Executor,GetIndent($)#Msg}
+	 else skip end
       end
       %% xtrace gives feedback even in non verbose mode
       %% but it can be shut up with --quiet
@@ -174,7 +179,9 @@ define
 	 Executor,exec_mkdir(DIR)
 	 L0 = [SRC '-o' DST]
 	 L1 = if {Member executable Options} then '-x'|L0 else L0 end
-	 L2 = L1%if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
+	 L2 = if {Member target(unix) Options} then '--target=unix'|L1
+	      elseif {Member target(windows) Options} then '--target=windows'|L1
+	      else L1 end %if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	 %% here is a temporary fix. The right thing to do is
 	 %% to extend ozl with --rooturl=URL to let it know
 	 %% from where to resolve the imports
@@ -409,6 +416,18 @@ define
 	 end
       end
 
+      meth exec_install_execUnix(From To)
+	 Executor,exec_mkdir({Path.dirname To})
+	 Executor,OZL(From To [executable target(unix)])
+	 Executor,exec_mkexec(To)
+      end
+
+      meth exec_install_execWindows(From To)
+	 Executor,exec_mkdir({Path.dirname To})
+	 Executor,OZL(From To [executable target(windows)])
+	 Executor,exec_mkexec(To)
+      end
+
       meth exec_check_for_gnu($)
 	 {self trace('checking for GNU compiler')}
 	 {Utils.haveGNUC
@@ -418,7 +437,7 @@ define
 
       meth exec_write_to_file(Data File)
 	 Executor,exec_mkdir({Path.dirname File})
-	 {self xtrace('writing '#File)}
+	 {self trace('writing '#File)}
 	 if {self get_justprint($)} then
 	    Executor,SimulatedTouch(File)
 	 else
@@ -427,6 +446,27 @@ define
 	 in
 	    {Out write(vs:Data)}
 	    {Out close}
+	 end 
+      end
+
+      meth exec_save_to_file(Data File)
+	 Executor,exec_mkdir({Path.dirname File})
+	 {self trace('saving '#File)}
+	 if {self get_justprint($)} then
+	    Executor,SimulatedTouch(File)
+	 else
+	    if {Path.exists File} then {Path.remove File} end
+	    {Pickle.save Data File}
+	 end 
+      end
+
+      meth exec_writeTextDB(DB File)
+	 Executor,exec_mkdir({Path.dirname File})
+	 {self trace('writing '#File)}
+	 if {self get_justprint($)} then
+	    Executor,SimulatedTouch(File)
+	 else
+	    {Utils.writeTextDB DB File}
 	 end 
       end
 
