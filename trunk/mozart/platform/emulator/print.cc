@@ -389,10 +389,22 @@ PRINT(Cell)
   stream << "C@" << this;
 }
 
-PRINT(Port)
+PRINT(PortLocal)
 {
   CHECKDEPTH;
-  stream << "Port@" << this;
+  stream << "PortLocal@" << this;
+}
+
+PRINT(PortProxy)
+{
+  CHECKDEPTH;
+  stream << "PortProxy@" << this;
+}
+
+PRINT(PortManager)
+{
+  CHECKDEPTH;
+  stream << "PortManager@" << this;
 }
 
 PRINT(Space)
@@ -638,7 +650,14 @@ PRINTLONG(ConstTerm)
   case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
   case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
   case Co_Cell:	      ((Cell *) this)->printLong(stream,depth,offset);        break;
-  case Co_Port:	      ((Port *) this)->printLong(stream,depth,offset);        break;
+  case Co_Port:	      
+    switch(((Tertiary *)this)->getTertType()){
+    case Te_Local:   ((PortLocal *)   this)->printLong(stream,depth,offset); break;
+    case Te_Manager: ((PortManager *) this)->printLong(stream,depth,offset); break;
+    case Te_Proxy:   ((PortProxy *)   this)->printLong(stream,depth,offset); break;
+    default:         Assert(NO);
+    }
+    break;
   case Co_Space:      ((Space *) this)->printLong(stream,depth,offset);       break;
   case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
   case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
@@ -1192,8 +1211,6 @@ PRINTLONG(Builtin)
   stream << indent(offset) << "gRegs: -" << endl;
 }
 
-
-
 PRINTLONG(Cell)
 {
   CHECKDEPTHLONG;
@@ -1204,14 +1221,34 @@ PRINTLONG(Cell)
   tagged2StreamLong(val,stream,depth,offset+2);
 }
 
-PRINTLONG(Port)
+/* TODO: ?? */
+PRINTLONG(PortLocal)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-	 << "Port@id" << this << endl
+	 << "PortLocal@id" << this << endl
 	 << indent(offset)
 	 << " stream:"<<endl;
-  tagged2StreamLong(strm,stream,depth,offset+2);
+  tagged2StreamLong(NULL,stream,depth,offset+2);  
+}
+
+/* TODO: FIX NULL*/
+
+PRINTLONG(PortManager)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+	 << "PortManager@id" << this << endl
+	 << indent(offset)
+	 << " stream:"<<endl;
+  tagged2StreamLong(NULL,stream,depth,offset+2);  
+}
+
+PRINTLONG(PortProxy)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+	 << "PortProxy@id" << this << endl;  
 }
 
 PRINTLONG(Space)

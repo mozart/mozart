@@ -128,12 +128,12 @@ TaggedRef makeTaggedRef(TypeOfTerm tag, int32 i)
 #endif
 }
 
-  
 inline
 TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
 {
   return makeTaggedRef(tag,ToInt32(ptr));
 }
+
 
 #ifdef DEBUG_CHECK
 inline
@@ -519,6 +519,13 @@ TaggedRef makeTaggedConst(ConstTerm *s)
   return makeTaggedRef(OZCONST,s);
 }
 
+inline
+TaggedRef makeTaggedTert(Tertiary *s)
+{
+  CHECK_POINTER(s);
+  return makeTaggedRef(OZCONST,s);
+}
+
 // getArg() and the like may never return variables
 inline
 TaggedRef tagged2NonVariable(TaggedRef *term)
@@ -577,6 +584,7 @@ TaggedRef derefStepBack(TaggedRef *ptr, TaggedRef val)
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: conversion: tagged2<Type>
+
 
 
 inline
@@ -670,6 +678,14 @@ ConstTerm *tagged2Const(TaggedRef ref)
   GCDEBUG(ref);
   CHECKTAG(OZCONST);
   return (ConstTerm *) tagValueOf(OZCONST,ref);
+}
+
+inline
+Tertiary *tagged2Tert(TaggedRef ref)
+{
+  GCDEBUG(ref);
+  CHECKTAG(OZCONST);
+  return (Tertiary*) tagValueOf(OZCONST,ref);
 }
 
 inline
