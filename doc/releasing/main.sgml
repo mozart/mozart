@@ -279,7 +279,11 @@ make bin</code>
       consortium.  Below is the very abbreviated list of steps to
       follow for creating a new release:
       <list>
-        <item>bump up the version in file
+	<item>make sure that the files <file/config.sub/ and
+	<file/config.guess/ are up-to-date.  Check for new versions
+	at <ref.extern to="ftp://ftp.gnu.org/gnu/config"
+	><file>ftp://ftp.gnu.org/gnu/config</file></ref.extern>
+	<item>bump up the version in file
 	<file>OZVERSION</file></item>
 	<item>update version specific changes in
 	<file>doc/changes/main.sgml</file></item>
