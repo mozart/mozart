@@ -3177,8 +3177,8 @@ OZ_BI_define(BIexchangeCellFun,2,1)
   oz_declareIN(1,newVal);
   OZ_Term old;
   int ret = exchangeCell(cell,newVal,old);
-  if (ret != PROCEED) return ret;
-  OZ_RETURN(old);
+  OZ_out(0) = old;
+  return ret;
 } OZ_BI_end
 
 /********************************************************************
