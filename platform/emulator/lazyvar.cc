@@ -51,9 +51,8 @@ GenLazyVariable::kickLazy()
 	  case 2:
 	    // 2#X ==> force request of X
 	    snd = OZ_deref(snd);
-	    if (tagTypeOf(snd)==CVAR &&
-		tagged2CVar(snd)->getType()==LazyVariable)
-	      ((GenLazyVariable*)tagged2CVar(snd))->kickLazy();
+	    if (isLazyVar(snd))
+	      tagged2LazyVar(snd)->kickLazy();
 	    break;
 	  case 3:
 	    // 3#URL ==> thread {Load URL ME} end
