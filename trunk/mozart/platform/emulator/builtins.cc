@@ -3480,7 +3480,7 @@ static OZ_Return bombArith(char *type)
 
 static OZ_Return suspendOnNumbers(TaggedRef A, TaggedRef B) 
 {
-  suspendTest(A,B,isNumber,"Number");
+  suspendTest(A,B,isNumber,"int or float (uniformly for all arguments)");
 }
 
 inline Bool isNumOrAtom(TaggedRef t)
@@ -3490,7 +3490,7 @@ inline Bool isNumOrAtom(TaggedRef t)
 
 static OZ_Return suspendOnNumbersAndAtoms(TaggedRef A, TaggedRef B) 
 {
-  suspendTest(A,B,isNumOrAtom,"Number or Atom");
+  suspendTest(A,B,isNumOrAtom,"int, float or atom (uniformly for all arguments)");
 }
 
 static OZ_Return suspendOnFloats(TaggedRef A, TaggedRef B) 
@@ -3940,39 +3940,6 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
     return ret;
 
   return suspendOnNumbersAndAtoms(A,B);
-}
-
-
-
-OZ_Return BInumneqInline(TaggedRef A, TaggedRef B)
-{
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
-
-  if (tagA == tagB) {
-    if (isSmallInt(tagA)) if(smallIntEq(A,B)) goto failed; goto proceed;
-    if (isFloat(tagA))    if(floatEq(A,B))    goto failed; goto proceed;
-    if (isBigInt(tagA))   if(bigIntEq(A,B))   goto failed; goto proceed;
-  }
-
-  return suspendOnNumbers(A,B);
-
- failed:
-  return FAILED;
-  
- proceed:
-  return PROCEED;
-}
-
-
-OZ_Return BInumneqInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
-{
-  OZ_Return ret = BInumneqInline(A,B);
-  switch (ret) {
-  case PROCEED: out = NameTrue;  return PROCEED;
-  case FAILED:  out = NameFalse; return PROCEED;
-  default:      return ret;
-  }
 }
 
 OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
