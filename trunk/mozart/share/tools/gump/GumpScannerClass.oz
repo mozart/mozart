@@ -49,6 +49,10 @@ local
    proc {FromVirtualString VS ?NewBufferState}
       NewBufferState = {LexBase.createFromVirtualString VS}
    end
+
+   proc {FinalizeScanner S}
+      {S close()}
+   end
 in
    class GumpScanner
       prop locking
@@ -56,21 +60,18 @@ in
 
       meth init()
 	 lock X in
+	    {Finalize.register self FinalizeScanner}
 	    TokenStreamHd <- X
 	    TokenStreamTl <- X
-	    {ForAll @BufferList proc {$ B} {LexBase.close B} end}
-	    BufferList <- nil
-	    case @LexerAddr == unit then
-	       LexerAddr <- {self.lexer.create}
-	    else skip
-	    end
+	    GumpScanner, close()
+	    LexerAddr <- {self.lexer.create}
 	 end
       end
-      meth putToken(Token Val) NewTl in
-	 (TokenStreamTl <- NewTl) = (Token#Val)|NewTl
+      meth putToken(Token Value) NewTl in
+	 (TokenStreamTl <- NewTl) = Token#Value|NewTl
       end
       meth putToken1(Token) NewTl in
-	 (TokenStreamTl <- NewTl) = (Token#unit)|NewTl
+	 (TokenStreamTl <- NewTl) = Token#unit|NewTl
       end
       meth getToken(?Token ?Value)
 	 case {IsFree @TokenStreamHd} then N in
@@ -83,7 +84,7 @@ in
 	       GumpScanner, getToken(?Token ?Value)
 	    end
 	 else NewTl in
-	    (TokenStreamHd <- NewTl) = (Token#Value)|NewTl
+	    (TokenStreamHd <- NewTl) = Token#Value|NewTl
 	 end
       end
       meth scanFile(FileName) Buffer in
