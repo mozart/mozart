@@ -17,7 +17,8 @@
 #endif
 
 
-//-----------------------------------------------------------------------------// Inlined member functions of class BIfdHeadManager
+//-----------------------------------------------------------------------------
+// Inlined member functions of class BIfdHeadManager
 
 inline
 Bool BIfdHeadManager::addForXorYdet(OZ_CFun func, RefsArray xregs, int arity)
@@ -74,6 +75,53 @@ Bool BIfdHeadManager::expectInt(int i, TaggedRef v, int &s)
   return FALSE;
 }
 
+
+//-----------------------------------------------------------------------------
+// Inlined member functions of class BIfdHeadManager
+
+inline
+void BIfdBodyManager::processLocal(void)
+{
+  vars_left = FALSE;
+
+  for (int i = curr_num_of_vars; i--; ) {
+    Assert(isCVar(bifdbm_vartag[i]) || isSmallInt(bifdbm_vartag[i]));
+
+    if (bifdbm_vartag[i] == SMALLINT) {
+      continue;
+    } else {
+      if (bifdbm_init_dom_size[i] == bifdbm_dom[i]->getSize()) {
+        vars_left = TRUE;
+      } else if (*bifdbm_dom[i] == fd_singleton) {
+        tagged2GenFDVar(bifdbm_var[i])->
+          becomesSmallIntAndPropagate(bifdbm_varptr[i]);
+      } else {
+        tagged2GenFDVar(bifdbm_var[i])->
+          propagate(bifdbm_var[i], fd_bounds,TaggedRef(bifdbm_varptr[i]));
+        vars_left = TRUE;
+      }
+    }
+  }
+} // BIfdBodyManager::processLocal
+
+
+inline
+void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
+{
+  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
+
+  bifdbm_var[i] = deref(v, bifdbm_varptr[i], bifdbm_vartag[i]);
+  Assert(isCVar(bifdbm_vartag[i]) || isSmallInt(bifdbm_vartag[i]));
+
+  if (bifdbm_vartag[i] == SMALLINT) {
+    bifdbm_domain[i].setSingleton(smallIntValue(v));
+    bifdbm_dom[i] = &bifdbm_domain[i];
+    bifdbm_init_dom_size[i] = 1;
+  } else {
+    bifdbm_dom[i] = &tagged2GenFDVar(v)->getDom();
+    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
+  }
+}
 
 //-----------------------------------------------------------------------------
 // Inlined functions

@@ -152,6 +152,7 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
     return;
   } else if (tag == CVAR) {
     addSuspFDVar(bifdhm_var[i], new SuspList(susp, NULL), target);
+    if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == UVAR) {
     if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
     if (am.isLocalUVar(bifdhm_var[i])) {
@@ -159,6 +160,7 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
       doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
     } else {
+      global_vars += 1;
       addSuspUVar(bifdhm_varptr[i], new SuspList(susp, NULL));
     }
   } else if (tag == SVAR) {
@@ -171,6 +173,7 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
       doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
     } else {
+      global_vars += 1;
       addSuspSVar(bifdhm_var[i], new SuspList(susp, NULL));
     }
   } else {
@@ -301,7 +304,7 @@ void BIfdBodyManager::initStaticData(void) {
 //-----------------------------------------------------------------------------
 // Member functions
 
-void BIfdBodyManager::introduce(int i, TaggedRef v)
+void BIfdBodyManager::_introduce(int i, TaggedRef v)
 {
   DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
 
@@ -343,7 +346,6 @@ void BIfdBodyManager::introduce(int i, TaggedRef v)
   bifdbm_vartag[i] = vtag;
 }
 
-
 void BIfdBodyManager::process(void)
 {
   vars_left = glob_vars_touched = FALSE;
@@ -373,7 +375,8 @@ void BIfdBodyManager::process(void)
         if (! bifdbm_is_local[i]) {
           GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
           TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-          doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i], TaggedRef(newtaggedfdvar));
+          doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+                         TaggedRef(newtaggedfdvar));
           glob_vars_touched = TRUE;
         }
         vars_left = TRUE;
@@ -390,8 +393,10 @@ void BIfdBodyManager::process(void)
       } else {
         GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-        am.checkSuspensionList(bifdbm_var[i], makeTaggedRef(newtaggedfdvar), NULL);
-        doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i], TaggedRef(newtaggedfdvar));
+        am.checkSuspensionList(bifdbm_var[i],
+                               makeTaggedRef(newtaggedfdvar), NULL);
+        doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+                       TaggedRef(newtaggedfdvar));
         vars_left = TRUE;
       }
     } else  {
@@ -399,6 +404,7 @@ void BIfdBodyManager::process(void)
     }
   } // for
 } // BIfdBodyManager::process
+
 
 void BIfdBodyManager::processNonRes(void)
 {
