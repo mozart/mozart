@@ -574,7 +574,9 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail>>).
+<ITEM> Owner site down (<<permFail>>
+and <<remoteProblem(I)>> where <<I>> is both <<permSome>>
+and <<permAll>>).
 <ITEM> Owner site unreachable (<<tempFail>>).
 </LIST>
 <P>A port has a single operation, <<Send>>,
@@ -598,32 +600,34 @@ and a set of proxy sites.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail>>).
+<ITEM> Owner site down (<<permFail>> and
+<<remoteProblem(I)>> where <<I>> is both <<permSome>>
+and <<permAll>>).
 <ITEM> Owner site unreachable (<<tempFail>>).
 <ITEM> Some or all proxy sites down
-(<<remoteProblem(I)>> where <<I>> is <<permSome>> or <<permAll>>).
+(<<remoteProblem(I)>> where <<I>> is both <<permSome>> and <<permAll>>).
 <ITEM> Some or all proxy sites unreachable
-(<<remoteProblem(I))>> where <<I>> is <<tempSome>> or <<tempAll>>).
+(<<remoteProblem(I))>> where <<I>> is both <<tempSome>> and <<tempAll>>).
 </LIST>
 <P> A logic variable has two operations,
 binding and waiting until bound.
 Bind operations are explicit in the program text.
-Most wait operations are implicit:
+Most wait operations are implicit since
 threads block until their data is available.
 The bind operation will only complete if the
 fault state is <<ok>> or <<remoteProblem>>.
 
 <P>If the application binds a variable,
-then its wait operation is only sure to complete if the
+then its wait operation is only guaranteed to complete if the
 fault state is <<ok>>.
 When it completes, this means
 that another proxy has bound the variable.
 If the fault state is <<remoteProblem>>,
 then the wait operation may not be able
 to complete if the problem exists 
-at the proxy that should bind the variable.
+at the proxy that was supposed to bind the variable.
 This is <EM>not</EM> a <<tempFail>> or <<permFail>>,
-since another proxy can successfully bind the variable.
+since a third proxy can successfully bind the variable.
 But from the application's viewpoint, it may still
 be important to know about this problem.
 Therefore, the fault state <<remoteProblem>>
@@ -647,16 +651,16 @@ is at one proxy or in the network.
 The following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down and state pointer not present
+<ITEM> State pointer not present and owner site down
 (<<permFail(info:owner)>> and <<remoteProblem(permSome)>>).
-<ITEM> Owner site unreachable and state pointer not present
+<ITEM> State pointer not present and owner site unreachable
 (<<tempFail(info:owner)>>).
-<ITEM> State pointer lost (owner site up)
+<ITEM> State pointer lost and owner site up
 (<<permFail(info:state)>>, <<remoteProblem(permAll)>>,
 and <<remoteProblem(permSome)>>).
-This failure mode is only for cells.
+This failure mode is only possible for cells.
 If a lock token is lost then the owner recreates it.
-<ITEM> State pointer unreachable (owner site up)
+<ITEM> State pointer unreachable and owner site up
 (<<tempFail(info:state)>>).
 <ITEM> State pointer present and owner site down
 (<<remoteProblem(permAll)>> and <<remoteProblem(permSome)>>).
@@ -665,6 +669,9 @@ If a lock token is lost then the owner recreates it.
 </LIST>
 <P>A cell has one primitive operation,
 a state update, which is called <<Exchange>>.
+A lock has two implicit operations,
+acquiring the lock token and releasing it.
+Both are implemented by the same distributed protocol.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
@@ -678,16 +685,16 @@ This means that
 the following failure modes are possible:
 <LIST>
 <ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down and
-object-record or state pointer not present
+<ITEM> Object-record or state pointer not present
+and owner site down
 (<<permFail(info:owner)>> and <<remoteProblem(permSome)>>).
-<ITEM> Owner site unreachable and
-object-record or state pointer not present
+<ITEM> Object-record or state pointer not present
+and owner site unreachable
 (<<tempFail(info:owner)>>).
-<ITEM> State pointer lost (owner site up)
+<ITEM> State pointer lost and owner site up
 (<<permFail(info:state)>>, <<remoteProblem(permAll)>>,
 and <<remoteProblem(permSome)>>).
-<ITEM> State pointer unreachable (owner site up)
+<ITEM> State pointer unreachable and owner site up
 (<<tempFail(info:state)>>).
 <ITEM> Object-record and state pointer present and owner site down
 (<<remoteProblem(permAll)>> and <<remoteProblem(permSome)>>).
