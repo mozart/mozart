@@ -70,6 +70,24 @@
           in a new thread.  When the application of&nbsp;?_{P} is fully
           reduced, the variable associated with&nbsp;?_{X} is bound
           to&nbsp;?_{Y}.
+
+        <Entry><<byNeedFail>>
+          <Index class=tails/<<Value>><And><<byNeedFail>>/
+        <Synopsis>
+          <<{Value.byNeedFail ?+{E} ?_{X}}>>
+        <Item>
+          creates a failed future&nbsp;?_{X} encapsulating exception
+          ?_{E}.  Whenever ?_{X} is <Span
+          class=index/requested/ (see above), in particular, whenever
+          a thread synchronizes on ?_{X}, exception term ?_{E} is
+          raised.  This is convenient in concurrent designs: if a
+          concurrent generator encounters a problem while computing a
+          value, it may catch the corresponding exception, package it
+          as a failed future and return the latter instead.  Thus each
+          consumer will be able to synchronously handle the exception
+          when it attempts to use the <q/failed/ future.  For example,
+          the module manager returns failed futures for modules that
+          cannot be found or linked.
       </List>
 
   <Section id="section.control.loops">
