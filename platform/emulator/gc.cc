@@ -2582,25 +2582,13 @@ Actor *Actor::gcActor()
   return ret;
 }
 
-void Actor::gcRecurse()
-{
-  GCMETHMSG("Actor::gcRecurse");
-  if (isWait()) {
-    ((AWActor *)this)->gcRecurse();
-    ((WaitActor *)this)->gcRecurse();
-  } else if (isAsk()) {
-    ((AWActor *)this)->gcRecurse();
-    ((AskActor *)this)->gcRecurse();
-  } else {
-    ((SolveActor *)this)->gcRecurse();
-  }
-}
-
+inline
 void AWActor::gcRecurse()
 {
   thread = thread->gcThread();
 }
 
+inline
 void WaitActor::gcRecurse()
 {
   GCMETHMSG("WaitActor::gcRecurse");
@@ -2628,6 +2616,7 @@ void WaitActor::gcRecurse()
   cpb      = cpb->gc();
 }
 
+inline
 void AskActor::gcRecurse () {
   GCMETHMSG("AskActor::gcRecurse");
   next.gcRecurse ();
@@ -2635,6 +2624,7 @@ void AskActor::gcRecurse () {
   Assert(board);
 }
 
+inline
 void SolveActor::gcRecurse () {
   GCMETHMSG("SolveActor::gcRecurse");
   if (opMode == IN_GC || solveBoard != fromCopyBoard) {
@@ -2652,6 +2642,20 @@ void SolveActor::gcRecurse () {
   cpb              = cpb->gc();
   localThreadQueue = localThreadQueue->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
+}
+
+void Actor::gcRecurse()
+{
+  GCMETHMSG("Actor::gcRecurse");
+  if (isWait()) {
+    ((AWActor *)this)->gcRecurse();
+    ((WaitActor *)this)->gcRecurse();
+  } else if (isAsk()) {
+    ((AWActor *)this)->gcRecurse();
+    ((AskActor *)this)->gcRecurse();
+  } else {
+    ((SolveActor *)this)->gcRecurse();
+  }
 }
 
 CpBag * CpBag::gc(void) {
