@@ -139,12 +139,12 @@ to continue waiting or not.
 <P>Applications find out about fault states
 by installing <EM>fault handlers</EM>
 on language entities.
-When the application attempts an operation
+When an operation is attempted
 on an entity with a problem,
-then the handler is called instead.
-The handler is called in the context of the thread
+then a handler call replaces the operation.
+This call is done in the context of the thread
 that attempted the operation.
-If the entity works again later
+If the entity is working again later
 (which is possible with <<tempFail>>
 and <<remoteProblem>>) then the
 handler can just try the operation again.
@@ -154,17 +154,22 @@ handler can just try the operation again.
 
 <P>A handler will be called
 only on some of all possible fault states.
-At installation, a list is given of these states.
+When it is installed, a list is given of these states.
 These states are called the handler's
 <EM>fault conditions</EM>.
 
 <P>The set of fault conditions
-is a subset of all possible
-fault states given above, i.e., a subset of
-<<[tempFail>>, <<permFail>>, <<remoteProblem(tempSome)>>,
-<<remoteProblem(permSome)>>,
-<<remoteProblem(tempAll)>>,
-<<remoteProblem(permAll)]>>.
+is a subset of all six possible fault states given above
+(the state <<ok>> does not count).
+That is, it is a list with the following possible elements:
+<LIST>
+<ITEM> <<tempFail>>
+<ITEM> <<permFail>>
+<ITEM> <<remoteProblem(tempSome)>>
+<ITEM> <<remoteProblem(permSome)>>
+<ITEM> <<remoteProblem(tempAll)>>
+<ITEM> <<remoteProblem(permAll)]>>
+</LIST>
 
 <SUBSECTION><TITLE>Handler levels</TITLE>
 
@@ -204,9 +209,67 @@ global handler with condition <<permFail>>.
 
 <SUBSECTION><TITLE>Installing and deinstalling handlers</TITLE>
 
+<P>Handlers are installed and deinstalled with the
+following two built-in operations:
+<LIST>
+<ITEM> <<fun {Fault.install Entity Level Cond HandlerProc}>>
+<ITEM> <<fun {Fault.deInstall Entity Level}>>
+</LIST>
+These functions return <<true>> if the installation or
+deinstallation was successful.
+The arguments to these calls are defined as follows:
+<LIST>
+<ITEM> <<Entity>> is any object, cell, lock, port, or logic variable.
+<ITEM> <<Level>> is <<global>>, <<site>>, or <<thread(T)>>, where
+<<T>> is a thread identifier.
+<ITEM> <<Cond>> is a subset of
+<<[tempFail>>, <<permFail>>, <<remoteProblem(tempSome)>>,
+<<remoteProblem(permSome)>>,
+<<remoteProblem(tempAll)>>,
+<<remoteProblem(permAll)]>>.
+<ITEM> <<HandlerProc>> is a three-argument procedure
+called as <<{HandlerProc Entity ActualCond Op}>>, where
+<<ActualCond>> is essentially a subset of <<Cond>>
+and <<Op>> indicates which operation the handler call replaces.
+</LIST>
+
 <SUBSECTION><TITLE>How handlers are called</TITLE>
 
+<P>A handler <<HandlerProc>> is a three-argument
+procedure that is called as <<{HandlerProc Entity ActualCond Op}>>.
+The arguments to this call are defined as follows:
+<LIST>
+<ITEM> <<Entity>> is the language entity on which the handler was
+installed.
+<ITEM> <<ActualCond>> is a subset of the handler conditions
+under which the handler was installed.
+Each fault condition in <<ActualCond>> may have an extra
+field <<info:>> that gives additional information about
+the fault.
+The possible elements of <<ActualCond>> are
+currently the following:
+<LIST>
+<ITEM> <<tempFail(info:I)>> where <<I>> is in {<<state>>, <<owner>>}.
+<ITEM> <<permFail(info:I)>> where <<I>> is in {<<state>>, <<owner>>}.
+<ITEM> <<remoteProblem(tempSome)>>.
+<ITEM> <<remoteProblem(permSome)>>.
+<ITEM> <<remoteProblem(tempAll)>>.
+<ITEM> <<remoteProblem(permAll)>>.
+</LIST>
+
+<ITEM> <<Op>> indicates which operation the handler call replaces.
+The possible values of <<Op>> are currently:
+<LIST>
+<ITEM>
+</LIST>
+
+</LIST>
+
 <SUBSECTION><TITLE>Conveniences</TITLE>
+
+<P>Raising exceptions on failures
+
+<P>Watchers
 
 <SUBSECTION><TITLE>Limitations of the current release</TITLE>
 
