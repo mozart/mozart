@@ -34,7 +34,7 @@
 We offer the following rules for the design of
 efficient constraint programs.
 
-<section><title/Analyze and Understand your Script/
+<section class=unnumbered><title/Analyze and Understand your Script/
 <p>
 The first script for a difficult problem usually
 does not show satisfactory performance, even if
@@ -47,7 +47,7 @@ propagators have been created?  How often where
 the propagators invoked?
 </section>
 
-<section><title/Experiment/
+<section class=unnumbered><title/Experiment/
 <p>
 Once you have analyzed the search tree and
 performance of your script, start to experiment
@@ -56,7 +56,7 @@ strategies, and propagators for redundant
 constraints.
 </section>
 
-<section><title/Have as much Constraint Propagation as Possible/
+<section class=unnumbered><title/Have as much Constraint Propagation as Possible/
 <p>
 More constraint propagation results in smaller
 search trees.  Try to design a model that yields
@@ -67,7 +67,7 @@ stronger propagation when imposed as
 propagators.
 </section>
 
-<section><title/Find a Good Distribution Strategy/
+<section class=unnumbered><title/Find a Good Distribution Strategy/
 <p>
 A good distribution strategy can reduce the size
 of the search trees dramatically.  Usually, it's a
@@ -83,7 +83,7 @@ value in the middle of the domain of the selected
 variable first.
 </section>
 
-<section><title/Keep the Number of Variables and Propagators Low/
+<section class=unnumbered><title/Keep the Number of Variables and Propagators Low/
 <p>
 The memory consumption of a script depends very
 much on the number of propagators and finite
@@ -108,7 +108,7 @@ Pythagoras Example in
 <ptr to=SecFDPythagoras>).
 </section>
 
-<section><title/Eliminate Symmetries/
+<section class=unnumbered><title/Eliminate Symmetries/
 <p>
 It is always a good idea to design a model such
 that symmetries are avoided as much as possible.
@@ -129,7 +129,7 @@ symmetries by imposing an order on the three
 occurring fractions.
 </section>
 
-<section><title/Introduce Propagators for Redundant Constraints/
+<section class=unnumbered><title/Introduce Propagators for Redundant Constraints/
 <p>
 Propagators for redundant constraints can often
 strengthen a script's propagation.  A redundant
@@ -144,6 +144,6 @@ for nonredundant propagators for redundant
 constraints.
 </section>
 
-<section><title/Use Recomputation if Memory Consumption is a Problem/
+<section class=unnumbered><title/Use Recomputation if Memory Consumption is a Problem/
 </section>
 </chapter>

@@ -37,7 +37,7 @@ We are now well-prepared to write and run our
 first finite domain problem solvers in Oz.  For
 running, analyzing, and debugging problem solvers
 we will use the <Ref.extern to="ozdoc:tools"
-key="chapter:explorer"/Explorer/, a graphical tool of the
+key="chapter.explorer"/Explorer/, a graphical tool of the
 Mozart programming environment.
 
 <p>
