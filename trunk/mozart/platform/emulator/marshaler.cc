@@ -487,26 +487,15 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
   marshalSRecord(cl->getFeatures(),bs);
 }
 
-void marshalDict(OzDictionary *d, MsgBuffer *bs)
+
+
+void marshalNoGood(TaggedRef term, MsgBuffer *bs)
 {
-  if (!d->isSafeDict()) {
-    bs->addNogood(makeTaggedConst(d));
-    return;
-  }
-  int size = d->getSize();
-  marshalNumber(size,bs);
-  trailCycle(d->getRef(),bs,3);
-  
-  int i = d->getFirst();
-  i = d->getNext(i);
-  while(i>=0) {
-    marshalTerm(d->getKey(i),bs);
-    marshalTerm(d->getValue(i),bs);
-    i = d->getNext(i);
-    size--;
-  }
-  Assert(size==0);
+  bs->addNogood(term);
+  marshalTerm(NameNonExportable,bs); // to make bs consistent
 }
+
+
 
 void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 {
@@ -525,9 +514,25 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   case Co_Dictionary:
     {
       PD((MARSHAL,"dictionary"));
+      OzDictionary *d = (OzDictionary *) t;
+
+      if (!d->isSafeDict()) {
+	goto bomb;
+      }
+
       marshalDIF(bs,DIF_DICT);
-      //      addRes(bs,makeTaggedConst(t));
-      marshalDict((OzDictionary *) t,bs);
+      int size = d->getSize();
+      marshalNumber(size,bs);
+      trailCycle(d->getRef(),bs,3);
+      
+      int i = d->getFirst();
+      i = d->getNext(i);
+      while(i>=0) {
+	marshalTerm(d->getKey(i),bs);
+	marshalTerm(d->getValue(i),bs);
+	i = d->getNext(i);
+	size--;
+      }
       return;
     }
 
@@ -632,7 +637,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
   return;
 
 bomb:
-  bs->addNogood(makeTaggedConst(t));
+  marshalNoGood(makeTaggedConst(t),bs);
 }
 
 void marshalTerm(OZ_Term t, MsgBuffer *bs)
@@ -780,8 +785,7 @@ loop:
 
   default:
   bomb:
-    bs->addNogood(t);
-    marshalTerm(NameNonExportable,bs); // to make ByetStream consistent
+    marshalNoGood(t,bs);
     break;
   }
 
