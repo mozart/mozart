@@ -5941,18 +5941,6 @@ TaggedRef Abstraction::DBGgetGlobals() {
   return t;
 }
 
-OZ_C_proc_begin(BIgetArgv,1)
-{
-  TaggedRef out = nil();
-  for(int i=ozconf.argC-1; i>=0; i--) {
-    out = cons(OZ_atom(ozconf.argV[i]),out);
-  }
-
-  return OZ_unify(OZ_getCArg(0),out);
-}
-OZ_C_proc_end
-
-
 OZ_C_proc_begin(BIgetPrintName,2)
 {
   OZ_Term term = OZ_getCArg(0);
@@ -6019,32 +6007,16 @@ int AM::getValue(TaggedRef feat, TaggedRef out)
 
   char *feature = tagged2Literal(feat)->getPrintName();
 
-  STRCASE("userTime",       (int) osUserTime(),               OZ_unifyInt);
-  STRCASE("currentHeapSize",getUsedMemory()*KB,               OZ_unifyInt);
-  STRCASE("freeListSize",   getMemoryInFreeList(),            OZ_unifyInt);
-  STRCASE("debugmode",      isSetSFlag(DebugMode) ? 1 : 0,    OZ_unifyInt);
   STRCASE("fastload",       ozconf.showFastLoad,                OZ_unifyInt);
   STRCASE("foreignload",    ozconf.showForeignLoad,             OZ_unifyInt);
-  STRCASE("idleMessage",    ozconf.showIdleMessage,             OZ_unifyInt);
+  STRCASE("debugmode",      isSetSFlag(DebugMode) ? 1 : 0,    OZ_unifyInt);
   STRCASE("showSuspension", ozconf.showSuspension,              OZ_unifyInt);
   STRCASE("stopOnToplevelFailure",ozconf.stopOnToplevelFailure, OZ_unifyInt);
-  STRCASE("isvar",          "no",OZ_unifyAtom);
 
   STRCASE("cellHack",          ozconf.cellHack,                 OZ_unifyInt);
-  STRCASE("gcFlag",            ozconf.gcFlag,                   OZ_unifyInt);
-  STRCASE("gcVerbosity",       ozconf.gcVerbosity,              OZ_unifyInt);
   STRCASE("stackMaxSize",      ozconf.stackMaxSize,             OZ_unifyInt);
-  STRCASE("heapMaxSize",       ozconf.heapMaxSize,              OZ_unifyInt);
-  STRCASE("heapThreshold",     ozconf.heapThreshold,            OZ_unifyInt);
-  STRCASE("heapMargin",        ozconf.heapMargin,               OZ_unifyInt);
-  STRCASE("heapIncrement",     ozconf.heapIncrement,            OZ_unifyInt);
-  STRCASE("heapIdleMargin",    ozconf.heapIdleMargin,           OZ_unifyInt);
 
   STRCASE("clockTick",         CLOCK_TICK,                    OZ_unifyInt);
-  STRCASE("printDepth",        ozconf.printDepth,             OZ_unifyInt);
-  STRCASE("printWidth",        ozconf.printWidth,             OZ_unifyInt);
-  STRCASE("errorPrintDepth",   ozconf.errorPrintDepth,        OZ_unifyInt);
-  STRCASE("errorPrintWidth",   ozconf.errorPrintWidth,        OZ_unifyInt);
   STRCASE("statusReg",         (int)statusReg,                OZ_unifyInt);
   STRCASE("root",              makeTaggedConst(rootBoard),    OZ_unify);
   STRCASE("currentBlackboard", makeTaggedConst(currentBoard), OZ_unify);
@@ -6078,22 +6050,23 @@ OZ_C_proc_begin(BISystemGetTime,1) {
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetGC,1) {
-  OZ_Term minimal   = OZ_pairAI("minimal",    0);
-  OZ_Term maximal   = OZ_pairAI("maximal",    0);
-  OZ_Term increase  = OZ_pairAI("increase",   0);
-  OZ_Term decrease  = OZ_pairAI("decrease",   0);
+  OZ_Term minimal   = OZ_pairAI("min",     ozconf.heapMinSize*KB);
+  OZ_Term maximal   = OZ_pairAI("max",     ozconf.heapMaxSize*KB);
+  OZ_Term increase  = OZ_pairAI("free", ozconf.heapFree);
+  OZ_Term decrease  = OZ_pairAI("tolerance", ozconf.heapTolerance);
+  OZ_Term idle      = OZ_pairAI("idleFree", ozconf.heapIdleMargin);
   OZ_Term on        = OZ_pair2(OZ_atom("on"),
                                ozconf.gcFlag ? NameTrue : NameFalse);
   OZ_Term threshold = OZ_pairAI("threshold",  ozconf.heapThreshold*KB);
   OZ_Term size      = OZ_pairAI("size",       getUsedMemory()*KB);
-  OZ_Term active    = OZ_pairAI("active",     0);
+  OZ_Term active    = OZ_pairAI("active",     ozstat.gcLastActive*KB);
 
   return OZ_unify(OZ_getCArg(0),
                   OZ_recordInit(OZ_atom("gc"),
                     OZ_cons(active, OZ_cons(decrease,
-                      OZ_cons(increase, OZ_cons(maximal,
+                      OZ_cons(idle, OZ_cons(increase, OZ_cons(maximal,
                         OZ_cons(minimal, OZ_cons(on,
-                          OZ_cons(size, OZ_cons(threshold,nil()))))))))));
+                          OZ_cons(size, OZ_cons(threshold,nil())))))))))));
 }
 OZ_C_proc_end
 
@@ -6118,21 +6091,55 @@ OZ_C_proc_begin(BISystemGetSpaces,1) {
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BISystemGetErrors,1) {
+  OZ_Term message  = OZ_pair2(OZ_atom("message"),
+                          ozconf.errorMessage  ? NameTrue : NameFalse);
+  OZ_Term thread   = OZ_pair2(OZ_atom("thread"),
+                          ozconf.errorThread   ? NameTrue : NameFalse);
+  OZ_Term location = OZ_pair2(OZ_atom("location"),
+                          ozconf.errorLocation ? NameTrue : NameFalse);
+  OZ_Term hints    = OZ_pair2(OZ_atom("hints"),
+                          ozconf.errorHints    ? NameTrue : NameFalse);
+  OZ_Term depth = OZ_pairAI("depth", ozconf.errorPrintDepth);
+  OZ_Term width = OZ_pairAI("width", ozconf.errorPrintWidth);
+
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_recordInit(OZ_atom("errors"),
+                     OZ_cons(depth, OZ_cons(hints,
+                       OZ_cons(location, OZ_cons(message,
+                         OZ_cons(thread, OZ_cons(width,
+                                                 nil()))))))));
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BISystemGetMessages,1) {
-  return OZ_unify(OZ_getCArg(0),nil());
+  OZ_Term gc   = OZ_pair2(OZ_atom("gc"),
+                          ozconf.gcVerbosity     ? NameTrue : NameFalse);
+  OZ_Term idle = OZ_pair2(OZ_atom("idle"),
+                          ozconf.showIdleMessage ? NameTrue : NameFalse);
+  OZ_Term load = OZ_pair2(OZ_atom("feed"),
+                          ozconf.showFastLoad    ? NameTrue : NameFalse);
+  OZ_Term fore = OZ_pair2(OZ_atom("foreign"),
+                          ozconf.showForeignLoad ? NameTrue : NameFalse);
+
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_recordInit(OZ_atom("messages"),
+                     OZ_cons(fore, OZ_cons(gc,
+                       OZ_cons(idle, OZ_cons(load,nil()))))));
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetMemory,1) {
-  return OZ_unify(OZ_getCArg(0),nil());
+  return OZ_unify(OZ_getCArg(0), ozstat.getMemory());
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetLimits,1) {
   OZ_Term intl  = OZ_pair2(OZ_atom("int"), OZ_pair2(OZ_int(OzMinInt),
                                                     OZ_int(OzMaxInt)));
-  return OZ_recordInit(OZ_atom("limits"),
-                       OZ_cons(intl,nil()));
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_recordInit(OZ_atom("limits"),
+                                OZ_cons(intl,nil())));
 }
 OZ_C_proc_end
 
@@ -6162,26 +6169,157 @@ OZ_C_proc_begin(BISystemGetPlatform,1) {
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BISystemSetPriorities,2) {
+#define LookRecord(t) \
+  OZ_Term t = OZ_getCArg(0);            \
+  DEREF(t, tPtr, tTag);                 \
+  if (isAnyVar(tTag))                   \
+    OZ_suspendOn(makeTaggedRef(tPtr));  \
+  if (isLiteral(tTag))                  \
+    return PROCEED;                     \
+  if (!isSRecord(t))                    \
+    TypeErrorT(0, "Record");
+
+#define DoPercentFeature(var,term,atom) \
+  int     var = -1;                                                       \
+  { OZ_Term out = tagged2SRecord(term)->getFeature(makeTaggedAtom(atom)); \
+    if (out) {                                                            \
+      DEREF(out, outPtr, outTag);                                         \
+      if (isAnyVar(outTag)) OZ_suspendOn(makeTaggedRef(outPtr));          \
+      if (!isSmallInt(outTag) ||                                          \
+          (var=smallIntValue(out)) < 1 || var > 100)                      \
+         TypeErrorT(0, "Int");                                            \
+    }                                                                     \
+  }
+
+#define DoNatFeature(var,term,atom) \
+  int     var = -1;                                                       \
+  { OZ_Term out = tagged2SRecord(term)->getFeature(makeTaggedAtom(atom)); \
+    if (out) {                                                            \
+      DEREF(out, outPtr, outTag);                                         \
+      if (isAnyVar(outTag)) OZ_suspendOn(makeTaggedRef(outPtr));          \
+      if (isSmallInt(outTag) && smallIntValue(out)>=0) {                  \
+        var = smallIntValue(out);                                         \
+      } else if (isBigInt(outTag) && tagged2BigInt(out)->getInt()>=0) {   \
+        var = tagged2BigInt(out)->getInt();                               \
+      } else {                                                            \
+        TypeErrorT(0, "Int");                                             \
+      }                                                                   \
+    }                                                                     \
+  }
+
+#define DoBoolFeature(var,term,atom) \
+  int     var = -1;                                                       \
+  { OZ_Term out = tagged2SRecord(term)->getFeature(makeTaggedAtom(atom)); \
+    if (out) {                                                            \
+      DEREF(out, outPtr, outTag);                                         \
+      if (isAnyVar(outTag)) OZ_suspendOn(makeTaggedRef(outPtr));          \
+      if (isLiteral(outTag))                                              \
+        if (literalEq(out,NameTrue)) {                                    \
+          var = 1;                                                        \
+        } else if (literalEq(out,NameFalse)) {                            \
+          var = 0;                                                        \
+        } else {                                                          \
+          TypeErrorT(0, "Bool");                                          \
+        }                                                                 \
+    }                                                                     \
+  }
+
+#define SetIfPos(left,right,scale) if (right >= 0) left = right / scale;
+
+OZ_C_proc_begin(BISystemSetPriorities,1) {
+  LookRecord(t);
+
+  DoPercentFeature(high,   t, "high");
+  DoPercentFeature(middle, t, "middle");
+
+
+  // Do something with these guys
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BISystemSetGC,2) {
+OZ_C_proc_begin(BISystemSetGC,1) {
+  LookRecord(t);
+
+  DoNatFeature(max_size,      t, "max");
+  DoNatFeature(min_size,      t, "min");
+  DoPercentFeature(free,      t, "free");
+  DoPercentFeature(tolerance, t, "tolerance");
+  DoPercentFeature(idle_free, t, "idleFree");
+  DoBoolFeature(active,       t, "on");
+
+  SetIfPos(ozconf.heapMaxSize,    max_size,  KB);
+  SetIfPos(ozconf.heapMinSize,    min_size,  KB);
+
+  SetIfPos(ozconf.heapFree,       free,      1);
+  SetIfPos(ozconf.heapTolerance,  tolerance, 1);
+  SetIfPos(ozconf.heapIdleMargin, idle_free, 1);
+  SetIfPos(ozconf.gcFlag,         active,    1);
+
+  if (ozconf.heapMinSize > ozconf.heapThreshold)
+    ozconf.setHeapThreshold(ozconf.heapMinSize);
+
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BISystemSetPrint,2) {
+OZ_C_proc_begin(BISystemSetPrint,1) {
+  LookRecord(t);
+
+  DoNatFeature(width, t, "width");
+  DoNatFeature(depth, t, "depth");
+
+  SetIfPos(ozconf.printWidth, width, 1);
+  SetIfPos(ozconf.printDepth, depth, 1);
+
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BISystemSetMessages,2) {
+OZ_C_proc_begin(BISystemSetErrors,1) {
+  LookRecord(t);
+
+  DoBoolFeature(message,  t, "message");
+  DoBoolFeature(thread,   t, "thread");
+  DoBoolFeature(location, t, "location");
+  DoBoolFeature(hints,    t, "hints");
+  DoNatFeature(width,     t, "width");
+  DoNatFeature(depth,     t, "depth");
+
+  SetIfPos(ozconf.errorMessage,    message,  1);
+  SetIfPos(ozconf.errorThread,     thread,   1);
+  SetIfPos(ozconf.errorLocation,   location, 1);
+  SetIfPos(ozconf.errorHints,      hints,    1);
+  SetIfPos(ozconf.errorPrintWidth, width,    1);
+  SetIfPos(ozconf.errorPrintDepth, depth,    1);
+
   return PROCEED;
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BISystemSetMessages,1) {
+  LookRecord(t);
+
+  DoBoolFeature(gc,      t, "gc");
+  DoBoolFeature(idle,    t, "idle");
+  DoBoolFeature(feed,    t, "feed");
+  DoBoolFeature(foreign, t, "foreign");
+
+  SetIfPos(ozconf.gcVerbosity,     gc,      1);
+  SetIfPos(ozconf.showIdleMessage, idle,    1);
+  SetIfPos(ozconf.showFastLoad,    feed,    1);
+  SetIfPos(ozconf.showForeignLoad, foreign, 1);
+
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+#undef LookRecord
+#undef DoPercentFeature
+#undef DoNatFeature
+#undef DoBoolFeature
+#undef SetIfPos
 
 // --------------------------------------------------------------------------
 // SETVALUE
@@ -6200,17 +6338,14 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
   }
   int val = OZ_intToC(value);
 
-  DOIF("debugmode",
-       val ? setSFlag(DebugMode) : unsetSFlag(DebugMode);
-       );
   DOIF("foreignload",
        ozconf.showForeignLoad = val ? OK : NO;
        );
   DOIF("fastload",
        ozconf.showFastLoad = val ? OK : NO;
        );
-  DOIF("idleMessage",
-       ozconf.showIdleMessage = val ? OK : NO;
+  DOIF("debugmode",
+       val ? setSFlag(DebugMode) : unsetSFlag(DebugMode);
        );
   DOIF("showSuspension",
        ozconf.showSuspension = val ? OK : NO;
@@ -6220,41 +6355,8 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
   DOIF("cellHack",
        ozconf.cellHack = val;
        );
-  DOIF("gcFlag",
-       ozconf.gcFlag = val;
-       );
-  DOIF("gcVerbosity",
-       ozconf.gcVerbosity = val;
-       );
   DOIF("stackMaxSize",
        ozconf.stackMaxSize = val;
-       );
-  DOIF("heapThreshold",
-       ozconf.setHeapThreshold(val);
-       );
-  DOIF("heapMaxSize",
-       ozconf.heapMaxSize = val;
-       );
-  DOIF("heapMargin",
-       ozconf.heapMargin = val;
-       );
-  DOIF("heapIncrement",
-       ozconf.heapIncrement = val;
-       );
-  DOIF("heapIdleMargin",
-       ozconf.heapIdleMargin = val;
-       );
-  DOIF("printDepth",
-       ozconf.printDepth = val;
-       );
-  DOIF("printWidth",
-       ozconf.printWidth = val;
-       );
-  DOIF("errorPrintDepth",
-       ozconf.errorPrintDepth = val;
-       );
-  DOIF("errorPrintWidth",
-       ozconf.errorPrintWidth = val;
        );
   DOIF("errorVerbosity",
        ozconf.errorVerbosity = val;
@@ -6477,24 +6579,6 @@ OZ_C_proc_begin(BIqueryDebugState,2)
 }
 OZ_C_proc_end
 
-// ----------------------------------------------------------
-
-OZ_C_proc_begin(BIusertime, 1)
-{
-  OZ_Term out = OZ_getCArg(0);
-  return OZ_unifyInt(out, (int) osUserTime());
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BImemory, 1)
-   {
-    OZ_Term out = OZ_getCArg(0);
-    int memory = getUsedMemory()*KB - getMemoryInFreeList();
-    return OZ_unifyInt(out,memory);
-    }
-OZ_C_proc_end
-
-
 /* -------------------------------------------------------------------------
  * Debugging: special builtins for Benni
  * ------------------------------------------------------------------------- */
@@ -6506,30 +6590,10 @@ OZ_C_proc_begin(BIshowStatistics,0)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIgetStatistics,1)
-{
-  OZ_Term out=OZ_getCArg(0);
-  return OZ_unify(out,ozstat.getStatistics());
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIresetStatistics,0)
-{
-  ozstat.reset();
-  return PROCEED;
-}
-OZ_C_proc_end
-
 
 /* -------------------------------------------------------------------------
  *
  * ------------------------------------------------------------------------- */
-
-OZ_C_proc_begin(BIisStandalone,1)
-{
-  return OZ_unify(OZ_getCArg(0),am.isStandalone() ? NameTrue : NameFalse);
-}
-OZ_C_proc_end
 
 OZ_C_proc_begin(BIshowBuiltins,0)
 {
@@ -6545,19 +6609,6 @@ OZ_C_proc_begin(BItraceBack, 0)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIplatform, 1)
-{
-  OZ_Term ret = OZ_pair2(OZ_atom(ozconf.osname),OZ_atom(ozconf.cpu));
-  return OZ_unify(ret,OZ_getCArg(0));
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIozhome, 1)
-{
-  return OZ_unifyAtom(OZ_getCArg(0),ozconf.ozHome);
-}
-OZ_C_proc_end
 
 
 // ---------------------------------------------------------------------------
@@ -7499,9 +7550,6 @@ BIspec allSpec2[] = {
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
-  {"usertime",1,BIusertime},
-  {"memory",1,BImemory},
-  {"isStandalone",1,BIisStandalone},
   {"showBuiltins",0,BIshowBuiltins},
   {"Print",1,BIprint,  (IFOR) printInline},
   {"printError",1,BIprintError},
@@ -7517,6 +7565,7 @@ BIspec allSpec2[] = {
   {"SystemGetPrint",      1, BISystemGetPrint},
   {"SystemGetFD",         1, BISystemGetFD},
   {"SystemGetSpaces",     1, BISystemGetSpaces},
+  {"SystemGetErrors",     1, BISystemGetErrors},
   {"SystemGetMessages",   1, BISystemGetMessages},
   {"SystemGetMemory",     1, BISystemGetMemory},
   {"SystemGetLimits",     1, BISystemGetLimits},
@@ -7528,6 +7577,7 @@ BIspec allSpec2[] = {
   {"SystemSetPriorities", 1, BISystemSetPriorities},
   {"SystemSetPrint",      1, BISystemSetPrint},
   {"SystemSetGC",         1, BISystemSetGC},
+  {"SystemSetErrors",     1, BISystemSetErrors},
   {"SystemSetMessages",   1, BISystemSetMessages},
 
 
@@ -7536,7 +7586,6 @@ BIspec allSpec2[] = {
   {"addr",2,BIaddr},
   {"suspensions",2,BIsuspensions},
   {"globals",2,BIglobals},
-  {"getArgv", 1,BIgetArgv},
 
   {"halt",0,BIhalt},
 
@@ -7571,8 +7620,6 @@ BIspec allSpec2[] = {
   {"displayCode", 2, BIdisplayCode},
 
   {"showStatistics",0,BIshowStatistics},
-  {"getStatistics",1,BIgetStatistics},
-  {"resetStatistics",0,BIresetStatistics},
   {"System_getPrintName",2,BIgetPrintName},
   {"traceBack",0,BItraceBack},
 
@@ -7588,8 +7635,6 @@ BIspec allSpec2[] = {
   {"listThreads",1,BIlistThreads},
 
   {"foreignFDProps", 1, BIforeignFDProps},
-  {"platform",       1, BIplatform},
-  {"ozhome",         1, BIozhome},
 
   {"@",               2,BIat,                  (IFOR) atInline},
   {"<-",              2,BIassign,              (IFOR) assignInline},

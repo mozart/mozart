@@ -174,6 +174,7 @@ void Statistics::reset()
   allocateCounter = deallocateCounter = procCounter = waitCounter =
     askCounter = protectedCounter = 0;
 #endif
+  gcLastActive = 0;
 
   gcCollected.reset();
   heapUsed.reset();
@@ -209,41 +210,6 @@ static void recSetArg(OZ_Term record, char *feat, unsigned int val)
 }
 
 
-/*
- * fill two records of the form
- *
- *        statistics(r:_  p:_ g:_  l:_  c:_  h:_  s:_  u:_  e:_)
- *        enum(a:_  c:_  s:_  f:_)
- */
-
-OZ_Term Statistics::getStatistics()
-{
-  unsigned int timeNow = osUserTime();
-
-  OZ_Term r=OZ_pairAI("r",
-                      timeNow-(timeForGC.total+timeForLoading.total+
-                               timeForCopy.total+timeForPropagation.total));
-  OZ_Term p=OZ_pairAI("p",timeForPropagation.total);
-  OZ_Term g=OZ_pairAI("g",timeForGC.total);
-  OZ_Term l=OZ_pairAI("l",timeForLoading.total);
-  OZ_Term c=OZ_pairAI("c",timeForCopy.total);
-  OZ_Term h=OZ_pairAI("h",heapUsed.total+getUsedMemory());
-  OZ_Term s=OZ_pairAI("s",osSystemTime());
-  OZ_Term u=OZ_pairAI("u",timeNow);
-
-  OZ_Term a2=OZ_pairAI("a",solveAlt.total);
-  OZ_Term c2=OZ_pairAI("c",solveCloned.total);
-  OZ_Term s2=OZ_pairAI("s",solveSolved.total);
-  OZ_Term f2=OZ_pairAI("f",solveFailed.total);
-  OZ_Term e=OZ_pair2(OZ_atom("e"),
-                     OZ_recordInit(OZ_atom("enum"),
-                                   OZ_cons(a2,OZ_cons(c2,OZ_cons(s2,OZ_cons(f2,OZ_nil()))))));
-
-  return OZ_recordInit(OZ_atom("stat"),
-                       OZ_cons(r,OZ_cons(p,OZ_cons(g,OZ_cons(l,OZ_cons(c,OZ_cons(h,OZ_cons(s,OZ_cons(u,OZ_cons(e,nil()))))))))));
-}
-
-
 OZ_Term Statistics::getThreads() {
   OZ_Term created  = OZ_pairAI("created",  createdThreads.total);
   OZ_Term runnable = OZ_pairAI("runnable", 0);
@@ -274,12 +240,27 @@ OZ_Term Statistics::getTime() {
                              OZ_cons(user,nil()))))))));
 }
 
+OZ_Term Statistics::getMemory() {
+  OZ_Term atoms    = OZ_pairAI("atoms",
+                               CodeArea::atomTab.memRequired(sizeof(Literal)));
+  OZ_Term names    = OZ_pairAI("names",
+                               CodeArea::nameTab.memRequired(sizeof(Literal)));
+  OZ_Term builtins = OZ_pairAI("builtins", builtinTab.memRequired());
+  OZ_Term freelist = OZ_pairAI("freelist", getMemoryInFreeList());
+  OZ_Term code     = OZ_pairAI("code",     CodeArea::totalSize);
+
+  return OZ_recordInit(OZ_atom("memory"),
+                       OZ_cons(atoms, OZ_cons(builtins,
+                         OZ_cons(code, OZ_cons(freelist,
+                           OZ_cons(names, nil()))))));
+}
+
 OZ_Term Statistics::getSpaces() {
-  OZ_Term chosen  = OZ_pairAI("chosen",  solveAlt.total);
-  OZ_Term cloned  = OZ_pairAI("cloned",  solveCloned.total);
-  OZ_Term created = OZ_pairAI("created", solveCreated.total);
-  OZ_Term failed  = OZ_pairAI("failed",  solveFailed.total);
-  OZ_Term solved  = OZ_pairAI("solved",  solveSolved.total);
+  OZ_Term chosen  = OZ_pairAI("chosen",    solveAlt.total);
+  OZ_Term cloned  = OZ_pairAI("cloned",    solveCloned.total);
+  OZ_Term created = OZ_pairAI("created",   solveCreated.total);
+  OZ_Term failed  = OZ_pairAI("failed",    solveFailed.total);
+  OZ_Term solved  = OZ_pairAI("succeeded", solveSolved.total);
 
   return OZ_recordInit(OZ_atom("spaces"),
                        OZ_cons(chosen,OZ_cons(cloned,
@@ -370,19 +351,12 @@ void Statistics::printGcMsg(int level)
 
   /* do not count amount of meory copied */
   heapUsed.incf(-getUsedMemory());
+  gcLastActive = getUsedMemory();
 
   if (level > 0) {
     printMem(stdout, " disposed ", gc_mem*KB);
     printf(" in %d msec.\n", gc_utime);
 
-    if (level > 1) {
-      printf("Statistics:");
-      printMem(stdout, "\n\tMemory used was ", gcStartmem*KB);
-      printMem(stdout, " and is now ", getUsedMemory()*KB);
-      printMem(stdout, ".\nTotal garbage collected: ", gcCollected.total*KB);
-      printf(".\n\n");
-    }
-    fflush(stdout);
   }
 }
 
