@@ -6153,9 +6153,9 @@ OZ_C_proc_end
 OZ_C_proc_begin(BISystemGetErrors,1) {
   GetRecord;
 
-  SetBoolArg(AtomThread,   ozconf.errorThread);
   SetBoolArg(AtomLocation, ozconf.errorLocation);
   SetBoolArg(AtomHints,    ozconf.errorHints);
+  SetIntArg(AtomThread,    ozconf.errorThreadDepth);
   SetIntArg(AtomDepth,     ozconf.errorPrintDepth);
   SetIntArg(AtomWidth,     ozconf.errorPrintWidth);
   
@@ -6345,17 +6345,17 @@ OZ_C_proc_end
 OZ_C_proc_begin(BISystemSetErrors,1) {
   LookRecord(t);
 
-  DoBoolFeature(thread,   t, AtomThread);
   DoBoolFeature(location, t, AtomLocation);
   DoBoolFeature(hints,    t, AtomHints);
+  DoNatFeature(thread,    t, AtomThread);
   DoNatFeature(width,     t, AtomWidth);
   DoNatFeature(depth,     t, AtomDepth);
 
-  SetIfPos(ozconf.errorThread,     thread,   1);
-  SetIfPos(ozconf.errorLocation,   location, 1);
-  SetIfPos(ozconf.errorHints,      hints,    1);
-  SetIfPos(ozconf.errorPrintWidth, width,    1);
-  SetIfPos(ozconf.errorPrintDepth, depth,    1);
+  SetIfPos(ozconf.errorThreadDepth, thread,   1);
+  SetIfPos(ozconf.errorLocation,    location, 1);
+  SetIfPos(ozconf.errorHints,       hints,    1);
+  SetIfPos(ozconf.errorPrintWidth,  width,    1);
+  SetIfPos(ozconf.errorPrintDepth,  depth,    1);
 
   return PROCEED;
 }
