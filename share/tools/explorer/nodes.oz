@@ -33,6 +33,8 @@ local
       feat
 	 kind: failed
 	 mom
+      prop final
+	 
       meth init(Mom Depth)
 	 self.mom = Mom
 	 {self.status addFailed(Depth)}
@@ -56,7 +58,8 @@ local
 	 feat
 	    kind: blocked
 	    mom
-	 
+	 prop final
+	    
 	 meth init(Mom Depth Control)
 	    Status         = self.status
 	    UnwrapControl  = thread {UnwrapBlocked Control} end
@@ -103,10 +106,14 @@ local
 	 end
       end
    in
-      class EntailedNode from SucceededNode TkNodes.entailed
+      class EntailedNode
+	 from SucceededNode TkNodes.entailed
+	 prop final
       end
 
-      class SuspendedNode from SucceededNode TkNodes.suspended
+      class SuspendedNode
+	 from SucceededNode TkNodes.suspended
+	 prop final
       end
    end
 
@@ -161,29 +168,16 @@ in
     dirtyUp}
       
    fun {MakeRoot Manager Query Order}
-      class Features
-	 feat
-	    classes:  Classes
-	    canvas:   Manager.canvas
-	    order:    Order
-	    status:   Manager.status
-	    manager:  Manager
-      end
-      Classes = c(failed:    class $ from FailedNode Features
-				prop final
-			     end
-		  blocked:   class $ from BlockedNode Features
-				prop final
-			     end
-		  entailed:  class $ from EntailedNode Features
-				prop final
-			     end
-		  suspended: class $ from SuspendedNode Features
-				prop final
-			     end
-		  choose:    class $ from ChooseNode Features
-				prop final
-			     end)
+      Features=f(classes:   Classes
+		 canvas:    Manager.canvas
+		 order:     Order
+		 status:    Manager.status
+		 manager:   Manager)
+      Classes =c(failed:    {Class.extendFeatures FailedNode Features nil}
+		 blocked:   {Class.extendFeatures BlockedNode Features nil}
+		 entailed:  {Class.extendFeatures EntailedNode Features nil}
+		 suspended: {Class.extendFeatures SuspendedNode Features nil}
+		 choose:    {Class.extendFeatures ChooseNode Features nil})
       S = {Space.new Query}
    in   
       case thread {Space.askVerbose S} end
