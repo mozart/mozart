@@ -163,22 +163,21 @@ enum tcpMessageType {
 };
 
 enum ConnectionFlags{
-  CLOSING=1,  // has sent CLOSE request
-  OPENING=2,  // has made connection 
-  WANTS_TO_OPEN=4,      // NOT USED! 
-  WANTS_TO_PROBE=8,     // NOT USED!
-  WANTS_TO_CLOSE=4,     // is blocked on trying to send CLOSE
-  CURRENT=8,            // incompleteRead or Write
-  WRITE_QUEUE=16,       // has something in write queue
-  CAN_CLOSE = 32,       // Zero refs to site, but still something to send
-  ACK_MSG_INCOMMING=64, // incomplete on back-channel
-  WRITE_CON = 128,      // connection type is WRITE
-  MY_DWN= 256,          // Closed by me 
-  TMP_PROBE = 512,      // Probe for Perm 
-  PRM_PROBE = 1024,     // Probe for Tmp
-  OK_PROBE =  2048,     // Probe for Ok
-  TMP_DWN   = 4096      // Closed due to Tmp problem   
-  
+  CLOSING           = 1,        // has sent CLOSE request
+  OPENING           = 2,        // has made connection 
+  WANTS_TO_CLOSE    = 4,        // is blocked on trying to send CLOSE
+  CURRENT           = 8,        // incompleteRead or Write
+  WRITE_QUEUE       = 16,       // has something in write queue
+  CAN_CLOSE         = 32,       // Zero refs to site, but still something to send
+  ACK_MSG_INCOMMING = 64,       // incomplete on back-channel
+  WRITE_CON         = 128,      // connection type is WRITE
+  MY_DWN            = 256,      // Closed by me 
+  TMP_PROBE         = 512,      // Probe for Perm 
+  PRM_PROBE         = 1024,     // Probe for Tmp
+  OK_PROBE          = 2048,     // Probe for Ok
+  TMP_DWN           = 4096,     // Closed due to Tmp problem   
+  RC_READING        = 8192,     // ReadCon in midle of read
+  RC_CRASHED        = 16384     // ReadCon crashed during read
 };
 
 enum ByteStreamType {
@@ -189,7 +188,7 @@ enum ByteStreamType {
   BS_Unmarshal};
 
 
-#define MAXTCPCACHE 25
+#define MAXTCPCACHE 4
 
 enum ipReturn{
   IP_OK              =   0,
@@ -1143,6 +1142,15 @@ public:
   void close();
   void prmDwn();
   void closeConnection();
+  
+  void setReading(){setFlag(RC_READING);}
+  Bool isReading(){return testFlag(RC_READING);}
+  void clearReading(){clearFlag(RC_READING);}
+
+  void setCrashed(){setFlag(RC_CRASHED);}
+  Bool isCrashed(){return testFlag(RC_CRASHED);}
+  void clearCrashed(){clearFlag(RC_CRASHED);}
+  
 };
 
 class WriteConnection:public Connection{
@@ -1166,7 +1174,10 @@ public:
     remoteSite->writeConnectionRemoved();}
   
   ipReturn open();
-  
+
+  Bool isReadReading(){
+    ReadConnection *rr = remoteSite->getReadConnection();
+    return (rr && rr->isReading()) ;}
   void tmpDwn();
   Bool shouldSendFromUser();
     
@@ -1218,7 +1229,7 @@ public:
   void clearInWriteQueue(){
     PD((TCP_INTERFACE,"Removed from writequeue  s:%s",	remoteSite->site->stringrep()));
     clearFlag(WRITE_QUEUE);}
-  
+  /*
   void setWantsToProbe(){
     Assert(!testFlag(WANTS_TO_PROBE));    
     PD((TCP_INTERFACE,"setWantsToPROBE site:%s",remoteSite->site->stringrep()));
@@ -1229,7 +1240,7 @@ public:
     Assert(testFlag(WANTS_TO_PROBE));
     PD((TCP_INTERFACE,"clearWantsToProbe site:%s",remoteSite->site->stringrep()));
     clearFlag(WANTS_TO_PROBE);}
-  
+    */
   Bool isProbingPrm(){
     return testFlag(TMP_PROBE | PRM_PROBE);}
   Bool isProbingTMP(){
@@ -1276,7 +1287,6 @@ public:
   Bool canbeClosed(){
     if(isClosing()) return FALSE;
     if(isOpening()) return FALSE;
-    if(isWantsToProbe()) return FALSE;
     // Ek is it writing? insert that here 
     return TRUE;}
   
@@ -1525,6 +1535,10 @@ class TcpCache {
   int close_size;
   int open_size;
   int max_size;
+  unsigned long tmpTime;
+  unsigned long probeTime;
+  unsigned long myTime;
+  
   
   void addToFront(Connection *r, Connection* &head, Connection* &tail){
     if(head==NULL){
@@ -1554,7 +1568,7 @@ class TcpCache {
 
 
   Connection* getLast(Connection* &head,Connection* &tail){
-    PD((TCPCACHE,"get last"));
+    // PD((TCPCACHE,"get last"));
     Connection *w = tail;
     if (head == tail) 
       head = tail = NULL;
@@ -1565,7 +1579,7 @@ class TcpCache {
     return w;}
 
   void unlink(Connection *r,Connection* &head, Connection* &tail){
-    PD((TCPCACHE,"cache unlink r:%x",r));
+    //    PD((TCPCACHE,"cache unlink r:%x",r));
     if(tail==r) {
       if(head==r){
 	tail=NULL;
@@ -1659,6 +1673,9 @@ public:
     openCon = TRUE;
     probes = FALSE;
     shutDwn = FALSE;
+    tmpTime = 0;
+    myTime = 0;
+    probeTime= 0;
     PD((TCPCACHE,"max_size:%d",max_size));}
   
   void nowAccept(){
@@ -1670,7 +1687,7 @@ public:
 
     
   void adjust(){
-    PD((TCPCACHE,"adjusting size:%d maxsize:%d",open_size,max_size));
+    // PD((TCPCACHE,"adjusting size:%d maxsize:%d",open_size,max_size));
     if(shutDwn && !(close_size|open_size)){
       // TcpCache empty
       // Just close now.
@@ -1741,7 +1758,7 @@ public:
   
   
   void touch(Connection *r) {
-    PD((TCPCACHE,"cache touch r:%x",r));
+    //PD((TCPCACHE,"cache touch r:%x",r));
     if(currentHead!=r){
       unlink(r, currentHead, currentTail);
       addToFront(r,currentHead, currentTail);}
@@ -1763,6 +1780,12 @@ public:
       w->open();}
     return myHead!=NULL;}
 
+  Bool sendProbeConnections(){
+    PD((TCPCACHE,"SEND On PROBE CONS"));
+    probes =  findProbeCons(currentHead) != 0;
+    return probes;}
+  
+
   void probeStarted(){
     // ATTENTION 
     return;
@@ -1771,16 +1794,50 @@ public:
       wakeUpTmp(WKUPPRB, WKUPPRB_TIME);
     }}
   
-  Bool sendProbeConnections(){
-    PD((TCPCACHE,"SEND On PROBE CONS"));
-    probes =  findProbeCons(currentHead) != 0;
-    return probes;}
+    
+  void wakeUp(unsigned int time);
+
+  Bool checkWakeUp(unsigned int time);
 };
 
 
+/************************************************************/
+/* SECTION 12a:  WakeUps of the TCP-cache                   */
+/************************************************************/
+
+  
+void  TcpCache::wakeUp(unsigned int time){
+  if (myTime<time)
+    if( openMyClosedConnection()) 
+      myTime += WKUPMYC_TIME;
+    else 
+      myTime = 0;
+  if (tmpTime<time)
+    if(openTmpBlockedConnection())
+      tmpTime += WKUPTMP_TIME;
+    else
+      tmpTime = 0;
+  if (probeTime<time)
+    if(sendProbeConnections())
+      probeTime += WKUPPRB_TIME; 
+    else
+      probeTime = 0;
+}
+
+Bool TcpCache::checkWakeUp(unsigned int time){
+  return ((myTime|probeTime|tmpTime)&
+	  (myTime<time | tmpTime < time | probeTime< time));} 
+
+
+Bool wakeUpTcpCache(unsigned long time, void *v){
+  tcpCache->wakeUp(time);
+  return TRUE;}
+
+Bool checkTcpCache(unsigned long time, void *v){
+  return tcpCache->checkWakeUp(time);}
 
 /************************************************************/
-/* SECTION 12:  Exported to Perdio                           */
+/* SECTION 12b:  Exported to Perdio                           */
 /************************************************************/
 
 Bool openClosedConnection(int Type){
@@ -2333,8 +2390,9 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
       // EK check ret. The Assert will disapear in
       // non-debug code.
       Assert(ret<0);
-      if(errno==EINTR) continue;
-      if(!((errno==EWOULDBLOCK) || (errno==EAGAIN)))
+      if(ossockerrno()==EINTR) continue;
+      if(!((ossockerrno()==EWOULDBLOCK) || (ossockerrno()==EAGAIN)))
+       
 	return tcpError();
       break;}
     PD((WRITE,"wr:%d try:%d error:%d",ret,len,errno));
@@ -2705,10 +2763,10 @@ tcpPreFailure:
 
 static int tcpReadHandler(int fd,void *r0)
 {  
-
+  printf("tcpReadH\n");
   PD((TCP,"tcpReadHandler Invoked"));
   ReadConnection *r = (ReadConnection*) r0;
-
+  
   int ret,rem,len,msgNr,ansNr;
   int totLen;
   ipReturn ip;
@@ -2765,7 +2823,7 @@ start:
     if(tcpError() == IP_TEMP_BLOCK)
       r->close();
     else{
-      warning("Connection Site Has Crashed error: %d %s ", ossockerrno(),
+      warning("Connection Site Has Crashed error: %d %s\n ", ossockerrno(),
 	      r->remoteSite->site->stringrep());
       r->connectionLost();}
     return 0;}
@@ -2790,10 +2848,14 @@ start:
 	goto maybe_redo;}}
     else{
       rem -=ret;}
-  
     if(rem>0){goto maybe_redo;}
     
-
+    /* Must mark the readConnection. It is possible
+       to discover that the site has crashed during interpret.
+       EK
+       */
+    r->setReading();
+    
     PD((CONTENTS," Informin: %d %d %d ",msgNr,ansNr,totLen));
 
     /***************************************************/
@@ -2802,12 +2864,17 @@ start:
     /* For concistency, When to inform the remoteSite  */
     /* About the received Message.                     */
     /***************************************************/
-
     bs->beforeInterpret(rem);
     PD((CONTENTS,"interpret rem:%d len:%d",
 		 rem,bs->interLen()));
     // EK this might be done in a nicer way...
     ip=interpret(bs,type,r->informSiteAck(msgNr,totLen));
+    
+    if(r->isCrashed()){
+      r->clearReading();
+      r->remoteSite->sitePrmDwn();
+      return 0;}
+    
     if(ip==IP_CLOSE){
       Assert(rem==0);
       if(m!=NULL){
@@ -2818,16 +2885,26 @@ start:
     bs->afterInterpret();    
     if(rem==0){goto fin;}
     ret=0-rem;
-    rem=0-tcpHeaderSize;}
+    rem=0-tcpHeaderSize;
+  }
 
 maybe_redo:  
-
-  if(readAll && osTestSelect(fd,SEL_READ)){
+  if((!r->isCrashed()) && readAll && osTestSelect(fd,SEL_READ)){
     if(rem==0) {pos=bs->initForRead(len);}
     else {pos=bs->beginRead(len);}
     goto start;}
   
 fin:
+  // It is possible to discover that the site is gone
+  // during interpret. If that has happened, take care of
+  // it here.
+  // Else clear reading.
+  r->clearReading();
+  if(r->isCrashed()){
+    r->remoteSite->sitePrmDwn();
+    return 0;}
+
+    
   if(!r->isClosing())
     tcpCache->touch(r);
   if(rem==0){
@@ -2843,19 +2920,16 @@ fin:
 #endif
       return 0;}
     Assert(!r->isIncomplete());
-#ifdef SLOWNET
-    //r->setTime(READ_NO_TIME);
-#endif
     messageManager->freeMessageAndMsgBuffer(m);
     return 0;}
   newReadCur(m,bs,r,type,rem);
-#ifdef SLOWNET
-  //r->setTime(TSC->getCurTime());
-#endif
   return 0;
   
 close:
-  
+  if(r->isCrashed()){
+    r->connectionLost();
+    return 0;}
+  r->clearReading();
   PD((TCP,"readHandler received close"));
   if(rem!=0) {NETWORK_ERROR(("readHandler gets bytes after Close"));}
   switch(type){
@@ -3042,6 +3116,7 @@ tcpConPermLost:
 /************************************************************/
 
 int tcpWriteHandler(int fd,void *r0){
+  printf("tcpWriteH\n");
   WriteConnection *r=(WriteConnection *)r0;
   Message *m;
   ipReturn ret;
@@ -3060,6 +3135,7 @@ int tcpWriteHandler(int fd,void *r0){
     hasSent = TRUE;
 #endif
     Assert(m!=NULL);
+    Assert(r->getFD()==fd);
     ret=tcpSend(r->getFD(),m,TRUE);
     if(ret<0){
       goto writeHerrorBlock;
@@ -3123,6 +3199,7 @@ writeHerrorBlock:
 
 
 static int tcpCloseHandler(int fd,void *r0){
+  printf("tcpCloseH\n");
   WriteConnection *r=(WriteConnection *)r0;
   BYTE msg;
   ipReturn ret;
@@ -3263,6 +3340,10 @@ int RemoteSite::readRecMsgCtr(){
 
 void RemoteSite::sitePrmDwn(){
   status = SITE_PERM;
+  if(readConnection!=NULL && readConnection->isReading()){
+    readConnection->setCrashed();
+    return;}
+  
   if(writeConnection!=NULL){
     if(writeConnection->getFD() != LOST)
       writeConnection->prmDwn();
@@ -3297,17 +3378,18 @@ void ReadConnection::prmDwn(){
   PD((TCP,"ReadConnection is taken down fd: %d",fd));
   osclose(fd);
   OZ_unregisterRead(fd);
+  fd =  -1;
   tcpCache->remove(this);
   if(isIncomplete()) 
     messageManager->freeMessage(getCurQueue());}
 
 void WriteConnection::prmDwn(){
-    osclose(fd);
-    PD((TCP,"WriteConnection is taken down fd: %d",fd));
-    tcpCache->remove(this);
-    if(isProbingPrm()){
-      remoteSite->site->probeFault(PROBE_PERM);
-      clearProbingPrm();}
+  osclose(fd);
+  PD((TCP,"WriteConnection is taken down fd: %d %d",fd,getFD()));
+  tcpCache->remove(this);
+  if(isProbingPrm()){
+    remoteSite->site->probeFault(PROBE_PERM);
+    clearProbingPrm();}
     
     Message *m = sentMsg;
     sentMsg = NULL;
@@ -3320,12 +3402,13 @@ void WriteConnection::prmDwn(){
       m = m->next;
 
       messageManager->freeMessageAndMsgBuffer(tmp);}
-        
+    OZ_unregisterRead(fd);
+
     if(!isWritePending())
       return;
     if(isInWriteQueue())
       clearInWriteQueue();
-    OZ_unregisterWrite(fd);
+    OZ_unregisterWrite(fd);        
     
     if(isIncomplete()) {
       clearIncomplete();
@@ -3611,18 +3694,25 @@ storeS,msg,storeInd);
   else{
     if(!writeConnection->shouldSendFromUser())
       goto ipBlockSend;
+    /*if(writeConnection->isReadReading()){
+      OZ_registerWriteHandler(fd,tcpWriteHandler,
+			      (void *)this->writeConnection);
+      printf("sendT stoped by read\n");
+      goto ipBlockSend;}
+      */
     tcpCache->touch(writeConnection);}  
   
 #ifdef SLOWNET
   // In case of slownet, all msgs are put in the writeques.
   m->getMsgBuffer()->PiggyBack(m);
   writeConnection->addCurQueue(m);
-#ifdef SLOWNET
+
   TSC->addWrite(this->writeConnection);
-#endif
   
   return ACCEPTED;
 #endif
+
+  
 
   fd=writeConnection->getFD();
   Assert(fd>0);
@@ -3656,11 +3746,13 @@ tmpdwnsend2:
   msgNum = getTmpMsgNum();
   addWriteQueue(m);
   return msgNum;
+
 ipBlockSend:
 #ifdef SLOWNET
   TSC->addWrite(this->writeConnection);
 #endif
   PD((TCP_INTERFACE,"sendTo IpBlock add to writeQueue %d",m));
+  
   addWriteQueue(m);
   
   return ACCEPTED;
