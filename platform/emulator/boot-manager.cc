@@ -57,6 +57,7 @@ TaggedRef dictionary_of_modules;
 #include "modProfile-if.cc"
 #include "modFault-if.cc"
 #include "modDistribution-if.cc"
+#include "modNative-if.cc"
 
 /*
  * Builtins that are possibly dynamically loaded
@@ -97,6 +98,7 @@ struct ModuleEntry {
 
 static ModuleEntry module_table[] = {
   // Most important stuff
+  {"Native",          mod_int_Native},
   {"Property",        mod_int_Property},
   {"OS",              mod_int_OS},
   {"URL",             mod_int_URL},
@@ -392,6 +394,32 @@ void link_bi_modules()
       ->setArg(oz_atom(E->name),OZ_recordInit(AtomExport,list));
   }
 }
+
+OZ_BI_define(BIloadNative,1,1)
+{
+  oz_declareVirtualStringIN(0,filename);
+
+  TaggedRef hdl;
+  TaggedRef res = osDlopen(filename,hdl);
+  if (res) return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
+                           oz_atom(filename),res);
+
+  void* handle = OZ_getForeignPointer(hdl);
+
+  init_fun_t init_function = (init_fun_t) osDlsym(handle,"oz_init_module");
+
+  // oops, there is no `init_function()'
+  if (init_function == 0) {
+    return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,
+                    OZ_in(0));
+  }
+
+  // `init_function()' returns the interface table
+  OZ_C_proc_interface * i_table = (*init_function)();
+
+  OZ_RETURN(ozInterfaceToRecord(i_table, 0, OK));
+} OZ_BI_end
+
 
 void initBuiltins() {
   //
