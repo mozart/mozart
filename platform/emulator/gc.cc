@@ -1513,6 +1513,10 @@ void AM::gc(int msgLevel)
 #ifdef VERBOSE
   verbReopen ();
 #endif
+#ifdef PERDIO
+  gcFrameToProxy();
+#endif
+
   GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
   gcing = 0;
@@ -1592,8 +1596,11 @@ void AM::gc(int msgLevel)
 
   PROFILE_CODE1(FDProfiles.gc());
 
+#ifdef PERDIO
+  performCopying();
   gcBorrowTableRoots();
   performCopying();
+#endif
 
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
@@ -1606,7 +1613,6 @@ void AM::gc(int msgLevel)
   EXITCHECKSPACE;
 
 #ifdef PERDIO
-  gcPostOwnerTable();
   gcBorrowTable();
   gcGNameTable();
 #endif
@@ -2004,7 +2010,7 @@ void ConstTerm::gcConstRecurse()
       switch(t->getTertType()){
       case Te_Local:{
         CellLocal *cl=(CellLocal*)t;
-        cl->setBoard(cl->getBoard()->gcBoard()); /* ATTENTION */
+        cl->setBoard(cl->getBoard()->gcBoard());
         gcTagged(cl->val,cl->val);
         break;}
       case Te_Proxy:{
@@ -2099,10 +2105,37 @@ void ConstTerm::gcConstRecurse()
 
   case Co_Lock:
     {
-      OzLock *lock = (OzLock *) this;
-      lock->setBoard(lock->getBoardInternal()->gcBoard());
-      gcTagged(lock->threads,lock->threads);
-      lock->locker = lock->locker->gcThread();
+      Tertiary *t=(Tertiary*)this;
+      switch(t->getTertType()){
+
+      case Te_Local:{
+        LockLocal *ll = (LockLocal *) this;
+        ll->setBoard(ll->getBoard()->gcBoard());  /* maybe getBoardInternal() */
+        gcPendThread(&(ll->pending));
+        ll->setLocker(ll->getLocker()->gcThread());
+        break;}
+
+      case Te_Manager:{
+        LockManager* lm=(LockManager*)t;
+        LockFrame* lf=(LockFrame*)t;
+        LockSec* ls= lf->sec;
+        lf->sec=(LockSec*)gcRealloc(ls,sizeof(LockSec));
+        lm->gcLockManager();
+        break;}
+
+      case Te_Frame:{
+        LockFrame *lf=(LockFrame*)t;
+        LockSec *ls=lf->sec;
+        lf->sec=(LockSec*)gcRealloc(ls,sizeof(LockSec));
+        lf->gcLockFrame();
+        break;}
+
+      case Te_Proxy:{
+        t->gcProxy();
+        break;}
+
+      default:{
+        Assert(0);}}
       break;
     }
 
@@ -2153,21 +2186,16 @@ ConstTerm *ConstTerm::gcConstTerm()
   case Co_Cell:
     {
       COUNT(cell);
-      switch(((Tertiary *)this)->getTertType()) {
-      case Te_Local:{
-        CellLocal *cl=(CellLocal*)this;
-        CheckLocal(cl);
-        sz = sizeof(CellLocal);
-        break;}
-      case Te_Proxy:{
-        sz = sizeof(CellProxy);
-        break;}
-      case Te_Manager:{
+      switch(((Tertiary *)this)->getTertType()){
+      case Te_Local:
+        CheckLocal((CellLocal*)this);
+      case Te_Proxy:
+      case Te_Manager:
         sz = sizeof(CellManager);
-        break;}
+        break;
       case Te_Frame:{
         CellFrame *cf=(CellFrame *)this;
-        if(cf->isAccessBit()){
+        if(cf->isAccessBit()){           // has only been reached via gcBorrowRoot so far
           DebugCode(cf->resetAccessBit());
           void* forward=cf->getForward();
           ((CellFrame*)forward)->resetAccessBit();
@@ -2181,19 +2209,12 @@ ConstTerm *ConstTerm::gcConstTerm()
       break;
     }
 
-  case Co_Port:  /* TODO: what to count TODO: no need for local check?? */
+  case Co_Port:
     {
-      switch(((Tertiary *)this)->getTertType()) {
-      case Te_Local:
-        CheckLocal((PortLocal *) this);
-        sz = sizeof(PortLocal);
-        break;
-
-      case Te_Manager:  sz = sizeof(PortManager); break;
-      case Te_Proxy:    sz = sizeof(PortProxy);   break;
-      default: Assert(0);                         break;
-      }
-
+      COUNT(port);
+      if(((Tertiary *)this)->getTertType()==Te_Local) {
+        CheckLocal((PortLocal *) this);}
+      sz = sizeof(PortLocal);
       break;
     }
   case Co_Space:
@@ -2221,10 +2242,29 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Lock:
-    CheckLocal((OzLock *) this);
-    sz = sizeof(OzLock);
-    break;
-
+    {
+      switch(((Tertiary *)this)->getTertType()) {
+      case Te_Local:
+        CheckLocal((LockLocal*)this);
+      case Te_Proxy:
+      case Te_Manager:
+        sz = sizeof(LockManager);
+        break;
+      case Te_Frame:{
+        LockFrame *lf=(LockFrame *)this;
+        if(lf->isAccessBit()){
+          DebugCode(lf->resetAccessBit());
+          void* forward=lf->getForward();
+          ((LockFrame*)forward)->resetAccessBit();
+          *getGCField()=GCMARK(forward);
+          return (ConstTerm*) forward;}
+        sz = sizeof(LockFrame);
+        break;}
+      default:{
+        Assert(0);
+        break;}}
+      break;
+    }
   case Co_Thread:
     {
       Thread *th = ((Thread *)this)->gcThread();
@@ -2250,24 +2290,36 @@ ConstTerm *ConstTerm::gcConstTerm()
 /* the purpose of this procedure is to provide an additional entry
    into gc so to be able to distinguish between owned perdio-objects that
    are locally accssible to those that are not - currently this is needed
-   only for cell-frames */
+   only for frames (cells and locks).
+   The distinction is that in this procedure the BORROW ENTRY is not marked
+   but in gcConstTerm it is marked.
+   Note- all other Tertiarys are marked in gcConstRecurse
+*/
 
-ConstTerm *ConstTerm::gcConstTermSpec()
+ConstTerm* ConstTerm::gcConstTermSpec()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
-  if(getType()!=Co_Cell){return gcConstTerm();}
   Tertiary *t=(Tertiary*)this;
-  if(t->getTertType()!=Te_Frame){return gcConstTerm();}
-
-  CellFrame *cf=(CellFrame*)t;
-  cf->setAccessBit();
-  COUNT(cell);
-  size_t sz = sizeof(CellFrame);
-  ConstTerm *ret = (ConstTerm *) gcRealloc(this,sz);
+  Assert((t->getType()==Co_Cell) || (t->getType()==Co_Lock));
+  Assert(t->getTertType()==Te_Frame);
+  ConstTerm *ret;
+  if(t->getType()==Co_Cell){
+    CellFrame *cf=(CellFrame*)t;
+    cf->setAccessBit();
+    COUNT(cell);
+    size_t sz = sizeof(CellFrame);
+    ret = (ConstTerm *) gcRealloc(this,sz);
+    cf->myStoreForward(ret);}
+  else{
+    Assert(getType()==Co_Lock);
+    LockFrame *lf=(LockFrame*)t;
+    lf->setAccessBit();
+    size_t sz = sizeof(LockFrame);
+    ret = (ConstTerm *) gcRealloc(this,sz);
+    lf->myStoreForward(ret);}
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_CONSTTERM);
-  cf->myStoreForward(ret);
   return ret;
 }
 

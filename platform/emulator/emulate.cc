@@ -1807,7 +1807,7 @@ LBLdispatcher:
       if (!e->isToplevel() && e->currentBoard != self->getBoard()) {
         (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
         goto LBLraise;
-      }
+     }
 
       RecOrCell state = self->getState();
       SRecord *rec;
@@ -2111,27 +2111,48 @@ LBLdispatcher:
         goto LBLraise;
       }
 
-      OzLock *lck = tagged2Lock(aux);
-      if (!e->isToplevel()) {
-        if (e->currentBoard != lck->getBoard()) {
-          (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
-          goto LBLraise;
-        }
-      }
+      OzLock *t = (OzLock*)tagged2Tert(aux);
+      Thread *th=e->currentThread;
 
-      Thread *cs = e->currentThread;
-      if (lck->isLocked(cs)) {
-        e->pushTask(lbl,Y,G);
-        DISPATCH(4);
-      }
-      TaggedRef *var = lck->lock(cs);
-      if (var==NULL) {
-        e->pushTask(lbl,Y,G);
-        CTS->pushLock(lck);
-        DISPATCH(4);
-      }
 
-      SUSP_PC(var,toSave,PC);
+      switch(t->getTertType()){
+      case Te_Local:{
+        if(!e->isToplevel()){
+          if((t->getTertType!=Te_Local) || (e->currentBoard != ((LockLocal*)t)->getBoard())) {
+            (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+            goto LBLraise;}}
+        if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
+        if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
+        goto no_lock;}
+      case Te_Frame:{
+        if(((LockFrame*)t)->hasLock(th)) {goto has_lock;}
+        if(((LockFrame*)t)->lockB(e->currentThread)){goto got_lock;}
+        goto no_lock;}
+      case Te_Proxy:{
+        ((LockProxy*)t)->lock(th);
+        goto no_lock;}
+      case Te_Manager:{
+        if(((LockManager*)t)->hasLock(th)) {goto has_lock;}
+        if(((LockManager*)t)->lockB(th)){goto got_lock;}
+        goto no_lock;}}
+
+      Assert(0);
+
+      got_lock:
+         e->pushTask(lbl,Y,G);
+         CTS->pushLock(t);
+         DISPATCH(4);
+
+      has_lock:
+         e->pushTask(lbl,Y,G);
+         DISPATCH(4);
+
+      no_lock:
+        e->pushTask(lbl,Y,G);
+        CTS->pushLock(t);
+        e->pushTask((PC+4),Y,G,X,toSave);      /* ATTENTION */
+        goto LBLsuspendThread;
+
     }
 
   Case(RETURN)
@@ -2795,7 +2816,19 @@ LBLdispatcher:
     {
       OzLock *lck = (OzLock *) Y;
       Y = NULL;
-      lck->unlock();
+      switch(lck->getTertType()){
+      case Te_Local:
+        ((LockLocal*)lck)->unlock();
+        break;
+      case Te_Frame:
+        ((LockFrame*)lck)->unlock();
+        break;
+      case Te_Proxy:
+        e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+        goto LBLraise;
+      case Te_Manager:
+        ((LockManager*)lck)->unlock();
+        break;}
       goto LBLpopTaskNoPreempt;
     }
 

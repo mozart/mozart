@@ -68,7 +68,11 @@ Bool TaskStack::findCatch()
 
     if (PC==C_LOCK_Ptr) {
       OzLock *lck = (OzLock *) Y;
-      lck->unlock();
+      switch(lck->getTertType()){
+      case Te_Local: ((LockLocal*)lck)->unlock();break;
+      case Te_Frame: ((LockFrame*)lck)->unlock();break;
+      case Te_Manager: ((LockManager*)lck)->unlock();break;
+      case Te_Proxy: error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) {
       Object *newSelf = (Object*)Y;
       am.setSelf(newSelf);

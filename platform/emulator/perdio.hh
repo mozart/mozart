@@ -22,6 +22,7 @@
 #include "tagged.hh"
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
+#include "runtime.hh"
 
 /* TODO */
 #define DummyClassConstruction(X) \
@@ -43,11 +44,12 @@ void networkSiteDec(int sd);
 #define tert2PortProxy(t)     ((PortProxy*) t)
 
 void gcOwnerTable();
-void gcPostOwnerTable();
 void gcBorrowTable();
+void gcFrameToProxy();
 void gcBorrowTableRoots();
 void gcPortProxy(PortProxy* );
 void gcPortManager(PortManager* );
+void gcPendThread(PendThread **);
 
 #define BYTEBUFFER_CUTOFF 100
 #define BYTEBUFFER_SIZE 2048
@@ -314,6 +316,7 @@ public:
   PendThread *next;
   Thread *thread;
   PendThread(Thread *th,PendThread *pt):thread(th),next(pt){}
+  PendThread(Thread *th):thread(th),next(NULL){}
   PendThread(){DebugCode(thread=NULL);}
   USEFREELISTMEMORY;
   void dispose(){freeListDispose(this,sizeof(PendThread));}
