@@ -131,10 +131,9 @@ void OwnerTable::init(int beg,int end){
 void OwnerTable::compactify()
 {
   Assert(size>=no_used);
-  Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
-  if(size==DEFAULT_OWNER_TABLE_SIZE) return;
-  PD((TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
-               size,no_used));
+  if(size==ozconf.dpTableDefaultOwnerTableSize) return;
+  PD((TABLE,"owner compactify enter: size:%d no_used:%d",
+      size,no_used));
   int i=0;
   int used_slot= -1;
   int* base = &nextfree;
@@ -148,31 +147,46 @@ void OwnerTable::compactify()
   *base=END_FREE;
   int after_last=used_slot+1;
 
-  if((double)no_used/(double)size >= TABLE_LOW_LIMIT){
-    PD((TABLE,"TABLE:owner compactify no realloc"));
+  if(size<ozconf.dpTableDefaultOwnerTableSize){
+    int newsize = ozconf.dpTableDefaultOwnerTableSize;
+    array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
+    if(array==NULL){
+      OZ_error("Memory allocation: Owner Table growth not possible");}
+    int i=size;
+    while(i<ozconf.dpTableDefaultOwnerTableSize){
+      array[i].makeFree(i+1);
+      i++;}
+    i--;
+    array[i].makeFree(END_FREE);
+    *base=size;
+    PD((TABLE,"owner compactify and realloc to the default table size %d"
+        ,newsize));
+    size=newsize;
     return;}
-  int newsize= after_last-no_used < TABLE_BUFFER ?
-    after_last+TABLE_BUFFER : after_last+1;
-  if(newsize > DEFAULT_OWNER_TABLE_SIZE &&
-     size - newsize > TABLE_WORTHWHILE_REALLOC){
-    PD((TABLE,"TABLE:owner compactify free slots: new%d",newsize));
+
+  if(no_used*100/size >= ozconf.dpTableLowLimit){
+    PD((TABLE,"owner compactify no realloc"));
+    return;}
+  int newsize= after_last-no_used < ozconf.dpTableBuffer ?
+    after_last+ozconf.dpTableBuffer : after_last+1;
+  if(newsize > ozconf.dpTableDefaultOwnerTableSize &&
+     size - newsize > ozconf.dpTableWorthwhileRealloc){
+    PD((TABLE,"owner compactify free slots: new%d",newsize));
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
     size=newsize;
     Assert(array[newsize-1].isFree());
     array[newsize-1].uOB.nextfree = END_FREE;
     Assert(size>=no_used);
-    Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
     return;}
-  PD((TABLE,"TABLE:owner compactify no realloc\n"));
-  Assert(size>=no_used);
-  Assert(size>=DEFAULT_OWNER_TABLE_SIZE);}
+  PD((TABLE,"owner compactify no realloc\n"));
+  Assert(size>=no_used);}
 
 void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
   OZ_warning("OwnerTable::resize: maybe incorrect");
 #endif
-  int newsize = ((int) (TABLE_EXPAND_FACTOR *size));
-  PD((TABLE,"TABLE:resize owner old:%d no_used:%d new:%d",
+  int newsize = ((int) ((double) ozconf.dpTableExpandFactor*size)/100.0);
+  PD((TABLE,"resize owner old:%d no_used:%d new:%d",
                 size,no_used,newsize));
   array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
   if(array==NULL){
@@ -951,11 +965,25 @@ void BorrowTable::init(int beg,int end)
 
 void BorrowTable::compactify(){
   Assert(notGCMarked());
-  if((double)no_used / (double)size >= TABLE_LOW_LIMIT) return;
-  Assert(size>=DEFAULT_BORROW_TABLE_SIZE);
-  if(size==DEFAULT_BORROW_TABLE_SIZE) return;
-  int newsize= no_used+TABLE_BUFFER;
-  if(newsize<DEFAULT_BORROW_TABLE_SIZE) newsize=DEFAULT_BORROW_TABLE_SIZE;
+  if(no_used*100/size >= ozconf.dpTableLowLimit) return;
+
+  if(size<ozconf.dpTableDefaultBorrowTableSize){
+    int newsize=ozconf.dpTableDefaultBorrowTableSize;
+    PD((TABLE,"TABLE:compactify borrow, resized to the default table size %d",
+        newsize));
+    BorrowEntry *oldarray=array;
+    array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));
+    if(array==NULL){
+      OZ_error("Memory allocation: Borrow Table growth not possible");}
+    int oldsize=size;
+    size=newsize;
+    copyBorrowTable(oldarray,oldsize);
+    return;}
+
+  if(size==ozconf.dpTableDefaultBorrowTableSize) return;
+  int newsize= no_used+ozconf.dpTableBuffer;
+  if(newsize<ozconf.dpTableDefaultBorrowTableSize)
+    newsize=ozconf.dpTableDefaultBorrowTableSize;
   PD((TABLE,"compactify borrow old:%d no_used:%d new:%d",
                 size,no_used,newsize));
   BorrowEntry *oldarray=array;
@@ -978,7 +1006,7 @@ void BorrowTable::resize()
   OZ_warning("BorrowTable::resize: maybe incorrect");
 #endif
   Assert(no_used==size);
-  int newsize = int (TABLE_EXPAND_FACTOR*size);
+  int newsize = (int) ((double) ozconf.dpTableExpandFactor*size)/100.0;
   PD((TABLE,"resize borrow old:%d no_used:%d new:%d", size,no_used,newsize));
   BorrowEntry *oldarray=array;
   array = (BorrowEntry*) malloc(newsize*sizeof(BorrowEntry));

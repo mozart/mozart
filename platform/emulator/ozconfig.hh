@@ -82,6 +82,13 @@ public:
   // global handler
   int perdioSeifHandler;
 
+  int dpTableDefaultOwnerTableSize;
+  int dpTableDefaultBorrowTableSize;
+  int dpTableLowLimit;
+  int dpTableExpandFactor;
+  int dpTableBuffer;
+  int dpTableWorthwhileRealloc;
+
   int closetime;
 
   int numToplevelVars;
