@@ -660,7 +660,7 @@ void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
   
   if (cl==NULL)  return;
   
-  TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
+  TaggedRef ff = feat->getFeature(NameOoFeat);
 
   cl->import(feat,
 	     tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
