@@ -275,6 +275,7 @@ inline ProxyVar* getProxyVar(TaggedRef *tPtr){
 Watcher *varGetWatchersIfExist(TaggedRef* tPtr);
 
 #define GET_VAR(po,T) oz_get##T##Var(*((po)->getPtr()))
+#define GET_TERM(po,T) oz_get##T##Var(*((po)->getAnyPtr()))
 
 VarKind typeOfBorrowVar(BorrowEntry*);
 

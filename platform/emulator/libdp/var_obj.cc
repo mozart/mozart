@@ -168,6 +168,7 @@ void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
     cl=tagged2ObjectClass(oz_deref(oz_findGName(getGNameClass())));
   }
   o->setClass(cl);
+  Assert(be->isVar());
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
@@ -185,6 +186,7 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
       
   fillInObjectAndClass(&of,o);
   EntityInfo *savedInfo = info; // bind disposes this!
+  Assert(be->isVar());
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
