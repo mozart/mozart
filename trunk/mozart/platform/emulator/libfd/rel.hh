@@ -24,6 +24,9 @@
  *
  */
 
+#ifndef __REL_HH__
+#define __REL_HH__
+
 #include "std.hh"
 
 //-----------------------------------------------------------------------------
@@ -160,3 +163,5 @@ public:
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
+
+#endif /*  __REL_HH__ */

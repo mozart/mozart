@@ -49,6 +49,16 @@
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
 
+#define __OZ_EXPECT(O, V, T, F)				\
+  {							\
+    OZ_expect_t r = O.F(V);				\
+    if (O.isFailing(r)) {				\
+      O.fail();						\
+      return OZ_typeErrorCPI(T, 0, "");	                \
+    } else if (O.isSuspending(r) || O.isExceptional(r))	\
+      return O.suspend();				\
+  }
+
 #define _OZ_EXPECT(O, V, A, F)				\
   {							\
     OZ_expect_t r = O.F(V);				\
@@ -62,11 +72,11 @@
 #define OZ_EXPECT(O, A, F)			\
   {						\
     OZ_Term P = OZ_in(A);			\
-    _OZ_EXPECT(O, P, A, F)				\
+    _OZ_EXPECT(O, P, A, F)			\
   }
 
 
-#define _OZ_EXPECT_SUSPEND(O, V, A, F, SC)			\
+#define _OZ_EXPECT_SUSPEND(O, V, A, F, SC)		\
   {							\
     OZ_expect_t r = O.F(V);				\
     if (O.isFailing(r)) {				\
@@ -592,8 +602,16 @@ public:
   OZ_Return postpone(void);
   OZ_Boolean imposeOn(OZ_Term);
   OZ_Boolean addImpose(OZ_FDPropState s, OZ_Term v);
+  OZ_Boolean expectInt(OZ_Term v, int &r) {
+    r = 0;
+    return 0;
+  }
+  int expectIntVarMinMax(OZ_Term v, int &r) {
+    r = addImpose(fd_prop_bounds, v);
+    return 0;
+  }
   OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
-  void impose(OZ_Propagator *);
+  int impose(OZ_Propagator *);
   virtual size_t sizeOf(void) = 0;
   virtual void sClone(void) = 0;
   virtual void gCollect(void) = 0;
@@ -666,6 +684,7 @@ public:
 
   // conversion operator: OZ_CPIVar -> OZ_Term
   operator OZ_Term () const { return varPtr == NULL ? var : (OZ_Term) varPtr; }
+  int operator == (OZ_CPIVar &v) const { return v.var == var; } // tmueller: new stuff
 };
 
 inline
@@ -1068,6 +1087,30 @@ public:
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectBoolVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
+  int expectIntVarMinMax(OZ_Term v, OZ_Return &r) {
+    OZ_expect_t e = expectIntVar(v);
+    if (isFailing(e)) {
+      fail();
+      r = OZ_typeErrorCPI(OZ_EM_FD, 0, "");
+      return 1;
+    } else if (isSuspending(e) || isExceptional(e)) {
+      r = suspend();
+      return 1;
+    }
+    return 0;
+  }
+  int expectInt(OZ_Term v, OZ_Return &r) {
+    OZ_expect_t e = expectInt(v);
+    if (isFailing(e)) {
+      fail();
+      r = OZ_typeErrorCPI(OZ_EM_FD, 0, "");
+      return 1;
+    } else if (isSuspending(e) || isExceptional(e)) {
+      r = suspend();
+      return 1;
+    }
+    return 0;
+  }
   OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectFloat(OZ_Term);
@@ -1102,6 +1145,16 @@ inline
 OZ_Boolean OZ_Expect::isExceptional(OZ_expect_t r) {
   return (r.accepted == -2);
 }
+
+template <class RTYPE>
+class _OZ_ParamIterator {
+public:
+  virtual RTYPE leave(int vars_left = 0) = 0;
+  virtual RTYPE fail(void) = 0;
+  virtual RTYPE vanish(void) = 0;
+};
+
+typedef _OZ_ParamIterator<OZ_Return> OZ_ParamIterator;
 
 #endif // __MOZART_CPI_HH__
 //
