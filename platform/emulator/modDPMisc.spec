@@ -22,45 +22,41 @@
 ### WARRANTIES.
 ###
 
+# -*-perl-*-
+
 %builtins_all =
-(
-
-    ###
-    ### Perdio
-    ###
-
-
-    'close'             => { in  => ['+int'],
+    (
+     'close'            => { in  => ['+int'],
                              out => [],
                              BI  => BIclose},
 
-    'crash'             => { in  => [],
+     'crash'            => { in  => [],
                              out => [],
                              BI  => BIcrash,
                              doesNotReturn=>1},
 
-    'dvset'             => { in  => ['+int','+int'],
+     'dvset'            => { in  => ['+int','+int'],
                              out => [],
                              BI  => BIdvset},
 
-    'siteStatistics'    => { in  => [],
+     'siteStatistics'   => { in  => [],
                              out => ['+[value]'],
                              BI  => BIsiteStatistics},
 
-    'getTablesInfo'     => { in  => [],
+     'getTablesInfo'    => { in  => [],
                              out => ['+[value]'],
                              BI  => BItablesExtract},
 
-    'perdioStatistics'  => { in  => [],
+     'perdioStatistics' => { in  => [],
                              out => ['+record'],
                              BI  => BIperdioStatistics},
 
-    'slowNet'           => { in  => ['+int', '+int'],
+     'slowNet'           => { in  => ['+int', '+int'],
+                              out => [],
+                              bi  => BIslowNet},
+
+     'marshalerPerf'    => { in  => ['+value', '+int'],
                              out => [],
-                             bi  => BIslowNet},
+                             bi  => BImarshalerPerf},
 
-    'tempSimulate'      => { in  => ['+int'],
-                             out => ['+int'],
-                             BI  => BIcloseCon},
-
- );
+     );

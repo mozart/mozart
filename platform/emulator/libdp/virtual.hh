@@ -129,4 +129,8 @@ void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &s);
 void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs);
 void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid);
 
+//
+// special stuff:
+MsgBuffer* getCoreVirtualMsgBuffer(DSite* site);
+
 #endif // __VIRTUAL_HH

@@ -242,6 +242,15 @@ VSMsgBufferOwned* getBasicVirtualMsgBufferImpl(DSite* site)
 static VSMsgHeaderOwned vsStdMsgHeader(VS_M_PERDIO);
 
 //
+// The non-interface method: a virtual message buffer that is not
+// supposed for the actual transmitting (aka for 'BImarshalerPerf');
+MsgBuffer* getCoreVirtualMsgBuffer(DSite* site)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBufferImpl(site);
+  return (buf);                 // upcast (actually, even 2 steps);
+}
+
+//
 // The interface method: a message buffer for perdio messages;
 MsgBuffer* getVirtualMsgBufferImpl(DSite* site)
 {

@@ -475,7 +475,7 @@ public:
   }
 
   //
-  // (for unmarsahaling at the sender site; rare operation;)
+  // (for unmarsahaling at the sender site - a rare operation;)
   VSMsgChunkOwned *getMsgChunk(key_t shmKey, int cn) {
     for (int i = 0; i < getSize(); i++) {
       VSMsgChunkPoolSegmentManagerOwned *fsm = get(i);
@@ -818,7 +818,12 @@ public:
   // "to be provided" methods;
   void marshalBegin() {}        // already initialized;
   void marshalEnd() {}          // no special action now;
-  void unmarshalBegin() {}      // already initialized (allocated);
+  // already initialized (allocated) but pointers are not set:
+  void unmarshalBegin() {
+    currentAddr = cpm->getMsgChunk(firstSegSHMKey, firstChunkNum);
+    posMB = currentAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize(); // in bytes;
+  }
   void unmarshalEnd() {}        // but the chunks need to be released yet;
 
   //
@@ -898,43 +903,9 @@ public:
   VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn,
                       key_t shmKey, int chunkIndex)
     : VSMsgBuffer(shmKey, chunkIndex), cpm(cpmIn) {
-    VSMsgChunkPoolSegmentManagerImported *fsm;
-
-    //
-    fsm = cpm->getSegmentManager(shmKey);
-    if (fsm) {
-      currentAddr = cpm->getMsgChunk(fsm, chunkIndex);
-      //
-      posMB = currentAddr->getDataAddr();
-      endMB = posMB + cpm->getChunkDataSize(fsm); // in bytes;
-
-      //
-      // pre-fetch all segments. Otherwise, unmarshaling process could
-      // break: it cannot be interrupted if some data to be read is
-      // unavailable; it requires that the whole thing can be read;
-      VSMsgChunkImported *tmpAddr = currentAddr;
-      int nextNum;
-      //
-      while ((nextNum = tmpAddr->getNext()) >= 0) {
-        key_t nextKey = tmpAddr->getSHMKey();
-        VSMsgChunkPoolSegmentManagerImported *fsm =
-          cpm->getSegmentManager(nextKey);
-
-        //
-        if (fsm) {
-          // going ahead:
-          tmpAddr = cpm->getMsgChunk(fsm, nextNum);
-        } else {
-          // ... or premature EOF - mark the whole thing as void;
-          currentAddr = (VSMsgChunkImported *) -1;
-          DebugCode(posMB = endMB = (BYTE *) -1;);
-          break;
-        }
-      }
-    } else {
-      currentAddr = (VSMsgChunkImported *) -1;
-      DebugCode(posMB = endMB = (BYTE *) -1;);
-    }
+    Assert(currentAddr = (VSMsgChunkImported *) 0);
+    Assert(posMB = (BYTE *) 0);
+    Assert(endMB = (BYTE *) 0);
   }
   virtual ~VSMsgBufferImported() {
     OZ_error("VSMsgBufferImported destroyed?");
@@ -977,8 +948,6 @@ public:
     //
     DebugCode(firstChunkNum = -1);
     DebugCode(firstSegSHMKey = (key_t) -1);
-    DebugCode(currentAddr = (VSMsgChunkImported *) 0);
-    DebugCode(posMB = endMB = (BYTE *) 0);
   }
 
   //
@@ -1003,8 +972,51 @@ public:
   // "to be provided" methods;
   void marshalBegin() { OZ_error("VSMsgBufferImported::marshalBegin?"); }
   void marshalEnd()   { OZ_error("VSMsgBufferImported::marshalBegin?"); }
-  void unmarshalBegin() {}      // already initialized (allocated);
-  void unmarshalEnd() {}        // but the chunks need to be released yet;
+  //
+  void unmarshalBegin() {
+    VSMsgChunkPoolSegmentManagerImported *fsm;
+
+    //
+    fsm = cpm->getSegmentManager(firstSegSHMKey);
+    if (fsm) {
+      currentAddr = cpm->getMsgChunk(fsm, firstChunkNum);
+      //
+      posMB = currentAddr->getDataAddr();
+      endMB = posMB + cpm->getChunkDataSize(fsm); // in bytes;
+
+      //
+      // pre-fetch all segments. Otherwise, unmarshaling process could
+      // break: it cannot be interrupted if some data to be read is
+      // unavailable; it requires that the whole thing can be read;
+      VSMsgChunkImported *tmpAddr = currentAddr;
+      int nextNum;
+      //
+      while ((nextNum = tmpAddr->getNext()) >= 0) {
+        key_t nextKey = tmpAddr->getSHMKey();
+        VSMsgChunkPoolSegmentManagerImported *fsm =
+          cpm->getSegmentManager(nextKey);
+
+        //
+        if (fsm) {
+          // going ahead:
+          tmpAddr = cpm->getMsgChunk(fsm, nextNum);
+        } else {
+          // ... or premature EOF - mark the whole thing as void;
+          currentAddr = (VSMsgChunkImported *) -1;
+          DebugCode(posMB = endMB = (BYTE *) -1;);
+          break;
+        }
+      }
+    } else {
+      currentAddr = (VSMsgChunkImported *) -1;
+      DebugCode(posMB = endMB = (BYTE *) -1;);
+    }
+  }
+  // and the chunks need to be released:
+  void unmarshalEnd() {
+    DebugCode(currentAddr = (VSMsgChunkImported *) 0);
+    DebugCode(posMB = endMB = (BYTE *) 0);
+  }
 
   //
   // ('siteStringrep' exists just for debugging;)

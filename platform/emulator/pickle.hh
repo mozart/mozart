@@ -86,6 +86,7 @@ typedef enum {
   DIF_FUTURE,
   DIF_VAR_AUTO,
   DIF_FUTURE_AUTO,
+  DIF_EOF,
   DIF_LAST
 } MarshalTag;
 
@@ -130,6 +131,10 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
   { DIF_EXTENSION,    "EXTENSION"},
   { DIF_RESOURCE_T,     "RESOURCE_T"},
   { DIF_RESOURCE_N,     "RESOURCE_N"},
+  { DIF_FUTURE,       "LAZY MAN!"},
+  { DIF_VAR_AUTO,     "LAZY MAN!"},
+  { DIF_FUTURE_AUTO,  "LAZY MAN!"},
+  { DIF_EOF,          "EOF"},
   { DIF_LAST,         "LAST"}
 };
 
