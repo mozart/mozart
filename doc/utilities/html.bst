@@ -77,7 +77,6 @@ FUNCTION {output.nonnull}
     { output.state after.block =
 	{ add.period$ write$
 	  newline$
-%	  "\newblock " write$
 	}
 	{ output.state before.all =
 	    'write$
@@ -268,7 +267,7 @@ FUNCTION {cleanup.braces}
   ""
     { t empty$ not }
     { t #1 #1 substring$ duplicate$ "{" = swap$ "}" = or
-	{}
+	'skip$
 	{ t #1 #1 substring$ * }
       if$
       t #2 global.max$ substring$ 't :=
@@ -283,9 +282,23 @@ FUNCTION {format.title}
   if$
 }
 
-%--**
 FUNCTION {n.dashify}
-{}
+{ 't :=
+  ""
+    { t empty$ not }
+    { t #1 #1 substring$ "-" =
+	{ "-" *
+	    { t #1 #1 substring$ "-" = }
+	    { t #2 global.max$ substring$ 't := }
+	  while$
+	}
+	{ t #1 #1 substring$ *
+	  t #2 global.max$ substring$ 't :=
+	}
+      if$
+    }
+  while$
+}
 
 FUNCTION {format.date}
 { year empty$
@@ -536,8 +549,8 @@ FUNCTION {format.book.crossref}
     }
     { format.crossref.editor * }
   if$
-%--**
-  " \cite{" * crossref * "}" *
+  %--** " \cite{" * crossref * "}" *
+  "cross-referenced entries not implemented" warning$
 }
 
 FUNCTION {format.incoll.inproc.crossref}
@@ -558,8 +571,8 @@ FUNCTION {format.incoll.inproc.crossref}
     }
     { "In " format.crossref.editor * }
   if$
-%--**
-  " \cite{" * crossref * "}" *
+  %--** " \cite{" * crossref * "}" *
+  "cross-referenced entries not implemented" warning$
 }
 
 FUNCTION {article}
@@ -1258,16 +1271,13 @@ REVERSE {reverse.pass}
 
 FUNCTION {begin.bib}
 { et.al.char.used
-%    { "\newcommand{\etalchar}[1]{$^{#1}$}" write$ newline$ }
     { "" write$ newline$ }
     'skip$
   if$
   preamble$ empty$
     'skip$
-%    { preamble$ write$ newline$ }
     { "non-empty preamble not supported" warning$ }
   if$
-%  "\begin{thebibliography}{"  longest.label  * "}" * write$ newline$
   "<DL>" write$ newline$
 }
 
