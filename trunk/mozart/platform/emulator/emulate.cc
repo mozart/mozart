@@ -2406,13 +2406,6 @@ LBLdispatcher:
 	 JUMP(def->getPC());
        }
 
-       if (typ == Co_Port) {
-	 X[1] = X[0];
-	 X[0] = makeTaggedConst(predicate);
-	 predicate = tagged2Const(BI_send);
-	 predArity = 2;
-	 typ=Co_Builtin;
-       }
 // -----------------------------------------------------------------------
 // --- Call: Builtin
 // -----------------------------------------------------------------------
