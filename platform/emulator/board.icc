@@ -177,8 +177,13 @@ void Board::checkSolveThreads(void) {
 
     Assert(bb->crt >= 0);
 
-    if (bb->isStable())
+    if (bb->crt > 0)
+      return;
+
+    if (bb->isStable()) {
       oz_newThreadInject(bb);
+      return;
+    }
 
     bb = bb->getParent();
   }
@@ -196,7 +201,7 @@ void Board::decRunnableThreads(void) {
     Assert(bb->crt >= 0);
 
     if (--(bb->crt) > 0)
-      break;
+      return;
 
     if (bb->isStable())
       oz_newThreadInject(bb);
