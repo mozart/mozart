@@ -45,7 +45,7 @@ export SRCDIR
 export OZPREFIX
 export OZLIB
 export OZMAINIT = Init.ozc
-export OZMAFILE = $(SRCDIR)/ozbatch.ozm
+export OZMAFILE = "-u $(SRCDIR)/ozbatch.ozc"
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
@@ -131,7 +131,9 @@ LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
 CACHETYCS       = $(ENVS:%.env=$(CACHEDIR)/%.tyc)
 
-STAGEEXTRAFILES = $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc $(OZLIB)/ozbatch.ozm
+STAGEEXTRAFILES = \
+        $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc \
+        $(OZLIB)/ozbatch.ozm $(OZLIB)/ozbatch.ozc
 
 SYSLETS = ozbatch ozserver
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
@@ -213,6 +215,9 @@ ozbatch.ozm: MakeAssembly.oz \
         $(OPSRC) OP.env $(COMPILERSRC) Compiler.env BatchCompile.oz
         $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
         $(MV) -f /tmp/$$$$.ozm $@
+
+ozbatch.ozc: ozbatch.ozm
+        OZMAINIT="" OZMAFILE="-b $(SRCDIR)/ozbatch.ozm" $(SRCDIR)/ozbatch.sh
 
 ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
         Init.ozc SP.ozc SP.env OP.ozc OP.env AP.ozc AP.env $(TYCS)
@@ -370,7 +375,7 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 
 # use Ozma to create the components
 bootstrap:
-        $(MAKE) all \
+        $(MAKE) ozbatch.ozc all \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=Init.ozc \
         OZ_LIB=. \
@@ -402,11 +407,12 @@ stage2b:
 
 # stage3: recreate the components and Ozma file using the stage2 Ozma file
 stage3:
-        $(MAKE) install-stage PREFIX=$(STAGE3) \
+        $(MAKE) ozbatch.ozc install-stage PREFIX=$(STAGE3) \
         OZ_LOAD=all=.:all=tyc/lib:all=tyc/tools:prefix=$(URL)/tools/=$(URL)/tools/:= \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=$(STAGE2)/lib/Init.ozc \
-        OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
+        OZMAINIT=$(STAGE2)/lib/Init.ozc \
+        OZMAFILE="-u $(STAGE2)/lib/ozbatch.ozc"
 
 # stage3b: recreate the components and Ozma file using the stage3 components
 stage3b:
