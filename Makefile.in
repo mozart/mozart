@@ -246,18 +246,8 @@ MOGUL_ARCHIVE_DIRS = $(addprefix $(MOGUL_DIRECTORY)/,pkg doc)
 MOGUL_HTML_DIRS    = $(addprefix $(MOGUL_DIRECTORY)/,info info/category)
 MOGUL_CSS_FILES	= $(addprefix $(MOGUL_DIRECTORY)/,$(HTMLEXTRA))
 
-#MOGUL_INFO_DIR     = $(MOGUL_DIRECTORY)/info
-#MOGUL_CAT_DIR      = $(MOGUL_DIRECTORY)/info/category
-#MOGUL_INFO_FILES   = $(addprefix $(MOGUL_INFO_DIR)/,$(HTMLEXTRA))
-#MOGUL_CAT_FILES    = $(addprefix $(MOGUL_CAT_DIR)/,$(HTMLEXTRA))
-
 $(MOGUL_ARCHIVE_DIRS) $(MOGUL_HTML_DIRS):
 	$(INSTALL_DIR) $@
-
-# $(MOGUL_INFO_FILES): $(MOGUL_INFO_DIR)/% : % $(MOGUL_INFO_DIR)
-# 	$(INSTALL_FILE) $< $@
-# $(MOGUL_CAT_FILES): $(MOGUL_CAT_DIR)/% : % $(MOGUL_CAT_DIR)
-# 	$(INSTALL_FILE) $< $@
 
 mogul-archive: $(MOGUL_ARCHIVE_DIRS)
 	$(MOGUL_LIBRARIAN) $(MOGUL_ARCHIVE_OPTIONS) --print-reports
@@ -265,11 +255,10 @@ mogul-archive: $(MOGUL_ARCHIVE_DIRS)
 mogul-html: $(MOGUL_HTML_DIRS) $(MOGUL_CSS_FILES)
 	$(MOGUL_LIBRARIAN) $(MOGUL_HTML_OPTIONS) --print-reports
 
-mogul-css: $(MOGUL_CSS_FILES)
 $(MOGUL_CSS_FILES): $(MOGUL_DIRECTORY)/% : %
 	$(INSTALL_FILE) $< $@
 
-.PHONY: mogul-update mogul-database mogul-archive mogul-html mogul-css
+.PHONY: mogul-update mogul-database mogul-archive mogul-html
 
 veryclean:: clean
 	-rm -f $(MOGUL_DATABASE)
