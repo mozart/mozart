@@ -22,6 +22,12 @@
 
 <Appendix id="appendix.syntax">
   <Title/Syntax Tree Format/
+  <P>
+    This appendix documents the syntax tree data structure used by
+    the compiler.  This information is only needed by implementors of
+    custom front-ends.  Most nodes are self-explanatory; if in doubt,
+    it is recommended that you refer to the Gump sample implementing
+    an Oz parser (installed at <File>examples/gump/OzParser.ozg</File>).
   <Para class=apropos><Title/Input/
     <Grammar.Rule>?={input}
       <Grammar.Alt/<<parseError>>/
@@ -44,8 +50,14 @@
   <Section>
     <Title/The Base Language/
     <Para class=apropos><Title/Phrases/
-      At the syntactical level, statements can in general not be distinguished
-      from expressions.  Both are subsumed by ?={phrase}.
+      At the syntactical level, statements are not distinguished from
+      expressions.  Both are subsumed by ?={phrase}.  In a top-down
+      analysis of the tree, it can be determined which phrases need to
+      be statements and which need to be expressions.  The <<fStepPoint>>
+      form is only required if you want to provide support for source-level
+      debugging:  It wraps the contained phrase into a step point
+      (see <Ptr.Extern to="ozdoc:ozcar">); the atom can be freely chosen
+      to indicate its kind (<<call>>, <<conditional>>, etc.).
       <Grammar.Rule>?={phrase}
 	<Grammar.Alt/<<fStepPoint(?={phrase} ?={atom} ?={coord})>>/
 	<Grammar.Alt/<<fAnd(?={phrase} ?={phrase})>>/
@@ -60,7 +72,7 @@
 	<Grammar.Alt/<<fObjApply(?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fAt(?={phrase} ?={coord})>>/
 	<Grammar.Alt/?={atom literal}/
-	<Grammar.Alt/?={variable}/
+	<Grammar.Alt/?={escapable variable}/
 	<Grammar.Alt/?={wildcard}/
 	<Grammar.Alt/<<fSelf(?={coord})>>/
 	<Grammar.Alt/<<fDollar(?={coord})>>/
@@ -91,15 +103,14 @@
 	<Grammar.Alt/<<fSkip(?={coord})>>/
       <Grammar.Rule>?={label}
 	<Grammar.Alt/?={atom literal}/
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
       <Grammar.Rule>?={atom literal}
 	<Grammar.Alt/<<fAtom(?={literal} ?={coord})>>/
-      <!--** eliminate naked variable? -->
-      <Grammar.Rule>?={naked variable}
-	<Grammar.Alt/<<fVar(?={atom} ?={coord})>>/
       <Grammar.Rule>?={variable}
-	<Grammar.Alt/?={naked variable}/
-	<Grammar.Alt/<<fEscape(?={naked variable} ?={coord})>>/
+	<Grammar.Alt/<<fVar(?={atom} ?={coord})>>/
+      <Grammar.Rule>?={escapable variable}
+	<Grammar.Alt/?={variable}/
+	<Grammar.Alt/<<fEscape(?={variable} ?={coord})>>/
       <Grammar.Rule>?={wildcard}
 	<Grammar.Alt/<<fWildcard(?={coord})>>/
       <Grammar.Rule>?={int literal}
@@ -107,8 +118,12 @@
       <Grammar.Rule>?={record argument}
 	<Grammar.Alt/?={phrase}/
 	<Grammar.Alt/<<fColon(?={feature} ?={phrase})>>/
-      For the moment, the only recognized flags are <<instantiate>>, <<lazy>>,
-      <<dynamic>>, and <<native>>.
+      Procedures can carry flags (atoms following the <<proc>> or <<fun>>
+      keyword).  For the moment, the only recognized flags are <<instantiate>>
+      (the body's code is copied upon application), <<lazy>> (the body has
+      by-need semantics), <<dynamic>> (disable static-call optimization of
+      this procedure), and <<native>> (cannot be pickled).  Other atoms are
+      silently ignored.
       <Grammar.Rule>?={proc flag}
 	<Grammar.Alt/?={atom}/
     <Para class=apropos><Title/Functors/
@@ -119,19 +134,19 @@
 	<Grammar.Alt/<<fExport([?={export decl}] ?={coord})>>/
 	<Grammar.Alt/<<fDefine(?={phrase} ?={phrase} ?={coord})>>/
       <Grammar.Rule>?={import decl}
-	<Grammar.Alt/<<fImportItem(?={naked variable} [?={aliased feature}]>>/
+	<Grammar.Alt/<<fImportItem(?={variable} [?={aliased feature}]>>/
 	<Grammar.Alt space/<<            ?={opt import at})>>/
       <Grammar.Rule>?={aliased feature}
 	<Grammar.Alt/?={feature no var}/
-	<Grammar.Alt/<<?={naked variable}#?={feature no var}>>/
+	<Grammar.Alt/<<?={variable}#?={feature no var}>>/
       <Grammar.Rule>?={opt import at}
 	<Grammar.Alt/<<fNoImportAt>>/
 	<Grammar.Alt/<<fImportAt(?={atom literal})>>/
       <Grammar.Rule>?={export decl}
 	<Grammar.Alt/<<fExportItem(?={export item})>>/
       <Grammar.Rule>?={export item}
-	<Grammar.Alt/?={naked variable}/
-	<Grammar.Alt/<<fColon(?={feature no var} ?={naked variable})>>/
+	<Grammar.Alt/?={variable}/
+	<Grammar.Alt/<<fColon(?={feature no var} ?={variable})>>/
     <Para class=apropos><Title/Classes/
       <Grammar.Rule>?={class descriptor}
 	<Grammar.Alt/<<fFrom([?={phrase}] ?={coord})>>/
@@ -145,21 +160,21 @@
 	<Grammar.Alt/<<fMeth(?={meth head} ?={phrase} ?={coord})>>/
       <Grammar.Rule>?={meth head}
 	<Grammar.Alt/?={meth head 1}/
-	<Grammar.Alt/<<fEq(?={meth head 1} ?={naked variable} ?={coord})>>/
+	<Grammar.Alt/<<fEq(?={meth head 1} ?={variable} ?={coord})>>/
       <Grammar.Rule class=compact>?={meth head 1}
 	<Grammar.Alt/?={atom literal}/
-	<Grammar.Alt/?={variable}/
+	<Grammar.Alt/?={escapable variable}/
 	<Grammar.Alt/<<fRecord(?={meth head label} [?={meth argument}])>>/
 	<Grammar.Alt/<<fOpenRecord(?={meth head label} [?={meth argument}])>>/
       <Grammar.Rule>?={meth head label}
 	<Grammar.Alt/?={atom literal}/
-	<Grammar.Alt/?={variable}/
+	<Grammar.Alt/?={escapable variable}/
       <Grammar.Rule class=compact>?={meth argument}
 	<Grammar.Alt/<<fMethArg(?={meth arg term} ?={default})>>/
 	<Grammar.Alt
 	  /<<fMethColonArg(?={feature} ?={meth arg term} ?={default})>>/
       <Grammar.Rule>?={meth arg term}
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
 	<Grammar.Alt/?={wildcard}/
 	<Grammar.Alt/<<fDollar(?={coord})>>/
       <Grammar.Rule>?={default}
@@ -171,10 +186,10 @@
 	<Grammar.Alt/?={int literal}/
       <Grammar.Rule>?={feature}
 	<Grammar.Alt/?={feature no var}/
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
       <Grammar.Rule>?={escaped feature}
 	<Grammar.Alt/?={feature no var}/
-	<Grammar.Alt/?={variable}/
+	<Grammar.Alt/?={escapable variable}/
     <Para class=apropos><Title/Other/
       <Grammar.Rule>?={case clause}
 	<Grammar.Alt/<<fCaseClause(?={pattern} ?={phrase})>>/
@@ -249,13 +264,13 @@
 	  /<<fSynTopLevelProductionTemplates([?={prod clause}])>>/
       <Grammar.Rule>?={phrase}
 	<Grammar.Alt add
-	  /<<fScanner(?={naked variable}>>/
+	  /<<fScanner(?={variable}>>/
 	<Grammar.Alt space
 	  /<<         [?={class descriptor}] [?={meth}]>>/
 	<Grammar.Alt space
 	  /<<         [?={scanner rule}] ?={atom} ?={coord})>>/
 	<Grammar.Alt
-	  /<<fParser(?={naked variable}>>/
+	  /<<fParser(?={variable}>>/
 	<Grammar.Alt space
 	  /<<        [?={class descriptor}] [?={meth}]>>/
 	<Grammar.Alt space
@@ -264,13 +279,13 @@
 	  /<<        ?={coord})>>/
       <Grammar.Rule>?={grammar symbol}
 	<Grammar.Alt/?={atom literal}/
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
     <Para class=apropos><Title/Scanners/
       <Grammar.Rule>?={scanner rule}
-	<Grammar.Alt/<<fMode(?={naked variable} [?={mode descriptor}])>>/
+	<Grammar.Alt/<<fMode(?={variable} [?={mode descriptor}])>>/
 	<Grammar.Alt/?={lex clause}/
       <Grammar.Rule>?={mode descriptor}
-	<Grammar.Alt/<<fInheritedModes([?={naked variable}])>>/
+	<Grammar.Alt/<<fInheritedModes([?={variable}])>>/
 	<Grammar.Alt/?={lex clause}/
       <Grammar.Rule>?={lex clause}
 	<Grammar.Alt/<<fLexicalAbbreviation(?={grammar symbol} ?={regex})>>/
@@ -293,29 +308,29 @@
 	<Grammar.Alt space
 	  /<<                    [?={prod ret}])>>/
       <Grammar.Rule>?={prod param}
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
 	<Grammar.Alt/?={wildcard}/
       <Grammar.Rule>?={prod key}
 	<Grammar.Alt/<<none#?={string}>>/
 	<Grammar.Alt/<<?={atom}#?={string}>>/
       <Grammar.Rule>?={prod ret}
 	<Grammar.Alt/<<none>>/
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
 	<Grammar.Alt/<<fDollar(?={coord})>>/
       <Grammar.Rule>?={syntax rule}
 	<Grammar.Alt/<<fSyntaxRule(?={grammar symbol} [?={syn formal}]>>/
 	<Grammar.Alt space/<<            ?={syn expression})>>/
       <Grammar.Rule>?={syn formal}
-	<Grammar.Alt/?={naked variable}/
+	<Grammar.Alt/?={variable}/
 	<Grammar.Alt/?={wildcard}/
 	<Grammar.Alt/<<fDollar(?={coord})>>/
       <Grammar.Rule class=compact>?={syn expression}
 	<Grammar.Alt/<<fSynApplication(?={grammar symbol} [?={phrase}])>>/
 	<Grammar.Alt/<<fSynAction(?={phrase})>>/
-	<Grammar.Alt
-	  /<<fSynSequence([?={naked variable}] [?={syn expression}])>>/
+	<Grammar.Alt/<<fSynSequence([?={variable}] [?={syn expression}])>>/
 	<Grammar.Alt/<<fSynAlternative([?={syn expression}])>>/
-	<Grammar.Alt/<<fSynAssignment(?={variable} ?={syn expression})>>/
+	<Grammar.Alt
+	  /<<fSynAssignment(?={escapable variable} ?={syn expression})>>/
 	<Grammar.Alt
 	  /<<fSynTemplateInstantiation(?={prod key} [?={syn expression}]>>/
 	<Grammar.Alt space/<<                          ?={coord})>>/
