@@ -209,16 +209,16 @@
 	  /<<coarseStep(?={atom} ?={int} ?={int} ?={atom} ?={int} ?={int})>>/
 	<Grammar.Alt/<<unit>>/
   <Section>
-    <Title/Finite Domain Extensions/
+    <Title/Finite Domain Extensions and Combinators/
     <P>
       <Grammar.Rule>?={phrase}
 	<Grammar.Alt add/?={fd expression}/
 	<Grammar.Alt/<<fFail(?={coord})>>/
 	<Grammar.Alt/<<fNot(?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fCond([?={clause}] ?={opt else} ?={coord})>>/
-	<Grammar.Alt/<<fOr([?={clause opt then}] for ?={coord})>>/
-	<Grammar.Alt/<<fOr([?={clause opt then}] fdis ?={coord})>>/
-	<Grammar.Alt/<<fOr([?={clause}] fchoice ?={coord})>>/
+	<Grammar.Alt/<<fOr([?={clause opt then}] ?={coord})>>/
+	<Grammar.Alt/<<fDis([?={clause opt then}] ?={coord})>>/
+	<Grammar.Alt/<<fChoice([?={phrase}] ?={coord})>>/
 	<Grammar.Alt/<<fCondis([[?={fd expression}]] ?={coord})>>/
       <Grammar.Rule class=compact>?={fd expression}
 	<Grammar.Alt/<<fFdCompare(?={atom} ?={phrase} ?={phrase} ?={coord})>>/
