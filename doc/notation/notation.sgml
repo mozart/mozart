@@ -63,8 +63,8 @@
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Oz Notation/
-    <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Author.Extern to="author.db" key="Martin.Henz">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Comic>
       <Picture.Choice>
         <Picture.Extern to="notation.gif" type=gif>
