@@ -169,8 +169,7 @@ ALLSRCS = \
         $(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
         $(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
         $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
-        $(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC) \
-        $(ENVS:%=$(OZLIB)/%) \
+        $(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC)
 
 STANDARD = Base.ozc Standard.ozc Base.env Standard.env
 DUMPINTRO = DumpIntro.oz $(STANDARD)
@@ -178,6 +177,7 @@ DUMPINTRO = DumpIntro.oz $(STANDARD)
 LIBFILES = \
         $(GUMPEXAMPLES:%=$(OZLIB)/gump/examples/%) \
         $(OZLIB)/gump/ProductionTemplates.oz \
+        $(ENVS:%=$(OZLIB)/%) \
         $(TYCS:tyc/%=$(OZLIB)/%)
 
 COMPONENTS = \
