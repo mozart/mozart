@@ -249,6 +249,8 @@ where <<Msg>> is the message attempted to be sent to the port.
 where <<Attr>> is the name of the object attribute,
 <<Old>> is the attribute value before the attempted operation,
 and <<New>> is the attribute value after the attempted operation.
+A limitation of the current release is that the attempted
+operation cannot be retried.
 The <<objectFetch>> operation exists because object-records
 are copied lazily: the first time the object is used, the
 object-record is fetched over the network, which might fail.
@@ -551,7 +553,8 @@ to be instances of <<tempFail>> and <<permFail>>.
 
 <SECTION><TITLE>Limitations of current release</TITLE>
 
-<P>The current release has the following limitations:
+<P>The current release has the following limitations
+which will be removed in future releases:
 <LIST>
 <ITEM>Functions, procedures, classes, and functors
 are copied immediately in messages,
@@ -564,6 +567,9 @@ of such an entity can exist per site.
 <ITEM>If an exception is raised or a handler or a watcher is invoked
 due to a distribution fault of an object,
 then the entity argument <<E>> is undefined.
+<ITEM>When an exception is raised or a handler is invoked
+on an object, then the attempted object operation
+cannot be retried.
 <ITEM>The <<global>> level is not implemented for handler installation,
 i.e., the call <<{Fault.install global _ _}>> is not implemented.
 If an attempt is made to install a <<global>> handler,
