@@ -88,14 +88,14 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 
   STuple &xtc = *tagged2STuple(tagged_xtc);
   const int ts = xtc.getSize();
-  TaggedRef prev_fdvar, last_fdvar;
-  TaggedRefPtr last_fdvarptr = NULL;
+  TaggedRef last_fdvar;
+  TaggedRefPtr last_fdvarptr = NULL, prev_fdvarptr;
   TaggedRef var;
   TaggedRefPtr varptr;
   pm_term_type vartag;
   long prod = 1;
   Suspension * susp;
-  pm_term_type last_tag = pm_none, prev_tag = pm_none;
+  pm_term_type last_tag = pm_none;
 
   int j, fds_found;
   for (j = ts, fds_found = 0; j-- && (fds_found < 2); ) {
@@ -107,10 +107,8 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
       if (prod < OzMinInt || OzMaxInt < prod) return FALSE;
     } else if (vartag == pm_fd || vartag == pm_bool) {
       fds_found += 1;
-      if (last_fdvarptr != NULL) {
-	prev_fdvar = last_fdvar;
-	prev_tag = last_tag;
-      }
+      if (last_fdvarptr != NULL)
+	prev_fdvarptr = last_fdvarptr;
       last_fdvar = var;
       last_tag = vartag;
       last_fdvarptr = varptr;
@@ -141,27 +139,16 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
     return TRUE;
   case 2:
     s += 1;
-    susp = createNonResSusp(func, xregs, arity);
-    if (prev_tag == pm_fd) 
-      addSuspFDVar(prev_fdvar, new SuspList(susp), fd_det);
-    else
-      addSuspBoolVar(prev_fdvar, new SuspList(susp));
-
-    if (last_tag == pm_fd)
-      addSuspFDVar(last_fdvar, new SuspList(susp), fd_det);
-    else
-      addSuspBoolVar(last_fdvar, new SuspList(susp));
-
+    am.addSuspendVarList(prev_fdvarptr);
+    am.addSuspendVarList(last_fdvarptr);
     return TRUE;
   case 3:
     s += 1;
-    susp = createNonResSusp(func, xregs, arity);
-    addSuspOnlyToUVar(varptr, new SuspList(susp, NULL));
+    am.addSuspendVarList(varptr);
     return TRUE;
   case 4:
     s += 1;
-    susp = createNonResSusp(func, xregs, arity);
-    addSuspSVar(var, new SuspList(susp, NULL));
+    am.addSuspendVarList(varptr);
     return TRUE;
   case 5:
     return FALSE;
@@ -212,44 +199,6 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
       addSuspSVar(bifdhm_var[i], new SuspList(susp));
     } 
   } 
-}
-
-
-void BIfdHeadManager::addForIntSusp(int i, Suspension * susp)
-{
-  DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
-
-  pm_term_type vtag = bifdhm_vartag[i];
-  
-  if (vtag != pm_singl)
-    if (vtag == pm_fd) {
-      addSuspFDVar(bifdhm_var[i], new SuspList(susp), fd_det);
-    } else if (vtag == pm_bool) {
-      addSuspBoolVar(bifdhm_var[i], new SuspList(susp));
-    } else if (vtag == pm_uvar) {
-      addSuspOnlyToUVar(bifdhm_varptr[i], new SuspList(susp));
-    } else {
-      Assert(vtag == pm_svar);
-
-      addSuspSVar(bifdhm_var[i], new SuspList(susp));
-    }
-}
-
-
-void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
-{
-  DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
-
-  pm_term_type vtag = bifdhm_vartag[i];
-  
-  if (!(vtag == pm_singl || vtag == pm_fd || vtag == pm_bool))
-    if (vtag == pm_uvar) {
-      addSuspOnlyToUVar(bifdhm_varptr[i], new SuspList(susp));
-    } else {
-      Assert(vtag == pm_svar);
-
-      addSuspSVar(bifdhm_var[i], new SuspList(susp));
-    }
 }
 
 
@@ -333,16 +282,14 @@ OZ_Bool checkDomDescr(OZ_Term descr,
   deref(descr, descr_ptr, descr_tag);
   
   if (isNotCVar(descr_tag)) {
-    addNonResSuspForDet(descr, descr_ptr, descr_tag,
-			createNonResSusp(cfun, args, arity));
+    am.addSuspendVarList(descr_ptr);
     return SUSPEND;
   } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
     return PROCEED;
   } else if (AtomSup == descr && (expect >= 1)) { // (1)
     return PROCEED;
   } else if (isGenFDVar(descr, descr_tag) && (expect >= 1)) {
-    addSuspFDVar(descr, new SuspList(createNonResSusp(cfun, args, arity),
-				     NULL), fd_det);
+    am.addSuspendVarList(descr_ptr);
     return SUSPEND;
   } else if (AtomBool == descr && (expect >= 2)) { // (1)
     return PROCEED;
