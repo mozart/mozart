@@ -86,7 +86,6 @@ void ConfigData::init() {
   runningUnderEmacs     = 0;
 
   debugPerdio  = 0;
-  perdioMinimal = 0;
   debugIP = 0;
 
   perdioSeifHandler = 1;
