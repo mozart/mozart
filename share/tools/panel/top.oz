@@ -188,7 +188,6 @@ local
 	 P = {System.get print}
 	 M = {System.get messages}
       in
-	 {OE.message  set(E.message)}
 	 {OE.'thread' set(E.'thread')}
 	 {OE.location set(E.location)}
 	 {OE.hints    set(E.hints)}
@@ -438,15 +437,8 @@ in
 	 OPI =
 	 {MakePage OpiPage 'Programming Interface' Book
 	  [frame(text:    'Errors'
-		 height:  85
-		 left:    [checkbutton(text:    'Show message'
-				       feature: message
-				       state:  {System.get errors}.message
-				       action:  proc {$ B}
-						   {System.set
-						    errors(message:B)}
-						end)
-			   checkbutton(text:    'Show thread'
+		 height:  60
+		 left:    [checkbutton(text:    'Show thread'
 				       feature: 'thread'
 				       state:  {System.get errors}.'thread'
 				       action:  proc {$ B}
@@ -470,8 +462,7 @@ in
 		 right:   [button(text:   'Default'
 				  action: proc {$}
 					     {System.set
-					      errors(message:  True
-						     'thread': True
+					      errors('thread': True
 					             location: True
 						     hints:    True)}
 					     {OPI update}
