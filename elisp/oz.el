@@ -982,7 +982,7 @@ The directory containing FILE becomes the initial working directory
 and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
-	(init-str "set args -u http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc\n"))
+	(init-str "set args -u http://www.ps.uni-sb.de/ozhome/bin/opi\n"))
     (cond ((get-buffer oz-emulator-buffer)
 	   (delete-windows-on oz-emulator-buffer)
 	   (kill-buffer oz-emulator-buffer)))
