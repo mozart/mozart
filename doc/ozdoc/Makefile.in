@@ -8,7 +8,7 @@ OZDOC           = @OZDOC@
 OZDOCFLAGS      =
 DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
-DOCDIR          = /www/mozart/ozdoc
+DOCDIR          = /www/mozart/documentation/ozdoc
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -21,7 +21,7 @@ SGMLSRCS        = ozdoc.sgml
 
 all: ozdoc-html
 
-include $(SRCDIR)/../../share/Makefile.boot
+include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
@@ -38,7 +38,7 @@ validate: ozdoc-html
         nsgmls -cHTML4.soc -sB ozdoc-html/*.html
 
 install: ozdoc-html $(DOCDIR)
-        for i in *; do $(INSTALL_FILE) $$i $(DOCDIR); done
+        for i in ozdoc-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
 
 $(DOCDIR):
         $(INSTALL_DIR) $@
