@@ -72,21 +72,6 @@ starts the machine under gdb")
   "The previewer for doc files")
 
 
-(defconst oz-keywords
-   (concat
-    (oz-make-keywords-for-match
-     '(
-       "pred" "proc" "fun"
-       "local" "declare"
-       "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
-       "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
-       "true" "false"
-       "div" "mod"
-       "not" "process" "in"
-       ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
-    ))
-
 (defvar oz-error-string (format "%c" 17)
   "how compiler and engine signal errors")
 
@@ -340,115 +325,6 @@ Compiler buffer")
 ;     )
     )))
 
-
-;;------------------------------------------------------------
-;; oz-mode
-;;------------------------------------------------------------
-
-(if oz-mode-syntax-table
-    ()
-  (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?_ "_" table)
-    (modify-syntax-entry ?\\ "\\" table)
-    (modify-syntax-entry ?+ "." table)
-    (modify-syntax-entry ?- "." table)
-    (modify-syntax-entry ?= "." table)
-    (modify-syntax-entry ?< "." table)
-    (modify-syntax-entry ?> "." table)
-    (modify-syntax-entry ?\" "\"" table)
-    (modify-syntax-entry ?\' "\"" table)
-    (modify-syntax-entry ?\` "\"" table)
-    (modify-syntax-entry ?%  "<" table)
-    (modify-syntax-entry ?\n ">" table)
-;; emacs does not support two comment formats !!!
-;    (modify-syntax-entry ?/ ". 14" table)
-;    (modify-syntax-entry ?* ". 23" table)
-    (setq oz-mode-syntax-table table)
-    (set-syntax-table oz-mode-syntax-table)))
-
-(define-abbrev-table 'oz-mode-abbrev-table ())
-
-(defun oz-mode-variables ()
-  (set-syntax-table oz-mode-syntax-table)
-  (setq local-abbrev-table oz-mode-abbrev-table)
-  (make-local-variable 'paragraph-start)
-  (setq paragraph-start (concat "^%%\\|^$\\|" page-delimiter)) ;'%%..'
-  (make-local-variable 'paragraph-separate)
-  (setq paragraph-separate paragraph-start)
-  (make-local-variable 'paragraph-ignore-fill-prefix)
-  (setq paragraph-ignore-fill-prefix t)
-  (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'oz-indent-line)
-  (make-local-variable 'comment-start)
-  (setq comment-start "%")
-  (make-local-variable 'comment-end)
-  (setq comment-end "")
-  (make-local-variable 'comment-start-skip)
-  (setq comment-start-skip "/\\*+ *\\|% *")
-)
-
-(defun oz-mode-commands (map)
-  (define-key map "\t"      'oz-indent-line)
-  (define-key map "\M-\C-m" 'oz-feed-buffer)
-  (define-key map "\M-r"    'oz-feed-region)
-  (define-key map "\M-l"    'oz-feed-line)
-  (define-key map "\M-n"   'oz-next-buffer)
-  (define-key map "\M-p"   'oz-previous-buffer)
-  (define-key map "\C-c\C-e"    'oz-toggle-errors)
-  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-;  (if oz-lucid
-;      (progn
-;	(define-key map [(control button1)]       'oz-feed-region-browse)
-;	(define-key map [(control button3)]       'oz-feed-region-browse-memory)))
-;  (if oz-gnu19
-;      (progn
-;	(define-key map [C-down-mouse-1]        'oz-feed-region-browse)
-;	(define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory)))
-  
-  (if oz-lucid
-      (progn
-	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
-	(define-key map [(control c) (control i)] 'oz-feed-file)
-	(define-key map [(control c) (control h)] 'oz-halt)
-	(define-key map [(control c) (control m)]   'oz-toggle-machine))
-    (define-key map "\C-c\C-h"    'oz-halt)
-    (define-key map "\C-c\C-i"    'oz-feed-file)
-    (define-key map "\C-c\C-m"    'oz-toggle-machine))
-
-  (define-key map "\C-c\C-f"    'oz-feed-file)
-  (define-key map "\C-c\C-n"    'oz-new-buffer)
-  (define-key map "\C-c\C-l"    'oz-fontify)
-  (define-key map "\C-c\C-r"    'run-oz)
-  (define-key map "\C-cc"       'oz-precompile-file)
-  (define-key map "\C-cm"       'oz-set-machine)
-  (define-key map "\C-co"       'oz-other)
-  (define-key map "\C-cd"       'oz-gdb)
-  (define-key map "\r"		'oz-electric-terminate-line)
-  )
-
-(oz-mode-commands oz-mode-map)
-
-(defun oz-mode ()
-  "Major mode for editing Oz code.
-Commands:
-\\{oz-mode-map}
-Entry to this mode calls the value of oz-mode-hook
-if that value is non-nil."
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map oz-mode-map)
-  (setq major-mode 'oz-mode)
-  (setq mode-name "Oz")
-  (oz-mode-variables)
-  (if oz-lucid
-   (set-buffer-menubar (append current-menubar oz-menubar)))
-
-  ; font lock stuff
-  (setq font-lock-keywords (list oz-keywords))
-  (if oz-want-font-lock
-      (font-lock-mode 1))
-  (run-hooks 'oz-mode-hook))
-
 ;;------------------------------------------------------------
 ;; Start/Stop oz
 ;;------------------------------------------------------------
@@ -683,6 +559,21 @@ the GDB commands `cd DIR' and `directory'."
 	  (mapconcat 'identity args "\\|")
 	  "\\)\\>"))
 
+(defconst oz-keywords
+   (concat
+    (oz-make-keywords-for-match
+     '(
+       "pred" "proc" "fun"
+       "local" "declare"
+       "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
+       "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
+       "true" "false"
+       "div" "mod"
+       "not" "process" "in"
+       ))
+    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
+    ))
+
 
 (defconst oz-declare-pattern (oz-make-keywords-for-match '("declare")))
 
@@ -775,8 +666,9 @@ the GDB commands `cd DIR' and `directory'."
 	((and no-empty-line (looking-at "%"))
 	 -1)
 	((looking-at "\\<in\\>")
-	 (oz-search-matching-begin nil)
-	 )
+	 (oz-search-matching-begin nil))
+	((looking-at "\\\\")
+	 0)
 	((or (looking-at oz-end-pattern) (looking-at oz-middle-pattern))
 	 ;; we must indent to the same column as the matching begin
 	 (oz-search-matching-begin nil))
@@ -899,8 +791,6 @@ the GDB commands `cd DIR' and `directory'."
 		     (setq do-loop nil)
 		   (message "unbalanced open paren")
 		   (setq do-loop nil)))
-		((and (looking-at "\\<else\\>\\|\\[\\]") (= nesting 0))
-		 (setq do-loop nil))
 		((looking-at oz-middle-pattern)
 		 ;; 'then' '[]'
 		 t)
@@ -941,6 +831,113 @@ the GDB commands `cd DIR' and `directory'."
   (current-column))
 
 
+;;------------------------------------------------------------
+;; oz-mode
+;;------------------------------------------------------------
+
+(if oz-mode-syntax-table
+    ()
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?_ "_" table)
+    (modify-syntax-entry ?\\ "\\" table)
+    (modify-syntax-entry ?+ "." table)
+    (modify-syntax-entry ?- "." table)
+    (modify-syntax-entry ?= "." table)
+    (modify-syntax-entry ?< "." table)
+    (modify-syntax-entry ?> "." table)
+    (modify-syntax-entry ?\" "\"" table)
+    (modify-syntax-entry ?\' "\"" table)
+    (modify-syntax-entry ?\` "\"" table)
+    (modify-syntax-entry ?%  "<" table)
+    (modify-syntax-entry ?\n ">" table)
+;; emacs does not support two comment formats !!!
+;    (modify-syntax-entry ?/ ". 14" table)
+;    (modify-syntax-entry ?* ". 23" table)
+    (setq oz-mode-syntax-table table)
+    (set-syntax-table oz-mode-syntax-table)))
+
+(define-abbrev-table 'oz-mode-abbrev-table ())
+
+(defun oz-mode-variables ()
+  (set-syntax-table oz-mode-syntax-table)
+  (setq local-abbrev-table oz-mode-abbrev-table)
+  (make-local-variable 'paragraph-start)
+  (setq paragraph-start (concat "^%%\\|^$\\|" page-delimiter)) ;'%%..'
+  (make-local-variable 'paragraph-separate)
+  (setq paragraph-separate paragraph-start)
+  (make-local-variable 'paragraph-ignore-fill-prefix)
+  (setq paragraph-ignore-fill-prefix t)
+  (make-local-variable 'indent-line-function)
+  (setq indent-line-function 'oz-indent-line)
+  (make-local-variable 'comment-start)
+  (setq comment-start "%")
+  (make-local-variable 'comment-end)
+  (setq comment-end "")
+  (make-local-variable 'comment-start-skip)
+  (setq comment-start-skip "/\\*+ *\\|% *")
+)
+
+(defun oz-mode-commands (map)
+  (define-key map "\t"      'oz-indent-line)
+  (define-key map "\M-\C-m" 'oz-feed-buffer)
+  (define-key map "\M-r"    'oz-feed-region)
+  (define-key map "\M-l"    'oz-feed-line)
+  (define-key map "\M-n"   'oz-next-buffer)
+  (define-key map "\M-p"   'oz-previous-buffer)
+  (define-key map "\C-c\C-e"    'oz-toggle-errors)
+  (define-key map "\C-c\C-c"    'oz-toggle-compiler)
+;  (if oz-lucid
+;      (progn
+;	(define-key map [(control button1)]       'oz-feed-region-browse)
+;	(define-key map [(control button3)]       'oz-feed-region-browse-memory)))
+;  (if oz-gnu19
+;      (progn
+;	(define-key map [C-down-mouse-1]        'oz-feed-region-browse)
+;	(define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory)))
+  
+  (if oz-lucid
+      (progn
+	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
+	(define-key map [(control c) (control i)] 'oz-feed-file)
+	(define-key map [(control c) (control h)] 'oz-halt)
+	(define-key map [(control c) (control m)]   'oz-toggle-machine))
+    (define-key map "\C-c\C-h"    'oz-halt)
+    (define-key map "\C-c\C-i"    'oz-feed-file)
+    (define-key map "\C-c\C-m"    'oz-toggle-machine))
+
+  (define-key map "\C-c\C-f"    'oz-feed-file)
+  (define-key map "\C-c\C-n"    'oz-new-buffer)
+  (define-key map "\C-c\C-l"    'oz-fontify)
+  (define-key map "\C-c\C-r"    'run-oz)
+  (define-key map "\C-cc"       'oz-precompile-file)
+  (define-key map "\C-cm"       'oz-set-machine)
+  (define-key map "\C-co"       'oz-other)
+  (define-key map "\C-cd"       'oz-gdb)
+  (define-key map "\r"		'oz-electric-terminate-line)
+  )
+
+(oz-mode-commands oz-mode-map)
+
+(defun oz-mode ()
+  "Major mode for editing Oz code.
+Commands:
+\\{oz-mode-map}
+Entry to this mode calls the value of oz-mode-hook
+if that value is non-nil."
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map oz-mode-map)
+  (setq major-mode 'oz-mode)
+  (setq mode-name "Oz")
+  (oz-mode-variables)
+  (if oz-lucid
+   (set-buffer-menubar (append current-menubar oz-menubar)))
+
+  ; font lock stuff
+  (setq font-lock-keywords (list oz-keywords))
+  (if oz-want-font-lock
+      (font-lock-mode 1))
+  (run-hooks 'oz-mode-hook))
 
 
 ;;------------------------------------------------------------
