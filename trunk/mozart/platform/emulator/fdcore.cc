@@ -99,8 +99,8 @@ OZ_BI_define(BIisFdVarB, 1,1)
 
 OZ_BI_define(BIgetFDLimits, 0,2)
 {
-  OZ_out(0) = OZ_int(0);
-  OZ_out(1) = OZ_int(fd_sup);
+  OZ_out(0) = oz_int(0);
+  OZ_out(1) = oz_int(fd_sup);
   return PROCEED;
 } OZ_BI_end
 
@@ -111,7 +111,7 @@ OZ_C_proc_begin(BIfdIs, 2)
   if (oz_isNonKinded(fd))
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
   
-  return oz_unify(OZ_getCArg(1), // mm_u
+  return oz_unify(OZ_getCArg(1), 
 		  oz_bool(isPosSmallFDInt(fd) || 
 			  isGenFDVar(fd, fdtag) || 
 			  isGenBoolVar(fd, fdtag)));
@@ -131,9 +131,9 @@ OZ_C_proc_begin(BIfdMin, 2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     int minVal = tagged2GenFDVar(var)->getDom().getMinElem();
-    return OZ_unify(OZ_int(minVal), OZ_getCArg(1));   
+    return OZ_unify(oz_int(minVal), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_int(0), OZ_getCArg(1));   
+    return OZ_unify(oz_int(0), OZ_getCArg(1));   
   } else if (oz_isNonKinded(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -152,9 +152,9 @@ OZ_C_proc_begin(BIfdMax, 2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     int maxVal = tagged2GenFDVar(var)->getDom().getMaxElem();
-    return OZ_unify(OZ_int(maxVal), OZ_getCArg(1));   
+    return OZ_unify(oz_int(maxVal), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_int(1), OZ_getCArg(1));   
+    return OZ_unify(oz_int(1), OZ_getCArg(1));   
   } else if (oz_isNonKinded(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -173,9 +173,9 @@ OZ_C_proc_begin(BIfdMid, 2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    return OZ_unify(OZ_int(fdomain.getMidElem()), OZ_getCArg(1));   
+    return OZ_unify(oz_int(fdomain.getMidElem()), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_int(0), OZ_getCArg(1));   
+    return OZ_unify(oz_int(0), OZ_getCArg(1));   
   } else if (oz_isNonKinded(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -194,7 +194,7 @@ OZ_C_proc_begin(BIfdNextSmaller, 3)
   if (isVariableTag(valtag)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, valptr);
   } else if (isSmallIntTag(valtag)) {
-    value = OZ_intToC(val);
+    value = smallIntValue(val);
   } else {
     TypeError(1, "");
   }
@@ -202,17 +202,17 @@ OZ_C_proc_begin(BIfdNextSmaller, 3)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallIntTag(vartag)) {
-    if (value > OZ_intToC(var))
+    if (value > smallIntValue(var))
       return OZ_unify(var, OZ_getCArg(2));;   
   } else if (isGenFDVar(var,vartag)) {
     int nextSmaller = tagged2GenFDVar(var)->getDom().getNextSmallerElem(value);
     if (nextSmaller != -1) 
-      return OZ_unify(OZ_int(nextSmaller), OZ_getCArg(2));
+      return OZ_unify(oz_int(nextSmaller), OZ_getCArg(2));
   } else if (isGenBoolVar(var,vartag)) {
     if (value > 1)
-      return OZ_unify(OZ_int(1), OZ_getCArg(2));   
+      return OZ_unify(oz_int(1), OZ_getCArg(2));   
     else if (value > 0)
-      return OZ_unify(OZ_int(0), OZ_getCArg(2));   
+      return OZ_unify(oz_int(0), OZ_getCArg(2));   
   } else if (oz_isNonKinded(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -232,7 +232,7 @@ OZ_C_proc_begin(BIfdNextLarger, 3)
   if (oz_isVariable(valtag)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, valptr);
   } else if (isSmallIntTag(valtag)) {
-    value = OZ_intToC(val);
+    value = smallIntValue(val);
   } else {
     TypeError(1, "");
   }
@@ -240,17 +240,17 @@ OZ_C_proc_begin(BIfdNextLarger, 3)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallIntTag(vartag)) {
-    if (value < OZ_intToC(var))
+    if (value < smallIntValue(var))
       return OZ_unify(var, OZ_getCArg(2));;   
   } else if (isGenFDVar(var,vartag)) {
     int nextLarger = tagged2GenFDVar(var)->getDom().getNextLargerElem(value);
     if (nextLarger != -1) 
-      return OZ_unify(OZ_int(nextLarger), OZ_getCArg(2));
+      return OZ_unify(oz_int(nextLarger), OZ_getCArg(2));
   } else if (isGenBoolVar(var,vartag)) {
     if (value < 0)
-      return OZ_unify(OZ_int(0), OZ_getCArg(2));   
+      return OZ_unify(oz_int(0), OZ_getCArg(2));   
     else if (value < 1)
-      return OZ_unify(OZ_int(1), OZ_getCArg(2));   
+      return OZ_unify(oz_int(1), OZ_getCArg(2));   
   } else if (oz_isNonKinded(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else {
@@ -290,12 +290,12 @@ OZ_C_proc_begin(BIfdGetCardinality, 2)
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if(isSmallIntTag(vartag)) {
-    return OZ_unify(OZ_int(1), OZ_getCArg(1));
+    return OZ_unify(oz_int(1), OZ_getCArg(1));
   } else if (isGenFDVar(var,vartag)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    return OZ_unify(OZ_int(fdomain.getSize()), OZ_getCArg(1));
+    return OZ_unify(oz_int(fdomain.getSize()), OZ_getCArg(1));
   } else if (isGenBoolVar(var,vartag)) {
-    return OZ_unify(OZ_int(2), OZ_getCArg(1));
+    return OZ_unify(oz_int(2), OZ_getCArg(1));
   } else if (oz_isNonKinded(var)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, varptr);
   } else { 
@@ -375,7 +375,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
   if (isVariableTag(vstag)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vsptr);
   } else if (isSmallIntTag(vstag)) {
-    size = OZ_intToC(vs);
+    size = smallIntValue(vs);
   } else {
     TypeError(1, "");
   }
@@ -411,7 +411,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
 
 // get the current lower bound of the domain
   if(isSmallIntTag(vtag)) {
-    vmin = vmax = OZ_intToC(v);
+    vmin = vmax = smallIntValue(v);
   } else if (isGenFDVar(v,vtag)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
     vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
@@ -431,7 +431,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
   if (isVariableTag(vmtag)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vmptr);
   } else if (isSmallIntTag(vmtag)) {
-    min = OZ_intToC(vm);
+    min = smallIntValue(vm);
   } else {
     TypeError(1, "");
   }
@@ -466,7 +466,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   
 // get the current lower bound of the domain
   if(isSmallIntTag(vtag)) {
-    vmin = vmax = OZ_intToC(v);
+    vmin = vmax = smallIntValue(v);
   } else if (isGenFDVar(v,vtag)) {
     vmin = tagged2GenFDVar(v)->getDom().getMinElem();
     vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
@@ -486,7 +486,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   if (isVariableTag(vmtag)) {
     return BI_FD_suspendOnVar(OZ_self, OZ_arity, OZ_args, vmptr);
   } else if (isSmallIntTag(vmtag)) {
-    max = OZ_intToC(vm);
+    max = smallIntValue(vm);
   } else {
     TypeError(1, "");
   }
