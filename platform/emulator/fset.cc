@@ -968,6 +968,7 @@ FSetValue FSetValue::operator - (const FSetValue &y) const
     Assert(!_normal && y._normal);
 
     z._normal = true;
+    z._other = ! y._other;
     for (int i = fset_high; i--; )
       z._in[i] = ~y._in[i]; // !
     z.toExtended();
