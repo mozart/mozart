@@ -1245,7 +1245,8 @@ void unmarshalUnsentTerm(MsgBuffer *bs) {
 void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
 {
   if((pvar->isProxy()) || pvar->isManager()) {
-    marshalVar(pvar,bs);}
+    marshalVar(pvar,bs);
+    return;}
 
   if (pvar->isObjectURL()) {
     PD((MARSHAL,"var objectproxy"));

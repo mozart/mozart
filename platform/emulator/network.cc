@@ -1019,6 +1019,7 @@ public:
 
 
 void RemoteSite::zeroReferences(){
+  PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)
     return;
   
@@ -2051,7 +2052,7 @@ inline ipReturn write_ack_close(int fd,Connection *r){
   return IP_BLOCK;}
 
 ipReturn tcpCloseWriter(WriteConnection *r){
-  PD((TCP,"tcpCloseWriter r:%x",r));
+  PD((TCP,"tcpCloseWriter r:%x site: %s",r,r->remoteSite->site->stringrep()));
   OZ_warning("Closing connection, no check for acks!!!!");
   Assert(r->canbeClosed());
   int fd=r->getFD();
@@ -3221,10 +3222,10 @@ ipBlockSend:
 /**********************************************************************/
 RemoteSite* createRemoteSite(Site* site, int readCtr){
   return remoteSiteManager->allocRemoteSite(site, readCtr);}
-void zeroRefsToRemote(RemoteSite *s){
-  s->zeroReferences();}
-void nonZeroRefsToRemote(RemoteSite *s){
-  s->zeroReferences();} 
+void zeroRefsToRemote(RemoteSite *s){return;}
+//s->zeroReferences();}
+void nonZeroRefsToRemote(RemoteSite *s){return;}
+//  s->nonzeroReferences();} 
 int sendTo_RemoteSite(RemoteSite* rs,MsgBuffer* bs,MessageType m,Site* s, int i){
   return rs->sendTo((NetMsgBuffer*)bs,m,s,i);}
 int discardUnsentMessage_RemoteSite(RemoteSite* s,int msg){
