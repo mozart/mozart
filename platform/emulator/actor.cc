@@ -19,6 +19,7 @@
 #include "value.hh"
 
 #include "cont.hh"
+#include "cpstack.hh"
 #include "actor.hh"
 #include "board.hh"
 
@@ -112,6 +113,18 @@ int WaitActor::selectOrFailChildren(int l, int r) {
   } else {
     return 0;
   }
+}
+
+void WaitActor::pushChoice(WaitActor *wa) {
+  if (cps) { cps->push(wa); } else { cps = new CpStack(wa); }
+}
+ 
+void WaitActor::pushChoices(CpStack *pcps) {
+  if (cps) { cps->push(pcps); } else { cps = pcps; }
+}
+
+Bool WaitActor::hasChoices() {
+  return (cps ? !cps->isEmpty() : NO);
 }
 
 #ifdef OUTLINE
