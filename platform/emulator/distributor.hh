@@ -44,40 +44,4 @@ public:
 
 };
 
-
-class DistBag {
-private:
-  Distributor * dist;
-  DistBag     * next;
-
-  DistBag(Distributor *d, DistBag *b) {
-    dist = d; next = b;
-  }
-
-  DistBag(Distributor *d) {
-    dist = d;
-  }
-
-  void dispose(void);
-
-public:
-  USEFREELISTMEMORY;
-
-  DistBag * add(Distributor * d);
-
-  DistBag * get(Distributor ** d);
-
-  Distributor * getFirst(void) {
-    Assert(this);
-    return dist;
-  }
-
-  DistBag * merge(DistBag * b);
-
-  DistBag * gCollect(void);
-  DistBag * sClone(void);
-
-};
-
-
 #endif

@@ -56,12 +56,6 @@ void Board::addToNonMono(Propagator * prop) {
 }
 
 inline
-void Board::addToDistBag(Distributor * d) {
-  setDistBag(getDistBag()->add(d));
-}
-
-
-inline
 TaggedRef Board::genSucceeded(Bool isEntailed) {
   ozstat.incSolveSolved();
   SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
@@ -100,22 +94,6 @@ void Board::scheduleNonMono(void) {
 
   setNonMono(NULL);
 }
-
-
-/*
- * Distributors
- *
- */
-
-inline
-Distributor * Board::getDistributor(void) {
-  Distributor * d = NULL;
-  setDistBag(getDistBag()->get(&d));
-  return d;
-}
-
-
-
 
 
 /*
@@ -309,11 +287,7 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   bb->incSuspCount(getSuspCount());
 
   // Merge constraints
-  DEBUG_CONSTRAIN_CVAR(("\n==== Start Merging ===="));
-
   OZ_Return ret = installScript(OK);
-
-  DEBUG_CONSTRAIN_CVAR(("\n==== Stop Merging ===="));
 
   // Merge propagators (must be after script installation, since script
   //                    installation might wake some propagators!!!!)
@@ -340,9 +314,6 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
       Assert(bb->crt > 0);
     }
 
-    // Merge distributors
-    bb->setDistBag(bb->getDistBag()->merge(getDistBag()));
-
     // Merge nonmonotonic propagators
     bb->setNonMono(bb->getNonMono()->merge(getNonMono()));
 
@@ -355,13 +326,21 @@ inline
 int Board::commit(int left, int right) {
   ozstat.incSolveAlt();
 
-  return getDistBag()->getFirst()->commit(this,left,right);
+  Distributor * d = getDistributor();
 
+  int n = d->commit(this,left,right);
+
+  if (n == 0) {
+    d->dispose();
+    setDistributor(NULL);
+  }
+
+  return n;
 }
 
 
 inline
-Bool Board::cacIsAlive() {
+Bool Board::cacIsAlive(void) {
   Board * s = this;
 
   do {

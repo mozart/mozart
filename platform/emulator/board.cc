@@ -58,7 +58,7 @@ Bool Board::_ignoreWakeUp = NO;
  */
 
 Board::Board()
-  : suspCount(0), bag(0),
+  : suspCount(0), dist(0),
     crt(0), suspList(0), nonMonoSuspList(0),
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue)
@@ -69,7 +69,7 @@ Board::Board()
 
 
 Board::Board(Board * p)
-  : suspCount(0), bag(0),
+  : suspCount(0), dist(0),
     crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue)
 {
@@ -385,7 +385,7 @@ void Board::checkStability(void) {
         int n = d->getAlternatives();
 
         if (n == 1) {
-          d->commit(this,1,1);
+          commit(1,1);
         } else {
           trail.popMark();
           am.setCurrent(pb);

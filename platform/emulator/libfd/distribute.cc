@@ -235,7 +235,7 @@ void FdDistributor::selectVarNbSusps(void) {
            int maxnb   = getConstraints(vd),
            int curnb = getConstraints(vd);
            if (curnb < maxnb)
-           continue;
+              continue;
            int cursize = getSize(vd);
            if (curnb > maxnb || cursize < minsize) {
              maxnb   = curnb;
@@ -436,6 +436,9 @@ OZ_BI_define(fdd_distribute, 3, 1) {
   {
     Board * bb = oz_currentBoard();
 
+    if (bb->getDistributor())
+      return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
+
     FdDistributor * fdd;
 
     switch (PP(var_sel,val_sel)) {
@@ -471,7 +474,7 @@ OZ_BI_define(fdd_distribute, 3, 1) {
     default:
       Assert(0);
     }
-    bb->addToDistBag(fdd);
+    bb->setDistributor(fdd);
 
     OZ_RETURN(fdd->getSync());
   }
