@@ -3,8 +3,21 @@
 
 local
 
-   fun {FormatExceptionLine E}
-      ErrorExcText # E.title
+   local
+      FormatLine = Error.formatLine
+      FormatBody =
+      fun {$ B}
+	 {FoldL B
+	  fun {$ A L}
+	     A # ' / ' # {FormatLine {CondSelect L l nil} V2VS} #
+	     ': ' # {FormatLine {CondSelect L m nil} V2VS}
+	  end nil}
+      end
+   in
+      fun {FormatExceptionLine E}
+	 ErrorExcText # {CondSelect E title ""} #
+	 {FormatBody {CondSelect E body ""}}
+      end
    end
    
    fun {S2F Nr Id Dir File Line Time Name Args Vars Builtin}
