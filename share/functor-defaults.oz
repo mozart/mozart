@@ -36,7 +36,7 @@ defaults(lib:
 	     'Misc']
 
 	 volatile:
-	    ['Module' 'Resolve' 'OS' 'Property' 'Pickle' 'System' 'BitArray']
+	    ['Module' 'Resolve' 'OS' 'Property' 'Pickle' 'System']
 
 	 tools:
 	    ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
