@@ -58,4 +58,26 @@ public class Meta {
   public static boolean fullwidthGet(String id) {
     return fullwidth_map.containsKey(id.toUpperCase());
   }
+  private static Hashtable chunk_map = new Hashtable();
+  public static class ChunkInfo {
+    String s;
+    int i=0;
+    public ChunkInfo(String s) { this.s=s; }
+  }
+  public static boolean chunkExists(String title) {
+    return chunk_map.containsKey(title);
+  }
+  public static boolean chunkRegister(String id,String title) {
+    ChunkInfo info = new ChunkInfo(id);
+    chunk_map.put(title,info);
+    return true;
+  }
+  public static String chunkGetID(String title) {
+    return ((ChunkInfo)chunk_map.get(title)).s;
+  }
+  public static String chunkGetNUMInc(String title) {
+    ChunkInfo info =  (ChunkInfo) chunk_map.get(title);
+    info.i += 1;
+    return String.valueOf(info.i);
+  }
 }
