@@ -1,6 +1,6 @@
 DESCRIPTION="Mozart/Oz: a multiparadigm concurrent constraint programming language"
 MOZART_TAG="1.2.5.20030125"
-SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-01-25/mozart-1.2.5.20030125-src.tar.gz
+SRC_URI="ftp://ftp.mozart-oz.org/pub/mozart/store/1.2.5-2003-01-25/mozart-1.2.5.20030125-src.tar.gz"
 HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 DEPEND="virtual/glibc
