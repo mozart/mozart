@@ -28,6 +28,9 @@ proc {OzcarMessage M}
       {System.showInfo OzcarMessagePrefix # M}
    else skip end
 end
+proc {OzcarError M}
+   {System.showInfo OzcarErrorPrefix # M}
+end
 
 fun {VS2A X} %% virtual string to atom
    {String.toAtom {VirtualString.toString X}}
