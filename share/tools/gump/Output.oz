@@ -54,8 +54,6 @@ local
       % any term output by this function must have a precedence of at least P
       case Ex of _|_ then {LI {Map Ex OutputOz} NL}#NL
       [] nil then ""
-      [] dirHalt then '\\halt'
-      [] dirHelp then '\\help'
       [] dirSwitch(Switches) then
 	 {FoldL Switches
 	  fun {$ In Switch}
@@ -64,11 +62,9 @@ local
 		end
 	  end '\\switch'}
       [] dirShowSwitches then '\\showSwitches'
-      [] dirFeed(Filename) then '\\feed \''#Filename#'\''
-      [] dirThreadedFeed(Filename) then '\\threadedfeed \''#Filename#'\''
-      [] dirCore(Filename) then '\\core \''#Filename#'\''
-      [] dirMachine(Filename) then '\\machine \''#Filename#'\''
-      [] dirExpect(_) then ""
+      [] dirLocalSwitches then '\\localSwitches'
+      [] dirPushSwitches then '\\pushSwitches'
+      [] dirPopSwitches then '\\popSwitches'
       [] fAnd(S T) then
 	 case S of fSkip(_) then {Oz T P}
 	 elsecase T of fSkip(_) then {Oz S P}
