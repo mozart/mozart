@@ -235,7 +235,7 @@ char *OZ_toC(OZ_Term term)
   case SMALLINT:
     {
       int value = smallIntValue(term);
-      sprintf(TmpBuffer,"%s",value);
+      sprintf(TmpBuffer,"%d",value);
     }
     break;
   case CONST:
