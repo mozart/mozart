@@ -17,9 +17,10 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "tagged.hh"
 #include "term.hh"
 #include "bignum.hh"
+
 
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
 enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
@@ -349,6 +350,16 @@ TaggedRef mkTuple(int from, int to){
   OZ_putArg(s, 2, OZ_CToInt(to));
   return s;
 }
+
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+#define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
+#define AssertFD(C) \
+   if (!(C)) error("FD assertion '%s' failed at %s:%d.", \
+       #C, __FILE__, __LINE__); 
+#else
+#define DEBUG_FD_IR(COND, CODE)
+#define AssertFD(C)
+#endif
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdomn.icc"

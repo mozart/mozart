@@ -14,15 +14,6 @@
 #ifndef __CODE_AREAH
 #define __CODE_AREAH
 
-#include "opcodes.hh"
-#include "term.hh"
-#include "indexing.hh"
-#include "hashtbl.hh"
-
-
-class CodeArea;
-
-
 /**********************************************************************
  *							              *
  *    class AbstractionTable: represented as hash table               *
@@ -103,6 +94,7 @@ public:
   /* read from file and return start in "pc" */
   CodeArea(CompStream *fd, int size, ProgramCounter &pc);
 
+  static void printDef(ProgramCounter PC);
   static void getDefinitionArgs(ProgramCounter PC,
 				Reg &reg, ProgramCounter &next, TaggedRef &file,
 				TaggedRef &line, PrTabEntry *& pred);

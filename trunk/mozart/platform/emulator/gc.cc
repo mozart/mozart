@@ -22,25 +22,18 @@
 
 #include <ctype.h>
 
-#include "gc.hh"
-#include "records.hh"
-#include "builtins.hh"
-#include "actor.hh"
 #include "am.hh"
-#include "board.hh"
-#include "cell.hh"
-#include "debug.hh"
+
+#include "gc.hh"
+
 #include "dllist.hh"
+
 #include "genvar.hh"
 #include "ofgenvar.hh"
 #include "fdhook.hh"
-#include "io.hh"
-#include "misc.hh"
-#include "objects.hh"
-#include "stack.hh"
-#include "thread.hh"
-#include "verbose.hh"
 #include "fdprofil.hh"
+
+#include "verbose.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -1513,13 +1506,16 @@ void AM::gc(int msgLevel)
   GCREF(threadsHead);
   GCREF(threadsTail);
 
+  Assert(suspendVar==0);
+  gcTagged(suspCallHandler,suspCallHandler);
   GCPROCMSG("ioNodes");
-  for(int i = 0; i < IO::openMax; i++)
-    if(FD_ISSET(i,&IO::globalReadFDs)) {
-      if (i != IO::QueryFILE->csfileno()) {
-	IO::ioNodes[i] = IO::ioNodes[i]->gcBoard();
+  for(int i = 0; i < osOpenMax(); i++) {
+    if (osIsWatchedReadFD(i)) {
+      if (i != compStream->csfileno()) {
+	ioNodes[i] = ioNodes[i]->gcBoard();
       }
-    } 
+    }
+  }
   performCopying();
 
   GCPROCMSG("toplevelVars");
@@ -1636,7 +1632,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   opMode = IN_TC;
   gcing = 0;
   varCount = 0;
-  unsigned int starttime = usertime();
+  unsigned int starttime = osUserTime();
 
   DebugGC ((bb->isCommitted () == OK), error ("committed board to be copied"));
   fromCopyBoard = bb;
@@ -1661,7 +1657,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   fromCopyBoard = NULL;
   gcing = 1;
 
-  stat.timeForCopy.incf(usertime()-starttime);
+  stat.timeForCopy.incf(osUserTime()-starttime);
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 
@@ -2353,7 +2349,7 @@ void checkGC()
 
 void AM::doGC()
 {
-  blockSignals();
+  osBlockSignals();
 
   /*  --> empty trail */
   deinstallPath(rootBoard);
@@ -2368,7 +2364,7 @@ void AM::doGC()
   }
 
   unsetSFlag(StartGC);
-  unblockSignals();
+  osUnblockSignals();
 }
 
 

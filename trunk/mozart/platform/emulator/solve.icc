@@ -1,0 +1,46 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: popow
+  Last modified: $Date$ from $Author$
+  Version: $Revision$
+  State: $State$
+
+  Solver
+  ------------------------------------------------------------------------
+*/
+
+#ifndef __SOLVE_ICC_
+#define __SOLVE_ICC_
+
+#if !defined(OUTLINE) && defined(__GNUC__)
+#pragma interface
+#endif
+
+/* ------------------------------------------------------------------------
+   class SolveActor
+   ------------------------------------------------------------------------ */
+
+inline
+void SolveActor::addSuspension (SuspList *l)
+{
+  l->setNext (suspList);
+  suspList = l;
+}
+
+inline
+void SolveActor::addSuspension (Suspension *susp)
+{
+  suspList = new SuspList (susp, suspList);
+}
+
+inline
+Bool SolveActor::areNoExtSuspensions ()
+{
+  if (suspList == NULL)
+    return (OK);
+  else
+    return (checkExtSuspList ());
+}
+
+#endif  // __SOLVE_ICC_
