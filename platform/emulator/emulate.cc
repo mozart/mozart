@@ -2875,6 +2875,10 @@ LBLdispatcher:
        case RAISE:         goto LBLraise;
        case BI_TYPE_ERROR: RAISE_TYPE;
 
+       case BI_REPLACEBICALL:
+         PC = NOCODE;
+         goto LBLreplaceBICall;
+
        case SUSPEND:
          e->pushCFun(biFun,X,predArity);
          e->suspendOnVarList(CTT);
