@@ -31,10 +31,7 @@ private:
   size_t chunk_size;
   char * chunk_data;
   char * copyChunkData(void) {
-    char * data = allocate(chunk_size);
-    for (int i = chunk_size; i--; )
-      data[i] = chunk_data[i];
-    return data;
+    return (char *) memcpy(allocate(chunk_size), chunk_data, chunk_size);
   }
   char * allocate(int size) {
     COUNT1(sizeHeapChunks,size);

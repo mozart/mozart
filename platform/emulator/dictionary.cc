@@ -96,8 +96,7 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize) {
     ret = (DynamicTable *) freeListMalloc(memSize);
     ret->numelem=numelem;
     ret->size=size;
-    for (dt_index i=ret->size; i--; )
-      ret->table[i]=table[i];
+    memcpy(ret->table, table, size * sizeof(table[0]));
   } else {
     ret=newDynamicTable(newSize);
 

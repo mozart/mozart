@@ -150,103 +150,34 @@ void exitCheckSpace() {
  *
  */
 
-#define LD0(i) f0=frm[i];
-#define LD1(i) f1=frm[i];
-#define LD2(i) f2=frm[i];
-#define ST0(i) to[i]=f0;
-#define ST1(i) to[i]=f1;
-#define ST2(i) to[i]=f2;
-
-#define MaxStaticSize 56
-
 inline
 void * gcReallocStatic(void * p, size_t sz) {
   // Use for blocks where size is known statically at compile time
   DebugCheck(sz%sizeof(int) != 0,
              OZ_error("gcReallocStatic: can only handle word sized blocks"););
 
-  register int32 * frm = (int32 *) p;
-  register int32 * to  = (int32 *) freeListMalloc(sz);
+  if (sz > 12) {
+    return memcpy(freeListMalloc(sz), p, sz);
+  } else {
+    register int32 * frm = (int32 *) p;
+    register int32 * to  = (int32 *) freeListMalloc(sz);
 
-  register int32 f0, f1, f2;
+    switch(sz) {
+    case 12:
+      to[2]=frm[2];
+    case 8:
+      to[1]=frm[1];
+    case 4:
+      to[0]=frm[0];
+      break;
+    default:
+      Assert(0);
+    }
 
-  switch(sz) {
-  case 56:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
-      ST2(8)  LD2(11) ST0(9)  LD0(12) ST1(10) LD1(13)
-      ST2(11) ST0(12) ST1(13) break; }
-  case 52:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
-      ST2(8)  LD2(11) ST0(9)  LD0(12)
-      ST1(10) ST2(11) ST0(12)  break; }
-  case 48:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
-      ST2(8)  LD2(11)
-      ST0(9)  ST1(10) ST2(11)  break; }
-  case 44:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)  ST1(7)  LD1(10)
-      ST2(8)  ST0(9)  ST1(10)  break; }
-  case 40:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)  ST2(5)  LD2(8)  ST0(6)  LD0(9)
-      ST1(7)  ST2(8)  ST0(9)  break; }
-  case 36:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)  ST2(5)  LD2(8)
-      ST0(6)  ST1(7)  ST2(8)  break; }
-  case 32:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  LD1(7)
-      ST2(5)  ST0(6)  ST1(7)  break; }
-  case 28:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)  ST0(3)  LD0(6)
-      ST1(4)  ST2(5)  ST0(6)  break; }
-  case 24:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)  ST2(2)  LD2(5)
-      ST0(3)  ST1(4)  ST2(5)  break; }
-  case 20:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)  ST1(1)  LD1(4)
-      ST2(2)  ST0(3)  ST1(4)  break; }
-  case 16:
-    { LD0(0)  LD1(1)  LD2(2)
-      ST0(0)  LD0(3)
-      ST1(1)  ST2(2)  ST0(3)  break; }
-  case 12:
-    { LD0(0)  LD1(1)  LD2(2)  ST0(0)  ST1(1)  ST2(2)  break; }
-  case  8:
-    { LD0(0)  LD1(1)  ST0(0)  ST1(1)  break; }
-  case  4:
-    { LD0(0)  ST0(0)  break; }
-#ifdef DEBUG_CHECK
-  default:
-    if (sz > MaxStaticSize)
-      { Assert(0); };
-#endif
+    return to;
   }
-
-  return to;
 }
 
-#undef LD0
-#undef LD1
-#undef LD2
-#undef ST0
-#undef ST1
-#undef ST2
 
 /*
  * The garbage collector uses an explicit recursion stack. The stack

@@ -42,9 +42,7 @@ void Stack::reallocate(int newsize)
 
   allocate(newsize);
 
-  for (int i=0; i < oldsize; i++) {
-    array[i] = savearray[i];
-  }
+  memcpy(array, savearray, oldsize * sizeof(StackEntry));
 
   if (stkalloc==Stack_WithMalloc)
     free(savearray);
