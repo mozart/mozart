@@ -3867,7 +3867,7 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
   case PERM_BLOCKED|PERM_ME:{
     PD((ERROR_DET,"Port is PERM"));
     if(!p->startHandlerPort(th, p, msg, PERM_BLOCKED|PERM_ME))
-      oz_suspendOnNet(th); 
+      oz_suspendOnNet(th);
     return BI_REPLACEBICALL;}
   case TEMP_BLOCKED|TEMP_ME:{
     PD((ERROR_DET,"Port is Tmp size:%d treash:%d",
@@ -3877,17 +3877,13 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
       return BI_REPLACEBICALL;}
   case ENTITY_NORMAL: break;
   default: Assert(0);}
+
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
   marshal_M_PORT_SEND(bs,index,msg);
 
   OZ_Term nogoods = bs->getNoGoods();
   if (!literalEq(nil(),nogoods)) {
-    /* 
-       This should fix your problem 
-       with the portSend Ralph 
-       EK
-       */
     int portIndex;
     OZ_Term t;
     unmarshal_M_PORT_SEND(bs,portIndex,t);
@@ -6041,8 +6037,8 @@ OZ_BI_define(BIportWait,2,0)
    Tertiary *tert = tagged2Tert(prt);
    int dummy;
    portWait(am.currentThread(),
-	    getSiteFromTertiaryProxy(tert)-> getQueueStatus(dummy)
-	    ,t,tert);
+	    getSiteFromTertiaryProxy(tert)-> getQueueStatus(dummy),
+	    t,tert);
    return PROCEED;
 } OZ_BI_end
 
