@@ -77,7 +77,6 @@ static Bool isUninterestingTask(ProgramCounter PC) {
   return
     PC == C_XCONT_Ptr ||
     PC == C_CALL_CONT_Ptr ||
-    PC == C_LOCK_Ptr ||
     PC == C_SET_SELF_Ptr ||
     PC == C_SET_ABSTR_Ptr ||
     PC == C_LTQ_Ptr ||
@@ -171,6 +170,13 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
   }
   if (auxPC == C_EMPTY_STACK) {
     frame = NULL;
+    return makeTaggedNULL();
+  } else if (auxPC == C_LOCK_Ptr) {
+    // the continuation we found belongs to this lock
+    // (note that we may lose information when executing
+    // code without debug information, but this saves us from
+    // stack corruptions in Ozcar)
+    frame = auxframe;
     return makeTaggedNULL();
   } else if (auxPC == C_DEBUG_CONT_Ptr) {
     // the OzDebug in the next stack frame has more to tell than
