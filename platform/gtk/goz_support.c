@@ -99,7 +99,7 @@ OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
 
 /*****************************************************************************
  * Bruni's Corner
- * Until Thorsten has his own backend we need these functions
+ * Until Thorsten has his own backend he needs these functions
  *****************************************************************************/
 
 /* Just easy cut&paste
@@ -144,6 +144,10 @@ OZ_BI_define (ozgtk_signal_connect_sml, 3, 1)
   OZ_RETURN_INT (id);
 } OZ_BI_end
 
+/*
+ * End of Bruni's Corner
+ */
+
 /*****************************************************************************
  * Convertions
  *****************************************************************************/
@@ -159,16 +163,23 @@ goz_ozterm_to_gtkarg(OZ_Term term)
     OZ_typeError (0, "expecting tuple of the form Name|Value");
   }
 
-  arg.name = OZ_virtualStringToC (OZ_head (term), &len);
-  arg.type = gtk_type_from_name (arg.name);
+  arg.name = OZ_virtualStringToC (OZ_head(term), &len);
 
   {
-    OZ_Term type, value;
+    OZ_Term val = OZ_tail(term);
 
-    value = OZ_tail (term);
-    type = OZ_termType(value);
-
-    /* TODO */
+    if (OZ_isInt(val)) {
+      arg.type = GTK_TYPE_INT;
+      arg.d.int_data = OZ_intToC(val);
+    }
+    else if (OZ_isBool(val)) {
+      arg.type = GTK_TYPE_BOOL;
+      arg.d.bool_data = (gboolean) OZ_boolToC(val);
+    }
+    else if (OZ_isFloat(val)) {
+      arg.type = GTK_TYPE_DOUBLE;
+      arg.d.double_data = OZ_floatToC(val);
+    }
   }
 
   return arg;
