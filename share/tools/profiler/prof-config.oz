@@ -1,10 +1,6 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-%% Until the emacs interface has been fixed, you'll find
-%% lines with "funny" comments like here:
-%% StatusInitText = 'No current thread' /* end */
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% some helpers
@@ -174,7 +170,7 @@ end
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
 
-ConfigEmacs     = true             % should we use Emacs?
+ConfigEmacs     = {Not {System.get standalone}} % should we use Emacs?
 ConfigUpdate    = UpdateTimes.1.1  % Automatic update interval
 ConfigThreshold = t(calls:2 closures:2 samples:2 heap:256)
 
