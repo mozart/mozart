@@ -59,6 +59,7 @@ BIMODSPECS = \
         Lock Name Number Object Port Procedure Record \
         String Thread Time Tuple Unit Value VirtualString \
         BitString ByteString InterFault \
+        WeakDictionary \
         INTERNAL # do not include this at compiler (things will blow up!)
 
 MODSPECS= \
