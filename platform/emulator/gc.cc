@@ -41,10 +41,6 @@
 #define inline
 #endif
 
-#ifdef PERDIO
-extern OwnerTable *ownerTable;
-#endif
-
 /****************************************************************************
  * MACROS
  ****************************************************************************/
@@ -695,7 +691,7 @@ Bool isInTree (Board *b)
 
 void dogcGName(GName *gn)
 {
-  if (opMode == IN_GC) {
+  if (gn && opMode == IN_GC) {
     gcGName(gn);
   }
 }
@@ -704,8 +700,9 @@ inline
 Name *Name::gcName()
 {
   CHECKCOLLECTED(homeOrGName, Name *);
+  GName *gn = NULL;
   if (hasGName()) {
-    dogcGName(getGName());
+    gn = getGName();
   }
   if (opMode == IN_GC && isOnHeap() ||
       opMode == IN_TC && isLocalBoard(getBoard())) {
@@ -718,8 +715,10 @@ Name *Name::gcName()
     storeForward(&homeOrGName, aux);
     
     FDPROFILE_GC(cp_size_literal,sizeof(*this));
+    dogcGName(gn);
     return aux;
   } else {
+    dogcGName(gn);
     return this;
   }
 }
@@ -1591,8 +1590,6 @@ void AM::gc(int msgLevel)
 #ifdef PERDIO
   performCopying();
   gcBorrowTableRoots();
-  performCopying();
-  gcBorrowTable();
   gcGNameTable();
 #endif
 
@@ -1602,6 +1599,8 @@ void AM::gc(int msgLevel)
   processUpdateStack ();
   
   Assert(ptrStack.isEmpty());
+
+  gcBorrowTable();
 
   exitCheckSpace();
 
@@ -2172,6 +2171,8 @@ ConstTerm *ConstTerm::gcConstTerm()
   if (this == NULL) return NULL;
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
+  GName *gn = NULL;
+
   size_t sz = 0;
   switch (getType()) {
   case Co_Board:     return ((Board *) this)->gcBoard();
@@ -2182,7 +2183,7 @@ ConstTerm *ConstTerm::gcConstTerm()
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
       sz = sizeof(Abstraction);
-      dogcGName(a->getGName1());
+      gn = a->getGName1();
       COUNT(abstraction);
       break;
     }
@@ -2192,7 +2193,7 @@ ConstTerm *ConstTerm::gcConstTerm()
       Object *o = (Object *) this;
       CheckLocal(o);
       sz = sizeof(Object);
-      dogcGName(o->getGName1());
+      gn = o->getGName1();
       break;
     }
   case Co_Cell:
@@ -2233,14 +2234,14 @@ ConstTerm *ConstTerm::gcConstTerm()
     CheckLocal((Space *) this);
     sz = sizeof(Space);
     COUNT(space);
-    dogcGName(getGName1());
+    gn = getGName1();
     break;
 
   case Co_Chunk:
     CheckLocal((SChunk *) this);
     sz = sizeof(SChunk);
     COUNT(chunk);
-    dogcGName(getGName1());
+    gn = getGName1();
     break;
 
   case Co_Array:
@@ -2297,6 +2298,7 @@ ConstTerm *ConstTerm::gcConstTerm()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_CONSTTERM);
   storeForward(getGCField(), ret);
+  dogcGName(gn);
   return ret;
 }
 

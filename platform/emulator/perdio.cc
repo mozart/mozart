@@ -789,8 +789,10 @@ char *GNameSite::print() {
 
 
 class GName {
-public:
+  TaggedRef value;
   char gcMark;
+
+public:
   char gnameType;
   GNameSite site;
   FatInt id;
@@ -800,12 +802,15 @@ public:
   TaggedRef getURL() { return url; }
   void markURL(TaggedRef u) { Assert(!url); url = u; }
 
+  TaggedRef getValue()       { return value; }
+  void setValue(TaggedRef v) { value = v; }
+
   Bool same(GName *other) {
     return site.same(other->site) && id.same(other->id);
   }
-  GName() { gcMark = 0; url=0; }
+  GName() { gcMark = 0; url=0; value = 0; }
   // GName(GName &) // this implicit constructor is used!
-  GName(ip_address ip, port_t port, time_t timestamp, GNameType gt) 
+  GName(ip_address ip, port_t port, time_t timestamp, GNameType gt, TaggedRef val) 
   {
     gcMark = 0;
     url = 0;
@@ -817,6 +822,8 @@ public:
     idCounter->inc();
     id = *idCounter;
     gnameType = (char) gt;
+
+    value = val;
   }
   
   GNameType getGNameType() { return (GNameType) gnameType; }
@@ -824,17 +831,24 @@ public:
   void setGCMark()   { gcMark = 1; }
   Bool getGCMark()   { return gcMark; }
   void resetGCMark() { gcMark = 0; }
-  
+
+  void gcGName()
+  {
+    if (getGNameType()!=GNT_CODE && !getGCMark()) {
+      setGCMark();
+      gcTagged(value,value);
+    }
+  }
+
 };
 
 class GNameTable: public GenHashTable{
   friend TaggedRef findGName(GName *gn);
-  friend void addGName(GName *gn,TaggedRef t);
 private:
   int hash(GName *);
-  void add(GName *name, TaggedRef t);
   TaggedRef find(GName *name);
 public:
+  void add(GName *name);
   GNameTable():GenHashTable(GNAME_HASH_TABLE_DEFAULT_SIZE) {}
   
   void gcGNameTable();
@@ -852,11 +866,10 @@ int GNameTable::hash(GName *gname)
 
 
 inline
-void GNameTable::add(GName *name, TaggedRef t)
+void GNameTable::add(GName *name)
 {
   int hvalue=hash(name);
-  GenHashTable::htAdd(hvalue,(GenHashBaseKey*)name,
-		      (GenHashEntry *) ToPointer(t));
+  GenHashTable::htAdd(hvalue,(GenHashBaseKey*)name,0);
 }
 
 TaggedRef GNameTable::find(GName *name)
@@ -864,8 +877,9 @@ TaggedRef GNameTable::find(GName *name)
   int hvalue = hash(name);
   GenHashNode *aux = htFindFirst(hvalue);
   while(aux) {
-    if (name->same((GName*)aux->getBaseKey())) {
-      return (TaggedRef) ToInt32(aux->getEntry());
+    GName *gn = (GName*)aux->getBaseKey();
+    if (name->same(gn)) {
+      return gn->getValue();
     }
     aux = htFindNext(aux,hvalue); }
   return makeTaggedNULL();
@@ -878,9 +892,15 @@ TaggedRef findGName(GName *gn) {
 }
 
 inline
-void addGName(GName *gn, TaggedRef t) {
+void addGName(GName *gn) {
   Assert(!findGName(gn));
-  theGNameTable.add(gn,t);
+  theGNameTable.add(gn);
+}
+
+inline
+void addGName(GName *gn, TaggedRef t) {
+  gn->setValue(t);
+  addGName(gn);
 }
 
 GName *newGName(TaggedRef t, GNameType gt)
@@ -890,15 +910,9 @@ GName *newGName(TaggedRef t, GNameType gt)
   time_t ts;
   
   getSiteFields(mySite,ip,port,ts); 
-  GName* ret = new GName(ip,port,ts,gt);
-  addGName(ret,t);
+  GName* ret = new GName(ip,port,ts,gt,t);
+  addGName(ret);
   return ret;
-}
-
-void addGName(GName *name, PrTabEntry *pr)
-{
-  Assert(name->getGNameType()==GNT_CODE);
-  addGName(name,ToInt32(pr));
 }
 
 GName *newGName(PrTabEntry *pr)
@@ -1834,7 +1848,7 @@ void gcOwnerTable()      { ownerTable->gcOwnerTable();}
 void gcBorrowTable() { borrowTable->gcBorrowTable();}
 void gcBorrowTableRoots() { borrowTable->gcBorrowTableRoots();}
 void gcGNameTable()  { theGNameTable.gcGNameTable();}
-void gcGName(GName* name) { if (name) name->setGCMark(); }
+void gcGName(GName* name) { if (name) name->gcGName(); }
 void gcFrameToProxy()  {borrowTable->gcFrameToProxy();}
 
 
@@ -2114,12 +2128,10 @@ void GNameTable::gcGNameTable()
       continue;
 
     if (gn->getGCMark()) {
-      TaggedRef &t = aux->getEntryAdr();
-      gcTagged(t,t);
       gn->resetGCMark();
     } else {
       if (gn->getGNameType()==GNT_NAME &&
-	  tagged2Literal(ToInt32(aux->getEntry()))->isNamedName()) {
+	  tagged2Literal(gn->getValue())->isNamedName()) {
 	continue;
       }
       delete gn;
