@@ -1473,10 +1473,10 @@ TaggedRef oz_adjoin(SRecord *, SRecord *);
 TaggedRef oz_adjoinList(SRecord *, TaggedRef arity, TaggedRef proplist);
 
 Bool isSorted(TaggedRef list);
-
 TaggedRef duplist(TaggedRef list, int &len);
 TaggedRef sortlist(TaggedRef list,int len);
-TaggedRef packsort(TaggedRef list);
+TaggedRef packlist(TaggedRef list);
+TaggedRef packsortlist(TaggedRef list);
   
 inline
 Bool oz_isRecord(TaggedRef t) {
@@ -1529,7 +1529,7 @@ int getWidth(OZ_Term term)
 inline
 Arity *oz_makeArity(OZ_Term list)
 {
-  list=packsort(list);
+  list = packsortlist(list);
   if (!list) return 0;
   return aritytable.find(list);
 }
