@@ -195,7 +195,7 @@ starts the emulator under gdb")
   (setq font-lock-keywords (list oz-keywords)))
 
 ; workaround for a bug in older font-lock modes  
-(setq font-lock-mode-hook '(oz-set-fontlock-keywords))
+;(setq font-lock-mode-hook '(oz-set-fontlock-keywords))
 
 
 ;;------------------------------------------------------------
