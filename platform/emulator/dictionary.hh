@@ -310,6 +310,7 @@ public:
       np->set(key, value);
       Assert(!np->isEmpty());
       //
+      Assert(entries >= 0);
       entries++;
       // slots++;
       if (entries > maxEntries /* || slots > maxSlots */ )
@@ -338,6 +339,7 @@ public:
           np->setEPtr(newA);
 
           //
+          Assert(entries >= 0);
           entries++;
           if (entries > maxEntries)
             resize();
@@ -375,6 +377,7 @@ public:
         np->setEPtr(newA);
 
         //
+        Assert(entries >= 0);
         entries++;
         if (entries > maxEntries)
           resize();
@@ -455,6 +458,7 @@ public:
       Assert(!np->isEmpty());
 
       //
+      Assert(entries >= 0);
       entries++;
       // slots++;
       if (entries > maxEntries /* || slots > maxSlots */ )
@@ -484,6 +488,7 @@ public:
           np->setEPtr(newA);
 
           //
+          Assert(entries >= 0);
           entries++;
           if (entries > maxEntries)
             resize();
@@ -524,6 +529,7 @@ public:
         np->setEPtr(newA);
 
         //
+        Assert(entries >= 0);
         entries++;
         if (entries > maxEntries)
           resize();
@@ -545,6 +551,7 @@ public:
       if (featureEq(np->getKey(), key)) {
         np->setEmpty();
         entries--;
+        Assert(entries >= 0);
         // slots--;
       }
     } else if (!np->isEmpty()) {
@@ -581,6 +588,7 @@ public:
             np->set(fptr->getKey(), fptr->getValue());
           }
           entries--;
+          Assert(entries >= 0);
           break;
         }
 
@@ -593,7 +601,7 @@ public:
 
   //
   int getSize() { return (dictHTSizes[sizeIndex]); }
-  int getUsed() { return (entries); }
+  int getUsed() { Assert(entries >= 0); return (entries); }
 
   // Allocate & return _unsorted_ list containing all features:
   OZ_Term getKeys();

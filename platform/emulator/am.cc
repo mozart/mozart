@@ -583,7 +583,7 @@ void AM::suspendEngine(void)
     // explicit alarm signal is sent while in 'osBlockSelect()');
     handleAlarm(sleepTime);
 
-    ozstat.timeIdle += (osTotalTime() - idle_start);
+    ozstat.timeIdle += sleepTime;
 
     wakeUser();
   }
