@@ -25,13 +25,6 @@
 %%
 
 local
-   fun {GumpFormatter Exc}
-      case Exc of gump(fileNotFound FileName) then
-	 error(title: 'Gump Scanner'
-	       body: [line(l: 'Could not open file "'#FileName#'"')])
-      end
-   end
-
    LexBase = {Foreign.require 'tools/gump/GumpScanner.dl'
 	      gump(createFromFile: 2 createFromVirtualString: 2
 		   setInteractive: 2 getInteractive: 2
@@ -41,7 +34,7 @@ local
    proc {FromFile FileName ?NewBufferState}
       NewBufferState = {LexBase.createFromFile FileName}
       case NewBufferState == 0 then
-	 raise gump(fileNotFound FileName) end
+	 {Exception.raiseError gump(fileNotFound FileName)}
       else skip
       end
    end
@@ -182,9 +175,5 @@ in
 	    end
 	 end
       end
-   end
-
-   case {Error.formatter.exists gump} then skip
-   else {Error.formatter.put gump GumpFormatter}
    end
 end
