@@ -155,7 +155,7 @@ local
 	     elsecase {IsThread Value} then 'Thread'
 	     elsecase {IsSpace Value} then 'Space'
 	     elsecase {FS.value.is Value} then 'Finite Set Value'
-	     elsecase {Foreign.pointer.is Value} then 'Foreign Pointer'
+	     elsecase {ForeignPointer.is Value} then 'Foreign Pointer'
 	     end = Type
 	     {Dictionary.get ColorDict Type}
 	  else
