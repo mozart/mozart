@@ -135,6 +135,43 @@ static inline gchar *GOZ_stringToC(OZ_Term val) {
   return GOZ_importString((gchar *) OZ_virtualStringToC(val, NULL));
 }
 
+/* GList Handling */
+static inline OZ_Term goz_import_glist(GList *ptr) {
+  GList *anchor = ptr;
+  OZ_Term cons  = OZ_atom("nil");
+
+  ptr = g_list_reverse(ptr);
+  while (ptr != NULL) {
+    cons = OZ_cons(OZ_makeForeignPointer(ptr->data), cons);
+    ptr  = g_list_next(ptr);
+  }
+  g_list_free(ptr);
+
+  return cons;
+}
+
+static inline GList *goz_export_glist(OZ_Term cons) {
+  GList *list = NULL;
+
+  while (OZ_isCons(cons)) {
+    OZ_Term hd = OZ_head(cons);
+
+    if (OZ_isForeignPointer(hd)) {
+      list = g_list_append(list, OZ_getForeignPointer(hd));
+    }
+
+    cons = OZ_tail(cons);
+  }
+
+  return list;
+}
+
+#define GOZ_importGList(val) \
+  goz_import_glist(val)
+
+#define GOZ_exportGList(val) \
+  goz_export_glist(val)
+
 /* Generic Argument Handling */
 #define GOZ_declareTerm(i, val) \
   OZ_declareTerm(i, val); \
