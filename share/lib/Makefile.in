@@ -146,6 +146,7 @@ Open.ozf: op/HtmlTable.oz
 
 # wp dependencies
 Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
+TkTools.ozf: ../url-defaults.oz
 
 # compiler dependencies
 COMPILERSRC1 = \
