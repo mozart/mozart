@@ -38,7 +38,7 @@
 #include "oz_cpi.hh"
 #include "gc.hh"
 
-BuiltinTabEntry *BIinit();
+Builtin *BIinit();
 
 void threadRaise(Thread *th,OZ_Term E,int debug=0);
 

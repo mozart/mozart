@@ -277,7 +277,7 @@ public:
     return writeWord(checkLabel && label==0 ? NOCODE : ToPointer(label-offset), ptr);
   }
 
-  static ProgramCounter writeBuiltin(BuiltinTabEntry *bi, ProgramCounter ptr)
+  static ProgramCounter writeBuiltin(Builtin *bi, ProgramCounter ptr)
   {
     return writeWord(bi,ptr);
   }
@@ -331,7 +331,7 @@ public:
 
   void writeInt(int i)                   { CheckWPtr; wPtr=writeInt(i,wPtr); }
   void writeTagged(TaggedRef t)          { CheckWPtr; wPtr=writeTagged(t,wPtr); }
-  void writeBuiltin(BuiltinTabEntry *bi) { CheckWPtr; wPtr=writeBuiltin(bi,wPtr); }
+  void writeBuiltin(Builtin *bi)         { CheckWPtr; wPtr=writeBuiltin(bi,wPtr); }
   void writeOpcode(Opcode oc)            { CheckWPtr; curInstr=wPtr; wPtr=writeOpcode(oc,wPtr); }
   void writeSRecordArity(SRecordArity ar){ CheckWPtr; wPtr=writeSRecordArity(ar,wPtr); }
   void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }

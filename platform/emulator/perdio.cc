@@ -3296,7 +3296,7 @@ void Site::msgReceived(MsgBuffer* bs)
 
       OwnerEntry *oe=receiveAtOwner(i);
       Tertiary *tert= oe->getTertiary();
-      BuiltinTabEntry *found = builtinTab.find(biName);
+      Builtin *found = builtinTab.find(biName);
       if (!found) {
         PD((WEIRD,"builtin %s not found",biName));
         break;

@@ -105,7 +105,7 @@ OZ_BI_define(Name,1,0)                                  \
   } else {                                              \
     return state;                                       \
   }                                                     \
-}                                                       \
+} OZ_BI_end
 
 
 #define DECLAREBI_USEINLINEREL2(Name,InlineName)        \
@@ -133,7 +133,7 @@ OZ_BI_define(Name,2,0)                                  \
   } else {                                              \
     return state;                                       \
   }                                                     \
-}
+} OZ_BI_end
 
 
 #define DECLAREBI_USEINLINEREL3(Name,InlineName)        \
@@ -163,7 +163,7 @@ OZ_BI_define(Name,3,0)                                  \
   } else {                                              \
     return state;                                       \
   }                                                     \
-}
+} OZ_BI_end
 
 
 #define DECLAREBI_USEINLINEFUN1(Name,InlineName)        \
@@ -198,7 +198,7 @@ OZ_BI_define(Name,1,1)                                  \
   default:                                              \
     return state;                                       \
   }                                                     \
-}
+} OZ_BI_end
 
 
 #define DECLAREBI_USEINLINEFUN2(Name,InlineName)        \
@@ -235,7 +235,7 @@ OZ_BI_define(Name,2,1)                                  \
   default:                                              \
     return state;                                       \
   }                                                     \
-}
+} OZ_BI_end
 
 #define DECLAREBI_USEINLINEFUN3(Name,InlineName)        \
 OZ_C_proc_begin(Name,4)                                 \
@@ -273,7 +273,7 @@ OZ_BI_define(Name,3,1)                                  \
   default:                                              \
     return state;                                       \
   }                                                     \
-}
+} OZ_BI_end
 
 #define DECLAREBOOLFUN1(BIfun,BIifun,BIirel)            \
 OZ_Return BIifun(TaggedRef val, TaggedRef &out)         \
@@ -296,7 +296,7 @@ OZ_BI_define(BIfun,1,1)                                 \
   case FAILED : OZ_RETURN(NameFalse);                   \
   default     : return r;                               \
   }                                                     \
-}                                                       \
+} OZ_BI_end                                             \
 OZ_Return BIifun(TaggedRef val, TaggedRef &out)         \
 { return BI__##BIfun(&val,&out); }
 
@@ -321,7 +321,7 @@ OZ_BI_define(BIfun,2,1)                                 \
   case FAILED : OZ_RETURN(NameFalse);                   \
   default     : return r;                               \
   }                                                     \
-}                                                       \
+} OZ_BI_end                                             \
 OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
 { TaggedRef __val__[2];                                 \
   __val__[0] = val1;                                    \
@@ -342,7 +342,7 @@ OZ_BI_define(BIbuiltin,2,1)
   OZ_declareVirtualStringIN(0,name);
   OZ_declareIntIN(1,arity);
 
-  BuiltinTabEntry *found = builtinTab.find(name);
+  Builtin *found = builtinTab.find(name);
 
   if (found == htEmpty) {
     return oz_raise(E_ERROR,E_SYSTEM,"builtinUndefined",1,
@@ -600,7 +600,7 @@ OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
       arity = ((Abstraction *) rec)->getArity();
       break;
     case Co_Builtin:
-      arity = ((BuiltinTabEntry *) rec)->getArity();
+      arity = ((Builtin *) rec)->getArity();
       break;
     default:
       goto typeError;
@@ -5252,7 +5252,7 @@ OZ_BI_define(BIbiPrint, 0,0)
 {
   unsigned long sum = 0;
   for (HashNode *hn = builtinTab.getFirst(); hn; hn = builtinTab.getNext(hn)) {
-    BuiltinTabEntry *abit = (BuiltinTabEntry *) hn->value;
+    Builtin *abit = (Builtin *) hn->value;
     sum += abit->getCounter();
     if (abit->getCounter()!=0) {
       printf("%010lu x %s\n",abit->getCounter(),abit->getPrintName());
@@ -5364,14 +5364,14 @@ OZ_BI_define(BIdlLoad,1,1)
                     OZ_in(0));
   OZ_Term l = nil();
   OZ_CFun func;
-  BuiltinTabEntry *bi;
+  Builtin *bi;
   while (I->name) {
     func = (OZ_CFun) osDlsym(handle,I->name);
     if (func==0)
       return oz_raise(E_ERROR,AtomForeign,
                       "cannotFindInterfaceFunction", 2,
                       OZ_in(0), oz_atom(I->name));
-    bi = new BuiltinTabEntry(I->name,I->arity,*func,(IFOR)NULL);
+    bi = new Builtin(I->name,I->arity,*func,(IFOR)NULL);
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
@@ -5704,7 +5704,7 @@ OZ_BI_define(BIgetPrintName,1,1)
     if (isConst(t)) {
       ConstTerm *rec = tagged2Const(t);
       switch (rec->getType()) {
-      case Co_Builtin:     OZ_RETURN(((BuiltinTabEntry *) rec)->getName());
+      case Co_Builtin:     OZ_RETURN(((Builtin *) rec)->getName());
       case Co_Abstraction: OZ_RETURN(((Abstraction *) rec)->getName());
       case Co_Object:      OZ_RETURN_ATOM(tagged2Object(t)->getPrintName());
       case Co_Class:       OZ_RETURN_ATOM(tagged2ObjectClass(t)->getPrintName());
@@ -6332,7 +6332,7 @@ OZ_BI_define(BIgetBuiltinName,1,1)
   ConstTerm *cnst = tagged2Const(val);
   if (cnst->getType() != Co_Builtin)
     oz_typeError(0,"builtin");
-  OZ_RETURN(((BuiltinTabEntry *) cnst)->getName());
+  OZ_RETURN(((Builtin *) cnst)->getName());
 } OZ_BI_end
 
 OZ_BI_define(BInameVariable,2,0)
@@ -6784,9 +6784,9 @@ extern void BIinitPerdio();
 extern void BIinitLazy();
 extern void initVirtualProperties();
 
-BuiltinTabEntry *BIinit()
+Builtin *BIinit()
 {
-  BuiltinTabEntry *bi = BIadd("builtin",3,BIbuiltin);
+  Builtin *bi = BIadd("builtin",3,BIbuiltin);
 
   if (!bi)
     return bi;
