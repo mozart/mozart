@@ -82,8 +82,7 @@ public:
     upperBound = b->upperBound;
     int size = getSize();
     array = allocate(size);
-    for (int i = 0; i < size; i++)
-      array[i] = b->array[i];
+    memcpy(array, b->array, size * sizeof(array[0]));
     COUNT1(sizeBitArrays, sizeof(BitArray));
   }
   Bool checkBounds(int i) {

@@ -102,28 +102,11 @@ DiffnPropagator::~DiffnPropagator()
 //////////
 
 void DiffnPropagator::updateHeapRefs(OZ_Boolean duplicate) {
-  OZ_Term * new_reg_x      = OZ_hallocOzTerms(reg_size);
-  OZ_Term * new_reg_y      = OZ_hallocOzTerms(reg_size);
-  int * new_reg_xdurs      = OZ_hallocCInts(reg_size);
-  int * new_reg_ydurs      = OZ_hallocCInts(reg_size);
-
-  for (int i = reg_size; i--; ) {
-    new_reg_x[i]       = reg_x[i];
-    new_reg_y[i]       = reg_y[i];
-    new_reg_xdurs[i]   = reg_xdurs[i];
-    new_reg_ydurs[i]   = reg_ydurs[i];
-    OZ_updateHeapTerm(new_reg_x[i]);
-    OZ_updateHeapTerm(new_reg_y[i]);
-  }
-
-  int limit = getLimit(reg_size);
-
-  reg_ordered = OZ_copyCInts(limit,reg_ordered);
-
-  reg_x               = new_reg_x;
-  reg_y               = new_reg_y;
-  reg_xdurs           = new_reg_xdurs;
-  reg_ydurs           = new_reg_ydurs;
+  reg_ordered = OZ_copyCInts(getLimit(reg_size), reg_ordered);
+  reg_x       = OZ_copyOzTerms(reg_size, reg_x);
+  reg_y       = OZ_copyOzTerms(reg_size, reg_y);
+  reg_xdurs   = OZ_copyCInts(reg_size, reg_xdurs);
+  reg_ydurs   = OZ_copyCInts(reg_size, reg_ydurs);
 }
 
 OZ_Term DiffnPropagator::getParameters(void) const
