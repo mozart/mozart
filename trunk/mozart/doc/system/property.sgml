@@ -29,32 +29,99 @@
 <Chapter id="Chapter.Property" proglang=oz>
   <Title/Emulator Properties: <<Property>>/
 
-  <Section class=unnumbered id="section.property.threads">  
+  <P>
+    The property module provides operations to query and possibly
+    update Mozart system related parameters that control various
+    aspects of the Mozart engine and system modules.
+  </P>
+
+  <P>
+    The most important properties can be controlled graphically by means of
+    the Mozart Panel, which is described in <Ptr.Extern
+    to="ozdoc:tools" key="chapter.panel">.
+  </P>
+
+  <P>
+    The properties are accessible to the programmer by operations
+    resembling the operations on dictionaries: <<Property.put>> sets a
+    property, whereas <<Property.get>> and <<Property.condGet>> access
+    properties. The operations are describeb <Ref
+    to="section.property.interface"/here/ in more detail.
+  </P>
+
+  <Section id="section.property.intro">
+    <Title/Engine Properties/
+
+  <P>
+    The properties that control the Mozart engine are identified by
+    atoms. For example, the current number of runnable threads is
+    identified by the atom <<'threads.runnable'>>. That is,
+    <<<{Property.get 'threads.runnable'}>>> returns the number of
+    currently runnable threads as an integer.
+  </P>
+
+  <P> 
+    For convenience, most
+    properties are organized into groups. They be accessed by an
+    atom giving the group's name (<<'threads'>>, for example), and
+    returns a record containing the 
+    properties of that group. For example,
+    <<<{Property.get 'threads'}>>> returns a record that has several
+    features one of which is <<'runnable'>>. 
+  </P>
+
+  <P>
+    Some properties are readonly in that they just provide access to
+    statistical information (as the property <<'threads.runnable'>> in
+    our previous example). Other properties are mutable:
+    changing their values customizes the engine's behaviour. For
+    example, the property 
+    <<'threads.medium'>> gives the relation between time slices
+    available for threads of priorities <<medium>> and <<low>>. This
+    can be changed to 1:2 by:
+<<<{Property.put 'threads.medium' 2}>>>
+  </P>
+
+  <P>
+    <<Property.put>> supports groups as well, for example to customize
+    time slices for threads of all priorities, we can use:
+<<<{Property.put 'threads' foo('medium': 2
+                            'high':   2)}>>>
+    Not that the record's label does not carry any significance.
+  </P>
+ 
+  <P> 
+    The properties sorted according to their group are listed in the
+    following sections. 
+  <P>
+
+
+  <Subsection class=unnumbered id="section.property.threads">  
     <Title/Threads: <<threads>>/
 
     <P>
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-          <Td/created/
+          <Td/<<created>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Total number of threads created./
         </Tr>
         <Tr>
-          <Td/runnable/
+          <Td/<<runnable>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Number of currently runnable threads./
         </Tr>
         <Tr>
-          <Td/min/
+          <Td/<<min>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Minimal size of a thread stack in number of tasks./
         </Tr>
         <Tr>
-          <Td/max/
+          <Td/<<max>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Maximal size of a thread stack in number of tasks. If
@@ -64,55 +131,55 @@
       </Table>
     </P>
 
-  </Section>
+  </Subsection>
 
-  <Section class=unnumbered id="section.property.priority">  
+  <Subsection class=unnumbered id="section.property.priority">  
     <Title/Thread Priorities: <<priorities>>/
 
     <P>
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-          <Td/high/
+          <Td/<<high>>/
           <Td/yes/
-          <Td/1&ellipsis;100/
+          <Td/<<1>>&ellipsis;<<100>>/
           <Td/Relation between time slices available for threads of
         priorities <<medium>> and <<low>>./
         </Tr>
         <Tr>
-          <Td/medium/
+          <Td/<<medium>>/
           <Td/yes/
-          <Td/1&ellipsis;100/
+          <Td/<<1>>&ellipsis;<<100>>/
           <Td/Relation between time slices available for threads of
         priorities <<high>> and <<medium>>./
         </Tr>
       </Table>
     </P>
 
-  </Section>
+  </Subsection>
 
-  <Section class=unnumbered id="section.property.time">  
+  <Subsection class=unnumbered id="section.property.time">  
     <Title/Time Usage: <<time>>/
 
     <P>
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-          <Td/user/
+          <Td/<<user>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Operating system user time of the Oz Emulator process in
               milliseconds./
         </Tr>
         <Tr>
-          <Td/system/
+          <Td/<<system>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Operating system system time of the Oz Emulator process in
         milliseconds./
         </Tr>
         <Tr>
-          <Td/total/
+          <Td/<<total>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Elapsed real time in milli seconds from an arbitrary point in
@@ -121,34 +188,34 @@
         applications of <<{Property.get 'time.total'}>>./
         </Tr>
         <Tr>
-          <Td/run/
+          <Td/<<run>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Run time in milliseconds./
         </Tr>
         <Tr>
-          <Td/copy/
+          <Td/<<copy>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Time spent on copying (that is, on cloning of spaces) in
         milliseconds./
         </Tr>
         <Tr>
-          <Td/propagate/
+          <Td/<<propagate>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Time spent on executing propagators in
         milliseconds./
         </Tr>
         <Tr>
-          <Td/gc/
+          <Td/<<gc>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Time spent on garbage collection in
           milliseconds./
         </Tr>
         <Tr>
-          <Td/detailed/
+          <Td/<<detailed>>/
           <Td/yes/
           <Td/<<Bool>>/
           <Td/Only if <<true>>, the fields <<time.copy>>, <<time.gc>>,
@@ -157,35 +224,35 @@
       </Table>
     </P>
 
-  </Section>
+  </Subsection>
 
-  <Section class=unnumbered id="section.property.gc">  
+  <Subsection class=unnumbered id="section.property.gc">  
     <Title/Garbage Collection: <<gc>>/
 
     <P>
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-          <Td/size/
+          <Td/<<size>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Current heap size in bytes/
         </Tr>
         <Tr>
-          <Td/threshold/
+          <Td/<<threshold>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Heap size in bytes when next automatic garbage collection takes
         place. Gets recomputed after every garbage collection./
         </Tr>
         <Tr>
-          <Td/active/
+          <Td/<<active>>/
           <Td/no/
           <Td/<<Int>>/
           <Td/Heap size in bytes after last garbage collection./
         </Tr>
         <Tr>
-          <Td/max/
+          <Td/<<max>>/
           <Td/yes/
           <Td/<<Int>>/
           <Td/Maximal allowed heap size in bytes. If the heap size exceeds this
@@ -193,13 +260,13 @@
         can take place, the user is prompted to increase the limit./
         </Tr>
         <Tr>
-          <Td/min/
+          <Td/<<min>>/
           <Td/yes/
           <Td/<<Int>>/
           <Td/Minimal heap size in bytes./
         </Tr>
         <Tr>
-          <Td/free/
+          <Td/<<free>>/
           <Td/yes/
           <Td/<<1>>&ellipsis;<<100>>/
           <Td>Gives the percentage of free heap memory after garbage
@@ -208,7 +275,7 @@
         <<active>>*100/(100-75)=<<active>>*4.</Td>
         </Tr>
         <Tr>
-          <Td/tolerance/
+          <Td/<<tolerance>>/
           <Td/yes/
           <Td/<<1>>&ellipsis;<<100>>/
           <Td/Gives the percentage by which the emulator is allowed for
@@ -216,7 +283,7 @@
         the maximal heap size <<max>> or to increase <<threshold>>./
         </Tr>
         <Tr>
-          <Td/on/
+          <Td/<<on>>/
           <Td/yes/
           <Td/<<Bool>>/
           <Td/Whether garbage collection is invoked automatically./
@@ -224,38 +291,292 @@
       </Table>
     </P>
 
-  </Section>
+  </Subsection>
 
-  <Section class=unnumbered id="section.property.print">  
+  <Subsection class=unnumbered id="section.property.print">  
     <Title/Printing Values: <<print>>/
-  </Section>
 
-  <Section class=unnumbered id="section.property.fd">  
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<width>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+        <Tr>
+          <Td/<<depth>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.fd">  
     <Title/Finite Domains: <<fd>>/
-  </Section>
 
-  <Section class=unnumbered id="section.property.spaces">  
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<variables>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain variables created./
+        </Tr>
+        <Tr>
+          <Td/<<propagators>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain propagators created./
+        </Tr>
+        <Tr>
+          <Td/<<invoked>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain propagators invoked./
+        </Tr>
+        <Tr>
+          <Td/<<threshold>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Integer when internal domain representation switches from
+        bit sets to interval lists./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.spaces">  
     <Title/Computation Spaces: <<space>>/
-  </Section>
 
-  <Section class=unnumbered id="section.property.errors">  
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<created>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces created by <<Space.new>>./
+        </Tr>
+        <Tr>
+          <Td/<<cloned>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces cloned by <<Space.clone>>./
+        </Tr>
+        <Tr>
+          <Td/<<committed>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces committed by
+          <<Space.commit>>./
+        </Tr>
+        <Tr>
+          <Td/<<failed>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of failed computation spaces./
+        </Tr>
+        <Tr>
+          <Td/<<succeeded>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of succeeded computation spaces./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.errors">  
     <Title/Printing Errors: <<errors>>/
-  </Section>
 
-  <Section class=unnumbered id="section.property.messages">  
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<hints>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether error messages contain hint information./
+        </Tr>
+        <Tr>
+          <Td/<<location>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether error messages contain location information./
+        </Tr>
+        <Tr>
+          <Td/<<debug>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether error messages contain debug information./
+        </Tr>
+        <Tr>
+          <Td/<<'thread'>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Number of tasks on the thread to be printed./
+        </Tr>
+        <Tr>
+          <Td/<<width>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for printing values in error messages./
+        </Tr>
+        <Tr>
+          <Td/<<depth>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for printing values in error messages./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.messages">  
     <Title/Printing Messages: <<messages>>/
-  </Section>
 
-  <Section class=unnumbered id="section.property.memory">  
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<gc>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether messages on garbage collection are printed./
+        </Tr>
+        <Tr>
+          <Td/<<idle>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether messages are printed when the Mozart Engine gets idle./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.memory">  
     <Title/Memory Usage: <<memory>>/
-  </Section>
 
-  <Section class=unnumbered id="section.property.limits">  
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<atoms>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for atoms./
+        </Tr>
+        <Tr>
+          <Td/<<names>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for names./
+        </Tr>
+        <Tr>
+          <Td/<<freelist>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory allocated but held in free lists for later use in bytes./
+        </Tr>
+        <Tr>
+          <Td/<<code>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for Mozart bytecode./
+        </Tr>
+        <Tr>
+          <Td/<<heap>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Total memory used in Kilo bytes (i.e., 1024 bytes) since start
+        of the Mozart engine. Is increased after each garbage collection by
+        the heap threshold./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.limits">  
     <Title/Implementation Limits: <<limits>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/width/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+        <Tr>
+          <Td/depth/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.misc">  
+    <Title/Miscellaneous: <<misc>>/
+  </Subsection>
+
   </Section>
 
-  <Section class=unnumbered id="section.property.misc">  
-    <Title/Miscellaneous: <<misc>>/
+
+
+
+  <Section id="section.property.interface">
+    <Title/The Programming Interface/
+
+  <P>
+    <List>
+      <Entry><Span class=index/<<get>>/
+	<Index class=tails/<<Property>><And><<get>>/
+      <Synopsis>
+	<<{Property.get ?+{LI} ?_{X}}>>
+      <Item>
+        Returns the property stored under the key ?_{LI} (a literal or
+        an integer). Raises an exception, if no property with key
+        ?_{LI} exists.
+    
+      <Entry><Span class=index/<<condGet>>/
+	<Index class=tails/<<Property>><And><<condGet>>/
+      <Synopsis>
+	<<{Property.condGet ?+{LI} ?_{X} ?_{Y}}>>
+      <Item>
+        Returns the property stored under the key ?_{LI} (a literal or
+        an integer). If no property with key
+        ?_{LI} exists, ?_{X} is returned.
+    
+      <Entry><Span class=index/<<put>>/
+	<Index class=tails/<<Property>><And><<put>>/
+      <Synopsis>
+	<<{Property.put ?+{LI} ?_{X}}>>
+      <Item>
+        Stores the property ?_{X} under key ?_{LI} (a literal or
+        an integer). Raises an exception, if the property is
+        readonly.
+    
+    </List>
+  </P>
   </Section>
 
 

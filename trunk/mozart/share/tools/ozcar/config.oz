@@ -28,11 +28,7 @@ Version                = \insert ozcar-version.oz
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
 
-Platform               = local
-			    X#Y = {Property.get platform}
-			 in
-			    {VirtualString.toAtom X#'-'#Y}
-			 end
+Platform               = {Property.get 'platform.name'}
 WindowsPlatform        = 'win32-i486'
 
 NameOfBenni            = 'Benjamin Lorenz'

@@ -46,6 +46,9 @@
 
 extern char *AMVersion, *AMDate;
 
+// "ozplatform" (defined in version.cc) has the form <osname-cpu>, 
+extern char *ozplatform;
+
 enum EmulatorPropertyIndex {
   // THREADS
   PROP_THREADS_CREATED,
@@ -125,18 +128,21 @@ enum EmulatorPropertyIndex {
   PROP_LIMITS_INT_MIN,
   PROP_LIMITS_INT_MAX,
   PROP_LIMITS,
-  // ARGV
-  PROP_ARGV,
+  // APPLICATION
+  PROP_APPLICATION_ARGS,
+  PROP_APPLICATION_URL,
+  PROP_APPLICATION,
+  // PLATFORM
+  PROP_PLATFORM_NAME,
+  PROP_PLATFORM_OS,
+  PROP_PLATFORM_ARCH,
+  PROP_PLATFORM,
   // MISC
-  PROP_ROOT_URL,
   PROP_STANDALONE,
-  PROP_HOME,
   PROP_OZ_CONFIGURE_HOME,
   PROP_OZ_EMULATOR_HOME,
   PROP_OZ_VERSION,
   PROP_OZ_DATE,
-  PROP_OS_NAME,
-  PROP_OS_CPU,
   // DISTRIBUTION
   PROP_DISTRIBUTION_VIRTUALSITES,
   // INTERNAL
@@ -152,6 +158,14 @@ enum EmulatorPropertyIndex {
   // this must remain last
   PROP__LAST
 };
+
+
+static OZ_Term getApplicationArgs(void) {
+  TaggedRef out = oz_nil();
+  for(int i=ozconf.argC-1; i>=0; i--)
+    out = oz_cons(oz_atom(ozconf.argV[i]),out);
+  return out;
+}
 
 #define oz_bool(i) ((i)?NameTrue:NameFalse)
 
@@ -218,6 +232,7 @@ REC__ = SRecord::newSRecord(LAB__,(Arity*)ARY__);
 
 #define SET_INT( F,I) SET_REC(F,oz_int( I))
 #define SET_BOOL(F,B) SET_REC(F,oz_bool(B))
+#define SET_ATOM(F,A) SET_REC(F,oz_atom(A))
 
 OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   SRecord * REC__;
@@ -375,23 +390,28 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_LIMITS_INT_MAX,OzMaxInt);
   case PROP_LIMITS:
     return oz_pair2(oz_int(OzMinInt),oz_int(OzMaxInt));
-    // ARGV
-  case PROP_ARGV:
-    {
-      TaggedRef out = oz_nil();
-      for(int i=ozconf.argC-1; i>=0; i--)
-	out = oz_cons(oz_atom(ozconf.argV[i]),out);
-      return out;
-    }
-  CASE_ATOM(PROP_ROOT_URL,ozconf.url);
+    // APPLICATION
+  case PROP_APPLICATION_ARGS: { return getApplicationArgs(); }
+    CASE_ATOM(PROP_APPLICATION_URL,ozconf.url);
+    CASE_REC(PROP_APPLICATION,"application",
+	     (2,AtomArgs,AtomURL),
+	     SET_ATOM(AtomURL,ozconf.url);
+	     SET_REC(AtomArgs,getApplicationArgs()););
+    // PLATFORM
+    CASE_ATOM(PROP_PLATFORM_NAME, ozplatform);
+    CASE_ATOM(PROP_PLATFORM_OS,   ozconf.osname);
+    CASE_ATOM(PROP_PLATFORM_ARCH, ozconf.cpu);
+    CASE_REC(PROP_PLATFORM,"platform",
+             (3,AtomName, AtomOs, AtomArch),
+             SET_ATOM(AtomName,ozplatform);
+	     SET_ATOM(AtomOs,ozconf.osname);
+	     SET_ATOM(AtomArch,ozconf.cpu););
+    // MISC
   CASE_BOOL(PROP_STANDALONE,!ozconf.runningUnderEmacs);
-  CASE_ATOM(PROP_HOME,ozconf.ozHome);
   CASE_ATOM(PROP_OZ_CONFIGURE_HOME,OZ_CONFIGURE_PREFIX);
   CASE_ATOM(PROP_OZ_EMULATOR_HOME,ozconf.emuhome);
   CASE_ATOM(PROP_OZ_VERSION,AMVersion);
   CASE_ATOM(PROP_OZ_DATE,AMDate);
-  CASE_ATOM(PROP_OS_NAME,ozconf.osname);
-  CASE_ATOM(PROP_OS_CPU,ozconf.cpu);
   // DISTRIBUTION
 #ifdef VIRTUALSITES
   CASE_BOOL(PROP_DISTRIBUTION_VIRTUALSITES,OK);
@@ -815,7 +835,6 @@ void initVirtualProperties()
   // POPULATE THE SYSTEM REGISTRY
   {
     OzDictionary * dict = tagged2Dictionary(system_registry);
-    dict->setArg(oz_atom("platform"),oz_pairAA(ozconf.osname,ozconf.cpu));
     dict->setArg(oz_atom("oz.home"),oz_atom(ozconf.ozHome));
   }
   // THREADS
@@ -893,18 +912,21 @@ void initVirtualProperties()
   VirtualProperty::add("limits.int.min",PROP_LIMITS_INT_MIN);
   VirtualProperty::add("limits.int.max",PROP_LIMITS_INT_MAX);
   VirtualProperty::add("limits",PROP_LIMITS);
-  // ARGV
-  VirtualProperty::add("argv",PROP_ARGV);
-  VirtualProperty::add("root.url",PROP_ROOT_URL);
+  // APPLICATION
+  VirtualProperty::add("application.args",PROP_APPLICATION_ARGS);
+  VirtualProperty::add("application.url",PROP_APPLICATION_URL);
+  VirtualProperty::add("application",PROP_APPLICATION);
+  // PLATFORM
+  VirtualProperty::add("platform.name", PROP_PLATFORM_NAME);
+  VirtualProperty::add("platform.os",   PROP_PLATFORM_OS);
+  VirtualProperty::add("platform.arch", PROP_PLATFORM_ARCH);
+  VirtualProperty::add("platform",      PROP_PLATFORM);
   // MISC
   VirtualProperty::add("oz.standalone",PROP_STANDALONE);
-  VirtualProperty::add("oz.conf.home",PROP_HOME);
   VirtualProperty::add("oz.configure.home",PROP_OZ_CONFIGURE_HOME);
   VirtualProperty::add("oz.emulator.home",PROP_OZ_EMULATOR_HOME);
   VirtualProperty::add("oz.version",PROP_OZ_VERSION);
   VirtualProperty::add("oz.date",PROP_OZ_DATE);
-  VirtualProperty::add("os.name",PROP_OS_NAME);
-  VirtualProperty::add("os.cpu",PROP_OS_CPU);
   // Distribution
   VirtualProperty::add("distribution.virtualsites",
 		       PROP_DISTRIBUTION_VIRTUALSITES);
