@@ -149,6 +149,7 @@ void gCollectSiteTable() {
 
 Site *mySite;
 
+#ifdef USE_FAST_UNMARSHALER
 Site* unmarshalSite(MsgBuffer *buf)
 {
   Site tryS;
@@ -166,7 +167,7 @@ Site* unmarshalSite(MsgBuffer *buf)
   }
   return (s);
 }
-
+#else
 Site* unmarshalSiteRobust(MsgBuffer *buf, int *overflow)
 {
   Site tryS;
@@ -184,3 +185,4 @@ Site* unmarshalSiteRobust(MsgBuffer *buf, int *overflow)
   }
   return (s);
 }
+#endif

@@ -519,12 +519,11 @@ void msgReceived(MsgBuffer* bs)
     {
       int portIndex;
       OZ_Term t;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_PORT_SEND(bs,portIndex,t);
 #else
       unmarshal_M_PORT_SEND(bs,portIndex,t);
 #endif
-      PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
       OwnerEntry *oe=receiveAtOwner(portIndex);
       Assert(oe);
       PortManager *pm=(PortManager*)(oe->getTertiary());
@@ -534,12 +533,11 @@ void msgReceived(MsgBuffer* bs)
 
       break;
       }
-
   case M_ASK_FOR_CREDIT:
     {
       int na_index;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_ASK_FOR_CREDIT(bs,na_index,rsite);
 #else
       unmarshal_M_ASK_FOR_CREDIT(bs,na_index,rsite);
@@ -558,7 +556,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int index;
       Credit c;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_OWNER_CREDIT(bs,index,c);
 #else
       unmarshal_M_OWNER_CREDIT(bs,index,c);
@@ -573,7 +571,7 @@ void msgReceived(MsgBuffer* bs)
       int index;
       Credit c;
       DSite* s;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_OWNER_SEC_CREDIT(bs,s,index,c);
 #else
       unmarshal_M_OWNER_SEC_CREDIT(bs,s,index,c);
@@ -590,7 +588,7 @@ void msgReceived(MsgBuffer* bs)
       int si;
       Credit c;
       DSite* sd;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_BORROW_CREDIT(bs,sd,si,c);
 #else
       unmarshal_M_BORROW_CREDIT(bs,sd,si,c);
@@ -605,7 +603,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_REGISTER(bs,OTI,rsite);
 #else
       unmarshal_M_REGISTER(bs,OTI,rsite);
@@ -624,7 +622,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_REGISTER(bs,OTI,rsite);
 #else
       unmarshal_M_REGISTER(bs,OTI,rsite);
@@ -645,7 +643,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_GET_OBJECT(bs,OTI,rsite);
 #else
       unmarshal_M_GET_OBJECT(bs,OTI,rsite);
@@ -665,7 +663,7 @@ void msgReceived(MsgBuffer* bs)
       ObjectFields of;
       DSite* sd;
       int si;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_SEND_OBJECT(bs,sd,si,&of);
 #else
       unmarshal_M_SEND_OBJECT(bs,sd,si,&of);
@@ -683,7 +681,7 @@ void msgReceived(MsgBuffer* bs)
       ObjectFields of;
       DSite* sd;
       int si;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_SEND_OBJECTANDCLASS(bs,sd,si,&of);
 #else
       unmarshal_M_SEND_OBJECTANDCLASS(bs,sd,si,&of);
@@ -702,7 +700,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* sd;
       int si;
       TaggedRef val;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_REDIRECT(bs,sd,si,val);
 #else
       unmarshal_M_REDIRECT(bs,sd,si,val);
@@ -725,7 +723,7 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       DSite* rsite;
       TaggedRef v;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_SURRENDER(bs,OTI,rsite,v);
 #else
       unmarshal_M_SURRENDER(bs,OTI,rsite,v);
@@ -749,7 +747,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* site;
       int OTI;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_GETSTATUS(bs,site,OTI);
 #else
       unmarshal_M_GETSTATUS(bs,site,OTI);
@@ -767,7 +765,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* site;
       int OTI;
       TaggedRef status;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_SENDSTATUS(bs,site,OTI,status);
 #else
       unmarshal_M_SENDSTATUS(bs,site,OTI,status);
@@ -790,7 +788,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* sd;
       int si;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_ACKNOWLEDGE(bs,sd,si);
 #else
       unmarshal_M_ACKNOWLEDGE(bs,sd,si);
@@ -811,7 +809,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_LOCK_GET(bs,OTI,rsite);
 #else
       unmarshal_M_CELL_LOCK_GET(bs,OTI,rsite);
@@ -825,7 +823,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite;
       int OTI;
       TaggedRef val;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_CONTENTS(bs,rsite,OTI,val);
 #else
       unmarshal_M_CELL_CONTENTS(bs,rsite,OTI,val);
@@ -845,7 +843,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* fS;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_READ(bs,OTI,fS);
 #else
       unmarshal_M_CELL_READ(bs,OTI,fS);
@@ -858,7 +856,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* fS,*mS;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_REMOTEREAD(bs,mS,OTI,fS);
 #else
       unmarshal_M_CELL_REMOTEREAD(bs,mS,OTI,fS);
@@ -872,7 +870,7 @@ void msgReceived(MsgBuffer* bs)
       int index;
       DSite*mS;
       TaggedRef val;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_READANS(bs,mS,index,val);
 #else
       unmarshal_M_CELL_READANS(bs,mS,index,val);
@@ -889,7 +887,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* site,*rsite;
       int OTI;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_LOCK_FORWARD(bs,site,OTI,rsite);
 #else
       unmarshal_M_CELL_LOCK_FORWARD(bs,site,OTI,rsite);
@@ -904,7 +902,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_LOCK_DUMP(bs,OTI,rsite);
 #else
       unmarshal_M_CELL_LOCK_DUMP(bs,OTI,rsite);
@@ -919,7 +917,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite, *ssite;
       int OTI;
       TaggedRef val;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CELL_CANTPUT(bs, OTI, rsite, val, ssite);
 #else
       unmarshal_M_CELL_CANTPUT(bs, OTI, rsite, val, ssite);
@@ -933,7 +931,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite;
       int OTI;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_LOCK_TOKEN(bs,rsite,OTI);
 #else
       unmarshal_M_LOCK_TOKEN(bs,rsite,OTI);
@@ -951,7 +949,7 @@ void msgReceived(MsgBuffer* bs)
     {
       int OTI;
       DSite* rsite;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CHAIN_ACK(bs,OTI,rsite);
 #else
       unmarshal_M_CHAIN_ACK(bs,OTI,rsite);
@@ -965,7 +963,7 @@ void msgReceived(MsgBuffer* bs)
     {
       DSite* rsite, *ssite;
       int OTI;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
 #else
       unmarshal_M_LOCK_CANTPUT(bs, OTI, rsite, ssite);
@@ -979,7 +977,7 @@ void msgReceived(MsgBuffer* bs)
    {
       DSite* site,*deadS;
       int OTI;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CHAIN_QUESTION(bs,OTI,site,deadS);
 #else
       unmarshal_M_CHAIN_QUESTION(bs,OTI,site,deadS);
@@ -996,7 +994,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* rsite,*deadS;
       int OTI;
       int ans;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_CHAIN_ANSWER(bs,OTI,rsite,ans,deadS);
 #else
       unmarshal_M_CHAIN_ANSWER(bs,OTI,rsite,ans,deadS);
@@ -1012,7 +1010,7 @@ void msgReceived(MsgBuffer* bs)
       DSite* site;
       int OTI;
       int ec,flag;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_TELL_ERROR(bs,site,OTI,ec,flag);
 #else
       unmarshal_M_TELL_ERROR(bs,site,OTI,ec,flag);
@@ -1030,7 +1028,7 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       int ec;
       DSite* toS;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_ASK_ERROR(bs,OTI,toS,ec);
 #else
       unmarshal_M_ASK_ERROR(bs,OTI,toS,ec);
@@ -1045,7 +1043,7 @@ void msgReceived(MsgBuffer* bs)
       int OTI;
       int ec;
       DSite* toS;
-#ifdef PERDIO_USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
       unmarshalRobust_M_UNASK_ERROR(bs,OTI,toS,ec);
 #else
       unmarshal_M_UNASK_ERROR(bs,OTI,toS,ec);
@@ -1060,7 +1058,11 @@ void msgReceived(MsgBuffer* bs)
       // the information received is not of any interest.
       int unused;
       DSite* fromS;
+#ifndef USE_FAST_UNMARSHALER
+      unmarshalRobust_M_SEND_PING(bs,fromS,unused);
+#else
       unmarshal_M_SEND_PING(bs,fromS,unused);
+#endif
       break;
     }
   default:
@@ -1109,7 +1111,11 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
   case M_CELL_CONTENTS:{
     if(fc == COMM_FAULT_PERM_NOT_SENT){
       ResetCP(((MsgBuffer*)fi),M_CELL_CONTENTS);
+#ifndef USE_FAST_UNMARSHALER
+      unmarshalRobust_M_CELL_CONTENTS((MsgBuffer*)fi,s1,OTI,tr);
+#else
       unmarshal_M_CELL_CONTENTS((MsgBuffer*)fi,s1,OTI,tr);
+#endif
       Assert(s1==storeSite);
       Assert(OTI=storeIndex);
       returnSendCredit(s1,OTI);
@@ -1121,7 +1127,11 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
   case M_LOCK_TOKEN:{
     if(fc == COMM_FAULT_PERM_NOT_SENT){
       ResetCP(((MsgBuffer*)fi),M_LOCK_TOKEN);
+#ifndef USE_FAST_UNMARSHALER
+      unmarshalRobust_M_LOCK_TOKEN((MsgBuffer*)fi,s1,OTI);
+#else
       unmarshal_M_LOCK_TOKEN((MsgBuffer*)fi,s1,OTI);
+#endif
       Assert(s1==storeSite);
       Assert(OTI=storeIndex);
       returnSendCredit(s1,OTI);
@@ -1160,12 +1170,15 @@ void initDPCore()
   lockLockFrameOutline = lockLockFrameOutlineImpl;
   unlockLockFrameOutline = unlockLockFrameOutlineImpl;
   marshalTertiary = marshalTertiaryImpl;
+#ifdef USE_FAST_UNMARSHALER
   unmarshalTertiary = unmarshalTertiaryImpl;
   unmarshalOwner = unmarshalOwnerImpl;
+  unmarshalVar = unmarshalVarImpl;
+#else
   unmarshalTertiaryRobust = unmarshalTertiaryRobustImpl;
   unmarshalOwnerRobust = unmarshalOwnerRobustImpl;
-  unmarshalVar = unmarshalVarImpl;
   unmarshalVarRobust = unmarshalVarRobustImpl;
+#endif
   marshalVariable = marshalVariableImpl;
   triggerVariable = triggerVariableImpl;
   marshalObject = marshalObjectImpl;

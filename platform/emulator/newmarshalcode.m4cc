@@ -317,6 +317,7 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
 }
 
 
+#ifdef USE_FAST_UNMARSHALER
 //
 undefine([[opAction]])
 undefine([[marshaling]])
@@ -343,6 +344,8 @@ define(opAction,
         $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
         $1,Location,PC=unmarshalLocation(PC,bs);,
         $1,Cache,PC=unmarshalCache(PC,code);)]])
+
+#endif
 
 //
 // Occasionally Oz terms must be placed in the current binary area
@@ -386,6 +389,7 @@ ProgramCounter unmarshalOzValue(Builder *b, ProgramCounter pc, CodeArea *code)
   return (retPC);
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 inline static
 ProgramCounter unmarshalNum(ProgramCounter pc, MsgBuffer *bs)
@@ -417,6 +421,7 @@ ProgramCounter unmarshalGReg(ProgramCounter pc, MsgBuffer *bs)
   int idx = unmarshalNumber(bs);
   return (pc ? CodeArea::writeGRegIndex(idx, pc) : (ProgramCounter) 0);
 }
+#endif
 
 //
 // A builtin in a code area is stored not as an 'OzTerm' but as an
@@ -442,6 +447,7 @@ ProgramCounter unmarshalBuiltin(Builder *b, ProgramCounter pc)
   }
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 inline static
 ProgramCounter unmarshalLabel(ProgramCounter PC, MsgBuffer *bs)
@@ -449,6 +455,7 @@ ProgramCounter unmarshalLabel(ProgramCounter PC, MsgBuffer *bs)
   int offset = unmarshalNumber(bs);
   return (PC ? CodeArea::writeLabel(offset,0,PC) : (ProgramCounter) 0);
 }
+#endif
 
 //
 inline static
@@ -457,6 +464,7 @@ ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code)
   return PC ? code->writeCache(PC) : 0;
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 static
 ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs)
@@ -489,6 +497,7 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
 
   return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
 }
+#endif
 
 //
 // Gets a *complete* arity list (thus, must be used with 'Builder::
@@ -503,6 +512,7 @@ static void putRealRecordArityCA(void *arg, OZ_Term value) {
   delete loc;
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 // 'unmarshalRecordArity' exists in two flavors: one fills a cell in a
 // code area with an 'SRecordArity' value (resp. discards it in "skip"
@@ -530,6 +540,7 @@ ProgramCounter unmarshalRecordArity(Builder *b,
     return ((ProgramCounter) 0);
   }
 }
+#endif
 
 //
 // A "CodeAreaLocation" argument ist not sufficient for more
@@ -621,6 +632,7 @@ static void saveFlagsListCA(void *arg, OZ_Term value)
   loc->setFlagsList(value);
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 // (of course, this code must resemble 'marshalPredId()')
 static
@@ -681,6 +693,7 @@ ProgramCounter unmarshalPredId(Builder *b, ProgramCounter pc,
     return ((ProgramCounter) 0);
   }
 }
+#endif
 
 //
 //
@@ -735,6 +748,7 @@ static void saveCallMethodInfoRecordArityCA(void *arg, OZ_Term value)
   loc->setArityList(value);
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 static
 ProgramCounter unmarshalCallMethodInfo(Builder *b,
@@ -773,6 +787,7 @@ ProgramCounter unmarshalCallMethodInfo(Builder *b,
     return ((ProgramCounter) 0);
   }
 }
+#endif
 
 //
 // Hash table entries are constructed using the table itself, label,
@@ -844,6 +859,7 @@ static void getHashTableNumEntryLabelCA(void *arg, OZ_Term value) {
 }
 
 
+#ifdef USE_FAST_UNMARSHALER
 //
 static
 ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
@@ -1019,6 +1035,7 @@ Bool unmarshalCode(MsgBuffer *bs, Builder *b,
   return (done);
 }
 
+#else
 
 // Robust unmarshaling
 undefine([[opAction]])
@@ -1457,3 +1474,5 @@ Bool unmarshalCodeRobust(MsgBuffer *bs, Builder *b,
     desc->setCurrent(PC);
   return (done);
 }
+
+#endif

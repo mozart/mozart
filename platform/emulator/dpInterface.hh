@@ -64,13 +64,15 @@ extern void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 // variables could yield 'DIF_OWNER*'.  This means that those entries
 // must either be all remembered or not remembered;
 extern void (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
+#ifdef USE_FAST_UNMARSHALER
 extern OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag);
 extern OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt);
+extern OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool);
+#else
 extern OZ_Term (*unmarshalTertiaryRobust)(MsgBuffer *bs,MarshalTag tag,int *);
 extern OZ_Term (*unmarshalOwnerRobust)(MsgBuffer *bs,MarshalTag mt,int *error);
-//
-extern OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool);
 extern OZ_Term (*unmarshalVarRobust)(MsgBuffer*,Bool,Bool,int*);
+#endif
 extern Bool (*marshalVariable)(TaggedRef*, MsgBuffer*);
 extern Bool (*triggerVariable)(TaggedRef*);
 extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs);

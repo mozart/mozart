@@ -259,7 +259,15 @@ Bool checkIncTimeSlice(unsigned long, void* v);
 
 static int tcpWriteHandler(int,void*);
 static int tcpCloseHandler(int,void*);
+#ifdef USE_FAST_UNMARSHALER
 int tcpPreReadHandler(int,void*);
+#else
+int tcpPreReadHandlerRobust(int,void*,Bool*);
+int tcpPreReadHandler(int fd,void* r0) {
+  int trash;
+  return tcpPreReadHandlerRobust(fd,r0,&trash);
+}
+#endif
 static int tcpReadHandler(int,void*);
 inline ipReturn writeI(int,BYTE*);
 inline ipReturn readI(int,BYTE *);
@@ -2764,10 +2772,13 @@ static int acceptHandler(int fd,void *unused)
   return 0 ;}
 
 // for tcpPreReadHandler see network_general.cc
+#ifndef USE_FAST_UNMARSHALER
 #define ROBUST_UNMARSHALER
 #include "network_general.cc"
 #undef ROBUST_UNMARSHALER
+#else
 #include "network_general.cc"
+#endif
 
 static int tcpReadHandler(int fd,void *r0)
 {

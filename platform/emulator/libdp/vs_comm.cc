@@ -485,10 +485,13 @@ void VirtualSite::marshalLocalResources(MsgBuffer *mb,
 }
 
 // for VirtualSite::unmarshalResources see vs_comm_general.cc
+#ifndef USE_FAST_UNMARSHALER
 #define ROBUST_UNMARSHALER
 #include "vs_comm_general.cc"
 #undef ROBUST_UNMARSHALER
+#else
 #include "vs_comm_general.cc"
+#endif
 
 //
 void VirtualSite::gcResources()

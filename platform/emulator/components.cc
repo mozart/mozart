@@ -506,7 +506,14 @@ OZ_Term digOutVars(OZ_Term t)
 static
 Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 {
+#ifndef USE_FAST_UNMARSHALER
+  int e;
+  vers = unmarshalVersionStringRobust(buf,&e);
+  if(e)
+    OZ_error("Unmarshal error!");
+#else
   vers = unmarshalVersionString(buf);
+#endif
 
   if (vers==0)
     return NO;
@@ -520,7 +527,7 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 
   buf->setVersion(major,minor);
 
-#ifdef USE_ROBUST_UNMARSHALER
+#ifndef USE_FAST_UNMARSHALER
   t = newUnmarshalTermRobust(buf);
   if(t == 0)
     OZ_error("Unmarshal error!");

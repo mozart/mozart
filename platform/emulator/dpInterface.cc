@@ -107,6 +107,7 @@ void marshalTertiaryStub(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
 {
   OZD_error("'marshalTertiary' called without DP library?");
 }
+#ifdef USE_FAST_UNMARSHALER
 OZ_Term unmarshalTertiaryStub(MsgBuffer *bs, MarshalTag tag)
 {
   OZD_error("'unmarshalTertiary' called without DP library?");
@@ -117,6 +118,12 @@ OZ_Term unmarshalOwnerStub(MsgBuffer *bs,MarshalTag mt)
   OZD_error("'unmarshalOwner' called without DP library?");
   return ((OZ_Term) 0);
 }
+OZ_Term unmarshalVarStub(MsgBuffer*,Bool, Bool)
+{
+  OZD_error("'unmarshalVar' called without DP library?");
+  return ((OZ_Term) 0);
+}
+#else
 OZ_Term unmarshalTertiaryRobustStub(MsgBuffer *bs, MarshalTag tag, int *error)
 {
   OZ_error("'unmarshalTertiaryRobust' called without DP library?");
@@ -133,11 +140,7 @@ OZ_Term unmarshalVarRobustStub(MsgBuffer*,Bool, Bool, int *error)
   OZ_error("'unmarshalVarRobust' called without DP library?");
   return ((OZ_Term) 0);
 }
-OZ_Term unmarshalVarStub(MsgBuffer*,Bool, Bool)
-{
-  OZD_error("'unmarshalVar' called without DP library?");
-  return ((OZ_Term) 0);
-}
+#endif
 Bool marshalVariableStub(TaggedRef*, MsgBuffer*)
 {
   OZD_error("'marshalVariable' called without DP library?");
@@ -278,19 +281,22 @@ void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
 //
 void (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
   = marshalTertiaryStub;
+#ifdef USE_FAST_UNMARSHALER
 OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag)
   = unmarshalTertiaryStub;
 OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt)
   = unmarshalOwnerStub;
+//
+OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool)
+  = unmarshalVarStub;
+#else
 OZ_Term (*unmarshalTertiaryRobust)(MsgBuffer *bs, MarshalTag tag,int *error)
   = unmarshalTertiaryRobustStub;
 OZ_Term (*unmarshalOwnerRobust)(MsgBuffer *bs,MarshalTag mt,int *error)
   = unmarshalOwnerRobustStub;
-//
-OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool)
-  = unmarshalVarStub;
 OZ_Term (*unmarshalVarRobust)(MsgBuffer*,Bool,Bool,int*)
   = unmarshalVarRobustStub;
+#endif
 Bool (*marshalVariable)(TaggedRef*, MsgBuffer*)
   = marshalVariableStub;
 Bool (*triggerVariable)(TaggedRef*)
