@@ -309,14 +309,13 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
     }
 
   Assert(oz_onToplevel());
-  Thread *th=oz_mkRunnableThread(DEFAULT_PRIORITY,oz_currentBoard());
+  Thread *th=oz_newThread(DEFAULT_PRIORITY);
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called %d %d",val1, val2));
 
   Assert(MemChunks::isInHeap(val1) && MemChunks::isInHeap(val1));
 #endif
   pushUnify(th,val1,val2);
-  am.threadsPool.scheduleThread(th);
 }
 
 void SiteUnifyCannotFail(TaggedRef val1,TaggedRef val2){
@@ -5348,9 +5347,9 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity,
 
 void Watcher::invokeWatcher(EntityCond ec,Tertiary* entity){
   Assert(!isHandler());
-  Thread *tt = oz_mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
+  Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
   tt->pushCall(proc, makeTaggedTert(entity), listifyWatcherCond(ec));
-  am.threadsPool.scheduleThread(tt);}
+}
 
 Bool CellSec::threadIsPending(Thread *t){
   return basicThreadIsPending(pending,t);}
@@ -5859,9 +5858,9 @@ void Site::probeFault(ProbeReturn pr){
 
 void insertDangelingEvent(Tertiary *t){
   PD((PROBES,"Starting DangelingThread"));
-  Thread *tt = oz_mkRunnableThread(DEFAULT_PRIORITY, oz_rootBoard());
+  Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
   tt->pushCall(BI_probe, makeTaggedTert(t));
-  am.threadsPool.scheduleThread(tt);}
+}
 
 /**********************************************************************/
 /*   SECTION 40:: communication problem                               */
@@ -6136,10 +6135,10 @@ OZ_BI_define(BIportWait,2,0)
 
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
-  Thread *tt = oz_mkRunnableThread(LOW_PRIORITY, oz_rootBoard());
+  Thread *tt = oz_newThreadToplevel(LOW_PRIORITY);
   tt->pushCall(BI_startTmp, oz_int(i), oz_int(time));
   tt->pushCall(BI_Delay, oz_int(time));
-  am.threadsPool.scheduleThread(tt);}
+}
 
 GenHashNode *getPrimaryNode(GenHashNode* node, int &i);
 GenHashNode *getSecondaryNode(GenHashNode* node, int &i);

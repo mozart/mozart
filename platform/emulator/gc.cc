@@ -1434,9 +1434,8 @@ void gc_finalize()
   // if the finalize_list is not empty, we must create a new
   // thread (at top level) to effect the finalization phase
   if (!oz_isNil(finalize_list)) {
-    Thread* thr = oz_mkRunnableThread(DEFAULT_PRIORITY,oz_rootBoard());
+    Thread* thr = oz_newThreadInject(DEFAULT_PRIORITY,oz_rootBoard());
     thr->pushCall(finalize_handler,finalize_list);
-    am.threadsPool.scheduleThread(thr);
     finalize_list = oz_nil();
   }
 }

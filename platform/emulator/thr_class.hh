@@ -359,8 +359,8 @@ public:
   void pushCallNoCopy(TaggedRef pred, RefsArray  x) {
     item.threadBody->taskStack.pushCallNoCopy(pred, x);
   }
-  void pushCFun(OZ_CFun f, RefsArray  x, int n, Bool copyF) {
-    item.threadBody->taskStack.pushCFun(f, x, n, copyF);
+  void pushCFun(OZ_CFun f, RefsArray  x, int n) {
+    item.threadBody->taskStack.pushCFun(f, x, n);
   }
 
   Bool hasCatchFlag() { return (state.flags & T_catch); }

@@ -47,18 +47,6 @@
 #include "genvar.hh"
 
 
-void SVariable::wakeupAll()
-{
-  while (suspList) {
-    Suspension susp = suspList->getElem();
-
-    if (!susp.isDead() && !susp.isRunnable()) {
-      oz_wakeupAny(susp, GETBOARD(this));
-    }
-    suspList = suspList->dispose();
-  }
-}
-
 /*
  * Class VariableNamer: assign names to variables
  */

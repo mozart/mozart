@@ -1991,7 +1991,7 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
 
 void OZ_pushCFun(OZ_Thread thr,OZ_CFun fun,OZ_Term *args,int arity)
 {
-  ((Thread *)thr)->pushCFun(fun, args, arity, OK);
+  ((Thread *)thr)->pushCFun(fun, args, arity);
 }
 
 void OZ_pushCall(OZ_Thread thr,OZ_Term fun,OZ_Term *args,int arity)
@@ -2010,25 +2010,25 @@ OZ_Thread OZ_newSuspendedThread()
   printf("\n");
 #endif
 
-  return (OZ_Thread) oz_newSuspendedThread();
+  return (OZ_Thread) oz_newThreadSuspended();
 }
 
 OZ_Thread OZ_makeSuspendedThread(OZ_CFun fun,OZ_Term *args,int arity)
 {
-  OZ_Thread thr=OZ_newSuspendedThread();
-  OZ_pushCFun(thr,fun,args,arity);
-  return thr;
+  Thread *thr=oz_newThreadSuspended();
+  thr->pushCFun(fun,args,arity);
+  return (OZ_Thread) thr;
 }
 
 OZ_Thread OZ_newRunnableThread()
 {
-  return (OZ_Thread) oz_newRunnableThread();
+  return (OZ_Thread) oz_newThread();
 }
 
 void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args,int arity)
 {
-  OZ_Thread thr = OZ_newRunnableThread();
-  OZ_pushCFun(thr,fun,args,arity);
+  Thread *thr = oz_newThread();
+  thr->pushCFun(fun,args,arity);
 }
 
 void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
@@ -2038,20 +2038,20 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
   switch (ret) {
   case SUSPEND:
     {
-      OZ_Thread thr = OZ_newSuspendedThread();
-      am.suspendOnVarList((Thread *)thr);
+      Thread *thr = oz_newThreadSuspended();
+      am.suspendOnVarList(thr);
       break;
     }
   case BI_REPLACEBICALL:
     {
-      OZ_Thread thr = OZ_newRunnableThread();
+      OZ_Thread thr = oz_newThread();
       am.pushPreparedCalls((Thread *) thr);
       break;
     }
   case FAILED:
     {
-      OZ_Thread thr = OZ_newRunnableThread();
-      OZ_pushCall(thr,BI_fail,0,0);
+      Thread *thr = oz_newThread();
+      thr->pushCall(BI_fail,0,0);
       break;
     }
   default:

@@ -381,9 +381,8 @@ void oz_solve_inject(TaggedRef var, int prio, TaggedRef proc,
   RefsArray args = allocateRefsArray(1, NO);
   args[0] = var;
 
-  Thread *it = oz_mkRunnableThread(prio, solveBoard);
+  Thread *it = oz_newThreadInject(prio, solveBoard);
   it->pushCall(proc, args, 1);
-  am.threadsPool.scheduleThread(it);
 }
 
 inline
@@ -718,8 +717,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   sa->unsetGround();
   sa->clearResult(GETBOARD(space));
 
-  oz_suspThreadToRunnable(tt);
-  am.threadsPool.scheduleThread(tt);
+  oz_wakeupThread(tt);
 
   return BI_PREEMPT;
 } OZ_BI_end
@@ -1699,12 +1697,14 @@ void threadRaise(Thread *th,OZ_Term E,int debug) {
   RefsArray args=allocateRefsArray(1, NO);
   args[0]=E;
 
-  th->pushCFun(debug?BIraiseDebug:BIraise, args, 1, OK);
+  th->pushCFun(debug?BIraiseDebug:BIraise, args, 1);
 
   th->setStop(NO);
 
-  if (th->isSuspended())
-    oz_suspThreadToRunnable(th);
+  if (th->isSuspended()) {
+    oz_wakeupThread(th);
+    return;
+  }
 
   if (!am.threadsPool.isScheduledSlow(th))
     am.threadsPool.scheduleThread(th);
@@ -1852,12 +1852,10 @@ OZ_BI_define(BIthreadCreate,1,0)
   }
 
   int prio   = min(oz_currentThread()->getPriority(),DEFAULT_PRIORITY);
-  Thread *tt = oz_mkRunnableThreadOPT(prio,oz_currentBoard());
+  Thread *tt = oz_newThread(prio);
 
   tt->getTaskStackRef()->pushCont(a->getPC(),NULL,a);
   tt->setAbstr(a->getPred());
-
-  am.threadsPool.scheduleThread (tt);
 
   return PROCEED;
 } OZ_BI_end

@@ -508,9 +508,7 @@ OZ_PropagatorProfile CDPropagator::spawner = "BIfdConstrDisj";
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
 {
-  prop = (void *) oz_mkPropagator(oz_currentBoard(),
-                                  OZ_getHighPrio(),
-                                  p);
+  prop = (void *) oz_newPropagator(OZ_getHighPrio(), p);
   // cd threads,  are expected to be suspended
   ((Propagator *) prop)->unmarkRunnable();
 }

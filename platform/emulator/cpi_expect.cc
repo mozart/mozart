@@ -726,7 +726,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     }
   }
 
-  Propagator * prop = oz_mkPropagator(oz_currentBoard(), prio, p);
+  Propagator * prop = oz_newPropagator(prio, p);
   ozstat.propagatorsCreated.incf();
 
   // only monotonic propagator are run on imposition
