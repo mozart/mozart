@@ -31,6 +31,20 @@ import
 export
    Translate
 define
+   STYLESHEET = 'http://www.ps.uni-sb.de/css/page.css'
+
+   %%
+   %% Note: order is important in the following list!
+   %%
+   EntryClasses = [private#'private' protected#'protected' public#'public'
+		   datatype#'data type' enumtype#'enum type'
+		   static#'static' virtual#'virtual' purevirtual#'pure virtual'
+		   member#'member'
+		   constructor#'constructor' destructor#'destructor'
+		   operator#'operator' function#'function'
+		   macro#'macro'
+		   variable#'variable' command#'command']
+
    fun {InitialCapital S}
       case S of C|Cr then {Char.toUpper C}|Cr
       [] nil then ""
@@ -529,12 +543,27 @@ define
 		  InDescription <- X
 		  Out <- @Out#'</UL><P'#@Align#'>\n'
 	       end
-	    [] entry then
+	    [] entry then ClassName in
 	       Out <- @Out#'<DT>'
 	       OzDocToHTML, Batch(M.1 1)
 	       Out <- @Out#'</DT>'
+	       ClassName = {FoldLTail
+			    {FoldR EntryClasses
+			     fun {$ C#T In}
+				if {SGML.isOfClass M C} then T|In else In end
+			     end nil}
+			    fun {$ In T|Tr}
+			       In#T#case Tr of nil then "" else ' ' end
+			    end ""}
+	       case ClassName of "" then skip
+	       else
+		  Out <- @Out#('<DT><P align=right><I>'#ClassName#
+			       '</I></P></DT>\n')
+	       end
 	    [] synopsis then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       Out <- @Out#'<DD><BLOCKQUOTE>\n'
+	       OzDocToHTML, Batch(M 1)
+	       Out <- @Out#'</DD></BLOCKQUOTE>\n'
 	    [] item then
 	       if @InDescription then
 		  Out <- @Out#'<DD>\n'
@@ -919,7 +948,7 @@ define
 		 '<HTML>\n'#
 		 '<HEAD>\n'#
 		 '<TITLE>'#Title#'</TITLE>\n'#
-		 '<LINK rel=stylesheet href="http://www.ps.uni-sb.de/www/css/page.css">\n'#
+		 '<LINK rel=stylesheet href='#{MakeCDATA STYLESHEET}#'>\n'#
 		 '</HEAD>\n'#
 		 '<BODY>\n')
 	 %--** navigation panel
