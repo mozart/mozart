@@ -1,4 +1,5 @@
 config.*
+conf.h
 Makefile
 oz.wish.bin
 oz.wish.bin.noresolv
