@@ -50,7 +50,7 @@ TaggedRef
   BI_load, BI_fail, BI_url_load, BI_obtain_native,
 
   BI_dot,
-  BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
+  BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
   BI_unknown,
 
@@ -1415,6 +1415,7 @@ void LockLocal::unlockComplex(){
   return;}
 
 void LockLocal::lockComplex(Thread *t){
+  // mm2: ignoring the return is badly wrong
   (void) pendThreadAddToEndEmul(getPendBase(),t,getBoardInternal());}
 
 /*===================================================================

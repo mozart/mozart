@@ -192,7 +192,8 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
       return;}
     default: Assert(0);}}
   case Co_Lock:{
-    pd->thread->pushCall(BI_lockLock,makeTaggedTert(t));
+    // mm2: no builtin lockLock available
+    // pd->thread->pushCall(BI_lockLock,makeTaggedTert(t));
     return;}
   case Co_Port:
     Assert(0); // ERIK-LOOK
