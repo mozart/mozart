@@ -151,7 +151,7 @@ public:
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
-  Thread *createThread(int prio);
+  Thread *createThread(int prio,int compMode);
 
   int catchError() { return setjmp(engineEnvironment); }
 public:
@@ -222,7 +222,7 @@ public:
   // entailment check
   Bool entailment();
   Bool isEmptyTrailChunk();
-  int checkEntailment(Continuation *&contAfter,int &prio);
+  int checkEntailment(Continuation *&contAfter,Actor *&aa);
   int checkStable(Continuation *&contAfter,int &prio);  // mm2 todo
 
   // Unification
@@ -299,6 +299,7 @@ public:
   static OZ_Bool SolveActorWaker(int n, TaggedRef *args);
   Bool isStableSolve(SolveActor *sa);
 
+  void createTask();
 };
 
 extern AM am;

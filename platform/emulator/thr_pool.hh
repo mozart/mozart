@@ -71,7 +71,7 @@ public:
   //
   void doGC ();
 
-  Thread *newThread (int p,Board *h);
+  Thread *newThread (int p,Board *h,int compMode);
   // ... in emulate.cc; 
   void disposeThread (Thread *th);
 

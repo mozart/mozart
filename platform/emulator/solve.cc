@@ -267,8 +267,9 @@ Bool SolveActor::checkExtSuspList ()
 
 // Note that there is one thread ALREADY AT THE CREATION TIME!
 
-SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR, TaggedRef guiTR)
- : Actor (Ac_Solve, bb, prio), result (resTR), guidance (guiTR), 
+SolveActor::SolveActor (Board *bb, int prio, int compMode,
+			TaggedRef resTR, TaggedRef guiTR)
+ : Actor (Ac_Solve, bb, prio, compMode), result (resTR), guidance (guiTR), 
    boardToInstall(NULL), suspList (NULL), threads (1), stable_sl(NULL)
 {
   solveBoard = NULL;
