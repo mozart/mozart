@@ -31,8 +31,7 @@ on entities that have problems related to distribution.
 All these exceptions are of the
 form <<system(dp(conditions:FS ...) ...)>> where
 <<FS>> is the list of actual fault states
-as defined before, except for <<ok>> since it
-is not wrong behavior.
+as defined before.
 By default, the system will raise exceptions
 only on the fault states <<tempFail>> and <<permFail>>.
 
