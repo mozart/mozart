@@ -352,7 +352,8 @@ Bool hookCheckNeeded(AM *e)
 
 #define JUMP(absAdr) PC = absAdr; DISPATCH(0)
 
-#define ONREG(Label,R)     HelpReg = (R); goto Label
+#define ONREG(Label,R)      HelpReg = (R); goto Label
+#define ONREG2(Label,R1,R2) HelpReg = (R1); HelpReg2 = (R2); goto Label
 
 
 #ifdef FASTREGACCESS
@@ -533,6 +534,24 @@ void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
   }
 }
 
+static
+void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
+			 ProgramCounter PC, RefsArray X, RefsArray Y, RefsArray G, int prio)
+{
+  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
+  Suspension *susp  = new Suspension(new SuspContinuation(b,prio,PC,Y,G,X,argsToSave));
+  b->incSuspCount();
+
+  Assert(isAnyVar(ATag) || isAnyVar(BTag));
+  
+  if (isAnyVar(ATag)) {
+    taggedBecomesSuspVar(APtr)->addSuspension(susp);
+  }
+  if (isAnyVar(BTag)) {
+    taggedBecomesSuspVar(BPtr)->addSuspension(susp);
+  }
+}
+
 
 static
 TaggedRef makeMethod(int arity, TaggedRef label, TaggedRef *X)
@@ -619,7 +638,7 @@ void engine() {
 
 # define CBB (e->currentBoard)
 
-  RefsArray HelpReg = NULL; NoReg(HelpReg);
+  RefsArray HelpReg = NULL, HelpReg2 = NULL;
   OZ_CFun biFun = NULL;     NoReg(biFun);
 
   /* shallow choice pointer */
@@ -1304,27 +1323,10 @@ void engine() {
 
       case FAILED:  JUMP( getLabelArg(PC+4) );
 
-      default:
       case SUSPEND:
+      default:
 	{
-	  TaggedRef A    = XPC(2);
-	  TaggedRef B    = XPC(3);
-	  DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-	  int argsToSave    = getPosIntArg(PC+5);
-	  Suspension *susp  =
-	    new Suspension(new SuspContinuation(CBB,
-						GET_CURRENT_PRIORITY(),
-						PC,Y,G,X,argsToSave));
-	  CBB->incSuspCount();
-
-	  Assert(isAnyVar(ATag) || isAnyVar(BTag));
-
-	  if (isAnyVar(ATag)) {
-	    taggedBecomesSuspVar(APtr)->addSuspension(susp);
-	  }
-	  if (isAnyVar(BTag)) {
-	    taggedBecomesSuspVar(BPtr)->addSuspension(susp);
-	  }
+	  suspendShallowTest2(XPC(2),XPC(3),getPosIntArg(PC+5),CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
 	  goto LBLcheckEntailment;
 	}
       }
@@ -1340,6 +1342,7 @@ void engine() {
 	DISPATCH(1);
       }
 
+/* RS:  OUTLINE */
       if (e->conf.showSuspension) {
 	printSuspension(PC);
       }
@@ -1912,7 +1915,7 @@ void engine() {
        // NB2:
        //    CBB can not become reducible after the applying of solveCont,
        //    since its childCount can not become smaller. 
-       if ( !e->fastUnify(solveAA->getSolveVar(), X[0], OK) ) {
+       if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
 	 warning ("unification of variable in solveCont failed");
 	 HF_NOMSG;
        }
@@ -1964,12 +1967,12 @@ void engine() {
 	 DebugCheck (((newSolveBB->getScriptRef ()).getSize () != 0),
 		     error ("non-empty script in solve blackboard"));
 
-	 if ( !e->fastUnify(solveAA->getSolveVar(), X[0], OK) ) {
+	 if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
 	   warning ("unification of variable in solved failed");
 	   HF_NOMSG;
 	 }
        } else {
-	 if ( !e->fastUnify(valueIn, X[0], OK) ) {
+	 if ( !e->fastUnifyOutline(valueIn, X[0], OK) ) {
 	   warning ("unification of variable in solved failed");
 	   HF_NOMSG;
 	 }
@@ -2337,7 +2340,7 @@ void engine() {
 	// 'solved';
 	// don't unlink the subtree from the computation tree;
 	DebugCheckT (solveBB->setReflected ());
-	if ( !e->fastUnify(solveAA->getResult(), solveAA->genSolved(), OK) ) {
+	if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
 	  warning ("unification of solved tuple with variable has failed");
 	  HF_NOMSG;
 	}
@@ -2348,7 +2351,7 @@ void engine() {
 	  // "stuck" (stable without distributing waitActors);
 	  // don't unlink the subtree from the computation tree; 
 	  DebugCheckT (solveBB->setReflected ());
-	  if ( !e->fastUnify(solveAA->getResult(), solveAA->genStuck(), OK) ) {
+	  if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genStuck(), OK) ) {
 	    warning ("unification of solved tuple with variable has failed");
 	    HF_NOMSG;
 	  }
@@ -2373,7 +2376,7 @@ void engine() {
 	    ((AWActor *) wa)->addChild (waitBoard);
 	    solveAA->setBoardToInstall (waitBoard);
 	    DebugCheckT (solveBB->setReflected ());
-	    if ( !e->fastUnify(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
+	    if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
 	      warning ("unification of distributed tuple with variable has failed");
 	      HF_NOMSG;
 	    }
@@ -2434,9 +2437,9 @@ void engine() {
 	    DebugCheckT (newSolveBB->setReflected ());
 	    // ... and now there are two proper branches of search problem;
 
-	    if ( !e->fastUnify (solveAA->getResult(),
-				solveAA->genEnumed(newSolveBB),
-				OK)) {
+	    if ( !e->fastUnifyOutline(solveAA->getResult(),
+				      solveAA->genEnumed(newSolveBB),
+				      OK)) {
 	      warning ("unification of distributed tuple with variable has failed");
 	      HF_NOMSG;
 	    }
@@ -2551,9 +2554,9 @@ void engine() {
       // the result variable; 
       aa->setCommitted();
       CBB->removeSuspension();
-      if ( !e->fastUnify(SolveActor::Cast(aa)->getResult(),
-			 SolveActor::Cast(aa)->genFailed(),
-			 OK) ) {
+      if ( !e->fastUnifyOutline(SolveActor::Cast(aa)->getResult(),
+				SolveActor::Cast(aa)->genFailed(),
+				OK) ) {
 	warning ("unification of atom 'failed' with variable has failed");
 	HF_NOMSG;
       }
