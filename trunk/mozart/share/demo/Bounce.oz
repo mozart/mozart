@@ -115,7 +115,7 @@ define
    
    class Manager
       from Tk.canvas
-      prop final
+      prop final locking
       attr
 	 Balls:  nil
 	 Colors: BallColors
@@ -131,15 +131,19 @@ define
       end
       
       meth NewBall(X Y)
-	 C|Cr  = @Colors
-      in
-	 Balls  <- {New Ball init(X Y self C)}|@Balls
-	 Colors <- Cr
+	 lock
+	    C|Cr  = @Colors
+	 in
+	    Balls  <- {New Ball init(X Y self C)}|@Balls
+	    Colors <- Cr
+	 end
       end
       
       meth KillBall
-	 case @Balls of nil then skip
-	 [] B|Br then {B close} Balls <- Br
+	 lock
+	    case @Balls of nil then skip
+	    [] B|Br then {B close} Balls <- Br
+	    end
 	 end
       end
    end
