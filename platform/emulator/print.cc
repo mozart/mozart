@@ -399,6 +399,16 @@ PRINT(Space)
   stream << "Space@" << this;
 }
 
+PRINT(OzThread)
+{
+  stream << "Thread";
+}
+
+PRINTLONG(OzThread)
+{
+  stream << "Thread";
+}
+
 PRINT(OzArray)
 {
   CHECKDEPTH;
@@ -630,18 +640,19 @@ PRINTLONG(ConstTerm)
 {
   CHECKDEPTHLONG;
   switch (getType()) {
-  case Co_Board:        ((Board *) this)->printLong(stream, depth, offset);      break;
-  case Co_Actor:        ((Actor *) this)->printLong(stream, depth, offset);      break;
-  case Co_HeapChunk:    ((HeapChunk *) this)->printLong(stream, depth, offset);  break;
-  case Co_Abstraction:  ((Abstraction *) this)->printLong(stream,depth,offset);  break;
-  case Co_Object:	((Object *) this)->printLong(stream,depth,offset); 	 break;
-  case Co_Cell:	        ((Cell *) this)->printLong(stream,depth,offset);         break;
-  case Co_Space:	((Space *) this)->printLong(stream,depth,offset);        break;
-  case Co_Chunk:	((SChunk *) this)->printLong(stream,depth,offset);       break;
-  case Co_Array:	((OzArray *) this)->printLong(stream,depth,offset);      break;
-  case Co_Dictionary:	((OzDictionary *) this)->printLong(stream,depth,offset); break;
-  case Co_Builtin:	((Builtin *) this)->printLong(stream,depth,offset);      break;
-  default: 	        Assert(NO);
+  case Co_Board:      ((Board *) this)->printLong(stream, depth, offset);     break;
+  case Co_Actor:      ((Actor *) this)->printLong(stream, depth, offset);     break;
+  case Co_HeapChunk:  ((HeapChunk *) this)->printLong(stream, depth, offset); break;
+  case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
+  case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
+  case Co_Cell:	      ((Cell *) this)->printLong(stream,depth,offset);        break;
+  case Co_Space:      ((Space *) this)->printLong(stream,depth,offset);       break;
+  case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
+  case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
+  case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
+  case Co_Thread:     ((OzThread *) this)->printLong(stream,depth,offset);    break;
+  case Co_Builtin:    ((Builtin *) this)->printLong(stream,depth,offset);     break;
+  default: 	      Assert(NO);
   }
 }
 
@@ -649,18 +660,19 @@ PRINT(ConstTerm)
 {
   CHECKDEPTH;
   switch (getType()) {
-  case Co_Board:       ((Board *) this)->print(stream, depth, offset);       break;
-  case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);       break;
-  case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset);   break;
-  case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset);   break;
-  case Co_Object:      ((Object *) this)->print(stream,depth,offset);        break;
-  case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
-  case Co_Space:       ((Space *) this)->print(stream,depth,offset);         break;
-  case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);        break;
-  case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);       break;
-  case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);  break;
-  case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);       break;
-  default:              Assert(NO);
+  case Co_Board:       ((Board *) this)->print(stream, depth, offset);     break;
+  case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);     break;
+  case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset); break;
+  case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
+  case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;
+  case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);        break;
+  case Co_Space:       ((Space *) this)->print(stream,depth,offset);       break;
+  case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
+  case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
+  case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
+  case Co_Thread:      ((OzThread *) this)->print(stream,depth,offset);    break;
+  case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);     break;
+  default:             Assert(NO);
   }
 }
 
@@ -1318,30 +1330,30 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 
     case C_CONT:
       {
-	ProgramCounter PC = getPC(C_CONT,topElem);
-	RefsArray Y = (RefsArray) pop();
-	RefsArray G = (RefsArray) pop();
-	if (verbose) {
-	  message("\tC_CONT: PC=0x%x, Y=0x%x, G=0x%x\n\t",
-		  PC, Y, G);
-	}
-	CodeArea::printDef(PC);
+        ProgramCounter PC = getPC(C_CONT,topElem);
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        if (verbose) {
+          message("\tC_CONT: PC=0x%x, Y=0x%x, G=0x%x\n\t",
+                  PC, Y, G);
+        }
+        CodeArea::printDef(PC);
       }
       break;
 
     case C_XCONT:
       {
-	ProgramCounter PC = getPC(C_XCONT,topElem);
-	RefsArray Y = (RefsArray) pop();
-	RefsArray G = (RefsArray) pop();
-	RefsArray X = (RefsArray) pop();
-	if (verbose) {
-	  message("\tC_XCONT: PC=0x%x, Y=0x%x, G=0x%x\n",
-		  PC, Y, G);
-	  printX(stdout,X);
-	}
-	CodeArea::printDef(PC);
-	break;
+        ProgramCounter PC = getPC(C_XCONT,topElem);
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        RefsArray X = (RefsArray) pop();
+        if (verbose) {
+          message("\tC_XCONT: PC=0x%x, Y=0x%x, G=0x%x\n",
+                  PC, Y, G);
+          printX(stdout,X);
+        }
+        CodeArea::printDef(PC);
+        break;
       }
 
     case C_LOCAL:
@@ -1350,58 +1362,58 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 
     case C_CFUNC_CONT:
       {
-	OZ_CFun biFun    = (OZ_CFun) pop();
-	RefsArray X      = (RefsArray) pop();
-	message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
-	for(int i=0; i<getRefsArraySize(X); i++) {
-	  printf(" ");    
-	  printf(toC(X[i]));
-	}
-	printf("}\n");
-	break;
+        OZ_CFun biFun    = (OZ_CFun) pop();
+        RefsArray X      = (RefsArray) pop();
+        message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
+        for(int i=0; i<getRefsArraySize(X); i++) {
+          printf(" ");    
+          printf(toC(X[i]));
+        }
+        printf("}\n");
+        break;
       }
 
     case C_DEBUG_CONT:
       {
-	OzDebug *deb = (OzDebug*) pop();
-	deb->printCall();
-	break;
+        OzDebug *deb = (OzDebug*) pop();
+        deb->printCall();
+        break;
       }
 
     case C_CALL_CONT:
       {
-	SRecord *s = (SRecord *) pop();
-	RefsArray X = (RefsArray) pop();
-	message("\tC_CALL_CONT: Pred=0x%x\n", s);
-	printX(stdout,X);
-	if (!verbose) break;
-	break;
+        SRecord *s = (SRecord *) pop();
+        RefsArray X = (RefsArray) pop();
+        message("\tC_CALL_CONT: Pred=0x%x\n", s);
+        printX(stdout,X);
+        if (!verbose) break;
+        break;
       }
 
     case C_SET_CAA:
       { 
-	AskActor *aa = (AskActor *) pop ();
-	if (verbose)
-	  message("\tC_SET_CAA: AA=0x%x\n", aa);
-	break;
+        AskActor *aa = (AskActor *) pop ();
+        if (verbose)
+          message("\tC_SET_CAA: AA=0x%x\n", aa);
+        break;
       }
 
     case C_SET_SELF:
       { 
-	Object *obj = (Object *) pop();
-	if (verbose)
-	  message("\tSET_SELF: 0x%x\n", obj);
-	break;
+        Object *obj = (Object *) pop();
+        if (verbose)
+          message("\tSET_SELF: 0x%x\n", obj);
+        break;
       }
 
     case C_LTQ:
       {
-	ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-	message("\tLocal thread queue @0x%x\n", ltq);
-	if (verbose) {
-	  ltq->print();
-	}
-	break;
+        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
+        message("\tLocal thread queue @0x%x\n", ltq);
+        if (verbose) {
+          ltq->print();
+        }
+        break;
       }
     default:
       Assert(0);
@@ -1436,21 +1448,21 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 
     case C_CONT:
       {
-	ProgramCounter PC = getPC(C_CONT,topElem);
-	RefsArray Y = (RefsArray) pop();
-	RefsArray G = (RefsArray) pop();
-	out = cons(CodeArea::dbgGetDef(PC),out);
+        ProgramCounter PC = getPC(C_CONT,topElem);
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        out = cons(CodeArea::dbgGetDef(PC),out);
       }
       break;
 
     case C_XCONT:
       {
-	ProgramCounter PC = getPC(C_XCONT,topElem);
-	RefsArray Y = (RefsArray) pop();
-	RefsArray G = (RefsArray) pop();
-	RefsArray X = (RefsArray) pop();
-	out = cons(CodeArea::dbgGetDef(PC),out);
-	break;
+        ProgramCounter PC = getPC(C_XCONT,topElem);
+        RefsArray Y = (RefsArray) pop();
+        RefsArray G = (RefsArray) pop();
+        RefsArray X = (RefsArray) pop();
+        out = cons(CodeArea::dbgGetDef(PC),out);
+        break;
       }
 
     case C_LOCAL:
@@ -1459,52 +1471,52 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 
     case C_CFUNC_CONT:
       {
-	OZ_CFun biFun    = (OZ_CFun) pop();
-	RefsArray X      = (RefsArray) pop();
-	TaggedRef args = nil();
-	for(int i=getRefsArraySize(X)-1; i>=0; i--) {
-	  args = cons(X[i],args);
-	}
-	out = cons(OZ_mkTupleC("builtin",2,
-			       OZ_atom(builtinTab.getName((void *) biFun)),
-			       args),out);
-	break;
+        OZ_CFun biFun    = (OZ_CFun) pop();
+        RefsArray X      = (RefsArray) pop();
+        TaggedRef args = nil();
+        for(int i=getRefsArraySize(X)-1; i>=0; i--) {
+          args = cons(X[i],args);
+        }
+        out = cons(OZ_mkTupleC("builtin",2,
+                               OZ_atom(builtinTab.getName((void *) biFun)),
+                               args),out);
+        break;
       }
 
     case C_DEBUG_CONT:
       {
-	OzDebug *deb = (OzDebug*) pop();
-	out = cons(OZ_atom("debug"),out);
-	break;
+        OzDebug *deb = (OzDebug*) pop();
+        out = cons(OZ_atom("debug"),out);
+        break;
       }
 
     case C_CALL_CONT:
       {
-	SRecord *s = (SRecord *) pop();
-	RefsArray X = (RefsArray) pop();
-	out = cons(OZ_atom("call"),out);
-	break;
+        SRecord *s = (SRecord *) pop();
+        RefsArray X = (RefsArray) pop();
+        out = cons(OZ_atom("call"),out);
+        break;
       }
 
     case C_SET_CAA:
       { 
-	AskActor *aa = (AskActor *) pop ();
-	out = cons(OZ_atom("setCAA"),out);
-	break;
+        AskActor *aa = (AskActor *) pop ();
+        out = cons(OZ_atom("setCAA"),out);
+        break;
       }
 
     case C_SET_SELF:
       { 
-	Object *obj = (Object *) pop();
-	out = cons(OZ_atom("setSelf"),out);
-	break;
+        Object *obj = (Object *) pop();
+        out = cons(OZ_atom("setSelf"),out);
+        break;
       }
 
     case C_LTQ:
       {
-	ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-	out = cons(OZ_atom("ltq"),out);
-	break;
+        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
+        out = cons(OZ_atom("ltq"),out);
+        break;
       }
     default:
       Assert(0);

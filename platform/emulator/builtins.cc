@@ -1620,6 +1620,9 @@ LBLagain:
       case Co_Chunk:
 	t = tagged2SChunk(term)->getFeature(fea);
 	break;
+      case Co_Thread:
+	t = tagged2Thread(term)->getFeature(fea);
+	break;
       case Co_Object:
 	t = tagged2Object(term)->getFeature(fea);
 	break;
@@ -2404,6 +2407,8 @@ OZ_C_proc_begin(BIchunkArity,2)
     return OZ_unify(out,tagged2Object(ch)->getArityList());
   case Co_Chunk:
     return OZ_unify(out,tagged2SChunk(ch)->getArityList());
+  case Co_Thread:
+    return OZ_unify(out,tagged2Thread(ch)->getArityList());
   case Co_Dictionary:
   case Co_Array:
   default:
@@ -5806,15 +5811,96 @@ OZ_C_proc_end
 // Debugging: special builtins for Benni
 // ---------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIsetDebugVar,1)
+OZ_C_proc_begin(BIsetStreamVar,1)
 {
   OZ_Term var = OZ_getCArg(0);
-  Assert(OZ_isVariable(var));
-  am.currentThread->setDebugVar(var);
+  am.currentThread->setStreamVar(var);
   return PROCEED;
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIsetStepMode,2)
+{
+  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  char   *onoff = toC(OZ_getCArg(1));
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = ((OzThread*) rec)->th();
+ 
+  if (!strcmp(onoff, "on"))
+    thread->startStepMode();
+  else if (!strcmp(onoff, "off"))
+    thread->stopStepMode();
+  else warning("setStepMode: invalid second argument: must be 'on' or 'off'");
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIstartTraceMode,2)
+{
+  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  OZ_Term out   = OZ_getCArg(1);
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = ((OzThread*) rec)->th();
+ 
+  TaggedRef var = OZ_newVariable();
+  thread->setStreamVar(var);
+  thread->startTraceMode();
+  return OZ_unify(out, var);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIstopTraceMode,1)
+{
+  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = ((OzThread*) rec)->th();
+ 
+  thread->setStreamVar(OZ_atom("noStream"));
+  thread->stopTraceMode();
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIrunPermission,2)
+{
+  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  char   *yesno = toC(OZ_getCArg(1));
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = ((OzThread*) rec)->th();
+  
+  if (!strcmp(yesno, "yes"))
+    thread->runPermission();
+  else if (!strcmp(yesno, "no"))
+    thread->noRunPermission();
+  else
+    warning("runPermission: invalid second argument: must be 'yes' or 'no'");
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIqueryDebugState,2)
+{
+  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
+  OZ_Term out   = OZ_getCArg(1);
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = ((OzThread*) rec)->th();
+
+  return OZ_unify(out, 
+		  OZ_mkTupleC("debugState",
+			      3,
+			      thread->traceMode() ? OZ_true() : OZ_false(),
+			      thread->stepMode() ? OZ_true() : OZ_false(),
+			      thread->stopped() ? OZ_atom("stopped")
+			                        : OZ_atom("running")
+			      ));
+			      
+}
+OZ_C_proc_end
 
 // --------------------- ... -----------------------------
 
@@ -6738,7 +6824,18 @@ BIspec allSpec2[] = {
 
   {"halt",0,BIhalt},
 
-  {"setDebugVar",1,BIsetDebugVar},
+  // Debugging ---
+  {"setStreamVar",1,BIsetStreamVar},
+
+  {"startTraceMode",2,BIstartTraceMode},
+  {"stopTraceMode",1,BIstopTraceMode},
+
+  {"setStepMode",2,BIsetStepMode},
+
+  {"runPermission",2,BIrunPermission},
+  // End Debugging ---
+  
+  {"queryDebugState",2,BIqueryDebugState},
 
   {"printLong",1,BIprintLong},
 
