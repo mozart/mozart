@@ -972,34 +972,13 @@ SuspList * SuspList::gc(Bool tcFlag)
     if (!aux) {
       continue;
     }
-    if (help->isCondSusp()){
-      Condition *auxConds = ((CondSuspList*)help)->getConds();
-      unsigned int auxNumOfConds = ((CondSuspList*)help)->getCondNum();
-      auxConds = (Condition*) gcRealloc(auxConds,
-					auxNumOfConds * sizeof(Condition));
-      for (unsigned int i = 0; i < auxNumOfConds; i++)
-	gcTagged(((CondSuspList*)help)->getConds()[i].arg, auxConds[i].arg);
-      
-      ret = new CondSuspList(aux, ret, auxConds, auxNumOfConds);
-
-      PROFILE_CODE1(if (opMode == IN_TC) {
-	              FDProfiles.inc_item(cp_no_condsusplist);
-		      FDProfiles.inc_item(cp_size_condsusplist,
-					  sizeof(CondSuspList)
-					  + auxNumOfConds * sizeof(Condition));
-		    })
-
-    } else {
-      ret = new SuspList(aux, ret);
-
-      PROFILE_CODE1(if (opMode == IN_TC) {
-	              FDProfiles.inc_item(cp_no_susplist);
-		      FDProfiles.inc_item(cp_size_susplist, sizeof(SuspList));
-		    })
-
-    }
+    ret = new SuspList(aux, ret);
+    
+    PROFILE_CODE1(if (opMode == IN_TC) {
+      FDProfiles.inc_item(cp_no_susplist);
+      FDProfiles.inc_item(cp_size_susplist, sizeof(SuspList));
+    })
   }
-
   GCNEWADDRMSG (ret);
   return (ret);
 }
