@@ -35,7 +35,7 @@ REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc		\
                protocolState.cc dsite.cc perdio.cc state.cc		\
                vs_interface.cc fail.cc protocolCredit.cc table.cc	\
                protocolFail.cc var.cc var_obj.cc msgType.cc chain.cc	\
-               dpResource.cc
+               dpResource.cc flowControl.cc
 CREATEDCOREFILES = marshalMsg.cc dpMarshaler.hh
 CREATEDCORESRCS  = marshalMsg.cc
 CORESRCS = $(REALCORESRCS) $(CREATEDCORESRCS)

@@ -56,20 +56,85 @@ void adjustProxyForFailure(Tertiary*,EntityCond,EntityCond);
 void adjustManagerForFailure(Tertiary*,EntityCond,EntityCond);
 
 /**********************************************************************/
+/*   deferoperations                                          */
+/**********************************************************************/
+
+TaggedRef BI_defer;
+
+DeferElement *DeferdEvents;
+
+OZ_BI_define(BIdefer,0,0)
+{ 
+  DeferElement *ptr = DeferdEvents, *old;
+  DeferdEvents = NULL;
+  while(ptr){
+    switch(ptr->type){
+    case DEFER_PROXY_PROBLEM:
+      proxyProbeFault(ptr->tert, ptr->prob);
+    case DEFER_MANAGER_PROBLEM:
+      managerProbeFault(ptr->tert,ptr->site, ptr->prob);
+    case DEFER_ENTITY_PROBLEM:{
+      entityProblem(ptr->tert);
+      break;}
+    default: Assert(0);
+    }
+    old = ptr;
+    ptr = ptr->next;
+    genFreeListManager->putOne_5((FreeListEntry*)old);
+  }
+  return PROCEED;
+} OZ_BI_end
+
+void addDeferElement(DeferElement* e){
+  if(DeferdEvents==NULL){
+    Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
+    tt->pushCall(BI_defer);}
+  e->next = DeferdEvents;
+  DeferdEvents = e;
+}
+
+DeferElement* newDeferElement(){
+  return (DeferElement*) genFreeListManager->getOne_5();}
+  
+
+void gcDeferEvents(){
+  DeferElement* ptr = DeferdEvents;
+  while(ptr!=NULL) {
+    ptr->tert=(Tertiary*)ptr->tert->gcConstTerm();
+    if(ptr->type==DEFER_MANAGER_PROBLEM)
+      ptr->site->makeGCMarkSite();
+    ptr=ptr->next;
+  }
+    
+}
+/**********************************************************************/
 /*   support                                   */
 /**********************************************************************/
 
 
+
 void deferEntityProblem(Tertiary* t){
-  Assert(0); // ERIK-LOOK
+  DeferElement *e = newDeferElement();
+  e->tert = t;
+  e->type = DEFER_ENTITY_PROBLEM;
+  addDeferElement(e);
 }
 
-void deferManagerProbeFault(Tertiary* t,DSite* s){
-  Assert(0); // ERIK-LOOK
+void deferManagerProbeFault(Tertiary* t,DSite* s, int pr){
+  DeferElement *e = newDeferElement();
+  e->tert = t;
+  e->site = s;
+  e->type = DEFER_MANAGER_PROBLEM;
+  e->prob = pr;
+  addDeferElement(e);
 }
 
-void deferProxyProbeFault(Tertiary* t){
-  Assert(0); // ERIK-LOOK
+void deferProxyProbeFault(Tertiary* t, int pr){
+  DeferElement *e = newDeferElement();
+  e->tert = t;
+  e->prob = pr;
+  e->type = DEFER_PROXY_PROBLEM;
+  addDeferElement(e);
 }
 
 void tertiaryInstallProbe(DSite* s,ProbeType pt,Tertiary *t){
@@ -77,9 +142,9 @@ void tertiaryInstallProbe(DSite* s,ProbeType pt,Tertiary *t){
   ProbeReturn pr=installProbe(s,pt);
   if(pr==PROBE_INSTALLED) return;
   if(t->isManager())
-    deferManagerProbeFault(t,s);
+    deferManagerProbeFault(t,s,pr);
   else
-    deferProxyProbeFault(t);}
+    deferProxyProbeFault(t,pr);}
 
 void managerInstallProbe(Tertiary* t,ProbeType pt){
   installProbeNoRet(BT->getOriginSite(t->getIndex()),pt);}
@@ -154,27 +219,28 @@ void insertWatcher(Tertiary *t,Watcher *w, EntityCond &oldEC, EntityCond &newEC)
 /**********************************************************************/
 
 PendThread* threadTrigger(Tertiary* t,Watcher* w){
-  PendThread* aux;
+  PendThread* aux, *old = NULL, *pd;
   switch(t->getType()){
-  case Co_Cell:
-  case Co_Lock:{
-    PendThread* pd=getPendThreadStartFromCellLock(t);
-    while(TRUE){
-      while((pd!=NULL) && (pd->thread!=NULL)){
-	pd=pd->next;}
-      if(pd==NULL) return NULL;
-      if(w->thread==NULL || (pd->thread== w->thread)){
-	return pd;}
-      pd=pd->next;
-      if(pd==NULL) break;}
-    return NULL;}
   case Co_Port:
-    Assert(0); // ERIK-LOOK
+    pd = getPendThreadStartFromPort(t);
+    break;
+  case Co_Cell:
+  case Co_Lock:
+    pd=getPendThreadStartFromCellLock(t);
+    break;
   default:
-    Assert(0); 
+    Assert(0);
+    return NULL;
   }
-  return NULL; // stupid compiler
-}
+  while(TRUE){
+    while((pd!=NULL) && (pd->thread==NULL)){
+      pd=pd->next;}
+    if(pd==NULL) return NULL;
+    if(w->thread==NULL || (pd->thread== w->thread)){
+      return pd;}
+    pd=pd->next;
+    if(pd==NULL) break;}
+  return NULL;}
 
 void dealWithContinue(Tertiary* t,PendThread* pd){
   switch(t->getType()){
@@ -185,10 +251,10 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
 				pd->old, pd->nw); 
       return;}
     case ASSIGN:{
-      pd->thread->pushCall(BI_assign,pd->old,pd->nw); 
+      pd->thread->pushCall(BI_assign,makeTaggedTert(t),pd->old,pd->nw); 
       return;}
     case AT:{
-      pd->thread->pushCall(BI_atRedo,pd->old,pd->nw); 
+      pd->thread->pushCall(BI_atRedo,makeTaggedTert(t),pd->old,pd->nw); 
       return;}
     default: Assert(0);}}
   case Co_Lock:{
@@ -196,7 +262,7 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
     // pd->thread->pushCall(BI_lockLock,makeTaggedTert(t));
     return;}
   case Co_Port:
-    Assert(0); // ERIK-LOOK
+    pd->thread->pushCall(BI_send, makeTaggedTert(t), pd->old);
   default:
     Assert(0); 
   }}
@@ -209,15 +275,16 @@ Bool entityProblemPerWatcher(Tertiary*t, Watcher* w){
     PendThread* pd=threadTrigger(t,w);
     if(pd!=NULL){
       if(w->isRetry()) dealWithContinue(t,pd);
-      w->invokeHandler(ec,pd->controlvar);
+      pd->thread = NULL;
+      w->invokeHandler(ec,pd->controlvar,makeTaggedTert(t));
       if(w->isPersistent()) return FALSE; 
       return TRUE;}
     return FALSE;}
-  w->invokeWatcher(ec);
+  w->invokeWatcher(ec,makeTaggedTert(t));
   return TRUE;}
 
 Bool entityCondMeToBlocked(Tertiary* t){
-  if(getEntityCond(t) & PERM_ME|TEMP_ME) {
+  if(getEntityCond(t) & (PERM_ME|TEMP_ME)) {
     if(getEntityCond(t) & PERM_ME) 
       addEntityCond(t,PERM_BLOCKED);
     if(getEntityCond(t) & TEMP_ME) 
@@ -257,26 +324,30 @@ void entityProblem(Tertiary *t) {
 /*   SECTION::  watcher                */
 /**********************************************************************/
 
-void Watcher::invokeWatcher(EntityCond ec){
+void Watcher::invokeWatcher(EntityCond ec, TaggedRef entity){
   if(!isFired()){
     Assert(!isHandler());
     Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
-    tt->pushCall(proc, listifyWatcherCond(ec));}
+    tt->pushCall(proc, listifyWatcherCond(ec),entity);}
 }
 
-void Watcher::invokeHandler(EntityCond ec,TaggedRef controlvar){
+void Watcher::invokeHandler(EntityCond ec,TaggedRef controlvar,
+			    TaggedRef entity){
   if(!isFired()){
     Assert(isHandler());
-    thread->pushCall(proc,listifyWatcherCond(ec));
-    ControlVarResume(controlvar);}
+    //    thread->pushCall(proc,listifyWatcherCond(ec));
+    //ControlVarResume(controlvar);}
+    ControlVarApply(controlvar,proc,
+		    oz_cons(listifyWatcherCond(ec),
+			    oz_cons(entity,oz_nil())));}
 }
 
 /**********************************************************************/
 /*   SECTION::  probeFault -- first indication of error                */
 /**********************************************************************/
 
-void cellLockManagerProbeFault(Tertiary *t, DSite* s, int pr){
-  Chain *ch=getChainFromTertiary(t);
+  void cellLockManagerProbeFault(Tertiary *t, DSite* s, int pr){
+    Chain *ch=getChainFromTertiary(t);
   if(pr==PROBE_OK){
     if(!ch->hasFlag(INTERESTED_IN_OK)) return;
     ch->managerSeesSiteOK(t,s);
@@ -305,6 +376,23 @@ void cellLockProxyProbeFault(Tertiary *t, int pr){
   cellLock_Temp(state,t);
   return;}
 
+void portProxyProbeFault(Tertiary *t, int pr){
+  PortProxy *pp = (PortProxy*) t;
+  switch(pr){
+  case PROBE_PERM:
+    port_Perm(pp);
+    break;
+  case PROBE_OK:
+    port_Ok(pp);
+    break;
+  case PROBE_TEMP:
+    port_Temp(pp);
+    break;
+  default: 
+    Assert(0);
+  }
+}
+
 void proxyProbeFault(Tertiary *t, int pr) {
   PD((ERROR_DET,"proxy probe invoked %d",pr));
   switch(t->getType()){
@@ -313,8 +401,8 @@ void proxyProbeFault(Tertiary *t, int pr) {
     cellLockProxyProbeFault(t,pr);
     return;
   case Co_Port:
-    Assert(pr==PROBE_PERM);
-    return;              // ERIK-LOOK;
+    portProxyProbeFault(t,pr);
+    return;   
   default: Assert(0);
     return;}
 }
@@ -326,8 +414,10 @@ void managerProbeFault(Tertiary *t, DSite* s,int pr) {
     if(getChainFromTertiary(t)->siteExists(s))
       cellLockManagerProbeFault(t, s, pr);
     return;
-  case Co_Port: //ERIK-LOOK
-    break;
+  case Co_Port: 
+    /* The portManager is not affected by 
+       other sites. */
+    return;
   default:
     Assert(0);}
 }
@@ -486,8 +576,6 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
     shortcutCrashLock((LockManager*) t);
     return;}
   PD((ERROR_DET,"Token lost"));
-  setFlagAndCheck(TOKEN_LOST);
-  establish_TOKEN_LOST(t);
   int OTI=t->getIndex();
   handleTokenLost(t,OT->getOwner(OTI),OTI);
   Assert(inform==NULL);
@@ -697,7 +785,7 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
 		    Thread* th, unsigned int kind) {
 		    
   if(checkForExistentHandler(t,th,wc)) return FALSE;
-    Watcher *w=new Watcher(proc,th,wc,kind);
+  Watcher *w=new Watcher(proc,th,wc,kind);
   if(t==NULL){
     PD((NET_HANDLER,"Watcher installed globally old was %x",globalWatcher));
     globalWatcher=w;
@@ -876,16 +964,15 @@ OZ_Return WatcherInstall(Tertiary* entity,SRecord *condStruct,TaggedRef proc){
   Thread *th;
   TaggedRef aux;
 
-  return PROCEED; // ERIK-LOOK
   watcherInstallHelp(condStruct,ec,th,kind,entity);
   if(!checkWatcherCorrectness(entity,ec,th,kind))
     {return IncorrectFaultSpecification;}
-  if(installWatcher(entity,ec,proc,th,kind)) return PROCEED;
-  return IncorrectFaultSpecification;}
+  if(installWatcher(entity,ec,proc,th,kind)) 
+    return PROCEED;
+  return HandlerExists;}
 
 OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,
 			   TaggedRef proc){
-  return PROCEED; // ERIK-LOOK PER-LOOK
   EntityCond ec    = ENTITY_NORMAL;  
   short kind;
   Thread *th;

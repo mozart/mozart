@@ -51,7 +51,8 @@
 #include "protocolState.hh"
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
-
+#include "flowControl.hh"
+#include "ozconfig.hh"
 // from builtins.cc
 void doPortSend(PortWithStream *port,TaggedRef val);
 
@@ -289,6 +290,8 @@ void gcPerdioRootsImpl()
     OT->gcOwnerTableRoots();
     BT->gcBorrowTableRoots();
     gcGlobalWatcher();
+    flowControler->gcEntries();
+    gcDeferEvents();
   }
 }
 
@@ -425,7 +428,7 @@ void msgReceived(MsgBuffer* bs)
   Assert(creditSiteOut==NULL);
   MessageType mt = (MessageType) unmarshalHeader(bs);
   PD((MSG_RECEIVED,"msg type %d",mt));
-
+  
   switch (mt) {
   case M_PORT_SEND:   
     {
@@ -433,7 +436,6 @@ void msgReceived(MsgBuffer* bs)
       OZ_Term t;
       unmarshal_M_PORT_SEND(bs,portIndex,t);
       PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
-
       OwnerEntry *oe=receiveAtOwner(portIndex);
       Assert(oe);
       PortManager *pm=(PortManager*)(oe->getTertiary());
@@ -1061,7 +1063,7 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
     OZ_warning("communication problem - impossible");
     Assert(0);
   }
-
+  
   switch(flag){
   case USUAL_OWNER_CASE:{
     switch(fc){
@@ -1097,6 +1099,7 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
 /**********************************************************************/
 //
 OZ_BI_proto(BIstartTmp);
+OZ_BI_proto(BIdefer);
 
 void initDPCore()
 {
@@ -1147,11 +1150,20 @@ void initDPCore()
 
   creditSiteIn = NULL;
   creditSiteOut = NULL;
-  ownerTable = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
-  borrowTable = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
-  resourceTable = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
+  borrowTable      = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
+  ownerTable       = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
+  resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
+  flowControler    = new FlowControler();
   msgBufferManager = new MsgBufferManager();
+  
+  if(!am.registerTask(NULL, FlowControlCheck, FlowControlExecute))
+    error("Unable to register FlowControl task");
+   
+  ozconf.perdioFlowBufferSize  =  1000000;
+  ozconf.perdioFlowBufferTime  =  1000;
+  BI_defer = makeTaggedConst(new Builtin("defer", 0, 0, BIdefer, OK));
   globalWatcher = NULL; // PER-LOOK
+  DeferdEvents = NULL;
   usedTwins = NULL;
 
   BI_startTmp  = makeTaggedConst(new Builtin("startTmp",
@@ -1173,7 +1185,7 @@ void initDPCore()
   Assert(sizeof(LockSecEmul)==sizeof(LockSec));
   Assert(sizeof(CellSecEmul)==sizeof(CellSec));
   Assert(sizeof(PortManager)==sizeof(PortLocal));
-  Assert(sizeof(PortProxy)==12);
+  Assert(sizeof(PortProxy)==SIZEOFPORTPROXY);
 }
 
 /**********************************************************************/
@@ -1228,7 +1240,9 @@ OZ_Term getGatePort(DSite* sd){
   if (b==NULL) {
     int bi=borrowTable->newBorrow( PERSISTENT_CRED,sd,si);
     b=borrowTable->getBorrow(bi);
-    b->mkTertiary((new PortProxy(bi)));
+    PortProxy *pp = new PortProxy(bi);
+    b->mkTertiary(pp);
+    tertiaryInstallProbe(sd,PROBE_TYPE_ALL,pp);
     b->makePersistent();
     return b->getValue();}
   Assert(b->isPersistent());

@@ -107,7 +107,7 @@ public:
     return evalTrueEntityCond(entityCond);}
 
   Bool addEntityCond(EntityCond ec){
-    if((entityCond & ec) ==entityCond) return FALSE;
+    if((entityCond | ec) ==entityCond) return FALSE;
     entityCond |= ec;
     return TRUE;}
 
@@ -226,9 +226,9 @@ public:
 
   Watcher* getNext(){return next;}
 
-  void invokeHandler(EntityCond,TaggedRef);
+  void invokeHandler(EntityCond,TaggedRef,TaggedRef);
 
-  void invokeWatcher(EntityCond);
+  void invokeWatcher(EntityCond, TaggedRef);
 
   Thread* getThread(){Assert(thread!=NULL);return thread;}
 
@@ -325,7 +325,29 @@ void initProxyForFailure(Tertiary*);
 OZ_Return WatcherInstall(Tertiary*, SRecord*, TaggedRef);
 OZ_Return WatcherDeInstall(Tertiary*, SRecord*, TaggedRef);
 
+/**********************   DeferEvents   ******************/
+enum DeferType{ 
+  DEFER_PROXY_PROBLEM,
+  DEFER_MANAGER_PROBLEM,
+  DEFER_ENTITY_PROBLEM};
+    
+class DeferElement{
+public:
+  DeferElement *next;
+  Tertiary  *tert;
+  DSite     *site;
+  DeferType  type;
+  int        prob;
+  DeferElement(){}
+};
+
+extern DeferElement* DeferdEvents;
+extern TaggedRef BI_defer;
+void gcDeferEvents();
+
 #define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
+
+#define HandlerExists oz_raise(E_ERROR,E_SYSTEM,"handler exists",0)
 
 
 

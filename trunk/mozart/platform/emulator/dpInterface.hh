@@ -33,11 +33,11 @@
 #include "base.hh"
 #include "pickle.hh"
 
-#define SIZEOFPORTPROXY 12
+#define SIZEOFPORTPROXY 16
 
 //
 extern Bool (*isPerdioInitialized)();
-
+ 
 // 
 extern OZ_Return (*portSend)(Tertiary *p, TaggedRef msg);
 extern OZ_Return (*cellDoExchange)(Tertiary*,TaggedRef,TaggedRef);

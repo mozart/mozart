@@ -68,6 +68,7 @@ OZ_BI_define(BIhwDeInstall,3,0){
 }OZ_BI_end
 
 // ERIK-LOOK make another for variables
+// ERIK-LOOK put sitehandlers last!!!!
 OZ_BI_define(BIhwInstall,3,0){
   OZ_Term e0        = OZ_in(0);
   OZ_Term c0        = OZ_in(1);
