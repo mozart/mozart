@@ -34,7 +34,7 @@ INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_FILE	= $(INSTALL) -m 444
 
-OZFLAGS		= 
+OZCFLAGS	= 
 OZC		= @OZC@
 OZL		= @OZL@
 EMACS		= emacs
@@ -73,7 +73,7 @@ ozdoc: $(FUNCTORS)
 	$(OZL) -z 9 -x Main.ozf -o $@
 
 %.ozf: %.oz
-	$(OZC) $(OZFLAGS) -c $< -o $@
+	$(OZC) $(OZCFLAGS) -c $< -o $@
 
 %.elc: %.el
 	-rm -f $@
