@@ -65,7 +65,7 @@ local
    local
 
       fun {FindPos TLs FT N}
-	 !TLs = T#L|TLr
+	 T#L|TLr = !TLs
       in
 	 case T==FT then N else {FindPos TLr FT N+1} end
       end
