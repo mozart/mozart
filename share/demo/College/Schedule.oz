@@ -36,7 +36,7 @@ MorningQuarters = 18
 
 Morning 
 [MondayM TuesdayM WednesdayM ThursdayM FridayM] = !Morning
-{Map Week fun {$ S#E} S#S+MorningQuarters-1 end} = !Morning
+{Map Week fun {$ S#_} S#S+MorningQuarters-1 end} = !Morning
 
 Afternoon 
 [MondayA TuesdayA WednesdayA ThursdayA FridayA] = !Afternoon
@@ -253,10 +253,12 @@ end
 %% %%%%%%%%%%%%%%%%%%%%%
 %% Constraint Procedures
 %% %%%%%%%%%%%%%%%%%%%%%
-   
+
+/*
 proc {NotOnSpecialDay Lectures Day}
    {ForAll Lectures proc{$ Lec} Lec.start :: compl(Day) end}
 end
+*/
 proc {OnSpecialDayOnly Lectures Day}
    {ForAll Lectures proc{$ Lec} Lec.start :: Day end}
 end
@@ -439,7 +441,7 @@ local
       case Lectures of nil then nil
       [] L2|Lr then B={FD.int 0#1} L1Dur L2Dur in
 	 case L1.name==L2.name then 0|{SumUpOverlaps L1 Lr}
-	 else B1 B2 B3 B11 B21 B31 L11 L12 L21 L22 L31 L32 L1S L2S in
+	 else L1S L2S in
 	    L1Dur=case L1.dur<4 then L1.dur+1
 		  else L1.dur+2
 		  end
@@ -516,9 +518,9 @@ fun {MakeProblem ProblemDescription}
 			*/
 			   
 		       }
-
+/*
       FlatLecturesSecond = {List.flatten LecturesSecond}
-
+*/
       %% Fourth Semester
       %% %%%%%%%%%%%%%%%
 
@@ -546,9 +548,9 @@ fun {MakeProblem ProblemDescription}
 
 
 		       }
-
+/*
       FlatLecturesFourth = {List.flatten LecturesFourth}
-
+*/
       GrundStudiumLectures = {Append LecturesSecond LecturesFourth}
       FlatGrundStudiumLectures = {List.flatten GrundStudiumLectures}
 
@@ -598,8 +600,9 @@ fun {MakeProblem ProblemDescription}
       FlatLecturesEighth = {List.flatten LecturesEighth}
 
       NotOnThursdayLectures = {Append GrundStudiumLectures LecturesSixth}
+/*
       FlatNotOnThursdayLectures={List.flatten NotOnThursdayLectures}
-
+*/
       AllSemesterLectures = {Append NotOnThursdayLectures LecturesEighth}
       FlatAllSemesterLectures={List.flatten AllSemesterLectures}
 
