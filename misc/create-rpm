@@ -45,8 +45,7 @@ OZHOME=/usr/lib/mozart
 #
 
 VERSION=`(echo ${SRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.gz/\1/')`
-BUILD=`(echo $Revision$ | sed 's/\.\(.*\)$/\1/')`
-
+BUILD=`(echo $Revision$ | sed 's|.*\.\([1-9][0-9]*\).*|\1|')`
 
 #
 # Build sh files
