@@ -136,15 +136,24 @@ void AM::pushTask(Board *n,ProgramCounter pc,
 			 RefsArray y,RefsArray g,
 			 RefsArray x,int i)
 {
+#ifndef NEWCOUNTER
   n->incSuspCount();
+#endif
   currentThread->taskStack.pushCont(n,pc,y,g,x,i);
 }
 
 inline
 void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
 {
+#ifndef NEWCOUNTER
   n->incSuspCount();
+#endif
   currentThread->taskStack.pushCFunCont(n, f, (Suspension *) NULL, x, i);
+}
+
+inline
+void AM::pushNervous(Board *n) {
+  currentThread->taskStack.pushNervous(n);
 }
 
 inline
