@@ -12,15 +12,10 @@ Profile = profile(getInfo: {`Builtin` statisticsGetProcs 1}
 NL = [10]  %% newline
 
 %% send a warning/error message
-proc {ProfilerShow X}
-   case {Cget verbose} then
-      {Show X}
-   else skip end
-end
 proc {ProfilerMessage M}
-   case {Cget verbose} then
-      {System.showInfo {ProfilerMessagePrefix} # M}
-   else skip end
+   %% disabled...
+   %{System.showInfo {ProfilerMessagePrefix} # M}
+   skip
 end
 proc {ProfilerError M}
    {System.showInfo ProfilerErrorPrefix # M}
