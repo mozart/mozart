@@ -1,5 +1,6 @@
 \switch +dynamicvarnames
 \switch +controlflowinfo
+\switch +profile
 
 {Property.put 'internal.propLocation' true}
 
@@ -38,25 +39,27 @@ in
    N13 + N23 + N33 =: Sum
    N11 + N22 + N33 =: Sum
    N31 + N22 + N13 =: Sum
-   {FD.distribute ff Square}
 end
-   Sol
-   Square
-   [N11 N12 N13 N21 N22 N23 N31 N32 N33] = Square
-   Sum = {FD.decl}
+Sol
+Square
+[N11 N12 N13 N21 N22 N23 N31 N32 N33] = Square
+Sum = {FD.decl}
 in
-   Sol=s(square:Square sum:Sum)
-   Square ::: 1#9
-   N11 + N12 + N13 =: Sum
-   N21 + N22 + N23 =: Sum
-   N31 + N32 + N33 =: Sum
-   N11 + N21 + N31 =: Sum
-   N12 + N22 + N32 =: Sum
-   N13 + N23 + N33 =: Sum
-   N11 + N22 + N33 =: Sum
-   N31 + N22 + N13 =: Sum
-   {FD.distinct Square}
+Sol=s(square:Square sum:Sum)
+Square ::: 1#9
+N11 + N12 + N13 =: Sum
+N21 + N22 + N23 =: Sum
+N31 + N32 + N33 =: Sum
+N11 + N21 + N31 =: Sum
+N12 + N22 + N32 =: Sum
+N13 + N23 + N33 =: Sum
+N11 + N22 + N33 =: Sum
+N31 + N22 + N13 =: Sum
+{FD.distinct Square}
+
 {InvestigateConstraints [N11 N12] }
+
+{Problem} = {InvestigateConstraints}
 
 {Explorer.object script(Problem)}
 
@@ -216,5 +219,39 @@ RS =reflect_space(
 		    )
        )
 {InvestigateConstraints RS}
+
+*/
+/*
+Denys Bug:
+
+	 {Property.put 'internal.propLocation' true}
+declare
+local
+   [V] = {Module.link ['x-oz://contrib/Investigator.ozf']}
+in
+   BrowserPluginActivate  = V.browserPluginActivate
+   ExplorerPluginActivate = V.explorerPluginActivate
+   InvestigateConstraints = V.investigateConstraints
+end
+{ExplorerPluginActivate}
+{BrowserPluginActivate}
+
+declare
+[M] = {Module.link ['~duchier/Coli/DG/Tobias.ozf']}
+proc {E L} {ExploreAll {M.solutionPredicate L}} end
+
+declare L = {{M.solutionPredicate [zu lesen hat er mir das buch versprochen]}}
+{Browse {R.spaceReflect L}}
+
+{Show L}
+{InvestigateConstraints L}
+
+
+
+
+declare X = {FD.decl} Y = {FD.decl}
+%X <: Y
+{InvestigateConstraints X}
+
 
 */
