@@ -96,37 +96,39 @@ OZ_C_proc_end
 
 
 
-static Bool isSpied(Chunk *def)
+static Bool isSpied(TaggedRef def)
 {
   if (isAbstraction(def)) {
-    return ((Abstraction*)def)->getPred()->getSpyFlag();
+    return tagged2Abstraction(def)->getPred()->getSpyFlag();
   }
   return NO;
 }
 
-static char *getPrintName(Chunk *def)
+static char *getPrintName(TaggedRef def)
 {
   if (isAbstraction(def)) {
-    return ((Abstraction*)def)->getPrintName();
+    return tagged2Abstraction(def)->getPrintName();
+  } else if (isBuiltin(def)) {
+    return tagged2Builtin(def)->getPrintName();
+  } else {
+    return NULL;
   }
-
-  return ((Builtin*)def)->getPrintName();
 }
 
 
-static void setSpyFlag(Chunk *def)
+static void setSpyFlag(TaggedRef def)
 {
   if (isAbstraction(def)) {
-    ((Abstraction*)def)->getPred()->setSpyFlag();
+    tagged2Abstraction(def)->getPred()->setSpyFlag();
   } else {
     fprintf(stderr,"Cannot set spy flag for builtins\n");
   }
 }
 
-static void unsetSpyFlag(Chunk *def)
+static void unsetSpyFlag(TaggedRef def)
 {
   if (isAbstraction(def)) {
-    ((Abstraction*)def)->getPred()->unsetSpyFlag();
+    tagged2Abstraction(def)->getPred()->unsetSpyFlag();
   }
 }
 
@@ -142,7 +144,7 @@ char *binaryInfixes [] = {
   };
 
 
-Bool isInTable(Chunk *def, char **table)
+Bool isInTable(TaggedRef def, char **table)
 {
   char *pn = getPrintName(def);
   for (char **i=table; *i; i++) {
@@ -181,7 +183,7 @@ static int initPortMap()
 static int dummy = initPortMap();
 
 
-void printCall(DBGPort port, Chunk *def, int arity, TaggedRef *argss,
+void printCall(DBGPort port, TaggedRef def, int arity, TaggedRef *argss,
                unsigned long goal)
 {
 //  prefixError(); // to show up emulator buffer in emacs
@@ -289,7 +291,8 @@ dbgOption dbgReadInput(int &helpArg)
   return DBG_NONE;
 }
 
-void showCall(DBGPort port, Board *b, Chunk *def, int arity, TaggedRef *args,
+void showCall(DBGPort port, Board *b, TaggedRef def,
+              int arity, TaggedRef *args,
               unsigned long goal)
 {
   Bool goon = OK;
@@ -376,7 +379,7 @@ void showCall(DBGPort port, Board *b, Chunk *def, int arity, TaggedRef *args,
 }
 
 
-void enterCall(Board *b, Chunk *def, int arity, TaggedRef *args)
+void enterCall(Board *b, TaggedRef def, int arity, TaggedRef *args)
 {
   if (skipMode ||
       stepMode == NO && isSpied(def) == NO) {
@@ -408,7 +411,7 @@ void exitCall(OZ_Bool bol, OzDebug *deb)
   delete deb;
 }
 
-void exitBuiltin(OZ_Bool bol, Builtin *bi, int arity, TaggedRef *args)
+void exitBuiltin(OZ_Bool bol, TaggedRef bi, int arity, TaggedRef *args)
 {
   if (stepMode == OK && am.isSetSFlag(DebugMode)) {
     exitCall(bol, new OzDebug(bi,arity,args));
