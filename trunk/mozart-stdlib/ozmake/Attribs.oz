@@ -733,17 +733,28 @@ define
       meth subresolver_push(DST SRC)
 	 PATH = {OS.getEnv 'OZ_SEARCH_LOAD'}
 	 SEP  = [{Property.get 'path.separator'}]
+	 DST_DIR = {Path.dirname DST}
+	 SRC_DIR = {Path.dirname SRC}
+	 DST_ENV = {OS.getEnv 'OZMAKE_BUILD_DIR'}
+	 SRC_ENV = {OS.getEnv 'OZMAKE_SOURCE_DIR'}
       in
-	 SubResolverStack <- PATH|@SubResolverStack
+	 SubResolverStack <- (PATH#{Resolve.getHandlers}#DST_ENV#SRC_ENV)|@SubResolverStack
 	 {OS.putEnv 'OZ_SEARCH_LOAD'
-	  {Path.dirname DST}#SEP#
-	  {Path.dirname SRC}#SEP#PATH}
+	  DST_DIR#SEP#
+	  SRC_DIR#SEP#PATH}
+	 {Resolve.addHandler {Resolve.handler.root DST_DIR}}
+	 {Resolve.addHandler {Resolve.handler.root SRC_DIR}}
+	 {OS.putEnv 'OZMAKE_BUILD_DIR'  DST_DIR}
+	 {OS.putEnv 'OZMAKE_SOURCE_DIR' SRC_DIR}
       end
 
       meth subresolver_pop()
-	 case @SubResolverStack of PATH|L then
+	 case @SubResolverStack of (PATH#Handlers#DST_ENV#SRC_ENV)|L then
 	    SubResolverStack<-L
 	    {OS.putEnv 'OZ_SEARCH_LOAD' PATH}
+	    {Resolve.setHandlers Handlers}
+	    {OS.putEnv 'OZMAKE_BUILD_DIR'  if DST_ENV==false then nil else DST_ENV end}
+	    {OS.putEnv 'OZMAKE_SOURCE_DIR' if SRC_ENV==false then nil else SRC_ENV end}
 	 end
       end
 
