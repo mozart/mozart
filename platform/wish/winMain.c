@@ -9,9 +9,6 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#ifndef cdecl
-#define cdecl __cdecl
-#endif
 
 #include <windows.h>
 #include <stdlib.h>
@@ -22,6 +19,10 @@
 #include <string.h>
 
 #include "tk.h"
+
+#ifndef cdecl
+#define cdecl __cdecl
+#endif
 
 static void cdecl WishPanic(char *x,...);
 static unsigned __stdcall readerThread(void *arg);
@@ -298,8 +299,9 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      * Invoke application-specific initialization.
      */
 
-    if (Tcl_AppInit(interp) != TCL_OK) {
-	WishPanic("Tcl_AppInit failed: %s\n", interp->result);
+    if (Tcl_Init(interp) == TCL_ERROR ||
+	Tk_Init(interp) == TCL_ERROR) {
+      WishPanic("Tcl_Init failed: %s\n", interp->result);
     }
 
     Tcl_ResetResult(interp);
@@ -311,7 +313,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     ckfree((char *)argvlist);
 
-    Tcl_CreateCommand(interp, "puts", PutsCmd,  (ClientData) NULL,
+    Tcl_CreateCommand(interp, "puts", (Tcl_CmdProc*) PutsCmd,  (ClientData) NULL,
 		      (Tcl_CmdDeleteProc *) NULL);
 
     setmode(fileno(stdout),O_BINARY);
@@ -319,12 +321,14 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     outstream = fdopen(fileno(stdout),"wb");
     
+#if 1
     /* mm: do not show the main window */
     code = Tcl_GlobalEval(interp, "wm withdraw . ");
     if (code != TCL_OK) {
       fprintf(outstream, "w %s\n.\n", interp->result);
       fflush(outstream); /* added mm */
     }
+#endif
 
     {
       ReaderInfo *info = (ReaderInfo*) malloc(sizeof(ReaderInfo));
@@ -360,21 +364,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 }
 
 
-
-
-int
-Tcl_AppInit(interp)
-    Tcl_Interp *interp;		/* Interpreter for application. */
-{
-  if (Tcl_Init(interp) == TCL_ERROR) {
-    return TCL_ERROR;
-  }
-  if (Tk_Init(interp) == TCL_ERROR) {
-    return TCL_ERROR;
-  }
-
-  return TCL_OK;
-}
 
 
 /*
@@ -440,6 +429,7 @@ int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code)
   Tcl_DoWhenIdle(idleProc,cd);
   return code;
 }
+
 
 static unsigned __stdcall readerThread(void *arg)
 {
