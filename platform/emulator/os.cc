@@ -305,38 +305,47 @@ typedef struct {
   OZ_Term  ozhandler;
 } SigHandler ;
 
+void handlerIgnore(int sig)
+{
+}
+
+void handlerDefault(int sig)
+{
+  // kost@ : virtual sites need to be cleaned up - otherwise some
+  // shared memory pages will get stuck in the system;
+  am.exitOz(1);
+}
+
+
 #define SIGLAST -1
 
 static SigHandler handlers[] = {
-  {SIGINT, "SIGINT",NO,0,0},
-  {SIGTERM,"SIGTERM",NO,0,0},
-  {SIGUSR1,"SIGUSR1",NO,0,0},
-  {SIGSEGV,"SIGSEGV",NO,0,0},
-  {SIGFPE, "SIGFPE", NO,0,0},
+  {SIGINT, "SIGINT", NO,handlerDefault,0},
+  {SIGTERM,"SIGTERM",NO,handlerDefault,0},
+  {SIGUSR1,"SIGUSR1",NO,handlerDefault,0},
+  {SIGSEGV,"SIGSEGV",NO,handlerDefault,0},
+  {SIGFPE, "SIGFPE", NO,handlerDefault,0},
 
 #ifdef SIGHUP
-  {SIGHUP, "SIGHUP",NO,0,0},
+  {SIGHUP, "SIGHUP",NO,handlerDefault,0},
 #endif
 #ifdef SIGUSR2
-  {SIGUSR2,"SIGUSR2",NO,0,0},
-#endif
-#ifdef SIGCONT
-  {SIGCONT,"SIGCONT",NO,0,0},
+  {SIGUSR2,"SIGUSR2",NO,handlerDefault,0},
 #endif
 #ifdef SIGALRM
-  {SIGALRM,"SIGALRM",NO,0,0},
+  {SIGALRM,"SIGALRM",NO,handlerDefault,0},
 #endif
 #ifdef SIGBUS
-  {SIGBUS,"SIGBUS",NO,0,0},
+  {SIGBUS,"SIGBUS",NO,handlerDefault,0},
 #endif
 #ifdef SIGKILL
-  {SIGKILL,"SIGKILL",NO,0,0},
+  {SIGKILL,"SIGKILL",NO,handlerDefault,0},
 #endif
 #ifdef SIGPIPE
-  {SIGPIPE,"SIGPIPE",NO,0,0},
+  {SIGPIPE,"SIGPIPE",NO,handlerDefault,0},
 #endif
 #ifdef SIGCHLD
-  {SIGCHLD,"SIGCHLD",NO,0,0},
+  {SIGCHLD,"SIGCHLD",NO,handlerIgnore,0},
 #endif
 
   {SIGLAST,0,NO,0,0}
@@ -391,12 +400,21 @@ void genericHandler(int sig)
   if (aux == NULL)
     goto exit;
 
-  if (aux->ozhandler) {
-    aux->pending = OK;
-    am.setSFlag(SigPending);
+  Assert(aux->ozhandler != 0);
+
+  if (OZ_eq(aux->ozhandler,OZ_atom("ignore"))) // also ignore C handler
+    goto exit;
+
+  if (OZ_eq(aux->ozhandler,OZ_atom("default"))) {
+    (*aux->chandler)(sig);
+    goto exit;
   }
 
-  if (aux->chandler)
+  aux->pending = OK;
+  am.setSFlag(SigPending);
+
+  // existing Oz handler dominates handler that just does the default exit
+  if (aux->chandler != handlerDefault)
     (*aux->chandler)(sig);
   
 exit:
@@ -446,33 +464,13 @@ OsSigFun *osSignalInternal(int signo, OsSigFun *fun)
 
 
 static
-void checkHandler(SigHandler *sh)
-{
-  if (sh->chandler==0 && sh->ozhandler==0) {
-    osSignalInternal(sh->signo,SIG_DFL);
-    return;
-  }
-  if (sh->chandler!=0 || sh->ozhandler !=0) {
-    osSignalInternal(sh->signo,genericHandler);
-    return;
-  }
-}
-
-
-static
 Bool osSignal(int sig, OsSigFun *fun)
 {
   SigHandler *aux = findHandler(sig);
   if (aux == NULL) 
     return NO;
   
-  if (fun == SIG_DFL || fun == SIG_IGN) {
-    aux->chandler = 0;
-  } else {
-    aux->chandler = fun;
-  }
-
-  checkHandler(aux);
+  aux->chandler = (fun == SIG_IGN) ? handlerIgnore : fun;
   return OK;
 }
 
@@ -484,17 +482,7 @@ Bool osSignal(const char *signo, OZ_Term proc)
   if (aux == NULL) 
     return NO;
 
-  if (OZ_isUnit(proc)) {
-    if (aux->ozhandler != 0)
-      OZ_unprotect(&aux->ozhandler);
-    aux->ozhandler = 0;
-  } else {
-    if (aux->ozhandler == 0)
-      OZ_protect(&aux->ozhandler);
-    aux->ozhandler = proc;
-  }
-
-  checkHandler(aux);
+  aux->ozhandler = proc;
   return OK;
 }
 
@@ -856,25 +844,38 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
 
 void osInitSignals()
 {
-#ifndef WINDOWS
-  osSignal(SIGALRM,handlerALRM);
+  OZ_Term def = OZ_atom("default");
+  SigHandler *aux = handlers;
+  while(aux->signo != SIGLAST) {
+    osSignal(aux->signo,aux->chandler);
+    aux->ozhandler = def;
+    OZ_protect(&aux->ozhandler);
+    osSignalInternal(aux->signo,genericHandler);
+    aux++;
+  }
+
   // 'SIGUSR2' notifies about presence of tasks. Right now these are 
   // only virtual site messages;
-  osSignal(SIGUSR1,handlerUSR1);
+#ifdef SIGUSR2
   osSignal(SIGUSR2,handlerUSR2);
 #endif
-  // kost@ : virtual sites need to be cleaned up - otherwise some
-  // shared memory pages will get stuck in the system;
-#if !defined(DEBUG_DET) || defined(VIRTUALSITES)
-  osSignal(SIGINT,handlerINT);
-  osSignal(SIGTERM,handlerTERM);
-  osSignal(SIGSEGV,handlerSEGV);
-#ifndef WINDOWS
+#ifdef SIGALRM
+  osSignal(SIGALRM,handlerALRM);
+#endif
+#ifdef SIGUSR1
+  osSignal(SIGUSR1,handlerUSR1);
+#endif
+#ifdef SIGBUS
   osSignal(SIGBUS,handlerBUS);
+#endif
+#ifdef SIGPIPE
   osSignal(SIGPIPE,handlerPIPE);
+#endif
+#ifdef SIGCHLD
   osSignal(SIGCHLD,handlerCHLD);
 #endif
-#endif
+
+  osSignal(SIGSEGV,handlerSEGV);
 }
 
 
@@ -922,7 +923,6 @@ char *oslocalhostname()
 
 
 #ifdef WINDOWS
-
 
 char *ostmpnam(char *s)
 {

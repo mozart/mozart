@@ -1923,9 +1923,9 @@ OZ_BI_define(unix_signalHandler, 2,0)
   OZ_declareAtom(0,signo);
   OZ_declareDetTerm(1,handler);
   
-  if (!(OZ_isUnit(handler) || 
+  if (!(OZ_eq(handler,OZ_atom("ignore")) || OZ_eq(handler,OZ_atom("default")) || 
 	OZ_isProcedure(handler) && oz_procedureArity(oz_deref(handler)) == 1)) {
-    return OZ_typeError(1,"unary procedure or unit");
+    return OZ_typeError(1,"unary procedure or 'default' or 'ignore'");
   }
 
   if (osSignal(signo,handler))
