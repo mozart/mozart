@@ -421,18 +421,25 @@ same print name are identical, even if created separately.
 <index/object<and>object-record/
 An object is a composite entity consisting
 of an object-record that references
-the object's features, a cell, and a class.
-It's important to distinguish the distribution
-semantics of an object and a class.
-An object-record is a chunk that is copied lazily.
+the object's features, a cell, and an internal class.
+The distribution semantics
+of the object's internal class
+are different from
+that of a class that is referenced explicitly
+independent of any object.
+An object-record and an internal class are both chunks
+that are copied lazily.
 I.e., if an object is passed to a site,
-then when the object is called,
+then when the object is called there,
 the object-record is requested if it is missing
 and the class is requested if it is missing.
-If the object's class already exists
+If the internal class already exists
 on the site, then it is not requested at all.
-A class that is explicitly passed
-to a site is copied eagerly.
+On the other hand,
+a class that referenced explicitly is passed eagerly,
+i.e., a message referencing the class
+will contain the class code,
+even if the site already has a copy.
 
 </LIST>
 <P>In terms of the language semantics,
