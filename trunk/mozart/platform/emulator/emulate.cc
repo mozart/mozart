@@ -2045,11 +2045,11 @@ void engine() {
 
 
 // ------------------------------------------------------------------------
-// *** REDUCE CONTROL NODE
+// *** REDUCE Board
 // ------------------------------------------------------------------------
 
  LBLreduce:
-  DebugTrace(trace("reduce control node",CBB));
+  DebugTrace(trace("reduce board",CBB));
 
   CBB->unsetNervous();
 

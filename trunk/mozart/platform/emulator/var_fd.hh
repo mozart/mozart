@@ -37,7 +37,7 @@ public:
   Bool unifyFD(TaggedRef*, TaggedRef, TypeOfTerm, 
 	       TaggedRef*, TaggedRef, TypeOfTerm);
 
-  void becomesSmallIntAndPropagate(TaggedRef* trPtr);
+  inline void becomesSmallIntAndPropagate(TaggedRef* trPtr);
    
   ProgramCounter index(ProgramCounter elseLabel, IHashTable* table);
 
@@ -47,7 +47,7 @@ public:
   void setDom(FiniteDomain &fd){finiteDomain = fd;}
   FiniteDomain &getDom(void){return finiteDomain;}
 
-  void relinkSuspList(GenFDVariable* leftVar);
+  inline void relinkSuspList(GenFDVariable* leftVar);
 
   void addVirtualConstr(SuspList *elem, FDState state) {
     if (state == any)
@@ -61,8 +61,8 @@ public:
     GenCVariable::addVirtualConstr(elem);
   }
       
-  void propagate(TaggedRef var, FDState state, TaggedRef term);  
-  void propagate(TaggedRef var, FDState state, TaggedRef* tPtr);
+  inline void propagate(TaggedRef var, FDState state, TaggedRef term);  
+  inline void propagate(TaggedRef var, FDState state, TaggedRef* tPtr);
 };
 
 
@@ -70,28 +70,8 @@ public:
 //            Some additional stuff for tagged references
 //-----------------------------------------------------------------------------
 
-inline Bool isGenFDVar(TaggedRef term)
-{
-  GCDEBUG(term);
-#ifdef CVAR_ONLY_FDVAR
-  return isCVar(term);
-#else
-  return (tagTypeOf(term) == CVAR)
-    ? ((tagged2CVar(term)->getType() == FDVariable) ? OK : NO)
-    : NO;
-#endif
-}
-
-inline GenFDVariable* tagged2GenFDVar(TaggedRef term)
-{
-  GCDEBUG(term);
-#ifdef DEBUG_FD
-  if(isGenFDVar(term) == NO)
-    error("GenFDVariable expected at %s:%d", __FILE__, __LINE__);
-#endif
-  return (GenFDVariable*) tagged2CVar(term);
-}
-
+inline Bool isGenFDVar(TaggedRef term);
+inline GenFDVariable* tagged2GenFDVar(TaggedRef term);
 
 //-----------------------------------------------------------------------------
 //                   Functions to constrain variables
