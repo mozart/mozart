@@ -999,7 +999,7 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
       DSite* site    = na->site;
       MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
       msgC->put_M_PING();
-      send(msgC, -1);
+      send(msgC);
     }
     adjustProxyForFailure(t,oldC,newC);}
   if(w->isTriggered(getEntityCond(t))) deferEntityProblem(t);

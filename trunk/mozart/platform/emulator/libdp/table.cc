@@ -120,7 +120,7 @@ void OwnerEntry::updateReference(DSite* site){
   if (isVar() || isTertiary()){
     MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
     msgC->put_M_BORROW_REF(getValue());
-    send(msgC,-1);
+    send(msgC);
   }
   else
     printf("Warning: Updating bound variable!\n");
