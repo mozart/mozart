@@ -40,7 +40,7 @@ intlong abs(intlong i) { return i >= 0 ? i : -i; }
 //-----------------------------------------------------------------------------
 
 enum TypeOfReflStackEntry {
-  Entry_Propagator,
+  Entry_Propagator = 0,
   Entry_Variable
 };
 
@@ -54,14 +54,16 @@ public:
 
   void push(Propagator * p) {
     DEBUGPRINT(("ReflectStack::push(Propagator *)"));
-    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Propagator,
-                                             (OZ_Term) p));
+//      Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Propagator,
+//                                           (OZ_Term) p));
+    Stack::push((StackEntry) __stag_ptr(p, Entry_Propagator));
   }
 
   void push(OZ_Term * v) {
     DEBUGPRINT(("ReflectStack::push(OZ_Term *)"));
-    Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Variable,
-                                             (OZ_Term) v));
+//      Stack::push((StackEntry) makeTaggedRef2p((TypeOfTerm) Entry_Variable,
+//                                           (OZ_Term) v));
+    Stack::push((StackEntry) __stag_ptr(v, Entry_Variable));
   }
 
   void * pop(void) {
@@ -77,12 +79,12 @@ public:
 // positive. To the outside a table provides only positive ids.
 
 template <class T_WHAT>
-class TableClass : protected HashTable {
+class TableClass : protected AddressHashTable {
 private:
   int id_counter;
 
 public:
-  TableClass(void) : HashTable(HT_INTKEY, 2000), id_counter(-1) {}
+  TableClass(void) : AddressHashTable(2000), id_counter(-1) {}
 
   int add(T_WHAT k, Bool &is_reflected) {
     DEBUGPRINT(("TableClass::add -- in --"));
