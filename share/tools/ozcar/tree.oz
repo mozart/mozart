@@ -77,6 +77,7 @@ local
       attr
 	 x  : 1                   %% xpos
 	 y  : 1                   %% ypos
+	 r  : false               %% root node?
 	 s  : runnable            %% state
 	 ct : unit                %% canvas tag
 	 dy : 0                   %% distance to upper sibling
@@ -96,6 +97,10 @@ local
 	 dy <- DY
       end
 
+      meth setRoot(R)
+	 r <- R
+      end
+
       meth setState(S)
 	 s <- S
       end
@@ -109,14 +114,14 @@ local
       end
 
       meth get($)
-	 node(x:@x y:@y s:@s ct:@ct dy:@dy i:@i q:@q)
+	 node(x:@x y:@y r:@r s:@s ct:@ct dy:@dy i:@i q:@q)
       end
    end
 
    WC =
    {New class
 	   attr w
-	   meth init w <- 1 end
+	   meth init w <- 0 end
 	   meth inc($) w <- @w + 1 @w end
 	   meth get($) @w end
 	end init}
@@ -124,26 +129,48 @@ local
 
    class BaseTree
 
+      feat
+	 ThreadDic
+
       attr
 	 nodes
 	 width
 
-      meth init
+	 trees
+
+      meth init(O)
+	 self.ThreadDic = {O getThreadDic($)}
 	 nodes <- nil
 	 width <- 0
       end
 
       meth calculatePositions
+	 trees <- {Dictionary.new}
+	 {ForAll @nodes
+	  proc {$ N}
+	     Q = {N get($)}.q
+	  in
+	     case {Dictionary.member self.ThreadDic Q} then
+		{Show fals#{N get($)}.i}
+		{N setRoot(false)}
+	     else
+		{N setRoot(true)}
+		%% we don't care if Q gets inserted twice...
+		{Dictionary.put @trees Q unit}
+	     end
+	  end}
+
 	 {WC init}
 
-	 {self DoCalculatePositions(1 3)}  %% toplevel queries
-	 {self DoCalculatePositions(0 3)}  %% threads with unknown parent
+	 {self DoCalculatePositions(1 3)}     %% Emacs queries...
+	 {self DoCalculatePositions(2 3)}     %% ...Tk actions...
+	 {ForAll {Filter {Dictionary.keys @trees}
+		  fun {$ Q} Q \= 1 andthen Q \= 2 end}
+	  proc {$ T}
+	     {self DoCalculatePositions(T 3)} %% ...and all the others
+	  end}
 
-	 local
-	    Width = {WC get($)} - 1
-	 in
-	    width <- Width
-	 end
+	 width <- {WC get($)} - 1
       end
 
       meth find(I $)
@@ -155,12 +182,11 @@ local
 	 NI = BaseTree,find(I $)
 	 NQ = {NI get($)}.q
       in
-	 {ForAll NC
-	  proc {$ N} {N setParent(NQ)} end}
+	 {ForAll NC proc {$ N} {N setParent(NQ)} end}
       end
 
       meth Nodegroup(Q $)
-	 {Reverse {List.filter @nodes
+	 {Reverse {Filter @nodes
 		   fun{$ N}
 		      {N get($)}.q == Q
 		   end}}
@@ -169,29 +195,17 @@ local
       meth DoCalculatePositions(Q X)
 	 NG = BaseTree,Nodegroup(Q $)
       in
-	 case NG == nil then
-	    skip
-	 else
+	 case NG == nil then /* leaf node */ skip else
 	    Wold = {WC get($)}
 	 in
-	    {NG.1 setXY(X {WC inc($)} 1)}
-	    {self DoCalculatePositions({NG.1 get($)}.i X+1)}
-	    case NG.2 \= nil then
-	       {ForAll NG.2
-		proc{$ N}
-		   Wnew = {WC inc($)}
-		in
-		   {N setXY(X Wnew Wnew-Wold)}
-		   {self DoCalculatePositions({N get($)}.i X+1)}
-		end}
-	    else
-	       skip
-	    end
+	    {ForAll NG
+	     proc{$ N}
+		Wnew = {WC inc($)}
+	     in
+		{N setXY(X Wnew Wnew-Wold)}
+		{self DoCalculatePositions({N get($)}.i X+1)}
+	     end}
 	 end
-      end
-
-      meth print
-	 {ForAll @nodes proc{$ N} {Show {N get($)}} end}
       end
    end
 
@@ -208,9 +222,9 @@ in
 
 	 SyncCalc       : _
 
-      meth tkInit(...)=M
-	 BaseTree,init
-	 ScrolledTitleCanvas,M
+      meth tkInit(ozcar:O ...)=M
+	 BaseTree,init(O)
+	 ScrolledTitleCanvas,{Record.subtract M ozcar}
       end
 
       meth add(I Q)
@@ -312,16 +326,27 @@ in
 	 {self tk(delete all)}
 	 {ForAll @nodes
 	  proc{$ N}
-	     X Y S DY I Q
+	     X Y R S DY I Q
 	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
 	  in
-	     node(x:X y:Y s:S dy:DY i:I q:Q ...) = {N get($)}
-	     {ForAll [tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
-			 width:1 fill:TrunkColor)] self}
-	     case Q > 0 then
-		{self tk(crea line (X-1)*SFX-OS Y*SFY (X-1)*SFX-OS (Y-DY)*SFY
+	     node(x:X y:Y r:R s:S dy:DY i:I q:Q ...) = {N get($)}
+
+	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
+		      width:1 fill:TrunkColor)}
+	     case R then
+		case Y \= 1 andthen DY == 1 then
+		   {self tk(crea line SFX (Y-DY+1)*SFY-7 10*SFX (Y-DY+1)*SFY-7
+			    stipple: LocalBitMapDir # 'line.xbm')}
+		else skip
+		end
+		{self tk(crea line (X-1)*SFX-OS Y*SFY
+			 (X-1)*SFX-OS (Y-DY+1)*SFY-5
 			 width:1 fill:TrunkColor)}
-	     else skip end
+	     else
+		{self tk(crea line (X-1)*SFX-OS Y*SFY
+			 (X-1)*SFX-OS (Y-1)*SFY
+			 width:1 fill:TrunkColor)}
+	     end
 
 	     local
 		CL = {GetColor S}

@@ -30,8 +30,6 @@ Dbg = dbg(on:           proc {$}
 			   {System.set internal(debug:false)}
 			end
 	  mode:         {`Builtin` 'Debug.mode' 1}
-	  emacsThreads: {`Builtin` 'Debug.addEmacsThreads' 1}
-	  subThreads:   {`Builtin` 'Debug.addSubThreads' 1}
 	  stream:       {`Builtin` 'Debug.getStream' 1}
 	  step:         {`Builtin` 'Debug.setStepFlag' 2}
 	  trace:        {`Builtin` 'Debug.setTraceFlag' 2}
