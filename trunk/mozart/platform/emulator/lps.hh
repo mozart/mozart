@@ -94,7 +94,6 @@ public:
  */
 class LocalPropagationStore : protected LocalPropagationQueue {
 private:
-  Bool propagate_locally ();
   Bool useit;
 
 public:
@@ -109,11 +108,6 @@ public:
     return (LocalPropagationQueue::isEmpty ());
   }
 
-  Bool do_propagation () {
-    if (!isEmpty ()) return (propagate_locally ());
-    return (TRUE);
-  }
-
   void push (Propagator * prop) {
     enqueue (prop);
   }
@@ -122,9 +116,10 @@ public:
     return (dequeue ());
   }
 
-  void setUseIt () { useit = TRUE; }
-  void unsetUseIt () { useit = FALSE; }
-  Bool isUseIt () { return (useit); }
+  void setUseIt (void) { useit = TRUE; }
+  void unsetUseIt (void) { useit = FALSE; }
+  Bool isUseIt (void) { return (useit); }
+  int getSize (void) { return LocalPropagationQueue::getSize(); }
 };
 
 extern LocalPropagationStore localPropStore;

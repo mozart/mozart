@@ -45,7 +45,6 @@
 #include "iso-ctype.hh"
 #include "genvar.hh"
 #include "ofgenvar.hh"
-#include "fdbuilti.hh"
 #include "solve.hh"
 #include "oz_cpi.hh"
 #include "dictionary.hh"

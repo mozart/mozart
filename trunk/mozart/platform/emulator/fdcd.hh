@@ -24,13 +24,21 @@
  *
  */
 
-#ifndef __FDBUILTIN_H__
-#define __FDBUILTIN_H__
+#ifndef __FDCD_H__
+#define __FDCD_H__
 
-#ifdef INTERFACE
-#pragma interface
-#endif
+//-----------------------------------------------------------------------------
 
+
+#include <stdarg.h>
+#include <math.h>
+
+#include "lps.hh"
+#include "thr_int.hh"
+#include "prop_int.hh"
+
+#include "fdgenvar.hh"
+#include "fdbvar.hh"
 #include "fdomn.hh"
 #include "builtins.hh"
 #include "genvar.hh"
@@ -62,20 +70,20 @@ enum Recalc_e {lower, upper};
   }						\
 }
 
-#define SimplifyOnUnify(EQ01, EQ02, EQ12) \
-  if (isUnifyCurrentPropagator ()) { \
-    OZ_getCArgDeref(0, x, xPtr, xTag); \
-    OZ_getCArgDeref(1, y, yPtr, yTag); \
-    if (xPtr == yPtr && isVariableTag(xTag)) { \
-      return (EQ01); \
-    } \
-    OZ_getCArgDeref(2, z, zPtr, zTag); \
-    if (xPtr == zPtr && isVariableTag(xTag)) { \
-      return (EQ02); \
-    } \
-    if (yPtr == zPtr && isVariableTag(yTag)) { \
-      return (EQ12); \
-    } \
+#define SimplifyOnUnify(EQ01, EQ02, EQ12)	\
+  if (isUnifyCurrentPropagator ()) {		\
+    OZ_getCArgDeref(0, x, xPtr, xTag);		\
+    OZ_getCArgDeref(1, y, yPtr, yTag);		\
+    if (xPtr == yPtr && isVariableTag(xTag)) {	\
+      return (EQ01);				\
+    }						\
+    OZ_getCArgDeref(2, z, zPtr, zTag);		\
+    if (xPtr == zPtr && isVariableTag(xTag)) {	\
+      return (EQ02);				\
+    }						\
+    if (yPtr == zPtr && isVariableTag(yTag)) {	\
+      return (EQ12);				\
+    }						\
   }
 
 //-----------------------------------------------------------------------------
@@ -317,9 +325,155 @@ public:
 }; // BIfdBodyManager
 
 
-#ifndef OUTLINE
-#include "fdbuilti.icc"
-#endif
+//-----------------------------------------------------------------------------
+// Inlined member functions of class BIfdHeadManager
 
+inline 
+BIfdHeadManager::BIfdHeadManager(int s) : global_vars(0) {
+  AssertFD(0 <= s && s <= MAXFDBIARGS);
+  curr_num_of_items = s;
+}
+
+inline
+void BIfdHeadManager::increaseSizeBy(int s) {
+  curr_num_of_items += s;
+  AssertFD(0 <= curr_num_of_items && curr_num_of_items < MAXFDBIARGS);
+}
+
+inline
+int BIfdHeadManager::getCoeff(int i) {
+  AssertFD(0 <= i && i < curr_num_of_items);
+  return bifdhm_coeff[i];
+}
+
+inline
+pm_term_type BIfdHeadManager::getTag(int i) {
+  AssertFD(0 <= i && i < curr_num_of_items);
+  return bifdhm_vartag[i];
+}
+
+//-----------------------------------------------------------------------------
+// Inlined member functions of class BIfdHeadManager
+
+
+inline 
+OZ_Boolean BIfdBodyManager::isTouched(int i) {
+  return bifdbm_init_dom_size[i] > bifdbm_dom[i]->getSize() || 
+    bifdbm_vartag[i] == pm_svar;
+}
+
+inline
+void BIfdBodyManager::add(int i, int size) {
+  curr_num_of_vars += size;
+
+  AssertFD(0 <= curr_num_of_vars && curr_num_of_vars < MAXFDBIARGS);
+
+  if (i == 0) index_offset[0] = 0;
+  index_offset[i + 1] = index_offset[i] + size;
+  index_size[i] = size;
+}
+
+inline
+OZ_FiniteDomain &BIfdBodyManager::operator [](int i) {
+  AssertFD(0 <= i && i < curr_num_of_vars);
+  return *bifdbm_dom[i];
+}
+
+inline
+OZ_FiniteDomain &BIfdBodyManager::operator ()(int i, int j) {
+  return operator [](idx(i, j));
+}
+
+inline
+void BIfdBodyManager::introduce(int i, OZ_Term v) {
+  if (only_local_vars) {
+    introduceLocal(i, v);
+  } else {
+    _introduce(i, v);
+  }
+  // if current board is the top-level then save domains for
+  // restoration on failure
+  saveDomainOnTopLevel(i);
+}
+
+inline
+void BIfdBodyManager::reintroduce(int i, OZ_Term v) {
+  int aux = bifdbm_init_dom_size[i];
+  introduce(i, v);
+  bifdbm_init_dom_size[i] = aux;
+}
+
+inline
+void BIfdBodyManager::introduce(int i, int j, OZ_Term v) {
+  int index = idx(i, j);
+  AssertFD(index_offset[i] <= index && index < index_offset[i + 1]); 
+  if (only_local_vars) {
+    introduceLocal(index, v);
+  } else {
+    _introduce(index, v);
+  }
+  saveDomainOnTopLevel(index);
+}
+
+inline
+OZ_Return BIfdBodyManager::entailment(void) {
+  if (only_local_vars) {
+    processLocal();
+  } else {
+    process();
+  }
+  return EntailFD;
+}
+
+inline
+OZ_Return BIfdBodyManager::entailmentClause(int from_b, int to_b) {
+  processLocalFromTo(from_b, to_b+1);
+  
+  return EntailFD;
+}
+
+inline
+OZ_Return BIfdBodyManager::releaseReify(int from_b, int to_b, int from, int to) {
+  
+  processLocalFromTo(from_b, to_b+1);
+  
+  return release(from, to);
+}
+
+inline
+OZ_Return BIfdBodyManager::release1(void) { 
+  process(); 
+  return EntailFD; 
+}
+
+inline
+OZ_Return BIfdBodyManager::releaseNonRes(void) { 
+  processNonRes(); 
+  return EntailFD; 
+}
+
+inline
+void BIfdBodyManager::setSpeculative(int i) {
+  AssertFD(0 <= i && i <= curr_num_of_vars);
+
+  if (bifdbm_var_state[i] == fdbm_local && bifdbm_vartag[i] == pm_fd) {
+    bifdbm_domain[i] = *bifdbm_dom[i];
+    bifdbm_dom[i] = &bifdbm_domain[i];
+  }
+  bifdbm_var_state[i] = fdbm_speculative;
+}
+  
+
+inline
+void BIfdBodyManager::introduceSpeculative(int i, OZ_Term v) {
+  if (only_local_vars) {
+    introduceLocal(i, v);
+    } else {
+      _introduce(i, v);
+    }
+  setSpeculative(i);
+}
+
+//-----------------------------------------------------------------------------
 
 #endif
