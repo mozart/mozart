@@ -30,6 +30,7 @@
 #include "stack.hh"
 #include "thread.hh"
 #include "ozdebug.hh"
+#include "verbose.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -110,25 +111,24 @@ Bool isInTree(Board *b);
 #endif
 
 #ifdef VERBOSE
-   static FILE *debugFile = fopen ("./gc-debug.txt", "w");
-#  define PUTCHAR(C) putc(C, debugFile)
+#  define PUTCHAR(C) putc(C, verbOut)
 #  define GCMETHMSG(S)                                                        \
-    fprintf(debugFile,"[%d] %s this: 0x%p :%d\n",                             \
+    fprintf(verbOut,"(gc) [%d] %s this: 0x%p :%d\n",                          \
             (ptrStack.getUsed ()), S,this,__LINE__);                          \
-    fflush(debugFile);
+    fflush(verbOut);
 #  define GCNEWADDRMSG(A)                                                     \
-    fprintf(debugFile,"--> 0x%p :%d\n",(void *)A,__LINE__);                   \
-    fflush(debugFile);
+    fprintf(verbOut,"(gc) --> 0x%p :%d\n",(void *)A,__LINE__);                \
+    fflush(verbOut);
 #  define GCOLDADDRMSG(A)                                                     \
-    fprintf(debugFile,"<-- 0x%p :%d\n",(void *)A,__LINE__);                   \
-    fflush(debugFile);
+    fprintf(verbOut,"(gc) <-- 0x%p :%d\n",(void *)A,__LINE__);                \
+    fflush(verbOut);
 #  define GCPROCMSG(S)                                                        \
-    fprintf(debugFile,"[%d] %s :%d\n",                                        \
+    fprintf(verbOut,"(gc) [%d] %s :%d\n",                                     \
             (ptrStack.getUsed ()),S,__LINE__);                                \
-    fflush(debugFile);
+    fflush(verbOut);
 # define MOVEMSG(F,T,S)                                                       \
-     fprintf(debugFile,"\t%d bytes moved from 0x%p to 0x%p\n",S,F,T);         \
-     fflush(debugFile)
+     fprintf(verbOut,"(gc) \t%d bytes moved from 0x%p to 0x%p\n",S,F,T);      \
+     fflush(verbOut)
 #else
 #  define PUTCHAR(C)
 #  define GCMETHMSG(S)
@@ -144,7 +144,7 @@ Bool isInTree(Board *b);
 typedef enum {IN_GC = 0, IN_TC} GcMode;
 
 GcMode opMode;
-static int varCount;
+static int varCount;   // not only variables, but names, cells & abstractions;
 static Board* fromCopyBoard;
 static Board* toCopyBoard;
 
@@ -194,7 +194,8 @@ Bool needsNoCollection(TaggedRef t)
   Assert(t!=makeTaggedNULL());
 
   TypeOfTerm tag = tagTypeOf(t);
-  return (tag == SMALLINT || tag == ATOM)
+  return (tag == SMALLINT ||
+          (tag == ATOM && (tagged2Atom(t)->isNonTopXName ()) == NO))
          ? OK
          : NO;
 }
@@ -427,6 +428,19 @@ Bool isLocalBoard (Board* b)
   return b->isPathMark() ? NO : OK;
 }
 
+inline
+Atom *Atom::gc()
+{
+  if (isNonTopXName () == OK) {
+    if (opMode == IN_GC) {
+      home == home->gcBoard ();
+      return (this);
+    } else if (isLocalBoard (home) == OK) {
+      varCount++;
+      return (new Atom (home->gcBoard (), name.string ()));
+    }
+  }
+}
 
 // WARNING: the value field of floats has no bit left for a gc mark
 //   --> copy every float !! so that X=Y=1.0 --> X=1.0, Y=1.0
@@ -1003,8 +1017,11 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   switch (auxTermTag) {
 
   case SMALLINT:
-  case ATOM:
     toTerm = auxTerm;
+    return;
+
+  case ATOM:
+    toTerm = makeTaggedAtom (tagged2Atom (auxTerm)->gc ());
     return;
 
   case LTUPLE:
@@ -1086,6 +1103,9 @@ int gcing = 1;
 // treated and references to variables are properly updated
 void AM::gc(int msgLevel)
 {
+#ifdef VERBOSE
+  verbReopen ();
+#endif
   GCMETHMSG(" ********** AM::gc **********");
   opMode = IN_GC;
   gcing = 0;
@@ -1122,11 +1142,6 @@ void AM::gc(int msgLevel)
 
 // colouring root pointers grey
 //-----------------------------------------------------------------------------
-
-#ifdef VERBOSE
-  (void) fclose (debugFile);
-  debugFile = fopen ("./gc-debug.txt", "w");  // reopen;
-#endif
 
   trail.gc();
   rebindTrail.gc();
@@ -1725,6 +1740,7 @@ void SRecord::gcRecurse()
 
   case R_CELL:
     {
+      varCount++;
       Cell *c = (Cell *) this;
       c->home = c->home->gcBoard();
       gcTagged(c->val,c->val);
