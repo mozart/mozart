@@ -38,6 +38,7 @@
    ------------------------------------------------------------------------ */
 
 TaggedRef SolveActor::genSolved() {
+  ozstat.incSolveSolved();
   SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
   Assert(solveBoard->isSolve());
@@ -64,6 +65,7 @@ TaggedRef SolveActor::genChoice(int noOfClauses) {
 }
 
 TaggedRef SolveActor::genFailed() {
+  ozstat.incSolveFailed();
   return AtomFailed;
 }
 
