@@ -175,19 +175,29 @@ an abstract base class.
 class <<P>> is supposed to return the size of an instance of <<P>>.
 
 
-<Entry class="pure virtual member function"><<updateHeapRefs>>
-<Index class=proglang><<OZ_Propagator>><And><<updateHeapRefs>></Index>
-<Synopsis> <<virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;>>
+<Entry class="pure virtual member function"><<sClone>>
+<Index class=proglang><<OZ_Propagator>><And><<sClone>></Index>
+<Synopsis> <<virtual void sClone(void) = 0;>>
 
 <Item> The implementation of this pure virtual function in a derived
-class <<P>> is supposed to apply to each data member of type
-<<OZ_Term>> the function <<OZ_updateHeapTerm>> (see <ptr to="r_aux">)
-and possibly, copy dynamically allocated extensions of the object's
-state. The value of <<duplicate>> determines whether the propagator is
-being duplicated (for example, as part of copy-based search) or only
-an update of heap references is required (as for instance in case of
-garbage collection). Further details on that issue can be found in
+class <<P>> is called during cloning and is supposed to apply to each
+data member of type <<OZ_Term>> the function <<OZ_sCloneTerm>> (see
+<ptr to="r_aux">) and possibly, copy dynamically allocated extensions
+of the object's state. Further details on that issue can be found in
 <Ptr.Extern to="ozdoc:cpitut" key="u_advanced.redundant">.
+<p>
+
+<Entry class="pure virtual member function"><<gCollect>>
+<Index class=proglang><<OZ_Propagator>><And><<gCollect>></Index>
+<Synopsis> <<virtual void gCollect(void) = 0;>>
+
+<Item> The implementation of this pure virtual function in a derived
+class <<P>> is called during garbage collection and is supposed to
+apply to each data member of type <<OZ_Term>> the function
+<<OZ_sCloneTerm>> (see <ptr to="r_aux">) and possibly, copy
+dynamically allocated extensions of the object's state. Further
+details on that issue can be found in <Ptr.Extern to="ozdoc:cpitut"
+key="u_advanced.redundant">.
 <p>
 
 <Entry class="pure virtual member function"><<propagate>>
