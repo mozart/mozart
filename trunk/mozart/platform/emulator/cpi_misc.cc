@@ -61,6 +61,7 @@ OZ_Boolean OZ_isPosSmallInt(OZ_Term val)
   return isPosSmallFDInt(val);
 }
 
+// tmueller: (S * sizeof(T)) % 8 == 0
 #define OZMALLOC(T, S) (T *) freeListMalloc(S * sizeof(T))
 #define OZDISPOSE(T, S, P) freeListDispose(P, S * sizeof(T))
 
