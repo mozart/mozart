@@ -36,7 +36,7 @@ local
 					      '(schulte@dfki.uni-sb.de)\n'))}
       in
 	 {Tk.send pack(Title Author
-		       o(side:top expand:1 padx:BigPad pady:BigPad))}
+		       side:top expand:1 padx:BigPad pady:BigPad)}
       end
 
    end
@@ -127,13 +127,13 @@ local
 				       tk(insert 0 Prev.size)]}
 	 in
 	    {Tk.batch [pack(ColorLabel ColorButton GrayButton MonoButton
-			    o(side:left pady:Pad))
+			    side:left pady:Pad)
 		       pack(OrientLabel Portrait Landscape
-			    o(side:left fill:x pady:Pad))
+			    side:left fill:x pady:Pad)
 		       pack(SizeLabel SizeEntry
-			    o(side:left fill:x pady:Pad))
+			    side:left fill:x pady:Pad)
 		       pack(Color Orient Size
-			    o(side:top fill:x padx:BigPad pady:BigPad))
+			    side:top fill:x padx:BigPad pady:BigPad)
 		       focus(SizeEntry)]}
 	 end
 
@@ -195,9 +195,9 @@ local
 					       text: ' solutions')}
 	 in
 	    {Tk.batch [pack(RedrawFirst RedrawEntry RedrawSnd
-			    o(side:left fill:x))
+			    side:left fill:x)
 		       pack(HideButton RedrawFrame
-			    o(side:top fill:x))
+			    side:top fill:x)
 		       focus(RedrawEntry)]}		
 	 end
       
@@ -255,13 +255,13 @@ local
 			     tk(insert 0 CustomDist)]}
 	 in
 	    {Tk.batch [pack(CustomButton CustomEntry
-			    o(side:left))
+			    side:left)
 		       pack(None Full Custom
-			    o(side:top padx:Pad pady:Pad fill:both expand:1))
+			    side:top padx:Pad pady:Pad fill:both expand:1)
 		       pack(Head
-			    o(side:top padx:BigPad pady:BigPad
-			      ipadx:BigPad ipady:BigPad fill:x))
-		       pack(Buttons o(side:left fill:y expand:1))]}
+			    side:top padx:BigPad pady:BigPad
+			    ipadx:BigPad ipady:BigPad fill:x)
+		       pack(Buttons side:left fill:y expand:1)]}
 	    self.mode  = Mode
 	    self.entry = CustomEntry
 	 end
@@ -311,7 +311,7 @@ local
 					    custom:   Prev.customDist)}
 	 in
 	    {Tk.send pack(Dist
-			  o(side:top fill:x padx:BigPad pady:BigPad))}
+			  side:top fill:x padx:BigPad pady:BigPad)}
 	 end
 
       end
@@ -349,7 +349,7 @@ local
 					    custom:   Prev.customDist)}
 	 in
 	    {Tk.send pack(Dist
-			  o(side:top fill:x padx:BigPad pady:BigPad))}
+			  side:top fill:x padx:BigPad pady:BigPad)}
 	 end
 
       end

@@ -51,12 +51,12 @@ local
 	 self.scale   = Scale
 
 	 proc {PackMe}
-	    {Tk.batch [pack(Scale       o(expand:yes fill:y))
-		       pack(CanFrame    o(side:left fill:both expand:yes))
-		       pack(ScaleFrame  o(side:left fill:y))
-		       pack(Menu        o(side:top fill:x))
-		       pack(Status      o(side:bottom anchor:w fill:x))
-		       pack(Frame       o(side:bottom fill:both expand:yes))
+	    {Tk.batch [pack(Scale       expand:True fill:y)
+		       pack(CanFrame    side:left fill:both expand:True)
+		       pack(ScaleFrame  side:left fill:y)
+		       pack(Menu        side:top fill:x)
+		       pack(Status      side:bottom anchor:w fill:x)
+		       pack(Frame       side:bottom fill:both expand:True)
 		       wm(deiconify self)]}
 	 end
       end
@@ -133,13 +133,13 @@ local
 	 {Tk.addYScrollbar self ScrY}
 	 {Tk.addXScrollbar self ScrX}
 	 {Tk.batch
-	  [pack(ScrXBox o(side:bottom fill:x     padx:Pad pady:Pad))
-	   pack(ScrY    o(side:right  fill:y     padx:Pad pady:Pad))
-	   pack(CanScrY o(fill:both              padx:Pad pady:Pad expand:yes))
-	   pack(ScrX    o(side:left   fill:x     expand:yes))
-	   pack(Box     o(side:right  fill:none  padx:Pad))
-	   pack(self    o('in':CanScrY
-			    fill:both   expand:yes padx:BigPad pady:BigPad))]}
+	  [pack(ScrXBox side:bottom fill:x     padx:Pad pady:Pad)
+	   pack(ScrY    side:right  fill:y     padx:Pad pady:Pad)
+	   pack(CanScrY fill:both              padx:Pad pady:Pad expand:True)
+	   pack(ScrX    side:left   fill:x     expand:True)
+	   pack(Box     side:right  fill:none  padx:Pad)
+	   pack(self    'in':CanScrY
+			fill:both expand:True padx:BigPad pady:BigPad)]}
 	 <<Tk.canvas tkBind(event:  '<Configure>'
 			    action: self # Resized
 			    args:   [float(h) float(w)]
@@ -212,8 +212,8 @@ local
 		     else @height
 		     end
       in
-	 <<Tk.canvas tk(configure(scrollregion:
-				     q(ReqLeft 0 ReqRight ReqBottom)))>>
+	 <<Tk.canvas tk(conf scrollregion:
+			   q(ReqLeft 0 ReqRight ReqBottom))>>
       end
       
       meth scale(Scale)
@@ -257,18 +257,17 @@ local
 	 Height = {IntToFloat @bottom} * Scale
 	 Width  = {IntToFloat (@right - @left)} * Scale
       in
-	 <<Tk.canvas tk(postscript(file:       F
-				   colormode:  C
-				   rotate:     R
-				   height:     Height
-				   width:      Width
-				   x:          {IntToFloat @left} * Scale
-				   y:          0)
-			case H/Height > W/Width then
-			   o(pagewidth: W#c)
-			else
-			   o(pageheight: H#c)
-			end)>>
+	 <<Tk.canvas tk(postscript
+			case H/Height > W/Width then o(pagewidth: W#c)
+			else o(pageheight: H#c)
+			end
+			file:       F
+			colormode:  C
+			rotate:     R
+			height:     Height
+			width:      Width
+			x:          {IntToFloat @left} * Scale
+			y:          0)>>
 	 
       end
       
@@ -348,7 +347,7 @@ in
 		   proc {$ Node}
 		      {Node redrawNumber(Scale FontName)}
 		   end}
-	       else {Numbers tk(itemconfigure o(font:FontName))}
+	       else {Numbers tk(itemconf font:FontName)}
 	       end
 	    end
 	    curFont <- Font
@@ -392,7 +391,7 @@ in
 			  {IntToFloat (X + ShadeWidth)} * Scale
 			  {IntToFloat (Y + ShadeWidth)} * Scale
 			  Scale}
-		    o(fill:CursorColor outline: '' tags:Cursor))}
+		    fill:CursorColor outline: '' tags:Cursor)}
 	 {Cursor tk(lower)}
 	 case CurNode==@curNode orelse IsVisible then true else
 	    {Canvas scrollTo(X Y)}
@@ -408,10 +407,10 @@ in
 	       {Canvas tk(crea line
 			  Scale*{IntToFloat X} Scale*{IntToFloat Y}
 			  Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
-			  o(arrow: last
-			    fill:  CursorColor
-			    width: LinkWidth
-			    tags:  Connection))}
+			  arrow: last
+			  fill:  CursorColor
+			  width: LinkWidth
+			  tags:  Connection)}
 	       {Connection tk(raise)}
 	    end
 	 end
@@ -441,7 +440,7 @@ in
       meth refreshNumbers
 	 Numbers = self.canvas.numbers
       in
-	 {Numbers tk(itemconfigure o(fill:LineColor))}
+	 {Numbers tk(itemconfigure fill:LineColor)}
 	 {Numbers tk(raise)}
       end
 
