@@ -73,7 +73,7 @@ if [ ! -f $OZILE -o ${TERM-xx} = emacs ]; then
 fi
 
 # where is Emacs?
-if [ "${OZEMACS-0}" = 0 ]; then
+if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
 
   if [ -f ${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs ]; then
 
@@ -108,9 +108,10 @@ if [ "${OZEMACS-0}" = 0 ]; then
         exit 1
      fi
   fi
+
+  export OZEMACS
 fi
 
-export OZEMACS
 
 
 case "$cmd" in
