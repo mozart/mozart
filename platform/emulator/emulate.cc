@@ -3376,6 +3376,14 @@ LBLsuspendThread:
   Case(TEST3)
   Case(TEST4)
 
+  Case(GETSELFX)
+  Case(GETSELFY)
+  Case(GETSELFG)
+  Case(RELEASEOBJECT)
+  Case(SETMODETODEEP)
+  Case(INLINEAT)
+  Case(INLINEASSIGN)
+
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
 
