@@ -67,12 +67,6 @@ extern int h_errno;
 #include <sys/utsname.h>
 #endif
 
-#if defined(GNUWIN32) || defined(LINUX)
-#define CHARCAST (char *)
-#else
-#define CHARCAST
-#endif
-
 
 #ifdef IRIX
 #include <bstring.h>
@@ -615,8 +609,11 @@ OZ_Term timeval2Oz(struct timeval tv)
   return OZ_recordInit(OZ_atom("timeval"),pl);
 }
 
+#define HAVERUSAGE LINUX
+
 OZ_BI_iodefine(unix_getRUsage,1,1)
 {
+#if HAVERUSAGE
   OZ_declareVsIN(0,whoS);
   int who;
   if (whoS[0]=='c') { // children
@@ -667,6 +664,9 @@ OZ_BI_iodefine(unix_getRUsage,1,1)
 
   OZ_RETURN(OZ_recordInit(OZ_atom("rusage"),pl));
 
+#else
+  OZ_RETURN(OZ_atom("rusageIsNotPosix"));
+#endif
 } OZ_BI_ioend
 #endif
 
@@ -1116,7 +1116,7 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
                                           fromlen, AF_INET);
   if (gethost) {
     OZ_out(0) = OZ_int(ntohs(from.sin_port));
-    OZ_out(1) = OZ_string((char*)gethost->h_name);
+    OZ_out(1) = OZ_string(gethost->h_name);
     OZ_out(2) = OZ_int(fd);
     return PROCEED;
   } else {
@@ -1328,9 +1328,9 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   free(buf);
 
   if (oz_unify(localhead, hd) != PROCEED) return FAILED; // mm_u
-  OZ_out(0) = OZ_string(CHARCAST (gethost ?
-				  gethost->h_name :
-				  inet_ntoa(from.sin_addr)));
+  OZ_out(0) = OZ_string(gethost ?
+			gethost->h_name :
+			(const char*) inet_ntoa(from.sin_addr));
   OZ_out(1) = OZ_int(ntohs(from.sin_port));
   OZ_out(2) = OZ_int(ret);
   return PROCEED;
@@ -1566,7 +1566,7 @@ OZ_BI_iodefine(unix_getHostByName, 1,1)
     RETURN_NET_ERROR;
   }
 
-  OZ_Term t1=OZ_pairAS("name",CHARCAST hostaddr->h_name);
+  OZ_Term t1=OZ_pairAS("name", hostaddr->h_name);
   OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
   OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
   OZ_Term pairlist= cons(t1,cons(t2,cons(t3,nil())));
