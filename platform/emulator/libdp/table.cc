@@ -1308,9 +1308,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
 	}
       }
       else {
-	TaggedRef term = be->getRef();
-	DEREF(term,termPtr,tag);
-	if(oz_isProxyVar(term)) {
+	if(oz_isProxyVar(oz_deref(be->getRef()))) {
 	  maybeFreeBorrowEntry(i);
 	  proxies++;
 	}
