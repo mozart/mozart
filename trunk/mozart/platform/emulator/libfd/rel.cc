@@ -298,7 +298,7 @@ OZ_Return DistinctPropagator::propagate(void)
 
   DECL_DYN_ARRAY(OZ_FDIntVar, l, sz);
   PropagatorController_VV P(sz, l);
-  OZ_FiniteDomain u(fd_empty), f(fd_empty);
+  OZ_FiniteDomain u(fd_empty); 
   int i;
 
   for (i = sz; i--; )
@@ -334,11 +334,13 @@ OZ_Return DistinctPropagator::propagate(void)
       reg_l[to++] = reg_l[from];
   sz = to;
 
+  /*
   for (i = to; i--; ) {
     f = f | *l[i];
     if (f.getSize() >= to) goto escape;
   }
   if (f.getSize() < to) goto failure;
+  */
 
  escape:
   return P.leave();
