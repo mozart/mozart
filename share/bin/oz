@@ -27,14 +27,6 @@ export OZPLATFORM
 : ${OZMACHINE=$OZHOME/platform/$OZPLATFORM/oz.machine.bin}
 #echo "OZMACHINE = $OZMACHINE"
 
-if [ ${OZWISH-xx} = xx ]
-then
-  # OZWISH=`find blt_wish wish`
-  OZWISH=blt_wish
-  export OZWISH
-fi
-
-
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
 	# where Oz searches for files:
@@ -136,12 +128,6 @@ case "$cmd" in
    ozwindowmanager)
 	: ${OZWINDOWMANAGER=$OZHOME/platform/$OZPLATFORM/ozwindowmanager}
 	exec $OZWINDOWMANAGER "$@"
-   ;;
-
-   ozwish)
-	: ${OZWISH=blt_wish}
-	export OZWISH
-	exec $OZWISH "$@"
    ;;
 
    *)
