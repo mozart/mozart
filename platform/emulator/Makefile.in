@@ -314,7 +314,7 @@ initffuns.cc mozart.c: mozart.h $(OZVERSION)
 	$(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
 version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
-	sed -e "s/HEREGOESDATE/`date '+%h %d %Y \(%T\)'`/" \
+	sed -e "s/HEREGOESDATE/@OZBUILDDATE@/" \
 	     -e "s/OZPLATFORM/$(PLATFORM)/" \
 	     $(SRCDIR)/version.sed > version.cc
 
