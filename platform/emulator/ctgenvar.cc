@@ -82,13 +82,13 @@ OZ_Return GenCtVariable::unify(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
       // `t' and `tptr' refer to another `GenCtVariable'
     
       GenCtVariable * term_var = (GenCtVariable *)cv;
-      OZ_GenConstraint * t_constr = term_var->getConstraint();
-      OZ_GenConstraint * constr = getConstraint();
+      OZ_Ct * t_constr = term_var->getConstraint();
+      OZ_Ct * constr = getConstraint();
 
       // bind temporarily to avoid looping in unification on cyclic terms
       OZ_Term trail = *vptr;
       *vptr = term;
-      OZ_GenConstraint * new_constr = constr->unify(t_constr);
+      OZ_Ct * new_constr = constr->unify(t_constr);
     
       // undo binding
       *vptr = trail;
@@ -250,9 +250,7 @@ f:
   return FALSE;
 }
 
-OZ_Return tellBasicConstraint(OZ_Term v, 
-			      OZ_GenConstraint * constr, 
-			      OZ_GenDefinition * def)
+OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 {
   DEREF(v, vptr, vtag);
 
@@ -300,9 +298,9 @@ OZ_Return tellBasicConstraint(OZ_Term v,
     if (! constr) goto proceed;
 
     GenCtVariable * ctvar = tagged2GenCtVar(v);
-    OZ_GenConstraint * old_constr = ctvar->getConstraint();
-    OZ_GenConstraintProfile * old_constr_prof = old_constr->getProfile();
-    OZ_GenConstraint * new_constr = old_constr->unify(constr);
+    OZ_Ct * old_constr = ctvar->getConstraint();
+    OZ_CtProfile * old_constr_prof = old_constr->getProfile();
+    OZ_Ct * new_constr = old_constr->unify(constr);
 
     if (! new_constr->isValid())
       goto failed;
@@ -354,8 +352,7 @@ proceed:
 }
 
 
-void GenCtVariable::propagate(OZ_GenWakeUpDescriptor descr, 
-			      PropCaller caller)
+void GenCtVariable::propagate(OZ_CtWakeUp descr, PropCaller caller)
 {
   int no_of_wakup_lists = _definition->getNoOfWakeUpLists();
 

@@ -89,9 +89,7 @@ void OZ_Expect::addSpawn(OZ_FSetPropState ps, OZ_Term * v)
 }
 
 inline
-void OZ_Expect::addSpawn(OZ_GenDefinition * def, 
-			 OZ_GenWakeUpDescriptor w, 
-			 OZ_Term * v)
+void OZ_Expect::addSpawn(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
 {
   if (collect)
     staticAddSpawn(def, w, v);
@@ -139,9 +137,7 @@ void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
 
 // generic constraints
 inline
-void OZ_Expect::addSuspend(OZ_GenDefinition * def, 
-			   OZ_GenWakeUpDescriptor w,
-			   OZ_Term * v)
+void OZ_Expect::addSuspend(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
 {;
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
@@ -157,8 +153,8 @@ void OZ_Expect::addSuspend(OZ_GenDefinition * def,
 // generic constraint variable
 
 OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t, 
-				      OZ_GenDefinition * def, 
-				      OZ_GenWakeUpDescriptor w)
+				      OZ_CtDefinition * def, 
+				      OZ_CtWakeUp w)
 {
   DEREF(t, tptr, ttag);
   
@@ -718,7 +714,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 	Assert(type == CtVariable);
 
 	tellBasicConstraint(makeTaggedRef(vptr), 
-			    (OZ_GenConstraint *) NULL, 
+			    (OZ_Ct *) NULL, 
 			    staticSuspendVars[i].state.ct.def);
 
       }
