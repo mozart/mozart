@@ -86,9 +86,9 @@ void initSite()
   ip_address myIP = getMySiteIP();
   TimeStamp timestamp(time(0), osgetpid());
   mySite = new Site(myIP, (port_t) 0, timestamp);
-
   //
   siteTable = new SiteHashTable(SITE_TABLE_SIZE);
+  siteTable->insert(mySite, mySite->hash());
 }
 
 void SiteHashTable::cleanup(){
@@ -143,7 +143,9 @@ Site* unmarshalSite(MsgBuffer *buf)
   //
   int hvalue = tryS.hash();
   s = siteTable->find(&tryS, hvalue);
-  if (!s)
+  if (!s) {
     s = new Site(&tryS);
+    siteTable->insert(s, hvalue);
+  }
   return (s);
 }
