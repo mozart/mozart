@@ -12,6 +12,8 @@
 
 #include "wsock.hh"
 
+#include "am.hh"
+
 #include <errno.h>
 #include <limits.h>
 #include <malloc.h>
