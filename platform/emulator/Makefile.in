@@ -42,7 +42,7 @@ STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
 STATIC_MODULELIBS=	-L. ${STATIC_MODULES:%=-l%}
 STATIC_MODULETARGETS=	$(STATIC_MODULES:%=lib%.a)
-DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so)
+DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so-$(PLATFORM))
 
 LIBS=		$(STATIC_MODULELIBS) @LIBS@ 
 
@@ -230,40 +230,40 @@ bootstrap:: all
 
 $(MODINTERS): bidecl.perl
 
-.PHONY: libDPB.a DPB.so
-libDPB.a DPB.so:
+.PHONY: libDPB.a DPB.so-$(PLATFORM)
+libDPB.a DPB.so-$(PLATFORM):
 	cd libdp; $(MAKE) ../$@
 
-.PHONY: libPID.a PID.so
-libPID.a PID.so:
+.PHONY: libPID.a PID.so-$(PLATFORM)
+libPID.a PID.so-$(PLATFORM):
 	cd libdp; $(MAKE) ../$@
 
-.PHONY: libFault.a Fault.so
-libFault.a Fault.so:
+.PHONY: libFault.a Fault.so-$(PLATFORM)
+libFault.a Fault.so-$(PLATFORM):
 	cd libdp; $(MAKE) ../$@
 
 
-.PHONY: libDPMisc.a DPMisc.so
-libDPMisc.a DPMisc.so:
+.PHONY: libDPMisc.a DPMisc.so-$(PLATFORM)
+libDPMisc.a DPMisc.so-$(PLATFORM):
 	cd libdp; $(MAKE) ../$@
 
-.PHONY: libDPStatistics.a DPStatistics.so
-libDPStatistics.a DPStatistics.so:
+.PHONY: libDPStatistics.a DPStatistics.so-$(PLATFORM)
+libDPStatistics.a DPStatistics.so-$(PLATFORM):
 	cd libdp; $(MAKE) ../$@
 
-.PHONY: libVirtualSite.a VirtualSite.so
-libVirtualSite.a VirtualSite.so:
+.PHONY: libVirtualSite.a VirtualSite.so-$(PLATFORM)
+libVirtualSite.a VirtualSite.so-$(PLATFORM):
 	cd libdp; $(MAKE) ../$@
 
-.PHONY: libFDP.a FDP.so libSchedule.a Schedule.so
-libFDP.a FDP.so libSchedule.a Schedule.so:
+.PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
+libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 	cd libfd; $(MAKE) ../$@
 
-.PHONY: libFSP.a FSP.so
-libFSP.a FSP.so:
+.PHONY: libFSP.a FSP.so-$(PLATFORM)
+libFSP.a FSP.so-$(PLATFORM):
 	cd libfset; $(MAKE) ../$@
 
-Tk.so: $(TKOBJS)
+Tk.so-$(PLATFORM): $(TKOBJS)
 	$(DYNLD) -o $@ $(TKOBJS)
 
 libTk.a: $(TKOBJS)
@@ -272,55 +272,55 @@ libTk.a: $(TKOBJS)
 s-clone.lo: cac.cc
 g-collect.o: cac.cc
 
-Space.so: $(SPACEOPOBJS)
+Space.so-$(PLATFORM): $(SPACEOPOBJS)
 	$(DYNLD) -o $@ $(SPACEOPOBJS)
 
 libSpace.a: $(SPACEOPOBJS)
 	$(AR) -rc $@ $(SPACEOPOBJS) && $(RANLIB) $@
 
-FDB.so: $(FDBOBJS)
+FDB.so-$(PLATFORM): $(FDBOBJS)
 	$(DYNLD) -o $@ $(FDBOBJS)
 
 libFDB.a: $(FDBOBJS)
 	$(AR) -rc $@ $(FDBOBJS) && $(RANLIB) $@
 
-FSB.so: $(FSBOBJS)
+FSB.so-$(PLATFORM): $(FSBOBJS)
 	$(DYNLD) -o $@ $(FSBOBJS)
 
 libFSB.a: $(FSBOBJS)
 	$(AR) -rc $@ $(FSBOBJS) && $(RANLIB) $@
 
-CTB.so: $(CTBOBJS)
+CTB.so-$(PLATFORM): $(CTBOBJS)
 	$(DYNLD) -o $@ $(CTBOBJS)
 
 libCTB.a: $(CTBOBJS)
 	$(AR) -rc $@ $(CTBOBJS) && $(RANLIB) $@
 
-RecordC.so: $(RECORDCOBJS)
+RecordC.so-$(PLATFORM): $(RECORDCOBJS)
 	$(DYNLD) -o $@ $(RECORDCOBJS)
 
 libRecordC.a: $(RECORDCOBJS)
 	$(AR) -rc $@ $(RECORDCOBJS) && $(RANLIB) $@
 
-Compat.so: $(COMPATOBJS)
+Compat.so-$(PLATFORM): $(COMPATOBJS)
 	$(DYNLD) -o $@ $(COMPATOBJS)
 
 libCompat.a: $(COMPATOBJS)
 	$(AR) -rc $@ $(COMPATOBJS) && $(RANLIB) $@
 
-Win32.so: $(WIN32OBJS)
+Win32.so-$(PLATFORM): $(WIN32OBJS)
 	$(DYNLD) -o $@ $(WIN32OBJS)
 
 libWin32.a: $(WIN32OBJS)
 	$(AR) -rc $@ $(WIN32OBJS) && $(RANLIB) $@
 
-Profile.so: $(PROFILEOBJS)
+Profile.so-$(PLATFORM): $(PROFILEOBJS)
 	$(DYNLD) -o $@ $(PROFILEOBJS)
 
 libProfile.a: $(PROFILEOBJS)
 	$(AR) -rc $@ $(PROFILEOBJS) && $(RANLIB) $@
 
-CompilerSupport.so: $(COMPILERSUPPORTOBJS)
+CompilerSupport.so-$(PLATFORM): $(COMPILERSUPPORTOBJS)
 	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
 
 libCompilerSupport.a: $(COMPILERSUPPORTOBJS)
@@ -328,31 +328,31 @@ libCompilerSupport.a: $(COMPILERSUPPORTOBJS)
 
 browser.o: modBrowser-if.cc
 
-Browser.so: $(BROWSEROBJS)
+Browser.so-$(PLATFORM): $(BROWSEROBJS)
 	$(DYNLD) -o $@ $(BROWSEROBJS)
 
 libBrowser.a: $(BROWSEROBJS)
 	$(AR) -rc $@ $(BROWSEROBJS) && $(RANLIB) $@
 
-OsTime.so: $(OSTIMEOBJS)
+OsTime.so-$(PLATFORM): $(OSTIMEOBJS)
 	$(DYNLD) -o $@ $(OSTIMEOBJS)
 
 libOsTime.a: $(OSTIMEOBJS)
 	$(AR) -rc $@ $(OSTIMEOBJS) && $(RANLIB) $@
 
-Debug.so: $(DEBUGOBJS)
+Debug.so-$(PLATFORM): $(DEBUGOBJS)
 	$(DYNLD) -o $@ $(DEBUGOBJS)
 
 libDebug.a: $(DEBUGOBJS)
 	$(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
 
-System.so: $(SYSTEMOBJS)
+System.so-$(PLATFORM): $(SYSTEMOBJS)
 	$(DYNLD) -o $@ $(SYSTEMOBJS)
 
 libSystem.a: $(SYSTEMOBJS)
 	$(AR) -rc $@ $(SYSTEMOBJS) && $(RANLIB) $@
 
-Assembler.so: $(ASSEMOBJS)
+Assembler.so-$(PLATFORM): $(ASSEMOBJS)
 	$(DYNLD) -o $@ $(ASSEMOBJS)
 
 libAssembler.a: $(ASSEMOBJS)
@@ -389,14 +389,14 @@ install-bin: $(TARGETS) $(BINDIR)
 	done
 
 NEWCACHEDIR = $(PREFIX)/cache/x-oz/boot
-NEWTARGETS = $(DYNAMIC_MODULETARGETS:%=$(NEWCACHEDIR)/%-$(PLATFORM))
+NEWTARGETS = $(DYNAMIC_MODULETARGETS:%=$(NEWCACHEDIR)/%)
 
 install-cache: $(NEWCACHEDIR) $(NEWTARGETS)
 
 $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
 
-$(NEWCACHEDIR)/%-$(PLATFORM) : %
+$(NEWCACHEDIR)/% : %
 	$(INSTALL_FILE) $< $@
 
 install-inc: $(INCDIR)
@@ -446,7 +446,7 @@ new-parser:
 
 
 PARSEROBJS = parser.lo scanner.lo parsertable.lo
-Parser.so: $(PARSEROBJS)
+Parser.so-$(PLATFORM): $(PARSEROBJS)
 	$(DYNLD) -o $@ $(PARSEROBJS)
 
 libParser.a: $(PARSEROBJS)
