@@ -1,6 +1,30 @@
 declare
 
 
+proc {BinaryPartition ?S1 ?S2 S}
+   %% Sets S1 and S2 are binary partition of S
+   C1 C2
+in
+   S1={FS.var.decl} S2={FS.var.decl}
+   {FS.disjoint S1 S2} {FS.union S1 S2 S}
+   C1={FS.card S1} C2={FS.card S2}
+   C1>:0 C2>:0 C1+C2=:{FS.card S}
+end
+
+local
+   fun {Run I1 I2 Is}
+      I1|if I1==I2 then Is else {Run I1+1 I2 Is} end
+   end
+in
+   fun {UnfoldSetSpec Ss}
+      case Ss of nil then nil
+      [] S|Sr then
+	 case S of I1#I2 then {Run I1 I2 {UnfoldSetSpec Sr}}
+	 else S|{UnfoldSetSpec Sr}
+	 end
+      end
+   end
+end
 
 fun {Compile Spec PlaceAll}
 
@@ -8,10 +32,9 @@ fun {Compile Spec PlaceAll}
    %%  Spec.x, Spec.y: size of the target plate
    %%  Spec.squares.D=N: N squares of size D
    
-   N     = {Record.foldL Spec.squares Number.'+' 0}
-   Sizes = {Reverse {Arity Spec.squares}} % ordered in increasing size
-   DX    = Spec.x
-   DY    = Spec.y
+   N  = {Record.foldL Spec.squares Number.'+' 0}
+   DX = Spec.x
+   DY = Spec.y
 
 
    %% Area covered by squares.
@@ -50,7 +73,17 @@ fun {Compile Spec PlaceAll}
       end
    end
 
-   proc {Distribute Sqs}
+   fun {Merge Xs Ys}
+      case Xs of nil then Ys
+      [] X|Xr then X|{Mix Ys Xr}
+      end
+   end
+   fun {Mix Xs Ys}
+      {WaitOr Xs Ys}
+      if {IsDet Xs} then {Merge Xs Ys} else {Merge Ys Xs} end
+   end
+   
+   proc {Distribute Sqs Cuts}
       %% Place all rectangles
       if PlaceAll then
 	 {Record.forAll Sqs proc {$ Sq}
@@ -67,24 +100,65 @@ fun {Compile Spec PlaceAll}
 			    end
 			 end}
       %% Find the position
-      {FD.distribute splitMin
-       {Record.foldR Sqs fun {$ Sq XYs}
-			    if Sq.placed==1 then
-			       Sq.x|Sq.y|XYs
-			    else
-			       XYs
-			    end
-			 end nil}}
+      {ForAll
+       {Mix thread {Map Cuts fun {$ C} C.cut end} end
+	{Record.foldR Sqs fun {$ Sq XYs}
+			     if Sq.placed==1 then
+				Sq.x|Sq.y|XYs
+			     else
+				XYs
+			     end
+			  end nil}}
+       proc {$ X}
+	  {FD.distribute splitMin [X]}
+       end}
    end
 
+   local
+      fun {Swap XY}
+	 case XY of x then y [] y then x end
+      end
+   in
+      fun {MakeCuts XY SQS Sqs}
+	 thread
+	    cond {FS.card SQS}<:4 then
+	       %% For this, a cut always exists and is trivial to find
+	       nil
+	    else
+	       SQS1 SQS2 Cut
+	    in
+	       {BinaryPartition SQS1 SQS2 SQS}
+	       Cut :: 1#N-1
+	       {ForAll {UnfoldSetSpec {FS.reflect.upperBound SQS}}
+		proc {$ I}
+		   SqsI=Sqs.I SqsIXY=SqsI.XY
+		   IsLeftOfCut  = Cut >=: SqsIXY + SqsI.d
+		   IsRightOfCut = Cut =<: SqsIXY
+		in
+		   {FD.nega IsLeftOfCut IsRightOfCut}
+		   IsLeftOfCut  = {FS.reified.isIn I SQS1}
+		   IsRightOfCut = {FS.reified.isIn I SQS2}
+		end}
+	       cut(xy:XY cut:Cut SQS1 SQS2)|
+	       {Mix
+		{MakeCuts {Swap XY} SQS1 Sqs}
+		{MakeCuts {Swap XY} SQS2 Sqs}}
+	    end
+	 end
+      end
+   end
+   
 in
    
-   proc {$ Sqs}
+   proc {$ Root}
+      root(squares:Sqs cuts:Cuts) = Root
+   in
+
       Sqs = {MakeTuple '#' N}
       
       %% Set up problem variables
       {Record.foldRInd Spec.squares
-       fun {$ D I M}
+       fun {$ D M I}
 	  {For I I+M-1 1 proc {$ J}
 			    Sqs.J=square(x:      {FD.int 0#{Max 0 DX-D}}
 					 y:      {FD.int 0#{Max 0 DY-D}}
@@ -97,12 +171,8 @@ in
       %% The placed squares must fit the target
       {Covered Sqs}
 
-      if N>1 then
-	 %% Place the largest on at the lower left (wlog)
-	 Sqs.1.x=0  Sqs.1.y=0
-	 %% Also fix some freedom for second square
-	 Sqs.2.x =<: Sqs.2.y
-      end
+      %% Fix some freedom for first square (wolg)
+      Sqs.1.x =<: Sqs.1.y
       
       %% Remove permutations of equally-sized squares by ordering them
       {For 1 N-1 1 proc {$ I}
@@ -134,12 +204,12 @@ in
 		       end} '=<:' DXY}
 	   end}
        end}
+
       
-      %% The master rectangle must be splittable
-%      {Splitting Squares}
-      
-      
-      {Distribute Sqs}
+      Cuts = {MakeCuts x {FS.value.make [1#N]} Sqs}
+
+      {Distribute Sqs Cuts}
+
    end
 
 end
@@ -147,32 +217,32 @@ end
 
 
 declare
-Spec = spec(x:5 y:5 squares:s(3:1 2:2))
-%Spec = spec(x:7 y:8 ds:[2 2 2 5 2 1 3])
-%Spec = spec(x:12 y:13 ds:[5 5 4 4 4 3 3 3 2 2 2 2 2 1 1 1 1])
+%Spec = spec(x:5 y:5 squares:s(3:1 2:2))
+%Spec = spec(x:7 y:8 squares:s(2:4 5:1 1:1 3:1))
+Spec = spec(x:16 y:15 squares:s(5:2 4:3 3:3 2:5 1:4))
 %Spec = spec(x:8 y:9 ds:[4 4 3 3 2 2 2 2 2 1 1 1])
 {ExploreOne {Compile
 	     Spec
 	     true}}
 
 
-
 	     
-/*
-   
+
 declare
 fun {DrawSquares Spec Sol}
    DX=20 DY=20
+   HX=10 HY=10
    T = {New Tk.toplevel tkInit}
    C = {New Tk.canvas tkInit(parent: T
 			     bg:     ivory
 			     width:  Spec.x * DX
 			     height: Spec.y * DY)}
 in
+   {Browse Sol}
    {Tk.send pack(C)}
-   {For 1 {Length Spec.ds} 1
+   {For 1 {Width Sol.squares} 1
     proc {$ I}
-       Sq = Sol.I
+       Sq = Sol.squares.I
        SX = Sq.x
        SY = Sq.y
     in
@@ -186,6 +256,8 @@ in
 		fill:    blue
 		width:   1
 		outline: black)}
+	  {C tk(create text X+Sq.d*HX Y+Sq.d*HY
+		text:I)}
        end
     end}
    T#tkClose
@@ -195,116 +267,4 @@ end
 				    {DrawSquares Spec Sol}
 				 end)}
 
-*/
 
-/*				    
-
-proc {Splitting Sqs}
-   thread 
-      if {FD.sum {Record.map Sqs fun {$ Sq} S.placed end} '>:' 1} then
-	 {Split Sqs Sqs Sqs}
-      end
-   end
-end
-
-      
-   % The whole rectangle must be cuttable with straight cuts.
-   % If a cut is possible (checked by CheckSplit), cut the rectangle
-   % into two pieces and call Split recursively with both halves.
-   % First it is tested whether cuttable by x-coordinate.
-   % The variant with deep guards is slightly more efficient than a variant
-   % with CheckSplit returning a value and flat guards.
-   proc {Split XSqs YSqs Sqs}
-      cond XSqs=[_] YSqs=[_] then skip else
-	 case XSqs
-	 of Square|SquareRest then
-	       if if Square.chosen=1
-		     {CheckSplit Square.x AllSquares nil nil x}
-		  then
-		     LeftSquares RightSquares
-		  in
-		     {DoSplit Square.x AllSquares LeftSquares RightSquares x}
-		     {Split LeftSquares LeftSquares LeftSquares}
-		     {Split RightSquares RightSquares RightSquares}
-		  else fail
-		  end
-	       then skip 
-	       else  {Split SquareRest YSquares AllSquares} 
-	       end
-	 [] nil then
-	    case YSquares
-	    of Square|SquareRest
-	    then
-	       if if Square.chosen=1
-		     {CheckSplit Square.y AllSquares nil nil y}  
-		  then
-		     LeftSquares RightSquares
-		  in
-		     {DoSplit Square.y AllSquares LeftSquares RightSquares y}
-		     {Split LeftSquares LeftSquares LeftSquares}
-		     {Split RightSquares RightSquares RightSquares}
-		  else fail
-		  end
-	       then skip
-	       else  {Split XSquares SquareRest AllSquares} 
-	       end
-	    end
-	 [] nil then fail
-	    end
-	 end
-      end
-   end
-
-   % Check whether straight cut is possible at position Pos (lower
-   % left corner of a square). To avoid nontermination, 
-   % at least one square must be left and right of the cut.
-   proc {CheckSplit Pos Squares Left Right Axis}
-      case Squares of nil then Left=left Right=right 
-      [] S|Sr
-      then X=S.Axis C=S.chosen in
-	 thread 
-	    if C=1 X>=:Pos
-	    then {CheckSplit Pos Sr Left right Axis}
-	    [] C=1 X+S.size=<:Pos
-	    then {CheckSplit Pos Sr left Right Axis}
-	    [] C=0 then {CheckSplit Pos Sr Left Right Axis}
-	    [] C=1 X+S.size>:Pos X<:Pos then fail
-	    else  fail
-	    end
-	 end
-      end
-   end
-   
-   % Split the rectangle into two: one left of the cut, one right of it.
-   % The cut is at position Cut.
-   proc {DoSplit Cut Squares LeftSquares RightSquares Axis}
-      case Squares
-      of nil
-      then LeftSquares=RightSquares=nil
-      [] S|Sr
-      then
-	 X=S.Axis C=S.chosen in
-	 if S.chosen=0 
-	 then {DoSplit Cut Sr LeftSquares RightSquares Axis}
-	 [] C=1 X+S.size=<:Cut
-	 then LSquares in
-	    LeftSquares=S|LSquares
-	    {DoSplit Cut Sr LSquares RightSquares Axis}
-	 [] C=1 X>=:Cut
-	 then RSquares in
-	    RightSquares=S|RSquares
-	    {DoSplit Cut Sr LeftSquares RSquares Axis}
-	 [] C=1 X+S.size>:Cut X<:Cut then fail
-	 else  fail
-	 end
-      end
-   end
-
-
-
- 
-
-   
-		       */
-		       
-				    
