@@ -120,6 +120,16 @@ local
       end
    end
 
+   class NumberEntry
+      from TkTools.numberentry
+      meth set(V)
+	 TkTools.numberentry,tkSet(V)
+      end
+      meth get($)
+	 TkTools.numberentry,tkGet($)
+      end
+   end
+	 
    fun {MakeSide Ls N P R TclT}
       case Ls of nil then TclT
       [] L|Lr then TclR TclS in
@@ -133,10 +143,10 @@ local
 				      font:   MediumFont
 				      anchor: w)}
 	    S1 = {New NumberEntry tkInit(parent: P
-					 min:    {CondSelect L min 1}
-					 max:    {CondSelect L max ~1}
-					 action: L.action
-					 init:   {CondSelect L init 1})}
+					 min:    {CondSelect L min  1}
+					 val:    {CondSelect L init 1}
+					 max:    {CondSelect L max  unit}
+					 action: L.action)}
 	    L2 = {New Tk.label tkInit(parent: P
 				      anchor: w
 				      font:   MediumFont
