@@ -271,18 +271,23 @@
 	      <PARAM name="ImageNumber" value="13">
 	    </OBJECT>
 	  <LI><OBJECT type="text/sitemap">
-	      <PARAM name="Name" value="Documentation">
-	      <PARAM name="Local" value="http://www.mozart-oz.org/documentation/">
-	      <PARAM name="ImageNumber" value="13">
-	    </OBJECT>
-	  <LI><OBJECT type="text/sitemap">
 	      <PARAM name="Name" value="Download">
 	      <PARAM name="Local" value="http://www.mozart-oz.org/download/">
 	      <PARAM name="ImageNumber" value="13">
 	    </OBJECT>
 	  <LI><OBJECT type="text/sitemap">
+	      <PARAM name="Name" value="License Information">
+	      <PARAM name="Local" value="http://www.mozart-oz.org/license.html">
+	      <PARAM name="ImageNumber" value="13">
+	    </OBJECT>
+	  <LI><OBJECT type="text/sitemap">
 	      <PARAM name="Name" value="Demo">
 	      <PARAM name="Local" value="http://www.mozart-oz.org/demo/">
+	      <PARAM name="ImageNumber" value="13">
+	    </OBJECT>
+	  <LI><OBJECT type="text/sitemap">
+	      <PARAM name="Name" value="Documentation">
+	      <PARAM name="Local" value="http://www.mozart-oz.org/documentation/">
 	      <PARAM name="ImageNumber" value="13">
 	    </OBJECT>
 	  <LI><OBJECT type="text/sitemap">
@@ -302,7 +307,7 @@
 	      <PARAM name="ImageNumber" value="13">
 	    </OBJECT>
 	  <LI><OBJECT type="text/sitemap">
-	      <PARAM name="Name" value="Mailing Lists">
+	      <PARAM name="Name" value="Contact Information">
 	      <PARAM name="Local" value="http://www.mozart-oz.org/lists/">
 	      <PARAM name="ImageNumber" value="13">
 	    </OBJECT>
