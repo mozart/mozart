@@ -1448,7 +1448,7 @@ echo "configure:1440: checking for default CXXFLAGS" >&5
 : ${platform=$PLATFORM}
 
 case "$platform" in
-   win32-i486)
+    win32-i486)
 	
 	ozm_out=
 	if test -n "-mno-cygwin"
@@ -1482,16 +1482,24 @@ fi
 	oz_a="$ozm_out"
 	
 	CXX="$CXX $oz_a"
-   ;;
+	if test "$target" = NONE
+	then # compiling for mingw32 under cygwin
+	    BINDIRNAME=bin
+	else # cross-compiling
+	    BINDIRNAME=winbin
+	fi
+    ;;
 
-   *)
+    *)
+	BINDIRNAME=winbin
     ;;
 esac
 
 
 
+
 echo $ac_n "checking build system type""... $ac_c" 1>&6
-echo "configure:1495: checking build system type" >&5
+echo "configure:1503: checking build system type" >&5
 
 build_alias=$build
 case "$build_alias" in
@@ -1517,7 +1525,7 @@ fi
 # Extract the first word of "${ac_tool_prefix}ar", so it can be a program name with args.
 set dummy ${ac_tool_prefix}ar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1521: checking for $ac_word" >&5
+echo "configure:1529: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_AR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1549,7 +1557,7 @@ fi
 # Extract the first word of "${ac_tool_prefix}windres", so it can be a program name with args.
 set dummy ${ac_tool_prefix}windres; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1553: checking for $ac_word" >&5
+echo "configure:1561: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_WINDRES'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1748,6 +1756,7 @@ s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
 s%@CXX@%$CXX%g
 s%@CXXCPP@%$CXXCPP%g
+s%@BINDIRNAME@%$BINDIRNAME%g
 s%@build@%$build%g
 s%@build_alias@%$build_alias%g
 s%@build_cpu@%$build_cpu%g

@@ -24,7 +24,7 @@ BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 SRCDIR= 	@srcdir@
 VPATH=	 	@srcdir@
-BINDIR=		$(PREFIX)/winbin
+BINDIR=		$(PREFIX)/@BINDIRNAME@
 
 CXX=		@CXX@ @CXXFLAGS@
 AR=		@AR@

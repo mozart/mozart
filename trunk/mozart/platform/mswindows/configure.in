@@ -40,16 +40,24 @@ OZ_CXX_CHOOSE
 : ${platform=$PLATFORM}
 
 case "$platform" in
-   win32-i486)
+    win32-i486)
 	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
 	CXX="$CXX $oz_a"
-   ;;
+	if test "$target" = NONE
+	then # compiling for mingw32 under cygwin
+	    BINDIRNAME=bin
+	else # cross-compiling
+	    BINDIRNAME=winbin
+	fi
+    ;;
 
-   *)
+    *)
+	BINDIRNAME=winbin
     ;;
 esac
 
 AC_SUBST(CXX)
+AC_SUBST(BINDIRNAME)
 
 AC_CHECK_TOOL(AR, ar)
 AC_CHECK_TOOL(WINDRES, windres)
