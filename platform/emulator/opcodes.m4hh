@@ -4,30 +4,30 @@ typedef enum {
 
 define(`OPCODE',0) dnl
 define(instruction,
-        `ifelse(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),1,oneReg(TOUPPER($1)),
-                eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),2,twoRegs(TOUPPER($1)),
+        `ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
+                numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
                 TOUPPER($1) = `OPCODE,') dnl
-         define(`OPCODE',eval(OPCODE+1)) dnl
+         incrop(1) dnl
 ')
 
 define(oneReg,
         `$1X = `OPCODE,'
-         $1Y = `eval(OPCODE + 1),'
-         $1G = `eval(OPCODE + 2),'
-         `define(`OPCODE',eval(OPCODE + 2)) dnl'
+         $1Y = `incrop(1)OPCODE,'
+         $1G = `incrop(1)OPCODE,'
+         `dnl'
 ')
 
 define(twoRegs,
         `$1XX = `OPCODE,'
-         $1XY = `eval(OPCODE + 1),'
-         $1XG = `eval(OPCODE + 2),'
-         $1YX = `eval(OPCODE + 3),'
-         $1YY = `eval(OPCODE + 4),'
-         $1YG = `eval(OPCODE + 5),'
-         $1GX = `eval(OPCODE + 6),'
-         $1GY = `eval(OPCODE + 7),'
-         $1GG = `eval(OPCODE + 8),'
-         `define(`OPCODE',eval(OPCODE+8)) dnl'
+         $1XY = `incrop(1)OPCODE,'
+         $1XG = `incrop(1)OPCODE,'
+         $1YX = `incrop(1)OPCODE,'
+         $1YY = `incrop(1)OPCODE,'
+         $1YG = `incrop(1)OPCODE,'
+         $1GX = `incrop(1)OPCODE,'
+         $1GY = `incrop(1)OPCODE,'
+         $1GG = `incrop(1)OPCODE,'
+         `dnl'
 ')
 
 
