@@ -145,14 +145,17 @@ int execute(char **argv)
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
   PROCESS_INFORMATION pi;
-  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
+  DWORD ret = CreateProcess(NULL,buffer,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",buffer);
   }
+  CloseHandle(pi.hThread);
   WaitForSingleObject(pi.hProcess,INFINITE);
 
   DWORD code;
-  if (GetExitCodeProcess(pi.hProcess,&code) != FALSE)
+  ret = GetExitCodeProcess(pi.hProcess,&code);
+  CloseHandle(pi.hProcess);
+  if (ret != FALSE)
     return code;
   else
     return 0;
