@@ -213,6 +213,15 @@ Note that this variable is only checked once when oz.el is loaded."
      "sOz components search path: ")
 
 (eval-and-compile
+  (eval '(defcustom oz-root-functor
+	   "http://www.ps.uni-sb.de/ozhome/share/OPI.ozf"
+	   "*Name of the root functor to load on startup."
+	   :type 'string
+	   :group 'oz)))
+(put 'oz-root-functor 'variable-interactive
+     "sName of the root functor to load on startup: ")
+
+(eval-and-compile
   (eval '(defcustom oz-gdb-autostart t
 	   "*If non-nil, start emulator immediately when in gdb mode.
 If nil, you have the possibility to first set breakpoints and only
@@ -742,10 +751,7 @@ If FORCE is non-nil, kill it immediately."
 	      (setq filter
 		    (process-filter (get-buffer-process oz-emulator-buffer))))
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (let ((opi "http://www.ps.uni-sb.de/ozhome/share/OPI.ozf"))
-	    (if oz-win32
-		(make-comint "Oz Emulator" "ozemulator" nil "-u" opi)
-	      (make-comint "Oz Emulator" "ozengine" nil opi)))
+	  (make-comint "Oz Emulator" "ozengine" nil oz-root-functor)
 	  (oz-create-emulator-buffer oz-emulator-buffer))
 
 	(let ((proc (get-buffer-process oz-emulator-buffer)))
@@ -887,7 +893,7 @@ The directory containing FILE becomes the initial working directory
 and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
-	(init-str "set args -u http://www.ps.uni-sb.de/ozhome/bin/opi\n"))
+	(init-str (concat "set args -u " oz-root-functor "\n")))
     (cond ((get-buffer oz-emulator-buffer)
 	   (delete-windows-on oz-emulator-buffer)
 	   (kill-buffer oz-emulator-buffer)))
