@@ -25,11 +25,7 @@
 %%
 
 local
-   LexBase = {Foreign.require 'tools/gump/GumpScanner.dl'
-	      gump(createFromFile: 2 createFromVirtualString: 2
-		   setInteractive: 2 getInteractive: 2
-		   setBOL: 2 getBOL: 2
-		   close: 1)}
+   LexBase = {Foreign.load 'www.ps.uni-sb.de/ozhome/tools/gump/GumpScanner.dl'}
 
    proc {FromFile FileName ?NewBufferState}
       NewBufferState = {LexBase.createFromFile FileName}
