@@ -245,6 +245,7 @@ extern void    _FUNDECL(OZ_printVirtualString,(OZ_Term t));
 #define OZ_printVS(t) OZ_printVirtualString(t)
 extern char*   _FUNDECL(OZ_vsToC,(OZ_Term t,int*n));
 extern char *  _FUNDECL(OZ_virtualStringToC,(OZ_Term t,int*n));
+extern OZ_Term _FUNDECL(OZ_mkByteString,(char*,int));
 
 
 /* tuples */
