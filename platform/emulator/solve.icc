@@ -161,8 +161,13 @@ Board *SolveActor::clone(Board *bb) {
 }
 
 inline
-int SolveActor::choose(int left, int right) {
+int SolveActor::choose(int left, int right) 
+{
   ozstat.incSolveAlt();
+
+  if (cpb==0)
+    return -1;
+
   WaitActor *wa = cpb->access();
   
   if (!wa)

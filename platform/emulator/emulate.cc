@@ -417,12 +417,19 @@ Bool AM::hookCheckNeeded()
 #ifdef THREADED
 #define Case(INSTR) INSTR##LBL : asmLbl(INSTR); 
 
+#ifdef DELAY_SLOT
 // let gcc fill in the delay slot of the "jmp" instruction:
-#define DISPATCH(INC) {							      \
-  intlong aux = *(PC+INC);						      \
-  INCFPC(INC);								      \
-  goto* (void*) (aux|textBase);					   	      \
+#define DISPATCH(INC) {				\
+  intlong aux = *(PC+INC);			\
+  INCFPC(INC);					\
+  goto* (void*) (aux|textBase);			\
 }
+#else
+#define DISPATCH(INC) {				\
+  INCFPC(INC);					\
+  goto* (void*) ((*PC)|textBase);		\
+}
+#endif
 
 #else /* THREADED */
 
@@ -765,7 +772,7 @@ void engine(Bool init)
    * if -DREGOPT is set
    */
   register ProgramCounter PC   Reg1 = 0;
-  register RefsArray X         Reg2 = am.xRegs;
+  register TaggedRef *X             = am.xRegs;
   register RefsArray Y         Reg3 = NULL;
   register TaggedRef *sPointer Reg4 = NULL;
   register AM *e               Reg5 = &am;

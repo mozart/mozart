@@ -80,6 +80,11 @@
 #endif
 
 
+#if defined(MIPS) || defined(SPARC) || defined(OSF1_ALPHA)
+#define DELAY_SLOT
+#endif
+
+
 /* where does the text segment start
  * needed for threaded code
  */
