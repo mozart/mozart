@@ -32,7 +32,7 @@
   <Title/Widgets/
 
   <P>
-    This chapter introduces some of the widget objects the Tcl/Tk
+    This chapter introduces some of the widget objects the Tk
     interface provides.  Examples illustrate the most common options and
     the values they can take.
 
@@ -48,7 +48,7 @@
       toplevel widget is 150 pixels wide and 50 pixels high.
 
     <p>
-      <Figure class=picture id="picture.widgets-1.toplevel">
+      <Figure id="picture.widgets-1.toplevel">
         <Caption/Creating a toplevel widget./
         <P>
           <Picture.Extern to="toplevel-1.gif" type=gif>
@@ -74,7 +74,7 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
 <chunk class=anonymous><title/{Tk.toplevel tk(configure)}/
 {T tk(configure background:purple)}
 </chunk>
-      Additionally, widget objects understand messages with label <<tkReturn>>
+      Additionally, widget objects understand messages
       to query the state of a widget.  We will discuss these messages later.
 
     <P>
@@ -84,61 +84,62 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
       contains more details how widget objects are closed.
 
     <P>
-      The structure of messages with labels <<tkInit>>, <<tk>> and <<tkReturn>>
+      The structure of messages with labels <<tkInit>> and <<tk>>
       depend on the particular widget under consideration.  However, all of
       these messages share a common structure.  The following section
       explains this structure and shows how to build messages such that they
       are understood by widgets.
 
   <Section id="section.widgets-1.tickles">
-    <Title/The GUI Agent, Tickles and Widget Messages/
+    <Title/The Graphics Engine, Tickles and Widget Messages/
 
     <P>
       Widget objects as well as instances of other classes defined in the
       <<Tk>> module are built as object oriented frontends to a single
-      graphical agent, the so-called <Def/GUI agent/.
+      graphical agent, the so-called <Def/graphics engine/.
 
     <SubSection>
-      <Title/The GUI Agent/
+      <Title/The Graphics Engine/
 
       <P>
-        The GUI agent receives messages and executes them.  By executing a
-        message the GUI agent creates widgets, configures the appearance and
-        behaviour of widgets, or computes a geometry for the layout of a
-        widget on the screen.
+        The graphics engine receives messages and executes them.  By
+        executing a message the engine creates widgets, configures the
+        appearance and behavior of widgets, or computes a geometry for
+        the layout of a widget on the screen.
 
       <P>
-        The messages the GUI agent understands are so-called <Def/tickles/.
+        The messages the engine understands are so-called <Def/tickles/.
         The procedures <<Tk.send>> and <<Tk.batch>> take a tickle or a list of
-        tickles and send it to the GUI agent.  We will use these two precedures
-        especially to send tickles for geometry management, as will be
-        discussed in <Ptr to="chapter.geometry">.
+        tickles and send it to the graphics engine.  We use these
+        two procedures especially to send tickles for geometry
+        management, as is discussed in <Ptr to="chapter.geometry">.
 
       <P>
         Messages send to widget objects and other objects the Tk interface
         provides are translated in a straightforward way to tickles.  These
-        tickles are then send to the GUI agent.
+        tickles are then send to the graphics engine.
 
     <SubSection>
-      <Title/Tickles and Messages/
+      <Title/Tickles and Widget Messages/
 
       <P>
-        Tickles are used to describe messages for the GUI agent.  A tickle is
-        either a boolean value, the name <<unit>>, a virtual string, a record
-        that has neither a name as label nor as feature, or a so-called tickle
-        object.  A tickle object is an instance of a class the Tk module
-        provides.
+        Tickles are used to describe messages for the graphics engine.
+        A tickle is either a boolean value, the name <<unit>>, a
+        virtual string, a record
+        that has neither a name as label nor as feature, or a tickle
+        object.  A <def/tickle object/ is an instance of a class the
+        Tk module provides.
 
       <P>
-        An initilaization message with label <<tkInit>> must be a record
-        without integer features.  The values for a feature must be a
+        An initialization message with label <<tkInit>> must be a record
+        without integer features.  The field of a feature must be a
         tickle.  Only the special features <<parent>>, <<action>>, and <<args>>
         may take different values.  These features we will discuss later.
 
       <P>
         To the features we refer to as <Def/configuration options/, or
-        short as <Def/options/.  Their values we refer to as <Def
-        /option values/.
+        short as <Def/options/.  Their values we refer to as
+        <Def/option values/.
 
       <P>
         A message with label <<tk>> must be a record with at least a single
@@ -146,77 +147,90 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
         options.  The value of the first integer feature we call the
         <Def/command/, whereas we refer to the remaining values for the
         integer features as <Def/arguments/.  For example, in the message
-        <<<tk(set active backgound:purple)>>>
+        <<<tk(set active background:purple)>>>
         <<set>> is the command, <<active>> is the single argument, and
         <<background>> is an option with value <<purple>>.
 
     <SubSection>
-      <Title>Tickles and Tcl/Tk</Title>
+      <Title/Translating Tickles/
+
+      <p>
+        The graphics engine does not understand tickles but strings
+        that follow are particular structure. This means that each
+        tickle send to the graphics engine is first translated to a
+        string. The translation is generic, for our purposes here it
+        suffices to give a
+        short example. The full translation details can be found in
+        <Ptr.extern to="ozdoc:system" key="chapter.tk">.
 
       <P>
-        According to the messages the gui manager receives
-        When the gui manager executes the messages
         For example,
         <<<example("test" 1 2.0 side:left(right:true) fill:x)>>>
-        describes the string
-        <<<"example test 1 2.0 -side left -right 1 -fill x">>>
-        Explain commands and configuration options.  Values given for
-        configuration options are <Def/tickles/.  A tickle is data structure
-        for the convenient description of values.
+        is translated to
+        <<<"example test 1 2.0 -side left -right 1 -fill x">>>. That
+        is, a record is translated to a string consisting of the label
+        and the features and the translation of the fields.
+        Atomic features are prepended by a <<"-">> and integer
+        features are ignored.
+
+
+    <SubSection>
+      <Title>Special Tickles</Title>
+
+      <p>
+        Additionally, special tickles are supported (see <Ptr
+        to="figure.widgets-1.special">). Their usage becomes clear in
+        the examples that are presented in this document.
 
       <P>
-        A tickle value is either a boolean value (&ie;, <<true>> or <<false>>),
-        a virtual string, or a record with atomic label and atomic or integer
-        features, where the fields of the record is a tickle itself.
-
-      <P>
-        Additionally, all objects created as instances of widget classes are
-        tickles.
-
-      <P>
-        Why do we need tickles.
-
-      <P>
-        How can we look up options.
-
-      <P>
-        <Figure class=table>
+        <Figure class=table id="figure.widgets-1.special">
           <Caption/Examples of special tickles./
           <Table>
             <TR>
               <TH/Example/
-              <TH/Expansion/
+              <TH/Translation/
               <TH/Mnemonic/
+              <th/Explanation/
             <TR>
               <TD/<<o(10 12 fill:yellow)>>/
               <TD proglang=tcl/<<10 12 -fill yellow>>/
               <TD/option/
+              <td/the label <<o>> is skipped/
             <TR>
               <TD/<<l(red green blue)>>/
               <TD proglang=tcl/<<[red green blue]>>/
               <TD/list/
+              <td/list of tickles/
             <TR>
               <TD/<<q(red green blue)>>/
               <TD proglang=tcl/<<{red green blue}>>/
               <TD/quote/
+              <td/group list of tickles/
             <TR>
               <TD/<<s(red green blue)>>/
               <TD proglang=tcl/<<"red green blue">>/
               <TD/string/
+              <td/string consisting of several tickles/
             <TR>
               <TD/<<p(4 7 linestart)>>/
               <TD proglang=tcl/<<{4.7 linestart}>>/
               <TD/position/
+              <td/position used with
+                  <ref to="chapter.text"/text widgets//
             <TR>
               <TD/<<b([a(b:1) c(d:2)])>>/
               <TD proglang=tcl/<<a -b 1 c -d 2>>/
               <TD/batch/
+              <TD/concatenate tickles/
             <TR>
               <TD/<<v(1#"\nno quotation")>>/
               <TD proglang=tcl/<<1\nno quotation>>/
               <TD/virtual string/
+              <TD/verbatim virtual strings/
           </Table>
         </Figure>
+
+
 
   <Section id="section.widgets-1.frame">
     <Title/Frames/
@@ -224,10 +238,11 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
     <P>
       Frame widgets are similar to toplevel widgets in that they serve as
       containers for other widgets.  The difference is that a frame is used
-      as container within other widgets, whereas a toplevel is the outermost
+      as container within other widgets, whereas a toplevel widget is
+      the outermost
       container.  The main purpose of frames is to determine geometrical
       layouts for the widgets they contain.  More on geometry management we
-      will see in <Ptr to="chapter.geometry">.
+      see in <Ptr to="chapter.geometry">.
 
     <SubSection id="section.widgets-1.relief">
       <Title/Relief Options/
@@ -270,15 +285,17 @@ Fs={Map [groove ridge flat sunken raised]
       <P>
         Note that we left out the code to create the toplevel widget.  Here
         and in the following we assume that the variable&nbsp;<<T>> is bound
-        to a toplevel widget.  The example file, however, contains the code
-        needed to create the toplevel widget.
+        to a toplevel widget.  The <ref.extern
+        to="WindowProgramming.oz"/example file/, however, contains the
+        code needed to create the toplevel widget.
 
       <P>
-        The exact meaning of the <<pack>> command used in this example will be
+        The exact meaning of the <<pack>> command used in this example is
         explained in <Ptr to="section.geometry.pack">.
 
     <SubSection id="section.widgets-1.distances">
       <Title/Screen Distance Options/
+
       <P>
         As value for the <<borderwidth>> option we used an integer in the
         example shown in <Ptr to="figure.widgets-1.relief-frames">.  Just
@@ -288,22 +305,25 @@ Fs={Map [groove ridge flat sunken raised]
         millimeters, inches (2.54 centimeters), or printers' points
         (<math.choice><math html>1/72</math><math latex>1/72</math>
         </math.choice> inch).
+
       <P>
         A convenient way to specify screen distances that employ units is
         to use a virtual string that appends the unit letter to the number,
         as used in <Ptr to="figure.widgets-1.relief-frames">.
+
     <SubSection id="section.widgets-1.color">
       <Title/Color Options/
+
       <P>
         To make the frame with the <<relief>> option <<flat>> visible, we
         configured the background color to be black. Color options can be
         given either symbolically or numerically.
+
       <P>
         A symbolic color value can be given as virtual string like <<black>>,
         <<"red">>, or <<"dArK"#blUe>>, where the capitalization does not have
-        any significance.  A list of valid color names you can find in the file
-        <File display>$OZHOME/demo/documentation/misc/colors.oz</File>
-        <!--** is the above still correct? -->
+        any significance.
+
       <P>
         A numerical color value is determined by three integers between <<0>>
         and <<255>>.  The three integers describe the red, green, and blue part
@@ -312,12 +332,15 @@ Fs={Map [groove ridge flat sunken raised]
         tuple are the three integers.  For example, the base colors red, green,
         and blue are described by the tuples <<c(255 0 0)>>, <<c(0 255 0)>>,
         and <<c(0 0 255)>> respectively.
+
       <P>
         Two examples that make frequent use of color options can
         be found in <Ptr to="section.widgets-2.scale"> and <Ptr
         to="section.widgets-2.listbox">.
+
     <SubSection>
       <Title/Abbreviations and Synonyms/
+
       <P>
       Some of the most common options have the following synonyms:
       <Table>
@@ -331,21 +354,40 @@ Fs={Map [groove ridge flat sunken raised]
           <TD><<borderwidth>>
           <TD><<bd>>
       </Table>
+
+      <p>
       Besides of synonyms it is possible to abbreviate options provided that
       the abbreviation is unambiguous.  For example, it is correct to
       abbreviate the <<background>> option by <<ba>> but not by <<b>> since
-      <<b>> is also an abbreviation for <<bitmap>> and <<borderwidth>>.
+      <<b>> is also an abbreviation for <<bitmap>> and
+      <<borderwidth>>.
+
+    <SubSection>
+      <Title/Additional Tk Information/
+
+      <p>
+        The full Tk-reference information for each widget is shipped with
+        a Mozart system. For an example, see the reference information
+        for a <ref.extern to="&tkcmd;/frame.htm"/<kbd/frame//.
+
+      <p>
+        Reference information on options that are supported by all
+        widgets are explained in <ref.extern
+        to="&tkcmd;/options.htm"/<kbd/options//.
+
 
   <Section id="section.widgets-1.hierarchy">
     <Title/The Widget Hierarchy/
 
     <P>
-      Widgets are arranged in a hierarchy.  Each widget has a single parent.
+      Widgets are arranged in a hierarchy.  Each widget has a single
+      <def/parent/.
       The only exceptions can be toplevel widget objects, which do not have
       to have a parent.  The parent of a widget is given by the option
       <<parent>> in the <<tkInit>> message.  Usually parent widgets are
-      containers.  To the parent of a widget we also refer to as its master.
-      To the widget itself we refer to as slave of its master.
+      containers.  To the parent of a widget we also refer to as its
+      <def/master/.
+      To the widget itself we refer to as <def/slave/ of its master.
 
     <P>
       For example, in the previous example shown in <Ptr
@@ -360,20 +402,20 @@ Fs={Map [groove ridge flat sunken raised]
           This is discussed in <Ptr to="chapter.geometry">.
         <Item>
           Creation and initialization has to follow the hierarchy.  To
-          initialize a widget object is is necessary that its parent widget
+          initialize a widget object it is necessary that its parent widget
           object is already created and initialized.  Otherwise initialization
           of a slave blocks until its master is initialized.
         <Item>
           Closing a parent widget object also closes all its slaves.  The
-          slaves are closed by applying them to the <<close>> message.  A
+          slaves are closed by applying them to the <<tkClose>> message.  A
           widget object gets closed and its widget gets destroyed only after
-          all of its slaves have been closed.  This implies that if a slave
-          does not serve the <<close>> message, because another message is
-          being served, the master does not close itself.
+          all of its slaves have been closed.
       </List>
+
+     <p>
       After a widget object has been closed, using it in tickles sent
-      directly to the GUI agent, &eg; by <<Tk.send>> or <<Tk.batch>>, issues
-      a runtime error.
+      directly to the graphics engine, &eg; by <<Tk.send>> or
+      <<Tk.batch>>, issues a runtime error.
 
   <Section id="section.widgets-1.label">
     <Title/Label Widgets/
@@ -381,7 +423,8 @@ Fs={Map [groove ridge flat sunken raised]
     <P>
       A <Def/label/ widget displays a text string or a bitmap.  Options for
       frames are also valid options for labels, additional options determine
-      what the label displays.
+      what the label displays. The reference documentation for labels
+      is <ref.extern to="&tkcmd/label.htm"/<kbd/label//.
 
     <p>
       <Figure id="figure.widgets-1.labels">
@@ -402,7 +445,9 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
       sending the widget object a <<tk>> message with the command
       <<configure>>.  Execution of the following expression changes the
       bitmap to an exclamation mark:
-      <<<{L1 tk(configure bitmap:warning)}>>>
+<chunk class=anonymous><title/label configure/
+{L1 tk(configure bitmap:warning)}
+</chunk>
 
     <SubSection id="section.widgets-1.bitmap">
       <Title/Bitmap Options/
@@ -416,41 +461,41 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
         If the first character of the <<bitmap>> option value is an <File/@/,
         the value is interpreted as filename.  For instance, feeding
 <chunk class=anonymous><title/Bitmap Options/
-{L2 tk(configure bitmap: '@'#{Property.get 'oz.home'}#
-                         '/share/images/compiler.xbm')}
+{L2 tk(configure bitmap:     '@'#{Property.get 'oz.home'}#
+                             '/doc/wp/queen.xbm'
+                 foreground: orange)}
 </chunk>
         displays a bitmap stored in a file.  Here the file name is given
-        relative to where Mozart system has been installed, that is relative
-        to <<{Property.get 'oz.home'}>>.
+        relative to where the Mozart system has been installed, that
+        is relative to <<{Property.get 'oz.home'}>>.
 
       <P>
         If the first character is different from <File/@/, it is interpreted
-        as the name of a predefined bitmap.  A table of all predefined bitmaps
-        and their names you can see in <Ptr to="figure.widgets-1.predefined">.
+        as the name of a predefined bitmap.  A program that displays
+        all predefined bitmaps
+        and their names you can see in <Ptr
+        to="figure.widgets-1.predefined">. The program uses the grid
+        geometry manager which is discussed in <ptr
+        to="section.geometry.grid">.
+
+      <p>
         <Figure id="figure.widgets-1.predefined">
           <Caption/Predefined bitmaps./
-          <Table class=dyptic>
-            <TR>
-              <TD><Picture.Extern to="predefined-error.gif" type=gif>
-              <TD><Picture.Extern to="predefined-info.gif" type=gif>
-              <TD><Picture.Extern to="predefined-question.gif" type=gif>
-              <TD><Picture.Extern to="predefined-warning.gif" type=gif>
-            <TR>
-              <TD><<error>>
-              <TD><<info>>
-              <TD><<question>>
-              <TD><<warning>>
-            <TR>
-              <TD><Picture.Extern to="predefined-questhead.gif" type=gif>
-              <TD><Picture.Extern to="predefined-hourglass.gif" type=gif>
-              <TD><Picture.Extern to="predefined-gray25.gif" type=gif>
-              <TD><Picture.Extern to="predefined-gray50.gif" type=gif>
-            <TR>
-              <TD><<questhead>>
-              <TD><<hourglass>>
-              <TD><<gray25>>
-              <TD><<gray50>>
-          </Table>
+          <p>
+          <Picture.Extern to="predefined.gif" type=gif>
+<chunk class=anonymous><title/predefined/
+{List.forAllInd [error     gray75 gray50    gray25   gray12
+                 hourglass info   questhead question warning]
+ proc {$ I D}
+    R=(I-1) div 5
+    C=(I-1) mod 5
+ in
+    {Tk.batch [grid(row:R*2   column:C
+                    {New Tk.label tkInit(parent:T bitmap:D)})
+               grid(row:R*2+1 column:C
+                    {New Tk.label tkInit(parent:T text:D)})]}
+ end}
+</chunk>
         </Figure>
 
       <P>
@@ -465,8 +510,8 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
         A font to be used for displaying text can be specified by the <<font>>
         option. Valid values for the <<font>> option are either
         platform specific font names or instances of the class
-        <<Tk.font>>. An instance of the class <<Tk.font>> are also
-        tickle objects but are different from widget objects.
+        <<Tk.font>>. An instance of the class <<Tk.font>> is also
+        a tickle object but is not a widget.
 
       <p>
         Platform dependent font names are for example X font names. If
@@ -497,10 +542,11 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
                                           Family#' font.')
                                  font:   F)}
      in
-        {Tk.send pack(L padx:1#m pady:1#m)}
+        {Tk.send pack(L)}
      end}
  end}
 </chunk>
+        </Figure>
 
       <p>
         The init message for creating a font determines with the options
@@ -530,24 +576,24 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
         <P>
           <Picture.Extern to="images-1.gif" type=gif>
 <chunk class=anonymous><title/Tk.image/
-I  = {New Tk.image
-      tkInit(type:photo format:gif
-             file:{System.get home}#'/demo/bitmaps/trucks/truck-left.gif')}
+D  = {Property.get 'oz.home'}#'/doc/wp/'
+I  = {New Tk.image tkInit(type:photo format:ppm
+                          file:D#'truck-left.ppm')}
 L1 = {New Tk.label tkInit(parent:T image:I)}
 L2 = {New Tk.label tkInit(parent:T image:I)}
 L3 = {New Tk.label tkInit(parent:T image:I)}
 {Tk.send pack(L1 L2 L3 padx:1#m pady:1#m side:left)}
 </chunk>
-
+      </Figure>
 
     <P>
       The program in <Ptr to="figure.widgets-1.images"> creates an image object
       and displays the image in three labels.  Changing the configuration of
       the image, changes the displayed image in all label widgets. For example,
       feeding the following expression
-<<<{I tk(configure
-      file:{System.get home}#
-           '/demo/bitmaps/trucks/truck-right.gif')}>>>
+<chunk class=anonymous><title/Tk.image configure/
+{I tk(configure file:D#'truck-right.ppm')}
+</chunk>
       replaces all three displayed trucks by trucks heading in the inverse
       direction.
 
@@ -557,12 +603,32 @@ L3 = {New Tk.label tkInit(parent:T image:I)}
       If the type is <<photo>>, the image can display files in two different
       formats.  The format is specified by the <<format>> option.  Valid
       values for the <<format>> option are <<gif>> and <<ppm>>.
+
     <P>
       In case the value for the <<type>> option is <<bitmap>>, the value given
       for the <<file>> option must be a valid bitmap file.
 
+    <P>
+      In addition to files, images can also be referred to by
+      URLs. For example,
+<<<{New Tk.image tkInit(type:photo format:gif
+                     url:'http://foo.com/bar.gif'}
+>>>
+      would have loaded a gif file from the given URL. Note that the
+      graphics engine itself is not capable of handling URLs. Instead,
+      the image object handles URLs by localizing a URL to
+      a local file (see also <ptr.extern to="ozdoc:system"
+      key="chapter.resolve">). The local file then is used by the
+      graphics engine.
+
+    <p>
+      In <ptr to="section.tools.images"> an
+      abstraction is presented that eases the handling of images
+      considerably.
+
   <Section id="section.widgets-1.messages">
     <Title/Messages/
+
     <P>
       Message widgets display text extending over several lines.  How the
       text is distributed over several lines is determined by one of the
@@ -571,18 +637,22 @@ L3 = {New Tk.label tkInit(parent:T image:I)}
       are <<left>> (the default value), <<center>>, and <<right>>.  <Ptr
       to="figure.widgets-1.messages"> shows the result of different
       combinations of aspect and justification.
+
+    <p>
       <Figure id="figure.widgets-1.messages">
         <Caption/Messages with <<justify>> and <<aspect>> options./
         <P>
           <Picture.Extern to="messages.gif" type=gif>
-<<<T={New Tk.toplevel tkInit(bg:white)}
+<chunk class=anonymous><title/Tk.message/
 S ='Text extending over several lines.'
 Ms={Map [left#200 center#100 right#50]
     fun {$ J#A}
        {New Tk.message tkInit(parent:T text:S justify:J aspect:A)}
     end}
-{Tk.send pack(b(Ms) side:left padx:2#m pady:2#m)}>>>
+{Tk.send pack(b(Ms) side:left padx:2#m pady:2#m)}
+</chunk>
       </Figure>
+
     <P>
       If the option <<width>> is present, the value (a screen distance, see
       <Ptr to="section.widgets-1.distances">) gives the length of each line.
@@ -595,14 +665,11 @@ Ms={Map [left#200 center#100 right#50]
       as high.
 
 <![ %EXTRA; [
-<chunk><title/DefaultBegin/
-declare
-T = {New Tk.toplevel tkInit}
-</chunk>
-<chunk><title/DefaultEnd/
-{T tkClose}
-</chunk>
-<chunk><title/Widgets/
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Widgets
+%%%
+
 %%
 %% Toplevel widgets
 %%
@@ -615,28 +682,30 @@ declare
 <chunk.ref/{Tk.toplevel tk(configure)}/
 
 %% Closing the toplevel widget
-<chunk.ref/DefaultEnd/
+{T tkClose}
 
 
 %%
 %% Frames
 %%
 
-<chunk.ref/DefaultBegin/
-
+declare
+T={New Tk.toplevel tkInit}
 <chunk.ref/Tk.frame/
 
 
-<chunk.ref/DefaultEnd/
+{T tkClose}
 
 
 %%
 %% Label Widgets
 %%
 
-<chunk.ref/DefaultBegin/
-
+declare
+T={New Tk.toplevel tkInit}
 <chunk.ref/Tk.label/
+
+<chunk.ref/label configure/
 
 
 %%
@@ -645,20 +714,55 @@ declare
 
 <chunk.ref/Bitmap Options/
 
+{T tkClose}
 
-<chunk.ref/DefaultEnd/
+
+declare
+T={New Tk.toplevel tkInit(bg:white)}
+<chunk.ref/predefined/
+
+{T tkClose}
 
 
 %%
 %% Font options
 %%
 
-<chunk.ref/DefaultBegin/
-
+declare
+T={New Tk.toplevel tkInit}
 <chunk.ref/Tk.font/
 
 
-<chunk.ref/DefaultEnd/
+{T tkClose}
+
+
+%%
+%% Images
+%%
+
+declare
+T={New Tk.toplevel tkInit}
+<chunk.ref/Tk.image/
+
+<chunk.ref/Tk.image configure/
+
+
+
+{T tkClose}
+
+
+%%
+%% Messages
+%%
+
+declare
+T={New Tk.toplevel tkInit(bg:white)}
+<chunk.ref/Tk.message/
+
+
+{T tkClose}
+
+
 
 
 </chunk>

@@ -29,129 +29,102 @@
 
 <Chapter id="chapter.started">
   <Title/Getting Started/
+
   <P>
-    This section shows a small graphical application from which we can
-    identify the most important concepts found in the window interface.
+    This chapter shows a small graphical application from which we can
+    identify the most important concepts found in the window
+    interface.
+
   <Section>
     <Title/Our First Graphical Application/
+
     <P>
-      The main application window contains a so-called <Def/toplevel/
-      widget.  A <Def/widget/ is a graphical component.  Toplevel widgets
-      serve as containers for other widgets.  In our example, it contains a
-      <Def/entry/ widget, &ie;, a single-line in which the user can enter
-      text, and a <Def/button/ widget.  Pressing the button replaces all
+      The main application window contains a toplevel
+      widget.  A widget is a graphical component.  Toplevel widgets
+      serve as containers for other widgets.  In our example, it
+      contains an
+      entry widget, &ie;, a single-line in which the user can enter
+      text, and a button widget.  Pressing the button replaces all
       upper-case letters by lower-case letters in the entry and vice versa.
+
     <P>
       <Ptr to="figure.intro.start"> shows a screendump of our first graphical
       application.  To the left the window after the user has entered the text
-      <Samp>DFKI Oz and Tcl/Tk!</Samp> in the entry is shown.  After pressing
+      <Samp>Mozart and Graphics!</Samp> in the entry is shown.  After pressing
       the button, the window looks as shown to the right.
+
+    <p>
       <Figure id="figure.intro.start">
         <Table class=dyptic>
           <TR>
-            <TD><Picture.Extern to="started-1.gif" type=gif>
-            <TD><Picture.Extern to="started-2.gif" type=gif>
+            <TD><Picture.Extern to="lower.gif" type=gif>
+            <TD><Picture.Extern to="upper.gif" type=gif>
         </Table>
       </Figure>
+
     <P>
       The program for our graphical application is shown in <Ptr
       to="program.intro.start">.  The definition of the function that maps
       a character to its upper-case or lower-case counterpart is left out.
-      However, the full example is included in the demo file for this
-      document.  More information on this you find in
-      <!--** <Ptr to=section.introduction.demo>. <P>* -->
+      However, the full example is included in the <ref.extern
+      to="WindowProgramming.oz"/demo file/ for this
+      document.
+
+    <p>
       <Figure class=program id="program.intro.start">
-        <Caption/Program to create a capitalization window./
-<<<T = {New Tk.toplevel tkInit(title:'Capitalization')}
+                 <Caption/Program that creates a capitalization window./
+                 <p>
+<chunk><title/Change capitalization/
+fun {$ I}
+   case {Char.type I}
+   of lower then {Char.toUpper I}
+   [] upper then {Char.toLower I}
+   else I
+   end
+end
+</chunk>
+<chunk class=anonymous><title/Capitalization/
+T = {New Tk.toplevel tkInit(title:'Capitalization')}
 E = {New class $ from Tk.entry
             meth capitalize
                S={self tkReturn(get $)}
             in
                {self tk(delete 0 'end')}
-               {self tk(insert 0 {Map S fun {$ I}
-                                           case {Char.type I}
-                                           of lower then {Char.toUpper I}
-                                           [] upper then {Char.toLower I}
-                                           else I
-                                           end
-                                        end})}
-               {self tk(insert 0 {Map S fun {$ I} &ellipsis; end)}
+               {self tk(insert 0 {Map S <chunk.ref/Change capitalization/})}
             end
          end
      tkInit(parent: T)}
 B = {New Tk.button tkInit(parent: T
                           text:   'Change Capitalization'
                           action: proc {$} {E capitalize} end)}
-{Tk.send pack(E B fill:x padx:4 pady:4)}>>>
+{Tk.send pack(E B fill:x padx:4 pady:4)}
+</chunk>
       </Figure>
+
     <P>
       <Ptr to="program.intro.start"> is structured as follows.  For each of
       the widgets a object is created.  The objects are created from a class
       corresponding to the type of the widget.  All objects are initialized
       with a <Span class=index/<<tkInit>>/ message.
-  <Section>
-    <Title/The Model/
-  <Section>
-    <Title/Widgets/
-    <P>
-      <List>
-        <Item>
-          Widgets are modelled as objects.
-        <Item>
-          Widgets are created from classes which correspond to the widget type.
-        <Item>
-          Widgets are initialized with the <<tkInit>> method.
-        <Item>
-          Widgets can be sent commands by the <<tk>> method.
-        <Item>
-          Values can be retrieved by the <<tkReturn>> method.
-        <Item>
-          Widgets are arranged in a hierarchy.
-        <Item>
-          The hierarchy is used for geometry management.
-        <Item>
-          The hierarchy is used for closing widgets.
-      </List>
-  <Section>
-    <Title/Actions/
-    <P>
-      Actions can be attached to widgets.
-    <P>
-      Whenever the action is invoked a new thread is created in which the
-      action is executed.
-  <Section>
-    <Title/Geometry Management/
-    <P>
-      The layout of container widgets is determined by applying a geometry
-      manager.
-    <P>
-      Geometry managers are dynamic.
-  <Section>
-    <Title/The Graphical User Interface Manager/
-    <P>
-      There is a gui manager.
-    <P>
-      Messages to the gui manager can be send by <<Tk.send>>.  The messages
-      have to be so-called tickles.
-    <P>
-      The gui manager also handles <<return>> requests.
-    <P>
-      The gui manager allows to use actions.
-    <P>
-      Widgets and other graphical components are built on top of the gui
-      manager.
-    <P>
-      Creation of a widget defines a unique identifier which enables gui
-      manager to distinguish widget. Sends then message to gui manager.
-    <P>
-      Applying widget to message preprocesses message and then sends tickle to
-      gui manager.
-    <P>
-      Returning is asynchronous.
-    <P>
-      Synchronisation can be done by waiting for the return value.
-    <P>
-      How does the gui manager draw.
+
+
+
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Getting started
+%%%
+
+declare
+<chunk.ref/Capitalization/
+
+
+
+
+</chunk>
+]]>
 
 
 </Chapter>
