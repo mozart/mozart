@@ -28,7 +28,9 @@
 
 <list ENUM>
 <item> You have to install GNU Emacs first.
-<p>Download <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/emacs-20.4.1.exe">emacs-20.4.1.exe</Ref.Extern>,
+<p>Download the GNU Emacs installer from our
+<Ref.Extern to="http://www.mozart-oz.org/download/ftp.cgi?action=windows"
+>Windows download page</Ref.Extern>,
 execute it, and follow the instructions.
 <p>
 More information about  GNU Emacs for Windows can be found under
@@ -38,9 +40,11 @@ http://www.gnu.org/software/emacs/windows/ntemacs.html</Ref.Extern>.
 <item> Afterwards you install Mozart. (If you upgrade to
 a newer version of Mozart you only have to perform the second step.)
 <p>
-Get the self-extracting executable from the
-<Ref.Extern to="http://www.mozart-oz.org/download/winarchive.shtml">download page</Ref.Extern>,
-execute it, and follow the instructions.
+Get the self-extracting executable (<samp>exe</samp> file) from our
+<Ref.Extern to="http://www.mozart-oz.org/download/ftp.cgi?action=windows"
+>Windows download page</Ref.Extern>,
+execute it, and follow the instructions.  If you already have the MS installer software
+on your system, you can get the smaller <samp>msi</samp> file instead.
 </list>
 
 
