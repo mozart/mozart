@@ -95,7 +95,7 @@ Scheduling:
      <P>
        By default, the linker includes (or links) all functors that
        are refered to by relative URLs as in our previous example. How
-       to chnage this behaviour is discussed in <Ptr
+       to change this behaviour is discussed in <Ptr
        to="Section.Linker.Include">.
      </P>
 
@@ -103,14 +103,96 @@ Scheduling:
 
   <Section id="Section.Linker.Include">
     <Title/Including and Excluding Functors/
+
+    <P>
+      <List>
+        <Entry><<--relative>>
+        <Synopsis><<--relative>> (default), <<--norelative>>
+        <Item>
+           All functors that are referred to by relative URLs are
+           included.
+
+        <Entry><<--include>>
+        <Synopsis><<--include=<Var/URL/,&ellipsis,<Var/URL/>>
+        <Item>
+           Include all functors whose URL matches one of the comma
+           separated URL prefices.
+
+        <Entry><<--exclude>>
+        <Synopsis><<--exclude=<Var/URL/,&ellipsis,<Var/URL/>>
+        <Item>
+           Exclude all functors whose URL matches one of the comma
+           separated URL prefices.
+      </List>
+    <P>
+
+    <P>
+      Note that multiple <<--include>> and <<--exclude>> directives
+      can be given on the commandline, and that they are considered in
+      order. For example with a commandline containing
+      <<<--include=http --exclude=http://foo --include=http://foo.com>>>
+      a pickled functor with URL <File>http://bar/A.ozf</File> gets
+      <Em/included/, a pickled functor with URL
+      <File>http://foo.org/A.ozf</File> is <Em/excluded/, and a
+      pickled functor with URL <File>http://foo.com/A.ozf</File> is
+      <Em/included/ as well.
+    </P>
+
   </Section>
 
   <Section id="Section.Linker.Pickling">
     <Title/Pickling Options/
+
+    <P>
+      The linker supports the following default options for pickles.
+    </P>
+
+    <P>
+      <List>
+        <Entry><<--compress>>
+        <Synopsis><<--compress=<Var/N/>>, <<-z <Var/N/>>
+        <Item>
+           The created pickle is compressed with level
+           <Var/N/ (a single digit). By default the compression level
+           <Var/N/ is <<0>>, that is, no compression is employed.
+
+        <Entry><<--executable>>
+        <Synopsis><<--executable>> (<<-x>>), <<--noexecutable>> (default)
+        <Item>
+           Output the pickled functor as being executable (that is,
+           with an additional header).
+
+        <Entry><<--execheader>>
+        <Synopsis><<--execheader=<Var/STR/>>
+        <Item>
+           Use string <Var/STR/ as header for executable pickled
+           functor.
+
+      </List>
+    <P>
+
   </Section>
 
   <Section id="Section.Linker.Misc">
     <Title/Miscellaneous Options/
+
+    <P>
+      <List>
+        <Entry><<--sequential>>
+        <Synopsis><<--sequential>>, <<--nosequential>> (default)
+        <Item>
+           Do not create a thread per executed functor body, rather
+           execute all functor bodies in the same thread in a bottom
+           up fashion.
+        <P class=danger>
+           Use with care! In case the functors included have cyclic
+           imports, it is not used.
+        </P>
+
+
+      </List>
+    <P>
+
   </Section>
 
 </Chapter>
