@@ -59,7 +59,7 @@
 //   this order is used in the case of VAR=VAR unification
 //
 // kost@ : the following description (who compiled it??!), the
-// 'cmpVar(...)'  with its usage, and the table used before (just
+// 'CMPVAR(...)'  with its usage, and the table used before (just
 // below) are contradictory!!
 // -----
 //   e.g. SimpleVariable are bound prefered
@@ -98,7 +98,7 @@ enum TypeOfVariable {
   // group 1: futures: anything but constrained variables should be
   //          bound to them. Note that a constrained variable cannot
   //          be bound to a future since that means that the future
-  //          has to be converted to a FD variable, which is not
+  //          has to be converted to an FD variable, which is not
   //          possible.
   OZ_VAR_FUTURE  = 5,
   // group 2:  extensions, notably the distributed variables;
