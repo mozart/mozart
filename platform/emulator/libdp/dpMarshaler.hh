@@ -529,7 +529,7 @@ public:
   //
   virtual void          disposeV() {
     disposeOVP();
-    oz_freeListDispose(this, sizeof(MVarPatch));
+    oz_freeListDispose(extVar2Var(this), extVarSizeof(MVarPatch));
   }
   //
   virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MVARPATCH); }
