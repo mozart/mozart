@@ -1,24 +1,22 @@
 #  Authors:
-#    Ralf Scheidhauer (scheidhr@dfki.de)
-# 
-#  Contributors:
-#    optional, Contributor's name (Contributor's email address)
+#    Ralf Scheidhauer <scheidhr@dfki.de>
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
 # 
 #  Copyright:
-#    Ralf Scheidhauer (scheidhr@dfki.de)
+#    Ralf Scheidhauer, 1999
+#    Leif Kornstaedt, 1999
 # 
 #  Last change:
 #    $Date$ by $Author$
 #    $Revision$
 # 
-#  This file is part of Mozart, an implementation 
-#  of Oz 3:
-#     http://www.mozart-oz.org
+#  This file is part of Mozart, an implementation of Oz 3:
+#    http://www.mozart-oz.org
 # 
 #  See the file "LICENSE" or
-#     http://www.mozart-oz.org/LICENSE.html
-#  for information on usage and redistribution 
-#  of this file, and for a DISCLAIMER OF ALL 
+#    http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
 #  WARRANTIES.
 
 SRCTOP=		@SRCTOP@
@@ -29,41 +27,64 @@ VPATH=	 	@srcdir@
 BINDIR=		$(PREFIX)/winbin
 
 CXX=		@CXX@ @CXXFLAGS@
+AR=		@AR@
+WINDRES=	@WINDRES@
+
 INCS=		-I. -I$(SRCDIR)
+LIBS=		-L. -lstartup -luser32
 
 INSTALL=	@INSTALL@
 INSTALL_DIR=	@INSTALL_DIR@
+INSTALL_FILE=	$(INSTALL) -m 444
 INSTALL_BIN=	$(INSTALL) -m 555
 
-WINEXES=	oz.exe ozengine.exe ozwrapper.exe oztool.exe\
-		ozenginew.exe ozwrapperw.exe 
+CONSOLE_EXES = oztool.exe ozengine.exe
+CONSOLE_BINS = ozwrapper.bin
+WINDOWS_EXES = oz.exe ozenginew.exe
+WINDOWS_BINS = ozwrapperw.bin
+EXES = $(CONSOLE_EXES) $(CONSOLE_BINS) $(WINDOWS_EXES) $(WINDOWS_BINS)
 
-.PHONY: bootstrap all install clean veryclean distclean depend check
+LIBOBJS = \
+	panic.o getenv.o path.o initenv.o makecmd.o \
+	ppid.o process.o registry.o
 
-.SUFFIXES: .cc .o .exe
+.PHONY: all bootstrap install clean veryclean distclean depend check
 
+.SUFFIXES: .cc .o .exe .bin
 
-all: $(WINEXES)
+%.o: %.cc
+	$(CXX) $(INCS) -c -o $@ $<
+
+all: $(EXES)
 
 bootstrap: all
 
-install: $(WINEXES)
-	$(INSTALL_DIR) $(BINDIR)
-	$(INSTALL_BIN) $(WINEXES) $(SRCDIR)/mozart.ico $(BINDIR)
+libstartup.a: $(LIBOBJS)
+	$(AR) rcs $@ $(LIBOBJS)
 
+$(CONSOLE_EXES): %.exe: %.o res.o libstartup.a
+	$(CXX) $(INCS) -s -o $@ $< res.o $(LIBS)
 
-$(BINDIR):
-	$(INSTALL_DIR) $@
+$(CONSOLE_BINS): %.bin: %.o libstartup.a
+	$(CXX) $(INCS) -s -o $@ $< $(LIBS)
 
-veryclean: clean
+$(WINDOWS_EXES): %.exe: %.o res.o libstartup.a
+	$(CXX) $(INCS) -s -o $@ $< res.o $(LIBS) -mwindows
 
-distclean: clean
-	rm -f Makefile version.h config.cache config.log config.status
+$(WINDOWS_BINS): %.bin: %.o libstartup.a
+	$(CXX) $(INCS) -s -o $@ $< $(LIBS) -mwindows
 
+res.o: res.rc
+	$(WINDRES) -i $< -o $@
 
-clean:
-	rm -f *.o $(WINEXES) *~
-	rm -f *.obj *.sym *.map *.mk* *.lk* *.err oz.res
+version.h: $(SRCTOP)/OZVERSION
+	echo "#define OZVERSION \"`$<`\"" > $@
+
+oz.o ozengine.o ozenginew.o ozwrapper.o ozwrapperw.o oztool.o: startup.hh
+
+$(LIBOBJS): startup.hh
+
+registry.o: version.h
 
 Makefile: Makefile.in config.status
 	./config.status
@@ -71,28 +92,29 @@ Makefile: Makefile.in config.status
 config.status: configure
 	config.status --recheck
 
-check:
+install: $(BINDIR) $(EXES:%=$(BINDIR)/%) $(BINDIR)/mozart.ico
+
+$(BINDIR):
+	$(INSTALL_DIR) $@
+
+$(BINDIR)/%.exe: %.exe
+	$(INSTALL_BIN) $< $@
+
+$(BINDIR)/%.bin: %.bin
+	$(INSTALL_FILE) $< $@
+
+$(BINDIR)/%.ico: %.ico
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -f *.o *.a version.h
+
+veryclean: clean
+	rm -f $(EXES)
+
+distclean: veryclean
+	rm -f Makefile version.h config.cache config.log config.status
 
 depend:
 
-
-.cc.o:
-	$(CXX) $(INCS) -c -o $@ $<
-
-.o.exe:
-	$(CXX) $(INCS) -s -o $@ $<
-
-oz.exe: oz.o
-	$(CXX) $(INCS) -s -o $@ $< -mwindows
-
-ozenginew.exe: ozenginew.o
-	$(CXX) $(INCS) -s -o $@ $< -mwindows
-
-ozwrapperw.exe: ozwrapperw.o
-	$(CXX) $(INCS) -s -o $@ $< -mwindows
-
-version.h: $(SRCTOP)/OZVERSION
-	echo "#define OZVERSION \"`$<`\"" > $@
-
-oz.o oztool.o ozwrapperw.o: misc.cc version.h
-ozengine.o ozenginew.o: oz.cc misc.cc version.h
+check:
