@@ -1,5 +1,10 @@
 -*-outline-*-
 
+* version 0.83
+** ozmake will now automatically compute build-time and install-time
+   dependencies, but sofar only for Oz sources.  This can be
+   controlled by --(no)autodepend, which is true by default.
+
 * version 0.82
 ** honor new OZ_DOTOZ introduced in Mozart 1.2.4
 
