@@ -45,10 +45,7 @@ BuiltinTabEntry *solvedBITabEntry    = NULL;
 Arity *SolveContArity                = NULL;
 
 TaggedRef solvedAtom;
-TaggedRef enumedAtom;
 TaggedRef choiceAtom;
-TaggedRef lastAtom;
-TaggedRef moreAtom;
 TaggedRef entailedAtom;
 TaggedRef stableAtom;
 TaggedRef unstableAtom;
@@ -65,10 +62,7 @@ void SolveActor::Init()
   SolveContArity = aritytable.find(solveContFList);
 
   solvedAtom     = makeTaggedAtom (SEARCH_SOLVED);
-  enumedAtom     = makeTaggedAtom (SEARCH_ENUMED);
   choiceAtom     = makeTaggedAtom (SEARCH_CHOICE);
-  lastAtom       = makeTaggedAtom (SEARCH_LAST);
-  moreAtom       = makeTaggedAtom (SEARCH_MORE);
   entailedAtom   = makeTaggedAtom (SEARCH_ENTAILED);
   stableAtom     = makeTaggedAtom (SEARCH_STABLE);
   unstableAtom   = makeTaggedAtom (SEARCH_UNSTABLE);
@@ -130,58 +124,6 @@ TaggedRef SolveActor::genStuck ()
   stuple->setArg (0, makeTaggedConst
                   (new SolvedBuiltin (solvedBITabEntry, contGRegs,
                                       SolveContArity, stableAtom)));
-  return (makeTaggedSTuple (stuple));
-}
-
-TaggedRef SolveActor::genEnumed (Board *newSolveBB)
-{
-  STuple *stuple = STuple::newSTuple (enumedAtom, 2);
-  RefsArray contGRegs;
-
-  // left side:
-  contGRegs = allocateRefsArray (1);
-  contGRegs[0] = makeTaggedConst (newSolveBB);
-  stuple->setArg (0, makeTaggedConst
-                  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-                                       SolveContArity, lastAtom)));
-
-  // right side - the rest:
-  contGRegs = allocateRefsArray (1);
-  TaggedRef fea = (boardToInstall==NULL) ? moreAtom : lastAtom;
-  contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (1, makeTaggedConst
-                  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-                                       SolveContArity, fea)));
-
-  return (makeTaggedSTuple (stuple));
-}
-
-TaggedRef SolveActor::genEnumedFail ()
-{
-  STuple *stuple = STuple::newSTuple (enumedAtom, 2);
-  RefsArray contGRegs;
-
-  // left side:
-  contGRegs = allocateRefsArray (1);
-  contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (0, makeTaggedConst
-                  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-                                       SolveContArity, lastAtom)));
-
-  // right side - the rest:
-  //: kost@ 21.12.94: not necessary any more;
-  //: Moreover, because the new implementation of OneCallBuiltin,
-  //: it MUST BE NULL!
-  //: contGRegs = allocateRefsArray (1);
-  contGRegs = (RefsArray) NULL;
-  //: contGRegs[0] = makeTaggedConst(solveBoard);  // but it has no impact;
-  OneCallBuiltin *bi = new OneCallBuiltin (solveContBITabEntry, contGRegs,
-                                           SolveContArity, lastAtom);
-  //: kost@ 22.12.94: contGRegs == NULL means now "already seen";
-  //: so, it's not necessary (although quite correct);
-  //: bi->hasSeen ();
-  stuple->setArg (1, makeTaggedConst(bi));
-
   return (makeTaggedSTuple (stuple));
 }
 
@@ -270,7 +212,7 @@ Bool SolveActor::checkExtSuspList ()
 SolveActor::SolveActor (Board *bb, int prio, int compMode,
                         TaggedRef resTR, TaggedRef guiTR)
  : Actor (Ac_Solve, bb, prio, compMode), result (resTR), guidance (guiTR),
-   boardToInstall(NULL), suspList (NULL), threads (1), stable_sl(NULL)
+   suspList (NULL), threads (1), stable_sl(NULL)
 {
   solveBoard = NULL;
   solveVar= makeTaggedNULL();
@@ -288,7 +230,6 @@ SolveActor::~SolveActor()
   solveVar = (TaggedRef) NULL;
   result = (TaggedRef) NULL;
   guidance = (TaggedRef) NULL;
-  boardToInstall = (Board *) NULL;
   suspList = (SuspList *) NULL;
   threads = 0;
 }

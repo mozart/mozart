@@ -103,12 +103,6 @@ public:
 
   void printTree();
 
-  void setCompModeHackForBoardToInstall(int compMode) {
-    flags |= compMode<<16;
-  }
-  int getCompModeHackForBoardToInstall() {
-    return flags>>16;
-  }
   inline void incSuspCount(int n=1);
   void decSuspCount();
   inline Board *getBoardFast();
