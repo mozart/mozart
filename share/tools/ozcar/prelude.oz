@@ -57,10 +57,10 @@ proc {OzcarError M}
 end
 
 fun {V2VS X}
-%   P = {System.get print}
-   P = '#'(depth:1 width:2)
+   Width = {Cget printWidth}
+   Depth = {Cget printDepth}
 in
-   {System.valueToVirtualString X P.depth P.width}
+   {System.valueToVirtualString X Depth Width}
 end
 
 proc {SendEmacs M}
