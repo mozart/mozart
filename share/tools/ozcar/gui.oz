@@ -36,18 +36,30 @@ local
 	 case     {IsArray X}      then ArrayType
 	 elsecase {IsThread X}     then ThreadType
 	 elsecase {IsAtom X}       then case X
-					of 'nil'         then NilAtom
-					[] '|'           then ConsAtom
-					[] '#'           then HashAtom
+					of 'nil'         then "'nil'"
+					[] '|'           then "'|'"
+					[] '#'           then "'#'"
 					[] 'unallocated' then UnAllocatedType
 					else                  '\'' # X # '\''
 					end
-	 elsecase {IsBool X}       then case X then TrueName else FalseName end
+	 elsecase {IsBool X}       then case X then
+					   'true'
+					else
+					   'false'
+					end
 	 elsecase {IsCell X}       then CellType
 	 elsecase {IsClass X}      then ClassType
 	 elsecase {IsDictionary X} then DictionaryType
-	 elsecase {IsFloat X}      then {V2VS X} %NoAction
-	 elsecase {IsInt X}        then X %NoAction
+	 elsecase {IsFloat X}      then case X >= BigFloat then
+					   BigFloatType
+					else
+					   {V2VS X}
+					end
+	 elsecase {IsInt X}        then case X >= BigInt then
+					   BigIntType
+					else
+					   X
+					end
 	 elsecase {IsUnit  X}      then UnitType
 	 elsecase {IsName X}       then NameType
 	 elsecase {IsLock X}       then LockType
@@ -273,11 +285,7 @@ in
 	     case V.1 == '' then skip
 	     elsecase CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
-		   case     AT == UnAllocatedType then skip
-		   elsecase AT == NoAction then
-		      {Widget tk(insert 'end'
-				 {PrintF ' ' # V.1 EnvVarWidth} # V.2 # NL)}
-		   else
+		   case AT == UnAllocatedType then skip else
 		      T  = {Widget newTag($)}
 		      Ac = {New Tk.action
 			    tkInit(parent: Widget
@@ -447,27 +455,23 @@ in
 	    
 	    {ForAll FrameArgs
 	     proc {$ Arg}
-		case Arg.1 == NoAction then
-		   {W tk(insert LineEnd ' ' # Arg.2 LineTag)}
-		else
-		   ArgTag    = {W newTag($)}
-		   ArgAction =
-		   {New Tk.action
-		    tkInit(parent: W
-			   action: proc {$}
-				      {Lck set}
-				      {Browse Arg.2} LastClicked <- Arg.2
-				      {Delay 150}
-				      {Lck unset}
-				   end)}
-		in
-		   {ForAll [tk(insert LineEnd ' ' LineTag)
-			    tk(insert LineEnd Arg.1 q(LineTag ArgTag))
-			    tk(tag bind ArgTag '<1>' ArgAction)
-			    tk(tag conf ArgTag font:BoldFont)] W}
-		end
+		ArgTag    = {W newTag($)}
+		ArgAction =
+		{New Tk.action
+		 tkInit(parent: W
+			action: proc {$}
+				   {Lck set}
+				   {Browse Arg.2} LastClicked <- Arg.2
+				   {Delay 150}
+				   {Lck unset}
+				end)}
+	     in
+		{ForAll [tk(insert LineEnd ' ' LineTag)
+			 tk(insert LineEnd Arg.1 q(LineTag ArgTag))
+			 tk(tag bind ArgTag '<1>' ArgAction)
+			 tk(tag conf ArgTag font:BoldFont)] W}
 	     end}
-	 
+	    
 	    {ForAll [tk(insert LineEnd BraceRight #
 			case UpToDate then nil else
 			   ' (source has changed)' end #
@@ -758,9 +762,11 @@ in
 			{Dbg.checkStopped T} then Gui,StoppedStatus(I A)
 		     else
 			case S == blocked then
-			   {ForAll [rebuild(true) print] Stack}
+			   F L in
+			   {ForAll [rebuild(true) print
+				    getPos(file:F line:L)] Stack}
 			   {Thread.suspend T}
-			   SourceManager,configureBar(S)
+			   SourceManager,bar(file:F line:L state:S)
 			else
 			   {Stack rebuild(true)}
 			end
