@@ -31,6 +31,16 @@ proc {Compile VS}
    end
 end
 
+fun {IsSpecialFrameName Name}
+   case Name of 'lock' then true
+   [] 'exception handler' then true
+   [] 'conditional' then true
+   [] 'exception' then true
+   [] 'unknown' then true
+   else false
+   end
+end
+
 %% send a warning/error message
 proc {OzcarShow X}
    case {Cget verbose} then

@@ -10,21 +10,25 @@ local
 	 TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
 			       title:   'About'
+			       bg:      DefaultBackground
 			       buttons: ['Ok'#tkClose]
-			       focus:   1
+			       %focus:   1
 			       pack:    false
 			       default: 1)
 	 T = {New Tk.label tkInit(parent: self
 				  fg:     SelectedBackground
+				  bg:     DefaultBackground
 				  font:   HelpTitleFont
 				  text:   'Oz Debugger')}
 
 	 V = {New Tk.label tkInit(parent: self
+				  bg:     DefaultBackground
 				  text:   ('Last updated on ' # Version #
 					   '\n' #
 					   'Current platform is ' # Platform))}
 
 	 A = {New Tk.label tkInit(parent: self
+				  bg:     DefaultBackground
 				  text:   NameOfBenni # '\n' # EmailOfBenni)}
       in
 	 {Tk.send pack(T V A side:top expand:true)}
@@ -147,22 +151,26 @@ local
 					 'Reset' # Kill
 					 'Done'  # Close]
 			       pack:    false
-			       default: 1 /* <Return> calls `Eval' */)
+			       default: 1 /* <Return> calls 'Eval' */)
 
-	 ExprLabel = {New Tk.label tkInit(parent: self
-					  width:  7
+	 Frame = {New TkTools.textframe tkInit(parent: self
+					       text: 'Eval Expression' #
+						     ' / Exec Statement')}
+
+	 ExprLabel = {New Tk.label tkInit(parent: Frame.inner
+					  width:  6
 					  anchor: w
-					  text:   'Query: ')}
-	 ExprEntry = {New TkExtEntry tkInit(parent:     self
+					  text:   'Query:')}
+	 ExprEntry = {New TkExtEntry tkInit(parent:     Frame.inner
 					    bd:         1
 					    font:       DefaultFont
 					    background: DefaultBackground
 					    width:      40)}
-	 ResultLabel = {New Tk.label tkInit(parent: self
-					    width:  7
+	 ResultLabel = {New Tk.label tkInit(parent: Frame.inner
+					    width:  6
 					    anchor: w
-					    text:   'Result: ')}
-	 ResultEntry = {New Tk.label tkInit(parent:     self
+					    text:   'Result:')}
+	 ResultEntry = {New Tk.label tkInit(parent:     Frame.inner
 					    relief:     sunken
 					    bd:         1
 					    anchor:     w
@@ -186,10 +194,11 @@ local
 	 {ExprEntry tkBind(event: '<Meta-Return>'
 			   action: Exec)}
 
-	 {Tk.batch [grid(ExprLabel    row:0 column:0)
-		    grid(ExprEntry    row:0 column:1)
-		    grid(ResultLabel  row:1 column:0)
-		    grid(ResultEntry  row:1 column:1)
+	 {Tk.batch [grid(ExprLabel    row:0 column:0 padx:1 pady:1)
+		    grid(ExprEntry    row:0 column:1 padx:3 pady:1)
+		    grid(ResultLabel  row:1 column:0 padx:1 pady:1)
+		    grid(ResultEntry  row:1 column:1 padx:3 pady:1)
+		    grid(Frame        row:0 column:0 padx:1 pady:0)
 		    focus(ExprEntry)]}
 	 EvalDialog,tkPack
       end

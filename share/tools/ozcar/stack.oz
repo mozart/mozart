@@ -244,6 +244,22 @@ in
 	 {Dictionary.put self.D Key {S2F Key Frame}}
       end
 
+      meth CountFramesWithoutDebug(I $)
+	 case I == 0 then
+	    0
+	 else
+	    Frame = {Dictionary.get self.D I}
+	 in
+	    case Frame.args == unit
+	       andthen {Not {IsSpecialFrameName Frame.name}}
+	    then
+	       StackManager, CountFramesWithoutDebug(I - 1 $) + 1
+	    else
+	       0
+	    end
+	 end
+      end
+
       meth exit(Frame)
 	 S = @Size
       in
@@ -252,9 +268,13 @@ in
 	    StackManager, ReCalculate
 	 else
 	    Key = case {Dictionary.get self.D S}.dir == entry then S
-		  else
-		     {Dictionary.remove self.D S}
-		     S - 1
+		  else N in
+		     StackManager,CountFramesWithoutDebug(S - 1 ?N)
+		     {For 0 N 1
+		      proc {$ I}
+			 {Dictionary.remove self.D S - I}
+		      end}
+		     S - (N + 1)
 		  end
 	 in
 	    Size <- Key
