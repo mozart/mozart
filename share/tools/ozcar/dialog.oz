@@ -53,235 +53,34 @@ local
       end
    end
 
-   SL = '/' | '-' | '\\' | '|' | SL
-
-   class EvalDialog from TkTools.dialog
-      prop
-	 final
-	 locking
-      feat
-	 Expr
-	 Result
-      attr
-	 CurComp    : unit
-	 CurCompUI  : unit
-	 CurEnv     : unit
-	 EvalThread : unit
-	 Self       : unit
-
-	 SlashList  : SL
-
-      meth init(master:Master)
-	 proc {EvalInit}
-	    C      = {New Compiler.engine init}
-	    CUI    = {New Compiler.quietInterface init(C)}
-	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
-	 in
-	    CurComp   <- C
-	    CurCompUI <- CUI
-	    CurEnv    <- {Record.adjoinList env
-			  {Filter {Append AuxEnv.'G' AuxEnv.'Y'}
-			   fun {$ V#W}
-			      case V of 'self' then Self <- W false
-			      else true
-			      end
-			   end}}
-	    case {IsFree @Self} then Self <- unit
-	    else skip
-	    end
-
-	    case {Emacs.getOPI} of false then skip
-	    elseof OPI then
-	       {C enqueue(putEnv({{OPI getCompiler($)} enqueue(getEnv($))}))}
-	    end
-	    {C enqueue(mergeEnv(@CurEnv))}
-	    {Wait {C enqueue(ping($))}}
-	    {CUI reset}
-	 end
-
-	 SpinnerLock = {NewLock}
-
-	 proc {Spinner W X}
-	    case {IsFree X} then
-	       S|Sr = @SlashList
-	    in
-	       {Delay 70}
-	       {W tk(conf text:S)}
-	       SlashList <- Sr
-	       {Spinner W X}
-	    else skip end
-	 end
-
-	 proc {Doit V}
-	    case @EvalThread == unit then Sync in
-	       try R in
-		  EvalThread <- {Thread.this}
-		  {OzcarMessage 'Doit: ' # V}
-		  thread
-		     lock SpinnerLock then
-			{Delay 150} %% short calculations don't need a spinner
-			case {IsFree Sync} then
-			   S|Sr = @SlashList
-			in
-			   {self.Result tk(conf fg:DefaultForeground text:S)}
-			   SlashList <- Sr
-			   {Thread.setThisPriority high}
-			   {Spinner self.Result Sync}
-			else skip end
-		     end
-		  end
-		  {EvalInit}
-		  {@CurComp enqueue(setSwitch(expression true))}
-		  {@CurComp enqueue(setSwitch(threadedqueries false))}
-		  {@CurComp enqueue(setSwitch(debuginfovarnames true))}
-		  {@CurComp enqueue(setSwitch(debuginfocontrol true))}
-		  case @Self of unit then
-		     {@CurComp
-		      enqueue(feedVirtualString(V return(result: ?R)))}
-		  else
-		     %% declare `result` in
-		     %% local
-		     %%    class Class1
-		     %%       meth eval($)
-		     %%          <V>
-		     %%       end
-		     %%    end
-		     %% in
-		     %%    {`send` eval(`result`) Class1 `self`}
-		     %% end
-		     {@CurComp enqueue(mergeEnv(env('`self`': @Self)))}
-		     {@CurComp
-		      enqueue(feedVirtualString('{Object.send eval($) ' #
-						'class meth eval($)\n' #
-						V # '\nend end `self`}'
-						return(result: ?R)))}
-		  end
-		  {Wait {@CurComp enqueue(ping($))}}
-		  Sync = unit
-		  lock SpinnerLock then skip end %% wait for spinner to finish
-		  case {@CurCompUI hasErrors($)} then ResultText in
-		     case RunningWithOPI then
-			ResultText = 'Compile Error (see *Oz Compiler* buffer)'
-			{System.printInfo [6 17]#{@CurCompUI getVS($)}#[5]}
-		     else
-			ResultText = 'Compile Error'
-			{System.printInfo {@CurCompUI getVS($)}}
-		     end
-		     {self.Result tk(conf fg:BlockedThreadColor
-				     text:ResultText)}
-		  else
-		     {self.Result tk(conf fg:DefaultForeground
-				     text:{V2VS R})}
-		  end
-		  EvalThread <- unit
-	       catch E=kernel(terminate) then
-		  case @CurComp \= unit then
-		     {@CurComp clearQueue()}
-		     {@CurComp interrupt()}
-		  else skip
-		  end
-		  raise E end
-	       finally
-		  Sync = unit
-	       end
-	    else
-	       skip
-	    end
-	 end
-
-	 proc {Eval}
-	    {Kill}
-	    case {self.Expr tkReturn(get $)} of "" then
-	       {self.Result tk(conf text:'Did you ask something?')}
-	    elseof V then
-	       {Doit V}
-	    end
-	 end
-
-	 proc {Exec}
-	    {Kill}
-	    case {self.Expr tkReturn(get $)} of "" then
-	       {self.Result tk(conf text:'Did you say something?')}
-	    elseof V then
-	       {Doit V # '\nunit'}
-	    end
-	 end
-
-	 proc {Reset}
-	    {Kill}
-	    {self.Result tk(conf text:'')}
-	 end
-
-	 proc {Kill}
-	    lock
-	       case @EvalThread == unit then skip else
-		  {Thread.terminate @EvalThread}
-		  lock SpinnerLock then skip end %% wait for spinner to finish
-		  EvalThread <- unit
-	       end
-	    end
-	 end
-
-	 proc {Close}
-	    {Kill}
-	    {self tkClose}
-	 end
-
-	 TkTools.dialog,tkInit(master:  Master
-			       root:    pointer
-			       title:   'Query'
-			       buttons: ['Eval'  # Eval
-					 'Exec'  # Exec
-					 'Reset' # Reset
-					 'Done'  # Close]
-			       pack:    false)
-	 Frame = {New TkTools.textframe tkInit(parent: self
-					       text: 'Eval Expression' #
-						     ' / Exec Statement')}
-
-	 ExprLabel = {New Tk.label tkInit(parent: Frame.inner
-					  anchor: w
-					  text:   'Query:')}
-	 ExprEntry = {New Tk.entry tkInit(parent:     Frame.inner
-					  font:       DefaultFont
-					  background: DefaultBackground
-					  width:      40)}
-	 ResultLabel = {New Tk.label tkInit(parent: Frame.inner
-					    anchor: w
-					    text:   'Result:')}
-	 ResultEntry = {New Tk.label tkInit(parent:     Frame.inner
-					    relief:     sunken
-					    anchor:     w
-					    font:       DefaultFont
-					    background: DefaultBackground
-					    width:      40)}
-
+   class EvalDialog from TkTools.evalDialog
+      prop final
+      meth init(master: Master)
+	 AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
+	 Self
+	 Env = {Record.adjoinList
+		case {Emacs.getOPI} of false then env
+		elseof OPI then
+		   {{OPI getCompiler($)} enqueue(getEnv($))}
+		end
+		{Filter {Append AuxEnv.'G' AuxEnv.'Y'}
+		 fun {$ V#W}
+		    case V of 'self' then Self = W false
+		    else true
+		    end
+		 end}}
       in
-	 self.Expr = ExprEntry
-	 self.Result = ResultEntry
+	 TkTools.evalDialog, tkInit(master:   Master
+				    root:     pointer
+				    env:      Env
+				    'self':   if {IsFree Self} then unit
+					      else Self
+					      end)
+	 {TkTools.evalDialog, getCompiler($)
+	  enqueue([setSwitch(debuginfovarnames true)
+		   setSwitch(debuginfocontrol true)])}
 
-	 %% how to close the dialog
-	 {self.toplevel tkBind(event: '<Escape>'
-			       action: Close)}
-	 %% resetting (kill eval/exec thread)
-	 {ExprEntry tkBind(event: '<Meta-t>'
-			   action: Reset)}
-	 %% eval expression
-	 {ExprEntry tkBind(event: '<Return>'
-			   action: Eval)}
-	 %% exec statement
-	 {ExprEntry tkBind(event: '<Meta-Return>'
-			   action: Exec)}
-
-	 {Tk.batch [grid(ExprLabel    row:0 column:0 padx:1 pady:1)
-		    grid(ExprEntry    row:0 column:1 padx:3 pady:1)
-		    grid(ResultLabel  row:1 column:0 padx:1 pady:1)
-		    grid(ResultEntry  row:1 column:1 padx:3 pady:1)
-		    grid(Frame        row:0 column:0 padx:1 pady:0)
-		    focus(ExprEntry)]}
-	 EvalDialog,tkPack
       end
-
    end
 
    class SettingsDialog from TkTools.dialog
