@@ -289,6 +289,8 @@ TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
 }
 
 TaggedRef TaskStack::getFrameVariables(int frameId) {
+  Assert(this);
+
   if (frameId < 0 || frameId % frameSz != 0)   // incorrect frame ID
     return NameUnit;
   Frame *frame = array + frameId;
@@ -299,4 +301,22 @@ TaggedRef TaskStack::getFrameVariables(int frameId) {
     return NameUnit;
   OzDebug *dbg = (OzDebug *) Y;
   return dbg->getFrameVariables();
+}
+
+void TaskStack::unleash(int frameId) {
+  Assert(this);
+
+  OzDebugDoit dothislater = DBG_NOSTEP;
+  Frame *auxtos = getTop();
+  while (auxtos != NULL) {
+    if (getFrameId(auxtos) <= frameId)
+      dothislater = DBG_STEP;
+    GetFrame(auxtos,PC,Y,G);
+    if (PC == C_DEBUG_CONT_Ptr) {
+      OzDebugDoit dothis = (OzDebugDoit) (int) G;
+      if (dothis != DBG_EXIT)
+	ReplaceFrame(auxtos,PC,Y,dothislater);
+    } else if (PC == C_EMPTY_STACK)
+      return;
+  }
 }
