@@ -1,4 +1,6 @@
 ;;;
+(standard-display-european 1)
+
 (if (fboundp 'font-lock-add-keywords)
     (font-lock-add-keywords
      'emacs-lisp-mode
@@ -33,7 +35,7 @@
 (defun ozdoc-output (data) (princ data t))
 
 (defconst ozdoc-xml-special-chars
-  "[<>&\000-\010\013-\037\177-\376]")
+  "[<>&\000-\010\013-\037\177-\377]")
 
 (defvar ozdoc-encode-buffer
   (get-buffer-create "* Mozart Encode Buffer *"))
