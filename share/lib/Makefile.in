@@ -255,7 +255,7 @@ ozl: Base.ozf DefaultURL.ozf linker/Print.oz linker/Main.oz linker/Link.oz
 # Installation
 #---------------------------------------------------------------------
 
-.PHONY: install install-stage install-main install-images install-cache
+.PHONY: install install-main install-images install-cache
 
 LIBFUNCTORS = \
 	$(FUNCTORS:%=$(OZLIB)/%)
@@ -265,12 +265,7 @@ BINFILES = \
 BOOTINITTXT	= boot-init.ozt
 BOOTOZCTXT	= boot-ozc.ozt
 
-STAGEEXTRAFILES = \
-	$(OZLIB)/Base.ozf $(OZLIB)/$(BOOTINITTXT) $(OZLIB)/$(BOOTOZCTXT)
-
 install: install-main install-images install-cache
-
-install-stage: install-main $(STAGEEXTRAFILES)
 
 install-main: all \
 	$(OZLIB) $(LIBFUNCTORS) \
@@ -325,21 +320,18 @@ clean:
 	-rm -f $(CLEANFILES)
 
 veryclean: clean
-	-rm -rf $(STAGE1) $(STAGE2) $(STAGE3) $(SAVE)
 
 distclean: veryclean
 	@echo To really make distclean, please use \"cd ..\; make distclean\".
 
 #---------------------------------------------------------------------
-# Bootstrapping and Testing Functors Locally
+# Bootstrapping
 #---------------------------------------------------------------------
 #    make check
 # Test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/emulator.exe
 
-.PHONY: bootstrap stage1 stage2 stage3
-.PHONY: save restore
-.PHONY: check
+.PHONY: bootstrap
 
 # use the boot compiler to create the functors
 bootstrap:
@@ -352,51 +344,6 @@ boot-all:
 		OZINIT=Init.ozf \
 		OZ_LIB=. \
 		OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
-
-STAGE1=./stage1
-STAGE2=./stage2
-STAGE3=./stage3
-
-# stage1: create the initial functors using the installed ones
-stage1:
-	$(MAKE) install-main PREFIX=$(STAGE1)
-
-# stage2: recreate the functors and boot compiler using the stage1 functors
-stage2:
-	$(MAKE) install-stage PREFIX=$(STAGE2) \
-		OZ_LOAD=prefix=$(HOMEURL)/share/=$(STAGE1)/share/:prefix=./=./:.:= \
-		OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
-		OZINIT=$(STAGE1)/share/Init.ozf \
-		OZL=$(STAGE1)/bin/ozl
-
-# stage3: recreate the functors and boot compiler using the stage2
-# boot compiler -- we should compare the generated boot-*.txt files
-# but we don't have a stable comparator yet
-stage3:
-	$(MAKE) boot-init boot-ozc \
-		BOOTINITTXTFROM=$(STAGE2)/share/$(BOOTINITTXT) \
-		BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
-	$(MAKE) install-stage \
-		PREFIX=$(STAGE3) \
-		OZ_LOAD=prefix=$(HOMEURL)/share/=./:prefix=./=./:.:prefix=/=/:= \
-		OZC=$(SRCDIR)/boot-ozc.sh \
-		OZINIT=Init.ozf \
-		OZL=ozl
-
-SAVE=./save
-
-save:
-	-mkdir $(SAVE)
-	-mv -f $(CLEANFILES) save
-
-restore: clean
-	-mv -f $(SAVE)/* .
-	-rmdir $(SAVE)
-
-check:
-	$(MAKE) clean bootstrap stage1 || exit 1
-	$(MAKE) clean stage2 || exit 1
-	$(MAKE) clean stage3
 
 #---------------------------------------------------------------------
 # Boot compiler
