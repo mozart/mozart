@@ -12,7 +12,6 @@ SED             = @SED@
 RM              = @RM@ -f
 EGREP           = @EGREP@
 M4              = @M4@
-GZIP            = @GZIP@
 
 INSTALL         = @INSTALL@
 INSTALLFILE     = $(INSTALL) -m 444
@@ -36,11 +35,10 @@ OZVERSION       = $(TOPDIR)/OZVERSION
 ECHO            = @ECHO@
 
 OZLIBDIRS = \
-        $(OZLIB)/Standard $(OZLIB)/SP $(OZLIB)/OP $(OZLIB)/CP $(OZLIB)/WP \
-        $(OZLIB)/DP \
+        $(OZLIB)/Standard $(OZLIB)/Init $(OZLIB)/SP $(OZLIB)/OP \
+        $(OZLIB)/AP $(OZLIB)/CP $(OZLIB)/WP $(OZLIB)/DP \
         $(OZLIB)/compiler $(OZLIB)/panel $(OZLIB)/browser \
-        $(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler \
-        $(OZLIB)/Init $(OZLIB)/AP
+        $(OZLIB)/explorer $(OZLIB)/ozcar $(OZLIB)/profiler
 OZCARBITMAPDIR = $(BITMAPDIR)/ozcar
 
 STANDARDSRC1 = \
@@ -62,7 +60,7 @@ SPSRC = $(SPSRC1:%=$(SRCDIR)/SP/%) $(SRCDIR)/SP.oz
 OPSRC1 = OS.oz Open.oz Component.oz
 OPSRC = $(OPSRC1:%.oz=$(SRCDIR)/OP/%.oz) $(SRCDIR)/OP.oz
 
-APSRC1 = Application.oz
+APSRC1 = Application.oz ArgParser.oz CgiParser.oz
 APSRC = $(APSRC1:%.oz=$(SRCDIR)/AP/%.oz) $(SRCDIR)/AP.oz
 
 CPSRC1 = Search.oz FD.oz FS.oz
@@ -81,8 +79,9 @@ COMPILERSRC1 = \
         CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
         UnnestFD.oz Assembler.oz Interface.oz \
         GenericInterface.oz QuietInterface.oz
-COMPILERSRCNOVER = $(COMPILERSRC1:%=$(SRCDIR)/compiler/%) $(SRCDIR)/Compiler.oz
-COMPILERSRC = $(COMPILERSRCNOVER) compiler/Opcodes.oz compiler/Version.oz
+COMPILERSRCNOVER = $(COMPILERSRC1:%=$(SRCDIR)/compiler/%) compiler/Opcodes.oz \
+        $(SRCDIR)/Compiler.oz
+COMPILERSRC = $(COMPILERSRCNOVER) compiler/Version.oz
 
 COMPILERPANELSRC1 = CompilerPanelClass.oz
 COMPILERPANELSRC = $(COMPILERPANELSRC1:%=$(SRCDIR)/compiler/%) \
@@ -113,9 +112,8 @@ EXPLORERSRC = $(EXPLORERSRC1:%=$(SRCDIR)/explorer/%) $(SRCDIR)/Explorer.oz
 EMACSSRC = $(SRCDIR)/Emacs.oz
 
 OZCARSRC1 = \
-        prelude.oz string.oz tk.oz config.oz help.oz \
-        tree.oz thread.oz stack.oz source.oz menu.oz dialog.oz gui.oz \
-        ozcar.oz
+        prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
+        stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
 OZCARSRCNOVER = $(OZCARSRC1:%=$(SRCDIR)/ozcar/%) $(SRCDIR)/Ozcar.oz
 OZCARSRC = $(OZCARSRCNOVER) ozcar/version.oz
 
@@ -126,33 +124,33 @@ PROFILERSRC1 = \
 PROFILERSRC = $(PROFILERSRC1:%=$(SRCDIR)/profiler/%) $(SRCDIR)/Profiler.oz
 
 ALLSRCS = \
-        $(STANDARDSRC) $(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
+        $(STANDARDSRC) $(INITSRC) \
+        $(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
         $(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
-        $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) $(INITSRC)
+        $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC)
 
 DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
 DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
 
 ENVS1 = \
-        Base.env Standard.env SP.env OP.env CP.env WP.env DP.env \
+        Base.env Standard.env SP.env OP.env AP.env CP.env WP.env DP.env \
         Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
-        Emacs.env Ozcar.env Profiler.env AP.env
+        Emacs.env Ozcar.env Profiler.env
 ENVS = $(ENVS1:%=$(SRCDIR)/%)
 TYPS = $(ENVS1:%.env=%.typ)
-TYCS = $(ENVS1:%.env=%.tyc)
+TYCS = $(TYPS:%.typ=%.tyc)
 
 LIBFILES = \
         $(ALLSRCS:$(SRCDIR)/%=$(OZLIB)/%) \
         $(ENVS:$(SRCDIR)/%=$(OZLIB)/%) \
-        $(TYPS:%=$(OZLIB)/%) \
         $(TYCS:%=$(OZLIB)/%)
 
 HELPCOMPONENTS = Base.ozc Standard.ozc
 
 COMPONENTS = \
-        OPI.ozc SP.ozc OP.ozc CP.ozc WP.ozc DP.ozc AP.ozc \
-        Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc \
-        Emacs.ozc Ozcar.ozc Profiler.ozc Init.ozc
+        Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
+        Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
+        Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 
@@ -173,25 +171,20 @@ OZCARBITMAPS1 = \
         step.xbm stop.xbm term.xbm unleash.xbm
 OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
-.PHONY: all install clean realclean veryclean
+.PHONY: all install clean realclean veryclean tags
 
-all: Makefile $(COMPONENTS) ozbatch
-
-tycs: $(TYCS)
-
-ozbatch.ozm.gz: ozbatch.ozm
-        $(GZIP) --best < $< > $@
+all: Makefile $(COMPONENTS) $(TYCS) ozbatch
 
 ozbatch.ozm: $(SRCDIR)/MakeAssembly.oz \
         $(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env \
         $(SPSRC) $(SRCDIR)/SP.env $(CPSRC) $(SRCDIR)/CP.env \
-        $(OPSRC) $(TYPS) $(SRCDIR)/OP.env \
-        $(COMPILERSRC) $(SRCDIR)/Compiler.env $(SRCDIR)/BatchCompile.oz
+        $(OPSRC) $(SRCDIR)/OP.env $(COMPILERSRC) $(SRCDIR)/Compiler.env \
+        $(SRCDIR)/BatchCompile.oz
         $(OZMA) -o /tmp/$$$$.ozm $(SRCDIR)/MakeAssembly.oz && \
         /bin/mv -f /tmp/$$$$.ozm $@
 
 ozbatch: $(SRCDIR)/MakeBatch.oz $(SRCDIR)/BatchCompile.oz $(DUMPINTRO) \
-        OP.ozc $(SRCDIR)/OP.env SP.ozc $(SRCDIR)/SP.env \
+        SP.ozc $(SRCDIR)/SP.env OP.ozc $(SRCDIR)/OP.env \
         AP.ozc $(SRCDIR)/AP.env
         $(EXECWITHSTD) $(SRCDIR)/MakeBatch.oz
 
@@ -238,9 +231,6 @@ $(OZCARBITMAPDIR)/%: $(SRCDIR)/ozcar/bitmaps/%
 $(OZLIB)/%.env: $(SRCDIR)/%.env
         $(INSTALLSRC) $< $@
 
-$(OZLIB)/%.typ: %.typ
-        $(INSTALLFILE) $< $@
-
 $(OZLIB)/%.tyc: %.tyc
         $(INSTALLFILE) $< $@
 
@@ -250,7 +240,7 @@ $(OZBIN)/ozbatch: ozbatch
 %.typ: $(SRCDIR)/%.env
         $(ENV2TYPE) $< > $@
 
-%.tyc: $(SRCDIR)/%.typ
+%.tyc: %.typ
         $(COMPILE) $< -o $@
 
 %.ozc:
@@ -263,10 +253,10 @@ OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc AP.ozc \
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env
 
-OP.ozc: $(DUMPINTRO) $(OPSRC) $(TYCS) $(SRCDIR)/SP.env $(SRCDIR)/OP.env
+OP.ozc: $(DUMPINTRO) $(OPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env
 
-AP.ozc: $(DUMPINTRO) $(APSRC) $(SRCDIR)/AP.env $(SRCDIR)/SP.env \
-        $(SRCDIR)/OP.env
+AP.ozc: $(DUMPINTRO) $(APSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
+        $(SRCDIR)/AP.env
 
 CP.ozc: $(DUMPINTRO) $(CPSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env
 
@@ -274,7 +264,7 @@ WP.ozc: $(DUMPINTRO) $(WPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
         $(SRCDIR)/WP.env
 
 DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/WP.env $(SRCDIR)/DP.env $(SRCDIR)/AP.env
+        $(SRCDIR)/AP.env $(SRCDIR)/WP.env $(SRCDIR)/DP.env
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
         $(SRCDIR)/CP.env $(SRCDIR)/Compiler.env
@@ -322,7 +312,7 @@ Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
         $(SRCDIR)/WP.env $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env \
         $(SRCDIR)/Compiler.env $(SRCDIR)/Profiler.env
 
-Makefile: Makefile.in config.status
+Makefile: $(SRCDIR)/Makefile.in config.status
         ./config.status
 
 config.status: configure
