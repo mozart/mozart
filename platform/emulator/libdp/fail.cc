@@ -1205,7 +1205,8 @@ OZ_BI_define(BIfailureDefault,3,0){
   list=oz_cons(oz_pair2(AtomConditions,what),list);
   list=oz_cons(oz_pair2(AtomOp,op),list);
   rec=OZ_recordInit(AtomDp,list);
-  return OZ_raiseError(rec);
+  rec=mkOp1("system",rec);
+  return OZ_raise(rec);
 }OZ_BI_end
 
 
