@@ -229,6 +229,17 @@ undefine(`instruction')
   return COPYABLEPREDICATEREF;
 }
 
+"<R: "{ATOM}">" {
+  strip('<');
+  int i;
+  for (i = 0; ozmatext[i + 3] != '\0'; i++)
+    ozmatext[i] = ozmatext[i + 3];
+  ozmatext[i] = '\0';
+  stripTrans('\'');
+  ozmalval.tagged = OZ_atom(ozmatext);
+  return RUNTIMEPROC;
+}
+
 {ATOM} {
   stripTrans('\'');
   ozmalval.tagged = OZ_atom(ozmatext);
