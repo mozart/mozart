@@ -7,7 +7,7 @@ dnl
 dnl
 dnl
 AC_DEFUN(OZSKEL_MAKE_ABSOLUTE,[
-  if expr "$[$1]" : "/" >/dev/null; then
+  if expr "$[$1]" : "\/" >/dev/null; then
       : ;
   else
       ozcur=`pwd`
