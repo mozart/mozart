@@ -14,8 +14,8 @@ INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_LIB     = $(INSTALL) -m 444
 
 prefix          = @prefix@
-bindir          = $(prefix)/oz/platform/@platform@/tools/$(TOOL)
-libdir          = $(prefix)/oz/tools/$(TOOL)
+bindir          = $(prefix)/platform/@platform@/tools/$(TOOL)
+libdir          = $(prefix)/tools/$(TOOL)
 
 all: gdbm.so gdbm.ozc
 
