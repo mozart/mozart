@@ -160,6 +160,7 @@
 
   <Back>
     <Bib.Extern id="FischerKuhn.93" to="demo.bib" key="FischerKuhn.93"> 
+    <Bib.Extern id="Peek.95"        to="demo.bib" key="Peek.95"> 
 </BOOK>
 
 <!--
