@@ -56,6 +56,15 @@ define
 			     {ToMode ProgLang} VS R)
 	 end
       end
+      meth enqueueRequest(ProgLang Result)
+	 Request = {MakeRequest Result}
+      in
+	 lock
+	    q <- (Request#Result)|@q
+	    FontifierBase,enqueueRequest(
+			     {ToMode ProgLang} Request)
+	 end
+      end
       meth process(Type)
 	 L Transform = case Type
 		       of 'html-color'       then ToHtmlColor
@@ -65,6 +74,13 @@ define
       in
 	 lock L=@q q<-nil FontifierBase,synck end
 	 {ForAll L proc {$ R#Result} {Transform R Result} end}
+      end
+   end
+
+   fun {MakeRequest Req}
+      case Req
+      of simple(In Out) then simple(In _)
+      [] complex(L)     then complex({Map L MakeRequest})
       end
    end
 
@@ -83,16 +99,16 @@ define
       end
    end
 
-   fun {HtmlEscape L}
-      case L of nil then nil
-      [] H|T then
-	 case H
-	 of &< then &&|&l|&t|&;|{HtmlEscape T}
-	 [] &> then &&|&g|&t|&;|{HtmlEscape T}
-	 [] && then &&|&a|&m|&p|&;|{HtmlEscape T}
-	 else H|{HtmlEscape T} end
-      end
-   end
+   fun {HtmlEscape L} L end
+%      case L of nil then nil
+%      [] H|T then
+%	 case H
+%	 of &< then &&|&l|&t|&;|{HtmlEscape T}
+%	 [] &> then &&|&g|&t|&;|{HtmlEscape T}
+%	 [] && then &&|&a|&m|&p|&;|{HtmlEscape T}
+%	 else H|{HtmlEscape T} end
+%      end
+%   end
 
    fun {Face2Color Face}
       case Face
@@ -135,7 +151,10 @@ define
    end
 
    fun {ToHtmlCSS L}
-      SEQ({Map L ToHtmlCSS1})
+      case L
+      of simple(S R) then simple(S {ToHtmlCSS R})
+      [] complex(L)  then complex({Map L ToHtmlCSS})
+      else SEQ({Map L ToHtmlCSS1}) end
    end
 
    fun {ToHtmlColor1 Face#Text L}
@@ -143,7 +162,10 @@ define
    end
 
    fun {ToHtmlColor L}
-      SEQ({Map L ToHtmlColor1})
+      case L
+      of simple(S R) then simple(S {ToHtmlColor R})
+      [] complex(L)  then complex({Map L ToHtmlColor})
+      else SEQ({Map L ToHtmlColor1}) end
    end
 
    fun {ToHtmlMono1 Face#Text L}
@@ -154,7 +176,10 @@ define
    end
 
    fun {ToHtmlMono L}
-      SEQ({Map L ToHtmlMono1})
+      case L
+      of simple(S R) then simple(S {ToHtmlMono R})
+      [] complex(L)  then complex({Map L ToHtmlMono})
+      else SEQ({Map L ToHtmlMono1}) end
    end
    
 end
