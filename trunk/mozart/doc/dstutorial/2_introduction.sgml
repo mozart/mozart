@@ -54,9 +54,9 @@ given by four modules:
 <LIST>
 <ITEM> The module <<Connection>> 
 provides the basic mechanism (known as <EM>tickets</EM>)
-for running applications to connect with each other.
+for active applications to connect with each other.
 <ITEM> The module <<Remote>>
-allows a running application to create
+allows an active application to create
 a new site on another host machine and connect with it.
 <ITEM> The module <<Pickle>> gives the basic primitives
 for storing and retrieving
