@@ -704,18 +704,10 @@ define
 		putTop(SEQ([PCDATA('``') @TopTitle PCDATA('\'\'')]))}
 	       EMPTY
 	    [] author then
-	       Authors <- {Append @Authors
-			   [author(name: OzDocToHTML, Batch(M 1 $))]}
+	       Authors <- {Append @Authors [OzDocToHTML, MakeAuthor(M $)]}
 	       EMPTY
 	    [] 'author.extern' then
-	       case {CondSelect M key unit} of unit then
-		  {@Reporter error(kind: OzDocError
-				   msg: 'missing attribute `key\''
-				   items: [hint(l: 'Node' m: oz(M))])}
-	       elseof Key then
-		  Authors <- {Append @Authors
-			      [{@MyAuthorDB get(M.to Key $)}]}
-	       end
+	       Authors <- {Append @Authors [OzDocToHTML, MakeAuthor(M $)]}
 	       EMPTY
 	    [] meta then
 	       if {HasFeature M value} then
@@ -1578,13 +1570,15 @@ define
 		    OzDocToHTML, Batch(T 1 $)
 		 [] nil then unit
 		 end
-	 Authors = {Filter Ns
-		    fun {$ N}
-		       case {Label N} of author then true
-		       [] 'author.extern' then true
-		       else false
+	 Authors = {FoldR Ns
+		    fun {$ N In}
+		       case N of author(...) then
+			  OzDocToHTML, MakeAuthor(N $)|In
+		       [] 'author.extern'(...) then
+			  OzDocToHTML, MakeAuthor(N $)|In
+		       else In
 		       end
-		    end}
+		    end nil}
 	 if {HasFeature M id} then
 	    TheLabel = M.id
 	 else
@@ -1936,6 +1930,20 @@ define
 				   a(href: @IdxNode#"#"#L HTML)]))}
 	    OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML)
 	 [] nil then skip
+	 end
+      end
+      meth MakeAuthor(M $)
+	 case M of author(...) then
+	    author(name: OzDocToHTML, Batch(M 1 $))
+	 [] 'author.extern'(...) then
+	    case {CondSelect M key unit} of unit then
+	       {@Reporter error(kind: OzDocError
+				msg: 'missing attribute `key\''
+				items: [hint(l: 'Node' m: oz(M))])}
+	       author()
+	    elseof Key then
+	       {@MyAuthorDB get(M.to Key $)}
+	    end
 	 end
       end
       meth FormatAuthors(Authors $)
