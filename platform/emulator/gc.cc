@@ -29,7 +29,7 @@
 #include "cell.hh"
 #include "debug.hh"
 #include "dllist.hh"
-#include "fdgenvar.hh"
+#include "genvar.hh"
 #include "fdhook.hh"
 #include "io.hh"
 #include "misc.hh"
@@ -980,18 +980,6 @@ TaggedRef gcVariable(TaggedRef var)
 }
 
 
-void GenCVariable::gc(void){
-  switch (type){
-  case FDVariable:
-    ((GenFDVariable*)this)->gc();
-    break;
-  default:
-    error("Unexpected type generic variable at %s:%d.",
-          __FILE__, __LINE__);
-    break;
-  }
-} // GenCVariable::gc
-
 void GenFDVariable::gc(void)
 {
   GCMETHMSG("GenFDVariable::gc");
@@ -1006,6 +994,19 @@ void GenFDVariable::gc(void)
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
+
+inline
+
+void GenCVariable::gc(void)
+{
+  Assert(getType()==FDVariable);
+  switch (getType()){
+  case FDVariable:
+  default:
+    ((GenFDVariable*)this)->gc();
+    break;
+  }
+}
 
 inline
 Bool updateVar(TaggedRef var)

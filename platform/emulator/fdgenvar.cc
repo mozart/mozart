@@ -15,7 +15,6 @@
 #endif
 
 #include "genvar.hh"
-#include "fdgenvar.hh"
 #include "bignum.hh"
 
 
@@ -45,9 +44,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
     }
   case CVAR:
     {
-#ifndef CVAR_ONLY_FDVAR
       if (tagged2CVar(term)->getType() != FDVariable) return FALSE;
-#endif
 
 // compute intersection of domains ...
       GenFDVariable* termVar = tagged2GenFDVar(term);
