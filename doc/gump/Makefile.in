@@ -1,4 +1,5 @@
 OZDOC = ozdoc
+OZDOCFLAGS = 
 
 DOCDIR		= /www/mozart/gump
 
@@ -24,11 +25,11 @@ Makefile: Makefile.in config.status
 	./config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-	$(OZDOC) --in=gump.sgml --out=$@ --type=html-color
+	$(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=$@ --type=html-color
 	cp -p $(GIFSRCS) $@
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-	$(OZDOC) --in=gump.sgml --out=gump-tex --type=latex
+	$(OZDOC) $(OZDOCFLAGS) --in=gump.sgml --out=gump-tex --type=latex
 
 install: gump-html $(DOCDIR)
 	cp -p gump-html/* $(DOCDIR)
