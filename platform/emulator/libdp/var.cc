@@ -145,12 +145,12 @@ void gcPerdioVarRecurse(OzVariable *cv)
 Bool checkExportable(TaggedRef var)
 {
   Assert(OZ_isVariable(var));
-  return (isPerdioVar(var) || oz_isFree(var));
+  return (oz_isPerdioVar(var) || oz_isFree(var));
 }
 
 OldPerdioVar *var2PerdioVar(TaggedRef *tPtr)
 {
-  if (isPerdioVar(*tPtr) ) {
+  if (oz_isPerdioVar(*tPtr) ) {
     return tagged2PerdioVar(*tPtr);
   }
 
@@ -220,6 +220,7 @@ void OldPerdioVar::acknowledge(OZ_Term *p){
   redirect(val);
 }
 
+static
 OZ_Return bindPerdioVar(OldPerdioVar *pv, TaggedRef *lPtr, TaggedRef v)
 {
   PD((PD_VAR,"bindPerdioVar by thread: %x",oz_currentThread()));
@@ -270,13 +271,20 @@ void OldPerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 
 OZ_Return OldPerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 {
+  Assert(oz_safeDeref(r)==r);
   if (oz_isRef(r)) {
     TaggedRef *rPtr = tagged2Ref(r);
     TaggedRef rVal = *rPtr;
     TaggedRef lVal = *lPtr;
+    if (!oz_isPerdioVar(rVal)) {
+      // switch binding order
+      if (isSimpleVar(rVal) || isFuture(rVal))  {
+        return oz_cv_unify(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
+      } else {
+        return FAILED;
+      }
+    }
     OzVariable *cv = tagged2CVar(rVal);
-
-    if (cv->getType()!=OZ_VAR_DIST) return FAILED;
 
     OldPerdioVar *lVar = this;
 
@@ -321,7 +329,8 @@ OZ_Return OldPerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 
 
   // PVAR := non PVAR
-  if (!validV(r)) return FAILED;
+  Bool ret = validV(r);
+  if (!ret) return FAILED;
 
   if (am.isLocalSVar(this)) {
     // onToplevel: distributed unification
@@ -361,7 +370,7 @@ void OldPerdioVar::proxyBindV(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
     PD((PD_VAR,"REDIRECT while pending"));
     redirect(val);
   }
-  // pv->dispose();
+  // dispose();
   BT->maybeFreeBorrowEntry(getIndex());
 }
 
@@ -396,9 +405,8 @@ void OldPerdioVar::marshalV(MsgBuffer *bs)
 OZ_Term OldPerdioVar::isDetV()
 {
   if (isObject())  return OZ_true();
-  if (isManager()) return OZ_false(); // RS: CHECK THIS
+  if (isManager()) return OZ_false();
   Assert(isProxy());
-  if (hasVal())  return OZ_true();
   BorrowEntry *be=BT->getBorrow(getIndex());
   return sendIsDet(be);
 }
@@ -408,27 +416,13 @@ OZ_Term OldPerdioVar::isDetV()
 void perdioVarAddSusp(OzVariable *cv, TaggedRef *v,
                       Suspension susp, int unstable)
 {
-  Assert(cv->getType() == OZ_VAR_DIST);
+  Assert(oz_isPerdioVar(makeTaggedCVar(cv)));
   OldPerdioVar *pv = (OldPerdioVar *) cv;
 
   pv->addSuspV(v, susp, unstable);
 }
 
 // interface
-
-void perdioVarPrint(OzVariable* cv,ostream &out,int depth){
-  ((OldPerdioVar*)cv)->printStreamV(out,depth);}
-
-OZ_Return perdioVarUnify(OzVariable* cv,TaggedRef* ptr, TaggedRef val,ByteCode* scp){
-  return ((OldPerdioVar*)cv)->unifyV(ptr,val,scp);}
-
-Bool perdioVarValid(OzVariable* cv, TaggedRef val){
-  return ((OldPerdioVar*)cv)->validV(val);}
-
-VariableStatus perdioVarStatus(OzVariable *cv) {
-  return ((OldPerdioVar*) cv)->statusV();
-}
-
 
 OZ_Term perdioVarIsDet(OzVariable *cv) {
   return ((OldPerdioVar*) cv)->isDetV();

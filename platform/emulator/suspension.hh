@@ -187,9 +187,4 @@ Bool operator == (Suspension a, Suspension b)
   return (a._getPropagator() == b._getPropagator());
 }
 
-#define GETSUSPPTR(S)                           \
-(S.isThread()                                   \
- ? (void *) S.getThread()                       \
- : (void *) S.getPropagator())
-
 #endif

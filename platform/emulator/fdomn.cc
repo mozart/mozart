@@ -1466,7 +1466,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
     }
   }
 
-  AssertFD(y.isConsistent());
+  // mm2: AssertFD(y.isConsistent());
   DEBUG_FD_IR(OZ_FALSE, y.toString() << endl);
 
   return y;

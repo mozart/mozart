@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef __VARIABLEH
-#define __VARIABLEH
+#ifndef __VAR_BASE_HH
+#define __VAR_BASE_HH
 
 #ifdef INTERFACE
 #pragma interface
@@ -36,8 +36,9 @@
 
 #include "tagged.hh"
 #include "susplist.hh"
+// mm2
 #include "board.hh"
-#include "dpInterface.hh"
+
 #ifdef DEBUG_CHECK
 #include "am.hh"
 #endif
@@ -48,20 +49,18 @@
 //   this order is used in the case of CVAR=CVAR unification
 //   e.g. SimpleVariable are bound prefered
 // partial order required:
-//  Simple<<everything
+//  Simple<<Future<<Distributed<<everything
 //  Bool<<FD
-//  ???
 
 enum TypeOfVariable {
+  OZ_VAR_EXT,
   OZ_VAR_SIMPLE,
   OZ_VAR_FUTURE,
-  OZ_VAR_DIST,
   OZ_VAR_BOOL,
   OZ_VAR_FD,
   OZ_VAR_OF,
   OZ_VAR_FS,
-  OZ_VAR_CT,
-  OZ_VAR_EXTENTED
+  OZ_VAR_CT
 };
 
 #ifdef DEBUG_CHECK
@@ -154,13 +153,6 @@ public:
     freeListDispose(this,sizeof(*this));
   }
 
-  // get home node without deref, for faster isLocal
-  Board *getHomeUpdate() {
-    if (getHome1()->isCommitted()) {
-      setHome(getHome1()->derefBoard());
-    }
-    return getHome1();
-  }
   Board *getBoardInternal() { return getHome1(); }
   SuspList *getSuspList() { return suspList; }
   int getSuspListLengthS() { return suspList->length(); }
@@ -270,6 +262,32 @@ void addSuspAnyVar(TaggedRef * v, Suspension susp,int unstable = TRUE)
   }
 }
 
+inline
+Bool isFuture(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FUTURE);
+}
+
+inline
+Future *tagged2Future(TaggedRef t) {
+  Assert(isFuture(t));
+  return (Future *) tagged2CVar(t);
+}
+
+inline
+Bool isSimpleVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_SIMPLE);
+}
+
+inline
+SimpleVar *tagged2SimpleVar(TaggedRef t) {
+  Assert(isSimpleVar(t));
+  return (SimpleVar *) tagged2CVar(t);
+}
+
 /* -------------------------------------------------------------------------
  * Kinded/Free
  * ------------------------------------------------------------------------- */
@@ -288,8 +306,6 @@ VariableStatus oz_cv_status(OzVariable *cv)
     return OZ_FREE;
   case OZ_VAR_FUTURE:
     return OZ_FUTURE;
-  case OZ_VAR_DIST:
-    return perdioVarStatus(cv);
   default:
     return OZ_OTHER;
   }
@@ -319,12 +335,6 @@ inline
 int oz_isFuture(TaggedRef r)
 {
   return isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_FUTURE;
-}
-
-inline
-int oz_isPerdioVar(TaggedRef r)
-{
-  return isCVar(r) && tagged2CVar(r)->getType()==OZ_VAR_DIST;
 }
 
 Bool oz_cv_valid(OzVariable *,TaggedRef *,TaggedRef);

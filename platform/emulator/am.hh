@@ -76,6 +76,21 @@ enum oz_BFlag {
 
 oz_BFlag oz_isBetween(Board *to, Board *varHome);
 
+/*===================================================================
+ * see preparedCalls
+ *=================================================================== */
+
+class CallList {
+public:
+  USEFREELISTMEMORY;
+  TaggedRef proc;
+  RefsArray args;
+
+  CallList *next;
+  CallList(TaggedRef p, RefsArray a) : proc(p), args(a), next(NULL) {}
+  void dispose() { freeListDispose(this,sizeof(*this)); }
+};
+
 /*
  * -----------------------------------------------------------------------
  * Tasks

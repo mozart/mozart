@@ -44,6 +44,7 @@
 #include "debug.hh"
 #include "iso-ctype.hh"
 #include "var_base.hh"
+#include "var_ext.hh"
 #include "var_of.hh"
 #include "solve.hh"
 #include "oz_cpi.hh"
@@ -173,7 +174,7 @@ OZ_BI_define(BIisDet,1,1)
   TaggedRef term = OZ_in(0);
   DEREF(term, _1, _2);
   if (!oz_isVariable(term)) OZ_RETURN(oz_true());
-  if (oz_isPerdioVar(term)) OZ_RETURN(perdioVarIsDet(tagged2CVar(term)));
+  if (oz_isExtVar(term)) OZ_RETURN(oz_getExtVar(term)->isDetV());
   OZ_RETURN(oz_false());
 } OZ_BI_end
 

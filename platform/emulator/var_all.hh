@@ -45,15 +45,14 @@ inline
 Bool oz_cv_validINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val)
 {
   switch (cv->getType()){
-  case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->valid(val);
-  case OZ_VAR_FUTURE:   return ((Future *) cv)->valid(val);
-  case OZ_VAR_DIST:  return (perdioVarValid(cv, val));
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->valid(val);
+  case OZ_VAR_FUTURE:  return ((Future *) cv)->valid(val);
   case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->valid(val);
   case OZ_VAR_FD:      return ((OzFDVariable*) cv)->valid(val);
-  case OZ_VAR_OF:     return ((OzOFVariable*) cv)->valid(val);
-  case OZ_VAR_FS:    return ((OzFSVariable*) cv)->valid(val);
+  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->valid(val);
+  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->valid(val);
   case OZ_VAR_CT:      return ((OzCtVariable*) cv)->valid(val);
-  case OZ_VAR_EXTENTED: return ((ExtentedVar *) cv)->validV(val);
+  case OZ_VAR_EXT:     return ((ExtVar *) cv)->validV(val);
   default: error("not impl"); return FAILED;
   }
 }
@@ -63,15 +62,14 @@ OZ_Return oz_cv_unifyINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
                             ByteCode *scp)
 {
   switch (cv->getType()){
-  case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->unify(ptr,val,scp);
-  case OZ_VAR_FUTURE:   return ((Future *) cv)->unify(ptr,val,scp);
-  case OZ_VAR_DIST:  return (perdioVarUnify(cv, ptr, val, scp));
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->unify(ptr,val,scp);
+  case OZ_VAR_FUTURE:  return ((Future *) cv)->unify(ptr,val,scp);
   case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->unify(ptr,val,scp);
   case OZ_VAR_FD:      return ((OzFDVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_OF:     return ((OzOFVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_FS:    return ((OzFSVariable*) cv)->unify(ptr,val,scp);
+  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->unify(ptr,val,scp);
+  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->unify(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_EXTENTED: return ((ExtentedVar *) cv)->unifyV(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) cv)->unifyV(ptr,val,scp);
   default:  error("not impl"); return FAILED;
   }
 }
@@ -82,15 +80,14 @@ OZ_Return oz_cv_bindINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
 {
   switch (cv->getType()){
     /*
-  case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FUTURE:   return ((Future *) cv)->bind(ptr,val,scp);
-  case OZ_VAR_DIST:  return (perdioVarBind(cv, ptr, val, scp));
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->bind(ptr,val,scp);
+  case OZ_VAR_FUTURE:  return ((Future *) cv)->bind(ptr,val,scp);
   case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->bind(ptr,val,scp);
   case OZ_VAR_FD:      return ((OzFDVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_OF:     return ((OzOFVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FS:    return ((OzFSVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->bind(ptr,val,scp);
+  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->bind(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_EXTENTED: return ((ExtentedVar *) cv)->bindV(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) cv)->bindV(ptr,val,scp);
     */
   default:
     return oz_cv_unify(cv,ptr,val,scp);
@@ -104,10 +101,8 @@ void oz_cv_addSuspINLINE(OzVariable *cv, TaggedRef *v, Suspension susp,
   switch(cv->getType()) {
   case OZ_VAR_FUTURE:
     ((Future *) cv)->addSusp(v, susp, unstable); return;
-  case OZ_VAR_DIST:
-    perdioVarAddSusp(cv, v, susp, unstable); return;
-  case OZ_VAR_EXTENTED:
-    ((ExtentedVar *) cv)->addSuspV(v, susp, unstable); return;
+  case OZ_VAR_EXT:
+    ((ExtVar *) cv)->addSuspV(v, susp, unstable); return;
   default:
     cv->addSuspSVar(susp,unstable);
   }

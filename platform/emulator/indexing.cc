@@ -161,8 +161,8 @@ Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
     }
 
   // mm2: hack: an arbitrary number is check for validity
-  case OZ_VAR_DIST:
-    return (!perdioVarValid(cvar, OZ_int(4711)));
+  case OZ_VAR_EXT:
+    return !oz_cv_validINLINE(cvar,ptr,OZ_int(4711));
 
   default:
     return NO;

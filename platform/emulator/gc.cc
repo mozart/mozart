@@ -1047,12 +1047,11 @@ OzVariable * OzVariable::gcVar(void) {
     return to;
 
 
-  case OZ_VAR_SIMPLE:   to = ((SimpleVar *)this)->gc(); break;
-  case OZ_VAR_FUTURE:   to = ((Future *)this)->gc(); break;
+  case OZ_VAR_SIMPLE: to = ((SimpleVar *)this)->gc(); break;
+  case OZ_VAR_FUTURE: to = ((Future *)this)->gc(); break;
   case OZ_VAR_OF:     to = new OzOFVariable(*(OzOFVariable*) this);break;
-  case OZ_VAR_DIST:  to = gcCopyPerdioVar(this); break;
-  case OZ_VAR_CT:      to = ((OzCtVariable*)this)->gc(); break;
-  case OZ_VAR_EXTENTED: to = ((ExtentedVar *)this)->gcV(); break;
+  case OZ_VAR_CT:     to = ((OzCtVariable*)this)->gc(); break;
+  case OZ_VAR_EXT:    to = ((ExtVar *)this)->gcV(); break;
   default:
     Assert(0);
   }
@@ -1104,15 +1103,14 @@ void OzOFVariable::gcRecurse(void) {
 void OzVariable::gcVarRecurse(void) {
 
   switch (getType()) {
-  case OZ_VAR_SIMPLE:   ((SimpleVar *)this)->gcRecurse(); break;
-  case OZ_VAR_FUTURE:   ((Future *)this)->gcRecurse(); break;
-  case OZ_VAR_DIST:  gcPerdioVarRecurse(this); break;
+  case OZ_VAR_SIMPLE:  ((SimpleVar *)this)->gcRecurse(); break;
+  case OZ_VAR_FUTURE:  ((Future *)this)->gcRecurse(); break;
   case OZ_VAR_BOOL:    Assert(0); break;
   case OZ_VAR_FD:      Assert(0); break;
-  case OZ_VAR_OF:     ((OzOFVariable*)this)->gcRecurse(); break;
-  case OZ_VAR_FS:    Assert(0); break;
+  case OZ_VAR_OF:      ((OzOFVariable*)this)->gcRecurse(); break;
+  case OZ_VAR_FS:      Assert(0); break;
   case OZ_VAR_CT:      ((OzCtVariable*)this)->gcRecurse(); break;
-  case OZ_VAR_EXTENTED: ((ExtentedVar *)this)->gcRecurseV(); break;
+  case OZ_VAR_EXT:     ((ExtVar *)this)->gcRecurseV(); break;
   default:
     Assert(0);
   }
