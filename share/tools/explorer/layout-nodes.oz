@@ -160,17 +160,15 @@ local
 
    
    class LayoutLeaf
-      attr
-	 offset: 0
+      attr offset: 0
 
       meth layout(Break Scale Font)
 	 Canvas = self.canvas
-	 Suffix = self.suffix
       in
 	 LayoutLeaf,Layout(_ 0)
-	 LayoutLeaf,Adjust(Break TreePrefix#Suffix RootX 0 RootY Scale Font)
+	 LayoutLeaf,Adjust(Break RootX 0 RootY Scale Font)
 	 %% move away root link
-	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
+	 {Canvas tk(mo @item 0 ~VerSpaceF * MaxScale)}
 	 {Canvas bounding(~HalfHorSpaceI HalfHorSpaceI VerSpaceI)}
       end
 
@@ -179,17 +177,17 @@ local
 	 offset <- Offset|@offset   
       end
       
-      meth !Adjust(Break MomTree MomX MomByX MyY Scale Font)
+      meth !Adjust(Break MomX MomByX MyY Scale Font)
 	 NewOffset|OldOffset = @offset
       in
-	 case @isDrawn then
+	 case @item>0 then
 	    MyX                 = MomX   + NewOffset
 	    MyByX               = MomByX + NewOffset - OldOffset
 	 in
 	    {self moveNode(MomX MyX MyByX MyY Scale)}
 	    offset <- NewOffset
 	 else
-	    {self drawTree(Break MomTree MomX MyY Scale Font)}
+	    {self drawTree(Break MomX MyY Scale Font)}
 	 end
       end
 
@@ -203,11 +201,11 @@ local
    end
 
    
-   proc {AdjustKids Ks Break MomTree MyX MyByX KidsY Scale Font}
+   proc {AdjustKids Ks Break MyX MyByX KidsY Scale Font}
       case Ks of nil then skip
       [] K|Kr then
-	 {K Adjust(Break MomTree MyX MyByX KidsY Scale Font)}
-	 {AdjustKids Kr Break MomTree MyX MyByX KidsY Scale Font}
+	 {K Adjust(Break MyX MyByX KidsY Scale Font)}
+	 {AdjustKids Kr Break MyX MyByX KidsY Scale Font}
       end
    end
 
@@ -219,20 +217,17 @@ local
       
       meth layout(Break Scale Font)
 	 Canvas = self.canvas
-	 Suffix = self.suffix
 	 Shape  = LayoutNode,Layout($ 0)
       in
 	 {Canvas {GetBoundingBox Shape}}
-	 LayoutNode,Adjust(Break TreePrefix#Suffix
-			   RootX 0 RootY Scale Font)
-	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
+	 LayoutNode,Adjust(Break RootX 0 RootY Scale Font)
+	 {Canvas tk(mo @item 0 ~VerSpaceF * MaxScale)}
       end
 
       meth !Layout(?Shape Offset)
 	 Shape = case @isDirty then SubShapes SubOffsets in
 		    shape <- Shape
-		    case @isHidden then HiddenShape
-		    else
+		    case @isHidden then HiddenShape else
 		       {LayoutKids @kids SubOffsets SubShapes}
 		       RootExtent|{ComputeLayout SubShapes $ ?SubOffsets}
 		    end
@@ -241,24 +236,20 @@ local
 	 offset <- Offset|@offset
       end
       
-      meth !Adjust(Break MomTree MomX MomByX MyY Scale Font)
+      meth !Adjust(Break MomX MomByX MyY Scale Font)
 	 NewOffset|OldOffset = @offset
 	 MyX                 = MomX + NewOffset
 	 MyByX               = MomByX + NewOffset - OldOffset
       in
 	 case @isDirty then
-	    case @isDrawn then
+	    case @item>0 then
 	       isDirty <- false
 	       offset  <- NewOffset
 	       {self moveNode(MomX MyX MyByX MyY Scale)}
 	       case @isHidden then skip else
-		  Suffix = self.suffix
-	       in
-		  {AdjustKids @kids Break TreePrefix#Suffix
-		   MyX MyByX MyY+VerSpaceI Scale Font}
-		  {self.canvas tk(addtag MomTree withtag TreePrefix#Suffix)}
+		  {AdjustKids @kids Break MyX MyByX MyY+VerSpaceI Scale Font}
 	       end
-	    else {self drawTree(Break MomTree MomX MyY Scale Font)}
+	    else {self drawTree(Break MomX MyY Scale Font)}
 	    end
 	 else
 	    offset <- NewOffset
