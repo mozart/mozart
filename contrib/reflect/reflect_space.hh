@@ -85,7 +85,7 @@ public:
   TableClass(void) : HashTable(HT_INTKEY, 2000), id_counter(-1) {}
 
   int add(T_WHAT k, Bool &is_reflected) {
-    DEBUGPRINT(("TableClass::add"));
+    DEBUGPRINT(("TableClass::add -- in --"));
 
     int i = (int) htFind((intlong) k);
     is_reflected = ((i != (int) htEmpty) && (i >= 0));
@@ -94,15 +94,18 @@ public:
     }
     id_counter -= 1;
     htAdd((intlong) k, (void *) id_counter);
+    DEBUGPRINT(("TableClass::add -- out --"));
     return abs(id_counter)-1;
   }
 
   void reflected(T_WHAT k) {
-    DEBUGPRINT(("TableClass::reflected"));
+    DEBUGPRINT(("TableClass::reflected -- in --"));
 
     int i = (int) htFind((intlong) k);
-    Assert((i != (int) htEmpty) && (i < 0));
+    DEBUG_ASSERT((i != (int) htEmpty) && (i < 0));
     htAdd((intlong) k, (void *) -i);
+
+    DEBUGPRINT(("TableClass::reflected -- out --"));
   }
 };
 
