@@ -1,4 +1,5 @@
 oztest
+ozbench
 make-test
 Makefile
 *.ozf
