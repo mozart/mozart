@@ -35,6 +35,24 @@ command line:
 <code display>
 % make install PREFIX=$HOME/mozart-install
 </code></item>
+	<entry class=option><code>--with-inc-dir=?{d1},...,?{dn}</code></entry>
+	<item>When you configure and attempt to build the Mozart
+system, you may discover that some library or package is missing, or
+that the installed version is too old, or that it happens to be
+installed in a very strange place.  In this case, it may be convenient
+to install up to date versions of such libraries and packages in a
+location of your own choosing.  For example, if you configure and
+build a missing package using <code/--prefix=$HOME/, it will normally
+install its include files into <code>$HOME/include</code> and its
+libraries into <code>$HOME/lib</code>.  In that case, when you
+configure Mozart, you could supply the argument:
+<code display>--with--inc-dir=$HOME/include</code>
+to indicate where to look first find additional include files.  There
+are also specific options for specific packages, and they are
+documented later, but our experience is that putting everything in one
+<em/extra/ location is much more convenient.</item>
+	<entry class=option><code>--with-lib-dir=?{d1},...,?{dn}</code></entry>
+	<item>Similar to the above, but for libraries.</item>
       </list>
 </p>
   </subsection>
