@@ -1455,11 +1455,13 @@ OZ_BI_define(unix_pipe,2,2) {
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
 		     NULL,NULL,&si,&pinf)) {
     fprintf(stderr,"dup error %d\n",GetLastError());
-    return raiseUnixError("CreatePipe",0, "Cannot create pipe process.", 
-                          "os");
+    return raiseUnixError("CreatePipe",0, "Cannot create pipe process.",
+			  "os");
   }
 
   int pid = pinf.dwProcessId;
+  CloseHandle(pinf.hProcess);
+  CloseHandle(pinf.hThread);
   CloseHandle(wh1);
   CloseHandle(wh1);
   SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
@@ -1567,18 +1569,20 @@ OZ_BI_define(unix_exec,3,1){
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
-  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
   si.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
 
   PROCESS_INFORMATION pinf;
 
-  if (!CreateProcess(NULL,buf,NULL,NULL,TRUE,
+  if (!CreateProcess(NULL,buf,NULL,NULL,FALSE,
 		     0,NULL,NULL,&si,&pinf)) {
-    return raiseUnixError("exec",0, "Cannot exec process.", 
+    return raiseUnixError("exec",0, "Cannot exec process.",
 			  "os");
   }
+  CloseHandle(pinf.hProcess);
+  CloseHandle(pinf.hThread);
 
   int pid = pinf.dwProcessId;
 
