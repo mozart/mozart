@@ -88,21 +88,24 @@ define
    end
 
    local
-      fun {MakeSortKeySub S}
-         case S of C|Cr then
-            if {Char.isSpace C} then {MakeSortKeySub Cr}
-            else
-               case {CondSelect ReplaceMap C unit} of unit then
-                  OrderMap.C|{MakeSortKeySub Cr}
-               elseof L then {MakeSortKeySub {Append L Cr}}
-               end
+      fun {PreprocessSortKey S}
+         case S of nil then nil
+         [] C|Cr then
+            if {Char.isSpace C} then {PreprocessSortKey Cr}
+            elsecase {CondSelect ReplaceMap C unit}
+            of unit then C|{PreprocessSortKey Cr}
+            [] L then {Append L {PreprocessSortKey Cr}}
             end
-         [] nil then ""
          end
+      end
+      fun {LookUpOrder C}
+         OrderMap.{Char.toLower C}
       end
    in
       fun {MakeSortKey VS#_}
-         {String.toAtom {MakeSortKeySub {VirtualString.toString VS}}}
+         {String.toAtom
+           {Map {PreprocessSortKey {VirtualString.toString VS}}
+            LookUpOrder}}
       end
    end
 
