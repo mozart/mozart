@@ -181,7 +181,8 @@
         <P>
           For example, invoking a statistics action on the following subtree;
         <P>
-          <Picture.extern to="pictures/stat-ex.ps" type=ps info="-width 70">
+          <Picture.extern id="pic.stat-ex"
+                          to="pictures/stat-ex.ps" type=ps info="-width 70">
         <P>
           the second actual argument is as follows:
 <<<stat(c:4 s:1 f:1 b:1

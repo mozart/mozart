@@ -27,7 +27,7 @@
   <P>
     <Figure id="figure.nodes">
       <Caption/Nodes in the search tree./
-      <Table>
+      <Table id="figure.nodes.table">
         <Tr>
           <Th>Node</Th>
           <Th>Kind</Th>
@@ -37,47 +37,59 @@
         <Tr>
           <Td>choice</Td>
           <Td>open</Td>
-          <Td><Picture.Extern to="pictures/c-open.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-open"
+                              inline to="pictures/c-open.ps.gz" type=ps info="-width 40"></Td>
           <Td>light blue</Td>
-          <Td><Picture.Extern to="pictures/b-open.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.b-open"
+                              inline to="pictures/b-open.ps.gz" type=ps info="-width 40"></Td>
           <Td>thin border</Td>
         </Tr>
         <Tr>
           <Td>choice</Td>
           <Td>closed</Td>
-          <Td><Picture.Extern to="pictures/c-closed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-closed"
+                              inline to="pictures/c-closed.ps.gz" type=ps info="-width 40"></Td>
           <Td>blue</Td>
-          <Td><Picture.Extern to="pictures/b-closed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.b-closed"
+                              inline to="pictures/b-closed.ps.gz" type=ps info="-width 40"></Td>
           <Td>thick border</Td>
         </Tr>
         <Tr>
           <Td>solved</Td>
           <Td>suspended</Td>
-          <Td><Picture.Extern to="pictures/c-suspended.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-suspended"
+                              inline to="pictures/c-suspended.ps.gz" type=ps info="-width 40"></Td>
           <Td>light green</Td>
-          <Td><Picture.Extern to="pictures/b-suspended.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.b-suspended"
+                              inline to="pictures/b-suspended.ps.gz" type=ps info="-width 40"></Td>
           <Td>thin border</Td>
         </Tr>
         <Tr>
           <Td>solved</Td>
           <Td>entailed</Td>
-          <Td><Picture.Extern to="pictures/c-entailed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-entailed"
+                              inline to="pictures/c-entailed.ps.gz" type=ps info="-width 40"></Td>
           <Td>green</Td>
-          <Td><Picture.Extern to="pictures/b-entailed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.b-entailed"
+                              inline to="pictures/b-entailed.ps.gz" type=ps info="-width 40"></Td>
           <Td>thick border</Td>
         </Tr>
         <Tr>
           <Td Colspan=2>failed</Td>
-          <Td><Picture.Extern to="pictures/c-failed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-failed"
+                              inline to="pictures/c-failed.ps.gz" type=ps info="-width 40"></Td>
           <Td>red</Td>
-          <Td><Picture.Extern to="pictures/b-failed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.b-failed"
+                              inline to="pictures/b-failed.ps.gz" type=ps info="-width 40"></Td>
           <Td>thin border</Td>
         </Tr>
         <Tr>
           <Td Colspan=2>blocked</Td>
-          <Td><Picture.Extern to="pictures/c-blocked.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-blocked"
+                              inline to="pictures/c-blocked.ps.gz" type=ps info="-width 40"></Td>
           <Td>orange</Td>
-          <Td><Picture.Extern to="pictures/b-blocked.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.b-blocked"
+                              inline to="pictures/b-blocked.ps.gz" type=ps info="-width 40"></Td>
           <Td>thin border</Td>
         </Tr>
       </Table>
@@ -116,7 +128,7 @@
   <P>
   <Figure id="figure.trees">
     <Caption/Hidden subtrees in the search tree./
-      <Table>
+      <Table id="figure.trees.table">
         <Tr>
           <Th>Explored</Th>
 
@@ -126,25 +138,29 @@
         <Tr>
           <Td>partially</Td>
           <Td>yes</Td>
-          <Td><Picture.Extern to="pictures/c-h-part-solved.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-h-part-solved"
+                              inline to="pictures/c-h-part-solved.ps.gz" type=ps info="-width 40"></Td>
           <Td>light green</Td>
         </Tr>
         <Tr>
           <Td>partially</Td>
           <Td>no</Td>
-          <Td><Picture.Extern to="pictures/c-h-part-failed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-h-part-failed"
+                              inline to="pictures/c-h-part-failed.ps.gz" type=ps info="-width 40"></Td>
           <Td>purple</Td>
         </Tr>
         <Tr>
           <Td>fully</Td>
           <Td>yes</Td>
-          <Td><Picture.Extern to="pictures/c-h-solved.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-h-solved"
+                              inline to="pictures/c-h-solved.ps.gz" type=ps info="-width 40"></Td>
           <Td>green</Td>
         </Tr>
         <Tr>
           <Td>fully</Td>
           <Td>no</Td>
-          <Td><Picture.Extern to="pictures/c-h-failed.ps" type=ps info="-width 40"></Td>
+          <Td><Picture.Extern id="pic.c-h-failed"
+                              inline to="pictures/c-h-failed.ps.gz" type=ps info="-width 40"></Td>
           <Td>red</Td>
         </Tr>
       </Table>
