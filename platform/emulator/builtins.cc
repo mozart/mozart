@@ -3314,7 +3314,8 @@ OZ_Return printVS(char*s,int n, int fd, Bool newline)
   if ((ossafewrite(fd,s,n) < 0) ||
       (newline && (ossafewrite(fd,&c,1) < 0))) {
     if (isDeadSTDOUT())
-      am.exitOz(1);
+      //am.exitOz(1);
+      return PROCEED;
     else
       return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_string(OZ_unixError(ossockerrno())));
   }
