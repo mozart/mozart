@@ -83,14 +83,6 @@ TaggedRef OzDebug::getFrameVariables() {
 
 // ------------------ debug stream messages ---------------------------
 
-void debugStreamThread(Thread *thread, Thread *parent) {
-  TaggedRef pairlist =
-    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
-  if (parent != NULL)
-    pairlist = cons(OZ_pairA("par",makeTaggedConst(parent)),pairlist);
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("thr"), pairlist));
-}
-
 void debugStreamBlocked(Thread *thread) {
   TaggedRef pairlist = 
     cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
@@ -140,32 +132,6 @@ void debugStreamUpdate(Thread *thread) {
 OZ_C_proc_begin(BIdebugmode,1)
 {
   return OZ_unify(OZ_getCArg(0),am.debugmode()? NameTrue: NameFalse);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIaddEmacsThreads,1)
-{
-  OZ_declareNonvarArg(0,yesno);
-  if (OZ_isTrue(yesno))
-    ozconf.addEmacsThreads = OK;
-  else if (OZ_isFalse(yesno))
-    ozconf.addEmacsThreads = NO;
-  else
-    oz_typeError(0,"Bool");
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIaddSubThreads,1)
-{
-  OZ_declareNonvarArg(0,yesno);
-  if (OZ_isTrue(yesno))
-    ozconf.addSubThreads = OK;
-  else if (OZ_isFalse(yesno))
-    ozconf.addSubThreads = NO;
-  else
-    oz_typeError(0,"Bool");
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -264,7 +230,6 @@ void execBreakpoint(Thread *t) {
   if (!t->getTrace() || !t->getStep()) {
     t->setTrace(OK);
     t->setStep(OK);
-    debugStreamThread(t);
   }
 }
 
