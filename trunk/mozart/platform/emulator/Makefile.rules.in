@@ -16,7 +16,8 @@ veryclean: realclean
 
 tags::
 	etags --regex='/OZ_C_(io)?proc_begin([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
-	*c *h */*c */*h
+	-o $(SRCDIR)/TAGS \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/*/*c $(SRCDIR)/*/*h
 
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
 
