@@ -351,6 +351,8 @@ int atomcmp(Literal *a, Literal *b)
 {
   if (a==b) return 0;
 
+  if (a->isName() != b->isName()) return a->isName() ? -1 : 1;
+
   int res = strcmp(a->getPrintName(), b->getPrintName());
   if (res < 0) return -1;
   if (res > 0) return  1;
