@@ -1410,19 +1410,22 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
 //                                GC-METHODS
 //*****************************************************************************
 
+inline void AbstractionEntry::gc()
+{
+  abstr = (Abstraction *) abstr->gcSRecord();
+  g     = gcRefsArray(g);
+}
+
 void AbstractionTable::gc()
 {
-  GCMETHMSG("AbstractionTable::gc");
-  AbstractionTable *aux = this;
+  // there may be NULL entries in the table during gc
 
-  while(aux != NULL)
-    {
-      // there may be NULL entries in the table during gc
-      aux->abstr = (Abstraction *) aux->abstr->gcSRecord();
-      aux->g     = gcRefsArray(aux->g);
-      aux->left->gc();
-      aux = aux->right;    // tail recursion optimization
-    }
+  GCMETHMSG("AbstractionTable::gc");
+
+  HashNode * hn = getFirst();
+  for (; hn != NULL; hn = getNext(hn)) {
+    ((AbstractionEntry*) hn->value)->gc();
+  }
 }
 
 void ArityTable::gc ()
@@ -1453,7 +1456,7 @@ void Arity::gc ()
 
 void CodeArea::gc()
 {
-  abstractionTab->gc();
+  abstractionTab.gc();
 }
 
 
