@@ -46,7 +46,7 @@ protected:
   // moves appropriate suspension-list entries onto wake-up stack
   void propagate(TaggedRef, TaggedRef);
   void propagate(TaggedRef, TaggedRef *);
-  SuspList * propagate(TaggedRef, SuspList * &, TaggedRef);
+  void propagate(TaggedRef, SuspList * &, TaggedRef);
 
 public:
   USEHEAPMEMORY;
