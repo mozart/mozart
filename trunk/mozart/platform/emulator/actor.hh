@@ -21,6 +21,8 @@
 #define inline
 #endif
 
+#include "cpstack.hh"
+
 // ------------------------------------------------------------------------
 //  all 'proper' actors; 
 
@@ -125,7 +127,8 @@ public:
     Assert(a->isWait()); return (WaitActor *) a;
   }
 private:
-  Board **childs;
+  Board   **childs;
+  CpStack *cps;
 public:
   WaitActor(Board *s,int prio,
 	    ProgramCounter p,RefsArray y,RefsArray g,RefsArray x, int i, Bool d);
@@ -149,6 +152,11 @@ public:
 
   void dispose(void);
  
+  void pushChoice(WaitActor *wa);
+  void pushChoices(CpStack *pcps);
+  Bool hasChoices();
+
+  CpStack *getCps() { return cps; } 
 };
 
 // ------------------------------------------------------------------------

@@ -17,11 +17,9 @@
 #pragma interface
 #endif
 
-// ------------------------------------------------------------------------
-//  'solve' actors; 
+#include "cpstack.hh"
 
-extern BuiltinTabEntry *solveContBITabEntry;
-extern BuiltinTabEntry *solvedBITabEntry;
+// ------------------------------------------------------------------------
 
 class SolveActor : public Actor {
 public:
@@ -33,17 +31,13 @@ public:
     Assert(a->isSolve());
     return ((SolveActor *) a);
   }
-//  Very special thing: 
-// The procedure that converts the DLLStackEntry to the Actor* (in our case),
-// collects it and returns the DLLStackEntry again (for gc);
-  static DLLStackEntry StackEntryGC (DLLStackEntry entry);
 private:
-  Board *solveBoard;
-  DLLStack orActors;
+  Board     *solveBoard;
+  CpStack   *cps;
   TaggedRef solveVar;
   TaggedRef result;
-  SuspList *suspList;
-  SuspList *stable_sl;
+  SuspList  *suspList;
+  SuspList  *stable_sl;
   int threads;
 public:
   SolveActor(Board *bb, int prio, Bool debug);
@@ -71,9 +65,21 @@ public:
   TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
 
-  void pushWaitActor (WaitActor *a);
-  void pushWaitActorsStackOf (SolveActor *sa);
-  WaitActor *getDisWaitActor ();
+  void pushChoice(WaitActor *wa) {
+    if (cps) { cps->push(wa); } else { cps = new CpStack(wa); }
+  }
+  void pushChoices(CpStack *pcps) {
+    if (cps) { cps->push(pcps); } else { cps = pcps; }
+  }
+  Bool hasChoices() {
+    return (cps ? !cps->isEmpty() : NO);
+  }
+  CpStack *getCps() { return cps; } 
+
+  void popChoice() { Assert(cps); cps->pop(); }
+  WaitActor *topChoice() {
+    return (cps ? cps->getTop() : (WaitActor *) 0);
+  } 
 
   Bool stable_wake(void);
   void add_stable_susp (Thread *thr);
@@ -86,9 +92,6 @@ public:
   TaggedRef genUnstable(TaggedRef arg);
 
 private:
-  WaitActor* getTopWaitActor ();
-  WaitActor* getNextWaitActor ();
-  void unlinkLastWaitActor (); 
   Bool checkExtSuspList ();
 };
 

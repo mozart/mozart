@@ -69,9 +69,14 @@ TaggedRef SolveActor::merge(Board *bb) {
   bb->incSuspCount(solveBoard->getSuspCount());
 
   // adjoin the list of or-actors to the list in actual solve actor!
-  Board *csb = am.currentSolveBoard;
-  if (csb != (Board *) NULL)
-    SolveActor::Cast(csb->getActor())->pushWaitActorsStackOf(this);
+
+  if (hasChoices()) {
+    if (bb->isWait()) {
+      WaitActor::Cast(bb->getActor())->pushChoices(cps);
+    } else if (bb->isSolve()) {
+      SolveActor::Cast(bb->getActor())->pushChoices(cps);
+    }
+  }
 
   return solveVar;
 }
@@ -88,7 +93,7 @@ Board *SolveActor::clone(Board *bb) {
 
 inline
 int SolveActor::choose(int left, int right) {
-  WaitActor *wa = this->getDisWaitActor();
+  WaitActor *wa = this->topChoice();
   
   if (!wa)
     return -1;
@@ -98,6 +103,11 @@ int SolveActor::choose(int left, int right) {
   if (n==0) {
     return 0;
   } else if (n==1) {
+    this->popChoice();
+
+    if (wa->hasChoices())
+      this->pushChoices(wa->getCps());
+
     Board *waitBoard = wa->getChildRef();
 
     waitBoard->setCommitted(solveBoard);
@@ -111,9 +121,6 @@ int SolveActor::choose(int left, int right) {
       return 1;
 
     am.currentThread->pushCont(waitBoard->getBodyPtr());
-  } else {
-    // push back wait actor!
-    this->pushWaitActor(wa);
   }
 
   return 1;
