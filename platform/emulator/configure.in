@@ -111,7 +111,6 @@ if test -z "$AR"; then
     AC_CHECK_PROGS(AR, gar ar, ar)
 fi
 
-OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 AC_PATH_PROG(DEPEND, makedepend, makedepend)
 
 OZTOOL_SH="sh `pwd`/oztool.sh"
@@ -122,7 +121,8 @@ dnl *****************************************************************
 dnl platform
 dnl *****************************************************************
 
-: ${platform=`$PLATFORMSCRIPT`}
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
 AC_SUBST(platform)
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
