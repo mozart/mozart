@@ -814,6 +814,7 @@ If FORCE is non-nil, kill it immediately."
 	       (oz-prepare-emulator-buffer
 		(process-filter (get-buffer-process oz-emulator-buffer)) t))
 	      (t
+	       (setq oz-emulator-buffer "*Oz Emulator*")
 	       (oz-make-comint "ozengine" oz-root-functor)
 	       (oz-prepare-emulator-buffer 'oz-filter t)))
 	(oz-set-title oz-frame-title)
