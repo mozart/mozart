@@ -149,6 +149,8 @@ OZ_BI_define(BIgetConnGrant,4,0){
     if(ret!=OZ_ENTAILED)
       return ret;
     Assert(!comObj->connectgrantrequested);
+    Assert(comObj->connectVar==(OZ_Term) 0x45);
+    Assert(comObj->transtype==(OZ_Term) 0x46);
     comObj->connectVar=var;
     comObj->transtype=type;
     comObj->connectgrantrequested=TRUE;
@@ -207,6 +209,8 @@ void transObjReady(ComObj *comObj,TransObj *transObj) {
 				   oz_nil())));
     OZ_unprotect(&comObj->connectVar);
     OZ_unprotect(&comObj->transtype);
+    DebugCode(comObj->connectVar=(OZ_Term) 0x45);
+    DebugCode(comObj->transtype=(OZ_Term) 0x46);
     comObj->connectgrantrequested=FALSE;
   }
   else
@@ -285,6 +289,8 @@ void comObjDone(ComObj *comObj) {
     OZ_unprotect(&comObj->connectVar);
     OZ_unprotect(&comObj->transtype);
     comObj->connectgrantrequested=FALSE;
+    DebugCode(comObj->connectVar=(OZ_Term) 0x45);
+    DebugCode(comObj->transtype=(OZ_Term) 0x46);
   }
   // Requestor=requestor(id:SiteId req:comObj)
   OZ_Term Requestor=OZ_recordInit(oz_atom("requestor"),
