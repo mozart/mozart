@@ -13,6 +13,8 @@ OZGSRCS = \
 	LambdaParser.ozg LambdaScanner.ozg TestParser.ozg TestScanner.ozg
 MISCSRCS = \
 	Lambda.in
+GIFSRCS = \
+	gump.gif
 
 .PHONY: all install clean veryclean distclean
 
@@ -22,7 +24,8 @@ Makefile: Makefile.in config.status
 	./config.status
 
 gump-html: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
-	$(OZDOC) --in=gump.sgml --out=gump-html --type=html-color
+	$(OZDOC) --in=gump.sgml --out=$@ --type=html-color
+	cp -p $(GIFSRCS) $@
 
 gump-tex: $(OZGSRCS) $(SGMLSRCS) $(MISCSRCS)
 	$(OZDOC) --in=gump.sgml --out=gump-tex --type=latex
