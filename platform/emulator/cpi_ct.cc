@@ -29,40 +29,40 @@
 
 //-----------------------------------------------------------------------------
 
-void * OZ_GenConstraint::operator new(size_t s, int align)
+void * OZ_Ct::operator new(size_t s, int align)
 {
   return alignedMalloc(s, align);
 }
 
-void OZ_GenConstraint::operator delete(void * p, size_t s)
+void OZ_Ct::operator delete(void * p, size_t s)
 {
   freeListDispose(p, s);
 }
 
-void * OZ_GenCtVar::operator new(size_t s)
+void * OZ_CtVar::operator new(size_t s)
 {
   return CpiHeap.alloc(s);
 }
 
-void OZ_GenCtVar::operator delete(void * p, size_t s)
+void OZ_CtVar::operator delete(void * p, size_t s)
 {
   // deliberately left empty
 }
 
 #ifdef __GNUC__
-void * OZ_GenCtVar::operator new[](size_t s)
+void * OZ_CtVar::operator new[](size_t s)
 {
   return CpiHeap.alloc(s);
 }
 
-void OZ_GenCtVar::operator delete[](void * p, size_t s)
+void OZ_CtVar::operator delete[](void * p, size_t s)
 {
   // deliberately left empty
 }
 #endif
 
 
-void OZ_GenCtVar::ask(OZ_Term v)
+void OZ_CtVar::ask(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
@@ -79,7 +79,7 @@ void OZ_GenCtVar::ask(OZ_Term v)
 }
 
 
-void OZ_GenCtVar::read(OZ_Term v)
+void OZ_CtVar::read(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
@@ -99,7 +99,7 @@ void OZ_GenCtVar::read(OZ_Term v)
       setSort(var_e);
 
       GenCtVariable * ctvar = tagged2GenCtVar(v);
-      OZ_GenConstraint * constr = ctvar->getConstraint();
+      OZ_Ct * constr = ctvar->getConstraint();
 
       if (oz_onToplevel())
         ctSaveConstraint(constr);
@@ -116,7 +116,7 @@ void OZ_GenCtVar::read(OZ_Term v)
       setSort(var_e);
 
       GenCtVariable * ctvar = tagged2GenCtVar(v);
-      OZ_GenConstraint * constr = ctvar->getConstraint();
+      OZ_Ct * constr = ctvar->getConstraint();
 
       if (isState(glob_e) || oz_onToplevel()) {
         ctSetGlobalConstraint(constr);
@@ -141,7 +141,7 @@ void OZ_GenCtVar::read(OZ_Term v)
 }
 
 
-void OZ_GenCtVar::readEncap(OZ_Term v)
+void OZ_CtVar::readEncap(OZ_Term v)
 {
   Assert(oz_isRef(v) || !oz_isVariable(v));
 
@@ -168,9 +168,9 @@ void OZ_GenCtVar::readEncap(OZ_Term v)
     } else {
     // fs var entered first time
 
-      OZ_GenConstraint * constr = ctvar->getConstraint();
+      OZ_Ct * constr = ctvar->getConstraint();
 
-      OZ_GenConstraint * constr_copy = ctSetEncapConstraint(constr);
+      OZ_Ct * constr_copy = ctSetEncapConstraint(constr);
 
       ctSetConstraintProfile();
 
@@ -192,7 +192,7 @@ void OZ_GenCtVar::readEncap(OZ_Term v)
 }
 
 
-OZ_Boolean OZ_GenCtVar::tell(void)
+OZ_Boolean OZ_CtVar::tell(void)
 {
   if (testReifiedFlag(var))
     unpatchReifiedCt(var);
@@ -205,7 +205,7 @@ OZ_Boolean OZ_GenCtVar::tell(void)
     Assert(isSort(var_e)); // must be constraint variable
 
     GenCtVariable * ctvar = tagged2GenCtVar(var);
-    OZ_GenConstraint * constr = ctGetConstraint();
+    OZ_Ct * constr = ctGetConstraint();
 
     if (constr->isValue()) {
       // a variable has been constrained to a value
@@ -228,7 +228,7 @@ OZ_Boolean OZ_GenCtVar::tell(void)
       goto f;
     } else {
 
-      OZ_GenWakeUpDescriptor wakeup_descr = ctGetWakeUpDescrptor();
+      OZ_CtWakeUp wakeup_descr = ctGetWakeUpDescrptor();
 
       ctvar->propagate(wakeup_descr, pc_propagator);
 
@@ -256,7 +256,7 @@ f:
 }
 
 
-void OZ_GenCtVar::fail(void)
+void OZ_CtVar::fail(void)
 {
   if (isSort(val_e))
     return;
@@ -274,9 +274,7 @@ void OZ_GenCtVar::fail(void)
 }
 
 
-OZ_Return OZ_mkCtVariable(OZ_Term v,
-                          OZ_GenConstraint * c,
-                          OZ_GenDefinition * d)
+OZ_Return OZ_mkCtVariable(OZ_Term v, OZ_Ct * c, OZ_CtDefinition * d)
 {
   return tellBasicConstraint(v, c, d);
 }

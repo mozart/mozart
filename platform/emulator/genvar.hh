@@ -88,7 +88,7 @@ private:
     TypeOfGenCVariable var_type;
     OZ_FiniteDomain   * patchDomain;
     OZ_FSetConstraint * patchFSet;
-    OZ_GenConstraint  * patchCt;
+    OZ_Ct             * patchCt;
   } u;
 
   enum u_mask_t {u_fd = 0, u_bool = 1, u_fset = 2, u_ct = 3, u_mask = 3};

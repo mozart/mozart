@@ -37,11 +37,11 @@ class GenCtVariable : public GenCVariable {
 
   friend class GenCVariable;
   friend OZ_Return tellBasicConstraint(OZ_Term,
-                                       OZ_GenConstraint *,
-                                       OZ_GenDefinition *);
-  friend OZ_Boolean OZ_GenCtVar::tell(void);
+                                       OZ_Ct *,
+                                       OZ_CtDefinition *);
+  friend OZ_Boolean OZ_CtVar::tell(void);
 
-  friend void addSuspCtVar(OZ_Term , Suspension , OZ_GenWakeUpDescriptor);
+  friend void addSuspCtVar(OZ_Term , Suspension , OZ_CtWakeUp);
 
 private:
   // --------------------
@@ -50,19 +50,19 @@ private:
   // if this pointer is `NULL', the variable is constrained to the
   // least constraint of this kind
 
-  OZ_GenConstraint * _constraint;
-  OZ_GenDefinition * _definition;
+  OZ_Ct * _constraint;
+  OZ_CtDefinition * _definition;
   SuspList ** _susp_lists;
 
   // ------------------------
   // private member functions
 
-  void propagate(OZ_GenWakeUpDescriptor, PropCaller);
+  void propagate(OZ_CtWakeUp, PropCaller);
   void propagateUnify() {
     propagate(OZ_WAKEUP_ALL, pc_cv_unif);
   }
 
-  void copyConstraint(OZ_GenConstraint * c) {
+  void copyConstraint(OZ_Ct * c) {
     _constraint = c->copy();
   }
 
@@ -83,7 +83,7 @@ public:
             : (SuspList *) NULL);
   }
 
-  GenCtVariable(OZ_GenConstraint * c, OZ_GenDefinition * d,Board *bb)
+  GenCtVariable(OZ_Ct * c, OZ_CtDefinition * d,Board *bb)
     : _definition(d), GenCVariable(CtVariable,bb)
   {
     Assert(c);
@@ -100,20 +100,20 @@ public:
       _susp_lists[i] = (SuspList *) NULL;
   }
 
-  OZ_GenConstraint * getConstraint(void) {
+  OZ_Ct * getConstraint(void) {
     return _constraint;
   }
 
-  OZ_GenDefinition * getDefinition(void) {
+  OZ_CtDefinition * getDefinition(void) {
     return _definition;
   }
 
-  OZ_GenConstraint * getReifiedPatch(void) {
-    return (OZ_GenConstraint *) (u.var_type & ~u_mask);
+  OZ_Ct * getReifiedPatch(void) {
+    return (OZ_Ct *) (u.var_type & ~u_mask);
   }
 
-  void patchReified(OZ_GenConstraint * s) {
-    u.patchCt = (OZ_GenConstraint *) ToPointer(ToInt32(s) | u_ct);
+  void patchReified(OZ_Ct * s) {
+    u.patchCt = (OZ_Ct *) ToPointer(ToInt32(s) | u_ct);
     setReifiedFlag();
   }
 
@@ -152,7 +152,7 @@ public:
 };
 
 
-OZ_Return tellBasicConstraint(OZ_Term, OZ_GenConstraint *, OZ_GenDefinition *);
+OZ_Return tellBasicConstraint(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 
 
 #ifndef OUTLINE
@@ -162,8 +162,8 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_GenConstraint *, OZ_GenDefinition *);
 
 GenCtVariable * tagged2GenCtVar(OZ_Term);
 Bool isGenCtVar(OZ_Term term, TypeOfTerm tag);
-OZ_GenConstraint * unpatchReifiedCt(OZ_Term t);
-void addSuspCtVar(OZ_Term, Suspension, OZ_GenWakeUpDescriptor);
+OZ_Ct * unpatchReifiedCt(OZ_Term t);
+void addSuspCtVar(OZ_Term, Suspension, OZ_CtWakeUp);
 
 #endif
 

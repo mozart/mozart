@@ -51,8 +51,8 @@ struct _spawnVars_t {
     OZ_FDPropState fd;
     OZ_FSetPropState fs;
     struct {
-      OZ_GenDefinition * def;
-      OZ_GenWakeUpDescriptor w;
+      OZ_CtDefinition * def;
+      OZ_CtWakeUp w;
     } ct;
   } state;
 };
@@ -103,9 +103,9 @@ void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v);
 void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v);
 void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v);
 
-void staticAddSpawnProp(OZ_GenDefinition * def, OZ_Term * v);
-void staticAddSpawn(OZ_GenDefinition * def,
-                    OZ_GenWakeUpDescriptor w,
+void staticAddSpawnProp(OZ_CtDefinition * def, OZ_Term * v);
+void staticAddSpawn(OZ_CtDefinition * def,
+                    OZ_CtWakeUp w,
                     OZ_Term * v);
 
 #if !defined(OUTLINE)

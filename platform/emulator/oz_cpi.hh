@@ -533,28 +533,28 @@ int * OZ_getCIntVector(OZ_Term, int *);
 //-----------------------------------------------------------------------------
 // Interface to Generic Constraint Systems
 
-class OZ_GenConstraint;
+class OZ_Ct;
 
 //-----------------------------------------------------------------------------
-// OZ_GenDefinition
+// OZ_CtDefinition
 
-class OZ_GenDefinition {
+class OZ_CtDefinition {
 public:
   virtual int getKind(void) = 0;
   virtual int getNoOfWakeUpLists(void) = 0;
   virtual char ** getNamesOfWakeUpLists(void) = 0;
   virtual char * getName(void) = 0;
-  virtual OZ_GenConstraint * toConstraint(OZ_Term) = 0;
-  virtual OZ_GenConstraint * leastConstraint(void) = 0;
+  virtual OZ_Ct * toConstraint(OZ_Term) = 0;
+  virtual OZ_Ct * leastConstraint(void) = 0;
   virtual OZ_Boolean isValidValue(OZ_Term) = 0;
 
 };
 
 //-----------------------------------------------------------------------------
-// OZ_GenWakeUpDescriptor
+// OZ_CtWakeUp
 
 // there are not more than 32 wake up lists
-class OZ_GenWakeUpDescriptor {
+class OZ_CtWakeUp {
 private:
   unsigned _wakeUpDescriptor;
 public:
@@ -563,56 +563,56 @@ public:
   OZ_Boolean isEmpty(void) { return (_wakeUpDescriptor == 0); }
   OZ_Boolean setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
   OZ_Boolean isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
-  static OZ_GenWakeUpDescriptor getWakeUpAll(void) {
-    OZ_GenWakeUpDescriptor aux;
+  static OZ_CtWakeUp getWakeUpAll(void) {
+    OZ_CtWakeUp aux;
     aux._wakeUpDescriptor = 0xffff;
     return aux;
   };
 };
 
-#define OZ_WAKEUP_ALL OZ_GenWakeUpDescriptor::getWakeUpAll()
+#define OZ_WAKEUP_ALL OZ_CtWakeUp::getWakeUpAll()
 
 //-----------------------------------------------------------------------------
-// OZ_GenConstraintProfile
+// OZ_CtProfile
 
-class OZ_GenConstraintProfile {
+class OZ_CtProfile {
 public:
-  OZ_GenConstraintProfile(void) {}
-  virtual void init(OZ_GenConstraint *) = 0;
+  OZ_CtProfile(void) {}
+  virtual void init(OZ_Ct *) = 0;
 
 };
 
 //-----------------------------------------------------------------------------
-// OZ_GenConstraint
+// OZ_Ct
 
-class OZ_GenConstraint {
+class OZ_Ct {
 
 public:
-  OZ_GenConstraint(void) {}
+  OZ_Ct(void) {}
   virtual OZ_Boolean isValue(void) = 0;
   virtual OZ_Term toValue(void) = 0;
   virtual OZ_Boolean isValid(void) = 0;
-  virtual OZ_Boolean isWeakerThan(OZ_GenConstraint *) = 0;
-  virtual OZ_GenConstraint * unify(OZ_GenConstraint *) = 0;
+  virtual OZ_Boolean isWeakerThan(OZ_Ct *) = 0;
+  virtual OZ_Ct * unify(OZ_Ct *) = 0;
   virtual OZ_Boolean unify(OZ_Term) = 0;
   virtual size_t sizeOf(void) = 0;
-  virtual OZ_GenConstraintProfile * getProfile(void) = 0;
-  virtual OZ_GenWakeUpDescriptor getWakeUpDescriptor(OZ_GenConstraintProfile *) = 0;
+  virtual OZ_CtProfile * getProfile(void) = 0;
+  virtual OZ_CtWakeUp getWakeUpDescriptor(OZ_CtProfile *) = 0;
   virtual char * toString(int) = 0;
-  virtual OZ_GenConstraint * copy(void) = 0;
+  virtual OZ_Ct * copy(void) = 0;
 
   static void * operator new(size_t, int align = sizeof(void *));
   static void operator delete(void *, size_t);
 };
 
 //-----------------------------------------------------------------------------
-// OZ_GenCtVar
+// OZ_CtVar
 
-class OZ_GenCtVar {
+class OZ_CtVar {
 private:
 
-  OZ_GenConstraintProfile * _profile; // necessary ?
-  OZ_GenDefinition * _definition;
+  OZ_CtProfile * _profile; // necessary ?
+  OZ_CtDefinition * _definition;
 
   OZ_Term var;
   OZ_Term * varPtr;
@@ -627,21 +627,21 @@ private:
 
   OZ_Boolean tell(void);
 
-  void ctSetLocalConstraint(OZ_GenConstraint * c) {
+  void ctSetLocalConstraint(OZ_Ct * c) {
     ctRefConstraint(c);
   }
-  void ctSetGlobalConstraint(OZ_GenConstraint * c) {
+  void ctSetGlobalConstraint(OZ_Ct * c) {
     // copy constraint ...
     this->ctSaveConstraint(c);
     // ... but compute on constraint in store
     this->ctRefConstraint(c);
   }
-  OZ_GenConstraint * ctSetEncapConstraint(OZ_GenConstraint * c) {
+  OZ_Ct * ctSetEncapConstraint(OZ_Ct * c) {
     // copy constraint and compute on the copy
     return ctRefConstraint(ctSaveConstraint(c));
   }
 
-  OZ_GenWakeUpDescriptor ctGetWakeUpDescrptor(void) {
+  OZ_CtWakeUp ctGetWakeUpDescrptor(void) {
     return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
   }
 
@@ -649,18 +649,18 @@ protected:
 
   virtual void ctSetValue(OZ_Term) = 0;
 
-  virtual OZ_GenConstraint * ctRefConstraint(OZ_GenConstraint *) = 0;
-  virtual OZ_GenConstraint * ctSaveConstraint(OZ_GenConstraint *) = 0;
+  virtual OZ_Ct * ctRefConstraint(OZ_Ct *) = 0;
+  virtual OZ_Ct * ctSaveConstraint(OZ_Ct *) = 0;
   virtual void ctRestoreConstraint() = 0;
 
   virtual void ctSetConstraintProfile(void) = 0;
-  virtual OZ_GenConstraintProfile * ctGetConstraintProfile(void) = 0;
+  virtual OZ_CtProfile * ctGetConstraintProfile(void) = 0;
 
-  virtual OZ_GenConstraint * ctGetConstraint(void) = 0;
+  virtual OZ_Ct * ctGetConstraint(void) = 0;
 
 public:
 
-  OZ_GenCtVar(void) {}
+  OZ_CtVar(void) {}
 
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
@@ -682,7 +682,7 @@ public:
 //-----------------------------------------------------------------------------
 // Misc
 
-OZ_Return OZ_mkCtVariable(OZ_Term, OZ_GenConstraint *, OZ_GenDefinition *);
+OZ_Return OZ_mkCtVariable(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
@@ -707,12 +707,12 @@ private:
 protected:
   void addSpawn(OZ_FDPropState, OZ_Term *);
   void addSpawn(OZ_FSetPropState, OZ_Term *);
-  void addSpawn(OZ_GenDefinition *, OZ_GenWakeUpDescriptor, OZ_Term *);
+  void addSpawn(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
 
   void addSuspend(OZ_Term *);
   void addSuspend(OZ_FDPropState, OZ_Term *);
   void addSuspend(OZ_FSetPropState, OZ_Term *);
-  void addSuspend(OZ_GenDefinition *, OZ_GenWakeUpDescriptor, OZ_Term *);
+  void addSuspend(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
 
 public:
   OZ_Expect(void);
@@ -740,9 +740,7 @@ public:
   OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectList(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectStream(OZ_Term st);
-  OZ_expect_t expectGenCtVar(OZ_Term,
-                             OZ_GenDefinition *,
-                             OZ_GenWakeUpDescriptor);
+  OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
 
   OZ_Return impose(OZ_Propagator * p,
                    int prio = OZ_getMediumPrio(),
