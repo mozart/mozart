@@ -717,10 +717,16 @@ void atom2buffer(ostream &out, Literal *a)
 }
 
 inline
-void name2buffer(ostream &out, Literal *a)
-{
+void name2buffer(ostream &out, Literal *a) {
   char *s = a->getPrintName();
-  if (!*s) {
+
+  if (literalEq(makeTaggedLiteral(a),NameTrue))  {
+    out << "true";
+  } else if (literalEq(makeTaggedLiteral(a),NameFalse)) {
+    out << "false";
+  } else if (literalEq(makeTaggedLiteral(a),NameUnit)) {
+    out << "unit";
+  } else if (!*s) {
     out << "<N>";
   } else {
     out << "<N: " << s << '>';
@@ -801,7 +807,50 @@ static
 int listWidth = 0;
 
 inline
+Bool isNiceHash(TaggedRef t, int width) {
+  if (width <= 0) return OK;
+
+  if (!isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair)) 
+    return NO;
+
+  int w = tagged2SRecord(t)->getWidth();
+
+  return ((w <= width) && (w > 1)) ? OK : NO;
+}
+
+inline
+Bool isNiceList(TaggedRef l, int width) {
+  if (width <= 0) return OK;
+
+  while (isCons(l) && width--> 0) {
+    l = deref(tail(l));
+  }
+  
+  if (isNil(l)) return OK;
+
+  return NO;
+}
+
+inline
 void record2buffer(ostream &out, SRecord *sr,int depth) {
+  if (isNiceHash(makeTaggedSRecord(sr), listWidth)) {
+    int len = sr->getWidth();
+    for (int i=0; i < len; i++) {
+      TaggedRef arg = deref(sr->getArg(i));
+      if (isNiceHash(arg,listWidth) ||
+	  (isCons(arg) && !isNiceList(arg,listWidth))) {
+	out << '(';
+	value2buffer(out, sr->getArg(i), depth-1);
+	out << ')';
+      } else {
+	value2buffer(out, sr->getArg(i), depth-1);
+      }
+      if (i+1!=len)
+	out << '#';
+    }
+    return;
+  }
+
   value2buffer(out,sr->getLabel());
   out << '(';
   if (depth <= 0) {
@@ -814,6 +863,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 	out << ' ';
 	value2buffer(out,sr->getArg(i),depth-1);
       }
+      
       if (sr->getWidth() > listWidth)
 	out << " ,,,";
     } else {
@@ -852,21 +902,15 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
   out << ')';
 }
 
-
 inline
 void list2buffer(ostream &out, LTuple *list,int depth) {
   int width = listWidth;
 
   if (width > 0) {
-    TaggedRef l = deref(list->getTail());
-    width--;
-    while (isCons(l) && width-- > 0) {
-      l = deref(tail(l));
-    }
 
-    if (isNil(l)) {
+    if (isNiceList(makeTaggedLTuple(list),width)) {
       out << '[';
-      l = makeTaggedLTuple(list);
+      TaggedRef l = makeTaggedLTuple(list);
       while (isCons(l)) {
 	value2buffer(out, head(l), depth-1);
 	l = deref(tail(l));
@@ -878,19 +922,17 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
       return;
     }
 
-    width = listWidth;
-
     while (width-- > 0) { 
       OZ_Term a=deref(list->getHead());
-      if (isCons(a)) {
-	out << '('; value2buffer(out,a,depth-1); out << ')';
+      if (isCons(a) && !isNiceList(a,listWidth)) {
+	out << '('; value2buffer(out,list->getHead(),depth-1); out << ')';
       } else {
-	value2buffer(out,a,depth-1);
+	value2buffer(out,list->getHead(),depth-1);
       }
       out << '|';
       OZ_Term t=deref(list->getTail());
       if (!isCons(t)) {
-	value2buffer(out,t,depth);
+	value2buffer(out,list->getTail(),depth);
 	return;
       }
       list = tagged2LTuple(t);
