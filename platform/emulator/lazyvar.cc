@@ -47,13 +47,11 @@
 void
 GenLazyVariable::kickLazy()
 {
-  static RefsArray args = allocateStaticRefsArray(20);
   if (function!=0) {
     if (OZ_isProcedure(function)||OZ_isObject(function))
       {
         Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-        args[0] = result;
-        thr->pushCall(function,args,1);
+        thr->pushCall(function,result);
         am.scheduleThread(thr);
       }
     else if (OZ_isCons(function) ||
@@ -67,8 +65,7 @@ GenLazyVariable::kickLazy()
             // 1#P ==> thread {P ME} end
             {
               Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-              args[0] = result;
-              thr->pushCall(snd,args,1);
+              thr->pushCall(snd,result);
               am.scheduleThread(thr);
               break;
             }
@@ -82,9 +79,7 @@ GenLazyVariable::kickLazy()
             // 3#URL ==> thread {Load URL ME} end
             {
               Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-              args[0] = snd;
-              args[1] = result;
-              thr->pushCall(BI_load,args,2);
+              thr->pushCall(BI_load,snd,result);
               am.scheduleThread(thr);
               break;
             }
@@ -93,11 +88,11 @@ GenLazyVariable::kickLazy()
             if (OZ_isTuple(snd)) {
               Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
               int w = OZ_width(snd);
-              RefsArray args2 = (w>20)?allocateRefsArray(w,NO):args;
-              for(int i=1;i<w;i++) args2[i-1]=OZ_getArg(snd,i);
-              args2[w-1] = result;
-              thr->pushCall(OZ_getArg(snd,0),args2,w);
-              if (w>20) disposeRefsArray(args2);
+              RefsArray args = allocateRefsArray(w,NO);
+              for(int i=1;i<w;i++) args[i-1]=OZ_getArg(snd,i);
+              args[w-1] = result;
+              thr->pushCall(OZ_getArg(snd,0),args,w);
+              disposeRefsArray(args);
               am.scheduleThread(thr);
               break;
             }

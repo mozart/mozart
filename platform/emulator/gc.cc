@@ -1415,7 +1415,6 @@ extern OZ_Term finalize_handler;
 
 void gc_finalize()
 {
-  static RefsArray args = allocateStaticRefsArray(1);
   // go through the old guardian list
   OZ_Term old_guardian_list = guardian_list;
   guardian_list = finalize_list = oz_nil();
@@ -1447,8 +1446,7 @@ void gc_finalize()
   // thread (at top level) to effect the finalization phase
   if (!isNil(finalize_list)) {
     Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,ozx_rootBoard());
-    args[0] = finalize_list;
-    thr->pushCall(finalize_handler,args,1);
+    thr->pushCall(finalize_handler,finalize_list);
     am.scheduleThread(thr);
     finalize_list = oz_nil();
   }
