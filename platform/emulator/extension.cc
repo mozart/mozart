@@ -55,50 +55,21 @@ unsigned int OZ_getUniqueId(void)
   return oz_newUniqueId();
 }
 
-OZ_Extension::~OZ_Extension()
-{
-  OZ_error("invoking destructor ~OZ_Extension()");
+
+void* _OZ_new_OZ_Extension(size_t n) {
+ return alignedMalloc(n,sizeof(double));
 }
 
-void* OZ_Extension::operator new(size_t n) {
-  return alignedMalloc(n,sizeof(double));
-}
 
-void OZ_Extension::operator delete(void*,size_t)
+OZ_Boolean _OZ_isLocal_OZ_Extension(void *inb)
 {
-  OZ_error("invoking OZ_Extension::operator delete(void*,size_t)");
-}
-
-OZ_Term OZ_Extension::printV(int depth)
-{
-  return typeV();
-}
-
-OZ_Term OZ_Extension::printLongV(int depth, int offset)
-{
-  return oz_pair2(printV(depth),oz_atom("\n"));
-}
-
-OZ_Term OZ_Extension::typeV()
-{
-  return oz_atom("extension");
-}
-
-OZ_Boolean OZ_Extension::isLocal()
-{
-  Board *bb=(Board*) __getSpaceInternal();
+  Board *bb=(Board*) inb;
   return bb==0?OZ_TRUE:oz_isCurrentBoard(bb);
 }
 
-OZ_SituatedExtension::OZ_SituatedExtension(void)
-  : OZ_Extension()
+void * _OZ_currentBoard()
 {
-  space = oz_currentBoard();
-}
-
-OZ_Term OZ_SituatedExtension::typeV()
-{
-  return oz_atom("situatedExtension");
+  return oz_currentBoard();
 }
 
 Bool oz_isChunkExtension(TaggedRef term)
