@@ -47,7 +47,8 @@ define
 	 end
       end
 
-      meth database_check_grade
+      meth database_check_grade(?Skip)
+	 {self database_read}
 	 Grade={self get_grade($)}
       in
 	 if Grade==any then skip else
@@ -58,7 +59,8 @@ define
 	    if PKG\=unit then
 	       %% make sure we actually get dates (not unit)
 	       CurDate = {Utils.dateCurrent}
-	       OldReleased =
+	       CurNext = {AdjoinAt CurDate sec 1+CurDate.sec}
+	       OldReleased0 =
 	       local D={CondSelect PKG released unit} in
 		  if D\=unit then D else
 		     D={CondSelect PKG installed unit}
@@ -66,9 +68,22 @@ define
 		     if D\=unit then D else CurDate end
 		  end
 	       end
+	       %% oops! OS.localTime returns time(...) with more features than
+	       %% we need.  Here is a fix to accommodate dates recorded before
+	       %% I noticed the problem.
+	       OldReleased =
+	       if {Label OldReleased0}==date then OldReleased0 else
+		  date(
+		     year : {CondSelect OldReleased0 year 0}
+		     mon  : {CondSelect OldReleased0 mon  1}
+		     mDay : {CondSelect OldReleased0 mDay 1}
+		     hour : {CondSelect OldReleased0 hour 0}
+		     min  : {CondSelect OldReleased0 min  0}
+		     sec  : {CondSelect OldReleased0 sec  0})
+	       end
 	       NewReleased =
 	       local D={self get_released($)} in
-		  if D\=unit then D else CurDate end
+		  if D\=unit then D else CurNext end
 	       end
 	       NewOldCmp =
 	       if NewReleased==OldReleased then eq
@@ -92,9 +107,11 @@ define
 		  if NewOldCmp==gt then
 		     raise ozmake(datebase:downgrade(OldString NewString)) end
 		  end
+	       [] freshen then Skip=(NewOldCmp\=gt)
 	       end
 	    end
 	 end
+	 if {IsFree Skip} then Skip=false end
       end
 
       meth database_mutable_entry(MOG $)

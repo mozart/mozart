@@ -194,7 +194,13 @@ define
       Y=D.year+1900
       M=D.mon+1
    in
-      {Adjoin D time(year:Y mon:M)}
+      date(
+	 year : Y
+	 mon  : M
+	 mDay : D.mDay
+	 hour : D.hour
+	 min  : D.min
+	 sec  : D.sec)
    end
 
    fun {DateCurrentToString}
