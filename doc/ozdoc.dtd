@@ -107,9 +107,8 @@
 
 <!--==================== PARAMETER ENTITIES =======================-->
 
-<!ENTITY % index.class  "index">
 <!ENTITY % p.mix.local "">
-<!ENTITY % p.mix "
+<!ENTITY % p.mix.noindex "
           file    | kbd            | key        | samp
         | q       | span           | def        | name
         | ref     | ptr            | ref.extern | ptr.extern
@@ -122,10 +121,11 @@
         | table   | grammar.rule   | grammar
         %p.mix.local;
 ">
+<!ENTITY % p.mix "%p.mix.noindex; | index">
 <!ENTITY % p.chars.mix "#PCDATA|%p.mix;">
 
-<!ENTITY % p.class "p|p.silent|p.level|para|div">
-<!ENTITY % p.model "(p|para|div)*">
+<!ENTITY % p.level "(p|para|div)">
+<!ENTITY % p.model "(p|para|div|index)*">
 <!ENTITY % p.chars.model "p.silent,(%p.model;)">
 
 <!--==================== DOCUMENT STRUCTURE =======================-->
@@ -182,9 +182,7 @@
 <!ENTITY % sect2.class "sect2 | subsection"   >
 <!ENTITY % sect3.class "sect3 | subsubsection">
 
-<!ELEMENT body O O ((%sect0.class;)*,part*,appendix*)
-        +(%index.class;)        -- indexing elements may appear anywhere --
->
+<!ELEMENT body O O ((%sect0.class;)*,part*,appendix*)>
 
 <!ELEMENT part            - O (title?,(%p.model;),(%sect0.class;)*)>
 <!ELEMENT (%sect0.class;) - O (title?,(%p.model;),(%sect1.class;)*)>
@@ -229,11 +227,10 @@
 
 <!ELEMENT p        - O (%p.chars.mix;)*>
 <!ELEMENT p.silent O O (%p.chars.mix;)*>
-<!ELEMENT p.level  O O (%p.mix;)*>
 <!ELEMENT para     - O (title ,(%p.chars.mix;)*)>
 <!ELEMENT div      - O (title?,(%p.model;))>
 
-<!ATTLIST (p|p.silent|p.level|para|div)
+<!ATTLIST (p|p.silent|para|div)
         %common.attr;
 >
 
@@ -623,7 +620,8 @@
 
   -->
 
-<!ELEMENT figure - O (title?,caption?,p.level?,(%p.model;))>
+<!ELEMENT figure - O (title?,caption?,
+index*,(((%p.mix.noindex;),index*)|((%p.level;),(%p.model;))))>
 <!ATTLIST figure
         %common.attr;
         float (float) #IMPLIED
