@@ -588,12 +588,6 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
   return ret;
 }
 
-static
-STuple *newSTupleOutline(TaggedRef literal, int arity)
-{
-  return STuple::newSTuple(literal,arity);
-}
-
 // aux debugging;
 #define VERBMSG(S,A1,A2)                                                   \
     fprintf(verbOut,"(em) %s (arg#1 0x%x, arg#2 0x%x) :%d\n",              \
