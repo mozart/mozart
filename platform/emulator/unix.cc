@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <netdb.h>
 
+#include "misc.hh"
+
 #if defined(LINUX) || defined(HPUX_700)
 extern int h_errno;
 #endif
@@ -75,13 +77,6 @@ extern "C" char *inet_ntoa(struct in_addr in);
 
 
 
-static inline char *ozstrdup(char *s)
-{
-  char *ret = new char[strlen(s)+1];
-  strcpy(ret,s);
-  return ret;
-}
-
 // checking
 
 inline int unixIsCons(OZ_Term cons, OZ_Term *head, OZ_Term *tail)
@@ -105,6 +100,7 @@ int RET;                                            \
 while ((RET = CALL) < 0) {                          \
   if (errno != EINTR) { RETURN_UNIX_ERROR(OUT); } \
 }
+
 
 // -------------------------------------------------
 // specification of returning
@@ -1477,7 +1473,7 @@ OZ_C_ioproc_begin(unix_system,2)
   OZ_declareVsArg("system", 0, vs);
   OZ_declareArg(1, out);
 
-  WRAPCALL(system(vs),ret,out);
+  int ret = ozSystem(vs);
 
   return OZ_unifyInt(out,ret);
 }
