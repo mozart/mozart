@@ -32,6 +32,7 @@
 //*****************************************************************************
 
 class FSetDisjointNPropagator : public Propagator_VS {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 
@@ -53,9 +54,12 @@ public:
 #define EXPERIMENT
 
 class FSetUnionNPropagator : public Propagator_VS_S {
+  friend INIT_FUNC(fsp_init);
+
 #ifdef EXPERIMENT
 friend void sortVars(FSetUnionNPropagator  &p);
 #endif
+
 protected:
   static OZ_PropagatorProfile profile;
 
@@ -73,9 +77,11 @@ public:
     _aux = (OZ_FSetConstraint *) (void*)
       OZ_hallocChars(_vs_size * sizeof(OZ_FSetConstraint));
     _init_aux();
+
 #ifdef EXPERIMENT
     sortVars(*this);
 #endif
+
   }
 
   virtual OZ_Return propagate(void);
@@ -100,23 +106,10 @@ public:
   };
 
 
-#ifdef EXPERIMENT
-#include <stdlib.h>
-int sortVarsOrder(const void * _a, const void  * _b) {
-  OZ_FSetVar a, b;
-  a.ask(* (const OZ_Term *) _a);
-  b.ask(* (const OZ_Term *) _b);
-  return a->getKnownNotIn() -  b->getKnownNotIn();
-}
-
-void sortVars(FSetUnionNPropagator  &p)
-{
-  qsort(p._vs, p._vs_size, sizeof(OZ_Term), sortVarsOrder);
-}
-#endif    
 //-----------------------------------------------------------------------------
 
 class FSetPartitionPropagator : public FSetUnionNPropagator {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 
@@ -140,7 +133,6 @@ public:
   }
 };
 
-//*****************************************************************************
 #endif /* __STD_N_HH__ */
 // end of file
 

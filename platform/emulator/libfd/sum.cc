@@ -397,8 +397,8 @@ failure:
 //-----------------------------------------------------------------------------
 // static members
 
-OZ_PropagatorProfile LinEqPropagator::profile = "fdp_sumC";
-OZ_PropagatorProfile LinNotEqPropagator::profile = "fdp_sumC";
-OZ_PropagatorProfile LinLessEqPropagator::profile = "fdp_sumC";
-OZ_PropagatorProfile NonLinEqPropagatorP::profile = "fdp_sumCN";
-OZ_PropagatorProfile NonLinLessEqPropagatorP::profile = "fdp_sumCN";
+OZ_PropagatorProfile LinEqPropagator::profile;
+OZ_PropagatorProfile LinNotEqPropagator::profile;
+OZ_PropagatorProfile LinLessEqPropagator::profile;
+OZ_PropagatorProfile NonLinEqPropagatorP::profile;
+OZ_PropagatorProfile NonLinLessEqPropagatorP::profile;

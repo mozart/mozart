@@ -1,3 +1,5 @@
+$module_init_fun_name = "sched_init";
+
 %builtins_all =
 (
     'disjoint_card'=> { in  => ['int','+int','int','+int'],

@@ -2,6 +2,7 @@
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Michael Mehl (mehl@dfki.de)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)

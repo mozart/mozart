@@ -30,6 +30,7 @@
 #include "fsstd.hh"
 
 class IncludePropagator : public Propagator_S_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -44,6 +45,7 @@ public:
 };
 
 class ExcludePropagator : public Propagator_S_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -58,6 +60,7 @@ public:
 };
 
 class FSetCardPropagator : public Propagator_S_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

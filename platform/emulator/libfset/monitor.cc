@@ -111,5 +111,5 @@ failure:
   return FAILED;
 }
 
-OZ_PropagatorProfile MonitorInPropagator::profile = "fsp_monitorIn";
+OZ_PropagatorProfile MonitorInPropagator::profile;
 

@@ -52,6 +52,7 @@ public:
 #endif
 
 class MonitorInPropagator : public OZ_Propagator {
+  friend INIT_FUNC(fsp_init);
 private:
 #ifdef FSET_HIGH
   BitVector _in_sofar;

@@ -738,16 +738,16 @@ failure:
 //-----------------------------------------------------------------------------
 // static members
 
-OZ_PropagatorProfile TwicePropagator::profile = "fdp_twice";
-OZ_PropagatorProfile SquarePropagator::profile = "fdp_square";
-OZ_PropagatorProfile PlusPropagator::profile = "fdp_plus";
-OZ_PropagatorProfile MinusPropagator::profile = "fdp_minus";
-OZ_PropagatorProfile TimesPropagator::profile = "fdp_times";
-OZ_PropagatorProfile DivPropagator::profile = "fdp_divD";
-OZ_PropagatorProfile DivIPropagator::profile = "fdp_divI";
-OZ_PropagatorProfile ModPropagator::profile = "fdp_modD";
-OZ_PropagatorProfile ModIPropagator::profile = "fdp_modI";
-OZ_PropagatorProfile PowerPropagator::profile = "fdp_power";
+OZ_PropagatorProfile TwicePropagator::profile;
+OZ_PropagatorProfile SquarePropagator::profile;
+OZ_PropagatorProfile PlusPropagator::profile;
+OZ_PropagatorProfile MinusPropagator::profile;
+OZ_PropagatorProfile TimesPropagator::profile;
+OZ_PropagatorProfile DivPropagator::profile;
+OZ_PropagatorProfile DivIPropagator::profile;
+OZ_PropagatorProfile ModPropagator::profile;
+OZ_PropagatorProfile ModIPropagator::profile;
+OZ_PropagatorProfile PowerPropagator::profile;
 
 //-----------------------------------------------------------------------------
 // eof

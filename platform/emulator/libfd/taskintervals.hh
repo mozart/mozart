@@ -33,6 +33,7 @@
 //-----------------------------------------------------------------------------
 
 class TaskIntervalsPropagator : public Propagator_VD_VI {
+  friend INIT_FUNC(sched_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -55,6 +56,7 @@ public:
 
 //-----------------------------------------------------------------------------
 class CPIteratePropagatorCumTI : public Propagator_VD_VI_VI_I {
+  friend INIT_FUNC(sched_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

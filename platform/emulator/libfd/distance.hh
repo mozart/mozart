@@ -27,6 +27,7 @@
 #include "std.hh"
 
 class DistancePropagatorLeq : public Propagator_D_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -39,6 +40,7 @@ public:
 };
 
 class DistancePropagatorGeq : public Propagator_D_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -51,6 +53,7 @@ public:
 };
 
 class DistancePropagatorEq : public Propagator_D_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -63,6 +66,7 @@ public:
 };
 
 class DistancePropagatorNeq : public Propagator_D_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

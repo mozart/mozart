@@ -32,6 +32,7 @@
 //-----------------------------------------------------------------------------
 
 class ConjunctionPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -45,6 +46,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class DisjunctionPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -58,6 +60,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class XDisjunctionPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -71,6 +74,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class ImplicationPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -84,6 +88,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class EquivalencePropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -97,6 +102,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class NegationPropagator : public Propagator_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

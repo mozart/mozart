@@ -879,13 +879,13 @@ failure:
   return P.fail();  
 }
 
-OZ_PropagatorProfile FSetsMinPropagator::profile = "fsp_min";
-OZ_PropagatorProfile FSetsMaxPropagator::profile = "fsp_max";
-OZ_PropagatorProfile FSetsConvexPropagator::profile = "fsp_convex";
-OZ_PropagatorProfile FSetMatchPropagator::profile = "fsp_match";
-OZ_PropagatorProfile FSetMinNPropagator::profile = "fsp_minN";
-OZ_PropagatorProfile FSetMaxNPropagator::profile = "fsp_maxN";
-OZ_PropagatorProfile FSetSeqPropagator::profile = "fsp_seq";
+OZ_PropagatorProfile FSetsMinPropagator::profile;
+OZ_PropagatorProfile FSetsMaxPropagator::profile;
+OZ_PropagatorProfile FSetsConvexPropagator::profile;
+OZ_PropagatorProfile FSetMatchPropagator::profile;
+OZ_PropagatorProfile FSetMinNPropagator::profile;
+OZ_PropagatorProfile FSetMaxNPropagator::profile;
+OZ_PropagatorProfile FSetSeqPropagator::profile;
 
 //-----------------------------------------------------------------------------
 // eof

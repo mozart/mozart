@@ -32,6 +32,7 @@
 //*****************************************************************************
 
 class FSetIntersectionPropagator : public Propagator_S_S_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -46,6 +47,7 @@ public:
 };
 
 class FSetUnionPropagator : public Propagator_S_S_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -60,6 +62,7 @@ public:
 };
 
 class FSetSubsumePropagator : public Propagator_S_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -74,6 +77,7 @@ public:
 };
 
 class FSetDisjointPropagator : public Propagator_S_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -88,6 +92,7 @@ public:
 };
 
 class FSetDistinctPropagator : public Propagator_S_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -102,6 +107,7 @@ public:
 };
 
 class FSetDiffPropagator : public Propagator_S_S_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
