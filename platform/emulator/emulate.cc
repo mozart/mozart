@@ -32,22 +32,20 @@
 
 extern TaggedRef methApplHdl;
 
-#define StateLocked ((Abstraction*) -1l)
-
 inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity, 
 			   InlineCache *cache, RefsArray X)
 {
   Assert(isFeature(label));
 
-  if (!am.isToplevel() || obj->isClosedOrClassOrDeepOrLocked()) {
+  if (!am.isToplevel() || obj->isClosedOrClassOrDeep()) {
     /* send to object in guard */
-    if (obj->getDeepness()!=0 || obj->isClosed() || obj->isClass() ||
+    if (obj->isClosed() || obj->isClass() ||
 	am.currentBoard != obj->getBoardFast())
       return NULL;
   }
 
-  Assert(obj->getDeepness()==0 && !obj->isClosed() && !obj->isClass());
+  Assert(!obj->isClosed() && !obj->isClass());
 
   return cache->lookup(obj,label,arity,X);
 }
@@ -433,26 +431,20 @@ Bool AM::hookCheckNeeded()
 #define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G,NULL,0)
 
 #define SaveSelf(e,obj,pushOntoStack)		\
-  {						\
-    Object *auxo = e->getSelf();		\
-    if (auxo!=obj) {				\
-      if (pushOntoStack)			\
-	e->currentThread->pushSelf(auxo);	\
-      else					\
-	e->currentThread->setSelf(auxo);	\
-      e->setSelf(obj);				\
-    }						\
-  }
+    if (pushOntoStack)				\
+      e->changeSelf(obj);			\
+    else					\
+      e->saveSelf();
 
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,Arity)					\
-     Y = NULL;								\
-     G = gRegs;								\
-     emulateHookCall(e,Pred,Arity,X,					\
+#define CallDoChecks(Pred,gRegs,Arity)				\
+     Y = NULL;							\
+     G = gRegs;							\
+     emulateHookCall(e,Pred,Arity,X,				\
 		     e->pushTask(Pred->getPC(),NULL,G,X,Arity);	\
 		     goto LBLpreemption;);
 
@@ -602,17 +594,11 @@ Bool AM::hookCheckNeeded()
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
-#define CHECK_CURRENT_THREAD			\
-    if (e->currentThread->isSuspended()) {	\
-      goto LBLsuspendThread;			\
-    }						\
-    goto LBLpopTask;
-
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)		\
    e->pushTask(PC,Y,G,X,RegsToSave);		\
    addSusp(TermPtr,e->mkSuspThread ());		\
-   CHECK_CURRENT_THREAD;
+   goto LBLsuspendThread;
 
 
 void addSusp(TaggedRef *varPtr, Thread *thr)
@@ -661,8 +647,6 @@ void AM::suspendOnVarList(Thread *thr)
 inline
 Thread *AM::mkSuspThread ()
 {
-  /* save special registers */
-  SaveSelf(this,NULL,OK);
   currentThread->unmarkPropagated();
   return currentThread;
 }
@@ -1239,6 +1223,12 @@ LBLpopTask:
 	goto next_task;
       }
 
+    case C_SETFINAL:
+      {
+	am.setFinal();
+	goto next_task;
+      }
+
     case C_DEBUG_CONT:
       {
 	OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
@@ -1295,7 +1285,7 @@ LBLpopTask:
 	    e->pushCFun(biFun,X,predArity);
 	    Thread *thr = e->mkSuspThread ();
 	    e->suspendOnVarList (thr);
-	    CHECK_CURRENT_THREAD;
+	    goto LBLsuspendThread;
 	  }
 
 	case RAISE:
@@ -1371,8 +1361,8 @@ LBLpopTask:
 	CTT->unmarkPropagated();
 	goto LBLsuspendThread;
       }
-    case C_SET_SELF:
-      e->setSelf((Object *) TaskStackPop(--topCache));
+    case C_SET_OOREGS:
+      e->restoreSelf(ToInt32(TaskStackPop(--topCache)));
       goto next_task;
       
     default:
@@ -1780,7 +1770,7 @@ LBLdispatcher:
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,predArity);
 	e->suspendOnVarList(e->mkSuspThread ());
-	CHECK_CURRENT_THREAD;
+	goto LBLsuspendThread;
 
       case FAILED:
 	HF_BI;
@@ -1823,7 +1813,7 @@ LBLdispatcher:
 	}
 	e->pushTask(PC,Y,G,X,getPosIntArg(PC+3));
 	e->suspendInline(1,XPC(2));
-	CHECK_CURRENT_THREAD;
+	goto LBLsuspendThread;
       case FAILED:
 	SHALLOWFAIL;
 	HF_FAIL(OZ_mkTupleC("fail",2,
@@ -1860,7 +1850,7 @@ LBLdispatcher:
 
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(2,XPC(2),XPC(3));
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
       case FAILED:
 	SHALLOWFAIL;
@@ -1899,7 +1889,7 @@ LBLdispatcher:
 
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(3,XPC(2),XPC(3),XPC(4));
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
       case FAILED:
 	SHALLOWFAIL;
@@ -1938,7 +1928,7 @@ LBLdispatcher:
 	  }
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(1,A);
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
 
       case FAILED:
@@ -1979,7 +1969,7 @@ LBLdispatcher:
 	  }
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(2,A,B);
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
 
       case FAILED:
@@ -2031,7 +2021,7 @@ LBLdispatcher:
 	    }
 	    e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	    e->suspendInline(1,A);
-	    CHECK_CURRENT_THREAD;
+	    goto LBLsuspendThread;
 	  }
 
 	case RAISE:
@@ -2046,6 +2036,7 @@ LBLdispatcher:
 
   Case(INLINEAT)
     {
+      Assert(e->getSelf()->isLocked());
       TaggedRef fea = getLiteralArg(PC+1);
 
       Assert(e->getSelf()!=NULL);
@@ -2064,6 +2055,7 @@ LBLdispatcher:
 
   Case(INLINEASSIGN)
     {      
+      Assert(e->getSelf()->isLocked());
       TaggedRef fea = getLiteralArg(PC+1);
 
       SRecord *rec = e->getSelf()->getState();
@@ -2092,7 +2084,7 @@ LBLdispatcher:
 	  OZ_suspendOnInternal2(XPC(1),XPC(2));
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendOnVarList(e->mkSuspThread());
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 
       case FAILED:
 	HF_FAIL(OZ_mkTupleC("fail",2,
@@ -2134,7 +2126,7 @@ LBLdispatcher:
 	  }
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+6));
 	  e->suspendInline(3,A,B,C);
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
 
       case FAILED:
@@ -2168,7 +2160,7 @@ LBLdispatcher:
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  Thread *thr=e->mkSuspThread();
 	  e->suspendOnVarList(thr);
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
 
       case RAISE:
@@ -2204,7 +2196,7 @@ LBLdispatcher:
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	addSusp (XPC(2), e->mkSuspThread ());
-	CHECK_CURRENT_THREAD;
+	goto LBLsuspendThread;
 
       case RAISE:
 	RAISE_BI1(entry->getPrintName(),
@@ -2236,7 +2228,7 @@ LBLdispatcher:
 	  Assert(isAnyVar(ATag) || isAnyVar(BTag));
 	  if (isAnyVar (A)) addSusp (APtr, thr);
 	  if (isAnyVar (B)) addSusp (BPtr, thr);
-	  CHECK_CURRENT_THREAD;
+	  goto LBLsuspendThread;
 	}
 
       case RAISE:
@@ -2262,7 +2254,7 @@ LBLdispatcher:
       Thread *thr = e->mkSuspThread ();
       shallowCP = NULL;
       e->reduceTrailOnShallow(thr);
-      CHECK_CURRENT_THREAD;
+      goto LBLsuspendThread;
     }
 
 
@@ -2315,13 +2307,38 @@ LBLdispatcher:
     e->pushTask(getLabelArg(PC+1),Y,G);
     DISPATCH(2);
 
-  Case(RELEASEOBJECT)
-    e->getSelf()->release();
+  Case(LOCKOBJECT)
+    { 
+      if (e->isLocked()) {
+	DISPATCH(2);
+      }
+      Object *obj = e->getSelf();
+      if (obj->isClosed()) {
+	DORAISE(OZ_atom("attempt to lock closed object"));
+      }
+      if (obj->isLocked()) {
+	TaggedRef suspvar = obj->attachThread();
+	int regsToSave = getPosIntArg(PC+1);
+	SUSP_PC(suspvar,regsToSave,PC);
+      }
+      e->setLocked();
+      obj->setLocked();
+      DISPATCH(2);
+    }
+
+  Case(UNLOCKOBJECT)
+    e->unlockSelf();
     DISPATCH(1);
 
-  Case(SETMODETODEEP)
-    e->getSelf()->incDeepness();
-    DISPATCH(2);
+  Case(UNSETFINAL)
+    {
+      e->pushTask(getLabelArg(PC+1),Y,G);
+      if (e->isFinal()) {
+	e->pushSetFinal();
+	e->unsetFinal();
+      }
+      DISPATCH(2);
+    }
 
   Case(RETURN)
     goto LBLpopTask;
@@ -2412,7 +2429,7 @@ LBLdispatcher:
     } else {
       addSusp (termPtr, thr);
     }
-    CHECK_CURRENT_THREAD;
+    goto LBLsuspendThread;
   }
 
   Case(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
@@ -2444,8 +2461,6 @@ LBLdispatcher:
 
       if (!isTailCall) CallPushCont(PC+6);
       SaveSelf(e,obj,OK);
-      Assert(obj->getDeepness()==0);
-      obj->incDeepness();
       CallDoChecks(def,def->getGRegs(),getWidth(arity));
       JUMP(def->getPC());
     }
@@ -2578,22 +2593,8 @@ LBLdispatcher:
 	       CallPushCont(PC);
 	     }
 	     SaveSelf(e,o,OK); 
-#ifdef DOESNOTWORK
-	     if (o->getDeepness()==0) {
-	       /* lock the object: important if we are about to execute
-		* the init method after having just created the object
-		*/
-	       o->incDeepness();
-	     }
-#endif
 	   } else {
 	     def = (Abstraction *) predicate;
-#if 0
-	     if (def->isDistributed() && !def->isFetched()) {
-	       def = dvarApply(def,predArity,X);
-	       predArity = 2;
-	     }
-#endif
 	     CheckArity(def->getArity(), makeTaggedConst(def));
 	     if (!isTailCall) { CallPushCont(PC); }
 	   }
@@ -2668,7 +2669,7 @@ LBLdispatcher:
 		     e->pushCFun(biFun,X,predArity);
 		     Thread *thr=e->mkSuspThread();
 		     e->suspendOnVarList(thr);
-		     CHECK_CURRENT_THREAD;
+		     goto LBLsuspendThread;
 		   }
 		   predicate = tagged2Const(sh);
 		 }
@@ -2857,22 +2858,17 @@ LBLdispatcher:
 
   Case(CREATEOR)
     {
-      ProgramCounter elsePC = getLabelArg(PC+1);
-      int argsToSave = getPosIntArg(PC+2);
-
-      CAA = new WaitActor(CBB, CPP, CTT, NOCODE, Y, G, X, argsToSave, NO);
+      CAA = new WaitActor(CBB, CPP, CTT, NOCODE, Y, G, X, 0, NO);
       CTT->pushActor(CAA);
 
-      DISPATCH(3);
+      DISPATCH(1);
     }
 
   Case(CREATEENUMOR)
     {
-      ProgramCounter elsePC = getLabelArg(PC+1);
-      int argsToSave = getPosIntArg(PC+2);
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, argsToSave, NO);
+      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, NO);
       CTT->pushActor(CAA);
 
       if (bb->isWait()) {
@@ -2881,16 +2877,14 @@ LBLdispatcher:
 	SolveActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
       }
 
-      DISPATCH(3);
+      DISPATCH(1);
     }
 
   Case(CREATECHOICE)
     {
-      ProgramCounter elsePC = getLabelArg (PC+1);
-      int argsToSave = getPosIntArg (PC+2);
       Board *bb = CBB;
 
-      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, argsToSave, OK);
+      CAA = new WaitActor(bb, CPP, CTT, NOCODE, Y, G, X, 0, OK);
       CTT->pushActor(CAA);
 
       if (bb->isWait()) {
@@ -2899,11 +2893,10 @@ LBLdispatcher:
 	SolveActor::Cast(bb->getActor())->pushChoice((WaitActor *) CAA);
       }
 
-      DISPATCH(3);
+      DISPATCH(1);
     }
 
-  Case(WAITCLAUSE)
-  Case(ASKCLAUSE)
+  Case(CLAUSE)
     {
 
       Board *bb = new Board(CAA,CAA->isAsk()?Bo_Ask:Bo_Wait);
@@ -2916,9 +2909,6 @@ LBLdispatcher:
       DISPATCH(1);
     }
 
-  Case(ELSECLAUSE)
-    DISPATCH(1);
-
   Case(NEXTCLAUSE)
       CAA->nextClause(getLabelArg(PC+1));
       DISPATCH(2);
@@ -2927,7 +2917,6 @@ LBLdispatcher:
       CAA->lastClause();
       DISPATCH(1);
 
-  Case(JOB)
   Case(THREAD)
     {
       markDirtyRefsArray(Y);

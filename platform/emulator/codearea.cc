@@ -414,9 +414,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case WAITTOP:
     case ASK: 
     case RETURN:
-    case ELSECLAUSE:
-    case WAITCLAUSE: 
-    case ASKCLAUSE:
+    case CLAUSE:
     case LASTCLAUSE:
     case DEALLOCATEL:
     case ALLOCATEL1:
@@ -430,7 +428,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case ALLOCATEL9:
     case ALLOCATEL10:
     case SHALLOWTHEN:
-    case RELEASEOBJECT:
+    case UNLOCKOBJECT:
+    case CREATEOR:
+    case CREATEENUMOR:
+    case CREATECHOICE:
           /* Commands with no args.   */
       fprintf(ofile, "\n");       
       DISPATCH();
@@ -697,6 +698,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GETVOID:
     case UNIFYVOID:
     case ALLOCATEL: 
+    case LOCKOBJECT: 
 	  /* ***type 2:    OP PosInt    */
       fprintf(ofile, "(%d)\n",getPosIntArg(PC+1));
       DISPATCH();
@@ -859,9 +861,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case BRANCH:
     case NEXTCLAUSE: 
     case THREAD:
-    case JOB:
     case SAVECONT:
-    case SETMODETODEEP:
+    case UNSETFINAL:
 	  /* ***type 8:    OP Label */
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
       DISPATCH();
@@ -894,10 +895,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
 
     case SHALLOWGUARD:
-    case CREATEOR:
-    case CREATEENUMOR:
     case CREATECOND:
-    case CREATECHOICE:
 	  /* ***type 8:    OP Label Int*/
       {
 	ProgramCounter lbl = getLabelArg(PC+1);
