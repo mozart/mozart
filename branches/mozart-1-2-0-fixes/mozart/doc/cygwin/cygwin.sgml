@@ -147,8 +147,8 @@
 	      ></Ref.Extern>
 	  <TR><TD>regex<TD>0.12
 	    <TD><Ref.Extern
-	      to="ftp://ftp.mozart-oz.org/pub/mozart/extras/regex-0.12.tar.gz"
-	      ><File>ftp://ftp.mozart-oz.org/pub/mozart/extras/regex-0.12.tar.gz</File
+	      to="ftp://ftp.gnu.org/pub/gnu/regex/regex-0.12.tar.gz"
+	      ><File>ftp://ftp.gnu.org/pub/gnu/regex/regex-0.12.tar.gz</File
 	      ></Ref.Extern>
 	</Table>
 	Note that these are all source packages except for Tcl/Tk.  You'll
