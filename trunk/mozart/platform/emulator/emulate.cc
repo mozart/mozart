@@ -41,7 +41,7 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 {
   Assert(isFeature(label));
 
-  if (obj->isClosedOrClass())
+  if (obj->isClass())
       return NULL;
 
   return cache->lookup(obj,label,arity,X);
