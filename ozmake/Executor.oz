@@ -156,7 +156,16 @@ define
 
       meth CC(DST SRC Options)
 	 Executor,exec_mkdir({Path.dirname DST})
-	 L1 = [SRC '-o' DST]
+	 INCS = for D in {self get_includedirs($)} collect:Collect do
+		   {Collect '-I'#D}
+		end
+	 OPTS = for O in Options collect:Collect do
+		   case O
+		   of include(D) then {Collect '-I'#D}
+		   end
+		end
+	 L0 = [SRC '-o' DST]
+	 L1 = {Append INCS {Append OPTS L0}}
 	 L2 = case {self get_optlevel($)}
 	      of debug then '-g'|L1
 	      [] optimize then
@@ -179,15 +188,24 @@ define
 
       meth LD(DST SRC Options)
 	 Executor,exec_mkdir({Path.dirname DST})
+	 LIBS = for D in {self get_librarydirs($)} collect:Collect do
+		   {Collect '-L'#D}
+		end
+	 OPTS = for O in Options collect:Collect do
+		   case O
+		   of library(D) then {Collect '-l'#D}
+		   end
+		end
 	 L1 = [ld SRC '-o' DST]
+	 L2 = {Append L1 {Append LIBS OPTS}}
       in
-	 {self xtrace({Utils.listToVS oztool|L1})}
+	 {self xtrace({Utils.listToVS oztool|L2})}
 	 if {self get_justprint($)} then
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
 	    try {Shell.execute
-		 {self get_oz_oztool($)}|L1}
+		 {self get_oz_oztool($)}|L2}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
 	    end
