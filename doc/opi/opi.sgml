@@ -758,6 +758,21 @@
 	    </List>
       <Section proglang=oz>
 	<Title/Seeing the &OPI; from Mozart/
+	<Para class=apropos><Title/Startup/
+	  When the <File/OPI.ozf/ file is applied, a <Span class=index
+	  /startup file/ is searched and loaded as follows:
+	  <List enum>
+	    <Item>
+	      It is first checked whether the environment variable <Var
+	      type=env/OZRC/ is set.  If it is, its contents is interpreted
+	      as a file name that is fed to the &OPI; compiler.
+	    <Item>
+	      Else, if the file <Span class=index><File>~/.oz/ozrc</File
+	      ></Span> exists and is readable, it is fed to the compiler.
+	    <Item>
+	      Else, if the file <Span class=index><File>~/.ozrc</File></Span>
+	      exists and is readable, it is fed to the compiler.
+	  </List>
 	<Para class=apropos><Title/Compiler Environment/
 	  The environment available when running Mozart from the &OPI;
 	  is an enriched base environment&nbsp;<Ptr to="Mozart-Base">.
