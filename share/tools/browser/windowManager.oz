@@ -80,8 +80,9 @@ class WindowManagerClass from MyClosableObject BatchObject
 	 {Dictionary.put Actions 1 r(action:Browse
 				     label:'Browse'
 				     number:1)} % must be 1st!
-	 actions <- Actions
+	 {self.store store(StoreProcessAction Browse)}
 	 nextANumber <- 2	% two pre-defined actions;
+	 actions <- Actions
       end
    end
 
@@ -123,12 +124,13 @@ class WindowManagerClass from MyClosableObject BatchObject
 \endif
       %%
       case {self.store read(StoreAreMenus $)} then skip
-      else Store BO Window Menus ActionVar Actions in 
+      else Store BO Window Menus ActionVar Actions CurrAction in 
 	 %% 
 	 Store = self.store
 	 BO = self.browserObj
 	 Window = @window
 	 Actions = @actions
+	 CurrAction = {Store read(StoreProcessAction $)}
 
 	 %%
 	 %%  All the elements of the menubar
@@ -264,7 +266,16 @@ class WindowManagerClass from MyClosableObject BatchObject
 				   fg:    IStopFG
 				   activeforeground:IStopAFG)
 			     "Break")
-		  createTkVar(1	% that's the 'Browse' action;
+		  createTkVar({List.foldL {Dictionary.keys Actions}
+			       fun {$ I K}
+				  Action = {Dictionary.get Actions K}
+			       in
+				  case Action.action == CurrAction
+				  then Action.number
+				  else I
+				  end
+			       end
+			       1}       % that's the 'Browse' action;
 			      proc {$ V}
 				 Action = {Dictionary.get Actions
 					   {String.toInt V}}.action
@@ -308,7 +319,6 @@ class WindowManagerClass from MyClosableObject BatchObject
 				      {Dictionary.get Actions K}.label
 				      ActionVar K)}
 	     end}
-	    {Store store(StoreProcessAction Browse)}
 
 	    %%
 	 end
@@ -514,14 +524,25 @@ class WindowManagerClass from MyClosableObject BatchObject
       local
 	 Actions = @actions
 	 WClearProc
+	 WAddProc
+	 Store = self.store
+	 CurrAction = {Store read(StoreProcessAction $)}
       in
+	 %%
 	 case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
-	 then Window = @window in
+	 then
+	    Window = @window
+	    AVar = @actionVar
+	 in
 	    proc {WClearProc  N}
 	       {Window removeRadioEntry(selection(action(menu)) N)}
 	    end
-	 else
+	    proc {WAddProc N L}
+	       {Window addRadioEntry(selection(action(menu)) L AVar N)}
+	    end
+	 else 
 	    proc {WClearProc _} skip end
+	    proc {WAddProc _ _} skip end
 	 end
 
 	 %%
@@ -544,15 +565,33 @@ class WindowManagerClass from MyClosableObject BatchObject
 	 %%
 	 %% Slide numbers - since menu entries could get new
 	 %% indexes (after executing the code above);
+	 {ForAll {Sort {Dictionary.keys Actions} `<`} WClearProc}
 	 nextANumber <-
 	 {List.foldL
 	  {Sort {Dictionary.keys Actions} `<`}
 	  fun {$ I K}
-	     {Dictionary.put Actions K
-	      {AdjoinAt {Dictionary.get Actions K} number I}}
+	     OldAction = {Dictionary.get Actions K}
+	  in
+	     {Dictionary.put Actions I {AdjoinAt OldAction number I}}
+	     {WAddProc I OldAction.label}
 	     I + 1
 	  end
 	  0}			% must be 0;
+
+	 %%
+	 %% Set up other action if needed;
+	 WindowManagerClass ,
+	 setAction({List.foldL {Dictionary.keys Actions}
+		    fun {$ D K}
+		       Action = {Dictionary.get Actions K}
+		    in
+		       case Action.action == CurrAction
+		       then CurrAction
+		       else D
+		       end
+		    end
+		    Browse})
+	 
       end
 \ifdef DEBUG_WM
       {Show 'WindowManagerClass::removeProcessAction is finished'}
@@ -566,10 +605,18 @@ class WindowManagerClass from MyClosableObject BatchObject
       {Show 'WindowManagerClass::setAction is applied'}
 \endif
       %%
-      case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
-      then Actions AVar in
+      local
 	 Actions = @actions
-	 AVar = @actionVar
+	 WSetProc
+      in
+	 case @window \= InitValue andthen {self.store read(StoreAreMenus $)}
+	 then AVar = @actionVar in
+	    proc {WSetProc K}
+	       {AVar tkSet(K)}
+	    end
+	 else
+	    proc {WSetProc _} skip end
+	 end
 
 	 %%
 	 {ForAll {Dictionary.keys Actions}
@@ -577,12 +624,11 @@ class WindowManagerClass from MyClosableObject BatchObject
 	     A = {Dictionary.get Actions K}
 	  in 
 	     case A.action == Action then
-		{AVar tkSet(K)}
+		{WSetProc K}
 		{self.store store(StoreProcessAction Action)}
 	     else skip
 	     end
 	  end}
-      else skip			% don't set the thing that cannot be used :-)
       end
 \ifdef DEBUG_WM
       {Show 'WindowManagerClass::setAction is finished'}
