@@ -1229,7 +1229,7 @@ void initDPCore()
     installGlobalWatcher(PERM_BLOCKED|TEMP_BLOCKED,
 		   makeTaggedConst(new Builtin("seifHandler",
 					       2, 0, BIseifHandler, OK)),
-		   WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
+	 WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
   
   Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
   Assert(sizeof(OwnerCreditExtension)==sizeof(Construct_3));
