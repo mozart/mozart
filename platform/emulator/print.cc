@@ -1564,7 +1564,7 @@ void OZ_FiniteDomainImpl::printLong(ostream &ofile, int idnt) const
 
   ofile << indent(idnt) << "min_elem=" << min_elem
 	<< " max_elem=" << max_elem << " size=" << getSize()
-	<< " descr=" << get_iv() << " type=" << descr_type_text[getType()];
+	<< " type=" << descr_type_text[getType()];
   
   switch (getType()) {
   case fd_descr:

@@ -27,32 +27,54 @@
 inline
 SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
 {
-  if (reset_local) {
-    if (this) {
-      SuspList *aux;
-      for (aux = this; aux->getNext(); aux = aux->getNext()) {
-#ifdef DEBUG_CHECK
-	if (aux->getElem()->isLocalThread()) 
-	  {cout << '&'; cout.flush();}
-#endif
-	aux->getElem()->unmarkLocalThread();
+  if (this) { 
+    SuspList * aux;
+    
+    if (reset_local) 
+      for (aux = this; aux; aux = aux->getNext())
+      	aux->getElem()->unmarkLocalThread();
+    
+    if (to_list) {
+      // this != NULL && to_list != NULL
+      
+      // multiple entries of suspensions have to be removed; therefore ...
+      // ... tag this-list and find last entry
+      SuspList * last DebugCode(= NULL);
+      for (aux = this; 1; ) {
+	aux->getElem()->markTagged();
+	
+	SuspList * aux_next = aux->getNext(); 
+	
+	if (aux_next) {
+	  aux = aux_next; 
+	} else {
+	  last = aux;
+	  break;
+	}
       }
-      aux->getElem()->unmarkLocalThread();
-      aux->setNext(to_list);
-      to_list = this;
-    }
-    return NULL;
-  } else {
-    if (this)
-      if (to_list) {
-	SuspList* aux;
-	for (aux = to_list; aux->getNext(); aux = aux->getNext());
-	aux->setNext(this);
-      } else {
-	to_list = this;
+
+      Assert (last);
+      
+      // remove tagged entries from to_list 
+      SuspList ** aux1 = &to_list;
+      while (*aux1) {
+	if ((*aux1)->getElem()->isTagged()) {
+	  *aux1 = (*aux1)->getNext();
+	  continue;
+	}
+	aux1 = &(*aux1)->next;
       }
-    return NULL;
+      
+      // untag this-list
+      for (aux = this; aux; aux = aux->getNext())
+      	aux->getElem()->unmarkTagged();
+      
+      last->setNext(to_list);
+    } 
+
+    to_list = this;
   }
+  return NULL;
 }
 
 //-----------------------------------------------------------------------------
