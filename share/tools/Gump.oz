@@ -30,8 +30,9 @@ import
 
    OS.{system}
 
-   System.{get
-	   valueToVirtualString}
+   Property.get
+   
+   System.{valueToVirtualString}
 
    Error.{formatGeneric
 	  format

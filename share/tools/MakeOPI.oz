@@ -81,21 +81,22 @@ in
    functor prop once
    import
       Module.load
-      System.{printError property}
+      System.printError
+      Property.{get put}
       OS.getEnv
       Open.file
       Compiler.engine
       Emacs.interface
    body
       local
-	 OZVERSION = {System.property.get 'oz.version'}
-	 DATE      = {System.property.get 'oz.date'}
+	 OZVERSION = {Property.get 'oz.version'}
+	 DATE      = {Property.get 'oz.date'}
       in
 	 {System.printError
 	  'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
       end
 
-      {System.property.put 'oz.standalone' false}
+      {Property.put 'oz.standalone' false}
 
       OPICompiler = {New Compiler.engine init()}
       {OPICompiler enqueue(setSwitch(warnunused true))}

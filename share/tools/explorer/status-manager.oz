@@ -309,17 +309,18 @@ in
       end
 
       meth start($)
-	 StartTime  <- {System.get time}.user
+	 StartTime  <- {Property.get 'time.user'}
 	 {self.status start}
 	 {self.status getBreakFlag($)}
       end
 
       meth startTime
-	 StartTime  <- {System.get time}.user
+	 StartTime  <- {Property.get 'time.user'}
       end
       
       meth stop
-	 CurTotalTime <- @CurTotalTime + {System.get time}.user - @StartTime
+	 CurTotalTime <- (@CurTotalTime +
+			  {Property.get 'time.user'} - @StartTime)
 	 {self.status update}
 	 {self.status setTime({FormatTime @CurTotalTime})}
       end

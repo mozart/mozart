@@ -23,9 +23,10 @@
 functor $ prop once
 
 import
-   System.{get
-	   set
-	   gcDo
+   Property.{get
+	     put}
+   
+   System.{gcDo
 	   valueToVirtualString
 	   exit}
 

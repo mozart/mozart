@@ -51,9 +51,9 @@ local
 	 OT  = O.threads
 	 OP  = O.priorities
 	 OR  = O.runtime
-	 T   = {System.get threads}
-	 P   = {System.get priorities}
-	 R   = {System.get time}
+	 T   = {Property.get threads}
+	 P   = {Property.get priorities}
+	 R   = {Property.get time}
 	 PR  = @PrevRuntime
       in
 	 case What==nosample then skip else
@@ -95,7 +95,7 @@ local
 	 {OR.copy        clear}
 	 {OR.propagation clear}
 	 {OR.curLoad     clear}
-	 PrevRuntime <- {System.get time}
+	 PrevRuntime <- {Property.get time}
       end
       meth toggleInfo
 	 O = self.options
@@ -120,7 +120,7 @@ local
 	 O   = self.options
 	 OG  = O.gc
 	 OU  = O.usage
-	 G   = {System.get gc}
+	 G   = {Property.get gc}
       in
 	 case What==nosample then skip else
 	    {OU.load       display([{IntToFloat G.threshold} / MegaByteF
@@ -175,8 +175,8 @@ local
 	 O  = self.options
 	 OS = O.spaces
 	 OF = O.fd
-	 S = {System.get spaces}
-	 F = {System.get fd}
+	 S = {Property.get spaces}
+	 F = {Property.get fd}
       in
 	 {OS.created   set(S.created)}
 	 {OS.cloned    set(S.cloned)}
@@ -213,9 +213,9 @@ local
 	 OE = O.errors
 	 OP = O.output
 	 OM = O.messages
-	 E = {System.get errors}
-	 P = {System.get print}
-	 M = {System.get messages}
+	 E = {Property.get errors}
+	 P = {Property.get print}
+	 M = {Property.get messages}
       in
 	 {OE.'thread' set(E.'thread')}
 	 {OE.width    set(E.width)}
@@ -255,7 +255,7 @@ in
       meth init(manager:Manager options:O)
 	 lock
 	    %% Switch to time detailed mode
-	    {System.set time(detailed:true)}
+	    {Property.put time time(detailed:true)}
 	    Config = {Dictionary.get O config}
 	    Tk.toplevel,tkInit(title:              TitleName
 			       'class':            'OzTools'
@@ -366,23 +366,26 @@ in
 		       [entry(text:    'High / Medium:'
 			      feature: high
 			      max:     100
-			      init:    {System.get priorities}.high
+			      init:    {Property.get priorities}.high
 			      action:  proc {$ N}
-					  {System.set priorities(high:N)}
+					  {Property.put priorities
+					   priorities(high:N)}
 				       end)
 			entry(text:    'Medium / Low:'
 			      feature: medium
 			      max:     100
-			      init:    {System.get priorities}.medium
+			      init:    {Property.get priorities}.medium
 			      action:  proc {$ N}
-					  {System.set priorities(medium:N)}
+					  {Property.put priorities
+					   priorities(medium:N)}
 				       end)]
 		    right:
 		       [button(text:    'Default'
 			       feature: default
 			       action:  proc {$}
-					   {System.set priorities(high:   10
-								  medium: 10)}
+					   {Property.put priorities
+					    priorities(high:   10
+						       medium: 10)}
 					   {self update(false)}
 					end)])]}
 	    Memory =
@@ -418,25 +421,27 @@ in
 			      min:     1
 			      max:     1024
 			      dim:     'MB'
-			      init:    {System.get gc}.min div MegaByteI
+			      init:    {Property.get gc}.min div MegaByteI
 			      action:  proc {$ N}
 					  S = Memory.options.parameter.maxSize
 				       in
 					  case {S get($)}<N then
 					     {S set(N)}
-					     {System.set gc(min:N * MegaByteI
-							    max:N * MegaByteI)}
+					     {Property.put gc
+					      gc(min:N * MegaByteI
+						 max:N * MegaByteI)}
 					  else
-					     {System.set gc(min:N * MegaByteI)}
+					     {Property.put gc
+					      gc(min:N * MegaByteI)}
 					  end
 				       end)
 			entry(text:    'Free:'
 			      feature: free
 			      max:     100
-			      init:    {System.get gc}.free
+			      init:    {Property.get gc}.free
 			      side:    right
 			      action:  proc {$ N}
-					  {System.set gc(free: N)}
+					  {Property.put gc gc(free: N)}
 				       end
 			      dim:     '%')
 			entry(text:    'Maximal Size:'
@@ -444,7 +449,7 @@ in
 			      min:     1
 			      max:     1024
 			      dim:     'MB'
-			      init:    local MS={System.get gc}.max in
+			      init:    local MS={Property.get gc}.max in
 					  case MS=<0 then 1024
 					  else MS div MegaByteI
 					  end
@@ -454,10 +459,12 @@ in
 				       in
 					  case {S get($)}>N then
 					     {S set(N)}
-					     {System.set gc(min:N * MegaByteI
-							    max:N * MegaByteI)}
+					     {Property.put gc
+					      gc(min:N * MegaByteI
+						 max:N * MegaByteI)}
 					  else
-					     {System.set gc(max:N * MegaByteI)}
+					     {Property.put gc
+					      gc(max:N * MegaByteI)}
 					  end
 				       end)
 			entry(text:    'Tolerance:'
@@ -465,15 +472,16 @@ in
 			      max:     100
 			      dim:     '%'
 			      side:    right
-			      init:    {System.get gc}.tolerance
+			      init:    {Property.get gc}.tolerance
 			      action:  proc {$ N}
-					  {System.set gc(tolerance: N)}
+					  {Property.put gc
+					   gc(tolerance: N)}
 				       end)]
 		    right:
 		       [button(text:   'Small'
 			       feature: small
 			       action:  proc {$}
-					   {System.set
+					   {Property.put gc
 					    gc(max:       4 * MegaByteI
 					       min:       1 * MegaByteI
 					       free:      75
@@ -483,7 +491,7 @@ in
 			button(text:    'Medium'
 			       feature: medium
 			       action:  proc {$}
-					   {System.set
+					   {Property.put gc
 					    gc(max:       16 * MegaByteI
 					       min:       2  * MegaByteI
 					       free:      80
@@ -493,7 +501,7 @@ in
 			button(text:    'Large'
 			       feature: large
 			       action:  proc {$}
-					   {System.set
+					   {Property.put gc
 					    gc(max:       64 * MegaByteI
 					       min:       8 * MegaByteI
 					       free:      90
@@ -517,9 +525,9 @@ in
 		    left:
 		       [checkbutton(text:   'Active'
 				    feature: active
-				    state:  {System.get gc}.on
+				    state:  {Property.get gc}.on
 				    action: proc {$ OnOff}
-					       {System.set gc(on:OnOff)}
+					       {Property.put gc gc(on:OnOff)}
 					    end)]
 		    right:   [button(text: 'Invoke'
 				     feature: invoke
@@ -557,22 +565,25 @@ in
 		     left:
 			[checkbutton(text:    'Idle'
 				     feature: time
-				     state:  {System.get messages}.idle
+				     state:  {Property.get messages}.idle
 				     action: proc {$ B}
-						{System.set messages(idle:B)}
+						{Property.put messages
+						 messages(idle:B)}
 					     end)
 			 checkbutton(text:    'Garbage Collection'
 				     feature: gc
-				     state:  {System.get messages}.gc
+				     state:  {Property.get messages}.gc
 				     action: proc {$ B}
-						{System.set messages(gc:B)}
+						{Property.put messages
+						 messages(gc:B)}
 					     end)]
 		     right:
 			[button(text:    'Default'
 				feature: default
 				action:  proc {$}
-					    {System.set messages(idle: false
-								 gc:   false)}
+					    {Property.put messages
+					     messages(idle: false
+						      gc:   false)}
 					    {self update(false)}
 					 end)])
 	       frame(text:    'Output'
@@ -581,19 +592,22 @@ in
 			[entry(text:    'Maximal Depth:'
 			       feature: depth
 			       action:  proc {$ N}
-					   {System.set print(depth: N)}
+					   {Property.put print
+					    print(depth: N)}
 					end)
 			 entry(text:    'Maximal Width:'
 			       feature: width
 			       action:  proc {$ N}
-					   {System.set print(width: N)}
+					   {Property.put print
+					    print(width: N)}
 					end)]
 		     right:
 			[button(text:    'Default'
 				feature: default
 				action:  proc {$}
-					    {System.set print(width: 10
-							      depth: 2)}
+					    {Property.put print
+					     print(width: 10
+						   depth: 2)}
 					    {self update(false)}
 					 end)])
 	       frame(text:    'Errors'
@@ -601,38 +615,42 @@ in
 		     left:
 			[checkbutton(text:    'Show Location'
 				     feature: location
-				     state:   {System.get errors}.location
+				     state:   {Property.get errors}.location
 				     action:  proc {$ B}
-						 {System.set
+						 {Property.put errors
 						  errors(location:B)}
 					      end)
 			 checkbutton(text:    'Show Hints'
 				     feature: hints
-				     state:   {System.get errors}.hints
+				     state:   {Property.get errors}.hints
 				     action:  proc {$ B}
-						 {System.set errors(hints:B)}
+						 {Property.put errors
+						  errors(hints:B)}
 					      end)
 			 entry(text:    'Maximal Depth:'
 			       feature: depth
 			       action:  proc {$ N}
-					   {System.set errors(depth: N)}
+					   {Property.put errors
+					    errors(depth: N)}
 					end)
 			 entry(text:    'Maximal Tasks:'
 			       feature: 'thread'
 			       side:    right
 			       action:  proc {$ N}
-					   {System.set errors('thread': N)}
+					   {Property.put errors
+					    errors('thread': N)}
 					end)
 			 entry(text:    'Maximal Width:'
 			       feature: width
 			       action:  proc {$ N}
-					   {System.set errors(width: N)}
+					   {Property.put errors
+					    errors(width: N)}
 					end)]
 		     right:
 			[button(text:    'Default'
 				feature: default
 				action:  proc {$}
-					    {System.set
+					    {Property.put errors
 					     errors('thread': 10
 						    location: true
 						    hints:    true
@@ -720,9 +738,9 @@ in
 		 print(depth:unit width:unit)
 		 errors(depth:unit hints:unit location:unit 'thread':unit)]
 		proc {$ SS}
-		   {F write(vs:('{System.set ' #
+		   {F write(vs:('{Property.put ' # {Label SS} # ' ' #
 				  {System.valueToVirtualString
-				   {Record.zip SS {System.get {Label SS}}
+				   {Record.zip SS {Property.get {Label SS}}
 				    ProjectSnd} 100 100} #
 				  '}\n'))}
 		end}
@@ -870,7 +888,7 @@ in
       meth tkClose
 	 lock
 	    {self.manager PanelTopClosed}
-	    {System.set time(detailed:false)}
+	    {Property.put time time(detailed:false)}
 	    Tk.toplevel, tkClose
 	    {Wait _}
 	 end
