@@ -522,7 +522,7 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIdiscardSpace, 1, 0) {
+OZ_BI_define(BIkillSpace, 1, 0) {
   declareSpace;
 
   if (space->isMarkedMerged())
