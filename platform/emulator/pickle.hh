@@ -34,9 +34,6 @@
 /* magic marker for start of saved components */
 static char SYSLETHEADER = 2;
 
-/* magic marker for start of saved components */
-/* OUTDATED only for backwards compatibility */
-#define PERDIOMAGICSTART       31
 
 #define PERDIOMAJOR      1
 #define PERDIOMINOR      5
@@ -177,12 +174,14 @@ void marshalLabelDef(char *lbl, MsgBuffer *bs);
 void marshalTermDef(int lbl, MsgBuffer *bs);
 void marshalTermRef(int lbl, MsgBuffer *bs);
 
-char *makeHeader(unsigned long crc, int *headerSize);
+typedef unsigned int32 crc_t;
+
+char *makeHeader(crc_t crc, int *headerSize);
 
 
 OZ_Term digOutVars(OZ_Term);
 
-unsigned long update_crc(unsigned long crc, unsigned char *buf, int len);
-inline unsigned long init_crc() { return 0; }
+crc_t update_crc(crc_t crc, unsigned char *buf, int len);
+inline crc_t init_crc() { return 0; }
 
 #endif /* __PICKLEH */
