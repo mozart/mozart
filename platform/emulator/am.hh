@@ -89,6 +89,8 @@ public:
 
   int dumpCore;
 
+  int cellHack;
+
   /* command line arguments visible from Oz */
   char **argV;
   int argC;
