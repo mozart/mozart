@@ -65,7 +65,6 @@ public:
   void printTree();
 
   void incSuspCount(int n=1) { suspCount += n; }
-  void incSuspCount () { suspCount++; }
   void addSuspension (Suspension *susp);
   // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();
@@ -93,7 +92,7 @@ public:
   void setReflected () { flags |= Bo_Reflected; }
   Bool isReflected () { return ((flags & Bo_Reflected) ? OK : NO); }
   void newScript(int size);
-  inline void removeSuspension();
+  void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
                        RefsArray g,RefsArray x,int i);
   void setInstalled() { flags |= Bo_Installed; }

@@ -160,31 +160,33 @@ PRINT(GenCVariable){
 
   switch(type){
   case FDVariable:
-    GenFDVariable * me = (GenFDVariable *) this;
-    if (isEffectiveList(me->fdSuspList[det]) == OK)
-      stream << " d("
-             << me->fdSuspList[det]->length()
-             << '/'
-             << me->fdSuspList[det]->lengthProp()
-             << ')';
-    if (isEffectiveList(me->fdSuspList[bounds]) == OK)
-      stream << " b(" << me->fdSuspList[bounds]->length()
-             << '/'
-             << me->fdSuspList[bounds]->lengthProp()
-             << ')';
-    if (isEffectiveList(me->fdSuspList[size]) == OK)
-      stream << " s(" << me->fdSuspList[size]->length()
-             << '/'
-             << me->fdSuspList[size]->lengthProp()
-             << ')';
-    if (isEffectiveList(me->fdSuspList[eqvar]) == OK)
-      stream << " e(" << me->fdSuspList[eqvar]->length()
-             << '/'
-             << me->fdSuspList[eqvar]->lengthProp()
-             << ')';
-    stream << ' ';
-    me->getDom().print(stream, 0);
-    break;
+    {
+      GenFDVariable * me = (GenFDVariable *) this;
+      if (isEffectiveList(me->fdSuspList[det]) == OK)
+        stream << " d("
+               << me->fdSuspList[det]->length()
+               << '/'
+               << me->fdSuspList[det]->lengthProp()
+               << ')';
+      if (isEffectiveList(me->fdSuspList[bounds]) == OK)
+        stream << " b(" << me->fdSuspList[bounds]->length()
+               << '/'
+               << me->fdSuspList[bounds]->lengthProp()
+               << ')';
+      if (isEffectiveList(me->fdSuspList[size]) == OK)
+        stream << " s(" << me->fdSuspList[size]->length()
+               << '/'
+               << me->fdSuspList[size]->lengthProp()
+               << ')';
+      if (isEffectiveList(me->fdSuspList[eqvar]) == OK)
+        stream << " e(" << me->fdSuspList[eqvar]->length()
+               << '/'
+               << me->fdSuspList[eqvar]->lengthProp()
+               << ')';
+      stream << ' ';
+      me->getDom().print(stream, 0);
+      break;
+    }
   default:
     error("Unexpected type generic variable at %s:%d.",
           __FILE__, __LINE__);
