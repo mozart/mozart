@@ -12,14 +12,6 @@ local
    SquareSize   = 10
    ButtonWidth  = 6
 
-   fun {GetFeature X}
-      case {HasFeature X feature} then X.feature
-      else {String.toAtom
-	    {Map {Filter {VirtualString.toString X.text} Char.isAlNum}
-	     Char.toLower}}
-      end
-   end
-
    class Square
       from Tk.canvas
       prop final
@@ -204,7 +196,7 @@ local
 				      anchor: w
 				      text:   {CondSelect L dim ''})}
 	 in
-	    R.{GetFeature L}=S1
+	    R.(L.feature)=S1
 	    grid(L1 sticky:w column:0 row:N) |
 	    grid(S1 sticky:e column:1 row:N) | 
 	    grid(L2 sticky:w column:2 row:N) | TclR	    
@@ -220,7 +212,7 @@ local
 		 else {New Tk.frame tkInit(parent:P)}
 		 end
 	 in
-	    R.{GetFeature L}=L2
+	    R.(L.feature)=L2
 	    grid(L1 sticky:w column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
 	    grid(L3 padx:Pad sticky:e column:2 row:N) | TclR
@@ -239,7 +231,7 @@ local
 		 else {New Tk.frame tkInit(parent:P)}
 		 end
 	 in
-	    R.{GetFeature L}=L2
+	    R.(L.feature)=L2
 	    grid(L1 sticky:w column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
 	    grid(L3 sticky:e column:2 row:N) | 
@@ -257,7 +249,7 @@ local
 		 else {New Tk.frame tkInit(parent:P)}
 		 end
 	 in
-	    R.{GetFeature L}=L2
+	    R.(L.feature)=L2
 	    grid(L1 sticky:w column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
 	    grid(L3 sticky:w column:2 row:N) | 
@@ -268,7 +260,7 @@ local
 				 action: {CondSelect L action
 					  proc {$} skip end})}
 	 in
-	    R.{GetFeature L}=B
+	    R.(L.feature)=B
 	    grid(B sticky:w column:0 row:N) | TclR
 	 [] checkbutton  then
 	    B = {New Checkbutton init(parent: P
@@ -276,7 +268,7 @@ local
 				      text:   L.text
 				      action: L.action)}
 	 in
-	    R.{GetFeature L}=B
+	    R.(L.feature)=B
 	    grid(B sticky:w column:0 row:N) | TclR
 	 [] entry then
 	    L1 = {New Tk.label tkInit(parent: P
@@ -286,7 +278,7 @@ local
 				 action: L.action
 				 top:    L.top)}
 	 in
-	    R.{GetFeature L}=E2
+	    R.(L.feature)=E2
 	    grid(L1 sticky:w column:0 row:N) |
 	    grid(E2 sticky:w column:1 row:N) | TclR
 	 [] timebar then
@@ -294,7 +286,7 @@ local
 				      highlightthickness:0)}
 	    L1 = {New RuntimeBar init(parent: F)}
 	 in
-	    R.{GetFeature L}=L1
+	    R.(L.feature)=L1
 	    grid(F sticky:ens column:0 row:N) |
 	    pack(L1 side:top) | TclR
 	 [] load then
@@ -305,13 +297,15 @@ local
 				maxy:    {CondSelect L maxy 5.0}
 				dim:     {CondSelect L dim ''})}
 	 in
-	    R.{GetFeature L}=L1
+	    R.(L.feature)=L1
 	    grid(L1 sticky:e column:0 row:N) | TclR
 	 end
 	 TclR={MakeSide Lr N+1 P R TclT}
 	 TclS
       end
    end
+
+   fun {GetFeature X} X.feature end
    
    fun {MakeFrames Fs P R TclT}
       case Fs
@@ -325,10 +319,10 @@ local
 				       border:            LargeBorder
 				       highlightthickness: 0)}
 	 FR     = {MakeRecord a frame|{Append {Map F.left GetFeature}
-				 {Map F.right GetFeature}}}
+				       {Map F.right GetFeature}}}
       in
 	 FR.frame = Border
-	 R.{GetFeature F}=FR
+	 R.(F.feature)=FR
 	 {MakeSide F.left 0 Left FR
 	  {MakeSide F.right 0 Right FR
 	   pack(Left   side:left  anchor:nw) |
