@@ -118,7 +118,8 @@ OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t)
 
 OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t)
 {
-  oz_bindVar(this,vPtr,t);
+  if (*vPtr != oz_deref(t))
+    oz_bindVar(this,vPtr,t);
   return PROCEED;
 }
 
