@@ -47,7 +47,7 @@ define
 	 in
 	    if OS==unit andthen Cs\=nil then
 	       NS=Cs.1
-	       {NS.frametag tk(move 1000+MCX 1000+MCY)}
+	       {NS.frametag tk(move CWidth+MCX CWidth+MCY)}
 	    else
 	       OS=NS
 	    end
@@ -64,7 +64,7 @@ define
 	     {DC tk(config scrollregion:q(0 0 {Access LastX} Y))}
 	    if OS==unit then F={Dictionary.get DB NS.id} in
 	       {DC tk(coords lline 0 Y F.currentx Y)}
-	       {DC tk(coords rline F.currentx+F.width Y 1000 Y)}
+	       {DC tk(coords rline F.currentx+F.width Y CWidth Y)}
 	    end 
 	    {DC tk('raise' lline)}
 	    {DC tk('raise' rline)}
@@ -73,10 +73,10 @@ define
 	    OS NS={Exchange SelectedCard OS}
 	    E={Dictionary.get DB C}
 	 in
-	    {OS.frametag tk(move ~1000-MCX ~1000-MCY)}
+	    {OS.frametag tk(move ~CWidth-MCX ~CWidth-MCY)}
 	    {DC tk(coords lline 0 Y E.currentx Y)}
-	    {DC tk(coords rline E.currentx+E.width Y 1000 Y)}
-	    {E.frametag tk(move 1000+MCX 1000+MCY)}
+	    {DC tk(coords rline E.currentx+E.width Y CWidth Y)}
+	    {E.frametag tk(move CWidth+MCX CWidth+MCY)}
 	    NS=E
 	 end
 	 DCC={New Tk.canvas tkInit(parent:self bd:0 highlightthickness:0 width:CWidth height:CHeight)}
@@ -88,7 +88,7 @@ define
 		fill:LCol
 		tags:lline)}
 	 {DC tk(crea line
-		2 Y-1 1000 Y-1
+		2 Y-1 CWidth Y-1
 		width:2
 		fill:LCol
 		tags:rline)}
@@ -139,7 +139,7 @@ define
 			    if {Dictionary.member DB A.id}==false then
 			       Tag={New Tk.canvasTag tkInit(parent:DC)}
 			       FTag={New Tk.canvasTag tkInit(parent:DCC)}
-			       {DC tk(crea text ~1000 Y-3 text:A.title tags:Tag anchor:sw)}
+			       {DC tk(crea text ~CWidth Y-3 text:A.title tags:Tag anchor:sw)}
 			       [TX0 Y0 X1 Y1]={DC tkReturnListInt(bbox Tag $)}
 			       X0=TX0-2
 			    in
@@ -157,7 +157,7 @@ define
 			       %% Display frame
 			       {DCC tk(create window 0 0 window:A.frame anchor:nw tags:FTag)}
 			       {Delay 100}
-			       {FTag tk(move ~1000 ~1000)}
+			       {FTag tk(move ~CWidth ~CWidth)}
 			       {Layout}
 			    end
 			 end
