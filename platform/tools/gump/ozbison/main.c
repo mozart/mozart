@@ -27,8 +27,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 int verboseflag;
 
-/* The name this program was run with, for messages.  */
-char *program_name;
 FILE *foutput = NULL;
 
 extern void getargs(), openfiles(), reader(), reduce_grammar();
@@ -38,12 +36,12 @@ extern OZ_Term output();
 
 static jmp_buf env;
 
-void done(int k) {
+void done(OZ_Term k) {
   if (foutput) {
     fclose(foutput);
     foutput = NULL;
   }
-  longjmp(env, k);
+  longjmp(env, (int) k);
 }
 
 OZ_BI_define(bison_generate, 2, 1)
@@ -52,14 +50,13 @@ OZ_BI_define(bison_generate, 2, 1)
   CONST char *verbosefile = OZ_atomToC(OZ_in(1));
 
   if ((k = setjmp(env)) != 0)
-    return OZ_raiseC("ozbison", 1, OZ_int(k));
+    return OZ_raiseC("ozbison", 1, (OZ_Term) k);
 
   verboseflag = verbosefile[0] != '\0';
   if (verboseflag) {
     foutput = fopen(verbosefile, "w");
     if (foutput == NULL) {
-      fprintf(stderr, "fatal error: cannot open output file %s\n", verbosefile);
-      done (1);
+      done (OZ_pairA("cannot open output file ",OZ_in(1)));
     }
   }
 
@@ -116,8 +113,8 @@ void
 toomany(s)
      char *s;
 {
-  fprintf(stderr, "fatal error: limit of %d exceeded, too many %s\n", MAXSHORT, s);
-  done(1);
+  done(OZ_pair2(OZ_pairAI("limit of ",MAXSHORT),
+                OZ_pairAA(" exceeded, too many ",s)));
 }
 
 /* Abort for an internal error denoted by string S.  */
@@ -126,6 +123,5 @@ void
 berror(s)
      char *s;
 {
-  fprintf(stderr, "internal error, %s\n", s);
-  abort();
+  done(OZ_pairAA("internal error, ",s));
 }

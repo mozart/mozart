@@ -29,6 +29,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
  */
 
 #include <stdio.h>
+#include <oz.h>
 #include "system.h"
 #include "gram.h"
 #include "machine.h"
@@ -139,9 +140,8 @@ reduce_grammar ()
     {
       extern void done();
 
-      fprintf(stderr, "fatal error: start symbol %s does not derive any sentence\n",
-           tags[start_symbol]);
-      done(1);
+      done(OZ_pair2(OZ_pairAA("start symbol ",tags[start_symbol]),
+                    OZ_atom(" does not derive any sentence")));
     }
 
   reduce_grammar_tables();

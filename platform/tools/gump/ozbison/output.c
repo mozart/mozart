@@ -96,6 +96,7 @@ yyLAST = ??
 */
 
 #include <stdio.h>
+#include <oz.h>
 #include "system.h"
 #include "machine.h"
 #include "new.h"
@@ -914,9 +915,8 @@ int vector;
           loc = j + from[k];
           if (loc > MAXTABLE)
             {
-              fprintf(stderr, "fatal error: maximum table size (%d) exceeded\n",
-                     MAXTABLE);
-              done(1);
+              done(OZ_pair2(OZ_pairAI("maximum table size (",MAXTABLE),
+                            OZ_atom(") exceeded")));
             }
 
           if (table[loc] != 0)
