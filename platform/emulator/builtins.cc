@@ -6096,7 +6096,7 @@ int AM::setValue(TaggedRef feature, TaggedRef value)
        ozconf.stackMaxSize = val;
        );
   DOIF("heapThreshold",
-       ozconf.heapThreshold = val;
+       ozconf.setHeapThreshold(val);
        );
   DOIF("heapMaxSize",
        ozconf.heapMaxSize = val;
