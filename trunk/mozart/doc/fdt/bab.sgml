@@ -87,7 +87,6 @@ proc {RevisedPhoto Root}
    Preferences   = [betty#gary betty#mary  chris#betty chris#gary
 		    fred#mary  fred#donald paul#fred   paul#donald]
    NbPersons     = {Length Persons}
-   NbPreferences = {Length Preferences}
    Alignment     = {FD.record alignment Persons 1#NbPersons}
    Satisfaction  = {FD.decl} 
    proc {Satisfied P#Q S}
@@ -408,6 +407,9 @@ declare
 <chunk.ref/WareHouseOrder/
 
 <chunk.ref/{ExploreBest WareHouse}/
+
+
+
 
 </chunk>
 ]]>
