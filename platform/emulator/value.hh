@@ -14,12 +14,6 @@
 
 #include "tagged.hh"
 
-#if defined(OUTLINE)
-#define INLINE
-#else
-#define INLINE inline
-#endif
-
 /*===================================================================
  * global names and atoms
  *=================================================================== */
