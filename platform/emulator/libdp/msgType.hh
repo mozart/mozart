@@ -78,6 +78,8 @@ enum MessageType {
   M_UNUSED, // Empty spot, dont remove 
   M_PING,
 
+  M_PONG_TERM,
+  M_PONG_PL,
   // Communication layer messages:
   C_FIRST,                  // Just for the index, must be first of C_-msgs
 
@@ -94,7 +96,9 @@ enum MessageType {
   C_CLOSE_REJECT,
 
   C_CLEAR_REFERENCE,
-
+  
+  C_SEND_PING_PONG,
+  
   M_LAST
 };
 
