@@ -765,6 +765,14 @@ TaggedRef oz_int(int i)
 }
 
 inline
+TaggedRef oz_ulong(unsigned long l) {
+  if (l > (unsigned long) OzMaxInt) 
+    return makeTaggedConst(newBigInt(l));
+  else
+    return newSmallInt(l);
+}
+
+inline
 int oz_intToC(TaggedRef term)
 {
   if (oz_isSmallInt(term)) {
