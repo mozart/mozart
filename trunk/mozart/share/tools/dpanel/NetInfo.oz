@@ -26,12 +26,9 @@ functor
 import
    Colour(list)
    DPStatistics(getNetInfo)
-   DPB at 'x-oz://boot/DPB'
 export
    netInfo:NetInfo
 define
-   {Wait DPB}
-
    class InfoEntry
       attr
 	 type
