@@ -10,95 +10,99 @@ export
 define
    class HTML_Package from HE
       meth formatHeaders($)
-	 'div'(
-	    'class' : 'formatheaders'
-	    table(
+	 try
+	    'div'(
 	       'class' : 'formatheaders'
-	       'width' : '100%'
-	       'cellspacing' : '0'
-	       'border': '0'
-	       {self formatHeader('type' "package" $)}
-	       {self formatHeader('id' tt({HtmlQuote @id}) $)}
-	       if @pid==unit then '' else
-		  {self formatHeader(
-			   'section'
-			   a(href:{Manager id_to_href(@pid $)}
-			     {HtmlQuote @pid})
-			   $)}
-	       end
-	       if @version==unit then '' else
-		  {self formatHeader(
-			   'version'
-			   {HtmlQuote @version}
-			   $)}
-	       end
-	       if @blurb==unit then '' else
-		  {self formatHeader(
-			   'blurb'
-			   {HtmlQuote @blurb}
-			   $)}
-	       end
-	       if @author==nil then '' else
-		  {self formatHeaderEnum(
-			   'author'#if {Length @author}==1 then nil else 's' end
-			   {Map @author Author.toHref}
-			   $)}
-	       end
-	       if @contact==nil then '' else
-		  {self formatHeaderEnum(
-			   'contact'
-			   {Map @contact Author.toHref}
-			   $)}
-	       end
-	       if @categories==nil then '' else
-		  {self formatHeader(
-			   'category'
-			   {self categoriesToHrefs($)}
-			   $)}
-	       end
-	       /*
-	       if @keywords==nil then '' else
-		  {self formatHeader(
-			   'keywords'
-			   ...
-			   $)}
-	       end
-	       */
-	       if @provides==nil then '' else
-		  {self formatHeaderEnum(
-			   'provides'
-			   {Map @provides
-			    fun {$ S} tt({HtmlQuote S}) end}
-			   $)}
-	       end
-	       if @requires==nil then '' else
-		  {self formatHeaderEnum(
-			   'requires'
-			   {Map @requires
-			    fun {$ S}
-			       {self requiresToHrefs(S $)}
-			    end}
-			   $)}
-	       end
-	       local Docs = {self docHrefs($)} in
-		  if Docs==nil then '' else
+	       table(
+		  'class' : 'formatheaders'
+		  'width' : '100%'
+		  'cellspacing' : '0'
+		  'border': '0'
+		  {self formatHeader('type' "package" $)}
+		  {self formatHeader('id' tt({HtmlQuote @id}) $)}
+		  if @pid==unit then '' else
 		     {self formatHeader(
-			      'documentation'
-			      {List.toTuple span Docs}
-			      'class':'headerdoc'
+			      'section'
+			      a(href:{Manager id_to_href(@pid $)}
+				{HtmlQuote @pid})
 			      $)}
 		  end
-	       end
-	       local Pkgs = {self pkgHrefs($)} in
-		  if Pkgs==nil then '' else
+		  if @version==unit then '' else
+		     {self formatHeader(
+			      'version'
+			      {HtmlQuote @version}
+			      $)}
+		  end
+		  if @blurb==unit then '' else
+		     {self formatHeader(
+			      'blurb'
+			      {HtmlQuote @blurb}
+			      $)}
+		  end
+		  if @author==nil then '' else
 		     {self formatHeaderEnum(
-			      'download' Pkgs
-			      'class':'headerdoc'
+			      'author'#if {Length @author}==1 then nil else 's' end
+			      {Map @author Author.toHref}
 			      $)}
 		  end
-	       end
+		  if @contact==nil then '' else
+		     {self formatHeaderEnum(
+			      'contact'
+			      {Map @contact Author.toHref}
+			      $)}
+		  end
+		  if @categories==nil then '' else
+		     {self formatHeader(
+			      'category'
+			      {self categoriesToHrefs($)}
+			      $)}
+		  end
+		  /*
+		  if @keywords==nil then '' else
+		     {self formatHeader(
+			      'keywords'
+			      ...
+			      $)}
+		  end
+		  */
+		  if @provides==nil then '' else
+		     {self formatHeaderEnum(
+			      'provides'
+			      {Map @provides
+			       fun {$ S} tt({HtmlQuote S}) end}
+			      $)}
+		  end
+		  if @requires==nil then '' else
+		     {self formatHeaderEnum(
+			      'requires'
+			      {Map @requires
+			       fun {$ S}
+				  {self requiresToHrefs(S $)}
+			       end}
+			      $)}
+		  end
+		  local Docs = {self docHrefs($)} in
+		     if Docs==nil then '' else
+			{self formatHeader(
+				 'documentation'
+				 {List.toTuple span Docs}
+				 'class':'headerdoc'
+				 $)}
+		     end
+		  end
+		  local Pkgs = {self pkgHrefs($)} in
+		     if Pkgs==nil then '' else
+			{self formatHeaderEnum(
+				 'download' Pkgs
+				 'class':'headerdoc'
+				 $)}
+		     end
+		  end
+		  )
 	       )
-	    )
+	 catch mogul(...)=E then
+	    raise {Adjoin E mogul(formatHeaders(@id))} end
+	 end
       end
       %%
       meth docHrefs($)

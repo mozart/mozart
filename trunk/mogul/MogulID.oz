@@ -74,7 +74,9 @@ define
 	  [] "mogul"|_ then true
 	  else false end)
       then
-	 {URL.toAtom IdU}
+	 case {Reverse {CondSelect IdU path nil}}
+	 of nil|((_|_)=L) then {URL.toAtom {AdjoinAt IdU path {Reverse L}}}
+	 else {URL.toAtom IdU} end
       else
 	 raise mogul(id_prefix(want:{URL.toAtom BaseU}
 			       got :{URL.toAtom IdU}))

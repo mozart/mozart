@@ -71,7 +71,7 @@ define
 	 Got  = {NormalizeID {self condGet1('id' EID $)} Base}
       in
 	 if Want\=Got then
-	    {Raise mogule(id_expected(want:Want got:Got))}
+	    {Raise mogul(id_expected(want:Want got:Got))}
 	 end
       end
    end

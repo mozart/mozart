@@ -33,7 +33,7 @@ define
 	    {Manager condGetId(I unit $)} #
 	    {Map X fun{$ Y} {Manager condGetId(Y unit $)} end}
 	 end}
-	fun{$ X} X.1\=unit end}
+	fun{$ X} X.1\=unit andthen X.1.type==contact end}
        fun {$ X Y}
 	  %% this totally sucks
 	  {VirtualString.toAtom {X.1 getSlot('name_for_index' $)}}<
