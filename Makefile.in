@@ -48,7 +48,7 @@ URL=            http\\://www.ps.uni-sb.de/ozhome
 # programs
 ######################################################################
 
-@SET_MAKE@
+MAKE=           @MAKE@
 INSTALL=        @INSTALL@
 INSTALL_BIN=    $(INSTALL) -m 555
 INSTALL_FILE=   $(INSTALL) -m 444
