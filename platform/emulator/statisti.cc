@@ -487,10 +487,9 @@ void Statistics::printInstr()
     return;
   }
   unsigned long sum = 0;
-  for (int i=0; i<PROFILE_INSTR_MAX; i++) {
+  for (int i=0; i<(int)OZERROR; i++) {
     sum += instr[i];
-    if (instr[i]!=0)
-      fprintf(out,"%010lu x %s\n",instr[i],opcodeToString((Opcode)i));
+    fprintf(out,"%10lu x %s\n",instr[i],opcodeToString((Opcode)i));
   }
   fprintf(out,"----------\n%010lu\n",sum);
   fclose(out);
