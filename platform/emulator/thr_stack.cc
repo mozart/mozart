@@ -332,7 +332,7 @@ void TaskStack::unleash(int frameId) {
     if (PC == C_DEBUG_CONT_Ptr) {
       Atom * dothis = (Atom *) (int) G;
       if (dothis != DBG_EXIT_ATOM)
-	ReplaceFrame(auxtos,PC,Y,makeTaggedLiteral(dothislater));
+	ReplaceFrame(auxtos,PC,Y,dothislater);
     } else if (PC == C_EMPTY_STACK)
       return;
   }
