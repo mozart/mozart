@@ -117,15 +117,25 @@ OZ_ADDTO_CONTRIBDIRS(micq)
 AC_SUBST(CONTRIBDIRS)
 AC_CONFIG_SUBDIRS($CONTRIBDIRS)
 
-AC_MSG_CHECKING([for --enable-contrib-gdbm])
-AC_ARG_ENABLE(contrib-ri_lp,
-  [--enable-contrib-ri_lp
+AC_MSG_CHECKING([for --enable-contrib-ri-lp])
+AC_ARG_ENABLE(contrib-ri-lp,
+  [--enable-contrib-ri-lp
 	whether to build the ri_lp contribution (default: yes)],
   [oz_cv_enable_contrib_ri_lp=$enableval],
   [: ${oz_cv_enable_contrib_ri_lp:=$oz_enable_contrib_ri_lp}
    : ${oz_cv_enable_contrib_ri_lp:=yes}])
 AC_MSG_RESULT($oz_cv_enable_contrib_ri_lp)
 OZ_ADDTO_CONTRIBDIRS(ri_lp)
+
+AC_MSG_CHECKING([for --enable-contrib-psql])
+AC_ARG_ENABLE(contrib-psql,
+  [--enable-contrib-psql
+	whether to build the psql contribution (default: no)],
+  [oz_cv_enable_contrib_psql=$enableval],
+  [: ${oz_cv_enable_contrib_psql:=$oz_enable_contrib_psql}
+   : ${oz_cv_enable_contrib_psql:=no}])
+AC_MSG_RESULT($oz_cv_enable_contrib_psql)
+OZ_ADDTO_CONTRIBDIRS(psql)
 
 AC_OUTPUT(Makefile)
 
