@@ -28,6 +28,7 @@ import
    Gdbm at 'x-oz://contrib/gdbm'
 export
    'class': IndexerClass
+   MakeIndex
 prepare
    %%--** Sorting should be language-dependent!
    %%--** unsupported: &Ð &Þ &ð &þ
@@ -160,19 +161,45 @@ define
       end
    end
 
+   fun {MakeIndex Entries} Es SortedEs Groups in
+      Es = {Map Entries
+	    fun {$ Ands0#EntryHTML} Ands in
+	       %%--** remove any id attributes
+	       Ands = {Map Ands0
+		       fun {$ X}
+			  case X of _#_ then X
+			  else {HTML.toVirtualString {HTML.clean X}}#X
+			  end
+		       end}
+	       {Map Ands MakeSortKey}#Ands#EntryHTML
+	    end}
+      SortedEs = {Sort Es fun {$ X Y} {KeyLess X.1 Y.1} end}
+      Groups = {Group SortedEs}
+      SEQ({Map Groups
+	   fun {$ G#Es}
+	      'div'(h3('class': [margin]
+		       PCDATA(case G of &* then 'Symbols'
+			      [] &0 then 'Numbers'
+			      else [G]
+			      end))
+		    SEQ({MakeHierarchy Es}))
+	   end})
+   end
+
    class IndexerClass
       attr Entries: unit
       meth init()
 	 Entries <- nil
       end
-      meth enter(L Ands HTML Classes)
-	 Entries <- {AddAName Ands L}#HTML#Classes|@Entries
+      meth enter(L Ands HTML GlobalLink Classes)
+	 %% GlobalLink has the form: RURL#SectionTitle
+	 Entries <- {AddAName Ands L}#HTML#GlobalLink#Classes|@Entries
       end
       meth empty($)
 	 @Entries == nil
       end
-      meth process(DBName Prefix ?IndexHTML) DB in
-	 thread Es SortedEs Groups in
+      meth process(DBName Prefix DocumentTitle ?IndexHTML)
+	 thread DB Es in
 	    DB = case DBName of unit then unit
 		 else
 		    try
@@ -181,35 +208,19 @@ define
 		       {Gdbm.new create(DBName)}
 		    end
 		 end
+	    Es = DocumentTitle#{Map @Entries
+				fun {$ Ands#_#GlobalLink#Classes}
+				   Ands#GlobalLink#Classes
+				end}
 	    try
-	       {Gdbm.put DB Prefix @Entries}
+	       {Gdbm.put DB Prefix Es}
 	    catch error(dp(generic _ _ 'Resources'#Rs|_) ...) then
 	       {ForAll Rs Wait}
-	       {Gdbm.put DB Prefix @Entries}
+	       {Gdbm.put DB Prefix Es}
 	    end
 	    {Gdbm.close DB}
-	    Es = {Map @Entries
-		  fun {$ Ands0#EntryHTML#_} Ands in
-		     %%--** remove any id attributes
-		     Ands = {Map Ands0
-			     fun {$ X}
-				case X of _#_ then X
-				else {HTML.toVirtualString {HTML.clean X}}#X
-				end
-			     end}
-		     {Map Ands MakeSortKey}#Ands#EntryHTML
-		  end}
-	    SortedEs = {Sort Es fun {$ X Y} {KeyLess X.1 Y.1} end}
-	    Groups = {Group SortedEs}
-	    IndexHTML = SEQ({Map Groups
-			     fun {$ G#Es}
-				'div'(h3('class': [margin]
-					 PCDATA(case G of &* then 'Symbols'
-						[] &0 then 'Numbers'
-						else [G]
-						end))
-				      SEQ({MakeHierarchy Es}))
-			     end})
+	    IndexHTML = {MakeIndex
+			 {Map @Entries fun {$ Ands#HTML#_#_} Ands#HTML end}}
 	 end
       end
    end
