@@ -26,4 +26,9 @@ then
     exit 1
 fi
 
+if test "x$OZMAKE_VERBOSE" = xyes
+then
+    echo "Using TEXT2PICKLE: $TEXT2PICKLE" 1>&2
+fi
+
 exec $TEXT2PICKLE "$@"
