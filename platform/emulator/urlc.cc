@@ -37,6 +37,7 @@
 
 /* defines */
 
+#include "wsock.hh"
 #include "os.hh"
 #include "urlc.hh"
 

@@ -36,6 +36,7 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "wsock.hh"
 #include "builtins.hh"
 #include "perdio.hh"
 #include "os.hh"
