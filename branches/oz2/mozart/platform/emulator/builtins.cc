@@ -3692,38 +3692,43 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 OZ_Return BIminusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1,_11);
+  DEREF(B,_2,_22);
 
-  if ( (tagA == SMALLINT) && (tagB == SMALLINT) ) {
+  if ( isSmallInt(A) && isSmallInt(B) ) {
     out = makeInt(smallIntValue(A) - smallIntValue(B));
     return PROCEED;
   } 
 
-  if (isFloat(tagA) && isFloat(tagB)) {
+  if (isFloat(A) && isFloat(B)) {
     out = makeTaggedFloat(floatValue(A) - floatValue(B));
     return PROCEED;
   }
 
+  
+  TypeOfTerm tagA = tagTypeOf(A);
+  TypeOfTerm tagB = tagTypeOf(B);
   BIGOP(sub);
   return suspendOnNumbers(A,B);
 }
 
 OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
-  DEREF(A,_1,tagA);
-  DEREF(B,_2,tagB);
+  DEREF(A,_1,_11);
+  DEREF(B,_2,_22);
 
-  if ( (tagA == SMALLINT) && (tagB == SMALLINT) ) {
+  if ( isSmallInt(A) && isSmallInt(B) ) {
     out = makeInt(smallIntValue(A) + smallIntValue(B));
     return PROCEED;
   } 
 
-  if (isFloat(tagA) && isFloat(tagB)) {
+  if (isFloat(A) && isFloat(B)) {
     out = makeTaggedFloat(floatValue(A) + floatValue(B));
     return PROCEED;
   }
 
+  TypeOfTerm tagA = tagTypeOf(A);
+  TypeOfTerm tagB = tagTypeOf(B);
   BIGOP(add);
   return suspendOnNumbers(A,B);
 }
@@ -3798,19 +3803,13 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
   if (isSmallInt(tagA)) {
     /* INTDEP */
     int res = (int)A + (1<<tagSize);
-    out = (int)A >= res ? makeInt(smallIntValue(A)+1) : res;
-    return PROCEED;
+    if ((int)A < res) {
+      out = res;
+      return PROCEED;
+    }
   }
 
-  if (isBigInt(tagA)) {
-    return BIplusInline(A,newSmallInt(1),out);
-  }
-  
-  if (isAnyVar(tagA)) {
-    return SUSPEND;
-  }
-
-  oz_typeError(0,"Int");
+  return BIplusInline(A,makeTaggedSmallInt(1),out);
 }
 
 // sub1(X) --> X-1
@@ -3821,19 +3820,13 @@ OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
   if (isSmallInt(tagA)) {
     /* INTDEP */
     int res = (int)A - (1<<tagSize);
-    out = (int)A <= res ? makeInt(smallIntValue(A)-1) : res;
-    return PROCEED;
+    if ((int)A > res) {
+      out = res;
+      return PROCEED;
+    }
   }
 
-  if (isBigInt(tagA)) {
-    return BIminusInline(A,newSmallInt(1),out);
-  }
-
-  if (isAnyVar(tagA)) {
-    return SUSPEND;
-  }
-
-  oz_typeError(0,"Int");
+  return BIminusInline(A,makeTaggedSmallInt(1),out);
 }
 
 
