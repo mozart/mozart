@@ -125,7 +125,6 @@ class DebtRec;
 DebtRec* debtRec;
 
 TaggedRef currentURL;
-int load(char *url, OZ_Term &out);
 
 
 void marshallTerm(Site* sd,OZ_Term t, ByteStream *bs);
@@ -2036,7 +2035,7 @@ void PerdioVar::addSuspPerdioVar()
     Literal *lit = tagged2Literal(t);
     Assert(lit->isAtom());
     char *s=lit->getPrintName();
-    int ret=load(s,val);
+    int ret=loadURL(s,val);
     if (ret != PROCEED) {
       warning("mm2: load URL failed not impl");
     } else {
@@ -4917,7 +4916,7 @@ OZ_C_proc_begin(BIsave,2)
 }
 OZ_C_proc_end
 
-int load(char *url, OZ_Term &out)
+int loadURL(char *url, OZ_Term &out)
 {
   if (strncmp(url,"file:",5)!=0) {
     return oz_raise(E_ERROR,OZ_atom("perdio"),"only \"file:\" allowed",0);
@@ -4975,7 +4974,7 @@ OZ_C_proc_begin(BIload,2)
   OZ_declareArg(1,out);
 
   OZ_Term v;
-  int ret=load(url,v);
+  int ret=loadURL(url,v);
   if (ret != PROCEED) return ret;
 
   return OZ_unify(out,v);
