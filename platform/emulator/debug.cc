@@ -22,6 +22,7 @@
 
 #include "am.hh"
 #include "debug.hh"
+#include "runtime.hh"
 
 unsigned long OzDebug::goalCounter = 1;
 
@@ -96,7 +97,7 @@ OZ_C_proc_begin(BItaskStack,2)
   OZ_declareArg(1,out);
 
   in = OZ_deref(in);
-  if (!isThread(in)) { TypeErrorT(0,"Thread"); }
+  if (!isThread(in)) { oz_typeError(0,"Thread"); }
 
   ConstTerm *rec = tagged2Const(in);
   Thread *thread = (Thread*) rec;
@@ -120,7 +121,7 @@ OZ_C_proc_begin(BIlocation,2)
   OZ_declareArg(1,out);
 
   in = OZ_deref(in);
-  if (!isThread(in)) { TypeErrorT(0,"Thread"); }
+  if (!isThread(in)) { oz_typeError(0,"Thread"); }
 
   ConstTerm *rec = tagged2Const(in);
   Thread *thread = (Thread*) rec;

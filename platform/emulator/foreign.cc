@@ -23,6 +23,8 @@
 
 #include "../include/gmp.h"
 
+#include "runtime.hh"
+
 /* ------------------------------------------------------------------------ *
  * tests
  * ------------------------------------------------------------------------ */
@@ -2034,7 +2036,7 @@ char *OZ_unixError(int aErrno) {
 
 OZ_Return OZ_typeError(int pos,char *type)
 {
-  TypeErrorT(pos,type);
+  oz_typeError(pos,type);
 }
 
 void OZ_main(int argc,char **argv)
