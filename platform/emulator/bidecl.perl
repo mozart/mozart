@@ -43,55 +43,7 @@
 ###
 ### A type may be simple or complex:
 ###
-### SIMPLE    ::= unit
-###             | atom
-###             | nilAtom
-###             | array
-###             | bitArray
-###             | bool
-###             | cell
-###             | char
-###             | chunk
-###             | comparable
-###             | class
-###             | dictionary
-###             | feature
-###             | float
-###             | foreignPointer
-###             | fset
-###             | int
-###             | fdint
-###             | intC
-###             | literal
-###             | lock
-###             | name
-###             | number
-###             | object
-###             | port
-###             | procedure
-###             | procedure/0
-###             | procedure/1
-###             | procedure/2
-###             | procedure/3
-###             | procedure/4
-###             | procedure/5
-###             | procedure/6
-###             | procedure/>6
-###             | procedureOrObject
-###             | unaryProcOrObject
-###             | record
-###             | recordOrChunk
-###             | recordC
-###             | recordCOrChunk
-###             | space
-###             | thread
-###             | tuple
-###             | pair
-###             | cons
-###             | list
-###             | string
-###             | virtualString
-###             | value
+### SIMPLE    ::= ... any atom that occurs as feature in the Type.is module ...
 ###
 ### COMPLEX   ::= [SIMPLE]              (list of SIMPLE)
 ###             | [SIMPLE#SIMPLE]       (list of pairs of SIMPLE)
