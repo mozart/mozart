@@ -47,7 +47,6 @@ private:
   TaggedRef solveVar;
   TaggedRef result;
   TaggedRef guidance;
-  Board *boardToInstall;
   SuspList *suspList;
   SuspList * stable_sl;
   int threads;
@@ -82,23 +81,10 @@ public:
   Bool stable_wake(void);
   void add_stable_susp(Suspension *);
   void setBoard (Board *bb) { board = bb; }
-  void setBoardToInstall (Board *bb, int compMode) { 
-    boardToInstall = bb;
-    if (bb) {
-      bb->setCompModeHackForBoardToInstall(compMode);
-    }
-  }
-  Board* getBoardToInstall (int &compMode) {
-    if (boardToInstall) {
-      compMode=boardToInstall->getCompModeHackForBoardToInstall();
-    }
-    return (boardToInstall);
-  }
+
   TaggedRef genSolved();
   TaggedRef genStuck();
-  TaggedRef genEnumed(Board *newSolveBB);
   TaggedRef genChoice(int noOfClauses);
-  TaggedRef genEnumedFail();
   TaggedRef genFailed();
   TaggedRef genUnstable(TaggedRef arg);
   void printDebugKP();

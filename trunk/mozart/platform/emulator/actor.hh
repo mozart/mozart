@@ -31,8 +31,7 @@ enum ActorFlags {
   Ac_Solve      = 0x04,
   Ac_Committed	= 0x08,
   Ac_EatWaits   = 0x10, // in disjunction with Ac_Solve
-  Ac_Guided     = 0x20, // in disjunction with Ac_Solve
-  Ac_Debug      = 0x40  // in disjunction with Ac_Solve
+  Ac_Debug      = 0x20  // in disjunction with Ac_Solve
 };
 
 class Actor : public ConstTerm {
@@ -63,11 +62,9 @@ public:
   Bool isAskWait () { return ((flags & (Ac_Ask|Ac_Wait)) ? OK : NO); } 
   Bool isSolve () { return ((flags & Ac_Solve) ? OK : NO); }
   Bool isEatWaits() { return ((flags & Ac_EatWaits) ? OK : NO); }
-  Bool isGuided() { return ((flags & Ac_Guided) ? OK : NO); }
   Bool isDebug() { return ((flags & Ac_Debug) ? OK : NO); }
   void setCommitted() { flags |= Ac_Committed; }
   void setEatWaits() { flags |= Ac_EatWaits; }
-  void setGuided() { flags |= Ac_Guided; }
   void setDebug() { flags |= Ac_Debug; }
 };
 
