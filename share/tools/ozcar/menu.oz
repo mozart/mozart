@@ -60,7 +60,7 @@ in
 		  C(label:  'Terminate'
 		    action: self # action(' term')
 		    key:    t)]
-	      feature: 'thread')
+	      feature: thr)
 	   MB(text: 'Stack'
 	      menu:
 		 [C(label:  'Previous Frame'
@@ -70,7 +70,8 @@ in
 		  C(label:  'Next Frame'
 		    action: self # neighbourStackFrame(1)
 		    key:    'Down'
-		    event:  '<Down>')])
+		    event:  '<Down>')]
+	      feature: stack)
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:    'Use Oz Source Window'
@@ -137,7 +138,8 @@ in
 	  ]}
 
 	 {ForAll [self.menuBar.ozcar.menu
-		  self.menuBar.'thread'.menu
+		  self.menuBar.thr.menu
+		  self.menuBar.stack.menu
 		  self.menuBar.help.menu
 		  self.menuBar.help.breakpoints.menu]
 	  proc {$ M} {M tk(conf tearoff:false)} end}
