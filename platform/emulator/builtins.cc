@@ -473,6 +473,36 @@ DECLAREBI_USEINLINEREL1(BIisNonvar,isNonvarInline)
 DECLAREBOOLFUN1(BIisNonvarB,isNonvarBInline,isNonvarInline)
 
 
+
+OZ_Return isFreeRelInline(TaggedRef term) {
+  DEREF(term, _1, tag);
+  switch (tag) {
+  case UVAR: case SVAR: return PROCEED;
+  default:              return FAILED;
+  }
+}
+
+DECLAREBI_USEINLINEREL1(BIisFreeRel,isFreeRelInline)
+DECLAREBOOLFUN1(BIisFree,isFreeInline,isFreeRelInline)
+
+OZ_Return isKindedRelInline(TaggedRef term) {
+  DEREF(term, _1, tag);
+  return isCVar(tag) ? PROCEED : FAILED;
+}
+
+DECLAREBI_USEINLINEREL1(BIisKindedRel,isKindedRelInline)
+DECLAREBOOLFUN1(BIisKinded,isKindedInline,isKindedRelInline)
+
+OZ_Return isDetRelInline(TaggedRef term) {
+  DEREF(term, _1, tag);
+  return isAnyVar(tag) ? FAILED : PROCEED;
+}
+
+DECLAREBI_USEINLINEREL1(BIisDetRel,isDetRelInline)
+DECLAREBOOLFUN1(BIisDet,isDetInline,isDetRelInline)
+
+
+
 OZ_Return isNameInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
@@ -2872,6 +2902,35 @@ OZ_Return BItermTypeInline(TaggedRef term, TaggedRef &out)
 }
 
 DECLAREBI_USEINLINEFUN1(BItermType,BItermTypeInline)
+
+OZ_Return BIstatusInline(TaggedRef term, TaggedRef &out) {
+  DEREF(term, _1, tag);
+
+  switch (tag) {
+  case UVAR: 
+  case SVAR: 
+    out = AtomFree; break;
+  case CVAR: {
+    SRecord *t = SRecord::newSRecord(AtomKinded, 1);
+    switch (tagged2CVar(term)->getType()) {
+    case FDVariable:
+    case BoolVariable:
+      t->setArg(0, AtomInt); break;
+    case OFSVariable:
+      t->setArg(0, AtomRecord); break;
+    default:
+      t->setArg(0, AtomOther); break;
+    }
+    out = makeTaggedSRecord(t);
+    break;
+  }
+  default:
+    out = OZ_termType(term);
+  }
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIstatus,BIstatusInline)
 
 
 // ---------------------------------------------------------------------
@@ -7160,9 +7219,12 @@ BIspec allSpec2[] = {
 
   {"isVar",2,BIisVarB,           (IFOR) isVarBInline},
   {"isNonvar",2,BIisNonvarB,     (IFOR) isNonvarBInline},
-  {"isVarRel",1,BIisVar,             (IFOR) isVarInline},
-  {"isNonvarRel",1,BIisNonvar,       (IFOR) isNonvarInline},
-
+  {"IsFreeRel",   1, BIisFreeRel,   (IFOR) isFreeRelInline},
+  {"IsKindedRel", 1, BIisKindedRel, (IFOR) isKindedRelInline},
+  {"IsDetRel",    1, BIisDetRel,    (IFOR) isDetRelInline},
+  {"IsFree",   2, BIisFree,   (IFOR) isFreeInline},
+  {"IsKinded", 2, BIisKinded, (IFOR) isKindedInline},
+  {"IsDet",    2, BIisDet,    (IFOR) isDetInline},
 
   {"IsVirtualString",      2, BIvsIs,    0},
   {"virtualStringLength",  3, BIvsLength, 0},
@@ -7176,6 +7238,7 @@ BIspec allSpec2[] = {
   {"Or",      3,BIor,              (IFOR) orInline},
 
   {"Value.type",2,BItermType,       	 (IFOR) BItermTypeInline},
+  {"Value.status",2,BIstatus,       	 (IFOR) BIstatusInline},
 
   {"ProcedureArity",2,BIprocedureArity,	 (IFOR)procedureArityInline},
   {"MakeTuple",3,BItuple,              (IFOR) tupleInline},
