@@ -448,13 +448,15 @@ Bool AM::hookCheckNeeded()
 #define XPC(N) Xreg(getRegArg(PC+N))
 #define GetBI(PC) ((BuiltinTabEntry*) getAdressArg(PC))
 
- 
+#if defined(LINUX_I486) || defined(GNUWIN32) || defined(SOLARIS_I486) || defined(FREEBSD_I486)
+#define I486
+#endif
+
 /* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(GNUWIN32) || defined(LINUX_I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
 
-#if defined(LINUX_I486) || defined(GNUWIN32)
-
+#ifdef I486
 #define Reg1 asm("%esi")
 #define XReg1 
 #define Reg2
