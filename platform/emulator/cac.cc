@@ -2645,6 +2645,10 @@ ConstTerm * ConstTerm::_cacConstTerm(void) {
   return this ? _cacConstTermInline() : this;
 }
 
-OzVariable * OzVariable::_cacVar(void) {
-  return _cacVarInline();
+#ifdef G_COLLECT
+
+OzVariable * OzVariable::gCollectVar(void) {
+  return gCollectVarInline();
 }
+
+#endif

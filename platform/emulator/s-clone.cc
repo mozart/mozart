@@ -43,7 +43,6 @@
 
 #define _cacName                sCloneName
 
-#define _cacVar                 sCloneVar
 #define _cacVarRecurse          sCloneVarRecurse
 #define _cacVarInline           sCloneVarInline
 

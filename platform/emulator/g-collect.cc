@@ -43,7 +43,6 @@
 
 #define _cacName                 gCollectName
 
-#define _cacVar                  gCollectVar
 #define _cacVarRecurse           gCollectVarRecurse
 #define _cacVarInline            gCollectVarInline
 
