@@ -260,14 +260,13 @@ Bool AM::hookCheckNeeded()
 #define emulateHook0(e) emulateHook(e,NULL,0,NULL)
 
 
+#define CallPushCont(ContAdr) e->pushTask(CBB,ContAdr,Y,G)
+
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity,CheckMode)		      \
-     if (! IsEx) {				\
-       e->pushTask(CBB,ContAdr,Y,G);		\
-     }						\
+#define CallDoChecks(Pred,gRegs,Arity,CheckMode)		      \
      G = gRegs;								      \
      if (CheckMode) e->currentThread->checkCompMode(Pred->getCompMode()); \
      if (emulateHook(e,Pred,Arity,X)) {					      \
@@ -1509,32 +1508,18 @@ void engine() {
 
   Case(FASTCALL):
     {
-      
-      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-      INCFPC(2);
-
-      Assert((e->currentThread->compMode&1) == entry->getAbstr()->getCompMode());
-      CallDoChecks(entry->getAbstr(),entry->getGRegs(),NO,PC,
-		   entry->getAbstr()->getArity(),NO);
-
-      Y = NULL; // allocateL(0);
-      // set pc
-      IHashTable *table = entry->indexTable;
-      if (table) {
-	DoSwitchOnTerm(X[0],table);
-      } else {
-	JUMP(entry->getPC());
-      }
+      CallPushCont(PC+2);
+      goto LBLFastTailCall;
     }
 
 
   Case(FASTTAILCALL):
+  LBLFastTailCall:
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
       Assert((e->currentThread->compMode&1) == entry->getAbstr()->getCompMode());
-      CallDoChecks(entry->getAbstr(),entry->getGRegs(),OK,PC,
-		   entry->getAbstr()->getArity(),NO);
+      CallDoChecks(entry->getAbstr(),entry->getGRegs(),entry->getAbstr()->getArity(),NO);
 
       Y = NULL; // allocateL(0);
       // set pc
@@ -2021,30 +2006,35 @@ void engine() {
 
     PC = isTailCall ? 0 : PC+4;
 
-    DEREF(object,_1,objectTag);
-    if (!isConstChunk(object)) {
-      if (isAnyVar(objectTag)) {
+    DEREF(object,_1,_2);
+    if (!isObject(object)) {
+      if (isAnyVar(object)) {
 	X[0] = makeMethod(arity,label,X);
 	X[1] = origObj;
 	predArity = 2;
 	predicate = chunkCast(e->suspCallHandler);
 	goto LBLcall;
       }
+      
+      if (isProcedure(object)) 
+	goto bombSend;
 
       HF_WARN(applFailure(object),
 	      message("send method application\n");
 	      printArgs(X+3,arity));  // mm2
     }
 
-    Abstraction *def = getSendMethod(object,label,arity,X);
-    if (def == NULL) {
-      goto bombSend;
+    {
+      Abstraction *def = getSendMethod(object,label,arity,X);
+      if (def == NULL) {
+	goto bombSend;
+      }
+
+      if (!isTailCall) { CallPushCont(PC); }
+      CallDoChecks(def,def->getGRegs(),arity+3,OK);
+      Y = NULL; // allocateL(0);
+      JUMP(def->getPC());
     }
-
-    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity+3,OK);
-    Y = NULL; // allocateL(0);
-    JUMP(def->getPC());
-
 
   bombSend:
     X[0] = makeMethod(arity,label,X);
@@ -2073,12 +2063,13 @@ void engine() {
     PC = isTailCall ? 0 : PC+4;
 
     DEREF(object,objectPtr,objectTag);
-    if (!isSRecord(objectTag) ||
+    if (!isObject(object) ||
 	NULL == (def = getApplyMethod(object,label,arity-3+3,X[0]))) {
       goto bombApply;
     }
     
-    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity,OK);
+    if (!isTailCall) { CallPushCont(PC); }
+    CallDoChecks(def,def->getGRegs(),arity,OK);
     Y = NULL; // allocateL(0);
     JUMP(def->getPC());
 
@@ -2150,10 +2141,14 @@ void engine() {
     case Co_Object:
       {
 	Abstraction *def;
-	if (typ==Co_Object) {	  
+	if (typ==Co_Object) {
+	  /* {Obj Msg} --> {Obj Msg Methods Self} */
 	  Object *o = (Object*) predicate;
 	  if (o->getIsClass()) {
 	    HF_FAIL(message("classes cannot be applied "),);
+	  }
+	  if (predArity != 1) {
+	    HF_FAIL(message("Object application: expect one argument, got: %d",predArity),);
 	  }
 	  def = o->getAbstraction();
 	  X[predArity++] = o->getSlowMethods();
@@ -2162,7 +2157,8 @@ void engine() {
 	  def = (Abstraction *) predicate;
 	}
 	CheckArity(predArity, def->getArity(), def, PC);
-	CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity(),OK);
+	if (!isTailCall) { CallPushCont(PC); }
+	CallDoChecks(def,def->getGRegs(),def->getArity(),OK);
 	Y = NULL; // allocateL(0);
 
 	JUMP(def->getPC());
