@@ -204,21 +204,26 @@ then
     oz_tcl_inc_dir=$with_tcl_include
 fi
 
+AC_MSG_CHECKING(for tcl library source)
 AC_ARG_WITH(tcl_lib_tcl,
     [--with-tcl-lib-tcl=<dir>
-    search tcl libraries (tcl) in <dir> (default: /usr/lib/tcl8.0)])
+    search tcl libraries (tcl) in <dir> (default: ${oz_tcl_lib_dir:-/usr/lib}/tcl8.0)])
 
 if test -n "${with_tcl_lib_tcl}"
 then
     oz_tcl_lib_tcl_dir=$with_tcl_lib_tcl
 fi
 
-: ${oz_tcl_lib_tcl_dir=/usr/lib/tcl8.0}
+: ${oz_tcl_lib_tcl_dir=${oz_tcl_lib_dir:-/usr/lib}/tcl8.0}
+
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tcl_lib_tcl_dir/init.tcl"
 then
     AC_MSG_ERROR("$oz_tcl_lib_tcl_dir/init.tcl" not found)
 fi
+
+AC_MSG_RESULT($oz_tcl_lib_tcl_dir)
+
 
 oz_inc_path="$oz_tcl_inc_dir $oz_inc_path"
 oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
@@ -263,9 +268,10 @@ then
     oz_tk_inc_dir=$with_tk_include
 fi
 
+AC_MSG_CHECKING(for tk library source)
 AC_ARG_WITH(tk_lib_tcl,
     [--with-tk-lib-tcl=<dir>
-    search tk libraries (tcl) in <dir> (default: /usr/lib/tk8.0)])
+    search tk libraries (tcl) in <dir> (default: ${oz_tk_lib_dir:-/usr/lib}/tk8.0)])
 
 if test -n "${with_tk_lib_tcl}"
 then
@@ -277,13 +283,16 @@ if test "${OZSUSE}" = "yes"
 then
     : ${oz_tk_lib_tcl_dir=/usr/X11R6/lib/tk8.0}
 else
-    : ${oz_tk_lib_tcl_dir=/usr/lib/tk8.0}
+    : ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.0}
 fi
 
 if test "$oz_coolness" != yes && test ! -f "$oz_tk_lib_tcl_dir/tk.tcl"
 then
     AC_MSG_ERROR("$oz_tk_lib_tcl_dir/tk.tcl" not found)
 fi
+
+AC_MSG_RESULT($oz_tk_lib_tcl_dir)
+
 
 oz_inc_path="$oz_tk_inc_dir $oz_inc_path"
 oz_lib_path="$oz_tk_lib_dir $oz_lib_path"
