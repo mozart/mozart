@@ -97,23 +97,6 @@ void deleteGName(GName *gn)
   delete gn;
 }
 
-GName *newGName(PrTabEntry *pr)
-{
-  GName *ret = newGName(ToInt32(pr),GNT_CODE);
-  return ret;
-}
-
-
-PrTabEntry *findCodeGName(GName *gn)
-{
-  TaggedRef aux = findGName(gn);
-  if (aux) {
-    return (PrTabEntry*) ToPointer(aux);
-  }
-  return NULL;
-}
-
-
 /* OBSERVE - this must be done at the end of other gc */
 void GNameTable::gcGNameTable()
 {
@@ -124,11 +107,6 @@ void GNameTable::gcGNameTable()
     GName *gn = (GName*) aux->getBaseKey();
 
     DebugCode(used--);
-
-    /* code is never garbage collected */
-    if (gn->getGNameType()==GNT_CODE){
-      gn->site->setGCFlag();
-      goto next_one;}
 
     if (gn->getGCMark()) {
       gn->resetGCMark();
@@ -151,7 +129,7 @@ void GNameTable::gcGNameTable()
 
 
 /**********************************************************************/
-/*   SECTION 19 :: Globalizing       stateless BASIC otherwise entity                         */
+/*   SECTION 19 :: Globalizing       stateless BASIC otherwise entity */
 /**********************************************************************/
 
 GName *Name::globalize()
