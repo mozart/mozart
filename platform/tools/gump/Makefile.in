@@ -28,17 +28,16 @@ INSTALLSRC	= @INSTALLSRC@
 INSTALLDIR	= $(INSTALL) -m 775 -d
 
 HEADERS1 = FlexLexer.h lexer.h
-HEADERS = $(HEADERS1:$(SRCDIR)/%=$(INCDIR)/%)
+HEADERS = $(HEADERS1:%=$(INCDIR)/%)
 
 all: Makefile subdirs GumpScanner.dl
 
 subdirs:
 	for i in $(SUBDIRS); do (cd $$i && $(MAKE) all); done
 
-GumpScanner.dl: $(SRCDIR)/GumpScanner.C $(TOPDIR)/Emulator/oz.h
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(SRCDIR)/GumpScanner.C \
-	-o GumpScanner.o
-	$(DYNLD) -o GumpScanner.dl GumpScanner.o $(LDFLAGS) $(LIBS)
+GumpScanner.dl: GumpScanner.C $(TOPDIR)/Emulator/oz.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
+	$(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
 
 install: all \
 	$(DYNLDIR) $(DYNLDIR)/GumpScanner.dl \
@@ -68,7 +67,7 @@ distclean: clean
 	$(RM) Makefile config.*
 	for i in $(SUBDIRS); do (cd $$i && $(MAKE) distclean); done
 
-Makefile: $(SRCDIR)/Makefile.in config.status
+Makefile: Makefile.in config.status
 	./config.status
 
 config.status: configure
