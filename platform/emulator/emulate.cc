@@ -2922,7 +2922,7 @@ void buildRecord(ProgramCounter PC, RefsArray X, RefsArray Y,Abstraction *CAP)
   int argsToHandle = 0;
 
   int maxX = CAP->getPred()->getMaxX();
-  RefsArray savedX = allocateRefsArray(maxX,NO);
+  RefsArray savedX = maxX ? allocateRefsArray(maxX,NO) : 0;
   for (int i = 0; i < maxX; i++)
     savedX[i] = X[i];
 
