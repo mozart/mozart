@@ -4162,26 +4162,30 @@ Bool Chain::siteExists(Site *s){
     e=e->next;}
   return NO;}
 
-Bool Chain::siteRemove(Site* s){
+int Chain::siteRemove(Site* s){
   ChainElem *ce,*ce2;
   int ctr=0;
   ce=first;
   ce2=ce->next;
-  Assert(ce->site!=s);
+  if(ce->site==s)
+    return 0;
+  ce->deinstallProbe(PROBE_TYPE_PERM);
   freeChainElem(ce);
   if(ce2->site==s){
     first=ce2;
-    return OK;}
+    return 1;}
+  ce2->deinstallProbe(PROBE_TYPE_PERM);
   while(TRUE){
     ce=ce2;
     ce2=ce->next;
     freeChainElem(ce);
     if(ce2->site==s){
       first=ce2;
-      return NO;}}}
+      return 2;}}}
 
 void Chain::removeFirstElem(){
   ChainElem *ce=first;
+  ce->deinstallProbe(PROBE_TYPE_PERM);
   first=first->next;
   freeChainElem(ce);}
 
@@ -4194,6 +4198,7 @@ Site* Chain::removeSecondElem(){
     last=first;}
   else{
     ret=ce->next->site;}
+  ce->deinstallProbe(PROBE_TYPE_PERM);
   freeChainElem(ce);
   return ret;}
 
@@ -4235,10 +4240,14 @@ void chainReceiveAck(OwnerEntry* oe,Site* rsite){
   Tertiary *t=oe->getTertiary();
   Chain* chain=tertiaryGetChain(t);
   if(!(chain->siteExists(rsite))) {return;}
-  if(chain->siteRemove(rsite)){
+  int ret=chain->siteRemove(rsite);
+  if(ret==1){
     chain->installProbeAfterAck();
     return;}
-  chain->installTwoProbesAfterAck();}
+  if(ret==2){
+    chain->installTwoProbesAfterAck();
+    return;}
+  Assert(ret==0);}
 
 void chainReceiveQuestion(BorrowEntry *be,Site* site,int OTI){
   if(be==NULL){
@@ -4265,10 +4274,12 @@ void chainReceiveQuestion(BorrowEntry *be,Site* site,int OTI){
   return;}
 
 void chainDump(Chain *ch,Tertiary* t){
+  int ctr=0;
   ChainElem* ce=ch->getFirstChainElem();
   ChainElem *ce1;
   while(ce!=NULL){
     ce1=ce->getNext();
+    if(ctr<2) {ctr++;ce->deinstallProbe(PROBE_TYPE_PERM);}
     freeChainElem(ce);
     ce=ce1;}
   ch->hasDumped();
@@ -4860,6 +4871,7 @@ void Chain::managerSeesSiteCrash(Tertiary *t,Site *s){
   ChainElem *ce=first->next;
   if(first->site==s){
     if(ce==NULL){
+      first->deinstallProbe(PROBE_TYPE_PERM);
       freeChainElem(first);
       first=ce;
       if(t->getType()==Co_Cell){

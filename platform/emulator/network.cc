@@ -1702,11 +1702,12 @@ void WriteConnection::prmDwn(){
     sentMsg = NULL;
     while(m != NULL){
       PD((ACK_QUEUE,"Emptying ackqueu m:%x bs: %x",m, m->bs));
+      m->bs->resend();
       remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
                                  COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
       Message *tmp = m;
       m = m->next;
-      tmp->bs->resend();
+
       messageManager->freeMessageAndMsgBuffer(tmp);}
 
     if(!isWritePending())
