@@ -324,19 +324,19 @@ int OZ_getHeapChunkSize(TaggedRef t)
 {
   NotHeapChunkWarning(t, OZ_getHeapChunkSize, 0);
   
-  return ((HeapChunk *) tagged2Const(t))->getChunkSize();
+  return ((HeapChunk *) tagged2Const(deref(t)))->getChunkSize();
 }
 
 char * OZ_getHeapChunkData(TaggedRef t)
 {
   NotHeapChunkWarning(t, OZ_getHeapChunk, NULL);
   
-  return ((HeapChunk *) tagged2Const(t))->getChunkData();
+  return ((HeapChunk *) tagged2Const(deref(t)))->getChunkData();
 }
 
 int OZ_isHeapChunk(OZ_Term t)
 {
-  return isHeapChunk(t);
+  return isHeapChunk(deref(t));
 }
 
 
