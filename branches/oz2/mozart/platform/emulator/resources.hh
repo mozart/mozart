@@ -50,10 +50,11 @@
 #define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
 
 #define STACKMAXSIZE	8192 /* tasks */
-#define STACKMINSIZE    3    /* tasks */
+#define STACKMINSIZE    4    /* tasks */
+
+#define QUEUEMINSIZE    32
 
 #define CLOCK_TICK	        10000  /* usec */
-#define THREAD_QUEUE_SIZE	256
 #define NUM_TOPLEVEL_VARS	10000
 
 #define NumberOfXRegisters	10000

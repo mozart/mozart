@@ -79,7 +79,9 @@ public:
   ~TaskStack() { Assert(0); }
 
   int suggestNewSize() {
-    return max(ozconf.stackMinSize,(getMaxSize() + getUsed()) >> 1);
+    int used = getUsed();
+    return max(ozconf.stackMinSize,
+	       min(used * 2, (getMaxSize() + used) >> 1));
   }
 
   void printTaskStack(ProgramCounter pc = NOCODE,
