@@ -63,7 +63,7 @@ public:
   }
       
   void addVirtualConstr(SuspList * elem, FDState state) {
-    DebugCheck((state < det || state > any), error("Unexpected state.")); 
+    DebugCheck(state > any, error("Unexpected state.")); 
     if (state == any)
       addVirtualConstr(elem);
     else
@@ -71,7 +71,7 @@ public:
   }
 
   void addVirtualConstrLocal(SuspList * elem, FDState state) {
-    DebugCheck((state < det || state > any), error("Unexpected state.")); 
+    DebugCheck(state > any, error("Unexpected state.")); 
     if (isLocalVariable() == OK || state == any || state == eqvar)
       addVirtualConstr(elem, state);
     else
