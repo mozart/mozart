@@ -15,9 +15,6 @@ fun
    instantiate
 \endif
    {NewExplorer IMPORT}
-
-   \insert 'Standard.env'
-       = IMPORT.'Standard'
    \insert 'SP.env'
        = IMPORT.'SP'
    \insert 'WP.env'
