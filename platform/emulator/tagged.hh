@@ -908,6 +908,20 @@ RefsArray resize(RefsArray r, int s){
 } // resize
 
 
+//
+// identity test
+//
+inline Bool sameTerm(TaggedRef t1, TaggedRef t2)
+{
+  DEREF(t1,t1Ptr,_1);
+  DEREF(t2,t2Ptr,_2);
+  if (isAnyVar(t1) || isAnyVar(t2)) {
+    return t1Ptr==t2Ptr;
+  }
+  return t1==t2;
+}
+
+
 extern void initTagged();
 
 #endif
