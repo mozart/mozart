@@ -704,12 +704,18 @@ in
 		     Frame
 		  in
 		     {@currentStack getFrame(~1 Frame)}
-		     Gui,UnselectStackFrame
-		     Gui,markNode({Thread.id T} running)
-		     {Emacs configureBar(running)}
-		     Gui,markStack(inactive)
-		     {Dbg.unleash @currentThread Frame.frameID}
-		     {Thread.resume @currentThread}
+		     case Frame == unit then skip else
+			Gui,UnselectStackFrame
+			Gui,markNode({Thread.id T} running)
+			{Emacs configureBar(running)}
+			Gui,markStack(inactive)
+			case Frame.frameID of unit then
+			   {Dbg.unleash T 0}
+			elseof FrameID then
+			   {Dbg.unleash T FrameID}
+			end
+			{Thread.resume T}
+		     end
 		  end
 	       end
 
@@ -727,21 +733,19 @@ in
 		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
-		     ThreadDic = ThreadManager,getThreadDic($)
-		     Stack     = {Dictionary.condGet ThreadDic I nil}
+		     TopFrame = {@currentStack getTop($)}
 		  in
-		     case Stack == nil then skip else
-			TopFrame  = {Stack getTop($)}
-			Dir       = case TopFrame == nil
-				    then entry else TopFrame.dir end
-		     in
+		     case TopFrame == unit then skip else
 			{Dbg.step T false}
-
 			Gui,UnselectStackFrame
 			Gui,markNode(I running)
 			Gui,markStack(inactive)
 			{Emacs configureBar(running)}
-			{Dbg.unleash @currentThread TopFrame.frameID}
+			case TopFrame.frameID of unit then
+			   {Dbg.unleash T 0}
+			elseof FrameID then
+			   {Dbg.unleash T FrameID}
+			end
 			{Thread.resume T}
 		     end
 		  end
@@ -761,28 +765,29 @@ in
 		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
-		     ThreadDic = ThreadManager,getThreadDic($)
-		     Stack     = {Dictionary.condGet ThreadDic I nil}
+		     Frame
+		     LSF = @LastSelectedFrame
+		     Stk = @currentStack
 		  in
-		     case Stack == nil then skip else
-			Frame LSF
-		     in
-			{@currentStack getFrame(@LastSelectedFrame Frame)}
-
+		     {Stk getFrame(LSF Frame)}
+		     case Frame == unit then skip else
 			{Dbg.step T false}
-			{@currentStack rebuild(true)}
-			{Dbg.unleash T Frame.frameID}
+			{Stk rebuild(true)}
+			case Frame.frameID of unit then
+			   {Dbg.unleash T 0}
+			elseof FrameID then
+			   {Dbg.unleash T FrameID}
+			end
 
 			%% delete all tags
-			{ForAll [resetReservedTags({Stack getSize($)})
-				 resetTags] self.StackText}
+			{self.StackText resetReservedTags({Stk getSize($)})}
+			{self.StackText resetTags}
 
 			Gui,markNode({Thread.id T} running)
 			Gui,markStack(inactive)
 			Gui,doStatus('Unleashing thread #' # I #
 				     ' to frame ' #
-				     case (LSF=@LastSelectedFrame) == 0 then 1
-				     else LSF end)
+				     case LSF == 0 then 1 else LSF end)
 			{Emacs configureBar(running)}
 			{Thread.resume T}
 		     end
