@@ -161,16 +161,16 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-AC_CHECK_PROGS(M4, gm4 m4)
-AC_CHECK_PROGS(RM, rm)
-AC_CHECK_PROGS(SH, sh bash)
-AC_CHECK_PROGS(MV, mv)
-AC_CHECK_PROGS(ECHO, echo)
-AC_CHECK_PROGS(SED, gnused sed)
-AC_CHECK_PROGS(AR, ar)
+AC_CHECK_PROGS(M4, gm4 m4, true)
+AC_CHECK_PROGS(RM, rm, true)
+AC_CHECK_PROGS(SH, sh bash, true)
+AC_CHECK_PROGS(MV, mv, true)
+AC_CHECK_PROGS(ECHO, echo, true)
+AC_CHECK_PROGS(SED, gnused sed, true)
+AC_CHECK_PROGS(AR, gar ar, true)
 
 AC_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-AC_PATH_PROG(DYNLD, ozdynld)
+AC_PATH_PROG(DYNLD, ozdynld, true)
 
 if test ! -n "$PLATFORMSCRIPT"
 then
@@ -180,7 +180,7 @@ fi
 M4_S="$M4"
 AC_SUBST(M4_S)
 
-AC_PATH_PROG(DEPEND, makedepend)
+AC_PATH_PROG(DEPEND, makedepend, true)
 
 dnl *****************************************************************
 dnl platform
