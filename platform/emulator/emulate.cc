@@ -92,68 +92,75 @@
       TaggedRef term = indexTerm;                                             \
       DEREF(term,_1,_2);                                                      \
                                                                               \
-      ProgramCounter offset;                                                  \
-                                                                              \
       if (isLTuple(term)) {                                                   \
-        offset = table->listLabel;                                            \
+        ProgramCounter offset = table->listLabel;                             \
         sPointer = tagged2LTuple(term)->getRef();                             \
         JUMP(offset);                                                         \
       }                                                                       \
                                                                               \
-      offset = table->getElse();                                              \
-                                                                              \
-      if (isSTuple(term)) {                                                   \
-        if (table->functorTable) {                                            \
-          Atom *name = tagged2STuple(term)->getLabelAtom();                   \
-          int hsh = name ? table->hash(name->hash()) : 0;                     \
-          offset = table->functorTable[hsh]                                   \
-            ->lookup(name,tagged2STuple(term)->getSize(),offset);             \
-          sPointer = tagged2STuple(term)->getRef();                           \
-        }                                                                     \
-        JUMP(offset);                                                         \
-      }                                                                       \
-                                                                              \
-      if (isLiteral(term)) {                                                  \
-        if (table->atomTable) {                                               \
-          int hsh = table->hash(tagged2Atom(term)->hash());                   \
-          offset = table->atomTable[hsh]->lookup(tagged2Atom(term),offset);   \
-        }                                                                     \
-        JUMP(offset);                                                         \
-      }                                                                       \
-                                                                              \
-      if (isNotCVar(term)) {                                          \
-        JUMP(table->varLabel);                                                \
-      }                                                                       \
-                                                                              \
-      if (isSmallInt(term)) {                                                 \
-        if (table->numberTable) {                                             \
-          int hsh = table->hash(smallIntHash(term));                          \
-          offset = table->numberTable[hsh]->lookup(term,offset);              \
-        }                                                                     \
-        JUMP(offset);                                                         \
-      }                                                                       \
-                                                                              \
-      if (isFloat(term)) {                                                    \
-        if (table->numberTable) {                                             \
-          int hsh = table->hash(tagged2Float(term)->hash());                  \
-          offset = table->numberTable[hsh]->lookup(term,offset);              \
-        }                                                                     \
-                                                                              \
-      }                                                                       \
-                                                                              \
-      if (isBigInt(term)) {                                                   \
-        if (table->numberTable) {                                             \
-          int hsh = table->hash(tagged2BigInt(term)->hash());                 \
-          offset = table->numberTable[hsh]->lookup(term,offset);              \
-        }                                                                     \
-      }                                                                       \
-                                                                              \
-      if (isCVar(term)) {                                                \
-        JUMP(tagged2CVar(term)->index(offset, table));                        \
-      }                                                                       \
-                                                                              \
-      JUMP(offset)
+      TaggedRef *sp = sPointer;                                               \
+      ProgramCounter offset = switchOnTermOutline(term,table,sp);             \
+      sPointer = sp;                                                          \
+      JUMP(offset);
 
+
+static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
+                                          TaggedRef *&sP)
+{
+  ProgramCounter offset = table->getElse();
+  if (isSTuple(term)) {
+    if (table->functorTable) {
+      Atom *name = tagged2STuple(term)->getLabelAtom();
+      int hsh = name ? table->hash(name->hash()) : 0;
+      offset = table->functorTable[hsh]
+            ->lookup(name,tagged2STuple(term)->getSize(),offset);
+      sP = tagged2STuple(term)->getRef();
+    }
+    return offset;
+  }
+
+  if (isLiteral(term)) {
+    if (table->atomTable) {
+      int hsh = table->hash(tagged2Atom(term)->hash());
+      offset = table->atomTable[hsh]->lookup(tagged2Atom(term),offset);
+    }
+    return offset;
+  }
+
+  if (isNotCVar(term)) {
+    return table->varLabel;
+  }
+
+  if (isSmallInt(term)) {
+    if (table->numberTable) {
+      int hsh = table->hash(smallIntHash(term));
+      offset = table->numberTable[hsh]->lookup(term,offset);
+    }
+    return offset;
+  }
+
+  if (isFloat(term)) {
+    if (table->numberTable) {
+      int hsh = table->hash(tagged2Float(term)->hash());
+      offset = table->numberTable[hsh]->lookup(term,offset);
+    }
+    return offset;
+  }
+
+  if (isBigInt(term)) {
+    if (table->numberTable) {
+      int hsh = table->hash(tagged2BigInt(term)->hash());
+      offset =table->numberTable[hsh]->lookup(term,offset);
+    }
+    return offset;
+  }
+
+  if (isCVar(term)) {
+    return (tagged2CVar(term)->index(offset, table));
+  }
+
+  return offset;
+}
 
 // -----------------------------------------------------------------------
 // CALL HOOK
