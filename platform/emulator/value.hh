@@ -1700,6 +1700,14 @@ Bool oz_isChunk(TaggedRef t)
     || (oz_isExtension(t) && oz_isChunkExtension(t));
 }
 
+inline
+OZ_Term oz_newChunk(Board *bb, OZ_Term val)
+{
+  Assert(val==oz_deref(val));
+  Assert(oz_isRecord(val));
+  return makeTaggedConst(new SChunk(bb, val));
+}
+
 /*===================================================================
  * Arrays
  *=================================================================== */

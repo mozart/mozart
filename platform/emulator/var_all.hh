@@ -69,7 +69,7 @@ OZ_Return oz_var_unifyINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef *val,
   case OZ_VAR_OF:      return ((OzOFVariable*) cv)->unify(ptr,val,scp);
   case OZ_VAR_FS:      return ((OzFSVariable*) cv)->unify(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_EXT:     return ((ExtVar *) cv)->unifyV(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) cv)->unifyV(ptr,val);
   default:  error("not impl"); return FAILED;
   }
 }
@@ -86,7 +86,7 @@ OZ_Return oz_var_bindINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
   case OZ_VAR_OF:      return ((OzOFVariable*) cv)->bind(ptr,val,scp);
   case OZ_VAR_FS:      return ((OzFSVariable*) cv)->bind(ptr,val,scp);
   case OZ_VAR_CT:      return ((OzCtVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_EXT:     return ((ExtVar *) cv)->bindV(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) cv)->bindV(ptr,val);
   default:  error("not impl"); return FAILED;
   }
 }

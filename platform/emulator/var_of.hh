@@ -31,9 +31,8 @@
 #pragma interface
 #endif
 
-#include "am.hh"
 #include "var_base.hh"
-#include "tagged.hh"
+#include "unify.hh"
 #include "value.hh"
 #include "mem.hh"
 #include "dictionary.hh"
