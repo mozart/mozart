@@ -366,8 +366,8 @@ The <code/{native}/ annotation is entered into the <code/info/
 feature.
       </list>
     <section><title/Interface/
-<p><list>
-        <entry/<code/URL.make//
+      <p><list>
+          <entry/<code/URL.make//
         <synopsis/<code/{URL.make ?+{VS} ??{Url}}//
         <item>Parses virtual string ?_{VS} as a url, according to the
 proposed uri syntax modulo Windows-motivated derigations (see above).
@@ -402,17 +402,43 @@ cache-style syntax be used (see <ptr to="Chapter.Resolve">): the
 authority are both replaced by single <samp>/</samp>.</item>
       <entry/<code/URL.toString//
       <synopsis/<code/{URL.toString ?+{X} ??{STR}}//
-      <item>Calls <code/URL.toVs/ and transforms the result to a
+      <item>Calls <code/URL.toVs/ and converts the result to a
 string.
       <entry/<code/URL.toAtom//
       <synopsis/<code/{URL.toAtom ?+{X} ??{Atom}}//
-      <item>Calls <code/URL.toVs/ and transforms the result to a
+      <item>Calls <code/URL.toVs/ and converts the result to a
 atom.
       <entry/<code/URL.resolve//
       <synopsis/<code/{URL.resolve ?+{BASE} ?+{REL} ??{Url}}//
       <item>?_{BASE} and {_{REL} are url records or vstrings.  ?_{REL}
 is resolved relative to ?_{BASE} and a new url record is returned with
 the appropriate fileds filled in.
+          <entry/<code/URL.normalizePath//
+          <synopsis/<code/{URL.normalizePath ?+{L1} ??{L2}}//
+          <item>Given a list ?_{L1} of pairs of the form
+<code/?{STRING}#?{BOOLEAN}/ (see <code/path/ feature of a url record),
+returns a list ?_{L2} that results from normalizing ?_{L1}.
+Normalization is the process of eliminating occurrences of path
+components <file/./ and <file/../ by interpreting them relative to the
+stack of path components.  A leading <file/./ is preserved because
+<file>./foo</file> and <file/foo/ should be treated differently: the
+first one is an absolute path anchored in the current directory,
+whereas the second one is relative.
+          <entry/<code/URL.isAbsolute//
+          <entry/<code/URL.isRelative//
+          <synopsis/<code/{URL.isAbsolute ?+{X} ??{B}}//
+          <synopsis/<code/{URL.isRelative ?+{X} ??{B}}//
+          <item>A url is considered absolute if (1) it has a
+<code/scheme/, or (2) it has a <code/device/, or (3) its <code/path/
+started with <samp>/</samp>, <samp/~/ (user home directory notation),
+<samp/./ (current directory), or <samp/../ (parent directory).  For
+example, <file>~rob/foo/baz</file> is abolute.
+          <entry/<code/URL.toBase//
+          <synopsis/<code/{URL.toBase ?+{X} ??{Url}}//
+          <item>Turns a url vstring or record into a url record that
+can safely be used as a base for <code/URL.resolve/ without loosing
+its last component.  Basically, it makes sure that there is a slash at
+the end.
     </list>
   </Chapter>
 
