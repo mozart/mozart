@@ -467,12 +467,13 @@ OZ_Return Board::installScript(Bool isMerging)
     Board::ignoreWakeUp(NO);
 
     if (res != PROCEED) {
-#undef BUG_FIX_FUTURE_MERGE
-#ifdef BUG_FIX_FUTURE_MERGE
-      if (!oz_isCons(xys)) {
-        // hack alert: ensure that preparedCalls != empty
-        am.prepareCall(BI_Unify,oz_unit(),oz_unit());
-      } else {
+      // NOTE: in case of a failure the remaining constraints in the
+      //       script are discarded
+      if (res == SUSPEND) {
+        res = BI_REPLACEBICALL;
+        am.prepareCall(BI_Unify,x,y);
+      }
+      if (res == BI_REPLACEBICALL) {
         while (oz_isCons(xys)) {
           TaggedRef xy = oz_deref(oz_head(xys));
           Assert(oz_isCons(xy));
@@ -482,11 +483,7 @@ OZ_Return Board::installScript(Bool isMerging)
           am.prepareCall(BI_Unify,x,y);
         }
       }
-      return BI_REPLACEBICALL;
-#else
-      (void) am.emptySuspendVarList();
-      return FAILED;
-#endif
+      return res;
     }
   }
   return PROCEED;
