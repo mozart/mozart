@@ -400,22 +400,29 @@ in
 	 {ForAll Vars
 	  proc{$ V}
 	     Name # Value = V
-	     Print        = case {Cget envPrintTypes} then
-			       {CheckType Value}
-			    else
-			       {V2VS Value}
-			    end
+	     PrintName # PrintValue # ClickValue =
+	     case {Cget envPrintTypes} then
+		Name # {CheckType Value} # Value
+	     else
+		case {IsDet Value} andthen {IsCell Value} then
+		   X = {Access Value}
+		in
+		   {VS2A '{Access ' # Name # '}'} # {V2VS X} # X
+		else
+		   Name # {V2VS Value} # Value
+		end
+	     end
 	  in
 	     case SV orelse {Atom.toString Name}.1 \= &` then
 		T  = {Widget newTag($)}
 		W  = {Widget w($)}
 		Ac = {New Tk.action
 		      tkInit(parent: W
-			     action: self # ProcessClick(Value))}
+			     action: self # ProcessClick(ClickValue))}
 	     in
 		Gui,Enqueue(env o(W insert 'end'
-				  {PrintF ' ' # Name {EnvVarWidth}}))
-		Gui,Enqueue(env o(W insert 'end' Print # '\n' T))
+				  {PrintF ' ' # PrintName {EnvVarWidth}}))
+		Gui,Enqueue(env o(W insert 'end' PrintValue # '\n' T))
 		Gui,Enqueue(env o(W tag bind T '<1>' Ac))
 		Gui,Enqueue(env o(W tag conf T font:BoldFont))
 	     else skip end
