@@ -26,6 +26,71 @@
 
 #include "intsets.hh"
 
+// for seq/propagation, we can do better than to propagate the
+// known information: we can propagate necessary bounds even on
+// the unknown stuff.  For example, if a set var has cardinality
+// at least N and its LUB is {i1 i2 ... iN ...}, then its maximum
+// element (when N>0) is at least iN, which means that the next
+// set in the sequence must be above that limit.  Similarly in
+// the other direction.  For this reason, we define the auxiliary
+// functions FSetGetLowerBoundOfMax and FSetGetUpperBoundOfMin.
+
+// Here we approximate the max element in a set.
+// It must be at least as large as the largest element
+// in the GLB.  However, if the cardinality is at least
+// N, then it must be at least as large as the Nth smallest
+// element in the LUB, which could be larger than the
+// largest element currently in the GLB.
+//
+// Note: if the set _could_ be empty, then this _must_ return -1
+
+int FSetGetLowerBoundOfMax(OZ_FSetConstraint& c)
+{
+  // just in case we _know_ that there are no elements
+  if (c.getCardMax()=<0) return -1;
+  // else: the set must contain at least i elements
+  int i = c.getCardMin();
+  // if i==0: we don't know anything about cardinality.
+  // the set could be empty.  we expect GLB to still be
+  // empty, but just in case it's not, we guess its
+  // max element (-1 if empty).
+  if (i==0) return c.getGlbMaxElem();
+  // else, we start counting upwards from the min element
+  // of LUB
+  int n = c.getLubMinElem();
+  while (--i) {
+    n=c.getLubNextLargerElem(n);
+    // in case we run out of elements (should not happen)
+    if (n<0) break;
+  }
+  return max(n,c.getGlbMaxElem());
+}
+
+// Similarly for the min element
+
+int FSetGetUpperBoundOfMin(OZ_FSetConstraint& c)
+{
+  // just in case there can be no elements
+  if (c.getCardMax()=<0) return -1;
+  // else the set must contain at least i elements
+  int i = c.getCardMin();
+  // if i==0: we know nothing about cardinality. the set
+  // could be empty.  we expect GLB to still be empty,
+  // but, just in case it's not, we guess its min element
+  // (-1 if empty)
+  if (i==0) return c.getGlbMinElem();
+  // else we start counting downward from the max element
+  // of LUB
+  int n = c.getLubMaxElem();
+  while (--i) {
+    n=c.getLubNextSmallerElem(n);
+    // in case we run out of elements (should not happen)
+    if (n<0) break;
+  }
+  int m = c.getGlbMinElem();
+  return (m<0)?n:((n<0)?m:min(n,m));
+}
+
 // FSP_MIN WAS WRITTEN BY TOBIAS AS AN EXAMPLE
 
 OZ_BI_define(fsp_min, 2, 0)
@@ -79,11 +144,19 @@ OZ_Return FSetsMinPropagator::propagate(void)
     FailOnEmpty(*d -= not_in);
   }
 
-  // d is in s
   {
     int i = d->getSingleElem();
     if (i != -1)
-      FailOnInvalid(*s += i);
+      {
+        // d is in s
+        FailOnInvalid(*s += i);
+      }
+    else
+      {
+        // d =< upper_bound_of_min(s)
+        // s is not empty, thus upper_bound_of_min(s) is not -1
+        FailOnEmpty(*d <= FSetGetUpperBoundOfMin(*s));
+      }
   }
 
   OZ_DEBUGPRINTTHIS("out: ");
@@ -145,11 +218,19 @@ OZ_Return FSetsMaxPropagator::propagate(void)
     FailOnEmpty(*d -= not_in);
   }
 
-  // d is in s
   {
     int i = d->getSingleElem();
     if (i != -1)
-      FailOnInvalid(*s += i);
+      {
+        // d is in s
+        FailOnInvalid(*s += i);
+      }
+    else
+      {
+        // d >= lower_bound_of_max(s)
+        // s is not empty, thus lower_bound_of_max(s) is not -1
+        FailOnEmpty(*d >= FSetGetLowerBoundOfMax(*s));
+      }
   }
 
   OZ_DEBUGPRINTTHIS("out: ");
@@ -722,43 +803,6 @@ OZ_BI_define(fsp_seq, 1, 0)
   return pe.impose(new FSetSeqPropagator(OZ_in(0)));
 }
 OZ_BI_end
-
-// for seq/propagation, we can do better than to propagate the
-// known information: we can propagate necessary bounds even on
-// the unknown stuff.  For example, if a set var has cardinality
-// at least N and its LUB is {i1 i2 ... iN ...}, then its maximum
-// element (when N>0) is at least iN, which means that the next
-// set in the sequence must be above that limit.  Similarly in
-// the other direction.  For this reason, we define the auxiliary
-// functions FSetGetLowerBoundOfMax and FSetGetUpperBoundOfMin.
-
-// Here we approximate the max element in a set.
-// It must be at least as large as the largest element
-// in the GLB.  However, if the cardinality is at least
-// N, then it must be at least as large as the Nth smallest
-// element in the LUB, which could be larger than the
-// largest element currently in the GLB.
-
-int FSetGetLowerBoundOfMax(OZ_FSetConstraint& c)
-{
-  int i = c.getCardMin();
-  if (i==0) return c.getGlbMaxElem();
-  int n = c.getLubMinElem();
-  while (--i) n=c.getLubNextLargerElem(n);
-  return max(n,c.getGlbMaxElem());
-}
-
-// Similarly for the min element
-
-int FSetGetUpperBoundOfMin(OZ_FSetConstraint& c)
-{
-  int i = c.getCardMin();
-  if (i==0) return c.getGlbMinElem();
-  int n = c.getLubMaxElem();
-  while (--i) n=c.getLubNextSmallerElem(n);
-  int m = c.getGlbMinElem();
-  return (m>=0)?min(n,m):n;
-}
 
 OZ_Return FSetSeqPropagator::propagate(void)
 {
