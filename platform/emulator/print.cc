@@ -1528,7 +1528,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       // definitionStart(PC) == NOCODE_GLOBALVARNAME
       ;
   }
-  return out;
+  return reverseC(out);
 }
 
 
