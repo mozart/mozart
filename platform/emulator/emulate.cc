@@ -1211,8 +1211,7 @@ LBLsuspendThread:
 
     if (e->debugmode() && CTT->getTrace()) {
       debugStreamBlocked(CTT);
-    } else if (CTT->getNoBlock() &&
-	       e->onToplevel() && !CTT->isPropagator() && CAA == NULL) {
+    } else if (CTT->getNoBlock() && CAA == NULL) {
       (void) oz_raise(E_ERROR,E_KERNEL,"block",1,makeTaggedConst(CTT));
       CTT->markRunnable();
       goto LBLraise;
@@ -2666,6 +2665,7 @@ LBLdispatcher:
 	CBB->decSuspCount();
 	CTS->discardActor();
 	WaitActor::Cast(CAA)->disposeWait();
+	CAA = NULL;
 	DISPATCH(1);
       }
       CBB->setWaiting();
@@ -2688,6 +2688,7 @@ LBLdispatcher:
 	CBB->decSuspCount();
 	CTS->discardActor();
 	AskActor::Cast(CAA)->disposeAsk();
+	CAA = NULL;
 	DISPATCH(1);
       }
 
