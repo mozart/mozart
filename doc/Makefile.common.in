@@ -101,7 +101,7 @@ CLASSPATH       = $(SRCTOP)/doc/xsl/oz.jar
 
 $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
         ( nsgmls -c../catalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1 }
-$(WHAT).tex: $(WHAT)-defaced.xml
+$(WHAT).tex: $(WHAT)-ready.xml
         $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
         || { rm -f $@; exit -1 }
 
@@ -188,6 +188,22 @@ $(WHAT)-prefaced.xml: $(WHAT)-hilite.xml $(WHAT)-annotated.xml
 
 $(WHAT)-defaced.xml: $(WHAT)-prefaced.xml
         $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-deface.xsl $@ || { rm -f $@; exit -1 }
+
+# extract db for cross doc refs
+
+$(WHAT)-xref-db.xml: $(WHAT).xml
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-xref.xsl $@ || { rm -f $@; exit -1 }
+
+#
+
+$(WHAT)-with-db.xml: $(WHAT)-defaced.xml ../global-xref-db.xml
+        echo "<OZDOC.READY>" > $@
+        cat $(WHAT)-defaced.xml >> $@
+        cat ../global-xref-db.xml >> $@
+        echo "</OZDOC.READY>" >> $@
+
+$(WHAT)-ready.xml: $(WHAT)-with-db.xml
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-ready.xsl $@ || { rm -f $@; exit -1 }
 
 clean::
         -rm -f $(WHAT).xml $(WHAT)-annotated.xml $(WHAT)-hilite.el
