@@ -449,6 +449,22 @@ Bool AM::hookCheckNeeded()
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
+/*
+ * create the suspension for a builtin returning SUSPEND
+ */
+void AM::suspendBI(Board *bb,int prio,OZ_CFun fun,RefsArray args,int nArgs)
+{
+  Suspension *susp = mkSuspension(bb,prio,fun,args,nArgs);
+  TaggedRef varList=suspendVarList;
+  while (!isRef(varList)) {
+    Assert(isCons(varList));
+    taggedBecomesSuspVar(tagged2Ref(head(varList)))->addSuspension(susp);
+    varList=tail(varList);
+  }
+  taggedBecomesSuspVar(tagged2Ref(varList))->addSuspension(susp);
+  suspendVarList=makeTaggedNULL();
+}
+
 inline
 Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
 			     RefsArray Y, RefsArray G,
@@ -970,13 +986,9 @@ void engine() {
 	    killPropagatedCurrentTaskSusp();
 	    LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 			      goto localhack0;);
-	    Assert(e->suspendVar);
-	    Suspension *susp =
-	      e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-			      biFun,X,XSize);
-	    taggedBecomesSuspVar(e->suspendVar)
-	      ->addSuspension(susp);
-	    e->suspendVar=0;
+	    Assert(e->suspendVarList!=makeTaggedNULL());
+	    e->suspendBI(CBB,GET_CURRENT_PRIORITY(),
+			 biFun,X,XSize);
 	    if (e->currentThread->compMode == ALLSEQMODE) {
 	      e->currentThread=0;
 	      goto LBLstart;
@@ -1691,14 +1703,8 @@ void engine() {
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
 		if (!isTailCall) e->pushTask(CBB,PC,Y,G);
-		if (e->suspendVar) {
-		  Suspension *susp =
-		    e->mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-				    bi->getFun(),X,predArity);
-		  taggedBecomesSuspVar(e->suspendVar)
-		    ->addSuspension(susp);
-		  e->suspendVar=0;
-		}
+		e->suspendBI(CBB,GET_CURRENT_PRIORITY(),
+			     bi->getFun(),X,predArity);
 		if (e->currentThread->getCompMode() == ALLSEQMODE) {
 		  e->currentThread=0;
 		  goto LBLstart;
