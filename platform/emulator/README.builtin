@@ -1,0 +1,370 @@
+% Copyright: Michael Mehl (1996)
+
+builtins and their types
+========================
+
+IsValue
+IsLiteral
+IsAtom
+IsName
+IsTuple
+IsRecord
+IsRecordC
+IsProcedure
+IsChunk
+IsCell
+IsString
+IsVirtualString
+IsBool
+IsChar
+IsSpace
+IsDictionary
+IsArray
+                +Value x -Bool
+
+isVar           Value x -Bool
+isNonvar        Value x -Bool
+
+
+recordCIsVar    Value x -Bool
+
+MakeRecordC             -Record
+
+recordCSize     ++SmallInt x -Record
+
+
+Procedure.isNary        +Procedure x +SmallInt x Bool
+
+ProcedureArity  +Procedure x -SmallInt
+
+
+Space.new       +Procedure x -Space
+
+Space.newDebug  +Procedure x -Space
+
+Space.ask       +Space x -Record
+
+Space.merge     +Space x -Value
+  "Space already merged"
+  "current space is subordinated"
+
+Space.clone     +Space x -Space
+  "Space already merged"
+
+Space.choose    +Space x -Space x Integer
+                +Space x -Space x Pair(Integer)
+  "Space already merged"
+  "current space is subordinated"
+  "Space: choice point stack is empty"
+
+Space.inject    +Space x +Procedure
+  "Space already merged"
+  "current space is subordinated"
+
+
+MakeTuple       +Literal x +SmallInt x -Tuple
+  "Only positive number of arguments"
+
+Label           +Record x -Literal
+
+WidthC          +Record x +SmallInt
+
+LabelC          +Record x -Literal
+
+monitorArity    +Record x +Value x -List(Feature)
+
+.               +properRecord x +Feature x -Value
+                +Chunk x +Feature x -Value
+  "Feature not in Record"
+  "Feature not in Chunk"
+
+@               +Feature
+  "Feature not in state"
+
+Subtree         +Record x +Feature x -Value
+                +Chunk x +Feature x -Value
+
+setC            ???
+removeC         ???
+testCB          ???
+
+^               +Record x +Feature x -Value
+
+HasSubtreeAt    +Record x +Feature x -Bool
+
+Width           +Record x -SmallInt
+
+getTrue         -Bool
+getFalse        -Bool
+
+Not             +Bool x -Bool
+And             +Bool x +Bool x -Bool
+Or              +Bool x +Bool x -Bool
+
+AtomToString    +Atom x -String
+StringToAtom    +String x -Atom
+
+VirtualString.length    +VirtualString x ++SmallInt x -SmallInt
+
+NewChunk        +Record x -Chunk
+chunkArity      +Chunk x -List(Feature)
+
+setThreadPriority       +SmallInt [0..100]
+getThreadPriority       -SmallInt [0..100]
+
+NewName         -Name
+
+Value.type      +Value x -Atom
+
+==              +Value x +Value x -Bool
+\=              +Value x +Value x -Bool
+
+Char.isAlNum
+Char.isAlpha
+Char.isCntrl
+Char.isDigit
+Char.isGraph
+Char.isLower
+Char.isPrint
+Char.isPunct
+Char.isSpace
+Char.isUpper
+Char.isXDigit
+                +Char x -Bool
+
+Char.toLower    +Char x -Char
+
+Char.toUpper    +Char x -Char
+
+Char.toAtom     +Char x -Atom
+
+Char.type       +Char x -Atom
+
+copyRecord      +DetRecord x -Record
+
+Adjoin          +Record x +Record x -Record
+
+AdjoinAt        +Record x +Feature x +Value x -Record
+
+AdjoinList      +Record x +List(+Pair(+Feature Value)) x -Record
+
+record          +Literal x +List(+Pair(+Feature Value)) x -Record
+
+Arity           +Record x -List(Feature)
+
+<-              +Feature x Value
+  "Feature not in State"
+
+/               +Float x +Float x -Float
+
+div             +Int x +Int x -Int
+  "Division by zero"
+
+mod             +Int x +Int x -Int
+  "Division by zero"
+
+*,-,+           +Int x +Int x -Int
+                +Float x +Float x -Float
+
+~,Abs           +Int x -Int
+                +Float x -Float
+
+
++1,-1           +Int x -Int
+
+Min,Max         +Int x +Int x -Int
+                +Float x +Float x -Float
+                +Atom x +Atom x -Atom
+
+<,>,=<,>=       +Int x +Int x -Bool
+                +Float x +Float x -Bool
+                +Atom x +Atom x -Bool
+
+=:=,=\=         +Int x +Int x -Bool
+                +Float x +Float x -Bool
+
+IntToFloat      +Int x -Float
+
+FloatToInt      +Float x -Int
+
+Float.toString  +Float x -String
+
+String.toFloat  +String x -Float
+  "String does not represent Float"
+
+String.isFloat  +String x -Bool
+
+String.toInt    +String x -Int
+  "String does not represent Int"
+
+String.isInt    +String x -Bool
+
+Int.toString    +Int x -String
+
+Exp,Log,Sqrt,Sin,Asin,Cos,Acos,Tan,Atan,Ceil,Floor,fabs,Float.round,Abs
+                +Float x -Float
+
+fPow            +Float x +Float x -Float
+
+Float.atan2             +Float x +Float x -Float
+
+smallIntLimits  -SmallInt x -SmallInt
+
+NewCell         Value x -Cell
+
+Exchange        +Cell x Value x Value
+  "not local"
+
+NewArray        +SmallInt x +SmallInt x Value x -Array
+
+Array.low       +Array x -SmallInt
+
+Array.high      +Array x -SmallInt
+
+Get             +Array x +SmallInt x -Value
+  "not local"
+
+Put             +Array x +SmallInt x Value
+  "not local"
+
+NewDictionary   -Dictionary
+
+Dictionary.keys +Dictionary x -List(Feature)
+  "not local"
+
+Dictionary.member       +Dictionary x +Feature x -Bool
+  "not local"
+
+Dictionary.get  +Dictionary x +Feature x -Value
+  "not local"
+  "not found"
+
+Dictionary.getIf        +Dictionary x +Feature x Value x -Value
+  "not local"
+
+Dictionary.put  +Dictionary x +Feature x Value
+  "not local"
+
+Dictionary.remove       +Dictionary x +Feature
+  "not local"
+
+linkObjectFiles  ++List(Atom) x -SmallInt
+  "expand filename failed"
+  "dlopen failed"
+
+unlinkObjectFile        +Atom
+  "expand filename failed"
+
+findFunction    +Atom x +SmallInt x +SmallInt
+
+shutdown
+
+Sleep           +Int x -Value x -Value
+  "negative time not allowed"
+  "only on toplevel"
+
+garbageCollection
+
+systemEq[B]     +Value x +Value [ x -Bool ]
+
+unify           -Value x -Value
+
+fail
+
+loadFile        +Atom
+  "file not found"
+
+apply           +Procedure x +List(Value)
+
+deepFeed        +Cell x Value
+
+deepCellRead    +Cell x -Value
+
+genericSet      +Record x +Feature x Value
+  "feature not found"
+
+SubtreeIf       +Record x +Feature x Value x -Value
+                +Chunk x +Feature x Value x -Value
+
+atomHash        +Atom x +SmallInt x -Int
+
+gensym          +Atom x -Atom
+
+getsBound       Value
+
+intToAtom
+
+constraints     Value x -Int
+
+pushExHdl       Procedure
+
+connectLingRef
+
+getLingRefFd    -Int
+
+getLingEof      -Int
+
+setAbstractionTabDefaultEntry   +Procedure
+        "no builtin allowed"
+
+printError      Value
+
+Print           Value
+
+printVS         VirtualString
+  "no virtual string"
+
+Show            Value
+
+getValue        +Int x +Atom x -Value
+setValue        +Int x +Atom x Value
+
+getArgv         -List(Value)
+
+getPrintName    Value x -Atom
+
+usertime        -Int
+
+memory          -Int
+
+showStatistics
+
+getStatistics   -Record
+
+resetStatistics
+
+traceBack       +SmallInt
+
+platform        -Pair(Atom Atom)
+
+ozhome          -Atom
+
+makeClass       ???
+
+makeObject      ???
+
+setMethApplHdl
+
+hasFastBatch
+
+getClass
+
+setClosed
+
+objectIsFree
+
+releaseObject
+
+getSelf         -Object
+
+setSelf         ++Object
+
+setModeToDeep
+
+cloneObjectRecord ...
+
+builtin         +Atom x +Value x -Procedure
+  Warn: "Illegal handler"
+  "Builtin not in table"
+  "Special builtin needs handler"
+  Warn: "Compiled inline ignore handler"
