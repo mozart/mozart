@@ -94,7 +94,7 @@ the statement between <<define ... end>> is executed.
 the system in the EMACS OZ menu. Click on the entry Find, and select
 Modules File.
 
-<P CLASS=TIPS>Given
+<P CLASS=WARNING>Given
 a file <<'x.oz'>> defining a functor, you may
 create the corresponding functor <<'x.ozf'>> from
 your shell by typing the command:
