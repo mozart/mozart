@@ -53,16 +53,16 @@ public:
 
 
 #define USEFREELISTMEMORY \
-  static inline void *operator new(size_t chunk_size) \
+  static void *operator new(size_t chunk_size) \
     { return freeListMalloc(chunk_size); } \
-  static inline void operator delete(void *,size_t ) \
+  static void operator delete(void *,size_t ) \
     { error("deleting free list mem"); }
 
 
 #define USEHEAPMEMORY \
-  static inline void *operator new(size_t chunk_size) \
+  static void *operator new(size_t chunk_size) \
     { return heapMalloc(chunk_size); }\
-  static inline void operator delete(void *,size_t) \
+  static void operator delete(void *,size_t) \
     { error("deleting heap mem");}
 
 
@@ -123,14 +123,6 @@ inline void *mallocBody(size_t chunk_size)
 /* Assert: heapTop grows to LOWER address */
 #define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
 
-/* like malloc(3): return pointer aligned to void* */
-inline void *heapMalloc(size_t chunk_size)
-{
-  if (sizeof(int32) != WordSize) {
-    HeapTopAlign(WordSize);
-  }
-  return mallocBody(chunk_size);
-}
 
 /* return pointer aligned to sizeof(int32) */
 inline int32 *int32Malloc(size_t chunk_size)
@@ -174,6 +166,7 @@ void printChunkChain(void *);
 #else
 void * freeListMalloc(size_t chunk_size);
 void freeListDispose(void *addr, size_t chunk_size);
+void *heapMalloc(size_t chunk_size);
 #endif
 
 #endif
