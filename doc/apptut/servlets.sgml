@@ -62,13 +62,13 @@ The <<Open.html>> class has support for this (see example below).
 It uses a class <<Open.html>> to generate HTML code on the fly.
 You can test it by sending a URL that looks like this:
 <<<
-'http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&text=3DHi+Guys'
+'http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&chars=3DHi+Guys'
 >>>
 <p>In this example,
 the value <<10>> is passed
 for the argument <<'number'>>
 and the value <<"Hi+Guys">> for 
-the argument <<'text'>>
+the argument <<'chars'>>
 (in CGI argument syntax,
 the plus is used to quote a space).
 
@@ -79,7 +79,7 @@ define
    %% Parse the arguments
    Args={Application.getCgiArgs 
       record(number(single type:int default:0)
-             text(single type:string default:"none"))}
+             chars(single type:string default:"none"))}
  
    %% A file that supports HTML output
    Out={New class $
@@ -95,7 +95,7 @@ define
                  body(bgcolor:'#f0f0e0'
                       h1('My First CGI')
                       p('The number is: '#Args.number)
-                      p('The text is: '#Args.text))))}
+                      p('The characters are: '#Args.chars))))}
  
    %% Terminate
    {Application.exit 0}
