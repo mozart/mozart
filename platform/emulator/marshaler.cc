@@ -1372,8 +1372,6 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
 /*   SECTION 17: code unmarshaling/marshaling                          */
 /* *********************************************************************/
 
-void marshalOpCode(ProgramCounter PC,Opcode op, MsgBuffer *bs);
-
 #include "marshalcode.cc"
 
 /* *********************************************************************/

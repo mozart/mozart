@@ -145,8 +145,8 @@ void marshalNumber(unsigned int i, MsgBuffer *bs);
 int unmarshalNumber(MsgBuffer *bs);
 void marshalCode(ProgramCounter,MsgBuffer*);
 void marshalLabel(ProgramCounter,int,MsgBuffer*);
-void marshalOpCode(ProgramCounter PC, Opcode op, MsgBuffer *bs);
-void marshalCodeEnd(ProgramCounter PC, MsgBuffer *bs);
+void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, int showLabel = 1);
+void marshalCodeEnd(MsgBuffer *bs);
 void marshalCodeStart(int codesize, MsgBuffer *bs);
 void putComment(char *s,MsgBuffer *bs);
 void putString(const char *s, MsgBuffer *bs);
@@ -154,7 +154,7 @@ void putTag(char tag, MsgBuffer *bs);
 void marshalDIF(MsgBuffer *bs, MarshalTag tag) ;
 void marshalByte(unsigned char c, MsgBuffer *bs);
 void marshalString(const char *s, MsgBuffer *bs);
-void marshalLabel(ProgramCounter PC, int lbl, MsgBuffer *bs);
+void marshalLabel(int start, int lbl, MsgBuffer *bs);
 void marshalLabelDef(char *lbl, MsgBuffer *bs);
 
 #endif /* __PICKLEH */
