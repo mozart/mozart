@@ -142,8 +142,8 @@ static void initGateStream()
   {
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
     globalizeTert(t);
-    int ind = t->getIndex();
-    OwnerEntry* oe=OT->index2entry(ind);
+    OB_TIndex ind = MakeOB_TIndex(t->getTertPointer());
+    OwnerEntry* oe = OT->index2entry(ind);
     oe->makePersistent();
   }
 }
@@ -200,7 +200,7 @@ void send(MsgContainer *msgC)
 }
 
 DSite* getSiteFromTertiaryProxy(Tertiary* t){
-  BorrowEntry *be=BT->bi2borrow(t->getIndex());
+  BorrowEntry *be = BT->bi2borrow(MakeOB_TIndex(t->getTertPointer()));
   Assert(be!=NULL);
   return be->getNetAddress()->site;}
 
@@ -240,7 +240,9 @@ void pendThreadAddMoveToEnd(PendThread **pt){
   *pt=new PendThread(NULL,NULL,MOVEEX);
 }
 
-void pendThreadAddRAToEnd(PendThread **pt,DSite *s1, DSite *s2,int index){
+void
+pendThreadAddRAToEnd(PendThread **pt,DSite *s1, DSite *s2,Ext_OB_TIndex index)
+{
   while(*pt!=NULL){pt= &((*pt)->next);}
   *pt=new PendThread(NULL,NULL,(TaggedRef)s1,(TaggedRef)s2,
                      (TaggedRef)index,REMOTEACCESS);
@@ -258,7 +260,7 @@ void gcBorrowTableUnusedFramesImpl() {
 }
 
 void gcProxyRecurseImpl(Tertiary *t) {
-  int i = t->getIndex();
+  OB_TIndex i = MakeOB_TIndex(t->getTertPointer());
   BorrowEntry *be=BT->bi2borrow(i);
   if(be->isGCMarked()){
     PD((GC,"borrow already marked:%d",i));
@@ -271,7 +273,7 @@ void gcProxyRecurseImpl(Tertiary *t) {
 
 void gcManagerRecurseImpl(Tertiary *t) {
   Assert(!t->isFrame());
-  int i = t->getIndex();
+  OB_TIndex i = MakeOB_TIndex(t->getTertPointer());
   OwnerEntry *oe=OT->index2entry(i);
   if(oe->isGCMarked()){
     PD((GC,"owner already marked:%d",i));
@@ -392,7 +394,7 @@ void globalizeTert(Tertiary *t)
   // be transfered into a distributable form.
 
   OwnerEntry *oe_manager;
-  int manI=ownerTable->newOwner(oe_manager);
+  OB_TIndex manI = ownerTable->newOwner(oe_manager);
   oe_manager->mkTertiary(t);
 
   switch(t->getType()) {
@@ -411,7 +413,7 @@ void globalizeTert(Tertiary *t)
   case Co_Port:
     {
       t->setTertType(Te_Manager);
-      t->setIndex(manI);
+      t->setTertPointer(OB_TIndex2Ptr(manI));
       return;
     }
   default:
@@ -484,24 +486,24 @@ Bool localizeTertiary(Tertiary*t){
 /*  Main Receive                                      */
 /**********************************************************************/
 
-OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
-  if(mS==myDSite)
-    return OT->odi2entry(OTI);
-  return NULL;
+OwnerEntry* maybeReceiveAtOwner(DSite* mS, Ext_OB_TIndex extOTI)
+{
+  return ((mS == myDSite) ? OT->extOTI2entry(extOTI) : (OwnerEntry*) 0);
 }
 
-inline OwnerEntry* receiveAtOwner(int OTI){
-  OwnerEntry *oe=OT->odi2entry(OTI);
-  return oe;
+static inline OwnerEntry* receiveAtOwner(Ext_OB_TIndex extOTI)
+{
+  return (OT->extOTI2entry(extOTI));
 }
 
-BorrowEntry* receiveAtBorrow(DSite* mS,int OTI){
-  return BT->find(OTI,mS);
+BorrowEntry* receiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI)
+{
+  return (BT->find(extOTI, mS));
 }
 
-inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
+inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI){
   if (mS != myDSite)
-    return BT->find(OTI,mS);
+    return BT->find(extOTI,mS);
   return NULL;
 }
 
@@ -518,7 +520,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   switch (mt) {
   case M_PORT_SEND:
     {
-      int portIndex;
+      Ext_OB_TIndex portIndex;
       OZ_Term t;
       msgC->get_M_PORT_SEND(portIndex,t);
       OwnerEntry *oe=receiveAtOwner(portIndex);
@@ -532,7 +534,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
     }
   case M_UPDATE_REFERENCE:
     {
-      int index;
+      Ext_OB_TIndex index;
       msgC->get_M_UPDATE_REFERENCE(index);
       OwnerEntry *oe=receiveAtOwner(index);
       if (oe)
@@ -550,7 +552,8 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
     }
   case M_OWNER_REF:
    {
-     int val1,val2,type,index;
+     int val1, val2, type;
+     Ext_OB_TIndex index;
      msgC->get_M_OWNER_REF(index,type,val1,val2);
 
      PD((MSG_RECEIVED,"OWNER_REF index:%d type:%d val1:%d val2:%d",index,type,val1,val2));
@@ -571,16 +574,16 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_REGISTER:
     {
-      int OTI;
-      msgC->get_M_REGISTER(OTI);
-      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,sender->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_REGISTER(extOTI);
+      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",extOTI,sender->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe)
         {
           if (oe->isVar()) {
             (GET_VAR(oe,Manager))->registerSite(sender);
           } else {
-            sendRedirect(sender,(int)oe,oe->getRef());
+            sendRedirect(sender,MakeOB_TIndex(oe),oe->getRef());
           }
         }
       break;
@@ -588,10 +591,10 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_DEREGISTER:
     {
-      int OTI;
-      msgC->get_M_REGISTER(OTI);
-      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,sender->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_DEREGISTER(extOTI);
+      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",extOTI,sender->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe)
         {
           if (oe->isVar()) {
@@ -606,15 +609,15 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_GET_LAZY:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       DSite* rsite;
       int lazyFlag;
       //
-      msgC->get_M_GET_LAZY(OTI, lazyFlag, rsite);
+      msgC->get_M_GET_LAZY(extOTI, lazyFlag, rsite);
       PD((MSG_RECEIVED,"M_GET_LAZY index:%d site:%s",
-          OTI, rsite->stringrep()));
+          extOTI, rsite->stringrep()));
       //
-      OwnerEntry *oe = receiveAtOwner(OTI);
+      OwnerEntry *oe = receiveAtOwner(extOTI);
       //
       if (oe)
         {
@@ -634,7 +637,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
           MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
 
           //
-          msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT_AND_CLASS,
+          msgC->put_M_SEND_LAZY(myDSite, extOTI, OBJECT_AND_CLASS,
                                 o->getClassTerm());
           send(msgC);
         }
@@ -647,7 +650,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
           MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
 
           //
-          msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT, t);
+          msgC->put_M_SEND_LAZY(myDSite, extOTI, OBJECT, t);
           send(msgC);
         }
         break;
@@ -664,7 +667,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_SEND_LAZY:
     {
       DSite* sd;
-      int si;
+      Ext_OB_TIndex si;
       int lazyFlag;
       OZ_Term t;
 
@@ -723,7 +726,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_REDIRECT:
     {
       DSite* sd;
-      int si;
+      Ext_OB_TIndex si;
       TaggedRef val;
       msgC->get_M_REDIRECT(sd,si,val);
       PD((MSG_RECEIVED,"M_REDIRECT site:%s index:%d val%s",
@@ -741,12 +744,12 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_SURRENDER:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       TaggedRef v;
-      msgC->get_M_SURRENDER(OTI,v);
+      msgC->get_M_SURRENDER(extOTI,v);
       PD((MSG_RECEIVED,"M_SURRENDER index:%d site:%s val%s",
-          OTI,sender->stringrep(),toC(v)));
-      OwnerEntry *oe = receiveAtOwner(OTI);
+          extOTI,sender->stringrep(),toC(v)));
+      OwnerEntry *oe = receiveAtOwner(extOTI);
       if (oe){
         if (oe->isVar()) {
           PD((PD_VAR,"SURRENDER do it"));
@@ -763,14 +766,14 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_GETSTATUS:
     {
-      int OTI;
-      msgC->get_M_GETSTATUS(OTI);
-      PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
-      OwnerEntry *oe = receiveAtOwner(OTI);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_GETSTATUS(extOTI);
+      PD((MSG_RECEIVED,"M_GETSTATUS index:%d",extOTI));
+      OwnerEntry *oe = receiveAtOwner(extOTI);
       if (oe)
         {
           if(oe->isVar()){
-            varGetStatus(sender,OTI,oz_status(oe->getValue()));}
+            varGetStatus(sender,extOTI,oz_status(oe->getValue()));}
         }
       break;
     }
@@ -778,12 +781,12 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_SENDSTATUS:
     {
       DSite* site;
-      int OTI;
+      Ext_OB_TIndex extOTI;
       TaggedRef status;
-      msgC->get_M_SENDSTATUS(site,OTI,status);
+      msgC->get_M_SENDSTATUS(site,extOTI,status);
       PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
-          site->stringrep(),OTI,status));
-      BorrowEntry *be=BT->find(OTI,site);
+          site->stringrep(),extOTI,status));
+      BorrowEntry *be=BT->find(extOTI,site);
       if(be==NULL){
         PD((WEIRD,"receive M_SENDSTATUS after gc"));
         break;}
@@ -794,7 +797,7 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_ACKNOWLEDGE:
     {
-      int si;
+      Ext_OB_TIndex si;
       msgC->get_M_ACKNOWLEDGE(si);
       PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sender->stringrep(),si));
       BorrowEntry *be=BT->find(si,sender);
@@ -806,11 +809,11 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
     }
   case M_CELL_LOCK_GET:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       DSite* rsite;
-      msgC->get_M_CELL_LOCK_GET(OTI,rsite);
-      PD((MSG_RECEIVED,"M_CELL_LOCK_GET index:%d site:%s",OTI,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+      msgC->get_M_CELL_LOCK_GET(extOTI,rsite);
+      PD((MSG_RECEIVED,"M_CELL_LOCK_GET index:%d site:%s",extOTI,rsite->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe)
         {
           cellLockReceiveGet(oe,rsite);
@@ -820,26 +823,26 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
    case M_CELL_CONTENTS:
     {
       DSite* rsite;
-      int OTI;
+      Ext_OB_TIndex extOTI;
       TaggedRef val;
-      msgC->get_M_CELL_CONTENTS(rsite,OTI,val);
+      msgC->get_M_CELL_CONTENTS(rsite,extOTI,val);
       PD((MSG_RECEIVED,"M_CELL_CONTENTS index:%d site:%s val:%s",
-          OTI,rsite->stringrep(),toC(val)));
+          extOTI,rsite->stringrep(),toC(val)));
 
-      OwnerEntry* oe=maybeReceiveAtOwner(rsite,OTI);
+      OwnerEntry* oe=maybeReceiveAtOwner(rsite,extOTI);
       if(oe!=NULL){
-        cellReceiveContentsManager(oe,val,OTI);
+        cellReceiveContentsManager(oe,val,extOTI);
         break;}
-      cellReceiveContentsFrame(receiveAtBorrow(rsite,OTI),val,rsite,OTI);
+      cellReceiveContentsFrame(receiveAtBorrow(rsite, extOTI), val, rsite, extOTI);
       break;
     }
   case M_CELL_READ:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       DSite* fS;
-      msgC->get_M_CELL_READ(OTI,fS);
+      msgC->get_M_CELL_READ(extOTI,fS);
       PD((MSG_RECEIVED,"M_CELL_READ"));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe){
         cellReceiveRead(oe,fS,NULL);
       }
@@ -847,17 +850,17 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
     }
   case M_CELL_REMOTEREAD:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       DSite* fS,*mS;
-      msgC->get_M_CELL_REMOTEREAD(mS,OTI,fS);
+      msgC->get_M_CELL_REMOTEREAD(mS,extOTI,fS);
       PD((MSG_RECEIVED,"CELL_REMOTEREAD %s",fS->stringrep()));
-      cellReceiveRemoteRead(receiveAtBorrow(mS,OTI),mS,OTI,fS);
+      cellReceiveRemoteRead(receiveAtBorrow(mS,extOTI),mS,extOTI,fS);
       break;
     }
   case M_CELL_READANS:
     {
-      int index;
-      DSite*mS;
+      Ext_OB_TIndex index;
+      DSite *mS;
       TaggedRef val;
       msgC->get_M_CELL_READANS(mS,index,val);
       PD((MSG_RECEIVED,"CELL_READANS"));
@@ -872,22 +875,22 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_CELL_LOCK_FORWARD:
     {
       DSite* site,*rsite;
-      int OTI;
-      msgC->get_M_CELL_LOCK_FORWARD(site,OTI,rsite);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_CELL_LOCK_FORWARD(site,extOTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_FORWARD index:%d site:%s rsite:%s",
-          OTI,site->stringrep(),rsite->stringrep()));
+          extOTI,site->stringrep(),rsite->stringrep()));
 
-      cellLockReceiveForward(receiveAtBorrow(site,OTI),rsite,site,OTI);
+      cellLockReceiveForward(receiveAtBorrow(site, extOTI), rsite, site, extOTI);
       break;
     }
   case M_CELL_LOCK_DUMP:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       DSite* rsite;
-      msgC->get_M_CELL_LOCK_DUMP(OTI,rsite);
+      msgC->get_M_CELL_LOCK_DUMP(extOTI,rsite);
       PD((MSG_RECEIVED,"M_CELL_LOCK_DUMP index:%d site:%s",
-          OTI,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+          extOTI,rsite->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe)
         {
           cellLockReceiveDump(oe,rsite);
@@ -897,40 +900,40 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_CELL_CANTPUT:
     {
       DSite* rsite, *ssite;
-      int OTI;
+      Ext_OB_TIndex extOTI;
       TaggedRef val;
-      msgC->get_M_CELL_CANTPUT( OTI, rsite, val, ssite);
+      msgC->get_M_CELL_CANTPUT(extOTI, rsite, val, ssite);
       PD((MSG_RECEIVED,"M_CELL_CANTPUT index:%d site:%s val:%s",
-          OTI,rsite->stringrep(),toC(val)));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+          extOTI,rsite->stringrep(),toC(val)));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe){
-        cellReceiveCantPut(oe,val,OTI,ssite,rsite);
+        cellReceiveCantPut(oe,val,extOTI,ssite,rsite);
       }
       break;
     }
   case M_LOCK_TOKEN:
     {
       DSite* rsite;
-      int OTI;
-      msgC->get_M_LOCK_TOKEN(rsite,OTI);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_LOCK_TOKEN(rsite,extOTI);
       PD((MSG_RECEIVED,"M_LOCK_TOKEN index:%d site:%s",
-          OTI,rsite->stringrep()));
+          extOTI,rsite->stringrep()));
       // Erik, look
-      OwnerEntry *oe=maybeReceiveAtOwner(rsite,OTI);
+      OwnerEntry *oe=maybeReceiveAtOwner(rsite,extOTI);
       if(oe!=NULL){
-        lockReceiveTokenManager(oe,OTI);
+        lockReceiveTokenManager(oe, extOTI);
         break;}
-      lockReceiveTokenFrame(receiveAtBorrow(rsite,OTI),rsite,OTI);
+      lockReceiveTokenFrame(receiveAtBorrow(rsite, extOTI), rsite, extOTI);
       break;
     }
   case M_CHAIN_ACK:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       DSite* rsite;
-      msgC->get_M_CHAIN_ACK(OTI,rsite);
+      msgC->get_M_CHAIN_ACK(extOTI,rsite);
       PD((MSG_RECEIVED,"M_CHAIN_ACK index:%d site:%s",
-          OTI,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+          extOTI,rsite->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe){
         chainReceiveAck(oe,rsite);
       }
@@ -939,38 +942,38 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_LOCK_CANTPUT:
     {
       DSite* rsite, *ssite;
-      int OTI;
-      msgC->get_M_LOCK_CANTPUT( OTI, rsite, ssite);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_LOCK_CANTPUT( extOTI, rsite, ssite);
       PD((MSG_RECEIVED,"M_LOCK_CANTPUT index:%d site:%s val:%s",
-          OTI,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+          extOTI,rsite->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if(oe)
         {
-          lockReceiveCantPut(oe,OTI,ssite,rsite);
+          lockReceiveCantPut(oe,extOTI,ssite,rsite);
         }
       break;
     }
   case M_CHAIN_QUESTION:
    {
       DSite* site,*deadS;
-      int OTI;
-      msgC->get_M_CHAIN_QUESTION(OTI,site,deadS);
+      Ext_OB_TIndex extOTI;
+      msgC->get_M_CHAIN_QUESTION(extOTI,site,deadS);
       PD((MSG_RECEIVED,"M_CHAIN_QUESTION index:%d site:%s",
-          OTI,site->stringrep()));
-      BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
+          extOTI,site->stringrep()));
+      BorrowEntry *be=maybeReceiveAtBorrow(site,extOTI);
       if(be==NULL) break;
-      chainReceiveQuestion(be,site,OTI,deadS);
+      chainReceiveQuestion(be,site,extOTI,deadS);
       break;
    }
   case M_CHAIN_ANSWER:
     {
       DSite* rsite,*deadS;
-      int OTI;
+      Ext_OB_TIndex extOTI;
       int ans;
-      msgC->get_M_CHAIN_ANSWER(OTI,rsite,ans,deadS);
+      msgC->get_M_CHAIN_ANSWER(extOTI,rsite,ans,deadS);
       PD((MSG_RECEIVED,"M_CHAIN_ANSWER index:%d site:%s val:%d",
-          OTI,rsite->stringrep(),ans));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+          extOTI,rsite->stringrep(),ans));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if(oe){
         chainReceiveAnswer(oe,rsite,ans,deadS);
       }
@@ -980,12 +983,12 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
   case M_TELL_ERROR:
     {
       DSite* site;
-      int OTI;
+      Ext_OB_TIndex extOTI;
       int ec,flag;
-      msgC->get_M_TELL_ERROR(site,OTI,ec,flag);
+      msgC->get_M_TELL_ERROR(site,extOTI,ec,flag);
       PD((MSG_RECEIVED,"M_TELL_ERROR index:%d site:%s ec:%d",
-          OTI,site->stringrep(),ec));
-      BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
+          extOTI,site->stringrep(),ec));
+      BorrowEntry *be=maybeReceiveAtBorrow(site,extOTI);
       if(be==NULL) break;
       receiveTellError(be,ec,flag);
       break;
@@ -993,13 +996,13 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
 
   case M_ASK_ERROR:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       int ec;
       DSite* toS;
-      msgC->get_M_ASK_ERROR(OTI,toS,ec);
+      msgC->get_M_ASK_ERROR(extOTI,toS,ec);
       PD((MSG_RECEIVED,"M_ASK_ERROR index:%d ec:%d toS:%s",
-          OTI,ec,toS->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+          extOTI,ec,toS->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe){
         receiveAskError(oe,toS,ec);
       }
@@ -1007,14 +1010,14 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
     }
   case M_UNASK_ERROR:
     {
-      int OTI;
+      Ext_OB_TIndex extOTI;
       int ec;
       DSite* toS;
-      msgC->get_M_UNASK_ERROR(OTI,toS,ec);
+      msgC->get_M_UNASK_ERROR(extOTI,toS,ec);
       PD((MSG_RECEIVED,"M_UNASK_ERROR index:%d ec:%d toS:%s",
-          OTI,ec,toS->stringrep()));
+          extOTI,ec,toS->stringrep()));
 
-      OwnerEntry *oe=receiveAtOwner(OTI);
+      OwnerEntry *oe=receiveAtOwner(extOTI);
       if (oe)
         receiveUnAskError(oe,toS,ec);
       break;
@@ -1085,8 +1088,9 @@ enum CommCase{
     USUAL_BORROW_CASE
   };
 
-void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc) {
-  int OTI;
+void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc)
+{
+  Ext_OB_TIndex extOTI;
   DSite* s1;
   TaggedRef tr;
   CommCase flag;
@@ -1094,8 +1098,8 @@ void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc) {
   switch(msgC->getMessageType()) {
   case M_CELL_CONTENTS: {
     if(fc == COMM_FAULT_PERM_NOT_SENT) {
-      msgC->get_M_CELL_CONTENTS(s1,OTI,tr);
-      cellSendContentsFailure(tr,this,s1,OTI);
+      msgC->get_M_CELL_CONTENTS(s1,extOTI,tr);
+      cellSendContentsFailure(tr, this, s1, extOTI);
       return;
     }
     flag=USUAL_BORROW_CASE;
@@ -1104,8 +1108,8 @@ void DSite::communicationProblem(MsgContainer *msgC, FaultCode fc) {
 
   case M_LOCK_TOKEN: {
     if(fc == COMM_FAULT_PERM_NOT_SENT) {
-      msgC->get_M_LOCK_TOKEN(s1,OTI);
-      lockSendTokenFailure(this,s1,OTI);
+      msgC->get_M_LOCK_TOKEN(s1,extOTI);
+      lockSendTokenFailure(this, s1, extOTI);
       return;
     }
     return;
@@ -1210,15 +1214,6 @@ void initDPCore()
 /*   MISC                                                */
 /**********************************************************************/
 
-void marshalDSite(MarshalerBuffer *buf, DSite* s)
-{
-  s->marshalDSite(buf);
-}
-
-DSite* getSiteFromBTI(int i){
-  return BT->bi2borrow(i)->getNetAddress()->site;}
-
-
 /*
  * The builtin table: no builtins, just a fake
  */
@@ -1260,15 +1255,16 @@ extern "C"
 /**********************************************************************/
 
 OZ_Term getGatePort(DSite* sd){
-  int si=0; /* Gates are always located at position 0 */
+  /* Gates are always located at position 0 */
+  Ext_OB_TIndex si = (Ext_OB_TIndex) 0;
   if(sd==myDSite){
-    OwnerEntry* oe=OT->odi2entry(si);
+    OwnerEntry* oe = OT->extOTI2entry(si);
     Assert(oe->isPersistent());
     return  oe->getValue();}
   NetAddress na = NetAddress(sd,si);
   BorrowEntry *b = borrowTable->find(&na);
   if (b==NULL) {
-    int bi=borrowTable->newBorrow(NULL,sd,si);
+    OB_TIndex bi = borrowTable->newBorrow(NULL, sd, si);
     b=borrowTable->bi2borrow(bi);
     PortProxy *pp = new PortProxy(bi);
     b->mkTertiary(pp);

@@ -49,7 +49,9 @@ class PortProxy: public Port {
 public:
   PendThread* pending;
   NO_DEFAULT_CONSTRUCTORS(PortProxy);
-  PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); pending = NULL;}
+  PortProxy(OB_TIndex i): Port(0, Te_Proxy), pending((PendThread*) 0) {
+    setTertPointer(OB_TIndex2Ptr(i));
+  }
   Bool canSend();
 };
 

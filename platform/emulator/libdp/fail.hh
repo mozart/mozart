@@ -338,7 +338,7 @@ void deferProxyVarProbeFault(TaggedRef,int);
 void maybeUnask(Tertiary*);
 Bool isVariableSpec(SRecord*);
 
-void varAdjustPOForFailure(int,EntityCond,EntityCond);
+void varAdjustPOForFailure(OB_TIndex,EntityCond,EntityCond);
 
 void triggerInforms(InformElem**,OwnerEntry*,EntityCond);
 void triggerInformsOK(InformElem**,OwnerEntry*,EntityCond);
@@ -360,7 +360,7 @@ TaggedRef mkOp3(char*,TaggedRef,TaggedRef,TaggedRef);
 OZ_Return tertiaryFailHandle(Tertiary*, TaggedRef,EntityCond,TaggedRef);
 Bool tertiaryFail(Tertiary*, EntityCond &, TaggedRef&);
 
-OZ_Term createFailedEntity(int OTI, Bool defer);
+OZ_Term createFailedEntity(Ext_OB_TIndex OTI, Bool defer);
 
 /* __FAILHH */
 #endif

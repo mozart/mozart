@@ -356,6 +356,7 @@ private:
 public:
   // internal clock in 'ms';
   LongTime emulatorClock;
+  int suspCnt;
 
   void setProfileMode()   { _profileMode=TRUE; }
   void unsetProfileMode() { _profileMode=FALSE; }
@@ -571,6 +572,7 @@ public:
 #endif
   //
   LongTime *getEmulatorClock() { return (&emulatorClock); }
+  int getSuspCnt() { return (suspCnt); }
 
   // yields time for blocking in 'select()';
   unsigned int waitTime();

@@ -28,7 +28,7 @@
 message(M_PORT_SEND,Index,Term)
 
 message(M_UPDATE_REFERENCE,Index)
-message(M_OWNER_REF,Credit,Index,Index2,Index3)
+message(M_OWNER_REF,Index,Credit,Int,Int2)
 message(M_BORROW_REF,Term)
 
 message(M_REGISTER,Index)
@@ -54,29 +54,29 @@ message(M_CELL_CANTPUT,Index,Site,Term,Site2)
 message(M_LOCK_CANTPUT,Index,Site,Site2)
 message(M_CHAIN_ACK,Index,Site)
 message(M_CHAIN_QUESTION,Index,Site,Site2)
-message(M_CHAIN_ANSWER,Index,Site,Index2,Site2)
-message(M_ASK_ERROR,Index,Site,Index2);
-message(M_TELL_ERROR,Site,Index,Index2,Index3);
+message(M_CHAIN_ANSWER,Index,Site,Int,Site2)
+message(M_ASK_ERROR,Index,Site,Int);
+message(M_TELL_ERROR,Site,Index,Int,Int2);
 
-message(M_GET_LAZY,Index,Index2,Site)
-message(M_SEND_LAZY,Site,Index,Index2,FullTopTerm)
+message(M_GET_LAZY,Index,Int,Site)
+message(M_SEND_LAZY,Site,Index,Int,FullTopTerm)
 
-message(M_UNASK_ERROR,Index,Site,Index2)
+message(M_UNASK_ERROR,Index,Site,Int)
 
-message(M_REQUESTED,Index)
+message(M_UNUSED)
 
 message(M_PING)
 
-message(M_PONG_TERM,Site,Index,Index2,Term)
-message(M_PONG_PL,Site,Index,Index2)
+message(M_PONG_TERM,Site,Int,Int2,Term)
+message(M_PONG_PL,Site,Int,Int2)
 
-message(C_PRESENT,String,Site)        //String is Version
+message(C_PRESENT,String,Site)        // String is Version
 message(C_NEGOTIATE,String,Site,Term)
 message(C_NEGOTIATE_ANS,Term)
-message(C_SEND_PING_PONG,Index,Index2)
+message(C_SEND_PING_PONG,Int,Int2)
 
 message(C_ACK)
-message(C_SET_ACK_PROP,Index,Index2)  // time, length
+message(C_SET_ACK_PROP,Int,Int2)      // time, length
 
 message(C_CLOSE_HARD)
 message(C_CLOSE_WEAK)

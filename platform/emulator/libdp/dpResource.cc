@@ -60,7 +60,7 @@ ResourceHashTable *resourceTable;
 
 struct GCRTEntry {
   OZ_Term term;
-  int oti;
+  OB_TIndex oti;
 };
 
 //
@@ -92,11 +92,11 @@ void ResourceHashTable::gcResourceTable()
     //
     if (isGCMarkedTerm(te)) {
       // ... can be alive - somebody copied it;
-      int oti;
+      OB_TIndex oti;
       OwnerEntry *oe;
 
       //
-      GenCast(aux->getEntry(), GenHashEntry*, oti, int);
+      GenCast(aux->getEntry(), GenHashEntry*, oti, OB_TIndex);
       oe = OT->index2entry(oti);
 
       //

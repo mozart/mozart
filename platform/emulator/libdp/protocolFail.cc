@@ -141,7 +141,7 @@ void sendTellError(OwnerEntry *oe,DSite* toS,EntityCond ec,Bool set){
   if(SEND_SHORT(toS)) {return;}
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
-  msgC->put_M_TELL_ERROR(myDSite,oe->getOdi(),ec,set);
+  msgC->put_M_TELL_ERROR(myDSite, oe->getExtOTI(), ec, set);
 
   send(msgC);
 }

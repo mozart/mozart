@@ -97,12 +97,12 @@ class NetAddress {
 public:
   /* DummyClassConstruction(NetAddress) */
   DSite* site;
-  int index;
+  Ext_OB_TIndex index;
 
-  NetAddress(DSite* s, int i) : site(s), index(i) {}
+  NetAddress(DSite* s, Ext_OB_TIndex i) : site(s), index(i) {}
   NetAddress(){}
 
-  void set(DSite *s,int i) {site=s,index=i;}
+  void set(DSite *s, Ext_OB_TIndex i) {site=s, index=i;}
 
   Bool same(NetAddress *na) { return na->site==site && na->index==index; }
 

@@ -1,3 +1,4 @@
+
 /* -*- C++ -*-
  *  Authors:
  *    Konstantin Popov <kost@sics.se>
@@ -473,7 +474,7 @@ private:
 class MgrVarPatch : public OzValuePatch {
 private:
   Bool isMarshaled;             // for the case of transmission failure;
-  int oti;
+  OB_TIndex oti;
   RRinstance *remoteRef;        // '!' memory???
   MarshalTag tag;               // future? auto?
 
@@ -541,9 +542,9 @@ public:
 //
 class PxyVarPatch : public OzValuePatch {
 private:
-  DebugCode(int bti;);
+  DebugCode(OB_TIndex bti;);
   Bool isMarshaled;
-  int oti;
+  Ext_OB_TIndex oti;
   RRinstance *remoteRef;        // '!' memory???
   DSite *ms;                    // manager site, always;
   short isFuture;               //
@@ -920,9 +921,6 @@ void dpUnmarshalerFinishBatch(Builder *b) {}
 class SendRecvCounter;
 extern SendRecvCounter mess_counter[];
 
-//
-void marshalDSite(MarshalerBuffer *, DSite *);
-
 // '-1' means the action is suspended;
 
 //
@@ -932,7 +930,7 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag);
 OZ_Term unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt);
 // var.cc
 OZ_Term unmarshalBorrow(MarshalerBuffer *bs,
-                        OB_Entry *&ob, int &bi, BYTE &ec);
+                        OB_Entry *&ob, OB_TIndex &bi, BYTE &ec);
 void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 
 //

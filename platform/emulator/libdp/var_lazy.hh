@@ -38,21 +38,21 @@
 
 class LazyVar : public ExtVar {
 protected:
-  int index;                    // borrow index;
+  OB_TIndex index;              // borrow index;
   short requested;              // flag - whether in transition;
   GName *gname;                 // how it is known;
   EntityInfo* info;             // failure;
 
 public:
-  LazyVar(Board *bb, int indexIn, GName *gIn)
+  LazyVar(Board *bb, OB_TIndex indexIn, GName *gIn)
     : index(indexIn), gname(gIn), ExtVar(bb), requested(0), info(0)
   {}
 
   //
   EntityInfo* getInfo(){return info;}
   void setInfo(EntityInfo* ei){info=ei;}
-  int getIndex(){ return (index); }
-  void setIndex(int indexIn) { index = indexIn; }
+  OB_TIndex getIndex(){ return (index); }
+  void setIndex(OB_TIndex indexIn) { index = indexIn; }
 
   //
   virtual ExtVarType getIdV() { return (OZ_EVAR_LAZY); }

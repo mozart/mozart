@@ -49,10 +49,10 @@
 
 OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   Assert(p->getTertType()==Te_Proxy);
-  BorrowEntry* b = BT->bi2borrow(p->getIndex());
-  NetAddress *na = b->getNetAddress();
+  BorrowEntry* b  = BT->bi2borrow(MakeOB_TIndex(p->getTertPointer()));
+  NetAddress *na  = b->getNetAddress();
   DSite* site     = na->site;
-  int index      = na->index;
+  Ext_OB_TIndex index = na->index;
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site,am.currentThread()->getPriority());
   msgC->put_M_PORT_SEND(index,msg);

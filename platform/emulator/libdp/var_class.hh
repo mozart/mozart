@@ -79,7 +79,7 @@ private:
   }
 
 public:
-  ClassVar(Board *bb, int indexIn, GName *gnclass)
+  ClassVar(Board *bb, OB_TIndex indexIn, GName *gnclass)
     : LazyVar(bb, indexIn, gnclass), dsl((DSiteList *) 0)
   {}
 
@@ -101,6 +101,6 @@ public:
 };
 
 //
-TaggedRef newClassProxy(int bi, GName *gnclass);
+TaggedRef newClassProxy(OB_TIndex bi, GName *gnclass);
 
 #endif

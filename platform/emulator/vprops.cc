@@ -147,6 +147,7 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_PROPLOCATION,
   PROP_INTERNAL_SUSPENSION,
   PROP_INTERNAL_STOP,
+  PROP_INTERNAL_ENGINE_SUSP,
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL,
   // PERDIO renamed DP
@@ -458,6 +459,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_PROPLOCATION,am.isPropagatorLocation());
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
+  CASE_INT(PROP_INTERNAL_ENGINE_SUSP,am.getSuspCnt());
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
   // DP
   CASE_INT(PROP_DP_DEBUG,ozconf.debugPerdio);
@@ -1145,6 +1147,7 @@ static const struct prop_entry prop_entries[] = {
   {"internal.propLocation",PROP_INTERNAL_PROPLOCATION},
   {"internal.suspension",PROP_INTERNAL_SUSPENSION},
   {"internal.stop",PROP_INTERNAL_STOP},
+  {"internal.engineSusps",PROP_INTERNAL_ENGINE_SUSP},
   {"internal.ip.debug",PROP_INTERNAL_DEBUG_IP},
   // DP
   {"dp.debug",PROP_DP_DEBUG},

@@ -39,7 +39,7 @@ protected:
   TaggedRef aclass;             // either class or its lazy proxy;
 
 public:
-  ObjectVar(Board *bb, int indexIn, GName *gobjIn, OZ_Term cl)
+  ObjectVar(Board *bb, OB_TIndex indexIn, GName *gobjIn, OZ_Term cl)
     : LazyVar(bb, indexIn, gobjIn)
   {
     Assert(cl);
@@ -119,6 +119,6 @@ public:
 };
 
 //
-TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef clas);
+TaggedRef newObjectProxy(OB_TIndex bi, GName *gnobj, TaggedRef clas);
 
 #endif

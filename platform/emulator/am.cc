@@ -377,6 +377,10 @@ void AM::init(int argc,char **argv)
 #endif
   taskMinInterval = DEFAULT_MIN_INTERVAL;
 
+  //
+  suspCnt = 0;
+
+  //
   unsetProfileMode();
 }
 
@@ -480,8 +484,8 @@ sigjmp_buf wake_jmp;
 #endif
 volatile int use_wake_jmp = 0;
 
-void AM::suspendEngine(void) {
-
+void AM::suspendEngine(void)
+{
   _rootBoard->install();
 
   //
@@ -533,10 +537,11 @@ void AM::suspendEngine(void) {
     }
 #endif
 
-    unsigned long idle_start = osTotalTime();
-
     //
+    unsigned long idle_start = osTotalTime();
     unsigned int sleepTime = waitTime();
+    //
+    suspCnt++;
 
     // here we set up wake_jmp so that we can longjmp out of a
     // signal handler

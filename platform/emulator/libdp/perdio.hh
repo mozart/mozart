@@ -75,8 +75,8 @@ OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);
 
 void gCollectPendThread(PendThread **pt);
 
-BorrowEntry *receiveAtBorrow(DSite*,int);
-OwnerEntry *maybeReceiveAtOwner(DSite*,int);
+BorrowEntry *receiveAtBorrow(DSite*, Ext_OB_TIndex);
+OwnerEntry *maybeReceiveAtOwner(DSite*, Ext_OB_TIndex);
 
 void pendThreadRemoveFirst(PendThread **pt);
 
@@ -84,7 +84,8 @@ void pendThreadAddToEnd(PendThread **,TaggedRef,TaggedRef, ExKind);
 void pendThreadAddToEnd(PendThread **);
 
 void pendThreadAddDummyToEnd(PendThread **);
-void pendThreadAddRAToEnd(PendThread **,DSite* , DSite*, int);
+void pendThreadAddRAToEnd(PendThread **,
+                          DSite *toS, DSite *mS, Ext_OB_TIndex);
 void pendThreadAddMoveToEnd(PendThread **);
 
 void cellifyObject(Object*);

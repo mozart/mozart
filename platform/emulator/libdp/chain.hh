@@ -205,7 +205,7 @@ public:
   void managerSeesSiteOK(Tertiary*,DSite* );
   void shortcutCrashLock(LockManager*);       // shortcutting chain methods
   void shortcutCrashCell(CellManager*,TaggedRef);
-  void handleTokenLost(Tertiary*,OwnerEntry*,int);
+  void handleTokenLost(Tertiary*,OwnerEntry*,Ext_OB_TIndex);
   void receiveUnAsk(DSite*,EntityCond);
   void establish_PERM_SOME(Tertiary*);
   void establish_TOKEN_LOST(Tertiary*);

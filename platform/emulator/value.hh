@@ -972,22 +972,22 @@ public:
 
   void setInfo(EntityInfo *infoIn) { info = infoIn; }
 
-  void setIndex(int i) { tagged.setVal(i); }
-  int getIndex() { return tagged.getData(); }
-  void setPointer (void *p) { tagged.setPtr(p); }
-  void *getPointer() { return tagged.getPtr(); }
+  void setTertIndex(int i) { tagged.setVal(i); }
+  int getTertIndex() { return tagged.getData(); }
+  void setTertPointer (void *p) { tagged.setPtr(p); }
+  void *getTertPointer() { return tagged.getPtr(); }
 
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
 
   void setBoard(Board *b) {
     if (getTertType() == Te_Local) {
-      setPointer(b);
+      setTertPointer(b);
     }
   }
   void setBoardLocal(Board *b) {
     Assert(getTertType() == Te_Local);
-    setPointer(b);
+    setTertPointer(b);
   }
 
   NO_DEFAULT_CONSTRUCTORS(Tertiary)
@@ -996,11 +996,15 @@ public:
     setTertType(t);
     info=NULL;
     setBoard(b);}
-  Tertiary(int i, TypeOfConst s,TertType t) : ConstTerm(s)
-  {
+  Tertiary(void *p, TypeOfConst s, TertType t) : ConstTerm(s) {
     setTertType(t);
     info=NULL;
-    setIndex(i);
+    setTertPointer(p);
+  }
+  Tertiary(int i, TypeOfConst s, TertType t) : ConstTerm(s) {
+    setTertType(t);
+    info=NULL;
+    setTertIndex(i);
   }
 
   //
@@ -1012,11 +1016,11 @@ public:
   Bool isFrame()   { return (getTertType() == Te_Frame); }
 
   Board *getBoardInternal() {
-    return isLocal() ? (Board*)getPointer() : oz_rootBoardOutline();}
+    return isLocal() ? (Board*)getTertPointer() : oz_rootBoardOutline();}
 
   Board *getBoardLocal() {
     Assert(isLocal());
-    return (Board*) getPointer();
+    return (Board*) getTertPointer();
   }
 
 };
@@ -2789,7 +2793,7 @@ public:
   NO_DEFAULT_CONSTRUCTORS(OzLock)
   OzLock() { Assert(0); }
   OzLock(Board *b,TertType tt):Tertiary(b,Co_Lock,tt){}
-  OzLock(int i,TertType tt):Tertiary(i,Co_Lock,tt){}
+  OzLock(void *i,TertType tt):Tertiary(i,Co_Lock,tt){}
 };
 
 class LockLocal:public OzLock{

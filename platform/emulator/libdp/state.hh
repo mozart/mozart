@@ -71,7 +71,7 @@ public:
   OZ_Return access(Tertiary*,TaggedRef,TaggedRef);
   OZ_Return exchangeVal(TaggedRef,TaggedRef,ExKind);
 
-  Bool secReceiveRemoteRead(DSite*,DSite*,int);
+  Bool secReceiveRemoteRead(DSite *toS, DSite *mS, Ext_OB_TIndex mI);
   void secReceiveReadAns(TaggedRef);
   Bool secReceiveContents(TaggedRef,DSite* &,TaggedRef &);
   Bool secForward(DSite*,TaggedRef&);
@@ -94,7 +94,7 @@ private:
 public:
   NO_DEFAULT_CONSTRUCTORS(CellProxy)
 
-  CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
+  CellProxy(OB_TIndex manager):Tertiary(OB_TIndex2Ptr(manager),Co_Cell,Te_Proxy){  // on import
     holder = 0;}
 };
 
@@ -111,9 +111,9 @@ public:
   Chain *getChain() {return chain;}
   void setChain(Chain *ch) { chain = ch; }
 
-  void init(int index,Chain *ch, CellSec *secX){
+  void init(OB_TIndex index, Chain *ch, CellSec *secX) {
     setTertType(Te_Manager);
-    setIndex(index);
+    setTertPointer(OB_TIndex2Ptr(index));
     setChain(ch);
     sec=secX;}
 
@@ -243,9 +243,9 @@ public:
   Chain *getChain() {return chain;}
   void setChain(Chain *ch) { chain = ch; }
 
-  void init(int index,Chain *ch, LockSec *secX){
+  void init(OB_TIndex index,Chain *ch, LockSec *secX){
     setTertType(Te_Manager);
-    setIndex(index);
+    setTertPointer(OB_TIndex2Ptr(index));
     setChain(ch);
     sec=secX;}
 
@@ -265,7 +265,7 @@ private:
   void *dummy; // mm2
 public:
   NO_DEFAULT_CONSTRUCTORS(LockProxy)
-  LockProxy(int manager):OzLock(manager,Te_Proxy){  // on import
+  LockProxy(OB_TIndex manager):OzLock(manager,Te_Proxy){  // on import
     holder = 0;}
 
   void lock(Thread *);
@@ -323,8 +323,8 @@ void gcDistLockRecurseImpl(Tertiary *t);
 ConstTerm* auxGcDistCellImpl(Tertiary *t);
 ConstTerm* auxGcDistLockImpl(Tertiary *t);
 
-void globalizeCell(CellLocal*, int);
-void globalizeLock(LockLocal*, int);
+void globalizeCell(CellLocal*, OB_TIndex);
+void globalizeLock(LockLocal*, OB_TIndex);
 
 void cellLock_Perm(int state,Tertiary* t);
 void cellLock_Temp(int state,Tertiary* t);
