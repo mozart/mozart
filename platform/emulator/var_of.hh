@@ -374,6 +374,14 @@ public:
     // Is X=val still valid, i.e., is val a feature and is width(ofs)==0 (see GenFDVariable::valid)
     Bool valid(TaggedRef val);
 
+    // Hooks for indexing: the following two methods should return
+    // OK iff "this" disentails its label being "l" or its
+    // arity being "tupleArity"/"recordArity"
+    // note: "tupleArity" may be zero
+    // for now they always return NO, leading to suspension
+    Bool disentailed(Literal *l, int tupleArity)     { return NO; }
+    Bool disentailed(Literal *l, Arity *recordArity) { return NO; }
+
     // These procedures exist as well in the class GenFDVariable,
     // but they are not needed in GenOFSVariable:
 
