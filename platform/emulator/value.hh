@@ -2605,8 +2605,8 @@ inline
 Bool oz_isExtensionPlus(TaggedRef t) {
   if (oz_isExtension(t)) return TRUE;
   if (oz_isConst(t)) {
-    TypeOfConst t = tagged2Const(t)->getType();
-    if (t==Co_Resource || t==Co_Foreign_Pointer) return TRUE;
+    TypeOfConst tc = tagged2Const(t)->getType();
+    if (tc==Co_Resource || tc==Co_Foreign_Pointer) return TRUE;
   }
   if (oz_isFSetValue(t)) return TRUE;
   return FALSE;
