@@ -43,6 +43,9 @@ import
    Compiler.{engine
 	     quietInterface}
 
+   DebugSupport
+      from 'x-oz-boot:Debug'
+   
 export
    'Ozcar': Ozcar
    

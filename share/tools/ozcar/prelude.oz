@@ -29,11 +29,11 @@ Dbg = dbg(on:           proc {$}
 	  off:          proc {$}
 			   {Property.put 'internal.debug' false}
 			end
-	  stream:       {`Builtin` 'Debug.getStream' 1}
-	  step:         {`Builtin` 'Debug.setStepFlag' 2}
-	  trace:        {`Builtin` 'Debug.setTraceFlag' 2}
-	  checkStopped: {`Builtin` 'Debug.checkStopped' 2}
-	  unleash:      {`Builtin` 'Thread.unleash' 2}
+	  stream:       DebugSupport.getStream
+	  step:         DebugSupport.setStepFlag
+	  trace:        DebugSupport.setTraceFlag
+	  checkStopped: DebugSupport.checkStopped
+	  unleash:      DebugSupport.threadUnleash
 	 )
 
 UserActionLock = {NewLock}
