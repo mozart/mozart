@@ -28,6 +28,49 @@ public:
   }
 };
 
+class FSetsMaxPropagator : public Propagator_S_D {
+private:
+  static OZ_CFun header;
+public:
+  FSetsMaxPropagator(OZ_Term v, OZ_Term i)
+    : Propagator_S_D(v, i) {}
+  
+  virtual OZ_Return propagate(void);
+  
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }
+};
+
+class Propagator_S : public OZ_Propagator {
+protected:
+  OZ_Term _s;
+public:
+  Propagator_S(OZ_Term s)
+    : _s(s) {}
+  virtual size_t sizeOf(void) {
+    return sizeof(Propagator_S);
+  }
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_updateHeapTerm(_s);
+  }
+  virtual OZ_Term getParameters(void) const {
+    return OZ_cons(_s,OZ_nil());
+  }
+};
+
+class FSetsConvexPropagator : public Propagator_S {
+private:
+  static OZ_CFun header;
+public:
+  FSetsConvexPropagator(OZ_Term v)
+    : Propagator_S(v) {}
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }
+};
+
 #endif /* __INTSETS_HH__ */
 
 
