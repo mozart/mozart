@@ -162,8 +162,8 @@ sub FUNCTOR {
 
     print "\ndefine\n";
 
-    printf ("{Wait %s}\n", $module_name);
-    print "{Wait Reflect}\n";
+    printf ("\t{Wait %s}\n", $module_name);
+    print "\t{Wait Reflect}\n\n";
 
 
     $mod_name =~ s/^.*\///o;
