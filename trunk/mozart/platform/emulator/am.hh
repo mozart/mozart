@@ -112,7 +112,7 @@ public:
 
   jmp_buf engineEnvironment;
 
-  Board **ioNodes;		// node that must be waked up on io
+  TaggedRef *ioNodes;		// node that must be waked up on io
 
 #ifdef DEBUG_CHECK
   Bool dontPropagate;
@@ -213,7 +213,7 @@ public:
 // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
-  void awakeNode(Board *node);
+  void awakeIOVar(TaggedRef var);
 
   // entailment check
   Bool entailment();
@@ -280,7 +280,7 @@ public:
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
-  void select(int fd);
+  OZ_Bool readSelect(int fd,TaggedRef l,TaggedRef r);
   void checkIO();
 
   void handleAlarm();

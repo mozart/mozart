@@ -802,12 +802,9 @@ OZ_C_proc_begin(unix_select,2)
   WRAPCALL(osSelect(fd+1, &fds, NULL, NULL, &timeout), sel, out);
 
   if (sel == 0) {
-    if (!OZ_select(fd)) {
-      RETURN_ANY_ERROR(out,0,"Oz select failed","internal");
-    }
-    return OZ_unifyInt(out,0);
+    return OZ_readSelect(fd,OZ_CToInt(0),out);
   }
-  return OZ_unifyInt(out,1);
+  return OZ_unifyInt(out,0);
 }
 OZ_C_proc_end
 
