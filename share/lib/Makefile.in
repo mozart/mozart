@@ -180,9 +180,8 @@ LIBFILES = \
         $(ENVS1:%=$(OZLIB)/%) \
         $(TYCS:tyc/%=$(OZLIB)/%)
 
-HELPCOMPONENTS = Base.ozc Standard.ozc
-
 COMPONENTS = \
+        Base.ozc Standard.ozc \
         Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
         Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
         Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
@@ -264,7 +263,7 @@ clean:
         $(RM) *~ *.bak
         $(RM) compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
         $(RM) ozcar-version.oz
-        $(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS)
+        $(RM) $(TYPS) $(TYCS) $(COMPONENTS)
         $(RM) ozbatch ozserver
         $(RM) TAGS
         $(RM) -r tyc
