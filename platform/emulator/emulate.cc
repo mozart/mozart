@@ -1704,8 +1704,17 @@ LBLdispatcher:
 	goto LBLraise;
 
       case BI_PREEMPT:
-	PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
-	goto LBLsuspendThread;
+	{
+	  int registersToSave = max(getPosIntArg(PC+5),getRegArg(PC+4)+1);
+	  // This hack means the following: usually it is
+	  // sufficient to no save the output register in the case of
+	  // Distributed Oz "Exchange" can be delayed because of
+	  // network communication in which case the output argument
+	  // is already initialized. (mm)
+
+	  PushContX(PC+6,Y,G,X,registersToSave);
+	  goto LBLsuspendThread;
+	}
 
       case BI_REPLACEBICALL: 
 	predArity = getPosIntArg(PC+5);
