@@ -16,7 +16,9 @@
 
 
 #include <stdlib.h>
+#ifndef IRIX5_MIPS
 #include <memory.h>
+#endif
 #include <stdio.h>
 
 #include "types.hh"
