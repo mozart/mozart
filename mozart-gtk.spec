@@ -10,7 +10,7 @@ Vendor: Mozart Consortium
 URL: http://www.mozart-oz.org/
 Group: Development/Languages
 Packager: Denys Duchier
-Source: ftp://ftp.mozart-oz.org/pub/extras/mozart-gtk-1.0.tar.gz
+Source: ftp://ftp.mozart-oz.org/pub/extras/mozart-gtk-1.1.tar.gz
 Prefix: /usr/lib/mozart
 BuildRoot: /var/tmp/mozart-gtk
 
