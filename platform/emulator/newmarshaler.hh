@@ -26,6 +26,8 @@
  *
  */
 
+#ifdef NEWMARSHALER
+
 #ifndef __NEWMARSHALER_H
 #define __NEWMARSHALER_H
 
@@ -82,3 +84,5 @@ void newMarshalTerm(OZ_Term term, MsgBuffer *bs)
 OZ_Term newUnmarshalTerm(MsgBuffer *);
 
 #endif
+
+#endif /* NEWMARSHALER */

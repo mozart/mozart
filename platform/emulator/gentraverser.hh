@@ -25,6 +25,8 @@
  *
  */
 
+#ifdef NEWMARSHALER
+
 #ifndef __GENTRAVERSER_H
 #define __GENTRAVERSER_H
 
@@ -887,3 +889,5 @@ public:
 };
 
 #endif
+
+#endif /* NEWMARSHALER */
