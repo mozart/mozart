@@ -64,7 +64,7 @@ public:
   }
 
   virtual OZ_Return getFeatureV(OZ_Term,OZ_Term&);
-  // virtual OZ_Return putFeatureV(OZ_Term,OZ_Term );
+  virtual OZ_Return putFeatureV(OZ_Term,OZ_Term );
 
   virtual
   OZ_Extension *gCollectV(void);
@@ -305,6 +305,22 @@ OZ_Return BitArray::getFeatureV(OZ_Term f,OZ_Term& v)
     return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,
 		    oz_makeTaggedExtension(this),f);
   }
+}
+
+OZ_Return BitArray::putFeatureV(OZ_Term f,OZ_Term v)
+{
+  if (!OZ_isInt(f)) { oz_typeError(1,"int"); }
+  int i = OZ_intToC(f);
+  if (!checkBounds(i)) {
+    return oz_raise(E_ERROR,E_KERNEL,"BitArray.index",2,
+		    oz_makeTaggedExtension(this),f);
+  }
+  if (OZ_isVariable(v)) { OZ_suspendOn(v); }
+  v = oz_deref(v);
+  if (v==OZ_true()) set(i);
+  else if (v==OZ_false()) clear(i);
+  else { oz_typeError(2,"bool"); }
+  return PROCEED;
 }
 
 OZ_BI_define(BIbitArray_low,1,1)
