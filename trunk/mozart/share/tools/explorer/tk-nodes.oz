@@ -133,7 +133,7 @@ local
 	    case @toDo\=nil orelse @isHidden then true else
 	       {Canvas tk(itemconfigure Node
 			  fill:  ChooseTermColor
-			  width: TermNodeBorderWidth)}
+			  width: ThickNodeBorderWidth)}
 	    end
 	 end
 
@@ -229,7 +229,7 @@ local
 			     ScaledMyY + ScaledWidth
 			     case @toDo==nil then
 				o(fill:  ChooseTermColor
-				  width: TermNodeBorderWidth)
+				  width: ThickNodeBorderWidth)
 			     else
 				o(fill:  ChooseColor
 				  width: NodeBorderWidth)
@@ -326,7 +326,7 @@ local
 		       ScaledMyX + ScaledWidth
 		       ScaledMyY + ScaledWidth      
 		       fill:    FailedColor
-		       width:   TermNodeBorderWidth
+		       width:   NodeBorderWidth
 		       outline: LineColor
 		       tags:    q(Node Tree MomTree))}
 	    isDrawn <- True
@@ -383,7 +383,7 @@ local
 	    {Canvas tk(crea polygon
 		       X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
 		       fill:    BlockedColor
-		       width:   TermNodeBorderWidth
+		       width:   NodeBorderWidth
 		       outline: LineColor
 		       tags:    q(Node Tree MomTree))}
 	    isDrawn <- True
@@ -472,7 +472,7 @@ local
 	    
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					EntailedColor TermNodeBorderWidth)>>
+					EntailedColor NodeBorderWidth)>>
 	    end
 	    
 	 end
@@ -483,7 +483,7 @@ local
 
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					SuspendedColor NodeBorderWidth)>>
+					SuspendedColor ThickNodeBorderWidth)>>
 	    end
 	    
 	 end
