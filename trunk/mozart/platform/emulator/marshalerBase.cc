@@ -65,102 +65,8 @@ void initRobustMarshaler()
 }
 
 //
-class DoubleConv {
-public:
-  union {
-    unsigned char c[sizeof(double)];
-    int i[sizeof(double)/sizeof(int)];
-    double d;
-  } u;
-};
-
-Bool isLowEndian()
-{
-  DoubleConv dc;
-  dc.u.i[0] = 1;
-  return dc.u.c[0] == 1;
-}
-//
-static const Bool lowendian = isLowEndian();
-
-//
 SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];
-
-//
-void marshalFloat(MarshalerBuffer *bs, double d)
-{
-  static DoubleConv dc;
-  dc.u.d = d;
-  if (lowendian) {
-    marshalNumber(bs, dc.u.i[0]);
-    marshalNumber(bs, dc.u.i[1]);
-  } else {		       
-    marshalNumber(bs, dc.u.i[1]);
-    marshalNumber(bs, dc.u.i[0]);
-  }
-}
-
-//
-void marshalGName(MarshalerBuffer *bs, GName *gname)
-{
-  misc_counter[MISC_GNAME].send();
-
-  // generic one (not distributions'!)
-  gname->site->marshalSiteForGName(bs);
-  for (int i = 0; i < fatIntDigits; i++) {
-    marshalNumber(bs, gname->id.number[i]);
-  }
-  marshalNumber(bs, (int) gname->gnameType);
-}
-
-//
-//
-void marshalSmallInt(MarshalerBuffer *bs, OZ_Term siTerm)
-{
-  marshalDIF(bs, DIF_SMALLINT);
-  marshalNumber(bs, tagged2SmallInt(siTerm));
-}
-
-//
-void marshalFloat(MarshalerBuffer *bs, OZ_Term floatTerm)
-{
-  marshalDIF(bs, DIF_FLOAT);
-  marshalFloat(bs, tagged2Float(floatTerm)->getValue());
-}
-
-//
-void marshalLiteral(MarshalerBuffer *bs, OZ_Term litTerm, int litTermInd)
-{
-  Literal *lit = tagged2Literal(litTerm);
-
-  MarshalTag litTag;
-  GName *gname = NULL;
-
-  if (lit->isAtom()) {
-    litTag = DIF_ATOM;
-  } else if (lit->isUniqueName()) {
-    litTag = DIF_UNIQUENAME;
-  } else if (lit->isCopyableName()) {
-    litTag = DIF_COPYABLENAME;
-  } else {
-    litTag = DIF_NAME;
-    gname = ((Name *) lit)->globalize();
-  }
-
-  marshalDIF(bs, litTag);
-  const char *name = lit->getPrintName();
-  marshalTermDef(bs, litTermInd);
-  marshalString(bs, name);
-  if (gname) marshalGName(bs, gname);
-}
-
-//
-void marshalBigInt(MarshalerBuffer *bs, OZ_Term biTerm, ConstTerm *biConst)
-{ 
-  marshalDIF(bs, DIF_BIGINT);
-  marshalString(bs, toC(biTerm));
-}
 
 //
 void marshalBuiltin(MarshalerBuffer *bs,
@@ -255,69 +161,17 @@ void traverseBuiltin(GenTraverser *gt, Builtin *entry)
   gt->marshalOzValue(makeTaggedConst(entry));
 }
 
-//
-void marshalProcedureRef(GenTraverser *gt,
-			 AbstractionEntry *entry, MarshalerBuffer *bs)
-{
-  Bool copyable = entry && entry->isCopyable();
-  marshalNumber(bs, copyable);
-  if (copyable) {
-    int ind = gt->findLocation(entry);
-    if (ind >= 0) {
-      marshalDIF(bs, DIF_REF);
-      marshalTermRef(bs, ind);
-    } else {
-      marshalDIF(bs, DIF_ABSTRENTRY);
-      rememberLocation(gt, bs, entry);
-    }
-  } else {
-    Assert(entry==NULL || entry->getAbstr() != NULL);
-  }
-}
 
 //
-static inline
-void marshalRecordArityType(RecordArityType type, MarshalerBuffer *bs)
-{
-  marshalNumber(bs, type);
-}
-
-//
-//
-// NOTE: this code cannot be changed without changing
-// marshaling/unmarshaling of pred id"s, hash table refs, gen call
-// info"s and app meth info"s !!! Sorry, i (kost@) don't know how to
-// express an appropriate assertion... may be the be way is just not
-// to use this procedure for marshaling structures named above;
-void marshalRecordArity(GenTraverser *gt,
-			SRecordArity sra, MarshalerBuffer *bs)
-{
-  if (sraIsTuple(sra)) {
-    marshalRecordArityType(TUPLEWIDTH, bs);
-    marshalNumber(bs, getTupleWidth(sra));
-  } else {
-    marshalRecordArityType(RECORDARITY, bs);
-    gt->marshalOzValue(getRecordArity(sra)->getList());
-  }
-}
+#define MARSHALERBUFFER		MarshalerBuffer
+#include "marshalerBaseShared.cc"
+#undef  MARSHALERBUFFER
 
 //
 void traverseRecordArity(GenTraverser *gt, SRecordArity sra)
 {
   if (!sraIsTuple(sra))
     gt->marshalOzValue(getRecordArity(sra)->getList());
-}
-
-//
-void marshalPredId(GenTraverser *gt, PrTabEntry *p, MarshalerBuffer *bs)
-{
-  gt->marshalOzValue(p->getName());
-  marshalRecordArity(gt, p->getMethodArity(), bs);
-  gt->marshalOzValue(p->getFile());
-  marshalNumber(bs, p->getLine());
-  marshalNumber(bs, p->getColumn());
-  gt->marshalOzValue(p->getFlagsList());
-  marshalNumber(bs, p->getMaxX());
 }
 
 //
@@ -330,87 +184,10 @@ void traversePredId(GenTraverser *gt, PrTabEntry *p)
 }
 
 //
-void marshalCallMethodInfo(GenTraverser *gt,
-			   CallMethodInfo *cmi, MarshalerBuffer *bs)
-{
-  int compact = (cmi->regIndex<<1) | (cmi->isTailCall);
-  marshalNumber(bs, compact);
-  gt->marshalOzValue(cmi->mn);
-  marshalRecordArity(gt, cmi->arity, bs);
-}
-
-//
 void traverseCallMethodInfo(GenTraverser *gt, CallMethodInfo *cmi)
 {
   gt->marshalOzValue(cmi->mn);
   traverseRecordArity(gt, cmi->arity);
-}
-
-//
-void marshalGRegRef(AssRegArray *gregs, MarshalerBuffer *bs)
-{ 
-  int nGRegs = gregs->getSize();
-  marshalNumber(bs, nGRegs);
-
-  for (int i = 0; i < nGRegs; i++) {
-    int out = ((*gregs)[i].getIndex()<<2) | (int)(*gregs)[i].getKind();
-    marshalNumber(bs, out);
-  }
-}
-
-//
-void marshalLocation(Builtin *bi, OZ_Location *loc, MarshalerBuffer *bs) 
-{ 
-  int inAr  = bi->getInArity();
-  int outAr = bi->getOutArity();
-  marshalNumber(bs, inAr);
-  marshalNumber(bs, outAr);
-
-  for (int i = 0; i < (inAr + outAr); i++) {
-    int out = loc->getIndex(i);
-    marshalNumber(bs, out);
-  }
-}
-
-//
-// The hash table is considered to be compound: its subtrees are table
-// nodes;
-void marshalHashTableRef(GenTraverser *gt,
-			 int start, IHashTable *table, MarshalerBuffer *bs)
-{
-  int sz = table->getSize();
-  marshalNumber(bs, sz);	// kost@ : but it's not used anymore;
-  marshalLabel(bs, start, table->lookupElse());
-  marshalLabel(bs, start, table->lookupLTuple());
-  int entries = table->getEntries();
-  // total number of entries (and, thus, of 'ht_???_entry' tasks);
-  marshalNumber(bs, entries);
-
-  //
-  for (int i = table->getSize(); i--; ) {
-    if (table->entries[i].val) {
-      if (oz_isLiteral(table->entries[i].val)) {
-	if (table->entries[i].sra == mkTupleWidth(0)) {
-	  // That's a literal entry
-	  marshalNumber(bs, ATOMTAG);
-	  marshalLabel(bs, start, table->entries[i].lbl);
-	  gt->marshalOzValue(table->entries[i].val);
-	} else {
-	  // That's a record entry
-	  marshalNumber(bs, RECORDTAG);
-	  marshalLabel(bs,start, table->entries[i].lbl);
-	  gt->marshalOzValue(table->entries[i].val);
-	  marshalRecordArity(gt, table->entries[i].sra, bs);
-	}
-      } else {
-	Assert(oz_isNumber(table->entries[i].val));
-	// That's a number entry
-	marshalNumber(bs,NUMBERTAG);
-	marshalLabel(bs, start, table->entries[i].lbl);
-	gt->marshalOzValue(table->entries[i].val);
-      }
-    }
-  }
 }
 
 //

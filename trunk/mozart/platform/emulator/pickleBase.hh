@@ -83,13 +83,35 @@ void marshalShort(PickleBuffer *bs, unsigned short i);
 void marshalNumber(PickleBuffer *bs, unsigned int i);
 void marshalString(PickleBuffer *bs, const char *s);
 void marshalLabel(PickleBuffer *bs, int start, int lbl);
-void marshalOpCode(PickleBuffer *bs, int lbl, Opcode op, Bool showLabel);
+void marshalOpCode(PickleBuffer *bs, int lbl, Opcode op, Bool showLabel = 1);
 void marshalCodeStart(PickleBuffer *bs);
 void marshalCodeEnd(PickleBuffer *bs);
 void marshalTermDef(PickleBuffer *bs, int lbl);
 void marshalTermRef(PickleBuffer *bs, int lbl);
 
 #if !defined(TEXT2PICKLE)
+
+//
+void marshalFloat(PickleBuffer *bs, double d);
+void marshalGName(PickleBuffer *bs, GName *gname);
+void marshalSmallInt(PickleBuffer *bs, OZ_Term siTerm);
+void marshalFloat(PickleBuffer *bs, OZ_Term floatTerm);
+void marshalLiteral(PickleBuffer *bs, OZ_Term litTerm, int litTermInd);
+void marshalBigInt(PickleBuffer *bs, OZ_Term biTerm, ConstTerm *biConst);
+//
+void marshalProcedureRef(GenTraverser *gt,
+			 AbstractionEntry *entry, PickleBuffer *bs);
+void marshalRecordArity(GenTraverser *gt,
+			SRecordArity sra, PickleBuffer *bs);
+void marshalPredId(GenTraverser *gt, PrTabEntry *p, PickleBuffer *bs);
+void marshalCallMethodInfo(GenTraverser *gt,
+			   CallMethodInfo *cmi, PickleBuffer *bs);
+void marshalGRegRef(AssRegArray *gregs, PickleBuffer *bs);
+void marshalLocation(Builtin *bi, OZ_Location *loc, PickleBuffer *bs);
+void marshalHashTableRef(GenTraverser *gt,
+			 int start, IHashTable *table, PickleBuffer *bs);
+
+
 //
 #ifdef USE_FAST_UNMARSHALER
 
