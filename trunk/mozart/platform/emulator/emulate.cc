@@ -1817,6 +1817,14 @@ void engine() {
 	 DebugCheck (((newSolveBB->getScriptRef ()).getSize () != 0),
 		     error ("non-empty script in solve blackboard"));
 
+	 // adjoin the list of or-actors to the list in actual solve actor!!!
+	 Board *currentSolveBB = e->currentSolveBoard;
+	 if (currentSolveBB == (Board *) NULL) {
+	   DebugCheckT (message ("solved is applied not inside of a search problem?\n"));
+	 } else {
+	   SolveActor::Cast (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
+	 }
+	 
 	 if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
 	   warning ("unification of variable in solved failed");
 	   HF_NOMSG;
@@ -1982,7 +1990,6 @@ void engine() {
 
       CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
 			  NOCODE, Y, G, X, argsToSave);
-
       DISPATCH(3);
     }
 
@@ -1993,7 +2000,6 @@ void engine() {
 
       CAA = new WaitActor(CBB, GET_CURRENT_PRIORITY(),
 			  NOCODE, Y, G, X, argsToSave);
-      CAA->setDisWait();
       if (e->currentSolveBoard != (Board *) NULL) {
 	SolveActor *sa= SolveActor::Cast (e->currentSolveBoard->getActor ());
 	sa->pushWaitActor (WaitActor::Cast (CAA));
