@@ -1958,6 +1958,9 @@ void CellManager::localize(){
 // and add it to the owner table
 void Tertiary::globalizeTert()
 { 
+  if (getType()==GCTAG)
+    return;
+
   switch(getType()) {
   case Co_Abstraction:
     ((Abstraction *)this)->globalize();
@@ -2546,6 +2549,7 @@ Bool marshallTertiaryExport(Tertiary *t, ByteStream *bs)
 Bool marshallTertiary(Site* sd, Tertiary *t, ByteStream *bs)
 {
   if (!sd) return marshallTertiaryExport(t,bs);
+
   MarshallTag tag;
   switch (t->getType()) {
   case Co_Port:        tag = DIF_PORT;     break;
@@ -2597,7 +2601,7 @@ Bool marshallTertiary(Site* sd, Tertiary *t, ByteStream *bs)
       Object *o = (Object*) t;
       marshallGName(o->getGName(),bs);
       if (!o->isClass()) {
-	if (!marshallTertiary(sd,o->getOzClass(),bs)) return NO;
+	if (!marshallTerm(sd,makeTaggedConst(o->getOzClass()),bs)) return NO;
       }
       break;
     }
@@ -2622,7 +2626,7 @@ void unmarshallTertiary(ByteStream *bs, TaggedRef *ret, MarshallTag tag, char *c
 
   Tertiary *tert = NULL;
   switch (tag) {
-  case DIF_PORT:     tert = new PortProxy(bi);       break;
+  case DIF_PORT:   tert = new PortProxy(bi);       break;
   case DIF_THREAD: tert = new Thread(bi,Te_Proxy); break;
   case DIF_SPACE:  tert = new Space(bi,Te_Proxy);  break;
   default:         Assert(0);
@@ -3073,6 +3077,7 @@ loop:
       int i = unmarshallNumber(bs);
       PD((UNMARSHALL,"ref: %d",i));
       *ret = refTable->get(i);
+      Assert(*ret);
       return;
     }
 
@@ -3085,7 +3090,7 @@ loop:
       return;
     }
 
-  case DIF_PORT:     unmarshallTertiary(bs,ret,tag,"port");   return;
+  case DIF_PORT:   unmarshallTertiary(bs,ret,tag,"port");   return;
   case DIF_THREAD: unmarshallTertiary(bs,ret,tag,"thread"); return;
   case DIF_SPACE:  unmarshallTertiary(bs,ret,tag,"space");  return;
 
@@ -3189,6 +3194,7 @@ loop:
 
       if (val1) {
 	PD((UNMARSHALL,"object hit: b:%d",bi));
+	gotRef(bs,val1);
 	*ret=val1;
 	return;
       }
@@ -3404,8 +3410,7 @@ void siteReceive(ByteStream* bs)
   case M_PORT_SEND:    /* M_PORT_SEND index term */
     {
       int portIndex = unmarshallNumber(bs);
-      OZ_Term t;
-      unmarshallTerm(bs,&t);
+      OZ_Term t = unmarshallTerm(bs);
       Assert(t);
       bs->unmarshalEnd();
       PD((MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t)));
@@ -3426,8 +3431,7 @@ void siteReceive(ByteStream* bs)
     {
       int i = unmarshallNumber(bs);
       char *biName = unmarshallString(bs);
-      OZ_Term t;
-      unmarshallTerm(bs,&t);
+      OZ_Term t = unmarshallTerm(bs);
       Assert(t);
       bs->unmarshalEnd();
       PD((MSG_RECEIVED,"REMOTE_SEND: o:%d bi:%s v:%s",i,biName,toC(t)));
@@ -4773,8 +4777,7 @@ OZ_C_proc_begin(BIimport,2)
 
   bs->unmarshalBegin();
 
-  OZ_Term v;
-  unmarshallTerm(bs,&v);
+  OZ_Term v = unmarshallTerm(bs);
 
   bs->unmarshalEnd();
 
