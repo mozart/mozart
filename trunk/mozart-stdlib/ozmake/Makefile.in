@@ -132,7 +132,6 @@ export PKG_METHOD
 # TOOLS
 #=====================================================================
 
-OZTOOL_HOST	= @VAR_OZTOOL_HOST@
 OZTOOL		= @VAR_OZTOOL@
 OZE		= @VAR_OZE@
 OZC		= $(OZE) @VAR_OZC@
@@ -147,9 +146,6 @@ OZCFLAGS	= $(PKG_OZCFLAGS)
 OZLFLAGS	= $(PKG_OZLFLAGS)
 OZHFLAGS	= $(PKG_OZHFLAGS)
 PLATFORM	= $(shell $(OZTOOL) platform)
-ZIP		= @VAR_ZIP@
-COMPRESS	= @VAR_COMPRESS@
-XSLTPROC	= @XSLTPROC@
 
 #=====================================================================
 # RECURSIVE PROCESSING AND CLEANING UP
@@ -224,7 +220,6 @@ LIBDIR_TOP	= $(CACHE)/$(LIBPKG_DIR)
 LIBDIR_AUX	= $(CACHE)/$(LIBPKG_DIR_AUX)
 LIBDIR_DOC	= $(DOCDIR)/$(LIBPKG_MOGUL_DIR)
 LIBDIR_INC	= $(INCDIR)/$(LIBPKG_MOGUL_DIR)
-LIBDIR_API	= $(LIBDIR_DOC)/API
 LIBDIR_BIN	= $(BINDIR)
 LIBFILES_TOP	= $(addprefix $(LIBDIR_TOP)/,$(PKG_INSTALLS))
 LIBFILES_AUX	= $(addprefix $(LIBDIR_AUX)/,$(PKG_INSTALLS_AUX))
@@ -232,25 +227,11 @@ LIBFILES_BIN	= $(addprefix $(LIBDIR_BIN)/,$(PKG_INSTALLS_BIN))
 LIBFILES_DOC	= $(addprefix $(LIBDIR_DOC)/,$(PKG_INSTALLS_DOC))
 LIBFILES_INC	= $(addprefix $(LIBDIR_INC)/,$(PKG_INSTALLS_INC))
 
-API_FROM_SRC	= $(wildcard $(SRCDIR)/API/*)
-API_FROM_BUILD	= $(wildcard $(BUILDDIR)/API/*)
-
-ifndef API_FROM_BUILD
-API_DIR		= $(SRCDIR)/API
-API_SOURCES	= $(API_FROM_SRC)
-LIBFILES_API	= $(patsubst $(SRCDIR)/API/%,$(LIBDIR_API)/%,$(API_FROM_SRC))
-else
-API_DIR		= $(BUILDDIR)/API
-API_SOURCES	= $(API_FROM_BUILD)
-LIBFILES_API	= $(patsubst $(BUILDDIR)/API/%,$(LIBDIR_API)/%,$(API_FROM_BUILD))
-endif
-
 install		:: install.top install.aux install.bin install.doc install.api install.inc
 install.top	:: $(LIBFILES_TOP)
 install.aux	:: $(LIBFILES_AUX)
 install.bin	:: $(LIBFILES_BIN)
 install.doc	:: $(LIBFILES_DOC)
-install.api	:: $(LIBFILES_API)
 install.inc	:: $(LIBFILES_INC)
 
 $(LIBFILES_TOP): $(LIBDIR_TOP)/% : %
@@ -261,8 +242,6 @@ $(LIBFILES_BIN): $(LIBDIR_BIN)/% : %
 	$(INSTALL_BIN) $< $@
 $(LIBFILES_DOC): $(LIBDIR_DOC)/% : %
 	$(INSTALL_FILE) $< $@
-$(LIBFILES_API): $(LIBDIR_API)/% : API/%
-	$(INSTALL_FILE) $< $@
 $(LIBFILES_INC): $(LIBDIR_INC)/% : %
 	$(INSTALL_FILE) $< $@
 
@@ -272,33 +251,6 @@ $(LIBFILES_INC): $(LIBDIR_INC)/% : %
 
 Makefile: Makefile.in
 	cd $(BUILDTOP) && ./config.status
-
-#=====================================================================
-# API DOCUMENTATION (using ozh)
-#=====================================================================
-
-OZHDIR   = $(API_DIR)
-ECHO_API = $(BUILDTOP)/ozskel_api
-
-api:: api.first api.second
-
-api.first::
-	-rm -f $(ECHO_API)
-	$(MAKE) echo.api
-
-api.second::
-	-rm -rf $(OZHDIR)
-	OZLOAD=all=$(SRCDIR):cache=${HOME}/.oz/cache:cache=$(OZHOME)/cache \
-	$(OZH) $(OZHFLAGS) -o $(OZHDIR) $(shell cat $(ECHO_API))
-
-echo.api::
-	echo $(addprefix $(SRCDIR)/,$(PKG_API)) >> $(ECHO_API)
-
-clean::
-	-rm -f $(ECHO_API)
-
-veryclean::
-	-rm -rf $(OZHDIR)
 
 #=====================================================================
 # SOURCE TAR BALL
@@ -357,9 +309,7 @@ FIND_SOURCES	= $(shell find $(FIND_DIRS) $(FIND_OPTIONS) -print)
 ALL_PKG_SOURCES	= $(subst $(SRCDIR)/,,$(FIND_SOURCES))
 endif
 
-ALL_API_SOURCES = $(API_SOURCES)
 TAR_PKG_SOURCES	= $(addprefix $(TAR_DIR)/,$(ALL_PKG_SOURCES))
-TAR_API_SOURCES	= $(subst $(API_DIR)/,$(TAR_DIR)/API/,$(ALL_API_SOURCES))
 
 $(TGZ_FILE): tgz
 tgz::
@@ -377,10 +327,7 @@ tarz:: $(TAR_FILE).Z
 %.Z: %
 	$(COMPRESS) -c $< > $@
 
-install.src:: $(TAR_PKG_SOURCES) $(TAR_API_SOURCES)
-
-$(TAR_API_SOURCES): $(TAR_DIR)/API/% : $(API_DIR)/%
-	$(INSTALL) -M $< $@
+install.src:: $(TAR_PKG_SOURCES)
 
 $(TAR_PKG_SOURCES): $(TAR_DIR)/% : $(SRCTOP)/%
 	$(INSTALL) -M $< $@
@@ -404,18 +351,6 @@ $(INSTALL_FILES_DST): $(PKGDIR)/% : $(BUILDTOP)/%
 update-tgz :: $(TGZ_FILE_DST)
 update-tarz:: $(TAR_FILE_DST)
 update-zip :: $(ZIP_FILE_DST)
-
-#=====================================================================
-# ZIP DISTRIBUTIONS
-#=====================================================================
-
-zip: all
-	-rm -rf $(TAR_DIR)
-	$(MAKE) install PREFIX=$(TAR_DIR)
-	cd $(TAR_DIR) && $(ZIP) -r -D $(ZIP_FILE) *
-
-clean::
-	-rm -f $(ZIP_FILE)
 
 #=====================================================================
 # OZPM SUPPORT - THIS WAS EXPERIMENTAL AND DOES NOT WORK AT PRESENT!!!

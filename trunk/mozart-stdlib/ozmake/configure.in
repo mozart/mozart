@@ -1,16 +1,55 @@
 dnl replace install-sh by the name of a real source file
 AC_INIT(ozinstall)
-AC_PREFIX_DEFAULT(${OZSKEL_PREFIX:-${HOME}/.oz})
-OZSKEL_INIT
-AC_PATH_PROG([XSLTPROC],[xsltproc],[NONE])
-AC_SUBST(XSLTPROC)
-if test "$XSLTPROC" = "NONE"; then
-    AC_MSG_ERROR(["xsltproc not found (see http://xmlsoft.org/XSLT/xsltproc2.html)"])
+AC_PREFIX_DEFAULT(/usr/local/oz)
+AC_CANONICAL_HOST
+AC_PROG_MAKE_SET
+srcdir=`cd $srcdir 2> /dev/null && pwd`
+if test "$prefix" = NONE; then
+  prefix="$ac_default_prefix"
 fi
+prefix=`cd $prefix 2> /dev/null && pwd`
+dnl
+dnl
+dnl
+AC_PATH_PROGS(VAR_OZE,ozengine ozengine.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_OZE" = "UNDEFINED"; then
+    AC_MSG_ERROR([ozengine not found])
+fi
+AC_SUBST(VAR_OZE)
+dnl
+dnl
+dnl
+changequote(<,>)
+OZHOME=`expr "${VAR_OZE}" : '\(.*\)/[^/]*/[^/]*$' || echo "."`
+changequote([,])
+AC_SUBST(OZHOME)
+dnl
+dnl
+dnl
+AC_PATH_PROGS(VAR_OZC,ozc ozc.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_OZC" = "UNDEFINED"; then
+  AC_MSG_ERROR([ozc not found])
+fi
+AC_SUBST(VAR_OZC)
+dnl
+dnl
+dnl
+AC_PATH_PROGS(VAR_OZL,ozl ozl.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_OZL" = "UNDEFINED"; then
+  AC_MSG_ERROR([ozl not found])
+fi
+AC_SUBST(VAR_OZL)
+dnl
+dnl
+dnl
+AC_PATH_PROGS(VAR_OZTOOL,oztool oztool.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_OZTOOL" = "UNDEFINED"; then
+  AC_MSG_ERROR([oztool not found])
+fi
+AC_SUBST(VAR_OZTOOL)
+dnl
+dnl
+dnl
+VAR_OZINSTALL="$srcdir/ozinstall"
+AC_SUBST(VAR_OZINSTALL)
 AC_OUTPUT(Makefile)
-errprint(ifdef([OZSKEL_INIT],
- [autoconf succeeded
-],
- [autoconf failed: use "autoconf -l SRCDIR" to include aclocal.m4.
-]))
-
