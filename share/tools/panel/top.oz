@@ -623,13 +623,13 @@ in
       end
       
       meth delay(ODS)
-	 case
-	    lock
-	       case @DelayStamp==ODS then {self update(true)} true
-	       else false
-	       end
-	    end
-	 then {Delay @UpdateTime} {self delay(ODS)}
+	 DS UT
+      in
+	 lock
+	    DS = @DelayStamp
+	    UT = @UpdateTime
+	 end
+	 case DS==ODS then {self update(true)} {Delay UT} {self delay(ODS)}
 	 else skip
 	 end
       end
