@@ -592,17 +592,16 @@ void doRaise(Thread *th, char *msg, char *url)
 
 int pipeHandler(int, PipeInfo *pi)
 {
-  char buf[2];
-  int n = osread(pi->fd,buf,2);
+  char retloc = 0;
+  int n = osread(pi->fd,&retloc,sizeof(retloc));
   osclose(pi->fd);
-  int retloc = buf[0];
 
   Thread *th = pi->thread ? tagged2Thread(pi->thread) : 0;
 
 #ifndef WINDOWS
   int u = waitpid(pi->pid,NULL,0);
   if (u!=pi->pid) {
-      doRaise(th,OZ_unixError(errno),pi->url);
+    doRaise(th,OZ_unixError(errno),pi->url);
     return NO;
   }
 #endif
@@ -707,7 +706,7 @@ void getURL(char *url, TaggedRef out, TaggedRef trigger,Bool load, Thread *th)
   case 0: /* child */
     {
       osclose(fds[0]);
-      int ret = localizeUrl(url,tmpfile);
+      char ret = (char) localizeUrl(url,tmpfile);
       oswrite(fds[1],&ret,sizeof(ret));
       exit(0);
     }
