@@ -3,21 +3,21 @@
 
 <SECTION><TITLE>Distribution model</TITLE>
 
-The distribution model gives well-defined distribution
+<P> The distribution model gives well-defined distribution
 behaviors to the Oz language entities.
 The distribution behaviors are designed to do the
 right thing by default in almost all cases.
 For example, procedure code is transferred to sites
 immediately, so that sites never need ask for
 procedure code.
-In the other cases, e.g., objects, the developer can
+In the other cases, e.g., for objects, the developer can
 specify what distribution behavior he wants, e.g.,
 mobile (cached) objects, stationary objects,
 stationary single-threaded objects.
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
-The most critical entities in a distributed application
+<P> The most critical entities in a distributed application
 in terms of network efficiency are the objects.
 Objects have a state that is updated in a
 globally consistent way.
@@ -59,7 +59,7 @@ wait until the method is finished.
 All method invocations execute in the same thread,
 so the object is executed in a completely sequential way.
 </LIST>
-Deciding between these three behaviors is done
+<P> Deciding between these three behaviors is done
 when the object is created from its class.
 A cached object is created with <<New>>,
 a stationary object is created with <<NewStat>>,
@@ -67,7 +67,7 @@ and a server is created with <<NewServer>>.
 
 <SUBSECTION><TITLE>Other stateful entities</TITLE>
 
-The other stateful language entities have the following
+<P> The other stateful language entities have the following
 distribution behaviors:
 <LIST>
 <ITEM> <EM>Thread</EM>:
@@ -110,7 +110,7 @@ as cached objects and cells.
 
 <SUBSECTION><TITLE>Single-assignment entities</TITLE>
 
-An important category of language entities
+<P> An important category of language entities
 are those that can be assigned only to one value:
 <LIST>
 <ITEM> <EM>Logic variable</EM>:
@@ -148,7 +148,7 @@ programmed explicitly.
 The reader is advised not to take
 the above numbers too seriously.
 </LIST>
-When a logic variable is bound,
+<P> When a logic variable is bound,
 the value is sent to its owner site
 (the site on which it was created),
 which then multicasts it to all the
@@ -181,7 +181,7 @@ sent from the same thread.
 
 <SUBSECTION><TITLE>Stateless entities</TITLE>
 
-Stateless entities never
+<P> Stateless entities never
 change, i.e., they do not have any internal state whatsoever.
 Their distribution behavior is very efficient:
 they are copied across the net in a single message.
@@ -218,7 +218,7 @@ of all the object's methods.
 If many objects of a given class
 exist on a site, then the class only exists once.
 
-<P>Note that classes are copied eagerly,
+<P> Note that classes are copied eagerly,
 whereas objects are lazy.
 I.e., if an object is passed to a site,
 then the object's class is not copied to
@@ -241,7 +241,7 @@ laziness into large data structures when needed.
 
 <SUBSECTION><TITLE>Sited entities</TITLE>
 
-Entities that can be used only on one site
+<P> Entities that can be used only on one site
 are called <EM>sited</EM>.
 References to these entities can be passed to other
 sites, but they do not work there.
@@ -284,7 +284,7 @@ unsited in future releases.
 
 <SUBSECTION><TITLE>Bringing it all together</TITLE>
 
-Does the above classification
+<P> Does the above classification
 give programmers a warm, fuzzy feeling when
 writing distributed applications?
 In short, yes it does.
@@ -292,7 +292,7 @@ The distribution model has been designed in tandem
 with many application prototypes and incredible
 numbers of Gedankenexperimenten.
 
-Here's how to use the distribution model 
+<P> Here's how to use the distribution model 
 to build applications.
 Typically, the large-scale structure
 of an application consists of a graph
@@ -319,7 +319,7 @@ used to manage the dataflow and the concurrency.
 
 <SECTION><TITLE>Global naming</TITLE>
 
-Global names are needed when an application
+<P> Global names are needed when an application
 wants to interact with the world outside it.
 Mozart supports three basic kinds of global names:
 <LIST>
@@ -342,7 +342,7 @@ Mozart process there.
 
 <SUBSECTION><TITLE>Connecting applications with tickets</TITLE>
 
-Let's say Application 1 has a stream that
+<P> Let's say Application 1 has a stream that
 it wants others to access.
 It can do this by creating a ticket
 that references the stream.
@@ -356,7 +356,7 @@ declare Stream Tkt in
 {Show Tkt}
 >>>
 
-Then Application 1 publishes the ticket somewhere so that
+<P> Then Application 1 publishes the ticket somewhere so that
 other applications can access it.
 Our example displays
 the ticket string in the emulator window.
@@ -379,14 +379,14 @@ declare Stream in
 {Browse Stream}
 >>>
 
-If Application 1 binds the stream
+<P> If Application 1 binds the stream
 by doing <<Stream=a|b|c|_>>
 then Application 2's browse window will show the bindings.
 
 
 <SUBSECTION><TITLE>Persistent data structures</TITLE>
 
-An application can save
+<P> An application can save
 any stateless data structure
 in a file and load it again from a file.
 The loading may be done from a URL, used as 
@@ -395,7 +395,7 @@ The module <<Pickle>> implements the saving
 and loading, and the conversion to and from
 the file format.
 
-For example, let's define a function and save it:
+<P> For example, let's define a function and save it:
 
 <<<
 declare
@@ -406,7 +406,7 @@ end
 {Pickle.save Fact "~pvr/public_html/fact"}
 >>>
 
-Since the function is in a <<public_html>> directory,
+<P> Since the function is in a <<public_html>> directory,
 anyone can load it by giving a URL that specifies
 the file:
 
@@ -417,7 +417,7 @@ Fact={Pickle.load "http://www.sics.se/~pvr/fact"}
 {Browse {Fact 10}}
 >>>
 
-Anything stateless can be saved in a pickle,
+<P> Anything stateless can be saved in a pickle,
 including functions, procedures, classes,
 records, and atoms.
 Stateful entities, such as objects and variables,
@@ -425,7 +425,7 @@ cannot be pickled.
 
 <SUBSECTION><TITLE>Remote computations</TITLE>
 
-An application can start a computation
+<P> An application can start a computation
 on a given host that uses the resources
 of that host and
 that continues to interact with the
@@ -434,14 +434,14 @@ The computation is specified as a functor,
 which is the standard way to
 define computations with the resources they need.
 
-First we create a new Mozart process
+<P> First we create a new Mozart process
 that is ready to accept new computations:
 <<<
 declare
 R={New Remote.manager init(host:"sinuhe.sics.se")}
 >>>
 
-Let's make the process do some work:
+<P> Let's make the process do some work:
 <<<
 declare F X in
 F=functor define X={Fact 30} end
@@ -451,10 +451,8 @@ F=functor define X={Fact 30} end
 {Browse X}            % See the answer
 >>>
 
-If the remote computation needs resources,
+<P> If the remote computation needs resources,
 you have to specify the base URL for the resources.
-
-<SECTION><TITLE>
 
 
 </CHAPTER>
