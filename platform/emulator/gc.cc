@@ -1662,7 +1662,7 @@ void Arity::gc()
   Arity *aux = this;
   while(aux) {
     GCMETHMSG("Arity::gc");
-    if (!isTuple()) {
+    if (!aux->isTuple()) {
       for (int i = 0; i < aux->size; i++) {
 	if (aux->keytable[i] != makeTaggedNULL()) {
 	  gcTagged(aux->keytable[i],aux->keytable[i]);
