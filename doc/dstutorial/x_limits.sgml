@@ -22,12 +22,12 @@ In future releases, they will be made unsited.
 
 <item>The code of functions, procedures, classes, and functors
 (but not objects) is always inserted in messages,
-even this code is already present at the destination.
-In future releases, these entities will be copied
+even if the code is already present at the destination.
+In future releases, the code will be copied
 across the network only
-if they are not present on the destination site.
+if it is not present on the destination site.
 In both current and future releases, at most a single copy
-of these entities can exist per site.
+of the code can exist per site.
 
 <item>The fault state <<tempFail>> is indicated only after
 a long delay.
@@ -45,13 +45,8 @@ reference the object.
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
 
-<item>Enabling or installation cannot be done at the <<global>> level.
-In other words, the calls
-<<{Fault.enable _ global _}>> and
-<<{Fault.install _ global _ _}>> are undefined.
-If an attempt is made to enable a <<global>> exception
-or install a <<global>> handler,
-then an exception <<error(dp('not implemented') ...)>> is given.
+<item>The <<Probe>> operation is not available to users.
+
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
