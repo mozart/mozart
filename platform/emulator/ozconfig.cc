@@ -126,5 +126,6 @@ void ConfigData::init() {
   }
 
   url="";
+  gui=0;
 
 }
