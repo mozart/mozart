@@ -44,8 +44,8 @@ local
 	 in
 	    {Tk.addYScrollbar self.W SY}
 	    {Tk.batch [grid(self.W row:1 column:0 sticky:nswe)
-		       grid(SY     row:1 column:1 sticky:ns)]}
-	    {Tk.batch [grid(rowconfigure    self 1 weight:1)
+		       grid(SY     row:1 column:1 sticky:ns)
+		       grid(rowconfigure    self 1 weight:1)
 		       grid(columnconfigure self 0 weight:1)]}
 	 end
       end
@@ -213,7 +213,7 @@ local
       
 in
 
-   fun {OzcarMenuBar Parent KeyBinder L R}
+   fun {MyMenuBar Parent KeyBinder L R}
       MenuBar      = {New {MakeClass Tk.frame {Append {GetFeatures L}
 					       {GetFeatures R}}}
 		      tkInit(parent: Parent
