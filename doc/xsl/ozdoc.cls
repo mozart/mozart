@@ -20,6 +20,9 @@
 \RequirePackage{times}
 \RequirePackage{mathptm}
 
+\newif\ifmozart@hyper \mozart@hypertrue
+\DeclareOption{nohyper}{\mozart@hyperfalse}
+
 % pass options down to book class
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 \ProcessOptions
@@ -84,21 +87,21 @@
 
 \renewcommand{\section}{%
   \@startsection{section}{1}{\z@}%
-	{-3ex plus -1ex minus -.2ex}%
-	{2ex plus .2ex}%
-	{\mozart@section\Large}}
+        {-3ex plus -1ex minus -.2ex}%
+        {2ex plus .2ex}%
+        {\mozart@section\Large}}
 
 \renewcommand{\subsection}{%
   \@startsection{subsection}{1}{\z@}%
-	{-2ex plus -1ex minus -.2ex}%
-	{1.3ex plus .2ex}%
-	{\mozart@section\large}}
+        {-2ex plus -1ex minus -.2ex}%
+        {1.3ex plus .2ex}%
+        {\mozart@section\large}}
 
 \renewcommand{\subsubsection}{%
   \@startsection{subsubsection}{1}{\z@}%
-	{-2ex plus -1ex minus -.2ex}%
-	{1.3ex plus .2ex}%
-	{\mozart@section}}
+        {-2ex plus -1ex minus -.2ex}%
+        {1.3ex plus .2ex}%
+        {\mozart@section}}
 
 \renewcommand{\chaptermark}[1]{%
   \markboth{\ifnum \c@secnumdepth >\z@
@@ -110,8 +113,8 @@
   {\parindent\z@\raggedleft
     \ifnum \c@secnumdepth >\m@ne
       \if@mainmatter
-	\mozart@section@font\huge
-	\thechapter\quad
+        \mozart@section@font\huge
+        \thechapter\quad
         \par\nobreak
         \vskip 4\p@
       \fi
@@ -173,7 +176,7 @@
   \hspace{1em}\ignorespaces}
 
 % \begin{FULLWIDTH}...\end{FULLWIDTH}
-%	an environment that spans the full width of the page
+%       an environment that spans the full width of the page
 % including the left margin
 
 \newenvironment{mozartFULLWIDTH}
@@ -222,6 +225,9 @@
   \pagestyle{mozart}\thispagestyle{mozart}%
   \setcounter{page}{1}\setcounter{footnote}{0}}
 
+\ifmozart@hyper
+\RequirePackage{hyperref}
+\fi
 \AtBeginDocument{\mozart@front}
 
 \newcommand{\mozart@title@font@one}{%
@@ -572,19 +578,19 @@
 \newcommand{\mozartEMPTY}{}
 
 \newcommand{\mozart@specials@text}{%
-  \let\mozart@HASH	\mozart@text@HASH
-  \let\mozart@DOLLAR	\mozart@text@DOLLAR
-  \let\mozart@PERCENT	\mozart@text@PERCENT
-  \let\mozart@AMPERSAND	\mozart@text@AMPERSAND
-  \let\mozart@TILDE	\mozart@text@TILDE
+  \let\mozart@HASH      \mozart@text@HASH
+  \let\mozart@DOLLAR    \mozart@text@DOLLAR
+  \let\mozart@PERCENT   \mozart@text@PERCENT
+  \let\mozart@AMPERSAND \mozart@text@AMPERSAND
+  \let\mozart@TILDE     \mozart@text@TILDE
   \let\mozart@UNDERSCORE\mozart@text@UNDERSCORE
-  \let\mozart@CARET	\mozart@text@CARET
-  \let\mozart@BSLASH	\mozart@text@BSLASH
-  \let\mozart@LBRACE	\mozart@text@LBRACE
-  \let\mozart@RBRACE	\mozart@text@RBRACE
-  \let\mozart@LT	\mozart@text@LT
-  \let\mozart@GT	\mozart@text@GT
-  \let\mozart@VBAR	\mozart@text@VBAR
+  \let\mozart@CARET     \mozart@text@CARET
+  \let\mozart@BSLASH    \mozart@text@BSLASH
+  \let\mozart@LBRACE    \mozart@text@LBRACE
+  \let\mozart@RBRACE    \mozart@text@RBRACE
+  \let\mozart@LT        \mozart@text@LT
+  \let\mozart@GT        \mozart@text@GT
+  \let\mozart@VBAR      \mozart@text@VBAR
 }
 \mozart@specials@text
 
@@ -605,47 +611,47 @@
 \DeclareRobustCommand\mozart@code@NEWLINE{\nobreakspace}
 
 \newcommand{\mozart@specials@code@inline}{%
-  \let\mozart@HASH	\mozart@code@HASH
-  \let\mozart@DOLLAR	\mozart@code@DOLLAR
-  \let\mozart@PERCENT	\mozart@code@PERCENT
-  \let\mozart@AMPERSAND	\mozart@code@AMPERSAND
-  \let\mozart@TILDE	\mozart@code@TILDE
+  \let\mozart@HASH      \mozart@code@HASH
+  \let\mozart@DOLLAR    \mozart@code@DOLLAR
+  \let\mozart@PERCENT   \mozart@code@PERCENT
+  \let\mozart@AMPERSAND \mozart@code@AMPERSAND
+  \let\mozart@TILDE     \mozart@code@TILDE
   \let\mozart@UNDERSCORE\mozart@code@UNDERSCORE
-  \let\mozart@CARET	\mozart@code@CARET
-  \let\mozart@BSLASH	\mozart@code@BSLASH
-  \let\mozart@LBRACE	\mozart@code@LBRACE
-  \let\mozart@RBRACE	\mozart@code@RBRACE
-  \let\mozart@LT	\mozart@code@LT
-  \let\mozart@GT	\mozart@code@GT
-  \let\mozart@VBAR	\mozart@code@VBAR
-  \let\mozart@SPACE	\mozart@code@SPACE
-  \let\mozart@NEWLINE	\mozart@code@NEWLINE
+  \let\mozart@CARET     \mozart@code@CARET
+  \let\mozart@BSLASH    \mozart@code@BSLASH
+  \let\mozart@LBRACE    \mozart@code@LBRACE
+  \let\mozart@RBRACE    \mozart@code@RBRACE
+  \let\mozart@LT        \mozart@code@LT
+  \let\mozart@GT        \mozart@code@GT
+  \let\mozart@VBAR      \mozart@code@VBAR
+  \let\mozart@SPACE     \mozart@code@SPACE
+  \let\mozart@NEWLINE   \mozart@code@NEWLINE
 }
 
 \DeclareRobustCommand\mode@code@NEWLINE@display{\par}
 
 \newcommand{\mozart@specials@code@display}{%
   \mozart@specials@code@inline
-  \let\mozart@NEWLINE	\mode@code@NEWLINE@display}
+  \let\mozart@NEWLINE   \mode@code@NEWLINE@display}
 
 \newcommand{\mozart@DOT}{.}
 
 \newcommand{\mozart@specials@ref}{%
-  \let\mozart@HASH	\mozart@DOT
-  \let\mozart@DOLLAR	\mozart@DOT
-  \let\mozart@PERCENT	\mozart@DOT
-  \let\mozart@AMPERSAND	\mozart@DOT
-  \let\mozart@TILDE	\mozart@DOT
+  \let\mozart@HASH      \mozart@DOT
+  \let\mozart@DOLLAR    \mozart@DOT
+  \let\mozart@PERCENT   \mozart@DOT
+  \let\mozart@AMPERSAND \mozart@DOT
+  \let\mozart@TILDE     \mozart@DOT
   \let\mozart@UNDERSCORE\mozart@other@UNDERSCORE
-  \let\mozart@CARET	\mozart@DOT
-  \let\mozart@BSLASH	\mozart@DOT
-  \let\mozart@LBRACE	\mozart@DOT
-  \let\mozart@RBRACE	\mozart@DOT
-  \let\mozart@LT	\mozart@DOT
-  \let\mozart@GT	\mozart@DOT
-  \let\mozart@VBAR	\mozart@DOT
-  \let\mozart@SPACE	\mozart@DOT
-  \let\mozart@NEWLINE	\mozart@DOT
+  \let\mozart@CARET     \mozart@DOT
+  \let\mozart@BSLASH    \mozart@DOT
+  \let\mozart@LBRACE    \mozart@DOT
+  \let\mozart@RBRACE    \mozart@DOT
+  \let\mozart@LT        \mozart@DOT
+  \let\mozart@GT        \mozart@DOT
+  \let\mozart@VBAR      \mozart@DOT
+  \let\mozart@SPACE     \mozart@DOT
+  \let\mozart@NEWLINE   \mozart@DOT
 }
 
 \newcommand{\mozart@defochar}[2]{%
@@ -667,21 +673,21 @@
 \mozart@defochar{\mozart@other@VBAR}{\|}
 
 \newcommand{\mozart@specials@other}{%
-  \let\mozart@HASH	\mozart@other@HASH
-  \let\mozart@DOLLAR	\mozart@other@DOLLAR
-  \let\mozart@PERCENT	\mozart@other@PERCENT
-  \let\mozart@AMPERSAND	\mozart@other@AMPERSAND
-  \let\mozart@TILDE	\mozart@other@TILDE
+  \let\mozart@HASH      \mozart@other@HASH
+  \let\mozart@DOLLAR    \mozart@other@DOLLAR
+  \let\mozart@PERCENT   \mozart@other@PERCENT
+  \let\mozart@AMPERSAND \mozart@other@AMPERSAND
+  \let\mozart@TILDE     \mozart@other@TILDE
   \let\mozart@UNDERSCORE\mozart@other@UNDERSCORE
-  \let\mozart@CARET	\mozart@other@CARET
-  \let\mozart@BSLASH	\mozart@other@BSLASH
-  \let\mozart@LBRACE	\mozart@other@LBRACE
-  \let\mozart@RBRACE	\mozart@other@RBRACE
-  \let\mozart@LT	\mozart@other@LT
-  \let\mozart@GT	\mozart@other@GT
-  \let\mozart@VBAR	\mozart@other@VBAR
-  \let\mozart@SPACE	\mozart@other@SPACE
-  \let\mozart@NEWLINE	\mozart@other@NEWLINE
+  \let\mozart@CARET     \mozart@other@CARET
+  \let\mozart@BSLASH    \mozart@other@BSLASH
+  \let\mozart@LBRACE    \mozart@other@LBRACE
+  \let\mozart@RBRACE    \mozart@other@RBRACE
+  \let\mozart@LT        \mozart@other@LT
+  \let\mozart@GT        \mozart@other@GT
+  \let\mozart@VBAR      \mozart@other@VBAR
+  \let\mozart@SPACE     \mozart@other@SPACE
+  \let\mozart@NEWLINE   \mozart@other@NEWLINE
 }
 
 \let\latex@citex\@citex
@@ -819,20 +825,22 @@
 \newcommand{\mozartREFEXTKEY}[1]{ (#1)}
 \newcommand{\mozartDEFAULTREFEXT}{\texttt}
 
-\let\latex@ref\ref
-\let\latex@pageref\pageref
-
 \newcommand{\mozart@noweird}{\useochar@defs\def\usechar##1{##1}\def\protect{}}
 
-\def\ref#1{{\mozart@specials@ref\latex@ref{#1}}}
-\def\pageref#1{{\mozart@specials@ref\latex@pageref{#1}}}
+\AtBeginDocument{%
+\let\latex@ref\ref
+\let\latex@pageref\pageref
+\let\latex@label\label
+\def\ref#1{{\mozart@specials@ref\latex@ref{#1}}}%
+\def\pageref#1{{\mozart@specials@ref\latex@pageref{#1}}}%
 \def\label#1{\@bsphack
   {\mozart@specials@ref\xdef\mozart@temp{#1}}%
-  \expandafter\mozart@label\expandafter{\mozart@temp}}
-\def\mozart@label#1{%
-  \protected@write\@auxout{}%
-         {\string\newlabel{#1}{{\@currentlabel}{\thepage}}}%
-  \@esphack}
+  \expandafter\latex@label\expandafter{\mozart@temp}}}
+
+%\def\mozart@label#1{%
+%  \protected@write\@auxout{}%
+%         {\string\newlabel{#1}{{\@currentlabel}{\thepage}}}%
+%  \@esphack}
 
 % figures
 
@@ -917,13 +925,23 @@
 \newcommand{\mozart@chunk@prev@page}{}
 \newcommand{\mozart@chunk@curr@page}{}
 
+\ifmozart@hyper
+\def\mozart@pick@first#1#2#3#4#5{#1}
+\def\mozart@pick@second#1#2#3#4#5{#2}
+\else
+\def\mozart@pick@first#1#2{#1}
+\def\mozart@pick@second#1#2{#2}
+\fi
+
 \newcommand{\mozart@chunk@init}{%
   \xdef\mozart@chunk@prev@page{\mozart@chunk@curr@page}%
   \stepcounter{mozart@chunk}%
   \@ifundefined{r@chunk.glob.\themozart@chunk}%
     {\xdef\mozart@chunk@curr@page{\thepage}}%
-    {\edef\mozart@temp{\csname r@chunk.glob.\themozart@chunk\endcsname}%
-     \xdef\mozart@chunk@curr@page{\expandafter\@secondoftwo\mozart@temp}}%
+    {\xdef\mozart@chunk@curr@page{%
+       \expandafter\expandafter
+       \expandafter\mozart@pick@second
+       \csname r@chunk.glob.\themozart@chunk\endcsname}}%
   \ifnum\themozart@chunk=\@ne
     \xdef\mozart@chunk@prev@page{\mozart@chunk@curr@page}%
   \fi
@@ -975,7 +993,7 @@
 \newcommand{\mozart@chunk@ref@def}[1]{%
   \@ifundefined{r@chunk.#1.1}{}%
     {\edef\mozart@temp{\expandafter\expandafter
-       \expandafter\@firstoftwo\csname r@chunk.#1.1\endcsname}%
+       \expandafter\mozart@pick@first\csname r@chunk.#1.1\endcsname}%
      ~~{\chunk@ref@font\pageref{chunk.#1.1}\@alph{\mozart@temp}}}}
 
 \newenvironment{mozartCHUNK}[3]
@@ -990,7 +1008,7 @@
      \topsep\z@\parskip\z@\partopsep\z@\parsep\z@\itemsep\z@
      \let\obeylines\@empty
      \hfill\hbox{\rlap{\mozart@chunk@ref@bwd{#2}{#3}%
-		       \hskip3mm
+                       \hskip3mm
                        \mozart@chunk@ref@fwd{#2}{#3}}}%
      \begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
@@ -1049,6 +1067,8 @@
   \let\ENTRY@MBOX\relax\mbox{}\par\noindent}
 \newcommand{\@ITEM}{%
   \let\ENTRY@MBOX\relax\vspace{\parsep}\noindent}
+\newcommand{\mozartITEMnotes}{%
+  \mozartITEM\let\mozartITEM\relax}
 
 %\def\mozart@temp{\long\def\@item[##1]}
 %\expandafter\mozart@temp\expandafter{\the\@item}
@@ -1140,13 +1160,13 @@
   {\normalfont\textsl{``#1''}}}
 
 %% table of contents should also use \mozart@section@font
-\let\latex@l@part		\l@part
-\let\latex@l@chapter		\l@chapter
-\let\latex@l@section		\l@section
-\let\latex@l@subsection		\l@subsection
-\let\latex@l@subsubsection	\l@subsubsection
-\let\latex@l@paragraph		\l@paragraph
-\let\latex@subparagraph		\l@subparagraph
+\let\latex@l@part               \l@part
+\let\latex@l@chapter            \l@chapter
+\let\latex@l@section            \l@section
+\let\latex@l@subsection         \l@subsection
+\let\latex@l@subsubsection      \l@subsubsection
+\let\latex@l@paragraph          \l@paragraph
+\let\latex@subparagraph         \l@subparagraph
 
 \newcommand{\mozart@toc@font}{\sffamily}
 
@@ -1246,11 +1266,11 @@
 \DeclareFontShape{T1}{code}{bx}{it}{<->ssub * code/b/it}{}
 
 %% \mozartBibAdd{FILENAME}
-%%	accumulates bibliography files
+%%      accumulates bibliography files
 %% \mozartBibDo
-%%	issues the corresponding
-%%		\bibliographystyle{...}
-%%		\bibliography{FILE1,...,FILEn}
+%%      issues the corresponding
+%%              \bibliographystyle{...}
+%%              \bibliography{FILE1,...,FILEn}
 
 \def\mozart@bibfiles{}
 \newcommand{\mozartBibAdd}[1]{%
