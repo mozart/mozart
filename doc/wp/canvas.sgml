@@ -32,7 +32,7 @@
   <Title/Canvas Widgets/
 
   <p> 
-    A canvas widget allows to create and manipulate graphical
+    Canvas widgets allow to create and manipulate graphical
     items. In particular, arbitrary widgets can be embedded within
     canvas widgets.
 
@@ -179,7 +179,7 @@ V={New Tk.scrollbar tkInit(parent:T orient:vertical)}
     <p>
       Canvas widgets offer a more powerful and easier method to
       manipulate single items or even groups of items. Items can be
-      referred to by <def/tags/. A single item can be refered to by as
+      referred to by <def/tags/. A single item can be referred to by as
       many tags as you like to. Tags are provided as objects in
       &Oz;. Before an item can be added to a tag, a tag object must
       be created from the class <<Tk.canvasTag>> and initialized with
@@ -199,7 +199,7 @@ R={New Tk.canvasTag tkInit(parent:C)}
 <chunk class=anonymous><title/tags2/
 {C tk(create oval 20 20 40 40 tags:R)}
 </chunk>
-      All items refered to by a tag can be manipulated
+      All items referred to by a tag can be manipulated
       simultaneously. The following moves all items 40 pixels 
       to the right:
 <chunk class=anonymous><title/move/
@@ -299,7 +299,18 @@ Colors = {New class $ from BaseObject
     <title/Example: An Animated Time Waster/
 
     <p>
-      Gaga.
+      In this section we want to program a procedure that signals to
+      the user that a particular computation is still running and
+      entertains the user by some animation.
+
+    <p>
+      <ptr to="figure.canvas.animclass"> shows a subclass of
+      <<Tk.canvasTag>> that creates a bitmap item showing a magnifying
+      glass and starts a thread to move that bitmap randomly. The
+      random movement can be stopped by binding the variable <<D>>
+      given as value for the feature <<done>>. If the animation has
+      stopped indeed, the variable <<S>> gets bound, as you can see in
+      method <<move>>. 
 
     <p>
       <figure id="figure.canvas.animclass">
@@ -329,6 +340,15 @@ end
       </figure>
 
     <p>
+      The procedure <<WaitDone>> shown in <ptr
+      to="figure.canvas.waitdone"> takes a
+      variable <<Done>> which is used for signalling when the
+      computation we are waiting for is finished. It creates a
+      randomly moving magnifier item and as soon as the magnifier
+      signals that it has been stopped (by <<Stopped>>) the toplevel
+      windows is closed.
+
+    <p>
       <figure id="figure.canvas.waitdone">
         <caption/A procedure for creating wait dialogs./
         <p>
@@ -348,15 +368,6 @@ in
 end
 </chunk>
       </figure> 
-
-    <p>
-      The procedure <<WaitDone>> shown in <ptr
-      to="figure.canvas.waitdone"> takes a
-      variable <<Done>> which is used for signalling when the
-      computation we are waiting for is finished. It creates a
-      randomly moving magnifier item and as soon as the magnifier
-      signals that it has been stopped (by <<Stopped>>) the toplevel
-      windows is closed.
 
     <p>
       For example,
@@ -397,6 +408,13 @@ declare
 declare
 T={New Tk.toplevel tkInit}
 <chunk.ref/barchart/
+
+
+
+%%
+%% The Scrollregion: Resizing
+%%
+
 
 
 
