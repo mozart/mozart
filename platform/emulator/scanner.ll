@@ -135,8 +135,8 @@ private:
     for(p = s; *p; p++) {
       h = (h << 4) + (*p);
       if ((g = h & 0xf0000000)) {
-        h = h ^ (g >> 24);
-        h = h ^ g;
+	h = h ^ (g >> 24);
+	h = h ^ g;
       }
     }
     return h % TableSize;
@@ -178,9 +178,9 @@ public:
     ScannerListNode **prev = &Table[hashFunc(key)];
     for (ScannerListNode *l = *prev; l != 0; prev = &l->next, l = l->next)
       if (!strcmp(l->key, key)) {
-        *prev = l->next;
-        delete l;
-        return 1;
+	*prev = l->next;
+	delete l;
+	return 1;
       }
     return 0;
   }
@@ -387,7 +387,7 @@ static char *scExpndFileName(char *fileName, char *curfile) {
       delete[] help;
 
       if (ret != NULL)
-        return ret;
+	return ret;
     }
   }
 
@@ -616,12 +616,12 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 <COMMENT>"/*"                  { commentdepth++; }
 <COMMENT>"*/"                  { if (--commentdepth == 0)
-                                   BEGIN(commentlastmode);
+				   BEGIN(commentlastmode);
 			       }
 <COMMENT>[^*/\n]+              ;
 <COMMENT>\n                    { xylino++;
-                                 xylastline = xytext + 1;
-                               }
+				 xylastline = xytext + 1;
+			       }
 <COMMENT>.                     ;
 <COMMENT><<EOF>>               { if (cond()) {
 				   const char *file = OZ_atomToC(commentfile);
@@ -635,11 +635,12 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 
-\\ha(lt?)?                     { BEGIN(DIRECTIVE); return HALT; }
 \\he(lp?)?                     { BEGIN(DIRECTIVE); return HELP; }
 \\l(i(ne?)?)?                  { if (cond()) BEGIN(LINE); }
 \\s(w(i(t(ch?)?)?)?)?          { BEGIN(SWITCHDIR); return SWITCH; }
 \\sh(o(w(Switches)?)?)?        { BEGIN(DIRECTIVE); return SHOWSWITCHES; }
+\\pu(s(h(Switches)?)?)?        { BEGIN(DIRECTIVE); return PUSHSWITCHES; }
+\\po(p(Switches)?)?            { BEGIN(DIRECTIVE); return POPSWITCHES; }
 \\f(e(ed?)?)?                  { BEGIN(INPUTFILE); return FEED; }
 \\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
@@ -659,10 +660,10 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				   xyreportError("macro directive error",
 						 "\\endif without previous corresponding \\ifdef or \\ifndef",
 						 xyFileName,xylino,xycharno());
-                                 BEGIN(DIRECTIVE);
+				 BEGIN(DIRECTIVE);
 			       }
 \\e(n(d(if?)?)?)?              { pop_cond();
-                                 BEGIN(DIRECTIVE);
+				 BEGIN(DIRECTIVE);
 			       }
 \\u(n(d(ef?)?)?)?              { BEGIN(UNDEF);}
 
@@ -670,7 +671,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
   {BLANK}                      ;
   .                            ;
   \n                           { BEGIN(INITIAL);
-                                 xylino++;
+				 xylino++;
 				 xylastline = xytext + 1;
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
@@ -689,7 +690,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
@@ -718,7 +719,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -742,7 +743,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
@@ -773,7 +774,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -819,7 +820,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -836,7 +837,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				     hashTable->insert(xytext);
 				   BEGIN(DIRECTIVE);
 				 } else
-                                   BEGIN(INITIAL);
+				   BEGIN(INITIAL);
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
@@ -848,7 +849,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -863,7 +864,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				   hashTable->remove(xytext);
 				   BEGIN(DIRECTIVE);
 				 } else
-                                   BEGIN(INITIAL);
+				   BEGIN(INITIAL);
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
@@ -875,7 +876,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -902,7 +903,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -929,7 +930,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
 				 xylino++;
 				 xylastline = xytext + 1;
-                                 BEGIN(INITIAL);
+				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
 					       "unterminated directive",
@@ -943,7 +944,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 <LEX>"<<EOF>>"                 { BEGIN(INITIAL); return REGEX; }
 <LEX>"<"{REGEXCHAR}+">"        { BEGIN(INITIAL); stripRegex(); return REGEX; }
 
-"[]"		               { return CHOICE; }
+"[]"                           { return CHOICE; }
 "..."                          { return LDOTS; }
 "<-"                           { return ASSIGN; }
 "<<"                           { return OBJPATTERNOPEN; }
@@ -973,7 +974,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 // If this rule would not be there, the rule
 				 // for floats would match and an error would
 				 // occur.
-                                 return OZINT; }
+				 return OZINT; }
 
 {OZINT}                        { return OZINT; }
 
@@ -1030,11 +1031,11 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "skip"/\(?                     { return skip; }
 "syn"                          { return xy_gumpSyntax? syn: OZATOM; }
 "syn"/\(                       { return xy_gumpSyntax? syn: ATOM_LABEL; }
-"then"/\(?   	               { return then; }
+"then"/\(?                     { return then; }
 "token"                        { return xy_gumpSyntax? token: OZATOM; }
 "token"/\(                     { return xy_gumpSyntax? token: ATOM_LABEL; }
 "thread"/\(?                   { return thread; }
-"true"		               { return true; }
+"true"                         { return true; }
 "try"/\(?                      { return try; }
 "unit"                         { return unit; }
 "with"/\(?                     { return with; }
@@ -1057,26 +1058,26 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 "{"|"}"|"("|")"|"["|"]"|"|"|"#"|":"|"="|"."|"^"|"@"|"$"|"!"|"~"|"_"|"," {
-                                 return xytext[0];
+				 return xytext[0];
 			       }
 
-{SPACE}		               ;
+{SPACE}                        ;
 \n                             { xylino++;
-                                 xylastline = xytext + 1;
-                               }
+				 xylastline = xytext + 1;
+			       }
 
 \\[a-zA-Z]+                    { xyreportError("lexical error",
-                                               "unknown directive",
-                                               xyFileName,xylino,xycharno());
-                                 BEGIN(IGNOREDIRECTIVE);
-                               }
+					       "unknown directive",
+					       xyFileName,xylino,xycharno());
+				 BEGIN(IGNOREDIRECTIVE);
+			       }
 
 .                              { xyreportError("lexical error",
 					       "illegal character",
 					       xyFileName,xylino,xycharno());
 			       }
 
-<<EOF>>			       { BEGIN(DIRECTIVE);
+<<EOF>>                        { BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
 			       }
@@ -1115,7 +1116,7 @@ void xyscannerInit()
 }
 
 // this one is called before every new parser run
-static void xy_init() {
+static void xy_init(OZ_Term defines) {
   yy_init = 1;
 
   errorFlag = 0;
@@ -1133,6 +1134,12 @@ static void xy_init() {
   hashTable->insert(SCANNERMinorVersion);   // minor version number
   hashTable->insert(SCANNERMajorVersion);   // general Oz release
   hashTable->insert("NEWCOMPILER");
+  while (OZ_isCons(defines)) {
+    char *x = OZ_virtualStringToC(OZ_head(defines));
+printf("%s\n", x);
+    hashTable->insert(x);
+    defines = OZ_tail(defines);
+  }
 
   conditional_p = 0;
   conditional_basep = 0;
@@ -1141,7 +1148,7 @@ static void xy_init() {
   BEGIN(INITIAL);
 }
 
-int xy_init_from_file(char *file) {
+int xy_init_from_file(char *file, OZ_Term defines) {
   char *fullname = scExpndFileName(file, NULL);
   if (fullname == NULL)
     return 0;
@@ -1149,7 +1156,7 @@ int xy_init_from_file(char *file) {
   if (xyin == NULL)
     return 0;
   xy_create_buffer(xyin, YY_BUF_SIZE);
-  xy_init();
+  xy_init(defines);
   xylino = 1;
   strncpy(xyFileName,fullname,99);
   xyFileNameAtom = OZ_atom(xyFileName);
@@ -1157,10 +1164,10 @@ int xy_init_from_file(char *file) {
   return 1;
 }
 
-void xy_init_from_string(char *str) {
+void xy_init_from_string(char *str, OZ_Term defines) {
   xy_scan_string(str);
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
-  xy_init();
+  xy_init(defines);
   xylino = 1;
   strcpy(xyFileName,"nofile");
   xyFileNameAtom = OZ_atom(xyFileName);

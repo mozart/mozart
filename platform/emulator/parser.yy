@@ -21,6 +21,7 @@
  *  WARRANTIES.
  *
  */
+
 %{
 //
 // See Oz/tools/compiler/Doc/TupleSyntax for an description of the
@@ -40,16 +41,16 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
-static void parserInit();
-static unsigned int parseFile(char *file);
-static unsigned int parseVirtualString(char *str);
-
 #include "../include/config.h"
 #include "oz.h"
 #include "types.hh"
 #include "error.hh"
 
 typedef OZ_Term CTerm;
+
+static void parserInit();
+static unsigned int parseFile(char *file, OZ_Term defines);
+static unsigned int parseVirtualString(char *str, OZ_Term defines);
 
 static CTerm nilAtom;
 
@@ -81,7 +82,10 @@ OZ_C_proc_begin(ozparser_parseFile, 3)
     return OZ_typeError(1, "Record");
   init(optRec);
   xy_errorMessages = OZ_nil();
-  OZ_Return res = OZ_unify(OZ_getCArg(2), parseFile(str));
+  OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
+  if (defines == 0)
+    defines = OZ_nil();
+  OZ_Return res = OZ_unify(OZ_getCArg(2), parseFile(str, defines));
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
@@ -106,7 +110,10 @@ OZ_C_proc_begin(ozparser_parseVirtualString, 3)
     return OZ_typeError(1, "Record");
   init(optRec);
   xy_errorMessages = OZ_nil();
-  OZ_Return res = OZ_unify(OZ_getCArg(2), parseVirtualString(str));
+  OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
+  if (defines == 0)
+    defines = OZ_nil();
+  OZ_Return res = OZ_unify(OZ_getCArg(2), parseVirtualString(str, defines));
   if (res == PROCEED) {
     OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
     if (x == 0) {
@@ -211,8 +218,8 @@ static CTerm makeLongPos(CTerm pos1, CTerm pos2) {
 //----------------------
 
 void xyscannerInit();
-int xy_init_from_file(char *file);
-void xy_init_from_string(char *str);
+int xy_init_from_file(char *file, OZ_Term defines);
+void xy_init_from_string(char *str, OZ_Term defines);
 void xy_exit();
 
 int xylex();
@@ -305,8 +312,8 @@ static CTerm decls[DEPTH];
   int i;
 }
 
-%token HALT HELP SWITCH SHOWSWITCHES FEED THREADEDFEED
-%token CORE OZMACHINE
+%token HELP SWITCH SHOWSWITCHES PUSHSWITCHES POPSWITCHES
+%token FEED THREADEDFEED CORE OZMACHINE
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
@@ -491,14 +498,16 @@ queries1	: directive queries
 		  { $$ = nilAtom; }
 		;
 
-directive	: HALT
-		  { $$ = newCTerm("dirHalt"); }
-		| HELP
+directive	: HELP
 		  { $$ = newCTerm("dirHelp"); }
 		| SWITCH switchList
 		  { $$ = newCTerm("dirSwitch",$2); }
 		| SHOWSWITCHES
 		  { $$ = newCTerm("dirShowSwitches"); }
+		| PUSHSWITCHES
+		  { $$ = newCTerm("dirPushSwitches"); }
+		| POPSWITCHES
+		  { $$ = newCTerm("dirPopSwitches"); }
 		| FEED FILENAME
 		  { $$ = newCTerm("dirFeed",newCTerm(xyhelpFileName)); }
 		| THREADEDFEED FILENAME
@@ -1472,14 +1481,14 @@ void xyreportError(char *kind, char *msg, const char *file,
   append(":\n%**\n%**     ");
   char s[256];
   int col = 0, curoff = 0, n = -1;
-  do {				/* print the line (including '\n') */
+  do {                          /* print the line (including '\n') */
     if (curoff == offset)
       n = col;
     curoff++;
     c = fgetc(pFile);
     if (c == EOF)
       s[col++] = '\n';
-    else if (c == '\t') {	/* print tabs explicitly */
+    else if (c == '\t') {       /* print tabs explicitly */
       while (col % 8)
 	s[col++] = ' ';
     } else
@@ -1539,15 +1548,15 @@ static CTerm parse() {
   return yyoutput;
 }
 
-static CTerm parseFile(char *file) {
-  if (!xy_init_from_file(file))
+static CTerm parseFile(char *file, CTerm defines) {
+  if (!xy_init_from_file(file, defines))
     return newCTerm("fileNotFound");
   CTerm res = parse();
   fclose(xyin);
   return res;
 }
 
-static CTerm parseVirtualString(char *str) {
-  xy_init_from_string(str);
+static CTerm parseVirtualString(char *str, CTerm defines) {
+  xy_init_from_string(str, defines);
   return parse();
 }
