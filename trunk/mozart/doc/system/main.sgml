@@ -34,6 +34,7 @@
 
 <!-- Abbreviations -->
 <!ENTITY amp "&">
+<!ENTITY Oz "Oz">
 
 <!-- Processing Instructions -->
 <!ENTITY emdash PI "emdash">
@@ -54,11 +55,16 @@
 <!ENTITY part.open        SYSTEM "open.sgml">
 <!ENTITY part.system      SYSTEM "system.sgml">
 <!ENTITY part.window      SYSTEM "window.sgml">
+<!ENTITY chapter.tk       SYSTEM "tk.sgml">
 ]>
+
 
 <BOOK>
 <Title/System Modules/
     <!-- Splitting the document into different HTML nodes -->
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="pifont">
+
     <Meta name="html.split"       value="part.application">
     <Meta name="html.split"       value="chapter.application">
     <Meta name="html.split"       value="section.application.module">
