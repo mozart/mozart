@@ -23,6 +23,11 @@
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
 #include "runtime.hh"
+#include "../include/config.h"
+
+
+#define PERDIOVERSION    OZVERSION "#2"
+
 
 /* TODO */
 #define DummyClassConstruction(X) \
