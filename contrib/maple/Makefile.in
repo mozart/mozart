@@ -141,7 +141,7 @@ first: $(GENERATED_FILES)
 depend: Makefile $(CPPSRCS) $(OZSRCS) $(OZGSRCS) first
 	$(RM) Makefile.deps
 	$(DEPEND) $(CPPSRCS:%=$(SRCDIR)/%) >> Makefile.deps
-	$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) >> Makefile.deps
+	$(DEPEND) $(CSRCS) >> Makefile.deps
 	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
 	>> Makefile.deps
 
