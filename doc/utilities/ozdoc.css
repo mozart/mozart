@@ -74,3 +74,12 @@ A:visited {
 .ignore {
   display: none;
 }
+
+P.linkmenu {
+  text-align: center;
+  font-weight: bold;
+  color: #881155;
+}
+
+P.linkmenu A:link    { color: #881155; }
+P.linkmenu A:visited { color: #881155; }

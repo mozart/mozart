@@ -300,7 +300,7 @@ define
 	 TableRow: unit
 	 CurTableCols: unit
 	 % for List:
-	 InDescription: unit
+	 ListType: unit
 	 OLTypes: (X='1'|'a'|'i'|'A'|'I'|X in X)
 	 % back matter:
 	 MyBibliographyDB: unit
@@ -815,19 +815,19 @@ define
 				  items: [hint(l: 'Node' m: oz(M))])}
 	       end
 	       if {Label M.1} == entry then X HTML in
-		  X = @InDescription
-		  InDescription <- true
+		  X = @ListType
+		  ListType <- description
 		  OzDocToHTML, Batch(M 1 ?HTML)
-		  InDescription <- X
+		  ListType <- X
 		  BLOCK(dl(COMMON: @Common HTML))
 	       elseif {HasFeature M enum} then X Y HTML in
-		  X = @InDescription
-		  InDescription <- false
+		  X = @ListType
+		  ListType <- enumeration
 		  Y = @OLTypes
 		  OLTypes <- Y.2
 		  OzDocToHTML, Batch(M 1 ?HTML)
 		  OLTypes <- Y
-		  InDescription <- X
+		  ListType <- X
 		  BLOCK(ol(COMMON: @Common
 			   type: @OLTypes.1
 			   start: {CondSelect M n unit}
@@ -837,11 +837,17 @@ define
 				   msg: ('illegal attribute `n\' in '#
 					 'non-enumerated list'))}
 		  unit
-	       else X HTML in
-		  X = @InDescription
-		  InDescription <- false
+	       elseif {SGML.isOfClass M linkmenu} then X HTML in
+		  X = @ListType
+		  ListType <- menu_first
 		  OzDocToHTML, Batch(M 1 ?HTML)
-		  InDescription <- X
+		  ListType <- X
+		  BLOCK(p(COMMON: @Common PCDATA('[ ') HTML PCDATA(' ]')))
+	       else X HTML in
+		  X = @ListType
+		  ListType <- bulleted
+		  OzDocToHTML, Batch(M 1 ?HTML)
+		  ListType <- X
 		  BLOCK(ul(COMMON: @Common HTML))
 	       end
 	    [] entry then HTML1 ClassName HTML2 in
@@ -864,8 +870,25 @@ define
 	       dd(COMMON: @Common
 		  blockquote('class': [synopsis] OzDocToHTML, Batch(M 1 $)))
 	    [] item then
-	       if @InDescription then
+	       case @ListType of description then
 		  dd(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	       [] menu_first then
+		  ListType <- menu_rest
+		  if {HasFeature M 2} then
+		     {@Reporter error(kind: OzDocError
+				      msg: ('link menu items must only '#
+					    'consist of one paragraph each'))}
+		  end
+		  span(COMMON: @Common
+		       OzDocToHTML, Batch(M.1 1 $))
+	       [] menu_rest then
+		  if {HasFeature M 2} then
+		     {@Reporter error(kind: OzDocError
+				      msg: ('link menu items must only '#
+					    'consist of one paragraph each'))}
+		  end
+		  span(COMMON: @Common
+		       PCDATA(' | ') OzDocToHTML, Batch(M.1 1 $))
 	       else
 		  li(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       end
