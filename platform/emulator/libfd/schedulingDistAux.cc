@@ -278,17 +278,21 @@ OZ_Return FirstsLasts::propagate(void)
 	  goto findResource;
 	}
 	else {
+	  // mark task ordered which was delived by Oz through the stream
 	  int rStart = resource_starts[reg_resource];
 	  reg_ordered[rStart + task] = 1;
+	  // test whether the current resource is serialized
 	  int finished = 0;
 	  for (i=0; i<reg_nb_tasks[reg_resource]; i++)
 	    if (reg_ordered[rStart + i] == 0) finished = 1;
 	  if (finished == 0) {
+	    // find a new resource to serialize
 	    reg_ordered_resources[reg_resource] = 1;
 	    reg_resource = -1;
 	    goto findResource;
 	  }
 	  else {
+	    // consider already chosen resource
 	    int rStart = resource_starts[reg_resource];
 	    for (j = 0; j < reg_nb_tasks[reg_resource]; j++)
 	      all_fds[reg_resource][j].read(reg_fds[rStart+j]);
@@ -377,11 +381,12 @@ OZ_Return FirstsLasts::propagate(void)
 
 
 	if (reg_resource == -1) {
+	  // all resources are serialized
 	  if (OZ_unify(new_out, OZ_atom("finished")) == FAILED) 
 	    goto failure;
 	}
 	else {
-
+	  // Compute auxiliary data structures for firsts/lasts computation
 	  int max1 = -1;
 	  int max2 = -1;
 	  int min1 = fd_sup;
@@ -420,7 +425,7 @@ OZ_Return FirstsLasts::propagate(void)
 	  }
 	  
 	  
-	  // compute firsts and lasts
+	  // compute firsts and lasts in linear time
 	  int number_of_firsts = 0;
 	  int number_of_lasts  = 0;
 	  int how_many         = 0;
@@ -466,6 +471,7 @@ OZ_Return FirstsLasts::propagate(void)
 	  if ( (how_many > 1) && ( (number_of_lasts==0) || 
 				   (number_of_firsts==0) ) )
 	    {
+	      // we need at least one first and one last
 	      goto failure;
 	    }
 	  else {
