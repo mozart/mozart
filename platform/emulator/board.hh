@@ -198,12 +198,6 @@ public:
     Assert(!isCommitted());
     return parent->derefBoard();
   }
-  Board *getParentAndTest() {
-    Assert(!isCommitted());
-    if (isFailed() || isRoot())
-      return 0;
-    return getParent();
-  }
 
   //
   // Script
