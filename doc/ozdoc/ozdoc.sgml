@@ -17,6 +17,7 @@
     <META NAME="html.split" value="chapter.description">
     <META NAME="html.split" value="chapter.extending">
     <META NAME="html.split" value="chapter.editing">
+    <META NAME="proglang.mode" arg1="shell" arg2="shell-script-mode">
     <TITLE>Oz Documentation DTD
     <AUTHOR.EXTERN TO="author.db" KEY="Denys.Duchier">
     <CHAPTER ID=chapter.intro>
