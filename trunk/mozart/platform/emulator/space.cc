@@ -86,11 +86,20 @@ Bool oz_isBelow(Board *below, Board *above)
 oz_BFlag oz_isBetween(Board *to, Board *varHome)
 {
   while (1) {
-    if (oz_isCurrentBoard(to)) return B_BETWEEN;
-    if (to == varHome) return B_NOT_BETWEEN;
+
+    if (oz_isCurrentBoard(to)) 
+      return B_BETWEEN;
+
+    if (to == varHome) 
+      return B_NOT_BETWEEN;
+
     Assert(!oz_isRootBoard(to));
-    to = to->getParentAndTest();
-    if (!to) return B_DEAD;
+    
+    if (to->isFailed()) 
+      return B_DEAD;
+
+    to = to->getParent();
+
   }
 }
 
@@ -128,23 +137,22 @@ InstType oz_installPath(Board *to)
 
   Assert(!oz_isRootBoard(to));
 
-  Board *par=to->getParentAndTest();
-  if (!par) {
+  if (to->isFailed())
     return INST_REJECTED;
-  }
-
-  InstType ret = oz_installPath(par);
-  if (ret != INST_OK) {
+  
+  InstType ret = oz_installPath(to->getParent());
+  
+  if (ret != INST_OK)
     return ret;
-  }
-
+  
   am.setCurrent(to);
   to->setInstalled();
 
   am.trail.pushMark();
-  if (!oz_installScript(to->getScriptRef())) {
+
+  if (!oz_installScript(to->getScriptRef()))
     return INST_FAILED;
-  }
+
   return INST_OK;
 }
 
