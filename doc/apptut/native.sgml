@@ -361,7 +361,7 @@ table of builtins.  Here, it must also initialize the static member
     </section>
 
     <section>
-      <title/Oz Module/
+      <title/Oz Wrapper Module/
       <p>The counter object native library will now be wrapped in an
 Oz module that registers every new counter object for finalization.
 <code display proglang=oz>
