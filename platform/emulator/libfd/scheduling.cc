@@ -142,7 +142,7 @@ OZ_Return CPIteratePropagator::propagate(void)
   int mSi;
 
   constraints = initConstraints;
-  int * constraintsExtension;
+  int * constraintsExtension = NULL;
 
   int constraintLimit = INITIALSIZE;
 
@@ -390,9 +390,9 @@ cploop:
             // it cannot be first
             constraints[constraintsSize] = l;
             constraints[constraintsSize+1] = 1;
-            constraints[constraintsSize+2] = s->mSi;
-            constraintsSize +=3;
+            constraintsSize +=2;
             setCount--;
+            FailOnEmpty(*x[l] >= s->mSi);
           }
         }
         else {
@@ -407,8 +407,9 @@ cploop:
               upFlag = 1;
               constraints[constraintsSize] = l;
               constraints[constraintsSize+1] = 1;
-              constraints[constraintsSize+2] = s->cSi;
-              constraintsSize +=3;
+              constraintsSize +=2;
+
+              FailOnEmpty(*x[l] >= s->cSi);
               for (i=0; i < Sets[0].extSize; i++) {
                 int sext = Sets[0].ext[i];
                 int right = maxL-dur[sext];
@@ -417,8 +418,8 @@ cploop:
                 if (MinMax[sext].max > right) {
                   constraints[constraintsSize] = sext;
                   constraints[constraintsSize+1] = 0;
-                  constraints[constraintsSize+2] = right;
-                  constraintsSize +=3;
+                  constraintsSize +=2;
+                  FailOnEmpty(*x[sext] <= right);
                 }
               }
 
@@ -430,8 +431,8 @@ cploop:
                 if (MinMax[sext].max > right) {
                   constraints[constraintsSize] = sext;
                   constraints[constraintsSize+1] = 0;
-                  constraints[constraintsSize+2] = right;
-                  constraintsSize +=3;
+                  constraintsSize +=2;
+                  FailOnEmpty(*x[sext] <= right);
                 }
               }
 
@@ -450,14 +451,13 @@ cploop:
   //////////
   // constrain the variables as memorized
   //////////
-  for (i=0; i<constraintsSize; i+=3) {
+  for (i=0; i<constraintsSize; i+=2) {
+    int ci = constraints[i];
     if (constraints[i+1]==0) {
-      FailOnEmpty( *x[constraints[i]] <= constraints[i+2]);
-      MinMax[constraints[i]].max = x[constraints[i]]->getMaxElem();
+      MinMax[ci].max = x[ci]->getMaxElem();
     }
     else {
-      FailOnEmpty( *x[constraints[i]] >= constraints[i+2]);
-      MinMax[constraints[i]].min = x[constraints[i]]->getMinElem();
+      MinMax[ci].min = x[ci]->getMinElem();
     }
   }
 
@@ -631,9 +631,9 @@ cploop:
             // it cannot be last
               constraints[constraintsSize] = l;
               constraints[constraintsSize+1] = 0;
-              constraints[constraintsSize+2] = s->mSi - durL;
-              constraintsSize +=3;
-            setCount--;
+              constraintsSize +=2;
+              setCount--;
+              FailOnEmpty(*x[l] <= s->mSi - durL);
           }
         }
         else {
@@ -651,8 +651,8 @@ cploop:
                 return FAILED;
               constraints[constraintsSize] = l;
               constraints[constraintsSize+1] = 0;
-              constraints[constraintsSize+2] = right;
-              constraintsSize +=3;
+              constraintsSize +=2;
+              FailOnEmpty(*x[l] <= right);
 
               int minDL = minL + durL;
               for (i=0; i < Sets[0].extSize; i++) {
@@ -660,8 +660,8 @@ cploop:
                 if (MinMax[element].min < minDL) {
                   constraints[constraintsSize] = element;
                   constraints[constraintsSize+1] = 1;
-                  constraints[constraintsSize+2] = minDL;
-                  constraintsSize +=3;
+                  constraintsSize +=2;
+                  FailOnEmpty(*x[element] >= minDL);
                 }
               }
 
@@ -670,8 +670,8 @@ cploop:
                 if (MinMax[element].min < minDL) {
                   constraints[constraintsSize] = element;
                   constraints[constraintsSize+1] = 1;
-                  constraints[constraintsSize+2] = minDL;
-                  constraintsSize +=3;
+                  constraintsSize +=2;
+                  FailOnEmpty(*x[element] >= minDL);
                 }
               }
 
@@ -692,14 +692,13 @@ cploop:
   //////////
   // impose memorized constraints
   //////////
-  for (i=0; i<constraintsSize; i+=3) {
+  for (i=0; i<constraintsSize; i+=2) {
+    int ci = constraints[i];
     if (constraints[i+1]==0) {
-      FailOnEmpty( *x[constraints[i]] <= constraints[i+2]);
-      MinMax[constraints[i]].max = x[constraints[i]]->getMaxElem();
+      MinMax[ci].max = x[ci]->getMaxElem();
     }
     else {
-      FailOnEmpty( *x[constraints[i]] >= constraints[i+2]);
-      MinMax[constraints[i]].min = x[constraints[i]]->getMinElem();
+      MinMax[ci].min = x[ci]->getMinElem();
     }
   }
 
@@ -959,7 +958,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int mSi;
 
   constraints = initConstraints;
-  int * constraintsExtension;
+  int * constraintsExtension = NULL;
 
   int constraintLimit = INITIALSIZE;
 
