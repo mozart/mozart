@@ -185,10 +185,16 @@ ByteSink::allocateBytes(int n)
   return FAILED;
 }
 
+OZ_Term makeGenericExc(char *msg, OZ_Term arg)
+{
+  return OZ_makeException(E_ERROR,OZ_atom("dp"),"generic",2,oz_atom(msg),arg);
+}
+
 OZ_Return raiseGeneric(char *msg, OZ_Term arg)
 {
-  return oz_raise(E_ERROR,OZ_atom("dp"),"generic",2,oz_atom(msg),arg);
+  return OZ_raise(makeGenericExc(msg,arg));
 }
+
 
 
 OZ_Return
@@ -544,14 +550,15 @@ public:
  (act==URL_LOAD    )?"load":	\
  "<unknown action>")
 
+
 static
 void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
 {
   ControlVarRaise(controlvar,
-		  OZ_makeException(E_SYSTEM,oz_atom("url"),
-				   ACTION_STRING(act),2,
-				   oz_atom(msg),
-				   oz_atom(url)));
+		  makeGenericExc("Error in URL handler",
+				 mklist(OZ_pairA("Message",oz_atom(msg)),
+					OZ_pairA("Action",oz_atom(ACTION_STRING(act))),
+					OZ_pairA("URL",oz_atom(url)))));
 }
 
 static
@@ -673,15 +680,16 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   unsigned tid;
   HANDLE thrd = (HANDLE) _beginthreadex(NULL,0,&fetchThread,ui,0,&tid);
   if (thrd==NULL)
-    return oz_raise(E_ERROR,E_KERNEL,"getURL: start thread",1,oz_atom(url));
-
+    return raiseGeneric("getURL: start thread failed",
+			cons(OZ_pairA("URL",oz_atom(url)),nil()));
   int pid = 0;
 
 #else
 
   int fds[2];
   if (pipe(fds)<0) {
-    return oz_raise(E_ERROR,E_KERNEL,"pipe",1,oz_atom(url));
+    return raiseGeneric("getURL: system call 'pipe' failed",
+			cons(OZ_pairA("URL",oz_atom(url)),nil()));
   }
 
   pid_t pid = fork();
@@ -694,7 +702,8 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
       exit(0);
     }
   case -1:
-    return oz_raise(E_ERROR,E_KERNEL,"fork",1,oz_atom(url));
+    return raiseGeneric("getURL: system call 'fork' failed",
+			cons(OZ_pairA("URL",oz_atom(url)),nil()));
   default:
     break;
   }
@@ -770,9 +779,10 @@ url_remote:
   out = oz_newVariable();
   return getURL(url,out,act);
 kaboom:
-  return oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,
-		  oz_atom(OZ_unixError(errno)),
-		  oz_atom(url));
+  return raiseGeneric("URL get: system call failed",
+		      mklist(OZ_pairA("Message",oz_atom(OZ_unixError(errno))),
+			     OZ_pairA("Action",oz_atom(ACTION_STRING(act))),
+			     OZ_pairA("URL",oz_atom(url))));
 }
 
 OZ_BI_define(BIurl_localize,1,1)
