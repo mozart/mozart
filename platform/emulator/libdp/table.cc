@@ -563,7 +563,9 @@ OZ_Term BorrowTable::extract_info() {
       ans = oz_cons(be->extract_info(),ans);
     }
   }
-  return ans;
+  return OZ_recordInit(oz_atom("ot"),
+		       oz_cons(oz_pairAI("size", size),oz_cons(oz_pairA("list",ans),oz_nil())));
+
 }
 
 void BorrowTable::print()
