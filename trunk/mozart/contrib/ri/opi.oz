@@ -22,4 +22,14 @@ declare X Y C in {ForAll [X Y] proc {$ V} V = {RI.var.bounds 0.0 10.0} end}
 {Show {R.propCoordinates C}}
 {Show C}
 
+declare 
+X={RI.var.decl}
+Y={RI.var.decl}
+Z={RI.var.decl}
+in
+{RI.greater X 0.0}
+{RI.times Y 2.0 X}
+{Show X#Y}
+
+{Browse RI}
 */

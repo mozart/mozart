@@ -33,7 +33,7 @@ RILPSolve::mode_e RILPSolve::mode;
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(ri_lpsolve, 5)
+OZ_BI_define(ri_lpsolve, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT EM_RI "," EM_LP_OBJFN "," 
 		   EM_LP_CONSTR "," EM_RI "," OZ_EM_LIT);
@@ -54,10 +54,10 @@ OZ_C_proc_begin(ri_lpsolve, 5)
 
   OZ_EXPECT_SUSPEND(pe, 4, expectLPReturnLiteral, dummy);
 
-  return pe.impose(new RILPSolve(OZ_args[0], OZ_args[1], 
-				 OZ_args[2], OZ_args[3], OZ_args[4]));
+  return pe.impose(new RILPSolve(OZ_in(0), OZ_in(1), 
+				 OZ_in(2), OZ_in(3), OZ_in(4)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_PropagatorProfile RILPSolve::profile;
 
