@@ -1,0 +1,1 @@
+<ITEM> <<winfo(parameter1:value1 ... parameterX:valueX)>> : This commands works like the <<get>> method, but for window-related information. For more details, see <ptr to="misc.winfo">.

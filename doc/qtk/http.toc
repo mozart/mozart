@@ -1,0 +1,26 @@
+\contentsline {chapter}{\numberline {1}Introduction}{1}
+\contentsline {chapter}{\numberline {2}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}} Module}{3}
+\contentsline {section}{\numberline {2.1}Exceptions}{3}
+\contentsline {subsection}{\numberline {2.1.1}General exceptions}{3}
+\contentsline {subsection}{\numberline {2.1.2}Cgi exceptions}{4}
+\contentsline {section}{\numberline {2.2}Input \mozart@text@AMPERSAND Ouput parameters}{4}
+\contentsline {subsection}{\numberline {2.2.1}Input parameters}{4}
+\contentsline {subsection}{\numberline {2.2.2}Output parameters}{4}
+\contentsline {section}{\numberline {2.3}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}\mozartFACEKEYWORD {.}\mozartFACETEXT {service}} class }{5}
+\contentsline {section}{\numberline {2.4}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}\mozartFACEKEYWORD {.}\mozartFACETEXT {cgiGET}} class }{7}
+\contentsline {section}{\numberline {2.5}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}\mozartFACEKEYWORD {.}\mozartFACETEXT {cgiPOST}} class }{7}
+\contentsline {section}{\numberline {2.6}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}\mozartFACEKEYWORD {.}\mozartFACETEXT {cgiISINDEX}} class }{8}
+\contentsline {section}{\numberline {2.7}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}\mozartFACEKEYWORD {.}\mozartFACETEXT {urlGET}} class }{8}
+\contentsline {section}{\numberline {2.8}\mozartCODEINLINE {\mozartFACETEXT {HttpClient}\mozartFACEKEYWORD {.}\mozartFACETEXT {urlHEAD}} class }{9}
+\contentsline {chapter}{\numberline {3}Tutorial Examples}{11}
+\contentsline {section}{\numberline {3.1}Download a document}{11}
+\contentsline {paragraph}{Source File\footnotemark }{11}
+\contentsline {section}{\numberline {3.2}Build CGI queries}{12}
+\contentsline {paragraph}{Source File\footnotemark }{12}
+\contentsline {section}{\numberline {3.3}Use of the module functionalities}{13}
+\contentsline {paragraph}{Source File\footnotemark }{13}
+\contentsline {section}{\numberline {3.4}Parallel documents retrieval}{14}
+\contentsline {paragraph}{Source File\footnotemark }{15}
+\contentsline {chapter}{\numberline {4}Demo Applications}{17}
+\contentsline {section}{\numberline {4.1}Web Browser}{17}
+\contentsline {section}{\numberline {4.2}Web based Service Combinators}{18}

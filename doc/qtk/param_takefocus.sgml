@@ -1,0 +1,3 @@
+<ITEM> <<takefocus:B>> : Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the takeFocus option. A value of <<false>> means that the window should be skipped
+    entirely during keyboard traversal. <<true>> means that the window should receive the input focus as long as it is viewable (it and all of its
+    ancestors are mapped). <<B>> must be a boolean.

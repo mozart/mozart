@@ -1,0 +1,3 @@
+<ITEM> <<tooltips:VS>> : Specifies a tooltip for the widget. A tooltip is a small message that appears when the mouse cursor if left still over the widget for a while. If <<VS>> is set to <<nil>>, no tooltip will appear at all. <<VS>> must be a virtual string.
+
+<ITEM> <<look:L>> : Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
