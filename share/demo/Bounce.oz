@@ -2,7 +2,7 @@
 %%% Authors:
 %%%   Michael Mehl (mehl@dfki.de)
 %%%   Gert Smolka (smolka@dfki.de)
-%%%   Christian Schulte (schulte@dfki.de)
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%   Joerg Wuertz (wuertz@dfki.de)
 %%%
 %%% Copyright:
