@@ -1,60 +1,69 @@
-TOOL            = regex
-
 prefix          = @prefix@
-OZHOME          = $(prefix)/oz
-BINDIR          = $(OZHOME)/bin
-DYNLDIR         = $(OZHOME)/platform/@platform@/tools/$(TOOL)
-COMPDIR         = $(OZHOME)/tools/$(TOOL)
+PLATFORM        = @PLATFORM@
+PACKAGE         = @PACKAGE@
+PROTOCOL        = @PROTOCOL@
+DIR_LOAD        = $(prefix)/cache/$(PROTOCOL)/$(PACKAGE)
+DIR_DLOAD       = $(prefix)/platform/$(PLATFORM)/cache/$(PACKAGE)
 
-DYNLD           = @DYNLD@
+OZBATCH         = @OZBATCH@
+OZDYNLD         = @OZDYNLD@
+MKINSTALLDIRS   = @MKINSTALLDIRS@
+
 CXX             = @CXX@
 CXXFLAGS        = @CXXFLAGS@
-CPPBASE         = -I../../Emulator -I$(OZHOME)/include
+CPPBASE         = -I../../platform/emulator -I$(prefix)/include
 CPPFLAGS        = @CPPFLAGS@ $(CPPBASE)
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
 
 INSTALL         = @INSTALL@
-INSTALL_DIR     = $(INSTALL) -m 775 -d
+INSTALL_DIR     = $(MKINSTALLDIRS)
 INSTALL_BIN     = $(INSTALL) -m 555
 INSTALL_LIB     = $(INSTALL) -m 444
 
-OZBATCH         = $(OZHOME)/bin/ozbatch
+POSIX_LOAD      = posix.ozc
+POSIX_DLOAD     = posix.so
 
-### TARGETS
+ALL_LOAD        = $(POSIX_LOAD)
+ALL_DLOAD       = $(POSIX_DLOAD)
 
-all:    simple.so simple.ozc posix.so posix.ozc
+LIB_POSIX_LOAD  = $(addprefix $(DIR_LOAD)/,$(POSIX_LOAD))
+LIB_POSIX_DLOAD = $(addprefix $(DIR_DLOAD)/,$(POSIX_DLOAD))
 
-simple.o:       simple.cc $(OZHOME)/include/oz.h
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c simple.cc
+.PHONY: all install install-load install-dload \
+        posix install-posix install-posix-load install-posix-dload
 
-posix.o:        posix.cc $(OZHOME)/include/oz.h
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c posix.cc
+all:    posix
+posix:  $(POSIX_LOAD) $(POSIX_DLOAD)
 
-simple.so:      simple.o
-        $(DYNLD) -o simple.so simple.o $(LDFLAGS) $(LIBS)
+install:        install-posix
+install-load:   install-posix-load
+install-dload:  install-posix-dload
 
-posix.so:       posix.o
-        $(DYNLD) -o posix.so posix.o $(LDFLAGS) $(LIBS)
+install-posix:  install-posix-load install-posix-dload
+install-posix-load:     $(LIB_POSIX_LOAD)
+install-posix-dload:    $(LIB_POSIX_DLOAD)
 
-install:        simple.so simple.ozc posix.so posix.ozc
-        $(INSTALL_DIR)                  $(COMPDIR)
-        $(INSTALL_LIB) simple.ozc       $(COMPDIR)
-        $(INSTALL_LIB) posix.ozc        $(COMPDIR)
-        $(INSTALL_DIR)                  $(DYNLDIR)
-        $(INSTALL_LIB) simple.so        $(DYNLDIR)
-        $(INSTALL_LIB) posix.so         $(DYNLDIR)
+$(DIR_LOAD) $(DIR_DLOAD):
+        $(INSTALL_DIR) $@
 
-simple.ozc:     simple.oz
-        $(OZBATCH) -c simple.oz
+$(subst %,\%,$(DIR_LOAD))/%: %
+        $(INSTALL_LIB) $< $@
 
-posix.ozc:      posix.oz
-        $(OZBATCH) -c posix.oz
+$(subst %,\%,$(DIR_DLOAD))/%: %
+        $(INSTALL_LIB) $< $@
+
+$(ALL_LOAD): %.ozc : %.oz
+        $(OZBATCH) -c $<
+
+$(ALL_DLOAD): %.so : %.o
+        $(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
+
+%.o: %.c
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean:
-        -rm *~ *.ozc *.o *.so
+        -$(RM) *~ *.ozc *.o *.so *.oz
 
-veryclean: clean
-        -rm config.*
-
-distclean: veryclean
+distclean: clean
+        -$(RM) config.*

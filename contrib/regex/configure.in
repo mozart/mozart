@@ -1,11 +1,38 @@
 AC_INIT(simple.cc)
+. ../conf.all
 AC_CANONICAL_HOST
 AC_PROG_CXX
 AC_LANG_CPLUSPLUS
 AC_PROG_INSTALL
-AC_PATH_PROG(DYNLD, ozdynld, ozdynld, `pwd`/../../bin $prefix/oz/bin)
-AC_PATH_PROG(PLATFORM, ozplatform, ozplatform, `pwd`/../../bin $prefix/oz/bin)
-platform=`$PLATFORM`
-AC_SUBST(DYNLD)
-AC_SUBST(platform)
-AC_OUTPUT(Makefile)
+AC_PATH_PROG(OZBATCH,ozbatch,ozbatch,../../share/lib $prefix/bin $path)
+AC_PATH_PROG(OZDYNLD,ozdynld,ozdynld,../../share/lib $prefix/bin $path)
+AC_PATH_PROG(OZPLATFORM,ozplatform,ozplatform,../../share/bin $prefix/bin $path)
+AC_PATH_PROG(MKINSTALLDIRS,mkinstalldirs,mkinstalldirs,../.. $path)
+: ${PLATFORM=`$OZPLATFORM`}
+AC_SUBST(OZBATCH)
+AC_SUBST(OZDYNLD)
+AC_SUBST(PLATFORM)
+AC_SUBST(MKINSTALLDIRS)
+dnl
+dnl check for --with-package-name=...
+dnl
+PACKAGE=www.ps.uni-sb.de/ozhome/contrib/regex
+AC_MSG_CHECKING(for --with-package-name)
+AC_ARG_WITH(package_name,[--with-package-name=PKG       default $PACKAGE])
+if test -n "${with_package_name}"; then
+  PACKAGE="${with_package_name}"
+fi
+AC_MSG_RESULT($PACKAGE)
+AC_SUBST(PACKAGE)
+dnl
+dnl check for --with-protocol=...
+dnl
+AC_MSG_CHECKING(for --with-protocol)
+PROTOCOL=http
+AC_ARG_WITH(protocol,[--with-protocol=PROTO     default $PROTOCOL])
+if test -n "${with_protocol}"; then
+  PROTOCOL="${with_protocol}"
+fi
+AC_MSG_RESULT($PROTOCOL)
+AC_SUBST(PROTOCOL)
+AC_OUTPUT(Makefile posix.oz:posix.in)

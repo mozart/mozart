@@ -1,3 +1,4 @@
+%%% -*-oz-*-
 %%% Copyright © by Denys Duchier, Dec 1997, Universität des Saarlandes
 
 fun {$ IMPORT}
@@ -7,7 +8,7 @@ fun {$ IMPORT}
            regex_execute:EXECUTE
            regex_free:FREE
            regex_flags:FLAGS)
-   = {Fload 'tools/regex/posix.so'}
+   = {Fload '@PACKAGE@/posix.so'}
    flag(EXTENDED ICASE NEWLINE NOSUB NOTBOL NOTEOL)={FLAGS}
    Flags = flag(extended:EXTENDED
                 icase   :ICASE
