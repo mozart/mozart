@@ -350,12 +350,8 @@ public:
   }
 
 #ifdef PERDIO
-  int pStop() {
-    return stopCount++;
-  }
-  int pCont() {
-    return --stopCount;
-  }
+  int pStop() { return stopCount++; }
+  int pCont() { return --stopCount; }
 #endif
 
   int getThrType () { return (state.flags & S_TYPE_MASK); }
@@ -511,9 +507,7 @@ public:
   void removeExtThread ();
 
   //
-  Bool isBelowFailed (Board *top);
 
-  //
   void pushLTQ(SolveActor * sa) {
     item.threadBody->taskStack.pushLTQ(sa);
   }
