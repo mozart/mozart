@@ -61,7 +61,7 @@ void OZ_FDIntVar::ask(OZ_Term v)
   varPtr = _vptr;
   //
   if (isSmallIntTag(vtag)) {
-    initial_size = dom.initSingleton(smallIntValue(v));
+    initial_size = CAST_FD_OBJ(dom).initSingleton(smallIntValue(v));
     domPtr = &dom;
     setSort(sgl_e);
   } else {
@@ -70,14 +70,14 @@ void OZ_FDIntVar::ask(OZ_Term v)
     OzVariable * cvar = tagged2CVar(v);
 
     if (cvar->getType() == OZ_VAR_BOOL) {
-      initial_size = dom.initBool();
+      initial_size = CAST_FD_OBJ(dom).initBool();
       domPtr = &dom;
       setSort(bool_e);
     } else {
       Assert(cvar->getType() == OZ_VAR_FD);
 
       domPtr = &((OzFDVariable *) cvar)->getDom();
-      initial_size = domPtr->getSize();
+      initial_size = CAST_FD_PTR(domPtr)->getSize();
       setSort(int_e);
 
       Assert(initial_size > 1 && *domPtr != fd_bool);
@@ -95,7 +95,7 @@ int OZ_FDIntVar::read(OZ_Term v)
   //
   if (isSmallIntTag(vtag)) {
 
-    initial_size = dom.initSingleton(smallIntValue(v));
+    initial_size = CAST_FD_OBJ(dom).initSingleton(smallIntValue(v));
     initial_width = 0;
     domPtr = &dom;
     setSort(sgl_e);
@@ -123,7 +123,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 	  domPtr = ((OzBoolVariable *) cvar)->getStorePatchBool();
 	} else {
 	// entered first time as store var
-	  initial_size = dom.initBool();
+	  initial_size = CAST_FD_OBJ(dom).initBool();
 	  domPtr = &dom;
 	  ((OzBoolVariable *) cvar)->patchStoreBool(domPtr);
 	}
@@ -136,8 +136,8 @@ int OZ_FDIntVar::read(OZ_Term v)
 	if (oz_onToplevel())
 	  dom = ((OzFDVariable *) cvar)->getDom();
 	domPtr = &((OzFDVariable *) cvar)->getDom();
-	initial_size = domPtr->getSize();
-	initial_width = ((OZ_FiniteDomainImpl *) domPtr)->getWidth();
+	initial_size = CAST_FD_PTR(domPtr)->getSize();
+	initial_width = CAST_FD_PTR(domPtr)->getWidth();
 
 	Assert(initial_size > 1 && *domPtr != fd_bool);
       }
@@ -167,7 +167,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 	// entered first time as store var
 	  domPtr = &dom;
 	  ((OzBoolVariable *) cvar)->patchStoreBool(domPtr);
-	  initial_size = dom.initBool();
+	  initial_size = CAST_FD_OBJ(dom).initBool();
 	}
 	initial_width = 1;
 
@@ -184,8 +184,8 @@ int OZ_FDIntVar::read(OZ_Term v)
 	  domPtr = &((OzFDVariable *) cvar)->getDom();
 	}
 
-	initial_size = domPtr->getSize();
-	initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
+	initial_size = CAST_FD_PTR(domPtr)->getSize();
+	initial_width = CAST_FD_PTR(domPtr)->getWidth();
 	setSort(int_e);
 
 	Assert(initial_size > 1 && *domPtr != fd_bool);
@@ -194,7 +194,7 @@ int OZ_FDIntVar::read(OZ_Term v)
 
     setStoreFlag(v);
   }
-  return domPtr->getSize();
+  return CAST_FD_PTR(domPtr)->getSize();
 }
 
 int OZ_FDIntVar::readEncap(OZ_Term v)
@@ -206,7 +206,7 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
   varPtr= _vptr;
   //
   if (isSmallIntTag(vtag)) {
-    initial_size = dom.initSingleton(smallIntValue(v));
+    initial_size = CAST_FD_OBJ(dom).initSingleton(smallIntValue(v));
     initial_width = 0;
     domPtr = &dom;
     setState(loc_e);
@@ -221,11 +221,11 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
     // var is already entered somewhere else
       setSort(cvar->isBoolPatched() ? bool_e : int_e);
       domPtr = cvar->getReifiedPatch();
-      initial_size = domPtr->getSize();
-      initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
+      initial_size = CAST_FD_PTR(domPtr)->getSize();
+      initial_width = CAST_FD_PTR(domPtr)->getWidth();
     } else if (cvar->getType() == OZ_VAR_BOOL) {
     // bool var entered first time
-      initial_size = dom.initBool();
+      initial_size = CAST_FD_OBJ(dom).initBool();
       initial_width = 1;
       domPtr = &dom;
       setSort(bool_e);
@@ -235,11 +235,11 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
       Assert(cvar->getType() == OZ_VAR_FD);
 
       setSort(int_e);
-      dom.initEmpty();
+      CAST_FD_OBJ(dom).initEmpty();
       dom = ((OzFDVariable *) cvar)->getDom();
       domPtr = &dom;
-      initial_size = domPtr->getSize();
-      initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
+      initial_size = CAST_FD_PTR(domPtr)->getSize();
+      initial_width = CAST_FD_PTR(domPtr)->getWidth();
 
       cvar->patchReified(domPtr, FALSE);
 
@@ -247,12 +247,12 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
     }
     setReifiedFlag(v);
   }
-  return domPtr->getSize();
+  return CAST_FD_PTR(domPtr)->getSize();
 }
 
-#define CHECK_BOUNDS                                                    \
-   (initial_width > ((OZ_FiniteDomainImpl *)domPtr)->getWidth()         \
-     ? fd_prop_bounds : fd_prop_any)
+#define CHECK_BOUNDS					\
+   (initial_width > CAST_FD_PTR(domPtr)->getWidth())	\
+     ? fd_prop_bounds : fd_prop_any
 
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
@@ -279,7 +279,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     //
     // there is a finite domain variable in the store
     //
-    if (*domPtr == fd_singl) {
+    if (*CAST_FD_PTR(domPtr) == fd_singl) {
       //
       // propagation produced singleton
       //
@@ -288,13 +288,13 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	tagged2GenFDVar(var)->becomesSmallIntAndPropagate(varPtr);
       } else {
 	// global variable
-	int int_val = domPtr->getSingleElem();
+	int int_val = CAST_FD_PTR(domPtr)->getSingleElem();
 	// wake up
 	tagged2GenFDVar(var)->propagate(fd_prop_singl);
 	bindGlobalVarToValue(varPtr, newSmallInt(int_val));
       }
       goto oz_false;
-    } else if (*domPtr == fd_bool) {
+    } else if (*CAST_FD_PTR(domPtr) == fd_bool) {
       //
       // propagation produced boolean domain
       //
@@ -327,7 +327,8 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     // there is a boolean variable in the store which becomes a singleton
     // (otherwise it would not been recognized as touched)
     //
-    Assert(isSort(bool_e) && *domPtr == fd_singl); // boolean variable
+    Assert(isSort(bool_e) && *CAST_FD_PTR(domPtr) == fd_singl); 
+    // boolean variable
 
     if (isState(loc_e)) {
       // local variable
@@ -335,7 +336,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     } else {
       // global variable
       tagged2GenBoolVar(var)->propagate();
-      int int_val = domPtr->getSingleElem();
+      int int_val = CAST_FD_PTR(domPtr)->getSingleElem();
       bindGlobalVarToValue(varPtr, newSmallInt(int_val));
     }
     goto oz_false;

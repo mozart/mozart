@@ -39,13 +39,20 @@
 #define OZ_DEBUG
 #endif
 
+//#define OZ_DEBUG
+
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
 
 extern "C" void oz_debugprint(char *format ...);
 
+#define _OZ_DEBUGPRINTTHIS(string) 		\
+   _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
+
+#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string)
+
 #define _OZ_DEBUGPRINT(C) oz_debugprint C
-#define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
+#define OZ_DEBUGPRINT(C) _OZ_DEBUGPRINT(C) 
 #define OZ_ASSERT(C)					\
   if (! (C)) {						\
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",	\
@@ -58,12 +65,9 @@ extern "C" void oz_debugprint(char *format ...);
 #define _OZ_DEBUGPRINT(C)
 #define OZ_DEBUGPRINT(C)
 #define OZ_ASSERT(C)
+#define OZ_DEBUGPRINTTHIS(C)
 #endif
 
-#define _OZ_DEBUGPRINTTHIS(string) 		\
-   _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
-
-#define OZ_DEBUGPRINTTHIS(string) /* _OZ_DEBUGPRINTTHIS(string) */
 
 //-----------------------------------------------------------------------------
 // misc macros

@@ -114,7 +114,8 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       //
       if (intersection == fd_singl) {
 	// intersection is singleton
-	OZ_Term int_var = newSmallInt(intersection.getSingleElem());
+	OZ_Term int_var = 
+	  newSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
 	// wake up 
 	right_fdvar->propagateUnify();
 	propagateUnify();
@@ -170,7 +171,8 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       //
       if (intersection == fd_singl) {
 	// intersection is singleton
-	OZ_Term int_var = newSmallInt(intersection.getSingleElem());
+	OZ_Term int_var = 
+	  newSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
 	right_fdvar->propagateUnify();
 	propagateUnify();
 	bindLocalVarToValue(left_varptr, int_var);
@@ -213,7 +215,8 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       //
       if (intersection == fd_singl){
 	// intersection is singleton
-	OZ_Term int_val = newSmallInt(intersection.getSingleElem());
+	OZ_Term int_val = 
+	  newSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
 	propagateUnify();
 	right_fdvar->propagateUnify();
 	bindGlobalVarToValue(left_varptr, int_val);
@@ -310,9 +313,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       if (oz_isLocalVariable(vptr)) {
 	if (!isUVar(vtag))
 	  oz_checkSuspensionListProp(tagged2CVar(v));
-	bindLocalVarToValue(vptr, newSmallInt(fd->getSingleElem()));
+	bindLocalVarToValue(vptr, 
+			    newSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
       } else {
-	bindGlobalVarToValue(vptr, newSmallInt(fd->getSingleElem()));
+	bindGlobalVarToValue(vptr, 
+			     newSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
       }
       goto proceed;
     }
@@ -364,7 +369,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	fdvar->getDom() = dom;
 	fdvar->becomesSmallIntAndPropagate(vptr);
       } else {
-	int singl = dom.getSingleElem();
+	int singl = CAST_FD_OBJ(dom).getSingleElem();
 	fdvar->propagate(fd_prop_singl);
 	bindGlobalVarToValue(vptr, newSmallInt(singl));
       }

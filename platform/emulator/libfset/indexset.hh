@@ -142,14 +142,14 @@ int IndexSet::getHigh(void) const
   return _high; 
 }
 
-extern int get_num_of_bits(const int m, const int * ia);
+extern int get_num_of_bits_outline(const int m, const int * ia);
 
 inline
 int IndexSet::findCard(void) {
 #ifdef OZ_DEBUG
-  return get_num_of_bits(getHigh(), (int *) _elems);
+  return get_num_of_bits_outline(getHigh(), (int *) _elems);
 #else
-  return get_num_of_bits(getHigh(), _elems);
+  return get_num_of_bits_outline(getHigh(), _elems);
 #endif
 }
 
