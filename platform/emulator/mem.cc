@@ -360,7 +360,7 @@ void getMemFromOS(size_t sz)
 
   heapTotalSize += heapBlockSize/KB;
   
-  if (ozconf.heapMaxSize != 0 && heapTotalSize >= ozconf.heapMaxSize) {
+  if (ozconf.heapMaxSize != -1 && heapTotalSize >= ozconf.heapMaxSize) {
     int newSize = (heapTotalSize*3)/2;
     prefixError();
     printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
