@@ -28,7 +28,7 @@ local
 		width: Width <=SourceWindowTextSize.1
 		height:Height<=SourceWindowTextSize.2)
 	 Tk.text,tkInit(parent: P         bg: SourceTextBackground
-			font:   SmallFont bd: BorderSize
+			font:   SmallFont bd: BorderSize cursor: TextCursor
 			width:  Width     height:Height)
 	 self.filename = F
 	 CurrentLine <- line(appl:undef stack:undef)
@@ -53,7 +53,40 @@ local
 	 case Line == false then
 	    skip
 	 else
-	    {self tk(insert 'end' {PrintF L 4} # {FixTabs Line} # [10] q(L))}
+	    FL   = {StripPath self.filename} # ', line ' # L
+	    D1   = 'Deleted b'
+	    D2   = 'delete b'
+	    Set  = 'set b'
+	    Br   = 'reakpoint at '
+	    Err  = 'Failed to '
+	    AcSet  = {New Tk.action
+		      tkInit(parent: self
+			     action: proc{$}
+					Ok = {Debug.breakpointAt
+					      self.filename L true}
+				     in
+					{Ozcar rawStatus(case Ok then
+							    'B'#Br#FL
+							 else
+							    Err#Set#Br#FL
+							 end)}
+				     end)}
+	    AcDelete = {New Tk.action
+			tkInit(parent: self
+			       action: proc{$}
+					  Ok = {Debug.breakpointAt
+						self.filename L false}
+				       in
+					  {Ozcar rawStatus(case Ok then
+							      D1#Br#FL
+							   else
+							      Err#D2#Br#FL
+							   end)}
+				       end)}
+	 in
+	    {ForAll [tk(insert 'end' {PrintF L 4} # {FixTabs Line} # NL q(L))
+		     tk(tag bind q(L) '<1>' AcSet)
+		     tk(tag bind q(L) '<3>' AcDelete)] self}
 	    {self DoLoad(F L+1)}
 	 end
       end
