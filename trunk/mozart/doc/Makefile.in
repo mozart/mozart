@@ -54,13 +54,13 @@ Makefile: Makefile.in config.status
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
 	$(DOCDIR)/idx/index.html $(DOCDIR)/idx
 
-$(SHDOCDIR) $(DOCDIR):
+$(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
 	$(INSTALL_DIR) $@
 
 $(DOCDIR)/.htaccess: .htaccess
 	$(INSTALL_FILE) $< $@
 
-$(DOCDIR)/idx/index.html: idx/index.html
+$(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
 	$(INSTALL_FILE) $< $@ && \
 	$(INSTALL_DIR) $(DOCDIR)/idx && \
 	(cd idx && for i in *; do \
