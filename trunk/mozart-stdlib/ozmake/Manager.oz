@@ -31,5 +31,30 @@ define
       meth init
 	 {self exec_init}
       end
+
+      meth initAsSubdir(Subdir Superman)
+	 {self set_assubdir(Subdir)}
+	 {self set_superman(Superman)}
+	 Manager,init
+      end
+
+      meth subdirs_to_managers(L $)
+	 {Map L fun {$ D} {New Manager initAsSubdir(D self)} end}
+      end
+
+      meth recurse(CMD)
+	 if {self get_local($)} then skip else
+	    for
+	       D in {self get_subdirs($)}
+	       M in {self get_submans($)}
+	    do
+	       {self trace('entering '#D)}
+	       {self incr}
+	       try {M makefile_read} {M CMD}
+	       finally {self decr} end
+	       {self trace('leaving '#D)}
+	    end
+	 end
+      end
    end
 end

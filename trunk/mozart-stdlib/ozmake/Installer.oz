@@ -68,33 +68,53 @@ define
       meth install(Targets)
 	 if {self get_package_given($)} then Installer,install_from_package
 	 elseif Targets==nil then Installer,install_all
-	 else Installer,install_targets(Targets) end
+	 else
+	    {self build_targets(Targets)}
+	    IPairs = Installer,targets_to_installation_pairs(Targets $)
+	 in
+	    Installer,install_ipairs(IPairs)
+	 end
+      end
+
+      meth get_installation_pairs($)
+	 ITargets = Installer,get_install_targets($)
+	 IPairs   = Installer,targets_to_installation_pairs(ITargets $)
+	 Stack = {Utils.newStackFromList {Reverse IPairs}}
+      in
+	 if {self get_local($)} then skip else
+	    for M in {self get_submans($)} do
+	       for P in {M get_installation_pairs($)} do {Stack.push P} end
+	    end
+	 end
+	 {Reverse {Stack.toList}}
       end
 
       meth install_all
 	 %% need to read the makefile before computing install targets
 	 {self makefile_read}
-	 Targets = {self get_install_targets($)}
+	 {self build_all}
+	 IPairs = {self get_installation_pairs($)}
+	 %%!!! Targets = {self get_install_targets($)}
       in
-	 Installer,install_targets(Targets)
+	 Installer,install_ipairs(IPairs)
       end
 
-      meth install_targets(Targets)
-	 %% need to read the makefile before building targes
+      meth install_ipairs(IPairs) %installation pairs
+	 %% need to read the makefile before building targets
 	 {self makefile_read}
 	 %% --grade=GRADE
 	 {self database_read}
 	 {self database_check_grade}
-	 %% make sure all targets have been built
-	 for T in Targets do {self build_target(T)} end
+	 %%!!! %% make sure all targets have been built
+	 %%!!! for T in Targets do {self build_target(T)} end
 	 %% compute the files that will be written
-	 IPairs    = Installer,targets_to_installation_pairs(Targets $)
+	 %%!!! IPairs    = Installer,targets_to_installation_pairs(Targets $)
 	 MOG       = {self get_mogul($)}
 	 PKG       = {self database_mutable_entry(MOG $)}
 	 LostStack = {Utils.newStack} LostFiles
 	 IFiles    = {Map IPairs fun {$ _#F} F end}
       in
-	 %% compute the files that wil be overwritten and
+	 %% compute the files that will be overwritten and
 	 %% belong to other packages
 	 for _#F in IPairs do
 	    FMog = {self file_to_package(F $)}

@@ -49,9 +49,8 @@ define
 	    {self exec_write_to_file(D {Path.resolve DIR F})}
 	 end
 	 if MAK then
-	    {self exec_write_to_file(
-		     {Value.toVirtualString REC.info 1000000 1000000}
-		     {Path.resolve DIR "makefile.oz"})}
+	    Extractor,WriteMakefile(DIR REC.info)
+	    {self set_submakefiles(unit)}
 	 end
 	 if {Not MAK} orelse {self get_justprint($)} then
 	    %% when installing from a package, we don't actually need to
@@ -61,8 +60,19 @@ define
 	    %% both cases, we initialize the makefile info from the package
 	    %% record we just read, but we don't actually write out the
 	    %% makefile.
-	    {self makefile_from_record(REC.info)}
+	    {self makefile_from_record(REC.info fromPackage:true)}
 	    {self set_no_makefile(false)}
+	 end
+      end
+
+      meth WriteMakefile(DIR R)
+	 {self exec_write_to_file(
+		  {Value.toVirtualString
+		   {Record.subtract R submakefiles}
+		   1000000 1000000}
+		  {Path.resolve DIR "makefile.oz"})}
+	 for DD#RR in {Record.toListInd {CondSelect R submakefiles o}} do
+	    Extractor,WriteMakefile({Path.resolve DIR DD} RR)
 	 end
       end
 

@@ -107,3 +107,10 @@ move them to the zombie list of the new installation
 remove them
 *** update database entry
 using new installation
+
+* RECURSING INTO SUBDIRECTORIES
+
+the makefile record may have a subdirs feature which holds a list of
+subdirectories (bare filenames).
+
+create

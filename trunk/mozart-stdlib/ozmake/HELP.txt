@@ -36,6 +36,8 @@ GENERAL OPTIONS
 -n, --just-print
         perform a dry run, i.e. just print what would happen without
         actually performing the actions
+--local
+	do not recurse into subdirectories
 
 DIRECTORIES
 
@@ -296,6 +298,7 @@ recommended.
           blurb    : TEXT
           info_text: TEXT
           info_html: TEXT
+          subdirs  : [ DIRS... ]
         )
 
 Features bin, lib and doc list targets to be installed in <BINDIR>,
@@ -471,3 +474,15 @@ but does not also distribute its source Foo.oz.  Normally, when you
 build a package it simply checks that the src files are present but
 will not attempt to build them.  If you have the sources, you can
 force building the src targets if necessary using --fullbuild.
+
+SUBDIRS
+
+feature `subdirs' is a list of bare filenames representing
+subdirectories of the project.  By default, when necessary, ozmake
+will recurse into these subdirectories.  It is expected that each
+subdirectory should provide its own makefile.  The mogul id is
+automatically inherited to subdirectories and the uri is automatically
+extended by appending the name of the subdirectory: thus submakefiles
+can be simpler since they don't need to be concerned with
+package-level features.
+

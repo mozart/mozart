@@ -56,11 +56,13 @@ define
       meth clean
 	 {self makefile_read}
 	 Cleaner,CleanPatterns(Cleaner,GetCleanPatterns($))
+	 {self recurse(clean)}
       end
 
       meth veryclean
 	 Cleaner,clean
 	 Cleaner,CleanPatterns(Cleaner,GetVeryCleanPatterns($))
+	 {self recurse(veryclean)}
       end
    end
 end

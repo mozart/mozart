@@ -13,7 +13,7 @@ prepare
    RULE_EXISTS = rule(tool:unit file:unit options:nil)
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
-			      blurb info_text info_html]
+			      blurb info_text info_html subdirs submakefiles]
 
 define
 
@@ -38,7 +38,7 @@ define
 	 {CondSelect @Target2Section {Path.toAtom T} unit}
       end
 
-      meth makefile_from_record(R)
+      meth makefile_from_record(R fromPackage:FromPackage<=false)
 
 	 Target2Section<-{NewDictionary}
 	 Target2Rule   <-{NewDictionary}
@@ -156,6 +156,35 @@ define
 	       raise ozmake(makefile:badinfohtml(R.info_html)) end
 	    else
 	       {self set_info_html({MakeByteString R.info_html})}
+	    end
+	 end
+
+	 %% process subdirs feature
+
+	 if {HasFeature R subdirs} then
+	    if {IsList R.subdirs} then
+	       for D in R.subdirs do
+		  if {Not {IsVirtualString D}} then
+		     raise ozmake(makefile:subdirnotvs(D)) end
+		  elseif {Not {Path.isBasename D}} then
+		     raise ozmake(makefile:subdirnotbasename(D)) end
+		  end
+	       end
+	    else
+	       raise ozmake(makefile:badsubdirs(R.subdirs)) end
+	    end
+	    {self set_subdirs({Map R.subdirs Path.toAtom})}
+	 end
+
+	 %% process submakefiles feature
+
+	 if {HasFeature R submakefiles} then
+	    if {Not {IsRecord R.submakefiles}} then
+	       raise ozmake(makefile:badsubmakefiles(R.submakefiles)) end
+	    elseif {Width R.submakefiles}\=0 andthen {Not FromPackage} then
+	       raise ozmake(makefile:submakefilesnotallowed) end
+	    else
+	       {self set_submakefiles(R.submakefiles)}
 	    end
 	 end
 
@@ -358,18 +387,22 @@ define
       end
 
       meth makefile_read
-	 if @Target2Section==unit then
-	    F={self get_makefile($)}
-	 in
-	    if {Path.exists F} then
-	       {self trace('reading makefile: '#F)}
-	       Makefile,makefile_from_record({Utils.compileFile F false})
-	       {self set_no_makefile(false)}
-	    elseif {self get_makefile_given($)} then
-	       raise ozmake(makefile:filenotfound(F)) end
+	 if @Target2Section==unit then S={self get_superman($)} in
+	    if S\=unit andthen {S has_submakefile({self get_assubdir($)} $)} then
+	       Makefile,makefile_from_record({S get_submakefile({self get_assubdir($)} $)})
 	    else
-	       {self trace('using empty makefile')}
-	       Makefile,makefile_from_record(o)
+	       F={self get_makefile($)}
+	    in
+	       if {Path.exists F} then
+		  {self trace('reading makefile: '#F)}
+		  Makefile,makefile_from_record({Utils.compileFile F false})
+		  {self set_no_makefile(false)}
+	       elseif {self get_makefile_given($)} then
+		  raise ozmake(makefile:filenotfound(F)) end
+	       else
+		  {self trace('using empty makefile')}
+		  Makefile,makefile_from_record(o)
+	       end
 	    end
 	 end
       end
@@ -436,6 +469,17 @@ define
 	 if InfoText \=unit then MAK.info_text := InfoText end
 	 if InfoHtml \=unit then MAK.info_html := InfoHtml end
 	 MAK.released:= {Utils.dateCurrentToAtom}
+	 %% grab also all the recursive makefiles
+	 MAK.subdirs := {self get_subdirs($)}
+	 MAK.submakefiles :=
+	 {List.toRecord o
+	  for
+	     D in {self get_subdirs($)}
+	     M in {self get_submans($)}
+	     collect : Collect
+	  do
+	     {Collect D#{M makefile_to_record($)}}
+	  end}
 	 {Dictionary.toRecord makefile MAK}
       end
 

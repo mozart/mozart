@@ -31,11 +31,6 @@ define
 	 end
 	 %% compute the files to be included in the package
 	 Needed = Creator,GetNeeded($)
-	 %% make sure that they are all available
-	 %% we do not simulate --fullbuild because that would prevent
-	 %% repackaging prebuilt files for which the sources are not
-	 %% available.
-	 for F in Needed do {self build_target(F)} end
 	 %% make a record with all the package stuff in it
 	 REC = packed(
 		  info : {self makefile_to_record($)}
@@ -59,6 +54,7 @@ define
       end
 
       meth GetNeeded($)
+	 {self makefile_read}
 	 %% we need to get everything needed to build the targets
 	 %% of the makefile except for those in src which must be
 	 %% prebuilt
@@ -86,6 +82,27 @@ define
 	       end
 	    end
 	 catch empty then skip end
+	 %% make sure that they are all available
+	 %% we do not simulate --fullbuild because that would prevent
+	 %% repackaging prebuilt files for which the sources are not
+	 %% available.
+	 for F in {Dictionary.keys Needed} do {self build_target(F)} end
+	 %% also get what is needed in subdirectories
+	 if {self get_local($)} then skip else
+	    for
+	       D in {self get_subdirs($)}
+	       M in {self get_submans($)}
+	    do
+	       {self trace('entering '#D)}
+	       {self incr}
+	       try
+		  for T in {M GetNeeded($)} do
+		     Needed.{Path.resolveAtom D T} := true
+		  end
+	       finally {self decr} end
+	       {self trace('leaving '#D)}
+	    end
+	 end
 	 {Dictionary.keys Needed}
       end
    end
