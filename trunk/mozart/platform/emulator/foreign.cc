@@ -2056,7 +2056,6 @@ OZ_Thread OZ_newSuspendedThread()
   printf("\n");
 #endif
 
-  Thread *thr = am.mkSuspendedThread(am.currentBoard(), DEFAULT_PRIORITY);
   return (OZ_Thread) oz_newSuspendedThread();
 }
 
