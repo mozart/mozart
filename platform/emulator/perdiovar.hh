@@ -61,7 +61,7 @@ public:
 };
 
 class PerdioVar: public GenCVariable {
-  TaggedPtr tagged;
+  TaggedPtr tagged;  // TODO: check if can reuse home
   union {
     PendBinding *bindings;
     ProxyList *proxies;
