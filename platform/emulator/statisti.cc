@@ -306,7 +306,7 @@ void Statistics::printCount(char *file) {
 
   FILE *out = (strcmp(file,"-")==0) ? stdout : fopen(file,"w");
   if (out==NULL) {
-    OZ_warning("cannot open '%s': %s\n",file,OZ_unixError(errno));
+    OZ_warning("cannot open '%s': %s\n",file,OZ_unixError(ossockerrno()));
     return;
   }
   fprintf(out,"Heap after last GC:\n\n");
@@ -322,7 +322,6 @@ void Statistics::printCount(char *file) {
   fprintf(out,"flatObject      %ld (%dB)\n",flatObject,sizeof(Object));
   fprintf(out,"objectClass     %ld (%dB)\n",objectClass,sizeof(ObjectClass));
   fprintf(out,"chunk           %ld (%dB)\n",chunk,sizeof(SChunk));
-  fprintf(out,"heapChunk       %ld (%dB)\n",heapChunk,sizeof(HeapChunk));
 
   fprintf(out,"refsArray       %ld (%dB)\n",refsArray,0);
   fprintf(out,"refsArrayLen    %ld (%dB)\n",refsArrayLen,sizeof(TaggedRef));
@@ -337,7 +336,6 @@ void Statistics::printCount(char *file) {
   fprintf(out,"board           %ld (%dB)\n",board,sizeof(Board));
   fprintf(out,"askActor        %ld (%dB)\n",askActor,sizeof(AskActor));
   fprintf(out,"waitActor       %ld (%dB)\n",waitActor,sizeof(WaitActor));
-  fprintf(out,"solveActor      %ld (%dB)\n",solveActor,sizeof(SolveActor));
   fprintf(out,"waitChild       %ld (%dB)\n",waitChild,sizeof(Board *));
 
   fprintf(out,"\nThreads\n");
@@ -357,8 +355,6 @@ void Statistics::printCount(char *file) {
   fprintf(out,"suspList        %ld (%dB)\n",suspList,sizeof(SuspList));
 
   fprintf(out,"\nOFS\n");
-  fprintf(out,"dynamicTable    %ld (%dB)\n",dynamicTable,sizeof(DynamicTable));
-  fprintf(out,"dynamicTableLen %ld (%dB)\n",dynamicTableLen,sizeof(HashElement));
 
   fprintf(out,"\nRS\n");
   PrintVar(freeListAllocated);
@@ -468,7 +464,7 @@ void Statistics::printInstr()
   for (int i=0; i<PROFILE_INSTR_MAX; i++) {
     sum += instr[i];
     if (instr[i]!=0)
-      fprintf(out,"%010lu x %s\n",instr[i],opcodeToString(i));
+      fprintf(out,"%010lu x %s\n",instr[i],opcodeToString((Opcode)i));
   }
   fprintf(out,"----------\n%010lu\n",sum);
   fclose(out);
@@ -488,7 +484,7 @@ void Statistics::printInstrCollapsable()
       if (instrCollapsable[i][j]!=0)
         fprintf(out,"%010lu x %s %s\n",
                 instrCollapsable[i][j],
-                opcodeToString(i),opcodeToString(j));
+                opcodeToString((Opcode)i),opcodeToString((Opcode)j));
     }
   }
   fclose(out);
