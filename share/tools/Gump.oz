@@ -24,8 +24,14 @@ fun instantiate {$ IMPORT}
    = IMPORT.'SP'
    \insert 'OP.env'
    = IMPORT.'OP'
-
-   \insert gump/Main.oz
 in
-   \insert Gump.env
+   local
+      \insert gump/Main.oz
+
+      Gump = gump(makeProductionTemplates: MakeProductionTemplates
+		  transformScanner: TransformScanner
+		  transformParser: TransformParser)
+   in
+      \insert Gump.env
+   end
 end
