@@ -64,13 +64,13 @@ DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
 
 // Initialize an elsewhere-allocated dynamictable of size s
 void DynamicTable::init(dt_index s) {
-    Assert(isPwrTwo(s));
-    numelem=0;
-    size=s;
-    for (dt_index i=0; i<s; i++) {
-        table[i].ident=makeTaggedNULL();
-        table[i].value=makeTaggedNULL();
-    }
+  Assert(isPwrTwo(s));
+  numelem=0;
+  size=s;
+  for (dt_index i=s; i--; ) {
+    table[i].ident=makeTaggedNULL();
+    table[i].value=makeTaggedNULL();
+  }
 }
 
 // Return a copy of the current table that has size newSize and all contents
@@ -78,31 +78,39 @@ void DynamicTable::init(dt_index s) {
 // Normally, the copy is rehashed except when newSize==size.  If
 // optcopyflag==FALSE, then rehash also this case.
 DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize) {
-    if (newSize==(dt_index)(-1L)) newSize=size;
-    Assert(isPwrTwo(size));
-    Assert(numelem<=fullFunc(size));
-    Assert(numelem<=fullFunc(newSize));
-    Assert(size!=(dt_index)(-1L));
-    DynamicTable* ret;
-    if (size==newSize) {
-        // Optimize case where copy has same size as original:
-        size_t memSize = DTBlockSize(size);
-        ret = (DynamicTable *) freeListMalloc(memSize);
-        ret->numelem=numelem;
-        ret->size=size;
-        for (dt_index i=0; i<ret->size; i++) ret->table[i]=table[i];
-    } else {
-        ret=newDynamicTable(newSize);
-        Bool valid;
-        for(dt_index i=0; i<size; i++) {
-            if (table[i].value!=makeTaggedNULL()) {
-                Assert(isFeature(table[i].ident));
-                ret->insert(table[i].ident, table[i].value, &valid);
-                Assert(valid);
-            }
-        }
+  if (newSize==(dt_index)(-1L))
+    newSize=size;
+
+  Assert(isPwrTwo(size));
+  Assert(numelem<=fullFunc(size));
+  Assert(numelem<=fullFunc(newSize));
+  Assert(size!=(dt_index)(-1L));
+
+  DynamicTable* ret;
+
+  if (size==newSize) {
+    // Optimize case where copy has same size as original:
+    size_t memSize = DTBlockSize(size);
+    ret = (DynamicTable *) freeListMalloc(memSize);
+    ret->numelem=numelem;
+    ret->size=size;
+    for (dt_index i=ret->size; i--; )
+      ret->table[i]=table[i];
+  } else {
+    ret=newDynamicTable(newSize);
+
+    Bool valid;
+
+    for(dt_index i=size; i--; ) {
+      if (table[i].value!=makeTaggedNULL()) {
+        Assert(isFeature(table[i].ident));
+
+        ret->insert(table[i].ident, table[i].value, &valid);
+        Assert(valid);
+      }
     }
-    return ret;
+  }
+  return ret;
 }
 
 // Hash and rehash until: (1) the element is found, (2) a fully empty slot is
@@ -296,15 +304,18 @@ DynamicTable *DynamicTable::remove(TaggedRef id) {
 // are not in the current dynamictable
 // This routine is currently not needed
 Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
-    Assert(isPwrTwo(size));
-    for (dt_index i=0; i<dt->size; i++) {
-        if (dt->table[i].value!=makeTaggedNULL()) {
-            Assert(isFeature(dt->table[i].ident));
-            Bool exists=lookup(dt->table[i].ident);
-            if (!exists) return TRUE;
-        }
+  Assert(isPwrTwo(size));
+
+  for (dt_index i=dt->size; i--; ) {
+
+    if (dt->table[i].value!=makeTaggedNULL()) {
+      Assert(isFeature(dt->table[i].ident));
+
+      Bool exists=lookup(dt->table[i].ident);
+      if (!exists) return TRUE;
     }
-    return FALSE;
+  }
+  return FALSE;
 }
 
 /* LATER OPT: move fullFunc out of inner loop */
@@ -312,30 +323,39 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
 // Return a pairlist containing all term pairs with the same feature
 // The external dynamictable is resized if necessary
 void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
-    Assert(isPwrTwo(size));
-    pairs=new PairList();
-    Assert(pairs->isempty());
-    Bool valid;
-    for (dt_index i=0; i<size; i++) {
-        if (table[i].value!=makeTaggedNULL()) {
-            Assert(isFeature(table[i].ident));
-            if (dt->fullTest()) resizeDynamicTable(dt);
-            TaggedRef val=dt->insert(table[i].ident, table[i].value, &valid);
-            if (!valid) {
-                resizeDynamicTable(dt);
-                val=dt->insert(table[i].ident, table[i].value, &valid);
-            }
-            Assert(valid);
-            if  (val!=makeTaggedNULL()) {
-                // Two terms have this feature; don't insert
-                // Add the terms to the list of pairs:
-                pairs->addpair(val, table[i].value);
-                Assert(!pairs->isempty());
-            } else {
-                // Element successfully inserted
-            }
-        }
+  Assert(isPwrTwo(size));
+  pairs=new PairList();
+  Assert(pairs->isempty());
+  Bool valid;
+
+  for (dt_index i=0; i<size; i++) {
+
+    if (table[i].value!=makeTaggedNULL()) {
+
+      Assert(isFeature(table[i].ident));
+
+      if (dt->fullTest())
+        resizeDynamicTable(dt);
+
+      TaggedRef val=dt->insert(table[i].ident, table[i].value, &valid);
+
+      if (!valid) {
+        resizeDynamicTable(dt);
+        val=dt->insert(table[i].ident, table[i].value, &valid);
+      }
+
+      Assert(valid);
+
+      if  (val!=makeTaggedNULL()) {
+        // Two terms have this feature; don't insert
+        // Add the terms to the list of pairs:
+        pairs->addpair(val, table[i].value);
+        Assert(!pairs->isempty());
+      } else {
+        // Element successfully inserted
+      }
     }
+  }
 }
 
 // Check an srecord against the current dynamictable
@@ -344,25 +364,30 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
 // If TRUE, collect pairs of corresponding elements of dynamictable and srecord.
 // If FALSE, pair list contains a well-terminated but meaningless list.
 // Neither the srecord nor the dynamictable is modified.
+
 Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
-    Assert(isPwrTwo(size));
-    pairs=new PairList();
-    Assert(pairs->isempty());
-    for (dt_index i=0; i<size; i++) {
-        if (table[i].value!=makeTaggedNULL()) {
-            Assert(isFeature(table[i].ident));
-            TaggedRef val=sr.getFeature(table[i].ident);
-            if (val!=makeTaggedNULL()) {
-                // Feature found in srecord; add corresponding terms to list of pairs:
-                pairs->addpair(val, table[i].value);
-                Assert (!pairs->isempty());
-            } else {
-                // Feature not found in srecord; failure of unification
-                return FALSE;
-            }
-        }
+  Assert(isPwrTwo(size));
+  pairs=new PairList();
+  Assert(pairs->isempty());
+
+  for (dt_index i=size; i--; ) {
+
+    if (table[i].value!=makeTaggedNULL()) {
+      Assert(isFeature(table[i].ident));
+
+      TaggedRef val=sr.getFeature(table[i].ident);
+
+      if (val!=makeTaggedNULL()) {
+        // Feature found in srecord; add corresponding terms to list of pairs:
+        pairs->addpair(val, table[i].value);
+        Assert (!pairs->isempty());
+      } else {
+        // Feature not found in srecord; failure of unification
+        return FALSE;
+      }
     }
-    return TRUE;
+  }
+  return TRUE;
 }
 
 TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
@@ -376,29 +401,31 @@ TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)
 
 // Return list of features in current table that are not in dt:
 TaggedRef DynamicTable::extraFeatures(DynamicTable* &dt) {
-    TaggedRef flist=AtomNil;
-    for (dt_index i=0; i<size; i++) {
-        TaggedRef feat=table[i].ident;
-        TaggedRef val=table[i].value;
-        if (val!=makeTaggedNULL() && !dt->lookup(feat)) {
-            flist=makeTaggedLTuple(new LTuple(feat,flist));
-        }
+
+  TaggedRef flist=AtomNil;
+
+  for (dt_index i=0; i<size; i++) {
+    TaggedRef feat=table[i].ident;
+    TaggedRef val=table[i].value;
+    if (val!=makeTaggedNULL() && !dt->lookup(feat)) {
+      flist=makeTaggedLTuple(new LTuple(feat,flist));
     }
-    return flist;
+  }
+  return flist;
 }
 
 // Return list of features in srecord that are not in current table:
 TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
-    TaggedRef flist=AtomNil;
-    TaggedRef arity=sr.getArityList();
-    while (isCons(arity)) {
-        TaggedRef feat=head(arity);
-        if (!lookup(feat)) {
-            flist=cons(feat,flist);
-        }
-        arity=tail(arity);
+  TaggedRef flist=AtomNil;
+  TaggedRef arity=sr.getArityList();
+  while (isCons(arity)) {
+    TaggedRef feat=head(arity);
+    if (!lookup(feat)) {
+      flist=cons(feat,flist);
     }
-    return flist;
+    arity=tail(arity);
+  }
+  return flist;
 }
 
 // Allocate & return sorted list containing all features:
