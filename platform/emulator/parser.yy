@@ -784,7 +784,7 @@ caseMain	: coord sequence then coord inSequence caseRest coord
 		    $$ = newCTerm("fBoolCase",$2,$5,$6,makeLongPos($1,$7));
 		  }
 		| coord sequence of elseOfList caseRest coord
-		  { $$ = newCTerm("fCase",$2,$4,$5,makeLongPos($1,$6)); }
+		  { $$ = newCTerm("fCaseNew",$2,$4,$5,makeLongPos($1,$6)); }
 		;
 
 caseRest	: elseif coord ifMain
@@ -799,9 +799,11 @@ caseRest	: elseif coord ifMain
 		  { $$ = newCTerm("fNoElse",pos()); }
 		;
 
-elseOfList	: caseClauseList
+elseOfList	: caseClause
 		  { $$ = consList($1,nilAtom); }
-		| caseClauseList elseof elseOfList
+		| caseClause CHOICE elseOfList
+		  { $$ = consList($1,$3); }
+		| caseClause elseof elseOfList
 		  { $$ = consList($1,$3); }
 		;
 
