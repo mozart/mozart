@@ -23,8 +23,7 @@ OZ_Return LinEqPropagator::propagate(void)
   OZ_DEBUGPRINT("in (after simplify)" << *this);
 
   if (sz == 0) return c ? FAILED : PROCEED;
-  if (sz == 2 && c == 0 && 
-      ((a[0] == 1 && a[1] == -1) || (a[0] == -1 && a[1] == 1)))
+  if (sz == 2 && c == 0 && (a[0] == -a[1]))
     return replaceBy(reg_x[0], reg_x[1]);
   
   DECL_DYN_ARRAY(OZ_FDIntVar, x, sz);
