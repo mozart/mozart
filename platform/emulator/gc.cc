@@ -1983,8 +1983,8 @@ void ConstTerm::gcConstRecurse()
 	((DeepObject*)o)->home = o->getBoard()->gcBoard();
       }
       o->setState(o->getState()->gcSRecord());
-      gcTagged(o->threads,o->threads);
-      o->lock = (OzLock*) o->lock->gcConstTerm();
+      int oldFlags = o->flagsAndLock&(~ObjFlagMask);
+      o->flagsAndLock = ToInt32(o->getLock()->gcConstTerm())|oldFlags;
       break;
     }
     
@@ -2070,7 +2070,9 @@ void ConstTerm::gcConstRecurse()
     {
       SChunk *c = (SChunk *) this;
 
-      gcTagged(c->value,c->value);
+      c->gcTertiary();
+      if (c->value)
+	gcTagged(c->value,c->value);
       c->setPtr(((Board *) c->getPtr())->gcBoard());
 
       break;
