@@ -239,7 +239,7 @@ Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
   Suspension * s = NULL;
 
   for (int i = curr_num_of_vars; i--; )
-    if (!bifdbm_is_local[i] &&  isTouched(i)) {
+    if (bifdbm_var_state[i] == fdbm_global &&  isTouched(i)) {
       if (s == NULL)
         (s = FDcurrentTaskSusp = new Suspension(am.currentBoard))->anyGlobalInit();
       addSuspAnyVar(bifdbm_varptr[i], new SuspList(s, NULL));
@@ -274,7 +274,7 @@ void BIfdBodyManager::backup(void)
   cache_to += backup_curr_num_of_vars1;
   index_offset += backup_curr_num_of_vars1;
   index_size += backup_curr_num_of_vars1;
-  bifdbm_is_local += backup_curr_num_of_vars1;
+  bifdbm_var_state += backup_curr_num_of_vars1;
 }
 
 
@@ -291,7 +291,7 @@ void BIfdBodyManager::restore(void)
   cache_to -= backup_curr_num_of_vars1;
   index_offset -= backup_curr_num_of_vars1;
   index_size -= backup_curr_num_of_vars1;
-  bifdbm_is_local -= backup_curr_num_of_vars1;
+  bifdbm_var_state -= backup_curr_num_of_vars1;
 
   curr_num_of_vars = backup_curr_num_of_vars1;
   vars_left = backup_vars_left1;
