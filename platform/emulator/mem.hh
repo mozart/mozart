@@ -94,7 +94,7 @@ extern char *heapTop;         // pointer to next free memory block
 extern char *heapEnd;
 extern unsigned int heapTotalSize;   // # kilo bytes allocated
 
-Bool getMemFromOS(size_t size);
+void getMemFromOS(size_t size);
 
 // return free used kilo bytes on the heap
 unsigned int getUsedMemory(void);
@@ -126,7 +126,7 @@ retry:
   }
 
   if (heapEnd > heapTop) {
-    (void) getMemFromOS(chunk_size);
+    getMemFromOS(chunk_size);
     goto retry;
   }
 #ifdef DEBUG_MEM
@@ -171,7 +171,7 @@ unsigned int getMemoryInFreeList();
 extern "C" void* memset(void*, int, size_t);
 #endif
 
-int initMemoryManagement(void);
+void initMemoryManagement(void);
 void deleteChunkChain(char *);
 int inChunkChain(void *, void *);
 void printChunkChain(void *);
