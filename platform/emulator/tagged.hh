@@ -205,6 +205,7 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 #define oz_isSmallInt(t) hasLtag(t,LTAG_SMALLINT)
 #define oz_isConst(t)    hasStag(t,STAG_CONST)
 #define oz_isMark(t)     hasStag(t,STAG_MARK)
+#define oz_isToken(t)    hasStag(t,STAG_TOKEN)
 
 
 
