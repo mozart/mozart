@@ -106,11 +106,11 @@ class HTEntry {
   /* look a number */
   int lookup(TaggedRef term, int elseLabel) 
   {
-    Assert(isNumber(term));
+    Assert(oz_isNumber(term));
     int ret = elseLabel;
     
     for (HTEntry *help = this; help != NULL; help = help->next) {
-      if (numberEq(help->u.number,term)) {
+      if (oz_numberEq(help->u.number,term)) {
 	ret = help->label;
 	break;
       }

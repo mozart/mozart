@@ -466,15 +466,15 @@ public:
 
 
 inline
-Bool isDictionary(TaggedRef term)
+Bool oz_isDictionary(TaggedRef term)
 {
-  return isConst(term) && tagged2Const(term)->getType() == Co_Dictionary;
+  return oz_isConst(term) && tagged2Const(term)->getType() == Co_Dictionary;
 }
 
 inline
 OzDictionary *tagged2Dictionary(TaggedRef term)
 {
-  Assert(isDictionary(term));
+  Assert(oz_isDictionary(term));
   return (OzDictionary *) tagged2Const(term);
 }
 

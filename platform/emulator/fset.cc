@@ -212,13 +212,13 @@ void setBits(OZ_Term t, int high, int * bv, int neg = 0)
     OZ_Term vt = OZ_head(t);
     DEREF(vt, vtptr, vttag);
 
-    if (isSmallInt(vttag)) {
+    if (isSmallIntTag(vttag)) {
       int v = OZ_intToC(OZ_head(t));
       if (0 <= v && v < 32 * high)
 	bv[div32(v)] |= (1 << mod32(v));
-    } else if (isSTuple(vt)) {
+    } else if (oz_isSTuple(vt)) {
       SRecord &t = *tagged2SRecord(vt);
-      OZ_Term t0 = deref(t[0]), t1 = deref(t[1]);
+      OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
       
       int l = OZ_intToC(t0);
       int r = OZ_intToC(t1);

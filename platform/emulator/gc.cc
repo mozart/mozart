@@ -475,7 +475,6 @@ void storeFwd(int32* fromPtr, void *newValue, Bool domark=OK) {
   storeFwdMode(isInGc, fromPtr, newValue, domark);
 }
 
-
 #define storeFwdField(d,t) \
   storeFwd((int32*) d->gcGetMarkField(), t, NO); d->gcMark(t);
 
@@ -564,8 +563,8 @@ Bool needsNoCollection(TaggedRef t)
   Assert(t != makeTaggedNULL());
 
   TypeOfTerm tag = tagTypeOf(t);
-  return isSmallInt(tag) ||
-	 isLiteral(tag) && !needsCollection(tagged2Literal(t));
+  return isSmallIntTag(tag) ||
+	 isLiteralTag(tag) && !needsCollection(tagged2Literal(t));
 }
 
 
@@ -862,6 +861,7 @@ Object *Object::gcObject() {
  *  If threads is dead, returns (Thread *) NULL;
  */
 
+// mm2: why do threads need another gcmarking scheme????
 inline
 Bool Thread::gcIsMarked() {
   return IsMarkedPointer(item.threadBody);
@@ -1178,13 +1178,8 @@ FSetValue * FSetValue::gc(void) {
 
 BigInt * BigInt::gc() {
   Assert(isInGc);
-
-  if (gcForwardPtr)
-    return gcForwardPtr;
-
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
-  gcForwardPtr = ret;
   return ret;
 }
 
@@ -1210,12 +1205,12 @@ void Script::gc() {
 	    auxTerm = ToInt32(GCUNMARK(auxTerm));
 	    continue;
 	  }
-	  if (isRef (auxTerm)) {
+	  if (oz_isRef (auxTerm)) {
 	    auxTermPtr = tagged2Ref (auxTerm);
 	    auxTerm = *auxTermPtr;
 	    continue;
 	  }
-	  if (isAnyVar (auxTerm))
+	  if (oz_isVariable (auxTerm))
 	    break;   // ok;
 	  error ("non-variable is found at left side in Script");
 	} while (1);
@@ -1427,7 +1422,7 @@ void gc_finalize()
   OZ_Term old_guardian_list = guardian_list;
   guardian_list = finalize_list = oz_nil();
   if (old_guardian_list==0) return;
-  while (!isNil(old_guardian_list)) {
+  while (!oz_isNil(old_guardian_list)) {
     OZ_Term pair = head(old_guardian_list);
     old_guardian_list = tail(old_guardian_list);
     OZ_Term obj = head(pair);
@@ -1442,17 +1437,17 @@ void gc_finalize()
   // since these lists have been freshly consed in the new half space
   // this simply means to go through both and gc the pairs
   // in the head of each cons
-  for (OZ_Term l=guardian_list;!isNil(l);l=tail(l)) {
+  for (OZ_Term l=guardian_list;!oz_isNil(l);l=tail(l)) {
     LTuple *t = tagged2LTuple(l);
     OZ_collectHeapTerm(*t->getRefHead(),*t->getRefHead());
   }
-  for (OZ_Term l1=finalize_list;!isNil(l1);l1=tail(l1)) {
+  for (OZ_Term l1=finalize_list;!oz_isNil(l1);l1=tail(l1)) {
     LTuple *t = tagged2LTuple(l1);
     OZ_collectHeapTerm(*t->getRefHead(),*t->getRefHead());
   }
   // if the finalize_list is not empty, we must create a new
   // thread (at top level) to effect the finalization phase
-  if (!isNil(finalize_list)) {
+  if (!oz_isNil(finalize_list)) {
     Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,oz_rootBoard());
     thr->pushCall(finalize_handler,finalize_list);
     am.scheduleThread(thr);
@@ -1496,11 +1491,11 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	// All the following jumps are resolved to jumps in the switch-table!
       case GCTAG:     goto DO_GCTAG;
       case SMALLINT:  goto DO_SMALLINT;
+      case UNUSED:    goto DO_UNUSED;
       case FSETVALUE: goto DO_FSETVALUE;
       case LITERAL:   goto DO_LITERAL;
       case LTUPLE:    goto DO_LTUPLE;
       case SRECORD:   goto DO_SRECORD;
-      case BIGINT:    goto DO_BIGINT;
       case OZFLOAT:   goto DO_OZFLOAT;
       case OZCONST:   goto DO_OZCONST;
 	// All variables are not direct!
@@ -1585,6 +1580,9 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     to = aux;
     return;
 
+  case UNUSED: DO_UNUSED:
+    return;
+
   case FSETVALUE: DO_FSETVALUE:
     if (isInGc) {
       to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc()); 
@@ -1611,14 +1609,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 
   case SRECORD: DO_SRECORD:
     to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord()); 
-    return;
-
-  case BIGINT: DO_BIGINT:
-    if (isInGc) {
-      to = makeTaggedBigInt(tagged2BigInt(aux)->gc()); 
-    } else {
-      to = aux;
-    }
     return;
 
   case OZFLOAT: DO_OZFLOAT:
@@ -1869,7 +1859,7 @@ void VarFix::fix(void) {
   do {
     TaggedRef * to = (TaggedRef *) pop();
 
-    Assert(isRef(*to));
+    Assert(oz_isRef(*to));
 
     TaggedRef * aux_ptr = tagged2Ref(*to);
     TaggedRef   aux     = *aux_ptr;
@@ -2149,7 +2139,7 @@ void ConstTerm::gcConstRecurse()
 	  Assert(getCell(state)->isLocal());
 	  TaggedRef newstate = ((CellLocal*) getCell(state))->getValue();
 	  message("GC: localizing object\n");
-	  o->setState(tagged2SRecord(deref(newstate))->gcSRecord());
+	  o->setState(tagged2SRecord(oz_deref(newstate))->gcSRecord());
 	} else {
 	  o->setState((Tertiary*) getCell(state)->gcConstTerm());
 	}
@@ -2367,6 +2357,14 @@ ConstTerm *ConstTerm::gcConstTerm() {
   ConstTerm * ret;
 
   switch (getType()) {
+  case Co_BigInt:
+    if (isInGc) {
+      ret = ((BigInt *) this)->gc();
+      storeFwdField(this, ret);
+      return ret;
+    } else {
+      return this;
+    }
   case Co_HeapChunk: 
     return ((HeapChunk *) this)->gc();
   case Co_Abstraction: 
@@ -2853,10 +2851,10 @@ void LTuple::gcRecurse() {
   // Restore original!
   frm->args[0] = to->args[0];
 
-  TaggedRef aux = deref(to->args[0]);
+  TaggedRef aux = oz_deref(to->args[0]);
 
   // Case : L=L|_
-  if (!isLTuple(aux) || tagged2LTuple(aux) != this) {
+  if (!oz_isLTuple(aux) || tagged2LTuple(aux) != this) {
     OZ_collectHeapTerm(frm->args[0], to->args[0]);
     
     storeFwd((int32 *)frm->args, to->args);
@@ -2865,9 +2863,9 @@ void LTuple::gcRecurse() {
   while (1) {
     // Store forward, order is important, since collection might already 
     // have done a storeFwd, which means that this one will be overwritten
-    TaggedRef t = deref(frm->args[1]);
+    TaggedRef t = oz_deref(frm->args[1]);
 
-    if (!isLTuple(t)) {
+    if (!oz_isCons(t)) {
       OZ_collectHeapTerm(frm->args[1], to->args[1]);
       return;
     }
@@ -2998,7 +2996,7 @@ OzDebug *OzDebug::gcOzDebug() {
 
 // special purpose to gc borrowtable entry which is a variable
 TaggedRef gcTagged1(TaggedRef in) {
-  TaggedRef x=deref(in);
+  TaggedRef x=oz_deref(in);
   Assert(GCISMARKED(x));
   return makeTaggedRef((TaggedRef*)GCUNMARK(x));
 }

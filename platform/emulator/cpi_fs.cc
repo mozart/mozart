@@ -53,12 +53,12 @@ void OZ_FSetVar::operator delete[](void * p, size_t s)
 
 void OZ_FSetVar::ask(OZ_Term v) 
 {
-  Assert(isRef(v) || !isAnyVar(v));
+  Assert(oz_isRef(v) || !oz_isVariable(v));
   
   _DEREF(v, varPtr, vtag);
   var = v;
 
-  if (isFSetValue(vtag)) {
+  if (isFSetValueTag(vtag)) {
     set = *tagged2FSetValue(v);
     setPtr = &set;
     setSort(val_e);
@@ -74,12 +74,12 @@ void OZ_FSetVar::ask(OZ_Term v)
 
 void OZ_FSetVar::read(OZ_Term v) 
 {
-  Assert(isRef(v) || !isAnyVar(v));
+  Assert(oz_isRef(v) || !oz_isVariable(v));
   
   _DEREF(v, varPtr, vtag);
   var = v;
 
-  if (isFSetValue(vtag)) {
+  if (isFSetValueTag(vtag)) {
     set = *tagged2FSetValue(v);
     setPtr = &set;
     setSort(val_e);
@@ -127,12 +127,12 @@ void OZ_FSetVar::read(OZ_Term v)
 
 void OZ_FSetVar::readEncap(OZ_Term v) 
 {
-  Assert(isRef(v) || !isAnyVar(v));
+  Assert(oz_isRef(v) || !oz_isVariable(v));
 
   _DEREF(v, varPtr, vtag);
   var = v;
 
-  if (isFSetValue(vtag)) {
+  if (isFSetValueTag(vtag)) {
     set = *tagged2FSetValue(v);
     setPtr = &set;
     setSort(val_e);
