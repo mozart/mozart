@@ -38,6 +38,7 @@
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"
+#include "os.hh"
 
 #ifdef OUTLINE
 #include "board.icc"
@@ -171,22 +172,24 @@ public:
  */
 
 Board::Board()
-  : localPropagatorQueue(0), suspCount(0), bag(0),
+  : suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0),
     status(taggedVoidValue), rootVar(taggedVoidValue)
 {
   parentAndFlags.set((void *) 0, (int) BoTag_Root);
+  lpq.init();
 }
 
 
 Board::Board(Board * p)
-  : localPropagatorQueue(0), suspCount(0), bag(0),
+  : suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0)
 {
   Assert(!p->isCommitted());
   status  = oz_newVar(p);
   rootVar = oz_newVar(this);
   parentAndFlags.set((void *) p, 0);
+  lpq.init();
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
   copy_start  = (int32 *) NULL;
@@ -196,25 +199,125 @@ Board::Board(Board * p)
 
 
 /*
+ * Propagator queue
+ *
+ */
+
+void Board::wakeServeLPQ(void) {
+  Assert(lpq.isEmpty());
+
+  if (board_served == this)
+    return;
+
+  Thread * thr = oz_newThreadInject(this);
+
+  // Push run lpq builtin
+  thr->pushCall(BI_PROP_LPQ, 0, 0);
+
+}
+
+inline
+void Board::killServeLPQ(void) {
+  board_served = NULL;
+  lpq.reset();
+}
+
+Board * Board::board_served = NULL;
+
+OZ_Return Board::scheduleLPQ(void) {
+  Assert(!board_served);
+
+  board_served = this;
+
+  unsigned int starttime = 0;
+
+  if (ozconf.timeDetailed)
+    starttime = osUserTime();
+
+  while (!lpq.isEmpty() && !am.isSetSFlag()) {
+    Propagator * prop = SuspToPropagator(lpq.dequeue());
+    Propagator::setRunningPropagator(prop);
+    Assert(!prop->isDead());
+
+    switch (oz_runPropagator(prop)) {
+    case SLEEP:
+      oz_sleepPropagator(prop);
+      break;
+    case PROCEED:
+      oz_closeDonePropagator(prop);
+      break;
+    case SCHEDULED:
+      oz_preemptedPropagator(prop);
+      break;
+    case FAILED:
+
+#ifdef NAME_PROPAGATORS
+      // this is experimental: a top-level failure with set
+      // property 'internal.propLocation',
+      if (am.isPropagatorLocation()) {
+        if (!am.hf_raise_failure()) {
+          if (ozconf.errorDebug)
+            am.setExceptionInfo(OZ_mkTupleC("apply",2,
+                                            OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
+                                            prop->getPropagator()->getParameters()));
+          oz_sleepPropagator(prop);
+          prop->setFailed();
+          killServeLPQ();
+          return RAISE;
+        }
+      }
+#endif
+
+      if (ozconf.timeDetailed)
+        ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+      // check for top-level and if not, prepare raising of an
+      // exception (`hf_raise_failure()')
+      if (am.hf_raise_failure()) {
+        oz_closeDonePropagator(prop);
+        killServeLPQ();
+        return FAILED;
+      }
+
+      if (ozconf.errorDebug)
+        am.setExceptionInfo(OZ_mkTupleC("apply",2,
+                                        OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
+                                        prop->getPropagator()->getParameters()));
+
+      oz_closeDonePropagator(prop);
+      killServeLPQ();
+      return RAISE;
+    }
+
+    Assert(prop->isDead() || !prop->isRunnable());
+
+  }
+
+  if (ozconf.timeDetailed)
+    ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+  if (lpq.isEmpty()) {
+    killServeLPQ();
+    return PROCEED;
+  } else {
+    board_served = NULL;
+    am.prepareCall(BI_PROP_LPQ, (RefsArray) NULL);
+    return BI_REPLACEBICALL;
+  }
+
+}
+
+/*
  * Non monotonic propagators
  *
  */
 
 inline
 void Board::scheduleNonMono(void) {
-
-  SuspQueue * sc = NULL;
-
   for (OrderedSuspList * p = getNonMono();
        p != NULL;
-       p = p->getNext()) {
-    Propagator * prop = p->getPropagator();
-
-    if (sc)
-      sc->enqueue(prop);
-    else
-      sc = oz_pushToLPQ(prop);
-  }
+       p = p->getNext())
+    addToLPQ(p->getPropagator());
 
   setNonMono(NULL);
 
@@ -520,10 +623,6 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
 
   // First the things that must done even for merging with root board
 
-  // Merge propagators
-  bb->setLocalPropagatorQueue(getLocalPropagatorQueue()->
-                              merge(bb->getLocalPropagatorQueue()));
-
   // Mark as merged
   setCommitted(bb);
 
@@ -533,6 +632,11 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   // Merge constraints
   OZ_Return ret = oz_installScript(this->getScriptRef());
   if (ret != PROCEED) return FAILED;
+
+  // Merge propagators (must be after script installation, since script
+  //                    installation might wake some propagators!!!!)
+  (bb->lpq).merge(lpq);
+  // This might cause to serving threads for the same board!
 
   Assert(oz_isCurrentBoard(bb));
 

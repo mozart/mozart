@@ -37,6 +37,7 @@
 #include "thr_class.hh"
 #include "distributor.hh"
 #include "suspendable.hh"
+#include "susp_queue.hh"
 #include "pointer-marks.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
@@ -280,16 +281,22 @@ public:
   //
 
 private:
-  SuspQueue * localPropagatorQueue;
+  SuspQueue lpq;
+
+  static Board * board_served;
+
+  void wakeServeLPQ(void);
+  void killServeLPQ(void);
 
 public:
-  SuspQueue * getLocalPropagatorQueue(void) {
-    return localPropagatorQueue;
+  void addToLPQ(Propagator * p) {
+    Assert(!isCommitted() && p->getBoardInternal()->derefBoard() == this);
+    if (lpq.isEmpty())
+      wakeServeLPQ();
+    lpq.enqueue(p);
   }
-  void setLocalPropagatorQueue(SuspQueue * lpq) {
-    localPropagatorQueue = lpq;
-  }
-  void resetLocalPropagatorQueue(void);
+  OZ_Return scheduleLPQ(void);
+
 
   //
   // nonmonotonic propagators

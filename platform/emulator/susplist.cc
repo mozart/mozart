@@ -37,8 +37,11 @@
 #define inline
 #endif
 
-//-----------------------------------------------------------------------------
-//                          class SuspList
+SuspList * SuspList::_gc_sentinel;
+
+void SuspList::init(void) {
+  _gc_sentinel = (SuspList *) malloc(sizeof(SuspList));
+}
 
 int SuspList::length(void) {
   int i=0;

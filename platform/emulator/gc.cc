@@ -823,11 +823,12 @@ DynamicTable * DynamicTable::gc(void) {
 
   for (dt_index i=size; i--; )
     if (ft[i].ident) {
-      OZ_collectHeapTerm(ft[i].ident, tt[i].ident);
-      if (ft[i].value)
-        OZ_collectHeapTerm(ft[i].value, tt[i].value);
-      else
+      if (ft[i].value) {
+        OZ_collectHeapBlock(&(ft[i].ident), &(tt[i].ident), 2);
+      } else {
+        OZ_collectHeapTerm(ft[i].ident, tt[i].ident);
         tt[i].value = makeTaggedNULL();
+      }
     } else {
       tt[i].ident = makeTaggedNULL();
       tt[i].value = makeTaggedNULL();
@@ -2332,31 +2333,34 @@ Suspendable * Suspendable::gcSuspendable(void) {
 
 /*
  * This routine MUST maintain the order, since it is also used
- * for ordered susplists
+ * for ordered susplists and suspendable queues
  *
  */
 
 inline
-SuspList * SuspList::gcRecurse(void) {
+SuspList * SuspList::gcRecurse(SuspList ** last) {
   SuspList * sl = this;
+  SuspList * pl = SuspList::_gc_sentinel;
 
-  SuspList * ret;
-  SuspList ** p = &ret;
-
-  for (SuspList * sl = this; sl; sl=sl->getNext()) {
+  while (sl) {
     Suspendable * to = sl->getSuspendable()->gcSuspendableInline();
 
     if (to) {
-      SuspList * n = new SuspList(to);
-      *p = n;
-      p  = &(n->_next);
+      SuspList * nl = new SuspList(to);
+      pl->setNext(nl);
+      pl = nl;
     }
 
-  }
+    sl = sl->getNext();
 
-  *p = NULL;
+  };
 
-  return ret;
+  pl->setNext(NULL);
+
+  if (last)
+    *last = pl;
+
+  return SuspList::_gc_sentinel->getNext();
 }
 
 inline
@@ -2383,21 +2387,28 @@ SuspList * SuspList::gcLocalRecurse(Board * bb) {
   return ret;
 }
 
-SuspQueue * SuspQueue::gc(void) {
-  Assert(isInGc);
+void SuspQueue::gc(void) {
+  if (isEmpty())
+    return;
 
-  SuspQueue * to = new SuspQueue(suggestNewSize());
+  SuspList * head = last->getNext();
 
-  while (!isEmpty())
-    to->enqueue(dequeue()->gcSuspendableInline());
+  if (!isInGc)
+    cpTrail.save((int32 *) last->getNextRef());
 
-  return to;
+  last->setNext(NULL);
+
+  head = head->gcRecurse(&last);
+
+  last->setNext(head);
+
 }
 
 void ThreadsPool::gc(void) {
-  _q[ HI_PRIORITY] = _q[ HI_PRIORITY]->gc();
-  _q[MID_PRIORITY] = _q[MID_PRIORITY]->gc();
-  _q[LOW_PRIORITY] = _q[LOW_PRIORITY]->gc();
+  Assert(isInGc);
+  _q[ HI_PRIORITY].gc();
+  _q[MID_PRIORITY].gc();
+  _q[LOW_PRIORITY].gc();
 }
 
 
@@ -2434,8 +2445,7 @@ void Board::gcRecurse() {
   if (!isRoot() && !getParentInternal()->hasMarkOne())
     parentAndFlags.set(getParentInternal()->gcBoard(),0);
 
-  if (localPropagatorQueue)
-    localPropagatorQueue = localPropagatorQueue->gc();
+  lpq.gc();
 
   script.Script::gc();
 
@@ -2530,40 +2540,40 @@ void GcStack::recurse(void) {
     void * ptr    = tagValueOf(tp);
     TypeOfPtr how = (TypeOfPtr) tagTypeOf(tp);
 
-    if (how & PTR_LOCAL_SUSPLIST) {
-      SuspList ** sl = (SuspList **) ptr;
-      Board    *  bb = (Board *) pop();
+    switch(how) {
+    case PTR_LTUPLE:
+      ((LTuple *) ptr)->gcRecurse();
+      break;
+    case PTR_SRECORD:
+      ((SRecord *) ptr)->gcRecurse();
+      break;
+    case PTR_BOARD:
+      ((Board *) ptr)->gcRecurse();
+      break;
+    case PTR_CVAR:
+      ((OzVariable *) ptr)->gcVarRecurse();
+      break;
+    case PTR_CONSTTERM:
+      ((ConstTerm *) ptr)->gcConstRecurse();
+      break;
+    case PTR_EXTENSION:
+      gcExtensionRecurse((OZ_Extension *)ptr);
+      break;
+    case PTR_SUSPLIST:
+      *((SuspList **) ptr) = (*(SuspList **) ptr)->gcRecurse(NULL);
+      break;
+    case PTR_UNUSED2:
+      Assert(0);
+    default:
+      {
+        Assert(how & PTR_LOCAL_SUSPLIST);
 
-      for (int i = how - PTR_LOCAL_SUSPLIST; i--; )
-        sl[i] = sl[i]->gcLocalRecurse(bb);
+        SuspList ** sl = (SuspList **) ptr;
+        Board    *  bb = (Board *) pop();
 
-    } else {
+        for (int i = how - PTR_LOCAL_SUSPLIST; i--; )
+          sl[i] = sl[i]->gcLocalRecurse(bb);
 
-      switch(how) {
-      case PTR_LTUPLE:
-        ((LTuple *) ptr)->gcRecurse();
-        break;
-      case PTR_SRECORD:
-        ((SRecord *) ptr)->gcRecurse();
-        break;
-      case PTR_BOARD:
-        ((Board *) ptr)->gcRecurse();
-        break;
-      case PTR_CVAR:
-        ((OzVariable *) ptr)->gcVarRecurse();
-        break;
-      case PTR_CONSTTERM:
-        ((ConstTerm *) ptr)->gcConstRecurse();
-        break;
-      case PTR_EXTENSION:
-        gcExtensionRecurse((OZ_Extension *)ptr);
-        break;
-      case PTR_SUSPLIST:
-        *((SuspList **) ptr) = (*(SuspList **) ptr)->gcRecurse();
-        break;
-      case PTR_UNUSED2:
-      case PTR_LOCAL_SUSPLIST:
-        Assert(0);
       }
     }
   }

@@ -158,7 +158,7 @@ public:
   Bool _wakeup(Board *, PropCaller);
   Bool wakeup(Board *, PropCaller);
 
-  Bool _wakeupLocal(PropCaller);
+  Bool _wakeupLocal(Board *, PropCaller);
 
   /*
    * Threads

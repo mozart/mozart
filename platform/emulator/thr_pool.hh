@@ -37,7 +37,7 @@
 
 class ThreadsPool {
 private:
-  SuspQueue * _q[HI_PRIORITY+1];
+  SuspQueue _q[HI_PRIORITY+1];
 
   int hi, mid;
 
@@ -51,7 +51,7 @@ public:
 
   void scheduleThread(Thread *th) {
     Assert(!isScheduledSlow(th));
-    _q[th->getPriority()]->enqueue(th);
+    _q[th->getPriority()].enqueue(th);
   }
 
   void rescheduleThread(Thread *th);
@@ -62,33 +62,33 @@ public:
   int getRunnableNumber();
 
   Bool isEmpty() {
-    return (_q[MID_PRIORITY]->isEmpty() &&
-            _q[ HI_PRIORITY]->isEmpty() &&
-            _q[LOW_PRIORITY]->isEmpty());
+    return (_q[MID_PRIORITY].isEmpty() &&
+            _q[ HI_PRIORITY].isEmpty() &&
+            _q[LOW_PRIORITY].isEmpty());
   }
 
   Thread * getNext() {
 
     do {
-      if (!_q[HI_PRIORITY]->isEmpty() && hi > 0) {
+      if (!_q[HI_PRIORITY].isEmpty() && hi > 0) {
         hi--;
-        return SuspToThread(_q[HI_PRIORITY]->dequeue());
+        return SuspToThread(_q[HI_PRIORITY].dequeue());
       }
 
       hi = ozconf.hiMidRatio;
 
-      if (!_q[MID_PRIORITY]->isEmpty() && mid > 0) {
+      if (!_q[MID_PRIORITY].isEmpty() && mid > 0) {
         mid--;
-        return SuspToThread(_q[MID_PRIORITY]->dequeue());
+        return SuspToThread(_q[MID_PRIORITY].dequeue());
       }
 
       mid = ozconf.midLowRatio;
 
-      if (!_q[LOW_PRIORITY]->isEmpty())
-        return SuspToThread(_q[LOW_PRIORITY]->dequeue());
+      if (!_q[LOW_PRIORITY].isEmpty())
+        return SuspToThread(_q[LOW_PRIORITY].dequeue());
 
-    } while (!_q[MID_PRIORITY]->isEmpty() ||
-             !_q[ HI_PRIORITY]->isEmpty());
+    } while (!_q[MID_PRIORITY].isEmpty() ||
+             !_q[ HI_PRIORITY].isEmpty());
 
     return (Thread *) NULL;
   }
