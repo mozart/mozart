@@ -1981,7 +1981,12 @@ void ConstTerm::gcConstRecurse()
       }
       o->setClass(o->getClass()->gcClass());
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
-      o->setState(o->getState()->gcSRecord());
+      RecOrCell state = o->getState();
+      if (stateIsCell(state)) {
+        o->setState((Tertiary*) getCell(state)->gcConstTerm());
+      } else {
+        o->setState(getRecord(state)->gcSRecord());
+      }
       int oldFlags = o->flagsAndLock&(~ObjFlagMask);
       o->flagsAndLock = ToInt32(o->getLock()->gcConstTerm())|oldFlags;
       break;

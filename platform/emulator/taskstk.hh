@@ -48,6 +48,7 @@ private:
     return ret;
   }
 
+public:
   void pushFrame(ProgramCounter pc,void *y, void *g)
   {
     TaskStackEntry *newTop = ensureFree(frameSz);
@@ -58,7 +59,7 @@ private:
     tos = newTop+frameSz;
   }
 
-public:
+
   USEFREELISTMEMORY;
 
   int suggestNewSize() {

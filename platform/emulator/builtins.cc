@@ -200,7 +200,7 @@ OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
 DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
 #define CheckLocalBoard(Object,Where);                                  \
-  if (am.currentBoard != Object->getBoard()) {                          \
+  if (!am.isToplevel() && am.currentBoard != Object->getBoard()) {      \
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));   \
   }
 
@@ -4532,22 +4532,22 @@ OZ_C_proc_begin(BInewCell,2)
 OZ_C_proc_end
 
 
-OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
+OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef oldVal, TaggedRef &newVal)
 {
   NONVAR(c,rec);
-  outState = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  newVal = makeTaggedRef(newTaggedUVar(am.currentBoard));
 
   if (!isCell(rec)) {oz_typeError(0,"Cell");}
 
   Tertiary *tert = tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
-    cellDoExchange(tert,inState,outState,oz_currentThread);
+    cellDoExchange(tert,oldVal,newVal,oz_currentThread);
     return PROCEED;}
 
   CellLocal *cell=(CellLocal*)tert;
   CheckLocalBoard(cell,"cell");
-  TaggedRef old = cell->exchangeValue(outState);
-  return oz_unify(old,inState);
+  TaggedRef old = cell->exchangeValue(newVal);
+  return oz_unify(old,oldVal);
 }
 
 /* we do not use here DECLAREBI_USEINLINEFUN2,
@@ -6328,52 +6328,97 @@ OZ_C_proc_begin(BIcopyRecord,2)
 }
 OZ_C_proc_end
 
-#define CheckSelf Assert(am.getSelf()!=NULL);
 
-
-OZ_Return atInline(TaggedRef fea, TaggedRef &out)
+inline
+SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)
 {
-  DEREF(fea, _1, feaTag);
+  if (!stateIsCell(state)) {
+    return getRecord(state);
+  }
 
-  SRecord *rec = am.getSelf()->getState();
-  if (rec) {
-    if (!isFeature(fea)) {
-      if (isAnyVar(fea)) {
-        return SUSPEND;
-      }
-      goto bomb;
+  TaggedRef old = cellGetContentsFast(getCell(state));
+  if (old)
+    return tagged2SRecord(deref(old));
+
+  old = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  cellDoExchange(getCell(state),old,old,NULL);
+  OZ_suspendOnInternal(old);
+
+  RefsArray x = allocateRefsArray(3,NO);
+  x[0] = old;
+  x[1] = fea;
+  if (!isAssign)
+    val = makeTaggedRef(newTaggedUVar(am.currentBoard));
+  x[2] = val;
+  oz_currentThread->pushCFunCont(isAssign?BIassignWithState:BIatWithState,x,3,NO);
+
+  return NULL;
+}
+
+SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)
+{
+  return getStateInline(state,isAssign,fea,val);
+}
+
+
+inline
+OZ_Return doAt(SRecord *rec, TaggedRef fea, TaggedRef &out)
+{
+  Assert(rec!=NULL);
+
+  DEREF(fea, _1, feaTag);
+  if (!isFeature(fea)) {
+    if (isAnyVar(fea)) {
+      return SUSPEND;
     }
-    CheckSelf;
+    goto bomb;
+  }
+  {
     TaggedRef t = rec->getFeature(fea);
     if (t) {
       out = t;
       return PROCEED;
     }
   }
-
 bomb:
   oz_typeError(0,"(valid) Feature");
 }
+
+OZ_Return atInline(TaggedRef fea, TaggedRef &out)
+{
+  RecOrCell state = am.getSelf()->getState();
+  SRecord *rec = getStateInline(state,NO,fea,out);
+  if (rec==NULL) {
+    return BI_REPLACEBICALL;
+  }
+  return doAt(rec,fea,out);
+}
 DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
-OZ_Return assignInline(TaggedRef fea, TaggedRef value)
+OZ_C_proc_begin(BIatWithState,3)
 {
+  oz_declareNonvarArg(0,state);
+  OZ_Term fea = OZ_getCArg(1);
+  OZ_Term out;
+
+  OZ_Return ret = doAt(tagged2SRecord(deref(state)),fea,out);
+  return (ret==PROCEED) ? oz_unify(OZ_getCArg(2),out) : ret;
+}
+OZ_C_proc_end
+
+
+inline
+OZ_Return doAssign(SRecord *r, TaggedRef fea, TaggedRef value)
+{
+  Assert(r!=NULL);
+
   DEREF(fea, _2, feaTag);
-
-  Object *self = am.getSelf();
-  SRecord *r = self->getState();
-
-  CheckSelf;
-  CheckLocalBoard(self,"object");
-
   if (!isFeature(fea)) {
     if (isAnyVar(fea)) {
       return SUSPEND;
     }
     oz_typeError(0,"Feature");
   }
-
-  if (!r) return oz_raise(E_ERROR,E_OBJECT,"<-",3,nil(),fea,value);
 
   if (r->replaceFeature(fea,value) == makeTaggedNULL()) {
     return oz_raise(E_ERROR,E_OBJECT,"<-",3,makeTaggedSRecord(r),fea,value);
@@ -6382,21 +6427,44 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
   return PROCEED;
 }
 
+OZ_Return assignInline(TaggedRef fea, TaggedRef value)
+{
+  Object *self = am.getSelf();
+  CheckLocalBoard(self,"object");
+
+  RecOrCell state = self->getState();
+  SRecord *rec = getStateInline(state,OK,fea,value);
+  if (rec==NULL)
+    return BI_REPLACEBICALL;
+  return doAssign(rec,fea,value);
+}
+
 DECLAREBI_USEINLINEREL2(BIassign,assignInline)
+
+OZ_C_proc_begin(BIassignWithState,3)
+{
+  oz_declareNonvarArg(0,state);
+  OZ_Term fea = OZ_getCArg(1);
+  OZ_Term val = OZ_getCArg(2);
+
+  return doAssign(tagged2SRecord(deref(state)),fea,val);
+}
+OZ_C_proc_end
 
 OZ_Return ooExchInline(TaggedRef fea, TaggedRef newAttr, TaggedRef &oldAttr)
 {
   DEREF(fea, _1, feaTag);
 
-  SRecord *rec = am.getSelf()->getState();
-  if (rec) {
+  RecOrCell state = am.getSelf()->getState();
+  if (!isCell(state)) {
+    SRecord *rec = getRecord(state);
+    Assert(rec!=NULL);
     if (!isFeature(feaTag)) {
       if (isAnyVar(feaTag)) {
         return SUSPEND;
       }
       goto bomb;
     }
-    CheckSelf;
     TaggedRef aux = rec->getFeature(fea);
     if (aux) {
       oldAttr = aux;
@@ -6541,14 +6609,27 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
   return makeTaggedSRecord(rec);
 }
 
+static TaggedRef dummyRecord;
+
 inline
 OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 {
   Assert(isRecord(initState) && isRecord(ffeatures));
 
+  /* state is _allways_ a record, this makes life somewhat easier */
+  if (!isSRecord(initState)) {
+    if (dummyRecord==makeTaggedNULL()) {
+      SRecord *rec = SRecord::newSRecord(OZ_atom("noattributes"),
+                                         aritytable.find(cons(OZ_newName(),nil())));
+      rec->setArg(0,OZ_atom("novalue"));
+      dummyRecord = makeTaggedSRecord(rec);
+    }
+    initState = dummyRecord;
+  }
+
   Object *out =
     newObject(isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
-              isSRecord(initState) ? tagged2SRecord(initState) : (SRecord*) NULL,
+              tagged2SRecord(initState),
               clas,
               NO,
               am.currentBoard);
@@ -7067,6 +7148,8 @@ extern void BIinitAssembler();
 extern void BIinitTclTk();
 extern void BIinitPerdio();
 
+TaggedRef dummyState;
+
 BuiltinTabEntry *BIinit()
 {
   BuiltinTabEntry *bi = BIadd("builtin",3,BIbuiltin);
@@ -7090,6 +7173,9 @@ BuiltinTabEntry *BIinit()
 #ifdef PERDIO
   BIinitPerdio();
 #endif
+
+  dummyRecord = makeTaggedNULL();
+  OZ_protect(&dummyRecord);
 
   return bi;
 }

@@ -541,8 +541,12 @@ PRINT(Object)
   else
     stream << "nofreefeatures";
   stream << ", State: ";
-  if (getState())
-    getState()->print(stream,depth+1,offset);
+  RecOrCell state = getState();
+  if (stateIsCell(state)) {
+    getCell(state)->print(stream,depth+1,offset);
+  } else if(getRecord(state)) {
+    getRecord(state)->print(stream,depth+1,offset);
+  }
   stream << ">";
 }
 
@@ -1226,8 +1230,11 @@ PRINTLONG(Object)
   }
   stream << endl;
   stream << "State: ";
-  if (getState())
-    getState()->printLong(stream,depth,offset);
+  if (stateIsCell(state)) {
+    getCell(state)->printLong(stream,depth+1,offset);
+  } else if(getRecord(state)) {
+    getRecord(state)->printLong(stream,depth+1,offset);
+  }
 }
 
 PRINTLONG(Abstraction)
