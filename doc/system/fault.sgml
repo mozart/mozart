@@ -113,35 +113,36 @@ argument is undefined.
 <P>The <<Fault>> module contains the following operations.
 All operations return a boolean flag <<B>> that is <<true>>
 iff the operation succeeds.
-All <<enable>> and <<install>
+All <<enable>> and <<install>>
 operations succeed if nothing was enabled or installed
 at that level.
-All <<disable>> and <<deInstall>
+All <<disable>> and <<deInstall>>
 operations succeed if nothing was disabled or deinstalled
 at that level.
-At system startup, it is as if <<{Fault.defaultEnable
-[tempFail permFail] _}>> was executed successfully.
+At system startup, it is as if
+<<{Fault.defaultEnable [tempFail permFail] _}>>
+was executed successfully.
 
 <list>
-<entry/<code/{Fault.defaultEnable FStates ?B}//
+<entry/<code/{Fault.defaultEnable FStates ??{B}}//
 <item>Enable default fault detection at the <<global>> level
 for all entities created after this call.
 
-<entry/<code/{Fault.defaultDisable ?B}//
+<entry/<code/{Fault.defaultDisable ??{B}}//
 <item>Disable default fault detection for all entities
 created after this call.
 
-<entry/<code/{Fault.enable Entity Level FStates ?B}//
+<entry/<code/{Fault.enable Entity Level FStates ??{B}}//
 <item>Enable fault detection on a given entity
 at a given level for a given set of fault states.
 An exception is raised if a fault is detected
 when an operation is attempted on the entity.
 
-<entry/<code/{Fault.disable Entity Level ?B}//
+<entry/<code/{Fault.disable Entity Level ??{B}}//
 <item>Disable fault detection on a given entity
 at a given level.
 
-<entry/<code/{Fault.install Entity Level FStates HandlerProc ?B}//
+<entry/<code/{Fault.install Entity Level FStates HandlerProc ??{B}}//
 <item>Install a handler for fault detection on a given entity
 at a given level for a given set of fault states.
 The handler <<{HandlerProc Entity AFStates OP}>> is called
@@ -149,7 +150,7 @@ if a fault is detected when an operation is attempted on the entity.
 A limitation of the current release is that handlers
 cannot be installed at the <<global>> level.
 
-<entry/<code/{Fault.deInstall Entity Level ?B}//
+<entry/<code/{Fault.deInstall Entity Level ??{B}}//
 <item>Deinstall a handler for fault detection on a given
 entity at a given level.
 
