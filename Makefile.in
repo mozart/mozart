@@ -324,6 +324,7 @@ std: $(PACKDIR)
 	-rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
 	mkdir $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
 	cd $(PACKDIR)/mozart-stdlib && \
+	  cp ozmake-$(shell $(OZVERSION)).ozf ozmake.ozf && \
 	  $(PREFIX)/bin/ozengine ./ozmake.ozf --create --package=mozart-stdlib.pkg && \
 	  cp README ozmake.ozf mozart-stdlib.pkg $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
 	(cd $(PACKDIR) && $(TARTAR) -cf - mozart-$(shell $(OZVERSION)).$(OZBUILD)-std) | \
@@ -339,7 +340,7 @@ CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
 
 installstd:
 	test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
-	(cd $(STDLIB) && \
+	(cd $(STDLIB) && cp ozmake-$(shell $(OZVERSION)).ozf ozmake.ozf && \
 	 if test -r mozart-stdlib.pkg; then \
 	   $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(CYG_PREFIX) --nosavedb --package=mozart-stdlib.pkg; \
 	 else \
