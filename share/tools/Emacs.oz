@@ -55,9 +55,8 @@ define
       proc {Trace M}
 	 case {GetOPI} of false then skip
 	 elseof OPI then
-	    case {OPI isTrace($)} then
+	    if {OPI isTrace($)} then
 	       {System.showInfo 'Emacs: ' # M}
-	    else skip
 	    end
 	 end
       end
@@ -66,11 +65,11 @@ define
       WindowsPlatform = 'win32'
 
       local
-	 FieldSeparator = case Platform == WindowsPlatform then &; else &: end
+	 FieldSeparator = if Platform == WindowsPlatform then &; else &: end
 
 	 fun {SystemPathList RawPath} H T in % RawPath must be of type string
 	    {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
-	    case T == nil then [H]
+	    if T == nil then [H]
 	    else H|{SystemPathList T.2}
 	    end
 	 end
@@ -106,7 +105,7 @@ define
 	    OrigF
 	 elseof Path|SearchListRest then Try = Path # '/' # F in
 	    try
-	       case {OS.stat Try}.type == reg then
+	       if {OS.stat Try}.type == reg then
 		  {Trace F # ' is ' # Try}
 		  Try
 	       else
@@ -128,7 +127,7 @@ define
 	       elseof _|&:|_ then Platform == WindowsPlatform
 	       else false end
       in
-	 case Abs then
+	 if Abs then
 	    %% the file doesn't need to exist, since it may be the name of
 	    %% an unsaved buffer or file in Emacs:
 	    F
@@ -234,7 +233,7 @@ define
 
 	 meth bar(file:F line:L column:C state:S)
 	    BarSync <- _ = unit
-	    case {UnknownFile F} orelse L == unit then
+	    if {UnknownFile F} orelse L == unit then
 	       CompilerInterfaceEmacs, removeBar()
 	    else
 	       CompilerInterfaceEmacs, MakeOzBar({LookupFile F} L C S)
@@ -244,7 +243,7 @@ define
 	    BarSync <- New = unit
 	    thread
 	       {WaitOr New {Alarm TimeoutToUpdateBar}}
-	       case {IsDet New} then skip else
+	       if {IsDet New} then skip else
 		  CompilerInterfaceEmacs, bar(file:F line:L column:C state:S)
 	       end
 	    end
@@ -253,7 +252,7 @@ define
 	    BarSync <- New = unit
 	    thread
 	       {WaitOr New {Alarm TimeoutToConfigBar}}
-	       case {IsDet New} orelse @lastFile == unit then skip else
+	       if {IsDet New} orelse @lastFile == unit then skip else
 		  CompilerInterfaceEmacs,
 		  MakeOzBar(@lastFile @lastLine @lastColumn State)
 	       end

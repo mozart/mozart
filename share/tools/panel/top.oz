@@ -56,25 +56,24 @@ local
 	 R   = {Property.get time}
 	 PR  = @PrevRuntime
       in
-	 case What==nosample then skip else
+	 if What\=nosample then
 	    DiffUsed  = R.user + R.system - PR.user - PR.system
 	    DiffTotal = R.total - PR.total
 	 in
 	    {OT.load    display([{IntToFloat T.runnable}])}
-	    {OR.curLoad display([case DiffTotal==0 then 0.0 else
+	    {OR.curLoad display([if DiffTotal==0 then 0.0 else
 				    {IntToFloat DiffUsed} /
 				    {IntToFloat DiffTotal}
 				 end])}
 	    PrevRuntime <- R
 	 end
-	 case What==sample then skip else
+	 if What\=sample then
 	    {OR.timebar     display(R)}
 	    {OT.created     set(T.created)}
 	    {OT.runnable    set(T.runnable)}
-	    case @InfoVisible then
+	    if @InfoVisible then
 	       {OP.high        set(P.high)}
 	       {OP.medium      set(P.medium)}
-	    else skip
 	    end
 	    {OR.run         set(R.run)}
 	    {OR.gc          set(R.gc)}
@@ -100,7 +99,7 @@ local
       meth toggleInfo
 	 O = self.options
       in
-	 {Tk.send case @InfoVisible then pack(forget O.priorities.frame)
+	 {Tk.send if @InfoVisible then pack(forget O.priorities.frame)
 		  else pack(O.priorities.frame
 			    after:O.threads.frame side:top fill:x padx:3)
 		  end}
@@ -122,16 +121,16 @@ local
 	 OU  = O.usage
 	 G   = {Property.get gc}
       in
-	 case What==nosample then skip else
+	 if What\=nosample then
 	    {OU.load       display([{IntToFloat G.threshold} / MegaByteF
 				    {IntToFloat G.size} / MegaByteF
 				    {IntToFloat G.active} / MegaByteF])}
 	 end
-	 case What==sample then skip else
+	 if What\=sample then
 	    {OU.active     set(G.active div KiloByteI)}
 	    {OU.size       set(G.size div KiloByteI)}
 	    {OU.threshold  set(G.threshold div KiloByteI)}
-	    case @InfoVisible then
+	    if @InfoVisible then
 	       OP  = O.parameter
 	    in
 	       {OP.minSize    set(G.min div MegaByteI)}
@@ -153,7 +152,7 @@ local
       meth toggleInfo
 	 O = self.options
       in
-	 {Tk.batch case @InfoVisible then
+	 {Tk.batch if @InfoVisible then
 		      [pack(forget O.parameter.frame O.gc.frame)
 		       pack(O.showParameter.frame
 			    after:O.usage.frame side:top fill:x padx:3)]
@@ -425,7 +424,7 @@ in
 			      action:  proc {$ N}
 					  S = Memory.options.parameter.maxSize
 				       in
-					  case {S get($)}<N then
+					  if {S get($)}<N then
 					     {S set(N)}
 					     {Property.put gc
 					      gc(min:N * MegaByteI
@@ -450,14 +449,14 @@ in
 			      max:     1024
 			      dim:     'MB'
 			      init:    local MS={Property.get gc}.max in
-					  case MS=<0 then 1024
+					  if MS=<0 then 1024
 					  else MS div MegaByteI
 					  end
 				       end
 			      action:  proc {$ N}
 					  S = Memory.options.parameter.minSize
 				       in
-					  case {S get($)}>N then
+					  if {S get($)}>N then
 					     {S set(N)}
 					     {Property.put gc
 					      gc(min:N * MegaByteI
@@ -690,7 +689,7 @@ in
 	    Threads = self.threads
 	    Memory  = self.memory
 	 in
-	    case Regular then
+	    if Regular then
 	       case TopNote
 	       of !Threads then
 		  {Threads update(both)}
@@ -710,8 +709,8 @@ in
 
       meth shutdown
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
-	 case DialogClass, shutdown($) then {System.exit 0}
-	 else skip
+	 if DialogClass, shutdown($) then
+	    {System.exit 0}
 	 end
 	 {self.menu.panel.shutdown tk(entryconf state:normal)}
       end
@@ -764,7 +763,7 @@ in
 	 lock
 	    InfoVisible <- {Not @InfoVisible}
 	    {Dictionary.put self.options config @InfoVisible}
-	    case @InfoVisible then {self.notebook add(self.opi)}
+	    if @InfoVisible then {self.notebook add(self.opi)}
 	    else {self.notebook remove(self.opi)}
 	    end
 	    {self.threads toggleInfo}
@@ -779,8 +778,8 @@ in
 	    DS = @DelayStamp
 	    UT = @UpdateTime
 	 end
-	 case DS==ODS then {self update(true)} {Delay UT} {self delay(ODS)}
-	 else skip
+	 if DS==ODS then
+	    {self update(true)} {Delay UT} {self delay(ODS)}
 	 end
       end
 
@@ -795,7 +794,7 @@ in
 	 case
 	    lock
 	       MouseInside <- true
-	       case @RequireMouse then
+	       if @RequireMouse then
 		  PanelTop,stop
 		  @DelayStamp
 	       else ~1
@@ -809,8 +808,8 @@ in
       meth leave
 	 lock
 	    MouseInside <- false
-	    case @RequireMouse then PanelTop,stop
-	    else skip
+	    if @RequireMouse then
+	       PanelTop,stop
 	    end
 	 end
       end
@@ -833,24 +832,24 @@ in
 	       M = {Dictionary.get O mouse}
 	       T = {Dictionary.get O time}
 	    in
-	       case {Dictionary.get O config}==@InfoVisible then skip else
+	       if {Dictionary.get O config}\=@InfoVisible then
 		  PanelTop, toggleInfo
 	       end
-	       case H==@HistoryRange then skip else
+	       if H\=@HistoryRange then
 		  HistoryRange <- H
 		  PanelTop,setSlice
 	       end
-	       {Max case @RequireMouse==M then ~1
+	       {Max if @RequireMouse==M then ~1
 		    else
 		       RequireMouse <- M
-		       case M then
-			  case @MouseInside then @DelayStamp
+		       if M then
+			  if @MouseInside then @DelayStamp
 			  else PanelTop,stop ~1
 			  end
 		       else PanelTop,stop @DelayStamp
 		       end
 		    end
-		    case @UpdateTime==T then ~1
+		    if @UpdateTime==T then ~1
 		    else
 		       UpdateTime <- T
 		       PanelTop,stop
