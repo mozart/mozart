@@ -3377,20 +3377,91 @@ int FSetConstraint::getUnknownNextLargerElem(int i) const {
 }
 
 inline
-void FSetConstraint::operator <= (const int)
+OZ_Boolean FSetConstraint::operator <= (const int i)
 {
+  _card_max = min(i, _card_max);
+  return normalize();
 }
+
 inline
-void FSetConstraint::operator >= (const int)
+OZ_Boolean FSetConstraint::operator >= (const int i)
 {
+  _card_min = max(i, _card_min);
+  return normalize();
 }
+
 inline
-void FSetConstraint::operator |= (const FSetValue &)
+OZ_Boolean FSetConstraint::operator |= (const FSetValue &y)
 {
+  DEBUG_FSET_IR(("{FSIR.'operator |=' %s %s ",
+		 this->toString(), y.toString()));
+
+  FSDEBUG(printf("fsc::|= "); DP(); y.DP("y"));
+
+#ifdef BIGFSET
+  if (_normal) {
+    if (y._normal) {
+      _otherin |= y._other;
+      for (int i = fset_high; i--; ) {
+	_in[i] |= y._in[i];
+      }
+    } else {
+      toExtended();
+      _IN = _IN | y._IN;
+    }
+  } else {
+    if (y._normal) {
+      set_Auxin(y._in, y._other);
+      _IN = _IN | _Auxin;
+    } else {
+      _IN = _IN | y._IN;
+    }
+  }
+#else
+  for (int i = fset_high; i--; ) {
+    _in[i]     |= y._in[i];
+  }
+#endif
+
+  FSDEBUG(DP());
+  return normalize();
 }
+
 inline
-void FSetConstraint::operator &= (const FSetValue &)
+OZ_Boolean FSetConstraint::operator &= (const FSetValue & y)
 {
+  DEBUG_FSET_IR(("{FSIR.'operator &=' %s %s ",
+		 this->toString(), y.toString()));
+
+  FSDEBUG(printf("fsc::&= "); DP(); y.DP("y"));
+
+#ifdef BIGFSET
+  if (_normal) {
+    if (y._normal) {
+      _otherout |= y._other;
+      for (int i = fset_high; i--; ) {
+	_not_in[i] |= y._in[i];
+      }
+    } else {
+      toExtended();
+      _OUT = _OUT | y._IN;
+    }
+  } else {
+    if (y._normal) {
+      set_Auxout(y._in, y._other);
+      _OUT = _OUT | _Auxout;
+    } else {
+      _OUT = _OUT | y._IN;
+    }
+  }
+#else
+  for (int i = fset_high; i--; ) {
+    _not_in[i] |= y._in[i];
+  }
+#endif
+
+  FSDEBUG(DP());
+  return normalize();
 }
 
 
@@ -3910,24 +3981,24 @@ makeFSetValue(OZ_Term desc,OZ_Term*fs)
 #undef CASTREF
 #define CASTREF * (const FSetValue *) &
 
-void OZ_FSetConstraint::operator <= (const int i)
+OZ_Boolean OZ_FSetConstraint::operator <= (const int i)
 {
-  CASTTHIS->operator <= (i);
+  return CASTTHIS->operator <= (i);
 }
 
-void OZ_FSetConstraint::operator >= (const int i)
+OZ_Boolean OZ_FSetConstraint::operator >= (const int i)
 {
   return CASTTHIS->operator >= (i);
 }
 
-void OZ_FSetConstraint::operator |= (const OZ_FSetValue &y)
+OZ_Boolean OZ_FSetConstraint::operator |= (const OZ_FSetValue &y)
 {
-  CASTTHIS->operator |= (CASTREF y);
+  return CASTTHIS->operator |= (CASTREF y);
 }
 
-void OZ_FSetConstraint::operator &= (const OZ_FSetValue &y)
+OZ_Boolean OZ_FSetConstraint::operator &= (const OZ_FSetValue &y)
 {
-   CASTTHIS->operator &= (CASTREF y);
+   return CASTTHIS->operator &= (CASTREF y);
 }
 
 
