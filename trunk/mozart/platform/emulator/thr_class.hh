@@ -135,8 +135,8 @@ union ThreadBodyItem {
 // <board|index> | <Tertiary Tag> from class Tertiary
 // <prio> | <flags>
 // <id>
-// <name>
 // <stack>
+// <stopCount>
 
 class Thread : public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
