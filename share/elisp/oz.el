@@ -85,7 +85,7 @@ starts the emulator under gdb")
   "How compiler and engine signal status changes")
 
 (defvar oz-want-font-lock t
-  "*If t means taht font-lock mode is switched on")
+  "*If t means that font-lock mode is switched on")
 
 (defvar oz-temp-counter 0
   "gensym counter")
@@ -158,6 +158,8 @@ starts the emulator under gdb")
 ;; Fonts
 ;;------------------------------------------------------------
 
+
+
 (defvar oz-small-font      "-adobe-courier-medium-r-normal--*-100-*-*-m-*-iso8859-1")
 (defvar oz-std-font        "-adobe-courier-medium-r-normal--*-120-*-*-m-*-iso8859-1")
 (defvar oz-large-font      "-adobe-courier-medium-r-normal--*-140-*-*-m-*-iso8859-1")
@@ -181,6 +183,15 @@ starts the emulator under gdb")
 
 (defun oz-set-font(font)
   (set-default-font font))
+
+(defun oz-set-fontlock-keywords()
+  (setq font-lock-keywords (list oz-keywords)))
+
+; workaround for a bug in older font-lock modes  
+(setq font-lock-mode-hook (cons 'oz-set-fontlock-keywords
+				font-lock-mode-hook))
+
+      
 
 ; (oz-std-font)
 
@@ -909,7 +920,7 @@ if that value is non-nil."
    (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
   ; font lock stuff
-  (setq font-lock-keywords (list oz-keywords))
+  (oz-set-fontlock-keywords)
   (if oz-want-font-lock
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
