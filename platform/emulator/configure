@@ -31,7 +31,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-ozma      add assembler (default=no)"
 ac_help="$ac_help
---enable-opt       optimize [y|n|d[ebug]|p[rofile]] (default=yes)"
+--enable-opt       optimize [y|n|d[ebug]|p[rofile]|rsp[rofile]] (default=yes)"
 ac_help="$ac_help
   --enable-threaded  threaded code emulator (default=yes)"
 ac_help="$ac_help
@@ -2450,6 +2450,14 @@ EOF
 
 	CFLAGS="$CFLAGS $G_OPT"
     ;;
+    rsp*)
+        echo "$ac_t""-DRS_PROFILE" 1>&6
+	cat >> confdefs.h <<\EOF
+#define RS_PROFILE 1
+EOF
+
+	CFLAGS="$CFLAGS -O"
+    ;;
     *)
 	CFLAGS="$CFLAGS $O_OPT"
 	case $enable_opt in
@@ -2475,7 +2483,7 @@ EOF
 		;;
 	esac
 	echo $ac_n "checking for   --enable-threaded""... $ac_c" 1>&6
-echo "configure:2479: checking for   --enable-threaded" >&5
+echo "configure:2487: checking for   --enable-threaded" >&5
 	# Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -2493,7 +2501,7 @@ EOF
 	fi
 	
 	echo $ac_n "checking for   --enable-fastreg""... $ac_c" 1>&6
-echo "configure:2497: checking for   --enable-fastreg" >&5
+echo "configure:2505: checking for   --enable-fastreg" >&5
 	# Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -2510,7 +2518,7 @@ EOF
 		echo "$ac_t""no" 1>&6
 	fi
 	echo $ac_n "checking for   --enable-regopt""... $ac_c" 1>&6
-echo "configure:2514: checking for   --enable-regopt" >&5
+echo "configure:2522: checking for   --enable-regopt" >&5
 	# Check whether --enable-regopt or --disable-regopt was given.
 if test "${enable_regopt+set}" = set; then
   enableval="$enable_regopt"
@@ -2531,7 +2539,7 @@ EOF
 esac
 
 echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:2535: checking for --enable-linkprop" >&5
+echo "configure:2543: checking for --enable-linkprop" >&5
 # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -2558,7 +2566,7 @@ fi
 
 
 echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:2562: checking for --enable-peanuts" >&5
+echo "configure:2570: checking for --enable-peanuts" >&5
 # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
@@ -2577,7 +2585,7 @@ fi
 
 
 echo $ac_n "checking for --with-malloc""... $ac_c" 1>&6
-echo "configure:2581: checking for --with-malloc" >&5
+echo "configure:2589: checking for --with-malloc" >&5
 # Check whether --with-malloc or --without-malloc was given.
 if test "${with_malloc+set}" = set; then
   withval="$with_malloc"
@@ -2599,7 +2607,7 @@ fi
 
 
 echo $ac_n "checking for --enable-tmphack""... $ac_c" 1>&6
-echo "configure:2603: checking for --enable-tmphack" >&5
+echo "configure:2611: checking for --enable-tmphack" >&5
 # Check whether --enable-tmphack or --disable-tmphack was given.
 if test "${enable_tmphack+set}" = set; then
   enableval="$enable_tmphack"
@@ -2628,7 +2636,7 @@ fi
 
 
 echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:2632: checking for --enable-finalization" >&5
+echo "configure:2640: checking for --enable-finalization" >&5
 # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"
@@ -2647,7 +2655,7 @@ fi
 
 
 echo $ac_n "checking for --enable-foreign-pointer""... $ac_c" 1>&6
-echo "configure:2651: checking for --enable-foreign-pointer" >&5
+echo "configure:2659: checking for --enable-foreign-pointer" >&5
 # Check whether --enable-foreign-pointer or --disable-foreign-pointer was given.
 if test "${enable_foreign_pointer+set}" = set; then
   enableval="$enable_foreign_pointer"
