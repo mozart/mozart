@@ -233,6 +233,8 @@ OZ_BI_proto(BIHeapChunk_peek);
 OZ_BI_proto(BIHeapChunk_poke);
 
 OZ_BI_proto(BIwaitOrF);
+OZ_BI_proto(BInewPortF);
+OZ_BI_proto(BIsendPortF);
 
 static
 OZ_C_proc_interface oz_interface[] = {
@@ -254,6 +256,8 @@ OZ_C_proc_interface oz_interface[] = {
   {"HeapChunk.poke",3,0,BIHeapChunk_poke},
 
   {"WaitOrF",1,1,BIwaitOrF},
+  {"NewPortF",0,2,BInewPortF},
+  {"SendPortF",2,0,BIsendPortF},
   {0,0,0,0}
 };
 
