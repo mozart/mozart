@@ -29,8 +29,12 @@ static int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code);
 #define xxDEBUG
 
 #ifdef DEBUG
-FILE *dbgout = NULL, *dbgin = NULL;
+#define DebugCode(Code) Code
+#else
+#define DebugCode(Code)
 #endif
+
+DebugCode(FILE *dbgout = NULL; FILE *dbgin = NULL;)
 
 FILE *outstream;
 
@@ -92,9 +96,7 @@ PutsCmd(clientData, inter, argc, argv)
     }
     fflush(f);
 
-#ifdef DEBUG
-    fprintf(dbgout,"********puts(%d):\n%s\n",inter,argv[i]); fflush(dbgout);
-#endif
+    DebugCode(fprintf(dbgout,"********puts(%d):\n%s\n",inter,argv[i]); fflush(dbgout));
 
     if (ferror(f)) {
       WishPanic("Connection to engine lost");
@@ -170,12 +172,11 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     char buf[300];
     size_t length;
 
-#ifdef DEBUG
-      dbgin  = fopen("c:\\tmp\\wishdbgin","w");
-      dbgout = fopen("c:\\tmp\\wishdbgout","w");
-      if (dbgin == NULL || dbgout == NULL)
-        WishPanic("cannot open dbgin/dbgout");
-#endif
+    DebugCode(
+              dbgin  = fopen("c:\\tmp\\wishdbgin","w");
+              dbgout = fopen("c:\\tmp\\wishdbgout","w");
+              if (dbgin == NULL || dbgout == NULL)
+              WishPanic("cannot open dbgin/dbgout"));
 
     Tcl_SetPanicProc(WishPanic);
 
@@ -196,16 +197,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     ozhome = getenv("OZHOME");
     if (ozhome == NULL) {
       WishPanic("OZHOME not set\n");
-    }
-
-    if (getenv("TCL_LIBRARY") == NULL) {
-      sprintf(buf,"%s\\ozwish\\lib\\tcl\\",ozhome);
-      Tcl_SetVar(interp, "tcl_library", buf, TCL_GLOBAL_ONLY);
-    }
-
-    if (getenv("TK_LIBRARY") == NULL) {
-      sprintf(buf,"%s/ozwish/lib/tk",ozhome);
-      Tcl_SetVar2(interp, "env", "TK_LIBRARY", buf, TCL_GLOBAL_ONLY);
     }
 
     /*
@@ -324,7 +315,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     outstream = fdopen(fileno(stdout),"wb");
 
     /* mm: do not show the main window */
-    code = Tcl_Eval(interp, "wm withdraw . ");
+    code = Tcl_GlobalEval(interp, "wm withdraw . ");
     if (code != TCL_OK) {
       fprintf(outstream, "w %s\n.\n", interp->result);
       fflush(outstream); /* added mm */
@@ -419,23 +410,16 @@ void cdecl idleProc(ClientData cd)
   ReaderInfo *ri = (ReaderInfo*) cd;
   int code;
 
-#ifdef DEBUG
-  fprintf(dbgin,"************* idleProc called:\n%s\n", ri->cmd);
-  fflush(dbgin);
-#endif
+  /*  DebugCode(fprintf(dbgin,"\n#### idleProc(%p) called:\n%s\n", interp,ri->cmd);fflush(dbgin));*/
 
-  code = Tcl_Eval(interp, ri->cmd);
+  code = Tcl_GlobalEval(interp, ri->cmd);
 
-  if (*interp->result != 0) {
-    if (code != TCL_OK) {
-#ifdef DEBUG
-      fprintf(dbgin,"Error:  %s\n", interp->result);
-      fflush(dbgin);
-#endif
-      fprintf(outstream,"w --- %s", ri->cmd);
-      fprintf(outstream,"---  %s\n---\n.\n", interp->result);
-      fflush(outstream); /* by mm */
-    }
+  if (code != TCL_OK) {
+    DebugCode(fprintf(dbgin,"### Error(%d):  %s\n", code,interp->result);
+              fflush(dbgin));
+    fprintf(outstream,"w --- %s", ri->cmd);
+    fprintf(outstream,"---  %s\n---\n.\n", interp->result);
+    fflush(outstream); /* by mm */
   }
 
   /* force readerThread to read next input */
@@ -455,15 +439,13 @@ static unsigned __stdcall readerThread(void *arg)
   ReaderInfo *ri = (ReaderInfo *)arg;
   int count,i;
 
-  int bufSize  = 100000; // is selected smaller get strange errors, don't know why (RS)
+  int bufSize  = 10000;
   char *buffer = (char*) malloc(bufSize+1);
   int used = 0;
 
   while(1) {
 
-#ifdef DEBUG
-    fprintf(dbgout,"\n***before read:\n"); fflush(dbgout);
-#endif
+    /* DebugCode(fprintf(dbgin,"\n### before read:\n"); fflush(dbgin));*/
 
     if (used>=bufSize) {
       bufSize *= 2;
@@ -476,12 +458,7 @@ static unsigned __stdcall readerThread(void *arg)
       WishPanic("Connection to engine lost");
     }
 
-#ifdef DEBUG
-    fprintf(dbgout,"count=%d\n",count); fflush(dbgout);
-    for (i=0; i<count; i++) {
-      fputc(buffer[used+i],dbgout); fflush(dbgout);
-    }
-#endif
+    DebugCode(fprintf(dbgin,"\n### read done: %d\n",count); fflush(dbgin));
 
     used += count;
     buffer[used] = 0;
@@ -489,6 +466,16 @@ static unsigned __stdcall readerThread(void *arg)
         !Tcl_CommandComplete(buffer) ||
         used >=2 && buffer[used-2] == '\\')
       continue;
+
+#ifdef DEBUG
+    for (i=0; i<used; i++) {
+      if (buffer[i]==0) {
+        WishPanic("NULL BYTE: %s",buffer+used);
+      }
+    }
+    fprintf(dbgin,buffer);
+    fflush(dbgin);
+#endif
 
     ri->cmd = buffer;
     used = 0;
