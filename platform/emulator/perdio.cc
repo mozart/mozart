@@ -2418,8 +2418,17 @@ void Tertiary::localize()
     LockManager *lm=(LockManager*)this;
     lm->localize();
     return;}
-
+  case Co_Thread:
+  case Co_Space:
+  case Co_Object:{
+    Assert(getTertType()==Te_Manager);
+    PD((GLOBALIZING,"localizing object/space/thread manager"));
+    setTertType(Te_Local);
+    setBoard(am.rootBoard);
+    return;}
   default:
+    Assert(0);
+    printf("cannot localize %d\n",getType());
     error("cannot localize\n");
   }
 }
