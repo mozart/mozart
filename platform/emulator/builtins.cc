@@ -7007,6 +7007,7 @@ BIspec allSpec2[] = {
   {"IsRecord",        2, BIisRecordB,    (IFOR) isRecordBInline},
   {"IsTuple",         2, BIisTupleB,     (IFOR) isTupleBInline},
   {"IsLiteral",       2, BIisLiteralB,   (IFOR) isLiteralBInline},
+  {"IsLock",          2, BIisLockB,      (IFOR) isLockBInline},
   {"IsCell",          2, BIisCellB,      (IFOR) isCellBInline},
   {"IsPort",          2, BIisPortB,      (IFOR) isPortBInline},
   {"IsProcedure",     2, BIisProcedureB, (IFOR) isProcedureBInline},
