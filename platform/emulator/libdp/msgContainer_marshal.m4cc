@@ -20,12 +20,11 @@ void MsgContainer::marshal(ByteBuffer *bb,
 	setFlag(MSG_HAS_MARSHALCONT);
     }
     else {
-      if(bb->availableSpace() >= MDSiteMaxSize) {
+      if(bb->availableSpace() >= 1+MDSiteMaxSize) {
 	PD((CREDIT,"Message carries secondary creds %s",
 	    creditSite->stringrep()));
 	bb->put(DIF_SECONDARY);
 	marshalDSite(bb, creditSite);
-	creditSite=NULL;
       }
       else
 	setFlag(MSG_HAS_MARSHALCONT);
