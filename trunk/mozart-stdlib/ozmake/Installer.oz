@@ -111,7 +111,7 @@ define
 	 IPairs   = Installer,targets_to_installation_pairs(ITargets $)
 	 DPairs   = {NewDictionary}
 	 proc {Enter IPair}
-	    Key = IPair.1	% src file
+	    Key = IPair.2	% dst file
 	    Old = {CondSelect DPairs Key unit}
 	 in
 	    if Old==unit then
@@ -119,7 +119,7 @@ define
 	    elseif Old==IPair then
 	       skip
 	    else
-	       raise ozmake(install:clash(Old.1 Key IPair.2)) end
+	       raise ozmake(install:clash(Old.1 IPair.1 Key)) end
 	    end
 	 end
       in
