@@ -65,6 +65,9 @@ public:
   int hiMidRatio;
   int midLowRatio;
 
+  int bwlIterationsPerMS;
+  int bwlMSs;
+
   int debugIP;
   int debugPerdio;
   
@@ -111,7 +114,6 @@ public:
   int dp_wrc_alpha;
   int dp_tl_leaseTime;
   int dp_tl_updateTime;
-  
   
   int closetime;
 

@@ -555,6 +555,8 @@ void AM::suspendEngine(void)
 #endif
       // now perform blocking select
       osBlockSelect(sleepTime);
+      // osBusyWaitSelect(sleepTime);
+
       // it returned normally
       // we block all signals again, but it is ok if we don't make
       // it through because a signal handler is invoked and does

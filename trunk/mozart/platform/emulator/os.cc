@@ -1232,6 +1232,86 @@ void osBlockSelect(unsigned int &ms)
   blockWatchedFDs = OK;
 }
 
+/*
+void osBusyWaitSelect(unsigned int &ms)
+{
+  int delay;
+  unsigned int currentSystemTime;
+
+  //
+  currentSystemTime = osTotalTime();
+
+  // calibrated?
+  if (ozconf.bwlIterationsPerMS == 0) {
+    unsigned int t, ref = osTotalTime();
+    int ldelay;
+
+    // skip to next tick;
+    ldelay = 0;
+    do {
+      ldelay++;
+      t = osTotalTime();
+    } while (t == ref);
+    ref = t;
+
+    // measure #iterations for 'osTotalTime()';
+    ldelay = 0;
+    do {
+      ldelay++;
+      t = osTotalTime();
+    } while (t == ref);
+    ref = t;
+
+    //
+    delay = 0;
+    do {
+      delay++;
+      watchedFDs[SEL_READ]  = registeredFDs[SEL_READ];
+      watchedFDs[SEL_WRITE] = registeredFDs[SEL_WRITE];
+      (void) osSelect(&watchedFDs[SEL_READ], &watchedFDs[SEL_WRITE],
+		      (unsigned int *) WAIT_NULL);
+      t = osTotalTime();
+    } while (t == ref);
+
+    // Now we know how many iterations are needed for both
+    // 'osTotalTime()' alone, and together with 'osSelect()'
+    // per 1ms;
+    ozconf.bwlIterationsPerMS =
+      (delay * ldelay) / ((t - ref) * (ldelay - delay));
+    // fprintf(stdout, "delay: %d\n", ozconf.bwlIterationsPerMS);
+  }
+
+  //
+  delay = ozconf.bwlIterationsPerMS;
+  if (ms == 0)
+    delay = delay * ozconf.bwlMSs;
+  else
+    delay = delay * min(ms, ozconf.bwlMSs);
+
+  //
+  do {
+    watchedFDs[SEL_READ]  = registeredFDs[SEL_READ];
+    watchedFDs[SEL_WRITE] = registeredFDs[SEL_WRITE];
+    numbOfWatchedFDs = 
+      osSelect(&watchedFDs[SEL_READ], &watchedFDs[SEL_WRITE],
+	       (unsigned int *) WAIT_NULL);
+  } while (numbOfWatchedFDs == 0 && delay--);
+
+  //
+  if (numbOfWatchedFDs) {
+    // fprintf(stdout, "bingo (%d) !\n", delay);
+    ms = osTotalTime() - currentSystemTime;
+    blockWatchedFDs = OK;
+  } else {
+    // also account for the time already spent;
+    currentSystemTime = osTotalTime() - currentSystemTime;
+    ms = ms - currentSystemTime;
+    (void) osBlockSelect(ms);
+    ms = ms + currentSystemTime;
+  }
+}
+*/
+
 /* osClearSocketErrors
  * remove the closed/failed descriptors from the fd_sets
  */
