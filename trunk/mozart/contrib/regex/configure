@@ -11,6 +11,10 @@
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
+ac_help="$ac_help
+--with-package-name=PKG	default $PACKAGE"
+ac_help="$ac_help
+--with-protocol=PROTO	default $PROTOCOL"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -518,6 +522,7 @@ else
 fi
 
 
+. ../conf.all
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
   if test -f $ac_dir/install-sh; then
@@ -544,7 +549,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:548: checking host system type" >&5
+echo "configure:553: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -569,7 +574,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:573: checking for $ac_word" >&5
+echo "configure:578: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_CXX'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -600,7 +605,7 @@ test -n "$CXX" || CXX="gcc"
 
 
 echo $ac_n "checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works""... $ac_c" 1>&6
-echo "configure:604: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works" >&5
+echo "configure:609: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) works" >&5
 
 ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
@@ -610,11 +615,11 @@ ac_link='${CXX-g++} -o conftest $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $L
 cross_compiling=$ac_cv_prog_cxx_cross
 
 cat > conftest.$ac_ext <<EOF
-#line 614 "configure"
+#line 619 "configure"
 #include "confdefs.h"
 main(){return(0);}
 EOF
-if { (eval echo configure:618: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:623: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   ac_cv_prog_cxx_works=yes
   # If we can't run a trivial program, we are probably using a cross compiler.
   if (./conftest; exit) 2>/dev/null; then
@@ -640,12 +645,12 @@ if test $ac_cv_prog_cxx_works = no; then
   { echo "configure: error: installation or configuration problem: C++ compiler cannot create executables." 1>&2; exit 1; }
 fi
 echo $ac_n "checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
-echo "configure:644: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler" >&5
+echo "configure:649: checking whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) is a cross-compiler" >&5
 echo "$ac_t""$ac_cv_prog_cxx_cross" 1>&6
 cross_compiling=$ac_cv_prog_cxx_cross
 
 echo $ac_n "checking whether we are using GNU C++""... $ac_c" 1>&6
-echo "configure:649: checking whether we are using GNU C++" >&5
+echo "configure:654: checking whether we are using GNU C++" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_gxx'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -654,7 +659,7 @@ else
   yes;
 #endif
 EOF
-if { ac_try='${CXX-g++} -E conftest.C'; { (eval echo configure:658: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
+if { ac_try='${CXX-g++} -E conftest.C'; { (eval echo configure:663: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
   ac_cv_prog_gxx=yes
 else
   ac_cv_prog_gxx=no
@@ -669,7 +674,7 @@ if test $ac_cv_prog_gxx = yes; then
   ac_save_CXXFLAGS="$CXXFLAGS"
   CXXFLAGS=
   echo $ac_n "checking whether ${CXX-g++} accepts -g""... $ac_c" 1>&6
-echo "configure:673: checking whether ${CXX-g++} accepts -g" >&5
+echo "configure:678: checking whether ${CXX-g++} accepts -g" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_cxx_g'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -714,7 +719,7 @@ cross_compiling=$ac_cv_prog_cxx_cross
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:718: checking for a BSD compatible install" >&5
+echo "configure:723: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -763,34 +768,66 @@ test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
 
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
-# Extract the first word of "ozdynld", so it can be a program name with args.
-set dummy ozdynld; ac_word=$2
+# Extract the first word of "ozbatch", so it can be a program name with args.
+set dummy ozbatch; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:770: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_DYNLD'+set}'`\" = set"; then
+echo "configure:775: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZBATCH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$DYNLD" in
+  case "$OZBATCH" in
   /*)
-  ac_cv_path_DYNLD="$DYNLD" # Let the user override the test with a path.
+  ac_cv_path_OZBATCH="$OZBATCH" # Let the user override the test with a path.
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in `pwd`/../../bin $prefix/oz/bin$ac_dummy; do
+  for ac_dir in ../../share/lib $prefix/bin $path$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_DYNLD="$ac_dir/$ac_word"
+      ac_cv_path_OZBATCH="$ac_dir/$ac_word"
       break
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_DYNLD" && ac_cv_path_DYNLD="ozdynld"
+  test -z "$ac_cv_path_OZBATCH" && ac_cv_path_OZBATCH="ozbatch"
   ;;
 esac
 fi
-DYNLD="$ac_cv_path_DYNLD"
-if test -n "$DYNLD"; then
-  echo "$ac_t""$DYNLD" 1>&6
+OZBATCH="$ac_cv_path_OZBATCH"
+if test -n "$OZBATCH"; then
+  echo "$ac_t""$OZBATCH" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+# Extract the first word of "ozdynld", so it can be a program name with args.
+set dummy ozdynld; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:807: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZDYNLD'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZDYNLD" in
+  /*)
+  ac_cv_path_OZDYNLD="$OZDYNLD" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in ../../share/lib $prefix/bin $path$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZDYNLD="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  test -z "$ac_cv_path_OZDYNLD" && ac_cv_path_OZDYNLD="ozdynld"
+  ;;
+esac
+fi
+OZDYNLD="$ac_cv_path_OZDYNLD"
+if test -n "$OZDYNLD"; then
+  echo "$ac_t""$OZDYNLD" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
@@ -798,37 +835,99 @@ fi
 # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:802: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_PLATFORM'+set}'`\" = set"; then
+echo "configure:839: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$PLATFORM" in
+  case "$OZPLATFORM" in
   /*)
-  ac_cv_path_PLATFORM="$PLATFORM" # Let the user override the test with a path.
+  ac_cv_path_OZPLATFORM="$OZPLATFORM" # Let the user override the test with a path.
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in `pwd`/../../bin $prefix/oz/bin$ac_dummy; do
+  for ac_dir in ../../share/bin $prefix/bin $path$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_PLATFORM="$ac_dir/$ac_word"
+      ac_cv_path_OZPLATFORM="$ac_dir/$ac_word"
       break
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_PLATFORM" && ac_cv_path_PLATFORM="ozplatform"
+  test -z "$ac_cv_path_OZPLATFORM" && ac_cv_path_OZPLATFORM="ozplatform"
   ;;
 esac
 fi
-PLATFORM="$ac_cv_path_PLATFORM"
-if test -n "$PLATFORM"; then
-  echo "$ac_t""$PLATFORM" 1>&6
+OZPLATFORM="$ac_cv_path_OZPLATFORM"
+if test -n "$OZPLATFORM"; then
+  echo "$ac_t""$OZPLATFORM" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-platform=`$PLATFORM`
+# Extract the first word of "mkinstalldirs", so it can be a program name with args.
+set dummy mkinstalldirs; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:871: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_MKINSTALLDIRS'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$MKINSTALLDIRS" in
+  /*)
+  ac_cv_path_MKINSTALLDIRS="$MKINSTALLDIRS" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in ../.. $path$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_MKINSTALLDIRS="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  test -z "$ac_cv_path_MKINSTALLDIRS" && ac_cv_path_MKINSTALLDIRS="mkinstalldirs"
+  ;;
+esac
+fi
+MKINSTALLDIRS="$ac_cv_path_MKINSTALLDIRS"
+if test -n "$MKINSTALLDIRS"; then
+  echo "$ac_t""$MKINSTALLDIRS" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
 
+: ${PLATFORM=`$OZPLATFORM`}
+
+
+
+
+PACKAGE=www.ps.uni-sb.de/ozhome/contrib/regex
+echo $ac_n "checking for --with-package-name""... $ac_c" 1>&6
+echo "configure:907: checking for --with-package-name" >&5
+# Check whether --with-package_name or --without-package_name was given.
+if test "${with_package_name+set}" = set; then
+  withval="$with_package_name"
+  :
+fi
+
+if test -n "${with_package_name}"; then
+  PACKAGE="${with_package_name}"
+fi
+echo "$ac_t""$PACKAGE" 1>&6
+
+echo $ac_n "checking for --with-protocol""... $ac_c" 1>&6
+echo "configure:920: checking for --with-protocol" >&5
+PROTOCOL=http
+# Check whether --with-protocol or --without-protocol was given.
+if test "${with_protocol+set}" = set; then
+  withval="$with_protocol"
+  :
+fi
+
+if test -n "${with_protocol}"; then
+  PROTOCOL="${with_protocol}"
+fi
+echo "$ac_t""$PROTOCOL" 1>&6
 
 trap '' 1 2 15
 cat > confcache <<\EOF
@@ -943,7 +1042,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile posix.oz:posix.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -981,9 +1080,13 @@ s%@host_os@%$host_os%g
 s%@CXX@%$CXX%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@DYNLD@%$DYNLD%g
+s%@OZBATCH@%$OZBATCH%g
+s%@OZDYNLD@%$OZDYNLD%g
+s%@OZPLATFORM@%$OZPLATFORM%g
+s%@MKINSTALLDIRS@%$MKINSTALLDIRS%g
 s%@PLATFORM@%$PLATFORM%g
-s%@platform@%$platform%g
+s%@PACKAGE@%$PACKAGE%g
+s%@PROTOCOL@%$PROTOCOL%g
 
 CEOF
 EOF
@@ -1025,7 +1128,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile posix.oz:posix.in"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
