@@ -2307,7 +2307,9 @@ void PerdioVar::addSuspPerdioVar(Thread *el, int unstable)
 
   if (isURL()) {
     OZ_Return ret = loadURL(getURL(),oz_newVariable());
-    if (ret != PROCEED) {
+    // BI_PREEMPT is returned when  we fall through to the default
+    // method of starting an independent loader process
+    if (ret != PROCEED && ret != BI_PREEMPT) {
       warning("mm2: load URL %s failed not impl",toC(getURL()));
     }
   }
