@@ -29,7 +29,7 @@ proc {OzcarShow X}
 end
 proc {OzcarMessage M}
    case {Cget verbose} then
-      {System.showInfo OzcarMessagePrefix # M}
+      {System.showInfo {OzcarMessagePrefix} # M}
    else skip end
 end
 proc {OzcarError M}

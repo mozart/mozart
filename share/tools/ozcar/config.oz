@@ -75,7 +75,9 @@ TerminateMessage       = 'Thread #'
 TerminateMessage2      = ' has been terminated'
 
 ID                     = fun {$ I} ' (id ' # I # ')' end
-OzcarMessagePrefix     = 'Ozcar: '
+OzcarMessagePrefix     = fun {$}
+			    'Ozcar[' # {Thread.id {Thread.this}} # ']: '
+			 end
 OzcarErrorPrefix       = 'Ozcar ERROR: '
 
 BraceLeft              = '{'  /* } */
@@ -194,10 +196,10 @@ MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
 TimeoutToCalcTree      = 380 % ms
-TimeoutToBlock         = 720
+TimeoutToBlock         = 620
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateBar     = TimeoutToUpdateEnv
-TimeoutToConfigBar     = 5
+TimeoutToConfigBar     = 70
 TimeoutToSwitch        = 260
 TimeoutToStatus        = 240
 
@@ -234,11 +236,11 @@ case Tk.isColor then
    SelectedForeground      = white
    
    %% thread forest window
-   RunnableThreadColor     = SelectedBackground
-   RunningThreadColor      = '#afafff'
+   RunnableThreadColor     = '#00a500'
+   RunningThreadColor      = '#e0c000'
    
    BlockedThreadColor      = '#e07070'
-   DeadThreadColor         = '#505050'
+   DeadThreadColor         = '#b0b0b0'
 
    ZombieThreadColor       = '#f000f0'
    TrunkColor              = black % '#a00000'
