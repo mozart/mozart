@@ -1,0 +1,27 @@
+#
+# Imakefile for handbook utilities
+# $Id$
+#
+
+CC=gcc
+CFLAGS=-O
+LEX=flex
+BIN=raw2tex
+C=raw2tex.c
+DESTDIR=/usr/share/gs/bin
+STYDIR=/project/ps/tex/inputs
+STY=ozbook.cls oz2tex.sty
+
+all:: $(BIN)
+raw2tex: raw2tex.c
+	$(CC) $(CFLAGS) -o raw2tex raw2tex.c -ll
+raw2tex.c: raw2tex.lex
+	$(LEX) -oraw2tex.c raw2tex.lex
+clean::
+	-rm -f $(BIN) $(C) *.o core *~
+install:: install.bin install.sty
+install.bin: $(BIN)
+	$(INSTALL) -m 555 raw2tex $(DESTDIR)
+install.sty: $(STY)
+	$(INSTALL) -m 444 ozbook.cls $(STYDIR)
+	$(INSTALL) -m 444 oz2tex.sty $(STYDIR)

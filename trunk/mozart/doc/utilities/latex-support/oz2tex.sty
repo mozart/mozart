@@ -1,0 +1,75 @@
+% Copyright (c) by Denys Duchier, April 1996, Universitaet des Saarlandes
+\ProvidesPackage{oz2tex}
+
+% OZ CODE DISPLAY ENVIRONMENT
+
+\newlength{\oztexdisplaytopsep}
+\newlength{\oztexleftmargin}
+\setlength{\oztexdisplaytopsep}{4.5pt plus 2pt minus 0.5pt}
+\setlength{\oztexleftmargin}{0pt}
+\newenvironment{oz2texdisplay}
+  {\begin{list}{}{\topsep\oztexdisplaytopsep
+   \parsep\z@\partopsep\z@\leftmargin\oztexleftmargin
+   \rightmargin\z@}\ozfont\item[]}
+  {\end{list}}
+
+%\newlength{\tabone}
+
+\DeclareRobustCommand{\ozfont}{\normalfont\ttfamily\small}
+\DeclareRobustCommand{\ozkeyfont}{\normalfont\ttfamily\upshape\bfseries\small}
+\DeclareRobustCommand{\ozcommentfont}{\normalfont\ttfamily\itshape\small}
+\DeclareRobustCommand{\ozquotefont}{\normalfont\ttfamily\bfseries\small}
+
+\newcommand{\copies@zero}[1]{}
+\newcommand{\copies@one}[1]{#1}
+\newcommand{\copies@two}[1]{#1#1}
+\newcommand{\copies@three}[1]{#1#1#1}
+\newcommand{\copies@four}[1]{#1#1#1#1}
+\newcommand{\copies@five}[1]{#1#1#1#1#1}
+\newcommand{\@ncopies}[1]{%
+  \ifcase#1
+	\expandafter\copies@zero
+  \or	\expandafter\copies@one
+  \or	\expandafter\copies@two
+  \or	\expandafter\copies@three
+  \or	\expandafter\copies@four
+  \or	\expandafter\copies@five
+  \else \def\@tempa{\@@ncopies{#1}}\expandafter\@tempa\fi}
+\newcommand{\@@ncopies}[2]{%
+  \@tempcnta#1\relax
+  \@temptokena{}%
+  \@whilenum\@tempcnta>\z@\do{%
+	\advance\@tempcnta\m@ne
+	\expandafter\@temptokena
+	\expandafter{\the\@temptokena#2}}%
+  \the\@temptokena}
+
+\DeclareRobustCommand{\OzSpace}[1]{\@ncopies{#1}{{\ }}}
+\newcommand{\newozchar}[1]{%
+  \expandafter\newcommand
+  \csname ozchar\string#1\endcsname}
+\newcommand{\renewozchar}[1]{%
+  \expandafter\renewcommand
+  \csname ozchar\string#1\endcsname}
+\DeclareRobustCommand{\OzChar}[1]{%
+  \@ifundefined{ozchar\string#1}%
+	{\char`#1}%
+	{\@nameuse{ozchar\string#1}}}
+\newcommand{\OzFwdQuote}{{\ozquotefont\symbol{19}}}
+\newcommand{\OzBwdQuote}{{\ozquotefont\symbol{18}}}
+\newozchar{\'}{\OzFwdQuote}
+\newozchar{\`}{\OzBwdQuote}
+
+\DeclareRobustCommand{\OzKeyword}[1]{{\ozkeyfont#1}}
+\DeclareRobustCommand{\OzFwd}[1]{\OzFwdQuote#1\OzFwdQuote}
+\DeclareRobustCommand{\OzBwd}[1]{\OzBwdQuote#1\OzBwdQuote}
+\DeclareRobustCommand{\OzString}[1]{"#1"}
+
+\DeclareRobustCommand{\OzInline}[1]{\ifmmode\expandafter\mbox\fi
+  {\ozfont\let\OzEol\space#1}}
+
+\DeclareRobustCommand{\OzComment}[1]{{\ozcommentfont/*#1*/}}
+\DeclareRobustCommand{\OzEolComment}[1]{{\ozcommentfont\OzChar\%#1}\OzEol}
+\DeclareRobustCommand{\OzEol}{\par}
+
+\DeclareRobustCommand{\OzBox}[1]{{\ozfont\let\OzEol\space#1}}
