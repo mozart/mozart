@@ -51,7 +51,7 @@ define
       end
       meth convertMath(VS Display ?OutFileName)
 	 LaTeXToGIFClass, Enter(case Display of inline then '$'#VS#'$\n'
-				[] display then '\\[\n'#VS#'\n\\]\n'
+				[] display then '$$\n'#VS#'\n$$\n'
 				end ?OutFileName)
       end
       meth Enter(VS OutFileName) A in
