@@ -2,14 +2,24 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 declare
+\ifdef NEWSAVE
 Profiler
+\endif
 \ifdef SAVE
 NewProfiler
 \endif
 in
 
 \ifdef SAVE
-proc {NewProfiler Compile Tk TkTools Browse ?Profiler}
+proc {NewProfiler
+\ifdef NEWSAVE
+      Standard
+\endif
+      Compile Tk TkTools Browse ?Profiler}
+\ifdef NEWSAVE
+\insert 'Standard.env'
+   = Standard
+\endif
 \else
 local
 \endif   
