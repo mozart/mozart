@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 
-#define AMVersion "0.6.1"
+#define AMVersion "0.9.0"
 #define AMDate "HEREGOESDATE"
 
 void version() {
