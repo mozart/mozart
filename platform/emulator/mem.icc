@@ -67,6 +67,7 @@ void freeListDispose(void * addr, size_t chunk_size)
 #endif
     *(void **)addr =  FreeList[chunk_size];
     FreeList[chunk_size] = addr;
+    COUNT1(freeListDisposed,chunk_size);
   }
 }
 
