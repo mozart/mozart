@@ -367,7 +367,7 @@ public:
   }
 };
 
-class PropagatorController_VS_S {
+class PropagatorController_VS_S : public OZ_ParamIterator {
 protected:
   OZ_FSetVar * _vs, _s;
   int _vs_size;
@@ -375,10 +375,10 @@ public:
   PropagatorController_VS_S(int vs_size, OZ_FSetVar vs[], OZ_FSetVar &s)
     : _vs_size(vs_size), _vs(vs), _s(s){}
 
-  OZ_Return leave(void) {
-    OZ_Boolean vars_left = _s.leave();
-    for (int i = _vs_size; i--; vars_left |= _vs[i].leave());
-    return vars_left ? OZ_SLEEP : OZ_ENTAILED;
+  OZ_Return leave(int j = 0) {
+    int vars_left = _s.leave() ? 1 : 0;
+    for (int i = _vs_size; i--; vars_left += _vs[i].leave() ? 1 : 0);
+    return (vars_left <= j) ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     _s.leave();

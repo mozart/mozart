@@ -90,6 +90,7 @@ void OZ_CPIVar::dropParameter(void)
     cvar->putRawTag(cpi_raw);
     forward->_nb_refs -= 1;
   }
+  setState(drop_e);
 }
 
 void initCPI(void)
