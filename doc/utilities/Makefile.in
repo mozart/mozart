@@ -23,6 +23,7 @@ PREFIX		= @prefix@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
 BINDIR		= $(PREFIX)/bin
 DOCDIR		= $(PREFIX)/share/doc
 ELISPDIR	= $(PREFIX)/share/elisp

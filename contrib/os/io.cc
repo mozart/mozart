@@ -62,12 +62,21 @@ OZ_Extension* FileDescriptor::gcV()
 }
 
 void FileDescriptor::doClose() {
-  if (fd>=0) { close(fd); fd = -1; }
+  if (fd>=0) {
+    osClrWatchedFD(fd,SEL_READ);
+    osClrWatchedFD(fd,SEL_WRITE);
+    close(fd); fd = -1;
+  }
 }
 
 void FileDescriptor::doFree() { doClose(); }
 
 OZ_Term OZ_mkFileDescriptor(int fd) {
+  // watching fd both for read and write may not always
+  // be necessary - I may optimize this by supplying an
+  // additional argument to be more specific when possible
+  osWatchFD(fd,SEL_READ);
+  osWatchFD(fd,SEL_WRITE);
   return OZ_extension(new FileDescriptor(fd));
 }
 
