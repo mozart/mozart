@@ -1,2 +1,12 @@
 $Id$
 
+Mon Mar  3 21:59:55 MET 1997
+test auf schlunz ergab:
+=======================
+switch: bei add kein scrollbar noetig
+loading file... nach source.oz, methode scrollbar
+500,700 delay nach config.oz
+90,180 delay vergroessern
+bei aktiviertem start threads; stack kaputt bei tk action (cd.oz)
+'start threads' und breakpoints, in die viele th laufen, testen (+blocking!)
+C-c C-d C-h mit 'start threads' laesst thread zurueck
