@@ -274,6 +274,7 @@ cat files.doc | \
 
 %clean
 rm -rf \$RPM_BUILD_ROOT
+rm -rf \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std
 %files -f mfiles.base
 %doc README LICENSE LICENSE.html LICENSE.rtf
 %config /etc/profile.d/oz.sh
