@@ -224,14 +224,16 @@ OZ_BI_define(BIaskVerboseSpace, 1, 1) {
   if (space->isMarkedMerged())
     OZ_RETURN(AtomMerged);
 
-  if (space->getSpace()->isBlocked()) {
+  Board * s = space->getSpace();
+
+  if (s->isBlocked() && !s->isStable()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
-    stuple->setArg(0, space->getSpace()->getStatus());
+    stuple->setArg(0, s->getStatus());
 
     OZ_RETURN(makeTaggedSRecord(stuple));
   } 
   
-  OZ_RETURN(space->getSpace()->getStatus());
+  OZ_RETURN(s->getStatus());
 } OZ_BI_end
 
 
