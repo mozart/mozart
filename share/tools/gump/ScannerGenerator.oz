@@ -142,6 +142,11 @@ local
 	    {WriteVSFile Flex FlexFile}
 	    {Rep startSubPhase('generating scanner tables')}
 	    case {InvokeFlex FlexFile Rep} of 0 then
+	       LIBC = if {Property.get 'platform.os'} == win32 
+		      then ' -lc' 
+		      else '' 
+		      end
+	    in
 	       {Rep startSubPhase('compiling scanner')}
 	       if {OS.system
 		   {OZTOOL}#' c++ -O3 '#{OZTOOLINC}#
@@ -152,8 +157,8 @@ local
 			     msg: 'invocation of g++ failed')}
 		  stop
 	       elseif {OS.system {OZTOOL}#' ld '#
-		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#
-		      {MakeFileName T ".o -lc"}} \= 0
+		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#' '#
+		      {MakeFileName T ".o"}#LIBC} \= 0
 	       then
 		  {Rep error(kind: 'system error'
 			     msg: 'invocation of oztool failed')}
