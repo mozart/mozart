@@ -36,6 +36,7 @@ void printBCDebug(Board * b = NULL) { printBC(cerr, b); }
 void reviveCurrentTaskSusp(void);
 void killPropagatedCurrentTaskSusp(void);
 void dismissCurrentTaskSusp(void);
+void activateCurrentTaskSusp(void);
 
 inline
 Bool isUnifyCurrentTaskSusp(void) {

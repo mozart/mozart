@@ -69,6 +69,16 @@ void dismissCurrentTaskSusp(void) {
   FDcurrentTaskSusp = NULL;
 }
 
+void activateCurrentTaskSusp(void) {
+  DebugCheck(!FDcurrentTaskSusp->isResistant(),
+             error("Cannot activate non-resistant suspension."));
+  DebugCheck(FDcurrentTaskSusp->isDead(),
+             error("Suspension is dead."));
+
+  FDcurrentTaskSusp->unmarkPropagated();
+  FDcurrentTaskSusp->unmarkResistantSusp();
+  FDcurrentTaskSusp = NULL;
+}
 
 Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
                                 OZ_Term * args, int arity)
