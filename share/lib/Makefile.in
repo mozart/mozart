@@ -292,16 +292,19 @@ $(OZBIN)/%: %
 
 .PHONY: clean veryclean distclean
 
+CLEANFILES = \
+        compiler-Version.oz compiler-Builtins.oz \
+        compiler-Opcodes.oz \
+        functor2env compiler-Env.oz \
+        ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS) \
+        $(SYSLETS)
+
 clean:
-        -rm -f compiler-Version.oz compiler-Builtins.oz
-        -rm -f compiler-Opcodes.oz
-        -rm -f functor2env compiler-Env.oz
-        -rm -f ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
-        -rm -f $(SYSLETS)
+        -rm -f $(CLEANFILES)
 
 veryclean: clean
-        -rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2A) $(STAGE2B)
-        -rm -f -r $(STAGE3) $(STAGE3A) $(STAGE3B)
+        -rm -f -r $(STAGE1) $(STAGE2) $(STAGE2A) $(STAGE2B)
+        -rm -f -r $(STAGE3) $(STAGE3A) $(STAGE3B) $(SAVE)
 
 distclean: veryclean
         @echo To really make distclean, please use \"cd ..\; make distclean\".
@@ -316,6 +319,7 @@ distclean: veryclean
 #    make check-compiler
 
 .PHONY: bootstrap stage1 stage2 stage2a stage2b stage3 stage3a stage3b
+.PHONY: save restore
 .PHONY: check check-compiler
 
 URL=http\\://www.ps.uni-sb.de/ozhome
@@ -396,6 +400,16 @@ stage3b:
         OZ_LOAD=prefix=$(URL)/share/=$(STAGE3A)/share/:.:= \
         OZC=$(STAGE3A)/bin/ozc \
         OZINIT=$(STAGE3A)/share/Init.ozf
+
+SAVE=./save
+
+save:
+        -mkdir $(SAVE)
+        -mv -f $(CLEANFILES) save
+
+restore: clean
+        -mv -f $(SAVE)/* .
+        -rmdir $(SAVE)
 
 check:
         $(MAKE) clean bootstrap stage1 || exit 1
