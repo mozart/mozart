@@ -150,7 +150,7 @@ in
 				     action:  self # moveTop
 				     state:   disabled
 				     key:     't'
-				feature: top)
+				     feature: top)
 			     separator
 			     command(label:   'Leftmost'
 				     action:  self # moveFrom(leftMost)
