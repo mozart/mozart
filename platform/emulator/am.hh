@@ -113,7 +113,6 @@ public:
   RefsArray toplevelVars;
 
   Thread *currentThread;
-  TaskStack* currentTaskStack;    // opt: cache
   Thread *rootThread;
 
   Board *currentBoard;
@@ -196,8 +195,6 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
   Bool isInScope (Board *above, Board* node);
-
-  TaskStack *ensureTaskStack();
 
   void pushCall(Board *b, SRecord *def, int arity, RefsArray args);
   void pushDebug(Board *n, SRecord *def, int arity, RefsArray args);
