@@ -179,7 +179,6 @@ void sendRegister(BorrowEntry *);
 
 void printChain(Chain*);
 void insertDangelingEvent(Tertiary*);
-void insertDangelingProbe(Site*,Tertiary*,ProbeReturn);
 
 OZ_C_proc_proto(BIapply);
 
@@ -2106,13 +2105,12 @@ Chain* getChainFromTertiary(Tertiary *t){
 
 void Chain::newInform(Site* toS,EntityCond ec){
   InformElem *ie=newInformElem();
-  if(someTempCondition(ec)){ 
-    probeTemp();}
   ie->init(toS,ec);
   ie->next=inform;
   inform=ie;}
 
 void Chain::releaseChainElem(ChainElem *ce){
+  PD((CHAIN,"Releaseing Element"));
   if((!ce->flagIsSet(CHAIN_GHOST))){
     if(hasFlag(INTERESTED_IN_TEMP)){
       deinstallProbe(ce->getSite(),PROBE_TYPE_ALL);}
@@ -2142,10 +2140,7 @@ void Chain::releaseInformElem(InformElem *ie){
 	break;}
       tmp=tmp->next;}
     if(!interestedInTemp){
-      deProbeTemp();}
-    deinstallProbe(ie->site,PROBE_TYPE_ALL);}
-  else{
-    deinstallProbe(ie->site,PROBE_TYPE_PERM);}
+      deProbeTemp();}}
   freeInformElem(ie);}
 
 void Chain::init(Site *s){
@@ -4219,13 +4214,11 @@ void ChainElem::init(Site *s){
 /*   SECTION 31b:: InformElem routines                                  */
 /**********************************************************************/
     
-void InformElem::init(Site*s,EntityCond c){// ATTENTION
+void InformElem::init(Site*s,EntityCond c){
   site=s;
   next=NULL;
   watchcond=c;
-  foundcond=0;
-  if(someTempCondition(c)){
-    tertiaryInstallProbe(s,PROBE_TYPE_ALL,0);}}
+  foundcond=0;}
 
 /**********************************************************************/
 /*   SECTION 31c:: Chain routines working on ChainElem                */
@@ -4297,18 +4290,19 @@ Bool Chain::removeGhost(Site* s){
       return OK;}
     ce = &((*ce)->next);}}
 
-void Chain::probeTemp(){
-  /* Attention PROBES are
-     not handled in a safe way */
-  
+void Chain::probeTemp(Tertiary* t){
+  PD((CHAIN,"Probing Temp"));
   ChainElem *ce=getFirstNonGhost();
   while(ce!=NULL){
-    installProbe(ce->site,PROBE_TYPE_ALL);
+    tertiaryInstallProbe(ce->site,PROBE_TYPE_ALL,t); 
+    deinstallProbe(ce->site,PROBE_TYPE_PERM);
     ce=ce->next;}}
 
 void Chain::deProbeTemp(){
+  PD((CHAIN,"DeProbing Temp"));
   ChainElem *ce=getFirstNonGhost();
   while(ce!=NULL){
+    installProbe(ce->site,PROBE_TYPE_PERM);
     deinstallProbe(ce->site,PROBE_TYPE_ALL);
     ce=ce->next;}}
 
@@ -4763,7 +4757,7 @@ void sendAskError(Tertiary *t,EntityCond ec){ // caused by installing handler/wa
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   be->getOneMsgCredit();
-  marshal_M_ASK_ERROR(bs,t->getIndex(),mySite,ec);
+  marshal_M_ASK_ERROR(bs,na->index,mySite,ec);
   SendTo(na->site,bs,M_ASK_ERROR,na->site,na->index);}
 
 void sendUnAskError(Tertiary *t,EntityCond ec){ // caused by deinstalling handler/watcher
@@ -4776,6 +4770,7 @@ void sendUnAskError(Tertiary *t,EntityCond ec){ // caused by deinstalling handle
 
                                    // caused by installing remote watcher/handler
 void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){  
+  PD((NET_HANDLER,"Ask Error Received"));
   Tertiary *t=oe->getTertiary();
   switch(t->getType()){
   case Co_Cell: break;
@@ -4783,6 +4778,7 @@ void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
   default: NOT_IMPLEMENTED;}
   Chain *ch=getChainFromTertiary(t);
   if(ch->hasFlag(TOKEN_LOST)){
+    PD((NET_HANDLER,"Token Lost"));
     EntityCond tmp=ec & (PERM_SOME|PERM_ME);
     if(tmp != ENTITY_NORMAL){
       sendTellError(oe,toS,t->getIndex(),tmp,true);
@@ -4792,21 +4788,26 @@ void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
     return;}
   Assert(!(ec & TEMP_ALL));
   if((ch->hasFlag(TOKEN_PERM_SOME)) && (ec & PERM_SOME)){
+    PD((NET_HANDLER,"State and q match PERM_SOME"));
     sendTellError(oe,toS,t->getIndex(),PERM_SOME,TRUE);
     return;}
-  ch->newInform(toS,ec);      
-  if(someTempCondition(ec) && ch->hasFlag(INTERESTED_IN_TEMP)){
-    if(!ch->hasFlag(INTERESTED_IN_OK)){
+  ch->newInform(toS,ec);
+  PD((NET_HANDLER,"Adding Inform Element"));
+  if(someTempCondition(ec)){
+    if(!ch->hasFlag(INTERESTED_IN_TEMP)){
       ch->setFlagAndCheck(INTERESTED_IN_TEMP);
-      ch->probeTemp();
+      ch->probeTemp(t);
       return;}
-    ChainElem *ce=ch->getFirstNonGhost();
-    while(ce!=NULL){
-      if(ce->getSite()->siteStatus()==SITE_TEMP) break;
-      ce=ce->getNext();}
-    if(ce!=NULL){
-      ch->managerSeesSiteTemp(t,ce->getSite());}}}
+    else   PD((NET_HANDLER,"Tmp q; allredy interested in that"));
+    if(ch->hasFlag(INTERESTED_IN_OK)){
+      PD((NET_HANDLER,"Manager is in TmpCond"));
+      EntityCond ecS = (ch->getInform())->wouldTrigger(TEMP_SOME|TEMP_ME|TEMP_BLOCKED);
+      PD((NET_HANDLER,"ecS %d",ecS));
+      if(ecS !=ENTITY_NORMAL)
+	sendTellError(oe,toS,t->getIndex(),
+		      ecS,TRUE);}}}
 
+  
 void Chain::receiveUnAsk(Site* s,EntityCond ec){
   InformElem **ie=&inform;
   InformElem *tmp;
@@ -4814,7 +4815,8 @@ void Chain::receiveUnAsk(Site* s,EntityCond ec){
     if(((*ie)->site==s) && ((*ie)->watchcond==ec)){
       tmp=*ie;
       *ie=tmp->next;
-      releaseInformElem(tmp);}
+      releaseInformElem(tmp);
+      break;}
     ie=&((*ie)->next);}
   PD((WEIRD,"unaskerror with no error"));
   return;}
@@ -4872,6 +4874,9 @@ void informInstallHandler(Tertiary* t,EntityCond ec){
   if(t->getTertType()==Te_Manager){
     Chain *ch=getChainFromTertiary(t);
     ch->newInform(mySite,ec);
+    if(someTempCondition(ec) && !ch->hasFlag(INTERESTED_IN_TEMP)){ 
+      ch->setFlagAndCheck(INTERESTED_IN_TEMP);
+      ch->probeTemp(t);}
     return;}
   sendAskError(t,managerPart(ec));
   if(someTempCondition(ec)) 
@@ -4881,7 +4886,7 @@ void informInstallHandler(Tertiary* t,EntityCond ec){
 
 Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
   if(handlerExists(th)){return FALSE;} // duplicate
-  PD((NET_HANDLER,"Handler installed on tertiary %x",this));
+  PD((NET_HANDLER,"Handler installed on tertiary:%x",this));
   Watcher *w=new Watcher(proc,th,wc);
   insertWatcher(w);
   if(this->getTertType() == Te_Local){
@@ -4891,6 +4896,7 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th){
     informInstallHandler(this,wc);
     return TRUE;}
   if(getTertType()==Te_Manager) return TRUE;
+
   tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_PERM,this);
   return TRUE;}
 
@@ -4916,7 +4922,6 @@ void Tertiary::installWatcher(EntityCond wc,TaggedRef proc){
     return;}
   if(this->getTertType() == Te_Manager){
     return;}
-  ProbeReturn pr;
   if(someTempCondition(wc))
     tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_ALL,this);
   else 
@@ -4992,7 +4997,6 @@ void sendTellError(OwnerEntry *oe,Site* toS,int mI,EntityCond ec,Bool set){
   SendTo(toS,bs,M_TELL_ERROR,mySite,mI);}
 
 void receiveTellError(Tertiary *t,Site* mS,int mI,EntityCond ec,Bool set){
-
   if(set){
     if(t->setEntityCondManager(ec)){
       t->entityProblem();}
@@ -5005,11 +5009,17 @@ void Tertiary::releaseWatcher(Watcher* w){
     switch(getType()){
     case Co_Cell:
     case Co_Lock: {
-      ec &= (~PERM_BLOCKED|PERM_SOME|PERM_ME); // Automatic
+      ec &= ~(PERM_BLOCKED|PERM_SOME|PERM_ME); // Automatic
       break;}
     default: NOT_IMPLEMENTED;}
     if(ec!=ENTITY_NORMAL) {
-      sendUnAskError(this,managerPart(w->watchcond));}}}
+      sendUnAskError(this,managerPart(w->watchcond));}
+    if(someTempCondition(w->watchcond))
+      deinstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_ALL);
+    else 
+      deinstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_PERM);
+  }}
+  
  
 void Tertiary::entityProblem(){ 
   PD((ERROR_DET,"entityProblem invoked"));
@@ -5017,12 +5027,14 @@ void Tertiary::entityProblem(){
   Watcher** base=getWatcherBase();
   if(*base==NULL) return;
   EntityCond ec=getEntityCond();
+  EntityCond Mec=(TEMP_BLOCKED|TEMP_ME|TEMP_SOME);
   Watcher* w=*base;
   while(w!=NULL){
     if((!w->isTriggered(ec)) || 
        ((w->isHandler()) && (!threadIsPending(w->getThread())))){
-	base= &(w->next);
-	w=*base;}
+      Mec &= ~(w->getWatchCond() & (TEMP_BLOCKED|TEMP_ME|TEMP_SOME));
+      base= &(w->next);
+      w=*base;}
     else{
       if(w->isHandler()){
 	w->invokeHandler(ec,this);}
@@ -5030,7 +5042,8 @@ void Tertiary::entityProblem(){
 	w->invokeWatcher(ec,this);}
       releaseWatcher(w);
       *base=w->next;
-      w=*base;}}}
+      w=*base;}}
+  resetEntityCondManager(Mec);}
 
 void Chain::informHandle(OwnerEntry* oe,int OTI,EntityCond ec){
   Assert(somePermCondition(ec));
@@ -5194,7 +5207,7 @@ void Chain::managerSeesSiteTemp(Tertiary *t,Site *s){
   InformElem *cur=inform;  // deal with TEMP_SOME|TEMP_ME watchers
   while(cur!=NULL){
     ec=cur->wouldTrigger(TEMP_SOME|TEMP_ME);
-    if(ec != ENTITY_NORMAL){
+    if(ec != ENTITY_NORMAL && cur->site != s){
       change=OK;
       index=t->getIndex();
       sendTellError(OT->getOwner(index),cur->site,index,ec,TRUE);}
@@ -5203,7 +5216,7 @@ void Chain::managerSeesSiteTemp(Tertiary *t,Site *s){
   while(ce!=NULL){
     cur=inform;
     while(cur!=NULL){
-      if(cur->site==s){
+      if(cur->site!=s){
 	ec=cur->wouldTrigger(TEMP_BLOCKED);
 	if(ec!= ENTITY_NORMAL){
 	  change=OK;
@@ -5211,8 +5224,7 @@ void Chain::managerSeesSiteTemp(Tertiary *t,Site *s){
 	  sendTellError(OT->getOwner(index),cur->site,index,ec,TRUE);}}
       cur=cur->next;}
     ce=ce->next;}
-  if(change){
-    setFlag(INTERESTED_IN_OK);}}
+  setFlag(INTERESTED_IN_OK);}
 
 void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
   Assert(siteExists(s));
@@ -5222,15 +5234,7 @@ void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
   Bool change=NO;
   OwnerEntry *oe;
   EntityCond ec;
-  InformElem *cur=inform;  // deal with TEMP_SOME|TEMP_ME watchers
-  while(cur!=NULL){
-    ec=cur->wouldTriggerOK(TEMP_SOME|TEMP_ME);
-    if(ec!=ENTITY_NORMAL){
-      change=OK;
-      index=t->getIndex();
-      sendTellError(OT->getOwner(index),cur->site,index,ec,FALSE);}
-    cur=cur->next;}    
-      
+  InformElem *cur;   
   ChainElem *ce=findAfter(s); // deal with TEMP_BLOCKED handlers
   while(ce!=NULL){
     cur=inform;
@@ -5244,10 +5248,19 @@ void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
       cur=cur->next;}
     ce=ce->next;}
 
-  if((change) && (!tempConnectionInChain())){
-    resetFlagAndCheck(INTERESTED_IN_OK);
-    deProbeTemp();}}
-    
+  if(tempConnectionInChain()) return;
+  
+  cur=inform;  // deal with TEMP_SOME|TEMP_ME watchers
+  while(cur!=NULL){
+    ec=cur->wouldTriggerOK(TEMP_SOME|TEMP_ME);
+    if(ec!=ENTITY_NORMAL){
+      change=OK;
+      index=t->getIndex();
+      sendTellError(OT->getOwner(index),cur->site,index,ec,FALSE);}
+    cur=cur->next;}    
+  
+  resetFlagAndCheck(INTERESTED_IN_OK);}
+
 /**********************************************************************/
 /*   SECTION 39:: probes                                            */
 /**********************************************************************/
@@ -5368,7 +5381,7 @@ void Site::probeFault(ProbeReturn pr){
     Assert(be!=NULL);
     if(be->isTertiary()){
       Tertiary *tr=be->getTertiary();
-      if(tr->hasWatchers()){
+      if(tr->hasWatchers()||tr->getEntityCond()!=ENTITY_NORMAL){
 	tr->proxyProbeFault(pr);}}}
   return;}
 
