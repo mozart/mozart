@@ -32,14 +32,16 @@
  *****************************************************************************/
 
 /* Signal ports for event processing */
-OZ_Term signal_port;
-OZ_Term signal_port_sml;
+OZ_Term signal_port = NULL;
+OZ_Term signal_port_sml = NULL;
 
 OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
   OZ_declareTerm (0, port);
+  if (signal_port == NULL) {
+    OZ_protect(&signal_port); /* prevent GC of port anchor */
+  }
   signal_port = port;
-  OZ_protect(&signal_port); /* prevent GC of port anchor */
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -106,11 +108,36 @@ OZ_BI_define (ozgtk_signal_emit_by_name, 2, 0)
  * These functions will be removed anyway when Thorsten does his own backend
  */
 
+OZ_BI_define (ozgtk_allocate_gdk_color, 3, 1)
+{
+  GdkColor *ret = (GdkColor *) malloc(sizeof(GdkColor));
+
+  OZ_declareInt(0, red);
+  OZ_declareInt(1, blue);
+  OZ_declareInt(2, green);
+
+  ret->red   = red;
+  ret->blue  = blue;
+  ret->green = green;
+
+  OZ_out(0) = OZ_makeForeignPointer(ret);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (ozgtk_free_gdk_color, 1, 0)
+{
+  GOZ_DECLARE_GTKOBJECT(0, object);
+  free(GTK_OBJECT(object));
+  return OZ_ENTAILED;
+} OZ_BI_end
+
 OZ_BI_define (ozgtk_initialize_signal_port_sml, 1, 0)
 {
   OZ_declareTerm (0, port);
+  if (signal_port_sml == NULL) {
+    OZ_protect(&signal_port_sml); /* prevent GC of port anchor */
+  }
   signal_port_sml = port;
-  OZ_protect(&signal_port_sml); /* prevent GC of port anchor */
   return OZ_ENTAILED;
 } OZ_BI_end
 
