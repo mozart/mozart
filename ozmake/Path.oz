@@ -8,6 +8,7 @@ export
    ResolveURL		Resolve		ResolveAtom
    IsRelative IsAbsolute ToString ToAtom
    ExpandURL 		Expand
+   ExpandInCWDURL	ExpandInCWD	ExpandInCWDAtom
    BasenameURL		Basename	BasenameAtom
    DirnameURL		Dirname		DirnameAtom
    Extension		ExtensionAtom
@@ -132,6 +133,10 @@ define
 
    fun {ExpandURL P} {RESOLVE.expand {ToURL P}} end
    fun {Expand P} {ToString {ExpandURL P}} end
+
+   fun {ExpandInCWDURL P} {ExpandURL {ResolveURL "./" {ExpandURL P}}} end
+   fun {ExpandInCWD P} {ToString {ExpandInCWDURL P}} end
+   fun {ExpandInCWDAtom P} {ToAtom {ExpandInCWDURL P}} end
 
    fun {Basename P}
       case {Reverse {CondSelect {ToNonBaseURL P} path nil}}
