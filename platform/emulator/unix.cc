@@ -42,6 +42,7 @@
 
 #ifndef WINDOWS
 #include <netdb.h>
+#include <netinet/tcp.h>
 #endif
 
 
@@ -1014,7 +1015,6 @@ OZ_BI_iodefine(unix_socket,3,1)
     struct protoent *proto;
 
     proto = getprotobyname(OzProtocol);
-
     if (!proto) {
       return OZ_typeError(2,"enum protocol");
     }
@@ -1075,12 +1075,10 @@ OZ_BI_iodefine(unix_listen,2,0)
   return PROCEED;
 } OZ_BI_ioend
 
-
 OZ_BI_define(unix_connectInet,3,0)
 {
   OZ_declareInt(0, s);
   OZ_declareTerm(1, host);
-//    OZ_declareVsIN(1, host);
   OZ_declareInt(2, port);
 
   struct sockaddr_in addr;
@@ -1115,6 +1113,72 @@ OZ_BI_define(unix_connectInet,3,0)
   return PROCEED;
 } OZ_BI_end
 
+#ifdef WINDOWS
+/* connect under windows are always done in blocking mode */
+void osSetNonBlocking(int fd, Bool onoff) {
+  u_long dd = onoff;
+  int ret = ioctlsocket(fd,FIONBIO,&dd);
+  if (ret<0)
+    message("ioctlsocket(%d,FIONBIO,%d) failed: %d\n",fd,ossockerrno(),onoff);
+}
+#endif
+
+OZ_BI_define(unix_connect_nonblocking,3,0)
+{
+  OZ_declareInt(0, s);
+  OZ_declareTerm(1, host);
+  OZ_declareInt(2, port);
+
+  struct sockaddr_in addr;
+
+  void *junk;
+
+  if(OZ_isInt(host)) {
+    addr.sin_addr.s_addr=htonl(OZ_intToC(host));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons ((unsigned short) port);
+  }
+  else if(OZ_isVirtualString(host,(OZ_Term *) junk)){
+    struct hostent *hostaddr;
+    if ((hostaddr = gethostbyname(OZ_virtualStringToC(host,(int *) junk))) == NULL) {
+      RETURN_NET_ERROR("gethostbyname");
+    }
+
+    memset((char *)&addr, 0, sizeof (addr));
+    addr.sin_family = AF_INET;
+    memcpy(&addr.sin_addr,hostaddr->h_addr_list[0],sizeof(addr.sin_addr));
+    addr.sin_port = htons ((unsigned short) port);
+  }
+  else
+    OZ_typeError(1,"VirtualString");
+
+  // Make the socket nonblocking, non nagle
+  int one   =  1;
+  if(setsockopt(s,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
+    RETURN_UNIX_ERROR("connectNonblocking");
+  }
+
+#ifndef WINDOWS
+  fcntl(s,F_SETFL,O_NDELAY);
+#endif
+
+  //
+
+  int ret = osconnect(s,(struct sockaddr *) &addr,sizeof(addr));
+  if (ret<0) {
+    Assert(errno != EINTR);
+    RETURN_UNIX_ERROR("connectNonblocking");
+  }
+#ifdef WINDOWS
+  else {
+    // do this later on Windows otherwise it doesn't work
+    osSetNonBlocking(s,OK);
+  }
+#endif
+
+  return PROCEED;
+} OZ_BI_end
+
 OZ_BI_iodefine(unix_acceptInet,1,3)
 {
   OZ_declareInt(0, sock);
@@ -1126,6 +1190,47 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
   int fromlen = sizeof from;
 
   WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
+
+  char *host = inet_ntoa(from.sin_addr);
+  if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being
+    host = "localhost";               // opened when working at home for example
+  } else {
+    struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
+                                            fromlen, AF_INET);
+    if (gethost) {
+      host = gethost->h_name;
+    }
+  }
+  OZ_out(0) = OZ_string(host);
+  OZ_out(1) = OZ_int(ntohs(from.sin_port));
+  OZ_out(2) = OZ_int(fd);
+  return PROCEED;
+} OZ_BI_ioend
+
+OZ_BI_iodefine(unix_accept_nonblocking,1,3)
+{
+  OZ_declareInt(0, sock);
+  // OZ_out(0) == host
+  // OZ_out(1) == port
+  // OZ_out(2) == fd
+
+  struct sockaddr_in from;
+  int fromlen = sizeof from;
+
+  WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
+
+  // Nonblocking
+  int one=1;
+  if(setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char*) &one,sizeof(one))<0){
+    RETURN_UNIX_ERROR("acceptNonblocking");
+  }
+
+#ifdef WINDOWS
+  osSetNonBlocking(fd,OK);
+#else
+  fcntl(fd,F_SETFL,O_NDELAY);
+#endif
+  //
 
   char *host = inet_ntoa(from.sin_addr);
   if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being

@@ -132,13 +132,21 @@
                              out => [],
                              BI  => unix_listen},
 
-     'connect'  => { in  => ['+int','+value','+int'],
-                     out => [],
-                     BI  => unix_connectInet},
+     'connect'          => { in  => ['+int','+value','+int'],
+                             out => [],
+                             BI  => unix_connectInet},
+
+     'connectNonblocking'=> { in  => ['+int','+value','+int'],
+                             out => [],
+                             BI  => unix_connect_nonblocking},
 
      'accept'           => { in  => ['+int'],
                              out => ['+int','+string','+int'],
                              BI  => unix_acceptInet},
+
+     'acceptNonblocking'        => { in  => ['+int'],
+                             out => ['+int','+string','+int'],
+                             BI  => unix_accept_nonblocking},
 
      'shutDown' => { in  => ['+int','+int'],
                      out => [],

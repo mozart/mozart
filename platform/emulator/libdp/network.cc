@@ -130,10 +130,11 @@ int getComControllerInfo(int &size){
 }
 
 int getTransControllerInfo(int &size) {
-  // Temporary solution, should work with any type of transObj and include
-  // buffers.
-  size = sizeof(TCPTransObj)+2*30000;
-  return tcptransController->getCTR();
+//    // Temporary solution, should work with any type of transObj and include
+//    // buffers.
+//    size = sizeof(TCPTransObj)+2*30000;
+//    return tcptransController->getCTR();
+  return tcptransController->getInfo(size);
 }
 
 int getMsgContainerManagerInfo(int &size) {

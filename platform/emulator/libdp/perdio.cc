@@ -538,8 +538,8 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
   // we can do nothing
   // Is that still true??? AN!
 
-  if(dsite!=NULL && dsite->siteStatus()!=SITE_OK){
-    return;}
+//    if(dsite!=NULL && dsite->siteStatus()!=SITE_OK){
+//      return;}
 
   PD((MSG_RECEIVED,"msg type %d",mt));
   //printf("receiving msg:%d %s\n",mt,mess_names[mt]);
