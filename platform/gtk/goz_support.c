@@ -22,7 +22,6 @@
  */
 
 #include <gtk/gtk.h>
-#include <gtk-canvas.h>
 #include <mozart.h>
 /*#include <goz_support.h>*/
 
