@@ -282,7 +282,7 @@ public:
   // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
-  static int awakeIO(int fd,void *var);
+  static int awakeIO(void *var);
   void awakeIOVar(TaggedRef var);
 
   // entailment check
