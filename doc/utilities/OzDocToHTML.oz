@@ -685,8 +685,7 @@ define
 	       dt(COMMON: @Common HTML1 HTML2)
 	    [] synopsis then
 	       dd(COMMON: @Common
-		  'class': [synopsis]
-		  blockquote(OzDocToHTML, Batch(M 1 $)))
+		  blockquote('class': [synopsis] OzDocToHTML, Batch(M 1 $)))
 	    [] item then
 	       if @InDescription then
 		  dd(COMMON: @Common OzDocToHTML, Batch(M 1 $))
@@ -771,7 +770,7 @@ define
 	    [] code then HTML in
 	       OzDocToHTML, BatchCode(M 1 ?HTML)
 	       case M.display of display then
-		  BLOCK(blockquote(COMMON: @Common HTML))
+		  BLOCK(blockquote(COMMON: @Common 'class': [code] HTML))
 	       [] inline then span(COMMON: @Common HTML)
 	       end
 	    [] 'code.extern' then HTML in
