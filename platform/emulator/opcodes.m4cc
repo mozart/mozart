@@ -23,39 +23,59 @@
  *  WARRANTIES.
  *
  */
+
 #include "opcodes.hh"
 #include "base.hh"
+
+OpcodeInfo opcodes[] = {
+
+define(readArg,$1)
+define(writeArg,$1)
 
 define(Size,`ifelse($1,`',0,
 		    $1,Cache,CacheSize,
 	            1)')
 
-define(makeInstr,
-     `ifelse($1,0,case $2:,
-             $1,1,case $2X: case $2Y: case $2G:,
-             $1,2,case $2XX: case $2XY: case $2XG: case $2YX: case $2YY:
-	          case $2YG: case $2GX: case $2GY: case $2GG:)') dnl
-
-define(readArg,$1)
-define(writeArg,$1)
 define(instruction,
-       `makeInstr(eval(numOfRegs($2)+numOfRegs($3)+numOfRegs($4)),TOUPPER($1)) return dnl
-        eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8))dnl
-;')
+	`define(`sz',eval(1+Size($2)+Size($3)+Size($4)+Size($5)+Size($6)+Size($7)+Size($8)))dnl
+         ifelse(numOfRegs($2,$3,$4),1,oneReg($1,`sz'),
+		numOfRegs($2,$3,$4),2,twoRegs($1,sz),
+		`{"$1",sz},') dnl
+')
+
+define(oneReg,``
+        {"$1X",$2},
+        {"$1Y",$2},
+        {"$1G",$2},
+'')
+
+define(twoRegs,``
+         {"$1XX",$2},
+         {"$1XY",$2},
+         {"$1XG",$2},
+         {"$1YX",$2},
+         {"$1YY",$2},
+         {"$1YG",$2},
+         {"$1GX",$2},
+         {"$1GY",$2},
+         {"$1GG",$2},
+'')
+
+
+include(EMUDIR/instrDefs.m4)
+
+{"OZERROR",1}
+};
 
 
 
-
-int sizeOf(Opcode oc)
+Opcode stringToOpcode(const char *s)
 {
-  switch(oc) {
-   include(EMUDIR/instrDefs.m4)
-    
-  default:
-    error("sizeOf: unknown opcode: %d",oc);
-    return 1;
+  for (int i=0; i < (Opcode) OZERROR; i++) {
+    if (strcmp(s,opcodeToString((Opcode)i)) == 0 ) {
+      return (Opcode) i;
+    }
   }
 
-  return -1;
+  return OZERROR;
 }
-
