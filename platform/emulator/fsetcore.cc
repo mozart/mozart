@@ -31,6 +31,14 @@
 
 //*****************************************************************************
 
+#define FSETDESCR_SYNTAX                                                \
+"The syntax of a " OZ_EM_FSETDESCR " is:\n"                             \
+"   set_descr   ::= nil | [range_descr+]\n"                             \
+"   range_descr ::= integer | integer#integer\n"                        \
+"   integer     ::= {" _OZ_EM_FSETINF ",...," _OZ_EM_FSETSUP "}"
+
+//*****************************************************************************
+
 OZ_BI_define(BIfsValueToString, 1,1)
 {
   OZ_declareNonvarIN(0,in);
@@ -71,7 +79,7 @@ OZ_C_proc_begin(BIfsSetValue, 2)
 
   ExpectOnly pe;
 
-  EXPECT_BLOCK(pe, 0, expectFSetDescr);
+  EXPECT_BLOCK(pe, 0, expectFSetDescr, FSETDESCR_SYNTAX);
 
   return OZ_unify(OZ_getCArg(1),
                   makeTaggedFSetValue(new FSetValue(OZ_getCArg(0))));
@@ -84,8 +92,8 @@ OZ_C_proc_begin(BIfsSet, 3)
 
   ExpectOnly pe;
 
-  EXPECT_BLOCK(pe, 0, expectFSetDescr);
-  EXPECT_BLOCK(pe, 1, expectFSetDescr);
+  EXPECT_BLOCK(pe, 0, expectFSetDescr, FSETDESCR_SYNTAX);
+  EXPECT_BLOCK(pe, 1, expectFSetDescr, FSETDESCR_SYNTAX);
 
   FSetConstraint fset(OZ_getCArg(0), OZ_getCArg(1));
 
@@ -109,7 +117,7 @@ OZ_C_proc_begin(BIfsClone, 2)
 
   ExpectOnly pe;
 
-  EXPECT_BLOCK(pe, 0, expectFSetVar);
+  EXPECT_BLOCK(pe, 0, expectFSetVar, "");
 
   DEREF(OZ_getCArg(0), arg0ptr, arg0tag);
 
