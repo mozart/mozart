@@ -419,9 +419,10 @@ void tuple2buffer(SRecord *st, int start = 0) {
   } else {
     TaggedRef as = st->getArityList();
     
-    if (start==1 && isCons(as))
+    if (start==1 && isCons(as)) {
+      Assert(smallIntValue(head(as))==1);
       as=tail(as);
-   
+    }
     if (!isCons(as))
       return;
 
@@ -653,21 +654,26 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BItclWriteFilter,7) {  
   OZ_declareIntArg(0, fd);
+  OZ_declareArg(1,tkclass);
+  OZ_declareArg(2,id);
+  OZ_declareArg(3,mess);
+  OZ_declareArg(4,filter);
+  OZ_declareArg(5,cont);
 
   tcl_buffer.reset();
-  tcl2buffer(OZ_getCArg(1));
+  tcl2buffer(tkclass);
   tcl_put(' ');
-  vs2buffer(OZ_getCArg(2));
+  vs2buffer(id);
   tcl_put(' ');
-  
-  TaggedRef tr   = OZ_getCArg(3);
+
+  TaggedRef tr   = mess;
 
   DEREF(tr, t_p, tr_tag);
 
   if (isSRecord(tr_tag)) {
     SRecord   * sr = tagged2SRecord(tr);
     TaggedRef as   = sr->getArityList();
-    TaggedRef fs   = deref(OZ_getCArg(4));
+    TaggedRef fs   = deref(filter);
     
     while (isCons(as) && isCons(fs)) {
       TaggedRef a = head(as);
@@ -708,7 +714,7 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
     }
   }
 	
-  tcl2buffer(OZ_getCArg(5));
+  tcl2buffer(cont);
   tcl_put('\n');
 
   return tcl_write(fd, tcl_buffer.string(), tcl_buffer.size(),
@@ -778,6 +784,26 @@ OZ_C_proc_begin(BIdelFastGroup,1)
 } 
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIdelAndTestFastGroup,2)
+{
+  TaggedRef member = deref(OZ_getCArg(0));
+  OZ_declareArg(1,out);
+
+  if (isCons(member)) {
+    if (literalEq(deref(head(member)),NameGroupVoid)) {
+      return OZ_unify(out,NameFalse);
+    } else {
+      tagged2LTuple(member)->setHead(NameGroupVoid);
+      tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
+      return OZ_unify(out,NameTrue);
+    }
+  }
+
+  /* e.g. toplevel is nobodys slave */
+  return OZ_unify(out,NameTrue);
+} 
+OZ_C_proc_end
+
 
 OZ_C_proc_begin(BIgetFastGroup,2)
 {
@@ -807,6 +833,36 @@ OZ_C_proc_begin(BIgetFastGroup,2)
 
 } 
 OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdelAllFastGroup,2)
+{
+  OZ_nonvarArg(0);
+  TaggedRef group = OZ_getCArg(0); 
+
+  DEREF(group, _1, _2);
+
+  Assert(isCons(group));
+  TaggedRef out = nil();
+
+  group = deref(tail(group));
+
+  while (isCons(group)) {
+    TaggedRef ahead = deref(head(group));
+
+    if (!(isLiteral(ahead) && literalEq(ahead,NameGroupVoid))) {
+      out = cons(ahead, out);
+      tagged2LTuple(group)->setHead(NameGroupVoid);
+    }
+      
+    group = deref(tail(group));
+  }
+
+  Assert(isNil(group));
+  return OZ_unify(out,OZ_getCArg(1));
+}
+OZ_C_proc_end
+
 
 
 // ---------------------------------------------------------------------
@@ -878,9 +934,11 @@ BIspec tclTkSpec[] = {
   {"tclWriteFilter",   7, BItclWriteFilter,    0},
   {"tclWriteCont",     3, BItclWriteCont,      0},
 
-  {"addFastGroup", 3, BIaddFastGroup,	 0},
-  {"delFastGroup", 1, BIdelFastGroup,	 0},
-  {"getFastGroup", 2, BIgetFastGroup,	 0},
+  {"addFastGroup",        3, BIaddFastGroup,	   0},
+  {"delFastGroup",        1, BIdelFastGroup,	   0},
+  {"delAndTestFastGroup", 2, BIdelAndTestFastGroup,0},
+  {"getFastGroup",        2, BIgetFastGroup,	   0},
+  {"delAllFastGroup",     2, BIdelAllFastGroup,    0},
 
   {"genTopName",    1, BIgenTopName,	 0},
   {"genWidgetName", 2, BIgenWidgetName,	 0},

@@ -148,7 +148,9 @@ Bool LocalPropagationStore::propagate_locally () {
 	  if (isNewPropagator) {
             ostrstream buf; 
             buf << * thr->getNewPropagator() << '\0';
- 	    message("Propagator %s failed\n", buf.str());
+	    char *str = buf.str();
+ 	    message("Propagator %s failed\n", str);
+	    delete str;
 	  } else {
 	    message("Propagator %s failed.\n",
 		    builtinTab.getName((void *)(c->getCFunc())));
