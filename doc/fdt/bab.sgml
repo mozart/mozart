@@ -334,7 +334,6 @@ CostMatrix = store(supplier(36 42 22 44 52)
 		   supplier(151 60 104 139 77) 
 		   supplier(79 107 91 117 154))
 BuildingCost = 50
-
 fun {Regret X}
    M = {FD.reflect.min X} 
 in 
@@ -363,8 +362,7 @@ in
        {FD.atMost Capacity.S Supplier S}
        Open.S = {FD.reified.sum {Map Stores fun {$ St} 
 					       Supplier.St =: S 
-					    end}
-		 '>:' 0}
+					    end} '>:' 0}
     end}
    {FD.distribute
     generic(order: fun {$ X Y} {Regret X} > {Regret Y} end)
