@@ -111,7 +111,7 @@ OZ_BI_define(BIaddFastGroup,2,1)
     OZ_RETURN(member);
   }
   return OZ_typeError(0,"List");
-} 
+} OZ_BI_end 
 
 
 OZ_BI_define(BIdelFastGroup,1,0)
@@ -124,7 +124,7 @@ OZ_BI_define(BIdelFastGroup,1,0)
   }
 
   return PROCEED;
-} 
+} OZ_BI_end 
 
 
 OZ_BI_define(BIgetFastGroup,1,1)
@@ -152,7 +152,7 @@ OZ_BI_define(BIgetFastGroup,1,1)
   }
   
   return OZ_typeError(0,"List");
-} 
+} OZ_BI_end 
 
 
 OZ_BI_define(BIdelAllFastGroup,1,1)
@@ -180,7 +180,7 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
 
   Assert(isNil(group));
   OZ_RETURN(out);
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BIgetTclNames,0,3) {
@@ -188,7 +188,7 @@ OZ_BI_define(BIgetTclNames,0,3) {
   OZ_out(1)=NameTclSlaveEntry;
   OZ_out(2)=NameTclName;
   return PROCEED;
-}
+} OZ_BI_end
 
 /*
  * Locking
@@ -1178,7 +1178,7 @@ OZ_BI_define(BIinitTclSession, 3,1) {
   tcl_sessions[session_no] = new TclSession(fd, deref(OZ_in(1)), OZ_in(2));
   OZ_Term sid = cons(newSmallInt(session_no),oz_newVariable());
   OZ_RETURN(sid);
-}
+} OZ_BI_end
 
 OZ_BI_define(BIcloseTclSession, 1,0) {
   OZ_Term sid=deref(OZ_in(0));
@@ -1190,7 +1190,7 @@ OZ_BI_define(BIcloseTclSession, 1,0) {
     OZ_unify(tail(sid),NameUnit);
   }
   return PROCEED;
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BItclWrite, 2,0) {
@@ -1216,7 +1216,7 @@ OZ_BI_define(BItclWrite, 2,0) {
     LEAVE_TCL_LOCK(ts);
     return s;
   }
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BItclWriteReturn, 4,0) {  
@@ -1246,7 +1246,7 @@ OZ_BI_define(BItclWriteReturn, 4,0) {
     LEAVE_TCL_LOCK(ts);
     return s;
   }
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BItclWriteReturnMess, 5,0) {  
@@ -1309,7 +1309,7 @@ OZ_BI_define(BItclWriteReturnMess, 5,0) {
     return s;
   }
     
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BItclWriteBatch,2,0) {  
@@ -1335,7 +1335,7 @@ OZ_BI_define(BItclWriteBatch,2,0) {
     LEAVE_TCL_LOCK(ts);
     return s;
   }
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BItclWriteTuple,3,0) {  
@@ -1381,7 +1381,7 @@ OZ_BI_define(BItclWriteTuple,3,0) {
     return s;
   }
 
-}
+} OZ_BI_end
 
 
 
@@ -1430,7 +1430,7 @@ OZ_BI_define(BItclWriteTagTuple,4,0) {
     LEAVE_TCL_LOCK(ts);
     return s;
   }
-}
+} OZ_BI_end
 
 OZ_BI_define(BItclWriteFilter,6,0) {  
   NEW_GET_TCL_SESSION;
@@ -1461,7 +1461,7 @@ OZ_BI_define(BItclWriteFilter,6,0) {
     LEAVE_TCL_LOCK(ts);
     return s;
   }
-}
+} OZ_BI_end
 
 
 OZ_Return TclSession::close_hierarchy(Object * o) {
@@ -1581,7 +1581,7 @@ OZ_BI_define(BItclClose,3,0) {
     LEAVE_TCL_LOCK(ts);
     return s;
   }
-}
+} OZ_BI_end
 
 
 OZ_BI_define(BItclCloseWeb,2,0) {  
@@ -1618,7 +1618,7 @@ OZ_BI_define(BItclCloseWeb,2,0) {
 
     return PROCEED;
   }
-}
+} OZ_BI_end
 
 
 // ---------------------------------------------------------------------
@@ -1628,7 +1628,7 @@ OZ_BI_define(BItclCloseWeb,2,0) {
 OZ_BI_define(BIgenTopName,1,1) {
   NEW_GET_TCL_SESSION;
   OZ_RETURN(ts->genTopName());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgenWidgetName,2,1) {
   NEW_GET_TCL_SESSION;
@@ -1640,22 +1640,22 @@ OZ_BI_define(BIgenWidgetName,2,1) {
     OZ_suspendOn(makeTaggedRef(p_ptr));
 
   OZ_RETURN(ts->genWidgetName(parent));
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgenTagName,1,1) {
   NEW_GET_TCL_SESSION;
   OZ_RETURN(ts->genTagName());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgenVarName,1,1) {
   NEW_GET_TCL_SESSION;
   OZ_RETURN(ts->genVarName());
-}
+} OZ_BI_end
 
 OZ_BI_define(BIgenImageName,1,1) {
   NEW_GET_TCL_SESSION;
   OZ_RETURN(ts->genImageName());
-}
+} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Add to Builtin-Table
