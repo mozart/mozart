@@ -13,9 +13,10 @@ EXAMPLESM4  = 	constdata.m4cc \
 		ex_b.m4cc \
 		reified_less.m4cc \
 		ex_a.m4cc \
-		ex_c.m4cc
+		ex_c.m4cc \
+		sync.m4cc
 
-EXAMPLES    = $(EXAMPLESM4:.m4cc=.cc) sync.cc
+EXAMPLES    = $(EXAMPLESM4:.m4cc=.cc)
 
 NATIVEFNCTS = $(EXAMPLES:.cc=.so-$(PLATFORM))
 
@@ -41,7 +42,12 @@ CCSNIPPETS  =   ex_a.1.cc ex_a.1a.cc \
                 constData.3.cc \
                 constData.4.cc \
                 constData.5.cc \
-                reifiedLess.1.cc
+                reifiedLess.1.cc \
+		sync.1.cc \
+		sync.class.cc \
+		sync.nfi.cc \
+		sync.header.cc \
+		sync.prop.cc
 
 all: $(NATIVEFNCTS)
 
