@@ -67,7 +67,7 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
 		   oz_cons(OZ_pairAI("line",iline < 0? -iline: iline),
 			oz_cons(OZ_pairA("column",getTaggedArg(PC+3)),
 			     oz_cons(OZ_pairA("origin",
-					   OZ_atom("OzDebug::toRecord")),
+					   OZ_atom("debugFrame")),
 				  oz_cons(OZ_pairAI("PC",(int)PC),
 				       oz_cons(OZ_pairA("kind",
 						     getTaggedArg(PC+4)),
