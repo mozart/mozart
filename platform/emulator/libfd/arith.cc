@@ -102,20 +102,6 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_plus_rel, 3)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
-
-  PropagatorExpect pe;
-
-  OZ_EXPECT(pe, 0, expectIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectIntVarMinMax);
-  OZ_EXPECT(pe, 2, expectIntVarMinMax);
-
-  return pe.impose(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(fdp_plus, 3)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
@@ -308,20 +294,6 @@ OZ_C_proc_begin(fdp_times, 3)
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
   if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
-
-  return pe.impose(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(fdp_times_rel, 3)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
-
-  PropagatorExpect pe;
-
-  OZ_EXPECT(pe, 0, expectIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectIntVarMinMax);
-  OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
   return pe.impose(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }

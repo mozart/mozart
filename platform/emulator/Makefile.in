@@ -93,7 +93,7 @@ CXXSRCS= \
 
 FDSRCS=\
 	fdbuilti.cc fdomn.cc fdcore.cc \
-	fdcd.cc fdbvar.cc fddist.cc 
+	fdcd.cc fdbvar.cc
 
 CPISRCS=\
 	cpi.cc cpi_fd.cc cpi_prop.cc \
