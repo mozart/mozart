@@ -377,9 +377,7 @@ int AM::commit(Board *bb, Thread *tt)
     tt->getTaskStackRef()->discardFrame(C_ACTOR_Ptr);
   }
 
-  if (!bb->isWaitTop()) {
-    tt->pushCont(bb->getBodyPtr());
-  }
+  tt->pushCont(bb->getBodyPtr());
 
   bb->setCommitted(currentBoard);
   currentBoard->incSuspCount(bb->getSuspCount()-1);
