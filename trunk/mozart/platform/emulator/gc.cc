@@ -998,7 +998,7 @@ void GenFSetVariable::gc()
 inline
 FSetValue * FSetValue::gc(void) 
 {
-  return (FSetValue *) gcReallocStatic(this, sizeof(FSetValue));
+  return (FSetValue *) gcReallocDynamic(this, sizeof(FSetValue));
 }
 
 inline
@@ -1145,7 +1145,8 @@ GenCVariable * GenCVariable::gc(void) {
     ((PerdioVar *) to)->gc();
     break;
   case FSetVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenFSetVariable));
+    // TMUELLER: must be reset to `gcReallocStatic'
+    to = (GenCVariable *) gcReallocDynamic(this, sizeof(GenFSetVariable));
     storeForward(&suspList, to);
     ((GenFSetVariable *) to)->gc();
     break;
