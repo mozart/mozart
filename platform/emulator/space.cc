@@ -499,6 +499,7 @@ void oz_removeExtThread(Thread *tt)
 void oz_checkExtSuspension(Suspension susp, Board * varHome)
 {
   if (am.isBelowSolveBoard()) {
+    varHome=varHome->derefBoard();
     Board * bb = oz_currentBoard();
     Bool wasFound = NO;
     Assert (!varHome->isCommitted());
