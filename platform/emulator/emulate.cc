@@ -53,6 +53,8 @@
 
 OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 {
+  Assert(am.isEmptySuspendVarList());
+
   const int inAr = bi->getInArity();
   const int outAr = bi->getOutArity();
 
@@ -676,7 +678,7 @@ void pushContX(TaskStack *stk,
  * last significant bit of sPointer set iff in WRITE mode
  */
 
-#define SetReadMode
+#define SetReadMode  lastGetRecord = PC
 #define SetWriteMode (sPointer = (TaggedRef *)((long)sPointer+1));
 
 #define InWriteMode (((long)sPointer)&1)
@@ -909,6 +911,9 @@ int engine(Bool init)
   AWActor *CAA                 = NULL;
   DebugCheckT(Board *currentDebugBoard=CBB);
 
+  // handling perdio unification
+  ProgramCounter lastGetRecord;                     NoReg(lastGetRecord);
+
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
   #define HelpReg sPointer  /* more efficient */
 
@@ -920,7 +925,8 @@ int engine(Bool init)
 
   int argsToSave;  // replace bi call
 
-  OZ_Return tmpRet;  // optimized arithmetic
+  // optimized arithmetic and special cases for unification
+  OZ_Return tmpRet;  NoReg(tmpRet); 
 
   TaggedRef auxTaggedA, auxTaggedB;
   int auxInt;
@@ -991,6 +997,7 @@ LBLdispatcher:
   if (op < PROFILE_INSTR_MAX) ozstat.instr[op]++;
 #endif
  
+  Assert(am.isEmptySuspendVarList());
   switch (op) {
 #endif
 
@@ -1677,10 +1684,15 @@ LBLdispatcher:
       if (isTailCall) {
 	TaggedRef alist = deref(Xreg(reg));
 	ProgramCounter preddPC = predd->PC;
+#ifndef DISABLE_DEFINITIONCOPY
 	Bool copyOnce = predd->copyOnce;
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
 			       predd->getFileName(), predd->getLine(), NO);
 	predd->PC = copyCode(preddPC,alist,copyOnce==NO);
+#else
+        predd->copyOnce = OK;
+        copyCode(preddPC,alist,NO);
+#endif
       }
       int size = list->getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
@@ -2748,6 +2760,38 @@ LBLdispatcher:
 
 // ----------------- end instructions -------------------------------------
 
+
+// ------------------------------------------------------------------------
+// *** Special return values from unify: SUSPEND, EXCEPTION, etc.
+// ------------------------------------------------------------------------
+
+  LBLunifySpecial:
+  {
+    e->unsetSFlag(StopThread);  // will go away
+    if (shallowCP) {
+      if (e->trail.isEmptyChunk()) {
+	e->trail.popMark();
+      } else {
+	e->reduceTrailOnFail();
+      }
+      PC=shallowCP;
+      shallowCP=0;
+      e->shallowHeapTop = NULL;
+    }
+    switch (tmpRet) {
+    case BI_REPLACEBICALL:
+      argsToSave=CodeArea::livenessX(PC,X);
+      goto LBLreplaceBICall;
+    case SUSPEND:
+      argsToSave=CodeArea::livenessX(PC,X);
+      PushContX(PC,Y,G,X,argsToSave);
+      SUSPENDONVARLIST;
+    case RAISE:
+      RAISE_THREAD;
+    default:
+      Assert(0);
+    }
+  }
 
 // ------------------------------------------------------------------------
 // *** FAILURE

@@ -96,6 +96,10 @@ SRecord *unmarshalSRecord(MsgBuffer *);
 void unmarshalUnsentSRecord(MsgBuffer *);
 void unmarshalTerm(MsgBuffer *, OZ_Term *);
 
+#define CheckD0Compatibility \
+   if (ozconf.perdiod0Compatiblity) goto bomb;
+
+
 /* *********************************************************************/
 /*   SECTION 2: global variables                                       */
 /* *********************************************************************/
@@ -544,8 +548,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
       Builtin *bi= (Builtin *)t;
       if (bi->isNative()) {
-	warning("marshaling native builtin, will expire soon: %s",
-		bi->getPrintName());
+	warning("marshaling native builtin, now expired: %s", bi->getPrintName());
 	// goto bomb;
       }
       marshalString(bi->getPrintName(),bs);
@@ -592,6 +595,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
   case Co_Object:
     {
+      CheckD0Compatibility;
+
       PD((MARSHAL,"object"));
       Object *o = (Object*) t;
       ObjectClass *oc = o->getClass();
@@ -601,34 +606,26 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       return;
     }
   case Co_Lock:
+    CheckD0Compatibility;
+
     PD((MARSHAL,"lock"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_LOCK,bs)) return;
     break;
 
   case Co_Cell:
+    CheckD0Compatibility;
+
     PD((MARSHAL,"cell"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_CELL,bs)) return;
     break;
+
   case Co_Port:
     PD((MARSHAL,"port"));
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_PORT,bs)) return;
     break;
-
-    /*
-      case Co_Thread:
-      PD((MARSHAL,"thread"));
-      bs->addRes(makeTaggedConst(t));
-      if (marshalTertiary((Tertiary *) t,DIF_THREAD,bs)) return;
-      break;
-      case Co_Space:
-      PD((MARSHAL,"space"));
-      bs->addRes(makeTaggedConst(t));
-      if (marshalTertiary((Tertiary *) t,DIF_SPACE,bs)) return;
-      break;
-      */
 
   default:
     goto bomb;
@@ -766,6 +763,8 @@ loop:
 
   case FSETVALUE:
     {
+      CheckD0Compatibility;
+
       PD((MARSHAL,"finite set value"));
       OZ_FSetValue * fsetval = tagged2FSetValue(t);
       marshalDIF(bs,DIF_FSETVALUE);
@@ -1155,7 +1154,7 @@ loop:
   case DIF_ARRAY:
     {
       PD((UNMARSHAL,"array"));
-      warning("mm2: array not impl");
+      warning("unmarshal array not impl");  // mm2
       return;
     }
   case DIF_BUILTIN:

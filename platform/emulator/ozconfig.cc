@@ -110,7 +110,8 @@ void ConfigData::init() {
   browser               = 0;
   applet                = 0;
 
-  debugPerdio = 0;
+  debugPerdio  = 0;
+  perdiod0Compatiblity = 0;
   debugIP = 0;
   maxTcpCache = MAX_TCP_CACHE;
   maxUdpPacket = MAX_UDP_PACKET;

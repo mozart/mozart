@@ -114,12 +114,10 @@
 class BorrowTable;
 class OwnerTable;
 class MsgBuffer;
-class FatInt;
 
-void sendSurrender(BorrowEntry *be,OZ_Term val);
-void sendRedirect(Site* sd,int OTI,TaggedRef val);
-void sendAcknowledge(Site* sd,int OTI);
-void sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite,int OTI);
+OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val);
+OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite,int OTI);
+OZ_Return sendAcknowledge(Site* sd,int OTI);
 void sendCreditBack(Site* sd,int OTI,Credit c);
 void sendPrimaryCredit(Site *sd,int OTI,Credit c);
 void sendSecondaryCredit(Site* s,Site* site,int index,Credit c);
@@ -3807,6 +3805,17 @@ void Site::msgReceived(MsgBuffer* bs)
 /*   SECTION 23:: remote send protocol                                */
 /**********************************************************************/
 
+
+#define CheckNogoods(bs,msg)				\
+  { OZ_Term nogoods = bs->getNoGoods();			\
+    if (!literalEq(nil(),nogoods)) {			\
+       return oz_raise(E_ERROR,OZ_atom("perdio"),msg,2,	\
+	  	       oz_atom("nogoods"),		\
+		       nogoods);			\
+    }							\
+  }
+
+
 /* engine-interface */
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   BorrowEntry *b= borrowTable->getBorrow(p->getIndex());
@@ -3817,13 +3826,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   MsgBuffer *bs = msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
   marshal_M_REMOTE_SEND(bs,index,biName,msg);
-  OZ_Term nogoods = bs->getNoGoods();
-  if (!literalEq(nil(),nogoods)) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"send",2,
-		    oz_atom("nogoods"),
-		    nogoods);
-  }
-
+  CheckNogoods(bs,"send");
   SendTo(site,bs,M_REMOTE_SEND,site,index);
   return PROCEED;
 }
@@ -3972,24 +3975,32 @@ void sendRegister(BorrowEntry *be) {
   marshal_M_REGISTER(bs,na->index,mySite);
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);}
 
-void sendSurrender(BorrowEntry *be,OZ_Term val){
+OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();  
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   marshal_M_SURRENDER(bs,na->index,mySite,val);
-  SendTo(na->site,bs,M_SURRENDER,na->site,na->index);}
+  CheckNogoods(bs,"unify");
+  SendTo(na->site,bs,M_SURRENDER,na->site,na->index);
+  return PROCEED;
+}
 
-void sendRedirect(Site* sd,int OTI,TaggedRef val){
+OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_REDIRECT(bs,mySite,OTI,val);
-  SendTo(sd,bs,M_REDIRECT,mySite,OTI);}
+  CheckNogoods(bs,"unify");
+  SendTo(sd,bs,M_REDIRECT,mySite,OTI);
+  return PROCEED;
+}
 
-void sendAcknowledge(Site* sd,int OTI){
+OZ_Return sendAcknowledge(Site* sd,int OTI){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);  
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_ACKNOWLEDGE(bs,mySite,OTI);
-  SendTo(sd,bs,M_ACKNOWLEDGE,mySite,OTI);}
+  SendTo(sd,bs,M_ACKNOWLEDGE,mySite,OTI);
+  return PROCEED;
+}
 
 void PerdioVar::acknowledge(OZ_Term *p){
   PD((PD_VAR,"acknowledge"));
@@ -4014,40 +4025,46 @@ void PerdioVar::redirect(OZ_Term val) {
     u.bindings=tmp;}
 }
 
-void sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI){
+OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI){
+  OZ_Return ret = PROCEED;
   while (pl) {
     Site* sd=pl->sd;
     ProxyList *tmp=pl->next;
     pl->dispose();
     pl = tmp;
 
-    if (sd==ackSite) {
-      sendAcknowledge(sd,OTI);} 
-    else {
-      sendRedirect(sd,OTI,val);}}
+    ret = (sd==ackSite) ? sendAcknowledge(sd,OTI) : sendRedirect(sd,OTI,val);
+    if (ret != PROCEED)
+      break;
+  }
+  return ret;
 }
 
-void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
+OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
 {
   PD((PD_VAR,"bindPerdioVar by thread: %x",am.currentThread()));
   if (pv->isManager()) {
     PD((PD_VAR,"bind manager o:%d v:%s",pv->getIndex(),toC(v)));
     pv->primBind(lPtr,v);
     OT->getOwner(pv->getIndex())->mkRef();
-    sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
-  } else if (pv->isObject()) {
+    return sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
+  } 
+  if (pv->isObject()) {
     PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(pv->getObject()))));
     pv->primBind(lPtr,v);
+    return PROCEED;
+  } 
+
+  PD((PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v)));
+  Assert(pv->isProxy());
+  if (pv->hasVal()) {
+    return pv->pushVal(v); // save binding for ack message, ...
   } else {
-    PD((PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v)));
-    Assert(pv->isProxy());
-    if (pv->hasVal()) {
-      pv->pushVal(v); // save binding for ack message, ...
-    } else {
-      pv->setVal(v); // save binding for ack message, ...
-      BorrowEntry *be=BT->getBorrow(pv->getIndex());
-      sendSurrender(be,v);
-    }
+    BorrowEntry *be=BT->getBorrow(pv->getIndex());
+    OZ_Return aux = sendSurrender(be,v);
+    if (aux!=PROCEED) 
+      return aux;
+    return pv->setVal(v); // save binding for ack message, ...
   }
 }
 

@@ -2069,7 +2069,6 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
 {
   int ret = oz_unify(val1,val2);
   if (ret == PROCEED) return;
-  DebugCheckT(printf("oz_unifyInThread: ret=%d\n",ret));
   switch (ret) {
   case SUSPEND:
     {
