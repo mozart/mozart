@@ -24,7 +24,7 @@
  *
  */
 
-#include "aux.hh"
+#include "misc.hh"
 
 double * getDoubleVector(OZ_Term t, double * v)
 {
