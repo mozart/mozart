@@ -64,7 +64,7 @@ define
 	 else
 	    case S of C|Cr then
 	       C|{ChangeExtensionSub Cr OldExt NewExt}
-	    [] nil then nil
+	    [] nil then NewExt
 	    end
 	 end
       end
