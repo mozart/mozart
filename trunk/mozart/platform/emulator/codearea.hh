@@ -54,7 +54,7 @@ public:
 
 class AbstractionTable: public HashTable {
 public:
-  AbstractionTable(int s) : HashTable(INTTYPE,s) {};
+  AbstractionTable(int s) : HashTable(HT_INTKEY,s) {};
 
   static AbstractionEntry *add(int id);
   static AbstractionEntry *add(Abstraction *abstr);

@@ -19,7 +19,6 @@ struct BIspec {
   char *name;
   int arity;
   OZ_CFun fun;
-  Bool yps;
   IFOR ifun;
 };
 
@@ -29,10 +28,8 @@ void BIaddSpec(BIspec *spec);
 
 
 BuiltinTabEntry *BIinit();
-BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
-		       Bool replace = NO, IFOR infun=(IFOR) NULL);
-BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
-			      Bool replace = NO);
+BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
+BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t);
 
 
 // -----------------------------------------------------------------------
@@ -40,7 +37,7 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
 
 class BuiltinTab : public HashTable {
 public:
-  BuiltinTab(int sz) : HashTable(CHARTYPE,sz) {};
+  BuiltinTab(int sz) : HashTable(HT_CHARKEY,sz) {};
   ~BuiltinTab() {};
   unsigned memRequired(void) {
     return HashTable::memRequired(sizeof(BuiltinTabEntry));
