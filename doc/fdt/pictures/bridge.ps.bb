@@ -1,1 +1,1 @@
-%%BoundingBox: 0 0 863 576
+%%BoundingBox: 90 237 522 525
