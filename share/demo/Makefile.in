@@ -5,7 +5,7 @@ SRCDIR		= @srcdir@
 SRCTOP		= @SRCTOP@
 
 PREFIX		= @prefix@
-OZDEMO		= $(PREFIX)/doc/demo
+OZDEMO		= $(PREFIX)/doc/demo/applets
 
 SHELL		= /bin/sh
 LN_S            = @LN_S@
