@@ -206,6 +206,12 @@ public:
 
   Bool isEmptySuspList() { return suspList==0; }
   int getSuspListLengthS() { return suspList->length(); }
+  void removeFromSuspList(Suspendable * sl) {
+    suspList = suspList->remove(sl);
+  }
+  Bool isInSuspList(Suspendable * sl) {
+    return suspList->isIn(sl);
+  }
 
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   SuspList *getSuspList() { return suspList; }

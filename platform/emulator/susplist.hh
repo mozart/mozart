@@ -77,6 +77,30 @@ public:
   Suspendable * getSuspendable(void) {
     return _susp;
   }
+  SuspList * remove(Suspendable * s) {
+    if (this) {
+      if (getSuspendable() == s)
+        return getNext();
+      SuspList * pl = this;
+      SuspList * sl = pl->getNext();
+      while (sl) {
+        if (sl->getSuspendable() == s) {
+          pl->setNext(sl->getNext());
+          break;
+        }
+        pl = sl;
+        sl = sl->getNext();
+      }
+    }
+    return this;
+  }
+
+  Bool isIn(Suspendable * s) {
+    for (SuspList * sl = this; sl; sl = sl->getNext())
+      if (s == sl->getSuspendable())
+        return OK;
+    return NO;
+  }
 
   SuspList * appendToAndUnlink(SuspList * &, Bool reset_local);
 
