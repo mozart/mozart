@@ -710,13 +710,19 @@ extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
 // ???
 // ------------------------------------------------------------------------
 
+#define MAGIC_RET                                               \
+{                                                               \
+   if (tmpRet == SUSPEND) return T_SUSPEND;                     \
+   if (tmpRet == PROCEED) goto LBLpopTask;                      \
+   Assert(tmpRet == RAISE || tmpRet == BI_REPLACEBICALL);       \
+   goto LBLhandleRet;                                           \
+}
+
 #define SUSP_PC(TermPtr,PC) {                   \
    CheckLiveness(PC);                           \
    PushContX(PC);                               \
-   OZ_Return ret = oz_var_addSusp(TermPtr,CTT); \
-   if (ret == SUSPEND) return T_SUSPEND;        \
-   if (ret == PROCEED) goto LBLpopTask;         \
-   goto LBLhandleRet;                           \
+   tmpRet = oz_var_addSusp(TermPtr,CTT);        \
+   MAGIC_RET;                                   \
 }
 
 /*
@@ -729,9 +735,7 @@ extern void checkLiveness(ProgramCounter PC,TaggedRef *X, int maxX);
 #define SUSPENDONVARLIST                        \
 {                                               \
   tmpRet = e->suspendOnVarList(CTT);            \
-  if (tmpRet == SUSPEND) return T_SUSPEND;      \
-  if (tmpRet == PROCEED) goto LBLpopTask;       \
-  goto LBLhandleRet;                            \
+  MAGIC_RET;                                    \
 }
 
 static
@@ -1178,9 +1182,7 @@ LBLdispatcher:
           CheckLiveness(PC);
           PushContX(PC);
           tmpRet = suspendInline(CTT,auxTaggedA,auxTaggedB);
-          if (tmpRet == SUSPEND) return T_SUSPEND;
-          if (tmpRet == PROCEED) goto LBLpopTask;
-          goto LBLhandleRet;
+          MAGIC_RET;
         }
       default:    Assert(0);
       }
@@ -1218,9 +1220,7 @@ LBLdispatcher:
             CheckLiveness(PC);
             PushContX(PC);
             tmpRet = suspendInline(CTT,A);
-            if (tmpRet == PROCEED) goto LBLpopTask;
-            if (tmpRet == SUSPEND) return T_SUSPEND;
-            goto LBLhandleRet;
+            MAGIC_RET;
           }
 
         case RAISE:
@@ -1389,10 +1389,7 @@ LBLdispatcher:
           CheckLiveness(PC);
           PushContX(PC);
           tmpRet = suspendInline(CTT,XPC(1),XPC(2));
-          if (tmpRet == SUSPEND) return T_SUSPEND;
-          if (tmpRet == PROCEED) goto LBLpopTask;
-Assert(0);
-          goto LBLhandleRet;
+          MAGIC_RET;
         }
 
       case BI_TYPE_ERROR:
@@ -1916,6 +1913,7 @@ Assert(0);
      default: break;
      }
      Assert(0);
+     error("impossible");
 
 // ------------------------------------------------------------------------
 // --- Call: Builtin: replaceBICall
@@ -2217,9 +2215,7 @@ Assert(0);
         if (isVariableTag(predTag)) {
           CTS->pushCallNoCopy(makeTaggedRef(predPtr),args);
           tmpRet = oz_var_addSusp(predPtr,CTT);
-          if (tmpRet == PROCEED) goto LBLpopTask;
-          if (tmpRet == SUSPEND) return T_SUSPEND;
-          goto LBLhandleRet;
+          MAGIC_RET;
         }
         RAISE_APPLY(taggedPredicate,OZ_toList(predArity,args));
       }
