@@ -1411,6 +1411,7 @@ OZ_BI_define(unix_pipe,2,2) {
   buf[0] = '\0';
   for (k=0 ; k<argno; k++) {
     strcat(buf,argv[k]);
+    strcat(buf," ");
   }
 
   SECURITY_ATTRIBUTES sa;
@@ -1436,11 +1437,14 @@ OZ_BI_define(unix_pipe,2,2) {
 
 
   HANDLE saveout = GetStdHandle(STD_OUTPUT_HANDLE);
+  HANDLE saveerr = GetStdHandle(STD_ERROR_HANDLE);
   HANDLE savein  = GetStdHandle(STD_INPUT_HANDLE);
   HANDLE rh1,wh1,rh2,wh2;
+message(buf);
   if (!CreatePipe(&rh1,&wh1,&sa,0)  ||
       !CreatePipe(&rh2,&wh2,&sa,0)  ||
       !SetStdHandle((DWORD)STD_OUTPUT_HANDLE,wh1) ||
+      !SetStdHandle((DWORD)STD_ERROR_HANDLE,wh1) ||
       !SetStdHandle((DWORD)STD_INPUT_HANDLE,rh2) ||
       !CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
                      NULL,NULL,&si,&pinf)) {
@@ -1452,6 +1456,7 @@ OZ_BI_define(unix_pipe,2,2) {
   CloseHandle(wh1);
   CloseHandle(rh2);
   SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
+  SetStdHandle((DWORD)STD_ERROR_HANDLE,saveerr);
   SetStdHandle((DWORD)STD_INPUT_HANDLE,savein);
 
   int rsock = _hdopen((int)rh1,O_RDONLY|O_BINARY);
