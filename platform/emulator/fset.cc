@@ -3511,10 +3511,12 @@ char * OZ_FSetValue::toString() const
   const FSetValue * tmp = (const FSetValue *) this;
   tmp->print(str);
 
-#ifdef DEBUG_FSET_CONSTRREP
+#ifdef DEBUG_FSET_CONSTRREP_DETAILED_OUTPUT
   static ozstrstream tmp_str;
   tmp_str.reset();
-  tmp_str << "fset_val(set:" << str.str() << " card:" << _card << ")" << flush;
+  tmp_str << "fset_val(set:" << str.str() << " card:" << _card << ")" 
+	  << "@" << this
+	  << flush;
   return tmp_str.str();
 #else
   return str.str();
@@ -3843,11 +3845,12 @@ char * OZ_FSetConstraint::toString() const
   const FSetConstraint * tmp = (const FSetConstraint *) this;
   tmp->print(str);
 
-#ifdef DEBUG_FSET_CONSTRREP
+#ifdef DEBUG_FSET_CONSTRREP_DETAILED_OUTPUT
   static ozstrstream tmp_str;
   tmp_str.reset();
   tmp_str << "fset(" << str.str()
 	  << " card:" << _card_min << "#" << _card_max << ")"
+	  << "@" << this
 	  << flush;
   return tmp_str.str();
 #else

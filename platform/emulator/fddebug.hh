@@ -32,14 +32,27 @@
 //-----------------------------------------------------------------------------
 
 //#define DEBUG_CONSTRAINT_IR
+
 #ifdef DEBUG_CONSTRAINT_IR
+//#define DEBUG_FD
+//#define DEBUG_FSET
+
 //#define DEBUG_FD_CONSTRREP
-#define DEBUG_FD
-#define DEBUG_FSET
 //#define DEBUG_FSET_CONSTRREP
+
+#define DEBUG_FD_CONSTRREP_DETAILED_OUTPUT
+#define DEBUG_FSET_CONSTRREP_DETAILED_OUTPUT
 
 //#define TO_FSET_FILE
 //#define TO_FD_FILE
+#endif
+
+#ifdef DEBUG_FD_CONSTRREP
+#define DEBUG_FD_CONSTRREP_DETAILED_OUTPUT
+#endif
+
+#ifdef DEBUG_FSET_CONSTRREP
+#define DEBUG_FSET_CONSTRREP_DETAILED_OUTPUT
 #endif
 
 extern FILE * _fdomn_file, * _fset_file;
