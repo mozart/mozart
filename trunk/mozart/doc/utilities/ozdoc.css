@@ -9,7 +9,7 @@ PRE, CODE {
 BODY {
   background-color: white;
   margin-left: 160px;
-  background-image: url(http://www.ps.uni-sb.de/www/img/page.gif);
+  background: url(http://www.ps.uni-sb.de/www/img/page.gif) white;
 }
 
 P {
