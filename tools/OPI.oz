@@ -35,45 +35,13 @@ import
    Open(file)
    Compiler(engine)
    Emacs(interface)
+   OPIEnv(full)
 export
    compiler: OPICompiler
    interface: CompilerUI
    'import': Import
-require
-   DefaultURL(functorNames: Modules)
 prepare
    Spec = record(host(single type: string default: unit))
-
-   ShortCuts = [%% Library
-		'Pickle'('Load': [load]
-			 'Save': [save])
-
-		'Search'('SearchOne':  [base one]
-			 'SearchAll':  [base all]
-			 'SearchBest': [base best])
-
-		'System'('Show':  [show]
-			 'Print': [print])
-
-		'Module'('Link':  [link]
-			 'Apply': [apply])
-
-		%% Tools
-		'Browser'('Browse': [browse])
-
-		'Explorer'('ExploreOne':  [one]
-			   'ExploreAll':  [all]
-			   'ExploreBest': [best])
-
-		'Inspector'('Inspect': [inspect])
-
-		'OPI'('Import': ['import'])]
-
-   fun {Dots M Fs}
-      case Fs of nil then M
-      [] F|Fr then {Dots M.F Fr}
-      end
-   end
 define
    Args = {Application.getCmdArgs Spec}
 
@@ -122,32 +90,7 @@ define
       end
    end
 
-   local
-      ModMan = {New Module.manager init}
-   in
-      %% Get system modules
-      local
-	 Env = {List.toRecord env
-		{Map Modules
-		 fun {$ ModName}
-		    ModName#{ModMan link(name:ModName $)}
-		 end}}
-      in
-	 {OPICompiler enqueue(mergeEnv(Env))}
-      end
-
-      %% Provide shortcuts
-      {ForAll ShortCuts
-       proc {$ SC}
-	  Module = {ModMan link(name:{Label SC} $)}
-	  Env    = {Record.map SC
-		    fun lazy {$ Fs}
-		       {Dots Module Fs}
-		    end}
-       in
-	  {OPICompiler enqueue(mergeEnv(Env))}
-       end}
-   end
+   {OPICompiler enqueue(mergeEnv({AdjoinAt OPIEnv.full 'Import' Import}))}
 
    CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
    {Property.put 'opi.compiler' CompilerUI}
