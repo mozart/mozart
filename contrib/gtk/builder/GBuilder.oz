@@ -115,6 +115,7 @@ define
 
    proc {AnalyzeConfigurator Desc ClassName ?Handle ?Args ?Signals ?Children}
       ChildrenDict = {NewDictionary}
+      Children0
    in
       Args = {NewDictionary}
       Signals = {NewDictionary}
@@ -122,6 +123,8 @@ define
          Value = Desc.F
          case F of handle then
             Handle = Value
+         [] children then
+            ChildrenDict.children := Value
          elseif {IsAtom F} then
             case {GetFeature ClassName F} of ArgSpec=arg(...) then
                if {GBuilderTypes.is ArgSpec.type Value} then
@@ -142,7 +145,15 @@ define
             {Exception.raiseError gBuilder(unknownFeature ClassName F Value)}
          end
       end
-      Children = {Dictionary.toRecord children ChildrenDict}
+      Children0 = {Dictionary.toRecord children ChildrenDict}
+      case Children0 of children(children: Cs) then
+         Children = {List.toTuple children Cs}
+      elseif {IsTuple Children0} then
+         Children = Children0
+      else
+         {Exception.raiseError
+          gBuilder(illegalChildren ClassName {Arity Children0})}
+      end
    end
 
    ConfigureArgs = {NewName}
@@ -159,34 +170,38 @@ define
       end
    end
 
-   proc {Create Desc Object} ClassName in
-      ClassName = {Label Desc}
-      case {Dictionary.condGet WidgetSpecs ClassName NONE} of !NONE then
-         {Exception.raiseError gBuilder(unknownClass ClassName)}
-      elseof ClassSpec then Args Signals Children in
-         {AnalyzeConfigurator Desc ClassName ?Object ?Args ?Signals ?Children}
-         case {CondSelect ClassSpec new NONE} of !NONE then
-            {Exception.raiseError gBuilder(abstract ClassName)}
-         elseof News then
-            case {SelectConstructor ClassName News Args} of Names#Constructor
-            then InitArgs in
-               InitArgs = {ConstructorGetArgs ClassName Names Args}
-               %% Apply the constructor
-               if {IsAtom Constructor} then
-                  Object = {New ClassSpec.'class'
-                            {List.toTuple Constructor InitArgs}}
-               else
-                  {Procedure.apply Constructor
-                   ClassSpec.'class'|{Append InitArgs [Object]}}
+   proc {Create Desc Object}
+      if {IsObject Desc} then Object = Desc
+      else ClassName in
+         ClassName = {Label Desc}
+         case {Dictionary.condGet WidgetSpecs ClassName NONE} of !NONE then
+            {Exception.raiseError gBuilder(unknownClass ClassName)}
+         elseof ClassSpec then Args Signals Children in
+            {AnalyzeConfigurator Desc ClassName
+             ?Object ?Args ?Signals ?Children}
+            case {CondSelect ClassSpec new NONE} of !NONE then
+               {Exception.raiseError gBuilder(abstract ClassName)}
+            elseof News then
+               case {SelectConstructor ClassName News Args}
+               of Names#Constructor then InitArgs in
+                  InitArgs = {ConstructorGetArgs ClassName Names Args}
+                  %% Apply the constructor
+                  if {IsAtom Constructor} then
+                     Object = {New ClassSpec.'class'
+                               {List.toTuple Constructor InitArgs}}
+                  else
+                     {Procedure.apply Constructor
+                      ClassSpec.'class'|{Append InitArgs [Object]}}
+                  end
+               [] !NONE then
+                  {Exception.raiseError
+                   gBuilder(constructor ClassName {Dictionary.keys Args})}
                end
-            [] !NONE then
-               {Exception.raiseError
-                gBuilder(constructor ClassName {Dictionary.keys Args})}
             end
+            {Object ConfigureArgs(Args ClassName)}
+            {Object ConfigureSignals(Signals ClassName)}
+            {Object ConfigureChildren(Children ClassName)}
          end
-         {Object ConfigureArgs(Args ClassName)}
-         {Object ConfigureSignals(Signals ClassName)}
-         {Object ConfigureChildren(Children ClassName)}
       end
    end
 
@@ -253,10 +268,7 @@ define
             Child = case {CondSelect Desc 1 NONE} of !NONE then
                        {Exception.raiseError
                         gBuilder(missingChild ClassName {Label Desc})} unit
-                    elseof ChildDesc then
-                       if {IsObject ChildDesc} then ChildDesc
-                       else {Create ChildDesc}
-                       end
+                    elseof ChildDesc then {Create ChildDesc}
                     end
             case {CondSelect Adds {Label Desc} NONE} of !NONE then
                {Exception.raiseError
@@ -436,6 +448,11 @@ define
                 msg: 'trying to get write-only argument'
                 items: [hint(l: 'Widget class' m: ClassName)
                         hint(l: 'Argument name' m: ArgName)])
+       [] gBuilder(illegalChildren ClassName Features) then
+          error(kind: T
+                msg: 'illegal features for specifying children'
+                items: [hint(l: 'Widget class' m: ClassName)
+                        hint(l: 'Features' m: '{'#list(Features ', ')#'}')])
        [] gBuilder(missingChild ClassName Method) then
           error(kind: T
                 msg: 'missing child description'
