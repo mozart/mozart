@@ -29,7 +29,6 @@ import
    System.{showError}
 
 export
-   'GumpParser': GumpParser
    'class':      GumpParser
 
 body

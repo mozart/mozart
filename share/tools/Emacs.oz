@@ -31,11 +31,12 @@ import
    OS.{getEnv stat uName getHostByName tmpnam}
    Open.{socket text file}
    Compiler.genericInterface
+
 export
-   'Emacs':   Emacs
    getOPI:    GetOPI
    condSend:  CondSend
    interface: CompilerInterfaceEmacs
+
 body
    TimeoutToConfigBar = 200
    TimeoutToUpdateBar = TimeoutToConfigBar
@@ -292,7 +293,4 @@ body
 			     end
 			  end)
 
-   Emacs = emacs(getOPI:    GetOPI
-		 condSend:  CondSend
-		 interface: CompilerInterfaceEmacs)
 end

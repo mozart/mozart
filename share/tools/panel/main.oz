@@ -78,6 +78,15 @@ in
 	 end
       end
 
+      meth close
+	 lock
+	    if @ThisPanelTop\=unit then
+	       thread {@ThisPanelTop tkClose} end
+	       ThisPanelTop <- unit
+	    end
+	 end
+      end
+      
       meth !PanelTopClosed
 	 lock
 	    ThisPanelTop <- unit

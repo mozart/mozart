@@ -620,7 +620,7 @@ the variable `oz-pedantic-spaces' is non-nil."
   "Start the Oz debugger.
 With ARG, stop it instead."
   (interactive "P")
-  (oz-send-string (if arg "{Ozcar off}" "{Ozcar on}") t))
+  (oz-send-string (if arg "{Ozcar.close}" "{Ozcar.open}") t))
 
 (defun oz-debug-stop (arg)
   "Stop the Oz debugger.
@@ -678,7 +678,7 @@ With ARG, set it instead."
   "Start the profiler.
 With ARG, stop it instead."
   (interactive "P")
-  (oz-send-string (if arg "{Profiler off}" "{Profiler on}") t))
+  (oz-send-string (if arg "{Profiler.close}" "{Profiler.open}") t))
 
 (defun oz-profiler-stop (arg)
   "Stop the profiler.
@@ -2612,9 +2612,9 @@ of the procedure Browse."
     (oz-feed-region-browse (car region) (cdr region))))
 
 (defun oz-view-panel ()
-  "Feed `{Panel open}' to the Oz Compiler."
+  "Feed `{Panel.open}' to the Oz Compiler."
   (interactive)
-  (oz-send-string "{Panel open}" t))
+  (oz-send-string "{Panel.open}" t))
 
 (defun oz-compiler-panel ()
   "Feed `{New CompilerPanel init(`Compiler`) _}' to the Oz Compiler."
