@@ -434,7 +434,7 @@ phrase          : phrase '=' coord phrase
                 | phrase OOASSIGN coord phrase
                   { $$ = newCTerm("fAssign",$1,$4,$3); }
                 | phrase ASSIGN coord phrase
-                  { $$ = newCTerm("fOpApply",newCTerm(":="),
+                  { $$ = newCTerm("fOpApplyStatement",newCTerm(":="),
                                   consList($1,consList($4,nilAtom)),$3); }
                 | phrase orelse coord phrase
                   { $$ = newCTerm("fOrElse",$1,$4,$3); }
