@@ -57,9 +57,9 @@ bootstrap:
 ifeq ($(MSWIN),yes)
 
 install: $(WINEXES)
-        $(INSTALL_BIN) oz.exe oz.ico setup.exe setup.ico $(PREFIX)
-        $(INSTALL_BIN) ozengine.exe $(PREFIX)/platform/win32-i486
-        $(INSTALL_BIN) ozc.bat $(PREFIX)/bin
+        $(INSTALL_DIR) $(PREFIX)/winbin
+        $(INSTALL_BIN) oz.exe oz.ico setup.exe setup.ico ozc.bat ozengine.exe \
+                        $(PREFIX)/winbin
 
 all: $(WINEXES)
 
