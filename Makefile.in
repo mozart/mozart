@@ -169,9 +169,9 @@ $(PLATFORMS): $(DISTDIR)
 oz-win::
         rm -rf oz oz3 oz-`$(OZVERSION)`
         ( cd $(PREFIX)/..; \
-          $(TAR) cf - oz/?*.exe oz/?*.ico oz/demo oz/include oz/share \
+          $(TAR) cf - oz/include oz/share \
                    oz/LICENSE \
-                   oz/bin/ozc \
+                   oz/winbin \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/wish \
@@ -181,4 +181,5 @@ oz-win::
         $(INSTALL_DIR) $(WINCACHEDIR)/bin
         mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
         mv $(WINCACHEDIR)/share/Init.ozf oz/share
+        mv oz/winbin oz/bin
         mv oz oz3
