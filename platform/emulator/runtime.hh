@@ -75,6 +75,9 @@ OZ_Term oz_newChunk(OZ_Term val)
  * # - tuples
  * -----------------------------------------------------------------------*/
 
+#define oz_cons(a,b) cons(a,b)
+#define oz_nil()  nil()
+
 inline
 int oz_isPair(OZ_Term term)
 {
