@@ -39,7 +39,7 @@ protected:
 public:
   PEL_LessEqOffset(PEL_PersistentFDIntVar &x, int c, 
 		   PEL_PersistentFDIntVar &y) 
-    :  _c(c) {
+    :  _c(-c) {
     _x = x.newId(*_pe);
     _y = y.newId(*_pe);
     CDM(("constr lesseqoff _x=%d _y=%d _c=%d\n", _x, _y, _c));

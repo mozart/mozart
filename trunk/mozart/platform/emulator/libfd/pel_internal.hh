@@ -35,9 +35,9 @@
 //-----------------------------------------------------------------------------
 // debug macros
 
-//#define DEBUG_COMPOUND
+//#define DEBUG_PEL
 
-#ifdef DEBUG_COMPOUND
+#ifdef DEBUG_PEL
 #define CDM(A) printf A; fflush(stdout)
 #define CMD(C) C
 #define CASSERT(C)					\
@@ -45,6 +45,7 @@
     fprintf(stderr,"CASSERT %s failed (%s:%d).\n",	\
 	    #C,__FILE__, __LINE__);			\
     fflush(stderr);					\
+    OZ_error("CASSERT fired!"); \
   }
 #else
 #define CDM(A)
@@ -169,8 +170,10 @@ public:
   ResizeableArray(void) : EnlargeableArray<T,M>() { }
   //
   void resize(int new_size) {
-    if (new_size > _size)
+    if (new_size > _size) {
       _array = realloc(_array, _size, new_size);
+      _size = new_size;
+    }
   }
   void reset(void) {
     _size = 0;
