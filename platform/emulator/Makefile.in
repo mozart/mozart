@@ -85,9 +85,6 @@ FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
 SCHEDLIBSRCS = $(FDDIR)/scheduling.cc $(FDDIR)/schedulingDist.cc \
                $(FDDIR)/schedulingDistAux.cc $(FDDIR)/taskintervals.cc
 
-# ??? #ifdef LINKFOREIGNFD
-SCHEDLIBSRCS += $(FDDIR)/std.cc $(FDDIR)/fdaux.cc $(FDDIR)/rel.cc
-
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
 FSETDIR = $(srcdir)/FSetLib
