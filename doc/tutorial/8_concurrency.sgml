@@ -290,7 +290,7 @@ producing volvo's. This happens in general in an eager fashion.
 
 <<<fun {Producer ...} ... volvo|{Producer ...} ... end>>>
 
-<P>The consumer waits on the stream until items arrives, then the items
+<P>The consumer waits on the stream until items arrive, then the items
 are consumed as in:
 
 <<<
@@ -582,7 +582,7 @@ declare Y
 <P>we will observe that <<Y>> becomes a future, 
 i.e. we will see <<Y&lt;Future&gt;>> in the Browser. 
 If we try to access the value of <<Y>>, it will get bound to <<1>>.
-One way to access <<Y>> is by perform the operation
+One way to access <<Y>> is by performing the operation
 <<{Wait Y}>> which triggers the producing procedure.
 
 

@@ -147,9 +147,9 @@ error is raised.
 
 <LIST>
 
-<ITEM><<{NewLock L}>> creates a new lock <<L>> .   
+<ITEM><<{NewLock L}>> creates a new lock <<L>>.   
 
-<ITEM><<{IsLock E>>} returns true iff  <<E >>is a lock..
+<ITEM><<{IsLock E>>} returns true iff  <<E >>is a lock.
 
 </LIST>
 
@@ -180,7 +180,7 @@ elements of an array to positive, and zero elements to the atom
 <<zero>>! The procedure <<Zero>> resets all elements to zero.
 
 <P><FIGURE ID="usingLock" CLASS="Figure">
-<CAPTION>Using Lock</CAPTION>
+<CAPTION>Using a lock</CAPTION>
 <<<
 declare A L in
 A = {NewArray 1 100 ~5}
@@ -277,7 +277,7 @@ method body with <<lock ... end>>, and
 
 <P>Of course, if we use multiple threads calling methods in multiple
 objects, we might deadlock if there is any cyclic dependency. Writing
-nontrivial concurrent program needs careful understanding of the
+nontrivial concurrent programs needs careful understanding of the
 dependency patterns between threads. In such programs deadlock may
 occur whether locks are used or not. It suffices to have a cyclic
 communication pattern for deadlock to occur.
@@ -438,7 +438,7 @@ end
 above. In general it is very awkward. There is a simpler way to write
 a <<UnitBuffer>> class that is not traditional. This is due to the
 combination of objects and logic variable, <PTR TO="unitBuffer"> shows 
-simple definition. No locking is needed directly.
+a simple definition. No locking is needed directly.
 
 <P><FIGURE ID="unitBuffer" CLASS="Figure">
 <CAPTION>Unit Buffer</CAPTION>
@@ -462,7 +462,7 @@ end
 >>>
 </FIGURE>
 
-<P>Simple generalization of the above program leads to an arbitrary
+<P>A simple generalization of the above program leads to an arbitrary
 size bounded buffer class. This is shown in below. The put and get
 methods are the same as before. Only the initialization method is
 changed.
