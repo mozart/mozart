@@ -1,0 +1,11 @@
+AC_INIT(simple.cc)
+AC_CANONICAL_HOST
+AC_PROG_CXX
+AC_LANG_CPLUSPLUS
+AC_PROG_INSTALL
+AC_PATH_PROG(DYNLD, ozdynld, ozdynld, `pwd`/../../bin $prefix/oz/bin)
+AC_PATH_PROG(PLATFORM, ozplatform, ozplatform, `pwd`/../../bin $prefix/oz/bin)
+platform=`$PLATFORM`
+AC_SUBST(DYNLD)
+AC_SUBST(platform)
+AC_OUTPUT(Makefile)
