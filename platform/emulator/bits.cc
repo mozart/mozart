@@ -21,9 +21,11 @@
  *
  */
 
-#include "bits.hh"
+#if defined(INTERFACE)
+#pragma implementation "bits.hh"
+#endif
 
-#pragma implementation
+#include "bits.hh"
 
 const char bits_in_byte[256] = {
   0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 
