@@ -24,6 +24,7 @@ import
    Error(registerFormatter)
    GDK
    GTK
+   GTKCANVAS
    GBuilderTypes(is fromOz toOz)
    GBuilderWidgets(widgets)
 export
@@ -338,7 +339,10 @@ define
 
       class C
 	 from
-	    case Spec.api of gdk then GDK [] gtk then GTK end.ClassName
+	    case Spec.api of gdk then GDK
+	    [] gtk then GTK
+	    [] gtkcanvas then GTKCANVAS
+	    end.ClassName
 	    GBuilderMixin
 	 meth conf(...)=M Args Signals Children in
 	    {AnalyzeConfigurator M ClassName unit ?Args ?Signals ?Children}
