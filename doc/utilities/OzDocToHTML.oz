@@ -596,7 +596,8 @@ define
                               HTML = SEQ([HTML1
                                           h1(a(name: Label Title))
                                           {@MyIndexer
-                                           process(@IndexDBName @XRefDir $)}])
+                                           process(@IndexDBName @XRefDir
+                                                   @TopTitle $)}])
                               WhereNow <- WhereBefore
                               OzDocToHTML, FinishNode(Title X HTML $)
                            end
@@ -1928,6 +1929,7 @@ define
          ToGenerate <- L2|@ToGenerate
          case {CondSelect M see unit} of unit then
             {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2 @WhereNow.1)
+                              (@CurrentNode#"#"#L2)#@WhereNow.1
                               {CondSelect M 'class' nil})}
          elseof X then Node HTML in
             OzDocToHTML, ID(X ?Node ?HTML)
@@ -1936,7 +1938,9 @@ define
                                           PCDATA(' (')
                                           a(href: @CurrentNode#"#"#L2
                                             @WhereNow.1)
-                                          PCDATA(')')]) [see])}
+                                          PCDATA(')')])
+                              (@CurrentNode#"#"#L2)#@WhereNow.1
+                              [see])}
          end
          a(name: L2)
       end
@@ -1948,7 +1952,9 @@ define
                                    PCDATA(' (')
                                    a(href: @CurrentNode#"#"#L2
                                      @WhereNow.1)
-                                   PCDATA(')')]) [generated])}
+                                   PCDATA(')')])
+                              (@CurrentNode#"#"#L2)#@WhereNow.1
+                              [generated])}
             OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML L2)
          [] nil then skip
          end
