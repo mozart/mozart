@@ -1694,12 +1694,13 @@ Case(GETVOID)
         JUMPRELATIVE(table->lookupLiteral(term));
       case TAG_SMALLINT:
         JUMPRELATIVE(table->lookupSmallInt(term));
-      case TAG_FLOAT:
-        JUMPRELATIVE(table->lookupFloat(term));
       case TAG_CONST:
-        if (tagged2Const(term)->getType() == Co_BigInt) {
+        switch (tagged2Const(term)->getType()) {
+        case Co_Float:
+          JUMPRELATIVE(table->lookupFloat(term));
+        case Co_BigInt:
           JUMPRELATIVE(table->lookupBigInt(term));
-        } else {
+        default:
           JUMPRELATIVE(table->lookupElse());
         }
       case TAG_REF:
@@ -2356,9 +2357,9 @@ Case(GETVOID)
         }
       }
 
-      if (isFloatTag(tagA)) {
+      if (oz_isFloat(A)) {
         TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-        if (isFloatTag(tagB)) {
+        if (oz_isFloat(B)) {
           LT_IF(floatValue(A) < floatValue(B));
         }
       }
@@ -2408,7 +2409,7 @@ Case(GETVOID)
           LT_IF(smallIntLE(A,B));
         }
 
-        if (isFloatTag(tagA)) {
+        if (oz_isFloat(A) && oz_isFloat(B)) {
           LT_IF(floatValue(A) <= floatValue(B));
         }
 

@@ -331,54 +331,6 @@ Bool smallIntCmp(TaggedRef a, TaggedRef b)
 
 
 /*===================================================================
- * Float
- *=================================================================== */
-
-class Float {
-protected:
-  double value;
-
-public:
-  OZPRINTLONG
-  NO_DEFAULT_CONSTRUCTORS(Float)
-  static Float *newFloat(double val);
-  double getValue() { return value; }
-  unsigned int hash() { return (unsigned int) value; }
-
-  Float * gCollect(void);
-};
-
-inline
-Float *Float::newFloat(double val)
-{
-  Float *ret = (Float *) oz_heapMalloc(sizeof(Float));
-  ret->value = val;
-  return ret;
-}
-
-inline
-double floatValue(TaggedRef t)
-{
-  return tagged2Float(t)->getValue();
-}
-
-inline
-Bool floatEq(TaggedRef a, TaggedRef b)
-{
-  return (tagged2Float(a)->getValue() == tagged2Float(b)->getValue());
-}
-
-inline
-TaggedRef oz_float(double i)
-{
-  return makeTaggedFloat(Float::newFloat(i));
-}
-
-#define CHECK_LITERAL(lab) \
-Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
-
-
-/*===================================================================
  * LTuple
  *=================================================================== */
 
@@ -537,6 +489,7 @@ const int Co_Bits = 16;
 const int Co_Mask = (1<<Co_Bits)-1;
 
 enum TypeOfConst {
+  Co_Float,
   Co_BigInt,
   Co_Foreign_Pointer,
   Co_Abstraction,
@@ -656,6 +609,64 @@ public:
     return ((GName *) boardOrGName.getPtr());
   }
 };
+
+
+/*===================================================================
+ * Float
+ *=================================================================== */
+
+class Float : public ConstTerm {
+protected:
+  double value;
+
+public:
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS2(Float)
+  Float(double f) : ConstTerm(Co_Float) {
+    value = f;
+  }
+  double getValue(void) {
+    return value;
+  }
+  unsigned int hash(void) {
+    return (unsigned int) value;
+  }
+};
+
+inline
+Bool oz_isFloat(TaggedRef t) {
+  return oz_isConst(t) && tagged2Const(t)->getType() == Co_Float;
+}
+
+inline
+Float * tagged2Float(TaggedRef t) {
+  return (Float *) tagged2Const(t);
+}
+
+inline
+TaggedRef makeTaggedFloat(Float * s) {
+  return makeTaggedConst(s);
+}
+
+inline
+double floatValue(TaggedRef t) {
+  return tagged2Float(t)->getValue();
+}
+
+inline
+Bool floatEq(TaggedRef a, TaggedRef b) {
+  return (tagged2Float(a)->getValue() == tagged2Float(b)->getValue());
+}
+
+inline
+TaggedRef oz_float(double f) {
+  return makeTaggedFloat(new Float(f));
+}
+
+#define CHECK_LITERAL(lab) \
+Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
+
+
 
 /*===================================================================
  * BigInt
@@ -872,16 +883,33 @@ Bool bigIntEq(TaggedRef a, TaggedRef b)
 }
 
 inline
-Bool oz_numberEq(TaggedRef a, TaggedRef b)
-{
+Bool oz_numberEq(TaggedRef a, TaggedRef b) {
   TypeOfTerm tag = tagTypeOf(a);
-  if (tag != tagTypeOf(b)) return NO;
-  switch(tag) {
-  case TAG_FLOAT:    return floatEq(a,b);
-  case TAG_SMALLINT: return smallIntEq(a,b);
-  case TAG_CONST:    return bigIntEq(a,b);
-  default:       return NO;
+  if (tag != tagTypeOf(b))
+    return NO;
+  switch (tag) {
+  case TAG_SMALLINT:
+    return smallIntEq(a,b);
+  case TAG_CONST:
+    {
+      TypeOfConst cta = tagged2Const(a)->getType();
+      TypeOfConst ctb = tagged2Const(b)->getType();
+      if (cta != ctb)
+        return NO;
+      switch (cta) {
+      Co_Float:
+        return (((Float *) tagged2Const(a))->getValue() ==
+                ((Float *) tagged2Const(b))->getValue());
+      Co_BigInt:
+        return ((BigInt *) tagged2Const(a))->equal((BigInt *) tagged2Const(b));
+      default:
+        break;
+      }
+    }
+  default:
+    break;
   }
+  return NO;
 }
 
 extern TaggedRef TaggedOzOverMaxInt;

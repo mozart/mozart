@@ -59,10 +59,6 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
     DEREF(h, hptr, htag);
     switch (htag) {
 
-    case TAG_FLOAT:
-      o << floatValue(h);
-      break;
-
     case TAG_LITERAL:
       o << tagged2Literal(h)->getPrintName();
       break;
@@ -84,6 +80,8 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
     case TAG_CONST:
       if (oz_isFSetValue(h))
         o << tagged2FSetValue(h)->toString();
+      if (oz_isFloat(h))
+        o << floatValue(h);
       break;
 
     case TAG_SMALLINT:

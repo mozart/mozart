@@ -705,7 +705,7 @@ static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
     return PROCEED;
   } else if (oz_isBigInt(vs)) {
     return PROCEED;
-  } else if (isFloatTag(vs_tag)) {
+  } else if (oz_isFloat(vs)) {
     return PROCEED;
   } else if (isLiteralTag(vs_tag) && tagged2Literal(vs)->isAtom()) {
     return PROCEED;
@@ -778,7 +778,7 @@ static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
   } else if (isSmallIntTag(vs_tag) || oz_isBigInt(vs)) {
     *len = *len + strlen(toC(vs));
     return PROCEED;
-  } else if (isFloatTag(vs_tag)) {
+  } else if (oz_isFloat(vs)) {
     *len = *len + strlen(toC(vs));
     return PROCEED;
   } else if (isLiteralTag(vs_tag) && tagged2Literal(vs)->isAtom()) {
@@ -1275,7 +1275,6 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   }
 
   if (isSmallIntTag(tagA)) return smallIntEq(A,B) ? PROCEED : FAILED;
-  if (isFloatTag(tagA))    return floatEq(A,B)    ? PROCEED : FAILED;
 
   if (isLiteralTag(tagA))  return oz_eq(A,B)  ? PROCEED : FAILED;
 
@@ -1286,6 +1285,8 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
 
   if (isConstTag(tagA)) {
     switch (tagged2Const(A)->getType()) {
+    case Co_Float:
+      return floatEq(A,B)  ? PROCEED : FAILED;
     case Co_BigInt:
       return bigIntEq(A,B) ? PROCEED : FAILED;
     default:
@@ -1952,7 +1953,7 @@ OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
-  if (isFloatTag(tagA) && isFloatTag(tagB)) {
+  if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(floatValue(A) / floatValue(B));
     return PROCEED;
   }
@@ -2066,7 +2067,7 @@ OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     }
   }
 
-  if (isFloatTag(tagA) && isFloatTag(tagB)) {
+  if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(floatValue(A) * floatValue(B));
     return PROCEED;
   }
@@ -2134,7 +2135,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
 
-  if (isFloatTag(tagA)) {
+  if (oz_isFloat(A)) {
     out = oz_float(-floatValue(A));
     return PROCEED;
   }
@@ -2162,7 +2163,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
   }
 
-  if (isFloatTag(tagA)) {
+  if (oz_isFloat(A)) {
     double f = floatValue(A);
     out = (f >= 0.0) ? A : oz_float(fabs(f));
     return PROCEED;
@@ -2270,8 +2271,9 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
   if (tagA == tagB) {
     switch(tagA) {
-    case TAG_SMALLINT: out = (smallIntLess(A,B) ? A : B);             return PROCEED;
-    case TAG_FLOAT:  out = (floatValue(A) < floatValue(B)) ? A : B; return PROCEED;
+    case TAG_SMALLINT:
+      out = (smallIntLess(A,B) ? A : B);
+      return PROCEED;
     case TAG_LITERAL:
       if (oz_isAtom(A) && oz_isAtom(B)) {
         out = (strcmp(tagged2Literal(A)->getPrintName(),
@@ -2280,10 +2282,17 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
         return PROCEED;
       }
       oz_typeError(-1,"Comparable");
-
-    default: break;
+    case TAG_CONST:
+      if (oz_isFloat(A) && oz_isFloat(B)) {
+        out = (floatValue(A) < floatValue(B)) ? A : B;
+        return PROCEED;
+      }
+      break;
+    default:
+      break;
     }
   }
+
 
   OZ_Return ret = bigtest(A,B,bigintLess);
   switch (ret) {
@@ -2308,9 +2317,12 @@ OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     case TAG_SMALLINT:
       out = (smallIntLess(A,B) ? B : A);
       return PROCEED;
-    case TAG_FLOAT:
-      out = (floatValue(A) < floatValue(B)) ? B : A;
-      return PROCEED;
+    case TAG_CONST:
+      if (oz_isFloat(A) && oz_isFloat(B)) {
+        out = (floatValue(A) < floatValue(B)) ? B : A;
+        return PROCEED;
+      }
+      break;
     case TAG_LITERAL:
       if (oz_isAtom(A) && oz_isAtom(B)) {
         out = (strcmp(tagged2Literal(A)->getPrintName(),
@@ -2346,7 +2358,7 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
       return (smallIntLess(A,B) ? PROCEED : FAILED);
     }
 
-    if (isFloatTag(tagA)) {
+    if (oz_isFloat(A) && oz_isFloat(B)) {
       return (floatValue(A) < floatValue(B)) ? PROCEED : FAILED;
     }
 
@@ -2400,7 +2412,7 @@ OZ_Return BIleInline(TaggedRef A, TaggedRef B)
       return (smallIntLE(A,B) ? PROCEED : FAILED);
     }
 
-    if (isFloatTag(tagA)) {
+    if (oz_isFloat(A) && oz_isFloat(B)) {
       return (floatValue(A) <= floatValue(B)) ? PROCEED : FAILED;
     }
 
@@ -2573,7 +2585,7 @@ OZ_Return BIisFloatInline(TaggedRef num)
     return SUSPEND;
   }
 
-  return isFloatTag(tag) ? PROCEED : FAILED;
+  return oz_isFloat(num) ? PROCEED : FAILED;
 }
 
 OZ_DECLAREBOOLFUN1(BIisFloatB,BIisFloatInline)
@@ -2621,7 +2633,7 @@ OZ_Return InlineName(TaggedRef AA, TaggedRef &out)      \
     return SUSPEND;                                     \
   }                                                     \
                                                         \
-  if (isFloatTag(tag)) {                                \
+  if (oz_isFloat(AA)) {                                 \
     out = oz_float(Fun(floatValue(AA)));                \
     return PROCEED;                                     \
   }                                                     \
@@ -2677,7 +2689,7 @@ OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
-  if (isFloatTag(tagA) && isFloatTag(tagB)) {
+  if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(pow(floatValue(A),floatValue(B)));
     return PROCEED;
   }
@@ -2689,7 +2701,7 @@ OZ_Return BIfModInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
-  if (isFloatTag(tagA) && isFloatTag(tagB)) {
+  if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(fmod(floatValue(A),floatValue(B)));
     return PROCEED;
   }
@@ -2701,7 +2713,7 @@ OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(A,_1,tagA);
   DEREF(B,_2,tagB);
 
-  if (isFloatTag(tagA) && isFloatTag(tagB)) {
+  if (oz_isFloat(A) && oz_isFloat(B)) {
     out = oz_float(atan2(floatValue(A),floatValue(B)));
     return PROCEED;
   }

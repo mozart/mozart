@@ -171,10 +171,6 @@ void GenTraverser::doit()
       processSmallInt(t);
       break;
 
-    case TAG_FLOAT:
-      processFloat(t);
-      break;
-
     case TAG_LITERAL:
       {
         int ind = findTerm(t);
@@ -256,6 +252,10 @@ void GenTraverser::doit()
         //
         ConstTerm *ct = tagged2Const(t);
         switch (ct->getType()) {
+
+        case Co_Float:
+          processFloat(t);
+          break;
 
         case Co_BigInt:
           processBigInt(t, ct);

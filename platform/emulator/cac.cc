@@ -653,12 +653,6 @@ void OzVariable::_cacVarRecurse(void) {
 #ifdef G_COLLECT
 
 inline
-Float *Float::gCollect(void) {
-  return newFloat(value);
-}
-
-
-inline
 FSetValue * FSetValue::gCollect(void) {
 
 #ifdef BIGFSET
@@ -878,7 +872,6 @@ Bool isGCMarkedTerm(OZ_Term t)
 
   case TAG_SRECORD:
   case TAG_LTUPLE:
-  case TAG_FLOAT:
   case TAG_SMALLINT :
     return NO;
 
@@ -1188,11 +1181,17 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
      *
      */
 
+  case Co_Float: {
+    ConstTerm * ret = new Float(((Float *) this)->getValue());
+    STOREFWDFIELD(this, ret);
+    return ret;
+  }
+
   case Co_BigInt: {
-      ConstTerm * ret = ((BigInt *) this)->gCollect();
-      STOREFWDFIELD(this, ret);
-      return ret;
-    }
+    ConstTerm * ret = ((BigInt *) this)->gCollect();
+    STOREFWDFIELD(this, ret);
+    return ret;
+  }
 
   case Co_FSetValue: {
       ConstTerm * ret = ((ConstFSetValue *) this)->gCollect();
@@ -1318,6 +1317,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
      *
      */
 
+  case Co_Float:
   case Co_BigInt:
   case Co_FSetValue:
   case Co_Foreign_Pointer:
@@ -1835,9 +1835,9 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     case TAG_EXT:        goto DO_EXT;
     case TAG_LTUPLE:     goto DO_LTUPLE;
     case TAG_SRECORD:    goto DO_SRECORD;
-    case TAG_FLOAT:      goto DO_FLOAT;
     case TAG_CONST:      goto DO_CONST;
     case TAG_VAR:        goto DO_D_VAR;
+    case TAG_UNUSED_FLOAT:     goto DO_UNUSED;
     case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
     case TAG_UNUSED_UVAR:      goto DO_UNUSED;
     case TAG_UNUSED_SVAR:      goto DO_UNUSED;
@@ -1858,9 +1858,9 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     case TAG_EXT:        goto DO_EXT;
     case TAG_LTUPLE:     goto DO_LTUPLE;
     case TAG_SRECORD:    goto DO_SRECORD;
-    case TAG_FLOAT:      goto DO_FLOAT;
     case TAG_CONST:      goto DO_CONST;
     case TAG_VAR:        goto DO_I_VAR;
+    case TAG_UNUSED_FLOAT:     goto DO_UNUSED;
     case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
     case TAG_UNUSED_UVAR:      goto DO_UNUSED;
     case TAG_UNUSED_SVAR:      goto DO_UNUSED;
@@ -1869,12 +1869,6 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
   DO_GCMARK:
     *t = makeTaggedRef((TaggedRef*) tagged2GcUnmarked(aux));
     continue;
-
-  DO_FLOAT:
-#ifdef G_COLLECT
-    *t = makeTaggedFloat(tagged2Float(aux)->gCollect());
-    continue;
-#endif
 
   DO_SMALLINT:
     *t = aux;

@@ -386,7 +386,7 @@ OZ_expect_t OZ_Expect::expectFloat(OZ_Term t)
 
   DEREF(t, tptr, ttag);
 
-  if (isFloatTag(ttag)) {
+  if (oz_isFloat(ttag)) {
     return expectProceed(1, 1);
   } else if (oz_isFree(t)|| oz_isKinded(t)) {
     addSuspend(tptr);
