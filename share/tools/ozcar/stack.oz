@@ -165,7 +165,7 @@ in
 		      args: [X]) | Stack
 	 in
 	    Status = {FormatExceptionLine {Error.formatExc X}}
-	    {Ozcar status(Status clear BlockedThreadColor)}
+	    {Ozcar PrivateSend(status(Status clear BlockedThreadColor))}
 	    {Emacs bar(file:F line:L column:C state:blocked)}
 	    StackManager,ReCalculate({Reverse S})
 
@@ -173,7 +173,7 @@ in
 	    E = {V2VS X}
 	 in
 	    Status = 'Exception: ' # E # ' / no stack available'
-	    {Ozcar status(Status clear BlockedThreadColor)}
+	    {Ozcar PrivateSend(status(Status clear BlockedThreadColor))}
 	    {Emacs removeBar}
 	    StackManager,ReCalculate(nil)
 	 end
@@ -189,11 +189,12 @@ in
 	    Depth  = @Size
 	    Last   = case Depth > 0 then {Dictionary.get self.D Depth} else nil end
 	 in
-	    {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
+	    {Ozcar PrivateSend(printStack(id:self.I frames:Frames
+					  depth:Depth last:Last))}
 	    case {CheckState self.T} == running then
-	       {Ozcar markStack(inactive)}
+	       {Ozcar PrivateSend(markStack(inactive))}
 	    else
-	       {Ozcar markStack(active)}
+	       {Ozcar PrivateSend(markStack(active))}
 	    end
 	 end
       end
@@ -202,6 +203,16 @@ in
 	 S = @Size
       in
 	 case S == 0 then nil else {Dictionary.get self.D S} end
+      end
+
+      meth emacsBarToTop
+	 F = StackManager,getTop($)
+      in
+	 case F == nil then skip else
+	    S = {CheckState self.T}
+	 in
+	    {Emacs bar(file:F.file line:F.line column:F.column state:S)}
+	 end
       end
 
       meth printTop
@@ -213,15 +224,17 @@ in
 	    case S == 0 then skip else
 	       TopFrame = {Dictionary.get self.D S}
 	    in
-	       {Ozcar printStackFrame(frame:TopFrame delete:true)}
+	       {Ozcar PrivateSend(printStackFrame(frame:TopFrame delete:true))}
 	    end
 	 end
       end
 
       meth entry(Frame)
 	 S = @Size
-	 Key = case S == 0 orelse {Dictionary.get self.D S}.dir == entry then S + 1
-	       else S
+	 Key = case S == 0 orelse {Dictionary.get self.D S}.dir == entry then
+		  S + 1
+	       else
+		  S
 	       end
       in
 	 Size <- Key
@@ -267,7 +280,7 @@ in
 			else S end
       in
 	 {OzcarMessage 're-calculating stack of thread #' # self.I}
-	 {Ozcar removeSkippedProcs(self.I)}
+	 {Ozcar PrivateSend(removeSkippedProcs(self.I))}
 	 StackManager,rebuild(false)
 	 StackManager,RemoveAllFrames
 	 {StackToDict CurrentStack self.D}
