@@ -43,6 +43,9 @@
 (defvar oz-indent-chars 3
   "*Indentation of Oz statements with respect to containing block.")
 
+(defvar oz-wait-time nil
+  "wait for compiler startup (on linux use 15 sec)")
+
 (defvar oz-mode-syntax-table nil)
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
@@ -62,13 +65,17 @@ For example
   (setq oz-emulator-hook 'oz-start-gdb-emulator)
 starts the emulator under gdb")
 
-;(defvar oz-wait-for-compiler 5
-;  "Wait between startup of compiler and engine")
-
-(defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/Oz") "/")
+(defvar OZ-HOME "/usr/share/gs/Oz"
   "The directory where oz is installed")
 
-(defvar oz-doc-dir (concat oz-home "doc/chapters/")
+(defun oz-home ()
+  (let ((ret (getenv "OZHOME")))
+    (if ret
+	ret
+      (message "OZHOME not set using fallback: %s" OZ-HOME)
+      OZ-HOME)))
+
+(defvar oz-doc-dir (concat (oz-home) "/doc/chapters/")
   "The default doc directory")
 
 (defvar oz-preview "xdvi"
@@ -352,7 +359,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (get-buffer-process oz-compiler-buffer)
       t
     (let ((file (oz-make-temp-name "/tmp/ozsock")))
-;	  (i (* 2 oz-wait-for-compiler)))
       (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
       (setq oz-compiler-buffer "*Oz Compiler*")
@@ -361,14 +367,10 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			  'oz-compiler-filter)
       (bury-buffer oz-compiler-buffer)
 
-;      (while (and (> i 0)
-;		  (not (file-exists-p file)))
-;	(sleep-for 0.5)
-;	(setq i (1- i)))
-
       (if oz-emulator-hook
 	  (funcall oz-emulator-hook file)
 	(setq oz-emulator-buffer "*Oz Emulator*")
+	(if oz-wait-time (sleep-for oz-wait-time))
 	(make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file)
 	(set-process-filter (get-buffer-process oz-emulator-buffer)
 			    'oz-emulator-filter)
@@ -407,7 +409,10 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       t
     (setenv "OZ_PI" "1")
     (setenv "OZPLATFORM" "sunos-sparc")
-    (setenv "OZHOME" (or (getenv "OZHOME") "/usr/share/gs/Oz"))
+    (if (getenv "OZHOME")
+	t
+      (message "no OZHOME using fallback: %s" OZ-HOME)
+      (setenv "OZHOME" OZ-HOME))
     (setenv "OZPATH" 
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (getenv "OZHOME") "/lib:"
@@ -1247,7 +1252,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-find-file(prompt file)
   (find-file (read-file-name prompt
-			     (concat oz-home file)
+			     (concat (oz-home) "/" file)
 			     nil
 			     t
 			     nil)))
