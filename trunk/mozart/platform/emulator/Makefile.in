@@ -33,8 +33,8 @@ SRCDIR=	@srcdir@
 include Makefile.vars
 
 MODULE_NAMES =							\
-	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser\
-	CompilerSupport Browser Debug
+	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
+	CompilerSupport Browser Debug Space FDB FSB CTB
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -62,7 +62,7 @@ BIMODSPECS = \
 
 MODSPECS= \
 	FDP FSP Schedule Tk Parser OS Property Pickle \
-	PID URL FDB FSB Space System Finalize CTB \
+	PID URL FDB FSB CTB RecordC Space System Finalize CTB \
 	CompilerSupport Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
 	VirtualSite Application DPPane \
@@ -124,7 +124,7 @@ PICKLESRCS=\
 OFSRCS=	var_of.cc ofbi.cc
 
 FDSRCS=\
-	fdomn.cc fdcore.cc \
+	fdomn.cc \
 	var_fd.cc var_bool.cc
 
 CPISRCS=\
@@ -134,7 +134,7 @@ CPISRCS=\
 	var_ct.cc
 
 FSETSRCS=\
-	fset.cc fsetcore.cc var_fs.cc
+	fset.cc var_fs.cc
 
 TEXT2PICKLESRCS= text2pickle.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
@@ -156,14 +156,28 @@ BROWSERSRCS= \
 	browser.cc
 DEBUGSRCS= \
 	debugBI.cc
+SPACEOPSRCS = \
+	board-bi.cc
+FDBSRCS = \
+	fdcore.cc
+FSBSRCS = \
+	fsetcore.cc
+CTBSRCS = \
+	ct-bi.cc
 
 TKOBJS=	$(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
 BROWSEROBJS=	$(BROWSERSRCS:%.cc=%.lo)
 DEBUGOBJS=	$(DEBUGSRCS:%.cc=%.lo)
+SPACEOPOBJS=	$(SPACEOPSRCS:%.cc=%.lo)
+FDBOBJS=	$(FDBSRCS:%.cc=%.lo)
+FSBOBJS=	$(FSBSRCS:%.cc=%.lo)
+CTBOBJS=	$(CTBSRCS:%.cc=%.lo)
+
 
 ALLSRCS= $(SRCS) \
 	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
+	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
@@ -218,6 +232,30 @@ Tk.so: $(TKOBJS)
 
 libTk.a: $(TKOBJS)
 	$(AR) -rc $@ $(TKOBJS) && $(RANLIB) $@
+
+Space.so: $(SPACEOPOBJS)
+	$(DYNLD) -o $@ $(SPACEOPOBJS)
+
+libSpace.a: $(SPACEOPOBJS)
+	$(AR) -rc $@ $(SPACEOPOBJS) && $(RANLIB) $@
+
+FDB.so: $(FDBOBJS)
+	$(DYNLD) -o $@ $(FDBOBJS)
+
+libFDB.a: $(FDBOBJS)
+	$(AR) -rc $@ $(FDBOBJS) && $(RANLIB) $@
+
+FSB.so: $(FSBOBJS)
+	$(DYNLD) -o $@ $(FSBOBJS)
+
+libFSB.a: $(FSBOBJS)
+	$(AR) -rc $@ $(FSBOBJS) && $(RANLIB) $@
+
+CTB.so: $(CTBOBJS)
+	$(DYNLD) -o $@ $(CTBOBJS)
+
+libCTB.a: $(CTBOBJS)
+	$(AR) -rc $@ $(CTBOBJS) && $(RANLIB) $@
 
 CompilerSupport.so: $(COMPILERSUPPORTOBJS)
 	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
@@ -308,6 +346,9 @@ Parser.so: $(PARSEROBJS)
 
 libParser.a: $(PARSEROBJS)
 	$(AR) -rc $@ $(PARSEROBJS) && $(RANLIB) $@
+
+board-bi.o: modSpace-if.cc
+board-bi.lo: modSpace-if.cc
 
 tk.o: modTk-if.cc
 
