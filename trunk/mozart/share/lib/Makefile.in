@@ -154,17 +154,6 @@ GUMPEXAMPLES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
 	OzParser.ozg OzScanner.ozg
 
-ALLSRCS = \
-	$(STANDARDSRC) $(INITSRC) \
-	$(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
-	$(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
-	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
-	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC)
-
-DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
-DUMPINTRO = $(DUMPINTRO1:%=%) Base.ozc Standard.ozc
-STANDARD =  Base.ozc Standard.ozc Base.env Standard.env
-
 ENVS1 = \
 	SP.env OP.env AP.env CP.env WP.env DP.env \
 	Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
@@ -174,10 +163,21 @@ ENVS = $(ENVS1:%=%) Base.env Standard.env
 TYPS = $(ENVS1:%.env=%.typ)
 TYCS = $(TYPS:%.typ=tyc/%.tyc)
 
+ALLSRCS = \
+	$(STANDARDSRC) $(INITSRC) \
+	$(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
+	$(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
+	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
+	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC) \
+	$(ENVS1:%=$(OZLIB)/%) \
+
+DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
+DUMPINTRO = $(DUMPINTRO1:%=%) Base.ozc Standard.ozc
+STANDARD =  Base.ozc Standard.ozc Base.env Standard.env
+
 LIBFILES = \
 	$(GUMPEXAMPLES:%=$(OZLIB)/gump/examples/%) \
 	$(OZLIB)/gump/ProductionTemplates.oz \
-	$(ENVS1:%=$(OZLIB)/%) \
 	$(TYCS:tyc/%=$(OZLIB)/%)
 
 COMPONENTS = \
