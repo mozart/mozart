@@ -31,35 +31,43 @@
 #pragma interface
 #endif
 
-#define CHAIN_PROBE 1
 
-enum TokenState{
-TOKEN_MAYBE_LOST,
-TOKEN_UNTOUCHED,
-TOKEN_NOT_LOST
-};
+enum ChainElemCode{
+    CHAIN_GHOST=1,
+    CHAIN_QUESTION_ASKED=2,
+      CHAIN_BEFORE=4,
+      CHAIN_PAST=8,
+      CHAIN_CANT_PUT=16,
+      CHAIN_DUPLICATE=24};
 
 class ChainElem{
 friend class Chain;
+friend class InformElem;
 protected:
-  ChainElem* next;
   Site *site;
+  ChainElem* next;
+  unsigned int flags;
 public:
-  ChainElem(){}
+  ChainElem(){Assert(0);}
 
-  void init(Site *s){
-    next = NULL;
-    site=s;}
+  Site *getSite(){ return site;}
 
-  void setNext(ChainElem* n){
-    next = n;}
+  void init(Site *s);
 
-  ChainElem *getNext(){
-    return next;}
+  Bool flagIsSet(ChainElemCode cec){return cec & flags;}
 
-  void deinstallProbe(ProbeType pt){
-    site->deinstallProbe(pt);}
+  void setFlag(ChainElemCode cec){flags |= cec;}
+  void resetFlag(ChainElemCode cec){flags &= ~cec;}
+  ChainElem *getNext(){return next;}
+  void removeNext(Bool,Bool);
 
+  void setFlagAndCheck(ChainElemCode cec){
+    Assert(!flagIsSet(cec));
+    setFlag(cec);}
+
+  void resetFlagAndCheck(ChainElemCode cec){
+    Assert(flagIsSet(cec));
+    resetFlag(cec);}
 };
 
 class InformElem{
@@ -67,73 +75,114 @@ friend class Chain;
 protected:
   InformElem *next;
   Site *site;
-  EntityCond watchcond;
+  short unsigned int watchcond;
+  short unsigned int foundcond;
 public:
-  InformElem(){}
-  void init(Site* s,EntityCond c){site=s;next=NULL;watchcond=c;}
+  InformElem(){Assert(0);}
+
+  void init(Site* s,EntityCond c);
+
+  EntityCond wouldTrigger(EntityCond c){
+    EntityCond ec= ((watchcond & c) & (~(foundcond)));
+    foundcond |= ec;
+    return ec;}
+
+  EntityCond wouldTriggerOK(EntityCond c){
+    EntityCond ec= (foundcond & c);
+    foundcond &= ~ec;
+    return ec;}
 };
+
+enum ChainFlags{
+  INTERESTED_IN_OK=1,
+  INTERESTED_IN_TEMP=2,
+  TOKEN_PERM_SOME=8,
+  TOKEN_LOST=4};
+
+enum ChainAnswer{
+  BEFORE_ME=1,
+  AT_ME=2,
+  PAST_ME=4};
 
 class Chain{
 protected:
   ChainElem* first;
   ChainElem* last;
   InformElem* inform;
+  unsigned int flags;
+
 public:
-  Chain(){first = NULL;last=NULL;inform=NULL;}
+  Chain(){Assert(0);}
 
   void init(Site*);
 
-  void informHandle(Tertiary*,EntityCond,Bool);
+  void setFlagAndCheck(int f){
+    Assert(!hasFlag(f));
+    setFlag(f);}
 
-  void informAutomatic(Tertiary*);
+  void resetFlagAndCheck(int f){
+    Assert(hasFlag(f));
+    resetFlag(f);}
 
-  ChainElem *getFirstChainElem(){return first;}
+  void setFlag(int f){
+    flags |= f;}
+
+  void resetFlag(int f){
+    flags &= ~f;}
+
+  Bool hasFlag(int f){
+    return f & flags;}
 
   Site* getCurrent(){
     Assert(last != NULL);
     return last->site;}
 
-  Site* getFirstSite(){
-    Assert(first!=NULL);
-    return first->site;}
-
-  void hasDumped(){
-    first=NULL;
-    last=NULL;}
+  Site* setCurrent(Site*);
 
   Bool hasInform(){
     return inform!=NULL;}
 
-  void setCurrent(Site* s);
+  InformElem *getInform(){return inform;}
 
-  int siteRemove(Site*);
+  void receiveAnswer(Tertiary*,Site*,int,Site*); // messages
+  void receiveUnAsk(Site*,EntityCond);
+  void managerSeesSitePerm(Tertiary*,Site* ); // probe
+  void managerSeesSiteTemp(Tertiary*,Site* );
+  void managerSeesSiteOK(Tertiary*,Site* );
+  Bool removeGhost(Site*);                    // manipulating list of chain elements
+  void removeBefore(Site*);
+  void removePerm(ChainElem**);
+  void removeNextChainElem(ChainElem** base);
+  void probeTemp();                          // for all manipulation of list of chain elements
+  void deProbeTemp();
+  Bool basicSiteExists(ChainElem*,Site*);    // accessing list of chain elements
   Bool siteExists(Site*);
+  Bool siteOrGhostExists(Site*);
+  ChainElem **getFirstNonGhostBase();
+  ChainElem *findChainElemFrom(ChainElem*,Site*);
+  ChainElem *getFirstNonGhost();
+  ChainElem *findAfter(Site*);
+  Bool tempConnectionInChain();
+  void makeGhost(ChainElem*);                // manipulating one chain element
+  void releaseChainElem(ChainElem*);
+  void newInform(Site*,EntityCond);          // manipulating list of inform elements
+  void removeInformOnPerm(Site*);
+  void informHandle(OwnerEntry*,int,EntityCond);
+  void informHandleTempOnAdd(OwnerEntry*,Tertiary*,Site*s);
+  void dealWithTokenLostBySite(OwnerEntry*,int,Site*);
+  void releaseInformElem(InformElem*);       // manipulating one inform element
+  void gcChainSites();                       // gc
+  void shortcutCrashLock(LockManager*);       // shortcutting chain methods
+  void shortcutCrashCell(CellManager*,TaggedRef);
 
-  void installProbeAfterAck(){
-    Assert(first->next!=NULL);
-    if(first->next->site!=mySite){
-      first->next->site->installProbe(PROBE_TYPE_PERM,0);}}
-
-  void installTwoProbesAfterAck(){
-    installProbeAfterAck();
-    Site *s=first->site;
-    if(s!=mySite){s->installProbe(PROBE_TYPE_PERM,0);}}
-
-  Bool afterOneAnother(Site *s1,Site* s2);
-
-  Site* removeSecondElem();
-  void removeFirstElem();
-  void gcChainSites();
-  void receiveAck(Site*,int);
-
-  void managerSeesSiteCrash(Tertiary*,Site* );
-  Site* proxySeesSiteCrash(Tertiary *,Site*);
-
-  void addInform(InformElem *ie){
-    ie->next=inform;
-    inform=ie;}
-
-  void removeInformElem(Site*,EntityCond);
+  Bool siteOfInterest(Site* s){
+    if(inform!=NULL) return OK;
+    ChainElem *tmp=first;
+    while(tmp!=NULL){
+      if(tmp->site==s) return OK;
+      tmp=tmp->next;}
+    return NO;}
+  void handleTokenLost(OwnerEntry*,int);
 };
 
 /* __CHAINHH */

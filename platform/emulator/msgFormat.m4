@@ -51,8 +51,8 @@ message(M_LOCK_TOKEN,Site,Index)
 message(M_CELL_CANTPUT,Index,Site,Term)
 message(M_LOCK_CANTPUT,Index,Site)
 message(M_CHAIN_ACK,Index,Site)
-message(M_CHAIN_QUESTION,Index,Site)
-message(M_CHAIN_ANSWER,Index,Site,Index2)
+message(M_CHAIN_QUESTION,Index,Site,Site2)
+message(M_CHAIN_ANSWER,Index,Site,Index2,Site2)
 message(M_ASK_ERROR,Index,Site,Index2);
 message(M_TELL_ERROR,Site,Index,Index2,Index3);
 

@@ -307,6 +307,7 @@ Site *findSite(ip_address a,int port,time_t stamp)
 Site* unmarshalSite(MsgBuffer *buf){
   PD((UNMARSHAL,"site"));
   MarshalTag mt= (MarshalTag) buf->get();
+  Assert((mt==DIF_REMOTE) || (mt==DIF_VIRTUAL) || (mt==DIF_PERM));
   FindType rc;
   int hvalue;
   Site *s;

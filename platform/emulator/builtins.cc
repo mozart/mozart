@@ -4897,9 +4897,28 @@ DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
 // ---------------------------------------------------------------------
 // Perdio stuff
 // ---------------------------------------------------------------------
-
-OZ_C_proc_begin(BIrestop,0)
+OZ_C_proc_begin(BIcrash,0)   /* only for debugging */
 {
+  exit(1);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIrestop,1)
+{
+  OZ_Term entity = OZ_getCArg(0);
+  DEREF(entity,entityPtr,entityTag);
+
+  switch(entityTag){
+  case OZCONST:{
+    switch(tagged2Const(entity)->getType()){
+    case Co_Cell:
+    case Co_Lock:{
+      tagged2Tert(entity)->restop();
+      break;}
+    default: Assert(0);}
+    break;}
+  default:{
+    Assert(0);}}
   oz_suspendOnNet(am.currentThread());
   return BI_PREEMPT;
 }
@@ -4907,11 +4926,12 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIhandlerInstall,3)
 {
-  OZ_Term entity   = OZ_getCArg(0);
-  OZ_Term cond     = OZ_getCArg(1);
+  OZ_Term entity0   = OZ_getCArg(0);
+  OZ_Term cond0     = OZ_getCArg(1);
   OZ_Term proc     = OZ_getCArg(2);
 
-  if(isAnyVar(cond)) {return SUSPEND;}
+  NONVAR(cond0,cond);
+  NONVAR(entity0,entity);
 
   EntityCond ec;
   if(cond==AtomPermBlocked) {ec=PERM_BLOCKED;}
@@ -4920,8 +4940,6 @@ OZ_C_proc_begin(BIhandlerInstall,3)
     else {
       return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
 
-  if(isAnyVar(entity)){
-    return oz_raise(E_ERROR,E_SYSTEM,"handlers on variables not implemented",0);      }
 
   Tertiary *tert = tagged2Tert(entity);
   if((tert->getType()!=Co_Cell) && (tert->getType()!=Co_Lock)){
@@ -6778,21 +6796,27 @@ inline
 SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)
 {
   if (!stateIsCell(state)) {
-    return getRecord(state);
-  }
+    return getRecord(state);}
 
-  TaggedRef old = cellGetContentsFast(getCell(state));
-  if (old) {
-    old = deref(old);
-    if (!isAnyVar(old))
-      return tagged2SRecord(old);
-  }
+  TaggedRef old;
+  Tertiary *t=getCell(state);          // shortcut
+  if(t->getTertType()!=Te_Proxy){
+    CellSec* sec;
+    if(t->getTertType()==Te_Frame){
+      sec=((CellFrame*)t)->getSec();}
+    else{
+      sec=((CellManager*)t)->getSec();}
+    if(sec->getState()==Cell_Lock_Valid){
+      old=sec->getContents();
+      old=deref(old);
+      if (!isAnyVar(old))
+        return tagged2SRecord(old);}}
 
   old = oz_newVariable();
   if (am.onToplevel())
-    cellDoExchange(getCell(state),old,old,am.currentThread());
+    cellDoExchange(t,old,old,am.currentThread());
   else
-    cellDoAccess(getCell(state),old);
+    cellDoAccess(t,old);
   if (!isAnyVar(deref(old)))
     return tagged2SRecord(deref(old));
 
@@ -7798,7 +7822,8 @@ BIspec allSpec[] = {
   {"Access",          2,BIaccessCell,   (IFOR) BIaccessCellInline},
   {"Assign",          2,BIassignCell,   (IFOR) BIassignCellInline},
 
- {"perdioRestop",   0, BIrestop,          0},
+ {"perdioRestop",   1, BIrestop,          0},
+ {"crash",          0, BIcrash,           0},
  {"InstallHandler", 3, BIhandlerInstall,  0},
  {"InstallWatcher", 3, BIwatcherInstall,  0},
 

@@ -395,7 +395,8 @@ public:
     NetMsgBuffer();}
 
   void resend();
-
+  void reset();
+  void unmarshalReset();
 
   void init(){
     MsgBuffer::init();
@@ -477,10 +478,6 @@ public:
   void beginWrite(RemoteSite*); /* putting end packet header */
   void PiggyBack(Message*);
 
-
-  // EK
-  //
-  // Redo this implementation.
 
   void sentFirst();
 
@@ -825,6 +822,7 @@ public:
   ProbeReturn installProbe(ProbeType);
   ProbeReturn deInstallProbe(ProbeType);
 
+  void sendAck();
 };
 
 
@@ -921,10 +919,13 @@ public:
     recSizeAck +=  size;
     PD((ACK_QUEUE,"SizeReceived s: %d l: %d",recSizeAck
         ,maxSizeAck));
-    if(recSizeAck >= maxSizeAck &&
-       tcpAckReader(this,remoteSite->getRecMsgCtr())){
+    if(recSizeAck >= maxSizeAck)
+      sendAck();}
+  void sendAck(){
+    if(tcpAckReader(this,remoteSite->getRecMsgCtr())){
       PD((ACK_QUEUE,"Ack, limit reached...."));
       recSizeAck = 0;}}
+
 
   void messageSent(){
     recSizeAck=0;}
@@ -1969,11 +1970,21 @@ void NetMsgBuffer::beginWrite(RemoteSite *s)
 }
 
 void NetMsgBuffer::resend(){
-  Assert(start!=NULL && stop != NULL);
   Assert(type == BS_Write);
+  reset();
+  pos = first->head();}
+
+void NetMsgBuffer::reset(){
+  Assert(start!=NULL && stop != NULL);
   first= start;
   last = stop;}
 
+void NetMsgBuffer::unmarshalReset(){
+  reset();
+  pos = first->head() + tcpHeaderSize ;
+  if(endpos==NULL) curpos=last->tail();
+  else curpos= endpos-1;
+}
 
 void NetMsgBuffer::PiggyBack(Message* m)
 {
@@ -2111,6 +2122,7 @@ public:
     endMB = buffer + TCPOPENMSGBUFFER_SIZE;
     size = 0;}
   void marshalEnd(){ size = posMB - buffer  - 5;}
+  void unmarshalMarshal(){}
   void beginWrite(BYTE b){
     pos = buffer;
     *pos++=b;
@@ -2125,7 +2137,7 @@ public:
   Site *getSite(){
     Assert(0);
     return NULL;}
-  int getLen(){
+int getLen(){
     return size;}
   BYTE* getBuf(){
     return buffer;}
@@ -3083,10 +3095,10 @@ void ReadConnection::resend(){
   ipReturn ret;
   BYTE msg = TCP_RESEND_MESSAGES;
   if(!tcpAckReader(this,remoteSite->getRecMsgCtr())){
-    NETWORK_ERROR(("tcpCloseReader: ack failed write %d\n",errno));}
+    NETWORK_ERROR(("resend 1 tcpCloseReader: ack failed write %d\n",errno));}
   ret=writeI(fd,&msg);
   if(ret==IP_BLOCK){
-    NETWORK_ERROR(("tcpCloseReader:write %d\n",errno));}
+    NETWORK_ERROR(("resend 2 tcpCloseReader:write %d\n",errno));}
   Assert(ret==IP_OK);}
 
 void WriteConnection::ackReceived(int nr){
@@ -3118,6 +3130,7 @@ void WriteConnection::ackReceived(int nr){
 
 
 void RemoteSite::siteLost(){
+  status = SITE_PERM;
   if(writeConnection!=NULL){
     if(writeConnection->getFD() != LOST)
       writeConnection->prmDwn();
@@ -3129,7 +3142,6 @@ void RemoteSite::siteLost(){
     readConnectionManager->freeConnection(readConnection);
     readConnection=NULL;}
   Message* m;
-  status = SITE_PERM;
   while((m = writeQueue.removeFirst()) && m != NULL) {
     site->communicationProblem(m->msgType, m->site, m->storeIndx,
                                COMM_FAULT_PERM_NOT_SENT,(FaultInfo) m->bs);
@@ -3367,6 +3379,12 @@ Message* RemoteSite::getWriteQueue(){
     writeConnection->clearInWriteQueue();
   return m;}
 
+void RemoteSite::sendAck(){
+  PD((SITE,"Ack Invoked from perdioLayer"));
+  if(siteStatus() == SITE_PERM){return;}
+  Assert(readConnection != NULL);
+  readConnection->sendAck();}
+
 int RemoteSite::
 sendTo(NetMsgBuffer *bs, MessageType msg,
        Site *storeS, int storeInd)
@@ -3379,7 +3397,8 @@ storeS,msg,storeInd);
   case SITE_TEMP:{
       goto tmpdwnsend2;}
   case SITE_PERM:{
-        return SITE_PERM;}
+    OZ_warning("Discovered perm before send");
+    return PERM_NOT_SENT;}
   case SITE_OK:{
     PD((SITE,"OK"));}}
   bs->beginWrite(this);
@@ -3390,7 +3409,7 @@ storeS,msg,storeInd);
     fd=tcpOpen(this,writeConnection);
     if(fd==IP_TIMER ||fd==IP_NO_MORE_TRIES){
       goto tmpdwnsend;}
-    if(fd==IP_NET_CRASH){ return SITE_PERM;}
+    if(fd==IP_NET_CRASH){ return PERM_NOT_SENT;}
     PD((TCP,"is reopened %s",site->stringrep()));
     tcpCache->add(writeConnection);
     goto ipBlockSend;}
@@ -3454,6 +3473,8 @@ void nonZeroRefsToRemote(RemoteSite *s){return;}
 //  s->nonzeroReferences();}
 int sendTo_RemoteSite(RemoteSite* rs,MsgBuffer* bs,MessageType m,Site* s, int i){
   return rs->sendTo((NetMsgBuffer*)bs,m,s,i);}
+void sendAck_RemoteSite(RemoteSite* rs){
+  rs->sendAck();}
 int discardUnsentMessage_RemoteSite(RemoteSite* s,int msg){
   return s->discardUnsentMessage(msg);}
 int getQueueStatus_RemoteSite(RemoteSite* s,int &noMsgs){

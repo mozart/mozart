@@ -43,15 +43,16 @@ public:
   BYTE get(){
     if(posMB==endMB){
       return getNext();}
-    PD((MARSHAL_CT,"one char put c:%d d:%d",*posMB,*posMB));
+    PD((MARSHAL_CT,"one char got c:%d",*posMB));
     return *posMB++;}
 
   void put(BYTE b){
     if(posMB>endMB){
       putNext(b);
       return;}
-    PD((MARSHAL_CT,"one char got c:%d d:%d",*posMB,*posMB));
-    *posMB++=b;}
+    *posMB++=b;
+    PD((MARSHAL_CT,"one char put c:%d p:%d",b,*posMB));
+  }
 
 
   virtual char* siteStringrep()=0;
@@ -61,6 +62,8 @@ public:
   virtual Bool saveAnyway(OZ_Term)              {return NO;} // only for load/save - returns NO for rest
   virtual void marshaledProcHasNames(TaggedRef) {} // only for load/save - noop for rest
   virtual Bool knownAsNewName(OZ_Term)          {return NO;} // only for load/save - returns NO for rest
+  virtual void unmarshalReset()                 {} // only for network receovery
+
 };
 
 MsgBuffer* getComponentMsgBuffer();

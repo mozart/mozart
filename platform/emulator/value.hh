@@ -96,7 +96,9 @@ enum EntityCondFlags{
     PERM_ALL = 4,
     TEMP_ALL = 8,
     PERM_SOME = 16,
-    TEMP_SOME = 32};
+    TEMP_SOME = 32,
+    PERM_ME =64,
+    TEMP_ME=128};
 
 typedef unsigned int EntityCond;
 
@@ -104,14 +106,22 @@ class EntityInfo{
   friend class Tertiary;
 protected:
   Watcher *watchers;
-  EntityCond ec;
+  short entityCond;
+  short managerEntityCond;
+
 public:
   USEHEAPMEMORY;
   EntityInfo(Watcher *w){
-    ec=ENTITY_NORMAL;
+    entityCond=ENTITY_NORMAL;
+    managerEntityCond=ENTITY_NORMAL;
     watchers=w;}
   EntityInfo(EntityCond c){
-    ec=c;
+    entityCond=c;
+    managerEntityCond=ENTITY_NORMAL;
+    watchers=NULL;}
+  EntityInfo(EntityCond c,EntityCond d){
+    entityCond=c;
+    managerEntityCond=d;
     watchers=NULL;}
   void gcWatchers();
 };
@@ -154,7 +164,7 @@ public:
   Bool isTriggered(EntityCond ec){
     if(ec & watchcond) return OK;
     return NO;}
-  EntityCond getEntityCond(){return watchcond;}
+  EntityCond getWatchCond(){return watchcond;}
 };
 
 /*===================================================================
@@ -810,24 +820,52 @@ public:
     setIndex(i);
   }
 
+  Bool errorIgnore(){
+    if(getEntityCond()==ENTITY_NORMAL) return OK;
+    if(info->watchers==NULL) return OK;
+    return NO;}
+
+  Bool hasWatchers(){
+    if(info==NULL) return NO;
+    if(info->watchers==NULL) return NO;
+    return OK;}
+
   EntityCond getEntityCond(){
     if(info==NULL) return ENTITY_NORMAL;
-    return info->ec;}
+    return info->entityCond | info->managerEntityCond;}
 
-  void setEntityCond(EntityCond c){
+  Bool setEntityCondOwn(EntityCond c){
     if(info==NULL){
       info= new EntityInfo(c);
-      return;}
-    info->ec = (EntityCond) (info->ec | c);}
+      return OK;}
+    EntityCond old_ec=getEntityCond();
+    info->entityCond = (info->entityCond | c);
+    if(getEntityCond()==old_ec) return NO;
+    return OK;}
 
-  void resetEntityCond(EntityCond c){
+  Bool setEntityCondManager(EntityCond c){
+    if(info==NULL){
+      info= new EntityInfo(ENTITY_NORMAL,c);
+      return OK;}
+    EntityCond old_ec=getEntityCond();
+    info->managerEntityCond=info->managerEntityCond | c;
+    if(getEntityCond()==old_ec) return NO;
+    return OK;}
+
+  Bool resetEntityCondProxy(EntityCond c){
     Assert(info!=NULL);
-    EntityCond ec= (EntityCond) (getEntityCond() & ~c);
-    if(ec!=ENTITY_NORMAL){
-      info->ec=ec;
-      return;}
-    info=NULL;
-    return;}
+    EntityCond old_ec=getEntityCond();
+    info->entityCond &= ~c;
+    if(getEntityCond()==old_ec) return NO;
+    return OK;}
+
+  Bool resetEntityCondManager(EntityCond c){
+    Assert(!(c & PERM_BLOCKED|PERM_ME|PERM_SOME|PERM_ALL));
+    Assert(info!=NULL);
+    EntityCond old_ec=getEntityCond();
+    info->managerEntityCond &= ~c;
+    if(getEntityCond()==old_ec) return NO;
+    return OK;}
 
   void gcEntityInfo();
 
@@ -843,10 +881,13 @@ public:
     if(info->watchers==NULL) return NULL;
     return &(info->watchers);}
 
+  Watcher** findWatcherBase(Thread*,EntityCond);
+
   void setWatchers(Watcher* e){
     info->watchers=e;}
 
   void insertWatcher(Watcher* w);
+  void releaseWatcher(Watcher*);
   Bool handlerExists(Thread *);
 
   void setIndex(int i) { tagged.setIndex(i); }
@@ -875,23 +916,18 @@ public:
   void gcBorrowMark();
 
   Bool installHandler(EntityCond,TaggedRef,Thread*);
+  Bool deinstallHandler(Thread*);
   void installWatcher(EntityCond,TaggedRef);
 
-  void entityProblem(EntityCond);
-  void entityOK(EntityCond);
+  void entityProblem();
   void managerProbeFault(Site*,int);
-  void proxyProbeFault(Site*,int);
-
-  void invokeSoon();
-  Bool maybeInvokeSoon(){
-    if(getEntityCond() & PERM_BLOCKED){ // ATTENTION
-      invokeSoon();
-      return OK;}
-    return NO;}
+  void proxyProbeFault(int);
+  void restop();
 
   Bool maybeHasInform(){
     if(info==NULL) return NO;
     return OK;}
+  Bool threadIsPending(Thread* th);
 };
 
 
@@ -2024,7 +2060,9 @@ public:
   OZPRINTLONG;
 
   TaggedRef getValue() { return val; }
+
   void setValue(TaggedRef v) { val=v; }
+
   TaggedRef exchangeValue(TaggedRef v) {
     TaggedRef ret = val;
     val = v;
@@ -2044,31 +2082,55 @@ public:
 class CellSec{
 friend class CellFrame;
 friend class CellManager;
+friend class Chain;
 private:
-  USEHEAPMEMORY;
-  int state;
+  unsigned int state;
   TaggedRef head;
   PendThread* pending;
   Site* next;
   TaggedRef contents;
   PendBinding* pendBinding;
-  Chain* chain;
 
 public:
+  USEHEAPMEMORY;
   CellSec(TaggedRef val){ // on globalize
     state=Cell_Lock_Valid;
     pending=NULL;
     next=NULL;
     contents=val;
-    pendBinding=NULL;
-    chain=NULL;}
+    pendBinding=NULL;}
 
-  CellSec(int nr){ // on Proxy becoming Frame
+  CellSec(){ // on Proxy becoming Frame
     state=Cell_Lock_Invalid;
     pending=NULL;
     pendBinding=NULL;
-    chain=NULL;
     next=NULL;}
+
+  unsigned int stateWithoutAccessBit(){return state & (~Cell_Lock_Access_Bit);}
+
+  void addPendBinding(Thread*,TaggedRef);
+
+  TaggedRef getHead(){return head;}
+
+  Site* getNext(){return next;}
+
+  unsigned int getState(){return state;}
+
+  TaggedRef getContents(){
+    Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
+    return contents;}
+
+  PendThread** getPendBase(){return &pending;}
+
+  void gcCellSec();
+  void exchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+  void access(Tertiary*,TaggedRef);
+  Bool cellRecovery(TaggedRef);
+  Bool secReceiveRemoteRead(TaggedRef&);
+  void secReceiveReadAns(TaggedRef);
+  Bool secReceiveContents(TaggedRef,Site* &,TaggedRef &);
+  Bool secForward(Site*,TaggedRef&);
+  Bool threadIsPending(Thread* th);
 };
 
 class CellManager:public Tertiary{
@@ -2079,18 +2141,30 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  CellManager() : Tertiary(0,Co_Cell,Te_Manager){init();}
+  CellManager() : Tertiary(0,Co_Cell,Te_Manager){Assert(0);}
+
+  CellSec* getSec(){return sec;}
+
+  Chain *getChain() {return (Chain*) getPtr();}
+
+  unsigned int getState(){return sec->state;}
+
+  void initOnGlobalize(int index,Chain* ch,CellSec *secX){
+    setTertType(Te_Manager);
+    setIndex(index);
+    setPtr(ch);
+    sec=secX;}
+
 
   void setOwnCurrent();
   Bool isOwnCurrent();
   void init();
-  void setCurrent(Site *);
   Site* getCurrent();
   void localize();
   void gcCellManager();
-  void probeFault(Site*, int);
-  Chain *getChain() {return sec->chain;}
   void tokenLost();
+  PendThread* getPending(){return sec->pending;}
+  PendBinding *getPendBinding(){return sec->pendBinding;}
 };
 
 class CellProxy:public Tertiary{
@@ -2102,10 +2176,7 @@ public:
   OZPRINTLONG;
 
  CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
-   holder = 0;
-   DebugIndexCheck(manager);}
-
-  void probeFault(Site*, int);
+   holder = 0;}
 };
 
 class CellFrame:public Tertiary{
@@ -2117,59 +2188,43 @@ public:
   OZPRINTLONG;
 
   CellFrame():Tertiary((Board*)NULL,Co_Cell,Te_Frame){Assert(0);}
-  short getState(){
-    Assert(sec!=NULL);
-    return sec->state;}
-  void setState(short s){
-    Assert(sec!=NULL);
-    sec->state=s;}
 
-  Bool isAccessBit(){
-    if(getState() & Cell_Lock_Access_Bit) return TRUE;
-    return FALSE;}
-  void setAccessBit(){
-    setState(getState()| Cell_Lock_Access_Bit);}
-  void resetAccessBit(){setState(getState() & (~Cell_Lock_Access_Bit));}
+  void setDumpBit(){sec->state |= Cell_Lock_Dump_Asked;}
+
+  void resetDumpBit(){sec->state &= ~Cell_Lock_Dump_Asked;}
+
+  Bool dumpCandidate(){
+    if((sec->state & Cell_Lock_Valid) && (!(sec->state & Cell_Lock_Dump_Asked))){
+      setDumpBit();
+      return OK;}
+    return NO;}
+
+  Bool isAccessBit(){return sec->state & Cell_Lock_Access_Bit;}
+
+  void setAccessBit(){sec->state |= Cell_Lock_Access_Bit;}
+
+  void resetAccessBit(){sec->state &= (~Cell_Lock_Access_Bit);}
+
+  unsigned int getState(){return sec->state;}
+
+
 
   void myStoreForward(void* forward){setPtr(forward);}
+
   void* getForward(){return getPtr();}
 
-  void setPending(PendThread *pt){
-    sec->pending=pt;}
-  PendThread* getPending(){return sec->pending;}
-  PendThread ** getPendBase(){return &(sec->pending);}
-
-  void setPendBinding(PendBinding *pb){
-    sec->pendBinding=pb;}
-  PendBinding* getPendBinding(){
-    return sec->pendBinding;}
-
-  void addPendBinding(Thread*,TaggedRef);
-
-  TaggedRef getHead(){return sec->head;}
-  void setHead(TaggedRef val){sec->head=val;}
-
-  void setNext(Site *s){
-    sec->next=s;}
-  Site* getNext(){return sec->next;}
-
-  TaggedRef getContents(){
-    Assert(getState()&(Cell_Lock_Valid|Cell_Lock_Requested));return sec->contents;}
-  void setContents(TaggedRef tr){sec->contents=tr;}
-
-  void initFromProxy(){
-    int nr=(int)sec;
-    sec=new CellSec(nr);}
-
-  void initFromGlobalize(TaggedRef val){
-    sec=new CellSec(val);}
+  CellSec* getSec(){return sec;}
 
   void convertToProxy(){
     setTertType(Te_Proxy);
-    DebugCode(sec=NULL);}
+    sec=NULL;}
+
+  void convertFromProxy(){
+    setTertType(Te_Frame);
+    sec=new CellSec();}
 
   void gcCellFrame();
-  void gcCellFrameSec();
+
 };
 
 
@@ -2314,7 +2369,6 @@ public:
 
   void unlockComplex();
   void unlock(){
-    //    Assert(getLocker()==am.currentThread());
     Assert(getLocker()!=NULL);
     if(pending==NULL){
       setLocker(NULL);
@@ -2328,6 +2382,7 @@ public:
     if(t==getLocker()) {return;}
     if(getLocker()==NULL) {setLocker(t);return;}
     lockComplex(t);}
+
   Bool lockB(Thread *t){
     if(t==getLocker()) {return TRUE;}
     if(getLocker()==NULL) {setLocker(t);return TRUE;}
@@ -2346,12 +2401,12 @@ public:
 class LockSec{
 friend class LockFrame;
 friend class LockManager;
+friend class Chain;
 private:
   unsigned int state;
   PendThread* pending;
   Site* next;
   Thread *locker;
-  Chain* chain;
 
 public:
   LockSec(Thread *t,PendThread *pt){ // on globalize
@@ -2360,11 +2415,46 @@ public:
     locker=t;
     next=NULL; }
 
-  LockSec(int nr){ // on Proxy becoming Frame
+  LockSec(){ // on Proxy becoming Frame
     state=Cell_Lock_Invalid;
     locker=NULL;
     pending=NULL;
     next=NULL;}
+
+  void setAccessBit(){state |= Cell_Lock_Access_Bit;}
+
+  void resetAccessBit(){state &= ~Cell_Lock_Access_Bit;}
+
+  Bool isPending(Thread *th);
+
+  Thread* getLocker(){return locker;}
+
+  Site* getNext(){return next;}
+
+  unsigned int getState(){return state;}
+
+  Bool secLockB(Thread*t){
+    if(t==locker) return OK;
+    if((locker==NULL) && (state==Cell_Lock_Valid)){
+      Assert(pending==NULL);
+      locker=t;
+      return OK;}
+    return NO;}
+
+  PendThread** getPendBase(){return &pending;}
+
+  void lockComplex(Thread* th,Tertiary*);
+  void unlockComplex(Tertiary* );
+  void unlockComplexB(Thread *);
+  void unlockPending(Thread*);
+  void gcLockSec();
+  Bool secReceiveToken(Tertiary*,Site* &);
+  Bool secForward(Site*);
+  Bool lockRecovery();
+  void makeRequested(){
+    Assert(state==Cell_Lock_Invalid);
+    state=Cell_Lock_Requested;}
+  Bool threadIsPending(Thread* th);
 };
 
 class LockFrame:public OzLock{
@@ -2376,78 +2466,62 @@ public:
   OZPRINTLONG;
 
   LockFrame():OzLock((Board*)NULL,Te_Frame){Assert(0);}
-  unsigned int getState(){
-    Assert(sec!=NULL);
-    return sec->state;}
-  void setState(short s){
-    Assert(sec!=NULL);
-    sec->state=s;}
 
-  void setLocker(Thread *t){
-    sec->locker=t;}
-  Thread *getLocker(){
-    return sec->locker;}
-  Bool hasLock(Thread *t){if(t==getLocker()) return TRUE;return FALSE;}
+  Bool hasLock(Thread *t){if(t==sec->getLocker()) return TRUE;return FALSE;}
 
   Bool isAccessBit(){
-    if(getState() & Cell_Lock_Access_Bit) return TRUE;
+    if(sec->state & Cell_Lock_Access_Bit) return TRUE;
     return FALSE;}
-  void setAccessBit(){
-    setState(getState()| Cell_Lock_Access_Bit);}
-  void resetAccessBit(){setState(getState() & (~Cell_Lock_Access_Bit));}
+
+  void setAccessBit(){sec->setAccessBit();}
+
+  void resetAccessBit(){sec->resetAccessBit();}
+
+  void setDumpBit(){sec->state |= Cell_Lock_Dump_Asked;}
+
+  void resetDumpBit(){sec->state &= ~Cell_Lock_Dump_Asked;}
+
+  Bool dumpCandidate(){
+    if((sec->state & Cell_Lock_Valid) && (!(sec->state & Cell_Lock_Dump_Asked))){
+      setDumpBit();
+      return OK;}
+    return NO;}
+
+  unsigned int getState(){return sec->state;}
 
   void myStoreForward(void* forward){setPtr(forward);}
+
   void* getForward(){return getPtr();}
-
-  void setPending(PendThread *pt){sec->pending=pt;}
-  PendThread* getPending(){return sec->pending;}
-  PendThread** getPendBase(){return &sec->pending;}
-  Bool isPending(Thread *th);
-
-  void setNext(Site *s){sec->next=s;}
-  Site* getNext(){return sec->next;}
-
-  void initFromProxy(){
-    int nr=(int)sec;
-    sec=new LockSec(nr);}
-  void initFromGlobalize(Thread *t,PendThread *pt){
-    sec=new LockSec(t,pt);}
 
   void convertToProxy(){
     setTertType(Te_Proxy);
-    DebugCode(sec=NULL);}
+    sec=NULL;}
 
-  void gcLockFrame();
-  void gcLockFrameSec();
+  void convertFromProxy(){
+    setTertType(Te_Frame);
+    sec=new LockSec();}
 
-  void lockComplex(Thread *);
   void lock(Thread *t){
-    if(getLocker()==t) return;
-    if((getLocker()==NULL) && (getState()==Cell_Lock_Valid)){
-      Assert(getPending()==NULL);
-      setLocker(t);
-      return;}
-    lockComplex(t);}
+    if(sec->secLockB(t)) return;
+    sec->lockComplex(t,(Tertiary*) this);}
+
   Bool lockB(Thread *t){
-    if(getLocker()==t) return TRUE;
-    if((getLocker()==NULL) && (getState()==Cell_Lock_Valid)){
-      Assert(getPending()==NULL);
-      setLocker(t);
-      return TRUE;}
-    lockComplex(t);
+    if(sec->secLockB(t)) return TRUE;
+    sec->lockComplex(t,(Tertiary*) this);
     return FALSE;}
 
   void unlock(Thread *t){
-    if (getLocker()!=t){
-      unlockComplexB(t);
+    if (sec->locker!=t){
+      sec->unlockPending(t);
       return;}
-    setLocker(NULL);
-    if((getState()==Cell_Lock_Valid) && (getPending()==NULL)){
+    sec->locker=NULL;
+    if((sec->state==Cell_Lock_Valid) && (sec->pending==NULL)){
       return;}
-    unlockComplex();}
+    sec->unlockComplex((Tertiary*) this);}
 
-  void unlockComplex();
-  void unlockComplexB(Thread *);
+  LockSec* getSec(){return sec;}
+
+  void gcLockFrame();
 };
 
 class LockManager:public OzLock{
@@ -2460,55 +2534,48 @@ public:
 
   LockManager() : OzLock((Board*)NULL,Te_Manager){Assert(0);}
 
+  void initOnGlobalize(int index,Chain* ch,LockSec *secX){
+    setTertType(Te_Manager);
+    setIndex(index);
+    setPtr(ch);
+    sec=secX;}
 
-  void localize();
-  void gcLockManager();
+  Bool hasLock(Thread *t){
+    if(sec->locker==t) return TRUE;
+    return FALSE;}
 
-  Bool hasLock(Thread *t){if(t==((LockFrame*)this)->getLocker()) return TRUE;return FALSE;}
-
-  void tokenLost();
-
-  void lockComplex(Thread *);
   void lock(Thread *t){
-    LockFrame *lf=(LockFrame*)this;
-    if(lf->getLocker()==t) return;
-    if((lf->getLocker()==NULL) && (lf->getState()==Cell_Lock_Valid)){
-      Assert(lf->getPending()==NULL);
-      lf->setLocker(t);
-      return;}
-    lockComplex(t);}
+    if(sec->secLockB(t)) return;
+    sec->lockComplex(t,(Tertiary*)this);}
+
+  LockSec *getSec(){return sec;}
 
   Bool lockB(Thread *t){
-    LockFrame *lf=(LockFrame*)this;
-    if(lf->getLocker()==t) return TRUE;
-    if((lf->getLocker()==NULL) && (lf->getState()==Cell_Lock_Valid)){
-      Assert(lf->getPending()==NULL);
-      lf->setLocker(t);
-      return TRUE;}
-    lockComplex(t);
+    if(sec->secLockB(t)) return TRUE;
+    sec->lockComplex(t,(Tertiary*)this);
     return FALSE;}
 
   void unlock(Thread *t){
-    LockFrame *lf=(LockFrame*)this;
-    if (lf->getLocker()!=t){
-      unlockComplexB(t);
+    if (sec->getLocker()!=t){
+      sec->unlockPending(t);
       return;}
-    lf->setLocker(NULL);
-    if((lf->getState()==Cell_Lock_Valid) && (lf->getPending()==NULL)){
-      return;}
-    unlockComplex();}
+    Assert(sec->state & Cell_Lock_Valid);
+    sec->locker=NULL;
+    if((sec->state==Cell_Lock_Valid) && sec->pending==NULL) return;
+    sec->unlockComplex((Tertiary*) this);}
 
-  void unlockComplex();
-  void unlockComplexB(Thread *);
+  Chain *getChain() {return (Chain*) getPtr();}
 
+  PendThread* getPending(){return sec->pending;}
+
+  void localize();
+  void gcLockManager();
+  void tokenLost();
   void setOwnCurrent();
   Bool isOwnCurrent();
-
   void init();
-  void setCurrent(Site *);
   Site* getCurrent();
   void probeFault(Site*, int);
-  Chain *getChain() {return sec->chain;}
 };
 
 class LockProxy:public OzLock{
@@ -2520,13 +2587,11 @@ public:
   OZPRINTLONG;
 
  LockProxy(int manager):OzLock(manager,Te_Proxy){  // on import
-   holder = 0;
-   DebugIndexCheck(manager);}
+   holder = 0;}
 
   void lock(Thread *);
   void unlock();
   void probeFault(Site*, int);
-  void blocked(EntityCond);
 };
 
 
