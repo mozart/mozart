@@ -115,11 +115,8 @@ BASESRC1 = \
         ByteString.oz ForeignPointer.oz Base.oz
 BASESRC = $(BASESRC1:%=base/%)
 
-Base.ozf: $(BASESRC) BaseBuiltins.ozf
-        $(OZC) $(OZFLAGS) -l BaseBuiltins -c base/Base.oz -o $@
-
-BaseBuiltins.ozf: base/BaseBuiltins.oz
-        $(OZC) $(OZFLAGS) -c $< -o $@
+Base.ozf: $(BASESRC)
+        $(OZC) $(OZFLAGS) -c base/Base.oz -o $@
 
 #---------------------------------------------------------------------
 # Remaining functors
@@ -318,7 +315,7 @@ $(OZLIB)/boot-%: boot-%
 CLEANFILES = \
         compiler-Version.oz compiler-Builtins.oz \
         compiler-Opcodes.oz \
-        Base.ozf BaseBuiltins.ozf CpSupport.ozf \
+        Base.ozf CpSupport.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
