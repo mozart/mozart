@@ -234,7 +234,7 @@ error include resources.hh before mozart.h
 //#define DEBUG_NONMONOTONIC
 //#define DEBUG_LTQ
 //#define DEBUG_INDICES
-#define DEBUG_PROPAGATORS
+//#define DEBUG_PROPAGATORS
 //#define DEBUG_CONSTRAINT_UNIFY
 //#define DEBUG_REMOVE_PARAMS
 //#define ALLDIFF
