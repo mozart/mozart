@@ -55,9 +55,9 @@ void * OZ_hrealloc(void *, size_t);
 
 void protectInlineCache(InlineCache *);
 
-OZ_C_proc_proto(BIprepareDumpThreads)
-OZ_C_proc_proto(BIdumpThreads)
-OZ_C_proc_proto(BIlistThreads)
+OZ_C_proc_proto(BIprepareDumpThreads);
+OZ_C_proc_proto(BIdumpThreads);
+OZ_C_proc_proto(BIlistThreads);
 
 void gcSiteTable();
 
