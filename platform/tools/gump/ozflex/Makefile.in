@@ -23,7 +23,7 @@ LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 OZTOOL		= @OZTOOL@
 
-FLEX = flex
+FLEX = flex.exe
 
 SHELL = /bin/sh
 srcdir = @srcdir@

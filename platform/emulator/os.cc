@@ -602,7 +602,7 @@ int osSystem(char *cmd)
   //prepare the command to be executed to be passed
   //as an argument to cmd.exe via the /c switch
   char* buf = (char*) malloc(sizeof(strlen(cmd)+5));
-  sprintf(buf, "/c %s",cmd);
+  sprintf(buf, "/c \"%s\"",cmd);
 
 
   
@@ -1934,6 +1934,13 @@ static DWORD __stdcall readerThread(void *p)
   SOCKET out = io->fd1;
   HANDLE in = io->fd2;
   delete io;
+
+  // this one solves a problem with W2K SP2.
+  // readerThread cause the system to freeze if we
+  // don't call gethostname() (?load ws2_32.dll? changed with SP2)
+  // before ReadFile().
+  char dummyBuf[1000];
+  int dummy = gethostname(dummyBuf,sizeof(dummyBuf));
 
   char buf[bufSz];
   while(1) {

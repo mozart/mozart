@@ -12,6 +12,15 @@ then
     export OZCOPYALWAYS
 fi
 
+case $OZPLATFORM in
+    win32*)
+	exe=emulator.dll
+	;;
+    *)
+	exe=emulator.exe
+	;;
+esac
+
 if test -z "$OZEMULATOR"
 then
     for d in \
@@ -19,9 +28,9 @@ then
 	$BUILDTOP/platform/emulator/$OZPLATFORM \
 	$OZPREFIX/platform/$OZPLATFORM
     do
-	if test -x $d/emulator.exe
+	if test -x $d/$exe
 	then
-	    OZEMULATOR=$d/emulator.exe
+	    OZEMULATOR=$d/$exe
 	    break
 	fi
     done
@@ -35,4 +44,14 @@ fi
 url=$1
 shift
 
-exec $OZEMULATOR -init $OZINIT -u $url -- $*
+case $OZPLATFORM in
+    win32*)
+	OZEMULATOR=`cygpath -w $OZEMULATOR`
+	OZINIT=`cygpath -w $OZINIT`
+	export OZEMULATOR OZINIT
+	exec $BUILDTOP/platform/mswindows/ozengine $url "$@"
+	;;
+    *)
+	exec $OZEMULATOR -init $OZINIT -u $url -- "$@"
+	;;
+esac

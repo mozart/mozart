@@ -32,7 +32,8 @@ DefOptions = o(drawing:    o(hide:   true
 			     width:       6.5 * FactorsToCm.i
 			     height:      9.5 * FactorsToCm.i
 			     size:        '6.5ix9i'
-			     orientation: false))
+			     orientation: false)
+	       visual:     o(title:       'Oz Explorer'))
 
 NodeBorderWidth      #
 ThickNodeBorderWidth = if Tk.isColor then 1#1 else 1#2 end

@@ -31,6 +31,7 @@ local
 	 scale
       
       meth init(Manager Menu Canvas Status ?PackMe)
+	 TitleName = {Dictionary.get Manager.options.visual title}
 	 Tk.toplevel,tkInit(title:              TitleName
 			    'class':            'OzTools'
 			    delete:

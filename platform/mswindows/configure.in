@@ -32,43 +32,32 @@ dnl *****************************************************************
 
 dnl This will check that we are in the Oz directory and initiate
 AC_INIT(oz.cc)
-
 OZ_INIT
-
 
 OZ_CXX_CHOOSE
 
-dnl *****************************************************************
-dnl windows cross compilation
-dnl *****************************************************************
-
-case "$target" in
-   NONE)
-   ;;
-   i386-mingw32)
-	AC_MSG_RESULT(cross compiling for windows)
-	platform=win32-i486
-   ;;
-   *)
-	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
-    ;;
-esac
-
-OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-: ${platform=`$PLATFORMSCRIPT`}
-AC_SUBST(platform)
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
 
 case "$platform" in
-   win32-i486)
+    win32-i486)
 	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
 	CXX="$CXX $oz_a"
-   ;;
+	if test "$target" = NONE
+	then # compiling for mingw32 under cygwin
+	    BINDIRNAME=bin
+	else # cross-compiling
+	    BINDIRNAME=winbin
+	fi
+    ;;
 
-   *)
+    *)
+	BINDIRNAME=winbin
     ;;
 esac
 
 AC_SUBST(CXX)
+AC_SUBST(BINDIRNAME)
 
 AC_CHECK_TOOL(AR, ar)
 AC_CHECK_TOOL(WINDRES, windres)

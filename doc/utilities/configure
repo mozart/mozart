@@ -891,7 +891,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$INSTALL_DIR"
@@ -918,7 +918,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
   
   
   case "$target" in
-    i386-mingw32) 
+    i386-mingw32|i386-mingw32msvc)
 	PLATFORM=win32-i486
 	platform="win32-i486"
 	ozplatform=$platform
@@ -987,7 +987,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZPLATFORM"
@@ -996,7 +996,7 @@ fi
 	
     fi
     
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -1042,7 +1042,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZTOOL"
@@ -1199,7 +1199,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZENGINE=`echo $OZENGINE | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZENGINE"
@@ -1253,7 +1253,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZC=`echo $OZC | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZC"
@@ -1307,7 +1307,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZL=`echo $OZL | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZL"

@@ -30,17 +30,17 @@
 #define BYTE_MODE_WRITING 3
 #define BYTE_MODE_READING 4
 
-static const int netIntSize=4;
-
-//Utilities
-inline void ByteBuffer::int2net(int i) { 
+// Utilities
+inline void ByteBuffer::int2net(int i)
+{
   for (int k=0; k<4; k++) { 
     put(i & 0xFF); 
     i = i>>8;
   }
 }
 
-inline int ByteBuffer::net2int(){
+inline int ByteBuffer::net2int()
+{
   unsigned int i[4];
   for (int k=0; k<4; k++) {
     i[k]=get();
@@ -48,149 +48,150 @@ inline int ByteBuffer::net2int(){
   return (int) (i[0] + (i[1]<<8) + (i[2]<<16) + (i[3]<<24));
 }
 
-inline void ByteBuffer::putSize() {
+inline void ByteBuffer::putSize()
+{
   BYTE *tmp = posMB;
   int size;
 
-  Assert(posMB<=endMB);
-  Assert(putptr<=endMB);
-  if(posMB>putptr) 
-    size=posMB-putptr;
+  Assert(posMB <= endMB);
+  Assert(putptr <= endMB);
+  if (posMB > putptr) 
+    size = posMB-putptr;
   else
-    size=endMB-putptr+posMB-buf + 1;
+    size = ((endMB+1)-putptr) + (posMB-buf);
   // Find position for size 5 bytes from the beginning of this frame
   posMB = putptr+5;
-  if(posMB>endMB)
-    posMB = buf+(posMB-endMB-1);
-
+  if (posMB>endMB)
+    posMB = buf + (posMB-(endMB+1));
   int2net(size);
-  posMB=tmp;
+  posMB = tmp;
 }
 
-// Class methods
-ByteBuffer::ByteBuffer() {
-}
-
-void ByteBuffer::init(int size,BYTE *buf) {
+void ByteBuffer::init(int size,BYTE *buf)
+{
   this->buf=buf;
   this->size=size;
 
   reinit();
 
-  // Develc
-  fixsite=NULL;
+  site = NULL;
 }
 
-void ByteBuffer::reinit() {
+void ByteBuffer::reinit()
+{
   putptr = getptr = buf;
-  endMB = buf+size -1;
+  endMB = buf+size-1;
   used = 0;
   mode = BYTE_MODE_NONE;
 
-  //DEBUG
-#ifdef DEBUG_CHECK
+#if defined(DEBUG_CHECK)
   // printf("ByteBuffer init %x\n",this);
-  for(int i=0;i<size;i++)
-    buf[i]=0xde;
+  for (int i=0; i<size; i++)
+    buf[i] = 0xde;
 #endif
 }
 
-Bool ByteBuffer::isEmpty() {
-  return (used==0);
-}
-
 // For sending
-int ByteBuffer::getUsed() {
-  return used;
-}
-
-int ByteBuffer::getWriteParameters(BYTE *&buf) {
+int ByteBuffer::getWriteParameters(BYTE *&buf)
+{
   Assert(mode==BYTE_MODE_NONE);
   buf = getptr;
-  if (getptr<putptr)
-    return putptr-getptr;
-  else if (getptr>putptr || (getptr==putptr && used==size))
-    return endMB-getptr +1;
+  if (getptr < putptr)
+    return (putptr-getptr);
+  else if (getptr > putptr || (getptr == putptr && used == size))
+    return ((endMB+1)-getptr);
   else
     return 0;
 }
 
-void ByteBuffer::clearWrite(int sizeWritten) {
-  Assert(sizeWritten+getptr<=endMB+1);
-  Assert(sizeWritten+getptr<=putptr ||
-	 putptr<getptr ||
-	 putptr==getptr&&used==size);  // Not allowed to circle on write.
-#ifdef DEBUG_CHECK
+void ByteBuffer::clearWrite(int sizeWritten)
+{
+  Assert(getptr+sizeWritten <= endMB+1); // subsumes (used < size);
+  Assert(getptr+sizeWritten <= putptr ||
+	 putptr < getptr ||
+	 // Not allowed to circle on write.
+	 (putptr == getptr && used == size));
+#if defined(DEBUG_CHECK)
   for (BYTE *p=getptr;p<getptr+sizeWritten;p++)    
     *p=0xde;
 #endif
 
-  getptr+=sizeWritten;
-  if (getptr==endMB+1) getptr=buf;
-  used-=sizeWritten;
-  mode=BYTE_MODE_NONE;
-  if (used==0) 
+  //
+  mode = BYTE_MODE_NONE;
+  used -= sizeWritten;
+  Assert(used >= 0);
+  if (used == 0) {
     reinit();
+  } else {
+    getptr += sizeWritten;
+    if (getptr == endMB+1)
+      getptr = buf;
+  }
 }
 
 // For marshaler
-void ByteBuffer::putBegin () {
+void ByteBuffer::marshalBegin()
+{
   Assert(mode == BYTE_MODE_NONE);
   mode = BYTE_MODE_MARSHALING;
-  posMB=putptr;
+  posMB = putptr;
 }     
 
-void ByteBuffer::putNext(BYTE b) {
+void ByteBuffer::putNext(BYTE b)
+{
   Assert(mode == BYTE_MODE_MARSHALING);
   Assert(posMB >= putptr);
-  Assert(used+posMB-putptr < size);
-  Assert(posMB==endMB+1);
-  posMB=buf;
-  *posMB++=b;
+  Assert(used+posMB-putptr <= size);
+  Assert(posMB == endMB+1);
+  posMB = buf;
+  *posMB++ = b;
 }
 
-void ByteBuffer::putInt(int i) {
+void ByteBuffer::putInt(int i)
+{
   Assert(mode == BYTE_MODE_MARSHALING);
   int2net(i);
 }
 
-void ByteBuffer::putEnd() {
+void ByteBuffer::marshalEnd()
+{
   Assert(mode == BYTE_MODE_MARSHALING);
   // Are we just about to wrap around?
-  if(posMB>endMB)
-    posMB=buf;
+  Assert(posMB <= endMB+1);
+  if (posMB > endMB)		// faster than posMB == endMB+1
+    posMB = buf;
   putSize();
-  if(posMB>putptr) 
-    used+=posMB-putptr;
+  if (posMB > putptr) 
+    used += posMB-putptr;
   else
-    used+=endMB-putptr+posMB-buf +1;
-  putptr=posMB;
+    used += ((endMB+1)-putptr) + (posMB-buf);
+  Assert(used <= size);
+  putptr = posMB;
   mode = BYTE_MODE_NONE;
 }
 
 // For unmarshaler
-void ByteBuffer::getBegin() {
+void ByteBuffer::unmarshalBegin()
+{
   Assert(mode == BYTE_MODE_NONE);
   mode = BYTE_MODE_UNMARSHALING;
   posMB = getptr;
 }
 
-void ByteBuffer::setFrameSize(int size) {
-  framesize=size;
-}
-
-Bool ByteBuffer::getDebug() {
+Bool ByteBuffer::getDebug()
+{
   return canGet(1);
 }
 
-BYTE ByteBuffer::getNext() {
-  Assert(posMB==endMB);
-  BYTE b=*posMB;  // Must get last byte due to unsymmetry in msgbuffer.hh
-  posMB=buf;
-  return b;
+BYTE ByteBuffer::getNext()
+{
+  Assert(posMB == endMB+1);
+  posMB = buf;			// wrap over (not a new chunk);
+  return (*posMB++);
 }
 
-int ByteBuffer::getInt() {
+int ByteBuffer::getInt()
+{
   Assert(mode == BYTE_MODE_UNMARSHALING);
   int tmp=net2int();
   return tmp;
@@ -198,10 +199,11 @@ int ByteBuffer::getInt() {
 
 // getCommit may never be called when no data has been read, that
 // case looks equivalent to the case of all data being read.
-void ByteBuffer::getCommit() {
+void ByteBuffer::getCommit()
+{
   Assert(mode == BYTE_MODE_UNMARSHALING);
-#ifdef DEBUG_CHECK
-  if (posMB>getptr)
+#if defined(DEBUG_CHECK)
+  if (posMB > getptr)
     for (BYTE *p=getptr;p<posMB;p++)    
       *p=0xde;
   else { // Fills all of the buffer if getptr==posMB
@@ -212,92 +214,72 @@ void ByteBuffer::getCommit() {
   }
 #endif
 
-  if (posMB==getptr) // Assume all read
-    used=0;
-  else if (posMB>=getptr)
-    used-= (posMB-getptr);
+  if (posMB == getptr) // Assume all read
+    used = 0;
+  else if (posMB >= getptr)
+    used -= (posMB-getptr);
   else
-    used -= (endMB-getptr)+(posMB-buf) +1;
-  getptr=posMB;
+    used -= (((endMB+1)-getptr) + (posMB-buf));
+  Assert(used >= 0);
   if (used==0) {
     reinit();
-    mode=BYTE_MODE_UNMARSHALING;
+    mode = BYTE_MODE_UNMARSHALING;
+  } else {
+    getptr = posMB;
+    if (getptr == endMB+1)
+      getptr = buf;
+    Assert(getptr < endMB+1);
   }
 }
 
-void ByteBuffer::getEnd() {
+void ByteBuffer::unmarshalEnd()
+{
   //  Assert(mode == BYTE_MODE_UNMARSHALING);
   mode = BYTE_MODE_NONE;
 }
 
 // For receiving
-int ByteBuffer::getReadParameters (BYTE *&buf) {
+int ByteBuffer::getReadParameters(BYTE *&buf)
+{
   Assert(mode == BYTE_MODE_NONE);
   buf = putptr;
   int ret;
-  if (putptr>getptr || (putptr==getptr && used==0))
-    ret= endMB+1-putptr;
+  if (putptr > getptr || (putptr == getptr && used == 0))
+    ret = (endMB+1)-putptr;
   else if (putptr<getptr)
-    ret= getptr-putptr;
+    ret = getptr-putptr;
   else 
-    ret= 0;
-  Assert(ret<=size-used);
+    ret = 0;
+  Assert(used+ret <= size);
   return ret;
 }
 
-void ByteBuffer::hasRead(int sizeRead) {
-  Assert(sizeRead+putptr<=endMB+1);
-  Assert(sizeRead<=size-used);
-  Assert(sizeRead+putptr<=getptr ||
-	 getptr<putptr ||
-	 getptr==putptr&&used==0);
+void ByteBuffer::hasRead(int sizeRead)
+{
+  Assert(putptr+sizeRead <= endMB+1);
+  Assert(used+sizeRead <= size);
+  Assert(putptr+sizeRead <= getptr ||
+	 getptr < putptr ||
+	 (getptr == putptr && used == 0));
   // Better test needed to check for overflow AN
 
-  used+=sizeRead;
-  putptr+=sizeRead;
-  if (putptr==endMB+1) {
+  used += sizeRead;
+  Assert(used <= size);
+  putptr += sizeRead;
+  if (putptr == endMB+1)
     putptr=buf;
-  }
+  Assert(putptr < endMB+1);
   //  mode = BYTE_MODE_NONE;
 }
 
-Bool ByteBuffer::putDebug() {
+Bool ByteBuffer::putDebug()
+{
   return availableSpace()+1>0; // +1 since put trailer uses this too...
 };
 
-// Glue and fixes during development.
-// To be REMOVED!
-void ByteBuffer::marshalBegin() {
-  OZ_error("byteBuffer: OLD marshalBegin USED");
-}
-
-void ByteBuffer::marshalEnd() {
-  OZ_error("byteBuffer: OLD marshalEnd USED");
-}
-
-void ByteBuffer::unmarshalBegin() {
-  OZ_error("byteBuffer: OLD unmarshalBegin USED");
-  getBegin ();
-}
-
-void ByteBuffer::unmarshalEnd() {
-  OZ_error("byteBuffer: OLD unmarshalEnd USED");
-  getCommit ();
-  getEnd ();
-}
-
-//
-// kost@:  still needed for marshaling tertiaries and variables..
-DSite* ByteBuffer::getSite()
+ByteBufferManager::ByteBufferManager()
+  : FreeListManager(BYTE_ByteBuffer_CUTOFF)
 {
-  return fixsite;
-}
-
-// End of development fixes
-//
-
-ByteBufferManager::ByteBufferManager():
-  FreeListManager(BYTE_ByteBuffer_CUTOFF){
   wc = 0;
 }
 

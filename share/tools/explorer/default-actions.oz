@@ -23,14 +23,14 @@
 ExplorerClass,add(information proc {$ N X} {System.show N#X} end
 		  label: 'Show')
 
-ExplorerClass,add(information proc {$ N X} {Browser.browse N#X} end
-		  label: 'Browse')
+ExplorerClass,add(information proc {$ N X} {Inspector.inspect N#X} end
+		  label: 'Inspect')
 
 ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {System.show N1#N2#X1#X2} end
 		  label: 'Show')
 
-ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {Browser.browse N1#N2#X1#X2} end
-		  label: 'Browse')
+ExplorerClass,add(compare proc {$ N1 X1 N2 X2} {Inspector.inspect N1#N2#X1#X2} end
+		  label: 'Inspect')
 
 ExplorerClass,add(statistics proc {$ N S}
 				{System.show N#{Record.subtract S shape}}
@@ -38,6 +38,6 @@ ExplorerClass,add(statistics proc {$ N S}
 		  label: 'Show')
 
 ExplorerClass,add(statistics proc {$ N S}
-				{Browser.browse N#{Record.subtract S shape}}
+				{Inspector.inspect N#{Record.subtract S shape}}
 			     end
-		  label: 'Browse')
+		  label: 'Inspect')
