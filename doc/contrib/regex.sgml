@@ -10,7 +10,8 @@ The module may be imported as follows:
       <item>Returns <code/true/ iff ?_{X} is a regex object.
       <entry><code/Regex.make/
       <synopsis><code/{Regex.make ?+{PAT} ??{RE}}/
-      <item>Creates regex object ?_{RE} from virtual string pattern ?_{PAT}.
+      <item>Creates regex object ?_{RE} from virtual string pattern
+?_{PAT}. Note that ?_{Regex.make} cannot be used in (subordinated) spaces.
       <entry><code/Regex.search/
       <synopsis><code/{Regex.search ?+{RE} ?+{TXT} ??{MATCH}}/
       <item>Returns the next ?_{MATCH} of regex ?_{RE} in virtual string

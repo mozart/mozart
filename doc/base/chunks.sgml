@@ -345,8 +345,11 @@ finalization stream <code/L/.
           <<{WeakDictionary.close ?+{Weak}}>>
         <Item>
           drops the finalization stream (if any).  After this, any
-entry that becomes garbage is simply dropped instead of being sent to
-the finalization stream.
+          entry that becomes garbage is simply dropped instead of
+          being sent to the finalization stream. Note that the
+          ?_{close}, ?_{put}, ?_{remove}, and ?_{removeAll} operations
+          cannot be used in a (subordinated) space other than where
+          the weak dictionary has been constructed.
 
         <Entry><<put>>
           <Index class=tails/<<WeakDictionary>><And><<put>>/
