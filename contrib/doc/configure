@@ -12,9 +12,6 @@ ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_default_prefix=/usr/local/oz
-ac_help="$ac_help
---enable-contrib=c1,c2,...
-        add these contributions to the configuration (default: doc)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -454,7 +451,7 @@ echo > confdefs.h
 
 # A filename unique to this package, relative to the directory that
 # configure is in, which we can look for to find out if srcdir is correct.
-ac_unique_file=gdbm
+ac_unique_file=sgml
 
 # Find the source files, if location was not specified.
 if test -z "$srcdir"; then
@@ -522,40 +519,32 @@ else
 fi
 
 
-
-for ac_prog in rm
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:532: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
+echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
+echo "configure:524: checking whether ${MAKE-make} sets \${MAKE}" >&5
+set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  if test -n "$RM"; then
-  ac_cv_prog_RM="$RM" # Let the user override the test.
+  cat > conftestmake <<\EOF
+all:
+        @echo 'ac_maketemp="${MAKE}"'
+EOF
+# GNU make sometimes prints "make[1]: Entering...", which would confuse us.
+eval `${MAKE-make} -f conftestmake 2>/dev/null | grep temp=`
+if test -n "$ac_maketemp"; then
+  eval ac_cv_prog_make_${ac_make}_set=yes
 else
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_RM="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
+  eval ac_cv_prog_make_${ac_make}_set=no
 fi
+rm -f conftestmake
 fi
-RM="$ac_cv_prog_RM"
-if test -n "$RM"; then
-  echo "$ac_t""$RM" 1>&6
+if eval "test \"`echo '$ac_cv_prog_make_'${ac_make}_set`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  SET_MAKE=
 else
   echo "$ac_t""no" 1>&6
+  SET_MAKE="MAKE=${MAKE-make}"
 fi
-
-test -n "$RM" && break
-done
-
 
 ac_aux_dir=
 for ac_dir in $srcdir $srcdir/.. $srcdir/../..; do
@@ -586,7 +575,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:590: checking host system type" >&5
+echo "configure:579: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -628,7 +617,7 @@ echo "$ac_t""$host" 1>&6
 
 
     echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:632: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:621: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -665,7 +654,7 @@ fi
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:669: checking for a BSD compatible install" >&5
+echo "configure:658: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -725,7 +714,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:729: checking for $ac_word" >&5
+echo "configure:718: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -784,60 +773,7 @@ fi
     BUILDTOP=`cd $BUILDTOP && pwd`
 
 
-echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:789: checking whether ${MAKE-make} sets \${MAKE}" >&5
-set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  cat > conftestmake <<\EOF
-all:
-        @echo 'ac_maketemp="${MAKE}"'
-EOF
-# GNU make sometimes prints "make[1]: Entering...", which would confuse us.
-eval `${MAKE-make} -f conftestmake 2>/dev/null | grep temp=`
-if test -n "$ac_maketemp"; then
-  eval ac_cv_prog_make_${ac_make}_set=yes
-else
-  eval ac_cv_prog_make_${ac_make}_set=no
-fi
-rm -f conftestmake
-fi
-if eval "test \"`echo '$ac_cv_prog_make_'${ac_make}_set`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  SET_MAKE=
-else
-  echo "$ac_t""no" 1>&6
-  SET_MAKE="MAKE=${MAKE-make}"
-fi
-
-BUILDTOP=`cd .. && pwd`
-
-
-echo $ac_n "checking for --enable-contrib""... $ac_c" 1>&6
-echo "configure:819: checking for --enable-contrib" >&5
-# Check whether --enable-contrib or --disable-contrib was given.
-if test "${enable_contrib+set}" = set; then
-  enableval="$enable_contrib"
-  :
-fi
-
-
-if test -z "${enable_contrib}"; then
-    : ${oz_enable_contrib=doc}
-else
-    case "${enable_contrib}" in
-    no)         oz_enable_contrib=;;
-    yes)        oz_enable_contrib=gdbm,regex,doc;;
-    *)          oz_enable_contrib=${enable_contrib};;
-    esac
-fi
-echo "$ac_t""$oz_enable_contrib" 1>&6
-
-CONTRIBDIRS=`echo $oz_enable_contrib | sed 's/,/ /g'`
-
-subdirs="$CONTRIBDIRS"
-
+SUBDIRS="code sgml"
 
 trap '' 1 2 15
 cat > confcache <<\EOF
@@ -952,7 +888,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile code/Makefile sgml/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -982,20 +918,18 @@ s%@includedir@%$includedir%g
 s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
-s%@RM@%$RM%g
+s%@SET_MAKE@%$SET_MAKE%g
 s%@host@%$host%g
 s%@host_alias@%$host_alias%g
 s%@host_cpu@%$host_cpu%g
 s%@host_vendor@%$host_vendor%g
 s%@host_os@%$host_os%g
 s%@SRCTOP@%$SRCTOP%g
-s%@SET_MAKE@%$SET_MAKE%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
 s%@BUILDTOP@%$BUILDTOP%g
-s%@CONTRIBDIRS@%$CONTRIBDIRS%g
-s%@subdirs@%$subdirs%g
+s%@SUBDIRS@%$SUBDIRS%g
 
 CEOF
 EOF
@@ -1037,7 +971,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile code/Makefile sgml/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
@@ -1107,100 +1041,3 @@ EOF
 chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
-
-if test "$no_recursion" != yes; then
-
-  # Remove --cache-file and --srcdir arguments so they do not pile up.
-  ac_sub_configure_args=
-  ac_prev=
-  for ac_arg in $ac_configure_args; do
-    if test -n "$ac_prev"; then
-      ac_prev=
-      continue
-    fi
-    case "$ac_arg" in
-    -cache-file | --cache-file | --cache-fil | --cache-fi \
-    | --cache-f | --cache- | --cache | --cach | --cac | --ca | --c)
-      ac_prev=cache_file ;;
-    -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
-    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* | --c=*)
-      ;;
-    -srcdir | --srcdir | --srcdi | --srcd | --src | --sr)
-      ac_prev=srcdir ;;
-    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
-      ;;
-    *) ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
-    esac
-  done
-
-  for ac_config_dir in $CONTRIBDIRS; do
-
-    # Do not complain, so a configure script can configure whichever
-    # parts of a large source tree are present.
-    if test ! -d $srcdir/$ac_config_dir; then
-      continue
-    fi
-
-    echo configuring in $ac_config_dir
-
-    case "$srcdir" in
-    .) ;;
-    *)
-      if test -d ./$ac_config_dir || mkdir ./$ac_config_dir; then :;
-      else
-        { echo "configure: error: can not create `pwd`/$ac_config_dir" 1>&2; exit 1; }
-      fi
-      ;;
-    esac
-
-    ac_popdir=`pwd`
-    cd $ac_config_dir
-
-      # A "../" for each directory in /$ac_config_dir.
-      ac_dots=`echo $ac_config_dir|sed -e 's%^\./%%' -e 's%[^/]$%&/%' -e 's%[^/]*/%../%g'`
-
-    case "$srcdir" in
-    .) # No --srcdir option.  We are building in place.
-      ac_sub_srcdir=$srcdir ;;
-    /*) # Absolute path.
-      ac_sub_srcdir=$srcdir/$ac_config_dir ;;
-    *) # Relative path.
-      ac_sub_srcdir=$ac_dots$srcdir/$ac_config_dir ;;
-    esac
-
-    # Check for guested configure; otherwise get Cygnus style configure.
-    if test -f $ac_sub_srcdir/configure; then
-      ac_sub_configure=$ac_sub_srcdir/configure
-    elif test -f $ac_sub_srcdir/configure.in; then
-      ac_sub_configure=$ac_configure
-    else
-      echo "configure: warning: no configuration information is in $ac_config_dir" 1>&2
-      ac_sub_configure=
-    fi
-
-    # The recursion is here.
-    if test -n "$ac_sub_configure"; then
-
-      # Make the cache file name correct relative to the subdirectory.
-      case "$cache_file" in
-      /*) ac_sub_cache_file=$cache_file ;;
-      *) # Relative path.
-        ac_sub_cache_file="$ac_dots$cache_file" ;;
-      esac
-  case "$ac_given_INSTALL" in
-        [/$]*) INSTALL="$ac_given_INSTALL" ;;
-        *) INSTALL="$ac_dots$ac_given_INSTALL" ;;
-        esac
-
-      echo "running ${CONFIG_SHELL-/bin/sh} $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir"
-      # The eval makes quoting arguments work.
-      if eval ${CONFIG_SHELL-/bin/sh} $ac_sub_configure $ac_sub_configure_args --cache-file=$ac_sub_cache_file --srcdir=$ac_sub_srcdir
-      then :
-      else
-        { echo "configure: error: $ac_sub_configure failed for $ac_config_dir" 1>&2; exit 1; }
-      fi
-    fi
-
-    cd $ac_popdir
-  done
-fi
