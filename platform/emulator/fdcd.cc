@@ -71,13 +71,11 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
   for (i = clauses; i--; ) {
     TaggedRef bi = makeTaggedRef(&b[i]);
     DEREF(bi, bi_ptr, bi_tag);
-    if (isNotCVar(bi_tag)) {
-      GenFDVariable * fdvar = new GenFDVariable();
-      fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);
-      doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
-    } else {
-      error("Unexpected CVar found.");
-    }
+    //mm2
+    Assert(isUVar(bi));
+    GenFDVariable * fdvar = new GenFDVariable();
+    fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);
+    doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
   }
 
   // Has already been reduced to sum(b) >= 1
@@ -105,7 +103,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     for (int j = variables; j--; ) {
       TaggedRef vp_i_j = makeTaggedRef(&vp_i[j]);
       DEREF(vp_i_j, vp_i_j_ptr, vp_i_j_tag);
-      if (isNotCVar(vp_i_j_tag)) {
+      if (oz_isFree(vp_i_j)) {
         OZ_Term vj = v[j], vp_i_j_val;
         DEREF(vj, vjptr, vjtag);
 

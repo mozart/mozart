@@ -174,7 +174,7 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
 
     addSpawn(def, w, tptr);
     return expectProceed(1, 1);
-  } else if (isNotCVar(ttag)) {
+  } else if (oz_isFree(t)) {
     addSuspend(def, w, tptr);
     return expectSuspend(1, 0);
   }
@@ -206,12 +206,13 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
       return expectSuspend(1, 0);
     } else if (oz_isSTuple(descr) && tagged2SRecord(descr)->getWidth() == 1 &&
                AtomCompl == tagged2SRecord(descr)->getLabel()) {
+      //mm2: use tagged2Ref
       return expectDomDescr(makeTaggedRef(&(*tagged2SRecord(descr))[0]), 3);
     }
     level = 3;
   }
 
-  if (isNotCVar(descr_tag)) {
+  if (oz_isFree(descr)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (isPosSmallFDInt(descr) && (level >= 1)) { // (1)
@@ -227,6 +228,7 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     if (tuple.getWidth() != 2)
       return expectFail();
     for (int i = 0; i < 2; i++) {
+      //mm2: use tagged2Ref
       OZ_expect_t r = expectDomDescr(makeTaggedRef(&tuple[i]), 1);
       if (isSuspending(r) || isFailing(r))
         return r;
@@ -236,9 +238,11 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 
     do {
       LTuple &list = *tagged2LTuple(descr);
+      //mm2: use tagged2Ref
       OZ_expect_t r = expectDomDescr(makeTaggedRef(list.getRefHead()), 2);
       if (isSuspending(r) || isFailing(r))
         return r;
+      //mm2: use tagged2Ref
       descr = makeTaggedRef(list.getRefTail());
 
       __DEREF(descr, descr_ptr, descr_tag);
@@ -259,7 +263,7 @@ OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
   } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
     addSpawn(ps, tptr);
     return expectProceed(1, 1);
-  } else if (isNotCVar(ttag)) {
+  } else if (oz_isFree(t)) {
     addSuspend(ps, tptr);
     return expectSuspend(1, 0);
   }
@@ -295,7 +299,7 @@ OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
 {
   DEREF(descr, descr_ptr, descr_tag);
 
-  if (isNotCVar(descr_tag)) {
+  if (oz_isFree(descr)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (isPosSmallSetInt(descr) && (level == 1 || level == 2)) { // (1)
@@ -311,6 +315,7 @@ OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
     if (tuple.getWidth() != 2)
       return expectFail();
     for (int i = 0; i < 2; i++) {
+      //mm2: use tagged2Ref
       OZ_expect_t r = expectDomDescr(makeTaggedRef(&tuple[i]), 1);
       if (isSuspending(r) || isFailing(r))
         return r;
@@ -322,9 +327,11 @@ OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
 
     do {
       LTuple &list = *tagged2LTuple(descr);
+      //mm2: use tagged2Ref
       OZ_expect_t r = expectDomDescr(makeTaggedRef(list.getRefHead()), 2);
       if (isSuspending(r) || isFailing(r))
         return r;
+      //mm2: use tagged2Ref
       descr = makeTaggedRef(list.getRefTail());
 
       __DEREF(descr, descr_ptr, descr_tag);
@@ -345,7 +352,7 @@ OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
   } else if (isGenFSetVar(t, ttag)) {
     addSpawn(ps, tptr);
     return expectProceed(1, 1);
-  } else if (isNotCVar(ttag)) {
+  } else if (oz_isFree(t)) {
     addSuspend(ps, tptr);
     return expectSuspend(1, 0);
   }
@@ -389,7 +396,7 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
   } else if (isGenOFSVar(t, ttag)) {
     addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
-  } else if (isNotCVar(ttag)) {
+  } else if (oz_isFree(t)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
   }
@@ -426,6 +433,7 @@ OZ_expect_t OZ_Expect::expectProperRecord(OZ_Term t,
     int width = tuple.getWidth(), acc = 1;
 
     for (int i = width; i--; ) {
+      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(&tuple[i]));
       if (r.accepted == -1) {
         return r;
@@ -457,6 +465,7 @@ OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t,
     int width = tuple.getWidth(), acc = 1;
 
     for (int i = width; i--; ) {
+      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(&tuple[i]));
       if (r.accepted == -1) {
         return r;
@@ -486,6 +495,7 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
 
     do {
       len += 1;
+      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
 
       if (r.accepted == -1) {
@@ -526,6 +536,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     int width = tuple.getWidth(), acc = 1;
 
     for (int i = width; i--; ) {
+      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(&tuple[i]));
       if (r.accepted == -1) {
         return r;
@@ -541,6 +552,7 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
 
     do {
       len += 1;
+      //mm2: use tagged2Ref
       OZ_expect_t r = (this->*expectf)(makeTaggedRef(tagged2LTuple(t)->getRefHead()));
 
       if (r.accepted == -1) {
@@ -573,7 +585,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 
   DEREF(st, stptr, sttag);
 
-  if (isNotCVar(sttag)) {
+  if (oz_isFree(st)) {
     addSpawn(fd_prop_any, stptr);
     return expectProceed(1, 1);
   } else if (oz_isNil(st)) {
@@ -590,7 +602,7 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 
     if (oz_isNil(st)) {
       return expectProceed(len, len);
-    } else if (isNotCVar(sttag)) {
+    } else if (oz_isFree(st)) {
       addSpawn(fd_prop_any, stptr);
       return expectProceed(len, len);
     }
@@ -643,7 +655,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 
     Assert(type == FDVariable || type == FSetVariable || type == CtVariable);
 
-    if (isNotCVar(vtag)) {
+    if (oz_isFree(v)) {
 
       if (type == FDVariable) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FiniteDomain *) NULL);
@@ -714,6 +726,9 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
         addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
         all_local &= am.isLocalSVar(v);
       } else if (isGenOFSVar(v, vtag)) {
+        //mm2 else
+        // addSuspAnyVar(vptr,prop);
+        // all_local &= am.isLocalVariable(v,vptr);
         addSuspOFSVar(v, prop);
         all_local &= am.isLocalSVar(v);
       } else if (isSVar(vtag)) {

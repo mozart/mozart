@@ -325,13 +325,14 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
 
 // tell finite domain constraint to unconstrained variable
-  if (isNotCVar(vtag)) {
+  if (oz_isFree(v)) {
     if (! fd) goto fdvariable;
 
     // fd is singleton domain --> v becomes integer
     if (fd->getSize() == 1) {
       if (am.isLocalVariable(v, vptr)) {
-        if (isSVar(vtag))
+        // mm2: was isSVar
+        if (!isUVar(vtag))
           am.checkSuspensionList(v);
         doBind(vptr, OZ_int(fd->getSingleElem()));
       } else {
@@ -352,9 +353,10 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     OZ_Term *  tcv = newTaggedCVar(cv);
 
     if (am.isLocalVariable(v, vptr)) {
-      if (isSVar(vtag)) {
+      // mm2: was isSVar
+      if (!isUVar(vtag)) {
         am.checkSuspensionList(v);
-        cv->setSuspList(tagged2SVar(v)->getSuspList());
+        cv->setSuspList(tagged2SVarPlus(v)->getSuspList());
       }
       doBind(vptr, makeTaggedRef(tcv));
     } else {
