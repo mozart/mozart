@@ -472,7 +472,9 @@ starts the emulator under gdb")
 	  (or bar-overlay (setq bar-overlay (make-overlay beg end)))
 	  (move-overlay bar-overlay beg end (current-buffer))
 	  
-	  (oz-bar-configure state))
+	  (if (string-equal state "unchanged")
+	      ()
+	    (oz-bar-configure state)))
 	
 	(if (or (< beg (window-start)) (> beg (window-end)))
 	    (progn
