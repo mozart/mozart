@@ -36,7 +36,7 @@ This section lists traps and pitfalls that
 beginners typically fall into when writing their
 first finite domain problem scripts in Oz.
 
-<section><title/Ordinary Arithmetic Blocks/
+<section class=unnumbered><title/Ordinary Arithmetic Blocks/
 <p>
 There is a big difference between the statement
 <<<
@@ -99,7 +99,7 @@ the script can have blocked, except for those that have
 been explicitly parallelized with <<thread ... end>>.
 </section>
 
-<section><title/Delay of Propagators/
+<section class=unnumbered><title/Delay of Propagators/
 
 <p>
 Almost all propagators start their work only after
@@ -123,7 +123,7 @@ to the largest finite domain possible (&ie;
 <<0#sup>>).
 </section>
 
-<section><title/The Operators <<=:>> and <<::>>
+<section class=unnumbered><title/The Operators <<=:>> and <<::>>
 don't Introduce Pattern Variables/
 <p>
 The statement
@@ -152,7 +152,7 @@ local X = {FD.int 4#5} in &ellipsis; end
 >>>
 </section>
 
-<section><title/Delay of Domain Specifications/
+<section class=unnumbered><title/Delay of Domain Specifications/
 <p>
 A domain specification like <<X::L#U>> constrains
 <<X>>  only after both <<L>> and <<U>> are
@@ -166,7 +166,7 @@ will constrain <<X>> only after both <<L>> and <<U>>
 have been determined.
 </section>
 
-<section><title/Coreferences are not Always Realized/
+<section class=unnumbered><title/Coreferences are not Always Realized/
 <p>
 The propagator created by
 <<<
@@ -188,7 +188,7 @@ Pythagoras Puzzle (see <ptr to=SecFDPythagoras>) is a problem, where
 exploiting coreferences is essential).
 </section>
 
-<section><title/Large Numbers/
+<section class=unnumbered><title/Large Numbers/
 <p>
 There is an implementation-dependent upper bound
 for the integers that can occur in a finite domain

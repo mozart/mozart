@@ -11,7 +11,7 @@ SGMLSRCS0 = \
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
-PICTURES = explorer-a explorer-b queen
+PICTURES = explorer-a explorer-b queen fdt
 
 HTMLEXTRAFILES = $(PICTURES:%=pictures/%.gif)
 

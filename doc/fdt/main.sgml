@@ -120,7 +120,7 @@
       <Author.Extern to="author.db" key="Joerg.Wuertz"> 
     <Comic>
       <Picture.Choice>
-	<Picture.Extern to="pictures/crash-small.gif" type=gif>
+	<Picture.Extern to="fdt.gif" type=gif>
       </Picture.Choice>
     <Abstract>
     This document is an introduction
