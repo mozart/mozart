@@ -65,11 +65,7 @@
 
 #define _cacPendThreadEmul       gCollectPendThreadEmul
 
-#define _cacVarFix               gCollectVarFix
-#define _CacVarFix               GCollectVarFix
-
-#define _CacStack                GCollectStack
-#define _cacStack                gCollectStack
+#define _cacFix                  gCollectFix
 
 #define _cac_varSizes            gCollectVarsizes
 
