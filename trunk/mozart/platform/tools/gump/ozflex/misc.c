@@ -326,7 +326,7 @@ void dataflush()
 void flexerror( msg )
 const char msg[];
 	{
-	fprintf( stderr, "%s: %s\n", program_name, msg );
+	fprintf( stderr, "E: %s\n", msg );
 	flexend( 1 );
 	}
 
@@ -336,8 +336,8 @@ const char msg[];
 void flexfatal( msg )
 const char msg[];
 	{
-	fprintf( stderr, _( "%s: fatal internal error, %s\n" ),
-		program_name, msg );
+	fprintf( stderr, _( "E: fatal internal error, %s\n" ), msg );
+	fprintf( stderr, _( "X:1\n" ) );
 	exit( 1 );
 	}
 

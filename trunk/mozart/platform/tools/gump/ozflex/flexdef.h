@@ -975,7 +975,7 @@ extern void pinpoint_message PROTO((char[]));
 extern void line_warning PROTO(( char[], int ));
 
 /* Write out a message, pinpointing it at the given line. */
-extern void line_pinpoint PROTO(( char[], int ));
+extern void line_pinpoint PROTO(( char[], int, int ));
 
 /* Report a formatted syntax error. */
 extern void format_synerr PROTO((char [], char[]));

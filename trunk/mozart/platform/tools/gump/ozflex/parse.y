@@ -873,7 +873,7 @@ char msg[], arg[];
 void pinpoint_message( str )
 char str[];
 	{
-	line_pinpoint( str, linenum );
+	line_pinpoint( str, linenum, 1 );
 	}
 
 
@@ -883,23 +883,22 @@ void line_warning( str, line )
 char str[];
 int line;
 	{
-	char warning[MAXLINE];
-
 	if ( ! nowarn )
 		{
-		sprintf( warning, "warning, %s", str );
-		line_pinpoint( warning, line );
+		line_pinpoint( str, line, 0 );
 		}
 	}
 
 
 /* line_pinpoint - write out a message, pinpointing it at the given line */
 
-void line_pinpoint( str, line )
+void line_pinpoint( str, line, iserror )
 char str[];
 int line;
+int iserror;
 	{
-	fprintf( stderr, "\"%s\", line %d: %s\n", infilename, line, str );
+	fprintf( stderr, "%c:%s:%d: %s\n", iserror? 'E': 'W',
+		 infilename, line, str );
 	}
 
 

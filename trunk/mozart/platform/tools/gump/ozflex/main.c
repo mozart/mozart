@@ -614,6 +614,7 @@ _( "  %d/%d character classes needed %d/%d words of storage, %d reused\n" ),
 			tblsiz );
 		}
 
+	fprintf( stderr, _( "X:%d\n" ), exit_status );
 	exit( exit_status );
 	}
 
