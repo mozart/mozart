@@ -61,11 +61,11 @@ define
 	 end
       end
 
-      Platform = {Property.get platform}.1
-      WindowsPlatform = 'win32'
+      OsName      = {Property.get 'platform.os'}
+      WindowsName = 'win32'
 
       local
-	 FieldSeparator = if Platform == WindowsPlatform then &; else &: end
+	 FieldSeparator = if OsName == WindowsName then &; else &: end
 
 	 fun {SystemPathList RawPath} H T in % RawPath must be of type string
 	    {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
@@ -124,7 +124,7 @@ define
 	 S   = {Atom.toString F}
 	 Abs = case S                   % absolute path?
 	       of     &/|_   then true
-	       elseof _|&:|_ then Platform == WindowsPlatform
+	       elseof _|&:|_ then OsName == WindowsName
 	       else false end
       in
 	 if Abs then
