@@ -30,10 +30,11 @@
 //-----------------------------------------------------------------------------
 // naming variables
 
-typedef Namer<OZ_Term, const char *> VarNamer;
-template VarNamer;
+template class Namer<OZ_Term, const char *>;
 
-VarNamer * VarNamer::_head;
+typedef Namer<OZ_Term, const char *> VarNamer;
+
+template <> VarNamer * VarNamer::_head = NULL;
 
 VarNamer varNamer; 
 
@@ -94,10 +95,11 @@ const char * toStringNamer(const char * s)
 //-----------------------------------------------------------------------------
 // naming propagators
 
-typedef Namer<Propagator *, OZ_Term> PropNamer;
-template PropNamer;
+template class Namer<Propagator *, OZ_Term>;
 
-PropNamer * PropNamer::_head;
+typedef class Namer<Propagator *, OZ_Term> PropNamer;
+
+template <> PropNamer * PropNamer::_head = NULL;
 
 PropNamer propNamer; 
 
