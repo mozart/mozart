@@ -109,6 +109,9 @@ public:
     *tos = value;
     tos++;
   }
+
+  StackEntry topElem() { return *(tos-1); }
+
   StackEntry pop(int n=1)
   {
     checkConsistency();
