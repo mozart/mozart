@@ -620,6 +620,8 @@ void msgReceived(MsgBuffer* bs)
       unmarshal_M_ISDET(bs,OTI,v);
       PD((MSG_RECEIVED,"M_ISDET index:%d val:%s",OTI,toC(v)));
       OwnerEntry *oe = receiveAtOwner(OTI);
+      // RS: please recheck: !oe->isVar does not mean its determined
+      //     may be bound to other var.
       SiteUnify(v,oe->isVar()?OZ_false():OZ_true());
       break;
     }

@@ -24,7 +24,7 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE) && !defined(VAR_ALL)
 #pragma implementation "var_fd.hh"
 #endif
 
