@@ -680,7 +680,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
         Assert(0); //Not an error just want to see AN
         break;
       }
-      perdio_msgReceived(msgC,this->site);
+      perdio_msgReceived(msgC);
 
       if(!msgAckLength || // avoid division with zero
          lastReceived%msgAckLength==0)  // Time for explicit acknowledgement
@@ -873,7 +873,7 @@ MsgContainer *ComObj::getMsgContainer(int num) {
   return queues.getRec(num);
 }
 
-void ComObj::connectionLost(void *info) {
+void ComObj::connectionLost() {
   PD((TCP_INTERFACE,"Connection lost, state=%d %x",state,this));
 //    printf("Connection lost, state=%d %x to %d\n",state,(int) transObj,
 //       site->getTimeStamp()->pid);

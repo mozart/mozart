@@ -45,7 +45,7 @@ void sendAskError(BorrowEntry* be,EntityCond ec){
   msgC->put_M_UNASK_ERROR(na->index,myDSite,ec);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
 
 void sendUnAskError(BorrowEntry *be,EntityCond ec){
@@ -55,7 +55,7 @@ void sendUnAskError(BorrowEntry *be,EntityCond ec){
   msgC->put_M_UNASK_ERROR(na->index,myDSite,ec);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
-  sendTo(na->site,msgC,3);
+  send(msgC,3);
 }
 
 void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
@@ -145,4 +145,5 @@ void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_TELL_ERROR(myDSite,mI,ec,set);
 
-  sendTo(toS,msgC,3);}
+  send(msgC,3);
+}

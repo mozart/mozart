@@ -126,7 +126,7 @@ public:
                           // MsgContainer for message num to be continued.
   Bool msgReceived(MsgContainer *); // A full message was received and is
                                     // now handed up. Return: continue?
-  void connectionLost(void *info);
+  void connectionLost();
 
   // For connection procedure
   Bool handover(TransObj *);

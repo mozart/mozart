@@ -93,12 +93,12 @@ void cellLockSendGet(BorrowEntry *be,DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_LOCK_GET(na->index,myDSite);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);}
+  send(msgC,3);}
 
 void cellLockSendForward(DSite *toS,DSite *fS,int mI){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_LOCK_FORWARD(myDSite,mI,fS);
-  sendTo(toS,msgC,3);}
+  send(msgC,3);}
 
 void cellLockReceiveDump(OwnerEntry *oe,DSite* fromS){
   Tertiary *t=oe->getTertiary();
@@ -116,7 +116,7 @@ void cellLockSendDump(BorrowEntry *be){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_LOCK_DUMP(na->index,myDSite);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  sendTo(toS,msgC,3);}
+  send(msgC,3);}
 
 /**********************************************************************/
 /*   Cell protocol - receive                            */
@@ -307,14 +307,14 @@ void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val,DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_READANS(mS,mI,val);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS,DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_REMOTEREAD(mS,mI,fS);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI,DSite *cS){
@@ -323,7 +323,7 @@ void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI,DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_CONTENTS(mS,mI,tr);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 void cellSendRead(BorrowEntry *be,DSite *dS,DSite *cS){
@@ -333,7 +333,7 @@ void cellSendRead(BorrowEntry *be,DSite *dS,DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_READ(na->index,dS);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 void chainSendAck(DSite* toS, int mI, DSite *cS){
@@ -342,7 +342,7 @@ void chainSendAck(DSite* toS, int mI, DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_ACK(mI,myDSite);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 /**********************************************************************/
@@ -477,7 +477,7 @@ void lockSendToken(DSite *mS,int mI,DSite* toS,DSite *cS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_LOCK_TOKEN(mS,mI);
   msgC->setImplicitMessageCredit(cS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 /**********************************************************************/
@@ -572,7 +572,7 @@ void cellSendCantPut(TaggedRef tr,DSite* toS, DSite *mS, int mI){
       toS->stringrep(), mS->stringrep(),mI));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_CANTPUT(mI, toS, tr, myDSite);
-  sendTo(mS,msgC,3);
+  send(msgC,3);
 }
 
 void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){
@@ -591,7 +591,7 @@ void lockSendCantPut(DSite* toS, DSite *mS, int mI){
       toS->stringrep(),mS->stringrep(),mI));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(mS);
   msgC->put_M_LOCK_CANTPUT(mI, toS, myDSite);
-  sendTo(mS,msgC,3);
+  send(msgC,3);
 }
 
 void lockSendTokenFailure(DSite* toS,DSite *mS, int mI){
@@ -638,12 +638,12 @@ void chainSendQuestion(DSite* toS,int mI,DSite *deadS){
   PD((ERROR_DET,"chainSendQuestion  %s",toS->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_QUESTION(mI,myDSite,deadS);
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }
 
 void chainSendAnswer(BorrowEntry* be,DSite* toS, int mI, int ans, DSite *deadS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_ANSWER(mI,myDSite,ans,deadS);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  sendTo(toS,msgC,3);
+  send(msgC,3);
 }

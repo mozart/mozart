@@ -78,6 +78,11 @@ DSite* MsgContainer::getImplicitMessageCredit() {
   return creditSite;
 }
 
+DSite* MsgContainer::getDestination() {
+  return destination;
+}
+
+
 // includes MessageType-specific get_,put_,marshal_,unmarshal_,gcMsgC_
 #include "msgContainer_marshal.cc"
 
@@ -90,20 +95,16 @@ MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
     GenCast(f,FreeListEntry*,msgC,MsgContainer*);
   msgC->init(site);
   ++wc;
-//    printf("Creating msgC %x \n",msgC);
   return msgC;
 }
 
 void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC) {
-//    printf("Removing msgC %x (ucont %d term %x)\n",msgC,
-//       msgC->checkFlag(MSG_HAS_UNMARSHALCONT),
-//       (msgC->msgFields[1]).arg);
   if(msgC->checkFlag(MSG_HAS_MARSHALCONT) && msgC->cont!=0)
     msgC->transController->returnMarshaler((DPMarshaler *) msgC->cont);
   else if(msgC->checkFlag(MSG_HAS_UNMARSHALCONT) && msgC->cont!=0)
     msgC->transController->returnUnmarshaler((Builder *) msgC->cont);
 
-  FreeListEntry *f; // AN ****
+  FreeListEntry *f;
   --wc;
   GenCast(msgC,MsgContainer*,f,FreeListEntry*);
   if(putOne(f)) return;

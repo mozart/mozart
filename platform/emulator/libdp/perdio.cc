@@ -148,23 +148,16 @@ void initDP()
 /* *********************************************************************/
 
 //
-void sendTo(DSite* toS, MsgContainer *msgC, int priority)
+void send(MsgContainer *msgC, int priority)
 {
-  // kost@ : 'toS' is unnecessary here?
-  Assert(msgC->getDestination() == toS);
-
-  //
   globalSendCounter++;
 
-  //
-  int ret = toS->sendTo(msgC, priority);
+  int ret=msgC->getDestination()->send(msgC, priority);
 
-  //
   switch (ret) {
-  case ACCEPTED:
-    break;
   case PERM_NOT_SENT:
-    toS->communicationProblem(msgC, COMM_FAULT_PERM_NOT_SENT);
+    msgC->getDestination()->communicationProblem(msgC,
+                                                 COMM_FAULT_PERM_NOT_SENT);
     msgContainerManager->deleteMsgContainer(msgC);
     break;
   default:
@@ -393,7 +386,6 @@ void globalizeTert(Tertiary *t)
   PD((GLOBALIZING,"GLOBALIZING port/object index:%d",i));
   DebugCode(if(t->getType()==Co_Object)
   {
-    //        printf("globalizingObject  index:%d %s %d\n",i,toC(makeTaggedConst(t)),osgetpid());
     PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));})
 
   oe->mkTertiary(t);
@@ -449,7 +441,6 @@ Bool localizeTertiary(Tertiary*t){
     localizePort(t);
     return OK;
   case Co_Object:
-//      printf("localizingObject  index:%d %s %d\n",t->getIndex(),toC(makeTaggedConst(t)),osgetpid());
     ((Object*)t)->localize();
     return OK;
   default:
@@ -512,9 +503,7 @@ inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
   return be;
 }
 
-void msgReceived(MarshalerBuffer *mb) {printf("VS should not be used!!!\n");}
-
-void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
+void msgReceived(MsgContainer* msgC)
 {
   Assert(oz_onToplevel());
   Assert(creditSiteIn==NULL);
@@ -524,20 +513,9 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
 
   MessageType mt = msgC->getMessageType();
   creditSiteIn=msgC->getImplicitMessageCredit();
-  //  if(creditSiteIn!=NULL) printf("creditSiteIn: %x\n",creditSiteIn);
-
-  // this is a necessary check - you should never receive
-  // a message from a site that you think is PERM or TEMP
-  // this can happen - though it is very rare
-  // for virtual sites we do not know, for now, the sending site so
-  // we can do nothing
-  // Is that still true??? AN!
-
-//    if(dsite!=NULL && dsite->siteStatus()!=SITE_OK){
-//      return;}
 
   PD((MSG_RECEIVED,"msg type %d",mt));
-  //printf("receiving msg:%d %s\n",mt,mess_names[mt]);
+
   switch (mt) {
   case M_PORT_SEND:
     {
@@ -566,7 +544,7 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
       MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
       newmsgC->put_M_BORROW_CREDIT(myDSite,na_index,c);
 
-      sendTo(rsite,newmsgC,3);
+      send(newmsgC,3);
       break;
     }
 
@@ -653,8 +631,6 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
       msgC->get_M_GET_LAZY(OTI, lazyFlag, rsite);
       PD((MSG_RECEIVED,"M_GET_LAZY index:%d site:%s",
           OTI, rsite->stringrep()));
-//        printf("M_GET_LAZY index:%d site:%s\n",
-//           OTI, rsite->stringrep());
       //
       OwnerEntry *oe = receiveAtOwner(OTI);
       //
@@ -677,8 +653,7 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
           //
           msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT_AND_CLASS,
                                 o->getClassTerm());
-          // printf("Class: %s\n",toC(o->getClassTerm()));
-          sendTo(rsite, msgC, 3);
+          send(msgC, 3);
         }
         // no break here! - proceed with the 'OBJECT' case;
 
@@ -691,7 +666,7 @@ void msgReceived(MsgContainer* msgC,DSite *dsite) //dsite only for test
 
           //
           msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT, t);
-          sendTo(rsite, msgC, 3);
+          send(msgC, 3);
         }
         break;
 
@@ -1217,11 +1192,12 @@ void initDPCore()
 /*   MISC                                                */
 /**********************************************************************/
 
+// AN! To be removed ?
 void sendPing(DSite* s){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(s);
   msgC->put_M_SEND_PING(myDSite,42);
 
-  sendTo(s,msgC,3);
+  send(msgC,3);
 }
 
 void marshalDSite(MarshalerBuffer *buf, DSite* s)

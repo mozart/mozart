@@ -56,7 +56,7 @@ ExportedProxyVar::ExportedProxyVar(ProxyVar *pv, DSite *dest)
 //
 void ExportedProxyVar::marshal(ByteBuffer *bs)
 {
-  DebugCode(PD((MARSHAL,"exported var proxy bi:%d", bi)););
+//    DebugCode(PD((MARSHAL,"exported var proxy bi:%d", bi)););
   Assert(isMarshaled == NO);
   DebugCode(isMarshaled = OK;);
   //

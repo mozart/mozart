@@ -71,9 +71,7 @@ void TCPTransObj::init() {
 
 void TCPTransObj::close() {
   PD((TCP_INTERFACE,"TCPTransObj closing down"));
-  //printf("cl on %x to %x\n",(int)this,(int)comObj);
-//    printf("close %d %x %x %d\n", getpid(), (int)comObj, (int)this, fd);
-//    comObj=NULL; // DEVEL
+
   if(fd!=-1) {
     OZ_unregisterRead(fd);  // Sometimes done twice!
     OZ_unregisterWrite(fd); // Sometimes done twice!
@@ -90,24 +88,9 @@ void TCPTransObj::deliver() {
   Assert(fd!=-1);
   OZ_registerWriteHandler(fd,tcpTransObj_writeHandler,(void *) this);
 }
-/*
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-*/
+
 void TCPTransObj::readyToReceive() {
   OZ_registerReadHandler(fd,tcpTransObj_readHandler,(void *) this);
-  /*
-  int tmp, len;
-  len=sizeof(tmp);
-  if(getsockopt(fd,IPPROTO_TCP,TCP_MAXSEG,(char *) &tmp, (socklen_t *) &len)<0)
-    printf("TCP_MAXSEG getsockopt error\n");
-  printf("TCP_MAXSEG = %d\n", tmp);
-  if(getsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char *) &tmp, (socklen_t *) &len)<0)
-    printf("TCP_NODELAY getsockopt error\n");
-  printf("TCP_NODELAY = %d\n", tmp);
-  */
 }
 
 void TCPTransObj::setSite(DSite *site) {
@@ -125,12 +108,12 @@ OZ_Return TCPTransObj::setUp(DSite *site,ComObj *comObj,OZ_Term settings) {
   SRecord *s = tagged2SRecord(settings);
   int index = s->getIndex(oz_atom("fd"));
   if (index>=0) {
-      OZ_Term t0 = s->getArg(index);
-      NONVAR(t0,t);
-      if(!oz_isInt(t))
-        OZ_typeError(-1,"Int");
-      int fd=oz_intToC(t);
-      this->fd=fd;
+    OZ_Term t0 = s->getArg(index);
+    NONVAR(t0,t);
+    if(!oz_isInt(t))
+      OZ_typeError(-1,"Int");
+    int fd=oz_intToC(t);
+    this->fd=fd;
   }
   tcptransController->addRunning(comObj);
   return PROCEED;
@@ -219,18 +202,15 @@ int TCPTransObj::writeHandler(int fd) {
         return 0;
       case PERM:
         // Inform comObj wich will close us
-//      printf("connectionLost writeHandler %d %d\n",
-//             myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid);
-        comObj->connectionLost((void *) fd);
+        comObj->connectionLost();
         // This object is now reused or removed. No fields may be altered
         return 0; // Don't unregister with 1 here since a new
-                  // register might have been done in the mean time.
+        // register might have been done in the mean time.
       }
     }
 
     writeBuffer->clearWrite(ret);
     if(ret<len) {
-//        printf("writeHandler didn't write all (%d of %d)\n",ret,len);
       return 0;
     }
   }
@@ -275,29 +255,37 @@ inline unmarshalReturn TCPTransObj::unmarshal() {
     // Unmarshal data
     readBuffer->fixsite=site;
     // kost@ : handle error conditions!
-    (void) msgC->unmarshal(readBuffer, tcptransController);
-
-    t=readBuffer->get();
-    readBuffer->getCommit();           // A full frame read.
-    if(t==CF_CONT) {
-      Assert(msgC->checkFlag(MSG_HAS_UNMARSHALCONT));
-      Assert(type<C_FIRST);
-      comObj->msgPartlyReceived(msgC);
+    if (msgC->unmarshal(readBuffer, tcptransController)) {
+      // Frame contents successfully unmarshaled.
+      t=readBuffer->get();
+      readBuffer->getCommit();           // A full frame read.
+      if(t==CF_CONT) {
+        Assert(msgC->checkFlag(MSG_HAS_UNMARSHALCONT));
+        Assert(type<C_FIRST);
+        comObj->msgPartlyReceived(msgC);
+      }
+      else {
+        Assert(t==CF_FINAL && !msgC->checkFlag(MSG_HAS_UNMARSHALCONT));
+        if(!comObj->msgReceived(msgC))
+          return U_CLOSED;
+      }
+      return U_MORE;
     }
     else {
-      Assert(t==CF_FINAL && !msgC->checkFlag(MSG_HAS_UNMARSHALCONT));
-      if(!comObj->msgReceived(msgC))
-        return U_CLOSED;
+      // Contents somehow corrupted.
+      // Since messages have to be delivered in order we cannot just
+      // discard this frame. Using TCP something must be seriously wrong.
+      // Break the connection by telling the comObj it was lost. The comObj can
+      // then decide on further actions.
+      comObj->connectionLost();
+      return U_CLOSED;
     }
-    return U_MORE;
   }
   else
     return U_WAIT;                       // Wait for more data
 }
 
 int TCPTransObj::readHandler(int fd) {
-  //  printf("readHandler invoked\n");
-
   int ret,len,msgNum;
   BYTE *pos;
   Assert(fd == this->fd);
@@ -310,7 +298,6 @@ int TCPTransObj::readHandler(int fd) {
     ret = osread(fd,pos,len);
 
     if (ret<0) {
-//        printf("Error in read %d\n",ossockerrno());
       switch(classifyError()) {
       case GO_AHEAD:
         break;
@@ -318,9 +305,8 @@ int TCPTransObj::readHandler(int fd) {
         goto done_reading;
       case PERM:
         // Inform comObj which will close us
-        // Here some information that was read could be lost AN
-//  printf("connectionLost readHandler %d %d\n",myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid);
-        comObj->connectionLost((void *) fd);
+        // Here some information that was read could be lost AN!
+        comObj->connectionLost();
         // This object is now reused or removed. No fields may be altered
         return 0; // Don't unregister with 1 here since a new
                   // register might have been done in the mean time.
@@ -331,8 +317,7 @@ int TCPTransObj::readHandler(int fd) {
       readBuffer->hasRead(ret);
 
       if(ret==0) { // EOF
-//      printf("connectionLost readHandler EOF %d %d %x %x\n",myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,comObj,this);
-        comObj->connectionLost((void *) fd);
+        comObj->connectionLost();
         // This object is now reused or removed. No fields may be altered
         return 0; // Don't unregister with 1 here since a new
                   // register might have been done in the mean time.

@@ -33,7 +33,7 @@
 #include "network.hh"
 #include "comObj.hh"
 #include "transObj.hh"
-#include "tcpTransObj.hh" // DEVEL? AN
+#include "tcpTransObj.hh"
 #include "byteBuffer.hh"
 #include "connection.hh"
 #include "timers.hh"
@@ -143,10 +143,6 @@ int getComControllerInfo(int &size){
 }
 
 int getTransControllerInfo(int &size) {
-//    // Temporary solution, should work with any type of transObj and include
-//    // buffers.
-//    size = sizeof(TCPTransObj)+2*30000;
-//    return tcptransController->getCTR();
   return tcptransController->getInfo(size);
 }
 

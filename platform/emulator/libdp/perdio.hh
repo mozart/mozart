@@ -45,16 +45,14 @@
 void initDP();
 
 //
-// void sendTo(DSite *toS,MarshalerBuffer *bs,MessageType mt,DSite *sS,int sI);
-void sendTo(DSite* toS,MsgContainer *msgC,int priority);
+void send(MsgContainer *msgC,int priority);
 
 //
 // kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.
 // That's quite natural: we don't know who send us a message (of
 // course, communication layer for remote site do know, but that's
 // another story).
-void msgReceived(MarshalerBuffer *); // Not to be used, only needed during devel
-void msgReceived(MsgContainer *,DSite *);
+void msgReceived(MsgContainer *);
 
 // Used by networklayer to do pinging.
 void sendPing(DSite*);
@@ -125,7 +123,7 @@ void setTransport(OZ_Term);
 OZ_Term getTransport();
 
 // ERIK
-// These are the pointers to the default Accept and COnnect procedures.
+// These are the pointers to the default Accept and Connect procedures.
 // The pointers are set by InitIPconnection in dpMiscModule.cc and
 // read by the connection stub and initIP in connection.cc.
 
@@ -134,9 +132,9 @@ extern OZ_Term defaultConnectionProcedure;
 extern OZ_Term ConnectPortStream;
 extern OZ_Term ConnectPort;
 
-// AN
-inline void perdio_msgReceived(MsgContainer *msgC,DSite *dsite) {
-  msgReceived(msgC,dsite);
+// Avoid name-conflict
+inline void perdio_msgReceived(MsgContainer *msgC) {
+  msgReceived(msgC);
 }
 
 // Message Statistics:
