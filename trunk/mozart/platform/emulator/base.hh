@@ -256,7 +256,7 @@ class OwnerTable;
 class BorrowTable;
 class Site;
 
-class BuiltinTabEntry;
+class Builtin;
 
 class FiniteDomain;
 

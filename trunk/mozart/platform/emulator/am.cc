@@ -400,7 +400,7 @@ void AM::init(int argc,char **argv)
 
   // builtins
   initLiterals();
-  BuiltinTabEntry *entry = BIinit();
+  Builtin *entry = BIinit();
   if (!entry) {
     error("BIinit failed");
     osExit(1);

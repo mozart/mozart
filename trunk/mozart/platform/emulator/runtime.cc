@@ -111,9 +111,9 @@ Board *ozx_rootBoard() { return am._rootBoard; }
 
 BuiltinTab builtinTab(750);
 
-BuiltinTabEntry *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
+Builtin *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
 {
-  BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
+  Builtin *builtin = new Builtin(name,arity,funn,infun);
 
   builtinTab.htAdd(name,builtin);
 

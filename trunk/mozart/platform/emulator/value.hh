@@ -2001,10 +2001,10 @@ Abstraction *tagged2Abstraction(TaggedRef term)
 
 
 /*===================================================================
- * Builtin (incl. BuiltinTabEntry)
+ * Builtin (incl. Builtin)
  *=================================================================== */
 
-class BuiltinTabEntry: public ConstTerm {
+class Builtin: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef printname; //must be atom
@@ -2017,13 +2017,13 @@ private:
 
 public:
   OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(BuiltinTabEntry);
+  NO_DEFAULT_CONSTRUCTORS(Builtin);
 
   /* use malloc to allocate memory */
   static void *operator new(size_t chunk_size)
   { return ::new char[chunk_size]; }
   
-  BuiltinTabEntry(const char *s,int arty,OZ_CFun fn,IFOR infun)
+  Builtin(const char *s,int arty,OZ_CFun fn,IFOR infun)
   : arity(arty),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
@@ -2059,10 +2059,10 @@ Bool isBuiltin(TaggedRef term)
 }
 
 inline
-BuiltinTabEntry *tagged2Builtin(TaggedRef term)
+Builtin *tagged2Builtin(TaggedRef term)
 {
   Assert(isBuiltin(term));
-  return (BuiltinTabEntry *)tagged2Const(term);
+  return (Builtin *)tagged2Const(term);
 }
 
 /*===================================================================

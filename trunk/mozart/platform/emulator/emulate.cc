@@ -457,7 +457,7 @@ void pushContX(TaskStack *stk,
 #define Greg(N) RegAccess(G,N)
 
 #define XPC(N) Xreg(getRegArg(PC+N))
-#define GetBI(PC) ((BuiltinTabEntry*) getAdressArg(PC))
+#define GetBI(PC) ((Builtin*) getAdressArg(PC))
 
 #if defined(LINUX_I486) || defined(GNUWIN32) || defined(SOLARIS_I486) || defined(FREEBSD_I486)
 #define OZ_I486
@@ -909,7 +909,7 @@ LBLdispatcher:
   Case(CALLBUILTIN)
     {
       COUNT(bicalls);
-      BuiltinTabEntry* entry = GetBI(PC+1);
+      Builtin* entry = GetBI(PC+1);
       OZ_CFun biFun = entry->getFun();
 
       // CheckArity(entry->getArity(),makeTaggedConst(entry));
@@ -2138,7 +2138,7 @@ LBLdispatcher:
 
   LBLcall:
      COUNT(nonoptcalls);
-     BuiltinTabEntry *bi;
+     Builtin *bi;
 
 // -----------------------------------------------------------------------
 // --- Call: Abstraction
@@ -2173,7 +2173,7 @@ LBLdispatcher:
        Assert(typ==Co_Builtin);
        COUNT(nonoptbicalls);
      
-       bi = (BuiltinTabEntry *) predicate;
+       bi = (Builtin *) predicate;
 	
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 	   
