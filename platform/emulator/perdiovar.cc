@@ -18,7 +18,7 @@
 
 
 // bind and inform sites
-Bool PerdioVar::bindPerdioVar(TaggedRef *lPtr,TaggedRef v,PerdioVar *rVar=0)
+Bool PerdioVar::bindManager(TaggedRef *lPtr,TaggedRef v, PerdioVar *rVar)
 {
   warning("bindPerdioVar: only does local unification: no protocol yet");
 
@@ -27,7 +27,7 @@ Bool PerdioVar::bindPerdioVar(TaggedRef *lPtr,TaggedRef v,PerdioVar *rVar=0)
   return TRUE;
 }
 
-Bool PerdioVar::surrender(TaggedRef *lPtr,TaggedRef v,PerdioVar *rVar)
+Bool PerdioVar::bindProxy(TaggedRef *lPtr,TaggedRef v, PerdioVar *rVar)
 {
   warning("surrender: only does local unification: no protocol yet");
   return TRUE;
@@ -57,56 +57,44 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
     PerdioVar *rVar = tagged2PerdioVar(rVal);
     Assert(!rVar->isBound());
 
-    Bool l_is_local = (prop && am.isLocalSVar(lVar));
-    Bool r_is_local = (prop && am.isLocalSVar(rVar));
-    switch (l_is_local + 2 * r_is_local) {
-    case TRUE + 2 * TRUE: // v and t are local
-      {
-	int cmp = lVar->compare(rVar);
-	Assert(cmp!=0);
-	if (cmp<0) {
-	  if (lVar->isManager()) {
-	    return lVar->bindPerdioVar(lPtr,makeTaggedRef(rPtr),rVar);
-	  } else {
-	    return lVar->surrender(lPtr,makeTaggedRef(rPtr),rVar);
+    if (prop) {
+      if (am.isLocalSVar(lVar)) {
+	if (am.isLocalSVar(rVar)) {
+	  int cmp = lVar->compare(rVar);
+	  Assert(cmp!=0);
+	  if (cmp<0) {
+	    if (lVar->isManager()) {
+	      return lVar->bindManager(lPtr,makeTaggedRef(rPtr));
+	    } else {
+	      return lVar->bindProxy(lPtr,makeTaggedRef(rPtr));
+	    }
 	  }
-	  return TRUE;
+	  Assert(cmp>0);
+	  if (rVar->isManager()) {
+	    return rVar->bindManager(rPtr,makeTaggedRef(lPtr));
+	  } else {
+	    return rVar->bindProxy(rPtr,makeTaggedRef(lPtr));
+	  }
 	}
-	Assert(cmp>0);
-	if (rVar->isManager()) {
-	  return rVar->bindPerdioVar(rPtr,makeTaggedRef(lPtr),lVar);
-	} else {
-	  return rVar->surrender(rPtr,makeTaggedRef(lPtr),lVar);
-	}
+	am.doBindAndTrail(rVal, rPtr,makeTaggedRef(lPtr));
+	return TRUE;
       }
-      return TRUE;
-      
-    case TRUE + 2 * FALSE: // r is local and l is global
-      am.doBindAndTrail(rVal, rPtr,makeTaggedRef(lPtr));
-      return TRUE;
-      
-    case FALSE + 2 * TRUE: // r is global and l is local
-      am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
-      return TRUE;
-
-    case FALSE + 2 * FALSE: // r and l are global
-      am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
-      return TRUE;
-      
-    default:
-      Assert(0);
-      return FALSE;
-      break;
+    }
+    am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
+    return TRUE;
+  }
+  
+  Assert(!isAnyVar(rVal));
+  if (prop && am.isLocalSVar(lVar)) {
+    if (lVar->isManager()) {
+      return lVar->bindManager(lPtr,rVal);
+    } else {
+      return lVar->bindProxy(lPtr,rVal);
     }
   } else {
-    Assert(!isAnyVar(rVal));
-    if (prop && am.isLocalSVar(this)) {
-      return bindPerdioVar(lPtr,rVal);
-    } else {
-      if (prop) am.checkSuspensionList(lVal,pc_std_unif);
-      am.doBindAndTrail(lVal, lPtr,rVal);
-      return TRUE;
-    }
+    if (prop) am.checkSuspensionList(lVal,pc_std_unif);
+    am.doBindAndTrail(lVal, lPtr,rVal);
+    return TRUE;
   }
 }
 
