@@ -1220,7 +1220,7 @@ test -n "$YACC" || YACC="yacc"
   echo $ac_n "checking $YACC version is at least 1.25""... $ac_c" 1>&6
 echo "configure:1222: checking $YACC version is at least 1.25" >&5
   oz_tmp_ok=no
-  if oz_tmp_version=`$YACC --version 2>/dev/null | tr '\n' ' '`; then
+  if oz_tmp_version=`$YACC --version 2>/dev/null | tr -c 'a-zA-Z0-9._' ' '`; then
 
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
