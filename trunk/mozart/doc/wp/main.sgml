@@ -105,8 +105,15 @@
     <Meta name="html.split"       value="section.canvas.tags">
     <Meta name="html.split"       value="section.canvas.animated">
 
-    <Meta name="html.split"       value="chapter.tools">
+
     <Meta name="html.split"       value="chapter.text">
+
+    <Meta name="html.split"       value="chapter.tools">
+    <Meta name="html.split"       value="section.tools.dialogs">
+    <Meta name="html.split"       value="section.tools.error">
+    <Meta name="html.split"       value="section.tools.menubars">
+    <Meta name="html.split"       value="section.tools.images">
+
     <Meta name="html.split"       value="appendix.data">
 
     <Meta name="html.split.toc"   value="">
