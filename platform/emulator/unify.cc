@@ -64,7 +64,7 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
     //  
     //  The whole thread is eliminated - because of the invariant
     // stated just before 'disposeThread ()' in thread.hh;
-    tt->markDeadThread();
+    tt->setDead();
     CheckExtSuspension(tt);
     tt->disposeStack();
     return TRUE;
@@ -115,10 +115,10 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
       if (susp.isPropagator()) {
 	Propagator * prop = susp.getPropagator();
 
-	if (calledBy && !prop->isUnifyPropagator()) {
+	if (calledBy && !prop->isUnify()) {
 	  switch (oz_isBetween(prop->getBoardInternal(), home)) {
 	  case B_BETWEEN:
-	    prop->markUnifyPropagator();
+	    prop->setUnify();
 	    break;
 	  case B_DEAD:
 	    //  keep the thread itself alive - it will be discarded

@@ -239,7 +239,7 @@ TT VAR;						\
 
 #define oz_declareThread(ARG,VAR)				\
  oz_declareTypeIN(ARG,VAR,Thread*,Thread);			\
- if ((VAR)->isDeadThread())				\
+ if ((VAR)->isDead())				\
    return oz_raise(E_ERROR,E_KERNEL,"deadThread",1,OZ_in(ARG));
 
 #define oz_declareDictionaryIN(ARG,VAR) \

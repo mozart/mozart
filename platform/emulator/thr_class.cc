@@ -53,7 +53,7 @@ int Thread::getRunnableNumber() {
 }
 
 void Thread::printTaskStack(int depth) {
-  if (!isDeadThread()) {
+  if (!isDead()) {
     taskStack->printTaskStack(depth);
   } else {
     message("\tEMPTY\n");

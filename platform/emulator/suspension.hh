@@ -97,8 +97,8 @@ public:
 
   Bool isDead(void) {
     return (_isThread() 
-	    ? _getThread()->isDeadThread() 
-	    : _getPropagator()->isDeadPropagator());
+	    ? _getThread()->isDead() 
+	    : _getPropagator()->isDead());
   }
   Bool isRunnable(void) {
     return (_isThread() 
@@ -111,47 +111,47 @@ public:
 	    : _getPropagator()->getBoardInternal());
   }
   
-  void unmarkLocalPropagator(void) {
+  void unsetLocal(void) {
     if (isPropagator())
-      _getPropagator()->unmarkLocalPropagator();
+      _getPropagator()->unsetLocal();
   }
 
-  void markLocalPropagator(void) {
+  void setLocalPropagator(void) {
     if (isPropagator())
-      _getPropagator()->markLocalPropagator();
+      _getPropagator()->setLocal();
   }
-  Bool isLocalPropagator(void) {
+  Bool isLocal(void) {
     if (isPropagator())
-      return _getPropagator()->isLocalPropagator();
+      return _getPropagator()->isLocal();
     return FALSE;
   }
 
-  void unmarkUnifyPropagator(void) {
+  void unsetUnify(void) {
     if (isPropagator())
-      _getPropagator()->unmarkUnifyPropagator();
+      _getPropagator()->unsetUnify();
   }
 
-  void markUnifyPropagator(void) {
+  void setUnify(void) {
     if (isPropagator())
-      _getPropagator()->markUnifyPropagator();
+      _getPropagator()->setUnify();
   }
-  Bool isUnifyPropagator(void) {
+  Bool isUnify(void) {
     if (isPropagator())
-      return _getPropagator()->isUnifyPropagator();
+      return _getPropagator()->isUnify();
     return FALSE;
   }
 
-  void markTagged(void) { 
+  void setTagged(void) { 
     if (_isThread())  
-      _getThread()->markTagged();
+      _getThread()->setTagged();
     else
-      _getPropagator()->markTagged();
+      _getPropagator()->setTagged();
   }
-  void unmarkTagged(void) { 
+  void unsetTagged(void) { 
     if (_isThread())  
-      _getThread()->unmarkTagged();
+      _getThread()->unsetTagged();
     else
-      _getPropagator()->unmarkTagged();
+      _getPropagator()->unsetTagged();
   }
   Bool isTagged(void) { 
     return (_isThread() 
@@ -159,22 +159,22 @@ public:
 	    : _getPropagator()->isTagged());
   }
 
-  void setExtSuspension(void) {
+  void setExternal(void) {
     if (_isThread())
-      _getThread()->setExtThread();
+      _getThread()->setExternal();
     else
-      _getPropagator()->setExtPropagator();
+      _getPropagator()->setExternal();
   }
 
-  Bool wasExtSuspension(void) {
+  Bool isExternal(void) {
     return (_isThread()
-	    ? _getThread()->wasExtThread()
-	    : _getPropagator()->wasExtPropagator());    
+	    ? _getThread()->isExternal()
+	    : _getPropagator()->isExternal());    
   }
 
-  Bool isOFSPropagator(void) {
+  Bool isOFS(void) {
     if (isPropagator())
-      return _getPropagator()->isOFSPropagator();
+      return _getPropagator()->isOFS();
     return FALSE;
   }
 
