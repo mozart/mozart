@@ -27,6 +27,9 @@
 
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 <!ENTITY part.native SYSTEM "native.sgml">
+<!entity native.counter.global system "native-counter.sgml">
+<!entity native.counter.object system "native-counter-obj.sgml">
+<!entity native.celloid system "native-celloid.sgml">
 
 <!ENTITY chapter.hello       SYSTEM "hello.sgml">
 <!ENTITY chapter.development SYSTEM "devel.sgml">
@@ -42,6 +45,7 @@
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
 <!ENTITY eg PI "eg">
+<!entity amp "&">
 
 <!ENTITY cc.class "<span class=ignore>class </span>">
 ]>
@@ -51,6 +55,7 @@
 <meta name="html.split" value="chapter.counter.global">
 <meta name="html.split" value="chapter.counter.object">
 <meta name="html.split" value="part.managing.modules">
+<meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
 <Title/Application Programming/
 <Author.Extern to="author.db" key="Denys.Duchier">
 <Author.Extern to="author.db" key="Leif.Kornstaedt">
