@@ -1,0 +1,115 @@
+# -*-makefile-*-
+
+hack-%:
+	$(MAKE) $* OZCFLAGS="$(OZCFLAGS) -DHYPHEN_HACK"
+
+MAIN_DEPS = Text.ozf Message.ozf Admin.ozf \
+	Contact.ozf Database.ozf Except.ozf Package.ozf \
+	Section.ozf Externalizable.ozf GetSlot.ozf Wget.ozf \
+	ContactName.ozf Entry.ozf HTML_Entry.ozf HTML_Contact.ozf \
+	HTML_Section.ozf Author.ozf HTML_Package.ozf Category.ozf \
+	MogulID.ozf Directory.ozf HTML_ByAuthor.ozf HTML_Navigation.ozf \
+	Pickler.ozf
+
+Librarian.exe: Main.ozf $(MAIN_DEPS)
+	$(OZL) $(OZLFLAGS) -x $< -o $@
+
+Makefile.vars mogul.css: % : %.in
+	cd $(BUILDTOP) && ./config.status
+
+$(HTMLSUBDIR)/index.html: $(SGMLFILES) $(HTMLSUBDIR)/mogul.css
+	$(OZDOC) --in=$< --out=$(HTMLSUBDIR) \
+	--type=html-stylesheets --stylesheet=mogul.css
+$(HTMLSUBDIR)/mogul.css $(HTMLSUBDIR)/page.gif: $(HTMLSUBDIR)/% : %
+	$(INSTALL_FILE) $< $@
+
+clean::
+	-rm -rf $(HTMLSUBDIR) *.exe
+distclean::
+	-rm -f Makefile.vars
+
+#=====================================================================
+# CREATE A MOGUL ARCHIVE STRUCTURE
+#=====================================================================
+
+MOGUL_DATABASE	= MOGUL.DB
+MOGUL_DIRECTORY	= /services/mozart/httpd/html/mogul
+MOGUL_ROOT_URL	= http://www.mozart-oz.org/mogul/db
+MOGUL_IGNORE	=
+MOGUL_URI = /home/mogul/mogul
+MOGUL_LIBRARIAN	= $(OZE) $(MOGUL_URI)/Librarian.exe	\
+	--verbose 					\
+	--mogul-url=$(MOGUL_ROOT_URL)			\
+	--root-url=mogul-root.mogul			\
+	--open-db=$(MOGUL_DATABASE)			\
+	--mogul-dir=$(MOGUL_DIRECTORY)			\
+	--mogul-top=$(MOGUL_TOP)			\
+	$(MOGUL_IGNORE)
+
+#MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
+#	--verbose 					\
+#	--mogul-url=$(MOGUL_ROOT_URL)			\
+#	--root-url=mogul-root.mogul			\
+#	--open-db=$(MOGUL_DATABASE)			\
+#	--mogul-dir=$(MOGUL_DIRECTORY)			\
+#	--mogul-top=$(MOGUL_TOP)			\
+#	$(MOGUL_IGNORE)
+
+MOGUL_EXPORT_OPTIONS	=	\
+	--export-db=$(MOGUL_DATABASE)-EXPORT
+MOGUL_IMPORT_OPTIONS	=	\
+	--import-db=$(MOGUL_DATABASE)-EXPORT \
+	--save-db
+
+MOGUL_DATABASE_OPTIONS	=	\
+	--update-info		\
+	--update-provided	\
+	--update-categories	\
+	--update-package-list	\
+	--update-author-list	\
+	--update-ozpm-info	\
+	--save-db
+MOGUL_ARCHIVE_OPTIONS	=	\
+	--update-pub
+MOGUL_HTML_OPTIONS	=	\
+	--update-html		\
+	--update-categories-html \
+	--update-package-list-html \
+	--update-author-list-html
+
+mogul-doc:: all.doc
+	for i in $(HTMLSUBDIR)/* ; do $(INSTALL_FILE) $$i $(MOGUL_DIRECTORY)/; done
+
+mogul-update: mogul-database mogul-archive mogul-html
+
+mogul-database:
+	$(MOGUL_LIBRARIAN) $(MOGUL_DATABASE_OPTIONS) --print-reports
+
+mogul-export:
+	$(MOGUL_LIBRARIAN) $(MOGUL_EXPORT_OPTIONS) --print-reports
+mogul-import:
+	$(MOGUL_LIBRARIAN) $(MOGUL_IMPORT_OPTIONS) --print-reports
+
+mogul-ozmake:
+	$(MOGUL_LIBRARIAN) --update-ozmake --print-reports
+
+MOGUL_ARCHIVE_DIRS = $(addprefix $(MOGUL_DIRECTORY)/,pkg doc)
+MOGUL_HTML_DIRS    = $(addprefix $(MOGUL_DIRECTORY)/,info info/category)
+MOGUL_CSS_FILES    = $(addprefix $(MOGUL_DIRECTORY)/,$(HTMLEXTRA))
+
+$(MOGUL_ARCHIVE_DIRS) $(MOGUL_HTML_DIRS):
+	$(INSTALL_DIR) $@
+
+mogul-archive: $(MOGUL_ARCHIVE_DIRS)
+	$(MOGUL_LIBRARIAN) $(MOGUL_ARCHIVE_OPTIONS) --print-reports
+
+mogul-html: $(MOGUL_HTML_DIRS) $(MOGUL_CSS_FILES)
+	$(MOGUL_LIBRARIAN) $(MOGUL_HTML_OPTIONS) --print-reports
+
+$(MOGUL_CSS_FILES): $(MOGUL_DIRECTORY)/% : %
+	$(INSTALL_FILE) $< $@
+
+.PHONY: mogul-update mogul-database mogul-archive mogul-html
+
+veryclean:: clean
+	-rm -f $(MOGUL_DATABASE)

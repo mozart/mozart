@@ -1,0 +1,54 @@
+#!/bin/sh
+# Make directory hierarchy.
+# Written by Noah Friedman <friedman@prep.ai.mit.edu>
+# Added chgrp command by Benjamin Lorenz <lorenz@ps.uni-sb.de>
+# Public domain.
+
+# INSTALL_DIR_CHMOD=775 to also give write permission to group members
+# INSTALL_DIR_CHMOD=    to only get default (from umask)
+
+: ${INSTALL_DIR_CHMOD=775}
+if test -z "$INSTALL_DIR_CHMOD"; then
+dochmod(){ true; }
+else
+dochmod() {
+  if test -z "$INSTALL_DIR_GROUP"; then true; else
+    echo "chgrp $INSTALL_DIR_GROUP $1" 1>&2;
+    chgrp $INSTALL_DIR_GROUP $1 || errstatus=$?;
+  fi
+  echo "chmod $INSTALL_DIR_CHMOD $1" 1>&2;
+  chmod $INSTALL_DIR_CHMOD $1 || errstatus=$?; }
+fi
+
+defaultIFS='
+'
+IFS="${IFS-${defaultIFS}}"
+
+errstatus=0
+
+for file in ${1+"$@"} ; do
+   oIFS="${IFS}"
+   # Some sh's can't handle IFS=/ for some reason.
+   IFS='%'
+   set - `echo ${file} | sed -e 's@/@%@g' -e 's@^%@/@'`
+   IFS="${oIFS}"
+
+   pathcomp=''
+
+   for d in ${1+"$@"} ; do
+     pathcomp="${pathcomp}${d}"
+
+     if test ! -d "${pathcomp}"; then
+	echo "mkdir $pathcomp" 1>&2
+	mkdir "${pathcomp}" || errstatus=$?
+	dochmod "${pathcomp}"
+     fi
+
+     pathcomp="${pathcomp}/"
+   done
+done
+
+exit $errstatus
+
+# eof
+

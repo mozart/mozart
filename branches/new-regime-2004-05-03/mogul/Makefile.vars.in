@@ -1,0 +1,25 @@
+# -*-makefile-*-
+
+OZDOC		= @VAR_OZDOC@
+MOGUL_TOP	= @MOGUL_TOP@
+
+PKG_NAME	= duchier-mogul
+PKG_MOGUL_URI	= mogul:/duchier/mogul
+PKG_URI		= x-ozlib://duchier/mogul
+PKG_SOURCES	= Text.oz Message.oz Admin.oz \
+	Contact.oz Database.oz Except.oz Package.oz \
+	Section.oz Externalizable.oz GetSlot.oz Wget.oz \
+	ContactName.oz Entry.oz HTML_Entry.oz HTML_Contact.oz \
+	HTML_Section.oz Author.oz HTML_Package.oz Category.oz \
+	HTML_ByAuthor.oz HTML_Navigation.oz Main.oz \
+	mogul.css page.gif mogul.sgml
+PKG_INSTALLS	= Librarian.exe
+HTMLSUBDIR	= mogul-html
+HTMLEXTRA	= mogul.css page.gif
+SGMLFILES	= mogul.sgml
+
+default: all
+all:: all.doc
+all.doc:: $(HTMLSUBDIR)/index.html $(addprefix $(HTMLSUBDIR)/,$(HTMLEXTRA))
+install.doc:: $(HTMLSUBDIR)/index.html
+	for i in $(HTMLSUBDIR)/* ; do $(INSTALL_FILE) $$i $(LIBDIR_DOC)/; done

@@ -1,0 +1,8 @@
+*.ozf
+MOGUL.DB
+config.log
+config.cache
+config.status
+Makefile
+mogul.css
+mogul-html

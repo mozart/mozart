@@ -1,0 +1,518 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+<!ENTITY % proglang.values.local "|fundamental">
+<!ENTITY VERSION "1.0">
+<!ENTITY ozmake.home "http://www.mozart-oz.org/mogul/doc/duchier/ozmake/index.html">
+]>
+<book proglang=fundamental>
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
+    <meta name="html.split" value="chap.overview">
+    <meta name="html.split" value="chap.design">
+    <meta name="html.split" value="chap.contrib">
+    <meta name="html.split" value="sec.types">
+    <meta name="html.split" value="sec.format">
+    <meta name="html.split" value="sec.format.contact">
+    <meta name="html.split" value="sec.format.section">
+    <meta name="html.split" value="sec.format.package">
+    <meta name="html.split" value="sec.own.section">
+    <meta name="html.split" value="sec.own.section.old">
+    <meta name="html.split" value="sec.own.section.new">
+    <meta name="html.split" value="sec.choosing.uri">
+    <meta name="html.split" value="sec.devel">
+    <meta name="html.split" value="sec.devel.old">
+    <meta name="html.split" value="sec.devel.new">
+    <title/MOGUL: the MOzart Global User Library/
+    <author.extern to="author.db" key="Denys.Duchier">
+    <abstract>
+      This is release &VERSION; of the MOGUL Archive, a repository of
+Mozart packages contributed by the user community.  We are keen on
+improving its presentation, infrastructure, and usefulness.  We
+welcome your comments and suggestions at <ref.extern
+to="mailto:contrib@mozart-oz.org">contrib@mozart-oz.org</ref.extern>
+<p>
+<table display>
+	  <tr>
+	    <th/enter the <name/MOGUL Archive//
+	  <tr>
+	    <td><ref.extern to="info/mogul.html">Root of the MOGUL
+	  database</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="info/packages.html">List of all
+	  packages</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="info/category/index.html">List of all
+	  categories</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="info/byauthor.html">List by author</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="pkg/">Archive of package distributions</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="doc/">Archive of package documentation</ref.extern></td>
+	  </tr>
+	</table>
+    <p><em/Acknowledgements:/ great user interface improvements by
+<ref.extern to="http://www.sics.se/~nilsf/">Nils
+Franzén</ref.extern>.  Many suggestions (e.g. MOGUL URI design) and
+early testing of the framework by <ref.extern
+to="http://www.ags.uni-sb.de/~afranke/">Andreas Franke</ref.extern>
+    </abstract>
+    <chapter id="chap.overview">
+      <title/Overview/
+      <p><name>MOGUL</name>, the MOzart Global User Library, is a
+      virtual library of packages for the Mozart system, created and
+      maintained by the user community.  You can browse its contents
+      by visiting a <name>MOGUL Archive</name>, e.g.:
+<table display>
+	  <tr>
+	    <td><ref.extern to="info/mogul.html">Root of the MOGUL
+	  database</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="info/packages.html">List of all
+	  packages</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="info/category/index.html">List of all
+	  categories</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="info/byauthor.html">List by author</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="pkg/">Archive of package distributions</ref.extern></td>
+	  </tr>
+	  <tr>
+	    <td><ref.extern to="doc/">Archive of package documentation</ref.extern></td>
+	  </tr>
+	</table>
+A <name>MOGUL Archive</name> is maintained automatically by a
+<name>MOGUL Librarian</name>.
+    </chapter>
+    <chapter id="chap.design">
+      <title/Design of the Database/
+      <p>The design of <name>MOGUL</name> was guided by one essential
+      requirement:
+<list>
+	  <item>maintenance of a <name>MOGUL Archive</name> should
+      require <em/no work/.  It must be fully automated!
+	</list>
+For this reason, the <name>MOGUL</name> database was designed to be
+completely decentralized.  Each contributor maintains his part of the
+database wherever he wants.  Each database entry is made available at
+a URL so that the <name>MOGUL Librarian</name> software can easily
+fetch them to compile a snapshot of the full database.</p>
+      <p>While in the past, contributors had to maintain their entries
+      by hand, full support is now integrated into the
+      <ref.extern to="&ozmake.home;"><name>ozmake</name>
+      tool</ref.extern> (see in particular the <code/--publish/ option).  The details of the present section are no
+      longer as important as they once were, and for the most part you
+      should instead refer to the <ref.extern
+      to="&ozmake.home;"><name>ozmake</name>
+      documentation</ref.extern>.</p>
+      <section id="sec.types">
+	<title/Types of Entries/
+	<p>The database contains 3 kinds of entries:
+<list>
+	    <entry/Sections/
+	    <item/A <q/section/ is very much like a directory (or
+folder).  It lists sub-entries and gives their corresponding URLs./
+	    <entry/Contacts/
+	    <item/A <q/contact/ describes an individual or
+organization.  A reference to such an entry can appear for example as
+an <q/author/ field in a <q/package/ entry./
+	    <entry/Packages/
+	    <item/A <q/package/ describes (surprise!) a  package.  In
+particular, it typically gives a URL for downloading the package./
+	  </list></p>
+	<para id="valid.id"><title/Valid IDs/
+Each entry is assigned, and denoted by, a unique ID that is a URI of
+the general form:
+<code display>mogul:/sherlock/BakerStreet/pipe</code>
+To guarantee that no ID collision can occur, the use of <em/valid/ IDs
+is enforced.  A valid ID is defined as follows:
+<list>
+	    <item/Either it was obtained from the <name/Mozart
+Consortium/ by email request to <ref.extern
+to="mailto:contrib@mozart-oz.org"/<samp/contrib@mozart-oz.org//./
+	    <item>Or it is of the form <code>?{SUP}/?{SUB}</code>
+where <code/?{SUP}/ is a valid id for the section in which it
+occurs.
+	  </list>
+Thus, once you have obtained a valid id, you can construct new ones by
+appending new path components.
+      </section>
+      <section id="sec.format">
+	<title/Format of Entries/
+	<p>The format of a database entry was chosen for simplicity
+and familiarity.  It looks exactly like an email message: it begins
+with a sequence of headers.  It may also have a body separated from
+the headers by 1 or more empty lines.</p>
+	<p>There can be no empty line in the header part!  The first
+empty line is interpreted as the separation between headers and body.
+However, one header may extend over several lines provided none is
+empty and all but the 1st one begin with a space or tab character.
+This is the usual convention for email headers too!</p>
+	<p>You can include arbitrary headers in an entry.  However,
+only certain headers are meaningful to the <name/MOGUL Librarian/.
+Below we take a look at each of the 3 types of database entries and
+describe for each one the meaningful headers and their
+interpretation.</p>
+	<para><title/Header <code/type//
+Only one header is mandatory for all database entries, namely the
+<code/type/ header.  It is required in order to identify the type of
+the entry.</para>
+	<para><title/Header <code/id//
+It is not necessary to provide an <code/id/ header since an entry can
+only be reached via a <q/section/ entry, which already gives both its
+id and its url.  However doing so is good practice.  It is also safer:
+the <name>MOGUL Librarian</name> performs a sanity check; if a header
+id is provided, it must contain the expected id otherwise an error is
+reported (and eventually will find its way back to you via automated
+email).</para>
+	<subsection id="sec.format.contact">
+	  <title/Contact Entry/
+	  <p>A contact describes an individual or organization. For example
+<code display>
+type:    contact
+id:      mogul:/sherlock/holmes
+email:   Holmes.Sherlock@baker-street.com
+www:     http://www.baker-street.com/~holmes/
+name:    Sherlock Holmes
+</code>
+Only <code/type/ and <code/name/ are required.  The name may also be
+given as:
+<code display>
+name:    Holmes, Sherlock
+</code>
+The <name/MOGUL Librarian/ can analyze most common forms of names to
+determine how they should be listed in an index.  Some names cannot be
+so simply analyzed and you can help the librarian by providing a
+<code/name-for-index/ header.  For example:
+<code display>
+type:    contact
+id:      mogul:/mozart
+www:     http://www.mozart-oz.org/
+name:    Mozart Consortium
+name-for-index: Mozart Consortium
+</code>
+otherwise the librarian would list it under <q/Consortium,
+Mozart/.</p>
+	</subsection>
+	<subsection id="sec.format.section">
+	  <title/Section Entry/
+	  <p>Sections provide a means of hierarchically structuring
+the database.  A section is simply a container for subentries, much like
+a directory or a folder.  If <code>mogul:/sherlock/BakerStreet</code>
+is the URI id of a section, then the URI of an immediate entry might
+be <code>mogul:/sherlock/BakerStreet/pipe</code>.  This makes it easy
+to structure the database into sections and subsections, just like you
+would organize your files into directories and subdirectories.</p>
+
+	  <p>An individual contributor obtains an id from
+the <name/Mozart Consortium/ and typically will use it to denote a
+section entry in which he accumulates all his package entries, plus
+possibly one contact entry for himself.  A larger group, however,
+might want to grant subsections to its members or employees thus
+allowing for <em/local decentralization/.</p>
+	  <p>A section's body contains lines that look just like
+headers.  Each line corresponds to a subentry, and associates an id
+with the url at which the entry can be found.  For example:
+<code display>
+type:  section
+id:    sherlock
+email: watson@baker-street.com
+
+holmes: SherlockHolmes.entry
+lestrade: http://www.scotland-yard.uk/people/lestrade/MeForMogul
+irregulars: BakerStreetIrregulars.entry
+</code>
+The id of a subentry <em/must/ be given in a <q/relative/ form.<note
+foot>Actually it may be given in an absolute form provided that the
+<code>mogul:</code> scheme prefix is omitted.  Otherwise, the colon is
+mistaken for the end of the header key.</note>  The
+actual id is then computed by resolving relative to the section's ID.
+Thus the relative URI id <code>irregulars</code> is resolved relative
+to <code>mogul:/sherlock</code> to produce the absolute URI id
+<code>mogul:/sherlock/irregulars</code></p>
+
+<p>Similarly, URLs of entries <em/may/ be given in a relative form:
+they are then resolved relative to the URL of the section entry.
+For example, assuming that the URL of the section entry above is
+<code display>http://www.baker-street.com/~watson/mogul/db/sherlock.main</code>
+then, the URL for subentry <code>mogul:/sherlock/holmes</code>, which
+was supplied in the relative form <code>SherlockHolmes.entry</code>,
+will be resolved to:
+<code display>http://www.baker-street.com/~watson/mogul/db/SherlockHolmes.entry</code>
+Note that the optional <code/email/ header permits to introduce an
+administrative address for a subsection that is different
+from that of its parent section.</p>
+	</subsection>
+	<subsection id="sec.format.package">
+	  <title/Package Entry/
+	  <p>A package entry describes an actual contribution.  Let's
+now look at a real example (at least it was at some point).
+<code display>
+type:          package
+id:            mogul:/duchier/expat
+author:        mogul:/duchier/denys
+blurb:         A SAX-like XML processor using Jame Clark's expat library, and a parser derived from it.
+url-pkg:       http://fox.ps.uni-sb.de/~denys/mogul/pub/tar/duchier-expat.tgz
+url-doc:       http://fox.ps.uni-sb.de/~denys/mogul/pub/doc/duchier/expat/index.html
+url-doc-extra: [API] http://www.ps.uni-sb.de/~duchier/mogul/pub/doc/duchier/expat/API/ozdoc.css
+url-doc-extra: [API] http://www.ps.uni-sb.de/~duchier/mogul/pub/doc/duchier/expat/API/page.gif
+provides:      [xml] x-ozlib://duchier/xml/expat/Processor.ozf
+provides:      [xml] x-ozlib://duchier/xml/expat/Parser.ozf
+requires:      x-ozlib://duchier/op/InputSource.ozf
+content-type:  text/html
+
+&lt;P&gt;This is an interface to &lt;A HREF="http://www.jclark.com/"&gt;James
+Clark&lt;/A&gt;'s &lt;TT&gt;expat&lt;/TT&gt; library for parsing XML documents.
+Module &lt;TT&gt;Processor.ozf&lt;/TT&gt; exports a class that implements a
+SAX-like processor which can be used e.g. as shown below.
+SAX events are invoked as methods.  Each application should specialize
+these methods to do something useful.
+...
+</code>
+This is the entry for package <code>mogul:/duchier/expat</code> (in
+section <code>mogul:/duchier</code> of course).  It has an
+<code/author/ header that
+refers to the database entry with id
+<code>mogul:/duchier/denys</code>.  An
+arbitrary number of <code/author/ and <code/contact/ headers can be
+supplied.  The <code/blurb/ provides a very short description of the
+package.  <code/url-pkg/ provides a url to a downloadable archive of
+the package.  In the example this corresponds to a source
+distribution, but in general the header could be repeated to indicate
+different urls for binary distributions for different platforms.
+<code/url-doc/ is a url to online documentation for the package.</p>
+<p><code/url-doc-extra/ headers are for extra files necessary for
+viewing the documentation, such as stylesheets and graphics (e.g. gif
+files).  It is necessary to specify such files separately when there
+is no hyperlink to them in the HTML documentation:  in such a case
+they are not automatically downloaded.
+<code display>url-doc-extra: [API] http://www.ps.uni-sb.de/~duchier/mogul/pub/doc/duchier/expat/API/ozdoc.css</code>
+Optionally, a subdirectory name maybe supplied between square brackets
+(here <code/[API]/) to indicate that the file should be placed in this
+subdirectory when it is downloaded rather than in the main doc directory.
+</p>
+	  <p>There are 2 <code/provides/ headers.
+<code display>provides:      [xml] x-ozlib://duchier/xml/expat/Processor.ozf
+provides:      [xml] x-ozlib://duchier/xml/expat/Parser.ozf</code>
+They indicate that the package provides the following 2 URIs
+(corresponding here to Oz functors):
+<code display>
+x-ozlib://duchier/xml/expat/Processor.ozf
+x-ozlib://duchier/xml/expat/Parser.ozf
+</code>
+Furthermore, the annotation <code/[xml]/ indicates that these URIs
+should be listed in the <name/MOGUL Category/ <code/xml/.  Assigning
+categories to modules makes it easier for users to locate relevant
+packages.  Since a proliferation of categories would be counter
+productive, the <code/MOGUL Librarian/ ignores any category that is
+not <em/official/.  The current official categories can be found in a
+<name/MOGUL Archive/, e.g.:
+<list>
+	      <item><ref.extern to="info/category/index.html">List of all
+	  categories</ref.extern>
+	    </list>
+Introduction of new categories is mediated by the <name/Mozart
+Consortium/ and should be proposed and discussed on the mozart user
+group.</p>
+	  <p>The <code/requires/ header indicates that the package
+also needs another module identified by the given URI:
+<code display>requires:      x-ozlib://duchier/op/InputSource.ozf</code>
+The <name/MOGUL Librarian/ automatically creates a hyperlink to the
+package that provides this needed module.</p>
+	  <p>Finally, the entry has a non-empty body containing some
+documentation.  It should be a 1 page description of the purpose of
+the package.  The actual documentation (see <code/url-doc/) may be
+much more extensive.  Header <code/content-type/ indicates how to
+interpret the body.  The <code/MOGUL Librarian/ only understands
+content types <code>text/plain</code> (the default) and
+<code>text/html</code>.
+	</subsection>
+      </section>
+    </chapter>
+    <chapter id="chap.contrib">
+      <title/Contributing To <name/MOGUL//
+      <p>The success of a programming language is largely dependent on
+the range and quality of its libraries and the contributions from its
+user community.  We have put considerable effort into the <code/MOGUL/
+framework to make it easy to use, find, and contribute packages.  If
+you have written modules or applications that may be of general
+interest to the user community, please consider contributing this work
+to <name/MOGUL/.  It's very easy!</p>
+      <section id="sec.own.section">
+	<title/Getting your own section/
+	<p>In order to contribute to <name/MOGUL/ you have to become
+known to the <name/MOGUL Librarian/ so that it can automatically
+update your contributions in the <name/MOGUL Archive/.  You need to
+obtain an ID from the <name/Mozart Consortium/.  Simply send email to
+<ref.extern to="mailto:contrib@mozart-oz.org">contrib@mozart-oz.org</ref.extern>
+to request a <name/MOGUL/ id.  Your email should contain the following
+information:
+<list>
+	    <item/An email address for administrative purposes.  It
+will be used to report to you problems concerning your section of the
+<name/MOGUL/ database.  If missing, your email address will be used./
+	    <item/A url for the database entry describing your section
+of the <name/MOGUL/ database.  The <name/MOGUL Librarian/ will update
+your section of the database by fetching the entry at this url and
+recursively processing subentries./
+	    <item/Optionally, you may also suggest an alternative list
+of ids and, if possible, we will pick one for you from this list, if
+they are still available and not objectionable./
+	  </list>
+We will reply to the <q/administrative/ email address, telling you
+which id you have been granted.  Using this id, you can create <ref
+to="valid.id"/valid subids/ at your heart's content.</p>
+<subsection id="sec.own.section.old">
+  <title/Setting things up the old way/
+	<p>You should then write an entry for you section, see
+<ptr to="sec.format.section">, and make it available at the url you
+indicated in your email message.  Remember to create a database entry
+describing yourself, see <ptr to="sec.format.contact">, and use it
+when describing your packages, see <ptr to="sec.format.package">.</p>
+        <p>However things can be much simpler if you use <name/ozmake/
+	instead and this is described in the next section.</p>
+</subsection>
+<subsection id="sec.own.section.new">
+  <title/Setting things up using <code/ozmake//
+        <p>Since the advent of <ref.extern
+	to="&ozmake.home;"><name>ozmake</name></ref.extern> version
+	0.76
+becoming a contributor has become a lot simpler.  See
+this <ref.extern
+to="http://www.mozart-oz.org/lists/oz-users/2585.html">message on the
+users list</ref.extern> for some details.  However the gist of it
+is that you typically set things up as follows:
+<code display>
+ozmake --config=put --mogulrootid=$MOGULID
+ozmake --config=put --moguldir=$MOGULDIR
+ozmake --config=put --mogulurl=$MOGULURL
+</code>
+where <code/$MOGULID/ is the MOGUL id you were granted, <code/$MOGULDIR/
+ is the directory on
+your local file system where you want <code>ozmake</code> to put all
+the stuff related to the packages that you wish to publish in MOGUL
+(for example <file>/home/$USER/public_html/mogul/publish</file>),
+and <code/$MOGULURL/ is the URL at
+which this directory is made available on the Web (for example
+<file>http://$HOSTNAME/~$USER/mogul/publish</file>).</p>
+<p>You then need to create and publish an entry for yourself.  See the "CONTACTS"
+section in the <ref.extern
+to="&ozmake.home;"><name>ozmake</name> documentation</ref.extern>.
+Briefly this amounts to creating a file <file/makefile.oz/ that looks
+something like this:
+<code display>
+makefile(
+  contact :
+    o(
+      mogul : 'mogul:/homes/sherlock
+      name  : 'Sherlock Holmes'
+      email : 'holmes@baker-street.com'
+      www   : 'http://www.baker-street.com/~holmes/'))
+</code>
+but with your own data, of course! Then you publish it by invoking:
+<code display>
+ozmake --publish
+</code>
+that's it! now you have a section and it contains your contact entry.
+When you publish your packages (again using <code/--publish/),
+corresponding entries will be created and added to your section.  In
+order to publish a package, you will have to provide some features in
+its <file/makefile.oz/.  See the <ref.extern
+to="&ozmake.home;"><name>ozmake</name> documentation</ref.extern> for
+details.</p>
+</subsection>
+      </section>
+      <section id="sec.choosing.uri">
+	<title/Choosing URIs/
+	<p>The <name/Mozart/ system fully embraces the idea of
+<em/modular programming/: applications are assembled from
+<q/components/ or <q/modules/ which are loaded lazily when needed.</p>
+	<p>Furthermore, <name/Mozart/ takes the idea of a world-wide,
+or universal, component library seriously: modules are referenced
+through URIs<note foot>See <ref.extern
+to="ftp://ftp.isi.edu/in-notes/rfc2396.txt"
+>Uniform Resource Identifiers (URI): Generic
+Syntax</ref.extern></note> and may be dowloaded from the net
+automatically when necessary.  The essential idea is that every module
+should be uniquely identified by a URI.  It's the same everywhere and
+it never changes.  This means that other developers can reliably use
+these URIs to import these modules.</p>
+	<p>So what URI should you pick? You have 2 choices:
+<list>
+	    <item>You can pick a <q/real/ url, like:
+<code display>http://random.com/people/quux/mogul/CL.ozf</code>
+ This has the advantage
+that if a copy of your module has not been installed into the user's
+cache, then it will be automatically downloaded from your site
+(assuming it is really available from there).
+	    <item>You can pick an <q/abstract/ uri, like:
+<code display>x-ozlib://quux/CL.ozf</code>
+This has the advantage of making it a little more independent of
+physical location.  Typically users would then either install your
+package into their local cache, or point the <q/resolver/ to an
+appropriate cache by setting the <var env/OZ_SEARCH_PATH/ variable.
+	  </list>
+Which you choose is of course up to you, but we encourage you to
+choose an abstract uri.</p>
+      </section>
+      <section id="sec.devel">
+	<title/Developing and packaging contributions/
+	<p>The job of developing and packaging a contribution so that
+it is easy to install anywhere is <q/in principle/ not that
+straightforward.  Fortunately, we have already done most of the work
+for you.  We provide utilities that make this task very simple:
+<name/ozskel/ for the old obsolete way, <name/ozmake/ for the new
+recommended way.</p>
+	<subsection id="sec.devel.old">
+	  <title/The old way using <code/ozskel//
+	  <p>The <code/ozskel/ utility makes it very easy to develop
+and distribute applications.  It is also just as useful for projects
+that you don't intend to distribute.</p>
+	  <p><ref.extern
+to="http://www.mozart-oz.org/mogul/info/duchier/ozskel.html"
+><code/ozskel/</ref.extern> is a script which, when invoked, populates
+your current directory with a whole collection of administrative
+files.  In particular it gives you a <file/Makefile.in/ where you just
+have to fill in the blanks.  Creating a good <file/Makefile.in/ is
+hard.  We've done it for you!  For most of your projects, all you'll
+need to do is to add files names to certain variables.  All the really
+useful rules are already in there.</p>
+	</subsection>
+	<subsection id="sec.devel.new">
+	  <title/The new way using <code/ozmake//
+	  <p>The old way using <code/ozskel/ was complicated and usually
+not portable to Windows.  The new way uses the <code/ozmake/ tool, 
+and your should read <ref.extern
+to="&ozmake.home;">the <name>ozmake</name> documentation</ref.extern>
+for full details.  The short story is that you write a file
+<file/makefile.oz/ containing a record in Oz syntax that describes
+your project.  You publish you package simply by invoking:
+<code display>
+ozmake --publish
+</code>
+Others can then install your package by invoking:
+<code display>
+ozmake --install --package=$PKGID
+</code>
+where <code/$PKGID/ is your package MOGUL id.</p>
+	</subsection>
+      </section>
+    </chapter>
+</book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

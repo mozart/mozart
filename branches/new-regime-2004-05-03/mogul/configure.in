@@ -1,0 +1,21 @@
+dnl replace install-sh by the name of a real source file
+AC_INIT(ozinstall)
+AC_PREFIX_DEFAULT(${OZSKEL_PREFIX:-${HOME}/.oz})
+OZSKEL_INIT
+OZSKEL_PATH_PROG(VAR_OZDOC,ozdoc)
+AC_MSG_CHECKING(for --with-mogul-top)
+AC_ARG_WITH(mogul-top,
+  [--with-mogul-top=URL		this will be used as the
+	top URL for the MOGUL Archive],
+  [mogul_cv_MOGUL_TOP=$with_mogul_top
+   MOGUL_TOP=$mogul_cv_MOGUL_TOP],
+  [MOGUL_TOP=${mogul_cv_MOGUL_TOP:-/~$USER/mogul}])
+AC_MSG_RESULT($MOGUL_TOP)
+AC_SUBST(MOGUL_TOP)
+AC_OUTPUT(Makefile Makefile.vars mogul.css:mogul.css.in)
+errprint(ifdef([OZSKEL_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use "autoconf -l SRCDIR" to include aclocal.m4.
+]))
+
