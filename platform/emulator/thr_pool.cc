@@ -40,7 +40,7 @@ void ThreadsPool::initThreads ()
   currentThread = (Thread *) NULL;
   ozstat.createdThreads.incf();
 
-  rootThread = am.mkRunnableThread (SYSTEM_PRIORITY, am.rootBoard);
+  rootThread = am.mkRunnableThread (DEFAULT_PRIORITY, am.rootBoard);
   threadBodyFreeList = NULL;
 }
 
