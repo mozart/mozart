@@ -360,8 +360,8 @@ PRINT(SRecord)
       stream << ": ";
       tagged2Stream(getFeature(feat),stream,DEC(depth),offset+2);
       NEWLINE(offset+2);
-      stream << ")";
     }
+    stream << ")";
   }
 }
 
