@@ -17,9 +17,11 @@ Librarian.exe: Main.ozf $(MAIN_DEPS)
 Makefile.vars mogul.css: % : %.in
 	cd $(BUILDTOP) && ./config.status
 
-$(HTMLSUBDIR)/index.html: $(SGMLFILES)
+$(HTMLSUBDIR)/index.html: $(SGMLFILES) $(HTMLSUBDIR)/mogul.css
 	$(OZDOC) --in=$< --out=$(HTMLSUBDIR) \
 	--type=html-stylesheets --stylesheet=mogul.css
+$(HTMLSUBDIR)/mogul.css: mogul.css
+	$(INSTALL_FILE) $< $@
 
 clean::
 	-rm -rf $(HTMLSUBDIR) *.exe
