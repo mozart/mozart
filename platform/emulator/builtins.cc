@@ -1197,48 +1197,43 @@ OZ_Term oz_status(OZ_Term term)
 {
   DEREF(term, _1);
 
-  switch (tagTypeOf(term)) {
-  case TAG_VAR:
-    {
-      OzVariable *cv = tagged2Var(term);
-      VarStatus status = oz_check_var_status(cv);
+  if (oz_isVar(term)) {
+    OzVariable *cv = tagged2Var(term);
+    VarStatus status = oz_check_var_status(cv);
       
-      switch (status) {
-      case EVAR_STATUS_FREE: 
-	return AtomFree;
-      case EVAR_STATUS_FUTURE:
-	return AtomFuture;
-      case EVAR_STATUS_DET:
-      case EVAR_STATUS_UNKNOWN:
-	return _var_status(cv);
-      case EVAR_STATUS_KINDED:
-	break;
-      default:
-	Assert(0);
-      }
+    switch (status) {
+    case EVAR_STATUS_FREE: 
+      return AtomFree;
+    case EVAR_STATUS_FUTURE:
+      return AtomFuture;
+    case EVAR_STATUS_DET:
+    case EVAR_STATUS_UNKNOWN:
+      return _var_status(cv);
+    case EVAR_STATUS_KINDED:
+      break;
+    default:
+      Assert(0);
+    }
 
-      SRecord *t = SRecord::newSRecord(AtomKinded, 1);
-      switch (cv->getType()) {
-      case OZ_VAR_FD:
-      case OZ_VAR_BOOL:
-	t->setArg(0, AtomInt); break;
-      case OZ_VAR_FS:
-	t->setArg(0, AtomFSet); break;
-      case OZ_VAR_OF:
-	t->setArg(0, AtomRecord); break;
-      default:
-	t->setArg(0, AtomOther); break;
-      }
-      return makeTaggedSRecord(t);
+    SRecord *t = SRecord::newSRecord(AtomKinded, 1);
+
+    switch (cv->getType()) {
+    case OZ_VAR_FD:
+    case OZ_VAR_BOOL:
+      t->setArg(0, AtomInt); break;
+    case OZ_VAR_FS:
+      t->setArg(0, AtomFSet); break;
+    case OZ_VAR_OF:
+      t->setArg(0, AtomRecord); break;
+    default:
+      t->setArg(0, AtomOther); break;
     }
-  default:
-    {
-      SRecord *t = SRecord::newSRecord(AtomDet, 1);
-      t->setArg(0, OZ_termType(term));
-      return makeTaggedSRecord(t);
-    }
+    return makeTaggedSRecord(t);
   }
-  Assert(0);
+  
+  SRecord *t = SRecord::newSRecord(AtomDet, 1);
+  t->setArg(0, OZ_termType(term));
+  return makeTaggedSRecord(t);
 }
 
 OZ_BI_define(BIstatus,1,1)
@@ -1621,54 +1616,44 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
   }
 
   DEREF(t0,t0Ptr);
+
+  if (oz_isNil(arity)) { // adjoin nothing
+    if (oz_isLiteral(t0)) {
+      OZ_RETURN(t0);
+    }
+    if (!oz_isKinded(t0)) {
+      oz_suspendOnPtr(t0Ptr);
+    }
+    goto typeError0;
+  }
+
   if (oz_isRef(arity)) { // must suspend
-    switch (tagTypeOf(t0)) {
-    case TAG_VAR:
-      if (oz_isKinded(t0))
-	goto typeError0;
-    case TAG_LITERAL:
+    if (oz_isLiteral(t0) || 
+	(oz_isVar(t0) && !oz_isKinded(t0))) {
       oz_suspendOn(arity);
-    default:
+    } else {
       goto typeError0;
     }
   }
   
-  if (oz_isNil(arity)) { // adjoin nothing
-    switch (tagTypeOf(t0)) {
-    case TAG_LITERAL:
-      OZ_RETURN(t0);
-    case TAG_VAR:
-      if (!oz_isKinded(t0))
-	oz_suspendOnPtr(t0Ptr);
-    default:
-      goto typeError0;
+  if (oz_isLiteral(t0)) {
+    int len1 = oz_fastlength(arity);
+    arity = sortlist(arity,len1);
+    int len = oz_fastlength(arity); // NOTE: duplicates may be removed
+    if (len!=len1) {  // handles case f(a:_ a:_)
+      return oz_raise(E_ERROR,E_KERNEL,"recordConstruction",2,
+		      t0,list
+		      );
     }
+    SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
+    newrec->initArgs();
+    OZ_RETURN(newrec->normalize());
   }
 
-  switch (tagTypeOf(t0)) {
-  case TAG_LITERAL:
-    {
-      int len1 = oz_fastlength(arity);
-      arity = sortlist(arity,len1);
-      int len = oz_fastlength(arity); // NOTE: duplicates may be removed
-      if (len!=len1) {  // handles case f(a:_ a:_)
-	return oz_raise(E_ERROR,E_KERNEL,"recordConstruction",2,
-			t0,list
-			);
-      }
-      SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
-
-      newrec->initArgs();
-      
-      OZ_RETURN(newrec->normalize());
-    }
-  case TAG_VAR:
-    if (!oz_isKinded(t0))
-      oz_suspendOnPtr(t0Ptr);
-  default:
-    goto typeError0;
+  if (oz_isVar(t0) && !oz_isKinded(t0)) {
+    oz_suspendOnPtr(t0Ptr);
   }
-
+  
  typeError0:
   oz_typeError(0,"Literal");
   
@@ -3394,19 +3379,17 @@ OZ_BI_define(BIcopyRecord,1,1)
 {
   oz_declareNonvarIN(0,rec);
   
-  switch (tagTypeOf(rec)) {
-  case TAG_SRECORD:
-    {
-      SRecord *rec0 = tagged2SRecord(rec);
-      SRecord *rec1 = SRecord::newSRecord(rec0);
-      OZ_RETURN(makeTaggedSRecord(rec1));
-    }
-  case TAG_LITERAL:
-    OZ_RETURN(rec);
-
-  default:
-    oz_typeError(0,"Determined Record");
+  if (oz_isSRecord(rec)) {
+    SRecord *rec0 = tagged2SRecord(rec);
+    SRecord *rec1 = SRecord::newSRecord(rec0);
+    OZ_RETURN(makeTaggedSRecord(rec1));
   }
+  
+  if (oz_isLiteral(rec)) {
+    OZ_RETURN(rec);
+  }
+
+  oz_typeError(0,"Determined Record");
 } OZ_BI_end
 
 
