@@ -355,37 +355,3 @@ OZ_C_proc_begin(BIfdPutNot, 2)
   return x.releaseNonRes();
 }
 OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIfdPutFromTo, 3)
-{
-  ExpectedTypes("FDish,SmallInt,SmallInt");
-
-  OZ_getCArgDeref(1, f, fptr, ftag); // from
-
-  if (isAnyVar(ftag)) {
-    return addNonResSuspForDet(f, fptr, ftag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  } else if (! isSmallInt(ftag)) {
-    TypeError(1, "");
-  }
-
-  OZ_getCArgDeref(2, t, tptr, ttag); // to
-
-  if (isAnyVar(ttag)) {
-    return addNonResSuspForDet(t, tptr, ttag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
-  } else if (! isSmallInt(ttag)) {
-    TypeError(2, "");
-  }
-
-  BIfdBodyManager x;
-
-  if (! x.introduce(OZ_getCArg(0))) return FAILED;
-
-  FailOnEmpty(*x >= smallIntValue(f));
-  FailOnEmpty(*x <= smallIntValue(t));
-
-  return x.releaseNonRes();
-}
-OZ_C_proc_end
