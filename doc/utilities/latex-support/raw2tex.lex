@@ -53,6 +53,14 @@ void banner() {
     printf("\\OzChar\\%c",yytext[1]);        \
   else                                       \
     putchar(yytext[1]); }
+#define FLUSHECHOIDENT {                     \
+  char* s=yytext;                            \
+  FLUSH;                                     \
+  while (*s) {                               \
+    if (*s=='_') printf("\\OzChar\\_");      \
+    else putchar(*s);                        \
+    s++; }                                   \
+}
 %}
 IDENT           [a-zA-Z0-9_]+
 KEYWORD         (proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|create|meth|"extern"|from|with|attr|feat|self|true|false|touch|div|mod|andthen|orelse|thread|job|conc|in|condis|not)
@@ -88,7 +96,7 @@ KEYWORD         (proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|el
 <DISPLAY>\n     { RESET; printf("\\OzEol\n"); }
 <DISPLAY>[\\{}$&#^_%~]  OZCHAR;
 <DISPLAY>{KEYWORD}              OZKEYWORD;
-<DISPLAY>{IDENT}                FLUSHECHO;
+<DISPLAY>{IDENT}                FLUSHECHOIDENT;
 <DISPLAY>\'     STARTFWD;
 <DISPLAY>\`     STARTBWD;
 <DISPLAY>\"     STARTSTRING;
@@ -134,7 +142,7 @@ KEYWORD         (proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|el
   SPACE; warning("newline in inline Oz code (ignored)"); }
 <INLINE>[\\{}$&#^_%~]   OZCHAR;
 <INLINE>{KEYWORD}       OZKEYWORD;
-<INLINE>{IDENT}         FLUSHECHO;
+<INLINE>{IDENT}         FLUSHECHOIDENT;
 <INLINE>\'      STARTFWD;
 <INLINE>\`      STARTBWD;
 <INLINE>\"      STARTSTRING;
@@ -159,7 +167,7 @@ KEYWORD         (proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|el
 <ENTRY>"|"      {printf("}|"); level=1; BEGIN(SKIP);}
 <ENTRY>[\\$&#^_~]       OZCHAR;
 <ENTRY>{KEYWORD}        OZKEYWORD;
-<ENTRY>{IDENT}          FLUSHECHO;
+<ENTRY>{IDENT}          FLUSHECHOIDENT;
 <ENTRY>\'       STARTFWD;
 <ENTRY>\`       STARTBWD;
 <ENTRY>\"       STARTSTRING;
@@ -172,7 +180,7 @@ KEYWORD         (proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|el
   SPACE; warning("newline in index/see (ignored)"); }
 <SEE>[\\$&#^_~] OZCHAR;
 <SEE>{KEYWORD}  OZKEYWORD;
-<SEE>{IDENT}    FLUSHECHO;
+<SEE>{IDENT}    FLUSHECHOIDENT;
 <SEE>\'         STARTFWD;
 <SEE>\`         STARTBWD;
 <SEE>\"         STARTSTRING;
