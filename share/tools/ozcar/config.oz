@@ -128,7 +128,7 @@ BorderSize             = 2
 PadXButton             = 5
 PadYButton             = 3
 
-ScrollbarWidth         = 12
+ScrollbarWidth         = 10
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
