@@ -106,7 +106,6 @@ public:
   Bool isPersistentBuffer() { return OK; }
 
   char *siteStringrep() {return "toFile";}
-  Bool skipHeader();
 
   int availableSpace(){
     Assert(last!=NULL);
@@ -169,9 +168,7 @@ public:
   int getWriteLen(){
     Assert(type==BS_Write);
     Assert(first!=NULL);
-    if(first==last){
-      if(endpos!=NULL) {return endpos-pos;}
-      return first->tail()-pos+1;}
+    if(first==last && endpos!=NULL) {return endpos-pos;}
     return first->tail()-pos+1;}
 
   BYTE* getWritePos() {Assert(type==BS_Write);return pos;}
@@ -196,6 +193,26 @@ public:
       Assert(bb==last);
       if(endpos==NULL){return i+BYTEBUFFER_SIZE;}
       return i+endpos-last->head();}}
+
+  unsigned long crc()
+  {
+    unsigned long crc = init_crc();
+    
+    if(first==last){
+      int len = (endpos!=NULL) ? (endpos-pos) : first->tail()-pos+1;
+      return update_crc(crc,pos,len);
+    } else {
+      crc = update_crc(crc,pos,first->tail()-pos+1);
+      ByteBuffer *bb=first->next;
+      while(bb->next!=NULL){
+	crc = update_crc(crc,bb->head(),BYTEBUFFER_SIZE);
+	bb = bb->next;
+      }
+      Assert(bb==last);
+      int len = (endpos==NULL) ? BYTEBUFFER_SIZE : endpos-last->head();
+      return update_crc(crc,last->head(),len);
+    }
+  }
 
   void writeCheck(){
     Assert(type==BS_Write);
@@ -488,20 +505,6 @@ void ByteStream::beforeInterpret(int len){
     curpos=last->tail()+len;}
   else{
     curpos=endpos+len-1;}}
-
-Bool ByteStream::skipHeader()
-{
-  // if PERDIOMAGICSTART is a printable character, we may run into
-  // problems, if we load an executable component
-  Assert(PERDIOMAGICSTART < ' ');
-
-  while(1) {
-    if (atEnd()) return NO;
-    BYTE ret = get();
-    if (ret==PERDIOMAGICSTART)
-      return OK;
-  }
-}
 
 
 BYTE* ByteStream::initForRead(int &len){

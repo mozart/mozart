@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
+#include <unistd.h>
+
 
 #include "config.h"
 #include "opcodes.hh"
@@ -26,20 +28,62 @@ void OZ_error(const char *format, ...)
 
 /************************************************************/
 
-class MsgBuffer {
-  FILE *fd;
-  int mode;  
+const int TBSize = 1024;
 
+class TextBlock {
 public:
-  MsgBuffer(FILE *f, int m): fd(f), mode(m) {}
+  unsigned char text[TBSize];
+  TextBlock *next;
+  TextBlock(): next(0) {}
+};
+
+class MsgBuffer {
+  int mode;  
+  TextBlock *first, *last;
+  int pos;
+public:
+  int fd;
+
+  MsgBuffer(int f, int m): fd(f), mode(m), pos(0) {
+    first = last = new TextBlock();
+  }
   int textmode()   { return mode!=0; }
-  void put(char c) { fputc(c,fd); }
+  void put(unsigned char c) { 
+    if (pos==TBSize){
+      last->next = new TextBlock();
+      last = last->next;
+      pos = 0;      
+    }
+    last->text[pos++] = c;
+  }
+
+  void dump()
+  {
+    while(first->next) {
+      write(fd,first->text,TBSize);
+      first = first->next;
+    }
+    write(fd,first->text,pos);
+  }
+  unsigned long crc();
 };
 
 
 #define TEXT2PICKLE
 #include "pickle.cc"
 
+
+unsigned long MsgBuffer::crc()
+{
+  TextBlock *aux = first;
+  unsigned long i = init_crc();
+  while(aux->next) {
+    i = update_crc(i,aux->text,TBSize);
+    aux = aux->next;
+  }
+  i = update_crc(i,aux->text,pos);
+  return i;
+}
 
 inline
 int nextchar(FILE *in)
@@ -201,7 +245,7 @@ char *scanString(FILE *in)
       setBuf(i++,c);
       c = nextchar(in);
     }
-    if (!isspace(c))
+    if (c!=EOF && !isspace(c))
       OZ_error("illegal character in string");
     setBuf(i,'\0');
   } else {
@@ -223,22 +267,6 @@ char *scanComment(FILE *in)
     setBuf(i++,c);
   }
 }
-
-char *skipHeader(FILE *in)
-{
-  int i = 0;
-  while(1) {
-    char c = nextchar(in);
-    Assert(c!=EOF);
-    setBuf(i++,c);
-    if (c==PERDIOMAGICSTART)
-      break;
-  }
-  setBuf(i++,nextchar(in));  // skip second PERDIOMAGICSTART
-  setBuf(i,0);
-  return strdup(buf);
-}
-
 
 inline
 MarshalTag char2Tag(char *s)
@@ -420,11 +448,6 @@ public:
 
 void pickle(TaggedPair *aux, MsgBuffer *out)
 {
-  /* output header unchanged */
-  Assert(aux->tag==TAG_STRING);
-  putVerbatim(aux->val.string,out);
-  aux = aux->next;
-
   /* write new version number */
   Assert(aux->tag==TAG_STRING);
   marshalString(PERDIOVERSION,out);
@@ -473,6 +496,13 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
     }
     aux = aux->next;
   }
+
+  if (!out->textmode()) {
+    int headerSize;
+    char *header = makeHeader(out->crc(),&headerSize);
+    write(out->fd,header,headerSize);
+  }
+  out->dump();
 }
 
 /************************************************************/
@@ -521,19 +551,15 @@ TaggedPair *unpickle(FILE *in)
   TermTagTable termTags;
   Tagvalue val;
 
-  int tag    = TAG_STRING;
-  val.string = skipHeader(in);
-  AddPair(lastPair,tag,val);
-
   /* old version */
-  tag = getTag(in);
+  int tag = getTag(in);
   Assert(tag==TAG_STRING);
   val.string = strdup(scanString(in));
   AddPair(lastPair,tag,val);
 
   int major, minor;
   int aux = sscanf(val.string,"%d#%d",&major,&minor);
-  if (aux !=2 && strcmp(val.string,"3.0.10#15")!=0) { // hard coded old version
+  if (aux !=2) {
     OZ_error("Version too new. Got: '%s', expected: '%s'.\n",val.string,PERDIOVERSION);
   }
 
@@ -600,6 +626,6 @@ main(int argc, char **argv)
 
   TaggedPair *aux = unpickle(stdin);
 
-  MsgBuffer fbuf(stdout,textmode);
+  MsgBuffer fbuf(STDOUT_FILENO,textmode);
   pickle(aux,&fbuf);
 }

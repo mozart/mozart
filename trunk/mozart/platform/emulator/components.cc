@@ -92,7 +92,7 @@ static int zlibDummy = checkzlibversion();
 /*              BUILTINS                                                  */
 /* ********************************************************************** */
 
-static char SYSLETHEADER = 1;
+static char OLDSYSLETHEADER = 1;
 
 
 // class ByteSource [Denys Duchier]
@@ -102,47 +102,74 @@ class ByteSource {
 public:
   virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
   virtual char *getHeader() = 0;
+  virtual Bool checkChecksum(unsigned long) = 0;
   OZ_Return getTerm(OZ_Term, const char *compname,Bool);
-  OZ_Return makeByteStream(ByteStream*&);
+  OZ_Return makeByteStream(ByteStream*&, const char*);
 };
 
 class ByteSourceFD : public ByteSource {
 private:
   gzFile fd;
+  unsigned long checkSum;
   char *header;
 public:
   char *getHeader() {return header; }
   virtual ~ByteSourceFD() { free(header); gzclose(fd); }
   OZ_Return getBytes(BYTE*,int&,int&);
 
+  virtual Bool checkChecksum(unsigned long i) {return checkSum==0||checkSum==i;}
+
   ByteSourceFD(int i)
   { 
     int bufsz = 10;
     char *buf = (char *) malloc(bufsz);
     int j = 0;
+    int sysheaderread = 0;
+    Bool oldformat = NO;
     while(1) {
       if (j>=bufsz) {
 	bufsz *= 2;
 	buf = (char *) realloc(buf,bufsz);
       }
-      int ret = read(i,&buf[j],1);
-      if (ret<=0 || buf[j]==SYSLETHEADER) {
-	buf[j] = 0; 
+
+      if (read(i,&buf[j],1)<=0 || buf[j]==OLDSYSLETHEADER) {
+	oldformat = OK;
 	break; 
       }
 
-      /* for backward compatibility: */
-      if (buf[j]==PERDIOMAGICSTART) {
-	lseek(i,-1,SEEK_CUR);
-	buf[j] = 0;
-	break;
+      /* check whether we got syslet header 3 times in sequence */
+      if (buf[j]==SYSLETHEADER) {
+	if (++sysheaderread==3) {
+	  j -= 2;
+	  break;
+	}
+      } else {
+	sysheaderread = 0;
       }
+
       j++;
     }
 
+    buf[j] = 0;
     header = ozstrdup(buf);
     free(buf);
+    checkSum = 0;
+
+    if (!oldformat) {
+      for (int k=0; k<sizeof(int32); k++) {
+	unsigned char c;
+	read(i,&c,1);
+	checkSum |=  c<<(k*8);
+      }
+    }
+
     fd = gzdopen(i,"rb"); 
+
+    if (oldformat) {
+      char c;
+      gzread(fd,&c,1); Assert(c==PERDIOMAGICSTART);
+      gzread(fd,&c,1); Assert(c==PERDIOMAGICSTART);
+    }
   }
 };
 
@@ -156,6 +183,7 @@ public:
   ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
   virtual ~ByteSourceDatum() { free(dat.data); }
   OZ_Return getBytes(BYTE*,int&,int&);
+  virtual Bool checkChecksum(unsigned long i) { return OK; }
 };
 
 
@@ -166,7 +194,7 @@ class ByteSink {
 public:
   OZ_Return putTerm(OZ_Term,char*,char*,Bool text);
   virtual OZ_Return putBytes(BYTE*,int) = 0;
-  virtual OZ_Return allocateBytes(int,char*) = 0;
+  virtual OZ_Return allocateBytes(int,char*,unsigned long,Bool) = 0;
 };
 
 
@@ -182,7 +210,7 @@ public:
     if (zfd!=0) { gzclose(zfd); return; }
     if (fd!=-1) close(fd);
   }
-  OZ_Return allocateBytes(int,char*);
+  OZ_Return allocateBytes(int,char*,unsigned long,Bool);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -192,7 +220,7 @@ private:
 public:
   OZ_Datum dat;
   ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
-  OZ_Return allocateBytes(int,char*);
+  OZ_Return allocateBytes(int,char*,unsigned long,Bool);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -215,8 +243,6 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 
 void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
-  buf->put(PERDIOMAGICSTART);
-  buf->put(PERDIOMAGICSTART);
   marshalString(PERDIOVERSION, buf);
   marshalTermRT(t, buf);
   buf->marshalEnd();
@@ -258,7 +284,8 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
   bs->incPosAfterWrite(tcpHeaderSize);
 
   int total=bs->calcTotLen();
-  allocateBytes(total,header);
+  allocateBytes(total,header,bs->crc(),textmode);
+
   while (total) {
     Assert(total>0);
     int len=bs->getWriteLen();
@@ -292,7 +319,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 // ===================================================================
 
 OZ_Return
-ByteSinkFile::allocateBytes(int n,char *header)
+ByteSinkFile::allocateBytes(int n,char *header, unsigned long crc, Bool txtmode)
 {
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO 
                                : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
@@ -302,19 +329,22 @@ ByteSinkFile::allocateBytes(int n,char *header)
 			oz_mklist(OZ_pairA("File",oz_atom(filename)),
 				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   
-  /* write syslet header uncompressed */
-  int len = strlen(header);
-  if (ossafewrite(fd,header,len) < 0 ||
-      ossafewrite(fd,&SYSLETHEADER,1) < 0) {
-    return raiseGeneric("save:write",
-			"Write failed during save",
-			oz_mklist(OZ_pairA("File",oz_atom(filename)),
-				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+  if (!txtmode) {
+    /* write syslet header uncompressed */
+    int headerSize;
+    char *sysletheader = makeHeader(crc,&headerSize);
+    if (ossafewrite(fd,header,strlen(header)) < 0 ||
+	ossafewrite(fd,sysletheader,headerSize) < 0) {
+      return raiseGeneric("save:write",
+			  "Write failed during save",
+			  oz_mklist(OZ_pairA("File",oz_atom(filename)),
+				    OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+    }
   }
 
-  /* gzdopen allways spits out the gzip header */
+  /* gzdopen always spits out the gzip header */
   if (compressionlevel>0) {
-    char buf[100];
+    char buf[10];
     sprintf(buf,"w%d",compressionlevel);
     zfd = gzdopen(fd,buf);
     Assert(zfd);
@@ -344,7 +374,8 @@ ByteSinkFile::putBytes(BYTE*pos,int len)
 // ===================================================================
 
 OZ_Return
-ByteSinkDatum::allocateBytes(int n, char *ignored)
+ByteSinkDatum::allocateBytes(int n, char *ignored, unsigned long crc_ignored,
+			     Bool txtmode_ignored)
 {
   dat.size = n;
   dat.data = (char*) malloc(n);
@@ -502,7 +533,6 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 {
   refTable->reset();
   Assert(refTrail->isEmpty());
-  char c = buf->get(); // second PERDIOMAGICSTART
   vers = unmarshalVersionString(buf);
 
   if (vers==0)
@@ -534,7 +564,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 {
   ByteStream * stream;
    
-  OZ_Return result = makeByteStream(stream);
+  OZ_Return result = makeByteStream(stream,compname);
   if (result!=PROCEED) return result;
   // EK fast fix
 
@@ -544,7 +574,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   char *versiongot = 0;
   OZ_Term val;
 
-  if(stream->skipHeader() && loadTerm(stream,versiongot,val)){
+  if(loadTerm(stream,versiongot,val)){
     stream->afterInterpret();    
     bufferManager->dumpByteStream(stream);
     delete versiongot;
@@ -570,23 +600,30 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 
 
 OZ_Return
-ByteSource::makeByteStream(ByteStream*& stream)
+ByteSource::makeByteStream(ByteStream*& stream, const char *filename)
 {
   stream = bufferManager->getByteStream();
   stream->getSingle();
   int max,got;
   int total = 0;
   BYTE *pos = stream->initForRead(max);
+  unsigned long crc = init_crc();
   while (TRUE) {
-    OZ_Return result = getBytes(pos,max,got);
+    OZ_Return result = getBytes(pos,max,got);   
     if (result!=PROCEED) return result;
+    crc = update_crc(crc,pos,got);
     total += got;
     stream->afterRead(got);
     if (got<max) break;
     pos = stream->beginRead(max);
   }
   if (total==0)
-    return raiseGeneric("bytesource:empty","Empty byte source",oz_nil());
+    return raiseGeneric("bytesource:empty","Empty byte source",
+			oz_cons(OZ_pairA("File",oz_atom(filename)),oz_nil()));
+  
+  if (checkChecksum(crc)==NO)
+    return raiseGeneric("bytesource:crc","Checksum mismatch",
+			oz_cons(OZ_pairA("File",oz_atom(filename)),oz_nil()));
 
   return PROCEED;
 }

@@ -43,59 +43,18 @@
 #endif
 #include <netdb.h>
 
-// The following sample code represents a practical implementation of the
-// CRC (Cyclic Redundancy Check) employed in PNG chunks. (See also ISO
-// 3309 [ISO-3309] or ITU-T V.42 [ITU-V42] for a formal specification.) 
-
-
-/* Table of CRCs of all 8-bit messages. */
-unsigned long crc_table[256];
-   
-/* Make the table for a fast CRC. */
-inline
-void make_crc_table(void) {
-  unsigned long c;
-  int n, k;
-   
-  for (n = 0; n < 256; n++) {
-    c = (unsigned long) n;
-    for (k = 0; k < 8; k++) {
-      if (c & 1)
-	c = 0xedb88320L ^ (c >> 1);
-      else
-	c = c >> 1;
-    }
-    crc_table[n] = c;
-  }
-
-}
-
-/* Update a running CRC with the bytes buf[0..len-1]--the CRC
-   should be initialized to all 1's, and the transmitted value
-   is the 1's complement of the final running CRC (see the
-   crc() routine below)). */
-
-inline
-unsigned long update_crc(unsigned long crc, unsigned char *buf, int len) {
-  unsigned long c = crc;
-  int n;
-   
-  make_crc_table();
-  for (n = 0; n < len; n++) {
-    c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
-  }
-  return c;
-}
 
 OZ_BI_define(BIgetCRC,1,1) {
   oz_declareVirtualStringIN(0,s);
 
-  int l = strlen(s);
+  unsigned long crc = update_crc(init_crc(),(unsigned char *) s, strlen(s));
   
-  /* Return the CRC of the bytes buf[0..len-1]. */
-  unsigned long crc = update_crc(0xffffffffL, (unsigned char *) s, 
-				 strlen(s)) ^ 0xffffffffL;
+  int hi = (int) ((crc & 0xffff0000L) >> 16);
+  int lo = (int) (crc & 0x0000ffffL);
   
+  OZ_out(0) = oz_int(lo);
+  OZ_out(1) = oz_int(hi);
+    
   OZ_RETURN(oz_ulong(crc));
 } OZ_BI_end
 
