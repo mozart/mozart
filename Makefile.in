@@ -191,7 +191,7 @@ $(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
 	rm -f files.base files.base-$@ files.contrib files.contrib-$@ files.all
 
 $(PACKDIR) $(PACKDIR)/mozart:
-	export INSTALL_DIR_CHMOD=777 && $(INSTALL_DIR) $@
+	INSTALL_DIR_CHMOD=777; export INSTALL_DIR_CHMOD && $(INSTALL_DIR) $@
 
 win32-i486-cygwin: $(PACKDIR) $(PACKDIR)/mozart
 	( cd $(PREFIX) && \
