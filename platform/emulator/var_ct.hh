@@ -113,20 +113,6 @@ public:
     return _definition;
   }
 
-  OZ_Ct * getReifiedPatch(void) {
-    return (OZ_Ct *) (u.var_type & ~u_mask);
-  }
-
-  void patchReified(OZ_Ct * s) {
-    u.patchCt = (OZ_Ct *) ToPointer(ToInt32(s) | u_ct);
-    setReifiedFlag();
-  }
-
-  void unpatchReified(void) {
-    setType(OZ_VAR_CT);
-    resetReifiedFlag();
-  }
-
   OZ_Return bind(OZ_Term * vPtr, OZ_Term t);
   OZ_Return unify(OZ_Term *, OZ_Term *);
 
@@ -194,7 +180,6 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 
 OzCtVariable * tagged2GenCtVar(OZ_Term);
 Bool isGenCtVar(OZ_Term term);
-OZ_Ct * unpatchReifiedCt(OZ_Term t);
 void addSuspCtVar(OZ_Term, Suspendable *, OZ_CtWakeUp);
 
 #endif

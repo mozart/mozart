@@ -45,17 +45,6 @@ Bool isGenCtVar(TaggedRef term)
   return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_CT);
 }
 
-
-inline
-OZ_Ct * unpatchReifiedCt(OZ_Term t) 
-{
-  Assert(!oz_isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-  OzCtVariable * ctv = ((OzCtVariable *) tagValueOf(t));;
-  
-  ctv->unpatchReified();
-  return ctv->getReifiedPatch();
-}
-
 inline
 void addSuspCtVar(OZ_Term v, Suspendable * susp, OZ_CtWakeUp w)
 {
