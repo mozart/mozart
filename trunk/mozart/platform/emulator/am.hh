@@ -231,7 +231,7 @@ public:
   Bool hasOFSSuspension(SuspList *suspList);
   void addFeatOFSSuspensionList(TaggedRef var, SuspList* suspList,
 				TaggedRef flist, Bool determined);
-  SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
+  SuspList * checkSuspensionList(SVariable * var,
 				 SuspList * suspList, PropCaller calledBy);
   BFlag isBetween(Board * to, Board * varHome);
   void incSolveThreads (Board *bb,int n=1);
