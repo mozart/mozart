@@ -65,12 +65,12 @@ Bool oz_isLocalUVar(TaggedRef *varPtr) {
 
   Assert(bb->isCommitted() && bb != oz_currentBoard());
 
-  do {
+  while (bb->isCommitted()) {
     bb = bb->getParentInternal();
     
     if (bb==c) 
       return OK;
-  } while (!bb->isCommitted());
+  };
 
   return NO;
 }
