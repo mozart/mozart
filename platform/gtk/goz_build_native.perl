@@ -40,6 +40,7 @@ EOF
 
 %argument_translation =
   (
+   '...'                      => 'GOZ_DECLARE_VARARG',
    'char'                     => 'OZ_declareInt',
    'unsigned char'            => 'OZ_declareInt',
    'int'                      => 'OZ_declareInt',
@@ -174,6 +175,19 @@ sub get_interface_data(@) {
     return @interface_data;
 }
 
+# Print a warning comment and include needed headers
+sub gen_prelude {
+    print $C_WARNING;
+
+    # include headers
+    print "#include <mozart.h>\n";
+    print "#include <goz_support.h>\n";
+    foreach my $header (@includes) {
+	print "#include <$header>\n";
+    }
+    print "\n";
+}
+
 ###############################################################################
 #
 #                              gen_oz_interface
@@ -187,12 +201,7 @@ sub gen_oz_interface(@) {
     my @interfaces = get_interface_data @_;
     my $interface;
 
-    print $C_WARNING;
-    print <<EOF;
-#include <gtk/gtk.h>
-#include <mozart.h>
-
-EOF
+    gen_prelude();
 
     # generate prototypes for the interface functions
     # This is needed because the functions are defined in an other file
@@ -233,10 +242,11 @@ EOF
 # Tags are:
 #   !        Object with corrospondencing Oz object
 #   %        Enumeration type
-#   +        Return value
+#   +        Out value
+#   =        In/Out value
 sub clean_type {
   my ($type_str) = @_;
-  $type_str =~ s/^\W//s unless $type_str =~ m/^\w/s;
+  $type_str =~ s/^[\%\!\+\=]+//s ;
   return $type_str;
 }
 
@@ -252,17 +262,27 @@ sub is_enumeration {
     return $arg =~ m/^\%/s;
 }
 
+# check whether an argument is an array type or not
+sub is_array {
+    my ($arg) = @_;
+    return $arg =~ m/\[\w*\]/s;
+}
+
 # converts C values to Oz terms
 sub c2oz_return_value {
-  my ($arg) = @_;
-  my $clean_arg = clean_type($arg);
+  my ($arg, $type) = @_;
+  my $ctype = clean_type($type);
 
-  if ($return_value_translation{$clean_arg}) {
-      return "$return_value_translation{$clean_arg} (ret)";
-  } elsif (is_enumeration($arg)) {
-      return 'OZ_int (ret)';
+  if ($return_value_translation{$ctype}) {
+      return "$return_value_translation{$ctype} (ret)";
+  } elsif (is_array($type)) {
+      return '/* array return value not supported */';
+
+
+  } elsif (is_enumeration($type)) {
+      return "OZ_int ($arg)";
   } else {
-      return 'OZ_makeForeignPointer (ret)';
+      return "OZ_makeForeignPointer ($arg)";
   }
 }
 
@@ -274,17 +294,19 @@ sub write_oz_bi_definition {
   #
   # compute arities
   #
-  my $arity_in = 0;
-  my $arity_out = 0;
+  my $arity_in          = 0;
+  my $arity_out         = 0;
+  my $arity_special_out = 0; # This is the out arity without the normal C return value
 
-  $arity_out += 1 if $out;
   foreach my $arg (@$in) {
     if (is_return_value($arg)) {
-      $arity_out += 1;
+      $arity_special_out += 1;
     } else {
       $arity_in += 1;
     }
   }
+  $arity_out = $arity_special_out;
+  $arity_out += 1 if $out;
 
   print "OZ_BI_define ($C_FUN_PREFIX$meth, $arity_in, $arity_out) {\n";
 
@@ -295,23 +317,47 @@ sub write_oz_bi_definition {
 
   my $i = 0;
   foreach my $arg (@$in) {
-    print "\t";
-    if (is_return_value($arg)) {
-      #TODO: handle them
-      next;
-    } else {
-      # First lookup the translation table
-      if ($argument_translation{clean_type($arg)}) {
-	print $argument_translation{clean_type($arg)};
-	print " ($i, arg$i);\n";
-      } elsif (is_enumeration($arg)) { 	# handle enumerations
-        print "OZ_declareInt ($i, arg$i\_);\n";
-	print "\t" . clean_type($arg) . " arg$i = (" . clean_type($arg) . ") arg$i\_;\n";
-      } else { 	# everything else is a foreign type
-	print "OZ_declareForeignType ($i, arg$i, " . clean_type($arg) . ");\n";
+      print "\t";
+      if (is_return_value($arg)) {
+	  # We have to declare a variable for the return value
+	  my $real_type = $arg;
+	  $real_type =~ s/\*$//s; # drop last asterisk
+	  if (is_array($real_type)) { # array types
+	      $real_type =~ s/(\[\w*\])/ arg$i$1;/ ;
+	      print clean_type($real_type) . "\n";
+	  } else { #pointers
+	      print clean_type($real_type) . " arg$i;\n";
+	  }
+	  next;
+      } else {
+	  #
+	  # First lookup the translation table
+	  #
+	  if ($argument_translation{clean_type($arg)}) {
+	      print $argument_translation{clean_type($arg)};
+	      print " ($i, arg$i);\n";
+	  #
+	  # array types
+	  #
+	  } elsif (is_array($arg)) {
+	      my $type = clean_type($arg);
+	      $arg =~ s/\[\w+\]/\*/s;
+	      print "/* Array type not supported */\n";
+	      print "\tOZ_declareForeignType ($i, arg$i, $arg);\n";
+          #
+	  # handle enumerations
+	  #
+	  } elsif (is_enumeration($arg)) {
+	      print "OZ_declareInt ($i, arg$i\_);\n";
+	      print "\t" . clean_type($arg) . " arg$i = (" . clean_type($arg) . ") arg$i\_;\n";
+          #
+	  # everything else is a foreign type
+	  #
+	  } else {
+	      print "OZ_declareForeignType ($i, arg$i, " . clean_type($arg) . ");\n";
+	  }
       }
-    }
-    $i++;
+      $i++;
   }
 
   #
@@ -320,9 +366,9 @@ sub write_oz_bi_definition {
   print "\t";
   print 'ret = ' if $out;
   print "$meth (";
-  for (my $i = 0; $i < $arity_in; $i++) {
+  for (my $i = 0; $i < ($arity_in + $arity_special_out); $i++) {
     print "arg$i";
-    print ', ' unless $i >= $arity_in - 1;
+    print ', ' unless $i >= ($arity_in + $arity_special_out) - 1;
   }
   print ");\n";
 
@@ -335,10 +381,10 @@ sub write_oz_bi_definition {
     foreach my $arg (@$in) {
       $i++;
       next unless is_return_value($arg);
-      print "\tOZ_out($i) = " . c2oz_return_value($arg) . ";\n";
+      print "\tOZ_out($i) = " . c2oz_return_value("arg$i", $arg) . ";\n";
     }
     # the regular return value
-    print "\tOZ_out(" . ($arity_out - 1) . ') = ' . c2oz_return_value($out) . ";\n" if $out;
+    print "\tOZ_out(" . ($arity_out - 1) . ') = ' . c2oz_return_value('ret', $out) . ";\n" if $out;
     print "\treturn OZ_ENTAILED;\n";
   } else {
     print "\treturn OZ_ENTAILED;\n";
@@ -364,18 +410,12 @@ sub process_spec {
 sub gen_c_wrappers {
   my @specs = @_;
 
-    print  $C_WARNING;
-    print  <<EOF;
-#include <gtk/gtk.h>
-#include <mozart.h>
-#include <goz_support.h>
+  gen_prelude();
 
-EOF
-
-    foreach my $spec (@specs) {
+  foreach my $spec (@specs) {
       require $spec;
       process_spec;
-    }
+  }
 }
 
 
@@ -388,6 +428,7 @@ Generate glue code for the GTK+ binding for Oz
   --c-wrappers              generate the C glue code
   --interface               generate the interface definition for
                             Oz C/C++ interface
+  --includes                Optional header files to include
 EOF
 
     exit 0;
@@ -400,11 +441,15 @@ EOF
 ###############################################################################
 
 # parse arguments
-my ($opt_cwrappers, $opt_interface) = (0, 0);
+my ($opt_cwrappers,
+    $opt_interface,
+    $opt_includes) = (0, 0, 0);
 &GetOptions("c-wrappers"     =>    \$opt_cwrappers,
-	    "interface"      =>    \$opt_interface,);
+	    "interface"      =>    \$opt_interface,
+	    "includes:s"     =>    \$opt_includes);
 
-@input = @ARGV;
+@input    = @ARGV;
+@includes = split /\s/, $opt_includes; # headers to include
 
 usage() unless @input != 0;
 usage() unless $opt_cwrappers | $opt_interface;
