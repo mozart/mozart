@@ -24,20 +24,20 @@ Help.ozf: Utils.ozf HELP.txt
 clean::
 	-rm -f ozmake
 
-html: HELP.xml HELP.xsl
+html: HELP.xml HELP.xsl Makefile.vars
 	case `java -version 2>&1` in \
 	Kaffe*) JAVACP=-addclasspath;; \
 	*) JAVACP=-classpath;; \
 	esac; \
 	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl index.html OZMAKEOUTPUT=html OZMAKEVERSION=$(VERSION)
 
-HELP.html: HELP.xml HELP.xsl
+HELP.html: HELP.xml HELP.xsl Makefile.vars
 	case `java -version 2>&1` in \
 	Kaffe*) JAVACP=-addclasspath;; \
 	*) JAVACP=-classpath;; \
 	esac; \
 	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl HELP.html OZMAKEOUTPUT=text OZMAKEVERSION=$(VERSION)
-HELP.txt: HELP.html
+HELP.txt: HELP.html Makefile.vars
 	lynx -dump $< > $@
 txt: HELP.txt
 
