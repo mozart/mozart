@@ -40,6 +40,11 @@ class VirtualSite;
 class RemoteSite;
 class DSiteHashTable;
 class Watcher;
+class Twin;
+
+// MERGECON class PerdioVar;
+// MERGECON class OldPerdioVar;
+
 class BorrowEntry;
 class OwnerEntry;
 class DSite;

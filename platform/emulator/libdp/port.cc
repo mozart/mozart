@@ -44,42 +44,16 @@ int PortSendTreash = 100000;
 int PortWaitTimeSlice = 800;
 int PortWaitTimeK = 1;
 
-/**********************************************************************/
-/*   SECTION Port protocol                                       */
-/**********************************************************************/
-
-/* PER-HANDLE
-EntityCond getEntityCondPort(Tertiary* p){
-  EntityCond ec = getEntityCond(p);
-  int dummy;
-  if(ec!=ENTITY_NORMAL)return ec;
-  if(getSiteFromTertiaryProxy(p)->getQueueStatus(dummy)>=PortSendTreash)
-    return TEMP_BLOCKED|TEMP_ME;
-  return ENTITY_NORMAL;}
-*/
-
-EntityCond getEntityCondPort(Tertiary* p){
-  return ENTITY_NORMAL;}
 
 /**********************************************************************/
 /*   SECTION Port protocol                                       */
 /**********************************************************************/
 
-OZ_Return portWait(int queueSize, int restTime, Tertiary *t);
+OZ_Return portWait(int queueSize, int restTime, Tertiary *t){
+  return PROCEED;
+}
 
-OZ_BI_define(BIportWait,2,0)
-{
-   oz_declareIN(0,prt);
-   Assert(oz_isPort(prt));
-   oz_declareIntIN(1,t);
-   Tertiary *tert = tagged2Tert(prt);
-   int dummy;
-   return portWait(getSiteFromTertiaryProxy(tert)-> getQueueStatus(dummy),
-		   t,tert);
-} OZ_BI_end
-
-TaggedRef BI_portWait;
-
+/* ERIK-LOOK 
 OZ_Return portWait(int queueSize, int restTime, Tertiary *t)
 {
   PD((ERROR_DET,"PortWait q: %d r: %d", queueSize, restTime));
@@ -98,6 +72,7 @@ OZ_Return portWait(int queueSize, int restTime, Tertiary *t)
   am.prepareCall(BI_Delay,oz_int(time));
   return BI_REPLACEBICALL;
 }
+*/
 
 OZ_Return portSendImpl(Tertiary *p, TaggedRef msg) 
 {
@@ -109,7 +84,7 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
   int dummy;
   Bool wait = FALSE;
   
-  switch(getEntityCondPort(p)){
+  switch(getEntityCond(p)){
   case PERM_BLOCKED|PERM_ME:{
     /* PER-HANDLE
     PD((ERROR_DET,"Port is PERM"));
@@ -120,7 +95,7 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
     */
   }
   case TEMP_BLOCKED|TEMP_ME:{
-    /* PER-HANDLE
+    /* ERIK-LOOK
     PD((ERROR_DET,"Port is Tmp size:%d treash:%d",
 	site->getQueueStatus(dummy),PortSendTreash));
     wait = TRUE;
@@ -164,12 +139,14 @@ void gcDistPortRecurseImpl(Tertiary *p)
   //
   gcEntityInfoImpl(p);
   if (p->isProxy()) {
-    gcProxy(p);
+    gcProxyRecurse(p);
   } else {
-    gcManager(p);
+    gcManagerRecurse(p);
     PortWithStream *pws = (PortWithStream *) p;
     OZ_collectHeapTerm(pws->strm,pws->strm);
   }
 }
+
+
 
 

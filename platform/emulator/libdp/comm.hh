@@ -72,7 +72,8 @@ enum GiveUpReturn{
 
 enum ProbeType{
   PROBE_TYPE_ALL,
-  PROBE_TYPE_PERM
+  PROBE_TYPE_PERM,
+  PROBE_TYPE_NONE
 };
 
 enum SiteStatus {

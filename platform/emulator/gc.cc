@@ -1800,6 +1800,7 @@ void AM::gc(int msgLevel)
   Assert(gcStack.isEmpty());
 
   GT.gcGNameTable();
+  //   MERGECON gcPerdioFinal();
   gcSiteTable();
   (*gcPerdioFinal)();
   Assert(gcStack.isEmpty());

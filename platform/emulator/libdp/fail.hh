@@ -36,14 +36,14 @@
 #include "value.hh"
 #include "dpBase.hh"
 #include "comm.hh"
+#include "genhashtbl.hh"
 
 typedef unsigned int FaultInfo;
 
 enum WatcherKind{
-  HANDLER    = 1,
-  WATCHER    = 2,
-  RETRY      = 4,
-  PERSISTENT = 8
+  RETRY      = 1,
+  PERSISTENT = 2,
+  W_CELL     = 4
 };
 
 enum EntityCondFlags{
@@ -54,46 +54,109 @@ enum EntityCondFlags{
   TEMP_ALL      = 8,
   PERM_SOME     = 16,
   TEMP_SOME     = 32,
-  PERM_ME       = 64,
-  TEMP_ME       = 128,
-  OBJECT_PART   = 256
+  TEMP_SOME_M   = 64,// must come after TEMP_SOME
+  PERM_ME       = 128,
+  TEMP_ME       = 256,
+  TEMP_ME_M     = 512, // must come after TEMP_ME
+  TEMP_FLOW     =1024
 };
 
 typedef unsigned int EntityCond;
+
+inline EntityCond evalTrueEntityCond(EntityCond c){
+  return (((c & (TEMP_ME_M)<<1) | ((c & TEMP_SOME_M) << 1) |
+	  (c & (~(TEMP_ME_M | TEMP_SOME_M | TEMP_FLOW)))) |
+	  (c & (TEMP_FLOW)<<2) | (c & (TEMP_FLOW)<<9));}
+
+inline EntityCond msgEntityCond(EntityCond ec){
+  if(!(ec & TEMP_SOME|TEMP_ME)) return ec;
+  if(ec & TEMP_SOME) {
+    ec |= TEMP_SOME_M;
+    ec &= ~TEMP_SOME;}
+  if(ec & TEMP_ME) {
+    ec |= TEMP_ME_M;
+    ec &= ~TEMP_ME;}
+  return ec;}
+
+inline Bool isHandlerCondition(EntityCond ec){
+  if(ec & (PERM_BLOCKED|TEMP_BLOCKED)) {
+    Assert((ec & (PERM_BLOCKED|TEMP_BLOCKED))==ec);
+    return TRUE;}
+  return FALSE;}
+
 extern TaggedRef BI_probe;
 
 class EntityInfo{
   friend class Tertiary;
 public:
   Watcher *watchers;
-  short entityCond;
-  short managerEntityCond;
-  Tertiary* object;
+  EntityCond entityCond;
 
   USEHEAPMEMORY;
   NO_DEFAULT_CONSTRUCTORS(EntityInfo);
+
   EntityInfo(Watcher *w){
     entityCond=ENTITY_NORMAL;
-    managerEntityCond=ENTITY_NORMAL;
-    object   = NULL;
     watchers = w;}
+
   EntityInfo(EntityCond c){
     entityCond=c;
-    managerEntityCond=ENTITY_NORMAL;    
-    object = NULL;
     watchers=NULL;}
-  EntityInfo(EntityCond c,EntityCond d){
-    entityCond=c;
-    managerEntityCond=d;
-    object = NULL;
-    watchers=NULL;}
-  EntityInfo(Tertiary* o){
-    entityCond=ENTITY_NORMAL;
-    managerEntityCond=ENTITY_NORMAL;
-    object = o;
-    watchers=NULL;}
+
+  EntityCond getEntityCond(){
+    return evalTrueEntityCond(entityCond);}
+
+  Bool addEntityCond(EntityCond ec){
+    if((entityCond & ec) ==entityCond) return FALSE;
+    entityCond |= ec;
+    return TRUE;}
+
+  void subEntityCond(EntityCond ec){
+    entityCond &= ~ec;}
+
+  EntityCond getSummaryWatchCond();
+
   void gcWatchers();
 };
+
+#define TWIN_GC    1
+extern Twin *usedTwins;
+extern Watcher* globalWatcher;
+void gcGlobalWatcher();
+void gcTwins();
+
+class Twin{
+friend class Watcher;
+public:
+  unsigned int flags;
+  Twin *next;
+  int cellCtr;
+  int lockCtr;
+  
+  void* operator new(size_t size){
+    Assert(size==16);
+    return (Chain *)genFreeListManager->getOne_4();}        
+  
+  void free(){
+    genFreeListManager->putOne_4((FreeListEntry*) this);}    
+
+  Twin(){
+    flags=0;
+    cellCtr=0;
+    lockCtr=0;
+    next=usedTwins;
+    usedTwins=this;}
+
+  void setGCMark(){
+    flags = TWIN_GC;}
+
+  Bool hasGCMark(){
+    return flags & TWIN_GC;}    
+
+  void resetGCMark(){
+    flags = 0;}    
+};
+
 
 class Watcher{
 friend class Tertiary;
@@ -101,68 +164,96 @@ friend class EntityInfo;
 public:
   TaggedRef proc;
   Watcher *next;
-  Thread *thread;
+  Thread *thread; // thread of handler
   short kind;
   short watchcond;
+  Twin* twin;
 
   USEHEAPMEMORY;
 
   NO_DEFAULT_CONSTRUCTORS(Watcher);
-  // handler
-  Watcher(TaggedRef p,Thread* t,EntityCond wc){
+
+  Watcher(TaggedRef p,Thread* t,EntityCond wc, short k){
     proc=p;
     next=NULL;
     thread=t;
-    kind=HANDLER;
-    Assert((wc==PERM_BLOCKED) || (wc==TEMP_BLOCKED|PERM_BLOCKED));
-    watchcond=wc;}
-
-// watcher
-  Watcher(TaggedRef p,EntityCond wc){
-    proc=p;
-    next=NULL;
-    thread=NULL;
-    kind=WATCHER;
-    watchcond=wc;}
-
-  Bool isHandler(){ return kind&HANDLER;}
-  Bool isContinueHandler(){Assert(isHandler());return kind & RETRY;} 
-  void setContinueHandler(){Assert(isHandler()); kind = kind | RETRY;} 
-  Bool isPersistent(){return kind & PERSISTENT;}
-  void setPersistent(){kind = kind | PERSISTENT;}
+    watchcond=wc;
+    twin=NULL;
+    kind=k;}
   
+  Bool matches(TaggedRef p,Thread* t,EntityCond wc, short k){
+    if(p!=proc) return FALSE;
+    if(t!=thread) return FALSE;
+    if(watchcond!=wc) return FALSE;
+    if(kind!=k) return FALSE;
+    return TRUE;}
 
+  Twin* cellTwin(){
+    kind |= W_CELL;
+    Assert(twin==NULL);
+    twin = new Twin();}
+
+  void lockTwin(Twin* tw){
+    Assert(twin==NULL);    
+    twin=tw;}
+
+  Bool fire(){
+    if(kind & W_CELL){
+      if(twin->lockCtr>twin->cellCtr) return FALSE;
+      twin->cellCtr++;
+      return TRUE;}
+    else{
+      if(twin->cellCtr>twin->lockCtr) return FALSE;
+      twin->lockCtr++;
+      return TRUE;}}
+
+  Bool isFired(){
+    if(twin==NULL) return FALSE;
+    if(twin->cellCtr>0) return TRUE;
+    if(twin->lockCtr>0) return TRUE;    
+    return FALSE;}
+
+  Bool isRetry(){return kind & RETRY;} 
+  Bool isPersistent(){return kind & PERSISTENT;}
+  Bool isSiteBased(){
+    Assert(isHandler());
+    return thread==NULL;}
+  Bool isHandler(){return isHandlerCondition(watchcond);}
+  Bool isCellPartObject(){return kind & W_CELL;}
+  
   void setNext(Watcher* w){next=w;}
+
   Watcher* getNext(){return next;}
-  void invokeHandler(EntityCond ec,Tertiary* t,Thread *,TaggedRef);
-  void invokeWatcher(EntityCond ec,Tertiary* t);
+
+  void invokeHandler(EntityCond,TaggedRef);
+
+  void invokeWatcher(EntityCond);
+
   Thread* getThread(){Assert(thread!=NULL);return thread;}
+
   Bool isTriggered(EntityCond ec){
     if(ec & watchcond) return OK;
     return NO;}
+
   EntityCond getWatchCond(){return watchcond;}
+
+  EntityCond getEffWatching();
 };
+
+
+// MEREGCON void gcEntityInfo(Tertiary *t);
 
 void gcEntityInfoImpl(Tertiary *t);
 
-#define DefaultThread ((Thread*)0x3)
-//
-// kost@, PER-LOOK !!!
-// The following artifacts.
-
-//
 inline Bool errorIgnore(Tertiary *t) {
   EntityInfo* info = t->getInfo();
   if (info == NULL) return OK;
-  if(info->watchers == NULL) return OK;
-  return NO;
-}
+  return NO;}
 
 inline EntityCond getEntityCond(Tertiary *t) {
   EntityInfo* info = t->getInfo();
   if (info == NULL) return ENTITY_NORMAL;
-  return (info->entityCond | info->managerEntityCond);
-}
+  return info->getEntityCond();}
 
 inline Watcher** getWatcherBase(Tertiary *t){
   EntityInfo* info = t->getInfo();
@@ -170,142 +261,74 @@ inline Watcher** getWatcherBase(Tertiary *t){
   if(info->watchers==NULL) return NULL;
   return &(info->watchers);}
 
-inline void setMasterTert(Tertiary *t, Tertiary *tOther) {
-  EntityInfo* info = t->getInfo();
-  if(info==NULL)
-    info= new EntityInfo(tOther);
-  else
-    info->object = tOther;
-}
-
-void insertWatcher(Tertiary *t, Watcher* w);
-
-inline EntityCond managerPart(EntityCond ec){
-  return ec & (PERM_SOME|PERM_BLOCKED|PERM_ME|TEMP_SOME|TEMP_BLOCKED|TEMP_ME);}
+void insertWatcherAtProxy(Tertiary *t, Watcher* w);
+void insertWatcherAtManager(Tertiary *t, Watcher* w);
 
 inline Bool someTempCondition(EntityCond ec){
   return ec & (TEMP_SOME|TEMP_BLOCKED|TEMP_ME|TEMP_ALL);}
 
-inline Tertiary* getInfoTert(Tertiary *t){
+inline Bool addEntityCond(Tertiary *t, EntityCond c){
   EntityInfo* info = t->getInfo();
-  if(info==NULL) return NULL;
-  return info->object;}
-
-inline Bool resetEntityCondManager(Tertiary *t, EntityCond c){
-  EntityInfo* info = t->getInfo();
-  Assert(!(c & (PERM_BLOCKED|PERM_ME|PERM_SOME|PERM_ALL)));
-  Assert(info!=NULL);
-  EntityCond old_ec=getEntityCond(t);    
-  info->managerEntityCond &= ~c;
-  if(getEntityCond(t)==old_ec) return NO;
-  return OK;
-}
-
-inline Bool setEntityCondOwn(Tertiary *t, EntityCond c) {
-  EntityInfo* info = t->getInfo();
-  if(info==NULL) {
+  if(info==NULL){
     t->setInfo(new EntityInfo(c));
-    return OK;
-  }
-  EntityCond old_ec=getEntityCond(t);
-  info->entityCond = (info->entityCond | c);
-  if(getEntityCond(t)==old_ec) return NO;
-  return OK;
-}
+    return TRUE;}
+  return info->addEntityCond(c);}
 
-inline Bool setEntityCondManager(Tertiary *t, EntityCond c) {
-  EntityInfo* info = t->getInfo();
-  if(info==NULL) {
-    t->setInfo(new EntityInfo(ENTITY_NORMAL, c));
-    return OK;
-  }
-  EntityCond old_ec=getEntityCond(t);
-  info->managerEntityCond=info->managerEntityCond | c;
-  if(getEntityCond(t)==old_ec) return NO;
-  return OK;
-}
+inline Bool addEntityCondMsg(Tertiary *t, EntityCond c){
+  addEntityCond(t,msgEntityCond(c));}
 
-void installProbe(DSite* s,ProbeType pt);
-void tertiaryInstallProbe(DSite* s,ProbeType pt,Tertiary *t);
-void deinstallProbe(DSite* s,ProbeType pt);
-
-
-
-/* PER-HANDLE
-
-
-
-inline Bool resetEntityCondProxy(Tertiary *t, EntityCond c) {
+inline void subEntityCond(Tertiary *t, EntityCond c){
   EntityInfo* info = t->getInfo();
   Assert(info!=NULL);
-  EntityCond old_ec=getEntityCond();
-  info->entityCond &= ~c;
-  if(getEntityCond()==old_ec) return NO;
-  return OK;
-}
+  info->subEntityCond(c);}
 
+inline void subEntityCondMsg(Tertiary *t, EntityCond c){
+  subEntityCond(t,msgEntityCond(c));}
 
+void tertiaryInstallProbe(DSite* s,ProbeType pt,Tertiary *t);
 
-  
 inline Watcher *getWatchersIfExist(Tertiary *t){
   EntityInfo* info = t->getInfo();
   if(info==NULL){return NULL;}
   return info->watchers;}
 
+EntityCond askPart(Tertiary*, EntityCond);
 
-inline void setWatchers(Tertiary *t, Watcher* e){
-  EntityInfo* info = t->getInfo();
-  info->watchers=e;}
+ProbeType managerProbePart(Tertiary*, EntityCond ec);
 
-inline Bool maybeHasInform(Tertiary *t){
-  EntityInfo* info = t->getInfo();
-  if(info==NULL) return NO;
-  return OK;}
-  
-void insertDangelingEvent(Tertiary*);
-Watcher** findWatcherBase(Tertiary *t, Thread*,EntityCond);
+inline EntityCond getSummaryWatchCond(Tertiary* t){
+  if(t->getInfo()==NULL) return ENTITY_NORMAL;
+  return t->getInfo()->getSummaryWatchCond();}
 
-void releaseWatcher(Tertiary *t, Watcher*);
-Bool handlerExists(Tertiary *t, Thread *);
-Bool handlerExistsThread(Tertiary *t, Thread *);
-
-
-
-
-Bool installHandler(Tertiary *t, EntityCond,TaggedRef,Thread*,Bool,Bool);
-Bool deinstallHandler(Tertiary *t, Thread*,TaggedRef);
-void installWatcher(Tertiary *t, EntityCond,TaggedRef,Bool);
-Bool deinstallWatcher(Tertiary *t, EntityCond,TaggedRef);
+void installWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,Bool,Bool);
+Bool deinstallWatcher(Tertiary *t, EntityCond,TaggedRef,Thread*,Bool,Bool);
 void entityProblem(Tertiary *t);
-Bool startHandlerPort(Tertiary *t, Thread*,Tertiary* ,TaggedRef,EntityCond);
-void managerProbeFault(Tertiary *t, Site*, int);
+void deferEntityProblem(Tertiary *t);
+void managerProbeFault(Tertiary *t, DSite*, int);
 void proxyProbeFault(Tertiary *t, int);
 
+Bool entityCondMeToBlocked(Tertiary* t);
 
-EntityCond getEntityCondPort(Tertiary*);
-
-
-inline Bool somePermCondition(EntityCond ec){
-  return ec & (PERM_SOME|PERM_BLOCKED|PERM_ME|PERM_ALL);}
-
-*/
+inline void removeBlocked(Tertiary* t){
+  if(t->getInfo()==NULL) return;
+  subEntityCond(t,PERM_BLOCKED|TEMP_BLOCKED);}
 
 TaggedRef listifyWatcherCond(EntityCond);
 
-OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct, 
-			 TaggedRef proc);
-OZ_Return HandlerDeInstall(Tertiary *entity, SRecord *condStruct,
-			   TaggedRef proc);
-OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,
-			 TaggedRef proc);
-OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,
-			   TaggedRef proc);
-
-void maybeStateError(Tertiary*, Thread*);
-
-void insertWatcher(Tertiary*, Watcher*);
-void tertiaryInstallProbe(DSite* s,ProbeType pt,Tertiary *t);
 void entityProblem(Tertiary*);
+void gcTwins();
+
+void initManagerForFailure(Tertiary*);
+void initProxyForFailure(Tertiary*);
+
+OZ_Return WatcherInstall(Tertiary*, SRecord*, TaggedRef);
+OZ_Return WatcherDeInstall(Tertiary*, SRecord*, TaggedRef);
+
+#define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
+
+
+
+
 
 /* __DPFAILHH */
 #endif 

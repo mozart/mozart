@@ -37,3 +37,9 @@ OZ_Return suspendOnControlVar()
   am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
   return BI_REPLACEBICALL;
 }
+
+void suspendOnControlVar2()
+{
+  am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
+}
+
