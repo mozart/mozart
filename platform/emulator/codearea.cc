@@ -79,14 +79,19 @@ inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
 }
 
 
-Literal *addToAtomTab(const char *str)
+OZ_Term oz_atom(const char *str)
 {
-  return addToLiteralTab(str,&CodeArea::atomTab,NO);
+  CHECK_STRPTR(str);
+  Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO);
+  return makeTaggedLiteral(lit);
 }
 
-Literal *addToNameTab(const char *str)
+TaggedRef oz_uniqueName(const char *str)
 {
-  return addToLiteralTab(str,&CodeArea::nameTab,OK);
+  CHECK_STRPTR(str);
+  Literal *lit = addToLiteralTab(str,&CodeArea::nameTab,OK);
+  lit->setFlag(Lit_isUniqueName);
+  return makeTaggedLiteral(lit);
 }
 
 

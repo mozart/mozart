@@ -582,8 +582,7 @@ OZ_BI_define(BInewNamedName,1,1)
 OZ_BI_define(BInewCopyableName,1,1)
 {
   oz_declareAtomIN(0,printName);
-  Literal *lit = NamedName::newNamedName(printName);
-  lit->setFlag(Lit_isCopyableName);
+  Literal *lit = NamedName::newCopyableName(printName);
   OZ_RETURN(makeTaggedLiteral(lit));
 } OZ_BI_end
 

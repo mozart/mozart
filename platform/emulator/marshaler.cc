@@ -942,8 +942,7 @@ loop:
       int refTag      = unmarshalRefTag(bs);
       char *printname = unmarshalString(bs);
 
-      NamedName *aux = NamedName::newNamedName(ozstrdup(printname));
-      aux->setFlag(Lit_isCopyableName);
+      NamedName *aux = NamedName::newCopyableName(ozstrdup(printname));
       *ret = makeTaggedLiteral(aux);
       gotRef(bs,*ret,refTag);
       delete printname;
@@ -957,7 +956,7 @@ loop:
 
       PD((UNMARSHAL,"unique name %s",printname));
 
-      *ret = getUniqueName(printname);
+      *ret = oz_uniqueName(printname);
       gotRef(bs,*ret,refTag);
       delete printname;
       return;

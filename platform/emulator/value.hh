@@ -186,7 +186,6 @@ public:
   void dispose() { freeListDispose(this,sizeof(*this)); }
 };
 
-
 /*===================================================================
  * Literal
  *=================================================================== */
@@ -207,15 +206,21 @@ const int litFlagsMask    = (1<<sizeOfLitFlags)-1;
 const int copyCountMask   = (1<<sizeOfCopyCount)-1;
 
 class Literal {
-  int32 flagsAndOthers;
-public:
-  OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(Literal);
+friend TaggedRef oz_uniqueName(const char *s);
 
+private:
+  int32 flagsAndOthers;
+
+protected:
   void init() { flagsAndOthers=0; }
   void setFlag(int flag) { flagsAndOthers |= flag; }
   void clearFlag(int flag) { flagsAndOthers &= ~flag; }
   int getFlags() { return (flagsAndOthers&litFlagsMask); }
+
+public:
+  OZPRINTLONG;
+  NO_DEFAULT_CONSTRUCTORS(Literal);
+
   int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
   void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
 
@@ -283,6 +288,7 @@ public:
   NO_DEFAULT_CONSTRUCTORS(NamedName);
   const char *printName;
   static NamedName *newNamedName(const char *str);
+  static NamedName *newCopyableName(const char *str);
   NamedName *generateCopy();
 };
 
@@ -336,6 +342,9 @@ int atomcmp(Literal *a, Literal *b)
   return (((Name*)a)->getSeqNumber() < ((Name*)b)->getSeqNumber()) ? -1 : 1;
 }
 
+// see codearea.cc
+extern TaggedRef oz_atom(const char *s);
+extern TaggedRef oz_uniqueName(const char *s);
 
 
 /*===================================================================
@@ -2926,7 +2935,6 @@ char *toC(OZ_Term);
 TaggedRef reverseC(TaggedRef l);
 TaggedRef appendI(TaggedRef x,TaggedRef y);
 Bool member(TaggedRef elem,TaggedRef list);
-TaggedRef getUniqueName(const char *s);
 
 /*===================================================================
  * Service Registry

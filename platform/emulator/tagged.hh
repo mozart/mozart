@@ -478,16 +478,6 @@ TaggedRef makeTaggedTert(Tertiary *s)
 
 #endif
 
-
-extern Literal *addToAtomTab(const char *str);
-extern Literal *addToNameTab(const char *str);
-inline
-TaggedRef oz_atom(const char *s)
-{
-  CHECK_STRPTR(s);
-  return makeTaggedLiteral(addToAtomTab(s));
-}
-
 // getArg() and the like may never return variables
 inline
 TaggedRef tagged2NonVariable(TaggedRef *term)

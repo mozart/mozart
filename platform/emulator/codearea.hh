@@ -163,8 +163,8 @@ class CodeArea {
   friend class Statistics;
   static HashTable atomTab;
   static HashTable nameTab;
-  friend Literal *addToAtomTab(const char *str);
-  friend Literal *addToNameTab(const char *str);
+  friend TaggedRef oz_atom(const char *str);
+  friend TaggedRef oz_uniqueName(const char *str);
   friend inline void printAtomTab();
   friend inline void printNameTab();
 
