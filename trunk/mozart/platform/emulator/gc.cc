@@ -2376,7 +2376,7 @@ void SolveActor::gcRecurse () {
     board = board->gcBoard();
     Assert(board);
   }
-  Board *solveBoard = solveBoard->gcBoard();
+  solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
   if (opMode == IN_GC || !isGround())
