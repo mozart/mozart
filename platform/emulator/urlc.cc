@@ -1474,11 +1474,11 @@ urlc::getURL(const char* line, char *file)
         ofd = -1;
 
         if(0 == strcmp("file:", proto))
-            n = get_file();
-        if(0 == strcmp("http://", proto))
-            n = get_http(file);
-        if(0 == strcmp("ftp://", proto))
-            n = get_ftp(file);
+          n = get_file();
+        else if(0 == strcmp("http://", proto))
+          n = get_http(file);
+        else if(0 == strcmp("ftp://", proto))
+          n = get_ftp(file);
         /* other protocols tested here */
         /* ##extension */
 
