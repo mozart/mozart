@@ -1139,14 +1139,14 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
      */
 
   case Co_Extension: {
-    OZ_Extension * ex = (OZ_Extension *) this;
+    OZ_Extension * ex = (OZ_Extension *) (OZ_Container *) this;
     Assert(ex);
     GCDBG_INFROMSPACE(ex);
 
     Board * bb = (Board *) ex->__getSpaceInternal();
 
     OZ_Extension * ret = ex->gCollectV();
-    Assert(((ConstTerm *) ret)->getType() == Co_Extension);
+    Assert(((ConstTerm *) (OZ_Container*) ret)->getType() == Co_Extension);
     GCDBG_INTOSPACE(ret);
 
     if (bb) {
@@ -1154,9 +1154,9 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
       ret->__setSpaceInternal(bb->gCollectBoard());
     }
 
-    cacStack.push(ret,PTR_EXTENSION);
-    STOREFWDFIELD(this, ret);
-    return (ConstTerm *) ret;
+    cacStack.push((OZ_Container *) ret,PTR_EXTENSION);
+    STOREFWDFIELD(this, (OZ_Container *) ret);
+    return (ConstTerm *) (OZ_Container *) ret;
   }
 
   case Co_Float: {
@@ -1297,7 +1297,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
 
   case Co_Extension: {
     // This is in fact situated
-    OZ_Extension * ex = (OZ_Extension *) this;
+    OZ_Extension * ex = (OZ_Extension *) (OZ_Container *) this;
     Assert(ex);
     Board * bb = (Board *) ex->__getSpaceInternal();
 
@@ -1313,9 +1313,9 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
       ret->__setSpaceInternal(bb->sCloneBoard());
     }
 
-    cacStack.push(ret,PTR_EXTENSION);
-    STOREFWDFIELD(this, ret);
-    return (ConstTerm *) ret;
+    cacStack.push((OZ_Container *) ret,PTR_EXTENSION);
+    STOREFWDFIELD(this, (OZ_Container *) ret);
+    return (ConstTerm *) (OZ_Container *) ret;
   }
 
   case Co_Float:
@@ -1825,7 +1825,7 @@ void CacStack::_cacRecurse(void) {
       UTG_PTR(tp,PTR_CONSTTERM,ConstTerm *)->_cacConstRecurse();
       break;
     case PTR_EXTENSION:
-      UTG_PTR(tp,PTR_EXTENSION,OZ_Extension *)->_cacRecurseV();
+      ((OZ_Extension*)(UTG_PTR(tp,PTR_EXTENSION,OZ_Container *)))->_cacRecurseV();
       break;
     case PTR_SUSPLIST0:
     case PTR_SUSPLIST1:
