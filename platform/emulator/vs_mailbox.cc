@@ -212,4 +212,29 @@ void VSMailboxRegister::add(key_t key, VSMailboxManagerImported *pool)
   htAdd(hvalue, ghn_bk, ghn_e);
 }
 
+//
+VSMailboxManagerImported *VSMailboxRegister::getFirst()
+{
+  VSMailboxManagerImported *mbm;
+  GenHashNode *ghn;
+
+  ghn = GenHashTable::getFirst(seqIndex);
+  GenCast(ghn, GenHashNode*, mbm, VSMailboxManagerImported*);
+  return (mbm);
+}
+
+//
+VSMailboxManagerImported*
+VSMailboxRegister::getNext(VSMailboxManagerImported *prev)
+{
+  VSMailboxManagerImported *mbm;
+  GenHashNode *ghn;
+
+  GenCast(prev, VSMailboxManagerImported*, ghn, GenHashNode*);
+  ghn = GenHashTable::getNext(ghn, seqIndex);
+  GenCast(ghn, GenHashNode*, mbm, VSMailboxManagerImported*);
+  return (mbm);
+}
+
+
 #endif // VIRTUALSITES

@@ -83,6 +83,7 @@ protected:
   //
   int memSize;                  // in bytes;
   int pid;                      // of the owner; 0 says "not yet known";
+  // pid is used also for terminating
   //
   // queue (unfortunately, it cannot be moved out since then we cannot
   // inherit from such a 'queue' class (because of the var-size 'msgs'
@@ -105,6 +106,9 @@ public:
   // safe since only receiver (owner) is using it (& 'dequeue');
   int getSize() { return (size); }
   Bool isNotEmpty() { return (size); }
+
+  //
+  int getPid() { return (pid); }
 };
 
 //
@@ -367,10 +371,11 @@ void markDestroy(key_t shmkey);
 // 'VSChunkPoolRegister' (see vs_msgbuffer.hh);
 class VSMailboxRegister : public GenHashTable {
 private:
-  unsigned int hash(key_t key);
+  int seqIndex;                 // does not need to be initialized;
 
   //
 private:
+  unsigned int hash(key_t key);
   VSMailboxManagerImported* find(key_t key);
   void add(key_t key, VSMailboxManagerImported *pool);
 
@@ -405,6 +410,44 @@ public:
     //
     GenCast(mbm, VSMailboxManagerImported*, ghn, GenHashNode*);
     htSub(hvalue, ghn);
+  }
+
+  //
+  VSMailboxManagerImported *getFirst();
+  VSMailboxManagerImported *getNext(VSMailboxManagerImported *prev);
+};
+
+//
+// The register object for created mailboxes (their keys). Since it
+// does not need to be efficient, that's just a list...
+class VSMailboxKeysRegisterNode {
+  friend class VSMailboxKeysRegister;
+private:
+  key_t mailboxKey;
+  VSMailboxKeysRegisterNode *next;
+};
+class VSMailboxKeysRegister {
+private:
+  VSMailboxKeysRegisterNode *first;
+
+public:
+  VSMailboxKeysRegister() : first((VSMailboxKeysRegisterNode *) 0) {}
+
+  //
+  void add(key_t mailboxKey) {
+    VSMailboxKeysRegisterNode *n = new VSMailboxKeysRegisterNode;
+    n->mailboxKey = mailboxKey;
+    n->next = first;
+    first = n;
+  }
+  Bool isInThere(key_t mailboxKey) {
+    VSMailboxKeysRegisterNode *n = first;
+    while (n) {
+      if (n->mailboxKey == mailboxKey)
+        return (TRUE);
+      n = n->next;
+    }
+    return (FALSE);
   }
 };
 

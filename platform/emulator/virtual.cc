@@ -84,6 +84,10 @@ static VSFreeMessagePool freeMessagePool;
 static VSMailboxRegister mailboxRegister(vsRegisterHTSize);
 
 //
+// Created mailboxes (their keys);
+static VSMailboxKeysRegister slavesRegister;
+
+//
 // Imported pools of chunks for message buffers (incoming messages are
 // read from there):
 static VSChunkPoolRegister chunkPoolRegister(vsRegisterHTSize);
@@ -444,6 +448,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   // The 'VSMailboxManager' always creates a proper object (or crashes
   // the system if it can't);
   mbm = new VSMailboxManagerCreated(vs_mailbox_size);
+  slavesRegister.add(mbm->getSHMKey());
 
   //
   // Put the 'M_INIT_VS' message into it;
@@ -565,7 +570,28 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
 ///
 void virtualSitesExit()
 {
+  //
   am.removeTask((void *) &vsSiteQueue, checkMessageQueue);
+
+  //
+  // Kill those virtual sites we know about that are the slaves
+  // (i.e. whose mailboxes have been created here):
+  VSMailboxManagerImported *mbm;
+  mbm = mailboxRegister.getFirst();
+  while (mbm) {
+    if (slavesRegister.isInThere(mbm->getSHMKey())) {
+      VSMailboxManagerImported *mbmDel = mbm;
+      int pid = mbm->getMailbox()->getPid();
+      if (pid)
+        (void) oskill(pid, SIGTERM);
+      mbm = mailboxRegister.getNext(mbm);
+      mailboxRegister.unregister(mbmDel);
+    } else {
+      mbm = mailboxRegister.getNext(mbm);
+    }
+  }
+
+  //
   if (myVSMailboxManager) {
     am.removeTask((void *) myVSMailboxManager->getMailbox(),
                   checkVSMessages);
@@ -573,10 +599,14 @@ void virtualSitesExit()
     delete myVSMailboxManager;
     myVSMailboxManager = (VSMailboxManagerOwned *) 0;
   }
+
+  //
   if (myVSChunksPoolManager) {
     delete myVSChunksPoolManager;
     myVSChunksPoolManager = (VSMsgChunkPoolManagerOwned *) 0;
   }
+
+  //
   if (myVSMsgBufferImported) {
     free(myVSMsgBufferImported);
     myVSMsgBufferImported = (VSMsgBufferImported *) 0;
