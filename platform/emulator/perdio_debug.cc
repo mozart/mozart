@@ -3,6 +3,48 @@
 
 DebugVector *DV = new DebugVector();
 
+char *debugTypeStr[LAST] = {
+  "SEND_EMIT",	// 0
+  "SEND_DONE",
+  "DEBT_SEC",
+  "DEBT_MAIN",
+  "MSG_RECEIVED",
+  "MSG_SENT",	// 5
+  "DELAYED_MSG_SENT",
+  "TABLE",
+  "TABLE2",
+  "GC",
+  "CREDIT",	// 10
+  "LOOKUP",
+  "GLOBALIZING",
+  "AUXILLARY",
+  "DEBT",
+  "MARSHALL",	// 15
+  "MARSHALL_CT",
+  "UNMARSHALL",
+  "UNMARSHALL_CT",
+  "MARSHALL_BE",
+  "PENDLINK",     // 20
+  "HASH",
+  "HASH2",
+  "USER",
+  "TCP",
+  "WEIRD",        // 25
+  "TCP_INTERFACE",
+  "TCPCACHE",
+  "TCPQUEUE",
+  "SITE",
+  "REMOTE",       // 30
+  "MESSAGE",
+  "OS",
+  "BUFFER",
+  "READ",
+  "WRITE",        // 35
+  "CONTENTS",
+  "SPECIAL",
+  "PD_VAR"
+};
+
 void dvset(int i){
   if(i==0){
     /*    DV->set(SEND_DONE);
