@@ -29,7 +29,7 @@ RPMROOT=/usr/src/redhat
 RPMSRC=$RPMROOT/SOURCES
 RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
-: ${PACKAGER:="Christian Schulte <schulte@ps.uni-sb.de>"}
+: ${PACKAGER:="Denys Duchier (mozart-oz.org)"}
 
 #
 # Read dir
@@ -216,7 +216,7 @@ applications that can directly be started from the pages.
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --enable-opt=yes --disable-doc --with-stdlib=\$RPM_BUILD_ROOT$OZHOME-std
+./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes --with-stdlib=\$RPM_BUILD_ROOT$OZHOME-std
 make
 
 %install
