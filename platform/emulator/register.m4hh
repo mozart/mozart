@@ -448,7 +448,7 @@ define(M4INSTRTWOREGS,``''
                  HANDLE_FAILURE(PC+3,
                                 message("getint %s = %s",
                                         OZ_toC(i),
-                                        OZ_toC(*termPtr)),
+                                        OZ_toC(term)),
                                 );
                }''
                );
