@@ -27,21 +27,22 @@
 functor
 import
    Fault
-   System
+%   System
 export
    stationaryClass:StationaryObject
    newStationary:NewStationaryObject
 define
+   {Wait Fault}
    class StationaryObject
       feat this
    end
 
-    DBGS DBGP={NewPort DBGS}
-    thread
-       {ForAll DBGS proc{$ X}
- 		      {System.show X}
- 		   end}
-    end
+%    DBGS DBGP={NewPort DBGS}
+%     thread
+%        {ForAll DBGS proc{$ X}
+%  		      {System.show X}
+%  		   end}
+%     end
    
    %% Creates a new instance of Class and encapsulates it in a thread (=stationary)
    fun{NewStationaryObject ?Class ?Init}
@@ -61,8 +62,7 @@ define
  	    
 	    %% Failure handling
 %	    {Send DBGP tryInstallWatcher(Watcher)}
-%	    {Fault.installWatcher P [permFail] Watcher _}
-%	    {Send DBGP sucInstallWatcher(Watcher)}
+	    {Fault.installWatcher P [permFail] Watcher _}
 
 	    %% Try to send to remote object
 	    try
@@ -78,7 +78,7 @@ define
 	    
 	    %% Unistall watcher
 %	    {Send DBGP deInstallWatcher}
-%	    {Fault.deInstallWatcher P Watcher _}
+	    {Fault.deInstallWatcher P Watcher _}
 
 	    %% Ok or not?
 	    if {Label Sync}==exception then raise Sync.1 end end
