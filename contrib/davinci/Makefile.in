@@ -1,0 +1,91 @@
+@SET_MAKE@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PREFIX          = @prefix@
+PLATFORM        = @PLATFORM@
+LIB_DIR         = $(PREFIX)/contrib
+HOMEURL         = @HOMEURL@
+
+OZC             = @OZC@
+COMPILE         = $(OZC) -c
+OZTOOL          = @OZTOOL@
+CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
+                  -I$(BUILDTOP)/platform/emulator \
+                  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS        = @CXXFLAGS@
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@
+
+INSTALL         = @INSTALL@
+INSTALL_DIR     = @INSTALL_DIR@
+INSTALL_LIB     = $(INSTALL) -m 444
+INSTALL_DLL     = $(INSTALL) -m 555
+DAVINCI         = @DAVINCI@
+
+OZC     = ozc
+OZL     = ozl
+
+OZSRCS  =       DaVinciObject.oz
+
+OZGSRCS  =      DaVinciScanner.ozg
+
+OZFNCTS  = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
+
+TARGETS         = DaVinci.ozf
+LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
+
+all:     $(TARGETS)
+install: $(LIB_TARGETS)
+#
+# Oz part
+#
+
+DaVinci.ozf: $(OZFNCTS)
+        echo $(DAVINCI)
+        $(OZL) DaVinciObject.ozf -o $@
+
+$(LIB_DIR)/DaVinci.ozf: DaVinci.ozf
+        $(INSTALL_LIB) $< $@
+        for f in *.so-$(PLATFORM) ; do \
+        $(INSTALL_DLL) $$f $(LIB_DIR)/$$f ; \
+        done
+
+%.ozf: %.oz
+        $(OZC) -c $< -o $@
+
+%.ozf: %.ozg
+        $(OZC) -c --gump $< -o $@
+
+
+clean:
+        -rm *.ozf
+        -rm *.o
+        -rm *.so-$(PLATFORM)
+        -rm *.so
+        -rm *.l
+        -rm *.C
+        -rm *~
+
+veryclean: clean
+        -rm Makefile.deps
+
+depend: Makefile $(SRCS)
+        $(DEPEND) $(SRCS) > Makefile.deps
+
+-include Makefile.deps
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck
