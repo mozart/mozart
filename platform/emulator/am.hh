@@ -86,7 +86,7 @@ public:
  * Tasks
  * -----------------------------------------------------------------------
  */
-
+#ifndef DENYS_EVENTS
 //
 // "check" says 'TRUE' if there is some pending processing;
 typedef Bool (*TaskCheckProc)(unsigned long clock, void *arg);
@@ -164,7 +164,7 @@ public:
     ready = FALSE;
   }
 };
-
+#endif
 
 /* -----------------------------------------------------------------------
  * OO
@@ -238,7 +238,9 @@ private:
   int threadSwitchCounter;
   int userCounter;
 
+#ifndef DENYS_EVENTS
   TaskNode *taskNodes;
+#endif
 
   struct {
     int debug;
@@ -466,7 +468,7 @@ public:
     unsetSFlag(ThreadSwitch);
     threadSwitchCounter=oz_msToClockTick(TIME_SLICE);
   }
-
+#ifndef DENYS_EVENTS
   void handleTasks();
 
   //
@@ -479,7 +481,7 @@ public:
   Bool registerTask(void *arg, TaskCheckProc cIn, TaskProcessProc pIn);
   Bool removeTask(void *arg, TaskCheckProc cIn);
   void checkTasks();
-
+#endif
   //
   unsigned long getEmulatorClock() { return (emulatorClock); }
 
@@ -491,9 +493,13 @@ public:
   void handleAlarm(int ms = -1);
   // 'SIGUSR2' notifies about presence of tasks. Right now these are 
   // only virtual site messages;
+#ifndef DENYS_EVENTS
   void handleUSR2();
+#endif
   void handleUser();
+#ifndef DENYS_EVENTS
   void insertUser(int t,TaggedRef node);
+#endif
   void wakeUser();
   int  nextUser();
   Bool checkUser();

@@ -73,20 +73,29 @@ public:
 
 class FlowControler{
   FlowControlElement *first, *last;
+#ifndef DENYS_EVENTS
   unsigned int time;
+#endif
 public:
   
   FlowControler(){
     first = last = NULL;
-    time = 0;} 
+#ifndef DENYS_EVENTS
+    time = 0;
+#endif
+  } 
   
   void addElement(TaggedRef e);
   void addElement(TaggedRef e,DSite*,int);
-  
+
+#ifndef DENYS_EVENTS
   Bool wakeUpCheck(unsigned int t){
     return first != NULL && t > time;}
   
   void wakeUpExecute(unsigned int t);
+#else
+  Bool doTask();
+#endif
   
   void gcEntries();
 

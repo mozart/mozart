@@ -1062,3 +1062,27 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
   return loadDatum(d,t);
 }
 
+#ifdef DENYS_XML
+typedef void (*marshalFun)(OZ_Term,MsgBuffer*);
+OZ_Term toXML(OZ_Term t,marshalFun f)
+{
+  ByteStream* bs=bufferManager->getByteStream();
+  bs->marshalBegin();
+  (*f)(t,bs);
+  bs->marshalEnd();
+  bs->beginWrite();
+  bs->incPosAfterWrite(tcpHeaderSize);
+  int total=bs->calcTotLen();
+  OZ_Term val = OZ_nil();
+  while (total) {
+    int len=bs->getWriteLen();
+    BYTE* pos=bs->getWritePos();
+    total -= len;
+    val = OZ_pair2(val,OZ_mkByteString((char*)pos,len));
+    bs->sentFirst();
+  }
+  bs->writeCheck();
+  bufferManager->freeByteStream(bs);
+  return val;
+}
+#endif
