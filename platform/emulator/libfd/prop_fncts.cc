@@ -31,13 +31,13 @@
 //-----------------------------------------------------------------------------
 
 // X + C <= Y
-pf_return_t lessEqOff(int * map, SuspVar * regs[])
+pf_return_t lessEqOff(int * map, PEL_SuspVar * regs[])
 {
   CDM(("lessEqOff function %p ", map));
 
-  SuspFDIntVar &x = *(SuspFDIntVar *) regs[map[0]];
+  PEL_SuspFDIntVar &x = *(PEL_SuspFDIntVar *) regs[map[0]];
   int c = (int) regs[map[1]];
-  SuspFDIntVar &y = *(SuspFDIntVar *) regs[map[2]];
+  PEL_SuspFDIntVar &y = *(PEL_SuspFDIntVar *) regs[map[2]];
 
   FailOnEmpty(*x <= (y->getMaxElem() - c));
   FailOnEmpty(*y >= (x->getMinElem() + c));
@@ -64,13 +64,13 @@ pf_return_t lessEqOff(int * map, SuspVar * regs[])
 }
 
 // X + C > Y
-pf_return_t greaterOff(int * map, SuspVar * regs[])
+pf_return_t greaterOff(int * map, PEL_SuspVar * regs[])
 {
   CDM(("greaterOff function %p ", map));
 
-  SuspFDIntVar &x = *(SuspFDIntVar *) regs[map[0]];
+  PEL_SuspFDIntVar &x = *(PEL_SuspFDIntVar *) regs[map[0]];
   int c = (int) regs[map[1]];
-  SuspFDIntVar &y = *(SuspFDIntVar *) regs[map[2]];
+  PEL_SuspFDIntVar &y = *(PEL_SuspFDIntVar *) regs[map[2]];
 
   FailOnEmpty(*x >= (y->getMinElem() - c + 1));
   FailOnEmpty(*y <= (x->getMaxElem() + c - 1));
