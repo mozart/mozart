@@ -807,7 +807,7 @@ int listWidth = 0;
 
 inline
 Bool isNiceHash(OZ_Term t, int width) {
-  if (width <= 0) return OK;
+  if (width <= 0) return NO;
 
   if (!isSTuple(t) || !literalEq(tagged2SRecord(t)->getLabel(),AtomPair))
     return NO;
@@ -819,7 +819,7 @@ Bool isNiceHash(OZ_Term t, int width) {
 
 inline
 Bool isNiceList(OZ_Term l, int width) {
-  if (width <= 0) return OK;
+  if (width <= 0) return NO;
 
   while (isCons(l) && width--> 0) {
     l = deref(tail(l));
@@ -852,7 +852,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 
   value2buffer(out,sr->getLabel());
   out << '(';
-  if (depth <= 0) {
+  if (depth <= 0 || listWidth <= 0) {
     out << ",,,";
   } else {
     if (sr->isTuple()) {
