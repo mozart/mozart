@@ -1208,6 +1208,25 @@ void ThreadQueue::printStream(ostream &stream, int depth)
   }
 }
 #else
+
+void SuspStack::printStream(ostream &stream, int depth)
+{
+  if (isEmpty()) {
+    stream << "Suspendable stack empty.\n";
+  } else {
+    stream << "Suspendable stack #" << getSize() << endl << flush;
+
+    int i = 0;
+
+    for (SuspList * sl = _head; sl != (SuspList *) NULL; 
+	 sl = sl->getNext(), i+= 1) 
+      {
+	stream << "stack[" << i++ << "]=" << flush;
+	sl->printStream(stream,depth);
+      }
+  }
+}
+
 void SuspQueue::printStream(ostream &stream, int depth)
 {
   if (isEmpty()) {
@@ -1223,6 +1242,8 @@ void SuspQueue::printStream(ostream &stream, int depth)
     }
   }
 }
+
+
 #endif /* !LINKED_QUEUES */
 
 void FDIntervals::printLong(ostream &stream, int idnt) const

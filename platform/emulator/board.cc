@@ -148,7 +148,20 @@ OZ_Return Board::scheduleLPQ(void) {
     if (prop->isDead())
       continue;
     Propagator::setRunningPropagator(prop);
-    	   
+
+#ifdef COUNT_PROP_INVOCS
+    extern int count_prop_invocs_max_runnable;
+    extern int count_prop_invocs_min_runnable;
+    extern double count_prop_invocs_sum_runnable;
+    extern int count_prop_invocs_nb_smp_runnable;
+    count_prop_invocs_max_runnable = max(count_prop_invocs_max_runnable,
+					 lpq.getSize());
+    count_prop_invocs_min_runnable = min(count_prop_invocs_min_runnable,
+					 lpq.getSize());
+    count_prop_invocs_sum_runnable += lpq.getSize()+1;
+    count_prop_invocs_nb_smp_runnable += 1;
+#endif
+
     switch (oz_runPropagator(prop)) {
     case SLEEP:
       oz_sleepPropagator(prop);

@@ -41,6 +41,71 @@
  *
  */
 
+
+class SuspStack {
+private:
+  SuspList * _head;
+
+public:
+
+  SuspStack(void) {}
+  ~SuspStack(void) {}
+
+  void init(void) {
+    _head = (SuspList *) NULL;
+  }
+
+  void reset(void);
+
+  void gCollect(void);
+  void sClone(void);
+
+
+  /*
+   * Fast operations on queues
+   *
+   */
+
+  Bool isEmpty(void) {
+    return _head == (SuspList *) NULL;
+  }
+
+  int getSize(void);
+
+  void enqueue(Suspendable * s) {
+    _head = new SuspList(s, _head);
+  }
+
+  Suspendable * dequeue(void) {
+    Assert(!isEmpty());
+    Suspendable * s = _head->getSuspendable();
+    _head = _head->getNext();
+    return s;
+  }
+
+
+  /*
+   * Slow operations on queues
+   *
+   */
+
+  int isIn(Suspendable *);
+
+  void remove(Suspendable *);
+
+  void merge(SuspStack &);
+
+  /*
+   * Misc stuff
+   *
+   */
+
+  OZPRINT;
+
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class SuspQueue {
 private:
   SuspList * last;
