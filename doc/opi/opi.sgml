@@ -33,6 +33,11 @@
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
 
+    <Meta name="entry.category" value="command">
+    <Meta name="entry.category" arg1="useroption" arg2="user option">
+    <Meta name="entry.category" value="face">
+    <Meta name="entry.category" value="function">
+
     <Meta name="link.bib" arg1="ozdoc:compiler" arg2="mozart-compiler">
 
     <Meta name=ozversion value="3.0">
