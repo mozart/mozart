@@ -1069,5 +1069,5 @@ void BIinitFD(void)
   BIadd("fdNotInKillB", 3, BIfdNotInKillB);
   BIadd("fdNotInKillB_body", 3, BIfdNotInKillB_body);
   BIadd("fdCopyDomain", 2, BIfdCopyDomain);
-  BIadd("fdDivDomCons", 3, BIfdDivDomCons);
+  BIadd("fdDivDomCons", 3, BIfdDivIntervalCons);
 }
