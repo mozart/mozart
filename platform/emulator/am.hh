@@ -298,6 +298,7 @@ public:
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio);
 
+  INLINE void suspThreadToRunnableOPT(Thread *tt);
   INLINE void suspThreadToRunnable(Thread *tt);
   INLINE void wakeupToRunnable(Thread *tt);
   INLINE void propagatorToRunnable(Thread *tt);

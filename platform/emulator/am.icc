@@ -253,7 +253,7 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
 
 
 inline
-void AM::suspThreadToRunnable(Thread *tt)
+void AM::suspThreadToRunnableOPT(Thread *tt)
 {
   Assert(tt->isSuspended() || tt->getPStop());
 
@@ -277,6 +277,27 @@ void AM::suspThreadToRunnable(Thread *tt)
     tt->clearExtThread();
   } else {
     Assert(!isInSolveDebug(GETBOARD(tt)));
+  }
+}
+
+inline
+void AM::suspThreadToRunnable(Thread *tt)
+{
+  Assert(tt->isSuspended() || tt->getPStop());
+
+  tt->markRunnable();
+
+  if (debugmode() && tt->getTrace()) {
+    //Thread *t; if ((t = am.currentThread()) && t->isTraced())
+    //  execBreakpoint(t);
+    debugStreamReady(tt);
+  }
+
+  int inSolve = incSolveThreads(GETBOARD(tt));
+  if (inSolve) {
+    tt->setInSolve();
+    removeExtThread(tt);
+    tt->clearExtThread();
   }
 }
 
