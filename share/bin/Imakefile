@@ -1,10 +1,10 @@
-
+VERS    = 0.9.1
 BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
 
 SCRIPTS = oz oz2lpr oz+ oz2declare ozplatform ozwish
 LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
-          ozwindowmanager ozemacs
+          ozwindowmanager ozemacs ozdemo
 
 all::
 	@echo ""
@@ -24,9 +24,9 @@ install:: $(BINDIR)
 $(BINDIR):
 	install -d -m 775 $@
 
-tar: oz-base
+tar: oz-$(VERS)-common
 
-oz-base:
+oz-$(VERS)-common:
 	(cd $(OZHOME)/..; \
 	tar -cf - oz/bin oz/demo oz/include oz/lib oz/README oz/doc \
 		oz/ozwish/tcl ) | \
@@ -38,4 +38,4 @@ PLATFORMS = sunos-sparc solaris-sparc ultrix-mips linux-i496 hpux-700 \
 $(PLATFORMS):
 	(cd $(OZHOME)/..; \
 	tar -cf - oz/platform/$@ oz/ozwish/platform/$@) | \
-	compress > $@.tar.Z
+	compress > oz-$(VERS)-$@.tar.Z
