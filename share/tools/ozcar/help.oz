@@ -5,7 +5,7 @@
 local
 
    MessageWidth = 400
-   OkButtonText = 'Aha...'
+   OkButtonText = 'Aha?!'
 
    class HelpDialog from TkTools.dialog
       feat
@@ -66,10 +66,10 @@ local
 	 self.help  =
 	 'Threads can be added to the tree by feeding code from Emacs. ' #
 	 'When added this way, new threads get selected automatically.\n' # 
-	 '\nYou can select another threads by clicking on it.\n' #
+	 '\nYou can select another thread by clicking on it.\n' #
 	 '\nThe different colors correspond to the ' #
 	 'following thread states:\n' #
-	 'green <-> runnable, red <-> blocked, black <-> terminated\n' #
+	 'green -> runnable, red -> blocked, black -> terminated\n' #
 	 '\nA thread can be removed from the tree by ' #
 	 'pressing f or clicking on the forget button.' 
 	 HelpDialog,init(master:Master)
