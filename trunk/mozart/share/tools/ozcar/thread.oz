@@ -250,6 +250,7 @@ in
 	 case T == @currentThread then
 	    Ack
 	 in
+	    %{{O getStack($)} update}
 	    {{O getStack($)} print}
 	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
 	       {OzcarMessage NoFileInfo # I}

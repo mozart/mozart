@@ -3,6 +3,53 @@
 
 local
    
+   fun {FormatArgs A}
+      {Map A
+       fun {$ X}
+	  {ArgType X} # X
+       end}
+   end
+   
+   fun {ArgType X}
+      case {IsDet X} then
+	 case     {IsArray X}      then ArrayType
+	 elsecase {IsThread X}     then ThreadType
+	 elsecase {IsAtom X}       then case X
+					of 'nil'         then NilAtom
+					[] '|'           then ConsAtom
+					[] '#'           then HashAtom
+					[] 'unallocated' then UnAllocatedType
+					else                  '\'' # X # '\''
+					end
+	 elsecase {IsBool X}       then case X then TrueName else FalseName end
+	 elsecase {IsCell X}       then CellType
+	 elsecase {IsClass X}      then ClassType
+	 elsecase {IsDictionary X} then DictionaryType
+	 elsecase {IsFloat X}      then FloatType
+	 elsecase {IsInt X}        then MagicAtom
+	 elsecase {IsList X}       then ListType
+	 elsecase {IsUnit  X}      then UnitType
+	 elsecase {IsName X}       then NameType
+	 elsecase {IsLock X}       then LockType
+	 elsecase {IsObject X}     then ObjectType
+	 elsecase {IsPort X}       then PortType
+	 elsecase {IsProcedure X}  then ProcedureType
+	 elsecase {IsTuple X}      then TupleType
+	 elsecase {IsRecord X}     then RecordType
+	 elsecase {IsChunk X}      then ChunkType
+	 else                           UnknownType
+	 end
+      else                              UnboundType
+      end
+   end
+   
+   TagCounter =
+   {New class 
+	   attr n
+	   meth clear n<-0 end
+	   meth get($) N=@n in n<-N+1 N end
+	end clear}
+   
    fun {MakeLines N}
       case N < 1 then nil
       else 10 | {MakeLines N-1} end
@@ -187,15 +234,19 @@ in
 	  in
 	     case CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
-		   T = {TagCounter get($)}
-		   Ac = {New Tk.action
-			 tkInit(parent: Widget
-				action: proc{$}{Browse V.2}end)}
-		in
-		   {ForAll [tk(insert 'end' {PrintF ' ' # V.1 18})
-			    tk(insert 'end' AT # NL T)
-			    tk(tag bind T '<1>' Ac)
-			    tk(tag conf T font:BoldFont)] Widget}
+		   case AT == MagicAtom then
+		      {Widget tk(insert 'end' {PrintF ' ' # V.1 18} # V.2)}
+		   else
+		      T = {TagCounter get($)}
+		      Ac = {New Tk.action
+			    tkInit(parent: Widget
+				   action: proc {$} {Browse V.2} end)}
+		   in
+		      {ForAll [tk(insert 'end' {PrintF ' ' # V.1 18})
+			       tk(insert 'end' AT # NL T)
+			       tk(tag bind T '<1>' Ac)
+			       tk(tag conf T font:BoldFont)] Widget}
+		   end
 		else skip end
 	     else skip end
 	  end}
@@ -227,14 +278,14 @@ in
 	 Gui,Disable(self.GlobalEnvText)
       end
    
-      meth frameClick(frame:F tag:T)
+      meth frameClick(frame:F size:S tag:T)
 	 L
       in
 	 {Delay 70} % > TIME_SLICE
 	 L = {Lck is($)}
 	 case L then skip else
 	    Gui,SelectStackFrame(T)
-	    Gui,printEnv(frame:F.nr vars:F.env)
+	    Gui,printEnv(frame:S-F.nr+1 vars:F.env)
 	    SourceManager,scrollbar(file:F.file line:{Abs F.line}
 				    color:ScrollbarStackColor what:stack)
 	    /*
@@ -260,10 +311,70 @@ in
 	       foreground: SelectedForeground)}
 	 LastSelectedFrame <- T
       end
-   
-      meth printStack(id:I size:Size stack:Stack)
+
+      meth printStackFrame(frame:Frame size:Size)
+	 W          = self.StackText
+	 FrameNr    = Size - Frame.nr + 1      % frame number (swapped)
+	 FrameName  = Frame.name               % procedure/builtin name
+	 FrameArgs  = {FormatArgs Frame.args}  % argument list
+	 FrameFile  = {StripPath  Frame.file}
+	 FrameLine  = {Abs Frame.line}
+	 LineTag    = {TagCounter get($)}
+	 LineAction =
+	 {New Tk.action
+	  tkInit(parent: W
+		 action:
+		    Ozcar # frameClick(frame:Frame size:Size tag:LineTag))}
+	 LineEnd    = FrameNr # DotEnd
+      in
+	 {W tk(insert LineEnd
+	       ' ' # FrameNr #
+	       ' ' # BraceLeft #
+	       case FrameName == '' then '$' else FrameName end
+	       LineTag)}
+	  
+	 {ForAll FrameArgs
+	  proc {$ Arg}
+	     case Arg.1 == MagicAtom then
+		{W tk(insert LineEnd ' ' # Arg.2 LineTag)}
+	     else
+		ArgTag    = {TagCounter get($)}
+		ArgAction =
+		{New Tk.action
+		 tkInit(parent: W
+			action: proc {$}
+				   {Lck set}
+				   {Browse Arg.2}
+				   {Delay 150}
+				   {Lck unset}
+				end)}
+	     in
+		{ForAll [tk(insert LineEnd ' ' LineTag)
+			 tk(insert LineEnd Arg.1 q(LineTag ArgTag))
+			 tk(tag bind ArgTag '<1>' ArgAction)
+			 tk(tag conf ArgTag font:BoldFont)] W}
+	     end
+	  end}
+	 
+	 {ForAll [tk(insert LineEnd
+		     case Frame.builtin then BraceRight
+		     else BraceRight # '  ' # BracketLeft # FrameFile #
+			FileLineSeparator # FrameLine # BracketRight end
+		     LineTag)
+		  tk(tag add  LineTag LineEnd) % extend tag to whole line
+		  tk(tag bind LineTag '<1>' LineAction)] W}
+	 
+	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
+	     %LastSelectedFrame <- undef
+	    Gui,SelectStackFrame(LineTag)
+	    Gui,printEnv(frame:FrameNr vars:Frame.env)
+	 else skip end
+      end
+	 
+      meth printStack(id:I size:Size stack:Stack ack:Ack<=unit)
 	 W = self.StackText
       in
+	 {OzcarMessage 'printing complete stack of size ' # Size}
 	 {W title(AltStackTitle # I)}
 	 
 	 Gui, Clear(W)
@@ -271,56 +382,11 @@ in
 	 
 	 {ForAll {Ditems Stack}
 	  proc{$ Frame}
-	     FrameNr    = Size - Frame.nr + 1      % frame number (swapped)
-	     FrameName  = Frame.name               % procedure/builtin name
-	     FrameArgs  = {FormatArgs Frame.args}  % argument list
-	     FrameFile  = {StripPath  Frame.file}
-	     FrameLine  = {Abs Frame.line}
-	     LineTag    = {TagCounter get($)}
-	     LineAction =
-	     {New Tk.action
-	      tkInit(parent: W
-		     action: Ozcar # frameClick(frame:Frame tag:LineTag))}
-	     LineEnd    = FrameNr # '.end'
-	  in
-	     {W tk(insert LineEnd
-		   ' '  # FrameNr #
-		   ' {' # case FrameName == '' then '$' else FrameName end
-		   LineTag)}
-	   
-	     {ForAll FrameArgs
-	      proc {$ Arg}
-		 ArgTag    = {TagCounter get($)}
-		 ArgAction =
-		 {New Tk.action
-		  tkInit(parent: W
-			 action: proc {$}
-				    {Lck set}
-				      {Browse Arg.3}
-				      {Delay 150}
-				    {Lck unset}
-				 end)}
-	      in
-		 {ForAll [tk(insert LineEnd ' ' LineTag)
-			  tk(insert LineEnd Arg.2 q(LineTag ArgTag))
-			  tk(tag bind ArgTag '<1>' ArgAction)
-			  tk(tag conf ArgTag font:BoldFont)] W}
-	      end}
-	   
-	     {ForAll [tk(insert LineEnd
-			 case Frame.builtin then '}'
-			 else '}  [' # FrameFile #
-		             FileLineSeparator # FrameLine # ']' end LineTag)
-                      tk(tag add  LineTag LineEnd) % extend tag to whole line
-	              tk(tag bind LineTag '<1>' LineAction)] W}
-	     
-	     case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
-		LastSelectedFrame <- undef
-		Gui,SelectStackFrame(LineTag)
-		Gui,printEnv(frame:FrameNr vars:Frame.env)
-	     else skip end
+	     Gui,printStackFrame(frame:Frame size:Size)
 	  end}
+	 
 	 Gui,Disable(W)
+	 case {IsDet Ack} then skip else Ack = unit end
       end
       
       meth printAppl(id:I name:N args:A builtin:B<=false time:Time<=0
@@ -334,29 +400,30 @@ in
 	 else
 	    Args      = {FormatArgs A}
 	    ApplColor = case B then BuiltinColor else ProcColor end 
-	    T         = {TagCounter get($)}
+	    ColorTag  = {TagCounter get($)}
 	 in
-	    {ForAll [tk(insert 'end' ' {')
-		     tk(insert 'end' case N == '' then '$' else N end T)
-		     tk(tag conf T foreground:ApplColor)] W}
-	  
+	    {ForAll [tk(insert 'end' ' ' # BraceLeft)
+		     tk(insert 'end' case N == '' then '$' else N end ColorTag)
+		     tk(tag conf ColorTag foreground:ApplColor)] W}
+	    
 	     {ForAll Args
-	      proc {$ A}
-		 T = {TagCounter get($)}
-		 Ac = {New Tk.action
-		       tkInit(parent:W
-			      action:proc{$}
-					S = A.3
-				     in
-					{Browse S}
-				     end)}
-	      in
-		 {ForAll [tk(insert 'end' ' ')
-			  tk(insert 'end' A.2 T)
-			  tk(tag bind T '<1>' Ac)
-			  tk(tag conf T font:BoldFont)] W}
+	      proc {$ Arg}
+		 case Arg.1 == MagicAtom then
+		    {W tk(insert 'end' ' ' # Arg.2)}
+		 else
+		    ArgTag    = {TagCounter get($)}
+		    ArgAction =
+		    {New Tk.action
+		     tkInit(parent: W
+			    action: proc {$} {Browse Arg.2} end)}
+		 in
+		    {ForAll [tk(insert 'end' ' ')
+			     tk(insert 'end' Arg.1 ArgTag)
+			     tk(tag bind ArgTag '<1>' ArgAction)
+			     tk(tag conf ArgTag font:BoldFont)] W}
+		 end
 	      end}
-	     {W tk(insert 'end' '}')}
+	     {W tk(insert 'end' BraceRight)}
 	    Gui,Disable(W)
 	 end
       
@@ -438,15 +505,24 @@ in
 	 Gui,Disable(W)
       end
 
-      meth loadStatus(F Ack)
-	 {Delay 1000}
+      meth loadStatus(File Ack)
+	 {Delay TimeoutToMessage}
 	 case {IsDet Ack} then skip else
-	    Gui,rawStatus('Loading file ' # F # '...')
+	    Gui,rawStatus('Loading file ' # File # '...')
 	    {Wait Ack}
 	    Gui,rawStatus(' done' append)
 	 end
       end
-   
+      
+      meth stackStatus(Size Ack)
+	 {Delay TimeoutToMessage}
+	 case {IsDet Ack} then skip else
+	    Gui,rawStatus('Printing stack of size ' # Size # '...')
+	    {Wait Ack}
+	    Gui,rawStatus(' done' append)
+	 end
+      end
+	    
       meth action(A)
 	 T = @currentThread
 	 I
@@ -483,7 +559,7 @@ in
 	       ThreadManager,forget(T I)
 	    
 	    elseof ' stack' then  %% will go away, someday...
-	       {Browse {Reverse {Dbg.taskstack T 25}}}
+	       {Browse {Reverse {Dbg.taskstack T MaxStackBrowseSize}}}
 	    end
 	 
 	 else skip end
@@ -506,5 +582,8 @@ in
 	 {Widget tk(conf state:disabled)}
       end
       
+      meth DeleteLine(Widget Nr)
+	 {Widget tk(delete Nr#'.0' Nr#DotEnd)}
+      end
    end
 end
