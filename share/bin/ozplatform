@@ -13,8 +13,6 @@ case $system in
    ;;
    m68k\ Linux\ *)      OZARCH=linux-m68k
    ;;
-   IP19\ IRIX\ *)       OZARCH=irix-ip19
-   ;;
    9000/7*HP-UX*)       OZARCH=hpux-700
    ;;
    *IRIX\ 5*)           OZARCH=irix5-`/bin/uname -p`
