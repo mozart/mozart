@@ -2,7 +2,7 @@
 BUILDTOP        = @BUILDTOP@
 SRCTOP          = @SRCTOP@
 SRCDIR          = @srcdir@
-VPATH           = @srcdir@
+VPATH           = @srcdir@ @srcdir@/../ri
 PREFIX          = @prefix@
 PLATFORM        = @PLATFORM@
 LIB_DIR         = $(PREFIX)/contrib
@@ -46,9 +46,12 @@ FCPDECL         = $(SRCDIR)/fcpdecl.perl
 # Sources and targets
 #----------------------------------------------------------------------
 
-MODULE        = FDP # FSP Schedule
-MODULE_CC     = $(addsuffix .fcp.cc, $(addprefix mod,$(MODULE)))
-FUNCTOR_OZ    = $(addsuffix .fcp.oz, $(addprefix mod,$(MODULE)))
+MODULE        = modFDP modRI modFSP
+
+SRC_CC     = $(addsuffix .fcp.cc, $(MODULE))
+MOD_CC     = $(addsuffix .fcp.so-$(PLATFORM), $(MODULE))
+SRC_OZ    = $(addsuffix .fcp.oz, $(MODULE))
+FNCT_OZ    = $(addsuffix .fcp.ozf, $(MODULE))
 
 CSRCS           =
 
@@ -59,8 +62,8 @@ OZGSRCS         =
 
 OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
 
-TARGETS         = modFDP.fcp.ozf Propagator.ozf fcp.so-$(PLATFORM)
-#TARGETS                = fcp.so-$(PLATFORM)
+TARGETS         = $(MOD_CC) $(FNCT_OZ) Propagator.ozf
+
 LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
 
 .PHONY: depend clean distclean bootstrap
@@ -104,7 +107,7 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 # C part
 #----------------------------------------------------------------------
 
-%.so-$(PLATFORM): $(CSRCS:.cc=.o) $(MODULE_CC:.cc=.o)
+%.so-$(PLATFORM): %.o
         $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc
@@ -114,11 +117,11 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 # Maintenance
 #----------------------------------------------------------------------
 
-depend: Makefile $(MODULE_CC) $(FUNCTOR_OZ) $(CSRCS) $(OZSRCS) $(OZGSRCS)
+depend: Makefile $(SRC_CC) $(SRC_OZ) $(CSRCS) $(OZSRCS) $(OZGSRCS)
         #$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
-        $(DEPEND) $(MODULE_CC) >> Makefile.deps
+        $(DEPEND) $(SRC_CC) >> Makefile.deps
         $(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) >> Makefile.deps
-        $(OZDEPEND) $(FUNCTOR_OZ) >> Makefile.deps
+        $(OZDEPEND) $(SRC_OZ) >> Makefile.deps
 
 clean:
         $(RM) *.ozf
@@ -127,8 +130,8 @@ clean:
         $(RM) *.so
         $(RM) *.l
         $(RM) *.C
-        $(RM) $(MODULE_CC)
-        $(RM) $(FUNCTOR_OZ)
+        $(RM) $(SRC_CC)
+        $(RM) $(SRC_OZ)
         $(RM) *~
 
 distclean: clean
