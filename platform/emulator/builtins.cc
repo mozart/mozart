@@ -1617,8 +1617,8 @@ OZ_BI_define(BIthreadIs,1,1)
 /*
  * raise exception on thread
  */
-OZ_C_proc_proto(BIraise);
-OZ_C_proc_proto(BIraiseDebug);
+OZ_BI_proto(BIraise);
+OZ_BI_proto(BIraiseDebug);
 
 void threadRaise(Thread *th,OZ_Term E,int debug) {
   Assert(oz_currentThread() != th);
@@ -4476,9 +4476,9 @@ OZ_BI_define(BImakeClass,6,1)
 } OZ_BI_end
 
 
-OZ_C_proc_begin(BIcomma,2)
+OZ_BI_define(BIcomma,2,0)
 {
-  oz_declareNonvarArg(0,cl);
+  oz_declareNonvarIN(0,cl);
   cl = oz_deref(cl);
 
   if (!oz_isClass(cl)) {
@@ -4488,16 +4488,15 @@ OZ_C_proc_begin(BIcomma,2)
   TaggedRef fb = tagged2ObjectClass(cl)->getFallbackApply();
   Assert(fb);
 
-  am.prepareCall(fb,OZ_args[0],OZ_args[1]);
+  am.prepareCall(fb,OZ_in(0),OZ_in(1));
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
-}
-OZ_C_proc_end
+} OZ_BI_end
 
-OZ_C_proc_begin(BIsend,3)
+OZ_BI_define(BIsend,3,0)
 {
-  oz_declareNonvarArg(1,cl);
-  oz_declareNonvarArg(2,obj);
+  oz_declareNonvarIN(1,cl);
+  oz_declareNonvarIN(2,obj);
 
   cl = oz_deref(cl);
   if (!oz_isClass(cl)) {
@@ -4514,11 +4513,10 @@ OZ_C_proc_begin(BIsend,3)
 
   am.changeSelf(tagged2Object(obj));
 
-  am.prepareCall(fb,OZ_args[1],OZ_args[0]);
+  am.prepareCall(fb,OZ_in(1),OZ_in(0));
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
-}
-OZ_C_proc_end
+} OZ_BI_end
 
 OZ_Return BIisObjectInline(TaggedRef t)
 {
@@ -4622,9 +4620,9 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 OZ_DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
 
-OZ_C_proc_begin(BINew,3)
+OZ_BI_define(BINew,3,0)
 {
-  oz_declareNonvarArg(0,cl);
+  oz_declareNonvarIN(0,cl);
   cl = oz_deref(cl);
 
   if (!oz_isClass(cl)) {
@@ -4637,11 +4635,10 @@ OZ_C_proc_begin(BINew,3)
 
   Assert(fb);
 
-  am.prepareCall(fb,OZ_args[0],OZ_args[1],OZ_args[2]);
+  am.prepareCall(fb,OZ_in(0),OZ_in(1),OZ_in(2));
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
-}
-OZ_C_proc_end
+} OZ_BI_end
 
 
 OZ_Return ooGetLockInline(TaggedRef val)
