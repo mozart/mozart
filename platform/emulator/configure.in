@@ -160,6 +160,9 @@ dnl *****************************************************************
 
 : ${oz_copt_default=$CXXFLAGS}
 CXXFLAGS=
+EMULATE_CXXFLAGS=""
+export EMULATE_CXXFLAGS
+AC_SUBST(EMULATE_CXXFLAGS)
 
 if test "${GXX}" = yes; then
     M4_S="-s"
@@ -219,8 +222,12 @@ if test "${GXX}" = yes; then
 	  oz_om=""
           ;;
       *)
-          oz_opt="-O3 -pipe -fstrict-aliasing"
-	  oz_om=""
+      # Darwin/GCC 3.x
+      # the settings below were provided by Marc-Antoine Parent and
+      # gave the best (well least bad results :-) on his 450MHz G4
+          oz_opt="-O3 -pipe -fstrict-aliasing -fschedule-insns2 "
+	  oz_om=" -fomit-frame-pointer -mtune=7450 "
+	  EMULATE_CXXFLAGS=" -finline-limit=500 "
           ;;
       esac
       ;;
@@ -242,6 +249,7 @@ if test "${GXX}" = yes; then
 	*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+	    EMULATE_CXXFLAGS=-finline-limit=500
 	    ;;
 	esac
 	;;
@@ -272,6 +280,14 @@ if test "${GXX}" = yes; then
         esac
         ;;
 
+    linux-parisc)
+	case `$CXX -dumpversion` in
+	3.*)
+	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_om="-fomit-frame-pointer"
+	    ;;
+	esac
+	;;
     *)  ;;
     esac
 
@@ -352,6 +368,7 @@ case $platform in
     ;;
     *rhapsody | *darwin)
 	AC_DEFINE(RHAPSODY)
+	EMULDFLAGS="-Wl,-keep_private_externs"
 	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
 	: ${oz_enable_modules_static=no}
     ;;
@@ -518,11 +535,23 @@ win32*)
     AC_CHECKING(whether we could allocate Oz heap with malloc ...)
     AC_CACHE_VAL(ac_cv_can_malloc,
     [can_malloc=yes
-     AC_CHECK_FUNCS(malloc,, can_malloc=no)
+     case $platform in
+	 powermac-darwin)
+	 #AC_CHECK_FUNC includes <assert.h> and this seems to
+	 #introduce a conflicting prototype for malloc on MacOS X
+	 #so we need to check differently
+	     AC_TRY_LINK([#include <stdlib.h>],[malloc(100);],
+		 AC_DEFINE_UNQUOTED(HAVE_MALLOC),
+		 can_malloc=no)
+	     ;;
+	 *)
+	     AC_CHECK_FUNCS(malloc,, can_malloc=no)
+	     ;;
+     esac
      if test $can_malloc = yes; then
         AC_MSG_CHECKING(... with a test program)
         AC_TRY_RUN([
-#include <malloc.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -1616,7 +1645,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf-others.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in extension.hh:extension.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded

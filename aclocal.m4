@@ -232,8 +232,12 @@ AC_DEFUN(OZ_CHECK_VERSION,[
   oz_tmp_got="[$2]"
   oz_tmp_want="[$3]"
   oz_tmp_IFS="$IFS"
-  IFS="$IFS._"
+  IFS="$IFS._-"
+  oz_tmp_got=`echo $oz_tmp_got`
+  oz_tmp_want=`echo $oz_tmp_want`
   set $oz_tmp_got DONE
+  IFS=""
+  IFS="$oz_tmp_IFS"
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
     if test "$[1]" = DONE; then
@@ -246,7 +250,6 @@ AC_DEFUN(OZ_CHECK_VERSION,[
     fi
     [shift]
   done
-  IFS=$oz_tmp_IFS
   [$1]=$oz_tmp__ok])
 
 dnl ------------------------------------------------------------------
@@ -266,14 +269,18 @@ AC_DEFUN(OZ_PROG_VERSION_CHECK,[
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 changequote(<,>)
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*\)'`
     # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
       oz_tmp_IFS="$IFS"
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+	# else try to match the entire first line
+	if test -z "$oz_tmp_version"; then
+	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
+	fi
 	break
       done
       IFS="$oz_tmp_IFS"
@@ -285,8 +292,10 @@ changequote([,])
   fi
   if test -z "$oz_tmp_version"; then
     AC_MSG_RESULT([no (cannot find version)])
+  elif test $[$1] = no; then
+    AC_MSG_RESULT([no])
   else
-    AC_MSG_RESULT($[$1])
+    AC_MSG_RESULT([yes ($oz_tmp_version)])
   fi])
 
 dnl ==================================================================
@@ -304,19 +313,15 @@ AC_DEFUN(OZ_CXX_CHOOSE,[
     OZ_ARG_WITH_CXX
     AC_PROG_CXX
     if test "${GXX}" = yes; then
-      if oz_tmp=`$CXX --version 2>/dev/null`; then
+      if oz_tmp=`$CXX -dumpversion 2>/dev/null` || oz_tmp=`$CXX --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
 dnl I don't know what the appropriate version number is for egcs
-          :
-changequote(<,>)
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
-changequote([,])
-          AC_MSG_CHECKING($CXX version is at least OZ_VERSION_GXX)
-          OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GXX)
-          AC_MSG_RESULT($oz_tmp_ok)
-          if test "$oz_tmp_ok" = no; then
+          AC_MSG_WARN([dont know how to check egcs version, assuming ok])
+	else
+	  OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CXX,OZ_VERSION_GXX,$CXX -dumpversion || $CXX --version)
+	  if test "$oz_tmp_ok" = no; then
             AC_MSG_ERROR([
-configure found the GNU C++ compiler $CXX version $oz_tmp
+configure found the GNU C++ compiler $CXX version $oz_tmp_version
 but version] OZ_VERSION_GXX [or higher is required to build the
 system.  It can be retrieved from:
 
@@ -332,8 +337,6 @@ You may find a mirror archive closer to you by consulting:
 	http://www.gnu.org/order/ftp.html
 ])
           fi
-        else
-          AC_MSG_WARN([Could not check $CXX version, assuming ok])
         fi
       else
         AC_MSG_WARN([Could not check $CXX version, assuming ok])
@@ -435,19 +438,15 @@ AC_DEFUN(OZ_CC_CHOOSE,[
     : ${CFLAGS="-O"}
     AC_PROG_CC
     if test "$GCC" = yes; then
-      if oz_tmp=`$CC --version 2>/dev/null`; then
+      if oz_tmp=`$CC -dumpversion 2>/dev/null` || oz_tmp=`$CC --version 2>/dev/null`; then
         if expr "$oz_tmp" : egcs >/dev/null; then
 dnl I don't know what the appropriate version number is for egcs
-          :
-changequote(<,>)
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
-changequote([,])
-          AC_MSG_CHECKING($CC version is at least OZ_VERSION_GCC)
-          OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GCC)
-          AC_MSG_RESULT($oz_tmp_ok)
+          AC_MSG_WARN([dont know how to check egcs version, assuming ok])
+	else
+          OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CC,OZ_VERSION_GCC,$CC -dumpversion || $CC --version)
           if test "$oz_tmp_ok" = no; then
             AC_MSG_ERROR([
-configure found the GNU C compiler $CC version $oz_tmp
+configure found the GNU C compiler $CC version $oz_tmp_version
 but version] OZ_VERSION_GCC [or higher is required to build the
 system.  It can be retrieved from:
 
@@ -463,8 +462,6 @@ You may find a mirror archive closer to you by consulting:
 	http://www.gnu.org/order/ftp.html
 ])
           fi
-        else
-          AC_MSG_WARN([Could not check $CC version, assuming ok])
         fi
       else
         AC_MSG_WARN([Could not check $CC version, assuming ok])
@@ -850,9 +847,13 @@ changequote([,])
     else
       oz_tmp_ok=no
     fi
+    oz_cv_gmp_version_major=$OZ_GMP_MAJOR
+    oz_cv_gmp_version_minor=$OZ_GMP_MINOR
     AC_MSG_RESULT($oz_tmp_ok)
   else
     oz_tmp_ok=$oz_cv_gmp_version_ok
+    OZ_GMP_MAJOR=$oz_cv_gmp_version_major
+    OZ_GMP_MINOR=$oz_cv_gmp_version_minor
     AC_MSG_RESULT([(cached) $oz_tmp_ok])
   fi
   oz_gmp_version_ok=$oz_tmp_ok
@@ -957,12 +958,43 @@ The system cannot be built.
   fi])
 
 dnl ------------------------------------------------------------------
+dnl OZ_ARG_WITH_GLOBAL_OZ
+dnl
+dnl typically, we do NOT want to bootstrap the system using an existing
+dnl mozart installation.  This can be overriden with an explicit
+dnl --with-global-oz
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_ARG_WITH_GLOBAL_OZ,[
+  AC_MSG_CHECKING([for --with-global-oz])
+  AC_ARG_WITH(global-oz,
+    [--with-global-oz allows to use an existing oz installation to build the system (default: no)],
+    [oz_cv_global_oz="$with_global_oz"],
+    [oz_cv_global_oz=no])
+  WITH_GLOBAL_OZ="$oz_cv_global_oz"
+  AC_MSG_RESULT($WITH_GLOBAL_OZ)
+])
+
+dnl ------------------------------------------------------------------
 dnl OZ_PATH_PROG(VAR,PROGRAM,ACTION-IF-NOT-FOUND)
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PATH_PROG, [
+    if test -z "$WITH_GLOBAL_OZ"; then
+      OZ_ARG_WITH_GLOBAL_OZ
+    fi
+    dummy_PATH="$PATH"
+    if test "$WITH_GLOBAL_OZ" = no; then
+      for oz_prog_tmp in $2; do
+        case $oz_prog_tmp in
+          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
+            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
+          ;;
+        esac
+      done
+    fi
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
@@ -1229,11 +1261,11 @@ changequote([,])
         oz_tmp_ok="-I$oz_tmp"
         break])
       done
+      CPPFLAGS="$oz_tmp_cppflags"
       if test "$oz_tmp_ok" = no; then
 	AC_TRY_CPP([#include "$1"],[
           oz_tmp_ok=yes],)
       fi
-      CPPFLAGS=$oz_tmp_cppflags
 changequote(`,')oz_cv_header_`'patsubst($1,[^a-zA-Z0-9],_)="$oz_tmp_ok"
 changequote([,])
     ])
@@ -1304,6 +1336,36 @@ AC_DEFUN(OZ_COMPILE_ELISP,
 	COMPILE_ELISP=no)
    AC_MSG_RESULT($COMPILE_ELISP)
    AC_SUBST(COMPILE_ELISP)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_EMACS
+dnl	tries to locate emacs or xemacs
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_EMACS,[
+  AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
+  AC_SUBST(THEEMACS)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_EMACS_OPTIONS
+dnl	check with what options to start an emacs subprocess, e.g.
+dnl	to perform highlighting when processing the documentation
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_EMACS_OPTIONS,[
+  AC_REQUIRE([OZ_EMACS])
+  AC_MSG_CHECKING([for --with-emacs-options])
+  AC_ARG_WITH(emacs-options,
+    [--with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-[file])],
+    [oz_cv_emacs_options="$with_emacs_options"],
+    [ if $THEEMACS --version 2>&1 | egrep XEmacs >/dev/null; then
+        oz_cv_emacs_options="-q -no-site-[file]"
+      else
+        oz_cv_emacs_options="-q --no-site-[file]"
+      fi ])
+  EMACS_OPTIONS="$oz_cv_emacs_options"
+  AC_SUBST(EMACS_OPTIONS)
+  AC_MSG_RESULT($EMACS_OPTIONS)])
 
 dnl ------------------------------------------------------------------
 dnl OZ_DENYS_EVENTS

@@ -124,7 +124,7 @@ boot-%:
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
 	OZDOC_BIB_PATH="$(SRCDIR)" \
 	OZDOC_BST_PATH="$(SRCDIR):$(SRCTOP)/doc/utilities" \
-	OZDOC_ELISP_PATH=".:$(SRCDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
+	OZDOC_ELISP_PATH=".:$(SRCDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(SRCTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
 	OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities" \
 	OZDOC_CATALOG="$(BUILDTOP)/doc/bootcatalog" \
 	OZTOOL=$(BOOTOZTOOL) \

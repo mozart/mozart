@@ -148,7 +148,12 @@ dnl ******************************************************************
 dnl maybe select QTk
 dnl ******************************************************************
 
-OZ_ENABLE(qtk,[QTk GUI builder],no,QTK_ENABLED=yes,QTK_ENABLED=no)
+OZ_ENABLE(qtk,[QTk GUI builder],no,
+    QTK_ENABLED=yes
+    AC_MSG_RESULT(yes),
+    QTK_ENABLED=no
+    AC_MSG_RESULT(no)
+)
 AC_SUBST(QTK_ENABLED)
 
 dnl *****************************************************************
