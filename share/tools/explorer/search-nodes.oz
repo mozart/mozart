@@ -24,7 +24,7 @@ local
       end
 
       fun {GetIndex Xs Y N}
-	 X|Xr=!Xs in case X==Y then N else {GetIndex Xr Y N+1} end
+	 X|Xr=Xs in case X==Y then N else {GetIndex Xr Y N+1} end
       end
       
    in
@@ -73,7 +73,7 @@ local
 	 
 	 meth GotoCopyAbove(CurDepthIn ?CurDepthOut
 			    Node CurDistIn ?CurDistOut ?RevNs ?CurCopy)
-	    {GetIndex @kids Node 1}|RevNr = !RevNs
+	    {GetIndex @kids Node 1}|RevNr = RevNs
 	 in
 	    case @copy of false then
 	       {self.mom GotoCopyAbove(CurDepthIn+1 ?CurDepthOut
@@ -464,10 +464,10 @@ local
    
 in
    
-   SearchNodes = classes(choose:    !Choose
-			 succeeded: !Succeeded
-			 failed:    !Leaf
-			 blocked:   !Blocked
-			 sentinel:  !Sentinel)
+   SearchNodes = classes(choose:    Choose
+			 succeeded: Succeeded
+			 failed:    Leaf
+			 blocked:   Blocked
+			 sentinel:  Sentinel)
 
 end

@@ -122,7 +122,7 @@ local
 	 meth moveNode(MomX MyX MyByX MyY Scale)
 	    Canvas = self.canvas
 	    Suffix = self.suffix
-	    Node   = !NodePrefix#!Suffix
+	    Node   = NodePrefix#Suffix
 	 in
 	    {Canvas tk(coords LinkPrefix#Suffix
 		       Scale*{IntToFloat MomX}
@@ -174,8 +174,8 @@ local
 	       ScaledMyY   = Scale * {IntToFloat MyY}
 	       Canvas      = self.canvas
 	       Suffix      = self.suffix
-	       Node        = !NodePrefix#!Suffix
-	       Tree        = !TreePrefix#!Suffix
+	       Node        = NodePrefix#Suffix
+	       Tree        = TreePrefix#Suffix
 	       Actions     = Canvas.actions
 	    in
 	       offset <- NewOffset
@@ -309,8 +309,8 @@ local
 	    ScaledMyY   = Scale * {IntToFloat MyY}
 	    Canvas      = self.canvas
 	    Suffix      = self.suffix
-	    Node        = !NodePrefix#!Suffix
-	    Tree        = !TreePrefix#!Suffix
+	    Node        = NodePrefix#Suffix
+	    Tree        = TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
 	    {Canvas tk(crea line
@@ -359,18 +359,18 @@ local
 	    ScaledMyY       = Scale * {IntToFloat MyY}
 	    X0              = ScaledMyX - ScaledFullWidth
 	    X1              = ScaledMyX - ScaledHalfWidth
-	    X2              = !ScaledMyX
+	    X2              = ScaledMyX
 	    X3              = ScaledMyX + ScaledHalfWidth
 	    X4              = ScaledMyX + ScaledFullWidth
 	    Y0              = ScaledMyY - ScaledFullWidth
 	    Y1              = ScaledMyY - ScaledHalfWidth
-	    Y2              = !ScaledMyY
+	    Y2              = ScaledMyY
 	    Y3              = ScaledMyY + ScaledHalfWidth
 	    Y4              = ScaledMyY + ScaledFullWidth
 	    Canvas          = self.canvas
 	    Suffix          = self.suffix
-	    Node            = !NodePrefix#!Suffix
-	    Tree            = !TreePrefix#!Suffix
+	    Node            = NodePrefix#Suffix
+	    Tree            = TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
 	    {Canvas tk(crea line
@@ -416,14 +416,14 @@ local
 	       ScaledMyY   = Scale * {IntToFloat MyY}
 	       Canvas      = self.canvas
 	       Suffix      = self.suffix
-	       Node        = !NodePrefix#!Suffix
-	       Tree        = !TreePrefix#!Suffix
+	       Node        = NodePrefix#Suffix
+	       Tree        = TreePrefix#Suffix
 	       Actions     = Canvas.actions
 	       X0          = ScaledMyX - ScaledWidth
-	       X1          = !ScaledMyX
+	       X1          = ScaledMyX
 	       X2          = ScaledMyX + ScaledWidth
 	       Y0          = ScaledMyY - ScaledWidth
-	       Y1          = !ScaledMyY
+	       Y1          = ScaledMyY
 	       Y2          = ScaledMyY + ScaledWidth
 	    in
 	       offset <- NewOffset
@@ -494,12 +494,12 @@ local
    
 in
 
-   TkNodes=c(choose:    !ChooseNode
-	     failed:    !FailedNode
-	     blocked:   !BlockedNode
-	     suspended: !SuspendedNode
-	     entailed:  !EntailedNode
-	     sentinel:  !Sentinel)
+   TkNodes=c(choose:    ChooseNode
+	     failed:    FailedNode
+	     blocked:   BlockedNode
+	     suspended: SuspendedNode
+	     entailed:  EntailedNode
+	     sentinel:  Sentinel)
 
 end
 

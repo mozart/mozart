@@ -22,7 +22,7 @@ HourF          = {IntToFloat HourI}
 
 BitMapDir      = '@' # {System.get home} # '/lib/bitmaps/'
 
-DashLine       = !BitMapDir # 'dash-line.xbm'
+DashLine       = BitMapDir # 'dash-line.xbm'
 
 EnterColor       #
 RunnableColor    # RunnableStipple  #
@@ -58,11 +58,11 @@ AboutColor       = case Tk.isColor then
 			    copy: black
 			    gc:   black
 			    load: black) #
-		      stipple(run:  !BitMapDir # 'grid-25.xbm'
-			      prop: !BitMapDir # 'grid-50.xbm'
-			      copy: !BitMapDir # 'lines-lr.xbm'
-			      gc:   !BitMapDir # 'lines-rl.xbm'
-			      load: !BitMapDir # 'zig-zag.xbm') #
+		      stipple(run:  BitMapDir # 'grid-25.xbm'
+			      prop: BitMapDir # 'grid-50.xbm'
+			      copy: BitMapDir # 'lines-lr.xbm'
+			      gc:   BitMapDir # 'lines-rl.xbm'
+			      load: BitMapDir # 'zig-zag.xbm') #
 		      blue
 		   end
 
@@ -71,7 +71,7 @@ AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
 TitleName = 'Oz Panel'
 
 
-BitMap = !BitMapDir # 'panel.xbm'
+BitMap = BitMapDir # 'panel.xbm'
 
 UpdateTimes         = [500   # '500ms'
 		       1000  # '1s'
@@ -89,7 +89,7 @@ LoadWidth           = 240
 
 BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
 FontMatch       = '-*-*-*-*-*-*'
-ScaleFont       = !BoldFontFamily#100#!FontMatch
+ScaleFont       = BoldFontFamily#100#FontMatch
 
 
 
