@@ -2,7 +2,7 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 
 WHAT = wp
-MAIN = wp.sgml
+MAIN = main.sgml
 SGMLSRCS = \
         intro.sgml started.sgml widgets-1.sgml geometry.sgml widgets-2.sgml \
         tools.sgml
