@@ -674,10 +674,8 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-extern void OZ_updateLocalHeapTerm(OZ_Term &);
-
 inline void OZ_updateHeapTerm(OZ_Term &t) {
-  OZ_updateLocalHeapTerm(t);
+  OZ_collect(&t);
 }
 
 extern void * OZ_hrealloc(void *, size_t);
