@@ -94,7 +94,6 @@
     <Meta name="html.split" arg1="section.records.records" arg2="record.html">
     <Meta name="html.split" arg1="section.records.tuples" arg2="tuple.html">
     <Meta name="html.split" arg1="section.records.lists" arg2="list.html">
-    <Meta name="html.split" value="section.records.features">
 
     <Meta name="html.split" value="chapter.text">
     <Meta name="html.split" arg1="section.text.characters" arg2="char.html">
@@ -105,7 +104,6 @@
     <Meta name="html.split" value="chapter.proccells">
     <Meta name="html.split" arg1="section.proccells.procedures" arg2="procedure.html">
     <Meta name="html.split" arg1="section.proccells.cells" arg2="cell.html">
-    <Meta name="html.split" arg1="section.proccells.spaces" arg2="space.html">
 
     <Meta name="html.split" value="chapter.chunks">
     <Meta name="html.split" arg1="section.chunks.general" arg2="chunk.html">
