@@ -17,12 +17,19 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_DIR	= @INSTALL_DIR@
 
-OZFLAGS		= 
+COMPRESSLEVEL   = @oz_picklecompression@
+COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
+
+OZFLAGS		= $(COMPRESSFLAGS)
 OZC		= @OZC@
+
+OZARFLAGS       = $(COMPRESSFLAGS) --verbose --nosequential 
 OZAR		= @OZAR@
+
 LN_S		= @LN_S@
 
 COMPILE		= $(OZC) $(OZFLAGS) -c
+ARCHIVE         = $(OZAR) $(OZARFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -175,7 +182,7 @@ ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
 	$(COMPILE) -l Compiler $(SRCDIR)/ProductionTemplates.oz -o $@
 
 Inspector.ozf: $(INSPECTOROBJS)
-	$(OZAR) --verbose --nosequential --in=InspectorMain.ozf --out=$@
+	$(ARCHIVE) --in=InspectorMain.ozf --out=$@
 
 %.ozf: inspector/%.oz
 	$(COMPILE) $< -o $@
