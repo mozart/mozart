@@ -2,3 +2,4 @@ Hydra	mail -s "I have changed Hydra/*: %s" mehl
 Hydra	mail -s "I have changed Hydra/*: %s" scheidhr
 Hydra	mail -s "I have changed Hydra/*: %s" tmueller
 Hydra/Compiler   mail -s "I have changed Hydra/Compiler/*: %s" henz
+Oz	mail -s "I have changed Oz/*: %s" mehl
