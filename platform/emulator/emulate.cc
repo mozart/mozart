@@ -2674,6 +2674,11 @@ void engine() {
       }
 
       Thread *tt = e->createThread(prio);
+
+      /* 'thread .. end' in seqmode creates a new sequential thread */
+      Assert(tt->getCompMode()==PARMODE);
+      if (e->currentThread->getCompMode()!=PARMODE) tt->switchCompMode();
+
       tt->pushCont(CBB,newPC,Y,G,NULL,0,OK);
       JUMP(contPC);
     }
