@@ -27,7 +27,7 @@
 extern int gcing;
 
 #define COUNTIT(WHAT,n) ozstat.WHAT += n
-#define COUNT1(WHAT,n) ProfileCode(if (1||gcing) {COUNTIT(WHAT,n);})
+#define COUNT1(WHAT,n) ProfileCode(if (gcing) {COUNTIT(WHAT,n);})
 #define COUNT(WHAT)    COUNT1(WHAT,1) 
 #define CountMax(What,Value) ProfileCode(ozstat.What = max(ozstat.What,Value))
 
