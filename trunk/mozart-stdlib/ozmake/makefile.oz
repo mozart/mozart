@@ -14,7 +14,7 @@ makefile(
 	 'ozmake.ozf' :
 	    ['Main.ozf' 'Utils.ozf' 'Path.ozf' 'Shell.ozf'
 	     'Executor.ozf' 'Attribs.ozf' 'Builder.ozf'
-	     'Makefile.ozf' 'Manager.ozf' 'Installer.ozf'
+	     'Makefiler.ozf' 'Manager.ozf' 'Installer.ozf'
 	     'Database.ozf' 'Cleaner.ozf' 'Creator.ozf'
 	     'Extractor.ozf' 'Lister.ozf' 'Help.ozf'
 	     'Uninstaller.ozf' 'Errors.ozf' 'Windows.ozf'
