@@ -207,8 +207,8 @@ ConfigVerbose              = false  %% debug messages in Emulator buffer?
 
 ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
 ConfigStepRecordBuiltin    = false  %% step on builtin 'record' ?
-ConfigStepDotBuiltin       = false  %% step on builtin '.'      ?
-ConfigStepWidthBuiltin     = false  %% step on builtin 'width'  ?
+ConfigStepDotBuiltin       = true   %% step on builtin '.'      ?
+ConfigStepWidthBuiltin     = true   %% step on builtin 'width'  ?
 
 ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
 ConfigEnvProcedures        = false  %% filter procedures in Env Window?
