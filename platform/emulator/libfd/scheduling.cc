@@ -376,12 +376,12 @@ cploop:
 	set0[set0Size++] = l;
       }
       else {
-	outSide[outSideSize++] = l;
 	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
 				intMin(intMax(0,kUp-xlMaxDL+dl),
 				       intMin(dl,kUp-kDown)));
 	overlap += overlapTmp;
 	if (xlMaxDL > kUp) {
+	  outSide[outSideSize++] = l;
 	}
       }
     }

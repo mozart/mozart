@@ -177,6 +177,7 @@ tiloop:
       int csize = 0;
       int maxEct = 0;
       int minLst = fd_sup;
+      int overlap = 0;
       if ( (cset->low <= MinMax[right].min)
 	   && (MinMax[left].max + dur[left] <= cset->up)
 	   ) 
@@ -197,7 +198,13 @@ tiloop:
 		cset->max = intMax(cset->max, dueL);
 		cset->min = intMin(cset->min, releaseL);
 	      }
-
+	    }
+	    else {
+	      // add the overlapping amount of tasks
+	      int overlapTmp = intMin(intMax(0,releaseL+durL-cset->low),
+				      intMin(intMax(0,cset->up-dueL+durL),
+					     intMin(durL,cset->up-cset->low)));
+	      overlap += overlapTmp;
 	    }
 	  }
 	}
@@ -206,7 +213,7 @@ tiloop:
       cset->lst     = minLst;
       cset->ect     = maxEct;
       
-      if ( (csize > 0) && (cset->up - cset->low < cdur) ) {
+      if ( (csize > 0) && (cset->up - cset->low < cdur+overlap) ) {
 	goto failure;
       }
     }
