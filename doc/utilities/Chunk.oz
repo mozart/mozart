@@ -1,6 +1,6 @@
 functor
 import
-   Narrator SGML ErrorListener
+   Narrator SGML ErrorListener Browser
 export
    GetChunk
 define
@@ -150,8 +150,18 @@ define
             Indentor,PUTMARGIN(N-1)
          end
       end
+      meth PUTTAB
+         Indentor,putc(& )
+         if @column mod 8 \= 0 then
+            Indentor,PUTTAB
+         end
+      end
       meth putc(C)
-         if C==&\n then column<-0 flushed<-false
+         if C==&\n then
+            column<-0 flushed<-false
+            Indentor,PUTC(C)
+         elseif C==&\t then
+            Indentor,PUTTAB
          else
             column<-@column+1
             if @flushed then skip
@@ -159,33 +169,30 @@ define
                Indentor,PUTMARGIN(@margin)
                flushed<-true
             end
+            Indentor,PUTC(C)
          end
-         Indentor,PUTC(C)
       end
       meth entercode(Code)
          case Code of X#Y then
-            Indentor,enterelem(X)
+            Indentor,entercode(X)
             Indentor,entercode(Y)
-         else
-            Indentor,enterelem(Code)
-         end
-      end
-      meth enterelem(Elem)
-         case Elem of chunk(Code) then
+         elseof chunk(Code) then
             Margin = @margin
          in
             margin<-@column
             Indentor,entercode(Code)
             margin<-Margin
+         elseof nil then skip
          else
-            Indentor,enterstring(Elem)
+            Indentor,enterstring(Code)
          end
       end
       meth enterstring(Str)
          case Str of H|T then
             Indentor,putc(H)
             Indentor,enterstring(T)
-         else skip end
+         elseof nil then skip
+         else {Browser.browse Str} {Wait _} end
       end
    end
 end
