@@ -632,6 +632,7 @@ public:
     // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
     // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
     // $**#& !!!!!!!!!!!!!
+    // RS: nein, da ist Per dran schuld: siehe bufferManager->getByteStream();
     MsgBuffer::init();
     // this should be in MsgBuffer's constructor (or initializer, 
     // whichever is preferred);
@@ -642,6 +643,7 @@ public:
     // Ralf Scheidhauer' liebe fuer 'init()' anstatt class
     // constructors, $%@#$# @#$ #@$*@#$ $#$$*@&#*$* &@ $@#^@#
     // $**#& !!!!!!!!!!!!!
+    // RS: nein, da ist Per dran schuld: siehe bufferManager->getByteStream();
     MsgBuffer::init();
     // this should be in MsgBuffer's constructor (or initializer, 
     // whichever is preferred);
