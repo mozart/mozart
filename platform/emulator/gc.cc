@@ -1469,7 +1469,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
       gcVariable(auxTerm);
-      toTerm = makeTaggedRef(auxTermPtr);
+      toTerm = makeTaggedRefToFromSpace(auxTermPtr);
       DebugGC((auxTermPtr == NULL), error ("auxTermPtr == NULL"));
     } else {
       toTerm = fromTerm;

@@ -788,7 +788,7 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
                                           STuple &vp)
 {
   // 1st pass: mark first occ of a var
-  int v;
+  int v, c;
   for (v = 0; v < variables; v++) {
     Assert(isCVar(bifdbm_vartag[idx_v(v)]) ||
            isSmallInt(bifdbm_vartag[idx_v(v)]));
@@ -799,14 +799,16 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
         int fs = getIndex(*bifdbm_varptr[idx_v(v)]);
 
         // unify corresponding local variables
-        for (int c = 0; c < clauses; c++) {
+        for (c = 0; c < clauses; c++) {
           // check void variables
           TaggedRef l_var, r_var;
 
           if (isLiteral(bifdbm_vartag[idx_vp(c, fs)])) {
             // convert void variable to heap variable
             GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, fs)]);
-            l_var = makeTaggedRef(newTaggedCVar(fv));
+            bifdbm_varptr[idx_vp(c, fs)] = newTaggedCVar(fv);
+            l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
+            bifdbm_vartag[idx_vp(c, fs)] = CVAR;
             // update arguments
             STuple &vp_c = *tagged2STuple(deref(vp[c]));
             vp_c[fs] = l_var;
@@ -821,7 +823,9 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
           if (isLiteral(bifdbm_vartag[idx_vp(c, v)])) {
             // convert void variable to heap variable
             GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, v)]);
-            r_var = makeTaggedRef(newTaggedCVar(fv));
+            bifdbm_varptr[idx_vp(c, v)] = newTaggedCVar(fv);
+            r_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
+            bifdbm_vartag[idx_vp(c, v)] = CVAR;
             // update arguments
             STuple &vp_c = *tagged2STuple(deref(vp[c]));
             vp_c[v] = r_var;
@@ -833,6 +837,8 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
             error("Unexpected type found for r_var variable.");
           }
 
+//        printTerm(idx_vp(5, 3));
+
           backup();
 
           if (OZ_unify(l_var, r_var) == FALSE) {
@@ -842,13 +848,21 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
           }
           restore();
 
-          introduceLocal(idx_vp(c, fs), l_var);
-          introduceLocal(idx_vp(c, v), r_var);
+//        introduceLocal(idx_vp(c, fs), l_var);
+//        introduceLocal(idx_vp(c, v), r_var);
         }
       }
   }
 
  escape:
+
+  // (re)introduce renamed variable (propagation done by unify) after
+  // propagation of equalities has finished
+  for (c = clauses; c--; )
+    for (v = variables; v--; )
+      if (bifdbm_varptr[idx_vp(c, v)])
+        introduceLocal(idx_vp(c, v), TaggedRef(bifdbm_varptr[idx_vp(c, v)]));
+
   // 2nd pass: undo marks
   for (v = 0; v < variables; v++) {
     if (isAnyVar(bifdbm_vartag[idx_v(v)]))
