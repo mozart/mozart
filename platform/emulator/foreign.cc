@@ -75,51 +75,97 @@ int OZ_isCell(OZ_Term term)
   return (isCell(term) == OK) ? 1 : 0;
 }
 
-int OZ_termToInt(OZ_Term term, int*n)
-{
-  DEREF(term,_1,tag);
+/* ----------------------------------------------------------------- */
 
-  if ( isSmallInt(tag) ) {
-    *n = smallIntValue(term);
-    return(1);
-  } else if (isBigInt(term) && (*n = tagged2BigInt(term)->BigInt2Int()) != 0) {
-									           return(1);
-  } else {
-    return(0);
-  }
-}
 
-int OZ_termToFloat(OZ_Term term, OZ_Float *n)
-{
-  DEREF(term,_1,tag);
-
-  if ( isFloat(tag) ) { 
-    *n = floatValue(term);
-    return(1);
-  } else 
-    return(0);
-}
-
-int OZ_termToString(OZ_Term term, char **s)
-{
-  DEREF(term,_1,tag);
-  if (isXAtom(term)) {
-    *s = tagged2Atom(term)->getPrintName();
+// mm2
+int OZ_termToInt(OZ_Term term, int* n) {
+  if (OZ_isInt(term)) {
+    *n = OZ_OzIntToCInt(term);
     return 1;
   }
   return 0;
 }
 
+int OZ_OzIntToCInt(OZ_Term term)
+{
+  DEREF(term,_1,tag);
+
+  if (isSmallInt(tag)) {
+    return smallIntValue(term);
+  } else if (isBigInt(term)) {
+    return tagged2BigInt(term)->BigInt2Int();
+  }
+  OZ_warning("OzIntToCInt(%s): int arg expected",tagged2String(term));
+  return 0;
+}
+
+// mm2
+int OZ_termToFloat(OZ_Term term, OZ_Float *n)
+{
+  if (OZ_isFloat(term)) {
+    *n = OZ_OzFloatToCFloat(term);
+    return 1;
+  }
+  return 0;
+}
+
+OZ_Float OZ_OzFloatToCFloat(OZ_Term term)
+{
+  DEREF(term,_1,tag);
+
+  if (isFloat(tag)) { 
+    return floatValue(term);
+  }
+  OZ_warning("OzFloatToCFloat(%s): float arg expected",tagged2String(term));
+  return 0.0;
+}
+
+// mm2
+int OZ_termToString(OZ_Term term, char **s)
+{
+  if (OZ_isAtom(term)) {
+    *s = OZ_OzAtomToCString(term);
+    return 1;
+  }
+  return 0;
+}
+
+char *OZ_OzAtomToCString(OZ_Term term)
+{
+  DEREF(term,_1,tag);
+  if (isXAtom(term)) {
+    return tagged2Atom(term)->getPrintName();
+  }
+  OZ_warning("OzAtomToCString(%s): atom arg expected",tagged2String(term));
+  return NULL;
+}
+
+// mm2
 char *OZ_termToStr(OZ_Term term)
+{
+  return OZ_OzTermToCString(term);
+}
+
+char *OZ_OzTermToCString(OZ_Term term)
 {
   return tagged2String(term);
 }
 
+// mm2
 char *OZ_intTermToString(OZ_Term term)
 {
+  return OZ_OzIntToCString(term);
+}
+
+char *OZ_OzIntToCString(OZ_Term term)
+{
   DEREF(term,_1,tag);
-  if (!isInt(term)) {
-    return NULL;
+
+  if (isSmallInt(term)) {
+    char buf[1000];
+    sprintf(buf,"%d",smallIntValue(term));
+    return ozstrdup(buf);
   }
 
   if (isBigInt(term)) {
@@ -129,39 +175,64 @@ char *OZ_intTermToString(OZ_Term term)
     }
     return s;
   }
-
-  char buf[1000];
-  sprintf(buf,"%d",smallIntValue(term));
-  return ozstrdup(buf);
+  
+  OZ_warning("OzIntToCString(%s): int arg expected",tagged2String(term));
+  return NULL;
 }
 
 
+// mm2
 OZ_Term OZ_intToTerm (int i)
 {
   return intToTerm(i);
 }
 
+OZ_Term OZ_CIntToOzInt(int i)
+{
+  return intToTerm(i);
+}
+
+// mm2
 OZ_Term OZ_floatToTerm (OZ_Float i)
 {
   return floatToTerm(i);
 }
 
+OZ_Term OZ_CFloatToOzFloat (OZ_Float i)
+{
+  return floatToTerm(i);
+}
+
+// mm2
 OZ_Term OZ_stringToTerm(char *s)
 {
   return makeTaggedAtom(s);
 }
 
+OZ_Term OZ_CStringToOzAtom(char *s)
+{
+  return makeTaggedAtom(s);
+}
+
+// mm2
 OZ_Term OZ_numberToTerm(char *s)
 {
   return numberToTerm(s);
 }
 
+OZ_Term OZ_CStringToOzNumber(char *s)
+{
+  return numberToTerm(s);
+}
+
+/* ----------------------------------------------------------------- */
+
 OZ_Bool OZ_unify(OZ_Term t1, OZ_Term t2)
 {
   if (!am.unify(t1, t2)) {
-    return OZ_FAILED;
+    return FAILED;
   }
-  return OZ_PROCEED;
+  return PROCEED;
 }
 
 OZ_Term OZ_newVariable(char *name)
@@ -411,4 +482,19 @@ OZ_Bool OZ_onToplevel()
 OZ_Bool onToplevel()
 {
   return am.isToplevel() == OK ? PROCEED : FAILED;
+}
+
+
+/* convert a C string (char*) to an Oz string */
+OZ_Term OZ_CStringToOzString(char *s)
+{
+  char *p=s;
+  while (*p!='\0') {
+    p++;
+  }
+  OZ_Term ret = AtomNil;
+  while (p!=s) {
+    ret = cons(OZ_intToTerm((unsigned char)*(--p)), ret);
+  }
+  return ret;
 }
