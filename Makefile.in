@@ -9,8 +9,8 @@ INSTALL_DIR=    @MKINSTALLDIRS@
 OZHOME=         @prefix@
 OZVERSION=      $(TOPDIR)/OZVERSION
 
-# not yet
-# SUBDIRS=      Emulator lib bin elisp
+SUBDIRS=        bin elisp ozwish Emulator lib
+
 PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
                 irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
                 osf1-alpha solaris-i486 sunos-sparc win32-i486
@@ -47,6 +47,10 @@ all install clean realclean depend distclean:
 veryclean: realclean
 
 install: $(ALLDIRS) $(ALLFILES)
+
+bootstrap:
+        (cd Emulator; make)
+        (cd lib; make bootstrap)
 
 $(ALLFILES):
         $(INSTALL) -m 444 $(FILES) $(OZHOME)

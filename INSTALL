@@ -1,72 +1,34 @@
-*** completely outdated!
+* Single platform installation
 
-CHECKLIST
+./configure
+make
+make install
 
-- make a backup of the old version
+* Multi platform installation
 
-- write a news announcing the changes from the old to the current version
+mkdir linux
+cd linux
+../configure
+make
+make install
 
-- make a new src
+* bootstraping (lib)
 
-- check the Oz-menu/print ???
+make bootstrap
 
-mkdir /usr/share/gs/soft/oz-xxx
-cd $!
-cvs get -l Oz
-cvs get Oz/lib
-cvs get Oz/bin
-cvs get Oz/elisp
-cvs get Oz/include
-cvs get Oz/Emulator
-cvs get Oz/Compiler
-cvs get Oz/demo
-cvs get Oz/Tools
-cvs get Oz/ozwish
+* configuration parameters
 
-cvs rtag -b 2.0.0 Oz
-- install bin/ozplatform in your PATH
+--prefix=<dir>: default is /usr/local/oz
 
-- edit Imake.tmpl:
-    OZVERSION: make a unique version number
-    OZHOME: target directory for installation
+* required variables default to /usr/local/{include,lib}
 
-- edit Compiler/Imake.tmpl
-    SPLIB : sicstus prolog
+$oz_tk_lib_dir
+$oz_tk_inc_dir
+$oz_x11_lib_dir
+$oz_x11_inc_dir
+$oz_gmp_lib_dir
+$oz_gmp_inc_dir
 
-- edit Compiler/backend/Imakefile
+* TIPS:
 
-- edit ozwish/Imakefile
-    OZWISHHOME
-
-- ./ozmkmf
-
-- make World
-   make Makefiles
-   make all
-        include
-        Emulator
-        Compiler/backend
-        Compiler/frontend
-        lib
-
-   make install
-        bin
-        elisp
-        ozwish
-        Emulator
-        Compiler/backend
-        Compiler/frontend
-        lib
-        demo
-        demo/documentation (copy !)
-
-        make install SUBDIRS= (ANNOUNCE, README, ...)
-
-- test your installation:
-
-   $(OZHOME)/bin/oz
-
-- create a new entry in /project/ps/bin/scripts/oz-wrapper
-
-- mkdir dist
-- make dist
+./configure --no-recursion # create Makefile only in current directory
