@@ -1023,19 +1023,19 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
 
   stream << indent(offset)
          << "Suspension List:\n";
-  suspList->print(stream, 0, offset+3);
+  suspList->print(stream, depth, offset+3);
 
   stream << indent(offset) << "HomeNode: ";
-  home->getBoardDeref()->print(stream,0);
+  home->getBoardDeref()->print(stream,depth);
   stream << endl;
 
   switch(getType()){
   case FDVariable:
     stream << indent(offset) << "FD Det SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, 0, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_det]->print(stream, depth, offset+3);
 
     stream << indent(offset) << "FD Bounds SuspList:\n";
-    ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, 0, offset+3);
+    ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, depth, offset+3);
     stream << indent(offset) << "FD Domain:\n";
     ((GenFDVariable*)this)->getDom().printLong(stream, offset+3);
     break;
