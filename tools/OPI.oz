@@ -80,6 +80,8 @@ define
       in
 	 if OZRC \= false andthen {FileExists OZRC} then
 	    {OPICompiler enqueue(feedFile(OZRC))}
+	 elseif {FileExists {Property.get 'oz.dotoz'}#'/ozrc'} then
+	    {OPICompiler enqueue(feedFile({Property.get 'oz.dotoz'}#'/ozrc'))}
 	 elseif {FileExists HOME#'/.oz/ozrc'} then
 	    {OPICompiler enqueue(feedFile(HOME#'/.oz/ozrc'))}
 	 elseif {FileExists HOME#'/.ozrc'} then   % note: deprecated
