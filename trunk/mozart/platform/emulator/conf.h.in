@@ -1,12 +1,12 @@
 /*
  *  Authors:
- *    Author's name (Author's email address)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl (1997)
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -62,6 +62,8 @@
 /* define if propagator are linked statically */
 #undef FOREIGNFDPROPS
 
+/* define for including the Oz assembler */
+#undef OZMA
 
 /* debugging */
 #undef DEBUG_EMULATOR
