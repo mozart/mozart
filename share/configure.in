@@ -123,12 +123,14 @@ dnl ******************************************************************
 SHAREDIRS="lib tools elisp test demo examples"
 case $platform in
     win32*)
+	OZWSOCKLIB=-lwsock32
 	;;
     *)
 	SHAREDIRS="bin $SHAREDIRS"
 	;;
 esac
 AC_SUBST(SHAREDIRS)
+AC_SUBST(OZWSOCKLIB)
 
 dnl ******************************************************************
 dnl need GMP for test
