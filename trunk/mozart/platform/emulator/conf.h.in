@@ -94,3 +94,5 @@
 /* Define if you have the mmap system call.  */
 #undef HAVE_MMAP
 
+/* Define if dlopen needs a leading underscore. */
+#undef DLOPEN_UNDERSCORE
