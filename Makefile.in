@@ -6,6 +6,8 @@ PLATFORM	= @PLATFORM@
 LIB_DIR		= $(PREFIX)/cache/x-oz/system/gtk
 EXAMPLES_DIR	= $(PREFIX)/examples/gtk
 
+VERSION		= 1.0
+
 OZC		= @OZC@
 OZL             = @OZL@
 COMPILE		= $(OZC) -c
@@ -291,3 +293,20 @@ Makefile: Makefile.in config.status
 
 config.status: configure
 	./config.status --recheck
+
+#---------------------------------------------------------------------
+# create tar archive and source rpm
+# the following assumes that the build dir and the source dir are
+# distinct. leave the source dir in a pristine state!
+#---------------------------------------------------------------------
+
+tar:
+	rm -rf mozart-gtk-$(VERSION)
+	cp -a $(SRCDIR) mozart-gtk-$(VERSION)
+	tar czf mozart-gtk-$(VERSION).tar.gz mozart-gtk-$(VERSION)
+
+rpm: mozart-gtk.spec mozart-gtk-$(VERSION).tar.gz
+	cp mozart-gtk-$(VERSION).tar.gz /usr/src/redhat/SOURCES/
+	rpmbuild -bs $<
+	-rm -f /usr/src/redhat/SOURCES/mozart-gtk-$(VERSION).tar.gz
+	mv /usr/src/redhat/SRPMS/mozart-gtk-$(VERSION)-1.src.rpm .
