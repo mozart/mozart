@@ -100,7 +100,9 @@ SPAN.BUILTIN      { color: #DA70D6; }
   CLASS="MODULE">ozmake.ozf</SPAN> for either</A></DD>
 </DL>
 <HR/>
-  <P CLASS="WARNING">this is an alpha-release -  feedback is welcome</P>
+  <P CLASS="WARNING">this is an alpha-release -  feedback is welcome<BR/>
+ozmake support for automated publication in MOGUL is still under development
+</P>
   <xsl:apply-templates/>
 <HR/>
 <ADDRESS>
