@@ -157,7 +157,7 @@ enum OZ_PropagatorFlags {
 
 class OZ_PropagatorExpect;
 
-typedef OZ_expect_t (OZ_PropagatorExpect::* FDExpectFun) (OZ_Term);
+typedef OZ_expect_t (*FDExpectFun) (OZ_PropagatorExpect*,OZ_Term);
 
 class OZ_PropagatorExpect {
 private:
