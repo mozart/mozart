@@ -208,6 +208,8 @@ void AM::init(int argc,char **argv)
   extern void DLinit(char *name);
   DLinit(argv[0]);
 
+  engine(OK);
+
   initFDs();
 
   initMemoryManagement();
@@ -1080,7 +1082,8 @@ Bool AM::loadQuery(CompStream *fd)
 
 void AM::pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
 {
-  pushTaskInline(pc,y,g,x,i);
+  x = (i>0) ? copyRefsArray(x,i) : 0;
+  cachedStack->pushCont(pc,y,g,x);
 }
 
 void AM::select(int fd, int mode, OZ_IOHandler fun, TaggedRef val)
@@ -1322,7 +1325,7 @@ void AM::pushToplevel(ProgramCounter pc)
   Assert(rootThread->isEmpty());
   // kost@ : MOD!!! TODO?
   // rootBoard->incSuspCount();
-  rootThread->pushCont(pc,toplevelVars,NULL,NULL,0);
+  rootThread->pushCont(pc,toplevelVars,NULL,NULL);
   if (rootThread!=currentThread && !isScheduled(rootThread)) {
     scheduleThread(rootThread);
   }

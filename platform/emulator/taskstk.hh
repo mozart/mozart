@@ -18,84 +18,61 @@
 #endif
 
 
-/*
- * - if you ever change this then check POPTASK,
- *  i.e. in other words: keep your hands off this definition
- *  if you don't fully understand the macro POPTASK
- * - there are 4 tag bits
- */
-enum ContFlag {
-  C_CONT           = 0, // a continuation without X registers
-  C_XCONT          = 1, // a continuation with    X registers
-  C_CFUNC_CONT     = 2, // a continuation  to call a c-function
-  C_DEBUG_CONT     = 3, // a continuation for debugging
-  C_CALL_CONT      = 4, // an application
-  C_LOCK           = 5, //
-  C_ACTOR          = 6, // an actor task
-  C_XXXX2          = 7, //
-  C_XXXX3          = 8, //
-  C_SET_SELF       = 9, // set am.cachedSelf
-  C_LTQ            = 10,// local thread queue
-  C_CATCH          = 11 // exception handler
-};
-
-
-
-/* for C_CONT and C_XCONT we combine
- * the ContFlag with the PC
- */
-
-typedef TaggedRef TaggedPC;
-
-inline
-TaggedPC makeTaggedPC(ContFlag f, ProgramCounter pc)
-{
-  return makeTaggedRef((TypeOfTerm)f,pc);
-}
-
-inline
-ProgramCounter getPC(ContFlag f,TaggedPC tpc)
-{
-  return (ProgramCounter) tagValueOf((TypeOfTerm)f,tpc);
-}
-
-inline
-ContFlag getContFlag(TaggedPC tpc)
-{
-  return (ContFlag) tagTypeOf(tpc);
-}
+extern ProgramCounter
+  C_XCONT_Ptr          , // a continuation with    X registers
+  C_CFUNC_CONT_Ptr     , // a continuation  to call a c-function
+  C_DEBUG_CONT_Ptr     , // a continuation for debugging
+  C_CALL_CONT_Ptr      , // an application
+  C_LOCK_Ptr           , //
+  C_ACTOR_Ptr          , // an actor task
+  C_SET_SELF_Ptr       , // set am.ooRegisters
+  C_LTQ_Ptr            , // local thread queue
+  C_CATCH_Ptr          , // exception handler
+  C_EMPTY_STACK        ;
 
 typedef StackEntry TaskStackEntry;
 
+#define frameSz 3
 
-/* The bottom of the TaskStack contains a special element: emptyTaskStackEntry
- * this allows faster check for emptyness
- */
-
-
-/* if you ever change this check POPTASK */
-const TaskStackEntry emptyTaskStackEntry = (TaskStackEntry)(unsigned int32)-1;
 
 class TaskStack: public Stack {
+private:
+
+  void pushFrame(ProgramCounter pc,void *y, void *g)
+  {
+    TaskStackEntry *newTop = ensureFree(frameSz);
+    *(newTop)   = g;
+    *(newTop+1) = y;
+    *(newTop+2) = pc;
+
+    tos = newTop+frameSz;
+  }
+
 public:
   USEFREELISTMEMORY;
+
+  void restoreFrame() { tos += frameSz; Assert(tos<stackEnd); }
+  void discardFrame(ProgramCounter pc)
+  {
+    Assert(pc==NOCODE || (ProgramCounter)*(tos-1)==pc);
+    tos -= frameSz;
+  }
 
   void makeEmpty()
   {
     mkEmpty();
-    push(emptyTaskStackEntry,NO);
+    pushFrame(C_EMPTY_STACK,0,0);
   }
 
   TaskStack(int s): Stack(s,Stack_WithFreelist) { makeEmpty(); }
-  ~TaskStack()                  { error("~TaskStack called"); }
+  ~TaskStack() { Assert(0); }
 
   void printTaskStack(ProgramCounter pc = NOCODE,
                       Bool verbose = NO, int depth = 10000);
   TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE,
                        int depth = 10000);
 
-  Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
-  Bool isEmpty()                 { return isEmpty(*(tos-1)); }
+  Bool isEmpty() { return *(tos-1)==C_EMPTY_STACK; }
 
   void checkMax();
   StackEntry *ensureFree(int n)
@@ -109,19 +86,6 @@ public:
     return ret;
   }
 
-  void shift(int len)
-  {
-    ensureFree(len);
-
-    for(TaskStackEntry *help = tos; help >= array; help--) {
-      *(help+len) = *help;
-    }
-
-    tos += len;
-  }
-
-# define TaskStackPop(tos) (*(tos))
-
   TaskStackEntry *getTop()            { return tos; }
   void setTop(TaskStackEntry *newTos) { tos = newTos; }
 
@@ -131,90 +95,64 @@ public:
   TaggedRef reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
                     ProgramCounter pc=NOCODE);
 
-  void pushLock(OzLock *lck)
+
+  void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
-    ensureFree(2);
-    push(lck,NO);
-    push(ToPointer(C_LOCK),NO);
+    DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
+
+    Assert(MemChunks::areRegsInHeap(x, i));
+
+    pushFrame(C_CFUNC_CONT_Ptr,(void*)f,
+              i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL);
   }
 
-  void pushCatch()
+  void pushCont(Continuation *cont)
   {
-    push(ToPointer(C_CATCH));
+    pushCont(cont->getPC(),cont->getY(),cont->getG(),cont->getX());
+  }
+
+  void pushCont(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x)
+  {
+    Assert(!isFreedRefsArray(y));
+
+    Assert(!x || MemChunks::areRegsInHeap(x,getRefsArraySize(x)));
+    Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
+    Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
+
+    pushFrame(pc,y,g);
+    if (x)
+      pushFrame(C_XCONT_Ptr,x,0);
   }
 
   void pushCall(TaggedRef pred, RefsArray  x, int i)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
-    ensureFree(3);
-
-    push(i>0 ? copyRefsArray(x, i) : NULL, NO);
-    push(ToPointer(pred), NO);
-    push(ToPointer(C_CALL_CONT), NO);
+    pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), i>0 ? copyRefsArray(x, i) : NULL);
   }
 
-  void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
-  {
-    DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
+  void pushLTQ(SolveActor *sa)   { pushFrame(C_LTQ_Ptr,sa,0); }
+  void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
+  void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
+  void pushDebug(OzDebug *deb)   { pushFrame(C_DEBUG_CONT_Ptr,deb,0); }
+  void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
+  void pushActor(Actor *aa)      { pushFrame(C_ACTOR_Ptr,aa,0); }
 
-    ensureFree(3);
-
-    Assert(MemChunks::areRegsInHeap(x, i));
-    push(i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL, NO);
-    push((TaskStackEntry)f,NO);
-    push(ToPointer(C_CFUNC_CONT), NO);
-  }
-
-  void pushCont(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
-  {
-    Assert(!isFreedRefsArray(y));
-    DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
-
-    /* cache top of stack in register since gcc does not do it */
-    TaskStackEntry *newTop = ensureFree(4);
-
-    Assert(MemChunks::areRegsInHeap(x,i));
-    Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
-    Assert(!g || MemChunks::areRegsInHeap(g,getRefsArraySize(g)));
-
-    if (i > 0) { *newTop++ = x; }
-    *newTop++   = g;
-    *newTop++   = y;
-    *newTop++   = ToPointer(makeTaggedPC(i>0 ? C_XCONT : C_CONT, pc));
-
-    tos = newTop;
-  }
-
-  void pushCont(Continuation *cont) {
-    pushCont(cont->getPC(),cont->getY(),cont->getG(),
-             cont->getX(),cont->getXSize());
-  }
-
-  void pushPair(void *p, ContFlag cf)
-  {
-    TaskStackEntry *newTop = ensureFree(2);
-    *newTop = p;
-    *(newTop+1) = ToPointer(cf);
-    tos = newTop+2;
-  }
-
-  void pushLTQ(SolveActor * sa)
-  {
-    TaskStackEntry *newTop = ensureFree(2);
-    *newTop++ = ToPointer((int) sa);
-    *newTop++ = ToPointer(C_LTQ);
-    tos = newTop;
-  }
-
-  void pushDebug(OzDebug *deb)   { pushPair(deb,C_DEBUG_CONT); }
-  void pushSelf(Object *o)       { pushPair(o,C_SET_SELF); }
-  void pushActor(Actor *aa)      { pushPair(aa,C_ACTOR); }
-
-  static int frameSize(ContFlag);
   int tasks();
 };
 
+
+
+#define PopFrameNoDecl(top,pc,y,g)              \
+    pc   = (ProgramCounter) *(top-1);           \
+    y    = (RefsArray) *(top-2);                \
+    g    = (RefsArray) *(top-3);                \
+    top -= 3
+
+#define PopFrame(top,pc,y,g)                    \
+    ProgramCounter pc;                          \
+    RefsArray y,g;                              \
+    PopFrameNoDecl(top,pc,y,g)
 
 
 #endif

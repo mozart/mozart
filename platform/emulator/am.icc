@@ -208,13 +208,9 @@ void AM::pushCall(TaggedRef def, int arity, RefsArray args)
 }
 
 inline
-void AM::pushTaskInline(ProgramCounter pc,
-                        RefsArray y,RefsArray g,RefsArray x,int i)
+void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g)
 {
-  if (i>0) {
-    x = copyRefsArray(x,i);
-  }
-  cachedStack->pushCont(pc,y,g,x,i);
+  cachedStack->pushCont(pc,y,g,0);
 }
 
 inline
@@ -370,11 +366,8 @@ int AM::commit(Board *bb, Thread *tt=0)
       scheduleThread(tt);
     }
 
-    { // remove the actor task
-      TaskStackEntry topElem = tt->pop ();
-      Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_ACTOR);
-      tt->pop();
-    }
+    // remove the actor task
+    tt->getTaskStackRef()->discardFrame(C_ACTOR_Ptr);
   }
 
   if (!bb->isWaitTop()) {

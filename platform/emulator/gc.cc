@@ -1870,82 +1870,83 @@ void TaskStack::gc(TaskStack *newstack)
   TaskStackEntry *newtop = newstack->array + offset;
 
   while (1) {
-    TaskStackEntry oldEntry = *(--oldtop);
-    *(--newtop) = oldEntry;
-    if (isEmpty(oldEntry)) {
+
+    PopFrame(oldtop,PC,Y,G);
+
+    *(--newtop) = PC;
+
+    if (PC==C_EMPTY_STACK) {
+      *(--newtop) = Y;
+      *(--newtop) = G;
       break;
     }
-    ContFlag cFlag = getContFlag(ToInt32(oldEntry));
 
-    switch (cFlag){
-
-    case C_ACTOR:
-      COUNT(cLocal);
-      *(--newtop) = ((AWActor *) *(--oldtop))->gcActor();
-      break;
-
-    case C_LOCK:
-      *(--newtop) = ((OzLock *) *(--oldtop))->gcConstTerm();
-      break;
-
-    case C_CONT:
-      COUNT(cCont);
-      // PC is already queued
-      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // Y
-      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // G
-      break;
-
-    case C_XCONT:
-      COUNT(cXCont);
-      // PC is already queued
-      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // Y
-      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // G
-      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));  // X
-      break;
-
-    case C_DEBUG_CONT:
-      COUNT(cDebugCont);
-      *(--newtop) = ((OzDebug *) *(--oldtop))->gcOzDebug();
-      break;
-
-    case C_CALL_CONT:
-      {
-        COUNT(cCallCont);
-        TaggedRef tt=deref((TaggedRef) ToInt32(*(--oldtop)));
-        Assert(!isAnyVar(tt));
-        gcTagged(tt,tt);
-        *(--newtop) = ToPointer(tt);
-        *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
-      }
-      break;
-
-    case C_CATCH:
-      COUNT(cCatch);
-      break;
-
-    case C_CFUNC_CONT:
-      COUNT(cCFuncCont);
-      *(--newtop) = *(--oldtop);                // OZ_CFun
-      *(--newtop) = gcRefsArray((RefsArray) *(--oldtop));
-      break;
-
-    case C_SET_SELF:
-      *(--newtop) = ((Object*)*(--oldtop))->gcConstTerm();
-      break;
-
-    case C_LTQ:
-      *(--newtop) = ((Actor *) *(--oldtop))->gcActor();
-      break;
-
-    default:
-      error("Unexpected case in TaskStack::gc().");
-      break;
+    if (PC==C_ACTOR_Ptr) {
+      *(--newtop) = ((AWActor *) Y)->gcActor();
+      *(--newtop) = G;
+      continue;
     }
+
+    if (PC==C_XCONT_Ptr) {
+      *(--newtop) = gcRefsArray(Y); // X
+      *(--newtop) = G;
+      continue;
+    }
+
+    if (PC==C_LOCK_Ptr) {
+      *(--newtop) = ((OzLock *) Y)->gcConstTerm();
+      *(--newtop) = G;
+      continue;
+    }
+
+    if (PC==C_CATCH_Ptr) {
+      *(--newtop) = Y;
+      *(--newtop) = G;
+      continue;
+    }
+
+    if (PC==C_LTQ_Ptr) {
+      *(--newtop) = ((Actor *) Y)->gcActor();
+      *(--newtop) = G;
+      continue;
+    }
+
+    if (PC==C_SET_SELF_Ptr) {
+      *(--newtop) = ((Object*)Y)->gcConstTerm();
+      *(--newtop) = G;
+      continue;
+    }
+
+    if (PC==C_DEBUG_CONT_Ptr) {
+      *(--newtop) = ((OzDebug *) Y)->gcOzDebug();
+      *(--newtop) = G;
+      continue;
+    }
+
+    if (PC==C_CALL_CONT_Ptr) {
+      TaggedRef tt=deref((TaggedRef) ToInt32(Y));
+      Assert(!isAnyVar(tt));
+      gcTagged(tt,tt);
+      *(--newtop) = ToPointer(tt);
+      *(--newtop) = gcRefsArray(G);
+      continue;
+    }
+
+    if (PC==C_CFUNC_CONT_Ptr) {
+      *(--newtop) = Y;                // OZ_CFun
+      *(--newtop) = gcRefsArray(G);
+      continue;
+    }
+
+    COUNT(cCont);
+    // PC is already queued
+    *(--newtop) = gcRefsArray(Y);
+    *(--newtop) = gcRefsArray(G);
   } // while not task stack is empty
 
   Assert(newstack->array == newtop);
   newstack->setTop(newstack->array+offset);
-} // TaskStack::gc
+}
 
 
 

@@ -1871,7 +1871,7 @@ OZ_Return OZ_typeError(int pos,char *type)
 void OZ_main(int argc,char **argv)
 {
   am.init(argc,argv);
-  engine();
+  engine(NO);
   am.exitOz(0);
 }
 

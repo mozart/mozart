@@ -15,47 +15,10 @@
 
 #include "am.hh"
 
-int TaskStack::frameSize(ContFlag cFlag)
-{
-  switch (cFlag){
-  case C_CATCH:
-    return 1;
-
-  case C_LOCK:
-  case C_DEBUG_CONT:
-  case C_SET_SELF:
-  case C_LTQ:
-  case C_ACTOR:
-    return 2;
-
-  case C_CALL_CONT:
-  case C_CFUNC_CONT:
-  case C_CONT:
-    return 3;
-
-  case C_XCONT:
-    return 4;
-
-  default:
-    Assert(0);
-    return -1;
-  }
-}
-
 int TaskStack::tasks()
 {
-  TaskStackEntry *oldTos=tos;
-  int len=0;
-
-  while (!isEmpty()) {
-    len++;
-
-    TaskStackEntry entry=*(--tos);
-    ContFlag cFlag = getContFlag(ToInt32(entry));
-    tos = tos - frameSize(cFlag) + 1;
-  }
-  tos=oldTos;
-  return len;
+  /* we do not count the empty task */
+  return (tos-array)/frameSz - 1;
 }
 
 void TaskStack::checkMax()
@@ -93,31 +56,21 @@ Bool TaskStack::findCatch()
   Assert(this);
 
   while (!isEmpty()) {
-    TaskStackEntry entry=pop();
-    TaggedPC topElem = ToInt32(entry);
-    ContFlag cFlag = getContFlag(topElem);
-    switch (cFlag){
+    PopFrame(tos,PC,Y,G);
 
-    case C_LOCK:
-      {
-        OzLock *lck = (OzLock *) pop();
-        lck->unlock();
-        break;
-      }
-    case C_CATCH:
-      return TRUE;
-
-    case C_SET_SELF:
-      {
-        Object *newSelf = (Object*)ToInt32(pop());
-        am.setSelf(newSelf);
-        break;
-      }
-
-    default:
-      tos = tos - frameSize(cFlag) + 1;
+    if (PC==C_LOCK_Ptr) {
+      OzLock *lck = (OzLock *) Y;
+      lck->unlock();
       break;
+    }
+    if (PC==C_CATCH_Ptr) {
+      return TRUE;
+    }
 
+    if (PC==C_SET_SELF_Ptr) {
+      Object *newSelf = (Object*)Y;
+      am.setSelf(newSelf);
+      break;
     }
   }
 
@@ -128,102 +81,20 @@ Bool TaskStack::findCatch()
 TaggedRef TaskStack::reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
                              ProgramCounter pc=NOCODE)
 {
-  TaggedRef out = nil();
-
   Assert(this);
 
-  TaskStackEntry *oldtos = getTop();
-  if (from != 0) setTop(from);
+  TaskStackEntry *auxtos = (from == 0) ? getTop() : from;
 
   if (to == 0) { // reflect all
-    to = array+1;
+    to = array+frameSz;  // do not include EMPTY marker
   }
 
-  while (getTop() > to) {
-    TaggedPC topElem = ToInt32(pop());
-    ContFlag flag = getContFlag(topElem);
-    switch (flag){
+  TaggedRef out = nil();
 
-    case C_CONT:
-      {
-        ProgramCounter PC = getPC(C_CONT,topElem);
-        RefsArray Y = (RefsArray) pop();
-        RefsArray G = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC),out);
-      }
-      break;
-
-    case C_XCONT:
-      {
-        ProgramCounter PC = getPC(C_XCONT,topElem);
-        RefsArray Y = (RefsArray) pop();
-        RefsArray G = (RefsArray) pop();
-        RefsArray X = (RefsArray) pop();
-        out = cons(CodeArea::dbgGetDef(PC),out);
-        break;
-      }
-
-    case C_ACTOR:
-      pop();
-      out = cons(OZ_atom("actor"),out);
-      break;
-
-    case C_CFUNC_CONT:
-      {
-        OZ_CFun biFun    = (OZ_CFun) pop();
-        RefsArray X      = (RefsArray) pop();
-        out = cons(OZ_mkTupleC("builtin",2,
-                               OZ_atom(builtinTab.getName((void *) biFun)),
-                               OZ_toList(getRefsArraySize(X),X)),
-                   out);
-        break;
-      }
-
-    case C_DEBUG_CONT:
-      {
-        OzDebug *deb = (OzDebug*) pop();
-        out = cons(OZ_atom("debug"),out);
-        break;
-      }
-
-    case C_CALL_CONT:
-      {
-        TaggedRef pred = (TaggedRef) ToInt32(pop());
-        RefsArray X = (RefsArray) pop();
-        out = cons(OZ_mkTupleC("apply",2,
-                               pred,OZ_toList(getRefsArraySize(X),X)),
-                   out);
-        break;
-      }
-
-    case C_LOCK:
-      out = cons(OZ_atom("lock"),out);
-      pop();
-      break;
-
-    case C_CATCH:
-      out = cons(OZ_atom("catch"),out);
-      break;
-
-    case C_SET_SELF:
-      {
-        pop();
-        out = cons(OZ_atom("setSelf"),out);
-        break;
-      }
-
-    case C_LTQ:
-      {
-        ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-        out = cons(OZ_atom("ltq"),out);
-        break;
-      }
-    default:
-      Assert(0);
-    } // switch
-  } // while
-
-  setTop(oldtos);
+  while (auxtos > to) {
+    PopFrame(auxtos,PC,Y,G);
+    out = cons(CodeArea::dbgGetDef(PC),out);
+  }
 
   out = reverseC(out);
   if (pc != NOCODE) {

@@ -133,31 +133,22 @@ Bool Thread::isBelowFailed (Board *top)
  *  if not in deep guard: discard all tasks, return NO
  *  if in deep guard: don't discard any task, return OK
  */
+
 Bool Thread::terminate()
 {
-  TaskStack *ts;
-  TaskStackEntry *tos;
   Assert(hasStack());
 
-  ts = &(item.threadBody->taskStack);
-  tos = ts->getTop ();
+  TaskStack *ts = getTaskStackRef();
+  TaskStackEntry *tos = ts->getTop();
   while (TRUE) {
-    TaskStackEntry entry=*(--tos);
-    if (ts->isEmpty (entry)) {
-      ts->setTop(tos+1);
+    PopFrame(tos,PC,Y,G);
+    if (PC==C_EMPTY_STACK) {
+      ts->makeEmpty();
       return NO;
     }
 
-    ContFlag cFlag = getContFlag(ToInt32(entry));
-
-    switch (cFlag) {
-    case C_ACTOR:
+    if (PC==C_ACTOR_Ptr)
       return OK;
-
-    default:
-      tos = tos - ts->frameSize(cFlag) + 1;
-      break;
-    }
   }
 }
 
@@ -178,13 +169,12 @@ int Thread::getRunnableNumber()
     {
       TaskStack * taskstack = getTaskStackRef();
       if (taskstack->isEmpty()) return 0;
-      TaskStackEntry * topCache = taskstack->getTop();
-      TaskStackEntry topElem = TaskStackPop(topCache-1);
-      int cFlag   = getContFlag (ToInt32 (topElem));
-      if (cFlag != C_LTQ) return 1;
+      TaskStackEntry *tos = taskstack->getTop();
+      PopFrame(tos,PC,Y,G);
+      if (PC!=C_LTQ_Ptr)
+        return 1;
 
-      topElem = TaskStackPop(topCache-2);
-      SolveActor *sa = (SolveActor *) topElem;
+      SolveActor *sa = (SolveActor *) Y;
       ThreadQueueImpl *ltq = sa->getLocalThreadQueue();
       return ltq->getSize();
     }
@@ -193,7 +183,7 @@ int Thread::getRunnableNumber()
   case S_PR_THR:
     return 1;
   default:
-    error("Thread::getRunnableNumber()");
+    Assert(0);
     return 0;
   }
 }

@@ -95,7 +95,7 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
 
 // this class contains the central global data
 class AM : public ThreadsPool {
-friend void engine();
+friend void engine(Bool init);
 public:
   int threadSwitchCounter;
   int userCounter;
@@ -318,8 +318,7 @@ public:
 
   void pushDebug(TaggedRef def, int arity, RefsArray args);
 
-  INLINE void pushTaskInline(ProgramCounter pc,
-                             RefsArray y,RefsArray g,RefsArray x,int i);
+  INLINE void pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g);
 
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,
                 RefsArray x=0,int i=0);

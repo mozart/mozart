@@ -73,13 +73,6 @@ public:
 #define getWord(PC) (*(PC))
 
 
-class CodeAreaList {
-  CodeArea *elem;
-  CodeAreaList *next;
- public:
-  CodeAreaList(CodeArea *e,CodeAreaList *n) : elem(e), next(n) {};
-};
-
 #ifdef THREADED
   typedef int32 AdressOpcode;
 #else
@@ -90,7 +83,7 @@ class CodeAreaList {
 class CodeArea {
   friend class AM;
   friend class TMapping;
-  friend void engine();
+  friend void engine(Bool init);
   friend class Statistics;
   static HashTable atomTab;
   static HashTable nameTab;
@@ -103,8 +96,13 @@ class CodeArea {
   ByteCode *codeBlock;    /* a block of abstract machine code */
   int size;               /* size of thie block */
   ProgramCounter wPtr;       /* write pointer for the code block */
+  CodeArea *nextBlock;
 
-  static CodeAreaList *allBlocks;
+  static CodeArea *allBlocks;
+
+  void allocateBlock(int sz);
+  CodeArea(int sz);
+  static void init(void **instrtab);
 
 public:
   static AbstractionTable abstractionTab;
