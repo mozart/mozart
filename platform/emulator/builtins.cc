@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX5_MIPS) || defined(OSF1_ALPHA) || defined(FREEBSD_I486)
+#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX) || defined(OSF1_ALPHA) || defined(FREEBSD_I486)
 #   define DLOPEN 1
 #ifdef FREEBSD_I486
 #define RTLD_NOW 1
@@ -38,7 +38,7 @@ extern "C" int dlclose(void *);
 #endif
 #endif
 
-#ifdef IRIX5_MIPS
+#ifdef IRIX
 #include <bstring.h>
 #include <sys/time.h>
 #endif
@@ -5074,7 +5074,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 #ifdef SUNOS_SPARC
   strCat(command, commandUsed, "ld -o ");
 #endif
-#ifdef IRIX5_MIPS
+#ifdef IRIX
   strCat(command, commandUsed, "ld -shared -check_registry /dev/null -o ");
 #endif
 #ifdef OSF1_ALPHA

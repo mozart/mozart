@@ -59,7 +59,7 @@ extern int h_errno;
 #endif
 
 
-#ifdef IRIX5_MIPS
+#ifdef IRIX
 #include <bstring.h>
 #endif
 
