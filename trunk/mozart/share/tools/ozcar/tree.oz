@@ -112,10 +112,14 @@ local
 in
    
    class Tree from BaseTree ScrolledTitleCanvas
+
+      prop
+	 locking
       
       attr
-	 Selected   : undef
-	 SyncStream : _
+	 Selected       : undef
+	 SyncStreamCalc : _
+	 SyncStreamDraw : _
       
       meth tkInit(...)=M
 	 BaseTree,init
@@ -125,13 +129,25 @@ in
       meth add(I Q)
 	 %% each new thread is runnable, initially... (hope so?)
 	 nodes <- {New Node init(I Q runnable)} | @nodes
-	 BaseTree,calculatePositions
+	 Tree,syncCalc
       end
       
       meth remove(I)
 	 Tree,mark(I dead)
       end
 
+      meth syncCalc
+	 Old New in
+	 Old = SyncStreamCalc <- New
+	 Old = _ | New
+	 thread
+	    {WaitOr New {Alarm TimeoutToCalc}}
+	    case {IsDet New} then skip else
+	       lock BaseTree,calculatePositions end
+	    end
+	 end
+      end
+      
       meth kill(I)
 	 nodes <- {List.filter @nodes fun {$ N} {N get($)}.i \= I end}
 	 BaseTree,calculatePositions
@@ -170,16 +186,16 @@ in
 
       meth display
 	 Old New in
-	 Old = SyncStream <- New
+	 Old = SyncStreamDraw <- New
 	 Old = _ | New
 	 thread
 	    {WaitOr New {Alarm TimeoutToRedraw}}
 	    case {IsDet New} then skip else
-	       Tree,DoDisplay
+	       lock Tree,DoDisplay end
 	    end
 	 end
       end
-
+      
       meth DoDisplay
 	 SFX = ThreadTreeStretchX
 	 SFY = ThreadTreeStretchY
