@@ -35,6 +35,7 @@
 #endif
 
 #include "tagged.hh"
+#include "atoms.hh"
 
 class RefsArray {
 private:
