@@ -26,73 +26,66 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *progname = getProgname(buffer);
 
-  char *ozhome = getRegistry("OZHOME");
-  if (ozhome==NULL) {
-    OzPanic(1,"Oz home not found.\nDid you run setup?");
-  }
-
-  char *ebin;
-  if (stricmp(progname,"oz.exe")!=0) {
-    ebin = "unused";
-  } else {
-    char *ehome  = getRegistry("EMACSHOME");
-    if (ehome==NULL) {
-      OzPanic(1,"Emacs home not found.\nDid you run setup?");
-    }
-    sprintf(buffer,"%s/bin/runemacs.exe",ehome);
-    ebin = strdup(buffer);
-  }
+  char *ozhome   = getOzHome(buffer);
 
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
 
-  if (getenv("OZPATH") == NULL) {
-    sprintf(buffer,"%s;%s/lib;%s/platform/%s;%s/demo",
-	    ozhome,ozhome,ozhome,ozplatform,ozhome);
+  {
+    char *ozpath = getenv("OZPATH");
+    if (ozpath == NULL) {
+      ozpath = ".";
+    }
+    sprintf(buffer,"%s;%s/share", ozpath,ozhome);
     ozSetenv("OZPATH",buffer);
   }
 
   sprintf(buffer,"%s/platform/%s;%s",ozhome,ozplatform,getenv("PATH"));
   ozSetenv("PATH",buffer);
 
-  /*
-   * TCL/TK
-   */
-  sprintf(buffer,"%s/lib/wish/tcl",ozhome);
-  ozSetenv("TCL_LIBRARY",buffer);
-  sprintf(buffer,"%s/lib/wish/tk",ozhome);
-  ozSetenv("TK_LIBRARY",buffer);
+  int console = 0;
+  if (stricmp(progname,"oz.exe")==0) {
+    char *emacshome  = getEmacsHome();
+    if (emacshome==NULL) {
+      OzPanic(1,"Emacs home not found.\nDid you install Emacs?");
+    }
+    sprintf(buffer,"%s/bin/runemacs.exe -l \"%s/share/elisp/oz.elc\" -f run-oz",
+	    emacshome,ozhome);
+  } else if (stricmp(progname,"ozengine.exe")==0) {
+    /*
+      char *rest = splitFirstArg(lpszCmdLine);
+      char *url = lpszCmdLine;
+      sprintf(buffer,"%s -u \"%s\" -- %s", ozemulator,url,rest);
+      */
+#ifdef CONSOLEAPP
+    if (argc < 2) {
+      fprintf(stderr,"usage: ozengine url <args>\n");
+      exit(1);
+    }
+    char *ozemulator = getenv("OZEMULATOR");
+    if (ozemulator == NULL) {
+      sprintf(buffer,"%s/platform/%s/ozemulator.exe",ozhome,ozplatform);
+      ozemulator = strdup(buffer);
+    }
 
+    char *url = argv[1];
+    sprintf(buffer,"%s -u \"%s\" -- ", ozemulator,url);
+    for (int i=2; i<argc; i++) {
+      strcat(buffer," ");
+      strcat(buffer,argv[i]);
+    }
+#endif
+    //    console = DETACHED_PROCESS;
+  } else {
+    OzPanic(1,"Unknown invocation: %s", progname);
+  } 
 
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
 
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
-
-  int console = 0;
-  if (stricmp(progname,"oz.exe")==0) {
-    sprintf(buffer,"%s -l \"%s/lib/elisp/oz.elc\" -f run-oz",ebin,ozhome);
-  } else if (stricmp(progname,"ozdemo.exe")==0) {
-    sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
-	    ozhome,ozplatform,ozhome);
-  } else if (stricmp(progname,"ozengine.exe")==0) {
-    char *rest = splitFirstArg(lpszCmdLine);
-    char *url = lpszCmdLine;
-    sprintf(buffer,"%s/platform/%s/ozemulator -u \"%s\" -- %s",
-	    ozhome,ozplatform,url,rest);
-    //    console = DETACHED_PROCESS;
-  } else {
-    OzPanic(1,"Unknown invocation: %s", progname);
-  }
-
   PROCESS_INFORMATION pinf;
-  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
-			   console,NULL,NULL,&si,&pinf);
-  
+  BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,console,NULL,NULL,&si,&pinf);
   if (ret!=TRUE) {
     OzPanic(1,"Cannot start Oz.\nError = %d.\nDid you run setup?",errno);
   }
