@@ -51,13 +51,14 @@ OZ_C_proc_begin(BImakeProc,3)
   declareCodeBlock(0,code);
   OZ_declareNonvarArg(1,globals);
   OZ_declareArg(2,ret);
+  globals = deref(globals);
 
   int numglobals = length(globals);
   RefsArray gRegs = (numglobals == 0) ? (RefsArray) NULL : allocateRefsArray(numglobals);
 
   for (int i = 0; i < numglobals; i++) {
     gRegs[i] = head(globals);
-    globals = tail(globals);
+    globals = deref(tail(globals));
   }
   Assert(isNil(globals));
 
@@ -240,6 +241,7 @@ OZ_C_proc_begin(BIstoreGRegRef,2)
 {
   declareCodeBlock(0,code);
   OZ_declareNonvarArg(1,globals);
+  globals = deref(globals);
   int numglobals = length(globals);
 
   AssRegArray *gregs = new AssRegArray(numglobals);
@@ -247,7 +249,7 @@ OZ_C_proc_begin(BIstoreGRegRef,2)
   unsigned int reg;
   for (int i = 0; i < numglobals; i++) {
     SRecord *rec = tagged2SRecord(deref(head(globals)));
-    globals = tail(globals);
+    globals = deref(tail(globals));
 
     char *label = rec->getLabelLiteral()->getPrintName();
     KindOfReg regType;
