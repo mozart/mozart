@@ -393,6 +393,12 @@ PRINT(Cell)
   stream << "C@" << this;
 }
 
+PRINT(Port)
+{
+  CHECKDEPTH;
+  stream << "Port@" << this;
+}
+
 PRINT(Space)
 {
   CHECKDEPTH;
@@ -636,6 +642,7 @@ PRINTLONG(ConstTerm)
   case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
   case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
   case Co_Cell:	      ((Cell *) this)->printLong(stream,depth,offset);        break;
+  case Co_Port:	      ((Port *) this)->printLong(stream,depth,offset);        break;
   case Co_Space:      ((Space *) this)->printLong(stream,depth,offset);       break;
   case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
   case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
@@ -656,6 +663,7 @@ PRINT(ConstTerm)
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;
   case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);        break;
+  case Co_Port:        ((Port *) this)->print(stream,depth,offset);        break;
   case Co_Space:       ((Space *) this)->print(stream,depth,offset);       break;
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
   case Co_Array:       ((OzArray *) this)->print(stream,depth,offset);     break;
@@ -1196,6 +1204,16 @@ PRINTLONG(Cell)
 	 << indent(offset)
 	 << " value:"<<endl;
   tagged2StreamLong(val,stream,depth,offset+2);
+}
+
+PRINTLONG(Port)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+	 << "Port@id" << this << endl
+	 << indent(offset)
+	 << " stream:"<<endl;
+  tagged2StreamLong(strm,stream,depth,offset+2);
 }
 
 PRINTLONG(Space)
