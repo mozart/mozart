@@ -131,6 +131,11 @@
 	  ( AtomDebugPerdio, "debugPerdio"),
 
 
+	  # Error formatting
+          ( AtomStack,          "stack"),
+          ( AtomD,              "d"),
+          ( AtomFailure,        "failure"),
+
 	  # Failure
 	  ( AtomBlocked,	"blocked"),
 	  ( AtomPermBlocked,	"permBlocked"),
@@ -168,7 +173,7 @@
 	  ( AtomOwner,	        "owner"),
 	  ( AtomSystem,	        "system"),
 	  ( AtomState,	        "state"),
-
+	  
 	# Types
 	  ( AtomBool,        "bool"),
 	  ( AtomInt,         "int"),
