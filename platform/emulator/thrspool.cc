@@ -83,11 +83,13 @@ Thread *ThreadsPool::getFirstThreadOutline()
    * empty hiQueue
    */
   if (hiCounter < 0) {
-    Assert(lowCounter > 0); /* other case inline version */
+    Assert(hiQueue.isEmpty());
+
+    Assert(lowCounter >= 0); /* other case inline version */
 
     Assert(!lowQueue.isEmpty() || !midQueue.isEmpty());
     lowCounter--;
-    if (lowCounter == 0 || midQueue.isEmpty()) {
+    if (lowCounter < 0 || midQueue.isEmpty()) {
       if (!lowQueue.isEmpty()) {
         lowCounter=ozconf.midLowRatio;
         return lowQueue.dequeue();
@@ -103,7 +105,7 @@ Thread *ThreadsPool::getFirstThreadOutline()
    * use hiQueue, else mid/low
    */
   hiCounter--;
-  if (hiCounter > 0) {
+  if (hiCounter >= 0) {
     if (!hiQueue.isEmpty()) { return hiQueue.dequeue(); }
     hiCounter = -1;
     goto mid;
@@ -122,7 +124,7 @@ mid:
    * use midQueue, else lowQueue, else hiQueue
    */
   lowCounter--;
-  if (lowCounter > 0) {
+  if (lowCounter >= 0) {
     if (!midQueue.isEmpty()) return midQueue.dequeue();
 
     if (!lowQueue.isEmpty()) {
