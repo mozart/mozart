@@ -466,6 +466,8 @@ void oz_checkAnySuspensionList(SuspList ** suspList, Board *home,
 void oz_checkLocalSuspensionList(SuspList ** suspList,
 				 PropCaller calledBy);
 
+void oz_forceWakeUp(SuspList ** suspList);
+
 // see ioHandler.cc
 void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val);
 void oz_io_acceptSelect(int fd, OZ_IOHandler fun, void *val);

@@ -133,13 +133,10 @@ Bool Suspendable::_wakeup_outline(Board * home, PropCaller calledBy) {
 
 void oz_checkAnySuspensionList(SuspList ** suspList,
 			       Board * home,
-			       PropCaller calledBy) {
-
-  // raph: Do not return when calledBy == pc_all, otherwise by-need
-  // futures aren't kicked properly by '=='.
-  if ((calledBy != pc_all && am.inEqEq()) || Board::mustIgnoreWakeUp()) {
+			       PropCaller calledBy)
+{
+  if (am.inEqEq() || Board::mustIgnoreWakeUp())
     return;
-  }
 
   home = home->derefBoard();
 
@@ -225,17 +222,12 @@ Bool Suspendable::_wakeupAll(void) {
 }
 
 
-void oz_forceWakeUp(SuspList ** suspList) {
-
-  if (am.inEqEq())
-    return;
-
+void oz_forceWakeUp(SuspList **suspList)
+{
   SuspList ** p  = suspList;
-
   SuspList * sl = *suspList;
 
   while (sl) {
-
     SuspList ** n = sl->getNextRef();
 
     if (sl->getSuspendable()->_wakeupAll()) {
@@ -246,10 +238,7 @@ void oz_forceWakeUp(SuspList ** suspList) {
       sl = *n;
       p  = n;
     }
-
-
   }
-
 }
 
 inline
