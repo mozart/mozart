@@ -493,6 +493,8 @@ void engine() {
           DebugCheck (((fsb = tmpBB->getSolveBoard ()) != NULL &&
                       fsb->isReflected () == OK),
                       error ("activity under reduced solve actor"));
+          disposeRefsArray(cont->getX());
+          cont->dispose();
           goto LBLTaskCont;
         }
         if (c->isSuspCCont()) {
@@ -1070,18 +1072,18 @@ void engine() {
           X[1] = B;
           X[2] = newVar;
 
-          extern TaggedRef suspHandlerEqEq;
-          if (suspHandlerEqEq != makeTaggedNULL() && isSRecord(suspHandlerEqEq)) {
+          extern TaggedRef getSuspHandlerBool(InlineFun2);
+          TaggedRef handler = getSuspHandlerBool(fun);
+          if (handler != makeTaggedNULL()) {
+            predicate = tagged2SRecord(handler);
             isExecute = OK;
             predArity = 3;
-            predicate = tagged2SRecord(suspHandlerEqEq);
             goto LBLcall;
           }
 
-          HANDLE_FAILURE(PC+6,
-                         message("==F must call susp handler: no predicate: %s",
-                                 tagged2String(suspHandlerEqEq)));
+          HANDLE_FAILURE(PC+6,message("susp handler for ==F, \\=F not set"));
         }
+
       case FAILED:
         error("{`%s` %s %s} unexpectedly failed",
               entry->getPrintName(), tagged2String(A),tagged2String(B));
