@@ -12,6 +12,10 @@
 #ifndef __AMH
 #define __AMH
 
+#if !defined(OUTLINE)
+#define INLINE inline
+#endif
+
 #ifdef INTERFACE
 #pragma interface
 #endif
@@ -219,7 +223,7 @@ public:
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
-  Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
+  INLINE Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
 
 
   Thread *mkSuspThread ();
