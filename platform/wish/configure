@@ -1974,6 +1974,9 @@ fi
 
 
 
+CFLAGS="-O -fwritable-strings"
+
+
 case $platform in
     linux*)
 	if ! test -f /usr/include/xopen_lim.h
