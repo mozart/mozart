@@ -629,6 +629,8 @@ OZ_Term OZ_record(OZ_Term label, OZ_Term arity)
 /* take a label and a property list and construct a record */
 OZ_Term OZ_recordProp(OZ_Term label, OZ_Term propList)
 {
+  OZ_warning("not impl");
+#ifdef MM2
   OZ_Term out;
   OZ_Bool ret = adjoinPropList(label,propList,out,NO);
 
@@ -639,6 +641,7 @@ OZ_Term OZ_recordProp(OZ_Term label, OZ_Term propList)
   }
 
   return out;
+#endif
 }
 
 void OZ_putRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
