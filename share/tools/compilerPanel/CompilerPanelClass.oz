@@ -768,13 +768,9 @@ in
 	 end
 	 Begin =
 	 o(self.Text configure state: normal)|
-	 case Coord == unit then
+	 case Coord of unit then
 	    o(self.Text insert 'end' VS)|Middle
-	 else
-	    File = Coord.1
-	    Line = Coord.2
-	    Column = Coord.3
-	 in
+	 [] pos(File Line Column) then
 	    case File of '' then
 	       o(self.Text insert 'end' VS)|Middle
 	    else Tag Action in
