@@ -171,7 +171,9 @@ enum ConnectionFlags{
   OK_PROBE          = 2048,     // Probe for Ok
   TMP_DWN           = 4096,     // Closed due to Tmp problem
   RC_READING        = 8192,     // ReadCon in midle of read
-  RC_CRASHED        = 16384     // ReadCon crashed during read
+  RC_CRASHED        = 16384,    // ReadCon crashed during read
+  HIS_DWN           = 32768,    // WriteCon closed by reader
+  PROBE             = 65536     // WriteCon in probe list
 };
 
 enum ByteStreamType {
@@ -210,9 +212,10 @@ enum closeInitiator{
 #define WKUPTMP 1
 #define WKUPPRB 3
 
-#define WKUPMYC_TIME 1000
-#define WKUPTMP_TIME 4000
-#define WKUPPRB_TIME 180000
+#define WKUPMYC_TIME 500
+#define WKUPTMP_TIME 60000
+#define WKUPPRB_TIME 3000
+#define CLOSE_EXPIRETIME 540000
 
 /* ************************************************************************ */
 /*  SECTION 2:  Forward declarations                                        */
@@ -250,8 +253,6 @@ int tcpPreReadHandler(int,void*);
 static int tcpReadHandler(int,void*);
 inline ipReturn writeI(int,BYTE*);
 inline ipReturn readI(int,BYTE *);
-
-int findProbeCons(Connection*);
 
 /* ************************************************************************ */
 /*  SECTION 3:  Global Variables                                            */
@@ -1169,6 +1170,8 @@ protected:
   int probeCtrPrm;
   int probeCtrTmp;
 public:
+  unsigned long expireTime;
+
   void fastfixerik3(){
     Connection();}
 
@@ -1204,6 +1207,7 @@ public:
   void opened(){
     Assert(isOpening());
     PD((TCP_INTERFACE,"opened site:%s",remoteSite->site->stringrep()));
+    expireTime = 0;
     clearOpening();
     remoteSite->setSiteStatus(SITE_OK);
     remoteSite->incTmpSessionNr();
@@ -1264,6 +1268,13 @@ public:
     setFlag(OK_PROBE);}
   void clearProbingOK(){
     clearFlag(OK_PROBE);}
+  Bool isProbing(){
+    return testFlag(PROBE);}
+  void setProbing(){
+    setFlag(PROBE);}
+  void clearProbing(){
+    clearFlag(PROBE);}
+
 
   void setWantsToClose();
   void clearWantsToClose();
@@ -1314,6 +1325,15 @@ public:
   void clearMyInitiative(){
     Assert(isMyInitiative());
     clearFlag(MY_DWN);}
+
+  Bool isHisInitiative(){
+    return testFlag(HIS_DWN);}
+  void setHisInitiative(){
+    Assert(!isHisInitiative());
+    setFlag(HIS_DWN);}
+  void clearHisInitiative(){
+    Assert(isHisInitiative());
+    clearFlag(HIS_DWN);}
 
   void init(RemoteSite *s){
     next = prev = NULL;
@@ -1535,6 +1555,8 @@ class TcpCache {
   Connection* myTail;      //
   Connection* tmpHead;     // Connections that are tmp down
   Connection* tmpTail;     //
+  Connection* probeHead;     // Connections that are tmp down
+  Connection* probeTail;     //
   int current_size;
   int close_size;
   int open_size;
@@ -1546,29 +1568,28 @@ class TcpCache {
 
   void setMinTime(int time){
     int testTime = time + 1;
-    if(time <min(
-                 min(tmpTime?WKUPTMP_TIME:testTime,
-                     probeTime?WKUPPRB_TIME:testTime) ,
-                 myTime?WKUPMYC_TIME:testTime))
-      am.setMinimalTaskInterval((void*)this, time);
+    if(time < min(min(tmpTime?WKUPTMP_TIME:testTime,
+                      probeTime?WKUPPRB_TIME:testTime) ,
+                  myTime?WKUPMYC_TIME:testTime)){
+      //printf("SettingMinTime %d\n",time);
+      am.setMinimalTaskInterval((void*)this, time);}
   }
 
   void newTmpDwn(){
     if(!tmpTime){
-      tmpTime=curTime+WKUPTMP_TIME;
-      setMinTime(WKUPTMP_TIME);}
+      setMinTime(WKUPTMP_TIME);
+      tmpTime=curTime+WKUPTMP_TIME;}
   }
 
   void newProbe(){
     if(!probeTime){
-      probeTime=curTime+WKUPPRB_TIME;
-      setMinTime(WKUPPRB_TIME);}
-
+      setMinTime(WKUPPRB_TIME);
+    probeTime=curTime+WKUPPRB_TIME;}
   }
   void newMyDwn(){
     if(!myTime)   {
-      myTime=curTime+WKUPMYC_TIME;
-      setMinTime(WKUPMYC_TIME);}
+      setMinTime(WKUPMYC_TIME);
+      myTime=curTime+WKUPMYC_TIME;}
   }
 
 
@@ -1655,21 +1676,23 @@ class TcpCache {
         GenCast(c, Connection*, w,WriteConnection*);
         if(w->goodCloseCand()){
           w->closeConnection();
+          //printf("WriteCon closed by me %d\n",(int)w);
           return;}
         if(cncls==NULL && w->canbeClosed())
           cncls = w;}
       else{
         GenCast(c, Connection*,  r, ReadConnection*);
         if(r->goodCloseCand()){
-          /*      printf("ReadCon closed by me %s\n",
-                 r->remoteSite->site->stringrep());
-                 */
+          //printf("ReadCon closed by me %d\n",(int)r);
           r->closeConnection();
           return;}}
     c = c->next;}
     if(open_size>max_size * 2 && cncls != NULL){
+      //printf("Forced to close %d\n",(int)cncls);
       cncls->closeConnection();
-      return;}}
+      return;}
+    //printf("NoOneToClose\n");
+  }
 
 public:
   Bool accept;
@@ -1727,24 +1750,26 @@ public:
     while(openTmpBlockedConnection());}
 
   TcpCache():accept(FALSE){
-    currentHead = NULL;
-    currentTail= NULL;
-    closeHead= NULL;
-    closeTail= NULL;
-    myHead= NULL;
-    myTail= NULL;
-    tmpHead= NULL;
-    tmpTail= NULL;
-    current_size = 0;
-    close_size = 0;
-    open_size = 0;
-    max_size=MAXTCPCACHE;
-    openCon = TRUE;
-    probes = FALSE;
-    shutDwn = FALSE;
-    tmpTime = 0;
-    myTime = 0;
-    probeTime= 0;
+    currentHead         = NULL;
+    currentTail         = NULL;
+    closeHead           = NULL;
+    closeTail           = NULL;
+    myHead              = NULL;
+    myTail              = NULL;
+    tmpHead             = NULL;
+    tmpTail             = NULL;
+    probeHead           = NULL;
+    probeTail           = NULL;
+    current_size        = 0;
+    close_size          = 0;
+    open_size           = 0;
+    max_size            =MAXTCPCACHE;
+    openCon             = TRUE;
+    probes              = FALSE;
+    shutDwn             = FALSE;
+    tmpTime             = 0;
+    myTime              = 0;
+    probeTime           = 0;
     PD((TCPCACHE,"max_size:%d",max_size));}
 
   void nowAccept(){
@@ -1756,7 +1781,7 @@ public:
 
   void adjust(){
     if(myHead!=NULL && open_size<max_size){
-      openMyClosedConnection();
+      openMyClosedConnection(0);
       return;}
     if(open_size>max_size){
       //printf("Size too big %d\n",open_size);
@@ -1767,8 +1792,23 @@ public:
     else
       accept = TRUE;}
 
+  Bool canAddWrite(){return open_size < max_size;}
+
   void add(Connection *w) {
-    //    printf("cache add connection r:%d\n",(int)w);
+    /*    printf("add r:%d \n cur: %d %d \n close: %d %d \n my: %d %d \n tmp: %d %d \n probe: %d %d\n",(int)w,
+           (int) currentHead,
+           (int)currentTail     ,
+           (int)closeHead,
+           (int)closeTail,
+           (int)myHead,
+           (int)myTail,
+           (int)tmpHead,
+           (int)tmpTail,
+           (int)probeHead,
+           (int)probeTail
+           );
+    */
+    WriteConnection *ww;
     if(w->isOpening()){
       addToFront(w, currentHead, currentTail);
       open_size++;
@@ -1781,62 +1821,73 @@ public:
       adjust();
       return;}
     Assert(w->isWriteCon());
-    if(((WriteConnection*)w)->isMyInitiative()){
-      PD((TCPCACHE,"Starting wakeups"));
-      //printf("WriteCon closed by me %s\n",
-      //             w->remoteSite->site->stringrep());
+    ww = ((WriteConnection*)w);
+    if(ww->isMyInitiative() ||ww->isHisInitiative()){
       newMyDwn();
       addToFront(w, myHead, myTail);
       return;}
-    if(((WriteConnection*)w)->isTmpDwn()){
-      //printf("WriteCon closed by him %s\n",
-      //             w->remoteSite->site->stringrep());
-      //printf("Tmps %x %x %x open:%d time:%d\n",(int)tmpHead, (int)tmpTail,(int)w,(int)openCon,(int)tmpTime);
+    if(ww->isTmpDwn()){
       if(openCon) newTmpDwn();
       addToFront(w, tmpHead, tmpTail);
+      return;}
+    if(ww->isProbing()){
+      newProbe();
+      addToFront(w, probeHead, probeTail);
+      /*printf("Adding %d to probe %d %d\n",(int)ww,(int)probeHead,
+             (int)probeTail);
+      */
       return;}
     OZ_warning("Unknown type of connection");
     Assert(0);}
 
   void remove(Connection *w){
-    //    printf("cache remove connection r:%d\n",(int)w);
-    //     (int)w->getRemoteSite(),open_size, close_size);
-    //EK remove thisone?
     if(w->isOpening()){
+      //fprintf(stderr,"rmO\n");
       unlink(w, currentHead, currentTail);
       open_size--;
       adjust();
       return;}
     if(w->isClosing()){
+      //fprintf(stderr,"rmC\n");
       unlink(w, closeHead, closeTail);
       close_size--;
       adjust();
       return;}
     if(w->isWriteCon()){
-      if(((WriteConnection*)w)->isMyInitiative()){
+      if(((WriteConnection*)w)->isMyInitiative()
+         ||((WriteConnection*)w)->isHisInitiative()){
+        //fprintf(stderr,"rmM\n");
         unlink(w, myHead, myTail);
         return;}
       if(((WriteConnection*)w)->isTmpDwn()){
+        //fprintf(stderr,"rmT\n");
         unlink(w, tmpHead, tmpTail);
-        return;}}
+        return;}
+      if(((WriteConnection*)w)->isProbing()){
+        //fprintf(stderr,"rmP\n");
+        unlink(w, probeHead, probeTail);
+        //printf("Removing %d from probe %d %d \n",(int)w,(int)probeHead,(int)probeTail);
+        return;}
+
+    }
+    //fprintf(stderr,"rmCCC\n");
     unlink(w, currentHead, currentTail);
     open_size--;
     adjust();}
 
 
   void touch(Connection *r) {
-    if(currentHead!=r){
+  if(currentHead!=r){
       unlink(r, currentHead, currentTail);
       addToFront(r,currentHead, currentTail);}
     adjust();}
 
   Bool openTmpBlockedConnection();
-  Bool openMyClosedConnection();
-  Bool sendProbeConnections();
-  void probeStarted();
+  Bool openMyClosedConnection(unsigned long time);
+  Bool startProbe();
 
-  void wakeUp(unsigned int time);
-  Bool checkWakeUp(unsigned int time);
+  void wakeUp(unsigned long time);
+  Bool checkWakeUp(unsigned long time);
 };
 
 
@@ -1844,27 +1895,30 @@ public:
 /* SECTION 12a:  WakeUps of the TCP-cache                   */
 /************************************************************/
 
-void  TcpCache::wakeUp(unsigned int time){
-  if (myTime<time)
-    if( openMyClosedConnection())
+void  TcpCache::wakeUp(unsigned long time){
+  if (myTime && myTime<time)
+    if( openMyClosedConnection(time))
       myTime += WKUPMYC_TIME;
-    else
-      myTime = 0;
-  if (tmpTime<time)
+    else {
+      //printf("Nothingmore to check my\n");
+      myTime = 0;}
+  if (tmpTime && tmpTime<time)
     if(openTmpBlockedConnection())
       tmpTime += WKUPTMP_TIME;
     else
       tmpTime = 0;
-  if (probeTime<time)
-    if(sendProbeConnections())
+  if (probeTime && probeTime<time){
+    //printf("StartingProbes\n");
+    if(startProbe())
       probeTime += WKUPPRB_TIME;
     else
-      probeTime = 0;
-  if(!(probeTime|tmpTime|myTime))
-    am.setMinimalTaskInterval((void*)this,0);
+      probeTime = 0;}
+  if(!(probeTime|tmpTime|myTime)){
+    //printf("Settingmin time to 0\n");
+    am.setMinimalTaskInterval((void*)this,0);}
 }
 
-Bool TcpCache::checkWakeUp(unsigned int time){
+Bool TcpCache::checkWakeUp(unsigned long time){
   curTime = time;
   return ((myTime||probeTime||tmpTime)&&
           (myTime<time || tmpTime < time || probeTime< time));}
@@ -1888,27 +1942,49 @@ Bool TcpCache::openTmpBlockedConnection(){
     w->open();}
   return tmpHead!=NULL;}
 
-Bool TcpCache::openMyClosedConnection(){
-  PD((TCPCACHE,"OpeningMys %x %x",myHead, myTail));
-  if(myHead!=NULL){
-    WriteConnection *w = ((WriteConnection *)getLast(myHead, myTail));
-    //printf("Opening con closed by me %s\n",
-    //w->remoteSite->site->stringrep());
-    w->clearMyInitiative();
+Bool TcpCache::openMyClosedConnection(unsigned long time){
+  /*  if(time)
+      printf("OpeningMys %d %d time:%d\n",(int)myHead, (int)myTail, (int) time);
+  */
+  WriteConnection *w = (WriteConnection *)myHead;
+  while(time && w!= NULL){
+    if(w->expireTime == 0)
+      w->expireTime = time + CLOSE_EXPIRETIME;
+    if(w->expireTime < time ){
+      remove(w);
+      w->clearMyInitiative();
+      w->setTmpDwn();
+      add(w);
+      if(w->isProbingTMP())
+        w->remoteSite->site->probeFault(PROBE_TEMP);}
+    w = (WriteConnection*) w->next;}
+  w = (WriteConnection *)myTail;
+  while(w!=NULL && time==0 && w->isHisInitiative())
+    w = (WriteConnection*) w->prev;
+  if(w!=NULL){
+    //fprintf(stderr,"Opening %d %d\n", (int)w, (int)w->isWriteCon());
+    remove(w);
+    if(w->isHisInitiative())
+      w->clearHisInitiative();
+    else
+      w->clearMyInitiative();
     w->open();}
   return myHead!=NULL;}
 
-Bool TcpCache::sendProbeConnections(){
-  PD((TCPCACHE,"SEND On PROBE CONS"));
-  probes =  findProbeCons(currentHead) != 0;
-  return probes;}
-
-
-void TcpCache::probeStarted(){
-  // ATTENTION
-  return;
-  // What is this good for?
-  // Nothing?
+Bool TcpCache::startProbe(){
+  if(probeHead!=NULL){
+    WriteConnection *w = ((WriteConnection *) getLast(probeHead, probeTail));
+    /*printf("Starting from probe r:%d %d %d\n",(int)w,(int)probeHead,
+           (int)probeTail);
+    */
+    w->clearProbing();
+    if(canAddWrite())
+      w->open();
+    else{
+      w->setMyInitiative();
+      add(w); }
+  }
+  return probeHead!=NULL;
 }
 
 
@@ -1916,20 +1992,6 @@ void TcpCache::probeStarted(){
 /************************************************************/
 /* SECTION 12b:  Exported to Perdio                           */
 /************************************************************/
-
-Bool openClosedConnection(int Type){
-  PD((TCPCACHE,"OpeningClosedConnections"));
-  switch(Type){
-  case WKUPMYC:
-    return tcpCache->openMyClosedConnection();
-  case WKUPTMP:
-    return tcpCache->openTmpBlockedConnection();
-  case WKUPPRB:
-    return tcpCache->sendProbeConnections();
-  default:
-    Assert(0);}
-  return FALSE;}
-
 
 int openclose(int Type){
   int state = 0;
@@ -1952,19 +2014,31 @@ void Connection::setClosing(){
   tcpCache->add(this);}
 
 Bool WriteConnection::shouldSendFromUser(){
-    if(isClosing()){PD((TCP_INTERFACE,"isClosing")); return FALSE;}
-    if(isOpening()) {PD((TCP_INTERFACE,"isOpening")); return FALSE;}
-    if(isIncomplete()) {PD((TCP_INTERFACE,"isIncompleteWrite")); return FALSE;}
-    if(isInWriteQueue()) {PD((TCP_INTERFACE,"isInWriteQueue")); return FALSE;}
-    if(isMyInitiative()) {PD((TCP_INTERFACE,"isMyInitiative")); return FALSE;}
-    Assert(fd!=LOST);
-    return TRUE;}
+  if(isClosing()){PD((TCP_INTERFACE,"isClosing")); return FALSE;}
+  if(isOpening()) {PD((TCP_INTERFACE,"isOpening")); return FALSE;}
+  if(isIncomplete()) {PD((TCP_INTERFACE,"isIncompleteWrite")); return FALSE;}
+  if(isInWriteQueue()) {PD((TCP_INTERFACE,"isInWriteQueue")); return FALSE;}
+  if(isMyInitiative()) {PD((TCP_INTERFACE,"isMyInitiative")); return FALSE;}
+  if(isHisInitiative()) {PD((TCP_INTERFACE,"isProbing")); return FALSE;}
+  if(isProbing()) {
+    //printf("Sending on probing con %d\n", (int) this);
+    tcpCache->remove(this);
+    clearProbing();
+    if(tcpCache->canAddWrite())
+      open();
+    else{
+      //printf("Clogged tcpCache %d\n",(int)this);
+      setMyInitiative();
+      tcpCache->add(this); }
+    return FALSE;}
+  Assert(fd!=LOST);
+  return TRUE;}
 
 ipReturn WriteConnection::open(){
-    PD((TCP_INTERFACE,"OpenConnection"));
-    setOpening();
-    tcpCache->add(this);
-    return tcpOpen(remoteSite, this);}
+  PD((TCP_INTERFACE,"OpenConnection"));
+  setOpening();
+  tcpCache->add(this);
+  return tcpOpen(remoteSite, this);}
 /**********************************************************************/
 /*   SECTION 14: MessageManagers                                           */
 /**********************************************************************/
@@ -2017,41 +2091,6 @@ public:
 /**********************************************************************/
 /*   SECTION 15: Methods                                            */
 /**********************************************************************/
-
-int findProbeCons(Connection *c){
-  if(c==NULL) return 0;
-  if(c->isWriteCon()){
-    WriteConnection *w = (WriteConnection *)c;
-    if(w->isProbingPrm()){
-      int nr = 1 + findProbeCons(c->next);
-      if(!w->isWritePending()){
-        NetMsgBuffer* nb = netMsgBufferManager->
-          getNetMsgBuffer(NULL);
-        nb->constructMsg(w->remoteSite,TCP_PING_REQUEST);
-        Message* m= messageManager->
-          allocMessage(nb, NO_MSG_NUM, NULL,(MessageType) 0, 0);
-        switch(tcpSend(w->fd,m,TRUE)){
-        case IP_OK:{
-          PD((TCP,"PingMsg sent"));
-          messageManager->freeMessageAndMsgBuffer(m);
-          break;}
-        case IP_BLOCK:{
-          PD((TCP,"PingMsg Blocked"));
-          w->addCurQueue(m);
-#ifndef SLOWNET
-          OZ_registerWriteHandler(w->fd,tcpWriteHandler,(void *)w);
-#endif
-          break;}
-        case IP_PERM_BLOCK:{
-          PD((TCP,"CloseMsg nSent sitecrash"));
-          messageManager->freeMessageAndMsgBuffer(m);
-          w->connectionLost();
-          break;}
-        default: Assert(0);}}
-      return nr;}
-  }
-  return findProbeCons(c->next);}
-
 
 int RemoteSite::discardUnsentMessage(int msgNum){
   Message *m  = writeQueue.find(msgNum);
@@ -2498,7 +2537,7 @@ int smallMustRead(int fd,BYTE *pos,int todo,int tries){
   while(TRUE){
     int ret=osread(fd,pos,todo);
     if(ret==todo) return 0;
-    if(ret == 0) return IP_BLOCK;
+    if(ret == 0) return IP_CLOSE;
     if(ret<0){
 
 #ifdef LINUX
@@ -2837,6 +2876,7 @@ int tcpPreReadHandler(int fd,void *r0){
 
   r->setMaxSizeAck(maxNrSize);
   r->clearOpening();
+
 OZ_registerReadHandler(fd,tcpReadHandler,(void *)r);
 return 0;
 
@@ -2910,7 +2950,7 @@ start:
       return 0;}
 
     if(m!=NULL){
-      fprintf(stderr,"dumping incomplete read\n");
+      //fprintf(stderr,"dumping incomplete read\n");
       Assert(r->isIncomplete());
       messageManager->freeMessage(m);}
 
@@ -3116,18 +3156,22 @@ retry:
 int tcpConnectionHandler(int fd,void *r0){
   WriteConnection *r=(WriteConnection *)r0;
   int ret,bufSize = 9, tcheck,todo=bufSize, written;
-  BYTE *buf = new BYTE[bufSize], *pos = buf;
+  BYTE *buf1 = new BYTE[bufSize], *pos, *buf2=NULL;
   unsigned int strngLen;
   time_t timestamp;
   char msgType;
 
+  pos = buf1;
+
   PD((TCP,"tcpConnectionHandler invoked r:%x",r));
   ret = smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES);
   if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
-  if(ret)goto tcpConFailure;
+  if(ret == IP_CLOSE) {goto tcpConClosed;}
+  if(ret){goto tcpConFailure;}
 
-  pos = buf;
-  if(*pos!=TCP_CONNECTION) goto tcpConFailure;
+  pos = buf1;
+  if(*pos!=TCP_CONNECTION)
+    {goto tcpConFailure;}
 
   pos++;
   timestamp=net2int(pos);
@@ -3137,19 +3181,17 @@ int tcpConnectionHandler(int fd,void *r0){
   pos += netIntSize;
   strngLen = net2int(pos);
 
-  delete buf;
-  buf = new BYTE[strngLen + 1];
-  pos = buf;
+
+  buf2 = new BYTE[strngLen + 1];
+  pos = buf2;
 
   ret=smallMustRead(fd,pos,strngLen,CONNECTION_HANDLER_TRIES);
   if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
-  if(ret)goto tcpConFailure;
+  if(ret){goto tcpConFailure;}
 
 
   if (strlen(PERDIOVERSION)!=strngLen ||
       strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) goto tcpConPermLost;
-
-  delete buf;
 
   PD((TCP,"Sending My Site Message..%s",myDSite->stringrep()));
   if(r->isAcked()) msgType = TCP_MYSITE;
@@ -3172,7 +3214,7 @@ int tcpConnectionHandler(int fd,void *r0){
       written += ret;
       if(written==bufSize) break;
       if(ret<=0 && ret!=EINTR && ossockerrno()!=EWOULDBLOCK && ossockerrno()!=EAGAIN )
-        goto tcpConFailure;}
+        goto tcpConClosed;}
   }
 
   PD((OS,"unregister READ fd:%d",fd));
@@ -3189,17 +3231,28 @@ int tcpConnectionHandler(int fd,void *r0){
 #endif
   PD((TCP,"tcpConnectionHandler ord fin"));
   r->opened();
+  delete buf1;
+  if(buf2)delete buf2;
   return 0;
 
-tcpConFailure:
+ tcpConClosed:
   osclose(fd);
-  delete buf;
+  delete buf1;
+  if(buf2)delete buf2;
+  r->close(HIS_INITIATIVE);
+  return 1;
+
+ tcpConFailure:
+  osclose(fd);
+  delete buf1;
+  if(buf2)delete buf2;
   r->connectionBlocked();
   return 1;
 
 tcpConPermLost:
   osclose(fd);
-  delete buf;
+  delete buf1;
+  if(buf2)delete buf2;
   r->connectionLost();
   return 1;
 }
@@ -3437,7 +3490,7 @@ int RemoteSite::readRecMsgCtr(){
 /************************************************************/
 
 void RemoteSite::sitePrmDwn(){
-  //  printf("Site prm %s\n",site->stringrep());
+  //  printf("Site prm %d %d %s\n",(int)writeConnection, (int) readConnection,site->stringrep());
   status = SITE_PERM;
   if(readConnection!=NULL && readConnection->isReading()){
     readConnection->setCrashed();
@@ -3448,6 +3501,9 @@ void RemoteSite::sitePrmDwn(){
        writeconnection from TC. I dont know about the LOST....
     */
     if(writeConnection->getFD() != LOST ||
+       writeConnection->isMyInitiative()||
+       writeConnection->isHisInitiative()||
+       writeConnection->isProbing() ||
        writeConnection->isTmpDwn()||
        writeConnection->isOpening())
       writeConnection->prmDwn();
@@ -3467,13 +3523,13 @@ void RemoteSite::sitePrmDwn(){
 
 
 void RemoteSite::siteTmpDwn(closeInitiator ci){
-  if(status ==  SITE_OK)
+  if(status ==  SITE_OK && ci == TMP_INITIATIVE)
     status = SITE_TEMP;
   if(writeConnection!=NULL)
     writeConnection->close(ci);}
 
 void ReadConnection::prmDwn(){
-  PD((TCP,"ReadConnection is taken down fd: %d",fd));
+  //fprintf(stderr,"ReadConnection is taken down fd: %d\n",fd);
   osclose(fd);
   OZ_unregisterRead(fd);
   fd =  -1;
@@ -3584,26 +3640,40 @@ void WriteConnection::close(closeInitiator type){
   if(isClosing()) clearClosing();
   if(isOpening())
     clearOpening();
-  if(type != MY_INITIATIVE && isProbingTMP() &&
+  if(type == TMP_INITIATIVE && isProbingTMP() &&
      !isProbingOK()){
     remoteSite->site->probeFault(PROBE_TEMP);
     setProbingOK();}
   if(type!=TMP_INITIATIVE) sentMsgCtr=0;
-  if(sentMsg!=NULL || isWritePending() ||
-     isProbingOK() || isProbingPrm()){
-    PD((TCP_CONNECTIONH,"Storing connection"));
-    if(type == MY_INITIATIVE)
+  if(sentMsg!=NULL || isWritePending()) {
+    //printf("Storing connection %d\n",(int)this);
+    switch(type){
+    case MY_INITIATIVE:
       setMyInitiative();
-    else{
-      if(type == HIS_INITIATIVE &&
-         (sentMsg!=NULL || isWritePending())){
+      break;
+    case HIS_INITIATIVE:
+      if(sentMsg!=NULL || isWritePending()){
         remoteSite->resendAckQueue(sentMsg);
-        setInWriteQueue();
-        sentMsg = NULL;}
-      setTmpDwn();}
+        setInWriteQueue();}
+      sentMsg = NULL;
+      setHisInitiative();
+      break;
+    case TMP_INITIATIVE:
+      setTmpDwn();
+      break;
+    default:
+      OZ_warning("Unknown type of close reason %d",type);
+      Assert(0);}
+
     clearFD();
     tcpCache->add(this);
     return;}
+  if(isProbingOK() || isProbingPrm() || isProbingTMP()){
+    clearFD();
+    setProbing();
+    tcpCache->add(this);
+    return;}
+
   PD((TCP_CONNECTIONH,"Discarding Connection"));
   informSiteRemove();
   clearFlag(WRITE_CON);
@@ -3930,6 +4000,7 @@ void initNetwork()
   port_t p;
   int tcpFD;
   PD((TCP_INTERFACE,"Init Network"));
+
 
   writeConnectionManager = new WriteConnectionManager();
   readConnectionManager = new ReadConnectionManager();
