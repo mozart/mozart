@@ -13,8 +13,7 @@
 
 #include <sys/types.h>
 
-#include "mem.hh"
-#include "tagged.hh"
+#include "am.hh"
 
 // ----------------------------------------------------------------
 // heap memory
@@ -356,10 +355,26 @@ void *heapMallocOutline(size_t chunk_size)
 void getMemFromOS(size_t sz)
 {
   if (sz > heapBlockSize) {
-    error("too big memory chunk: look for an infinite recursion");
+    error("memory chunk too big: look for an infinite recursion");
   }
 
   heapTotalSize += heapBlockSize/KB;
+  
+  if (ozconf.heapMaxSize != 0 && heapTotalSize >= ozconf.heapMaxSize) {
+    int newSize = (heapTotalSize*3)/2;
+    prefixError();
+    printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
+	   ozconf.heapMaxSize,newSize);
+    fflush(stdout);
+    char buf[1000];
+    fgets(buf,1000,stdin);
+    if (strcmp(buf,"y\n") != 0 &&
+	strcmp(buf,"ye\n") != 0 &&
+	strcmp(buf,"yes\n") != 0) {
+      am.exitOz(1);
+    }
+    ozconf.heapMaxSize = newSize;
+  }
 
   heapEnd = (char *) ozMalloc(heapBlockSize);
   

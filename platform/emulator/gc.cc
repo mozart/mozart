@@ -2260,7 +2260,7 @@ void performCopying(void)
 void checkGC()
 {
   Assert(!am.isCritical());
-  if (getUsedMemory() > ozconf.heapMaxSize && ozconf.gcFlag) {
+  if (getUsedMemory() > ozconf.heapThreshold && ozconf.gcFlag) {
     am.setSFlag(StartGC);
   }
 }
@@ -2277,8 +2277,8 @@ void AM::doGC()
 
   /* calc upper limits for next gc */
   unsigned int used = getUsedMemory();
-  if (used > (ozconf.heapMaxSize*ozconf.heapMargin)/100) {
-    ozconf.heapMaxSize = ozconf.heapMaxSize*(100+ozconf.heapIncrement)/100;
+  if (used > (ozconf.heapThreshold*ozconf.heapMargin)/100) {
+    ozconf.heapThreshold = ozconf.heapThreshold*(100+ozconf.heapIncrement)/100;
   }
 
   unsetSFlag(StartGC);
@@ -2289,7 +2289,7 @@ void AM::doGC()
 // pre-condition: root node is installed
 Bool AM::idleGC()
 {
-  if (getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapMaxSize)/100 && ozconf.gcFlag) {
+  if (getUsedMemory() > (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
     if (ozconf.showIdleMessage) {
       printf("gc ... ");
       fflush(stdout);
