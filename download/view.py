@@ -689,6 +689,18 @@ def page_ipaq(mozart_version):
     print_entries_by_module(l,"ipaqpkg")
     page_table_end()
     page_div_end()
+    page_section("Notes")
+    page_div_begin()
+    print """
+<p>This package does <b>not</b> run on Windows CE.  This package runs on the
+Familiar Linux operating system that you can find here :
+<a href=\"http://www.handhelds.org/\">http://www.handhelds.org/</a></p>
+<p>Warning : at this time, not all iPaqs are supported by
+Familiar. Please check their Status of Platform Linux Support to see
+if your iPaq is supported or not: <a href=
+\"http://www.handhelds.org/projects/\">http://www.handhelds.org/projects/</a></p>
+"""
+    page_div_end()
     page_license()
     page_end()
 
