@@ -693,7 +693,7 @@ def page_cvs(mozart_version):
     <pre>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS login</pre>
     <p>when prompted for a password, answer <tt>anoncvs</tt>.  Then you can retrieve the
     module you are interested in as follows:</p>
-    <pre>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -d TAG MODULE</pre>
+    <pre>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r TAG MODULE</pre>
     <p>where <code>TAG</code> is given by the table above and <code>MODULE</code> is
     <code>mozart</code>, <code>mozart-stdlib</code> or whatever else appears in the table
     above.</p>
