@@ -12,7 +12,7 @@
 #ifndef __FDOMN__H__
 #define __FDOMN__H__
 
-//#define BETA
+#define BETA
 
 #ifdef BETA
 
