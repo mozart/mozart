@@ -487,7 +487,7 @@ RefsArray refsArrayUnmark(RefsArray r) {
 // r[-1] gc tag set --> has already been copied
 
 inline
-RefsArray gcRefsArray(RefsArray r, Bool isUnsafe = NO) {
+RefsArray gcRefsArray(RefsArray r) {
   if (r == NULL)
     return r;
 
@@ -505,15 +505,7 @@ RefsArray gcRefsArray(RefsArray r, Bool isUnsafe = NO) {
 
   refsArrayMark(r,aux);
 
-  if (isUnsafe) {
-    for (int i=sz; i--;)
-      if (r[i])
-        OZ_collectHeapTerm(r[i],aux[i]);
-      else
-        aux[i]=makeTaggedNULL();
-  } else {
-    OZ_collectHeapBlock(r, aux, sz);
-  }
+  OZ_collectHeapBlock(r, aux, sz);
 
   return aux;
 }
@@ -2441,12 +2433,18 @@ inline
 OzDebug *OzDebug::gcOzDebug() {
   OzDebug *ret = (OzDebug*) gcReallocStatic(this,sizeof(OzDebug));
 
-  ret->Y = gcRefsArray(ret->Y);
+  ret->Y   = gcRefsArray(ret->Y);
   ret->CAP = gcAbstraction(ret->CAP);
+
   if (ret->data)
     OZ_collectHeapTerm(ret->data,ret->data);
 
-  ret->arguments = gcRefsArray(ret->arguments,OK);
+  if (ret->arity > 0) {
+    ret->arguments = (TaggedRef *)
+      heapMalloc(ret->arity * sizeof(TaggedRef));
+
+    OZ_collectHeapBlock(arguments, ret->arguments, arity);
+  }
 
   return ret;
 }

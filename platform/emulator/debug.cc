@@ -47,12 +47,14 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   if (data != makeTaggedNULL()) {
     pairlist = oz_cons(OZ_pairA("data",data),pairlist);
   }
-  if (arguments != (RefsArray) NULL) {
+  if (arity > 0) {
+
     TaggedRef arglist = oz_nil();
-    for(int i = getRefsArraySize(arguments) - 2; i >= 0; i--) {
-      if (arguments[i] == makeTaggedNULL())
+
+    for(int i = arity; i--; ) {
+      if (arguments[i] == NameVoidRegister)
         arguments[i] = OZ_newVariable();
-      arglist = oz_cons(arguments[i],arglist);
+      arglist = oz_cons(arguments[i], arglist);
     }
     pairlist = oz_cons(OZ_pairA("args",arglist),pairlist);
   }
