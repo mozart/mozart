@@ -28,7 +28,6 @@
 #include "var_all.hh"
 #include "prop_int.hh"
 
-static
 void splitfname(const char * fname, char * &dirname, char * &basename)
 {
 #ifdef WINDOWS
@@ -831,6 +830,10 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     Thread * thr = oz_currentThread();
     OZ_Term debug_frame_raw =
       thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1);
+
+    OZ_Term abstr_stack_entry =
+      thr->getTaskStackRef()->findAbstrRecord();
+
     if (debug_frame_raw != OZ_nil()) {
       OZ_Term debug_frame = OZ_head(debug_frame_raw);
 
@@ -839,16 +842,19 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
       splitfname(fname, dirname, basename);
 
-      OZ_Term prop_loc = OZ_record(AtomPropLocation,
-                                   OZ_cons(AtomFile,
-                                           OZ_cons(AtomLine,
-                                                   OZ_cons(AtomColumn,
-                                                           OZ_cons(AtomPath,
-                                                                   OZ_nil())))));
+      OZ_Term prop_loc
+        = OZ_record(AtomPropLocation,
+                    OZ_cons(AtomPropInvoc,
+                            OZ_cons(AtomFile,
+                                    OZ_cons(AtomLine,
+                                            OZ_cons(AtomColumn,
+                                                    OZ_cons(AtomPath,
+                                                            OZ_nil()))))));
       OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
       OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
       OZ_putSubtree(prop_loc, AtomLine, OZ_subtree(debug_frame, AtomLine));
       OZ_putSubtree(prop_loc, AtomColumn, OZ_subtree(debug_frame, AtomColumn));
+      OZ_putSubtree(prop_loc, AtomPropInvoc, abstr_stack_entry);
 
       oz_propAddName(prop, prop_loc);
 

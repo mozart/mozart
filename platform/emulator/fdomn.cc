@@ -173,7 +173,11 @@ FDIntervals * FDIntervals::copy(void)
 {
   FDIntervals * new_item = newIntervals(high);
 
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  memcpy(&new_item->i_arr, &i_arr, high * sizeof(_i_arr_type));
+#else
   memcpy(new_item->i_arr, i_arr, high * sizeof(i_arr[0]));
+#endif
 
   return new_item;
 }
@@ -214,8 +218,12 @@ const FDIntervals &FDIntervals::operator = (const FDIntervals &iv)
   AssertFD(high >= iv.high);
 
   high = iv.high;
-  memcpy(i_arr, iv.i_arr, high * sizeof(i_arr[0]));
 
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  memcpy(&i_arr, &iv.i_arr, high * sizeof(_i_arr_type));
+#else
+  memcpy(i_arr, iv.i_arr, high * sizeof(i_arr[0]));
+#endif
   return *this;
 }
 
@@ -685,7 +693,11 @@ const FDBitVector &FDBitVector::operator = (const FDBitVector &bv)
   AssertFD(high >= bv.high);
 
   high = bv.high;
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  memcpy(&b_arr, &bv.b_arr, high * sizeof(b_arr_t));
+#else
   memcpy(b_arr, bv.b_arr, high * sizeof(b_arr[0]));
+#endif
 
   return *this;
 }
@@ -695,7 +707,11 @@ FDBitVector * FDBitVector::copy(void)
 {
   FDBitVector * new_item = newBitVector(high);
 
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  memcpy(&new_item->b_arr, &b_arr, high * sizeof(b_arr_t));
+#else
   memcpy(new_item->b_arr, b_arr, high * sizeof(b_arr[0]));
+#endif
 
   return new_item;
 }

@@ -428,7 +428,7 @@ OZ_Return InBPropagator::propagate(void)
   PropagatorController_V_V P(v, b);
 
   if (*b == fd_singl) {
-    FailOnEmpty(*v &= b->getSingleElem() ? domain : ~domain);
+    FailOnEmpty(*v &= (b->getSingleElem() ? domain : ~domain));
     OZ_DEBUGPRINTTHIS("vanish out ");
     return P.vanish();
   }

@@ -39,6 +39,8 @@
 #include "debug.hh"
 #include "dpInterface.hh"
 
+unsigned invoc_counter = 0;
+
 int TaskStack::tasks()
 {
   /* we do not count the empty task */
@@ -203,6 +205,56 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
   } else {
     frame = lastframe;
     return CodeArea::dbgGetDef(PC,definitionPC,frameId,Y,G);
+  }
+}
+
+void splitfname(const char * fname, char * &dirname, char * &basename);
+
+TaggedRef TaskStack::findAbstrRecord(void)
+{
+  Frame * frame = getTop();
+  PrTabEntry * abstr = NULL;
+
+  while (1) {
+    GetFrame(frame,PC,Y,G);
+
+    if (PC == C_EMPTY_STACK) {
+      frame = NULL;
+      return NameUnit;
+    }
+
+    if (PC == C_DEBUG_CONT_Ptr) {
+      OzDebug *dbg = (OzDebug *) Y;
+      abstr = dbg->CAP->getPred();
+    }
+
+    if (PC == C_SET_ABSTR_Ptr && abstr != NULL) {
+      unsigned invoc_counter = (unsigned) G;
+
+
+      const char * fname = OZ_atomToC(abstr->getFile());
+      char * dirname, * basename;
+
+      splitfname(fname, dirname, basename);
+
+      OZ_Term prop_loc =
+        OZ_record(AtomPropInvoc,
+                  OZ_cons(AtomName,
+                          OZ_cons(AtomFile,
+                                  OZ_cons(AtomLine,
+                                          OZ_cons(AtomColumn,
+                                                  OZ_cons(AtomPath,
+                                                          OZ_cons(AtomInvoc,
+                                                                  OZ_nil())))))));
+      OZ_putSubtree(prop_loc, AtomName, abstr->getName());
+      OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
+      OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
+      OZ_putSubtree(prop_loc, AtomLine, OZ_int(abstr->getLine()));
+      OZ_putSubtree(prop_loc, AtomColumn, OZ_int(abstr->getColumn()));
+      OZ_putSubtree(prop_loc, AtomInvoc, OZ_int(invoc_counter));
+
+      return prop_loc;
+    }
   }
 }
 

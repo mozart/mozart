@@ -109,6 +109,7 @@ OZ_Return LinEqAbsPropagator::propagate(void)
   for(j=reg_sz; j--;) {
     x[j].read(reg_x[j]);
     x_aux_neg[j] = x_aux_pos[j] = *x[j];
+    Assert(reg_a[j] != 0);
   }
 
   if (unified) {
@@ -261,8 +262,10 @@ OZ_Return LinLessEqAbsPropagator::propagate(void)
   DECL_DYN_ARRAY(OZ_FDIntVar, x, reg_sz);
   PropagatorController_VV_V P(reg_sz, x, d);
 
-  for(j = reg_sz; j--;)
+  for(j = reg_sz; j--;) {
     x[j].read(reg_x[j]);
+    Assert(reg_a[j] != 0);
+  }
 
   if (unified) {
     reg_a[dpos] -= 1;
@@ -360,6 +363,8 @@ OZ_Return LinNotEqAbsPropagator::propagate(void)
   int  num_of_singl = 0, last_nonsingl = 0;
   for(j = reg_sz; j--;) {
     x[j].read(reg_x[j]);
+    Assert(reg_a[j] != 0);
+
     if (*x[j] == fd_singl)
       num_of_singl += 1;
     else
@@ -467,6 +472,7 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
   for(j=reg_sz; j--;) {
     x[j].read(reg_x[j]);
     x_aux_neg[j] = x_aux_pos[j] = *x[j];
+    Assert(reg_a[j] != 0);
   }
 
   if (unified) {
@@ -527,7 +533,9 @@ OZ_Return LinGreaterEqAbsPropagator::propagate(void)
           }
         } // for
 
-        bound1 = (dmin - summax) / double(reg_a[j]);
+        if (reg_a[j] != 0) {
+          bound1 = (dmin - summax) / double(reg_a[j]);
+        }
         d_size = CLAUSE(x_aux_neg[j].getSize(), x_aux_pos[j].getSize());
 
         if (reg_a[j] < 0) {
