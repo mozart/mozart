@@ -152,45 +152,54 @@ Bool AM::entailment ()
 }
 
 inline
-Bool AM::isLocalUVar(TaggedRef var)
+Bool AM::isLocalUVar(TaggedRef var,TaggedRef *varPtr)
 {
-  return (var == currentUVarPrototype ||
-	  // variables are usually bound 
-	  // in the node where they are created
-	  tagged2VarHome(var)->getBoardFast() == currentBoard );
+  // variables are usually bound 
+  // in the node where they are created
+  if (var == currentUVarPrototype) return OK;
+  return isLocalUVarOutline(var,varPtr);
 }
 
 inline
-Bool AM::isLocalSVar(TaggedRef var) {
-  Board *home = tagged2SVar(var)->getHome1();
-
-  return (home == currentBoard ||
-	  home->getBoardFast() == currentBoard );
+Bool AM::isLocalUVar(TaggedRef var)
+{
+  // variables are usually bound 
+  // in the node where they are created
+  if (var == currentUVarPrototype) return OK;
+  return tagged2VarHome(var)->getBoardFast()==currentBoard;
 }
+
 
 inline
 Bool AM::isLocalSVar(SVariable *var) {
   Board *home = var->getHome1();
 
-  return (home == currentBoard ||
-	  home->getBoardFast() == currentBoard );
+  if (home == currentBoard) return OK;
+  return isLocalSVarOutline(var);
+}
+
+inline
+Bool AM::isLocalSVar(TaggedRef var)
+{
+  return isLocalSVar(tagged2SVar(var));
 }
 
 inline
 Bool AM::isLocalCVar(TaggedRef var) {
-  Board *home = taggedCVar2SVar(var)->getHome1();
+  SVariable *svar=taggedCVar2SVar(var);
+  Board *home = svar->getHome1();
 
-  return (home == currentBoard ||
-          home->getBoardFast() == currentBoard );
+  if (home == currentBoard) return OK;
+  return isLocalSVarOutline(svar);
 }
 
 inline
-Bool AM::isLocalVariable(TaggedRef var)
+Bool AM::isLocalVariable(TaggedRef var,TaggedRef *varPtr)
 {
   CHECK_ISVAR(var);
 
   if (isUVar(var))
-    return isLocalUVar(var);
+    return isLocalUVar(var,varPtr);
   if (isSVar(var))
     return isLocalSVar(var);
 
