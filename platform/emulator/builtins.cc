@@ -2101,9 +2101,7 @@ OZ_BI_define(BIrealMakeRecord,2,1) {
       }
       SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
 
-      for (int i=newrec->getWidth(); i--; ) {
-	newrec->setArg(i,oz_newVariable());
-      }
+      newrec->initArgs();
       
       OZ_RETURN(newrec->normalize());
     }
@@ -2141,6 +2139,44 @@ OZ_BI_define(BIcloneRecord,1,1) {
   }
 
   oz_typeError(0,"Record");
+  
+} OZ_BI_end
+
+
+OZ_BI_define(BIrecordToDictionary,1,1) {
+  oz_declareNonvarIN(0,rec);
+
+  OzDictionary * dict;
+  Board * bh = oz_currentBoard();
+
+  if (oz_isLiteral(rec)) {
+    dict = new OzDictionary(bh);
+  } else if (oz_isLTuple(rec)) {
+    dict = new OzDictionary(bh);
+    dict->setArg(oz_int(1), oz_head(rec));
+    dict->setArg(oz_int(2), oz_tail(rec));
+  } else if (oz_isSRecord(rec)) {
+    SRecord * r = tagged2SRecord(rec);
+    int size = r->getWidth();
+    dict = new OzDictionary(bh,size);
+
+    if (r->isTuple()) {
+      for (int i=size; i--; )
+	dict->setArg(oz_int(i+1),r->getArg(i));
+    } else {
+      TaggedRef as = r->getArityList();
+
+      while (!oz_isNil(as)) {
+	TaggedRef a = oz_head(as);
+	dict->setArg(a,r->getFeature(a));
+	as = oz_tail(as);
+      }
+    }
+  } else {
+    oz_typeError(0,"Record");
+  }
+
+  OZ_RETURN(makeTaggedConst(dict));
   
 } OZ_BI_end
 
