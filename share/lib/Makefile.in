@@ -152,7 +152,7 @@ COMPILERSRC1 = \
 	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz \
-	Abstractions.oz Errors.oz
+	Abstractions.oz Errors.oz RunTime.oz
 
 COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz compiler-Env.oz
 
@@ -186,7 +186,8 @@ FunMisc.ozf: compiler/Misc.oz $(STANDARD)
 
 FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
 
-FunSA.ozf: Search.ozf compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
+FunSA.ozf: Search.ozf compiler/POTypes.oz compiler/StaticAnalysis.oz \
+	$(STANDARD)
 	$(COMPILE) -l Search=Search.ozf compiler/FunSA.oz -o $@
 
 FunCode.ozf: compiler/CodeStore.oz compiler/CodeEmitter.oz \
