@@ -53,7 +53,6 @@ private:
   OZ_FiniteDomain * store_patch;
 
 public:  
-  NO_DEFAULT_CONSTRUCTORS2(GenBoolVariable);
   GenBoolVariable(void) : GenCVariable(BoolVariable) {
     ozstat.fdvarsCreated.incf();
   }
@@ -91,6 +90,27 @@ public:
   // needed to catch multiply occuring bool vars in propagators
   void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
   OZ_FiniteDomain * getStorePatchBool(void) { return store_patch; }
+
+
+  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
+		   ByteCode*scp) {
+    return unifyBool(vPtr,v,tPtr,t,scp);
+  }
+  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
+    return valid(val);
+  }
+  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) { return FAILED; }
+  GenCVariable* gcV() { error("not impl"); return 0; }
+  void gcRecurseV() { error("not impl"); }
+  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
+    error("not impl");
+    // mm2: addSuspBoolVar(makeTaggedRef(ptr),susp,state);
+  }
+  Bool isKindedV() { return true; }
+  void disposeV(void) { dispose(); }
+  int getSuspListLengthV() { return getSuspListLength(); }
+  void printV() {}
+  void printLongV() {}
 };
 
 inline Bool isGenBoolVar(TaggedRef term);

@@ -68,8 +68,8 @@ private:
 
 public:
   USEFREELISTMEMORY;
-  NO_DEFAULT_CONSTRUCTORS2(GenCtVariable);
 
+  GenCtVariable() : GenCVariable(CtVariable) {}
   GenCtVariable(OZ_GenConstraint * c, OZ_GenDefinition * d) 
     : _definition(d), GenCVariable(CtVariable)
   {
@@ -106,6 +106,27 @@ public:
     setType(CtVariable); 
     resetReifiedFlag();
   }
+
+
+  OZ_Return unifyV(TaggedRef *vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
+		   ByteCode*scp) {
+    return unifyCt(vPtr,v,tPtr,t,scp);
+  }
+  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
+    return FALSE; // mm2
+  }
+  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) { return SUSPEND; }
+  GenCVariable* gcV() { error("not impl"); return 0; }
+  void gcRecurseV() { error("not impl"); }
+  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
+    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
+  }
+  Bool isKindedV() { return true; }
+  void disposeV(void) { error("not impl"); }
+  int getSuspListLengthV() { return getSuspListLength(); }
+  void printV() {}
+  void printLongV() {}
+
 };
 
 OZ_Return tellBasicConstraint(OZ_Term, OZ_GenConstraint *, OZ_GenDefinition *);

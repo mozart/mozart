@@ -52,6 +52,8 @@
 #include "runtime.hh"
 
 #include "genvar.hh"
+#include "lazyvar.hh"
+
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
 #include "fdhook.hh"
@@ -70,14 +72,13 @@ TaggedRef term = X;				\
   if (isVariableTag(_myTag)) return SUSPEND;	\
 }
 
-// mm2
 // Suspend on UVAR and SVAR:
-#define NONSUVAR(X,term,tag)			\
+#define SUSPEND_ON_FREE_VAR(X,term,tag)		\
 TaggedRef term = X;				\
 TypeOfTerm tag;					\
 { DEREF(term,_myTermPtr,myTag);			\
   tag = myTag;					\
-  if (isNotCVar(tag)) return SUSPEND;		\
+  if (oz_isFree(term)) return SUSPEND;	\
 }
 
 
@@ -246,7 +247,7 @@ OZ_BI_define(BIwaitOr,2,0)
 
 OZ_Return isLiteralInline(TaggedRef t)
 { 
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
       case OFSVariable:
@@ -259,6 +260,8 @@ OZ_Return isLiteralInline(TaggedRef t)
       case BoolVariable:
           return FAILED;
       default:
+	// mm2
+	// return tagged2CVar(term)->isLiteralV();
           return SUSPEND;
       }
   }
@@ -270,7 +273,7 @@ NEW_DECLAREBOOLFUN1(BIisLiteralB,isLiteralBInline,isLiteralInline)
 
 OZ_Return isAtomInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
       case OFSVariable:
@@ -286,6 +289,7 @@ OZ_Return isAtomInline(TaggedRef t)
       case BoolVariable:
           return FAILED;
       default:
+	// return tagged2CVar(term)->isAtomV();
           return SUSPEND;
       }
   }
@@ -296,7 +300,7 @@ NEW_DECLAREBOOLFUN1(BIisAtomB,isAtomBInline,isAtomInline)
 
 OZ_Return isLockInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   return oz_isLock(term) ? PROCEED : FAILED;
 }
 
@@ -307,6 +311,7 @@ NEW_DECLAREBOOLFUN1(BIisLockB,isLockBInline,isLockInline)
 
 OZ_Return isFreeRelInline(TaggedRef term) {
   DEREF(term, _1, tag);
+  // mm2: use oz_isFree
   switch (tag) {
   case UVAR: case SVAR: return PROCEED;
   default:              return FAILED;
@@ -317,11 +322,12 @@ NEW_DECLAREBOOLFUN1(BIisFree,isFreeInline,isFreeRelInline)
 
 OZ_Return isKindedRelInline(TaggedRef term) {
   DEREF(term, _1, tag);
+  // mm2: use oz_isFree
   if (isCVar(tag)) {
     Bool kinded = OK;
     switch (tagged2CVar(term)->getType()) {
       // mm2: generalize
-    case LazyVariable: kinded=tagged2LazyVar(term)->isKinded(); break;
+    case LazyVariable: kinded=tagged2LazyVar(term)->isKindedV(); break;
     default: 
       if (isFuture(term))
 	kinded=tagged2Future(term)->isKinded(); 
@@ -346,7 +352,7 @@ NEW_DECLAREBOOLFUN1(BIisDet,isDetInline,isDetRelInline)
 
 OZ_Return isNameInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
       case OFSVariable:
@@ -363,6 +369,8 @@ OZ_Return isNameInline(TaggedRef t)
       case BoolVariable:
           return FAILED;
       default:
+      // mm2
+      // return tagged2CVar(term)->isNameV();
           return SUSPEND;
       }
   }
@@ -375,7 +383,7 @@ NEW_DECLAREBOOLFUN1(BIisNameB,isNameBInline,isNameInline)
 
 OZ_Return isTupleInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
       case FDVariable:
@@ -393,7 +401,7 @@ NEW_DECLAREBOOLFUN1(BIisTupleB,isTupleBInline,isTupleInline)
 
 OZ_Return isRecordInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
       case FDVariable:
@@ -419,7 +427,7 @@ NEW_DECLAREBOOLFUN1(BIisProcedureB,isProcedureBInline,isProcedureInline)
 
 OZ_Return isChunkInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag );
+  SUSPEND_ON_FREE_VAR( t, term, tag );
   if (isCVar(tag)) {
       switch (tagged2CVar(term)->getType()) {
       case OFSVariable:
@@ -2048,7 +2056,7 @@ NEW_DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 
 OZ_Return isUnitInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag);
+  SUSPEND_ON_FREE_VAR( t, term, tag);
   if (isCVar(tag)) {
     switch (tagged2CVar(term)->getType()) {
     case OFSVariable:
@@ -2090,7 +2098,7 @@ NEW_DECLAREBOOLFUN1(BIisUnitB,isUnitBInline,isUnitInline)
 
 OZ_Return isBoolInline(TaggedRef t)
 {
-  NONSUVAR( t, term, tag);
+  SUSPEND_ON_FREE_VAR(t, term, tag);
   if (isCVar(tag)) {
     switch (tagged2CVar(term)->getType()) {
     case OFSVariable:
