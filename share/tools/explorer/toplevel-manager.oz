@@ -16,49 +16,48 @@ local
       
       meth init(Manager Menu Canvas Status ?PackMe)
 	 <<Tk.toplevel tkInit(title:              TitleName
-			      relief:             sunken
-			      width:              MinSizeX
-			      height:             MinSizeY
 			      withdraw:           True
 			      highlightthickness: 0)>>
-	 {Tk.batch [focus(self)
-		    wm(iconname   self TitleName)
-		    wm(iconbitmap self BitMap)
-		    wm(minsize self MinSizeX MinSizeY)]}
-	 
-	 Frame = {New Tk.frame tkInit(parent:self highlightthickness:0)}
-	 
-	 CanFrame = {New Tk.frame tkInit(parent:Frame highlightthickness:0)}
-	 
-	 ScaleFrame = {New Tk.frame tkInit(parent:Frame highlightthickness:0)}
-	 
-	 Scale = {New Tk.scale
-		  [tkInit(parent:     ScaleFrame
-			  'from':     MinScale
-			  to:         MaxScale
-			  showvalue:  False
-		          width:      ScrollerWidth
-		          resolution: 0.001 / FloatScaleBase
-			  action:     proc {$ S}
-					 {Manager
-					  scale({Tk.string.toFloat S})}
-				      end)
-		   tk(set DefScale)
-		   tkBind(event:  '<3>'
-			  action: Manager # scaleToFit)]}
+	 ScrX  = {New Tk.scrollbar tkInit(parent: self
+					  relief: sunken
+					  bd:     Border
+					  width:  ScrollerWidth
+					  orient: horizontal)}
+	 ScrY  = {New Tk.scrollbar tkInit(parent: self
+					  relief: sunken
+					  bd:     Border
+					  width:  ScrollerWidth)}
+	 Scale = {New Tk.scale tkInit(parent:     self
+				      'from':     MinScale
+				      to:         MaxScale
+				      showvalue:  False
+				      width:      ScrollerWidth
+				      resolution: 0.001 / FloatScaleBase
+				      action:     Manager # scale
+				      args:       [float])}
       in
-	 Canvas = {New ScrollCanvas init(self CanFrame Manager)}
+	 Canvas = {New ScrollCanvas init(self Manager)}
+	 {Scale tk(set DefScale)}
+	 {Scale tkBind(event:'<3>' action: Manager # scaleToFit)}
+	 {Tk.addYScrollbar Canvas ScrY}
+	 {Tk.addXScrollbar Canvas ScrX}
 
 	 self.manager = Manager
 	 self.scale   = Scale
 
 	 proc {PackMe}
-	    {Tk.batch [pack(Scale       expand:True fill:y)
-		       pack(CanFrame    side:left fill:both expand:True)
-		       pack(ScaleFrame  side:left fill:y)
-		       pack(Menu        side:top fill:x)
-		       pack(Status      side:bottom anchor:w fill:x)
-		       pack(Frame       side:bottom fill:both expand:True)
+	    {Tk.batch [focus(self)
+		       wm(iconname   self TitleName)
+		       wm(iconbitmap self BitMap)
+		       wm(minsize self MinSizeX MinSizeY)
+		       grid(Menu   row:0 column:0 columnspan:3 sticky:we)
+		       grid(Canvas row:1 column:0              sticky:nswe)
+		       grid(ScrY   row:1 column:1              sticky:ns)
+		       grid(Scale  row:1 column:2 rowspan:2    sticky:ns)
+		       grid(ScrX   row:2 column:0              sticky:we)
+		       grid(Status row:3 column:0 columnspan:3 sticky:we)
+		       grid(columnconfigure self 0 weight:1.0)
+		       grid(rowconfigure    self 1 weight:1.0)
 		       wm(deiconify self)]}
 	 end
       end
@@ -93,8 +92,8 @@ local
 	 right:  0
 	 bottom: 0
          %% These values are unscaled
-	 width:  CanvasWidth
-	 height: CanvasHeight
+	 width:  1.0
+	 height: 1.0
    
       feat
 	 manager
@@ -104,75 +103,46 @@ local
 	 cursor
 	 connection
 
-      meth init(Toplevel Parent Manager)
-	 CanScrY = {New Tk.frame tkInit(parent:Parent bd:0
-					highlightthickness:0)}
-	 ScrXBox = {New Tk.frame tkInit(parent:Parent bd:0
-					highlightthickness:0)}
-	 <<Tk.canvas tkInit(parent:          Toplevel
-			    width:           CanvasWidth
-			    height:          CanvasHeight
-			    relief:          sunken
-			    background:      BackColor
-			    bd:              1
-			    scrollregion:    q(~CanvasWidth/2.0 0
-					       CanvasWidth/2.0  CanvasHeight)
-			    highlightthickness:0)>>
-	 ScrX    = {New Tk.scrollbar tkInit(parent: ScrXBox
-					    relief: sunken
-					    bd:     Border
-					    width:  ScrollerWidth
-					    orient: horizontal)}
-	 ScrY    = {New Tk.scrollbar tkInit(parent: Parent
-					    relief: sunken
-					    bd:     Border
-					    width:  ScrollerWidth)}
-	 Box     = {New Tk.frame tkInit(parent: ScrXBox
-					width:  ScrollerWidth + 2*Border
-					height: ScrollerWidth + 2*Border
-					highlightthickness:0)}
-      in
-	 {Tk.addYScrollbar self ScrY}
-	 {Tk.addXScrollbar self ScrX}
-	 {Tk.batch
-	  [pack(ScrXBox side:bottom fill:x     padx:Pad pady:Pad)
-	   pack(ScrY    side:right  fill:y     padx:Pad pady:Pad)
-	   pack(CanScrY fill:both              padx:Pad pady:Pad expand:True)
-	   pack(ScrX    side:left   fill:x     expand:True)
-	   pack(Box     side:right  fill:none  padx:Pad)
-	   pack(self    'in':CanScrY
-			fill:both expand:True padx:BigPad pady:BigPad)]}
+      meth init(Toplevel Manager)
+	 <<Tk.canvas tkInit(parent:             Toplevel
+			    relief:             sunken
+			    width:              MinSizeX
+			    height:             MinSizeY
+			    background:         BackColor
+			    bd:                 Border
+			    highlightthickness: 0)>>
 	 <<Tk.canvas tkBind(event:  '<Configure>'
 			    action: self # Resized
 			    args:   [float(h) float(w)]
 			    append: True)>>
-	 self.manager   = Manager
-	 self.genTagId  = {New TagCounter clear}
+	 ActionTag = {New Tk.canvasTag tkInit(parent:self)}
+	 FloatXY   = [float(x) float(y)]
+      in
+	 self.manager    = Manager
+	 self.genTagId   = {New TagCounter clear}
 	 %% Get some tags
 	 self.cursor     = {New Tk.canvasTag tkInit(parent:self)}
 	 self.connection = {New Tk.canvasTag tkInit(parent:self)}
 	 self.numbers    = {New Tk.canvasTag tkInit(parent:self)}
-	 self.actions    = {New Tk.canvasTag
-			    [tkInit(parent:self)
-			     tkBind(event:  '<1>'
-				    args:   [float(x) float(y)]
-				    action: Manager # setByXY )
-			     tkBind(event:  '<Double-1>'
-				    args:   [float(x) float(y)]
-				    action: Manager # selInfo)
-			     tkBind(event:  '<2>'
-				    args:   [float(x) float(y)]
-				    action: Manager # nodesByXY(hide))
-			     tkBind(event:  '<Double-2>'
-				    args:   [float(x) float(y)]
-				    action: Manager # nodesByXY(hideFailed))
-			     tkBind(event:  '<3>'
-				    args:   [float(x) float(y)]
-				    action: Manager # doByXY(step))
-			     tkBind(event:  '<Double-3>'
-				    args:   [float(x) float(y)]
-				    action: Manager # doByXY(next))]}
-
+	 self.actions    = ActionTag
+	 {ActionTag tkBind(event:'<1>'
+			   args:   FloatXY
+			   action: Manager # setByXY )}
+	 {ActionTag tkBind(event:'<Double-1>'
+			   args:   FloatXY
+			   action: Manager # selInfo)}
+	 {ActionTag tkBind(event:  '<2>'
+			   args:   FloatXY
+			   action: Manager # nodesByXY(hide))}
+	 {ActionTag tkBind(event:  '<Double-2>'
+			   args:   FloatXY
+			   action: Manager # nodesByXY(hideFailed))}
+	 {ActionTag tkBind(event:  '<3>'
+			   args:   FloatXY
+			   action: Manager # doByXY(step))}
+	 {ActionTag tkBind(event:  '<Double-3>'
+			   args:   FloatXY
+			   action: Manager # doByXY(next))}
       end
 
       meth clear
@@ -220,8 +190,7 @@ local
 		     else @height
 		     end
       in
-	 <<Tk.canvas tk(conf scrollregion:
-			   q(ReqLeft 0 ReqRight ReqBottom))>>
+	 <<Tk.canvas tk(conf scrollregion:q(ReqLeft 0 ReqRight ReqBottom))>>
       end
       
       meth scale(Scale)
