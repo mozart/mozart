@@ -741,13 +741,18 @@ RefsArray gcRefsArray(RefsArray r) {
   return aux;
 }
 
+inline
+Abstraction *gcAbstraction(Abstraction *a) {
+  return (Abstraction *) a->gcConstTerm();
+}
+
 //
 //  ... Continuation;
 
 inline
 void Continuation::gc() {
   yRegs = gcRefsArray(yRegs);
-  gRegs = gcRefsArray(gRegs);
+  cap = gcAbstraction(cap);
   xRegs = gcRefsArray(xRegs);
 }
 
@@ -1277,13 +1282,6 @@ SRecord *SRecord::gcSRecord() {
   gcStack.push(this, PTR_SRECORD);
 
   return ret;
-}
-
-
-
-inline
-Abstraction *gcAbstraction(Abstraction *a) {
-  return (Abstraction *) a->gcConstTerm();
 }
 
 
@@ -2005,7 +2003,6 @@ void AbstractionEntry::gcAbstractionEntries()
   AbstractionEntry *aux = allEntries;
   while(aux) {
     aux->abstr = gcAbstraction(aux->abstr);
-    aux->g = (aux->abstr == NULL) ? (RefsArray) NULL : gcRefsArray(aux->g);
     aux = aux->next;
   }
 }
@@ -2144,7 +2141,6 @@ void ConstTerm::gcConstRecurse()
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
-      a->gRegs = gcRefsArray(a->gRegs);
       a->gcConstTermWithHome();
       a->getPred()->gcPrTabEntry();
       break;
@@ -2351,10 +2347,19 @@ ConstTerm *ConstTerm::gcConstTerm() {
     {
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
-      gn = a->getGName1();
 
-      ret = (ConstTerm *) gcReallocStatic(this,sizeof(Abstraction));
-      break;
+      Abstraction *newA = Abstraction::newAbstraction(a->getPred(),
+						      a->getBoardInternal());
+      gcStack.push(newA,PTR_CONSTTERM);
+      storeFwdField(this, newA);
+      gn = a->getGName1();
+      if (gn) {
+	newA->setGName(gn);
+	dogcGName(gn);
+      }
+      OZ_collectHeapBlock(a->getGRef(),newA->getGRef(),
+			  a->getPred()->getGSize());
+      return newA;
     }
 
   case Co_Object: 
@@ -2589,12 +2594,12 @@ void TaskStack::gc(TaskStack *newstack) {
   Frame *newtop = newstack->array + offset;
 
   while (1) {
-    GetFrame(oldtop,PC,Y,G);
+    GetFrame(oldtop,PC,Y,CAP);
 
     if (PC == C_EMPTY_STACK) {
       *(--newtop) = PC;
       *(--newtop) = Y;
-      *(--newtop) = G;
+      *(--newtop) = CAP;
       Assert(newstack->array == newtop);
       newstack->setTop(newstack->array+offset);
       return;
@@ -2623,17 +2628,17 @@ void TaskStack::gc(TaskStack *newstack) {
       TaggedRef *tt = (TaggedRef*) (newtop-2);
       OZ_collectHeapTerm(*tt,*tt);
       Y = (RefsArray) ToPointer(*tt);
-      G = gcRefsArray(G);
+      CAP = (Abstraction *)gcRefsArray((RefsArray)CAP);
     } else if (PC == C_CFUNC_CONT_Ptr) {
-      G = gcRefsArray(G);
+      CAP = (Abstraction *)gcRefsArray((RefsArray)CAP);
     } else { // usual continuation
       Y = gcRefsArray(Y);
-      G = gcRefsArray(G);
+      CAP = gcAbstraction(CAP);
     }
 
     *(--newtop) = PC;
     *(--newtop) = Y;
-    *(--newtop) = G;
+    *(--newtop) = CAP;
   } // while not task stack is empty
 }
 
@@ -2968,7 +2973,7 @@ OzDebug *OzDebug::gcOzDebug() {
   OzDebug *ret = (OzDebug*) gcReallocStatic(this,sizeof(OzDebug));
   
   ret->Y = gcRefsArray(ret->Y);
-  ret->G = gcRefsArray(ret->G);
+  ret->CAP = gcAbstraction(ret->CAP);
   OZ_collectHeapTerm(ret->data,ret->data);
   ret->arguments = gcRefsArray(ret->arguments);
 
