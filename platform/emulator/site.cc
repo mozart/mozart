@@ -67,9 +67,21 @@ int BaseSite::hash() {
 static ip_address getMySiteIP()
 {
   char *nodename = oslocalhostname();
-  if(nodename==0) { OZ_error("getMySiteIP: don't know local hostname"); }
-  struct hostent *hostaddr;
-  hostaddr=gethostbyname(nodename);
+  if(nodename==0) {
+    // OZ_warning("getMySiteIP: don't know local hostname");
+    nodename = "localhost";
+  }
+
+  // very simple for now
+  ip_address ret = (ip_address) update_crc((crc_t)osTotalTime(),
+                                           (unsigned char*)nodename,
+                                           strlen(nodename));
+  free(nodename);
+  return ret;
+
+#if 0
+  // this will open an IP connection, so don't do it
+  struct hostent *hostaddr=gethostbyname(nodename);
   if(hostaddr==0) {
     OZ_error("getMySiteIP: can't resolve local hostname (%s)", nodename);
   }
@@ -78,6 +90,7 @@ static ip_address getMySiteIP()
   memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
   ip_address ip=ntohl(tmp.s_addr);
   return (ip);
+#endif
 }
 
 //
@@ -88,6 +101,7 @@ void initSite()
 {
   ip_address myIP = getMySiteIP();
   TimeStamp timestamp(time(0), osgetpid());
+  // RS: should also use the port for making it more unique
   mySite = new Site(myIP, (port_t) 0, timestamp);
   //
   siteTable = new SiteHashTable(SITE_TABLE_SIZE);
