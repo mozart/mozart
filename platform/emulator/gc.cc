@@ -1975,6 +1975,8 @@ void checkGC()
 
 void AM::doGC()
 {
+  blockSignals();
+
   /*  --> empty trail */
   deinstallPath(rootBoard);
 
@@ -1983,11 +1985,12 @@ void AM::doGC()
 
   /* calc upper limits for next gc */
   int used = getUsedMemory();
-  if ((used*conf.heapMargin)/100 > conf.heapMaxSize) {
-    conf.heapMaxSize *= (100+conf.heapIncrement)/100;
+  if (used > (conf.heapMaxSize*conf.heapMargin)/100) {
+    conf.heapMaxSize = conf.heapMaxSize*(100+conf.heapIncrement)/100;
   }
 
   unsetSFlag(StartGC);
+  unblockSignals();
 }
 
 
