@@ -49,13 +49,13 @@ void oz_checkStability()
   // try to reduce a solve board;
   Board * solveBB = oz_currentBoard();
 
-  if (oz_isStableSolve(solveBB)) {
+  if (solveBB->isStable()) {
     Assert(am.trail.isEmptyChunk());
     // all possible reduction steps require this;
 
     // check for nonmonotonic propagators
     oz_solve_scheduleNonMonoSuspList(solveBB);
-    if (!oz_isStableSolve(solveBB))
+    if (!solveBB->isStable())
       return;
 
     // Check whether there are registered distributors
@@ -83,17 +83,17 @@ void oz_checkStability()
 
     }
 
-    if (!solveBB->hasSuspension()) {
-      // 'solved';
-      // don't unlink the subtree from the computation tree;
+    if (solveBB->getSuspCount() == 0) {
+      // 'succeeded';
       am.trail.popMark();
       solveBB->unsetInstalled();
       am.setCurrent(solveBB->getParent());
-      // don't decrement counter of parent board!
 
       int ret = oz_unify(solveBB->getResult(), solveBB->genSolved());
+
       // VIOLATED ASSERTION!!!! CS-SPECIAL
       //   Assert(ret==PROCEED);
+
       return;
     }
 
@@ -149,7 +149,7 @@ int canOptimizeFailure(Thread *tt)
   if (tt->hasCatchFlag() || oz_onToplevel()) { // catch failure
     if (tt->isSuspended()) {
       tt->pushCall(BI_fail,0,0);
-      oz_wakeupThreadOPT(tt);
+      oz_wakeupThread(tt);
     } else {
       printf("WEIRD: failure detected twice");
 #ifdef DEBUG_CHECK
@@ -353,7 +353,7 @@ LBLcheckEntailmentAndStability:
     //  kost@ : optimize the most probable case!
 
     if (CBB->decThreads () != 0) {
-      oz_decSolveThreads(nb);
+      nb->decSolveThreads();
       goto LBLstart;
     }
 
@@ -373,7 +373,7 @@ LBLcheckEntailmentAndStability:
     Assert(nb);
 
     if (nb)
-      oz_decSolveThreads(nb->derefBoard());
+      nb->derefBoard()->decSolveThreads();
 
     goto LBLstart;
   }
@@ -406,7 +406,7 @@ LBLdiscardThread:
     Board *tmpBB = GETBOARD(CTT);
 
     if (!tmpBB->isRoot())
-      oz_decSolveThreads(tmpBB->getParent());
+      tmpBB->getParent()->decSolveThreads();
 
     oz_disposeThread(CTT);
     am.threadsPool.unsetCurrentThread();
@@ -498,8 +498,7 @@ LBLfailure:
        Assert(0);
      }
 
-     oz_decSolveThreads(CBB);
-
+     p->decSolveThreads();
 
      // tmueller: this experimental
 #ifdef NAME_PROPAGATORS

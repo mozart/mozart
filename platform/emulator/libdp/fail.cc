@@ -92,7 +92,7 @@ OZ_BI_define(BIdefer,0,0)
 
 void addDeferElement(DeferElement* e){
   if(DeferdEvents==NULL){
-    Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
+    Thread *tt = oz_newThreadToplevel();
     tt->pushCall(BI_defer);}
   e->next = DeferdEvents;
   DeferdEvents = e;
@@ -385,7 +385,7 @@ if(!isFired()){
     lis=listifyWatcherCond(ec,tagged2Tert(t));}
   else{
     lis=listifyWatcherCond(ec);}
-  Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
+  Thread *tt = oz_newThreadToplevel();
   tt->pushCall(proc,t,lis);}
 }
 

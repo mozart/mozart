@@ -36,6 +36,7 @@
 
 #include "susplist.hh"
 #include "value.hh"
+#include "am.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -108,10 +109,69 @@ Distributor * Board::getDistributor(void) {
   return bag->getDist();
 }
 
-#ifdef DEBUG_THREADCOUNT
-extern int existingLTQs;
-#endif
 
+inline
+Bool Board::isStable(void) {
+  if (getThreads() != 0)
+    return NO;
+
+  if (oz_isCurrentBoard(this) && !am.trail.isEmptyChunk())
+    return NO;
+
+  if (isEmptySuspList())
+    return OK;
+
+  clearSuspList((Thread *) NULL);
+
+  return isEmptySuspList();
+}
+
+inline
+Bool Board::isBlocked(void) {
+  return (getThreads()==0) && !isStable();
+}
+
+/*
+ * increment/decrement the thread counter
+ * in every solve board above
+ * if "stable" generate a new thread "solve waker"
+ * NOTE:
+ *   there may be failed board in between which must be simply ignored
+ *
+ */
+
+inline
+void Board::incSolveThreads(void) {
+  Assert(!isCommitted() && !isRoot());
+
+  Board * bb = this;
+
+  do {
+    bb->incThreads(); bb = bb->getParent();
+  } while (!bb->isRoot());
+
+}
+
+// from thr_int.hh
+
+Thread * oz_newThreadInject(Board * bb);
+
+inline
+void Board::decSolveThreads(void) {
+  Assert(!isCommitted());
+
+  Board * bb = this;
+
+  while (!bb->isRoot()) {
+    // ... first - notification board below the failed solve board;
+
+    if (bb->decThreads()==0 && bb->isStable())
+      oz_newThreadInject(bb);
+
+    bb = bb->getParent();
+  }
+
+}
 
 #ifdef OUTLINE
 #undef inline

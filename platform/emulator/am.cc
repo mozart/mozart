@@ -459,10 +459,6 @@ void AM::suspendEngine()
 {
   oz_deinstallPath(_rootBoard);
 
-  //
-#ifdef DEBUG_THREADCOUNT
-  printf("(AM::suspendEngine LTQs=%d) ", existingLTQs); fflush(stdout);
-#endif
   ozstat.printIdle(stdout);
 
   //

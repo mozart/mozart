@@ -41,15 +41,6 @@ void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
 void oz_reduceTrailOnEqEq();
 
-Bool oz_isStableSolve(Board *sb);
-
-int oz_incSolveThreads(Board *bb);
-#ifdef DEBUG_THREADCOUNT
-void oz_decSolveThreads(Board *bb, char *);
-#else
-void oz_decSolveThreads(Board *bb);
-#endif
-
 void oz_removeExtThread(Thread *tt);
 
 void oz_checkExtSuspension(Suspension susp, Board * home);

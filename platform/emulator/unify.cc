@@ -50,12 +50,12 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
 
   switch (oz_isBetween(GETBOARD(tt), home)) {
   case B_BETWEEN:
-    oz_wakeupThreadOPT(tt);
+    oz_wakeupThread(tt);
     return TRUE;
 
   case B_NOT_BETWEEN:
     if (calledBy==pc_all) {
-      oz_wakeupThreadOPT(tt);
+      oz_wakeupThread(tt);
       return TRUE;
     }
     return FALSE;
@@ -79,14 +79,16 @@ inline
 static
 void wakeup_Wakeup(Thread *tt)
 {
+  // RECHECK-CS
   Assert(tt->isSuspended());
 
   tt->markRunnable();
   am.threadsPool.scheduleThread(tt);
 
-  if (!(GETBOARD(tt))->isRoot() || tt->isExtThread()) {
-    oz_incSolveThreads(GETBOARD(tt));
-  }
+  Board * bb = GETBOARD(tt);
+
+  if (!bb->isRoot() || tt->isExtThread())
+    bb->incSolveThreads();
 
 }
 

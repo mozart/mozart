@@ -34,6 +34,7 @@
 #include "space.hh"
 #include "builtins.hh"
 #include "value.hh"
+#include "var_base.hh"
 
 #ifdef OUTLINE
 #include "board.icc"
@@ -84,35 +85,17 @@ void Script::dealloc()
 }
 
 
-
-/*
- * return solve board of this
- *   0, if no solve board found
- *      or discard or fail detected below a solve board
- *
-Board* Board::getSolveBoard ()
-{
-  Assert(!isCommitted());
-  Board *bb;
-  for (bb=this;
-       bb!=0 && bb->isRoot();
-       bb=bb->getParentAndTest()) {}
-  return bb;
-}
-
-*/
-
 Board::Board(Board * p)
-  : localPropagatorQueue(0), gcField(0), flags(0), suspCount(0), bag(0),
+  : localPropagatorQueue(0), flags(0), suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0)
 {
   Assert(p==NULL || !p->isCommitted());
   parent = p;
   if (p) {
-    result     = oz_newVar(p);
-    solveVar   = oz_newVar(this);
+    result  = oz_newVar(p);
+    rootVar = oz_newVar(this);
   } else {
-    solveVar = result = oz_nil();
+    rootVar = result = oz_nil();
   }
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -122,104 +105,132 @@ Board::Board(Board * p)
 }
 
 
-/*
- * Before copying all spaces but the space to be copied get marked.
- */
-void Board::setGlobalMarks(void) {
+
+inline
+void Board::inject(TaggedRef proc) {
+  // thread creation for {proc root}
+  RefsArray args = allocateRefsArray(1, NO);
+  args[0] = getRootVar();
+
+  Thread *it = oz_newThreadInject(this);
+  it->pushCall(proc, args, 1);
+}
+
+
+static
+Bool extParameters(OZ_Term list, Board * solve_board)
+{
+  while (OZ_isCons(list)) {
+    OZ_Term h = OZ_head(list);
+
+    Bool found = FALSE;
+
+    if (OZ_isVariable(h)) {
+
+      DEREF(h, hptr, htag);
+
+      Assert(!isUVar(htag));
+
+      Board * home = GETBOARD(tagged2SVarPlus(h));
+      Board * tmp  = solve_board;
+
+      // from solve board go up to root; if you step over home
+      // then the variable is external otherwise it must be a local one
+      do {
+        tmp = tmp->getParent();
+
+        if (tmp->isFailed())
+          return FALSE;
+
+        tmp = tmp->derefBoard();
+
+        if (tmp == home) {
+          found = TRUE;
+          break;
+        }
+      } while (!tmp->isRoot());
+
+    } else if (OZ_isCons(h)) {
+      found = extParameters(h, solve_board);
+    }
+
+    if (found) return TRUE;
+
+    list = OZ_tail(list);
+  } // while
+  return FALSE;
+}
+
+
+void Board::clearSuspList(Suspension killSusp) {
   Assert(!isRoot());
 
-  Board * b = this;
+  SuspList * fsl = getSuspList();
+  SuspList * tsl = (SuspList *) 0;
 
-  do {
-    b = b->getParent(); b->setGlobalMark();
-  } while (!b->isRoot());
+  while (fsl) {
+    // Traverse suspension list and copy all valid suspensions
+    Suspension susp = fsl->getSuspension();
 
-}
+    fsl = fsl->dispose();
 
-/*
- * Purge marks after copying
- */
-void Board::unsetGlobalMarks(void) {
-  Assert(!isRoot());
+    if (susp.isDead() ||
+        killSusp == susp ||
+        (susp.isRunnable() && !susp.isPropagator())) {
+      continue;
+    }
 
-  Board * b = this;
+    Board * bb = GETBOARDOBJ(susp);
 
-  do {
-    b = b->getParent(); b->unsetGlobalMark();
-  } while (!b->isRoot());
+    Bool isAlive = OK;
 
-}
+    // find suspensions, which occured in a failed nested search space
+    while (1) {
+      Assert(!bb->isCommitted() && !bb->isRoot());
 
+      if (bb->isFailed()) {
+        isAlive = NO;
+        break;
+      }
 
+      if (bb == this)
+        break;
 
-#ifdef DEBUG_CHECK
-/*
- * Check if a board is alive.
- * NOTE: this test can be very expensive !!!
- */
-Bool Board::checkAlive() {
+      bb = bb->getParent();
+    }
 
-  /*
-  Board *bb=this;
+    if (susp.isPropagator()) {
+      Propagator * prop = susp.getPropagator();
 
-  while (!bb->isRoot()) {
-loop:
-  Assert(!bb->isCommitted());
-  if (bb->isFailed()) return NO;
-  if (bb->isRoot()) return OK;
-  Actor *aa=bb->getActor();
-  if (aa->isCommitted()) return NO;
-  bb=GETBOARD(aa);
-  goto loop;
+      if (isAlive) {
 
-  */
-
-  return OK;
-}
-#endif
-
-
-#ifdef CS_PROFILE
-TaggedRef Board::getCloneDiff(void) {
-  TaggedRef l = oz_nil();
-
-  if (copy_start && orig_start && (copy_size>0)) {
-    int n = 0;
-
-    while (n < copy_size) {
-      if (copy_start[n] != orig_start[n]) {
-        int d = 0;
-
-        while ((n < copy_size) && (copy_start[n] != orig_start[n])) {
-          d++; n++;
+        // if propagator suspends on external variable then keep its
+        // thread in the list to avoid stability
+        if (extParameters(prop->getPropagator()->getParameters(), this)) {
+          tsl = new SuspList(susp, tsl);
         }
 
-        LTuple *lt = new LTuple();
-        lt->setHead(newSmallInt(d));
-        lt->setTail(l);
-        l = makeTaggedLTuple(lt);
+      }
+
+    } else {
+      Assert(susp.isThread());
+
+      Thread * thr = susp.getThread();
+
+      if (isAlive) {
+        tsl = new SuspList(susp, tsl);
       } else {
-        n++;
+        oz_disposeThread(thr);
       }
 
     }
-
-    free(copy_start);
-
-    TaggedRef ret = OZ_pair2(newSmallInt(copy_size),l);
-
-    copy_start = (int32 *) 0;
-    copy_size  = 0;
-    orig_start = (int32 *) 0;
-
-    return ret;
-
-  } else {
-    return OZ_pair2(newSmallInt(0),l);
   }
 
+  setSuspList(tsl);
+
 }
-#endif
+
+
 
 //
 // Status variable
@@ -294,7 +305,7 @@ void oz_solve_scheduleNonMonoSuspList(Board * b) {
 
 
 // ---------------------------------------------------------------------
-// Spaces
+// First class spaces (the builtin interface)
 // ---------------------------------------------------------------------
 
 #define declareSpace()                                  \
@@ -307,18 +318,6 @@ void oz_solve_scheduleNonMonoSuspList(Board * b) {
   Space *space = (Space *) tagged2Const(tagged_space);
 
 
-
-inline
-void oz_solve_inject(TaggedRef var, int prio, TaggedRef proc,
-                     Board *solveBoard)
-{
-  // thread creation for {proc root}
-  RefsArray args = allocateRefsArray(1, NO);
-  args[0] = var;
-
-  Thread *it = oz_newThreadInject(solveBoard,prio);
-  it->pushCall(proc, args, 1);
-}
 
 inline
 OZ_Term oz_solve_merge(Board *solveBoard, Board *bb, int sibling) {
@@ -345,22 +344,9 @@ OZ_Term oz_solve_merge(Board *solveBoard, Board *bb, int sibling) {
   }
 
 
-  return solveBoard->getSolveVar();
+  return solveBoard->getRootVar();
 }
 
-inline
-Board *oz_solve_clone(Board *sb, Board *bb) {
-  ozstat.incSolveCloned();
-  Board *copy = (Board *) am.copyTree(sb);
-
-#ifdef CS_PROFILE
-  copy->orig_start = cs_orig_start;
-  copy->copy_start = cs_copy_start;
-  copy->copy_size  = cs_copy_size;
-#endif
-
-  return copy;
-}
 
 OZ_BI_define(BInewSpace, 1,1) {
   OZ_Term proc = OZ_in(0);
@@ -379,7 +365,7 @@ OZ_BI_define(BInewSpace, 1,1) {
   Board *sb = new Board(CBB);
 
   // thread creation for {proc root}
-  oz_solve_inject(sb->getSolveVar(),DEFAULT_PRIORITY, proc, sb);
+  sb->inject(proc);
 
   // create space
   OZ_result(makeTaggedConst(new Space(CBB,sb)));
@@ -403,12 +389,11 @@ OZ_BI_define(BIisSpace, 1,1) {
 OZ_BI_define(BIaskSpace, 1,1) {
   declareSpace();
 
-  // mm2: dead code
-  if (space->isProxy()) Assert(0);
+  if (space->isFailed())
+    OZ_RETURN(AtomFailed);
 
-  if (space->isFailed()) OZ_RETURN(AtomFailed);
-
-  if (space->isMerged()) OZ_RETURN(AtomMerged);
+  if (space->isMerged())
+    OZ_RETURN(AtomMerged);
 
   TaggedRef answer = space->getSolveBoard()->getResult();
 
@@ -425,10 +410,6 @@ OZ_BI_define(BIaskSpace, 1,1) {
 } OZ_BI_end
 
 
-Bool oz_solve_isBlocked(Board * b) {
-  return ((b->getThreads()==0) && !oz_isStableSolve(b));
-}
-
 OZ_BI_define(BIaskVerboseSpace, 2,0) {
   declareSpace();
   oz_declareIN(1,out);
@@ -439,7 +420,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
   if (space->isMerged())
     return oz_unify(out, AtomMerged);
 
-  if (oz_solve_isBlocked(space->getSolveBoard())) {
+  if (space->getSolveBoard()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
@@ -464,15 +445,13 @@ OZ_BI_define(BIaskUnsafeSpace, 2,0) {
   declareSpace();
   oz_declareIN(1,out);
 
-  if (space->isProxy()) Assert(0);
-
   if (space->isFailed())
     return oz_unify(out, AtomFailed);
 
   if (space->isMerged())
     return oz_unify(out, AtomMerged);
 
-  if (oz_solve_isBlocked(space->getSolveBoard())) {
+  if (space->getSolveBoard()->isBlocked()) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
@@ -490,8 +469,6 @@ OZ_BI_define(BIaskUnsafeSpace, 2,0) {
 
 OZ_BI_define(BImergeSpace, 1,1) {
   declareSpace();
-
-  if (space->isProxy()) Assert(0);
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -568,8 +545,6 @@ OZ_BI_define(BImergeSpace, 1,1) {
 OZ_BI_define(BIcloneSpace, 1,1) {
   declareSpace();
 
-  if (space->isProxy()) Assert(0);
-
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
 
@@ -581,19 +556,27 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   TaggedRef result = space->getSolveBoard()->getResult();
 
   DEREF(result, result_ptr, result_tag);
+
   if (isVariableTag(result_tag))
     oz_suspendOn(makeTaggedRef(result_ptr));
 
-  OZ_RETURN(makeTaggedConst(new Space(CBB,oz_solve_clone(space->getSolveBoard(),CBB))));
+  ozstat.incSolveCloned();
 
+  Board * copy = (Board *) space->getSolveBoard()->clone();
+
+#ifdef CS_PROFILE
+  copy->orig_start = cs_orig_start;
+  copy->copy_start = cs_copy_start;
+  copy->copy_size  = cs_copy_size;
+#endif
+
+  OZ_RETURN(makeTaggedConst(new Space(CBB,copy)));
 } OZ_BI_end
 
 
 OZ_BI_define(BIcommitSpace, 2,0) {
   declareSpace();
   oz_declareIN(1,choice);
-
-  if (space->isProxy()) Assert(0);
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -692,7 +675,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
   sb->clearResult();
 
   // inject
-  oz_solve_inject(sb->getSolveVar(),DEFAULT_PRIORITY, proc, sb);
+  sb->inject(proc);
 
   return BI_PREEMPT;
 } OZ_BI_end
@@ -717,7 +700,49 @@ OZ_BI_define(BIregisterSpace, 1, 1) {
 } OZ_BI_end
 
 
+
 #ifdef CS_PROFILE
+
+TaggedRef Board::getCloneDiff(void) {
+  TaggedRef l = oz_nil();
+
+  if (copy_start && orig_start && (copy_size>0)) {
+    int n = 0;
+
+    while (n < copy_size) {
+      if (copy_start[n] != orig_start[n]) {
+        int d = 0;
+
+        while ((n < copy_size) && (copy_start[n] != orig_start[n])) {
+          d++; n++;
+        }
+
+        LTuple *lt = new LTuple();
+        lt->setHead(newSmallInt(d));
+        lt->setTail(l);
+        l = makeTaggedLTuple(lt);
+      } else {
+        n++;
+      }
+
+    }
+
+    free(copy_start);
+
+    TaggedRef ret = OZ_pair2(newSmallInt(copy_size),l);
+
+    copy_start = (int32 *) 0;
+    copy_size  = 0;
+    orig_start = (int32 *) 0;
+
+    return ret;
+
+  } else {
+    return OZ_pair2(newSmallInt(0),l);
+  }
+
+}
+
 OZ_BI_define(BIgetCloneDiff, 1,1) {
   declareSpace();
 

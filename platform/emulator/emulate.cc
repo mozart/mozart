@@ -2116,11 +2116,7 @@ LBLdispatcher:
 
   Case(TASKLPQ)
      {
-#ifdef DEBUG_THREADCOUNT
-       extern int existingLTQs;
-       if (existingLTQs <= 0)
-         Assert(0);
-#endif
+
        Y = NULL;  // sa here unused
        Assert(CTS->isEmpty()); // approximates one LTQ task
 

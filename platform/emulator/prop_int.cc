@@ -95,22 +95,9 @@ Thread * oz_mkLPQ(Board *bb, int prio)
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
   oz_checkDebug(th,bb);
-  //Assert(oz_isCurrentBoard(bb));
 
-#ifdef DEBUG_THREADCOUNT
-  th->markLPQThread();
-#endif
-
-#ifdef DEBUG_THREADCOUNT
-  //printf("+");fflush(stdout);
-#endif
-
-  if (!bb->isRoot()) {
-#ifdef DEBUG_THREADCOUNT
-    //printf("!");fflush(stdout);
-#endif
-    oz_incSolveThreads(bb);
-  }
+  if (!bb->isRoot())
+    bb->incSolveThreads();
 
   th->pushLPQ(bb);
 
@@ -160,10 +147,6 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
   return ret_list;
 }
 
-#ifdef DEBUG_THREADCOUNT
-int existingLTQs = 0;
-#endif
-
 void oz_pushToLPQ(Board *bb, Propagator * prop)
 {
   LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
@@ -173,9 +156,5 @@ void oz_pushToLPQ(Board *bb, Propagator * prop)
     Thread * lpq_thr = oz_mkLPQ(bb, DEFAULT_PRIORITY);
     bb->setLocalPropagatorQueue(new LocalPropagatorQueue(lpq_thr, prop));
     am.threadsPool.scheduleThreadInline(lpq_thr, DEFAULT_PRIORITY);
-#ifdef DEBUG_THREADCOUNT
-    existingLTQs += 1;
-    //    printf("+LTQ=%p\n", localPropagatorQueue); fflush(stdout);
-#endif
   }
 }

@@ -74,41 +74,31 @@ private:
 };
 
 
-
-
 enum BoardFlags {
-  Bo_Root       = 0x0001,
-  Bo_Installed  = 0x0002,
-  Bo_GlobalMark = 0x0004,
-  Bo_Failed     = 0x0008,
-  Bo_Committed  = 0x0010,
-  Bo_Clone      = 0x0020,
+  Bo_Root       = 0x0001, // is root
+  Bo_Installed  = 0x0002, // is installed
+  Bo_GlobalMark = 0x0004, // is marked as global for cloning
+  Bo_Failed     = 0x0008, // is failed
+  Bo_Committed  = 0x0010, // is committed (merged)
+  Bo_Clone      = 0x0020, // is the root for cloning
 };
 
 
-#ifdef DEBUG_THREADCOUNT
-extern int existingLTQs;
-#endif
-
 class Board {
 friend int engine(Bool init);
-private:
-  int flags;
-  int suspCount;
-  Board * parent;
-  Script script;
-  Board * gcField; // Will go away, when new propagator model is active
-  TaggedRef solveVar;
-  TaggedRef result;
-  SuspList  *suspList;
-  int threads;
-
 public:
   NO_DEFAULT_CONSTRUCTORS(Board);
   Board(Board *b);
 
   USEHEAPMEMORY;
 
+  //
+  // Flags
+  //
+private:
+  int flags;
+
+public:
   Bool isCommitted()    { return flags & Bo_Committed;  }
   Bool isFailed()       { return flags & Bo_Failed;     }
   Bool isInstalled()    { return flags & Bo_Installed;  }
@@ -126,51 +116,56 @@ public:
   void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
   void unsetCloneBoard() { flags &= ~Bo_Clone;      }
 
+
+  //
+  // Garbage collection and copying
+  //
+public:
   Bool gcIsMarked(void);
   void gcMark(Board *);
   Board * gcGetFwd(void);
   Board *gcBoard();
   void gcRecurse(void);
   Bool gcIsAlive();
-  Bool checkAlive();
   Board *gcGetNotificationBoard ();
 
-  OZPRINTLONG;
-
-  void printTree();
+  void unsetGlobalMarks(void);
+  void setGlobalMarks(void);
+  Board * clone(void);
 
   //
   // Suspension counter
   //
+private:
+  int suspCount;
 
+public:
   void incSuspCount(int n=1) {
     Assert(!isCommitted() && !isFailed());
     suspCount += n;
     Assert(suspCount >= 0);
   }
-  void decSuspCount() {
+  void decSuspCount(void) {
     Assert(!isCommitted() && !isFailed());
     Assert(suspCount > 0);
     suspCount--;
   }
-
   int getSuspCount(void) {
-    Assert(!isFailed());
-    Assert(suspCount >= 0);
+    Assert(!isFailed() && suspCount >= 0);
     return suspCount;
   }
-
-  Bool hasSuspension(void) {
-    Assert(!isFailed());
-    Assert(suspCount >= 0);
-    return suspCount != 0;
-  }
-
+  Bool isStable(void);
+  Bool isBlocked(void);
+  void incSolveThreads(void);
+  void decSolveThreads(void);
 
   //
   // Thread counter
   //
+private:
+  int threads;
 
+public:
   void incThreads(int n = 1) {
     threads += n;
   }
@@ -178,7 +173,6 @@ public:
     Assert (threads > 0);
     return (--threads);
   }
-
   int getThreads(void) {
     return threads;
   }
@@ -186,24 +180,24 @@ public:
   //
   // Home and parent access
   //
+private:
+  Board * parent;
 
+public:
   void setCommittedBoard(Board *s) {
     Assert(!isInstalled() && !isCommitted());
     flags |= Bo_Committed;
     parent = s;
   }
-
   Board *derefBoard() {
     Board *bb;
     for (bb=this; bb->isCommitted(); bb=bb->parent) {}
     return bb;
   }
-
   Board *getParent() {
     Assert(!isCommitted());
     return parent->derefBoard();
   }
-
   Board *getParentAndTest() {
     Assert(!isCommitted());
     if (isFailed() || isRoot())
@@ -214,7 +208,10 @@ public:
   //
   // Script
   //
+private:
+  Script script;
 
+public:
   Script &getScriptRef() { return script; }
   void newScript(int size) {
     script.allocate(size);
@@ -228,22 +225,21 @@ public:
   //
   // Suspension list
   //
+private:
+  SuspList  *suspList;
+
+public:
   void addSuspension(Suspension);
-  Bool isEmptySuspList() { return suspList==0; }
-  void setSuspList(SuspList *sl) { suspList=sl; }
-  SuspList *unlinkSuspList() {
-    SuspList *sl = suspList;
-    suspList=0;
-    return sl;
+  SuspList * getSuspList(void) {
+    return suspList;
   }
-
-  //
-  // Copying marks
-  //
-
-  Bool isInTree(void);
-  void unsetGlobalMarks(void);
-  void setGlobalMarks(void);
+  void setSuspList(SuspList *sl) {
+    suspList=sl;
+  }
+  Bool isEmptySuspList() {
+    return suspList==0;
+  }
+  void clearSuspList(Suspension);
 
   //
   // local thread queue
@@ -302,17 +298,28 @@ public:
   void cleanDistributors(void);
   Distributor * getDistributor(void);
 
+  //
+  // Operations
+  //
   int commit(int left, int right);
-
+  void inject(TaggedRef proc);
 
   //
   // Status variable
   //
+private:
+  TaggedRef result;
+
+public:
+  TaggedRef getResult() {
+    return result;
+  }
+  void setResult(TaggedRef v) {
+    result = v;
+  }
 
   void clearResult();
   void patchChoiceResult(int i);
-  TaggedRef getResult() { return result; }
-  void setResult(TaggedRef v) { result = v; }
 
   TaggedRef genSolved();
   TaggedRef genStuck();
@@ -324,11 +331,27 @@ public:
   //
   // Root variable
   //
+private:
+  TaggedRef rootVar;
 
-  TaggedRef getSolveVar() {
-    return makeTaggedRef(&solveVar);
+public:
+  TaggedRef getRootVar() {
+    return makeTaggedRef(&rootVar);
   }
 
+
+  //
+  // Misc
+  //
+
+  OZPRINTLONG;
+
+#ifdef DEBUG_CHECK
+  void printTree();
+
+  Bool isInTree(void);
+
+#endif
 
   //
   // Trailing comparison

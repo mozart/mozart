@@ -470,10 +470,11 @@ static VarFix varFix;
  *
  */
 
-
 /*
  * Copying: Check if suspension entry is local to copyBoard.
  */
+
+#ifdef DEBUG_CHECK
 
 Bool Board::isInTree(void) {
   Assert(!isInGc);
@@ -498,6 +499,7 @@ Bool Board::isInTree(void) {
 
 }
 
+#endif
 
 
 /****************************************************************************
@@ -560,20 +562,21 @@ Abstraction *gcAbstraction(Abstraction *a) {
 
 inline
 Bool Board::gcIsMarked(void) {
-  return (Bool) gcField;
+  return IsMarkedPointer(suspList);
 }
 
 inline
 void Board::gcMark(Board * fwd) {
+  Assert(!gcIsMarked());
   if (!isInGc)
-    cpTrail.save((int32 *) &gcField);
-  gcField = fwd;
+    cpTrail.save((int32 *) &suspList);
+  suspList = (SuspList *) MarkPointer(fwd);
 }
 
 inline
 Board * Board::gcGetFwd(void) {
   Assert(gcIsMarked());
-  return gcField;
+  return (Board *) UnMarkPointer(suspList);
 }
 
 Board * Board::gcBoard() {
@@ -679,13 +682,6 @@ Thread *Thread::gcThreadInline() {
     return this;
 
   Assert(isInGc || !isRunnable());
-
-#ifdef DEBUG_THREADCOUNT
-  if (!(isInGc || !isRunnable())) {
-    printf("runnable propagator while cloning\n");
-    fflush(stdout);
-  }
-#endif
 
   // Note that runnable threads can be also counted
   // somewhere, and, therefore,
@@ -835,14 +831,10 @@ SuspList * SuspList::gc(void) {
   return (ret);
 }
 
-
-
-
 inline
 Bool OzVariable::gcIsMarked(void) {
   return IsMarkedPointer(suspList);
 }
-
 
 Bool OzVariable::gcIsMarkedOutlined(void) {
   return gcIsMarked();
@@ -1726,7 +1718,37 @@ void VarFix::fix(void) {
 static Bool across_redid = NO;
 #endif
 
-Board* AM::copyTree(Board* bb) {
+/*
+ * Before copying all spaces but the space to be copied get marked.
+ */
+inline
+void Board::setGlobalMarks(void) {
+  Assert(!isRoot());
+
+  Board * b = this;
+
+  do {
+    b = b->getParent(); b->setGlobalMark();
+  } while (!b->isRoot());
+
+}
+
+/*
+ * Purge marks after copying
+ */
+inline
+void Board::unsetGlobalMarks(void) {
+  Assert(!isRoot());
+
+  Board * b = this;
+
+  do {
+    b = b->getParent(); b->unsetGlobalMark();
+  } while (!b->isRoot());
+
+}
+
+Board * Board::clone(void) {
 
 #ifdef CS_PROFILE
   across_redid  = NO;
@@ -1754,14 +1776,14 @@ redo:
   cs_orig_start = (int32 *) heapTop;
 #endif
 
-  Assert(!bb->isCommitted());
+  Assert(!isCommitted());
 
-  bb->setCloneBoard();
-  bb->setGlobalMarks();
+  setCloneBoard();
+  setGlobalMarks();
 
-  Board * toCopyBoard = bb->gcBoard();
+  Board * copy = gcBoard();
 
-  Assert(toCopyBoard);
+  Assert(copy);
 
   gcStack.recurse();
 
@@ -1775,10 +1797,9 @@ redo:
 
   cpTrail.unwind();
 
-  bb->unsetGlobalMarks();
-  bb->unsetCloneBoard();
-  toCopyBoard->unsetCloneBoard();
-
+  unsetGlobalMarks();
+  unsetCloneBoard();
+  copy->unsetCloneBoard();
 
 #ifdef CS_PROFILE
   if (across_chunks) {
@@ -1787,9 +1808,7 @@ redo:
   }
 
   cs_copy_size = cs_orig_start - ((int32 *) heapTop);
-
   cs_orig_start = (int32 *) heapTop;
-
   cs_copy_start = (int32*) malloc(4 * cs_copy_size + 256);
 
   {
@@ -1808,7 +1827,7 @@ redo:
 
   isCollecting = NO;
 
-  return toCopyBoard;
+  return copy;
 }
 
 //*****************************************************************************
@@ -2256,11 +2275,15 @@ ConstTerm *ConstTerm::gcConstTerm() {
       CheckLocal(sp);
 
       Board *bb=GETBOARD(sp);
+
+      /*
 #ifdef DEEP_GARBAGE
       if (!isInGc && !bb->isInTree()) {
         return 0;
       }
 #endif
+      */
+
       Assert(isInGc || bb->isInTree());
 
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
@@ -2497,7 +2520,7 @@ void Board::gcRecurse() {
 
   script.Script::gc();
 
-  OZ_collectHeapTerm(solveVar,solveVar);
+  OZ_collectHeapTerm(rootVar,rootVar);
 
   OZ_collectHeapTerm(result,result);
 
