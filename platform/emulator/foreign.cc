@@ -70,6 +70,12 @@ int OZ_isInt(OZ_Term term)
   return isInt(term);
 }
 
+int OZ_isNumber(OZ_Term term)
+{
+  term = deref(term);
+  return isNumber(term);
+}
+
 int OZ_isSmallInt(OZ_Term term)
 {
   term = deref(term);
