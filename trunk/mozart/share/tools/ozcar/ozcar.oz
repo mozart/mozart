@@ -20,7 +20,7 @@ local
       meth on
 	 {Tk.batch [update(idletasks)
 		    wm(deiconify self.toplevel)]}
-	 case {NewCompiler} then
+	 case {UsingNewCompiler} then
 	    case {CgetTk emacsThreads} then
 	       {Compile '\\switch +debuginfo'}
 	    else

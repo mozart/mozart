@@ -96,7 +96,11 @@ in
 		    key:    ctrl(l))
 		  C(label:  'Browse'
 		    action: self # action(StackAction)
-		    key:    ctrl(b))])
+		    key:    ctrl(b))
+		  separator
+		  C(label:  'Evaluate...'
+		    action: self # eval
+		    key:    ctrl(e))])
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:    'Step on All System Procedures'
