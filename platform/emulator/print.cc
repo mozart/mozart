@@ -7,13 +7,6 @@
   State: $State$
 
   ------------------------------------------------------------------------
-
-exported:
-  char *tagged2String(TaggedRef ref, int depth=10, int offset=0)
-  void taggedPrint(TaggedRef ref, int depth=10, int offset=0)
-  void taggedPrintLong(TaggedRef ref, int depth=10, int offset=0)
-
-  ------------------------------------------------------------------------
 */
 
 #ifdef __GNUC__
@@ -113,17 +106,12 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
     tagged2Float(ref)->print(stream,depth,offset);
     break;
   case BIGINT:
-    tagged2BigInt(ref)->print(stream,depth,offset);
-    break;
   case SMALLINT:
     {
-      int value = smallIntValue(ref);
-      if (value < 0) {
-	stream << "~"
-	       << -value;
-      } else {
-	stream << value;
-      }
+      char *s = OZ_intToCString(ref);
+      OZ_normInt(s);
+      stream << s;
+      OZ_free(s);
     }
     break;
   case CONST:
@@ -343,16 +331,10 @@ PRINT(Atom)
 
 PRINT(Float)
 {
-  stream << tagged2Atom(floatToAtomTerm(value))->getPrintName();
-}
-
-PRINT(BigInt)
-{
-  char *s = stringTilde();
+  char *s = OZ_floatToCString(makeTaggedFloat(this));
+  OZ_normFloat(s);
   stream << s;
-//       << "B";
-
-  delete [] s;
+  OZ_free(s);
 }
 
 PRINT(Cell)
@@ -539,7 +521,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 	     << "SmallInt @"
 	     << ref
 	     << ": ";
-      tagged2Stream(ref,stream);
+      tagged2Stream(ref,stream,depth,offset);
       stream << endl;
     }
     break;
@@ -965,20 +947,17 @@ PRINTLONG(SRecord)
 
 PRINTLONG(Float)
 {
-  stream << indent(offset) << "Float @" << this << ": "
-	 << tagged2Atom(floatToAtomTerm(value))->getPrintName();
+  stream << indent(offset) << "Float @" << this << ": ";
+  print(stream,depth,offset);
+  stream << endl;
 }
 
 PRINTLONG(BigInt)
 {
-  char *s = stringTilde();
-
   stream << indent(offset)
-	 << "BigInt @" << this << ": "
-	 << s
-	 << endl;
-
-  delete [] s;
+	 << "BigInt @" << this << ": ";
+  tagged2Stream(makeTaggedBigInt(this),stream,depth,offset);
+  stream << endl;
 }
 
 
