@@ -106,7 +106,7 @@ define(M4INSTRTWOREGS,``''
 		size,newSize);
 	am.toplevelVars = resize(am.toplevelVars,newSize);
 	Y = am.toplevelVars;
-	// do deletion of old array --> GC does it
+	// no deletion of old array --> GC does it
       }
       SVariable *svar = new SVariable(CBB, makeTaggedAtom(getAtomArg(PC+2)));
       Reg1(regIndex) = makeTaggedRef(newTaggedSVar(svar));
