@@ -73,6 +73,7 @@ define
 	    case K
 	    of "__extension__"              then ""
 	    [] "__signed"                   then ""
+	    [] "__volatile"                 then "volatile"
 	    [] "((noreturn));"              then ""
 	    [] "__ssize_t"                  then "unsigned int"
 	    [] "(__const"                   then "(const"
