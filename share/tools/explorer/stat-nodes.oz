@@ -79,6 +79,6 @@ in
 			       b:     1)
 		       end
 		    end
-		 sentinel: EmptyClass)
+		 sentinel: !EmptyClass)
    
 end

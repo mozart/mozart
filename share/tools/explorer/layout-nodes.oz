@@ -152,8 +152,8 @@ local
    end
    
    RootExtent  = 0|0
-   RootShape   = [RootExtent]
-   HiddenShape = [RootExtent ~!HalfHorSpaceI|!HalfHorSpaceI]
+   RootShape   = [!RootExtent]
+   HiddenShape = [!RootExtent ~!HalfHorSpaceI|!HalfHorSpaceI]
 
    Layout = {NewName}
    Adjust = {NewName}

@@ -212,10 +212,10 @@ local
    
 in
 
-   MoveNodes = classes(choose:    ChooseNode
-		       succeeded: SucceededNode
-		       failed:    FailedOrBlockedNode
-		       blocked:   FailedOrBlockedNode
-		       sentinel:  Sentinel)
+   MoveNodes = classes(choose:    !ChooseNode
+		       succeeded: !SucceededNode
+		       failed:    !FailedOrBlockedNode
+		       blocked:   !FailedOrBlockedNode
+		       sentinel:  !Sentinel)
 		       
 end
