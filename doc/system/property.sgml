@@ -101,7 +101,7 @@
     <Title/Threads: <<threads>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.threads">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<created>>/
@@ -138,7 +138,7 @@
     <Title/Thread Priorities: <<priorities>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.prio">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<high>>/
@@ -163,7 +163,7 @@
     <Title/Time Usage: <<time>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.time">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<user>>/
@@ -237,7 +237,7 @@
     <Title/Garbage Collection: <<gc>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.gc">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<size>>/
@@ -312,7 +312,7 @@
     <Title/Printing Values: <<print>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.print">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<width>>/
@@ -337,7 +337,7 @@
     <Title/Finite Domains: <<fd>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.fd">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<variables>>/
@@ -373,7 +373,7 @@
     <Title/Computation Spaces: <<space>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.space">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<created>>/
@@ -415,7 +415,7 @@
     <Title/Printing Errors: <<errors>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.errors">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<debug>>/
@@ -464,7 +464,7 @@
     <Title/Printing Messages: <<messages>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.messages">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<gc>>/
@@ -487,7 +487,7 @@
     <Title/Memory Usage: <<memory>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.memory">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<atoms>>/
@@ -530,7 +530,7 @@
     <Title/Implementation Limits: <<limits>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.limits">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<int.min>>/
@@ -564,7 +564,7 @@
     <Title/Platform Information: <<platform>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.platform">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<name>>/
@@ -614,7 +614,7 @@
     <Title/Application Support: <<application>>/
 
     <P>
-      <Table>
+      <Table id="table.prop.application">
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
           <Td/<<args>>/
