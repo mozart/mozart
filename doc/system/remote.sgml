@@ -69,7 +69,7 @@
           proglang=sh>rsh</code> command, which in turn creates the
           new Oz engine.  
 
-        <para class=apropos proglang=sh><title/rsh configuration/
+        <para class=apropos proglang=sh><title/<code proglang=sh/rsh/ configuration/
           Remote managers with method <<rsh>> only work properly, if
           the <<rsh>> command has been set up properly. You can test it for
           the host ?{Host} by executing the following command in the
@@ -89,12 +89,12 @@
                password. 
 
               <p>
-               Take the following sample <file/.rhosts/ file:
+               Take the following sample <file/.rhosts/ file at the computer <<wallaby.ps.uni-sb.de>>:
 <code display proglang=none>
 godzilla.ps.uni-sb.de
 bamse.sics.se
 </code>
-               If the <<rsh>> command is executed on
+               If <<rsh wallaby.ps.uni-sb.de>> is executed on
                <<bamse.sics.se>> or <<godzilla.ps.uni-sb.de>>, then
                <<rsh>> does not prompt for a password.
 
@@ -112,9 +112,9 @@ bamse.sics.se
                Mozart has been installed). 
           </list>
           
-        <para class=apropos><title/<<sh>> configuration/
-          <<'sh'>> can only be used, if ?_{HostV} is <<localhost>> and
-          just creates a new Oz engine by using the Unix <code
+        <para class=apropos proglang=sh><title/<<sh>> configuration/
+          <<'sh'>> can only be used, if ?_{HostV} is <<localhost>>. It
+          creates a new Oz engine by using the Unix <code
           proglang=sh>sh</code> command. You can test whether this
           method works on your computer by:
           <<<sh -c 'ozengine x-oz://system/RemoteServer.ozf --test'>>>
@@ -196,7 +196,9 @@ bamse.sics.se
           <Synopsis>
 	    <code display/close()/
           <Item>
-            Kills the remote process.
+            Performs a controlled shutdown of all remote processes
+            (for a discussion of controlled shutdown see <ptr.extern
+to="ozdoc:dstutorial" key="section.distmodel.shutdown">).
 
         </List>
        </P>         
