@@ -742,7 +742,7 @@ Bool AM::wakeUpThread(Thread *tt, Board *home)
 
   switch (isBetween(GETBOARD(tt), home)) {
   case B_BETWEEN:
-    suspThreadToRunnable(tt);
+    suspThreadToRunnableOPT(tt);
     scheduleThread(tt);
     return TRUE;
 
@@ -1987,7 +1987,7 @@ int AM::commit(Board *bb, Thread *tt)
   if (!tt) {
     tt=aw->getThread();
     Assert(tt->isSuspended());
-    suspThreadToRunnable(tt);
+    suspThreadToRunnableOPT(tt);
     scheduleThread(tt);
     DebugCheckT(aw->setThread(0));
   }
