@@ -226,7 +226,7 @@ Tcl/Tk.</p>
 
       <section>
 	  <title/Can modules mutually import each others?/
-	<p>Yes, there is no problem.  Modules are loaded by need
+	<p>Yes, there is no problem.  Modules are loaded by need and
 concurrently.</p>
       </section>
 
@@ -267,8 +267,37 @@ datastructures can be collected successfully.</p>
       </section>
 
       <section>
+	  <title/What is multi-paradigm programming?/
+	<p>Multi-paradigm programming is the freedom to choose and mix
+programming paradigms according to your tastes and needs.  Unlike most
+other programming languages which lock you into a single programming
+paradigm, Oz unifies into one simple and coherent framework the
+functional, object-oriented, and logic flavors of programming. This is
+possible due to the very general and powerful underlying paradigm of
+concurrent constraints programming.</p>
+      </section>
+
+      <section proglang=oz>
 	  <title/Does Oz support object-oriented programming?/
-	<p></p>
+	<p>Yes, Oz supports the class/instance model for
+object-oriented programming.  A class is created &eg; as follows:
+<code display>
+declare
+class Foo
+   attr val
+   meth init(V) val<-V end
+   meth show {Show foo(val: @val)} end
+end
+</code>
+An instance is created using procedure <code/New/ applied to class
+<code/Foo/ and initial message <code/init(12)/ for example:
+<code display/declare O = {New Foo init(12)}/
+Object <code/O/ can be applied to message <code/show/ as follows:
+<code display/{O show}/
+which, in this case causes <code/foo(val: 12)/ to be printed.</p>
+<p>A point of terminology:
+we speak of object application rather than of message sending.
+</p>
       </section>
 
       <section>
