@@ -207,8 +207,8 @@ Main.ozf: compiler/Main.oz compiler-Env.oz compiler/FormatStrings.oz \
 RunTime.ozf: compiler/RunTime.oz
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
-        $(OZENGINE) ozar -in=Main.ozf -out=Compiler.ozf \
-        -exclude=ProductionTemplates
+        $(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf \
+        --exclude=ProductionTemplates
 
 #---------------------------------------------------------------------
 # Syslets
