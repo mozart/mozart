@@ -158,7 +158,9 @@ enum OZ_PropagatorFlags {
 
 class OZ_PropagatorExpect;
 
-typedef OZ_expect_t (*FDExpectFun) (OZ_PropagatorExpect*,OZ_Term);
+typedef OZ_expect_t ozcdecl (*FDExpectFun) (OZ_PropagatorExpect*,OZ_Term);
+
+extern OZ_expect_t ozcdecl expectIntVarAny(OZ_PropagatorExpect* p,OZ_Term t);
 
 class OZ_PropagatorExpect {
 private:
@@ -192,7 +194,7 @@ public:
 
   //  by kost@ 9.04.96: usage of fdaux.hh in fdcd.cc is eliminated;
   OZ_expect_t expectVectorIntVarAny(OZ_Term t) {
-    return expectVector(t, (FDExpectFun)(OZ_PropagatorExpect::expectIntVarAny));
+    return expectVector(t, ::expectIntVarAny);
   }
   
   OZ_Boolean isSuspending(OZ_expect_t r) {
@@ -202,6 +204,8 @@ public:
     return (r.accepted == -1);
   }
 };
+
+
 
 //-----------------------------------------------------------------------------
 // class OZ_FDIntVar, etc.
