@@ -1,0 +1,70 @@
+BODY, TH, TD, TR, P, CAPTION, H1, H2, H3, IMG, TABLE {
+  font-family: sans-serif;
+}
+
+PRE, CODE {
+  font-family: monospace;
+}
+
+BODY {
+  background-color: white;
+  margin-left: 160px;
+  background-image: url(http://www.ps.uni-sb.de/www/img/page.gif);
+}
+
+P {
+  text-align: justify;
+}
+
+P.MARGIN {
+  text-align: left;
+}
+
+H1 {
+  color: #9B0000;
+}
+
+H2 {
+  color: #FF9933;
+  font-size: medium;
+}
+
+H3 {
+  color: #999999;
+  font-size: medium;
+}
+
+CODE {
+  color: #000000;
+  font-size: 12pt;
+}
+
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+
+.MARGIN {
+  position: absolute;
+  left: 10px;
+  width: 130px;
+}
+
+A:LINK {
+  color: #666666;
+}
+
+A:VISITED {
+  color: black;
+}
+
+.MARGIN A:LINK {
+  color: black;
+}
+
+.IGNORE {
+  display: none;
+}
