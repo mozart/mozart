@@ -20,16 +20,16 @@ OBJS =  LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
         lalr.o main.o nullable.o output.o print.o reader.o reduce.o \
         symtab.o warshall.o version.o alloca.o
 
-all: ozbison.dl
+all: ozbison.so
 
 %.o: %.c
         $(CC) $(CFLAGS) $(INCLUDES) -c $< -o $*.o
 
-ozbison.dl: $(OBJS)
-        $(DYNLD) -o ozbison.dl $(OBJS) $(LDFLAGS) $(LIBS)
+ozbison.so: $(OBJS)
+        $(DYNLD) -o ozbison.so $(OBJS) $(LDFLAGS) $(LIBS)
 
 clean veryclean realclean:
-        $(RM) *~ *.o *.dl
+        $(RM) *~ *.o *.so
 
 distclean:
         $(RM) Makefile config.*
