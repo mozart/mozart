@@ -6,11 +6,11 @@
   Version: $Revision$
   State: $State$
 
-  implementation of threads and queues of threads with priorities
+  implementation of threads
   ------------------------------------------------------------------------
 */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "thread.hh"
 #endif
 
@@ -29,88 +29,8 @@
 
    */
 
-#include "am.hh"
+#include "thread.hh"
 
-#ifdef OUTLINE
-#define inline
-#include "thread.icc"
-#undef inline
-#endif
-
-
-// --------------------------------------------------------------------------
-
-/*
- *  Threads;
- *
- */
-
-void Thread::setExtThreadOutlined (Board *varHome)
-{
-  Board *bb = am.currentBoard;
-  Bool wasFound = NO;
-  Assert (!(varHome->isCommitted ()));
-
-  while (bb != varHome) {
-    Assert (!(bb->isRoot ()));
-    Assert (!(bb->isCommitted ()) && !(bb->isFailed ()));
-    if (bb->isSolve ()) {
-      SolveActor *sa = SolveActor::Cast (bb->getActor ());
-      sa->addSuspension (this);
-      wasFound = OK;
-    }
-    bb = bb->getParent();
-  }
-
-  if (wasFound)
-    setExtThread ();
-}
-
-//
-void Thread::checkExtThreadOutlined ()
-{
-  Assert (wasExtThread ());
-  
-  Board *sb = GETBOARD(this)->getSolveBoard ();
-  AM *e = &am;
-  
-  while (sb) {
-    Assert (sb->isSolve());
-    
-    SolveActor *sa = SolveActor::Cast (sb->getActor ());
-    if (e->isStableSolve (sa)) {
-      e->scheduleThread(e->mkRunnableThreadOPT(DEFAULT_PRIORITY,sb));
-    }
-    sb = GETBOARD(sa)->getSolveBoard();
-  }
-}
-
-//
-void Thread::removeExtThreadOutlined ()
-{
-  Assert (wasExtThread ());
-  
-  Board *sb = GETBOARD(this)->getSolveBoard ();
-  AM *e = &am;
-  
-  while (sb) {
-    Assert (sb->isSolve());
-    
-    SolveActor *sa = SolveActor::Cast (sb->getActor ());
-    sa->clearSuspList(this);
-    sb = GETBOARD(sa)->getSolveBoard();
-  }
-}
-
-void Thread::propagatorToNormal()
-{
-  Assert(isPropagator());
-  delete item.propagator;
-  state.flags &= ~S_PR_THR;
-
-  setBody(am.allocateBody());
-  state.flags = state.flags|S_RTHREAD;
-}
 
 int Thread::getRunnableNumber()
 {
