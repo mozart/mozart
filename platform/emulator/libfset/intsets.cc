@@ -205,7 +205,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       // and remove all elements starting from this element to `inf'
       {
         int next_smaller = s->getNotInNextSmallerElem(min_in);
-        FailOnInvalid(*s >= next_smaller);
+        if (next_smaller>0) FailOnInvalid(*s >= next_smaller);
       }
 
       OZ_DEBUGPRINT(("c"));
@@ -214,7 +214,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       // and remove all elements starting from this element to `sup'
       {
         int next_larger = s->getNotInNextLargerElem(max_in);
-        FailOnInvalid(*s <= next_larger);
+        if (next_larger>0) FailOnInvalid(*s <= next_larger);
       }
     }
 
