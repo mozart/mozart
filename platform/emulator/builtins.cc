@@ -5944,11 +5944,7 @@ OZ_C_proc_begin(BISystemGetFD,1) {
   SetIntArg(AtomVariables,   ozstat.fdvarsCreated.total);
   SetIntArg(AtomPropagators, ozstat.propagatorsCreated.total);
   SetIntArg(AtomInvoked,     ozstat.propagatorsInvoked.total);
-  SetIntArg(AtomRuns, ((ozstat.timeForPropagation.total>0) ?
-		       ((int) (1000*double(ozstat.propagatorsInvoked.total)/
-			       ozstat.timeForPropagation.total)) :
-		       0));
-  SetIntArg(AtomThreshold,     32 * fd_bv_max_high);
+  SetIntArg(AtomThreshold,   32 * fd_bv_max_high);
   
   return PROCEED;
 }
