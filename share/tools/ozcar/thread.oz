@@ -293,7 +293,7 @@ in
 	       else skip end
 	    else skip end
 	 else
-	    Gui,removeNode(I)
+	    Gui,markNode(I dead)
 	 end
 	 case T == @currentThread then
 	    case Mode == kill then
@@ -307,6 +307,7 @@ in
 	    else
 	       Gui,status('Thread #' # I # ' died')
 	       {SendEmacs removeBar}
+	       Gui,markStack(active)
 	       Gui,printStack(id:I frames:nil depth:0)
 	    end
 	 else skip end
