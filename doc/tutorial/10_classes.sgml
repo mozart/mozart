@@ -706,7 +706,7 @@ end
 
 <<<
 class C1 from C
-  meth b(...) {self @pa(5)} ... end
+  meth b(...) L=@pa in {self L(5)} ... end
   ...
 end
 >>>
