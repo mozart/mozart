@@ -75,12 +75,8 @@ void error(const char *format, ...)
   DebugCheckT(osUnblockSignals());
 
   //
-  // kost@ : I don't know anything about 'DEBUG_OS_THREADS', but *i want*
-  // to halt the program at the point of an error!!!
-#ifdef DEBUG_CHECK
-#define DEBUG_OS_THREADS
-#endif
-#ifdef DEBUG_OS_THREADS
+  // kost@ : *i want* to halt the program at the point of an error!!!
+#if defined(DEBUG_CHECK) && defined(VIRTUALSITES)
   // just get a synchronous signal on the same thread;
   *((int *) 0) = 0;
 #else
