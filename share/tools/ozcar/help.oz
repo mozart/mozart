@@ -34,9 +34,11 @@ local
     [
      nil #
      ('The Ozcar Help System' #
-      ('For most of the widgets you can ' #
-       'get some help.\nJust click ' #
-       'with the right mouse button on the widget.'))
+      ('Information about important topics can be found' #
+      ' in the Help menu you' #
+       ' just activated. Furthermore, there\'s some help' #
+       ' available for most of the widgets in the GUI; just click' #
+       ' with the right mouse button over them.'))
 
      StatusHelp #
      ('The Status Line' #
@@ -52,6 +54,15 @@ local
      ('Attach Subthreads' #
       ('Deactivate this checkbutton if you don\'t want Ozcar ' #
        'to attach any subthreads of your initial query thread.'))
+
+     ValuesHelp #
+     ('Access to Values' #
+      ('All bold printed Oz values in the stack and the environment' #
+       ' windows can be examined by clicking' #
+       ' on them. This will activate the Browser. Moreover, by feeding' #
+       ' the expression' #
+       '\n\n    {Ozcar lastClickedValue($)},' #
+       '\n\n you get access to the last clicked value from the OPI.'))
 
      BreakpointStaticHelp #
      ('Static Breakpoints' #
@@ -145,7 +156,7 @@ local
 	 topic help
       meth init(master:Master)
 	 TkTools.dialog,tkInit(master:  Master
-			       root:    pointer
+			       root:    master # 143 # 77
 			       title:   HelpTitle % self.topic
 			       buttons: [OkButtonText # tkClose]
 			       bg:      DefaultBackground

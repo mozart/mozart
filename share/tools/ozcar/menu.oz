@@ -156,11 +156,13 @@ in
 		 [C(label:   'Help on Help'
 		    action:  self # help(nil))
 		  separator
+		  C(label:   'Access to Values'
+		    action:  self # help(ValuesHelp))
 		  CC(label:  'Breakpoints'
 		     menu:
-			[C(label:  'static'
+			[C(label:  'Static'
 			   action: self # help(BreakpointStaticHelp))
-			 C(label:  'dynamic'
+			 C(label:  'Dynamic'
 			   action: self # help(BreakpointDynamicHelp))]
 		     feature: breakpoints)])]}
       end
