@@ -253,8 +253,9 @@ and should normally be placed in a file called `makefile.oz'.  A
 makefile typically looks like this:
 
         makefile(
-          lib : ['Foo.ozf']
-          uri : 'x-ozlib://mylib')
+          lib   : ['Foo.ozf']
+          uri   : 'x-ozlib://mylib'
+          mogul : 'mogul:/denys/lib-foo')
 
 stating explicitly that there is one library target, namely the
 functor Foo.ozf, and that it should installed at URI:
@@ -262,7 +263,9 @@ functor Foo.ozf, and that it should installed at URI:
         x-ozlib://mylib/Foo.ozf
 
 and implicitly that it should be compiled from the Oz source file
-Foo.oz.
+Foo.oz.  When you invoke `ozmake --install', the `mogul' feature
+serves to uniquely identify this package and the files it contributes
+in the ozmake database of installed packages.
 
 There are many more features which can occur in the makefile and they
 are all optional.  If you omit all the features, you only get the

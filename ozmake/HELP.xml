@@ -610,7 +610,8 @@ makefile typically looks like this:</p>
 <oz.display>
         makefile(
           lib : ['Foo.ozf']
-          uri : 'x-ozlib://mylib')
+          uri : 'x-ozlib://mylib'
+          mogul : 'mogul:/denys/lib-foo')
 </oz.display>
 <p>stating explicitly that there is one library target, namely the
 functor <file>Foo.ozf</file>, and that it should installed at URI:</p>
@@ -618,7 +619,10 @@ functor <file>Foo.ozf</file>, and that it should installed at URI:</p>
         x-ozlib://mylib/Foo.ozf
 </oz.display>
 <p>and implicitly that it should be compiled from the Oz source file
-<file>Foo.oz</file>.</p>
+<file>Foo.oz</file>.  When you invoke <opt>ozmake --install</opt>, the
+<oz>mogul</oz> feature serves to uniquely identify this package and
+the files it contributes in the <tool>ozmake</tool> database of
+installed packages.</p>
 
 <p>There are many more features which can occur in the makefile and
 they are all optional.  If you omit all the features, you only get the
