@@ -38,7 +38,7 @@ import
    CompilerSupport(isBuiltin featureLess) at 'x-oz://boot/CompilerSupport'
    Space(new ask merge)
    FD(decl distinct sumC reflect assign)
-   System(show printName)
+   System(show printName eq)
    Property(get)
    Builtins(getInfo)
    Core
@@ -412,7 +412,13 @@ define
 	    end
 	 else skip
 	 end
-	 if {IsDet VHd} then skip
+	 if {IsDet VHd} orelse
+	    %% this is the case when makeEquation above calls MakeUnify and
+	    %% the equation is trivial (same reg on both sides).  In this case
+	    %% no instruction is inserted, we have just unified VHd=VTl. So,
+	    %% here we just check whether we have done that.
+	    {System.eq VHd VTl}
+	 then skip
 	 else
 	    VHd = vCallBuiltin(_ Builtinname {GetRegs ActualArgs} Coord VTl)
 	 end
@@ -968,7 +974,7 @@ define
       end
    end
    class CodeGenClauseBody from CodeGenDefinition
-      feat ClauseBodyShared
+      feat ClauseBodyShared ClauseBodyTail
       meth codeGen(CS VHd VTl)
 	 %% code for the clause body is only generated when it is applied
 	 VHd = VTl
@@ -976,11 +982,11 @@ define
       meth codeGenApply(Designator Coord ActualArgs CS VHd VTl)
 	 ActualArgs = nil   % by construction
 	 VHd = self.ClauseBodyShared
-	 VTl = nil
+	 VTl = self.ClauseBodyTail % see log message for rev 1.132
 	 if {IsFree VHd} then Label Addr in
 	    {CS newLabel(?Label)}
 	    VHd = vShared(_ _ Label Addr)
-	    {CodeGenList @statements CS Addr nil}
+	    {CodeGenList @statements CS Addr VTl}
 	 end
       end
    end
