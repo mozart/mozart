@@ -1,0 +1,120 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title/Changes/
+    <Abstract>
+      This documents gives a brief overview of what has changed from
+      Oz 2.0 (and its implementation DFKI Oz) to Oz 3.0 (and its
+      implementation Mozart).
+    </Abstract>
+  <Body>
+    <chapter id="chapter.general">
+      <title/General Changes/
+    <chapter id="chapter.syntax">
+      <title/Syntax Imporvements/
+    <chapter id="chapter.base">
+      <title/Base/
+    
+      <section id="section.base.objects">
+        <title/Classes and Objects
+
+        <subsection class=unumbered>
+          <title/Multiple Inheritance/
+
+          <p>
+            Multiple inheritance does not provide for automatic
+            conflict resolution. If a conflicting method definition
+            arises in multiple inheritance, the 
+            conflict <em/must/ be resolved by overriding the
+            method. Otherwise, an exception is raised.
+          <p>
+            A conflicting method definition arises if a method is
+            defined by more than one class. For example,
+<<<class A meth m skip end end
+class B meth m skip end end
+class C from A B end>>>
+            raises an exception (the old model would silently pick the
+            method from <<B>>), since both <<A>> and <<B>> define the
+            method <<m>>. The only way to fix this is by overriding <<m>>
+            when creating class <<C>>: 
+            <<<class C from A B meth m skip end end>>>
+          <p>
+            Features and attributes are handled identically. For a
+            more thorough discussion, see <ptr.extern
+            to="ozdoc:tutorial" key="chapter.classes">.
+
+    <chapter id="chapter.system">
+      <title/System Modules/
+
+      
+      <section id="section.system.search">
+        <title/Search Engines renamed/
+
+      <section id="section.system.schedule">
+        <title/Scheduling support moved/
+
+        <p>
+          Scheduling support is now provided by the system module
+          <<Schedule>> rather than <<FD.schedule>>. See also
+          <ptr.extern to="ozdoc:fdt" key="chapter.scheduling">  and
+          <ptr.extern to="ozdoc:system" key="chapter.scheduling">.
+
+      
+</Book>
