@@ -1151,14 +1151,6 @@ $cmode='stat';
                               BI  => BIfinalize_setHandler,
                               native => true},
 
-    'GetCloneDiff'      => { in  => ['+space'],
-                             out => ['+value'],
-                             BI  => BIgetCloneDiff,
-                             ifdef=>'CS_PROFILE',
-                             native => true},
-
-
-
     ##* Diffent Kinds of Special Variables
 
     #* System Stuff
@@ -1925,17 +1917,6 @@ $cmode='stat';
                              ifdef  => STATIC_LIBOZMA,
                              native => true},
 
-#    'SystemRegistry'   => { in  => [],
-#                            out => ['+dictionary'],
-#                            BI  => BIsystem_registry,
-#                            native => true},
-#
-#    'ServiceRegistry'  => { in  => [],
-#                            out => ['+dictionary'],
-#                            BI  => BIsystem_registry,
-#                            native => true},
-
-
     ##* Virtual Properties
 
     'GetProperty'       => { in  => ['+literal'],
@@ -2258,5 +2239,22 @@ $cmode='stat';
                              BI  => BIbyNeed,
                              module=>'future',
                              native => false},
+
+    ###
+    ### Misc stuff
+    ###
+
+    ###
+    ### Christian's private stuff
+    ###
+
+    'GetCloneDiff'      => { in  => ['+space'],
+                             out => ['+value'],
+                             BI  => BIgetCloneDiff,
+                             ifdef=>'CS_PROFILE',
+                             native => true},
+
+
+
 
 );
