@@ -58,7 +58,8 @@ OZ_BI_define(BIbyNeedAssign,2,0)
  */
 void Future::kick(TaggedRef *ptr)
 {
-  Assert(function!=0);
+  if (!function) return;
+
   Board* bb      = GETBOARD(this);
   Thread* thr    = oz_newThreadInject(DEFAULT_PRIORITY,bb);
   OZ_Term newvar = oz_newVar(bb);
@@ -74,7 +75,7 @@ void Future::kick(TaggedRef *ptr)
 
 OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 {
-  if (function) kick(vPtr);
+  kick(vPtr);
 
   am.addSuspendVarList(vPtr);
   return SUSPEND;
@@ -88,7 +89,7 @@ OZ_Return Future::forceBind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 
 OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode*scp)
 {
-  if (function) kick(vPtr);
+  kick(vPtr);
 
   am.addSuspendVarList(vPtr);
   return SUSPEND;

@@ -403,7 +403,7 @@ OZTESTOPTS=-v
 test:
         OZEMULATOR=`pwd`/emulator.exe; export OZEMULATOR; \
         cd $(TESTDIR) && \
-        $(MAKE) check OZTESTOPTS=$(OZTESTOPTS)
+        $(MAKE) check OZTESTOPTS="$(OZTESTOPTS)"
 
 lib-all:
         $(MAKE) lib-check

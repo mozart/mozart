@@ -73,5 +73,7 @@ char *mess_names[M_LAST] = {
   "file",
   "export",
   "unask error",
-  "send gate"
+  "send gate",
+  "isdet",
+  "requested"
 };

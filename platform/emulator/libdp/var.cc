@@ -26,9 +26,6 @@
  *
  */
 
-// TODO mm2
-//  future: kick
-
 #if defined(INTERFACE)
 #pragma implementation "var.hh"
 #endif
@@ -38,6 +35,7 @@
 #include "dpMarshaler.hh"
 #include "unify.hh"
 #include "var_simple.hh"
+#include "var_future.hh"
 
 /* --- Common unification --- */
 
@@ -103,14 +101,22 @@ OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 
 /* --- ProxyVar --- */
 
+static
+void sendRequested(BorrowEntry *be){
+  be->getOneMsgCredit();
+  NetAddress *na = be->getNetAddress();
+  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
+  marshal_M_REQUESTED(bs,na->index);
+  SendTo(na->site,bs,M_REQUESTED,na->site,na->index);
+}
+
 void ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
   if (!suspList) {
     BorrowEntry *be=BT->getBorrow(getIndex());
-    // sendRequested(be); // mm2
+    sendRequested(be);
   }
   addSuspSVar(susp, unstable);
-
 }
 
 void ProxyVar::gcRecurseV(void)
@@ -178,6 +184,14 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 }
 
 /* --- ManagerVar --- */
+
+void ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
+{
+  if (origVar->getType()==OZ_VAR_FUTURE) {
+    ((Future *)origVar)->kick(vPtr);
+  }
+  addSuspSVar(susp, unstable);
+}
 
 void ManagerVar::gcRecurseV(void)
 {
@@ -248,11 +262,6 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
     // send redirect done first to check if r is exportable
     OZ_Return ret = sendRedirectToProxies(r, myDSite);
     if (ret != PROCEED) return ret;
-#ifdef TODO
-    origVar->setSuspList(unlinkSuspList());
-    *vPtr=makeTaggedCVar(origVar);
-    origVar=0;
-#endif
     oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(OTI)->changeToRef();
     if (OT->getOwner(OTI)->hasFullCredit()) {
@@ -287,7 +296,6 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
   }
 }
 
-// after a surrender message is received
 void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
 {
   OZ_Return ret = bindV(vPtr,val);
@@ -296,6 +304,13 @@ void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
     return;
   }
   Assert(ret==PROCEED);
+}
+
+void ManagerVar::requested(TaggedRef *vPtr)
+{
+  if (origVar->getType()==OZ_VAR_FUTURE) {
+    ((Future *)origVar)->kick(vPtr);
+  }
 }
 
 /* --- Marshal --- */
