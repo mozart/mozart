@@ -36,10 +36,10 @@ interface Oz to existing libraries: for example, the <NAME
 type="library"/regex/ and <NAME type="library"/gdbm/ modules are
 implemented in this fashion.</P>
 
-    <PARA TYPE=APROPOS><TITLE/Native Functors/
+    <PARA CLASS=APROPOS><TITLE/Native Functors/
 Every extension is presented to the system in the form of a
 <DEF/native functor/, &ie; a functor which happens to be implemented
-in C or C++ rather than in Oz.</P>
+in C or C++ rather than in Oz.</PARA>
 </PART>
 
 <!--
