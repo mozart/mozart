@@ -23,12 +23,6 @@
 #endif
 
 
-#ifdef PROFILE_FD
-unsigned FiniteDomain::constrCalled = 0;
-unsigned FiniteDomain::unifyCalled = 0;
-unsigned FiniteDomain::varsCreated = 0;
-#endif
-
 //-----------------------------------------------------------------------------
 //                           class BitArray
 
