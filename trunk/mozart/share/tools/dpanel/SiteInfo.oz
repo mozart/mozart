@@ -103,7 +103,7 @@ define
 	 graphKey
 	 state
 	 paneClient:false
-	 
+	 selected:false
       meth init(S G SD)
 	 self.key = S.siteid
 	 self.info = S
@@ -131,7 +131,12 @@ define
 	 W <- true
 	 @col
       end
-   
+
+      meth select selected <- true end
+      meth deselect selected <- false end
+      meth isSelected($) @selected  end
+      
+      
       meth retCol(who:W)
 	 @W = true
 	 W <- false
@@ -312,6 +317,13 @@ define
 	      fun{$ RTT#_} RTT\=~1.0 end}
 	 in
 	    {self.GUI.sactivity display(ActivityDL)}
+	    %% Find eventual selected site and raise its line
+	    case {Filter {Dictionary.items self.ActiveSites}
+		  fun{$ S} {S isSelected($)} end}
+	    of [S] then
+	       {self.GUI.sactivity raise_line({S getGraphKey($)})} 
+	    else skip
+	    end
 	    {self.GUI.srtt display(RTTDL)}
 	 end
       end

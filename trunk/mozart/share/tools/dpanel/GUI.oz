@@ -241,7 +241,7 @@ define
 
    
    fun{RemoteSiteWin Site Delete}
-      Top    = {New Tk.toplevel tkInit(title:Site.ip#"  "#Site.port
+      Top    = {New Tk.toplevel tkInit(title:Site.ip#":"#Site.port#" pid:"#Site.pid
 				       delete:Delete
 				      )}
       SSites = {New SiteList tkInit(parent:Top)}
