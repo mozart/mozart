@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#include "taskints.hh"
+#include "taskintervals.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
 #include <stdlib.h>
