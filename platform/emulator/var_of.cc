@@ -15,9 +15,13 @@ Bool isPwrTwo(dt_index s) {
 }
 
 // Return zero or the least power of two greater or equal to s:
-dt_index ceilPwrTwo(dt_index s) {
-    if (isPwrTwo(s)) return s;
-    return ceilPwrTwo((s>>1)|1)<<1;
+dt_index ceilPwrTwo(dt_index s)
+{
+  int ret = 1;
+  while (ret < s) {
+    ret = ret+ret;
+  }
+  return ret;
 }
 
 //-------------------------------------------------------------------------
@@ -27,8 +31,8 @@ dt_index ceilPwrTwo(dt_index s) {
 // Create an initially empty dynamictable of size s
 DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
     Assert(isPwrTwo(s));
-    size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
-    DynamicTable* ret = (DynamicTable *) heapMalloc(memSize);
+    size_t memSize = DTBlockSize(s);
+    DynamicTable* ret = (DynamicTable *) freeListMalloc(memSize);
     Assert(ret!=NULL);
     ret->init(s);
     return ret;
@@ -58,8 +62,8 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize) {
     DynamicTable* ret;
     if (size==newSize) {
         // Optimize case where copy has same size as original:
-        size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(size-1);
-        ret = (DynamicTable *) heapMalloc(memSize);
+        size_t memSize = DTBlockSize(size);
+        ret = (DynamicTable *) freeListMalloc(memSize);
         ret->numelem=numelem;
         ret->size=size;
         for (dt_index i=0; i<ret->size; i++) ret->table[i]=table[i];
@@ -97,15 +101,17 @@ dt_index DynamicTable::fullhash(TaggedRef id)
   dt_index s=size1;
   // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
   // Theorem: semi-quadratic probing is covering in size steps (proof: PVR+JN)
-  Bool notvalid;
-  while((notvalid=(table[i].ident!=makeTaggedNULL() &&
-                   !featureEq(table[i].ident,id)))
-        && s!=0) {
+
+  while(1) {
+    if (table[i].ident==makeTaggedNULL() ||
+        featureEq(table[i].ident,id))
+      return i;
+    if (s==0)
+      return invalidIndex;
     i+=s;
     i&=size1;
     s--;
   }
-  return notvalid ? invalidIndex : i;
 }
 
 
@@ -246,10 +252,10 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
     for (dt_index i=0; i<size; i++) {
         if (table[i].value!=makeTaggedNULL()) {
             Assert(isFeature(table[i].ident));
-            if (dt->fullTest()) dt=dt->doubleDynamicTable();
+            if (dt->fullTest()) resizeDynamicTable(dt);
             TaggedRef val=dt->insert(table[i].ident, table[i].value, &valid);
             if (!valid) {
-                dt=dt->doubleDynamicTable();
+                resizeDynamicTable(dt);
                 val=dt->insert(table[i].ident, table[i].value, &valid);
             }
             Assert(valid);

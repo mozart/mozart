@@ -47,10 +47,10 @@ public:
 
   void setArg(TaggedRef key, TaggedRef value)
   {
-    if (table->fullTest()) table = table->doubleDynamicTable();
+    if (table->fullTest()) resizeDynamicTable(table);
     Bool valid=table->add(key,value);
     if (!valid) {
-      table = table->doubleDynamicTable();
+      resizeDynamicTable(table);
       valid = table->add(key,value);
     }
     Assert(valid);
@@ -58,7 +58,9 @@ public:
 
   void remove(TaggedRef key)
   {
-    table = table->remove(key);
+    DynamicTable *tab = table->remove(key);
+
+    table = tab;
   }
 
   TaggedRef keys()
