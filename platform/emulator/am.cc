@@ -36,7 +36,6 @@
 #include "os.hh"
 #include "genvar.hh"
 #include "fdbuilti.hh"
-#include "builtins.hh"
 
 AM am;
 
@@ -656,7 +655,7 @@ loop:
 
   if (isCVar(tag1)) {
     // mm2: use GenCVar::bind here
-    result = tagged2CVar(term1)->unify(termPtr1, term2, scp);
+    result = tagged2CVar(term1)->unifyV(termPtr1, term2, scp);
     if (result == PROCEED)
       goto next;
     goto fail;
@@ -721,7 +720,7 @@ loop:
 
 
 cvar:
-  result = tagged2CVar(term1)->unify(termPtr1, makeTaggedRef(termPtr2), scp);
+  result = tagged2CVar(term1)->unifyV(termPtr1, makeTaggedRef(termPtr2), scp);
   if (result == PROCEED)
     goto next;
   goto fail;
@@ -1390,105 +1389,6 @@ void AM::reduceTrailOnEqEq()
     addSuspendVarList(refPtr);
   }
   trail.popMark();
-}
-
-/* -------------------------------------------------------------------------
- * OFS
- * -------------------------------------------------------------------------*/
-// Check if there exists an S_ofs (Open Feature Structure) suspension
-// in the suspList (Used only for monitorArity)
-Bool AM::hasOFSSuspension(SuspList * suspList)
-{
-  while (suspList) {
-    Suspension susp = suspList->getSuspension();
-
-    if (!susp.isDead() && susp.isPropagator() && susp.isOFSPropagator())
-      return TRUE;
-
-    suspList = suspList->getNext();
-  }
-  return FALSE;
-}
-
-
-/* Add list of features to each OFS-marked suspension list 'flist' has
- * three possible values: a single feature (literal or integer), a
- * nonempty list of features, or NULL (no extra features).
- * 'determined'==TRUE iff the unify makes the OFS determined.  'var'
- * (which must be deref'ed) is used to make sure that features are
- * added only to variables that are indeed waiting for features. This
- * routine is inspired by am.checkSuspensionList, and must track all
- * changes to it.  */
-void AM::addFeatOFSSuspensionList(TaggedRef var,
-                                  SuspList * suspList,
-                                  TaggedRef flist,
-                                  Bool determ)
-{
-  while (suspList) {
-    Suspension susp = suspList->getSuspension();
-
-    // The added condition ' || thr->isRunnable () ' is incorrect
-    // since isPropagated means only that the thread is runnable
-    if (susp.isDead()) {
-      suspList = suspList->getNext();
-      continue;
-    }
-
-    if (susp.isPropagator() && susp.isOFSPropagator()) {
-      MonitorArityPropagator * prop =
-        (MonitorArityPropagator *) susp.getPropagator()->getPropagator();
-
-      Assert(sizeof(MonitorArityPropagator) == prop->sizeOf());
-
-      // Only add features if var and fvar are the same:
-      TaggedRef fvar=prop->getX();
-      DEREF(fvar,_1,_2);
-      if (var!=fvar) {
-        suspList=suspList->getNext();
-        continue;
-      }
-      // Only add features if the 'kill' variable is undetermined:
-      TaggedRef killl=prop->getK();
-      DEREF(killl,_,killTag);
-      if (!isVariableTag(killTag)) {
-        suspList=suspList->getNext();
-        continue;
-      }
-
-      // Add the feature or list to the diff. list in FH and FT:
-      if (flist) {
-        if (oz_isFeature(flist))
-          prop->setFH(cons(flist,prop->getFH()));
-        else {
-          // flist must be a list
-          Assert(oz_isCons(flist));
-          TaggedRef tmplist=flist;
-          while (tmplist!=AtomNil) {
-            prop->setFH(cons(head(tmplist),prop->getFH()));
-            tmplist=tail(tmplist);
-          }
-        }
-      }
-      if (determ) {
-        // FS is det.: tail of list must be bound to nil: (always succeeds)
-        // Do *not* use unification to do this binding!
-        TaggedRef tl=prop->getFT();
-        DEREF(tl,tailPtr,tailTag);
-        switch (tailTag) {
-        case LITERAL:
-          Assert(tl==AtomNil);
-          break;
-        case UVAR:
-          doBind(tailPtr, AtomNil);
-          break;
-        default:
-          Assert(FALSE);
-        }
-      }
-    }
-
-    suspList = suspList->getNext();
-  }
 }
 
 /* -------------------------------------------------------------------------

@@ -405,7 +405,17 @@ void initLiterals();
 void displayCode(ProgramCounter from, int ssize);
 void displayDef(ProgramCounter from, int ssize);
 
-
+// see builtins.cc
+Builtin *BIinit();
+void threadRaise(Thread *th,OZ_Term E,int debug=0);
+extern OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
+extern OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea,
+                                       TaggedRef &out);
+OZ_Return BIarityInline(TaggedRef, TaggedRef &);
+OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
+                             Bool recordFlag);
+OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out);
+OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
 
 // see am.cc
 SuspList *oz_installPropagators(SuspList *local_list, SuspList *glob_list,

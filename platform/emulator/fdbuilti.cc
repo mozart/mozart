@@ -35,7 +35,6 @@
 
 #include "fdhook.hh"
 #include "genvar.hh"
-#include "builtins.hh"
 
 #ifdef OUTLINE
 #define inline

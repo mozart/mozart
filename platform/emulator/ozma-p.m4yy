@@ -28,6 +28,7 @@ dnl
 #include "runtime.hh"
 #include "indexing.hh"
 #include "dictionary.hh"
+#include "builtins.hh"
 
 #define YYERROR_VERBOSE
 

@@ -32,6 +32,7 @@
 #include "genvar.hh"
 #include "runtime.hh"
 #include "perdio.hh"
+#include "builtins.hh"
 
 void Future::init()
 {

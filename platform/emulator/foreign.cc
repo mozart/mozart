@@ -39,7 +39,6 @@
 
 #include "gmp.h"
 #include "os.hh"
-#include "builtins.hh"
 
 // forward decl
 static

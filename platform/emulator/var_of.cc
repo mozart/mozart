@@ -40,6 +40,22 @@
 //-------------------------------------------------------------------------
 
 
+// Check if there exists an S_ofs (Open Feature Structure) suspension
+// in the suspList (Used only for monitorArity)
+static
+Bool hasOFSSuspension(SuspList * suspList)
+{
+  while (suspList) {
+    Suspension susp = suspList->getSuspension();
+
+    if (!susp.isDead() && susp.isPropagator() && susp.isOFSPropagator())
+      return TRUE;
+
+    suspList = suspList->getNext();
+  }
+  return FALSE;
+}
+
 // (Arguments are dereferenced)
 OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
                                  ByteCode *scp)
@@ -66,8 +82,7 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
         if (!oz_unify(term,label,scp)) return FALSE; // mm_u
 
         // Update the OFS suspensions:
-        if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),
-                                              TRUE);
+        if (vLoc) addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
@@ -98,7 +113,7 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
             return FALSE;
 
         // Take care of OFS suspensions:
-        if (vLoc && am.hasOFSSuspension(suspList)) {
+        if (vLoc && hasOFSSuspension(suspList)) {
             if (getWidth()<2) {
                 // Calculate feature or list of features 'flist' that are
                 // in LTUPLE and not in OFS.
@@ -106,10 +121,9 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
                 if (!arg2) flist=cons(makeTaggedSmallInt(2),flist);
                 if (!arg1) flist=cons(makeTaggedSmallInt(1),flist);
                 // Add the extra features to S_ofs suspensions:
-                am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
+                addFeatOFSSuspensionList(var,suspList,flist,TRUE);
             } else {
-                am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),
-                                            TRUE);
+                addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
             }
         }
 
@@ -151,15 +165,15 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
         if (!success) { pairs->free(); return FALSE; }
 
         // Take care of OFS suspensions:
-        if (vLoc && am.hasOFSSuspension(suspList)) {
+        if (vLoc && hasOFSSuspension(suspList)) {
             if (termSRec->getWidth()>getWidth()) {
                 // Calculate feature or list of features 'flist' that are in SRECORD
                 // and not in OFS.
                 TaggedRef flist = dynamictable->extraSRecFeatures(*termSRec);
                 // Add the extra features to S_ofs suspensions:
-                am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
+                addFeatOFSSuspensionList(var,suspList,flist,TRUE);
             } else {
-                am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
+                addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
             }
         }
 
@@ -277,13 +291,13 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
     Assert(otherVar!=NULL);
 
     // Take care of OFS suspensions, part 1/2 (before merging tables):
-    Bool vOk=vLoc && am.hasOFSSuspension(suspList);
+    Bool vOk=vLoc && hasOFSSuspension(suspList);
     TaggedRef vList = 0;
     if (vOk) {
       // Calculate the extra features in var:
       vList=termVar->dynamictable->extraFeatures(dynamictable);
     }
-    Bool tOk=tLoc && am.hasOFSSuspension(termVar->suspList);
+    Bool tOk=tLoc && hasOFSSuspension(termVar->suspList);
     TaggedRef tList = 0;
     if (tOk) {
       // Calculate the extra features in term:
@@ -299,11 +313,11 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
     // Take care of OFS suspensions, part 2/2 (after merging tables):
     if (vOk && (vList!=AtomNil /*mergeWidth>termWidth*/)) {
       // Add the extra features to S_ofs suspensions:
-      am.addFeatOFSSuspensionList(var,suspList,vList,FALSE);
+      addFeatOFSSuspensionList(var,suspList,vList,FALSE);
     }
     if (tOk && (tList!=AtomNil /*mergeWidth>varWidth*/)) {
       // Add the extra features to S_ofs suspensions:
-      am.addFeatOFSSuspensionList(term,termVar->suspList,tList,FALSE);
+      addFeatOFSSuspensionList(term,termVar->suspList,tList,FALSE);
     }
 
     // Bind both var and term to the (possibly reused) newVar:

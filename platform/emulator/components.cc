@@ -63,6 +63,7 @@
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
+#include "builtins.hh"
 
 // ATTENTION
 #define tcpHeaderSize   7

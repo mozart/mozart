@@ -33,6 +33,7 @@
 #include "am.hh"
 #include "runtime.hh"
 #include "indexing.hh"
+#include "builtins.hh"
 
 
 static

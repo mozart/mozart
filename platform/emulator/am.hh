@@ -538,9 +538,6 @@ public:
 
   void checkSuspensionList(TaggedRef taggedvar,
                            PropCaller calledBy = pc_propagator);
-  Bool hasOFSSuspension(SuspList *suspList);
-  void addFeatOFSSuspensionList(TaggedRef var, SuspList* suspList,
-                                TaggedRef flist, Bool determined);
   SuspList * checkSuspensionList(SVariable * var,
                                  SuspList * suspList, PropCaller calledBy);
   int incSolveThreads(Board *bb);
@@ -622,7 +619,6 @@ extern AM am;
 #include "opcodes.hh"
 #include "codearea.hh"
 
-#include "builtins.hh"
 #include "os.hh"
 
 #ifndef OUTLINE

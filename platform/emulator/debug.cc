@@ -33,6 +33,7 @@
 #include "runtime.hh"
 #include "debug.hh"
 #include "codearea.hh"
+#include "builtins.hh"
 
 TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   TaggedRef pairlist = nil();
