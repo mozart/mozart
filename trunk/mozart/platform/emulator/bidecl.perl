@@ -2110,15 +2110,21 @@ $builtins = {
 
     #* Pickles
 
-    'smartSave'		=> { in  => ['value','value','+virtualString'],
+    'save'		=> { in  => ['value','+virtualString'],
 			     out => [],
-			     BI  => BIsmartSave,
+			     BI  => BIsave,
 			     module=>components,
 			     native => true},
 
     'load'		=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BIload,
+			     module=>components,
+			     native => true},
+
+    'export'		=> { in  => ['value'],
+			     out => [],
+			     BI  => BIexport,
 			     module=>components,
 			     native => true},
 
