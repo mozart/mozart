@@ -509,6 +509,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TAILCALLX:
     case TAILCALLY:
     case TAILCALLG:
+    case WEAKDETX:
+    case WEAKDETY:
+    case WEAKDETG:
     case DETX:
     case DETY:
     case DETG:

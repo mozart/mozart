@@ -594,6 +594,14 @@ TaggedRef GenOFSVariable::getOpenArityList(TaggedRef* ftail, Board* hoome)
 }
 
 
+/* add a suspension, that is only woken up, when we get bound */
+void GenOFSVariable::addDetSusp(Suspension *susp)
+{
+  // not yet implemented --> use generic suspension mechanism
+  addSuspension(susp);
+}
+
+
 /**** Low-level utilities ****/
 
 /* For eventual inlining (in similar manner to fdgenvar.icc): */
