@@ -635,6 +635,18 @@ See <file /recvfrom(2)/ and <file /gethostbyaddr(3)/.
 <title/Process Control/
 <p>
 <list>
+<Entry> <<kill>> <Synopsis>
+<<<
+{OS.kill ?+{PidI} ?+{SigA} ??{StatusI}}
+>>>
+<Index class=module/OS<and>kill/
+<item>
+Implements the <file /kill(2)/ function. ?+{PidI} is the process
+identifier, ?+{SigA} is an atom describing the signal to be sent:
+depending on the platform different signals are supported; at least
+the following signals are supported on all platforms: <<'SIGTERM'>>,
+<<'SIGINT'>>.
+
 <Entry> <<pipe>> <Synopsis>
 <<<
 {OS.pipe ?+{CmdV} ?+{ArgsVs} ??{PidI} ??{StatusT}}
