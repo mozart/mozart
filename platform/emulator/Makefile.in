@@ -23,6 +23,7 @@
 
 # !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
 
+BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
@@ -39,6 +40,7 @@ SUBDIRS		= libfd libfset
 OZVERSION	= $(TOPDIR)/OZVERSION
 
 CREATEDOTHERS = \
+	CONF.h \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
 	config.h builtins.tbl builtins.dcl \
@@ -146,7 +148,7 @@ version:
 	     $(SRCDIR)/version.sed > version.cc
 
 depend:: Makefile $(CREATEDFILES) $(SRCS)
-	$(DEPEND) $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) >> Makefile
+	$(DEPEND) $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) > Makefile.deps
 
 # prefered gmake depend!
 # include $(SRCS:.cc=.d)
@@ -215,6 +217,8 @@ distclean::
 		Makefile.rules Makefile.vars Makefile
 
 # dependencies
+-include Makefile.deps
+
 marshaler.hh marshalMsg.cc: msgFormat.m4
 copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 
