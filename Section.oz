@@ -68,26 +68,36 @@ define
 	 end
       end
       meth updatePkgList(DB L $)
-	 {Manager incTrace('--> updatePkgList section '#@id)}
-	 try
-	    {FoldL {Arity @toc}
-	     fun {$ L K}
-		{DB updatePkgListFor(K L $)}
-	     end L}
-	 finally
-	    {Manager decTrace('<-- updatePkgList section '#@id)}
+	 if {Manager ignoreID(@id $)} then
+	    {Manager trace('Ignoring ID='#@id)}
+	    L % this is wrong, should use recorded stuff, but I cannot remember...
+	 else
+	    {Manager incTrace('--> updatePkgList section '#@id)}
+	    try
+	       {FoldL {Arity @toc}
+		fun {$ L K}
+		   {DB updatePkgListFor(K L $)}
+		end L}
+	    finally
+	       {Manager decTrace('<-- updatePkgList section '#@id)}
+	    end
 	 end
       end
       %%
       meth updateAuthorList(DB L $)
-	 {Manager incTrace('--> updateAuthorList section '#@id)}
-	 try
-	    {FoldL {Arity @toc}
-	     fun {$ L K}
-		{DB updateAuthorListFor(K L $)}
-	     end L}
-	 finally
-	    {Manager decTrace('<-- updateAuthorList section '#@id)}
+	 if {Manager ignoreID(@id $)} then
+	    {Manager trace('Ignoring ID='#@id)}
+	    L % wrong for the same reason as above
+	 else
+	    {Manager incTrace('--> updateAuthorList section '#@id)}
+	    try
+	       {FoldL {Arity @toc}
+		fun {$ L K}
+		   {DB updateAuthorListFor(K L $)}
+		end L}
+	    finally
+	       {Manager decTrace('<-- updateAuthorList section '#@id)}
+	    end
 	 end
       end
    end

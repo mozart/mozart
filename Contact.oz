@@ -56,7 +56,7 @@ define
 	 try
 	    {Manager get_authors($)}.@id
 	 catch _ then
-	    {Manager trace(@id " has no registered contributions in the database")}
+	    {Manager trace(@id#" has no registered contributions in the database")}
 	    nil
 	 end
       end
