@@ -39,6 +39,7 @@
 #include "value.hh"
 #include "base.hh"
 
+#include "var.hh"
 
 #ifndef WINDOWS
 #include <sys/errno.h>
@@ -378,27 +379,50 @@ OZ_BI_define(BIcreateLogFile,1,0)
 OZ_BI_define(BIsetDGC,2,1)
 {
   OZ_declareTerm(0,entity);
-  OZ_declareAtom(1,algorithm);
-  // Currently only suport persistitaion for ports and cells
-  if(OZ_isPort(entity) || OZ_isCell(entity))
+  OZ_declareTerm(1,algorithm);
+  int OTI = -1;
+  if(OZ_isPort(entity) || OZ_isCell(entity) || oz_isLock(entity))
     {
-      Tertiary *tert = (Tertiary*) tagged2Const(entity);
-      if (tert->isLocal()){
-        globalizeTert(tert);
-      }
-
-      if (tert->isManager()){
-        ownerTable->getEntry(tert->getIndex())->makePersistent();
-        OZ_RETURN(oz_atom("persistent"));
-      }
-      OZ_RETURN(oz_atom("only_applicable_to_managers"));
+      Tertiary *tert =  (Tertiary*) tagged2Const(entity);
+      if (tert->isManager())
+        OTI = tert->getIndex();
+      else
+        OZ_RETURN(oz_atom("not_manager"));
     }
-  OZ_RETURN(oz_atom("onlyapplicable_to_ports_and_cells"));
+  else{
+    DEREF(entity,e0);
+    if(oz_isVarOrRef(entity)){
+      if (oz_isManagerVar(*e0))
+        OTI = oz_getManagerVar(*e0)->getIndex();}
+    else
+      OZ_RETURN(oz_atom("not_manager"));
+  }
+  if (ownerTable->getEntry(OTI)->homeRef.removeAlgorithm(algorithm))
+    OZ_RETURN(oz_true());
+  else
+    OZ_RETURN(oz_false());
 }OZ_BI_end
 
 OZ_BI_define(BIgetDGC,1,1)
 {
-  OZ_RETURN(oz_atom("fwrc"));
+  OZ_declareTerm(0,entity);
+  if(OZ_isPort(entity) || OZ_isCell(entity) || oz_isLock(entity))
+    {
+      Tertiary *tert =  (Tertiary*) tagged2Const(entity);
+      if (tert->isLocal())
+        OZ_RETURN(oz_atom("local_entity"));
+      if (tert->isManager()){
+        OZ_RETURN(ownerTable->getEntry(tert->getIndex())->homeRef.extract_info());}
+      OZ_RETURN(borrowTable->getBorrow(tert->getIndex())->remoteRef.extract_info());
+    }
+  DEREF(entity,e0);
+  if(oz_isVarOrRef(entity)){
+    if (oz_isManagerVar(*e0))
+      OZ_RETURN(ownerTable->getEntry(oz_getManagerVar(*e0)->getIndex())->homeRef.extract_info());
+    if (oz_isProxyVar(*e0))
+      OZ_RETURN(borrowTable->getBorrow(oz_getProxyVar(*e0)->getIndex())->remoteRef.extract_info());
+  }
+  OZ_RETURN(oz_atom("local_entity"));
 }OZ_BI_end
 
 #ifndef MODULES_LINK_STATIC
