@@ -128,15 +128,17 @@ void TRAVERSERCLASS::doit()
 	case Co_Dictionary:
 	  if (!processDictionary(t, ct)) {
 	    OzDictionary *d = (OzDictionary *) ct;
-	    // kost@ : what the hell is going on here???
-	    int i = d->getFirst();
-	    i = d->getNext(i);
-	    // (pairs will be added on the receiver site in reverse order);
-	    ensureFree(i+i);
-	    while(i>=0) {
-	      put(d->getValue(i));
-	      put(d->getKey(i));
-	      i = d->getNext(i);
+	    int size = d->getSize();
+	    if (size > 0) {
+	      DictNode *nodes = d->pairsInArray();
+	      DictNode *p = nodes;
+	      //
+	      ensureFree(size*2);
+	      for ( ; size--; p++) {
+		put(p->getValue());
+		put(p->getKey());
+	      }
+	      delete [] nodes;
 	    }
 	  }
 	  break;

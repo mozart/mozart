@@ -971,21 +971,17 @@ OZ_Return TK::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
       if (oz_isName(a))
 	return raise_type_error(tcl);	
 
-      switch (featureCmp(a,f)) {
-      case 0:
+      int res = featureCmp(a,f);
+      if (!res) {
 	fs = oz_deref(oz_tail(fs));
 	as = oz_tail(as);
-	break;
-      case 1:
+      } else if (res > 0) {
 	fs = oz_deref(oz_tail(fs));
-	break;
-      case -1:
+      } else {
 	StateReturn(put_feature(sr,a));
 	put(' ');
 	as = oz_tail(as);
-	break;
       }
-
     }
 
     if (oz_isCons(as)) {

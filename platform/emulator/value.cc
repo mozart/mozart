@@ -323,8 +323,10 @@ inline
 Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder)
 {
   TaggedRef def;
-  if (getDefMethods()->getArg(label,def)!=PROCEED)
-    return NO;
+
+  def = getDefMethods()->getArg(label);
+  if (!def) 
+    return (NO);
 
   def = oz_deref(def);
   Assert(oz_isSRecord(def));
@@ -405,10 +407,12 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity,
 				    Bool &defaultsUsed)
 {
   TaggedRef method;
-  if (getfastMethods()->getArg(label,method)!=PROCEED)
-    return NULL;
-  
-  DEREF(method,_1);
+
+  method = getfastMethods()->getArg(label);
+  if (!method)
+    return ((Abstraction *) 0);
+
+  DEREF_NONVAR(method);
   Assert(!oz_isRef(method));
   if (oz_isVarOrRef(method)) return NULL;
   Assert(oz_isAbstraction(method));
@@ -496,7 +500,11 @@ void bigIntInit()
   oz_protect(&TaggedOzOverMinInt);
 }
 
-
+Bool bigIntEq(TaggedRef a, TaggedRef b)
+{
+  Assert(oz_isBigInt(a) && oz_isBigInt(b));
+  return (tagged2BigInt(a)->equal(tagged2BigInt(b)));
+}
 
 
 /*===================================================================
@@ -575,24 +583,18 @@ TaggedRef insert(TaggedRef a, TaggedRef list) {
     TaggedRef oldhead = oz_head(list);
     Assert(!oz_isRef(oldhead) && !oz_isVar(oldhead));
 
-    switch (featureCmp(a,oldhead)) {
-    case 0:
+    int res = featureCmp(a,oldhead);
+    if (!res) {
       *ptr = list;
       return out;
-    case -1:
+    } else if (res < 0) {
       *ptr = oz_cons(a,list);
       return out;
-    case 1:
-      {
-	LTuple *lt = new LTuple(oldhead,makeTaggedNULL());
-	*ptr = makeTaggedLTuple(lt);
-	ptr = lt->getRefTail();
-	list = oz_tail(list);
-      }
-      break;
-    default:
-      OZD_error("insert");
-      return 0;
+    } else {
+      LTuple *lt = new LTuple(oldhead,makeTaggedNULL());
+      *ptr = makeTaggedLTuple(lt);
+      ptr = lt->getRefTail();
+      list = oz_tail(list);
     }
     Assert(!oz_isRef(list));
   }
@@ -642,7 +644,7 @@ Bool isSorted(TaggedRef list)
       return OK;
     Assert(!oz_isRef(oz_head(list)) && !oz_isVar(oz_head(list)));
     Assert(!oz_isRef(oz_head(cdr)) && !oz_isVar(oz_head(cdr)));
-    if (featureCmp(oz_head(list), oz_head(cdr)) != -1)
+    if (featureCmp(oz_head(list), oz_head(cdr)) >= 0)
       return NO;
     list = cdr;
   }
@@ -653,7 +655,7 @@ Bool isSorted(TaggedRef list)
 class Order_Taggedref_By_Feat {
 public:
   Bool operator()(const TaggedRef& a, const TaggedRef& b) {
-    return featureCmp(a,b) <= 0;
+    return (featureCmp(a,b) <= 0);
   }
 };
 
@@ -969,22 +971,17 @@ TaggedRef merge(TaggedRef lista, TaggedRef listb)
   TaggedRef b = oz_head(listb);
   TaggedRef newHead;
 
-  switch (featureCmp(a,b)) {
-    
-  case 0:
+  int res = featureCmp(a,b);
+  if (!res) {
     newHead = a;
     lista = oz_tail(lista);
     listb = oz_tail(listb);
-    break;
-  case -1:
+  } else if (res < 0) {
     newHead = a;
     lista = oz_tail(lista);
-    break;
-  case 1:
-  default:
+  } else {
     newHead = b;
     listb = oz_tail(listb);
-    break;
   }
 
   LTuple *lt = new LTuple(newHead,makeTaggedNULL());
@@ -1206,14 +1203,6 @@ CodeArea *PrTabEntry::getCodeBlock()
     codeBlock = CodeArea::findBlock(getPC());
   }
   return codeBlock;
-}
-
-
-int featureEqOutline(TaggedRef a, TaggedRef b)
-{
-  Assert(a != b); // already check in featureEq
-
-  return bigIntEq(a,b);
 }
 
 //

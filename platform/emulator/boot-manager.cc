@@ -297,32 +297,36 @@ TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
 }
 
 
-Builtin * cfunc2Builtin(void * f) {
-  
+Builtin * cfunc2Builtin(void * f)
+{
   OzDictionary * d = tagged2Dictionary(dictionary_of_modules);
+  int size = d->getSize();
+  DictNode *nodes = d->pairsInArray();
+  DictNode *p = nodes;
 
-  for (int i = d->getNext(d->getFirst()); i>=0; i=d->getNext(i)) {
+  for ( ; size--; p++) {
+    TaggedRef v = p->getValue();
 
-    TaggedRef v = d->getValue(i);
-      
+    //      
     if (oz_isSRecord(v)) {
-	
       TaggedRef as = tagged2SRecord(v)->getArityList();
-	
       while (oz_isCons(as)) {
 	TaggedRef bt = tagged2SRecord(v)->getFeature(oz_head(as));
-	  
+
+	//  
 	if (bt && oz_isBuiltin(bt) && 
-	    (tagged2Builtin(bt)->getFun() == (OZ_CFun) f)) 
+	    (tagged2Builtin(bt)->getFun() == (OZ_CFun) f)) {
+	  delete [] nodes;
 	  return tagged2Builtin(bt);
-	  
+	}
+
+	//
 	as = oz_tail(as);
-	
       }
-	
     }
   }
 
+  delete [] nodes;
   return tagged2Builtin(BI_unknown);
 }
 
@@ -362,7 +366,8 @@ TaggedRef string2Builtin(const char * mn, const char * bn) {
 
  retry:
 
-  if (d->getArg(mn_a, mod) != PROCEED) {
+  mod = d->getArg(mn_a);
+  if (!mod) {
     ModuleEntry * E = find_module(base_module_table, mn);
     if (!E) {
       OZ_warning("[BUILTIN NOT FOUND: Unknown module %s]\n", mn);
@@ -443,10 +448,10 @@ Builtin * string2CBuiltin(const char * Name) {
 OZ_BI_define(BIObtainGetInternal,1,1) {
   oz_declareVirtualStringIN(0,name);
   TaggedRef module;
+
  retry_mod:
-  if (tagged2Dictionary(dictionary_of_modules)
-      ->getArg(oz_atom(name), module) == PROCEED)
-      OZ_RETURN(module);
+  module = tagged2Dictionary(dictionary_of_modules)->getArg(oz_atom(name));
+  if (module)
   // Check whether it is a base module
   {
     ModuleEntry * E = find_module(base_module_table, name);

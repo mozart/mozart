@@ -335,7 +335,7 @@ class GenDistEntryTable {
 private:
   // buckets are sorted in ascending order;
   NODE **table;
-  int tableSize;
+  int tableSize;		// number of cells (not the logarithm);
   int counter;			// number of allocated entries;
   int percent;			// reallocate when percent > counter;
 
@@ -349,7 +349,7 @@ private:
   //
 private:
   void mkEmpty();
-  void init(int sizeIn);
+  void init(int sizeAsPowerOf2);
   void resize();
 
   //
@@ -368,12 +368,20 @@ private:
     // For our radix=2 computers with 4 bytes let's take
     //   0x9e*256^3 + 0x41*256^2 + 0x93*256^1 + 0x55*256^0 = 0x9e419355
     // (2655097685 in decimal);
-    return ((((unsigned int) i) * ((unsigned int) 0x9e419355)) >> rsBits);
+
+    // However, experiments show that if we consider a hash table of
+    // 64k entries, with keys uniformly distributed between 4mb and
+    // 5mb (which corresponds to 16mb of Oz heap), as well as
+    // sequences of addresses with increments of 1byte, 16bytes, 32,
+    // 64, ... 32768bytes, the following key outperforms the latter
+    // one: 0x9e6d5541 (2657965377)
+
+    return ((((unsigned int) i) * ((unsigned int) 0x9e6d5541)) >> rsBits);
   }
 
   //
 public:
-  GenDistEntryTable(int sizeIn) { init(sizeIn); }
+  GenDistEntryTable(int sizeAsPowerOf2) { init(sizeAsPowerOf2); }
   ~GenDistEntryTable() {
     delete table;
     DebugCode(table = (NODE **) -1;);
@@ -416,5 +424,19 @@ public:
   //
   DebugCode(void checkConsistency(););
 };
+
+//
+// discrete ceiling of a logarithm base 2;
+// log2ceiling(0) == 0 per definition;
+inline int log2ceiling(int i) {
+  Assert(i >= 0);
+  int l = 0;
+  if (i != 0) i--;
+  while (i) {
+    i = i >> 1;
+    l++;
+  }
+  return (l);
+}
 
 #endif

@@ -369,7 +369,8 @@ OZ_BI_define(BIgetInstructionSizes,0,1) {
 
 static int ci_getlbl(OzDictionary * lbldict, TaggedRef t_lbl) {
   TaggedRef t_ilbl;
-  if (lbldict->getArg(t_lbl,t_ilbl) == FAILED)
+  t_ilbl = lbldict->getArg(t_lbl);
+  if (!t_ilbl)
     return -1;
   t_ilbl = oz_deref(t_ilbl);
   if (!oz_isInt(t_ilbl))
@@ -1522,7 +1523,7 @@ OZ_BI_define(BIfeatureLess,2,1)
   if (!oz_isFeature(f2)) {
     oz_typeError(1,"Feature");
   }
-  OZ_RETURN(oz_bool(featureCmp(f1,f2) == -1));
+  OZ_RETURN(oz_bool(featureCmp(f1,f2) < 0));
 } OZ_BI_end
 
 OZ_BI_define(BIconcatenateAtomAndInt,2,1)

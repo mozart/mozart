@@ -35,13 +35,14 @@
 //
 
 #include "vprops.hh"
-#include "dictionary.hh"
+#include "hashtbl.hh"
 #include "fdomn.hh"
 #include "am.hh"
 #include "os.hh"
 #include "codearea.hh"
 #include "OZCONF.h"
 #include "builtins.hh"
+#include "dictionary.hh"
 
 #include <stdarg.h>
 
@@ -544,7 +545,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
 	   ozconf.dpTableDefaultOwnerTableSize);
   CASE_INT(PROP_DPTABLE_DEFAULTBORROWTABLESIZE,
-	   ozconf.dpTableDefaultBorrowTableSize);
+	   (1<<ozconf.dpTableDefaultBorrowTableSize));
   CASE_INT(PROP_DPTABLE_LOWLIMIT, ozconf.dpTableLowLimit);
   CASE_INT(PROP_DPTABLE_EXPANDFACTOR, ozconf.dpTableExpandFactor);
   CASE_INT(PROP_DPTABLE_BUFFER, ozconf.dpTableBuffer);
@@ -557,7 +558,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_INT(oz_atomNoDup("defaultOwnerTableSize"),
 		   ozconf.dpTableDefaultOwnerTableSize);
 	   SET_INT(oz_atomNoDup("defaultBorrowTableSize"),
-		   ozconf.dpTableDefaultBorrowTableSize);
+		   (1<<ozconf.dpTableDefaultBorrowTableSize));
 	   SET_INT(oz_atomNoDup("lowLimit"), ozconf.dpTableLowLimit);
 	   SET_INT(oz_atomNoDup("expandFactor"), ozconf.dpTableExpandFactor);
 	   SET_INT(oz_atomNoDup("buffer"), ozconf.dpTableBuffer);
@@ -893,7 +894,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
       am.setSFlag(StartGC);
       return BI_PREEMPT;});
     CASE_NAT_DO(PROP_DPTABLE_DEFAULTBORROWTABLESIZE,{
-      ozconf.dpTableDefaultBorrowTableSize=INT__;
+      ozconf.dpTableDefaultBorrowTableSize=log2ceiling(INT__);
       am.setSFlag(StartGC);
       return BI_PREEMPT;});      
     CASE_PERCENT_DO(PROP_DPTABLE_LOWLIMIT,{
@@ -915,8 +916,11 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_DPTABLE,
 	     SET_NAT(oz_atomNoDup("defaultOwnerTableSize"), 
 		   ozconf.dpTableDefaultOwnerTableSize);
-	     SET_NAT(oz_atomNoDup("defaultBorrowTableSize"),
-		     ozconf.dpTableDefaultBorrowTableSize);
+	     DO_NAT(oz_atomNoDup("defaultBorrowTableSize"),{
+	       ozconf.dpTableDefaultBorrowTableSize=log2ceiling(INT__);
+	       am.setSFlag(StartGC);
+	       return BI_PREEMPT;
+	     });      
 	     SET_NAT(oz_atomNoDup("lowLimit"), ozconf.dpTableLowLimit);
 	     SET_NAT(oz_atomNoDup("expandFactor"),
 		     ozconf.dpTableExpandFactor);
@@ -997,7 +1001,8 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
   OzDictionary* dict;
   TaggedRef entry;
   dict = tagged2Dictionary(vprop_registry);
-  if (dict->getArg(key,entry)==PROCEED)
+  entry = dict->getArg(key);
+  if (entry) 
     if (oz_isInt(entry)) {
       entry = GetEmulatorProperty((EmulatorPropertyIndex)
 				  oz_IntToC(entry));
@@ -1009,7 +1014,8 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
       return PROCEED;
     }
   dict = tagged2Dictionary(system_registry);
-  if (dict->getArg(key,entry)==PROCEED) {
+  entry = dict->getArg(key);
+  if (entry) {
     val=entry; return PROCEED;
   }
   return PROP__NOT__FOUND;
@@ -1029,7 +1035,8 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
   OzDictionary* dict;
   TaggedRef entry;
   dict = tagged2Dictionary(vprop_registry);
-  if (dict->getArg(key,entry)==PROCEED)
+  entry = dict->getArg(key);
+  if (entry)
     if (OZ_isInt(entry)) {
       return SetEmulatorProperty((EmulatorPropertyIndex)
 				 oz_IntToC(entry),v);
