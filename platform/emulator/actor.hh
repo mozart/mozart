@@ -25,6 +25,8 @@
 //  all 'proper' actors;
 
 class Actor : public ConstTerm {
+public:
+  static void InitSolve();
 protected:
   int flags;
   Board *board;

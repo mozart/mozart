@@ -36,6 +36,7 @@
 
 #include "sun-proto.h"
 
+#include "actor.hh"
 #include "am.hh"
 #include "bignum.hh"
 #include "builtins.hh"
@@ -218,6 +219,7 @@ void AM::init(int argc,char **argv)
   }
 
   initAtoms();
+  Actor::InitSolve();
 
   globalStore = allocateStaticRefsArray(NumberOfYRegisters);
 
