@@ -846,19 +846,6 @@ RefsArray allocateRefsArray(int n, Bool init=OK)
 }
 
 inline
-RefsArray allocateRefsArray(int n, TaggedRef initRef)
-{
-  Assert(n > 0);
-  RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
-  a += 1;
-  // Initialize with given TaggedRef:
-  setRefsArraySize(a,n);
-  for(int i = n-1; i >= 0; i--) 
-    a[i] = initRef;
-  return a;  
-}
-
-inline
 void disposeRefsArray(RefsArray a)
 {
   if (a) {
@@ -877,48 +864,10 @@ RefsArray allocateStaticRefsArray(int n)
   return a;
 }
 
-
 inline
-RefsArray copyRefsArray(RefsArray a) 
-{
-  int n = getRefsArraySize(a);
-  RefsArray r = allocateRefsArray(n,NO);
-  for (int i = n; i--;) {
-    r[i] = tagged2NonVariable(&a[i]);
-  }
-  return r;
+RefsArray copyRefsArray(RefsArray a, int n)  {
+  return (RefsArray) memcpy(allocateRefsArray(n), a, n * sizeof(TaggedRef));
 }
-
-inline
-RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) 
-{
-  RefsArray r = allocateRefsArray(n,init);
-  for (int i = n; i--;) {
-    CHECK_NONVAR(a[i]);
-    r[i] = a[i];
-  }
-  return r;
-}
-
-
-inline
-RefsArray resize(RefsArray r, int s)
-{
-  int size = getRefsArraySize(r);
-  if (s < size){
-    setRefsArraySize(r,s);
-    return r;
-  }
-  
-  if (s > size){
-    RefsArray aux = allocateRefsArray(s);
-    for(int j = size; j--;)
-      aux[j] = r[j];
-    return aux;
-  }
-  return r;
-} // resize
-
 
 /*===================================================================
  * 
@@ -927,6 +876,8 @@ RefsArray resize(RefsArray r, int s)
 // 
 // identity test
 //
+#ifdef DEBUG_CHECK
+
 inline
 Bool oz_eq(TaggedRef t1, TaggedRef t2)
 {
@@ -934,6 +885,12 @@ Bool oz_eq(TaggedRef t1, TaggedRef t2)
   Assert(t2==oz_safeDeref(t2));
   return t1==t2;
 }
+
+#else
+
+#define oz_eq(t1,t2) ((t1)==(t2))
+
+#endif
 
 
 /*===================================================================
