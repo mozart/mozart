@@ -63,7 +63,7 @@ quick: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)); do cp -p $$i $(WHAT)-html; done
 
 verify: $(MAIN)
-        nsgmls -c$(PREFIX)/share/doc/catalog $< -s $<
+        nsgmls -s -c$(PREFIX)/share/doc/catalog $<
 
 validate: $(WHAT)-html/index.html
         nsgmls -cHTML4.soc -sB $(WHAT)-html/*.html
