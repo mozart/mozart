@@ -76,6 +76,7 @@ in
 	 lock
 	    O = self.Options
 	 in
+	    {Wait @ThisPanelTop}
 	    case
 	       case
 		  What==update andthen {List.sub {Arity OM} [1 time mouse]}
