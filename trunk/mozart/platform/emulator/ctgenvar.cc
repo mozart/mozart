@@ -279,7 +279,7 @@ OZ_Return tellBasicConstraint(OZ_Term v,
     ctvariable:
       GenCtVariable * ctv = 
 	constr 
-	? new GenCtVariable(constr, def,oz_currentBoard()) 
+	? new GenCtVariable(constr, def, oz_currentBoard()) 
 	:  new GenCtVariable(def->leastConstraint(), def, oz_currentBoard());
       
       OZ_Term *  tctv = newTaggedCVar(ctv);
