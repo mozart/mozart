@@ -29,7 +29,7 @@
 
     <P>
       A short introduction by means of examples can be found in
-      <ptr.extern to="ozdoc:apptut" key="section.deployment.linker">.
+      <ptr.extern to="ozdoc:apptut" key="section.deployment.linking">.
     </P>
 
   <Section id="Section.Linker.Basic">
