@@ -10,14 +10,19 @@
 local
    \insert 'Dump.oz'
 in
+   
    local
       BASE = \insert 'Base.env'
    in
       {Dump BASE 'Base'}
    end
    
-   {Dump NewStandard 'Standard'}
-
+   local
+      STD = \insert 'Standard.env'
+   in
+      {Dump STD 'Standard'}
+   end
+   
 end
 
 \insert 'DumpHalt.oz'
