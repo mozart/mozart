@@ -1637,34 +1637,44 @@ OZ_Term OZ_newVariable()
  * IO
  * -----------------------------------------------------------------*/
 
-OZ_Return OZ_readSelect(int fd,OZ_Term l,OZ_Term r)
-{
-  return am.select(fd,SEL_READ,l,r) ? PROCEED : FAILED;
-}
-
-void OZ_registerReadHandler(int fd,OZ_IOHandler fun,OZ_Term val)
-{
+void OZ_registerReadHandler(int fd,OZ_IOHandler fun,void *val) {
   am.select(fd,SEL_READ,fun,val);
 }
 
-void OZ_registerAcceptHandler(int fd,OZ_IOHandler fun,OZ_Term val)
-{
+void OZ_unregisterRead(int fd) {
+  am.deSelect(fd,SEL_READ);
+}
+
+void OZ_registerWriteHandler(int fd,OZ_IOHandler fun,void *val) {
+  am.select(fd,SEL_WRITE,fun,val);
+}
+
+void OZ_unregisterWrite(int fd) {
+  am.deSelect(fd,SEL_WRITE);
+}
+
+void OZ_registerAcceptHandler(int fd,OZ_IOHandler fun,void *val) {
   am.acceptSelect(fd,fun,val);
 }
 
-OZ_Return OZ_writeSelect(int fd,OZ_Term l,OZ_Term r)
-{
+
+
+
+
+OZ_Return OZ_readSelect(int fd,OZ_Term l,OZ_Term r) {
+  return am.select(fd,SEL_READ,l,r) ? PROCEED : FAILED;
+}
+
+OZ_Return OZ_writeSelect(int fd,OZ_Term l,OZ_Term r) {
   return am.select(fd,SEL_WRITE,l,r) ? PROCEED : FAILED;
 }
 
-OZ_Return OZ_acceptSelect(int fd,OZ_Term l,OZ_Term r)
-{
+OZ_Return OZ_acceptSelect(int fd,OZ_Term l,OZ_Term r) {
   am.acceptSelect(fd,l,r);
   return PROCEED;
 }
 
-void OZ_deSelect(int fd)
-{
+void OZ_deSelect(int fd) {
   am.deSelect(fd);
 }
 
