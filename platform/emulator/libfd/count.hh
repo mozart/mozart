@@ -18,24 +18,67 @@
 
 class ExactlyPropagator : public Propagator_D_VD_I {
 private:
+  int reg_tn, reg_tnn, oldSize;
+  int * reg_oldDomSizes;
+  void init_l_u(void)
+  {
+    reg_tn=0;
+    reg_tnn=0;
+    oldSize = reg_l_sz;
+    reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    for (int i = reg_l_sz; i--; )
+      reg_oldDomSizes[i] = OZ_getFDSup() + 1;
+  }
   static OZ_CFunHeader spawner;
 public:
   ExactlyPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
-    : Propagator_D_VD_I(n, l, v) {}
+    //    : Propagator_D_VD_I(n, l, v) {}
+    : Propagator_D_VD_I(n, l, v) {init_l_u();}
+  virtual void updateHeapRefs(OZ_Boolean d)
+  {
+    Propagator_D_VD_I::updateHeapRefs(d);
+    int * new_reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    for (int i = reg_l_sz; i--; )
+      new_reg_oldDomSizes[i] = reg_oldDomSizes[i];
+    reg_oldDomSizes = new_reg_oldDomSizes;
+  }
 
+  virtual ~ExactlyPropagator(void);
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual size_t sizeOf(void) { return sizeof(*this); }
 };
 
 //-----------------------------------------------------------------------------
 
 class AtLeastPropagator : public Propagator_D_VD_I {
 private:
+  int reg_tn, reg_tnn, oldSize;
+  int * reg_oldDomSizes;
+  void init_l_u(void)
+  {
+    reg_tn=0;
+    reg_tnn=0;
+    oldSize = reg_l_sz;
+    reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    for (int i = reg_l_sz; i--; )
+      reg_oldDomSizes[i] = OZ_getFDSup() + 1;
+  }
   static OZ_CFunHeader spawner;
 public:
   AtLeastPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
-    : Propagator_D_VD_I(n, l, v) {}
-
+   //    : Propagator_D_VD_I(n, l, v) {}
+    : Propagator_D_VD_I(n, l, v) {init_l_u();}
+  virtual void updateHeapRefs(OZ_Boolean d)
+  {
+    Propagator_D_VD_I::updateHeapRefs(d);
+    int * new_reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    for (int i = reg_l_sz; i--; )
+      new_reg_oldDomSizes[i] = reg_oldDomSizes[i];
+    reg_oldDomSizes = new_reg_oldDomSizes;
+  }
+  virtual ~AtLeastPropagator(void);
+  virtual size_t sizeOf(void) { return sizeof(*this); }
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
 };
@@ -44,10 +87,31 @@ public:
 
 class AtMostPropagator : public Propagator_D_VD_I {
 private:
-  static OZ_CFunHeader spawner;
+  int reg_tn, reg_tnn, oldSize;
+  int * reg_oldDomSizes;
+  void init_l_u(void)
+  {
+    reg_tn=0;
+    reg_tnn=0;
+    oldSize = reg_l_sz;
+    reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    for (int i = reg_l_sz; i--; )
+      reg_oldDomSizes[i] = OZ_getFDSup() + 1;
+  }
+static OZ_CFunHeader spawner;
 public:
   AtMostPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
-    : Propagator_D_VD_I(n, l, v) {}
+    : Propagator_D_VD_I(n, l, v) {init_l_u();}
+  virtual void updateHeapRefs(OZ_Boolean d)
+  {
+    Propagator_D_VD_I::updateHeapRefs(d);
+    int * new_reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    for (int i = reg_l_sz; i--; )
+      new_reg_oldDomSizes[i] = reg_oldDomSizes[i];
+    reg_oldDomSizes = new_reg_oldDomSizes;
+  }
+  virtual ~AtMostPropagator(void);
+  virtual size_t sizeOf(void) { return sizeof(*this); }
 
   virtual OZ_Return propagate(void);
   virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
