@@ -26,7 +26,45 @@ This failure model is reflected in each language entity.
 The system provides mechanisms to be informed of failures
 and to program with language entities in case of failures.
 
-<SUBSECTION><TITLE>Stateless data</TITLE>
+<P> All failure modes are defined with respect to
+a given language entity on a given site.
+For example, one would like to send to a port
+from a given site.
+In general,
+there are four situations that can occur
+relative to a language entity on a given site:
+<LIST>
+<ITEM> The entity works normally (fault state <<ok>>).
+<ITEM> The entity is temporarily not working
+(fault state <<tempBlock>>).
+This is because a site crucial to the entity's operation
+is unreachable due to a network problem.
+This fault state can go away.
+The network layer actively tries
+to reestablish another connection.
+<ITEM> The entity is permanently not working
+(fault state <<permBlock>>).
+This is because a site crucial to the entity's operation
+has crashed.
+<ITEM> The entity works normally on the given site
+(fault state <<remoteProblem>>),
+but there are some remote problems that might
+have a bearing on the application's use of the entity.
+For example, one is waiting for a variable
+binding on a given site,
+but the site that will bind the value has crashed.
+This fault state can go away if the
+remote problems are temporary.
+</LIST>
+<P> An entity on a site therefore has four
+possible basic fault states.
+We now explain how these fault states occur
+for the different language entities.
+In the case of <<remoteProblem>>, it is usually
+possible to find out something about what the
+problem is, depending on the type of the entity.
+
+<SUBSECTION><TITLE>Eager Stateless data</TITLE>
 
 <P> Eager stateless data are
 copied immediately in messages.
@@ -34,6 +72,7 @@ There are therefore no remote references to eager
 stateless data, which are
 always local to a site.
 Therefore no special failure handling is needed for them.
+Their only possible fault state is <<ok>>.
 
 <P> In future releases, procedures, functions, classes, and functors
 will not send their code immediately in the message,
@@ -42,9 +81,9 @@ Upon arrival, if the code is not present,
 then it will be immediately requested.
 This will guarantee that code is sent at most
 once to a given site.
-This will introduce additional failure modes
-if the site containing the code fails or
-becomes unreachable.
+This will introduce fault states <<tempBlock>> and <<permBlock>>
+if the site containing the code
+becomes unreachable or crashes.
 
 
 <SUBSECTION><TITLE>Sited entities</TITLE>
@@ -55,6 +94,7 @@ Attempting to use one outside of its home
 site immediately raises an exception,
 without any network operations.
 Therefore no special failure handling is needed for them.
+Their only possible fault state is <<ok>>.
 
 <SUBSECTION><TITLE>Ports</TITLE>
 
