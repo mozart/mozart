@@ -48,34 +48,34 @@ local
    end
 
 
-   class UnstableNode
+   class BlockedNode
       from
 	 BasicNodes.leaf
 	 LayoutNodes.leaf
 	 HideNodes.leaf
-	 MoveNodes.unstable
-	 SearchNodes.unstable
-	 TkNodes.unstable
-	 StatNodes.unstable
-	 ActionNodes.unstable
+	 MoveNodes.blocked
+	 SearchNodes.blocked
+	 TkNodes.blocked
+	 StatNodes.blocked
+	 ActionNodes.blocked
       
       feat
-	 kind: unstable
+	 kind: blocked
       
    end
 
-   class SolvedNode
+   class SucceededNode
       from 
 	 BasicNodes.leaf
 	 LayoutNodes.leaf
-	 MoveNodes.solved
-	 SearchNodes.solved
-	 StatNodes.solved
+	 MoveNodes.succeeded
+	 SearchNodes.succeeded
+	 StatNodes.succeeded
 	 HideNodes.leaf
-	 ActionNodes.solved
+	 ActionNodes.succeeded
       
       feat
-	 kind: solved
+	 kind: succeeded
       meth close true end
    end
 
@@ -95,8 +95,8 @@ local
       meth close true end
    end
 
-   fun {UnwrapUnstable UC}
-      case UC of unstable(C) then {UnwrapUnstable C} else UC end
+   fun {UnwrapBlocked UC}
+      case UC of blocked(C) then {UnwrapBlocked C} else UC end
    end
    
 
@@ -130,9 +130,9 @@ in
 		 {Status addFailed(Depth)}
 	      end
 	   end
-	unstable:
+	blocked:
 	   case IsBAB then
-	      class $ from UnstableNode
+	      class $ from BlockedNode
 		 feat canvas:Canvas
 		 meth init(Mom PrevSol NextDepth Control AllocateCopy)
 		    KillFlag KillId UnwrapControl
@@ -140,7 +140,7 @@ in
 		    self.mom = Mom
 		    {Manager.killer get(KillFlag KillId)}
 		    thread
-		       UnwrapControl = {UnwrapUnstable Control}
+		       UnwrapControl = {UnwrapBlocked Control}
 		    end
 		    thread
 		       if {Wait UnwrapControl} then
@@ -150,16 +150,16 @@ in
 		       [] {Wait KillFlag} then true
 		       end
 		    end
-		    <<TkNodes.unstable init>>
-		    {Status addUnstable(NextDepth)}
+		    <<TkNodes.blocked init>>
+		    {Status addBlocked(NextDepth)}
 		 end
 		 meth close
 		    <<BasicNodes.leaf close>>
-		    <<TkNodes.unstable close>>
+		    <<TkNodes.blocked close>>
 		 end
 	      end
 	   else
-	      class $ from UnstableNode
+	      class $ from BlockedNode
 		 feat canvas:Canvas
 		 meth init(Mom CurDepth CurDist CurInfo Control)
 		    KillFlag KillId UnwrapControl
@@ -167,7 +167,7 @@ in
 		    self.mom = Mom
 		    {Manager.killer get(KillFlag KillId)}
 		    thread
-		       UnwrapControl = {UnwrapUnstable Control}
+		       UnwrapControl = {UnwrapBlocked Control}
 		    end
 		    thread
 		       if {Wait UnwrapControl} then
@@ -177,12 +177,12 @@ in
 		       [] {Wait KillFlag} then true
 		       end
 		    end
-		    <<TkNodes.unstable init>>
-		    {Status addUnstable(CurDepth)}
+		    <<TkNodes.blocked init>>
+		    {Status addBlocked(CurDepth)}
 		 end
 		 meth close
 		    <<BasicNodes.leaf close>>
-		    <<TkNodes.unstable close>>
+		    <<TkNodes.blocked close>>
 		 end
 	      end
 	   end
@@ -190,21 +190,24 @@ in
 	   case IsBAB then
 	      class $
 		 from
-		    SolvedNode
+		    SucceededNode
 		    TkNodes.entailed
-		    StrategyNodes.solved
+		    StrategyNodes.succeeded
 		 feat
 		    canvas:Canvas
 		 attr
 		    solution: False
-		 meth init(Mom Depth Info)
+		 meth init(Mom Depth S)
 		    self.mom  = Mom
-		    solution <- Info.1
+		    solution <- S
 		    <<TkNodes.entailed   init>>
 		    {Status addSolution(Depth)}
 		 end
-		 meth getInfo(?P)
-		    P = @solution
+		 meth findSpace($)
+		    {Space.clone @solution}
+		 end
+		 meth getSol($)
+		    @solution
 		 end
 		 meth close
 		    <<TkNodes.entailed close>>
@@ -213,14 +216,14 @@ in
 	   else
 	      class $
 		 from
-		    SolvedNode
+		    SucceededNode
 		    TkNodes.entailed
-		    StrategyNodes.solved
+		    StrategyNodes.succeeded
 		 feat
 		    canvas:Canvas
 		 meth init(Mom Depth _)
 		    self.mom  = Mom
-		    <<TkNodes.entailed   init>>
+		    <<TkNodes.entailed init>>
 		    {Status addSolution(Depth)}
 		 end
 		 meth close
@@ -228,45 +231,48 @@ in
 		 end
 	      end
 	   end	   
-	stable:
+	suspended:
 	   case IsBAB then
 	      class $
 		 from
-		    SolvedNode
-		    TkNodes.stable
-		    StrategyNodes.solved
+		    SucceededNode
+		    TkNodes.suspended
+		    StrategyNodes.succeeded
 		 feat
 		    canvas: Canvas
 		 attr
 		    solution: False
-		 meth init(Mom Depth Info)
+		 meth init(Mom Depth S)
 		    self.mom  = Mom
-		    solution <- Info.1
-		    <<TkNodes.stable init>>
+		    solution <- S
+		    <<TkNodes.suspended init>>
 		    {Status addSolution(Depth)}
 		 end
-		 meth getInfo(?P)
-		    P = @solution
+		 meth findSpace($)
+		    {Space.clone @solution}
+		 end
+		 meth getSol($)
+		    @solution
 		 end
 		 meth close
-		    <<TkNodes.stable close>>
+		    <<TkNodes.suspended close>>
 		 end
 	      end
 	   else	
 	      class $
 		 from
-		    SolvedNode
-		    TkNodes.stable
-		    StrategyNodes.solved
+		    SucceededNode
+		    TkNodes.suspended
+		    StrategyNodes.succeeded
 		 feat
 		    canvas:Canvas 
 		 meth init(Mom Depth _)
 		    self.mom  = Mom
-		    <<TkNodes.stable init>>
+		    <<TkNodes.suspended init>>
 		    {Status addSolution(Depth)}
 		 end
 		 meth close
-		    <<TkNodes.stable close>>
+		    <<TkNodes.suspended close>>
 		 end
 	      end
 	   end
@@ -277,18 +283,18 @@ in
 		    ChoiceNode
 		    StrategyNodes.choice
 		    ChoiceFeatures
-		 meth init(Mom Depth PrevSol AllocateCopy Info)
-		    choice(P MaxAlt) = !Info
+		 meth init(Mom Depth PrevSol AllocateCopy S Info)
+		    alternatives(MaxAlt) = !Info
 		 in
 		    self.mom  = Mom
 		    copy <- case AllocateCopy
 			    of transient then 
-			       transient({Procedure.clone P})
+			       transient({Space.clone S})
 			    [] persistent then
-			       persistent({Procedure.clone P})
+			       persistent({Space.clone S})
 			    else False
 			    end
-		    toDo     <- PrevSol#P#1#MaxAlt
+		    toDo <- PrevSol#S#1#MaxAlt
 		    <<TkNodes.choice init>>
 		    {Status addChoice(Depth)}
 		 end
@@ -302,18 +308,18 @@ in
 		    ChoiceNode
 		    StrategyNodes.choice
 		    ChoiceFeatures
-		 meth init(Mom Depth AllocateCopy Info)
-		    choice(P MaxAlt) = !Info
+		 meth init(Mom Depth AllocateCopy S Info)
+		    alternatives(MaxAlt) = !Info
 		 in
 		    self.mom  = Mom
 		    copy <- case AllocateCopy
 			    of transient then 
-			       transient({Procedure.clone P})
+			       transient({Space.clone S})
 			    [] persistent then
-			       persistent({Procedure.clone P})
+			       persistent({Space.clone S})
 			    else False
 			    end
-		    toDo     <- P#1#MaxAlt
+		    toDo     <- S#1#MaxAlt
 		    <<TkNodes.choice init>>
 		    {Status addChoice(Depth)}
 		 end
@@ -332,39 +338,42 @@ in
       create FakedRoot
 	 from Classes.choice
       end
-      Info = {Solve Query nil}
-   in
-      
-      case {Label Info}
+      S = {Space.newDebug Query}
+      A = {Space.ask S}
+   in   
+      case A
       of failed then
 	 {New Classes.failed init(False 1)}
-      [] solved then
-	 LocalClasses = Classes.(Info.2)
+      [] succeeded(SA) then
+	 LocalClasses = Classes.SA
       in
 	 create $
 	    attr solution:False
 	    from LocalClasses
 	    with init
 	    meth init
-	       <<LocalClasses init(False 1 Info)>>
-	       solution <- Info.1
+	       <<LocalClasses init(False 1 S A)>>
+	       solution <- S
 	    end
-	    meth getInfo(?P)
-	       P = @solution
+	    meth getSol($)
+	       @solution
+	    end
+	    meth findSpace($)
+	       {Space.clone @solution}
 	    end
 	 end
-      [] choice then
+      [] alternatives(_) then
 	 {New Classes.choice [case IsBAB then 
-				 init(False 1 False persistent Info)
+				 init(False 1 False persistent S A)
 			      else
-				 init(False 1 persistent Info)
+				 init(False 1 persistent S A)
 			      end sync($)] _}
-      [] unstable then
-	 {New Classes.unstable [case IsBAB then
-				   init(False False 1 Info False)
-				else
-				   init(False 1 0 1 Info)
-				end sync($)] _}
+      [] blocked then
+	 {New Classes.blocked [case IsBAB then
+				  init(False False 1 S A False)
+			       else
+				  init(False 1 0 1 S A)
+			       end sync($)] _}
       end
    end
 			

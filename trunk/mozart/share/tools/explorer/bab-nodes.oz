@@ -14,7 +14,7 @@ local
       [] N|Nr then
 	 case N.kind
 	 of failed then True
-	 [] solved then True
+	 [] succeeded then True
 	 else {N NoChoicesLeft($)} andthen {CheckDone Nr}
          end
       end
@@ -24,9 +24,9 @@ local
       case Ns of nil then False
       [] N|Nr then
 	 case N.kind
-	 of solved then {NotHiddenChoices Nr}
+	 of succeeded then {NotHiddenChoices Nr}
 	 [] failed then {NotHiddenChoices Nr}
-	 [] unstable then True
+	 [] blocked then True
 	 [] choice then
 	    case {N isHidden($)} orelse {N NoChoicesLeft($)} then
 	       {NotHiddenChoices Nr}
@@ -41,34 +41,34 @@ local
 
    class ChoiceNode
 
-      meth Create(PrevSol NextDepth Control AllocateCopy $)
+      meth Create(PrevSol NextDepth Space Control AllocateCopy $)
 	 case Control
 	 of failed then
 	    {New self.classes.failed init(self NextDepth)}
-	 [] solved(_ S) then
+	 [] succeeded(S) then
 	    isSolBelow <- True
-	    {New self.classes.S init(self NextDepth Control)}
-	 [] choice(_ _) then
+	    {New self.classes.S init(self NextDepth Space)}
+	 [] alternatives(_) then
 	    choices  <- @choices + 1
 	    {New self.classes.choice
-	     init(self NextDepth PrevSol AllocateCopy Control)}
-	 [] unstable(_) then
+	     init(self NextDepth PrevSol AllocateCopy Space Control)}
+	 [] blocked(_) then
 	    choices <- @choices + 1
 	    {self.canvas.manager.status halt}
-	    {New self.classes.unstable
-	     init(self PrevSol NextDepth Control AllocateCopy)}
+	    {New self.classes.blocked
+	     init(self PrevSol NextDepth Space Control AllocateCopy)}
 	 end
       end
 
-      meth wake(Node PrevSol NextDepth Control AllocateCopy)
+      meth wake(Node PrevSol NextDepth Space Control AllocateCopy)
 	 isDirty  <- True
 	 choices  <- @choices - 1
 	 <<replaceKid(Node
 		      <<Create(PrevSol NextDepth
-				   Control AllocateCopy $)>>)>>
+			       Space Control AllocateCopy $)>>)>>
 	 {Node close}
 	 case self.mom of !False then true elseof Mom then
-	    {Mom leaveNode({Label Control}==solved True @choices==0)}
+	    {Mom leaveNode({Label Control}==succeeded True @choices==0)}
 	 end
       end
 
@@ -78,10 +78,10 @@ local
 	 UseNs UseCopy AllocateCopy
       in
 	 case @toDo
-	 of Sol#P#1#MaxAlt then
+	 of Sol#S#1#MaxAlt then
 	    toDo          <- Sol#2#MaxAlt
 	    UseNs         = [1]
-	    UseCopy       = P
+	    UseCopy       = S
 	    NextDist      = CurSearchDist - 1
 	    NextNs        = 1|CurNs
 	    AllocateCopy  = case CurDepth mod InfoDist of 1 then persistent
@@ -93,21 +93,21 @@ local
 	    case PrevSol==Sol then
 	       case NextAlt==MaxAlt then
 		  toDo    <- nil
-		  choices <- @choices  - 1
+		  choices <- @choices - 1
 		  case @choices==0 andthen @copy\=False then
 		     NextDist = 0 % force allocation of a copy below!
 		     UseCopy  = case @copy of transient(_) then
 				   copy <- False
 				   CurCopy
-				else {Procedure.clone CurCopy}
+				else {Space.clone CurCopy}
 				end
 		  else
-		     UseCopy  = {Procedure.clone CurCopy}
+		     UseCopy  = {Space.clone CurCopy}
 		     NextDist = CurSearchDist - 1
 		  end
 	       else
 		  toDo     <- Sol#NextAlt+1#MaxAlt
-		  UseCopy  = {Procedure.clone CurCopy}
+		  UseCopy  = {Space.clone CurCopy}
 		  NextDist = CurSearchDist - 1
 	       end
 	       UseNs = NextNs = NextAlt|CurNs
@@ -117,33 +117,27 @@ local
 			       end
 	       NextCopy      = CurCopy
 	    else
-	       SkipCopy = case {Solve {Procedure.clone CurCopy}
-				{Reverse 
-				 case NextAlt==MaxAlt then NextAlt
-				 else NextAlt#MaxAlt
-				 end|CurNs}}
-			  of choice(P _) then P
-			  [] solved(P _) then P
-			  [] failed      then
-			     proc {$ X} false end
-			  end
+	       ToMerge = {Space.clone PrevSol}
 	    in
+	       UseCopy = {Space.clone CurCopy}
+	       {Misc.recompute UseCopy case NextAlt==MaxAlt then NextAlt else NextAlt#MaxAlt end|CurNs}
 	       %% I'm finished
 	       toDo     <- nil
 	       choices  <- @choices  - 1
 	       case @copy of transient(_) then copy <- False else true end
-	       UseCopy = proc {$ X}
-			    {SkipCopy X}
-			    {self.order {PrevSol} X}
-			 end
+	       {Space.inject UseCopy 
+		proc {$ X}
+		   {self.order {Space.merge ToMerge} X}
+		end}
 	       UseNs = NextNs = nil
 	       NextDist     = 0
 	       AllocateCopy = persistent
 	       NextCopy     = CurCopy
-	       end
+	    end
 	 end
-	 Information = {Solve UseCopy {Reverse UseNs}}
-	 <<ChoiceNode Create(PrevSol CurDepth+1 Information
+	 {Misc.recompute UseCopy UseNs}
+	 Information = {Space.ask UseCopy}
+	 <<ChoiceNode Create(PrevSol CurDepth+1 UseCopy Information
 			     AllocateCopy ?NewNode)>> 
 	 isDirty <- True
 	 <<addKid(NewNode)>>
@@ -181,7 +175,7 @@ local
 		     CurSearchDist SearchDist CurNs CurCopy
 		     ?Sol ?IsDirty ?DecChoices)
 	 case @toDo\=nil andthen {System.isVar Break} then
-	    Information NewNode
+	    NewNode Information
 	    NextDist NextNs NextCopy
 	 in
 	    <<ChoiceNode Add(PrevSol CurDepth InfoDist CurSearchDist
@@ -189,11 +183,11 @@ local
 			     ?NextDist ?NextNs ?NextCopy
 			     ?Information ?NewNode)>>
 	    case Information
-	    of solved(_ _) then
+	    of succeeded(_) then
 	       Sol         = NewNode
 	       IsDirty     = True
 	       DecChoices  = @choices==0
-	    [] choice(_ _) then
+	    [] alternatives(_) then
 	       SolBelow DecChoicesBelow
 	    in
 	       {NewNode Next(Break PrevSol CurDepth+1 InfoDist
@@ -298,7 +292,7 @@ local
 			     CurNs CurCopy
 			     _ _ _
 			     ?Info ?NewNode)>>
-	    Sol = case {Label Info}==solved then NewNode else False end
+	    Sol = case {Label Info}==succeeded then NewNode else False end
 	    case self.mom of !False then true elseof Mom then
 	       {Mom leaveNode(Sol\=False True @choices==0)}
 	    end
@@ -320,7 +314,7 @@ local
 
    end
       
-   class SolvedNode
+   class SucceededNode
 
       meth next(_ _ _ _ $)
 	 False
@@ -343,6 +337,6 @@ local
 in
    
    BABNodes = c(choice: ChoiceNode
-		solved: SolvedNode)
+		succeeded: SucceededNode)
 
 end

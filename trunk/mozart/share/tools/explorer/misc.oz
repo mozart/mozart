@@ -50,8 +50,15 @@ local
       end
    end
 
+   proc {ReDo S Is}
+      case Is of nil then true
+      [] I|Ir then {ReDo S Ir} {Space.choose S I}
+      end
+   end
+
 in
 
-   Misc = misc(check: CheckSize)
+   Misc = misc(check:     CheckSize
+	       recompute: ReDo)
 
 end
