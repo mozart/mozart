@@ -6,11 +6,12 @@ We then progressively introduce
 examples of distributed applications
 to illustrate servers,
 agents, mobility, collaborative tools,
-and fault tolerance.
+fault tolerance, and security.
 
 <P>The tutorial is suitable for Oz programmers who want to be
 able to quickly start writing distributed programs.
 The document is deliberately informal and thus complements
+the other Oz tutorials and
 the research papers on distribution in Oz.
 
 <P>The Mozart programming system has been
