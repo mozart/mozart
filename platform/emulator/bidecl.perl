@@ -1957,6 +1957,12 @@ $builtins = {
                              bi  => BIatRedo,
                              native => true},
 
+    'slowNet'           => { in  => ['+int', '+int'],
+                             out => [],
+                             bi  => BIslowNet,
+                             native => true},
+
+
     #* Pickles
 
     'save'              => { in  => ['value','+virtualString'],

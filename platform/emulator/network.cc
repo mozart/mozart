@@ -255,6 +255,9 @@ static ipReturn tcpOpen(RemoteSite *,WriteConnection *) ;
 int tcpConnectionHandler(int,void *);
 void wakeUpTmp(int,int);
 
+Bool incTimeSlice(unsigned long, void *v);
+Bool checkIncTimeSlice(unsigned long, void* v);
+
 static int tcpWriteHandler(int,void*);
 static int tcpCloseHandler(int,void*);
 int tcpPreReadHandler(int,void*);
@@ -380,85 +383,97 @@ public:
 /*   SECTION 3b:  Transfer speed control                             */
 /**********************************************************************/
 
-#define TSC_LATENCY         200
-#define TSC_READ_A          400 * 8
-#define TSC_WRITE_A         400 * 8
-#define TSC_TOTAL_A         400 * 10
+int  TSC_LATENCY;
+int TSC_TOTAL_A;
 #define READ_NO_TIME        (0-1)
+#define TSCQ_WRITE          0
 #define TSCQ_READ           1
-#define TSCQ_WRITE          2
-
+#define TSCQ_TIME_SLICE     10
 
 
 class TSCQElement{
 public:
-  int t;
-  Connection *c;
+  unsigned long t;
+  void *c;
+  int  type;
   TSCQElement *e;
-  TSCQElement(int tt, Connection *cc, TSCQElement* ee){
+  TSCQElement(unsigned long tt, int ty, void *cc, TSCQElement* ee){
     t = tt;
     c = cc;
-    e = ee;}
+    e = ee;
+    type = ty;}
 };
+
+TSCQElement* newTSCQElement(){
+  return (TSCQElement*) genFreeListManager->getOne_4();}
+
+void freeTSCQElement(TSCQElement* e){
+  genFreeListManager->putOne_4((FreeListEntry*) e);}
 
 
 class TSCQueue{
 private:
-  int readAmount;
-  int writeAmount;
-  int time;
-  TSCQElement *ptr;
-
+  int transferAmount;
+  unsigned long time, dtime;
+  TSCQElement *ptr, *last;
+  int nrOfReads;
+  Bool reAdd;
 public:
   TSCQueue(){
-    readAmount     =  0;
-    writeAmount    =  0;
-    time = getCurTime();
+    transferAmount     =  0;
+    time = 0;
+    dtime = 0;
     ptr = NULL;
+    last = NULL;
+    nrOfReads = 0;
+    reAdd = FALSE;
   }
 
   void writing(int size){
-    writeAmount += size;}
+    transferAmount += size;
+    //   printf("writing %d tot:%d?n",size, writeAmount);
+  }
 
   void reading(int size){
-    readAmount += size;}
+    transferAmount += size;}
 
-  Bool writeAmountFull(){
-    Bool ret =  (writeAmount > TSC_WRITE_A)  ||
-      (((readAmount>TSC_READ_A?TSC_READ_A:readAmount) +
-        writeAmount ) > TSC_TOTAL_A);
-    printf("slownet: writeAmountFull a:%d r:%d w:%d\n",ret,readAmount,writeAmount);
-    return ret;
+  Bool netAmountFull(){
+    return transferAmount > TSC_TOTAL_A;
   }
 
-  Bool readAmountFull(){
-    Bool ret =(readAmount > TSC_READ_A)  ||
-      (((writeAmount>TSC_READ_A?TSC_READ_A:writeAmount)
-        + readAmount) > TSC_TOTAL_A);
-    printf("slownet: readAmountFull a:%d r:%d w:%d\n",ret,readAmount,writeAmount);
-    return ret;
+  Bool hasTask(unsigned long aTime){
+    time = aTime;
+    return  ptr && ptr->t <= aTime;}
+  //(time + ++dtime * TSCQ_TIME_SLICE);}
+
+  unsigned long getCurTime() {
+    return time;}
+  unsigned long getNewTime(){
+    return time + TSC_LATENCY;}
+
+  void addelement(TSCQElement* ele){
+    if(ptr == NULL)
+      ptr = ele;
+    else
+      last->e = ele;
+    last = ele;}
+
+  void addRead(void* ele){
+    TSCQElement *TS = newTSCQElement();
+    TS->TSCQElement::TSCQElement(getNewTime(),TSCQ_READ, ele, NULL);
+    addelement(TS);}
+  void addWrite(void *ele){
+    TSCQElement *TS = newTSCQElement();
+    TS->TSCQElement::TSCQElement(getNewTime(),TSCQ_WRITE, ele, NULL);
+    addelement(TS);
   }
+  void reAddWrite(){
+    Assert(!reAdd);
+    reAdd = TRUE;}
 
-  int getCurTime() {
-    return osTotalTime();}
-  int getNewTime(){
-    return getCurTime() + TSC_LATENCY;}
-
-  void addRead(Connection *c){
-    ptr = new TSCQElement(TSCQ_READ, c, ptr);}
-  void addWrite(Connection *c){
-    TSCQElement *tmp = ptr;
-    while(tmp){
-      if(tmp->c == c) return;
-      tmp = tmp->e;}
-    ptr = new TSCQElement(TSCQ_WRITE, c, ptr);}
-
-  void incTime();
+  void incTime(unsigned long);
 };
 
-void incTimeSlice(){
-  TSC->incTime();
-}
 
 
 
@@ -512,6 +527,9 @@ public:
 
 class NetMsgBuffer:public MsgBuffer{
   friend class NetMsgBufferManager;
+#ifdef SLOWNET
+  friend ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool ValidMsg);
+#endif
 protected:
   ByteBuffer *first;
   ByteBuffer *start;
@@ -523,6 +541,8 @@ protected:
   int totlen;  /* include header */
   int type;
   Site *site;
+  int slownetTotLen;    // used for slownet communication
+
 
   RemoteSite *remotesite;
   int availableSpace();
@@ -541,6 +561,10 @@ public:
   //ATTENTION Hack Remove
   void startfixerik1(){
     NetMsgBuffer();}
+
+  void setslownetTotLen(int s){slownetTotLen = s;}
+  int getslownetTotLen(){return slownetTotLen;}
+
 
   void resend();
   void reset();
@@ -1878,7 +1902,9 @@ int findProbeCons(Connection *c){
         case IP_BLOCK:{
           PD((TCP,"PingMsg Blocked"));
           w->addCurQueue(m);
+#ifndef SLOWNET
           OZ_registerWriteHandler(w->fd,tcpWriteHandler,(void *)w);
+#endif
           break;}
         case IP_PERM_BLOCK:{
           PD((TCP,"CloseMsg nSent sitecrash"));
@@ -2311,7 +2337,6 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
       break;}
     PD((WRITE,"wr:%d try:%d error:%d",ret,len,errno));
 #ifdef SLOWNET
-    printf("slownet: TcpSend sending %d\n",ret);
     TSC->writing(ret);
 #endif
     if(ret<len){
@@ -2493,7 +2518,23 @@ ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool ValidMsg)
     if (ValidMsg) {
       PD((TCP,"interpret-packet"));
       PD((TCP,"received TCP_PACKET"));
+#ifdef SLOWNET
+      int totalLen = bs->getslownetTotLen();
+      NetMsgBuffer *bsNew=netMsgBufferManager->getNetMsgBuffer(bs->getSite());
+      bsNew->setslownetTotLen(totalLen);
+      bsNew->marshalBegin();
+      bs->unmarshalBegin();
+      while(totalLen--){
+        BYTE bb = bs->get();
+        bsNew->put(bb);}
+      bsNew->marshalEnd();
+      bsNew->beforeInterpret(0);
+      bsNew->pos = bsNew->pos + 13;
+      TSC->addRead(bsNew);
+      bs->unmarshalEnd();
+#else
       msgReceived(bs);
+#endif
     }
     return IP_OK;}
   case TCP_CLOSE_REQUEST_FROM_WRITER:{
@@ -2593,7 +2634,7 @@ static int acceptHandler(int fd,void *unused)
   int2net(auxbuf, accHbufSize - 9);
   auxbuf += netIntSize;
   for (char *pv = PERDIOVERSION; *pv;) {
-    PD((TCP,"Writing %c %d",*pv,auxbuf));
+    PD((TCP,"Writing %c %d\n",*pv,auxbuf));
     *auxbuf++ = *pv++;}
 
   Assert(auxbuf-accHbuf == accHbufSize);
@@ -2666,17 +2707,6 @@ static int tcpReadHandler(int fd,void *r0)
   PD((TCP,"tcpReadHandler Invoked"));
   ReadConnection *r = (ReadConnection*) r0;
 
-#ifdef SLOWNET
-  if(r->getTime() == READ_NO_TIME){
-    r->setTime(TSC->getNewTime());
-    printf("slownet: The read had no time\n");}
-
-  if(TSC->readAmountFull() || TSC->getCurTime() < r->getTime()){
-    printf("slownet: We got to wait, read at:%d mt%d\n",
-           TSC->getCurTime() ,r->getTime());
-    return 0;}
-#endif
-
   int ret,rem,len,msgNr,ansNr;
   int totLen;
   ipReturn ip;
@@ -2738,11 +2768,6 @@ start:
       r->connectionLost();}
     return 0;}
 
-#ifdef SLOWNET
-  printf("slownet: read adds %d av:%d rem:%d\n",ret,len,rem);
-  TSC->reading(ret);
-#endif
-
   PD((READ,"no:%d av:%d rem:%d",ret,len,rem));
   bs->afterRead(ret);
 
@@ -2753,6 +2778,9 @@ start:
         type=getHeader(bs,len,msgNr,ansNr);
         r->remoteSite->receivedNewAck(ansNr);
         totLen = len;
+#ifdef SLOWNET
+        bs->setslownetTotLen(totLen - tcpHeaderSize);
+#endif
         PD((READ,"Header done no:%d av:%d rem:%d tcp:%d",ret,len,rem,tcpHeaderSize));
         rem=len-ret-tcpHeaderSize-rem;}
       else{
@@ -2809,18 +2837,18 @@ fin:
       // ATTENTION
       netMsgBufferManager->dumpNetMsgBuffer(bs);
 #ifdef SLOWNET
-      r->setTime(READ_NO_TIME);
+      // r->setTime(READ_NO_TIME);
 #endif
       return 0;}
     Assert(!r->isIncomplete());
 #ifdef SLOWNET
-    r->setTime(READ_NO_TIME);
+    //r->setTime(READ_NO_TIME);
 #endif
     messageManager->freeMessageAndMsgBuffer(m);
     return 0;}
   newReadCur(m,bs,r,type,rem);
 #ifdef SLOWNET
-  r->setTime(TSC->getCurTime());
+  //r->setTime(TSC->getCurTime());
 #endif
   return 0;
 
@@ -2983,7 +3011,11 @@ int tcpConnectionHandler(int fd,void *r0){
   PD((OS,"register READ - close fd:%d",fd));
 
   if(r->isWritePending())
+#ifndef SLOWNET
     OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)r);
+#else
+  ;
+#endif
   PD((TCP,"tcpConnectionHandler ord fin"));
   r->opened();
   return 0;
@@ -3011,46 +3043,43 @@ int tcpWriteHandler(int fd,void *r0){
   WriteConnection *r=(WriteConnection *)r0;
   Message *m;
   ipReturn ret;
+#ifdef SLOWNET
+  Bool hasSent = FALSE;
+  if(r->isOpening()){
+    TSC->reAddWrite();
+    return 0;}
+#endif
   RemoteSite* site = r->remoteSite;
 
   PD((TCP,"tcpWriteHandler invoked r:%x",r));
   if(r->isIncomplete()){
     m=r->getCurQueue();
 #ifdef SLOWNET
-    if(TSC->getCurTime()<m->getTime() ||
-       TSC->writeAmountFull()){
-      printf("slownet: WriteH should wait\n");
-      ret=IP_BLOCK;
-      TSC->addWrite(r);
-      goto writeHerrorBlock;}
+    hasSent = TRUE;
 #endif
-
-
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,TRUE);
-    if(ret<0) goto writeHerrorBlock;}
+    if(ret<0){
+      goto writeHerrorBlock;
+    }}
 
   if(r->isClosing()){
     messageManager->freeMessageAndMsgBuffer(m);
     return 1;}
+
   if(r->isWantsToClose()){
     r->closeConnection();
     return 0;}
 
+
+
   while(r->isInWriteQueue()){
+#ifdef SLOWNET
+    if(hasSent) break;
+    hasSent = TRUE;
+#endif
     PD((TCP,"taking from write queue %x",r));
     m=site->getWriteQueue();
-
-#ifdef SLOWNET
-    if(TSC->getCurTime()<m->getTime() ||
-       TSC->writeAmountFull()){
-      printf("slownet: WriteH should wait\n");
-      ret=IP_BLOCK;
-      m->getMsgBuffer()->PiggyBack(m);
-      TSC->addWrite(r);
-      goto writeHerrorBlock;}
-#endif
-
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,FALSE);
     if(ret<0) goto writeHerrorBlock;
@@ -3058,8 +3087,9 @@ int tcpWriteHandler(int fd,void *r0){
 
 
   PD((TCP,"tcpWriteHandler finished r:%x",r));
-
+#ifndef SLOWNET
   OZ_unregisterWrite(fd);
+#endif
   PD((OS,"unregister WRITE fd:%d",fd));
   if(r->isCanClose()){
     r->clearCanClose();
@@ -3071,6 +3101,9 @@ int tcpWriteHandler(int fd,void *r0){
 writeHerrorBlock:
   switch(ret){
   case IP_BLOCK:{
+#ifdef SLOWNET
+    TSC->reAddWrite();
+#endif
     PD((WEIRD,"incomplete write %x",r));
     r->addCurQueue(m);
     tcpCache->touch(r);
@@ -3547,10 +3580,6 @@ sendTo(NetMsgBuffer *bs, MessageType msg,
   int msgNum,ret;
   Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,
 storeS,msg,storeInd);
-#ifdef SLOWNET
-  printf("slownet: settingTime\n");
-  m->setTime(TSC->getNewTime());
-#endif
 
   queueMessage(m->getMsgBuffer()->getTotLen());
   switch (siteStatus()){
@@ -3584,11 +3613,12 @@ storeS,msg,storeInd);
 
 #ifdef SLOWNET
   // In case of slownet, all msgs are put in the writeques.
-  printf("slownet: Queue not Send\n");
-  OZ_registerWriteHandler(fd,tcpWriteHandler,(void *)this->writeConnection);
   m->getMsgBuffer()->PiggyBack(m);
   writeConnection->addCurQueue(m);
+#ifdef SLOWNET
   TSC->addWrite(this->writeConnection);
+#endif
+
   return ACCEPTED;
 #endif
 
@@ -3614,6 +3644,9 @@ storeS,msg,storeInd);
     Assert(0);
     return PERM_NOT_SENT;}}
 tmpdwnsend:
+#ifdef SLOWNET
+  TSC->addWrite(this->writeConnection);
+#endif
   PD((TCP_INTERFACE,"TMPDWNSEND1"));
   siteTmpDwn(TMP_INITIATIVE);
 tmpdwnsend2:
@@ -3622,6 +3655,9 @@ tmpdwnsend2:
   addWriteQueue(m);
   return msgNum;
 ipBlockSend:
+#ifdef SLOWNET
+  TSC->addWrite(this->writeConnection);
+#endif
   PD((TCP_INTERFACE,"sendTo IpBlock add to writeQueue %d",m));
   addWriteQueue(m);
 
@@ -3707,6 +3743,12 @@ void initNetwork()
   OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
   tcpCache->nowAccept();  // can be removed ??
+#ifdef SLOWNET
+  if(!am.registerTask(NULL, checkIncTimeSlice, incTimeSlice))
+    error("Unable to registertask");
+  TSC_LATENCY = 300;
+  TSC_TOTAL_A = 4000;
+#endif
 }
 
 MsgBuffer* getRemoteMsgBuffer(Site* s){
@@ -3731,43 +3773,78 @@ int timeCtr = 0;
 /**********************************************************************/
 /*   SECTION 30: SLOWNET method, dependent of writeconnection     */
 /**********************************************************************/
+void TSCQueue::incTime(unsigned long aTime){
 
-void TSCQueue::incTime(){
-  int t = getCurTime();
-  int dTime = (t - time);
-  int newRA = readAmount - dTime * TSC_TOTAL_A / 2000;
-  int newWA = writeAmount - dTime * TSC_TOTAL_A / 2000;
+  if(transferAmount){
+    int decrease = (int)((aTime - dtime) *  TSC_TOTAL_A / 1000);
 
-  printf("slownet: incTime t:%d nt:%d dt:%d ",time,t,dTime);
-  printf("ra:%d nra:%d wa:%d nwa:%d ptr: %d \n",
-         readAmount,newRA, writeAmount, newWA, (int)ptr);
+    if(decrease){
+      transferAmount -= decrease;
+      if(transferAmount < 0) transferAmount  = 0;}}
 
- time = t;
-  if(newRA < 0) newWA += newRA;
-  if(newWA < 0) newRA += newWA;
-  if(newRA < 0) newRA = 0;
-  if(newWA < 0) newWA = 0;
-  readAmount = newRA;
-  writeAmount = newWA;
-
+  time =  dtime = aTime;
+  //dtime * TSCQ_TIME_SLICE;
 
   TSCQElement *tptr = ptr;
+  TSCQElement *tmpLast = last, *tmp;
   ptr = NULL;
-  while(tptr){
-    printf("whiling\n");
-    switch(tptr->t){
-    case TSCQ_READ:{
-      break;}
-    case TSCQ_WRITE:{
-      (void) tcpWriteHandler((int) ((WriteConnection *)(tptr->c))->fd,
-                           (void *) tptr->c);
-      break;}
-    default:
-      Assert(0);}
+  last = NULL;
 
-    TSCQElement *tmp = tptr->e;
+  int ctr = 0;
 
-    delete tptr;
-    tptr = tmp;
+  //  printf("slownet: incTime t:%d ta:%d tptr:%d tptrT:%d nf:%d\n",(int)time,
+  // transferAmount,(int)tptr, (int)tptr->t,netAmountFull() );
+
+  while(tptr && tptr->t < time && !netAmountFull()){
+    if(tptr->type == TSCQ_WRITE){
+      reAdd = FALSE;
+      (void) tcpWriteHandler((int) -1 ,(void *) tptr->c);
+      tmp = tptr->e;
+      if(reAdd){
+        tptr->e = NULL;
+        addelement(tptr);}
+      else{
+        freeTSCQElement(tptr);}
+      tptr = tmp;
+    }
+    else{
+      NetMsgBuffer* nb = (NetMsgBuffer*)tptr->c;
+      msgReceived(nb);
+      reading(nb->getslownetTotLen());
+      tmp = tptr->e;
+      //netMsgBufferManager->dumpNetMsgBuffer(nb);
+      freeTSCQElement(tptr);
+      tptr = tmp;
+    }
+    ctr ++;
   }
+
+  // printf("ctr: %d\n",ctr);
+
+  if(tptr){
+    addelement(tptr);
+    last = tmpLast;}
 }
+
+
+/* ************************************************************************ */
+/*  SECTION 42: Procerdures used for "Signals"                                            */
+/* ************************************************************************ */
+
+Bool incTimeSlice(unsigned long time, void *v){
+  TSC->incTime(time);
+  return TRUE;}
+
+Bool checkIncTimeSlice(unsigned long time, void* v){
+  return TSC->hasTask(time);}
+
+
+OZ_BI_define(BIslowNet,2,0)
+{
+  oz_declareIntIN(0,arg0);
+  oz_declareIntIN(1,arg1);
+  TSC_LATENCY = arg0;
+  TSC_TOTAL_A = arg1;
+  printf("New slownetvals ms:%d buff:%d \n", TSC_LATENCY, TSC_TOTAL_A);
+  return PROCEED;
+} OZ_BI_end
