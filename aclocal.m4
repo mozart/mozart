@@ -763,7 +763,14 @@ else
 fi
 
 OZ_CHECK_HEADER_PATH(gmp.h,
- [oz_gmp_inc_found=yes],[oz_gmp_inc_found=no])
+ [oz_gmp_inc_found=yes],
+dnl for Debian, also check in /usr/include/gmp2
+ [oz_inc_path_sav=$oz_inc_path
+  oz_inc_path="$oz_inc_path /usr/include/gmp2"
+  OZ_CHECK_HEADER_PATH(gmp.h,
+   [oz_gmp_inc_found=yes],
+   [oz_inc_path=$oz_inc_path_sav
+    oz_gmp_inc_found=no])])
 
 if test "$oz_gmp_inc_found" = yes; then
 dnl first check for GMP 3
