@@ -589,11 +589,8 @@ the GDB commands `cd DIR' and `directory'."
   "Feeds the region."
   (interactive "r")
   (if oz-debug-mode
-      (oz-send-string
-       (concat "{Buggi debugProc(proc{$}"
-	       (buffer-substring start end)
-	       "end)}"))
-      (oz-send-string (buffer-substring start end)))
+      (oz-send-string (buffer-substring start end))
+    (oz-send-string (buffer-substring start end)))
   (oz-zmacs-stuff))
 
 
