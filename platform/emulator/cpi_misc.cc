@@ -307,16 +307,17 @@ void OZ_FSetValue::operator delete[](void * p, size_t s)
 }
 #endif
 
+*/
 
-OZ_Term OZ_setValue(OZ_FSetValue * s)
+OZ_Term OZ_fsetValue(OZ_FSetValue * s)
 {
   return makeTaggedFSetValue(s);
 }
 
-OZ_FSetValue * OZ_setValueToC(OZ_Term t)
+OZ_FSetValue * OZ_fsetValueToC(OZ_Term t)
 {
   return  tagged2FSetValue(oz_deref(t));
 }
-*/
+
 // End of File
 //-----------------------------------------------------------------------------
