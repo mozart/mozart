@@ -168,7 +168,15 @@ OZ_Return TasksOverlapPropagator::propagate(void)
       }
     }
     _first = 0;
-    // 3. step // was soll das?, wir sind och eager, oder?
+    // 3. step
+    /*
+    // was soll das?, wir sind doch eager, oder?
+    if (!(engine_cl1.hasReachedFixPoint() &&
+          engine_cl2.hasReachedFixPoint() &&
+          engine_cl3.hasReachedFixPoint())) {
+      printf("gaga\n");
+    }
+    */
     if (engine_cl1.hasReachedFixPoint() &&
         engine_cl2.hasReachedFixPoint() &&
         engine_cl3.hasReachedFixPoint()) {

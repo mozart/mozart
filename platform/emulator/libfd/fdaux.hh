@@ -281,29 +281,32 @@ public:
 typedef _PropagatorController_V_V<OZ_Return,OZ_FDIntVar,PROCEED,FAILED,SLEEP>
 PropagatorController_V_V;
 
-class PropagatorController_V_V_V {
+template<class RTYPE, class CVAR, int P, int F, int S>
+class _PropagatorController_V_V_V : public _OZ_ParamIterator<RTYPE> {
 protected:
-  OZ_FDIntVar &v1, &v2, &v3;
+  CVAR &v1, &v2, &v3;
 public:
-  PropagatorController_V_V_V(OZ_FDIntVar &i1, OZ_FDIntVar &i2, OZ_FDIntVar &i3)
+  _PropagatorController_V_V_V(CVAR &i1, CVAR &i2, CVAR &i3)
     : v1(i1), v2(i2), v3(i3) {}
 
-  OZ_Return leave(void) {
-    return (v1.leave() | v2.leave() | v3.leave()) ? SLEEP : PROCEED;
+  RTYPE leave(int vars_left = 0) {
+    return ((v1.leave()?1:0) + (v2.leave()?1:0) + (v3.leave()?1:0) <= vars_left) ? P : S;
   }
-  OZ_Return vanish(void) {
+  RTYPE vanish(void) {
     v1.leave();
     v2.leave();
     v3.leave();
-    return PROCEED;
+    return P;
   }
-  OZ_Return fail(void) {
+  RTYPE fail(void) {
     v1.fail();
     v2.fail();
     v3.fail();
-    return FAILED;
+    return F;
   }
 };
+
+typedef _PropagatorController_V_V_V<OZ_Return,OZ_FDIntVar,PROCEED,FAILED,SLEEP> PropagatorController_V_V_V;
 
 class PropagatorController_VV_V_V_V {
 protected:
