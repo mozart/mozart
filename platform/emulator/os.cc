@@ -1280,7 +1280,7 @@ void osStackDump()
   if (tmpout != stdout) {
     fclose(tmpout);
     char buf[1000];
-    sprintf(buf,"gdb -batch -n -x %s -c %d %s",tmpfile,getpid(),ozconf.emuexe);
+    sprintf(buf,"gdb -batch -n -x %s -c %d %s",tmpfile,osgetpid(),ozconf.emuexe);
     osSystem(buf);
   }
   
