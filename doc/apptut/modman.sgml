@@ -50,17 +50,19 @@
           returns the entry in the module table.
         <item>
           If ?{U} is not yet in the module table, the module manager
-          creates a new future ?{M} and stores ?{M} under ?{U} in the
-          module table. As soon as the value of the future ?{M} gets
+          creates a new future ?{M} and stores value ?{M} under key ?{U} in the
+          module table. As soon as the value of future ?{M} gets
           requested, the module manager <def/installs/ the functor at
           ?{U}.
       </list>
 
     <p>
-      Linking of a functor is done lazily: Only when the value of the
-      module is requested, the module is installed. A module with full
-      module url ?{U} is installed as follows Installation returns a
-      module ?{M}.
+      Linking of a functor is done lazily: only when the value of the
+      module is requested (usually implicitly, when the application 
+      attempts to access an export feature), is the module installed.
+      A module with full
+      module url ?{U} is installed as follows, where the installation
+      procedure returns a module ?{M}:
       <list enum>
         <item>
           The pickled functor stored at ?{U} is loaded.
@@ -81,11 +83,11 @@
     <title/Import Specifications/
 
     <p>
-      First some names. The entire import part of a functor is called
+     The entire import part of a functor is called the
       <def/import specification/. Each import specification consists
       of several <def/import clauses/. Each import clause consists of
       a mandatory <def/module name/ and an optional <def/module url/
-      that must be preceded by an <<at>> keyword.
+      that must be preceded by the <<at>> keyword.
 
     <p>
       For example, in the import specification
@@ -106,7 +108,7 @@ import
       <list enum>
         <item>
           If the import clause features a module url ?{U}, the full
-          module name is ?_{U}.
+          module name is ?{U}.
         <item>
           If the import clause consists of a module name ?{M} only,
           where ?{M} is the name of a system module, the full url is
@@ -119,7 +121,7 @@ import
       </list>
      
     <p>
-      All currently defined system module are listed in <ptr
+      All currently defined system modules are listed in <ptr
       to="table.modman.system">.
 
   <figure class=table id="table.modman.system">
@@ -228,14 +230,14 @@ import
       <def/local url/) as
       input and computes a new <def/resolved url/. The process of
       url resolution you already know from organizing your html-pages:
-      a url for a href-link in the document is a local url which
-      gets resolved with respect to the url of the containing
-      document (the base url).
+      a url for a relative href-link is resolved with respect to the
+      base url of the containing document.
 
     <p>
-      A module manager does exactly the same as a www-browser. If it
-      installs a module that has been loaded from the url ?{U}, the
-      its full import urls are resolved with respect to ?{U}.
+      I this respect, a module manager will behave similarly to a
+      web-browser.  When it
+      installs a module that was loaded from url ?{U}, the latter's
+      full import urls are resolved with respect to ?{U}.
       <ptr to="figure.modman.resolve"> shows two small examples.
 
     <figure id="figure.modman.resolve">
@@ -275,19 +277,21 @@ import
       follows
       <<<{Browse DBA}>>>
       shows <samp/DBA&le;Future&gt;/, which means that <<DBA>> still
-      refers to a future. Requesting the module by for example adding
-      an entry to the data base also shows effect on the Browser
-      display in that the module is displayed.
+      refers to a future.  Requesting the module by, for example, adding
+      an entry to the data base is also reflected in the Browser:
+      the display of
+      <samp/DBA&le;Future&gt;/ is replaced by a representation of the
+      module's value.
 
     <p>
-      That both module managers work independently you can verify by
+      That both module managers work independently can be verified by
       browsing <<DBB>>.
 
     <p>
       <<Module.link>> takes a list of urls, creates a new module
       manager and maps each url ?{U} to the module created by
-      linking the functor at ?{U}. Reference description you can
-      find in <ptr.extern to="ozdoc:system" key="chapter.module">.
+      linking the functor at ?{U}. Reference documentation can be found
+      in <ptr.extern to="ozdoc:system" key="chapter.module">.
 
   <section id="section.modman.opi">
     <title/Functors in the Oz Programming Environment/
@@ -299,7 +303,8 @@ import
 
     <p>
       Suppose the following demo functor definition
-<<<functor F
+<<<declare
+functor F
 export Pam
 define
    fun {DoPam Xs P Ys}
@@ -333,7 +338,7 @@ end>>>
       first-class functors and that they can be applied by module
       managers. In particular they are useful for remote module
       managers that create new Oz processes on networked
-      computers. More on this issue you can find in <ptr.extern
+      computers.  You can learn more on this issue in <ptr.extern
       to="ozdoc:dstutorial">. 
     
 

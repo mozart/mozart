@@ -28,13 +28,15 @@
     Applications often require to store their state on file and load
     the saved data later. Oz supports this by <def/pickling/ of data
     structures: Data structures are made persistent by writing them to
-    file.
+    files.
 
   <section id="section.pickle.values">
     <title/Stateless, Stateful, and Sited Nodes/
 
     <p>
-      Nodes in Oz are either stateless or stateful:
+      Values, or more precisely nodes,<note foot/A node may also be an
+      unbound variable, &ie; a value that is not yet determined/ in Oz
+      are either stateless or stateful:
       <list>
         <entry>Stateful
         <item>
@@ -45,12 +47,13 @@
         <entry>Stateless
         <item> 
           <def/Stateless/ data structures are literals, numbers, records,
-          classes, records, and procedures.
+          classes, chunks, and procedures.
       </list>
       
     <p>
-      In addition, nodes in the store can be <def/sited/: The node is
-      specific to a particular site. For example, classes for files
+      In addition, nodes in the store can be <def/sited/: the node is
+      specific to a particular site; it is a site-bound resource. For
+      example, classes for files
       (<<Open.file>>) and widget classes for graphics (for example,
       <<Tk.toplevel>>) are sited.
 
@@ -82,7 +85,8 @@
       graph that has been saved. For our example this means: what can be
       reached from <<X>> and <<Z>> is equal. For example
       <<<X.1==Z.1>>>
-      evaluates to <<true>>.
+      evaluates to <<true>>.  In fact, <code/X/ and <code/Z/ cannot be
+      distinguished.
 
     <p>
       Loading of pickles works across the internet: it is possible to
@@ -159,19 +163,23 @@ end
     <p>
       Note that since we only extended the functionality the functor
       provides, all programs that used the non-persistent data base
-      could still use the persistent data base with out being
-      recompiled. Could because we renamed <file/DB.ozf/ to
-      <file/PDB.ozf/. You can try it yourself by in fact renaming
-      <file/PDB.ozf/ to <file/DB.ozf/.
+      could, in principle, still use the persistent data base with out being
+      recompiled.   We say <em/could/ because the implementaion of the
+      persistent database is named <file/PDB.ozf/ rather than
+      <file/DB.ozf/.  However, you can give it a try and simply rename
+      <file/PDB.ozf/ to <file/DB.ozf/: all applications based on the
+      the non-persistent implementation will continue to work as before
+      but now using the persistent implementation (though without actually
+      taking advantage of the persistency).
 
 
   <section id="section.pickle.compression">
     <title/Pickle Compression/
    
     <p>
-      Pickles can also be compressed such that they occupy less space
-      on the disk. For example, a compressed pickle for <<X>> can be
-      written to the file <file/testz.ozp/ by 
+      Pickles can also be compressed so that they occupy less space
+      on disk. For example, a compressed pickle for <<X>> can be
+      written to file <file/testz.ozp/ by 
       <<<{Pickle.saveCompressed X 'testz.ozp' ?_{LevelI}}>>>
       ?_{LevelI} is an integer between <<0>> and <<9>> specifying the
       compression level: the higher the value the better the
@@ -179,7 +187,7 @@ end
       <<0>> gives no compression.
    
     <p>
-      Compression time and ratio depends on the data to be
+      Compression time and ratio depend on the data being
       pickled. The compression ratio might vary between 20 and 80
       percent, while compression at level 9 is usually less than 2
       times slower than using no compression.
