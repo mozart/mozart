@@ -58,6 +58,7 @@
 <meta name="html.split" value="part.foreign.extensions">
 <meta name="html.split" value="chapter.counter.global">
 <meta name="html.split" value="chapter.counter.object">
+<meta name="html.split" value="chapter.celloid">
 <meta name="html.split" value="part.managing.modules">
 <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
 <meta name="html.split" value="part.client.server">
