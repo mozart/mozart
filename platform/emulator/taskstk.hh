@@ -62,7 +62,9 @@ public:
   USEFREELISTMEMORY;
 
   int suggestNewSize() {
-    return max(ozconf.stackMinSize,(getMaxSize() + getUsed()) >> 1);
+      int used = getUsed();
+      return max(ozconf.stackMinSize,
+		 min(used * 2, (getMaxSize() + used) >> 1));
   }
 
   void restoreFrame() { tos += frameSz; Assert(tos<stackEnd); }
