@@ -75,7 +75,7 @@ void usage()
      "\toztool [-verbose] [-gnu|-msvc|-watcom] c++ -c <cfile> [ -o <ofile> ]\n"
      "\toztool [-verbose] [-gnu|-msvc|-watcom] cc  -c <cfile> [ -o <ofile> ]\n"
      "\toztool [-verbose] [-gnu|-msvc|-watcom] ld  -o <target> <files>\n"
-     "\toztool platform [-o <ofile>]\n");
+     "\toztool platform [ -o <ofile> ]\n");
   exit(2);
 }
 
@@ -187,7 +187,7 @@ enum system_type {
   SYS_GNU, SYS_MSVC, SYS_WATCOM
 };
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   if (argc < 2)
     usage();
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
     if (argc==2) {
       printf("%s\n",ozplatform);
     } else if (argc==4 && !strcmp(argv[2],"-o")) {
-      FILE* output = fopen(argv[3],"w");
+      FILE *output = fopen(argv[3],"w");
       if (output==NULL) {
 	panic(true,"Cannot open file '%s' for writing.\n",argv[3]);
 	exit(1);
