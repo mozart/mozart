@@ -44,8 +44,6 @@ DefOptions = o(drawing:    o(hide:   true
 StatusUpdateCnt = 50
 
 TitleName    = 'Oz Explorer'
-BitMapDir    = {System.get home} # '/lib/bitmaps/'
-BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
 StartSizeX   = 500
 StartSizeY   = 300
