@@ -131,6 +131,10 @@ void initDP()
 // PER-LOOK simplify
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
+#ifdef PERDIOLOGHIGH
+  printf("sendingperdio: to:%s type:%s site:%s index:%d\n",
+	 toS->stringRep(),mess_names[mt],sS->stringRep(),sI);
+#endif
   int ret=toS->sendTo(bs,mt,sS,sI);
   if(ozconf.perdioMinimal){
     OZ_Term nogoods = bs->getNoGoods();
