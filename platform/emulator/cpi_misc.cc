@@ -284,6 +284,39 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
   }
   return v + i;
 }
+/*
+void * OZ_FSetValue::operator new(size_t s)
+{
+  return CpiHeap.alloc(s);
+}
 
+void OZ_FSetValue::operator delete(void * p, size_t s)
+{
+  // deliberately left empty
+}
+
+#ifdef __GNUC__
+void * OZ_FSetValue::operator new[](size_t s)
+{
+  return CpiHeap.alloc(s);
+}
+
+void OZ_FSetValue::operator delete[](void * p, size_t s)
+{
+  // deliberately left empty
+}
+#endif
+
+
+OZ_Term OZ_setValue(OZ_FSetValue * s)
+{
+  return makeTaggedFSetValue(s);
+}
+
+OZ_FSetValue * OZ_setValueToC(OZ_Term t)
+{
+  return  tagged2FSetValue(oz_deref(t));
+}
+*/
 // End of File
 //-----------------------------------------------------------------------------
