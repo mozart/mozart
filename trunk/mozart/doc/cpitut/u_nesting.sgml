@@ -167,7 +167,7 @@ possible constraints to be expected. For details see <Ptr.Extern
 to="ozdoc:cpiref" key="expect.macros">. The macro <<OZ_EXPECTED_TYPE>>
 is required by <<OZ_EXPECT>> and <<OZ_EXPECT_SUSPEND>>.
 
-<Entry> <<OZ_EXPECT_(O, P, F)>>
+<Entry> <<OZ_EXPECT(O, P, F)>>
 <Item> checks if the argument at position
       <<P>> (<<P>> is an C integer with a value starting from <Math/0/)
       is constrained according to semantics of <<F>> (which is an
