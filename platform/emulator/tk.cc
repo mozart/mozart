@@ -835,13 +835,13 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
 	  if (!isSmallIntTag(arg_tag))
 	    return raise_type_error(tcl);
 
-	  int i = smallIntValue(arg);
+	  int j = smallIntValue(arg);
 
-	  if ((i < 0) || (i > 255))
+	  if ((j < 0) || (j > 255))
 	    return raise_type_error(tcl);
 
-	  unsigned char c1 = hex_digit(((unsigned char) i & '\xF0') >> 4);
-	  unsigned char c2 = hex_digit((unsigned char) i & '\x0F');
+	  unsigned char c1 = hex_digit(((unsigned char) j & '\xF0') >> 4);
+	  unsigned char c2 = hex_digit((unsigned char) j & '\x0F');
 	  put2(c1,c2);
 	}
 	return PROCEED;
