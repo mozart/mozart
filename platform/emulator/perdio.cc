@@ -115,7 +115,7 @@ class DebtRec;
 class FatInt;
 // global variables
 DebtRec* debtRec;
-TaggedRef currentURL;
+static TaggedRef currentURL;
 BorrowTable *borrowTable;
 OwnerTable *ownerTable;
 OZ_Term loadHook;
@@ -830,7 +830,10 @@ public:
 
   Bool hasURL() { return url!=0; }
   TaggedRef getURL() { return url; }
-  void markURL(TaggedRef u) { Assert(!url); url = u; }
+  void markURL(TaggedRef u) {
+    if (u && !literalEq(u,NameUnit))
+      url = u;
+  }
 
   TaggedRef getValue()       { return value; }
   void setValue(TaggedRef v) { value = v; }
@@ -2733,7 +2736,7 @@ GName *unmarshallGName(TaggedRef *ret, ByteStream *bs)
     return 0;
   }
   GName *gn=new GName(gname);
-  if (currentURL) { gn->markURL(currentURL); }
+  gn->markURL(currentURL);
   return gn;
 }
 
@@ -2998,7 +3001,7 @@ Bool checkURL(GName *gname, ByteStream *bs, MarshallInfo *mi)
     marshallURL(gname,t,bs,mi);
     return OK;
   }
-  if (currentURL) { gname->markURL(currentURL); }
+  gname->markURL(currentURL);
   return NO;
 }
 
@@ -5583,12 +5586,20 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url,
 OZ_C_proc_begin(BIsmartSave,6)
 {
   OZ_declareArg(0,in);
-  OZ_declareVirtualStringArg(2,urlS);
-  OZ_Term url=OZ_atom(urlS);
-  OZ_declareVirtualStringArg(1,filename);
+  OZ_declareNonvarArg(2,urlSave); urlSave = deref(urlSave);
   OZ_declareNonvarArg(3,dosave);
   OZ_declareArg(4,urls);
   OZ_declareArg(5,resources);
+
+  OZ_Term url;
+  if (literalEq(urlSave,NameUnit)) {
+    url = urlSave;
+  } else {
+    OZ_declareVirtualStringArg(2,urlSaveAux);
+    url=OZ_atom(urlSaveAux);
+  }
+
+  OZ_declareVirtualStringArg(1,filename);
 
   return saveFile(in,filename,url,dosave,urls,resources);
 }
@@ -5602,14 +5613,43 @@ int loadURL(TaggedRef url, OZ_Term out)
   return loadURL(s,out);
 }
 
+char *fdfgets(char *buf, int sz, int fd)
+{
+  char *aux = buf;
+  do {
+    int ret = osread(fd,aux,1);
+    if (ret<=0) return NULL;
+  } while(*(aux++)!='\n' && --sz>0);
+
+  *aux=0;
+  return buf;
+}
+
+
 int loadFile(char *filename,OZ_Term out)
 {
-  int fd = open(filename,O_RDONLY);
-  if (fd < 0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
-                    oz_atom("open"),
-                    oz_atom(OZ_unixError(errno)),
-                    oz_atom(filename));
+  int fd;
+  if (strcmp(filename,"-")==0) {
+    fd = STDIN_FILENO;
+    char car[100];
+    char *s;
+    do {
+      s = fdfgets(car,100,fd);
+    } while(s != NULL && strcmp(s,"###\n")!=0);
+    if (s == NULL) {
+      fprintf(stderr,"*** Header for standalone component must be terminated by \"###\"\n");
+      ossleep(3);
+      exit(1);
+    }
+
+  } else {
+    fd = open(filename,O_RDONLY);
+    if (fd < 0) {
+      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+                      oz_atom("open"),
+                      oz_atom(OZ_unixError(errno)),
+                      oz_atom(filename));
+    }
   }
 
   ByteStream *bs=bufferManager->getByteStream();
@@ -5673,13 +5713,19 @@ int loadFile(char *filename,OZ_Term out)
 
 int loadURL(char *url, OZ_Term out)
 {
+  if (strchr(url,':')==NULL) { // no prefix --> local file name
+    currentURL = oz_atom(url);
+    return loadFile(url,out);
+  }
+
   switch (url[0]) {
   case 'f':
     {
-      if (strncmp(url,"file:",5)!=0) goto bomb;
+      const char *prefix = "file:";
+      if (strncmp(url,prefix,strlen(prefix))!=0) goto bomb;
 
-      char *filename = url+5;
-      currentURL=oz_atom(url);
+      currentURL = oz_atom(url);
+      char *filename = url+strlen(prefix);
       return loadFile(filename,out);
     }
   case 'o':
