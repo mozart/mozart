@@ -1,18 +1,11 @@
-$cmode='dyn';
-
 %builtins_all =
 (
-    #* Pickles
-
     'save'		=> { in     => ['value','+virtualString'],
 			     out    => [],
-			     BI     => BIsave,
-			     native => true},
+			     BI     => BIsave},
 
     'load'		=> { in     => ['value','value'],
 			     out    => [],
-			     BI     => BIload,
-			     native => true},
-
+			     BI     => BIload},
 
  );
