@@ -10,9 +10,8 @@ local
    fun {FailedShape ScaledMyX ScaledMyY Scale}
       ScaledWidth = Scale * RectangleWidthF
    in
-      o(rectangle
-	ScaledMyX - ScaledWidth	  ScaledMyY - ScaledWidth
-	ScaledMyX + ScaledWidth   ScaledMyY + ScaledWidth)
+      rectangle(ScaledMyX - ScaledWidth	  ScaledMyY - ScaledWidth
+		ScaledMyX + ScaledWidth   ScaledMyY + ScaledWidth)
    end
 
    fun {HiddenShape ScaledMyX ScaledMyY Scale}
@@ -20,20 +19,18 @@ local
       ScaledSpace       = Scale * HalfHorSpaceF
       BottomY           = ScaledMyY + Scale * VerSpaceF
    in
-      o(polygon
-	ScaledMyX                 ScaledMyY - ScaledCircleWidth
-	ScaledMyX - ScaledSpace   BottomY
-	ScaledMyX + ScaledSpace   BottomY)
+      polygon(ScaledMyX                 ScaledMyY - ScaledCircleWidth
+	      ScaledMyX - ScaledSpace   BottomY
+	      ScaledMyX + ScaledSpace   BottomY)
    end
 
    fun {ChooseShape ScaledMyX ScaledMyY Scale}
       ScaledCircleWidth = Scale * CircleWidthF
    in
-      o(oval
-	ScaledMyX - ScaledCircleWidth
-	ScaledMyY - ScaledCircleWidth
-	ScaledMyX + ScaledCircleWidth
-	ScaledMyY + ScaledCircleWidth)
+      oval(ScaledMyX - ScaledCircleWidth
+	   ScaledMyY - ScaledCircleWidth
+	   ScaledMyX + ScaledCircleWidth
+	   ScaledMyY + ScaledCircleWidth)
    end
 
 
@@ -51,7 +48,7 @@ local
       Y3          = ScaledMyY + ScaledHalfWidth
       Y4          = ScaledMyY + ScaledFullWidth
    in
-      o(polygon X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2)
+      polygon(X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2)
    end
 
    fun {SucceededShape ScaledMyX ScaledMyY Scale}
@@ -63,7 +60,7 @@ local
       Y1          = !ScaledMyY 
       Y2          = ScaledMyY + ScaledWidth
    in
-      o(polygon X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1)
+      polygon(X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1)
    end
 
 
@@ -90,18 +87,18 @@ local
 	    <<Image init(parent: Parent
 			 tcl:    o({ChooseShape ImageCenter ImageCenter
 				    ImageScale}
-				   o(fill:    ChooseColor
-				     outline: LineColor
-				     width:   NodeBorderWidth
-				     tags:    self.Tag)))>>
+				   fill:    ChooseColor
+				   outline: LineColor
+				   width:   NodeBorderWidth
+				   tags:    self.Tag))>>
 	 end
 	 meth finish
-	    <<ChooseImage tk(itemconf self.Tag o(fill:ChooseTermColor
-						 width: TermNodeBorderWidth))>>
+	    <<ChooseImage tk(itemconf self.Tag
+			     fill:ChooseTermColor width:TermNodeBorderWidth)>>
 	 end
 	 meth clear
-	    <<ChooseImage tk(itemconf self.Tag o(fill:ChooseColor
-						 width: NodeBorderWidth))>>
+	    <<ChooseImage tk(itemconf self.Tag
+			     fill:ChooseColor width:NodeBorderWidth)>>
 	 end
       end
       
@@ -110,9 +107,9 @@ local
 	    <<Image init(parent: Parent
 			 tcl:    o({FailedShape ImageCenter ImageCenter
 				    ImageScale}
-				   o(fill:    FailedColor
-				     outline: LineColor
-				     width:   NodeBorderWidth)))>>
+				   fill:    FailedColor
+				   outline: LineColor
+				   width:   NodeBorderWidth))>>
 	 end
       end
 
@@ -121,9 +118,9 @@ local
 	    <<Image init(parent: Parent
 			 tcl:    o({SucceededShape ImageCenter ImageCenter
 				    ImageScale}
-				   o(fill:    EntailedColor
-				     outline: LineColor
-				     width:   NodeBorderWidth)))>>
+				   fill:    EntailedColor
+				   outline: LineColor
+				   width:   NodeBorderWidth))>>
 	 end
       end
 
@@ -132,9 +129,9 @@ local
 	    <<Image init(parent: Parent
 			 tcl:    o({BlockedShape ImageCenter ImageCenter
 				    ImageScale}
-				   o(fill:    BlockedColor
-				     outline: LineColor
-				     width:   NodeBorderWidth)))>>
+				   fill:    BlockedColor
+				   outline: LineColor
+				   width:   NodeBorderWidth))>>
 	 end
       end
 

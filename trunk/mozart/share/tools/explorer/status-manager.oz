@@ -94,13 +94,13 @@ local
 					   text:   0
 					   font:   BoldStatusFont)}
       in
-	 {Tk.batch [pack(TimeLabel  TimeField o(side:left))
-		    pack(DepthLabel DepthField o(side:left))
+	 {Tk.batch [pack(TimeLabel  TimeField side:left)
+		    pack(DepthLabel DepthField side:left)
 		    pack(ChooseIm ChooseNumber
 			 SolImage SolNumber
-			 FailedImage FailedNumber o(side:left))
+			 FailedImage FailedNumber side:left)
 		    pack(BabField TimeFrame NodeFrame DepthFrame
-			 o(side:left padx:HugePad fill:x))]}
+			 side:left padx:HugePad fill:x)]}
 	 self.Time          = TimeField
 	 self.Bab           = BabField
 	 self.Depth         = DepthField
@@ -113,11 +113,11 @@ local
       end
 
       meth setBAB(?IsBAB)
-	 {self.Bab tk(configure o(text: case IsBAB then 'BAB' else '' end))}
+	 {self.Bab tk(conf text: case IsBAB then 'BAB' else '' end)}
       end
 
       meth setTime(T)
-	 {self.Time tk(configure o(text:T))}
+	 {self.Time tk(conf text:T)}
       end
       
       meth clear
@@ -198,7 +198,7 @@ local
 	 GetNodes     = @CurNodes
 	 GetSolutions = @CurSolutions
 	 GetFailures  = @CurFailures
-	 GetBlocked  = @CurBlocked
+	 GetBlocked   = @CurBlocked
       in
 	 case (GetBlocked==0) == (@IsPackedBlocked) then
 	    case @IsPackedBlocked then
@@ -206,15 +206,15 @@ local
 	       {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    else
 	       IsPackedBlocked <- True
-	       {Tk.send pack(self.BlockedImage self.Blocked o(side:left))}
+	       {Tk.send pack(self.BlockedImage self.Blocked side:left)}
 	    end
 	 else true end
-	 {self.Depth    tk(conf(text:GetDepth))}
-	 {self.Choose   tk(conf(text:GetNodes -
-				(GetSolutions+GetFailures+GetBlocked)))}
-	 {self.Solution tk(conf(text:GetSolutions))}
-	 {self.Failure  tk(conf(text:GetFailures))}
-	 {self.Blocked tk(conf(text:GetBlocked))}
+	 {self.Depth    tk(conf text:GetDepth)}
+	 {self.Choose   tk(conf
+			   text:GetNodes-(GetSolutions+GetFailures+GetBlocked))}
+	 {self.Solution tk(conf text:GetSolutions)}
+	 {self.Failure  tk(conf text:GetFailures)}
+	 {self.Blocked  tk(conf text:GetBlocked)}
       end
       
       meth addSolution(Depth)
@@ -232,7 +232,7 @@ local
 	 IncNodes = @CurNodes + 1
       in
 	 MaxDepth    <- {Max @MaxDepth Depth}
-	 CurBlocked <- @CurBlocked + 1
+	 CurBlocked  <- @CurBlocked + 1
 	 CurNodes    <- IncNodes
 	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
 	 else true end
@@ -240,7 +240,7 @@ local
 
       meth removeBlocked
 	 CurNodes    <- @CurNodes - 1
-	 CurBlocked <- @CurBlocked - 1
+	 CurBlocked  <- @CurBlocked - 1
       end
       
       meth addFailed(Depth)

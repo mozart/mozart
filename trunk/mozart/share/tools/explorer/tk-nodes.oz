@@ -31,10 +31,10 @@ local
 						 Y + UpperSpaceI div 2
 					      else Y
 					      end}
-			  o(font: Font
-			    text: N
-			    tags: q(NodePrefix#self.suffix
-				    Actions Numbers b(Above))))}
+			  font: Font
+			  text: N
+			  tags: q(NodePrefix#self.suffix
+				  Actions Numbers b(Above)))}
 	    end
 	 else N = @number
 	 end
@@ -53,10 +53,10 @@ local
 					   Y + UpperSpaceI div 2
 					else Y
 					end}
-		    o(font: Font
-		      text: @number
-		      tags: q(NodePrefix#self.suffix Numbers Actions
-			      b(Above))))}
+		    font: Font
+		    text: @number
+		    tags: q(NodePrefix#self.suffix Numbers Actions
+			    b(Above)))}
       end
 
       meth clearNumber
@@ -103,19 +103,6 @@ local
    
 
    local
-      TkMoveOpt     = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#ChooseTermColor#
-			  ' -width '#TermNodeBorderWidth}})
-      TkCreaTermOpt = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#ChooseTermColor#
-			  ' -width '#TermNodeBorderWidth}})
-      TkCreaOpt     = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#ChooseColor#
-			  ' -width '#NodeBorderWidth}})
-
       proc {Purge Ks}
 	 case Ks of nil then true
 	 [] K|Kr then {K purge} {Purge Kr}
@@ -140,7 +127,9 @@ local
 	    end
 	    {Canvas tk(move Node Scale*{IntToFloat MyByX} 0)}
 	    case @toDo\=nil orelse @isHidden then true else
-	       {Canvas tk(itemconfigure Node TkMoveOpt)}
+	       {Canvas tk(itemconfigure Node
+			  fill:  ChooseTermColor
+			  width: TermNodeBorderWidth)}
 	    end
 	 end
 
@@ -194,8 +183,8 @@ local
 			     ScaledMyY - Scale * UpperSpaceF
 			     ScaledMyX
 			     ScaledMyY - ScaledWidth
-			     o(tag:   q(LinkPrefix#Suffix MomTree)
-			       width: LinkWidth))}
+			     tag:   q(LinkPrefix#Suffix MomTree)
+			     width: LinkWidth)}
 	       end
 	       case @isHidden then
 		  ScaledVerSpace = Scale * VerSpaceF
@@ -209,28 +198,27 @@ local
 			     ScaledMyY + ScaledVerSpace
 			     ScaledMyX + ScaledHorSpace
 			     ScaledMyY + ScaledVerSpace
-			     o(tags:    q(Node Tree Actions)
-			       fill:    case @isSolBelow then
-					   case @choices>0 then
-					      SuspendedColor
-					   else EntailedColor end
-					else
-					   case @choices>0 then
-					      PartialFailedColor
-					   else FailedColor end
-					end
-			       width:   NodeBorderWidth
-			       outline: LineColor))}
+			     tags:    q(Node Tree Actions)
+			     fill:    case @isSolBelow then
+					 case @choices>0 then
+					    SuspendedColor
+					 else EntailedColor end
+				      else
+					 case @choices>0 then
+					    PartialFailedColor
+					 else FailedColor end
+				      end
+			     width:   NodeBorderWidth
+			     outline: LineColor)}
 		  case @number of !False then true elseof N then
 		     case Font==False then true else
 			{Canvas tk(crea text
 				   ScaledMyX
 				   ScaledMyY +
 				   (ScaledVerSpace - ScaledWidth) / 2.0
-				   o(font: Font
-				     text: N
-				     tags: q(Node Actions Tree
-					     Canvas.numbers)))}
+				   font: Font
+				   text: N
+				   tags: q(Node Actions Tree Canvas.numbers))}
 		     end
 		  end
 	       else
@@ -239,17 +227,20 @@ local
 			     ScaledMyY - ScaledWidth
 			     ScaledMyX + ScaledWidth
 			     ScaledMyY + ScaledWidth
-			     case @toDo==nil then TkCreaTermOpt
-			     else TkCreaOpt
+			     case @toDo==nil then
+				o(fill:  ChooseTermColor
+				  width: TermNodeBorderWidth)
+			     else
+				o(fill:  ChooseColor
+				  width: NodeBorderWidth)
 			     end
-			     o(tags: q(Node Tree Actions)))}
+			     tags: q(Node Tree Actions))}
 		  case @number of !False then true elseof N then
 		     case Font==False then true else
 			{Canvas tk(crea text ScaledMyX ScaledMyY
-				   o(font: Font
-				     text: N
-				     tags: q(Node Tree Actions
-					     Canvas.numbers)))}
+				   font: Font
+				   text: N
+				   tags: q(Node Tree Actions Canvas.numbers))}
 		     end
 		  end
 		  <<ChooseNode DrawKids(@kids Break Tree MyX MyY+VerSpaceI
@@ -320,28 +311,6 @@ local
 	 
       end
 
-      
-      TkFailedOpt   = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#FailedColor#
-			  ' -width '#TermNodeBorderWidth#
-			  ' -outline '#LineColor}})
-      TkBlockedOpt = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#BlockedColor#
-			  ' -width '#TermNodeBorderWidth#
-			  ' -outline '#LineColor}})
-      TkEntailedOpt = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#EntailedColor#
-			  ' -width '#TermNodeBorderWidth#
-			  ' -outline '#LineColor}})
-      TkSuspendedOpt   = v({String.toAtom
-			 {VirtualString.toString
-			  '-fill '#SuspendedColor#
-			  ' -width '#TermNodeBorderWidth#
-			  ' -outline '#LineColor}})
-
    in
 
       class FailedNode
@@ -366,16 +335,18 @@ local
 			  ScaledMyY - Scale * UpperSpaceF
 			  ScaledMyX
 			  ScaledMyY - ScaledWidth
-			  o(tag: q(LinkPrefix#Suffix MomTree)
-			    width: LinkWidth))}
+			  tag: q(LinkPrefix#Suffix MomTree)
+			  width: LinkWidth)}
 	    end
 	    {Canvas tk(crea rectangle
 		       ScaledMyX - ScaledWidth
 		       ScaledMyY - ScaledWidth
 		       ScaledMyX + ScaledWidth
-		       ScaledMyY + ScaledWidth
-		       TkFailedOpt
-		       o(tags: q(Node Tree MomTree)))}
+		       ScaledMyY + ScaledWidth      
+		       fill:    FailedColor
+		       width:   TermNodeBorderWidth
+		       outline: LineColor
+		       tags:    q(Node Tree MomTree))}
 	    isDrawn <- True
 	 end
 	 
@@ -428,13 +399,15 @@ local
 			  ScaledMyY - Scale * UpperSpaceF
 			  ScaledMyX
 			  ScaledMyY - ScaledHalfWidth
-			  o(tag:   q(LinkPrefix#Suffix MomTree)
-			    width: LinkWidth))}
+			  tag:   q(LinkPrefix#Suffix MomTree)
+			  width: LinkWidth)}
 	    end
 	    {Canvas tk(crea polygon
 		       X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
-		       TkBlockedOpt
-		       o(tags: q(Node Tree)))}
+		       fill:    BlockedColor
+		       width:   TermNodeBorderWidth
+		       outline: LineColor
+		       tags:    q(Node Tree))}
 	    isDrawn <- True
 	 end
 	 
@@ -458,7 +431,7 @@ local
 	 class SucceededNode
 	    from LeafNode NumberNode
 	    
-	    meth drawTree(MomTree MomX MyY Scale Font TkOpt)
+	    meth drawTree(MomTree MomX MyY Scale Font Color)
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
 	       ScaledWidth = Scale * RhombeWidthF
@@ -484,19 +457,21 @@ local
 			     ScaledMyY - Scale * UpperSpaceF
 			     ScaledMyX
 			     ScaledMyY - ScaledWidth
-			     o(tag:   q(LinkPrefix#Suffix MomTree)
-			       width: LinkWidth))}
+			     tag:   q(LinkPrefix#Suffix MomTree)
+			     width: LinkWidth)}
 	       end
 	       {Canvas tk(crea polygon X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
-			  TkOpt
-			  o(tags: q(Node Tree MomTree Actions)))}
+			  fill:    Color
+			  width:   TermNodeBorderWidth
+			  outline: LineColor
+			  tags:    q(Node Tree MomTree Actions))}
 	       case @number of !False then true elseof N then
 		  case Font==False then true else
 		     {Canvas tk(crea text ScaledMyX ScaledMyY
-				o(font: Font
-				  text: N
-				  tags: q(Node Tree MomTree Actions
-					  Canvas.numbers)))}
+				font: Font
+				text: N
+				tags: q(Node Tree MomTree Actions
+					Canvas.numbers))}
 		  end
 	       end
 	       isDrawn <- True
@@ -525,7 +500,7 @@ local
 	    
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					TkEntailedOpt)>>
+					EntailedColor)>>
 	    end
 	    
 	 end
@@ -536,7 +511,7 @@ local
 
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					TkSuspendedOpt)>>
+					SuspendedColor)>>
 	    end
 	    
 	 end
