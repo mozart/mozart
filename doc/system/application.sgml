@@ -30,6 +30,7 @@
         application's arguments, and for terminating applications.
         <List>
           <Entry><<getCgiArgs>>
+            <Index class=tails/<<Application>><And><<getCgiArgs>>/
           <Synopsis>
             <<{Application.getCgiArgs ?+{Spec} ??{R}}>>
           <Item>
@@ -39,6 +40,7 @@
             options in&nbsp;?_{R}.
 
           <Entry><<getCmdArgs>>
+            <Index class=tails/<<Application>><And><<getCmdArgs>>/
           <Synopsis>
             <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
           <Item>
@@ -48,6 +50,7 @@
             Returns the options in&nbsp;?_{R}.
 
           <Entry><<getGuiArgs>>
+            <Index class=tails/<<Application>><And><<getGuiArgs>>/
           <Synopsis>
             <<{Application.getGuiArgs ?+{Spec} ??{R}}>>
           <Item>
@@ -57,6 +60,7 @@
             Returns the options in&nbsp;?_{R}.
 
           <Entry><<getArgs>>
+            <Index class=tails/<<Application>><And><<getArgs>>/
           <Synopsis>
             <<{Application.getArgs ?+{Spec} ??{R}}>>
           <Item>
@@ -74,6 +78,7 @@
       <P>
         <List>
           <Entry><<exit>>
+            <Index class=tails/<<Application>><And><<exit>>/
           <Synopsis>
             <<{Application.exit ?+{I}}>>
           <Item>
