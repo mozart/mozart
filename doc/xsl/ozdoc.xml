@@ -373,7 +373,7 @@
 
 <xsl:template mode="ref" match="*">
 <xsl:text>{UNEXPECTED REF </xsl:text>
-<xsl:value-of select="@ID"/>
+<xsl:value-of select="tex:quote((string(@ID)))"/>
 <xsl:text>}</xsl:text>
 </xsl:template>
 
@@ -400,6 +400,9 @@
     </xsl:when>
     <xsl:when test="$to='ozdoc:fdt'">
      <xsl:text>Finite Domain Constraint Programming</xsl:text>
+    </xsl:when>
+    <xsl:when test="$to='ozdoc:notation'">
+     <xsl:text>The Oz Notation</xsl:text>
     </xsl:when>
     <xsl:otherwise>
      <xsl:text>!!!UNKNOWN REF!!!</xsl:text>
@@ -541,6 +544,12 @@
 
 <xsl:template match="PICTURE[@TYPE='LATEX']">
 <xsl:value-of select="."/>
+</xsl:template>
+
+<xsl:template match="PICTURE.EXTERN[@DISPLAY='DISPLAY' and @TYPE='LATEX']">
+<xsl:text>\begin{center}\begin{minipage}{\linewidth}\input{</xsl:text>
+<xsl:value-of select="@TO"/>
+<xsl:text>}\end{minipage}\end{center}</xsl:text>
 </xsl:template>
 
 <xsl:template match="Q">
