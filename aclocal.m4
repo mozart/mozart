@@ -140,7 +140,7 @@ AC_DEFUN(OZ_INIT, [
   OZ_ARG_WITH_LIB_DIR
   AC_SUBST(CPPFLAGS)
   AC_SUBST(LDFLAGS)
-#OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+  OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
 ])
 
 dnl ==================================================================
@@ -997,7 +997,7 @@ AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     AC_SUBST(CPPFLAGS)
     AC_SUBST(CXXFLAGS)
     AC_LANG_CPLUSPLUS
-    OZ_PATH_PROG(OZTOOL,oztool)
+dnl    OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
 ])
 
 
