@@ -331,13 +331,11 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
 	  return ret2;
 	}
       case SUSPEND:
-	DebugCheckT(printf("oz_bi_wrapper: unify suspend\n"));
 	am.emptySuspendVarList();
 	am.prepareCall(BI_Unify,X[inAr+i],savedX[i]);
 	ret1=BI_REPLACEBICALL;
 	break;
       case BI_REPLACEBICALL:
-	DebugCheckT(printf("oz_bi_wrapper: unify replcall\n"));
 	ret1=BI_REPLACEBICALL;
 	break;
       default:
