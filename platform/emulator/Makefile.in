@@ -59,7 +59,7 @@ BIMODSPECS = \
 	Lock Name Number Object Port Procedure Record \
 	String Thread Time Tuple Unit Value VirtualString \
 	BitString ByteString InterFault \
-	WeakDictionary \
+	WeakDictionary $(SITE_PROPERTY_SPECS) \
 	INTERNAL # do not include this at compiler (things will blow up!)
 
 MODSPECS= \
@@ -103,7 +103,7 @@ STORESRCS=\
 	susplist.cc \
 	var_base.cc var_ext.cc var_simple.cc var_future.cc \
 	namer.cc \
-	weakdict.cc
+	weakdict.cc $(SITE_PROPERTY_SRCS)
 
 RUNSRCS=\
 	am.cc unify.cc indexing.cc codearea.cc \
