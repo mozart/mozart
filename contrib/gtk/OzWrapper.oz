@@ -774,6 +774,9 @@ define
 	     proc {$ Line}
 		TextFile, putS(Line)
 	     end}
+	    %% GDK/GTK 1.2 still has these crappy functions
+	 [] "gdkWindowRef"   then skip
+	 [] "gdkWindowUnref" then skip
 	 elsecase ShortName
 	 of "ref" then
 	    Var = if ResStart == nil then "" else " _" end
