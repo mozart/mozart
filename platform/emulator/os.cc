@@ -894,8 +894,9 @@ char *oslocalhostname()
   char buf[1000];
   int aux = gethostname(buf,sizeof(buf));
   if (aux < 0) {
-    OZ_warning("cannot determine hostname\n");
-    sprintf(buf,"%s","localhost");
+    // OZ_warning("cannot determine hostname\n");
+    // sprintf(buf,"%s","localhost");
+    return 0;
   }
   return strdup(buf);
 #else
