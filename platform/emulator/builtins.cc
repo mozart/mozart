@@ -1916,6 +1916,49 @@ OZ_Return labelInline(TaggedRef term, TaggedRef &out)
 
 DECLAREBI_USEINLINEFUN1(BIlabel,labelInline)
 
+OZ_Return hasLabelInline(TaggedRef term, TaggedRef &out)
+{
+  // Wait for term to be a record with determined label:
+  // Get the term's label, if it exists
+  DEREF(term,_1,tag);
+  switch (tag) {
+  case LTUPLE:
+    out=NameTrue;
+    return PROCEED;
+  case LITERAL:
+    out=NameTrue;
+    return PROCEED;
+  case SRECORD:
+  record:
+    out=NameTrue;
+    return PROCEED;
+  case UVAR:
+  case SVAR:
+    out=NameFalse;
+    return PROCEED;
+  case CVAR:
+    switch (tagged2CVar(term)->getType()) {
+    case OFSVariable:
+      {
+        TaggedRef thelabel=tagged2GenOFSVar(term)->getLabel(); 
+        DEREF(thelabel,_1,_2);
+        out = isAnyVar(thelabel) ? NameFalse : NameTrue;
+	return PROCEED;
+      }
+    case FDVariable:
+    case BoolVariable:
+      TypeErrorT(0,"Record");
+    default:
+      out=NameFalse;
+      return PROCEED;
+    }
+  default:
+    TypeErrorT(0,"Record");
+  }
+}
+
+DECLAREBI_USEINLINEFUN1(BIhasLabel,hasLabelInline)
+
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
  */
@@ -7269,7 +7312,8 @@ BIspec allSpec2[] = {
 
   {"ProcedureArity",2,BIprocedureArity,	 (IFOR)procedureArityInline},
   {"MakeTuple",3,BItuple,              (IFOR) tupleInline},
-  {"Label",2,BIlabel,              (IFOR) labelInline},
+  {"Label",2,BIlabel,                  (IFOR) labelInline},
+  {"hasLabel",2,BIhasLabel,            (IFOR) hasLabelInline},
 
   {"TellRecord",  2, BIrecordTell,	0},
   {"WidthC",      2, BIwidthC,		0},
