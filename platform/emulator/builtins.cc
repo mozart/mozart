@@ -5751,14 +5751,21 @@ OZ_Return printInline(TaggedRef term)
 
 DECLAREBI_USEINLINEREL1(BIprint,printInline)
 
-OZ_C_proc_begin(BIprintVS,1)
-{
+OZ_C_proc_begin(BIprintInfo,1) {
   OZ_Term t=OZ_getCArg(0);
   OZ_printVirtualString(t);
   fflush(stdout);
   return PROCEED;
-}
-OZ_C_proc_end
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIprintError,1) {
+  OZ_Term t=OZ_getCArg(0);
+  // print popup code for opi
+  if (!am.isStandalone()) printf("\021");
+  OZ_printVirtualString(t);
+  fflush(stdout);
+  return PROCEED;
+} OZ_C_proc_end
 
 OZ_C_proc_begin(BItermToVS,4)
 {
@@ -7155,7 +7162,6 @@ BIspec allSpec2[] = {
   {"dlClose",1,         BIdlClose,		0},
 
   {"findFunction",   3, BIfindFunction,		0},
-  {"shutdown",       0, BIshutdown,		0},
 
   {"Alarm",          2, BIalarm,		0},
   {"Delay",          1, BIdelay,		0},
@@ -7180,37 +7186,10 @@ BIspec allSpec2[] = {
   {"getLingRefFd",   1, BIgetLingRefFd,		0},
   {"getLingEof",     1, BIgetLingEof,		0},
   {"getOzEof",       1, BIgetLingEof,		0},
-  {"System.nbSusps", 2, BIconstraints,		0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
   {"showBuiltins",0,BIshowBuiltins},
-  {"Print", 1, BIprint,  (IFOR) printInline},
-  {"Show",  1, BIshow,   (IFOR) showInline},
-
-  {"SystemGetThreads",    1, BISystemGetThreads},
-  {"SystemGetPriorities", 1, BISystemGetPriorities},
-  {"SystemGetTime",       1, BISystemGetTime},
-  {"SystemGetGC",         1, BISystemGetGC},
-  {"SystemGetPrint",      1, BISystemGetPrint},
-  {"SystemGetFD",         1, BISystemGetFD},
-  {"SystemGetSpaces",     1, BISystemGetSpaces},
-  {"SystemGetErrors",     1, BISystemGetErrors},
-  {"SystemGetMessages",   1, BISystemGetMessages},
-  {"SystemGetMemory",     1, BISystemGetMemory},
-  {"SystemGetLimits",     1, BISystemGetLimits},
-  {"SystemGetArgv",       1, BISystemGetArgv},
-  {"SystemGetStandalone", 1, BISystemGetStandalone},
-  {"SystemGetHome",       1, BISystemGetHome},
-  {"SystemGetPlatform",   1, BISystemGetPlatform},
-
-  {"SystemSetPriorities", 1, BISystemSetPriorities},
-  {"SystemSetPrint",      1, BISystemSetPrint},
-  {"SystemSetFD",         1, BISystemSetFD},
-  {"SystemSetGC",         1, BISystemSetGC},
-  {"SystemSetErrors",     1, BISystemSetErrors},
-  {"SystemSetMessages",   1, BISystemSetMessages},
-  {"SystemSetInternal",   1, BISystemSetInternal},
 
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
@@ -7267,14 +7246,45 @@ BIspec allSpec2[] = {
   {"traceOff",    0, BItraceOff},
   {"Debug.displayCode", 2, BIdisplayCode},
 
-  {"System.printName",2,BIgetPrintName},
+  // System functionality
+  {"Print",                       1, BIprint,  (IFOR) printInline},
+  {"Show",                        1, BIshow,   (IFOR) showInline},
+  {"System.printInfo",            1, BIprintInfo},
+  {"System.printError",           1, BIprintError},
+  {"System.valueToVirtualString", 4, BItermToVS},
+  {"System.printName",            2, BIgetPrintName},
+  {"System.nbSusps",              2, BIconstraints, 0},
 
+  {"SystemGetThreads",    1, BISystemGetThreads},
+  {"SystemGetPriorities", 1, BISystemGetPriorities},
+  {"SystemGetTime",       1, BISystemGetTime},
+  {"SystemGetGC",         1, BISystemGetGC},
+  {"SystemGetPrint",      1, BISystemGetPrint},
+  {"SystemGetFD",         1, BISystemGetFD},
+  {"SystemGetSpaces",     1, BISystemGetSpaces},
+  {"SystemGetErrors",     1, BISystemGetErrors},
+  {"SystemGetMessages",   1, BISystemGetMessages},
+  {"SystemGetMemory",     1, BISystemGetMemory},
+  {"SystemGetLimits",     1, BISystemGetLimits},
+  {"SystemGetArgv",       1, BISystemGetArgv},
+  {"SystemGetStandalone", 1, BISystemGetStandalone},
+  {"SystemGetHome",       1, BISystemGetHome},
+  {"SystemGetPlatform",   1, BISystemGetPlatform},
+
+  {"SystemSetPriorities", 1, BISystemSetPriorities},
+  {"SystemSetPrint",      1, BISystemSetPrint},
+  {"SystemSetFD",         1, BISystemSetFD},
+  {"SystemSetGC",         1, BISystemSetGC},
+  {"SystemSetErrors",     1, BISystemSetErrors},
+  {"SystemSetMessages",   1, BISystemSetMessages},
+  {"SystemSetInternal",   1, BISystemSetInternal},
+
+  {"shutdown",       0, BIshutdown,		0},
   {"ozparser_parse",2,ozparser_parse},
   {"ozparser_init",0,ozparser_init},
   {"ozparser_exit",0,ozparser_exit},
 
-  {"printVS",1,BIprintVS},
-  {"termToVS",4,BItermToVS},
+
   {"getTermSize",4,BIgetTermSize},
 
   {"dumpThreads",0,BIdumpThreads},
