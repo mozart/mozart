@@ -80,6 +80,7 @@
 <!ENTITY chapter.remote      SYSTEM "remote.sgml">
 <!ENTITY chapter.resolve     SYSTEM "resolve.sgml">
 <!ENTITY chapter.urlurl      SYSTEM "url.sgml">
+<!ENTITY chapter.discovery   SYSTEM "discovery.sgml">
 
 
 <!-- Open programming -->
@@ -208,6 +209,7 @@
     <Meta name="html.split"       value="chapter.fault">
     <Meta name="html.split"       value="chapter.urlurl">
     <Meta name="html.split"       value="chapter.resolve">
+    <Meta name="html.split"       value="chapter.discovery">
 
     <!-- Open programming -->
 
@@ -316,6 +318,7 @@
     &chapter.urlurl;
     &chapter.resolve;
     &chapter.fault;
+    &chapter.discovery;
   </Part>
 
   <Part id="Part.Open">

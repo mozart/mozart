@@ -49,12 +49,10 @@
 
      'getBroadcastAddresses' => { in  => [],
 				  out => ['+[string]'],
-				  bi  => BIgetBroadcastAddresses,
-                                  ifdef => MISC_BUILTINS},
+				  bi  => BIgetBroadcastAddresses},
 
      'sockoptBroadcast'      => { in  => ['+int'],
 				  out => [],
-				  bi  => BIsockoptBroadcast,
-                                  ifdef => MISC_BUILTINS}
+				  bi  => BIsockoptBroadcast}
      );
 
