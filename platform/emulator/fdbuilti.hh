@@ -483,14 +483,41 @@ TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3)
 }
 
 inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2,
-			 TaggedRef t3, TaggedRef t4)
+TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
+                         TaggedRef t4)
 {
   TaggedRef * a = (TaggedRef *) heapMalloc(4 * sizeof(TaggedRef));
   a[0] = t1;
   a[1] = t2;
   a[2] = t3;
   a[3] = t4;
+  return a;  
+}
+
+inline
+TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
+                         TaggedRef t4, TaggedRef t5)
+{
+  TaggedRef * a = (TaggedRef *) heapMalloc(5 * sizeof(TaggedRef));
+  a[0] = t1;
+  a[1] = t2;
+  a[2] = t3;
+  a[3] = t4;
+  a[4] = t5;
+  return a;  
+}
+
+inline
+TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
+                         TaggedRef t4, TaggedRef t5, TaggedRef t6)
+{
+  TaggedRef * a = (TaggedRef *) heapMalloc(6 * sizeof(TaggedRef));
+  a[0] = t1;
+  a[1] = t2;
+  a[2] = t3;
+  a[3] = t4;
+  a[4] = t5;
+  a[5] = t6;
   return a;  
 }
 
