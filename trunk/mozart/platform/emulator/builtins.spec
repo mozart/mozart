@@ -1007,11 +1007,6 @@ $cmode='stat';
 			     BI  => BIthreadSuspend,
 			     native => false},
 
-    'Thread.unleash'	=> { in  => ['+thread','+int'],
-			     out => [],
-			     BI  => BIthreadUnleash,
-			     native => false},
-
     'Thread.resume'	=> { in  => ['+thread'],
 			     out => [],
 			     BI  => BIthreadResume,
@@ -1344,6 +1339,11 @@ $cmode='stat';
 			     native => false},
 
 
+    'chunkArity'	=> { in  => ['+chunk'],
+			     out => ['+[feature]'],
+			     BI  => BIchunkArity,
+			     native => true},
+
 
 
 
@@ -1371,6 +1371,40 @@ $cmode='stat';
 			     native => true},
 
 
+    #* Fault
+
+    'installHW'	        => { in  => ['value','value','value'],
+			     out => [],
+			     BI  => BIhwInstall,
+			     native => true},
+
+    'deInstallHW'	=>  { in  => ['value','value','value'],
+			     out => [],
+			     BI  => BIhwDeInstall,
+			     native => true},
+
+    'setNetBufferSize' 	=>  { in  => ['+value'],
+			     out => [],
+			     BI  => BIsetNetBufferSize,
+			     native => true},
+
+    'getNetBufferSize' 	=>  { in  => [],
+			     out => ['value'],
+			     BI  => BIgetNetBufferSize,
+			     native => true},
+
+    'getEntityCond'	=>  { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIgetEntityCond,
+			     native => true},
+
+    'tempSimulate'	=> { in  => ['+int'],
+			     out => ['+int'],
+			     BI  => BIcloseCon,
+			     module=>'perdio',
+			     native => true},
+
+
     #* Distribution
 
     'export'		=> { in  => ['value'],
@@ -1378,6 +1412,128 @@ $cmode='stat';
 			     BI  => BIexport,
 			     module=>components,
 			     native => false},
+
+
+    #* Virtual Sites
+
+    'VirtualSite.newMailbox' => { in     => [],
+				  out    => ['+string'],
+				  BI     => BIVSnewMailbox,
+				  module => vs,
+				  native => true},
+
+    'VirtualSite.initServer' => { in     => ['+string'],
+				  out    => [],
+				  BI     => BIVSinitServer,
+				  module => vs,
+				  native => true},
+
+    'VirtualSite.removeMailbox' => { in     => ['+string'],
+				  out    => [],
+				  BI     => BIVSremoveMailbox,
+				  module => vs,
+				  native => true},
+
+    ###* Debugger Internal
+
+    'Thread.unleash'	=> { in  => ['+thread','+int'],
+			     out => [],
+			     BI  => BIthreadUnleash,
+			     native => false},
+
+    'Debug.getStream'	=> { in  => [],
+			     out => ['value'],
+			     BI  => BIgetDebugStream,
+			     native => true},
+
+    'Debug.setStepFlag'	=> { in  => ['+thread','+bool'],
+			     out => [],
+			     BI  => BIsetStepFlag,
+			     native => true},
+
+    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
+			     out => [],
+			     BI  => BIsetTraceFlag,
+			     native => true},
+
+    'Debug.checkStopped'=> { in  => ['+thread'],
+			     out => ['+bool'],
+			     BI  => BIcheckStopped,
+			     native => true},
+
+    'Debug.print'	=> { in  => ['value','+int'],
+			     out => [],
+			     BI  => BIdebugPrint,
+			     ifdef=>'DEBUG_PRINT',
+			     native => true},
+
+    'Debug.printLong'	=> { in  => ['value','+int'],
+			     out => [],
+			     BI  => BIdebugPrintLong,
+			     ifdef=>'DEBUG_PRINT',
+			     native => true},
+
+    'Debug.prepareDumpThreads'	=> { in  => [],
+				     out => [],
+				     BI  => BIprepareDumpThreads,
+				     native => true},
+    
+    'Debug.dumpThreads'	=> { in  => [],
+			     out => [],
+			     BI  => BIdumpThreads,
+			     native => true},
+
+    'Debug.listThreads'	=> { in  => [],
+			     out => ['+[thread]'],
+			     BI  => BIlistThreads,
+			     native => true},
+
+    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
+			     out => ['+bool'],
+			     BI  => BIbreakpointAt,
+			     native => true},
+
+    'Debug.breakpoint'	=> { in  => [],
+			     out => [],
+			     BI  => BIbreakpoint,
+			     native => true},
+
+    'Debug.displayDef'	=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIdisplayDef,
+			     native => true},
+
+    'Debug.displayCode'	=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIdisplayCode,
+			     native => true},
+
+    'Debug.procedureCode'=> { in  => ['+procedure'],
+			      out => ['+int'],
+			      BI  => BIprocedureCode,
+			      native => true},
+    
+    'Debug.procedureCoord'=> { in  => ['+procedure'],
+			       out => ['+record'],
+			       BI  => BIprocedureCoord,
+			       native => true},
+
+
+    #* Unclassified
+
+    ##* Ozma
+
+    'ozma_readProc'	=> { in     => ['+virtualString'],
+			     out    => ['+value'],
+			     BI     => ozma_readProc,
+			     ifdef  => MODULES_LINK_STATIC,
+			     native => true},
+
+
+
+    ###
+    ### Misc stuff
+    ###
 
     'PerdioVar.is'	=> { in  => ['value'],
 			     out => ['+bool'],
@@ -1396,32 +1552,7 @@ $cmode='stat';
 			     doesNotReturn=>1,
 			     native => true},
 
-    'installHW'	        => { in  => ['value','value','value'],
-			     out => [],
-			     BI  => BIhwInstall,
-			     native => true},
 
-    'deInstallHW'	=>  { in  => ['value','value','value'],
-			     out => [],
-			     BI  => BIhwDeInstall,
-			     native => true},
-
-
-
-    'setNetBufferSize' 	=>  { in  => ['+value'],
-			     out => [],
-			     BI  => BIsetNetBufferSize,
-			     native => true},
-
-    'getNetBufferSize' 	=>  { in  => [],
-			     out => ['value'],
-			     BI  => BIgetNetBufferSize,
-			     native => true},
-
-    'getEntityCond'	=>  { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIgetEntityCond,
-			     native => true},
 
 
 
@@ -1434,12 +1565,6 @@ $cmode='stat';
 			     out => [],
 			     BI  => BIdvset,
 			     ifdef=>DEBUG_PERDIO,
-			     module=>'perdio',
-			     native => true},
-
-    'tempSimulate'	=> { in  => ['+int'],
-			     out => ['+int'],
-			     BI  => BIcloseCon,
 			     module=>'perdio',
 			     native => true},
 
@@ -1492,144 +1617,21 @@ $cmode='stat';
 			     bi  => BIslowNet,
 			     native => true},
     
-
-    #* Virtual Sites
-
-    'VirtualSite.newMailbox' => { in     => [],
-				  out    => ['+string'],
-				  BI     => BIVSnewMailbox,
-				  module => vs,
-				  native => true},
-
-    'VirtualSite.initServer' => { in     => ['+string'],
-				  out    => [],
-				  BI     => BIVSinitServer,
-				  module => vs,
-				  native => true},
-
-    'VirtualSite.removeMailbox' => { in     => ['+string'],
-				  out    => [],
-				  BI     => BIVSremoveMailbox,
-				  module => vs,
-				  native => true},
-
-    ###* Debugger Internal
-
-    'Debug.getStream'	=> { in  => [],
-			     out => ['value'],
-			     BI  => BIgetDebugStream,
-			     native => true},
-
-    'Debug.setStepFlag'	=> { in  => ['+thread','+bool'],
-			     out => [],
-			     BI  => BIsetStepFlag,
-			     native => true},
-
-    'Debug.setTraceFlag'=> { in  => ['+thread','+bool'],
-			     out => [],
-			     BI  => BIsetTraceFlag,
-			     native => true},
-
-    'Debug.checkStopped'=> { in  => ['+thread'],
-			     out => ['+bool'],
-			     BI  => BIcheckStopped,
-			     native => true},
-
-    'Debug.print'	=> { in  => ['value','+int'],
-			     out => [],
-			     BI  => BIdebugPrint,
-			     ifdef=>'DEBUG_PRINT',
-			     native => true},
-
-    'Debug.printLong'	=> { in  => ['value','+int'],
-			     out => [],
-			     BI  => BIdebugPrintLong,
-			     ifdef=>'DEBUG_PRINT',
-			     native => true},
-
-    'procedureEnvironment'=> { in  => ['+procedure'],
-			       out => ['+tuple'],
-			       BI  => BIprocedureEnvironment,
-			       native => true},
-
-    'chunkArity'	=> { in  => ['+chunk'],
-			     out => ['+[feature]'],
-			     BI  => BIchunkArity,
-			     native => true},
-
     'Debug.inspect'     => { in  => ['value'],
                              out => ['+value'],
 			     BI  => BIinspect,
 		             native => true},
 
-    ###* Debugger External
-
-    'Debug.prepareDumpThreads'	=> { in  => [],
-				     out => [],
-				     BI  => BIprepareDumpThreads,
-				     native => true},
-    
-    'Debug.dumpThreads'	=> { in  => [],
-			     out => [],
-			     BI  => BIdumpThreads,
-			     native => true},
-
-    'Debug.listThreads'	=> { in  => [],
-			     out => ['+[thread]'],
-			     BI  => BIlistThreads,
-			     native => true},
-
-    'Debug.breakpointAt'=> { in  => ['+atom','+int','+bool'],
-			     out => ['+bool'],
-			     BI  => BIbreakpointAt,
-			     native => true},
-
-    'Debug.breakpoint'	=> { in  => [],
-			     out => [],
-			     BI  => BIbreakpoint,
-			     native => true},
-
-    'Debug.displayDef'	=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIdisplayDef,
-			     native => true},
-
-    'Debug.displayCode'	=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIdisplayCode,
-			     native => true},
-
-    'Debug.procedureCode'=> { in  => ['+procedure'],
-			      out => ['+int'],
-			      BI  => BIprocedureCode,
-			      native => true},
-    
-    'Debug.procedureCoord'=> { in  => ['+procedure'],
-			       out => ['+record'],
-			       BI  => BIprocedureCoord,
-			       native => true},
 
     'Debug.livenessX'	=> { in  => ['+int'],
 			     out => ['+int'],
 			     BI  => BIlivenessX,
 			     native => true},
 
-
-    #* Unclassified
-
-    ##* Ozma
-
-    'ozma_readProc'	=> { in     => ['+virtualString'],
-			     out    => ['+value'],
-			     BI     => ozma_readProc,
-			     ifdef  => MODULES_LINK_STATIC,
-			     native => true},
-
-
-
-    ###
-    ### Misc stuff
-    ###
+    'procedureEnvironment'=> { in  => ['+procedure'],
+			       out => ['+tuple'],
+			       BI  => BIprocedureEnvironment,
+			       native => true},
 
     'statisticsPrint'	=> { in  => ['+virtualString'],
 			     out => [],
