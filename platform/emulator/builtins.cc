@@ -7475,6 +7475,7 @@ BIspec allSpec[] = {
   {"Debug.breakpointAt",4,BIbreakpointAt},
   {"Debug.breakpoint",0,BIbreakpoint},
   {"Debug.displayCode", 2, BIdisplayCode},
+  {"waitForArbiter", 1, BIisValue, (IFOR) isValueInline},
 
   {"topVarInfo",2,BItopVarInfo},
   {"topVars",2,BItopVars},
