@@ -27,13 +27,10 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 
 dnl mm2: Known Problems and Bugs
-dnl  SunPro feature
 dnl  Warnings pedwarn
 dnl  Windows support
 dnl  pmake support
 dnl  ensure that all needed programs are really found
-dnl  make all options as orthogonal as possible and print a warning if
-dnl   an option makes no sense (PGCC and debug)
 
 dnl *****************************************************************
 dnl INITIALIZE
@@ -66,10 +63,6 @@ fi
 TOPDIRA=`(cd $TOPDIR; pwd)`
 AC_SUBST(TOPDIR)
 AC_SUBST(TOPDIRA)
-
-# set OZVERSION
-. $TOPDIR/VERSION
-AC_SUBST(OZVERSION)
 
 dnl *****************************************************************
 dnl windows cross compilation
@@ -146,9 +139,8 @@ AC_ARG_WITH(sunpro,
 	    then
 		CC=cc
 		CXX=$SUNPRO
-		O_OPT="-fast"
-		DEPEND="$CXX -xM"
 		AC_DEFINE(SUNPRO)
+		: ${enable_threaded=no}
 	    else
 		AC_MSG_WARN(Ingnoring --with-sunpro!)
 	    fi
@@ -240,6 +232,12 @@ if test "${GXX}" = yes; then
     fi
 fi
 
+if test -n "${SUNPRO}"
+then
+    O_OPT="-fast"
+    DEPEND="$CXX -xM"
+fi
+
 : ${O_OPT="-O"}
 : ${G_OPT="-g"}
 
@@ -275,9 +273,9 @@ fi
 AC_SUBST(LD)
 
 AC_CHECK_LIB(intl, main)
-AC_CHECK_LIB(nsl, main)
-AC_CHECK_LIB(socket, main)
-AC_CHECK_LIB(m, main)
+AC_CHECK_LIB(nsl, gethostbyaddr)
+AC_CHECK_LIB(socket, socket)
+AC_CHECK_LIB(m, fabs)
 AC_CHECK_LIB(kernel32,main)
 AC_CHECK_LIB(wsock32,main)
 
@@ -313,7 +311,9 @@ dnl *****************************************************************
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl *****************************************************************
 
-AC_C_CONST
+dnl const test not needed for C++!
+dnl AC_C_CONST
+
 AC_C_INLINE
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
