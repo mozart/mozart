@@ -925,7 +925,7 @@ TaggedRef listifyWatcherCond(EntityCond ec){
 /*   gc                           */
 /**********************************************************************/
 
-void gcEntityInfo(Tertiary *t) {
+void gcEntityInfoImpl(Tertiary *t) {
   EntityInfo* info = t->getInfo();
   if (info==NULL) return;
   EntityInfo *newInfo = (EntityInfo *) gcRealloc(info,sizeof(EntityInfo));

@@ -32,8 +32,8 @@ SRCDIR=	@srcdir@
 
 include Makefile.vars
 
-DYN_MODULE_NAMES =\
-	Wif Schedule FDP FSP Parser \
+DYN_MODULE_NAMES =							\
+	dp PID Fault DPMisc VirtualSite Wif Schedule FDP FSP Parser	\
 	CompilerSupport Browser Debug
 
 STATIC_MODULELIBS=	-L. ${DYN_MODULE_NAMES:%=-l%}
@@ -47,17 +47,13 @@ CORE_MODULE_NAMES=	Run OF FS FD CPI OS Space Store Mem Pickle Support
 # CORE_LIBS=	-L. ${CORE_MODULE_NAMES:%=-l%}
 CORE_TARGETS=	${CORE_MODULE_NAMES:%=lib%.a}
 
-# kost@, Per: let's link against libdp statically (so far);
-# mm2: removed from DYN_MODULE_NAMES to fix parallel make problem
-CORE_LIBS=	-L. libDP.a
+CORE_LIBS=	-L.
 LIBS=		$(CORE_LIBS) @LIBS@
 
 INCS=		-I. -I$(SRCDIR)
 M4_D=		-DEMUDIR=$(SRCDIR)
 TARGETS=	@TARGETS@ text2pickle
 MODULETARGETS=	@MODULETARGETS@
-# kost@, Per: temporary: include libDP.a:
-MODULETARGETS += libDP.a
 MODULEINSTALL=	@MODULEINSTALL@  
 SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
@@ -96,7 +92,7 @@ OTHERSRCS= \
 	version.cc initffuns.cc \
 	statisti.cc trace.cc \
 	print.cc base.cc ozconfig.cc \
-	foreign.cc boot-manager.cc \
+	foreign.cc dpInterface.cc boot-manager.cc \
 	builtins.cc vprops.cc debug.cc
 
 SUPPORTSRCS=\
@@ -188,8 +184,24 @@ bootstrap:: all
 
 $(MODINTERS): bidecl.perl
 
-.PHONY: libDP.a DP.so
-libDP.a DP.so:
+.PHONY: libdp.a dp.so
+libdp.a dp.so:
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libPID.a PID.so
+libPID.a PID.so:
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libFault.a Fault.so
+libFault.a Fault.so:
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libDPMisc.a DPMisc.so
+libDPMisc.a DPMisc.so:
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libVirtualSite.a VirtualSite.so
+libVirtualSite.a VirtualSite.so:
 	cd libdp; $(MAKE) ../$@
 
 .PHONY: libFDP.a FDP.so libSchedule.a Schedule.so

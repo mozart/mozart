@@ -94,7 +94,7 @@ define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mx
 include(EMUDIR/msgFormat.m4)
 
 void marshalDSite(DSite *, MsgBuffer *);
-void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass);
+void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass);
 void marshalFullObject(Object *o,MsgBuffer* bs);
 void marshalFullObjectAndClass(Object *o,MsgBuffer* bs);
 void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs);
@@ -131,6 +131,13 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi);
 void marshalToOwner(int bi,MsgBuffer *bs);
 void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
 void marshalOwnHead(int tag,int i,MsgBuffer *bs);
+
+//
+Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
+OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag);
+OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt);
+void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs);
+void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail);
 
 #endif // __MARSHALER_M4HH
 

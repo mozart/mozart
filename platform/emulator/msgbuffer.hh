@@ -74,7 +74,7 @@ public:
   BYTE get(){
     if(posMB==endMB){
       return getNext();}
-    DebugCode(maybeDebugBufferGet(*posMB););
+    DebugCode((*maybeDebugBufferGet)(*posMB););
     return *posMB++;}
 
   void put(BYTE b){
@@ -83,7 +83,7 @@ public:
       putNext(b);
       return;}
     *posMB++=b;
-    DebugCode(maybeDebugBufferPut(*posMB););
+    DebugCode((*maybeDebugBufferPut)(*posMB););
   }
       
   //

@@ -58,4 +58,8 @@ extern int PortSendTreash;
 extern int PortWaitTimeSlice;
 extern int PortWaitTimeK;
 
+//
+OZ_Return portSendImpl(Tertiary *p, TaggedRef msg);
+void gcDistPortRecurseImpl(Tertiary *p);
+
 #endif

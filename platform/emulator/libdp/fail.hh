@@ -143,7 +143,7 @@ public:
   EntityCond getWatchCond(){return watchcond;}
 };
 
-void gcEntityInfo(Tertiary *t);
+void gcEntityInfoImpl(Tertiary *t);
 
 #define DefaultThread ((Thread*)0x3)
 //

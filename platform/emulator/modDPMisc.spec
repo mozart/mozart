@@ -54,6 +54,11 @@
     'slowNet'           => { in  => ['+int', '+int'],
 			     out => [],
 			     bi  => BIslowNet},
+
+    'tempSimulate'	=> { in  => ['+int'],
+			     out => ['+int'],
+			     BI  => BIcloseCon},
+
  );
 
 

@@ -30,6 +30,7 @@
 #endif
 
 #include "var_future.hh"
+#include "dpInterface.hh"
 #include "builtins.hh"
 #include "unify.hh"
 #include "thr_int.hh"
@@ -168,9 +169,6 @@ OZ_BI_define(BIbyNeed,1,1)
   OZ_RETURN(makeTaggedRef(newTaggedCVar(new Future(p,oz_currentBoard()))));
 } OZ_BI_end
 
-extern
-OZ_Return portSend(Tertiary *p, TaggedRef msg);
-
 // PORTS with Futures
 
 OZ_BI_define(BInewPortF,0,2)
@@ -192,7 +190,7 @@ OZ_Return sendPortF(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(port->isProxy()) {
-    return portSend(port,val);
+    return (*portSend)(port,val);
   } 
   OZ_Term newFut = oz_newFuture(oz_currentBoard());
   OZ_Term lt  = oz_cons(am.currentUVarPrototype(),newFut);

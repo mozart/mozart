@@ -2465,14 +2465,14 @@ public:
 
   void lock(Thread *t){
     if(sec->secLockB(t)) return;
-    lockLockManagerOutline(this, t);
+    (*lockLockManagerOutline)(this, t);
   }
 
   LockSecEmul *getSec(){return sec;}
 
   Bool lockB(Thread *t){
     if(sec->secLockB(t)) return TRUE;
-    lockLockManagerOutline(this, t);
+    (*lockLockManagerOutline)(this, t);
     return FALSE;}
 
   void unlock(Thread *t){
@@ -2484,7 +2484,7 @@ public:
     Assert(sec->state & Cell_Lock_Valid);
     sec->locker=NULL;
     if((sec->state==Cell_Lock_Valid) && sec->pending==NULL) return;
-    unlockLockManagerOutline(this, t);
+    (*unlockLockManagerOutline)(this, t);
   }
 
   PendThread* getPending() { return sec->pending; }
@@ -2505,12 +2505,12 @@ public:
 
   void lock(Thread *t){
     if(sec->secLockB(t)) return;
-    lockLockFrameOutline(this, t);
+    (*lockLockFrameOutline)(this, t);
   }
 
   Bool lockB(Thread *t){
     if(sec->secLockB(t)) return TRUE;
-    lockLockFrameOutline(this, t);
+    (*lockLockFrameOutline)(this, t);
     return FALSE;}
 
   void unlock(Thread *t){
@@ -2522,7 +2522,7 @@ public:
     sec->locker=NULL;
     if((sec->state==Cell_Lock_Valid) && (sec->pending==NULL)){
       return;}
-    unlockLockFrameOutline(this, t);
+    (*unlockLockFrameOutline)(this, t);
   }
 
   LockSecEmul* getSec() { return sec; }

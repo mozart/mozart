@@ -179,7 +179,7 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 /* ---------------------------------------------------------------------- */
 
 OZ_Return sendRedirect(DSite*, int, TaggedRef);
-OZ_Term unmarshalVar(MsgBuffer*);
-Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs);
+OZ_Term unmarshalVarImpl(MsgBuffer*);
+Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
 
 #endif
