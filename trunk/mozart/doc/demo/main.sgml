@@ -90,6 +90,16 @@
     <meta name="html.split"	  value="code.cutting.main">
     <meta name="html.split"	  value="code.cutting.script">
 
+    <meta name="html.split"	  value="code.college.problem">
+    <meta name="html.split"	  value="code.college.main">
+    <meta name="html.split"	  value="code.college.common">
+    <meta name="html.split"	  value="code.college.controller">
+    <meta name="html.split"	  value="code.college.scheduler">
+    <meta name="html.split"	  value="code.college.graphics">
+    <meta name="html.split"	  value="code.college.latex">
+    <meta name="html.split"	  value="code.college.">
+
+
     <Meta name="html.split"       value="chapter.trucks">
     <meta name="html.split"	  value="code.trucks">
     <Meta name="html.split"       value="chapter.bounce">
