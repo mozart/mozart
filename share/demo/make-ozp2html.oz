@@ -64,7 +64,7 @@ local
    import
       Open
       Syslet.{args exit}
-      Component
+      Pickle
 
    body
 
@@ -78,7 +78,7 @@ local
 
       F = {New HtmlOut init}
 
-      Page = {Component.load Syslet.args.ozp}
+      Page = {Pickle.load Syslet.args.ozp}
 
       {F
        tag(html(head(title(Page.title)
