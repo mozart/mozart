@@ -27,7 +27,7 @@ local
    MozartUrl = 'http://www.ps.uni-sb.de/ozhome/'
 
    LibNames = ['Application'
-	       'Search' 'FD' 'FS'
+	       'Search' 'FD' 'Schedule' 'FS'
 	       'System' 'Error' 'Debug' 'Finalize' 'Foreign'
 	       'Connection' 'Remote'
 	       'OS' 'Open' 'Component'

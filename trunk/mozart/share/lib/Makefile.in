@@ -42,7 +42,7 @@ export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 SPSRC = System Debug Foreign Error Finalize
 OPSRC = OS Open Component
 APSRC = Application
-CPSRC = Search FD FS
+CPSRC = Search FD Schedule FS
 DPSRC = Connection Remote
 WPSRC = Tk TkTools
 MISCSRC = Misc
