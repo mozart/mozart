@@ -480,7 +480,7 @@ stage2b:
 
 stage3:
 	$(MAKE) install-main2 PREFIX=$(STAGE3) \
-	OZ_LOAD=.:= \
+	OZ_LOAD=all=.:all=tyc:= \
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozc \
 	OZMAFILE=$(STAGE2)/lib/ozbatch.ozm \
