@@ -11,11 +11,11 @@ local
       feat
 	 options
       meth init(parent:P options:O text:T)
-	 <<TkTools.note tkInit(parent:P text:T)>>
+	 TkTools.note,tkInit(parent:P text:T)
 	 self.options = O
       end
       meth toTop
-	 <<update(nosample)>>
+	 self,update(nosample)
       end
    end
 	 
@@ -133,7 +133,7 @@ local
 			    after:O.usage.frame side:top fill:x)]
 		   end}
 	 InfoVisible <- {Not @InfoVisible}
-	 <<MemoryPage update(nosample)>>
+	 MemoryPage,update(nosample)
       end
    end
 
@@ -220,9 +220,9 @@ in
 	 InfoVisible:   False
       
       meth init(manager:Manager)
-	 <<Tk.toplevel tkInit(title:              TitleName
-			      highlightthickness: 0
-			      withdraw:           True)>>
+	 Tk.toplevel,tkInit(title:              TitleName
+			    highlightthickness: 0
+			    withdraw:           True)
 	 {Tk.batch [wm(iconname   self TitleName)
 		    wm(iconbitmap self BitMap)
 		    wm(resizable self 0 0)]}
@@ -561,8 +561,8 @@ in
 			    action:self # enter)}
 	 {EventFrame tkBind(event:'<Leave>'
 			    action:self # leave)}
-	 <<PanelTop tkWM(deiconify)>>
-	 <<PanelTop update(@DelayStamp)>>
+	 PanelTop,tkWM(deiconify)
+	         ,update(@DelayStamp)
       end
 
       meth update(Stamp)
@@ -583,7 +583,7 @@ in
 	       {Memory  update(sample)}
 	       {TopNote update}
 	    end
-	    <<PanelTop delay>>
+	    PanelTop,delay
 	 else skip
 	 end
       end
@@ -629,8 +629,8 @@ in
       meth enter
 	 MouseInside <- True
 	 case @RequireMouse then
-	    <<PanelTop stop>>
-	    <<PanelTop delay>>
+	    PanelTop,stop
+	            ,delay
 	 else skip
 	 end
       end
@@ -638,7 +638,7 @@ in
       meth leave
 	 MouseInside <- False
 	 case @RequireMouse then
-	    <<PanelTop stop>>
+	    PanelTop,stop
 	 else skip
 	 end
       end
@@ -650,19 +650,19 @@ in
 		   RequireMouse <- M
 		   case M then
 		      case @MouseInside then True
-		      else <<PanelTop stop>> False
+		      else PanelTop,stop False
 		      end
-		   else <<PanelTop stop>> True
+		   else PanelTop,stop True
 		   end
 		end
 	        case @UpdateTime==T then False
 		else
 		   UpdateTime <- T
-		   <<PanelTop stop>>
-		   <<PanelTop setSlice>>
+		   PanelTop,stop
+		   PanelTop,setSlice
 		   True
 		end}
-	 then <<PanelTop delay>>
+	 then PanelTop,delay
 	 else skip
 	 end
       end
@@ -691,7 +691,7 @@ in
       meth setHistory(H)
 	 case H==@HistoryRange then skip else
 	    HistoryRange <- H
-	    <<PanelTop setSlice>>
+	    PanelTop,setSlice
 	 end
       end
 
@@ -716,8 +716,8 @@ in
       end
       
       meth close
-	 <<UrObject    close>>
-	 <<Tk.toplevel close>>
+	 UrObject,close
+	 Tk.toplevel,close
 	 {self.manager PanelTopClosed}
       end
       

@@ -155,7 +155,7 @@ local
 	 meth isNextPossible(LeftToRight $)
 	    @choices>0 andthen
 	    (LeftToRight orelse
-	     (<<isStepPossible(LeftToRight $)>> orelse
+	     (self,isStepPossible(LeftToRight $) orelse
 	      {NotHiddenChoices @kids}))
 	 end
 	 
@@ -251,8 +251,8 @@ local
 	    end
 	    {ReDo UseCopy UseNs}
 	    Information = thread {Space.askVerbose UseCopy} end
-	    <<Choose Create(PrevSol CurDepth+1 UseCopy Information
-			    AllocateCopy ?NewNode)>> 
+	    Choose,Create(PrevSol CurDepth+1 UseCopy Information
+			  AllocateCopy ?NewNode)
 	    isDirty <- True
 	    kids    <- {Append @kids [NewNode]}
 	 end
@@ -270,17 +270,17 @@ local
 		  case DecChoices   then choices  <- @choices-1  else skip end
 		  case IsDirtyBelow then isDirty  <- True        else skip end
 		  case SolBelow of !False then
-		     <<Choose NextKids(Break PrevSol CurDepth InfoDist
-				       CurSearchDist SearchDist CurNs CurCopy
-				       Kr N+1 $)>>
+		     Choose,NextKids(Break PrevSol CurDepth InfoDist
+				     CurSearchDist SearchDist CurNs CurCopy
+				     Kr N+1 $)
 		  else
 		     isSolBelow <- True
 		     SolBelow
 		  end
 	       else
-		  <<Choose NextKids(Break PrevSol CurDepth InfoDist
-				    CurSearchDist SearchDist CurNs CurCopy
-				    Kr N+1 $)>>
+		  Choose,NextKids(Break PrevSol CurDepth InfoDist
+				  CurSearchDist SearchDist CurNs CurCopy
+				  Kr N+1 $)
 	       end  
 	    end
 	 end
@@ -292,10 +292,10 @@ local
 	       NewNode Information
 	       NextDist NextNs NextCopy
 	    in
-	       <<Choose Add(PrevSol CurDepth InfoDist CurSearchDist
-			    CurNs CurCopy
-			    ?NextDist ?NextNs ?NextCopy
-			    ?Information ?NewNode)>>
+	       Choose,Add(PrevSol CurDepth InfoDist CurSearchDist
+			  CurNs CurCopy
+			  ?NextDist ?NextNs ?NextCopy
+			  ?Information ?NewNode)
 	       case Information
 	       of succeeded(_) then
 		  Sol         = NewNode
@@ -312,11 +312,11 @@ local
 		  case DecChoicesBelow  then choices <- @choices - 1
 		  else skip end
 		  case SolBelow of !False then
-		     <<Choose NextLocal(Break PrevSol CurDepth InfoDist
-					CurSearchDist SearchDist
-					CurNs CurCopy
-					?Sol ?IsDirty
-					?DecChoices)>>
+		     Choose,NextLocal(Break PrevSol CurDepth InfoDist
+				      CurSearchDist SearchDist
+				      CurNs CurCopy
+				      ?Sol ?IsDirty
+				      ?DecChoices)
 		  else
 		     isSolBelow <- True
 		     Sol         = SolBelow
@@ -324,11 +324,11 @@ local
 		     DecChoices  = @choices==0
 		  end
 	       else
-		  <<Choose NextLocal(Break PrevSol CurDepth InfoDist
-				     CurSearchDist SearchDist
-				     CurNs CurCopy
-				     ?Sol ?IsDirty
-				     ?DecChoices)>>
+		  Choose,NextLocal(Break PrevSol CurDepth InfoDist
+				   CurSearchDist SearchDist
+				   CurNs CurCopy
+				   ?Sol ?IsDirty
+				   ?DecChoices)
 	       end
 	    else
 	       %% Oh, we are doomed: no sols at all
@@ -362,15 +362,15 @@ local
 		  NextCopy = Copy.1
 		  NextNs   = nil
 	       end
-	       case <<Choose NextKids(Break PrevSol CurDepth+1 InfoDist
-				      NextDist-1 SearchDist NextNs NextCopy
-				      @kids 1 $)>>
+	       case Choose,NextKids(Break PrevSol CurDepth+1 InfoDist
+				    NextDist-1 SearchDist NextNs NextCopy
+				    @kids 1 $)
 	       of !False then
 		  %% Now we have to create new kids to find whether a solution
 		  %% does exists there.
-		  <<Choose NextLocal(Break PrevSol CurDepth InfoDist
-				     NextDist SearchDist NextNs NextCopy
-				     ?Sol ?IsDirty ?DecChoices)>>
+		  Choose,NextLocal(Break PrevSol CurDepth InfoDist
+				   NextDist SearchDist NextNs NextCopy
+				   ?Sol ?IsDirty ?DecChoices)
 	       elseof S then
 		  %% Okay one of our kids found a solution.
 		  Sol         = S
@@ -383,14 +383,14 @@ local
 	 meth next(Break PrevSol SearchDist InfoDist ?Sol)
 	    CurDepth CurNs CurSearchDist CurCopy
 	 in
-	    <<Choose findDepthAndCopy(?CurDepth ?CurSearchDist
-				      ?CurNs ?CurCopy)>>
+	    Choose,findDepthAndCopy(?CurDepth ?CurSearchDist
+				    ?CurNs ?CurCopy)
 	    case @choices==0 then Sol=False
 	    else IsDirty DecChoices in
-	       <<Choose Next(Break PrevSol CurDepth InfoDist
-			     SearchDist-CurSearchDist SearchDist
-			     CurNs CurCopy
-			     ?Sol ?IsDirty ?DecChoices)>>
+	       Choose,Next(Break PrevSol CurDepth InfoDist
+			   SearchDist-CurSearchDist SearchDist
+			   CurNs CurCopy
+			   ?Sol ?IsDirty ?DecChoices)
 	       {self.mom leaveNode(Sol\=False IsDirty DecChoices)}
 	    end
 	 end
@@ -400,12 +400,12 @@ local
 	    else
 	       Info NewNode CurDepth CurNs CurSearchDist CurCopy
 	    in
-	       <<Choose findDepthAndCopy(?CurDepth ?CurSearchDist
-					 ?CurNs ?CurCopy)>>
-	       <<Choose Add(PrevSol CurDepth InfoDist CurSearchDist
-			    CurNs CurCopy
-			    _ _ _
-			    ?Info ?NewNode)>>
+	       Choose,findDepthAndCopy(?CurDepth ?CurSearchDist
+				       ?CurNs ?CurCopy)
+	             ,Add(PrevSol CurDepth InfoDist CurSearchDist
+			  CurNs CurCopy
+			  _ _ _
+			  ?Info ?NewNode)
 	       Sol = case {Label Info}==succeeded then NewNode else False end
 	       {self.mom leaveNode(Sol\=False True @choices==0)}
 	    end

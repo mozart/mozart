@@ -64,10 +64,10 @@ local
 	 BlockedImage
       
       meth init(Parent)
-	 <<Tk.frame tkInit(parent:             Parent
-			   highlightthickness: 0
-			   border:             Border
-			   relief:             sunken)>>
+	 Tk.frame,tkInit(parent:             Parent
+			 highlightthickness: 0
+			 border:             Border
+			 relief:             sunken)
 	 BabField   = {New Tk.label tkInit(parent: self
 					   text:   ''
 					   font:   BoldStatusFont)}
@@ -167,9 +167,9 @@ local
 	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    IsPackedBlocked <- False 
 	 else skip end
-	 <<Status update>>
-	 <<Status start>>
-	 <<Status setBAB(False)>>
+	 Status,update
+	       ,start
+	       ,setBAB(False)
 	 {self.ChooseImage clear}
       end
 
@@ -260,7 +260,7 @@ local
 	 MaxDepth     <- {Max @MaxDepth Depth}
 	 CurSolutions <- @CurSolutions + 1
 	 CurNodes     <- IncNodes
-	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
+	 case IncNodes mod StatusUpdateCnt==0 then Status,update
 	 else skip
 	 end
       end
@@ -271,7 +271,7 @@ local
 	 MaxDepth    <- {Max @MaxDepth Depth}
 	 CurBlocked  <- @CurBlocked + 1
 	 CurNodes    <- IncNodes
-	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
+	 case IncNodes mod StatusUpdateCnt==0 then Status,update
 	 else skip end
       end
 
@@ -286,7 +286,7 @@ local
 	 MaxDepth    <- {Max @MaxDepth Depth}
 	 CurFailures <- @CurFailures + 1
 	 CurNodes    <- IncNodes
-	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
+	 case IncNodes mod StatusUpdateCnt==0 then Status,update
 	 else skip end
       end
 
@@ -295,7 +295,7 @@ local
       in
 	 CurNodes <- IncNodes
 	 MaxDepth <- {Max @MaxDepth Depth}
-	 case IncNodes mod StatusUpdateCnt==0 then <<Status update>>
+	 case IncNodes mod StatusUpdateCnt==0 then Status,update
 	 else skip end
       end
 

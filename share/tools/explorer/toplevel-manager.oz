@@ -15,9 +15,9 @@ local
 	 scale
       
       meth init(Manager Menu Canvas Status ?PackMe)
-	 <<Tk.toplevel tkInit(title:              TitleName
-			      withdraw:           True
-			      highlightthickness: 0)>>
+	 Tk.toplevel,tkInit(title:              TitleName
+			    withdraw:           True
+			    highlightthickness: 0)
 	 ScrX  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
 					  bd:     Border
@@ -63,7 +63,7 @@ local
       end
 
       meth doClose
-	 <<Tk.toplevel close>>
+	 Tk.toplevel,close
       end
 
       meth close
@@ -107,17 +107,17 @@ local
 	 connection
 
       meth init(Toplevel Manager)
-	 <<Tk.canvas tkInit(parent:             Toplevel
-			    relief:             sunken
-			    width:              MinSizeX
-			    height:             MinSizeY
-			    background:         BackColor
-			    bd:                 Border
-			    highlightthickness: 0)>>
-	 <<Tk.canvas tkBind(event:  '<Configure>'
-			    action: self # Resized
-			    args:   [float(h) float(w)]
-			    append: True)>>
+	 Tk.canvas,tkInit(parent:             Toplevel
+			  relief:             sunken
+			  width:              MinSizeX
+			  height:             MinSizeY
+			  background:         BackColor
+			  bd:                 Border
+			  highlightthickness: 0)
+	          ,tkBind(event:  '<Configure>'
+			  action: self # Resized
+			  args:   [float(h) float(w)]
+			  append: True)
 	 ActionTag = {New Tk.canvasTag tkInit(parent:self)}
 	 FloatXY   = [float(x) float(y)]
       in
@@ -152,8 +152,8 @@ local
 	 left   <- 0
 	 right  <- 0
 	 bottom <- 0
-	 <<Tk.canvas tk(delete all)>>
-	 <<ScrollCanvas AdjustRegion>>
+	 Tk.canvas,tk(delete all)
+	 ScrollCanvas,AdjustRegion
 	 {self.genTagId clear}
       end
 
@@ -163,18 +163,17 @@ local
 	 Right  = Scale * {IntToFloat @right}
 	 Bottom = Scale * {IntToFloat @bottom}
       in 
-	 <<Tk.canvas tk(xview moveto
-			({IntToFloat X}*Scale - Left - @width/2.0)/
-			(Right-Left))>>
-	 <<Tk.canvas tk(yview moveto
-			({IntToFloat Y}*Scale - @height/2.0)/Bottom)>>
+	 Tk.canvas,tk(xview moveto
+		      ({IntToFloat X}*Scale - Left - @width/2.0)/ (Right-Left))
+	          ,tk(yview moveto
+		      ({IntToFloat Y}*Scale - @height/2.0)/Bottom)
       end
 
       meth bounding(NewLeft NewRight NewBottom)
 	 left   <- NewLeft
 	 right  <- NewRight
 	 bottom <- NewBottom
-	 <<ScrollCanvas AdjustRegion>>
+	 ScrollCanvas,AdjustRegion
       end
    
       meth AdjustRegion
@@ -193,15 +192,15 @@ local
 		     else @height
 		     end
       in
-	 <<Tk.canvas tk(conf scrollregion:q(ReqLeft 0 ReqRight ReqBottom))>>
+	 Tk.canvas,tk(conf scrollregion:q(ReqLeft 0 ReqRight ReqBottom))
       end
       
       meth scale(Scale)
 	 ScaleBy = Scale / @scale
       in
 	 scale <- Scale
-	 <<ScrollCanvas AdjustRegion>>
-	 <<Tk.canvas tk(scale all 0 0 ScaleBy ScaleBy)>>
+	 ScrollCanvas,AdjustRegion
+	 Tk.canvas,tk(scale all 0 0 ScaleBy ScaleBy)
       end
 
       meth scaleToFit($)
@@ -229,7 +228,7 @@ local
       meth Resized(H W)
 	 height <- H
 	 width  <- W
-	 <<ScrollCanvas AdjustRegion>>
+	 ScrollCanvas,AdjustRegion
       end
 
       meth postscript(colormode:C rotate:R file:F height:H width:W)
@@ -237,17 +236,17 @@ local
 	 Height = {IntToFloat @bottom} * Scale
 	 Width  = {IntToFloat (@right - @left)} * Scale
       in
-	 <<Tk.canvas tk(postscript
-			case H/Height > W/Width then o(pagewidth: W#c)
-			else o(pageheight: H#c)
-			end
-			file:       F
-			colormode:  C
-			rotate:     R
-			height:     Height
-			width:      Width
-			x:          {IntToFloat @left} * Scale
-			y:          0)>>
+	 Tk.canvas,tk(postscript
+		      case H/Height > W/Width then o(pagewidth: W#c)
+		      else o(pageheight: H#c)
+		      end
+		      file:       F
+		      colormode:  C
+		      rotate:     R
+		      height:     Height
+		      width:      Width
+		      x:          {IntToFloat @left} * Scale
+		      y:          0)
 	 
       end
       
@@ -308,7 +307,7 @@ in
 				     [] searching then watch
 				     [] idle      then top_left_arrow
 				     end) $)}}
-	 <<UrObject nil>>
+	 touch
       end
 
       meth scale(Scale)
@@ -336,7 +335,7 @@ in
       meth scaleToFit
 	 case {self.canvas scaleToFit($)} of !False then skip
 	 elseof NewScale then
-	    <<ToplevelManager scale(NewScale)>>
+	    ToplevelManager,scale(NewScale)
 	 end
       end
 

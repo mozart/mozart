@@ -112,8 +112,8 @@ local
       end
       
       meth hide
-	 <<TkNodes.choose deleteTree>>
-	 <<Inner          dirtyUp>>
+	 TkNodes.choose,deleteTree
+	 Inner,dirtyUp
 	 isDrawn  <- False
 	 case @isHidden then
 	    isHidden <- False
@@ -140,7 +140,7 @@ local
       end
       
       meth unhideTree
-	 <<Inner UnhideTree>>
+	 Inner,UnhideTree
 	 {self.mom dirtyUp}
       end
 
@@ -149,7 +149,7 @@ local
 	 case @isHidden then
 	    isHidden <- False
 	    isDrawn  <- False
-	    <<TkNodes.choose deleteTree>>
+	    TkNodes.choose,deleteTree
 	 else skip
 	 end
 	 {UnhideTreeKids @kids}
@@ -167,7 +167,7 @@ local
       end
 
       meth hideFailed
-	 case <<Inner HideFailed($)>> then {self.mom dirtyUp}
+	 case Inner,HideFailed($) then {self.mom dirtyUp}
 	 else skip
 	 end
       end
@@ -182,7 +182,7 @@ local
 	    isHidden <- True
 	    isDrawn  <- False
 	    isDirty  <- True
-	    <<TkNodes.choose deleteTree>>
+	    TkNodes.choose,deleteTree
 	    {HideKids @kids}
 	    True
 	 end
@@ -199,7 +199,7 @@ local
       end
       
       meth unhideButFailed
-	 <<Inner UnhideButFailed>>
+	 Inner,UnhideButFailed
 	 {self.mom dirtyUp}
       end
       
@@ -209,8 +209,8 @@ local
 	    %% indeed something to unhide we do not have to analyse this node
 	    %% further!
 	    isDrawn <- False
-	    <<TkNodes.choose deleteTree>>
-	    <<Inner UnhideButFailedBelowHidden>>
+	    TkNodes.choose,deleteTree
+	    Inner,UnhideButFailedBelowHidden
 	 else
 	    isDirty <- True
 	    {UnhideButFailedKids @kids}
@@ -233,7 +233,7 @@ local
 	 case @isDirty then
 	    case @isHidden then skip else
 	       case @isDrawn then {HideUndrawn @kids}
-	       else isHidden <- True <<Inner Hide>>
+	       else isHidden <- True Inner,Hide
 	       end
 	    end
 	 else skip

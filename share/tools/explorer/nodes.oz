@@ -39,7 +39,7 @@ local
 	 mom
       meth init(Mom Depth)
 	 self.mom = Mom
-	 <<TkNodes.failed init>>
+	 TkNodes.failed,init
 	 {self.status addFailed(Depth)}
       end
    end
@@ -77,7 +77,7 @@ local
 	       else skip
 	       end
 	    end
-	    <<TkNodes.blocked init>>
+	    TkNodes.blocked,init
 	    {Status addBlocked(Depth)}
 	 end
       end
@@ -109,7 +109,7 @@ local
 		    [] persistent then persistent(S)
 		    else False
 		    end
-	    <<TkNodes.entailed init>>
+	    TkNodes.entailed,init
 	    {self.status addSolution(Depth)}
 	 end
       end
@@ -125,7 +125,7 @@ local
 		    [] persistent then persistent(S)
 		    else False
 		    end
-	    <<TkNodes.suspended init>>
+	    TkNodes.suspended,init
 	    {self.status addSolution(Depth)}
 	 end
       end
@@ -161,7 +161,7 @@ local
 		 else False
 		 end
 	 toDo <- PrevSol # S # 1 # MaxAlt
-	 <<TkNodes.choose init>>
+	 TkNodes.choose,init
 	 {self.status addChoose(Depth)}
       end
       meth getKids($)

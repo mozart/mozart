@@ -30,7 +30,7 @@ local
 	 feat menu dict
 	 attr separators:nil max:0 cur:0
 	 meth init(menu: Menu)
-	    <<Tk.variable tkInit(0)>>
+	    Actions,tkInit(0)
 	    self.menu = Menu
 	    self.dict = {Dictionary.new}
 	 end
@@ -47,7 +47,7 @@ local
 	    max <- Num + 1
 	    cur <- Num
 	    {Dictionary.put self.dict Num Label#Entry#Value#Type}
-	    <<Tk.variable tkSet(Num)>>
+	    Actions,tkSet(Num)
 	 end
 
 	 meth addSeparator
@@ -67,14 +67,14 @@ local
 	    {Entry close}
 	    case Num==@cur then
 	       cur <- {FindNext Num-1 self.dict}
-	       <<Tk.variable tkSet(@cur)>>
+	       Actions,tkSet(@cur)
 	    else skip end
 	 end
 
 	 meth deleteAll
 	    {DeleteAll {Dictionary.keys self.dict} self.dict}
 	    cur <- 1 % The second of the default entries
-	    <<Tk.variable tkSet(@cur)>>
+	    Actions,tkSet(@cur)
 	    {ForAll @separators proc {$ O} {O close} end}
 	    separators <- nil
 	 end

@@ -39,13 +39,13 @@ in
 	 Clear: ZeroTime
 
       meth init(parent:P)
-	 <<RuntimeBar tkInit(parent:             P
-			     width:              Width
-			     relief:             groove
-			     highlightthickness: 0
-			     bd:                 Border
-			     bg:                 BackColor
-			     height:             Height)>>
+	 RuntimeBar,tkInit(parent:             P
+			   width:              Width
+			   relief:             groove
+			   highlightthickness: 0
+			   bd:                 Border
+			   bg:                 BackColor
+			   height:             Height)
 	 ThisRunTag  = {New Tk.canvasTag tkInit(parent:self)}
 	 ThisGcTag   = {New Tk.canvasTag tkInit(parent:self)}
 	 ThisCopyTag = {New Tk.canvasTag tkInit(parent:self)}
@@ -57,26 +57,26 @@ in
 	 self.CopyTag = ThisCopyTag
 	 self.PropTag = ThisPropTag
 	 self.LoadTag = ThisLoadTag
-	 <<RuntimeBar tk(crea rectangle Home Y0 Home Y1
-			 fill:    TimeColors.run
-			 stipple: TimeStipple.run
-			 tags:    ThisRunTag)>>
-	 <<RuntimeBar tk(crea rectangle Home Y0 Home Y1
-			 fill:    TimeColors.gc
-			 stipple: TimeStipple.gc
-			 tags:    ThisGcTag)>>
-	 <<RuntimeBar tk(crea rectangle Home Y0 Home Y1
-			 fill:    TimeColors.copy
-			 stipple: TimeStipple.copy
-			 tags:    ThisCopyTag)>>
-	 <<RuntimeBar tk(crea rectangle Home Y0 Home Y1
-			 fill:    TimeColors.prop
-			 stipple: TimeStipple.prop
-			 tags:    ThisPropTag)>>
-	 <<RuntimeBar tk(crea rectangle Home Y0 Home Y1
-			 fill:    TimeColors.load
-			 stipple: TimeStipple.load
-			 tags:    ThisLoadTag)>>
+	 RuntimeBar,tk(crea rectangle Home Y0 Home Y1
+		       fill:    TimeColors.run
+		       stipple: TimeStipple.run
+		       tags:    ThisRunTag)
+	           ,tk(crea rectangle Home Y0 Home Y1
+		       fill:    TimeColors.gc
+		       stipple: TimeStipple.gc
+		       tags:    ThisGcTag)
+	           ,tk(crea rectangle Home Y0 Home Y1
+		       fill:    TimeColors.copy
+		       stipple: TimeStipple.copy
+		       tags:    ThisCopyTag)
+	           ,tk(crea rectangle Home Y0 Home Y1
+		       fill:    TimeColors.prop
+		       stipple: TimeStipple.prop
+		       tags:    ThisPropTag)
+	           ,tk(crea rectangle Home Y0 Home Y1
+		       fill:    TimeColors.load
+		       stipple: TimeStipple.load
+		       tags:    ThisLoadTag)
       end
 
       meth clear
@@ -94,11 +94,11 @@ in
 	    LoadTime    = T.load - C.load
 	 in
 	    case RunTime==0 then
-	       <<RuntimeBar tk(coords self.RunTag  Home Y0 Home Y1)>>
-	       <<RuntimeBar tk(coords self.GcTag   Home Y0 Home Y1)>>
-	       <<RuntimeBar tk(coords self.CopyTag Home Y0 Home Y1)>>
-	       <<RuntimeBar tk(coords self.PropTag Home Y0 Home Y1)>>
-	       <<RuntimeBar tk(coords self.LoadTag Home Y0 Home Y1)>>
+	       RuntimeBar,tk(coords self.RunTag  Home Y0 Home Y1)
+	                 ,tk(coords self.GcTag   Home Y0 Home Y1)
+	                 ,tk(coords self.CopyTag Home Y0 Home Y1)
+	                 ,tk(coords self.PropTag Home Y0 Home Y1)
+	                 ,tk(coords self.LoadTag Home Y0 Home Y1)
 	    else
 	       GcZero    = case GcTime==0   then 0 else 1 end
 	       CopyZero  = case CopyTime==0 then 0 else 1 end
@@ -123,27 +123,27 @@ in
 	       RunStart  = Gap + 1
 	    in
 	       Saved <- T
-	       <<RuntimeBar tk(coords self.RunTag  RunStart  Y0 RunEnd  Y1)>>
-	       <<RuntimeBar case GcTime==0 then
-			       tk(coords self.GcTag  Home Y0 Home Y1)
-			    else
-			       tk(coords self.GcTag   GcStart   Y0 GcEnd   Y1)
-			    end>>
-	       <<RuntimeBar case CopyTime==0 then
-			       tk(coords self.CopyTag Home Y0 Home Y1)
-			    else
-			       tk(coords self.CopyTag CopyStart Y0 CopyEnd Y1)
-			    end>>
-	       <<RuntimeBar case PropTime==0 then
-			       tk(coords self.PropTag Home Y0 Home Y1)
-			    else
-			       tk(coords self.PropTag PropStart Y0 PropEnd Y1)
-			    end>>
-	       <<RuntimeBar case LoadTime==0 then
-			       tk(coords self.LoadTag Home Y0 Home Y1)
-			    else
-			       tk(coords self.LoadTag LoadStart Y0 LoadEnd Y1)
-			    end>>
+	       RuntimeBar,tk(coords self.RunTag  RunStart  Y0 RunEnd  Y1)
+	                 ,case GcTime==0 then
+			     tk(coords self.GcTag  Home Y0 Home Y1)
+			  else
+			     tk(coords self.GcTag   GcStart   Y0 GcEnd   Y1)
+			  end
+	                 ,case CopyTime==0 then
+			     tk(coords self.CopyTag Home Y0 Home Y1)
+			  else
+			     tk(coords self.CopyTag CopyStart Y0 CopyEnd Y1)
+			  end
+	                 ,case PropTime==0 then
+			     tk(coords self.PropTag Home Y0 Home Y1)
+			  else
+			     tk(coords self.PropTag PropStart Y0 PropEnd Y1)
+			  end
+	                 ,case LoadTime==0 then
+			     tk(coords self.LoadTag Home Y0 Home Y1)
+			  else
+			     tk(coords self.LoadTag LoadStart Y0 LoadEnd Y1)
+			  end
 	    end
 	 end
       end

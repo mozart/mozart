@@ -41,14 +41,14 @@ local
 		  {K findByX(Depth-1 CurX FindX $)}
 	       else K
 	       end
-	    else <<Choose FindKids(Kr Depth CurX FindX $)>>
+	    else Choose,FindKids(Kr Depth CurX FindX $)
 	    end
 	 end
    
 	 meth findByX(Depth MomX FindX $)
 	    case Depth>0 then
 	       case @isHidden then self
-	       else <<Choose FindKids(@kids Depth MomX+@offset FindX $)>>
+	       else Choose,FindKids(@kids Depth MomX+@offset FindX $)
 	       end
 	    else self
 	    end

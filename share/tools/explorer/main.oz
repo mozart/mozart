@@ -54,11 +54,10 @@ in
       meth Init()
 	 case @MyManager\=False then skip else
 	    MyManager <- {New Manager init(self)}
-	    <<ExplorerClass
+	    ExplorerClass,
 	       %% Include the standard actions
                \insert default-actions.oz
-	    >>
-	    <<ExplorerClass {Reverse @Stacked}>>
+	                 ,{Reverse @Stacked}
 	    Stacked <- nil
 	 end
       end
@@ -68,19 +67,19 @@ in
       end
       
       meth solver(Solver Order <=False)
-	 <<ExplorerClass Init>>
+	 ExplorerClass,Init
 	 {@MyManager query(proc {$ X} {Solver X} end
 			   Order)}
       end
 
       meth one(Solver Order <=False)
-	 <<ExplorerClass solver(Solver Order)>>
+	 ExplorerClass,solver(Solver Order)
 	 {@MyManager.menu.search.next tk(invoke)}
       end
 
       meth all(Solver Order <=False)
-	 <<ExplorerClass solver(Solver Order)>>
-	 {@MyManager.menu.search.all  tk(invoke)}
+	 ExplorerClass,solver(Solver Order)
+	 {@MyManager.menu.search.all tk(invoke)}
       end
 
 
@@ -241,7 +240,7 @@ in
       
       meth close
 	 case @MyManager of !False then skip elseof M then {M close} end
-	 <<UrObject close>>
+	 UrObject,close
       end
 
    end

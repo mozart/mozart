@@ -23,14 +23,14 @@ local
    class Square
       from Tk.canvas
       meth init(parent:P color:C stipple:S)
-	 <<Square tkInit(parent:             P
-			 width:              SquareSize
-			 height:             SquareSize
-			 bd:                 Border
-			 relief:             groove
-			 highlightthickness: 0)>>
-	 <<Square tk(crea rectangle ~2 ~2 SquareSize+2 SquareSize+2
-		     fill:C stipple:S)>>
+	 Square,tkInit(parent:             P
+		       width:              SquareSize
+		       height:             SquareSize
+		       bd:                 Border
+		       relief:             groove
+		       highlightthickness: 0)
+	       ,tk(crea rectangle ~2 ~2 SquareSize+2 SquareSize+2
+		   fill:C stipple:S)
       end
    end
    
@@ -38,18 +38,18 @@ local
       from Tk.label
       attr Saved:~1 Clear:0
       meth init(parent:P)
-	 <<PrintNumber tkInit(parent:P text:0 anchor:e width:LabelWidth)>>
+	 PrintNumber,tkInit(parent:P text:0 anchor:e width:LabelWidth)
       end
       meth set(N)
 	 case N==@Saved then skip else
 	    Saved <- N
-	    <<PrintNumber tk(conf text:(N-@Clear))>>
+	    PrintNumber,tk(conf text:(N-@Clear))
 	 end
       end
       meth clear
 	 Clear <- @Saved
 	 Saved <- ~1
-	 <<PrintNumber tk(conf text:0)>>
+	 PrintNumber,tk(conf text:0)
       end
    end
 
@@ -65,7 +65,7 @@ local
       feat Dim
       attr Saved:~1 Clear:0
       meth init(parent:P dim:D)
-	 <<PrintTime tkInit(parent:P text:0 anchor:e width:LabelWidth)>>
+	 PrintTime,tkInit(parent:P text:0 anchor:e width:LabelWidth)
 	 self.Dim = D
       end
       meth set(N)
@@ -89,12 +89,12 @@ local
 	       PrintText = C
 	    end
 	    {self.Dim tk(conf text:DimText)}	       
-	    <<PrintTime tk(conf text:PrintText)>>
+	    PrintTime,tk(conf text:PrintText)
 	 end
       end
       meth clear
 	 {self.Dim tk(conf text:ms)}	       
-	 <<PrintTime tk(conf text:0)>>
+	 PrintTime,tk(conf text:0)
 	 Clear <- @Saved
 	 Saved <- ~1
       end
@@ -104,24 +104,24 @@ local
       from Tk.scale
       attr Saved:0
       meth init(parent:P range:R action:A state:S)
-	 <<Tk.scale tkInit(parent:             P
-			   length:             200
-			   font:               ScaleFont
-			   'from':             R.1
-			   highlightthickness: 0
-			   to:                 R.2
-			   orient:             horizontal
-			   action:             self # noop
-			   width:              8
-			   showvalue:          True)>>
+	 Tk.scale,tkInit(parent:             P
+			 length:             200
+			 font:               ScaleFont
+			 'from':             R.1
+			 highlightthickness: 0
+			 to:                 R.2
+			 orient:             horizontal
+			 action:             self # noop
+			 width:              8
+			 showvalue:          True)
+	         ,tk(set S)
+	         ,tkAction(action:A args:[int])
 	 Saved <- S
-	 <<Tk.scale tk(set S)>>
-	 <<Tk.scale tkAction(action:A args:[int])>>
       end
       meth set(N)
 	 case N==@Saved then skip else
 	    Saved <- N
-	    <<Scale tk(set N)>>
+	    Scale,tk(set N)
 	 end
       end
       meth get($)
@@ -136,12 +136,12 @@ local
       meth init(parent:P text:T action:A state:S)
 	 V = {New Tk.variable tkInit(S)}
       in
-	 <<Tk.checkbutton tkInit(parent:             P
-				 highlightthickness: 0
-				 text:               T
-				 anchor:             w
-				 var:                V
-				 action:             self # invoke)>>
+	 Tk.checkbutton,tkInit(parent:             P
+			       highlightthickness: 0
+			       text:               T
+			       anchor:             w
+			       var:                V
+			       action:             self # invoke)
 	 self.Var    = V
 	 self.Action = A
 	 Saved <- S
@@ -161,12 +161,12 @@ local
    class Button
       from Tk.button
       meth init(parent:P text:T action:A)
-	 <<Tk.button tkInit(parent:             P
-			    highlightthickness: 0
-			    text:               T
-			    anchor:             w
-			    action:             A
-			    width:              ButtonWidth)>>
+	 Tk.button,tkInit(parent:             P
+			  highlightthickness: 0
+			  text:               T
+			  anchor:             w
+			  action:             A
+			  width:              ButtonWidth)
       end
    end
 
@@ -175,29 +175,29 @@ local
       feat Action Top
       attr Save: Unit
       meth init(parent:P action:A top:T)
-	 <<Tk.entry tkInit(parent: P
-			   bg:     EnterColor
-			   width:  LabelWidth)>>
-	 <<Tk.entry tkBind(event:  '<Return>'
-			   action: self # take)>>
+	 Tk.entry,tkInit(parent: P
+			 bg:     EnterColor
+			 width:  LabelWidth)
+	         ,tkBind(event:  '<Return>'
+			 action: self # take)
 	 self.Action = A
 	 self.Top    = T
       end
       meth take
 	 O = @Save
-	 N = <<Tk.entry tkReturnInt(get $)>>
+	 N = Tk.entry,tkReturnInt(get $)
       in
 	 Save <- N
 	 case {IsInt N} andthen N>=0 then
 	    {self.Action N} {Tk.send focus(self.Top)}
-	 else <<Entry set(O)>>
+	 else Entry,set(O)
 	 end
       end
       meth set(N)
 	 case N==@Save then skip else
 	    Save <- N
-	    <<Tk.entry tk(delete 0 'end')>>
-	    <<Tk.entry tk(insert 0 N)>>
+	    Tk.entry,tk(delete 0 'end')
+	            ,tk(insert 0 N)
 	 end
       end
    end
