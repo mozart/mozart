@@ -35,7 +35,7 @@
 #include "gentraverser.hh"
 
 
-OZ_Return export(OZ_Term t);
+OZ_Return oz_export(OZ_Term t);
 GName* unmarshalGName(TaggedRef*,MsgBuffer*);
 void marshalGName(GName *gname, MsgBuffer *bs);
 
