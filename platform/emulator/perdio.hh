@@ -7,6 +7,9 @@
   Version: $Revision$
   State: $State$
   $Log$
+  Revision 1.3  1996/08/02 16:25:50  scheidhr
+  more Perdio work: send Ports over the net
+
   Revision 1.2  1996/08/02 11:14:18  mehl
   perdio uses tcp now
 
@@ -19,6 +22,8 @@
 #ifndef __PERDIOHH
 #define __PERDIOHH
 
+#include "tagged.hh"
+
 /*
  * Format of messages:
  *   GSEND DIF    ; Send a message to the global port of the site
@@ -26,6 +31,8 @@
 enum MessageType {
   GSEND           // global send
 };
+
+void remoteSend(Port *p, TaggedRef msg);
 
 #endif /* __PERDIOHH */
 
