@@ -104,7 +104,7 @@ Import:
       For example, the pickled functor <file/LMF.oza/ can be created
       compressed by
       <<<ozl --compress 9 LMF.ozf -o LMF.oza>>>
-      This reduces the disk space used by 50%.
+      This reduces the used disk space by 50%.
 
   </Section>
 
