@@ -23,16 +23,13 @@ Dbg = dbg(on:           proc {$}
 
 IsBuiltin = {`Builtin` 'isBuiltin' 2}
 
-fun {UsingNewCompiler}
-   %% return true when using new compiler, false otherwise
-   try {{`Builtin` 'getOPICompiler' 1} _} true
-   catch error(...) then false
+proc {Compile VS}
+   case {Compiler.getOPICompiler} of false then
+      skip
+   elseof CompilerObject then
+      {CompilerObject feedVirtualString(VS)}
    end
 end
-
-\ifndef NEWCOMPILER
-fun {NewCompiler _ _ _ _ _} class meth otherwise(M) skip end end end
-\endif
 
 %% send a warning/error message
 proc {OzcarShow X}
