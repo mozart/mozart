@@ -58,6 +58,7 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <meta name="html.split"       value="chapter.m131">
     <meta name="html.split"       value="chapter.m130">
     <meta name="html.split"       value="chapter.m125">
     <meta name="html.split"       value="chapter.m124">
@@ -99,6 +100,33 @@
       This documents gives a brief overview of the changes between different Mozart versions.
     </Abstract>
   <Body>
+
+  <chapter id="chapter.m131">
+    <title/Mozart 1.3.1/
+
+    <p>Mozart 1.3.1 is a bug-fix and maintenance release, but most importantly
+    it has undergone important modifications to make it work correctly with Mogul
+    again.
+    </p>
+
+    <section id="section.m131.changes">
+      <title/Changes in Oz, Mozart libraries and UI/
+
+      <subsection id="sec.m131.oztool">
+        <title/oztool/
+        <p><code proglang=sh/oztool version/ now prints the version number of
+         the installed Mozart (e.g., 1.3.1).
+        </p>
+
+      <subsection><title/Bugs../
+        <p>
+        <list>
+          <item> Several register allocation bug fixes in the compiler (bugs
+                 1291, 1070, 1329)
+        </list>
+        </p>
+
+  </chapter>
 
   <chapter id="chapter.m130">
     <title/Mozart 1.3.0/
