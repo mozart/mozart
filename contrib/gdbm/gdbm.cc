@@ -47,7 +47,7 @@ inline Bool oz_isGdbm(OZ_Term t)
 inline GDBM* tagged2Gdbm(OZ_Term t)
 {
   Assert(oz_isGDBM(t));
-  return (GDBM*) oz_tagged2Extension(t);
+  return (GDBM*) oz_tagged2Extension(OZ_deref(t));
 }
 
 void GDBM::printStreamV(ostream &out,int depth = 10)
