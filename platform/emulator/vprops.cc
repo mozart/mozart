@@ -123,6 +123,7 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL_PERDIO_DEBUG,
   PROP_INTERNAL_PERDIO_DOCOMPATIBLE,
+  PROP_INTERNAL_COPYALWAYS,
   PROP_INTERNAL,
   // this must remain last
   PROP__LAST
@@ -391,6 +392,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
   CASE_INT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
   CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
+  CASE_BOOL(PROP_INTERNAL_COPYALWAYS,ozconf.copyalways);
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
   }
@@ -657,6 +659,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 	     SET_NAT(AtomDebugIP,ozconf.debugIP);
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
 	     SET_BOOL(oz_atom("perdiod0Compatiblity"),ozconf.perdiod0Compatiblity));
+    CASE_BOOL(PROP_INTERNAL_COPYALWAYS,ozconf.copyalways);
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
   default:
     return PROP__NOT__WRITABLE;
@@ -897,6 +900,7 @@ void initVirtualProperties()
   VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_PERDIO_DEBUG);
   VirtualProperty::add("perdio.minimal",PROP_INTERNAL_PERDIO_DOCOMPATIBLE);
   VirtualProperty::add("internal",PROP_INTERNAL);
+  VirtualProperty::add("internal.copyalways",PROP_INTERNAL_COPYALWAYS);
 }
 
 
