@@ -207,7 +207,7 @@ ALLOBJS= $(OBJS) \
 	$(SPACEOPOBJS) $(FDBOBJS) $(FSBOBJS) $(CTBOBJS) \
 	$(RECORDCOBJS) $(COMPATOBJS) $(WIN32OBJS) $(SYSTEMOBJS) \
 	$(PROFILEOBJS) $(OSTIMEOBJS) \
-	$(DEBUGOBJS) $(TEXT2PICKLEOBJS)
+	$(DEBUGOBJS)
 
 ############################################################################
 ### TARGETS
