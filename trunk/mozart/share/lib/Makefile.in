@@ -29,7 +29,7 @@ COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 OZCFLAGS	= $(COMPRESSFLAGS)
 OZC		= @OZC@
 
-COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base -b $(BUILDDIR)/
+COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(SRCDIR)/Base.ozf -b $(BUILDDIR)/
 COMPILE		= $(COMPILENOMODE) -c
 COMPILEEXEC	= $(COMPILENOMODE) -x
 
@@ -108,6 +108,8 @@ Init.ozf: URL.ozf DefaultURL.ozf $(INITSRC)
 # Base
 #---------------------------------------------------------------------
 
+.PHONY: new-base
+
 BASESRC1 = \
 	Record Unit Tuple Atom Name Procedure \
 	Int Float Number Bool List Chunk \
@@ -118,8 +120,8 @@ BASESRC1 = \
 	ByteString ForeignPointer Base
 BASESRC = $(BASESRC1:%=base/%.oz)
 
-Base.ozf: $(BASESRC)
-	$(OZC) $(OZCFLAGS) -c base/Base.oz -o $@
+new-base: $(BASESRC)
+	$(OZC) $(OZCFLAGS) -c base/Base.oz -o $(SRCDIR)/Base.ozf
 
 #---------------------------------------------------------------------
 # Remaining functors
@@ -316,7 +318,7 @@ $(OZLIB)/boot-%: boot-%
 CLEANFILES = \
 	compiler-Version.oz \
 	$(COMPILERSRCEXTRA) \
-	Base.ozf CpSupport.ozf \
+	CpSupport.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) \
 	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
