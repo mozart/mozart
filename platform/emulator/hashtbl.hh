@@ -36,138 +36,253 @@
 
 #define htEmpty ((void*) -1L)
 
-class HashNode;
+class SHT_HashNode;
 
-/* keys of hashtables may be integers or strings */
-typedef enum {HT_INTKEY = 0, HT_CHARKEY = 1} HtKeyType;
+typedef union {
+  const char *fstr;
+  intlong fint;
+} HtKey;
 
-typedef union {const char *fstr; intlong fint; } HtKey;
+//
+// The one with the paramount efficiency (atom- and name- hash
+// tables). That is, we don't really care how expensive is the
+// "insert" operation, both in terms of speed and memory.
 
-class HashNode {
-  public:
+//
+// The first key/value pair is stored in the table, and subsequent
+// ones outside it;
+class SHT_HashNode {
+private:
   HtKey key;
-  void * value;
-  void setEmpty() { key.fint = (intlong) htEmpty; }
-  HashNode() : value(NULL)
-  {
-    setEmpty();
-  };
+  void* value;
+  SHT_HashNode *next;
 
+public:
+  SHT_HashNode() { setEmpty(); }
+  SHT_HashNode(const char *s, void *valueIn, SHT_HashNode *nextIn)
+    : value(valueIn), next(nextIn)
+  {
+    setKey(s);
+    Assert(!isEmpty());
+  }
+
+  //
+  void setEmpty() { key.fint = (intlong) htEmpty; }
   Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+
+  //
+  void setKey(const char *sIn) { key.fstr = sIn; }
+  void setValue(void *valueIn) { value = valueIn; }
+  void setNext(SHT_HashNode *nextIn) { next = nextIn; }
+
+  //
+  HtKey getKey() { return (key); }
+  void* getValue() { return (value); }
+  SHT_HashNode *getNext() { return (next); }
 };
 
-class HashTable {
+//
+class StringHashTable {
 protected:
+  int tableSize;                //
+  SHT_HashNode* table;          //
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
-  int tableSize;
-  HtKeyType type;
-  HashNode * table;
-  int hashFunc(intlong);
-  int hashFunc(const char *);
-  int findIndex(intlong);
-  int findIndex(const char *);
-  int lengthList(int i);
+
+private:
+  DebugCode(int lengthList(int i););
+
+protected:
+  unsigned int hashFunc(const char *);
   void resize();
 
 public:
-  HashTable(HtKeyType,int sz);
-  ~HashTable();
+  StringHashTable(int sz);
+  ~StringHashTable();
 
   //
   int getSize() { return counter; }
-  void htAdd(const char *k, void *val);
-  void htAdd(intlong k, void *val);
-  void *htFind(intlong);
-  void *htFind(const char *);
   void mkEmpty();
-  void print();
-  void printStatistic();
+
+  //
+  void htAdd(const char *k, void *val);
+  void *htFind(const char *);
+
+  //
+  DebugCode(void print(););
+  DebugCode(void printStatistic(););
   unsigned memRequired(int valSize = 0);
-  int getTblSize(){return tableSize;}
+  int getTblSize() { return (tableSize); }
 
   //
 protected:
-  HashNode *getNext(HashNode *hn) {
+  SHT_HashNode *getFirst();
+  SHT_HashNode *getNext(SHT_HashNode *hn);
+};
+
+
+//
+// Compact one (does not allocate additional memory outside the table:
+// "open addressing"). "delete" is not supported. Find/insert are
+// supposed to be still reasonably fast..
+
+//
+class AHT_HashNode {
+private:
+  HtKey key;
+  void* value;
+
+public:
+  AHT_HashNode() { setEmpty(); }
+
+  //
+  void setEmpty() { key.fint = (intlong) htEmpty; }
+  Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+
+  //
+  void setKey(intlong iIn) { key.fint = iIn; }
+  void setValue(void *vIn) { value = vIn; }
+
+  //
+  HtKey getKey() { return (key); }
+  void* getValue() { return (value); }
+};
+
+//
+class AddressHashTable {
+protected:
+  int tableSize;                //
+  int incStepMod;               // an integer slightly < tableSize;
+  AHT_HashNode* table;          //
+  int counter;      // number of entries
+  int percent;      // if more than percent is used, we reallocate
+  DebugCode(int nsearch;);      // number of searches;
+  DebugCode(int tries;);        // accumulated;
+  DebugCode(int maxtries;);
+
+protected:
+  unsigned int primeHashFunc(intlong);
+  unsigned int incHashFunc(intlong);
+  unsigned int getStepN(unsigned int pkey, unsigned int ikey, int i);
+
+  unsigned int findIndex(intlong);
+  void resize();
+
+public:
+  AddressHashTable(int sz);
+  ~AddressHashTable();
+
+  //
+  int getSize() { return counter; }
+  void mkEmpty();
+
+  //
+  void htAdd(intlong k, void *val);
+  void *htFind(intlong);
+
+  //
+  DebugCode(void print(););
+  DebugCode(void printStatistic(););
+  unsigned memRequired(int valSize = 0);
+  int getTblSize() { return (tableSize); }
+
+  //
+protected:
+  AHT_HashNode *getFirst() { return (getNext(table-1)); }
+  AHT_HashNode *getNext(AHT_HashNode *hn) {
     for (hn++; hn < table+tableSize; hn++) {
       if (!hn->isEmpty())
         return (hn);
     }
-    return ((HashNode *) 0);
+    return ((AHT_HashNode *) 0);
   }
-  HashNode *getFirst() { return (getNext(table-1)); }
 };
 
-//
-// kost@ : A hash table with the O(n) (n=number of entries) reset
-// time. Useful e.g. for marshaling. The idea is that a hash node
-// keeps the number of a previously allocated node, so 'reset()'
-// traverses those backwards (keep in mind also that there is no
-// 'delete' operation). Unfortunately, i don't see any simple and
-// efficient way to just extend the 'HashTable'. So, a lot of things
-// are plain copied...
 
 //
-class HashNodeLinked {
-public:
+// An address hash table with the O(n) (n=number of entries) reset
+// time. Useful e.g. for marshaling. The idea is that a hash node
+// keeps a reference to a previous node, so 'reset()' traverses those
+// backwards (keep in mind also that there is no 'delete'
+// operation). Unfortunately, i don't see any simple and efficient way
+// to just extend the 'HashTable'. So, a lot of things are plain
+// copied...
+
+//
+class AHT_HashNodeLinked {
+private:
   HtKey key;
   void * value;
-  HashNodeLinked *prev;
+  AHT_HashNodeLinked *prev;
 
   //
 public:
+  AHT_HashNodeLinked() { setEmpty(); }
+
+  //
   void setEmpty() { key.fint = (intlong) htEmpty; }
   Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
-  //
-  HashNodeLinked() { setEmpty(); }
-};
 
-//
-#define K_SHIFT         4
+  //
+  void setKey(intlong iIn) { key.fint = iIn; }
+  void setValue(void *vIn) { value = vIn; }
+  void setPrev(AHT_HashNodeLinked *pIn) { prev = pIn; }
+
+  //
+  HtKey getKey() { return (key); }
+  void* getValue() { return (value); }
+  AHT_HashNodeLinked* getPrev() { return (prev); }
+};
 
 //
 // Only 'intlong' keys are supported by now;
-class HashTableFastReset {
+class AddressHashTableFastReset {
 private:
+  int tableSize;
+  int incStepMod;               // an integer slightly < tableSize;
   int counter;      // number of entries
   int percent;      // if more than percent is used, we reallocate
-  int tableSize;
-  HashNodeLinked *table;
-  HashNodeLinked *prev;
+  AHT_HashNodeLinked *table;
+  AHT_HashNodeLinked *prev;
+  DebugCode(int nsearch;);      // number of searches;
+  DebugCode(int tries;);        // accumulated;
+  DebugCode(int maxtries;);
 
   //
 private:
-  int hashFunc(intlong i) { return ((((unsigned) i)>>K_SHIFT) % tableSize); }
-  int findIndex(intlong i);
+  unsigned int primeHashFunc(intlong);
+  unsigned int incHashFunc(intlong);
+  unsigned int getStepN(unsigned int pkey, unsigned int ikey, int i);
+
+  unsigned int findIndex(intlong i);
   void mkTable();
   void resize();
-  DebugCode(int lengthList(int););
 
   //
 public:
-  HashTableFastReset(int sz);
-  ~HashTableFastReset();
+  AddressHashTableFastReset(int sz);
+  ~AddressHashTableFastReset();
 
   //
   int getSize() { return (counter); }
   void htAdd(intlong k, void *val);
   void *htFind(intlong k);
-  void mkEmpty();
+  void mkEmpty(Bool force = FALSE);
 
   //
   // for e.g. garbage collection:
-  HashNodeLinked *getNext(HashNodeLinked *hn) {
+  AHT_HashNodeLinked *getNext(AHT_HashNodeLinked *hn) {
     for (hn++; hn < table+tableSize; hn++) {
       if (!hn->isEmpty())
         return (hn);
     }
-    return ((HashNodeLinked *) 0);
+    return ((AHT_HashNodeLinked *) 0);
   }
-  HashNodeLinked *getFirst() { return (getNext(table-1)); }
+  AHT_HashNodeLinked *getFirst() { return (getNext(table-1)); }
 
   //
   DebugCode(void print(););
-  DebugCode(void printStatistics(););
+  DebugCode(void printStatistics(int th = 0););
 };
 
 #endif

@@ -110,8 +110,8 @@ class CodeArea {
   friend class TMapping;
   friend int engine(Bool init);
   friend class Statistics;
-  static HashTable atomTab;
-  static HashTable nameTab;
+  static StringHashTable atomTab;
+  static StringHashTable nameTab;
   friend TaggedRef OZ_atom(OZ_CONST char *str);
   friend TaggedRef oz_atomNoDup(OZ_CONST char *str);
   friend TaggedRef oz_uniqueName(const char *str);
@@ -182,7 +182,7 @@ public:
 #ifdef THREADED
   static void **globalInstrTable;
 #ifndef INLINEOPCODEMAP
-  static HashTable *opcodeTable;
+  static AddressHashTable *opcodeTable;
 #endif
 #endif
 

@@ -88,6 +88,13 @@ Bool dpMarshalCode(GenTraverser *gt, void *arg)
                    // builtins to locations
 
   //
+  if (bs->availableSpace() < 2*DIFMaxSize + OpcodeMaxSize) {
+    marshalDIF(bs, DIF_SUSPEND);
+    gt->suspendBA();
+    return (FALSE);
+  }
+
+  //
   if (PC == start) marshalCodeStart(bs);
   marshalDIF(bs, DIF_CODEAREA);
 

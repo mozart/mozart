@@ -50,11 +50,11 @@ void GTIndexTable::gCollectGTIT()
 
   //
   GCGTITEntry *ta = new GCGTITEntry[asize];
-  HashNodeLinked *n = getFirst();
+  AHT_HashNodeLinked *n = getFirst();
   int i = 0;
   do {
-    ta[i].term = (OZ_Term) n->key.fint;
-    ta[i].index = ToInt32(n->value);
+    ta[i].term = (OZ_Term) (n->getKey()).fint;
+    ta[i].index = ToInt32(n->getValue());
     n = getNext(n);
     i++;
   } while (n);
