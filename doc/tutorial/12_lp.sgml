@@ -6,16 +6,19 @@ Intelligence, and also found elsewhere, e.g., in operations research,
 are currently solvable only by resorting to some form of search and
 <EM/constraint/ propagation. Such problems admit very concise
 solutions, if the programming language abstracts away the details of
-search by providing don't know nondeterminism. In this tutorial, we
-are not going to talk about constraint solving.
-form. The reader may
-look to the companion tutorial on constraint programming in Oz.
-We will talk about logic programming and concurrent
-constraint programming where each procedure can be 
+search by providing don't know nondeterminism. Logic
+programming and Prolog is considered a suitable 
+formalism for this class of problems. 
+In this chapter we will talk about how to express
+logic programming and concurrent
+constraint programming in Oz. 
+In logic programming each procedure can be 
 interpreted as a relation expressed by a logical statement.
 We will also discuss the relation between Oz and Prolog, and how
 most Prolog programs have a straight forward translation to Oz programs.
 
+For more advanced constraint solving techniques, the reader may
+look to the companion tutorial on constraint programming in Oz.
 
 
 <SECTION><TITLE/Constraint Store/
