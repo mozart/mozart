@@ -25,6 +25,7 @@ key_t vsTypeToKey(int type);
 VSMailboxManager::VSMailboxManager(long memSizeIn)
   : memSize(memSizeIn)
 {
+#ifdef VIRTUALSITES
   int msgsNum = (memSize - sizeof(VSMailbox))/sizeof(VSMailboxMsg);
   // There must be a place for at least one message;
   Assert(msgsNum);
@@ -40,8 +41,10 @@ VSMailboxManager::VSMailboxManager(long memSizeIn)
   mbox = (VSMailbox *) mem;
   mbox->VSMailbox::VSMailbox(shmkey, memSize, msgsNum); 
   // Note that the mailbox is not yet ready - 'virtual info' is missing;
+#endif
 }
 
+#ifdef VIRTUALSITES
 //
 VSMailboxManager::VSMailboxManager(key_t shmkeyIn)
   : shmkey(shmkeyIn)
@@ -58,20 +61,24 @@ VSMailboxManager::VSMailboxManager(key_t shmkeyIn)
   //
   memSize = mbox->getMemSize();
 }
+#endif
 
 //
 void VSMailboxManager::unmap()
 {
+#ifdef VIRTUALSITES
   if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
   DebugCode(mbox = (VSMailbox *) 0);
   DebugCode(mem = (void *) 0);
+#endif
 }
 
 //
 void VSMailboxManager::destroy()
 {
+#ifdef VIRTUALSITES
   unmap();
 
   //
@@ -81,6 +88,7 @@ void VSMailboxManager::destroy()
   DebugCode(shmid = 0);
   DebugCode(shmkey = (key_t) 0);
   DebugCode(memSize = -1);
+#endif
 }
 
 //

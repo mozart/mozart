@@ -20,12 +20,15 @@
 //
 // ('SEM_UNDO' are not usable here, since the semaphore does not really
 // count resources;)
+
+#ifdef VIRTUALSITES
 static struct sembuf block[1] = {
   { 0, -1, 0 }
 };
 static struct sembuf wakeup[1] = {
   { 0, 1, 0 }
 };
+#endif
 
 //
 // compose the 'semkey' : the 'PERDIO' byte, type id and pid beneath; 
@@ -57,6 +60,7 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(int chunkSizeIn,
 					     int chunksNumIn)
   : chunkSize(chunkSizeIn), chunksNum(chunksNumIn)
 {
+#ifdef VIRTUALSITES
   SemOptArg arg;
 
   // 
@@ -93,12 +97,14 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(int chunkSizeIn,
   for (int i = 0; i < mapSize; i++)
     map[i] = (int32) 0xffffffff;     // everything is free originally;
   map[0] &= ~0x1;		// ... but except the one for the pool;
+#endif
 }
 
 //
 VSMsgChunkPoolManager::VSMsgChunkPoolManager(key_t shmkeyIn)
   : shmkey(shmkeyIn)
 {
+#ifdef VIRTUALSITES
   //
   // we don't know in advance how large it is - so just try to swallow
   // the page "as is";
@@ -128,11 +134,13 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(key_t shmkeyIn)
   // (no usage bitmap at receiver sites;)
   mapSize = 0;
   map = (int32 *) 0;
+#endif
 }
 
 //
 void VSMsgChunkPoolManager::destroy()
 {
+#ifdef VIRTUALSITES
   if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
@@ -147,6 +155,7 @@ void VSMsgChunkPoolManager::destroy()
   }
   DebugCode(shmid = 0);
   DebugCode(shmkey = (key_t) 0);
+#endif
 }
 
 //
@@ -160,6 +169,7 @@ void VSMsgChunkPoolManager::scavengeMemory()
 //
 int VSMsgChunkPoolManager::getMsgChunkOutline()
 {
+#ifdef VIRTUALSITES
   int chunkNum;
   SemOptArg arg;
 
@@ -199,16 +209,21 @@ retry:
   //
   pool->stopWakeupMode();	// don't care about the semaphore now;
   return (chunkNum);
+#else
+  return -1;
+#endif
 }
 
 //
 void VSMsgChunkPoolManager::wakeupOwner()
 {
+#ifdef VIRTUALSITES
   // Note that the "wakeup" mode can be dropped here already (though
   // that's tested in the 'markFree' method), but we don't care!
   while (semop(semid, &wakeup[0], 1) < 0)
     if (errno == EINTR) continue;
     else error("Virtual Sites: unable to wakeup a sender");
+#endif
 }
 
 //
