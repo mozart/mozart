@@ -312,7 +312,7 @@ Bool MemChunks::isInHeap(TaggedRef term)
     case STUPLE:
     case CONST:
     case SRECORD:
-      if (!list->inChunkChain(tagValueOf (term))) {
+      if (!list->inChunkChain(tagValueOf(term))) {
 	return NO;
       }
       break;
@@ -384,7 +384,7 @@ void getMemFromOS(size_t sz)
   heapTop = &heapEnd[heapBlockSize];
 
 //  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
-  if (heapTop > (char*)maxPointer) {
+  if (tagValueOf(makeTaggedMisc(heapTop)) != heapTop) {
     error("Oz adress space exhausted");
     IO::exitOz(1);
   }
