@@ -324,7 +324,7 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 bootstrap:
 	$(MAKE) ozc.ozp all \
 	OZC=$(SRCDIR)/ozc.sh \
-	OZENGINE=$(SRCDIR)/../ozengine.sh \
+	OZENGINE=$(SRCDIR)/oze.sh \
 	OZINIT=Init.ozf \
 	OZ_LIB=. \
 	OZ_LOAD=root=.:prefix=$(URL)/share/=./:=
