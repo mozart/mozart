@@ -1520,7 +1520,7 @@ void AM::gc(int msgLevel) {
   setCurrent(_currentBoard->gcBoard());
 
   aritytable.gc ();
-  threadsPool.doGC();
+  threadsPool.gc();
 
   // mm2: Assert(isEmptySuspendVarList());
   emptySuspendVarList();
@@ -1809,83 +1809,26 @@ void AbstractionEntry::gcAbstractionEntry()
   abstr = gcAbstraction(abstr);
 }
 
-#ifdef LINKED_QUEUES
 
-void ThreadQueue::gc() {
-  ThreadQueueIterator iter(this);
-  Thread*ptr;
-  head=tail=0;
-  head_index=tail_index=size=0;
-  while ((ptr=iter.getNext())) enqueue(ptr->gcThread());
-}
-
-#else
-
-
-void ThreadQueue::gc() {
-  int newsize = suggestNewSize();
-  Thread ** newqueue = 
-    (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * newsize));
-  
-  int asize   = size;
-  int ahead   = head;
-  int newhead = 0;
-  
-  while (asize--) {
-    newqueue[newhead++] = queue[ahead]->gcThread();
-    ahead = ahead + 1;
-    if (ahead==maxsize)
-      ahead = 0;
-  }
-
-   maxsize = newsize;
-   queue   = newqueue;
-   head    = 0;
-   tail    = size - 1;
-}
-#endif /* !LINKED_QUEUES */
-
-void ThreadsPool::doGC() {
-  hiQueue.gc();
-  midQueue.gc();
-  lowQueue.gc();
-}
-
-
-#ifdef LINKED_QUEUES
-LocalPropagatorQueue * LocalPropagatorQueue::gc() {
-  if (this==0) return 0;
-  // when a space is being cloned, it must be stable
-  // which means that it local propagation must be empty
-  // and this is catched by the conditional above.
-  // if we fall through, then we must be in GC
+SuspQueue * SuspQueue::gc(void) {
   Assert(isInGc);
-  Assert(!isEmpty());
-  LocalPropagatorQueue * q = new LocalPropagatorQueue();
-  LocalPropagatorQueueIterator iter(this);
-  Propagator*ptr;
-  while ((ptr=iter.getNext())) q->enqueue(ptr->gcPropagator());
-  // do not return the blocks to the free list since they
-  // are in old space, just forget everything
-  zeroAll();
-  return q;
+
+  SuspQueue * to = new SuspQueue(suggestNewSize());
+
+  while (!isEmpty())
+    to->enqueue(dequeue()->gcSuspendable());
+
+  return to;
 }
-#else
-LocalPropagatorQueue * LocalPropagatorQueue::gc() {
-  if (!this) 
-    return NULL;
-  
-  Assert(isInGc);
-  Assert(!isEmpty());
 
-  LocalPropagatorQueue * new_lpq = new LocalPropagatorQueue (suggestNewSize());
 
-  // gc and copy entries
-  for ( ; !isEmpty(); new_lpq->enqueue(dequeue()->gcPropagator()));
-
-  return new_lpq;
+void ThreadsPool::gc(void) {
+  _q[ HI_PRIORITY] = _q[ HI_PRIORITY]->gc();
+  _q[MID_PRIORITY] = _q[MID_PRIORITY]->gc();
+  _q[LOW_PRIORITY] = _q[LOW_PRIORITY]->gc();
 }
-#endif /* !LINKED_QUEUES */
+
+
 
 // Note: the order of the list must be maintained
 inline
@@ -2437,7 +2380,8 @@ void Board::gcRecurse() {
   if (!isRoot() && !getParentInternal()->hasMarkOne())
     parentAndFlags.set(getParentInternal()->gcBoard(),0);
   
-  localPropagatorQueue = localPropagatorQueue->gc();
+  if (localPropagatorQueue)
+    localPropagatorQueue = localPropagatorQueue->gc();
 
   script.Script::gc();
 

@@ -152,8 +152,6 @@ public:
     taskStack->dispose();
   }
 
-
-  int getRunnableNumber();
 };
 
 #endif
