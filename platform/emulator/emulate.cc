@@ -1387,7 +1387,8 @@ void engine() {
     int argsToSave = getPosIntArg(PC+2);
 
     if (isAnyVar(tag)) {
-      INCFPC(3);
+      /* INCFPC(3); do NOT suspend on next instructions: DET suspensions are
+                    now woken up always, even if variable is bound to another var */
       Suspension *susp =
 	new Suspension(new SuspContinuation(CBB,
 					    GET_CURRENT_PRIORITY(),
