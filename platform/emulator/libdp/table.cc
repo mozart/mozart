@@ -343,14 +343,21 @@ void BorrowEntry::gcBorrowRoot(int i) {
       return;}
     PD((GC,"BT1 b:%d variable found",i));
     if (tagged2CVar(*getPtr())->getSuspList()!=0) {
-      gcPO();}
+      gcPO();
+      return;
+    }
+    if(!bcreditHandler.canBeFreed()) {
+      gcPO();
+    }
     return;}
   if(isRef()){
     Assert(bcreditHandler.isExtended());
     gcPO();
     return;}
   Assert(isTertiary());
-  if(getTertiary()->cacIsMarked()){
+  // AN: Copy also if this is a secondary credit master, i.e. check with
+  // credithandler.
+  if(getTertiary()->cacIsMarked() || !bcreditHandler.canBeFreed()){
     makeGCMark();
     oz_gCollectTerm(u.tert,u.tert);
     return;}
@@ -499,13 +506,9 @@ void OB_Entry::gcPO() {
   Assert(!isFree());
   if (isGCMarked()) return;
   makeGCMark();
-  if (isTertiary()) {
-    PD((GC,"OT tertiary found"));
-    oz_gCollectTerm(u.tert, u.tert);
-  } else {
-    Assert(isRef() || isVar());
-    PD((GC,"OT var/ref"));
-    oz_gCollectTerm(u.ref,u.ref);}
+  Assert(isTertiary() || isRef() || isVar());
+  PD((GC,"var/ref/tert found"));
+  oz_gCollectTerm(u.tert, u.tert);
 }
 
 Bool withinBorrowTable(int i){
@@ -625,7 +628,9 @@ void BorrowTable::gcBorrowTableFinal()
         else{
           if(!errorIgnore(t)) maybeUnask(t);
           Assert(t->isProxy());
-          borrowTable->maybeFreeBorrowEntry(i);}}
+          borrowTable->maybeFreeBorrowEntry(i);
+        }
+    }
     else if(b->isRef()){
       Assert(b->isGCMarked());
       b->removeGCMark();

@@ -817,8 +817,6 @@ NetAddress* BorrowCreditHandler::getNetAddress() {
 Bool BorrowCreditHandler::maybeFreeCreditHandler() {
   if(isExtended()){
     if(getExtendFlags() & CH_MASTER) {
-//        printf("maybeFreeCreditHandler & master %d\n",osgetpid());
-//        Assert(0);
       return FALSE;
     }
     Assert(getExtendFlags() & CH_SLAVE);
@@ -826,6 +824,13 @@ Bool BorrowCreditHandler::maybeFreeCreditHandler() {
   }
   Assert(!isExtended());
   return TRUE;
+}
+
+Bool BorrowCreditHandler::canBeFreed() {
+  if(isExtended() && (getExtendFlags() & CH_MASTER))
+    return FALSE;
+  else
+    return TRUE;
 }
 
 BorrowCreditExtension* BorrowCreditHandler::getSlave(){
