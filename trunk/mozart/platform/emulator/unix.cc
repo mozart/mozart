@@ -181,7 +181,6 @@ while ((RET = CALL) < 0) {				\
 // specification of returning
 // -------------------------------------------------
 
-static
 int raiseUnixError(char *f,int n, char * e, char * g) {
   return oz_raise(E_SYSTEM,E_OS, g, 3, OZ_string(f), OZ_int(n), OZ_string(e)); 
 }
