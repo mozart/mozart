@@ -316,7 +316,9 @@ oz_warn=$oz_a
 OZ_CXX_OPTIONS($oz_warn_error,oz_a)
 oz_warn_error=$oz_a
 
-OZ_CXX_OPTIONS(-fpic,CDYNOPT)
+if test "$oz_enable_modules_static" != "yes" ; then
+    OZ_CXX_OPTIONS(-fpic,CDYNOPT)
+fi
 AC_SUBST(CDYNOPT)
 
 
