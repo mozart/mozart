@@ -48,20 +48,18 @@ enum OZ_Registered_Extension_Id {
 
 class OZ_Extension {
 public:
-  virtual ~OZ_Extension() { OZ_error("invoking destructor ~OZ_Extension()"); }
+  virtual ~OZ_Extension();
 
   OZ_Extension() {}
 
   void* operator        new(size_t n) { return _OZ_new_OZ_Extension(n); }
-  void operator         delete(void*,size_t) 
-    { OZ_error("invoking OZ_Extension::operator delete(void*,size_t)"); }
+  void operator         delete(void*,size_t);
   virtual int           getIdV() = 0;
   virtual OZ_Extension* gcV() = 0;
   virtual void          gcRecurseV() {}
   virtual OZ_Term       printV(int = 10) { return typeV(); }
-  virtual OZ_Term       printLongV(int depth = 10, int offset = 0)
-    { return OZ_pair2(printV(depth),OZ_atom("\n")); }
-  virtual OZ_Term       typeV() { return OZ_atom("extension"); }
+  virtual OZ_Term       printLongV(int depth = 10, int offset = 0);
+  virtual OZ_Term       typeV();
   virtual OZ_Term       inspectV() { return typeV(); }
   virtual OZ_Boolean    isChunkV() { return OZ_TRUE; }
   virtual OZ_Term       getFeatureV(OZ_Term)       { return 0; }
@@ -80,7 +78,7 @@ public:
   OZ_SituatedExtension(void): OZ_Extension() { space = _OZ_currentBoard(); }
   OZ_SituatedExtension(void *sp) : OZ_Extension(), space(sp) {}
 
-  virtual OZ_Term typeV() { return OZ_atom("situatedExtension"); }
+  virtual OZ_Term typeV();
 
   virtual void * __getSpaceInternal()         { return space; }
   virtual void   __setSpaceInternal(void *sp) { space = sp; }
