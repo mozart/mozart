@@ -143,8 +143,8 @@
       The module <Span class=index/<<Dictionary>>/ contains procedures
       operating on dictionaries.  If a dictionary contains an item under
       some key&nbsp;?_{LI}, we say ?_{LI} is a <Def/valid key/.  Whenever
-      a dictionary access is indexed with an invalid key, a type error is
-      raised.
+      a dictionary access is indexed with an ill-typed key, a type error is
+      raised. For a missing but well-typed key, a system exception is raised.
       <List>
         <Entry><Span class=index/<<IsDictionary>>/
           <Index class=tails/<<Dictionary>><And><<is>>/

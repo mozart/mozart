@@ -70,7 +70,7 @@ OZLOADSEP       = @OZLOADSEP@
 CYGPATH         = $(SRCDIR)/cygpath.sh
 
 CYG_SRCDIR      = $(shell $(CYGPATH) $(SRCDIR))
-CYG_BUILDDIR    = $(shell $(CYGPATH) $(BUILDIR))
+CYG_BUILDDIR    = $(shell $(CYGPATH) $(BUILDDIR))
 CYG_PREFIX      = $(shell $(CYGPATH) $(PREFIX))
 CYG_BUILDEMU    = $(shell $(CYGPATH) $(BUILDEMU))
 
@@ -92,7 +92,7 @@ export OZLIB
 export OZPATH = .$(OZLOADSEP)$(shell $(CYGPATH) $(SRCDIR))
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = $(subst :,'$(OZLOADSEP)',root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:cache=$(CYG_PREFIX)/cache:prefix=/=/:=)
+export OZ_LOAD = $(subst :,$(OZLOADSEP),root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:cache=$(CYG_PREFIX)/cache:prefix=/=/:=)
 
 export OZMAKE_COPYALWAYS        = no
 export OZMAKE_VERBOSE           = no
@@ -544,7 +544,7 @@ boot-all:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=$(subst :,'$(OZLOADSEP)',root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:prefix=/=/:prefix=./=./:all=.:all=$(CYG_BUILDEMU)/:=)
+                OZ_LOAD=$(subst :,$(OZLOADSEP),root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:prefix=/=/:prefix=./=./:all=.:all=$(CYG_BUILDEMU)/:=)
 
 boot--%:
         $(MAKE) $* \
@@ -552,7 +552,7 @@ boot--%:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=$(subst :,'$(OZLOADSEP)',root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:prefix=/=/:prefix=./=./:all=.:all=$(CYG_BUILDEMU)/:=)
+                OZ_LOAD=$(subst :,$(OZLOADSEP),root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:prefix=/=/:prefix=./=./:all=.:all=$(CYG_BUILDEMU)/:=)
 
 check:
 
@@ -601,7 +601,7 @@ boot-init: $(BOOTINITTXTFROM)
         || (rm -f $@; exit 1)
 
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-        OZINIT=Init.ozf OZ_LOAD=$(subst :,'$(OZLOADSEP)',root=.:prefix=/=/:prefix=./=./:prefix=x-oz://system/=./:pattern=x-oz://system/?{x}=./?{x}.ozf:prefix=x-oz://system/=../tools/:pattern=x-oz://system/?{x}=../tools/?{x}.ozf:prefix=x-oz://boot/=$(CYG_BUILDEMU)/:=) $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+        OZINIT=Init.ozf OZ_LOAD=$(subst :,$(OZLOADSEP),root=.:prefix=/=/:prefix=./=./:prefix=x-oz://system/=./:pattern=x-oz://system/?{x}=./?{x}.ozf:prefix=x-oz://system/=../tools/:pattern=x-oz://system/?{x}=../tools/?{x}.ozf:prefix=x-oz://boot/=$(CYG_BUILDEMU)/:=) $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
         cp $< $@
