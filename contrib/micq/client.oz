@@ -31,6 +31,7 @@ require
 	 inviteUser:S_inviteUser
 	 removeApplication:S_removeApplication
 	 getHistory: S_getHistory
+	 setStatus:S_setStatus
 	 clearHistory: S_clearHistory) at 'methods.ozf'
 import
    Browser(browse:Browse)
@@ -75,7 +76,7 @@ define
       feat
 	 args  ticketDB connecting
       attr
-	 id  server  args  name  ServerRef GUIStarted
+	 id  server  args  name  ServerRef GUIStarted status
 	 
       meth init(server:S args:A)
 	 proc{MyServer M}
@@ -105,6 +106,7 @@ define
 	 end
       in
 	 GUIStarted <- false
+	 status<-online
 	 self.connecting = {NewCell false}
 	 ServerRef<-S
 	 server<-MyServer
@@ -143,6 +145,7 @@ define
 	    end
 	    {ConnectLoop}
 	    {D close()}
+	    {self setStatus}
 	 end
       end
       
@@ -165,11 +168,10 @@ define
 	 {self pingServer()}
       end
       
-      meth startgui(settings:S<=nil) H in
+      meth startgui(settings:S<=nil)
 	 if @GUIStarted then skip
 	 else
-	    H = {self load($)}
-	    try
+	    try	H = {self load($)} in
 	       {StartGUI self.this @server @id H S}
 	       GUIStarted <- true
 	    catch X then {Browse exception(startgui X)} end
@@ -202,6 +204,11 @@ define
 
       meth messageAck(id:_ mid:_)=M
 	 {MessageAck M}
+      end
+      
+      meth setStatus(online: S<=nil)
+	 if S\=nil then status <- S end
+	 {@server S_setStatus(id: @id online: @status)}
       end
       
       meth startapplication(id:I) A T F R in
