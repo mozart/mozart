@@ -34,7 +34,8 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "base.hh"
+#include "ozconfig.hh"
 #include "stack.hh"
 #include "tagged.hh"
 

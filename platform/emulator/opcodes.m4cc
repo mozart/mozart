@@ -24,8 +24,7 @@
  *
  */
 #include "opcodes.hh"
-#include "types.hh"
-#include "error.hh"
+#include "base.hh"
 
 define(Size,`ifelse($1,`',0,
 		    $1,Cache,CacheSize,

@@ -46,12 +46,6 @@ AC_CANONICAL_HOST
 
 AC_LANG_CPLUSPLUS
 
-if test -n "$OZHOME" && test -d "$OZHOME";
-then
-  ac_default_prefix=$OZHOME
-fi
-
-
 dnl *****************************************************************
 dnl topdir
 dnl *****************************************************************
@@ -268,21 +262,6 @@ then
   LD="$CC"
 fi
 AC_SUBST(LD)
-
-dnl Special hack for finding library directories
-ps="$HOME/lib/$platform"
-if test -n "$PSDIR"
-then
-    ps="$ps $PSDIR/lib/$platform"
-fi
-for p in $ps
-do
-  if test -d $p
-  then
-    AC_MSG_RESULT(using library dir $p)
-    LDFLAGS="$LDFLAGS -L$p"
-  fi
-done
 
 AC_CHECK_LIB(intl, main)
 AC_CHECK_LIB(nsl, main)

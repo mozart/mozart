@@ -25,6 +25,7 @@
  */
 
 #include "cpi.hh"
+#include "builtins.hh"
 
 // gc.cc: OZ_Propagator * OZ_Propagator::gc(void)
 

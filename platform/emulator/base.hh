@@ -1,0 +1,396 @@
+/*
+ *  Authors:
+ *    Michael Mehl (mehl@dfki.de)
+ * 
+ *  Contributors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     $MOZARTURL$
+ * 
+ *  See the file "LICENSE" or
+ *     $LICENSEURL$
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __BASEH
+#define __BASEH
+
+#ifdef INTERFACE
+#pragma interface
+#endif
+
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
+#include "machine.hh"
+#include "resources.hh"
+#include "config.h"
+
+// more includes at end!
+
+#if !defined(__GNUC__) && !defined(NULL)
+# define NULL 0
+#endif
+
+const unsigned int KB = 1024;
+const unsigned int MB = KB*KB;
+
+const int WordSize = sizeof(void*);
+
+#define OZPRINT \
+  void print(ostream &stream=cout, int depth = 10, int offset = 0); \
+  void printDebug(void) {print(cerr,10,0); cerr << endl; cerr.flush();}
+
+#define OZPRINTLONG \
+  void printLong(ostream &stream=cout, int depth = 10, int offset = 0); \
+  void printLongDebug(void) {printLong(cerr,10,0); cerr << endl; cerr.flush();}
+
+inline int min(int a, int b) {return a < b ? a : b;}
+inline int max(int a, int b) {return a > b ? a : b;}
+
+inline int ozabs(int a) {return a > 0 ? a : -a;}
+inline float ozabs(float a) {return a > 0 ? a : -a;}
+
+
+#define Swap(A,B,Type) { Type help=A; A=B; B=help; }
+
+typedef int Bool;
+const Bool NO = 0;
+const Bool OK = 1;
+
+/* AIX and OSF/1 define these */
+#ifdef TRUE
+#undef TRUE
+#endif
+#ifdef FALSE
+#undef FALSE
+#endif
+const Bool TRUE  = 1;
+const Bool FALSE = 0;
+
+/*
+ * special return values for builtins
+ */
+#define BI_PREEMPT       1024
+#define BI_REPLACEBICALL 1025
+#define BI_TYPE_ERROR    1026
+
+
+typedef unsigned char BYTE;
+
+typedef int32 ByteCode;
+
+typedef ByteCode *ProgramCounter;
+
+#define NOCODE ((ProgramCounter) -1l)
+
+typedef int32 PosInt;
+typedef PosInt Reg;
+
+typedef unsigned int32 TaggedRef;
+
+enum PropCaller {pc_propagator = 0, pc_std_unif = 1, pc_cv_unif = 2};
+
+// duplicated from oz.h !!! Not nice, but 
+typedef unsigned int OZ_Term;
+typedef unsigned int OZ_Return;
+
+typedef OZ_Return (*InlineRel1)(TaggedRef In1);
+typedef OZ_Return (*InlineRel2)(TaggedRef In1, TaggedRef In2);
+typedef OZ_Return (*InlineRel3)(TaggedRef In1, TaggedRef In2, TaggedRef In3);
+typedef OZ_Return (*InlineFun1)(TaggedRef In1, TaggedRef &Out);
+typedef OZ_Return (*InlineFun2)(TaggedRef In1, TaggedRef In2,
+				    TaggedRef &Out);
+typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
+				    TaggedRef In3, TaggedRef &Out);
+typedef OZ_Return (*IFOR)(TaggedRef In1, ...);
+/* IFOR = InlineFunOrRel */
+
+//  ------------------------------------------------------------------------
+
+/* some macros to help debugging
+   DebugCheck:  if 'precondition' then print file and line and execute body
+   DebugCheckT: check without precondition
+   Assert:      issue an error if Cond is not fulfilled
+   */
+
+#ifdef DEBUG_CHECK
+#define WHERE(file) 							      \
+  fprintf(file,"%s:%d ",__FILE__,__LINE__);
+
+#define DebugCheck(Cond,Then)						      \
+     if (Cond) { WHERE(stderr);Then;}
+
+#define DebugCheckT(Then) Then
+
+#define DebugCode(C) C
+
+#define Assert(Cond)							      \
+  if (! (Cond)) {							      \
+    WHERE(stderr);							      \
+    error(" assertion '%s' failed", #Cond);				      \
+  }
+#else
+#define WHERE(file)
+#define DebugCheck(Cond,Then) 
+#define DebugCheckT(Then)
+#define DebugCode(C)
+#define Assert(Cond)
+#endif
+
+
+#ifdef DEBUG_TRACE
+#define DebugTrace(Command) Command
+#else
+#define DebugTrace(Command) 
+#endif
+
+
+#ifdef DEBUG_FD
+#define DebugFD(Cond,Then) if (Cond) {Then;}
+#else
+#define DebugFD(Cond,Then) 
+#endif
+
+#ifdef DEBUG_GC
+#define DebugGC(Cond,Then) if (Cond) {Then;}
+#define DebugGCT(Then) Then
+#else
+#define DebugGC(Cond,Then) 
+#define DebugGCT(Then)
+#endif
+
+//  ------------------------------------------------------------------------
+
+/*
+   Forward declarations of classes and procedures
+*/
+
+struct Equation;
+
+class SVariable;
+class GenCVariable;
+class GenFDVariable;
+class GenMetaVariable;
+class GenBoolVariable;
+class GenFSetVariable;
+class DynamicTable;
+class SRecord;
+class Arity;
+class Abstraction;
+class LTuple;
+class Literal;
+class Float;
+class SmallInt;
+class BigInt;
+class ConstTerm;
+class Cell;
+class SChunk;
+
+class Watcher;
+class Tertiary;
+
+class Port;
+class PortWithStream;
+class PortProxy;
+class PortLocal;
+class PortManager;
+class ProcProxy;
+
+class PendThread;
+class PendBinding;
+class CellManager;
+class CellFrame;
+class CellSec;
+class Chain;
+class ChainElem;
+
+class OwnerEntry;
+class BorrowEntry;
+class OwnerTable;
+class BorrowTable;
+class Site;
+
+class BuiltinTabEntry;
+
+class FiniteDomain;
+
+class OZ_FSetValue;
+
+class Continuation;
+
+class SuspList;
+class CondSuspList;
+
+class CpStack;
+class Thread;
+class ThreadsPool;
+class ThreadQueue;
+class Group;
+class Toplevel;
+class Actor;
+class AWActor;
+class WaitActor;
+class AskActor;
+class SolveActor;
+class Board;
+class RunnableThreadBody;
+
+class Script;
+
+class Trail;
+
+// source level debugger
+enum OzDebugDoit {DBG_STEP, DBG_NOSTEP, DBG_EXIT};
+class OzDebug;
+
+class AM;
+extern AM am; // the one and only engine
+
+// assem
+class CodeArea;
+class PrTabEntry;
+
+// 
+class BuiltinTab;
+
+class FastQueue;
+class DLLStack;
+
+class OzSleep;
+class Alarm;
+
+class IHashTable;
+
+class CompStream;
+
+class Object;
+
+class OzDictionary;
+
+class OzLock;
+
+class InlineCache;
+
+class NetAddress;
+class GName;
+
+class IONode;
+
+
+void checkGC();
+
+// see foreign.cc
+char *toC(OZ_Term);
+
+// see version.sed
+void version();
+
+// see am.cc
+void handlerUSR1();
+void handlerINT();
+void handlerTERM();
+void handlerMessage();
+void handlerSEGV();
+void handlerBUS();
+void handlerPIPE();
+void handlerCHLD();
+void handlerFPE();
+void handlerALRM();
+
+void checkExtThread(Thread *elem, Board *home);
+
+#ifdef DEBUG_STABLE
+extern SuspList * board_constraints;
+void printBC(ostream &, Board *);
+void printBCDebug(Board * = NULL); 
+#endif
+
+// debug print (ozd_)
+void ozd_printBoards();
+void ozd_printThreads();
+void ozd_printAM();
+
+
+char *replChar(char *s,char from,char to);
+char *delChar(char *s,char c);
+
+// see perdio.cc
+int perdioInit();
+int loadURL(TaggedRef url, OZ_Term out, Thread *th);
+int loadURL(const char *,OZ_Term,Thread *th);
+
+// see term.cc
+void initLiterals();
+
+/* Ultrix does not have 'strdup' */
+inline char *ozstrdup(const char *s)
+{
+  char *ret = new char[strlen(s)+1];
+  strcpy(ret,s);
+  return ret;
+}
+
+template <class T>
+class EnlargeableArray {
+private:
+  int _size;
+  T * _array;
+public:
+  EnlargeableArray(int s) : _size(s), _array((T *) malloc(s * sizeof(T))) {}
+  ~EnlargeableArray() { free(_array); }
+  
+  inline
+  T &operator [](int i) { 
+    Assert(0 <= i && i < _size);
+    return _array[i]; 
+  }
+  
+  inline 
+  void request(int s, int m = 100) { // margin of 100
+    if (s >= _size) {
+      _size = s + m;
+      _array = (T *) realloc(_array, _size * sizeof(T));
+    }
+  }
+
+  inline
+  operator T*() { return _array; } // conversion operator
+};
+
+#ifdef __cplusplus
+
+extern "C" {
+  void error( const char *format ...);
+  void warning( const char *format ...);
+  void message( const char *format ...);
+  void statusMessage( const char *format ...);
+  void prefixError();
+  void prefixWarning();
+  void prefixStatus();  
+  void ozperror( const char *msg);
+  void ozpwarning( const char *msg);
+}
+
+#endif
+
+void errorHeader();
+void errorTrailer();
+
+#include "ozostream.hh"
+
+#endif

@@ -31,7 +31,7 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "base.hh"
 #include "oz_cpi.hh"
 
 #ifdef HEAP_PROFILE

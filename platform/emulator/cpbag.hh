@@ -28,8 +28,8 @@
 #pragma interface
 #endif
 
+#include "base.hh"
 #include "mem.hh"
-#include "types.hh"
 
 class CpBag {
   WaitActor * choice;

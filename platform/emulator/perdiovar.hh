@@ -32,8 +32,10 @@
 #pragma interface
 #endif
 
+#include "am.hh"
 #include "genvar.hh"
 #include "oz.h"
+#include "perdio_debug.hh"
 
 enum PV_TYPES {
   PV_MANAGER,

@@ -32,13 +32,14 @@
 
 #include <stdarg.h>
 
-#include "am.hh"
+#include "runtime.hh"
 
 #include "indexing.hh"
 
 #include "genvar.hh"
 #include "dictionary.hh"
 #include "fdhook.hh"
+#include "perdio.hh"
 #include "marshaler.hh"
 
 OZ_C_proc_proto(BIfail);     // builtins.cc
