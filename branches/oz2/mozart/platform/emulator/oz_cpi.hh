@@ -50,6 +50,7 @@
 #define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
 #define OZ_EM_FDDESCR   "description of finite domain integer"
 #define OZ_EM_VECT      "vector of "
+#define OZ_EM_RECORD    "record of "
 #define OZ_EM_TNAME     "truth name"
 #define OZ_EM_STREAM    "stream"
 
