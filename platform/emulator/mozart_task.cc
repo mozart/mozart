@@ -1,7 +1,9 @@
 #include "mozart_cpi.hh"
 #include "mozart_task.hh"
+#include <pthread.h>
 #include <signal.h>
 #include <time.h>
+#include <errno.h>
 
 // ===================================================================
 // OzTaskQueue
@@ -24,8 +26,8 @@ static sigset_t empty_mask;
 
 class OzTaskQueue {
 public:
-  const int total_max = 100;	// at most these many threads may coexists
-  const int idle_sec = 2;	// stays idle at most 2s
+  static const int total_max = 100;	// at most these many threads may coexists
+  static const int idle_sec = 2;	// stays idle at most 2s
   int total;			// number of existing threads
   int idle;			// number of idle threads
   pthread_cond_t cond;
@@ -36,6 +38,7 @@ public:
   void enq(OzTask*);
   void work(void);
   void finish(void);
+  static void gc(void);
 };
 
 // ===================================================================
@@ -44,6 +47,7 @@ public:
 
 static OzTaskQueue* queue_tiny;
 static OzTaskQueue* queue_normal;
+static void task_queues_init(void);
 
 void
 OZ_taskEnqTiny(OzTask*t) {
@@ -61,7 +65,7 @@ OZ_taskEnq(OzTask*t) {
 // creation and initialization of task queues and related data
 // ===================================================================
 
-static void task_queues_init()
+static void task_queues_init(void)
 {
   initialized=1;
   sigemptyset(&empty_mask);
@@ -118,7 +122,7 @@ void OzTaskQueue::enq(OzTask* t)
     sigset_t old_mask;
     pthread_sigmask(SIG_SETMASK,&empty_mask,&old_mask);
     pthread_t id;
-    pthread_create(&id,&thread_attr,task_execute,(void*)this);
+    pthread_create(&id,&attr,task_execute,(void*)this);
     pthread_sigmask(SIG_SETMASK,&old_mask,NULL);
     // the new thread is created in the idle state
     idle++;
@@ -175,7 +179,7 @@ void OzTaskQueue::work(void)
     timeout.tv_sec = time(NULL) + idle_sec;
     timeout.tv_nsec = 0;
     // atomically: release lock, wait for condition, acquire lock
-    if (pthread_cond_timedwait(&cond,&mutex,&timeout)==ETIMEOUT) redo=0;
+    if (pthread_cond_timedwait(&cond,&mutex,&timeout)==ETIMEDOUT) redo=0;
     goto loop;
   }
 
@@ -217,20 +221,21 @@ void OzTaskQueue::finish(void)
 inline void OzTask::gc_linked(OzTask* t)
 {
   while (t) {
-    OZ_gCollectTerm(t->_var);
     t->gc();
     t=t->_next;
   }
 }
 
-void gc_tasks(void)
+void gc_tasks(void) {
+  // if there are tasks, then this module was initialized
+  if (number_of_tasks) OzTaskQueue::gc();
+}
+
+void OzTaskQueue::gc(void)
 {
-  if (number_of_tasks) {
-    // if there are tasks, then this module was initialized
-    pthread_mutex_lock(&mutex);
-    gc_linked_tasks(finish_first);
-    gc_linked_tasks(queue_tiny->queue_first);
-    gc_linked_tasks(queue_normal->queue_first);
-    pthread_mutex_unlock(&mutex);
-  }
+  pthread_mutex_lock(&mutex);
+  OzTask::gc_linked(finish_first);
+  OzTask::gc_linked(queue_tiny->queue_first);
+  OzTask::gc_linked(queue_normal->queue_first);
+  pthread_mutex_unlock(&mutex);
 }

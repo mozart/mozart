@@ -1,9 +1,6 @@
 #ifndef _MOZART_TASK__HH_
 #define _MOZART_TASK__HH_
 
-#include "mozart.h"
-#include <pthread.h>
-
 class OzTaskQueue;
 
 // An OzTask represents some work to be done that may block
