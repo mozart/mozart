@@ -35,7 +35,7 @@ local
    \insert dialog-manager.oz
 
    \insert status-manager.oz
-   
+
 in
 
    class Manager
@@ -59,6 +59,7 @@ in
 	 order:   false
 	 PrevSol: false
 	 ToClose: nil
+	 Resume:  false
 
       
       meth init(EXPLORER Options)
@@ -73,7 +74,7 @@ in
 	    ToplevelManager,configurePointer(idle)
 	 end
       end
-      
+
       meth clear
 	 lock
 	    Manager,ClearDialogs
@@ -82,6 +83,7 @@ in
 	    ToplevelManager,clear
 	    root    <- false
 	    PrevSol <- false
+	    Resume  <- false
 	 end
       end
 
@@ -261,7 +263,7 @@ in
       end
 
       meth StopSearch(Sol Cursor <= false)
-	 if @root==nil then skip else
+	 if @root\=nil then
 	    TryCursor = if Cursor==false then
 			   if Sol==false then @curNode
 			   else
@@ -287,6 +289,7 @@ in
 	    Break   = Manager,StartSearch($)
 	    O       = self.options.search
 	 in
+	    Resume <- resume(node:CurNode action:next)
 	    Manager,StopSearch({CurNode
 				next(Break Manager,GetPrevSol($)
 				     {Dictionary.get O search}
@@ -296,6 +299,7 @@ in
       
       meth all
 	 lock
+	    Resume <- resume(node:@curNode action:all)
 	    Manager,StartSearch
 	    Manager,DoAll({Dictionary.get self.options.drawing update})
 	 end
@@ -310,7 +314,8 @@ in
 				 {Dictionary.get O information} $)}
       in
 	 if Sol\=false andthen StatusManager,getBreakStatus($)==none then
-	    if @IsBAB then PrevSol <- Sol
+	    if @IsBAB then
+	       PrevSol <- Sol
 	    end
 	    if NoSol==1 then
 	       StatusManager,stop
@@ -319,9 +324,11 @@ in
 	       StatusManager,unbreak
 	       StatusManager,startTime
 	       Manager,DoAll({Dictionary.get self.options.drawing update})
-	    else Manager,DoAll(NoSol-1)
+	    else
+	       Manager,DoAll(NoSol-1)
 	    end
-	 else Manager,StopSearch(Sol)
+	 else
+	    Manager,StopSearch(Sol)
 	 end
       end
 
@@ -329,6 +336,7 @@ in
 	 lock
 	    CurNode = @curNode
 	 in
+	    Resume <- false
 	    Manager,StartSearch(_)
 	    Manager,StopSearch({CurNode
 				step(Manager,GetPrevSol($)
@@ -496,7 +504,9 @@ in
       meth wake(Node KillId)
 	 lock
 	    if {self.status getKill(_ $)}==KillId then
-	       Mom = Node.mom
+	       ToResume  = @Resume
+	       Mom       = Node.mom
+	       CurNode
 	    in
 	       if Mom.sentinel then
 		  Manager,reset
@@ -506,6 +516,20 @@ in
 		  {self.status removeBlocked}
 		  curNode <- Mom
 		  Manager,step
+	       end
+	       CurNode = @curNode
+	       if ToResume\=false andthen CurNode\=false then
+		  StartNode = ToResume.node
+		  Action    = ToResume.action
+	       in
+		  if
+		     (Action==all orelse
+		      CurNode.kind\=succeeded) andthen
+		     {StartNode isNextPossible($)}
+		  then
+		     curNode <- StartNode
+		     Manager,Action
+		  end
 	       end
 	    end
 	 end
