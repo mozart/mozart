@@ -384,6 +384,18 @@ public:
   ByteBlockManager():FreeListManager(BYTE_ByteBuffer_CUTOFF){
     wc = 0;
   };
+  ~ByteBlockManager() {
+    BYTE *bb;
+    FreeListEntry *f;
+    int l=length();
+    for(int i=0;i<l;i++) {
+      f=getOne();
+      Assert(f!=NULL);
+      GenCast(f,FreeListEntry*,bb,BYTE*);
+      delete [] bb;
+    }
+    Assert(length()==0);
+  }
   BYTE * getByteBlock() {
     FreeListEntry *f=getOne();
     BYTE *bb;
@@ -400,8 +412,8 @@ public:
     FreeListEntry *f;
     --wc;
     GenCast(bb,BYTE*,f,FreeListEntry*);
-    if(putOne(f)) return;
-    delete [] bb;
+    if(!putOne(f))
+      delete [] bb;
     return;
   }
 
@@ -415,14 +427,14 @@ TransObj *TCPTransController::newTransObj() {
   TCPTransObj *tcpTransObj;
   if(f==NULL) {
     tcpTransObj=new TCPTransObj();
-    tcpTransObj->readBuffer = byteBufferManager->getByteBuffer(
-                               BYTE_DEF_SIZE,byteBlockManager.getByteBlock());
-    tcpTransObj->writeBuffer = byteBufferManager->getByteBuffer(
-                               BYTE_DEF_SIZE,byteBlockManager.getByteBlock());
   }
   else {
     GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
   }
+  tcpTransObj->readBuffer = byteBufferManager->getByteBuffer(
+                               BYTE_DEF_SIZE,byteBlockManager.getByteBlock());
+  tcpTransObj->writeBuffer = byteBufferManager->getByteBuffer(
+                               BYTE_DEF_SIZE,byteBlockManager.getByteBlock());
   tcpTransObj->init();
 
   ++wc;
@@ -430,18 +442,19 @@ TransObj *TCPTransController::newTransObj() {
 }
 
 void TCPTransController::deleteTransObj(TransObj* transObj) {
-  FreeListEntry *f;
-  --wc;
-  GenCast((TCPTransObj *)transObj,TCPTransObj*,f,FreeListEntry*);
-  if(putOne(f))
-    return;
-
   byteBlockManager.deleteByteBlock(
   byteBufferManager->deleteByteBuffer(((TCPTransObj *) transObj)
                                       ->readBuffer));
   byteBlockManager.deleteByteBlock(
   byteBufferManager->deleteByteBuffer(((TCPTransObj *) transObj)
                                       ->writeBuffer));
+
+  FreeListEntry *f;
+  --wc;
+  GenCast((TCPTransObj *)transObj,TCPTransObj*,f,FreeListEntry*);
+  if(putOne(f))
+    return;
+
   delete (TCPTransObj *) transObj;
   return;
 }
@@ -449,4 +462,17 @@ void TCPTransController::deleteTransObj(TransObj* transObj) {
 int TCPTransController::getInfo(int &size) {
   size = sizeof(TCPTransObj)+2*BYTE_DEF_SIZE;
   return getCTR();
+}
+
+TCPTransController::~TCPTransController() {
+  TCPTransObj *tcpTransObj;
+  FreeListEntry *f;
+  int l=length();
+  for(int i=0;i<l;i++) {
+    f=getOne();
+    Assert(f!=NULL);
+    GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
+    delete tcpTransObj;
+  }
+  Assert(length()==0);
 }

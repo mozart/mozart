@@ -136,22 +136,31 @@ OZ_Term makeMemRec(OZ_Term type, int size, int nr){
 OZ_BI_define(BI_DistMemInfo,0,1)
 {
   initDP();
-  int comObjNr, comObjSz, transObjNr, transObjSz,
-      msgContainerNr, msgContainerSz, transObjUsed;
+  int comObjNr, comObjSz,
+      transObjNr, transObjSz,
+      msgContainerNr, msgContainerSz,
+      comObjUnused, transObjUnused, msgContainerUnused;
 
   comObjNr = getComControllerInfo(comObjSz);
   transObjNr = getTransControllerInfo(transObjSz);
-  transObjUsed = getTransControllerUsed();
   msgContainerNr = getMsgContainerManagerInfo(msgContainerSz);
+
+  comObjUnused = getComControllerUnused();
+  transObjUnused = getTransControllerUnused();
+  msgContainerUnused = getMsgContainerManagerUnused();
 
   OZ_RETURN(oz_cons(makeMemRec(oz_atom("ComObjects"),comObjSz,comObjNr),
               oz_cons(makeMemRec(oz_atom("TransObjects"),transObjSz,
                                  transObjNr),
-               oz_cons(makeMemRec(oz_atom("UsedTransObjects"),0,
-                                  transObjUsed),
                 oz_cons(makeMemRec(oz_atom("MsgContainers"),msgContainerSz,
                                    msgContainerNr),
-                  oz_nil())))));
+               oz_cons(makeMemRec(oz_atom("Unused ComObjects"),comObjSz,
+                                  comObjUnused),
+               oz_cons(makeMemRec(oz_atom("Unused TransObjects"),transObjSz,
+                                  transObjUnused),
+               oz_cons(makeMemRec(oz_atom("Unused MsgContainers"),msgContainerSz,
+                                  msgContainerUnused),
+                       oz_nil())))))));
 } OZ_BI_end
 
 

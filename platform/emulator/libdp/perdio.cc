@@ -1419,6 +1419,12 @@ void dpExitWithTimer(unsigned int timeUntilClose)
   //  printf("Close done at %s\n", myDSite->stringrep());
 
  if (logfile!=stdout) fclose(logfile);
+
+ // For leaktracers to show the right thing delete as much as possible
+ DebugCode(
+           delete msgContainerManager;
+           exitNetwork();
+           )
 }
 
 void dpExitImpl() {

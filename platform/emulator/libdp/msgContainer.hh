@@ -153,6 +153,8 @@ public:
 class MsgContainerManager: public FreeListManager {
 public:
   MsgContainerManager():FreeListManager(1000){wc = 0;}
+  ~MsgContainerManager();
+
   int wc;
 
   MsgContainer*newMsgContainer(DSite* site);

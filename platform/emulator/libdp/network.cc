@@ -123,6 +123,13 @@ void initNetwork() {
   networkNotInitiated = FALSE;
 }
 
+void exitNetwork() {
+  delete comController;
+  delete tcptransController;
+  delete byteBufferManager;
+  delete timers;
+}
+
 /* ************************************************************************ */
 /*  SECTION 43: DistPane-Info                                               */
 /* ************************************************************************ */
@@ -148,11 +155,19 @@ int getTransControllerInfo(int &size) {
   return tcptransController->getInfo(size);
 }
 
-int getTransControllerUsed() {
-  return tcptransController->getUsed();
-}
-
 int getMsgContainerManagerInfo(int &size) {
   size = sizeof(MsgContainer);
   return msgContainerManager->getCTR();
+}
+
+int getComControllerUnused() {
+  return comController->length();
+}
+
+int getTransControllerUnused() {
+  return tcptransController->length();
+}
+
+int getMsgContainerManagerUnused() {
+  return msgContainerManager->length();
 }

@@ -88,12 +88,15 @@ public:
     return TRUE;}
 
   int length(){
-    int ct=0;
-    FreeListEntry *f=free;
-    while(f!=NULL){
-      f= f->next;
-      ct++;}
-    return ct;}
+    DebugCode(int ct=0;
+              FreeListEntry *f=free;
+              while(f!=NULL){
+                f= f->next;
+                ct++;}
+              Assert(ct==no_free);
+              )
+    return no_free;
+  }
 };
 
 class GenHashBaseKey{

@@ -133,6 +133,7 @@ public:
   int wc;
 
   ByteBufferManager();
+  ~ByteBufferManager();
   ByteBuffer * getByteBuffer(int size,BYTE *buf);
   BYTE *deleteByteBuffer(ByteBuffer* bb);
 

@@ -66,6 +66,8 @@ public:
 
 class TCPTransController: public TransController {
 public:
+  ~TCPTransController();
+
   int getInfo(int &size);
 
 protected:

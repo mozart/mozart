@@ -80,6 +80,19 @@ void MsgContainer::deleteSnapshot() {
 // includes MessageType-specific get_,put_,marshal_,unmarshal_,gcMsgC_
 #include "msgContainer_marshal.cc"
 
+MsgContainerManager::~MsgContainerManager() {
+  MsgContainer *msgC;
+  FreeListEntry *f;
+  int l=length();
+  for(int i=0;i<l;i++) {
+    f=getOne();
+    Assert(f!=NULL);
+    GenCast(f,FreeListEntry*,msgC,MsgContainer*);
+    delete msgC;
+  }
+  Assert(length()==0);
+}
+
 MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
   FreeListEntry *f=getOne();
   MsgContainer *msgC;
