@@ -12,8 +12,9 @@ disjunction constructs, and programmable search mechanisms. Oz is a
 concurrent language where users can create dynamically any number of
 sequential threads.
 <!-- DENYS: very unclear -->
-Oz threads are data-flow whose execution proceeds
-only when data dependencies on variables involved are resolved.
+Oz threads are data-flow threads in the sense that
+a thread executing an operation will suspend until
+all operands needed have a well defined value.
 
 <P>The tutorial covers most of the concepts of Oz in an informal
 way. It is suitable as first reading for programmers who want to be
@@ -24,8 +25,7 @@ thus complements other Oz documentation.
 <P>The programming system of Oz is called Mozart and has been
 developed by several researchers from DFKI (the German Research Center
 Artificial Intelligent), SICS (the Swedish Institute of Computer
-Science),
-<!-- DENYS: university of saarbrucken -->
+Science), Saarland university,
 and others.
 
 <P CLASS=WARNING>The material in this document is still incomplete and
