@@ -28,17 +28,17 @@ include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
-Makefile: Makefile.in $(SRCTOP)/doc/config.status
-        cd $(SRCTOP)/doc && ./config.status
+Makefile: $(SRCDIR)/Makefile.in $(BUILDTOP)/doc/config.status
+        cd $(BUILDTOP)/doc && ./config.status
 
-$(SRCTOP)/doc/Makefile.common: $(SRCTOP)/doc/Makefile.common.in \
-        $(SRCTOP)/doc/config.status
-        cd $(SRCTOP)/doc && ./config.status
+$(BUILDTOP)/doc/Makefile.common: $(SRCTOP)/doc/Makefile.common.in \
+        $(BUILDTOP)/doc/config.status
+        cd $(BUILDTOP)/doc && ./config.status
 
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css \
-        --xrefdb=$(SRCTOP)/doc/xref.db --xrefdir=$(WHAT) && \
+        --xrefdb=$(BUILDTOP)/doc/xref.db --xrefdir=$(WHAT) && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(HTMLEXTRAFILES); do cp -p $$i $(WHAT)-html; done
 
