@@ -147,6 +147,11 @@ void AM::init(int argc,char **argv)
   
 #ifdef PROFILE
   printf("Compiled to support gprof-profiling.\n");
+#ifdef DEBUG_DET
+  printf("Deterministic scheduling.\n");
+#else
+  printf("Time-slice scheduling.\n");
+#endif  
 #endif
 
 #if THREADED == 1
@@ -302,6 +307,9 @@ Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
     doBind(refPtr,value);
   }
 
+  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			   localPropStore.isInLocalPropagation()));
+
   return result;
 }
 
@@ -318,6 +326,9 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
 {
   int argSize;
   RefsArray args1, args2;
+
+  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			   localPropStore.isInLocalPropagation()));
 
 start:
 
@@ -507,37 +518,36 @@ void AM::setExtSuspension (Board *varHome, Suspension *susp)
     susp->setExtSusp ();
 }
 
-Bool AM::checkExtSuspension (Suspension *susp)
+// expects susp to be external
+Bool AM::_checkExtSuspension (Suspension *susp)
 {
-  if (susp->isExtSusp()) {
-    Board *sb = susp->getBoard ();
-    DebugCheck ((sb == (Board *) NULL),
-		error ("no board is found in AM::checkExtSuspension"));
-    sb = sb->getSolveBoard ();
-
-    Bool wasFound = (sb == (Board *) NULL) ? NO : OK; 
-    while (sb != (Board *) NULL) {
-      DebugCheck ((sb->isSolve () == NO),
-		  error ("no solve board is found in AM::checkExtSuspension"));
-
-      SolveActor *sa = SolveActor::Cast (sb->getActor ());
-      if (sa->isStable () == OK) {
-	Thread::ScheduleSolve (sb);
-	// Note:
-	//  The observation is that some actors which have imposed instability
-        // could be discarded by reduction of other such actors. It means,
-	// that the stability condition can not be COMPLETELY controlled by the 
-	// absence of active threads; 
-	// Note too:
-	//  If the note is not yet stable, it means that there are other
-	// external suspension(s) and/or threads. Therefore it need not be waked.
-      }
-      sb = (sb->getParentBoard ())->getSolveBoard ();
+  Assert(susp->isExtSusp());
+  
+  Board *sb = susp->getBoard ();
+  DebugCheck ((sb == (Board *) NULL),
+	      error ("no board is found in AM::checkExtSuspension"));
+  sb = sb->getSolveBoard ();
+  
+  Bool wasFound = (sb == (Board *) NULL) ? NO : OK; 
+  while (sb != (Board *) NULL) {
+    DebugCheck ((sb->isSolve () == NO),
+		error ("no solve board is found in AM::checkExtSuspension"));
+    
+    SolveActor *sa = SolveActor::Cast (sb->getActor ());
+    if (sa->isStable () == OK) {
+      Thread::ScheduleSolve (sb);
+      // Note:
+      //  The observation is that some actors which have imposed instability
+      // could be discarded by reduction of other such actors. It means,
+      // that the stability condition can not be COMPLETELY controlled by the 
+      // absence of active threads; 
+      // Note too:
+      //  If the note is not yet stable, it means that there are other
+      // external suspension(s) and/or threads. Therefore it need not be waked.
     }
-    return (wasFound);
-  } else {
-    return (NO);
+    sb = (sb->getParentBoard ())->getSolveBoard ();
   }
+  return (wasFound);
 }
 
 void AM::incSolveThreads (Board *bb)
@@ -588,6 +598,16 @@ void AM::decSolveThreads (Board *bb)
 //  X = Y 
 // --> if det Y then ... fi
 
+#ifdef PROFILE_FD
+struct csl_stat_type {
+  unsigned long hs_lo;
+  unsigned long hs_dp;
+  unsigned long bn_lo;
+  unsigned long bn_dp_ms;
+  unsigned long bn_dp_ht;
+} csl_stat = {0,0,0,0,0};
+#endif
+
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				   SuspList * suspList,
 				   TaggedRef term,
@@ -615,6 +635,26 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
       continue;
     }
     
+#ifdef PROFILE_FD
+    {
+      Board * home_ptr = var->getHome();
+      if (home_ptr == am.currentBoard) {
+	if (susp->getBoard()->getBoardDeref() == am.currentBoard)
+	  csl_stat.hs_lo += 1;
+	else
+	  csl_stat.hs_dp += 1;
+      } else {
+	Board * b = susp->getBoard()->getBoardDeref();
+	if (b == home_ptr)
+	  csl_stat.bn_lo += 1;
+	else if (am.isBetween(b, home_ptr))
+	  csl_stat.bn_dp_ht += 1;
+	else
+	  csl_stat.bn_dp_ms += 1;
+      }
+    }
+#endif
+
     // already propagated susps remain in suspList
     if (! susp->isPropagated()) {      
       if ((suspList->checkCondition(taggedvar, term)) &&
@@ -674,6 +714,9 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
     checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term, pc_std_unif);
+
+    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
+			     localPropStore.isInLocalPropagation()));
 
 #ifdef DEBUG_CHECK
     Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();

@@ -214,7 +214,14 @@ public:
 				 PropCaller calledBy);
   Bool isBetween(Board * to, Board * varHome);
   void setExtSuspension (Board *varHome, Suspension *susp);
-  Bool checkExtSuspension (Suspension *susp);
+private:
+  Bool _checkExtSuspension(Suspension * susp);
+public:
+  Bool checkExtSuspension(Suspension * susp) {
+    if (susp->isExtSusp())
+      return _checkExtSuspension(susp);
+    return NO;
+  }
   void incSolveThreads (Board *bb);
   void decSolveThreads (Board *bb);
 
