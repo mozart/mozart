@@ -125,6 +125,9 @@ parameter.</item>
 state description are placed in by default in the directory of the source file.  This can be
 explicitly overridden by option <code/gumpDirectory/, or by command-line option
 <code proglang=sh/--gumpdirectory/.</item>
+      <item>Standard Library: Mozart 1.2.3 is the first release to include the Mozart
+Standard Library.  At present the latter contains only <code/QTk/ available at URI
+<file>x-oz://system/wp/QTk.ozf</file>.</item>
     </list>
   </chapter>
 
