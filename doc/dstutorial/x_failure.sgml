@@ -165,10 +165,17 @@ completes normally.
 The following operations are provided to do other
 kinds of fault detection:
 <LIST>
-<ITEM> <<proc {Fault.defaultEnable FStates}>> sets the global default.
+<ITEM> <<fun {Fault.defaultEnable FStates}>> enables the default
+fault states for the <<global>> level.
+If a new entity <<E>> is declared when the default is enabled,
+then it is as if the call <<{Fault.enable E global FStates}>>
+were done at its declaration.
 <<FStates>> is a list of fault states that cause exceptions.
 When the system starts up, the defaults are set up as if
 the call <<{Fault.defaultEnable [tempFail permFail]}>> had been done.
+
+<ITEM> <<fun {Fault.defaultDisable}>> disables the default
+for the <<global>> level.
 
 <ITEM> <<fun {Fault.enable Entity Level FStates}>> is a more targeted
 way to do fault detection.
@@ -188,13 +195,15 @@ it has to be quoted.</NOTE>
 <ITEM> <<fun {Fault.disable Entity Level}>> disables
 fault detection on the given entity at the given level.
 </LIST>
-<P>The function <<Fault.enable>> returns <<true>> if and only if the
+<P>The functions <<Fault.defaultEnable>> and <<Fault.enable>> return
+<<true>> if and only if the
 enable was successful, i.e., the entity was not already
 enabled for that level.
-The function <<Fault.disable>> returns <<true>> if and only if the
+The functions <<Fault.defaultDisable>> and <<Fault.disable>> return
+<<true>> if and only if the
 disable was successful, i.e., the entity was already
 enabled for that level.
-Both functions raise a type error exception if their arguments
+All functions raise a type error exception if their arguments
 do not have the correct type.
 
 <SUBSECTION><TITLE>Exception formats</TITLE>
