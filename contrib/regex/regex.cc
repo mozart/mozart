@@ -49,13 +49,13 @@ inline Bool oz_isRegex(OZ_Term t)
 {
   t = OZ_deref(t);
   return oz_isExtension(t) &&
-    tagged2Extension(t)->getIdV()==REGEX::id;
+    oz_tagged2Extension(t)->getIdV()==REGEX::id;
 }
 
 inline REGEX* tagged2Regex(OZ_Term t)
 {
   Assert(oz_isRegex(t));
-  return (REGEX*) tagged2Extension(OZ_deref(t));
+  return (REGEX*) oz_tagged2Extension(OZ_deref(t));
 }
 
 void REGEX::printStreamV(ostream &out,int depth = 10)
@@ -95,7 +95,7 @@ OZ_BI_define(regex_compile,2,1)
   regex_t *preg = new regex_t;
   errcode = regcomp(preg,RE,CFLAGS);
   if (errcode) return RegexError("compile",errcode,preg,1);
-  OZ_RETURN(makeTaggedConst(new REGEX(strdup(RE),preg)));
+  OZ_RETURN(oz_makeTaggedExtension(new REGEX(strdup(RE),preg)));
 }
 OZ_BI_end
 
