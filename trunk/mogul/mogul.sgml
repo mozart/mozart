@@ -1,5 +1,6 @@
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 <!ENTITY % proglang.values.local "|fundamental">
+<!ENTITY VERSION "1.0">
 ]>
 <book proglang=fundamental>
     <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
@@ -17,6 +18,12 @@
     <title/MOGUL: the MOzart Global User Library/
     <author.extern to="author.db" key="Denys.Duchier">
     <abstract>
+      This is release &VERSION; of the MOGUL Archive, a repository of
+Mozart packages contributed by the user community.  We are keen on
+improving its presentation, infrastructure, and usefulness.  We
+welcome your comments and suggestions at <ref.extern
+to="mailto:contrib@mozart-oz.org">contrib@mozart-oz.org</ref.extern>
+<p>
 <table display>
 	  <tr>
 	    <th/enter the <name/MOGUL Archive//
@@ -385,7 +392,7 @@ for you.  We provide utilities that make this task very simple.</p>
 and distribute applications.  It is also just as useful for projects
 that you don't intend to distribute.</p>
 	  <p><ref.extern
-to="http://www.mozart-oz.org/mogul/info/duchier/ozskel2.html"
+to="http://www.mozart-oz.org/mogul/info/duchier/ozskel.html"
 ><code/ozskel/</ref.extern> is a script which, when invoked, populates
 your current directory with a whole collection of administrative
 files.  In particular it gives you a <file/Makefile.in/ where you just
