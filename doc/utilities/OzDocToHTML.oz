@@ -35,7 +35,7 @@ import
 export
    Translate
 define
-   STYLESHEET = 'http://www.ps.uni-sb.de/css/page.css'
+   DEFAULTSTYLESHEET = 'http://www.ps.uni-sb.de/css/page.css'
 
    %%
    %% Note: order is important in the following list!
@@ -191,6 +191,7 @@ define
 	 Meta: unit
 	 Comic: unit
 	 Abstract: unit
+	 StyleSheet: unit
 	 % main matter:
 	 TOC: unit TOCMode: unit
 	 Part: unit Chapter: unit Section: unit SubSection: unit
@@ -213,13 +214,16 @@ define
 	 % back matter:
 	 MyBibliographyDB: unit
 	 BibNode: unit
-      meth init(B SGML Dir)
+      meth init(B SGML Args)
 	 IsColor <- B
+	 StyleSheet <- case Args.stylesheet of "" then DEFAULTSTYLESHEET
+		       elseof SS then SS
+		       end
 	 MyFontifier <- {New Fontifier.'class' init()}
-	 OutputDirectory <- Dir
-	 {OS.system "mkdir -p "#Dir _}   %--** {OS.mkDir Dir}
-	 MyThumbnails <- {New Thumbnails.'class' init(Dir)}
-	 MyMathToGIF <- {New MathToGIF.'class' init(Dir)}
+	 OutputDirectory <- Args.'out'
+	 {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
+	 MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
+	 MyMathToGIF <- {New MathToGIF.'class' init(@OutputDirectory)}
 	 CurrentNode <- "index.html"
 	 NodeCounter <- 0
 	 ToWrite <- nil
@@ -1021,7 +1025,7 @@ define
 		 '<HTML>\n'#
 		 '<HEAD>\n'#
 		 '<TITLE>'#Title#'</TITLE>\n'#
-		 '<LINK rel=stylesheet href='#{MakeCDATA STYLESHEET}#'>\n'#
+		 '<LINK rel=stylesheet href='#{MakeCDATA @StyleSheet}#'>\n'#
 		 '</HEAD>\n'#
 		 '<BODY>\n')
 	 %--** navigation panel
@@ -1117,8 +1121,7 @@ define
       end
    end
 
-   proc {Translate IsColor File OutputDirectory}
-      {New OzDocToHTML
-       init(IsColor {SGML.parse File} OutputDirectory) _}
+   proc {Translate IsColor Args}
+      {New OzDocToHTML init(IsColor {SGML.parse Args.'in'} Args) _}
    end
 end

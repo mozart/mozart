@@ -29,7 +29,9 @@ import
 define
    Syslet.spec = single('in'(type: string)
 			'type'(type: string)
-			'out'(type: string))
+			'out'(type: string)
+			% HTML options
+			'stylesheet'(type: string))
    try
       case Syslet.args.'in' of "" then
 	 {Raise usage('no input file name specified')}
@@ -38,9 +40,9 @@ define
       elsecase Syslet.args.2 of _|_ then
 	 {Raise usage('unrecognized command line arguments')}
       elsecase Syslet.args.'type' of "html-color" then
-	 {OzDocToHTML.translate true Syslet.args.'in' Syslet.args.'out'}
+	 {OzDocToHTML.translate true Syslet.args}
       elseof "html-mono" then
-	 {OzDocToHTML.translate false Syslet.args.'in' Syslet.args.'out'}
+	 {OzDocToHTML.translate false Syslet.args}
       else
 	 {Raise usage('illegal output type specified')}
       end
@@ -50,10 +52,13 @@ define
 	 {System.printError
 	  'Command line option error: '#M#'\n'#
 	  'Usage: '#{Property.get 'root.url'}#' [options]\n'#
-	  '--in=<File>      Specify the input SGML file.\n'#
-	  '--type=<Type>    Specify what format to generate\n'#
-	  '                 (supported: html-mono html-color).\n'#
-	  '--out=<Dir>      Specify the output directory or file.\n'}
+	  '--in=<File>         The input SGML file.\n'#
+	  '--type=<Type>       What format to generate\n'#
+	  '                    (supported: html).\n'#
+	  '--out=<Dir>         The output directory.\n'#
+	  '\n'#
+	  'HTML options\n'#
+	  '--stylesheet=<URL>  What style sheet to use for generated pages.\n'}
 	 {Syslet.exit 2}
       else
 	 {Error.printExc E}
