@@ -14,23 +14,20 @@ local
       andthen
       ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
       andthen
-      ({Cget stepWaitForArbiterBuiltin} orelse Name \= 'waitForArbiter')
-      andthen
       ({Cget stepSystemProcedures} orelse
-       Name == ''         orelse
        Name == '`,`'      orelse
        Name == '`send`'   orelse
        Name == '`ooSend`' orelse
-       {Atom.toString Name}.1 \= 96)
+       Name \= '' andthen {Atom.toString Name}.1 \= &`)
    end
 
-   proc {ReadLoop S}
+   proc {OzcarReadEvalLoop S}
       case S
       of H|T then
          {OzcarMessage 'readloop:'} {OzcarShow H}
          {Ozcar readStreamMessage(H)}
          {OzcarMessage 'preparing for next stream message...'}
-         {ReadLoop T}
+         {OzcarReadEvalLoop T}
       end
    end
 
@@ -52,10 +49,10 @@ in
          SwitchSync    : _
 
       meth init
-         self.ThreadDic = {Dictionary.new}
+         self.ThreadDic = {Dnew}
          thread
             self.ReadLoopThread = {Thread.this}
-            {ReadLoop {Dbg.stream}}
+            {OzcarReadEvalLoop {Dbg.stream}}
          end
       end
 
@@ -79,7 +76,9 @@ in
       end
 
       meth AddToSkippedProcs(Name T I FrameId)
-         SkippedProcs <- FrameId # I | @SkippedProcs
+         Key = FrameId # I
+      in
+         SkippedProcs <- Key | @SkippedProcs
          {OzcarMessage 'Skipping procedure \'' # Name # '\''}
          {OzcarShow @SkippedProcs}
          {Thread.resume T}
@@ -89,80 +88,84 @@ in
 
          case M
 
-         of step(thr:T#I file:File line:Line builtin:IsBuiltin
-                 time:Time frame:FrameId ...) then
-            Name = {CondSelect M name nil}
-            Args = {CondSelect M args nil}
-            Ok   = {AppOK Name}
+         of entry(thr:T ...) then
+            I = {Thread.id T}
          in
             case ThreadManager,Exists(I $) then
-               case Ok then
-                  ThreadManager,step(file:File line:Line thr:T id:I
-                                     name:Name args:Args frame:FrameId
-                                     builtin:IsBuiltin time:Time)
+               Name = {CondSelect M data unit}
+            in
+               case {Not {IsDet Name}}
+                  orelse {AppOK {System.printName Name}}
+               then
+                  ThreadManager,M
                else
-                  ThreadManager,AddToSkippedProcs(Name T I FrameId)
+                  ThreadManager,AddToSkippedProcs(Name T I M.frameID)
                end
 
             else
-               Obj   = try {Nth Args 3}
-                       catch failure(...) then nil end
-               ForMe = {IsDet Obj} andthen Obj == self
+               ForMe = case {CondSelect M data unit} \= `ooSend` then false
+                       elsecase {CondSelect M args nil} of [_ _ Obj] then
+                          {IsDet Obj} andthen Obj == self
+                       else false
+                       end
             in
-              case ForMe then
-                 {Dbg.trace T false}
-                 {Dbg.stepmode T false}
-                 {Thread.resume T}
-                 {OzcarMessage 'message for Ozcar detected.'}
+               case ForMe then
+                  {Dbg.trace T false}
+                  {Dbg.stepmode T false}
+                  {Thread.resume T}
+                  {OzcarMessage 'message for Ozcar detected.'}
 
-              elsecase (File == '' orelse File == 'nofile') then
-                 {Dbg.trace T false}
-                 {Dbg.stepmode T false}
-                 {Thread.resume T}
-                 Gui,status(IgnoreNoFileStep)
+               elsecase {UnknownFile M.file} then
+                  {Dbg.trace T false}
+                  {Dbg.stepmode T false}
+                  {Thread.resume T}
+                  Gui,status(IgnoreNoFileStep)
 
-              else
-                 {OzcarMessage WaitForThread}
-                 {Delay 240} % thread should soon be added
-                 case @Breakpoint then
-                    Breakpoint <- false
-                 else
-                    %% case Ok then
-                    ThreadManager,step(file:File line:Line thr:T id:I
-                                       name:Name args:Args frame:FrameId
-                                       builtin:IsBuiltin time:Time)
-                 end
-              end
+               else
+                  {OzcarMessage WaitForThread}
+                  {Delay 240} % thread should soon be added
+                  case @Breakpoint then
+                     Breakpoint <- false
+                  else
+                     ThreadManager,M
+                  end
+               end
             end
 
-         [] exit(thr:T#I frame:Frame) then
-            Found = {Member Frame.1 # I @SkippedProcs}
+         elseof exit(thr:T frameID:FrameId ...) then
+            I     = {Thread.id T}
+            Key   = FrameId # I
+            Found = {Member Key @SkippedProcs}
          in
-            {OzcarShow @SkippedProcs # (Frame.1 # I) # Found}
-            case Found orelse @SkippedThread == T then
-               {OzcarMessage 'ignoring exit message'}
-               SkippedProcs  <- {Filter @SkippedProcs
-                                 fun {$ F} F \= Frame.1 # I end}
+            {OzcarShow @SkippedProcs # Key # Found}
+            case Found then
+               {OzcarMessage 'ignoring exit message for ignored application'}
+               SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
+               SkippedThread <- nil
+               {Thread.resume T}
+            elsecase @SkippedThread == T then
+               {OzcarMessage 'ignoring exit message for ignored thread'}
                SkippedThread <- nil
                {Thread.resume T}
             else
                Gui,markNode(I runnable) % thread is not running anymore
                Gui,markStack(active)    % stack view has up-to-date content
                case T == @currentThread then
-                  F L
                   Stack = {Dget self.ThreadDic I}
                in
-                  {ForAll [exit(Frame) getPos(file:F line:L)] Stack}
-                  SourceManager,bar(file:F line:L state:runnable)
+                  {Stack exit(M)}
+                  SourceManager,bar(file:{CondSelect M file nofile}
+                                    line:{CondSelect M line unit}
+                                    column:{CondSelect M column unit}
+                                    state:runnable)
                   {Stack printTop}
                else skip end
             end
 
-         [] thr(thr:T#I ...) then
-            Q = case {Value.hasFeature M par} then
-                   M.par.2  %% id of parent thread
-                else
-                   0        %% parent unknown (threads of tk actions...)
+         elseof thr(thr:T ...) then   % thread creation
+            I = {Thread.id T}
+            Q = case {CondSelect M par unit} of unit then 0
+                elseof T then {Thread.id T}
                 end
             E = ThreadManager,Exists(I $)
          in
@@ -175,9 +178,9 @@ in
                {Stack rebuild(true)}
             else
                {OzcarMessage NewThread   # {ID I}}
-               case Q == 0 orelse Q == 1 then
+               case Q == 0 orelse Q == 1 then   % unknown or root thread
                   thread
-                     case Q == 1 then
+                     case Q == 1 then   % root thread
                         SkippedThread <- T
                         {Thread.resume T}
                      else skip end
@@ -191,11 +194,7 @@ in
                      case {Thread.state T} == terminated then
                         {OzcarMessage EarlyThreadDeath # I}
                      else
-                        case Q == 0 then
-                           ThreadManager,add(T I Q true)
-                        else
-                           ThreadManager,add(T I Q false)
-                        end
+                        ThreadManager,add(T I Q (Q == 0))
                      end
                   end
                else
@@ -203,7 +202,8 @@ in
                end
             end
 
-         [] term(thr:T#I) then
+         elseof term(thr:T) then
+            I = {Thread.id T}
             E = ThreadManager,Exists(I $)
          in
             case E then
@@ -212,22 +212,26 @@ in
                {OzcarMessage EarlyTermThread}
             end
 
-         [] block(thr:T#I file:F line:L name:N args:A builtin:B time:Time) then
+         [] blocked(thr:T) then
+            I = {Thread.id T}
+         in
             case ThreadManager,Exists(I $) then
-               ThreadManager,block(thr:T id:I file:F line:L)
+               ThreadManager,blocked(thr:T id:I)
             else
                thread
                   {OzcarMessage WaitForThread}
                   {Delay TimeoutToBlock} % thread should soon be added
                   case ThreadManager,Exists(I $) then
-                     ThreadManager,block(thr:T id:I file:F line:L)
+                     ThreadManager,blocked(thr:T id:I)
                   else
                      {OzcarError UnknownSuspThread}
                   end
                end
             end
 
-         [] cont(thr:T#I) then
+         [] ready(thr:T) then
+            I = {Thread.id T}
+         in
             case ThreadManager,Exists(I $) then
                case {Dbg.checkStopped T} then
                   Gui,markNode(I runnable)
@@ -242,7 +246,9 @@ in
                {OzcarError UnknownWokenThread}
             end
 
-         [] exception(thr:T#I exc:X) then
+         [] exception(thr:T exc:X) then
+            I = {Thread.id T}
+         in
             case ThreadManager,Exists(I $) then
                {{Dget self.ThreadDic I} printException(X)}
             else
@@ -255,7 +261,7 @@ in
                      {{Dget self.ThreadDic I} printException(X)}
                   else
                      {OzcarMessage 'still not known -- adding...'}
-                     ThreadManager,add(T I X#_ false)
+                     ThreadManager,add(T I exc(X) false)
                   end
                end
             end
@@ -289,12 +295,12 @@ in
             Breakpoint <- true
          else skip end
 
-         case {IsTuple Q} then  %% exception
+         case Q of exc(X) then  %% exception
             Gui,addNode(I 0)
             {Stack checkNew(_)} %% _don't_ do a first step here!
             ThreadManager,switch(I false)
-            {Stack printException(Q.1)}
-         else
+            {Stack printException(X)}
+         elsecase {IsInt Q} then   %% Q is the ID of the parent thread
             Gui,addNode(I Q)
             case Q == 0 orelse Q == 1 then
                {Stack checkNew(_)}  % don't force a first `step'
@@ -382,37 +388,32 @@ in
          end
       end
 
-      meth step(file:F line:L thr:T id:I name:N args:A
-                builtin:B time:Time frame:FrameId)
+      meth entry(thr: T ...)=Frame
+         I     = {Thread.id T}
          Stack = {Dget self.ThreadDic I}
       in
          Gui,markNode(I runnable) % thread is not running anymore
          Gui,markStack(active)    % stack view has up-to-date content
-         {Stack step(name:N args:A builtin:B file:F line:L
-                     time:Time frame:FrameId)}
+         {Stack entry(Frame)}
          case T == @currentThread then
+            F = {CondSelect Frame file nofile}
+         in
             case {UnknownFile F} then
                {OzcarMessage NoFileInfo # I}
                SourceManager,removeBar
                {Thread.resume T}
             else
-               SourceManager,bar(file:F line:L state:runnable)
+               L = {CondSelect Frame line unit}
+               C = {CondSelect Frame column unit}
+            in
+               SourceManager,bar(file:F line:L column:C state:runnable)
                {Stack printTop}
             end
          else skip end
       end
 
-      meth block(thr:T id:I file:F line:L)
+      meth blocked(thr:T id:I)
          Gui,markNode(I blocked)
-         case T == @currentThread then
-            case {UnknownFile F} then
-               {OzcarMessage 'Thread #' # I # NoFileBlockInfo}
-               SourceManager,removeBar
-            else
-               SourceManager,bar(file:F line:L state:running)
-            end
-            %Gui,doStatus('Thread #' # I # ' is blocked')
-         else skip end
       end
 
       meth rebuildCurrentStack
@@ -422,7 +423,8 @@ in
             Gui,doStatus(FirstSelectThread)
          else
             Gui,doStatus(RebuildMessage # {Thread.id @currentThread} # '...')
-            {ForAll [rebuild(true) print] Stack}
+            {Stack rebuild(true)}
+            {Stack print}
             Gui,doStatus(DoneMessage append)
          end
       end
@@ -466,13 +468,14 @@ in
                      SourceManager,removeBar
                      Gui,printStack(id:I frames:nil depth:0)
                   else
-                     F L Exc = {Stack getException($)}
+                     F L C Exc = {Stack getException($)}
                   in
-                     {ForAll [print getPos(file:F line:L)] Stack}
+                     {Stack print}
+                     {Stack getPos(file:?F line:?L column:?C)}
                      case Exc == nil then
-                        SourceManager,bar(file:F line:L state:S)
+                        SourceManager,bar(file:F line:L column:C state:S)
                      else
-                        SourceManager,bar(file:F line:L state:blocked)
+                        SourceManager,bar(file:F line:L column:C state:blocked)
                         Gui,doStatus(Exc clear BlockedThreadColor)
                      end
                   end
@@ -486,9 +489,9 @@ in
       in
          case {NewCompiler} then
             case Value then
-               {Compile '\\sw +runwithdebugger'}
+               {Compile '\\switch +runwithdebugger'}
             else
-               {Compile '\\sw -runwithdebugger'}
+               {Compile '\\switch -runwithdebugger'}
             end
          else
             {Dbg.emacsThreads Value}
@@ -496,7 +499,7 @@ in
       end
 
       meth toggleSubThreads(TkV)
-         Value = case {TkV tkReturnInt($)} == 0 then false else true end
+         Value = {TkV tkReturnInt($)} \= 0
       in
          {Dbg.subThreads Value}
       end

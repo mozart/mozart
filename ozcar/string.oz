@@ -14,9 +14,11 @@ local
 
    %% strchr: {Str.chr "Hallo Benni" & } --> " Benni"
    fun {StrChr S C}
-      case S == nil then nil
-      elsecase S.1 == C then S.1|S.2
-      else {StrChr S.2 C}
+      case S of C0|R then
+         case C == C0 then S
+         else {StrChr R C}
+         end
+      [] nil then nil
       end
    end
 

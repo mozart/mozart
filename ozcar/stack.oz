@@ -47,61 +47,42 @@ local
       end
    end
 
-   fun {S2F Nr Id Dir File Line Time Name Args Vars Builtin}
-      frame(nr      : Nr
-            id      : Id
-            dir     : Dir
-            file    : File
-            line    : Line
-            time    : Time
-            name    : case Name == xcont orelse Name == actor then
-                         suspension else Name end
-            args    : Args
-            vars    : Vars
-            builtin : Builtin)
+   fun {S2F Nr Frame}
+      frame(nr:      Nr   % frame counter
+            dir:     {Label Frame}   % 'entry' or 'exit'
+            file:    {CondSelect Frame file nofile}
+            line:    {CondSelect Frame line unit}
+            column:  {CondSelect Frame column unit}
+            time:    Frame.time
+            name:    case {CondSelect Frame name unit} of unit then
+                        case Frame.kind of call then
+                           Data = {CondSelect Frame data unit}
+                        in
+                           case {IsDet Data} then
+                              case Data == unit then 'unknown'
+                              else {System.printName Data}
+                              end
+                           else '_'   %--** should be clickable!
+                           end
+                        [] 'lock' then 'lock'
+                        [] handler then 'exception handler'
+                        [] cond then 'conditional'
+                        [] exception then 'exception'
+                        end
+                     elseof Name then Name
+                     end
+            args:    case Frame.kind == 'lock' then [Frame.data]
+                     else {CondSelect Frame args unit}
+                     end
+            frameID: {CondSelect Frame frameID unit}
+            vars:    {CondSelect Frame vars unit})
    end
 
-   local
-      fun {LastDebug F}
-         case {Label F.1} == debug then
-            case F.2 \= nil andthen {Label F.2.1} == debug then
-               {LastDebug F.2}
-            else
-               F
-            end
-         else
-            nodebug | F
-         end
-      end
-      proc {DoStackForAllInd Xs I P}
-         case Xs
-         of nil     then skip
-         [] _|nil   then skip
-         [] _|_|nil then skip
-         [] X|D|A|B then
-            Y|Z|T = {LastDebug D|A|B}
-         in
-            case Y == nodebug then
-               {DoStackForAllInd Z|T I P}
-            else
-               case {Label Z} == builtin then
-                  {P I {S2F I 0 enter X.file X.line
-                        Y.1.2.1 Z.name Z.args {CondSelect X vars nil} true}}
-               else
-                  {P I {S2F I Y.1.1 enter X.file X.line
-                        Y.1.2.1 Z.name Y.1.2.2 {CondSelect X vars nil} false}}
-               end
-               {DoStackForAllInd Z|T I+1 P}
-            end
-         else {OzcarError 'strange stack?!'}
-         end
-      end
-   in
-      proc {StackForAllInd Xs P}
-         case Xs == nil then skip else
-            {DoStackForAllInd {LastDebug Xs}.2 1 P}
-         end
-      end
+   proc {StackToDict Frames D}
+      {List.forAllInd Frames
+       proc {$ Key Frame}
+          {Dput D Key {S2F Key Frame}}
+       end}
    end
 
 in
@@ -118,7 +99,6 @@ in
 
       attr
          Size              % current size of stack
-         SP                % StackPointer (SP==Size+1 or SP==Size)
          Rebuild           % should we re-calculate the stack
                            % when the next 'step' message arrives?
 
@@ -131,7 +111,6 @@ in
          self.I = ID
          self.D = {Dictionary.new}
          Size    <- 0
-         SP      <- 1
          Rebuild <- false
       end
 
@@ -167,26 +146,33 @@ in
       in
          case {HasFeature X debug} andthen {HasFeature X.debug stack} then
             Stack = X.debug.stack
-            H|T   = case Stack.1 == nil then Stack.2.2 else Stack end
-            C     = case %% you never know...
-                       {HasFeature X 1} andthen {HasFeature X.1 1} then
-                       case X.1.1 == noElse then %% correct the line number
-                          {Record.adjoinAt H line X.1.2}
-                       else H end
-                    else H end
-            S = builtin(name:'Raise' args:[X]) | debug([0 999999999]) | C | T
+            F#L#C#Time = case Stack of Frame|_ then
+                            {CondSelect Frame file nofile}#
+                            case X of error(kernel(noElse Line) ...) then
+                               %% correct the line number
+                               Line
+                            else
+                               {CondSelect Frame line unit}
+                            end#
+                            {CondSelect Frame column unit}#
+                            Frame.time
+                         else nofile#unit#unit#999999999
+                         end
+            S = entry(kind: exception thr: self.T
+                      file: F line: L column: C time: Time
+                      args: [X]) | Stack
          in
             Status = {FormatExceptionLine {Error.formatExc X}}
-            {ForAll [status(Status clear BlockedThreadColor)
-                     bar(file:C.file line:C.line state:blocked)] Ozcar}
+            {Ozcar status(Status clear BlockedThreadColor)}
+            {Ozcar bar(file:F line:L column:C state:blocked)}
             StackManager,ReCalculate({Reverse S})
 
          else              % no stack available
             E = {V2VS X}
          in
             Status = UserExcText # E # NoStackText
-            {ForAll [status(Status clear BlockedThreadColor)
-                     removeBar] Ozcar}
+            {Ozcar status(Status clear BlockedThreadColor)}
+            {Ozcar removeBar}
             StackManager,ReCalculate(nil)
          end
 
@@ -231,28 +217,32 @@ in
          end
       end
 
-      meth step(name:N args:A builtin:B file:F line:L time:T frame:FrameId)
-         Frame = {S2F @SP FrameId enter F L T N A nil B}
+      meth entry(Frame)
+         S = @Size
+         Key = case S == 0 orelse {Dget self.D S}.dir == entry then S + 1
+               else S
+               end
       in
-         {Dput self.D @SP Frame}
-         SP   <- @SP + 1
-         Size <- @SP - 1
+         Size <- Key
+         {Dput self.D Key {S2F Key Frame}}
       end
 
-      meth exit(FrameId)
+      meth exit(Frame)
          S = @Size
       in
-         case S == 0 then skip else
-            Key   = case S == @SP then {Dremove self.D S} S-1 else S end
-            Frame
-            NewFrame
+         case S == 0 then
+            {OzcarError 'internal stack inconsistency; recalculating stack'}
+            StackManager, ReCalculate
+         else
+            Key = case {Dget self.D S}.dir == entry then S
+                  else
+                     {Dremove self.D S}
+                     S - 1
+                  end
          in
-            SP   <- @SP - 1
             Size <- Key
             case Key > 0 then
-               Frame    = {Dget self.D Key}
-               NewFrame = {Record.adjoinAt Frame dir leave}
-               {Dput self.D Key NewFrame}
+               {Dput self.D Key {S2F Key Frame}}
             else
                {Thread.resume self.T}
             end
@@ -262,13 +252,11 @@ in
       %% local helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
       meth GetStack($)
-         {Reverse {Dbg.taskstack self.T MaxStackSize}}
+         {Reverse {Thread.taskStack self.T MaxStackSize false}}
       end
 
       meth RemoveAllFrames
-         Frames = {Dkeys self.D}
-      in
-         {ForAll Frames proc {$ Frame} {Dremove self.D Frame} end}
+         {DremoveAll self.D}
       end
 
       meth ReCalculate(S<=noStack)
@@ -279,12 +267,8 @@ in
          {Ozcar removeSkippedProcs(self.I)}
          StackManager,rebuild(false)
          StackManager,RemoveAllFrames
-         {StackForAllInd CurrentStack
-          proc {$ Key Frame}
-             {Dput self.D Key Frame}
-          end}
+         {StackToDict CurrentStack self.D}
          Size <- {Length {Dkeys self.D}}
-         SP   <- @Size + 1
          StackManager,print
       end
 
@@ -302,17 +286,19 @@ in
          @Size
       end
 
-      meth getPos(file:?F line:?L)
+      meth getPos(file:?F line:?L column:?C)
          S = @Size
       in
          case S == 0 then
-            F = undef
-            L = 0
+            F = nofile
+            L = unit
+            C = unit
          else
             TopFrame = {Dget self.D S}
          in
             F = TopFrame.file
             L = TopFrame.line
+            C = TopFrame.column
          end
       end
 
