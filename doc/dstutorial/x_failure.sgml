@@ -376,7 +376,7 @@ They are implemented with handlers and the <<Probe>> operation.
 <SECTION><TITLE>Fault states for language entities</TITLE>
 
 <P>This section explains the possible fault states
-of each language entity in terms of its distributed behavior.
+of each language entity in terms of its distributed semantics.
 The fault state is
 a consequence of two things:
 the entity's distributed implementation and
