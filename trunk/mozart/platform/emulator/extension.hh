@@ -30,64 +30,76 @@
  * Extension
  *=================================================================== */
 
+/*
+ * TODO
+ *  - browser, debugger support
+ *  - copy flag for gc methods
+ *  - user defined extension class
+ *    (id is a good optimization for system extension, but user should use
+ *     a URL to identify its class)
+ */
+
+// starts with OZ_E_LAST
 int oz_newUniqueId();
 
-class SituatedExtension: public ConstTermWithHome {
+enum OZ_Registered_Extension_Id {
+  OZ_E_USER,
+  OZ_E_BITARRAY,
+  OZ_E_LAST,
+};
+
+class Extension: public ConstTerm {
+public:
+  virtual ~Extension() {} // C++ compiler requires this, mm2: why?
+  Extension() : ConstTerm(Co_Extension) {}
+
+  virtual int           getIdV() { return 0; }
+
+  virtual Extension *   gcV() = 0;
+  virtual void          gcRecurseV() {}
+
+  virtual void          printStreamV(ostream &out,int depth = 10);
+  virtual void          printLongStreamV(ostream &out,int depth = 10,
+					 int offset = 0);
+
+  virtual OZ_Term       typeV();
+  virtual OZ_Term       inspectV() { return typeV(); }
+
+  virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
+
+  virtual OZ_Return     unifyV(OZ_Term t)        { return FAILED; }
+
+  virtual int           marshalV(MsgBuffer *bs)  { return 0; }
+
+  virtual Board *       getBoardInternal() { return 0; }
+  virtual void          setBoardInternal(Board *bb) {}
+};
+
+inline
+int oz_isExtension(OZ_Term t) {
+  return oz_isConst(t) && tagged2Const(t)->getType()==Co_Extension;
+}
+
+inline
+Extension *tagged2Extension(OZ_Term t) {
+  return (Extension *) tagged2Const(t);
+}
+
+class SituatedExtension: public Extension {
+private:
+  Board *board;
 public:
   SituatedExtension(void);
+  SituatedExtension(Board *bb) : Extension(), board(bb) {}
 
-  SituatedExtension(Board *bb) : ConstTermWithHome(bb,Co_SituatedExtension) {}
-
-  virtual ~SituatedExtension() {}
-
-  virtual int getTypeV() { return 0; }
-
-  SituatedExtension * gc(void) {
-    SituatedExtension * ret = gcV();
-    ret->setBoard(getBoardInternal());
-    return ret;
-  }
-  virtual SituatedExtension * gcV() = 0;
-  virtual void          gcRecurseV() {}
   virtual void          printStreamV(ostream &out,int depth = 10);
-  virtual void          printLongStreamV(ostream &out,int depth = 10,
-					 int offset = 0);
-  virtual OZ_Term       inspectV();
-  virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
+  virtual OZ_Term       typeV();
+
+  virtual Board *getBoardInternal()        { return board; }
+  virtual void setBoardInternal(Board *bb) { board = bb; }
 };
 
-inline
-int oz_isSituatedExtension(OZ_Term t) {
-  return oz_isConst(t) && tagged2Const(t)->getType()==Co_SituatedExtension;
-}
-
-inline
-SituatedExtension *tagged2SituatedExtension(OZ_Term t) {
-  return (SituatedExtension *) tagged2Const(t);
-}
-
-class ConstExtension: public ConstTerm {
-public:
-  virtual ~ConstExtension() {}
-  ConstExtension() : ConstTerm(Co_ConstExtension) {}
-  virtual int getTypeV() { return 0; }
-  virtual ConstExtension *gcV() = 0;
-  virtual void          gcRecurseV() {}
-  virtual void          printStreamV(ostream &out,int depth = 10);
-  virtual void          printLongStreamV(ostream &out,int depth = 10,
-					 int offset = 0);
-  virtual OZ_Term       inspectV();
-  virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
-};
-
-inline
-int oz_isConstExtension(OZ_Term t) {
-  return oz_isConst(t) && tagged2Const(t)->getType()==Co_ConstExtension;
-}
-
-inline
-ConstExtension *tagged2ConstExtension(OZ_Term t) {
-  return (ConstExtension *) tagged2Const(t);
-}
-
+typedef OZ_Term (*oz_unmarshalProcType)(MsgBuffer*);
+OZ_Term oz_extension_unmarshal(int type,MsgBuffer*);
+void oz_registerConstExtension(int type, oz_unmarshalProcType f);
 #endif

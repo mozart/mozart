@@ -332,6 +332,8 @@ class GName;
 
 class IONode;
 
+class MsgBuffer;
+
 // this class can be used to fake the type system,e.g. to define a second
 //  constructor without arguments
 class DummyClass {};

@@ -39,6 +39,7 @@
 #include "allgenvar.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
+#include "extension.hh"
 
 AM am;
 
@@ -661,8 +662,22 @@ cvar:
     goto fail;
     
   case OZCONST:
-    if (bigIntEq(term1,term2))
-      goto next;
+    switch (tagged2Const(term1)->getType()) {
+    case Co_BigInt:
+      if (bigIntEq(term1,term2))
+	goto next;
+      break;
+    case Co_Extension:
+      {
+	int res = tagged2Extension(term1)->unifyV(term2);
+	if (res == PROCEED)
+	  goto next;
+	result = res;
+	break;
+      }
+    default:
+      break;
+    }
     goto fail;
 
   case LITERAL:
