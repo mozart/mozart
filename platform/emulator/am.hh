@@ -296,9 +296,6 @@ public:
 
   // entailment check
   Bool entailment();
-  Bool isEmptyTrailChunk() {
-    return trail.isEmptyChunk();
-  }
 
   void checkStability();
   int handleFailure(Continuation *&cont, AWActor *&aa);
