@@ -6,7 +6,7 @@ of it.</p>
   <section id=chapter.gdbm.interface>
     <title/Interface/
     <p>The module may be imported as follows:
-<code display>import Gdbm @ 'x-oz://contrib/gdbm'</code>
+<code display>import Gdbm at 'x-oz://contrib/gdbm'</code>
 The interface provided is similar to dictionaries and allows to store
 stateless Oz terms under keys.  A key is an arbitrary virtual
 string.
