@@ -121,10 +121,10 @@
 	    to="http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/"
 	    ><File>http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/</File
 	    ></Ref.Extern>
-	<TR><TD>GDBM<TD>1.8.0
+	<TR><TD>GDBM<TD>1.8.3
 	  <TD><Ref.Extern
-	    to="ftp://ftp.gnu.org/pub/gnu/gdbm/gdbm-1.8.0.tar.gz"
-	    ><File>ftp://ftp.gnu.org/pub/gnu/gdbm/gdbm-1.8.0.tar.gz</File
+	    to="ftp://ftp.gnu.org/pub/gnu/gdbm/gdbm-1.8.3.tar.gz"
+	    ><File>ftp://ftp.gnu.org/pub/gnu/gdbm/gdbm-1.8.3.tar.gz</File
 	    ></Ref.Extern>
 	<TR><TD>regex<TD>0.12
 	  <TD><Ref.Extern
@@ -232,13 +232,13 @@ TK_XINCLUDES=''>>>
       <P>
 	Unpack it thus:
 <<<cd ?{packages}
-tar zxvf gdbm-1.8.0.tar.gz
-cd gdbm-1.8.0>>>
+tar zxvf gdbm-1.8.3.tar.gz
+cd gdbm-1.8.3>>>
 	GDBM does not compile out-of-the-box for MinGW, so we have to
-	apply a patch.  Copy the file <Ref.Extern to="gdbm-1.8.0-patch.diff"
-	/gdbm-1.8.0-patch.diff/, then patch it, configure it, build it,
+	apply a patch.  Copy the file <Ref.Extern to="gdbm-1.8.3-patch.diff"
+	/gdbm-1.8.3-patch.diff/, then patch it, configure it, build it,
 	and install it thus:
-<<<patch &lt; gdbm-1.8.0-patch.diff
+<<<patch &lt; gdbm-1.8.3-patch.diff
 CFLAGS="?{CFLAGS}" ./configure --disable-shared
 make CFLAGS="?{CFLAGS}"
 make prefix=?{packages} install>>>
