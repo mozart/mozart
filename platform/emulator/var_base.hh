@@ -325,6 +325,7 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return _var_check_status(cv);
   ExhaustiveSwitch();
   }
+  return EVAR_STATUS_UNKNOWN;
 }
 
 // isKinded || isFree || isFuture
