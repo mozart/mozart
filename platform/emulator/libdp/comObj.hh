@@ -124,10 +124,8 @@ public:
   DSite *getSite() {return site;}
   CState getState() {return state;}
 
-  // For Site:
-  // Specifying priority -1 means accepting the default as in msgFormat.m4 and
-  // should allways be used.
-  void send(MsgContainer *,int priority);
+
+  void send(MsgContainer *);
   void installProbe(int lowerBound, int higherBound, int interval);
            // Should this be moved to the comController?
   Bool canBeFreed(); // A question that implicitly tells the comObj
