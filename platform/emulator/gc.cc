@@ -2242,6 +2242,16 @@ void WaitActor::gcRecurse()
     }
   }
   childs=newChilds;
+  if (cps) {
+    if (cps->isEmpty()) {
+      cps = (CpStack *) 0;
+    } else {
+      cps->purgeCommitted();
+      CpStack *new_cps = new CpStack(cps);
+      new_cps->gc(cps);
+      cps = new_cps;
+    }
+  }
 }
 
 void AskActor::gcRecurse ()
@@ -2269,41 +2279,44 @@ void SolveActor::gcRecurse ()
   gcTagged(result, result);
   suspList  = suspList->gc();
   stable_sl = stable_sl->gc();
-  orActors.gc(SolveActor::StackEntryGC);   // higher order :))
-}
-
-
-DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
-{
-  Actor *aa=(Actor *) entry;
-  if (aa->isCommitted()) return 0;
-  Board *bb=aa->getBoardFast();
-  if (!bb->gcIsAlive()) {
-    // DebugCheckT(warning("SolveActor::StackEntryGC: dead node\n")); // mm2
-    return 0;
-  }
-  if (opMode == IN_TC && !isInTree(bb)) return 0;
-  return ((DLLStackEntry) ((Actor *) entry)->gcActor());
-}
-
-void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
-{
-  DLLStackBodyEntry *rd = l, *current = c;
-  clear ();
-  while (rd != (DLLStackBodyEntry *) NULL) {
-    DLLStackEntry el = (*f)(rd->elem);
-    if (el == (DLLStackEntry) NULL) {
-      if (current == rd)
-	current = current->next;
+  if (cps) {
+    if (cps->isEmpty()) {
+      cps = (CpStack *) 0;
     } else {
-      push (el);
-      COUNT(solveDLLStack);
-      if (current == rd)
-	c = s;
+      cps->purgeCommitted();
+      CpStack *new_cps = new CpStack(cps);
+      new_cps->gc(cps);
+      cps = new_cps;
     }
-    rd = rd->next;
   }
 }
+
+void CpStack::gc(CpStack *cps) {
+  if (size == 0) {
+    WaitActor *wa = cps->u.choice;
+    Assert(wa && !wa->isCommitted());
+  
+    Board *b = wa->getBoardFast();
+    if (!b->gcIsAlive())
+      u.choice = (WaitActor *) 0;
+
+    Assert(!(opMode == IN_TC && !isInTree(b)));
+    u.choice = (WaitActor *) wa->gcActor();
+  } else {
+    Assert(cps->top);
+    top = 0;
+
+    for (int i = 0; i < cps->top; i++) {
+      WaitActor *wa = cps->u.choices[i];
+      Assert(wa && !wa->isCommitted());
+
+      Board *b = wa->getBoardFast();
+      if (b->gcIsAlive())
+	u.choices[top++] = (WaitActor *) wa->gcActor();
+    }
+  }
+}
+
 
 //*****************************************************************************
 //                           collectGarbage

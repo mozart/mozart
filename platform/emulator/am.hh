@@ -274,7 +274,8 @@ public:
 
 extern AM am;
 
-#include "dllstack.hh"
+
+#include "cpstack.hh"
 
 #include "actor.hh"
 #include "board.hh"
