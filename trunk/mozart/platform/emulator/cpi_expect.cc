@@ -28,6 +28,39 @@
 #include "var_all.hh"
 #include "prop_int.hh"
 
+static
+void splitfname(const char * fname, char * &dirname, char * &basename)
+{
+#ifdef WINDOWS
+  const char delim_char = '\\';
+#else
+  const char delim_char = '/';
+#endif
+
+  const int splitlen = 1024;
+  static char split[splitlen];
+  static char * empty = "";
+
+
+  if (strlen(fname) > splitlen-1) {
+    basename = dirname = empty;
+  } else {
+    strcpy(split, fname);
+    
+    char * delim = strrchr(split, delim_char);
+    
+    if (delim == NULL) { // '/' not found
+    dirname = empty;
+    basename = split;
+    } else {
+      dirname = split;
+      basename = delim+1;
+      *delim = '\0';
+    }
+  }
+}
+
+
 inline
 OZ_expect_t expectFail(void) {
   return OZ_expect_t(0, -1);
@@ -793,11 +826,33 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
   ozstat.propagatorsCreated.incf();
   
 #ifdef NAME_PROPAGATORS
-  NEW_NAMER_DEBUG_PRINT(("imposed_propagator = %p\n", imposed_propagator));
-
-  if (am.debugmode()) {
+  /*
+  NEW_NAMER_DEBUG_PRINT(("imposed_propagator = %p (%s)\n", 
+			 imposed_propagator, 
+			 p->getProfile()->getPropagatorName()));
+  */
+  if (am.isPropagatorLocation()) {
     Thread * thr = oz_currentThread();
-    oz_propAddName(prop, thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1));
+    OZ_Term debug_frame 
+      = OZ_head(thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1));
+    
+    const char * fname = OZ_atomToC(OZ_subtree(debug_frame, AtomFile));
+    char * dirname, * basename;
+    
+    splitfname(fname, dirname, basename);
+
+    OZ_Term prop_loc = OZ_record(AtomPropLocation, 
+				 OZ_cons(AtomFile, 
+					 OZ_cons(AtomLine,
+						 OZ_cons(AtomColumn,
+							 OZ_cons(AtomPath,
+								 OZ_nil())))));
+    OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
+    OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
+    OZ_putSubtree(prop_loc, AtomLine, OZ_subtree(debug_frame, AtomLine));
+    OZ_putSubtree(prop_loc, AtomColumn, OZ_subtree(debug_frame, AtomColumn));
+
+    oz_propAddName(prop, prop_loc); 
   }
 #endif
 

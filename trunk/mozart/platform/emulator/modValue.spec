@@ -140,5 +140,8 @@
 			     out => ['+string'],
 			     BI  => BItermToVS},
 
+     'nameVariable'    => { in  => ['value','+atom'],
+                            out => [],
+                            BI  => BIvalueNameVariable},
      );
 1;;

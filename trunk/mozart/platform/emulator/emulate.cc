@@ -2596,8 +2596,11 @@ LBLdispatcher:
 	} else {
 	  CTT->pushDebug(dbg,DBG_NOSTEP);
 	}
+      } else if (e->isPropagatorLocation()) {
+	OzDebug *dbg = new OzDebug(PC,NULL,CAP);
+	CTT->pushDebug(dbg,DBG_EXIT);
       }
-
+ 
       DISPATCH(5);
     }
 
@@ -2609,7 +2612,7 @@ LBLdispatcher:
 
       if (dbg != (OzDebug *) NULL) {
 	Assert(oz_eq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
-	Assert(dbg->Y == Y && dbg->CAP == CAP);
+	Assert(e->isPropagatorLocation() || (dbg->Y == Y && dbg->CAP == CAP));
 
 	if (dothis != DBG_EXIT
 	    && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||
