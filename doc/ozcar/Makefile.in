@@ -8,7 +8,7 @@ MAIN = ozcar.sgml
 SGMLSRCS = \
         ozcar.bib
 HTMLEXTRAFILES = ozcar-initial.gif \
-        ozcar-hello.gif ozcar-hello2.gif ozcar-hello3.gif \
+        ozcar-hello.gif ozcar-hello-emacs.gif \
         step.gif next.gif unleash.gif stop.gif detach.gif kill.gif
 OZDOCHTMLFLAGS = --autoindex
 
