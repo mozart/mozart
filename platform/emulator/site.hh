@@ -158,7 +158,7 @@ private:
 public:
   //
   void* operator new(size_t size){
-    Assert(sizeof(Site) == 20);
+    Assert(sizeof(Site) <= sizeof(Construct_5));
     return ((Site *) genFreeListManager->getOne_5());}
   void freeSite(){
     genFreeListManager->putOne_5((FreeListEntry*) this);}
