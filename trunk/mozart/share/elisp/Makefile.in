@@ -1,6 +1,7 @@
-OZHOME		= @prefix@
+PREFIX=		@prefix@
+
 SRCDIR		= @srcdir@
-ELISPDIR	= $(OZHOME)/lib/elisp
+ELISPDIR	= $(PREFIX)/lib/elisp
 
 EMACS		= @EMACS@
 ECHO		= @ECHO@

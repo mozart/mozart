@@ -5,7 +5,8 @@ INSTALL=	@INSTALL@
 INSTALL_OTHER=	$(INSTALL) -m 444
 MKINSTALLDIRS=	@MKINSTALLDIRS@
 
-OZHOME=		@prefix@
+PREFIX=		@prefix@
+
 OZVERSION=	$(TOPDIR)/OZVERSION
 
 SUBDIRS=	bin elisp ozwish Emulator lib
@@ -17,12 +18,12 @@ PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
 DISTDIR=	dist
 
 FILES=		README* LICENSE BUGS
-ALLFILES=	$(FILES:%=$(OZHOME)/%)
+ALLFILES=	$(FILES:%=$(PREFIX)/%)
 
 DIRS=		bin demo include lib platform tools man
 LIBDIRS=	elisp browser panel explorer bitmaps compiler wish
-ALLDIRS=	$(OZHOME) $(DIRS:%=$(OZHOME)/%) $(LIBDIRS:%=$(OZHOME)/lib/%) \
-		$(PLATFORMS:%=$(OZHOME)/platform/%)
+ALLDIRS=	$(PREFIX) $(DIRS:%=$(PREFIX)/%) $(LIBDIRS:%=$(PREFIX)/lib/%) \
+		$(PLATFORMS:%=$(PREFIX)/platform/%)
 
 COMMONFILES = oz/bin oz/demo oz/include oz/lib \
 		oz/README* oz/LICENSE oz/BUGS \
@@ -32,7 +33,7 @@ COMMONFILES = oz/bin oz/demo oz/include oz/lib \
 COMPRESS = compress
 ZIP      = gzip -9
 
-CACHEDIR=oz/cache/http/www.ps.uni-sb.de/ozhome/lib
+CACHEDIR=oz/cache/http/www.ps.uni-sb.de/PREFIX/lib
 
 .PHONY:	all install clean distclean realclean veryclean World files
 
@@ -50,7 +51,7 @@ bootstrap:
 	(cd lib; make bootstrap)
 
 $(ALLFILES):
-	$(INSTALL_OTHER) $(FILES) $(OZHOME)
+	$(INSTALL_OTHER) $(FILES) $(PREFIX)
 
 $(ALLDIRS) $(DISTDIR):
 	$(MKINSTALLDIRS) $@
@@ -70,23 +71,23 @@ src:
 	(cd $(SECDIR); tar vzcf dist/oz-lib.tgz lib TestFiles)
 
 mini-common: $(DISTDIR)
-	(cd $(OZHOME)/..; \
+	(cd $(PREFIX)/..; \
 	tar -zvcf - oz/bin oz/include oz/lib) > \
 	   $(DISTDIR)/mini-`$(OZVERSION)`.tgz
 
 common: $(DISTDIR)
-	(cd $(OZHOME)/..; \
+	(cd $(PREFIX)/..; \
 	tar -cf - $(COMMONFILES)) | \
         $(ZIP) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
 
 $(PLATFORMS): $(DISTDIR)
-	(cd $(OZHOME)/..; \
+	(cd $(PREFIX)/..; \
         tar -cf - oz/platform/$@) | \
         $(ZIP) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
 
 oz-win::
 	rm -rf oz oz3 oz-`$(OZVERSION)`
-	( cd $(OZHOME)/..; \
+	( cd $(PREFIX)/..; \
 	  tar cf - oz/?*.exe oz/demo oz/include oz/lib \
 		   oz/README* oz/LICENSE oz/BUGS oz/ChangeLog \
                    oz/platform/win32-i486/?*.exe \
