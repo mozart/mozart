@@ -1,6 +1,6 @@
 @SET_MAKE@
 BUILDTOP	= @BUILDTOP@
-SRCDIR		= @srcdira@
+SRCDIR		= @srcdir@
 prefix		= @prefix@
 PLATFORM	= @PLATFORM@
 PACKAGE		= @PACKAGE@
