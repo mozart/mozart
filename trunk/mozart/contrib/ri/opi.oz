@@ -1,4 +1,3 @@
-\switch +debuginfocontrol
 %{Property.put 'internal.debug' true}
 declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP.ozf']}
 %[RI LP] = {Module.link ['RI.ozf' 'LP.ozf']}

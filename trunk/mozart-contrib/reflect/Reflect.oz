@@ -66,7 +66,8 @@ define
 \endif
       ReflectTables = {BIspaceReflect Vs}
 \ifdef VERBOSE
-      {System.showInfo '\t preparing variables ... '}      
+      {System.showInfo '\t preparing '#{Width ReflectTables.vars}
+       #' variables ... '}
 \endif
       VarTable = {Record.map
 		  ReflectTables.vars
@@ -77,7 +78,6 @@ define
 			     reference: Reference)}
 		     SL = {Record.map SuspLists FS.value.make}
 		     PS = {FS.unionN SL}
-		     {Wait PS}
 		     CV = {FS.diff {FS.unionN
 				    {Map
 				     {FS.reflect.lowerBoundList PS}
@@ -96,7 +96,8 @@ define
 			 connected_vars: CV)
 		  end}
 \ifdef VERBOSE
-      {System.showInfo '\t preparing propagators ... '}      
+      {System.showInfo '\t preparing '#{Width ReflectTables.props}
+       #' propagators ... '}      
 \endif
       PropTable = {Record.map
 		   ReflectTables.props
@@ -109,11 +110,12 @@ define
 		      CP = {FS.diff
 			    {FS.unionN
 			     {Map
-			      {FS.reflect.lowerBoundList PS}
+			      Params %{FS.reflect.lowerBoundList PS}
 			      fun {$ PI}
 				 VarTable.PI.propagators
 			      end}}
 			    {FS.value.make Id}}
+
 		   in
 		      propagator(id:              Id
 				 name:            Name
