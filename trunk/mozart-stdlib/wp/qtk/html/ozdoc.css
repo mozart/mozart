@@ -1,0 +1,151 @@
+BODY {
+  margin-left: 160px;
+  margin-right: 10px;
+  background: url(page.gif) repeat-y white;
+}
+
+.margin {
+  position: absolute;
+  left: 10px;
+  width: 130px;
+}
+
+DIV.maxi {
+  margin-left: -160px;
+}
+
+BODY, P, H1, H2, H3, H4, TH, TD, A {
+  font-family: tahoma,arial,helvetica,sans-serif;
+}
+
+PRE, CODE, KBD, SPAN.key, SPAN.buffer {
+  font-family: "Andale Mono","lucida console",courier,monospace;
+}
+
+P {
+  text-align: justify;
+}
+
+H1, H2, H3, H4, .synopsis P, P.margin, TH {
+  text-align: left;
+}
+
+H1.title, H2.authors {
+  text-align: center;
+}
+
+H3.authors {
+  text-align: right;
+  color: #000000;
+}
+
+H1     { color: #9B0000; }
+H2     { color: #FF9933; }
+H3, H4 { color: #881155; }
+
+UL.toc {
+  list-style: none;
+}
+
+.allcaps {
+  font-size: 80%;
+}
+
+SPAN.key          { color: #669933; }
+CODE              { color: #663366; }
+.code CODE        { color: #000000; }
+.synopsis CODE    { color: #000000; }
+
+SPAN.comment      { color: #B22222; }
+SPAN.keyword      { color: #A020F0; }
+SPAN.string       { color: #BC8F8F; }
+SPAN.functionname { color: #0000FF; }
+SPAN.type         { color: #228B22; }
+SPAN.variablename { color: #B8860B; }
+SPAN.reference    { color: #5F9EA0; }
+SPAN.builtin      { color: #DA70D6; }
+
+DIV.footnote {
+  text-indent: 1em;
+  font-family: tahoma,arial,helvetica,sans-serif;
+  font-size: 10pt;
+}
+
+A:link {
+  color: #666666;
+}
+
+A:visited {
+  color: black;
+}
+
+.ignore {
+  display: none;
+}
+
+P.linkmenu {
+  text-align: center;
+  font-weight: bold;
+  color: #881155;
+}
+
+P.linkmenu A:link    { color: #881155; }
+P.linkmenu A:visited { color: #881155; }
+
+SPAN.chunkborder {
+  color: orange;
+  font-weight: bold;
+}
+
+SPAN.chunktitle {
+  color: olivedrab;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+SPAN.chunktitle A:link    { color: slateblue; }
+SPAN.chunktitle A:visited { color: slateblue; }
+
+SPAN.entrycategory {
+  position:absolute;
+  font-weight:bold;
+  left:10px;
+  width:130px;
+  text-align:right;
+}
+
+SPAN.entrycategorybracket {
+  display:none;
+}
+
+.PAPERYEAR,.PAPERAUTHOR {
+  font-weight:bold;
+}
+
+MENU.PAPERLINKS LI {
+  list-style-type:none;
+}
+
+.PAPERLINKS P {
+  display:inline;
+  text-indent:-40px;
+  font-weight:normal;
+  font-style:italic;
+}
+
+SPAN.BIBAUTHOR {
+  font-size:small;
+  font-style:italic;
+}
+
+SPAN.VERSION {
+  font-size:10pt;
+}
+
+P.LI {
+  margin-top:0px;
+  margin-bottom:0px;
+  font-weight:bold;
+  text-indent:-20px;
+  margin-left:20px;
+}

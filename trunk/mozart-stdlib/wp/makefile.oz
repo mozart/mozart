@@ -1,3 +1,5 @@
 makefile(
-   subdirs : ['qtk' 'qhtml']
+   subdirs : ['qtk'
+	      %'qhtml'
+	     ]
    )
