@@ -2,8 +2,12 @@
 %%% Author:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
+%%% Contributor:
+%%%   Denys Duchier <duchier@ps.uni-sb.de>
+%%%
 %%% Copyright:
 %%%   Leif Kornstaedt, 1998
+%%%   Denys Duchier, 1998
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
