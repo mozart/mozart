@@ -28,7 +28,7 @@
 #define __RESOURCES_H__
 
 #ifdef Assert
-error include resources.hh before mozart.h
+#error include resources.hh before mozart.h
 #endif
 
 /*
