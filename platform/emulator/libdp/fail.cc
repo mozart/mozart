@@ -292,25 +292,25 @@ TaggedRef detOp(Tertiary* t,PendThread* pd){
   case Co_Cell:
     switch(pd->exKind){
     case ASSIGN:
-      return mkOp2("objAssign",pd->old,pd->nw);
+      return mkOp2("objectAssign",pd->old,pd->nw);
     case AT:
-      return mkOp2("objAccess",pd->old,pd->nw);
+      return mkOp2("objectAccess",pd->old,pd->nw);
     case EXCHANGE:
-      return mkOp2("cellExch",pd->old,pd->nw);
+      return mkOp2("cellExchange",pd->old,pd->nw);
     case O_EXCHANGE:
       TaggedRef a,b;
       ooExchGetFeaOld(pd->old,a,b);
-      return mkOp3("objExch",a,b,pd->nw);
+      return mkOp3("objectExchange",a,b,pd->nw);
     case DEEPAT:
       if(pd->nw!=0)
-        return mkOp2("objAccess",pd->nw,pd->old);
+        return mkOp2("objectAccess",pd->nw,pd->old);
       else
         return mkOp1("cellAccess",pd->old);
     case ACCESS:
       if(pd->nw!=0)
-        return mkOp2("objAccess",pd->nw,pd->old);
+        return mkOp2("objectAccess",pd->nw,pd->old);
       else
-        return mkOp1("objAccess",pd->old);
+        return mkOp1("objectAccess",pd->old);
     default:
       Assert(0);}
     return makeTaggedNULL();
@@ -1024,7 +1024,11 @@ TaggedRef listifyWatcherCond(EntityCond ec,Tertiary *t){
   case Co_Cell:{
     if(t->getTertType()==Te_Manager){
       return listifyWatcherCond(ec,FALSE,TRUE);}
-    return listifyWatcherCond(ec,TRUE,FALSE);}
+    DSite*s =BT->getBorrow(t->getIndex())->getNetAddress()->site;
+    if(s->siteStatus()==SITE_PERM)
+      return listifyWatcherCond(ec,TRUE,FALSE);
+    else
+      return listifyWatcherCond(ec,FALSE,TRUE);}
   default:
     return listifyWatcherCond(ec,FALSE,FALSE);}
   Assert(0);

@@ -768,7 +768,10 @@ void BorrowEntry::removeMaster_M(BorrowCreditExtension* master){
   Credit c=master->msGetPrimCredit();
   removeFlags(PO_EXTENDED|PO_MASTER);
   freeBorrowCreditExtension(master);
-  setCreditOB(c);}
+  setCreditOB(c);
+  if(isRef()){
+    BT->maybeFreeBorrowEntry(BT->ptr2Index(this));}
+}
 
 void BorrowEntry::removeSlave(){
   BorrowCreditExtension* slave=getSlave();
@@ -851,11 +854,6 @@ Bool BorrowEntry::addSecCredit_Slave(Credit c,BorrowCreditExtension *slave){
 
 /* public */
 
-static inline void refClear(BorrowEntry* b){
-  if(b->isRef())
-    (void) BT->maybeFreeBorrowEntry(BT->ptr2Index(b));}
-
-
 void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
   switch(getExtendFlags()){
   case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
@@ -882,14 +880,12 @@ void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
   case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
     if(s==myDSite){
       addSecCredit_MasterBig(c,getMaster());
-      refClear(this);
       return;}
     break;}
 
   case PO_EXTENDED|PO_MASTER:{
     if(s==myDSite){
       addSecCredit_Master(c,getMaster());
-      refClear(this);
       return;}
     break;}
   default:
@@ -913,7 +909,7 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     else{
       Assert(vk==VAR_OBJECT);
       GET_VAR(from,Object)->getObject()->setIndex(i);}
-  } else {
+  } else{
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
   }
@@ -960,13 +956,14 @@ void BorrowEntry::gcBorrowRoot(int i) {
     if (tagged2CVar(*getPtr())->getSuspList()!=0) {
       gcPO();}
     return;}
-  if(isRef()) {
-     Assert(isExtended());
+  if(isRef()){
+    Assert(isExtended());
     gcPO();
     return;}
   Assert(isTertiary());
   if(getTertiary()->gcIsMarked()){
-     u.tert=(Tertiary *)u.tert->gcConstTerm();
+    makeGCMark();
+    u.tert=(Tertiary *)u.tert->gcConstTerm();
     return;}
   if(isTertiaryPending(getTertiary())) gcPO();
 }
@@ -1074,7 +1071,10 @@ int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
 Bool BorrowTable::maybeFreeBorrowEntry(int index){
   BorrowEntry *b = &(array[index]);
   if(b->isExtended()){
-    if(b->getExtendFlags() & PO_MASTER) return FALSE;
+    if(b->getExtendFlags() & PO_MASTER) {
+      if(b->isVar()){
+        b->changeToRef();}
+      return FALSE;}
     Assert(b->getExtendFlags()==PO_SLAVE);
     b->removeSlave();}
   Assert(!b->isExtended());
@@ -1217,7 +1217,6 @@ void BorrowTable::gcBorrowTableFinal()
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-
     if(b->isVar()) {
       if(b->isGCMarked()){
         b->removeGCMark();
@@ -1228,8 +1227,7 @@ void BorrowTable::gcBorrowTableFinal()
         if(!errorIgnoreVar(b)) maybeUnaskVar(b);
         borrowTable->maybeFreeBorrowEntry(i);
       }}
-    else {
-      if(b->isTertiary()){
+    else if(b->isTertiary()){
         Tertiary *t = b->getTertiary();
         if(b->isGCMarked()) {
           b->removeGCMark();
@@ -1238,10 +1236,13 @@ void BorrowTable::gcBorrowTableFinal()
         else{
           if(!errorIgnore(t)) maybeUnask(t);
           Assert(t->isProxy());
-          borrowTable->maybeFreeBorrowEntry(i);
-        }
-      }
-    }
+          borrowTable->maybeFreeBorrowEntry(i);}}
+    else if(b->isRef()){
+      Assert(b->isGCMarked());
+      b->removeGCMark();
+      b->getSite()->makeGCMarkSite();}
+    else {
+      Assert(b->isFree());}
   }
   compactify();
   hshtbl->compactify();
@@ -1255,7 +1256,7 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
   int j=0;
   for(int i=0;i<size;i++){
     be = getBorrow(i);
-    if((!be->isFree()) && be->isTertiary()){
+    if(be->isTertiary()){
       Tertiary *t = be->getTertiary();
       int type = t->getType();
       int state;
@@ -1359,7 +1360,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
         }
       }
       else {
-        if(oz_isProxyVar(oz_deref(be->getRef()))) {
+        if(be->isVar() && oz_isProxyVar(oz_deref(be->getRef()))) {
           maybeFreeBorrowEntry(i);
           proxies++;
         }

@@ -126,6 +126,7 @@ void ProxyManagerVar::gcSetIndex(int i)
 
 /* --- ProxyVar --- */
 
+/*
 static
 void sendRequested(BorrowEntry *be){
   be->getOneMsgCredit();
@@ -134,6 +135,7 @@ void sendRequested(BorrowEntry *be){
   marshal_M_REQUESTED(bs,na->index);
   SendTo(na->site,bs,M_REQUESTED,na->site,na->index);
 }
+*/
 
 OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
@@ -142,7 +144,8 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
 
   BorrowEntry *be=BT->getBorrow(getIndex());
-  sendRequested(be);
+  //  if(isFuture()){  NOT SUPPORTED in this release - another
+  //  sendRequested(be);} protocol necessary
 
   addSuspSVar(susp, unstable);
   return SUSPEND;
@@ -226,8 +229,14 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     if(!errorIgnore()){
-      if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}
+      if(isFuture()){
+        if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
+      else{
+        if(failurePreemption(mkOp1("bind",r))) return BI_REPLACEBICALL;}}
     if (!binding) {
+      if(isFuture()){
+        am.addSuspendVarList(lPtr);
+        return SUSPEND;}
       BorrowEntry *be=BT->getBorrow(getIndex());
       ExportControl(r);
       sendSurrender(be,r);
@@ -258,9 +267,6 @@ void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
   oz_bindLocalVar(this,vPtr,val);
   be->changeToRef();
   maybeHandOver(ei,val);
-  /*
-  if(BT->maybeFreeBorrowEntry(BTI)){
-  gcSetIndex(BAD_BORROW_INDEX);} */
   (void) BT->maybeFreeBorrowEntry(BTI);
 }
 
@@ -274,9 +280,6 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 
   be->changeToRef();
   maybeHandOver(ei,binding);
-  /*
-  if(BT->maybeFreeBorrowEntry(BTI)){
-  gcSetIndex(BAD_BORROW_INDEX);} */
   (void) BT->maybeFreeBorrowEntry(BTI);
 }
 
@@ -284,12 +287,12 @@ void ProxyVar::acknowledge(TaggedRef *vPtr, BorrowEntry *be)
 
 OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
 {
+  if(!errorIgnore()){
+    if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
   if (origVar->getType()==OZ_VAR_FUTURE) {
     if (((Future *)origVar)->kick(vPtr))
       return PROCEED;
   }
-  if(!errorIgnore()){
-    if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
   addSuspSVar(susp, unstable);
   return SUSPEND;
 }
@@ -379,9 +382,6 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
       am.addSuspendVarList(lPtr);
       return SUSPEND;
     }
-    // because of failure ManagerVar need not be in OwnerTable
-    // can now localize this variable
-
     ExportControl(r);
     EntityInfo *ei=info;
     sendRedirectToProxies(r, s);
@@ -410,6 +410,7 @@ void ManagerVar::getStatus(DSite* site,int OTI, TaggedRef tr){
 void ProxyVar::receiveStatus(TaggedRef tr){
   Assert(status!=0);
   SiteUnify(status,tr);
+  status=0;
 }
 
 
@@ -437,6 +438,7 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
 void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
 {
   OZ_Return ret = bindV(vPtr,val);
+  /*
   if (ret == SUSPEND) {
     Assert(origVar->getType()==OZ_VAR_FUTURE);
     Bool ret=((Future *)origVar)->kick(vPtr);
@@ -444,6 +446,7 @@ void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
     am.emptySuspendVarList();
     return;
   }
+  */
   Assert(ret==PROCEED);
 }
 
@@ -460,7 +463,7 @@ void ManagerVar::marshal(MsgBuffer *bs)
 {
   int i=getIndex();
   PD((MARSHAL,"var manager o:%d",i));
-  if((!USE_ALT_VAR_PROTOCOL) && globalRedirectFlag==AUT_REG){
+  if((USE_ALT_VAR_PROTOCOL) && globalRedirectFlag==AUT_REG){
     if(isFuture()){
       marshalOwnHead(DIF_FUTURE_AUTO,i,bs);}
     else{
