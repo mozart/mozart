@@ -2,6 +2,7 @@
   <TITLE>Failure Model</TITLE>
 
 <index/partial failure property/
+<index/failure<and>partial failure property/
 <P>Distributed systems have the partial failure
 property, that is, part of the system can fail
 while the rest continues to work.
@@ -19,7 +20,7 @@ are recognized by the system
 and how they are reflected in the language.
 The system recognizes
 <index/failure<and>fail-stop/
-<index/fail-stop failure/
+<index/fail-stop assumption/
 permanent site failures that are instantaneous (fail-stop)
 <index/failure<and>temporary network problem/
 <index/failure<and>permanent network problem/
@@ -242,7 +243,7 @@ The advanced model is explained in
 <SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
 
 <index/default failure detection/
-<index/failure detection<and>default/
+<index/failure<and>detection<and>default/
 <P>By default, new entities are
 set up so that an exception will be raised
 on fault states <<tempFail>> or <<permFail>>.
@@ -312,7 +313,7 @@ do not have the correct type.
 <SUBSECTION id="binding.logic.variables"><TITLE>Binding logic variables</TITLE>
 
 <index/logic variable<and>binding in failure model/
-<index/failure mode<and>binding logic variables/
+<index/failure<and>binding logic variables/
 <P>A logic variable can be declared before it is bound.
 What happens to its enabled exceptions when it is bound?
 For example, let's say variable <<V>> is enabled with <<FS_v>>
@@ -369,7 +370,7 @@ There is no attempt to "combine" the two sets.
 
 <SUBSECTION><TITLE>Exception formats</TITLE>
 
-<index/failure exception<and>format/
+<index/failure<and>exception format/
 <index/exception<and>format for failure exception/
 <P>The exceptions raised have the format
 <<<system(dp(entity:E conditions:FS op:OP) ...)>>>
@@ -539,7 +540,7 @@ the procedure is called <EM>watcher</EM>.
 
 <SUBSECTION><TITLE>Lazy detection with handlers</TITLE>
 
-<index/failure model<and>handler (synchronous detection)/
+<index/failure<and>handler (synchronous detection)/
 <index/fault handler/
 <index/handler/
 <P>When an operation is attempted
