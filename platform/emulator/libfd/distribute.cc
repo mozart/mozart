@@ -173,6 +173,7 @@ void FdDistributor::normalize(void) {
  *
  */
 
+inline
 void FdDistributor::selectVarNaive(void) {
   Assert(size > 0);
   sel_var = size-1;
@@ -244,18 +245,22 @@ void FdDistributor::selectVarNbSusps(void) {
  *
  */
 
+inline
 void FdDistributor::selectValMin(void) {
   sel_val = makeTaggedSmallInt(getMin(oz_deref(vars[sel_var])));
 }
 
+inline
 void FdDistributor::selectValMid(void) {
   sel_val = makeTaggedSmallInt(getMid(oz_deref(vars[sel_var])));
 }
 
+inline
 void FdDistributor::selectValMax(void) {
   sel_val = makeTaggedSmallInt(getMax(oz_deref(vars[sel_var])));
 }
 
+inline
 void FdDistributor::selectValSplitMin(void) {
   SRecord * st = SRecord::newSRecord(AtomPair, 2);
   st->setArg(0, makeTaggedSmallInt(0));
@@ -263,6 +268,7 @@ void FdDistributor::selectValSplitMin(void) {
   sel_val = makeTaggedSRecord(st);
 }
 
+inline
 void FdDistributor::selectValSplitMax(void) {
   SRecord * st = SRecord::newSRecord(AtomPair, 2);
   st->setArg(0, makeTaggedSmallInt(getMid(oz_deref(vars[sel_var])) + 1));
