@@ -1,0 +1,31 @@
+<Section id="r_overview">
+<title/Overview/
+<p>
+This reference is intended to be a supplement to the user manual. It is
+assumed that the reader has already read the manual and is familiar with
+the concepts of the &cpi .
+
+<para class=apropos><title/Include Files/
+The value of the environment variable <<OZHOME>> is supposed to denote
+the installation directory of the Oz
+system to be used.  The abstractions provided by the &cpi are defined
+in the following header file.
+<p>
+
+<< $OZHOME/include/mozart_cpi.hh>>
+<p>
+
+This file includes the file <<mozart.h>> which provides the basic
+functionality for interfacing Oz with <<C/C++>> code. For details
+see <ptr to="system">.
+<p>
+
+<para class=apropos><title/Naming Conventions/
+The &cpi defines classes, functions,
+macros etc. Their names begin with <<OZ_>>.
+Names of macros are made
+up of upper case letters.  Member functions and data members begin with
+lower case letters. The name of accessor functions begin with <<get>>
+and names of predicates begin with <<is>>.
+<p>
+The <<C/C++>> compiler to be used is <em/gcc/ version 2.7.2 or higher.

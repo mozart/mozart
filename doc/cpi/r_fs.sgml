@@ -1,0 +1,338 @@
+<section id="r_fs">
+<title/The class <<OZ_FSetValue>>/
+
+<subsection id="r_fs.misc">
+<title/Miscellaneous/
+<p>
+
+<para class=apropos><title/<<OZ_FSetState>>/
+<em/Enumerable Type/
+<p>
+<<
+enum OZ_FSetState {fs_empty, fs_full};
+>>
+<p>
+Used when constructing a Finite Set or with the operator <<==>>.
+<p>
+<table>
+<tr> <th/value/ <th/meaning/
+<tr> <td/<<fs_empty>>/ <td/the empty set/
+<tr> <td/<<fs_full>>/ <td/the set <math>\{0, \ldots, OZ\_getFDSup()\}</math>/
+</table>
+
+<p>
+
+<subsection id="r_fs.constr">
+<title/Constructor Member Functions/
+<p>
+
+<para class=apropos><title/<<OZ_FSetValue>>/
+<em/member function/
+<p>
+<<
+OZ_FSetValue(void);
+>>
+<p>
+This constructor creates an <em/uninitialised/ Finite Set Value.
+<p>
+
+<<
+OZ_FSetValue(const OZ_FSetConstraint &amp;fsc);
+>>
+<p>
+<<fsc>> must have a determined value (&ie <<fsc.isValue()>>
+must be true). A Finite Set is constructed from this value.
+<p>
+
+<<
+OZ_FSetValue(const OZ_Term t);
+>>
+<p>
+Constructor using a <em/level4/ list description like for Finite
+Domains (see <ptr to="expect.checkconstr">) to create a Finite Set
+Value.
+<p>
+
+<<
+OZ_FSetValue(const OZ_FSetState state);
+>>
+<p>
+Creates a Finite Set Value according to <<state>> (<<fs_empty>> or
+<<fs_full>>).
+<p>
+
+<<
+OZ_FSetValue(int min_elem, int max_elem);
+>>
+<p>
+Creates a Finite Set Value <math/\{min\_elem, \ldots, max\_elem\}/.
+<p>
+
+<!--
+<<
+OZ_FSetValue(const OZ_FiniteDomain &amp;fd);
+>>
+<p>
+Creates a Finite Set containing the possible values for <<fd>>.
+<p>
+-->
+
+<subsection id="r_fs.refl">
+<title/Reflection Member Functions/
+<p>
+
+<para class=apropos><title/<<getMinElem>>/
+<em/constant member function/
+<p>
+<<
+int getMinElem(void) const;
+>>
+<p>
+Returns the smallest element of the set.
+<p>
+
+<para class=apropos><title/<<getMaxElem>>/
+<em/constant member function/
+<p>
+<<
+int getMaxElem(void) const;
+>>
+<p>
+Returns the largest element of the set.
+<p>
+
+<para class=apropos><title/<<getNextLargerElem>>/
+<em/constant member function/
+<p>
+<<
+int getNextLargerElem(int i) const;
+>>
+<p>
+Returns the next larger Element after i in the set, or <math/-1/ if
+there is none.
+<p>
+
+<para class=apropos><title/<<getNextSmallerElem>>/
+<em/constant member function/
+<p>
+<<
+int getNextSmallerElem(int) const;
+>>
+<p>
+Returns the next smaller Element before i in the set, or <math/-1/ if
+there is none.
+<p>
+
+<para class=apropos><title/<<getKnownInList>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getKnownInList(void) const;
+>>
+<p>
+Returns a <em/level4/-List (see <ptr to="expect.checkconstr">)
+containing the elements in the set.
+<p>
+
+<para class=apropos><title/<<getKnownNotInList>>/
+<em/constant member function/
+<p>
+<<
+OZ_Term getKnownNotInList(void) const;
+>>
+<p>
+Returns a <em/level4/-List (see <ptr to="expect.checkconstr">)
+containing the elements in the complementary set.
+<p>
+
+<subsection id="r_fs.op">
+<title/Operator Member Functions/
+<p>
+
+<para class=apropos><title/<<operator==>>/
+<em/constant member function/
+<<
+OZ_Boolean operator==(const OZ_FSetValue &amp;fs) const;
+>>
+<p>
+Equality on sets.
+<p>
+
+<para class=apropos><title/<<operator&lt;=>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean operator&lt;=(const OZ_FSetValue &amp;fs) const;
+>>
+<p>
+true if <<*this>> is a subset of <<fs>>.
+<p>
+
+<para class=apropos><title/<<operator&amp;>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue operator&amp;(const OZ_FSetValue &amp;fs) const;
+>>
+<p>
+returns the intersection of <<*this>> with <<fs>>.
+<p>
+
+<para class=apropos><title/<<operator|>>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue operator|(const OZ_FSetValue &amp;fs) const;
+>>
+<p>
+returns the union of <<*this>> with <<fs>>.
+<p>
+
+<para class=apropos><title/<<operator->>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue operator-(const OZ_FSetValue &amp;fs) const;
+>>
+<p>
+returns the elements in <<*this>> not in <<fs>>.
+<p>
+
+<para class=apropos><title/<<operator&amp;=>>/
+<em/member function/
+<p>
+<<
+OZ_FSetValue operator&amp;=(const OZ_FSetValue &amp;fs);
+>>
+<p>
+<<*this>> is assigned its intersection with <<fs>>.
+<p>
+
+<para class=apropos><title/<<operator|=>>/
+<em/member function/
+<p>
+<<
+OZ_FSetValue operator|=(const OZ_FSetValue &amp;);
+>>
+<p>
+<<*this>> is assigned its union with <<fs>>.
+<p>
+
+<para class=apropos><title/<<operator&amp;=>>/
+<em/member function/
+<p>
+<<
+OZ_FSetValue operator&amp;=(const int i);
+>>
+<p>
+if <<i>> is in <<*this>>, this function returns <math/\{i\}/;
+otherwise the empty set.
+<p>
+
+<para class=apropos><title/<<operator+=>>/
+<em/member function/
+<p>
+<<
+OZ_FSetValue operator+=(const int i);
+>>
+<p>
+<<i>> is put into <<*this>>.
+<p>
+
+<para class=apropos><title/<<operator-=>>/
+<em/member function/
+<p>
+<<
+OZ_FSetValue operator-=(const int);
+>>
+<p>
+<<i>> is removed from <<*this>>, if in.
+<p>
+
+<para class=apropos><title/<<operator->>/
+<em/constant member function/
+<p>
+<<
+OZ_FSetValue operator-(void) const;
+>>
+<p>
+returns the complement of <<*this>>.
+<p>
+
+<subsection id="r_fs.aux">
+<title/Auxiliary Member Functions/
+<p>
+
+<para class=apropos><title/<<isIn>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isIn(int i) const;
+>>
+<p>
+<<true>> if i is in <<*this>>.
+<p>
+
+<para class=apropos><title/<<isNotIn>>/
+<em/constant member function/
+<p>
+<<
+OZ_Boolean isNotIn(int) const;
+>>
+<p>
+<<true>> if i is not in <<*this>>.
+<p>
+
+<para class=apropos><title/<<getCard>>/
+<em/constant member function/
+<p>
+<<
+int getCard(void) const;
+>>
+<p>
+returns the cardinality of <<*this>>.
+<p>
+
+<para class=apropos><title/<<getKnownNotIn>>/
+<em/constant member function/
+<p>
+<<
+int getKnownNotIn(void) const;
+>>
+<p>
+returns the cardinality of <<*this>>' complement.
+<p>
+
+
+<!--
+<para class=apropos><title/<<new>>/
+<em/member function/
+<p>
+<<
+static void * operator new(size_t);
+>>
+<p>
+
+<p>
+
+<para class=apropos><title/<<delete>>/
+<em/member function/
+<p>
+<<
+static void operator delete(void *, size_t);
+>>
+<p>
+
+<p>
+
+<para class=apropos><title/<<toString>>/
+<em/member function/
+<p>
+<<
+char * toString(void)
+>>
+<p>
+
+<p>
+
+-->

@@ -1,0 +1,524 @@
+<section id="r_expect">
+<title/The class <<OZ_Expect>>/
+
+<p>
+The functionality provided by class <<OZ_Expect>> is intended to be
+used for implementing header functions.
+
+<p>
+<subsection id="expect.types">
+<title/Types/
+
+<p>
+<para class=apropos><title/<<OZ_expect_t>>/
+<em/data type/<p>
+<<
+struct OZ_expect_t {
+  int size, accepted;
+  OZ_expect_t(int s, int a) : size(s), accepted(a) {}
+};
+>>
+<p>
+Return type of member functions which check for constraints on
+parameters (see <ptr to="expect.checkconstr">).
+
+<para class=apropos><title/<<OZ_FDPropState>>/
+<em/enumerable type/<p>
+<<
+enum
+OZ_FDPropState {fd_prop_singl = 0,
+                fd_prop_bounds,
+                fd_prop_any};
+
+>>
+<p>
+The values of this enumerable type are used to determine what kind of
+pruning of a finite domain causes a propagator to be resumed.
+<p>
+
+<para class=apropos><title/<<OZ_PropagatorFlags>>/
+<em/enumerable type/<p>
+<<
+enum OZ_PropagatorFlags {NULL_flag, OFS_flag};
+>>
+<p>
+[fixme]
+<p>
+
+<para class=apropos><title/<<OZ_ExpectMeth>>/
+<em/data type/<p>
+<<
+typedef
+OZ_expect_t (OZ_Expect::*OZ_ExpectMeth)(OZ_Term)
+>>
+<p>
+Type of member functions which check for constraints on parameters (see
+<ptr to="expect.checkconstr">).
+<p>
+
+<subsection id="expect.condes">
+<title/Constructor and Destructor/
+<p>
+<para class=apropos><title/<<OZ_Expect>>/
+<em/constructor/<p>
+<<
+OZ_Expect(void);
+>>
+<p>
+Default constructor of the class <<OZ_Expect>>.
+<p>
+
+<para class=apropos><title/<<~OZ_Expect>>/
+<em/destructor/<p>
+<<
+~OZ_Expect();
+>>
+<p>
+Destructor of the class <<OZ_Expect>>.
+<p>
+
+<subsection id="expect.checkconstr">
+<title/Member Functions for Checking the Constraint Store/
+<p>
+
+A member function described in this section takes as first argument a
+term, typically a parameter of a propagator. Extra arguments allow to
+control the behaviour of the member function or to specify the way
+subterms are to be checked. The returned value is of type
+<<OZ_expect_t>> and denotes the result of the examination of the
+constraint store.
+<p>
+
+<para class=apropos><title/<<expectDomDescr>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectDomDescr(OZ_Term descr,
+                           int level = 4);
+>>
+
+<p>
+This member function expects <<descr>> to be a domain description
+according to <<level>>.
+<p>
+<grammar.rule>?={level4}
+  <grammar.alt/compl(?={level3})/
+  <grammar.alt/?={level3}/
+
+<grammar.rule>?={level3}
+  <grammar.alt/?={level2+}/
+  <grammar.alt/?={level2}/
+
+<grammar.rule>?={level2}
+  <grammar.alt/?={level1}#?={level1}/
+  <grammar.alt/?={level1}/
+
+<grammar.rule>?={level1}
+  <grammar.alt/?={level2+}/
+  <grammar.alt/integer out of <<{0, .. , OZ_getFDSup()} >>/
+
+<p>
+The non-terminal <em/leveln/ corresponds to <<level=n>>.
+<p>
+
+<para class=apropos><title/<<expectFSetDescr>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectFSetDescr(OZ_Term descr,
+                           int level = 4);
+>><p>
+
+This member function expects <<descr>> to be a finite set description
+according to <<level>> [fixme].
+<p>
+<grammar.rule>?={level4}
+  <grammar.alt/compl(?={level3})/
+  <grammar.alt/?={level3}/
+
+<grammar.rule>?={level3}
+  <grammar.alt/?={level2+}/
+  <grammar.alt/?={level2}/
+
+<grammar.rule>?={level2}
+  <grammar.alt/?={level1}#?={level1}/
+  <grammar.alt/?={level1}/
+
+<grammar.rule>?={level1}
+  <grammar.alt/?={level2+}/
+  <grammar.alt/integer out of <<{0, .. , OZ_getFDSup()} >>/
+
+<p>
+The non-terminal <em/leveln/ corresponds to <<level=n>>.
+<p>
+
+
+<para class=apropos><title/<<expectVar>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectVar(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a variable. A determined term <<t>> is
+regarded as an inconsistency.
+<p>
+
+<para class=apropos><title/<<expectRecordVar>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectRecordVar(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a record.
+<p>
+
+<para class=apropos><title/<<expectBoolVar>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectRecordVar(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a boolean variable. [fixme?]
+<p>
+
+<para class=apropos><title/<<expectIntVar>>/
+<em/member function/<p>
+<<
+OZ_expect_t
+expectIntVar(OZ_Term t,
+             OZ_FDPropState ps = fd_prop_any);
+>>
+<p>
+Expects <<t>> to be a finite domain integer. The value of <<ps>>
+controls on what events the propagator has to be resumed.
+<!--
+The type <<OZ_FDPropState>> is defined in <ptr to="r_fd.misc">.
+-->
+The values <<OZ_FDPropState>> have the following meaning.
+<p>
+<table>
+<tr><th/value/ <th/explanation/
+<tr><td/<<fd_prop_any>>/ <td/The propagator imposed on that variable is
+     resumed if an arbitrary value is removed from the domain of the
+     finite domain integer denoted by <<t>>./
+<tr><td/<<fd_prop_bounds>>/ <td/The propagator imposed on that variable up
+     if the bounds are narrowed of the domain of the finite domain
+     integer denoted by <<t>>./
+<tr><td/<<fd_prop_singl>>/ <td/The propagator imposed on that variable is
+     resumed if the domain of the finite domain integer denoted by
+     m4cpp{t} becomes a singleton./
+</table>
+
+<para class=apropos><title/<<expectFSetVar>>/
+<em/member function/<p>
+<<
+OZ_expect_t
+expectFSetVar(OZ_Term t,
+              OZ_FSetPropState ps = fs_prop_glb);
+>>
+<p>
+Expects <<t>> to be a finite set variable. The value of <<ps>>
+controls on what events the propagator has to be resumed.
+The values <<OZ_FSetPropState>> have the following meaning.
+[fixme]
+<p>
+<table>
+<tr><th/value/ <th/explanation/
+<tr><td/<<fs_prop_any>>/ <td/The propagator imposed on that variable is
+     resumed if an arbitrary value is included or excluded in the
+     corresponding set<<t>>./
+<tr><td/<<fs_prop_bounds>>/ <td/???./
+<tr><td/<<fs_prop_glb>>/ <td/The propagator is resumed if the greatest
+     lower bound of the set changes../
+<tr><td/<<fs_prop_lub>>/ <td/The propagator is resumed if the least
+     upper bound of the set changes./
+<tr><td/<<fd_prop_val>>/ <td/???/
+</table>
+
+<!--
+
+<para class=apropos><title/<<expectIntVarAny>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectIntVarAny(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a finite domain integer. The propagator imposed
+on that variable is resumed if an arbitrary value is removed from the
+domain of the finite domain integer denoted by <<t>>.
+<p>
+-->
+
+
+<para class=apropos><title/<<expectInt>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectInt(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a small integer. See the systems
+manual <ptr to="system"> for details.
+<p>
+
+<para class=apropos><title/<<expectFloat>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectFloat(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a float.
+<p>
+
+<para class=apropos><title/<<expectFSetValue>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectFSetValue(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a finite set value.
+<p>
+
+<para class=apropos><title/<<expectLiteral>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectLiteral(OZ_Term t);
+>>
+<p>
+Expects <<t>> to be a literal.
+<p>
+<<
+OZ_expect_t expectLiteral(OZ_Term t, OZ_Term *);
+>>
+<p>
+[fixme]
+<p>
+
+<para class=apropos><title/<<expectVector>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectVector(OZ_Term t,
+                         OZ_ExpectMeth expect_f);
+>>
+<p>
+Expects <<t>> to be a vector of terms which are all sufficiently
+constrained with respect to <<expect_f>>. A vector is either a tuple,
+a closed record, or a list.
+<p>
+
+<para class=apropos><title/<<expectProperRecord>>/
+<em/member function/<p>
+<<
+OZ_expect_t
+expectProperRecord(OZ_Term t,
+                   OZ_ExpectMeth expect_f);
+>>
+<p>
+Expects <<t>> to be a proper record where all subtrees are sufficiently
+constrained with respect to <<expect_f>>. A proper record expects its
+subtrees to be indexed by literals.
+<p>
+OZ_expect_t
+expectProperRecord(OZ_Term t,
+                   OZ_Term *);
+>>
+<p>
+[fixme]
+<p>
+
+<para class=apropos><title/<<expectProperTuple>>/
+<em/member function/<p>
+<<
+OZ_expect_t
+expectProperTuple(OZ_Term t,
+                  OZ_ExpectMeth expect_f);
+>>
+<p>
+Expects <<t>> to be a proper tuple where all subtrees are sufficiently
+constrained with respect to <<expect_f>>. A proper tuple expects its
+subtrees to be indexed by integers.
+<p>
+
+<para class=apropos><title/<<expectList>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectList(OZ_Term t,
+                       OZ_ExpectMeth expect_f);
+>>
+<p>
+Expects <<t>> to be a list where all elements are sufficiently
+constrained with respect to <<expect_f>>. A list is either the atom
+<<nil>> or a 2-tuple with label <<'|'>> where the second
+subtree is a list again.
+<p>
+
+<para class=apropos><title/<<expectStream>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectStream(OZ_Term st);
+>>
+<p>
+[fixme]
+<p>
+
+<para class=apropos><title/<<expectGenCtVar>>/
+<em/member function/<p>
+<<
+OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
+>>
+<p>
+[fixme]
+<p>
+
+
+<subsection id="expect.control">
+<title/Member Functions for Control Purposes/
+<p>
+
+<para class=apropos><title/<<collectVarsOn>>/
+<em/member function/<p>
+<<
+void collectVarsOn(void);
+>>
+<p>
+This member function turns collecting variables <em/on/. That means
+that pruning of parameters checked in this mode may cause the propagator
+to be resumed.
+<p>
+
+<para class=apropos><title/<<collectVarsOff>>/
+<em/member function/<p>
+<<
+void collectVarsOff(void);
+>>
+<p>
+This member function turns collecting variables <em/off/. That means
+that pruning of parameters checked in this mode <em/cannot/ cause the
+propagator to be resumed.
+<p>
+
+<para class=apropos><title/<<impose>>/
+<em/member function/<p>
+<<
+OZ_Return impose(OZ_Propagator *p,
+                 int prio = OZ_getMediumPrio(),
+                 OZ_PropagatorFlags flags = NULL_flag);
+>>
+<p>
+[fixme]
+The propagator <<p>> is imposed with the thread priority
+<<prio>>. An admissible value for <<prio>> can be obtained either
+by the function <<OZ_getLowPrio()>>, <<OZ_getMediumPrio()>>, or
+<<OZ_getHighPrio()>>. The return value is result of the initial
+invocation of <<OZ_Propagator::propagate(void)>>.
+<p>
+
+<para class=apropos><title/<<suspend>>/
+<em/member function/<p>
+<<
+OZ_Return suspend(OZ_Thread th);
+>>
+<p>
+This member function is to be called if the header function has to be
+suspended. The thread <<th>> can be created with
+<<OZ_makeSuspendedThread()>> which is defined by the &sci
+(see <ptr to="system">  for details).
+<p>
+
+<para class=apropos><title/<<fail>>/
+<em/member function/<p>
+<<
+OZ_Return fail(void);
+>>
+<p>
+This member function is to be called if an inconsistency has been
+detected.
+<p>
+
+<para class=apropos><title/<<isSuspending>>/
+<em/member function/<p>
+<<
+OZ_Boolean isSuspending(OZ_expect_t r);
+>>
+<p>
+Returns <<OZ_TRUE>> if <<r>> indicates that constraints expected
+on a parameter are not present in the current store. Otherwise it
+returns <<OZ_FALSE>>.
+<p>
+
+<para class=apropos><title/<<isFailing>>/
+<em/member function/<p>
+<<
+OZ_Boolean isFailing(OZ_expect_t r);
+>>
+<p>
+Returns <<OZ_TRUE>> if <<r>> indicates an inconsistency. Otherwise
+it returns <<OZ_FALSE>>.
+<p>
+
+<para class=apropos><title/<<isExceptional>>/
+<em/member function/<p>
+<<
+OZ_Boolean isFailing(OZ_expect_t r);
+>>
+<p>
+[fixme]
+<p>
+
+
+<subsection id="expect.macros">
+<title/Macros/
+<p>
+
+<para class=apropos><title/<<OZ_EXPECTED_TYPE>>/
+<em/macro/<p>
+<<
+OZ_EXPECTED_TYPE(S)
+>>
+<p>
+This macro declares a <<C/C++>> string used by the macros <<OZ_EXPECT>>
+and <<OZ_EXPECT_SUPEND>> in case an inconsistency is detected. For
+details see <ptr to="u_nesting.impose">.
+<p>
+
+<para class=apropos><title/<<OZ_EM_>>/
+The macros <<OZ_EM_>> are provided to create
+standardized error messages.
+<p>
+<table>
+<tr><th/expected constraint/ <th/macro to be used/
+<tr> <td/literal/ <td/<<OZ_EM_LIT>>/
+<tr> <td/small integer/ <td/<<OZ_EM_INT>>/
+<tr> <td/finite domain integer/ <td/<<OZ_EM_FD>>/
+<tr> <td/boolean finite domain integer in <math/\{0,1\}// <td/<<OZ_EM_BOOL>>/
+<tr> <td/description of a finite domain integer/ <td/<<OZ_EM_FDDESCR>>/
+<tr> <td/finite set of integers/ <td/<<OZ_EM_FSETVAL>>/
+<tr> <td/finite set of integers constraint/ <td/<<OZ_EM_FSET>>/
+<tr> <td/description of a finite set of integers/ <td/<<OZ_EM_FSETDESCR>>/
+<tr> <td/vector of/ <td/<<OZ_EM_VECT>>/
+<tr> <td/record of/ <td/<<OZ_EM_RECORD>>/
+<tr> <td/truth name/ <td/<<OZ_EM_TNAME>>/
+<tr> <td/stream/ <td/<<OZ_EM_STREAM>>/
+</table>
+
+<para class=apropos><title/<<OZ_EXPECT>>/
+<em/macro/<p>
+<<
+OZ_EXPECT(O, P, F)
+>>
+<p>
+This macros checks if a term occurring at argument position <<P>> of
+a &sci function is currently expectedly constrained with respect to the
+function <<F>>. The first parameter <<O>> must be an instance of
+the class <<OZ_Expect>> &resp a class derived from it. Only if the
+expected constraints are available in the store the code following this
+macro is executed.
+<p>
+
+<para class=apropos><title/<<OZ_EXPECT_SUSPEND>>/
+<em/macro/<p>
+<<
+OZ_EXPECT_SUSPEND(O, P, F, SC)
+>>
+<p>
+This macros has the same semantics as the previous one except that in
+case that expected constraints are currently not present in the store
+the counter <<SC>> is incremented and the following code is executed.
+<p>
