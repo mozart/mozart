@@ -249,10 +249,6 @@ in
 	 end
       end
 
-      meth remove(I)
-	 Tree,mark(I dead)
-      end
-
       meth syncCalc
 	 New in
 	 SyncCalc <- New = unit
