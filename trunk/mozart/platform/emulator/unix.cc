@@ -1626,7 +1626,7 @@ OZ_BI_iodefine(unix_getServByName, 2,1)
 OZ_BI_iodefine(unix_tmpnam,0,1) {
   char *filename; 
 
-  if (!(filename = tmpnam(NULL))) {
+  if (!(filename = ostmpnam(NULL))) {
     return raiseUnixError(0, "OS.tmpnam failed.", "os");
   }
   filename = ozstrdup(filename);
