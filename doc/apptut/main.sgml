@@ -84,6 +84,7 @@
     <meta name="html.split" value="part.distributed.applications">
     <meta name="html.split" value="part.concurrency">
     <meta name="html.split" value="chapter.concurrency.cheap">
+    <meta name="html.split" value="chapter.concurrency.patterns">
 
     <meta name="html.split" value="part.appendices">
     <meta name="html.split" value="chapter.code">
