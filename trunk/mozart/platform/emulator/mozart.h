@@ -46,7 +46,7 @@
  * ------------------------------------------------------------------------ */
 
 /* calling convention "cdecl" under win32 */
-#ifdef __WATCOMC__
+#if defined(__WATCOMC__) || defined(__MINGW32__) || defined(__CYGWIN32__)
 #define ozcdecl __cdecl
 #define OZWIN
 #else
@@ -71,10 +71,12 @@
 #define CONST
 #endif
 
-#if defined(OZWIN) || defined(OZC)
+/* we use function pointers only when creating DLLs 
+ * HAVE_CONFIG_H is defined when compiling the emulator */
+#if defined(OZWIN) && !defined(xHAVE_CONFIG_H)
 #define OzFun(fun) (ozcdecl *fun)
 #else
-#define OzFun(fun) fun
+#define OzFun(fun) (ozcdecl fun)
 #endif
 
 #if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
@@ -88,6 +90,7 @@ extern "C" {
 #define _FUNTYPEDECL(fun,ignore) (ozcdecl *fun) ()
 #endif
 
+#define FUNDECL(fun,args) _FUNDECL(fun,args)
 
 /* Tell me whether this version of Oz supports dynamic linking */
 
@@ -314,11 +317,7 @@ extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 extern OZ_Term _FUNDECL(OZ_newName,());
 
 /* print warning */
-#ifdef __cplusplus
-extern void _FUNDECL(OZ_warning,(CONST char * ...));
-#else
 extern void _FUNDECL(OZ_warning,(CONST char *, ...));
-#endif
 
 /* generate the unix error string from an errno (see perror(3)) */
 extern char * _FUNDECL(OZ_unixError,(int err));
@@ -411,13 +410,10 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
    */
 
 #ifdef __cplusplus
-#define _OZ_BI_proto(Name) \
-  OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
-#define OZ_BI_proto(Name) \
-  extern "C" _OZ_BI_proto(Name);
+#define _OZ_BI_proto(Name) OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
+#define OZ_BI_proto(Name)  extern "C" _OZ_BI_proto(Name);
 #else
-#define _OZ_BI_proto(Name) \
-  OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
+#define _OZ_BI_proto(Name) OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
 #define OZ_BI_proto(Name) _OZ_BI_proto(Name);
 #endif
 
@@ -428,7 +424,7 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #define OZ_BI_define(Name,Arity_IN,Arity_OUT)			\
 OZ_BI_proto(Name);						\
-OZ_Return _FUNDECL(Name,(OZ_Term _OZ_ARGS[],int _OZ_LOC[])) {	\
+OZ_Return FUNDECL(Name,(OZ_Term _OZ_ARGS[],int _OZ_LOC[])) {	\
     const int _OZ_arity = Arity_IN;
 
 #define OZ_BI_end }
@@ -531,7 +527,7 @@ void *VAR;					\
 
 #define OZ_C_proc_begin(Name,arity)					  \
 OZ_BI_proto(Name);							  \
-OZ_Return _FUNDECL(Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {	  \
+OZ_Return FUNDECL(Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {	  \
     const OZ_CFun OZ_self = Name;					  \
     OZ_Term OZ_args[arity];						  \
     const int OZ_arity = arity;						  \
