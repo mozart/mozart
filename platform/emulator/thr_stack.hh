@@ -76,6 +76,10 @@ private:
   }
 
 public:
+  USEFREELISTMEMORY;
+  NO_DEFAULT_CONSTRUCTORS(TaskStack);
+  TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
+
   void pushFrame(ProgramCounter pc,void *y, void *g)
   {
     Frame *newTop = ensureFree(frameSz);
@@ -94,8 +98,6 @@ public:
   int getFrameId() {
     return getFrameId(tos);
   }
-
-  USEFREELISTMEMORY;
 
   int suggestNewSize() {
       int used = getUsed();
@@ -124,9 +126,6 @@ public:
     mkEmpty();
     pushEmpty();
   }
-
-  TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
-  ~TaskStack() { Assert(0); }
 
   void printTaskStack(int depth);
   TaggedRef getTaskStack(Thread *tt, Bool verbose, int depth);

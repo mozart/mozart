@@ -193,6 +193,17 @@ typedef OZ_Return (*IFOR)(TaggedRef In1, ...);
 
 //  ------------------------------------------------------------------------
 
+/* Avoid that the compiler generates constructors, destructors and
+ * assignment operators which are not wanted in Oz */
+#define NO_DEFAULT_CONSTRUCTORS2(aclass)        \
+  ~aclass();                                    \
+  aclass(const aclass &);                       \
+  aclass &operator = (const aclass&)
+
+#define NO_DEFAULT_CONSTRUCTORS(aclass)         \
+  NO_DEFAULT_CONSTRUCTORS2(aclass);             \
+  aclass()                                      \
+
 /*
    Forward declarations of classes and procedures
 */

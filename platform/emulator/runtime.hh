@@ -366,7 +366,6 @@ struct BIspec {
 class BuiltinTab : public HashTable {
 public:
   BuiltinTab(int sz) : HashTable(HT_CHARKEY,sz) {};
-  ~BuiltinTab() {};
   unsigned memRequired(void) {
     return HashTable::memRequired(sizeof(BuiltinTabEntry));
   }

@@ -117,7 +117,7 @@ public:
   LocalThreadQueue(int sz) : ThreadQueueImpl(){
     allocate(sz);
   }
-  ~LocalThreadQueue() { error("never destroy LTQ"); }
+  ~LocalThreadQueue();
 
   LocalThreadQueue * gc(void);
 

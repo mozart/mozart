@@ -35,6 +35,8 @@
 #pragma interface
 #endif
 
+#include "base.hh"
+
 /* ***common trail;                         */
 
 const StackEntry trailMark = (StackEntry) -1l;
@@ -43,7 +45,9 @@ class  Trail: public Stack {
 public:
   void gc();
 
-  Trail (int sizeInit = 200): Stack(sizeInit,Stack_WithMalloc) { }
+  NO_DEFAULT_CONSTRUCTORS1(Trail);
+  Trail(): Stack(DEFAULT_TRAIL_SIZE,Stack_WithMalloc) {}
+  Trail(int sizeInit): Stack(sizeInit,Stack_WithMalloc) {}
 
   void pushRef(TaggedRef *val, TaggedRef old)
   {
