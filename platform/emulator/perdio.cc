@@ -2595,6 +2595,7 @@ void siteReceive(ByteStream* bs)
       Credit c=unmarshallCredit(bs);
       PERDIO_DEBUG1(MSG_RECEIVED,"MSG_RECEIVED:OWNER_CREDIT %d",c);
       bs->unmarshalEnd();
+
       ownerTable->returnCreditAndCheck(index,c);
       break;
     }
@@ -2607,6 +2608,7 @@ void siteReceive(ByteStream* bs)
       NetAddress na=NetAddress(sd,si);
       PERDIO_DEBUG1(MSG_RECEIVED,"MSG_RECEIVED:BORROW_CREDIT %d",c);
       bs->unmarshalEnd();
+
       BorrowEntry *b=borrowTable->find(&na);
       Assert(b!=NULL);
       b->addAskCredit(c);
@@ -2619,13 +2621,14 @@ void siteReceive(ByteStream* bs)
       PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:GET_CLOSUREANDCODE");
       int na_index=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);
-      bs->marshalEnd();
+      bs->unmarshalEnd();
 
       Tertiary *tert=ownerTable->getOwner(na_index)->getTertiary();
       Assert (isAbstraction(tert) && tert->isManager());
       ProcProxy *pp = (ProcProxy*) tert;
 
       ByteStream *bs1= bufferManager->getByteStream();
+      bs1->marshalBegin();
       bs1->put(sendCode ? M_SEND_CLOSUREANDCODE : M_SEND_CLOSURE);
       NetAddress na = NetAddress(mySite,na_index);
       marshallNetAddress(&na,bs1);
