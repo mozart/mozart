@@ -22,6 +22,7 @@
 // from perdio.cc
 void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
+void deleteGName(GName*);
 
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 {

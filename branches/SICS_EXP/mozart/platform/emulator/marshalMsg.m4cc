@@ -1,0 +1,140 @@
+define(message,`
+	void marshal_$1(MsgBuffer * buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6)) {
+	PD((MARSHAL_BE,"marshal begin %s  kind:%s","$1",buf->getSite()->stringrep()));
+	mess_counter[$1].send();
+	buf->marshalBegin();
+	Assert(refTrail->isEmpty());
+	buf->put($1);
+	if(creditSite==NULL) {
+            buf->put(DIF_PRIMARY);}
+	else {
+            buf->put(DIF_SECONDARY);
+	    marshalSite(creditSite,buf);
+	    creditSite=NULL;}
+	argEnc($2)
+	argEnc($3)
+	argEnc($4)
+	argEnc($5)
+	refTrail->unwind();
+	buf->marshalEnd();
+	PD((MARSHAL_BE,"marshal end %s  kind:%s","$1",buf->getSite()->stringrep()));
+	return;}')
+
+
+define(arg,`ifelse($1,Index,int i1,
+	           $1,Index2,int i2,
+                   $1,Term,TaggedRef t,
+		   $1,String,char* str,
+                   $1,Credit,Credit c,
+		   $1,Object,Object* o,
+		   $1,ObjectAndClass,Object* o,
+                   $1,Site,Site* s1,
+	           $1,Site2,Site* s2)'
+            `ifelse($2,`',`',`,')')
+
+define(argEnc,`ifelse($1,Index,marshalNumber(i1,buf);,
+		   $1,Index2,marshalNumber(i2,buf);,
+	           $1,String,marshalString(str,buf);,			
+	           $1,Credit,marshalCredit(c,buf);,			
+		   $1,Object,marshalFullObject(o,buf);,
+		   $1,ObjectAndClass,marshalFullObjectAndClass(o,buf);,
+	           $1,Term,marshalTerm(t,buf);,
+                   $1,Site,marshalSite(s1,buf);,
+                   $1,Site2,marshalSite(s2,buf);,)')
+
+include(`msgFormat.m4')
+
+undefine(`argEnc')
+undefine(`arg')
+undefine(`message')
+
+define(message,`
+	void unmarshal_$1(MsgBuffer* buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6) arg($6 $7)) {
+	PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->getSite()->stringrep()));
+	refTable->reset();
+	argEnc($2)
+	argEnc($3)
+	argEnc($4)
+	argEnc($5)
+	buf->unmarshalEnd();
+	refTrail->unwind();
+	PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->getSite()->stringrep()));
+	return;}')
+
+
+define(arg,`ifelse($1,Index,int &i1,
+	           $1,Index2,int &i2,
+                   $1,Term,TaggedRef &t,
+                   $1,String,char* &str,
+                   $1,Credit,Credit &c,
+		   $1,Object,ObjectFields *o,
+		   $1,ObjectAndClass,ObjectFields* o,
+                   $1,Site,Site* &s1,
+	           $1,Site2,Site* &s2)'
+            `ifelse($2,`',`',`,')')
+
+define(argEnc,`ifelse($1,Index,i1=unmarshalNumber(buf);,
+		   $1,Index2,i2=unmarshalNumber(buf);,
+	           $1,Term,t=unmarshalTerm(buf);,
+	           $1,Credit,c=unmarshalCredit(buf);,	     
+		   $1,Object,unmarshalObject(o,buf);,
+		   $1,ObjectAndClass,unmarshalObjectAndClass(o,buf);,
+	           $1,String,str=unmarshalString(buf);,	     
+                   $1,Site,s1=unmarshalSite(buf);,
+                   $1,Site2,s2=unmarshalSite(buf);,)')
+
+include(`msgFormat.m4')
+
+undefine(`argEnc')
+undefine(`arg')
+undefine(`message')
+
+define(message,`
+	void unmarshalUnsent_$1(MsgBuffer* buf) {
+	PD((MARSHAL_BE,"unmarshal unsent msg begin %s  site:%s","$1",buf->getSite()->stringrep()));
+	refTable->reset();
+	argEnc($2)
+	argEnc($3)
+	argEnc($4)
+	argEnc($5)
+	buf->unmarshalEnd();
+	refTrail->unwind();
+	PD((MARSHAL_BE,"unmarshal unsent msg end %s  site:%s","$1",buf->getSite()->stringrep()));
+	return;}')
+
+
+define(arg,`ifelse($1,Index,int i1,
+	           $1,Index2,int i2,
+                   $1,Term,TaggedRef t,
+                   $1,String,char* str,
+                   $1,Credit,Credit &c,
+		   $1,Object,ObjectFields* o,
+		   $1,ObjectAndClass,ObjectFields* o,
+                   $1,Site,Site* s1,
+	           $1,Site2,Site* s2)'
+            `ifelse($2,`',`',`,')')
+
+define(argEnc,`ifelse($1,Index,unmarshalUnsentNumber(buf);,
+		   $1,Index2,unmarshalUnsentNumber(buf);,
+	           $1,Term,unmarshalUnsentTerm(buf);,
+	           $1,String,unmarshalUnsentString(buf);,		
+		   $1,Object,unmarshalUnsentObject(o,buf);,
+		   $1,ObjectAndClass,unmarshalUnsentObjectAndClass(o,buf);,
+	           $1,Credit,c=unmarshalCredit(buf);,
+                   $1,Site,unmarshalUnsentSite(buf);,
+                   $1,Site2,unmarshalUnsentSite(buf);,)')
+
+include(`format.m4')
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -16,52 +16,47 @@
 #define __PERDIO_DEBUG_HH
 
 enum DEBUGType {
-  SEND_EMIT,	// 0
-  SEND_DONE,
-  DEBT_SEC,
-  DEBT_MAIN,
-  MSG_RECEIVED,
-  MSG_SENT,	// 5
-  DELAYED_MSG_SENT,
-  TABLE,
-  TABLE2,
-  GC,
-  CREDIT,	// 10
+  MSG_RECEIVED,	// 0			// protocol -layer
+  MSG_SENT,	
+  MSG_PREP,
+  TABLE,					// borrow/owner table events without print
+  TABLE2,					// borrow/owner table events without print
+  GC,		// 5			
+  CREDIT,	
   LOOKUP,
   GLOBALIZING,
-  AUXILLARY,
-  DEBT,
-  MARSHALL,	// 15
-  MARSHALL_CT,
-  UNMARSHALL=17,
-  UNMARSHALL_CT=18,
-  MARSHALL_BE=19,
-  PENDLINK,     // 20
-  HASH,
-  HASH2,
-  USER,
-  TCP,
-  WEIRD,        // 25
+  LOCALIZING,   
+  PD_VAR,	// 10				variable protocol
+  CELL,						// cell protocol
+  LOCK,                                 	// lock protocol
+  SITE_OP,     
+  THREAD_D,
+
+  MARSHAL,	 // 15			// marshaler 
+  MARSHAL_CT,    
+  UNMARSHAL,
+  UNMARSHAL_CT,
+  MARSHAL_BE,					// marshal begin/end
+  REF_COUNTER,	// 20			
+
+  TCP,					// communication layer events
+  WEIRD,        
   TCP_INTERFACE,
   TCPCACHE,
-  TCPQUEUE,
-  SITE,
-  REMOTE,       // 30
+  TCPQUEUE,     // 25
+  SITE,		
+  REMOTE,       
   MESSAGE,
   OS,
-  BUFFER,
-  READ,
-  WRITE,        // 35
-  CONTENTS,
-  SPECIAL,
-  PD_VAR,
-  CELL,
-  SITE_OP,     // 40
-  MSG_QUEUED, 
-  MSG_PREP,
-  LOCK,     
-  REF_COUNTER,
-  THREAD_D,
+  BUFFER,       // 30
+  READ,         
+  WRITE,        
+  CONTENTS,				
+  HASH,					// site/gname hash table
+  HASH2,        // 35
+
+  USER,					// misc
+  SPECIAL,       // 37
   LAST
 };
 
@@ -113,5 +108,7 @@ void _PD(int i,char *format,...)
 #endif 
 
 #endif
+
+
 
 

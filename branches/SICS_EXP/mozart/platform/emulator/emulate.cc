@@ -16,6 +16,7 @@
 #include "genvar.hh"
 #include "dictionary.hh"
 #include "fdhook.hh"
+#include "marshaler.hh"
 
 #define PROP_TIME
 
@@ -3205,7 +3206,7 @@ LBLdispatcher:
 
       OZ_unprotect((TaggedRef*)(PC+1));
 
-      if (!changeMarshalledFastCall(PC,pred,tailcallAndArity)) {
+      if (!changeMarshaledFastCall(PC,pred,tailcallAndArity)) {
 	RAISE_APPLY(pred,cons(OZ_atom("proc or builtin expected."),nil()));
       }
 

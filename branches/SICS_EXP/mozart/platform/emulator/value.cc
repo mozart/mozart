@@ -242,16 +242,6 @@ NamedName *NamedName::newNamedName(char *pn)
 }
 
 
-GName *Name::globalize()
-{
-  if (!hasGName()) {
-    Assert(GETBOARD(this)==am.rootBoard);
-    homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
-    setFlag(Lit_hasGName);
-  }
-  return getGName();
-}
-
 void Name::import(GName *name)
 {
   Assert(GETBOARD(this)==am.rootBoard);
@@ -260,20 +250,6 @@ void Name::import(GName *name)
 }
 
 
-GName *Abstraction::globalize()
-{
-  if (!hasGName()) {
-    setGName(newGName(makeTaggedConst(this),GNT_PROC));
-  }
-  return getGName();
-}
-
-GName *SChunk::globalize() {
-  if (!hasGName()) {
-    setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
-  }
-  return getGName();
-}
 
 
 /*===================================================================
@@ -378,11 +354,6 @@ TaggedRef reverseC(TaggedRef l)
   return out;
 }
 
-void ObjectClass::globalize() {
-  if (!hasGName()) {
-    setGName(newGName(makeTaggedConst(this),GNT_CLASS));
-  }
-}
 
 TaggedRef Object::getArityList() 
 {
