@@ -2,8 +2,8 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 class Emacs from UrObject
-   %%  elisp code of gud.el, written by
-   %%  Eric S. Raymond <esr@snark.thyrsus.com> for emacs-19.30
+   %% prints an arrow at line L in file F
+   %% loads a file if necessary
    meth displayLine(file:F line:L)
       {ThisEmacs
        eval('

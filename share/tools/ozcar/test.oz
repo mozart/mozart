@@ -20,5 +20,9 @@ local
 	  {Show 'Y'#Y}
        end
 in
-   {Browse {A 47 11 $}}
+   local
+      D = 4711
+   in
+      {Browse {A 47 11 $}}
+   end
 end
