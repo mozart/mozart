@@ -68,22 +68,6 @@ test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib 
 DOC_DIRS=$oz_doc_dirs
 AC_SUBST(DOC_DIRS)
 
-AC_MSG_CHECKING(for --enable-index)
-AC_ARG_ENABLE(index,
-  [--enable-index
-       construct global index (default=no)],
-  oz_enable_index=$enable_index,
-  oz_enable_index=no)
-AC_MSG_RESULT($oz_enable_index)
-
-if test "${oz_enable_index}" != no
-then
-    ENABLE_INDEX=idx/index.html
-else
-    ENABLE_INDEX=
-fi
-AC_SUBST(ENABLE_INDEX)
-
 AC_MSG_CHECKING(for --enable-chm)
 AC_ARG_ENABLE(chm,
   [--enable-chm
