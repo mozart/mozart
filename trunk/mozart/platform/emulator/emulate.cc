@@ -72,7 +72,6 @@ OZ_Return oz_bi_wrapper(Builtin *bi,OZ_Term *X)
     case SLEEP:     // prop ?
     case BI_PREEMPT:
     case BI_REPLACEBICALL:
-    case BI_CONTROL_VAR:
       break;
     default:
       error("oz_bi_wrapper: return not handled: %d",ret1);
@@ -690,27 +689,6 @@ void suspendOnVarList(TaggedRef varList,Thread *thr)
 }
 
 
-static
-ThreadReturn suspendOnControlVar(TaggedRef controlvars, AM *e)
-{
-  e->currentThread()->pushCall(BI_controlVarHandler,controlvars);
-  TaggedRef varList = controlvars;
-  while (isCons(varList)) {
-    if (!isAnyVar(deref(head(varList))))
-      return T_PREEMPT;
-    varList=tail(varList);
-  }
-
-  varList = controlvars;
-  while (isCons(varList)) {
-    addSusp(head(varList),e->currentThread());
-    varList=tail(varList);
-  }
-
-  e->emptySuspendVarList();
-  return T_SUSPEND;
-}
-
 
 #define SUSPENDONCONTROLVAR					\
   return suspendOnControlVar(e->suspendVarList,e)
@@ -1053,10 +1031,6 @@ LBLdispatcher:
 	PushContX(PC,Y,G,X,getPosIntArg(PC+2));
 	SUSPENDONVARLIST;
 
-      case BI_CONTROL_VAR:
-	PushContX(PC+3,Y,G,X,getPosIntArg(PC+2));
-	SUSPENDONCONTROLVAR;
-
       case BI_PREEMPT:
 	PushContX(PC+3,Y,G,X,getPosIntArg(PC+2));
 	return T_PREEMPT;
@@ -1225,13 +1199,9 @@ LBLdispatcher:
 	suspendInline(CTT,XPC(2),XPC(3));
 	return T_SUSPEND;
 
-      case BI_CONTROL_VAR:
       case BI_PREEMPT:
 	CheckLiveness(PC,getPosIntArg(PC+4));
 	PushContX(PC+5,Y,G,X,getPosIntArg(PC+4));
-	if (res!=BI_PREEMPT) {
-	  SUSPENDONCONTROLVAR;
-	}
 	return T_PREEMPT;
 
       case RAISE:
@@ -1286,13 +1256,9 @@ LBLdispatcher:
       case RAISE:
 	RAISE_THREAD;
 
-      case BI_CONTROL_VAR:
       case BI_PREEMPT:
 	CheckLiveness(PC,getPosIntArg(PC+5));
 	PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
-	if (res!=BI_PREEMPT) {
-	  SUSPENDONCONTROLVAR;
-	}
 	return T_PREEMPT;
 
       case BI_TYPE_ERROR:
@@ -2488,13 +2454,9 @@ LBLdispatcher:
        case BI_TYPE_ERROR: RAISE_TYPE(bi);
        case FAILED:        HF_BI(bi);
 
-       case BI_CONTROL_VAR:
        case BI_PREEMPT:
 	 if (!isTailCall) {
 	   PushCont(PC,Y,G);
-	 }
-	 if (res!=BI_PREEMPT) {
-	   SUSPENDONCONTROLVAR;
 	 }
 	 return T_PREEMPT;
 	 
@@ -2515,16 +2477,11 @@ LBLdispatcher:
    LBLreplaceBICall:
      {
        if (PC != NOCODE) {
-	 PopFrame(CTS,auxPC,auxY,auxG);
-
 	 PushContX(PC,Y,G,X,argsToSave);
-	 CTS->pushFrame(auxPC,auxY,auxG);
        }
-#if 0
-       // don't like that much flickering for now ... -BL
-       if (e->debugmode() && CTT->getTrace())
-	 debugStreamUpdate(CTT);
-#endif
+
+       e->pushPreparedCalls();
+
        if (e->suspendVarList) {
 	 SUSPENDONVARLIST;
        }
@@ -2946,9 +2903,6 @@ LBLdispatcher:
 
       case BI_PREEMPT:
 	return T_PREEMPT;
-
-      case BI_CONTROL_VAR:
-	SUSPENDONCONTROLVAR;
 
        case SLEEP:
        default:

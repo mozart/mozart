@@ -199,6 +199,8 @@ void AM::init(int argc,char **argv)
   defaultExceptionHdl     = makeTaggedNULL();
   opiCompiler             = makeTaggedNULL();
 
+  preparedCalls = NULL;
+
   char *compilerName = OzCompiler;
 
   char *tmp;
@@ -2270,3 +2272,47 @@ void AM::failBoard()
   bb->unsetInstalled();
   setCurrent(GETBOARD(aa));
 }
+
+
+
+void AM::prepareCall(TaggedRef pred, RefsArray args)
+{
+  CallList **aux = &preparedCalls;
+  while(*aux) {
+    aux = &(*aux)->next;
+  }
+  *aux = new CallList(pred,args);
+}
+
+
+void AM::prepareCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1, 
+		     TaggedRef arg2, TaggedRef arg3, TaggedRef arg4)
+{
+  int argno = 0;
+  if (arg0) argno++;
+  if (arg1) argno++;
+  if (arg2) argno++;
+  if (arg3) argno++;
+  if (arg4) argno++;
+
+  RefsArray a = allocateRefsArray(argno);
+  if (arg0) a[0]=arg0;
+  if (arg1) a[1]=arg1;
+  if (arg2) a[2]=arg2;
+  if (arg3) a[3]=arg3;
+  if (arg4) a[4]=arg4;
+  prepareCall(pred,a);
+}
+
+
+void AM::pushPreparedCalls()
+{
+  Assert(preparedCalls != NULL);
+  while(preparedCalls) {
+    CallList *aux = preparedCalls;
+    cachedStack->pushCallNoCopy(aux->proc,aux->args);
+    preparedCalls = aux->next;
+    aux->dispose();
+  }
+}
+

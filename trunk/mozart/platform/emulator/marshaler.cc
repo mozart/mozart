@@ -540,7 +540,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
       Builtin *bi= (Builtin *)t;
       if (bi->isNative()) {
-	// warning("marshaling native builtin: %s",bi->getPrintName());
+	warning("marshaling native builtin, will expire soon: %s",
+		bi->getPrintName());
 	// goto bomb;
       }
       marshalString(bi->getPrintName(),bs);
