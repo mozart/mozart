@@ -14,12 +14,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifdef _MSC_VER
-#include <strstrea.h>
-#else
-#include <strstream.h>
-#endif
-
 #ifdef WINDOWS
 
 /* the following have been copied from linux's values.h */
@@ -45,9 +39,9 @@ inline
 void warn_inexact(double v)
 {
   if (DMAXPOWTWO < v) {
-    cout << "System warning (finite domain module): " << endl
-	 << "\tThe produced result might be incorrect due to" << endl
-	 << "\tlimited precision of internal computation." << endl << flush;
+    printf("System warning (finite domain module): \n");
+    printf("\tThe produced result might be incorrect due to\n");
+    printf("\tlimited precision of internal computation.");
   }
 }
 
@@ -652,11 +646,8 @@ void Propagator_D_FD_D::updateHeapRefs(OZ_Boolean)
 
 OZ_Term Propagator_D_FD_D::getParameters(void) const
 {
-  ostrstream tmp;
-  tmp << reg_domain.toString() << ends;
-  char * str = tmp.str();
+  char * str = reg_domain.toString();
   OZ_Term d = OZ_atom(str);
-  delete str;
 
   RETURN_LIST3(reg_v, d, reg_b);
 }
