@@ -35,18 +35,23 @@ INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 
-LIBFILES = \
-	$(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
-	$(ELISPDIR)/mozart.el $(ELISPDIR)/mozart.elc \
-	$(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc \
-	$(ELISPDIR)/oz-server.el $(ELISPDIR)/oz-server.elc
+COMPILE_ELISP	= @COMPILE_ELISP@
+ELFILES		= oz.el mozart.el oz-extra.el oz-server.el
+ELCFILES	= $(addsuffix c,$(ELFILES))
+ifeq ($(COMPILE_ELISP),yes)
+TARGETS		= $(ELFILES) $(ELCFILES)
+else
+TARGETS		= $(ELFILES)
+endif
+
+LIBFILES	= $(addprefix $(ELISPDIR)/,$(TARGETS)) \
 
 CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
 CYG_SRCDIR	= $(shell $(CYGPATH) $(SRCDIR))
 
 .PHONY: bootstrap all install clean veryclean distclean tags check depend
 
-all: oz.elc mozart.elc oz-extra.elc oz-server.elc
+all: $(TARGETS)
 
 bootstrap: all
 
@@ -61,7 +66,7 @@ mozart.el: mozart.el.in ../config.status
 
 mozart.elc: oz.elc
 
-oz.elc mozart.elc oz-extra.elc oz-server.elc: %.elc : %.el
+$(ELCFILES): %.elc : %.el
 	$(EMACS) --eval "(setq load-path (cons \"$(CYG_SRCDIR)\" load-path))" -q -batch -f batch-byte-compile $(shell $(CYGPATH) "$<") && \
 	if [ $<c != $@ ]; then mv $<c $@; fi
 
@@ -85,7 +90,7 @@ distclean: clean
 	-rm -f Makefile mozart.el
 
 tags:
-	etags oz.el mozart.el oz-extra.el
+	etags $(ELFILES)
 
 check:
 

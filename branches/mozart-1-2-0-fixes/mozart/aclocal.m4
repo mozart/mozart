@@ -1292,6 +1292,18 @@ AC_DEFUN(OZ_ENABLE, [
     ])
 
 dnl ------------------------------------------------------------------
+dnl OZ_COMPILE_ELISP
+dnl	check for --enable-compile-elisp
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_COMPILE_ELISP,
+  [OZ_ENABLE(compile-elisp,[whether to compile elisp files],yes,
+	COMPILE_ELISP=yes,
+	COMPILE_ELISP=no)
+   AC_MSG_RESULT($COMPILE_ELISP)
+   AC_SUBST(COMPILE_ELISP)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_GTK_ENABLED
 dnl	check for --enable-gtk
 dnl ------------------------------------------------------------------
