@@ -320,7 +320,7 @@ public:
 // Keep OZ_Term"s already seen;
 class GTIndexTable : private AddressHashTableFastReset {
 public:
-  GTIndexTable() : AddressHashTableFastReset(2000) {
+  GTIndexTable() : AddressHashTableFastReset(2048) {
     Assert(sizeof(OZ_Term) == sizeof(intlong));
   }
 
@@ -330,7 +330,7 @@ public:
     Assert(!oz_isRef(l));
     Assert(findTerm(l) == -1);
     int index = getSize();      // meets our needs...
-    htAdd((intlong) l, ToPointer(index));
+    htAddLastNotFound((intlong) l, ToPointer(index));
     return (index);
   }
   int findTerm(OZ_Term l) {
@@ -345,7 +345,7 @@ public:
     Assert(oz_isVar(*p));
     Assert(findVarLocation(p) == -1);
     int index = getSize();
-    htAdd((intlong) p, ToPointer(index));
+    htAddLastNotFound((intlong) p, ToPointer(index));
     return (index);
   }
   int findVarLocation(OZ_Term *p) {
@@ -363,7 +363,7 @@ public:
     Assert(findLocation(p) == -1);
     OZ_Term aux = makePseudoTaggedVar(p);
     int index = getSize();
-    htAdd((intlong) aux, ToPointer(index));
+    htAddLastNotFound((intlong) aux, ToPointer(index));
     return (index);
   }
   int findLocation(void *p) {
