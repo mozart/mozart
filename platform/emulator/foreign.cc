@@ -295,7 +295,7 @@ OZ_Term OZ_CStringToFloat(char *s)
   return OZ_CToFloat(res);
 }
 
-char *OZ_floatToCString(OZ_Term term)
+char *OZ_floatToCStringLong(OZ_Term term)
 {
   OZ_Float f = OZ_floatToC(term);
   sprintf(TmpBuffer,"%e",f);
