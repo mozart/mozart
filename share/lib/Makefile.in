@@ -267,7 +267,7 @@ $(OZBIN)/ozbatch: ozbatch
 %.typ: $(SRCDIR)/%.env
         $(ENV2TYPE) $< > $@
 
-tyc/%.tyc: %.typ $(DUMPINTRO)
+tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
         @if test ! -d tyc; then $(MKDIR) tyc; fi
         $(COMPILE) $< -o $@
 
