@@ -405,8 +405,9 @@ returns the output <<cut>>.
 <entry><<one.iterS>>
 <index class=module/Search<and>one<and>iterS/
 <synopsis><<{Search.one.iterS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
-<entry><<one.iterP>>{Search.one.iterP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<entry><<one.iterP>>
 <index class=module/Search<and>one<and>iterP/
+<synopsis><<{Search.one.iterP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
 <item>
 returns a singleton list containing the first solution of the script
 ?+{ScriptP} (a unary procedure) obtained by iterative deepening
