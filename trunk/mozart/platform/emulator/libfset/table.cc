@@ -35,7 +35,7 @@
 
 #include "../modFSP.dcl"
 
-const OZ_C_proc_interface mod_int_FSP[] = {
+OZ_C_proc_interface mod_int_FSP[] = {
 #include "../modFSP.tbl"
  {0,0,0,0}
 };
