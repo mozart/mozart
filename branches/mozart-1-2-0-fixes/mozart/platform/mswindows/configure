@@ -920,7 +920,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
   
   
   case "$target" in
-    i386-mingw32|i386-mingw32msvc)
+    i386-mingw32) 
 	PLATFORM=win32-i486
 	platform="win32-i486"
 	ozplatform=$platform
@@ -998,7 +998,7 @@ fi
 	
     fi
     
-	PLATFORM=`$OZPLATFORM || exit 1`
+	PLATFORM=`$OZPLATFORM`
 	
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
