@@ -301,6 +301,8 @@ TaggedRef oz_valueType(OZ_Term term)
   case FSETVALUE:
     ret = "fset";
     break;
+  case EXT:
+    return oz_tagged2Extension(term)->typeV();
   case OZCONST:
     switch (tagged2Const(term)->getType()) {
     case Co_BigInt:
@@ -340,8 +342,6 @@ TaggedRef oz_valueType(OZ_Term term)
     case Co_Class:
       ret = "class";
       break;
-    case Co_Extension:
-      return tagged2Extension(term)->typeV();
     default:
       break;
     }
@@ -854,10 +854,6 @@ void const2buffer(ostream &out, ConstTerm *c)
     out << "<ForeignPointer " << ((ForeignPointer *) c)->getPointer() << ">";
     break;
 
-  case Co_Extension:
-    ((Extension *) c)->printStreamV(out,0);
-    break;
-
   default:
     out << "<Chunk>";
     break;
@@ -1078,6 +1074,9 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     break;
   case LTUPLE:
     list2buffer(out,tagged2LTuple(term),depth);
+    break;
+  case EXT:
+    oz_tagged2Extension(term)->printStreamV(out,depth);
     break;
   case OZCONST:
     const2buffer(out,tagged2Const(term));

@@ -257,6 +257,9 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     ozd_printStream(val,stream,depth);
     stream << endl;
     break;
+  case EXT:
+    oz_tagged2Extension(ref)->printLongStreamV(stream,depth,offset);
+    break;
   case OZCONST:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
     break;
@@ -842,10 +845,6 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     break;
   case Co_Foreign_Pointer:
     ((ForeignPointer*)this)->printLongStream(stream,depth,offset); break;
-
-  case Co_Extension:
-    ((Extension *)this)->printLongStreamV(stream,depth,offset);
-    break;
 
   default: 	      Assert(NO);
   }
