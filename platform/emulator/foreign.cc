@@ -777,7 +777,7 @@ OZ_Term OZ_getArg(OZ_Term term, int pos)
       return nil();
     }
   }
-  if (isSTuple(term) && (pos >= 1) && pos <= tagged2STuple(term)->getSize ())
+  if (isSTuple(term) && (pos >= 1) && pos <= tagged2STuple(term)->getSize())
     return tagged2STuple(term)->getArg(pos-1);
 
   OZ_warning("OZ_getArg(%s,%d): bad arg",OZ_toC(term),pos);
