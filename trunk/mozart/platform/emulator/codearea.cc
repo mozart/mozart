@@ -19,6 +19,8 @@
 //
 
 
+AbstractionEntry* AbstractionEntry::allEntries = NULL;
+
 #ifdef RECINSTRFETCH
 
 int CodeArea::fetchedInstr = 0;
@@ -95,7 +97,7 @@ Literal *addToNameTab(char *str)
 AbstractionTable CodeArea::abstractionTab(4000);
 
 /*
-  AbstractionTable::defaultEntry: for bug fix. If you feed
+  AbstractionEntry::defaultEntry: for bug fix. If you feed
  
   declare P1 P2 Px
  
@@ -111,8 +113,15 @@ AbstractionTable CodeArea::abstractionTab(4000);
 
 */
 
-AbstractionEntry AbstractionTable::defaultEntry;
+AbstractionEntry AbstractionEntry::defaultEntry;
 
+
+AbstractionEntry *AbstractionTable::add(Abstraction *abstr)
+{
+  AbstractionEntry *ret = new AbstractionEntry();
+  ret->setPred(abstr);
+  return ret;
+}
 
 AbstractionEntry *AbstractionTable::add(int id)
 {
@@ -126,12 +135,11 @@ AbstractionEntry *AbstractionTable::add(int id)
   }
   
   found = new AbstractionEntry();
-  *found = AbstractionTable::defaultEntry;
   if (CodeArea::abstractionTab.aadd(found,id)) {
     return found;
   }
   
-  error("addAbstractionTab: failed");
+  Assert(0);
   return NULL;
 }
 
@@ -569,6 +577,14 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TAILAPPLMETHX:
     case TAILAPPLMETHY:
     case TAILAPPLMETHG:
+      {
+	ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
+	TaggedRef literal       = ami->methName;
+	int arity               = ami->arity;
+	Reg reg                 = regToInt(getRegArg(PC+2));
+	fprintf(ofile, "(%s,%d,%d)\n", OZ_toC(literal),arity,reg);
+	DISPATCH();
+      }
     case SENDMSGX:
     case SENDMSGY:
     case SENDMSGG:

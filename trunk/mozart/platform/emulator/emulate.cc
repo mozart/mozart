@@ -205,6 +205,57 @@ Bool Board::isFailureInBody ()
 }
 
 // -----------------------------------------------------------------------
+// genCallInfo: self modifying code!
+
+static
+void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred, 
+		 ProgramCounter PC, RefsArray X)
+{
+  static int gencall = 0;
+  static int gencallmethfailed = 0;
+  static int gencallfailed = 0;
+  gencall++;
+  
+  DEREF(pred,_1,_2);
+
+  Abstraction *abstr;
+  if (gci->isMethAppl) {
+    if (!isObject(pred) ||
+	NULL == (abstr = getApplyMethod(pred,gci->lit,arity,X[0]))) {
+      ApplMethInfoClass *ami = new ApplMethInfoClass(gci->lit,arity);
+      CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
+      CodeArea::writeAddress(ami, PC+1);
+      CodeArea::writeRegIndex(gci->regIndex, PC+2);
+      gencallmethfailed++;
+      getApplyMethod(pred,gci->lit,arity,X[0]);
+      return;
+    }
+  } else {
+    if(!isConstChunk(pred) ||
+       chunkCast(pred)->getType()!=Co_Abstraction) {
+      goto bombGenCall;
+    }
+    abstr = (Abstraction*)chunkCast(pred);
+    if (abstr->getArity() != arity) 
+      goto bombGenCall;
+  }
+  
+  {
+    /* ok abstr points to an abstraction */
+    AbstractionEntry *entry = AbstractionTable::add(abstr);
+    CodeArea::writeAddress(entry, PC+1);
+    CodeArea::writeOpcode(gci->isTailCall ? FASTTAILCALL : FASTCALL, PC);
+    return;
+  }
+  
+bombGenCall:
+  gencallfailed++;
+  CodeArea::writeRegIndex(gci->regIndex,PC+1);
+  CodeArea::writeOpcode(gci->isTailCall ? TAILCALLG : CALLG,PC);
+  return;
+}
+
+// -----------------------------------------------------------------------
 // CALL HOOK
 
 
@@ -1876,13 +1927,14 @@ LBLkillThread:
 
  ApplyMethod:
   {
-    TaggedRef label        = getLiteralArg(PC+1);
+    ApplMethInfoClass *ami = (ApplMethInfoClass*) getAdressArg(PC+1);
+    TaggedRef label        = ami->methName;
+    int arity              = ami->arity;
     TaggedRef origObject   = RegAccess(HelpReg,getRegArg(PC+2));
     TaggedRef object       = origObject;
-    int arity              = getPosIntArg(PC+3);
     Abstraction *def       = NULL;
 
-    PC = isTailCall ? 0 : PC+4;
+    PC = isTailCall ? 0 : PC+3;
 
     DEREF(object,objectPtr,objectTag);
     if (!isObject(object) ||
@@ -2581,6 +2633,17 @@ LBLkillThread:
       DISPATCH(2);
     }
 
+  Case(GENCALL) 
+    {
+      GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
+      int arity = getPosIntArg(PC+2);
+      TaggedRef pred = G[gci->regIndex];
+      genCallInfo(gci,arity,pred,PC,X);
+      gci->dispose();
+      DISPATCH(0);
+    }
+
+
   Case(TESTLABEL1)
   Case(TESTLABEL2)
   Case(TESTLABEL3)
@@ -2590,8 +2653,6 @@ LBLkillThread:
   Case(TEST2)
   Case(TEST3)
   Case(TEST4)
-
-  Case(GENCALL)
 
   Case(INLINEDOT)
 
