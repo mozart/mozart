@@ -42,5 +42,8 @@
      'slowNet'           => { in  => ['+int', '+int'],
 			      out => [],
 			      bi  => BIslowNet},
+     'initIPConnection'    => { in  => ['+record'],
+				out => ['+record'],
+				BI  => BIinitIPConnection},
      );
 
