@@ -84,7 +84,7 @@ public:
 private:
   Object *currentObject;
 public:
-  void setCurrentObject(Object *o) { currentObject = o; };
+  void setCurrentObject(Object *o) { Assert(!o || o->getType()==Co_Object); currentObject = o; };
   Object *getCurrentObject()       { return currentObject; };
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
