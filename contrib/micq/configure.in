@@ -1,6 +1,6 @@
-AC_INIT(methods.oz)
+AC_INIT(manager.oz)
 OZ_CONTRIB_INIT
-cp $SRCDIR/methods.ozf.orig $BUILDTOP/contrib/micq/methods.ozf
+cp $SRCDIR/manager.oz $BUILDTOP/contrib/micq/manager.oz
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
