@@ -96,7 +96,6 @@ void debugStreamEntry(OzDebug*, int);
 void debugStreamExit(OzDebug*, int);
 void debugStreamUpdate(Thread*);
 
-OZ_C_proc_proto(BIdebugmode);
 OZ_C_proc_proto(BIgetDebugStream);
 OZ_C_proc_proto(BIthreadUnleash);
 OZ_C_proc_proto(BIsetContFlag);

@@ -128,11 +128,6 @@ void debugStreamUpdate(Thread *thread) {
 
 // ------------------ Debugging Builtins ---------------------------
 
-OZ_BI_define(BIdebugmode,0,1)
-{
-  OZ_RETURN(am.debugmode()? NameTrue: NameFalse);
-} OZ_BI_end
-
 OZ_BI_define(BIgetDebugStream,0,1)
 {
   OZ_RETURN(am.getDebugStreamTail());
