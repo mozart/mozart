@@ -152,12 +152,12 @@ user changes the currently used font.
 
 <p>
 <index/X11 selection/
-The usual 'cut-and-paste' mechanism can be used with the Browser if you
-want to paste a part of a term's representation somewhere else. An X11
-selection is taken like in the Emacs or the X11 terminal
-emulator (xterm), except that the <Kbd/Shift/ key must be kept pressed
-during the selection, and that there are no word- or line- selection
-modes.
+The usual 'cut-and-paste' mechanism can be used with the Browser if
+you want to paste a part of a term's representation somewhere else. A
+text fragment is selected like in Emacs or the X11 terminal emulator
+(xterm), except that the <Kbd/Shift/ key must be kept pressed during
+the selection, and that there are no word- or line- selection
+modes. On Windows, a selected text is copied by means of <kbd/C-q/
 </section>
 
 <section><title/Browser Module/
