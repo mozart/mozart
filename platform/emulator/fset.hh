@@ -48,6 +48,7 @@ public:
   void init(const FSetConstraint &);
   void init(const OZ_Term);
   void init(OZ_FSetState);
+  void init(int, int);
 
   ostream &print2stream(ostream &) const;
 
@@ -165,6 +166,32 @@ ostream &operator << (ostream &ofile, const FSetConstraint &fs) {
   return fs.print(ofile);
 }
 
+
+class FSetIterator {
+private:
+  const OZ_FSetValue &_fset;
+  int _elem;
+
+public:
+  FSetIterator(const OZ_FSetValue &fs) : _fset(fs) {}
+  FSetIterator(const OZ_FSetValue &fs, int elem) : _elem(elem), _fset(fs) {}
+
+  void init(int elem) { _elem = elem; }
+
+  int resetToMin(void) {
+    return _elem = _fset.getMinElem();
+  }
+  int resetToMax(void) {
+    return _elem = _fset.getMaxElem();
+  }
+
+  int getNextLarger(void) {
+    return _elem = _fset.getNextLargerElem(_elem);
+  }
+  int getNextSmaller(void) {
+    return _elem = _fset.getNextSmallerElem(_elem);
+  }
+};
 
 #endif // __FSET_HH__
 

@@ -116,6 +116,39 @@ void resetBit(int * bv, int i)
   bv[div32(i)] &= ~(1 << mod32(i));
 }
 
+inline
+int setFromTo(int * bv, int from, int to)
+{
+  if (from < 0)
+    from = 0;
+  if (to >= 32 * fset_high)
+    to = 32 * fset_high - 1;
+
+  int i;
+  if (from > to) { // make empty set
+    for (i = 0; i < fset_high; i++)
+      bv[i] = 0;
+    return 0;
+  }
+  int low_word = div32(from), low_bit = mod32(from);
+  int up_word = div32(to), up_bit = mod32(to);
+
+  for (i = 0; i < low_word; i++)
+    bv[i] = 0;
+  for (i = up_word + 1; i < fset_high; i++)
+    bv[i] = 0;
+
+  if (low_word == up_word) {
+    bv[low_word] = toTheLowerEnd[up_bit] & toTheUpperEnd[low_bit];
+  } else {
+    bv[low_word] = toTheUpperEnd[low_bit];
+    for (i = low_word + 1; i < up_word; i++)
+      bv[i] = int(~0);
+    bv[up_word] = toTheLowerEnd[up_bit];
+  }
+  return to - from + 1;
+}
+
 static
 int mkRaw(int * list_left, int * list_right, const int * bv, int neg = 0)
 {
@@ -271,6 +304,15 @@ void FSetValue::init(OZ_FSetState s)
   default:
     error("Unexpected case (%d) in \"FSetValue::init(OZ_FSetState\".", s);
   }
+}
+
+inline
+void FSetValue::init(int min_elem, int max_elem)
+{
+  _card = setFromTo(_in, min_elem, max_elem);
+
+  // TMUELLER
+  //  printf("from=%d to=%d s=%s\n" , min_elem, max_elem, toString()); fflush(stdout);
 }
 
 FSetValue::FSetValue(OZ_Term t)
@@ -593,7 +635,7 @@ inline
 void FSetConstraint::init(const FSetValue &s)
 {
   _known_in = _card_min = _card_max = s._card;
-  _known_not_in = 32 * fset_high - _known_in ;
+  _known_not_in = 32 * fset_high - _known_in;
 
   for (int i = fset_high; i--; )
     _not_in[i] = ~(_in[i] = s._in[i]);
@@ -1270,6 +1312,11 @@ OZ_FSetValue::OZ_FSetValue(const OZ_FSetState s)
   CASTTHIS->init(s);
 }
 
+OZ_FSetValue::OZ_FSetValue(int min_elem, int max_elem)
+{
+  CASTTHIS->init(min_elem, max_elem);
+}
+
 OZ_Term OZ_FSetValue::getKnownInList(void) const
 {
   return CASTCONSTTHIS->getKnownInList();
@@ -1587,6 +1634,86 @@ int OZ_FSetConstraint::getNotInCard(void) const
 int OZ_FSetConstraint::getUnknownCard(void) const
 {
   return CASTCONSTTHIS->getUnknownCard();
+}
+
+int OZ_FSetConstraint::getGlbMinElem(void) const
+{
+  return getGlbSet().getMinElem();
+}
+
+int OZ_FSetConstraint::getLubMinElem(void) const
+{
+  return getLubSet().getMinElem();
+}
+
+int OZ_FSetConstraint::getNotInMinElem(void) const
+{
+  return getNotInSet().getMinElem();
+}
+
+int OZ_FSetConstraint::getUnknownMinElem(void) const
+{
+  return getUnknownSet().getMinElem();
+}
+
+int OZ_FSetConstraint::getGlbMaxElem(void) const
+{
+  return getGlbSet().getMaxElem();
+}
+
+int OZ_FSetConstraint::getLubMaxElem(void) const
+{
+  return getLubSet().getMaxElem();
+}
+
+int OZ_FSetConstraint::getNotInMaxElem(void) const
+{
+  return getNotInSet().getMaxElem();
+}
+
+int OZ_FSetConstraint::getUnknownMaxElem(void) const
+{
+  return getUnknownSet().getMaxElem();
+}
+
+int OZ_FSetConstraint::getGlbNextSmallerElem(int i) const
+{
+  return getGlbSet().getNextSmallerElem(i);
+}
+
+int OZ_FSetConstraint::getLubNextSmallerElem(int i) const
+{
+  return getLubSet().getNextSmallerElem(i);
+}
+
+int OZ_FSetConstraint::getNotInNextSmallerElem(int i) const
+{
+  return getNotInSet().getNextSmallerElem(i);
+}
+
+int OZ_FSetConstraint::getUnknownNextSmallerElem(int i) const
+{
+  return getUnknownSet().getNextSmallerElem(i);
+}
+
+int OZ_FSetConstraint::getGlbNextLargerElem(int i) const
+{
+  return getGlbSet().getNextLargerElem(i);
+}
+
+int OZ_FSetConstraint::getLubNextLargerElem(int i) const
+{
+  return getLubSet().getNextLargerElem(i);
+}
+
+int OZ_FSetConstraint::getNotInNextLargerElem(int i) const
+{
+  return getNotInSet().getNextLargerElem(i);
+}
+
+int OZ_FSetConstraint::getUnknownNextLargerElem(int i) const
+{
+  return getUnknownSet().getNextLargerElem(i);
 }
 
 char * OZ_FSetConstraint::toString()

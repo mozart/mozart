@@ -34,6 +34,7 @@
 #include "oz_cpi.hh"
 
 #include "fddebug.hh"
+#include "fset.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -274,6 +275,7 @@ public:
   int initRange(int, int);
   int initDescr(OZ_Term);
   int initBool(void);
+  int initFSetValue(const OZ_FSetValue &fs);
 
   int getSize(void) const {return size;}
   int minElem(void) const {return min_elem;}
