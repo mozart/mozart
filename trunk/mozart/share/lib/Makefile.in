@@ -160,7 +160,7 @@ COMPILERSRCNOVER = \
 	$(COMPILERSRC1:%=compiler/%) $(COMPILERSRCEXTRA)
 
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
-	echo 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@ \
+	echo 'DATE = '\'`date '+%h %d %Y (%T)'`\' > $@ \
 	|| (rm -f $@; exit 1)
 
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
