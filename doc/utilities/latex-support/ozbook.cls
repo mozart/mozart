@@ -13,26 +13,12 @@
 
 % Declaration of Options
 \newif\if@coverPage \@coverPagetrue
-\newif\if@infoPage  \@infoPagetrue
 \newif\if@titlePage \@titlePagetrue
-\newif\if@abstractPage \@abstractPagetrue
 \newif\if@tableofcontents \@tableofcontentstrue
 
-\newcommand{\oz@draft}{%
-  \@coverPagefalse
-  \@infoPagefalse
-  \@abstractPagefalse
-  \@titlePagetrue
-  \@tableofcontentstrue}%
-\DeclareOption{draft}{\oz@draft}
-\DeclareOption{cover}{\@coverPagetrue}
 \DeclareOption{nocover}{\@coverPagefalse}
-\DeclareOption{info}{\@infoPagetrue}
-\DeclareOption{noinfo}{\@infoPagefalse}
-\DeclareOption{abstract}{\@abstractPagetrue}
-\DeclareOption{noabstract}{\@abstractPagefalse}
-\DeclareOption{title}{\@titlePagetrue}
 \DeclareOption{notitle}{\@titlePagefalse}
+\DeclareOption{notableofcontents}{\@tableofcontentsfalse}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
 
 % Execution of Options
@@ -327,12 +313,10 @@
       \begin{tabular*}{\fullwidth}%
 	{@{}l@{\extracolsep\fill}r@{\extracolsep{0pt}}@{}}%
 %	{%
-	Describing the Programming Language Oz \@ozversion\\
-	Implemented by DFKI Oz \@dfkiozversion\\
-	Released on \@dfkiozreleasedate\\[1cm]
 	Programming Systems Lab\\
 	German Research Center for Artificial Intelligence (DFKI)\\
-	Stuhlsatzenhausweg 3, D-66123 Saarbr\"ucken, Germany &
+        and Universit\"at des Saarlandes\\
+        Postfach 15~11~50, D-66041 Saarbr\"ucken, Germany &
 	\@date
       \end{tabular*}%
     \end{maxipage}%
@@ -341,51 +325,35 @@
 }
 
 \newcommand{\front@two}{%
-\if@infoPage
+\if@coverPage
 \clearpage
 \pagestyle{empty}%
 \thispagestyle{empty}%
 \begin{maxipage}%
-  \textbf{DFKI Oz Documentation Series}%
-
-  Gert Smolka and Ralf Treinen, editors
-  \begin{itemize}%
-  %\item \ozrefplain{constraints}%
-  %\item \ozrefplain{prog}%
-  %\item \ozrefplain{kernel}%
-  %\item \ozrefplain{demos}%
-%
-  \item \ozrefplain{crash}%
-%
-  \item \ozrefplain{tips}%
-  \item \ozrefplain{tk}%
-  \item \ozrefplain{open}%
-%
-  \item \ozrefplain{modules}%
-  \item \ozrefplain{system}%
-  \item \ozrefplain{fd}%
-  \item \ozrefplain{notation}%
-  \end{itemize}%
-\vfill
-  More information about DFKI Oz, the documentation, and the system
-  can be obtained via WWW from
-  \[\texttt{http://www.ps.uni-sb.de/oz/}\]
-  The documentation and the system are also available by anonymous ftp
-  from \[\texttt{ftp.ps.uni-sb.de/pub/oz}\]
-
   This document describes the programming language 
-  Oz \@ozversion\ implemented by
-  DFKI Oz \@dfkiozversion\ released on \@dfkiozreleasedate.
-
-  For specific questions and bug reports, you may mail to
-  \texttt{oz@dfki.uni-sb.de}.  To join the Oz users mailing list,
-  contact \texttt{oz-users-request@dfki.uni-sb.de}.
+  Oz~\@ozversion\ and the programming system
+  DFKI~Oz \hbox{(Version \@dfkiozversion)}.
 
 \vfill
-  The development of Oz is supported by the Bundesminister f\"ur Forschung 
-  und Technologie (Hydra, ITW 9105),
-  the Esprit Basic Research Project ACCLAIM (contract EP 7195)
-  and the Esprit Working Group CCL (contract EP 6028).
+  More information about Oz and DFKI Oz
+  can be obtained via WWW at
+  \[\texttt{http://www.ps.uni-sb.de/oz/}\]
+  and via anonymous ftp at
+  \[\texttt{ftp.ps.uni-sb.de/pub/oz}\]
+
+\vfill
+  For specific questions and bug reports, you may mail to
+  \texttt{oz@ps.uni-sb.de}.  To join the Oz users mailing list,
+  contact \texttt{oz-users-request@ps.uni-sb.de}.
+
+\vfill
+  The development of Oz was supported by the 
+  Bundesminister f\"ur Bildung, Wissenschaft, Forschung und Technologie
+  of the German Government (ITW 9105 and ITW 9601), 
+  the Esprit Program of the European Communities
+  (ACCLAIM, EP 7195; CCL, EP 6028; CCLII, EP 22457),
+  the Deutsche For\-schungsgemeinschaft (SFB 378),
+  and the Universit\"at des Saarlandes.
 \vfill
   Cover Illustration by Andreas Schoch.
 
@@ -394,21 +362,18 @@
    The trademarks used in this document are the properties of their
    respective owners.
 
-   \copyright{} Deutsches Forschungszentrum f{\"u}r K{\"u}nstliche
-   Intelligenz 1994, 1995
-
    This work may not be copied or reproduced in whole or part for any
    commercial purpose. Permission to copy in whole or part without
    payment of fee is granted for nonprofit educational and research
    purposes provided that all such whole or partial copies include the
-   following: a notice that such copying is by permission of the
-   Deutsches Forschungszentrum f{\"u}r K{\"u}nstliche Intelligenz,
-   Kaiserslautern, Federal Republic of Germany; an acknowledgement of
+   following: a notice that such copying is by permission of DFKI,
+   Saarbr\"ucken, Germany; an acknowledgement of
    the authors and individual contributors to the work; all applicable
    portions of this copyright notice. Copying, reproducing, or
    republishing for any other purpose shall require a licence with
-   payment of fee to Deutsches Forschungszentrum f{\"u}r K{\"u}nstliche
-   Intelligenz.}%
+   payment of fee to DFKI.
+
+   \copyright{} DFKI 1994, 1995, 1996, 1997.}%
 \end{maxipage}%
 \fi
 }
@@ -426,7 +391,7 @@
   \vspace{3em}%
   {\large\begin{tabular}[t]{c}\@author\end{tabular}\par}%
 \end{center}%
-\if@abstractPage
+\if@titlePage
 \ifx\@abstract\long@empty\else
      \vspace*{\fill}%
      \begin{center}\textbf{Abstract}\end{center}%
@@ -444,17 +409,6 @@
 \fi
 }
 
-%\newcommand{\front@four}{%
-%\if@abstractPage
-%\ifx\@abstract\long@empty\else
-%  \clearpage
-%  \thispagestyle{empty}%
-%  \begin{maxipage}%
-%    \begin{center}\textbf{Abstract}\end{center}\@abstract
-%  \end{maxipage}%
-%\fi
-%\fi
-%}
 
 \newcommand{\front@four}{\clearpage\thispagestyle{empty}}
 
@@ -496,7 +450,7 @@
   \\[2mm]
   Programming Systems Lab\\
   German Research Center for Artificial Intelligence (DFKI)\\
-and Universit\"at des Saarlandes\\
+  and Universit\"at des Saarlandes\\
   Postfach 15~11~50\\
   D-66041 Saarbr\"ucken, Germany\\
   \texttt{\@email{}@ps.uni-sb.de}}
