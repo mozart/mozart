@@ -7,7 +7,7 @@
 
 local
 
-   class AboutDialog 
+   class AboutDialog
       from TkTools.dialog
       prop final
 
@@ -37,7 +37,7 @@ local
    class PostscriptDialog
       from TkTools.dialog
       prop final
-      
+
       meth init(master:M options:O)
 
 	 proc {Okay}
@@ -66,11 +66,11 @@ local
 	 Orient    = {New TkTools.textframe tkInit(parent: self
 						   text:   'Orientation')}
 	 OrientVar = {New Tk.variable tkInit({Dictionary.get O orientation})}
-	 
+
 	 Size      = {New TkTools.textframe tkInit(parent: self
+						   'class':'NumberEntry'
 						   text:   'Size')}
 	 SizeEntry = {New Tk.entry tkInit(parent: Size.inner
-					  back:   EntryColor
 					  width:  LargeEntryWidth)}
       in
 	 {SizeEntry tk(insert 0 {Dictionary.get O size})}
@@ -118,7 +118,7 @@ local
 	    {Dictionary.put O scale  {IsScale tkReturnInt($)}==1}
 	    {Dictionary.put O update {Update tkGet($)}}
 	 end
-	 
+
 	 TkTools.dialog,tkInit(master:  M
 			       title:   TitleName#': Drawing'
 			       default: 1
@@ -155,14 +155,14 @@ local
 		    grid({New Tk.label tkInit(parent: Drawing.inner
 					      anchor: w
 					      text:  ' Solutions')}
-			 row:3 column:2) 
+			 row:3 column:2)
 		    pack(Drawing)]}
 	 DrawingDialog,tkPack
       end
-      
+
    end
 
-   
+
    local
 
       fun {DistS2I S}
@@ -173,14 +173,14 @@ local
 	 else {Tk.string.toInt FS}
 	 end
       end
-      
+
       fun {DistI2VS I}
 	 case I<1 then full
 	 elsecase I==1 then none
 	 else I
 	 end
       end
-      
+
    in
 
       class SearchDialog
@@ -209,16 +209,15 @@ local
 				  buttons: ['Okay'#Okay 'Cancel'#tkClose])
 	    Recomp = {New TkTools.textframe tkInit(parent: self
 						   text:   'Recomputation')}
-	    Left   = {New Tk.frame tkInit(parent:Recomp.inner)}
+	    Left   = {New Tk.frame tkInit(parent:Recomp.inner
+					 'class':'NumberEntry')}
 	    Search = {New Tk.entry tkInit(parent:Left
-					  back:  EntryColor
 					  width: SmallEntryWidth)}
 	    Info   = {New Tk.entry tkInit(parent:Left
-					  back:  EntryColor
 					  width: SmallEntryWidth)}
 	    FailedVar = {New Tk.variable tkInit}
 	    Right  = {New Tk.frame tkInit(parent:Recomp.inner)}
-	    
+
 	    proc {Enter S#I#F}
 	       {Search tk(delete 0 'end')} {Search tk(insert 0 S)}
 	       {Info   tk(delete 0 'end')} {Info   tk(insert 0 I)}
@@ -242,7 +241,8 @@ local
 		       grid(Info row:1 column:1 sticky:w)
 		       grid({New Tk.checkbutton
 			     tkInit(parent:Left
-				    text:'Full Recomputation in Failed Subtrees'
+				    text:
+				       'Full Recomputation in Failed Subtrees'
 				    anchor:w
 				    var:FailedVar)}
 			    row:2 column:0 columnspan:2 sticky:we)
@@ -250,15 +250,15 @@ local
 		       pack({New Tk.button tkInit(parent: Right
 						  text:   'Normal'
 						  action: Enter #
-						          (none # 5 # true))}
+							  (none # 5 # true))}
 			    {New Tk.button tkInit(parent: Right
 						  text:   'Large'
 						  action: Enter #
-						          (5 # 25 # true))}
+							  (5 # 25 # true))}
 			    {New Tk.button tkInit(parent: Right
 						  text:   'Huge'
 						  action: Enter #
-						          (25 # full # true))}
+							  (25 # full # true))}
 			    fill:x)
 
 		       pack(Left side:left anchor:n)
@@ -301,7 +301,7 @@ in
 				    file:      S
 				    height:    {Dictionary.get O height}
 				    width:     {Dictionary.get O width})}
-	    
+
 	 end
       end
 

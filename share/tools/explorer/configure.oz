@@ -122,7 +122,6 @@ BlockedColor         #
 PartialFailedColor   #
 LineColor            #
 BackColor            #
-EntryColor           #
 DepthColor           #
 CursorColor          = case Tk.isColor then
 			  'lightskyblue3'   # % ChooseColor
@@ -134,7 +133,6 @@ CursorColor          = case Tk.isColor then
 			  'purple1'         # % PartialFailedColor
 			  black             # % LineColor
 			  white             # % BackColor
-			  wheat             # % EntryColor
 			  wheat             # % DepthColor
 			  gray60              % CursorColor
 		       else
@@ -147,7 +145,6 @@ CursorColor          = case Tk.isColor then
 			  white # % PartialFailedColor
 			  black # % LineColor
 			  white # % BackColor
-			  white # % EntryColor
 			  black # % DepthColor
 			  black   % CursorColor 
 		       end
