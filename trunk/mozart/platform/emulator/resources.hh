@@ -139,7 +139,7 @@ error include resources.hh before mozart.h
 
 //
 // Distributed Oz - general;
-#define FLOW_BUFFER_SiZE    1000000
+#define FLOW_BUFFER_SiZE    10000 /* lower limit on nof msg for flowcontrol */
 #define FLOW_BUFFER_TIME    1000
 #define PERDIO_TIMEOUT      30000 /* ms */
 
@@ -244,7 +244,7 @@ error include resources.hh before mozart.h
 // don't create UVAR's
 //#define DEBUG_NO_UVAR
 
-//#define DEBUG_PERDIO
+#define DEBUG_PERDIO
 
 //#define DEBUG_PROP_STABILTY_TEST 
 

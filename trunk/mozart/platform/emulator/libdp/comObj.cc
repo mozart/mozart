@@ -39,11 +39,11 @@
 //#define COMOBJ_LOG
 //#define COMOBJ_CONNECT_LOG
 
-ComObj::ComObj(DSite *site, int recCtr) {
-  init(site, recCtr);
+ComObj::ComObj(DSite *site) {
+  init(site);
 }
 
-void ComObj::init(DSite *site, int recCtr) {
+void ComObj::init(DSite *site) {
   this->site = site;
   this->transObj = NULL;
   
@@ -701,7 +701,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       remoteRef=TRUE; // Implicitly known since he is sending a message!
 
       if(site->siteStatus()!=SITE_OK) {
-	Assert(0); //Not an error just want to see AN
+	Assert(0); //Not an error just want to see AN! Can this ever happen???
         break;
       }
       perdio_msgReceived(msgC);
@@ -779,7 +779,7 @@ void ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
   case CLOSING_WF_DISCONNECT:
     goto adopt_anon;
   default:
-    printf("PROBLEM");
+    printf("PROBLEM (state %d %d)\n",old->state,state);
     Assert(0);
     return;
   }
@@ -1038,8 +1038,12 @@ int ComObj::getNORM() {
   return tmp;
 }
 
+int ComObj::getQueueStatus() {
+  return queues.getQueueStatus();
+}
+
 void comController_acceptHandler(TransObj *transObj) {
-  ComObj *comObj = comController->newComObj(NULL,0);
+  ComObj *comObj = comController->newComObj(NULL);
   comObj->accept(transObj);
 }
 
@@ -1081,7 +1085,7 @@ int ComController::closeDownCount() {
     if(tmp->canBeFreed()) {
       DSite *site=tmp->site;
       deleteComObj(tmp);  // Inefficient extra listsearch
-      site->dumpRemoteSite(4711); // Is this correct?
+      site->dumpRemoteSite(); // Is this correct? AN!
     }
     else 
       count++;
@@ -1091,16 +1095,16 @@ int ComController::closeDownCount() {
   return count;
 }
 
-ComObj *ComController::newComObj(DSite *site,int recCtr){
+ComObj *ComController::newComObj(DSite *site){
   FreeListEntry *f=getOne();
   ComObj *comObj;
   if(f==NULL) {
-    comObj=new ComObj(site,recCtr);
+    comObj=new ComObj(site);
 //      printf("new ComObj %x at %d\n",comObj,osgetpid());
   }
   else {
     GenCast(f,FreeListEntry*,comObj,ComObj*);
-    comObj->init(site,recCtr);
+    comObj->init(site);
   }
   ++wc;
   comObj->next=list;

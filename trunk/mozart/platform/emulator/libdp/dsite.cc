@@ -198,43 +198,6 @@ DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
       return s;}
 
     //
-    if(mt == DIF_SITE_VI) {
-      // Note: that can be GName, in which case we have to fetch
-      // virtual info as well;
-      if (s != myDSite) {
-	Assert(s->remoteComm() || s->virtualComm());
-	//
-	// 's' could either have or have not virtual info (a master of
-	// a group could be already remembered outside as a
-	// non-virtual one);
-	if (s->hasVirtualInfo()) {
-	  // should be the same...
-	  unmarshalUselessVirtualInfo(buf);
-	} else {
-	  // haven't seen it (virtual info) yet;
-	  VirtualInfo *vi = unmarshalVirtualInfo(buf);
-
-	  //
-	  if (!s->ActiveSite()) {
-	    if (myDSite->isInMyVSGroup(vi)) {
-	      s->makeActiveVirtual(vi);
-	    } else {
-	      s->makeActiveRemoteVirtual(vi);
-	    }
-	  } else {
-	    s->addVirtualInfoToActive(vi);
-	  }
-	}
-      } else {
-	// my site is my site... already initialized;
-	unmarshalUselessVirtualInfo(buf);
-      }
-
-      //
-      return (s);
-    }
-
-    //
     Assert(mt == DIF_SITE);
     if(s != myDSite && !s->ActiveSite()) {
       s->makeActiveRemote();}
@@ -246,9 +209,6 @@ DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
     
   case I_AM_YOUNGER:{
     PD((SITE,"unmarshalsite I_AM_YOUNGER"));
-    if(mt == DIF_SITE_VI) {
-      unmarshalUselessVirtualInfo(buf);
-    }
     int hvalue=tryS->hashSecondary();
     s=secondarySiteTable->findSecondary(tryS,hvalue);
     if(s){return s;}
@@ -276,20 +236,6 @@ DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
     s->initPerm();
     return s;}
 
-  if(mt == DIF_SITE_VI) {
-    PD((SITE,"initsite DIF_SITE_VI"));
-
-    //
-    // kost@ : fetch virtual info, which (among other things) 
-    // identifies the 'tryS's group of virtual sites;
-    VirtualInfo *vi = unmarshalVirtualInfo(buf);
-    if (myDSite->isInMyVSGroup(vi))
-      s->initVirtual(vi);
-    else 
-      s->initRemoteVirtual(vi);      
-    return (s);
-  }
-
   Assert(mt == DIF_SITE);
   PD((SITE,"initsite DIF_SITE"));
   s->initRemote();
@@ -307,7 +253,7 @@ DSite* unmarshalDSite(MarshalerBuffer *buf)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
-  Assert(mt == DIF_SITE || mt == DIF_SITE_VI || mt == DIF_SITE_PERM);
+  Assert(mt == DIF_SITE || mt == DIF_SITE_PERM);
   DSite tryS;
 
   tryS.unmarshalBaseSite(buf);
@@ -318,7 +264,7 @@ DSite* unmarshalDSiteRobust(MarshalerBuffer *buf, int *error)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
-  Assert(mt == DIF_SITE || mt == DIF_SITE_VI || mt == DIF_SITE_PERM);
+  Assert(mt == DIF_SITE || mt == DIF_SITE_PERM);
   DSite tryS;
 
   tryS.unmarshalBaseSiteRobust(buf, error);
@@ -384,29 +330,6 @@ int DSite::hashWOTimestamp(){
 /*   SECTION :: Site object methods                                   */
 /**********************************************************************/
 
-#ifdef VIRTUALSITES
-//
-// Modifies the 'VirtualInfo'! 
-void DSite::initVirtualInfoArg(VirtualInfo *vi)
-{
-  vi->setAddress(getAddress());
-  vi->setTimeStamp(*getTimeStamp());
-  vi->setPort(getPort());
-}
-#endif
-
-//
-Bool DSite::isInMyVSGroup(VirtualInfo *vi)
-{
-  if (getType() & VIRTUAL_INFO) {
-    VirtualInfo *myVI = getVirtualInfo();
-
-    //
-    return (myVI->cmpVirtualInfos(vi));
-  } else {
-    return (FALSE);
-  }
-}
 
 void DSite::marshalDSite(MarshalerBuffer *buf){
   PD((MARSHAL,"Site"));
@@ -415,68 +338,11 @@ void DSite::marshalDSite(MarshalerBuffer *buf){
     marshalDIF(buf,DIF_SITE_PERM);
     marshalBaseSite(buf);
     return;}
-  if (type & VIRTUAL_INFO) {
-    // A site with a virtual info can be also remote (in the case of a
-    // site in a remote virtual site group);
-    VirtualInfo *vi = getVirtualInfo();
-    marshalDIF(buf,DIF_SITE_VI);
-    marshalBaseSite(buf);    
-    marshalVirtualInfo(vi,buf);
-    return;}
   Assert((type & REMOTE_SITE) || (this==myDSite) );
   marshalDIF(buf,DIF_SITE);
   marshalBaseSite(buf);
   return;}
 
-//
-// Free bodies of "virtual info" objects.
-// We need a memory management for that since there can be "virtual
-// info" objects for "remote" virtual site groups;
-static FreeListDataManager<VirtualInfo> freeVirtualInfoPool(malloc);
-
-//
-// Throw away the "virtual info" object representation from a message
-// buffer;
-void unmarshalUselessVirtualInfo(MarshalerBuffer *mb)
-{
-  Assert(sizeof(ip_address) <= sizeof(unsigned int));
-  Assert(sizeof(port_t) <= sizeof(unsigned short));
-  Assert(sizeof(time_t) <= sizeof(unsigned int));
-  Assert(sizeof(int) <= sizeof(unsigned int));
-  Assert(sizeof(key_t) <= sizeof(unsigned int));
-#ifndef VIRTUALSITES
-    Assert(sizeof(key_t) == sizeof(unsigned int));
-#endif
-
-  //
-  skipNumber(mb);
-  (void) unmarshalShort(mb);  
-  skipNumber(mb);
-  skipNumber(mb);
-  //
-  skipNumber(mb);
-}
-
-//
-void marshalVirtualInfo(VirtualInfo *vi, MarshalerBuffer *mb)
-{
-  vi->marshal(mb);
-}
-
-//
-VirtualInfo* unmarshalVirtualInfo(MarshalerBuffer *mb)
-{
-  VirtualInfo *voidVI = freeVirtualInfoPool.allocate();
-  VirtualInfo *vi = new (voidVI) VirtualInfo(mb);
-  return (vi);
-}
-
-//
-void dumpVirtualInfo(VirtualInfo* vi)
-{
-  vi->destroy();
-  freeVirtualInfoPool.dispose(vi);
-}
 
 /**********************************************************************/
 /*   SECTION :: memory management  methods                            */

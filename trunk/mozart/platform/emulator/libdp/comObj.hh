@@ -117,8 +117,8 @@ protected:
   Bool hasQueued();
   Bool canBeClosed();
 public:
-  ComObj(DSite *site,int recCtr);
-  void init(DSite *site,int recCtr);
+  ComObj(DSite *site);
+  void init(DSite *site);
 
   DSite *getSite() {return site;}
 
@@ -129,6 +129,7 @@ public:
            // Should this be moved to the comController?
   Bool canBeFreed(); // A question that implicitly tells the comObj
                      // that no local references exist.
+  int getQueueStatus();
   
   // For TransController
   void preemptTransObj();
@@ -187,7 +188,7 @@ public:
   }
   int wc;
 
-  ComObj *newComObj(DSite *site,int recCtr);
+  ComObj *newComObj(DSite *site);
   void deleteComObj(ComObj* comObj);
   int getCTR(){ return wc;}
 
