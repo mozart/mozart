@@ -353,9 +353,12 @@ define
 	    if ID\=ROOT andthen {Not {Utils.isMogulRootID ID}} then
 	       PID = {Path.dirnameAtom ID}
 	       KEY = {Path.basenameAtom ID}
-	    in
 	       {Enter PID}
-	       Table.PID := KEY|{CondSelect Table PID nil}
+	       L = {CondSelect Table PID nil}
+	    in
+	       if {Member KEY L} then skip else
+		  Table.PID := KEY|L
+	       end
 	    end
 	 end
 	 for K in IDS do {Enter K} end
@@ -367,7 +370,7 @@ define
 	 {self trace('exporting MOGUL section entries')}
 	 {self incr}
 	 for K in {Sort {Dictionary.keys Table} Value.'<'} do
-	    {self mogul_export_section(K Table.K)}
+	    {self mogul_export_section(K {Sort Table.K Value.'<'})}
 	 end
 	 {self decr}
 	 {self trace('exporting MOGUL contact entries')}
