@@ -24,30 +24,8 @@
  *
  */
 
-// #include "misc.cc"
-#include <windows.h>
-#include <process.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-const char *ozplatform = "win32-i486";
-
-char *getParent(char *path, int levelsup)
-{
-  char *ret = strdup(path);
-  int i;
-  char *aux;
-  for(i=0; i<levelsup; i++) {
-    aux=strrchr(ret,'\\');
-    if (aux==NULL) {
-      return NULL;
-    }
-    *aux = '\0';
-  }
-  return ret;
-}
+#define OZENGINE
+#include "misc.cc"
 
 void dossify(char *path)
 {
@@ -61,20 +39,9 @@ void dossify(char *path)
 
 char *getOzHome()
 {
-  char *ret = getenv("OZHOME");
-  if (ret!=NULL) {
-    ret = strdup(ret);
-  } else {
-    char buffer[5000];
-    GetModuleFileName(NULL, buffer, sizeof(buffer));
-    ret = getParent(buffer,2);
-    if (ret == NULL) {
-      fprintf(stderr,
-	      "Cannot determine Oz installation directory.\n"
-	      "Try setting OZHOME environment variable.\n");
-      exit(2);
-    }
-  }
+  char buffer[5000];
+  GetModuleFileName(NULL, buffer, sizeof(buffer));
+  char *ret = getOzHome(buffer,2);
   dossify(ret);
   return ret;
 }
@@ -95,20 +62,16 @@ char *pappzammn(char **argv, int von, int bis)
   return ret;
 }
 
-void usage() 
+void usage(char *msg) 
 {
-  fprintf(stderr,"oztool for Win32 (November 1998)\n\
-oztool:\n\
-\tld  -gnu -o TargetLib FileList \n\
-\tld  -watcom -o TargetLib FileList \n\
-\tld  -msvc -o TargetLib FileList \n\
-\tc++ -gnu -c Source1.cc [SourceFiles.c ...]\n\
-\tc++ -watcom -c Source.cc\n\
-\tc++ -msvc -c Source.cc\n\
-\tc   -gnu -c Source1.c [SourceFiles.c ...]\n\
-\tc   -watcom -c Source.c\n\
-\tc   -msvc -c Source.cc\n\
-\tozplatform\n");
+  fprintf(stderr,
+	  "%s"
+	  "\nUsage:\n"
+	  "\toztool [-gnu|-watcom|-msvc] ld -o TargetLib FileList \n"
+	  "\toztool [-gnu|-watcom|-msvc] c++ SourceFile\n"
+	  "\toztool [-gnu|-watcom|-msvc] c   SourceFile\n"
+	  "\toztool platform\n",
+	  msg);
   exit(2);
 }
  
@@ -160,24 +123,42 @@ int execute(char **argv)
   return spawnvp(P_WAIT,argv[0],argv);
 }
 
+#define SYS_GNU  1
+#define SYS_WAT  2
+#define SYS_MSVC 3
+
 int main(int argc, char** argv) 
 {
   if (argc<2) 
-    usage();
+    usage("");
 
-  if (!strcmp(argv[1],"ozplatform")) {
+  if (!strcmp(argv[1],"platform")) {
     if (argc!=2)
-      usage();
+      usage("");
     printf("%s\n",ozplatform);
     exit(0);
   }
 
+  if (argc<3)
+    usage("");
+
+  int sys = SYS_GNU;
+  if (!strcmp(argv[1],"-watcom")) {
+    sys = SYS_WAT;
+    argv++; argc--;
+  } else if (!strcmp(argv[1],"-msvc")) {
+    sys = SYS_MSVC;
+    argv++; argc--;
+  } else if (!strcmp(argv[1],"-gnu")) {
+    sys = SYS_GNU;
+    argv++; argc--;
+  }
+
   if (!strcmp(argv[1],"ld")) {
-    if (argc>=3 && !strcmp(argv[2],"-watcom")) {
-      if (argc>=5 && !strcmp(argv[3],"-o")) {
-	if (argc==5) {
-	  fprintf(stderr,"Missing Object Files.\n");
-	  usage();
+    if (sys == SYS_WAT) {
+      if (argc>=4 && !strcmp(argv[2],"-o")) {
+	if (argc==4) {
+	  usage("Missing Object Files.\n");
 	}
 	/* ld -watcom -o */
 	char *tempfile=concat(ostmpnam(),".obj");
@@ -194,7 +175,7 @@ int main(int argc, char** argv)
 	  goto cleanup;
 	{
 	  char **links = new char*[10];
-	  char *libname = argv[4];
+	  char *libname = argv[3];
 	  links[0]="wlink";
 	  links[1]="system";
 	  links[2]="nt_dll";
@@ -203,7 +184,7 @@ int main(int argc, char** argv)
 	  links[5]="name";
 	  links[6]=libname;
 	  links[7]="file";
-	  links[8]=concat(tempfile,concat(",",pappzammn(argv,5,argc)));
+	  links[8]=concat(tempfile,concat(",",pappzammn(argv,4,argc)));
 	  links[9]=NULL;
 	  r=execute(links);
 	}
@@ -212,11 +193,10 @@ int main(int argc, char** argv)
 	doexit(r);
       }
     }
-    if (argc>=3 && !strcmp(argv[2],"-msvc")) {
-      if (argc>=5 && !strcmp(argv[3],"-o")) {
-	if (argc==5) {
-	  fprintf(stderr,"Missing Object Files.\n");
-	  usage();
+    if (sys == SYS_MSVC) {
+      if (argc>=4 && !strcmp(argv[2],"-o")) {
+	if (argc==4) {
+	  usage("Missing Object Files.\n");
 	}
 	/* ld -msvc -o */
 	char *tempfile=concat(ostmpnam(),".obj");
@@ -235,7 +215,7 @@ int main(int argc, char** argv)
 	  goto cleanup;
 	{
 	  char **links = new char*[argc+9];
-	  char *libname = argv[4];
+	  char *libname = argv[3];
 	  r = 0;
 	  links[r++]="cl";
 	  links[r++]="-LD";
@@ -254,16 +234,15 @@ int main(int argc, char** argv)
 	doexit(r);
       }
     }
-    if (argc>=3 && !strcmp(argv[2],"-gnu")) {
-      if (argc>=5 && !strcmp(argv[3],"-o")) {
-	if (argc==5) {
-	  fprintf(stderr,"Missing Object Files.\n");
-	  usage();
+    if (sys == SYS_GNU) {
+      if (argc>=4 && !strcmp(argv[2],"-o")) {
+	if (argc==4) {
+	  usage("Missing Object Files.\n");
 	}
 	char **wuergs  = new char*[argc+4];
 	char **links   = new char*[argc+9];
 	char **moz     = new char*[7];
-	char *libname  = argv[4];
+	char *libname  = argv[3];
 	char *defname  = concat(libname,".def");
 	char *aname    = concat("lib",concat(libname,".a"));
 	char *tempfile = concat(ostmpnam(),".o");
@@ -315,27 +294,29 @@ int main(int argc, char** argv)
     }
   }
   else if (strcmp(argv[1],"c")==0 || strcmp(argv[1],"c++")==0) {
-    if (argc<4)
-      usage();
+    if (argc<3)
+      usage("");
     int cxx = (strcmp(argv[1],"c++")==0);
     int r=0;
     char ** wc=new char*[argc+1];
-    if (!strcmp(argv[2],"-watcom")) {
+    switch (sys) {
+    case SYS_WAT:
       wc[r++]= cxx ? "wpp386" : "wcc386";
       wc[r++]="-zq";
       wc[r++]="-bd";
-    } else if (!strcmp(argv[2],"-gnu")) {
+      break;
+    case SYS_GNU:
       wc[r++]=cxx ? "g++" : "gcc";
-    } else if (!strcmp(argv[2],"-msvc")) {
+      break;
+    case SYS_MSVC:
       wc[r++]="cl";
-    } else {
-      usage();
+      break;
     }
     wc[r++]=oz_include();
-    for (int i=3; i<argc; i++) wc[r++]=argv[i];
+    for (int i=2; i<argc; i++) wc[r++]=argv[i];
     wc[r]=NULL;
     r=execute(wc);
     exit (r);
   }
-  usage();
+  usage("");
 }
