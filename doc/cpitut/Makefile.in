@@ -2,6 +2,8 @@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 
+WHATCLASS=tutorial
+PRINTNAME=CPI
 WHAT = cpitut
 MAIN = 0.sgml
 SGMLSRCS = 	0.sgml \

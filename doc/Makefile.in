@@ -44,7 +44,7 @@ EMACS		= emacs
 
 SUBDIRS		= @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend
+.PHONY: all quick bootstrap check install clean veryclean distclean depend installps
 
 all bootstrap:: $(CED)
 
@@ -69,7 +69,7 @@ $(LIBFILES): $(SHDOCDIR)/% : %
 ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
 	$(EMACS) -q -batch -l ced.el
 
-all quick check install clean veryclean distclean depend::
+all quick check install clean veryclean distclean installps depend::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
 

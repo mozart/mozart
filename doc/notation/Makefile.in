@@ -3,6 +3,8 @@ SRCDIR		= @srcdir@
 
 WHAT = notation
 MAIN = notation.sgml
+WHATCLASS=reference
+PRINTNAME=Notation
 SGMLSRCS = \
 	notation.bib
 HTMLEXTRAFILES = \
