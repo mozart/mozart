@@ -424,6 +424,7 @@ choice point without specifying how they will be explored. A completely
 separate program can then specify the search strategy.
 
 <SUBSECTION><TITLE/Choice Construct/
+<P>
 
 <<<
 proc {DApp Xs Ys Zs}
@@ -437,6 +438,8 @@ end
 >>>
 
 <SUBSECTION><TITLE/Define Clause Grammer/
+<P>
+
 <<<
 Sentence(P) --> NounPhrase(X P1 P) VerbPhrase(X P1)
 NounPhrase(X P1 P) --> Determiner(X P2 P1 P) Noun(X P3) RelClause(X P3 P2)
