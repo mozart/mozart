@@ -107,6 +107,15 @@ particular, it lists the changes from
     compilers (&eg; <code proglang=sh/gcc 3.x/) implementing the new multi-vendor
     standard C++ ABI (Application Binary Interface).
 
+    <section id="sec.m125.r1">
+      <title/Revision 1/
+      <p>
+      <list>
+        <item/Fixed a garbage collection bug that showed up on Solaris 9./
+	<item/ozdoc now generates PNG graphics rather than GIF./
+      </list>
+    </section>
+
     <section id="sec.m125.portability">
       <title/Portability/
       <p>
