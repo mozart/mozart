@@ -1,20 +1,15 @@
 functor
 import
-   Narrator SGML ErrorListener Open(file)
+   Open(file)
 export
    GetChunk ProcessSpecs
 define
-   class OzDocToCode from Narrator.'class'
+   class OzDocToCode
       attr Reporter Defs Refs
-      meth init
-	 Reporter <- Narrator.'class',init($)
-	 {@Reporter setLogPhases(true)}
+      meth init(MyReporter)
+	 Reporter <- MyReporter
       end
-      meth processFile(File)
-	 {@Reporter startBatch()}
-	 {@Reporter startPhase('parsing SGML input')}
-	 Node = {SGML.parse File @Reporter}
-      in
+      meth processNode(Node)
 	 if {@Reporter hasSeenError($)} then skip else
 	    Defs <- {Dictionary.new}
 	    Refs <- {Dictionary.new}
@@ -36,8 +31,8 @@ define
 	    {@Reporter tell(done())}
 	 end
       end
-      meth getChunk(File Title Chunk)
-	 OzDocToCode,processFile(File)
+      meth getChunk(Node Title Chunk)
+	 OzDocToCode,processNode(Node)
 	 OzDocToCode,getOneChunk(Title Chunk)
       end
       meth get(Title $)
@@ -128,39 +123,18 @@ define
       end
    end
    %%
-   class MyListener from ErrorListener.'class'
-      attr Sync: unit
-      meth init(O X)
-	 Sync <- X
-	 ErrorListener.'class', init(O ServeOne true)
-      end
-      meth ServeOne(M)
-	 case M of done() then @Sync = unit
-	 else skip
-	 end
-      end
-   end
-   %%
-   proc {GetChunk File Title IndentedCode}
-      O = {New OzDocToCode init}
-      Sync
-      L = {New MyListener init(O Sync)}
+   proc {GetChunk Reporter Node Title IndentedCode}
+      O = {New OzDocToCode init(Reporter)}
       Code
    in
-      {O getChunk(File Title Code)}
-      {Wait Sync}
-      if {L hasErrors($)} then raise error end end
+      {O getChunk(Node Title Code)}
       {New Indentor init(Code IndentedCode) _}
    end
    %%
-   proc {ProcessSpecs File Specs Sep}
-      O = {New OzDocToCode init}
-      Sync
-      L = {New MyListener init(O Sync)}
+   proc {ProcessSpecs Reporter Node Specs Sep}
+      O = {New OzDocToCode init(Reporter)}
    in
-      {O processFile(File)}
-      {Wait Sync}
-      if {L hasErrors($)} then raise error end end
+      {O processNode(Node)}
       {ForAll Specs
        proc {$ Spec}
 	  {O processSpec(Spec Sep)}
