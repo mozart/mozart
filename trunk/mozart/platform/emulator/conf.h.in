@@ -74,6 +74,7 @@
 
 /* use a debug malloc library */
 #undef DMALLOC
+#undef CCMALLOC
 
 /* Define if you want support for virtual sites */
 #undef VIRTUALSITES
