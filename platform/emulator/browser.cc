@@ -58,7 +58,7 @@ OZ_BI_define(BIchunkWidth, 1,1)
 
   switch(chTag) {
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
@@ -94,7 +94,7 @@ OZ_BI_define(BIisRecordCVarB,1,1)
       OZ_RETURN(NameFalse);
     break;
   case UVAR:
-  case SVAR:
+    // SVAR
     OZ_RETURN(NameFalse);
   default:
     OZ_RETURN(NameFalse);
@@ -169,7 +169,7 @@ OZ_BI_define(BIchunkArity,1,1)
 
   switch(chTag) {
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 

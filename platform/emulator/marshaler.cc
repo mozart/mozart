@@ -753,7 +753,7 @@ loop:
     }
 
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     {
       PerdioVar *pvar = var2PerdioVar(tPtr);

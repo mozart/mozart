@@ -378,7 +378,7 @@ Bool MemChunks::isInHeap(TaggedRef term)
   if (!oz_isRef(term)) {
     switch (tagTypeOf (term)) {
     case UVAR:
-    case SVAR:
+      // FUT
     case LTUPLE:
     case OZCONST:
       // if (oz_isBigInt(term)) return OK; // mm2

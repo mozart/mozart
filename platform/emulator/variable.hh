@@ -151,29 +151,8 @@ public:
   OZPRINTLONG;
 };
 
-inline
-void addSuspSVar(TaggedRef v, Suspension susp,int unstable = TRUE)
-{
-  tagged2SVar(v)->addSuspSVar(susp, unstable);
-}
-
-#define SIMPLEVAR
-#ifdef SIMPLEVAR
-SVariable *oz_newSVar(Board *bb);
-#else
-inline
-SVariable *oz_newSVar(Board *bb) {
-  return new SVariable(bb);
-}
-#endif
-
-inline
-void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE)
-{
-  SVariable *sv = oz_newSVar(tagged2VarHome(*v));
-  *v = makeTaggedSVar(sv);
-  sv->addSuspSVar(susp, unstable);
-}
+// not yet inlined
+void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE);
 
 void oz_cv_addSusp(GenCVariable *, TaggedRef *, Suspension, int = TRUE);
 
@@ -181,9 +160,8 @@ inline
 void addSuspAnyVar(TaggedRefPtr v, Suspension susp,int unstable = TRUE)
 {
   TaggedRef t = *v;
-  if (isSVar(t)) {
-    addSuspSVar(t, susp, unstable);
-  } else if (isCVar(t)) {
+  // FUT
+  if (isCVar(t)) {
     oz_cv_addSusp(tagged2CVar(*v), v, susp, unstable);
   } else {
     addSuspUVar(v, susp, unstable);

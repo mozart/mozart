@@ -57,7 +57,7 @@ enum TypeOfTerm {
   REFTAG4          = 12,   // 1100
 
   UVAR             =  1,   // 0001
-  SVAR             =  9,   // 1001
+  UNUSED_VAR       =  9,   // 1001
   CVAR             =  5,   // 0101
 
   GCTAG            =  13,  // 1101    --> !!! oz_isVariable(GCTAG) = 1 !!!
@@ -208,23 +208,10 @@ Bool oz_isRef(TaggedRef term) {
 // ---------------------------------------------------------------------------
 // Tests for variables and their semantics:
 //                           tag
-// unconstrained var         0001 (UVAR:1)  isUVar   isNotCVar  oz_isVariable
-// unconstr. suspending var  1001 (SVAR:9)  isSVar   isNotCVar  oz_isVariable
+// unconstrained var         0001 (UVAR:1)  isUVar              oz_isVariable
+// ???                       1001 (????:9)                      oz_isVariable
 // constrained-susp. var     0101 (CVAR:5)           isCVar     oz_isVariable
 // ---------------------------------------------------------------------------
-
-
-inline
-Bool isSVar(TypeOfTerm tag) {
-  return (tag == SVAR);
-}
-
-inline
-Bool isSVar(TaggedRef term) {
-  GCDEBUG(term);
-  Assert(!oz_isRef(term));
-  return isSVar(tagTypeOf(term));
-}
 
 
 inline
@@ -248,7 +235,6 @@ Bool isCVar(TaggedRef term) {
  */
 
 #define _oz_isVariable(val) (((TaggedRef) val&2)==0)       /* mask = 0010 */
-#define _isNotCVar(val)   (((TaggedRef) val&6)==0)       /* mask = 0110 */
 #define _isUVar(val)      (((TaggedRef) val&14)==0)      /* mask = 1110 */
 #define _isLTuple(val)    (((TaggedRef) val&13)==0)      /* mask = 1101 */
 
@@ -292,21 +278,10 @@ Bool oz_isVariable(TaggedRef term) {
   return _oz_isVariable(term);
 }
 
-inline Bool isNotCVar(TypeOfTerm tag) { return _isNotCVar(tag);}
-
-inline
-Bool isNotCVar(TaggedRef term) {
-  GCDEBUG(term);
-  Assert(!oz_isRef(term));
-  return _isNotCVar(term);
-}
-
-
 #else
 
 #define isVariableTag(term)    _oz_isVariable(term)
 #define oz_isVariable(term)    _oz_isVariable(term)
-#define isNotCVar(term)        _isNotCVar(term)
 #define isUVar(term)           _isUVar(term)
 #define isLTupleTag(term)      _isLTuple(term)
 #define oz_isLTuple(term)      _isLTuple(term)
@@ -411,13 +386,6 @@ TaggedRef makeTaggedUVar(Board *s)
 }
 
 inline
-TaggedRef makeTaggedSVar(SVariable *s)
-{
-  CHECK_POINTER_N(s);
-  return makeTaggedRef2p(SVAR,s);
-}
-
-inline
 TaggedRef makeTaggedCVar(GenCVariable *s) {
   CHECK_POINTER_N(s);
   return makeTaggedRef2p(CVAR, s);
@@ -492,7 +460,6 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #define makeTaggedMiscp(s)     makeTaggedRef2p((TypeOfTerm)0,s)
 #define makeTaggedMisci(s)     makeTaggedRef2i((TypeOfTerm)0,s)
 #define makeTaggedUVar(s)      makeTaggedRef2p(UVAR,s)
-#define makeTaggedSVar(s)      makeTaggedRef2p(SVAR,s)
 #define makeTaggedCVar(s)      makeTaggedRef2p(CVAR,s)
 #define makeTaggedFSetValue(s) makeTaggedRef2p(FSETVALUE,s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(LTUPLE,s)
@@ -542,14 +509,6 @@ TaggedRef *newTaggedRef(TaggedRef *t)
 {
   TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
   *ref = makeTaggedRef(t);
-  return ref;
-}
-
-inline
-TaggedRef *newTaggedSVar(SVariable *c)
-{
-  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
-  *ref = makeTaggedSVar(c);
   return ref;
 }
 
@@ -678,18 +637,9 @@ Tertiary *tagged2Tert(TaggedRef ref)
 }
 
 inline
-SVariable *tagged2SVar(TaggedRef ref)
-{
-  GCDEBUG(ref);
-  CHECKTAG(SVAR);
-  return (SVariable *) tagValueOf2(SVAR,ref);
-}
-
-
-inline
 SVariable *tagged2SVarPlus(TaggedRef ref) {
   GCDEBUG(ref);
-  Assert(isCVar(ref)||isSVar(ref));
+  Assert(isCVar(ref));
   return (SVariable *) tagValueOf(ref);
 }
 
@@ -803,12 +753,6 @@ inline
 void doBindCVar(TaggedRef *p, GenCVariable *cvar)
 {
   *p = makeTaggedCVar(cvar);
-}
-
-inline
-void doBindSVar(TaggedRef *p, SVariable *svar)
-{
-  *p = makeTaggedSVar(svar);
 }
 
 inline
@@ -1024,7 +968,7 @@ OZ_Term mkTuple(int from, int to) {
 class TaggedPtr {
   int32 tagged;
 public:
-  NO_DEFAULT_CONSTRUCTORS2(TaggedPtr);
+  ~TaggedPtr() {} // needed for *Extension classes
   TaggedPtr(void *p,int t) {
     Assert(t >= 0 && t <=3)
     tagged = (ToInt32(p)<<2) || t;

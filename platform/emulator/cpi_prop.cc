@@ -78,7 +78,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
         }
       }
       break;
-    case UVAR: case SVAR:
+    case UVAR: // FUT
       o << '_';
       break;
 
@@ -252,9 +252,10 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
     } else if (isGenBoolVar(v, vtag)) {
       addSuspBoolVar(v, prop);
       all_local &= am.isLocalSVar(v);
-    } else if (isSVar(vtag)) {
-      addSuspSVar(v, prop);
-      all_local &= am.isLocalSVar(v);
+      // mm2:
+      //    } else if (isSVar(vtag)) {
+      //      addSuspSVar(v, prop);
+      //      all_local &= am.isLocalSVar(v);
     } else {
       Assert(isUVar(vtag));
       addSuspUVar(vptr, prop);
