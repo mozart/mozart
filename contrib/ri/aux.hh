@@ -27,7 +27,7 @@
 #ifndef __AUX_HH__
 #define __AUX_HH__
 
-#include "mozart_cpi.hh"
+#include "/home/tmueller/mozart/platform/emulator/mozart_cpi.hh"
 #include <math.h>
 #include <values.h>
 
@@ -77,6 +77,8 @@ fflush(stdout);                                 \
 return OZ_FAILED
 
 //-----------------------------------------------------------------------------
+
+//#define DEBUG_CHECK
 
 #ifdef DEBUG_CHECK
 #define RI_DEBUG_PRINT(ARGS) printf ARGS; fflush(stdout);

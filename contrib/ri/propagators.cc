@@ -46,33 +46,6 @@ OZ_BI_define(ri_lessEq, 2, 0)
 OZ_BI_end
 
 //-----------------------------------------------------------------------------
-/*
-extern Propagator * imposed_propagator;
-
-OZ_BI_define(ri_lessEqMeta, 3, 0)
-{
-  OZ_EXPECTED_TYPE(EM_RI "," EM_RI);
-
-  RIExpect pe;
-  int susp_count = 0;
-
-  OZ_EXPECT_SUSPEND(pe, 0, expectRIVarMinMax, susp_count);
-  OZ_EXPECT_SUSPEND(pe, 1, expectRIVarMinMax, susp_count);
-
-  if (susp_count > 1) return pe.suspend();
-
-  OZ_Return ret = pe.impose(new RILessEq(OZ_in(0), OZ_in(1)));
-
-  printf("meta imposed_propagator = %p\n", imposed_propagator);
-
-  if (ret != OZ_FAILED) {
-    return OZ_unify(OZ_in(2), propagator2Term(imposed_propagator));
-  }
-  return OZ_FAILED;
-}
-OZ_BI_end
-*/
-//-----------------------------------------------------------------------------
 
 OZ_PropagatorProfile RILessEq::profile;
 
