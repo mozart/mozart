@@ -31,16 +31,8 @@
 
 OZ_C_proc_begin(fdp_notEqOff, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_INT);
-
-  PropagatorExpect pe;
-
-  OZ_EXPECT(pe, 0, expectIntVarSingl);
-  OZ_EXPECT(pe, 1, expectIntVarSingl);
-  OZ_EXPECT(pe, 2, expectInt);
-
-  return pe.impose(new NotEqOffPropagator(OZ_args[0], OZ_args[1],
-                                          OZ_intToC(OZ_args[2])));
+  OZ_warning("This foreign function must never be called.");
+  return FAILED;
 }
 OZ_C_proc_end
 
