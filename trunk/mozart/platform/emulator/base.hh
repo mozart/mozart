@@ -359,7 +359,8 @@ enum ThreadReturn {
   T_SUSPEND,		// thread must suspend
   T_FAILURE,		// an failure exception must be handled
   T_TERMINATE,		// the thread terminated
-  T_ERROR		// a fatal error occured
+  T_ERROR,		// a fatal error occured
+  T_OKOK                // NOTHING
 };
 
 enum LockRet{
