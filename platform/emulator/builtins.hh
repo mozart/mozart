@@ -68,8 +68,8 @@ public:
     : rawrec(r), rawwid(w) {}
 
   virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(rawrec);
-    OZ_updateHeapTerm(rawwid);
+    OZ_collectHeapTerm(rawrec,rawrec);
+    OZ_collectHeapTerm(rawwid,rawwid);
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return propagate(void);
@@ -88,11 +88,11 @@ public:
     : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
 
   virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(X);
-    OZ_updateHeapTerm(K);
-    OZ_updateHeapTerm(L);
-    OZ_updateHeapTerm(FH);
-    OZ_updateHeapTerm(FT);
+    OZ_collectHeapTerm(X,X);
+    OZ_collectHeapTerm(K,K);
+    OZ_collectHeapTerm(L,L);
+    OZ_collectHeapTerm(FH,FH);
+    OZ_collectHeapTerm(FT,FT);
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return propagate(void);

@@ -141,9 +141,9 @@ public:
     : b_tuple(b), v_tuple(v), vp_tuple(vp) {}
 
   virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(b_tuple);
-    OZ_updateHeapTerm(v_tuple);
-    OZ_updateHeapTerm(vp_tuple);
+    OZ_collectHeapTerm(b_tuple,b_tuple);
+    OZ_collectHeapTerm(v_tuple,v_tuple);
+    OZ_collectHeapTerm(vp_tuple,vp_tuple);
   }
   virtual size_t sizeOf(void) { return sizeof(CDPropagator); }
   virtual OZ_Return propagate(void);
@@ -516,7 +516,7 @@ CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
 
 void CDSuppl::updateHeapRefs(OZ_Boolean) {
   thr = (OZ_Thread) ((Thread *)thr)->gcThread();
-  OZ_updateHeapTerm(reg_b);
+  OZ_collectHeapTerm(reg_b,reg_b);
 }
 
 OZ_Return CDSuppl::propagate(void)

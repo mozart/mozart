@@ -541,7 +541,7 @@ public:
     while(aux) {
       if (aux->elem) {
         ret = new ExtRefNode(aux->elem,ret);
-        OZ_updateHeapTerm(*ret->elem);
+        OZ_collectHeapTerm(*ret->elem,*ret->elem);
       }
       aux = aux->next;
     }
@@ -811,11 +811,7 @@ RefsArray gcRefsArray(RefsArray r)
 
   refsArrayMark(r,aux);
 
-  for (int i = sz; i--; ) {
-    aux[i] = r[i];
-    Assert(!isDirectVar(r[i]));
-    OZ_updateHeapTerm(aux[i]);
-  }
+  OZ_collectHeapBlock(r, aux, sz);
 
   return aux;
 }
@@ -893,19 +889,18 @@ Board * Board::gcGetFwd(void) {
   return (Board *) body.gcGetFwd();
 }
 
-
-Board * Board::gcDerefedBoard() {
-  GCMETHMSG("Board::gcDerefedBoard");
+Board * Board::gcBoard() {
+  GCMETHMSG("Board::gcBoard");
   INFROMSPACE(this);
 
-  Assert(!isCommitted());
+  if (!this) return 0;
 
-  Board * bb = this;
+  Board * bb = derefBoard();
 
   Assert(bb);
 
-  if (gcIsMarked())
-    return gcGetFwd();
+  if (bb->gcIsMarked())
+    return bb->gcGetFwd();
 
   if (!bb->gcIsAlive())
     return 0;
@@ -926,21 +921,6 @@ Board * Board::gcDerefedBoard() {
   storeFwdField(ret);
 
   return ret;
-}
-
-Board * Board::gcDerefedBoardOutline() {
-
-  return gcDerefedBoard();
-
-}
-
-Board * Board::gcBoard() {
-  GCMETHMSG("Board::gcBoard");
-  INFROMSPACE(this);
-
-  if (!this) return 0;
-
-  return this->derefBoard()->gcDerefedBoard();
 }
 
 
@@ -1013,8 +993,7 @@ Object *Object::gcObject() {
  *
  */
 inline
-SuspList * SuspList::gc()
-{
+SuspList * SuspList::gc() {
   GCMETHMSG("SuspList::gc");
 
   SuspList *ret = NULL;
@@ -1032,6 +1011,54 @@ SuspList * SuspList::gc()
   GCNEWADDRMSG (ret);
   return (ret);
 }
+
+
+
+
+inline
+Bool SVariable::gcIsMarked(void) {
+  return IsMarkedPointer(suspList);
+}
+
+inline
+void SVariable::gcMark(SVariable * fwd) {
+  suspList = (SuspList *) MarkPointer(fwd);
+}
+
+inline
+void ** SVariable::gcGetMarkField(void) {
+  Assert(!gcIsMarked());
+  return (void **) &suspList;
+}
+
+inline
+SVariable * SVariable::gcGetFwd(void) {
+  return (SVariable *) UnMarkPointer(suspList);
+}
+
+inline
+SVariable * SVariable::gc() {
+  Assert(!gcIsMarked())
+
+  Board * bb = home->gcBoard();
+
+  Assert(bb);
+
+  isGround = NO;
+
+  SVariable * to = (SVariable *) heapMalloc(sizeof(SVariable));
+
+  Assert(!isInGc || to->home != bb);
+
+  to->suspList = suspList->gc();
+  to->home     = bb;
+
+  storeFwdField(to);
+
+
+  return to;
+}
+
 
 inline
 void OZ_FiniteDomainImpl::gc(void)
@@ -1073,7 +1100,7 @@ void GenFSetVariable::gc()
     fsSuspList[i] = fsSuspList[i]->gc();
 }
 
-
+inline
 FSetValue * FSetValue::gc(void)
 {
   return (FSetValue *) OZ_hrealloc(this, sizeof(FSetValue));
@@ -1084,8 +1111,8 @@ void GenLazyVariable::gc(void)
 {
   GCMETHMSG("GenLazyVariable::gc");
   if (function!=0) {
-    OZ_updateHeapTerm(function);
-    OZ_updateHeapTerm(result);
+    OZ_collectHeapTerm(function,function);
+    OZ_collectHeapTerm(result,result);
   }
 }
 
@@ -1093,17 +1120,17 @@ inline
 void GenMetaVariable::gc(void)
 {
   GCMETHMSG("GenMetaVariable::gc");
-  OZ_updateHeapTerm(data);
+  OZ_collectHeapTerm(data,data);
 }
 
 inline
 void AVar::gc(void)
 {
   GCMETHMSG("AVar::gc");
-  OZ_updateHeapTerm(value);
+  OZ_collectHeapTerm(value,value);
 }
 
-
+inline
 DynamicTable* DynamicTable::gc(void) {
   GCMETHMSG("DynamicTable::gc");
 
@@ -1139,12 +1166,12 @@ void DynamicTable::gcRecurse() {
 }
 
 
-inline
+
 void GenOFSVariable::gc(void) {
-    GCMETHMSG("GenOFSVariable::gc");
-    OZ_updateHeapTerm(label);
-    // Update the pointer in the copied block:
-    dynamictable=dynamictable->gc();
+  GCMETHMSG("GenOFSVariable::gc");
+  OZ_collectHeapTerm(label,label);
+  // Update the pointer in the copied block:
+  dynamictable=dynamictable->gc();
 }
 
 inline
@@ -1169,32 +1196,12 @@ GenCVariable * GenCVariable::gcGetFwd(void) {
 }
 
 inline
-Bool GenCVariable::gcNeeded() {
-
-  if (this->gcIsMarked()) {
-    Assert(!home->isCommitted());
-    return OK;
-  }
-
-  Board * bb = home->derefBoard();
-
-  home = bb;
-
-  return (isInGc || !bb->isMarkedGlobal());
-}
-
-
 GenCVariable * GenCVariable::gc(void) {
   INFROMSPACE(this);
 
-  Assert(!home->isCommitted());
+  Assert(!gcIsMarked())
 
-  Assert(gcNeeded());
-
-  if (gcIsMarked())
-    return gcGetFwd();
-
-  Board * bb = home->gcDerefedBoard();
+  Board * bb = home->gcBoard();
 
   Assert(bb);
 
@@ -1220,24 +1227,24 @@ GenCVariable * GenCVariable::gc(void) {
     FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case OFSVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenOFSVariable));
+    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenOFSVariable));
     storeFwdField(to);
     ((GenOFSVariable *) to)->gc();
     FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
     break;
   case MetaVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenMetaVariable));
+    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenMetaVariable));
     storeFwdField(to);
     ((GenMetaVariable *) to)->gc();
     FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
     break;
   case AVAR:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(AVar));
+    to = (GenCVariable *) OZ_hrealloc(this, sizeof(AVar));
     storeFwdField(to);
     ((AVar *) to)->gc();
     break;
   case PerdioVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(PerdioVar));
+    to = (GenCVariable *) OZ_hrealloc(this, sizeof(PerdioVar));
     storeFwdField(to);
     ((PerdioVar *) to)->gc();
     break;
@@ -1248,7 +1255,7 @@ GenCVariable * GenCVariable::gc(void) {
     ((GenFSetVariable *) to)->gc();
     break;
   case LazyVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenLazyVariable));
+    to = (GenCVariable *) OZ_hrealloc(this, sizeof(GenLazyVariable));
     storeFwdField(to);
     ((GenLazyVariable*) to)->gc();
     break;
@@ -1262,102 +1269,6 @@ GenCVariable * GenCVariable::gc(void) {
   to->home     = bb;
 
   return to;
-}
-
-inline
-Bool SVariable::gcIsMarked(void) {
-  return IsMarkedPointer(suspList);
-}
-
-inline
-void SVariable::gcMark(SVariable * fwd) {
-  suspList = (SuspList *) MarkPointer(fwd);
-}
-
-inline
-void ** SVariable::gcGetMarkField(void) {
-  Assert(!gcIsMarked());
-  return (void **) &suspList;
-}
-
-inline
-SVariable * SVariable::gcGetFwd(void) {
-  return (SVariable *) UnMarkPointer(suspList);
-}
-
-inline
-Bool SVariable::gcNeeded() {
-
-  if (this->gcIsMarked()) {
-    Assert(!home->isCommitted());
-    return OK;
-  }
-
-  Board * bb = home->derefBoard();
-
-  home = bb;
-
-  return (isInGc || !bb->isMarkedGlobal());
-}
-
-
-SVariable * SVariable::gc() {
-  Assert(!home->isCommitted());
-
-  Assert(gcNeeded());
-
-  if (gcIsMarked())
-    return gcGetFwd();
-
-  Board * bb = home->gcDerefedBoard();
-
-  Assert(bb);
-
-  isGround = NO;
-
-  SVariable * to = (SVariable *) heapMalloc(sizeof(SVariable));
-
-  Assert(!isInGc || to->home != bb);
-
-  to->suspList = suspList->gc();
-  to->home     = bb;
-
-  storeFwdField(to);
-
-
-  return to;
-}
-
-
-inline
-Bool gcUVarNeeded(TaggedRef var) {
-  Assert(isUVar(var));
-
-  Board * bb = tagged2VarHome(var)->derefBoard();
-
-  return (isInGc || !bb->isMarkedGlobal());
-}
-
-
-
-TaggedRef gcUVar(TaggedRef var) {
-  GCPROCMSG("gcUVar");
-
-  Assert(isUVar(var));
-
-  Board * bb = tagged2VarHome(var)->derefBoard();
-
-  Assert(isInGc || !bb->isMarkedGlobal());
-
-  bb = bb->gcDerefedBoard();
-
-  Assert(bb);
-
-  isGround = NO;
-
-  INTOSPACE(bb);
-
-  return makeTaggedUVar(bb);
 }
 
 
@@ -1425,11 +1336,8 @@ void Script::gc()
         } while (1);
       }
 #endif
-      aux[i] = first[i];
-      Assert(!isDirectVar(first[i].left));
-      Assert(!isDirectVar(first[i].right));
-      OZ_updateHeapTerm(aux[i].left);
-      OZ_updateHeapTerm(aux[i].right);
+      OZ_collectHeapTerm(first[i].left,  aux[i].left);
+      OZ_collectHeapTerm(first[i].right, aux[i].right);
     }
 
     first = aux;
@@ -1721,11 +1629,11 @@ void gc_finalize()
   // in the head of each cons
   for (OZ_Term l=guardian_list;!isNil(l);l=tail(l)) {
     LTuple *t = tagged2LTuple(l);
-    OZ_updateHeapTerm(*t->getRefHead());
+    OZ_collectHeapTerm(*t->getRefHead(),*t->getRefHead());
   }
   for (OZ_Term l1=finalize_list;!isNil(l1);l1=tail(l1)) {
     LTuple *t = tagged2LTuple(l1);
-    OZ_updateHeapTerm(*t->getRefHead());
+    OZ_collectHeapTerm(*t->getRefHead(),*t->getRefHead());
   }
   // if the finalize_list is not empty, we must create a new
   // thread (at top level) to effect the finalization phase
@@ -1742,9 +1650,7 @@ void gc_finalize()
 
 
 inline
-void gcTagged(TaggedRef & frm, TaggedRef & to,
-              Bool isAliased, Bool directStoreFwd) {
-  // Returns OK if a direct variable has been collected
+void gcTagged(TaggedRef & frm, TaggedRef & to) {
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
 
   TaggedRef aux       = frm;
@@ -1757,8 +1663,7 @@ update:
   case REFTAG1:
     /* initalized but unused cell in register array */
     if (aux == makeTaggedNULL()) {
-      if (!isAliased)
-        to = aux;
+      to = aux;
       return;
     }
 
@@ -1771,9 +1676,6 @@ update:
       aux     = *aux_ptr;
     } while (IsRef(aux));
 
-    if (isAliased)
-      to = aux;
-
     goto update;
 
   case GCTAG:
@@ -1782,21 +1684,19 @@ update:
     // the CONS forwarding: if a CONS cell is collected then every
     // reference to the first element becomes a ref. May try this:
     // if (!isVar(*to)) to=deref(to);
-    break;
+    return;
 
   case SMALLINT:
-    if (!isAliased)
-      to = aux;
-    break;
+    to = aux;
+    return;
 
   case FSETVALUE:
     if (isInGc) {
       to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc());
     } else {
-      if (!isAliased)
-        to = aux;
+      to = aux;
     }
-    break;
+    return;
 
   case LITERAL:
     {
@@ -1805,118 +1705,100 @@ update:
       if (needsCollection(l)) {
         to = makeTaggedLiteral(l->gc());
       } else {
-        if (!isAliased)
-          to = aux;
+        to = aux;
       }
-      break;
+      return;
     }
 
   case LTUPLE:
     to = makeTaggedLTuple(tagged2LTuple(aux)->gc());
-    break;
+    return;
 
   case SRECORD:
     to = makeTaggedSRecord(tagged2SRecord(aux)->gcSRecord());
-    break;
+    return;
 
   case BIGINT:
     if (isInGc) {
       to = makeTaggedBigInt(tagged2BigInt(aux)->gc());
     } else {
-      if (!isAliased)
-        to = aux;
+      to = aux;
     }
-    break;
+    return;
 
   case OZFLOAT:
     if (isInGc) {
       to = makeTaggedFloat(tagged2Float(aux)->gc());
     } else {
-      if (!isAliased)
-        to = aux;
+      to = aux;
     }
-    break;
+    return;
 
   case OZCONST:
     to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
-    break;
+    return;
 
   case SVAR:
     {
       SVariable * sv = tagged2SVar(aux);
 
-      if (sv->gcNeeded()) {
-        SVariable * sv_gc = sv->gc();
-
-        // Only if not isAlised, direct variables can occur!
-        if (isAliased || aux_ptr) {
+      if (sv->gcIsMarked()) {
+        if (aux_ptr) {
           // This means the variable is not direct!
           varFix.defer(aux_ptr, &to);
         } else {
-          Assert(isDirectVar(frm));
-          to = makeTaggedSVar(sv_gc);
-          if (directStoreFwd)
-            storeFwd(&frm, &to);
+          to = makeTaggedSVar(sv->gcGetFwd());
+          storeFwd(&frm, &to);
         }
+        return;
+      }
 
-      } else {
+      if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
+        SVariable * sv_gc = sv->gc();
 
-        if (isAliased || aux_ptr) {
-          Assert(aux_ptr);
-          to = makeTaggedRef(aux_ptr);
+        if (aux_ptr) {
+          // This means the variable is not direct!
+          varFix.defer(aux_ptr, &to);
         } else {
-          Assert(isDirectVar(frm));
-          // We cannot copy the variable, but we have already copied
-          // their taggedref, so we change the original variable to a ref
-          // of the copy.
-          // After pushing on the update stack the
-          // the original variable is replaced by a reference!
-          to  = aux;
-          frm = makeTaggedRef(&to);
-          if (directStoreFwd)
-            storeFwd(&frm, &to);
+          to = makeTaggedSVar(sv_gc);
+          storeFwd(&frm, &to);
         }
 
+        return;
       }
 
       break;
+
     }
 
   case CVAR:
     {
       GenCVariable * cv = tagged2CVar(aux);
 
-      if (cv->gcNeeded()) {
+      if (cv->gcIsMarked()) {
+        if (aux_ptr) {
+          // This means the variable is not direct!
+          varFix.defer(aux_ptr, &to);
+        } else {
+          to = makeTaggedSVar(cv->gcGetFwd());
+          storeFwd(&frm, &to);
+        }
+        return;
+      }
+
+      if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
         GenCVariable * cv_gc = cv->gc();
 
-        if (isAliased || aux_ptr) {
+        if (aux_ptr) {
           // This means the variable is not direct!
           varFix.defer(aux_ptr, &to);
         } else {
           Assert(isDirectVar(frm));
           to = makeTaggedCVar(cv_gc);
-          if (directStoreFwd)
-            storeFwd(&frm, &to);
+          storeFwd(&frm, &to);
         }
 
-      } else {
-
-        if (isAliased || aux_ptr) {
-          Assert(aux_ptr);
-          to = makeTaggedRef(aux_ptr);
-        } else {
-          Assert(isDirectVar(frm));
-          // We cannot copy the variable, but we have already copied
-          // their taggedref, so we change the original variable to a ref
-          // of the copy.
-          // After pushing on the update stack the
-          // the original variable is replaced by a reference!
-          to  = aux;
-          frm = makeTaggedRef(&to);
-          if (directStoreFwd)
-            storeFwd(&frm, &to);
-        }
-
+        return;
       }
 
       break;
@@ -1930,66 +1812,51 @@ update:
 
       if (isInGc || !bb->isMarkedGlobal()) {
 
-        if (isAliased || aux_ptr) {
-          (void) bb->gcDerefedBoard();
+        bb = bb->gcBoard();
 
-          Assert(bb->gcIsAlive());
+        isGround = NO;
+
+        if (aux_ptr) {
           varFix.defer(aux_ptr, &to);
         } else {
           Assert(isDirectVar(frm));
-          to = gcUVar(aux);
-          if (directStoreFwd)
-            storeFwd(&frm, &to);
+          to = makeTaggedUVar(bb);
+          storeFwd(&frm, &to);
         }
 
-      } else {
-
-        if (isAliased || aux_ptr) {
-          Assert(aux_ptr);
-          to = makeTaggedRef(aux_ptr);
-        } else {
-          Assert(isDirectVar(frm));
-          // See above
-          to  = aux;
-          frm = makeTaggedRef(&to);
-          if (directStoreFwd)
-            storeFwd(&frm, &to);
-        }
-
+        return;
       }
 
       break;
     }
   }
 
+  Assert(isUVar(aux) || isCVar(aux) || isSVar(aux));
+
+  if (aux_ptr) {
+    to = makeTaggedRef(aux_ptr);
+  } else {
+    Assert(isDirectVar(frm));
+    // We cannot copy the variable, but we have already copied
+    // their taggedref, so we change the original variable to a ref
+    // of the copy.
+    // After pushing on the update stack the
+    // the original variable is replaced by a reference!
+    to  = aux;
+    frm = makeTaggedRef(&to);
+    storeFwd(&frm, &to);
+  }
+
 }
 
 
-/*
- * If an object has been copied, all slots of type
- * 'TaggedRef' have to be
- * treated particularly:
- * - references pointing to non-variables have to be derefenced
- * - references to variables have to be treated after the whole term structure
- *   has been collected and therefore the address of such a reference has to
- *   put on the update stack
- * - variables, which are part of the block being copied, have to be marked as
- *   copied
- * - if non-collected variables are dereferenced, the entry points into heap
- *   provided by them, have to be collected by 'gcVariable'
- */
-void OZ_updateHeapTerm(TaggedRef &to) {
-  GCPROCMSG("OZ_updateHeapTerm");
-
-  gcTagged(to, to, OK, NO);
-
+void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
+  gcTagged(frm, to);
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
-  while (sz--) {
-    (void) gcTagged(*frm, *to, NO, OK);
-    frm++; to++;
-  }
+  for (int i=sz; i--; )
+    gcTagged(frm[i], to[i]);
 }
 
 
@@ -2059,12 +1926,12 @@ void AM::gc(int msgLevel)
 
   suspendVarList=makeTaggedNULL(); /* no valid data */
 
-  OZ_updateHeapTerm(aVarUnifyHandler);
-  OZ_updateHeapTerm(aVarBindHandler);
+  OZ_collectHeapTerm(aVarUnifyHandler,aVarUnifyHandler);
+  OZ_collectHeapTerm(aVarBindHandler,aVarBindHandler);
 
-  OZ_updateHeapTerm(defaultExceptionHdl);
-  OZ_updateHeapTerm(opiCompiler);
-  OZ_updateHeapTerm(debugStreamTail);
+  OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
+  OZ_collectHeapTerm(opiCompiler,opiCompiler);
+  OZ_collectHeapTerm(debugStreamTail,debugStreamTail);
 
   gc_tcl_sessions();
 
@@ -2075,7 +1942,7 @@ void AM::gc(int msgLevel)
   PROFILE_CODE1(FDProfiles.gc());
 
 #ifdef FINALIZATION
-  OZ_updateHeapTerm(finalize_handler);
+  OZ_collectHeapTerm(finalize_handler,finalize_handler);
   gcStack.recurse();
   gc_finalize();
 #endif
@@ -2136,11 +2003,15 @@ void VarFix::fix(void) {
 
     case UVAR:
       {
-        TaggedRef uv = gcUVar(aux);
+        Board * bb = tagged2VarHome(aux)->derefBoard();
 
-        Assert(uv);
+        bb = bb->gcBoard();
 
-        *to = makeTaggedRef(newTaggedUVar(tagged2VarHome(uv)));
+        Assert(bb);
+
+        isGround = NO;
+
+        *to = makeTaggedRef(newTaggedUVar(bb));
 
         COUNT(uvar);
         break;
@@ -2286,11 +2157,11 @@ void Arity::gc()
     if (!aux->isTuple()) {
       for (int i = aux->getSize(); i--; ) {
         if (aux->table[i].key) {
-          OZ_updateHeapTerm(aux->table[i].key);
+          OZ_collectHeapTerm(aux->table[i].key,aux->table[i].key);
         }
       }
     }
-    OZ_updateHeapTerm(aux->list);
+    OZ_collectHeapTerm(aux->list,aux->list);
     aux = aux->next;
   }
 }
@@ -2310,8 +2181,8 @@ void PrTabEntry::gcPrTabEntry()
 {
   if (this == NULL) return;
 
-  OZ_updateHeapTerm(info);
-  OZ_updateHeapTerm(names);
+  OZ_collectHeapTerm(info,info);
+  OZ_collectHeapTerm(names,names);
 }
 
 void AbstractionEntry::gcAbstractionEntries()
@@ -2438,7 +2309,7 @@ void ConstTerm::gcConstRecurse()
       o->gcEntityInfo();
 
       switch(o->getTertType()) {
-      case Te_Local:   o->setBoard(GETBOARD(o)->gcDerefedBoardOutline()); break;
+      case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
       case Te_Proxy:   o->gcProxy(); break;
       case Te_Manager: o->gcManager(); break;
       default:         Assert(0);
@@ -2483,8 +2354,8 @@ void ConstTerm::gcConstRecurse()
       switch(t->getTertType()){
       case Te_Local:{
         CellLocal *cl=(CellLocal*)t;
-        cl->setBoard(GETBOARD(cl)->gcDerefedBoardOutline());
-        OZ_updateHeapTerm(cl->val);
+        cl->setBoard(GETBOARD(cl)->gcBoard());
+        OZ_collectHeapTerm(cl->val,cl->val);
         break;}
       case Te_Proxy:{
         t->gcProxy();
@@ -2513,9 +2384,9 @@ void ConstTerm::gcConstRecurse()
       p->gcEntityInfo();
       switch(p->getTertType()){
       case Te_Local:{
-        p->setBoard(GETBOARD(p)->gcDerefedBoardOutline()); /* ATTENTION */
+        p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
         PortWithStream *pws = (PortWithStream *) this;
-        OZ_updateHeapTerm(pws->strm);
+        OZ_collectHeapTerm(pws->strm,pws->strm);
         break;}
       case Te_Proxy:{
         p->gcProxy();
@@ -2523,7 +2394,7 @@ void ConstTerm::gcConstRecurse()
       case Te_Manager:{
         p->gcManager();
         PortWithStream *pws = (PortWithStream *) this;
-        OZ_updateHeapTerm(pws->strm);
+        OZ_collectHeapTerm(pws->strm,pws->strm);
         break;}
       default:{
         Assert(0);}}
@@ -2537,7 +2408,7 @@ void ConstTerm::gcConstRecurse()
         if (s->solve != (Board *) 1)
         s->solve = s->solve->gcBoard();
         if (s->isLocal()) {
-          s->setBoard(GETBOARD(s)->gcDerefedBoardOutline());
+          s->setBoard(GETBOARD(s)->gcBoard());
         }
       }
       break;
@@ -2546,7 +2417,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Chunk:
     {
       SChunk *c = (SChunk *) this;
-      OZ_updateHeapTerm(c->value);
+      OZ_collectHeapTerm(c->value,c->value);
       c->gcConstTermWithHome();
       break;
     }
@@ -2589,7 +2460,7 @@ void ConstTerm::gcConstRecurse()
 
       case Te_Local:{
         LockLocal *ll = (LockLocal *) this;
-        ll->setBoard(GETBOARD(ll)->gcDerefedBoardOutline());  /* maybe getBoardInternal() */
+        ll->setBoard(GETBOARD(ll)->gcBoard());  /* maybe getBoardInternal() */
         gcPendThread(&(ll->pending));
         ll->setLocker(ll->getLocker()->gcThread());
         break;}
@@ -2640,7 +2511,7 @@ inline void EntityInfo::gcWatchers(){
     Watcher* newW=(Watcher*) gcReallocStatic(w,sizeof(Watcher));
     *base=newW;
     newW->thread=newW->thread->gcThread();
-    OZ_updateHeapTerm(newW->proc);
+    OZ_collectHeapTerm(newW->proc,newW->proc);
     base= &(newW->next);
     w=*base;}}
 
@@ -2906,7 +2777,7 @@ void TaskStack::gc(TaskStack *newstack)
       /* tt might be a variable, so use this ugly construction */
       *(newtop-2) = Y; /* UGLYYYYYYYYYYYY !!!!!!!! */
       TaggedRef *tt = (TaggedRef*) (newtop-2);
-      OZ_updateHeapTerm(*tt);
+      OZ_collectHeapTerm(*tt,*tt);
       Y = (RefsArray) ToPointer(*tt);
       G = gcRefsArray(G);
     } else if (PC == C_CFUNC_CONT_Ptr) {
@@ -3014,9 +2885,9 @@ void Board::gcRecurse()
 }
 
 
-Actor *Actor::gcActor()
-{
-  if (this==0) return 0;
+Actor *Actor::gcActor() {
+  if (this==0)
+    return 0;
 
   Assert(board->derefBoard()->gcIsAlive());
 
@@ -3025,26 +2896,21 @@ Actor *Actor::gcActor()
   if (gcIsMarked())
     return gcGetFwd();
 
-  Actor *ret;
+  size_t sz;
 
   if (isWait()) {
-    COUNT(waitActor);
-    ret = (Actor *) gcReallocStatic(this,sizeof(WaitActor));
-  } else if (isAsk () == OK) {
-    COUNT(askActor);
-    ret = (Actor *) gcReallocStatic(this,sizeof(AskActor));
+    sz = sizeof(WaitActor);
+  } else if (isAsk()) {
+    sz = sizeof(AskActor);
   } else {
-    COUNT(solveActor);
-    ret = (Actor *) gcReallocStatic(this,sizeof(SolveActor));
+    sz = sizeof(SolveActor);
   }
 
-  FDPROFILE_GC(isWait() ? cp_size_waitactor
-               : (isAsk() ? cp_size_askactor
-                  : cp_size_solveactor), sz);
+  Actor * ret = (Actor *) OZ_hrealloc(this, sz);
 
   GCNEWADDRMSG(ret);
 
-  gcStack.push(ret,PTR_ACTOR);
+  gcStack.push(ret, PTR_ACTOR);
 
   storeFwdField(ret);
 
@@ -3052,14 +2918,12 @@ Actor *Actor::gcActor()
 }
 
 inline
-void AWActor::gcRecurse()
-{
+void AWActor::gcRecurse() {
   thread = thread->gcThread();
 }
 
 inline
-void WaitActor::gcRecurse()
-{
+void WaitActor::gcRecurse() {
   GCMETHMSG("WaitActor::gcRecurse");
   board = board->gcBoard();
   Assert(board);
@@ -3104,9 +2968,9 @@ void SolveActor::gcRecurse () {
   Assert(solveBoard);
 
   if (isInGc || !isGround())
-    OZ_updateHeapTerm(solveVar);
+    OZ_collectHeapTerm(solveVar,solveVar);
 
-  OZ_updateHeapTerm(result);
+  OZ_collectHeapTerm(result,result);
   suspList         = suspList->gc();
   cpb              = cpb->gc();
   localThreadQueue = localThreadQueue->gc();
@@ -3122,15 +2986,15 @@ void SolveActor::gcRecurse () {
 }
 
 inline
-void Actor::gcRecurse()
-{
+void Actor::gcRecurse() {
   GCMETHMSG("Actor::gcRecurse");
-  if (isWait()) {
+  if (isAskWait()) {
     ((AWActor *)this)->gcRecurse();
-    ((WaitActor *)this)->gcRecurse();
-  } else if (isAsk()) {
-    ((AWActor *)this)->gcRecurse();
-    ((AskActor *)this)->gcRecurse();
+    if (isWait()) {
+      ((WaitActor *)this)->gcRecurse();
+    } else {
+      ((AskActor *)this)->gcRecurse();
+    }
   } else {
     ((SolveActor *)this)->gcRecurse();
   }
@@ -3174,7 +3038,7 @@ void SRecord::gcRecurse() {
 
   SRecord * to = (SRecord *) GCUNMARK(label);
 
-  OZ_updateHeapTerm(to->label);
+  OZ_collectHeapTerm(to->label,to->label);
 
   OZ_collectHeapBlock(getRef(), to->getRef(), getWidth());
 
@@ -3192,15 +3056,17 @@ void LTuple::gcRecurse() {
   frm->args[0] = to->args[0];
 
   while (1) {
-    // Collect element and store fwd (has not been done in gcTagged)
-    gcTagged(frm->args[0], to->args[0], NO, NO);
+    // Collect element
+    OZ_collectHeapTerm(frm->args[0], to->args[0]);
 
+    // Store forward, order is important, since gcTagged might already
+    // have done a storeFwd, which means that this one will be overwritten
     storeFwd(frm->args, to->args);
 
     TaggedRef t = deref(frm->args[1]);
 
     if (!isLTuple(t)) {
-      OZ_collectHeapBlock(&(frm->args[1]), &(to->args[1]), 1);
+      OZ_collectHeapTerm(frm->args[1], to->args[1]);
       return;
     }
 
@@ -3333,7 +3199,7 @@ OzDebug *OzDebug::gcOzDebug()
 
   ret->Y = gcRefsArray(ret->Y);
   ret->G = gcRefsArray(ret->G);
-  OZ_updateHeapTerm(ret->data);
+  OZ_collectHeapTerm(ret->data,ret->data);
   ret->arguments = gcRefsArray(ret->arguments);
 
   return ret;

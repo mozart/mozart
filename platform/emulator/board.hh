@@ -116,8 +116,6 @@ public:
   void ** gcGetMarkField(void);
   Board * gcGetFwd(void);
   Board *gcBoard();
-  Board *gcDerefedBoard();
-  Board *gcDerefedBoardOutline();
   void gcRecurse(void);
   Bool gcIsAlive();
   Bool checkAlive();

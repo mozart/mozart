@@ -109,7 +109,6 @@ public:
   void gcMark(GenCVariable *);
   GenCVariable * gcGetFwd(void);
   GenCVariable * gc(void);
-  Bool gcNeeded();
 
   // unifies a generic variable with another generic variable
   // or a non-variable
