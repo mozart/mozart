@@ -251,14 +251,13 @@ public:
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term, Bool prop);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);
-  void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
+  void checkSuspensionList(TaggedRef taggedvar,
                            PropCaller calledBy = pc_propagator);
   Bool hasOFSSuspension(SuspList *suspList);
   void addFeatOFSSuspensionList(TaggedRef var, SuspList* suspList,
                                 TaggedRef flist, Bool determined);
   SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
-                                 SuspList * suspList, TaggedRef term,
-                                 PropCaller calledBy);
+                                 SuspList * suspList, PropCaller calledBy);
   BFlag isBetween(Board * to, Board * varHome);
   void setExtSuspension (Board *varHome, Suspension *susp);
 private:
