@@ -702,13 +702,61 @@ OZ_BI_iodefine(unix_uName,0,1) {
 } OZ_BI_ioend
 
 
-OZ_BI_iodefine(unix_chDir,1,0)
+OZ_BI_iodefine(unix_chDir,2,0)
 {
   OZ_declareVsIN(0,dir);
+
   if (chdir(dir)) {
     RETURN_UNIX_ERROR("chdir");
   } else
     return PROCEED;
+} OZ_BI_ioend
+
+OZ_BI_define(unix_mkDir,1,0)
+{
+  OZ_declareVsIN(0, path);
+  DeclareAtomListIN(1, OzMode);
+  int mode = 0;
+  OZ_Term hd, tl;
+
+  while (unixIsCons(OzMode, &hd, &tl)) {
+    if (OZ_isVariable(hd))
+      return (SUSPEND);
+#ifdef OS2_I486
+    return OZ_typeError(2,"enum openMode");
+#else
+    if (OZ_eqAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
+    else if (OZ_eqAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
+    else if (OZ_eqAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
+    else if (OZ_eqAtom(hd,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
+    else if (OZ_eqAtom(hd,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
+    else if (OZ_eqAtom(hd,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
+    else if (OZ_eqAtom(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
+    else if (OZ_eqAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
+    else if (OZ_eqAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
+    else
+      return OZ_typeError(2,"enum openMode");
+#endif
+    OzMode = tl;
+  }
+
+  if (OZ_isVariable(OzMode)) {
+    return SUSPEND;
+  } else if (!OZ_isNil(OzMode)) {
+    return OZ_typeError(2,"enum openMode");
+  }
+
+  if (
+#if defined(WINDOWS)
+      mkdir(path)
+#else
+      mkdir(path, mode)
+#endif
+      ) {
+    RETURN_UNIX_ERROR("mkdir");
+  } else {
+    return (PROCEED);
+  }
 } OZ_BI_ioend
 
 OZ_BI_iodefine(unix_getCWD,0,1)
@@ -745,7 +793,6 @@ OZ_BI_iodefine(unix_getCWD,0,1)
 #define O_BINARY 0
 #define O_TEXT   0
 #endif
-
 
 OZ_BI_iodefine(unix_open,3,1)
 {
@@ -2210,7 +2257,6 @@ retry:
 } OZ_BI_end
 
 #endif
-
 
 
 OZ_BI_define(unix_signalHandler, 2,0)

@@ -36,6 +36,10 @@
                              out => [],
                              BI  => unix_chDir},
 
+     'mkDir'            => { in  => ['+virtualString','+[atom]'],
+                             out => [],
+                             BI  => unix_mkDir},
+
      'getCWD'           => { in  => [],
                              out => ['+atom'],
                              BI  => unix_getCWD},
