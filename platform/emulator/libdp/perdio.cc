@@ -615,8 +615,9 @@ void msgReceived(MsgBuffer* bs)
       if (oe->isVar()) {
 	(GET_VAR(oe,Manager))->deregisterSite(rsite);
       } else {
-	recDeregister(OT->getOwner(OTI)->getRef(),rsite);
-      }
+	if(USE_ALT_VAR_PROTOCOL){
+	  recDeregister(OT->getOwner(OTI)->getRef(),rsite);}
+	}
       break;
     }
 
