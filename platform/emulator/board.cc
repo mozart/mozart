@@ -76,8 +76,7 @@ Board* Board::getSolveBoard ()
 {
   Board *b = this;
   Board *rb = am.rootBoard;
-  DebugCheck ((b->isCommitted () == OK),
-              error ("committed board in Board::getSolveBoard ()"));
+  b = b->getBoardDeref ();
   while (b != (Board *) NULL && b != rb) {
     if (b->isSolve () == OK)
       return (b);
