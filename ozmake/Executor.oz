@@ -168,7 +168,9 @@ define
 	 {self subresolver_push(DST SRC)}
 	 try
 	    Executor,exec_mkdir(DIR)
-	    if {Not HaveGumpdir} /*andthen DIR\=nil*/ andthen DSTDir\=nil then {OS.chDir DSTDir} end
+	    if {self get_justprint($)} then skip else
+	       if {Not HaveGumpdir} /*andthen DIR\=nil*/ andthen DSTDir\=nil then {OS.chDir DSTDir} end
+	    end
 	    L1 = [SRCBase '-o' DSTBase]
 	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
@@ -192,8 +194,10 @@ define
 	       end
 	    end
 	 finally
-	    if {Not HaveGumpdir} /*andthen DIR\=nil*/ andthen DSTDir\=nil then
-	       try {OS.chDir CUR} catch _ then skip end
+	    if {self get_justprint($)} then skip else
+	       if {Not HaveGumpdir} /*andthen DIR\=nil*/ andthen DSTDir\=nil then
+		  try {OS.chDir CUR} catch _ then skip end
+	       end
 	    end
 	    {self subresolver_pop()}
 	 end
