@@ -27,10 +27,13 @@ import
 
    Edit(page)
    Compute(page)
+   Application(exit)
+
 
 define
 
    T = {New Tk.toplevel      tkInit(title:    'Glass Plates'
+                                    delete:   Application.exit # 0
                                     withdraw: true)}
    B = {New TkTools.notebook tkInit(parent: T)}
 
@@ -43,6 +46,9 @@ in
 
    {B add(E)} {B add(C)}
 
-   {Tk.batch [pack(B) update(idletasks) wm(deiconify T)]}
+   {Tk.batch [pack(B)
+              update(idletasks)
+              wm(deiconify T)
+              wm(resizable T false false)]}
 
 end

@@ -2,9 +2,6 @@
 %%% Authors:
 %%%   Christian Schulte <schulte@dfki.de>
 %%%
-%%% Contributor:
-%%%   Jörg Würtz
-%%%
 %%% Copyright:
 %%%   Christian Schulte, 1998
 %%%
@@ -28,8 +25,61 @@ functor
 import
    FD Schedule
 
+
 export
    compile: Compile
+
+
+prepare
+
+   local
+      fun {Expand N I Is}
+         if N>0 then I|{Expand N-1 I+1 Is} else Is end
+      end
+      fun {Get J IN Is}
+         if J>0 then I#N=IN.J in {Expand N I {Get J-1 IN Is}}
+         else Is
+         end
+      end
+   in
+      fun {IN2Is IN}
+         {Get {Width IN} IN nil}
+      end
+   end
+
+   local
+      fun {Get J IN}
+         N=IN.J.2
+      in
+         if N>0 then J else {Get J+1 IN} end
+      end
+   in
+      fun {GetMinSizeIN IN}
+         {Get 1 IN}
+      end
+   end
+
+   local
+      fun {Get J IN}
+         I#N=IN.J
+      in
+         if N>0 then I else {Get J-1 IN} end
+      end
+   in
+      fun {GetFirstIN IN}
+         {Get {Width IN} IN}
+      end
+   end
+
+   local
+      fun {Get J IN A}
+         if J>0 then {Get J-1 IN IN.J.2*J*J+A} else A end
+      end
+   in
+      fun {GetAreaIN IN}
+         {Get {Width IN} IN 0}
+      end
+   end
 
 define
 
@@ -44,6 +94,13 @@ define
       %% Dimension of X and Y
       DX = Spec.x
       DY = Spec.y
+      %%
+      MaxSize = {List.last {Arity Spec.squares}}
+      SizeToArea = {MakeTuple '#' MaxSize}
+
+      {For 1 MaxSize 1 proc {$ I}
+                          SizeToArea.I=I*I
+                       end}
 
       %% Mapping: Sqs -> Size
       SqsSize = {MakeTuple '#' N}
@@ -67,6 +124,7 @@ define
                     IntToAtom.I = {VirtualString.toAtom I}
                  end}
 
+
    in
 
       proc {$ Root}
@@ -77,184 +135,144 @@ define
          Cuts  % cut information
 
          local
-            fun {FindCut1 [I] X0 X1 Y0 Y1}
-               SqsX0.I=X0 SqsY0.I=Y0 X1>=:SqsX1.I Y1>=:SqsY1.I
-               nil
-            end
 
-            proc {FindCut2 [I1 I2] X0 X1 Y0 Y1 ?Info}
-               S1X0=SqsX0.I1 S1X1=SqsX1.I1 S1Y0=SqsY0.I1 S1Y1=SqsY1.I1
-               S2X0=SqsX0.I2 S2X1=SqsX1.I2 S2Y0=SqsY0.I2 S2Y1=SqsY1.I2
-            in
-               S1X0=X0 S1Y0=Y0
-               dis
-                  S2X0=X0   S2Y0=S1Y1 X1>=:S1X1 Y1>=:S2Y1
-               then
-                  Info=info(cut:S1Y1 dir:x nil nil)
-               []
-                  S2X0=S1X1 S2Y0=Y0   X1>=:S2X1 Y1>=:S1Y1
-               then
-                  Info=info(cut:S1X1 dir:y nil nil)
+            local
+               proc {Do J IN MN SqsXY0 SqsXY1 Cut}
+                  if J>0 then I#N=IN.J M=MN.J in
+                     {FD.distribute generic(value:mid) [M]}
+                     {For I I+M-1 1 proc {$ I}
+                                       SqsXY1.I =<: Cut
+                                    end}
+                     {For I+M I+N-1 1 proc {$ I}
+                                         SqsXY0.I >=: Cut
+                                      end}
+                     {Do J-1 IN MN SqsXY0 SqsXY1 Cut}
+                  end
                end
-            end
-
-            proc {FindCut3 [I1 I2 I3] X0 X1 Y0 Y1 ?Info}
-               S1X0=SqsX0.I1 S1X1=SqsX1.I1 S1Y0=SqsY0.I1 S1Y1=SqsY1.I1
-               S2X0=SqsX0.I2 S2X1=SqsX1.I2 S2Y0=SqsY0.I2 S2Y1=SqsY1.I2
-               S3X0=SqsX0.I3 S3X1=SqsX1.I3 S3Y0=SqsY0.I3 S3Y1=SqsY1.I3
             in
-               S1X0=X0 S1Y0=Y0
-               dis
-                  S2X0=X0 S2Y0=S1Y1
-                  dis %% in y direction: 1,2,3
-                     S3X0=X0   S3Y0=S2Y1 X1>=:S1X1 Y1>=:S3Y1
-                  then
-                     Info=info(cut:S1Y1 dir:x nil info(cut:S2Y1 dir:x nil nil))
-                  [] %% in y direction: 1,(2,3)
-                     S3X0=S1X1 S3Y0=S1Y1 Y1>=:S2Y1 X1>=:{FD.max S1X1 S3X1}
-                  then
-                     Info=info(cut:S1Y1 dir:x nil info(cut:S2X1 dir:y nil nil))
-                  end
-               [] S2X0=S1X1 S2Y0=Y0
-                  dis %% in x direction: 1,2,3
-                     S3X0=S2X1 S3Y0=Y0   X1>=:S3X1 Y1>=:S1Y1
-                  then
-                     Info=info(cut:S1X1 dir:y nil info(cut:S2Y1 dir:x nil nil))
-                  [] %% in x direction: 1,(2,3)
-                     S3X0=S2X0 S3Y0=S2Y1 X1>=:S2X1 Y1>=:{FD.max S1Y1 S3Y1}
-                  then
-                     Info=info(cut:S1X1 dir:y nil info(cut:S2X1 dir:y nil nil))
-                  end
+               proc {Position IN MN SqsXY0 SqsXY1 Cut}
+                  {Do MaxSize IN MN SqsXY0 SqsXY1 Cut}
                end
             end
 
             local
-               proc {Get Is Ps S N ?M ?SPs ?NIs ?NPs}
-                  case Is of nil then
-                     M=N SPs=nil NIs=nil NPs=nil
-                  [] I|Ir then
-                     if SqsSize.I==S then P|Pr=Ps in
-                        SPs=P|{Get Ir Pr S N+1 ?M $ ?NIs ?NPs}
-                     else
-                        M=N SPs=nil NIs=Is NPs=Ps
-                     end
+               fun {Do J IN MN ?LIN ?RIN LN}
+                  if J>0 then
+                     I#N=IN.J M=MN.J
+                  in
+                     LIN.J = I    #M
+                     RIN.J = (I+M)#N-M
+                     {Do J-1 IN MN LIN RIN LN+M}
+                  else
+                     LN
                   end
                end
             in
-               proc {GetSameSize Is Ps ?M ?SPs ?NIs ?NPs}
-                  case Is of nil then
-                     SPs=nil M=0 NIs=nil NPs=nil
-                  [] I|Ir then P|Pr=Ps in
-                     SPs=P|{Get Ir Pr SqsSize.I 1 ?M $ ?NIs ?NPs}
-                  end
+               fun {MakeLRIN IN MN ?LIN ?RIN}
+                  LIN = {MakeTuple '#' MaxSize}
+                  RIN = {MakeTuple '#' MaxSize}
+                  {Do {Width IN} IN MN LIN RIN 0}
                end
             end
 
-            local
-               proc {AssignZero Ps}
-                  case Ps of nil then skip
-                  [] P|Pr then P=0 {AssignZero Pr}
-                  end
-               end
-               proc {AssignOne Ps M}
-                  if M>0 then 1|Pr=Ps in {AssignOne Pr M-1}
-                  else {AssignZero Ps}
-                  end
-               end
+            proc {FindXY IN MN I MinSize Area XY0 XY1 DYX SqsXY0 SqsXY1
+                  ?Cut}
+               AreaL = {FD.decl}
             in
-               proc {Arrange Is Ps}
-                  if Is\=nil then SPs NIs NPs N M in
-                     {GetSameSize Is Ps ?N ?SPs ?NIs ?NPs}
-                     M::0#N
-                     {FD.distribute generic(value:mid) '#'(M)}
-                     {AssignOne SPs M}
-                     {Arrange NIs NPs}
-                  end
-               end
+               Cut = {FD.decl}
+               %% cut must be right of first square
+               Cut >=: XY0 + SqsSize.I
+               %% cut must be left of at least the smallest square
+               Cut + MinSize =<: XY1
+               %% numbers of squares for left side
+               %% they occupy AreaL
+               {FD.sumC SizeToArea MN '=:' AreaL}
+               %% which must fit the left of the cut
+               AreaL =<: (XY1-Cut) * DYX
+               %% not all squares must go to the left
+               AreaL  <: Area
+               %% position the squares
+               {FD.distribute mid [Cut]}
+               {Position IN MN SqsXY0 SqsXY1 Cut}
             end
 
-            proc {Arrangement Ps Is ?Ls ?Rs}
-               case Ps of nil then
-                  Ls=nil Rs=nil
-               [] P|Pr then I|Ir=Is in
-                  case P
-                  of 0 then Rs=I|{Arrangement Pr Ir Ls $}
-                  [] 1 then Ls=I|{Arrangement Pr Ir $ Rs}
-                  end
-               end
-            end
-
-            fun {GetPos Is SqsXY0 SqsXY1 Cut}
-               case Is of nil then nil
-               [] I|Ir then
-                  ((SqsXY1.I=<:Cut) = (SqsXY0.I<:Cut))
-                  |{GetPos Ir SqsXY0 SqsXY1 Cut}
-               end
-            end
-
-            proc {FindCutM Is X0 X1 Y0 Y1 ?Info}
-               %% More than three squares
-               Cut      = {FD.decl}
-               I|Ir     = Is
-               As       = {Map Is fun {$ I} SqsArea.I end}
-               Area     = {FoldL As Number.'+' 0}
-               MinSize  = {FoldL Ir fun {$ M I}
-                                       {Min SqsSize.I M}
-                                    end SqsSize.I}
+            fun {FindN N IN X0 X1 Y0 Y1}
+               I       = {GetFirstIN IN}
+               Area    = {GetAreaIN IN}
+               MinSize = {GetMinSizeIN IN}
+               MN      = {Record.map IN fun {$ _#N}
+                                           {FD.int 0#N}
+                                        end}
             in
-               %% Arrange first square
-               SqsX0.I = X0
-               SqsY0.I = Y0
+               %% place first square
+               SqsX0.I=X0 SqsY0.I =Y0
+               %% mapping of sizes to number of squares on left side
                choice
-                  Ls Rs InfoL InfoR
-                  Ps
-                  DL={FD.decl}
-                  PL={FD.decl}
+                  Cut={FindXY IN MN I MinSize Area X0 X1 Y1-Y0 SqsX0 SqsX1}
+                  LIN RIN
+                  LN={MakeLRIN IN MN ?LIN ?RIN}
                in
-                  Cut >=: X0+SqsSize.I
-                  Cut + MinSize =<: X1
-                  DL =: (Cut - X0) * (Y1 - Y0)
-                  Ps = {GetPos Is SqsX0 SqsX1 Cut}
-                  {FD.sumC As Ps '=:' PL}
-                  PL <: Area
-                  PL =<: DL
-                  Info = info(dir:y cut:Cut InfoL InfoR)
-                  {FD.distribute generic(value:mid) [Cut]}
-                  {Arrange Is Ps}
-                  {Arrangement Ps Is ?Ls ?Rs}
-                  InfoL={FindCut Ls X0 Cut Y0 Y1}
-                  InfoR={FindCut Rs Cut X1 Y0 Y1}
+                  info(cut:Cut dir:y
+                       {Find LN   LIN X0 Cut Y0 Y1}
+                       {Find N-LN RIN Cut X1 Y0 Y1})
                []
-                  Ls Rs InfoL InfoR
-                  Ps
-                  DL={FD.decl}
-                  PL={FD.decl}
+                  Cut={FindXY IN MN I MinSize Area Y0 Y1 X1-X0 SqsY0 SqsY1}
+                  LIN RIN
+                  LN={MakeLRIN IN MN ?LIN ?RIN}
                in
-                  Cut >=: Y0+SqsSize.I
-                  Cut + MinSize =<: Y1
-                  DL =: (Cut - Y0) * (X1 - X0)
-                  Ps = {GetPos Is SqsY0 SqsY1 Cut}
-                  {FD.sumC As Ps '=:' PL}
-                  PL <: Area
-                  PL =<: DL
-                  Info = info(dir:x cut:Cut InfoL InfoR)
-                  {FD.distribute generic(value:mid) [Cut]}
-                  {Arrange Is Ps}
-                  {Arrangement Ps Is ?Ls ?Rs}
-                  InfoL = {FindCut Ls X0 X1 Y0 Cut}
-                  InfoR = {FindCut Rs X0 X1 Cut Y1}
+                  info(cut:Cut dir:x
+                       {Find LN   LIN X0 X1 Y0 Cut}
+                       {Find N-LN RIN X0 X1 Cut Y1})
                end
             end
 
-         in
-            fun {FindCut Is X0 X1 Y0 Y1}
-               case {Length Is}
+            fun {Find N IN X0 X1 Y0 Y1}
+               case N
                of 0 then fail nil
-               [] 1 then {FindCut1 Is X0 X1 Y0 Y1}
-               [] 2 then {FindCut2 Is X0 X1 Y0 Y1}
-               [] 3 then {FindCut3 Is X0 X1 Y0 Y1}
-               else      {FindCutM Is X0 X1 Y0 Y1}
+               [] 1 then [I]={IN2Is IN} in
+                  SqsX0.I=X0 SqsY0.I=Y0
+                  nil
+               [] 2 then
+                  [I1 I2]={IN2Is IN}
+                  S1X0=SqsX0.I1 S1X1=SqsX1.I1 S1Y0=SqsY0.I1 S1Y1=SqsY1.I1
+                  S2X0=SqsX0.I2 S2Y0=SqsY0.I2
+               in
+                  S1X0=X0 S1Y0=Y0
+                  dis S2X0=X0   S2Y0=S1Y1 then info(cut:S1Y1 dir:x nil nil)
+                  []  S2X0=S1X1 S2Y0=Y0   then info(cut:S1X1 dir:y nil nil)
+                  end
+               [] 3 then
+                  [I1 I2 I3]={IN2Is IN}
+                  S1X0=SqsX0.I1 S1X1=SqsX1.I1 S1Y0=SqsY0.I1 S1Y1=SqsY1.I1
+                  S2X0=SqsX0.I2 S2X1=SqsX1.I2 S2Y0=SqsY0.I2 S2Y1=SqsY1.I2
+                  S3X0=SqsX0.I3 S3Y0=SqsY0.I3
+               in
+                  S1X0=X0 S1Y0=Y0
+                  dis S2X0=X0  S2Y0=S1Y1 S3X0=X0   S3Y0=S2Y1 then
+                     info(cut:S1Y1 dir:x nil info(cut:S2Y1 dir:x nil nil))
+                  []  S2X0=X0  S2Y0=S1Y1 S3X0=S1X1 S3Y0=S1Y1 then
+                     info(cut:S1Y1 dir:x nil info(cut:S2X1 dir:y nil nil))
+                  [] S2X0=S1X1 S2Y0=Y0   S3X0=S2X1 S3Y0=Y0   then
+                     info(cut:S1X1 dir:y nil info(cut:S2X1 dir:y nil nil))
+                  [] S2X0=S1X1 S2Y0=Y0   S3X0=S2X0 S3Y0=S2Y1 then
+                     info(cut:S1X1 dir:y nil info(cut:S2Y1 dir:x nil nil))
+                  end
+               else
+                  {FindN N IN X0 X1 Y0 Y1}
                end
+            end
+         in
+            fun {FindCuts}
+               IN={MakeTuple '#' MaxSize}
+            in
+               {ForThread MaxSize 1 ~1
+                fun {$ I Size}
+                   N={CondSelect Spec.squares Size 0}
+                in
+                   IN.Size = I#N
+                   I+N
+                end 1 _}
+               {Find N IN 0 DX 0 DY}
             end
          end
 
@@ -305,15 +323,24 @@ define
          %% Fix some freedom for first square (wolg)
          SqsX0.1=0 SqsY0.1=0
 
-
          %% Remove permutations of equally-sized squares by ordering them
-         {For 1 N-1 1 proc {$ I}
-                         I1 = I+1
-                      in
-                         if SqsSize.I==SqsSize.I1 then
-                            %% This is respected by the no overlap
-                            SqsX0.I * DY + SqsY0.I =<:
-                            SqsX0.I1 * DY + SqsY0.I1
+         {For 1 N-1 1 if DY>DX then
+                         proc {$ I}
+                            I1 = I+1
+                         in
+                            if SqsSize.I==SqsSize.I1 then
+                               %% This is respected by the no overlap
+                               SqsY0.I =<: SqsY0.I1
+                            end
+                         end
+                      else
+                         proc {$ I}
+                            I1 = I+1
+                         in
+                            if SqsSize.I==SqsSize.I1 then
+                               %% This is respected by the no overlap
+                               SqsX0.I =<: SqsX0.I1
+                            end
                          end
                       end}
 
@@ -322,10 +349,10 @@ define
 
          %% In any direction (be it x or y) the squares must
          %% fit into the height/width of the rectangle
-         {Fit SqsX0 DY}
-         {Fit SqsY0 DX}
+         {Fit SqsX0 DY} {Fit SqsY0 DX}
 
-         Cuts = {FindCut {List.number 1 N 1} 0 DX 0 DY}
+         %% The diffuclt part: find the cuts
+         Cuts = {FindCuts}
 
       end
 
