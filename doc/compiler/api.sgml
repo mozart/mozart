@@ -145,7 +145,7 @@
 
 	<Entry><<assemble>>
 	<Synopsis>
-	  <<{Compiler.assemble ?+{Ts} ?+{Xs} ?+{SwitchR} ??{P}}>>
+	  <<{Compiler.assemble ?+{Ts} ?+{Xs} ?+{SwitchR} ??{P} ??{V}}>>
 	<Item>
 	  takes a list of bytecode instructions ?_{Ts} for the Mozart virtual
 	  machine (see <Ptr to="appendix.bytecode">), assembles them and
@@ -156,7 +156,9 @@
 	  are switch names and whose values are booleans.  In the current
 	  implementation, the switches <<profile>>, <<controlflowinfo>>,
 	  <<verify>>, and <<peephole>> are used.  All features of ?_{SwitchR}
-	  are optional (default values are substituted).
+	  are optional (default values are substituted).  ?_{V} is a lazily
+	  computed virtual string containing an external representation of the
+	  assembled code after peephole optimization.
       </List>
   &engines;
   &interfaces;
