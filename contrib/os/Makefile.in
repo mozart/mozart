@@ -8,11 +8,18 @@ PLATFORM        = @PLATFORM@
 LIB_DIR         = $(PREFIX)/contrib/os
 HOMEURL         = @HOMEURL@
 
+DENYS_EVENTS=no
+ifeq ($(DENYS_EVENTS),yes)
+DENYS_CPPFLAGS  = -DDENYS_EVENTS
+else
+DENYS_CPPFLAGS  =
+endif
+
 OZC             = @OZC@
 OZTOOL          = @OZTOOL@
 CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
                   -I$(BUILDTOP)/platform/emulator \
-                  -I$(PREFIX)/include @CPPFLAGS@
+                  -I$(PREFIX)/include @CPPFLAGS@ $(DENYS_CPPFLAGS)
 CXXFLAGS        = @CXXFLAGS@
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@
