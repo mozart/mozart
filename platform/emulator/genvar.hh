@@ -187,6 +187,7 @@ public:
     case BoolVariable:
     case OFSVariable:
     case FSetVariable:
+    case CtVariable:
       return true;
     default:
       return false;
