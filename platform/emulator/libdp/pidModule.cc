@@ -50,7 +50,7 @@ OZ_BI_define(BIgetCRC,1,1)
 
   crc_t crc = update_crc(init_crc(),(unsigned char *) s, strlen(s));
     
-  OZ_RETURN(oz_unsignedInt(crc));
+  OZ_RETURN(OZ_unsignedInt(crc));
 } OZ_BI_end
 
 //
@@ -70,11 +70,11 @@ OZ_BI_define(BIGetPID,0,1)
   memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
 
   OZ_Term host = oz_pairA("host",oz_string(inet_ntoa(tmp)));
-  OZ_Term port = oz_pairA("port",oz_int(myDSite->getPort()));
+  OZ_Term port = oz_pairA("port",OZ_int(myDSite->getPort()));
   OZ_Term time = 
     oz_pairA("time",
-	     OZ_pair2(oz_unsignedLong((unsigned long) myDSite->getTimeStamp()->start),
-		      oz_int(myDSite->getTimeStamp()->pid)));
+	     OZ_pair2(OZ_unsignedLong((unsigned long) myDSite->getTimeStamp()->start),
+		      OZ_int(myDSite->getTimeStamp()->pid)));
   // NOTE: converting time_t to an unsigned long, maybe a [long] double!
 
   OZ_Term l = oz_cons(host,oz_cons(port,oz_cons(time,oz_nil())));
@@ -104,11 +104,11 @@ OZ_BI_define(BITicket2Port,4,1)
 
   time_t time;
   if (oz_isSmallInt(timeV)) {
-    int i = oz_IntToC(timeV);
+    int i = OZ_intToC(timeV);
     if (i <= 0) goto tbomb;
     time = (time_t) i;
   } else if (oz_isBigInt(timeV)) {
-    unsigned long i = tagged2BigInt(timeV)->getUnsignedLong();
+    unsigned long i = OZ_intToCulong(timeV);
     if (i==0 && i == OzMaxUnsignedLong) goto tbomb;
     time = (time_t) i;
   } else {
