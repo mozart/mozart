@@ -31,8 +31,8 @@ static inline int ozabs(int a) {return a > 0 ? a : -a;}
 
 static int CompareFirsts(const void *x, const void *y)
 {
-  min_max_dur_setFL *Int1 = (min_max_dur_setFL*) x;
-  min_max_dur_setFL *Int2 = (min_max_dur_setFL*) y;
+  const min_max_dur_setFL *Int1 = (const min_max_dur_setFL*) x;
+  const min_max_dur_setFL *Int2 = (const min_max_dur_setFL*) y;
   int min1 = Int1->min;
   int min2 = Int2->min;
   if (min1 < min2) return -1;
@@ -46,8 +46,8 @@ static int CompareFirsts(const void *x, const void *y)
 
 static int CompareLasts(const void *x, const void *y)
 {
-  min_max_dur_setFL *Int1 = (min_max_dur_setFL *) x;
-  min_max_dur_setFL *Int2 = (min_max_dur_setFL *) y;
+  const min_max_dur_setFL *Int1 = (const min_max_dur_setFL *) x;
+  const min_max_dur_setFL *Int2 = (const min_max_dur_setFL *) y;
   int max1 = Int1->max;
   int max2 = Int2->max;
   int dur1 = Int1->dur;
@@ -238,7 +238,7 @@ OZ_Return FirstsLasts::propagate(void)
   while (!st.isEostr()) {
     OZ_Term e = st.get();
     if (OZ_isTuple(e) && ! OZ_isLiteral(e)) {
-      char * label = OZ_atomToC(OZ_label(e));
+      const char * label = OZ_atomToC(OZ_label(e));
       if (! strcmp("dist", label)) {
 
 	OZ_Term old_out = OZ_getArg(e, 0);
@@ -250,7 +250,7 @@ OZ_Return FirstsLasts::propagate(void)
 	     
         int task = -1;
 	if (OZ_isTuple(old_out) && ! OZ_isLiteral(old_out)) {
-	  char * old_label = OZ_atomToC(OZ_label(old_out));
+	  const char * old_label = OZ_atomToC(OZ_label(old_out));
 	  // fill in order
           if (!strcmp("#", old_label)) {
 	    task = OZ_intToC( OZ_getArg(old_out, 0));

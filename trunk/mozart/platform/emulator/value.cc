@@ -46,7 +46,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
 
 
 
-TaggedRef getUniqueName(char *s)
+TaggedRef getUniqueName(const char *s)
 {
   CHECK_STRPTR(s);
   Literal *ret = addToNameTab(s);
@@ -194,7 +194,7 @@ void initLiterals()
 
 int Name::NameCurrentNumber = 0x200000;
 
-char *Literal::getPrintName()
+const char *Literal::getPrintName()
 {
   if (isAtom())
     return ((Atom*)this)->getPrintName();
@@ -206,7 +206,7 @@ char *Literal::getPrintName()
 }
 
 
-Atom *Atom::newAtom(char *str)
+Atom *Atom::newAtom(const char *str)
 {
   Atom *ret = (Atom*) malloc(sizeof(Atom));
   ret->init();
@@ -228,7 +228,7 @@ Name *Name::newName(Board *home)
 }
 
 
-NamedName *NamedName::newNamedName(char *pn)
+NamedName *NamedName::newNamedName(const char *pn)
 {
   COUNT(numNewNamedName);
 
@@ -280,14 +280,14 @@ GName *SChunk::globalize() {
  * ConstTerm
  *=================================================================== */
 
-char *ObjectClass::getPrintName() 
+const char *ObjectClass::getPrintName() 
 { 
   TaggedRef aux = classGetFeature(NameOoPrintName);
   return aux ? tagged2Literal(aux)->getPrintName() : "???";
 }
 
 
-char *ConstTerm::getPrintName()
+const char *ConstTerm::getPrintName()
 {
   switch (getType()) {
   case Co_Abstraction:

@@ -604,9 +604,9 @@ void octOut(ostream &out,unsigned char c)
 
 
 inline
-void atomq2buffer(ostream &out, char *s)
+void atomq2buffer(ostream &out, const char *s)
 {
-  unsigned char c;
+  char c;
   while ((c = *s)) {
     if (iso_iscntrl(c)) {
       out << '\\';
@@ -661,9 +661,9 @@ void atomq2buffer(ostream &out, char *s)
 
 
 inline
-Bool checkAtom(char *s)
+Bool checkAtom(const char *s)
 {
-  char *t = s;
+  const char *t = s;
   unsigned char c = *s++;
   if (!c || !iso_islower(c)) {
     return NO;
@@ -726,7 +726,7 @@ Bool checkAtom(char *s)
 inline
 void atom2buffer(ostream &out, Literal *a)
 {
-  char *s = a->getPrintName();
+  const char *s = a->getPrintName();
   if (checkAtom(s)) {
     out << s;
   } else {
@@ -738,7 +738,7 @@ void atom2buffer(ostream &out, Literal *a)
 
 inline
 void name2buffer(ostream &out, Literal *a) {
-  char *s = a->getPrintName();
+  const char *s = a->getPrintName();
 
   if (literalEq(makeTaggedLiteral(a),NameTrue))  {
     out << "true";
@@ -756,7 +756,7 @@ void name2buffer(ostream &out, Literal *a) {
 inline
 void const2buffer(ostream &out, ConstTerm *c)
 {
-  char *s = c->getPrintName();
+  const char *s = c->getPrintName();
   int arity = c->getArity();
 
   switch (c->getType()) {
@@ -1020,7 +1020,7 @@ void fset2buffer(ostream &out, OZ_FSetValue * fs)
 }
 
 static
-void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
+void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
 {
   switch(cv->getType()){
   case FDVariable:
@@ -1105,7 +1105,7 @@ void value2buffer(ostream &out, OZ_Term term, int depth)
     case UVAR:
     case SVAR:
       {
-	char *s = getVarName(makeTaggedRef(termPtr));
+	const char *s = getVarName(makeTaggedRef(termPtr));
 	if (!*s) {
 	  out << '_';
 	} else {
@@ -1115,7 +1115,7 @@ void value2buffer(ostream &out, OZ_Term term, int depth)
       break;
     case CVAR:
       {
-	char *s = getVarName(makeTaggedRef(termPtr));
+	const char *s = getVarName(makeTaggedRef(termPtr));
 	if (!*s) {
 	  s = "_";
 	}
@@ -1194,7 +1194,7 @@ int OZ_termGetSize(OZ_Term term, int depth, int width)
  * Atoms
  */
 
-char *OZ_atomToC(OZ_Term term)
+const char *OZ_atomToC(OZ_Term term)
 {
   term = deref(term);
 
@@ -1202,7 +1202,7 @@ char *OZ_atomToC(OZ_Term term)
   return a->getPrintName();
 }
 
-OZ_Term OZ_atom(char *s)
+OZ_Term OZ_atom(const char *s)
 {
   return oz_atom(s);
 }
@@ -1212,10 +1212,10 @@ OZ_Term OZ_atom(char *s)
  * -----------------------------------------------------------------*/
 
 /* convert a C string (char*) to an Oz string */
-OZ_Term OZ_string(char *s)
+OZ_Term OZ_string(const char *s)
 {
   if (!s) { return nil(); }
-  char *p=s;
+  const char *p=s;
   while (*p!='\0') {
     p++;
   }
@@ -1308,7 +1308,7 @@ void OZ_printFloat(OZ_Term t)
 inline
 void vsatom2buffer(ostream &out, OZ_Term term)
 {
-  char *s = tagged2Literal(term)->getPrintName();
+  const char *s = tagged2Literal(term)->getPrintName();
   out << s;
 }
 
@@ -1880,7 +1880,7 @@ OZ_Term OZ_newName()
  * 
  * -----------------------------------------------------------------*/
 
-int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
+int OZ_addBuiltin(const char *name, int arity, OZ_CFun fun)
 {
   return BIadd(name,arity,fun) == NULL ? 0 : 1;
 }

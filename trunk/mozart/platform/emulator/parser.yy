@@ -204,7 +204,7 @@ extern CTerm xyFileNameAtom;
 extern char xyhelpFileName[];
 
 static void xyerror(char *);
-extern "C" void xyreportError(char *, char *, char *, int ,int);
+extern "C" void xyreportError(char *, char *, const char *, int ,int);
 
 static inline int xycharno() {
   int n = xytext - xylastline;
@@ -1374,7 +1374,7 @@ synProdCallParams
 
 %%
 
-static void append(char *s) {
+static void append(const char *s) {
   xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_string(s));
 }
 
@@ -1382,7 +1382,8 @@ static void append(int i) {
   xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_int(i));
 }
 
-void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
+void xyreportError(char *kind, char *msg, const char *file,
+		   int line, int offset) {
   if (strcmp(kind,"warning"))
     nerrors++;
 

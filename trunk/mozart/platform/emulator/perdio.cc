@@ -5877,7 +5877,7 @@ int loadURL(TaggedRef url, OZ_Term out, OZ_Term triggerVar)
 {
   Literal *lit = tagged2Literal(url);
   Assert(lit->isAtom());
-  char *s=lit->getPrintName();
+  const char *s=lit->getPrintName();
   return loadURL(s,out,triggerVar);
 }
 
@@ -6300,19 +6300,19 @@ init_cache_path()
 
 /* triggerVar = variable that triggered the load, NULL if not available */
     
-int loadURL(char *url, OZ_Term out, OZ_Term triggerVar)
+int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar)
 {
   if (ozconf.showLoad)
-    message("Loading %s\n",url);
+    message("Loading %s\n",url0);
   // we need to locally copy the url arg because it may point
   // to the static area used the ...ToC interface.
 
   char urlbuf[NAMESIZE];
-  if (strlen(url)>=NAMESIZE)
+  if (strlen(url0)>=NAMESIZE)
     return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),
-		     OZ_atom(url));
-  strcpy(urlbuf,url);
-  url = urlbuf;
+		     OZ_atom(url0));
+  strcpy(urlbuf,url0);
+  char *url = urlbuf;
 
   // perform translation through url_map:
   // note that we leave currentURL untranslated in order to
@@ -6331,7 +6331,7 @@ int loadURL(char *url, OZ_Term out, OZ_Term triggerVar)
       if (!(notTooMany--))
 	return OZ_raiseC("loadURL",1,OZ_atom("tooManyRemaps"));
     }
-    char *urlin = OZ_atomToC(oldURL);
+    const char *urlin = OZ_atomToC(oldURL);
     if (strlen(urlin)>=NAMESIZE)
       return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),oldURL);
     strcpy(url,urlin);

@@ -545,10 +545,10 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #endif
 
 
-extern Literal *addToAtomTab(char *str);
-extern Literal *addToNameTab(char *str);
+extern Literal *addToAtomTab(const char *str);
+extern Literal *addToNameTab(const char *str);
 inline
-TaggedRef makeTaggedAtom(char *s)
+TaggedRef makeTaggedAtom(const char *s)
 {
   CHECK_STRPTR(s);
   return makeTaggedLiteral(addToAtomTab(s));
