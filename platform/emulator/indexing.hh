@@ -64,16 +64,18 @@ class HTEntry {
 
   HTEntry* getNext(void) {return next;}
 
-  int getLabel()  {return label;}
-  int *getLabelRef()  {return &label;}
-  TaggedRef getNumber()  {return u.number;}
-  Literal *getLiteral()  {return u.literal;}
+  int getLabel()              { return label; }
+  int *getLabelRef()          { return &label; }
+  TaggedRef getNumber()       { return u.number; }
+  Literal *getLiteral()       { return u.literal; }
+  void setLiteral(Literal *l) { u.literal = l; }
   Literal *getFunctor(SRecordArity &a)
   {
     a = u.functor.arity;
     return u.functor.fname;
   }
 
+  void setFunctor(Literal *l, SRecordArity a) {u.functor.fname=l; u.functor.arity=a; }
   /* look up a literal */
   int lookup(Literal *name, int elseLabel)
   {
