@@ -72,7 +72,7 @@ define(argEnc,`ifelse($1,Index,marshalNumber(i1,buf);,
                    $1,Site,marshalSite(s1,buf);,
                    $1,Site2,marshalSite(s2,buf);,)')
 
-include(`msgFormat.m4')
+include(OZSRCDIR/msgFormat.m4)
 
 undefine(`argEnc')
 undefine(`arg')
@@ -120,7 +120,7 @@ define(argEnc,`ifelse($1,Index,i1=unmarshalNumber(buf);,
                    $1,Site,s1=unmarshalSite(buf);,
                    $1,Site2,s2=unmarshalSite(buf);,)')
 
-include(`msgFormat.m4')
+include(OZSRCDIR/msgFormat.m4)
 
 undefine(`argEnc')
 undefine(`arg')
@@ -167,7 +167,7 @@ define(argEnc,`ifelse($1,Index,unmarshalUnsentNumber(buf);,
                    $1,Site,s1=unmarshalSite(buf);,
                    $1,Site2,s2=unmarshalSite(buf);,)')
 
-include(`msgFormat.m4')
+include(OZSRCDIR/msgFormat.m4)
 
 
 

@@ -16,14 +16,6 @@ FILES
         include/
         Emulator/
 
-BUILD
-
-change to directory Oz/Emulator
-
-% ./configure
-% make
-
-
 -----------------------------
 
 Debugging with Emacs:
