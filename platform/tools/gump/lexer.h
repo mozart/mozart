@@ -141,16 +141,16 @@ OZ_BI_define(yy_lexer_unput, 2, 0)
 OZ_BI_end
 
 OZ_C_proc_interface oz_interface[] = {
-  {yy_PREFIX "_lexer_create", 0, 1},
-  {yy_PREFIX "_lexer_delete", 1, 0},
-  {yy_PREFIX "_lexer_getNextMatch", 1, 1},
-  {yy_PREFIX "_lexer_getAtom", 1, 1},
-  {yy_PREFIX "_lexer_getString", 1, 1},
-  {yy_PREFIX "_lexer_getLength", 1, 1},
-  {yy_PREFIX "_lexer_switchToBuffer", 2, 0},
-  {yy_PREFIX "_lexer_setMode", 2, 0},
-  {yy_PREFIX "_lexer_currentMode", 1, 1},
-  {yy_PREFIX "_lexer_input", 1, 1},
-  {yy_PREFIX "_lexer_unput", 2, 0},
-  {0,0,0}
+  {yy_PREFIX "_lexer_create"		, 0, 1,yy_lexer_create},
+  {yy_PREFIX "_lexer_delete"		, 1, 0,yy_lexer_delete},
+  {yy_PREFIX "_lexer_getNextMatch"	, 1, 1,yy_lexer_getNextMatch},
+  {yy_PREFIX "_lexer_getAtom"		, 1, 1,yy_lexer_getAtom},
+  {yy_PREFIX "_lexer_getString"		, 1, 1,yy_lexer_getString},
+  {yy_PREFIX "_lexer_getLength"		, 1, 1,yy_lexer_getLength},
+  {yy_PREFIX "_lexer_switchToBuffer"	, 2, 0,yy_lexer_switchToBuffer},
+  {yy_PREFIX "_lexer_setMode"		, 2, 0,yy_lexer_setMode},
+  {yy_PREFIX "_lexer_currentMode"	, 1, 1,yy_lexer_currentMode},
+  {yy_PREFIX "_lexer_input"		, 1, 1,yy_lexer_input},
+  {yy_PREFIX "_lexer_unput"		, 2, 0,yy_lexer_unput},
+  {0,0,0,0}
 };
