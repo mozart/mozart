@@ -126,7 +126,7 @@ particular, it lists the changes from
 	<item>For users of Gentoo Linux, we now provide ebuilds to install and
 	maintain a Mozart installation using the portage system.<p>
 
-	<item>improved Darwin support<p>
+	<item>improved Darwin support now also available in CVS.<p>
 
 	<item>additional logic to fix the <file/glibc/ problem with time ticks introduced when
 	the Linux kernel bumped <code proglang=sh/HZ/ up to 1000.<p>
@@ -158,6 +158,15 @@ particular, it lists the changes from
 	  to="http://www.ps.uni-sb.de/alice/"/Alice/ programs
       </list>
 
+    <section id="sec.m125.cp">
+      <title/Constraint Programming/
+      <p>
+        <list>
+	  <item>fixed <code proglang=oz/FD.reified.card/<p>
+	  <item>fixed <code proglang=oz/FD.int/ problem with descriptions with
+	  more than 1024 items.<p>
+	</list>
+
     <section id="sec.m125.misc">
       <title/Miscellaneous/
       <p>
@@ -167,6 +176,7 @@ particular, it lists the changes from
 	  option <code proglang=sh/--with-global-oz/).  Previously, the user had to be
 	  very careful to remove from his/her environment all traces of <file/oz/ prior
 	  to invoking <file/configure/.<p>
+	  <item>fixed an issue related to sharing when sending to a superordinated port.<p>
 	</list>
 
   <chapter id="chapter.m124">
