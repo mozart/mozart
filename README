@@ -89,7 +89,6 @@ The Mozart installation structure:
       ozc  (link: ozcompiler)
       oz
       ozs  (link: ozserver)
-      oza  (link: ozapplet)
     lib/
       *.ozc
       images/
@@ -112,9 +111,10 @@ The Mozart installation structure:
           ozwish
           libma.so      (Machinecode Assembler)
           libfd.so
-          libfs.so
-          libsched.so
-          libwish.so
+          libfset.so
+          libschedule.so
+          libwif.so
+          libparser.so
         $ARCH/tools/
           gump/
             libbison.so
