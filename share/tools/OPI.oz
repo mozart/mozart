@@ -53,6 +53,8 @@ local
 		'Explorer'('ExploreOne':  [one]
 			   'ExploreAll':  [all]
 			   'ExploreBest': [best]) 
+
+		'Inspector'('Inspect': [inspect])
 	       ]
 
    fun {Dots M Fs}
