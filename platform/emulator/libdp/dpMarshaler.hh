@@ -107,6 +107,12 @@ private:
   int htIndex;
   // number of hash table entries that have already been processed;
   int htNDone;
+#if defined(DEBUG_CHECK)
+  // number of remaining entries *before* suspension;
+  int htREntries;
+  // The hash table we're wrestling with;
+  IHashTable *htable;
+#endif
 
 public:
   // Note: htNDone must be initialized (to zero);
@@ -120,6 +126,12 @@ public:
   void setHTIndex(int htIndexIn) { htIndex = htIndexIn; }
   int getHTNDone() { return (htNDone); }
   void setHTNDone(int htNDoneIn) { htNDone = htNDoneIn; }
+#if defined(DEBUG_CHECK)
+  int getHTREntries() { return (htREntries); }
+  void setHTREntries(int htREntriesIn) { htREntries = htREntriesIn; }
+  IHashTable* getHTable() { return (htable); }
+  void setHTable(IHashTable *htableIn) { htable = htableIn; }
+#endif
 };
 
 //

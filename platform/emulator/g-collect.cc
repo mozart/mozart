@@ -752,8 +752,11 @@ void Builder::gCollect()
       // untouched;
     case BT_dictKey:
       {
-        OZ_Term &d = GetBTTaskArg1Ref(frame, OZ_Term);
+        OzDictionary* &od = GetBTTaskArg1Ref(frame, OzDictionary*);
+        OZ_Term d = makeTaggedConst(od);
         oz_gCollectTerm(d, d);
+        od = tagged2Dictionary(d);
+        //
         NextBTFrame(frame);
         break;                  // case;
       }
@@ -761,8 +764,10 @@ void Builder::gCollect()
       //
     case BT_dictVal:
       {
-        OZ_Term &d = GetBTTaskArg1Ref(frame, OZ_Term);
+        OzDictionary* &od = GetBTTaskArg1Ref(frame, OzDictionary*);
+        OZ_Term d = makeTaggedConst(od);
         oz_gCollectTerm(d, d);
+        od = tagged2Dictionary(d);
         OZ_Term &k = GetBTTaskArg2Ref(frame, OZ_Term);
         oz_gCollectTerm(k, k);
         //
