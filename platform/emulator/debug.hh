@@ -35,6 +35,7 @@ void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, bool, int);
 void debugStreamExit(TaggedRef);
 
 OZ_C_proc_proto(BItaskStack)
+OZ_C_proc_proto(BIsuspendDebug)
 OZ_C_proc_proto(BIframeVariables)
 OZ_C_proc_proto(BIbreakpointAt)
 OZ_C_proc_proto(BIbreakpoint)
