@@ -109,6 +109,7 @@ protected:
   void copyHandler(BorrowCreditHandler *from);
   NetAddress* getNetAddress();
   Bool maybeFreeCreditHandler();
+  Bool canBeFreed();
 
 public:
   Credit getCreditBig();
