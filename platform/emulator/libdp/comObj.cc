@@ -171,7 +171,8 @@ Bool ComObj::handover(TransObj *transObj) {
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
 #ifdef COMOBJ_CONNECT_LOG
-  printf("handover(%d %d)\n",
+  printf("handover(%d %d %d)\n",
+	 myDSite->getTimeStamp()->pid,
 	 site!=NULL?site->getTimeStamp()->pid:0,
 	 (int) am.getEmulatorClock());
 #endif  
@@ -264,7 +265,8 @@ void ComObj::close(CState statetobe,Bool merging) {
 
   if(transObj!=NULL) {
 #ifdef COMOBJ_CONNECT_LOG
-    printf("close(%d %d)\n",
+    printf("close(%d %d %d)\n",
+	   myDSite->getTimeStamp()->pid,
 	   site!=NULL?site->getTimeStamp()->pid:0,
 	   (int) am.getEmulatorClock());
 #endif
@@ -508,7 +510,8 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       site=s1;
       transObj->setSite(site);
 #ifdef COMOBJ_CONNECT_LOG
-      printf("accept(%d %d)\n",
+      printf("accept(%d %d %d)\n",
+	     myDSite->getTimeStamp()->pid,
 	     site!=NULL?site->getTimeStamp()->pid:0,
 	     (int) am.getEmulatorClock());
 #endif
