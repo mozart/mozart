@@ -1766,6 +1766,32 @@ NotAvail("OS.fileDesc",        2, unix_fileDesc);
 
 #endif
 
+#include <pwd.h>
+#include <sys/types.h>
+OZ_C_proc_begin(unix_getpwnam,2)
+{
+  OZ_declareVirtualStringArg(0,user);
+  struct passwd *p = getpwnam(user);
+  if (p==0) {
+    return raiseUnixError(errno,OZ_unixError(errno),"getpwnam");
+  } else {
+    OZ_Term N1 = oz_pairAA("name"  ,p->pw_name  );
+    OZ_Term N2 = oz_pairAA("passwd",p->pw_passwd);
+    OZ_Term N3 = oz_pairAI("uid"   ,p->pw_uid   );
+    OZ_Term N4 = oz_pairAI("gid"   ,p->pw_gid   );
+    OZ_Term N5 = oz_pairAA("gecos" ,p->pw_gecos );
+    OZ_Term N6 = oz_pairAA("dir"   ,p->pw_dir   );
+    OZ_Term N7 = oz_pairAA("shell" ,p->pw_shell );
+    OZ_Term R =
+      OZ_recordInit(
+        oz_atom("passwd"),
+        oz_cons(N1,oz_cons(N2,oz_cons(N3,oz_cons(N4,oz_cons(N5,
+          oz_cons(N6,oz_cons(N7,oz_nil()))))))));
+    return oz_unify(OZ_getCArg(1),R);
+  }
+}
+OZ_C_proc_end
+
 OZ_BIspec spec[] = {
   {"OS.getDir",          2, unix_getDir},
   {"OS.stat",            2, unix_stat},
@@ -1806,6 +1832,7 @@ OZ_BIspec spec[] = {
   {"OS.wait",            2, unix_wait},
   {"OS.getServByName",   3, unix_getServByName},
   {"OS.uName",           1, unix_uName},
+  {"OS.getpwnam",        2, unix_getpwnam},
   {0,0,0}
 };
 

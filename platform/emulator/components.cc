@@ -898,7 +898,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIload,2)
 {
   RefsArray args = allocateRefsArray(2);
-  OZ_Term loader = service_get(AtomLoad);
+  OZ_Term loader = registry_get(AtomLoad);
   args[0] = OZ_getCArg(0);
   args[1] = OZ_getCArg(1);
   Thread*tt=am.currentThread();

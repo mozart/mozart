@@ -2629,17 +2629,17 @@ TaggedRef getUniqueName(const char *s);
  * Service Registry
  *=================================================================== */
 
-extern OZ_Term service_registry;
+extern OZ_Term system_registry;
 
-extern OZ_Term service_get(OZ_Term);
-inline OZ_Term service_get(char*s)
+extern OZ_Term registry_get(OZ_Term);
+inline OZ_Term registry_get(char*s)
 {
-  return service_get(makeTaggedAtom(s));
+  return registry_get(makeTaggedAtom(s));
 }
-extern void service_put(OZ_Term,OZ_Term);
-inline void service_put(char*s,OZ_Term v)
+extern void registry_put(OZ_Term,OZ_Term);
+inline void registry_put(char*s,OZ_Term v)
 {
-  service_put(makeTaggedAtom(s),v);
+  registry_put(makeTaggedAtom(s),v);
 }
 
 #endif
