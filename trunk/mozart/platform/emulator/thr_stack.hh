@@ -65,7 +65,7 @@ public:
   int suggestNewSize() {
       int used = getUsed();
       return max(ozconf.stackMinSize,
-		 min(used * 2, (getMaxSize() + used) >> 1));
+		 min(used * 2, (getMaxSize() + used + 1) >> 1));
   }
 
   void restoreFrame() { tos += frameSz; Assert(tos<stackEnd); }
