@@ -60,14 +60,13 @@ define
 		  if @format==nil then
 		     {self formatHeader(
 			      'format'
-			      ['mozart=<1.2.5']
+			      {HtmlQuote "mozart=<1.2.5"}
 			      'class':'headerdoc'
 			      $)}
 		  else
 		     {self formatHeader(
 			      'format'
-			      {Map @format
-			       fun {$ F} {self format(F $)} end}
+			      {HtmlQuote @format}
 			      'class':'headerdoc'
 			      $)}
 		  end
@@ -122,6 +121,7 @@ define
       meth format(F $)
 	 case F
 	 of '1.3.0' then 'mozart>=1.3.0 ozmake>=0.88'
+	 else 'UNEXPECTED'
 	 end
       end
       %%
