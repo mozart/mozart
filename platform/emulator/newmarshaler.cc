@@ -79,13 +79,41 @@ void Marshaler::processLiteral(OZ_Term litTerm)
   marshalGName(gname, bs);
 }
 
-void Marshaler::processExtension(OZ_Term extensionTerm)
-{ OZ_error("not implemented!"); }
-
 void Marshaler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
-{ OZ_error("not implemented!"); }
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  marshalDIF(bs,DIF_BIGINT);
+  marshalString(toC(biTerm),bs);
+}
+
 
 void Marshaler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  Builtin *bi= (Builtin *)biConst;
+  if (bi->isSited()) {
+    processNoGood(biTerm,OK);
+    RememberNode(biTerm,bs);
+    return;
+  }
+
+  marshalDIF(bs,DIF_BUILTIN);
+  RememberNode(biTerm,bs);
+  marshalString(bi->getPrintName(),bs);
+}
+
+
+void Marshaler::processNoGood(OZ_Term resTerm, Bool trail)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  if (ozconf.perdioMinimal || bs->getSite()==NULL) {
+    bs->addNogood(resTerm);
+  } else{
+    (*marshalSPP)(resTerm,bs,trail);
+  }
+}
+
+void Marshaler::processExtension(OZ_Term extensionTerm)
 { OZ_error("not implemented!"); }
 
 void Marshaler::processObject(OZ_Term objTerm, ConstTerm *objConst)
@@ -103,14 +131,20 @@ void Marshaler::processPort(OZ_Term portTerm, Tertiary *portTert)
 void Marshaler::processResource(OZ_Term resTerm, Tertiary *resTert)
 { OZ_error("not implemented!"); }
 
-void Marshaler::processNoGood(OZ_Term resTerm)
-{ OZ_error("not implemented!"); }
 
-void Marshaler::processUVar(OZ_Term uvarTerm)
-{ OZ_error("not implemented!"); }
+void Marshaler::processUVar(OZ_Term *uvarTerm)
+{
+  processCVar(uvarTerm);
+}
 
-void Marshaler::processCVar(OZ_Term cvarTerm)
-{ OZ_error("not implemented!"); }
+void Marshaler::processCVar(OZ_Term *cvarTerm)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  if (!bs->visit(makeTaggedRef(cvarTerm)) ||
+      (*marshalVariable)(cvarTerm, bs))
+    return;
+  processNoGood(makeTaggedRef(cvarTerm),NO);
+}
 
 Bool Marshaler::processRepetition(OZ_Term term, int repNumber)
 {
@@ -124,7 +158,6 @@ Bool Marshaler::processRepetition(OZ_Term term, int repNumber)
 Bool Marshaler::processLTuple(OZ_Term ltupleTerm)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
-  LTuple *l = tagged2LTuple(ltupleTerm);
 
   marshalDIF(bs, DIF_LIST);
   RememberNode(ltupleTerm, bs);
@@ -150,17 +183,49 @@ Bool Marshaler::processSRecord(OZ_Term srecordTerm)
   return (NO);
 }
 
+
+Bool Marshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  SChunk *ch    = (SChunk *) chunkConst;
+  GName *gname  = globalizeConst(ch,bs);
+  marshalDIF(bs,DIF_CHUNK);
+  RememberNode(chunkTerm, bs);
+  marshalGName(gname,bs);
+  return NO;
+}
+
+
+#define CheckD0Compatibility(Term,Trail) \
+   if (ozconf.perdioMinimal) { processNoGood(Term,Trail); return OK; }
+
 Bool Marshaler::processFSETValue(OZ_Term fsetvalueTerm)
-{ OZ_error("not implemented!"); return(OK); }
+{
+  CheckD0Compatibility(fsetvalueTerm,NO);
+
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+
+  if (!bs->visit(fsetvalueTerm))
+    return OK;
+
+  marshalDIF(bs,DIF_FSETVALUE);
+  return NO;
+}
 
 Bool Marshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 { OZ_error("not implemented!"); return(OK); }
 
-Bool Marshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
-{ OZ_error("not implemented!"); return(OK); }
-
 Bool Marshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
-{ OZ_error("not implemented!"); return(OK); }
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+
+  ObjectClass *cl = (ObjectClass *) classConst;
+  marshalDIF(bs,DIF_CLASS);
+  GName *gn = globalizeConst(cl,bs);
+  RememberNode(classTerm, bs);
+  marshalGName(gn,bs);
+  return NO;
+}
 
 Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 { OZ_error("not implemented!"); return(OK); }
@@ -193,12 +258,9 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
     case DIF_NAME:
       {
         int refTag = unmarshalRefTag(bs);
-        GName *gname;
-        char *printname;
+        char *printname = unmarshalString(bs);
         OZ_Term value;
-
-        printname = unmarshalString(bs);
-        gname     = unmarshalGName(&value, bs);
+        GName *gname    = unmarshalGName(&value, bs);
 
         if (gname) {
           Name *aux;
@@ -260,7 +322,12 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       }
 
     case DIF_BIGINT:
-      { OZ_error("not implemented!"); }
+      {
+        char *aux  = unmarshalString(bs);
+        b->buildValue(OZ_CStringToNumber(aux));
+        delete aux;
+        break;
+      }
 
     case DIF_LIST:
       {
@@ -309,11 +376,35 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       { OZ_error("not implemented!"); }
 
     case DIF_CHUNK:
-      { OZ_error("not implemented!"); }
+      {
+        int refTag = unmarshalRefTag(bs);
+        OZ_Term value;
+        GName *gname = unmarshalGName(&value, bs);
+
+        if (gname) {
+          b->buildChunkRemember(gname,refTag);
+        } else {
+          b->knownChunk(value);
+          b->set(value,refTag);
+        }
+        break;
+      }
 
     case DIF_CLASS:
-      { OZ_error("not implemented!"); }
+      {
+        int refTag = unmarshalRefTag(bs);
+        OZ_Term value;
+        GName *gname = unmarshalGName(&value, bs);
+        int flags = unmarshalNumber(bs);
 
+        if (gname) {
+          b->buildClassRemember(gname,flags,refTag);
+        } else {
+          b->knownClass(value);
+          b->set(value,refTag);
+        }
+        break;
+      }
     case DIF_VAR:
       { OZ_error("not implemented!"); }
 
@@ -336,10 +427,34 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
       { OZ_error("not implemented!"); }
 
     case DIF_BUILTIN:
-      { OZ_error("not implemented!"); }
+      {
+        int refTag = unmarshalRefTag(bs);
+        char *name = unmarshalString(bs);
+        Builtin * found = string2Builtin(name);
+
+        OZ_Term value;
+        if (!found) {
+          OZ_warning("Builtin '%s' not in table.", name);
+          value = oz_nil();
+          delete name;
+        } else {
+          if (found->isSited()) {
+            OZ_warning("Unpickling sited builtin: '%s'", name);
+          }
+
+          delete name;
+          value = makeTaggedConst(found);
+        }
+        b->buildValue(value);
+        b->set(value, refTag);
+        break;
+      }
 
     case DIF_FSETVALUE:
-      { OZ_error("not implemented!"); }
+      {
+        b->buildFSETValue();
+        break;
+      }
 
     case DIF_EXTENSION:
       { OZ_error("not implemented!"); }

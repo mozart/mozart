@@ -52,9 +52,9 @@ public:
   virtual void processCell(OZ_Term cellTerm, Tertiary *cellTert);
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert);
   virtual void processResource(OZ_Term resTerm, Tertiary *resTert);
-  virtual void processNoGood(OZ_Term resTerm);
-  virtual void processUVar(OZ_Term uvarTerm);
-  virtual void processCVar(OZ_Term cvarTerm);
+  virtual void processNoGood(OZ_Term resTerm, Bool trail);
+  virtual void processUVar(OZ_Term *uvarTerm);
+  virtual void processCVar(OZ_Term *cvarTerm);
   virtual Bool processRepetition(OZ_Term term, int repNumber);
   virtual Bool processLTuple(OZ_Term ltupleTerm);
   virtual Bool processSRecord(OZ_Term srecordTerm);

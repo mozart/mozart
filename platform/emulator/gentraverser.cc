@@ -184,7 +184,7 @@ void GenTraverser::doit()
         break;
 
       default:
-        processNoGood(t);
+        processNoGood(t,OK);
         break;
       }
       break;
@@ -199,14 +199,14 @@ void GenTraverser::doit()
       break;
 
     case UVAR:
-      processUVar(t);
+      processUVar(tPtr);
       break;
     case CVAR:
-      processCVar(t);
+      processCVar(tPtr);
       break;
 
     default:
-      processNoGood(t);
+      processNoGood(t,NO);
       break;
     }
   }
@@ -444,10 +444,10 @@ repeat:
 
   case BT_fsetvalue:
     {
-      OZ_Term *ret;
+      OZ_Term ret;
       DiscardBTFrame(frame);
-      makeFSetValue(value, ret);
-      value = *ret;
+      makeFSetValue(value, &ret);
+      value = ret;
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -471,7 +471,6 @@ repeat:
     {
       Assert(oz_onToplevel());
       GetBTTaskPtr1(frame, GName*, gname);
-      DiscardBTFrame(frame);
 
       //
       OZ_Term chunkTerm;
@@ -488,6 +487,7 @@ repeat:
         set(value, memoIndex);
         doMemo = NO;
       }
+      DiscardBTFrame(frame);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -499,6 +499,7 @@ repeat:
     {
       Assert(oz_isSRecord(value));
       GetBTTaskPtr1(frame, GName*, gname);
+      GetBTTaskArg2(frame, int, flags);
       DiscardBTFrame(frame);
 
       //
@@ -512,22 +513,17 @@ repeat:
       //
       SRecord *feat = tagged2SRecord(value);
       TaggedRef ff = feat->getFeature(NameOoFeat);
-      // RALF IS WORKING HERE
-#if 0
-      Bool locking = oz_isTrue(oz_deref(feat->getFeature(NameOoLocking)));
+
       cl->import(feat,
                  tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
                  oz_isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
                  tagged2Dictionary(feat->getFeature(NameOoDefaults)),
-                 locking);
+                 flags);
 
-      //
-#else
-      OZ_warning("New Marshaler does not work for classes!");
-#endif
       value = classTerm;
       if (doMemo) {
-        GetBTTaskArg2(frame, int, memoIndex);
+        GetBTFrameArg1(frame, int, memoIndex);
+        DiscardBTFrame(frame);
         set(value, memoIndex);
         doMemo = NO;
       }

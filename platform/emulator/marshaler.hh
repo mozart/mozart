@@ -58,6 +58,8 @@ unsigned short unmarshalShort(MsgBuffer*);
 GName* unmarshalGName(TaggedRef*,MsgBuffer*);
 SRecord* unmarshalSRecord(MsgBuffer*);
 
+GName *globalizeConst(ConstTerm *t, MsgBuffer *bs);
+
 extern RefTable *refTable;
 extern RefTrail *refTrail;
 

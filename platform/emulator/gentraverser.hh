@@ -286,10 +286,10 @@ protected:
   virtual void processPort(OZ_Term portTerm, Tertiary *portTert) = 0;
   virtual void processResource(OZ_Term resTerm, Tertiary *resTert) = 0;
   // anything else:
-  virtual void processNoGood(OZ_Term resTerm) = 0;
+  virtual void processNoGood(OZ_Term resTerm, Bool trail) = 0;
   //
-  virtual void processUVar(OZ_Term uvarTerm) = 0;
-  virtual void processCVar(OZ_Term cvarTerm) = 0;
+  virtual void processUVar(OZ_Term *uvarTerm) = 0;
+  virtual void processCVar(OZ_Term *cvarTerm) = 0;
 
   //
   // These methods return TRUE if the node to be considered a leaf;
@@ -820,13 +820,16 @@ public:
   }
 
   //
-  void buildClass(GName *gname) {
+  void buildClass(GName *gname, int flags) {
     Assert(gname);
-    putTask(BT_class, gname);
+    putTask(BT_class, gname, flags);
   }
-  void buildClassRemember(GName *gname, int n) {
+  void buildClassRemember(GName *gname, int flags, int n) {
     Assert(gname);
-    putTask(BT_classMemo, gname, n);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTFrameArg(frame,n)
+    putTask(BT_classMemo, gname, flags);
   }
   void knownClass(OZ_Term classTerm) {
     buildValue(classTerm);

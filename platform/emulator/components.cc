@@ -61,6 +61,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include "newmarshaler.hh"
+
 #include "zlib.h"
 
 
@@ -92,9 +94,6 @@ static int zlibDummy = checkzlibversion();
 /*              BUILTINS                                                  */
 /* ********************************************************************** */
 
-static char OLDSYSLETHEADER = 1;
-
-
 // class ByteSource [Denys Duchier]
 // something to marshal from
 
@@ -102,7 +101,7 @@ class ByteSource {
 public:
   virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
   virtual char *getHeader() = 0;
-  virtual Bool checkChecksum(unsigned long) = 0;
+  virtual Bool checkChecksum(crc_t) = 0;
   OZ_Return getTerm(OZ_Term, const char *compname,Bool);
   OZ_Return makeByteStream(ByteStream*&, const char*);
 };
@@ -110,14 +109,14 @@ public:
 class ByteSourceFD : public ByteSource {
 private:
   gzFile fd;
-  unsigned long checkSum;
+  crc_t checkSum;
   char *header;
 public:
   char *getHeader() {return header; }
   virtual ~ByteSourceFD() { free(header); gzclose(fd); }
   OZ_Return getBytes(BYTE*,int&,int&);
 
-  virtual Bool checkChecksum(unsigned long i) {return checkSum==0||checkSum==i;}
+  virtual Bool checkChecksum(crc_t i) { return checkSum==i; }
 
   ByteSourceFD(int i)
   {
@@ -125,22 +124,14 @@ public:
     char *buf = (char *) malloc(bufsz);
     int j = 0;
     int sysheaderread = 0;
-    Bool oldformat = NO;
     while(1) {
       if (j>=bufsz) {
         bufsz *= 2;
         buf = (char *) realloc(buf,bufsz);
       }
 
-#ifdef WINDOWS
       if (osread(i,&buf[j],1)<=0)
         break;
-#else
-      if (osread(i,&buf[j],1)<=0 || buf[j]==OLDSYSLETHEADER) {
-        oldformat = OK;
-        break;
-      }
-#endif
 
       /* check whether we got syslet header 3 times in sequence */
       if (buf[j]==SYSLETHEADER) {
@@ -160,21 +151,13 @@ public:
     free(buf);
     checkSum = 0;
 
-    if (!oldformat) {
-      for (int k=0; k<sizeof(int32); k++) {
-        unsigned char c;
-        osread(i,&c,1);
-        checkSum |=  c<<(k*8);
-      }
+    for (int k=0; k<sizeof(crc_t); k++) {
+      unsigned char c = 0;
+      osread(i,&c,1);
+      checkSum |=  c<<(k*8);
     }
 
     fd = gzdopen(i,"rb");
-
-    if (oldformat) {
-      char c;
-      gzread(fd,&c,1); Assert(c==PERDIOMAGICSTART);
-      gzread(fd,&c,1); Assert(c==PERDIOMAGICSTART);
-    }
   }
 };
 
@@ -188,7 +171,7 @@ public:
   ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
   virtual ~ByteSourceDatum() { free(dat.data); }
   OZ_Return getBytes(BYTE*,int&,int&);
-  virtual Bool checkChecksum(unsigned long i) { return OK; }
+  virtual Bool checkChecksum(crc_t i) { return OK; }
 };
 
 
@@ -199,7 +182,7 @@ class ByteSink {
 public:
   OZ_Return putTerm(OZ_Term,char*,char*,Bool text);
   virtual OZ_Return putBytes(BYTE*,int) = 0;
-  virtual OZ_Return allocateBytes(int,char*,unsigned long,Bool) = 0;
+  virtual OZ_Return allocateBytes(int,char*,crc_t,Bool) = 0;
 };
 
 
@@ -215,7 +198,7 @@ public:
     if (zfd!=0) { gzclose(zfd); return; }
     if (fd!=-1) close(fd);
   }
-  OZ_Return allocateBytes(int,char*,unsigned long,Bool);
+  OZ_Return allocateBytes(int,char*,crc_t,Bool);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -225,7 +208,7 @@ private:
 public:
   OZ_Datum dat;
   ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
-  OZ_Return allocateBytes(int,char*,unsigned long,Bool);
+  OZ_Return allocateBytes(int,char*,crc_t,Bool);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -246,10 +229,22 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 }
 
 
+Bool newMarshaler = NO;
+
+void marshalTermRT0(OZ_Term t, MsgBuffer *bs)
+{
+  if (newMarshaler)
+    newMarshalTerm(t,bs);
+  else
+    marshalTermRT(t,bs);
+}
+
+
 void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
-  marshalString(PERDIOVERSION, buf);
-  marshalTermRT(t, buf);
+  char *version  =  newMarshaler ? "2#0" : PERDIOVERSION;
+  marshalString(version, buf);
+  marshalTermRT0(t, buf);
   buf->marshalEnd();
   return;
 }
@@ -324,7 +319,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 // ===================================================================
 
 OZ_Return
-ByteSinkFile::allocateBytes(int n,char *header, unsigned long crc, Bool txtmode)
+ByteSinkFile::allocateBytes(int n,char *header, crc_t crc, Bool txtmode)
 {
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO
                                : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
@@ -379,7 +374,7 @@ ByteSinkFile::putBytes(BYTE*pos,int len)
 // ===================================================================
 
 OZ_Return
-ByteSinkDatum::allocateBytes(int n, char *ignored, unsigned long crc_ignored,
+ByteSinkDatum::allocateBytes(int n, char *ignored, crc_t crc_ignored,
                              Bool txtmode_ignored)
 {
   dat.size = n;
@@ -440,6 +435,15 @@ OZ_BI_define(BIsave,2,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BInewMarshaler,1,0)
+{
+  OZ_declareInt(0,nm);
+  newMarshaler = nm;
+  return PROCEED;
+} OZ_BI_end
+
+
+
 OZ_BI_define(BIsaveCompressed,3,0)
 {
   OZ_declareTerm(0,in);
@@ -491,7 +495,7 @@ OZ_Return export(OZ_Term t)
 {
   if (ozconf.perdioMinimal) {
     Exporter bs;
-    marshalTermRT(t,&bs);
+    marshalTermRT0(t,&bs);
     CheckNogoods(t,(&bs),"export:nogoods","Non-exportables found during export",);
 
     OZ_Term vars = bs.getVars();
@@ -523,7 +527,7 @@ OZ_Term digOutVars(OZ_Term t)
   int cached=ozconf.perdioMinimal;
   ozconf.perdioMinimal=TRUE;
   Exporter bs;
-  marshalTermRT(t,&bs);
+  marshalTermRT0(t,&bs);
   OZ_Term vars=bs.getVars();
   ozconf.perdioMinimal=cached;
   return vars;
@@ -545,19 +549,21 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 
   int major,minor;
   if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
-    if (strcmp(vers,"3.0.10#15")!=0) { // hard coded old version format
-      return NO;
-    }
-    major = 1;
-    minor = 0;
+    return NO;
   }
 
-  if (major!=PERDIOMAJOR || minor > PERDIOMINOR)
-    return NO;
+  Bool newFormat = NO;
+
+  if (major!=PERDIOMAJOR || minor > PERDIOMINOR) {
+    if (major==2 && minor==0)
+      newFormat = OK;
+    else
+      return NO;
+  }
 
   buf->setVersion(major,minor);
 
-  t = unmarshalTerm(buf);
+  t = newFormat ? newUnmarshalTerm(buf) : unmarshalTerm(buf);
   buf->unmarshalEnd();
   refTrail->unwind();
   return OK;
@@ -612,7 +618,7 @@ ByteSource::makeByteStream(ByteStream*& stream, const char *filename)
   int max,got;
   int total = 0;
   BYTE *pos = stream->initForRead(max);
-  unsigned long crc = init_crc();
+  crc_t crc = init_crc();
   while (TRUE) {
     OZ_Return result = getBytes(pos,max,got);
     if (result!=PROCEED) return result;
@@ -623,7 +629,8 @@ ByteSource::makeByteStream(ByteStream*& stream, const char *filename)
     pos = stream->beginRead(max);
   }
   if (total==0)
-    return raiseGeneric("bytesource:empty","Empty byte source",
+    return raiseGeneric("bytesource:empty",
+                        "Magic header not found (not a pickle?)",
                         oz_cons(OZ_pairA("File",oz_atom(filename)),oz_nil()));
 
   if (checkChecksum(crc)==NO)
