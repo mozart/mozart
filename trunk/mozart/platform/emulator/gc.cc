@@ -73,6 +73,12 @@ int32 * cs_orig_start = NULL;
 int     cs_copy_size  = 0;
 #endif
 
+/*
+ * Forward reference
+ */
+
+static void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
+
 
 /*
  *               Debug
@@ -366,7 +372,6 @@ void * gcReallocStatic(void * p, size_t sz) {
 enum TypeOfPtr {
   PTR_LTUPLE,
   PTR_SRECORD,
-  PTR_NAME,
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
@@ -847,7 +852,7 @@ void dogcGName(GName *gn) {
 
 Name *Name::gcName() {
   CHECKCOLLECTED(homeOrGName, Name *);
-  GName *gn = NULL;
+  GName * gn = NULL;
 
   if (hasGName()) {
     gn = getGName();
@@ -859,11 +864,17 @@ Name *Name::gcName() {
     isGround = NO;
     Name *aux = (Name*) gcReallocStatic(this,sizeof(Name));
 
-    gcStack.push(aux, PTR_NAME);
     storeFwd(&homeOrGName, aux);
     
-    dogcGName(gn);
+    if (gn) {
+      dogcGName(gn);
+    } else {
+      aux->homeOrGName = 
+	ToInt32(((Board*)ToPointer(aux->homeOrGName))->gcBoard());
+    }
+
     return aux;
+
   } else {
     dogcGName(gn);
     return this;
@@ -876,14 +887,6 @@ Literal *Literal::gc() {
 
   Assert(isName());
   return ((Name*) this)->gcName();
-}
-
-inline 
-void Name::gcRecurse() {
-  if (hasGName())
-    return;
-
-  homeOrGName = ToInt32(((Board*)ToPointer(homeOrGName))->gcBoard());
 }
 
 Object *Object::gcObject() {
@@ -996,7 +999,7 @@ SVariable * SVariable::gcGetFwd(void) {
 }
 
 
-SVariable * SVariable::gc() {
+void SVariable::gc() {
   Assert(!gcIsMarked()) 
   
   Board * bb = home->gcBoard();
@@ -1013,7 +1016,6 @@ SVariable * SVariable::gc() {
   
   to->home     = bb;
 
-  return to;
 }
 
 
@@ -1126,8 +1128,8 @@ GenCVariable * GenCVariable::gcGetFwd(void) {
   return (GenCVariable *) UnMarkPointer(suspList);
 }
 
-inline
-GenCVariable * GenCVariable::gc(void) {
+
+void GenCVariable::gc(void) {
   INFROMSPACE(this);
 
   Assert(!gcIsMarked())
@@ -1136,7 +1138,7 @@ GenCVariable * GenCVariable::gc(void) {
   
   Assert(bb);
 
-  SuspList * sl = suspList;
+  SuspList * sl = suspList->gc();
   
   GenCVariable * to;
   
@@ -1148,18 +1150,18 @@ GenCVariable * GenCVariable::gc(void) {
     to->u = this->u;
     storeFwdField(this, to);
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
-    to->suspList = sl->gc();
+    to->suspList = sl;
     to->home     = bb;
-    return to;
+    return;
 
   case BoolVariable:
     to = (GenCVariable *) heapMalloc(sizeof(GenBoolVariable));
     to->u = this->u;
     storeFwdField(this, to);
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
-    to->suspList = sl->gc();
+    to->suspList = sl;
     to->home     = bb;
-    return to;
+    return;
 
   case OFSVariable:
     sz = sizeof(GenOFSVariable);  break;
@@ -1201,10 +1203,9 @@ GenCVariable * GenCVariable::gc(void) {
 
   Assert(!isInGc || this->home != bb);
     
-  to->suspList = sl->gc();
+  to->suspList = sl;
   to->home     = bb;
     
-  return to;
 }
 
 
@@ -1502,7 +1503,8 @@ void gc_finalize()
 
 
 inline
-void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
+void gcTagged(TaggedRef & frm, TaggedRef & to, 
+	      Bool isInGc, Bool hasDirectVars, Bool allVarsAreLocal) {
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
   
   TaggedRef aux = frm;
@@ -1546,8 +1548,10 @@ void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
 	  SVariable * sv = tagged2SVar(aux);
 	  
 	  if (!sv->gcIsMarked()) {
-	    if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
-	      (void) sv->gc();
+	    if (allVarsAreLocal || 
+		isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
+	      Assert(isInGc || !(GETBOARD(sv))->isMarkedGlobal());
+	      sv->gc();
 	    } else {
 	      to = makeTaggedRef(aux_ptr);
 	      return;
@@ -1560,10 +1564,12 @@ void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
 	{
 	  Board * bb = tagged2VarHome(aux)->derefBoard();
 	  
-	  if (!isInGc && bb->isMarkedGlobal()) {
+	  if (!allVarsAreLocal && !isInGc && bb->isMarkedGlobal()) {
 	    to = makeTaggedRef(aux_ptr);
 	    return;
 	  }
+	  
+	  Assert(isInGc || !bb->isMarkedGlobal());
 	  
 	  (void) bb->gcBoard();
 	  
@@ -1577,8 +1583,10 @@ void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
 	  GenCVariable * cv = tagged2CVar(aux);
 	  
 	  if (!cv->gcIsMarked()) {
-	    if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
-	      (void) cv->gc();
+	    if (allVarsAreLocal || 
+		isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+	      Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
+	      cv->gc();
 	    } else {
 	      to = makeTaggedRef(aux_ptr);
 	      return;
@@ -1656,36 +1664,41 @@ void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
     return;
 
   case SVAR: 
-    {
+    if (hasDirectVars) {
       SVariable * sv = tagged2SVar(aux);
 
       if (!sv->gcIsMarked()) {
-	if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
+	if (allVarsAreLocal || isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
+	  Assert(isInGc || !(GETBOARD(sv))->isMarkedGlobal());
 	  isGround = NO;
-	  to = makeTaggedSVar(sv->gc());
+	  sv->gc();
 	} else {
 	  // We cannot copy the variable, but we have already copied
 	  // their taggedref, so we change the original variable to a ref 
 	  // of the copy.
 	  // After pushing on the update stack the
 	  // the original variable is replaced by a reference!
+	  Assert(!isInGc);
 	  frm = makeTaggedRef(&to);
 	  to  = aux;
+	  storeFwdMode(NO, &frm, &to);
+	  return;
 	}
-      } else {
-	to = makeTaggedSVar(sv->gcGetFwd());
       }
+	
+      to = makeTaggedSVar(sv->gcGetFwd());
       storeFwdMode(isInGc, &frm, &to);
-      return;
     }
-
+    return;
+    
   case UVAR: 
-    {
+    if (hasDirectVars) {
       Board * bb = tagged2VarHome(aux)->derefBoard();
       
       Assert(bb);
 
-      if (isInGc || !bb->isMarkedGlobal()) {
+      if (allVarsAreLocal || isInGc || !bb->isMarkedGlobal()) {
+	Assert(isInGc || !bb->isMarkedGlobal());
 	bb = bb->gcBoard();
 	Assert(bb);
 	isGround = NO;
@@ -1695,46 +1708,71 @@ void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
 	to  = aux;
       }
       storeFwdMode(isInGc, &frm, &to);
-      return;
     }
+    return;
 
   case CVAR:
-    {
+    if (hasDirectVars) {
       GenCVariable * cv = tagged2CVar(aux);
 
       if (!cv->gcIsMarked()) {
-	if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+	if (allVarsAreLocal || isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
+	  Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
 	  isGround = NO;
-	  to = makeTaggedCVar(cv->gc());
+	  cv->gc();
 	} else {
+	  Assert(!isInGc);
 	  frm = makeTaggedRef(&to);
 	  to  = aux;
+	  storeFwdMode(NO, &frm, &to);
+	  return;
 	}
-      } else {
-	to = makeTaggedCVar(cv->gcGetFwd());
       }
+      
+      to = makeTaggedCVar(cv->gcGetFwd());
       storeFwdMode(isInGc, &frm, &to);
-      return;
     }
+    return;
     
   }
-
 
 }
 
 
 void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
-  gcTagged(frm, to, isInGc);
+  gcTagged(frm, to, isInGc, OK, NO);
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
   if (isInGc) {
     for (int i=sz; i--; )
-      gcTagged(frm[i], to[i], OK);
+      gcTagged(frm[i], to[i], OK, OK, NO);
   } else {
     for (int i=sz; i--; )
-      gcTagged(frm[i], to[i], NO);
+      gcTagged(frm[i], to[i], NO, OK, NO);
   }
+}
+
+/*
+ * The following routine are for the CPI
+ *
+ * USE THEM ONLY IF YOU FULLY UNDERSTAND THAT THEY ONLY WORK FOR 
+ * LOCAL VARIABLES!
+ *
+ */
+
+void OZ_collectLocalHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
+  if (isInGc) {
+    for (int i=sz; i--; )
+      gcTagged(frm[i], to[i], OK, OK, OK);
+  } else {
+    for (int i=sz; i--; )
+      gcTagged(frm[i], to[i], NO, OK, OK);
+  }
+}
+
+void OZ_updateLocalHeapTerm(TaggedRef & to) {
+  gcTagged(to, to, isInGc, NO, OK);
 }
 
 
@@ -2858,10 +2896,6 @@ void GcStack::recurse(void) {
 
     case PTR_SRECORD:   
       ((SRecord *) ptr)->gcRecurse();          
-      break;
-
-    case PTR_NAME:      
-      ((Name *) ptr)->gcRecurse ();            
       break;
 
     case PTR_BOARD:     
