@@ -132,6 +132,17 @@ Bool hasOFSSuspension(SuspList * suspList)
   return FALSE;
 }
 
+//
+static inline TaggedRef ofvTrail(TaggedRef *vPtr)
+{
+  return (*vPtr);
+}
+static inline void ofvRestore(TaggedRef *vPtr, TaggedRef val)
+{
+  *vPtr = val;
+}
+
+//
 OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
 {
   Assert(!oz_isRef(term));
@@ -145,13 +156,19 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     
     // Get local/global flag:
     Bool vLoc=oz_isLocalVar(this);
-    
+
+    OZ_Term tv = ofvTrail(vPtr);
     // Bind OFSVar to the Literal:
     if (vLoc) DoBind(vPtr, term);
     else DoBindAndTrail(vPtr, term);
     
     // Unify the labels:
-    if (!oz_unify(term,label)) return FALSE; // mm_u
+    OZ_Return ret;
+    if ((ret = oz_unify(term,label)) != PROCEED) {
+      if (ret != FAILED)
+	ofvRestore(vPtr, tv);
+      return (ret);
+    }
     
     // Update the OFS suspensions:
     if (vLoc) addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
@@ -197,17 +214,31 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
 	addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
       }
     }
-    
+
+    OZ_Term tv = ofvTrail(vPtr);
     // Bind OFSVar to the LTuple:
     if (vLoc) DoBind(vPtr, bindInRecordCaseHack);
     else DoBindAndTrail(vPtr, bindInRecordCaseHack);
     
     // Unify the labels:
-    if (!oz_unify(AtomCons,label)) return FALSE; // mm_u
+    OZ_Return ret;
+    if ((ret = oz_unify(AtomCons,label)) != PROCEED) {
+      if (ret != FAILED)
+	ofvRestore(vPtr, tv);
+      return (ret);
+    }
     
     // Unify corresponding feature values:
-    if (arg1 && !oz_unify(termLTup->getHead(),arg1)) return FALSE; // mm_u
-    if (arg2 && !oz_unify(termLTup->getTail(),arg2)) return FALSE; // mm_u
+    if (arg1 && (ret = oz_unify(termLTup->getHead(),arg1)) != PROCEED) {
+      if (ret != FAILED)
+	ofvRestore(vPtr, tv);
+      return (ret);
+    }
+    if (arg2 && (ret = oz_unify(termLTup->getTail(),arg2)) != PROCEED) {
+      if (ret != FAILED)
+	ofvRestore(vPtr, tv);
+      return (ret);
+    }
     
     // Propagate changes to the suspensions:
     // (this routine is actually OzVariable::propagate)
@@ -246,32 +277,38 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
       }
     }
 
+    OZ_Term tv = ofvTrail(vPtr);
     // Bind OFSVar to the SRecord:
     if (vLoc) DoBind(vPtr, bindInRecordCaseHack);
     else DoBindAndTrail(vPtr, bindInRecordCaseHack);
   
     // Unify the labels:
-    if (!oz_unify(termSRec->getLabel(),label))  // mm_u
-      { pairs->free(); return FALSE; }
+    OZ_Return ret;
+    if ((ret = oz_unify(termSRec->getLabel(),label)) != PROCEED) {
+      pairs->free();
+      if (ret != FAILED)
+	ofvRestore(vPtr, tv);
+      return (ret);
+    }
 
     // Unify corresponding feature values:
-    PairList* p=pairs;
+    PairList* p = pairs;
     TaggedRef t1, t2;
     while (p->getpair(t1, t2)) {
       Assert(!p->isempty());
-      if (oz_unify(t1, t2)) { // mm_u
-	// Unification successful
-      } else {
-	// Unification failed
-	success=FALSE;
+      if ((ret = oz_unify(t1, t2)) != PROCEED)
 	break;
-      }
       p->nextpair();
     }
     Assert(!success || p->isempty());
     pairs->free();
-    if (!success) return FALSE;
-    // At this point, unification is successful
+    if (ret != PROCEED) {
+      if (ret != FAILED)
+	ofvRestore(vPtr, tv);
+      return (ret);
+    }
+
+    // At this point, binding is successful
 
     // Propagate changes to the suspensions:
     // (this routine is actually OzVariable::propagate)
@@ -395,7 +432,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   PairList * pairs;
   otherVar->dynamictable->merge(dt, pairs);
   long mergeWidth = dt->numelem;
-  // kost@ : do *not* f$ck up with the newVar's feature table here:
+  // kost@ : do *not* f$ck with the newVar's feature table here:
   //         (a) newVar can be global, 
   //         (b) newVar can be bound (in a "something is non-local" case);
   // newVar->dynamictable = dt;
@@ -415,12 +452,23 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   // Because of cycles, these bindings must be done _before_ the unification
   // If in glob/loc unification, the global is not constrained, then bind
   // the local to the global and relink the local's suspension list
+  //
+  // kost@ : in addition, the binding is trailed, and restored later
+  // in case of suspension. Note this is done even when the variable
+  // is global;
+  OZ_Term* trailedVarPtr;
+  OZ_Term trailedVar;
+
   if (vLoc && tLoc) {
     DEBUG_CONSTRAIN_VAR(("vLoc && tLoc\n"));
     Assert(otherPtr); 
     Assert(nvRefPtr);
+    // kost@ : extend the target variable now;
     newVar->dynamictable = dt;
-    // bind to var without trailing:
+    trailedVarPtr = otherPtr;
+    trailedVar = ofvTrail(trailedVarPtr);
+
+    //
     bindLocalVar(otherPtr, nvRefPtr);
   } else if (vLoc && !tLoc) {
     DEBUG_CONSTRAIN_VAR(("vLoc && !tLoc\n"));
@@ -429,6 +477,11 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
       DEBUG_CONSTRAIN_VAR(("constrainGlobalVar\n"));
       constrainGlobalVar(tPtr, dt);
     }
+    //
+    trailedVarPtr = vPtr;
+    trailedVar = ofvTrail(trailedVarPtr);
+
+    //
     bindLocalVar(vPtr, tPtr);
   } else if (!vLoc && tLoc) {
     DEBUG_CONSTRAIN_VAR(("!vLoc && tLoc\n"));
@@ -437,6 +490,11 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
       DEBUG_CONSTRAIN_VAR(("constrainGlobalVar\n"));
       constrainGlobalVar(vPtr, dt);
     }
+    //
+    trailedVarPtr = tPtr;
+    trailedVar = ofvTrail(trailedVarPtr);
+
+    //
     bindLocalVar(tPtr, vPtr);
   } else if (!vLoc && !tLoc) {
     DEBUG_CONSTRAIN_VAR(("!vLoc && !tLoc\n"));
@@ -445,16 +503,24 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
       DEBUG_CONSTRAIN_VAR(("constrainGlobalVar\n"));
       constrainGlobalVar(vPtr, dt);
     }
+    //
+    trailedVarPtr = tPtr;
+    trailedVar = ofvTrail(trailedVarPtr);
+
+    //
     bindGlobalVar(tPtr, vPtr);
   } else Assert(FALSE);
 
   // Unify the labels:
-  if (!oz_unify(termVar->label, label)) {
+  OZ_Return ret;
+  if ((ret = oz_unify(termVar->label, label)) != PROCEED) {
     pairs->free();
-    return FALSE;
+    if (ret != FAILED)
+      ofvRestore(trailedVarPtr, trailedVar);
+    return (ret);
   }
   // Must be literal or variable:
-  TaggedRef tmp=label;
+  TaggedRef tmp = label;
   DEREF(tmp,_1);
   if (!oz_isLiteral(tmp) && !oz_isVar(tmp)) {
     pairs->free();
@@ -465,24 +531,21 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   // Return FALSE upon encountering the first failing unification
   // Return TRUE if all unifications succeed
   PairList * p = pairs;
-  Bool success = TRUE;
   TaggedRef t1, t2;
   while (p->getpair(t1, t2)) {
     Assert(!p->isempty());
-    if (oz_unify(t1, t2)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?  // mm_u
-      // Unification successful
-    } else {
-      // Unification failed
-      success=FALSE;
+    if ((ret = oz_unify(t1, t2)) != PROCEED)
       break;
-    }
     p->nextpair();
   }
-  Assert(!success || p->isempty());
+  Assert(p->isempty() || ret != PROCEED);
   pairs->free();
-  if (!success) {
-    return FALSE;
+  if (ret != PROCEED) {
+    if (ret != FAILED)
+      ofvRestore(trailedVarPtr, trailedVar);
+    return (ret);
   }
+
   // At this point, unification is successful
 
   // Propagate changes to the suspensions:
