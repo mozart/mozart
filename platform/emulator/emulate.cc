@@ -2571,10 +2571,20 @@ LBLdispatcher:
          goto LBLfailure;
        }
 
+       if (e->debugmode()) {
+         TaggedRef debugstack =
+           CTT->getTaskStackRef()->dbgGetTaskStack(PC,1000,lastTop);
+         TaggedRef exv = e->exception.value;
+
+         execBreakpoint(CTT,NO);
+         debugStreamRaise(CTT,exv,debugstack);
+         goto LBLpreemption;
+       }
+
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = e->exception.value;
        CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
-       goto LBLpopTaskNoPreempt;
+       goto LBLpopTask; // changed from LBLpopTaskNoPreempt; -BL 26.3.97
      }
    }
 

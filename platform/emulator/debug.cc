@@ -32,11 +32,12 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
-void execBreakpoint(Thread *t) {
+void execBreakpoint(Thread *t, bool message) {
   t->startStepMode();
   t->deleteContFlag();
   t->traced();
-  debugStreamThread(t);
+  if (message)
+    debugStreamThread(t);
 }
 
 static Board* gotoRootBoard() {
@@ -189,6 +190,28 @@ void debugStreamExit(TaggedRef frameId) {
   gotoBoard(bb);
 }
 
+void debugStreamRaise(Thread *tt, TaggedRef exc, TaggedRef stack) {
+  Board *bb = gotoRootBoard();
+
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
+
+  am.currentThread->stop();
+
+  TaggedRef pairlist =
+    cons(OZ_pairA("thr",
+                  OZ_mkTupleC("#",2,makeTaggedConst(tt),
+                              OZ_int(tt->getID()))),
+         cons(OZ_pairA("exc", exc),
+              cons(OZ_pairA("stack", stack),
+                   nil())));
+
+  TaggedRef entry = OZ_recordInit(OZ_atom("exception"), pairlist);
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+  gotoBoard(bb);
+}
+
 void debugStreamCall(ProgramCounter debugPC, char *name, int arity,
                      TaggedRef *arguments, bool builtin, int frameId) {
   Board *bb = gotoRootBoard();
@@ -250,6 +273,12 @@ OZ_C_proc_begin(BItaskStack,3)
 OZ_C_proc_end
 
 // ------------------
+
+OZ_C_proc_begin(BIdebugmode,1)
+{
+  return OZ_unify(OZ_getCArg(0), am.debugmode() ? OZ_true() : OZ_false());
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIsuspendDebug,1)
 {

@@ -1556,7 +1556,8 @@ TaggedRef TaskStack::dbgFrameVariables(int frameId)
   return nil();
 }
 
-TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
+TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth,
+                                     TaskStackEntry *top)
 {
   Assert(this);
 
@@ -1566,7 +1567,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
     out = cons(CodeArea::dbgGetDef(pc),out);
   }
 
-  TaskStackEntry *auxtos = getTop();
+  TaskStackEntry *auxtos = top ? top : getTop();
 
   while (depth-- > 0) {
     PopFrame(auxtos,PC,Y,G);
