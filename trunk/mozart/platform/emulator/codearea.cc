@@ -223,22 +223,22 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 
   TaggedRef pairlist = oz_nil();
   pairlist =
-    oz_cons(OZ_pairAI("time",findTimeStamp(PC)),
-	 oz_cons(OZ_pairA("data",makeTaggedConst(CAP)),
-	      oz_cons(OZ_pairA("file",file),
-		   oz_cons(OZ_pairAI("line",line < 0? -line: line),
-			oz_cons(OZ_pairA("column",OZ_int(colum)),
-			     oz_cons(OZ_pairAI("PC",(int)PC),
-				  oz_cons(OZ_pairA("kind",OZ_atom("call")),
-				       oz_cons(OZ_pairA("origin",
-						  OZ_atom("procedureFrame")),
-					    pairlist))))))));
+    oz_cons(OZ_pair2(AtomData,makeTaggedConst(CAP)),
+	oz_cons(OZ_pair2(AtomFile,file),
+	    oz_cons(OZ_pair2(AtomLine,OZ_int(line < 0? -line: line)),
+		oz_cons(OZ_pair2(AtomColumn,OZ_int(colum)),
+		    oz_cons(OZ_pair2(AtomPC,OZ_int((int) PC)),
+			oz_cons(OZ_pair2(AtomKind,AtomCall),
+			    oz_cons(OZ_pair2(AtomOrigin,AtomProcedureFrame),
+				pairlist)))))));
   if (frameId != -1)
-    pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
+    pairlist =
+      oz_cons(OZ_pair2(AtomFrameID,OZ_int(frameId)),pairlist);
   else
-    pairlist = oz_cons(OZ_pairA("vars",getFrameVariables(PC,Y,CAP)),pairlist);
+    pairlist =
+      oz_cons(OZ_pair2(AtomVars,getFrameVariables(PC,Y,CAP)),pairlist);
 
-  return OZ_recordInit(OZ_atom("entry"), pairlist);
+  return OZ_recordInit(AtomEntry,pairlist);
 }
 
 TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
@@ -276,11 +276,11 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
   }
 
   TaggedRef pairlist =
-    oz_cons(OZ_pairA("Y", locals),
-	 oz_cons(OZ_pairA("G", globals),
+    oz_cons(OZ_pair2(AtomY, locals),
+	 oz_cons(OZ_pair2(AtomG, globals),
 	      oz_nil()));
 
-  TaggedRef ret = OZ_recordInit(OZ_atom("v"), pairlist);
+  TaggedRef ret = OZ_recordInit(AtomV, pairlist);
   return ret;
 }
 
@@ -1298,7 +1298,6 @@ void CodeArea::allocateBlock(int sz)
   wPtr       = codeBlock;
   nextBlock  = allBlocks;
   allBlocks  = this;
-  timeStamp  = time(0);
 }
 
 
