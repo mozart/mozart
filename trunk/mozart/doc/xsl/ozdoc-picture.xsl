@@ -11,6 +11,18 @@
 	GRAMMAR.RULE GRAMMAR
 	TABLE TR"/>
 
+<template match="text()"/>
+
+<template match="PICTURE.CHOICE">
+  <choose>
+    <when test="PICTURE[@TYPE='LATEX']"/>
+    <when test="PICTURE.EXTERN[@TYPE='LATEX' or @TYPE='PS']"/>
+    <when test="PICTURE.EXTERN[@TYPE='GIF']">
+      <apply-templates select="PICTURE.EXTERN[@TYPE='GIF'][1]"/>
+    </when>
+  </choose>
+</template>
+
 <template match="PICTURE.EXTERN[@TYPE='GIF']">
   <value-of select="@TO"/>
   <text>
