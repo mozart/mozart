@@ -1670,7 +1670,7 @@ fi
   echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
 echo "configure:1672: checking $CXX version is at least 2.7" >&5
   oz_tmp_ok=no
-  if oz_tmp_version1=`$CXX --version 2>/dev/null`; then
+  if oz_tmp_version1=`$CXX -dumpversion || $CXX --version 2>/dev/null`; then
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 
@@ -2097,7 +2097,7 @@ fi
   echo $ac_n "checking $CC version is at least 2.7""... $ac_c" 1>&6
 echo "configure:2099: checking $CC version is at least 2.7" >&5
   oz_tmp_ok=no
-  if oz_tmp_version1=`$CC --version 2>/dev/null`; then
+  if oz_tmp_version1=`$CC -dumpversion || $CC --version 2>/dev/null`; then
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 
