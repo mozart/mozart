@@ -443,13 +443,11 @@ tags:
 	$(ALLSRCS)
 
 bootstrap:
-	$(MAKE) Init.ozc CP.ozc Compiler.ozc Gump.ozc \
-		OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=. OZ_NOLOAD="="
-	$(MAKE) ozbatch \
-		OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=. OZ_NOLOAD="=" \
-		OZHOME=$(PREFIX)
 	$(MAKE) all \
-		OZBATCH=./ozbatch OZ_LIB=. OZ_NOLOAD="=" OZINIT=./Init.ozc
+		OZBATCH=$(SRCDIR)/ozbatch.sh \
+		OZINIT=Init.ozc \
+		OZ_LIB=. \
+		OZ_NOLOAD="="
 
 #
 # testing components locally
@@ -467,24 +465,23 @@ stage1:
 	$(MAKE) all
 	$(MAKE) install-main PREFIX=$(STAGE1)
 
-stage1-bootstrap:
-	$(MAKE) bootstrap PREFIX=$(STAGE1)
-
 stage2:
 	$(MAKE) install-main2 PREFIX=$(STAGE2) \
 	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/:.:= \
 	OZBATCH=$(STAGE1)/bin/ozbatch \
-	OZINIT=$(STAGE1)/lib/Init.ozc
+	OZINIT=$(STAGE1)/lib/Init.ozc \
+	OZ_NOLOAD="="
 
 stage3:
 	$(MAKE) install-main2 PREFIX=$(STAGE3) \
 	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:= \
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozc \
-	OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
+	OZMAFILE=$(STAGE2)/lib/ozbatch.ozm \
+	OZ_NOLOAD="="
 
 check:
-	$(MAKE) stage1-bootstrap clean stage2
+	$(MAKE) clean bootstrap stage1 clean stage2 clean stage3
 
 .PHONY: denys install-denys denys2
 
