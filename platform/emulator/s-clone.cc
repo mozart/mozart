@@ -24,53 +24,47 @@
 #undef  G_COLLECT
 #define S_CLONE
 
-#define OZ_cacBlock      OZ_sCloneBlock
-#define oz_cacTerm       oz_sCloneTerm
+#define OZ_cacBlock             OZ_sCloneBlock
+#define oz_cacTerm              oz_sCloneTerm
 
-#define _cacRecurse      sCloneRecurse
-#define _cac             sClone
-#define _cacRecurseV     sCloneRecurseV
-#define _cacV            sCloneV
+#define _cacRecurse             sCloneRecurse
+#define _cac                    sClone
+#define _cacRecurseV            sCloneRecurseV
+#define _cacV                   sCloneV
 
-#define _cacFix          sCloneFix
-#define _cacMark         sCloneMark
+#define _cacFix                 sCloneFix
+#define _cacMark                sCloneMark
 
-#define _cacConstTerm    sCloneConstTerm
-#define _cacConstTermWithHome    sCloneConstTermWithHome
-#define _cacTertiary   sCloneTertiary
-#define _cacConstRecurse sCloneConstRecurse
+#define _cacConstTerm           sCloneConstTerm
+#define _cacConstTermInline     sCloneConstTermInline
+#define _cacConstRecurse        sCloneConstRecurse
 
-#define _cacBoard        sCloneBoard
+#define _cacBoard               sCloneBoard
 
-#define _cacName         sCloneName
+#define _cacName                sCloneName
 
-#define _cacClass        sCloneClass
-#define _cacObject       sCloneObject
-#define _cacObjectInline sCloneObjectInline
+#define _cacVar                 sCloneVar
+#define _cacVarRecurse          sCloneVarRecurse
+#define _cacVarInline           sCloneVarInline
 
-#define _cacAbstraction  sCloneAbstraction
+#define _cacSRecordInline       sCloneSRecordInline
+#define _cacSRecord             sCloneSRecord
 
-#define _cacVar          sCloneVar
-#define _cacVarRecurse   sCloneVarRecurse
-#define _cacVarInline    sCloneVarInline
+#define _cacSuspendableInline   sCloneSuspendableInline
+#define _cacSuspendable         sCloneSuspendable
 
-#define _cacSRecord      sCloneSRecord
+#define _cacLocalInline         sCloneLocalInline
+#define _cacLocalRecurse        sCloneLocalRecurse
 
-#define _cacSuspendableInline  sCloneSuspendableInline
-#define _cacSuspendable  sCloneSuspendable
-
-#define _cacLocalInline  sCloneLocalInline
-#define _cacLocalRecurse  sCloneLocalRecurse
-
-#define _cacExtension    sCloneExtension
+#define _cacExtension           sCloneExtension
 #define _cacExtensionRecurse    sCloneExtensionRecurse
 
-#define _cacPendThreadEmul sClonePendThreadEmul
+#define _cacPendThreadEmul      sClonePendThreadEmul
 
 
-#define _cacReallocStatic        sCloneReallocStatic
+#define _cacReallocStatic       sCloneReallocStatic
 
-#define _cacRefsArray            sCloneRefsArray
+#define _cacRefsArray           sCloneRefsArray
 
 #include "cac.cc"
 

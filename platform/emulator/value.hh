@@ -598,8 +598,10 @@ public:
   }
 
   ConstTerm *gCollectConstTerm(void);
-  void gCollectConstRecurse(void);
   ConstTerm *sCloneConstTerm(void);
+  ConstTerm *gCollectConstTermInline(void);
+  ConstTerm *sCloneConstTermInline(void);
+  void gCollectConstRecurse(void);
   void sCloneConstRecurse(void);
 
   TypeOfConst getType() { return (TypeOfConst) ((tag & Co_Mask)>>1); }
@@ -623,12 +625,11 @@ class ConstTermWithHome: public ConstTerm {
 private:
   Tagged2 boardOrGName;
 
-protected:
+public:
   void setBoard(Board *b)
   {
     boardOrGName.set(b,CWH_Board);
   }
-public:
   ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
@@ -644,9 +645,6 @@ public:
     Assert(!hasGName());
     return (Board*)boardOrGName.getPtr();
   }
-
-  void gCollectConstTermWithHome(void);
-  void sCloneConstTermWithHome(void);
 
   void setGName(GName *gn) {
     Assert(gn);
@@ -935,9 +933,6 @@ public:
     return (Board*) getPointer();
   }
 
-  void gCollectTertiary(void);
-  void sCloneTertiary(void);
-
 };
 
 /*===================================================================
@@ -1178,6 +1173,8 @@ public:
 
   SRecord *gCollectSRecord(void);
   SRecord *sCloneSRecord(void);
+  SRecord *gCollectSRecordInline(void);
+  SRecord *sCloneSRecordInline(void);
 
   Bool isTuple() { return sraIsTuple(recordArity); }
 
@@ -1550,9 +1547,6 @@ public:
 
   const char *getPrintName();
 
-  ObjectClass *gCollectClass();
-  ObjectClass *sCloneClass();
-
   void import(SRecord *feat,OzDictionary *fm, SRecord *uf,
               OzDictionary *dm, int f)
   {
@@ -1673,11 +1667,6 @@ public:
 
   TaggedRef getArityList();
   int getWidth ();
-
-  Object * gCollectObjectInline();
-  Object * gCollectObject();
-  Object * sCloneObjectInline();
-  Object * sCloneObject();
 
   GName *globalize();
   void localize();
@@ -2420,8 +2409,8 @@ inline Port *tagged2Port(TaggedRef term)
  *=================================================================== */
 
 class Space: public Tertiary {
-  friend ConstTerm * ConstTerm::gCollectConstTerm(void);
-  friend ConstTerm * ConstTerm::sCloneConstTerm(void);
+  friend ConstTerm * ConstTerm::gCollectConstRecurse(void);
+  friend ConstTerm * ConstTerm::sCloneConstRecurse(void);
 private:
   Board *solve;
   // The solve pointer can be:
