@@ -1071,6 +1071,13 @@ Thread *Thread::gcThread ()
   return (newThread);
 }
 
+inline
+Abstraction *gcAbstraction(Abstraction *a)
+{
+  return (Abstraction *) a->gcConstTerm();
+}
+
+
 Thread *Thread::gcDeadThread()
 {
   Assert(isDeadThread());
@@ -1086,6 +1093,7 @@ Thread *Thread::gcDeadThread()
 
   storeForward (&item.threadBody, newThread);
   setSelf(getSelf()->gcObject());
+  ProfileCode(setAbstr(gcAbstraction(getAbstr()));)
 
   return (newThread);
 }
@@ -1143,6 +1151,7 @@ void Thread::gcRecurse ()
   }
 
   setSelf(getSelf()->gcObject());
+  ProfileCode(setAbstr(gcAbstraction(getAbstr()));)
 
   gcTertiary();
 }
@@ -1809,7 +1818,7 @@ void AbstractionEntry::gcAbstractionEntries()
   // there may be NULL entries in the table during gc
   AbstractionEntry *aux = allEntries;
   while(aux) {
-    aux->abstr = (Abstraction *) aux->abstr->gcConstTerm();
+    aux->abstr = gcAbstraction(aux->abstr);
     aux->g = (aux->abstr == NULL) ? (RefsArray) NULL : gcRefsArray(aux->g);
     aux = aux->next;
   }

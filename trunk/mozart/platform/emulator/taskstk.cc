@@ -128,10 +128,3 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
 }
 
 
-void TaskStack::saveAbstr()
-{
-  ProfileCode(
-	      pushAbstr(ozstat.currAbstr);
-	      ozstat.currAbstr = NULL;
-        )
-}
