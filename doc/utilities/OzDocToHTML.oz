@@ -35,6 +35,7 @@ import
 export
    Translate
 define
+   DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
    DEFAULTSTYLESHEET = 'http://www.ps.uni-sb.de/css/ozdoc.css'
 
    %%
@@ -1029,7 +1030,7 @@ define
 	 end
       end
       meth StartNode(Title)
-	 Out <- ('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0//EN">\n'#
+	 Out <- ('<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n'#
 		 '<HTML>\n'#
 		 '<HEAD>\n'#
 		 '<TITLE>'#Title#'</TITLE>\n'#
