@@ -51,6 +51,17 @@
 #include "os.hh"
 #include "value.hh"
 #include "codearea.hh"
+#include "fdgenvar.hh"
+#include "fsgenvar.hh"
+#include "fdbvar.hh"
+#include "ofgenvar.hh"
+#include "ctgenvar.hh"
+#include "future.hh"
+#include "simplevar.hh"
+#include "perdiovar.hh"
+#include "extvar.hh"
+#include "threadInterface.hh"
+#include "pointer-marks.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -1015,7 +1026,7 @@ void GenFSetVariable::gc(GenFSetVariable * frm) {
 }
 
 
-GenCVariable * GenCtVariable::gcV(void) 
+GenCVariable * GenCtVariable::gc(void) 
 {
   GenCtVariable * to = new GenCtVariable(* (GenCtVariable*) this);
 
@@ -1041,14 +1052,14 @@ GenCVariable * GenCtVariable::gcV(void)
 }
 
 
-void GenCtVariable::gcRecurseV(void)
+void GenCtVariable::gcRecurse(void)
 {
-  // constraint (must go in `gcRecurseV' since it may contain recursion
+  // constraint (must go in `gcRecurse' since it may contain recursion
   _constraint = _constraint->copy();  
 }
 
 
-GenCVariable * GenCVariable::gc(void) {
+GenCVariable * GenCVariable::gcG(void) {
   INFROMSPACE(this);
 
   Assert(!gcIsMarked())
@@ -1092,17 +1103,14 @@ GenCVariable * GenCVariable::gc(void) {
     to->home     = bb;
     return to;
 
-  case OFSVariable:
-    to = new GenOFSVariable(*(GenOFSVariable*) this);
-    break;
 
-  case PerdioVariable:
-    to = new PerdioVar(*(PerdioVar*) this);
-    break;
-
-  default:
-    to = gcV();
-    break;
+  case OZ_VAR_SIMPLE:   to = ((SimpleVar *)this)->gc(); break;
+  case OZ_VAR_FUTURE:   to = ((Future *)this)->gc(); break;
+  case OFSVariable:    to = new GenOFSVariable(*(GenOFSVariable*) this); break;
+  case PerdioVariable:  to = new PerdioVar(*(PerdioVar*) this); break;
+  case CtVariable:      to = ((GenCtVariable*)this)->gc(); break;
+  case OZ_VAR_EXTENTED: to = ((ExtentedVar *)this)->gcV(); break;
+  default: error("not impl");
   }
 
   // The generic part
@@ -1149,16 +1157,19 @@ void GenOFSVariable::gcRecurse(void) {
 }
 
 
-void GenCVariable::gcRecurse(void) {
+void GenCVariable::gcRecurseG(void) {
   
   switch (getType()) {
-  case OFSVariable:
-    ((GenOFSVariable *) this)->gcRecurse(); break;
-  case PerdioVariable:
-    ((PerdioVar *) this)->gcRecurse(); break;
-  default:
-    gcRecurseV(); break;
-    Assert(0);
+  case OZ_VAR_SIMPLE:   ((SimpleVar *)this)->gcRecurse(); break;
+  case OZ_VAR_FUTURE:   ((Future *)this)->gcRecurse(); break;
+  case PerdioVariable:  ((PerdioVar *)this)->gcRecurse(); break;
+  case BoolVariable:    Assert(0); break;
+  case FDVariable:      Assert(0); break;
+  case OFSVariable:     ((GenOFSVariable*)this)->gcRecurse(); break;
+  case FSetVariable:    Assert(0); break;
+  case CtVariable:      ((GenCtVariable*)this)->gcRecurse(); break;
+  case OZ_VAR_EXTENTED: ((ExtentedVar *)this)->gcRecurseV(); break;
+  default: error("not impl");
   }
 
 }
@@ -1528,7 +1539,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 	  } else if (allVarsAreLocal || 
 		     isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
 	    Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
-	    GenCVariable *new_cv=cv->gc();
+	    GenCVariable *new_cv=cv->gcG();
 #ifdef DEEP_GARBAGE
 	    // mm2: dead value may appear in the wrong space
 	    if (!new_cv) {
@@ -1663,7 +1674,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
 		 isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
 	Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
 	isGround = NO;
-	to = makeTaggedCVar(cv->gc());
+	to = makeTaggedCVar(cv->gcG());
 	cv->gcMark(isInGc, &to);
       } else {
 	// We cannot copy the variable, but we have already copied
@@ -2922,7 +2933,7 @@ void GcStack::recurse(void) {
       break;
       
     case PTR_CVAR:    
-      ((GenCVariable *) ptr)->gcRecurse();     
+      ((GenCVariable *) ptr)->gcRecurseG();
       break;
 
     case PTR_CONSTTERM: 

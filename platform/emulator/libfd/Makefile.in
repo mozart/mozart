@@ -25,8 +25,8 @@ include ../Makefile.vars
 
 BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
-FDDIR		= @srcdir@
-INCS		= -I. -I$(FDDIR)/.. -I..
+SRCDIR		= @srcdir@
+INCS		= -I. -I$(SRCDIR)/.. -I..
 
 FDLIBSRCS = arith.cc fdaux.cc bool.cc \
 	    card.cc cd.cc count.cc \
@@ -48,28 +48,22 @@ SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
 
 all:
 
-.PHONY: FDP.so libFDP.a libSchedule.a Schedule.so
-
-FDP.so: ../FDP.so
-Schedule.so: ../Schedule.so
-
-libFDP.a: ../libFDP.a
-libSchedule.a: ../libSchedule.a
-
-../FDP.so: $(FDLIBOBJS)
+# NOTE: $(SRCDIR) added to the dependencies, because in ../Makefile.in the libs
+#       depend also on this dir
+../FDP.so: $(FDLIBOBJS) $(SRCDIR)
 	$(DYNLD) -o $@ $(FDLIBOBJS)
 
-../libFDP.a: $(FDLIBOBJS)
+../libFDP.a: $(FDLIBOBJS) $(SRCDIR)
 	$(AR) -rc $@ $(FDLIBOBJS) && $(RANLIB) $@
 
-../Schedule.so: $(SCHEDLIBOBJS)
+../Schedule.so: $(SCHEDLIBOBJS) $(SRCDIR)
 	$(DYNLD) -o $@ $(SCHEDLIBOBJS)
 
-../libSchedule.a: $(SCHEDLIBOBJS)
+../libSchedule.a: $(SCHEDLIBOBJS) $(SRCDIR)
 	$(AR) -rc $@ $(SCHEDLIBOBJS) && $(RANLIB) $@
 
 depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
-	$(DEPEND) $(FDLIBSRCS:%=$(FDDIR)/%) $(SCHEDLIBSRCS:%=$(FDDIR)/%) \
+	$(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) \
 		> Makefile.deps
 
 -include Makefile.deps

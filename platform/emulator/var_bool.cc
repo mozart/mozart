@@ -29,9 +29,10 @@
 #endif
 
 
-#include "am.hh"
 #include "genvar.hh"
-#include "fdomn.hh"
+#include "fdbvar.hh"
+#include "fdgenvar.hh"
+#include "am.hh"
 
 // unify expects either two GenFDVariables or at least one
 // GenFDVariable and one non-variable
@@ -39,8 +40,8 @@
 // Only if a local variable is bound relink its suspension list, since
 // global variables are trailed.(ie. their suspension lists are
 // implicitely relinked.)
-OZ_Return GenBoolVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
-				  ByteCode *scp)
+OZ_Return GenBoolVariable::unify(TaggedRef * vPtr, TaggedRef term, 
+				 ByteCode *scp)
 {
 #ifdef SCRIPTDEBUG
   printf(am.isInstallingScript()
@@ -147,7 +148,8 @@ OZ_Return GenBoolVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
 	    printf("bool-bool global global\n"); fflush(stdout);
 #endif
 
-	    GenBoolVariable * bool_var = new GenBoolVariable();
+	    GenBoolVariable * bool_var
+	      = new GenBoolVariable(oz_currentBoard());
 	    TaggedRef * var_val = newTaggedCVar(bool_var);
 
 	    if (scp==0) {
@@ -276,7 +278,8 @@ OZ_Return GenBoolVariable::unifyV(TaggedRef * vPtr, TaggedRef term,
 	      am.doBindAndTrail(vPtr, int_val);
 	      am.doBindAndTrail(tPtr, int_val);
 	    } else {
-	      GenBoolVariable * bool_var = new GenBoolVariable();
+	      GenBoolVariable * bool_var
+		= new GenBoolVariable(oz_currentBoard());
 	      TaggedRef * var_val = newTaggedCVar(bool_var);
 	      if (scp==0) {
 		propagate(pc_cv_unif);

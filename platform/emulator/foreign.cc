@@ -33,7 +33,6 @@
 
 #include "value.hh"
 #include "genvar.hh"
-#include "ofgenvar.hh"
 
 #include "gmp.h"
 #include "os.hh"
@@ -958,124 +957,15 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
   out << ",,,|,,,";
 }
 
-
-ostream &DynamicTable::newprint(ostream &out, int depth)
-{
-  // Count Atoms & Names in dynamictable:
-  OZ_Term tmplit,tmpval;
-  dt_index di;
-  long ai;
-  long nAtomOrInt=0;
-  long nName=0;
-  for (di=0; di<size; di++) {
-    tmplit=table[di].ident;
-    tmpval=table[di].value;
-    if (tmpval) { 
-      CHECK_DEREF(tmplit);
-      if (oz_isAtom(tmplit)||oz_isInt(tmplit)) nAtomOrInt++; else nName++;
-    }
-  }
-  // Allocate array on heap, put Atoms in array:
-  OZ_Term *arr = new OZ_Term[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
-  for (ai=0,di=0; di<size; di++) {
-    tmplit=table[di].ident;
-    tmpval=table[di].value;
-    if (tmpval!=makeTaggedNULL() && (oz_isAtom(tmplit)||oz_isInt(tmplit)))
-      arr[ai++]=tmplit;
-  }
-  // Sort the Atoms according to printName:
-  inplace_quicksort(arr, arr+(nAtomOrInt-1));
-
-  // Output the Atoms first, in order:
-  for (ai=0; ai<nAtomOrInt; ai++) {
-    term2Buffer(out,arr[ai],0);
-    out << ':';
-    term2Buffer(out,lookup(arr[ai]),depth);
-    out << ' ';
-  }
-  // Output the Names last, unordered:
-  for (di=0; di<size; di++) {
-    tmplit=table[di].ident;
-    tmpval=table[di].value;
-    if (tmpval!=makeTaggedNULL() && !(oz_isAtom(tmplit)||oz_isInt(tmplit))) {
-      term2Buffer(out,tmplit,0);
-      out << ':';
-      term2Buffer(out,tmpval,depth);
-      out << ' ';
-    }
-  }
-  // Deallocate array:
-  delete arr;
-  return out;
-}
-
 static
 void fset2buffer(ostream &out, OZ_FSetValue * fs) 
 {
   out << fs->toString();
 }
 
-static
-void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
-{
-  switch(cv->getType()){
-  case FDVariable:
-    {
-      out << s;
-      out << ((GenFDVariable *) cv)->getDom().toString();
-      break;
-    }
-
-  case FSetVariable:
-    {
-      out << s;
-      out << ((GenFSetVariable *) cv)->getSet().toString();
-      break;
-    }
-
-  case BoolVariable:
-    {
-      out << s;
-      out << "{0#1}";
-      break;
-    }
-
-  case OFSVariable:
-    {
-      GenOFSVariable* ofs = (GenOFSVariable *) cv;
-      term2Buffer(out,ofs->getLabel(),0);
-      out << '(';
-      if (depth > 0) {
-	ofs->getTable()->newprint(out,depth-1);
-      } else {
-	out << ",,, ";
-	break;
-      }
-      out << "...)";
-      break;
-   }
-
-  case PerdioVariable:
-    {
-      PerdioVar *pv = (PerdioVar *) cv;
-      out << s << "<dist:";
-      char *type = "";
-      if (pv->isManager()) {
-	type = "mgr";
-      } else if (pv->isProxy()) {
-	type = "pxy";
-      } else {
-	type = "oprxy";
-      }
-      out << type << ">";
-      break;
-    }
-  default:
-    out << s << "/";
-    cv->printStreamV(out,depth);
-    break;
-  }
-}
+// genvar.cc
+void oz_cv_printStream(ostream &out, const char *s, GenCVariable *cv,
+		       int depth);
 
 void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
 {
@@ -1123,7 +1013,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       const char *s = getVarName(makeTaggedRef(termPtr));
       if (isCVar(tag)) {
-	cvar2buffer(out, s,tagged2CVar(term),depth);
+	oz_cv_printStream(out, s,tagged2CVar(term),depth);
       } else {
 	out << s;
       }

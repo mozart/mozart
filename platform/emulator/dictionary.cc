@@ -31,6 +31,7 @@
 
 #include "dictionary.hh"
 #include "am.hh"
+#include "ozostream.hh"
 
 // Return true iff argument is zero or a power of two
 Bool isPwrTwo(dt_index s) {
@@ -583,4 +584,54 @@ OZ_Term registry_get(OZ_Term k)
 void registry_put(OZ_Term k,OZ_Term v)
 {
   tagged2Dictionary(system_registry)->setArg(k,v);
+}
+
+ostream &DynamicTable::newprint(ostream &out, int depth)
+{
+  // Count Atoms & Names in dynamictable:
+  OZ_Term tmplit,tmpval;
+  dt_index di;
+  long ai;
+  long nAtomOrInt=0;
+  long nName=0;
+  for (di=0; di<size; di++) {
+    tmplit=table[di].ident;
+    tmpval=table[di].value;
+    if (tmpval) { 
+      CHECK_DEREF(tmplit);
+      if (oz_isAtom(tmplit)||oz_isInt(tmplit)) nAtomOrInt++; else nName++;
+    }
+  }
+  // Allocate array on heap, put Atoms in array:
+  OZ_Term *arr = new OZ_Term[nAtomOrInt+1]; // +1 since nAtomOrInt may be zero
+  for (ai=0,di=0; di<size; di++) {
+    tmplit=table[di].ident;
+    tmpval=table[di].value;
+    if (tmpval!=makeTaggedNULL() && (oz_isAtom(tmplit)||oz_isInt(tmplit)))
+      arr[ai++]=tmplit;
+  }
+  // Sort the Atoms according to printName:
+  inplace_quicksort(arr, arr+(nAtomOrInt-1));
+
+  // Output the Atoms first, in order:
+  for (ai=0; ai<nAtomOrInt; ai++) {
+    oz_printStream(arr[ai],out,0,0);
+    out << ':';
+    oz_printStream(lookup(arr[ai]),out,depth,0);
+    out << ' ';
+  }
+  // Output the Names last, unordered:
+  for (di=0; di<size; di++) {
+    tmplit=table[di].ident;
+    tmpval=table[di].value;
+    if (tmpval!=makeTaggedNULL() && !(oz_isAtom(tmplit)||oz_isInt(tmplit))) {
+      oz_printStream(tmplit,out,0,0);
+      out << ':';
+      oz_printStream(tmpval,out,depth,0);
+      out << ' ';
+    }
+  }
+  // Deallocate array:
+  delete arr;
+  return out;
 }

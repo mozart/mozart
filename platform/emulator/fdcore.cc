@@ -26,6 +26,9 @@
 
 #include "cpi.hh"
 #include "fdbuilti.hh"
+#include "genvar.hh"
+#include "fdgenvar.hh"
+#include "fdbvar.hh"
 
 //-----------------------------------------------------------------------------
 // fd built-ins don't cause stuck threads, but may cause their minds, therefore

@@ -1,3 +1,38 @@
+/*
+ *  Authors:
+ *    Michael Mehl (mehl@dfki.de)
+ * 
+ *  Copyright:
+ *    Michael Mehl, 1998
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ * 
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+/*
+ * This file helps me debugging the system and provides my infrastructure
+ * for experiments.  It's check in to the mozart system to make it simpler
+ * for me to use it from multiple sites.
+ *
+ * Compile it with
+ *
+ *   make michael.o
+ *   ozdynld -o libMichael.so michael.o
+ *
+ */
+
 #include "builtins.hh"
 #include "value.hh"
 #include "genvar.hh"
@@ -6,29 +41,6 @@
 #include "trace.hh"
 
 #include <stdio.h>
-
-const int MaxLine=1000;
-
-/*
- * sometimes this is useful for stopping a program to inspect something
- */
-OZ_BI_define(BIstop, 0,0)
-{
-  static char command[MaxLine];
- 
-  printf("press the RETURN key to continue! ");
-  fflush(stdout);
-  if (osfgets(command,MaxLine,stdin) == (char *) NULL) {
-    printf("Read no input.\n");
-  } else if (feof(stdin)) {
-    clearerr(stdin);
-    printf("EOF.\n");
-  } else {
-    printf("ok.\n");
-  }
-  return PROCEED;
-} OZ_BI_end
-
 
 /*===================================================================
  * Value.type/status
@@ -167,6 +179,33 @@ OZ_BI_define(BIstatusNew,1,1)
     strcpy(buf,"det_");
     strcpy(buf+4,t);
     OZ_RETURN(oz_atom(buf));
+  }
+  return PROCEED;
+} OZ_BI_end
+
+/*===================================================================
+ * Debugging aids
+ *=================================================================== */
+
+/*
+ * 'stop':
+ *   stop emulator until the RETURN key is pressed
+ *   sometimes this is useful for stopping a program to inspect something
+ */
+const int MaxLine=1000;
+OZ_BI_define(BIstop, 0,0)
+{
+  static char command[MaxLine];
+ 
+  printf("press the RETURN key to continue! ");
+  fflush(stdout);
+  if (osfgets(command,MaxLine,stdin) == (char *) NULL) {
+    printf("Read no input.\n");
+  } else if (feof(stdin)) {
+    clearerr(stdin);
+    printf("EOF.\n");
+  } else {
+    printf("ok.\n");
   }
   return PROCEED;
 } OZ_BI_end
