@@ -1,11 +1,11 @@
 #!/bin/sh
 
-if [ -x /bin/uname ]; then UNAME=/bin/uname
-elif [ -x /usr/bin/uname ]; then UNAME=/usr/bin/uname
+if [ -x /bin/uname ]; then uname=/bin/uname
+elif [ -x /usr/bin/uname ]; then uname=/usr/bin/uname
 else echo "Cannot find uname" 1>&2 ; exit 1
 fi
 
-system="`$UNAME -s`-`$UNAME -r`"
+system="`$uname -s`-`$uname -r`"
 
 case $system in
    SunOS-4.1*)
@@ -14,26 +14,21 @@ case $system in
    SunOS-5*)
 	DYNLD="ld -G"
 	;;
-   ULTRIX-4.*)
-	DYNLD=""
-   	;;
    Linux-*)
 	DYNLD="ld -shared"
    	;;
-   9000/7*HP-UX*)
+   HP-UX-*)
 	DYNLD="ld -b"
 	;;
    IRIX-5*)
 	DYNLD="ld -shared -check_registry /dev/null"
    	;;
-   *AIX*)
-   ;;
-   *alpha*OSF1*)        OZARCH=osf1-alpha
+   *alpha*OSF1*)
 	DYNLD="ld -shared -expect_unresolved '*'"
-   ;;
+   	;;
    FreeBSD-*|NetBSD-*)
 	DYNLD="ld -Bshareable"
-   ;;
+   	;;
    *)
 	echo "$0: platform $system not supported"
 	exit 1
