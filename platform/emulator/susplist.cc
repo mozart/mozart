@@ -41,10 +41,21 @@ SuspList * SuspList::stable_wake(void) {
 
     if (b == am.currentBoard) {
 #ifndef TM_LP
-      if (localPropStore.isUseIt ())
+      if (localPropStore.isUseIt ()) {
 	localPropStore.push (thr);
-      else
+      } else {
+	// 
+	//  Note that these threads might be converted into the 
+	// runnable state only now, because of the counter of runnable 
+	// threads in the solve actor: otherwise, if they would be converted
+	// earlier, they will affect stability, so that no stability 
+	// could be reached at all!
+	DebugCode (thr->unmarkPropagated ()); // otherwise assertion hits;
+	thr->cContToRunnable (); 
+
+	//
 	am.scheduleThread (thr);
+      }
 #else
       localPropStore.push (thr);
 #endif      

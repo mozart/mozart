@@ -59,13 +59,12 @@ public:
 
   void gcRecurse();
 
-  void incThreads (int n=1) {
-    Assert(threads+n >= 0);
-    threads+=n;
+  void incThreads () { threads++; }
+  int decThreads () {		// just return the new value;
+    Assert (threads > 0);
+    return (--threads);
   }
   int getThreads() { return threads; }
-  void decThreads () { incThreads(-1); }
-  void setUnStable() { threads=-1; }
   void addSuspension (Thread *thr); 
   void addSuspension (SuspList *l);
   Bool areNoExtSuspensions();
