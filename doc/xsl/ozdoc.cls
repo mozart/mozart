@@ -60,6 +60,7 @@
 \addtolength{\topmargin}{-1.5cm}
 \addtolength{\textheight}{2.6cm}
 \setlength{\mozart@fullwidth}{\textwidth}
+\newcommand{\mozartfullwidth}{\mozart@fullwidth}
 \addtolength{\textwidth}{-\mozart@leftmarginwidth}
 \addtolength{\oddsidemargin}{\mozart@leftmarginwidth}
 
@@ -858,6 +859,7 @@
   \fi
   {\mozart@specials@other\@@PICEXT}}
 
+\newcommand{\PICEXTINLINE}[2][]{\@PICEXT{#2}{#1}}
 % \PICEXT[width]{file}
 \newcommand{\PICEXT}[2][0.7\linewidth]{\@PICEXT{#2}{#1}}
 
@@ -888,17 +890,75 @@
 \newcommand{\GRAMMARNOTE}[1]{\textsl{\% #1}}
 
 % literate programming stuff
+% \begin{CHUNK}{TITLE}{CHUNK.ID}{CHUNK.NUM}
 
-\newenvironment{CHUNK}[1]
+\newcounter{mozart@chunk}
+\setcounter{mozart@chunk}{0}
+\newcounter{mozart@chunk@subpage}
+\setcounter{mozart@chunk@subpage}{0}
+
+\newcommand{\mozart@chunk@prev@page}{}
+\newcommand{\mozart@chunk@curr@page}{}
+
+\newcommand{\mozart@chunk@init}{%
+  \xdef\mozart@chunk@prev@page{\mozart@chunk@curr@page}%
+  \stepcounter{mozart@chunk}%
+  \@ifundefined{r@chunk.glob.\themozart@chunk}%
+    {\xdef\mozart@chunk@curr@page{\thepage}}%
+    {\edef\mozart@temp{\csname r@chunk.glob.\themozart@chunk\endcsname}%
+     \xdef\mozart@chunk@curr@page{\expandafter\@secondoftwo\mozart@temp}}%
+  \ifnum\themozart@chunk=\@ne
+    \xdef\mozart@chunk@prev@page{\mozart@chunk@curr@page}%
+  \fi
+  \ifnum\mozart@chunk@prev@page=\mozart@chunk@curr@page
+    \stepcounter{mozart@chunk@subpage}%
+  \else
+    \setcounter{mozart@chunk@subpage}{1}%
+  \fi}
+
+\newcommand{\mozart@chunk@label}{%
+  \llap{\hbox to1cm{\hfil\mozart@chunk@curr@page.\alph{mozart@chunk@subpage}\quad}}}
+
+% \mozart@chunk@ref@bwd{CHUNK.ID}{CHUNK.NUM}
+
+\newcommand{\mozart@chunk@ref@bwd}[2]{%
+  \hbox to5mm{%
+    \mozart@cnt#2\relax
+    \advance\mozart@cnt\m@ne
+    \@ifundefined{r@chunk.#1.\the\mozart@cnt}%
+      {}%
+      {$\triangleleft$\pageref{chunk.#1.\the\mozart@cnt}}%
+    \hfil}}
+
+\newcommand{\mozart@chunk@ref@fwd}[2]{%
+  \hbox to5mm{%
+    \hfil
+    \mozart@cnt#2\relax
+    \advance\mozart@cnt\@ne
+    \@ifundefined{r@chunk.#1.\the\mozart@cnt}%
+      {}%
+      {\pageref{chunk.#1.\the\mozart@cnt}$\triangleright$}}}
+
+\newcommand{\mozart@chunk@ref@def}[1]{%
+  \@ifundefined{r@chunk.#1.1}{}%
+    {~~\pageref{chunk.#1.1}\ref{chunk.#1.1}}}
+
+\newenvironment{CHUNK}[3]
   {\begin{list}{}{\leftmargin\mozart@displaymargin}%
-     \item[\mbox{\bf$\color{chunkborder}\langle$%
-       \textcolor{chunktitle}{#1}$\color{chunkborder}\rangle\equiv$}]%
+     \mozart@chunk@init
+     \item[\mbox{\mozart@chunk@label\bf$\color{chunkborder}\langle$%
+       \textcolor{chunktitle}{#1\mozart@chunk@ref@def{#2}}$\color{chunkborder}\rangle\equiv$}]%
+     \edef\@currentlabel{\themozart@chunk@subpage}%
+     \label{chunk.glob.\themozart@chunk}%
+     \label{chunk.#2.#3}%
      \topsep\z@\parskip\z@\partopsep\z@\parsep\z@\itemsep\z@
      \let\obeylines\@empty
-     \hfill\hbox{}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
+     \hfill\hbox{\rlap{\mozart@chunk@ref@bwd{#2}{#3}%
+                       \mozart@chunk@ref@fwd{#2}{#3}}}%
+     \begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
 
-\newenvironment{CHUNKANON}[1]
+\newenvironment{CHUNKANON}[3]
   {\begin{CODEDISPLAY}}
   {\end{CODEDISPLAY}}
 
