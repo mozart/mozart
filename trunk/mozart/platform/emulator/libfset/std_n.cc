@@ -519,7 +519,6 @@ OZ_BI_end
 OZ_Service &filter_intersectN(OZ_Service& s,
 			      OZ_FSetVarVector &xs, OZ_FSetVar &z)
 {
-  printf("gaga\n");
   DSP(("filter_intersect\n"));
   //
   int n = xs.getHigh();
