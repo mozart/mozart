@@ -54,6 +54,7 @@ typedef unsigned int OZ_Return;
 
 #define FAILED    0
 #define PROCEED   1
+#define ENTAILED  PROCEED
 #define SUSPEND   2
 #define SLEEP     3
 #define SCHEDULED 4
