@@ -1207,6 +1207,7 @@ BIspec fdSpec[] = {
   {"fdp_distance", 4, fdp_distance},
   {"sched_cpIterate", 2, sched_cpIterate},
   {"sched_cpIterateCap", 4, sched_cpIterateCap},
+  {"sched_cpIterateCapUp", 4, sched_cpIterateCapUp},
   {"sched_disjunctive", 2, sched_disjunctive},
   // dummies
   {"fdp_twice", 2, fdp_twice},
@@ -1219,7 +1220,7 @@ BIspec fdSpec[] = {
 #endif
   // Distribution builtins: fddist.cc
   {"fddistribute", 5, BIfdDistribute},
-  //  {"fdgetCandidates", 5, BIfdGetCandidates},
+  {"fdgetCandidates", 5, BIfdGetCandidates},
   {"fddistributeMinPairs", 5, BIfdDistributeMinPairs},
   {"fddistributeTaskIntervals", 7, BIfdDistributeTaskIntervals},
   {"fddistributeTaskIntervalsOpt", 7, BIfdDistributeTaskIntervalsOpt},

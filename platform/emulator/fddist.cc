@@ -1419,69 +1419,39 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
 
 #define MAGIC 100
 
-struct min_max_set {
-  int min, max;
+struct min_max_dur_set {
+  int min, max, dur;
+};
+struct min_max_dur_setFL {
+  int min, max, dur, id;
 };
 
-
-static int partition(struct min_max_set *tasks, int *fl, int *durs, int flag,
-           int p, int r) {
-//  cout << "partition\n";
-  struct min_max_set current = tasks[p];
-  int current_dur = durs[p];
-  int i = p-1;
-  int j = r+1;
-  while (1) {
-    if (flag==0){
-      do {
-        j--;
-      }
-      while ((current.min < tasks[fl[j]].min) ||
-             ( (current.min == tasks[fl[j]].min) &&
-               (current.max < tasks[fl[j]].max) ) );
+static int CompareFirsts(min_max_dur_setFL *Int1, min_max_dur_setFL *Int2) {
+  int min1 = Int1->min;
+  int min2 = Int2->min;
+  if (min1 < min2) return -1;
+  else {
+    if (min1 == min2) {
+      return Int1->max - Int2->max;
     }
-    else {
-      do {
-        j--;
-      }
-      while ( (current.max+current_dur > tasks[fl[j]].max+durs[fl[j]]) ||
-              ( (current.max+current_dur == tasks[fl[j]].max+durs[fl[j]]) &&
-                (current.min+current_dur > tasks[fl[j]].min+durs[fl[j]]) ) );
-    }
-    if (flag==0){
-      do {
-        i++;
-      }
-      while ((tasks[fl[i]].min < current.min) ||
-             ( (tasks[fl[i]].min == current.min) &&
-               (tasks[fl[i]].max < current.max) ) );
-    }
-    else {
-      do {
-        i++;
-      }
-      while ( (tasks[fl[i]].max+durs[fl[i]] > current.max+current_dur) ||
-              ( (tasks[fl[i]].max+durs[fl[i]] == current.max+current_dur) &&
-                (tasks[fl[i]].min+durs[fl[i]] > current.min+current_dur) ) );
-    }
-    if (i < j) {
-      int tmp = fl[i];
-      fl[i] = fl[j];
-      fl[j] = tmp;
-    }
-    else return j;
+    else return 1;
   }
 }
 
-static void quick(struct min_max_set *tasks, int *fl, int *durs, int flag,
-           int p, int r) {
-//  cout << "quick\n";
-  if (p < r) {
-    int q = partition(tasks, fl, durs, flag, p, r);
-    quick(tasks, fl, durs, flag, p, q);
-    quick(tasks, fl, durs, flag, q+1, r);
+static int CompareLasts(min_max_dur_setFL *Int1, min_max_dur_setFL *Int2) {
+  int max1 = Int1->max;
+  int max2 = Int2->max;
+  int dur1 = Int1->dur;
+  int dur2 = Int2->dur;
+  if (max1+dur1 > max2+dur2) return -1;
+  else {
+    if (max1+dur1 == max2+dur2) {
+      return Int2->min + dur2 - (Int1->min + dur1);
+    }
+    else return 1;
   }
 }
+
 
 inline static int abs(int a) { return a < 0 ? -a : a; }
 
@@ -1502,17 +1472,11 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
     cout << "width of tuple must not be zero";
     return FAILED;
   }
-  /*
-  struct min_max_set {
-    int min, max;
-  };
-  */
+
   // to store FD variables
   //  DECL_DYN_ARRAY(min_max_set, all_tasks, width);
-  struct min_max_set all_tasks[MAGIC];
+  struct min_max_dur_set all_tasks[MAGIC];
   // to store durations
-  //  DECL_DYN_ARRAY(int, all_durs, width);
-  int all_durs[MAGIC];
   int i,j,k,l,left,right;
   int sumDur = 0;
 
@@ -1530,7 +1494,7 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
     int current_dur      = OZ_intToC(tmp2);
     all_tasks[i].min     = getMin1(fd_var);
     all_tasks[i].max     = getMax1(fd_var);
-    all_durs[i]          = current_dur;
+    all_tasks[i].dur     = current_dur;
     sumDur               = sumDur + current_dur;
   }
 
@@ -1545,7 +1509,7 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
     for (j=0; j < width; j++) {
       if (j==i) continue;
       else {
-        due = intMax(due, all_tasks[j].max + all_durs[j]);
+        due = intMax(due, all_tasks[j].max + all_tasks[j].dur);
         release = intMin(release, all_tasks[j].min);
       }
     }
@@ -1556,43 +1520,57 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   // compute firsts and lasts
   //DECL_DYN_ARRAY(int, firsts, width);
   //DECL_DYN_ARRAY(int, lasts, width);
-  int firsts[MAGIC];
-  int lasts[MAGIC];
+  struct min_max_dur_setFL firsts[MAGIC];
+  struct min_max_dur_setFL lasts[MAGIC];
   int number_of_firsts = 0;
   int number_of_lasts = 0;
 
   /*
   for (i=0; i<width; i++) {
-    struct min_max_set current = all_tasks[i];
+    struct min_max_dur_set current = all_tasks[i];
     if (dues[i] - current.min >= sumDur) {
       // it is a candidate to be first
       for (j=number_of_firsts-1; j>=0; j--) {
-        struct min_max_set cfirst = all_tasks[firsts[j]];
+        struct min_max_dur_set cfirst = all_tasks[firsts[j].id];
         if ( (current.min < cfirst.min) ||
              ( (current.min == cfirst.min) &&
-               (current.max < cfirst.max) ) )
-          firsts[j+1] = firsts[j];
+               (current.max < cfirst.max) ) ) {
+          firsts[j+1].id = firsts[j].id;
+          firsts[j+1].min = firsts[j].min;
+          firsts[j+1].max = firsts[j].max;
+          firsts[j+1].dur = firsts[j].dur;
+        }
         else
           break;
       }
-      firsts[j+1] = i;
+      firsts[j+1].id = i;
+      firsts[j+1].min = all_tasks[i].min;
+      firsts[j+1].max = all_tasks[i].max;
+      firsts[j+1].dur = all_tasks[i].dur;
       number_of_firsts++;
     }
-    if (current.max + all_durs[i] - releases[i] >= sumDur) {
+    if (current.max + all_tasks[i].dur - releases[i] >= sumDur) {
       // it is a candidate to be last
       for (j=number_of_lasts-1; j>=0; j--) {
-        int cl = lasts[j];
-        struct min_max_set clast = all_tasks[cl];
-        int current_dur = all_durs[i];
-        int last_dur    = all_durs[cl];
+        int cl = lasts[j].id;
+        struct min_max_dur_set clast = all_tasks[cl];
+        int current_dur = all_tasks[i].dur;
+        int last_dur    = all_tasks[cl].dur;
         if ( (current.max+current_dur > clast.max+last_dur) ||
              ( (current.max+current_dur == clast.max+last_dur) &&
-               (current.min+current_dur > clast.min+last_dur) ) )
-          lasts[j+1] = lasts[j];
+               (current.min+current_dur > clast.min+last_dur) ) ) {
+          lasts[j+1].id = lasts[j].id;
+          lasts[j+1].min = lasts[j].min;
+          lasts[j+1].max = lasts[j].max;
+          lasts[j+1].dur = lasts[j].dur;
+        }
         else
           break;
       }
-      lasts[j+1] = i;
+      lasts[j+1].id = i;
+      lasts[j+1].min = all_tasks[i].min;
+      lasts[j+1].max = all_tasks[i].max;
+      lasts[j+1].dur = all_tasks[i].dur;
       number_of_lasts++;
     }
   }
@@ -1600,17 +1578,23 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
 
   for (i=0; i<width; i++) {
     if (dues[i] - all_tasks[i].min >= sumDur) {
-      firsts[number_of_firsts] = i;
+      firsts[number_of_firsts].id = i;
+      firsts[number_of_firsts].min = all_tasks[i].min;
+      firsts[number_of_firsts].max = all_tasks[i].max;
+      firsts[number_of_firsts].dur = all_tasks[i].dur;
       number_of_firsts++;
     }
-    if (all_tasks[i].max + all_durs[i] - releases[i] >= sumDur) {
-      lasts[number_of_lasts] = i;
+    if (all_tasks[i].max + all_tasks[i].dur - releases[i] >= sumDur) {
+      lasts[number_of_lasts].id = i;
+      lasts[number_of_lasts].min = all_tasks[i].min;
+      lasts[number_of_lasts].max = all_tasks[i].max;
+      lasts[number_of_lasts].dur = all_tasks[i].dur;
       number_of_lasts++;
     }
   }
 
-  quick(all_tasks, firsts, all_durs, 0, 0, number_of_firsts-1);
-  quick(all_tasks, lasts, all_durs, 1, 0, number_of_lasts-1);
+  qsort(firsts, number_of_firsts, sizeof(min_max_dur_setFL), CompareFirsts);
+  qsort(lasts, number_of_lasts, sizeof(min_max_dur_setFL), CompareLasts);
 
 
   OZ_Term nil = OZ_nil();
@@ -1623,12 +1607,9 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   else if (number_of_firsts == 1) goto imposeFirsts;
   else if (number_of_lasts == 1) goto imposeLasts;
   else {
-    int diff1 = abs(all_tasks[number_of_firsts-1].min -
-                    all_tasks[number_of_firsts-2].min);
-    int diff2 = abs(all_tasks[number_of_lasts-1].max +
-                    all_durs[number_of_lasts-1] -
-                    all_tasks[number_of_lasts-2].max -
-                    all_durs[number_of_lasts-2]);
+    int diff1 = abs(firsts[1].min - firsts[2].min);
+    int diff2 = abs(lasts[1].max + lasts[1].dur -
+                    lasts[2].max - lasts[2].dur);
     if (diff1 > diff2)
       goto imposeFirsts;
     else goto imposeLasts;
@@ -1636,7 +1617,7 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
 
 imposeLasts:
   for (i=number_of_lasts-1; i>=0; i--) {
-    TaggedRef task1 = deref(vector->getArg(lasts[i]));
+    TaggedRef task1 = deref(vector->getArg(lasts[i].id));
     ret = OZ_cons(task1, ret);
   }
   return ( (OZ_unify(out_atoms, makeTaggedAtom("lasts"))) &&
@@ -1645,7 +1626,7 @@ imposeLasts:
 
 imposeFirsts:
   for (i=number_of_firsts-1; i>=0; i--) {
-    TaggedRef task1 = deref(vector->getArg(firsts[i]));
+    TaggedRef task1 = deref(vector->getArg(firsts[i].id));
     ret = OZ_cons(task1, ret);
   }
   return ( (OZ_unify(out_atoms, makeTaggedAtom("firsts"))) &&
