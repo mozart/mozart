@@ -694,6 +694,8 @@ public:
 class ConstTermWithHome: public ConstTerm {
 private:
   TaggedPtr boardOrGName;
+
+protected:
   void setBoard(Board *b)
   {
     boardOrGName.setPtr(b);

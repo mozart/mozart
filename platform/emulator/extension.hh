@@ -34,11 +34,20 @@ int oz_newUniqueId();
 
 class SituatedExtension: public ConstTermWithHome {
 public:
-  SituatedExtension();
-  virtual ~SituatedExtension() {}
+  SituatedExtension(void);
+
   SituatedExtension(Board *bb) : ConstTermWithHome(bb,Co_SituatedExtension) {}
+
+  virtual ~SituatedExtension() {}
+
   virtual int getTypeV() { return 0; }
-  virtual SituatedExtension *gcV() = 0;
+
+  SituatedExtension * gc(void) {
+    SituatedExtension * ret = gcV();
+    ret->setBoard(getBoardInternal());
+    return ret;
+  }
+  virtual SituatedExtension * gcV() = 0;
   virtual void          gcRecurseV() {}
   virtual void          printStreamV(ostream &out,int depth = 10);
   virtual void          printLongStreamV(ostream &out,int depth = 10,

@@ -2246,7 +2246,7 @@ void ConstTerm::gcConstRecurse()
     }
 
   case Co_Thread:
-      break;
+    break;
 
   case Co_SituatedExtension:
     ((ConstTermWithHome *) this)->gcConstTermWithHome();
@@ -2465,7 +2465,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_SituatedExtension:
     CheckLocal((SituatedExtension *) this);
-    ret = ((SituatedExtension *) this)->gcV();
+    ret = ((SituatedExtension *) this)->gc();
     break;
 
   case Co_ConstExtension:
