@@ -1598,7 +1598,7 @@ LBLkillThread:
         Assert (!(CBB->isReflected ()));
 
         sa = SolveActor::Cast (CBB->getActor ());
-        sa->decThreads ();
+        (void) sa->decThreads ();
 
         //  'nb' points to some board above the current one,
         // so, 'decSolveThreads' will start there!
@@ -1815,7 +1815,7 @@ LBLsuspendThread:
         Assert (!(CBB->isReflected ()));
 
         sa = SolveActor::Cast (CBB->getActor ());
-        sa->decThreads ();
+        (void) sa->decThreads ();
 
         //  'nb' points to some board above the current one,
         // so, 'decSolveThreads' will start there!
@@ -2928,9 +2928,9 @@ LBLsuspendThread:
        X[0] = makeTaggedRef (sa->getSolveVarRef ());
        isTailCall = OK;
        Thread *tt = new Thread (CPP, sb, OK);
-                                // kost@  TODO!!! piece of junk
-       sb->decSuspCount ();     // since 'Board::Board' sets it to one;
-       sa->decThreads ();       // since 'SolveActor::SolveActor' sets it ...
+                                 // kost@  TODO!!! piece of junk
+       sb->decSuspCount ();      // since 'Board::Board' sets it to one;
+       (void) sa->decThreads (); // since 'SolveActor::SolveActor' sets it;
        tt->pushCall(makeTaggedConst(predicate),X,1);
        e->scheduleThread(tt);
        goto LBLpopTask;
@@ -3557,17 +3557,32 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
       if (tt != currentThread) {
         //  ... the same as above: it wasn't the 'main' thread;
         Assert (currentThread == (Thread *) NULL);
-        //  That's actually the complementary case for just above;
-        Assert (tt->isSuspended ());
-        Assert (!(isScheduled (tt)));
-        //  The following must hold because 'tt' can suspend
-        // only in the board where the actor itself is located;
-        Assert (tt->getBoardFast () == currentBoard);
 
         //
-        tt->suspThreadToRunnable ();
-        tt->pushCont (cont);    // no 'SetCaa' is ever needed;
-        scheduleThread (tt);
+        //  The 'tt' thread can be suspended or not: the last case
+        // is possible if the 'main' thread is still building up
+        // the same (last) guard;
+        if (tt->isSuspended ()) {
+          Assert (!(isScheduled (tt)));
+          //  The following must hold because 'tt' can suspend
+          // only in the board where the actor itself is located;
+          Assert (tt->getBoardFast () == currentBoard);
+
+          //
+          tt->suspThreadToRunnable ();
+          tt->pushCont (cont);  // no 'SetCaa' is ever needed;
+
+          //
+          scheduleThread (tt);
+        } else {
+          Assert (tt->isBelowFailed (currentBoard));
+          //  ... it means that the 'main' thread is still building
+          // the same failed guard;
+          tt->cleanUp (currentBoard);
+          tt->pushCont (cont);  // no 'SetCaa' is ever needed;
+
+          //  don't schedule it again;
+        }
 
         //
         DebugCode (cont = (Continuation *) NULL);
@@ -3579,15 +3594,22 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
     }
 
     //
-    //  The third case: all the guard are built up,
+    //  The third case: all the guards are built up,
     // not all of them are failed, and none of them are entailed;
     if (tt != currentThread) {
       //  ... not the 'main' thread;
       Assert (currentThread == (Thread *) NULL);
       //  The assertions below are the same as for the 'leaf' case above;
-      Assert (tt->isSuspended ());
-      Assert (!(isScheduled (tt)));
-      Assert (tt->getBoardFast () == currentBoard);
+#ifdef DEBUG_CHECK
+      if (tt->isSuspended ()) {
+        Assert (!(isScheduled (tt)));
+        Assert (tt->getBoardFast () == currentBoard);
+      } else {
+        Assert (isScheduled (tt));
+        // the 'tt' thread might or might not be below the failed
+        // board - so, let clean up it lazily ...
+      }
+#endif
 
       //
       DebugCode (cont = (Continuation *) NULL);

@@ -1104,25 +1104,27 @@ void AM::checkIO()
  * if "stable" generate a new thread "solve waker"
  * NOTE:
  *   there may be failed board in between which must be simply ignored
+ *
+ * kost@ to mm2:
+ *   Michael, i don't think that it was a good idea to merge
+ * these things together - this leads to efficiency penalties,
+ * and less possibilities to make an assertion.
+ *
  */
-void AM::incSolveThreads(Board *nb,int n)
+void AM::incSolveThreads(Board *bb)
 {
-  Board *bb=nb;
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
       if (!sa->isCommitted()) { // notification board below failed solve
-        sa->incThreads(n);
-        if (isStableSolve(sa)) {
-#ifdef NEWCOUNTER
-          scheduleThread (new Thread (sa->getPriority (), bb, OK));
-#else
-          does not work;
-          scheduleSolve(bb);
+        sa->incThreads ();
+        Assert (!isStableSolve(sa));
+#ifdef DEBUG_CHECK
+      } else {
+        Assert (bb->isFailed ());
 #endif
-        }
       }
     }
     bb = bb->getParentFast();
@@ -1131,7 +1133,26 @@ void AM::incSolveThreads(Board *nb,int n)
 
 void AM::decSolveThreads(Board *bb)
 {
-  incSolveThreads(bb,-1);
+  while (!bb->isRoot()) {
+    Assert(!bb->isCommitted());
+    if (bb->isSolve()) {
+      Assert(!bb->isReflected());
+      SolveActor *sa = SolveActor::Cast(bb->getActor());
+      if (!sa->isCommitted()) { // notification board below failed solve
+        // local optimization - check for threads first;
+        if (sa->decThreads () == 0) {
+          if (isStableSolve(sa)) {
+            scheduleThread (new Thread (sa->getPriority (), bb, OK));
+          }
+        }
+#ifdef DEBUG_CHECK
+      } else {
+        Assert (bb->isFailed ());
+#endif
+      }
+    }
+    bb = bb->getParentFast();
+  }
 }
 
 #ifdef DEBUG_CHECK

@@ -562,6 +562,12 @@ OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t,
     localPropStore.push (prop);
   } else {
     DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
+
+    //  The following is because otherwise we will not get the
+    // same propagation behaviour as with the local propagation ...
+    prop->setPriority (OZMAX_PRIORITY - 1);
+
+    //
     prop->cContToRunnable ();
     am.scheduleThread (prop);
   }

@@ -239,6 +239,11 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 // propagate till you reach a fixpoint
   localPropStore.backup(0x10);
 
+#ifndef TM_LP
+  Assert(localPropStore.isEmpty());
+  localPropStore.setUseIt();
+#endif
+
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0) {
       x.process(idx_b(c));
@@ -253,16 +258,8 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 
     Assert(x[idx_b(c)] != 0);
 
-#ifndef TM_LP
-    localPropStore.setUseIt();
-#endif
-
     for (v = variables; v--; )
       x.process(idx_vp(c, v));
-
-#ifndef TM_LP
-    localPropStore.unsetUseIt();
-#endif
 
     x.backup();
     if (!localPropStore.do_propagation())
@@ -272,6 +269,10 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
     Assert(localPropStore.isEmpty());
 
   }
+
+#ifndef TM_LP
+  localPropStore.unsetUseIt();
+#endif
 
   localPropStore.restore();
 
