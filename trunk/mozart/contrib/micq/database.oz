@@ -605,33 +605,24 @@ define
       meth getHistory( id: ID history:History )
 	 fun{MakeHistoryList SortedList}
 	    fun{MakeRecordR Ls Acc}
-	       {System.show Acc}
 	       if Ls == nil then Acc
 	       else
 		  L|Lx = Ls Old Sent F=L.friend
 		  R = {CondSelect Acc L.friend m(old: nil sent: nil)}
 	       in
-		  {System.show foo1}
-		  {System.show foo2}
+
 		  if L.type == sent then
-		     {System.show foo4}
 		     Old = R.old
-		     {System.show foo5}
 		     Sent = {List.append [message(mid: L.mid date: L.date
 						  message: L.message
 						  reply_to: L.reply_to)] R.sent }
-		     {System.show foo6}
 		  else
-		     {System.show foo7}
 		     Sent = R.sent
-		     {System.show foo8}
 		     Old = {List.append [receiveMessage(mid: L.mid date: L.date
 							      message: L.message reply_to: L.reply_to
 							sender: L.friend)] R.old }
-		     {System.show foo9}
 		  end
-		  {System.show foo10}
-		  {System.show foo11}
+
 		  {MakeRecordR Lx {Record.adjoinAt Acc F
 				   m(old: Old sent: Sent)}}
 	       end
