@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-#define TURNED_OFF
+#undef TURNED_OFF
 
 #include <ctype.h>
 
@@ -28,8 +28,11 @@
 #include "stack.hh"
 #include "thread.hh"
 
+#ifdef OUTLINE
+#define inline
+#endif
 
-#define GCREF(field) field = field->gc()
+#define GCREF(field) if (field) { field = field->gc(); }
 
 //*****************************************************************************
 //               Forward Declarations
@@ -1531,10 +1534,10 @@ void Board::gcRecurse()
   GCMETHMSG("Board::gc");
   if (isCommitted()) {
     body.defeat();
-    board=board->gc();
+    GCREF(board);
   } else {
     body.gcRecurse();
-    actor=actor->gc();
+    GCREF(actor);
   }
   script.gc();
 }
@@ -1779,4 +1782,9 @@ void regsInToSpace(TaggedRef *regs, int size)
   }
 }
 
+#endif
+
+
+#ifdef OUTLINE
+#undef inline
 #endif
