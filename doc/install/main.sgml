@@ -22,7 +22,7 @@
   -->
 
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
-<!ENTITY % proglang.values.local "|sh">
+<!ENTITY % proglang.values.local "|sh|none">
 <!ENTITY % p.mix.local "|em">
 <!ELEMENT em - - (#PCDATA)>
 <!ENTITY nbsp PI "nbsp">
@@ -31,82 +31,37 @@
 <!ENTITY eg PI "eg">
 <!entity amp "&">
 <!entity etc PI "ellipsis">
+<!entity chapter.src.get system "src-get.sgml">
+<!entity chapter.src.make system "src-make.sgml">
 <!entity section.configure system "configure.sgml">
 ]>
 <book proglang=sh>
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+    <meta name="proglang.mode" arg1="none" arg2="fundamental-mode">
     <meta name="entry.category" value="option">
     <meta name="entry.category" value="variable">
+    <!-- split statements -->
+    <meta name="html.split" value="chapter.src.get">
+    <meta name="html.split" value="chapter.src.make">
     <title/Installation Manual/
     <author.extern to="author.db" key="Denys.Duchier">
 
-    <part id=part.src>
-      <title/Building The System From Scratch/
-
-      <chapter>
-	<title/Retrieving The Sources/
-	<section>
-	  <title/Source TAR Balls/
-	</section>
-	<section>
-	  <title/Anonymous CVS/
-	  <p>You can retrieve the complete sources of the Mozart
-system from our anonymous CVS server.  First you need to <em/login/.
-This is a one-time only operation: <code/cvs/ correspondingly updates your
-<file>~/.cvspass</file> and remembers the login for the next time
-you access our server.  After typing the command below, your are
-prompted for the <code/CVS password/ which happens to be <code/anoncvs/.
-<code display>
-% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS login
-(Logging in to anoncvs@ps.uni-sb.de)
-CVS password: anoncvs
-</code>
-From now on, you can always obtain a complete snapshot of the Mozart
-system using the command below:
-<code display>
-% cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS get mozart
-</code>
-This creates a directory <file/mozart/ in which the full source tree
-is placed.
-	</section>
-      </chapter>
-
-      <chapter>
-	<title/Configuration And Compilation/
-	<p>Now, you need to decide where you are going to build the
-system.  Let us assume that the Mozart sources are in
-<file>~/mozart</file>.  We recommend that you then create a separate
-build directory; for example, on a Linux system you might call it
-<file>~/mozart-linux</file>.  Then, from that directory you should
-invoke the <file/configure/ file from the Mozart source distribution.
-<code display>
-% mkdir ~/mozart-linux
-% cd ~/mozart-linux
-% ~/mozart/configure
-</code>
-The configure script takes a long time to run and prints out a lot of
-information.  If you are lucky, the script completes successfully and
-you can proceed directly with compilation:
-<code display>
-% make
-</code>
-Often, however, the configure script will fail and print out a message
-explaining what went wrong and possibly how to fix it.  Most
-frequently the problem is either that (1) a library, tool, or include
-file cannot be found, (2) or the installed version is too old.  There
-are many shell variables and command line options that can be used to
-parametrize the configuration process.  They are described below.</p>
-	&section.configure;
-</chapter>
-    </part>
-
     <part id=part.rpm>
-      <title/Using An RPM Package/
+      <title/RPM Distribution/
     </part>
 
     <part id=part.bin>
-      <title/Using A Binary TAR Ball/
+      <title/Binary Distribution/
     </part>
+
+    <part id=part.src>
+      <title/Source Distribution/
+
+      &chapter.src.get;
+      &chapter.src.make;
+
+    </part>
+
 </book>
 <!--
 Local Variables:
