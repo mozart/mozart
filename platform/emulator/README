@@ -66,7 +66,7 @@ make stage3 OZEMULATOR=~/d-emu
 
 cd ~/mozart/share/lib
 
-set env OZ_LOAD "root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./"
+set env OZ_LOAD "root=.:prefix=http\://mozart.ps.uni-sb.de/home/lib/=tyc/:prefix=http\://mozart.ps.uni-sb.de/home/lib/=./"
 
 r -init '' -b ozbatch.ozm -a ~/mozart/share/lib/DumpInitial.oz
 

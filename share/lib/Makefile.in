@@ -46,7 +46,7 @@ export OZLIB
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
+export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=http\://mozart.ps.uni-sb.de/home/share/=$(OZ_LIB)/:prefix=/=/:=
 
 export OZMAKE_COPYALWAYS        = no
 export OZMAKE_VERBOSE           = no
@@ -281,8 +281,8 @@ IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 install-images: \
         $(IMAGESDIR) $(IMAGES)
 
-CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
-CACHELINK = $(CACHEDIR)/ozhome
+CACHEDIR  = $(PREFIX)/cache/http/mozart.ps.uni-sb.de
+CACHELINK = $(CACHEDIR)/home
 
 install-cache: \
         $(CACHEDIR) $(CACHELINK)
@@ -342,7 +342,7 @@ distclean: veryclean
 .PHONY: save restore
 .PHONY: check
 
-URL=http\\://www.ps.uni-sb.de/ozhome
+URL=http\\://mozart.ps.uni-sb.de/home
 
 # use the boot compiler to create the functors
 bootstrap:
@@ -451,7 +451,7 @@ boot-init: $(BOOTINITTXTFROM)
 # may have been side-effected and may contains stateful stuff
 
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-        OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://www.ps.uni-sb.de/ozhome/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+        OZMAKE_COPYALWAYS=yes OZINIT=Init.ozf OZ_LOAD=root=.:prefix=./=./:prefix=http\\://mozart.ps.uni-sb.de/home/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
         cp $< $@

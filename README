@@ -124,5 +124,5 @@ The Mozart installation structure:
           gdbm.so
     cache/
       http/
-        www.ps.uni-sb.de
+        mozart.ps.uni-sb.de
           ????
