@@ -1275,10 +1275,12 @@ int intcompare(const void * ii, const void  * jj) {
 
 typedef int* int_ptr;
 
-inline
-Bool order_int_ptr_inc(const int_ptr& ip, const int_ptr& jp) {
-  return *ip < *jp;
-}
+class Order_IntPtr_Inc {
+public:
+  Bool operator()(const int_ptr& ip, const int_ptr& jp) {
+    return *ip < *jp;
+  }
+};
 
 inline
 int OZ_FiniteDomainImpl::simplify(int list_len,
@@ -1293,7 +1295,8 @@ int OZ_FiniteDomainImpl::simplify(int list_len,
     fd_iv_ptr_sort[i] = list_left + i;
   }
 
-  fastsort<int_ptr,order_int_ptr_inc>(fd_iv_ptr_sort, list_len);
+  Order_IntPtr_Inc lt;
+  fastsort(fd_iv_ptr_sort, list_len, lt);
 
   //  qsort(fd_iv_ptr_sort, list_len, sizeof(int **), intcompare);
 

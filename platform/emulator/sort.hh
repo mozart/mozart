@@ -39,43 +39,56 @@ void sort_swap(T &a, T &b) {
   T t=a; a=b; b=t;
 }
 
-template <class T,Bool(*lt)(const T&,const T&)>
+template <class Type, class LessThan>
 inline
-void sort_exchange(T &a, T &b) {
+void sort_exchange(Type &a, Type &b, LessThan &lt) {
   if (lt(b,a))
     sort_swap(a,b);
 }
 
-const int QuickSortStack_maxsize = 32;
+int const QuickSortCutoff = 10;
+
+static const int QuickSortStack_maxsize = 32;
 
 class QuickSortStack {
 private:
   int stack[2*QuickSortStack_maxsize];
   int tos;
 public:
-  QuickSortStack() : tos(0) {};
-  int isEmpty(void) {
-    return tos == 0;
-  }
-  void push(int l, int r) {
-    stack[tos++] = l;
-    stack[tos++] = r;
-  }
-  void pop(int &l, int &r) {
-    r = stack[--tos];
-    l = stack[--tos];
-  }
+  QuickSortStack(void);
+  bool empty(void) const;
+  void push(int, int);
+  void pop(int&, int&);
 };
 
-template <class T,Bool(*lt)(const T&,const T&)>
 inline
-void insertion(T * x, int l, int r) {
+QuickSortStack::QuickSortStack(void) : tos(0) {
+}
+inline
+bool QuickSortStack::empty(void) const {
+  return tos == 0;
+}
+inline
+void QuickSortStack::push(int l, int r) {
+  stack[tos++] = l;
+  stack[tos++] = r;
+}
+inline
+void QuickSortStack::pop(int& l, int& r) {
+  r = stack[--tos];
+  l = stack[--tos];
+}
+
+
+template <class Type, class LessThan>
+inline
+void insertion(Type * x, int l, int r, LessThan &lt) {
   int i;
   for (i = r; i > l; i--)
-    sort_exchange<T,lt>(x[i-1],x[i]);
+    sort_exchange(x[i-1],x[i],lt);
   for (i = l+2; i <= r; i++) {
     int j = i;
-    T v = x[i];
+    Type v = x[i];
     while (lt(v,x[j-1])) {
       x[j] = x[j-1]; j--;
     }
@@ -83,14 +96,12 @@ void insertion(T * x, int l, int r) {
   }
 }
 
-int const QuickSortCutoff = 10;
-
-template <class T,Bool(*lt)(const T&,const T&)>
+template <class Type, class LessThan>
 inline
-int partition(T * x, int l, int r) {
+int partition(Type * x, int l, int r, LessThan &lt) {
   int i = l-1;
   int j = r;
-  T v = x[r];
+  Type v = x[r];
   while (1) {
     while (lt(x[++i],v));
     while (lt(v,x[--j])) if (j == l) break;
@@ -101,38 +112,38 @@ int partition(T * x, int l, int r) {
   return i;
 }
 
-template <class T,Bool(*lt)(const T&,const T&)>
+template <class Type, class LessThan>
 inline
-void quicksort(T * x, int l, int r) {
+void quicksort(Type * x, int l, int r, LessThan &lt) {
   QuickSortStack s;
   s.push(l,r);
-  while (!s.isEmpty()) {
+  while (!s.empty()) {
     s.pop(l,r);
-    while (1) {
-      if (r-l <= QuickSortCutoff)
-        break;
-      sort_swap(x[(l+r)/2],x[r-1]);
-      sort_exchange<T,lt>(x[l],x[r-1]);
-      sort_exchange<T,lt>(x[l],x[r]);
-      sort_exchange<T,lt>(x[r-1],x[r]);
-      int i = partition<T,lt>(x, l+1, r-1);
-      if (i-l > r-i) {
-        s.push(l,i-1); l=i+1; //goto nopush;
-      } else {
-        s.push(i+1,r); r=i-1; //goto nopush;
-      }
+  nopush:
+    if (r-l <= QuickSortCutoff)
+      continue;
+    sort_swap(x[(l+r)/2],x[r-1]);
+    sort_exchange(x[l],x[r-1],lt);
+    sort_exchange(x[l],x[r],lt);
+    sort_exchange(x[r-1],x[r],lt);
+    int i = partition(x, l+1, r-1,lt);
+    if (i-l > r-i) {
+      s.push(l,i-1); l=i+1; goto nopush;
+    } else {
+      s.push(i+1,r); r=i-1; goto nopush;
     }
   }
 }
 
-template <class T,Bool(*lt)(const T&,const T&)>
+template <class Type, class LessThan>
 inline
-void fastsort(T * x, int n) {
+void fastsort(Type* x, int n, LessThan &lt) {
   if (n < 2)
     return;
   if (n > QuickSortCutoff)
-    quicksort<T,lt>(x,0,n-1);
-  insertion<T,lt>(x,0,n-1);
+    quicksort(x,0,n-1,lt);
+  insertion(x,0,n-1,lt);
 }
+
 
 #endif
