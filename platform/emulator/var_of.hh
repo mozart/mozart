@@ -153,7 +153,6 @@ private:
 /* Empty/Max: 0/0, 0/1, 1/2, 2/4, 3/8, 6/16, ... (limit:37.5%) */
 #define emptyFunc(size) (((size)+((size)>>1)+2)>>2)
 
-
 // class DynamicTable uses:
 //   TaggedRef SRecord::getFeature(Literal* feature)		(srecord.hh)
 //   int Literal::hash()					(term.hh)
@@ -171,7 +170,7 @@ public:
     dt_index size;
     HashElement table[1]; // 1 == placeholder.  Actual size set when allocated.
 
-    USEHEAPMEMORY;
+    USEFREELISTMEMORY;
 
     void print(ostream & = cout, int=0, int=0);
     void printLong(ostream & = cout, int=0, int=0);
@@ -206,6 +205,13 @@ public:
       return copyDynamicTable(size?(size<<1):1);
     }
 
+  static
+  size_t DTBlockSize(int s)
+  {
+    return sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
+  }
+
+    void dispose() { freeListDispose(this, DTBlockSize(size)); } 
     // Insert val at index id 
     // If valid==FALSE then nothing has been done.
     // Otherwise, return NULL if val is successfully inserted (id did not exist) 
@@ -277,6 +283,16 @@ public:
 private:
     dt_index fullhash(TaggedRef id);
 };
+
+
+
+inline
+void resizeDynamicTable(DynamicTable *&dt) 
+{
+  DynamicTable *ret = dt->doubleDynamicTable();
+  dt->dispose();
+  dt = ret;
+}
 
 
 //-------------------------------------------------------------------------
@@ -375,10 +391,10 @@ public:
     Bool addFeatureValue(TaggedRef feature, TaggedRef term) {
 	Assert(isFeature(feature));
         Bool valid;
-        if (dynamictable->fullTest()) dynamictable=dynamictable->doubleDynamicTable();
+        if (dynamictable->fullTest()) resizeDynamicTable(dynamictable);
         TaggedRef prev=dynamictable->insert(feature,term,&valid);
         if (!valid) {
-            dynamictable=dynamictable->doubleDynamicTable();
+            resizeDynamicTable(dynamictable);
             prev=dynamictable->insert(feature,term,&valid);
         }
         Assert(valid);
