@@ -93,6 +93,7 @@ in
 	       TopFrame = {Dget self.D S}
 	    in
 	       {Ozcar printStackFrame(frame:TopFrame delete:true)}
+	       {Ozcar printEnv(frame:0)}
 	    end
 	 end
       end
