@@ -78,9 +78,13 @@ OZ_Return TellIsInPropagator::propagate(void)
   if (*d == fd_singl) {
     FailOnInvalid(*s += d->getSingleElem());
   } else {
+
     for (int i = 32 * fset_high; i --; )
       if (s->isNotIn(i))
 	FailOnEmpty(*d -= i);
+
+    if (*d == fd_singl) 
+      FailOnInvalid(*s += d->getSingleElem());
   }
 
   OZ_DEBUGPRINT("out: "<< *this);
@@ -103,9 +107,13 @@ OZ_Return TellIsNotInPropagator::propagate(void)
   if (*d == fd_singl) {
     FailOnInvalid(*s -= d->getSingleElem());
   } else {
+
     for (int i = 32 * fset_high; i --; )
       if (s->isIn(i))
 	FailOnEmpty(*d -= i);
+
+    if (*d == fd_singl) 
+      FailOnInvalid(*s -= d->getSingleElem());
   }
 
   OZ_DEBUGPRINT("out: "<< *this);
