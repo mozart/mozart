@@ -25,7 +25,7 @@
 
 functor
 import
-   OS(system tmpnam)
+   OS(system tmpnam unlink)
 export
    'class': PostScriptToGIFClass
 define
@@ -67,6 +67,7 @@ define
       in
          {PsToPpm InName PpmName}
          {PpmToGif PpmName Info OutName}
+         {OS.unlink PpmName}
          OutName
       end
    end
