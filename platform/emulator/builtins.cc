@@ -5907,6 +5907,7 @@ OZ_C_proc_begin(BISystemGetTime,1) {
                                     ozstat.timeForPropagation.total +
                                     ozstat.timeForCopy.total));
   SetIntArg(AtomSystem,    osSystemTime());
+  SetIntArg(AtomTotal,     osTotalTime());
   SetIntArg(AtomUser,      timeNow);
 
   return PROCEED;
@@ -5958,7 +5959,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BISystemGetSpaces,1) {
   GetRecord;
 
-  SetIntArg(AtomChosen,    ozstat.solveAlt.total);
+  SetIntArg(AtomCommitted, ozstat.solveAlt.total);
   SetIntArg(AtomCloned,    ozstat.solveCloned.total);
   SetIntArg(AtomCreated,   ozstat.solveCreated.total);
   SetIntArg(AtomFailed,    ozstat.solveFailed.total);
@@ -7278,7 +7279,7 @@ BIspec allSpec2[] = {
   {"Space.askVerbose",    2, BIaskVerboseSpace, 0},
   {"Space.merge",         2, BImergeSpace,      0},
   {"Space.clone",         2, BIcloneSpace,      0},
-  {"Space.choose",        2, BIchooseSpace,     0},
+  {"Space.commit",        2, BIchooseSpace,     0},
   {"Space.inject",        2, BIinjectSpace,     0},
 
   {"biExceptionHandler",         1, BIbiExceptionHandler,         0},

@@ -114,6 +114,27 @@ unsigned int osSystemTime()
 
 
 
+unsigned int osTotalTime()
+{
+#if defined(WINDOWS)
+  if (!runningUnderNT) {
+    return 0;
+  }
+
+  /* only NT supports this */
+  FILETIME ct,et,kt,ut;
+  GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
+  return fileTimeToMS(&kt);
+
+#else
+  struct tms buffer;
+
+  return (unsigned int) (times(&buffer)*1000.0/(double)sysconf(_SC_CLK_TCK));
+#endif
+}
+
+
+
 #ifdef WINDOWS
 class TimerThread {
 public:
