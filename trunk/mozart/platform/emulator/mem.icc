@@ -35,6 +35,7 @@ void * freeListMalloc(size_t chunk_size)
   if (aux == NULL) {
     aux = heapMalloc(chunk_size); 
   } else {
+    COUNT1(freeListAllocated,chunk_size);
     freeListCache[chunk_size] = *(void **)aux;
   }
   DebugMem(memset((char *)aux,0x5A,chunk_size));

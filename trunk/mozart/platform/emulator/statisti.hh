@@ -16,22 +16,15 @@
 #pragma interface
 #endif
 
-#ifdef AM_PROFILE
-#   define IncfProfCounter(C,N) ozstat.C += N
-#else
-#   define IncfProfCounter(C,N)
-#endif
-
 #ifdef HEAP_PROFILE
-# define INITCOUNT() ozstat.initCount();
-# define COUNT(WHAT) ozstat.WHAT += 1
-# define COUNT1(WHAT,n) ozstat.WHAT += n
+# define ProfileCode(Code) Code
 #else
-# define INITCOUNT()
-# define COUNT(WHAT)
-# define COUNT1(WHAT,n)
+# define ProfileCode(Code)
 #endif
 
+
+#define COUNT1(WHAT,n) ProfileCode(ozstat.WHAT += n)
+#define COUNT(WHAT)    COUNT1(WHAT,1) 
 
 class StatCounter {
 public:
@@ -90,12 +83,6 @@ public:
   void initGcMsg(int level);
   void printGcMsg(int level);
 
-#ifdef PROFILE
-  /* these should alos use class StatCounter */
-  int allocateCounter, deallocateCounter, procCounter,
-    localVariableCounter, protectedCounter;
-#endif
-
   void incSolveAlt(void)     { solveAlt.incf();}
   void incSolveCloned(void)  { solveCloned.incf();}
   void incSolveCreated(void) { solveCreated.incf();}
@@ -119,21 +106,38 @@ public:
   long lTuple;
   long sRecord;
   long sRecordLen;
-  long suspension;
   long suspList;
   long uvar;
   long svar;
   long cvar;
   long dynamicTable, dynamicTableLen;
   long taskStack,taskStackLen;
-  long cCatch,cLocal,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
-  long cCallCont, cCFuncCont;
-  long abstraction,deepObject,flatObject,cell,space,chunk;
-  long builtin;
+  long cSolve,cACont,cCatch,cLocal,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
+  long cCallCont;
+  long abstraction,flatObject,cell,space,chunk;
   long heapChunk,thread;
   long board,objectClass;
   long askActor,waitActor,solveActor,waitChild;
-  long solveDLLStack;
+
+
+  // RS
+  long freeListAllocated;
+  long totalAllocated;
+  long varVarUnify, recRecUnify,totalUnify;
+  long applBuiltin, applProc;
+  long maxStackDepth;
+  long maxEnvSize;
+  long numClosures;
+  long sizeStackVars;
+  long sizeEnvs;
+  
+  void derefChain(int n);
+  void printDeref();
+  long lenDeref;
+  long numDerefs;
+  long longestDeref;
+  const int maxDerefLength = 10;
+  long lengthDerefs[maxDerefLength+1];
 #endif
 };
 

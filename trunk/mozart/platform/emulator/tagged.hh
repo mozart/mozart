@@ -729,11 +729,14 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 // }
 
 
-#define __DEREF(term, termPtr, tag)		\
-  while(IsRef(term)) {				\
-    termPtr = tagged2Ref(term);			\
-    term = *termPtr;				\
-  }						\
+#define __DEREF(term, termPtr, tag)			\
+  ProfileCode(ozstat.lenDeref=0);			\
+  while(IsRef(term)) {					\
+    COUNT(lenDeref);					\
+    termPtr = tagged2Ref(term);				\
+    term = *termPtr;					\
+  }							\
+  ProfileCode(ozstat.derefChain(ozstat.lenDeref));	\
   tag = tagTypeOf(term);
 
 #define _DEREF(term, termPtr, tag)		\
@@ -928,7 +931,9 @@ void disposeRefsArray(RefsArray a)
 inline
 RefsArray allocateY(int n)
 {
-  RefsArray a = ((RefsArray) freeListMalloc((n+1) * sizeof(TaggedRef)));
+  int sz = (n+1) * sizeof(TaggedRef);
+  COUNT1(sizeEnvs,sz);
+  RefsArray a = (RefsArray) freeListMalloc(sz);
   a += 1;
   initRefsArray(a,n,OK);
   return a;  

@@ -149,12 +149,14 @@ Case(GETSELF)
 
 CaseOneRegGImpossible(CREATEVARIABLE,
    ``{
+       ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
        Reg1(getRegArg(PC+1)) = MakeVar;
        DISPATCH(2);
      }'')
 
 CaseOneRegGImpossible(CREATEVARIABLEMOVE,
    ``{
+       ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
        Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = MakeVar;
        DISPATCH(3);
      }'')

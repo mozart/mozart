@@ -91,11 +91,8 @@ Statistics::Statistics()
   timeUtime.idle();
 }
 
-void Statistics::reset() {
-#ifdef PROFILE
-  allocateCounter = deallocateCounter = procCounter = 
-    protectedCounter = 0;
-#endif
+void Statistics::reset() 
+{
   gcLastActive = 0;
 
   gcCollected.reset();
@@ -211,7 +208,6 @@ void Statistics::initCount() {
   lTuple=0;
   sRecord=0;
   sRecordLen=0;
-  suspension=0;
   suspList=0;
   uvar=0;
   svar=0;
@@ -219,16 +215,30 @@ void Statistics::initCount() {
   dynamicTable= dynamicTableLen=0;
   taskStack=taskStackLen=0;
   cSolve=cCatch=cLocal=cCont=cXCont=cACont=cDebugCont=cExceptHandler=0;
-  cCallCont= cCFuncCont=0;
-  abstraction=deepObject=flatObject=cell=chunk=0;
-  oneCallBuiltin=solvedBuiltin=builtin=0;
+  cCallCont=0;
+  abstraction=flatObject=cell=chunk=0;
   heapChunk=thread=0;
   board=objectClass=0;
   askActor=waitActor=solveActor=waitChild=0;
-  solveDLLStack=0;
+
+  freeListAllocated = 0;
+  totalAllocated = 0;  
+  varVarUnify = recRecUnify = totalUnify = 0;
+  applBuiltin = applProc =0;
+  maxStackDepth = 0;
+  maxEnvSize = 0;
+  numClosures = 0;
+  sizeStackVars = sizeEnvs = 0;
+  numDerefs = longestDeref = 0;
+  for(int i=0; i<=maxDerefLength; i++) {
+    lengthDerefs[i] = 0;
+  }
 }
 
 #include "ofgenvar.hh"
+
+#define PrintVar(Var) \
+  printf("%20s:          %d\n",OZStringify(Var),Var)
 
 void Statistics::printCount() {
   printf("Heap after last GC:\n\n");
@@ -236,20 +246,14 @@ void Statistics::printCount() {
   printf("literal         %d (%dB)\n",literal,sizeof(Literal));
   printf("ozfloat         %d (%dB)\n",ozfloat,sizeof(Float));
   printf("bigInt          %d (%dB)\n",bigInt,sizeof(BigInt));
-  printf("sTuple          %d (%dB)\n",sTuple,sizeof(STuple));
   printf("sTupleLen       %d (%dB)\n",sTupleLen,sizeof(TaggedRef));
   printf("lTuple          %d (%dB)\n",lTuple,sizeof(LTuple));
   printf("sRecord         %d (%dB)\n",sRecord,sizeof(SRecord));
   printf("sRecordLen      %d (%dB)\n",sRecordLen,sizeof(TaggedRef));
   printf("abstraction     %d (%dB)\n",abstraction,sizeof(Abstraction));
-  printf("deepObject      %d (%dB)\n",deepObject,sizeof(DeepObject));
   printf("flatObject      %d (%dB)\n",flatObject,sizeof(Object));
   printf("objectClass     %d (%dB)\n",objectClass,sizeof(ObjectClass));
-  printf("cell            %d (%dB)\n",cell,sizeof(Cell));
   printf("chunk           %d (%dB)\n",chunk,sizeof(SChunk));
-  printf("oneCallBuiltin  %d (%dB)\n",oneCallBuiltin,sizeof(OneCallBuiltin));
-  printf("solvedBuiltin   %d (%dB)\n",solvedBuiltin,sizeof(SolvedBuiltin));
-  printf("builtin         %d (%dB)\n",builtin,sizeof(Builtin));
   printf("heapChunk       %d (%dB)\n",heapChunk,sizeof(HeapChunk));
   
   printf("refsArray       %d (%dB)\n",refsArray,0);
@@ -267,7 +271,6 @@ void Statistics::printCount() {
   printf("waitActor       %d (%dB)\n",waitActor,sizeof(WaitActor));
   printf("solveActor      %d (%dB)\n",solveActor,sizeof(SolveActor));
   printf("waitChild       %d (%dB)\n",waitChild,sizeof(Board *));
-  printf("solveDLLStack   %d (%dB)\n",solveDLLStack,sizeof(DLLStackEntry *));
 
   printf("\nThreads\n");
   printf("thread          %d (%dB)\n",thread,sizeof(Thread));
@@ -281,15 +284,48 @@ void Statistics::printCount() {
   printf("cDebugCont      %d (%dB)\n",cDebugCont,8);
   printf("cExceptHandler  %d (%dB)\n",cExceptHandler,8);
   printf("cCallCont       %d (%dB)\n",cCallCont,12);
-  printf("cCFuncCont      %d (%dB)\n",cCFuncCont,16);
 
   printf("continuation    %d (%dB)\n",continuation,sizeof(Continuation));
-  printf("suspCFun        %d (%dB)\n",suspCFun,sizeof(CFuncContinuation));
-  printf("suspension      %d (%dB)\n",suspension,sizeof(Suspension));
   printf("suspList        %d (%dB)\n",suspList,sizeof(SuspList));
 
   printf("\nOFS\n");
   printf("dynamicTable    %d (%dB)\n",dynamicTable,sizeof(DynamicTable));
   printf("dynamicTableLen %d (%dB)\n",dynamicTableLen,sizeof(HashElement));
+
+  printf("\nRS\n");
+  PrintVar(freeListAllocated);
+  PrintVar(totalAllocated);
+  PrintVar(varVarUnify);
+  PrintVar(recRecUnify);
+  PrintVar(totalUnify);
+  PrintVar(applBuiltin);
+  PrintVar(applProc);
+  PrintVar(maxStackDepth);
+  PrintVar(maxEnvSize);
+  PrintVar(numClosures);
+  PrintVar(sizeStackVars);
+  PrintVar(sizeEnvs);
+  printDeref();
 }
+
+
+void Statistics::printDeref()
+{
+  PrintVar(numDerefs);
+  PrintVar(longestDeref);
+  for(int i=0; i<maxDerefLength; i++) {
+    printf("lengthDerefs[%d]=%d\n",i,lengthDerefs[i]);
+  }
+  printf("lengthDerefs[>=%d]=%d\n",maxDerefLength,lengthDerefs[maxDerefLength]);
+}
+
+void Statistics::derefChain(int n)
+{
+  numDerefs++;
+  longestDeref = max(n,longestDeref);
+  n = min(n,maxDerefLength);
+  lengthDerefs[n]++;    
+}
+
+
 #endif
