@@ -36,6 +36,15 @@ define(instruction,
 
 #ifdef AS_CAN_INLINE_OPCODE_MAP
 
+/* trick GCC into believing that we actually need the FAKE_... labels */
+
+#define INSTR(instr) case instr: goto FAKE_##instr;
+switch (MaybeJumpHere) {
+include(EMUDIR/instrDefs.m4)
+default: break;
+}
+#undef INSTR
+
 #if defined(ARCH_I486)
 #define LOAD_LABEL(instr) \
 asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))
@@ -46,10 +55,7 @@ asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))
 #error platform not supported
 #endif
 
-/* trick GCC into believing that we actually need the FAKE_... labels */
-
 #define INSTR(instr) \
-  *ptr = && FAKE_##instr; \
   LOAD_LABEL(instr); \
   ++ptr;
 

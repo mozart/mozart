@@ -409,6 +409,11 @@ void pushContX(TaskStack *stk,
 
 #ifdef AS_CAN_INLINE_OPCODE_MAP
 
+// used to fool gcc into believing that we might actually jump
+// to the FAKE_... labels (see the if (init) { ... } section of engine())
+
+int MaybeJumpHere = -1;
+
 #define REPEAT_FOR_ALIGNMENT(S) S;S;S;S
 
 #define Case(INSTR) \
@@ -581,7 +586,6 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label) {
 // ************************************************************************
 // ------------------------------------------------------------------------
 // ------------------------------------------------------------------------
-
 
 // short names
 # define CBB (e->currentBoard())
