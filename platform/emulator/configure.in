@@ -387,12 +387,13 @@ AC_MSG_CHECKING(whether linker understands --export-dynamic)
 AC_CACHE_VAL(ac_cv_understand_export_dynamic,
 [savedKPCXXFLAGS=$CXXFLAGS
 CXXFLAGS="$CXXFLAGS -Wl,--export-dynamic"
+AC_LANG_SAVE
 AC_LANG_CPLUSPLUS
 AC_TRY_LINK(,,
 ac_cv_understand_export_dynamic=yes,
 ac_cv_understand_export_dynamic=no)
 CXXFLAGS=$savedKPCXXFLAGS
-AC_LANG_CPLUSPLUS])
+AC_LANG_RESTORE])
 
 if test $ac_cv_understand_export_dynamic = yes; then
     AC_MSG_RESULT([yes, will use it!])
@@ -552,6 +553,8 @@ win32*)
      esac
      if test $can_malloc = yes; then
         AC_MSG_CHECKING(... with a test program)
+        AC_LANG_SAVE
+        AC_LANG_C
         AC_TRY_RUN([
 #include <stdlib.h>
 #include <signal.h>
@@ -610,7 +613,7 @@ main()
   l2 = malloc(L_BLOCKSIZE);
 
   if (s1 == 0 || l1 == 0 || s2 == 0 || l2 == 0)
-    return (-1);
+    return (1);
 
   // conceivably possible..
   if (s1 > s2) {
@@ -627,9 +630,9 @@ main()
   // Now there are 6 cases, of which in 3 the small pages "trap" one
   // or both large pages between them.
   if (s1 < l1 && l1 < s2)
-    return (-2);
+    return (2);
   if (s1 < l2 && l2 < s2)
-    return (-3);                // the third case is cover by both;
+    return (3);         // the third case is cover by both;
 
   // Now, adjacency of large pages:
   // Also covers the case as in Mac OS X:
@@ -637,9 +640,8 @@ main()
   // But barks if e.g.:
   //   (int&) l2 = ((int) l2) + 3*L_BLOCKSIZE + MALLOC_OVERHEAD;
   if ((((int) l2 - (int) l1) % L_BLOCKSIZE) > MALLOC_OVERHEAD) {
-    return (-4);
+    return (4);
   }
-  return (0);
 
   // freeing up memory..
   if (setjmp(env) != 0)
@@ -648,7 +650,7 @@ main()
 
   free(l1);
   *((int *) l1) = 0;
-  return (1);
+  return (5);
 }
 ],
         AC_MSG_RESULT(succeeded),
@@ -656,6 +658,7 @@ main()
         can_malloc=no,
         AC_MSG_RESULT(dunno (no))
         can_malloc=no)
+        AC_LANG_RESTORE
      fi
      ac_cv_can_malloc=$can_malloc])
     if test $ac_cv_can_malloc = yes; then
@@ -670,6 +673,8 @@ main()
      AC_CHECK_FUNCS(mmap,, can_mmap=no)
      if test $can_mmap = yes; then
         AC_MSG_CHECKING(... with a test program)
+        AC_LANG_SAVE
+        AC_LANG_C
         AC_TRY_RUN([
 #include <sys/types.h>
 #include <unistd.h>
@@ -716,7 +721,7 @@ main()
 #else
   int zeroFD = open("/dev/zero", O_RDWR);
   if (zeroFD < 0)
-    return (-2);
+    return (2);
   loc1 = mmap((caddr_t) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
               (MAP_PRIVATE), zeroFD, 0x0);
   loc2 = mmap((caddr_t) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
@@ -724,15 +729,15 @@ main()
 #endif
 
   if (loc1 == MAP_FAILED || loc2 == MAP_FAILED)
-    return (-3);
+    return (3);
   // On Solaris, regions are NOT adjacent - but so what?
   //    if (loc2 > loc1) {
   //      if ((char *) loc2 != ((char *) loc1) + BLOCKSIZE)
-  //        return (-4);
+  //        return (4);
   //    } else {
   //      // conceivable possible..
   //      if ((char *) loc1 != ((char *) loc2) + BLOCKSIZE)
-  //        return (-4);
+  //        return (4);
   //    }
 
   if (setjmp(env) != 0)
@@ -740,9 +745,9 @@ main()
   (void) signal(SIGSEGV, sh);
 
   if (munmap((caddr_t) loc1, BLOCKSIZE))
-    return (-5);
+    return (5);
   *((int *) loc1) = 0;
-  return (-6);
+  return (6);
 
 #else // _POSIX_MAPPED_FILES
   exit(-1);
@@ -754,6 +759,7 @@ main()
         can_mmap=no,
         AC_MSG_RESULT(dunno (no))
         can_mmap=no)
+        AC_LANG_RESTORE
      fi
      ac_cv_can_mmap=$can_mmap])
     if test $ac_cv_can_mmap = yes; then
@@ -768,9 +774,11 @@ main()
      AC_CHECK_FUNCS(sbrk,, can_sbrk=no)
      if test $can_sbrk = yes; then
         AC_MSG_CHECKING(... with a test program)
+        AC_LANG_SAVE
+        AC_LANG_C
         AC_TRY_RUN([
 #include <unistd.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -804,58 +812,58 @@ main()
 
   start = sbrk(0);
   if (start == (void *) -1)
-    return (-1);
+    return (1);
 
   mar1 = (char *) malloc(STRUCTSIZE);
   if (mar1 == (char *) NULL)
-    return (-2);
+    return (2);
   for (i = 0; i < STRUCTSIZE; i++)
     mar1[i] = (char) i;
 
   s1 = sbrk(BLOCKSIZE);
   if (s1 == (void *) -1)
-    return (-3);
+    return (3);
   if ((char *) sbrk(0) != ((char *) s1) + BLOCKSIZE)
-    return (-4);
+    return (4);
 
   for (i = 0; i < STRUCTSIZE; i++) {
     if (mar1[i] != (char) i)
-      return (-5);
+      return (5);
   }
 
   mar2 = (char *) malloc(STRUCTSIZE);
   if (mar2 == (char *) NULL)
-    return (-6);
+    return (6);
   for (i = 0; i < STRUCTSIZE; i++)
     mar2[i] = (char) i;
 
   s2 = sbrk(0);
   if (sbrk == (void *) -1)
-    return (-7);
+    return (7);
   if (brk((void *) (((char *) s2) + BLOCKSIZE)) != 0)
-    return (-8);
+    return (8);
   if ((char *) sbrk(0) != ((char *) s2) + BLOCKSIZE)
-    return (-9);
+    return (9);
 
   for (i = 0; i < STRUCTSIZE; i++) {
     if (mar1[i] != (char) i)
-      return (-10);
+      return (10);
     if (mar2[i] != (char) i)
-      return (-11);
+      return (11);
   }
 
   if (brk(s2) != 0 || sbrk(0) != s2)
-    return (-12);
+    return (12);
   if (setjmp(env) == 0) {
     (void) signal(SIGSEGV, sh);
     *((int *) s2) = 0;
-    return (-13);
+    return (13);
   }
 
   mar1 = (char *) malloc(STRUCTSIZE);
   mar2 = (char *) malloc(STRUCTSIZE);
   if (mar1 == (char *) NULL || mar2 == (char *) NULL)
-    return (-2);
+    return (2);
   for (i = 0; i < STRUCTSIZE; i++) {
     mar1[i] = (char) i;
     mar2[i] = (char) i;
@@ -863,6 +871,8 @@ main()
 
   free(mar1);
   free(mar2);
+
+  return (0);
 }
 ],
         AC_MSG_RESULT(succeeded),
@@ -870,6 +880,7 @@ main()
         can_sbrk=no,
         AC_MSG_RESULT(dunno (no))
         can_sbrk=no)
+        AC_LANG_RESTORE
      fi
      ac_cv_can_sbrk=$can_sbrk])
     if test $ac_cv_can_sbrk = yes; then
