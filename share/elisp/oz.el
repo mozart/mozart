@@ -486,7 +486,7 @@ STRING should be given if the last search was by `string-match' on STRING."
     ("Panel"               oz-view-panel t)
     ("Debugger"            oz-debug-start t)
     ("Profiler"            oz-profiler-start t)
-    ("Compiler Panel"      oz-compiler-panel)
+    ("Compiler Panel"      oz-compiler-panel t)
     ("-----")
     ("Next Oz Buffer"      oz-next-buffer t)
     ("Previous Oz Buffer"  oz-previous-buffer t)
