@@ -829,29 +829,32 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 #ifdef NAME_PROPAGATORS
   if (am.isPropagatorLocation()) {
     Thread * thr = oz_currentThread();
-    OZ_Term debug_frame
-      = OZ_head(thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1));
+    OZ_Term debug_frame_raw =
+      thr->getTaskStackRef()->getTaskStack(thr, TRUE, 1);
+    if (debug_frame_raw != OZ_nil()) {
+      OZ_Term debug_frame = OZ_head(debug_frame_raw);
 
-    const char * fname = OZ_atomToC(OZ_subtree(debug_frame, AtomFile));
-    char * dirname, * basename;
+      const char * fname = OZ_atomToC(OZ_subtree(debug_frame, AtomFile));
+      char * dirname, * basename;
 
-    splitfname(fname, dirname, basename);
+      splitfname(fname, dirname, basename);
 
-    OZ_Term prop_loc = OZ_record(AtomPropLocation,
-                                 OZ_cons(AtomFile,
-                                         OZ_cons(AtomLine,
-                                                 OZ_cons(AtomColumn,
-                                                         OZ_cons(AtomPath,
-                                                                 OZ_nil())))));
-    OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
-    OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
-    OZ_putSubtree(prop_loc, AtomLine, OZ_subtree(debug_frame, AtomLine));
-    OZ_putSubtree(prop_loc, AtomColumn, OZ_subtree(debug_frame, AtomColumn));
+      OZ_Term prop_loc = OZ_record(AtomPropLocation,
+                                   OZ_cons(AtomFile,
+                                           OZ_cons(AtomLine,
+                                                   OZ_cons(AtomColumn,
+                                                           OZ_cons(AtomPath,
+                                                                   OZ_nil())))));
+      OZ_putSubtree(prop_loc, AtomPath, OZ_atom(dirname));
+      OZ_putSubtree(prop_loc, AtomFile, OZ_atom(basename));
+      OZ_putSubtree(prop_loc, AtomLine, OZ_subtree(debug_frame, AtomLine));
+      OZ_putSubtree(prop_loc, AtomColumn, OZ_subtree(debug_frame, AtomColumn));
 
-    oz_propAddName(prop, prop_loc);
+      oz_propAddName(prop, prop_loc);
 
-    NEW_NAMER_DEBUG_PRINT(("added propLoc for = %p (%s)\n",
-                           imposed_propagator, OZ_toC(prop_loc, 100, 100)));
+      NEW_NAMER_DEBUG_PRINT(("added propLoc for = %p (%s)\n",
+                             imposed_propagator, OZ_toC(prop_loc, 100, 100)));
+    }
   }
 #endif
 
