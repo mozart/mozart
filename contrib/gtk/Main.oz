@@ -45,7 +45,13 @@ define
       {System.show 'parse error'}
    [] ParseTree then
       FlatTree  = {Record.toList {Flatten.flatten ParseTree}}
-      [Wrapper] = {Module.link {Application.getArgs plain}}
+      Args      = {Application.getArgs plain}
+      DoNative
+      ArgTail   = case Args
+		  of ["--no-native" _] then DoNative = false Args.2
+		  else DoNative = true Args
+		  end
+      [Wrapper] = {Module.link ArgTail}
    in
       %% 4 Phases
       %% 1. Create Native Functors containing the functions
@@ -58,9 +64,9 @@ define
       try
 	 TypeDict = {Collect.collect FlatTree}
       in
-	 {ToolKit.createFuncs TypeDict}
+	 if DoNative then {ToolKit.createFuncs TypeDict} end
 	 {Wrapper.createFuncs TypeDict}
-	 {ToolKit.createFields TypeDict}
+	 if DoNative then {ToolKit.createFields TypeDict} end
 	 {Wrapper.createFields TypeDict}
 	 {Application.exit 0}
       catch E then

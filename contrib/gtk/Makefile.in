@@ -9,7 +9,9 @@ LIB_DIR		= $(PREFIX)/cache/x-oz/system/gtk
 HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
+OZL             = @OZL@
 COMPILE		= $(OZC) -c
+LINK            = $(OZL)
 OZTOOL		= @OZTOOL@
 OZENGINE        = @OZENGINE@
 CPP             = @CPP@
@@ -81,11 +83,19 @@ OZSRCS    = GOZCore.oz \
             NativeEmitter.oz \
             ToolKit.oz \
             Main.oz \
-            OzWrapper.oz \
-            AliceWrapper.oz
+            OzWrapper.oz
 
 OZOBJS    = $(OZSRCS:%.oz=%.ozf)
 OZINSTALL = $(LIB_DIR)/GOZCore.ozf
+
+GENOBJS    = Collect.ozf \
+             Flatten.ozf \
+             Prepare.ozf \
+             Util.ozf \
+             NativeEmitter.ozf \
+             ToolKit.ozf \
+             Main.ozf
+GENINSTALL = $(LIB_DIR)/Generator.ozf
 
 CSRCS    = GOZSignal.c
 COBJS    = $(CSRCS:%.c=%.o)
@@ -133,9 +143,10 @@ WRPINSTALL = $(WRPSRCS:%.oz=$(LIB_DIR)/%.ozf)
 # Target Variables
 #---------------------------------------------------------------------
 
-TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) $(CCMPS)
+TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) $(CCMPS) Generator.ozf
 GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
-LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL)
+LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
+              $(GENINSTALL)
 
 #---------------------------------------------------------------------
 # Rules
@@ -161,6 +172,9 @@ $(CCMPS):%.so-$(PLATFORM): $(COBJS)
 
 $(NATCMPS):%.so-$(PLATFORM): %.o
 	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(NATEXTRAFLAGS)
+
+Generator.ozf: $(GENOBJS)
+	$(LINK) Main.ozf -o $@
 
 #---------------------------------------------------------------------
 # Building
@@ -202,8 +216,7 @@ binding:
 ifeq ($(GTKGENERATED), GDK.oz)
 	@$(MAKE) wrapper_files
 else
-	$(OZENGINE) Main.ozf OzWrapper.ozf
-	$(OZENGINE) Main.ozf AliceWrapper.ozf
+	$(OZENGINE) Generator.ozf OzWrapper.ozf
 	@$(MAKE) wrapper_files
 endif
 
