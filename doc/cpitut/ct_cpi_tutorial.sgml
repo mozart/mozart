@@ -463,7 +463,8 @@ constraint is inconsistent with the constraint store.
     Solver/
 
 <P> The module <<RI>> is provided as contribution (being part of the
-&moz3; distribution) and can be accessed either by
+&moz3; distribution<note foot>The module <<RI>>
+is <Em/not/ provided on any Windows platform.</note>) and can be accessed either by
 <<<declare [RI] = {Module.link ['x-oz://contrib/RI']}>>
 or by
 <<<import RI at 'x-oz://contrib/RI'>>>
