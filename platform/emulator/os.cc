@@ -349,6 +349,8 @@ void handlerDefault(int sig)
 static SigHandler handlers[] = {
   {SIGINT, "SIGINT", NO,handlerDefault,0},
   {SIGTERM,"SIGTERM",NO,handlerDefault,0},
+  {SIGSEGV,"SIGSEGV",NO,handlerDefault,0},
+  {SIGBUS,"SIGBUS",NO,handlerDefault,0},
   {SIGUSR1,"SIGUSR1",NO,handlerDefault,0},
   {SIGFPE, "SIGFPE", NO,handlerDefault,0},
 
@@ -882,6 +884,12 @@ void osInitSignals()
 #endif
 #ifdef SIGCHLD
   osSignal(SIGCHLD,handlerCHLD);
+#endif
+#ifdef SIGSEGV
+  osSignal(SIGSEGV,handlerSEGV);
+#endif
+#ifdef SIGSBUS
+  osSignal(SIGBUS,handlerBUS);
 #endif
 
   // do not allow to overload SIGALRM

@@ -83,9 +83,70 @@ class NodeProcessor;
 typedef void (*ProcessNodeProc)(OZ_Term, Opaque*, NodeProcessor*);
 
 //
+#ifdef DEBUG_CHECK
+//
+// The ring buffer keeps all extracted elements;
+#define NODEPROCESSOR_RINGBUFFER_ENTRIES        64
+// we save address in stack and its content;
+#define NODEPROCESSOR_RINGBUFFER_BUFSIZE        64*2
+//
+class NodeProcessorRingBuffer {
+private:
+  int cnt;
+  int current;
+  StackEntry buf[NODEPROCESSOR_RINGBUFFER_BUFSIZE];
+
+  //
+public:
+  void init() {
+    cnt = current = 0;
+    for (int i = 0; i < NODEPROCESSOR_RINGBUFFER_BUFSIZE; i++)
+      buf[i] = 0;
+  }
+  NodeProcessorRingBuffer() {
+    Assert(NODEPROCESSOR_RINGBUFFER_BUFSIZE % 2 == 0);
+    init();
+  }
+
+  //
+  void save(StackEntry *se, StackEntry e) {
+    cnt++;
+    current %= NODEPROCESSOR_RINGBUFFER_BUFSIZE;
+    buf[current++] = se;
+    buf[current++] = e;
+  }
+
+  //
+  void print(int n) {
+    int index = current;        // to be allocated;
+    n = max(n, 0);
+    n = min(n, cnt);
+    n = min(n, NODEPROCESSOR_RINGBUFFER_ENTRIES);
+    fprintf(stdout,
+            "Note processor's ring buffer (%d tasks ever recorded):\n",
+            cnt);
+
+    //
+    while (n--) {
+      index -= 2;
+      if (index < 0)
+        index = NODEPROCESSOR_RINGBUFFER_BUFSIZE - 2;
+      //
+      fprintf(stdout, " frame(%p) e=%p\n", buf[index], buf[index+1]);
+    }
+
+    //
+    fflush(stdout);
+  }
+};
+#endif
+
+//
 // 'NodeProcessorStack' keeps OZ_Term"s to be traversed.
 // Basically only allocation routines are used from 'Stack';
 class NodeProcessorStack : protected Stack {
+private:
+  DebugCode(NodeProcessorRingBuffer rbuf;);
 public:
   NodeProcessorStack() : Stack(GT_STACKSIZE, Stack_WithMalloc) {}
   ~NodeProcessorStack() {}
@@ -107,10 +168,12 @@ public:
   OZ_Term get() {
     checkConsistency();
     Assert(isEmpty() == NO);
+    DebugCode(rbuf.save(tos-1, *(tos-1)));
     return (ToInt32(*(--tos)));
   }
   OZ_Term lookup() {
     checkConsistency();
+    DebugCode(rbuf.save(tos-1, *(tos-1)));
     return (ToInt32(topElem()));
   }
 
@@ -123,10 +186,12 @@ public:
   int32 getInt() {
     checkConsistency();
     Assert(isEmpty() == NO);
+    DebugCode(rbuf.save(tos-1, *(tos-1)));
     return (ToInt32(*(--tos)));
   }
   int32 lookupInt() {
     checkConsistency();
+    DebugCode(rbuf.save(tos-1, *(tos-1)));
     return (ToInt32(topElem()));
   }
   void putPtr(void* ptr) {
@@ -136,10 +201,12 @@ public:
   void* getPtr() {
     checkConsistency();
     Assert(isEmpty() == NO);
+    DebugCode(rbuf.save(tos-1, *(tos-1)));
     return (*(--tos));
   }
   void* lookupPtr() {
     checkConsistency();
+    DebugCode(rbuf.save(tos-1, *(tos-1)));
     return (*(tos-1));
   }
 
@@ -305,8 +372,9 @@ int32 getTraverserTaskArg(OZ_Term taggedTraverserTask)
   Assert(tagTypeOf(taggedTraverserTask) == GCTAG);
   return (getGCTaggedInt(taggedTraverserTask));
 }
-// no argument is needed currenty;
-const OZ_Term taggedBATask = MAKETRAVERSERTASK(0);
+//
+const OZ_Term taggedBATask   = MAKETRAVERSERTASK(0);
+const OZ_Term taggedSyncTask = MAKETRAVERSERTASK(1);
 
 //
 // Marshaling/unmarshaling of record arity also requires some special
@@ -368,6 +436,22 @@ private:
     suspend();
     clear();
     unwind();
+  }
+
+  //
+  // When the builder receives a value from the stream, it either just
+  // stores it somewhere, or, alternatively, passes it to some
+  // emulator function. While in the first case it is sufficient just
+  // to know the top node of the value, in the second one the whole
+  // value must be built up completely. That is, a task that handles
+  // such a value must be postponed until the value is completely
+  // built up. The marshaler supports the builder by putting marks in
+  // the stream saying that a value of interest is complete at this
+  // point. These marks and tasks that handle complete values match
+  // with other, that is, when the builder fetches a mark from the
+  // stream, it executes a task from the stack;
+  void putSync() {
+    putInt(taggedSyncTask);
   }
 
   //
@@ -489,6 +573,11 @@ protected:
   // 'processAbstraction' also issues 'marshalBinary';
   virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst) = 0;
 
+  //
+  // One can think of 'sync' as an of a pseudo term: it simplifies
+  // greately the builder's work;
+  virtual void processSync() = 0;
+
 public:
   //
   // The 'marshalBinary' method is the only artifact due to the
@@ -524,7 +613,8 @@ public:
   // unmarshaled in the same order (but in the stream they appear in
   // reverse order);
   void marshalOzValue(OZ_Term term) {
-    ensureFree(1);
+    ensureFree(2);
+    putSync();          // will appear after the list;
     put(term);
   }
 
@@ -600,23 +690,18 @@ enum BuilderTaskType {
   //
   // Records are processed like this: first, 'takeRecordLabel' and
   // 'takeRecordArity' subsequently accumulate a label and arity list
-  // respectively. 'takeRecordArity' issues 'makeRecord_intermediate'
-  // what constructs the record and issues 'recordArg's. The thing is
-  // called "intermediate" since it's applied when a first subtree
-  // arrives; thus, it does the construction job and immediately
-  // proceeds to the actual topmost task (which is 'recordArg'). Note
-  // that "intermediate" tasks could work also for other data
-  // structures, provided they (a) preserve "value" argument of
-  // 'buildValue', (b) don't go iterate on their own, and (c) simulate
-  // another 'buildValue' with 'value' saved (thus, go to the beginning
-  // of 'buildValueOutline');
+  // respectively. 'takeRecordArity' issues 'makeRecordSync' what
+  // constructs the record and issues 'recordArg's. The thing is
+  // called "sync" since it's applied when a sync mark arrives (the
+  // gentraverser makes sure that it comes after the arity list).
+  // Thus, 'makeRecordSync' does the construction job.
   BT_takeRecordLabel,
   BT_takeRecordLabelMemo,
   BT_takeRecordArity,
   BT_takeRecordArityMemo,
 
-  BT_makeRecord_intermediate,
-  BT_makeRecordMemo_intermediate,
+  BT_makeRecordSync,
+  BT_makeRecordMemoSync,
   //
   BT_recordArg,
   BT_recordArg_iterate,
@@ -632,8 +717,8 @@ enum BuilderTaskType {
   //
   BT_fsetvalue,
   BT_fsetvalueMemo,
-  BT_fsetvalueFinalMemo,
-  BT_fsetvalueFinal,
+  BT_fsetvalueSync,
+  BT_fsetvalueMemoSync,
   //
   BT_chunk,
   BT_chunkMemo,
@@ -650,16 +735,21 @@ enum BuilderTaskType {
   //
   // Dealing with binary areas (e.g. code areas);
   BT_binary,
-  // an Oz value to appear in the stream after a binary area. The task
-  // contains a "processor" procedure and its (opaque) argument (see
-  // also the comments for 'Builder::getOzValue()');
+  // 'binary_getValue' records the top node of a value, and
+  // 'binary_getValueSync' processes it (on a sync that follows it);
   BT_binary_getValue,
-  // ... the same but process it first when it's built up (using an
-  // intermediate task, as one would expect):
-  BT_binary_getCompleteValue,
-  BT_binary_getValue_intermediate,
-  // do arbitrary task at the point (see also 'schedGenAction'):
+  BT_binary_getValueSync,
+  // do arbitrary task at the point (see also 'schedGenAction').
+  // 'intermediate' is called so because it gets its job done in front
+  // of another task: when 'buildValue' is applied, 'intermediate'
+  // tasks are done (they cannot modify stack, apply 'buildValue',
+  // modify the value 'buildValue' has got, etc.), and then iterate to
+  // a "real" task;
   BT_binary_doGenAction_intermediate,
+
+  //
+  // Sometimes we have to ignore the sync mark:
+  BT_nop,
 
   //
   BT_NOTASK
@@ -691,16 +781,16 @@ static char* builderTaskNames[] = {
   "takeRecordLabelMemo",
   "takeRecordArity",
   "takeRecordArityMemo",
-  "makeRecord_intermediate",
-  "makeRecordMemo_intermediate",
+  "makeRecord(sync)",
+  "makeRecordMemo(sync)",
   "recordArg",
   "recordArg_iterate",
   "dictKey",
   "dictVal",
   "fsetvalue",
   "fsetvalueMemo",
-  "fsetvalueFinalMemo",
-  "fsetvalueFinal",
+  "fsetvalue(sync)",
+  "fsetvalueMemo(sync)",
   "chunk",
   "chunkMemo",
   "classFeatures",
@@ -712,8 +802,9 @@ static char* builderTaskNames[] = {
   "closureElem_iterate",
   "binary",
   "binary_getValue",
-  "binary_getCompleteValue",
-  "binary_getValue_intermediate"
+  "binary_getValue(sync)",
+  "binary_doGenAction(intermediate)",
+  "(nop)"
 };
 
 //
@@ -893,6 +984,8 @@ public:
 
 #define GetNextBTFrameArg1(frame, ATYPE, arg)           \
   ATYPE arg = (ATYPE) ToInt32(*(frame - bsFrameSize - 1));
+#define GetNextBTFramePtr1(frame, PTYPE, arg)           \
+  PTYPE arg = (PTYPE) *(frame - bsFrameSize - 1);
 
 #define EnsureBTSpace(frame,n)                          \
   frame = ensureFree(frame, n * bsFrameSize);
@@ -919,6 +1012,13 @@ public:
 {                                                       \
   DebugCode(*(frame) = ToPointer(0xffffffff););         \
   *(frame+1) = ToPointer(arg);                          \
+  *(frame+2) = ToPointer(type);                         \
+  frame = frame + bsFrameSize;                          \
+}
+#define PutBTTask2Args(frame,type,arg1,arg2)            \
+{                                                       \
+  DebugCode(*(frame) = ToPointer(arg2););               \
+  *(frame+1) = ToPointer(arg1);                         \
   *(frame+2) = ToPointer(type);                         \
   frame = frame + bsFrameSize;                          \
 }
@@ -994,6 +1094,15 @@ public:
   *(frame+2) = ToPointer(arg1);                         \
   frame = frame + bsFrameSize;                          \
 }
+
+#define CopyBTFrame(oframe,nframe)                      \
+{                                                       \
+  *(--nframe) = *(--oframe);                            \
+  *(--nframe) = *(--oframe);                            \
+  *(--nframe) = *(--oframe);                            \
+}
+
+#define NextBTFrame(frame)  frame = frame - bsFrameSize;
 
 //
 class BuilderStack : protected Stack {
@@ -1161,47 +1270,6 @@ public:
 
 };
 
-
-
-//
-// Dealing with binary areas requires a temporary stack used within
-// 'buildValueOutline'. The problem is that some 'build' methods, for
-// instance - 'buildProc()', do not create a value and match it
-// against a "purpose" task from the builder's stack; instead, a value
-// is created later and matched against its task using (usally)
-// "_iterate" tasks. However, instead of a "purpose" task a "binary"
-// one can occur (when the user has declared an area): these "binary"
-// tasks are saved until 'buildValueOutline" finishes;
-//
-// Unfortunately, the depth of this stack depends on a data structure
-// being built: observe that a procedure can be a last closure element
-// of another procedure, recursively, causing crossing of multiple
-// 'BT_binary' entries per 'buildValueOutline()' call;
-//
-typedef void* BAStackEntry;
-//
-class BuilderAuxStack : private Stack {
-public:
-  BuilderAuxStack() : Stack(16, Stack_WithMalloc) {}
-  ~BuilderAuxStack() {}
-
-  //
-  Bool isEmpty() { return (tos == array); }
-
-  //
-  void save(void* value) {
-    checkConsistency();
-    ensureFree(1);
-    *tos = value;
-    tos++;
-  }
-  void* pop() {
-    Assert(tos != array);
-    tos--;
-    return (*tos);
-  }
-};
-
 //
 typedef int BuilderOpaqueBA;
 typedef void (*OzValueProcessor)(void *arg, OZ_Term value);
@@ -1213,7 +1281,6 @@ private:
   CrazyDebug(int debugNODES;);
   OZ_Term result;               // used as a "container";
   OZ_Term blackhole;            // ... for discarding stuff;
-  BuilderAuxStack binaryTasks;  // (see the comments for 'BuilderAuxStack';)
   DebugCode(BuilderRingBuffer ringbuf;);
 
 private:
@@ -1228,6 +1295,25 @@ private:
   void buildValueOutlineRobust(OZ_Term value, BTFrame *frame,
                                BuilderTaskType type);
 #endif
+
+  //
+  // Handling binary areas involves pushing a task into the stack (the
+  // task represents the binary area to be processed, and is used by
+  // 'fillBinary'). However, an Oz entry that declares a binary
+  // area(s) is not built yet, thus there is a task for that
+  // entry. Obviously, the entry task should stay atop, and the binary
+  // area task should go beneath it:
+  //
+  // 'BTFrame* liftTask(int sz)' lift the topmost stack (and if that
+  // task iterates, all of its successors) by 'sz' frames, and returns
+  // the bottom frame that has been freed:
+  BTFrame* liftTask(int sz);
+  //
+  // ... 'sync' tasks add problems here: in the case when the whole
+  // binary-area-containing entity is sync'ed, the sync will appear
+  // after the code area, thus, the binary task is buried and must be
+  // explicitly searched for:
+  BTFrame* findBinary(BTFrame *frame);
 
   //
 public:
@@ -1302,11 +1388,7 @@ public:
     EnsureBTSpace(frame, 2);
     PutBTFrameArg(frame, n);
     PutBTTask(frame, BT_takeRecordLabelMemo);
-
-    // Setting the slot to a 'GC' TaggedRef is exploited later by
-    // '_intermediate' tasks to reassign a proper value passed over
-    // that '_intermediate' task;
-    set(makeGCTaggedInt(n), n);
+    DebugCode(set(makeGCTaggedInt(n), n););
     SetBTFrame(frame);
   }
 
@@ -1367,6 +1449,7 @@ public:
     //
     set(classTerm, n);
 
+    //
     putTask(BT_classFeatures, cl, flags);
   }
 
@@ -1411,7 +1494,12 @@ public:
   void buildBinary(void *binaryAreaDesc) {
     // Zero arguments are not allowed since they are used internally;
     Assert(binaryAreaDesc);
-    putTask(BT_binary, binaryAreaDesc);
+    // Observer that lifting a task can have a consequence: if there
+    // is a 'sync' mark in the stream for the whole entity, then
+    // 'fillBinary' will have to search for the 'BT_binary' task;
+    BTFrame *hole = liftTask(1);
+    PutBTTaskPtr(hole, BT_binary, binaryAreaDesc);
+    // no 'SetBTFrame' since the thing is buried;
   }
 
   //
@@ -1424,22 +1512,37 @@ public:
     CrazyDebug(incDebugNODES(););
     GetBTFrame(frame);
     void *bp;
-    // Even if there are some empty binary tasks, these were binary
-    // ones:
-    DebugCode(GetBTTaskType(frame, type););
-    Assert(type == BT_binary);
 
     //
-    while (1) {
+  repeat:
+    GetBTTaskType(frame, type);
+    if (type != BT_binary) {
+      // This means that there is some 'sync' task in the stream,
+      // which covers the binary task, which must be searched for:
+      Assert(type == BT_makeRecordSync ||
+             type == BT_makeRecordMemoSync ||
+             type == BT_fsetvalueSync ||
+             type == BT_fsetvalueMemoSync ||
+             type == BT_binary_getValueSync);
+      //
+      frame = findBinary(frame);
       GetBTTaskPtr1NoDecl(frame, void*, bp);
-      if (bp) {
-        break;          // found;
-      } else {
+      Assert(bp);
+    } else {
+      Assert(type == BT_binary);
+
+      //
+      GetBTTaskPtr1NoDecl(frame, void*, bp);
+      if (!bp) {
+        // finished binary area - discard it & try again;
         DiscardBTFrame(frame);
         SetBTFrame(frame);
+        goto repeat;
       }
     }
-    // 'bp' can be zero meaning we are discarding the definition;
+
+    //
+    Assert(bp);
     opaque = (BuilderOpaqueBA) (ToInt32(frame) - ToInt32(getBottom()));
     return (bp);
   }
@@ -1449,33 +1552,18 @@ public:
   // later in the stream. The builder can be instructed to process
   // them using 'getOzValue()' method.
   //
-  // Observe that 'proc' will be applied when a value in the stream is
-  // reached (but not completely built up - because of top-down
-  // building process);
+  // Note that 'proc' will be applied when a value from the stream is
+  // built up completely.
   //
   // 'proc' must take of 'arg' by itself. For the builder it is really
   // an opaque value;
   //
   void getOzValue(OzValueProcessor proc, void *arg) {
-    putTask(BT_binary_getValue, (void *) proc, arg);
-  }
-
-  //
-  // ... however, it certain cases the value must be processed first
-  // when it's built up. Thus we have also 'getCompleteOzValue()':
-  void getCompleteOzValue(OzValueProcessor proc, void *arg) {
     GetBTFrame(frame);
     EnsureBTSpace(frame, 2);
     PutBTFrame2Ptrs(frame, proc, arg);
-    PutBTTask(frame, BT_binary_getCompleteValue);
+    PutBTTask(frame, BT_binary_getValue);
     SetBTFrame(frame);
-  }
-
-  //
-  // Sometimes a value from a stream just is to be stored just at a
-  // pointer:
-  void getOzValueLoc(OZ_Term *ptr) {
-    putTask(BT_spointer, ptr);
   }
 
   //
@@ -1483,7 +1571,8 @@ public:
   // not needed (and we don't need any special processing for it).  In
   // the end, if the value is not needed but nevertheless must be
   // processed, everyone is free to define its own processor;
-  void discardOzValueCA() {
+  void discardOzValue() {
+    putTask(BT_nop);
     putTask(BT_spointer, &blackhole);
   }
 

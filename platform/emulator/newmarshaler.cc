@@ -145,7 +145,7 @@ void initNewMarshaler()
 {
   NMMemoryManager::init();
   isInitialized = OK;
-  Assert(DIF_LAST == 45);  /* new dif(s) added? */
+  Assert(DIF_LAST == 46);  /* new dif(s) added? */
   initRobustMarshaler();
 }
 
@@ -474,6 +474,14 @@ Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 }
 
 #include "newmarshalcode.cc"
+
+//
+void Marshaler::processSync()
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  marshalDIF(bs, DIF_SYNC);
+}
+
 
 //
 Marshaler marshaler;
