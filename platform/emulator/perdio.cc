@@ -212,6 +212,11 @@ MsgBufferManager* msgBufferManager= new MsgBufferManager();
 Site* mySite;  // known to network-layer also 
 Site* creditSite;
 
+int PortSendTreash = 100000;
+int PortWaitTimeSlice = 100;
+int PortWaitTimeK = 1;
+
+
 SendRecvCounter mess_counter[M_LAST];
 
 char *mess_names[M_LAST] = {
@@ -2054,6 +2059,23 @@ OZ_BI_define(BIprintBorrowTable,0,0)
   return PROCEED;
 } OZ_BI_end
 
+OZ_BI_define(BIsetNetBufferSize,1,0)
+{
+  OZ_Term s = OZ_in(0);
+  DEREF(s,_1,tagS);
+  int size = 0;
+  if (isSmallInt(tagS))
+    size = smallIntValue(s);
+  if(size < 0)
+    oz_raise(E_ERROR,E_KERNEL,"NetBufferSize must be of type int and larger than 0",0);
+  PortSendTreash = size * 20000;
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIgetNetBufferSize,0,1)
+{
+  OZ_RETURN(makeInt(PortSendTreash / 20000));
+} OZ_BI_end
 
 #ifdef DEBUG_PERDIO
 
@@ -3809,9 +3831,6 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
 /**********************************************************************/
 /*   SECTION 24:: Port protocol                                       */
 /**********************************************************************/
-int PortSendTreash = 40000;
-int PortWaitTimeSlice = 100;
-int PortWaitTimeK = 1;
 
 #define DefaultThread ((Thread*)0x3)
 Thread *getDefaultThread(){
@@ -5257,21 +5276,26 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th, Bool Cont
   tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_PERM,this);
   return TRUE;}
 
-Bool Tertiary::deinstallHandler(Thread *th){
+Bool Tertiary::deinstallHandler(Thread *th,TaggedRef proc){
   if(!handlerExistsThread(th)){return NO;}
   PD((NET_HANDLER,"Handler deinstalled on tertiary %x",this));  
   EntityCond Mec=(TEMP_BLOCKED|TEMP_ME|TEMP_SOME);
   Watcher** base=getWatcherBase();
-  
+  Bool found = FALSE;
+
   while(*base != NULL)
-    if(((Watcher*)*base)->isHandler() && ((Watcher*)*base)->thread==th){
+    if(((Watcher*)*base)->isHandler() &&
+       ((Watcher*)*base)->thread==th &&
+       (((Watcher*)*base)->proc == proc || proc == AtomAny)){
       releaseWatcher(((Watcher*)*base));
+      Assert(found == FALSE);
+      found = TRUE;
       *base = (*base)->next;}
     else{
       Mec &= ~(((Watcher*)*base)->getWatchCond() & (TEMP_BLOCKED|TEMP_ME|TEMP_SOME));
       base = &((*base)->next);} 
   resetEntityCondManager(Mec);
-  return TRUE;}
+  return found;}
 
 void Tertiary::installWatcher(EntityCond wc,TaggedRef proc, Bool pr){
   PD((NET_HANDLER,"Watcher installed on tertiary %x",this));
@@ -5295,15 +5319,21 @@ void Tertiary::installWatcher(EntityCond wc,TaggedRef proc, Bool pr){
 
 Bool Tertiary::deinstallWatcher(EntityCond wc, TaggedRef proc){
   Watcher** base=getWatcherBase();
+  EntityCond Mec=(TEMP_BLOCKED|TEMP_ME|TEMP_SOME);
+  Bool found = FALSE;
   while(*base!=NULL){
     if((!((*base)->isHandler())) && 
-       ((*base)->proc==proc) && 
-       ((*base)->getWatchCond() == wc)){
+       ((*base)->getWatchCond() == wc) && 
+       (((*base)->proc==proc) || proc==AtomAny || proc==AtomAll)){
       releaseWatcher((*base));
       *base = (*base)->next;
-      return OK;}
-    base= &((*base)->next);}
-  return NO;}
+      found = TRUE;
+      if(proc == AtomAny) proc = 0;}
+    else{ 
+      Mec &= ~(((Watcher*)*base)->getWatchCond() & (TEMP_BLOCKED|TEMP_ME|TEMP_SOME));
+      base= &((*base)->next);}}
+  resetEntityCondManager(Mec);
+  return found;}
   
 void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, 
 			    Thread * th, TaggedRef controlvar)
@@ -5314,8 +5344,9 @@ void Watcher::invokeHandler(EntityCond ec,Tertiary* entity,
   if(entity->getType()==Co_Port) {
     am.prepareCall(proc,arg0,arg1);
   } else {
-    Assert(th!=am.currentThread());
-    ControlVarApply(controlvar,proc,cons(arg0,cons(arg1,nil())));
+    Assert(th!=am.currentThread()); 
+    th->pushCall(proc,arg0,arg1);
+    ControlVarResume(controlvar);
   }
 }
 
@@ -5451,7 +5482,7 @@ void Tertiary::entityProblem(){
       else
 	w->invokeHandler(ec,this,cThread,pd->controlvar);
       if(!w->isPersistent()){
-	if(obj && other) other->deinstallHandler(cThread);
+	if(obj && other) other->deinstallHandler(cThread,AtomAny);
 	*ww = w->next;
 	releaseWatcher(w);}
     }}
@@ -6073,7 +6104,7 @@ OZ_BI_define(BIdvset,2,0)
 #endif
 
 Bool openClosedConnection(int);
-void openclose(int);
+int openclose(int);
 void wakeUpTmp(int,int);
 
 OZ_BI_define(BIstartTmp,2,0)
@@ -6087,11 +6118,11 @@ OZ_BI_define(BIstartTmp,2,0)
   return PROCEED;
 } OZ_BI_end
   
-OZ_BI_define(BIcloseCon,1,0)
+OZ_BI_define(BIcloseCon,1,1)
 {
   OZ_declareIntIN(0,what);
   openclose(what);
-  return PROCEED;
+  OZ_RETURN(makeInt(openclose(what)));
 } OZ_BI_end
 
 OZ_BI_define(BIportWait,2,0)
