@@ -45,6 +45,12 @@
 #include "board.icc"
 #endif
 
+/*
+ * Static members
+ *
+ */
+
+Bool Board::_isInstalling = NO;
 
 /*
  * Generic operations
