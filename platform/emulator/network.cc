@@ -802,8 +802,8 @@ public:
   int  getQueuesize(int &);
   Site* getSite(){return site;}
 
-  ProbeReturn installProbe();
-  ProbeReturn deInstallProbe();
+  ProbeReturn installProbe(ProbeType);
+  ProbeReturn deInstallProbe(ProbeType);
 
 };
 
@@ -951,7 +951,8 @@ protected:
   BYTE *bytePtr;
   int sentMsgCtr;
   Message *sentMsg;      // non-acknowledge msgs
-  int probeCtr;
+  int probeCtrPrm;
+  int probeCtrTmp;
 public:
   void fastfixerik3(){
     Connection();}
@@ -1029,13 +1030,13 @@ public:
   Bool isProbing(){
     return testFlag(TMP_PROBE | PRM_PROBE);}
   void setProbingPrm(){
-    setFlag(TMP_PROBE|PRM_PROBE);}
+    setFlag(PRM_PROBE);}
   void setProbingTmp(){
-    setFlag(TMP_PROBE);}
+    setFlag(TMP_PROBE|PRM_PROBE);}
   void clearProbingPrm(){
-    clearFlag(TMP_PROBE|PRM_PROBE);}
+    clearFlag(PRM_PROBE);}
   void clearProbingTmp(){
-    clearFlag(TMP_PROBE);}
+    clearFlag(TMP_PROBE|PRM_PROBE);}
 
   Bool isWantsToClose(){
     return testFlag(WANTS_TO_CLOSE);}
@@ -1081,22 +1082,40 @@ public:
     flags=WRITE_CON;
     remoteSite=s;
     bytePtr = intBuffer + INT_IN_BYTES_LEN;
-    probeCtr = 0;
+    probeCtrTmp = 0;
+    probeCtrPrm = 0;
   }
-  void installProbe(){
-    PD((PROBES,"Probe Installed to  num: %d site: %s",probeCtr,
+  void installProbe(ProbeType pt){
+    PD((PROBES,"Probe Installed to  num: %d site: %s",
+        probeCtrPrm + probeCtrTmp,
         remoteSite->site->stringrep()));
-    Assert(probeCtr >=0);
-    if(probeCtr==0)
-      setProbingPrm();
-    probeCtr++;}
-  void deInstallProbe(){
-    PD((PROBES,"Probe DeInstalled to  num: %d site: %s",probeCtr,
+    Assert(probeCtrPrm >=0 && probeCtrTmp >= 0);
+    if(pt == PROBE_TYPE_PERM)
+      {if(probeCtrPrm==0)
+        setProbingPrm();
+      probeCtrPrm++;}
+    else
+      {if(probeCtrTmp==0)
+        setProbingTmp();
+      probeCtrTmp++;}}
+
+  void deInstallProbe(ProbeType pt){
+    PD((PROBES,"Probe DeInstalled to  num: %d site: %s",
+        probeCtrTmp + probeCtrPrm,
         remoteSite->site->stringrep()));
-    Assert(probeCtr>0);
-    probeCtr--;
-    if(probeCtr==0)
-      clearProbingPrm();}
+
+    if(pt == PROBE_TYPE_PERM)
+      { Assert(probeCtrPrm>0);
+        probeCtrPrm--;
+      if(probeCtrPrm==0)
+        clearProbingPrm();}
+    else
+      {Assert(probeCtrTmp>0);
+      probeCtrTmp--;
+      if(probeCtrTmp==0)
+        {clearProbingTmp();
+        if(probeCtrPrm==0)
+          clearProbingPrm();}}}
 };
 
 
@@ -3285,9 +3304,11 @@ void WriteConnection::closeTcpConnection(){
     Assert(0);
     return;}}
 
-ProbeReturn RemoteSite::installProbe(){
+ProbeReturn RemoteSite::installProbe(ProbeType pt){
   if(siteStatus() == SITE_PERM)
     return PROBE_PERM;
+  if(siteStatus() == SITE_TEMP && pt==PROBE_TYPE_ALL)
+    return PROBE_TEMP;
   if(writeConnection==NULL){
     int fd;
     PD((TCP_INTERFACE,"try open %s",site->stringrep()));
@@ -3301,14 +3322,14 @@ ProbeReturn RemoteSite::installProbe(){
     if(fd==IP_NET_CRASH){ return PROBE_PERM;}
     PD((TCP,"is reopened %s",site->stringrep()));
     tcpCache->add(writeConnection);}
-  writeConnection->installProbe();
+  writeConnection->installProbe(pt);
   return PROBE_INSTALLED;}
 
-ProbeReturn RemoteSite::deInstallProbe(){
+ProbeReturn RemoteSite::deInstallProbe(ProbeType pt){
   if(siteStatus() == SITE_PERM)
     return PROBE_DEINSTALLED;
   Assert(writeConnection!= NULL);
-  writeConnection->deInstallProbe();
+  writeConnection->deInstallProbe(pt);
   return PROBE_DEINSTALLED;}
 
 void RemoteSite::addWriteQueue(Message* m){
@@ -3419,10 +3440,10 @@ MonitorReturn monitorQueue_RemoteSite(RemoteSite* site,int size,int no_msgs,void
   return site->monitorQueueMsgs(no_msgs, size, storePtr);}
 MonitorReturn demonitorQueue_RemoteSite(RemoteSite* site){
   return site->deMonitorQueue();}
-ProbeReturn installProbe_RemoteSite(RemoteSite* site,int frequency){
-  return site->installProbe();}
-ProbeReturn deinstallProbe_RemoteSite(RemoteSite* site){
-  return site->deInstallProbe();}
+ProbeReturn installProbe_RemoteSite(RemoteSite* site,ProbeType pt, int frequency){
+  return site->installProbe(pt);}
+ProbeReturn deinstallProbe_RemoteSite(RemoteSite* site,ProbeType pt){
+  return site->deInstallProbe(pt);}
 ProbeReturn probeStatus_RemoteSite(RemoteSite* site,ProbeType &pt,int &frequncey,void* &storePtr){
   Assert(0);return PROBE_PERM;}
 GiveUpReturn giveUp_RemoteSite(RemoteSite* site){
