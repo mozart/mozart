@@ -163,6 +163,12 @@ public:
   void suspendOnVarList(Thread *thr);
 
   TaggedRef exception;
+  struct {
+    int pos;
+    char *comment;
+    char *type;
+  } typeError;
+  OZ_Term typeException(char *fun, OZ_Term args);
 
   void suspendInline(int n,
                      OZ_Term A,OZ_Term B=makeTaggedNULL(),OZ_Term C=makeTaggedNULL());
@@ -384,7 +390,7 @@ public:
 
   Bool isStableSolve(SolveActor *sa);
 
-  OZ_Term dbgGetSpaces();
+  OZ_Term dbgGetLoc();
 };
 
 extern AM am;

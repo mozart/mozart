@@ -51,6 +51,10 @@ extern "C" int dlclose(void *);
 #include "oz_cpi.hh"
 #include "dictionary.hh"
 
+
+extern
+int raiseKernel(char *label,int arity,...);
+
 /********************************************************************
  * Macros
  ******************************************************************** */
@@ -266,10 +270,10 @@ OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
 }                                                                       \
 DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
-#define CheckLocalBoard(Object,Where);                  \
-  if (am.currentBoard != Object->getBoard()) {  \
-    am.currentBoard->incSuspCount();                    \
-    return OZ_raiseC("globalState",1,OZ_atom(Where));           \
+#define CheckLocalBoard(Object,Where);                          \
+  if (am.currentBoard != Object->getBoard()) {                  \
+    am.currentBoard->incSuspCount();                            \
+    return raiseKernel("globalState",1,OZ_atom(Where)); \
   }
 
 /********************************************************************
@@ -1563,10 +1567,10 @@ OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
     TypeErrorT(0, "Space");                             \
   Space *space = (Space *) tagged2Const(tagged_space);
 
-#define declareUnmergedSpace()                  \
-  declareSpace()                                \
-  if (space->isMerged())                        \
-    return OZ_raiseC("spaceMerged",1,tagged_space);
+#define declareUnmergedSpace()                          \
+  declareSpace()                                        \
+  if (space->isMerged())                                \
+    return raiseKernel("spaceMerged",1,tagged_space);
 
 #define declareStableSpace()                                            \
   declareUnmergedSpace();                                               \
@@ -1671,7 +1675,7 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   declareUnmergedSpace();
 
   if (am.isBelow(am.currentBoard,space->getSolveBoard()->derefBoard()))
-    return OZ_raiseC("spaceSuper",1,tagged_space);
+    return raiseKernel("spaceSuper",1,tagged_space);
 
   if (space->isFailed())
     return FAILED;
@@ -1720,7 +1724,7 @@ OZ_C_proc_begin(contChooseInternal, 2) {
     SolveActor::Cast(am.currentBoard->getActor())->choose(left,right);
 
   if (status==-1) {
-    return OZ_raiseC("spaceNoChoices",0);
+    return raiseKernel("spaceNoChoices",0);
   } else if (status==0) {
     return FAILED;
   }
@@ -1765,7 +1769,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   }
 
   if (am.currentBoard != space->getSolveBoard()->getParent())
-    return OZ_raiseC("spaceParent",1,tagged_space);
+    return raiseKernel("spaceParent",1,tagged_space);
 
   space->getSolveActor()->unsetGround();
   space->getSolveActor()->clearResult(space->getBoard());
@@ -1793,7 +1797,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
     return PROCEED;
 
   if (am.currentBoard != space->getSolveBoard()->getParent())
-    return OZ_raiseC("spaceParent", 1, tagged_space);
+    return raiseKernel("spaceParent", 1, tagged_space);
 
   OZ_Term proc = OZ_getCArg(1);
 
@@ -2102,7 +2106,7 @@ typeError0:
 typeError1:
   TypeErrorT(1,"Feature");
 raise:
-  return OZ_raiseC(".",2,term,fea);
+  return raiseKernel(".",2,term,fea);
 }
 
 
@@ -3748,7 +3752,7 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if (tagB == SMALLINT && smallIntValue(B) == 0) {
-    return OZ_raiseC("div0",1,A);
+    return raiseKernel("div0",1,A);
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -3766,7 +3770,7 @@ OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   DEREF(B,_2,tagB);
 
   if ((tagB == SMALLINT && smallIntValue(B) == 0)) {
-    return OZ_raiseC("mod0",1,A);
+    return raiseKernel("mod0",1,A);
   }
 
   if ( (tagA == SMALLINT) && (tagB == SMALLINT)) {
@@ -4355,7 +4359,7 @@ OZ_C_proc_begin(BIstringToFloat, 2)
 
   char *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
-    return OZ_raiseC("stringNoFloat",1,OZ_getCArg(0));
+    return raiseKernel("stringNoFloat",1,OZ_getCArg(0));
   }
   OZ_Return ret = OZ_unify(out,OZ_CStringToFloat(str));
   return ret;
@@ -4384,12 +4388,12 @@ OZ_C_proc_begin(BIstringToInt, 2)
   OZ_declareProperStringArg(0,str);
   OZ_declareArg(1,out);
 
-  if (!str) return OZ_raiseC("stringNoInt",1,OZ_getCArg(0));
+  if (!str) return raiseKernel("stringNoInt",1,OZ_getCArg(0));
 
 
   char *end = OZ_parseInt(str);
   if (!end || *end != 0) {
-    return OZ_raiseC("stringNoInt",1,OZ_getCArg(0));
+    return raiseKernel("stringNoInt",1,OZ_getCArg(0));
   }
   OZ_Return ret = OZ_unify(out,OZ_CStringToInt(str));
   return ret;
@@ -4831,7 +4835,6 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
-  CheckLocalBoard(ar,"array");
   return ar->getArg(smallIntValue(index),out);
 }
 DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
@@ -4880,7 +4883,6 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
     TypeErrorT(0,"Dictionary");
   }
 
-  CheckLocalBoard(tagged2Dictionary(dict),"dict");
   return OZ_unify(tagged2Dictionary(dict)->keys(),out);
 }
 OZ_C_proc_end
@@ -4906,7 +4908,7 @@ DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
 
 OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
-  GetDictAndKey(d,k,dict,key,OK);
+  GetDictAndKey(d,k,dict,key,NO);
   out = dict->member(key);
   return PROCEED;
 }
@@ -4915,9 +4917,9 @@ DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
 
 OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
-  GetDictAndKey(d,k,dict,key,OK);
+  GetDictAndKey(d,k,dict,key,NO);
   if (dict->getArg(key,out) != PROCEED) {
-    return OZ_raiseC("dict",2,d,k);
+    return raiseKernel("dict",2,d,k);
   }
   return PROCEED;
 }
@@ -4926,7 +4928,7 @@ DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
 
 OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
 {
-  GetDictAndKey(d,k,dict,key,OK);
+  GetDictAndKey(d,k,dict,key,NO);
   if (dict->getArg(key,out) != PROCEED) {
     out = deflt;
   }
@@ -4978,7 +4980,6 @@ OZ_C_proc_begin(BIdictionaryToRecord,3)
   if (!isLiteral(lbl)) {
     TypeErrorT(1,"Literal");
   }
-  CheckLocalBoard(tagged2Dictionary(dict),"dict");
   return OZ_unify(tagged2Dictionary(dict)->toRecord(lbl),r);
 }
 OZ_C_proc_end
@@ -5157,7 +5158,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 
     if (!f) {
       OZ_warning("linkObjectFiles(%s): expand filename failed",fileName);
-      return OZ_raiseC("???",0);
+      goto raise;
     }
 
     if (ozconf.showForeignLoad) {
@@ -5167,7 +5168,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       OZ_warning("linkObjectFiles(%s): failed for %s",fileName,f);
       dld_perror("linkObjectFiles");
       delete [] f;
-      return OZ_raiseC("???",0);
+      goto raise;
     }
     delete [] f;
     list = OZ_tail(list);
@@ -5203,7 +5204,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   char *ofiles[numOfiles];
   if (arrayFromList(list,ofiles,numOfiles) == NULL) {
     unlink(tempfile);
-    return OZ_raiseC("???",0);
+    goto raise;
   }
 
   for (int i=0; ofiles[i] != NULL; i++) {
@@ -5212,7 +5213,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       OZ_warning("linkObjectFiles: too many arguments");
       unlink(tempfile);
       delete [] f;
-      return OZ_raiseC("???",0);
+      goto raise;
     }
     strCat(command, commandUsed, " ");
     strCat(command, commandUsed, f);
@@ -5228,7 +5229,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     sprintf(buf,"'%s' failed in linkObjectFiles",command);
     ozpwarning(buf);
     unlink(tempfile);
-    return OZ_raiseC("???",0);
+    goto raise;
   }
 
 #ifdef HPUX_700
@@ -5237,7 +5238,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
                     BIND_IMMEDIATE | BIND_NONFATAL | BIND_NOSTART | BIND_VERBOSE, 0L);
 
   if (handle == NULL) {
-    return OZ_raiseC("???",0);
+    goto raise;
   }
 #else
   void *handle;
@@ -5245,7 +5246,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   if (!(handle = (void *)dlopen(tempfile, RTLD_NOW ))) {
     OZ_warning("dlopen failed in linkObjectFiles: %s",dlerror());
     unlink(tempfile);
-    return OZ_raiseC("???",0);
+    goto raise;
   }
 #endif
 
@@ -5260,7 +5261,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
       ofiles[0]==NULL ||
       ofiles[1]!=NULL) {
     OZ_warning("linkObjectFiles(%s): can only accept one DLL\n",toC(list));
-    return OZ_raiseC("???",0);
+    goto raise;
   }
 
   if (ozconf.showForeignLoad) {
@@ -5270,12 +5271,15 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   void *handle = (void *)LoadLibrary(ofiles[0]);
   if (handle==NULL) {
     OZ_warning("failed in linkObjectFiles: %d",GetLastError());
-    return OZ_raiseC("???",0);
+    goto raise;
   }
   return OZ_unifyInt(out,ToInt32(handle));
 
 #endif
   return PROCEED;
+
+raise:
+  return raiseKernel("foreign",2,OZ_atom("linkFiles"),list);
 }
 OZ_C_proc_end
 
@@ -5291,12 +5295,12 @@ OZ_C_proc_begin(BIunlinkObjectFile,1)
 
   if (!f) {
     OZ_warning("unlinkObjectFile(%s): expand filename failed",fileName);
-    return OZ_raiseC("???",0);
+    goto raise;
   }
   if (dld_unlink_by_file(f,0) != 0) {
     delete [] f;
     OZ_warning("unlinkObjectFile(%s): failed for %s",fileName,f);
-    return OZ_raiseC("???",0);
+    goto raise;
   }
   delete [] f;
 #endif
@@ -5306,6 +5310,8 @@ OZ_C_proc_begin(BIunlinkObjectFile,1)
 #endif
 
   return PROCEED;
+raise:
+  return raiseKernel("foreign",3,OZ_atom("unlinkFile"),fileName);
 }
 OZ_C_proc_end
 
@@ -5399,10 +5405,10 @@ OZ_C_proc_begin(BIfindFunction,3)
 
   return PROCEED;
 raise:
-  return OZ_raiseC("foreign", 3,
-                   OZ_atom("cannotFindFunction"),
-                   OZ_getCArg(0),
-                   OZ_getCArg(1));
+  return raiseKernel("foreign", 3,
+                     OZ_atom("cannotFindFunction"),
+                     OZ_getCArg(0),
+                     OZ_getCArg(1));
 }
 OZ_C_proc_end
 
@@ -5430,7 +5436,7 @@ OZ_C_proc_begin(BIsleep,3)
   if (t <= 0) return OZ_unify(l,r);
 
   if (!am.isToplevel()) {
-    return OZ_raiseC("globalState",1,OZ_atom("io"));
+    return raiseKernel("globalState",1,OZ_atom("io"));
   }
 
   am.insertUser(t,cons(l,r));
@@ -5515,7 +5521,7 @@ OZ_C_proc_begin(BIloadFile,1)
 
   if (fd == NULL) {
     OZ_warning("call: loadFile: cannot open file '%s'",file);
-    return OZ_raiseC("???",0);
+    return raiseKernel("loadFile",1,term0);
   }
 
   if (ozconf.showFastLoad) {

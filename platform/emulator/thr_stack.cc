@@ -96,11 +96,9 @@ Bool TaskStack::findCatch()
     TaskStackEntry entry=pop();
     TaggedPC topElem = ToInt32(entry);
     ContFlag cFlag = getContFlag(topElem);
-    switch (cFlag){
-    default:
-      tos = tos - frameSize(cFlag) + 1;
+    switch (cFlag) {
 
-   case C_SETFINAL:
+    case C_SETFINAL:
       am.setFinal();
       break;
 
@@ -115,6 +113,10 @@ Bool TaskStack::findCatch()
         am.restoreSelf(newSelf);
         break;
       }
+    default:
+      tos = tos - frameSize(cFlag) + 1;
+      break;
+
     } // switch
   } // while
 

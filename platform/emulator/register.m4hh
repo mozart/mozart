@@ -178,7 +178,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
       if ( !e->fastUnify(A,B,NOFLATGUARD) ) {
         SHALLOWFAIL;
         /* NOTE: macro must be in *one* line */
-        HF_FAIL(OZ_mkTupleC("eq",2,A,B));
+        HF_EQ(A,B);
       }
       DISPATCH(3);
   }
@@ -300,7 +300,7 @@ Case(SETVOID)
            }
 
            SHALLOWFAIL;
-           HF_FAIL(OZ_mkTupleC("tell",2, RegAccess(HelpReg,getRegArg(PC+3)), mkRecord(label,ff)));
+           HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
          }
 
 
@@ -417,7 +417,7 @@ Case(SETVOID)
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL(OZ_mkTupleC("tell",2,Reg1(getRegArg(PC+2)), getLiteralArg(PC+1)));
+                 HF_TELL(Reg1(getRegArg(PC+2)), getLiteralArg(PC+1));
                }''
                )
 
@@ -446,7 +446,7 @@ Case(SETVOID)
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL(OZ_mkTupleC("tell",2, Reg1(getRegArg(PC+2)), getNumberArg(PC+1)));
+                 HF_TELL(Reg1(getRegArg(PC+2)), getNumberArg(PC+1));
                }''
                )
 
@@ -472,7 +472,7 @@ Case(SETVOID)
                        DISPATCH(4);
                      }
                      SHALLOWFAIL;
-                     HF_FAIL(OZ_mkTupleC("tell",2, Xreg(getRegArg(PC+1)), makeTaggedLTuple(ltuple)));
+                     HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(ltuple));
 
                    } else {
                      e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
@@ -492,12 +492,12 @@ Case(SETVOID)
                      DISPATCH(4);
                    }
                    SHALLOWFAIL;
-                   HF_FAIL(OZ_mkTupleC("tell",2, Reg1(reg2), makeTaggedRef(argg)));
+                   HF_TELL(Reg1(reg2), makeTaggedRef(argg));
 
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL(OZ_mkTupleC("tell",2, Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(reg2),e->currentUVarPrototype))));
+                 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(reg2),e->currentUVarPrototype)));
 
                }''
                )
@@ -539,7 +539,7 @@ Case(SETVOID)
 
 
                  SHALLOWFAIL;
-                 HF_FAIL(OZ_mkTupleC("tell",2, Reg1(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(e->currentUVarPrototype,e->currentUVarPrototype))));
+                 HF_TELL(Reg1(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(e->currentUVarPrototype,e->currentUVarPrototype)));
                }''
                )
 
@@ -602,7 +602,7 @@ Case(GETVOID)
                      DISPATCH(2);
                    }
                    SHALLOWFAIL;
-                   HF_FAIL(OZ_mkTupleC("tell",2,*(sPointer-1), Reg1(reg)));
+                   HF_TELL(*(sPointer-1), Reg1(reg));
                  }
                }''
                )
@@ -635,7 +635,7 @@ Case(GETVOID)
        if ( !e->fastUnify(RegAccess(HelpReg1,reg), makeTaggedRef(sPointer),
                           NOFLATGUARD) ) {
          SHALLOWFAIL;
-         HF_FAIL(OZ_mkTupleC("tell",2,*sPointer, RegAccess(HelpReg1,reg)));
+         HF_TELL(*sPointer, RegAccess(HelpReg1,reg));
        }
 
        RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
@@ -679,7 +679,7 @@ Case(UNIFYCONSTANT)
        }
 
        SHALLOWFAIL;
-       HF_FAIL(OZ_mkTupleC("tell",2, *(sPointer-1), getTaggedArg(PC+1)));
+       HF_TELL(*(sPointer-1), getTaggedArg(PC+1));
      }
 
   Case(UNIFYINT)
@@ -715,7 +715,7 @@ Case(UNIFYCONSTANT)
       }
 
       SHALLOWFAIL;
-      HF_FAIL(OZ_mkTupleC("tell",2, *(sPointer-1), getTaggedArg(PC+1) ));
+      HF_TELL(*(sPointer-1), getTaggedArg(PC+1) );
     }
 
 
