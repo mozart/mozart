@@ -17,7 +17,7 @@
 #pragma interface
 #endif
 
-#include "types.hh"
+#include "constterm.hh"
 #include "suspension.hh"
 #include "dllstack.hh"
 
@@ -184,6 +184,8 @@ DLLStackEntry actorStackEntryGC (DLLStackEntry entry);
 OZ_Bool solveActorWaker (int n, TaggedRef *args); 
 
 // ------------------------------------------------------------------------
+
+void initSolve();
 
 #ifndef OUTLINE
 #include "actor.icc"
