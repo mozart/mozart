@@ -39,7 +39,6 @@
 #define HEAPTOLERANCE	25      /* percent */
 #define HEAPSAFETY	256     /* kByte   */
 #define INITIALHEAPFREE	4096	/* kByte   */
-#define HEAPIDLEMARGIN	80	/* percent */
 
 #define CLOCK_TICK	10000	/* usec */
 #define TASK_STACK_SIZE		10
