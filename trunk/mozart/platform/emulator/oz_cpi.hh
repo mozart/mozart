@@ -321,7 +321,7 @@ private:
   OZ_FiniteDomain * domPtr;
   OZ_Term var;
   OZ_Term * varPtr;
-  int initial_size;
+  int initial_size, initial_width;
   enum Sort_e {sgl_e = 1, bool_e = 2, int_e  = 3} sort;
   enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
   OZ_Boolean isSort(Sort_e s) const {return s == sort;}

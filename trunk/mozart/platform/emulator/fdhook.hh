@@ -17,6 +17,7 @@
 
 #include "runtime.hh"
 
+//#define DEBUG_STABLE
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;
 void printBC(ostream &, Board *);

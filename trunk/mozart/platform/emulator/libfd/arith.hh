@@ -123,4 +123,19 @@ public:
   virtual OZ_Return propagate(void);
 };
 
+//-----------------------------------------------------------------------------
+
+class PowerPropagator : public Propagator_D_D_I {
+private:
+  static OZ_CFun spawner;
+public:
+  PowerPropagator(OZ_Term x, OZ_Term y,  int c) 
+    : Propagator_D_D_I(x, y, c) {}
+  
+  virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
+  virtual OZ_Return propagate(void);
+};
+
 #endif
+//-----------------------------------------------------------------------------
+// eof

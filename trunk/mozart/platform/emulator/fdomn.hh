@@ -216,9 +216,11 @@ protected:
     return (descr_type)ToInt32(andPointer(descr,3));
   }
   FDIntervals * get_iv(void) const {
+    Assert(getType() == iv_descr);
     return (FDIntervals *)andPointer(descr,~3); 
   }
   FDBitVector * get_bv(void) const {
+    Assert(getType() == bv_descr);
     return (FDBitVector *)andPointer(descr,~3);
   }
 
@@ -261,6 +263,7 @@ public:
   int getSize(void) const {return size;}
   int minElem(void) const {return min_elem;}
   int maxElem(void) const {return max_elem;}
+  int getWidth(void) const {return max_elem - min_elem;}
   int singl(void) const;
    
   OZ_Term getAsList(void) const;

@@ -46,20 +46,38 @@ extern ostream * fscout;
 inline int div32(int n) { return n >> 5; }
 inline int mod32(int n) { return n & 0x1f; }
 
-static
-int findBitsSet(int high, int * bv)
+unsigned char * initNumOfBitsInHalfWord(void)
 {
-  int bits_set = 0;
-
-  for (int i = high; i--; ) {
-    for (int j = 32; j--; )
-      if (bv[i] & (1 << j))
-	bits_set += 1;
+  const unsigned int maxHalfWord = 0xffff;
+  unsigned char * r = new unsigned char[maxHalfWord+1];
+  Assert(r!=NULL);
+  for(int i = 0; i <= maxHalfWord; i++) {
+    r[i] = 0;
+    int j = i;
+    while (j>0) {
+      if (j&1)
+	r[i]++;
+      j>>=1;
+    }
   }
-  return bits_set;
+  return r;
 }
 
-static
+inline
+int findBitsSet(int high, int * bv)
+{
+  static unsigned char * numOfBitsInHalfWord = initNumOfBitsInHalfWord();
+  int s, i;
+  for (s = 0, i = high; i--; ) {
+    s += numOfBitsInHalfWord[unsigned(bv[i]) & 0xffff];
+    s += numOfBitsInHalfWord[unsigned(bv[i]) >> 16];
+  }    
+  
+  return s;
+}
+
+
+inline
 OZ_Boolean testBit(const int * bv, int i) 
 {
   
@@ -69,7 +87,7 @@ OZ_Boolean testBit(const int * bv, int i)
   return (bv[div32(i)] & (1 << mod32(i)));
 }
 
-static
+inline
 void setBit(int * bv, int i) 
 {
   bv[div32(i)] |= (1 << mod32(i));
