@@ -778,6 +778,12 @@ void dumpVirtualMsgBuffer(MsgBuffer *)
 }
 
 //
+void siteAlive_VirtualSite(VirtualSite *vs)
+{
+  error("'siteAlive_VirtualSite' called without 'VIRTUALSITES'?");
+}
+
+//
 // Builtins for virtual sites - only two of them are needed:
 // (I) Creating a new mailbox (at the master site):
 OZ_BI_define(BIVSnewMailbox,0,1)
