@@ -34,6 +34,7 @@
 
 #include "distributor.hh"
 #include "thr_class.hh"
+#include "pointer-marks.hh"
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 #define GETBOARDOBJ(v) ((v).getBoardInternal()->derefBoard())
@@ -75,12 +76,8 @@ private:
 
 
 enum BoardFlags {
-  Bo_Root       = 0x0001, // is root
-  Bo_Installed  = 0x0002, // is installed
-  Bo_GlobalMark = 0x0004, // is marked as global for cloning
-  Bo_Failed     = 0x0008, // is failed
-  Bo_Committed  = 0x0010, // is committed (merged)
-  Bo_Clone      = 0x0020, // is the root for cloning
+  Bo_Installed  = 0x0001, // is installed
+  Bo_GlobalMark = 0x0002, // is marked as global for cloning
 };
 
 
@@ -93,29 +90,58 @@ public:
   USEHEAPMEMORY;
 
   //
+  // Home and parent access
+  //
+private:
+  void * parent;
+
+public:
+  int isCommitted(void) {
+    return IsMarkedPointer(parent,1);
+  }
+  void setCommitted(void) {
+    parent = MarkPointer(parent,1);
+  }
+  int isFailed(void) {
+    return IsMarkedPointer(parent,2);
+  }
+  void setFailed(void) {
+    parent = MarkPointer(parent,2);
+  }
+  Board * getParentInternal(void) {
+    return (Board *) UnMarkPointer(parent,3);
+  }
+  void setParentInternal(Board * p) {
+    parent = (void *) p;
+  }
+  Bool isRoot() {
+    Assert(UnMarkPointer(parent,3) || (!isCommitted() && !isFailed()));
+    return !parent;
+  }
+  Board *derefBoard() {
+    Board *bb;
+    for (bb=this; bb->isCommitted(); bb=bb->getParentInternal()) {}
+    return bb;
+  }
+  Board *getParent() {
+    Assert(!isCommitted());
+    return getParentInternal()->derefBoard();
+  }
+
+  //
   // Flags
   //
 private:
   int flags;
 
-  void setCommitted() { flags |= Bo_Committed;  }
-  void setCloneBoard() { flags |= Bo_Clone;      }
   void setGlobalMark() { flags |= Bo_GlobalMark; }
 
   void unsetGlobalMark() { flags &= ~Bo_GlobalMark; }
-  void unsetCloneBoard() { flags &= ~Bo_Clone;      }
 
 public:
-  Bool isCommitted()    { return flags & Bo_Committed;  }
-  Bool isFailed()       { return flags & Bo_Failed;     }
   Bool isInstalled()    { return flags & Bo_Installed;  }
+  void setInstalled()    {  flags |= Bo_Installed;  }
   Bool isMarkedGlobal() { return flags & Bo_GlobalMark; }
-  Bool isRoot()         { return flags & Bo_Root;       }
-  Bool isCloneBoard()   { return flags & Bo_Clone;      }
-
-  void setRoot()       { flags |= Bo_Root;       }
-  void setInstalled()  { flags |= Bo_Installed;  }
-  void setFailed()     { flags |= Bo_Failed;     }
 
   void unsetInstalled()  { flags &= ~Bo_Installed;  }
 
@@ -181,24 +207,6 @@ public:
     return threads;
   }
 
-  //
-  // Home and parent access
-  //
-private:
-  Board * parent;
-
-public:
-  Board *derefBoard() {
-    Board *bb;
-    for (bb=this; bb->isCommitted(); bb=bb->parent) {}
-    return bb;
-  }
-  Board *getParent() {
-    Assert(!isCommitted());
-    return parent->derefBoard();
-  }
-
-  //
   // Script
   //
 private:
@@ -335,9 +343,6 @@ public:
 
 #ifdef DEBUG_CHECK
   void printTree();
-
-  Bool isInTree(void);
-
 #endif
 
   //

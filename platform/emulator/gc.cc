@@ -32,10 +32,6 @@
 /****************************************************************************
  ****************************************************************************/
 
-// mm2: with pseudo shallow guard dead value may appear in the wrong
-// space, because threads are not sited
-#define DEEP_GARBAGE
-
 #include "gc.hh"
 #include "board.hh"
 #include "var_base.hh"
@@ -459,53 +455,6 @@ public:
 static VarFix varFix;
 
 
-
-/*
- * Routines to check whether entities are local to space to be cloned
- *
- * - Boards are marked
- * - For suspension list entries use isInTree
- *   (This routine is only needed for debugging, since in a stable space
- *    there are no external suspensions)
- *
- */
-
-/*
- * Copying: Check if suspension entry is local to copyBoard.
- */
-
-#ifdef DEBUG_CHECK
-
-Bool Board::isInTree(void) {
-  Assert(!isInGc);
-  Assert(this);
-
-  Board * b = this;
-
-  while (1) {
-    Assert (!b->isCommitted());
-
-    if (b->isCloneBoard())
-      return OK;
-
-    if (b->isMarkedGlobal())
-      return NO;
-
-    if (b->isFailed())
-      return NO;
-
-    if (b->isRoot())
-      return NO;
-
-    b = b->getParent();
-
-  }
-
-}
-
-#endif
-
-
 /****************************************************************************
  * Collect all types of terms
  ****************************************************************************/
@@ -564,29 +513,53 @@ Abstraction *gcAbstraction(Abstraction *a) {
   return (Abstraction *) a->gcConstTerm();
 }
 
+/*
+ * gcIsAlive(bb):
+ *   bb is marked collected, not failed and all parents are alive
+ *
+ */
+
 inline
 Bool Board::gcIsMarked(void) {
-  return IsMarkedPointer(suspList);
+  return IsMarkedPointer(suspList,1);
 }
+
+inline
+Bool Board::gcIsAlive() {
+  Board *bb = this->derefBoard();
+
+  while (1) {
+    if (bb->isFailed())
+      return NO;
+
+    if (bb->isRoot() || bb->gcIsMarked() || bb->isMarkedGlobal())
+      return OK;
+
+    bb = bb->getParent();
+  }
+}
+
 
 inline
 void Board::gcMark(Board * fwd) {
   Assert(!gcIsMarked());
   if (!isInGc)
     cpTrail.save((int32 *) &suspList);
-  suspList = (SuspList *) MarkPointer(fwd);
+  suspList = (SuspList *) MarkPointer(fwd,1);
 }
 
 inline
 Board * Board::gcGetFwd(void) {
   Assert(gcIsMarked());
-  return (Board *) UnMarkPointer(suspList);
+  return (Board *) UnMarkPointer(suspList,1);
 }
 
+inline
 Board * Board::gcBoard() {
   GCDBG_INFROMSPACE(this);
 
-  if (!this) return 0;
+  // Do not clone a space above or collect a space above root ;-(
+  Assert(this && !isMarkedGlobal());
 
   Board * bb = derefBoard();
 
@@ -595,10 +568,7 @@ Board * Board::gcBoard() {
   if (bb->gcIsMarked())
     return bb->gcGetFwd();
 
-  if (!bb->gcIsAlive())
-    return 0;
-
-  Assert(isInGc || bb->isInTree());
+  Assert(bb->gcIsAlive());
 
   Board *ret = (Board *) oz_hrealloc(bb, sizeof(Board));
 
@@ -620,6 +590,7 @@ void dogcGName(GName *gn) {
  *   only dynamic names need to be copied
  */
 
+inline
 Name *Name::gcName() {
   CHECKCOLLECTED(homeOrGName, Name *);
   GName * gn = NULL;
@@ -837,7 +808,7 @@ SuspList * SuspList::gc(void) {
 
 inline
 Bool OzVariable::gcIsMarked(void) {
-  return IsMarkedPointer(suspList);
+  return IsMarkedPointer(suspList,1);
 }
 
 Bool OzVariable::gcIsMarkedOutlined(void) {
@@ -849,13 +820,13 @@ void OzVariable::gcMark(Bool isInGc, TaggedRef * fwd) {
   Assert(!gcIsMarked());
   if (!isInGc)
     cpTrail.save((int32 *) &suspList);
-  suspList = (SuspList *) MarkPointer(fwd);
+  suspList = (SuspList *) MarkPointer(fwd,1);
 }
 
 inline
 TaggedRef * OzVariable::gcGetFwd(void) {
   Assert(gcIsMarked());
-  return (TaggedRef *) UnMarkPointer(suspList);
+  return (TaggedRef *) UnMarkPointer(suspList,1);
 }
 
 TaggedRef * OzVariable::gcGetFwdOutlined(void) {
@@ -919,7 +890,7 @@ OzVariable * OzCtVariable::gc(void)
   return to;
 }
 
-
+inline
 void OzCtVariable::gcRecurse(void)
 {
   // constraint (must go in `gcRecurse' since it may contain recursion
@@ -934,9 +905,6 @@ OzVariable * OzVariable::gcVar(void) {
 
   Board * bb = getHome1()->gcBoard();
 
-#ifdef DEEP_GARBAGE
-  if (!bb) return 0;
-#endif
   Assert(bb);
 
   SuspList * sl = suspList->gc();
@@ -1014,7 +982,7 @@ DynamicTable * DynamicTable::gc(void) {
   return to;
 }
 
-
+inline
 void OzOFVariable::gcRecurse(void) {
   OZ_collectHeapTerm(label,label);
   // Update the pointer in the copied block:
@@ -1203,33 +1171,30 @@ OZ_Propagator * OZ_Propagator::gc(void) {
 }
 
 inline
-void Thread::gcRecurse ()
-{
-  Board *newBoard = getBoardInternal()->gcBoard ();
-  if (!newBoard) {
-    //
+void Thread::gcRecurse() {
+
+  if (getBoardInternal()->gcIsAlive()) {
+    setBoardInternal(getBoardInternal()->gcBoard());
+  } else {
     //  The following assertion holds because suspended threads
     // which home board is dead are filtered out during
     // 'Thread::gcThread ()';
     Assert (isRunnable ());
 
-    //
     //  Actually, there are two cases: for runnable threads with
     // a taskstack, and without it (note that the last case covers
     // also the GC'ing of propagators);
     Board *notificationBoard=getBoardInternal()->gcGetNotificationBoard();
+
     setBoardInternal(notificationBoard->gcBoard());
 
-    GETBOARD(this)->incSuspCount ();
+    getBoardInternal()->incSuspCount();
 
-    //
     //  Convert the thread to a 'wakeup' type, and just throw away
     // the body;
     setWakeUpTypeGC ();
     item.threadBody = (RunnableThreadBody *) NULL;
     return;
-  } else {
-    setBoardInternal(newBoard);
   }
 
   //
@@ -1294,7 +1259,10 @@ TaggedRef gcExtension(TaggedRef term)
 void gcExtensionRecurse(OZ_Extension *ex)
 {
   Board *bb=(Board*) (ex->__getSpaceInternal());
-  if (bb) ex->__setSpaceInternal(bb->gcBoard());
+
+  if (bb)
+    ex->__setSpaceInternal(bb->gcBoard());
+
   ex->gcRecurseV();
 }
 
@@ -1406,7 +1374,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
       case UVAR: // non-direct var: delay collection
         {
-          Board * bb = tagged2VarHome(aux)->derefBoard();
+          Board * bb = tagged2VarHome(aux);
 
           if (!isInGc && bb->isMarkedGlobal()) {
             to = makeTaggedRef(aux_ptr);
@@ -1417,12 +1385,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
           bb = bb->gcBoard();
 
-#ifdef DEEP_GARBAGE
-          if (!bb) {
-            to = 0;
-            return;
-          }
-#endif
           Assert(bb);
           varFix.defer(aux_ptr, &to);
           return;
@@ -1439,12 +1401,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
             Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
             OzVariable *new_cv=cv->gcVar();
 
-#ifdef DEEP_GARBAGE
-            if (!new_cv) {
-              to=0;
-              return;
-            }
-#endif
             Assert(new_cv);
 
             TaggedRef * var_ptr = newTaggedCVar(new_cv);
@@ -1506,13 +1462,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
     return;
 
   case OZCONST: DO_OZCONST:
-#ifdef DEEP_GARBAGE
-    {
-      ConstTerm *ct = tagged2Const(aux)->gcConstTerm();
-      to = ct ? makeTaggedConst(ct) : 0;
-      return;
-    }
-#endif
     to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
     return;
 
@@ -1521,7 +1470,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
     return;
   case UVAR: // direct var
     {
-      Board * bb = tagged2VarHome(aux)->derefBoard();
+      Board * bb = tagged2VarHome(aux);
 
       Assert(bb);
 
@@ -1778,7 +1727,6 @@ redo:
 
   Assert(!isCommitted());
 
-  setCloneBoard();
   setGlobalMarks();
 
   Board * copy = gcBoard();
@@ -1798,8 +1746,6 @@ redo:
   cpTrail.unwind();
 
   unsetGlobalMarks();
-  unsetCloneBoard();
-  copy->unsetCloneBoard();
 
 #ifdef CS_PROFILE
   if (across_chunks) {
@@ -2030,7 +1976,7 @@ void ConstTerm::gcConstRecurse()
 
       switch(o->getTertType()) {
       case Te_Local:
-        o->setBoard(GETBOARD(o)->gcBoard());
+        o->setBoard(o->getBoardInternal()->gcBoard());
         maybeGCForFailure(o);
         break;
       case Te_Proxy:   // PER-LOOK is this possible?
@@ -2086,7 +2032,7 @@ void ConstTerm::gcConstRecurse()
       Tertiary *t=(Tertiary*)this;
       if (t->isLocal()) {
         CellLocal *cl=(CellLocal*)t;
-        cl->setBoard(GETBOARD(cl)->gcBoard());
+        cl->setBoard(cl->getBoardInternal()->gcBoard());
         OZ_collectHeapTerm(cl->val,cl->val);
         maybeGCForFailure(t);
       } else {
@@ -2099,7 +2045,7 @@ void ConstTerm::gcConstRecurse()
     {
       Port *p = (Port*) this;
       if (p->isLocal()) {
-        p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
+        p->setBoard(p->getBoardInternal()->gcBoard()); /* ATTENTION */
         PortWithStream *pws = (PortWithStream *) this;
         OZ_collectHeapTerm(pws->strm,pws->strm);
         maybeGCForFailure(p);
@@ -2114,12 +2060,16 @@ void ConstTerm::gcConstRecurse()
       Space *s = (Space *) this;
       Assert(s->getInfo()==NULL);
       if (!s->isProxy()) {
-        if (s->solve != (Board *) 1) {
-          s->solve = s->solve->gcBoard();
+        if (!s->isMarkedFailed() && !s->isMarkedMerged()) {
+          if (s->solve->gcIsAlive()) {
+            s->solve = s->solve->gcBoard();
+          } else {
+            s->solve = (Board *) 0;
+            Assert(s->isMarkedFailed());
+          }
         }
-        if (s->isLocal()) {
-          s->setBoard(GETBOARD(s)->gcBoard());
-        }
+        if (s->isLocal())
+          s->setBoard(s->getBoardInternal()->gcBoard());
       }
       break;
     }
@@ -2158,7 +2108,7 @@ void ConstTerm::gcConstRecurse()
       Tertiary *t=(Tertiary*)this;
       if (t->isLocal()) {
         LockLocal *ll = (LockLocal *) this;
-        ll->setBoard(GETBOARD(ll)->gcBoard());  /* maybe getBoardInternal() */
+        ll->setBoard(ll->getBoardInternal()->gcBoard());
         gcPendThreadEmul(&(ll->pending));
         ll->setLocker(ll->getLocker()->gcThread());
         maybeGCForFailure(t);
@@ -2273,18 +2223,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
     {
       Space *sp = (Space *) this;
       CheckLocal(sp);
-
-      Board *bb=GETBOARD(sp);
-
-      /*
-#ifdef DEEP_GARBAGE
-      if (!isInGc && !bb->isInTree()) {
-        return 0;
-      }
-#endif
-      */
-
-      Assert(isInGc || bb->isInTree());
 
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
       break;
@@ -2422,16 +2360,20 @@ void TaskStack::gc(TaskStack *newstack) {
   } // while not task stack is empty
 }
 
+
+/****************************************************************************
+ * Board collection
+ ****************************************************************************/
+
 /*
  * notification board == home board of thread
  * Although this may be discarded/failed, the solve actor must be announced.
  * Therefore this procedures searches for another living board.
  */
 Board* Board::gcGetNotificationBoard() {
-  if (this == 0)
-    return 0; // no notification board
+  Assert(this);
 
-  Board *bb = this->derefBoard();
+  Board *bb = derefBoard();
 
   Board *nb = bb;
 
@@ -2455,10 +2397,6 @@ Board* Board::gcGetNotificationBoard() {
 
   }
 }
-
-/****************************************************************************
- * Board collection
- ****************************************************************************/
 
 Distributor * BaseDistributor::gc(void) {
   BaseDistributor * t =
@@ -2488,33 +2426,14 @@ DistBag * DistBag::gc(void) {
 }
 
 
-/*
- * gcIsAlive(bb):
- *   bb is marked collected, not failed and all parents are alive
- *
- */
-
-Bool Board::gcIsAlive() {
-  Board *bb = this->derefBoard();
-
-  while (1) {
-    if (bb->isFailed())
-      return NO;
-
-    if (bb->isRoot() || bb->gcIsMarked())
-      return OK;
-
-    bb = bb->getParent();
-  }
-}
-
 inline
 void Board::gcRecurse() {
   Assert(!isCommitted() && !isFailed());
 
-  if (isInGc || !isCloneBoard()) {
-    parent = parent->gcBoard();
-  }
+  // Do not recurse over root board (be it the global one or
+  // the root board for cloning!)
+  if (!isRoot() && !getParentInternal()->isMarkedGlobal())
+    setParentInternal(getParentInternal()->gcBoard());
 
   localPropagatorQueue = localPropagatorQueue->gc();
 

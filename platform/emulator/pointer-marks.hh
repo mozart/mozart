@@ -25,30 +25,28 @@
 #ifndef __POINTERMARKSHH
 #define __POINTERMARKSHH
 
-#define _MarkPointer(p)     (_ToPointer((_ToInt32(p) | 0x1)))
-#define _UnMarkPointer(p)   (_ToPointer((_ToInt32(p) & ~(_ToInt32(0x1)))))
-#define _IsMarkedPointer(p) (_ToInt32(p) & 0x1)
+#define _MarkPointer(p,m)     (_ToPointer((_ToInt32(p) | (m))))
+#define _UnMarkPointer(p,m)   (_ToPointer((_ToInt32(p) & ~(_ToInt32(m)))))
+#define _IsMarkedPointer(p,m) (_ToInt32(p) & (m))
 
 #ifdef DEBUG_CHECK
-inline Bool IsMarkedPointer(void * p) {
-  return _IsMarkedPointer(p);
+inline Bool IsMarkedPointer(void * p, int m) {
+  return _IsMarkedPointer(p,m);
 }
 
-inline void * MarkPointer(void * p) {
-  Assert(!IsMarkedPointer(p));
-  return _MarkPointer(p);
+inline void * MarkPointer(void * p, int m) {
+  return _MarkPointer(p,m);
 }
 
-inline void * UnMarkPointer(void * p) {
-  Assert(IsMarkedPointer(p));
-  return _UnMarkPointer(p);
+inline void * UnMarkPointer(void * p, int m) {
+  return _UnMarkPointer(p,m);
 }
 
 #else
 
-#define MarkPointer(p) _MarkPointer(p)
-#define UnMarkPointer(p) _UnMarkPointer(p)
-#define IsMarkedPointer(p) _IsMarkedPointer(p)
+#define MarkPointer(p,m) _MarkPointer(p,m)
+#define UnMarkPointer(p,m) _UnMarkPointer(p,m)
+#define IsMarkedPointer(p,m) _IsMarkedPointer(p,m)
 
 #endif
 

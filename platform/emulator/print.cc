@@ -922,7 +922,7 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
     return;
 
   stream << indent(offset) << "Board:" << endl;
-  parent->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
+  getParentInternal()->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   stream << "Local propagator queue: " << localPropagatorQueue << endl;
 }
 
