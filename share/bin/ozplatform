@@ -25,6 +25,8 @@ case $system in
    ;;
    *IRIX\ 5*)	        OZARCH=irix5-`/bin/uname -p`
    ;;
+   *IRIX*\ 6*)	        OZARCH=irix6-`/bin/uname -p`
+   ;;
    *AIX*)	        OZARCH=aix3-rs6000
    ;;
    *alpha*OSF1*)        OZARCH=osf1-alpha
