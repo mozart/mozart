@@ -160,7 +160,9 @@ case "$cmd" in
         $OZCOMPILER +p /dev/null +c $infile +dn $tempfile
         if [ $? -ne 0 ]; then exit 1; fi
         (echo "#!/bin/sh";
-         echo "exec $OZHOME/bin/ozsa -f \$0";
+         echo ": \${OZHOME=$OZHOME}";
+         echo "exec \$OZHOME/bin/ozsa -f \$0";
+         echo "###";
          cat $tempfile) > $outfile
         chmod +x $outfile
    ;;
