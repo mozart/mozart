@@ -2116,21 +2116,19 @@ and is used for fontification.")
    (mapconcat
     'identity
     '("move" "moveMoveXYXY" "moveMoveYXYX" "moveMoveXYYX" "moveMoveYXXY"
-      "allocateL" "createNamedVariable" "createVariable" "createVariableMove"
-      "putConstant" "putList" "putRecord" "setConstant" "setPredicateRef"
-      "setValue" "setVariable" "setVoid" "getNumber" "getLiteral" "getList"
-      "getListValVar" "getListVarVar" "getRecord" "getRecordVars"
-      "unifyNumber" "unifyLiteral" "unifyValue" "unifyVariable"
-      "unifyValVar" "unifyVoid" "unify" "branch" "branchOnNonVar"
+      "allocateL" "createVariable" "createVariableMove" "putConstant"
+      "putList" "putRecord" "setConstant" "setPredicateRef" "setValue"
+      "setVariable" "setVoid" "getNumber" "getLiteral" "getList"
+      "getListValVar" "getListVarVar" "getRecord" "unifyNumber" "unifyLiteral"
+      "unifyValue" "unifyVariable" "unifyValVar" "unifyVoid" "unify" "branch"
       "callBI" "inlinePlus1?" "inlineMinus1?" "inlineDot" "inlineUparrow"
       "inlineAt" "inlineAssign" "genCall" "call" "tailCall" "fastCall"
       "fastTailCall" "genFastCall" "marshalledFastCall" "sendMsg"
       "tailSendMsg" "applMeth" "tailApplMeth" "thread" "threadX" "exHandler"
       "createCond" "nextClause" "shallowGuard" "testLiteral" "testNumber"
-      "testBool" "testBI" "testLT" "testLE" "switchOnTerm" "match"
-      "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
-      "weakDet" "debugEntry" "debugExit" "globalVarname" "localVarname"
-      "clearY") "\\|")
+      "testRecord" "testList" "testBool" "testBI" "testLT" "testLE"
+      "match" "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf"
+      "debugEntry" "debugExit" "globalVarname" "localVarname" "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
@@ -2138,10 +2136,10 @@ and is used for fontification.")
    "\t\\("
    (mapconcat
     'identity
-    '("allocateL[1-9]" "allocateL10" "deAllocateL"
-      "deAllocateL[1-9]" "deAllocateL10" "return" "popEx" "createOr"
-      "createEnumOr" "createChoice" "clause" "emptyClause" "lastClause"
-      "shallowThen" "failure" "skip" "wait" "waitTop" "ask" "profileProc")
+    '("allocateL[1-9]" "allocateL10" "deAllocateL" "deAllocateL[1-9]"
+      "deAllocateL10" "return" "popEx" "createOr" "createEnumOr"
+      "createChoice" "clause" "emptyClause" "lastClause" "shallowThen"
+      "failure" "skip" "wait" "waitTop" "ask" "profileProc")
     "\\|")
    "\\)$"))
 
