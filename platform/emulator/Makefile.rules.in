@@ -27,7 +27,7 @@ clean::
 # RULES
 ##########################################################################
 
-.SUFFIXES: .cc .m4cc .hh .m4hh .s .i .sed
+.SUFFIXES: .cc .m4cc .hh .m4hh .s .i .sed .perl
 
 .cc.s:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -o $@ $<
@@ -40,6 +40,13 @@ clean::
 
 .m4hh.hh:
 	$(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)
+
+.perl.cc:
+	perl $< -body > $@
+
+.perl.hh:
+	perl $< -header > $@
+
 
 @oz_tmphack_target@:
 	tmp=/tmp/ozobj$$$$.o; \
