@@ -645,7 +645,8 @@ void engine() {
     }
 
   LBLTaskEmpty:
-    if (e->currentThread->isSolve () == OK) {
+    if (boardForNotification != (Board *) NULL &&    // if it was 'empty' thread;
+        e->currentThread->isSolve () == OK) {
       if (e->currentThread->isSolveReduce () == OK) {
         if (boardForNotification != e->rootBoard) {
           if (boardForNotification->isCommitted () == NO) {
@@ -657,6 +658,7 @@ void engine() {
       } else {
         e->decSolveThreads (boardForNotification);
       }
+      boardForNotification = (Board *) NULL;
     }
     e->currentThread->dispose();
     e->currentThread=(Thread *) NULL;
@@ -733,6 +735,8 @@ void engine() {
   DebugCheck(blockSignals() == NO,
              error("signalmask not zero"));
   DebugCheckT(unblockSignals());
+  DebugCheck ((e->currentSolveBoard != CBB->getSolveBoard ()),
+              error ("am.currentSolveBoard and real solve board mismatch"));
 
   op = CodeArea::getOP(PC);
 

@@ -257,6 +257,7 @@ void Thread::dispose() {
       }
     }
     Assert(prev==0 && next==0);
+    DebugCheckT (flags = 0xff000000|flags);
     freeListDispose(this,sizeof(Thread));
   }
 }
