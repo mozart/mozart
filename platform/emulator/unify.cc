@@ -254,16 +254,6 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
  * Unification
  * -------------------------------------------------------------------------*/
 
-Bool _isLocalUVar(TaggedRef *varPtr)
-{
-  Board *bb=tagged2VarHome(*varPtr);
-  if (bb->isCommitted()) { // mm2: is this needed?
-    bb=bb->derefBoard();
-    *varPtr=makeTaggedUVar(bb);
-  }
-  return oz_isCurrentBoard(bb);
-}
-
 inline
 Board *getVarBoard(TaggedRef var)
 {
