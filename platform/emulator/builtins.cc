@@ -2362,7 +2362,7 @@ static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
     if (literalEq(vs,AtomPair) ||
         literalEq(vs,AtomNil))
       return PROCEED;
-    *len = *len + tagged2Literal(vs)->getSize();
+    *len = *len + ((Atom*)tagged2Literal(vs))->getSize();
     return PROCEED;
   } else if (isCons(vs_tag)) {
     TaggedRef cdr  = vs;
@@ -6615,10 +6615,10 @@ OZ_C_proc_begin(BImakeClass,9)
   if (!isDictionary(fastmeth))   { TypeErrorT(0,"dictionary"); }
   if (!isLiteral(printname))     { TypeErrorT(1,"literal"); }
   if (!isDictionary(slowmeth))   { TypeErrorT(2,"dictionary"); }
-  if (!isAbstraction(send))      { TypeErrorT(4,"abstraction"); }
-  if (!isRecord(features))       { TypeErrorT(5,"record"); }
-  if (!isRecord(ufeatures))      { TypeErrorT(6,"record"); }
-  if (!isDictionary(defmethods)) { TypeErrorT(7,"dictionary"); }
+  if (!isAbstraction(send))      { TypeErrorT(3,"abstraction"); }
+  if (!isRecord(features))       { TypeErrorT(4,"record"); }
+  if (!isRecord(ufeatures))      { TypeErrorT(5,"record"); }
+  if (!isDictionary(defmethods)) { TypeErrorT(6,"dictionary"); }
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 

@@ -57,7 +57,7 @@ public:
   ~HashTable();
 
   // return NO iff already in there and replace = NO
-  Bool htAdd(char *k, void *val);
+  Bool htAdd(char *k, void *val, Bool duplicate=OK);
   Bool htAdd(intlong k, void *val);
   void *htFind(intlong);
   void *htFind(char *);

@@ -1745,7 +1745,7 @@ int OZ_isVirtualString(OZ_Term vs, OZ_Term *var)
 
 OZ_Term OZ_newName()
 {
-  return makeTaggedLiteral(new Literal(am.currentBoard));
+  return makeTaggedLiteral(Name::newName(am.currentBoard));
 }
 /* -----------------------------------------------------------------
  *

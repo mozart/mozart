@@ -179,34 +179,67 @@ void initLiterals()
  *=================================================================== */
 
 
-int Literal::LiteralCurrentNumber = 0x200000;
+int Name::NameCurrentNumber = 0x200000;
 
+char *Literal::getPrintName()
+{
+  if (isAtom())
+    return ((Atom*)this)->getPrintName();
 
-Literal::Literal(char *str, Bool flag) {
-  printName   = ozstrdup(str);
-  printLength = strlen(str);
-  if (flag)
-    home = (Board *) ToPointer(ALLBITS);  // only top-level names;
-  else
-    home = (Board *) NULL;
-  seqNumber = LiteralCurrentNumber++;
+  if (getFlags()&Lit_isNamedName)
+    return ((NamedName*)this)->printName;
+
+  return "";
 }
 
-Literal::Literal (Board *hb) {
-  printName   = "";
-  printLength = 0;
-  if (hb == am.rootBoard) {
-    home = (Board *) ToPointer(ALLBITS);
-  } else {
-    home = hb;
+
+Atom *Atom::newAtom(char *str)
+{
+  Atom *ret = (Atom*) malloc(sizeof(Atom));
+  ret->init();
+  ret->printName = str;
+  ret->setOthers(strlen(str));
+  return ret;
+}
+
+Name *Name::newName(Board *home)
+{
+  Name *ret = (Name*) heapMalloc(sizeof(Name));
+  ret->init();
+  ret->homeOrGName = ToInt32(home);
+  ret->setOthers(NameCurrentNumber++);
+  ret->setFlag(Lit_isName);
+  return ret;
+}
+
+
+NamedName *NamedName::newNamedName(char *pn)
+{
+  NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
+  ret->init();
+  ret->homeOrGName = ToInt32(am.rootBoard);
+  ret->setOthers(NameCurrentNumber++);
+  ret->setFlag(Lit_isName|Lit_isNamedName);
+  ret->printName = pn;
+  return ret;
+}
+
+
+GName *Name::globalize()
+{
+  if (!hasGName()) {
+    Assert(getBoard()==am.rootBoard);
+    homeOrGName = ToInt32(newGName(makeTaggedLiteral(this)));
+    setFlag(Lit_hasGName);
   }
-  /* gcc bug workaround on linux: this was before
-         seqNumber = LiteralCurrentNumber;
-         LiteralCurrentNumber += sizeof(Literal);
-   */
-  seqNumber = LiteralCurrentNumber++;
+  return getGName();
 }
 
+void Name::import(GName *name)
+{
+  Assert(getBoard()==am.rootBoard);
+  homeOrGName = ToInt32(name);
+}
 
 /*===================================================================
  * ConstTerm

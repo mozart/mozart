@@ -68,8 +68,15 @@ inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
     return found;
   }
 
-  found = new Literal(str,isName);
-  if (table->htAdd(str,found)) {
+  str = ozstrdup(str);
+
+  if (isName) {
+    found = NamedName::newNamedName(str);
+  } else {
+    found = Atom::newAtom(str);
+  }
+
+  if (table->htAdd(str,found,NO)) {
     return found;
   }
   error("addToLiteralTab: failed");

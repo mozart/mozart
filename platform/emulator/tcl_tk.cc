@@ -325,9 +325,10 @@ public:
   void put_atom(TaggedRef atom) {
     if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
       return;
-    Literal * l = tagged2Literal(atom);
-    int       n = l->getSize();
-    char *    s = l->getPrintName();
+    Assert(isAtom(atom));
+    Atom *l = (Atom*) tagged2Literal(atom);
+    int   n = l->getSize();
+    char *s = l->getPrintName();
 
     ensure(n);
     for (int i = 0; i < n; i++) {
@@ -339,9 +340,10 @@ public:
     if (literalEq(atom, AtomPair) || literalEq(atom, AtomNil))
       return;
 
-    Literal * l = tagged2Literal(atom);
-    int       n = l->getSize();
-    char *    s = l->getPrintName();
+    Assert(isAtom(atom));
+    Atom* l = (Atom*)tagged2Literal(atom);
+    int   n = l->getSize();
+    char *s = l->getPrintName();
     char c;
     ensure(4*n);
 
@@ -1531,9 +1533,9 @@ void BIinitTclTk() {
   AtomVarPrefix    = OZ_atom("v");
   AtomImagePrefix  = OZ_atom("i");
 
-  NameTclName       = OZ_newName();
-  NameGroupVoid     = OZ_newName();
-  NameTclSlaves     = OZ_newName();
-  NameTclSlaveEntry = OZ_newName();
-  NameTclClosed     = OZ_newName();
+  NameTclName       = OZ_newName(); OZ_protect(&NameTclName);
+  NameGroupVoid     = OZ_newName(); OZ_protect(&NameGroupVoid);
+  NameTclSlaves     = OZ_newName(); OZ_protect(&NameTclSlaves);
+  NameTclSlaveEntry = OZ_newName(); OZ_protect(&NameTclSlaveEntry);
+  NameTclClosed     = OZ_newName(); OZ_protect(&NameTclClosed);
 }

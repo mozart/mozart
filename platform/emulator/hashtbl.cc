@@ -132,8 +132,7 @@ void HashTable::resize()
   } else {
     for (i=0;i<oldSize;i++) {
       if (! old[i].isEmpty()) {
-        htAdd(old[i].key.fstr,old[i].value);
-        free(old[i].key.fstr);
+        htAdd(old[i].key.fstr,old[i].value,NO);
       }
     }
   }
@@ -170,7 +169,7 @@ inline int HashTable::findIndex(intlong i)
 }
 
 
-Bool HashTable::htAdd(char *k, void *val)
+Bool HashTable::htAdd(char *k, void *val, Bool duplicate)
 {
   Assert(val!=htEmpty);
 
@@ -179,12 +178,13 @@ Bool HashTable::htAdd(char *k, void *val)
 
   int key = findIndex(k);
   if (! table[key].isEmpty()) {     // already in there
-    free(table[key].key.fstr);
+    if (duplicate)
+      free(table[key].key.fstr);
   } else {
     counter++;
   }
 
-  table[key].key.fstr  = ozstrdup(k);
+  table[key].key.fstr  = duplicate ? ozstrdup(k) : k;
   table[key].value = val;
   return OK;
 }

@@ -552,13 +552,20 @@ public:
 
 
 inline
+Bool needsNoCollection(Literal *l)
+{
+  return l->isAtom() || !((Name*)l)->isOnHeap();
+}
+
+
+inline
 Bool needsNoCollection(TaggedRef t)
 {
   Assert(t != makeTaggedNULL());
 
   TypeOfTerm tag = tagTypeOf(t);
   return isSmallInt(tag) ||
-         isLiteral(tag) && !tagged2Literal(t)->isDynName();
+         isLiteral(tag) && needsNoCollection(tagged2Literal(t));
 }
 
 
@@ -697,44 +704,49 @@ Bool isInTree (Board *b)
  *   3 cases: atom, optimized name, dynamic name
  *   only dynamic names need to be copied
  */
-inline
-Literal *Literal::gc()
-{
-  if (!isDynName()) return (this);
 
-  if (opMode == IN_GC || isLocalBoard(getBoard())) {
-    GCMETHMSG("Literal::gc");
-    CHECKCOLLECTED(ToInt32(printName), Literal *);
+inline
+Name *Name::gcName()
+{
+  CHECKCOLLECTED(homeOrGName, Name *);
+  if (opMode == IN_GC && hasGName()) {
+    gcGName(getGName());
+  }
+  if (opMode == IN_GC && isOnHeap() ||
+      isLocalBoard(getBoard())) {
+    GCMETHMSG("Name::gc");
     COUNT(literal);
     setVarCopied;
-    Literal *aux = (Literal *) gcRealloc (this,sizeof (*this));
-    GCNEWADDRMSG (aux);
-    ptrStack.push (aux, PTR_NAME);
-    storeForward(&printName, aux);
+    Name *aux = (Name*) gcRealloc(this,sizeof(Name));
+    GCNEWADDRMSG(aux);
+    ptrStack.push(aux, PTR_NAME);
+    storeForward(&homeOrGName, aux);
 
     FDPROFILE_GC(cp_size_literal,sizeof(*this));
-
-    return (aux);
+    return aux;
   } else {
-    return (this);
+    return this;
   }
 }
 
 inline
-void Literal::gcRecurse ()
+Literal *Literal::gc()
 {
-  GCMETHMSG("Literal::gcRecurse");
-  DebugGC((isDynName() == NO),
-          error ("non-dynamic name is found in gcRecurse"));
-  DebugCode (Board *savedHome = home;);
-  home = home->gcBoard();
+  if (needsNoCollection(this))
+    return this;
 
-  // Assert(home);
-  //  kost@ (14.1.96):
-  //  Actually, this might happen: the problem is that not every (deep)
-  // clause has it's own 'Y' register set. Therefore, a guard
-  // may create a local variable, bind it to something, fail itself
-  // and leave the variable visible outside!
+  Assert(isName());
+  return ((Name*) this)->gcName();
+}
+
+inline
+void Name::gcRecurse()
+{
+  GCMETHMSG("Name::gcRecurse");
+  if (hasGName())
+    return;
+
+  homeOrGName = ToInt32(((Board*)ToPointer(homeOrGName))->gcBoard());
 }
 
 inline
@@ -1600,6 +1612,7 @@ void AM::gc(int msgLevel)
 
 #ifdef PERDIO
   gcBorrowTable();
+  gcGNameTable();
 #endif
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2516,7 +2529,7 @@ void performCopying(void)
 
     case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse();           break;
     case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
-    case PTR_NAME:      ((Literal *) ptr)->gcRecurse ();         break;
+    case PTR_NAME:      ((Name *) ptr)->gcRecurse ();            break;
     case PTR_BOARD:     ((Board *) ptr)->gcRecurse();            break;
     case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse();            break;
     case PTR_THREAD:    ((Thread *) ptr)->gcRecurse();           break;

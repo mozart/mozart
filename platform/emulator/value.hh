@@ -51,51 +51,88 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
  * Literal
  *=================================================================== */
 
+const int sizeOfLitFlags = 3;
+const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
+
+#define Lit_isName       1
+#define Lit_isNamedName 2
+#define Lit_hasGName     4
+
 class Literal {
-private:
-  static int LiteralCurrentNumber;
-  //
-  char *printName;
-  int  printLength;
-  Board *home;
-  // home can be: NULL: an atom;
-  //              ALLBITS: optimized (static) top-level name;
-  //              <board-addr>: non-top-level name;
-  int seqNumber;
+  int32 flagsAndOthers;
 public:
-  Literal (char *str = "", Bool flag = NO);
-  Literal (Board *hb);
+  void init() { flagsAndOthers=0; }
+  void setFlag(int flag) { flagsAndOthers |= flag; }
+  int getFlags() { return (flagsAndOthers&litFlagsMask); }
+  int getOthers() { return flagsAndOthers>>sizeOfLitFlags; }
+  void setOthers(int value) { flagsAndOthers = getFlags()|(value<<sizeOfLitFlags); }
 
-  isAtom()     { return home == (Board *) NULL; }
-  isOptName()  { return home == (Board *) ToPointer(ALLBITS); }
-  isDynName()  { return !isAtom() && !isOptName(); }
+  Bool isName()     { return (getFlags()&Lit_isName); }
+  Bool isAtom()     { return !isName(); }
 
-  Board *getBoard(); // see am.icc
+  Literal() { Assert(0); }
 
-  Literal *gc ();       // for non-top-level names only;
-  void gcRecurse (); // too;
+  char *getPrintName();
 
-// atoms are the only terms which are not allocated on heap and that's why,
-// its new-operator has to be overloaded to allocate global memory for atoms
-  void *operator new(size_t size) {return ::new char[size]; }
-  void operator  delete(void *p, size_t) { ::delete(p); }
-
-// term functions
+  Literal *gc();
 
   OZPRINT;
   OZPRINTLONG;
 
-  /* It's an assumption: assembler produces only one entry.   */
-  /* OK means that this is equal constants.       */
-
-  // name access
-  char* getPrintName() { return printName; }
-  int getSize() { return printLength; }
-
-  int getSeqNumber() { return (seqNumber); }
-
-  int hash() { return getSeqNumber(); }
+  inline int hash();
 };
+
+class Atom: public Literal {
+private:
+  char *printName;
+public:
+  static Atom *newAtom(char *str);
+  char* getPrintName() { return printName; }
+  int getSize() { return getOthers(); }
+  int hash() { return ToInt32(getPrintName()); }
+};
+
+
+/* This one goes onto the heap */
+class Name: public Literal {
+protected:
+  static int NameCurrentNumber;
+  int32 homeOrGName;
+public:
+  Name() { Assert(0); }
+  static Name *newName(Board *b);
+
+  Board *getBoard(); // see am.icc
+
+  int getSeqNumber() { return getOthers(); }
+  int hash() { return getSeqNumber(); }
+
+  Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
+  Bool hasGName() { return (getFlags()&Lit_hasGName); }
+
+  Name *gcName();
+  void gcRecurse();
+
+  GName *getGName() { Assert(hasGName()); return (GName*) ToPointer(homeOrGName); }
+  GName *globalize();
+  void import(GName *);
+};
+
+
+/* This one managed via malloc */
+
+class NamedName: public Name {
+public:
+  char *printName;
+  static NamedName *newNamedName(char *str);
+};
+
+
+int Literal::hash()
+{
+  if (isAtom()) return ((Atom*)this)->hash();
+  return ((Name*)this)->hash();
+}
 
 inline
 Bool isAtom(TaggedRef term) {
@@ -133,10 +170,10 @@ int atomcmp(Literal *a, Literal *b)
   if (res < 0) return -1;
   if (res > 0) return  1;
 
-  // res == 0
-
-  return (((a->getSeqNumber ()) < (b->getSeqNumber ())) ? -1 : 1);
+  Assert(a->isName() && b->isName());
+  return (((Name*)a)->getSeqNumber() < ((Name*)b)->getSeqNumber()) ? -1 : 1;
 }
+
 
 inline
 int atomcmp(TaggedRef a, TaggedRef b)
@@ -1514,10 +1551,10 @@ public:
   PrTabEntry (TaggedRef name, SRecordArity arityInit,TaggedRef file, int line)
   : printname(name), spyFlag(NO), fileName(file), lineno(line)
   {
-      Assert(isLiteral(name));
-      methodArity = arityInit;
-      arity =  (unsigned short) getWidth(arityInit);
-      Assert((int)arity == getWidth(arityInit)); /* check for overflow */
+    Assert(isLiteral(name));
+    methodArity = arityInit;
+    arity =  (unsigned short) getWidth(arityInit);
+    Assert((int)arity == getWidth(arityInit)); /* check for overflow */
   }
 
   OZPRINTLONG;
