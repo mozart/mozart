@@ -38,6 +38,10 @@
  * appropriate handbook chapter: system/system.raw.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #define COMPILER_TIMEOUT        180 /* seconds */
 
 #define IO_BUF_SIZE             10000
@@ -162,6 +166,8 @@
 
 #define DEBUG_PERDIO
 
+//#define DEBUG_PROP_STABILTY_TEST
+
 // test if the liveness routine for X registers works
 // #define DEBUG_LIVENESS
 
@@ -174,7 +180,7 @@
 // #define HEAP_PROFILE
 // #define PROFILE_INSTR
 // #define PROFILE_BI
-
+// #define CS_PROFILE
 #endif
 
 // avoid inlining some functions

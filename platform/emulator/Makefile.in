@@ -42,7 +42,8 @@ LDFLAGS         = @LDFLAGS@
 
 COPT            = @COPT@
 DEFS            = @DEFS@
-CFLAGS          = $(COPT) $(DEFS) $(CDYN) $(CUSR)
+CWARN           = @CWARN@
+CFLAGS          = $(COPT) $(DEFS) $(CWARN) $(CUSR)
 CXXFLAGS        = $(CFLAGS) $(CCINCLUDES)
 CXXDEPEND       = $(CXX) $(CXXFLAGS) -MM
 
@@ -200,6 +201,7 @@ realclean::
         $(RM) ozlib.lnk *.exe *.map *.imp *.sym *.so
         $(RM) $(M4FILES)
         $(RM) oz.c initffuns.cc TAGS
+        $(RM) conf.h Makefile
 
 ozlib.lnk: oz.h
         grep FUNDECL oz.h | grep -v typedef | grep -v define | \
