@@ -3720,6 +3720,11 @@ void buildRecord(ProgramCounter PC, RefsArray * Y, Abstraction *CAP) {
         XPC(2) = getTaggedArg(PC+1);
         DISPATCH(3,0);
       }
+    case PUTCONSTANTY:
+      {
+        YPC(2) = getTaggedArg(PC+1);
+        DISPATCH(3,0);
+      }
 
     default:
       Assert(0);
