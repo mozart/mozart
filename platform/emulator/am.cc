@@ -57,7 +57,6 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
   fprintf(stderr, " -x <hex>     : start as a virtual site\n");
-  fprintf(stderr, " -b <file>    : boot from assembly code\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
   osExit(1);
 }
@@ -127,10 +126,6 @@ void printBanner(char*initFile)
 }
 
 
-#ifdef MODULES_LINK_STATIC
-OZ_BI_proto(ozma_readProc);
-#endif
-
 extern void initBuiltins();
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
@@ -162,7 +157,6 @@ void AM::init(int argc,char **argv)
 
   char *url = NULL;
   char *initFile = getenv("OZINIT");
-  char *assemblyCodeFile = NULL;
   
   /* process command line arguments */
   ozconf.argV = NULL;
@@ -214,10 +208,6 @@ void AM::init(int argc,char **argv)
       continue;
     }
 
-    if (strcmp(argv[i],"-b")==0) {
-      assemblyCodeFile = getOptArg(i,argc,argv);
-      continue;
-    }
     if (strcmp(argv[i],"-init")==0) {
       initFile = getOptArg(i,argc,argv);
       continue;
@@ -232,21 +222,11 @@ void AM::init(int argc,char **argv)
     usage(argc,argv);
   }
 
-  if (url && assemblyCodeFile) {
-    fprintf(stderr,"Options '-u' and '-b' are mutually exclusive.\n");
-    usage(argc,argv);
-  }
-
-  if (initFile && *initFile && assemblyCodeFile) {
-    fprintf(stderr,"no init file allowed with assembly code file.\n");
-    usage(argc,argv);
-  }
-
 #ifdef DEBUG_CHECK
   ozconf.showIdleMessage=1;
 #endif
 
-  if (!p2t && !initFile && !assemblyCodeFile) {
+  if (!p2t && !initFile) {
     char* ini = "/share/Init.ozf";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
@@ -258,8 +238,8 @@ void AM::init(int argc,char **argv)
   }
   if (initFile && *initFile=='\0') initFile=0;
 
-  if (!p2t && !initFile && !assemblyCodeFile) {
-    fprintf(stderr,"neither init file nor assembly code.\n");
+  if (!p2t && !initFile) {
+    fprintf(stderr,"No init file found.\n");
     usage(argc,argv);
   }
 
@@ -338,57 +318,6 @@ void AM::init(int argc,char **argv)
 #endif
 
   Thread *tt = oz_newThread();
-
-  if (assemblyCodeFile) {
-
-    OZ_CFun f = 0;
-
-#ifndef MODULES_LINK_STATIC
-
-    char * libname = "/ozma.so";
-    int n = strlen(ozconf.emuhome);
-    char * libfile = new char[n + strlen(libname)];
-
-    strcpy(libfile, ozconf.emuhome);
-
-    strcpy(libfile + n, libname);
-
-    printf("Loading ozma library: %s\n",libfile);
-
-    OZ_Term out;
-    OZ_Term ret = osDlopen(libfile, out);
-
-    if (ret) {
-      fprintf(stderr, "Cannot open ozma library: %s.\n",toC(ret));
-      osExit(1);
-    }
-
-    delete[] libfile;
-
-    void* handle = OZ_getForeignPointer(out);
-
-    f = (OZ_CFun)  osDlsym(handle,"ozma_readProc");
-
-    if (!f) {
-      fprintf(stderr,"builtin ozma_readProc not found");
-      osExit(1);
-    }
-      
-#else
-
-    printf("Ozma library statically linked\n");
-
-    f = ozma_readProc;
-#endif
-
-    OZ_Term args[2] = { oz_atom(assemblyCodeFile),0 };
-    OZ_Return r=(*f)(args,0);
-    if (r!=PROCEED) {
-      fprintf(stderr,"assembling %s failed",assemblyCodeFile);
-      osExit(1);
-    }
-    tt->pushCall(args[1], 0, 0);
-  }
 
   if (initFile) {
     TaggedRef functor   = oz_newVariable();
