@@ -261,11 +261,11 @@ PRINT(LTuple)
   if ( depth <= 0 ) {
     stream << " ... ";
   } else {
-    TaggedRef head = getHead();
-    DEREF(head,_1,tag1);
+    TaggedRef headd = getHead();
+    DEREF(headd,_1,tag1);
     if (isLTuple(tag1) ) {
       stream << "(";
-      tagged2Stream(head,stream, depth-1,offset);
+      tagged2Stream(headd,stream, depth-1,offset);
       stream << ")"
              << NameOfCons;
     } else {

@@ -29,7 +29,7 @@
 
 // experimental feature to check if all branches are correctly reached
 // #define CheckBranch(X) printf(X); printf("\n")
-#define CheckBranch
+#define CheckBranch(X)
 
 #include "../include/config.h"
 #include "types.hh"
@@ -355,6 +355,8 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
     case INST_FAILED:                                                         \
       currentTaskSusp = NULL;                                                 \
       goto LBLfailure;                                                        \
+    case INST_OK:                                                             \
+      break;                                                                  \
     }                                                                         \
   }
 
@@ -588,6 +590,8 @@ void engine() {
             case INST_FAILED:
               exitCall(FAILED,ozdeb);
               goto LBLfailure;
+            case INST_OK:
+              break;
             }
           }
 
@@ -1612,6 +1616,8 @@ void engine() {
               case HOOK_SCHEDULE:
                 e->pushTaskOutline(CBB,PC,Y,G);
                 goto LBLschedule;
+              case HOOK_OK:
+                break;
               }
               JUMP(PC);
             default:
