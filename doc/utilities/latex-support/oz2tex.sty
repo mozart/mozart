@@ -94,7 +94,7 @@
     \expandafter\gdef\csname coperator#1\endcsname{#2}%
   \endgroup}
 
-\newcommand{\OzOp}[1]{%
+\DeclareRobustCommand{\OzOp}[1]{%
   \begingroup
     \oz@docspecials\string
     \@ifundefined{coperator#1}%
@@ -102,7 +102,7 @@
         {\@nameuse{coperator#1}}%
   \endgroup}
 
-\newcommand{\OzMacro}[2]{%
+\DeclareRobustCommand{\OzMacro}[2]{%
   \OzChar\#\OzSpace{#1}\OzKeyword{#2}}
 \DeclareRobustCommand{\CEolComment}[1]{{%
   \ozcommentfont//#1}\OzEol}
