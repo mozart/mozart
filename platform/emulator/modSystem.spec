@@ -70,4 +70,10 @@ $cmode='dyn';
 		     BI  => BIconstraints,
 		     native => true},
 
+  'onToplevel'	=> { in  => [],
+			     out => ['+bool'],
+			     BI  => BIonToplevel,
+			     native => true},
+
+
  );
