@@ -388,7 +388,6 @@ prepare
 	 SavedToken   : unit
 	 KeepComments : false
 	 OpenWithTail : unit
-	 PrefixTable  : unit
 	 %%-----------------------------------------------------------
 	 %% namespace context
 	 %%-----------------------------------------------------------
@@ -403,6 +402,7 @@ prepare
 	 CONTENTS    : nil
 	 COORD       : unit
 	 TRAIL       : nil
+	 PREFIXTABLE : unit
 
       meth init(OWT)
 	 OpenWithTail <- OWT
@@ -430,8 +430,8 @@ prepare
       end
       
       meth Reset()
-	 PrefixTable <- {NewDictionary}
-	 TRAIL <- nil
+	 PREFIXTABLE  <- {NewDictionary}
+	 TRAIL        <- nil
 	 Line         <- 1
 	 Stack        <- nil
 	 Coord        <- unit
@@ -909,6 +909,72 @@ prepare
 	 end
 	 {@CONTEXT.intern Tag1 Tag2}
 	 {@CONTEXT.internAlist AlistMid Alist2}
+      end
+
+      meth Intern(Name ?Prefix ?Localname ?URI)
+	 %% I expect the common case to be a name without prefix
+	 %% i.e. in the default namespace.  Thus, I first check if
+	 %% the name contains a `:' to avoid unnecessary consing
+	 %% when splitting
+	 if {HasColon Name}
+	 then PrefixS SuffixS in
+	    {SplitName Name PrefixS SuffixS}
+	    Prefix    = {StringToAtom PrefixS}
+	    Localname = {StringToAtom SuffixS}
+	    URI       = {CondSelect @PREFIXTABLE Prefix unit}
+	 else
+	    %% in default namespace
+	    Prefix    = unit
+	    Localname = {StringToAtom Name}
+	    URI       = {CondSelect @PREFIXTABLE unit unit}
+	 end
+      end
+
+      meth ProcessAlist(IN $)
+	 case IN
+	 of nil then OUT=nil
+	 [] (Attr|Value)|IN then
+	    PrefixA SuffixA ValueA={StringToAtom Value}
+	 in
+	    if {HasColon Attr}
+	    then Prefix Suffix in
+	       {SplitName Attr Prefix Suffix}
+	       {StringToAtom Prefix PrefixA}
+	       {StringToAtom Suffix SuffixA}
+	    else PrefixA=unit SuffixA={StringToAtom Attr} end
+	    if PrefixA==unit then
+	       if {HasFeature XMLNS SuffixA} then
+		  %% default namespace declaration
+	       in
+		  TRAIL<-(unit|{CondSelect @PREFIXTABLE unit unit})|@TRAIL
+		  PREFIXTABLE.unit := ValueA
+		  namespaceDeclaration(prefix:'' uri:ValueA)
+		  |Parser,ProcessAlist(IN $)
+	       else
+		  %% attribute in no-namespace
+		  attribute(
+		     prefix : unit
+		     uri    : unit
+		     value  : ValueA)
+		  |Parser,ProcessAlist(IN $)
+	       end
+	    elseif {HasFeature XMLNS PrefixA} then
+	       %% namespace declaration
+	       TRAIL<-(SuffixA|{CondSelect @PREFIXTABLE SuffixA unit})|@TRAIL
+	       PREFIXTABLE.SuffixA := ValueA
+	       namespaceDeclaration(prefix:SuffixA uri:ValueA)
+	       |Parser,ProcessAlist(IN $)
+	    else
+	       %% qualified attribute
+	       attribute(
+		  name      : {StringToAtom Attr}
+		  prefix    : PrefixA
+		  localname : SuffixA
+		  uri       : {CondSelect @PREFIXTABLE PrefixA unit}
+		  value     : ValueA)
+	       |Parser,ProcessAlist(IN $)
+	    end
+	 end
       end
 
       %% =============================================================
