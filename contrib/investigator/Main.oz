@@ -5,11 +5,14 @@ export
    BrowserPluginActivate
    ExplorerPluginActivate
    InvestigateConstraints
+   InvestigateProcedureGraph
+   DisplayConstraintGraph
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
 
    FS
+   ProcedureGraph
    ConstrGraph
    ParamGraph
    SingleConstrGraph
@@ -51,26 +54,26 @@ define
        end {FS.value.make nil}}
    end
 
-   proc {Loop VarTable PropTable Hist DaVin Stream Result}
+   proc {Loop FailSet VarTable PropTable Hist DaVin Stream Result}
       case Stream.1
       of quit then skip
       [] popup_selection_node(_ C) then
-         {MakeAction VarTable PropTable Hist DaVin Stream C Result}
+         {MakeAction FailSet VarTable PropTable Hist DaVin Stream C Result}
       [] popup_selection_edge(_ C) then
-         {MakeAction VarTable PropTable Hist DaVin Stream C Result}
+         {MakeAction FailSet VarTable PropTable Hist DaVin Stream C Result}
       [] node_selections_labels([cn(C)]) then
-         {MakeAction VarTable PropTable Hist DaVin Stream cn(C) Result}
+         {MakeAction FailSet VarTable PropTable Hist DaVin Stream cn(C) Result}
       [] node_selections_labels([cn(C _)]) then
-         {MakeAction VarTable PropTable Hist DaVin Stream cn(C) Result}
+         {MakeAction FailSet VarTable PropTable Hist DaVin Stream cn(C) Result}
       [] error(...) then
          {Error.printException Stream.1}
-         {Loop VarTable PropTable Hist DaVin Stream.2 Result}
+         {Loop FailSet VarTable PropTable Hist DaVin Stream.2 Result}
       else
-         {Loop VarTable PropTable Hist DaVin Stream.2 Result}
+         {Loop FailSet VarTable PropTable Hist DaVin Stream.2 Result}
       end
    end
 
-   proc {MakeAction VarTable PropTable Hist DaVin Stream C Result}
+   proc {MakeAction FailSet VarTable PropTable Hist DaVin Stream C Result}
       Skip
       NextResult
       NextArgs
@@ -253,15 +256,15 @@ define
             {FS.value.make L}
          end
          {Hist add_action(NextAction NextArgs)}
-         NextResult = {NextAction VarTable PropTable Hist NextArgs}
+         NextResult = {NextAction FailSet VarTable PropTable Hist NextArgs}
          {DaVin graph(NextResult.graph)}
       elseif Skip == display then
-         NextResult = {NextAction VarTable PropTable Hist NextArgs}
+         NextResult = {NextAction FailSet VarTable PropTable Hist NextArgs}
          {DaVin graph(NextResult.graph)}
       else
          NextResult = Result
       end
-      {Loop VarTable PropTable Hist DaVin Stream.2 NextResult}
+      {Loop FailSet VarTable PropTable Hist DaVin Stream.2 NextResult}
    end
 
    proc {InvestigateConstraints Root}
@@ -304,12 +307,12 @@ define
          What = SolVars
       in
          {Hist add_action(ParamGraph.make What)}
-         Result = {ParamGraph.make VarTable PropTable Hist What}
+         Result = {ParamGraph.make FS.value.empty VarTable PropTable Hist What}
       else
          What = {FS.value.make FailPropId}
       in
          {Hist add_action(ParamGraph.make What)}
-         Result = {SingleConstrGraph.make VarTable PropTable Hist What}
+         Result = {SingleConstrGraph.make FS.value.empty VarTable PropTable Hist What}
       end
 
 \ifdef DEBUG
@@ -321,7 +324,7 @@ define
       {System.showInfo '\tDone and looping.'}
 \endif
 
-      {Loop VarTable PropTable Hist DaVin Stream Result}
+      {Loop FS.value.empty VarTable PropTable Hist DaVin Stream Result}
    end
 
    local
@@ -335,9 +338,9 @@ define
                        failedProp: FailPropId)  = {ReflectSpace Root}
       in
          {Hist add_action(SingleParamGraph.make [Root])}
-         Result = {SingleParamGraph.make VarTable PropTable Hist [Root]}
+         Result = {SingleParamGraph.make FS.value.empty VarTable PropTable Hist [Root]}
          {DaVin graph(Result.graph)}
-         thread {Loop VarTable PropTable Hist DaVin Stream Result} end
+         thread {Loop FS.value.empty VarTable PropTable Hist DaVin Stream Result} end
       end
    in
       proc {BrowserPluginActivate}
@@ -352,6 +355,63 @@ define
                                           {InvestigateConstraints Sol}
                                        end
                            label: 'Investigate Constraints')}
+   end
+
+   proc {InvestigateProcedureGraph Root}
+      Stream Result
+      DaVin = {New DaVinci.daVinciClass init(Stream)}
+      Hist  = {New History.historyClass init}
+      reflect_space(varsTable:  VarTable
+                    propTable:  PropTable
+                    procTable:  ProcTable
+                    failedProp: FailPropId)  = {ReflectSpace Root}
+      Elem = {Nth {Arity ProcTable} 3}
+/*
+      What = {FS.diff
+              {FS.union ProcTable.Elem.subsumed_props
+               {FS.value.make {Arity ProcTable}}}
+              {FS.value.make Elem}}
+*/
+      What = {FS.value.make {Arity ProcTable}}
+   in
+      {Hist add_action(ProcedureGraph.make [Root])}
+      Result = {ProcedureGraph.make FS.value.empty VarTable PropTable ProcTable Hist What}
+      {DaVin graph(Result.graph)}
+   end
+
+   proc {DisplayConstraintGraph Root FailSet}
+      Stream Result
+      DaVin = {New DaVinci.daVinciClass init(Stream)}
+      Hist  = {New History.historyClass init}
+      reflect_space(varsTable:  VarTable
+                    propTable:  PropTable
+                    procTable:  _
+                    failedProp: FailProp)
+
+      = Root
+      SolVars = {FS.value.make
+\ifdef IGNORE_REFERENCE
+                 {Arity VarTable}
+\else
+                 {Filter {Map {VectorToList Root}
+                          fun {$ E}
+                             {Record.foldL VarTable
+                              fun {$ L var(reference: Ref id: Id ...)}
+                                 if L == unit then
+                                    if {VarEq Ref E} then Id else unit end
+                                 else L end
+                              end unit}
+                          end}
+                  fun {$ E} E \= unit end}
+\endif
+                }
+   in
+      {Hist set_sol_vars(SolVars)}
+      {Hist add_action(ParamGraph.make SolVars)}
+      Result = {ConstrGraph.make FailSet VarTable PropTable Hist
+                {FS.value.make {Arity PropTable}}}
+      {DaVin graph(Result.graph)}
+      {Loop FailSet VarTable PropTable Hist DaVin Stream Result}
    end
 
 end

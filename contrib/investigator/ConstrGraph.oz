@@ -21,7 +21,7 @@ define
       {FS.reflect.lowerBoundList {FS.intersect S1 S2}}
    end
 
-   fun {MakeEdges Hist VarTable H T}
+   fun {MakeEdges FailSet Hist VarTable H T}
 \ifdef DEBUG
       {System.show makeEdges}
 \endif
@@ -53,11 +53,11 @@ define
             #T.1.id#">\")))"
             #if T.2 == nil then "" else ","end
          end
-         #{MakeEdges Hist VarTable H T.2}
+         #{MakeEdges FailSet Hist VarTable H T.2}
       end
    end
 
-   fun {MakeNode Ignore Hist VarTable PropTable H}
+   fun {MakeNode FailSet Ignore Hist VarTable PropTable H}
 \ifdef DEBUG
       {System.show makeNode}
 \endif
@@ -72,7 +72,7 @@ define
    in
       "l(\"cn<"#H.id#">\",n(\"\",["
       #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
-      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.reference $)}#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.reference FailSet H.id $)}#"\"),"
       #{Hist get_prop_node_attr(H.id $)}
       #"a(\"_GO\",\""#Config.propNodeShape#"\"),"
       #"m(["
@@ -97,23 +97,24 @@ define
       #",menu_entry(\"corrvg\",\"Corresponding variable graph\")"
       #"])"
       #"],["
-      #{MakeEdges Hist VarTable H
+      #{MakeEdges FailSet Hist VarTable H
         {FoldR {FS.reflect.lowerBoundList {FS.diff H.connected_props Ignore}}
          fun {$ L R} (PropTable.L)|R end nil}}#"]))"
    end
 
-   fun {MakeNodes IgnoreIn Hist VarTable PropTable L}
+   fun {MakeNodes FailSet IgnoreIn Hist VarTable PropTable L}
       {System.printInfo '.'}
       if L == nil then ""
       else
          Ignore = {FS.union {FS.value.make L.1.id} IgnoreIn}
       in
-         {MakeNode Ignore Hist VarTable PropTable L.1}#","
-         #{MakeNodes Ignore Hist VarTable PropTable L.2}
+         % tmueller:bug "," only if L.2 != nil
+         {MakeNode FailSet Ignore Hist VarTable PropTable L.1}#","
+         #{MakeNodes FailSet Ignore Hist VarTable PropTable L.2}
       end
    end
 
-   fun {Make VarTable PropTable Hist Ps}
+   fun {Make FailSet VarTable PropTable Hist Ps}
       {Hist reset_mark} % tmueller ?
 
       cg(graph:
@@ -121,6 +122,7 @@ define
                   fun {$ L R} (PropTable.L)|R end nil}
             of nil then ""
             [] L then "["#{MakeNodes
+                           FailSet
                            {FS.diff {FS.value.make 1#{Width PropTable}} Ps}
                            Hist VarTable PropTable L}#"]"
             end

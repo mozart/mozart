@@ -1,3 +1,4 @@
+
 \switch +dynamicvarnames
 \switch +controlflowinfo
 \switch +profile
@@ -12,13 +13,15 @@ in
    BrowserPluginActivate  = V.browserPluginActivate
    ExplorerPluginActivate = V.explorerPluginActivate
    InvestigateConstraints = V.investigateConstraints
+   InvestigateProcedureGraph = V.investigateProcedureGraph
 end
 {ExplorerPluginActivate}
 {BrowserPluginActivate}
 
 declare [R] = {Module.link ['x-oz://contrib/Reflect.ozf']}
 
-
+{Wait FD}
+{Wait Space}
 /*
 
 declare
@@ -104,11 +107,46 @@ B <: C
 \insert ~/Programming/Oz/coins.oz
 declare S in {Coins S}
 
-{InvestigateConstraints S}
+declare
+Tables = {R.spaceReflect S}
+
+{Browse Tables.procTable}
+
+{Browse Tables.propTable}
+
+\insert ~/Programming/Oz/FirstClassPropagators/hamil.oz
+% 2
+declare H = [
+             arc(0 [1])
+             arc(1 [0])
+            ]
+
+declare H = [
+             arc(0 [1])
+             arc(1 [0 2])
+             arc(2 [1 3 4 5])
+             arc(3 [2 4])
+             arc(4 [2 3 6])
+             arc(5 [2 6 7 8])
+             arc(6 [4 5 7])
+             arc(7 [5 6 8])
+             arc(8 [5 9 7])
+             arc(9 [8])
+            ]
+
+declare S = {{Hamilton H}}
+
+{InvestigateProcedureGraph S}
+
 
 declare
 Tables = {R.spaceReflect S}
+
+
 {Browse Tables.procTable}
+
+
+
 
 declare
 Tables = {R.spaceReflect S}

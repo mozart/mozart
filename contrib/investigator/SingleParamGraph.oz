@@ -22,7 +22,7 @@ define
 
    IdCounter = {New Aux.counterClass init}
 
-   fun {MakePropagatorEdge
+   fun {MakePropagatorEdge FailSet
         Hist PropTable Event PropId AllPs MenuAllReachablePs}
 \ifdef DEBUG
       {System.show makePropagatorEdge}
@@ -43,7 +43,7 @@ define
       #"\")],l(\"cn<"#PropId#'|'#{IdCounter next($)} %PropId
       #">\",n(\"\",["
       #"a(\"OBJECT\",\""#Name#"\\n"#Location#"\"),"
-      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(P.reference $)}#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(P.reference FailSet PropId $)}#"\"),"
       #{Hist get_prop_node_attr(PropId $)}
       #"a(\"_GO\",\""#Config.propNodeShape#"\"),"
       #"m(["
@@ -76,27 +76,27 @@ define
       #"])],[]))))"
    end
 
-   fun {MakePropagatorEdges Hist PropTable Event Ps AllPs MenuAllReachablePs}
+   fun {MakePropagatorEdges FailSet Hist PropTable Event Ps AllPs MenuAllReachablePs}
 \ifdef DEBUG
       {System.show makePropagatorEdges}
 \endif
       case Ps
       of A|B|T then
-         {MakePropagatorEdge
+         {MakePropagatorEdge FailSet
           Hist PropTable Event A AllPs MenuAllReachablePs}#","
-         #{MakePropagatorEdges
+         #{MakePropagatorEdges FailSet
            Hist PropTable Event B|T AllPs MenuAllReachablePs}
       [] A|nil then
-         {MakePropagatorEdge Hist PropTable Event A AllPs MenuAllReachablePs}
+         {MakePropagatorEdge FailSet Hist PropTable Event A AllPs MenuAllReachablePs}
       else "" end
    end
 
-   fun {MakeEventEdge Hist PropTable V Event MenuAllReachablePs}
+   fun {MakeEventEdge FailSet Hist PropTable V Event MenuAllReachablePs}
 \ifdef DEBUG
       {System.show makeEventEdge}
 \endif
       Filtered = {FS.reflect.lowerBoundList V.susplists.Event}
-      PropsOnEvent = {MakePropagatorEdges Hist PropTable Event Filtered Filtered MenuAllReachablePs}
+      PropsOnEvent = {MakePropagatorEdges FailSet Hist PropTable Event Filtered Filtered MenuAllReachablePs}
    in
       "l(\"e<"#{IdCounter next($)}#">\",e(\"\",[a(\"_DIR\",\"none\"),"
       #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\")],l(\""#Event#"\","
@@ -124,20 +124,20 @@ define
       #"])],["#PropsOnEvent#"]))))"
    end
 
-   fun {MakeEventEdges Hist PropTable V Events MenuAllReachablePs}
+   fun {MakeEventEdges FailSet Hist PropTable V Events MenuAllReachablePs}
 \ifdef DEBUG
       {System.show makeEventEdges}
 \endif
       case Events
       of A|B|T then
-         {MakeEventEdge Hist PropTable V A MenuAllReachablePs}#","
-         #{MakeEventEdges Hist PropTable V B|T MenuAllReachablePs}
+         {MakeEventEdge FailSet Hist PropTable V A MenuAllReachablePs}#","
+         #{MakeEventEdges FailSet Hist PropTable V B|T MenuAllReachablePs}
       [] A|nil then
-         {MakeEventEdge Hist PropTable V A MenuAllReachablePs} else ""
+         {MakeEventEdge FailSet Hist PropTable V A MenuAllReachablePs} else ""
       end
    end
 
-   fun {Make VarTable PropTable Hist V}
+   fun {Make FailSet VarTable PropTable Hist V}
       [VarId] = {FS.reflect.lowerBoundList V}
       ReflV = VarTable.VarId
       VarStr = {Hist get_sol_var(VarId $)}
@@ -176,7 +176,7 @@ define
               #",menu_entry(\"cg<all>\",\"Propagator graph of all propagators\")"
               #"])"
               #"],["
-              #{MakeEventEdges
+              #{MakeEventEdges FailSet
                 Hist PropTable ReflV {Arity ReflV.susplists} MenuAllReachablePs}
               #"]))]")
           )

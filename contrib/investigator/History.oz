@@ -4,6 +4,8 @@ import
 
    Config(propColour:             PropColour
           failedPropColour:       FailedPropColour
+          failedEdgeColour:       FailedEdgeColour
+          edgeColour:             EdgeColour
           markedPropNodeAttr:     MarkedPropNodeAttr
           markedParamNodeAttr:    MarkedParamNodeAttr
           unMarkedPropNodeAttr:   UnMarkedPropNodeAttr
@@ -100,12 +102,25 @@ define
          failedProp <- unit
       end
 
-      meth get_prop_node_failed(PReference C)
+      meth get_prop_node_failed(PReference FailSet Id C)
 \ifdef IGNORE_REFERENCE
          C = PropColour
 \else
-         C = if {PropIsFailed PReference} then FailedPropColour
+         C = if {PropIsFailed PReference} orelse {FS.isIn Id FailSet}
+             then FailedPropColour
              else PropColour end
+\endif
+      end
+
+      meth get_prop_edge_failed(FailSet SharedPropsList C)
+\ifdef IGNORE_REFERENCE
+         C = PropColour
+\else
+         C = if {FS.intersect {FS.value.make SharedPropsList} FailSet}
+                == FS.value.empty
+             then EdgeColour
+             else FailedEdgeColour#"\"),a(\"EDGEPATTERN\",\"thick"
+             end
 \endif
       end
 
