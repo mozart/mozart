@@ -344,8 +344,6 @@ PRINTLONG(DynamicTable)
   print(stream, depth, offset);
 }
 
-
-
 PRINT(STuple)
 {
   CHECKDEPTH;
@@ -1311,21 +1309,23 @@ void printX(FILE *fd, RefsArray X)
 
 void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 {
-  if (this == NULL || isEmpty()) {
-    // message("TaskStack empty.\n");
-    return;
-  }
-
   message("\n");
   message("Stack dump:\n");
   message("-----------\n");
 
-  if (pc != NOCODE && pc !=NULL) {
+  Assert(this);
+  if (pc == NOCODE && isEmpty()) {
+    message("\tEMPTY\n");
+    return;
+  }
+
+  if (pc != NOCODE) {
     CodeArea::printDef(pc);
   }
+
   TaskStackEntry *p = getTop();
-  
-  while (isEmpty() == NO && depth-- > 0) {
+
+  while (!isEmpty() && depth-- > 0) {
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){

@@ -146,9 +146,12 @@ public:
 #if PROFILE_FD 
 # define _PROFILE_CODE1(CODE) CODE
 # define PROFILE_CODE1(CODE) {_PROFILE_CODE1(CODE); }
+# define FDPROFILE_GC(what,sz) \
+     if (opMode == IN_TC) {  FDProfiles.inc_item(what, sz); }
 #else
 # define _PROFILE_CODE1(CODE)
 # define PROFILE_CODE1(CODE)
+# define FDPROFILE_GC(what,sz)
 #endif
 
 extern ProfileHost FDProfiles;
