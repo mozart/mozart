@@ -82,6 +82,7 @@ define
          [] c then 'c-mode'
          [] cc then 'c++-mode'
          [] elisp then 'emacs-lisp-mode'
+         [] sh then 'sh-mode'
          [] !NoProgLang then 'fundamental-mode'
          else
             %--** warn about unsupported programming language
