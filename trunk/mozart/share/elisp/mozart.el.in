@@ -211,77 +211,11 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
      "sDefault Oz engine to run the OPI: ")
 
 ;;}}}
-<<<<<<< mozart.el.in
-;;{{{ Oz Profiles
-
-(defcustom oz-profiles nil
-  "*alist of profiles for multiple mozart versions"
-  :group 'mozart
-  :type '(alist :key-type symbol
-		:value-type
-		(alist
-		 :key-type symbol
-		 :options ((OZ-HOME                string)
-			   (oz-change-title        boolean)
-			   (oz-frame-title         string)
-			   (oz-prepend-line        boolean)
-			   (oz-default-host        string)
-			   (oz-build-dir           string)
-			   (oz-emulator            string)
-			   (oz-functor-path        string)
-			   (oz-root-functor        string)
-			   (oz-gdb-autostart       boolean)
-			   (oz-other-buffer-size   integer)
-			   (oz-popup-on-error      boolean)
-			   (oz-halt-timeout        integer)
-			   (oz-compile-command     string)
-			   (oz-application-command string)
-			   (oz-engine-program      string)))))
-
-(defvar oz-profile-undo nil)
-
-(defun oz-profile-undo ()
-  (let ((l oz-profile-undo))
-    (while l
-      (eval (car l))
-      (setq l (cdr l)))
-    (setq oz-profile-undo nil)))
-
-(defun oz-profile-save-var (var)
-  (setq oz-profile-undo
-	(cons `(set ',var ',(eval ,var)) oz-profile-undo)))
-
-(defun oz-profile-save-envvar (var)
-  (setq oz-profile-undo
-	(cons `(setenv ',var ',(getenv var)) oz-profile-undo)))
-
-(defun oz-set-profile (name)
-  (interactive
-   (list (completing-read
-	  "Profile: "
-	  (mapcar (function
-		   (lambda (p) (list (format "%s" (car p)))))
-		  oz-profiles)
-	  nil t (format "%s" (caar oz-profiles)))))
-  (if (equal name "") nil
-    (oz-profile-undo)
-    (oz-profile-save-envvar "OZHOME")
-    (let* ((key (intern name))
-	   (alist (cdr (assq key oz-profiles))))
-      (while alist
-	(oz-profile-save-var (caar alist))
-	(set (caar alist) (cdar alist))
-	(setq alist (cdr alist))))
-    (setenv "OZHOME" OZ-HOME)))
-
-
-;;}}}
-=======
 ;;{{{ Oz Profiles
 
 (eval-and-compile
   (eval '(defcustom oz-profiles nil
-	   "*alist of profiles for multiple mozart versions"
+	   "*An alist of profiles for multiple Mozart versions"
 	   :group 'mozart
 	   :type '(alist :key-type symbol
 			 :value-type
@@ -307,7 +241,7 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 (defvar oz-profile-undo nil)
 
 (defun oz-profile-undo ()
-  "undo the bindings established by the current oz profile."
+  "Undo the bindings established by the current profile."
   (interactive)
   (let ((l oz-profile-undo))
     (while l
@@ -324,11 +258,11 @@ current buffer's file name, minus the `.oz' or `.ozg' extension."
 	(cons `(setenv ',var ',(getenv var)) oz-profile-undo)))
 
 (defun oz-set-profile (name)
-  "select a profile from alist oz-profiles.  This makes it
-easy to run multiple Mozart versions in the same Emacs session,
-or the same version with different parameters.  A profile is
-an alist which provides specific bindings for variables (and
-possibly affecting also the environment variable OZHOME)."
+  "Select a profile from the alist oz-profiles.
+This makes it easy to run multiple Mozart versions in the same
+Emacs session, or the same version with different parameters.
+A profile is an alist which provides specific bindings for variables
+(and possibly affecting also the environment variable OZHOME)."
   (interactive
    (list (completing-read
 	  "Profile: "
@@ -348,7 +282,6 @@ possibly affecting also the environment variable OZHOME)."
     (setenv "OZHOME" OZ-HOME)))
 
 ;;}}}
->>>>>>> 1.27.2.2
 ;;{{{ Variables/Initialization
 
 (defvar oz-emulator-buffer "*Oz Emulator*"
