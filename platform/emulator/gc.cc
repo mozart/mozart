@@ -61,8 +61,6 @@
 
 void processUpdateStack(void);
 void performCopying(void);
-TaggedRef gcDirectVar(TaggedRef);
-
 
 /****************************************************************************
  *   Modes of working:
@@ -71,7 +69,6 @@ TaggedRef gcDirectVar(TaggedRef);
  ****************************************************************************/
 
 Bool gc_is_running = NO;
-
 
 typedef enum {IN_GC = 0, IN_TC} GcMode;
 
@@ -219,7 +216,7 @@ void exitCheckSpace()
  *  Invalidating of inline caches
  **************************************************/
 
-const inlineCacheListBlockSize = 100;
+const int inlineCacheListBlockSize = 100;
 
 class InlineCacheList {
   InlineCacheList *next;
@@ -355,14 +352,8 @@ static Board* fromCopyBoard;
 static Board* toCopyBoard;
 
 
-inline Bool isDirectVar(TaggedRef t)
-{
-  return (!isRef(t) && isAnyVar(t));
-}
-
-
 /****************************************************************************
- * copy from from-space to to-space
+ * Copy from from-space to to-space
  ****************************************************************************/
 inline
 void fastmemcpy_static(int32 *to, int32 *frm, size_t sz)
@@ -815,6 +806,64 @@ Bool isInTree (Board *b)
  * Collect all types of terms
  ****************************************************************************/
 
+// This procedure derefences cluster chains and collects only the object at 
+// the end of such a chain.
+
+inline
+Board * Board::gcDerefedBoard() {
+  GCMETHMSG("Board::gcDerefedBoard");
+  INFROMSPACE(this);
+
+  Assert(!isCommitted());
+
+  Board * bb = this;
+
+  Assert(bb);
+
+  CHECKCOLLECTED(*bb->getGCField(), Board *);
+  
+  if (!bb->gcIsAlive()) return 0;
+
+  // kost@, TMUELLER
+  // process.oz causes the assertion to fire!!! 
+  // Presumably a register allocation problem
+  // See the cure below:
+  //  if (opMode == IN_TC && !isInTree(bb)) return 0; 
+
+  // In an optimized machine the assertion is absent
+  Assert(opMode != IN_TC || isInTree(bb)); 
+
+  COUNT(board);
+
+  Assert(opMode==IN_TC || !inToSpace(bb));
+
+  Board *ret = (Board *) gcReallocStatic(bb, sizeof(Board));
+      
+  FDPROFILE_GC(cp_size_board, sizeof(Board));
+	
+  GCNEWADDRMSG(ret);
+  ptrStack.push(ret,PTR_BOARD);
+  storeForward(bb->getGCField(),ret);
+  return ret;
+}
+
+Board * Board::gcDerefedBoardOutline() {
+  
+  return gcDerefedBoard();
+
+}
+
+Board * Board::gcBoard() {
+  GCMETHMSG("Board::gcBoard");
+  INFROMSPACE(this);
+
+  if (!this) return 0;
+
+  return this->derefBoard()->gcDerefedBoard();
+}
+
+
+
 /*
  * Literals:
  *   3 cases: atom, optimized name, dynamic name
@@ -856,8 +905,7 @@ Name *Name::gcName()
 }
 
 inline 
-Literal *Literal::gc()
-{
+Literal *Literal::gc() {
   Assert(needsCollection(this));
 
   Assert(isName());
@@ -865,8 +913,7 @@ Literal *Literal::gc()
 }
 
 inline 
-void Name::gcRecurse()
-{
+void Name::gcRecurse() {
   GCMETHMSG("Name::gcRecurse");
   if (hasGName())
     return;
@@ -878,6 +925,312 @@ Object *Object::gcObject() {
   return (Object *) gcConstTerm();
 }
 
+/*
+ *  We reverse the order of the list, but this should be no problem.
+ *
+ * kost@ : ... in any case, this is complaint with the 
+ * 'The Definition of Kernel Oz';
+ *
+ */
+inline
+SuspList * SuspList::gc()
+{
+  GCMETHMSG("SuspList::gc");
+
+  SuspList *ret = NULL;
+
+  for (SuspList* help = this; help != NULL; help = help->next) {
+    Thread *aux = (help->getElem ())->gcThread ();
+    if (!aux) {
+      continue;
+    }
+    ret = new SuspList(aux, ret);
+    COUNT(suspList);
+
+    FDPROFILE_GC(cp_size_susplist, sizeof(SuspList));
+  }
+  GCNEWADDRMSG (ret);
+  return (ret);
+}
+
+inline
+void OZ_FiniteDomainImpl::gc(void)
+{
+  FDPROFILE_GC(cp_size_fdvar, getDescrSize());
+
+  copyExtension();
+}
+
+inline
+void GenFDVariable::gc(GenFDVariable * frm)
+{
+  GCMETHMSG("GenFDVariable::gc");
+
+  finiteDomain = frm->finiteDomain;
+  ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
+  
+  int i;
+  for (i = fd_prop_any; i--; )
+    fdSuspList[i] = frm->fdSuspList[i]->gc();
+}
+
+inline
+void GenBoolVariable::gc(GenBoolVariable * frm)
+{
+  GCMETHMSG("GenFDVariable::gc");
+
+  store_patch = frm->store_patch;
+  
+}
+
+inline
+void GenFSetVariable::gc()
+{
+  GCMETHMSG("GenFSetVariable::gc");
+
+  int i;
+  for (i = fs_prop_any; i--; )
+    fsSuspList[i] = fsSuspList[i]->gc();
+}
+
+inline
+FSetValue * FSetValue::gc(void) 
+{
+  return (FSetValue *) gcReallocStatic(this, sizeof(FSetValue));
+}
+
+inline
+void GenLazyVariable::gc(void)
+{
+  GCMETHMSG("GenLazyVariable::gc");
+  if (function!=0) {
+    OZ_updateHeapTerm(function);
+    OZ_updateHeapTerm(result);
+  }
+}
+
+inline
+void GenMetaVariable::gc(void)
+{
+  GCMETHMSG("GenMetaVariable::gc");
+  OZ_updateHeapTerm(data);
+}
+
+inline
+void AVar::gc(void)
+{ 
+  GCMETHMSG("AVar::gc");
+  OZ_updateHeapTerm(value);
+}
+
+inline
+DynamicTable* DynamicTable::gc(void)
+{
+  GCMETHMSG("DynamicTable::gc");
+
+  Assert(isPwrTwo(size));
+  // Copy the table:
+  COUNT(dynamicTable);
+  COUNT1(dynamicTableLen,size);
+  size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
+  DynamicTable* ret = (DynamicTable*) gcReallocDynamic(this,len);
+  
+  FDPROFILE_GC(cp_size_ofsvar, len);
+  
+  GCNEWADDRMSG(ret);
+  // Take care of all TaggedRefs in the table:
+  ptrStack.push(ret,PTR_DYNTAB);
+  // (no storeForward needed since only one place points to the dynamictable)
+
+#ifdef DEBUG_CHECK
+  for (dt_index i=size; i--; ) {
+    if (table[i].ident != makeTaggedNULL()) {
+      Assert(!isDirectVar(table[i].ident));
+      Assert(!isDirectVar(table[i].value));
+    }
+  }
+#endif
+  
+  return ret;
+}
+
+inline
+void DynamicTable::gcRecurse() {
+  for (dt_index i=size; i--; ) {
+    if (table[i].ident != makeTaggedNULL()) {
+      OZ_updateHeapTerm(table[i].ident);
+      OZ_updateHeapTerm(table[i].value);
+    }
+  }
+}
+
+
+inline
+void GenOFSVariable::gc(void)
+{
+    GCMETHMSG("GenOFSVariable::gc");
+    OZ_updateHeapTerm(label);
+    // Update the pointer in the copied block:
+    dynamictable=dynamictable->gc();
+}
+
+inline
+GenCVariable * GenCVariable::gc(void) {
+  INFROMSPACE(this);
+    
+  SuspList * sl = suspList;
+
+  if (GCISMARKED(ToInt32(sl)))
+    return (GenCVariable *) GCUNMARK(ToInt32(sl));
+    
+  Board * bb = home->derefBoard();
+
+  if (opMode == IN_TC && !isLocalBoard(bb))
+    return this;
+  
+  bb = bb->gcDerefedBoard();
+
+  Assert(bb);
+  
+  setVarCopied;
+
+  GenCVariable * to;
+    
+  switch (getType()){
+  case FDVariable:
+    to = (GenCVariable *) heapMalloc(sizeof(GenFDVariable));
+    to->u = this->u;
+    storeForward(&suspList, to);
+    ((GenFDVariable *) to)->gc((GenFDVariable *) this);
+    FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
+    break;
+  case BoolVariable:
+    to = (GenCVariable *) heapMalloc(sizeof(GenBoolVariable));
+    to->u = this->u;
+    storeForward(&suspList, to);
+    ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
+    FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
+    break;
+  case OFSVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenOFSVariable));
+    storeForward(&suspList, to);
+    ((GenOFSVariable *) to)->gc();
+    FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
+    break;
+  case MetaVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenMetaVariable));
+    storeForward(&suspList, to);
+    ((GenMetaVariable *) to)->gc();
+    FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
+    break;
+  case AVAR:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(AVar));
+    storeForward(&suspList, to);
+    ((AVar *) to)->gc();
+    break;
+  case PerdioVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(PerdioVar));
+    storeForward(&suspList, to);
+    ((PerdioVar *) to)->gc();
+    break;
+  case FSetVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenFSetVariable));
+    storeForward(&suspList, to);
+    ((GenFSetVariable *) to)->gc();
+    break;
+  case LazyVariable:
+    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenLazyVariable));
+    storeForward(&suspList, to);
+    ((GenLazyVariable*) to)->gc();
+    break;
+  default:
+    Assert(0);
+  }
+
+  Assert(opMode != IN_GC || this->home != bb);
+    
+  to->suspList = sl->gc();
+  to->home     = bb;
+    
+  return to;
+}
+  
+
+inline
+SVariable * SVariable::gc() {
+  SuspList * sl = suspList;
+
+  if (GCISMARKED(ToInt32(sl)))
+    return (SVariable *) GCUNMARK(ToInt32(sl));
+
+  Board * bb = home->derefBoard();
+
+  if (opMode == IN_TC && !isLocalBoard(bb))
+    return this;
+  
+  bb = bb->gcDerefedBoard();
+    
+  Assert(bb);
+    
+  setVarCopied;
+
+  SVariable * to = (SVariable *) gcReallocStatic(this, sizeof(SVariable));
+  
+  to->suspList = suspList->gc();
+
+  storeForward(&suspList, to);
+  
+  Assert(opMode != IN_GC || to->home != bb);
+
+  to->home = bb;
+    
+  return to;
+}
+
+
+inline
+TaggedRef gcUVar(TaggedRef var) {
+  GCPROCMSG("gcUVar");
+  
+  Assert(isUVar(var));
+
+  Board *bb = tagged2VarHome(var)->derefBoard();
+
+  if (opMode == IN_TC && !isLocalBoard(bb))
+    return var;
+    
+  bb = bb->gcDerefedBoard();
+
+  Assert(bb);
+    
+  setVarCopied;
+
+  INTOSPACE(bb);
+  
+  return makeTaggedUVar(bb);
+}
+
+
+TaggedRef gcDirectVar(TaggedRef var) {
+  GCPROCMSG("gcDirectVar");
+  GCOLDADDRMSG(var);
+
+  Assert(isDirectVar(var));
+  
+  switch (tagTypeOf(var)) {
+  case CVAR:
+    return makeTaggedCVar(tagged2CVar(var)->gc());
+  case UVAR:
+    return gcUVar(var);
+  case SVAR:
+    return makeTaggedSVar(tagged2SVar(var)->gc());
+  case GCTAG:
+    return makeTaggedRef((TaggedRef*) GCUNMARK(var));
+  default:
+    Assert(0);
+    return makeTaggedNULL();
+  }
+}
 
 /*
  * Float
@@ -1356,298 +1709,6 @@ void Thread::gcRecurse ()
   gcTertiary();
 }
 
-/*
- *  We reverse the order of the list, but this should be no problem.
- *
- * kost@ : ... in any case, this is complaint with the 
- * 'The Definition of Kernel Oz';
- *
- */
-inline
-SuspList * SuspList::gc()
-{
-  GCMETHMSG("SuspList::gc");
-
-  SuspList *ret = NULL;
-
-  for (SuspList* help = this; help != NULL; help = help->next) {
-    Thread *aux = (help->getElem ())->gcThread ();
-    if (!aux) {
-      continue;
-    }
-    ret = new SuspList(aux, ret);
-    COUNT(suspList);
-
-    FDPROFILE_GC(cp_size_susplist, sizeof(SuspList));
-  }
-  GCNEWADDRMSG (ret);
-  return (ret);
-}
-
-inline
-void OZ_FiniteDomainImpl::gc(void)
-{
-  FDPROFILE_GC(cp_size_fdvar, getDescrSize());
-
-  copyExtension();
-}
-
-inline
-void GenFDVariable::gc(void)
-{
-  GCMETHMSG("GenFDVariable::gc");
-  ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
-  
-  int i;
-  for (i = fd_prop_any; i--; )
-    fdSuspList[i] = fdSuspList[i]->gc();
-}
-
-inline
-void GenFSetVariable::gc(void)
-{
-  GCMETHMSG("GenFSetVariable::gc");
-
-  int i;
-  for (i = fs_prop_any; i--; )
-    fsSuspList[i] = fsSuspList[i]->gc();
-}
-
-inline
-FSetValue * FSetValue::gc(void) 
-{
-  return (FSetValue *) gcReallocStatic(this, sizeof(FSetValue));
-}
-
-inline
-void GenLazyVariable::gc(void)
-{
-  GCMETHMSG("GenLazyVariable::gc");
-  if (function!=0) {
-    OZ_updateHeapTerm(function);
-    OZ_updateHeapTerm(result);
-  }
-}
-
-inline
-void GenMetaVariable::gc(void)
-{
-  GCMETHMSG("GenMetaVariable::gc");
-  OZ_updateHeapTerm(data);
-}
-
-inline
-void AVar::gc(void)
-{ 
-  GCMETHMSG("AVar::gc");
-  OZ_updateHeapTerm(value);
-}
-
-inline
-DynamicTable* DynamicTable::gc(void)
-{
-  GCMETHMSG("DynamicTable::gc");
-
-  Assert(isPwrTwo(size));
-  // Copy the table:
-  COUNT(dynamicTable);
-  COUNT1(dynamicTableLen,size);
-  size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
-  DynamicTable* ret = (DynamicTable*) gcReallocDynamic(this,len);
-  
-  FDPROFILE_GC(cp_size_ofsvar, len);
-  
-  GCNEWADDRMSG(ret);
-  // Take care of all TaggedRefs in the table:
-  ptrStack.push(ret,PTR_DYNTAB);
-  // (no storeForward needed since only one place points to the dynamictable)
-
-#ifdef DEBUG_CHECK
-  for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL()) {
-      Assert(!isDirectVar(table[i].ident));
-      Assert(!isDirectVar(table[i].value));
-    }
-  }
-#endif
-  
-  return ret;
-}
-
-inline
-void DynamicTable::gcRecurse() {
-  for (dt_index i=size; i--; ) {
-    if (table[i].ident != makeTaggedNULL()) {
-      OZ_updateHeapTerm(table[i].ident);
-      OZ_updateHeapTerm(table[i].value);
-    }
-  }
-}
-
-
-inline
-void GenOFSVariable::gc(void)
-{
-    GCMETHMSG("GenOFSVariable::gc");
-    OZ_updateHeapTerm(label);
-    // Update the pointer in the copied block:
-    dynamictable=dynamictable->gc();
-}
-
-inline
-GenCVariable * GenCVariable::gc(void) {
-  INFROMSPACE(this);
-    
-  SuspList * sl = suspList;
-
-  if (GCISMARKED(ToInt32(sl)))
-    return (GenCVariable *) GCUNMARK(ToInt32(sl));
-    
-  Board * bb = home->derefBoard();
-
-  if (opMode == IN_TC && !isLocalBoard(bb))
-    return this;
-  
-  bb = bb->gcBoard();
-
-  Assert(bb);
-  
-  setVarCopied;
-
-  GenCVariable * to;
-    
-  switch (getType()){
-  case FDVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenFDVariable));
-    storeForward(&suspList, to);
-    ((GenFDVariable *) to)->gc();
-    FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
-    break;
-  case OFSVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenOFSVariable));
-    storeForward(&suspList, to);
-    ((GenOFSVariable *) to)->gc();
-    FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
-    break;
-  case MetaVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenMetaVariable));
-    storeForward(&suspList, to);
-    ((GenMetaVariable *) to)->gc();
-    FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
-    break;
-  case BoolVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenBoolVariable));
-    storeForward(&suspList, to);
-    FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
-    break;
-  case AVAR:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(AVar));
-    storeForward(&suspList, to);
-    ((AVar *) to)->gc();
-    break;
-  case PerdioVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(PerdioVar));
-    storeForward(&suspList, to);
-    ((PerdioVar *) to)->gc();
-    break;
-  case FSetVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenFSetVariable));
-    storeForward(&suspList, to);
-    ((GenFSetVariable *) to)->gc();
-    break;
-  case LazyVariable:
-    to = (GenCVariable *) gcReallocStatic(this, sizeof(GenLazyVariable));
-    storeForward(&suspList, to);
-    ((GenLazyVariable*) to)->gc();
-    break;
-  default:
-    Assert(0);
-  }
-
-  Assert(opMode != IN_GC || to->home != bb);
-    
-  to->suspList = sl->gc();
-  to->home     = bb;
-    
-  return to;
-}
-  
-
-inline
-SVariable * SVariable::gc() {
-  SuspList * sl = suspList;
-
-  if (GCISMARKED(ToInt32(sl)))
-    return (SVariable *) GCUNMARK(ToInt32(sl));
-
-  Board * bb = home->derefBoard();
-
-  if (opMode == IN_TC && !isLocalBoard(bb))
-    return this;
-  
-  bb = bb->gcBoard();
-    
-  Assert(bb);
-    
-  setVarCopied;
-
-  SVariable * to = (SVariable *) gcReallocStatic(this, sizeof(SVariable));
-  
-  to->suspList = suspList->gc();
-
-  storeForward(&suspList, to);
-  
-  Assert(opMode != IN_GC || to->home != bb);
-
-  to->home = bb;
-    
-  return to;
-}
-
-
-inline
-TaggedRef gcUVar(TaggedRef var) {
-  GCPROCMSG("gcUVar");
-  
-  Assert(isUVar(var));
-
-  Board *bb = tagged2VarHome(var)->derefBoard();
-
-  if (opMode == IN_TC && !isLocalBoard(bb))
-    return var;
-    
-  bb = bb->gcBoard();
-
-  Assert(bb);
-    
-  setVarCopied;
-
-  INTOSPACE(bb);
-  
-  return makeTaggedUVar(bb);
-}
-
-
-TaggedRef gcDirectVar(TaggedRef var) {
-  GCPROCMSG("gcDirectVar");
-  GCOLDADDRMSG(var);
-
-  Assert(isDirectVar(var));
-  
-  switch (tagTypeOf(var)) {
-  case CVAR:
-    return makeTaggedCVar(tagged2CVar(var)->gc());
-  case UVAR:
-    return gcUVar(var);
-  case SVAR:
-    return makeTaggedSVar(tagged2SVar(var)->gc());
-  case GCTAG:
-    return makeTaggedRef((TaggedRef*) GCUNMARK(var));
-  default:
-    Assert(0);
-    return makeTaggedNULL();
-  }
-}
 
 #ifdef FOREIGN_POINTER
 ForeignPointer * ForeignPointer::gc(void)
@@ -1821,7 +1882,7 @@ update:
       if (opMode == IN_TC && !isLocalBoard(bb))
 	return;
       
-      (void) bb->gcBoard();
+      (void) bb->gcDerefedBoard();
       
       updateStack.push(&to);
       
@@ -1970,17 +2031,14 @@ void processUpdateStack(void) {
   updateStack.lock();
 
   while (!updateStack.isEmpty()) {
-    TaggedRef * tt      = updateStack.pop();
-    TaggedRef   aux     = * tt;
-    TaggedRef * aux_ptr;
+    TaggedRef * to = updateStack.pop();
+
+    Assert(isRef(*to));
+
+    TaggedRef * aux_ptr = tagged2Ref(*to);
+    TaggedRef   aux     = *aux_ptr;
     
-    Assert(isRef(aux));
-    
-    do {
-      Assert(aux);
-      aux_ptr = tagged2Ref(aux);
-      aux     = *aux_ptr;
-    } while(IsRef(aux));
+    Assert(!isRef(aux));
     
     switch (tagTypeOf(aux)) {
 
@@ -1990,7 +2048,7 @@ void processUpdateStack(void) {
 	
 	Assert(uv);
 
-	*tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(uv)));
+	*to = makeTaggedRef(newTaggedUVar(tagged2VarHome(uv)));
 	
 	COUNT(uvar);
 	break;
@@ -2004,7 +2062,7 @@ void processUpdateStack(void) {
   
 	Assert(GCISMARKED(ToInt32(sv->suspList)));
 	  
-	*tt = makeTaggedRef(newTaggedSVar((SVariable *) 
+	*to = makeTaggedRef(newTaggedSVar((SVariable *) 
 					  GCUNMARK(ToInt32(sv->suspList))));
       
 	COUNT(svar);
@@ -2017,7 +2075,7 @@ void processUpdateStack(void) {
 	
 	Assert(GCISMARKED(ToInt32(cv->suspList)));
 	
-	*tt = makeTaggedRef(newTaggedCVar((GenCVariable *) 
+	*to = makeTaggedRef(newTaggedCVar((GenCVariable *) 
 					  GCUNMARK(ToInt32(cv->suspList))));
     
 	COUNT(cvar);
@@ -2025,7 +2083,7 @@ void processUpdateStack(void) {
       }
 
     case GCTAG:
-      *tt = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
+      *to = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
       break;
     
     default:
@@ -2034,7 +2092,7 @@ void processUpdateStack(void) {
     
     INFROMSPACE(aux_ptr);
     
-    storeForward((int *) aux_ptr, ToPointer(*tt));
+    storeForward((int *) aux_ptr, ToPointer(*to));
     
   } // while
 
@@ -2385,7 +2443,7 @@ void ConstTerm::gcConstRecurse()
       o->gcEntityInfo();
 
       switch(o->getTertType()) {
-      case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
+      case Te_Local:   o->setBoard(GETBOARD(o)->gcDerefedBoardOutline()); break;
       case Te_Proxy:   o->gcProxy(); break;
       case Te_Manager: o->gcManager(); break;
       default:         Assert(0);
@@ -2430,7 +2488,7 @@ void ConstTerm::gcConstRecurse()
       switch(t->getTertType()){
       case Te_Local:{
 	CellLocal *cl=(CellLocal*)t;
-	cl->setBoard(GETBOARD(cl)->gcBoard()); 
+	cl->setBoard(GETBOARD(cl)->gcDerefedBoardOutline()); 
 	OZ_updateHeapTerm(cl->val);
 	break;}
       case Te_Proxy:{
@@ -2460,7 +2518,7 @@ void ConstTerm::gcConstRecurse()
       p->gcEntityInfo();
       switch(p->getTertType()){
       case Te_Local:{
-	p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
+	p->setBoard(GETBOARD(p)->gcDerefedBoardOutline()); /* ATTENTION */
 	PortWithStream *pws = (PortWithStream *) this;
 	OZ_updateHeapTerm(pws->strm);
 	break;}
@@ -2484,7 +2542,7 @@ void ConstTerm::gcConstRecurse()
 	if (s->solve != (Board *) 1)
 	s->solve = s->solve->gcBoard();
 	if (s->isLocal()) {
-	  s->setBoard(GETBOARD(s)->gcBoard());
+	  s->setBoard(GETBOARD(s)->gcDerefedBoardOutline());
 	}
       }
       break;
@@ -2538,7 +2596,7 @@ void ConstTerm::gcConstRecurse()
 
       case Te_Local:{
 	LockLocal *ll = (LockLocal *) this;
-	ll->setBoard(GETBOARD(ll)->gcBoard());  /* maybe getBoardInternal() */
+	ll->setBoard(GETBOARD(ll)->gcDerefedBoardOutline());  /* maybe getBoardInternal() */
 	gcPendThread(&(ll->pending));
 	ll->setLocker(ll->getLocker()->gcThread());
 	break;}
@@ -2865,44 +2923,6 @@ Bool Board::gcIsAlive()
   goto loop;
 }
 
-// This procedure derefences cluster chains and collects only the object at 
-// the end of such a chain.
-Board * Board::gcBoard()
-{
-  GCMETHMSG("Board::gcBoard");
-  INFROMSPACE(this);
-
-  if (!this) return 0;
-
-  Board *bb = this->derefBoard();
-  Assert(bb);
-
-  CHECKCOLLECTED(*bb->getGCField(), Board *);
-  if (!bb->gcIsAlive()) return 0;
-
-  // kost@, TMUELLER
-  // process.oz causes the assertion to fire!!! 
-  // Presumably a register allocation problem
-  // See the cure below:
-  //  if (opMode == IN_TC && !isInTree(bb)) return 0; 
-
-  // In an optimized machine the assertion is absent
-  Assert(opMode != IN_TC || isInTree(bb)); 
-
-  COUNT(board);
-
-  Assert(opMode==IN_TC || !inToSpace(bb));
-
-  Board *ret = (Board *) gcReallocStatic(bb, sizeof(Board));
-      
-  FDPROFILE_GC(cp_size_board, sizeof(Board));
-	
-  GCNEWADDRMSG(ret);
-  ptrStack.push(ret,PTR_BOARD);
-  storeForward(bb->getGCField(),ret);
-  return ret;
-}
-
 inline
 void Board::gcRecurse()
 {
@@ -2914,7 +2934,7 @@ void Board::gcRecurse()
   script.Script::gc();
 }
 
-
+inline
 ObjectClass *ObjectClass::gcClass()
 {
   return (ObjectClass *) gcConstTerm();

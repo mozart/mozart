@@ -259,10 +259,11 @@ Bool isCVar(TaggedRef term) {
  * for inline function version
  */
 
-#define _isAnyVar(val)  (((TaggedRef) val&2)==0)       /* mask = 0010 */
-#define _isNotCVar(val) (((TaggedRef) val&6)==0)       /* mask = 0110 */
-#define _isUVar(val)    (((TaggedRef) val&14)==0)      /* mask = 1110 */
-#define _isLTuple(val)  (((TaggedRef) val&13)==0)      /* mask = 1101 */
+#define _isAnyVar(val)    (((TaggedRef) val&2)==0)       /* mask = 0010 */
+#define _isDirectVar(val) (((TaggedRef) val&3)==1)       /* mask = 0011 */
+#define _isNotCVar(val)   (((TaggedRef) val&6)==0)       /* mask = 0110 */
+#define _isUVar(val)      (((TaggedRef) val&14)==0)      /* mask = 1110 */
+#define _isLTuple(val)    (((TaggedRef) val&13)==0)      /* mask = 1101 */
 
 #ifdef DEBUG_CHECK
 
@@ -304,6 +305,13 @@ Bool isAnyVar(TaggedRef term) {
   return _isAnyVar(term);
 }
 
+inline Bool isDirectVar(TypeOfTerm tag) { return _isDirectVar(tag); }
+
+inline
+Bool isDirectVar(TaggedRef term) {
+  return _isDirectVar(term);
+}
+
 inline Bool isNotCVar(TypeOfTerm tag) { return _isNotCVar(tag);}
 
 inline
@@ -316,10 +324,11 @@ Bool isNotCVar(TaggedRef term) {
 
 #else
 
-#define isAnyVar(term)  _isAnyVar(term)
-#define isNotCVar(term) _isNotCVar(term)
-#define isUVar(term)    _isUVar(term)
-#define isLTuple(term)  _isLTuple(term)
+#define isAnyVar(term)    _isAnyVar(term)
+#define isDirectVar(term) _isDirectVar(term)
+#define isNotCVar(term)   _isNotCVar(term)
+#define isUVar(term)      _isUVar(term)
+#define isLTuple(term)    _isLTuple(term)
 
 #endif
 
