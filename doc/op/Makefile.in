@@ -1,0 +1,15 @@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+
+WHAT = op
+MAIN = main.sgml
+SGMLSRCS = \
+        main.sgml intro.sgml data.sgml files.sgml text.sgml sockets.sgml \
+        pipe.sgml open.bib
+HTMLEXTRAFILES = \
+        open.gif
+HTMLEXTRASUPPORTFILES = \
+        danger.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include $(SRCDIR)/../Makefile.common
