@@ -1299,7 +1299,7 @@ srcdira=`(cd $srcdir; pwd)`
 
 case $platform in
 win32*)
-    oztmp=`$(SRCTOP)/share/lib/cypath.sh "$(SRCTOP)/platform/mswindows/ozwrapper.bin"`
+    oztmp=`${SRCTOP}/share/lib/cygpath.sh "${SRCTOP}/platform/mswindows/ozwrapper.bin"`
     OZEXECFILE="--execfile=\"$oztmp\""
     ;;
 esac
