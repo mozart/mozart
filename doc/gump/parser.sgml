@@ -240,21 +240,21 @@
         is intentional.)
       <P>
         &Gump; specifications are allowed anywhere as a statement.
-        <Grammar.Rule>?={phrase}
-          <Grammar.Alt type=add>?={parser specification}</Grammar.Alt>
+        <Grammar.Rule/?={statement}
+          <Grammar.Alt type=add/?={parser specification}//
       <P>
         A parser specification is introduced by the keyword <<parser>>,
         followed by the usual components of an &Oz; class.  Following these
         are additional parser-specific descriptors.  Parser specifications
         must be named by variables, since the names of these variables will
         be used to generate auxiliary file names during parser generation.
-        <Grammar.Rule>?={parser specification}
-          <Grammar.Alt type=def><<parser>> ?={variable}</Grammar.Alt>
-          <Grammar.Alt type=space>{ ?={class descriptor} }</Grammar.Alt>
-          <Grammar.Alt type=space>{ ?={method} }</Grammar.Alt>
-          <Grammar.Alt type=space>[ ?={token clause} ]</Grammar.Alt>
-          <Grammar.Alt type=space>{ ?={parser descriptor} }+</Grammar.Alt>
-          <Grammar.Alt type=space><<end>></Grammar.Alt>
+        <Grammar.Rule/?={parser specification}
+          <Grammar.Alt/<<parser>> ?={variable}/
+          <Grammar.Alt type=space/{ ?={class descriptor} }/
+          <Grammar.Alt type=space/{ ?={method} }/
+          <Grammar.Alt type=space/[ ?={token clause} ]/
+          <Grammar.Alt type=space/{ ?={parser descriptor} }+/
+          <Grammar.Alt type=space/<<end>>//
       <SubSubSection>
         <Title/Token Declarations/
         <P>
@@ -266,14 +266,12 @@
           (sequence) and is used for error recovery, and token <<'EOF'>>
           signalizes the end of input and is always expected before reduction
           to the start symbol can take place.
-          <Grammar.Rule>?={token clause}
-            <Grammar.Alt type=def
-              ><<token>> { ?={token declaration} }+</Grammar.Alt>
-          <Grammar.Rule>?={token declaration}
-            <Grammar.Alt type=def
-              >?={atom} [ <Q class=terminal/<<:>>/ ?={phrase} ]</Grammar.Alt>
+          <Grammar.Rule/?={token clause}
+            <Grammar.Alt/<<token>> { ?={token declaration} }+//
+          <Grammar.Rule/?={token declaration}
+            <Grammar.Alt/?={atom} [ <Q class=terminal/<<:>>/ ?={expression} ]//
         <P>
-          The optional phrase following the colon in a token declaration
+          The optional expression following the colon in a token declaration
           must be a tuple with arity&nbsp;1 and one of the labels
           <<leftAssoc>>, <<rightAssoc>> or <<nonAssoc>>, depending on the
           desired associativity.  The feature must always be a nonzero
@@ -291,24 +289,18 @@
             nonterminal, where atoms are considered start symbols, as well
             as the formal parameters of the nonterminal.  Only one syntax
             rule per nonterminal name is allowed.
-            <Grammar.Rule>?={parser descriptor}
-              <Grammar.Alt type=def>?={syn clause}</Grammar.Alt>
-            <Grammar.Rule>?={parser descriptor}
-              <Grammar.Alt type=def>?={syn clause}</Grammar.Alt>
-            <Grammar.Rule>?={syn clause}
-              <Grammar.Alt type=def
-                ><<syn>> ?={syn head} ?={syn alt} <<end>></Grammar.Alt>
-            <Grammar.Rule>?={syn head}
-              <Grammar.Alt type=def>?={atom}</Grammar.Alt>
-              <Grammar.Alt type=or
-                >?={atom label} ?={syn formals}</Grammar.Alt>
-              <Grammar.Alt type=or>?={variable}</Grammar.Alt>
-              <Grammar.Alt type=or
-                >?={variable label} ?={syn formals}</Grammar.Alt>
-            <Grammar.Rule>?={syn formals}
-              <Grammar.Alt type=def
-                ><Q class=terminal/<<(>>/ { ?={syn formal} } <Q
-                class=terminal/<<)>>/</Grammar.Alt>
+            <Grammar.Rule/?={parser descriptor}
+              <Grammar.Alt/?={syn clause}//
+            <Grammar.Rule/?={syn clause}
+              <Grammar.Alt/<<syn>> ?={syn head} ?={syn alt} <<end>>//
+            <Grammar.Rule/?={syn head}
+              <Grammar.Alt/?={atom}/
+              <Grammar.Alt/?={atom label} ?={syn formals}/
+              <Grammar.Alt/?={variable}/
+              <Grammar.Alt/?={variable label} ?={syn formals}//
+            <Grammar.Rule/?={syn formals}
+              <Grammar.Alt/<Q class=terminal/<<(>>/ { ?={syn formal} }
+                <Q class=terminal/<<)>>///
           <P>
             The body of a syntax rule is an EBNF phrase.  It is distinguished
             between EBNF statements and EBNF expressions:  EBNF expressions
@@ -320,10 +312,10 @@
             may be the nesting marker; in this case the body of the syntax
             rule must be an EBNF expression.  Its value is unified with the
             corresponding actual parameter upon application of the nonterminal.
-            <Grammar.Rule>?={syn formal}
-              <Grammar.Alt type=def>?={variable}</Grammar.Alt>
-              <Grammar.Alt type=or><Q class=terminal/<<_>>/</Grammar.Alt>
-              <Grammar.Alt type=or><Q class=terminal/<<$>>/</Grammar.Alt>
+            <Grammar.Rule/?={syn formal}
+              <Grammar.Alt/?={variable}/
+              <Grammar.Alt/<Q class=terminal/<<_>>//
+              <Grammar.Alt/<Q class=terminal/<<$>>///
           <P>
             An alternation specifies several sequences (called <Def
             >alternatives</Def>), separated by the choice operator&nbsp;<<[]>>.
@@ -331,9 +323,9 @@
             must be EBNF statements.  If all alternatives are expressions, the
             alternation is an expression and yields at runtime the value of
             the selected sequence at runtime.
-            <Grammar.Rule>?={syn alt}
-              <Grammar.Alt type=def>?={syn seq} { <Q
-                class=terminal/<<[]>>/ ?={syn seq} }</Grammar.Alt>
+            <Grammar.Rule/?={syn alt}
+              <Grammar.Alt/?={syn seq}
+                { <Q class=terminal/<<[]>>/ ?={syn seq} }//
           <P>
             At the beginning of an sequence, local variables may be declared.
             These are visible only inside the sequence.  The sequence itself
@@ -347,15 +339,13 @@
             other EBNF factors must be statements.  If <Math.Choice><Math
             type=html><I>n&lt;/I> = 0</Math><Math type=latex>n = 0</Math>
             </Math.Choice>, then the sequence may be written as <<skip>>.
-            <Grammar.Rule>?={syn seq}
-              <Grammar.Alt type=def
-                >[ { ?={variable} }+ <<in>> ]</Grammar.Alt>
-              <Grammar.Alt type=space
-                >{ ?={syn factor} } [ ?={syn action} ]</Grammar.Alt>
-              <Grammar.Alt type=or><<skip>> [ ?={syn action} ]</Grammar.Alt>
-            <Grammar.Rule>?={syn action}
-              <Grammar.Alt type=def
-                ><<=&gt;>> [ ?={phrase} <<in>> ] ?={phrase}</Grammar.Alt>
+            <Grammar.Rule/?={syn seq}
+              <Grammar.Alt/[ { ?={variable} }+ <<in>> ] { ?={syn factor} }
+                [ ?={syn action} ]/
+              <Grammar.Alt/<<skip>> [ ?={syn action} ]//
+            <Grammar.Rule/?={syn action}
+              <Grammar.Alt/<Q class=terminal/<<=&gt;>>/
+                ( ?={in statement} | ?={in expression} )//
           <P>
             An EBNF factor is either an application or an assignment.  An
             application is denoted by the name of either a terminal or a
@@ -371,19 +361,17 @@
             be the nesting marker.  In this case, the application is an
             expression yielding the value of the corresponding actual
             parameter; else it is a statement.
-            <Grammar.Rule>?={syn factor}
-              <Grammar.Alt type=def>?={syn application}</Grammar.Alt>
-              <Grammar.Alt type=or>?={syn assignment}</Grammar.Alt>
-            <Grammar.Rule>?={syn application}
-              <Grammar.Alt type=def>?={atom}</Grammar.Alt>
-              <Grammar.Alt type=or
-                >?={atom label} ?={syn actuals}</Grammar.Alt>
-              <Grammar.Alt type=or>?={variable}</Grammar.Alt>
-              <Grammar.Alt type=or
-                >?={variable label} ?={syn actuals}</Grammar.Alt>
-            <Grammar.Rule>?={syn actuals}
-              <Grammar.Alt type=def><Q class=terminal/<<(>>/ { ?={phrase} } <Q
-                class=terminal/<<)>>/</Grammar.Alt>
+            <Grammar.Rule/?={syn factor}
+              <Grammar.Alt/?={syn application}/
+              <Grammar.Alt/?={syn assignment}//
+            <Grammar.Rule/?={syn application}
+              <Grammar.Alt/?={atom}/
+              <Grammar.Alt/?={atom label} ?={syn actuals}/
+              <Grammar.Alt/?={variable}/
+              <Grammar.Alt/?={variable label} ?={syn actuals}//
+            <Grammar.Rule/?={syn actuals}
+              <Grammar.Alt/<Q class=terminal/<<(>>/ { ?={expression} }
+                <Q class=terminal/<<)>>///
           <P>
             Two grammar symbols are predefined which receive a special
             treatment:
@@ -410,9 +398,9 @@
             declared local to the sequence the assignment appears in, else it
             must have been declared local within the current syntax rule (or
             be a formal parameter).  An assignment is always a statement.
-            <Grammar.Rule>?={syn assignment}
-              <Grammar.Alt type=def>?={escaped variable} <Q
-                class=terminal/<<=>>/ ?={syn factor}</Grammar.Alt>
+            <Grammar.Rule/?={syn assignment}
+              <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable}
+                <Q class=terminal/<<=>>/ ?={syn factor}//
         <SubSubSection>
           <Title/Definition of Production Templates/
           <P>
@@ -426,22 +414,20 @@
             specification they are defined in, and may be used only textually
             after their definition.  (This is to avoid cyclic production
             template expansions.)  Production templates may be redefined.
-            <Grammar.Rule>?={parser descriptor}
-              <Grammar.Alt type=add>?={prod clause}</Grammar.Alt>
+            <Grammar.Rule/?={parser descriptor}
+              <Grammar.Alt type=add/?={prod clause}//
           <P>
             A production template definition consists of a head and a body.
             The body specifies the EBNF phrase the production template is
             to be replaced with when instantiated.  The body may introduce
             optional local syntax rules which are always newly created when
             instantiated.  These must be denoted by variables.
-            <Grammar.Rule>?={prod clause}
-              <Grammar.Alt type=def><<prod>> ?={prod head}</Grammar.Alt>
-              <Grammar.Alt type=space
-                >[ ?={local rules} <<in>> ] ?={syn alt}</Grammar.Alt>
-              <Grammar.Alt type=space><<end>></Grammar.Alt>
-            <Grammar.Rule>?={local rules}
-              <Grammar.Alt type=def
-                >?={syn clause} { ?={syn clause} }</Grammar.Alt>
+            <Grammar.Rule/?={prod clause}
+              <Grammar.Alt/<<prod>> ?={prod head}/
+              <Grammar.Alt type=space/[ ?={local rules} <<in>> ] ?={syn alt}/
+              <Grammar.Alt type=space/<<end>>//
+            <Grammar.Rule/?={local rules}
+              <Grammar.Alt/{ ?={syn clause} }+//
           <P>
             The head of a production template provides &endash; aside from the
             list of its formal parameters &endash; the unique identification
@@ -471,65 +457,58 @@
             denoted by the production template <<?{Z}={ ?{X} // ?{Y} }+>>.
             (Compare this to the template's instantiation in <Ptr
             to="program.parser.example"> in line&nbsp;21.)
-            <Grammar.Rule>?={prod head}
-              <Grammar.Alt type=def>?={template definition}</Grammar.Alt>
-              <Grammar.Alt type=or>?={variable} <Q
-                class=terminal/<<=>>/ ?={template definition}</Grammar.Alt>
-              <Grammar.Alt type=or><Q class=terminal/<<$>>/ <Q
-                class=terminal/<<=>>/ ?={template definition}</Grammar.Alt>
-            <Grammar.Rule>?={template definition}
-              <Grammar.Alt type=def>?={prod formal list}</Grammar.Alt>
-              <Grammar.Alt type=or>?={atom} <Q
-                class=terminal/<<:>>/ ?={prod formal list}</Grammar.Alt>
-            <Grammar.Rule>?={prod formal list}
-              <Grammar.Alt type=def><Q
-                class=terminal/<<(>>/ ?={prod formals} <Q
-                class=terminal/<<)>>/ [ ?={prod postfix} ]</Grammar.Alt>
-              <Grammar.Alt type=or><Q
-                class=terminal/<<[>>/ ?={prod formals} <Q
-                class=terminal/<<]>>/ [ ?={prod postfix} ]</Grammar.Alt>
-              <Grammar.Alt type=or><Q
-                class=terminal/<<{>>/ ?={prod formals} <Q
-                class=terminal/<<}>>/ [ ?={prod postfix} ]</Grammar.Alt>
-              <Grammar.Alt type=or
-                >?={variable} ?={prod postfix}</Grammar.Alt>
+            <Grammar.Rule/?={prod head}
+              <Grammar.Alt/?={template definition}/
+              <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+                ?={template definition}/
+              <Grammar.Alt/<Q class=terminal/<<$>>/ <Q class=terminal/<<=>>/
+                ?={template definition}//
+            <Grammar.Rule/?={template definition}
+              <Grammar.Alt/?={prod formal list}/
+              <Grammar.Alt/?={atom} <Q class=terminal/<<:>>/
+                ?={prod formal list}//
+            <Grammar.Rule/?={prod formal list}
+              <Grammar.Alt/<Q class=terminal/<<(>>/ ?={prod formals}
+                <Q class=terminal/<<)>>/ [ ?={prod postfix} ]/
+              <Grammar.Alt/<Q class=terminal/<<[>>/ ?={prod formals}
+                <Q class=terminal/<<]>>/ [ ?={prod postfix} ]/
+              <Grammar.Alt/<Q class=terminal/<<{>>/ ?={prod formals}
+                <Q class=terminal/<<}>>/ [ ?={prod postfix} ]/
+              <Grammar.Alt/?={variable} ?={prod postfix}//
             <Grammar.Rule>?={prod formals}
-              <Grammar.Alt type=def>?={variable} { <Q
-                class=terminal><<//>></Q> ?={variable} }</Grammar.Alt>
+              <Grammar.Alt>?={variable}
+                { <Q class=terminal><<//>></Q> ?={variable} }</Grammar.Alt>
             <Grammar.Rule>?={prod postfix}
-              <Grammar.Alt type=def><Q class=terminal/<<+>>/ | <Q
-                class=terminal/<<->>/ | <Q class=terminal/<<*>>/ | <Q
-                class=terminal><</>></Q></Grammar.Alt>
+              <Grammar.Alt><Q class=terminal/<<+>>/ |
+                <Q class=terminal/<<->>/ |
+                <Q class=terminal/<<*>>/ |
+                <Q class=terminal><</>></Q></Grammar.Alt>
         <SubSubSection>
           <Title/Expansion of Production Templates/
           <P>
             Production templates may be instantiated as EBNF factors.
-            <Grammar.Rule>?={syn factor}
-              <Grammar.Alt type=add>?={template instantiation}</Grammar.Alt>
+            <Grammar.Rule/?={syn factor}
+              <Grammar.Alt type=add/?={template instantiation}//
           <P>
             The instantiation of a production template is very similar to its
             definition, since it must specify the same unique identification.
             The difference is that instead of the formal parameter variables
             actual EBNF phrases are allowed.
-            <Grammar.Rule>?={template instantiation}
-              <Grammar.Alt type=def>?={prod actual list}</Grammar.Alt>
-              <Grammar.Alt type=or>?={atom} <Q
-                class=terminal/<<:>>/ ?={prod actual list}</Grammar.Alt>
-            <Grammar.Rule>?={prod actual list}
-              <Grammar.Alt type=def><Q
-                class=terminal/<<(>>/ ?={prod actuals} <Q
-                class=terminal/<<)>>/ [ ?={prod postfix} ]</Grammar.Alt>
-              <Grammar.Alt type=or><Q
-                class=terminal/<<[>>/ ?={prod actuals} <Q
-                class=terminal/<<]>>/ [ ?={prod postfix} ]</Grammar.Alt>
-              <Grammar.Alt type=or><Q
-                class=terminal/<<{>>/ ?={prod actuals} <Q
-                class=terminal/<<}>>/ [ ?={prod postfix} ]</Grammar.Alt>
-              <Grammar.Alt type=or
-                >?={syn application} ?={prod postfix}</Grammar.Alt>
+            <Grammar.Rule/?={template instantiation}
+              <Grammar.Alt/?={prod actual list}/
+              <Grammar.Alt/?={atom} <Q class=terminal/<<:>>/
+                ?={prod actual list}//
+            <Grammar.Rule/?={prod actual list}
+              <Grammar.Alt/<Q class=terminal/<<(>>/ ?={prod actuals}
+                <Q class=terminal/<<)>>/ [ ?={prod postfix} ]/
+              <Grammar.Alt/<Q class=terminal/<<[>>/ ?={prod actuals}
+                <Q class=terminal/<<]>>/ [ ?={prod postfix} ]/
+              <Grammar.Alt/<Q class=terminal/<<{>>/ ?={prod actuals}
+                <Q class=terminal/<<}>>/ [ ?={prod postfix} ]/
+              <Grammar.Alt/?={syn application} ?={prod postfix}//
             <Grammar.Rule>?={prod actuals}
-              <Grammar.Alt type=def>?={syn alt} { <Q
-                class=terminal><<//>></Q> ?={syn alt} }</Grammar.Alt>
+              <Grammar.Alt>?={syn alt}
+                { <Q class=terminal><<//>></Q> ?={syn alt} }</Grammar.Alt>
           <P>
             When a production template is expanded, name clashes must be
             avoided.  This is why the expansion proceeds in several steps:

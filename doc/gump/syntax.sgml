@@ -32,7 +32,7 @@
       lexical conventions apply as for &Oz;.  The only additional terminal
       type is ?={regex}, described in <Ptr to="section.scanner.syntax">.
     <Para class=apropos><Title/Terminals/
-      The following terminals from the Oz syntax are used:
+      The following named terminals from the Oz syntax are used:
       <List>
         <Entry>?={atom}
         <Item>
@@ -48,18 +48,22 @@
           is an &Oz; variable that is immediately followed by a left
           parenthesis.
       </List>
+      See <Ptr.Extern to="ozdoc:notation"> for the exact definitions.
     <Para class=apropos><Title/Nonterminals/
       Furthermore, the following nonterminals from the &Oz; syntax are used:
       <List>
-        <Entry>?={escaped variable}
+        <Entry>?={statement}
         <Item>
-          stands for an &Oz; variable that may optionally be preceded by an
-          exclamation mark, preventing its implicit declaration.
-        <Entry>?={phrase}
+          is an &Oz; statement.
+        <Entry>?={expression}
         <Item>
-          is an &Oz; statement or expression.  This distinction is not made
-          by the context-free syntax; it is stated informally in the
-          descriptions instead.
+          is an &Oz; expression.
+        <Entry>?={in statement}
+        <Item>
+          is an &Oz; statement with optional preceding variable declaration.
+        <Entry>?={in expression}
+        <Item>
+          is an &Oz; expression with optional preceding variable declaration.
         <Entry>?={class descriptor}
         <Item>
           stands for a class descriptor, &ie;, one of <<from>>, <<prop>>,
@@ -68,4 +72,5 @@
         <Item>
           stands for a <<meth &ellipsis; end>> definition.
       </List>
+      See <Ptr.Extern to="ozdoc:notation"> for the exact definitions.
 </Appendix>
