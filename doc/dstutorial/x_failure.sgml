@@ -526,6 +526,7 @@ Two operations are provided:
 for fault states <<FStates>>.
 If a fault in <<FStates>> is detected on the current site,
 then <<WatcherProc>> is invoked in its own new thread.
+A watcher is automatically deinstalled when it is invoked.
 Any number of watchers can be installed on an entity.
 The function always returns <<true>>, since it is always
 possible to install a watcher.
