@@ -722,12 +722,7 @@
   {\begin{FIGURE}\def\mozart@display@use@margin{\z@}}
   {\end{FIGURE}}
 
-\newcommand{\mozart@code@smaller}{%
-  \ifx\@currsize\small		\scriptsize\else
-  \ifx\@currsize\normalsize	\small\fi\fi}
-
-% pcrr8rn
-\newcommand{\mozart@code@family}{pcr}
+\newcommand{\mozart@code@family}{code}
 \newcommand{\mozart@code@font}{%
   \fontencoding{T1}%
   \fontfamily{\mozart@code@family}%
@@ -1182,3 +1177,38 @@
 %\newcolumntype{D}{>{\columncolor{tableTD}}l}
 %\newcolumntype{H}{>{\columncolor{tableTH}\mozartTH}l}
 %\newcommand{\TRBEGIN}{\rowcolor{tableTD}}
+
+%% scaled fonts for code
+
+\DeclareFontFamily{T1}{code}{}
+
+\DeclareFontShape{T1}{code}{m}{n}{
+   <-> s * [0.85] pcrr8t
+}{}
+
+\DeclareFontShape{T1}{code}{m}{sc}{
+   <-> s * [0.85] pcrrc8t
+}{}
+
+\DeclareFontShape{T1}{code}{m}{sl}{
+   <-> s * [0.85] pcrro8t
+}{}
+
+\DeclareFontShape{T1}{code}{b}{n}{
+   <-> s * [0.85] pcrb8t
+}{}
+
+\DeclareFontShape{T1}{code}{b}{sc}{
+   <-> s * [0.85] pcrbc8t
+}{}
+
+\DeclareFontShape{T1}{code}{b}{sl}{
+   <-> s * [0.85] pcrbo8t
+}{}
+
+\DeclareFontShape{T1}{code}{m}{it}{<->ssub * code/m/sl}{}
+\DeclareFontShape{T1}{code}{bx}{n}{<->ssub * code/b/n}{}
+\DeclareFontShape{T1}{code}{bx}{sc}{<->ssub * code/b/sc}{}
+\DeclareFontShape{T1}{code}{bx}{sl}{<->ssub * code/b/sl}{}
+\DeclareFontShape{T1}{code}{b}{it}{<->ssub * code/b/sl}{}
+\DeclareFontShape{T1}{code}{bx}{it}{<->ssub * code/b/it}{}
