@@ -249,6 +249,8 @@ Site *unmarshalPSite(MsgBuffer *buf){
   return s;}
 
 
+
+
 Site* unmarshalSite(MsgBuffer *buf){
   PD((UNMARSHAL,"site"));
   MarshalTag mt= (MarshalTag) buf->get();
@@ -269,8 +271,15 @@ Site* unmarshalSite(MsgBuffer *buf){
       s->discoveryPerm();
       return s;}
     if(mt==DIF_VIRTUAL){
-      unmarshalUselessVirtualInfo(buf);}
+      unmarshalUselessVirtualInfo(buf);
+      if(!s->ActiveSite()) {
+	SiteExtension *se=siteExtensionManager.allocSiteExtension();
+	s->makeActiveVirtual(se);}
+      return s;}
     Assert(mt==DIF_REMOTE);
+    if(!s->ActiveSite()) {
+      SiteExtension *se=siteExtensionManager.allocSiteExtension();
+      s->makeActiveRemote(se);}
     return s;}
 
   case NONE: {
