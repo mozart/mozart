@@ -163,7 +163,7 @@ OZ_C_proc_begin(sched_cpIterate, 3)
       OZ_Term start_task = OZ_subtree(starts, task);
       OZ_Term dur_task = OZ_subtree(durs, task);
       if (!start_task || !dur_task)
-        return OZ_FAILED;
+        return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
@@ -810,7 +810,7 @@ OZ_C_proc_begin(sched_disjunctive, 3)
       OZ_Term start_task = OZ_subtree(starts, task);
       OZ_Term dur_task = OZ_subtree(durs, task);
       if (!start_task || !dur_task)
-        return OZ_FAILED;
+        return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
@@ -1010,7 +1010,7 @@ OZ_C_proc_begin(sched_cpIterateCap, 5)
       OZ_Term dur_task = OZ_subtree(durs, task);
       OZ_Term use_task = OZ_subtree(use, task);
       if (!start_task || !dur_task || !use_task)
-        return OZ_FAILED;
+        return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times, the durations and the resource usages.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
@@ -1833,7 +1833,7 @@ OZ_C_proc_begin(sched_cpIterateCapUp, 5)
       OZ_Term dur_task = OZ_subtree(durs, task);
       OZ_Term use_task = OZ_subtree(use, task);
       if (!start_task || !dur_task || !use_task)
-        return OZ_FAILED;
+        return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times, the durations and the resource usages.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
 
