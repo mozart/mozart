@@ -103,7 +103,7 @@ void TCPTransObj::setOwner(ComObj *comObj) {
   this->comObj=comObj;
 }
 
-void TCPTransObj::setUp(DSite *site,ComObj *comObj,OZ_Term settings) {
+OZ_Return TCPTransObj::setUp(DSite *site,ComObj *comObj,OZ_Term settings) {
   this->site=site;
   setOwner(comObj);
 
@@ -118,6 +118,7 @@ void TCPTransObj::setUp(DSite *site,ComObj *comObj,OZ_Term settings) {
       this->fd=fd;
   }
   tcptransController->addRunning(comObj);
+  return PROCEED;
 }
 
 Bool TCPTransObj::hasEmptyBuffers() {
