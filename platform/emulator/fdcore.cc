@@ -333,7 +333,7 @@ public:
 OZ_C_proc_begin(BIfdPutList, 2) 
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
-  
+
   ExpectOnly pe;
   OZ_expect_t r = pe.expectDomDescr(OZ_getCArg(1));
   if (pe.isFailing(r)) {
