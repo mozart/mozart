@@ -1886,12 +1886,14 @@ ostream &FSetConstraint::print(ostream &o) const
 {
 #ifndef DEBUG_FSET_CONSTRREP
   o << "{";
+#else
+  o << "lb:";
 #endif
   printGlb(o);
 #ifndef DEBUG_FSET_CONSTRREP
   o << "..";
 #else 
-  o << " ";
+  o << " ub:";
 #endif
   printLub(o);
 #ifndef DEBUG_FSET_CONSTRREP
@@ -3530,7 +3532,7 @@ char * OZ_FSetValue::toString() const
 #ifdef DEBUG_FSET_CONSTRREP
   static ozstrstream tmp_str;
   tmp_str.reset();
-  tmp_str << "fset_val(" << str.str() << ")" << flush;
+  tmp_str << "fset_val(set:" << str.str() << " card:" << _card << ")" << flush;
   return tmp_str.str();
 #else
   return str.str();
@@ -3862,7 +3864,9 @@ char * OZ_FSetConstraint::toString() const
 #ifdef DEBUG_FSET_CONSTRREP
   static ozstrstream tmp_str;
   tmp_str.reset();
-  tmp_str << "fset(" << str.str() << ")" << flush;
+  tmp_str << "fset(" << str.str() 
+	  << " card:" << _card_min << "#" << _card_max << ")" 
+	  << flush;
   return tmp_str.str();
 #else
   return str.str();
