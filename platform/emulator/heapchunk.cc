@@ -62,7 +62,7 @@ public:
 
   virtual
   OZ_Term printV(int depth) {
-    return oz_pair2(oz_atom("<heap chunk: "),
+    return oz_pair2(oz_atom("<HeapChunk "),
 		    oz_pair2(oz_int((int)chunk_size),
 			     oz_pair2(oz_atom(" @"),
 				      oz_pair2(oz_int((int)this),
