@@ -179,7 +179,7 @@ public:
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
-  Bool fastUnify(TaggedRef ref1, TaggedRef ref2);
+  Bool fastUnify(TaggedRef ref1, TaggedRef ref2, Bool prop);
 #ifdef FASTSS
   Bool fastUnifyOutline(TaggedRef term1, TaggedRef *term1Ptr, TaggedRef term2);
 #endif
@@ -207,11 +207,10 @@ public:
                    TaggedRef *termPtr, TaggedRef term, Bool prop);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-                           SVariable * rightVar,
                            PropCaller calledBy = pc_propagator);
   SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
                                  SuspList * suspList, TaggedRef term,
-                                 SVariable * rightVar, PropCaller calledBy);
+                                 PropCaller calledBy);
   Bool isBetween(Board * to, Board * varHome);
   void setExtSuspension (Board *varHome, Suspension *susp);
   Bool checkExtSuspension (Suspension *susp);

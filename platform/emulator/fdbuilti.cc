@@ -168,7 +168,7 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
     if (am.isLocalSVar(bifdhm_var[i])) {
       GenFDVariable * fdvar = new GenFDVariable();
       TaggedRef * taggedfdvar = newTaggedCVar(fdvar);
-      am.checkSuspensionList(bifdhm_var[i], makeTaggedRef(taggedfdvar), NULL);
+      am.checkSuspensionList(bifdhm_var[i], makeTaggedRef(taggedfdvar));
       fdvar->setSuspList(tagged2SVar(bifdhm_var[i])->getSuspList());
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
       doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
@@ -388,13 +388,12 @@ void BIfdBodyManager::process(void)
 
       if (*bifdbm_dom[i] == fd_singleton) {
         TaggedRef newsmallint = newSmallInt(bifdbm_dom[i]->singl());
-        am.checkSuspensionList(bifdbm_var[i], newsmallint, NULL);
+        am.checkSuspensionList(bifdbm_var[i], newsmallint);
         doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i], newsmallint);
       } else {
         GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-        am.checkSuspensionList(bifdbm_var[i],
-                               makeTaggedRef(newtaggedfdvar), NULL);
+        am.checkSuspensionList(bifdbm_var[i], makeTaggedRef(newtaggedfdvar));
         doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
                        TaggedRef(newtaggedfdvar));
         vars_left = TRUE;
@@ -447,13 +446,13 @@ void BIfdBodyManager::processNonRes(void)
 
     if (*bifdbm_dom[0] == fd_singleton) {
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
-      am.checkSuspensionList(bifdbm_var[0], newsmallint, NULL);
+      am.checkSuspensionList(bifdbm_var[0], newsmallint);
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
       doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], newsmallint);
     } else {
       GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
-      am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar), NULL);
+      am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar));
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
       doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], TaggedRef(newtaggedfdvar));
       vars_left = TRUE;
@@ -500,7 +499,7 @@ Bool BIfdBodyManager::introduce(TaggedRef v)
       TaggedRef * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
-      am.checkSuspensionList(v, TaggedRef(taggedfdvar), NULL);
+      am.checkSuspensionList(v, TaggedRef(taggedfdvar));
       fdvar->setSuspList(tagged2SVar(v)->getSuspList());
       doBind(vptr, TaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
