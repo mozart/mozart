@@ -144,7 +144,7 @@ int SolveActor::choose(int left, int right) {
     Assert(!solveBoard->isCommitted());
     solveBoard->incSuspCount(waitBoard->getSuspCount()-1);
 
-    if (!am.installScript(waitBoard->getScriptRef()))
+    if (!am.installScriptOutline(waitBoard->getScriptRef()))
       return 0;
 
     if (waitBoard->isWaitTop())
