@@ -3,7 +3,7 @@
  *    Joerg Wuertz (wuertz@dfki.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -83,18 +83,9 @@ OZ_C_proc_end
 //////////
 void DisjunctivePropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
 {
-  int * new_reg_durs    = OZ_hallocCInts(reg_size);
-  OZ_Term * new_reg_fds = OZ_hallocOzTerms(reg_size);
   OZ_updateHeapTerm(stream);
-
-  for (int i = reg_size; i--; ) {
-    new_reg_durs[i] = reg_durs[i];
-    new_reg_fds[i] = reg_fds[i];
-    OZ_updateHeapTerm(new_reg_fds[i]);
-  }
-  reg_durs = new_reg_durs;
-  reg_fds  = new_reg_fds;
-
+  reg_durs = OZ_copyCInts(reg_size, reg_durs);
+  reg_fds = OZ_copyOzTerms(reg_size, reg_fds);
 }
 
 
@@ -304,12 +295,7 @@ OZ_C_proc_end
 void DistinctPropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
 {
   OZ_updateHeapTerm(stream);
-  OZ_Term * new_reg_fds = OZ_hallocOzTerms(reg_size);
-  for (int i = reg_size; i--; ) {
-    new_reg_fds[i] = reg_fds[i];
-    OZ_updateHeapTerm(new_reg_fds[i]);
-  }
-  reg_fds  = new_reg_fds;
+  reg_fds = OZ_copyOzTerms(reg_size, reg_fds);
 }
 
 
