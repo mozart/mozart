@@ -491,7 +491,9 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 void marshalDict(OzDictionary *d, MsgBuffer *bs)
 {
   if (!d->isSafeDict()) {
-    warning("Marshaling unsafe dictionary, will expire soon!!\n");
+    warning("Marshaling unsafe dictionary (keys: %s), will expire soon!!\n",
+            toC(d->keys()));
+    bs->addRes(makeTaggedConst(d));
   }
   int size = d->getSize();
   marshalNumber(size,bs);
@@ -783,6 +785,7 @@ loop:
   default:
   bomb:
     warning("Cannot marshal %s",toC(t));
+    bs->addRes(t);
     marshalTerm(nil(),bs);
     break;
   }
@@ -1070,22 +1073,9 @@ loop:
         sc->setGName(gname);
         *ret = makeTaggedConst(sc);
         addGName(gname,*ret);
-      } else if (!isSChunk(deref(*ret))) {
-        // mm2: share the follwing code DIF_CHUNK, DIF_CLASS, DIF_PROC!
-        DEREF(*ret,chPtr,_1);
-        PerdioVar *pv;
-        if (!isPerdioVar(*ret)) {
-          // mm2
-          warning("chunk gname mismatch");
-          return;
-        }
-        Assert(am.onToplevel());
-        sc=new SChunk(am.currentBoard(),0);
-        sc->setGName(pv->getGName());
-        *ret=makeTaggedConst(sc);
-        SiteUnifyCannotFail(makeTaggedRef(chPtr),*ret);
-        // pv->primBind(chPtr,*ret);
       } else {
+        // mm2: share the follwing code DIF_CHUNK, DIF_CLASS, DIF_PROC!
+        Assert(isSChunk(deref(*ret)));
         sc = 0;
       }
       gotRef(bs,*ret);
@@ -1105,19 +1095,8 @@ loop:
         cl = newClass(gname);
         *ret = makeTaggedConst(cl);
         addGName(gname,*ret);
-      } else if (!isClass(deref(*ret))) {
-        DEREF(*ret,chPtr,_1);
-        PerdioVar *pv;
-        if (!isPerdioVar(*ret)) {
-          // mm2
-          warning("class gname mismatch");
-          return;
-        }
-        cl = newClass(pv->getGName());
-        *ret = makeTaggedConst(cl);
-        SiteUnifyCannotFail(makeTaggedRef(chPtr),*ret);
-        // pv->primBind(chPtr,*ret);
       } else {
+        Assert(isClass(deref(*ret)));
         cl = 0;
       }
       gotRef(bs,*ret);
@@ -1151,22 +1130,8 @@ loop:
           pp->setGName(gname);
           addGName(gname,*ret);
         }
-      } else if (!isAbstraction(deref(*ret))) {
-        DEREF(*ret,chPtr,_1);
-        PerdioVar *pv;
-        if (!isPerdioVar(*ret)) {
-          // mm2
-          warning("unmarshal proc gname mismatch: %s",toC(makeTaggedRef(ret)));
-          return;
-        }
-        PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0,NO);
-        Assert(am.onToplevel());
-        pp=new Abstraction(pr,0,am.currentBoard());
-        pp->setGName(pv->getGName());
-        *ret = makeTaggedConst(pp);
-        SiteUnifyCannotFail(makeTaggedRef(chPtr),*ret);
-        // pv->primBind(chPtr,*ret);
       } else {
+        Assert(isAbstraction(deref(*ret)));
         pp=0;
       }
 
@@ -1217,6 +1182,7 @@ loop:
     {
       PD((UNMARSHAL,"finite set value"));
       OZ_Term glb=unmarshalTerm(bs);
+      message("read fset: %s\n",toC(glb));
       extern void makeFSetValue(OZ_Term,OZ_Term*);
       makeFSetValue(glb,ret);
       return;
@@ -1245,18 +1211,17 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
     marshalVar(pvar,bs);
     return;}
 
-  if (pvar->isObject()) {
-    PD((MARSHAL,"var objectproxy"));
-    if (checkCycle(*(pvar->getObject()->getRef()),bs))
-      return;
-    marshalObject(pvar->getObject(),bs,pvar->getClass()->getGName());
-    return;
-  }
-
-  Assert(pvar->isObjectGName());
+  Assert(pvar->isObject());
 
   PD((MARSHAL,"var objectproxy"));
-  marshalObject(pvar->getObject(),bs,pvar->getGNameClass());
+
+  if (checkCycle(*(pvar->getObject()->getRef()),bs))
+    return;
+
+  GName *classgn =  pvar->isObjectClassAvail() ?
+                      pvar->getClass()->getGName() : pvar->getGNameClass();
+
+  marshalObject(pvar->getObject(),bs,classgn);
   return;
 }
 
