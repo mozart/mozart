@@ -3,10 +3,19 @@
 import os,re,cPickle,sys
 
 VERBOSE = True
+MARGIN = ""
 
 def TRACE(msg):
     if VERBOSE:
-        print msg
+        print "%s%s" % (MARGIN,msg)
+
+def INC():
+    global MARGIN
+    MARGIN += "  "
+
+def DEC():
+    global MARGIN
+    MARGIN = MARGIN[:-2]
 
 class Uploaded:
     def __init__(self,src,dst,ispkg,format,platform,version):
@@ -30,6 +39,9 @@ def SYSTEM(cmd):
 FORMAT_CACHE = {}
 FORMAT_CACHE_FILE = "FORMAT.CACHE"
 
+TRACE("Updating upload/ area")
+INC()
+
 def uploaded(fulldir,dir,file):
     base = os.path.basename(dir)
     dirname = os.path.dirname(dir)
@@ -40,17 +52,22 @@ def uploaded(fulldir,dir,file):
             if format=="xxx":
                 ## try the fast way using the cache
                 key = "%s/%s" % (fulldir,file)
+                TRACE("determing format of %s" % key)
                 nformat = None
                 if FORMAT_CACHE.has_key(key):
                     inode,mtime,zformat = FORMAT_CACHE[key]
                     st = os.stat(key)
                     if st.st_ino==inode and st.st_mtime==mtime:
                         nformat = zformat
+                        TRACE("cached: %s" % nformat)
                 if not nformat:
+                    INC()
                     if SYSTEM("%s --dir=/tmp/MOGUL.NONE -xnp '%s/%s' >/dev/null 2>/dev/null" % (OZMAKE,fulldir,file)) == 0:
                         nformat = "1.3.0"
                     else:
                         nformat = "1.2.5"
+                    DEC()
+                    TRACE("found: %s" % nformat)
                     st = os.stat(key)
                     inode = st.st_ino
                     mtime = st.st_mtime
@@ -73,16 +90,21 @@ def read_uploaded(uploaddir):
     uploaddir = os.path.normpath(uploaddir)
     cache = "%s/%s" % (UPLOAD_DIR,FORMAT_CACHE_FILE)
     if os.path.exists(cache):
+        TRACE("Loading cache %s" % cache)
         FORMAT_CACHE = cPickle.load(open(cache,"r"))
     n = len(uploaddir)+1
     for (dir,dirs,files) in os.walk(uploaddir):
         for file in files:
             uploaded(dir,dir[n:],file)
+    TRACE("Saving cache %s" % cache)
     cPickle.dump(FORMAT_CACHE,open(cache,"w"))
 
 UPLOAD_DIR = "tmp/upload"
 
 read_uploaded(UPLOAD_DIR)
+
+DEC()
+TRACE("...done")
 
 #sys.exit(0)
 
@@ -90,6 +112,9 @@ POPULATE_DIR = "tmp/populate"
 POPULATE_DIR_N = len(POPULATE_DIR)+1
 
 IS_UPLOADED = {}
+
+TRACE("Linking populate/ area from upload/ area")
+INC()
 
 for item in uploaded_items:
     src = "%s/%s" % (UPLOAD_DIR,item.src)
@@ -112,6 +137,9 @@ for item in uploaded_items:
             os.unlink(dst)
         os.link(src,dst)
 
+DEC()
+TRACE("...done")
+
 #sys.exit(0)
 
 # now, we should process the POPULATE_DIR area and provide
@@ -127,6 +155,9 @@ FORMAT_TO_OZMAKE = {
 ALL_FORMATS = FORMAT_TO_OZMAKE.keys()
 
 EXTRACT_DIR = "/tmp/MOGUL.EXTRACT"
+
+TRACE("Providing format conversions in propulate/ area")
+INC()
 
 for (dir,dirs,files) in os.walk(POPULATE_DIR):
     for file in files:
@@ -160,6 +191,9 @@ for (dir,dirs,files) in os.walk(POPULATE_DIR):
                                 newcmd = FORMAT_TO_OZMAKE[newformat]
                                 SYSTEM("%s --dir=%s -cp %s" % (newcmd,EXTRACT_DIR,new))
 
+DEC()
+TRACE("...done")
+
 #sys.exit(0)
 
 # lookup up all the files now present in the POPULATE_DIR
@@ -181,12 +215,18 @@ class Available:
 
 AVAILABLE = []
 
+TRACE("Collecting the files in the populate/ area")
+INC()
+
 for (dir,dirs,files) in os.walk(POPULATE_DIR):
     pdir = dir[POPULATE_DIR_N:]
     for file in files:
         pfile = "%s/%s" % (pdir,file)
         ffile = "%s/%s" % (dir,file)
         AVAILABLE.append(Available(pfile,ffile))
+
+DEC()
+TRACE("...done")
 
 #sys.exit(0)
 
@@ -223,8 +263,8 @@ def version_lt_aux(l1,l2):
             return False
 
 def populate_specific(area,format,platform):
-    TRACE("")
-    TRACE("POPULATE SPECIFIC: %s" % area)
+    TRACE("Populating specific area %s" % area)
+    INC()
     highest = {}
     for item in AVAILABLE:
         if not item.ispkg:
@@ -241,17 +281,19 @@ def populate_specific(area,format,platform):
         src = "%s/%s-%s.pkg" % (area,key,version)
         dst = "%s/%s.pkg" % (area,key)
         populate_link(src,dst)
+    DEC()
+    TRACE("...done")
 
 def populate_link(src,dst):
     if not os.path.exists(dst):
         dir = os.path.dirname(dst)
         if not os.path.exists(dir):
             os.makedirs(dir)
-        TRACE("  POPULATE LINK: %s -> %s" % (src,dst))
+        TRACE("%s -> %s" % (src,dst))
         os.link(src,dst)
     elif os.stat(src).st_ino != os.stat(dst).st_ino:
         os.unlink(dst)
-        TRACE("  POPULATE LINK: %s -> %s" % (src,dst))
+        TRACE("%s -> %s" % (src,dst))
         os.link(src,dst)
 
 ALL_PLATFORMS = ['source']
@@ -261,3 +303,20 @@ SPECIFIC_DIR = "tmp/specific"
 for format in ALL_FORMATS:
     for platform in ALL_PLATFORMS:
         populate_specific(("%s/%s/%s" % (SPECIFIC_DIR,format,platform)),format,platform)
+
+# finally make sure that directory pkg/ points to specific/1.3.0/source
+
+PKG_DIR = os.path.abspath("tmp/pkg")
+PKG_DIR_ORIG = os.path.abspath("%s/%s/%s" % (SPECIFIC_DIR,"1.3.0","source"))
+
+TRACE("Updating pkg/ area")
+INC()
+if not os.path.exists(PKG_DIR):
+    TRACE("ln -s %s %s" % (PKG_DIR_ORIG,PKG_DIR))
+    os.symlink(PKG_DIR_ORIG,PKG_DIR)
+elif os.stat(PKG_DIR).st_ino != os.stat(PKG_DIR_ORIG):
+    TRACE("ln -s %s %s" % (PKG_DIR_ORIG,PKG_DIR))
+    os.unlink(PKG_DIR)
+    os.symlink(PKG_DIR_ORIG,PKG_DIR)
+DEC()
+TRACE("...done")
