@@ -151,6 +151,25 @@ OZ_Return kernelError(char *label,int arity,...)
   return tt;
 }
 
+
+// used in builtins.cc
+int raiseObject(char *label,int arity,...)
+{
+  OZ_Term tt=OZ_tuple(OZ_atom("object"),arity+1);
+  OZ_putArg(tt,0,OZ_atom(label));
+
+  va_list ap;
+  va_start(ap,arity);
+
+  for (int i = 0; i < arity; i++) {
+    OZ_putArg(tt,i+1,va_arg(ap,OZ_Term));
+  }
+
+  va_end(ap);
+
+  return OZ_raise(tt);
+}
+
 OZ_Return objectError(char *label,int arity,...)
 {
   OZ_Term tt=OZ_tuple(OZ_atom("object"),arity+1);
@@ -2784,7 +2803,7 @@ LBLdispatcher:
          case E_ERROR:
            if (ozconf.moreInfo) {
              OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
-             OZ_Term loc = e->dbgGetLoc();
+             OZ_Term loc = e->dbgGetLoc(CBB);
              exceptionValue = formatError(exceptionValue,traceBack,loc);
            } else {
              exceptionValue = formatError(exceptionValue);
@@ -2794,7 +2813,7 @@ LBLdispatcher:
          case E_FAILURE:
            if (ozconf.moreInfo) {
              OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
-             OZ_Term loc = e->dbgGetLoc();
+             OZ_Term loc = e->dbgGetLoc(CBB);
              exceptionValue = formatFailure(exceptionValue,traceBack,loc);
            } else {
              exceptionValue = formatFailure();
