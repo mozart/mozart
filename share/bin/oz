@@ -8,12 +8,15 @@
 # where Oz resides:
 
 howcalled=$0
+cmd=`basename $howcalled`
 
 if [ ${OZHOME-xx} = xx ]
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
-  echo "Setting Oz installation directory to: $OZHOME"
+  if [ $cmd != "ozemacs" ]; then
+     echo "Setting Oz installation directory to: $OZHOME"
+  fi
   export OZHOME
 else
   echo "Using Oz directory: $OZHOME"
@@ -68,8 +71,6 @@ if [ ! -f $OZILE -o $TERM = emacs ]; then
    OZILE=""  # running under emacs
 fi
 
-
-cmd=`basename $howcalled`
 
 # where is Emacs?
 if [ ${OZEMACS-0} = 0 ]; then
