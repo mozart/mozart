@@ -5943,17 +5943,16 @@ OZ_C_proc_begin(BIprintVS,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BItermToVS,2)
+OZ_C_proc_begin(BItermToVS,4)
 {
   OZ_Term t=OZ_getCArg(0);
-  OZ_Term out=OZ_getCArg(1);
-  return OZ_unify(out,
-		  OZ_string(OZ_toC(t,ozconf.printDepth,ozconf.printWidth)));
+  OZ_declareIntArg(1,depth);
+  OZ_declareIntArg(2,width);  
+  return OZ_unify(OZ_getCArg(3), OZ_string(OZ_toC(t,depth,width)));
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIgetTermSize,4)
-{
+OZ_C_proc_begin(BIgetTermSize,4) {
   OZ_declareArg(0,t);
   OZ_declareIntArg(1,depth);
   OZ_declareIntArg(2,width);
@@ -7431,7 +7430,7 @@ BIspec allSpec2[] = {
   {"ozparser_exit",0,ozparser_exit},
 
   {"printVS",1,BIprintVS},
-  {"termToVS",2,BItermToVS},
+  {"termToVS",4,BItermToVS},
   {"getTermSize",4,BIgetTermSize},
 
   {"dumpThreads",0,BIdumpThreads},
