@@ -104,6 +104,13 @@ Messages from the same thread appear
 in the stream in the same order 
 in which they were sent in the thread.
 
+<P> Oz ports, which are a language concept,
+should not be confused with Unix ports, which
+are an OS concept.
+Mozart applications will never use Unix ports explicitly
+except when communicating with other applications
+that have a Unix port interface.
+
 <ITEM> <EM>Cell</EM>:
 A cell is an updatable pointer to any other entity,
 i.e., it is analogous to a standard updatable variable
