@@ -266,13 +266,14 @@ OZ_Return TasksOverlapPropagator::propagate(void)
   x[_d1] = (PEL_SuspVar *) d1;
   x[_d2] = (PEL_SuspVar *) d2;
 
-  for (int var_idx = _cl1_t1; var_idx <= _cl1_o; var_idx += 1)
+  int var_idx;
+  for (var_idx = _cl1_t1; var_idx <= _cl1_o; var_idx += 1)
     x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
 				_prop_queue_cl1, _prop_fnct_table);
-  for (int var_idx = _cl2_t1; var_idx <= _cl2_o; var_idx += 1)
+  for (var_idx = _cl2_t1; var_idx <= _cl2_o; var_idx += 1)
     x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
 				_prop_queue_cl2, _prop_fnct_table);
-  for (int var_idx = _cl3_t1; var_idx <= _cl3_o; var_idx += 1)
+  for (var_idx = _cl3_t1; var_idx <= _cl3_o; var_idx += 1)
     x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
 				_prop_queue_cl3, _prop_fnct_table);
 
