@@ -54,6 +54,7 @@ define
    {Property.put 'oz.standalone' false}
 
    OPICompiler = {New Compiler.engine init()}
+   {OPICompiler enqueue(mergeEnv(OPIEnv.full))}
 
    CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
    {Property.put 'opi.compiler' CompilerUI}
