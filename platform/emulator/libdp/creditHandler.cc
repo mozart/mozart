@@ -265,7 +265,9 @@ OZ_Term  OwnerCreditHandler::extract_info(){
 }
 
 void BorrowCreditHandler::print() {printf("not implemented yet");}
-void BorrowCreditHandler::extract_info(OZ_Term &primCred,OZ_Term &secCred){
+
+OZ_Term BorrowCreditHandler::extract_info(){
+  OZ_Term primCred;
   EnumDenumPair *tmp = frac;
   if (tmp == NULL)
     primCred = oz_atom("persistent");
@@ -277,7 +279,7 @@ void BorrowCreditHandler::extract_info(OZ_Term &primCred,OZ_Term &secCred){
         tmp = tmp->next;
       }
     }
-  secCred = oz_nil();
+return primCred;
 }
 
 
@@ -1041,7 +1043,7 @@ void BorrowCreditHandler::print() {
     Assert(0);}
 }
 
-void BorrowCreditHandler::extract_info(OZ_Term &primCred,OZ_Term &secCred) {
+OZ_Term BorrowCreditHandler::extract_info() {
   OwnerCreditExtension *next;
   switch(getExtendFlags()){
   case CH_PERSISTENT:
@@ -1093,6 +1095,7 @@ void BorrowCreditHandler::extract_info(OZ_Term &primCred,OZ_Term &secCred) {
   default:
     Assert(0);
   }
+  return oz_pair(primCred,secCred);
 }
 
 Credit BorrowCreditHandler::getCreditBig() {

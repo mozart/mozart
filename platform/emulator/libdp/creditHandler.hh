@@ -122,7 +122,7 @@ protected:
 public:
   void addCredit(Credit c);
   void print();
-  void extract_info(OZ_Term &a, OZ_Term &b);
+  OZ_Term extract_info();
   Credit getCreditBig();
   Credit getCreditSmall();
 
@@ -243,7 +243,7 @@ public:
   Credit getCreditSmall();
   void addCredit(Credit c);
   void print();
-  void extract_info(OZ_Term &primCred, OZ_Term &secCred);
+  OZ_Term extract_info();
 
 private:
   // Methods copied from previous implementation in table.hh/cc
