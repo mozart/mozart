@@ -501,7 +501,7 @@ LBLfailure:
        SolveActor *saa=SolveActor::Cast(aa);
        // don't decrement parent counter
 
-       if (!e->fastUnifyOutline(saa->getResult(),saa->genFailed(),0)) {
+       if (!oz_unify(saa->getResult(),saa->genFailed())) { // mm_u
          // this should never happen?
          Assert(0);
        }

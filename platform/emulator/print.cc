@@ -372,9 +372,6 @@ void GenCVariable::printStream(ostream &stream, int depth)
       stream << " MV " << me->toString(PRINT_DEPTH_DEC(depth));
       break;
     }
-  case AVAR:
-    stream << " AVAR";
-    break;
   case PerdioVariable:
     stream << " PerdioVariable";
       break;
@@ -456,15 +453,6 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
   case PerdioVariable:
     stream << indent(offset) << "<PerdioVariable *" << this << ">" << endl;
       break;
-  case AVAR:
-    {
-      AVar* me = (AVar *) this;
-      stream << indent(offset); this->printStream(stream,depth);
-      stream << endl << indent(offset) << "Value: ";
-      ozd_printStream(me->getValue(), stream, PRINT_DEPTH_DEC(depth));
-      stream << endl;
-      break;
-    }
   default:
     stream << indent(offset) << " unknown type: " << getType() << endl;
     break;
@@ -1498,7 +1486,7 @@ void Board::printTree()
   Board *bb = this;
   Actor *aa;
   int off=0;
-  while (!am.isRootBoard(bb)) {
+  while (!oz_isRootBoard(bb)) {
     cout << indent(off);
     bb->printStream(cout,1);
     cout << endl;

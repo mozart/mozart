@@ -90,7 +90,8 @@ RecordFailure,
 BI_controlVarHandler;
 
 
-extern Board *ozx_rootBoard();
+// mm: hack to avoid imcluding am.hh
+extern Board *oz_rootBoardOutline();
 
 /*===================================================================
  *  Handlers
@@ -264,7 +265,7 @@ public:
 
   Board *getBoardInternal() {
     return (hasGName() || isNamedName())
-      ? ozx_rootBoard() : (Board*)ToPointer(homeOrGName);
+      ? oz_rootBoardOutline() : (Board*)ToPointer(homeOrGName);
   }
 
   int getSeqNumber() { return getOthers(); }
@@ -840,7 +841,7 @@ public:
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
 
   Board *getBoardInternal() {
-    return hasGName() ? ozx_rootBoard() : (Board*)boardOrGName.getPtr();
+    return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
   }
 
   void gcConstTermWithHome();
@@ -967,7 +968,7 @@ public:
     return (s==getType() && t==getTertType());}
 
   Board *getBoardInternal() {
-    return isLocal() ? (Board*)getPointer() : ozx_rootBoard();}
+    return isLocal() ? (Board*)getPointer() : oz_rootBoardOutline();}
 
   Bool isLocal()   { return (getTertType() == Te_Local); }
   Bool isManager() { return (getTertType() == Te_Manager); }

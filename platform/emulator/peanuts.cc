@@ -30,7 +30,6 @@
 #ifdef INTERFACE
 
 #pragma implementation "assemble.hh"
-#pragma implementation "avar.hh"
 #pragma implementation "debug.hh"
 #pragma implementation "perdiovar.hh"
 #pragma implementation "fdgenvar.hh"
@@ -54,7 +53,6 @@
 
 #include "am.cc"
 #include "assemble.cc"
-#include "avar.cc"
 #include "codearea.cc"
 #include "debug.cc"
 #include "perdiovar.cc"

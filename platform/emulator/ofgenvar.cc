@@ -61,7 +61,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else am.doBindAndTrail(var, vPtr, term);
 
         // Unify the labels:
-        if (!am.unify(term,label,scp)) return FALSE;
+        if (!oz_unify(term,label,scp)) return FALSE; // mm_u
 
         // Update the OFS suspensions:
         if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
@@ -114,11 +114,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
 
         // Unify the labels:
-        if (!am.unify(AtomCons,label,scp)) return FALSE;
+        if (!oz_unify(AtomCons,label,scp)) return FALSE; // mm_u
 
         // Unify corresponding feature values:
-        if (arg1 && !am.unify(termLTup->getHead(),arg1,scp)) return FALSE;
-        if (arg2 && !am.unify(termLTup->getTail(),arg2,scp)) return FALSE;
+        if (arg1 && !oz_unify(termLTup->getHead(),arg1,scp)) return FALSE; // mm_u
+        if (arg2 && !oz_unify(termLTup->getTail(),arg2,scp)) return FALSE; // mm_u
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
@@ -164,7 +164,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
 
         // Unify the labels:
-        if (!am.unify(termSRec->getLabel(),label,scp))
+        if (!oz_unify(termSRec->getLabel(),label,scp))  // mm_u
             { pairs->free(); return FALSE; }
 
         // Unify corresponding feature values:
@@ -172,7 +172,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         TaggedRef t1, t2;
         while (p->getpair(t1, t2)) {
             Assert(!p->isempty());
-            if (am.unify(t1, t2,scp)) {
+            if (oz_unify(t1, t2,scp)) { // mm_u
                 // Unification successful
             } else {
                 // Unification failed
@@ -325,7 +325,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         } else Assert(FALSE);
 
         // Unify the labels:
-        if (!am.unify(termVar->label,label,scp))
+        if (!oz_unify(termVar->label,label,scp))  // mm_u
             { pairs->free(); return FALSE; }
         // Must be literal or variable:
         TaggedRef tmp=label;
@@ -341,7 +341,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         TaggedRef t1, t2;
         while (p->getpair(t1, t2)) {
             Assert(!p->isempty());
-            if (am.unify(t1, t2, scp)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?
+            if (oz_unify(t1, t2, scp)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?  // mm_u
                 // Unification successful
             } else {
                 // Unification failed

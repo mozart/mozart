@@ -1058,8 +1058,6 @@ GenCVariable * GenCVariable::gc(void) {
     sz = sizeof(GenOFSVariable);  break;
   case MetaVariable:
     sz = sizeof(GenMetaVariable); break;
-  case AVAR:
-    sz = sizeof(AVar);            break;
   case PerdioVariable:
     sz = sizeof(PerdioVar);       break;
   case LazyVariable:
@@ -1094,11 +1092,6 @@ void GenLazyVariable::gcRecurse(void) {
 inline
 void GenMetaVariable::gcRecurse(void) {
   OZ_collectHeapTerm(data,data);
-}
-
-inline
-void AVar::gcRecurse(void) {
-  OZ_collectHeapTerm(value,value);
 }
 
 inline
@@ -1141,8 +1134,6 @@ void GenCVariable::gcRecurse(void) {
     ((GenOFSVariable *) this)->gcRecurse(); break;
   case MetaVariable:
     ((GenMetaVariable *) this)->gcRecurse(); break;
-  case AVAR:
-    ((AVar *) this)->gcRecurse(); break;
   case PerdioVariable:
     ((PerdioVar *) this)->gcRecurse(); break;
   case LazyVariable:
@@ -1453,7 +1444,7 @@ void gc_finalize()
   // if the finalize_list is not empty, we must create a new
   // thread (at top level) to effect the finalization phase
   if (!isNil(finalize_list)) {
-    Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,ozx_rootBoard());
+    Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,oz_rootBoard());
     thr->pushCall(finalize_handler,finalize_list);
     am.scheduleThread(thr);
     finalize_list = oz_nil();
@@ -1802,9 +1793,6 @@ void AM::gc(int msgLevel)
 #endif
 
   suspendVarList=makeTaggedNULL(); /* no valid data */
-
-  OZ_collectHeapTerm(aVarUnifyHandler,aVarUnifyHandler);
-  OZ_collectHeapTerm(aVarBindHandler,aVarBindHandler);
 
   OZ_collectHeapTerm(defaultExceptionHdl,defaultExceptionHdl);
   OZ_collectHeapTerm(opiCompiler,opiCompiler);
@@ -2639,6 +2627,7 @@ void TaskStack::gc(TaskStack *newstack) {
       return;
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_XCONT_Ptr) {
+      // mm2: opt: only the top task can/should be xcont!!
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
       if (isInGc)
         (void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));

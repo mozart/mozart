@@ -88,7 +88,7 @@ int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 OZ_Term oz_getLocation(Board *bb)
 {
   OZ_Term out = nil();
-  while (!am.isRootBoard(bb)) {
+  while (!oz_isRootBoard(bb)) {
     if (bb->isSolve()) {
       out = cons(OZ_atom("space"),out);
     } else if (bb->isAsk()) {
@@ -102,8 +102,6 @@ OZ_Term oz_getLocation(Board *bb)
   }
   return out;
 }
-
-Board *ozx_rootBoard() { return am._rootBoard; }
 
 /*===================================================================
  * BuiltinTab

@@ -196,8 +196,6 @@ void AM::init(int argc,char **argv)
   installingScript = FALSE;
 
   suspendVarList          = makeTaggedNULL();
-  aVarUnifyHandler        = makeTaggedNULL();
-  aVarBindHandler         = makeTaggedNULL();
   defaultExceptionHdl     = makeTaggedNULL();
   opiCompiler             = makeTaggedNULL();
 
@@ -465,10 +463,6 @@ void AM::init(int argc,char **argv)
   }
 
 
-#ifdef DEBUG_CHECK
-  dontPropagate = NO;
-#endif
-
   profileMode = NO;
 
 }
@@ -502,11 +496,6 @@ void AM::exitOz(int status)
  * -------------------------------------------------------------------------*/
 
 
-Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, ByteCode *scp)
-{
-  return fastUnify(ref1, ref2, scp);
-}
-
 Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
 {
   Board *bb=tagged2VarHome(var);
@@ -525,12 +514,14 @@ Bool AM::isLocalSVarOutline(SVariable *var)
 
 
 inline
+// static
 Bool AM::installScript(Script &script)
 {
   Bool ret = OK;
   installingScript = TRUE;
   for (int index = 0; index < script.getSize(); index++) {
-    if (!unify(script[index].getLeft(),script[index].getRight())) {
+    if (oz_unify(script[index].getLeft(),script[index].getRight())
+        != PROCEED) { // mm_u
       ret = NO;
       if (!onToplevel()) {
         break;
@@ -552,8 +543,17 @@ Bool AM::installScriptOutline(Script &script)
   return installScript(script);
 }
 
+Bool oz_isBelow(Board *below, Board *above)
+{
+  while (1) {
+    if (below == above) return OK;
+    if (oz_isRootBoard(below)) return NO;
+    below = below->getParent();
+  }
+}
 
 inline
+static
 Board *getVarBoard(TaggedRef var)
 {
   CHECK_ISVAR(var);
@@ -563,13 +563,13 @@ Board *getVarBoard(TaggedRef var)
   return tagged2SVarPlus(var)->getHome1();
 }
 
-
 inline
-Bool AM::isMoreLocal(TaggedRef var1, TaggedRef var2)
+static
+Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 {
   Board *board1 = getVarBoard(var1)->derefBoard();
   Board *board2 = getVarBoard(var2)->derefBoard();
-  return isBelow(board1,board2);
+  return oz_isBelow(board1,board2);
 }
 
 
@@ -620,13 +620,13 @@ void rebind(TaggedRef *refPtr, TaggedRef *ptr2)
     TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop();
 
 
-Bool AM::unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
+OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 {
-  Assert(shallowHeapTop && scp || shallowHeapTop==0 && scp==0);
+  Assert(am.checkShallow(scp));
   Assert(unifyStack.isEmpty()); /* unify is not reentrant */
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
 
-  Bool result = NO;
+  Bool result = FAILED;
 
   TaggedRef *termPtr1 = &t1;
   TaggedRef *termPtr2 = &t2;
@@ -669,12 +669,13 @@ loop:
   COUNT(varNonvarUnify);
 
   if (isCVar(tag1)) {
-    if (tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, scp))
+    if (tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, scp)) // mm_u
+
       goto next;
     goto fail;
   }
 
-  bindToNonvar(termPtr1, term1, term2, scp);
+  oz_bindToNonvar(termPtr1, term1, term2, scp); // mm_u
   goto next;
 
 
@@ -693,18 +694,18 @@ loop:
   if (isNotCVar(tag1)) {
     if (isNotCVar(tag2) &&
         isMoreLocal(term2,term1) &&
-        (!isLocalVariable(term1,termPtr1) ||
+        (!am.isLocalVariable(term1,termPtr1) ||
          (isUVar(term2) && !isUVar(term1)) ||
          heapNewer(termPtr2,termPtr1))) {
-      genericBind(termPtr2, term2, termPtr1, *termPtr1);
+      oz_bind(termPtr2, term2, termPtr1, *termPtr1); // mm_u
     } else {
-      genericBind(termPtr1, term1, termPtr2, *termPtr2);
+      oz_bind(termPtr1, term1, termPtr2, *termPtr2); // mm_u
     }
     goto next;
   }
 
   if (isNotCVar(tag2)) {
-    genericBind(termPtr2, term2, termPtr1, *termPtr1);
+    oz_bind(termPtr2, term2, termPtr1, *termPtr1); // mm_u
     goto next;
   }
 
@@ -714,7 +715,7 @@ loop:
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);
   }
-  if (tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp))
+  if (tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp)) // mm_u
     goto next;
   goto fail;
 
@@ -783,7 +784,7 @@ loop:
 
 next:
   if (unifyStack.isEmpty()) {
-    result = OK;
+    result = PROCEED;
     goto exit;
   }
 
@@ -802,7 +803,7 @@ push:
   goto loop;
 
 fail:
-  Assert(result==NO);
+  Assert(result==FAILED);
   unifyStack.mkEmpty();
   // fall through
 
@@ -821,34 +822,25 @@ exit:
   resp. equal to "to".
   */
 
-BFlag AM::isBetween(Board *to, Board *varHome)
+oz_BFlag oz_isBetween(Board *to, Board *varHome)
 {
   while (1) {
-    if (isCurrentBoard(to)) return B_BETWEEN;
+    if (am.isCurrentBoard(to)) return B_BETWEEN;
     if (to == varHome) return B_NOT_BETWEEN;
+    Assert(!oz_isRootBoard(to));
     to = to->getParentAndTest();
     if (!to) return B_DEAD;
   }
 }
 
-Bool AM::isBelow(Board *below, Board *above)
-{
-  while (1) {
-    if (below == above) return OK;
-    if (isRootBoard(below)) return NO;
-    below = below->getParent();
-  }
-}
-
-
-
 inline
+// static
 Bool AM::wakeUpThread(Thread *tt, Board *home)
 {
   Assert (tt->isSuspended());
   Assert (tt->isRThread());
 
-  switch (isBetween(GETBOARD(tt), home)) {
+  switch (oz_isBetween(GETBOARD(tt), home)) {
   case B_BETWEEN:
     suspThreadToRunnableOPT(tt);
     scheduleThread(tt);
@@ -872,8 +864,24 @@ Bool AM::wakeUpThread(Thread *tt, Board *home)
   }
 }
 
+inline
+// static
+void AM::wakeupToRunnable(Thread *tt)
+{
+  Assert(tt->isSuspended());
+  tt->markRunnable();
+
+  if (isBelowSolveBoard() || tt->isExtThread()) {
+    Assert (isInSolveDebug (GETBOARD(tt)));
+    incSolveThreads(GETBOARD(tt));
+    tt->setInSolve();
+  } else {
+    Assert(!isInSolveDebug(GETBOARD(tt)));
+  }
+}
 
 inline
+// static
 Bool AM::wakeUpBoard(Thread *tt, Board *home)
 {
   Assert(tt->isSuspended());
@@ -933,11 +941,11 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
 
   //
   //  General case;
-  switch (isBetween(bb, home)) {
+  switch (oz_isBetween(bb, home)) {
   case B_BETWEEN:
-    Assert(!currentBoard()->isSolve() || isBelowSolveBoard());
-    wakeupToRunnable(tt);
-    scheduleThread(tt);
+    Assert(!am.currentBoard()->isSolve() || am.isBelowSolveBoard());
+    am.wakeupToRunnable(tt);
+    am.scheduleThread(tt);
     return OK;
 
   case B_NOT_BETWEEN:
@@ -954,10 +962,12 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
   }
 }
 
+
 //
 //  Generic 'wakeUp';
 //  Since this method is used at the only one place, it's inlined;
 inline
+// static
 Bool AM::wakeUp(Thread *tt, Board *home, PropCaller calledBy) {
   switch (tt->getThrType()) {
   case S_RTHREAD:
@@ -978,17 +988,14 @@ Bool AM::wakeUp(Thread *tt, Board *home, PropCaller calledBy) {
 //  X = Y
 // --> if det Y then ... fi
 
-SuspList * AM::checkSuspensionList(SVariable * var,
-                                   SuspList * suspList,
-                                   PropCaller calledBy)
+SuspList *AM::checkSuspensionList(SVariable * var,
+                              SuspList * suspList,
+                              PropCaller calledBy)
 {
-  if (shallowHeapTop!=0)
+  if (inShallowGuard())
     return suspList;
 
   SuspList * retSuspList = NULL;
-
-  // see the reduction of solve actor by the enumeration;
-  DebugCheck(dontPropagate == OK, return (suspList));
 
   PROFILE_CODE1(FDProfiles.inc_item(no_calls_checksusplist);)
 
@@ -1013,7 +1020,7 @@ PROFILE_CODE1
      Board * b = GETBOARD(thr);
      if (b == GETBOARD(var))
        FDProfiles.inc_item(from_deep_to_home_misses);
-     else if (isBetween(b, GETBOARD(var))==B_BETWEEN)
+     else if (oz_isBetween(b, GETBOARD(var))==B_BETWEEN)
        FDProfiles.inc_item(from_deep_to_deep_hits);
      else
        FDProfiles.inc_item(from_deep_to_deep_misses);
@@ -1024,7 +1031,7 @@ PROFILE_CODE1
     if (thr->isRunnable()) {
       if (thr->isPropagator()) {
         if (calledBy && !thr->isUnifyThread()) {
-          switch (isBetween(GETBOARD(thr), GETBOARD(var))) {
+          switch (oz_isBetween(GETBOARD(thr), GETBOARD(var))) {
           case B_BETWEEN:
             thr->markUnifyThread ();
             break;
@@ -1078,25 +1085,25 @@ Bool checkHome(TaggedRef *vPtr) {
   TaggedRef val = deref(*vPtr);
 
   return !isAnyVar(val) ||
-    am.isBelow(am.currentBoard(),varHome(val));
+    oz_isBelow(am.currentBoard(),varHome(val));
 }
 #endif
 
 /* bind var to term */
-void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
-                     TaggedRef *termPtr, TaggedRef term)
+void oz_bind(TaggedRef *varPtr, TaggedRef var,
+             TaggedRef *termPtr, TaggedRef term)
 {
   Assert(!isCVar(var) && !isRef(term));
 
   /* first step: do suspension */
   if (isSVar(var)) {
-    checkSuspensionList(var, pc_std_unif);
+    am.checkSuspensionList(var, pc_std_unif);
   }
 
   /* second step: push binding for non-local variable on trail;     */
-  if ( !isLocalVariable(var,varPtr)) {
-    Assert(shallowHeapTop || checkHome(varPtr));
-    trail.pushRef(varPtr,var);
+  if ( !am.isLocalVariable(var,varPtr)) {
+    Assert(am.inShallowGuard() || checkHome(varPtr));
+    am.doTrail(varPtr,var);
   } else  { // isLocalVariable(var)
     if (isSVar(var)) {
       tagged2SVar(var)->dispose();
@@ -1166,7 +1173,7 @@ InstType AM::installPath(Board *to)
     return INST_OK;
   }
 
-  Assert(!isRootBoard(to));
+  Assert(!oz_isRootBoard(to));
 
   Board *par=to->getParentAndTest();
   if (!par) {
@@ -1187,6 +1194,24 @@ InstType AM::installPath(Board *to)
   }
   return INST_OK;
 }
+
+//
+//  Constructors for 'suspended' cases:
+//    deep 'unify' suspension;
+//    suspension with continuation;
+//    suspension with a 'C' function;
+//    suspended sequential thread (with a task stack);
+//
+inline
+// static
+Thread *AM::mkWakeupThread(Board *bb)
+{
+  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,newId());
+  bb->incSuspCount();
+  checkDebug(th,bb);
+  return th;
+}
+
 
 // only used in deinstall
 // Three cases may occur:
@@ -1410,7 +1435,7 @@ void AM::awakeIOVar(TaggedRef var)
   Assert(onToplevel());
   Assert(isCons(var));
 
-  if (OZ_unify(OZ_head(var),OZ_tail(var)) != PROCEED) {
+  if (oz_unify(OZ_head(var),OZ_tail(var)) != PROCEED) { // mm_u
     warning("select or sleep failed");
   }
 }
@@ -1499,7 +1524,7 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
     warning("select only on toplevel");
     return OK;
   }
-  if (osTestSelect(fd,mode)==1) return OZ_unify(l,r);
+  if (osTestSelect(fd,mode)==1) return oz_unify(l,r)==PROCEED; // mm_u
   IONode *ion = findIONode(fd);
   ion->readwritepair[mode]=(void *) cons(l,r);
   gcProtect((TaggedRef *) &(ion->readwritepair[mode]));
@@ -1703,7 +1728,7 @@ void AM::checkStatus()
 int AM::incSolveThreads(Board *bb)
 {
   int ret = NO;
-  while (!isRootBoard(bb)) {
+  while (!oz_isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       ret = OK;
@@ -1724,7 +1749,7 @@ int AM::incSolveThreads(Board *bb)
 
 void AM::decSolveThreads(Board *bb)
 {
-  while (!isRootBoard(bb)) {
+  while (!oz_isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());
@@ -1752,7 +1777,7 @@ void AM::decSolveThreads(Board *bb)
  */
 Bool AM::isInSolveDebug (Board *bb)
 {
-  while (!isRootBoard(bb)) {
+  while (!oz_isRootBoard(bb)) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());
@@ -2114,7 +2139,7 @@ void AM::setExtThreadOutlined(Thread *tt, Board *varHome)
   Assert (!varHome->isCommitted());
 
   while (bb != varHome) {
-    Assert (!isRootBoard(bb));
+    Assert (!oz_isRootBoard(bb));
     Assert (!bb->isCommitted() && !bb->isFailed());
     if (bb->isSolve()) {
       SolveActor *sa = SolveActor::Cast(bb->getActor());
@@ -2184,7 +2209,7 @@ SuspList *AM::installPropagators(SuspList * local_list, SuspList * glob_list,
         thr->isPropagator() &&
         !thr->isTagged() && /* TMUELLER possible optimization
                                   isTaggedAndUntag */
-        isBetween(GETBOARD(thr), glob_home) == B_BETWEEN) {
+        oz_isBetween(GETBOARD(thr), glob_home) == B_BETWEEN) {
       ret_list = new SuspList (thr, ret_list);
     }
 

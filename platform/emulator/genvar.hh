@@ -55,7 +55,6 @@ enum TypeOfGenCVariable {
   MetaVariable,
   BoolVariable,
   FSetVariable,
-  AVAR,
   PerdioVariable,
   LazyVariable,
   NonGenCVariable
@@ -64,7 +63,7 @@ enum TypeOfGenCVariable {
 #define GenVarCheckType(t)                              \
     Assert(t == FDVariable || t == OFSVariable ||       \
            t == MetaVariable || t == BoolVariable ||    \
-           t==AVAR || t==PerdioVariable || t == FSetVariable || \
+           t==PerdioVariable || t == FSetVariable || \
            t ==LazyVariable )
 
 class GenCVariable: public SVariable {
@@ -110,6 +109,7 @@ public:
   // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
+  // mm_u
   Bool unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
   Bool unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
@@ -231,7 +231,6 @@ void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable=TRUE);
 #include "fdbvar.hh"
 #include "ofgenvar.hh"
 #include "metavar.hh"
-#include "avar.hh"
 #include "perdiovar.hh"
 #include "lazyvar.hh"
 

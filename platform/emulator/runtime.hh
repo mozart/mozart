@@ -36,13 +36,26 @@
  * -----------------------------------------------------------------------*/
 
 // pointer equality!
-#define oz_eq(x,y) termEq((x),(y))
+// see tagged.hh: oz_eq(x,y)
 
-#define oz_unify(t1,t2)      (am.fastUnify((t1),(t2),0) ? PROCEED : FAILED)
+OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
+void oz_bind(OZ_Term *varPtr, OZ_Term var,
+             OZ_Term *termPtr, OZ_Term term);
 
-#define oz_unifyFloat(t1,f)  oz_unify((t1), oz_float(f))
-#define oz_unifyInt(t1,i)    oz_unify((t1), oz_int(i))
-#define oz_unifyAtom(t1,s)   oz_unify((t1), oz_atom(s))
+// mm_u
+inline
+void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
+                     OZ_Term a, ByteCode *scp=0)
+{
+  // most probable case first: local UVar
+  // if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
+  // more efficient:
+  if (am.currentUVarPrototypeEq(var) && scp==0) {
+    doBind(varPtr,a);
+  } else {
+    oz_bind(varPtr,var,NULL,a);
+  }
+}
 
 /* -----------------------------------------------------------------------
  * values
@@ -76,9 +89,9 @@
 #define oz_float(f)       newTaggedFloat((f))
 #define oz_int(i)         makeInt((i))
 
-  // see value.hh
+// see value.{hh,cc}
 // OZ_Term oz_unsignedInt(unsigned int i);
-  // see value.cc
+
 OZ_Term oz_long(long i);
 OZ_Term oz_unsignedLong(unsigned long i);
 
@@ -93,7 +106,7 @@ OZ_Term oz_newChunk(OZ_Term val)
 }
 
 #define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard()))
-#define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(ozx_rootBoard()))
+#define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(oz_rootBoard()))
 
 // stop thread: {Wait v}
 void oz_suspendOnNet(Thread *th);
@@ -172,21 +185,21 @@ int oz_isPair2(OZ_Term term)
 
 
 inline
-TaggedRef oz_arg(TaggedRef tuple, int i)
+OZ_Term oz_arg(OZ_Term tuple, int i)
 {
   Assert(oz_isTuple(tuple));
   return tagged2SRecord(tuple)->getArg(i);
 }
 
 inline
-TaggedRef oz_left(TaggedRef pair)
+OZ_Term oz_left(OZ_Term pair)
 {
   Assert(oz_isPair2(pair));
   return oz_arg(pair,0);
 }
 
 inline
-TaggedRef oz_right(TaggedRef pair)
+OZ_Term oz_right(OZ_Term pair)
 {
   Assert(oz_isPair2(pair));
   return oz_arg(pair,1);
@@ -461,6 +474,17 @@ OZ_Return typeError(int pos, char *comment, char *typeString);
 
 #define ExpectedTypes(S) char * __typeString = S;
 #define TypeError(Pos, Comment) return typeError(Pos,Comment,__typeString);
+
+
+/* -----------------------------------------------------------------------
+ * Spaces
+ * -----------------------------------------------------------------------*/
+
+inline
+int oz_isRootBoard(Board *bb) { return bb==oz_rootBoard(); }
+
+inline
+Board *oz_rootBoard() { return am._rootBoard; }
 
 /* -----------------------------------------------------------------------
  * MISC

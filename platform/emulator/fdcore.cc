@@ -55,7 +55,7 @@ OZ_C_proc_begin(BIfdIs, 2)
   if (isNotCVar(fdtag))
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
 
-  return OZ_unify(OZ_getCArg(1),
+  return oz_unify(OZ_getCArg(1), // mm_u
                   (isPosSmallFDInt(fd) ||
                    isGenFDVar(fd, fdtag) ||
                    isGenBoolVar(fd, fdtag)) ? NameTrue : NameFalse);

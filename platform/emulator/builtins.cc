@@ -620,9 +620,9 @@ OZ_BI_define(BIsystemTellSize,3,0)
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
                              : (int)ceil((double)numFeats/FILLFACTOR));
     GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
-    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
-                     makeTaggedRef(tPtr));
-    Assert(ok);
+    OZ_Return ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+                          makeTaggedRef(tPtr));
+    Assert(ok==PROCEED); // mm_u
     return PROCEED;
   }
 
@@ -682,9 +682,9 @@ OZ_BI_define(BIsystemTellSize,3,0)
       // Create newofsvar with unbound variable as label & given initial size:
       GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
       // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+      Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                        makeTaggedRef(tPtr));
-      Assert(ok);
+      Assert(ok); // mm_u
       return PROCEED;
     }
   default:
@@ -706,9 +706,9 @@ OZ_BI_define(BIrecordTell,2,0)
   /* most probable case first */
   if (isLiteral(labelTag) && isNotCVar(tag)) {
     GenOFSVariable *newofsvar=new GenOFSVariable(label);
-    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+    Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                      makeTaggedRef(tPtr));
-    Assert(ok);
+    Assert(ok); // mm_u
     return PROCEED;
   }
 
@@ -762,9 +762,9 @@ OZ_BI_define(BIrecordTell,2,0)
       // Create newofsvar with unbound variable as label & given initial size:
       GenOFSVariable *newofsvar=new GenOFSVariable(label);
       // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+      Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                        makeTaggedRef(tPtr));
-      Assert(ok);
+      Assert(ok); // mm_u
       return PROCEED;
     }
   default:
@@ -883,8 +883,8 @@ OZ_C_proc_begin(BIwidthC, 2)
         // Create new fdvar:
         GenFDVariable *fdvar=new GenFDVariable(); // Variable with maximal domain
         // Unify fdvar and wid:
-        Bool ok=am.unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
-        Assert(ok);
+        Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
+        Assert(ok); // mm_u
         break;
     }
     case CVAR:
@@ -904,7 +904,7 @@ OZ_C_proc_begin(BIwidthC, 2)
     //   if (recTag==CVAR) {
     //       TaggedRef otherwid=am.getWidthSuspension((void*)BIpropWidth,rec);
     //       if (otherwid!=makeTaggedNULL()) {
-    //           return (am.unify(otherwid,rawwid) ? PROCEED : FAILED);
+    //           return (oz_unify(otherwid,rawwid) ? PROCEED : FAILED);
     //       }
     //   }
 
@@ -945,7 +945,7 @@ OZ_Return WidthPropagator::propagate(void)
         if (isGenFDVar(wid)) {
             // GenFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
-          Bool res=am.unify(makeTaggedSmallInt(recwidth),rawwid);
+          Bool res=oz_unify(makeTaggedSmallInt(recwidth),rawwid); // mm_u
           if (!res) { result = FAILED; break; }
         } else if (isSmallInt(widTag)) {
             int intwid=smallIntValue(wid);
@@ -972,7 +972,7 @@ OZ_Return WidthPropagator::propagate(void)
             OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
             if (dom.getSize() > (dom & slice).getSize()) {
                 GenFDVariable *fdcon=new GenFDVariable(slice);
-                Bool res=am.unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid);
+                Bool res=oz_unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid); // mm_u
                 // No loc/glob handling: res=(fdwid>=recwidth);
                 if (!res) { result = FAILED; break; }
             }
@@ -1009,7 +1009,7 @@ OZ_Return WidthPropagator::propagate(void)
                 result = PROCEED;
                 if (recwidth==0) {
                     // Convert to LITERAL:
-                  Bool res=am.unify(rawrec,lbl);
+                  Bool res=oz_unify(rawrec,lbl); // mm_u
                   if (!res) error("unexpected failure of Literal conversion");
                 } else {
                     // Convert to SRECORD or LTUPLE:
@@ -1020,7 +1020,7 @@ OZ_Return WidthPropagator::propagate(void)
                     Arity *arity=aritytable.find(alist);
                     SRecord *newrec = SRecord::newSRecord(lbl,arity);
                     newrec->initArgs();
-                    Bool res=am.unify(rawrec,newrec->normalize());
+                    Bool res=oz_unify(rawrec,newrec->normalize()); // mm_u
                     Assert(res);
                 }
             }
@@ -1059,14 +1059,14 @@ OZ_C_proc_begin(BImonitorArity, 3)
     DEREF(tmprec,_2,recTag);
     switch (recTag) {
     case LTUPLE:
-        return am.unify(arity,makeTupleArityList(2)) ? PROCEED : FAILED;
+        return oz_unify(arity,makeTupleArityList(2));
     case LITERAL:
         // *** arity is nil
-        return (am.unify(arity,AtomNil)? PROCEED : FAILED);
+        return oz_unify(arity,AtomNil);
     case SRECORD:
     record:
         // *** arity is known set of features of the SRecord
-        return am.unify(arity,tagged2SRecord(tmprec)->getArityList()) ? PROCEED : FAILED;
+        return oz_unify(arity,tagged2SRecord(tmprec)->getArityList());
     case UVAR:
     case SVAR:
         oz_suspendOn(rec);
@@ -1094,14 +1094,14 @@ OZ_C_proc_begin(BImonitorArity, 3)
         TaggedRef featlist;
         featlist=tagged2GenOFSVar(tmprec)->getArityList();
 
-        return (am.unify(arity,featlist)? PROCEED : FAILED);
+        return oz_unify(arity,featlist);
     } else {
         TaggedRef featlist;
         TaggedRef feattail;
         Board *home=am.currentBoard();
         featlist=tagged2GenOFSVar(tmprec)->getOpenArityList(&feattail,home);
 
-        if (!am.unify(featlist,arity)) return FAILED;
+        if (!oz_unify(featlist,arity)) return FAILED; // mm_u
 
         OZ_Expect pe;
         OZ_EXPECT(pe, 0, expectRecordVar);
@@ -1156,13 +1156,13 @@ OZ_Return MonitorArityPropagator::propagate(void)
 
     // Add the features to L (the tail of the output list)
     TaggedRef arity=L;
-    if (!am.unify(fhead,arity)) return FAILED; // No further updating of the suspension
+    if (!oz_unify(fhead,arity)) return FAILED; // No further updating of the suspension // mm_u
     L=ftail; // 'ftail' is the new L in the suspension
 
     if (tmptail!=AtomNil) {
         // The record is not determined, so the suspension is revived:
         if (!isKilled) return (SLEEP);
-        else return (am.unify(ftail,AtomNil)? PROCEED : FAILED);
+        else return oz_unify(ftail,AtomNil);
     }
     return PROCEED;
 }
@@ -1241,9 +1241,9 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
           // Create newofsvar with unbound variable as label:
           GenOFSVariable *newofsvar=new GenOFSVariable();
           // Unify newofsvar and term:
-          Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+          Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                            makeTaggedRef(termPtr));
-          Assert(ok);
+          Assert(ok); // mm_u
           term=makeTaggedRef(termPtr);
           DEREF(term, termPtr2, tag2);
           termPtr=termPtr2;
@@ -1294,9 +1294,9 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 Assert(ok1);
                 out=uvar;
                 // Unify newofsvar and term (which is also an ofsvar):
-                Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+                Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                                   makeTaggedRef(termPtr));
-                Assert(ok2);
+                Assert(ok2); // mm_u
             }
         }
         return PROCEED;
@@ -1313,9 +1313,9 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         Assert(ok1);
         out=uvar;
         // Unify newofsvar (CVAR) and term (SVAR or UVAR):
-        Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+        Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                           makeTaggedRef(termPtr));
-        Assert(ok2);
+        Assert(ok2); // mm_u
         return PROCEED;
       }
 
@@ -1469,7 +1469,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
     SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
     stuple->setArg(0, am.currentUVarPrototype());
 
-    if (oz_unify(out, makeTaggedSRecord(stuple)) == FAILED)
+    if (oz_unify(out, makeTaggedSRecord(stuple)) == FAILED) // mm_u
       return FAILED;
 
     OZ_in(1) = stuple->getArg(0);
@@ -1519,14 +1519,14 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Assert(CBB == CBB->derefBoard());
 
-  Bool isSibling = (!am.isRootBoard(CBB) &&
+  Bool isSibling = (!oz_isRootBoard(CBB) &&
                     CBB->getParent()->derefBoard() == SBP &&
                     CBB != SBB);
 
   if (!isSibling && CBB != SBP)
     return oz_raise(E_ERROR,E_KERNEL,"spaceSuper",1,tagged_space);
 
-  Assert(!am.isBelow(CBB,SBB));
+  Assert(!oz_isBelow(CBB,SBB));
 
   TaggedRef result = space->getSolveActor()->getResult();
 
@@ -1541,7 +1541,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
       case INST_OK: break;
       }
 
-      if (OZ_unify(result, AtomMerged) == FAILED)
+      if (oz_unify(result, AtomMerged) == FAILED) // mm_u
         return FAILED;
 
       switch (am.installPath(CBB)) {
@@ -1550,7 +1550,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
       }
 
     } else {
-      if (OZ_unify(result, AtomMerged) == FAILED)
+      if (oz_unify(result, AtomMerged) == FAILED) // mm_u
         return FAILED;
     }
   }
@@ -1903,7 +1903,6 @@ LBLagain:
           return SUSPEND;
       }
       // if (tagged2CVar(term)->getType() == OFSVariable) return SUSPEND;
-      // if (tagged2CVar(term)->getType() == AVAR) return SUSPEND;
       // goto typeError0;
     case LITERAL:
       goto typeError0;
@@ -2667,7 +2666,7 @@ OZ_BI_define(BIthreadGetPriority,1,1)
   oz_declareThreadIN(0,th);
 
   if (th->isProxy()) {
-    OZ_out(0) = OZ_newVariable();
+    OZ_out(0) = oz_newVariable();
     return remoteSend(th,"Thread.getPriority",OZ_out(0));
   }
 
@@ -2987,7 +2986,7 @@ OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
 {
   trail.pushMark();
   shallowHeapTop = heapTop;
-  Bool ret = unify(Ain,Bin,(ByteCode*)1);
+  Bool ret = oz_unify(Ain,Bin,(ByteCode*)1); // mm_u
   shallowHeapTop = NULL;
   if (ret == NO) {
     reduceTrailOnFail();
@@ -4497,10 +4496,10 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   DEREF(old,oldPtr,_1);
 
   if(isAnyVar(old) && !isCVar(old)) {
-    am.bindToNonvar(oldPtr,old,makeTaggedLTuple(lt),0);
+    oz_bindToNonvar(oldPtr,old,makeTaggedLTuple(lt)); // mm_u
   } else {
     old = makeTaggedRef(oldPtr);
-    if (oz_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
+    if (oz_unify(makeTaggedLTuple(lt),old)!=PROCEED) { // mm_u
       /* respect port semantics:
        *
        * fun {NewPort S}
@@ -5049,8 +5048,8 @@ OZ_BI_define(BIgetEntityCond,2)
 
   EntityCond ec = tert->getEntityCond();
   if(ec == ENTITY_NORMAL)
-    return OZ_unify(out,cons(AtomEntityNormal,nil()));
-  return OZ_unify(out,listifyWatcherCond(ec));
+    return oz_unify(out,cons(AtomEntityNormal,nil()));
+  return oz_unify(out,listifyWatcherCond(ec));
 }OZ_BI_end
 */
 
@@ -5101,7 +5100,7 @@ OZ_BI_define(BIcontrolVarHandler,1,0)
 
     if (literalEq(label,AtomUnify)) {
       Assert(OZ_width(car)==2);
-      return OZ_unify(tpl->getArg(0),tpl->getArg(1));
+      return oz_unify(tpl->getArg(0),tpl->getArg(1));
     }
 
     if (literalEq(label,AtomException)) {
@@ -5141,7 +5140,7 @@ bomb:
 OZ_BI_define(BIcheckCVH,1,0)
 {
   ControlVarNew(var);
-  OZ_unify(var,OZ_in(0));
+  oz_unify(var,OZ_in(0)); // mm_u
   return BI_CONTROL_VAR;
 } OZ_BI_end
 
@@ -5989,7 +5988,7 @@ OZ_BI_define(BIatWithState,3,0)
   OZ_Term out;
   int ret = doAt(tagged2SRecord(deref(state)),fea,out);
   if (ret!=PROCEED) return ret;
-  return OZ_unify(OZ_in(2),out);
+  return oz_unify(OZ_in(2),out);
 } OZ_BI_end
 
 
@@ -6304,7 +6303,7 @@ OZ_Return ooGetLockInline(TaggedRef val)
     return oz_raise(E_ERROR,E_OBJECT,"locking",1,
                     makeTaggedConst(am.getSelf()));
 
-  return am.fastUnify(val,makeTaggedConst(lock),0) ? PROCEED : FAILED;
+  return oz_unify(val,makeTaggedConst(lock));
 }
 NEW_DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
@@ -6746,7 +6745,7 @@ static int finalizable(OZ_Term& x)
       case Co_Class:
         b = ((ObjectClass*)xp)->getBoardInternal(); break;
       }
-      return am.isRootBoard(b)?1:2;
+      return oz_isRootBoard(b)?1:2;
     }
   default:
     return 2;
@@ -6863,7 +6862,6 @@ BIspec allSpec[] = {
 extern void BIinitFD(void);
 extern void BIinitFSet(void);
 extern void BIinitMeta(void);
-extern void BIinitAVar(void);
 extern void BIinitPerdioVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
@@ -6891,7 +6889,6 @@ Builtin *BIinit()
   BIinitFSet();
   // BIinitMeta();
 
-  // BIinitAVar();
   // BIinitPerdioVar();
   BIinitUnix();
   BIinitTclTk();

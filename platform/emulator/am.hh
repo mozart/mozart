@@ -46,9 +46,11 @@
 #include "actor.hh"
 #include "board.hh"
 
-// more include's at end!
+// more includes at end!
 
-// -----------------------------------------------------------------------
+/* -----------------------------------------------------------------------
+ * StatusReg
+ * -----------------------------------------------------------------------*/
 
 typedef enum {
   ThreadSwitch  = 1 << 2, // choose a new process
@@ -59,13 +61,9 @@ typedef enum {
   StopThread    = 1 << 7
 } StatusBit;
 
-
-// isBetween returns
-enum BFlag {
-  B_BETWEEN,
-  B_NOT_BETWEEN,
-  B_DEAD
-};
+/* -----------------------------------------------------------------------
+ * spaces
+ * -----------------------------------------------------------------------*/
 
 enum InstType {
   INST_OK,
@@ -74,6 +72,20 @@ enum InstType {
 };
 
 
+Bool oz_isBelow(Board *below, Board *above);
+
+// oz_isBetween returns
+enum oz_BFlag {
+  B_BETWEEN,
+  B_NOT_BETWEEN,
+  B_DEAD
+};
+
+oz_BFlag oz_isBetween(Board *to, Board *varHome);
+
+/* -----------------------------------------------------------------------
+ * OO
+ * -----------------------------------------------------------------------*/
 
 typedef int32 ChachedOORegs;
 
@@ -90,11 +102,15 @@ ChachedOORegs setObject(ChachedOORegs regs, Object *o)
   return (ToInt32(o)|(regs&0x3));
 }
 
+/* -----------------------------------------------------------------------
+ * class AM
+ * -----------------------------------------------------------------------*/
+
 // this class contains the central global data
 class AM : public ThreadsPool {
 friend int engine(Bool init);
 friend void scheduler();
-friend Board *ozx_rootBoard();
+friend inline Board *oz_rootBoard();
 
 private:
   Board *_currentBoard;
@@ -128,11 +144,6 @@ private:
 
   Bool isStandaloneF;
 
-#ifdef DEBUG_CHECK
-  Bool dontPropagate;
-  // is used by consistency checking of a copy of a search tree;
-#endif
-
   struct {
     int debug;
     TaggedRef value;
@@ -145,8 +156,6 @@ private:
   Bool criticalFlag;  // if this is true we will NOT set Sflags
                       // from within signal handlers
 
-  TaggedRef aVarUnifyHandler;
-  TaggedRef aVarBindHandler;
   TaggedRef defaultExceptionHdl;
 
   TaggedRef opiCompiler;
@@ -168,19 +177,16 @@ public:
   Board *currentSolveBoard()    { return _currentSolveBoard; }
   Board *rootBoardGC()          { return _rootBoard; }
   int isCurrentBoard(Board *bb) { return bb==_currentBoard; }
-  int isRootBoard(Board *bb)    { return bb==_rootBoard; }
   int isBelowSolveBoard()       { return _currentSolveBoard!=0; }
   Bool inShallowGuard()         { return shallowHeapTop!=0; }
-
+#ifdef DEBUG_CHECK
+  Bool checkShallow(ByteCode *scp) {
+    return shallowHeapTop && scp || shallowHeapTop==0 && scp==0;
+  }
+#endif
   TaggedRef getOpiCompiler()       { return opiCompiler; }
   void setOpiCompiler(TaggedRef o) { opiCompiler = o; }
 
-  TaggedRef getAVarBindHandler() { return aVarBindHandler; }
-  TaggedRef getAVarUnifyHandler() { return aVarUnifyHandler; }
-  void setAVarHandler(TaggedRef u, TaggedRef b) {
-    aVarUnifyHandler = u;
-    aVarBindHandler = b;
-  }
   TaggedRef getX(int i) { return xRegs[i]; }
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
   void setDefaultExceptionHdl(TaggedRef pred) {
@@ -288,7 +294,7 @@ public:
 
   Bool debugmode() { return isSetSFlag(DebugMode); }
   void checkDebug(Thread *tt, Board *bb) {
-    if (debugmode() && isRootBoard(bb)) checkDebugOutline(tt);
+    if (debugmode() && bb==_rootBoard) checkDebugOutline(tt);
   }
   void checkDebugOutline(Thread *tt);
 
@@ -317,23 +323,23 @@ public:
   INLINE Thread *mkRunnableThread(int prio, Board *bb);
   INLINE Thread *mkRunnableThreadOPT(int prio, Board *bb);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
-  Thread *mkWakeupThread(Board *bb);
+  inline Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio);
   INLINE int newId();
 
   INLINE void suspThreadToRunnableOPT(Thread *tt);
   INLINE void suspThreadToRunnable(Thread *tt);
-  INLINE void wakeupToRunnable(Thread *tt);
+  inline void wakeupToRunnable(Thread *tt);
   INLINE void propagatorToRunnable(Thread *tt);
   INLINE void updateSolveBoardPropagatorToRunnable(Thread *tt);
 
   // wake up cconts and board conts
-  INLINE Bool wakeUp(Thread *tt,Board *home, PropCaller calledBy);
+  inline Bool wakeUp(Thread *tt,Board *home, PropCaller calledBy);
   INLINE Bool wakeUpPropagator(Thread *tt, Board *home,
                         PropCaller calledBy = pc_propagator);
-  INLINE Bool wakeUpBoard(Thread *tt, Board *home);
-  INLINE Bool wakeUpThread(Thread *tt, Board *home);
+  inline Bool wakeUpBoard(Thread *tt, Board *home);
+  inline Bool wakeUpThread(Thread *tt, Board *home);
   INLINE OZ_Return runPropagator(Thread *tt);
 
   //
@@ -427,12 +433,9 @@ public:
   void failBoard();
 
   // Unification
-  Bool unify(TaggedRef ref1, TaggedRef ref2, ByteCode *scp=0);
-  Bool fastUnify(TaggedRef ref1, TaggedRef ref2, ByteCode *);
-  Bool fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, ByteCode *);
-  void bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef term,
-                    ByteCode *);
-
+  void doTrail(TaggedRef *vp, TaggedRef v) {
+    trail.pushRef(vp,v);
+  }
   void doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t);
   void doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
                            GenCVariable * lv, GenCVariable * gv);
@@ -444,10 +447,6 @@ public:
   Bool isLocalSVar(SVariable *var);
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
-  Bool isMoreLocal(TaggedRef var1, TaggedRef var2);
-
-  void genericBind(TaggedRef *varPtr, TaggedRef var,
-                   TaggedRef *termPtr, TaggedRef term);
 
   void checkSuspensionList(TaggedRef taggedvar,
                            PropCaller calledBy = pc_propagator);
@@ -456,8 +455,6 @@ public:
                                 TaggedRef flist, Bool determined);
   SuspList * checkSuspensionList(SVariable * var,
                                  SuspList * suspList, PropCaller calledBy);
-  BFlag isBetween(Board * to, Board * varHome);
-  Bool  isBelow(Board *below, Board *above);
   int incSolveThreads(Board *bb);
   void decSolveThreads(Board *bb);
   DebugCode(Bool isInSolveDebug(Board *bb);)
@@ -508,7 +505,6 @@ extern AM am;
 #include "builtins.hh"
 #include "compiler.hh"
 #include "os.hh"
-
 
 #ifndef OUTLINE
 #include "am.icc"

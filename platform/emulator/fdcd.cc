@@ -345,7 +345,7 @@ OZ_Return CDPropagator::propagate(void)
       int * is = OZ_findEqualVars(variables, &_v[0]);
       for (int i = 0; i < variables; i += 1)
         if (is[i] >= 0 && is[i] != i)
-          if (FAILED == OZ_unify(_v[i], _v[is[i]]))
+          if (FAILED == OZ_unify(_v[i], _v[is[i]])) // mm_u
             error("Failure occured while commiting clause in constr disj.");
     }
 

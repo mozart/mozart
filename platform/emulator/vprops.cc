@@ -755,8 +755,8 @@ OZ_BI_define(BIputProperty,2,0)
 
 void initVirtualProperties()
 {
-  vprop_registry  = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
-  system_registry = makeTaggedConst(new OzDictionary(ozx_rootBoard()));
+  vprop_registry  = makeTaggedConst(new OzDictionary(oz_rootBoard()));
+  system_registry = makeTaggedConst(new OzDictionary(oz_rootBoard()));
   OZ_protect(&vprop_registry);
   OZ_protect(&system_registry);
   // POPULATE THE SYSTEM REGISTRY
