@@ -31,6 +31,7 @@ export
    pcdata: PCDATA
    verbatim: VERBATIM
    toVirtualString: HTMLToVirtualString
+   Clean
 define
    % names used for constructing the output tree:
    EMPTY    = {NewName}
@@ -148,5 +149,19 @@ define
 
    fun {HTMLToVirtualString HTML}
       {ToVSSub HTML unit unit}#'\n'
+   end
+
+   fun {Clean HTML}
+      case HTML of PCDATA(VS) then HTML
+      [] VERBATIM(VS) then HTML
+      [] SEQ(Xs) then SEQ({Map Xs Clean})
+      [] !EMPTY then EMPTY
+      [] BLOCK(X) then {Clean X}
+      else
+	 SEQ({Record.foldRInd HTML
+	      fun {$ F X In}
+		 if {IsInt F} then {Clean X}|In else In end
+	      end nil})
+      end
    end
 end
