@@ -36,6 +36,8 @@
 #include "wsock.hh"
 
 #include "builtins.hh"
+#include "site.hh"
+#include "gname.hh"
 
 #include "codearea.hh"
 #include "thr_int.hh"
@@ -1365,6 +1367,28 @@ OZ_BI_define(BInameHash,1,1)
     oz_typeError(0,"Name");
   } else {
     OZ_RETURN_INT(tagged2Literal(name)->hash());
+  }
+} OZ_BI_end
+
+OZ_BI_define(BInameToString,1,1)
+{
+  oz_declareNonvarIN(0,name);
+  if (!oz_isName(name)) {
+    oz_typeError(0,"Name");
+  } else {
+    Literal *literal = tagged2Literal(name);
+    if (literal->isUniqueName()) {
+      OZ_RETURN(oz_atom(literal->getPrintName()));
+    } else {
+      Name *name = (Name *) literal;
+      GName *gname = name->globalize();
+      TimeStamp *ts = gname->site->getTimeStamp();
+      static char s[256];
+      sprintf(s, "%u:%u:%u:%ld", ts->pid,
+              gname->id.number[0], gname->id.number[1],
+              (unsigned long) ts->start);
+      OZ_RETURN(oz_atom(s));
+    }
   }
 } OZ_BI_end
 
