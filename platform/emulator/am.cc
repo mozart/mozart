@@ -1041,6 +1041,7 @@ void AM::handleIO()
       numbOfFDs--;
       awakeNode(ioNodes[index]);
       ioNodes[index] = NULL;
+      osClrWatchedReadFD(index);
     }
   }
 }
