@@ -381,7 +381,9 @@ for you.  We provide utilities that make this task very simple.</p>
 	  <p>The <code/ozskel/ utility makes it very easy to develop
 and distribute applications.  It is also just as useful for projects
 that you don't intend to distribute.</p>
-	  <p><code/ozskel/ is a script which, when invoked, populates
+	  <p><ref.extern
+to="http://www.mozart-oz.org/mogul/info/duchier/ozskel2.html"
+><code/ozskel/</ref.extern> is a script which, when invoked, populates
 your current directory with a whole collection of administrative
 files.  In particular it gives you a <file/Makefile.in/ where you just
 have to fill in the blanks.  Creating a good <file/Makefile.in/ is
