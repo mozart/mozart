@@ -20,20 +20,31 @@
 
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
 
-#define DEBUG_FD_IR(COND, CODE) if (COND) CODE;
+#define DEBUG_FD_IR(COND, CODE) if (1||COND) CODE;
 
-Bool FDIntervals::isConsistent(void) {
+Bool FDIntervals::isConsistent(void) const {
+  if (high < 0) return FALSE;
   for (int i = 0; i < high; i++) {
-    if (i_arr[i].left > i_arr[i].right)
-      return FALSE;
-    if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left))
-      return FALSE;
+    if (i_arr[i].left > i_arr[i].right) return FALSE;
+    if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left)) return FALSE;
   }
+  for (i = 0; i < high - 1; i++)
+    if (! ((i_arr[i].right + 1) < i_arr[i + 1].left)) return FALSE;
   return TRUE;
 }
 
-#else
+Bool FiniteDomain::isConsistent(void) const {
+  if (size == 0) return TRUE;
+  descr_type type = getType();
+  if (type == fd_descr)
+    return findSize() == size;
+  else if (type == bv_descr)
+    return get_bv()->findSize() == size;
+  else
+    return get_iv()->findSize() == size;
+}
 
+#else
 #define DEBUG_FD_IR(COND, CODE)
 #undef Assert
 #define Assert(X)
@@ -127,14 +138,12 @@ int FDIntervals::findSize(void)
   return s;
 }
 
-int FDIntervals::findMinElem(void)
-{
-  return i_arr[0].left;
+int FDIntervals::findMinElem(void) {
+  return high ? i_arr[0].left : 0;
 }
 
-int FDIntervals::findMaxElem(void)
-{
-  return i_arr[high - 1].right;
+int FDIntervals::findMaxElem(void) {
+  return high ? i_arr[high - 1].right : 0;
 }
 
 int FDIntervals::nextBiggerElem(int v, int max_elem) const
@@ -334,21 +343,24 @@ FDIntervals * FDIntervals::operator += (const int put_in)
   if (i_arr[index].left <= put_in && put_in <= i_arr[index].right)
     return this;
 
-  if (index > 0 && (put_in == i_arr[index - 1].right + 1)) {
-    if (put_in == i_arr[index].left - 1) { // closing a gap
-      i_arr[index - 1].right = i_arr[index].right;
-      for (int i = index + 1; i < high; i += 1)
-        i_arr[i - 1] = i_arr[i];
+  if (put_in == i_arr[index].right + 1) {
+    // closing a gap
+    if ((index + 1) < high && put_in == i_arr[index + 1].left - 1) {
+      i_arr[index].right = i_arr[index + 1].right;
+      for (int i = index + 1; (i + 1) < high; i += 1)
+        i_arr[i] = i_arr[i + 1];
       high -= 1;
     } else {
-      i_arr[index - 1].right += 1;
+      i_arr[index].right += 1;
     }
   } else if (put_in == i_arr[index].left - 1) {
-    i_arr[index].left -= 1;
+    i_arr[index].left = put_in;
+  } else if ((index + 1) < high && put_in == i_arr[index + 1].left - 1) {
+    i_arr[index + 1].left -= 1;
   } else {
     high += 1;
     if (i_arr[index].right < put_in) index += 1;
-    if (high <= fd_bv_max_high) {
+    if (high <= fd_iv_max_high) {
       for (int i = high - 1; index < i; i -= 1)
         i_arr[i] = i_arr[i - 1];
       i_arr[index].left = i_arr[index].right = put_in;
@@ -483,7 +495,48 @@ int FDIntervals::intersect_iv(FDIntervals &z, const FDIntervals &y)
   z.high = z_c;
 
   Assert(z.isConsistent());
+  return z.findSize();
+}
 
+int FDIntervals::subtract_iv(FDIntervals &z, const FDIntervals &y)
+{
+  for (int x_c = 0, y_c = 0, z_c = 0; x_c < high && y_c < y.high; ) {
+    for (; y_c < y.high && y.i_arr[y_c].right < i_arr[x_c].left; y_c += 1);
+    if (y_c >= y.high) break;
+
+    if (y.i_arr[y_c].left <= i_arr[x_c].left &&
+        i_arr[x_c].right <= y.i_arr[y_c].right) { // overlap
+      x_c += 1;
+    } else if (i_arr[x_c].right < y.i_arr[y_c].left) { // step over
+      z.i_arr[z_c++] = i_arr[x_c++];
+    } else if (i_arr[x_c].right <= y.i_arr[y_c].right) { // right cut
+      z.i_arr[z_c].left = i_arr[x_c++].left;
+      z.i_arr[z_c++].right = y.i_arr[y_c].left - 1;
+    } else if (y.i_arr[y_c].right <= i_arr[x_c].right) {
+      if (i_arr[x_c].left < y.i_arr[y_c].left) {
+        z.i_arr[z_c].left = i_arr[x_c].left;
+      } else {
+        z.i_arr[z_c].left = y.i_arr[y_c++].right + 1;
+      }
+      while (y_c < y.high && y.i_arr[y_c].right < i_arr[x_c].right) {
+        z.i_arr[z_c].right = y.i_arr[y_c].left - 1;
+        z.i_arr[++z_c].left = y.i_arr[y_c++].right + 1;
+      }
+      if (y_c < y.high && y.i_arr[y_c].left <= i_arr[x_c].right) {
+        z.i_arr[z_c++].right = y.i_arr[y_c].left - 1;
+        x_c += 1;
+      } else {
+        z.i_arr[z_c++].right = i_arr[x_c++].right;
+      }
+    }
+  }
+
+  for (; x_c < high; x_c += 1, z_c += 1) z.i_arr[z_c] = i_arr[x_c];
+
+  Assert(z.high >= z_c);
+  z.high = z_c;
+
+  Assert(z.isConsistent());
   return z.findSize();
 }
 
@@ -492,8 +545,7 @@ const FDIntervals &FDIntervals::operator = (const FDIntervals &iv)
   Assert(high >= iv.high);
 
   high = iv.high;
-  for (int i = high; i--; )
-    i_arr[i] = iv.i_arr[i];
+  for (int i = high; i--; ) i_arr[i] = iv.i_arr[i];
 
   return *this;
 }
@@ -513,7 +565,10 @@ void FDBitVector::print(ostream &ofile, int idnt) const
   for (int i = 0; i < len; i += 1) {
     ofile << ' ' << fd_bv_left_conv[i];
     if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
-      ofile << ".." << fd_bv_right_conv[i];
+      if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
+        ofile << ' ' << fd_bv_right_conv[i];
+      else
+        ofile << ".." << fd_bv_right_conv[i];
   }
   ofile << " }";
 }
@@ -782,11 +837,6 @@ int FDBitVector::mkRaw(int * list_left, int * list_right) const
         if (d == 1) {
           list_left[len] = list_right[len] = l;
           len += 1;
-        } else if (d == 2) {
-          list_left[len] = list_right[len] = l;
-          len += 1;
-          list_left[len] = list_right[len] = i - 1;
-          len += 1;
         } else {
           list_left[len] = l;
           list_right[len] = i - 1;
@@ -814,6 +864,13 @@ int FDBitVector::intersect_bv(FDBitVector &z, const FDBitVector &y)
       z.b_arr[i] = b_arr[i] & y.b_arr[i];
 
   return z.findSize();
+}
+
+int FDBitVector::operator -= (const FDBitVector &y)
+{
+  for (int i = fd_bv_max_high; i--; )
+    b_arr[i] = b_arr[i] & ~y.b_arr[i];
+  return findSize();
 }
 
 // FD -------------------------------------------------------------------------
@@ -883,13 +940,17 @@ void FiniteDomain::printDebugLong(void) const
 
 Bool FiniteDomain::contains(int i) const
 {
-  descr_type type = getType();
-  if (type == fd_descr)
-    return (min_elem <= i && i <= max_elem);
-  else if (type == bv_descr)
-    return get_bv()->contains(i);
-  else
-    return get_iv()->contains(i);
+  if (size == 0) {
+    return FALSE;
+  } else {
+    descr_type type = getType();
+    if (type == fd_descr)
+      return (min_elem <= i && i <= max_elem);
+    else if (type == bv_descr)
+      return get_bv()->contains(i);
+    else
+      return get_iv()->contains(i);
+  }
 }
 
 int FiniteDomain::setEmpty(void)
@@ -984,7 +1045,7 @@ int FiniteDomain::initList(int list_len,
   return size;
 }
 
-FDBitVector * FiniteDomain::provideBitVector(void)
+FDBitVector * FiniteDomain::provideBitVector(void) const
 {
   FDBitVector * bv = get_bv();
 
@@ -999,8 +1060,7 @@ int intcompare(void * ii, void  * jj) {
   return(**i - **j);
 }
 
-int FiniteDomain::simplify(int list_len,
-                           int * list_left, int * list_right)
+int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
 {
   for (int i = list_len; i--; ) {
     fd_iv_left_sort[i] = list_left + i;
@@ -1022,7 +1082,7 @@ int FiniteDomain::simplify(int list_len,
 }
 
 
-FDIntervals * FiniteDomain::provideIntervals(int max_index)
+FDIntervals * FiniteDomain::provideIntervals(int max_index) const
 {
   FDIntervals * iv = get_iv();
   if (max_index > fd_iv_max_high)
@@ -1192,10 +1252,12 @@ int FiniteDomain::operator &= (const int i)
   DEBUG_FD_IR(FALSE, cout << *this << " &= " << i << " = ");
   if (contains(i)) {
     initSingleton(i);
+    Assert(isConsistent());
     DEBUG_FD_IR(FALSE, cout << *this << endl);
     return 1;
   } else {
     initEmpty();
+    Assert(isConsistent());
     DEBUG_FD_IR(FALSE, cout << *this << endl);
     return 0;
   }
@@ -1206,6 +1268,7 @@ int FiniteDomain::operator <= (const int leq)
   DEBUG_FD_IR(FALSE, cout << *this  << " <= " << leq << " = ");
 
   if (leq < min_elem) {
+    Assert(isConsistent());
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
   } else if (leq < max_elem) {
@@ -1226,6 +1289,7 @@ int FiniteDomain::operator <= (const int leq)
     }
   }
   if (isSingleInterval()) setType(fd_descr);
+  Assert(isConsistent());
   DEBUG_FD_IR(FALSE, cout << *this << endl);
   return size;
 }
@@ -1235,6 +1299,7 @@ int FiniteDomain::operator >= (const int geq)
   DEBUG_FD_IR(FALSE, cout << *this  << " >= " << geq << " = ");
 
   if (geq > max_elem) {
+    Assert(isConsistent());
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
     return initEmpty();
   } else if (geq > min_elem) {
@@ -1253,6 +1318,7 @@ int FiniteDomain::operator >= (const int geq)
     }
   }
   if (isSingleInterval()) setType(fd_descr);
+  Assert(isConsistent());
   DEBUG_FD_IR(FALSE, cout << *this << endl);
   return size;
 }
@@ -1295,6 +1361,74 @@ int FiniteDomain::operator -= (const int take_out)
     size -= 1;
     if (isSingleInterval()) setType(fd_descr);
   }
+  Assert(isConsistent());
+  DEBUG_FD_IR(FALSE, cout << *this << endl);
+  return size;
+}
+
+int FiniteDomain::operator -= (const FiniteDomain &y)
+{
+  DEBUG_FD_IR(FALSE, cout << *this << " -= " << y << " = ");
+  if (y != fd_empty) {
+    descr_type x_type = getType(), y_type = y.getType();
+    if (x_type == fd_descr) {
+      if (y_type == fd_descr) {
+        if (y.max_elem < min_elem || max_elem < y.min_elem) {
+          Assert(isConsistent());
+          DEBUG_FD_IR(FALSE, cout << *this << endl);
+          return size;
+        } else if (y.min_elem <= min_elem && max_elem <= y.max_elem) {
+          size = 0;
+        } else if (min_elem < y.min_elem && y.max_elem < max_elem) {
+          if (max_elem <= fd_bv_max_elem) {
+            FDBitVector * bv = provideBitVector();
+            bv->setFromTo(min_elem, y.min_elem - 1);
+            bv->addFromTo(y.max_elem + 1, max_elem);
+            size = bv->findSize();
+            setType(bv);
+          } else {
+            FDIntervals * iv = provideIntervals(2);
+            iv->init(min_elem, y.min_elem - 1, y.max_elem + 1, max_elem);
+            size = iv->findSize();
+            setType(iv);
+          }
+        } else if (y.max_elem < max_elem) {
+          min_elem = y.max_elem + 1;
+          size = findSize();
+        } else {
+          max_elem = y.min_elem - 1;
+          size = findSize();
+        }
+      } else if (y_type == bv_descr) {
+        FDBitVector * bv = asBitVector();
+        size = (*bv -= *y.get_bv());
+        min_elem = bv->findMinElem();
+        max_elem = bv->findMaxElem();
+        setType(bv);
+      } else { // y_type == iv_descr
+        FDIntervals * iv = newIntervals(1 + y.get_iv()->high);
+        size = asIntervals()->subtract_iv(*iv, *y.get_iv());
+        min_elem = iv->findMinElem();
+        max_elem = iv->findMaxElem();
+        setType(iv);
+      }
+    } else if (x_type == bv_descr) {
+      FDBitVector * bv = get_bv();
+      size = (*bv -= *y.asBitVector());
+      min_elem = bv->findMinElem();
+      max_elem = bv->findMaxElem();
+    } else { // x_type == iv_descr
+      FDIntervals * y_iv = y.asIntervals();
+      FDIntervals * iv = newIntervals(get_iv()->high + y_iv->high);
+      size = get_iv()->subtract_iv(*iv, *y_iv);
+      min_elem = iv->findMinElem();
+      max_elem = iv->findMaxElem();
+      setType(iv);
+    }
+
+    if (isSingleInterval()) setType(fd_descr);
+  }
+  Assert(isConsistent());
   DEBUG_FD_IR(FALSE, cout << *this << endl);
   return size;
 }
@@ -1307,6 +1441,7 @@ int FiniteDomain::operator += (const int put_in)
 
   if (size == 0) {
     min_elem = max_elem = put_in;
+    size = 1;
   } else if (!contains(put_in)) {
     descr_type type = getType();
     if (type == fd_descr) {
@@ -1314,14 +1449,22 @@ int FiniteDomain::operator += (const int put_in)
         min_elem -= 1;
       } else if (put_in == max_elem + 1) {
         max_elem += 1;
-      } else if (put_in < min_elem) {
-        FDIntervals * iv = provideIntervals(2);
-        iv->init(put_in, put_in, min_elem, max_elem);
-        setType(iv);
       } else {
-        FDIntervals * iv = provideIntervals(2);
-        iv->init(min_elem, max_elem, put_in, put_in);
-        setType(iv);
+        if (max(max_elem, put_in) <= fd_bv_max_elem) {
+          FDBitVector * bv = asBitVector();
+          bv->setBit(put_in);
+          min_elem = bv->findMinElem();
+          max_elem = bv->findMaxElem();
+          setType(bv);
+        } else {
+          FDIntervals * iv = provideIntervals(2);
+          if (put_in < min_elem) {
+            iv->init(put_in, put_in, min_elem, max_elem);
+          } else {
+            iv->init(min_elem, max_elem, put_in, put_in);
+          }
+          setType(iv);
+        }
       }
     } else if (type == bv_descr) {
       if (put_in <= fd_bv_max_elem) {
@@ -1350,10 +1493,11 @@ int FiniteDomain::operator += (const int put_in)
       max_elem = iv->findMaxElem();
       setType(iv);
     }
+    size += 1;
   }
-  size += 1;
   if (isSingleInterval()) setType(fd_descr);
 
+  Assert(isConsistent());
   DEBUG_FD_IR(FALSE, cout << *this << endl);
   return size;
 }
@@ -1408,6 +1552,7 @@ FiniteDomain &FiniteDomain::operator ~ (void) const
     }
   }
 
+  Assert(y.isConsistent());
   DEBUG_FD_IR(FALSE, cout << y << endl);
 
   return y;
@@ -1439,6 +1584,7 @@ FiniteDomain &FiniteDomain::operator | (const FiniteDomain &y) const
   }
   if (z.isSingleInterval()) z.setType(fd_descr);
 
+  Assert(z.isConsistent());
   DEBUG_FD_IR(FALSE, cout << z << endl);
 
   return z;
@@ -1450,7 +1596,7 @@ FDBitVector * FiniteDomain::asBitVector(void) const
   if (type == bv_descr) {
     return get_bv();
   } else if (type == fd_descr) {
-    FDBitVector * bv = new FDBitVector;
+    FDBitVector * bv = provideBitVector();
     if (min_elem > fd_bv_max_elem)
       bv->setEmpty();
     else
@@ -1472,12 +1618,18 @@ FDIntervals * FiniteDomain::asIntervals(void) const
   if (type == iv_descr) {
     return get_iv();
   } else if (type == bv_descr) {
-    int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
-    FDIntervals * iv = newIntervals(s);
-    iv->initList(s, fd_bv_left_conv, fd_bv_right_conv);
-    return iv;
+    if (isSingleInterval()) {
+      FDIntervals * iv = provideIntervals(1);
+      iv->init(min_elem, max_elem);
+      return iv;
+    } else {
+      int s = get_bv()->mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+      FDIntervals * iv = newIntervals(s);
+      iv->initList(s, fd_bv_left_conv, fd_bv_right_conv);
+      return iv;
+    }
   } else {
-    FDIntervals * iv = new FDIntervals(1);
+    FDIntervals * iv = provideIntervals(1);
     iv->init(min_elem, max_elem);
     return iv;
   }
@@ -1488,8 +1640,10 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
   DEBUG_FD_IR(FALSE, cout << *this << " &= " << y << " = ");
 
   if (*this == fd_empty || y == fd_empty) {
+    initEmpty();
+    Assert(isConsistent());
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
-    return initEmpty();
+    return 0;
   } else if (getType() == fd_descr && y.getType() == fd_descr) {
     if (max_elem < y.min_elem || y.max_elem < min_elem) {
       size = 0;
@@ -1519,6 +1673,7 @@ int FiniteDomain::operator &= (const FiniteDomain &y)
 
   if (isSingleInterval()) setType(fd_descr);
 
+  Assert(isConsistent());
   DEBUG_FD_IR(FALSE, cout << *this << endl);
 
   return size;
@@ -1531,6 +1686,7 @@ FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
   FiniteDomain &z = return_var; z.setEmpty();
 
   if (*this == fd_empty || y == fd_empty) {
+    Assert(z.isConsistent());
     DEBUG_FD_IR(FALSE, cout << "{ - empty -}" << endl);
     return z;
   } else if (getType() == fd_descr && y.getType() == fd_descr) {
@@ -1563,6 +1719,7 @@ FiniteDomain &FiniteDomain::operator & (const FiniteDomain &y) const
 
   if (z.isSingleInterval()) z.setType(fd_descr);
 
+  Assert(z.isConsistent());
   DEBUG_FD_IR(FALSE, cout << z << endl);
 
   return z;

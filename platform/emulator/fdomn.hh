@@ -37,7 +37,7 @@ private:
   struct i_arr_type {int left; int right;};
 
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-  Bool isConsistent(void);
+  Bool isConsistent(void) const;
   struct _i_arr_type {
     i_arr_type _i_arr[fd_iv_max_high];
     i_arr_type &operator [] (int i) const {
@@ -91,6 +91,7 @@ public:
   void copy(FDIntervals *);
   int union_iv(const FDIntervals &, const FDIntervals &);
   int intersect_iv(FDIntervals &, const FDIntervals &);
+  int subtract_iv (FDIntervals &, const FDIntervals &);
 };
 
 const int fd_bv_max_high = 2 * FD_NOI + 1;
@@ -145,6 +146,7 @@ public:
   FDBitVector * copy(void);
   int operator <= (const int);
   int operator >= (const int);
+  int operator -= (const FDBitVector &);
   int mkRaw(int * list_left, int * list_right) const;
   int union_bv(const FDBitVector &, const FDBitVector &);
   int intersect_bv(FDBitVector &, const FDBitVector &);
@@ -178,18 +180,22 @@ private:
   void set_bv(void * p) {descr = p;}
   FDBitVector * get_bv(void) const {return (FDBitVector *)(((int)descr) & ~3);}
 
-  int setEmpty(void);
-  FDBitVector * provideBitVector(void);
-  FDIntervals * provideIntervals(int);
-  int findSize(void) {return max_elem - min_elem + 1;}
+  FDBitVector * provideBitVector(void) const;
+  FDIntervals * provideIntervals(int) const;
+  int findSize(void) const {return max_elem - min_elem + 1;}
   Bool isSingleInterval(void) const {return size == (max_elem - min_elem + 1);}
   FDBitVector * asBitVector(void) const;
   FDIntervals * asIntervals(void) const;
+
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  Bool isConsistent(void) const;
+#endif
+
 public:
   void dispose(void) {
     switch (getType()) {
-    case iv_descr: get_iv()->dispose(); return;
-    case bv_descr: get_bv()->dispose(); return;
+    case iv_descr: return get_iv()->dispose();
+    case bv_descr: return get_bv()->dispose();
     default: return;
     }
   }
@@ -200,6 +206,8 @@ public:
   FiniteDomain(const FiniteDomain &);
   const FiniteDomain &operator = (const FiniteDomain &fd);
   void gc(void);
+
+  int setEmpty(void);
 
   int initFull(void);
   int initEmpty(void);
@@ -232,6 +240,7 @@ public:
   int operator &= (const FiniteDomain &);
   int operator &= (const int);
   int operator -= (const int);
+  int operator -= (const FiniteDomain &);
   int operator += (const int);
   int operator <= (const int);
   int operator >= (const int);
