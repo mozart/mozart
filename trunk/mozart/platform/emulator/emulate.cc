@@ -463,7 +463,7 @@ void AM::pushContX(ProgramCounter PC, RefsArray Y, RefsArray G,
 
 #define INCFPC(N) PC += N
 
-#define WANT_INSTRPROFILE
+// #define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -1475,12 +1475,12 @@ LBLdispatcher:
   Case(FASTCALL)
     {
       PushCont(PC+3,Y,G);   // PC+3 goes into a temp var (mm2)
-      goto LBLFastTailCall; // is not optimized away (mm2)
+      // goto LBLFastTailCall; // is not optimized away (mm2)
     }
 
 
   Case(FASTTAILCALL)
-  LBLFastTailCall:
+    //  LBLFastTailCall:
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
