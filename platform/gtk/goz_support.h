@@ -191,7 +191,7 @@ gchar *** VAR; \
   OZ_declareTerm (ARG, term); \
   len = OZ_length (term); \
   for (i=0; i<len; i++) { \
-    string = OZ_stringToC (OZ_head (term), &dummy); \
+    string = OZ_virtualStringToC (OZ_head (term), &dummy); \
     term = OZ_tail (term); \
     VAR[i] = &string; \
   } \

@@ -54,8 +54,8 @@ EOF
 
    'gchar'                    => 'GOZ_DECLARE_GCHAR',
    'guchar'                   => 'GOZ_DECLARE_GUCHAR',
-   'gchar*'                   => 'OZ_declareString',
-   'const gchar*'             => 'OZ_declareString',
+   'gchar*'                   => 'OZ_declareVirtualString',
+   'const gchar*'             => 'OZ_declareVirtualString',
 
    'gint'                     => 'GOZ_DECLARE_GINT',
    'guint'                    => 'GOZ_DECLARE_GUINT',
