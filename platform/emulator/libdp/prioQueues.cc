@@ -420,7 +420,6 @@ void PrioQueues::clearAll() {
   msgC=recList;
   while(msgC!=NULL) {
     recList=msgC->next;
-    msgC->deleteSnapshot(); // AN! for incoming?
     msgContainerManager->deleteMsgContainer(msgC);
     msgC=recList;
   }

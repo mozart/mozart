@@ -879,27 +879,6 @@ void VariableExcavator::copyStack(DPMarshaler *dpm)
 //
 VariableExcavator ve;
 
-//
-// kost@ : original dpMarshaler's stuff;
-// for now credit is a 32-bit word
-//
-void marshalCreditOutline(MarshalerBuffer *bs, Credit credit)
-{
-  marshalCredit(bs, credit);
-}
-
-#ifdef USE_FAST_UNMARSHALER
-Credit unmarshalCreditOutline(MarshalerBuffer *bs)
-{
-  return unmarshalCredit(bs)
-;}
-#else
-Credit unmarshalCreditRobustOutline(MarshalerBuffer *bs, int *error)
-{
-  return unmarshalCreditRobust(bs,error);
-}
-#endif
-
 /**********************************************************************/
 /*  basic borrow, owner */
 /**********************************************************************/
@@ -911,17 +890,14 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
   bs->put(tag);
   myDSite->marshalDSite(bs);
   marshalNumber(bs, i);
-  bs->put(DIF_PRIMARY);
-  Credit c = ownerTable->getOwner(i)->getSendCredit();
-// DebugCode(if (tag==DIF_STUB_OBJECT) printf("m-ms i:%d c:-%d %d\n",i,c,osgetpid());)
-  marshalNumber(bs, c);
-  PD((MARSHAL,"ownHead o:%d rest-c: ",i));
+
+  marshalCredit(bs,ownerTable->getOwner(i)->getCreditBig());
 }
 
 //
 void saveMarshalOwnHead(int oti, Credit &c)
 {
-  c = ownerTable->getOwner(oti)->getSendCredit();
+  c = ownerTable->getOwner(oti)->getCreditBig();
 }
 
 //
@@ -931,16 +907,13 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c)
   bs->put(tag);
   myDSite->marshalDSite(bs);
   marshalNumber(bs, oti);
-  bs->put(DIF_PRIMARY);
-  marshalNumber(bs, c);
-  PD((MARSHAL,"ownHead o:%d rest-c: ",oti));
+  marshalCredit(bs,c);
 }
 
 //
 void discardOwnHeadSaved(int oti, Credit c)
 {
-  OwnerEntry *oe = ownerTable->getOwner(oti);
-  oe->returnCreditOwner(c, oti);
+  ownerTable->getOwner(oti)->addCredit(c);
 }
 
 //
@@ -949,56 +922,28 @@ void marshalToOwner(MarshalerBuffer *bs, int bi)
   PD((MARSHAL,"toOwner"));
   BorrowEntry *b = borrowTable->getBorrow(bi); 
   int OTI = b->getOTI();
-  if (b->getOnePrimaryCredit()) {
-// printf("p-mto i:%d c:-%d %d\n",b->getOTI(),1,b->getNetAddress()->site->getTimeStamp()->pid);
-    bs->put((BYTE) DIF_OWNER);
-    marshalNumber(bs, OTI);
-    PD((MARSHAL,"toOwner Borrow b:%d Owner o:%d",bi,OTI));
-  } else {
-    bs->put((BYTE) DIF_OWNER_SEC);
-    DSite* xcs = b->getOneSecondaryCredit();
-    marshalNumber(bs, OTI);
-    xcs->marshalDSite(bs);
-  }
+  marshalCreditToOwner(bs,b->getCreditSmall(),OTI);
 }
 
 //
 // 'saveMarshalToOwner'/'marshalToOwnerSaved' are complimentary. These
 // are used for immediate exportation of variable proxies and
 // marshaling corresponding "exported variable proxies" later.
-void saveMarshalToOwner(int bi, int &oti,
-			CreditType &ct, Credit &c, DSite* &scm)
+void saveMarshalToOwner(int bi, int &oti, Credit &c)
 {
   PD((MARSHAL,"toOwner"));
   BorrowEntry *b = borrowTable->getBorrow(bi); 
 
   //
   oti = b->getOTI();
-  c = 1;
-  if (b->getOnePrimaryCredit()) {
-    ct = CT_Primary;
-    scm = (DSite *) 0;
-    PD((MARSHAL,"toOwner Borrow b:%d Owner o:%d", bi, oti));
-  } else {
-    ct = CT_Secondary;
-    scm = b->getOneSecondaryCredit();
-  }
+  c = b->getCreditSmall();
 }
 
 //
-void marshalToOwnerSaved(MarshalerBuffer *bs,
-			 int oti, CreditType ct, DSite *scm)
+void marshalToOwnerSaved(MarshalerBuffer *bs,Credit c,
+			 int oti)
 {
-  if (ct == CT_Primary) {
-    bs->put((BYTE) DIF_OWNER);
-    marshalNumber(bs, oti);
-    Assert(scm == (DSite *) 0);
-  } else {
-    Assert(ct == CT_Secondary);
-    bs->put((BYTE) DIF_OWNER_SEC);
-    marshalNumber(bs, oti);
-    scm->marshalDSite(bs);
-  }
+  marshalCreditToOwner(bs,c,oti);
 }
 
 //
@@ -1010,22 +955,13 @@ void marshalBorrowHead(MarshalerBuffer *bs, MarshalTag tag, int bi)
   NetAddress *na = b->getNetAddress();
   na->site->marshalDSite(bs);
   marshalNumber(bs, na->index);
-  Credit cred = b->getSmallPrimaryCredit();
-  if(cred) {
-    PD((MARSHAL,"borrowed b:%d remCredit c: give c:%d",bi,cred));
-    bs->put(DIF_PRIMARY);
-    marshalCredit(bs, cred);
-  } else {
-    DSite* ss = b->getSmallSecondaryCredit(cred);  
-    bs->put(DIF_SECONDARY);
-    marshalCredit(bs, cred);
-    marshalDSite(bs, ss);
-  }
+
+  marshalCredit(bs, b->getCreditSmall());
 }
 
 //
 void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
-			   CreditType &ct, Credit &c, DSite* &scm)
+			   Credit &c)
 {
   PD((MARSHAL,"BorrowHead"));
 
@@ -1036,42 +972,25 @@ void saveMarshalBorrowHead(int bi, DSite* &ms, int &oti,
   ms = na->site;
   oti = na->index;
   //
-  c = b->getSmallPrimaryCredit();
-  if (c) {
-    PD((MARSHAL,"borrowed b:%d remCredit c: give c:%d", bi, c));
-    ct = CT_Primary;
-    scm = (DSite *) 0;
-  } else {
-    ct = CT_Secondary;
-    scm = b->getSmallSecondaryCredit(c);
-  }
+  c = b->getCreditSmall();
 }
 
 //
 void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
-			    int oti, CreditType ct, Credit c, DSite *scm)
+			    int oti, Credit c)
 {
   bs->put((BYTE) tag);
   marshalDSite(bs, ms);
   marshalNumber(bs, oti);
 
   //
-  if (ct == CT_Primary) {
-    bs->put(DIF_PRIMARY);
-    marshalCredit(bs, c);
-    Assert(scm == (DSite *) 0);
-  } else {
-    Assert(ct == CT_Secondary);
-    bs->put(DIF_SECONDARY);
-    marshalCredit(bs, c);
-    marshalDSite(bs, scm);
-  }
+  marshalCredit(bs, c);
 }
 
 //
 // The problem with borrow entries is that they can go away.
 void discardBorrowHeadSaved(DSite *ms, int oti,
-			    CreditType ct, Credit credit, DSite *scm)
+			    Credit credit)
 {
   //
   NetAddress na = NetAddress(ms, oti); 
@@ -1080,23 +999,10 @@ void discardBorrowHeadSaved(DSite *ms, int oti,
   //
   if (b) {
     // still there - then just nail credits back;
-    if (ct == CT_Primary) {
-      if (credit != PERSISTENT_CRED)
-	b->addPrimaryCredit(credit);
-      else
-	Assert(b->isPersistent());
-    } else {
-      Assert(ct == CT_Secondary);
-      b->addSecondaryCredit(credit, scm);
-    }
+    b->addCredit(credit);
   } else {
-    // otherwise, send credit back to its manager:
-    if (ct == CT_Primary) {
-      sendPrimaryCredit(ms, oti, credit);
-    } else {
-      Assert(ct == CT_Secondary);
-      sendSecondaryCredit(scm, ms, oti, credit);
-    }
+    printf("discardBorrowHeadSaved - weird case reached\n");
+    sendCreditBack(ms,oti,credit);
   }
 }
 
@@ -1117,8 +1023,6 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
   DSite*  sd=unmarshalDSite(bs);
   int si=unmarshalNumber(bs);
 #endif
-  Credit cred;
-  MarshalTag mt=(MarshalTag) bs->get();
   PD((UNMARSHAL,"borrow o:%d",si));
   if(sd==myDSite){
     Assert(0); 
@@ -1141,56 +1045,24 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
   }
   NetAddress na = NetAddress(sd,si); 
   BorrowEntry *b = borrowTable->find(&na);
-  if (b!=NULL) {
-    PD((UNMARSHAL,"borrow found"));
 #ifndef USE_FAST_UNMARSHALER
-    cred = unmarshalCreditRobust(bs, error);    
-    if(*error) { Assert(0); return 0; }
-#else
-    cred = unmarshalCredit(bs);    
-#endif
-    if(mt==DIF_PRIMARY){
-      if(cred!=PERSISTENT_CRED)
-	b->addPrimaryCredit(cred);
-      else Assert(b->isPersistent());}
-    else{
-      Assert(mt==DIF_SECONDARY);
-#ifndef USE_FAST_UNMARSHALER
-      DSite* s=unmarshalDSiteRobust(bs,error);
-      if(*error){ Assert(0);return 0;}
-#else
-      DSite* s=unmarshalDSite(bs);
-#endif
-      b->addSecondaryCredit(cred,s);}
-    ob = b;
-    // Assert(b->getValue() != (OZ_Term) 0);
-    return b->getValue();}
-#ifndef USE_FAST_UNMARSHALER
-  cred = unmarshalCreditRobust(bs, error);
+  Credit cred = unmarshalCreditRobust(bs, error);    
   if(*error) { Assert(0); return 0; }
 #else
-  cred = unmarshalCredit(bs);    		
-#endif
-  if(mt==DIF_PRIMARY){
+  Credit cred = unmarshalCredit(bs);
+#endif 
+  if (b!=NULL) {
+    b->addCredit(cred);
+    ob = b;
+    // Assert(b->getValue() != (OZ_Term) 0);
+    return b->getValue();
+  }
+  else {
     bi=borrowTable->newBorrow(cred,sd,si);
     b=borrowTable->getBorrow(bi);
-    if(cred == PERSISTENT_CRED )
-      b->makePersistent();
-    PD((UNMARSHAL,"borrowed miss"));
     ob=b;
-    return 0;}
-  Assert(mt==DIF_SECONDARY);
-#ifndef USE_FAST_UNMARSHALER
-  DSite* site = unmarshalDSiteRobust(bs,error);    		  
-  if(*error) {Assert(0);return 0;}
-#else
-  DSite* site = unmarshalDSite(bs);    		  
-#endif
-
-  bi=borrowTable->newSecBorrow(site,cred,sd,si);
-  b=borrowTable->getBorrow(bi);
-  PD((UNMARSHAL,"borrowed miss"));
-  b->moreCredit(); // The Borrow needs some of the real McCoys
+    return 0;
+  }
 
   ob=b;
   return 0;
@@ -1453,32 +1325,19 @@ OZ_Term unmarshalOwnerRobust(MarshalerBuffer *bs,MarshalTag mt,int *error)
 #else
 OZ_Term unmarshalOwner(MarshalerBuffer *bs,MarshalTag mt)
 #endif
-  {
-  if(mt==DIF_OWNER){
+{
+  int OTI;
 #ifndef USE_FAST_UNMARSHALER
-    int OTI=unmarshalNumberRobust(bs,error);
-    if(*error) return oz_nil();
-#else
-    int OTI=unmarshalNumber(bs);
-#endif
-    PD((UNMARSHAL,"OWNER o:%d",OTI));
-    OwnerEntry* oe=ownerTable->getOwner(OTI);
-    oe->returnCreditOwner(1,OTI);
-    OZ_Term oz=oe->getValue();
-    return oz;}
-  Assert(mt==DIF_OWNER_SEC);
-#ifndef USE_FAST_UNMARSHALER
-  int OTI=unmarshalNumberRobust(bs,error);
+  Credit c=unmarshalCreditToOwnerRobust(bs,mt,OTI,error);
   if(*error) return oz_nil();
-  DSite* cs=unmarshalDSiteRobust(bs,error);
-  if(*error) return oz_nil();
-  sendSecondaryCredit(cs,myDSite,OTI,1);
 #else
-  int OTI=unmarshalNumber(bs);
-  DSite* cs=unmarshalDSite(bs);
-  sendSecondaryCredit(cs,myDSite,OTI,1);
+  Credit c=unmarshalCreditToOwner(bs,mt,OTI);
 #endif
-  return ownerTable->getOwner(OTI)->getValue();
+  PD((UNMARSHAL,"OWNER o:%d",OTI));
+  OwnerEntry* oe=ownerTable->getOwner(OTI);
+  oe->addCredit(c);
+  OZ_Term oz=oe->getValue();
+  return oz;
 }
 
 

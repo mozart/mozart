@@ -35,33 +35,42 @@
 /*   Credit protocol                                     */
 /**********************************************************************/
 
-
-void sendPrimaryCredit(DSite *sd,int OTI,Credit c)
-{
-  PD((CREDIT,"Sending PrimaryCreds c:%d", c));
-  Assert(creditSiteOut==NULL);
-
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
-  msgC->put_M_OWNER_CREDIT(OTI,c);
-  send(msgC,3);
-}
-
-void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c)
-{
-  PD((CREDIT,"Sending SecondaryCreds c:%d", c));
-
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(cs);
-  msgC->put_M_OWNER_SEC_CREDIT(sd,OTI,c); // no msg credit
+// AN! used?
+void sendCreditTo(DSite *toS,DSite *entitysite,int entityOTI,Credit c) {
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  
+  if(c.owner==NULL) {
+    msgC->put_M_OWNER_CREDIT(entityOTI,c.credit);
+  }
+  else {
+    msgC->put_M_OWNER_SEC_CREDIT(entitysite,entityOTI,c.credit); 
+  }
 
   send(msgC,3);
 }
 
-void sendCreditBack(DSite* sd,int OTI,Credit c){ 
-  if(creditSiteIn==NULL){
-    sendPrimaryCredit(sd,OTI,c);
-    return;}
-  sendSecondaryCredit(creditSiteIn,sd,OTI,c);
-  creditSiteIn=NULL;
-  return;}
+void sendCreditBack(DSite *entitysite,int entityOTI,Credit c) {
+  MsgContainer *msgC;
+  
+  if(c.owner==NULL) {
+    msgC = msgContainerManager->newMsgContainer(entitysite);
+    msgC->put_M_OWNER_CREDIT(entityOTI,c.credit);
+  }
+  else {
+    Assert(c.owner!=entitysite);
+//      printf("sending M_OWNER_SEC_CREDIT %x %d %d %x\n",
+//  	   (int)entitysite,entityOTI,c.credit,(int)c.owner);
+    msgC = msgContainerManager->newMsgContainer(c.owner);
+    msgC->put_M_OWNER_SEC_CREDIT(entitysite,entityOTI,c.credit); 
+  }
 
+  send(msgC,3);
+}
 
+void askForCredit(DSite *entitysite, int entityOTI) {
+  Assert(entitysite!=myDSite);
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(entitysite);
+  msgC->put_M_ASK_FOR_CREDIT(entityOTI,myDSite);
+  send(msgC,3);
+}

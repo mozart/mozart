@@ -39,7 +39,9 @@ REALCORESRCS = dpMarshaler.cc dpMarshalExt.cc				\
                chain.cc dpResource.cc flowControl.cc msgContainer.cc	\
 	       byteBuffer.cc comObj.cc connection.cc tcpConnection.cc	\
                prioQueues.cc transObj.cc tcpTransObj.cc timers.cc	\
-               var_class.cc var_eproxy.cc var_emanager.cc var_gcstub.cc
+               var_class.cc var_eproxy.cc var_emanager.cc var_gcstub.cc \
+               creditHandler.cc
+
 CREATEDCOREFILES = msgContainer_marshal.hh msgContainer_marshal.cc \
                    dpMarshalcode.cc 
 CREATEDCORESRCS  = 
