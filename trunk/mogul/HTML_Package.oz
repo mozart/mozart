@@ -17,11 +17,8 @@ define
 	       'width' : '100%'
 	       'cellspacing' : '0'
 	       'border': '0'
-	       {self trace(1)}
 	       {self formatHeader('type' "package" $)}
-	       {self trace(2)}
 	       {self formatHeader('id' tt({HtmlQuote @id}) $)}
-	       {self trace(3)}
 	       if @pid==unit then '' else
 		  {self formatHeader(
 			   'section'
@@ -29,14 +26,12 @@ define
 			     {HtmlQuote @pid})
 			   $)}
 	       end
-	       {self trace(3)}
 	       if @version==unit then '' else
 		  {self formatHeader(
 			   'version'
 			   {HtmlQuote @version}
 			   $)}
 	       end
-	       {self trace(4)}
 	       if @blurb==unit then '' else
 		  {self formatHeader(
 			   'blurb'

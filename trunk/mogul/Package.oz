@@ -18,7 +18,7 @@ define
    class Package from GS XT EntryClass HTMLClass
       attr id pid url blurb provides requires content_type
 	 url_pkg url_doc body author contact keywords
-	 categories url_doc_extra title version
+	 categories url_doc_extra title version:unit
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Package '#Id)}
 	 try
@@ -48,7 +48,7 @@ define
       meth extern_slots($)
 	 [id pid url blurb provides requires content_type
 	  url_pkg url_doc body author contact keywords
-	  categories url_doc_extra title]
+	  categories url_doc_extra title version]
       end
       meth printOut(Margin Out DB)
 	 {Out write(vs:Margin#' '#@id#' (package)\n')}
