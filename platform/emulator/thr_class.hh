@@ -99,9 +99,9 @@ public:
   RunnableThreadBody(int sz) : taskStack(sz) { }
   RunnableThreadBody *gcRTBody();
 
-  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
+  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x)
   {
-    taskStack.pushCont(pc,y,g,x,i);
+    taskStack.pushCont(pc,y,g,x);
   }
   void pushTask(SolveActor * sa)
   {
@@ -551,14 +551,9 @@ public:
     return item.threadBody->taskStack.reflect(from,to,pc);
   }
 
-  void pushSetModeTop();
-  void pushActor(Actor *aa) {
-    Assert (hasStack ());
-    item.threadBody->taskStack.pushActor(aa);
-  }
   void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
   void pushCont (ProgramCounter pc, 
-		 RefsArray y, RefsArray g, RefsArray x, int n);
+		 RefsArray y, RefsArray g, RefsArray x);
   void pushCont (Continuation *cont);
   //
   Bool isEmpty(); 
@@ -572,7 +567,6 @@ public:
   //
   TaskStack *getTaskStackRef ();
   TaskStackEntry *getTop ();
-  void setTop (TaskStackEntry *newTos);
   TaskStackEntry pop ();
 
   /*
