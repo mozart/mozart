@@ -218,7 +218,7 @@ public:
     return OZ_expect_t(1, 1);
   }
   OZ_expect_t expectListVar(OZ_Term t) {
-    return expectList(t, (PropagatorExpectMeth) &expectAny);
+    return expectList(t, &VarListExpect::expectAny);
   }
 };
 
