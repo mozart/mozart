@@ -46,10 +46,6 @@ OZ_Term OZ_Extension::printLongV(int depth, int offset) {
   return OZ_pair2(printV(depth),AtomNewLine);
 }
 
-OZ_Term OZ_SituatedExtension::typeV() {
-  return AtomSituatedExtension;
-}
-
 OZ_Term OZ_Extension::getFeatureV(OZ_Term f) {
   OZ_Term t;
   return (getFeatureV(f,t)==PROCEED)?t:0;

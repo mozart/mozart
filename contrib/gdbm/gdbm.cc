@@ -8,13 +8,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-class GDBM: public OZ_SituatedExtension {
+class GDBM: public OZ_Extension {
 public:
   GDBM_FILE db;
   char *filename;
-  GDBM(char*f,void * d):OZ_SituatedExtension(),filename(f),db((GDBM_FILE) d){}
+  GDBM(char*f,void * d):OZ_Extension(),filename(f),db((GDBM_FILE) d){}
   //
-  // Situated Extension
+  // Extension
   //
   friend int oz_isGdbm(OZ_Term);
   static int id;
@@ -31,7 +31,7 @@ public:
 };
 
 //
-// Situated Extension
+// Extension
 //
 
 int GDBM::id;

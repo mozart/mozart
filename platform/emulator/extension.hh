@@ -47,47 +47,44 @@ enum OZ_Registered_Extension_Id {
 };
 
 class OZ_Extension {
+private:
+  void *space;
+public:
+  OZ_Extension(void) { space = _OZ_currentBoard(); }
+  OZ_Extension(void *sp) : space(sp) {}
+
+  void *  __getSpaceInternal(void)      { return space; }
+  void ** __getSpaceRefInternal(void)   { return &space; }
+  void    __setSpaceInternal(void * sp) { space = sp;   }
+
 public:
   virtual ~OZ_Extension();
 
-  OZ_Extension() {}
-
   void* operator        new(size_t n) { return _OZ_new_OZ_Extension(n); }
   void operator         delete(void*,size_t);
+
   virtual int           getIdV(void) = 0;
+
   virtual OZ_Extension* gCollectV(void) = 0;
   virtual void          gCollectRecurseV(void) = 0;
   virtual OZ_Extension* sCloneV(void) = 0;
   virtual void          sCloneRecurseV(void) = 0;
+
   virtual OZ_Term       printV(int = 10) { return typeV(); }
   virtual OZ_Term       printLongV(int depth = 10, int offset = 0);
   virtual OZ_Term       typeV(void);
-  virtual OZ_Term       inspectV(void) { return typeV(); }
   virtual OZ_Boolean    isChunkV(void) { return OZ_TRUE; }
   virtual OZ_Term       getFeatureV(OZ_Term);
   virtual OZ_Return     getFeatureV(OZ_Term,OZ_Term&) { return OZ_FAILED; }
   virtual OZ_Return     putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
   virtual OZ_Return     eqV(OZ_Term)               { return OZ_FAILED; }
   virtual OZ_Boolean    marshalV(void *)           { return OZ_FALSE; }
-  virtual void *        __getSpaceInternal()       { return 0; }
-  virtual void          __setSpaceInternal(void *) {}
-  OZ_Boolean isLocal()  { return _OZ_isLocal_OZ_Extension(__getSpaceInternal()); }
+
+  OZ_Boolean isLocal(void) {
+    return _OZ_isLocal_OZ_Extension(__getSpaceInternal());
+  }
+
 };
-
-
-class OZ_SituatedExtension: public OZ_Extension {
-private:
-  void *space;
-public:
-  OZ_SituatedExtension(void): OZ_Extension() { space = _OZ_currentBoard(); }
-  OZ_SituatedExtension(void *sp) : OZ_Extension(), space(sp) {}
-
-  virtual OZ_Term typeV();
-
-  virtual void * __getSpaceInternal()         { return space; }
-  virtual void   __setSpaceInternal(void *sp) { space = sp; }
-};
-
 
 _FUNDECL(unsigned int, oz_newUniqueId,()); // starts with OZ_E_LAST
 

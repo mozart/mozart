@@ -724,12 +724,15 @@ TaggedRef _cacExtension(TaggedRef term) {
 
   Assert(ex);
 
-  // hack alert: write forward into vtable!
-  if ((*(int32*)ex)&1) {
-    return oz_makeTaggedExtension((OZ_Extension *)ToPointer((*(int32*)ex)&~1));
+  void ** spa = ex->__getSpaceRefInternal();
+
+
+  // hack alert: write forward into something
+  if ((*((int32*)spa))&1) {
+    return oz_makeTaggedExtension((OZ_Extension *)ToPointer((*(int32*)spa)&~1));
   }
 
-  Board *bb=(Board*)(ex->__getSpaceInternal());
+  Board *bb=(Board*)(*spa);
 
   if (bb) {
     Assert(bb->cacIsAlive());
@@ -744,7 +747,7 @@ TaggedRef _cacExtension(TaggedRef term) {
 
   cacStack.push(ret,PTR_EXTENSION);
 
-  int32 *fromPtr = (int32*)ex;
+  int32 *fromPtr = (int32*)spa;
 
   CPTRAIL(fromPtr);
 

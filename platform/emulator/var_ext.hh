@@ -66,7 +66,6 @@ public:
   }
   void print(void) { printStreamV(cerr); cerr << endl; cerr.flush(); }
   void printLong(void) { printLongStreamV(cerr); cerr.flush(); }
-  virtual OZ_Term inspectV() { return 0; }
   virtual OZ_Return     forceBindV(TaggedRef*p, TaggedRef v) {
     return bindV(p,v);
   }
