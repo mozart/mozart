@@ -253,9 +253,11 @@ Note that this variable is only checked once when oz.el is loaded."
    '("token")))
 
 (defconst oz-begin-pattern
-  (oz-make-keywords-for-match
-   '("local" "proc" "fun" "case" "if" "cond" "or" "dis" "choice" "not"
-     "thread" "try" "raise" "lock")))
+  (concat
+   (oz-make-keywords-for-match
+    '("local" "proc" "fun" "case" "if" "cond" "or" "dis" "choice" "not"
+      "thread" "try" "raise" "lock" "loop"))
+   "\\|<<"))
 
 (defconst oz-gump-between-pattern
   "=>")
@@ -270,20 +272,20 @@ Note that this variable is only checked once when oz.el is loaded."
   "//")
 
 (defconst oz-end-pattern
-  (oz-make-keywords-for-match '("end")))
+  (concat (oz-make-keywords-for-match '("end")) "\\|>>"))
 
 (defconst oz-left-pattern
-  "\\[\\($\\|[^]]\\)\\|[({]")
+  "\\[\\($\\|[^]]\\)\\|[({\253]\\|<<")
 (defconst oz-right-pattern
-  "[])}]")
+  "[])}\273]\\|>>")
 (defconst oz-left-or-right-pattern
-  "[][(){}]")
+  "[][(){}\253\273]\\|<<\\|>>")
 
 (defconst oz-any-pattern
   (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
 	  "declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
-	  "if\\|in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|prepare\\|"
+	  "if\\|in\\|import\\|local\\|lock\\|loop\\|meth\\|not\\|of\\|or\\|prepare\\|"
 	  "proc\\|prop\\|raise\\|require\\|then\\|thread\\|try\\)\\>\\|"
 	  "\\[\\]\\|"
 	  oz-left-or-right-pattern))
@@ -291,7 +293,7 @@ Note that this variable is only checked once when oz.el is loaded."
   (concat "\\<\\(at\\|attr\\|case\\|catch\\|class\\|choice\\|cond\\|"
 	  "declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
 	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
-	  "if\\|in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
+	  "if\\|in\\|import\\|lex\\|local\\|lock\\|loop\\|meth\\|mode\\|not\\|of\\|"
 	  "or\\|parser\\|prepare\\|proc\\|prod\\|prop\\|raise\\|require\\|"
 	  "scanner\\|syn\\|then\\|thread\\|token\\|try\\)\\>\\|=>\\|"
 	  "\\[\\]\\|"
@@ -1337,7 +1339,7 @@ and initial percent signs."
     "div" "mod" "andthen" "orelse"
     "cond" "or" "dis" "choice" "not"
     "thread" "try" "catch" "finally" "raise" "lock"
-    "skip" "fail")
+    "skip" "fail" "loop")
   "List of all Oz keywords with identifier syntax.")
 
 (defconst oz-char-matcher
@@ -1365,7 +1367,7 @@ This serves to distinguish between the directive `\\else' and the keyword
 The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-keywords-matcher-3
-  "[!#|.@,~*/+-]\\|\\[\\]\\|:::?\\|=?<[=:]?\\|>=?:?\\|=:\\|\\\\=:?\\|=="
+  "[\253\273!#|.@,~*/+-]\\|\\[\\]\\|:::?\\|=?<[=:]?\\|>=?:?\\|=:\\|\\\\=:?\\|==\\|>>\\|<<"
   "Regular expression matching non-identifier keywords and operators.")
 
 (defconst oz-proc-fun-matcher
