@@ -91,7 +91,7 @@ void ResourceHashTable::gcResourceTable()
       // [pointer] unequal even we collect 'te'.
       if (isGCMarkedTerm(te)) {
 	Ext_OB_TIndex oti = n->getOTI();
-	OwnerEntry *oe = OT->extOTI2ownerEntry(oti);
+	OwnerEntry *oe = OT->getOE(oti);
 
 	//
 	if (oe && oe->isRef()) {
