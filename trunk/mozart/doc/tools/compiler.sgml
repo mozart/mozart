@@ -44,7 +44,8 @@ assembly bytecode format, then writes it to the output file,
 	<synopsis/<code/ozc -x ?{FILE}.oz//
 	<item/Much like <code/-c/, compiles and evaluates the
 expression in file <code/?{FILE}.oz/, then writes the resulting value
-into the output file, <code/?{FILE}/ by default (no extension).
+into the output file, by default: <code/?{FILE}/ (no extension) under
+Unix or <code/?{FILE}.exe/ under Windows.
 Additionally, it makes the output file executable.  Thus, if
 <file/Foo.oz/ contains an application functor:
 <code display/ozc -x Foo.oz/
