@@ -3,6 +3,7 @@ export
    Expand FileTree Mkdir Rmdir Exists
 import
    URL(toVirtualStringExtended) Resolve(expand)
+   OS(getDir stat system)
 define
    %%
    %% {Expand F}

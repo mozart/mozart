@@ -29,7 +29,7 @@ define
       case L of nil then N
       [] H|T then {SizeN T {Size H N}} end
    end
-   Total = {SizeN {Map Args.1 LS.fileTree} 0}
+   Total = {SizeN {Map Args.1 FileUtils.fileTree} 0}
    {System.showInfo 'dirs='#{Access DirN}#' files='#{Access FileN}#' total='#Total}
    {Application.exit 0}
 end
