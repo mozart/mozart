@@ -9,7 +9,8 @@ import
 
    FS(value intersect reflect)
    Tables(getVarId makeVarTable getPropId getProp makePropTable)
-   Aux(propName mergeSuspLists1 variableToVirtualString varReflect)
+   Aux(propName mergeSuspLists1 variableToVirtualString varReflect
+       propLocation)
    Config(paramColour edgeColour)
    
 define
@@ -47,8 +48,22 @@ define
 	    #">\",\"Constraint graph of constraints imposed onto these two variables\")"
 	    #{FoldL SharedProps
 	      fun {$ L R}
+		 Prop = {Tables.getProp PropTable R}
+		 LocationProp  = {Aux.propLocation Prop}
+		 Loc = if LocationProp == unit then noLoc
+		      else loc(file:   LocationProp.file
+			       path:   LocationProp.path
+			       line:   LocationProp.line
+			       column: LocationProp.column)
+		      end
+	      in
+		 
 		 L#",menu_entry(\"scg<"#R#">\",\"Constraint graph of "
-		 #{Aux.propName {Tables.getProp PropTable R}}#"\")"
+		 #{Aux.propName Prop}
+		 #if Loc == noLoc then ""
+		  else " ("#Loc.file#":"#Loc.line#")"
+		  end 
+		 #"\")"
 	      end ""}
 	    
 	    #"])], r(\"n<"#T.1.id#">\")))"
@@ -89,12 +104,6 @@ define
 		     v(id: {Tables.getVarId VarTable V}
 		       r:  V
 		       p:  {Aux.mergeSuspLists1 PropTable ReflectedVar}
-
-/*
-		       p:  {Aux.mergeSuspLists
-			    {Record.foldL ReflectedVar.susplists
-			     fun {$ Xr X} {Append X Xr} end nil} nil}
-*/
 		      )
 		  end}
 	    of H|T then "["#{MakeNodes Hist PropTable H T}#"]"

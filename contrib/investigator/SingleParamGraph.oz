@@ -44,7 +44,11 @@ define
        end
 
       #",menu_entry(\"scg<"#{Tables.getPropId PropTable P.reference}
-      #">\",\"Single Constraint graph of "#P.name#"\")"
+      #">\",\"Single Constraint graph of "#P.name
+      #if LocP == unit then ""
+       else " ("#LocP.file#":"#LocP.line#")"
+       end 
+      #"\")"
 
 
       #"])],[]))))"
