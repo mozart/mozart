@@ -25,8 +25,9 @@
 
 #include "wsock.hh"
 
-#include "runtime.hh"
 #include "builtins.hh"
+#include "am.hh"
+#include "os.hh"
 
 #include <stdlib.h>
 #include <stdio.h>

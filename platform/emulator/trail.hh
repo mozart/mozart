@@ -36,6 +36,8 @@
 #endif
 
 #include "base.hh"
+#include "tagged.hh"
+#include "stack.hh"
 
 /* ***common trail;                         */
 

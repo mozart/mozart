@@ -3,6 +3,9 @@
  *    Kostja Popov (popow@ps.uni-sb.de)
  *    Christian Schulte (schulte@dfki.de)
  * 
+ *  Contributors:
+ *    Michael Mehl (mehl@dfki.de)
+ *
  *  Copyright:
  *    Kostja Popov, 1997
  *    Christian Schulte, 1997, 1998
@@ -32,8 +35,10 @@
 #pragma interface
 #endif
 
+#include "actor.hh"
 #include "cpbag.hh"
 #include "gc.hh"
+#include "susplist.hh"
 
 // ------------------------------------------------------------------------
 
@@ -55,6 +60,7 @@ private:
   int threads;
 
 #ifdef CS_PROFILE
+public:
   int32 * orig_start;
   int32 * copy_start;
   int     copy_size;
@@ -66,6 +72,11 @@ public:
 
   Board *getSolveBoard() { 
     return solveBoard; 
+  }
+
+  // mm2: ask christian why &solveVar
+  TaggedRef getSolveVar() {
+    return makeTaggedRef(&solveVar);
   }
 
   void gcRecurse();
@@ -84,12 +95,13 @@ public:
 
   void addSuspension(Suspension); 
   void addSuspension(SuspList *);
-  Bool areNoExtSuspensions();
-
-  void inject(int prio, TaggedRef proc);
+  SuspList *getSuspList() { return suspList; }
+  void setSuspList(SuspList *sl) { suspList=sl; }
   WaitActor * select(int left, int right);
-  TaggedRef merge(Board* bb, int isSibling);
-  Board *clone(Board *bb);
+
+  inline void mergeCPB(Board *bb, int siblings);
+  inline void mergeNonMono(Board *bb);
+
   void clearResult(Board *bb);
   void patchChoiceResult(int i) {
     SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
@@ -99,8 +111,6 @@ public:
     result = makeTaggedSRecord(stuple);
   }
 
-  Bool isBlocked();
-  
   TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
 
@@ -139,21 +149,11 @@ private:
   OrderedSuspList * nonMonoSuspList;
 public:
   void addToNonMonoSuspList(Propagator *);
-  void scheduleNonMonoSuspList(void);
   void mergeNonMonoSuspListWith(OrderedSuspList *);
-  void setNonMonoSuspList(OrderedSuspList * l) {
-    nonMonoSuspList = l;
-  }
+  void setNonMonoSuspList(OrderedSuspList * l) { nonMonoSuspList = l; }
+  OrderedSuspList *getNonMonoSuspList() { return nonMonoSuspList; }
 
 //-----------------------------------------------------------------------------
-
-public:
-  void clearSuspList(Suspension killSusp);
-private:
-  Bool checkExtSuspList () {
-    clearSuspList((Thread *) NULL);		// Kostja: Christian's; (no spaces!);
-    return (suspList == NULL);
-  }
 };
 
 #ifndef OUTLINE

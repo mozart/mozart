@@ -481,11 +481,10 @@ Bool floatEq(TaggedRef a, TaggedRef b)
 }
 
 inline
-TaggedRef newTaggedFloat(double i)
+TaggedRef oz_float(double i)
 {
   return makeTaggedFloat(Float::newFloat(i));
 }
-
 
 #define CHECK_LITERAL(lab) \
 Assert(!oz_isRef(lab) && !oz_isVariable(lab) && oz_isLiteral(lab));
@@ -598,6 +597,7 @@ int oz_fastlength(OZ_Term l)
   }
   return len;
 }
+
 
 
 /*===================================================================
@@ -877,13 +877,16 @@ BigInt *tagged2BigInt(TaggedRef term)
 }
 
 inline
-TaggedRef makeInt(int i)
+TaggedRef oz_int(int i)
 {
   if (i > OzMaxInt || i < OzMinInt) 
     return makeTaggedConst(newBigInt(i));
   else
     return newSmallInt(i);
 }
+
+OZ_Term oz_long(long i);
+OZ_Term oz_unsignedLong(unsigned long i);
 
 inline
 TaggedRef oz_unsignedInt(unsigned int i)
@@ -1637,6 +1640,116 @@ int getWidth(OZ_Term term)
   return (0);			// ???
 }
 
+inline
+Arity *oz_makeArity(OZ_Term list)
+{
+  list=packsort(list);
+  if (!list) return 0;
+  return aritytable.find(list);
+}
+
+inline
+int oz_isPair(OZ_Term term)
+{
+  if (oz_isLiteral(term)) return literalEq(term,AtomPair);
+  if (!oz_isSRecord(term)) return 0;
+  SRecord *sr = tagged2SRecord(term);
+  if (!sr->isTuple()) return 0;
+  return literalEq(sr->getLabel(),AtomPair);
+}
+
+inline
+int oz_isPair2(OZ_Term term)
+{
+  if (!oz_isSRecord(term)) return 0;
+  SRecord *sr = tagged2SRecord(term);
+  if (!sr->isTuple()) return 0;
+  if (!literalEq(sr->getLabel(),AtomPair)) return 0;
+  return sr->getWidth()==2;
+}
+
+
+inline
+OZ_Term oz_arg(OZ_Term tuple, int i)
+{
+  Assert(oz_isTuple(tuple));
+  return tagged2SRecord(tuple)->getArg(i);
+}
+
+inline
+OZ_Term oz_left(OZ_Term pair)
+{
+  Assert(oz_isPair2(pair));
+  return oz_arg(pair,0);
+}
+
+inline
+OZ_Term oz_right(OZ_Term pair)
+{
+  Assert(oz_isPair2(pair));
+  return oz_arg(pair,1);
+}
+
+inline 
+OZ_Term oz_pair2(OZ_Term t1,OZ_Term t2) {
+  SRecord *sr = SRecord::newSRecord(AtomPair,2);
+  sr->setArg(0,t1);
+  sr->setArg(1,t2);
+  return makeTaggedSRecord(sr);
+}
+
+#define oz_pairA(s1,t)      oz_pair2(oz_atom(s1),t)
+#define oz_pairAI(s1,i)     oz_pair2(oz_atom(s1),oz_int(i))
+#define oz_pairAA(s1,s2)    oz_pair2(oz_atom(s1),oz_atom(s2))
+#define oz_pairAS(s1,s2)    oz_pair2(oz_atom(s1),oz_string(s2))
+
+/* -----------------------------------------------------------------------
+ * lists
+ * -----------------------------------------------------------------------*/
+
+/*
+ * list checking
+ *   checkChar:
+ *     0 = any list
+ *     1 = list of char
+ *     2 = list of char != 0
+ * return
+ *     OZ_true
+ *     OZ_false
+ *     var
+ */
+
+inline
+OZ_Term oz_isList(OZ_Term l, int checkChar=0)
+{
+  DerefReturnVar(l);
+  OZ_Term old = l;
+  Bool updateF = 0;
+  int len = 0;
+  while (oz_isCons(l)) {
+    len++;
+    if (checkChar) {
+      OZ_Term h = oz_head(l);
+      DerefReturnVar(h);
+      if (!oz_isSmallInt(h)) return NameFalse;
+      int i=smallIntValue(h);
+      if (i<0 || i>255) return NameFalse;
+      if (checkChar>1 && i==0) return NameFalse;
+    }
+    l = oz_tail(l);
+    DerefReturnVar(l);
+    if (l==old) return NameFalse; // cyclic
+    if (updateF) {
+      old=oz_deref(oz_tail(old));
+    }
+    updateF=1-updateF;
+  }
+  if (oz_isNil(l)) {
+    return oz_int(len);
+  } else {
+    return NameFalse;
+  }
+}
 
 /*===================================================================
  * ObjectClass
@@ -2366,6 +2479,27 @@ Builtin *tagged2Builtin(TaggedRef term)
   Assert(oz_isBuiltin(term));
   return (Builtin *)tagged2Const(term);
 }
+
+
+/* -----------------------------------------------------------------------
+ * BuiltinTab
+ * -----------------------------------------------------------------------*/
+
+extern TaggedRef builtinRecord;
+
+inline
+Builtin * atom2Builtin(TaggedRef a) {
+  TaggedRef b = tagged2SRecord(builtinRecord)->getFeature(a);
+
+  return (b ? tagged2Builtin(b) : ((Builtin *) 0));
+}
+
+inline
+Builtin * string2Builtin(const char * s) {
+  return atom2Builtin(oz_atom(s));
+}
+
+Builtin * cfunc2Builtin(void * f);
 
 
 /*===================================================================

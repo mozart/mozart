@@ -36,6 +36,7 @@
 #include "fset.hh"
 #include "fdhook.hh"
 #include "oz_cpi.hh"
+#include "threadInterface.hh"
 
 class GenFSetVariable: public GenCVariable {
 

@@ -31,7 +31,12 @@
 #endif
 
 #include "taskstk.hh"
-#include "runtime.hh"
+#include "os.hh"
+#include "value.hh"
+#include "am.hh"
+#include "codearea.hh"
+#include "board.hh"
+#include "debug.hh"
 
 int TaskStack::tasks()
 {

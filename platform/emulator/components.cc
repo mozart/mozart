@@ -31,6 +31,24 @@
 
 #include "wsock.hh"
 
+
+#include "codearea.hh"
+#include "indexing.hh"
+
+#include "perdio.hh"
+#include "perdio_debug.hh"  
+#include "genvar.hh"
+#include "perdiovar.hh"
+#include "gc.hh"
+#include "dictionary.hh"
+#include "genhashtbl.hh"
+#include "urlc.hh"
+#include "marshaler.hh"
+#include "comm.hh"
+#include "msgbuffer.hh"
+#include "builtins.hh"
+#include "os.hh"
+
 #ifndef WINDOWS
 #include <sys/types.h>
 #include <sys/time.h>
@@ -48,22 +66,6 @@
 #include <errno.h>
 #include <strings.h>
 #include <netdb.h>
-#include "runtime.hh"
-#include "codearea.hh"
-#include "indexing.hh"
-
-#include "perdio.hh"
-#include "perdio_debug.hh"  
-#include "genvar.hh"
-#include "perdiovar.hh"
-#include "gc.hh"
-#include "dictionary.hh"
-#include "genhashtbl.hh"
-#include "urlc.hh"
-#include "marshaler.hh"
-#include "comm.hh"
-#include "msgbuffer.hh"
-#include "builtins.hh"
 
 // ATTENTION
 #define tcpHeaderSize 	7

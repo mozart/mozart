@@ -26,18 +26,15 @@
 #pragma implementation "debug.hh"
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
+#include "debug.hh"
+#include "codearea.hh"
+#include "builtins.hh"
+#include "thread.hh"
+#include "am.hh"
 
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
-
-#include "runtime.hh"
-#include "debug.hh"
-#include "codearea.hh"
-#include "builtins.hh"
 
 TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
   TaggedRef pairlist = oz_nil();
