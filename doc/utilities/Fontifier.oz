@@ -31,7 +31,7 @@ define
    NoProgLang = {NewName}
 
    local
-      FONTIFY = {Property.get 'oz.home'}#'/bin/ozdoc-fontify.sh'
+      FONTIFY = {Property.get 'oz.home'}#'/share/doc/fontify'
 
       fun {NotIsEOF C}
          C \= 4
