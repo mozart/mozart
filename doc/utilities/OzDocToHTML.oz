@@ -698,20 +698,18 @@ define
                end
             [] 'code.extern' then
                %--** class=linenumbers
-               Out <- @Out#'</P>'
                case M.display of display then
-                  Out <- @Out#'<BLOCKQUOTE>'
-               [] inline then skip
+                  Out <- @Out#'</P><BLOCKQUOTE><PRE>\n'
+               [] inline then
+                  Out <- @Out#'<CODE>'
                end
-               Out <- @Out#('<PRE>\n'#
-                            {@MyFontifier
-                             enqueueFile(@ProgLang.1 M.to '\n' $)}#
-                            '</PRE>')
+               Out <- @Out#({@MyFontifier
+                             enqueueFile(@ProgLang.1 M.to '\n' $)})
                case M.display of display then
-                  Out <- @Out#'</BLOCKQUOTE>'
-               [] inline then skip
+                  Out <- @Out#'</PRE></BLOCKQUOTE><P'#@Align#'>'
+               [] inline then
+                  Out <- @Out#'</CODE>'
                end
-               Out <- @Out#'<P'#@Align#'>'
             [] var then
                case M.type of prog then
                   Out <- @Out#"<CODE>"
@@ -826,7 +824,7 @@ define
             [] 'grammar.rule' then X in
                %--** display attribute?
                Out <- @Out#'</P><TABLE border=0 cellpadding=0 cellspacing=0>\n'
-               Out <- @Out#'<TR><TD>'
+               Out <- @Out#'<TR valign=top><TD>'
                OzDocToHTML, Process(M.1)
                Out <- @Out#'</TD>\n'
                X = @GrammarAltType
@@ -842,14 +840,16 @@ define
                            [] add then
                               '<TD align="center">&nbsp;+=&nbsp;'
                            [] 'or' then
-                              '<TR><TD></TD><TD align=center>&nbsp;|&nbsp;'
+                              '<TR valign=top>'#
+                              '<TD></TD><TD align=center>&nbsp;|&nbsp;'
                            [] space then
-                              '<TR><TD></TD><TD align=center>'
+                              '<TR valign=top>'#
+                              '<TD></TD><TD align=center>'
                            end
                GrammarAltType <- 'or'
                Out <- @Out#'</TD><TD>'
                OzDocToHTML, Batch(M 1)
-               Out <- @Out#'</TD><TR>\n'
+               Out <- @Out#'</TD><TR valign=top>\n'
             [] 'grammar.note' then
                Out <- @Out#'<TD align=left><I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% '
                OzDocToHTML, Batch(M 1)
@@ -869,11 +869,13 @@ define
                   OzDocToHTML, Batch(Title 1)
                   Out <- @Out#'</B></P>\n'
                end
-               Out <- @Out#'<TABLE align=center border=1>\n'
+               Out <- @Out#('<TABLE align=center border='#
+                            if {SGML.isOfClass M dyptic} then 0 else 1 end#
+                            '>\n')
                OzDocToHTML, Batch(Mr 1)
                Out <- @Out#'</TABLE><P'#@Align#'>\n'
             [] tr then
-               Out <- @Out#'<TR>\n'
+               Out <- @Out#'<TR valign=top>\n'
                OzDocToHTML, Batch(M 1)
                Out <- @Out#'</TR>\n'
             [] th then
