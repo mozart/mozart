@@ -315,7 +315,7 @@ AC_DEFUN(OZ_CXX_CHOOSE,[
 dnl I don't know what the appropriate version number is for egcs
           AC_MSG_WARN([dont know how to check egcs version, assuming ok])
 	else
-	  OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CXX,OZ_VERSION_GXX)
+	  OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CXX,OZ_VERSION_GXX,$CXX -dumpversion || $CXX --version)
 	  if test "$oz_tmp_ok" = no; then
             AC_MSG_ERROR([
 configure found the GNU C++ compiler $CXX version $oz_tmp_version
@@ -440,7 +440,7 @@ AC_DEFUN(OZ_CC_CHOOSE,[
 dnl I don't know what the appropriate version number is for egcs
           AC_MSG_WARN([dont know how to check egcs version, assuming ok])
 	else
-          OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CC,OZ_VERSION_GCC)
+          OZ_PROG_VERSION_CHECK(oz_tmp_ok,$CC,OZ_VERSION_GCC,$CC -dumpversion || $CC --version)
           if test "$oz_tmp_ok" = no; then
             AC_MSG_ERROR([
 configure found the GNU C compiler $CC version $oz_tmp_version
