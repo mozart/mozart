@@ -1,1 +1,4 @@
-Makefile
+*~
+Makefile config.*
+oz.elc
+TAGS
