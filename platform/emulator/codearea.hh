@@ -138,9 +138,12 @@ public:
   static void **globalInstrTable;
 #endif
 
-  static AdressOpcode getOP(ProgramCounter PC) { return (AdressOpcode) getWord(PC); }
+  static AdressOpcode getOP(ProgramCounter PC) {
+    return (AdressOpcode) getWord(PC); }
   static Opcode adressToOpcode(AdressOpcode);
   static AdressOpcode opcodeToAdress(Opcode);
+  static Opcode getOpcode(ProgramCounter PC) {
+    return adressToOpcode(getOP(PC)); }
 
   static char **opToString;
   static Opcode stringToOp(char *s);
