@@ -82,7 +82,7 @@ local
       fun {FindPos TLs FT N}
 	 T#_|TLr = TLs
       in
-	 case T==FT then N else {FindPos TLr FT N+1} end
+	 if T==FT then N else {FindPos TLr FT N+1} end
       end
 
       ScaleWidth  = 100

@@ -40,22 +40,22 @@ local
       Log10 = {Log 10.0}
 
       fun {Grow N L}
-	 case N=<L then L else {Grow N 10.0*L} end
+	 if N=<L then L else {Grow N 10.0*L} end
       end
 
       fun {Shrink N L}
 	 L2 = L  / 2.0   L4 = L2 / 2.0
       in
-	 case N=<L4 then L4
-	 elsecase N=<L2 then L2
+	 if N=<L4 then L4
+	 elseif N=<L2 then L2
 	 else L
 	 end
       end
    in
       fun {GetLimit N}
-	 case N=<0.25 then 0.25
-	 elsecase N=<1.0 then 1.0
-	 elsecase N=<5.0 then 5.0
+	 if N=<0.25 then 0.25
+	 elseif N=<1.0 then 1.0
+	 elseif N=<5.0 then 5.0
 	 else
 	    {Floor
 	     {Shrink N
@@ -128,13 +128,15 @@ in
 
       meth DrawTicks(N D)
 	 Load,tk(crea line 0 D*N LoadWidth D*N fill:LineColor)
-	 case N>0 then Load,DrawTicks(N-1 D) else skip end
+	 if N>0 then
+	    Load,DrawTicks(N-1 D)
+	 end
       end
 
       meth DrawLabel(N D Y IsFrac)
 	 Load,tk(crea text 0 D*N
 		 font: TickFont
-		 text: case IsFrac then
+		 text: if IsFrac then
 			  case N*{FloatToInt Y*10.0}
 			  of 10 then '1.0'
 			  elseof M then '0.'#M
@@ -144,7 +146,9 @@ in
 		 anchor: e
 		 tags:   self.TextTag)
 	 Load,tk('raise' self.TextTag)
-	 case N>0 then Load,DrawLabel(N-1 D Y IsFrac) else skip end
+	 if N>0 then
+	    Load,DrawLabel(N-1 D Y IsFrac)
+	 end
       end
 
       meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
@@ -184,7 +188,7 @@ in
 	 {@LeftTag  tk(delete)}
 	 {@RightTag tk(delete)}
 	 CurX <- 0
-	 case NewLimit==@CurLimit then skip else
+	 if NewLimit\=@CurLimit then
 	    Load,ReScale(NewLimit)
 	    CurLimit <- NewLimit
 	 end
@@ -202,7 +206,7 @@ in
 	 NeedsScale = (Y > L)
       in
 	 %% Check whether display needs to be scrolled
-	 case @CurX+S >= LoadWidth then
+	 if @CurX+S >= LoadWidth then
 	    TmpTag = @LeftTag
 	 in
 	    {TmpTag    tk(delete)}
@@ -210,29 +214,26 @@ in
 	    CurX     <- @CurX - HalfWidth
 	    LeftTag  <- @RightTag
 	    RightTag <- TmpTag
-	    case NeedsScale then skip
+	    if NeedsScale then skip
 	    else RightLimit = {GetLimit {Max @RightMaxY self.MinY}} in
-	       case RightLimit < L then
+	       if RightLimit < L then
 		  Load,ReScale(RightLimit)
 		  CurLimit  <- RightLimit
-	       else skip
 	       end
 	    end
 	    LeftMaxY  <- @RightMaxY
 	    RightMaxY <- Y
-	 else skip
 	 end
 	 %% Check whether display needs to be rescaled
-	 case NeedsScale then NewLimit = {GetLimit {Max Y self.MinY}} in
+	 if NeedsScale then NewLimit = {GetLimit {Max Y self.MinY}} in
 	    Load,ReScale(NewLimit)
 	    CurLimit <- NewLimit
-	 else skip
 	 end
-	 case @CurX+S < HalfWidth then LeftMaxY <- {Max @LeftMaxY Y}
+	 if @CurX+S < HalfWidth then LeftMaxY <- {Max @LeftMaxY Y}
 	 else RightMaxY <- {Max @RightMaxY Y}
 	 end
 	 Load,DisplayLoads(@PrevYs Ys @CurX @CurX+S self.Colors self.Stipple
-			   case @CurX+S < HalfWidth then @LeftTag
+			   if @CurX+S < HalfWidth then @LeftTag
 			   else @RightTag
 			   end)
 	 PrevYs <- Ys
