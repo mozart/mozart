@@ -27,24 +27,24 @@
 
 #include "distributor.hh"
 
-DistBag * DistBag::addIt(Distributor * d, Bool isUnary) {
+DistBag * DistBag::add(Distributor * d) {
   // Gives preferences to unary distributors: they are inserted
   // at the head
 
-  if (isUnary || !this || dist->getAlternatives()>1) {
+  if (d->getAlternatives() == 1 || !this || dist->getAlternatives()>1) {
 
-    return new DistBag(d,this,isUnary);
+    return new DistBag(d,this);
     
   } else {
     
     DistBag * pb = this;
     DistBag * db = pb->next;
     
-    while (db && db->isUnary) {
+    while (db && db->dist->getAlternatives()==1) {
       pb = db; db = db->next;
     }
 
-    pb->next = new DistBag(d,db,NO);
+    pb->next = new DistBag(d,db);
 
     return this;
 
@@ -67,7 +67,9 @@ DistBag * DistBag::get(Distributor ** gd) {
       Distributor * d = db->dist;
       DistBag * t;
 
-      if (db->isUnary) {
+      int n = d->getAlternatives();
+
+      if (n == 1) {
 	t = db;
 	db = db->next;
 	t->dispose();
@@ -75,7 +77,7 @@ DistBag * DistBag::get(Distributor ** gd) {
 	return db;
       }
       
-      if (d->getAlternatives()>1) {
+      if (n>1) {
 	*gd=d;
 	return db;
       } 
@@ -104,7 +106,7 @@ DistBag * DistBag::merge(DistBag * db) {
     DistBag * t;
 
     while (db) {
-      m  = m->addIt(db->dist, db->isUnary);
+      m  = m->add(db->dist);
       t = db;
       db = db->next;
       t->dispose();
