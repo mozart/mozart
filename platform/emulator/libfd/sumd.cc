@@ -148,7 +148,7 @@ int isumProp::sum (OZ_FiniteDomain &AuxDom, OZ_FDIntVar var[], int except,
     trimRemainders(reg_a[except], losum, hisum);
 
     if (losum < 0) losum = 0;
-    _OZ_DEBUGPRINT(("sum(%d) [%d; %d]",except,losum,hisum));
+    OZ_DEBUGPRINT(("sum(%d) [%d; %d]",except,losum,hisum));
 
             
     OZ_FiniteDomain NewInterval;
@@ -201,7 +201,7 @@ int isumProp::sum (OZ_FiniteDomain &AuxDom, OZ_FDIntVar var[], int except,
 }
 
 OZ_Return iLinEqProp::propagate(void) {
-  _OZ_DEBUGPRINT(("isumcEqProp: invoked"));
+  OZ_DEBUGPRINT(("isumcEqProp: invoked"));
   // if vector nullified, return failed if c!=0, else done:  
   long old_domains_size;    // these record the overall domain size sum to
   long new_domains_size =0; // check if something has changed.
@@ -215,7 +215,7 @@ OZ_Return iLinEqProp::propagate(void) {
     if (reg_a[i]*reg_a[i] != 1) 
       all_ones = 0;
 
-  _OZ_DEBUGPRINT(("reg_sz=%d all_ones=%d",reg_sz,all_ones));
+  OZ_DEBUGPRINT(("reg_sz=%d all_ones=%d",reg_sz,all_ones));
   if (reg_sz == 0) return reg_c ? FAILED : OZ_ENTAILED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
@@ -300,9 +300,9 @@ OZ_Return iLinEqProp::propagate(void) {
 
           if (!buffer[reduce].isIn(elem)) {
             *var[reduce] -= elem;
-	    _OZ_DEBUGPRINT(("*var[%d-=%d",reduce,elem));
+	    OZ_DEBUGPRINT(("*var[%d-=%d",reduce,elem));
           }
-          _OZ_DEBUGPRINT(("Exited."));
+          OZ_DEBUGPRINT(("Exited."));
         }
       }
     }
@@ -315,20 +315,20 @@ OZ_Return iLinEqProp::propagate(void) {
   goto do_leave;
 
 do_fail:
-   _OZ_DEBUGPRINT(("failAll: FAILED"));
+   OZ_DEBUGPRINT(("failAll: FAILED"));
   return P.fail();
 
 do_leave:
   OZ_Return value =P.leave();
-  if (value == OZ_ENTAILED) _OZ_DEBUGPRINT(("ENTAILED"));
-  else                      _OZ_DEBUGPRINT(("SLEEP"));
+  if (value == OZ_ENTAILED) OZ_DEBUGPRINT(("ENTAILED"));
+  else                      OZ_DEBUGPRINT(("SLEEP"));
   return value;
 }
 
 //-----------------------------------------------------------------------------
 
 OZ_Return iLinLessEqProp::propagate(void) {
-  _OZ_DEBUGPRINT(("isumcLeqProp: invoked"));
+  OZ_DEBUGPRINT(("isumcLeqProp: invoked"));
   // if vector nullified, return failed if c!=0, else done:  
   long old_domains_size;    // these record the overall domain size sum to
   long new_domains_size =0; // check if something has changed.
@@ -342,7 +342,7 @@ OZ_Return iLinLessEqProp::propagate(void) {
     if (reg_a[i]*reg_a[i] != 1) 
       all_ones=0;
 
-  _OZ_DEBUGPRINT(("reg_sz=%d",reg_sz));
+  OZ_DEBUGPRINT(("reg_sz=%d",reg_sz));
   if (reg_sz == 0) return reg_c ? FAILED : OZ_ENTAILED;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, var, reg_sz);
@@ -424,9 +424,9 @@ OZ_Return iLinLessEqProp::propagate(void) {
 
           if (!buffer[reduce].isIn(elem)) {
             *var[reduce] -= elem;
-	    _OZ_DEBUGPRINT(("*var[%d-=%d",reduce,elem));
+	    OZ_DEBUGPRINT(("*var[%d-=%d",reduce,elem));
           }
-          _OZ_DEBUGPRINT(("Exited."));
+          OZ_DEBUGPRINT(("Exited."));
         }
       }
     }
@@ -440,29 +440,29 @@ OZ_Return iLinLessEqProp::propagate(void) {
   goto do_leave;
 
 do_fail:
-   _OZ_DEBUGPRINT(("failAll: FAILED"));
+   OZ_DEBUGPRINT(("failAll: FAILED"));
   return P.fail();
 
 do_leave:
   // bugfix : not recognizing 'entailed'
   // check if sum over all max/mins is smaller than upper bound
-  _OZ_DEBUGPRINT(("do_leave"));
+  OZ_DEBUGPRINT(("do_leave"));
 
   int upsum = reg_c;
   for (i=0; i < reg_sz; i++) {
     if (reg_a[i] > 0) upsum += reg_a[i]*var[i]->getMaxElem();
     else              upsum += reg_a[i]*var[i]->getMinElem();
   } 
-  _OZ_DEBUGPRINT(("upsum=%d reg_c=%d",upsum,reg_c));
+  OZ_DEBUGPRINT(("upsum=%d reg_c=%d",upsum,reg_c));
 
   int already_entailed =(upsum <= 0);
 
   OZ_Return value =P.leave();
 
-  if (value == OZ_ENTAILED) _OZ_DEBUGPRINT(("ENTAILED"));
-  else                      _OZ_DEBUGPRINT(("SLEEP"));
+  if (value == OZ_ENTAILED) OZ_DEBUGPRINT(("ENTAILED"));
+  else                      OZ_DEBUGPRINT(("SLEEP"));
   if (already_entailed) {
-    _OZ_DEBUGPRINT(("ALREADY_ENTAILED"));
+    OZ_DEBUGPRINT(("ALREADY_ENTAILED"));
     return OZ_ENTAILED; 
   }
   else return value;
@@ -472,7 +472,7 @@ do_leave:
 //-----------------------------------------------------------------------------
 
 OZ_Return iLinNEqProp::propagate(void) {
-  _OZ_DEBUGPRINT(("isumcNEqProp: invoked"));
+  OZ_DEBUGPRINT(("isumcNEqProp: invoked"));
   // if vector nullified, return failed if c!=0, else done:  
   long old_domains_size;    // these record the overall domain size sum to
   long new_domains_size =0; // check if something has changed.
@@ -486,11 +486,11 @@ OZ_Return iLinNEqProp::propagate(void) {
     if (reg_a[i]*reg_a[i] != 1) 
       all_ones = 0;
 
-  _OZ_DEBUGPRINT(("reg_sz=%d all_ones=",reg_sz,all_ones));
+  OZ_DEBUGPRINT(("reg_sz=%d all_ones=",reg_sz,all_ones));
 
   // all vars gone and still a remainder? good...
   if (reg_sz == 0) {
-    _OZ_DEBUGPRINT(("reg_sz==0)"));
+    OZ_DEBUGPRINT(("reg_sz==0)"));
     return reg_c ? OZ_ENTAILED : FAILED;
   }
 
@@ -575,9 +575,9 @@ OZ_Return iLinNEqProp::propagate(void) {
 	  } while (to_increase < reg_sz);
           if (!buffer[reduce].isIn(elem)) {
             *var[reduce] -= elem;
-	    _OZ_DEBUGPRINT(("*var[%s-=",reduce,elem));
+	    OZ_DEBUGPRINT(("*var[%s-=",reduce,elem));
           }
-          _OZ_DEBUGPRINT(("Exited."));
+          OZ_DEBUGPRINT(("Exited."));
         }
       }
     }
@@ -591,7 +591,7 @@ OZ_Return iLinNEqProp::propagate(void) {
 
 do_fail:
   // Equality has failed, so Inequality is entailed
-   _OZ_DEBUGPRINT(("Equality FAILED -> Inequality ENTAILED"));
+   OZ_DEBUGPRINT(("Equality FAILED -> Inequality ENTAILED"));
   P.fail();
   return OZ_ENTAILED;
 
@@ -602,16 +602,16 @@ do_leave:
     
     // all variables determined? then fail
     if (sum_sizes == reg_sz) {
-      _OZ_DEBUGPRINT(("Equality ENTAILED,vars determined -> Inequality FAILED"));
+      OZ_DEBUGPRINT(("Equality ENTAILED,vars determined -> Inequality FAILED"));
       return FAILED; 
     }
     else {
-      _OZ_DEBUGPRINT(("SLEEP (_may_ be equal)"));
+      OZ_DEBUGPRINT(("SLEEP (_may_ be equal)"));
       return SLEEP;
     }
   }
   else {
-    _OZ_DEBUGPRINT(("SLEEP"));
+    OZ_DEBUGPRINT(("SLEEP"));
     return SLEEP;
   }
 }
