@@ -441,7 +441,7 @@ Bool AM::emulateHookOutline() {
       return TRUE;
     }
   }
-  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady|StopThread))) {
+  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady))) {
     return TRUE;
   }
 
@@ -502,11 +502,6 @@ Bool AM::hookCheckNeeded()
     if (e->hookCheckNeeded()) {                 \
       if (e->emulateHookOutline()) {            \
         Code;                                   \
-        if (e->isSetSFlag(StopThread)) {        \
-          e->unsetSFlag(StopThread);            \
-          PC=NOCODE;                            \
-          goto LBLreplaceBICall;                \
-        }                                       \
         return T_PREEMPT;                       \
       }                                         \
     }
@@ -2767,7 +2762,6 @@ LBLdispatcher:
 
   LBLunifySpecial:
   {
-    e->unsetSFlag(StopThread);  // will go away
     if (shallowCP) {
       if (e->trail.isEmptyChunk()) {
         e->trail.popMark();
