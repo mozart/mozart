@@ -26,12 +26,11 @@ GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn,
 :type(t), SVariable(n==NULL ? am.currentBoard : n, pn){}
 
 
-Bool GenCVariable::isLocalVariable(void)
-{
-  Board * hm = getHome1();
-  
-  return (hm == am.currentBoard ||
-	  hm->getBoardDeref() == am.currentBoard)
+Bool GenCVariable::isLocalVariable(void){
+  Board * home_board = getHome1();
+
+  return (home_board == am.currentBoard ||
+	  home_board->getBoardDeref() == am.currentBoard)
     ? OK : NO;
 }
 
@@ -68,11 +67,9 @@ void GenCVariable::propagate(TaggedRef var, TaggedRef *tPtr){
 }
 
 
-SuspList * GenCVariable::propagate(TaggedRef var, SuspList * &sl,
-				   TaggedRef term)
+void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term)
 {
   sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term);
-  return sl;
 }
 
 
