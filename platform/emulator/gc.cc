@@ -3240,15 +3240,8 @@ void LTuple::gcRecurse() {
   // Restore original!
   frm->args[0] = to->args[0];
 
-
-  TaggedRef start;
-  TaggedRef * p = &start;
-
-  int n = 0;
-
   while (1) {
-    // Collect element and if store fwd has not been done in gcTagged
-    // do it here!
+    // Collect element and store fwd (has not been done in gcTagged)
     gcTagged(frm->args[0], to->args[0], NO, NO);
 
     storeFwd(frm->args, to->args);
