@@ -1814,7 +1814,6 @@ void TaskStack::gcRecurse()
 
     case C_LOCAL:     COUNT(cLocal);   break;
     case C_JOB:       COUNT(cJob);     break;
-    case C_SET_MODETOP:                break;
 
     case C_CONT:
       COUNT(cCont);

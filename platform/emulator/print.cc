@@ -1483,10 +1483,6 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
         break;
       }
 
-    case C_SET_MODETOP:
-      message("\tSET_MODETOP\n");
-      break;
-
     default:
       Assert(0);
     } // switch
