@@ -182,10 +182,9 @@ OZ_Term getAsList(const int * bv, int neg = 0, int other = 0)
 
 #ifdef BIGFSET
   if ((other && !neg) || (neg && !other)) {
-    fflush(stdout);
-    if (fd_bv_right_conv[len-1] == fset_high*32 - 1)
+    if (fd_bv_right_conv[len-1] == fset_high*32 - 1) {
       fd_bv_right_conv[len-1] = fs_sup;
-    else {
+    } else {
       fd_bv_left_conv[len] = fset_high*32;
       fd_bv_right_conv[len] = fs_sup;
       len++;
@@ -193,12 +192,14 @@ OZ_Term getAsList(const int * bv, int neg = 0, int other = 0)
   }
 #endif
 
-  for (int i = 0; i < len; i += 1)
-    if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
+  for (int i = 0; i < len; i += 1) {
+    if (fd_bv_left_conv[i] == fd_bv_right_conv[i]) {
       l_ptr = mkListEl(hd, l_ptr, OZ_int(fd_bv_left_conv[i]));
-    else
+    } else {
       l_ptr = mkListEl(hd, l_ptr, oz_pairII(fd_bv_left_conv[i],
 					    fd_bv_right_conv[i]));
+    }
+  }
 
   return hd ? makeTaggedLTuple(hd) : OZ_nil();
 }

@@ -251,8 +251,6 @@ loop:
  /*************/
  var_var:
 
-#ifdef CORRECT_UNIFY
-
   /*
    * Specially optimized: local uvars
    */
@@ -338,53 +336,6 @@ loop:
     result = res;
     goto fail;
   }
-
-
-
-#else
-
-
-  /*
-   * The implemented partial order for binding variables to variables is:
-   *   local -> global
-   *   UVAR -> CVAR (prefer binding nonCVars to CVars)
-   *   local newer -> local older
-   */
-  if (isUVar(tag1)) {
-    if (isUVar(tag2) &&
-	isMoreLocal(term2,term1) &&
-	(!oz_isLocalUVar(termPtr1) ||
-	 heapNewer(termPtr2,termPtr1))) {
-      oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
-    } else {
-      oz_bindUVar(termPtr1, makeTaggedRef(termPtr2));
-    }
-    goto next;
-  }
-
-  if (isUVar(tag2)) {
-    oz_bindUVar(termPtr2, makeTaggedRef(termPtr1));
-    goto next;
-  }
-
-  Assert(isCVar(tag1) && isCVar(tag2));
-  /* preferred binding of perdio vars */
-  if (cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
-    Swap(term1,term2,TaggedRef);
-    Swap(termPtr1,termPtr2,TaggedRef*);
-  }
-
-  {
-    int res = oz_var_unify(tagged2CVar(term1),termPtr1, termPtr2);
-    if (res == PROCEED)
-      goto next;
-    result = res;
-    goto fail;
-  }
-
-
-#endif
-
 
  /*************/
  nonvar_nonvar:
