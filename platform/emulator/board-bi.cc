@@ -615,7 +615,7 @@ OZ_BI_define(BIgetCloneDiff, 1,1) {
  * The builtin table
  */
 
-extern void (*OZ_sCloneBlockDynamic)(OZ_Term *,OZ_Term *,const int);
+extern void (*OZ_sCloneBlockDynamic)(OZ_Term *,OZ_Term *,int);
 extern Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
 extern Suspendable * suspendableSCloneSuspendable(Suspendable *);
 extern OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);

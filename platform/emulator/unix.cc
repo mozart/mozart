@@ -1677,6 +1677,7 @@ static OZ_Return enter_exec_args(char * s, OZ_Term args, int &argno) {
 OZ_BI_define(unix_pipe,2,2) {
   OZ_declareVsIN(0, s);
   OZ_declareTerm(1, args);
+  int i;
   // OZ_out(0) == rpid
   // OZ_out(1) == rwsock
 
@@ -1691,7 +1692,7 @@ OZ_BI_define(unix_pipe,2,2) {
   //--** missing overflow check!
   char cmdline[10000];
   cmdline[0] = '\0';
-  for (int i = 0; i < argno; i++) {
+  for (i = 0; i < argno; i++) {
     strcat(cmdline,"\"");
     strcat(cmdline,argv[i]);
     strcat(cmdline,"\" ");
@@ -1799,7 +1800,6 @@ OZ_BI_define(unix_pipe,2,2) {
 	RETURN_UNIX_ERROR("setrlimit");
       }
 
-      int i;
       for (i = 0; i < FD_SETSIZE; i++) {
         if (i != sv[1]) {
           close(i);
@@ -1827,7 +1827,6 @@ OZ_BI_define(unix_pipe,2,2) {
   /* we can use the same descriptor for both reading and writing: */
   int wsock = rsock;
 
-  int i;
   for (i=1 ; i<argno ; i++)
     free(argv[i]);
     
@@ -1844,6 +1843,7 @@ OZ_BI_define(unix_exec,3,1){
   OZ_declareVsIN(0, s);
   OZ_declareTerm(1, args);
   OZ_declareBool(2, do_kill);
+  int i;
 
   // OZ_out(0) == rpid
 
@@ -1857,7 +1857,7 @@ OZ_BI_define(unix_exec,3,1){
   //--** missing overflow check!
   char cmdline[10000];
   cmdline[0] = '\0';
-  for (int i = 0; i < argno; i++) {
+  for (i = 0; i < argno; i++) {
     strcat(cmdline, "\"");
     strcat(cmdline,argv[i]);
     strcat(cmdline, "\" ");
@@ -1948,14 +1948,14 @@ OZ_BI_define(unix_exec,3,1){
       // one cannot see what forked sites are trying to say us.
       // However, this makes e.g. the 'detach' functionality of remote 
       // servers non-working (but who wants it in debug mode anyway?)
-      for (int i = 3; i<FD_SETSIZE; i++)
+      for (i = 3; i<FD_SETSIZE; i++)
 	close(i);
 #else
       if (do_kill) {
-	for (int i = 3; i<FD_SETSIZE; i++)
+	for (i = 3; i<FD_SETSIZE; i++)
 	  close(i);
       } else {
-	for (int i = FD_SETSIZE; i--; )
+	for (i = FD_SETSIZE; i--; )
 	  close(i);
 
 	WRAPCALL("open",open("/dev/null", O_RDWR),dn);
@@ -1980,7 +1980,6 @@ OZ_BI_define(unix_exec,3,1){
 
 #endif
 
-  int i;
   for (i=1 ; i<argno ; i++)
     free(argv[i]);
     
