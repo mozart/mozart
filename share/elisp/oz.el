@@ -1016,7 +1016,8 @@ buffer."
 (defun oz-make-menu (list)
   (cond (oz-gnu-emacs
 	 (oz-make-menu-gnu oz-mode-map
-			   (list (cons "menu-bar" (cons nil list)))))
+			   (list (cons "menu-bar" (cons nil list))))
+	 (define-key oz-mode-map [down-mouse-3] 'oz-menubar))
 	(oz-lucid-emacs
 	 (setq oz-menubar (car (oz-make-menu-lucid list))))))
 
@@ -1025,7 +1026,7 @@ buffer."
 
 (defun oz-make-temp-name (prefix)
   (setq oz-temp-counter (1+ oz-temp-counter))
-  (format "%s%d" (make-temp-name prefix) oz-temp-counter))
+  (intern (format "%s%d" (make-temp-name prefix) oz-temp-counter)))
 
 (defun oz-make-menu-gnu (map list)
   (if list
@@ -1036,12 +1037,14 @@ buffer."
 	       (command (car (cdr entry)))
 	       (rest (cdr (cdr entry))))
 	  (cond ((null rest)
-		 (define-key map (vector (intern (oz-make-temp-name name)))
+		 (define-key map (vector (oz-make-temp-name name))
 		   (cons name nil)))
 		((null command)
 		 (let ((newmap (make-sparse-keymap name)))
 		   (define-key map (vector aname)
 		     (cons name newmap))
+		   (if (string= name "Oz")
+		       (fset 'oz-menubar newmap))
 		   (oz-make-menu-gnu newmap (reverse rest))))
 		(t
 		 (define-key map (vector aname) (cons name command))
