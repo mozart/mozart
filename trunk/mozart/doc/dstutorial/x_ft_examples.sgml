@@ -886,16 +886,13 @@ end
 
 <SUBSECTION><TITLE>Sample use (with fault tolerance)</TITLE>
 
-<P>The fault-tolerant channel can be used in the same way
+<P>The fault-tolerant channel can be used in exactly the same way
 as the non-fault-tolerant version.
-We just have to create a fault-tolerant stationary object
-by calling <<NewSafeStat>> instead of <<NewStat>> to create
-the object.
-<<<
-S={NewSafeStat ChannelServer init(S)}
->>>
-<P>The user-defined handler
-procedure now has to handle error messages as well:
+The only difference is that
+the user-defined handler
+procedure can receive two extra messages,
+<<permClient>> and <<permServer>>, to indicate client
+and server crashes:
 <<<
 proc {UserMessageHandler Msg}
    {Show {VirtualString.toString
@@ -913,8 +910,15 @@ end
 
 <P>The non-fault-tolerant version of <ptr to="channel.definition">
 is easily extended to detect client and server crashes.
-This section
-gives the small extensions to the client and server definitions.
+First, the channel must be created
+by calling <<NewSafeStat>> instead of <<NewStat>>:
+<<<
+S={NewSafeStat ChannelServer init(S)}
+>>>
+<P>This makes the channel server a fault-tolerant stationary object.
+In addition, several small extensions to the client
+and server definitions are needed.
+This section gives these extensions.
 
 <SUBSUBSECTION><TITLE>Client definition</TITLE>
 
