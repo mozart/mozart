@@ -16,7 +16,7 @@
       <Title/Primary Types/
       <P>
         <Index/primary types/<Index/types<And>primary/
-        <Figure float id="figure.types">
+        <Figure float id="figure.types" class=maxi>
           <Caption>Primary Types in Oz.</Caption>
           <P>
             <Picture.extern latex to="primary-types.tex">
