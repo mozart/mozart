@@ -15,10 +15,7 @@
 
 <!-- Include Files -->
 <!ENTITY abstract       SYSTEM  "1_abstract.sgml">
-
-<!--
 <!ENTITY introduction   SYSTEM  "2_introduction.sgml">
--->
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
