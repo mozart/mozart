@@ -562,13 +562,6 @@ int oz_newId()
   return newID | (currentThreadID << THREAD_ID_SIZE);
 }
 
-void oz_checkDebugOutline(Thread *tt);
-
-inline
-void oz_checkDebug(Thread *tt, Board *bb) {
-  if (am.debugmode() && oz_isRootBoard(bb)) oz_checkDebugOutline(tt);
-}
-
 /* -----------------------------------------------------------------------
  * Suspensions
  * ----------------------------------------------------------------------- */

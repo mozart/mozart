@@ -888,17 +888,6 @@ void AM::wakeUser()
 
 
 
-void oz_checkDebugOutline(Thread *tt)
-{
-  Assert(am.debugmode());
-  if (oz_currentThread())
-    if (oz_currentThread()->getTrace()) {
-      tt->setTrace(OK);
-      tt->setStep(OK);
-    }
-}
-
-
 #ifdef DEBUG_STATUS
   /*
    * Print capital letter, when flag is set and
