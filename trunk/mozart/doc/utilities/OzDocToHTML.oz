@@ -331,6 +331,9 @@ define
 	    case Tag of book then
 	       Floats <- nil
 	       FigureCounters <- {NewDictionary}
+	       MyBibliographyDB <- {New BibliographyDB.'class'
+				    init(@OutputDirectory)}
+	       BibNode <- _
 	       OzDocToHTML, Process(M.1=front(...))
 	       if {HasFeature M 3} then
 		  OzDocToHTML, Process(M.3=back(...))
@@ -396,9 +399,6 @@ define
 	    [] abstract then
 	       Abstract <- OzDocToHTML, Excursion(M $)
 	    [] back then
-	       MyBibliographyDB <- {New BibliographyDB.'class'
-				    init(@OutputDirectory)}
-	       BibNode <- _
 	       OzDocToHTML, Batch(M 1)
 	    [] 'bib.extern' then BibKey in
 	       {@MyBibliographyDB get(M.to M.key ?BibKey)}
@@ -524,6 +524,9 @@ define
 	    %-----------------------------------------------------------
 	    [] p then
 	       Out <- @Out#'<P>\n'
+	       if {SGML.isOfClass M warning} then
+		  Out <- @Out#'<STRONG>Warning:</STRONG> '
+	       end
 	       OzDocToHTML, Batch(M 1)
 	       Out <- @Out#'</P>\n'
 	    [] para then
