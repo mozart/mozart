@@ -193,7 +193,11 @@ class SbrkMemory {
 #ifdef DEBUG_TRACEMEM
       printf("*** Returning %d bytes to the operating system\n",size);
 #endif
+#ifdef NETBSD
+      int ret = (int)brk((char*)oldBrk);
+#else
       int ret = brk(oldBrk);
+#endif
       lastBrk = sbrk(0);
       if (ret == -1) {
 	error("*** Something wrong when shrinking memory");
