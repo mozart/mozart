@@ -48,7 +48,7 @@ OZDEPEND 	= $(OZC) -c -M
 #----------------------------------------------------------------------
 
 CPPSRCS  	= \
-		aux.cc \
+		misc.cc \
 		ri.cc \
 		builtins.cc \
 		propagators.cc

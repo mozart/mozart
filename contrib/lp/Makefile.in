@@ -55,7 +55,7 @@ DEPEND   	= $(CXX) $(CFLAGS) -MM
 
 
 CPPSRCS		= \
-		aux.cc \
+		misc.cc \
 		propagators.cc \
 		builtins.cc \
 		lp.cc 
