@@ -10,8 +10,8 @@
   ------------------------------------------------------------------------
 */
 
+#define PEANUTS
 #ifdef INTERFACE
-#pragma interface
 
 #pragma implementation "actor.hh"
 #pragma implementation "am.hh"
@@ -26,9 +26,7 @@
 #pragma implementation "dllist.hh"
 #pragma implementation "dllstack.hh"
 #pragma implementation "error.hh"
-#pragma implementation "fdbool.hh"
 #pragma implementation "fdgeneri.hh"
-#pragma implementation "fdgennln.hh"
 #pragma implementation "fdgenvar.hh"
 #pragma implementation "fdhook.hh"
 #pragma implementation "fdprofil.hh"
@@ -39,11 +37,9 @@
 #pragma implementation "os.hh"
 #pragma implementation "objects.hh"
 #pragma implementation "solve.hh"
-#pragma implementation "special.hh"
 #pragma implementation "stack.hh"
 #pragma implementation "statisti.hh"
 #pragma implementation "suspensi.hh"
-#pragma implementation "system.hh"
 #pragma implementation "tagged.hh"
 #pragma implementation "taskstk.hh"
 #pragma implementation "term.hh"
@@ -54,7 +50,7 @@
 #pragma implementation "thrqueue.hh"
 #pragma implementation "thrspool.hh"
 #pragma implementation "verbose.hh"
-#undef INTERFACE
+
 #endif
 
 #include "actor.cc"
