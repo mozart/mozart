@@ -716,8 +716,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
   {VARIABLE}                   { if (get_cond()) {
                                    trans('`');
                                    OZ_Term key = OZ_atom(xytext);
-                                   if (!OZ_isTrue(defines->member(key)))
-                                     defines->setArg(key, OZ_true());
+                                   defines->setArg(key, OZ_true());
                                    BEGIN(DIRECTIVE);
                                  } else
                                    BEGIN(INITIAL);
@@ -798,10 +797,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 }
 <IFNDEF>{
   {VARIABLE}                   { trans('`');
-                                 if (defines->member(OZ_atom(xytext)))
-                                   push_cond(0);
-                                 else
-                                   push_cond(1);
+                                 OZ_Term key = OZ_atom(xytext);
+                                 push_cond(!OZ_isTrue(defines->member(key)));
                                  BEGIN(DIRECTIVE);
                                }
   {BLANK}                      ;
