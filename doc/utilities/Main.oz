@@ -27,10 +27,11 @@ functor
 import
    Application(getCmdArgs exit)
    Property(get put)
-   System(printError)
+   System(printError showInfo)
    OzDocToHTML(translate)
    OS(getEnv putEnv)
    URL
+   Chunk(getChunk)
 prepare
    Spec = record('in'(single char: &i type: string optional: false)
                  'type'(single char: &t type: string optional: false)
@@ -155,6 +156,9 @@ define
          {OzDocToHTML.translate mono Args}
       elseof "html-stylesheets" then
          {OzDocToHTML.translate stylesheets Args}
+      elseof "chunk" then
+         {System.showInfo
+          {Chunk.getChunk Args.'in' Args.'out'}}
       else
          {Raise usage('illegal output type specified')}
       end
@@ -167,7 +171,7 @@ define
           '--in=<File>         The input SGML file.\n'#
           '--type=<Type>       What format to generate\n'#
           '                    (supported: '#
-          'html-color html-mono html-stylesheets).\n'#
+          'html-color html-mono html-stylesheets chunk).\n'#
           '--out=<Dir>         The output directory.\n'#
           '--(no)autoindex     Automatically generate index entries.\n'#
           '\n'#
