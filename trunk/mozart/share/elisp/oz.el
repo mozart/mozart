@@ -87,6 +87,12 @@
   :type 'integer
   :group 'oz)
 
+(defcustom oz-pedantic-spaces nil
+  "*If non-nil, highlight ill-placed whitespace.
+Note that this variable is only checked once when oz.el is loaded."
+  :type 'boolean
+  :group 'oz)
+
 (defcustom oz-change-title t
   "*If non-nil, change the title of the Emacs window while Oz is running."
   :type 'boolean
@@ -360,8 +366,7 @@ All strings matching this regular expression are removed.")
     (save-excursion
       (set-buffer buffer)
       (shell-command command buffer)
-      (re-search-forward "[A-Za-z0-9-]+" nil t)
-      (setq string (match-string 0))
+      (setq string (buffer-string))
       (kill-buffer buffer))
     string))
 
@@ -870,7 +875,7 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
 	t
       (let ((res (oz-shell-command-to-string
 		  (concat (oz-home) "/bin/ozplatform"))))
-	(string-match "[a-z0-9-]+" res)
+	(string-match "[a-zA-Z0-9-]+" res)
 	(setenv "OZPLATFORM" (match-string 0 res))))
     (setenv "OZPATH"
 	    (concat (or (getenv "OZPATH") ".") ":"
@@ -1621,7 +1626,8 @@ Negative arg -N means kill N Oz expressions after the cursor."
        nil))
 
 (defun oz-mode-commands (map)
-  (define-key map "\t" 'oz-indent-line)
+  (define-key map "\t"           'oz-indent-line)
+  (define-key map "\177"         'backward-delete-char-untabify)
 
   (define-key map "\M-\C-m"      'oz-feed-buffer)
   (define-key map "\M-r"         'oz-feed-region)
@@ -1880,6 +1886,23 @@ The second subexpression matches the definition's identifier
 The second subexpression matches the definition's identifier
 and is used for fontification.")
 
+(make-face 'oz-space-face)
+(set-face-background 'oz-space-face "hotpink")
+(defvar oz-space-face 'oz-space-face
+  "Face to use for highlighting spaces at the end of a line.")
+
+(defconst oz-space-matcher-1
+  "[ \t]+$"
+  "Regular expression matching space at the end of a line.")
+
+(defconst oz-space-matcher-2
+  "\\( +\\)\t"
+  "Regular expression matching spaces before a TAB character.")
+
+(defconst oz-space-matcher-3
+  "[^\t\n]\\(\t+\\)"
+  "Regular expression matching TAB characters in the middle of a line.")
+
 (defconst oz-font-lock-keywords-1
   (list (cons oz-char-matcher 'font-lock-string-face)
 	oz-keywords-matcher-1
@@ -1904,13 +1927,21 @@ and is used for fontification.")
 		      '(2 font-lock-type-face))
 		(list oz-meth-matcher
 		      '(2 font-lock-function-name-face)))
+	  (and oz-pedantic-spaces
+	       (list (cons oz-space-matcher-1 'oz-space-face)
+		     (list oz-space-matcher-2
+			   '(1 oz-space-face))
+		     (list oz-space-matcher-3
+			   '(1 oz-space-face))))
 	  oz-font-lock-keywords-2)
   "Gaudy level highlighting for Oz mode.")
 
 (defun oz-set-font-lock-defaults ()
   (set (make-local-variable 'font-lock-defaults)
-       '((oz-font-lock-keywords oz-font-lock-keywords-1
-	  oz-font-lock-keywords-2 oz-font-lock-keywords-3)
+       '((oz-font-lock-keywords
+	  oz-font-lock-keywords-1
+	  oz-font-lock-keywords-2
+	  oz-font-lock-keywords-3)
 	 nil nil ((?& . "/")) beginning-of-line)))
 
 ;;------------------------------------------------------------
@@ -1924,20 +1955,22 @@ and is used for fontification.")
    "\t\\("
    (mapconcat
     'identity
-    '("move" "moveMoveXYXY" "moveMoveYXYX" "allocateL"
-      "moveMoveXYYX" "moveMoveYXXY" "createNamedVariable" "createVariable"
-      "createVariableMove" "putInt" "putConstant" "putList" "putRecord"
-      "setInt" "setConstant" "setValue" "setVariable" "setVoid" "getInt"
-      "getConstant" "getList" "getListValVar" "getRecord" "unifyInt"
-      "unifyConstant" "unifyValue" "unifyVariable" "unifyValVar" "unifyVoid"
-      "unify" "branch" "callBuiltin" "inlineFun[1-3]" "inlineRel[1-3]"
-      "inlineEqEq" "inlineDot" "inlineUparrow" "inlineAt" "inlineAssign"
-      "genCall" "call" "tailCall" "fastCall" "fastTailCall" "genFastCall"
+    '("move" "moveMoveXYXY" "moveMoveYXYX" "moveMoveXYYX" "moveMoveYXXY"
+      "allocateL" "createNamedVariable" "createVariable" "createVariableMove"
+      "putConstant" "putNumber" "putLiteral" "putList" "putRecord"
+      "setConstant" "setNumber" "setLiteral" "setValue" "setVariable"
+      "setVoid" "getNumber" "getLiteral" "getList" "getListValVar"
+      "getRecord" "unifyNumber" "unifyLiteral" "unifyValue" "unifyVariable"
+      "unifyValVar" "unifyVoid" "unify" "branch" "branchOnNonVar"
+      "callBuiltin" "inlineFun[1-3]" "inlineRel[1-3]" "inlineEqEq"
+      "inlineDot" "inlineUparrow" "inlineAt" "inlineAssign" "genCall"
+      "call" "tailCall" "fastCall" "fastTailCall" "genFastCall"
       "marshalledFastCall" "sendMsg" "tailSendMsg" "applMeth" "tailApplMeth"
       "thread" "threadX" "exHandler" "createCond" "nextClause" "shallowGuard"
-      "shallowTest[12]" "testConst" "testNumber" "testBool" "switchOnTerm"
+      "shallowTest[12]" "testLiteral" "testNumber" "testBool" "switchOnTerm"
       "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf" "det"
-      "weakDet" "debugInfo" "globalVarname" "localVarname" "clearY") "\\|")
+      "weakDet" "debugEntry" "debugExit" "globalVarname" "localVarname"
+      "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
@@ -1948,7 +1981,7 @@ and is used for fontification.")
     '("allocateL[1-9]" "allocateL10" "deAllocateL"
       "deAllocateL[1-9]" "deAllocateL10" "return" "popEx" "createOr"
       "createEnumOr" "createChoice" "clause" "emptyClause" "lastClause"
-      "shallowThen" "failure" "succeed" "wait" "waitTop" "ask" "profileProc")
+      "shallowThen" "failure" "skip" "wait" "waitTop" "ask" "profileProc")
     "\\|")
    "\\)$"))
 
@@ -2091,6 +2124,8 @@ and is used for fontification.")
 ;;------------------------------------------------------------
 
 (defun oz-fontify-buffer (&optional arg)
+  "Center point in window, redisplay frame and re-fontify buffer.
+The ARG is interpreted just as with \\[recenter]."
   (interactive "P")
   (recenter arg)
   (if window-system (font-lock-fontify-buffer)))
