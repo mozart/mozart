@@ -33,7 +33,7 @@
 #include "ozostream.hh"
 #include "fddebug.hh"
 #include "am.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 
 Bool GenFSetVariable::valid(TaggedRef val)
 {
@@ -275,7 +275,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     if (fs->isValue()) {
       if (am.isLocalVariable(v, vptr)) {
 	if (!isUVar(vtag))
-	  oz_checkSuspensionList(tagged2SVarPlus(v));
+	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
 	doBind(vptr, makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       } else {
 	am.doBindAndTrail(vptr,
@@ -294,7 +294,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 
     if (am.isLocalVariable(v, vptr)) {
       if (!isUVar(vtag)) {
-	oz_checkSuspensionList(tagged2SVarPlus(v));
+	oz_checkSuspensionListProp(tagged2SVarPlus(v));
 	fsv->setSuspList(tagged2SVarPlus(v)->getSuspList());
       }
       doBind(vptr, makeTaggedRef(tfsv));

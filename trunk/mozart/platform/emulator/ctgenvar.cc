@@ -31,7 +31,7 @@
 #include "ctgenvar.hh"
 #include "am.hh"
 #include "builtins.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 
 // `var' and `vptr' belongs to `this', i.e., is a `GenCtVariable
 // `term' and `tptr' are either values or other constrained variable
@@ -267,7 +267,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     if (constr->isValue()) {
       if (am.isLocalVariable(v, vptr)) {
 	if (!isUVar(vtag))
-	  oz_checkSuspensionList(tagged2SVarPlus(v));
+	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
 	doBind(vptr, constr->toValue());
       } else {
 	am.doBindAndTrail(vptr, constr->toValue());
@@ -284,7 +284,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       
       if (am.isLocalVariable(v, vptr)) {
 	if (!isUVar(vtag)) {
-	  oz_checkSuspensionList(tagged2SVarPlus(v));
+	  oz_checkSuspensionListProp(tagged2SVarPlus(v));
 	  ctv->setSuspList(tagged2SVarPlus(v)->getSuspList());
 	}
 	doBind(vptr, makeTaggedRef(tctv));

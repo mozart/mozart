@@ -30,7 +30,7 @@
 #endif
 
 #include "base.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 #include "controlvar.hh"
 #include "builtins.hh"
 

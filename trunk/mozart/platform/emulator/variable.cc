@@ -31,21 +31,6 @@
 #endif
 
 #include "variable.hh"
-#include "oz.h"
-
-#include "tagged.hh"
-#include "value.hh"
-#include "cont.hh"
-#include "board.hh"
-#include "stack.hh"
-#include "taskstk.hh"
-#include "am.hh"
-#include "thread.hh"
-#include "susplist.hh"
-
-#include "variable.hh"
-#include "genvar.hh"
-
 
 /*
  * Class VariableNamer: assign names to variables

@@ -30,7 +30,7 @@
 #include "fsgenvar.hh"
 #include "ctgenvar.hh"
 #include "ofgenvar.hh"
-#include "threadInterface.hh"
+#include "prop_int.hh"
 
 // gc.cc: OZ_Propagator * OZ_Propagator::gc(void)
 

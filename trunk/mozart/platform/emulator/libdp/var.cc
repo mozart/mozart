@@ -33,7 +33,7 @@
 #include "base.hh"
 #include "dpBase.hh"
 #include "var.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 #include "msgType.hh"
 #include "table.hh"
 #include "gname.hh"

@@ -28,7 +28,7 @@
 // implementation of threads
 
 #if defined(INTERFACE)
-#pragma implementation "thread.hh"
+#pragma implementation "thr_class.hh"
 #endif
 
 /* some random comments on threads:
@@ -46,7 +46,7 @@
 
    */
 
-#include "thread.hh"
+#include "thr_class.hh"
 
 int Thread::getRunnableNumber()
 {
@@ -75,6 +75,3 @@ int Thread::getRunnableNumber()
     return 0;
   }
 }
-
-
-Propagator * Propagator::_runningPropagator = NULL;

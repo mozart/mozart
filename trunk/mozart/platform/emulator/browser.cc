@@ -35,7 +35,7 @@
 #include "base.hh"
 #include "builtins.hh"
 #include "genvar.hh"
-#include "threadInterface.hh"
+#include "space.hh"
 
 
 OZ_BI_define(BIaddr,1,1)
