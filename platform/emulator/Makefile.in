@@ -42,15 +42,7 @@ STATIC_MODULELIBS=      -L. ${STATIC_MODULES:%=-l%}
 STATIC_MODULETARGETS=   $(STATIC_MODULES:%=lib%.a)
 DYNAMIC_MODULETARGETS=  $(DYNAMIC_MODULES:%=%.so)
 
-CORE_MODULE_NAMES=      Run OF FS FD CPI OS Space Store Mem Pickle Support
-# mm2: spliting emulator into different libraries does not work,
-#      because some files are not linked into emulator.exe, which
-#      are only required from dynamic modules
-# CORE_LIBS=    -L. ${CORE_MODULE_NAMES:%=-l%}
-CORE_TARGETS=   ${CORE_MODULE_NAMES:%=lib%.a}
-
-CORE_LIBS=
-LIBS=           $(CORE_LIBS) $(STATIC_MODULELIBS) @LIBS@
+LIBS=           $(STATIC_MODULELIBS) @LIBS@
 
 INCS=           -I. -I$(SRCDIR)
 M4_D=           -DEMUDIR=$(SRCDIR)
@@ -153,15 +145,17 @@ SRCS= \
         $(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
         $(PICKLESRCS)
 
-# mm2: if enabled CORE_LIBS uncomment the following
-COREOBJS=   $(SRCS:%.cc=%.o)
 
-OBJS=   $(COREOBJS) $(OTHERSRCS:%.cc=%.o)
+OBJS=   $(SRCS:%.cc=%.o) $(OTHERSRCS:%.cc=%.o)
 
-TKSRCS= tk.cc
-COMPILERSUPPORTSRCS=    compiler.cc
-BROWSERSRCS=    browser.cc
-DEBUGSRCS=      debugBI.cc
+TKSRCS= \
+        tk.cc
+COMPILERSUPPORTSRCS= \
+        compiler.cc
+BROWSERSRCS= \
+        browser.cc
+DEBUGSRCS= \
+        debugBI.cc
 
 TKOBJS= $(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=    $(COMPILERSUPPORTSRCS:%.cc=%.lo)
@@ -245,48 +239,8 @@ Debug.so: $(DEBUGOBJS)
 libDebug.a: $(DEBUGOBJS)
         $(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
 
-libOF.a: $(OFSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(OFSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libFD.a: $(FDSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(FDSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libFS.a: $(FSETSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(FSETSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libCPI.a: $(CPISRCS:%.cc=%.o)
-        $(AR) -rc $@ $(CPISRCS:%.cc=%.o) && $(RANLIB) $@
-
-libStore.a: $(STORESRCS:%.cc=%.o)
-        $(AR) -rc $@ $(STORESRCS:%.cc=%.o) && $(RANLIB) $@
-
-libSupport.a: $(SUPPORTSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(SUPPORTSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libSpace.a: $(SPACESRCS:%.cc=%.o)
-        $(AR) -rc $@ $(SPACESRCS:%.cc=%.o) && $(RANLIB) $@
-
-libRun.a: $(RUNSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(RUNSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libOS.a: $(OSSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(OSSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libMem.a: $(MEMSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(MEMSRCS:%.cc=%.o) && $(RANLIB) $@
-
-libPickle.a: $(PICKLESRCS:%.cc=%.o)
-        $(AR) -rc $@ $(PICKLESRCS:%.cc=%.o) && $(RANLIB) $@
-
-libOther.a: $(OTHERSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(OTHERSRCS:%.cc=%.o) && $(RANLIB) $@
 
 PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
-
-# mm2
-# PRGDEP+=$(CORE_TARGETS)
-
-libs: $(CORE_TARGETS)
 
 first: $(CREATEDFILES)
         for d in $(SUBDIRS); do (cd $$d; $(MAKE) first); done
