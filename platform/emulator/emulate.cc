@@ -1958,14 +1958,14 @@ LBLdispatcher:
       }
       
       if (!isLock(aux)) {
-	(void) e->raise(E_ERROR,E_OBJECT,"attempt to lock closed object",0);
+	(void) e->raise(E_ERROR,E_OBJECT,"lockClosed",0);
 	goto LBLraise;
       }
 
       OzLock *lck = tagged2Lock(aux);
       if (!e->isToplevel()) {
 	if (e->currentBoard != lck->getBoard()) {
-	  (void) e->raise(E_ERROR,E_OBJECT,"attempt to lock object in guard",0);
+	  (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
 	  goto LBLraise;
 	}
       }
@@ -2380,7 +2380,7 @@ LBLdispatcher:
 
        if (foundHdl) {
 	 X[0] = e->exception.value;
-	 goto LBLpopTask;
+	 goto LBLpopTaskNoPreempt;
        }
 
        if (!e->isToplevel() &&
@@ -2391,7 +2391,7 @@ LBLdispatcher:
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = e->exception.value;
        CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
-       goto LBLpopTask;
+       goto LBLpopTaskNoPreempt;
      }
    }
 
