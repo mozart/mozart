@@ -98,6 +98,48 @@ OZ_BI_define(BIsiteStatistics,0,1)
   
 } OZ_BI_end
 
+
+
+
+
+
+OZ_Term makeMemRec(OZ_Term type, int size, int nr){
+  return OZ_recordInit(oz_atom("mem"),
+		       oz_cons(oz_pairA("type", type),
+			       oz_cons(oz_pairAI("size",size),
+				       oz_cons(oz_pairAI("nr",nr),oz_nil()))));
+}
+
+
+			       
+/*
+
+Till Andreas::
+OZ_BI_define(BINetStuff,0,1)
+{
+  initDP();
+  int netmsgbSz, netmsgbNr, bytebSz, bytebNr,
+    wrcoSz, wrcoNr, recoSz, recoNr, messSz, messNr,
+    resiSz, resiNr;
+  
+  netmsgbNr =  getNetMsgBufferManagerInfo(netmsgbSz);
+  bytebNr   =  getNetByteBufferManagerInfo(bytebSz);
+  wrcoNr    =  getWriteConnectionManagerInfo(wrcoSz);
+  recoNr    =  getReadConnectionManagerInfo(recoSz);
+  messNr    =  getMessageManagerInfo(messSz);
+  resiNr    =  getRemoteSiteManagerInfo(resiSz);
+  OZ_RETURN(oz_cons(makeMemRec(oz_atom("netmsgb"), netmsgbSz,netmsgbNr),
+		    oz_cons(makeMemRec(oz_atom("netbyteb"),bytebSz, bytebNr),
+			    oz_cons(makeMemRec(oz_atom("writc"),wrcoSz, wrcoNr),
+				    oz_cons(makeMemRec(oz_atom("readc"),recoSz, recoNr),
+					    oz_cons(makeMemRec(oz_atom("messa"),messSz, messNr),
+						    oz_cons(makeMemRec(oz_atom("remsi"),resiSz, resiNr),oz_nil())))))));
+} OZ_BI_end
+    
+
+*/
+
+
 //
 // kost@: who put the following comment???
 // note that the marshaler always give you these statistics - should
