@@ -85,11 +85,11 @@ OZ_Boolean isPosSmallInt(OZ_Term v);
 OZ_Boolean isPosSmallFDInt(OZ_Term v); 
 OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
-#define EXPECT_BLOCK(O, P, F)						\
+#define EXPECT_BLOCK(O, P, F, C)						\
 {									\
   OZ_expect_t r = O.F(OZ_getCArg(P));					\
   if (O.isFailing(r)) {							\
-    TypeError(P, "");							\
+    TypeError(P, C);							\
   } else if (O.isSuspending(r) || pe.isExceptional(r)) {		\
     for (OZ_Term * v = O.getSuspVar(); v != NULL; v = O.getSuspVar())	\
       am.addSuspendVarList(v);						\
