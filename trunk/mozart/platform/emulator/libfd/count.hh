@@ -32,6 +32,7 @@
 //-----------------------------------------------------------------------------
 
 class ExactlyPropagator : public Propagator_D_VD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   int reg_tn, reg_tnn, oldSize;
   int * reg_oldDomSizes;
@@ -65,6 +66,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class AtLeastPropagator : public Propagator_D_VD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   int reg_tn, reg_tnn, oldSize;
   int * reg_oldDomSizes;
@@ -97,6 +99,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class AtMostPropagator : public Propagator_D_VD_I {
+  friend INIT_FUNC(fdp_init);
 private:
   int reg_tn, reg_tnn, oldSize;
   int * reg_oldDomSizes;
@@ -129,6 +132,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class ElementPropagator : public Propagator_D_VI_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

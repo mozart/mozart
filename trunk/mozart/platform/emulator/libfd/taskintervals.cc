@@ -1211,6 +1211,6 @@ failure:
 
 //----------------------------------------------------------------------
 
-OZ_PropagatorProfile CPIteratePropagatorCumTI::profile = "sched_cumulativeTI";
-OZ_PropagatorProfile TaskIntervalsPropagator::profile = "sched_taskIntervals";
+OZ_PropagatorProfile CPIteratePropagatorCumTI::profile;
+OZ_PropagatorProfile TaskIntervalsPropagator::profile;
 

@@ -31,12 +31,12 @@
 
 
 #ifdef OZ_DEBUG
-  int edgecount;
-  int nodecount;
-  int dlinkcount;
-  int dlinktotal;
-  int listcount;
-  int listtotal;
+  extern int edgecount;
+  extern int nodecount;
+  extern int dlinkcount;
+  extern int dlinktotal;
+  extern int listcount;
+  extern int listtotal;
 #endif
 
 #ifdef SUNPRO
@@ -133,7 +133,7 @@ public:
 
 extern CpiHeapClass CpiHeap;
 
-CpiHeapClass memory;
+extern CpiHeapClass memory;
 
 typedef void* GenPtr;
 
@@ -661,6 +661,7 @@ public:
   void write() const;  
 };
 
+inline
 void graph::write() const {
     dlink<node> *n;
     dlink<edge> *e;
@@ -684,7 +685,7 @@ inline node graph::new_node(int _val, bool _free) {
   return n;
 }
 
-edge graph::new_edge(node s, node t) {
+inline edge graph::new_edge(node s, node t) {
   edge e = new edge_struct();
   e->id  = edgecount++;
   e->src = s;
@@ -747,6 +748,7 @@ inline void graph::rev_all_edges() {
     (j->e)->out.swap((j->e)->in);
 }
 
+inline
 void graph::dfs_visit(node n, int &time, int direction, int component) {
   // direction = 0 means forward, = 1 backward edges.
   // (this is useful for 'strong components' dfs)
@@ -789,6 +791,7 @@ void graph::dfs_visit(node n, int &time, int direction, int component) {
   return;
 }
 
+inline
 void graph::mark_strong_components() {
   // Vorgehensweise:
   // a. do a DFS in the transponed graph.
@@ -871,6 +874,7 @@ public:
   }
 };
 
+inline
 edge graph::find_next_augmenting_path(node s, node t,
                                              node_array<edge>& pred,
                                              edge_array<int>& layered) { 
@@ -892,6 +896,7 @@ edge graph::find_next_augmenting_path(node s, node t,
   return f;
 } 
 
+inline
 bool graph::bfs(node s, node t, edge_array<int>& layered) { 
 
   node_array<int> dist(*this, -1);
@@ -1036,6 +1041,7 @@ inline list<edge> graph::MAX_CARD_BIPARTITE_MATCHING(const list<node>& A,
 //=============================================================================
 
 class CompleteAllDistProp : public Propagator_VD {
+  friend INIT_FUNC(fdp_init);
 private:
   bool isFailed;
   OZ_NonMonotonic _nm;

@@ -33,6 +33,7 @@
 #include <string.h>
 
 class IncludeRPropagator : public Propagator_S_D_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -49,6 +50,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class EqualRPropagator : public Propagator_S_S_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -65,6 +67,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class IsInRPropagator : public Propagator_S_I_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -81,6 +84,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class BoundsPropagator : public OZ_Propagator {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 
@@ -115,6 +119,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class BoundsNPropagator : public OZ_Propagator {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 
@@ -175,6 +180,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class PartitionReifiedPropagator : public OZ_Propagator {
+  friend INIT_FUNC(fsp_init);
 protected:
   static OZ_PropagatorProfile profile;
 
@@ -224,6 +230,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class PartitionReified1Propagator : public PartitionReifiedPropagator {
+  friend INIT_FUNC(fsp_init);
 protected:
   static OZ_PropagatorProfile profile;
 

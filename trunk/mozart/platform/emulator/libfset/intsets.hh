@@ -30,6 +30,7 @@
 #include "fsstd.hh"
 
 class FSetsMinPropagator : public Propagator_S_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -44,6 +45,7 @@ public:
 };
 
 class FSetsMaxPropagator : public Propagator_S_D {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -75,6 +77,7 @@ public:
 };
 
 class FSetsConvexPropagator : public Propagator_S {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -88,6 +91,7 @@ public:
 
 
 class FSetMatchPropagator : public Propagator_S_VD {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
   
@@ -106,6 +110,7 @@ public:
 };
 
 class FSetMinNPropagator : public Propagator_S_VD {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
   
@@ -124,6 +129,7 @@ public:
 };
 
 class FSetMaxNPropagator : public Propagator_S_VD {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
   
@@ -142,6 +148,7 @@ public:
 };
 
 class FSetSeqPropagator : public Propagator_VS {
+  friend INIT_FUNC(fsp_init);
 private:
   static OZ_PropagatorProfile profile;
   

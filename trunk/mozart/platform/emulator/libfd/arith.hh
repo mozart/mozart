@@ -32,6 +32,7 @@
 //-----------------------------------------------------------------------------
 
 class TwicePropagator : public Propagator_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -44,6 +45,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class SquarePropagator : public Propagator_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -56,6 +58,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class PlusPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -69,6 +72,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class MinusPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -82,6 +86,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class TimesPropagator : public Propagator_D_D_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -95,6 +100,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class DivPropagator : public Propagator_D_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -106,6 +112,7 @@ public:
 };
 
 class DivIPropagator : public Propagator_D_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -117,6 +124,7 @@ public:
 };
 
 class ModPropagator : public Propagator_D_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -128,6 +136,7 @@ public:
 };
 
 class ModIPropagator : public Propagator_D_I_D {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:
@@ -141,6 +150,7 @@ public:
 //-----------------------------------------------------------------------------
 
 class PowerPropagator : public Propagator_D_D_I {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
 public:

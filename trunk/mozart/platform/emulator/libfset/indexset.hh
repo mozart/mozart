@@ -348,8 +348,12 @@ private:
 public:
   IndexSet &operator [](int i);
 
-  static int sizeOf(int nb_isets, int max_card_iset);
-
+  static int sizeOf(int nb_isets, int max_card_iset) {
+    int size_per_iset = sizeof(int) * word32(max_card_iset) + sizeof(IndexSet);
+    int size = sizeof(IndexSets) + nb_isets * size_per_iset;
+    return size;
+  }
+  
   int sizeOfMe(void) { return sizeOf(_nb_isets, _max_card_iset); }
   
   int getHigh(void);
@@ -391,13 +395,6 @@ IndexSet &IndexSets::operator [](int i)
   return _isets[i]; 
 }
 
-int IndexSets::sizeOf(int nb_isets, int max_card_iset) // nb of bytes (chars)
-{
-  int size_per_iset = sizeof(int) * word32(max_card_iset) + sizeof(IndexSet);
-  int size = sizeof(IndexSets) + nb_isets * size_per_iset;
-  return size;
-}
-  
 inline
 int IndexSets::getHigh(void) 
 { 
@@ -494,6 +491,7 @@ IndexSets * IndexSets::copy(void)
   return tmp;
 }
 
+inline
 IndexSets * IndexSets::create(int nb_isets, int max_card_iset) 
 {
   IndexSets * tmp = (IndexSets *)(void *) 
@@ -519,3 +517,4 @@ void IndexSets::print(void)
 
 //-----------------------------------------------------------------------------
 // eof
+

@@ -82,11 +82,6 @@ OZ_C_proc_begin(fdp_sumAC, 4)
 }
 OZ_C_proc_end
 
-OZ_PropagatorProfile LinEqAbsPropagator::profile = "fdp_sumAC";
-OZ_PropagatorProfile LinLessEqAbsPropagator::profile = "fdp_sumAC";
-OZ_PropagatorProfile LinGreaterEqAbsPropagator::profile = "fdp_sumAC";
-OZ_PropagatorProfile LinNotEqAbsPropagator::profile = "fdp_sumAC";
-
 //-----------------------------------------------------------------------------
 
 #define CLAUSE1 1
@@ -596,3 +591,9 @@ failure:
 
   return P.fail();
 }
+
+OZ_PropagatorProfile LinEqAbsPropagator::profile;
+OZ_PropagatorProfile LinLessEqAbsPropagator::profile;
+OZ_PropagatorProfile LinGreaterEqAbsPropagator::profile;
+OZ_PropagatorProfile LinNotEqAbsPropagator::profile;
+

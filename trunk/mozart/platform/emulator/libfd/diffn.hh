@@ -14,6 +14,7 @@
 //-----------------------------------------------------------------------------
 
 class DiffnPropagator : public OZ_Propagator {
+  friend INIT_FUNC(fdp_init);
 private:
   static OZ_PropagatorProfile profile;
   int reg_size;

@@ -24,8 +24,9 @@
  *
  */
 
-#include "oz_cpi.hh"
+#include <string.h>
 
+#include "oz_cpi.hh"
 
 OZ_PropagatorProfile * OZ_PropagatorProfile::_all_headers = NULL;
 
@@ -43,8 +44,20 @@ void OZ_PropagatorProfile::profileReset()
 
 
 OZ_PropagatorProfile::OZ_PropagatorProfile(char * propagator_name) 
-  : _calls(0), _samples(0), _heap(0), _propagator_name(propagator_name)
+  : _calls(0), _samples(0), _heap(0), 
+    _propagator_name(strdup(propagator_name))
 {
+  *this = propagator_name;
+}
+
+
+void OZ_PropagatorProfile::operator = (char * propagator_name) 
+{
+  _calls = 0;
+  _samples = 0;
+  _heap = 0; 
+  _propagator_name = strdup(propagator_name);
+
   static int firstCall = 1;
   if (firstCall) {
     firstCall = 0;

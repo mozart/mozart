@@ -32,7 +32,8 @@ FSETLIBSRCS =	standard.cc telling.cc \
 		testing.cc fsaux.cc \
 		intsets.cc monitor.cc \
 		reified.cc fsstd.cc \
-		std_n.cc table.cc
+		std_n.cc table.cc \
+		fsinit.cc
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
