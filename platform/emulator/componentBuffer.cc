@@ -65,7 +65,7 @@ enum ByteStreamType{
 inline
 Bool isResource(OZ_Term t)
 {
-  if (oz_isFree(t) || oz_isFuture(t) || oz_isPort(t))
+  if (oz_isFree(t) || oz_isKinded(t) || oz_isFuture(t) || oz_isPort(t))
     return OK;
   return ozconf.perdioMinimal
     ? NO
