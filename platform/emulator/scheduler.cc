@@ -61,10 +61,11 @@ int run_thread(Thread * ct) {
 }
 
 void scheduler(void) {
-  register Thread * ct;
-  register Board  * cb;
 
   do {
+
+    register Thread * ct = (Thread *) NULL;
+    register Board  * cb;
 
     /*
      * Do everything that is expensive and ugly: garbage collection...
