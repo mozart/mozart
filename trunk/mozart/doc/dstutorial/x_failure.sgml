@@ -209,14 +209,12 @@ do not have the correct type.
 <SUBSECTION><TITLE>Exception formats</TITLE>
 
 <P>The exceptions raised have the format
-<<system(dp(entity:E type:T conditions:FS op:OP) ...)>>,
+<<system(dp(entity:E conditions:FS op:OP) ...)>>,
 where the four arguments are defined as follows:
 <LIST>
 <ITEM> <<E>> is the entity on which the operation was attempted.
 A temporary limitation of the current release is that
 if the entity is an object, then <<E>> is undefined.
-<ITEM> <<T>> is the type of the entity, which is one
-of <<variable>>, <<cell>>, <<lock>>, <<port>>, or <<object>>.
 <ITEM> <<FS>> is the list of actual fault states occurring
 at the site on which the operation was attempted.
 This list is a subset of the list for which fault detection
@@ -354,9 +352,8 @@ one cannot install <<global>> handlers.
 
 <P>A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
-The arguments <<E>>, <<FS>>, and <<OP>>,
-are exactly the same arguments as given
-in a distribution exception.
+The arguments <<E>>, <<FS>>, <<OP>>,
+are exactly the same as in a distribution exception.
 
 <SUBSECTION><TITLE>Eager failure detection</TITLE>
 
