@@ -8,7 +8,7 @@
 # where Oz resides:
 
 howcalled=$0	
-: ${OZHOME=`dirname \`dirname $howcalled\``}; export OZHOME
+: ${OZHOME=`dirname \`dirname $howcalled\``}
 echo "Setting Oz installation directory to: $OZHOME"
 
 # determine machine architecture
@@ -19,31 +19,22 @@ if [ ${OZARCH-0} = 0 ]; then
        exit 1;
   fi
 fi
-export OZARCH
+
 : ${OZARCHBIN=$OZHOME/bin/$OZARCH}
 
-
-# Where ispgm sits:
-: ${ISPGM=$OZHOME/bin/ispgm}; export ISPGM
-
-
 # where Oz searches for files:
-: ${OZPATH=.:${OZHOME}:${OZHOME}/lib:${OZHOME}/lib/${OZARCH}:${OZHOME}/demo}; export OZPATH
+: ${OZPATH=.}
+OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/lib/${OZARCH}:${OZHOME}/demo}
+export OZPATH
 
 
 # increment path
-PATH=${PATH}:${OZHOME}/bin; export PATH
+PATH=${PATH}:${OZHOME}/bin:${OZHOME}/bin/${OZARCH}
+export PATH
 
 # load fonts
 if [ -d ${OZHOME}/lib/fonts ]; then 
    xset +fp ${OZHOME}/lib/fonts
-fi
-
-
-# want to use an older version?
-if [ ${OZVERSION-0} = 0 ];  then
-  PATH=${OZVERSION}:$PATH; export PATH
-  OZPATH=${OZVERSION}:$OZPATH; export OZPATH
 fi
 
 
@@ -65,7 +56,7 @@ case "$cmd" in
 	     OZEMACS=${OZHOME}/lemacs/lemacs
 	  else
 
-	     echo checking for emacs
+	     echo -n "checking for emacs: "
 	     IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
              for name in lemacs emacs; do
 	       for dir in $PATH; do
@@ -79,18 +70,16 @@ case "$cmd" in
              done
 	     IFS="$saveifs"
 	     if [ ${OZEMACS-0} = 0 ]; then
-		echo "No 'emacs' found" 1>&2
+		echo "not found" 1>&2
 		echo "Try setting environment variable OZEMACS" 1>&2
 		exit 1
 	     fi
-	     echo "        choose emacs: ${OZEMACS}"
+	     echo "${OZEMACS}"
 
 	  fi
 	fi
-	export OZEMACS
 
-
-	exec $OZEMACS -l $OZHOME/elisp/ozstartup.el $*
+	exec $OZEMACS -l $OZHOME/lib/elisp/ozstartup.el $*
    ;;
 
    oz.compiler)
