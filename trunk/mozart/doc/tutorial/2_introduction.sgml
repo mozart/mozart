@@ -26,7 +26,7 @@
   <TITLE>Introduction</TITLE>
   <P>The Mozart system implements Oz 3, the latest in the Oz family
   of multi-paradigm languages based on the concurrent constraint model.
-  Oz 3 is almost completely upward compatible with its precursor Oz 2.
+  Oz 3 is almost completely upward compatible with its predecessor Oz 2.
   The main additions to Oz 2 are functors (a kind of software component)
   and futures (for improved dataflow behavior).  Oz 2 is itself a successor
   to the original Oz 1 language, whose implementation was first released
