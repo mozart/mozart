@@ -106,6 +106,8 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 
 ProgramCounter IHashTable::index(GenCVariable *cvar, ProgramCounter elseLbl)
 {
+  if (cvar->getType()==AVAR) return varLabel;
+
   // if there are no integer guards goto else-branch
   if (numberTable) {
     HTEntry** aux_table = numberTable;
