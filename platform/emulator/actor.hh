@@ -41,8 +41,9 @@ protected:
   Board *board;
   int priority;
 public:
-  Actor(int type,Board *s,int prio);
-  ~Actor();
+  Actor(int typ,Board *bb,int prio);
+
+  ~Actor() { flags=Ac_None; board=(Board *) NULL; }
 
   USEHEAPMEMORY;
   Actor *gc();
@@ -50,16 +51,16 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  int getPriority();
-  Board *getBoard();
-  Bool isCommitted();
-  Bool isAsk();
-  Bool isWait();
-  Bool isAskWait ();
-  Bool isSolve ();
-  Bool isDisWait();
-  void setCommitted();
-  void setDisWait();
+  int getPriority() { return (priority); }
+  Board *getBoard() { return (board); }
+  Bool isCommitted() { return ((flags & Ac_Committed) ? OK : NO); }
+  Bool isAsk() { return ((flags & Ac_Ask) ? OK : NO); }
+  Bool isWait() { return ((flags & Ac_Wait) ? OK : NO); }
+  Bool isAskWait () { return ((flags & (Ac_Ask|Ac_Wait)) ? OK : NO); }
+  Bool isSolve () { return ((flags & Ac_Solve) ? OK : NO); }
+  Bool isDisWait() { return ((flags & Ac_DisWait) ? OK : NO); }
+  void setCommitted() { flags |= Ac_Committed; }
+  void setDisWait() { flags |= Ac_DisWait; }
 };
 
 // ------------------------------------------------------------------------
@@ -67,7 +68,11 @@ public:
 
 class AWActor : public Actor {
 public:
-  static AWActor *Cast(Actor *a);
+  static AWActor *Cast(Actor *a)
+{
+  DebugCheck((a->isAskWait () == NO), error ("AWActor::Cast"));
+  return ((AWActor *) a);
+}
 protected:
   Continuation next;
   int childCount;
@@ -83,18 +88,20 @@ public:
 
   void addChild(Board *n);
   void failChild(Board *n);
-  Continuation *getNext();
-  Bool hasNext();
-  Bool isLeaf();
-  void lastClause();
-  void nextClause(ProgramCounter pc);
+  Continuation *getNext() { return &next; }
+  Bool hasNext() { return ((next.getPC() == NOCODE) ? NO : OK); }
+  /* see also: hasOneChild() */
+  Bool isLeaf() { return ((childCount == 0 && next.getPC() == NOCODE) ? OK : NO); }
+  void lastClause() { next.setPC(NOCODE); }
+  void nextClause(ProgramCounter pc) { next.setPC(pc); }
 };
 
 // ------------------------------------------------------------------------
 
 class AskActor : public AWActor {
 public:
-  static AskActor *Cast(Actor *a);
+  static AskActor *Cast(Actor *a)
+  { DebugCheck(!a->isAsk(),error("AskActor::Cast")); return (AskActor *) a; }
 private:
   ProgramCounter elsePC;
 public:
@@ -105,15 +112,15 @@ public:
 
   void gcRecurse();
 
-  ProgramCounter getElsePC();
-
+  ProgramCounter getElsePC() { return elsePC; }
 };
 
 // ------------------------------------------------------------------------
 
 class WaitActor : public AWActor {
 public:
-  static WaitActor *Cast(Actor *a);
+  static WaitActor *Cast(Actor *a)
+{ DebugCheck(!a->isWait(),error("WaitActor::Cast")); return (WaitActor *) a; }
 private:
   Board **childs;
 public:
@@ -130,9 +137,10 @@ public:
   // returns the first created child; this child is unlinked from the actor;
   Board *getChildRef ();
   // the same, but a child is not unlinked from the actor;
-  void decChilds ();    // for search;
-  Bool hasOneChild();
-  Bool hasNoChilds();
+  void decChilds () { childCount--; }    // for search;
+  /* see also: isLeaf() */
+  Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
+  Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   void unsetBoard () { board = (Board *) NULL; }
   void setBoard (Board *bb) {  board = bb; }
 };
@@ -142,7 +150,11 @@ public:
 
 class SolveActor : public Actor {
 public:
-  static SolveActor *Cast(Actor *a);
+  static SolveActor *Cast(Actor *a)
+{
+  DebugCheck ((a->isSolve () == NO), error ("SolveActor::Cast"));
+  return ((SolveActor *) a);
+}
   static void Init();
 //  This is 'de facto' the "solve actor";
 //  If BIsolve is applied, CFuncCont is generated containing request to call
@@ -167,8 +179,11 @@ public:
 
   void gcRecurse();
 
-  void incThreads ();
-  void decThreads ();
+  void incThreads () { threads++; }
+  void decThreads () {
+    DebugCheck ((threads == 0), error ("0-- in SolveActor::decThreads ()"));
+    threads--;
+  }
   Bool isStable ();  // so simple!
   void addSuspension (Suspension *susp);
   void addSuspension (SuspList *l);
