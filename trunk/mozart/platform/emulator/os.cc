@@ -496,12 +496,10 @@ int oskill(int pid, int sig)
 
   switch (sig) {
   case SIGTERM:
-  case SIGHUP:
   case SIGINT:
-    TerminateProcess((HANDLE)pid,0);
-    break;
+    return TerminateProcess((HANDLE)pid,0)==TRUE ? 0 : -1;
   default: // dont know how to sent other signals (RS)
-    break;
+    return -1;
   }
 #else
   return kill(pid,sig);
