@@ -1,7 +1,7 @@
 Release of Mozart 1.0
 ---------------------
 
-Available at http://www.mozart.ps.uni-sb.de
+Available at http://www.mozart-oz.org
 
 Systems supported: Many Unix-based platforms, Windows 95/98/NT
 
@@ -51,7 +51,7 @@ having to rewrite them.
 
 The Mozart consortium has developed significant applications with the
 platform.  Here we give a brief overview; a more complete list is at
-http://mozart.ps.uni-sb.de/archive.cgi.  DFKI has developed a
+http://www.mozart-oz.org/archive.cgi.  DFKI has developed a
 real-time bus scheduler, an intelligent manufacturing systems planner,
 a configuration tool, and an automatic music composition tool.  DFKI
 uses Mozart as the base platform for its multi-agent research.  UdS
@@ -91,17 +91,3 @@ and tools.  Fifth, Oz is a data-flow language, i.e., computations
 are driven by availability of data.  Finally, Mozart provides a much
 more efficient implementation of concurrency--it is literally possible
 to create millions of threads within a process.
-
-Contact addresses:
-
-   Seif Haridi
-   +46 (8) 633-1500
-   seif@sics.se
-
-   Christian Schulte
-   +49 (681) 302-5340
-   schulte@ps.uni-sb.de
-
-   Peter Van Roy
-   +32 (10) 47.83.74
-   pvr@info.ucl.ac.be
