@@ -424,10 +424,11 @@ class OwnerTable {
   int size;
   int no_used;
   int nextfree;
+  int localized;  /* Used by the distpane */
+
 
   void init(int,int);
   void compactify();
-
 public:
   void print();
 
@@ -443,6 +444,7 @@ public:
     Assert(array!=NULL);
     nextfree = END_FREE;
     no_used=0;
+    localized = 0;
     init(0,sz);
   }
 
@@ -461,6 +463,9 @@ public:
   int newOwner(OwnerEntry *&);
 
   void freeOwnerEntry(int);
+  void localizing(){localized = (localized + 1) % 100000;}
+  int  getLocalized(){int ret=localized; localized = 0; return ret;}
+
 };
 
 extern OwnerTable *ownerTable;
