@@ -230,7 +230,8 @@ void *ozMalloc(int chunk_size)
     void *old = sbrk(0);
     void *ret_val = sbrk(chunk_size);
     if (ret_val == (caddr_t) - 1) {
-      error("Virtual memory exhausted");
+      fprintf(stderr,"Virtual memory exhausted\n");
+      exit(1);
     }
     
     SbrkMemory *newMem = (SbrkMemory *) ret_val;
@@ -379,7 +380,8 @@ void getMemFromOS(size_t sz)
   heapEnd = (char *) ozMalloc(ozconf.heapBlockSize);
   
   if (heapEnd == NULL) {
-    error("heapMalloc: Virtual memory exceeded"); 
+    fprintf(stderr,"Virtual memory exceeded\n");
+    exit(1);
   }
 
   /* align heapEnd to word boundaries */
