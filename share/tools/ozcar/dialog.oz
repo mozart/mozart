@@ -72,7 +72,7 @@ local
 
       meth init(master:Master)
 	 proc {EvalInit}
-	    C      = {New Compiler.compilerClass init}
+	    C      = {New Compiler.engine init}
 	    CUI    = {New Compiler.quietInterface init(C)}
 	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
 	 in
