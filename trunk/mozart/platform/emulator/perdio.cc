@@ -6398,21 +6398,21 @@ int loadURL(const char *url0, OZ_Term out, OZ_Term triggerVar)
       }
       {
 	char *last;
-	unsigned long int p=strtoul(url,&last,10);
+	unsigned long int p=(unsigned long int)strtol(url,&last,10);
 	if (*last!='/') goto bomb;
 	url=last+1;
 	port = p;
       }
       {
 	char *last;
-	unsigned long int t=strtoul(url,&last,10);
+	unsigned long int t=(unsigned long int)strtol(url,&last,10);
 	if (*last!='/') goto bomb;
 	url=last+1;
 	timestamp=t;
       }
       {
 	char *last;
-	unsigned long int oti=strtoul(url,&last,10);
+	unsigned long int oti=(unsigned long int)strtol(url,&last,10);
 	if (*last!=0) goto bomb;
 	OTI=oti;
       }
