@@ -29,11 +29,16 @@
 #undef SUNOS_SPARC
 #undef SOLARIS_SPARC
 #undef GNUWIN32
+#undef OSF1_ALPHA
+#undef HPUX_700
 
 #undef WINDOWS
 #undef LINUX
 #undef SOLARIS
 #undef SUNOS
+#undef IRIX
+#undef NETBSD
+#undef FREEBSD
 #undef IRIX
 
 #undef I486
