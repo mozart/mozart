@@ -94,6 +94,8 @@ OZ_BI_define(BIgetConnGrant,4,0){
       OZ_error("A requestor must be specified to be able to wait");
     ComObj *comObj=(ComObj *) oz_intToC(requestor);
     comObj->connectVar=var;
+    OZ_protect(&(comObj->connectVar)); // Protects connectVar from GC,
+                                       // must be unprotected when done
     transController->getTransObj(comObj);
     // When the transObj is ready var will be bound
   }
@@ -135,6 +137,8 @@ OZ_BI_define(BIfreeConnGrant,2,0){
 
 // The transController delivers a transObj(= a right to use a resource)
 void transObjReady(ComObj *comObj,TransObj *transObj) {
+  //  printf("got a transobj, now unifying\n");
+  OZ_unprotect(&(comObj->connectVar));
   OZ_unify(comObj->connectVar,
            OZ_recordInit(oz_atom("grant"),
                          oz_cons(oz_pairAI("key",
@@ -216,8 +220,10 @@ OZ_BI_define(BIconnFailed,2,0) {
     // has its own timer to discover this.
     ;
   }
-  else
-    Assert(0);
+  else { // AN! do sensible stuff! Will work as for temp.
+    printf("connFailed due to");
+    printf(" %s\n",OZ_atomToC(reason));
+  }
 
   return PROCEED;
 }OZ_BI_end
