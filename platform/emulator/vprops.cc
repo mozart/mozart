@@ -152,6 +152,8 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL,
 
+  PROP_PERDIO_FLOWBUFFERSIZE,
+  PROP_PERDIO_FLOWBUFFERTIME,
   PROP_PERDIO_DEBUG,
   PROP_PERDIO_MINIMAL,
   PROP_PERDIO,
@@ -426,11 +428,17 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
   CASE_INT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
+  CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
+  CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
   CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
   CASE_REC(PROP_PERDIO,"perdio",
-           (2,oz_atom("minimal"),oz_atom("debug")),
+           (4,oz_atom("minimal"),oz_atom("debug"),
+            oz_atom("flowbuffersize"),oz_atom("flowbuffertime")),
            SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
-           SET_INT(oz_atom("debug"), ozconf.debugPerdio););
+           SET_INT(oz_atom("debug"), ozconf.debugPerdio);
+           SET_INT(oz_atom("flowbuffersize"), ozconf.perdioFlowBufferSize);
+           SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
+           );
   CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
@@ -695,9 +703,13 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
                    return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
                                                     "modelChoose",0));
                  ozconf.perdioMinimal=INT__);
+    CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
+    CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
 
     CASE_REC(PROP_PERDIO,
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
+             SET_NAT(oz_atom("flowbuffersize"),ozconf.perdioFlowBufferSize);
+             SET_NAT(oz_atom("flowbuffertime"),ozconf.perdioFlowBufferTime);
              DO_BOOL(oz_atom("minimal"),
                  if ((*isPerdioInitialized)())
                    return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
@@ -944,5 +956,7 @@ void initVirtualProperties()
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
   VirtualProperty::add("perdio.debug",PROP_PERDIO_DEBUG);
   VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
+  VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERTIME);
+  VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERSIZE);
   VirtualProperty::add("perdio",PROP_PERDIO);
 }

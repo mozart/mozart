@@ -39,74 +39,36 @@
 #include "controlvar.hh"
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
+#include "flowControl.hh"
+#include "ozconfig.hh"
+/**********************************************************************/
+/*   SECTION Port protocol                                       */
+/**********************************************************************/
 
-int PortSendTreash = 100000;
-int PortWaitTimeSlice = 800;
-int PortWaitTimeK = 1;
+/* PER-HANDLE
+EntityCond getEntityCondPort(Tertiary* p){
+  EntityCond ec = getEntityCond(p);
+  int dummy;
+  if(ec!=ENTITY_NORMAL)return ec;
+  if(getSiteFromTertiaryProxy(p)->getQueueStatus(dummy)>=PortSendTreash)
+    return TEMP_BLOCKED|TEMP_ME;
+  return ENTITY_NORMAL;}
+*/
 
 
 /**********************************************************************/
 /*   SECTION Port protocol                                       */
 /**********************************************************************/
 
-OZ_Return portWait(int queueSize, int restTime, Tertiary *t){
-  return PROCEED;
-}
 
-/* ERIK-LOOK
-OZ_Return portWait(int queueSize, int restTime, Tertiary *t)
-{
-  PD((ERROR_DET,"PortWait q: %d r: %d", queueSize, restTime));
-  int v = queueSize - PortSendTreash;
-  int time;
-  if(v<0) return PROCEED;
-  int tot=PortWaitTimeK * queueSize;
-  if(restTime && restTime < tot) tot = restTime;
-  if (v < PortWaitTimeSlice) {
-    time = v;
-  } else {
-    time = PortWaitTimeSlice;
-    am.prepareCall(BI_portWait,makeTaggedTert(t),
-                   oz_int(tot - PortWaitTimeSlice));
-  }
-  am.prepareCall(BI_Delay,oz_int(time));
-  return BI_REPLACEBICALL;
-}
-*/
 
-OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
-{
+OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   Assert(p->getTertType()==Te_Proxy);
   BorrowEntry* b = BT->getBorrow(p->getIndex());
   NetAddress *na = b->getNetAddress();
   DSite* site     = na->site;
   int index      = na->index;
   int dummy;
-  Bool wait = FALSE;
-
-  switch(getEntityCond(p)){
-  case PERM_BLOCKED|PERM_ME:{
-    /* PER-HANDLE
-    PD((ERROR_DET,"Port is PERM"));
-    if(p->startHandlerPort(oz_currentThread(), p, msg, PERM_BLOCKED|PERM_ME))
-      return BI_REPLACEBICALL;
-    ControlVarNew(var,p->getBoardInternal());
-    SuspendOnControlVar;
-    */
-  }
-  case TEMP_BLOCKED|TEMP_ME:{
-    /* ERIK-LOOK
-    PD((ERROR_DET,"Port is Tmp size:%d treash:%d",
-        site->getQueueStatus(dummy),PortSendTreash));
-    wait = TRUE;
-    if(p->startHandlerPort(oz_currentThread(), p, msg, TEMP_BLOCKED|TEMP_ME))
-      return BI_REPLACEBICALL;
-    break;
-    */
-  }
-  case ENTITY_NORMAL: break;
-  default: Assert(0);
-  }
 
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
@@ -128,11 +90,41 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
 
   PD((PORT,"sendingTo %s %d",site->stringrep(),index));
   SendTo(site,bs,M_PORT_SEND,site,index);
-  return wait ? portWait(site->getQueueStatus(dummy), 0, p)
-    : PROCEED;
+  return PROCEED;
 }
 
 //
+
+OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
+{
+  Assert(p->getTertType()==Te_Proxy);
+  OZ_Return ret;
+  if(getEntityCond(p)!= ENTITY_NORMAL){
+    /*
+      pendThreadAddToEnd(&(((PortProxy*)p)->pending),
+      msg,msg,NOEX);
+      if(getEntityCond(p) & PERM_ME)
+      addEntityCond(p, PERM_BLOCKED);
+      else
+      addEntityCond(p, TEMP_BLOCKED);
+      deferEntityProblem(p);
+      return SuspendOnControlVarReturnValue;
+    */
+
+  }
+  if(((PortProxy*)p)->pending!= NULL || !((PortProxy*)p)->canSend()){
+    /*
+      pendThreadAddToEnd(&(((PortProxy*)p)->pending),
+      msg,msg,NOEX);
+      flowControler->addElement(makeTaggedTert(p));
+      return SuspendOnControlVarReturnValue;
+    */
+  }
+  Assert(((PortProxy*)p)->pending == NULL);
+  return portSendInternal(p,msg);
+}
+
+
 void gcDistPortRecurseImpl(Tertiary *p)
 {
   Assert(!p->isLocal());
@@ -140,9 +132,79 @@ void gcDistPortRecurseImpl(Tertiary *p)
   gcEntityInfoImpl(p);
   if (p->isProxy()) {
     gcProxyRecurse(p);
+    gcPendThread(&(((PortProxy*)p)->pending));
   } else {
     gcManagerRecurse(p);
     PortWithStream *pws = (PortWithStream *) p;
     OZ_collectHeapTerm(pws->strm,pws->strm);
   }
 }
+
+Bool  PortProxy::canSend(){
+   BorrowEntry* b = BT->getBorrow(this->getIndex());
+   NetAddress *na = b->getNetAddress();
+   DSite* site     = na->site;
+   int dummy;
+   /*
+     if(!(site->getQueueStatus(dummy) <
+     ozconf.perdioFlowBufferSize))
+        printf("ps c:%d max: %d\n",
+        site->getQueueStatus(dummy),
+        ozconf.perdioFlowBufferSize);
+   */
+   return(site->getQueueStatus(dummy) <
+          ozconf.perdioFlowBufferSize);}
+
+
+void  PortProxy::wakeUp(){
+  OZ_Return ret;
+  PendThread *old;
+  while(pending!=NULL){
+    if(getEntityCond(this)!= ENTITY_NORMAL){
+      if(getEntityCond(this) & PERM_ME)
+        addEntityCond(this, PERM_BLOCKED);
+      else
+        addEntityCond(this, TEMP_BLOCKED);
+      entityProblem(this);
+      return;}
+    if(!this->canSend()){
+        flowControler->addElement(makeTaggedTert(this));
+        return;}
+
+    ret = portSendInternal(this, pending->nw);
+    if(ret!=PROCEED)
+      ControlVarRaise(pending->controlvar, ret);
+    else
+      ControlVarResume(pending->controlvar);
+    old = pending;
+    pending = pending->next;
+    old->dispose();
+  }
+}
+
+
+/**************************************************************/
+/*      Failure                                               */
+/**************************************************************/
+
+
+void port_Temp(PortProxy* pp){
+  EntityCond ec = TEMP_ME;
+  if(pp->pending) ec |= TEMP_BLOCKED;
+  if(!addEntityCond(pp,ec)) return;
+  entityProblem(pp);
+}
+void port_Ok(PortProxy* pp){
+  EntityCond ec = TEMP_ME;
+  if(pp->pending) ec |=TEMP_BLOCKED;
+  subEntityCond(pp,ec);
+  pp->wakeUp();
+}
+void port_Perm(PortProxy* pp){
+  EntityCond ec = PERM_ME;
+  if(pp->pending) ec |=PERM_BLOCKED;
+  if(!addEntityCond(pp,ec)) return;
+  entityProblem(pp);
+}
+PendThread* getPendThreadStartFromPort(Tertiary* t){
+    return ((PortProxy*)t)->pending;}

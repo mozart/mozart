@@ -417,6 +417,8 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
   }
   val=makeTaggedConst(tert);
   ob->changeToTertiary(tert);
+  tertiaryInstallProbe(getSiteFromTertiaryProxy(tert),
+                       PROBE_TYPE_ALL,tert);
   return val;
 }
 

@@ -77,7 +77,8 @@ LockSec *getLockSecFromTert(Tertiary *c){
 
 PendThread* getPendThreadStartFromCellLock(Tertiary* t){
   if(t->getType()==Co_Cell){
-    getCellSecFromTert(t)->getPending();}
+    return getCellSecFromTert(t)->getPending();
+  }
   Assert(t->getType()==Co_Lock);
   return getLockSecFromTert(t)->getPending();}
 

@@ -98,7 +98,6 @@
 #include "comm.hh"
 #include "dsite.hh"
 #include "network.hh"
-
 /* ************************************************************************ */
 /*  SECTION 1:  Enums & Defines                                            */
 /* ************************************************************************ */
@@ -1521,7 +1520,6 @@ default:{
   return IP_PERM_BLOCK;}}
 return IP_TEMP_BLOCK;
 }
-
 /************************************************************/
 /* SECTION 11: TcpCache                                         */
 /************************************************************/
@@ -1636,33 +1634,49 @@ public:
   Bool probes;
   Bool shutDwn;
 
-  DSite *closeConnections(Bool shutdwn){
-    DSite *s = NULL;
-    if(shutdwn) shutDwn = TRUE;
+
+  int shutDwnTcpCacheProgres(){
+    Connection *cu=currentHead, *cl = closeHead;
+    int open = 0, closed = 0;
+    while(cu!=NULL) {
+      open++;
+      cu = cu->next;}
+    while(cl!=NULL) {
+      closed++;
+      cl = cl->next;}
+    return open + closed;}
+
+  int shutDwnTcpCache(){
+    shutDwn = TRUE;
+    closeConnections();
+    return shutDwnTcpCacheProgres();}
+
+
+  void closeConnections(){
     PD((TCPCACHE,"ClosingConnections fakingTmp"));
     Connection *c=currentHead, *cc;
     while(c!=NULL){
-      PD((TCPCACHE,"Closing Connection %x %x",c,
-          c->getRemoteSite()));
-      if(!c->isClosing()){
-        PD((TCPCACHE,"Closing connection %x",c));
-        cc = c->next;
-        if(c->testFlag(WRITE_CON)){
-          if(shutdwn && !((WriteConnection*)c)->goodCloseCand()){
-            s = c->getRemoteSite()->getSite();
-            ((WriteConnection*)c)->setCanClose();}
+      cc = c->next;
+      if(!c->isClosing())
+        {
+          if(c->testFlag(WRITE_CON))
+            {
+              if(shutDwn && !((WriteConnection*)c)->goodCloseCand())
+                ((WriteConnection*)c)->setCanClose();
+              else
+                ((WriteConnection*)c)->closeConnection();
+            }
           else
-            ((WriteConnection*)c)->closeConnection();}
-        else
-          ((ReadConnection*)c)->closeConnection();}
-      else{
-        PD((TCPCACHE,"Not Closing connection %x",c));
-        c = c->next;}
+            {
+              ((ReadConnection*)c)->closeConnection();
+            }
+        }
       c = cc;}
-    openCon = FALSE;
-    return s;}
+    openCon = FALSE;}
+
 
   void openConnections(){
+    if(shutDwn) return;
     PD((TCPCACHE,"OpeningConnections %x",tmpHead));
     openCon = TRUE;
     while(openTmpBlockedConnection());}
@@ -1697,10 +1711,6 @@ public:
 
   void adjust(){
     // PD((TCPCACHE,"adjusting size:%d maxsize:%d",open_size,max_size));
-    if(shutDwn && !(close_size|open_size)){
-      // TcpCache empty
-      // Just close now.
-    }
     if(myHead!=NULL && open_size<max_size){
       openMyClosedConnection();
       return;}
@@ -1853,6 +1863,7 @@ void TcpCache::probeStarted(){
 }
 
 
+
 /************************************************************/
 /* SECTION 12b:  Exported to Perdio                           */
 /************************************************************/
@@ -1875,7 +1886,7 @@ int openclose(int Type){
   int state = 0;
   if(tcpCache->openCon) state = 1;
   if(Type){
-    if(state) (void) tcpCache->closeConnections(FALSE);
+    if(state) (void) tcpCache->closeConnections();
     else tcpCache->openConnections();}
   return state;}
 
@@ -3171,6 +3182,7 @@ int tcpWriteHandler(int fd,void *r0){
     if(ret<0){
       goto writeHerrorBlock;
     }
+    r->remoteSite->deQueueMessage(m->getMsgBuffer()->getTotLen());
     r->remoteSite->incNOSM();
   }
 
@@ -3194,6 +3206,7 @@ int tcpWriteHandler(int fd,void *r0){
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,FALSE);
     if(ret<0) goto writeHerrorBlock;
+    r->remoteSite->deQueueMessage(m->getMsgBuffer()->getTotLen());
     r->remoteSite->incNOSM();
   }
 
@@ -3337,7 +3350,6 @@ void WriteConnection::ackReceived(int nr){
             ptr->msgNum,ptr));
             old = ptr;
             ptr=ptr->next;
-            remoteSite->deQueueMessage(old->getMsgBuffer()->getTotLen());
             // EK I dont know about this resend....
             messageManager->freeMessageAndMsgBuffer(old);}}}
 
@@ -3424,8 +3436,11 @@ void WriteConnection::prmDwn(){
   if(isProbingPrm()){
     remoteSite->site->probeFault(PROBE_PERM);
     clearProbingPrm();}
-
-    Message *m = sentMsg;
+  else{
+    //ERIK_LOOK hack... Probing is goingaway....
+    remoteSite->site->probeFault(PROBE_PERM);
+  }
+  Message *m = sentMsg;
     sentMsg = NULL;
     while(m != NULL){
       PD((ACK_QUEUE,"Emptying ackqueue m:%x bs: %x",m, m->bs));
@@ -3742,19 +3757,17 @@ storeS,msg,storeInd);
   // In case of slownet, all msgs are put in the writeques.
   m->getMsgBuffer()->PiggyBack(m);
   writeConnection->addCurQueue(m);
-
   TSC->addWrite(this->writeConnection);
-
   return ACCEPTED;
 #endif
 
-
-
   fd=writeConnection->getFD();
   Assert(fd>0);
+
   switch(tcpSend(fd,m,FALSE)){
   case IP_OK:{
     incNOSM();
+    deQueueMessage(m->getMsgBuffer()->getTotLen());
     PD((TCP_INTERFACE,"reliableSend- all sent %d"));
     return ACCEPTED;}
   case IP_BLOCK:{
@@ -3845,6 +3858,12 @@ int getNOSM_RemoteSite(RemoteSite* site){
   return site->getNOSM();}
 int getNORM_RemoteSite(RemoteSite* site){
   return site->getNORM();}
+
+int startNiceClose(){
+  return tcpCache->shutDwnTcpCache();}
+int niceCloseProgres(){
+  return tcpCache->shutDwnTcpCacheProgres();}
+
 
 void initNetwork()
 {

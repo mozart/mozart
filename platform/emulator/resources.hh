@@ -52,8 +52,8 @@
 #define CLOCK_TICK              TIME_SLICE*(1000/5)     /* usec */
 
 /* task manager */
-/* 4 tasks are needed by virtual sites, see virtual.cc */
-#define MAXTASKS                4
+/* 4 tasks are needed by virtual sites, see virtual.cc and one needed by ports se perdio.cc*/
+#define MAXTASKS                5
 
 #define NAMETRUE "true"
 #define NAMEFALSE "false"
