@@ -1400,7 +1400,6 @@ void AM::gc(int msgLevel)
 #endif
   
   suspendVarList=makeTaggedNULL(); /* no valid data */
-  gcTagged(suspCallHandler,suspCallHandler);
 
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
