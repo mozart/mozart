@@ -93,13 +93,6 @@ void Thread::checkExtThreadOutlined ()
   }
 }
 
-//
-void Thread::addStableThreadOutlined ()
-{
-  (SolveActor::Cast (am.currentSolveBoard->getActor ()))
-    ->add_stable_susp (this);
-}
-
 /*
  * check if a thread's board is below a failed board
  */

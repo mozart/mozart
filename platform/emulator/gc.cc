@@ -2278,7 +2278,6 @@ void SolveActor::gcRecurse ()
   gcTagged(solveVar, solveVar);
   gcTagged(result, result);
   suspList  = suspList->gc();
-  stable_sl = stable_sl->gc();
   if (cps) {
     if (cps->isEmpty()) {
       cps = (CpStack *) 0;

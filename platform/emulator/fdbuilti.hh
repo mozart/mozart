@@ -191,7 +191,6 @@ public:
   OZ_Return spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Return spawnPropagator(OZ_FDPropState, OZ_FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Return spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
-  OZ_Return spawnPropagatorStabil(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
   static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
   static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
   static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
