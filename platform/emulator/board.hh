@@ -123,7 +123,9 @@ public:
     Assert(parentAndFlags.getTag() == 0);
     parentAndFlags.setTag(BoTag_Failed);
   }
-
+  int getTag(void) {
+    return parentAndFlags.getTag();
+  }
   //
   // Various marks needed during installation, cloning and garbage
   // collection
