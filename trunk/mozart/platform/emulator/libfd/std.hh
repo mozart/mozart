@@ -312,6 +312,7 @@ protected:
   int reg_capacity;
 public:
   Propagator_VD_VI_VI_I(OZ_Term l, OZ_Term offset, OZ_Term use, OZ_Term cap);
+  Propagator_VD_VI_VI_I(int);
   virtual ~Propagator_VD_VI_VI_I(void);
 
   virtual void updateHeapRefs(OZ_Boolean);
