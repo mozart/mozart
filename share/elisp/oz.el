@@ -938,7 +938,7 @@ the GDB commands `cd DIR' and `directory'."
   (set-syntax-table oz-mode-syntax-table)
   (setq local-abbrev-table oz-mode-abbrev-table)
   (make-local-variable 'paragraph-start)
-  (setq paragraph-start (concat "[ \t]*%%\\|[ \t]*$\\|" page-delimiter)) ;'%%..'
+  (setq paragraph-start (concat "[ \t]*$\\|" page-delimiter)) ;'%%..'
   (make-local-variable 'paragraph-separate)
   (setq paragraph-separate paragraph-start)
   (make-local-variable 'paragraph-ignore-fill-prefix)
