@@ -794,8 +794,8 @@ public:
     mpop(&n->value,&value,&b->value);					      \
     return n->shrink();							      \
   }
-  MKOP(div,mpz_div);
-  MKOP(mod,mpz_mod);
+  MKOP(div,mpz_tdiv_q);
+  MKOP(mod,mpz_tdiv_r);
   MKOP(mul,mpz_mul);
   MKOP(sub,mpz_sub);
   MKOP(add,mpz_add);
