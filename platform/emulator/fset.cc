@@ -1017,7 +1017,7 @@ FSetValue FSetValue::operator &= (const FSetValue &y)
     _normal = true;
     _other = y._other;
     for (int i = fset_high; i--; )
-      _in = y._in;
+      _in[i] = y._in[i];
     toExtended();
     _IN &= aux;
     _card = _IN.getSize();
