@@ -80,7 +80,6 @@ public:
   TaggedRef getData(void) { return data; }
   void setData(TaggedRef d) { data = d; }
 
-  size_t getSize(void) { return sizeof(GenMetaVariable); }
   void gc(void);
 
   char * getName(void) { return tag->name; }
