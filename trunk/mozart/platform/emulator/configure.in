@@ -359,7 +359,9 @@ dnl AC_FUNC_ALLOCA
 dnl AC_FUNC_MEMCMP
 dnl AC_TYPE_SIGNAL
 dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname setpgid)
+dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
+
+AC_CHECK_FUNC(setpgid,AC_DEFINE(HAVE_SETPGID))
 
 if test -z "${enable_wincross}"; then
     AC_CHECK_FUNCS(sbrk dlopen mmap)
@@ -445,7 +447,8 @@ OZ_CHECK_HEADER_PATH(zlib.h,,
   AC_MSG_ERROR(required zlib include file not found))
 	    
 OZ_CHECK_LIB_PATH(z, zlibVersion, ,
-  AC_MSG_ERROR(required zlib lib not found))
+    OZ_CHECK_LIB_PATH(gz, zlibVersion, ,
+	AC_MSG_ERROR(required zlib lib not found)))
 
 dnl *****************************************************************
 dnl ccmalloc
