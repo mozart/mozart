@@ -87,13 +87,14 @@ P.linkmenu A:visited { color: #881155; }
 
 SPAN.chunkborder {
   color: orange;
+  font-weight: bold;
 }
 
 SPAN.chunktitle {
-  color: orange;
+  color: olivedrab;
   font-family: sans-serif;
   font-weight: bold;
 }
 
-SPAN.chunktitle A:link    { color: orange; }
-SPAN.chunktitle A:visited { color: orange; }
+SPAN.chunktitle A:link    { color: slateblue; }
+SPAN.chunktitle A:visited { color: slateblue; }
