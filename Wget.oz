@@ -1,6 +1,6 @@
 functor
 import
-   OS(system)
+   OS(system getCWD chDir)
    Admin(manager:Manager)
    URL(make)
    Directory(mkDir:MkDir)
@@ -26,17 +26,19 @@ define
       if {Manager ignoreURL(DocUrl $)} then
 	 {Manager trace('Ignoring URL '#DocUrl)}
       else
+	 CurDir={OS.getCWD}
 	 {MkDir DocDir}
 	 Cuts = {Length {URL.make DocUrl}.path} - 1
 	 Cmd  = {Manager get_wget($)}
 	 #if {Manager is_verbose($)} then ' -v' else ' -nv' end
-	 #' -N -nH --cut-dirs='#Cuts#' -r -p -k --no-parent -Q 1m -P "'
-	 #DocDir#'" "'#DocUrl#'"'
+	 #' -N -nH --cut-dirs='#Cuts#' -r -p -k --no-parent -Q 1m "'#DocUrl#'"'
       in
 	 {Manager trace(Cmd)}
 	 try
+	    {OS.chDir DocDir}
 	    if {OS.system Cmd}\=0 then raise oops end end
-	 catch _ then {Raise mogul(wget_doc(DocUrl))} end
+	 catch _ then {Raise mogul(wget_doc(DocUrl))}
+	 finally {OS.chDir CurDir} end
       end
    end
 end
