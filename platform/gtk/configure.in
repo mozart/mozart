@@ -135,7 +135,10 @@ oz_inc_path="$oz_inc_path /usr/lib/glib/include /usr/local/lib/glib/include /opt
 canvas_ok=no
 OZ_CHECK_HEADER_PATH(glibconfig.h,[canvas_ok=yes])
 if test "$canvas_ok" = yes; then
-  OZ_CHECK_HEADER_PATH(gnome-canvas.h,[canvas_header="gnome-canvas.h"])
+  canvas_ok=no
+  OZ_CHECK_HEADER_PATH(gnome-canvas.h,
+    [canvas_ok=yes
+     canvas_header="gnome-canvas.h"])
 fi
 oz_inc_path=$oz_inc_path_sav
 if test -n "$canvas_header"; then
@@ -167,7 +170,10 @@ if test -z "$canvas_type"; then
   canvas_ok=no
   OZ_CHECK_HEADER_PATH(glibconfig.h,[canvas_ok=yes])
   if test "$canvas_ok" = yes; then
-    OZ_CHECK_HEADER_PATH(gtk-canvas.h,[canvas_header="gtk-canvas.h"])
+    canvas_ok=no
+    OZ_CHECK_HEADER_PATH(gtk-canvas.h,
+      [canvas_ok=yes
+       canvas_header="gtk-canvas.h"])
   fi
   oz_inc_path=$oz_inc_path_sav
   if test -n "$canvas_header"; then
