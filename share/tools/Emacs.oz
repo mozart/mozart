@@ -156,7 +156,7 @@ fun instantiate {$ IMPORT}
 	       {Print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
 	    end
 	 end
-	 meth getSocket($)
+	 meth getSocket($)   %--** should be replaced by readQuery
 	    @Socket
 	 end
 	 meth Serve(Ms)

@@ -60,7 +60,7 @@
        end
        {System.property.put 'oz.standalone' false}
 
-       OPICompiler = {New Compiler.compilerClass init()}
+       OPICompiler = {New Compiler.engine init()}
        local
 	  Env = {Record.foldL IMPORT Adjoin env()}
        in
