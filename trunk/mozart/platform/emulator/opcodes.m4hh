@@ -23,8 +23,12 @@
  *  WARRANTIES.
  *
  */
+
 #ifndef __OPCODESH
 #define __OPCODESH
+
+#include "base.hh"
+
 typedef enum {
 
 define(`OPCODE',0) dnl
@@ -66,6 +70,29 @@ OZERROR  /* this should always be the last one */
 } Opcode;
 
 
-int sizeOf(Opcode);
+
+class OpcodeInfo {
+public:
+  char *printname;
+  int size;
+};
+
+extern OpcodeInfo opcodes[];
+
+inline
+int sizeOf(Opcode oc)
+{
+  Assert((int)oc < OZERROR);
+  return opcodes[(int)oc].size;
+}
+
+inline
+char *opcodeToString(Opcode oc)
+{
+  Assert((int)oc < OZERROR);
+  return opcodes[(int)oc].printname;
+}
+
+Opcode stringToOpcode(const char *s);
 
 #endif

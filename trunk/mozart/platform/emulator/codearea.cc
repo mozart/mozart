@@ -28,7 +28,6 @@
 
 #include "codearea.hh"
 #include "indexing.hh"
-#include "optostr.hh"
 
 AbstractionEntry* AbstractionEntry::allEntries = NULL;
 
@@ -51,7 +50,6 @@ void CodeArea::recordInstr(ProgramCounter PC){
 HashTable CodeArea::atomTab(HT_CHARKEY,10000);
 HashTable CodeArea::nameTab(HT_CHARKEY,1000);
 int CodeArea::totalSize = 0; /* in bytes */
-char **CodeArea::opToString = initOpToString();
 CodeArea *CodeArea::allBlocks = NULL;
 
 #ifdef THREADED
@@ -61,16 +59,6 @@ HashTable *CodeArea::opcodeTable = 0;
 
 
 
-Opcode CodeArea::stringToOp(const char *s)
-{
-  for (int i=0; i < (Opcode) OZERROR; i++) {
-    if (strcmp(s,opToString[i]) == 0 ) {
-      return (Opcode) i;
-    }
-  }
-
-  return OZERROR;
-}
 
 inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
 {
@@ -171,7 +159,7 @@ ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
   ProgramCounter definitionPC = definitionStart(PC);
   if (definitionPC == NOCODE) {
     fprintf(out,"***\tspecial task or on toplevel (PC=%s)\n",
-	    opToString[(int)getOpcode(PC)]);
+	    opcodeToString(getOpcode(PC)));
     fflush(out);
     return definitionPC;
   }
@@ -431,7 +419,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       return;
     }
 
-    fprintf(ofile, "%03d\t%s", op, opToString[(int) op]);
+    fprintf(ofile, "%03d\t%s", op, opcodeToString(op));
 
     switch (op) {
     case FAILURE:
