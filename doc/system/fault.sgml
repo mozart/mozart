@@ -206,6 +206,16 @@ A <EM>modification</EM> is an operation that is specified
 but behaves differently in the current release.
 The limitations are:
 <list>
+<item>The code of functions, procedures, classes, and functors
+(but not objects) is always inserted in messages,
+even this code is already present at the destination.
+In future releases, these entities will be copied
+across the network only
+if they are not present on the destination site.
+In both current and future releases, at most a single copy
+of these entities can exist per site.
+<item>The fault state <<tempFail>> is indicated only after
+a long delay.
 <item>If an exception is raised or a handler or watcher
 is invoked for an <EM>object</EM>,
 then the <<Entity>> argument is undefined.
