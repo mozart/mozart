@@ -188,9 +188,9 @@ L = {NewLock}
 proc {Switch A}
    {For {Array.low A} {Array.high A} 1
     proc {$ I} 
- X = {Get A I} in
-       case X<0 then {Put A I ~X}
-       elsecase X == 0  then {Put A I zero} else skip end
+       X = {Get A I} in
+       if X<0 then {Put A I ~X}
+       elseif X == 0  then {Put A I zero} end
        {Delay 100}
     end}
 end
