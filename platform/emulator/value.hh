@@ -67,7 +67,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension,
        AtomStopOnToplevelFailure, AtomSystem, AtomThread,
        AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
-  AtomDetailed, AtomBrowser,
+  AtomDetailed, AtomBrowser, AtomApplet,
   AtomHeap, AtomDebugIP, AtomDebugPerdio,
   // Atoms for NetError Handlers
   AtomTempBlocked, AtomPermBlocked,

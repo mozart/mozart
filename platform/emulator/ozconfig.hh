@@ -83,6 +83,7 @@ public:
   int dumpCore;
 
   int runningUnderEmacs;
+  int applet;
   int browser;
 
   char *ozHome;

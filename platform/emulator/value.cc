@@ -61,7 +61,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate,
   AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension,
   AtomStopOnToplevelFailure, AtomSystem, AtomThread,
-  AtomTotal, AtomDetailed, AtomBrowser,
+  AtomTotal, AtomDetailed, AtomBrowser, AtomApplet,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
   AtomDebugIP, AtomDebugPerdio,
   // Atoms for NetError Handlers
@@ -197,6 +197,8 @@ void initLiterals()
   AtomWidth                 = makeTaggedAtom("width");
   AtomHeap                  = makeTaggedAtom("heap");
   AtomDetailed              = makeTaggedAtom("detailed");
+  AtomBrowser               = makeTaggedAtom("browser");
+  AtomApplet                = makeTaggedAtom("applet");
 
   // AtomFree                  = makeTaggedAtom("free");
   AtomKinded                = makeTaggedAtom("kinded");

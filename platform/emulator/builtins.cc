@@ -6031,6 +6031,7 @@ OZ_C_proc_begin(BISystemGetInternal,1) {
   GetRecord;
 
   SetBoolArg(AtomBrowser, ozconf.browser);
+  SetBoolArg(AtomApplet,  ozconf.applet);
 
   return PROCEED;
 }
@@ -6274,6 +6275,8 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
 
   DoBoolFeature(b, t, AtomBrowser);
   ozconf.browser = b;
+  DoBoolFeature(a, t, AtomApplet);
+  ozconf.applet = a;
 
   return PROCEED;
 }
