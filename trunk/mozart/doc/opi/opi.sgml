@@ -46,10 +46,10 @@
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split" value="chapter.intro">
     <Meta name="html.split" value="chapter.start">
-    <Meta name="html.split" value="chapter.keybdgs">
     <Meta name="html.split" value="chapter.editing">
     <Meta name="html.split" value="chapter.running">
     <Meta name="html.split" value="chapter.tools">
+    <Meta name="html.split" value="appendix.keybindings">
     <Meta name="html.split" value="appendix.devel">
     <Meta name="html.split" value="appendix.api">
     <Meta name="html.split" value="appendix.limitations">
@@ -113,12 +113,13 @@
 	into the standard framework provided by Emacsen<Note foot><Q/Emacsen/
 	is the plural of <Q/Emacs/.  In this manual, we use the term when the
 	feature being described applies to both GNU Emacs and XEmacs.</Note>.
-	<Ptr to="chapter.editing">,
-	<Ptr to="chapter.running">, and <Ptr to="chapter.tools"> are
-	dedicated to the three main features mentioned above respectively.
+	<Ptr to="chapter.editing">, <Ptr to="chapter.running">, and <Ptr
+	to="chapter.tools"> are dedicated to the three main features mentioned
+	above respectively.  <Ptr to="appendix.keybindings"> summarizes all
+	Oz-specific key bindings.
       <P>
-	Three appendices provide information for advanced users.  <Ptr
-	to="appendix.devel"> details how to test Mozart system components
+	The last three appendices provide information for advanced users.
+	<Ptr to="appendix.devel"> details how to test Mozart system components
 	locally and how to run Mozart under <Name type=tool/gdb/.  <Ptr
 	to="appendix.api"> documents some functions of the &OPI; that might
 	be useful for users who want to write their own editing commands.
@@ -315,67 +316,6 @@
 	    only the first of these.  However, some terminals may not be
 	    able to generate <Key/C-./; this is why the second one is
 	    provided.
-    <Chapter id=chapter.keybdgs>
-	<Title/Emacs Key Bindings For The Impatient/
-      <P>In this chapter, we simply present a table of all Oz specific Emacs
-key bindings.  This is merely intended as a convenient reference; more detailed
-explanations are given in subsequent chapters.</P>
-      <P><Key/C-./ is the short Oz specific prefix.  <Key/C-c ./ is the long
-equivalent prefix and is only useful on tty terminals where <Key/C-./ cannot
-be generated.  <Key/C-. C-./ is the short Oz specific tool prefix and
-<Key/C-c . C-c ./ is the equivalent long version.  The table below documents
-only the short prefix.
-<table display>
-	  <tr><th colspan=2>Editing Code</th></tr>
-	  <tr/<td/<key/M-C-f//<td/forward expression//
-	  <tr/<td/<key/M-C-b//<td/backward expression//
-	  <tr/<td/<key/M-C-k//<td/kill expression//
-	  <tr/<td/<key/M-C-DEL//<td/backward kill expression//
-	  <tr/<td/<key/M-C-@//<td/mark expression//
-	  <tr/<td/<key/M-C-SPC//<td/mark expression//
-	  <tr/<td/<key/M-C-q//<td/indent expression//
-	  <tr/<td/<key/M-C-a//<td/beginning of defun//
-	  <tr/<td/<key/M-C-e//<td/end of defun//
-	  <tr/<td/<key/M-C-t//<td/transpose expressions//
-	  <tr/<td/<key/C-x `//<td/next error//
-	  <tr/<th colspan=2/Managing Buffers//
-	  <tr/<td/<key/M-n//<td/next Oz buffer//
-	  <tr/<td/<key/M-p//<td/previous Oz buffer//
-	  <tr/<td/<key/C-. n//<td/new Oz buffer//
-	  <tr/<th colspan=2/Interacting With Oz Subprocess//
-	  <tr/<td/<key/C-. e//<td/toggle emulator buffer//
-	  <tr/<td/<key/C-. c//<td/toggle compiler buffer//
-	  <tr/<td/<key/C-. t//<td/toggle temporary buffer//
-	  <tr/<td/<key/C-. r//<td/start Oz subprocess//
-	  <tr/<td/<key/C-. h//<td/halt Oz subprocess//
-	  <tr/<td/<key/C-u C-. h//<td/halt Oz subprocess (forced)//
-	  <tr/<td/<key/C-. d//<td/toggle gdb//
-	  <tr/<td/<key/C-. o//<td>toggle global&slash;local emulator/
-	  <tr/<td/<key/C-. m//<td/set path to local emulator//
-	  <tr/<th colspan=2/Executing Code//
-	  <tr/<td/<key/C-. C-b//<td/feed buffer//
-	  <tr/<td/<key/C-. C-r//<td/feed region//
-	  <tr/<td/<key/C-. C-l//<td/feed line//
-	  <tr/<td/<key/C-. C-p//<td/feed paragraph//
-	  <tr/<th colspan=2/Evaluating Expression &amp; Browsing Result//
-	  <tr/<td/<key/C-. b C-b//<td/browse buffer//
-	  <tr/<td/<key/C-. b C-r//<td/browse region//
-	  <tr/<td/<key/C-. b C-l//<td/browse line//
-	  <tr/<td/<key/C-. b C-p//<td/browse paragraph//
-	  <tr/<th colspan=2/Evaluating Expression &amp; Showing Result//
-	  <tr/<td/<key/C-. s C-b//<td/show buffer//
-	  <tr/<td/<key/C-. s C-r//<td/show region//
-	  <tr/<td/<key/C-. s C-l//<td/show line//
-	  <tr/<td/<key/C-. s C-p//<td/show paragraph//
-	  <tr/<th colspan=2/Interacting With Tools//
-	  <tr/<td/<key/C-. C-. s//<td/open system panel//
-	  <tr/<td/<key/C-. C-. c//<td/open compiler panel//
-	  <tr/<td/<key/C-. C-. p//<td/start profiler//
-	  <tr/<td/<key/C-. C-. d//<td/start debugger//
-	  <tr/<td/<key/C-x SPC//<td/set breakpoint on current line//
-	</table>
-</P>
-    </Chapter>
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
       <P>
@@ -389,15 +329,15 @@ only the short prefix.
 	    and quickly switching between Oz buffers:
 	    <List>
 	      <Entry class=command><Span class=index/<<oz-new-buffer>>/
-		(<Key/C-. n/)
+		(<Key id="key.oz-new-buffer"/C-. n/)
 	      <Item>
 		Create a new buffer using the Oz major mode.
 		Note that this buffer has no associated file name,
 		so quitting Emacs will kill it without warning.
-	      <Entry class=command><Span class=index/<<oz-previous-buffer>>/
-		(<Key/M-p/)
 	      <Entry class=command><Span class=index/<<oz-next-buffer>>/
-		(<Key/M-n/)
+		(<Key id="key.oz-next-buffer"/M-n/)
+	      <Entry class=command><Span class=index/<<oz-previous-buffer>>/
+		(<Key id="key.oz-previous-buffer"/M-p/)
 	      <Item>
 		Switch to the previous &resp; next buffer in the buffer list
 		that runs in an Oz mode.  If no such buffer exists, an error
@@ -430,7 +370,7 @@ only the short prefix.
 	      <Item>
 		Reindent every line in the buffer.
 	      <Entry class=command><Span class=index/<<indent-oz-expr>>/
-		(<Key/M-C-q/)
+		(<Key id="key.indent-oz-expr"/M-C-q/)
 	      <Item>
 		<Index/Oz expression<And>indenting/
 		Reindent all lines at least partly covered by the Oz
@@ -549,33 +489,36 @@ only the short prefix.
 	  <P>
 	    <List>
 	      <Entry class=command><Span class=index/<<forward-oz-expr>>/
-		<<&amp;optional ?_{COUNT}>> (<Key/M-C-f/)
+		<<&amp;optional ?_{COUNT}>> (<Key id="key.forward-oz-expr"
+		/M-C-f/)
 	      <Item>
 		Move point forward by one balanced Oz expression.  With
 		?_{COUNT}, do it that many times.  Negative ?_{COUNT} means
 		backwards.
 	      <Entry class=command><Span class=index/<<backward-oz-expr>>/
-		<<&amp;optional ?_{COUNT}>> (<Key/M-C-b/)
+		<<&amp;optional ?_{COUNT}>> (<Key id="key.backward-oz-expr"
+		/M-C-b/)
 	      <Item>
 		<Index/Oz expression<And>moving over/
 		Move point backward by one balanced Oz expression.  With
 		?_{COUNT}, do it that many times.  ?_{COUNT} must be
 		positive.
 	      <Entry class=command><Span class=index/<<mark-oz-expr>>/
-		<<?_{COUNT}>> (<Key/M-C-@/, <Key/M-C-SPC/)
+		<<?_{COUNT}>> (<Key id="key.mark-oz-expr-1"/M-C-@/,
+		<Key id="key.mark-oz-expr-2"/M-C-SPC/)
 	      <Item>
 		<Index/Oz expression<And>marking/
 		Set mark ?_{COUNT} balanced Oz expressions from point.  The
 		place mark goes to is the same place the <<forward-oz-expr>>
 		command would move to with the same argument.
 	      <Entry class=command><Span class=index/<<transpose-oz-exprs>>/
-		<<?_{ARG}>> (<Key/M-C-t/)
+		<<?_{ARG}>> (<Key id="key.transpose-oz-exprs"/M-C-t/)
 	      <Item>
 		Like the <<transpose-words>> command (<Key/M-t/) but applies
 		to balanced Oz expressions.  Caveat:  This might not produce
 		nice results in all cases.
 	      <Entry class=command><Span class=index/<<kill-oz-expr>>/
-		<<?_{COUNT}>> (<Key/M-C-k/)
+		<<?_{COUNT}>> (<Key id="key.kill-oz-expr"/M-C-k/)
 	      <Item>
 		<Index/killing/<Index/Oz expression<And>killing/
 		Kill the balanced Oz expression following point.  With
@@ -584,22 +527,23 @@ only the short prefix.
 		before point.
 	      <Entry class=command><Span class=index/<<backward-kill-oz-expr>>/
 		<<?_{COUNT}>>
-		(<Key/M-C-DEL/<Note foot>Note that under some configurations,
-		this key combination kills the X&nbsp;server.</Note>)
+		(<Key id="key.backward-kill-oz-expr"/M-C-DEL/
+		<Note foot>Note that under some configurations, this
+		key combination kills the X&nbsp;server.</Note>)
 	      <Item>
 		Kill the balanced Oz expression preceding point.  With
 		?_{COUNT}, kill that many Oz expressions before point.
 		Negative ?_{COUNT} means kill <<-?_{COUNT}>> Oz expressions
 		after point.
 	      <Entry class=command><Span class=index/<<oz-beginning-of-defun>>/
-		(<Key/M-C-a/)
+		(<Key id="key.oz-beginning-of-defun"/M-C-a/)
 	      <Item>
 		Move point to the start of the Oz definition it is in.
 		If point is not inside an Oz definition, move to start of
 		buffer.  Returns <<t>> unless search stops due to beginning
 		or end of buffer.
 	      <Entry class=command><Span class=index/<<oz-end-of-defun>>/
-		(<Key/M-C-e/)
+		(<Key id="key.oz-end-of-defun"/M-C-e/)
 	      <Item>
 		Move point to the end of the Oz definition it is in.
 		If point is not inside an Oz definition, move to end of
@@ -654,7 +598,8 @@ only the short prefix.
 	  The following commands are used to start and halt the Mozart
 	  sub-process.
 	  <List>
-	    <Entry class=command><Span class=index/<<run-oz>>/ (<Key/C-. r/)
+	    <Entry class=command><Span class=index/<<run-oz>>/
+	      (<Key id="key.run-oz"/C-. r/)
 	    <Item>
 	      Start Mozart as a sub-process if it is not already running.
 	      Handle input and output via the Oz Emulator buffer.  If the
@@ -672,7 +617,7 @@ only the short prefix.
 	      is running.  In the default shown above, the old frame title
 	      will be inserted in place of the ellipsis.
 	    <Entry class=command><Span class=index/<<oz-halt>>/
-	      <<FORCE>> (<Key/C-. h/)
+	      <<FORCE>> (<Key id="key.oz-halt"/C-. h/)
 	    <Item>
 	      Halt the Mozart sub-process.  If <<FORCE>> is <<nil>>, send
 	      a <Index/<Code proglang=oz/System.exit//<Code proglang=oz
@@ -696,11 +641,11 @@ only the short prefix.
 	  buffers easier.
 	  <List>
 	    <Entry class=command><Span class=index/<<oz-toggle-emulator>>/
-	      (<Key/C-. e/)
+	      (<Key id="key.oz-toggle-emulator"/C-. e/)
 	    <Entry class=command><Span class=index/<<oz-toggle-compiler>>/
-	      (<Key/C-. c/)
+	      (<Key id="key.oz-toggle-compiler"/C-. c/)
 	    <Entry class=command><Span class=index/<<oz-toggle-temp>>/
-	      (<Key/C-. t/)
+	      (<Key id="key.oz-toggle-temp"/C-. t/)
 	    <Item>
 	      Toggle visibility of the Oz Emulator, Compiler or Temporary
 	      window respectively.  If the buffer is not visible in any
@@ -740,24 +685,25 @@ only the short prefix.
 	  </List>
 	  <List>
 	    <Entry class=command><Span class=index/<<oz-feed-buffer>>/
-	      (<Key/C-. C-b/)
+	      (<Key id="key.oz-feed-buffer"/C-. C-b/)
 	    <Entry class=command><Span class=index/<<oz-feed-region>>/
-	      <<?_{START} ?_{END}>> (<Key/C-. C-r/)
+	      <<?_{START} ?_{END}>> (<Key id="key.oz-feed-region"/C-. C-r/)
 	    <Entry class=command><Span class=index/<<oz-feed-line>>/
-	      <<?_{COUNT}>> (<Key/C-. C-l/)
+	      <<?_{COUNT}>> (<Key id="key.oz-feed-line"/C-. C-l/)
 	    <Entry class=command><Span class=index/<<oz-feed-paragraph>>/
-	      <<?_{COUNT}>> (<Key/C-. C-p/, <Key/M-C-x/)
+	      <<?_{COUNT}>> (<Key id="key.oz-feed-paragraph-1"/C-. C-p/,
+	      <Key id="key.oz-feed-paragraph-2"/M-C-x/)
 	    <Item>
 	      The corresponding text region is fed to the compiler and
 	      processed with its currently active switches.
 	    <Entry class=command><Span class=index/<<oz-show-buffer>>/
-	      (<Key/C-. s C-b/)
+	      (<Key id="key.oz-show-buffer"/C-. s C-b/)
 	    <Entry class=command><Span class=index/<<oz-show-region>>/
-	      <<?_{START} ?_{END}>> (<Key/C-. s C-r/)
+	      <<?_{START} ?_{END}>> (<Key id="key.oz-show-region"/C-. s C-r/)
 	    <Entry class=command><Span class=index/<<oz-show-line>>/
-	      <<?_{COUNT}>> (<Key/C-. s C-l/)
+	      <<?_{COUNT}>> (<Key id="key.oz-show-line"/C-. s C-l/)
 	    <Entry class=command><Span class=index/<<oz-show-paragraph>>/
-	      <<?_{COUNT}>> (<Key/C-. s C-p/)
+	      <<?_{COUNT}>> (<Key id="key.oz-show-paragraph"/C-. s C-p/)
 	    <Item>
 	      Feed the corresponding text region to the Oz Compiler.
 	      Assuming it to contain an expression, enclose it by an
@@ -814,7 +760,7 @@ only the short prefix.
 		If non-nil, pop up Compiler &resp; Emulator buffer upon an
 		error message.
 	      <Entry class=command><Span class=index/<<next-error>>/
-		<<&amp;optional ?_{ARG}>> (<Key/C-x `/)
+		<<&amp;optional ?_{ARG}>> (<Key id="key.next-error"/C-x `/)
 	      <Item>
 		Visit next compilation error message and corresponding
 		source code.
@@ -905,13 +851,13 @@ only the short prefix.
       <Para class=apropos><Title/<Span class=index/Browser//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-browse-buffer>>/
-	    (<Key/C-. b C-b/)
+	    (<Key id="key.oz-browse-buffer"/C-. b C-b/)
 	  <Entry class=command><Span class=index/<<oz-browse-region>>/
-	    <<?_{START} ?_{END}>> (<Key/C-. b C-r/)
+	    <<?_{START} ?_{END}>> (<Key id="key.oz-browse-region"/C-. b C-r/)
 	  <Entry class=command><Span class=index/<<oz-browse-line>>/
-	    <<?_{COUNT}>> (<Key/C-. b C-l/)
+	    <<?_{COUNT}>> (<Key id="key.oz-browse-line"/C-. b C-l/)
 	  <Entry class=command><Span class=index/<<oz-browse-paragraph>>/
-	    <<?_{COUNT}>> (<Key/C-. b C-p/)
+	    <<?_{COUNT}>> (<Key id="key.oz-browse-paragraph"/C-. b C-p/)
 	  <Item>
 	    Feed the corresponding text region to the Oz Compiler.
 	    Assuming it to contain an expression, enclose it by an
@@ -921,13 +867,13 @@ only the short prefix.
       <Para class=apropos><Title/<Span class=index/Inspector//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-inspect-buffer>>/
-	    (<Key/C-. i C-b/)
+	    (<Key id="key.oz-inspect-buffer"/C-. i C-b/)
 	  <Entry class=command><Span class=index/<<oz-inspect-region>>/
-	    <<?_{START} ?_{END}>> (<Key/C-. i C-r/)
+	    <<?_{START} ?_{END}>> (<Key id="key.oz-inspect-region"/C-. i C-r/)
 	  <Entry class=command><Span class=index/<<oz-inspect-line>>/
-	    <<?_{COUNT}>> (<Key/C-. i C-l/)
+	    <<?_{COUNT}>> (<Key id="key.oz-inspect-line"/C-. i C-l/)
 	  <Entry class=command><Span class=index/<<oz-inspect-paragraph>>/
-	    <<?_{COUNT}>> (<Key/C-. i C-p/)
+	    <<?_{COUNT}>> (<Key id="key.oz-inspect-paragraph"/C-. i C-p/)
 	  <Item>
 	    Feed the corresponding text region to the Oz Compiler.
 	    Assuming it to contain an expression, enclose it by an
@@ -937,7 +883,7 @@ only the short prefix.
       <Para class=apropos><Title/<Span class=index/System Panel//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-open-panel>>/
-	    (<Key/C-. C-. s/)
+	    (<Key id="key.oz-open-panel"/C-. C-. s/)
 	  <Item>
 	    Open the System Panel by feeding the statement <Code proglang=oz
 	    >{Panel.open}</Code> to the Oz Compiler.
@@ -945,7 +891,7 @@ only the short prefix.
       <Para class=apropos><Title/<Span class=index/Compiler Panel//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-open-compiler-panel>>/
-	    (<Key/C-. C-. c/)
+	    (<Key id="key.oz-open-compiler-panel"/C-. C-. c/)
 	  <Item>
 	    Open the Compiler Panel by feeding the statement <Code
 	    proglang=oz>{New CompilerPanel.'class' init(`Compiler`) _}</Code
@@ -954,13 +900,13 @@ only the short prefix.
       <Para class=apropos><Title/<Span class=index/Debugger//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-debugger>>/
-	    <<?_{ARG}>> (<Key/C-. C-. d/)
+	    <<?_{ARG}>> (<Key id="key.oz-debugger"/C-. C-. d/)
 	  <Item>
 	    Open the Oz Debugger by feeding the statement <Code proglang=oz
 	    >{Ozcar.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
 	    it instead by <Code proglang=oz>{Ozcar.close}</Code>.
 	  <Entry class=command><Span class=index/<<oz-breakpoint-at-point>>/
-	    <<?_{ARG}>> (<Key/C-x SPC/)
+	    <<?_{ARG}>> (<Key id="key.oz-breakpoint-at-point"/C-x SPC/)
 	  <Item>
 	    <Index/breakpoints/
 	    Set a dynamic breakpoint for the Oz Debugger in any code
@@ -971,12 +917,120 @@ only the short prefix.
       <Para class=apropos><Title/<Span class=index/Profiler//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-profiler>>/
-	    <<?_{ARG}>> (<Key/C-. C-. p/)
+	    <<?_{ARG}>> (<Key id="key.oz-profiler"/C-. C-. p/)
 	  <Item>
 	    Open the Oz Profiler by feeding the statement <Code proglang=oz
 	    >{Profiler.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
 	    it instead by <Code proglang=oz>{Profiler.close}</Code>.
 	</List>
+    <Appendix id="appendix.keybindings">
+      <Title/Key Binding Summary/
+      <P>
+	In this appendix, we present a summary table of all Oz-specific
+	Emacs key bindings.  This is intended as a convenient reference;
+	more detailed explanations are given in previous chapters.
+      <P>
+	<Key/C-./ is the short Oz-specific prefix; <Key/C-. C-./ is the
+	short Oz-specific tool prefix.  Both have equivalent long prefixes:
+	<Key/C-c ./ and <Key/C-c . C-c ./; these are useful on terminals
+	that cannot generate <Key/C-./ (such as a VT100).  The table below
+	documents only the short prefix.
+	<Table>
+	  <TR/<TH colspan=2/Editing Code//
+	  <TR/<TD/<Ptr to="key.forward-oz-expr">/
+	    <TD/forward expression//
+	  <TR/<TD/<Ptr to="key.backward-oz-expr">/
+	    <TD/backward expression//
+	  <TR/<TD/<Ptr to="key.kill-oz-expr">/
+	    <TD/kill expression//
+	  <TR/<TD/<Ptr to="key.backward-kill-oz-expr">/
+	    <TD/backward kill expression//
+	  <TR/<TD/<Ptr to="key.mark-oz-expr-1">/
+	    <TD/mark expression//
+	  <TR/<TD/<Ptr to="key.mark-oz-expr-2">/
+	    <TD/mark expression//
+	  <TR/<TD/<Ptr to="key.indent-oz-expr">/
+	    <TD/indent expression//
+	  <TR/<TD/<Ptr to="key.oz-beginning-of-defun">/
+	    <TD/beginning of definition//
+	  <TR/<TD/<Ptr to="key.oz-end-of-defun">/
+	    <TD/end of definition//
+	  <TR/<TD/<Ptr to="key.transpose-oz-exprs">/
+	    <TD/transpose expressions//
+	  <TR/<TD/<Ptr to="key.next-error">/
+	    <TD/next error//
+	  <TR/<TH colspan=2/Managing Buffers//
+	  <TR/<TD/<Ptr to="key.oz-next-buffer">/
+	    <TD/next Oz buffer//
+	  <TR/<TD/<Ptr to="key.oz-previous-buffer">/
+	    <TD/previous Oz buffer//
+	  <TR/<TD/<Ptr to="key.oz-new-buffer">/
+	    <TD/new Oz buffer//
+	  <TR/<TH colspan=2/Interacting With a Mozart Subprocess//
+	  <TR/<TD/<Ptr to="key.oz-toggle-emulator">/
+	    <TD/toggle emulator buffer//
+	  <TR/<TD/<Ptr to="key.oz-toggle-compiler">/
+	    <TD/toggle compiler buffer//
+	  <TR/<TD/<Ptr to="key.oz-toggle-temp">/
+	    <TD/toggle temporary buffer//
+	  <TR/<TD/<Ptr to="key.run-oz">/
+	    <TD/start Mozart subprocess//
+	  <TR/<TD/<Ptr to="key.oz-halt">/
+	    <TD/halt Mozart subprocess//
+	  <TR/<TD/<Ref to="key.oz-halt"/<Key/C-u C-. h///
+	    <TD/halt Mozart subprocess (forced)//
+	  <TR/<TH colspan=2/Executing Code//
+	  <TR/<TD/<Ptr to="key.oz-feed-buffer">/
+	    <TD/feed buffer//
+	  <TR/<TD/<Ptr to="key.oz-feed-region">/
+	    <TD/feed region//
+	  <TR/<TD/<Ptr to="key.oz-feed-line">/
+	    <TD/feed line//
+	  <TR/<TD/<Ptr to="key.oz-feed-paragraph-1">/
+	    <TD/feed paragraph//
+	  <TR/<TD/<Ptr to="key.oz-feed-paragraph-2">/
+	    <TD/feed paragraph//
+	  <TR/<TH colspan=2/Evaluating Expression and Browsing Result//
+	  <TR/<TD/<Ptr to="key.oz-browse-buffer">/
+	    <TD/browse buffer//
+	  <TR/<TD/<Ptr to="key.oz-browse-region">/
+	    <TD/browse region//
+	  <TR/<TD/<Ptr to="key.oz-browse-line">/
+	    <TD/browse line//
+	  <TR/<TD/<Ptr to="key.oz-browse-paragraph">/
+	    <TD/browse paragraph//
+	  <TR/<TH colspan=2/Evaluating Expression and Showing Result//
+	  <TR/<TD/<Ptr to="key.oz-show-buffer">/
+	    <TD/show buffer//
+	  <TR/<TD/<Ptr to="key.oz-show-region">/
+	    <TD/show region//
+	  <TR/<TD/<Ptr to="key.oz-show-line">/
+	    <TD/show line//
+	  <TR/<TD/<Ptr to="key.oz-show-paragraph">/
+	    <TD/show paragraph//
+	  <TR/<TH colspan=2/Interacting With Tools//
+	  <TR/<TD/<Ptr to="key.oz-open-panel">/
+	    <TD/open system panel//
+	  <TR/<TD/<Ptr to="key.oz-open-compiler-panel">/
+	    <TD/open compiler panel//
+	  <TR/<TD/<Ptr to="key.oz-profiler">/
+	    <TD/start profiler//
+	  <TR/<TD/<Ptr to="key.oz-debugger">/
+	    <TD/start debugger//
+	  <TR/<TD/<Ptr to="key.oz-breakpoint-at-point">/
+	    <TD/set breakpoint on current line//
+	  <TR/<TH colspan=2/Mozart System Development Support//
+	  <TR/<TD/<Ptr to="key.oz-gdb">/
+	    <TD/toggle gdb//
+	  <TR/<TD/<Ptr to="key.oz-other-emulator">/
+	    <td>toggle global&slash;local emulator/
+	  <TR/<TD/<Ptr to="key.oz-set-emulator">/
+	    <TD/set path to local emulator//
+	  <TR/<TD/<Ptr to="key.oz-other-functor-path">/
+	    <TD>toggle global&slash;local functors/
+	  <TR/<TD/<Ptr to="key.oz-set-functor-path">/
+	    <TD/set search path to local functors//
+	</Table>
     <Appendix id="appendix.devel">
       <Title/Mozart System Development Support/
       <P>
@@ -1068,13 +1122,13 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	      If ?_{SET-FUNCTOR-PATH} is <<nil>>, call <<oz-set-emulator>>,
 	      else call <<oz-set-functor-path>>.
 	    <Entry class=command><Span class=index/<<oz-set-emulator>>/
-	      (<Key/C-. m/)
+	      (<Key id="key.oz-set-emulator"/C-. m/)
 	    <Item>
 	      Interactively set the value of the variable <<oz-emulator>>.
 	      Also, if the environment variable <Var type=env/OZEMULATOR/ is
 	      set, replace its value by this one.
 	    <Entry class=command><Span class=index/<<oz-set-functor-path>>/
-	      (<Key/C-u C-. m/)
+	      (<Key id="key.oz-set-functor-path"/C-u C-. m/)
 	    <Item>
 	      Interactively set the value of the variable
 	      <<oz-functor-path>>.  Also, if the environment variable
@@ -1085,13 +1139,13 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	      If ?_{SET-FUNCTOR-PATH} is <<nil>>, call <<oz-other-emulator>>,
 	      else call <<oz-other-functor-path>>.
 	    <Entry class=command><Span class=index/<<oz-other-emulator>>/
-	      (<Key/C-. o/)
+	      (<Key id="key.oz-other-emulator"/C-. o/)
 	    <Item>
 	      Toggle between global and local Oz Emulator.  The local
 	      emulator is given by the user option <<oz-emulator>>; see
 	      <<oz-set-emulator>>.
 	    <Entry class=command><Span class=index/<<oz-other-functor-path>>/
-	      (<Key/C-u C-. o/)
+	      (<Key id="key.oz-other-functor-path"/C-u C-. o/)
 	    <Item>
 	      Toggle between global and local Oz functor search path.
 	      The local functors are given by the user option
@@ -1105,7 +1159,8 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
 	  class=index/gdb/.
 	  <!--** reference to gdb -->
 	  <List>
-	    <Entry class=command><Span class=index/<<oz-gdb>>/ (<Key/C-. d/)
+	    <Entry class=command><Span class=index/<<oz-gdb>>/
+	      (<Key id="key.oz-gdb"/C-. d/)
 	    <Item>
 	      <!--** reference to gud-mode -->
 	      <Index/<<oz>> shell script/
