@@ -17,6 +17,8 @@ import
    Pickler(toFile fromFile) at 'Pickler.ozf'
 export
    'class' : Database
+prepare
+   VS2A = VirtualString.toAtom
 define
    NOT_FOUND = {NewName}
    class Database
