@@ -47,7 +47,7 @@ public:
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef) = 0;
   virtual Bool          validV(TaggedRef) = 0;
   virtual OZ_Term       statusV() = 0;
-  virtual OZ_Term       isDetV() = 0;
+  virtual VarStatus     checkStatusV() = 0;
   virtual void          disposeV() = 0;
 
   virtual Bool addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) {

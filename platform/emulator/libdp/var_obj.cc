@@ -135,6 +135,21 @@ void ObjectVar::disposeV()
   freeListDispose(this,sizeof(ObjectVar));
 }
 
+
+OZ_Term ObjectVar::statusV()
+{
+  SRecord *t = SRecord::newSRecord(AtomDet, 1);
+  t->setArg(0, AtomObject);
+  return makeTaggedSRecord(t);
+}
+
+VarStatus ObjectVar::checkStatusV()
+{
+  return EVAR_STATUS_DET;
+}
+
+
+
 void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
 			   BorrowEntry *be)
 {
