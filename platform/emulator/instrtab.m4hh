@@ -41,7 +41,7 @@ define(instruction,
 asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))
 #elif defined(ARCH_SPARC)
 #define LOAD_LABEL(instr) \
-asm("sethi %hi(TRUE_"#instr"), %0\nor %0, %lo(TRUE_"#instr"), %0" : "=m" (*ptr))
+asm("sethi %%hi(TRUE_"#instr"), %0\nor %0, %%lo(TRUE_"#instr"), %0" : "=m" (*ptr))
 #else
 #error platform not supported
 #endif
