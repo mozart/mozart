@@ -29,7 +29,6 @@ class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
 friend void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
-friend void addSuspFDVar(TaggedRef, SuspList *);
   
 private:
   FiniteDomain finiteDomain;
@@ -40,14 +39,12 @@ public:
   : GenCVariable(FDVariable, pn) {
     finiteDomain = fd;
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
-    fdSuspList[fd_size] = NULL;
   }
 
   GenFDVariable(TaggedRef pn = AtomVoid)
   : GenCVariable(FDVariable, pn) {
     finiteDomain.setFull();
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
-    fdSuspList[fd_size] = NULL;
   }
 
   // methods relevant for term copying (gc and solve)
@@ -72,19 +69,21 @@ public:
 		 TaggedRef term, PropCaller prop_eq = pc_propagator);  
 
   int getSuspListLength(void) {
-    return suspList->length() + 
-      fdSuspList[fd_det]->length() + fdSuspList[fd_bounds]->length() +
-      fdSuspList[fd_size]->length();
+    return suspList->length() +
+      fdSuspList[fd_det]->length() + fdSuspList[fd_bounds]->length();
   }
 };
 
 Bool isGenFDVar(TaggedRef term);
 Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 GenFDVariable * tagged2GenFDVar(TaggedRef term);
+void addSuspFDVar(TaggedRef, SuspList *, FDPropState = fd_any);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"
 #endif
 
 #endif
+
+
 

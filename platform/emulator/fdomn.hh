@@ -18,7 +18,7 @@
 #include "bignum.hh"
 
 
-enum FDPropState {fd_det = 0, fd_bounds, fd_size, fd_any};
+enum FDPropState {fd_det = 0, fd_bounds, fd_any};
 enum FDState {fd_empty, fd_full, fd_discrete, fd_singleton};
 
 

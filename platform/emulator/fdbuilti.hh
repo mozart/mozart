@@ -176,6 +176,7 @@ OZ_C_proc_proto(BIfdAtMost);
 // fdcore.cc
 OZ_C_proc_proto(BIisFdVar);
 OZ_C_proc_proto(BIfdIs);
+State BIfdIsInline(TaggedRef);
 OZ_C_proc_proto(BIgetFDLimits);
 OZ_C_proc_proto(BIfdMin);
 OZ_C_proc_proto(BIfdMax);
@@ -494,7 +495,9 @@ public:
   void addResSusps(Suspension * susp, FDPropState target) {
     for (int i = curr_num_of_items; i--; )
       addResSusp(i, susp, target);
-    if (global_vars == 0) FDcurrentTaskSusp->markLocalSusp();
+    
+    if (global_vars == 0)
+      FDcurrentTaskSusp->markLocalSusp();
   }
   void addForIntSusps(Suspension * susp) {
     for (int i = curr_num_of_items; i--; )
