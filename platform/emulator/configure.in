@@ -224,7 +224,7 @@ do
   fi
 done
 
-AC_CHECK_LIB(gmp, mpz_init)
+AC_CHECK_LIB(gmp, mpz_init, , AC_MSG_ERROR(required GNU MP lib not found))
 
 
 # special hack for static linking under linux
