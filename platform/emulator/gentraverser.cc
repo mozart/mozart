@@ -58,13 +58,14 @@ void GenTraverser::gCollect()
   //
   while (--ptr >= bottom) {
     OZ_Term& t = (OZ_Term&) *ptr;
-    DEREF(t, tPtr, tTag);
+    OZ_Term tc = t;
+    DEREF(tc, tPtr, tTag);
 
     //
     switch (tTag) {
     case TAG_GCMARK:
       //
-      switch (t) {
+      switch (tc) {
       case taggedBATask:
 	--ptr;
 	--ptr;
@@ -85,6 +86,7 @@ void GenTraverser::gCollect()
       break;
 
     default:
+      // do not GC the dereferenced copy - do the original slot;
       oz_gCollectTerm(t, t);
       break;
     }      
