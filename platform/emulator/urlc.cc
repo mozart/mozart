@@ -330,7 +330,11 @@ urlc::tcpip_open(const char* h, int p)
 #endif
 
     // save local address for later use (esp. ftp PORT)
+#if __GLIBC__ == 2
+    unsigned int lin_len = sizeof(lin);
+#else
     int lin_len = sizeof(lin);
+#endif
     if(-1 == getsockname(fd, (struct sockaddr*) &lin, &lin_len))
         return (URLC_ESOCK);
 
@@ -986,8 +990,12 @@ urlc::get_ftp(char *file)
     }
     int sockfd2 = -1; // socket for listening
     struct sockaddr_in local_addr;
-    int local_addr_len = sizeof(local_addr);
     struct sockaddr_in rem_addr;
+#if __GLIBC__ == 2
+    unsigned int local_addr_len = sizeof(local_addr);
+#else
+    int local_addr_len = sizeof(local_addr);
+#endif
     int rem_addr_len = sizeof(rem_addr);
 
     // we assume that the kernel is not stupid
@@ -1039,7 +1047,11 @@ urlc::get_ftp(char *file)
 
     // verify if it comes from whom we wanted to come
     struct sockaddr_in pcin; // peer control connection address
+#if __GLIBC__ == 2
+    unsigned int pcin_len = sizeof(pcin);
+#else
     int pcin_len = sizeof(pcin);
+#endif
     // fills from control connection
     n = getpeername(sockfd, (struct sockaddr*) &pcin, &pcin_len);
     if(-1 == n) // strange, weird

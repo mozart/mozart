@@ -2029,7 +2029,11 @@ retry:
   if (listen(fd,5)<0) {NETWORK_ERROR(("listen %d\n",errno));}
 
   struct sockaddr_in addr1;
+#if __GLIBC__ == 2
+  unsigned int length = sizeof(addr1);
+#else
   int length = sizeof(addr1);
+#endif
   if (getsockname(fd, (struct sockaddr *) &addr1, &length) < 0) {
     NETWORK_ERROR(("getsockname %d\n",errno));
   }
