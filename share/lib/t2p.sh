@@ -22,7 +22,7 @@ fi
 
 if test -z "$TEXT2PICKLE"
 then
-    echo Fatal error: text2pickle not found
+    echo Fatal error: text2pickle not found 2>&1
     exit 1
 fi
 
