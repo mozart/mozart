@@ -231,7 +231,8 @@ in
 	 Selected       : unit
 	 LastSelected   : unit
 
-	 SyncCalc       : _
+	 CalcSync       : _
+	 QueueSync      : _
 
 	 MsgList        : nil
 	 MsgListTl      : nil
@@ -251,7 +252,7 @@ in
 
       meth syncCalc
 	 New in
-	 SyncCalc <- New = unit
+	 CalcSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToCalcTree}}
 	    case {IsDet New} then skip else
@@ -324,7 +325,7 @@ in
 	    CL = {GetColor How}
 	 in
 	    node(ct:CT ...) = {N.1 get($)}
-	    ScrolledTitleCanvas,tk(itemconfigure CT fill:CL.1 text:I#CL.2)
+	    Tree,Enqueue(o({self w($)} itemconfigure CT fill:CL.1 text:I#CL.2))
 	    {N.1 setState(How)}
 	 end
       end
@@ -385,7 +386,6 @@ in
 	    Tree,Enqueue(o(Canvas conf
 			   scrollregion:q(0 0 ThreadTreeWidth Height)))
 	 end
-	 Tree,ClearQueue
       end
 
       meth SwitchToThread(I)
@@ -406,10 +406,22 @@ in
 	       @MsgListTl = Ticklet|NewTl
 	    end
 	    MsgListTl <- NewTl
+	    Tree,ClearQueue
 	 end
       end
 
       meth ClearQueue
+	 New in
+	 QueueSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToMark}}
+	    case {IsDet New} then skip else
+	       Tree,DoClearQueue
+	    end
+	 end
+      end
+
+      meth DoClearQueue
 	 @MsgListTl = nil
 	 {Tk.batch @MsgList}
 	 MsgList <- nil
