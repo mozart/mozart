@@ -2130,9 +2130,87 @@ echo "$ac_t""$TK_LIB_DIR/tkConfig.sh" 1>&6
 
 
 
+PERMISSIVEOPT=
+if test "$GCC" = yes; then
+
+	ozm_out=
+	if test -n "-fpermissive"
+	then
+	    echo 'void f(){}' > oz_conftest.c
+	    oz_for="-fpermissive"
+	    for ozm_opt in $oz_for
+	    do
+		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
+echo "configure:2145: checking cc compiler option $ozm_opt" >&5
+		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
+		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+			eval "oz_cv_gccopt_$ozm_ropt=yes"
+		    else
+			eval "oz_cv_gccopt_$ozm_ropt=no"
+		    fi
+fi
+
+		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
+		    ozm_out="$ozm_out $ozm_opt"
+		    echo "$ac_t""yes" 1>&6
+		else
+		    echo "$ac_t""no" 1>&6
+		fi
+	    done
+	    rm -f oz_conftest*
+	fi
+	PERMISSIVEOPT="$ozm_out"
+	
+if test -n "$PERMISSIVEOPT"; then
+echo $ac_n "checking whether we need -fpermissive for Xlib.h""... $ac_c" 1>&6
+echo "configure:2170: checking whether we need -fpermissive for Xlib.h" >&5
+if eval "test \"`echo '$''{'ac_cv_xlib_permissive'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$TK_XINCLUDES $CPPFLAGS"
+  cat > conftest.$ac_ext <<EOF
+#line 2177 "configure"
+#include "confdefs.h"
+
+#include <X11/Xlib.h>
+
+int main() {
+
+void foo() {}
+
+; return 0; }
+EOF
+if { (eval echo configure:2188: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  
+  ac_cv_xlib_permissive=no
+
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  
+  ac_cv_xlib_permissive=yes
+
+fi
+rm -f conftest*
+CPPFLAGS="$save_CPPFLAGS"
+fi
+
+echo "$ac_t""$ac_cv_xlib_permissive" 1>&6
+else
+PERMISSIVEOPT=
+fi
+fi
+
+
 
 echo $ac_n "checking for Tcl public headers""... $ac_c" 1>&6
-echo "configure:2136: checking for Tcl public headers" >&5
+echo "configure:2214: checking for Tcl public headers" >&5
 
 # Check whether --with-tclinclude or --without-tclinclude was given.
 if test "${with_tclinclude+set}" = set; then
@@ -2165,7 +2243,7 @@ fi
 
 
 echo $ac_n "checking for Tk public headers""... $ac_c" 1>&6
-echo "configure:2169: checking for Tk public headers" >&5
+echo "configure:2247: checking for Tk public headers" >&5
 
 # Check whether --with-tkinclude or --without-tkinclude was given.
 if test "${with_tkinclude+set}" = set; then
@@ -2201,7 +2279,7 @@ fi
 
 
     echo $ac_n "checking for --enable-copy-tcl-libs""... $ac_c" 1>&6
-echo "configure:2205: checking for --enable-copy-tcl-libs" >&5
+echo "configure:2283: checking for --enable-copy-tcl-libs" >&5
     # Check whether --enable-copy-tcl-libs or --disable-copy-tcl-libs was given.
 if test "${enable_copy_tcl_libs+set}" = set; then
   enableval="$enable_copy_tcl_libs"
@@ -2400,6 +2478,7 @@ s%@TK_PREFIX@%$TK_PREFIX%g
 s%@TK_LIBS@%$TK_LIBS%g
 s%@TK_LIB_SPEC@%$TK_LIB_SPEC%g
 s%@TK_XINCLUDES@%$TK_XINCLUDES%g
+s%@PERMISSIVEOPT@%$PERMISSIVEOPT%g
 s%@TCL_INCLUDES@%$TCL_INCLUDES%g
 s%@TK_INCLUDES@%$TK_INCLUDES%g
 s%@PROVIDETCLLIBS@%$PROVIDETCLLIBS%g
