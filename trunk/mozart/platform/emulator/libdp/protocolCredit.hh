@@ -27,7 +27,7 @@
 #ifndef __PROTOCOLCREDITHH
 #define __PROTOCOLCREDITHH
 
-void sendCreditTo(DSite *toS,DSite *entitysite,int entityOTI,Credit c);
+//  void sendCreditTo(DSite *toS,DSite *entitysite,int entityOTI,Credit c);
 void sendCreditBack(DSite *entitysite,int entityOTI,Credit c);
 void askForCredit(DSite *entitysite, int entityOTI);
 
