@@ -397,7 +397,7 @@ See variable `compilation-parse-errors-function' for the interface it uses."
     (skip-chars-backward " \t\n")
     (setq end (point)))
   (if oz-prepend-line
-      (concat "\\line " (1+ (count-lines 1 start))
+      (concat "\\line " (number-to-string (1+ (count-lines 1 start)))
 	      " '" (or (buffer-file-name) (buffer-name)) "' % fromemacs\n"
 	      (buffer-substring start end))
     (buffer-substring start end)))
