@@ -416,8 +416,8 @@ operations pertinent to threads. Some of these are summarized in
 <CAPTION>Thread operations</CAPTION>
 <TABLE>
 <TR>
-  <TH>Procedure</TD>
-  <TH>Description</TD>
+  <TH>Procedure</TH>
+  <TH>Description</TH>
 </TR><TR>
   <TD><<{Thread.state +T ?A}>></TD>
   <TD>Returns current state of <<T>></TD>
