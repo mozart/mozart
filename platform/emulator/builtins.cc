@@ -1360,7 +1360,7 @@ loop:
   if (oz_isLTuple(list)) {
     TaggedRef fea;
 
-    if (isPair == OK) {
+    if (isPair) {
       TaggedRef pair = oz_head(list);
       DerefIfVarReturnIt(pair);
       if (!oz_isPair2(pair)) return 0;

@@ -32,7 +32,7 @@
 
 inline
 void oz_resetLocalPropagatorQueue(Board * bb) {
-  LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
+  SuspQueue *lpq = bb->getLocalPropagatorQueue();
   if (!lpq)
     return;
 
@@ -145,7 +145,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
 
   Board * bb = oz_currentBoard();
 
-  LocalPropagatorQueue * lpq = bb->getLocalPropagatorQueue();
+  SuspQueue * lpq = bb->getLocalPropagatorQueue();
 
   if (lpq == NULL)
     return PROCEED;
@@ -156,7 +156,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
     starttime = osUserTime();
 	 
   while (!lpq->isEmpty() && !am.isSetSFlag()) {
-    Propagator * prop = lpq->dequeue();
+    Propagator * prop = SuspToPropagator(lpq->dequeue());
     Propagator::setRunningPropagator(prop);
     Assert(!prop->isDead());
 	   
@@ -230,17 +230,20 @@ void oz_pushToLPQ(Propagator * prop) {
 
   Board * bb = prop->getBoardInternal()->derefBoard();
 
-  LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
+  SuspQueue * lpq = bb->getLocalPropagatorQueue();
 
-  if (lpq) {
-    lpq->enqueue(prop);
-  } else {
+  if (!lpq) {
     // Create new thread
     Thread * thr = oz_newThreadInject(bb);
+
     // Push run lpq builtin
     thr->pushCall(BI_PROP_LPQ, 0, 0);
 
-    bb->setLocalPropagatorQueue(new LocalPropagatorQueue(prop));
+    lpq = new SuspQueue();
 
+    bb->setLocalPropagatorQueue(lpq);
   }
+
+  lpq->enqueue(prop);
+  
 }

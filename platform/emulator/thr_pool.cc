@@ -29,49 +29,34 @@
 #endif
 
 #include "thr_pool.hh"
-#include "board.hh"
+
+ThreadsPool::ThreadsPool(void) : hi(0), mid(0) {
+  _q[ HI_PRIORITY] = new SuspQueue();
+  _q[MID_PRIORITY] = new SuspQueue();
+  _q[LOW_PRIORITY] = new SuspQueue();
+}
 
 int ThreadsPool::getRunnableNumber() {
-  return 
-     hiQueue.getRunnableNumber()
-    +midQueue.getRunnableNumber()
-    +lowQueue.getRunnableNumber()
-    +1; // for am.currentThread!
+  return
+    _q[ HI_PRIORITY]->getSize() +
+    _q[MID_PRIORITY]->getSize() +
+    _q[LOW_PRIORITY]->getSize() +
+    1;
 }
 
-//  Note that this can be called only after 'ozconf.init ()';
-// (so, it's not a constructor of the 'ThreadsPool' class;)
-void ThreadsPool::initThreads ()
-{
-#ifndef LINKED_QUEUES
-  // private;
-  hiQueue.allocate(QUEUEMINSIZE);
-  midQueue.allocate(QUEUEMINSIZE);
-  lowQueue.allocate(QUEUEMINSIZE);
-#endif
-
-  hi  = ozconf.hiMidRatio;
-  mid = ozconf.midLowRatio;
-
+Bool ThreadsPool::isScheduledSlow(Thread * thr) {
+  return (_q[MID_PRIORITY]->isIn(thr) ||
+	  _q[ HI_PRIORITY]->isIn(thr) ||
+	  _q[LOW_PRIORITY]->isIn(thr));
 }
 
-//
-Bool ThreadsPool::isScheduledSlow(Thread *thr)
-{
-  if (midQueue.isScheduledSlow(thr)) return OK;
-  if (hiQueue.isScheduledSlow(thr)) return OK;
-  return lowQueue.isScheduledSlow(thr);
+void ThreadsPool::deleteThread(Thread * thr) {
+  _q[ HI_PRIORITY]->remove(thr);
+  _q[MID_PRIORITY]->remove(thr);
+  _q[LOW_PRIORITY]->remove(thr);
 }
 
-void ThreadsPool::deleteThread(Thread *th)
-{
-  midQueue.deleteThread(th);
-  hiQueue.deleteThread(th);
-  lowQueue.deleteThread(th);
-}
-
-void ThreadsPool::rescheduleThread(Thread *th)
-{
+void ThreadsPool::rescheduleThread(Thread *th) {
   deleteThread(th);
   scheduleThread(th);
 }
