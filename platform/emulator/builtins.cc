@@ -769,7 +769,6 @@ DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
     if (isAnyVar(result_tag)) OZ_suspendOn(makeTaggedRef(result_ptr));	\
   }
 
-
 OZ_C_proc_begin(BInewSpace, 2) {
   OZ_Term proc = OZ_getCArg(0);
 
@@ -890,6 +889,9 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
 
   Board* CBB = am.currentBoard;
 
+  if (CBB != space->getSolveBoard()->getParentFast()) 
+    TypeErrorT(0, "current space must be directly subordinated");
+
   if (space->isFailed())
     return OZ_unify(OZ_getCArg(1),
 		    makeTaggedConst(new Space(CBB, (Board *) 0)));
@@ -954,8 +956,10 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
     TypeErrorT(1, "Integer or pair of integers");
   }
 
-  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-    TypeErrorT(0, "current space is subordinated");
+  if (am.currentBoard != space->getSolveBoard()->getParentFast()) 
+    TypeErrorT(0, "current space must be directly subordinated");
+    
+  //  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
         
   space->getSolveActor()->clearResult(space->getBoardFast());
 
@@ -979,9 +983,9 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   if (space->isFailed())
     return PROCEED;
 
-  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
-    TypeErrorT(0, "current space is subordinated");
-      
+  if (am.currentBoard != space->getSolveBoard()->getParentFast()) 
+    TypeErrorT(0, "current space must be directly subordinated");
+
   OZ_Term proc = OZ_getCArg(1);
 
   DEREF(proc, proc_ptr, proc_tag);
