@@ -133,10 +133,6 @@ void printBanner()
 
 #ifdef NO_LTQ
   warning("LTQ is turned off.");
-#else
-#ifdef LOCAL_THREAD_STACK
-  warning("LTQ is a STACK.");
-#endif
 #endif
 
 #ifdef DEBUG_CHECK
