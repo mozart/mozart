@@ -57,6 +57,14 @@ BreakpointStaticHelp   = {NewName}
 BreakpointDynamicHelp  = {NewName}
 StatusHelp             = {NewName}
 
+fun {CheckState T}
+   S = {Thread.state T}
+in
+   case     {Dbg.checkStopped T} then S
+   elsecase S == terminated      then S
+   else                               running end
+end
+
 local
    fun {MakeSpace N}
       case N < 1 then nil else 32 | {MakeSpace N-1} end

@@ -174,6 +174,9 @@ in
 	    Last   = case Depth > 0 then {Dget self.D Depth} else nil end
 	 in
 	    {Ozcar printStack(id:self.I frames:Frames depth:Depth last:Last)}
+	    case {CheckState self.T} == running then
+	       {Ozcar markStack(inactive)}
+	    else skip end
 	 end
       end
 
