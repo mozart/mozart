@@ -94,7 +94,6 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   TaggedRefPtr varptr;
   pm_term_type vartag;
   long prod = 1;
-  Suspension * susp;
   pm_term_type last_tag = pm_none;
 
   int j, fds_found;
@@ -666,10 +665,10 @@ void BIfdBodyManager::processNonRes(void)
           becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
         tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_det);
-
+#ifndef NEW_SUSP_SCHEME
         if (susp == NULL) susp = new Suspension(am.currentBoard);
         addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
-
+#endif
         am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                           newSmallInt(bifdbm_dom[0]->singl()));
         glob_vars_touched = TRUE;
@@ -677,9 +676,10 @@ void BIfdBodyManager::processNonRes(void)
     } else if (*bifdbm_dom[0] == fd_bool) {
       tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
+#ifndef NEW_SUSP_SCHEME
         if (susp == NULL) susp = new Suspension(am.currentBoard);
         addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
-
+#endif
         GenBoolVariable * newboolvar = new GenBoolVariable();
         TaggedRef * newtaggedboolvar = newTaggedCVar(newboolvar);
         am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
@@ -695,9 +695,10 @@ void BIfdBodyManager::processNonRes(void)
     } else {
       tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
+#ifndef NEW_SUSP_SCHEME
         if (susp == NULL) susp = new Suspension(am.currentBoard);
         addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
-
+#endif
         GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
         am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
@@ -719,10 +720,10 @@ void BIfdBodyManager::processNonRes(void)
         becomesSmallIntAndPropagate(bifdbm_varptr[0], *bifdbm_dom[0]);
     } else {
       tagged2GenBoolVar(bifdbm_var[0])->propagate(bifdbm_var[0]);
-
+#ifndef NEW_SUSP_SCHEME
       if (susp == NULL) susp = new Suspension(am.currentBoard);
       addSuspBoolVar(bifdbm_var[0], new SuspList(susp));
-
+#endif
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                         newSmallInt(bifdbm_dom[0]->singl()));
       glob_vars_touched = TRUE;
@@ -730,14 +731,18 @@ void BIfdBodyManager::processNonRes(void)
   } else {
     Assert(bifdbm_var_state[0] == fdbm_local && vartag == pm_svar);
 
+#ifndef NEW_SUSP_SCHEME
     if (susp == NULL) susp = new Suspension(am.currentBoard);
+#endif
 
     glob_vars_touched = TRUE;
 
     if (*bifdbm_dom[0] == fd_singleton) {
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
       am.checkSuspensionList(bifdbm_var[0]);
+#ifndef NEW_SUSP_SCHEME
       addSuspSVar(bifdbm_var[0], new SuspList(susp, NULL));
+#endif
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], newsmallint);
     } else if (*bifdbm_dom[0] == fd_bool) {
       GenBoolVariable * newboolvar = new GenBoolVariable();
@@ -750,7 +755,9 @@ void BIfdBodyManager::processNonRes(void)
       GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0]);
+#ifndef NEW_SUSP_SCHEME
       addSuspSVar(bifdbm_var[0], new SuspList(susp, NULL));
+#endif
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
                         makeTaggedRef(newtaggedfdvar));
       vars_left = TRUE;

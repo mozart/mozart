@@ -548,7 +548,6 @@ private:
         bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
     }
   }
-  Bool addAnySuspToTouchedGlobalVars(void);
   int simplifyBody(int ts, STuple &a, STuple &x,
                    Bool sign_bits[], double coeffs[]);
   void _propagate_unify_cd(int clauses, int variables, STuple &st);
@@ -701,12 +700,20 @@ public:
       processLocal();
     } else {
       process();
+#ifndef NEW_SUSP_SCHEME
       if (glob_vars_touched) dismissCurrentTaskSusp();
+#endif
     }
     return EntailFD;
   }
 
+#ifndef NEW_SUSP_SCHEME
+  Bool addAnySuspToTouchedGlobalVars(void);
   OZ_Bool entailmentAndSuspOnAny(void);
+#else
+  OZ_Bool entailmentAndSuspOnAny(void) {return entailment(); }
+
+#endif
 
   OZ_Bool entailmentClause(int from_b, int to_b,
                            int from, int to,
@@ -727,8 +734,10 @@ public:
       processFromTo(from, to+1);
       if (vars_left)
         reviveCurrentTaskSusp();
+#ifndef NEW_SUSP_SCHEME
       else if (glob_vars_touched)
         dismissCurrentTaskSusp();
+#endif
     }
 
     return vars_left ? SuspendFD : EntailFD;

@@ -35,8 +35,11 @@ void printBCDebug(Board * b = NULL);
 
 void reviveCurrentTaskSusp(void);
 void killPropagatedCurrentTaskSusp(void);
+
+#ifndef NEW_SUSP_SCHEME
 void dismissCurrentTaskSusp(void);
 void activateCurrentTaskSusp(void);
+#endif
 
 inline
 Bool isUnifyCurrentTaskSusp(void) {

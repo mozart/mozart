@@ -43,7 +43,9 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
         doBind(vPtr, term);
         if (disp) dispose();
       } else {
+#ifndef NEW_SUSP_SCHEME
         if (prop) addSuspension(new Suspension(am.currentBoard));
+#endif
         am.doBindAndTrail(var, vPtr, term);
       }
 
@@ -115,7 +117,9 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                     TaggedRef int_var = newSmallInt(intsct.singl());
                     termVar->propagate(term, r_dom, pc_cv_unif);
                     propagate(var, l_dom, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
                     termVar->addSuspension(new Suspension(am.currentBoard));
+#endif
                     doBind(vPtr, int_var);
                     am.doBindAndTrail(term, tPtr, int_var);
                     if (disp) dispose();
@@ -123,7 +127,9 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                     setDom(intsct);
                     termVar->propagate(term, r_dom, pc_cv_unif);
                     propagate(var, l_dom, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
                     termVar->addSuspension(new Suspension(am.currentBoard));
+#endif
                     am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
                                            this, termVar, prop);
                   }
@@ -143,7 +149,9 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                     TaggedRef int_term = newSmallInt(intsct.singl());
                     propagate(var, l_dom, pc_cv_unif);
                     termVar->propagate(term, r_dom, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
                     addSuspension(new Suspension(am.currentBoard));
+#endif
                     doBind(tPtr, int_term);
                     am.doBindAndTrail(var, vPtr, int_term);
                     if (disp) termVar->dispose();
@@ -151,7 +159,9 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                     termVar->setDom(intsct);
                     propagate(var, l_dom, pc_cv_unif);
                     termVar->propagate(term, r_dom, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
                     addSuspension(new Suspension(am.currentBoard));
+#endif
                     am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
                                            termVar, this, prop);
                   }
@@ -186,11 +196,13 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
                   am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
                                          c_var, termVar, prop);
                 }
+#ifndef NEW_SUSP_SCHEME
                 if (prop) {
                   Suspension * susp = new Suspension(am.currentBoard);
                   termVar->addSuspension(susp);
                   addSuspension(susp);
                 }
+#endif
                 break;
               }
             default:

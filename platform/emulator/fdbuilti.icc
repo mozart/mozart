@@ -149,7 +149,9 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
     processLocalFromTo(from, to+1);
   } else {
     processFromTo(from, to+1);
+#ifndef NEW_SUSP_SCHEME
     if (glob_vars_touched) dismissCurrentTaskSusp();
+#endif
   }
 
   processLocalFromTo(from_b, to_b+1);
@@ -197,7 +199,7 @@ int BIfdBodyManager::initCache(void) {
 
 }
 
-
+#ifndef NEW_SUSP_SCHEME
 inline
 Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
   Assert(FDcurrentTaskSusp==0);
@@ -213,7 +215,6 @@ Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
 
   return s != NULL;
 }
-
 
 inline
 OZ_Bool BIfdBodyManager::entailmentAndSuspOnAny(void) {
@@ -234,6 +235,7 @@ OZ_Bool BIfdBodyManager::entailmentAndSuspOnAny(void) {
 
   return EntailFD;
 }
+#endif
 
 
 inline

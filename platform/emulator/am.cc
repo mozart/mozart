@@ -758,6 +758,54 @@ void AM::reduceTrailOnUnitCommit()
 }
 
 // only used in deinstall
+#ifdef NEW_SUSP_SCHEME
+
+// Three cases may occur:
+// any global var G -> ground ==> add susp to G
+// any global var G -> constrained local var ==> add susp to G
+// unconstrained global var G1 -> unconstrained global var G2
+//    ==> add susp to G1 and G2
+
+void AM::reduceTrailOnSuspend()
+{
+  int numbOfCons = trail.chunkSize();
+
+  if (numbOfCons > 0) {
+    Board * bb = currentBoard;
+    bb->newScript(numbOfCons);
+
+    // one single suspension for all
+    Suspension * susp = new Suspension(bb);
+
+    for (int index = 0; index < numbOfCons; index++) {
+      TaggedRef * refPtr, value, old_value;
+
+      trail.popRef(refPtr, value);
+
+      Assert(isRef(*refPtr) || !isAnyVar(*refPtr));
+      Assert(isAnyVar(value));
+
+      bb->setScript(index,refPtr,*refPtr);
+
+      old_value = makeTaggedRef(refPtr);
+      DEREF(old_value, old_value_ptr, old_value_tag);
+
+      unBind(refPtr, value);
+
+      // value is always global variable, so add always a suspension
+      taggedBecomesSuspVar(refPtr)->addSuspension(susp);
+
+      // this might be a global unconstrained variable; in this case
+      // add a suspension
+      if(isNotCVar(old_value_tag) && !isLocalVariable(old_value)) {
+        Assert(isNotCVar(value));
+        taggedBecomesSuspVar(old_value_ptr)->addSuspension (susp);
+      }
+    } // for
+  } // if
+  trail.popMark();
+}
+#else
 void AM::reduceTrailOnSuspend()
 {
   int numbOfCons = trail.chunkSize();
@@ -785,11 +833,14 @@ void AM::reduceTrailOnSuspend()
 
       unBind(refPtr,value);
 
+      // this is a global variable, so add always a suspension
       if (isNotCVar(value)) {
         taggedBecomesSuspVar(refPtr)->addSuspension(susp);
         used = OK;
       }
 
+      // this might be a global unconstrained variable; in this case
+      // add a suspension
       if (isAnyVar(oldVal)) {
         // local generic variables are allowed to occure here
         Assert(!isLocalVariable (oldVal) || !isNotCVar(oldVal));
@@ -807,7 +858,7 @@ void AM::reduceTrailOnSuspend()
   }
   trail.popMark();
 }
-
+#endif
 
 void AM::reduceTrailOnFail()
 {
