@@ -154,7 +154,7 @@ Bool Board::isFailureInBody ()
   if (isWaitTop () == OK) {
     return (NO);
   } else {
-#if defined THREADED && THREADED > 0
+#ifdef THREADED
     Opcode op = CodeArea::adressToOpcode (CodeArea::getOP (body.getPC ()));
 #else
     Opcode op = CodeArea::getOP (body.getPC ());
