@@ -388,7 +388,7 @@ OZ_BI_define(BIsetDGC,2,1)
       }
 
       if (tert->isManager()){
-        ownerTable->getOwner(tert->getIndex())->makePersistent();
+        ownerTable->getEntry(tert->getIndex())->makePersistent();
         OZ_RETURN(oz_atom("persistent"));
       }
       OZ_RETURN(oz_atom("only_applicable_to_managers"));

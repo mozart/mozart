@@ -600,7 +600,7 @@ void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){
     cellManagerIsDown(tr,toS,mI);
     return;}
   if(mS==myDSite){// At managerSite
-    cellReceiveCantPut(OT->getOwner(mI),tr,mI,mS,toS);
+    cellReceiveCantPut(OT->getEntry(mI),tr,mI,mS,toS);
     return;}
   cellSendCantPut(tr,toS,mS,mI);
   return;
@@ -620,7 +620,7 @@ void lockSendTokenFailure(DSite* toS,DSite *mS, int mI){
     lockManagerIsDown(mS,mI);
     return;}
   if(mS==myDSite){// At managerSite
-    lockReceiveCantPut(OT->getOwner(mI),mI,mS,toS);
+    lockReceiveCantPut(OT->getEntry(mI),mI,mS,toS);
     return;}
   lockSendCantPut(toS,mS,mI);
   return;

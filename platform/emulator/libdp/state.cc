@@ -88,7 +88,7 @@ PendThread* getPendThreadStartFromCellLock(Tertiary* t){
 /**********************************************************************/
 
 static inline void sendPrepOwner(int index){
-  OwnerEntry *oe=OT->getOwner(index);
+  OwnerEntry *oe=OT->getEntry(index);
 }
 
 /**********************************************************************/
@@ -493,7 +493,7 @@ void secLockToNext(LockSec* sec,Tertiary* t,DSite* toS){
     lockSendToken(na->site,na->index,toS);
     return;}
   Assert(t->isManager());
-  OwnerEntry *oe=OT->getOwner(index);
+  OwnerEntry *oe=OT->getEntry(index);
   lockSendToken(myDSite,index,toS);}
 
 void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
@@ -504,7 +504,7 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
     cellLockSendGet(be);
     return;}
   Assert(t->isManager());
-  OwnerEntry *oe=OT->getOwner(index);
+  OwnerEntry *oe=OT->getEntry(index);
   Chain* ch=((LockManager*) t)->getChain();
   DSite* current=ch->setCurrent(myDSite,t);
   cellLockSendForward(current,myDSite,index);
@@ -666,7 +666,7 @@ void CellManager::gcCellManager(){
   getChain()->gcChainSites();
   int i=getIndex();
   PD((GC,"relocate cellManager:%d",i));
-  OwnerEntry* oe=OT->getOwner(i);
+  OwnerEntry* oe=OT->getEntry(i);
   Assert(oe->getTertiary()->cacIsMarked()?
          ((ConstTerm *) oe->getTertiary()->cacGetFwd())->getType() == Co_Cell:
          oe->getTertiary()->getType() == Co_Cell );
@@ -696,7 +696,7 @@ void LockManager::gcLockManager(){
   getChain()->gcChainSites();
   int i=getIndex();
   PD((GC,"relocate lockManager:%d",i));
-  OwnerEntry* oe=OT->getOwner(i);
+  OwnerEntry* oe=OT->getEntry(i);
   oe->gcPO(this);
   getLockSec()->gcLockSec();}
 

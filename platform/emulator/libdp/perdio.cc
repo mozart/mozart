@@ -107,8 +107,8 @@ static void initGateStream()
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
     globalizeTert(t);
     int ind = t->getIndex();
-    Assert(ind==0);
-    OwnerEntry* oe=OT->getOwner(ind);
+    Assert(ind==10000);
+    OwnerEntry* oe=OT->getEntry(ind);
     oe->setUp(ind);
     oe->makePersistent();
   }
@@ -240,7 +240,7 @@ void gcProxyRecurseImpl(Tertiary *t) {
 void gcManagerRecurseImpl(Tertiary *t) {
   Assert(!t->isFrame());
   int i = t->getIndex();
-  OwnerEntry *oe=OT->getOwner(i);
+  OwnerEntry *oe=OT->getEntry(i);
   if(oe->isGCMarked()){
     PD((GC,"owner already marked:%d",i));
     return;
@@ -461,7 +461,7 @@ Bool localizeTertiary(Tertiary*t){
 
 OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
   if(mS==myDSite){
-    OwnerEntry *oe=OT->getOwner(OTI);
+    OwnerEntry *oe=OT->getEntry(OTI);
     Assert(!oe->isFree());
     return oe;
   }
@@ -469,7 +469,7 @@ OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
 }
 
 inline OwnerEntry* receiveAtOwner(int OTI){
-  OwnerEntry *oe=OT->getOwner(OTI);
+  OwnerEntry *oe=OT->getEntry(OTI);
   Assert(!oe->isFree());
   return oe;
 }
@@ -636,7 +636,7 @@ void msgReceived(MsgContainer* msgC)
       if (oe->isVar()) {
         (GET_VAR(oe,Manager))->registerSite(rsite);
       } else {
-        sendRedirect(rsite,OTI,OT->getOwner(OTI)->getRef());
+        sendRedirect(rsite,OTI,OT->getEntry(OTI)->getRef());
       }
       break;
     }
@@ -652,7 +652,7 @@ void msgReceived(MsgContainer* msgC)
         (GET_VAR(oe,Manager))->deregisterSite(rsite);
       } else {
         if(USE_ALT_VAR_PROTOCOL){
-          recDeregister(OT->getOwner(OTI)->getRef(),rsite);}
+          recDeregister(OT->getEntry(OTI)->getRef(),rsite);}
       }
       break;
     }
@@ -1213,10 +1213,10 @@ DSite* getSiteFromBTI(int i){
   return BT->getBorrow(i)->getNetAddress()->site;}
 
 OwnerEntry *getOwnerEntryFromOTI(int i){
-  return OT->getOwner(i);}
+  return OT->getEntry(i);}
 
 Tertiary* getTertiaryFromOTI(int i){
-  return OT->getOwner(i)->getTertiary();}
+  return OT->getEntry(i)->getTertiary();}
 
 /*
  * The builtin table: no builtins, just a fake
@@ -1261,9 +1261,9 @@ extern "C"
 /**********************************************************************/
 
 OZ_Term getGatePort(DSite* sd){
-  int si=0; /* Gates are always located at position 0 */
+  int si=10000; /* Gates are always located at position 0 */
   if(sd==myDSite){
-    OwnerEntry* oe=OT->getOwner(si);
+    OwnerEntry* oe=OT->getEntry(si);
     Assert(oe->isPersistent());
     return  oe->getValue();}
   NetAddress na = NetAddress(sd,si);

@@ -89,6 +89,68 @@ inline Bool NetHashTable::findPlace(int hvalue,NetAddress *na,GenHashNode *&ghn)
 
 /* -------------------------------------------------------------------- */
 
+
+class OidHashTable: public GenHashTable {
+  int hash(int Oid){return Oid;}
+
+public:
+  OidHashTable(int i):GenHashTable(i){}
+
+  //
+  void add(int Oid, int OTI) {
+    int hvalue;
+    GenHashBaseKey *ghbk;
+    GenHashEntry *ghe;
+    //
+    hvalue = hash(Oid);
+    GenCast(Oid, int, ghbk, GenHashBaseKey*);
+    GenCast(OTI, int, ghe, GenHashEntry*);
+    GenHashTable::htAdd(hvalue, ghbk, ghe);
+  }
+
+  //
+  int find(int Oid) {
+    int hvalue = hash(Oid);
+    int shv;
+    GenHashNode *aux;
+    aux = htFindFirst(hvalue);
+    while (aux){
+      //
+      GenCast(aux->getBaseKey(), GenHashBaseKey*, shv, int);
+      if (shv == Oid)
+        {
+          int OTI;
+          GenCast(aux->getEntry(), GenHashEntry*, OTI, int);
+          return OTI;
+
+        }
+      aux = htFindNext(aux, hvalue);
+    }
+    return -1;
+  }
+
+  void remove(int Oid)
+  {
+    int hvalue = hash(Oid);
+    int te;
+    GenHashNode *aux;
+    aux = htFindFirst(hvalue);
+    while (aux){
+      //
+      GenCast(aux->getBaseKey(), GenHashBaseKey*, te, int);
+      if (te == Oid)
+        {
+          htSub(hvalue, aux);
+          return;
+        }
+      aux = htFindNext(aux, hvalue);
+    }
+  }
+};
+
+
+
+
 enum PO_TYPE {
   PO_Var,
   PO_Tert,
@@ -286,16 +348,16 @@ class OwnerTable {
   int no_used;
   int nextfree;
   int localized;  /* Used by the distpane */
-
+  int nxtId;
 
   void init(int,int);
   void compactify();
 public:
+  OidHashTable *hshtbl;
   void print();
 
   OZ_Term extract_info();
 
-  OwnerEntry *getOwner(int i)  { Assert(i>=0 && i<size); return &array[i];}
 
   int getSize() {return size;}
 
@@ -306,13 +368,25 @@ public:
     nextfree = END_FREE;
     no_used=0;
     localized = 0;
+    nxtId = 10000;
     init(0,sz);
-  }
+    hshtbl = new OidHashTable(100);
+ }
 
-  OwnerEntry* getEntry(int i){
-    Assert(i<=size);
-    if(array[i].isFree()) return NULL;
-    return &array[i];}
+  /*
+    Used when direct access to the array holding all the
+    owner entrys is needed. E.g gc, statistics...
+  */
+  OwnerEntry *getOtiEntry(int oti) { return &array[oti]; }
+
+  /*
+     Used when accessing owner entries from their unique id's
+     formaly known as OTI.
+  */
+  OwnerEntry* getEntry(int odi){
+    int oti = hshtbl->find(odi);
+    if((oti == -1) || array[oti].isFree()) return NULL;
+    return &array[oti];}
 
   void gcOwnerTableRoots();
   void gcOwnerTableFinal();
@@ -339,13 +413,14 @@ extern OwnerTable *ownerTable;
 class BorrowEntry: public OB_Entry {
 friend class BorrowTable;
 friend class BorrowCreditHandler;
-private:
-  BorrowCreditHandler bcreditHandler;
 
 protected:
   Bool canBeFreed();
 
 public:
+  BorrowCreditHandler bcreditHandler;
+
+
   void print_entry(int);
   OZ_Term extract_info(int);
 
@@ -413,7 +488,7 @@ public:
 };
 
 /* ********************************************************************** */
-/*   SECTION 15:: BorrowTable                                              */
+/*   SECTION 15:: BorrowTable                                             */
 /* ********************************************************************** */
 
 class BorrowTable {

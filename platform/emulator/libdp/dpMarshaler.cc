@@ -1577,13 +1577,13 @@ void marshalOwnHead(MarshalerBuffer *bs, int tag, int i)
   myDSite->marshalDSite(bs);
   marshalNumber(bs, i);
 
-  marshalCredit(bs,ownerTable->getOwner(i)->getCreditBig());
+  marshalCredit(bs,ownerTable->getEntry(i)->getCreditBig());
 }
 
 //
 void saveMarshalOwnHead(int oti, Credit &c)
 {
-  c = ownerTable->getOwner(oti)->getCreditBig();
+  c = ownerTable->getEntry(oti)->getCreditBig();
 }
 
 //
@@ -1600,7 +1600,7 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c)
 //
 void discardOwnHeadSaved(int oti, Credit c)
 {
-  ownerTable->getOwner(oti)->addCredit(c);
+  ownerTable->getEntry(oti)->addCredit(c);
 }
 
 //
@@ -2029,7 +2029,7 @@ unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
   Credit c = unmarshalCreditToOwner(bs, mt, OTI);
 #endif
   PD((UNMARSHAL,"OWNER o:%d",OTI));
-  OwnerEntry* oe=ownerTable->getOwner(OTI);
+  OwnerEntry* oe=ownerTable->getEntry(OTI);
   oe->addCredit(c);
   OZ_Term oz=oe->getValue();
   return oz;
