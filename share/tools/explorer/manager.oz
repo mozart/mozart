@@ -446,7 +446,7 @@ in
 
       meth wake(Node KillId)
 	 case {self.status getKill(_ $)}==KillId then
-	    case Node.mom of !False then
+	    case Node.mom of !Sentinel then
 	       <<Manager reset>>
 	    elseof Mom then
 	       {Mom  removeLast(<<Manager getPrevSol($)>>)}
