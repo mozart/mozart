@@ -26,7 +26,16 @@
 functor
 
 require
-   URL
+   URL(make:          UrlMake
+       is:            UrlIs
+       normalizePath: UrlNormalizePath
+       resolve:       UrlResolve
+       toVs:          UrlToVs
+       toAtom:        UrlToAtom
+       toBase:        UrlToBase
+       toString:      UrlToString
+       isRelative:    UrlIsRelative
+       toVsExtended:  UrlToVsExtended)
 
 prepare
 
@@ -54,7 +63,7 @@ prepare
 
 import
    Boot at 'x-oz://boot/Boot'
-
+   
 define
 
    %% The mechanism with which builtin modules can be accessed

@@ -247,7 +247,7 @@ ozc: Base.ozf ozbatch/Compile.oz
 
 ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
 	../url-defaults.oz
-	$(COMPILEEXEC) -l URL=URL.ozf ar/Main.oz -o $@
+	$(COMPILEEXEC) ar/Main.oz -o $@
 
 #---------------------------------------------------------------------
 # Installation
