@@ -78,7 +78,7 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 {
   Assert(isFeature(label));
 
-  if (obj->isClosedOrClassOrDeepOrLocked()) {
+  if (!am.isToplevel() || obj->isClosedOrClassOrDeepOrLocked()) {
     /* send to object in guard */
     if (obj->getDeepness()!=0 || obj->isClosed() || obj->isClass() ||
 	am.currentBoard != obj->getBoardFast())
