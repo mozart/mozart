@@ -26,7 +26,7 @@ int TaskStack::tasks()
 }
 
 #ifndef NEW_STACK
-void TaskStack::checkMax()
+void TaskStack::checkMax(int n)
 {
   int maxSize = getMaxSize();
   if (maxSize >= ozconf.stackMaxSize) {
@@ -52,6 +52,8 @@ loop:
     }
     ozconf.stackMaxSize = newMaxSize;
   }
+
+  resize(n);
 }
 #endif
 
