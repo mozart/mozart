@@ -62,7 +62,7 @@ local
 in
    class ScrolledTitleText from ScrolledTitleWidget
       feat
-	 TagBase 
+	 TagBase
       attr
 	 CurTag
 
@@ -72,11 +72,11 @@ in
 	 CurTag <- self.TagBase
 	 ScrolledTitleWidget,M
       end
-      
+
       meth newTag($)
 	 CurTag <- @CurTag + 1
       end
-      
+
       meth resetTags
 	 ScrolledTitleText,DeleteTags(CurTag <- self.TagBase)
       end
@@ -88,7 +88,7 @@ in
       meth resetReservedTags(N)
 	 ScrolledTitleText,DeleteTags(N 0)
       end
-      
+
       meth DeleteTags(N Base<=self.TagBase)
 	 case N < Base then skip else
 	    {self tk(tag delete N)}
@@ -96,7 +96,7 @@ in
 	 end
       end
    end
-   
+
    class ScrolledTitleCanvas from ScrolledTitleWidget
       meth tkInit(...)=M
 	 self.widget = Tk.canvas
@@ -165,7 +165,7 @@ local
 	 end
       end
    end
-      
+
 
    local
       fun {MakeAcc R}
@@ -175,7 +175,7 @@ local
 	 else R
 	 end
       end
-	 
+
       proc {ProcessMessage As M ?AMs}
 	 case As of nil then AMs=nil
 	 [] A|Ar then AMr in
@@ -194,7 +194,7 @@ local
 	 {AdjoinList tkInit parent#P|{ProcessMessage {Arity M} M}}
       end
    end
-   
+
    proc {MakeItems Ms Item Menu KeyBinder}
       case Ms of nil then skip
       [] M|Mr then
@@ -241,7 +241,7 @@ local
 	 MenuButton | {MakeButtons Mr Bar KeyBinder}
       end
    end
-      
+
 in
 
    fun {MyMenuBar Parent KeyBinder L R}
@@ -265,5 +265,5 @@ in
       end
       MenuBar
    end
-      
+
 end

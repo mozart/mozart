@@ -47,9 +47,16 @@ proc {OzcarError M}
 end
 
 fun {V2VS X}
-   P = {System.get errors}
+%   P = {System.get print}
+   P = '#'(depth:1 width:2)
 in
    {System.valueToVirtualString X P.depth P.width}
+end
+
+proc {SendEmacs M}
+   case {Cget useEmacsBar} then
+      {Emacs M}
+   else skip end
 end
 
 BreakpointStaticHelp   = {NewName}

@@ -4,22 +4,9 @@
 local
 
    fun {AppOK Name}
-      ({Cget stepRecordBuiltin}  orelse Name \= 'record')
-      andthen
       ({Cget stepDotBuiltin}     orelse Name \= '.')
       andthen
-      ({Cget stepWidthBuiltin}   orelse Name \= 'Width')
-      andthen
       ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
-      andthen
-      ({Cget stepSetSelfBuiltin} orelse Name \= 'setSelf')
-      andthen
-      ({Cget stepSystemProcedures} orelse
-       Name == '`,`'      orelse
-       Name == '`send`'   orelse
-       Name == '`ooSend`' orelse
-       Name == ''         orelse
-       {Atom.toString Name}.1 \= &`)
    end
 
    proc {OzcarReadEvalLoop S}
@@ -65,7 +52,7 @@ in
 	 {Dbg.off}
 	 {Thread.terminate @ReadLoopThread}
 	 {Compile '\\switch -debuginfo'}
-	 {Emacs removeBar}
+	 {SendEmacs removeBar}
 	 {Delay 1000}
 	 {self.toplevel tkClose}
       end
@@ -178,7 +165,7 @@ in
 		  Stack = {Dictionary.get self.ThreadDic I}
 	       in
 		  {Stack exit(M)}
-		  {Emacs bar(file:{CondSelect M file nofile}
+		  {SendEmacs bar(file:{CondSelect M file nofile}
 				    line:{CondSelect M line unit}
 				    column:{CondSelect M column unit}
 				    state:runnable)}
@@ -276,7 +263,7 @@ in
 	       case {Dbg.checkStopped T} then
 		  Gui,markNode(I runnable)
 		  case T == @currentThread then
-		     {Emacs configureBar(runnable)}
+		     {SendEmacs configureBar(runnable)}
 		     %Gui,doStatus('Thread #' # I # ' is runnable again')
 		  else skip end
 	       else
@@ -376,7 +363,7 @@ in
 	    case ThreadManager,EmptyTree($) then
 	       currentThread <- unit
 	       currentStack  <- unit
-	       {Emacs removeBar}
+	       {SendEmacs removeBar}
 	       Gui,selectNode(0)
 	       Gui,clearStack
 	       case Select then
@@ -397,7 +384,7 @@ in
 	       end
 	    else
 	       Gui,status('Thread #' # I # ' died')
-	       {Emacs removeBar}
+	       {SendEmacs removeBar}
 	       Gui,printStack(id:I frames:nil depth:0)
 	    end
 	 else skip end
@@ -467,13 +454,13 @@ in
 	 in
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
-	       {Emacs removeBar}
+	       {SendEmacs removeBar}
 	       {Thread.resume T}
 	    else
 	       L = {CondSelect Frame line unit}
 	       C = {CondSelect Frame column unit}
 	    in
-	       {Emacs bar(file:F line:L column:C state:runnable)}
+	       {SendEmacs bar(file:F line:L column:C state:runnable)}
 	       {Stack printTop}
 	    end
 	 else skip end
@@ -487,14 +474,15 @@ in
 	 Stack = @currentStack
       in
 	 case Stack == unit then
-	    Gui,doStatus(FirstSelectThread)
+	    %Gui,doStatus(FirstSelectThread)
+	    skip
 	 else
-	    Gui,doStatus('Re-calculating stack of thread #' #
-			 {Thread.id @currentThread} # '...')
+%	    Gui,doStatus('Re-calculating stack of thread #' #
+%			 {Thread.id @currentThread} # '...')
 	    {Stack rebuild(true)}
 	    {Stack print}
 	    {Stack emacsBarToTop}
-	    Gui,doStatus(' done' append)
+%	    Gui,doStatus(' done' append)
 	 end
       end
 
@@ -534,7 +522,7 @@ in
 	    else
 	       case PrintStack then
 		  case S == terminated then
-		     {Emacs removeBar}
+		     {SendEmacs removeBar}
 		     Gui,printStack(id:I frames:nil depth:0)
 		  else
 		     F L C Exc = {Stack getException($)}
@@ -542,9 +530,9 @@ in
 		     {Stack print}
 		     {Stack getPos(file:?F line:?L column:?C)}
 		     case Exc == nil then
-			{Emacs bar(file:F line:L column:C state:S)}
+			{SendEmacs bar(file:F line:L column:C state:S)}
 		     else
-			{Emacs bar(file:F line:L column:C state:blocked)}
+			{SendEmacs bar(file:F line:L column:C state:blocked)}
 			Gui,doStatus(Exc clear BlockedThreadColor)
 		     end
 		  end
