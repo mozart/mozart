@@ -5208,6 +5208,20 @@ OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
 
+OZ_C_proc_begin(BIforeignFDProps, 1)
+{
+  return OZ_unify(OZ_args[0], newSmallInt(
+#ifdef FOREIGNFDPROPS
+                                          1
+#else
+                                          0
+#endif
+                                          ));
+}
+OZ_C_proc_end
+
+// ---------------------------------------------------------------------------
+
 OZ_C_proc_proto(ozparser_parse)
 OZ_C_proc_proto(ozparser_init)
 OZ_C_proc_proto(ozparser_exit)
@@ -5828,6 +5842,7 @@ BIspec allSpec[] = {
 
   {"dumpThreads",0,BIdumpThreads},
 
+  {"foreignFDProps", 1, BIforeignFDProps},
   {"platform",1,BIplatform},
   {"ozhome",1,BIozhome},
 

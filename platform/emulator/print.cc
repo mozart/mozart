@@ -81,6 +81,7 @@ void printWhere(ostream &cout,ProgramCounter PC);
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
+  return OK;
   Thread *thr = sl->getElem ();
   if (thr->isDeadThread ())
     return NO;
@@ -227,7 +228,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       if (isEffectiveList(suspList))
         stream << " a" << suspList->length();
   
-      stream << " {0,1}>";
+      stream << " {0 1}>";
       break;
     }
 
@@ -1014,7 +1015,7 @@ PRINT(Thread)
       break;
 
     case S_NEW_PR_THR:
-      stream << "'new prop'";
+      stream << *item.propagator;
       break;
 
     default:
@@ -1124,13 +1125,12 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
 	 << this
 	 << endl;
 
-  stream << indent(offset)
-	 << "Suspension List:\n"; 
-  suspList->print(stream, depth, offset+3);
-
-  stream << indent(offset) << "HomeNode: ";
+  stream << indent(offset) << "Home board: ";
   home->getBoardFast()->print(stream,depth);
   stream << endl;
+
+  stream << indent(offset) << "Suspension List:\n"; 
+  suspList->print(stream, depth, offset+3);
 
   switch(getType()){
   case FDVariable:
@@ -1144,7 +1144,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
     break;
 
   case BoolVariable:
-    stream << indent(offset) << "Boolean Domain: {0,1}"; 
+    stream << indent(offset) << "Boolean Domain: {0 1}" << endl; 
     break;
 
   case OFSVariable:
@@ -1498,18 +1498,22 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 void printFromTo(ostream &ofile, int f, int t)
 {
   if (f == t)
-    ofile << ' ' << f;
+    ofile << f;
   else if ((t - f) == 1)
-    ofile << ' ' << f << ' ' << t;
+    ofile << f << ' ' << t;
   else
-    ofile << ' ' << f << RANGESTR << t;
+    ofile << f << RANGESTR << t;
 }
 
 void FDIntervals::print(ostream &ofile, int idnt) const
 {
+  Bool flag = FALSE;
+
   ofile << indent(idnt) << '{';
-  for (int i = 0; i < high; i += 1)
+  for (int i = 0; i < high; i += 1) {
+    if (flag) ofile << ' '; else flag = TRUE; 
     printFromTo(ofile, i_arr[i].left, i_arr[i].right);
+  }
   ofile << " }";
 }
 
@@ -1541,18 +1545,21 @@ void FDIntervals::printDebugLong(void) const
 
 void FDBitVector::print(ostream &ofile, int idnt) const
 {
+  Bool flag = FALSE;
+
   ofile << indent(idnt) << '{';
 
   int len = mkRawOutline(fd_bv_left_conv, fd_bv_right_conv);
   for (int i = 0; i < len; i += 1) {
-    ofile << ' ' << fd_bv_left_conv[i];
+    if (flag) ofile << ' '; else flag = TRUE; 
+    ofile << fd_bv_left_conv[i];
     if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
       if (fd_bv_left_conv[i] + 1 == fd_bv_right_conv[i])
 	ofile << ' ' << fd_bv_right_conv[i];
       else
 	ofile << RANGESTR << fd_bv_right_conv[i];
   }
-  ofile << " }";
+  ofile << '}';
 }
 
 void FDBitVector::printLong(ostream &ofile, int idnt) const
@@ -1586,12 +1593,12 @@ void FDBitVector::printDebugLong(void) const
 void OZ_FiniteDomain::print(ostream &ofile, int idnt) const
 {
   if (getSize() == 0)
-    ofile << indent(idnt) << "{ - empty - }";
+    ofile << indent(idnt) << "{ empty }";
   else switch (getType()) {
   case fd_descr:    
       ofile << indent(idnt) << '{';
       printFromTo(ofile, min_elem, max_elem);
-      ofile << " }";
+      ofile << "}";
     break;
   case bv_descr:
     get_bv()->print(ofile, idnt);

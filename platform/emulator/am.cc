@@ -622,7 +622,7 @@ PROFILE_CODE1
   
  // already propagated susps remain in suspList
     if (thr->isPropagated ()) {
-      if (thr->isPropagator ()) {
+      if (thr->isPropagator () || thr->isNewPropagator ()) {
 	if (calledBy && !(thr->isUnifyThread ())) {
 	  switch (isBetween(thr->getBoardFast (), var->getBoardFast ())) {
 	  case B_BETWEEN:
@@ -920,7 +920,8 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
         Thread *thr = suspList->getElem ();
 
         if (thr->isDeadThread () ||
-	    (thr->isPropagated () && !(thr->isPropagator ()))) {
+	    (thr->isPropagated () && 
+	     !(thr->isPropagator () || thr->isNewPropagator ()))) {
             suspList=suspList->getNext();
             continue;
         }
