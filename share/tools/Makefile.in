@@ -126,8 +126,9 @@ TOOLSFILES = \
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
-	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf Inspector.ozf \
+	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf \
 	EvalDialog.ozf
+#        Inspector.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -219,8 +220,8 @@ install-main: all \
 	$(OZBIN) $(BINFILES)
 
 install-images: \
-	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
-	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
+	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
+#	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
 
 $(OZTOOLS) $(TOOLSDIRS) $(OZBIN):
 	$(INSTALL_DIR) $@
@@ -267,7 +268,7 @@ $(CACHEDIR):
 clean:
 	rm -f *~ *.bak ./*/*~ ./*/*/*~ ./*/*.bak ./*/*/*.bak
 	rm -f ozcar-version.oz
-	rm -f $(FUNCTORS) $(INSPECTOROBJS)
+	rm -f $(FUNCTORS) # $(INSPECTOROBJS)
 
 veryclean: clean
 	rm -f -r TAGS
