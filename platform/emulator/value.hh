@@ -113,7 +113,10 @@ public:
   Name() { Assert(0); }
   static Name *newName(Board *b);
 
-  Board *getBoard(); // see am.icc
+  Board *getBoardInternal() {
+    return (hasGName() || isNamedName())
+      ? rootBoard() : (Board*)ToPointer(homeOrGName);
+  }
 
   int getSeqNumber() { return getOthers(); }
   unsigned int hash() { return getSeqNumber(); }
@@ -672,14 +675,12 @@ private:
     boardOrGName.setPtr(b);
     boardOrGName.setType(CWH_Board);
   }
-  Board *getBoardInternal()
-  {
-    return (Board*)boardOrGName.getPtr();
-  }
 public:
   ConstTermWithHome(Board *b, TypeOfConst t) : ConstTerm(t) { setBoard(b);  }
 
-  Board *getBoard();
+  Board *getBoardInternal() {
+    return hasGName() ? rootBoard() : (Board*)boardOrGName.getPtr();
+  }
 
   void gcConstTermWithHome();
   void setGName(GName *gn) { 
@@ -716,8 +717,9 @@ public:
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
 
-  INLINE Board *getBoard();
-  Board *getBoardInternal();
+  Board *getBoardInternal() {
+    return isLocal() ? (Board*)getPointer() : rootBoard();
+  }
   void setBoard(Board *b);
 
   Bool isLocal()   { return (getTertType() == Te_Local); }

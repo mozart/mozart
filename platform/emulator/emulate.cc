@@ -112,7 +112,7 @@ Bool hf_raise_failure(AM *e, TaggedRef t)
 {
   if (!e->isToplevel() &&
       (!e->currentThread->hasCatchFlag() || 
-       e->currentBoard!=e->currentThread->getBoard())) {
+       e->currentBoard!=GETBOARD(e->currentThread))) {
     return OK;
   }
   e->exception.info  = ozconf.errorDebug?t:NameUnit;
@@ -426,7 +426,7 @@ void Thread::makeRunning ()
     setHasStack ();
     item.threadBody = am.allocateBody ();
 
-    getBoard()->setNervous ();
+    GETBOARD(this)->setNervous ();
     // no break here
 
   case S_RTHREAD:
@@ -949,7 +949,7 @@ LBLerror:
 
 LBLpreemption:
   SaveSelf;
-  Assert(CTT->getBoard()==CBB);
+  Assert(GETBOARD(CTT)==CBB);
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
@@ -989,7 +989,7 @@ LBLstart:
 
   // Install board
   {
-    Board *bb=CTT->getBoard();
+    Board *bb=GETBOARD(CTT);
     if (CBB != bb) {
       switch (e->installPath(bb)) {
       case INST_OK:
@@ -1156,7 +1156,7 @@ LBLcheckEntailmentAndStability:
 	sa = SolveActor::Cast (CBB->getActor ());
 	//  'nb' points to some board above the current one,
 	// so, 'decSolveThreads' will start there!
-	nb = sa->getBoard();
+	nb = GETBOARD(sa);
 
 	//
 	//  kost@ : optimize the most probable case!
@@ -1231,7 +1231,7 @@ LBLdiscardThread:
     //  Note that we may not use the 'currentSolveBoard' test here,
     // because it may point to an irrelevant board!
     if (CTT->isInSolve()) {
-      Board *tmpBB = CTT->getBoard();
+      Board *tmpBB = GETBOARD(CTT);
 
       if (tmpBB->isSolve()) {
 	//
@@ -1240,7 +1240,7 @@ LBLdiscardThread:
 	Assert (sa);
 	Assert (sa->getSolveBoard () == tmpBB);
 
-	e->decSolveThreads (sa->getBoard());
+	e->decSolveThreads(GETBOARD(sa));
       } else {
 	e->decSolveThreads (tmpBB);
       }
@@ -1285,7 +1285,7 @@ LBLsuspendThread:
     //
     //  First, set the board and self, and perform special action for 
     // the case of blocking the root thread;
-    Assert(CTT->getBoard()==CBB);
+    Assert(GETBOARD(CTT)==CBB);
     SaveSelf;
 
     // this can happen if \sw -threadedqueries,
@@ -1736,7 +1736,7 @@ LBLdispatcher:
 
       Object *self = e->getSelf();
 
-      if (!e->isToplevel() && e->currentBoard != self->getBoard()) {
+      if (!e->isToplevel() && e->currentBoard != GETBOARD(self)) {
 	(void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
 	goto LBLraise;
      }
@@ -2050,7 +2050,7 @@ LBLdispatcher:
       switch(t->getTertType()){
       case Te_Local:{
 	if(!e->isToplevel()){
-	  if (e->currentBoard != ((LockLocal*)t)->getBoard()) {
+	  if (e->currentBoard != GETBOARD((LockLocal*)t)) {
 	    (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
 	    goto LBLraise;}}
 	if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
@@ -2622,6 +2622,7 @@ LBLdispatcher:
       CAA = new AskActor(CBB,CTT,
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
+      CBB->incSuspCount(); 
       CTS->pushActor(CAA);
       DISPATCH(3);
     }
@@ -2629,6 +2630,7 @@ LBLdispatcher:
   Case(CREATEOR)
     {
       CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
+      CBB->incSuspCount(); 
       CTS->pushActor(CAA);
 
       DISPATCH(1);
@@ -2639,6 +2641,7 @@ LBLdispatcher:
       Board *bb = CBB;
 
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
+      CBB->incSuspCount(); 
       CTS->pushActor(CAA);
 
       if (bb->isWait()) {
@@ -2655,6 +2658,7 @@ LBLdispatcher:
       Board *bb = CBB;
 
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
+      CBB->incSuspCount(); 
       CTS->pushActor(CAA);
 
       Assert(CAA->isChoice());
@@ -2670,7 +2674,14 @@ LBLdispatcher:
 
   Case(CLAUSE)
     {
-      Board *bb = new Board(CAA,CAA->isAsk()?Bo_Ask:Bo_Wait);
+      Board *bb;
+      if (CAA->isAsk()) {
+	bb = new Board(CAA,Bo_Ask);
+	AskActor::Cast(CAA)->addAskChild(bb);
+      } else {
+	bb = new Board(CAA,Bo_Wait);
+	WaitActor::Cast(CAA)->addWaitChild(bb);
+      }
       e->setCurrent(bb,OK);
       CBB->incSuspCount();
       DebugCode(currentDebugBoard=CBB);
@@ -2684,6 +2695,7 @@ LBLdispatcher:
     {
       Assert(CAA->isWait());
       Board *bb = new Board(CAA, Bo_Wait | Bo_Waiting);
+      WaitActor::Cast(CAA)->addWaitChild(bb);
 
       bb->setBody(PC+1, Y, G, NULL,0);
 
@@ -3238,8 +3250,11 @@ LBLfailure:
   Actor *aa=CBB->getActor();
   Assert(!aa->isCommitted());
 
-  if (aa->isAskWait()) {
-    (AWActor::Cast(aa))->failChild(CBB);
+  if (aa->isAsk()) {
+    (AskActor::Cast(aa))->failAskChild(CBB);
+  }
+  if (aa->isWait()) {
+    (WaitActor::Cast(aa))->failWaitChild(CBB);
   }
 
   Assert(!CBB->isFailed());
@@ -3247,7 +3262,7 @@ LBLfailure:
 
   e->reduceTrailOnFail();
   CBB->unsetInstalled();
-  e->setCurrent(aa->getBoard());
+  e->setCurrent(GETBOARD(aa));
   DebugCheckT(currentDebugBoard=CBB);
 
 
@@ -3279,7 +3294,7 @@ LBLfailure:
 
       //  The following must hold because 'tt' can suspend 
       // only in the board where the actor itself is located;
-      Assert(tt->getBoard() == CBB);
+      Assert(GETBOARD(tt) == CBB);
 
       tt->suspThreadToRunnable();
 
