@@ -5529,16 +5529,9 @@ OZ_C_proc_end
  * System specials
  * ------------------------------------------------------------ */
 
-OZ_C_proc_begin(BIsystemEq,2)
-{
-  return termEq(OZ_getCArg(0),OZ_getCArg(1)) ? PROCEED : FAILED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIsystemEqB,3)
-{
-  OZ_Term ret = termEq(OZ_getCArg(0),OZ_getCArg(1)) ? NameTrue : NameFalse;
-  return OZ_unify(OZ_getCArg(2),ret);
+OZ_C_proc_begin(BIsystemEq,3) {
+  return OZ_unify(OZ_getCArg(2),
+		  termEq(OZ_getCArg(0),OZ_getCArg(1)) ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
@@ -5704,152 +5697,6 @@ OZ_C_proc_begin(BIdeepReadCell,2)
 OZ_C_proc_end
 
 
-/* ---------------------------------------------------------------------
- * Destructive dot
- *   this is used in the array/dictionary objects
- *
- * NOTE: similar functions are dot, genericSet, uparrow, subtree, hasFeature
- * ---------------------------------------------------------------------*/
-
-OZ_C_proc_begin(BIgenericSet, 3)
-{
-  OZ_Term term = OZ_getCArg(0);
-  OZ_Term fea = OZ_getCArg(1);
-  OZ_Term val = OZ_getCArg(2);
-
-  DEREF(term, termPtr, termTag);
-  DEREF(fea, feaPtr, feaTag);
-
-  if (isAnyVar(feaTag)) {
-    switch (termTag) {
-    case LTUPLE:
-    case SRECORD:
-      OZ_suspendOn (makeTaggedRef(feaPtr));
-    case SVAR:
-    case UVAR:
-      OZ_suspendOn2 (makeTaggedRef(feaPtr),makeTaggedRef(termPtr));
-    case CVAR:
-      if (tagged2CVar(term)->getType()!=OFSVariable) return FAILED;
-      OZ_suspendOn2 (makeTaggedRef(feaPtr),makeTaggedRef(termPtr));
-    default:
-      return FAILED;
-    }
-  }
-
-  switch (termTag) {
-  case LTUPLE:
-    {
-      if (!isSmallInt(fea)) {
-	return FAILED;
-      }
-      int i2 = smallIntValue(fea);
-      
-      switch (i2) {
-      case 1:
-	tagged2LTuple(term)->setHead(val);
-	return PROCEED;
-      case 2:
-	tagged2LTuple(term)->setTail(val);
-	return PROCEED;
-      }
-      return FAILED;
-    }
-    
-  case SRECORD:
-    {
-      if ( ! isFeature(feaTag) ) {
-	return FAILED;
-      }
-      SRecord *rec = tagged2SRecord(term);
-      if (rec->setFeature(fea, val) ) {
-	return PROCEED;
-      }
-      return FAILED;
-    }
-    
-  case UVAR:
-  case SVAR:
-    if (!isFeature(feaTag)) {
-      return FAILED;
-    }
-    OZ_suspendOn (makeTaggedRef(termPtr));
-
-  case CVAR:
-    {
-      if (!isFeature(feaTag)) {
-        return FAILED;
-      }
-      if (tagged2CVar(term)->getType()!=OFSVariable) return FAILED;
-      OZ_suspendOn (makeTaggedRef(termPtr));
-    }
-
-  default:
-    return FAILED;
-  }
-}
-OZ_C_proc_end
-
-/* ---------------------------------------------------------------------
- * atomHash ???
- * --------------------------------------------------------------------- */
-
-OZ_C_proc_begin(BIatomHash, 3)
-{
-  OZ_Term atom = OZ_getCArg(0);
-  if (OZ_isVariable(atom)) {
-      OZ_suspendOn(atom);
-  }    
-
-  OZ_Term modulo = OZ_getCArg(1);
-  if (OZ_isVariable(modulo)) {
-    OZ_suspendOn(modulo);
-  }    
-
-  OZ_Term ret = OZ_getCArg(2);
-
-  if (!OZ_isAtom(atom)) {
-    TypeErrorT(0,"Atom");
-  }
-  if (!OZ_isInt(modulo)) {
-    TypeErrorT(1,"SmallInt");
-  }
-  char *nm = OZ_atomToC(atom);
-  int mod = OZ_intToC(modulo);
-
-  // 'hashfunc' is taken from 'Aho,Sethi,Ullman: Compilers ...', page 436
-  unsigned h = 0;
-  {
-    unsigned g;
-    for(; *nm; nm++) {
-      h = (h << 4) + (*nm);
-      if ((g = h & 0xf0000000)) {
-	h = h ^ (g >> 24);
-	h = h ^ g;
-      }
-    } 
-  }
-  return OZ_unifyInt(ret,h % mod + 1);
-}
-OZ_C_proc_end
-
-/* ---------------------------------------------------------------------
- * gensym ???
- * --------------------------------------------------------------------- */
-
-static int genCount = 0;
-
-OZ_C_proc_begin(BIgensym,2)
-{
-  OZ_declareAtomArg(0,str);
-  OZ_Term out = OZ_getCArg(1);
-  char *s = new char[strlen(str) + 20];
-  sprintf(s,"%s%04d",str,genCount++);
-  
-  OZ_Return ret = OZ_unifyAtom(out,s);
-  delete [] s;
-  return ret;
-}
-OZ_C_proc_end 
 
 /* ---------------------------------------------------------------------
  * Browser: special builtins: getsBound, intToAtom
@@ -5901,22 +5748,6 @@ OZ_C_proc_begin(BIgetsBoundB, 2)
   }
 
   return (PROCEED);		// no result yet;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIintToAtom, 2)
-{
-  OZ_Term inP = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  NONVAR(inP,in,_1);
-
-  if (OZ_isInt(in)) {
-    char *str = toC(in);
-    OZ_Return ret = OZ_unifyAtom(out,str);
-    return ret;
-  }
-  TypeErrorT(0,"Int");
 }
 OZ_C_proc_end
 
@@ -7420,12 +7251,11 @@ BIspec allSpec2[] = {
 
   {"Sleep",          3, BIsleep,		0},
 
-  {"garbageCollection",0,BIgarbageCollection,	0},
+  {"System.gcDo",    0, BIgarbageCollection,	0},
 
-  {"apply",          2, BIapply,		0},
+  {"System.apply",   2, BIapply,		0},
 
-  {"eq",             2, BIsystemEq,	        0},
-  {"eqB",            3, BIsystemEqB,		0},
+  {"System.eq",      3, BIsystemEq,		0},
 
   {"=",              2, BIunify,		0},
   {"fail",           VarArity,BIfail,		0},
@@ -7434,21 +7264,14 @@ BIspec allSpec2[] = {
   {"deepReadCell",   2, BIdeepReadCell,		0},
   {"deepFeed",       2, BIdeepFeed,		0},
 
-  {"genericSet",     3, BIgenericSet,		0},
-
-  {"atomHash",       3, BIatomHash,		0},
-
-  {"gensym",         2, BIgensym,		0},
-
   {"getsBound",      1, BIgetsBound,		0},
   {"getsBoundB",     2, BIgetsBoundB,		0},
-  {"intToAtom",      2, BIintToAtom,		0},
 
   {"connectLingRef", 1, BIconnectLingRef,	0},
   {"getLingRefFd",   1, BIgetLingRefFd,		0},
   {"getLingEof",     1, BIgetLingEof,		0},
   {"getOzEof",       1, BIgetLingEof,		0},
-  {"constraints",    2, BIconstraints,		0},
+  {"System.constraints", 2, BIconstraints,		0},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
@@ -7492,7 +7315,7 @@ BIspec allSpec2[] = {
   {"stopThread",1,BIstopThread},
   {"contThread",1,BIcontThread},
   {"queryDebugState",2,BIqueryDebugState},
-  {"breakpoint",0,BIbreakpoint},
+  {"Debug.breakpoint",0,BIbreakpoint},
 
   {"topVarInfo",2,BItopVarInfo},
   {"topVars",2,BItopVars},
@@ -7532,7 +7355,7 @@ BIspec allSpec2[] = {
   {"nospy",       1, BInospy},
   {"traceOn",     0, BItraceOn},
   {"traceOff",    0, BItraceOff},
-  {"displayCode", 2, BIdisplayCode},
+  {"Debug.displayCode", 2, BIdisplayCode},
 
   {"System_getPrintName",2,BIgetPrintName},
 
