@@ -62,12 +62,10 @@ fi
 
 
 # setting line editor
-if [ ! -f /usr/share/gs/bin/ile -o $TERM = emacs ]; then
+ILE=$OZHOME/bin/$OZARCH/ile
+if [ ! -f $ILE -o $TERM = emacs ]; then
    ILE=""  # running under emacs
-else
-   ILE=/usr/share/gs/bin/ile
 fi
-
 
 
 cmd=`basename $howcalled`
