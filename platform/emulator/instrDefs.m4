@@ -109,7 +109,7 @@ dnl   second argument is 2 * arity + (is_tailcall? 1: 0)
 instruction(marshalledFastCall,Constant,ArityAndIsTail)
 
 dnl   second argument is a flag: non-zero iff tailcall
-instruction(genFastCall,PredicateRef,IsTail)
+instruction(genFastCall,PredicateRef,ArityAndIsTail)
 
 dnl   second argument is dummy argument
 instruction(fastCall,PredicateRef,Dummy)
