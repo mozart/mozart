@@ -111,6 +111,7 @@ void Pickler::processExtension(OZ_Term t)
 
   //
   marshalDIF(bs,DIF_EXTENSION);
+  rememberNode(this,bs,t);
   marshalNumber(bs, tagged2Extension(t)->getIdV());
   // Pickling must be defined for this entity:
   Bool p = tagged2Extension(t)->pickleV(bs);
@@ -1018,9 +1019,12 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
         {
 #ifndef USE_FAST_UNMARSHALER
           int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          RETURN_ON_ERROR(e);
           int type = unmarshalNumberRobust(bs, &e);
           RETURN_ON_ERROR(e);
 #else
+          int refTag = unmarshalRefTag(bs);
           int type = unmarshalNumber(bs);
 #endif
           OZ_Term value = oz_extension_unmarshal(type,bs);
@@ -1028,6 +1032,7 @@ OZ_Term unpickleTermInternal(PickleBuffer *bs)
             break;  // next value is nogood
           }
           b->buildValue(value);
+          b->set(value, refTag);
           break;
         }
 
