@@ -55,7 +55,7 @@ variables, and the names that uniquely idententifies the procedures, cells
 and the various types of chunks (classes, objects, functors, etc.).
 Conceptually the  store is modeled as a conjunctive logical
 formula:
-<MATH>\exist Y_1 \ldots \Y_m : X_1=U_1 \wedge \ldots \wedge X_n=U_n</MATH>,
+<MATH>\exists Y_1 \ldots Y_m : X_1=U_1 \wedge \ldots \wedge X_n=U_n</MATH>,
 where the <MATH>X_i</MATH> are the variables and <MATH>U_i</MATH>
 are Oz values or variables, and <MATH>Y_i </MATH> are the union of all
 variables occuring in <MATH>X_i </MATH> and <MATH>U_i </MATH>.
@@ -310,9 +310,9 @@ or running forever in <MATH/SP_1/.
 with ?{S2}.
 
 <ITEM>If  <MATH/SP_1/ is entailed, assume it has been reduced to
-the store <MATH/\theta/ and the set of local variables <MATH/\SX/
+the store <MATH/\theta/ and the set of local variables <MATH/SX/
 In this case, the space is merged
-with the parent space. <MATH/\theta/ and <MATH/\SX/
+with the parent space. <MATH/\theta/ and <MATH/SX/
 added to that of the parent store. And the father thread continues
 with the execution of ?{S1}.
 
@@ -323,7 +323,8 @@ with the execution of ?{S1}.
 Prolog's conditional << P -> Q ; R >>. Oz is a bit more careful about
 the scope of variables, so local variables <<?{Xi}>> have to be
 introduced explicitly. <<cond X in P then Q else R end>> always has
-the logical semantics <MATH/\exist X : P \and Q \or (\not \exist X : P) \and R\, given that we stick to the logical part of Oz. This is not always true
+the logical semantics <MATH/\exists X : P \wedge Q \vee (\not \exists X : P) \wedge R/,
+given that we stick to the logical part of Oz. This is not always true
 in Prolog.
 
 <SUBSECTION><TITLE/Parallel Conditional/
