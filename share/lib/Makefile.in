@@ -231,10 +231,10 @@ GTK.ozf: gtk/GTK.oz \
          gtk/constdeclarations.oz gtk/constdefinitions.oz
 
 gtk/constdeclarations.oz: gtk/genconstants.pl
-         cd gtk; $(PERL) genconstants.pl; cd ..
+         $(PERL) $(VPATH)/gtk/genconstants.pl
 
 gtk/constdefinitions.oz: gtk/genconstants.pl
-         cd gtk; $(PERL) genconstants.pl; cd ..
+         $(PERL) $(VPATH)/gtk/genconstants.pl
 
 # compiler dependencies
 COMPILERSRC1 = \
@@ -384,7 +384,7 @@ CLEANFILES = \
         CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc \
-        gtk/constdefinitions.oz gtk/constdeclarations.oz
+        constdefinitions.oz constdeclarations.oz
 
 clean:
         -rm -f $(CLEANFILES)
