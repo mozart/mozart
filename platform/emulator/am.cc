@@ -278,6 +278,8 @@ void AM::init(int argc,char **argv)
   debugMode       = NO;
   debugStreamTail = OZ_newVariable();
 
+  propLocation    = NO;
+
   threadsPool.initThreads();
 
   // builtins

@@ -142,6 +142,7 @@ enum EmulatorPropertyIndex {
   PROP_DISTRIBUTION_VIRTUALSITES,
   // INTERNAL
   PROP_INTERNAL_DEBUG,
+  PROP_INTERNAL_PROPLOCATION,
   PROP_INTERNAL_SUSPENSION,
   PROP_INTERNAL_STOP,
   PROP_INTERNAL_DEBUG_IP,
@@ -431,6 +432,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #endif
   // INTERNAL
   CASE_BOOL(PROP_INTERNAL_DEBUG,am.debugmode());
+  CASE_BOOL(PROP_INTERNAL_PROPLOCATION,am.isPropagatorLocation());
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
@@ -727,6 +729,9 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL_DO(PROP_INTERNAL_DEBUG,
 		 if (INT__) am.setdebugmode(OK);
 		 else       am.setdebugmode(NO));
+    CASE_BOOL_DO(PROP_INTERNAL_PROPLOCATION,
+		 if (INT__) am.setPropagatorLocation(OK);
+		 else       am.setPropagatorLocation(NO));
     CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
     CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
     CASE_NAT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
@@ -1036,6 +1041,7 @@ void initVirtualProperties()
   // INTERNAL
   VirtualProperty::add("internal",PROP_INTERNAL);
   VirtualProperty::add("internal.debug",PROP_INTERNAL_DEBUG);
+  VirtualProperty::add("internal.propLocation",PROP_INTERNAL_PROPLOCATION);
   VirtualProperty::add("internal.suspension",PROP_INTERNAL_SUSPENSION);
   VirtualProperty::add("internal.stop",PROP_INTERNAL_STOP);
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
