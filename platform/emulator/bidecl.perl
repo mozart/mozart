@@ -8,6 +8,11 @@
 ###             generates the table of builtins for the emulator
 ###     bidecl.perl -oztable
 ###             generates the table of builtins for the Oz compiler
+###     bidecl.perl -builtins Foo Bar Baz
+###             generates the table of builtins for the compiler
+###             using files modFoo.spec modBar.spec modBaz.spec
+###             and for each one: adds the appropriate module prefix.
+###             thus a builtin bi in Foo is renamed Foo.bi
 ###
 ### ADDITIONAL OPTIONS
 ###
@@ -216,6 +221,25 @@ sub OZTABLE {
     }
 }
 
+sub BUILTINS {
+    foreach $mod (@ARGV) {
+        require "mod$mod.spec";
+        $builtins = {};
+        while (($k,$v) = each %builtins_all) {
+            $k = "\\'$k\\'" unless $k =~ /^[a-zA-Z]/;
+            if (exists $v->{negated}) {
+                my $neg = $v->{negated};
+                if ($neg !~ /^[a-zA-Z]/) {
+                    $neg = "\\'$neg\\'";
+                }
+                $v->{negated} = "$mod.$neg";
+            }
+            $builtins->{"$mod.$k"} = $v;
+        }
+        &OZTABLE;
+    }
+    exit 0;
+}
 
 my %include = ();
 my %exclude = ();
@@ -238,6 +262,7 @@ while (@ARGV) {
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
     elsif ($option eq '-file')       { push @files,shift; }
+    elsif ($option eq '-builtins')   {  &BUILTINS; }
     else { die "unrecognized option: $option"; }
 }
 
@@ -257,5 +282,5 @@ foreach $file (@files) {
 
     if ($choice eq 'interface' )    { &INTERFACE($file, $init_fun_name); }
     elsif ($choice eq 'oztable')    { &OZTABLE; }
-    else { die "must specify one of: -interface -oztable"; }
+    else { die "must specify one of: -interface -oztable -builtins"; }
 }
