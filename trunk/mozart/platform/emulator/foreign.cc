@@ -112,52 +112,51 @@ int OZ_isObject(OZ_Term term)
 }
 
 
-inline
-OZ_Return suspendOnVar(OZ_Term *varPtr)
-{
-  am.addSuspendVarList(varPtr);
-  return SUSPEND;
-}
-
 /*
  * list checking
  */
 
 inline
-OZ_Return isList(OZ_Term l, Bool checkChar)
+int isList(OZ_Term l, OZ_Term *var, Bool checkChar)
 {
   while (1) {
-    DEREF(l,lPtr,lTag)
-    if (isAnyVar(lTag)) return suspendOnVar(lPtr);
+    DEREF(l,lPtr,lTag);
+    if (isAnyVar(lTag)) {
+      if (var) *var=makeTaggedRef(lPtr);
+      return 0;
+    }
 
     if (isCons(lTag)) {
       if (checkChar) {
 	OZ_Term h = head(l);
 	DEREF(h,hPtr,hTag);
 	if (isAnyVar(hTag)) {
-	  return suspendOnVar(hPtr);
+	  if (var) *var=makeTaggedRef(hPtr);
+	  return 0;
 	}
-	if (!isSmallInt(hTag)) return FAILED;
+	if (!isSmallInt(hTag)) return 0;
 	int i=smallIntValue(h);
-	if (i<0 || i>255) return FAILED;
+	if (i<0 || i>255) return 0;
       }
       l = tail(l);
     } else if (isNil(l)) {
-      return PROCEED;
+      return 1;
     } else {
-      return FAILED;
+      return 0;
     }
   }
 }
 
-OZ_Return OZ_isString(OZ_Term term)
+int OZ_isString(OZ_Term term,OZ_Term *var)
 {
-  return isList(term,OK);
+  if (var) *var = 0;
+  return isList(term,var,OK);
 }
 
-OZ_Return OZ_isList(OZ_Term term)
+int OZ_isList(OZ_Term term,OZ_Term *var)
 {
-  return isList(term,NO);
+  if (var) *var = 0;
+  return isList(term,var,NO);
 }
 
 int OZ_isTrue(OZ_Term term)
@@ -403,7 +402,7 @@ char *OZ_parseInt(char *s)
     p++;
   }
   if (!isdigit(*p++)) {
-    return NULL;
+    return 0;
   }
   while (isdigit(*p)) {
     p++;
@@ -411,24 +410,6 @@ char *OZ_parseInt(char *s)
   return p;
 }
 
-
-char *OZ_intToCString(OZ_Term term)
-{
-  term = deref(term);
-  if (isSmallInt(term)) {
-    TmpBuffer.reset();
-    TmpBuffer.put_int(smallIntValue(term));
-    char *s = TmpBuffer.string();
-    if (s[0] == '-') s[0] = '~';
-    return s;
-  }
-  BigInt *bb = tagged2BigInt(term);
-  TmpBuffer.reset();
-  char *str = TmpBuffer.allocate(bb->stringLength());
-  bb->getString(str);
-  if (*str == '-') *str = '~';
-  return TmpBuffer.string();
-}
 
 /*
  * Floats
@@ -462,25 +443,66 @@ OZ_Term OZ_CStringToFloat(char *s)
   return OZ_float(res);
 }
 
-char *OZ_floatToCString(OZ_Term term)
-{
-  term = deref(term);
 
+/*
+ * Numbers
+ */
+
+OZ_Term OZ_CStringToNumber(char *s)
+{
+  if (strchr(s, '.') != NULL) {
+    return OZ_CStringToFloat(s);
+  }
+  return OZ_CStringToInt(s);
+}
+
+
+/*
+ * Features
+ */
+
+int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
+{
+  term1 = deref(term1);
+  term2 = deref(term2);
+  return featureCmp(term1,term2);
+}
+
+
+/*
+ * PRINTING
+ */
+
+inline
+void int2buffer(OZ_Term term)
+{
+  char *s = TmpBuffer.getPtr();
+  if (isSmallInt(term)) {
+    TmpBuffer.put_int(smallIntValue(term));
+  } else {
+    BigInt *bb=tagged2BigInt(term);
+    char *str = TmpBuffer.allocate(bb->stringLength());
+    bb->getString(str);
+  }
+  if (s[0] == '-') s[0] = '~';
+}
+
+inline
+void float2buffer(OZ_Term term)
+{
   double f = floatValue(term);
-  TmpBuffer.reset();
-  TmpBuffer.put_float(f);
-  char *str = ozstrdup(TmpBuffer.string());
+  StringBuffer tmp;
+  tmp.put_float(f);
+  char *str = tmp.string();
 
   // normalize float
   Bool hasDot = NO;
-  Bool hasE = NO;
   Bool hasDigits = NO;
-  TmpBuffer.reset(); 
   char *s = str;
   for (char c=*s++; c ; c=*s++) {
     switch (c) {
     case 'e':
-      if (!hasDot) TmpBuffer.put('.');
+      if (!hasDot) TmpBuffer.put2('.','0');
       TmpBuffer.put(c);
       break;
     case '.':
@@ -499,49 +521,299 @@ char *OZ_floatToCString(OZ_Term term)
       break;
     }
   }
-  delete [] str;
+}
+
+inline
+void atomq2buffer(char *s)
+{
+  char c;
+  while ((c = *s)) {
+    if (iscntrl(c)) {
+      switch (c) {
+      case '\'':
+	TmpBuffer.put2('\\','\'');
+	break;
+      case '\a':
+	TmpBuffer.put2('\\','a');
+	break;
+      case '\b':
+	TmpBuffer.put2('\\','b');
+	break;
+      case '\f':
+	TmpBuffer.put2('\\','f');
+	break;
+      case '\n':
+	TmpBuffer.put2('\\','n');
+	break;
+      case '\r':
+	TmpBuffer.put2('\\','r');
+	break;
+      case '\t':
+	TmpBuffer.put2('\\','t');
+	break;
+      case '\v':
+	TmpBuffer.put2('\\','v');
+	break;
+      default:
+	TmpBuffer.put_octal(c);
+	break;
+      }
+    } else if (c >= 127) {
+      TmpBuffer.put_octal(c);
+    } else {
+      switch (c) {
+      case '\'':
+	TmpBuffer.put2('\\','\'');
+	break;
+      case '\\':
+	TmpBuffer.put2('\\','\\');
+	break;
+      default:
+	TmpBuffer.put(c);
+	break;
+      }
+    }
+    s++;
+  }
+}
+
+
+inline
+Bool checkAtom(char *s)
+{
+  if (!*s || !islower(*s)) {
+    return NO;
+  }
+  s++;
+  while (*s) {
+    if (!isalnum(*s) && *s != '_') {
+      return NO;
+    }
+    s++;
+  }
+  return OK;
+}
+
+inline
+void atom2buffer(Literal *a)
+{
+  char *s = a->getPrintName();
+  if (checkAtom(s)) {
+    TmpBuffer.put_string(s);
+  } else {
+    TmpBuffer.put('\'');
+    atomq2buffer(s);
+    TmpBuffer.put('\'');
+  }
+}
+
+inline
+void name2buffer(Literal *a)
+{
+  char *s = a->getPrintName();
+  if (!*s) {
+    TmpBuffer.put_string("<N>");
+  } else {
+    int len = strlen(s)+20;
+    TmpBuffer.put2('<','N');
+    TmpBuffer.put2(':',' ');
+    TmpBuffer.put_string(s);
+    TmpBuffer.put('>');
+  }
+}
+
+inline
+void const2buffer(ConstTerm *c)
+{
+  char *s = c->getPrintName();
+
+  switch (c->getType()) {
+  case Co_Abstraction:
+  case Co_Builtin:
+    {
+      int arity = 
+	(c->getType() == Co_Abstraction)
+	? ((Abstraction *) c)->getArity()
+	: ((Builtin *) c)->getArity();
+
+      TmpBuffer.put2('<','P');
+      TmpBuffer.put('/');
+      TmpBuffer.put_int(arity);
+      if (*s != 0) {
+	TmpBuffer.put2(':',' ');
+	TmpBuffer.put_string(s);
+      }
+      TmpBuffer.put('>');
+    }
+    break;
+  case Co_Cell:
+    TmpBuffer.put_string("<Cell>");
+    break;
+  case Co_Space:
+    TmpBuffer.put_string("<Space>");
+    break;
+  case Co_Object:
+    {
+      Object *o = (Object *) c;
+      if (*s == '_' && *(s+1) == 0) {
+	TmpBuffer.put_string("<O>");
+      } else {
+	TmpBuffer.put2('<',o->isClass() ? 'C' : 'O');
+	TmpBuffer.put2(':',' ');
+	TmpBuffer.put_string(s);
+	TmpBuffer.put('>');
+      }
+    }
+    break;
+  case Co_Chunk:
+  case Co_Array:
+    TmpBuffer.put_string("<Chunk>");
+    break;
+  default:
+    Assert(0);
+    break;
+  }
+}
+
+
+/* forward declaration */
+static
+void value2buffer(OZ_Term term, int depth=0);
+
+inline
+void feature2buffer(SRecord *sr, OZ_Term fea, int depth)
+{
+  value2buffer(fea);
+  TmpBuffer.put(':');
+  value2buffer(sr->getFeature(fea),depth);
+}
+
+inline
+void record2buffer(SRecord *sr,int depth)
+{
+  value2buffer(sr->getLabel());
+  TmpBuffer.put('(');
+  if (depth <= 0) {
+    TmpBuffer.put_string(",,,");
+  } else {
+    if (sr->isTuple()) {
+      int len=sr->getWidth();
+      value2buffer(sr->getArg(0),depth-1);
+      for (int i=1; i < len; i++) {
+	TmpBuffer.put(' ');
+	value2buffer(sr->getArg(i),depth-1);
+      }
+    } else {
+      TaggedRef as = sr->getArityList();
+      Assert(isCons(as));
+      feature2buffer(sr,head(as),depth-1);
+      as = tail(as);
+      while (isCons(as)) {
+	TmpBuffer.put(' ');
+	feature2buffer(sr,head(as),depth-1);
+	as = tail(as);
+      }
+    }
+  }
+  TmpBuffer.put(')');
+}
+
+static
+int listWidth = 0;
+
+inline
+void list2buffer(LTuple *list,int depth)
+{
+  int width = listWidth;
+  while (width-- > 0) {
+    OZ_Term a=deref(list->getHead());
+    if (isCons(a)) {
+      TmpBuffer.put('(');
+      value2buffer(list->getHead(),depth-1);
+      TmpBuffer.put(')');
+    } else {
+      value2buffer(list->getHead(),depth-1);
+    }
+    TmpBuffer.put('|');
+    OZ_Term t=deref(list->getTail());
+    if (!isCons(t)) {
+      value2buffer(t,depth);
+      return;
+    }
+    list = tagged2LTuple(t);
+  }
+  TmpBuffer.put_string(",,,|,,,");
+}
+
+static
+void value2buffer(OZ_Term term, int depth)
+{
+  if (!term) {
+    TmpBuffer.put_string("<NULL>");
+  } else {
+
+    DEREF(term,termPtr,tag);
+    switch(tag) {
+    case UVAR:
+      TmpBuffer.put('_');
+      break;
+    case SVAR:
+    case CVAR:
+      {
+	char *s = getVarName(term);
+	if (!*s) {
+	  TmpBuffer.put('_');
+	} else {
+	  TmpBuffer.put_string(s);
+	}
+      }
+      break;
+    case SRECORD:
+      record2buffer(tagged2SRecord(term),depth);
+      break;
+    case LTUPLE:
+      list2buffer(tagged2LTuple(term),depth);
+      break;
+    case OZCONST:
+      const2buffer(tagged2Const(term));
+      break;
+    case LITERAL:
+      {
+	Literal *a = tagged2Literal(term);
+	if (a->isAtom()) {
+	  atom2buffer(a);
+	} else {
+	  name2buffer(a);
+	}
+      }
+      break;
+    case OZFLOAT:
+      float2buffer(term);
+      break;
+    case BIGINT:
+    case SMALLINT:
+      int2buffer(term);
+      break;
+    default:
+      Assert(0);
+      break;
+    }
+  }
+}
+
+char *OZ_toC(OZ_Term term, int depth,int width)
+{
+  TmpBuffer.reset();
+  int old=listWidth;
+  listWidth = width;
+  value2buffer(term,depth);
+  listWidth = old;
   return TmpBuffer.string();
 }
 
 /*
- * Numbers
+ * Atoms
  */
-
-OZ_Term OZ_CStringToNumber(char *s)
-{
-  if (strchr(s, '.') != NULL) {
-    return OZ_CStringToFloat(s);
-  }
-  return OZ_CStringToInt(s);
-}
-
-
-/*
- * Literals
- */
-char *literalToC(OZ_Term term)
-{
-  term = deref(term);
-
-  Literal *a = tagged2Literal(term);
-  char *s = a->getPrintName();
-  if (a->isAtom()) {
-    return s;
-  }
-  int len = strlen(s)+20;
-  TmpBuffer.reset();
-  char *tmp = TmpBuffer.allocate(len);
-  sprintf(tmp,"N:%s-%d",s,a->getSeqNumber());
-  return tmp;
-}
-
-
-int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
-{
-  term1 = deref(term1);
-  term2 = deref(term2);
-  return featureCmp(term1,term2);
-}
 
 char *OZ_atomToC(OZ_Term term)
 {
@@ -554,49 +826,6 @@ char *OZ_atomToC(OZ_Term term)
 OZ_Term OZ_atom(char *s)
 {
   return makeTaggedAtom(s);
-}
-
-/*
- * Any
- */
-
-char *toC(OZ_Term term)
-{
-  return OZ_toC(term,ozconf.errorPrintDepth);
-}
-
-
-char *OZ_toC(OZ_Term term, int depth)
-{
-  if (!term) {
-    return "*** NULL TERM ***";
-  }
-
-  DEREF(term,termPtr,tag)
-  switch(tag) {
-  case UVAR:
-  case SVAR:
-  case CVAR:
-    return getVarName(term);
-  case SRECORD:
-  case LTUPLE:
-    return tagged2String(term, depth);
-  case OZCONST:
-    return tagged2String(term, depth);;
-  case LITERAL:
-    return literalToC(term);
-  case OZFLOAT:
-    return OZ_floatToCString(term);
-  case BIGINT:
-  case SMALLINT:
-    return OZ_intToCString(term);
-
-  default:
-    break;
-  }
-  
-  warning("OZ_toC: failed");
-  return 0;
 }
 
 /* -----------------------------------------------------------------
@@ -659,18 +888,18 @@ void OZ_printInt(OZ_Term t)
   if (isSmallInt(t)) {
     printf("%d",smallIntValue(t));
   } else {
-    char *s=OZ_intToCString(t);
+    char *s=toC(t);
     printf("%s",s);
   }
 }
 
 void OZ_printFloat(OZ_Term t)
 {
-  char *s=OZ_floatToCString(t);
+  char *s=toC(t);
   printf("%s",s);
 }
 
-void OZ_printVS(OZ_Term t)
+void OZ_printVirtualString(OZ_Term t)
 {
   t=deref(t);
   if (isCons(t)) {
@@ -1045,26 +1274,37 @@ int OZ_unprotect(OZ_Term *t)
  * vs
  * -----------------------------------------------------------------*/
 
-OZ_Return OZ_isVirtualString(OZ_Term vs)
+
+inline
+int isVirtualString(OZ_Term vs, OZ_Term *var)
 {
   DEREF(vs,vsPtr,vsTag);
-  if (isAnyVar(vsTag)) return suspendOnVar(vsPtr);
+  if (isAnyVar(vsTag))  {
+    if (var) *var = makeTaggedRef(vsPtr);
+    return 0;
+  }
 
-  if (isInt(vs) || isFloat(vs) || isAtom(vs))  return PROCEED;
+  if (isInt(vs) || isFloat(vs) || isAtom(vs))  return 1;
 
   if (isPair(vs)) {
     SRecord *sr = tagged2SRecord(vs);
     int len = sr->getWidth();
     for (int i=0; i < len; i++) {
-      OZ_Return argstate = OZ_isVirtualString(sr->getArg(i));
-      if (argstate!=PROCEED) return argstate;
+      if (!isVirtualString(sr->getArg(i),var)) return 0;
     }
-    return PROCEED;
+    return 1;
   }
 
-  if (isCons(vs)) return isList(vs,OK);
+  if (isCons(vs)) return isList(vs,var,OK);
 
-  return FAILED;
+  return 0;
+}
+
+int OZ_isVirtualString(OZ_Term vs, OZ_Term *var)
+{
+  if (var) *var = 0;
+
+  return isVirtualString(vs,var);
 }
 
 
@@ -1181,7 +1421,8 @@ OZ_Term OZ_newCell(OZ_Term val)
 OZ_Term OZ_newChunk(OZ_Term val)
 {
   val=deref(val);
-  return makeTaggedConst(new SChunk(am.currentBoard, tagged2SRecord(val)));
+  if (!isRecord(val)) return 0;
+  return makeTaggedConst(new SChunk(am.currentBoard, val));
 }
 
 int OZ_onToplevel()

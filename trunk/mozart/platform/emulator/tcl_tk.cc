@@ -70,7 +70,8 @@ OZ_Return isTcl(TaggedRef tcl) {
     
     if (isAtom(l)) {
       if (literalEq(l,AtomPair)) { 
-	return OZ_isVirtualString(tcl);
+	OZ_assertVirtualString(tcl);
+	return PROCEED;
       } else if (literalEq(l,AtomTclVS)) {
 	TaggedRef arg = st->getArg(0);
 
@@ -80,7 +81,8 @@ OZ_Return isTcl(TaggedRef tcl) {
 	  OZ_suspendOn(makeTaggedRef(arg_ptr)); 
 	}
 
-	return OZ_isVirtualString(arg);
+	OZ_assertVirtualString(arg);
+	return PROCEED;
       } else if (literalEq(l,AtomTclBatch)) {
 	TaggedRef batch = st->getArg(0);
 
@@ -89,13 +91,13 @@ OZ_Return isTcl(TaggedRef tcl) {
 
 	  if (isAnyVar(batch_tag)) {
 	    OZ_suspendOn(makeTaggedRef(batch_ptr)); 
-	  } else if (isLTuple(batch_tag)) {
-	    OZ_Return batch_state = isTcl(tagged2LTuple(batch)->getHead());
+	  } else if (isCons(batch_tag)) {
+	    OZ_Return batch_state = isTcl(head(batch));
 
 	    if (batch_state!=PROCEED) 
 	      return batch_state;
 
-	    batch = tagged2LTuple(batch)->getTail();
+	    batch = tail(batch);
 	  } else if (isLiteral(batch_tag) && literalEq(batch,AtomNil)) {
 	    return PROCEED;
 	  } else {
@@ -125,16 +127,9 @@ OZ_Return isTcl(TaggedRef tcl) {
       return FAILED;
     }
     
-  } else if (isLTuple(tcl_tag)) {
-    int len = OZ_isString(tcl);
-
-    if (len == -2) {
-      return FAILED;
-    } else if (len == -1) {
-      return SUSPEND;
-    } else {
-      return PROCEED;
-    }
+  } else if (isCons(tcl_tag)) {
+    OZ_assertString(tcl);
+    return PROCEED;
   }
     
   return FAILED;
@@ -167,42 +162,42 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
   } else if (isSRecord(tcl_tag)) {
     OZ_Return s = PROCEED;
     SRecord * sr = tagged2SRecord(tcl);
-    TaggedRef as = deref(sr->getArityList());
+    TaggedRef as = sr->getArityList(); /* arity list is already deref'ed */
     TaggedRef fs = deref(OZ_getCArg(1));
 
-    while (isLTuple(as) && isLTuple(fs)) {
-      TaggedRef a = deref(tagged2LTuple(as)->getHead());
-      TaggedRef f = deref(tagged2LTuple(fs)->getHead());
+    while (isCons(as) && isCons(fs)) {
+      TaggedRef a = head(as);
+      TaggedRef f = deref(head(fs));
 
       if (isFeature(a)) {
 
 	switch (featureCmp(a,f)) {
 	case 0:
-	  fs = deref(tagged2LTuple(fs)->getTail());
-	  as = deref(tagged2LTuple(as)->getTail());
+	  fs = deref(tail(fs));
+	  as = tail(as);
 	  break;
 	case 1:
-	  fs = deref(tagged2LTuple(fs)->getTail());
+	  fs = deref(tail(fs));
 	  break;
 	case -1:
 	  s = isTcl(sr->getFeature(a));
 	  if (s!=PROCEED)
 	    goto exit;
-	  as = deref(tagged2LTuple(as)->getTail());
+	  as = tail(as);
 	  break;
 	}
 
       }
     }
 
-    while (isLTuple(as)) {
-      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+    while (isCons(as)) {
+      TaggedRef a = head(as);
 
       if (tagged2Literal(a)->isAtom()) {
 	s = isTcl(sr->getFeature(a));
 	if (s!=PROCEED)
 	  goto exit;
-	as = deref(tagged2LTuple(as)->getTail());
+	as = tail(as);
       }
     }
   exit:
@@ -287,7 +282,8 @@ void int2buffer(TaggedRef i) {
   if (isSmallInt(i)) {
     tcl_buffer.put_int(smallIntValue(i));
   } else {
-    char * s = OZ_intToCString(i);
+    char * s = toC(i);
+    if (*s == '~') *s='-';
     tcl_buffer.put_string(s);
     delete [] s;
   }
@@ -301,11 +297,11 @@ void float2buffer(TaggedRef f) {
 
 
 inline
-void string2buffer(TaggedRef tail) {
+void string2buffer(TaggedRef list) {
   do {
-    tcl_put((char) smallIntValue(deref(tagged2LTuple(tail)->getHead())));
-    tail = deref(tagged2LTuple(tail)->getTail());
-  } while (isLTuple(tail));
+    tcl_put((char) smallIntValue(deref(head(list))));
+    list = deref(tail(list));
+  } while (isCons(list));
 }
 
 
@@ -327,7 +323,7 @@ void vs2buffer(TaggedRef vs) {
 
     for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++)
       vs2buffer(tagged2SRecord(vs)->getArg(i));
-  } else if (isLTuple(vs_tag)) {
+  } else if (isCons(vs_tag)) {
     string2buffer(vs);
   }
 }
@@ -361,11 +357,11 @@ void protect_atom2buffer(TaggedRef atom) {
 
 
 inline
-void protect_string2buffer(TaggedRef tail) {
+void protect_string2buffer(TaggedRef list) {
   do {
-    tcl_put_quote((char) smallIntValue(deref(tagged2LTuple(tail)->getHead())));
-    tail = deref(tagged2LTuple(tail)->getTail());
-  } while (isLTuple(tail));
+    tcl_put_quote((char) smallIntValue(deref(head(list))));
+    list = deref(tail(list));
+  } while (isCons(list));
 }
 
 
@@ -387,7 +383,7 @@ void protect_vs2buffer(TaggedRef vs) {
 
     for (int i=0; i < tagged2SRecord(vs)->getWidth(); i++)
       protect_vs2buffer(tagged2SRecord(vs)->getArg(i));
-  } else if (isLTuple(vs_tag)) {
+  } else if (isCons(vs_tag)) {
     protect_string2buffer(vs);
   }
 }
@@ -397,12 +393,41 @@ void tcl2buffer(TaggedRef);
 
 
 inline
+void feature2buffer(SRecord *st, OZ_Term a) {
+  if (isSmallInt(a)) {
+    tcl2buffer(st->getFeature(a));
+  } else if (tagged2Literal(a)->isAtom()) {
+    tcl_put('-');
+    start_protect();
+    protect_atom2buffer(a);
+    stop_protect();
+    tcl_put(' ');
+    tcl2buffer(st->getFeature(a));
+  }
+}
+
+inline
 void tuple2buffer(SRecord *st, int start = 0) {
-  if (start < st->getWidth()) {
-    tcl2buffer(st->getArg(start));
-    for (int i=start+1; i < st->getWidth(); i++) {
+  if (st->isTuple()) {
+    if (start < st->getWidth()) {
+      tcl2buffer(st->getArg(start));
+      for (int i=start+1; i < st->getWidth(); i++) {
+	tcl_put(' ');
+	tcl2buffer(st->getArg(i));
+      }
+    }
+  } else {
+    Assert(start==0);
+    TaggedRef as = st->getArityList();
+    Assert(isCons(as));
+    feature2buffer(st,head(as));
+    as = tail(as);
+
+    while (isCons(as)) {
+      TaggedRef a = head(as);
       tcl_put(' ');
-      tcl2buffer(st->getArg(i));
+      feature2buffer(st,a);
+      as = tail(as);
     }
   }
 }
@@ -428,7 +453,7 @@ void tcl2buffer(TaggedRef tcl) {
     } else if (literalEq(tcl,NameFalse)) {
       tcl_put('0');
     }
-  } else if (isLTuple(tcl_tag)) {
+  } else if (isCons(tcl_tag)) {
     start_protect();
     protect_string2buffer(tcl);
     stop_protect();
@@ -459,14 +484,14 @@ void tcl2buffer(TaggedRef tcl) {
     } else if (literalEq(l,AtomTclBatch)) {
       TaggedRef b = deref(st->getArg(0));
 
-      if (isLTuple(b)) {
-	tcl2buffer(tagged2LTuple(b)->getHead());
-	b = deref(tagged2LTuple(b)->getTail());
+      if (isCons(b)) {
+	tcl2buffer(head(b));
+	b = deref(tail(b));
 
-	while (isLTuple(b)) {
+	while (isCons(b)) {
 	  tcl_put(' ');
-	  tcl2buffer(tagged2LTuple(b)->getHead());
-	  b = deref(tagged2LTuple(b)->getTail());
+	  tcl2buffer(head(b));
+	  b = deref(tail(b));
 	}
       }
     } else {
@@ -489,10 +514,10 @@ void tcl2buffer(TaggedRef tcl) {
       tcl_put(' ');
     }
     
-    TaggedRef as = deref(sr->getArityList());
+    TaggedRef as = sr->getArityList();
 
-    while (isLTuple(as)) {
-      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+    while (isCons(as)) {
+      TaggedRef a = head(as);
 
       if (isSmallInt(a)) {
 	tcl2buffer(sr->getFeature(a));
@@ -507,7 +532,7 @@ void tcl2buffer(TaggedRef tcl) {
 	tcl_put(' ');
       }
       
-      as = deref(tagged2LTuple(as)->getTail());
+      as = tail(as);
     }
 
     tcl_back();
@@ -572,10 +597,10 @@ OZ_C_proc_begin(BItclWriteBatch,3) {
 
   tcl_buffer.reset();
 
-  while (isLTuple(batch)) {
-    tcl2buffer(tagged2LTuple(batch)->getHead());
+  while (isCons(batch)) {
+    tcl2buffer(head(batch));
     tcl_put(';');
-    batch = deref(tagged2LTuple(batch)->getTail());
+    batch = deref(tail(batch));
   }
   tcl_put('\n');
 
@@ -636,35 +661,27 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
 
   if (isSRecord(tr_tag)) {
     SRecord   * sr = tagged2SRecord(tr);
-    TaggedRef as   = deref(sr->getArityList());
+    TaggedRef as   = sr->getArityList();
     TaggedRef fs   = deref(OZ_getCArg(4));
     
-    while (isLTuple(as) && isLTuple(fs)) {
-      TaggedRef a = deref(tagged2LTuple(as)->getHead());
-      TaggedRef f = deref(tagged2LTuple(fs)->getHead());
+    while (isCons(as) && isCons(fs)) {
+      TaggedRef a = head(as);
+      TaggedRef f = deref(head(fs));
       
       if (isFeature(a)) {
 	
 	switch (featureCmp(a,f)) {
 	case 0:
-	  fs = deref(tagged2LTuple(fs)->getTail());
-	  as = deref(tagged2LTuple(as)->getTail());
+	  fs = deref(tail(fs));
+	  as = tail(as);
 	  break;
 	case 1:
-	  fs = deref(tagged2LTuple(fs)->getTail());
+	  fs = deref(tail(fs));
 	  break;
 	case -1:
-	  if (isSmallInt(a)) {
-	    tcl2buffer(sr->getFeature(a));
-	    tcl_put(' ');
-	  } else if (isAtom(a)) {
-	    tcl_put('-');
-	    atom2buffer(a);
-	    tcl_put(' ');
-	    tcl2buffer(sr->getFeature(a));
-	    tcl_put(' ');
-	  }
-	  as = deref(tagged2LTuple(as)->getTail());
+	  feature2buffer(sr,a);
+	  tcl_put(' ');
+	  as = tail(as);
 	  break;
 	}
 	
@@ -672,8 +689,8 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
 
     }
     
-    while (isLTuple(as)) {
-      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+    while (isCons(as)) {
+      TaggedRef a = head(as);
       
       if (tagged2Literal(a)->isAtom()) {
 	tcl_put('-');
@@ -681,7 +698,7 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
       tcl_put(' ');
       tcl2buffer(sr->getFeature(a));
       tcl_put(' ');
-      as = deref(tagged2LTuple(as)->getTail());
+      as = tail(as);
       }
     }
   }
