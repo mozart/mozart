@@ -1381,7 +1381,7 @@ void engine() {
           goto LBLstart;
         }
         if (!tmpThread->isDead()) {
-          bb->decSuspCount1();
+          bb->decSuspCount();
         }
         e->disposeThread(tmpThread);
       loop:
