@@ -284,8 +284,9 @@ define
 	 end
       end
       
-      meth writeNewMessage(ID message:Mess<=nil reply_to:RPT<=nil) E={Dictionary.get DB ID} in
+      meth writeNewMessage(ID message:Mess<=nil reply_to:RPT<=nil faq:FAQ<=false) E={Dictionary.get DB ID} in
 	 {ComposeMess message(user:user(id:E.id name:E.name)
+			      faq:FAQ
 			      browser:{Access UsingBrowser}
 			      send:proc{$ IDs X} MID D in
 				      {Server S_message(sender:ClientID
@@ -293,6 +294,7 @@ define
 							message:X
 							reply_to:RPT
 							mid:MID
+							faq:if FAQ then X else unit end
 							date:D)}
 				      
 				      lock CLock then
@@ -312,7 +314,7 @@ define
 		    read(user:used(name:E.name id:E.id)
 			 browser:{Access UsingBrowser}
 			 su:({Access MyData}.userlevel==sysadm)
-			 send:proc{$ X} {self writeNewMessage(E.id message:X reply_to:M.mid)} end)}}
+			 send:proc{$ X FAQ} {self writeNewMessage(E.id message:X reply_to:M.mid faq:FAQ)} end)}}
       end
 
       meth hasReadMail(mid: M) 

@@ -26,7 +26,7 @@ functor
    
 import
    Tk
-   Browser(browse:Browse)
+%   Browser(browse:Browse)
    DD(dragAndDrop:DragAndDrop) at 'draganddrop.ozf'
    OS(system)
 %   Pop(popup:Popup) at 'popup.ozf'
@@ -112,7 +112,8 @@ define
    in
       if Type==new then
 	 proc{GO} Mess={TB tkReturnString(get p(1 0) 'end' $)} in
-	    {Wait Mess} {T tkClose} {Arg.send {ET getReceivers($)} Mess}
+	    {Wait Mess} {T tkClose}
+	    {Arg.send {ET getReceivers($)} Mess}
 	 end
       in
 	 {TB tkBind(event:'<Alt-Return>'
@@ -126,17 +127,32 @@ define
 								     if C==&\n then "\n>" else C end
 								  end}
 					 in
-					    {T tkClose} {Arg.send ">"#{Flatten Mess}#"\n\n"}
+					    {T tkClose} {Arg.send ">"#{Flatten Mess}#"\n\n" false}
 					 end)}
       end
 
       {Tk.addYScrollbar TB SY}
 
+      if {CondSelect Arg faq false}\=false then
+	 L0={New Tk.label tkInit(parent:T text:"Question:")}
+	 L1={New Tk.label tkInit(parent:T text:"Answer:")}
+	 TB1={New Tk.text tkInit(parent:T width:50 height:5 bg:white wrap:word fg:red insertbackground:black exportselection:true)}
+	 SY1={New Tk.scrollbar tkInit(parent:T width:8 orient:vertical)}
+      in
+	 {Tk.addYScrollbar TB1 SY1}
+	 {TB1 tk(insert p(1 0) Arg.message)}
+%	 {TB1 tk(config state:disabled)}
+	 {Tk.batch [grid(L0 row:2 column:0 columnspan:3 sticky:we)
+		    grid(TB1 row:3 column:0 columnspan:2 sticky:we pady:3)
+		    grid(SY1 row:3 column:2 sticky:ns pady:3)
+		    grid(L1 row:4 column:0 columnspan:3 sticky:we)]} 
+      end
+      
       if Type==read then
 	 if Arg.su==true then
-	    FAQB={New Tk.button tkInit(parent:T text:"Reply to FAQ" action:Browse#faq)}
+	    FAQB={New Tk.button tkInit(parent:T text:"Reply to FAQ" action:proc{$} {T tkClose} {Arg.send Arg.message true} end)}
 	 in
-	    {Tk.send grid(FAQB row:30 column:0 columnspan:3 sticky:we)}
+	    {Tk.send grid(FAQB row:30 column:0 columnspan:2 sticky:we)}
 	 end
 	 {Tk.batch [grid(DT row:1 column:0 sticky:e)
 		    grid(DE row:1 column:1 sticky:we)]}
@@ -155,29 +171,31 @@ define
 		 grid(rowconfigure T 5 weight:1)
 		 focus(TB)]}
 
-      if {CondSelect Arg browser false}==true then
-	 {ForAll {FindHttp {VirtualString.toString Arg.message}}
-	  proc{$ X}
-	     if {IsRecord X} andthen {Label X}==http then Tag FI LI in
-		Tag={New Tk.textTag tkInit(parent:TB)}
-		FI={TB tkReturn(index insert $)}
-		{TB tk(insert 'end' "http://"#X.1)}
-		LI={TB tkReturn(index insert $)}
-		{TB tk(tag add Tag FI LI)}
-		{TB tk(tag config Tag underline:true foreground:blue)}
-		{Tag tkBind(event:'<1>'
-			    action:proc{$}
-				      _={OS.system  "netscape -raise -remote 'openURL(http://"#
-					 X.1#", new-window)'"}
-				   end)}
-	     elseif {IsInt X} then
-		{TB tk(insert 'end' {Char.toAtom X})}
-	     else
-		{TB tk(insert 'end' {Flatten X})}
-	     end
-	  end}
-      else
-	 {TB tk(insert p(1 0) Arg.message)}
+      if {CondSelect Arg faq false}==false then
+	 if {CondSelect Arg browser false}==true then
+	    {ForAll {FindHttp {VirtualString.toString Arg.message}}
+	     proc{$ X}
+		if {IsRecord X} andthen {Label X}==http then Tag FI LI in
+		   Tag={New Tk.textTag tkInit(parent:TB)}
+		   FI={TB tkReturn(index insert $)}
+		   {TB tk(insert 'end' "http://"#X.1)}
+		   LI={TB tkReturn(index insert $)}
+		   {TB tk(tag add Tag FI LI)}
+		   {TB tk(tag config Tag underline:true foreground:blue)}
+		   {Tag tkBind(event:'<1>'
+			       action:proc{$}
+					 _={OS.system  "netscape -raise -remote 'openURL(http://"#
+					    X.1#", new-window)'"}
+				      end)}
+		elseif {IsInt X} then
+		   {TB tk(insert 'end' {Char.toAtom X})}
+		else
+		   {TB tk(insert 'end' {Flatten X})}
+		end
+	     end}
+	 else
+	    {TB tk(insert p(1 0) Arg.message)}
+	 end
       end
       {TB tk(config state:if Type==new then normal else disabled end)}
       if Type==new andthen Arg.message\=nil then {TB tk(see 'end')} end
