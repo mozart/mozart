@@ -2092,14 +2092,15 @@ else
 fi
 rm -f conftest*
       done
+      CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2098 "configure"
+#line 2099 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2103: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2104: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2112,7 +2113,6 @@ else
 fi
 rm -f conftest*
       fi
-      CPPFLAGS=$oz_tmp_cppflags
 oz_cv_header_gtk_canvas_h="$oz_tmp_ok"
 
     
@@ -2173,14 +2173,15 @@ else
 fi
 rm -f conftest*
       done
+      CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2179 "configure"
+#line 2180 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2184: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2185: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2193,7 +2194,6 @@ else
 fi
 rm -f conftest*
       fi
-      CPPFLAGS=$oz_tmp_cppflags
 oz_cv_header_gtk_canvas_h="$oz_tmp_ok"
 
     
@@ -2259,14 +2259,15 @@ else
 fi
 rm -f conftest*
       done
+      CPPFLAGS=$oz_tmp_cppflags
       if test "$oz_tmp_ok" = no; then
 	cat > conftest.$ac_ext <<EOF
-#line 2265 "configure"
+#line 2266 "configure"
 #include "confdefs.h"
 #include "gtk-canvas.h"
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2270: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2271: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2279,7 +2280,6 @@ else
 fi
 rm -f conftest*
       fi
-      CPPFLAGS=$oz_tmp_cppflags
 oz_cv_header_gtk_canvas_h="$oz_tmp_ok"
 
     
