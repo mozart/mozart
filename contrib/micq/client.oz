@@ -305,6 +305,7 @@ define
 	 end
       end
       {Wait WaitQuit}
+      {Delay 3000}
    end
 in
    skip
