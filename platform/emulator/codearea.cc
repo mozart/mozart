@@ -406,11 +406,9 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
 
 void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 {
-  if (sz <= 0) return;
-
   ProgramCounter PC = from;
-
-  for (int i = 1; i <= sz; i++) {
+  int defCount = 0; // counter for nested defintions
+  for (int i = 1; i <= sz || sz <= 0 ; i++) {
     fprintf(ofile, "%p:\t", PC);
     Opcode op = getOpcode(PC);
     if (op == OZERROR || op == ENDOFFILE) {
@@ -814,6 +812,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case DEFINITION:
       {
+        defCount++;
+
         Reg reg;
         ProgramCounter next;
         TaggedRef file, line, column, predName;
@@ -889,6 +889,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
 
     case ENDDEFINITION:
+      fprintf(ofile, "(%p)\n", getLabelArg (PC+1));
+      if (sz<=0 && defCount==0) return;
+      defCount--;
+      DISPATCH();
+
     case BRANCH:
     case NEXTCLAUSE:
     case THREAD:
