@@ -1054,23 +1054,26 @@ void engine()
  LBLerror:
  LBLstart:
 
-  e->deinstallPath(e->rootBoard);
 
-  /* GC */
-  if (e->isSetSFlag(StartGC)) {
-    e->doGC();
+  if (e->isSetSFlag()) {
+
+    e->deinstallPath(e->rootBoard);
+
+    if (e->isSetSFlag(StartGC)) {
+      e->doGC();
+    }
+
+    osBlockSignals();
+
+    if (e->isSetSFlag(UserAlarm)) {
+      e->handleUser();
+    }
+    if (e->isSetSFlag(IOReady)) {
+      e->handleIO();
+    }
+
+    osUnblockSignals();
   }
-
-  osBlockSignals();
-
-  if (e->isSetSFlag(UserAlarm)) {
-    e->handleUser();
-  }
-  if (e->isSetSFlag(IOReady)) {
-    e->handleIO();
-  }
-
-  osUnblockSignals();
 
   /* process switch */
   if (e->threadQueueIsEmpty()) {
