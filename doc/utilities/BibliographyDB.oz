@@ -78,7 +78,7 @@ define
    fun {DotExpand S}
       case S of &.|&/|L then
 	 {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#L}
-      elseof &.|&.|&/|L then
+      elseof &.|&.|&/|_ then
 	 {VirtualString.toString {Property.get 'ozdoc.src.dir'}#'/'#S}
       else S end
    end
