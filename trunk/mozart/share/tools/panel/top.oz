@@ -258,7 +258,7 @@ in
       meth init(manager:Manager options:O)
 	 lock
 	    %% Switch to time detailed mode
-	    {System.set time(detailled:true)}
+	    {System.set time(detailed:true)}
 	    Config = {Dictionary.get O config}
 	    Tk.toplevel,tkInit(title:              TitleName
 			       'class':            'OzTools'
@@ -878,7 +878,7 @@ in
       meth tkClose
 	 lock
 	    {self.manager PanelTopClosed}
-	    {System.set time(detailled:false)}
+	    {System.set time(detailed:false)}
 	    Tk.toplevel, tkClose
 	    {Wait _}
 	 end
