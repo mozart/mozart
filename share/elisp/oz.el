@@ -555,7 +555,7 @@ the GDB commands `cd DIR' and `directory'."
   "Consults the region."
    (interactive "r")
    (oz-hide-errors)
-   (shell-command-on-region start end (concat "cat > " oz-pretty-file))
+   (shell-command-on-region start end (concat "/bin/sh -c 'cat > " oz-pretty-file "'"))
    (message "")
    (oz-ks-file oz-pretty-file)
    (sleep-for 2)
