@@ -57,7 +57,7 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
   atom_bounds, atom_val, atom_glb, atom_lub, atom_flat, atom_local, atom_ask,
   atom_wait, atom_waittop, atom_oops, atom_prop, atom_params, atom_name,
   atom_space, atom_susp, atom_thread, atom_ct, atom_susplists, atom_ref,
-  atom_id;
+  atom_id, atom_loc;
 
 //=============================================================================
 // interface to the Oz loader
@@ -103,6 +103,7 @@ extern "C"
     atom_susplists = OZ_atom("susplists");
     atom_ref       = OZ_atom("reference");
     atom_id        = OZ_atom("id");
+    atom_loc       = OZ_atom("loc");
 
     PropagatorReference::_id = oz_newUniqueId();
 

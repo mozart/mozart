@@ -28,6 +28,39 @@
 
 //-----------------------------------------------------------------------------
 
+// returns an integer (ident of propagator)
+OZ_Term reflect_space_prop(ReflectStack &rec_stack,
+                           OZ_Term      &prop_list,
+                           VarTable     &vtable,
+                           PropTable    &ptable,
+                           Propagator   * prop)
+{
+  Bool is_reflected;
+  int id = ptable.add(prop, is_reflected);
+  if (is_reflected)
+    return OZ_int(id);
+  ptable.reflected(prop);
+
+
+  OZ_Propagator * p = prop->getPropagator();
+
+  OZ_Term arity_def[] = {
+    {OZ_pair2(atom_ref,    propagator2Term(prop))},
+    {OZ_pair2(atom_params, p->getParameters())},
+    {OZ_pair2(atom_name,   prop_name(p->getProfile()->getPropagatorName()))},
+    {OZ_pair2(atom_loc,    oz_propGetName(prop))},
+    {(OZ_Term) 0}
+  };
+
+  MKARITY(arity, arity_def);
+
+  ADD_TO_LIST(prop_list, OZ_recordInit(atom_prop, arity));
+
+  return oz_int(id);
+}
+
+//-----------------------------------------------------------------------------
+
 // returns a list of integers (idents of propagators)
 OZ_Term reflect_space_susplist(ReflectStack &rec_stack,
                                PropTable    &ptable,
@@ -251,12 +284,23 @@ OZ_Term reflect_space(OZ_Term v)
     switch (what) {
     case Entry_Propagator:
       {
-        OZ_Term * varptr = (OZ_Term *) ptr;
+        Propagator * prop = (Propagator *) ptr;
+        (void) reflect_space_prop(rec_stack,
+                                  var_list,
+                                  vtable,
+                                  ptable,
+                                  prop);
+
       }
       break;
     case Entry_Variable:
       {
-        Propagator * prop = (Propagator *) ptr;
+        OZ_Term * varptr = (OZ_Term *) ptr;
+        (void) reflect_space_variable(rec_stack,
+                                      var_list,
+                                      vtable,
+                                      ptable,
+                                      (OZ_Term) varptr);
       }
       break;
     default:
