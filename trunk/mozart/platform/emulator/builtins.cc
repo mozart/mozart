@@ -6529,6 +6529,33 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 
 DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
+OZ_Return ooExchInline(TaggedRef fea, TaggedRef newAttr, TaggedRef &oldAttr)
+{
+  DEREF(fea, _1, feaTag);
+
+  SRecord *rec = am.getSelf()->getState();
+  if (rec) {
+    if (!isFeature(feaTag)) {
+      if (isAnyVar(feaTag)) {
+	return SUSPEND;
+      }
+      goto bomb;
+    }
+    CheckSelf;
+    TaggedRef aux = rec->getFeature(fea);
+    if (aux) {
+      oldAttr = aux;
+      aux = rec->replaceFeature(fea,newAttr);
+      Assert(aux!=makeTaggedNULL());      
+      return PROCEED;
+    }
+  }
+
+bomb:
+  TypeErrorT(1,"(valid) Feature");
+}
+DECLAREBI_USEINLINEFUN2(BIooExch,ooExchInline)
+
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, 
 		  Bool iscl, Board *b)
 {
@@ -6760,27 +6787,6 @@ OZ_C_proc_begin(BIsetSelf,1)
 }
 OZ_C_proc_end
 
-
-OZ_C_proc_begin(BIooExch,3)
-{
-  OZ_Term obj  = OZ_getCArg(0); obj  = deref(obj);
-  OZ_Term news = OZ_getCArg(1); news = deref(news);
-  OZ_Term olds = OZ_getCArg(2);
-
-  if (!isObject(obj)) {
-    TypeErrorT(0,"Object");
-  }
-
-  if (!isSRecord(news)) {
-    TypeErrorT(1,"Record");
-  }
-
-  Object *oobj = tagged2Object(obj);
-  SRecord *oldstate = oobj->getState();
-  oobj->setState(tagged2SRecord(news));
-  return OZ_unify(olds,makeTaggedSRecord(oldstate));
-}
-OZ_C_proc_end
 
 
 OZ_C_proc_begin(BIoogetCounterSelf,1)
@@ -7243,7 +7249,7 @@ BIspec allSpec2[] = {
   {"getOONames",       5,BIgetOONames, 	       0},
   {"getSelf",          1,BIgetSelf,            0},
   {"setSelf",          1,BIsetSelf,            0},
-  {"ooExch",           3,BIooExch,             0},
+  {"ooExch",           3,BIooExch,             (IFOR) ooExchInline},
 
   {"Space.new",           2, BInewSpace,        0},
   {"IsSpace",             2, BIisSpace,         0},
