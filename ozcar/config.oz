@@ -215,17 +215,10 @@ DetachButtonColor
 TermButtonColor
 
 RunnableThreadColor
-RunningThreadColor
-
 BlockedThreadColor
+ExcThreadColor
 DeadThreadColor
-
-ZombieThreadColor
 TrunkColor
-
-RunnableThreadText
-BlockedThreadText
-DeadThreadText
 
 ProcColor
 BuiltinColor
@@ -246,23 +239,16 @@ case UseColors then
    StepButtonColor         = SelectedBackground
    NextButtonColor         = SelectedBackground
    UnleashButtonColor      = RunnableThreadColor
-   StopButtonColor         = BlockedThreadColor
+   StopButtonColor         = ExcThreadColor
    DetachButtonColor       = DefaultForeground
    TermButtonColor         = DefaultForeground
 
    %% thread forest window
    RunnableThreadColor     = '#00a500'
-   RunningThreadColor      = '#f0c000'
-
-   BlockedThreadColor      = '#e07070'
+   BlockedThreadColor      = '#f0c000'
+   ExcThreadColor          = '#e07070'
    DeadThreadColor         = '#b0b0b0'
-
-   ZombieThreadColor       = '#f000f0'
    TrunkColor              = grey70
-
-   RunnableThreadText      = nil
-   BlockedThreadText       = nil
-   DeadThreadText          = nil
 
    %% application trace window
    ProcColor               = '#0000c0'
@@ -287,15 +273,10 @@ else
 
    %% thread forest window
    RunnableThreadColor     = black
-   RunningThreadColor      = black
    BlockedThreadColor      = black
+   ExcThreadColor          = black
    DeadThreadColor         = black
-   ZombieThreadColor       = black
    TrunkColor              = black
-
-   RunnableThreadText      = nil
-   BlockedThreadText       = '(b)'
-   DeadThreadText          = '(t)'
 
    %% application trace window
    ProcColor               = black
