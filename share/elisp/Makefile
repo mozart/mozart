@@ -15,7 +15,7 @@ help:
 	@echo ""
 	@echo "The following targets are available"
 	@echo "(use 'make <target>' for installation)"
-	@echo "	oz		mehl@dfki.uni-sb.de"
+	@echo "	elcs		{scheidhr,mehl}@dfki.uni-sb.de"
 	@echo ""
 
 Makefile: Makefile.m4

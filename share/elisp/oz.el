@@ -242,7 +242,9 @@
 	;; do not show it as "C-c C-RET" but as "C-c C-m" in menu bar
 	(define-key map [(control c) (control m)] 'oz-toggle-machine-window)
 	(define-key map [(control c) (control h)] 'halt-oz)
-	(define-key map [(control c) (control i)] 'oz-include-file))
+	(define-key map [(control c) (control i)] 'oz-include-file)
+	(define-key map [(control button1)]       'oz-feed-region-browse)
+	)
     (define-key map "\C-c\C-m"    'oz-toggle-machine-window)
     (define-key map "\C-c\C-h"    'halt-oz)
     (define-key map "\C-c\C-i"    'oz-include-file))
@@ -336,6 +338,7 @@
 	      ["compiler"     oz-toggle-compiler-window t]
 	      ["machine"      oz-toggle-machine-window t]
 			  )
+	     ["Browse"   oz-feed-region-browse t]
 	     "-----"
 	     ["Start Oz" run-oz t]
 	     ["Halt Oz"  halt-oz t]
@@ -413,6 +416,7 @@ if that value is non-nil."
 	(oz-set-state 'oz-compiler-state "???")
 	(error "Compiler has died, for some unknown reason, try halting Oz"))))
 
+(defvar oz-machine-visible nil "")
 
 (defun start-oz-process()
   (or (get-process "Oz Compiler")
@@ -496,6 +500,14 @@ if that value is non-nil."
        (end-of-line)
        (oz-feed-region beg (point)))))
 
+(defun oz-feed-region-browse (start end)
+  "Consults the region."
+  (interactive "r")
+  (oz-hide-errors)
+  (let ((contents (buffer-substring start end)))
+    (oz-send-string (concat "{Browse " contents "}\n"))))
+
+
 
 (defun oz-include-file(file)
   (interactive "FInclude file: ")
@@ -513,8 +525,6 @@ if that value is non-nil."
   (oz-send-string (concat "!precompile '" file "'\n"))) 
 
 
-
-(defvar oz-machine-visible nil "")
 
 (defun oz-hide-errors()
   (interactive)
@@ -677,7 +687,7 @@ if that value is non-nil."
 
 (defconst oz-middle-pattern 
       (concat (oz-make-keywords-for-match
-	       '("in" "then" "else" "elseif" "by" "of" "wait"))
+	       '("in" "then" "else" "elseif" "by" "of"))
 	      "\\|" "\\[\\]"))
 
 (defconst oz-key-pattern
