@@ -50,5 +50,8 @@
 			     out => ['+int'],
 			     bi  => BInameHash},
 
+     'toString'		=> { in  => ['+name'],
+			     out => ['+atom'],
+			     bi  => BInameToString},
      );
 1;;
