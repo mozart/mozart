@@ -7,8 +7,7 @@
 
 local
 
-   class Succeeded
-
+   class Leaf
       meth isInSubtree(CurX Depth FindX $)
 	 Depth==0 andthen CurX+@offset>FindX
       end
@@ -16,14 +15,6 @@ local
       meth findByX(_ _ _ $)
 	 self
       end
-   end
-
-   class FailedOrBlocked
-
-      meth isInSubtree(CurX Depth FindX $)
-	 Depth==0 andthen CurX+@offset>FindX
-      end
-
    end
 
    local
@@ -37,7 +28,6 @@ local
       end
    in
       class Choose
-
 	 meth FindKids(Ks Depth CurX FindX $)
 	    !Ks=K|Kr
 	 in
@@ -75,9 +65,9 @@ local
    
 in
 
-   ActionNodes=c(succeeded: Succeeded
-		 failed:    FailedOrBlocked
-		 blocked:   FailedOrBlocked
+   ActionNodes=c(succeeded: Leaf
+		 failed:    Leaf
+		 blocked:   Leaf
 		 choose:    Choose)
 
 end
