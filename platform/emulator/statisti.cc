@@ -272,7 +272,7 @@ void Statistics::initCount() {
   taskStack=taskStackLen=0;
   cNervous=cSolve=cLocal=cJob=cCont=cXCont=cDebugCont=cExceptHandler=0;
   cCallCont= cCFuncCont=0;
-  abstraction=deepObject=flatObject=cell=0;
+  abstraction=deepObject=flatObject=cell=chunk=0;
   oneCallBuiltin=solvedBuiltin=builtin=0;
   heapChunk=thread=0;
   board=objectClass=0;
@@ -298,6 +298,7 @@ void Statistics::printCount() {
   printf("flatObject      %d (%dB)\n",flatObject,sizeof(Object));
   printf("objectClass     %d (%dB)\n",objectClass,sizeof(ObjectClass));
   printf("cell            %d (%dB)\n",cell,sizeof(Cell));
+  printf("chunk           %d (%dB)\n",chunk,sizeof(SChunk));
   printf("oneCallBuiltin  %d (%dB)\n",oneCallBuiltin,sizeof(OneCallBuiltin));
   printf("solvedBuiltin   %d (%dB)\n",solvedBuiltin,sizeof(SolvedBuiltin));
   printf("builtin         %d (%dB)\n",builtin,sizeof(Builtin));
