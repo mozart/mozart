@@ -372,7 +372,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
     case 'c':
       {
         sscanf(&command[1],"%d",&skip);
-        mode = NO;
+        if (skip==0) mode = NO;
         return OK;
       }
     case 'd':
