@@ -105,16 +105,14 @@ local
          Args = {Application.getCmdArgs ArgSpec}
 
          proc {SendApplet FileName Subject To}
-            case
+            if
                {OS.system ('metasend -b -e base64 -f '#FileName#
                            ' -m application/x-oz-application'#
-                           ' -s "'#Subject#'" -t '#To)}
-            of 0 then skip
-            else
+                           ' -s "'#Subject#'" -t '#To)}\=0
+            then
                raise failed(mail) end
             end
          end
-
 
          class Board from Server
             attr
@@ -258,10 +256,16 @@ local
 
                           grid({New Tk.button
                                 tkInit(parent: @top
-                                       text:  'Send Mail'
-                                       action: Desc.send)}
+                                       text:  'Mail Applet'
+                                       action: Desc.mail)}
                                sticky:ew pady:4
                                row:2 column:0)
+                          grid({New Tk.button
+                                tkInit(parent: @top
+                                       text:  'Save Applet'
+                                       action: Desc.save)}
+                               sticky:ew pady:4
+                               row:3 column:0)
                           update(idletasks)
                           wm(deiconify @top)]}
                {ConnectToAgenda @port}
@@ -567,10 +571,29 @@ local
 
             try
                {SendApplet FN 'Oz Drawing Board' To}
-            catch _ then skip
+            catch _ then
+               D={New TkTools.error
+                  tkInit(text: ('Could not send mail. Please check whether '#
+                                'metamail package is installed properly.'))}
+            in
+               {Wait D.tkClosed}
             end
 
             {OS.unlink FN}
+         end
+
+         proc {SaveBoard}
+            case {Tk.return
+                  tk_getSaveFile(filetypes: q(q('Oz Applications'
+                                                '.oza')
+                                              q('All files'
+                                                '*')))}
+            of nil then skip
+            [] S then
+               {Pickle.saveCompressed
+                {NewBoardFunctor false Ticket 'Saved'}
+                S PickleCompressionLevel}
+            end
          end
 
          Ticket B
@@ -593,7 +616,8 @@ local
             close: proc {$}
                       {Application.exit 0}
                    end
-            send:  MailBoard
+            mail:  MailBoard
+            save:  SaveBoard
             user:  UserId)}
 
          {Send B newUser(UserId Args.user)}
