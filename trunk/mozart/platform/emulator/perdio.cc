@@ -265,7 +265,7 @@ void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
   if (!literalEq(nil(),nogoods)) {
-    warning("send message %d contains nogoods: %s",mt,toC(nogoods));
+    warning("send message '%s' contains nogoods: %s",mess_names[mt],toC(nogoods));
   }
 
   int ret=toS->sendTo(bs,mt,sS,sI);
@@ -4497,12 +4497,10 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   int index=c->getIndex();
   Thread* th=am.currentThread();
   ControlVarNew(controlvar,c->getBoardInternal());
-  if(fea) 
-    pendBinding=new PendThread(th,pendBinding,val,fea,controlvar,DEEPAT);
-  else 
-    pendBinding=new PendThread(th,pendBinding,val,fea,controlvar,ACCESS);
+  Bool ask = (pendBinding==NULL);
+  pendBinding=new PendThread(th,pendBinding,val,fea,controlvar,fea ? DEEPAT : ACCESS);
 
-  if (pendBinding!=NULL) 
+  if (!ask) 
     goto exit;
   if(c->getTertType()==Te_Frame) {
     BorrowEntry *be=BT->getBorrow(index);
