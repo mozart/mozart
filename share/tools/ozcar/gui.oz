@@ -416,12 +416,12 @@ in
 	    Gui,printEnv(frame:0)
 	 else
 	    {W title(AltStackTitle # I)}
-	    Gui,Clear(W)
-	    case Depth == 0 then
-	       Gui,Disable(W)
-	       Gui,printEnv(frame:0)
-	    else
-	       lock
+	    lock
+	       Gui,Clear(W)
+	       case Depth == 0 then
+		  Gui,Disable(W)
+		  Gui,printEnv(frame:0)
+	       else
 		  Gui,Append(W {MakeLines Depth})  % Tk is _really_ stupid...
 		  {ForAll Frames
 		   proc{$ Frame}
