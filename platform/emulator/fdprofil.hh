@@ -22,10 +22,14 @@
 
 enum ProfileDataIndex {
   no_props = 0,
-  no_vars,
-  sz_vars,
+  no_vars_copied,
+  size_vars_copied,
   no_ent_props,
+  no_failed_props,
+  no_susp_props,
   no_touched_vars,
+  no_failed_fdunify_vars,
+  no_succ_fdunify_vars,
   from_home_to_home_hits,   // always hits
   from_home_to_deep_hits,   // always hits
   from_deep_to_home_misses, // always misses
@@ -103,7 +107,7 @@ public:
       delete(aux);
       aux = aux_next;
     }
-    curr = NULL;
+    head = tail = curr = NULL;
     add();
   }
   void get_average(void) {
@@ -113,8 +117,10 @@ public:
 
 
 #if PROFILE_FD == 1
-# define PROFILE_CODE1(CODE) {CODE}
+# define _PROFILE_CODE1(CODE) CODE
+# define PROFILE_CODE1(CODE) {_PROFILE_CODE1(CODE)}
 #else
+# define _PROFILE_CODE1(CODE)
 # define PROFILE_CODE1(CODE)
 #endif
 
