@@ -563,7 +563,9 @@ void CodeArea::gCollectCodeBlock(void) {
 }
 
 inline
-void CodeArea::gCollectCodeAreaStart(void) {
+void CodeArea::gCollectCodeAreaStart(void)
+{
+  (CodeArea::skipInGC)->referenced = OK;
   if (ozconf.codeGCcycles == 0) {
     codeGCgeneration = 1;
   } else if (++codeGCgeneration >= ozconf.codeGCcycles) {
