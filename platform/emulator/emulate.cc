@@ -761,6 +761,8 @@ loop:
               wa->getChildRefAt(1)->isFailureInBody()==OK &&
               solveAA->isEatWaits()) {
 
+            wa->getChildRefAt(1)->setFailed();
+
             Board *waitBoard = wa->getChildRef();
 
             ozstat.incSolveAlt();
@@ -797,14 +799,13 @@ loop:
             int clauseNo, noOfClauses;
 
             if (isSmallInt(guideTag)) {
-              clauseNo = smallIntValue(guideHead) - 1;
-              noOfClauses = ((clauseNo >= 0) &&
-                             (clauseNo < wa->getChildCount())) ? 1 : 0;
+              clauseNo    = smallIntValue(guideHead) - 1;
+              noOfClauses = wa->selectOrFailChild(clauseNo);
             } else {
               // now we have a pair of integers
               clauseNo = 0;
               noOfClauses =
-                wa->selectChildren(
+                wa->selectOrFailChildren(
                     smallIntValue(deref(
                       tagged2STuple(guideHead)->getArg(0)))-1,
                     smallIntValue(deref(
