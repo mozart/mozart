@@ -150,7 +150,7 @@ OZ_ADDTO_CONTRIBDIRS(davinci)
 AC_MSG_CHECKING([for --enable-contrib-reflect])
 AC_ARG_ENABLE(contrib-reflect,
   [--enable-contrib-reflect
-	whether to build the reflect contribution (default: yes)],
+	whether to build the reflect contribution (default: no)],
   [oz_cv_enable_contrib_reflect=$enableval],
   [: ${oz_cv_enable_contrib_reflect:=$oz_enable_contrib_reflect}
    : ${oz_cv_enable_contrib_reflect:=yes}])
