@@ -196,14 +196,15 @@ F={New Open.file
 <chunk class=anonymous><title/file catch/
 try
    _={New Open.file init(name:'not-existing')}
-catch system(os(A I S) ...) then
+catch system(os(A W I S) ...) then
    {Browse os(category:    A
+              what:        W
               number:      I
               description: S)}
 end
 </chunk>
         where <<A>> is an atom describing the category of the error
-        (&eg;, <<os>> or <<net>>), <<I>>&nbsp;is the operating system
+        (&eg;, <<os>> or <<net>>), <<W>> the system call that raised the exception, <<I>>&nbsp;is the operating system
         dependent error number, and <<S>> is a string describing the error.
       <P>
         Besides of operating system exceptions, the methods of the class

@@ -48,7 +48,7 @@ Program <ptr to=prog.shell> shows the definition of a shell class.
 <index/Shell/
 <figure class=Program id=prog.shell>
 <caption/A shell class./
-<<<
+<chunk class=anonymous><title/Shell/
 class Shell from Open.pipe Open.text
    meth init
       Open.pipe,init(cmd:"sh" args:["-s"])
@@ -63,39 +63,41 @@ class Shell from Open.pipe Open.text
       end
    end
 end
->>></figure>
+</chunk>
+</figure>
 
 Creating a shell object by
-<<<
+<chunk class=anonymous><title/shell init/
 S={New Shell init}
->>>
+</chunk>
 the command <file/sh/ is executed in a newly created process. The command
 <file/sh/ gets the argument <file/-s/ to signal that the shell should read
 from standard input. The forked process is connected by its
 standard input and standard output to the created <<Shell>> object.
+
 <p>
 By inheriting from the class <<Open.text>><index class=module/Open<AND>text/ we can
 simply send text to the running <file/sh/ process by using the <<putS>>
 method, and receive lines of text by using the <<getS>> method.
+
 <p>
 If we want to see the files in our home directory, we will first
 navigate to it by <file/cd(1)/, and then issue the <file/ls(1)/
 command:
-<<<
-{Shell cmd(cd)}
-{Shell cmd(ls)}
->>>
-<p>
+<chunk class=anonymous><title/shell cmd/
+{S cmd(cd)}
+{S cmd(ls)}
+</chunk>
 Now we can incrementally request the names of the files by
-<<<
-{Shell show}
->>>
+<chunk class=anonymous><title/shell show/
+{S show}
+</chunk>
 and they will appear in the Browser window.
 <p>
 Closing the object and the shell is done simply by
-<<<
-{Shell close}
->>>
+<chunk class=anonymous><title/shell close/
+{S close}
+</chunk>
 </section>
 
 
@@ -106,6 +108,20 @@ Closing the object and the shell is done simply by
 %%%
 %%% Chapter: Running Processes
 %%%
+
+
+declare
+<chunk.ref/Shell/
+
+declare
+<chunk.ref/shell init/
+
+<chunk.ref/shell cmd/
+
+<chunk.ref/shell show/
+
+<chunk.ref/shell close/
+
 
 
 
