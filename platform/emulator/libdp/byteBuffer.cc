@@ -24,10 +24,6 @@
 
 #include "byteBuffer.hh"
 
-// Default values
-#define BYTE_DEF_MINSEND 1    // Not in use
-#define BYTE_DEF_MINRECEIVE 1 // Not in use
-
 #define BYTE_MODE_MARSHALING 0
 #define BYTE_MODE_UNMARSHALING 1
 #define BYTE_MODE_NONE 2
@@ -143,18 +139,6 @@ void ByteBuffer::putBegin () {
   posMB=putptr;
 }
 
-int ByteBuffer::availableSpace() {
-  Assert(mode == BYTE_MODE_MARSHALING || mode == BYTE_MODE_NONE);
-  // used does not contain ongoing usage
-  // leave one byte for trailer
-  if (mode==BYTE_MODE_NONE)
-    return size-used-1;
-  else if (putptr<=posMB)
-    return size-used-(posMB-putptr)-1;
-  else
-    return size-used-(posMB-buf+endMB+1-putptr)-1;
-}
-
 void ByteBuffer::putNext(BYTE b) {
   Assert(mode == BYTE_MODE_MARSHALING);
   Assert(posMB >= putptr);
@@ -185,10 +169,6 @@ void ByteBuffer::getBegin() {
   Assert(mode == BYTE_MODE_NONE);
   mode = BYTE_MODE_UNMARSHALING;
   posMB = getptr;
-}
-
-Bool ByteBuffer::canGet(int size) {
-  return (used>=size);
 }
 
 BYTE ByteBuffer::getNext() {
