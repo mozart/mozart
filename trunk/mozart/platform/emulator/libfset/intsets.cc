@@ -713,6 +713,42 @@ OZ_BI_define(fsp_seq, 1, 0)
 } 
 OZ_BI_end
 
+// for seq/propagation, we can do better than to propagate the
+// known information: we can propagate necessary bounds even on
+// the unknown stuff.  For example, if a set var has cardinality
+// at least N and its LUB is {i1 i2 ... iN ...}, then its maximum
+// element (when N>0) is at least iN, which means that the next
+// set in the sequence must be above that limit.  Similarly in
+// the other direction.  For this reason, we define the auxiliary
+// functions FSetGetLowerBoundOfMax and FSetGetUpperBoundOfMin.
+
+// Here we approximate the max element in a set.
+// It must be at least as large as the largest element
+// in the GLB.  However, if the cardinality is at least
+// N, then it must be at least as large as the Nth smallest
+// element in the LUB, which could be larger than the
+// largest element currently in the GLB.
+
+int FSetGetLowerBoundOfMax(OZ_FSetConstraint& c)
+{
+  int i = c.getCardMin();
+  if (i==0) return c.getGlbMaxElem();
+  int n = c.getLubMinElem();
+  while (--i) n=c.getLubNextLargerElem(n);
+  return max(n,c.getGlbMaxElem());
+}
+
+// Similarly for the min element
+
+int FSetGetUpperBoundOfMin(OZ_FSetConstraint& c)
+{
+  int i = c.getCardMin();
+  if (i==0) return c.getGlbMinElem();
+  int n = c.getLubMaxElem();
+  while (--i) n=c.getLubNextSmallerElem(n);
+  int m = c.getGlbMinElem();
+  return (m>=0)?min(n,m):n;
+}
 
 OZ_Return FSetSeqPropagator::propagate(void)
 {
@@ -729,16 +765,14 @@ OZ_Return FSetSeqPropagator::propagate(void)
     int lb_max = -1;
     
     for (i = 0; i < _vs_size - 1; i += 1) {
-      int lb_max_tmp = vs[i]->getGlbMaxElem();
-      
-      lb_max = max(lb_max, lb_max_tmp);
+      lb_max = max(lb_max,FSetGetLowerBoundOfMax(*vs[i]));
       
       OZ_DEBUGPRINT(("%d", lb_max));
 
       // there is no maximal element in the lower bound so far
       if (lb_max == -1) 
 	continue;
-      
+
       FailOnInvalid(*vs[i+1] >= (lb_max + 1));
       
       OZ_DEBUGPRINT(("%d %s > %d\n", i, vs[i]->toString(), lb_max));
@@ -752,18 +786,15 @@ OZ_Return FSetSeqPropagator::propagate(void)
     int lb_min = sup1;
     
     for (i = _vs_size - 1; i > 0; i -= 1) {
-      int lb_min_tmp = vs[i]->getGlbMinElem();
-      
-      lb_min_tmp = (lb_min_tmp == -1 ? sup1 : lb_min_tmp);
-
-      lb_min = min(lb_min, lb_min_tmp);
+      int lb_min_tmp = FSetGetUpperBoundOfMin(*vs[i]);
+      if (lb_min_tmp>=0) lb_min=min(lb_min,lb_min_tmp);
       
       OZ_DEBUGPRINT(("%d", lb_min));
       
       // there is no minimal element in the lower bound so far
       if (lb_min == sup1) 
 	continue;
-      
+
       FailOnInvalid(*vs[i-1] <= (lb_min - 1));
       
      OZ_DEBUGPRINT(("#2 %d %s < %d\n", i, vs[i]->toString(), lb_min));
@@ -771,7 +802,6 @@ OZ_Return FSetSeqPropagator::propagate(void)
   }
 
   OZ_DEBUGPRINTTHIS("out ");
-
   return P.leave();
 
 failure:
