@@ -70,15 +70,14 @@ distclean: clean
 all:  version.h
 
 clean:
-	rm -f *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp version.h
+	rm -f *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res version.h
 
-win-install: setup.exe oz.exe ozdemo.exe ozengine.exe
-	$(INSTALL_BIN) setup.exe oz.exe ozdemo.exe ozengine.exe $(PREFIX)
+win-install: setup.exe oz.exe ozengine.exe
+	$(INSTALL_BIN) setup.exe oz.exe ozengine.exe $(PREFIX)
 
 
-ozdemo.exe ozengine.exe: oz.exe
-	cp oz.exe ozdemo.exe
-	cp oz.exe ozengine.exe
+ozengine.exe: oz.exe
+	cp oz.exe $@
 
 version.h: $(SRCTOP)/OZVERSION
 	echo "#define OZVERSION \"`$<`\"" > $@
