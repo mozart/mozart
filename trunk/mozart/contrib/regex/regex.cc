@@ -17,6 +17,8 @@
 #include <sys/types.h>
 
 #ifdef HAVE_STRDUP
+// quick fix to get it to compile at SICS on Solaris
+#define __EXTENSIONS__
 #include <string.h>
 #else
 inline char * strdup(const char *s) {
