@@ -30,7 +30,6 @@
 
 #include "base.hh"
 #include "dpBase.hh"
-#include "threadInterface.hh"
 #include "debug.hh"
 #include "dpDebug.hh"
 #include "network.hh"

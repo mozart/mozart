@@ -32,8 +32,8 @@
 
 #include "lps.hh"
 #include "am.hh"
-
-#include "threadInterface.hh"
+#include "prop_class.hh"
+#include "prop_int.hh"
 
 #ifdef OUTLINE
 #define inline

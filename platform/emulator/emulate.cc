@@ -34,14 +34,16 @@
 
 #include "am.hh"
 #include "space.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
+#include "debug.hh"
+#include "prop_int.hh"
+#include "space.hh"
 #include "codearea.hh"
 #include "builtins.hh"
 #include "indexing.hh"
 
 #include "allgenvar.hh"
 #include "dictionary.hh"
-#include "fdhook.hh"
 #include "marshaler.hh"
 #include "copycode.hh"
 #include "trace.hh"

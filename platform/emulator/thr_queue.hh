@@ -33,6 +33,9 @@
 #pragma interface
 #endif
 
+#include "base.hh"
+#include "mem.hh"
+
 //
 //  A queue a'la 'LocalPropagationQueue' by Tobias;
 

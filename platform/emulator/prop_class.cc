@@ -1,9 +1,9 @@
 /*
  *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -24,12 +24,6 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "fdhook.hh"
-#endif
+#include "prop_class.hh"
 
-#include "am.hh"
-
-#include "fdhook.hh"
-
-
+Propagator * Propagator::_runningPropagator = NULL;

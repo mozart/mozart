@@ -33,6 +33,7 @@
 
 #include "fdomn.hh"
 #include "builtins.hh"
+#include "genvar.hh"
 
 enum Recalc_e {lower, upper};
 
@@ -60,9 +61,6 @@ enum Recalc_e {lower, upper};
     return FailFD;				\
   }						\
 }
-
-#include "fdhook.hh"
-#include "genvar.hh"
 
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentPropagator ()) { \

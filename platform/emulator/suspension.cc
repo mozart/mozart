@@ -1,9 +1,9 @@
 /*
  *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -24,20 +24,4 @@
  *
  */
 
-#ifndef __FDHOOK__H__
-#define __FDHOOK__H__
-
-#ifdef INTERFACE
-#pragma interface
-#endif
-
-#include "base.hh"
-
-#include "thread.hh"
-
-inline 
-Bool isUnifyCurrentPropagator () {
-  return Propagator::getRunningPropagator()->isUnifyPropagator();
-}
-
-#endif
+#include "suspension.hh"

@@ -30,8 +30,11 @@
 
 #include "value.hh"
 #include "trace.hh"
-#include "threadInterface.hh"
+#include "thr_int.hh"
 #include "builtins.hh"
+#include "debug.hh"
+#include "solve.hh"
+#include "space.hh"
 
 # define CBB (oz_currentBoard())
 # define CTT (oz_currentThread())
