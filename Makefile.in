@@ -345,4 +345,9 @@ CYG_PREFIX      = $(shell $(CYGPATH) $(PREFIX))
 
 installstd:
         test -n "$(STDLIB)" || { echo "set STDLIB to source dir for mozart standard library"; exit 1; }
-        (cd $(STDLIB) && $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(CYG_PREFIX) --nosavedb)
+        (cd $(STDLIB) && \
+         if test -r mozart-stdlib.pkg; then \
+           $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(CYG_PREFIX) --nosavedb --package=mozart-stdlib.pkg; \
+         else \
+           $(PREFIX)/bin/ozengine ./ozmake.ozf --install --prefix=$(CYG_PREFIX) --nosavedb; \
+         fi)
