@@ -320,6 +320,11 @@ Bool getSign(int i) {
 }
 
 inline
+Bool getSign(double  i) {
+  return i >= 0.0;
+}
+
+inline
 void getSignbit(int i, int n) {
   static_sign_bit[i] = getSign(n);
 }
@@ -361,6 +366,20 @@ Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
   return s;
 }
 
+//-----------------------------------------------------------------------------
+// fd built-ins don't cause stuck threads, but may cause their minds, therefore
+
+#undef FDBISTUCK
+
+#ifdef FDBISTUCK
+
+#define SUSPEND_PROCEED SUSPEND
+
+#else 
+
+#define SUSPEND_PROCEED PROCEED
+
+#endif
 
 //-----------------------------------------------------------------------------
 //                          class BIfdHeadManager
@@ -401,9 +420,9 @@ public:
   Bool expectNonLin(int i, STuple &at, STuple &xt, TaggedRef tagged_xtc,
 		    int &s, OZ_CFun func, RefsArray xregs, int arity);
   
-  OZ_Bool addSuspFDish(void);
-  OZ_Bool addSuspSingl(void);
-  Bool addSuspXorYdet(void);
+  OZ_Bool addSuspFDish(OZ_CFun, RefsArray, int);
+  OZ_Bool addSuspSingl(OZ_CFun, RefsArray, int);
+  Bool addSuspXorYdet(OZ_CFun, RefsArray, int);
   
   int simplify(STuple &a, STuple &x) {
     return curr_num_of_items = simplifyHead(curr_num_of_items, a, x);
@@ -425,17 +444,6 @@ public:
   }
   int getCurrNumOfItems(void) {return curr_num_of_items;}
   
-  TaggedRef * makeArgs3(int x, int y, int c) {
-    DebugCheck((x < 0 || x >= curr_num_of_items ||
-		y < 0 || y >= curr_num_of_items ||
-		c < 0 || c >= curr_num_of_items),
-	       error("index overflow"));
-    int c_val = -bifdhm_coeff[c] * smallIntValue(bifdhm_var[c]);
-    return allocateRegs(makeTaggedRef(bifdhm_varptr[x]),
-			makeTaggedRef(bifdhm_varptr[y]),
-			newSmallInt(c_val));
-  }
-
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term, ...);
@@ -794,7 +802,7 @@ public:
     if (am.currentBoard->isRoot()) {
       for (int i = curr_num_of_vars; i--; )
 	if (bifdbm_vartag[i] == pm_fd)
-	  tagged2GenFDVar(bifdbm_var[i])->getDom() = bifdbm_domain[i];
+	  tagged2GenFDVar(bifdbm_var[i])->getDom() = *bifdbm_dom[i];
     }
   }
 }; // BIfdBodyManager

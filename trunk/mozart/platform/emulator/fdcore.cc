@@ -258,7 +258,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   }
 
   switch (checkDomDescr(OZ_getCArg(1), OZ_self, OZ_args, OZ_arity)) {
-  case SUSPEND: return SUSPEND;
+  case SUSPEND: return SUSPEND_PROCEED;
   case FAILED:  return FAILED;
   case PROCEED: break;
   default:      error("Unexpected value"); break;
