@@ -38,7 +38,8 @@
     <Title/Toplevel Widgets and Widget Objects/
 
     <P>
-      A toplevel widget serves as the outermost container for other widgets.
+      A toplevel widget serves as the outermost <def/container/ for
+      other widgets. 
       It can be created from the class <<Tk.toplevel>> and can be initialized
       by applying it to a message with label <<tkInit>>.  An example is shown
       in <Ptr to="picture.widgets-1.toplevel">.  The features <<width>> and
@@ -109,14 +110,14 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	appearance and behavior of widgets, or computes a geometry for
 	the layout of a widget on the screen.
 
-      <P>
+      <para class=apropos><title/tickles/
 	The messages the engine understands are <Def/tickles/. The
 	procedures <<Tk.send>> and <<Tk.batch>> take a tickle or a
 	list of tickles and send it to the graphics engine.  We use
 	these two procedures especially to send tickles for geometry
 	management, as is discussed in <Ptr to="chapter.geometry">.
 
-      <P>
+      <para class=apropos><title/translating object messages to tickles/
 	Messages sent to widgets and other objects of the Tk interface
 	are translated in a straightforward fashion to tickles.  These
 	tickles are then forwarded to the graphics engine.
@@ -140,12 +141,12 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	<<action>>, <<url>>, and <<args>> may take different values.
 	These features we will discuss later. 
 
-      <P>
+      <para class=apropos><title/options/
 	To the features we refer to as <Def/configuration options/, or
 	for short as <Def/options/.  Their values we refer to as
 	<Def/option values/.
 
-      <P>
+      <para class=apropos><title/commands and arguments/
 	A message with label <<tk>> must be a record with at least a single
 	integer feature and maybe some other integer features and some
 	options.  The value of the first integer feature we call the
@@ -199,7 +200,7 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TD/<<o(10 12 fill:yellow)>>/
 	      <TD proglang=tcl/<<10 12 -fill yellow>>/
 	      <TD/option/
-              <td/the label <<o>> is skipped/
+              <td/see <ptr to="figure.canvas.barchart">/
 	    <TR>
 	      <TD/<<l(red green blue)>>/
 	      <TD proglang=tcl/<<[red green blue]>>/ 
@@ -209,7 +210,7 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TD/<<q(red green blue)>>/
 	      <TD proglang=tcl/<<{red green blue}>>/
 	      <TD/quote/
-              <td/group list of tickles/
+              <td/see <ptr to="figure.canvas.barchart">/
 	    <TR>
 	      <TD/<<s(red green blue)>>/
 	      <TD proglang=tcl/<<"red green blue">>/
@@ -219,18 +220,27 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
 	      <TD/<<p(4 7 linestart)>>/
 	      <TD proglang=tcl/<<{4.7 linestart}>>/
 	      <TD/position/
-              <td/position used with 
-                  <ref to="chapter.text"/text widgets//
+              <td/see <ptr to="para.text.position">/
 	    <TR>
 	      <TD/<<b([a(b:1) c(d:2)])>>/
 	      <TD proglang=tcl/<<a -b 1 c -d 2>>/
 	      <TD/batch/
-	      <TD/concatenate tickles/
+	      <TD/see <ptr to="para.geometry.batch">/
 	    <TR>
 	      <TD/<<v(1#"\nno quotation")>>/
 	      <TD proglang=tcl/<<1\nno quotation>>/
 	      <TD/virtual string/
 	      <TD/verbatim virtual strings/
+	    <TR>
+	      <TD/<<c(255 128 0)>>/
+	      <TD proglang=tcl/<<#FF8000>>/
+	      <TD/color/
+	      <TD/see <ptr to="figure.widgets-2.scales">/
+	    <TR>
+	      <TD/<<d(pack(grid weight:4))>>/
+	      <TD proglang=tcl/<<grid -weight 4>>/
+	      <TD/delete/
+	      <TD/skip record label/
 	  </Table>
 	</Figure>
 
@@ -251,7 +261,7 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
     <SubSection id="section.widgets-1.relief">
       <Title/Relief Options/
 
-      <P>
+      <para class=apropos><title/relief and border/
 	Frames support the <<relief>> and <<borderwidth>> options.  These
 	options determine a three dimensional border to be drawn around
 	a frame.  The values for the <<relief>> option must be one of
@@ -275,7 +285,7 @@ Fs={Map [groove ridge flat sunken raised]
 </chunk>
 	</Figure>
 
-      <P>
+      <para class=apropos><title/parent widgets/
 	The <<tkInit>> message contains the option <<parent>> which links the
 	frames into its parent, the toplevel widget&nbsp;<<W>>.  All widgets
 	but toplevels need a parent widget, this is discussed in <Ptr
@@ -323,12 +333,12 @@ Fs={Map [groove ridge flat sunken raised]
 	configured the background color to be black. Color options can be
 	given either symbolically or numerically.
 
-      <P>
+      <para class=apropos><title/symbolic color values/
 	A symbolic color value can be given as virtual string like <<black>>,
 	<<"red">>, or <<"dArK"#blUe>>, where the capitalization does not have
 	any significance. 
 
-      <P>
+      <para class=apropos><title/numerical color values/
 	A numerical color value is determined by three integers between <<0>>
 	and <<255>>.  The three integers describe the red, green, and blue part
 	of the color.  A numerical color value in &Oz; can be specified by a
@@ -359,7 +369,7 @@ Fs={Map [groove ridge flat sunken raised]
 	  <TD><<bd>>
       </Table>
       
-      <p>
+      <para class=apropos><title/option abbreviations/
       In addition to synonyms, it is also possible to abbreviate options
       provided that
       the abbreviation is unambiguous.  For example, it is correct to
@@ -384,7 +394,7 @@ Fs={Map [groove ridge flat sunken raised]
   <Section id="section.widgets-1.hierarchy">
     <Title/The Widget Hierarchy/
 
-    <P>
+    <para class=apropos><title/masters and slaves/
       Widgets are arranged in a hierarchy.  Each widget has a single
       <def/parent/. The only exceptions can be toplevel widget
       objects, which do not have to have a parent.  The parent of a
@@ -475,7 +485,7 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
 	relative to where the Mozart system has been installed, that
 	is relative to <<{Property.get 'oz.home'}>>.
 
-      <P>
+      <para class=apropos><title/predefined bitmaps/
 	If the first character is different from <File/@/, it is interpreted
 	as the name of a predefined bitmap.  A program that displays
 	all predefined bitmaps
@@ -504,7 +514,7 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
 </chunk>
 	</Figure>
 
-      <P>
+      <para class=apropos><title/bitmap colors/
 	Bitmaps have two colors, which can be configured with the
 	<<foreground>> and <<background>> options.  The color of the bitmaps'
 	pixels is given by the foreground color. 
@@ -563,7 +573,10 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
         complete overview consult <Ref.extern
         to="&tkcmd;/font.htm"/<kbd/font//.
       
-
+      <p>
+        Regardless of the platform, the families <<courier>>,
+        <<times>>, and <<helvetica>> are supported.
+      
   <Section id="section.widgets-1.images">
     <Title/Images/
 
@@ -603,18 +616,18 @@ L3={New Tk.label tkInit(parent:W image:I)}
       replaces all three displayed trucks by trucks heading in the inverse
       direction.
 
-    <P>
+    <para class=apropos><title/type and format/
       Images can be of two different types.  The value of the <<type>>
       configuration option can be <<photo>> (as in our example), or <<bitmap>>.
       If the type is <<photo>>, the image can display files in two different
       formats.  The format is specified by the <<format>> option.  Valid
       values for the <<format>> option are <<gif>> and <<ppm>>.
 
-    <P>
+    <para class=apropos><title/bitmap images/
       In case the value for the <<type>> option is <<bitmap>>, the value given
       for the <<file>> option must be a valid bitmap file.
 
-    <P>
+    <para class=apropos><title/referring to images by URLs/
       In addition to files, images can also be referred to by
       URLs. For example,
 <<<{New Tk.image tkInit(type:photo format:gif
@@ -641,7 +654,7 @@ L3={New Tk.label tkInit(parent:W image:I)}
   <Section id="section.widgets-1.messages">
     <Title/Messages/
 
-    <P>
+    <para class=apropos><title/aspect and justify/
       Message widgets display text extending over several lines.  How the
       text is distributed over several lines is determined by one of the
       options <<width>> and <<aspect>>.  Each of the line is justified
@@ -665,7 +678,7 @@ Ms={Map [left#200 center#100 right#50]
 </chunk>
       </Figure>
 
-    <P>
+    <para class=apropos><title/aspect and width/
       If the option <<width>> is present, the value (a screen distance, see
       <Ptr to="section.widgets-1.distances">) gives the length of each line.
       If no <<width>> option is present, the aspect ratio between height
