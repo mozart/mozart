@@ -24,6 +24,8 @@
 %% the Gump Scanner Generator.
 %%
 
+\insert Errors.oz
+
 local
    LexBase = {Foreign.load 'www.ps.uni-sb.de/ozhome/tools/gump/GumpScanner.dl'}
 
