@@ -170,9 +170,9 @@ import
       <tr/<td/<<FS>>/
           <td/Finite set propagators and distributors/
           <td/<ptr.extern to="ozdoc:system" key="chapter.fs">//
-      <tr/<td/<<FC>>/
+      <tr/<td/<<RecordC>>/
           <td/Feature constraints (record constraints with open arities)/
-          <td/<ptr.extern to="ozdoc:system" key="chapter.fc">//
+          <td/<ptr.extern to="ozdoc:system" key="chapter.recordc">//
       <tr/<td/<<Combinator>>/
           <td/Deep-guard combinators/
           <td/<ptr.extern to="ozdoc:system" key="chapter.combinator">//
