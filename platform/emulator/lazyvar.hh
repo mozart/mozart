@@ -30,4 +30,20 @@ public:
   void addSuspLazy(Thread*);
 };
 
+
+inline
+Bool isLazyVar(TaggedRef term)
+{
+  GCDEBUG(term);
+  return isCVar(term) && (tagged2CVar(term)->getType() == LazyVariable);
+}
+
+inline
+GenLazyVariable *tagged2LazyVar(TaggedRef t) {
+  Assert(isLazyVar(t));
+  return (GenLazyVariable *) tagged2CVar(t);
+}
+
+
+
 #endif /* __LAZYVAR__H__ */
