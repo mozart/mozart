@@ -771,7 +771,7 @@ define
 	    [] code then HTML in
 	       OzDocToHTML, BatchCode(M 1 ?HTML)
 	       case M.display of display then
-		  BLOCK(blockquote(COMMON: @Common pre(HTML)))
+		  BLOCK(blockquote(COMMON: @Common HTML))
 	       [] inline then span(COMMON: @Common HTML)
 	       end
 	    [] 'code.extern' then HTML in
