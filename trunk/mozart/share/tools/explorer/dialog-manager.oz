@@ -7,17 +7,8 @@
 
 local
 
-   class CloseDialog
-      from TkTools.dialog Object.closedFeature
-
-      meth close
-	 <<TkTools.dialog close>>
-	 <<Object.closedFeature close>>
-      end
-   end 
-
    class AboutDialog 
-      from CloseDialog
+      from TkTools.dialog
 
       meth init(master:Master)
 	 <<TkTools.dialog tkInit(master:  Master
@@ -41,16 +32,9 @@ local
 
    end
 
-   class ErrorTool from TkTools.error Object.closedFeature
-      meth close
-	 <<TkTools.error close>>
-	 <<Object.closedFeature close>>
-      end
-   end
-   
 
    class PostscriptDialog
-      from CloseDialog
+      from TkTools.dialog
       
       meth init(master:M options:O)
 
@@ -122,7 +106,7 @@ local
 
 
    class DrawingDialog
-      from CloseDialog
+      from TkTools.dialog
 
       meth init(master:M options:O)
 
@@ -203,7 +187,7 @@ local
    in
 
       class SearchDialog
-	 from CloseDialog
+	 from TkTools.dialog
 
 	 meth init(master:M options:O)
 
@@ -339,7 +323,7 @@ in
       end
 
       meth error(M)
-	 {Wait {New ErrorTool
+	 {Wait {New TkTools.error
 		tkInit(master:  self.toplevel
 		       text:    M
 		       title:   TitleName#': Error Message')}.closed}
