@@ -6554,9 +6554,9 @@ OZ_C_proc_begin(BImakeClass,6)
   OZ_Term out        = OZ_getCArg(5);
 
   if (!isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
-  if (!isRecord(features))       { oz_typeError(4,"record"); }
-  if (!isRecord(ufeatures))      { oz_typeError(5,"record"); }
-  if (!isDictionary(defmethods)) { oz_typeError(6,"dictionary"); }
+  if (!isRecord(features))       { oz_typeError(1,"record"); }
+  if (!isRecord(ufeatures))      { oz_typeError(2,"record"); }
+  if (!isDictionary(defmethods)) { oz_typeError(3,"dictionary"); }
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
@@ -6564,7 +6564,7 @@ OZ_C_proc_begin(BImakeClass,6)
                                     tagged2Dictionary(fastmeth),
                                     uf,
                                     tagged2Dictionary(defmethods),
-                                    locking==NameTrue,
+                                    literalEq(locking,NameTrue),
                                     am.currentBoard);
 
   return oz_unify(out,makeTaggedConst(cl));
@@ -6645,17 +6645,12 @@ DECLAREBI_USEINLINEREL1(BIisObject,BIisObjectInline)
 DECLAREBOOLFUN1(BIisObjectB,BIisObjectBInline,BIisObjectInline)
 
 
-/* getClass(t) returns class of t, if t is an object
- * otherwise return t!
- */
 OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 {
   DEREF(t,_,tag);
   if (isAnyVar(tag)) return SUSPEND;
   if (!isObject(t)) {
     oz_typeError(0,"Object");
-    //    out = t;
-    // return PROCEED;
   }
   out = makeTaggedConst(tagged2Object(t)->getClass());
   return PROCEED;
