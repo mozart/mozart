@@ -332,6 +332,7 @@ void AM::suspendEngine()
       handleUser();
       continue;
     }
+
     setUserAlarmTimer(ticksleft);
   }
 
@@ -1164,10 +1165,15 @@ void AM::handleIO()
   // find the nodes to awake
   for (int index = 0; numbOfFDs > 0; index++) {
     for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
+
       if (osNextSelect(index, mode) ) {
+
         numbOfFDs--;
-        if ((*ioNodes[index].handler)(index,
-                                      ioNodes[index].readwritepair[mode])) {
+
+        if ((ioNodes[index].handler[mode]) &&
+            (ioNodes[index].handler[mode])(
+                          index,
+                          ioNodes[index].readwritepair[mode])) {
           ioNodes[index].readwritepair[mode] = makeTaggedNULL();
           ioNodes[index].handler[mode] = 0;
           osClrWatchedFD(index,mode);
