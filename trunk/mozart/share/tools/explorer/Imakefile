@@ -4,15 +4,11 @@ OZEXPLORER  = $(OZLIB)/explorer
 
 
 LOCALFILES = \
-	main.oz misc.oz \
-	action-nodes.oz hide-nodes.oz \
-	bab-nodes.oz layout-nodes.oz \
-	basic-nodes.oz manager.oz \
-	menu-manager.oz \
-	move-nodes.oz tk-nodes.oz \
+	main.oz misc.oz action-nodes.oz hide-nodes.oz \
+	layout-nodes.oz manager.oz \
+	menu-manager.oz move-nodes.oz tk-nodes.oz \
 	configure.oz nodes.oz toplevel-manager.oz \
-	default-actions.oz search-nodes.oz \
-	df-nodes.oz stat-nodes.oz \
+	default-actions.oz search-nodes.oz stat-nodes.oz \
 	dialog-manager.oz shapes-and-images.oz status-manager.oz
 
 BITMAPS = \
