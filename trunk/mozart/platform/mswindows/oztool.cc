@@ -311,12 +311,18 @@ int main(int argc, char** argv)
     char ** wc=new char*[argc+1];
     switch (sys) {
     case SYS_WAT:
-      wc[r++]= cxx ? "wpp386" : "wcc386";
+      if (cxx)
+	wc[r++]="wpp386";
+      else
+	wc[r++]="wcc386";
       wc[r++]="-zq";
       wc[r++]="-bd";
       break;
     case SYS_GNU:
-      wc[r++]=cxx ? "g++" : "gcc";
+      if (cxx)
+	wc[r++]="g++";
+      else
+	wc[r++]="gcc";
       break;
     case SYS_MSVC:
       wc[r++]="cl";
