@@ -147,7 +147,7 @@ public:
     pc   = (ProgramCounter) *(top-1);		\
     y    = (RefsArray) *(top-2);		\
     g    = (RefsArray) *(top-3);		\
-    top -= 3
+    top -= frameSz;
 
 #define PopFrame(top,pc,y,g)			\
     ProgramCounter pc;				\

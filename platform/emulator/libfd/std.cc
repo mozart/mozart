@@ -20,7 +20,7 @@
 #include <strstream.h>
 #endif
 
-#if defined(__WATCOMC__) || defined(_MSC_VER) || defined(__WIN32__)
+#ifdef WINDOWS
 
 /* the following have been copied from linux's values.h */
 #define _DEXPLEN    11
