@@ -222,7 +222,7 @@ but not possible in the current release.
 A <EM>modification</EM> is an operation that is specified
 but behaves differently in the current release.
 
-<P>The limitations and modifications
+<P>Most of the limitations and modifications
 listed here will be removed in future releases.
 
 <SECTION><TITLE>Limitations</TITLE>
