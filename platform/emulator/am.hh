@@ -282,7 +282,8 @@ public:
 
   void handleIO();
   Bool loadQuery(CompStream *fd);
-  int select(int fd,int mode,TaggedRef l,TaggedRef r);
+  int select(int fd,int mode, TaggedRef l, TaggedRef r);
+  void acceptSelect(int fd, TaggedRef l, TaggedRef r);
   void deSelect(int fd);
   void checkIO();
 
