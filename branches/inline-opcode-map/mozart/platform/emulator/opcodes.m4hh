@@ -1,0 +1,93 @@
+/*
+ *  Authors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __OPCODESH
+#define __OPCODESH
+
+#include "base.hh"
+
+/* FASTCALL is defined in cygwin W32API package version >= 2.1
+ * Not undefining yields a parse error
+ */
+#ifdef FASTCALL
+#undef FASTCALL
+#endif
+
+typedef enum {
+
+define(`OPCODE',0) dnl
+define(readArg,$1)
+define(writeArg,$1)
+define(instruction,
+	`TOUPPER($1) = OPCODE, dnl
+	 incrop(1) dnl
+')
+
+include(EMUDIR/instrDefs.m4)
+
+
+
+OZERROR  /* this should always be the last one */
+} Opcode;
+
+
+#ifdef INLINEOPCODEMAP
+
+changecom(comment,COMMENT)
+
+define(`OPCODE',0)
+define(CATUPPER,`$1`'TOUPPER($2)')
+define(`instruction',`#define CATUPPER(OPM_,$1) ".long OPCODE" incrop(1)')
+
+include(EMUDIR/instrDefs.m4)
+
+#define OPM_OZERROR ".long OPCODE"
+
+#endif
+
+class OpcodeInfo {
+public:
+  const char * printname;
+  int size;
+};
+
+extern OpcodeInfo opcodes[];
+
+inline
+int sizeOf(Opcode oc) {
+  Assert((int)oc < OZERROR);
+  return opcodes[(int)oc].size;
+}
+
+inline
+const char * opcodeToString(Opcode oc) {
+  Assert((int)oc < OZERROR);
+  return opcodes[(int)oc].printname;
+}
+
+Opcode stringToOpcode(const char *s);
+
+#endif

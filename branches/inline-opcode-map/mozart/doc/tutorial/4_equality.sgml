@@ -1,0 +1,179 @@
+<!--
+  - Authors:
+  -   Seif Haridi (seif@sics.se)
+  -   Nils Franzen (nilsf@sics.se)
+  -
+  - Copyright:
+  -   Seif Haridi, Nils Franzen, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER ID="chapter.equality">
+<TITLE>Equality and the Equality Test Operator</TITLE>
+
+<P>We have so far shown simple examples of the equality statement, e.g.  
+
+<<<W = tree(I Y LT LR)>>>
+
+<P>These were simple enough to understand intuitively what is going
+on. However, what happens when two unbound variables are equated
+<<X = Y>>, or when two large data structures are equated. Here is a short
+explanation. We may think of the store as a dynamically expanding
+array of memory words called <EM>nodes</EM>. Each node is labeled by a
+logic variable. When a variable <<X>> is introduced a new node is
+created in the store, labeled by <<X>>, having the value
+<EM>unknown</EM>. At this point, the node does not possess any real
+value; it is empty as a container that may be filled later.
+
+<P>A variable labeling a node whose value is <EM>unknown</EM> is an
+<EM>unbound</EM> variable.  The nodes are flexible enough to contain
+any arbitrary Oz value. The operation
+
+<<<W = tree(1:I 2:Y 3:LT 4:LR)>>>
+
+<P>stores the record structure in the node associated with
+<<W>>. Notice that we are just getting a graph structure. The node
+contains a record with four fields. The fields contain arcs pointing
+to the nodes labeled by <<I>> ,<<Y>> ,<<LT>>, and <<LR>>
+respectively. Each arc, in turn, is labeled by the corresponding
+feature of the record. Given two variables <<X>> and <<Y>>, the
+operation <<X = Y>> will try to <EM>merge</EM> their respective
+nodes. Now we are in a position to give a reasonable account for the
+merge operation <<X = Y>>, known as the
+<index id=idx.unification/unification/
+<index see=idx.unification/tell<and>incremental/
+<index see=idx.unification/merge<and>merging nodes/
+<EM>incremental tell</EM> or
+alternatively the <EM>unification</EM> operation.
+
+<LIST>
+
+ <ITEM>If ?{X} and ?{Y} label the same node, the operation is 
+ completed successfully.
+
+ <ITEM>If ?{X} (&resp; ?{Y}) is unbound then merge the node of ?{X}
+(&resp; ?{Y})
+ with the node of ?{Y} (&resp; ?{X}). Merging means replacing all references
+ to the node ?{X} by a reference to ?{Y}<NOTE FOOT>This could be done by
+ many various ways. One way is to let the node ?{X} point to the node ?{Y}, 
+ and changing ?{X} to be a reference node. The chain of reference node 
+ are always traversed before performing any unification operation.</NOTE>. 
+ Conceptually the original node of ?{X} has been discarded.
+
+ <ITEM>If ?{X} and ?{Y} label different nodes containing the records 
+ ?{Rx} and ?{Ry} respectively:
+
+ <LIST>
+
+  <ITEM>If ?{Rx} and ?{Ry} have different labels, 
+  arities, or both: the operation is completed, and an exception is raised.
+
+  <ITEM>Otherwise, the arguments of ?{Rx} and ?{Ry}
+  with the same feature are pair-wise merged in arbitrary order.
+
+ </LIST>
+
+</LIST>
+
+<P>In general the two graphs, to be merged, could have cycles. However
+any correct implementation of the merge operation will remember the
+node pairs for which an attempt to merge has been made earlier, and
+considers the operation to be successfully performed. A more formal
+description of the incremental tell operation is found in <ptr to=seif98>.
+
+<P>When a variable is no longer accessible, a process known as garbage
+collection reclaims its node.
+
+<P>Here are some examples of successful equality operations:
+
+<<<
+local X Y Z in
+   f(1:X 2:b) = f(a Y)
+   f(Z a) = Z
+   {Browse [X Y Z]}
+end
+>>>
+
+<P>will show <<[a b R14=f(R14 a)]>> in the browser. <<R14=f(R14 a)>> is 
+the external representation of a cyclic graph. 
+
+<P CLASS=WARNING>To be able to see the finite representation of Z, you
+have to switch the Browser to <EM>Minimal Graph</EM> presentation
+mode. Choose the Option menu, Representation field, and click on
+Minimal Graph.
+
+<P CLASS=WARNING>The Browser is described in <PTR.EXTERN
+to="ozdoc:browser">.
+
+<P>The following example shows, what happens when variables with
+incompatible values are equated.
+
+<<<
+declare X Y Z in
+X = f(c a)
+Y = f(Z b)
+X = Y
+>>>
+
+<P>The incremental tell of <<X = Y>> will bind <<Z>> to the value
+<<c>>, but will also raise an exception that is caught by the system,
+when it tries to equate <<a>> and <<b>>.
+
+
+<SECTION><TITLE>Equality test operator <<==>></TITLE>
+<P>The basic procedure <<{Value.'==' X Y R}>> tries to test whether <<X>>
+and <<Y>> are equal or not, and returns the result in <<R>>.
+
+<LIST>
+ <ITEM>It returns the Boolean value <<true>> if the graphs starting from 
+ the nodes of <<X>> and <<Y>> have the same structure, with each pair-wise
+ corresponding nodes having identical Oz values or are the same node.  
+
+ <ITEM>It returns the Boolean value <<false>> if the graphs have different
+ structure, or some pair-wise corresponding nodes have different values. 
+
+ <ITEM>It suspends when it arrives at pair-wise corresponding nodes that 
+ are different, but at least one of them is unbound. 
+
+</LIST>
+
+<P>Now remember this, if a procedure suspends, the whole thread
+suspends! This does not seem very useful. However, as you will see
+later, it becomes a very useful operation when multiple threads start
+interacting with each other.
+
+<P>The equality test is normally used as a functional expression,
+rather than a statement.  <<{Value.'==' X Y R}>> can also be
+written <<R = X==Y>> using the infix <<==>> operator.  This is further
+illustrated in the example below:
+
+<<<
+% See, lists are just tuples, which are just records
+local L1 L2 L3 Head Tail in
+   L1 = Head|Tail
+   Head = 1
+   Tail = 2|nil
+
+   L2 = [1 2]
+   {Browse L1==L2}
+
+   L3 = '|'(1:1 2:'|'(2 nil))
+   {Browse L1==L3}
+end
+>>>
+
+</CHAPTER>

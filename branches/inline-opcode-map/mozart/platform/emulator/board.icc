@@ -1,0 +1,382 @@
+/*
+ *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ *
+ *  Contributors:
+ *    Michael Mehl (mehl@dfki.de)
+ *
+ *  Copyright:
+ *    Kostja Popow, 1997-1999
+ *    Michael Mehl, 1997-1999
+ *    Christian Schulte, 1997-1999
+ *    Tobias Mueller, 1998-1999
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ *
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __BOARD_ICC_
+#define __BOARD_ICC_
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+#include "am.hh"
+#include "susplist.hh"
+#include "value.hh"
+#include "trail.hh"
+#include "var_base.hh"
+#include "builtins.hh"
+
+#ifdef OUTLINE
+#define inline
+#endif
+
+inline
+int Board::isAdmissible(void) {
+  Assert(!isCommitted());
+  Board * b1 = oz_currentBoard();
+  Board * b2 = this;
+  // Most frequent case
+  if (b2->getParent() == b1)
+    return OK;
+  // Traverse upwards: b2 must not occur on path from b1 to root
+  while (!(b1->isRoot())) {
+    if (b1 == b2)
+      return NO;
+    b1 = b1->getParent();
+  }
+  return OK;
+}
+
+inline
+void Board::addSuspension(Suspendable * susp) {
+  suspList = new SuspList(susp, suspList);
+}
+
+inline
+void Board::addToNonMono(Propagator * prop) {
+  setNonMono(getNonMono()->insert(prop));
+}
+
+inline
+TaggedRef Board::genSucceeded(Bool isEntailed) {
+  ozstat.incSolveSolved();
+  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
+
+  stuple->setArg(0, isEntailed ? AtomEntailed : AtomStuck);
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+TaggedRef Board::genAlt(int noOfClauses) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+
+  Assert(!isCommitted());
+  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+void Board::patchAltStatus(int i) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+  stuple->setArg(0, makeTaggedSmallInt(i));
+  status = makeTaggedSRecord(stuple);
+}
+
+/*
+ * Non monotonic propagators
+ *
+ */
+
+inline
+void Board::scheduleNonMono(void) {
+  for (OrderedSuspList * p = getNonMono(); p != NULL; p = p->getNext())
+    addToLPQ(p->getPropagator());
+  
+  setNonMono(NULL);
+}
+
+
+/*
+ * increment/decrement the thread counter
+ * in every solve board above
+ * if "stable" generate a new thread "solve waker"
+ * NOTE:
+ *   there may be failed board in between which must be simply ignored
+ *
+ */
+
+inline
+Bool Board::isStable(void) {
+  if (hasRunnableThreads())
+    return NO;
+
+  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
+    return NO;
+
+  if (isEmptySuspList())
+    return OK;
+
+  clearSuspList((Thread *) NULL);
+
+  return isEmptySuspList();
+}
+
+inline
+Bool Board::isBlocked(void) {
+  return !hasRunnableThreads();
+}
+
+inline
+void Board::incRunnableThreads(void) {
+  Assert(!isCommitted() && !isRoot());
+
+  Board * bb = this;
+
+  do {
+    Assert(bb->crt >= 0);
+    if ((bb->crt)++ > 0)
+      return;
+    bb = bb->getParent();
+  } while (!bb->isRoot());
+
+}
+
+// from thr_int.hh
+
+Thread * oz_newThreadInject(Board * bb);
+
+inline
+void Board::decRunnableThreads(void) {
+  Assert(!isCommitted());
+
+  Board * bb = this;
+
+  while (!bb->isRoot()) {
+
+    Assert(bb->crt >= 0);
+
+    if (--(bb->crt) > 0)
+      return;
+    
+    if (bb->isStable())
+      oz_newThreadInject(bb);
+    
+    bb = bb->getParent();
+  }
+
+}
+
+inline
+TaggedRef Board::genFailed() {
+  ozstat.incSolveFailed();
+  return AtomFailed;
+}
+
+inline
+Bool oz_isBelow(Board * below, Board * above) {
+  // Above _MUST_ be deref'd, it does not matter for below
+  Assert(!above->isCommitted());
+  register Board * s = below;
+  register Board * r = oz_rootBoard();
+
+  do {
+    // Just treat committed boards as ordinary boards, they
+    // are not very common!
+    if (s == above)
+      return OK;
+    if (s == r)
+      return NO;
+    s = s->getParentInternal();
+  } while (1);
+
+}
+
+/*
+  This function checks if the current board is between "varHome" and "to"
+  resp. equal to "to".
+  */
+
+inline
+oz_BFlag oz_isBetween(Board * to, Board * varHome) {
+  // varHome _MUST_ be deref'd, it does not matter for to
+
+  Assert(!varHome->isCommitted());
+
+  register Board * s = to;
+  register Board * c = oz_currentBoard();
+
+  do {
+    // Just treat committed boards as ordinary boards, they
+    // are not very common!
+
+    if (s == c) {
+      return B_BETWEEN;
+    } else if (s == varHome) {
+      return B_NOT_BETWEEN;
+    }
+
+    Assert(!s->hasMark() && !s->cacIsMarked());
+
+    if (s->isFailed())
+      return B_DEAD;
+
+    Assert(!s->isRoot());
+
+    s = s->getParentInternal();
+
+  } while (1);
+
+}
+
+/*
+ * Implementation of space operations
+ */
+
+inline
+void Board::inject(TaggedRef proc, int arity) {
+  Assert(arity == 0 || arity == 1);
+  // thread creation for {proc root}
+  oz_newThreadInject(this)->pushCall(proc,
+				     (arity == 1) ?
+				     RefsArray::make(getRootVar()) :
+				     NULL);
+}
+
+inline
+OZ_Return Board::merge(Board * dst, Bool isUpward) {
+  // this is the board that gets merged
+  //   --- it is merged with bb
+
+  // First the things that must done even for merging with root board
+
+  // Mark as merged
+  Board * src   = this;
+  Board * src_p = src->getParent();
+
+  src->setCommitted(dst);
+
+  // Must be before script installation
+  dst->incSuspCount(src->getSuspCount());
+
+  // Merge constraints
+  OZ_Return ret = installScript(OK);
+
+  // Merge propagators (must be after script installation, since script
+  //                    installation might wake some propagators!!!!)
+  (dst->lpq).merge(src->lpq);
+  // This might cause two serving threads for the same board!
+
+  Assert(oz_isCurrentBoard(dst));
+
+  if (dst->isRoot()) {
+    src->scheduleNonMono();
+  } else {
+    if (isUpward) {
+      // Handle runnable threads
+      if (src->crt > 0)
+	dst->crt += src->crt-1;
+    } else {
+      // Handle runnable threads
+      if (src->crt > 0) {
+	src_p->crt--;
+	dst->crt += src->crt;
+      }
+      // Handle globally suspended threads
+      // Clean them
+      dst->clearSuspList(NULL);
+      // Enter all upwards
+      for (Board * up = dst; up != src_p; up = up->getParent()) 
+	for (SuspList * sl = dst->suspList; sl; sl = sl->getNext())
+	  up->addSuspension(sl->getSuspendable());
+    }
+    // Merge nonmonotonic propagators
+    dst->setNonMono(dst->getNonMono()->merge(src->getNonMono()));
+    if (src->getDistributor()) {
+      Assert(!dst->getDistributor());
+      dst->setDistributor(src->getDistributor());
+    }
+  }
+
+  return ret;
+}
+
+inline
+OZ_Return Board::commit(TaggedRef ts, int n) {
+  ozstat.incSolveAlt();
+
+  int m = getDistributor()->commit(this,n);
+
+  if (m < 0) {
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAltRange",3,
+		    ts,
+		    makeTaggedSmallInt(n),
+		    makeTaggedSmallInt(-m));
+  }
+  if (m == 0)
+    setDistributor(NULL);
+  clearStatus();
+  return BI_PREEMPT;
+}
+
+
+inline
+OZ_Return Board::commit(TaggedRef ts, int l, int r) {
+  if (l == r)
+    return commit(ts,l);
+  else if (l > r)
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAltOrder",1,ts);
+  
+  int m = getDistributor()->commit(this,l,r);
+
+  if (m < 0) {
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAltRange",3,
+		    ts,
+		    makeTaggedSmallInt(r),
+		    makeTaggedSmallInt(-m));
+  }
+  patchAltStatus(m);
+  return PROCEED;
+}
+
+
+inline
+Bool Board::cacIsAlive(void) {
+  Board * s = this;
+
+  do {
+    if (s->hasMark() || s->cacIsMarked() || s->isRoot())
+      return OK;
+
+    if (s->isFailed()) {
+      return NO;
+    }
+
+    s = s->getParentInternal();
+  } while (1);
+
+}
+
+
+#ifdef OUTLINE
+#undef inline
+#endif
+
+#endif

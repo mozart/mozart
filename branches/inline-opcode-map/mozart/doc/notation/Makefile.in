@@ -1,0 +1,14 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = notation
+MAIN = notation.sgml
+WHATCLASS=reference
+PRINTNAME=Notation
+SGMLSRCS = \
+	notation.bib
+HTMLEXTRAFILES = \
+	notation.gif
+#OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

@@ -1,0 +1,165 @@
+#
+#  Author:
+#    Denys Duchier <duchier@ps.uni-sb.de>
+#
+#  Contributor:
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+#    Christian Schulte <schulte@ps.uni-sb.de>
+#
+#  Copyright:
+#    Denys Duchier, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+#
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SHDOCDIR	= $(PREFIX)/share/doc
+DOCDIR		= $(PREFIX)/doc
+ADDONSDIR	= $(PREFIX)/doc/add-ons
+SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
+PLATFORM	= @PLATFORM@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+HOMEURL		= @HOMEURL@
+OZENGINE	= @OZENGINE@
+OZDOC		= @OZDOC@
+
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+FILES		= ozdoc.dcl ozdoc.dtd ozdoc.doc catalog author.db
+LIBFILES	= $(addprefix $(SHDOCDIR)/,$(FILES))
+
+EMACS		= emacs
+
+SUBDIRS		= @SUBDIRS@
+
+.PHONY: all quick bootstrap bootquick boot-quick check install clean veryclean distclean depend ps pdf installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
+
+Makefile: Makefile.in config.status
+	./config.status
+
+Makefile.vars: Makefile.vars.in config.status
+	./config.status
+
+CSSFILES = ozdoc.css page.gif
+CSSSRCFILES = $(addprefix $(SRCTOP)/doc/utilities/,$(CSSFILES))
+CSSDSTFILES = $(addprefix $(SHDOCDIR)/,$(CSSFILES))
+
+install:: all \
+	$(DOCDIR) $(DOCDIR)/.htaccess $(DOCDIR)/idx $(DOCDIR)/idx/index.html \
+	$(SHDOCDIR) $(CSSDSTFILES) $(LIBFILES) \
+	$(ADDONSDIR) $(ADDONSDIR)/README.html
+
+$(DOCDIR) $(DOCDIR)/idx $(SHDOCDIR) $(ADDONSDIR):
+	$(INSTALL_DIR) $@
+
+$(DOCDIR)/.htaccess: .htaccess
+	$(INSTALL_FILE) $< $@
+
+$(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
+	(cd idx && for i in * $(CSSSRCFILES); do \
+	$(INSTALL_FILE) $$i $(DOCDIR)/idx || exit 1; done)
+
+$(SHDOCDIR)/ozdoc.css: $(SRCTOP)/doc/utilities/ozdoc.css
+	$(INSTALL_FILE) $< $@
+$(SHDOCDIR)/%.gif: $(SRCTOP)/doc/utilities/%.gif
+	$(INSTALL_FILE) $< $@
+
+$(LIBFILES): $(SHDOCDIR)/% : %
+	$(INSTALL_FILE) $< $@
+
+$(ADDONSDIR)/README.html: README.html
+	$(INSTALL_FILE) $< $@
+
+all quick check install clean veryclean distclean installps depend clean-xref::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
+
+# make it possible to configuree and build just the doc
+-include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) bootstrap) || exit 1; done; \
+	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+
+boot-quick bootquick:
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+
+bootstrap:: boot-THEINDEX
+all:: THEINDEX
+THEINDEX: idx/index.html
+
+clean::
+	-rm -f *~
+
+veryclean::
+	-rm -f *~
+	-rm -f xref.db index.db
+	-rm -f global-xref-db.xml
+
+distclean::
+	-rm -f *~
+	-rm -f xref.db index.db idx.html
+	-rm -f catalog
+	-rm -f Makefile Makefile.common config.log config.status config.cache
+
+PSDOCDIRS	= apptut base browser bugs changes compiler \
+	contrib cpiref cpitut demo dstutorial explorer fdt \
+	foreign fst gump install limitations macro notation op \
+	opi ozcar ozdoc panel profiler system tools \
+	tutorial wp loop dpanel ds_white_paper inspector
+
+idx/index.html:
+	mkdir idx 2> /dev/null; \
+	$(DOCIFY) --in=index.db --out=idx --type=html-global-index \
+	--stylesheet=ozdoc.css
+
+global-xref-db.xml:
+	dirs="$(PSDOCDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) $$i-xref-db.xml) || exit 1; done; \
+	echo '<OZDOC.DB>' > $@; \
+	for i in $$dirs; do \
+		echo "<OZDOC.DOCUMENT NAME='ozdoc:$$i'>" >> $@; \
+		cat $$i/$$i-xref-db.xml >> $@; \
+		echo "</OZDOC.DOCUMENT>" >> $@; \
+	done; \
+	cat $(SRCTOP)/doc/global-author-db.xml >> $@; \
+	echo '</OZDOC.DB>' >> $@
+
+ps:
+	$(MAKE) global-xref-db.xml; \
+	dirs="$(PSDOCDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) $$i.ps) || exit 1; done
+
+pdf:
+	$(MAKE) global-xref-db.xml; \
+	dirs="$(PSDOCDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) $$i.pdf) || exit 1; done
+
+ps.veryclean:
+	-rm -f global-xref-db.xml;
+	dirs="$(PSDOCDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) veryclean) || exit 1; done
+
+clean-xref::
+	-rm -f global-xref-db.xml
+xref: global-xref-db.xml

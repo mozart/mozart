@@ -1,0 +1,191 @@
+<chapter>
+  <title/Chat Application/
+  <p>A chat system permits participants on arbitrary machines on the
+internet to engage in a real-time text-based discussion.  New
+individual can join or leave the chat forum at any time.  This
+scenario is intended to be realistic, which means that the chat system
+must be reasonably robust in the face of network failures, as well as
+machine and process crashes.</p>
+  <p>In this tutorial application, we will not set out to solve all
+problems that may be associated with distributed applications; rather,
+we will demonstrate how simple it is to realize a fully distributed
+application with reasonable robustness properties.</p>
+  <section>
+    <title/Chat Server/
+    <p>The server creates a port <code/NewsPort/ and makes it
+available through a ticket.  The ticket, as usual, is saved into a
+file which clients normally will load through a url.  When a client
+wants to participate in the discussion forum, it needs not only
+<code/NewsPort/ in order to post messages, but also the stream of
+messages that results from all posts to <code/NewsPort/, in order to
+display these messages to the user.  The server could hand out the
+stream of all messages from the creation of <code/NewsPort/, but it
+seems more desirable to only hand out a stream that has only the
+messages posted after the client's request to connect to the
+discussion.</p>
+    <p>When a client wants to connect to the chat forum, it obtains
+<code/NewsPort/ by means of the ticket that the server made available
+at some url, and it posts a message of the form
+<code/connect(Messages)/, where <code/Messages/ is a new variable.
+The server then binds the variable to the stream of messages following
+the <code/connect(...)/ message.
+<chunk><title/Chat Server/
+functor
+import
+   Application(getCmdArgs) Connection(gate) Pickle(save)
+define
+   Args = {Application.getCmdArgs
+           record(ticketfile(single type:string optional:false))}
+   NewsPort
+   local Ticket in
+      {New Connection.gate init(NewsPort Ticket) _}
+      {Pickle.save Ticket Args.ticketfile}
+   end
+   {List.forAllTail {Port.new $ NewsPort}
+    proc {$ H|T}
+       case H of connect(Messages) then Messages=T else skip end
+    end}
+end
+</chunk>
+The server (<ref.extern to="chat-server.oz"/source in
+<file/chat-server.oz//) can be compiled as follows:
+<code display proglang=sh/ozc -x chat-server.oz/
+and invoked as follows:
+<code display proglang=sh/chat-server --ticketfile ?{FILE}/
+</p>
+  </section>
+  <section>
+    <title/Chat Client/
+    <p>The client consists of 2 agents: (1) a user interface agent and
+(2) a message stream processor.
+<chunk><title/Chat Client/
+functor
+import
+   Application(getCmdArgs) Pickle(load) Connection(take)
+   Viewer(chatWindow) at 'chat-gui.ozf'
+define
+   Args = {Application.getCmdArgs
+	   record(url(single type:string optional:false)
+		  name(single type:string optional:false)
+		 )}
+   NewsPort={Connection.take {Pickle.load Args.url}}
+   SelfPort
+   <chunk.ref/Chat Client: obtain and process message stream/
+   <chunk.ref/Chat Client: create user interface agent/
+   <chunk.ref/Chat Client: process message stream/
+end
+</chunk>
+The client obtains the stream of messages from the server by sending a
+<code/connect(...)/ message.  It then forwards every message on that
+stream to its internal <code/SelfPort/.  The user interface will also
+direct messages to this internal port.
+<chunk><title/Chat Client: obtain and process message stream/
+thread
+   {ForAll {Port.send NewsPort connect($)}
+    proc {$ Msg} {Port.send SelfPort Msg} end}
+end
+</chunk>
+When creating the user interface, we supply it with the internal
+<code/SelfPort/ so that it may also post internal messages.  In this
+simplistic implementation, the user interface simply posts messages of
+the form <code/say(?{String})/ to request that this ?{String} be
+posted to the global chat message stream.
+<chunk><title/Chat Client: create user interface agent/
+Chat = {New Viewer.chatWindow init(SelfPort)}
+</chunk>
+Finally, here is where we process all messages on the internal stream.
+A <code/msg(FROM TEXT)/ message is formatted and shown in the chat
+window.  A <code/say(TEXT)/ message is transformed into
+<code/msg(NAME TEXT)/, where <code/NAME/ identifies the user, and
+posted to the
+global chat stream; actually <code/TEXT/ is additionally converted into
+the more compact byte string representation for more efficient
+transmission.
+<chunk><title/Chat Client: process message stream/
+NAME = Args.name
+{ForAll {Port.new $ SelfPort}
+ proc {$ Msg}
+    case Msg of msg(FROM TEXT) then
+       {Chat show(FROM#':\t'#TEXT)}
+    elseof say(TEXT) then
+       {Port.send NewsPort msg(NAME {ByteString.make TEXT})}
+    else skip end
+ end}
+</chunk>
+The client (<ref.extern to="chat-client.oz"/source in
+<file/chat-client.oz//) can be compiled as follows:
+<code display proglang=sh/ozc -x chat-client.oz/
+and invoked as follows:
+<code display proglang=sh/chat-client --name ?{USER} --url ?{URL}/
+</p>
+  </section>
+  <section>
+    <title/Graphical User Interface/
+    <p>The user interface is always what requires the most code.  We
+won't go through the details here (but see the Window Programming
+Tutorial for extensive information), but merely point out that the
+<code/@entry/ widget is asked to respond to a <kbd/Return/ keypress,
+by invoking the <code/post/ method.  The latter posts a
+<code/say(?{Text})/ message to the internal port, where ?{Text} is the
+text of the entry as typed by the user.  This text is then deleted and
+the entry can be reused to compose and submit another message.
+<chunk><title/Chat GUI/
+functor
+import
+   Tk Application(exit:Exit)
+export
+   ChatWindow
+define
+   class ChatWindow from Tk.toplevel
+      attr canvas y:0 vscroll hscroll tag:0 selfPort entry quit
+      meth init(SelfPort)
+         Tk.toplevel,tkInit
+         selfPort <- SelfPort
+         canvas <- {New Tk.canvas
+                    tkInit(parent:self bg:ivory width:400 height:300)}
+         vscroll <- {New Tk.scrollbar tkInit(parent:self orient:v)}
+         hscroll <- {New Tk.scrollbar tkInit(parent:self orient:h)}
+         entry   <- {New Tk.entry     tkInit(parent:self)}
+         quit    <- {New Tk.button    tkInit(parent:self text:'Quit'
+                                             action:proc{$} {Exit 0} end)}
+         {Tk.addYScrollbar @canvas @vscroll}
+         {Tk.addXScrollbar @canvas @hscroll}
+         {@canvas tk(configure scrollregion:q(0 0 200 0))}
+         {@entry tkBind(event:'&lt;KeyPress-Return&gt;'
+                        action:proc {$} {self post} end)}
+         {Tk.batch [grid(row:0 column:0 @canvas sticky:ns)
+                    grid(row:1 column:0 @entry sticky:ew)
+                    grid(row:0 column:1 @vscroll sticky:ns)
+                    grid(row:2 column:0 @hscroll sticky:ew)
+                    grid(row:3 column:0 @quit sticky:w)
+                    grid(columnconfigure self 0 weight:1)
+                    grid(rowconfigure self 0 weight:1)]}
+      end
+      meth show(TEXT)
+         {@canvas tk(create text 0 @y text:TEXT anchor:nw tags:@tag)}
+         local
+            [X1 Y1 X2 Y2] = {@canvas tkReturnListInt(bbox all $)}
+         in
+            y<-Y2
+            {@canvas tk(configure scrollregion:q(X1 Y1 X2 Y2))}
+         end
+      end
+      meth post
+         {Port.send @selfPort say({@entry tkReturn(get $)})}
+         {@entry tk(delete 0 'end')}
+      end
+   end
+end
+</chunk>
+</p>
+  </section>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

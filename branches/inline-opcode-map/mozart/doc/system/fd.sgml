@@ -1,0 +1,1708 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Tobias Mueller <tmueller@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -   Tobias Mueller, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="Chapter.FD">
+  <Title/Finite Domain Constraints: <<FD>>/
+
+<p>
+The procedures in this module have the following properties. 
+<p>
+Each of their applications creates a new thread except for basic
+constraints which may block.
+<p>
+Most of the propagators perform interval propagation. Only some
+do domain propagation (&ie; cut holes into domains). 
+<p>
+Equality between variables is exploited, except for some non-linear
+propagators.  For example, <<A+A=:B>> is equivalent to <<2*A=:B>> (for
+notation see&nbsp;sec.infix-ps).
+<p>
+The constraint store is amplified with constraints <<X::Spec>>  and
+equality between variables, &eg;, <<X=:Y>> is equivalent to <<X=Y>>.
+
+<para><title/relation symbols/
+There are generic procedures who take
+an atomic argument <<A>> to denote an arithmetic relation <math/\sim_A/. The 
+possible atoms and the associated relations are summarized below. 
+<table>
+<tr/<td/<<A>>/<td/<<'=:'>> /<td/ <<'&gt;:'>> /<td/ <<'&gt;=:'>> /<td/ <<'&lt;:'>> /<td/ <<'=&lt;:'>> /<td/ <<'\\=:'>>//
+<tr/<td/<math>\sim_A</math> /<td/ <math>=</math> /<td/ <math>&gt;</math> /<td/ <math>\geq</math> /<td/ <math><</math> /<td/ <math>\leq</math> /<td/ <math>\neq</math>//
+</table>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.facts"><title/Some Facts About Propagators/
+
+<para><title/domain propagation,
+interval propagation/
+If a propagator is invoked, it tries to narrow the domains of the
+variables it is posted on. The amount of narrowing of domains depends on
+the operational semantics of the propagator. There are two main schemes
+for the operational semantics of a propagator. Domain propagation means that the propagator narrows the domains
+such that all values are discarded, which are not contained in a
+solution of the modeled constraint. But due to efficiency reasons,
+most propagators provide only interval 
+propagation, &ie; only the bounds of domains are narrowed. For some
+propagators, there is an operational semantics in between both schemes.
+
+<p>
+A propagator ceases to exist at least if all the variables it is posted
+on are determined. In the following
+sections, only exceptions from this rule are mentioned, &ie; if the
+propagator ceases to exist earlier. For example, {<<X =<: Y>>} ceases to
+exist if the current upper bound of <<X>> is smaller than or equal to the
+current lower bound of <<Y>>.
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.condis"><title/The Concept of Constructive Disjunction/
+
+<p>
+The operational semantics of some propagators is based on the concept
+of constructive disjunction which allows to lift common information
+from different clauses of a disjunctive constraint.
+
+<p>
+Constructive disjunction is <em/not/ available as program combinator
+in Oz. Anyway, we use it in Oz program fragments (by the keyword
+<Code/<span class=keyword/condis//) to describe the operational semantics
+of certain propagators. For example such propagators are <ref
+to="ref_tasksoverlap"><<FD.tasksOverlap>></ref> and <ref
+to="ref_disjoint"><<FD.disjoint>></ref>.
+
+<p>
+Constructive disjunction adopts the operational semantics of the
+nondistributable disjunction of Oz (<<or ... end>>) concerning
+entailment and failure of clauses. Furthermore, it extends the
+semantics as follows: Assume a disjunction with ?{n} clauses and let
+?{S} be the constraint store of the computation space in which it
+resides.  Let <math/S_1,\ldots,S_n/ denote the local stores of the
+?{n} clauses.  Then the strongest constraint ?{C} consisting of basic
+constraints <math/X\in D/ with <math/S_i\models C/ for <math/1\leq i
+\leq n/ is lifted and added to&nbsp;?{S}.
+
+<p>
+As an example consider the store <<X, Y>><math/\in\{0,\ldots,10\}/ and 
+<<<
+<span class=keyword/condis/ X + 9 =<: Y
+[] Y + 9 =<: X
+end
+>>>
+Constructive disjunction narrows the domains of <<X>> and <<Y>>
+to&nbsp;<math/\{0,1,9,10\}/.
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.general"><title/Finite Domains/
+<p>
+<index scope="section.fd.general"/Finite Domains/
+
+<list>
+
+<entry>
+<index class=module/FD<and>inf/
+<<inf>>
+<synopsis>
+<<<
+FD.inf
+>>>
+<item>
+is a constant integer. Its concrete value is implementation dependent. 
+In Mozart <<FD.inf>> is 0.
+
+<entry>
+<index class=module/FD<and>sup/
+<<sup>>
+<synopsis>
+<<<
+FD.sup
+>>>
+<item>
+is a constant integer. Its concrete value is implementation dependent. 
+In Mozart <<FD.sup>> is 134 217 726.
+
+<entry>
+<index class=module/FD<and>is/
+<<is>>
+<synopsis>
+<<<
+{FD.is ?*{D} ??{B}}  
+>>>
+<item>
+tests whether ?_{D} is an integer between 0 and <<FD.sup>>. 
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.telling"><title/Telling Domains/
+<p>
+<list>
+<entry>
+<index class=module/FD<and>int/
+<<::>>
+<synopsis>
+<<<
+??{D}::?+{Spec}
+{FD.int ?+{Spec} ??{D}}  
+>>>
+<item>
+tells the constraint store that ?_{D} is an integer in ?_{Spec}. 
+
+<entry>
+<index class=module/FD<and>dom/
+<<:::>>
+<synopsis>
+<<<
+?_{Dv}:::?+{Spec}
+{FD.dom ?+{Spec} ??{Dv}}
+>>>
+<item>
+tells the constraint store that ?_{Dv} is a vector of integers in
+?_{Spec}. Waits until ?_{Dv} is constrained to a vector. 
+
+<entry>
+<index class=module/FD<and>list/
+<<list>>
+<synopsis>
+<<<
+{FD.list ?+{I} ?+{Spec} ??{Ds}}  
+>>>
+<item>
+tells the constraint store that
+?_{Ds} is a list of integers in ?_{Spec} of length ?_{I}.
+
+<entry>
+<index class=module/FD<and>tuple/
+<<tuple>>
+<synopsis>
+<<<
+{FD.tuple ?+{L} ?+{I} ?+{Spec} ??{Dt}}  
+>>>
+<item>
+tells the constraint store that
+?_{Dt} is a tuple of integers in ?_{Spec} of width ?_{I}
+and label ?_{L}. 
+
+<entry id="FD.record">
+<index class=module/FD<and>record/
+<<record>>
+<synopsis>
+<<<
+{FD.record ?+{L} ?+{Ls} ?+{Spec} ??{Dr}}  
+>>>
+<item>
+tells the constraint store that
+?_{Dr} is a record of integers in ?_{Spec} with features
+?_{Ls} and 
+label ?_{L}. 
+
+<entry>
+<index class=module/FD<and>decl/
+<<decl>>
+<synopsis>
+<<<
+{FD.decl ??{D}}  
+>>>
+<item>
+Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.reflection"><title/Reflection/
+<p>
+<list>
+<entry>
+<index class=module/FD<and>reflect<and>min/
+<<reflect.min>>
+<synopsis>
+<<<
+{FD.reflect.min ?*{D1} ??{D2}}
+>>>
+<item>
+returns the current lower bound of ?_{D1}.
+
+<entry>
+<index class=module/FD<and>reflect<and>max/
+<<reflect.max>>
+<synopsis>
+<<<
+{FD.reflect.max ?*{D1} ??{D2}}
+>>>
+<item>
+returns the current upper bound of ?_{D1}.
+
+<entry>
+<index class=module/FD<and>reflect<and>mid/
+<<reflect.mid>>
+<synopsis>
+<<<
+{FD.reflect.mid ?*{D1} ??{D2}}
+>>>
+<item>
+returns the integer which is closest to the 
+middle of the current domain (the arithmetical means of the lower and upper
+bound of ?_{D1}). In case of ties, the smaller
+element	is selected.
+
+<entry>
+<index class=module/FD<and>reflect<and>nextLarger/
+<<reflect.nextLarger>>
+<synopsis>
+<<<
+{FD.reflect.nextLarger ?*{D1} ?+{D2} ??{D3}}
+>>>
+<item>
+returns the smallest integer in the domain of ?_{D1} which is larger than
+?_{D2}. 
+
+<entry>
+<index class=module/FD<and>reflect<and>nextSmaller/
+<<reflect.nextSmaller>>
+<synopsis>
+<<<
+{FD.reflect.nextSmaller ?*{D1} ?+{D2} ??{D3}}
+>>>
+<item>
+returns the largest integer in the domain of ?_{D1} which is smaller than
+?_{D2}.
+
+<entry>
+<index class=module/FD<and>reflect<and>size/
+<<reflect.size>>
+<synopsis>
+<<<
+{FD.reflect.size ?*{D1} ??{D2}}
+>>>
+<item>
+returns the size of the current domain of ?_{D1}.
+
+<entry>
+<index class=module/FD<and>reflect<and>domList/
+<<reflect.domList>>
+<synopsis>
+<<<
+{FD.reflect.domList ?*{D} ??{Ds}}  
+>>>
+<item>
+returns the current domain of ?_{D} as an ordered list of integers.
+
+<entry>
+<index class=module/FD<and>reflect<and>dom/
+<<reflect.dom>>
+<synopsis>
+<<<
+{FD.reflect.dom ?*{D} ??{Spec}}
+>>>
+<item>
+returns the current domain of  ?_{D} as a domain specification.
+
+<entry>
+<index class=module/FD<and>reflect<and>nbSusps/
+<<reflect.nbSusps>>
+<synopsis>
+<<<
+{FD.reflect.nbSusps ?*{D} ??{I}}
+>>>
+<item>
+returns the current number of suspensions  on ?_{D}.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.watching"><title/Watching Domains/
+<p>
+<list>
+<entry>
+<index class=module/FD<and>watch<and>min/
+<<watch.min>>
+<synopsis>
+<<<
+{FD.watch.min ?*{D1} ?+{D2} ??{B}}
+>>>
+<item>
+Returns <<true>> when <math/{\tt D1} \in \{{\tt D2}+1,\ldots,\codeinline{oz}{FD.sup}\}/ and
+<<false>> when <math/{\tt D1}\in \{0,\ldots,{\tt D2}\}/ is entailed by the constraint
+store.  
+
+<entry>
+<index class=module/FD<and>watch<and>max/
+<<watch.max>>
+<synopsis>
+<<<
+{FD.watch.max ?*{D1} ?+{D2} ??{B}}
+>>>
+<item>
+Returns <<true>> when <math/{\tt D1} \in \{0,\ldots, {\tt D2}-1\}/ and <<false>>
+when <math/{\tt D1} \in \{D2,\ldots,\codeinline{oz}{FD.sup}\}/ is entailed by the constraint
+store.  
+
+<entry>
+<index class=module/FD<and>watch<and>size/
+<<watch.size>>
+<synopsis>
+<<<
+{FD.watch.size ?*{D1} ?+{D2} ??{B}}
+>>>
+<item>
+Returns <<true>> when the size of the domain of ?_{D1} becomes smaller
+than ?_{D2}.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.arithmetic"><title/Generic Propagators/
+<p>
+The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do
+interval propagation. The propagators  <<FD.sumAC>> and
+<<FD.sumACN>> do interval propagation but may also cut holes into
+domains. For example, 
+<<<
+{FD.dom 0#10 [X Y]}
+{FD.sumAC [1 ~1] [X Y] '&gt;:' 8}
+>>>
+will reduce the domains of <<X>> and
+<<Y>> to <math/\{0,1,9,10\}/. Except for propagators <<FD.sumCN>> and
+<<FD.sumACN>>, equality is exploited, &eg;
+<<{FD.sumC [2 3] [A A] '=:' 10}>> is equivalent to 
+<<{FD.sumC [5] [A] '=:' 10}>>. 
+<para><title/<math/\underline{x}/,<math/\overline{x}//
+Let ?{S} denote the current  constraint store and ?{x} a finite domain
+integer.<math/\underline{x}/ denotes the largest integer such that 
+<math/S \models x \geq \underline{x}/ holds.  Analogously, <math/\overline{x}/
+denotes the smallest integer such that 
+<math/S \models x \leq \overline{x}/ holds. 
+<para><title/<math/\lfloor n \rfloor$, $\lceil n \rceil//
+Let 
+?{n} denote a real number. <math/\lfloor n \rfloor/
+ denotes the largest integer which is equal or smaller than
+?{n}. Analogously, <math/\lceil n \rceil/ denotes the smallest integer which is
+equal or larger than ?{n}. 
+<list>
+<entry>
+<index class=module/FD<and>sum/
+<<sum>>
+<synopsis>
+<<<
+{FD.sum ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator for 
+<p><math>1*{\tt D}_1+\ldots+1*{\tt D}_n+(-1)*{\tt D}\;\sim_{{\tt A}}\;0</math><p>
+For the operational semantics see <<FD.sumC>>.
+For the relation symbol <<'\=:'>>, the propagator waits until at most one
+non-determined variable is left. Then
+the appropriate value
+is discarded from the variable's domain. For the other relations, the
+propagator does interval propagation.
+
+<entry>
+<index class=module/FD<and>sumC/
+<<sumC>>
+<synopsis>
+<<<
+{FD.sumC ?+{Iv} ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator for the scalar product of the vectors ?_{Iv} and
+?_{Dv}:  
+<p><math/{\tt I}_1*{\tt D}_1+\ldots+{\tt I}_n*{\tt D}_n+(-1)*{\tt D}\;\sim_{{\tt A}}\;0
+</math><p>
+
+Let <math/{\tt D}_{n+1}/ be ?_{D} and <math/{\tt I}_{n+1}/ be <math/-1/. Then, the operational
+semantics is defined as follows. For each product
+<math/{\tt I}_k*{\tt D}_k/, an isolation (projection) is computed:
+<p>
+<math>
+ {\tt I}_k*{\tt D}_k \;\sim_{{\tt A}}\; \underbrace{- \sum_{i = 1, i \neq k}^{n+1}
+{\tt I}_i * {\tt D}_i}_{{\mbox{\sl RHS}}_k}.
+</math><p>
+For the right hand side <math/{\mbox{\sl RHS}}_k/, 
+the upper <math/\overline{\mbox{\mbox{\sl RHS}}_k}/ 
+and lower limit <math/\underline{\mbox{\mbox{\sl RHS}}_k}/
+are defined as follows.
+<p>
+<math> ~$~
+\begin{eqnarray*}
+\overline{\mbox{\mbox{\sl RHS}}_k} \ =\
+-\sum_{i =1, i\neq k, {\tt I}_i > 0}^{n+1} {\tt I}_i *
+\underline{{\tt D}}_i \;-\; 
+\sum_{i =1, i\neq k, {\tt I}_i < 0}^{n+1} {\tt I}_i *
+\overline{{\tt D}}_i 
+\\
+\underline{\mbox{\mbox{\sl RHS}}_k} \ = \
+-\sum_{i =1, i\neq k, {\tt I}_i > 0}^{n+1} {\tt I}_i *
+\overline{{\tt D}}_i \;-\; 
+\sum_{i =1, i\neq k, {\tt I}_i < 0}^{n+1} {\tt I}_i *
+\underline{{\tt D}}_i
+\end{eqnarray*}
+~$~</math>
+<p>
+These values are used to narrow the domain of&nbsp;<math/{\tt D}_k/ until a fixed
+point is reached. We describe the propagation for the different
+possible values of <<A>>.
+<list>
+<entry><<=&lt;:>><item>
+Narrowing is done according to the following inequalities.
+<p>
+<math>
+{\tt D}_k \leq \left \lfloor  \frac{\overline{{\mbox{\sl RHS}}_k}}{{\tt I}_k}
+\right \rfloor \quad 
+\mbox{ if\ } {\tt I}_k > 0
+</math><p><math>
+{\tt D}_k \geq \left \lceil  \frac{\overline{{\mbox{\sl RHS}}_k}}{{\tt I}_k} \right \rceil \quad
+\mbox{ if\ } {\tt I}_k < 0
+</math>
+<p>
+Here <math/x\leq n/ denotes the basic constraint <math/x \in
+\{0,\ldots,n\}/ and <math/x \geq n/ denotes the basic constraint <math/x \in
+\{n,\ldots,\codeinline{oz}{FD.sup}\}/.  
+<p>
+The propagator ceases to exist, if the following condition holds. 
+<p><math>
+\sum_{i =1, {\tt I}_i > 0}^{n+1} {\tt I}_i *
+\overline{{\tt D}}_i \;+\;
+\sum_{i =1, {\tt I}_i < 0}^{n+1} {\tt I}_i *
+\underline{{\tt D}}_i 
+\leq 0
+</math><p>
+As an example consider 
+<<<
+X - Y =<: Z - V
+>>>
+We have the following narrowing.
+<p><math>
+\codeinline{oz}{X} \leq \overline{\codeinline{oz}{Z}} - \underline{\codeinline{oz}{V}} + \overline{\codeinline{oz}{Y}}
+\quad \quad
+\codeinline{oz}{Y} \geq \underline{\codeinline{oz}{X}} - \overline{\codeinline{oz}{Z}} + \overline{\codeinline{oz}{V}}
+\quad \quad
+\codeinline{oz}{Z} \geq \underline{\codeinline{oz}{X}} - \overline{\codeinline{oz}{Y}} + \underline{\codeinline{oz}{V}}
+\quad\quad
+\codeinline{oz}{V} \leq \overline{\codeinline{oz}{Z}} - \underline{\codeinline{oz}{X}} + \overline{\codeinline{oz}{Y}}
+</math><p>
+The propagator ceases to exist if <math/\overline{\codeinline{oz}{X}} - \underline{\codeinline{oz}{Y}}
+\leq \underline{\codeinline{oz}{Z}} - \overline{\codeinline{oz}{V}}/ holds.
+
+<entry><<&gt;=:>>
+<item>
+This case can be reduced to <<=&lt;:>> due to the observation that 
+<p><math>{\tt I}_1*{\tt D}_1+\ldots+{\tt I}_n*{\tt D}_n+(-1)*{\tt D}\;\geq\;0</math><p>
+is equivalent to 
+<p><math>(-{\tt I}_1)*{\tt D}_1+\ldots+(-{\tt I}_n)*{\tt D}_n+1*{\tt D}\;\leq\;0</math><p>
+Alternatively, <math/\underline{\mbox{\mbox{\sl RHS}}_k}/ can be used for the
+definition. 
+
+<entry><<&lt;:>> 
+<item>Analogous to <<=&lt;:>>
+<entry><<&gt;:>> 
+<item>Analogous to <<&gt;=:>>
+<entry><<=:>>
+<item>
+In this case, the operational semantics is
+defined by conjunction of the formulas given for <<=&lt;:>> and <<&gt;=:>>.
+Furthermore, coreferences are realized in that, &eg; the propagator
+<<3*X=:3*Y>> tells the basic constraint&nbsp;<<X=Y>>.  
+<entry><<\=:>><item>
+In this case, the propagator waits until at most one
+non-determined variable is left, say <math/{\tt D}_k/. Then, 
+<math/{\mbox{\sl RHS}}_k/ denotes a unique integer value which 
+is discarded from the domain of <math/{\tt D}_k/.
+</list>
+<p>
+Additional propagation is achieved through the realization of
+coreferences, &ie; equality between variables.  If the store ?_{S}
+entails (without loss of generality) <math/{\tt D}_1 = {\tt D}_2/, the generic
+propagator evolves into:
+<p><math>
+({\tt I}_1 + {\tt I}_2) * {\tt D}_2 + \ldots +
+{\tt I}_n*{\tt D}_n+(-1)*{\tt D}\;\sim_{{\tt A}}\;0  
+</math><p>
+
+<entry>
+<index class=module/FD<and>sumCN/
+<<sumCN>>
+<synopsis>
+<<<
+{FD.sumCN ?+{Iv} ?*{Dvv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator for 
+<p><math>
+{\tt I}_1*{\tt D}_{11}*\ldots*{\tt D}_{1m_1}+\ldots+{\tt I}_n*{\tt D}_{n1}*\ldots*{\tt D}_{nm_n}+
+(-1)*{\tt D}\;\sim_{{\tt A}}\;0</math><p>
+
+Let <math/{\tt D}_{(n+1)1}/ be ?_{D}, <math/{\tt I}_{n+1}/ be -1, and <math/m_{n+1}/
+be 1.
+Then, the  operational semantics is defined as follows. For  <math/k, 1
+\leq k \leq n+1/, an isolation (projection) is computed:
+<p><math>
+{\tt I}_{k}*{\tt D}_{k1}*\ldots*{\tt D}_{km_k} \;\sim_{{\tt A}}\; \underbrace{- {\sum_{i = 1, i \neq k}^{n+1}
+{\tt I}_i * \prod_{j=1}^{m_i}{\tt D}_{ij}}}_{{\mbox{\sl RHS}}_k}
+</math><p>
+
+For the right hand side <math/{\mbox{\sl RHS}}_k/,
+the upper <math/\overline{\mbox{\mbox{\sl RHS}}_k}/ 
+and lower limit <math/\underline{\mbox{\mbox{\sl RHS}}_k}/
+are defined as follows.
+<p>
+<math>~$~
+\begin{eqnarray*}
+\overline{\mbox{\mbox{\sl RHS}}_k} \ =\
+-\sum_{i =1, i\neq k, {\tt I}_i > 0}^{n+1} {\tt I}_i *
+\prod_{j=1}^{m_i}\underline{{\tt D}}_{ij} \;-\;
+\sum_{i =1, i\neq k, {\tt I}_i < 0}^{n+1} {\tt I}_i *
+\prod_{j=1}^{m_i}\overline{{\tt D}}_{ij}
+\\
+\underline{\mbox{\mbox{\sl RHS}}_k} \ = \ 
+-\sum_{i =1, i\neq k, {\tt I}_i > 0}^{n+1} {\tt I}_i *
+\prod_{j=1}^{m_i}\overline{{\tt D}}_{ij} \;-\;
+\sum_{i =1, i\neq k, {\tt I}_i < 0}^{n+1} {\tt I}_i *
+\prod_{j=1}^{m_i}\underline{{\tt D}}_{ij}
+\end{eqnarray*}
+~$~</math>
+<p>
+These values are used to narrow the domain of&nbsp;<math/{\tt D}_{kl}, 1 \leq l
+\leq m_k,/ until a fixed
+point is reached. We describe the propagation for the different possible
+values of <<A>>.
+
+<list>
+<entry><<=&lt;:>><item>
+The narrowing is done according to the following inequalities.
+<p><math>
+{\tt D}_{kl} \leq \left \lfloor  \frac{\overline{\mbox{\sl RHS}}_k}{{\tt I}_k * \prod_{j=1,
+j\neq l}^{m_k} \underline{{\tt D}}_{kj}} \right \rfloor \quad
+\mbox{ if\ } {\tt I}_k > 0
+</math><p>
+<p><math>
+{\tt D}_{kl} \geq \left \lceil  \frac{\overline{\mbox{\sl RHS}}_k}{{\tt I}_k * \prod_{j=0,
+j\neq l}^{m_k} \overline{{\tt D}}_{kj}} \right \rceil \quad
+\mbox{ if\ } {\tt I}_k < 0
+</math><p>
+
+Here <math/x\leq n/ denotes the basic constraint <math/x \in
+\{0,\ldots,n\}/ and <math/x \geq n/ denotes the basic constraint <math/x \in
+\{n,\ldots,\codeinline{oz}{FD.sup}\}/.  
+<p>
+The propagator ceases to exist, if the following condition holds. 
+
+<p><math>
+\sum_{i =1, {\tt I}_i > 0}^{n+1} {\tt I}_i *
+\prod_{j=1}^{m_i}\overline{{\tt D}}_{ij} + 
+\sum_{i =1, {\tt I}_{i} < 0}^{n+1} {\tt I}_i *
+\prod_{j=1}^{m_i}\underline{{\tt D}}_i 
+\leq 0
+</math><p>
+
+As an example consider 
+<<<
+3*X*Y - Z =<: A
+>>>
+We have the following formulas.
+<p><math>
+\codeinline{oz}{X} \leq \left\lfloor \frac{\overline{\codeinline{oz}{A}} +
+\overline{\codeinline{oz}{Z}}}{3*\underline{\codeinline{oz}{Y}}} \right\rfloor 
+\quad \quad
+\codeinline{oz}{Y} \leq \left\lfloor \frac{\overline{\codeinline{oz}{A}} +
+\overline{\codeinline{oz}{Z}}}{3*\underline{\codeinline{oz}{X}}} \right\rfloor
+\quad \quad
+\codeinline{oz}{Z} \geq \underline{\codeinline{oz}{X}} *\overline{\codeinline{oz}{Y}} - \overline{\codeinline{oz}{A}}
+\quad \quad
+\codeinline{oz}{A} \geq \underline{\codeinline{oz}{X}} *\overline{\codeinline{oz}{Y}} - \overline{\codeinline{oz}{Z}}
+</math><p>
+The propagator ceases to exist if <math/3*\overline{\codeinline{oz}{X}}*\overline{\codeinline{oz}{Y}} -
+\underline{\codeinline{oz}{Z}} \leq \underline{\codeinline{oz}{A}}/ holds.
+
+<entry><<&gt;=:>><item>
+This case can be reduced to <<=&lt;:>> due to the observation that 
+<p><math>
+{\tt I}_1*{\tt D}_{11}*\ldots*{\tt D}_{1k_1}+\ldots+{\tt I}_n*{\tt D}_{n1}*\ldots*{\tt D}_{nk_n}+(-1)*{\tt D}_{(n+1)1}\;\leq\;0
+</math><p>
+is equivalent to 
+<p><math>
+(-{\tt I}_1)*{\tt D}_{11}*\ldots*{\tt D}_{1k_1}+\ldots+(-{\tt I}_n)*{\tt D}_{n1}*\ldots*{\tt D}_{nk_n}+1*{\tt D}_{(n+1)1}\;\geq\;0
+</math><p>
+Alternatively, <math/\underline{\mbox{\mbox{\sl RHS}}_k}/ can be used for the
+definition. 
+
+<entry><<&lt;:>><item> Analogous to <<=&lt;:>>
+<entry><<&gt;:>><item> Analogous to <<&gt;=:>>
+<entry><<=:>><item> In this case, the operational semantics is
+defined by conjunction of the formulas given for <<=&lt;:>> and <<&gt;=:>>.
+<entry><<\=:>><item>
+In this case, the propagator waits until at most one
+non-determined variable is left, say <math/D_{kl}/. Then, <math/{\mbox{\sl RHS}}_k/
+denotes a unique integer, and if 
+
+<p><math>
+\frac{{\mbox{\sl RHS}}_k}{{\tt I}_k * \prod_{j=1,
+j\neq l}^{m_k} {{\tt D}}_{kj}} 
+</math><p> 
+
+denotes an integer value, this value
+is discarded from the domain of <math/{\tt D}_{kl}/.
+</list>
+
+Coreferences are not exploited for nonlinear generic constraints.  The
+only exception is the expression
+<<<
+X * X =: Y
+>>>
+which has the same operational semantics as <<{FD.times X X Y}>> (but note
+that the occurring variables are not automatically constrained to finite
+domain integers). 
+
+<entry>
+<index class=module/FD<and>sumAC/
+<<sumAC>>
+<synopsis>
+<<<
+{FD.sumAC ?+{Iv} ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator for the absolute value of the scalar product of the
+vectors ?_{Iv} and ?_{Dv}: 
+<p><math>|{\tt Iv} * {\tt Dv}| = |{\tt I}_1*{\tt D}_1 + \ldots +
+{\tt I}_n*{\tt D}_n|\;\sim_{{\tt A}}\;{\tt D}</math><p>
+
+The operational semantics is as follows. 
+If ?_{A} is <<'<:'>>, <<'=<:'>> or <<'\=:'>>, the following definition
+holds.
+
+<p><math> {\tt Iv} * {\tt Dv} \sim_{{\tt A}} D \;\wedge\; (-{\tt Iv})*{\tt Dv}
+\sim_{{\tt A}} D
+</math><p>
+
+If ?_{A} is <<'&gt;:'>>, <<'&gt;=:'>> or <<'=:'>>, the following definition
+holds.
+
+<p><math>{\tt Iv} * {\tt Dv} \sim_{{\tt A}} D \;\vee\; (-{\tt Iv})*{\tt Dv}
+\sim_{{\tt A}} D
+</math><p>
+where the disjunction is realized by constructive disjunction.
+
+<entry>
+<index class=module/FD<and>sumACN/
+<<sumACN>>
+<synopsis>
+<<<
+{FD.sumACN ?+{Iv} ?*{Dvv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator for 
+<p><math>|{\tt I}_1*{\tt D}_{11}*\ldots*{\tt D}_{1k_1}+\ldots+{\tt I}_n*{\tt D}_{n1}*\ldots*{\tt D}_{nk_n}|\;\sim_{{\tt A}}\;{\tt D}</math><p>
+<p>
+The operational semantics is defined analogously to <<FD.sumAC>>.
+
+<entry>
+<index class=module/FD<and>sumD/
+<<sumD>>
+<synopsis>
+<<<
+{FD.sumD ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator analogous to <<FD.sum>> but performs
+<em>domain-consistent</em> propagation. Note that only equality
+(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\=:'>>) are
+supported, as for inequalities domain and bounds propagation are
+equivalent.
+
+
+<entry>
+<index class=module/FD<and>sumCD/
+<<sumCD>>
+<synopsis>
+<<<
+{FD.sumCD ?+{Iv} ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+creates a propagator analogous to <<FD.sumC>> but performs
+<em>domain-consistent</em> propagation. Note that only equality
+(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\=:'>>) are
+supported, as for inequalities domain and bounds propagation are
+equivalent.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.nonlinear"><title/Symbolic Propagators/
+<p>
+The following propagators do domain propagation or amplify the store by
+constraints <<X::Spec>>, where <<Spec>> may also contain holes. 
+<list>
+<entry>
+<index class=module/FD<and>distinct/
+<<distinct>>
+<synopsis>
+<<<
+{FD.distinct ?*{Dv}}
+>>>
+<item>
+All elements in ?_{Dv} are pairwise distinct. If one element becomes 
+determined, the remaining elements are constrained to be different from
+it. If two variables become equal, the propagator fails, 
+ &eg; <<{FD.distinct [A A B]}>> will  
+fail even if <<A>> is not determined. 
+
+<entry>
+<index class=module/FD<and>distinctB/
+<<distinctB>>
+<synopsis>
+<<<
+{FD.distinctB ?*{Dv}}
+>>>
+<item>
+All elements in ?_{Dv} are pairwise distinct. Uses bounds
+propagation, but does not use value propagation as
+<<FD.distinct>>. Also fails, if two variables are
+equal. Currently uses the quadratic algorithm for propagation by Puget
+described in <ptr to=puget.98>.
+
+
+<entry>
+<index class=module/FD<and>distinctD/
+<<distinctD>>
+<synopsis>
+<<<
+{FD.distinctD ?*{Dv}}
+>>>
+<item>
+All elements in ?_{Dv} are pairwise distinct. Uses full domain
+propagation. Also fails, if two variables are
+equal. Is based on Régin's algorithm <ptr to=regin.94>.
+
+<entry>
+<index class=module/FD<and>distinctOffset/
+<<distinctOffset>>
+<synopsis>
+<<<
+{FD.distinctOffset ?*{Dv} ?+{Iv}}
+>>>
+<item>
+All sums <math/{\tt D}_i+{\tt I}_i/ are pairwise distinct, &ie; for all
+<math/i\neq j/ holds <math/{\tt D}_i+{I}_i \neq {\tt D}_j + {\tt I}_j/. If one
+<math/{\tt D}_i/ becomes  
+determined, the remaining elements <math/{\tt D}_j/ are constrained to be
+different from <math/{\tt D}_i+{\tt I}_i-{\tt I}_j/. 
+
+<entry>
+<index class=module/FD<and>distinct2/
+<<distinct2>>
+<synopsis>
+<<<
+{FD.distinct2 ?*{Dv1} ?+{Iv1} ?*{Dv2} ?+{Iv2}}
+>>>
+<item>
+Assume that all arguments are tuples of width ?{n}. Then the propagator's
+operational 
+semantics  is defined as follows. 
+<<<
+or Dv1.?_{i} + IV1.?_{i} =<: Dv1.?_{j}
+[] Dv1.?_{j} + IV1.?_{j} =<: Dv1.?_{i}
+[] Dv2.?_{i} + IV2.?_{i} =<: Dv2.?_{j}
+[] Dv2.?_{j} + IV2.?_{j} =<: Dv2.?_{i}
+end
+>>>
+This propagator may be used to express that a number of rectangles must
+not overlap in the two-dimensional space. In this case ?_{Dv1} and
+?_{Dv2} may denote
+the x-coordinates and y-coordinates of the lower left corner of the
+rectangles, respectively. ?_{Iv1} and ?_{Iv2} may denote the widths
+and heights of 
+the rectangles, respectively. 
+
+<entry><<atMost>><index class=module/FD<and>atMost/
+<synopsis><<{FD.atMost ?*{D} ?*{Dv} ?+{I}}>>
+<entry><<atLeast>><index class=module/FD<and>atLeast/
+<synopsis><<{FD.atLeast ?*{D} ?*{Dv} ?+{I}}>>
+<entry><<exactly>><index class=module/FD<and>exactly/
+<synopsis><<{FD.exactly ?*{D} ?*{Dv} ?+{I}}>>
+<item>
+At most, at least, exactly ?_{D} elements of ?_{Dv} are equal to
+?_{I}. 
+The operational semantics is defined as follows. Let <<VFoldL>> be either
+<<FoldL>> or <<Record.foldL>> depending on the type of ?_{Dv} and 
+<<<
+S = {VFoldL Dv fun{$ In D1} {FD.plus In D1=:I} end 0}
+>>>
+The propagator <<FD.atMost>>, <<FD.atLeast>> and <<FD.exactly>> are defined
+ by 
+?_{D}<<>=:S>>, ?_{D}<<=<:S>> and ?_{D}<<=:S>>, respectively.
+
+<entry>
+<index class=module/FD<and>element/
+<<element>>
+<synopsis>
+<<<
+{FD.element ?*{D1} ?+{Iv} ?*{D2}}
+>>>
+<item>
+The ?_{D1}-th element of ?_{Iv} is ?_{D2}. 
+<p>
+It propagates as
+follows. For each integer ?{i} in
+the domain of ?_{D1}, the ?{i}-th element of ?_{Iv} is in the domain of
+?_{D2}; and no other values. For each value ?{j} in the domain of ?_{D2}, all
+positions 
+where ?{j} occurs in ?_{Is} are in the domain of ?_{D1}; and no
+other values. For example, 
+<<<
+{FD.int [1 3] X} {FD.element X [5 6 7 8] Y}
+>>>
+ will constrain <<Y>>
+to <math/\{5,7\}/. 
+?_{D1} is constrained to be greater than 0. 
+</list></section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.bool"><title>0/1 Propagators</title>
+<p>
+Using the mapping from <<0>> and <<1>> to the truth values <def/false/ and
+<def/true/, respectively,  logical connectives between finite
+domain integers are defined. 
+If at most  one argument is a free variable, it will be
+constrained to a finite domain integer in <math/\{0,1\}/. 
+Such a finite domain
+integer is also called a 0/1-integer. 
+The propagators exploit equality and  may also post
+equality between variables.
+<p>
+The operational semantics is detailed only for <<FD.conj>>. For the
+remaining propagators, the operational semantics is defined accordingly,
+exploiting as much information as possible (including coreferences). 
+<list>
+<entry>
+<index class=module/FD<and>conj/
+<<conj>>
+<synopsis>
+<<<
+{FD.conj ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the conjunction of ?_{D1} and ?_{D2}. 
+The operational semantics can be described by the following code
+<<<
+[D1 D2 D3] ::: 0#1
+cond D1=0  then D3=0            
+[]   D1=1  then D2=D3           
+[]   D2=0  then D3=0            
+[]   D2=1  then D1=D3           
+[]   D3=1  then D1=1 D2=1   
+[]   D1=D2 then D1=D3          
+end
+>>>
+
+<entry>
+<index class=module/FD<and>disj/
+<<disj>>
+<synopsis>
+<<<
+{FD.disj ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the disjunction of ?_{D1} and ?_{D2}. 
+
+<entry>
+<index class=module/FD<and>exor/
+<<exor>>
+<synopsis>
+<<<
+{FD.exor ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the exclusive disjunction of ?_{D1} and ?_{D2}. 
+
+<entry>
+<index class=module/FD<and>nega/
+<<nega>>
+<synopsis>
+<<<
+{FD.nega ?@{D1} ?@{D2}}
+>>>
+<item>
+?_{D2} is the negation of ?_{D1}. 
+
+<entry>
+<index class=module/FD<and>impl/
+<<impl>>
+<synopsis>
+<<<
+{FD.impl ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the implication of ?_{D2} by ?_{D1} 
+(<Q/<math/{\tt D1}\rightarrow{\tt D2}//). 
+
+<entry>
+<index class=module/FD<and>equi/
+<<equi>>
+<synopsis>
+<<<
+{FD.equi ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the equivalence of ?_{D1} by ?_{D2} 
+(<Q/<math/{\tt D1}\leftrightarrow{\tt D2}//). 
+</list></section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.reified"><title/Reified Constraints/
+<p>
+Reified constraints reflect the validity of a constraint ?{C} into a 0/1-valued
+finite domain integer. The propagator realizing a reified constraint is
+called the reification propagator.  
+The reification propagators wait in the same way as their non-reified
+counterparts. All reification propagators constrain their last argument to a
+0/1-valued finite domain integer. 
+<p>
+Let ?{C} be a constraint and ?{P} the corresponding 
+propagator. Reifying ?{C} into a
+0/1-valued variable <<D>> is defined by
+<p><math>
+(C \leftrightarrow \codeinline{oz}{D}=1) \wedge \codeinline{oz}{D} \in \{0,1\}.
+</math><p>
+This is implemented by
+<<<
+D::0#1 
+or ?_{P} D=1
+[] P^N D=0
+end
+>>>
+Here, <math/P^N/ denotes the negation of ?{P} (&ie; a propagator for the
+negation of the denotational semantics of ?{P}).
+<p>
+If ?{P} is one of <<{FD.reified.int Spec X}>> and 
+<<{FD.reified.dom Spec Xv}>>, then <math/P^N/ denotes 
+<<{FD.reified.int ComplSpec X}>> and
+<<{FD.reified.dom ComplSpec Xv}>>, respectively 
+(where <<ComplSpec = compl(Spec)>> if <<Spec>> is a simple domain specification, and
+<<ComplSpec = SSpec>> if <<Spec = compl(SSpec)>>).
+<p>
+For the propagators ?{P} wich are parameterized by a
+relation symbol ?{A}, the symbol of the negated relation occurs in
+<math/P^N/. For instance, if ?{P} is <<{FD.sum Ds '<:' X Y}>>, then <math/P^N/ is
+<<{FD.sum Ds '>=:' X Y}>>.  
+
+<list>
+<entry>
+<index class=module/FD<and>reified<and>int/
+<<reified.int>>
+<synopsis>
+<<<
+{FD.reified.int ?+{Spec} ?*{D1} ?_{D2}}
+>>>
+<item>
+reifies <<{FD.int Spec D1}>> into ?_{D2}.
+
+<entry>
+<index class=module/FD<and>reified<and>dom/
+<<reified.dom>>
+<synopsis>
+<<<
+{FD.reified.dom ?+{Spec} ?_{Dv} ?_{D}}
+>>>
+<item>
+reifies <<{FD.dom Spec Dv}>> into ?_{D}.
+
+<entry>
+<index class=module/FD<and>reified<and>sum/
+<<reified.sum>>
+<synopsis>
+<<<
+{FD.reified.sum ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
+>>>
+<item>
+reifies <<{FD.sum Dv A D1}>> into ?_{D2}.
+
+<entry>
+<index class=module/FD<and>reified<and>sumC/
+<<reified.sumC>>
+<synopsis>
+<<<
+{FD.reified.sumC ?+{Iv} ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
+>>>
+<item>
+reifies <<{FD.sumC Iv Dv A D1}>> into ?_{D2}.
+
+<entry>
+<index class=module/FD<and>reified<and>sumCN/
+<<reified.sumCN>>
+<synopsis>
+<<<
+{FD.reified.sumCN ?+{Iv} ?*{Dvv} ?+{A} ?*{D1} ?_{D2}} 
+>>>
+<item>
+reifies <<{FD.sumCN Iv Dvv A D1}>> into ?_{D2}.
+
+<entry>
+<index class=module/FD<and>reified<and>sumAC/
+<<reified.sumAC>>
+<synopsis>
+<<<
+{FD.reified.sumAC ?+{Iv} ?*{Dv} ?+{A} ?*{D1} ?_{D2}}
+>>>
+<item>
+reifies <<{FD.sumAC Iv Dv A D1}>> into ?_{D2}.
+
+<entry>
+<index class=module/FD<and>reified<and>sumACN/
+<<reified.sumACN>>
+<synopsis>
+<<<
+{FD.reified.sumACN ?+{Iv} ?*{Dvv} ?+{A} ?*{D1} ?_{D2}} 
+>>>
+<item>
+reifies <<{FD.sumACN Iv Dvv A D1}>> into ?_{D2}.
+
+<entry>
+<index class=module/FD<and>min/
+<<reified.distance>>
+<synopsis>
+<<<
+{FD.reified.distance ?*{D1} ?*{D2} ?+{A} ?*{D3} ?_{D4}}
+>>>
+<item>
+reifies <<{FD.distance D1 D2 A D3}>> into ?_{D4}.
+
+<entry>
+<index class=module/FD<and>reified<and>card/
+<<reified.card>>
+<synopsis>
+<<<
+{FD.reified.card ?*{D1} ?*{Dv} ?*{D2} ?_{D3}}
+>>>
+<item>
+?{Dv} is a vector of Boolean variables. <code/FD.reified.card/
+creates a propagator for
+<p><math>(({\tt D1}\leq{\tt D}_1+\ldots+{\tt D}_n\leq{\tt D2}) \leftrightarrow
+({\tt D3}=1))\;\wedge\;{\tt D3} \in \{0,1\}.</math><p>
+which reifies into <<D3>> the conjunction 
+<<<
+D1 =<: D1 + ... + Dn
+D1 + ... + Dn =&lt;: D2 
+>>> 
+<p>
+More specifically, its operational semantics is defined through 
+<<<
+D3 :: 0#1
+or D1 =<: D1 + ... + Dn 
+   D1 + ... + Dn =&lt;: D2
+   D3 = 1
+[] or D1 >: D1 + ... + Dn 
+   [] D1 + ... + Dn >: D2
+   end
+   D3 = 0
+end	
+>>>
+</list></section>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.misc"><title/Miscellaneous Propagators/
+<p>
+<list>
+
+<entry>
+<index class=module/FD<and>plus/
+<<plus>>
+<synopsis>
+<<<
+{FD.plus ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the sum of ?_{D1} and ?_{D2}. 
+The propagator constrains its arguments as ?_{D1}<<+>>?_{D2}<<=:>>?_{D3}.
+
+<entry>
+<index class=module/FD<and>plusD/
+<<plusD>>
+<synopsis>
+<<<
+{FD.plusD ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the sum of ?_{D1} and ?_{D2}. 
+The propagator constrains its arguments as ?_{D1}<<+>>?_{D2}<<=:>>?_{D3}.
+<P>
+Does domain propagation, which can be very expensive.
+
+<entry>
+<index class=module/FD<and>minus/
+<<minus>>
+<synopsis>
+<<<
+{FD.minus ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the difference between ?_{D1} and ?_{D2}. 
+The propagator constrains its arguments as ?_{D1}<<->>?_{D2}<<=:>>?_{D3}.
+
+<entry>
+<index class=module/FD<and>minusD/
+<<minusD>>
+<synopsis>
+<<<
+{FD.minusD ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the difference between ?_{D1} and ?_{D2}. 
+The propagator constrains its arguments as ?_{D1}<<->>?_{D2}<<=:>>?_{D3}.
+<P>
+Does domain propagation, which can be very expensive.
+
+<entry>
+<index class=module/FD<and>times/
+<<times>>
+<synopsis>
+<<<
+{FD.times ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the product of ?_{D1} and ?_{D2}. 
+Coreferences are exploited. If the store entails <<D1 = D3>>, 
+the propagator ceases to exist and the constraint <<D2=1>> is
+imposed. If the store entails <<D2 = D3>>, the propagator ceases to
+exist and the constraint <<D1=1>> is imposed. If the store entails
+<<D1 = D2>>, the propagator ceases to exist and a propagator is imposed
+instead, which constrains the variables <<D1>> and <<D2>> as follows. 
+<p><math>
+\underline{{\tt D1}}^2 \leq {\tt D3} \leq \overline{{\tt D1}}^2 \quad\quad
+\lceil \sqrt{\underline{{\tt D3}}} \rceil \leq {\tt D1} \leq \lfloor
+\sqrt{\overline{{\tt D3}}} \rfloor
+</math><p>
+For notation see&nbsp;<ptr to="section.fd.arithmetic">n.
+
+<entry>
+<index class=module/FD<and>timesD/
+<<timesD>>
+<synopsis>
+<<<
+{FD.timesD ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the product of ?_{D1} and ?_{D2}. 
+<P>
+Does domain propagation, which can be very expensive.
+
+
+<entry>
+<index class=module/FD<and>power/
+<<power>>
+<synopsis>
+<<<
+{FD.power ?@{D1} ?+{I} ?@{D2}}
+>>>
+<item>
+?@{D2} is the result of ?_{D1} raised to the power of ?_{I}, &ie;
+<math/{\tt D1}^{{\tt I}} = {\tt D2}/. 
+The propagator constrains the variables <<D1>> and <<D2>> as follows. 
+<p><math>
+\underline{{\tt D1}}^{{\tt I}} \leq {\tt D2} \leq \overline{{\tt D1}}^{{\tt I}}
+\quad\quad 
+\lceil \sqrt[{\tt D2}]{\underline{{\tt D1}}} \rceil \leq {\tt D2} \leq \lfloor
+\sqrt[{\tt D2}]{\overline{{\tt D1}}} \rfloor
+</math><p>
+For notation see &nbsp;<ptr to="section.fd.arithmetic">.
+
+<entry>
+<index class=module/FD<and>divI/
+<<divI>>
+<synopsis>
+<<<
+{FD.divI ?@{D1} ?+{I} ?@{D2}}
+>>>
+<item>
+?_{D2} is the result of the integer division of <<D1>> by <<I>>. 
+<p>
+A domain bound is discarded from the domain of one variable, if there is
+no value between the lower and upper bound of the domain of the other
+variable, such that the constraint holds.
+Additionally, if <math/{\tt D1}={\tt D2}/, the propagator is replaced by <<I=1>>.
+
+<entry>
+<<modI>>
+<synopsis>
+<index class=module/FD<and>modI/
+<<<
+{FD.modI ?@{D1} ?+{I} ?@{D2}}
+>>>
+<item>
+?_{D2} is the result of <<D1>> modulus <<I>>. 
+<p>
+A domain bound is discarded from the domain of one variable, if there is
+no value between the lower and upper bound of the domain of the other
+variable, such that the constraint holds.
+Additionally, if <math/{\tt D1}={\tt D2}/, the propagator is replaced by
+<<D1&lt;:I>>. If the current upper bound of ?_{D1} is less than ?_{I},
+the propagator is replaced by <<D1=D2>>. 
+
+<entry>
+<index class=module/FD<and>divD/
+<<divD>>
+<synopsis>
+<<<
+{FD.divD ?@{D1} ?+{I} ?@{D2}}
+>>>
+<item>
+?_{D2} is the result of the integer division of <<D1>> by <<I>>. 
+<p>
+Does domain propagation, which can be very expensive.
+
+<entry>
+<index class=module/FD<and>modD/
+<<modD>>
+<synopsis>
+<<<
+{FD.modD ?@{D1} ?+{I} ?@{D2}}
+>>>
+<item>
+?_{D2} is the result of <<D1>> modulus <<I>>. 
+<p>
+Does domain propagation, which can be very expensive.
+
+<entry>
+<index class=module/FD<and>max/
+<<max>>
+<synopsis>
+<<<
+{FD.max ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the maximum of ?_{D1} and ?_{D2}. 
+<p>
+Its operational semantics  is defined through 
+<<<
+D3&gt;=:D1   D3&gt;=:D2
+condis D3=&lt;:D1
+[] D3=&lt;:D2
+end	
+if D1=D2 then D3=D1
+else skip
+end	
+>>>
+
+<entry>
+<index class=module/FD<and>min/
+<<min>>
+<synopsis>
+<<<
+{FD.min ?@{D1} ?@{D2} ?@{D3}}
+>>>
+<item>
+?_{D3} is the minimum of ?_{D1} and ?_{D2}. 
+Its operational semantics is defined through
+<<<
+D3=&lt;:D1   D3=&lt;:D2
+condis D3&gt;=:D1
+[] D3&gt;=:D2
+end	
+if D1=D2 then D3=D1
+else skip
+end	
+>>>
+
+<entry>
+<index class=module/FD<and>distance/
+<<distance>>
+<synopsis id=page.distance>
+<<<
+{FD.distance ?*{D1} ?*{D2} ?+{A} ?*{D3}}
+>>>
+<item>
+creates a propagator for <math/|~{\tt D1}-{\tt D2}~|\;\sim_{{\tt A}}\;{\tt D3}/.
+May cut holes into domains. For example, 
+<<<
+{FD.dom 0#10 [X Y]}
+{FD.distance X Y '&gt;:' 8}
+>>>
+will reduce the domains of <<X>> and <<Y>> to <math/\{0,1,9,10\}/.
+<p>
+The propagator is equivalent to <<{FD.sumAC [1 ~1] [D1 D2] A D3}>> but is
+more efficient. 
+
+<entry>
+<index class=module/FD<and>less/
+<<less>>
+<synopsis>
+<<<
+{FD.less ?*{D1} ?*{D2}}
+>>>
+<item>
+Equivalent to ?_{D1}<<&lt;:>>?_{D2}.
+
+<entry>
+<index class=module/FD<and>lesseq/
+<<lesseq>>
+<synopsis>
+<<<
+{FD.lesseq ?*{D1} ?*{D2}}
+>>>
+<item>
+Equivalent to ?_{D1} <<=&lt;:>> ?_{D2}.
+
+<entry>
+<index class=module/FD<and>greater/
+<<greater>>
+<synopsis>
+<<<
+{FD.greater ?*{D1} ?*{D2}}
+>>>
+<item>
+Equivalent to ?_{D1}<<&gt;:>>?_{D2}. 
+
+<entry>
+<index class=module/FD<and>greatereq/
+<<greatereq>>
+<synopsis>
+<<<
+{FD.greatereq ?*{D1} ?*{D2}}
+>>>
+<item>
+Equivalent to ?_{D1}<<&gt;=:>>?_{D2}.
+
+<entry id="ref_disjoint">
+<index class=module/FD<and>disjoint/
+<<disjoint>>
+<synopsis>
+<<<
+{FD.disjoint ?*{D1} ?+{I1} ?*{D2} ?+{I2}}
+>>>
+<item>
+creates a propagator for 
+<math/{\tt D1}+{\tt I1}\leq{\tt D2} \;\vee\; {\tt D2}+{\tt I2}\leq{\tt D1}/. May cut holes into domains. For example,
+<<<
+{FD.dom 0#10 [X Y]}
+{FD.disjoint X 9 Y 9}
+>>>
+will reduce the domains of <<X>> and <<Y>> to <math/\{0,1,9,10\}/.
+<p>
+Its operational semantics  is defined through
+<<<
+condis D1 + I1 =&lt;: D2
+[] D2 + I2 =&lt;: D1
+end
+>>>
+
+<entry>
+<index class=module/FD<and>disjointC/
+<<disjointC>>
+<synopsis>
+<<<
+{FD.disjointC ?*{D1} ?+{I1} ?*{D2} ?+{I2} ?_{D3}}
+>>>
+<item>
+creates a propagator for 
+<p>
+<math/
+(({\tt D1}+{\tt I1}\leq{\tt D2} \wedge {\tt D3}=0) \;\vee\;({\tt D2}+{\tt I2}\leq{\tt D1} \wedge {\tt D3}=1)) \;\wedge\; ({\tt D3}\in\{0,1\}).
+/
+<p>
+Its operational semantics  is defined through 
+<<<
+condis D1 + I1 =&lt;: D2   
+   D3 =: 0
+[] D2 + I2 =&lt;: D1
+   D3 =: 1
+end
+>>>
+
+<entry id="ref_tasksoverlap">
+<index class=module/FD<and>tasksOverlap/
+<<tasksOverlap>>
+<synopsis>
+<<<
+{FD.tasksOverlap ?*{D1} ?+{I1} ?*{D2} ?+{I2} ?_{D3}}
+>>>
+<item>
+creates a propagator for 
+<p>
+<math/
+(({\tt D1}+{\tt I1}>{\tt D2} \;\wedge\; {\tt D2}+{\tt I2}>{\tt D1} \;\wedge \; {\tt D3}=1) \;\vee\; ({\tt D1}+{\tt I1}\leq{\tt D2} \;\wedge\; {\tt D3}=0) \;\vee\;({\tt D2}+{\tt I2}\leq{\tt D1} \;\wedge\; {\tt D3}=0)) \;\wedge\; ({\tt D3}\in\{0,1\})/.
+
+<p>
+Its operational semantics  is defined through 
+<<<
+condis
+   D1 + I1 &gt;: D2   
+   D2 + I2 &gt;: D1
+   D3 =: 1
+[] 
+   D1 + I1 =&lt;: D2   
+   D3 =: 0
+[] 
+   D2 + I2 =&lt;: D1
+   D3 =: 0
+end
+>>>
+</list>
+
+Note that the disjunction is <ref
+to="section.fd.condis">constructive</ref>. Informally, in case <<D3>> is 0 the
+propagator behaves like <<FD.disjoint>>, i.e., in context of task
+scheduling two tasks must not overlap. Otherwise, if <<D3>> is 1, the
+two tasks must overlap. This propagator is used in applications which
+shall be able to deal with overlapping tasks.
+
+</section>
+
+
+<!--
+**********************************************************************
+--> <section id="section.fd.distribution"><title/Distribution/
+<p>
+In this section it is shown how Oz supports distribution with
+constraints.  The following procedure creates binary
+choice-points for variables. The choice is delayed until propagation has
+reached a fixed point. Assume  <<Dv>> to be a vector of finite 
+domain integers. The distribution differs in the order of the
+choice-points and in the constraint with which is distributed.
+ Essentially, it works as follows
+<list class=enum>
+<item> Select an element <<D>> of <<Dv>> which is not determined.
+<item> Select a value or a domain specification <<Spec>> in the current
+domain of <<D>>. 
+<item> Create a choice point for <<X::Spec>> and <<X::compl(Spec)>>. 
+<item> If not all elements of <<Dv>> are determined, go to step 1.
+</list>
+The order of <<Dv>> is preserved. 
+<list>
+<entry>
+<index class=module/FD<and>distribute/
+<<distribute>>
+<synopsis>
+<<<
+{FD.distribute ?+{Dist} ?+{Xv}}
+>>>
+<item>
+The vector ?_{Xv} is distributed according to the specification 
+?_{Dist}. 
+ ?_{Dist} may be either
+the atom <<naive>>, <<ff>> (for first-fail), <<split>> or a record with label <<generic>>:
+
+<list>
+<item> <<naive>>:
+?_{Xv} must be a vector of finite domain integers.
+Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
+variable <<X>> in ?_{Xv}.
+Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
+bound of the domain of <<X>>.
+
+<item> <<ff>>:
+?_{Xv} must be a vector of finite domain integers.
+Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
+variable <<X>> in ?_{Xv}, whose domain size is minimal. 
+Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
+bound of the domain of <<X>>. 
+
+<item> <<split>>:
+?_{Xv} must be a vector of finite domain integers.
+Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
+variable <<X>> in ?_{Xv}, whose domain size is minimal. 
+Creates a choice point for <<X=<:M>> and <<X>:M>>, where <<M>> is the
+middle of the domain of <<X>> (see <<FD.reflect.mid>>). 
+
+<item> 
+<<<
+generic(order:     ?+{Order}  <= size
+        filter:    ?+{Filter} <= undet
+        select:    ?+{Select} <= id
+        value:     ?+{Value}  <= min
+        procedure: ?+{Proc}   <= proc {$} skip end)
+>>>
+Considers only those elements in ?_{Xv}, for which ?_{Filter} is
+true. Chooses the leftmost element, which is minimal with respect to ?_{Order}
+and selects the 
+corresponding variable <<D>> by ?_{Select}. Creates a choice point for
+<<D::Spec>> and <<D::compl(Spec)>>, where <<Spec>> is selected by
+<<Value>>. 
+<p>
+The values under the respective features must be as follows:
+<p>
+<list>
+<item> ?_{Order}:
+<list>
+        <item> Binary boolean function <<P>>: Selects the leftmost element
+                         in ?_{Xv} which is minimal with respect  to
+                         the order relation <<P>>.
+	<item> <<naive>>: Selects the leftmost variable. 
+        <item> <<size>>: Selects the leftmost variable, whose domain is
+                         minimal.
+        <item> <<min>>: Selects the leftmost variable, whose lower bound is
+                         minimal.
+        <item> <<max>>: Selects the leftmost variable, whose upper bound
+                         is maximal.
+        <item> <<nbSusps>>: Selects the variable with the
+                         largest number of suspensions. If 
+several variables suspend on the maximal number of constraints, 
+the leftmost variable whose domain is minimal is selected.  
+</list>
+<item> ?_{Filter}: 
+<list>
+        <item> Unary boolean function <<P>>: Considers only the elements
+        <<X>> in ?_{Xv}, for which <<{P X}>> yields <<true>>. 
+        <item> <<undet>>: Considers only undetermined variables.
+</list>
+<item> ?_{Select}:
+<list>
+        <item> Unary function <<P>>: Selects the variable to enumerate
+        from the selected element by ?_{Order} and ?_{Filter}.
+        <item> <<id>>: The variable to enumerate is the selected element.
+</list>
+<item> ?_{Value}:
+<list>
+        <item> Binary procedure <<P>>: Takes a variable as first argument,
+	and binds its second argument to a domain descriptor <<D>> to serve
+	as the restriction on said variable to be used in a binary distribution
+	step (<<D>> in one branch, <<compl(D)>> in the other).
+        <item> <<min>>: Selects the lower bound of the domain. 
+        <item> <<max>>: Selects the upper bound of the domain.
+        <item> <<mid>>: Selects the element, which is closest to the 
+		middle of the domain (the arithmetical means between 
+		the lower and upper bound of the domain). In case of ties, the smaller
+	        element	is selected.
+        <item> <<splitMin>>: Selects the interval from the lower bound to the
+        middle of the domain (see <<mid>>). 
+        <item> <<splitMax>>: Selects the interval from the element
+        following the middle to the upper bound  of the domain (see <<mid>>). 
+</list>
+<item> ?_{Proc}: Is applied when stability is reached. Since this
+      application may cause instability, distribution is continued when
+      stability is reached again.
+
+</list>
+Note, that in case ?_{Det} is <<det>> or in case ?_{Order} is <<size>>,
+<<lower>>, <<upper>>, or <<nbSusps>>, the elements of ?_{Xv} must be
+finite domain integers. 
+<p>
+For example, <<{FD.distribute ff Dv}>> can be expressed as 
+<<<
+{FD.distribute generic Dv},
+>>>
+<<{FD.distribute split Dv}>> as 
+<<<
+{FD.distribute generic(value: splitMin) Dv},
+>>>
+and <<{FD.distribute naive Dv}>> as
+<<<
+{FD.distribute generic(order: naive) Dv}
+>>>
+</list>
+The naive distribution can also be defined as follows using the <<value>>
+feature.
+<<<
+{FD.distribute 
+generic(value: proc{$ D Ds Cont}
+		  Min={FD.reflect.min D}
+ 	       in
+		  choice D=Min
+		     choice {Cont Ds} end
+		  [] {`Nec` D Min}
+		     choice {Cont Ds} end
+	  	  end
+		end) Ds}
+>>>
+
+<entry>
+<index class=module/FD<and>choose/
+<<choose>>
+<synopsis>
+<<<
+{FD.choose ?+{Dist} ?+{Xv} ??{X} ??{Spec}}
+>>>
+<item>
+Chooses the element ?_{X} in ?_{Xv} according to the description
+?_{Dist}. A specification ?_{Spec} for the element ?_{X} is returned
+according  to the description ?_{Dist}. The parameter ?_{Dist} is
+defined in the same way as for <<FD.distribute>> except for the value
+selection. If the feature <<value>> is used for generic distribution, the
+field must be constrained to a unary function <<P>> which selects a value
+from the domain of the selected variable (see below for an example). For
+example, 
+<<<
+{FD.choose ff Xs E S}
+>>>
+selects the element <<E>> in the list <<Xs>> according to the first-fail
+strategy and binds <<S>> to the current lower bound of <<E>>. 
+<<<
+{FD.choose generic(value:splitMin) Xv E S}
+>>>
+selects the element <<E>> in the list <<Xs>> according to the first-fail
+strategy and binds <<S>> to the pair <<0#M>>, where <<M>> is the result of
+<<{FD.reflect.mid E}>>.
+For the naive distribution strategy, the following may be used. 
+<<<
+{FD.choose generic(value: fun{$ X}
+			     {FD.reflect.min X}
+			  end)
+ Xv E S}
+>>>
+</list>
+</section>
+
+<!--
+**********************************************************************
+--> <section id="section.fd.assignment"><title/Assigning Values/
+<p>
+Special support is available for assigning particular values to
+vectors of variables. Assignment interleaves the assignment of a
+value proper to a variable and synchronization until stability
+after each assignment.
+</p>
+<p>The selection of variables and the selection of values is as
+with distribution <ptr to="section.fd.distribution">.
+</p>
+<p>
+<list>
+<entry>
+<index class=module/FD<and>assign/
+<<assign>>
+<synopsis>
+<<<
+{FD.assign ?+{ValA} ?+{Xv}}
+>>>
+<item>
+The vector ?_{Xv} is assigned according to the specification 
+?_{ValA}. 
+ ?_{ValA} may be either
+the atom <<min>>, <<mid>>, or <<max>>. That is, the smallest,
+medium, or largest element is assigned to each variable. 
+<p>
+Is equivalent to (for a list of variables <<Xs>>):
+<p>
+<<<proc {FD.assign ValA Xs}
+   for X in Xs do 
+      {Space.waitStable}
+      X = {FD.reflect.ValA X}
+   end
+end>>>
+</list>
+</p>
+</section>
+
+</chapter>
+

@@ -1,0 +1,5 @@
+*.simplified
+*.output
+*.l
+*.C
+*.so-*-*

@@ -1,0 +1,18 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT = dpanel
+WHATCLASS=tools
+PRINTNAME=DistributionPanel
+HTMLEXTRAFILES=basic.gif DSframe.gif  MSframe.gif UxpctExports.gif EEframe.gif  MassImportation.gif  StrangeRTT.gif IEframe.gif Cframe.gif TicketPort.gif
+
+
+WHAT	= dpanel
+MAIN	= main.sgml
+SGMLSRCS = chapter1.sgml chapter2.sgml remote.sgml
+
+
+
+include ../Makefile.common
+

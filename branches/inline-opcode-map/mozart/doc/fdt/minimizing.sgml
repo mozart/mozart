@@ -1,0 +1,388 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Gert Smolka <smolka@dfki.de>
+  -   Jörg Würtz
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Christian Schulte, 1998
+  -   Gert Smolka, 1998
+  -   Jörg Würtz, 1997
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.minimizing"><title/Minimizing a Cost Function/<p>
+
+In many applications one is interested in
+solutions that minimize a given cost function.
+If the cost function is simple enough, we can
+obtain the minimization effect by employing a
+two-dimensional distribution strategy.
+
+<p>
+This section will present two examples, map
+coloring and conference scheduling, for which a
+two-dimensional distribution strategy suffices.
+For each of the two examples we will develop a
+parameterized script.
+
+<section id="section.minimizing.mapcolor">
+  <title/Example: Coloring a Map/
+
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+<p>
+Given a map showing the West European countries
+Netherlands, Belgium, France, Spain, Portugal,
+Germany, Luxemburg, Switzerland, Austria, and
+Italy, find a coloring such that neighboring
+countries have different color and a minimal
+number of colors is used.
+
+<subsection class=unnumbered>
+  <title/Model/
+
+<p>
+We have a variable <math/NbColors/ saying how many
+different colors we can use.  Moreover, we have a
+variable for every country.  For every pair <math/A/,
+<math/B/ of countries having a border in common we
+impose the constraint <math/A\neq B/.  We represent
+colors as numbers.  Hence we constrain all
+variables for countries to integers in
+<math/0\#{NbColors}/.
+
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+
+<p>
+We first distribute on <math/NbColors/, trying the
+numbers <math/0,1,2,\ldots/ in ascending order.  After
+<math/NbColors/ is determined, we distribute on the
+variables for the countries using the usual
+first-fail strategy.
+
+<figure id="ProgMapColoring">
+<caption/A script for the Map Coloring Problem
+together with a data specification./
+<chunk class=anonymous><title/MapColoring/
+fun {MapColoring Data}
+   Countries = {Map Data fun {$ C#_} C end}
+in
+   proc {$ Color}
+      NbColors  = {FD.decl}
+   in
+      {FD.distribute naive [NbColors]}
+      %% Color: Countries --> 1#NbColors
+      {FD.record color Countries 1#NbColors Color}
+      {ForAll Data
+       proc {$ A#Bs}
+	  {ForAll Bs proc {$ B} Color.A \=: Color.B end}
+       end}
+      {FD.distribute ff Color}
+   end
+end
+
+Data = [ austria     # [italy switzerland germany]
+	 belgium     # [france netherlands germany luxemburg]
+	 france      # [spain luxemburg italy]
+	 germany     # [austria france luxemburg netherlands]
+	 italy       # nil
+	 luxemburg   # nil
+	 netherlands # nil
+	 portugal    # nil
+	 spain       # [portugal]
+	 switzerland # [italy france germany austria] ]
+</chunk>
+</figure>
+
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
+The script appears in
+<Ptr to="ProgMapColoring">.  It is parameterized
+with the specification of the map to be colored.
+The figure shows the specification of a map
+containing some European countries.
+<p>
+The script first creates a local variable
+<<NbColors>> that specifies the number of different
+colors to be used for coloring the map.  Then it
+distributes naively on <<NbColors>>.  Recall that a
+distributor blocks its thread until it has done
+its job.  After <<NbColors>> is determined by
+distribution, the variable <<Color>>  is
+constrained to a record mapping the country names
+to integers in <<1#NbColors>>.  This implicitly
+creates the variables for the Countries.  Next the
+script creates a propagator
+<<<
+Color.A \=: Color.B
+>>>
+for every pair <<A>>, <<B>> of bordering
+countries.
+Finally, the script distributes on <<Color>> using
+the first-fail strategy.
+<p>
+The statement
+<<<
+{ExploreOne {MapColoring Data}}
+>>>
+will show the search tree explored to find the
+first solution, which looks as follows:
+<<<
+color(
+   austria:     1   belgium:  3   france:    1  
+   germany:     2   italy:    2   luxemburg: 4  
+   netherlands: 1   portugal: 1   spain:     2  
+   switzerland: 3 
+     )
+>>>
+The search tree of <<MapColoring>> is interesting.
+First, colorings with 0, 1, 2 and 3 colors are
+searched and not found.  Then a coloring with 4
+colors is searched.  Now a solution is found
+quickly, without going through further failure
+nodes.  There are many solutions using 4 colors
+since the particular color given to a country does
+not matter.
+</section>
+
+<section id="section.minimizing.conference">
+  <title/Example: Conference/
+
+<p>
+This example will employ the constraint provided
+by <<FD.atMost>>.
+
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+
+<p>
+We want to construct the time table of a
+conference.  The conference will consist of 11
+sessions of equal length.  The time table is to
+be organized as a sequence of slots, where a slot
+can take up to 3 parallel sessions.  There are
+the following constraints on the timing of the
+sessions:
+<list enum>
+<item>
+Session 4 must take place before Session 11.
+<item>
+Session 5 must take place before Session 10.
+<item>
+Session 6 must take place before Session 11.
+<item>
+Session 1 must not be in parallel with
+Sessions 2, 3, 5, 7, 8, and 10.
+<item>
+Session 2 must not be in parallel with
+Sessions 3, 4, 7, 8, 9, and 11.
+<item>
+Session 3 must not be in parallel with
+Sessions 5, 6, and 8.
+<item>
+Session 4 must not be in parallel with
+Sessions 6, 8, and 10.
+<item>
+Session 6 must not be in parallel with
+Sessions 7 and 10.
+<item>
+Session 7 must not be in parallel with
+Sessions 8 and 9.
+<item>
+Session 8 must not be in parallel with
+Session 10.
+</list>
+The time table should minimize the number of
+slots.
+
+<subsection class=unnumbered>
+  <title/Model/
+
+<p>
+The model has a variable <math/{\it NbSlots}/ saying
+how many slots the conference has.  For the given
+data, <math/{\it NbSlots}/ can be constrained to the
+finite domain <math/4\#{11}/.  The model also has a
+variable <math/{\it Plan}_i/ for every session <math/i/,
+where <math/{\it Plan}_i/ stands for the number of the
+slot in which Session <math/i/ will take place.  Every
+variable <math/{\it Plan}_i/ can be constrained to the
+finite domain <math/1\#{\it NbSlots}/.  The remaining
+constraints are obvious from the problem
+description.
+
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+<p>
+We use a two-dimensional distribution strategy.
+We first distribute on <math/{\it NbSlots}/, trying
+smaller values first.  Once <math/{\it NbSlots}/ is
+determined, we distribute on the variables
+<math/{\it Plan}_1,\ldots,{\it Plan}_{11}/ using the standard
+first-fail strategy.
+
+<p>
+<figure id="ProgConference">
+<caption/A script for conference scheduling
+together with a data specification./
+
+<chunk class=anonymous><title/Conference/
+fun {Conference Data}
+   NbSessions    = Data.nbSessions
+   NbParSessions = Data.nbParSessions
+   Constraints   = Data.constraints
+   MinNbSlots    = NbSessions div NbParSessions
+in
+   proc {$ Plan}
+      NbSlots  = {FD.int MinNbSlots#NbSessions}
+   in
+      {FD.distribute naive [NbSlots]}
+      %% Plan: Session --> Slot
+      {FD.tuple plan NbSessions 1#NbSlots Plan}
+      %% at most NbParSessions per slot
+      {For 1 NbSlots 1  
+       proc {$ Slot} {FD.atMost NbParSessions Plan Slot} end}
+      %% impose constraints
+      {ForAll Constraints
+       proc {$ C}
+	  case C
+	  of before(X Y) then 
+             Plan.X <: Plan.Y
+	  [] disjoint(X Ys) then
+	     {ForAll Ys proc {$ Y} Plan.X \=: Plan.Y end}
+	  end
+       end}
+      {FD.distribute ff Plan}
+   end
+end
+
+Data = data(nbSessions:11  nbParSessions:3
+	    constraints: [ before(4 11)  before(5 10)  before(6 11)
+		           disjoint(1 [2 3 5 7 8 10])
+		           disjoint(2 [3 4 7 8 9 11])
+		           disjoint(3 [5 6 8])  disjoint(4 [6 8 10])
+		           disjoint(6 [7 10])   disjoint(7 [8 9])
+		           disjoint(8 [10]) ] )
+</chunk>
+
+</figure>
+
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
+The script in <Ptr to="ProgConference"> is
+parameterized with an argument <<Data>> specifying
+the conference to be organized.  The figure also
+shows the specification of the conference
+described in the problem specification.
+
+<p>
+The script creates a local variable <<NbSlots>>
+specifying the number of slots used by the
+conference.  It then distributes naively on
+<<NbSlots>>.  After <<NbSlots>> is determined, it
+constrains its root variable <<Plan>> to a tuple
+mapping the session numbers <<1>>, &ellipsis;, <<11>> to integers
+in <<1#NbSlots>>.  This implicitly creates
+variables corresponding to the variables <math/{\it
+Plan}_i/ of the model.
+
+<p>
+The statement
+<<<
+{FD.atMost NbParSessions Plan Slot}
+>>>
+creates a propagator for a constraint saying that
+at most <<NbParSessions>> components of <<Plan>>
+can be equal to <<Slot>>.
+
+<p>
+The statement <<{ForAll Constraints ... }>>
+imposes the constraints of the conference to be
+scheduled.
+
+<p>
+The last statement distributes on <<Plan>> using
+the first-fail strategy.
+
+<p>
+The statement
+<<<
+{ExploreOne {Conference Data}}
+>>>
+will explore the search tree until the first
+solution is found.  The first solution minimizes
+the number of slots and looks as follows:
+<<<
+plan(1 2 3 1 2 2 3 4 1 3 4)
+>>>
+This plan says that the conference requires 4
+slots, where the sessions 1, 4 and 9 take place in
+slot 1, the sessions 2, 5 and 6 take place in slot
+2, the sessions 3, 7 and 10 take place in slot 3,
+and the sessions 8 and 11 take place in slot 4.
+
+</section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Minimizing a Cost Function
+%%%
+
+%%
+%% Example: Coloring a Map
+%%
+
+declare
+<chunk.ref/MapColoring/
+
+{ExploreOne {MapColoring Data}}
+
+
+
+%%
+%% Example: Conference
+%%
+
+declare
+<chunk.ref/Conference/
+
+{ExploreOne {Conference Data}}
+
+
+
+</chunk>
+]]>
+
+</chapter>
+
