@@ -75,7 +75,7 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   int console = 0;
   if (stricmp(progname,"oz.exe")==0) {
-    sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",ebin,ozhome);
+    sprintf(buffer,"%s -l \"%s/lib/elisp/oz.elc\" -f run-oz",ebin,ozhome);
   } else if (stricmp(progname,"ozdemo.exe")==0) {
     sprintf(buffer,"%s/platform/%s/ozemulator -f %s/demo/rundemo",
             ozhome,ozplatform,ozhome);
