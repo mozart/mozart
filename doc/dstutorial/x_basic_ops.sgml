@@ -15,25 +15,192 @@ specify what distribution behavior he wants, e.g.,
 mobile (cached) objects, stationary objects,
 stationary single-threaded objects.
 
-The following distribution behaviors exist:
+The most critical entities in an application
+in terms of network efficiency are the objects.
+Objects have a state that is updated in a
+globally consistent way.
+This can be more or less efficient
+in certain cases,
+depending on the object's distributed behavior.
+Many distribution behaviors are possible for objects.
+Here are some of the more useful ones
+that the system provides:
 <LIST>
-<ITEM> Objects and cells are cached by default--we also call
+<ITEM> <EM>Cached object</EM>:
+Objects and cells are cached by default--we also call
 this "mobile objects".
 A site attempting to execute a method will first fetch the object,
 which requires up to three network messages.
-Later execution on the same site needs no network messages.
-A cached object optimizes writing its state relative to reading its state.
+After this, no further messages are needed as long
+as the object stays on the site.
+If many sites use the object, then it will travel
+among the sites, giving everyone a fair share of the object use.
 
-<ITEM> Objects can be made stationary.
-A stationary object will always execute on the same site.
-Calling a method is asynchronous
+<P>The class of a cached object is copied to each
+site that calls the object.
+This is done lazily, i.e., the class is only
+copied when the object is called for the first time.
+Once the class is on the site, no further copies are done.
+
+<ITEM> <EM>Stationary object</EM>:
+A stationary object remains on the site at which it was created.
+Each method invocation uses one message to start the method
+and one message to synchronize when the method is finished.
+Each method executes in its own thread on the object's site.
+Threads in Mozart are extremely efficient, millions can be
+created on one machine, so this is reasonable.
+
+<ITEM> <EM>Server (sequential asynchronous object)</EM>:
+A server is a stripped-down stationary object.
+Each method invocation uses one message only and does not
+wait until the method is finished.
+All method invocations execute in the same thread,
+so the object is executed in a completely sequential way.
+</LIST>
+Deciding between these three behaviors is done
+when the object is created from its class.
+A cached object is created with <<New>>,
+a stationary object is created with <<NewStat>>,
+and a server is created with <<NewServer>>.
+
+The other language entities have the following
+distribution behaviors:
+<LIST>
+<ITEM> <EM>Port</EM>:
+A port is an asynchronous many-to-one channel
+that respects FIFO for messages sent from within the same thread.
+A port is stationary on the site it is created.
+The messages are appended to a stream
+on the port's site.
+Messages from the same thread appear
+in the stream in the same order 
+in which they were sent in the thread.
+
+<ITEM> <EM>Cell</EM>:
+A cell is an updatable pointer to any other entity,
+i.e., it is analogous to a standard updatable variable
+in imperative languages such as C and Java.
+Cells have the same distribution behavior
+as cached objects, i.e., updating the pointer
+may need up to three network messages,
+but once the cell is local, then further
+updates do not use the network any more.
+
+<ITEM> <EM>Logic variable</EM>:
+A logic variable is a kind of single-assignment variable.
+It is more than that because two logic variables can
+be bound together even before they are assigned,
+and because a variable can be assigned more than
+once, if it is always to the same value.
+Logic variables are important for two reasons:
+<LIST>
+<ITEM> They have a more efficient protocol than cells.
+Often, variables are just used like placeholders, that is,
+they will be assigned only once.
+It would be highly inefficient in a distributed system
+to create a cell for that case.
+<ITEM> They can be used to improve latency tolerance.
+A logic variable can be passed in a message
+or stored in a data structure
+even before it is assigned its value.
+When the value is there, then
+it is sent to all sites that need it.
+</LIST>
+When a logic variable is bound,
+the value is sent to its owner site
+(the site on which it was created),
+which then multicasts it to all the
+sites that have the variable.
+That is, if the variable is on <EM>n</EM> sites,
+then a maximum of <EM>n</EM>+1 messages are
+used to bind the variable.
+When a variable arrives on a site
+for the first time, it is immediately
+registered with the owner site.
+This takes one message.
+
+<ITEM> <EM>Stream</EM>:
+A stream is an asynchronous one-to-many communication channel.
+In fact,
+a stream is just a list whose last element is a logic variable.
+If the stream is bound on the owner site,
+then the binding is sent asynchronously to all sites that
+have the variable.
+Messages from the same thread appear
+in the stream in the same order 
+in which they were sent in the thread.
+
+<P>A port together with a stream implement an
+asynchronous many-to-many channel
+that respects the order of messages
+from the same thread.
+
+</LIST>
+
+Finally, there are the stateless entities.
+Stateless entities never
+change, i.e., they do not have any internal state.
+Their distribution behavior is very efficient:
+they are copied across the net in a single message.
+The different kinds of stateless entities differ
+in when the copy is done (eager or lazy)
+and in how many copies of the entity
+can exist on a site:
+<LIST>
+
+<ITEM> <EM>Records, lists, and numbers</EM>:
+these entities are copied eagerly across the network,
+in the message that references them.
+The same record, list, and number may occur many
+times on a site, once per copy
+(remember that integers in Mozart
+may have any number of digits).
+Since these entities are so very basic
+and primitive, it would be highly inefficient
+to manage remote references to them
+and to ensure that they exist only once on a site.
+Of course, records and lists may refer
+to any other kind of entity,
+and the distribution behavior of that
+entity depends on its type, not on
+the fact of its being inside a record
+or a list.
+
+<ITEM> <EM>Procedures, functions, classes, functors,
+atoms, and names</EM>:
+These entities are copied eagerly across the
+network, but can only exist once on a given site.
+For example, an object class contains the code
+of all the object's methods.
+If many objects of a given class
+exist on a site, then the class only exists once.
+
+<P>Note that classes are copied eagerly,
+whereas objects are lazy.
+I.e., if an object is passed to a site,
+then the object's class is not copied to
+the site until the object is called.
+However, if a class is passed to a site,
+then it is copied eagerly.
+
+<ITEM> <EM>Chunks</EM>
+A chunk is a lazy record.
+If a chunk is passed to a site,
+then the site initially only
+has a reference to the chunk.
+The chunk is copied only when a thread
+on the site tries to access one of
+the chunk's fields.
+Chunks exist to make it easy to introduce
+laziness into large data structures when needed.
+
+</LIST>
 
 <SECTION><TITLE>Global naming</TITLE>
 
 Global names are needed when an application
 wants to interact with the world outside it.
 Mozart supports three basic kinds of global names:
-
 <LIST>
 <ITEM> A <EM>ticket</EM> is a string that references a data
 structure inside a running application.
