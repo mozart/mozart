@@ -111,14 +111,14 @@ static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
 static Bool checkVSMessages(void *mbox);
 // ... and the read handler itself:
 // static TaskProcessProc readVSMessages;
-static void readVSMessages(void *mbox);
+static Bool readVSMessages(void *mbox);
 
 //
 // ... and the pair for processing unsent messages:
 // static TaskCheckProc checkMessageQueue;
 static Bool checkMessageQueue(VSSiteQueue *sq);
 // static TaskProcessProc processMessageQueue;
-static void processMessageQueue(VSSiteQueue *sq);
+static Bool processMessageQueue(VSSiteQueue *sq);
 
 ///
 /// (static) interface methods for virtual sites;
@@ -294,7 +294,7 @@ static Bool checkVSMessages(void *vMBox)
 }
 
 //
-static void readVSMessages(void *vMBox)
+static Bool readVSMessages(void *vMBox)
 {
   // unsafe by now - some magic number(s) should be added;
   VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
@@ -322,12 +322,15 @@ static void readVSMessages(void *vMBox)
       myVSMsgBufferImported->cleanup();
     } else {
       // is locked - then let's try to read later;
-      return;
+      return (FALSE);
     }
 
     //
     msgs--;
   }
+
+  //
+  return (TRUE);
 }
 
 //
@@ -345,11 +348,12 @@ static Bool checkMessageQueue(void *sqi)
 }
 
 //
-static void processMessageQueue(void *sqi)
+static Bool processMessageQueue(void *sqi)
 {
   // unsafe by now - some magic number should be added;
   VSSiteQueue *sq = (VSSiteQueue *) sqi;
   Assert(sq->isNotEmpty());
+  Bool ready = TRUE;
 
   //
   // Observe that a virtual site/message can be put again into queues,
@@ -373,9 +377,12 @@ static void processMessageQueue(void *sqi)
         break;                  // ready;
 
       //
-      vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
+      ready = ready && vs->tryToSendToAgain(vsm, &freeMsgBufferPool);
     }
   }
+
+  //
+  return (ready);
 }
 
 //

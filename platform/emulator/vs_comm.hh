@@ -401,8 +401,8 @@ public:
   int sendTo(VSMsgBufferOwned *mb, MessageType mt,
              Site *storeSite, int storeIndex,
              FreeListDataManager<VSMsgBufferOwned> *freeMBs);
-  // ... resend it;
-  int tryToSendToAgain(VSMessage *vsm,
+  // ... resend it ('TRUE' if we succeeded);
+  Bool tryToSendToAgain(VSMessage *vsm,
                        FreeListDataManager<VSMsgBufferOwned> *freeMBs);
 
   //

@@ -308,11 +308,7 @@ OsSigFun *osSignal(int signo, OsSigFun *fun)
   act.sa_flags = 0;
 
   /* The following piece of code is from Stevens: Advanced UNIX Programming */
-  if (signo == SIGALRM
-#ifdef VIRTUALSITES
-      || signo == SIGUSR2
-#endif
-      ) {
+  if (signo == SIGALRM || signo == SIGUSR2) {
 #ifdef SA_INTERUPT /* SunOS */
     act.sa_flags |= SA_INTERUPT;
 #endif
@@ -692,10 +688,9 @@ void osInitSignals()
 {
 #ifndef WINDOWS
   osSignal(SIGALRM,handlerALRM);
-#ifdef VIRTUALSITES
-  // 'SIGUSR2' notifies a virtual site about pending messages;
+  // 'SIGUSR2' notifies about presence of tasks. Right now these are
+  // only virtual site messages;
   osSignal(SIGUSR2,handlerUSR2);
-#endif
 #endif
 #ifndef DEBUG_DET
   osSignal(SIGINT,handlerINT);
@@ -717,6 +712,7 @@ void osInitSignals()
  *********************************************************/
 
 static fd_set globalFDs[2];     // mask of active read/write FDs
+static fd_set copyFDs[2];       // ... its copy for 'select()';
 
 int osOpenMax()
 {
@@ -824,6 +820,10 @@ void osWatchFDInternal(int fd, int mode)
 {
   CheckMode(mode);
   OZ_FD_SET(fd,&globalFDs[mode]);
+  // kost@ : in the case of preventing blocking in 'select()' by
+  // waiting for write permission into 'stderr' (used by task
+  // checkers&handlers, see am.cc), the copy must be updated as well:
+  OZ_FD_SET(fd,&copyFDs[mode]);
 }
 
 
@@ -858,7 +858,6 @@ Bool osIsWatchedFD(int fd, int mode)
  */
 void osBlockSelect(int ms)
 {
-  fd_set copyFDs[2];
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
   int wait = ms;
@@ -921,6 +920,8 @@ int osTestSelect(int fd, int mode)
  * subroutines for AM::handleIO
  * ------------------------------------------------------------------------- */
 
+// another copy since it must be preserved between 'osFirstSelect()'
+// and 'osNextSelect()';
 static fd_set tmpFDs[2];
 
 /* signals are blocked */
@@ -967,7 +968,6 @@ Bool osNextSelect(int fd, int mode)
 int osCheckIO()
 {
  loop:
-  fd_set copyFDs[2];
   copyFDs[SEL_READ]  = globalFDs[SEL_READ];
   copyFDs[SEL_WRITE] = globalFDs[SEL_WRITE];
 

@@ -97,7 +97,8 @@ oz_BFlag oz_isBetween(Board *to, Board *varHome);
 //
 // "check" says 'TRUE' if there is some pending processing;
 typedef Bool (*TaskCheckProc)(void *arg);
-typedef void (*TaskProcessProc)(void *arg);
+// 'process' says 'TRUE' if all the tasks are done;
+typedef Bool (*TaskProcessProc)(void *arg);
 
 Bool NeverDo_CheckProc(void *va);
 
@@ -561,10 +562,9 @@ public:
   void checkTasks();
 
   void handleAlarm();
-#ifdef VIRTUALSITES
-  // 'SIGUSR2' notifies a virtual site about pending messages;
+  // 'SIGUSR2' notifies about presence of tasks. Right now these are
+  // only virtual site messages;
   void handleUSR2();
-#endif
   void handleUser();
   void insertUser(int t,TaggedRef node);
   void wakeUser();
