@@ -12,6 +12,24 @@
 	<Item>
           tests whether ?_{X} has kind record.
 
+	<Entry><Span class=index/<<tell>>/
+	  <Index class=tails/<<RecordC>><And><<tell>>/
+	<Synopsis>
+          <<{RecordC.tell ?+{L} ??{R}}>>
+	<Item>
+          tells the constraint store that ?_{R} is a record with
+	  label&nbsp;?_{L}.
+
+	<Entry><Span class=index/<<tellSize>>/
+	  <Index class=tails/<<RecordC>><And><<tellSize>>/
+	<Synopsis>
+          <<{RecordC.tellSize ?+{L} ?+{I} ??{R}}>>
+	<Item>
+          tells the constraint store that ?_{R} is a record with
+	  label&nbsp;?_{L}.
+        <p>
+          Signals the implementation that it is likely that ?_{I} features are told to ?_{R}. <<RecordC.tellSize>> is semantically equivalent to <<RecordC.tell>>, but the current implementation optimizes memory allocation. 
+
 	<Entry><Span class=index/<<^>>/
 	  <Index/<<RecordC>><And><<'^'>>/
 	<Synopsis>
@@ -24,14 +42,6 @@
           <<<{RecordC.'^' ?_{R} ?_{LI} ?_{X}}>>>
           can also be written as
           <<<?_{R}^?_{LI}=?_{X}>>>
-
-	<Entry><Span class=index/<<tell>>/
-	  <Index class=tails/<<RecordC>><And><<tell>>/
-	<Synopsis>
-          <<{RecordC.tell ?+{L} ??{R}}>>
-	<Item>
-          tells the constraint store that ?_{R} is a record with
-	  label&nbsp;?_{L}.
 
 	<Entry><Span class=index/<<width>>/
 	  <Index class=tails/<<RecordC>><And><<width>>/
@@ -63,6 +73,15 @@
           stream and deletes the propagator. The stream is
           automatically closed once the constraint store
 	  determines&nbsp;?_{R}.
+
+	<Entry><<hasLabel>>
+	  <Index class=tails/<<RecordC>><And><<hasLabel>>/
+	<Synopsis>
+          <<{RecordC.hasLabel ?*{R} ??{B}}>>
+	<Item>
+          blocks until ?_{R} becomes a feature structure. Tests whether ?_{R} has been told a label with <<RecordC.tell>>.
        </List>
+
+       
      </chapter>
 
