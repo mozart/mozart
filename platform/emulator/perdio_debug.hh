@@ -77,6 +77,7 @@ enum DEBUGType {
   NET_HANDLER,
   LOCK_MGR,
   CHAIN,        // 45
+  PORT,
   LAST
 
 };

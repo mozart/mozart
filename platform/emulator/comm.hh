@@ -120,10 +120,11 @@ void nonZeroRefsToRemote(RemoteSite *);
 int sendTo_RemoteSite(RemoteSite*,MsgBuffer*,MessageType,Site*, int);
 void sendAck_RemoteSite(RemoteSite*);
 int discardUnsentMessage_RemoteSite(RemoteSite*,int);
-int getQueueStatus_RemoteSite(RemoteSite*,int &noMsgs);  // return size in bytes
+int getQueueStatus_RemoteSite(RemoteSite*);  // return size in bytes
 SiteStatus siteStatus_RemoteSite(RemoteSite*);
-MonitorReturn monitorQueue_RemoteSite(RemoteSite*,int size,int no_msgs,void*);
-MonitorReturn demonitorQueue_RemoteSite(RemoteSite*);
+void monitorQueue_RemoteSite(RemoteSite*,int size);
+void demonitorQueue_RemoteSite(RemoteSite*);
+void *getMonitorQueue_RemoteSite(RemoteSite*);
 ProbeReturn installProbe_RemoteSite(RemoteSite*,ProbeType,int frequency);
 ProbeReturn deinstallProbe_RemoteSite(RemoteSite*,ProbeType);
 ProbeReturn probeStatus_RemoteSite(RemoteSite*,ProbeType &pt,int &frequncey,void* &storePtr);
@@ -502,7 +503,8 @@ public:
       noMsgs=0;
       return 0;}
     if(t & REMOTE_SITE){
-      return getQueueStatus_RemoteSite(getRemoteSite(),noMsgs);}
+      noMsgs = 0;
+      return getQueueStatus_RemoteSite(getRemoteSite());}
     return getQueueStatus_VirtualSite(getVirtualSite(),noMsgs);}
 
   SiteStatus siteStatus(){
@@ -519,13 +521,14 @@ public:
     if(!(t & CONNECTED)) {
       return NO_MONITOR_EXISTS;}
     if(t & REMOTE_SITE){
-      return demonitorQueue_RemoteSite(getRemoteSite());}
+      demonitorQueue_RemoteSite(getRemoteSite());
+      return MONITOR_OK;}
     return demonitorQueue_VirtualSite(getVirtualSite());}
 
   MonitorReturn monitorQueue(int size,int noMsgs,void *storePtr){
     if(connect()){
       if(getType() & REMOTE_SITE){
-        return monitorQueue_RemoteSite(getRemoteSite(),size,noMsgs,storePtr);}
+        monitorQueue_RemoteSite(getRemoteSite(),size); return MONITOR_OK;}
       return monitorQueue_VirtualSite(getVirtualSite(),size,noMsgs,storePtr);}
     return MONITOR_PERM;}
 

@@ -69,13 +69,16 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomTempBlocked, AtomPermBlocked,
   AtomTempMe, AtomPermMe,
   AtomTempAllOthers, AtomPermAllOthers,
-  AtomTempSomeOther, AtomPermSomeOther,
+  AtomTempSomeOther, AtomPermSomeOther, AtomEntityNormal,
+  AtomContinue, AtomRetry,
 
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
+  BI_Unify,BI_portWait,BI_Show,BI_send,BI_restop,BI_probe,BI_Delay,BI_startTmp,
   BI_load, BI_fail, BI_url_load,
+  BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
   BI_controlVarHandler;
+
 
 
 TaggedRef getUniqueName(const char *s)
@@ -225,9 +228,10 @@ void initLiterals()
   AtomPermAllOthers           = makeTaggedAtom("permAllOthers");
   AtomTempSomeOther           = makeTaggedAtom("tempSomeOther");
   AtomPermSomeOther           = makeTaggedAtom("permSomeOther");
+  AtomEntityNormal            = makeTaggedAtom("entityNormal");
 
-
-
+  AtomContinue                = makeTaggedAtom("continue");
+  AtomRetry                   = makeTaggedAtom("retry");
 
 
   RecordFailure = OZ_record(OZ_atom("failure"),

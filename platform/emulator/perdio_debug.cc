@@ -77,7 +77,8 @@ char *debugTypeStr[LAST] = {
   "PROBES",
   "NET_HANDLER",
   "LOCK_MGR",
-  "CHAIN"        //45
+  "CHAIN",        //45
+  "PORT"
 };
 
 #endif
