@@ -91,11 +91,11 @@ local
       ('Let the current thread continue to run until ' #
        'it reaches the next steppoint in the current stack frame.'))
 
-     ContButtonBitmap #
-     ('Continue' #
+     UnleashButtonBitmap #
+     ('Unleash' #
       ('Let the current thread continue to run until ' #
-       'it terminates, blocks, reaches a breakpoint ' #
-       'or raises an unhandled exception.'))
+       'the selected stack frame is discarded or the thread blocks, ' #
+       'reaches a breakpoint or raises an unhandled exception.'))
 
      StopButtonBitmap #
      ('Stop' #
