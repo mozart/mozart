@@ -157,8 +157,7 @@ COMPILERSRC1 = \
 	FormatStrings.oz Builtins.oz CoreLanguage.oz Annotate.oz \
 	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
-	UnnestFD.oz Assembler.oz Interface.oz \
-	GenericInterface.oz QuietInterface.oz
+	UnnestFD.oz Assembler.oz GenericInterface.oz QuietInterface.oz
 
 COMPILERSRCNOVER = \
 	$(COMPILERSRC1:%=compiler/%) \
@@ -426,7 +425,7 @@ FunUnnest.ozf: compiler/Misc-new.env compiler/TupleSyntax.oz \
 FunAssembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
 
 FunCompiler.ozf: compiler/Misc-new.env compiler/FormatStrings.oz \
-	compiler/Reporter.oz compiler/ParseOz.oz compiler/Interface.oz \
+	compiler/Reporter.oz compiler/ParseOz.oz \
 	compiler/CompilerClass.oz compiler/GenericInterface.oz \
 	compiler/QuietInterface.oz compiler-Version.oz $(STANDARD)
 
