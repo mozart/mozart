@@ -43,7 +43,7 @@
 #define HEAPMINSIZE             1024 /* kByte   */
 #define HEAPFREE                  75 /* percent */
 #define HEAPTOLERANCE             20 /* percent */
-#define INITIALHEAPTHRESHOLD    4096 /* kByte   */
+#define INITIALHEAPTHRESHOLD    2048 /* kByte   */
 #define HEAPBLOCKSIZE        1048576 /* byte    */
 
 #define CLOCK_TICK      10000   /* usec */
