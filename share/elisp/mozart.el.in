@@ -1292,12 +1292,13 @@ The first subexpression matches the file name without the extension.")
       "getListValVar" "getListVarVar" "getRecord" "unifyNumber" "unifyLiteral"
       "unifyValue" "unifyVariable" "unifyValVar" "unifyVoid" "unify" "branch"
       "callBI" "inlinePlus1?" "inlineMinus1?" "inlineDot" "inlineAt"
-      "inlineAssign" "callGlobal" "callMethod" "call" "tailCall"
-      "callProcedureRef" "callConstant" "sendMsg" "tailSendMsg"
-      "exHandler" "testLiteral" "testNumber" "testRecord" "testList"
-      "testBool" "testBI" "testLT" "testLE" "match" "getVariable" "getVarVar"
-      "getVoid" "lockThread" "getSelf" "setSelf" "debugEntry" "debugExit"
-      "globalVarname" "localVarname" "clear") "\\|")
+      "inlineAssign" "callGlobal" "callMethod" "call" "consCall" "deconsCall"
+      "tailCall" "tailConsCall" "tailDeconsCall" "callProcedureRef"
+      "callConstant" "sendMsg" "tailSendMsg" "exHandler" "testLiteral"
+      "testNumber" "testRecord" "testList" "testBool" "testBI" "testLT"
+      "testLE" "match" "getVariable" "getVarVar" "getVoid" "lockThread"
+      "getSelf" "setSelf" "debugEntry" "debugExit" "globalVarname"
+      "localVarname" "clear") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2

@@ -314,6 +314,8 @@ TaggedRef CodeArea::disassemble(void){
     case SETVARIABLEX:
     case PUTLISTX:
     case CREATEVARIABLEX:
+    case TAILDECONSCALLX:
+    case DECONSCALLX:
       DISASS_SETUP(1);
       DISASS_XREGISTERINDEX(1);
       PC += 2;
@@ -329,6 +331,7 @@ TaggedRef CodeArea::disassemble(void){
     case SETVARIABLEY:
     case PUTLISTY:
     case CREATEVARIABLEY:
+    case DECONSCALLY:
       DISASS_SETUP(1);
       DISASS_YREGISTERINDEX(1);
       PC += 2;
@@ -377,6 +380,8 @@ TaggedRef CodeArea::disassemble(void){
     case UNIFYVALUEG:
     case GETLISTG:
     case SETVALUEG:
+    case TAILDECONSCALLG:
+    case DECONSCALLG:
       DISASS_SETUP(1);
       DISASS_GREGISTERINDEX(1);
       PC += 2;
@@ -440,11 +445,14 @@ TaggedRef CodeArea::disassemble(void){
       break;
     case TAILCALLX:
     case CALLX:
+    case TAILCONSCALLX:
+    case CONSCALLX:
       DISASS_SETUP(2);
       DISASS_XREGISTERINDEX(1);
       DISASS_ARITY(2);
       PC += 3;
       break;
+    case CONSCALLY:
     case CALLY:
       DISASS_SETUP(2);
       DISASS_YREGISTERINDEX(1);
@@ -453,6 +461,8 @@ TaggedRef CodeArea::disassemble(void){
       break;
     case TAILCALLG:
     case CALLG:
+    case TAILCONSCALLG:
+    case CONSCALLG:
       DISASS_SETUP(2);
       DISASS_GREGISTERINDEX(1);
       DISASS_ARITY(2);

@@ -351,12 +351,27 @@ outerLoop2:
         }
       case CALLX:
       case TAILCALLX:
+      case CONSCALLX:
+      case TAILCONSCALLX:
         ISREAD(GETREGARG(PC+1));
         // fall through
       case CALLY:
       case CALLG:
       case TAILCALLG:
+      case CONSCALLY:
+      case CONSCALLG:
+      case TAILCONSCALLG:
         ISREAD_TO(getPosIntArg(PC+2));
+        BREAK;
+
+      case DECONSCALLX:
+      case TAILDECONSCALLX:
+        ISREAD(GETREGARG(PC+1));
+        // fall through
+      case DECONSCALLY:
+      case DECONSCALLG:
+      case TAILDECONSCALLG:
+        ISREAD_TO(2);
         BREAK;
 
       case CALLMETHOD:
