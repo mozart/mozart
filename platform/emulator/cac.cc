@@ -654,7 +654,7 @@ FSetValue * FSetValue::gCollect(void) {
 
 #ifdef BIGFSET
   FSetValue *retval = (FSetValue *) oz_hrealloc(this, sizeof(FSetValue));
-  retval->_IN.copyExtension();
+  ((OZ_FSetValue *) retval)->copyExtension();
   return retval;
 #else
   return (FSetValue *) oz_hrealloc(this, sizeof(FSetValue));
