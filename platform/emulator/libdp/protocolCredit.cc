@@ -36,7 +36,8 @@
 /**********************************************************************/
 
 
-void sendPrimaryCredit(DSite *sd,int OTI,Credit c){
+void sendPrimaryCredit(DSite *sd,int OTI,Credit c)
+{
   PD((CREDIT,"Sending PrimaryCreds c:%d", c));
   Assert(creditSiteOut==NULL);
 
@@ -45,7 +46,8 @@ void sendPrimaryCredit(DSite *sd,int OTI,Credit c){
   send(msgC,3);
 }
 
-void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c){
+void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c)
+{
   PD((CREDIT,"Sending SecondaryCreds c:%d", c));
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(cs);

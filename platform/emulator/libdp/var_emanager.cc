@@ -36,10 +36,9 @@ extern Bool globalRedirectFlag;
 
 //
 ExportedManagerVar::ExportedManagerVar(ManagerVar *mv, DSite *dest)
-  : ExtVar(oz_rootBoard())
+  : ExtVar(oz_rootBoard()), isMarshaled(NO)
 {
   Assert(mv->getIdV() == OZ_EVAR_MANAGER);
-  DebugCode(isMarshaled = NO;);
 
   //
   oti = mv->getIndex();
@@ -57,7 +56,18 @@ void ExportedManagerVar::marshal(ByteBuffer *bs)
 {
   DebugCode(PD((MARSHAL,"exported var manager oti:%d", oti)););
   Assert(isMarshaled == NO);
-  DebugCode(isMarshaled = OK;);
   //
   marshalOwnHeadSaved(bs, tag, oti, credit);
+  isMarshaled = OK;
+}
+
+//
+void ExportedManagerVar::disposeV()
+{
+  Assert(isEmptySuspList());
+  //
+  if (!isMarshaled) {
+    discardOwnHeadSaved(oti, credit);
+  }
+  freeListDispose(this, sizeof(ExportedManagerVar));
 }

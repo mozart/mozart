@@ -929,10 +929,17 @@ void marshalOwnHeadSaved(MarshalerBuffer *bs, int tag, int oti, Credit c)
 }
 
 //
+void discardOwnHeadSaved(int oti, Credit c)
+{
+  OwnerEntry *oe = ownerTable->getOwner(oti);
+  oe->returnCreditOwner(c, oti);
+}
+
+//
 void marshalToOwner(MarshalerBuffer *bs, int bi)
 {
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = BT->getBorrow(bi);
+  BorrowEntry *b = borrowTable->getBorrow(bi);
   int OTI = b->getOTI();
   if (b->getOnePrimaryCredit()) {
 // printf("p-mto i:%d c:-%d %d\n",b->getOTI(),1,b->getNetAddress()->site->getTimeStamp()->pid);
@@ -955,7 +962,7 @@ void saveMarshalToOwner(int bi, int &oti,
                         CreditType &ct, Credit &c, DSite* &scm)
 {
   PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = BT->getBorrow(bi);
+  BorrowEntry *b = borrowTable->getBorrow(bi);
 
   //
   oti = b->getOTI();
@@ -972,7 +979,7 @@ void saveMarshalToOwner(int bi, int &oti,
 
 //
 void marshalToOwnerSaved(MarshalerBuffer *bs,
-                         CreditType ct, int oti, DSite *scm)
+                         int oti, CreditType ct, DSite *scm)
 {
   if (ct == CT_Primary) {
     bs->put((BYTE) DIF_OWNER);
@@ -1053,6 +1060,39 @@ void marshalBorrowHeadSaved(MarshalerBuffer *bs, MarshalTag tag, DSite *ms,
   }
 }
 
+//
+// The problem with borrow entries is that they can go away.
+void discardBorrowHeadSaved(DSite *ms, int oti,
+                            CreditType ct, Credit credit, DSite *scm)
+{
+  //
+  NetAddress na = NetAddress(ms, oti);
+  BorrowEntry *b = borrowTable->find(&na);
+
+  //
+  if (b) {
+    // still there - then just nail credits back;
+    if (ct == CT_Primary) {
+      if (credit != PERSISTENT_CRED)
+        b->addPrimaryCredit(credit);
+      else
+        Assert(b->isPersistent());
+    } else {
+      Assert(ct == CT_Secondary);
+      b->addSecondaryCredit(credit, scm);
+    }
+  } else {
+    // otherwise, send credit back to its manager:
+    if (ct == CT_Primary) {
+      sendPrimaryCredit(ms, oti, credit);
+    } else {
+      Assert(ct == CT_Secondary);
+      sendSecondaryCredit(scm, ms, oti, credit);
+    }
+  }
+}
+
+
 #ifndef USE_FAST_UNMARSHALER
 OZ_Term unmarshalBorrowRobust(MarshalerBuffer *bs,OB_Entry *&ob,int &bi,int *error)
 #else
@@ -1077,7 +1117,7 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
 //     if(mt==DIF_PRIMARY){
 //       cred = unmarshalCredit(bs);
 //       PD((UNMARSHAL,"myDSite is owner"));
-//       OwnerEntry* oe=OT->getOwner(si);
+//       OwnerEntry* oe=ownerTable->getOwner(si);
 //       if(cred != PERSISTENT_CRED)
 //      oe->returnCreditOwner(cred);
 //       OZ_Term ret = oe->getValue();
@@ -1087,7 +1127,7 @@ OZ_Term unmarshalBorrow(MarshalerBuffer *bs,OB_Entry *&ob,int &bi)
 //     DSite* cs=unmarshalDSite(bs);
 //     sendSecondaryCredit(cs,myDSite,si,cred);
 //     PD((UNMARSHAL,"myDSite is owner"));
-//     OwnerEntry* oe=OT->getOwner(si);
+//     OwnerEntry* oe=ownerTable->getOwner(si);
 //     OZ_Term ret = oe->getValue();
 //     return ret;
   }
@@ -1352,7 +1392,7 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
 //             ((BorrowEntry *)ob)->getNetAddress()->index,
 //             ((BorrowEntry *)ob)->getNetAddress()->site->getTimeStamp()->pid,
 //             ((BorrowEntry *)ob)->getFlags());
-        if(!(BT->maybeFreeBorrowEntry(bi))){
+        if(!(borrowTable->maybeFreeBorrowEntry(bi))){
           ob->mkRef(obj,ob->getFlags());
 //        printf("indx:%d %xd\n",((BorrowEntry *)ob)->getNetAddress()->index,
 //               ((BorrowEntry *)ob)->getNetAddress()->site);
@@ -1414,7 +1454,7 @@ OZ_Term unmarshalOwner(MarshalerBuffer *bs,MarshalTag mt)
     int OTI=unmarshalNumber(bs);
 #endif
     PD((UNMARSHAL,"OWNER o:%d",OTI));
-    OwnerEntry* oe=OT->getOwner(OTI);
+    OwnerEntry* oe=ownerTable->getOwner(OTI);
     oe->returnCreditOwner(1,OTI);
     OZ_Term oz=oe->getValue();
     return oz;}
@@ -1430,7 +1470,7 @@ OZ_Term unmarshalOwner(MarshalerBuffer *bs,MarshalTag mt)
   DSite* cs=unmarshalDSite(bs);
   sendSecondaryCredit(cs,myDSite,OTI,1);
 #endif
-  return OT->getOwner(OTI)->getValue();
+  return ownerTable->getOwner(OTI)->getValue();
 }
 
 

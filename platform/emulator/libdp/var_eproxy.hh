@@ -46,13 +46,14 @@
 class ExportedProxyVar : public ExtVar {
 private:
   DebugCode(int bti;);
-  DebugCode(Bool isMarshaled;);
+  Bool isMarshaled;
   int oti;
   CreditType ct;
   Credit credit;
-  DSite *ms;                    // manager site, if needed;
+  DSite *ms;                    // manager site, always;
   DSite *scm;                   // secondary credit manager, if any;
   short isFuture;               //
+  short isToOwner;              //
 
   //
 public:
@@ -91,11 +92,9 @@ public:
   virtual VarStatus     checkStatusV() {
     return (EVAR_STATUS_UNKNOWN);
   }
-  virtual void          disposeV() {
-    Assert(isMarshaled);
-    Assert(isEmptySuspList());
-    freeListDispose(this, sizeof(ExportedProxyVar));
-  }
+
+  //
+  virtual void          disposeV();
 
   //
   virtual OZ_Return addSuspV(TaggedRef *, Suspendable *susp) {

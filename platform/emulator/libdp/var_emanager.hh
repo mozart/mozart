@@ -45,7 +45,7 @@
 //
 class ExportedManagerVar : public ExtVar {
 private:
-  DebugCode(Bool isMarshaled;);
+  Bool isMarshaled;
   int oti;
   Credit credit;
   int tag;                      // isFuture + isAuto;
@@ -89,11 +89,9 @@ public:
   virtual VarStatus     checkStatusV() {
     return (EVAR_STATUS_UNKNOWN);
   }
-  virtual void          disposeV() {
-    Assert(isMarshaled);
-    Assert(isEmptySuspList());
-    freeListDispose(this, sizeof(ExportedManagerVar));
-  }
+
+  //
+  virtual void          disposeV();
 
   //
   virtual OZ_Return addSuspV(TaggedRef *, Suspendable *susp) {
