@@ -37,7 +37,6 @@
 
 
 <!-- Include Files -->
-<!entity opi            SYSTEM  "opi.sgml">
 <!ENTITY abstract	SYSTEM	"1_abstract.sgml">
 <!ENTITY introduction	SYSTEM	"2_introduction.sgml">
 <!ENTITY basics		SYSTEM	"3_basics.sgml">
@@ -128,7 +127,6 @@
     </ABSTRACT>
   <BODY>
 
-   &opi;
    &introduction;
    &basics;
    &equality;
