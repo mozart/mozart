@@ -837,12 +837,9 @@ in
 	    in
 	       case TopFrame == unit then skip else
 		  case TopFrame.dir == exit then skip else
-		     N = {@currentStack incStep($)} in
-%		     Gui,status(N # ' step' #
-%				case N == 1 then '' else 's' end #
-%				' into')
-		     Gui,status('')
+		     {@currentStack incStep(_)}
 		  end
+		  Gui,status('')
 		  Gui,ContinueTo(T TopFrame)
 	       end
 	    end
@@ -858,13 +855,10 @@ in
 	    in
 	       case TopFrame == unit then skip else
 		  case TopFrame.dir == exit then skip else
-		     N = {@currentStack incNext($)} in
-%		     Gui,status(N # ' step' #
-%				case N == 1 then '' else 's' end #
-%				' over')
-		     Gui,status('')
+		     {@currentStack incNext(_)}
 		     {Dbg.step T false}
 		  end
+		  Gui,status('')
 		  Gui,ContinueTo(T TopFrame)
 	       end
 	    end
