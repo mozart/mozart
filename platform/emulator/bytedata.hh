@@ -104,6 +104,7 @@ protected:
 public:
   virtual int getIdV() { return OZ_E_BITSTRING; }
   virtual OZ_Term typeV();
+  virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
   virtual int marshalV(MsgBuffer*);
   virtual void printStreamV(ostream &out,int depth = 10);
@@ -190,6 +191,7 @@ protected:
 public:
   virtual int getIdV() { return OZ_E_BYTESTRING; }
   virtual OZ_Term typeV();
+  virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
   virtual int marshalV(MsgBuffer*);
   virtual void printStreamV(ostream &out,int depth = 10);
