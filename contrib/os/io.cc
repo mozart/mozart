@@ -198,15 +198,15 @@ OZ_BI_define(io_open,3,1)
   OZ_declareInt(      2,MODE    );
   OZ_declareVS(       0,FILE,LEN);
   int    flags;
-  if (FLAGS->get(0))
-    flags = (FLAGS->get(1))?O_RDWR:O_RDONLY;
-  else if (FLAGS->get(1)) flags = O_WRONLY;
+  if (OZ_BitStringGet(FLAGS,0))
+    flags = (OZ_BitStringGet(FLAGS,1))?O_RDWR:O_RDONLY;
+  else if (OZ_BitStringGet(FLAGS,1)) flags = O_WRONLY;
   else
     return
       OZ_raiseErrorC("io",2,OZ_atom("open"),OZ_atom("noReadWrite"));
-  if (FLAGS->get(2)) flags |= O_APPEND;
-  if (FLAGS->get(3)) flags |= O_CREAT;
-  if (FLAGS->get(4)) flags |= O_TRUNC;
+  if (OZ_BitStringGet(FLAGS,2)) flags |= O_APPEND;
+  if (OZ_BitStringGet(FLAGS,3)) flags |= O_CREAT;
+  if (OZ_BitStringGet(FLAGS,4)) flags |= O_TRUNC;
   int fd;
   fd = open(FILE,flags,(mode_t)MODE);
   if (fd<0) RETURN_UNIX_ERROR("open");
