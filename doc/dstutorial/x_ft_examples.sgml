@@ -337,7 +337,8 @@ To be precise, we introduce the procedure <<Guard>> with the
 following specification:
 <LIST>
 <ITEM> <<{Guard E FS S1 S2}>> guards entity <<E>> for
-fault states <<FS>> during statement <<S1>>.
+fault states <<FS>> during statement <<S1>>,
+replacing <<S1>> by <<S2>> if a fault is detected during <<S1>>.
 That is, it first executes <<S1>>.
 If there is no fault, then <<S1>> completes normally.
 If there is a fault on <<E>> in <<FS>>, then it interrupts <<S1>> as
