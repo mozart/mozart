@@ -457,7 +457,7 @@ Bool pickle2text()
 
 #endif
 
-OZ_Return export(OZ_Term t)
+OZ_Return oz_export(OZ_Term t)
 {
   if (ozconf.perdioMinimal) {
     Exporter bs;
@@ -480,7 +480,7 @@ OZ_BI_define(BIexport,1,0)
 {
   OZ_declareTerm(0,in);
 
-  return export(in);
+  return oz_export(in);
 } OZ_BI_end
 
 // ===================================================================

@@ -735,10 +735,10 @@ urlc::parse_ftp(const char* line)
 	    th1(URLC_EALLOC);
 	strcpy(user, "anonymous"); // hardwired by RFC1738
 #ifdef WINDOWS
-	char *username = "unknown";
+	const char *username = "unknown";
 #else
 	struct passwd* pp = getpwuid(getuid()); 	    
-	char *username = pp ? pp->pw_name : "unknown";
+	const char *username = pp ? pp->pw_name : "unknown";
 #endif
 
 #if 1 <= URLC_RESOLVER
