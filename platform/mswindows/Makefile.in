@@ -1,0 +1,95 @@
+#  Authors:
+#    Ralf Scheidhauer (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+# 
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+SRCTOP=		@SRCTOP@
+BUILDTOP=	@BUILDTOP@
+PREFIX=		@prefix@
+SRCDIR= 	@srcdir@
+VPATH=	 	@srcdir@
+BINDIR=		$(PREFIX)/platform/winbin
+
+CXX=		@CXX@
+
+INSTALL=	@INSTALL@
+INSTALL_DIR=	@INSTALL_DIR@
+INSTALL_BIN=	$(INSTALL) -m 555
+
+WINEXES=	setup.exe oz.exe ozengine.exe ozwrapper.exe
+
+.PHONY: bootstrap all install clean veryclean distclean depend check
+
+all: $(WINEXES)
+
+bootstrap:
+
+install: $(WINEXES)
+	$(INSTALL_DIR) $(BINDIR)
+	$(INSTALL_BIN) $(WINEXES) ozwindynld oz.ico setup.ico $(BINDIR)
+
+
+$(BINDIR):
+	$(INSTALL_DIR) $@
+
+veryclean: clean
+
+distclean: clean
+	rm -f Makefile
+
+
+clean:
+	rm -f *.o *.exe *.obj *.sym *.map *.mk* *.lk* *.err oz.res setup.res version.h
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	config.status --recheck
+
+check:
+
+depend:
+
+
+setup.cc oz.cc ozengine.cc: version.h
+
+ozengine.exe: ozengine.cc
+	$(CXX) -s -o $@ $<
+
+oz.o: oz.cc
+	$(CXX) -c -o $@ $<
+
+oz.exe: oz.o
+	$(CXX) -s -o $@ $< -mwindows
+
+setup.o: setup.cc
+	$(CXX) -c -o $@ $<
+
+setup.exe: setup.o
+	$(CXX) -s -o $@ $< -mwindows
+
+ozwrapper.exe: ozwrapper.cc
+	$(CXX) -s -o $@ $<
+
+
+version.h: $(SRCTOP)/OZVERSION
+	echo "#define OZVERSION \"`$<`\"" > $@
