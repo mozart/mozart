@@ -26,24 +26,17 @@
  *
  */
 
-#ifndef __OZ_H__
-#define __OZ_H__
+#ifndef __MOZART_H__
+#define __MOZART_H__
 
-#ifndef NOFINALIZATION
-#define FINALIZATION
-#endif
-
-/*
- * define this for debugging the emulator:
- *   the C++ compiler does more type checking on interface functions
- *   by removing the extern "C" declarations
- * NOTE: all symbol names in object files change!
- */
-#undef OZ_DEBUG_INTERFACE 
 
 /* ------------------------------------------------------------------------ *
  * 0. intro
  * ------------------------------------------------------------------------ */
+
+#ifndef NOFINALIZATION
+#define FINALIZATION
+#endif
 
 /* calling convention "cdecl" under win32 */
 #if defined(__WATCOMC__) || defined(__MINGW32__) || defined(__CYGWIN32__)
@@ -82,7 +75,7 @@
 #if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
 #define _FUNDECL(fun,arglist) OzFun(fun) arglist
 #define _FUNTYPEDECL(fun,arglist) (ozcdecl *fun) arglist
-#if defined(__cplusplus) && !defined(OZ_DEBUG_INTERFACE)
+#if defined(__cplusplus)
 extern "C" {
 #endif
 #else
@@ -122,11 +115,9 @@ typedef void *OZ_Arity;
 
 typedef OZ_Return _FUNTYPEDECL(OZ_CFun,(OZ_Term *,int *));
 
-/* for tobias */
 typedef int OZ_Boolean;
 #define OZ_FALSE 0
 #define OZ_TRUE 1
-
 
 /* ------------------------------------------------------------------------ *
  * II. function prototypes
@@ -316,6 +307,34 @@ extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 /* name */
 extern OZ_Term _FUNDECL(OZ_newName,());
 
+/* foreign pointer */
+extern OZ_Term	_FUNDECL(OZ_makeForeignPointer,(void*));
+extern void*	_FUNDECL(OZ_getForeignPointer,(OZ_Term));
+extern int	_FUNDECL(OZ_isForeignPointer,(OZ_Term));
+
+/* interface */
+
+typedef struct {
+  const char * name;
+  short        inArity;
+  short	       outArity;
+  OZ_CFun      func;
+} OZ_C_proc_interface;
+
+/* pickles */
+
+typedef struct {
+  char *data;  /* NULL on error */
+  int size;    /* contain error code */
+} OZ_Datum;
+
+
+#define OZ_DATUM_UNKNOWNERROR -1
+#define OZ_DATUM_OUTOFMEMORY  -2
+
+extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
+extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
+
 /* print warning */
 extern void _FUNDECL(OZ_warning,(CONST char *, ...));
 
@@ -391,11 +410,11 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 #define OZ_suspendOn3(t1,t2,t3) \
    { return OZ_suspendOnInternal3(t1,t2,t3); }
 
+
 /* ------------------------------------------------------------------------ *
  * III. macros
  * ------------------------------------------------------------------------ */
 
-/* Transitional Interface for the new regime for builtins */
 /* OZ_BI_define(Name,InArity,OutArity){ ... }
    	defines Name to be a builtin with arity=InArity+OutArity
 	define BI__Name to be the new style primitive with
@@ -518,156 +537,187 @@ void *VAR;					\
 #define OZ_RETURN_ATOM(S) OZ_RETURN(OZ_atom(S))
 #define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
 
+/* ------------------------------------------------------------------------ *
+ * More nice macros contributed by Denys Duchier
+ * ------------------------------------------------------------------------ */
 
-/* the old interface */
+#define OZ_RETURN_BOOL(X) \
+OZ_RETURN((X)?OZ_true():OZ_false())
 
-#define OZ_C_proc_proto(Name)	OZ_BI_proto(Name)
-
-#define OZ_C_proc_begin(Name,arity)					  \
-OZ_BI_proto(Name);							  \
-OZ_Return FUNDECL(Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {	  \
-    const OZ_CFun OZ_self = Name;					  \
-    OZ_Term OZ_args[arity];						  \
-    const int OZ_arity = arity;						  \
-    { int i;								  \
-      for (i = arity; i--; ) {						  \
-        OZ_args[i]=_OZ_NEW_ARGS[_OZ_NEW_LOC==OZ_ID_MAP?i:_OZ_NEW_LOC[i]]; \
-    }									  \
+#define OZ_expectDet(ARG)			\
+{						\
+  if (OZ_isVariable(OZ_in(ARG)))		\
+    { OZ_suspendOn(OZ_in(ARG)); }		\
 }
 
-#define OZ_C_proc_end			OZ_BI_end
+#define OZ_declareTerm(ARG,VAR)			\
+OZ_Term VAR = OZ_in(ARG);
 
-/* access arguments */
-#define OZ_getCArg(N) OZ_args[N]
+#define OZ_declareDetTerm(ARG,VAR)		\
+OZ_expectDet(ARG);				\
+OZ_declareTerm(ARG,VAR);
 
-/* useful macros and functions (mm 9.2.93) */
+/*
+ * OZ_expectType(ARG,MSG,CHECK)
+ *
+ * causes the builtin to suspend until argument number ARG
+ * is determined. it then uses the single argument function
+ * CHECK to test that the term is of the expected type.  If not,
+ * a type exception is raised, using MSG as the type name.
+ */
 
-#define OZ_declareArg(ARG,VAR) \
-     OZ_Term VAR = OZ_getCArg(ARG);
+#define OZ_expectType(ARG,MSG,CHECK)		\
+OZ_expectDet(ARG);				\
+if (!CHECK(OZ_in(ARG))) {			\
+  return OZ_typeError(ARG,MSG);			\
+}
 
-#define OZ_nonvarArg(ARG)			\
+#define OZ_expectBool(ARG)			\
+OZ_expectType(ARG,"Bool",OZ_isBool)
+
+#define OZ_expectInt(ARG)			\
+OZ_expectType(ARG,"Int",OZ_isInt)
+
+#define OZ_expectFloat(ARG)			\
+OZ_expectType(ARG,"Float",OZ_isFloat)
+
+#define OZ_expectAtom(ARG)			\
+OZ_expectType(ARG,"Atom",OZ_isAtom)
+
+#define OZ_expectBitString(ARG)			\
+OZ_expectType(ARG,"BitString",OZ_isBitString)
+
+#define OZ_expectByteString(ARG)		\
+OZ_expectType(ARG,"ByteString",OZ_isByteString)
+
+#define OZ_expectForeignPointer(ARG)		\
+OZ_expectType(ARG,"ForeignPointer",OZ_isForeignPointer)
+
+/*
+ * OZ_declareType(ARG,VAR,TYPE,MSG,CHECK,COERCE)
+ *
+ * calls OZ_expectType (see above), and, if the call succeeds,
+ * declares a variable VAR of TYPE and initializes it with
+ * the value that can be obtained from the ARG argument by
+ * applying the conversion function COERCE.
+ */
+
+#define OZ_declareType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
+OZ_expectType(ARG,MSG,CHECK);			\
+TYPE VAR = COERCE(OZ_in(ARG));
+
+#define OZ_declareBool(ARG,VAR)			\
+OZ_declareType(ARG,VAR,int,"Bool",OZ_isBool,OZ_boolToC)
+
+#define OZ_declareInt(ARG,VAR)			\
+OZ_declareType(ARG,VAR,int,"Int",OZ_isInt,OZ_intToC)
+
+#define OZ_declareFloat(ARG,VAR)		\
+OZ_declareType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
+
+#define OZ_declareAtom(ARG,VAR)			\
+OZ_declareType(ARG,VAR,CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
+
+#define OZ_declareBitString(ARG,VAR)		\
+OZ_declareType(ARG,VAR,BitString*,"BitString",	\
+	       OZ_isBitString,tagged2BitString)
+
+#define OZ_declareByteString(ARG,VAR)		\
+OZ_declareType(ARG,VAR,ByteString*,"ByteString",\
+	       OZ_isByteString,tagged2ByteString)
+
+#define OZ_declareForeignPointer(ARG,VAR)	\
+OZ_declareType(ARG,VAR,void*,"ForeignPointer",	\
+	OZ_isForeignPointer,OZ_getForeignPointer)
+
+/*
+ * OZ_declareForeignType(ARG,VAR,TYPE)
+ *
+ * this is a specialization of foreign pointer stuff.
+ * TYPE should be a pointer type. The foreign pointer is
+ * coerced to that type.
+ */
+
+#define OZ_declareForeignType(ARG,VAR,TYPE)	\
+OZ_expectForeignPointer(ARG);			\
+TYPE VAR = (TYPE) OZ_getForeignPointer(OZ_in(ARG));
+
+/*
+ * OZ_expectRecType(ARG,MSG,CHECK)
+ *
+ * When a value has components, in order to check that it is
+ * well formed, we may have to wait until some or all of these
+ * subcomponents are determined. CHECK (the predicate that
+ * verifies that the value is of the appropriate type, is here
+ * assumed to take 2 arguments: the 1st argument is the term
+ * to be checked, and the second argument is a pointer to an
+ * OZ_Term in which the next undetermined components will be
+ * stored in case we need to wait.
+ */
+
+#define OZ_expectRecType(ARG,MSG,CHECK)		\
 {						\
-  if (OZ_isVariable(OZ_getCArg(ARG))) {		\
-    OZ_suspendOn(OZ_getCArg(ARG));		\
+  OZ_Term OZ__aux__;				\
+  if (!CHECK(OZ_in(ARG),&OZ__aux__)) {		\
+    if (OZ__aux__ == 0) {			\
+      return OZ_typeError(ARG,MSG);		\
+    } else {					\
+      OZ_suspendOn(OZ__aux__);			\
+    }						\
   }						\
 }
 
-#define OZ_declareNonvarArg(ARG,VAR)		\
-OZ_Term VAR = OZ_getCArg(ARG);			\
-{						\
-  if (OZ_isVariable(VAR)) {			\
-    OZ_suspendOn(VAR);				\
-  }						\
-}
+#define OZ_expectString(ARG)			\
+OZ_expectRecType(ARG,"String",OZ_isProperString);
 
-#define OZ_declareIntArg(ARG,VAR)		\
- int VAR;					\
- OZ_nonvarArg(ARG);				\
- if (! OZ_isInt(OZ_getCArg(ARG))) {		\
-   return OZ_typeError(ARG,"Int");		\
- } else {					\
-   VAR = OZ_intToC(OZ_getCArg(ARG));		\
- }
+#define OZ_expectVirtualString(ARG)		\
+OZ_expectRecType(ARG,"VirtualString",OZ_isVirtualString);
 
-#define OZ_declareFloatArg(ARG,VAR)		\
- double VAR;					\
- OZ_nonvarArg(ARG);				\
- if (! OZ_isFloat(OZ_getCArg(ARG))) {		\
-   return OZ_typeError(ARG,"Float");		\
- } else {					\
-   VAR = OZ_floatToC(OZ_getCArg(ARG));		\
- }
+/*
+ * OZ_declareRecType(ARG,VAR,TYPE,MSG,CHECK,COERCE)
+ *
+ * just what you would expect.  Note, however, that strings
+ * and virtual strings are converted to char arrays that last
+ * only till the next call to the conversion function COERCE.
+ */
 
+#define OZ_declareRecType(ARG,VAR,TYPE,MSG,CHECK,COERCE) \
+OZ_expectRecType(ARG,MSG,COERCE);		\
+TYPE VAR = COERCE(OZ_in(ARG));
 
-#define OZ_declareAtomArg(ARG,VAR)		\
- CONST char *VAR;				\
- OZ_nonvarArg(ARG);				\
- if (! OZ_isAtom(OZ_getCArg(ARG))) {		\
-   return OZ_typeError(ARG,"Atom");		\
- } else {					\
-   VAR = OZ_atomToC(OZ_getCArg(ARG));		\
- }
+inline char* oz_str2c(OZ_Term t) { return OZ_stringToC(t,0); }
+inline char* oz_vs2c(OZ_Term t) { return OZ_vsToC(t,0); }
 
-#define OZ_declareProperStringArg(ARG,VAR)		\
- char *VAR;						\
- {							\
-   OZ_Term OZ_avar;					\
-   if (!OZ_isProperString(OZ_getCArg(ARG),&OZ_avar)) {	\
-     if (OZ_avar == 0) {				\
-       return OZ_typeError(ARG,"ProperString");		\
-     } else {						\
-       OZ_suspendOn(OZ_avar);				\
-     }							\
-   }							\
-   VAR = OZ_stringToC(OZ_getCArg(ARG),0);			\
- }
+#define OZ_declareString(ARG,VAR)		\
+OZ_declareRecType(ARG,VAR,char*,"String",	\
+	OZ_isProperString,oz_str2c);
 
-#define OZ_declareVirtualStringArg(ARG,VAR)		\
- char *VAR;						\
- {							\
-   OZ_Term OZ_avar;					\
-   if (!OZ_isVirtualString(OZ_getCArg(ARG),&OZ_avar)) {	\
-     if (OZ_avar == 0) {				\
-       return OZ_typeError(ARG,"VirtualString");	\
-     } else {						\
-       OZ_suspendOn(OZ_avar);				\
-     }							\
-   }							\
-   VAR = OZ_virtualStringToC(OZ_getCArg(ARG),0);		\
- }
+#define OZ_declareVirtualString(ARG,VAR)	\
+OZ_declareRecType(ARG,VAR,char*,"VirtualString",\
+	OZ_isVirtualString,oz_vs2c);
 
-#define OZ_declareForeignPointerArg(ARG,VAR)	\
-void *VAR;					\
-{						\
-  OZ_declareNonvarArg(ARG,_VAR);		\
-  if (!OZ_isForeignPointer(_VAR)) {		\
-    return OZ_typeError(ARG,"ForeignPointer");  \
-  } else {					\
-    VAR = OZ_getForeignPointer(_VAR);		\
-  }						\
-}
+/*
+ * OZ_declareVS(ARG,VAR,LEN)
+ *
+ * like OZ_declareVirtualString, but additionally sets LEN to
+ * the size of the result.
+ */
+
+#define OZ_declareVS(ARG,VAR,LEN)		\
+OZ_expectVirtualString(ARG);			\
+int LEN;					\
+char* VAR = OZ_vsToC(OZ_in(ARG),&LEN);
 
 /* ------------------------------------------------------------------------ *
  * end
  * ------------------------------------------------------------------------ */
 
-#if defined(__cplusplus) && !defined(OZ_DEBUG_INTERFACE)
+#if defined(__cplusplus)
 }
 #endif
 
-#if defined(__cplusplus) && !defined(OZ_DEBUG_INTERFACE)
-extern "C" { 
+#if defined(__cplusplus)
+#include "extension.hh"
 #endif
 
-
-extern OZ_Term	_FUNDECL(OZ_makeForeignPointer,(void*));
-extern void*	_FUNDECL(OZ_getForeignPointer,(OZ_Term));
-extern int	_FUNDECL(OZ_isForeignPointer,(OZ_Term));
-
-
-typedef struct {
-  const char * name;
-  short        inArity;
-  short	       outArity;
-  OZ_CFun      func;
-} OZ_C_proc_interface;
-
-/* Perdio related things */
-
-typedef struct {
-  char *data;  /* NULL on error */
-  int size;    /* contain error code */
-} OZ_Datum;
-
-
-#define OZ_DATUM_UNKNOWNERROR -1
-#define OZ_DATUM_OUTOFMEMORY  -2
-
-extern OZ_Return _FUNDECL(OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
-extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
-
-#if defined(__cplusplus) && !defined(OZ_DEBUG_INTERFACE)
-}
 #endif
-
-#endif /* __OZ_H__ */

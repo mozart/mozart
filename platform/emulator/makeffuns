@@ -1,14 +1,14 @@
 #!/bin/sh
 
-# This script creates 2 files "oz.c" and "initffuns.cc", that are used
+# This script creates 2 files "mozart.c" and "initffuns.cc", that are used
 # to allow dynamic linking under Windows 95/NT.  
 #
 # The problem here is that DLLs can only have external references to
 # other DLLs (as fare as I now) but not to an executable.
 #
 # So we solved this as follows: functions like "OZ_isAtom" are in
-# "oz.h" not declared as functions but as _pointers_ to functions. The
-# user has to integrate "oz.c" into his DLL. This file declares all
+# "mozart.h" not declared as functions but as _pointers_ to functions. The
+# user has to integrate "mozart.c" into his DLL. This file declares all
 # these function pointers and provides a procedure "OZ_initFF(char*
 # version, void **ffuns)". When the emulator loads a DLL it calls this
 # function, which first does a version check via "version" and then
@@ -19,14 +19,14 @@
 srcdir=$1
 OZVERSION=$2
 
-ozc=oz.c
-in=$srcdir/oz.h
+ozc=mozart.c
+in=$srcdir/mozart.h
 initffuns=initffuns.cc
 
 cat > $ozc << EOF
 #include <string.h>
 #include <stdio.h>
-#include "oz.h"
+#include "mozart.h"
 
 EOF
 
@@ -61,14 +61,9 @@ cat >> $ozc << EOF
 EOF
 
 cat > $initffuns << EOF
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
+#include "base.hh"
 
 #ifdef WINDOWS
-
-#include "base.hh"
-#include "oz.h"
 
 #undef _FUNDECL
 #define _FUNDECL(fun,args) ffuns[i++] = &fun

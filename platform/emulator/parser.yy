@@ -37,7 +37,6 @@
 #include <sys/time.h>
 
 #include "base.hh"
-#include "oz.h"
 
 
 //----------------------

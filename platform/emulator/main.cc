@@ -24,7 +24,7 @@
  *
  */
 
-#include "oz.h"
+#include "mozart.h"
 
 int main(int argc,char **argv)
 {

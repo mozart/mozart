@@ -31,7 +31,6 @@
 #define __GC_H__
 
 #include "base.hh"
-#include "oz.h"
 
 /*****************************************************************************
  * make external references into heap known to gc

@@ -24,10 +24,9 @@
  *
  */
 
-#include "extension.hh"
 #include "builtins.hh"
 
-class HeapChunk: public Extension {
+class HeapChunk: public OZ_Extension {
 private:
   size_t chunk_size;
   char * chunk_data;
@@ -43,7 +42,7 @@ private:
   }
 public:
   HeapChunk(int size)
-    : Extension(), chunk_size(size), chunk_data(allocate(size)) 
+    : OZ_Extension(), chunk_size(size), chunk_data(allocate(size)) 
   {
     COUNT1(sizeHeapChunks,sizeof(HeapChunk));
   }
