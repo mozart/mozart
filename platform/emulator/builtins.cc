@@ -2556,10 +2556,6 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
   oz_declareThreadArg(0,th);
   oz_declareNonvarArg(1,atom_prio);
 
-  if (th->isProxy()) {
-    return remoteSend(th,"Thread.setPriority",atom_prio);
-  }
-
   int prio;
 
   if (!isAtom(atom_prio))
@@ -2574,6 +2570,10 @@ OZ_C_proc_begin(BIthreadSetPriority,2)
   } else {
   type_goof:
     oz_typeError(1,"Atom [low medium high]");
+  }
+
+  if (th->isProxy()) {
+    return remoteSend(th,"Thread.setPriority",atom_prio);
   }
 
   if (th->isDeadThread()) return PROCEED;
@@ -2616,7 +2616,6 @@ OZ_C_proc_begin(BIthreadGetPriority,2)
   if (th->isProxy()) {
     return remoteSend(th,"Thread.getPriority",out);
   }
-
 
   return oz_unify(threadGetPriority(th),out);
 }
@@ -4411,7 +4410,7 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   CheckLocalBoard(port,"port");
 
   if(tt==Te_Proxy) {
-    remoteSend(port,"Send",val);
+    portSend(port,val);
     return PROCEED;
   }
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());

@@ -144,6 +144,7 @@ Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.rootBoard);
  * Message formats
  */
 enum MessageType {
+  M_PORT_SEND,
   M_REMOTE_SEND,        // OTI STRING DIF (implicit 1 credit)
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
   M_OWNER_CREDIT,       // OTI CREDIT
@@ -2932,6 +2933,27 @@ void siteReceive(ByteStream* bs)
 
   MessageType mt= (MessageType) bs->get();
   switch (mt) {
+  case M_PORT_SEND:    /* M_PORT_SEND index term */
+    {
+      int portIndex = unmarshallNumber(bs);
+      OZ_Term t;
+      unmarshallTerm(bs,&t);
+      Assert(t);
+      bs->unmarshalEnd();
+      PD(MSG_RECEIVED,"PORTSEND: o:%d v:%s",portIndex,toC(t));
+
+      Tertiary *tert= ownerTable->getOwner(portIndex)->getTertiary();
+      ownerTable->returnCreditAndCheck(portIndex,1);
+      Assert(tert->checkTertiary(Co_Port,Te_Manager));
+      PortManager *pm=(PortManager*)tert;
+
+      LTuple *lt = new LTuple(t,am.currentUVarPrototype());
+      OZ_Term old = pm->exchangeStream(lt->getTail());
+      PD(SPECIAL,"just after send port");
+      SiteUnify(makeTaggedLTuple(lt),old);
+      break;
+      }
+
   case M_REMOTE_SEND:    /* index string term */
     {
       int i = unmarshallNumber(bs);
@@ -3320,6 +3342,44 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
     }
   }
   return PROCEED;
+}
+
+void portSend(Tertiary *p, TaggedRef msg) {
+  BorrowEntry *b= borrowTable->getBorrow(p->getIndex());
+  NetAddress *na = b->getNetAddress();
+  Site* site = na->site;
+  int index = na->index;
+
+  ByteStream *bs = bufferManager->getByteStream();
+  bs->marshalBegin();
+  bs->put(M_PORT_SEND);
+  marshallNumber(index,bs);
+  domarshallTerm(site,msg,bs);
+  bs->marshalEnd();
+
+  PD(MSG_SENT,"PORT_SEND s:%s o:%d v:%s",
+     pSite(site),index,toC(msg));
+
+  if (b->getOneCredit()) {
+    if(debtRec->isEmpty()) {
+      reliableSendFail(site,bs,FALSE,11);
+    } else {
+      PD(DEBT_SEC,"portSend");
+      PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
+      b->inDebtFIFO(0,pe);
+      debtRec->handler(pe);
+    }
+  } else {
+    PD(DEBT_MAIN,"portSend");
+    PendEntry *pe=pendEntryManager->newPendEntry(bs,site,b);
+    pe= pendEntryManager->newPendEntry(bs,site,b);
+    b->inDebtFIFO(1,pe);
+    if(!debtRec->isEmpty()){
+      PD(DEBT_SEC,"portSend");
+      debtRec->handler(pe);
+    }
+  }
+  return;
 }
 
 void sendMessage(Tertiary *tert, MessageType msg)
