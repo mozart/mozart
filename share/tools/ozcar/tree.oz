@@ -3,28 +3,49 @@
 
 local
 
-   fun {TreeNext L X I}
-      case X == nil then nil else
-	 case X.1 == I then
-	    case X.2 == nil then L.1
-	    else X.2.1 end
+   fun {TreeNext L Xs I}
+      case Xs of nil then nil
+      [] X|Xr then
+	 case X == I then
+	    case Xr == nil then L.1
+	    else Xr.1 end
 	 else
-	    {TreeNext L X.2 I}
+	    {TreeNext L Xr I}
 	 end
       end
    end
    
-   fun {TreePrev X I}
-      case X == nil then nil
-      elsecase X.2 == nil then X.1 else
-	 case X.2.1 == I then
-	    X.1
-	 else
-	    {TreePrev X.2 I}
+   fun {TreePrev Xs I}
+      case Xs of nil then nil
+      [] X|Xr then
+	 case Xr == nil then X else
+	    case Xr.1 == I then X
+	    else {TreePrev Xr I} end
 	 end
       end
    end
 
+   local
+      fun {DoTreeRemoveAndNext Xs F N}
+	 case Xs of nil then nil
+	 [] X|Xr then case {F X} then
+			 X | {DoTreeRemoveAndNext Xr F N}
+		      else
+			 N = Xr
+			 {DoTreeRemoveAndNext Xr F N}
+		      end
+	 end
+      end
+   in
+      fun {TreeRemoveAndNext Xs F}
+	 N R in
+	 {DoTreeRemoveAndNext {Reverse Xs} F N R}
+	 case N == nil then
+	    case R == nil then nil # nil else {Reverse R} # {Reverse R}.1 end
+	 else {Reverse R} # N.1 end
+      end
+   end
+   
    fun {GetColor State}
       case State
       of runnable then RunningThreadColor # RunningThreadText
@@ -62,6 +83,10 @@ local
 
       meth setTag(CT)
 	 ct <- CT
+      end
+
+      meth setParent(Q)
+	 q <- Q
       end
       
       meth get($)
@@ -102,6 +127,19 @@ local
 	 end
       end
 
+      meth find(I $)
+	 {List.filter @nodes fun {$ N} {N get($)}.i == I end}.1
+      end
+	 
+      meth reorg(I)
+	 NC = BaseTree,Nodegroup(I $)
+	 NI = BaseTree,find(I $)
+	 NQ = {NI get($)}.q
+      in
+	 {ForAll NC
+	  proc {$ N} {N setParent(NQ)} end}
+      end
+      
       meth Nodegroup(Q $)
 	 {Reverse {List.filter @nodes
 		   fun{$ N}
@@ -110,7 +148,7 @@ local
       end
 
       meth DoCalculatePositions(Q X)
-	 NG = {self Nodegroup(Q $)}
+	 NG = BaseTree,Nodegroup(Q $)
       in
 	 case NG == nil then
 	    skip
@@ -158,8 +196,10 @@ in
       
       meth add(I Q)
 	 %% each new thread is runnable, initially... (hope so?)
-	 nodes <- {New Node init(I Q runnable)} | @nodes
-	 Tree,syncCalc
+	 lock
+	    nodes <- {New Node init(I Q runnable)} | @nodes
+	    Tree,syncCalc
+	 end
       end
       
       meth remove(I)
@@ -181,9 +221,13 @@ in
 	 end
       end
       
-      meth kill(I)
-	 nodes <- {List.filter @nodes fun {$ N} {N get($)}.i \= I end}
+      meth kill(I Next)
+	 R # N = {TreeRemoveAndNext @nodes fun {$ N} {N get($)}.i \= I end}
+      in
+	 BaseTree,reorg(I)
+	 nodes <- R
 	 Tree,syncCalc
+	 Next = case N == nil then 0 else {N get($)}.i end
       end
 
       meth selectPrevious

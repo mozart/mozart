@@ -322,7 +322,7 @@ in
       end
    
       meth frameClick(frame:F highlight:Highlight<=true delay:D<=true)
-	 L
+	 L CurThr
       in
 	 case D then
 	    {Delay 70} % > TIME_SLICE
@@ -330,8 +330,8 @@ in
 	 else
 	    L = false
 	 end
-	 case L then skip else
-	    CurThr        = @currentThread
+	 CurThr = @currentThread
+	 case L orelse CurThr == undef then skip else
 	    FrameId       = F.id
 	    FrameNr       = F.nr
 	    SavedVars     = F.vars
@@ -383,7 +383,9 @@ in
 	    N   = case LSF == 0 then ~1 else LSF + Delta end
 	    F   = {Stack getFrame(N $)}
 	 in
-	    Gui,frameClick(frame:F highlight:true delay:false)
+	    case F == nil then skip else
+	       Gui,frameClick(frame:F highlight:true delay:false)
+	    end
 	 end
       end
       
@@ -519,6 +521,10 @@ in
 	    end
 	 end
       end
+
+      meth clearStack
+	 Gui,printStack(id:0 frames:nil depth:0)
+      end
       
       meth selectNode(I)
 	 {self.ThreadTree select(I)}
@@ -536,12 +542,8 @@ in
 	 {self.ThreadTree remove(I)}
       end
 
-      meth killNode(I)
-	 {self.ThreadTree kill(I)}
-      end
-
-      meth displayTree
-	 {self.ThreadTree display}
+      meth killNode(I $)
+	 {self.ThreadTree kill(I $)}
       end
 
       meth getStackText($)
@@ -588,15 +590,24 @@ in
 		  
 	       elseof ' next' then
 		  ThreadDic = ThreadManager,getThreadDic($)
-		  TopFrame  = {{Dget ThreadDic I} getTop($)}
-		  Dir = case TopFrame == nil then enter else TopFrame.dir end
+		  Stack     = try
+				 {Dget ThreadDic I}
+			      catch
+				 system(kernel(dict ...) ...) then nil
+			      end
+		  TopFrame Dir
 	       in
-		  case Dir == leave then
-		     {OzcarMessage NextOnLeave}
-		  else
-		     {Dbg.stepmode T false}
+		  case Stack == nil then skip else
+		     TopFrame  = {Stack getTop($)}
+		     Dir       = case TopFrame == nil
+				 then enter else TopFrame.dir end
+		     case Dir == leave then
+			{OzcarMessage NextOnLeave}
+		     else
+			{Dbg.stepmode T false}
+		     end
+		     {Thread.resume T}
 		  end
-		  {Thread.resume T}
 		  
 	       elseof ' finish' then
 		  {Browse 'not yet implemented'}
@@ -609,13 +620,9 @@ in
 		  
 	       elseof ' forget' then
 		  ThreadManager,forget(T I)
-		  {self.StackText title(StackTitle)}
-		  Gui,status(ForgetMessage # I # ForgetMessage2)
 	  
 	       elseof ' term' then
 		  ThreadManager,kill(T I)
-		  {self.StackText title(StackTitle)}
-		  Gui,status(TerminateMessage # I # TerminateMessage2)
 		  
 	       elseof ' stack' then
 		  {Browse {Dbg.taskstack T MaxStackBrowseSize}}

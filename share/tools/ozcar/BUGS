@@ -1,8 +1,5 @@
 $Id$
 
-Fri Jan 10 18:01:11 MET 1997
-Forget loescht fehlerhaft aus dem Thread-Baum, wenn Knoten kein Blatt ist.
-
 Tue Jan 14 18:25:50 MET 1997
 Erkennung von "veralteter" Codearea (wenn korrespondierendes
 Source-File neueren Datums ist) klappt nicht bei vorcompiliertem Code
@@ -16,4 +13,4 @@ als erfolgreich bestaetigt wird, obwohl es (im aktuell gefeedeten Code)
 gar nicht geklappt hat.
 
 Tue Apr  1 14:49:21 MET DST 1997
-leif special: tags werden nicht geloescht aus stack/env fenster
+Tags werden nicht geloescht aus Stack/Env Fenster

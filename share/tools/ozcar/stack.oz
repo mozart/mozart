@@ -100,7 +100,11 @@ in
 	     elsecase Nr > S    then S
 	     else                    Nr end
       in
-	 {Dget self.D N}
+	 try
+	    {Dget self.D N}
+	 catch
+	    system(kernel(dict ...) ...) then nil
+	 end
       end
       
       meth blockMsg(Ack)
