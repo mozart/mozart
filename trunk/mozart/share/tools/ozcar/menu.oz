@@ -31,10 +31,12 @@ in
 		    key:     ctrl(c)
 		    feature: quit)]
 	      feature: file)
+	   /*
 	   MB(text: 'Thread'
 	      menu:
 		 [separator]
 	      feature: 'thread')
+	   */
 	   MB(text: 'Options'
 	      menu:
 		 [CB(label:    'Step on All System Procedures'
