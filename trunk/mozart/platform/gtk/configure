@@ -1915,20 +1915,19 @@ fi
 : ${platform=`$PLATFORMSCRIPT`}
 
 
-
 # Extract the first word of "perl", so it can be a program name with args.
 set dummy perl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1923: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_perlpath'+set}'`\" = set"; then
+echo "configure:1922: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_perl_path'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$perlpath" in
+  case "$perl_path" in
   /*)
-  ac_cv_path_perlpath="$perlpath" # Let the user override the test with a path.
+  ac_cv_path_perl_path="$perl_path" # Let the user override the test with a path.
   ;;
   ?:/*)			 
-  ac_cv_path_perlpath="$perlpath" # Let the user override the test with a dos path.
+  ac_cv_path_perl_path="$perl_path" # Let the user override the test with a dos path.
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
@@ -1936,7 +1935,7 @@ else
   for ac_dir in $ac_dummy; do 
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_perlpath="$ac_dir/$ac_word"
+      ac_cv_path_perl_path="$ac_dir/$ac_word"
       break
     fi
   done
@@ -1944,14 +1943,14 @@ else
   ;;
 esac
 fi
-perlpath="$ac_cv_path_perlpath"
-if test -n "$perlpath"; then
-  echo "$ac_t""$perlpath" 1>&6
+perl_path="$ac_cv_path_perl_path"
+if test -n "$perl_path"; then
+  echo "$ac_t""$perl_path" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-PERL=$perlpath
+PERL=$perl_path
 
 echo "$ac_t""ok" 1>&6
 
@@ -1959,16 +1958,16 @@ echo "$ac_t""ok" 1>&6
 # Extract the first word of "glib-config", so it can be a program name with args.
 set dummy glib-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1963: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_glibpath'+set}'`\" = set"; then
+echo "configure:1962: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_glib_path'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$glibpath" in
+  case "$glib_path" in
   /*)
-  ac_cv_path_glibpath="$glibpath" # Let the user override the test with a path.
+  ac_cv_path_glib_path="$glib_path" # Let the user override the test with a path.
   ;;
   ?:/*)			 
-  ac_cv_path_glibpath="$glibpath" # Let the user override the test with a dos path.
+  ac_cv_path_glib_path="$glib_path" # Let the user override the test with a dos path.
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
@@ -1976,7 +1975,7 @@ else
   for ac_dir in $ac_dummy; do 
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_glibpath="$ac_dir/$ac_word"
+      ac_cv_path_glib_path="$ac_dir/$ac_word"
       break
     fi
   done
@@ -1984,38 +1983,41 @@ else
   ;;
 esac
 fi
-glibpath="$ac_cv_path_glibpath"
-if test -n "$glibpath"; then
-  echo "$ac_t""$glibpath" 1>&6
+glib_path="$ac_cv_path_glib_path"
+if test -n "$glib_path"; then
+  echo "$ac_t""$glib_path" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-if test -z $glibpath; then
-    { echo "configure: error: You need the glib library to enable GTK support. It can be found at http://www.gtk.org" 1>&2; exit 1; }
+if test -z $glib_path; then
+    { echo "configure: error: You need the glib library to enable GTK+ support. It can be found at http://www.gtk.org" 1>&2; exit 1; }
 fi
 echo $ac_n "checking for Glib compile flags""... $ac_c" 1>&6
-echo "configure:1999: checking for Glib compile flags" >&5
-GLIB_CFLAGS=`$glibpath --cflags`
-GLIB_LIBS=`$glibpath --libs`
+echo "configure:1998: checking for Glib compile flags" >&5
+GLIB_CFLAGS=`$glib_path --cflags`
+GLIB_LIBS=`$glib_path --libs`
 CFLAGS="$CFLAGS $GLIB_CFLAGS"
 LIBS="$LIBS $GLIB_LIBS"
 echo "$ac_t""ok" 1>&6
 
 
-# Extract the first word of "gtk-config", so it can be a program name with args.
-set dummy gtk-config; ac_word=$2
+have_gnome=yes
+have_canvas=yes
+
+# Extract the first word of "gnome-config", so it can be a program name with args.
+set dummy gnome-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2010: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_gtkpath'+set}'`\" = set"; then
+echo "configure:2012: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_gnome_config'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  case "$gtkpath" in
+  case "$gnome_config" in
   /*)
-  ac_cv_path_gtkpath="$gtkpath" # Let the user override the test with a path.
+  ac_cv_path_gnome_config="$gnome_config" # Let the user override the test with a path.
   ;;
   ?:/*)			 
-  ac_cv_path_gtkpath="$gtkpath" # Let the user override the test with a dos path.
+  ac_cv_path_gnome_config="$gnome_config" # Let the user override the test with a dos path.
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
@@ -2023,7 +2025,7 @@ else
   for ac_dir in $ac_dummy; do 
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_path_gtkpath="$ac_dir/$ac_word"
+      ac_cv_path_gnome_config="$ac_dir/$ac_word"
       break
     fi
   done
@@ -2031,37 +2033,301 @@ else
   ;;
 esac
 fi
-gtkpath="$ac_cv_path_gtkpath"
-if test -n "$gtkpath"; then
-  echo "$ac_t""$gtkpath" 1>&6
+gnome_config="$ac_cv_path_gnome_config"
+if test -n "$gnome_config"; then
+  echo "$ac_t""$gnome_config" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-if test -z $gtkpath; then
+if test -z $gnome_config; then
+    have_gnome_config="no"
+else
+    have_gnome_config="yes"
+fi
+
+gnome_header="libgnomeui/gnome-canvas.h"
+gnome_header_paths="/usr/include /usr/local/include /opt/include /opt/gnome/include /usr/local/gnome/include"
+echo $ac_n "checking for Gnome headers""... $ac_c" 1>&6
+echo "configure:2053: checking for Gnome headers" >&5
+if test x$have_gnome_config = xyes; then
+    gnome_header_path=`$gnome_config --includedir gnomeui`
+	
+ac_safe=`echo "${gnome_header_path}/${gnome_header}" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for ${gnome_header_path}/${gnome_header}""... $ac_c" 1>&6
+echo "configure:2059: checking for ${gnome_header_path}/${gnome_header}" >&5
+if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+    { echo "configure: error: Cannot check for file existence when cross compiling" 1>&2; exit 1; }
+else
+  if test -r ${gnome_header_path}/${gnome_header}; then
+    eval "ac_cv_file_$ac_safe=yes"
+  else
+    eval "ac_cv_file_$ac_safe=no"
+  fi
+fi
+fi
+if eval "test \"`echo '$ac_cv_file_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+have_gnome=no
+fi
+
+else
+    for path in $gnome_headers_paths ; do
+	
+ac_safe=`echo "${path}/${gnome_header}" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for ${path}/${gnome_header}""... $ac_c" 1>&6
+echo "configure:2086: checking for ${path}/${gnome_header}" >&5
+if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+    { echo "configure: error: Cannot check for file existence when cross compiling" 1>&2; exit 1; }
+else
+  if test -r ${path}/${gnome_header}; then
+    eval "ac_cv_file_$ac_safe=yes"
+  else
+    eval "ac_cv_file_$ac_safe=no"
+  fi
+fi
+fi
+if eval "test \"`echo '$ac_cv_file_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  gnome_header_path=$path; break
+else
+  echo "$ac_t""no" 1>&6
+
+fi
+
+    done
+    if test -z $gnome_header_path; then
+	have_gnome=no
+    fi
+fi
+
+gnome_lib="libgnomeui.so"
+gnome_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib"
+echo $ac_n "checking for Gnome libraries""... $ac_c" 1>&6
+echo "configure:2117: checking for Gnome libraries" >&5
+if test x$have_gnome_config = xyes; then
+    gnome_lib_path=`$gnome_config --libdir gnomeui`
+    
+ac_safe=`echo "${gnome_lib_path}/${gnome_lib}" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for ${gnome_lib_path}/${gnome_lib}""... $ac_c" 1>&6
+echo "configure:2123: checking for ${gnome_lib_path}/${gnome_lib}" >&5
+if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+    { echo "configure: error: Cannot check for file existence when cross compiling" 1>&2; exit 1; }
+else
+  if test -r ${gnome_lib_path}/${gnome_lib}; then
+    eval "ac_cv_file_$ac_safe=yes"
+  else
+    eval "ac_cv_file_$ac_safe=no"
+  fi
+fi
+fi
+if eval "test \"`echo '$ac_cv_file_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+have_gnome=no
+fi
+
+else
+    for path in $gnome_lib_paths ; do
+	
+ac_safe=`echo "${path}/${gnome_lib}" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for ${path}/${gnome_lib}""... $ac_c" 1>&6
+echo "configure:2150: checking for ${path}/${gnome_lib}" >&5
+if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+    { echo "configure: error: Cannot check for file existence when cross compiling" 1>&2; exit 1; }
+else
+  if test -r ${path}/${gnome_lib}; then
+    eval "ac_cv_file_$ac_safe=yes"
+  else
+    eval "ac_cv_file_$ac_safe=no"
+  fi
+fi
+fi
+if eval "test \"`echo '$ac_cv_file_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  gnome_lib_path=$path; break
+else
+  echo "$ac_t""no" 1>&6
+
+fi
+
+    done
+    if test -z $gnome_lib_path; then
+	have_gnome=no
+    fi
+fi
+
+if test x$have_gnome = xno; then
+
+    echo $ac_n "checking for GTK+ canvas library""... $ac_c" 1>&6
+echo "configure:2181: checking for GTK+ canvas library" >&5
+    gtk_canvas_lib="libgtkcanvas.so"
+    gtk_canvas_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib /usr/lib/gtk-canvas /usr/local/lib/gtk-canvas /opt/lib/gtk-canvas"
+    for path in $gtk_canvas_lib_paths ; do
+	
+ac_safe=`echo "${path}/${gtk_canvas_lib}" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for ${path}/${gtk_canvas_lib}""... $ac_c" 1>&6
+echo "configure:2188: checking for ${path}/${gtk_canvas_lib}" >&5
+if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test "$cross_compiling" = yes; then
+    { echo "configure: error: Cannot check for file existence when cross compiling" 1>&2; exit 1; }
+else
+  if test -r ${path}/${gtk_canvas_lib}; then
+    eval "ac_cv_file_$ac_safe=yes"
+  else
+    eval "ac_cv_file_$ac_safe=no"
+  fi
+fi
+fi
+if eval "test \"`echo '$ac_cv_file_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  gtk_canvas_lib_path=$path; break
+else
+  echo "$ac_t""no" 1>&6
+
+fi
+
+    done
+    if test -z $gtk_canvas_lib_path; then
+	have_canvas=no
+    fi
+
+    ac_safe=`echo "gtk-canvas.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for gtk-canvas.h""... $ac_c" 1>&6
+echo "configure:2217: checking for gtk-canvas.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 2222 "configure"
+#include "confdefs.h"
+#include <gtk-canvas.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:2227: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  :
+else
+  echo "$ac_t""no" 1>&6
+have_canvas=no
+fi
+
+fi
+
+if test -z x$have_canvas=xno; then
+    echo "configure: warning: Canvas support will be disabled" 1>&2
+fi
+
+if test x$have_canvas = xyes; then
+    if test x$have_gnome = xyes; then
+	canvas_header=${gnome_header_path}/${gnome_header}
+	canvas_lib=${gnome_lib_path}/${gnome_lib}
+    else
+	canvas_header="gtk-canvas.h"
+	canvas_lib=${gtk_canvas_lib_path}/${gtk_canvas_lib}
+    fi
+else
+    canvas_header=
+    canvas_lib=
+fi
+
+
+
+
+
+# Extract the first word of "gtk-config", so it can be a program name with args.
+set dummy gtk-config; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:2275: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_gtk_path'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$gtk_path" in
+  /*)
+  ac_cv_path_gtk_path="$gtk_path" # Let the user override the test with a path.
+  ;;
+  ?:/*)			 
+  ac_cv_path_gtk_path="$gtk_path" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$PATH"
+  for ac_dir in $ac_dummy; do 
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_gtk_path="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+gtk_path="$ac_cv_path_gtk_path"
+if test -n "$gtk_path"; then
+  echo "$ac_t""$gtk_path" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+if test -z $gtk_path; then
     { echo "configure: error: The gtk-config script" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking for GTK+ version""... $ac_c" 1>&6
-echo "configure:2047: checking for GTK+ version" >&5
-GTK_VERSION=`$gtkpath --version`
+echo "configure:2312: checking for GTK+ version" >&5
+GTK_VERSION=`$gtk_path --version`
 case $GTK_VERSION in
     1.2.*) ;;
     *)     { echo "configure: error: Your GTK+ library is too old" 1>&2; exit 1; }
 esac
-echo "$ac_t""ok" 1>&6
+echo "$ac_t""$GTK_VERSION is ok" 1>&6
 
 echo $ac_n "checking for GTK+ compile flags""... $ac_c" 1>&6
-echo "configure:2056: checking for GTK+ compile flags" >&5
-GTK_CFLAGS=`$gtkpath --cflags`
-GTK_LIBS=`$gtkpath --libs`
-GTK_HDRS=`$gtkpath --prefix`/include/gtk
-GDK_HDRS=`$gtkpath --prefix`/include/gdk
+echo "configure:2321: checking for GTK+ compile flags" >&5
+GTK_CFLAGS=`$gtk_path --cflags`
+GTK_LIBS=`$gtk_path --libs`
+GTK_HDRS=`$gtk_path --prefix`/include/gtk
+GDK_HDRS=`$gtk_path --prefix`/include/gdk
 CFLAGS="$CFLAGS $GTK_CFLAGS"
 LIBS="$LIBS $GTK_LIBS"
-
-
 echo "$ac_t""ok" 1>&6
+
+
+
 
 
 ENABLE_GLADE="no"
@@ -2069,7 +2335,7 @@ GLADE_FAIL="not found. Glade support will be disabled."
 # Extract the first word of "libglade-config", so it can be a program name with args.
 set dummy libglade-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2073: checking for $ac_word" >&5
+echo "configure:2339: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_libglade_config'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2287,10 +2553,14 @@ s%@CXX@%$CXX%g
 s%@CXXCPP@%$CXXCPP%g
 s%@LN_S@%$LN_S%g
 s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
-s%@perlpath@%$perlpath%g
+s%@perl_path@%$perl_path%g
 s%@PERL@%$PERL%g
-s%@glibpath@%$glibpath%g
-s%@gtkpath@%$gtkpath%g
+s%@glib_path@%$glib_path%g
+s%@gnome_config@%$gnome_config%g
+s%@have_canvas@%$have_canvas%g
+s%@canvas_header@%$canvas_header%g
+s%@canvas_lib@%$canvas_lib%g
+s%@gtk_path@%$gtk_path%g
 s%@GTK_HDRS@%$GTK_HDRS%g
 s%@GDK_HDRS@%$GDK_HDRS%g
 s%@libglade_config@%$libglade_config%g
