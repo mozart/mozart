@@ -30,6 +30,8 @@ OZENGINE        = @OZENGINE@
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
+EXE_EXT         = @EXE_EXT@
+
 DENYS_EVENTS    = @DENYS_EVENTS@
 ifeq ($(DENYS_EVENTS),yes)
 DENYS_FLAGS     = -DDENYS_EVENTS
@@ -67,16 +69,23 @@ OZCFLAGS        = $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(GTK_F
 OZC             = @OZC@
 
 OZLOADSEP       = @OZLOADSEP@
+OZLOADWIN       = @OZLOADWIN@
+OZLOADCACHE     = @OZLOADCACHE@
 CYGPATH         = $(SRCDIR)/cygpath.sh
 
 CYG_SRCDIR      = $(shell $(CYGPATH) $(SRCDIR))
 CYG_BUILDDIR    = $(shell $(CYGPATH) $(BUILDDIR))
 CYG_PREFIX      = $(shell $(CYGPATH) $(PREFIX))
 CYG_BUILDEMU    = $(shell $(CYGPATH) $(BUILDEMU))
+ifeq ($(OZLOADCACHE),)
+CYG_OZCACHE     =
+else
+CYG_OZCACHE     = %cache=$(shell $(CYGPATH) $(OZLOADCACHE))/cache
+endif
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(CYG_SRCDIR)/Base.ozf -b $(CYG_BUILDDIR)/
 COMPILE         = $(COMPILENOMODE) -c
-COMPILEEXEC     = $(COMPILENOMODE) -x
+COMPILEEXEC     = $(COMPILENOMODE) -x @OZEXECFILE@
 
 OZLFLAGS        = $(COMPRESSFLAGS)
 OZL             = @OZL@
@@ -92,7 +101,7 @@ export OZLIB
 export OZPATH = .$(OZLOADSEP)$(shell $(CYGPATH) $(SRCDIR))
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = $(subst :,$(OZLOADSEP),root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:cache=$(CYG_PREFIX)/cache:prefix=/=/:=)
+export OZ_LOAD = $(subst %,$(OZLOADSEP),root=.%prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/%cache=$(CYG_PREFIX)/cache%prefix=/=/$(OZLOADWIN)$(CYG_OZCACHE)%=)
 
 export OZMAKE_COPYALWAYS        = no
 export OZMAKE_VERBOSE           = no
@@ -133,7 +142,8 @@ FUNCTORS1 = \
 
 FUNCTORS = $(FUNCTORS1) Init.ozf
 
-SYSLETS = ozc ozl
+SYSLETS0 = ozc ozl
+SYSLETS = $(SYSLETS0:%=%$(EXE_EXT))
 
 .PHONY: all
 
@@ -190,20 +200,20 @@ new-base: $(BASESRC)
 $(FUNCTORS): Base.ozf
 
 %.ozf: sp/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: op/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: ap/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 Search.ozf: cp/Search.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 CpSupport.ozf: cp/CpSupport.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 %.ozf: cp/%.oz CpSupport.ozf Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 PARSEARCHFUNCTORS = \
         ParBarChart.ozf ParFindLimit.ozf ParGetColor.ozf \
@@ -216,42 +226,42 @@ ParStatistics.ozf: ParBarChart.ozf
 ParManager.ozf: ParLogging.ozf
 ParSearchTmp.ozf: cp/par/ParSearch.oz \
         ParServer.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ParWorkerTmp.ozf: cp/par/ParWorker.oz \
         ParLogging.ozf ParTraceSpace.ozf ParServer.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ParLoggingTmp.ozf: cp/par/ParLogging.oz
-        $(COMPILE) $< -o $@
-ParWorker.ozf: ParWorkerTmp.ozf ozl
-        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
-ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl
-        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
-ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
-        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+ParWorker.ozf: ParWorkerTmp.ozf ozl$(EXE_EXT)
+        $(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
+ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl$(EXE_EXT)
+        $(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
+ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl$(EXE_EXT)
+        $(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
 %.ozf: cp/par/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 
 %.ozf: dp/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: wp/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: gtk/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: qtk/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: %.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: compiler/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 %.ozf: support/%.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 # support dependencies
 DefaultURL.ozf: URL.ozf
@@ -261,7 +271,7 @@ Open.ozf: op/HtmlTable.oz
 
 # wp dependencies
 Tk.ozf: wp/Tk.oz wp/TkInit.oz wp/TkOptions.oz
-        $(COMPILE) --norecordhoist $< -o $@
+        $(COMPILE) --norecordhoist $(shell $(CYGPATH) "$<") -o $@
 TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies and rules
@@ -322,10 +332,10 @@ endif
 
 
 QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
-        $(COMPILE) --define=FULLLOAD $< -o $@
+        $(COMPILE) --define=FULLLOAD $(shell $(CYGPATH) "$<") -o $@
 
 QTkDevel.ozf:qtk/QTkDevel.oz
-        $(COMPILE) --define=DEBUG $< -o $@
+        $(COMPILE) --define=DEBUG $(shell $(CYGPATH) "$<") -o $@
 
 mini-down.xbm:qtk/mini-down.xbm
         cp $< $@
@@ -345,7 +355,7 @@ QTkDropdownlistbox.ozf: \
         qtk/QTkDropdownlistbox.oz \
         QTkBare.ozf QTkImage.ozf QTkDevel.ozf \
         QTkDropdownbutton_bitmap.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 QTkNumberentry_bitmap.ozf: \
         QTkImageLibBoot.ozf $(QTKDEPS2) \
@@ -354,8 +364,8 @@ QTkNumberentry_bitmap.ozf: \
 
 QTkNumberentry.ozf: QTkNumberentry_bitmap.ozf
 
-QTk.ozf: QTkBare.ozf $(QTKDEPS3)
-        $(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+QTk.ozf: QTkBare.ozf $(QTKDEPS3) ozl$(EXE_EXT)
+        $(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
 
 
 # compiler dependencies
@@ -424,10 +434,10 @@ Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
         Base.ozf
 
 RunTime.ozf: compiler/RunTime.oz Base.ozf
-        $(COMPILE) $< -o $@
+        $(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
-Compiler.ozf: $(FUNFUNCTORS) ozl
-        $(OZENGINE) ozl $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
+Compiler.ozf: $(FUNFUNCTORS) ozl$(EXE_EXT)
+        $(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
@@ -435,10 +445,11 @@ Compiler.ozf: $(FUNFUNCTORS) ozl
 
 $(SYSLETS): $(RUNFUNCTORS)
 
-ozc: Base.ozf ozbatch/Compile.oz
+ozc$(EXE_EXT): Base.ozf ozbatch/Compile.oz
         $(COMPILEEXEC) ozbatch/Compile.oz -o $@
 
-ozl: Base.ozf DefaultURL.ozf linker/Print.oz linker/Main.oz linker/Link.oz
+ozl$(EXE_EXT): Base.ozf DefaultURL.ozf \
+        linker/Print.oz linker/Main.oz linker/Link.oz
         $(COMPILEEXEC) linker/Main.oz -o $@
 
 #---------------------------------------------------------------------
@@ -544,7 +555,7 @@ boot-all:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=$(subst :,$(OZLOADSEP),root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:prefix=/=/:prefix=./=./:all=.:all=$(CYG_BUILDEMU)/:=)
+                OZ_LOAD="$(subst %,$(OZLOADSEP),root=.%prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/%prefix=/=/%prefix=./=./$(OZLOADWIN)%all=.%all=$(CYG_BUILDEMU)/%=)"
 
 boot--%:
         $(MAKE) $* \
@@ -552,7 +563,7 @@ boot--%:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=$(subst :,$(OZLOADSEP),root=.:prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/:prefix=/=/:prefix=./=./:all=.:all=$(CYG_BUILDEMU)/:=)
+                OZ_LOAD="$(subst %,$(OZLOADSEP),root=.%prefix=$(CYG_SRCDIR)/=$(CYG_BUILDDIR)/%prefix=/=/%prefix=./=./$(OZLOADWIN)%all=.%all=$(CYG_BUILDEMU)/%=)"
 
 check:
 
@@ -600,8 +611,8 @@ boot-init: $(BOOTINITTXTFROM)
         $(T2P) -o $@ < $< \
         || (rm -f $@; exit 1)
 
-boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-        OZINIT=Init.ozf OZ_LOAD=$(subst :,$(OZLOADSEP),root=.:prefix=/=/:prefix=./=./:prefix=x-oz://system/=./:pattern=x-oz://system/?{x}=./?{x}.ozf:prefix=x-oz://system/=../tools/:pattern=x-oz://system/?{x}=../tools/?{x}.ozf:prefix=x-oz://boot/=$(CYG_BUILDEMU)/:=) $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+boot-ozc.linked: ozc$(EXE_EXT) ozl$(EXE_EXT) Compiler.ozf $(SUPPSRC:%=%.ozf)
+        OZINIT=Init.ozf OZ_LOAD="$(subst %,$(OZLOADSEP),root=.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=./%pattern=x-oz://system/?{x}=./?{x}.ozf%prefix=x-oz://system/=../tools/%pattern=x-oz://system/?{x}=../tools/?{x}.ozf%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%=)" $(SRCDIR)/oze.sh ozl$(EXE_EXT) --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
         cp $< $@

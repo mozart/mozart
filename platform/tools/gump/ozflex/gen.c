@@ -1321,7 +1321,7 @@ void make_tables()
 
         out( &action_array[defs1_offset] );
 
-        line_directive_out( stdout, 0 );
+        line_directive_out( outfile, 0 );
 
         skelout();
 
@@ -1379,7 +1379,7 @@ void make_tables()
         /* Copy prolog to output file. */
         out( &action_array[prolog_offset] );
 
-        line_directive_out( stdout, 0 );
+        line_directive_out( outfile, 0 );
 
         skelout();
 
@@ -1518,7 +1518,7 @@ void make_tables()
         gen_bu_action();
         out( &action_array[action_offset] );
 
-        line_directive_out( stdout, 0 );
+        line_directive_out( outfile, 0 );
 
         /* generate cases for any missing EOF rules */
         for ( i = 1; i <= lastsc; ++i )
@@ -1618,7 +1618,7 @@ void make_tables()
 
         /* Copy remainder of input to output. */
 
-        line_directive_out( stdout, 1 );
+        line_directive_out( outfile, 1 );
 
         if ( sectnum == 3 )
                 (void) flexscan(); /* copy remainder of input to output */

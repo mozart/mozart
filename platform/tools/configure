@@ -1154,12 +1154,69 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 
 
+  echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
+echo "configure:1159: checking for OZLOADSEP" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+
+    case $PLATFORM in
+    win32*) oz_cv_OZLOADSEP=';'
+    ;;
+    *) oz_cv_OZLOADSEP=':'
+    ;;
+    esac
+
+fi
+
+echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
+  OZLOADSEP="$oz_cv_OZLOADSEP";
+
+
+
+  echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
+echo "configure:1179: checking for OZLOADWIN" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+
+
+  case $PLATFORM in
+    win32*)
+        oztmp=`pwd`
+        oztmp=`cygpath -a -w "$tmp"`
+        oztmp=`expr "$oztmp" : "\(.\):"`
+        if test -n "$oztmp"; then
+          oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+          oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+          oz_cv_OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+        fi
+        oztmp=`cygpath -a -w "$srcdir"`
+        oztmp=`expr "$oztmp" : "\(.\):"`
+        if test -n "$oztmp"; then
+          oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+          oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+          oz_cv_OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+        fi
+        ;;
+    *) oz_cv_OZLOADWIN=
+        ;;
+  esac
+
+
+fi
+
+echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
+  OZLOADWIN="$oz_cv_OZLOADWIN"
+
+
+
 for ac_prog in rm
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1163: checking for $ac_word" >&5
+echo "configure:1220: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1357,6 +1414,8 @@ s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
+s%@OZLOADSEP@%$OZLOADSEP%g
+s%@OZLOADWIN@%$OZLOADWIN%g
 s%@RM@%$RM%g
 s%@subdirs@%$subdirs%g
 

@@ -39,10 +39,8 @@ INSTALL_FILE=   $(INSTALL) -m 444
 INSTALL_BIN=    $(INSTALL) -m 555
 
 CONSOLE_EXES = oztool.exe ozengine.exe
-CONSOLE_BINS = ozwrapper.bin
 WINDOWS_EXES = oz.exe ozenginew.exe
-WINDOWS_BINS = ozwrapperw.bin
-EXES = $(CONSOLE_EXES) $(CONSOLE_BINS) $(WINDOWS_EXES) $(WINDOWS_BINS)
+EXES = $(CONSOLE_EXES) ozwrapper.bin $(WINDOWS_EXES) ozwrapperw.bin
 
 LIBOBJS = \
         panic.o getenv.o path.o initenv.o makecmd.o \
@@ -65,14 +63,14 @@ libstartup.a: $(LIBOBJS)
 $(CONSOLE_EXES): %.exe: %.o res.o libstartup.a
         $(CXX) $(INCS) -s -o $@ $< res.o $(LIBS)
 
-$(CONSOLE_BINS): %.bin: %.o libstartup.a
-        $(CXX) $(INCS) -s -o $@ $< $(LIBS)
+new-ozwrapper.bin: ozwrapper.o libstartup.a
+        $(CXX) $(INCS) -s -o $(SRCDIR)/ozwrapper.bin $< $(LIBS)
 
 $(WINDOWS_EXES): %.exe: %.o res.o libstartup.a
         $(CXX) $(INCS) -s -o $@ $< res.o $(LIBS) -mwindows
 
-$(WINDOWS_BINS): %.bin: %.o libstartup.a
-        $(CXX) $(INCS) -s -o $@ $< $(LIBS) -mwindows
+new-ozwrapperw.bin: ozwrapperw.o libstartup.a
+        $(CXX) $(INCS) -s -o $(SRCDIR)/ozwrapperw.bin $< $(LIBS) -mwindows
 
 res.o: res.rc
         $(WINDRES) -i $< -o $@

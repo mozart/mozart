@@ -67,6 +67,7 @@ char *action_array;
 int action_size, defs1_offset, prolog_offset, action_offset, action_index;
 char *infilename = NULL, *outfilename = NULL;
 int did_outfilename;
+FILE *outfile = NULL;
 char *prefix, *yyclass;
 int do_stdinit, use_stdout;
 int onestate[ONE_STACK_SIZE], onesym[ONE_STACK_SIZE];
@@ -297,8 +298,6 @@ void check_options()
 
         if ( ! use_stdout )
                 {
-                FILE *prev_stdout;
-
                 if ( ! did_outfilename )
                         {
                         char *suffix;
@@ -314,12 +313,16 @@ void check_options()
                         outfilename = outfile_path;
                         }
 
-                prev_stdout = freopen( outfilename, "w", stdout );
+                outfile = fopen( outfilename, "w" );
 
-                if ( prev_stdout == NULL )
+                if ( outfile == NULL )
                         lerrsf( _( "could not create %s" ), outfilename );
 
                 outfile_created = 1;
+                }
+        else
+                {
+                outfile = stdout;
                 }
 
         if ( skelname && (skelfile = fopen( skelname, "r" )) == NULL )
@@ -376,7 +379,7 @@ void check_options()
                 }
 
         if ( did_outfilename )
-                line_directive_out( stdout, 0 );
+                line_directive_out( outfile, 0 );
 
         skelout();
         }
@@ -406,13 +409,18 @@ int exit_status;
                                 skelname );
                 }
 
+        if ( outfile != NULL )
+                {
+                fflush( outfile );
+                }
+
         if ( exit_status != 0 && outfile_created )
                 {
-                if ( ferror( stdout ) )
+                if ( ferror( outfile ) )
                         lerrsf( _( "error writing output file %s" ),
                                 outfilename );
 
-                else if ( fclose( stdout ) )
+                else if ( fclose( outfile ) )
                         lerrsf( _( "error closing output file %s" ),
                                 outfilename );
 

@@ -227,7 +227,7 @@ distclean: clean
 # Bootstrap Stuff
 #---------------------------------------------------------------------
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

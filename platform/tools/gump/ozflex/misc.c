@@ -622,7 +622,7 @@ Char str[];
 void out( str )
 const char str[];
         {
-        fputs( str, stdout );
+        fputs( str, outfile );
         out_line_count( str );
         }
 
@@ -630,7 +630,7 @@ void out_dec( fmt, n )
 const char fmt[];
 int n;
         {
-        printf( fmt, n );
+        fprintf( outfile, fmt, n );
         out_line_count( fmt );
         }
 
@@ -638,7 +638,7 @@ void out_dec2( fmt, n1, n2 )
 const char fmt[];
 int n1, n2;
         {
-        printf( fmt, n1, n2 );
+        fprintf( outfile, fmt, n1, n2 );
         out_line_count( fmt );
         }
 
@@ -646,7 +646,7 @@ void out_hex( fmt, x )
 const char fmt[];
 unsigned int x;
         {
-        printf( fmt, x );
+        fprintf( outfile, fmt, x );
         out_line_count( fmt );
         }
 
@@ -663,7 +663,7 @@ const char str[];
 void out_str( fmt, str )
 const char fmt[], str[];
         {
-        printf( fmt, str );
+        fprintf( outfile, fmt, str );
         out_line_count( fmt );
         out_line_count( str );
         }
@@ -671,7 +671,7 @@ const char fmt[], str[];
 void out_str3( fmt, s1, s2, s3 )
 const char fmt[], s1[], s2[], s3[];
         {
-        printf( fmt, s1, s2, s3 );
+        fprintf( outfile, fmt, s1, s2, s3 );
         out_line_count( fmt );
         out_line_count( s1 );
         out_line_count( s2 );
@@ -682,7 +682,7 @@ void out_str_dec( fmt, str, n )
 const char fmt[], str[];
 int n;
         {
-        printf( fmt, str, n );
+        fprintf( outfile, fmt, str, n );
         out_line_count( fmt );
         out_line_count( str );
         }
@@ -690,7 +690,7 @@ int n;
 void outc( c )
 int c;
         {
-        putc( c, stdout );
+        putc( c, outfile );
 
         if ( c == '\n' )
                 ++out_linenum;
@@ -699,7 +699,7 @@ int c;
 void outn( str )
 const char str[];
         {
-        puts( str );
+        fprintf( outfile, "%s\n", str );
         out_line_count( str );
         ++out_linenum;
         }
@@ -771,7 +771,7 @@ size_t element_size;
 /* skelout - write out one section of the skeleton file
  *
  * Description
- *    Copies skelfile or skel array to stdout until a line beginning with
+ *    Copies skelfile or skel array to outfile until a line beginning with
  *    "%%" or EOF is found.
  */
 void skelout()

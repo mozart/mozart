@@ -31,9 +31,6 @@ LIB_TARGETS     = $(LIB_DIR)/Psql.ozf $(LIB_DIR)/PsqlLib.so-$(PLATFORM)
 all:            $(TARGETS)
 install:        $(LIB_DIR) $(LIB_TARGETS)
 
-test: test.oz
-        $(OZC) -x $< -o $@
-
 $(LIB_DIR):
         $(INSTALL_DIR) $@
 
@@ -58,9 +55,12 @@ clean veryclean:
 distclean: clean
         -$(RM) config.* Makefile
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
+
+test: test.oz
+        $(OZC) -x $(OZEXECFILE) $< -o $@
 
 #---------------------------------------------------------------------
 # Automatic Makefile update

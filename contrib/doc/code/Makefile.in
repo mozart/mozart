@@ -42,6 +42,8 @@ ELIB_TARGETS    = $(addprefix $(ELIB_DIR)/,$(ETARGETS))
 NEWCACHEDIR     = $(PREFIX)/cache/x-oz/contrib/doc/code
 NEW_TARGETS     = $(addprefix $(NEWCACHEDIR)/,$(TARGETS))
 
+CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
+
 all:            $(TARGETS) $(ETARGETS)
 install:        $(ELIB_DIR) $(ELIB_TARGETS) \
         $(NEWCACHEDIR) $(NEW_TARGETS)
@@ -59,10 +61,10 @@ $(ELIB_TARGETS): $(ELIB_DIR)/% : %
         $(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
-        $(OZC) -z 9 -c $< -o $@
+        $(OZC) -z 9 -c $(shell $(CYGPATH) "$<") -o $@
 
 %.elc: %.el
-        $(EMACS) -q -batch -f batch-byte-compile $<
+        $(EMACS) -q -batch -f batch-byte-compile $(shell $(CYGPATH) "$<")
 
 %.el: %.EL
         @cp -f $< $@
@@ -73,7 +75,7 @@ clean veryclean:
 distclean: veryclean
         -rm -f Makefile config.*
 
-include $(SRCDIR)/../../../share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

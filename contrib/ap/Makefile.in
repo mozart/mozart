@@ -13,10 +13,11 @@ INSTALL_LIB     = $(INSTALL) -m 444
 FUNCTORS        = OptionSheet.ozf
 NEWCACHEDIR     = $(PREFIX)/cache/x-oz/contrib/ap
 PLATFORM        = @PLATFORM@
+CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
 
 all:            $(FUNCTORS)
 %.ozf: %.oz
-        $(OZC) -z 9 -c $< -o $@
+        $(OZC) -z 9 -c $(shell $(CYGPATH) "$<") -o $@
 install: $(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(FUNCTORS))
 $(LIB_DIR) $(NEWCACHEDIR):
         $(INSTALL_DIR) $@
@@ -31,7 +32,7 @@ clean veryclean:
 distclean: veryclean
         -rm -f Makefile config.*
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

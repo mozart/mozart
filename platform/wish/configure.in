@@ -46,9 +46,6 @@ AC_PROG_LN_S
 
 case "$platform" in
     win32*)
-        OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
-        LDFLAGS="$oz_a $LDFLAGS"
-        CPPFLAGS="$oz_a $CPPFLAGS"
         EXTRALDFLAGS="-mwindows -s"
         SRCS="winMain.cc"
         WITH_TCLTK=$with_tcl/lib

@@ -642,7 +642,7 @@ LEXOPT          [aceknopr]
 
 
 <SECT3>{
-        .*(\n?)         ECHO;
+        .*(\n?)         fprintf( outfile, "%s", yytext );
         <<EOF>>         sectnum = 0; yyterminate();
 }
 

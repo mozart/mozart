@@ -35,7 +35,7 @@ HTMLSUPPORTFILES = \
 
 all:: Makefile ../Makefile.common $(WHAT)-html/index.html
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

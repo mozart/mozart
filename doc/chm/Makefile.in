@@ -1,3 +1,4 @@
+BUILDTOP        = @BUILDTOP@
 PREFIX          = @prefix@
 VPATH           = @srcdir@
 SRCTOP          = @SRCTOP@
@@ -28,10 +29,13 @@ Mozart.hhc: Mozart.hhc.in
 
 quick:
 depend:
+include $(BUILDTOP)/share/Makefile.boot
+bootstrap: boot-all
 bootquick: boot-all
 boot-quick: boot-all
 
-include $(SRCTOP)/share/Makefile.boot
+# make it possible to configuree and build just the doc
+-include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
