@@ -32,9 +32,6 @@ import
    Export_RI at
    'http://www.ps.uni-sb.de/~tmueller/mozart/ri.so{native}'
 
-   Export_ReflectConstraints at
-   'http://www.ps.uni-sb.de/~tmueller/mozart/refl_constr.so{native}'
-
 export
    
    solve:   Solve
@@ -42,7 +39,6 @@ export
    
    
 define
-   {Wait Export_ReflectConstraints}
    
    Solve  = Export_RI.lpsolve
    Config = Export_RI.lpsolve_conf
