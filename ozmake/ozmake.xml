@@ -199,7 +199,48 @@ graphical interface.</p>
 	</p>
       </item>
       <item>
-        <
+        <label><cmd>--moguldir=<meta>MOGULDIR</meta></cmd></label>
+	<p>directory in which are placed sub-directories for the
+	user's contributions: <file>pkg</file> for packages,
+	<file>doc</file> for documentation, <file>db</file> for mogul
+	database entries.</p>
+      </item>
+      <item>
+        <label><cmd>--mogulurl=<meta>MOGULURL</meta></cmd></label>
+	<p>url corresponding to the <meta>MOGULDIR</meta>
+	directory</p>
+      </item>
+    </dlist>
+  </section>
+
+  <section>
+    <title>Files</title>
+    <dlist type="options">
+      <item>
+        <label><cmd>-m <meta>FILE</meta></cmd></label>
+	<label><cmd>--makefile=<meta>FILE</meta></cmd></label>
+	<label type="default"><file><meta>SRCDIR</meta>/makefile.oz</file></label>
+	<p>location of makefile</p>
+      </item>
+      <item>
+        <label><cmd>-p <meta>PKG</meta></cmd></label>
+	<label><cmd>--package=<meta>PKG</meta></cmd></label>
+	<p><meta>PKG</meta> should be either a pathname or URL, or a
+	MOGUL id.  When creating a package, it must be a local
+	pathname.   When extracting or installing, it can also be a
+	URL or a MOGUL id.  In the latter case, the package is
+	automatically downloaded from the MOGUL archive.</p>
+      </item>
+      <item>
+        <label><cmd>-V <meta>VERSION</meta></cmd></label>
+	<label><cmd>--packageversion=<meta>VERSION</meta></cmd></label>
+	<p>this option is respected by <cmd>--extract</cmd> and
+	<cmd>--install</cmd>.  When <cmd>--extract</cmd> is given a
+	MOGUL id and downloads the corresponding package from the
+	MOGUL archive, it will look precisely for the given
+	<meta>VERSION</meta> of the package.  <cmd>--install</cmd>
+	will simply check that the package to be installed really has
+	this <meta>VERSION</meta>.</p>
       </item>
     </dlist>
   </section>
