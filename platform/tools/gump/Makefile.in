@@ -20,8 +20,6 @@ DYNLD		= $(OZTOOL) ld
 CXX		= $(OZTOOL) c++
 CPPFLAGS	= -I$(SRCDIR) -I. -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 CXXFLAGS	= @CXXFLAGS@ $(CFLAGS)
-LDFLAGS		= @LDFLAGS@
-LIBS		= @LIBS@ -lc
 
 INSTALL		= @INSTALL@
 INSTALLPRG	= $(INSTALL) -m 555
@@ -55,7 +53,7 @@ subdirs:
 
 GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
-	$(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
+	$(DYNLD) -o $@ GumpScanner.o
 
 install: all \
 	$(SHAREDIR) $(SHAREFILES) \

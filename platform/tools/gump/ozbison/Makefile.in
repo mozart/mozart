@@ -14,8 +14,6 @@ CC		= $(OZTOOL) cc
 DYNLD		= $(OZTOOL) ld
 CFLAGS		= @CFLAGS@
 INCLUDES	= -I$(SRCTOP)/platform/emulator @CPPFLAGS@
-LDFLAGS		= @LDFLAGS@
-LIBS		= @LIBS@ -lc
 
 OBJS =	LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
 	lalr.o main.o nullable.o output.o print.o reader.o reduce.o \
@@ -30,7 +28,7 @@ bootstrap: cboot-all
 	$(CC) $(CFLAGS) $(CDYNOPT) $(INCLUDES) -c $< -o $*.o
 
 Bison.so: $(OBJS)
-	$(DYNLD) -o Bison.so $(OBJS) $(LDFLAGS) $(LIBS)
+	$(DYNLD) -o Bison.so $(OBJS)
 
 clean veryclean realclean:
 	$(RM) *~ *.o *.so

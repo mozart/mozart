@@ -67,7 +67,7 @@ all:
 pidModule.lo: ../modPID-if.cc
 
 ../PID.so: pidModule.lo
-	$(DYNLD) $(LDFLAGS) -o $@ $< $(LIBS)
+	$(DYNLD) -o $@ $<
 
 ../libPID.a: pidModule.lo
 	$(AR) -rc $@ $< && $(RANLIB) $@
