@@ -46,8 +46,9 @@ local
    %%
    %%  from 'core.oz';
    IntToAtom      %
-   IsVar	  % 
-   IsFdVar        % is a FD variable? 
+   IsVar	  %  
+   IsFdVar        % is a finite domain variable? 
+   IsFSetVar      % is a finite set variable?
    IsRecordCVar   % is an OFS?
    IsMetaVar      % is a Meta variable?
    WatchMetaVar   % 
@@ -64,6 +65,12 @@ local
    AddrOf         %
    OnToplevel     %
 
+   %% TMUELLER
+   %% reflectives for finite sets
+   FSetGetGlb 
+   FSetGetLub
+   FSetGetCard
+   
    %%
    %%  'XResources.oz';
    X11ResourceCacheClass
@@ -154,6 +161,7 @@ local
    CompClassTermObject
    VariableTermObject
    FDVariableTermObject
+   FSetTermObject
    MetaVariableTermObject
    UnknownTermObject
 
