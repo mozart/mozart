@@ -12,6 +12,7 @@ DYNLD		= @DYNLD@
 
 CC		= @CC@
 CFLAGS		= @CFLAGS@
+CFLAGS		+= -fPIC
 INCLUDES	= -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
