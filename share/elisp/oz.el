@@ -374,12 +374,12 @@ starts the emulator under gdb")
 (defun oz-debug-start()
   "Start the debugger."
   (interactive)
-  (oz-send-string "{Ozcar unhide}"))
+  (oz-send-string "{Ozcar on}"))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
-  (oz-send-string "{Ozcar hide}"))
+  (oz-send-string "{Ozcar off}"))
   
 
 ;;------------------------------------------------------------
