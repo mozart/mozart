@@ -80,7 +80,7 @@ local
 	       PrintText = {CutTrail C * 100 div HourI}
 	    elsecase C>MinuteI then
 	       DimText   = 'm'
-	       PrintText = {CutTrail C * 100 div HourI}
+	       PrintText = {CutTrail C * 100 div MinuteI}
 	    elsecase C>SecondI then
 	       DimText   = 's'
 	       PrintText = {CutTrail C * 100 div SecondI}
