@@ -34,6 +34,9 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-contrib-dpanel,
 	whether to build the distributed panel (default: yes)"
+ac_help="$ac_help
+--enable-contrib-ri_lp
+	whether to build the ri_lp contribution (default: yes)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -547,7 +550,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:551: checking for $ac_word" >&5
+echo "configure:554: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -585,7 +588,7 @@ done
 
   
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:589: checking for SRCTOP" >&5
+echo "configure:592: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -618,7 +621,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
   
   
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:622: checking for BUILDTOP" >&5
+echo "configure:625: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -675,7 +678,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:679: checking for $ac_word" >&5
+echo "configure:682: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -743,13 +746,13 @@ You may find a mirror archive closer to you by consulting:
   else
     
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:747: checking for GNU make" >&5
+echo "configure:750: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
   
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:753: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:756: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -778,7 +781,7 @@ fi
   
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:782: checking whether to unset broken INSTALL" >&5
+echo "configure:785: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -807,7 +810,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:811: checking for a BSD compatible install" >&5
+echo "configure:814: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -867,7 +870,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:871: checking for $ac_word" >&5
+echo "configure:874: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -908,7 +911,7 @@ fi
   
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:912: checking for --with-inc-dir" >&5
+echo "configure:915: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -948,7 +951,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:952: checking for --with-lib-dir" >&5
+echo "configure:955: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -996,7 +999,7 @@ CONTRIBDIRS="tk ap"
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1000: checking for --enable-contrib-gdbm" >&5
+echo "configure:1003: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
 if test "${enable_contrib_gdbm+set}" = set; then
   enableval="$enable_contrib_gdbm"
@@ -1013,7 +1016,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1017: checking for --enable-contrib-regex" >&5
+echo "configure:1020: checking for --enable-contrib-regex" >&5
 # Check whether --enable-contrib-regex or --disable-contrib-regex was given.
 if test "${enable_contrib_regex+set}" = set; then
   enableval="$enable_contrib_regex"
@@ -1030,7 +1033,7 @@ echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1034: checking for --enable-contrib-doc" >&5
+echo "configure:1037: checking for --enable-contrib-doc" >&5
 # Check whether --enable-contrib-doc or --disable-contrib-doc was given.
 if test "${enable_contrib_doc+set}" = set; then
   enableval="$enable_contrib_doc"
@@ -1047,7 +1050,7 @@ echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1051: checking for --enable-contrib-os" >&5
+echo "configure:1054: checking for --enable-contrib-os" >&5
 # Check whether --enable-contrib-os or --disable-contrib-os was given.
 if test "${enable_contrib_os+set}" = set; then
   enableval="$enable_contrib_os"
@@ -1064,7 +1067,7 @@ echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-text""... $ac_c" 1>&6
-echo "configure:1068: checking for --enable-contrib-text" >&5
+echo "configure:1071: checking for --enable-contrib-text" >&5
 # Check whether --enable-contrib-text or --disable-contrib-text was given.
 if test "${enable_contrib_text+set}" = set; then
   enableval="$enable_contrib_text"
@@ -1081,7 +1084,7 @@ echo "$ac_t""$oz_cv_enable_contrib_text" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-dpanel""... $ac_c" 1>&6
-echo "configure:1085: checking for --enable-contrib-dpanel" >&5
+echo "configure:1088: checking for --enable-contrib-dpanel" >&5
 # Check whether --enable-contrib-dpanel or --disable-contrib-dpanel was given.
 if test "${enable_contrib_dpanel+set}" = set; then
   enableval="$enable_contrib_dpanel"
@@ -1100,6 +1103,23 @@ echo "$ac_t""$oz_cv_enable_contrib_dpanel" 1>&6
 
 subdirs="$CONTRIBDIRS"
 
+
+echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
+echo "configure:1109: checking for --enable-contrib-gdbm" >&5
+# Check whether --enable-contrib-ri_lp or --disable-contrib-ri_lp was given.
+if test "${enable_contrib_ri_lp+set}" = set; then
+  enableval="$enable_contrib_ri_lp"
+  oz_cv_enable_contrib_ri_lp=$enableval
+else
+  : ${oz_cv_enable_contrib_ri_lp:=$oz_enable_contrib_ri_lp}
+   : ${oz_cv_enable_contrib_ri_lp:=yes}
+fi
+
+echo "$ac_t""$oz_cv_enable_contrib_ri_lp" 1>&6
+
+  if test "$oz_cv_enable_contrib_ri_lp" = yes; then
+    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }ri_lp"
+  fi
 
 trap '' 1 2 15
 cat > confcache <<\EOF
