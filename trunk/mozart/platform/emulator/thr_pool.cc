@@ -42,10 +42,12 @@ int ThreadsPool::getRunnableNumber()
 // (so, it's not a constructor of the 'ThreadsPool' class;)
 void ThreadsPool::initThreads ()
 {
+#ifndef LINKED_QUEUES
   // private;
   hiQueue.allocate(QUEUEMINSIZE);
   midQueue.allocate(QUEUEMINSIZE);
   lowQueue.allocate(QUEUEMINSIZE);
+#endif
 
   hiCounter = -1;
   lowCounter = -1;
