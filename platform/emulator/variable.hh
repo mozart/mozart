@@ -57,7 +57,7 @@ public:
 
   void addSuspension (Thread *thr)
   {
-    thr->updateExtThread (getBoardFast());
+    thr->updateExtThread(getBoardFast());
 
     suspList = new SuspList(thr, suspList);
   }
