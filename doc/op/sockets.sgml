@@ -26,23 +26,17 @@
   -->
 
 
-<!--
-  Translated to SGML by:
-     Daniel Simon, dansim@ps.uni-sb.de
-     Andy Walter, anwalt@ps.uni-sb.de
--->
-
 <chapter id="chapter.sockets">
 <title/Sockets/
 <p>
 A frequent need in programming open applications is to connect different
 operating system processes such that they are able to exchange
 data.  A tool for solving this problem are sockets. This chapter 
-explains how to use sockets from DFKI &Oz;.
+explains how to use sockets from Mozart.
 <p>
 Before starting to describe how to use them, we explain some basic
 concepts. The explanation is short; for more detailed information see
-for example <Ptr to="Stevens.90"> <Ptr to="SUN-network.90">.
+for example <Ptr to="Stevens.90">.
 
 <section>
 <title/Sockets in a Nutshell/
@@ -61,7 +55,7 @@ Internet/ <index /domain<and>Internet/ domain and the <def/
 Unix/<index /domain <and> Unix/ domain. The first can be used for
 communication all over the world, whereas the latter is only applicable
 within one Unix system. Other systems might offer only sockets for the
-Internet domain. DFKI &Oz; mainly supports sockets for the
+Internet domain. Mozart supports sockets for the
 Internet domain.
 
 </subsection>
@@ -128,8 +122,8 @@ must initiate a connection. How to obtain a connection is shown in
 shown in the figure as an example.
 <p>
 
-<figure class="Figure maxi" id="opprog-fig-stream">
-<caption/Initiating a Stream Connection/
+<figure id="opprog-fig-stream">
+<caption/Initiating a Stream Connection./
 <picture latex>
 \begin{center}
 \unitlength .45cm
@@ -160,7 +154,6 @@ shown in the figure as an example.
 \put( 8, 1){\makebox(8,1){Establish Connection}}
 \end{picture}
 \end{center}
-\hrule
 </picture>
 </figure>
 <p>
@@ -210,7 +203,7 @@ The next step connects the <<Client>> to the <<Server>>.
 initializes our client object<index class=module/Open<and>socket<and>init/.
 <p>
 By typing
-<<<Client connect(host:localhost port:?_{OurPort})}>>>
+<<<{Client connect(host:localhost port:?_{OurPort})}>>>
 <index class=module /Open<and>socket<and>connect/
 our client connects to the port ?_{OurPort} on the same computer
 (thus the virtual string <<localhost>>)<index /localhost/. 
@@ -465,7 +458,7 @@ Services use the Internet domain, thus for connecting to them we need
 the name of the host computer (&ie;its Internet address) and the port
 of the socket. For this reason there is the procedure
 <<OS.getServByName>><index /OS<and>getServByName/ (see
-<Ptr.Extern to="ozdoc:system" key="chapter.opprog-unix-file">) which gives the port of the socket
+<Ptr.Extern to="ozdoc:system" key="chapter.os">) which gives the port of the socket
 on which the service is available. Feeding 
 <<<FingerPort={OS.getServByName finger tcp}>>>
 binds <<FingerPort>> to the port number of the service. 
@@ -478,7 +471,7 @@ computers, so this number does not depend on your localhost.
 To get the information from this service we have to connect to the
 finger service. If you want to know whether the author is working right
 now, then you can connect to one of our computers with the Internet
-address <<elephant.ps.uni-sb.de>> on the <<FingerPort>>. This is done by
+address <<wallaby.ps.uni-sb.de>> on the <<FingerPort>>. This is done by
 feeding the code shown in Program <Ptr to="Prog.finger">.
 <p>
 <Figure class=Program id="Prog.finger">
@@ -488,12 +481,12 @@ feeding the code shown in Program <Ptr to="Prog.finger">.
    meth getInfo($)
       Is Ir 
    in
-      case {self read(list:Is tail:Ir len:$)} of 0 then nil
+      if {self read(list:Is tail:Ir len:$)}==0 then nil
       else {self getInfo(Ir)} Is
       end
    end
 end
-FC = {FingerClient client(host:'elephant.ps.uni-sb.de' 
+FC = {FingerClient client(host:'wallaby.ps.uni-sb.de' 
                           port:FingerPort)}>>>
 </figure>
 <p>

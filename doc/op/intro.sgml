@@ -28,7 +28,7 @@
 <Chapter id="chapter.intro">
   <Title/Introduction/
   <P>
-    This document describes how to connect Mozart to the rest of the
+    This document describes how to connect Mozart applications to the rest of the
     computational world.  Sometimes this is paraphrased as <Span
     class=index/interoperability/.
   <P>
@@ -83,34 +83,11 @@
       see the manual page.  In case you are running a Windows based system,
       information can be found in a good Unix book or a book describing the
       POSIX.1 standard (&eg;, <Ptr to="Lewine.91">).
-    <P>
-      Whenever we explain procedures or object methods, we use the same
-      notational conventions as in&nbsp;<Ptr to="Mozart-Base">.
-    <P>
-      A variable name of an argument possibly starts with a prefix giving
-      the purpose of the variable, and ends with a letter combination giving
-      the expected type(s) of the argument.  We will use ?_{A} for atoms,
-      ?_{B}&nbsp;for boolean values, ?_{I}&nbsp;for integers, ?_{S}&nbsp;for
-      strings, ?_{R}&nbsp;for records, ?_{T}&nbsp;for tuples, ?_{V}&nbsp;for
-      virtual strings, and ?_{X}, ?_{Y}, and&nbsp;?_{Z} for any type.  Lists
-      of a certain type are marked by appending ?_{s} to the latter.  So for
-      instance, the argument with name ?_{ArgsVs} is supposed to be a list
-      of virtual strings.  The arguments may be preceeded by ?+{} (an input
-      argument) or ??{} (an output argument).  For more information on this,
-      see&nbsp;<Ptr to="Mozart-Base">.
-    <P class=danger>
-      This sign means that the described features and functionality is either
-      difficult to use, or needs special attention in using.
-    <P>
   <Section>
     <Title/The Examples/
     <P>
-      This paper contains quite a number of examples.  It is recommended to
+      This document contains quite a number of examples.  It is recommended to
       read this document and try the examples while reading.
       All the examples collected into a single file can be found 
       <Ref.Extern to="OpenProgramming.oz"/here/.
-    <P>
-      In the presentation of the paper the necessary declarations of variables
-      are left out for readability.  In the demo file you will find all the
-      declarations in place.
 </Chapter>
