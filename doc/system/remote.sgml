@@ -126,13 +126,33 @@ bamse.sics.se
 
         <P>
           If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
-          <<'automatic'>> (the default) a more efficient way of
-          communication between forked and forking process is used. It
-          takes advantage of shared memory rather than network
-          communication. 
-          If your current Oz engine does not support this more
-          efficient alternative, the <<'sh'>>
-          method is used as fall-back. 
+          <<'automatic'>> (which is the default), then on some
+          platforms the forked and forking processes communicate over
+          shared memory instead of Unix sockets, which is more
+          efficient. The system property
+          <<'distribution.virtualsites'>> carries a boolean telling
+          whether this facility, called <def/virtual sites/, is
+          supported in the runnung Mozart process; the <<'sh'>> fork
+          method is used as a fall-back.
+
+<p class=danger>
+          On some platforms (notably on <<solaris-sparc>>) the
+	  operating system in its default configuration does not allow
+          to exploit the virtual sites facility efficiently. Namely,
+	  the Solaris OS limits the total number of shared memory
+	  pages per process to 6 and the number of shared memory pages
+	  system-wide to 100, while each of connected Mozart processes
+	  requires at least 2 of them for efficient communication.
+	  Please ask the system administrator to increase those limits
+	  with respect to your needs.
+
+<p class=danger>
+          The Mozart system tries to do its best to reclaim shared
+	  memory identifiers, even upon process crashes, but it is
+	  still possible that some shared memory pages become
+	  unaccounted and thus stay forever in the OS. In these cases
+	  please use Unix utilities (on Solaris and Linux these are
+          <<ipcs>> and <<ipcrm>>) to get rid of them.
 
         <P>
           If ?_{DetachB} is <<false>>, a non-detached process is
