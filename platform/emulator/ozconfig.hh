@@ -94,6 +94,9 @@ public:
   /* command line arguments visible from Oz */
   char **argV;
   int argC;
+
+  // root functor's url
+  char *url;
   
 public:
   ConfigData() {};
