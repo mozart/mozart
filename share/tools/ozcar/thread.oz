@@ -482,31 +482,23 @@ in
       end
 
       meth toggleEmacsThreads(TkV)
-	 Value = {TkV tkReturnInt($)}
-	 Arg   = case Value == 0 then true else false end
+	 Value = case {TkV tkReturnInt($)} == 0 then false else true end
       in
-	 {OzcarMessage 'Dbg.suspend called with argument ' # Value}
 	 case {NewCompiler} then
-	    case Arg then
-	       {Compile '\\sw -runwithdebugger'}
-	    else
+	    case Value then
 	       {Compile '\\sw +runwithdebugger'}
+	    else
+	       {Compile '\\sw -runwithdebugger'}
 	    end
 	 else
-	    {Dbg.suspend Arg}
+	    {Dbg.emacsThreads Value}
 	 end
       end
 
       meth toggleSubThreads(TkV)
-	 Value = {TkV tkReturnInt($)}
-	 Arg   = case Value == 0 then true else false end
+	 Value = case {TkV tkReturnInt($)} == 0 then false else true end
       in
-	 {OzcarMessage 'Dbg.runChildren called with argument ' # Value}
-	 {Dbg.runChildren Arg}
-      end
-      
-      meth close
-	 skip
+	 {Dbg.subThreads Value}
       end
       
    end
