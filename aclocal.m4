@@ -793,6 +793,13 @@ EOF
   oz_gmp_version_ok=$oz_tmp_ok
 fi
 
+if test "$oz_gmp_inc_found" = yes; then
+  OZ_CHECK_LIB_PATH(gmp, __gmpz_init,
+    oz_gmp_lib_found=gmp
+    oz_gmp_version_ok=yes,
+    oz_gmp_lib_found=no)
+fi
+
 if test "$oz_gmp_inc_found" = no; then
   AC_MSG_WARN([required GNU MP include file not found])
 elif test "$oz_gmp_lib_found" = no; then
@@ -811,10 +818,10 @@ to build the system.  It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/
 
-The latest version at this time is 2.0.2 and is available
+The latest version at this time is 3.0.1 and is available
 packaged as the following archive:
 
-        ftp://ftp.gnu.org/pub/gnu/gmp/gmp-2.0.2.tar.gz
+        ftp://ftp.gnu.org/pub/gnu/gmp/gmp-3.0.1.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
