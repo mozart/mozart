@@ -45,25 +45,31 @@ local
 in
 
    class ExplorerClass
-      from UrObject
+      from BaseObject
 
       attr
-	 Stacked:    nil
-         MyManager:  false
+	 Stacked:   nil
+         MyManager: unit
 
       meth Init()
-	 case @MyManager\=false then skip else
+	 case @MyManager\=unit then skip else
 	    MyManager <- {New Manager init(self)}
 	    ExplorerClass
 	       %% Include the standard actions
                \insert default-actions.oz
-	    ExplorerClass,{Reverse @Stacked}
+	    ExplorerClass,DoStacked(@Stacked)
 	    Stacked <- nil
 	 end
       end
 
+      meth DoStacked(Ms)
+	 case Ms of nil then skip
+	 [] M|Mr then ExplorerClass,DoStacked(Mr),M
+	 end
+      end
+      
       meth !ManagerClosed()
-	 MyManager <- false
+	 MyManager <- unit
       end
       
       meth solver(Solver Order <=false)
@@ -85,7 +91,7 @@ in
       meth add(Kind What
 	       label: Label <=NoLabel
 	       type:  Type  <=root) = Add
-	 case @MyManager==false then Stacked <- Add|@Stacked
+	 case @MyManager==unit then Stacked <- Add|@Stacked
 	 elsecase
 	    case {Member Kind ActionKinds} then
 	       ActionMenu = @MyManager.case Kind
@@ -126,7 +132,7 @@ in
       end
 
       meth delete(Kind What) = Del
-	 case @MyManager==false then Stacked <- Del|@Stacked
+	 case @MyManager==unit then Stacked <- Del|@Stacked
 	 elsecase
 	    case {Member Kind ActionKinds} then
 	       ActionMenu = @MyManager.case Kind
@@ -148,7 +154,7 @@ in
       end
 
       meth option(What ...) = OM
-	 case @MyManager==false then Stacked <- OM|@Stacked
+	 case @MyManager==unit then Stacked <- OM|@Stacked
 	 elsecase
 	    case
 	       What==postscript andthen
@@ -238,11 +244,6 @@ in
 	 end
       end
       
-      meth close
-	 case @MyManager of false then skip elseof M then {M close} end
-	 UrObject,close
-      end
-
    end
    
 end
