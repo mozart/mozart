@@ -245,7 +245,7 @@ local
    end
 in
    %% Initialize data structures
-   {Loop.for 0 ScheduleLength 1
+   {Loop.'for' 0 ScheduleLength 1
     proc{$ C}
        Running.(C+1) = {Extract RunningP C}
        Starting.(C+1) = {Extract StartingP C}
