@@ -13,7 +13,7 @@ a site is always one
 <index id=idx.process/process/
 operating system process on one machine.
 <index id=idx.multitasking/multitasking/
-/index id=idx.sitemultitasking/site<and>multitasking/
+<index id=idx.sitemultitasking/site<and>multitasking/
 A multitasking system can host several sites.
 An Oz language entity has the same
 <index id=idx.languagesemantics/language semantics/
@@ -29,11 +29,10 @@ is implemented using a distributed protocol.
 This gives the language entity a particular
 distributed semantics in terms of network messages.
 
-<P>The
+<P>The <EM>distributed semantics</EM>
 <index id=idx.distributedsemantics/distributed semantics/
 <index id=idx.semanticsdistributed/semantics<and>distributed/
-<EM>distributed semantics</EM> defines
-the network communications done by the system
+defines the network communications done by the system
 when operations are performed on an entity.
 The distributed semantics of the entities
 depends on their type.

@@ -125,7 +125,7 @@ and they are also listed together at the end of the tutorial
 
 <P>We say two or more applications are
 <index id=idx.connected/application<and>connected applications/
-<index id=idx.connected/connected applications/
+<index id=idx.connectedapplications/connected applications/
 <EM>connected</EM>
 if they share a reference to a language entity that allows
 them to exchange information.
