@@ -72,8 +72,6 @@ failure:
 //-----------------------------------------------------------------------------
 
 
-#define INITIALSIZE 10000
-
 static OZ_FDIntVar * xx;
 static int * dd;
 
@@ -86,6 +84,7 @@ static int compareAscDue(const void *a, const void *b) {
   return(xx[*(int*)a]->getMaxElem() + dd[*(int*)a] - xx[*(int*)b]->getMaxElem() - dd[*(int*)b]);
 }
 
+// for cpIterate
 struct StartDurTerms {
   OZ_Term start;
   int dur;
@@ -93,6 +92,18 @@ struct StartDurTerms {
 
 int compareDurs(const void * a, const void * b) {
   return ((StartDurTerms *) b)->dur - ((StartDurTerms *) a)->dur;
+}
+
+// for cpIterateCap
+struct StartDurUseTerms {
+  OZ_Term start;
+  int dur;
+  int use;
+};
+
+int compareDursUse(const void * a, const void * b) {
+  return ((StartDurUseTerms *) b)->dur * ((StartDurUseTerms *) b)->use
+    - ((StartDurUseTerms *) a)->dur * ((StartDurUseTerms *) a)->use;
 }
 
 CPIteratePropagator::CPIteratePropagator(OZ_Term tasks, 
@@ -770,20 +781,69 @@ failure:
 
 //--------------------------------------------------------------
 
-OZ_C_proc_begin(sched_disjunctive, 2)
+OZ_C_proc_begin(sched_disjunctive, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+    
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    SAMELENGTH_VECTORS(1, 2);
+  }
   
-  PropagatorExpect pe;
-  
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  SAMELENGTH_VECTORS(0, 1);
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2];
 
-  return pe.impose(new DisjunctivePropagator(OZ_args[0], OZ_args[1]),  
-		   OZ_getLowPrio());
+  VectorIterator vi(OZ_args[0]);
+
+  for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
+    OZ_Term tasks = vi.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      if (!start_task || !dur_task) 
+	return OZ_FAILED;
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new DisjunctivePropagator(tasks, starts, durs),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
+
 }
 OZ_C_proc_end
+
+DisjunctivePropagator::DisjunctivePropagator(OZ_Term tasks, 
+					     OZ_Term starts, 
+					     OZ_Term durs)
+  : Propagator_VD_VI(OZ_vectorSize(tasks))
+{
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    reg_l[i]      = OZ_subtree(starts, task);
+    reg_offset[i] = OZ_intToC(OZ_subtree(durs, task));
+    i += 1;
+  } // while
+    
+    OZ_ASSERT(i == reg_sz);
+
+}
+
 
 OZ_Return DisjunctivePropagator::propagate(void)
 {
@@ -876,46 +936,95 @@ int ozcdecl CompareIntervals(const void *In1, const void *In2)
 int ozcdecl CompareBounds(const void *Int1, const void *Int2) {
   return *(int*)Int1 - *(int*)Int2;
 }
-OZ_C_proc_begin(sched_cpIterateCap, 4)
+
+CPIteratePropagatorCap::CPIteratePropagatorCap(OZ_Term tasks, 
+					       OZ_Term starts, 
+					       OZ_Term durs, 
+					       OZ_Term use,
+					       OZ_Term cap)
+  : Propagator_VD_VI_VI_I(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT);
+
+  reg_capacity = OZ_intToC(cap);
+
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  DECL_DYN_ARRAY(StartDurUseTerms, sdu, reg_sz);
+
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    sdu[i].start = OZ_subtree(starts, task);
+    sdu[i].dur = OZ_intToC(OZ_subtree(durs, task));
+    sdu[i].use = OZ_intToC(OZ_subtree(use, task));
+    i += 1;
+  } // while
+
+  OZ_ASSERT(i == reg_sz);
+
+  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+
+  for (i = reg_sz; i--; ) {
+    reg_l[i]      = sdu[i].start;
+    reg_offset[i] = sdu[i].dur;
+    reg_use[i]    = sdu[i].use;
+  }
+}
+
+OZ_C_proc_begin(sched_cpIterateCap, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
+		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+		   "," OZ_EM_VECT OZ_EM_INT);
   
-  PropagatorExpect pe;
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    OZ_EXPECT(pe, 3, expectProperRecordInt);
+    OZ_EXPECT(pe, 4, expectVectorInt);
+    SAMELENGTH_VECTORS(1, 2);
+    SAMELENGTH_VECTORS(1, 3);
+  }
+
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2], use = OZ_args[3], 
+    caps = OZ_args[4];
+
+
+  VectorIterator vi(OZ_args[0]);
+  VectorIterator viCap(caps);
+
+  for (int i = 0; i < OZ_vectorSize(OZ_args[0]); i++) {
+    OZ_Term tasks    = vi.getNext();
+    OZ_Term capacity = viCap.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      OZ_Term use_task = OZ_subtree(use, task);
+      if (!start_task || !dur_task || !use_task) 
+	return OZ_FAILED;
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new CPIteratePropagatorCap(tasks, starts, durs, 
+						       use, capacity),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
   
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  OZ_EXPECT(pe, 2, expectVectorInt);
-  OZ_EXPECT(pe, 3, expectInt);
-  SAMELENGTH_VECTORS(0, 1);
-  
-  return pe.impose(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1], 
-					      OZ_args[2], OZ_args[3]),  
-		   OZ_getLowPrio());
 }
 OZ_C_proc_end
 
-/*
-// flag version for interval reasoning only
-OZ_C_proc_begin(sched_cpIterateCap, 5)
-{
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT ","  OZ_EM_INT);
-  
-  PropagatorExpect pe;
-  
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  OZ_EXPECT(pe, 2, expectVectorInt);
-  OZ_EXPECT(pe, 3, expectInt);
-  OZ_EXPECT(pe, 4, expectInt);
-  SAMELENGTH_VECTORS(0, 1);
-  
-  return pe.impose(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1],
-					     OZ_args[2], OZ_args[3],
-					     OZ_intToC(OZ_args[4])), 
-		  OZ_getLowPrio());
-}
-OZ_C_proc_end
-*/
 
 struct Set2 {
   int dSi, sUp, sLow, extSize;
@@ -1651,22 +1760,90 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-
-OZ_C_proc_begin(sched_cpIterateCapUp, 4)
+CPIteratePropagatorCapUp::CPIteratePropagatorCapUp(OZ_Term tasks, 
+						   OZ_Term starts, 
+						   OZ_Term durs, 
+						   OZ_Term use,
+						   OZ_Term cap)
+  : Propagator_VD_VI_VI_I(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT ","  OZ_EM_INT);
 
-  PropagatorExpect pe;
+  reg_capacity = OZ_intToC(cap);
+
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  DECL_DYN_ARRAY(StartDurUseTerms, sdu, reg_sz);
+
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
+
+    sdu[i].start = OZ_subtree(starts, task);
+    sdu[i].dur = OZ_intToC(OZ_subtree(durs, task));
+    sdu[i].use = OZ_intToC(OZ_subtree(use, task));
+    i += 1;
+  } // while
+
+  OZ_ASSERT(i == reg_sz);
+
+  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+
+  for (i = reg_sz; i--; ) {
+    reg_l[i]      = sdu[i].start;
+    reg_offset[i] = sdu[i].dur;
+    reg_use[i]    = sdu[i].use;
+  }
+}
+
+OZ_C_proc_begin(sched_cpIterateCapUp, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," OZ_EM_VECT OZ_EM_FD 
+		   "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_INT 
+		   "," OZ_EM_VECT OZ_EM_INT);
   
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  OZ_EXPECT(pe, 2, expectVectorInt);
-  OZ_EXPECT(pe, 3, expectInt);
-  SAMELENGTH_VECTORS(0, 1);
-  
-  return pe.impose(new CPIteratePropagatorCapUp(OZ_args[0], OZ_args[1], 
-						OZ_args[2], OZ_args[3]),  
-		   OZ_getLowPrio());
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    OZ_EXPECT(pe, 3, expectProperRecordInt);
+    OZ_EXPECT(pe, 4, expectVectorInt);
+    SAMELENGTH_VECTORS(1, 2);
+    SAMELENGTH_VECTORS(1, 3);
+  }
+
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2], use = OZ_args[3], 
+    caps = OZ_args[4];
+
+
+  VectorIterator vi(OZ_args[0]);
+  VectorIterator viCap(caps);
+
+  for (int i = 0; i < OZ_vectorSize(OZ_args[0]); i++) {
+    OZ_Term tasks    = vi.getNext();
+    OZ_Term capacity = viCap.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      OZ_Term use_task = OZ_subtree(use, task);
+      if (!start_task || !dur_task || !use_task) 
+	return OZ_FAILED;
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new CPIteratePropagatorCapUp(tasks, starts, durs, 
+							 use, capacity),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
 }
 OZ_C_proc_end
 

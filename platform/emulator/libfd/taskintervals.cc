@@ -17,27 +17,68 @@
 //-----------------------------------------------------------------------------
 
 
-#define INITIALSIZE 10000
-
-static int *constraints;
-static int initConstraints[INITIALSIZE];
-
 
 static inline int intMin(int a, int b) { return a < b ? a : b; }
 static inline int intMax(int a, int b) { return a > b ? a : b; }
 
-OZ_C_proc_begin(sched_taskIntervals, 2)
+TaskIntervalsPropagator::TaskIntervalsPropagator(OZ_Term tasks, 
+						 OZ_Term starts, 
+						 OZ_Term durs)
+  : Propagator_VD_VI(OZ_vectorSize(tasks))
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
-  
-  PropagatorExpect pe;
-  
-  OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
-  OZ_EXPECT(pe, 1, expectVectorInt);
-  SAMELENGTH_VECTORS(0, 1);
+  VectorIterator vi(tasks);
+  int i = 0;
+		     
+  while (vi.anyLeft()) {
+    OZ_Term task = vi.getNext();
 
-  return pe.impose(new TaskIntervalsPropagator(OZ_args[0], OZ_args[1]),  
-		   OZ_getLowPrio());
+    reg_l[i]      = OZ_subtree(starts, task);
+    reg_offset[i] = OZ_intToC(OZ_subtree(durs, task));
+    i += 1;
+  } // while
+    OZ_ASSERT(i == reg_sz);
+
+}
+
+OZ_C_proc_begin(sched_taskIntervals, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_VECT OZ_EM_LIT "," 
+		   OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
+  
+  {
+    PropagatorExpect pe;
+    
+    OZ_EXPECT(pe, 0, expectVectorVectorLiteral);
+    OZ_EXPECT(pe, 1, expectProperRecordIntVarMinMax);
+    OZ_EXPECT(pe, 2, expectProperRecordInt);
+    SAMELENGTH_VECTORS(1, 2);
+  }
+  
+  OZ_Term starts = OZ_args[1], durs = OZ_args[2];
+
+  VectorIterator vi(OZ_args[0]);
+
+  for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
+    OZ_Term tasks = vi.getNext();
+
+    PropagatorExpect pe;
+
+    VectorIterator vi_tasks(tasks);
+    while (vi_tasks.anyLeft()) {
+      OZ_Term task = vi_tasks.getNext();
+      OZ_Term start_task = OZ_subtree(starts, task);
+      OZ_Term dur_task = OZ_subtree(durs, task);
+      if (!start_task || !dur_task) 
+	return OZ_FAILED;
+      pe.expectIntVarMinMax(OZ_subtree(starts, task));
+    }
+
+    OZ_Return r = pe.impose(new TaskIntervalsPropagator(tasks, starts, durs),
+			    OZ_getLowPrio());
+
+    if (r == FAILED) return FAILED;
+  }
+  return OZ_ENTAILED;
 }
 OZ_C_proc_end
 
@@ -93,17 +134,10 @@ OZ_Return TaskIntervalsPropagator::propagate(void)
     MinMax[i].max = x[i]->getMaxElem();
   }
 
-  constraints = initConstraints;
-  int * constraintsExtension = NULL;
-
-  int constraintLimit = INITIALSIZE;
-
-
 
 tiloop:
 
 
-  int constraintsSize = 0;
 
   /////////
   // Initialize task intervals, cubic complexity
@@ -149,21 +183,6 @@ tiloop:
       }
     }
 
-
-  //////////  
-  // resize constraints if necessary
-  //////////  
-  while (constraintsSize + ts * ts * ts * 3
-	 > constraintLimit) {
-    cout << "increase constraintsSize" << endl;
-      if (constraintLimit > INITIALSIZE)
-	::delete [] constraintsExtension;
-      constraintsExtension = ::new int[constraintLimit*2];
-      for (i=0; i<constraintsSize; i++)
-	constraintsExtension[i] = constraints[i];
-      constraints = constraintsExtension;
-      constraintLimit = constraintLimit * 2;
-  }
 
   //////////  
   // Do the edge-finding
@@ -238,10 +257,7 @@ tiloop:
 		}
 		if (releaseI < mini) {
 		  loopFlag = 1;
-		  constraints[constraintsSize] = i;
-		  constraints[constraintsSize+1] = 1;
-		  constraints[constraintsSize+2] = mini;
-		  constraintsSize += 3;
+		  FailOnEmpty( *x[i] >= mini);
 		}
 	      }
 	    }
@@ -259,10 +275,7 @@ tiloop:
 		}
 		if (dueI > maxi) {
 		  loopFlag = 1;
-		  constraints[constraintsSize] = i;
-		  constraints[constraintsSize+1] = 0;
-		  constraints[constraintsSize+2] = maxi-durI;
-		  constraintsSize += 3;
+		  FailOnEmpty( *x[i] <= maxi-durI);
 		}
 	      }
 	    }
@@ -272,10 +285,7 @@ tiloop:
 	      // I cannot be first and not inside --> I must be last
 	      if (releaseI < treleaseTI + tdurTI) {
 		loopFlag = 1;
-		constraints[constraintsSize] = i;
-		constraints[constraintsSize+1] = 1;
-		constraints[constraintsSize+2] = treleaseTI + tdurTI;
-		constraintsSize += 3;
+		FailOnEmpty( *x[i] >= treleaseTI + tdurTI);
 	      }
 	      // all others in TI must be finished before I starts
 	      for (j = 0; j < setSize; j++) {
@@ -283,10 +293,7 @@ tiloop:
 		int right = maxI - dur[element];
 		if ( (i!=element) && (MinMax[element].max > right) ) {
 		  loopFlag = 1;
-		  constraints[constraintsSize] = element;
-		  constraints[constraintsSize+1] = 0;
-		  constraints[constraintsSize+2] = right;
-		  constraintsSize += 3;
+		  FailOnEmpty( *x[element] <= right);
 		  /*
 		    // is not useful
 		  OZ_Term left_side_task = reg_l[element];
@@ -304,10 +311,7 @@ tiloop:
 	      // I cannot be last and not inside --> I must be first
 	      if (maxI > tdueTI - tdurTI - durI) {
 		loopFlag = 1;
-		constraints[constraintsSize] = i;
-		constraints[constraintsSize+1] = 0;
-		constraints[constraintsSize+2] = tdueTI - tdurTI - durI;
-		constraintsSize += 3;
+		FailOnEmpty( *x[i] <= tdueTI - tdurTI - durI);
 	      }
 	      // all others in TI must start after I has finished
 	      for (j = 0; j < setSize; j++) {
@@ -315,10 +319,7 @@ tiloop:
 		int right = releaseI + durI;
 		if ( (i!=element) && (MinMax[element].min < right) ) {
 		  loopFlag = 1;
-		  constraints[constraintsSize] = element;
-		  constraints[constraintsSize+1] = 1;
-		  constraints[constraintsSize+2] = right;
-		  constraintsSize += 3;
+		  FailOnEmpty( *x[element] >= right);
 		  /*
 		    // is not useful
 		  OZ_Term left_side_task = reg_l[i];
@@ -338,18 +339,10 @@ tiloop:
     }
 	  
 
-  //////////  
-  // constrain the variables as memorized
-  //////////  
-  for (i=0; i<constraintsSize; i+=3) {
-    if (constraints[i+1]==0) {
-      FailOnEmpty( *x[constraints[i]] <= constraints[i+2]);
-      MinMax[constraints[i]].max = x[constraints[i]]->getMaxElem();	
-    }
-    else {  
-      FailOnEmpty( *x[constraints[i]] >= constraints[i+2]);
-      MinMax[constraints[i]].min = x[constraints[i]]->getMinElem();	
-    }
+
+  for (i=0; i<ts; i++) {
+    MinMax[i].min = x[i]->getMinElem();	
+    MinMax[i].max = x[i]->getMaxElem();	
   }
 
 
@@ -400,8 +393,6 @@ reifiedloop:
     goto reifiedloop;
   }
 
-  if (constraintLimit > INITIALSIZE)
-    :: delete [] constraintsExtension;
 
   for (i=0; i<ts; i++) 
     for (j=0; j<ts; j++) 
@@ -415,9 +406,6 @@ reifiedloop:
   return P.leave();
 
 failure:
-  if (constraintLimit > INITIALSIZE)
-    :: delete [] constraintsExtension;
-
   for (i=0; i<ts; i++) 
     for (j=0; j<ts; j++) 
       :: delete [] taskints[i][j].ext;
