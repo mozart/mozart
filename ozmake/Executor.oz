@@ -75,11 +75,11 @@ define
       %% turn a target into an actual filename
 
       meth make_dst(F $)	% output of a tool
-	 {Path.resolveAtom {self get_builddir($)} {Path.maybeAddPlatform F}}
+	 {Path.resolveAtom {self get_builddir($)} {self maybeAddPlatform(F $)}}
       end
 
       meth make_src(F $)	% input of a tool
-	 FF={Path.maybeAddPlatform F}
+	 FF={self maybeAddPlatform(F $)}
 	 DST={Path.resolveAtom {self get_builddir($)} FF}%look in build dir
       in
 	 if {self exec_exists(DST $)} then DST
@@ -597,6 +597,10 @@ define
 	 Executor,exec_mkdir({Path.dirname F})
 	 {self trace('writing '#F)}
 	 {Pickle.saveWithHeader R F H C}
+      end
+
+      meth maybeAddPlatform(F $)
+	 {Path.maybeAddThisPlatform F {self get_platform($)}}
       end
    end
 

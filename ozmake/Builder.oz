@@ -81,7 +81,7 @@ define
       meth Outdated(Target Deps $)
 	 SrcDir = {self get_srcdir($)}
 	 DstDir = {self get_builddir($)}
-	 T_full = {Path.maybeAddPlatform Target}
+	 T_full = {self maybeAddPlatform(Target $)}
 	 T_src  = {Path.resolve SrcDir T_full}
 	 T_dst  = {Path.resolve DstDir T_full}
 	 T_file = if     {self exec_exists(T_dst $)} then T_dst
@@ -105,7 +105,7 @@ define
 		      catch _ then {self get_simulated_mtime(T_file $)} end
 	 in
 	    for D in Deps default:false return:Return do
-	       D_full = {Path.maybeAddPlatform D}
+	       D_full = {self maybeAddPlatform(D $)}
 	       D_src  = {Path.resolve SrcDir D_full}
 	       D_dst  = {Path.resolve DstDir D_full}
 	       D_file = if {Path.exists D_dst} orelse

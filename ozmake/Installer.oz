@@ -70,7 +70,7 @@ define
 	 %% we add the platform suffix if necessary
 	 %% so that we can check directly presence or absence
 	 %% in the database.  This is also why we return atoms.
-	 TT = {Path.maybeAddPlatform T}
+	 TT = {self maybeAddPlatform(T $)}
       in
 	 case {self target_to_section(T $)}
 	 of bin then {Path.resolveAtom {self get_bindir($)} TT}

@@ -1,5 +1,5 @@
 makefile(
-   uri   : 'x-ozlib://duchier/tool'
+   uri   : 'x-oz://system/tool'
    mogul : 'mogul:/duchier/ozmake'
    author: 'mogul:/duchier/denys'
    lib   : ['ozmake.ozf']

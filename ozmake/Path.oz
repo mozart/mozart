@@ -15,7 +15,7 @@ export
    DropExtensionURL	DropExtension   DropExtensionAtom
    AddExtensionURL	AddExtension	AddExtensionAtom
    ReplaceExtensionURL	ReplaceExtension ReplaceExtensionAtom
-   MaybeAddPlatform
+   MaybeAddPlatform     MaybeAddThisPlatform
    ToCacheURL ToCache Stat SafeStat Dir Ls
    Exists IsDir IsFile
    Unresolve		UnresolveURL   UnresolveAtom
@@ -203,6 +203,12 @@ define
 
    PLATFORM = {Property.get 'platform.name'}
    fun {MaybeAddPlatform P}
+      if {ExtensionAtom P}=='so' then
+	 {ToString {ToString P}#'-'#PLATFORM}
+      else P end
+   end
+
+   fun {MaybeAddThisPlatform P PLATFORM}
       if {ExtensionAtom P}=='so' then
 	 {ToString {ToString P}#'-'#PLATFORM}
       else P end

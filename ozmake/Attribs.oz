@@ -122,6 +122,26 @@ define
 	 Optlist     : unit
 	 DoRequires  : true
 	 Binary      : unit
+	 Platform    : unit
+	 PlatformGiven : false
+
+      meth set_platform(V)
+	 PlatformGiven<-true
+	 Platform<-V
+      end
+      meth get_platform($)
+	 if @Platform==unit then
+	    if @Superman\=unit then
+	       Platform<-{@Superman get_platform($)}
+	    else
+	       Platform<-{Property.get 'platform.name'}
+	    end
+	 end
+	 @Platform
+      end
+      meth get_platform_given($)
+	 @PlatformGiven
+      end
 
       meth set_binary(V) Binary<-V end
       meth get_binary($)
