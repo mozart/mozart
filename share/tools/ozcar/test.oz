@@ -5,11 +5,14 @@ local
    A = proc{$ X Y Z}
 	  AA = proc{$}
 		  {Debug.breakpoint}
+		  X = 42
 		  {Show 'X'#X}
 	       end
        in
-	  Z = X + Y
-	  {Show 'Z'#Z}
+	  thread
+	     Z = X + Y
+	     {Show 'Z'#Z}
+	  end
 	  {AA}
 	  {B Z}
        end
@@ -23,7 +26,6 @@ in
    local
       D = 4711
    in
-      {Debug.breakpoint}
-      {Browse {A 47 11 $}}
+      {Browse {A _ 11 $}}
    end
 end

@@ -17,24 +17,29 @@ local
 	 Th   : undef
       
 	 Loc  : loc( file:undef line:undef)
-	 Call : call(name:undef args:undef)
+	 Call : call(builtin:false name:undef args:undef)
 	 Stack: nil
 
       meth init(T)
 	 Th <- T
       end
       
-      meth setPos(file:F line:L name:N args:A)
+      meth setPos(file:F line:L name:N args:A builtin:B)
 	 Loc  <- loc( file:F line:L)
-	 Call <- call(name:N args:A)
+	 Call <- call(builtin:B name:N args:A)
       end
-      meth getPos(file:?F line:?L name:?N args:?A)
+      meth getPos(file:?F line:?L name:?N args:?A builtin:?B)
 	 F = @Loc.file
 	 L = @Loc.line
 	 N = @Call.name
 	 A = @Call.args
+	 B = @Call.builtin
       end
 
+      meth isBuiltin($)
+	 @Call.builtin
+      end
+      
       meth getThr($)
 	 @Th
       end
@@ -68,11 +73,11 @@ in
       meth readStreamMessage(M)
 	 case {Label M}
 	 of step then
-	    T         = M.thr.1
-	    I         = M.thr.2
-	    File      = M.file
-	    Line      = M.line
-	    IsBuiltin = M.builtin
+	    T          = M.thr.1
+	    I          = M.thr.2
+	    File       = M.file
+	    Line       = M.line
+	    IsBuiltin  = M.builtin
 	    Name = case {Value.hasFeature M name} then M.name else nil end
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
@@ -90,7 +95,7 @@ in
 	    Q = case {Value.hasFeature M par} then
 		   M.par.2  %% id of parent thread
 		else
-		   1
+		   0        %% parent unknown (threads of tk actions...)
 		end
 	    E = {Ozcar exists(T $)}
 	 in
@@ -149,12 +154,16 @@ in
 	    {OzcarMessage 'Unknown message on stream'}
 	 end
       end
-
+      
       meth add(T I Q)
 	 Threads <- T | @Threads
 	 {Dictionary.put self.ThreadDic I {New Thr init(T)}}
 	 Gui,addNode(I Q)
-	 case @currentThread == undef then
+	 case Q == 1 then           %% toplevel query?
+	    ThreadManager,switch(I) %% does Gui,displayTree
+	    {Thread.resume T}       %% we want T to make
+	                            %% the first step automatically
+	 elsecase Q == 0 then       %% tk action?
 	    ThreadManager,switch(I)
 	 else
 	    Gui,displayTree
@@ -163,11 +172,17 @@ in
       
       meth remove(T I Mode)
 	 Threads <- {List.filter @Threads fun {$ X} X\=T end}
-	 {Show left#{List.length @Threads}}
+	 ThreadManager,setThrPos(id:I name:undef)
+	 SourceManager,scrollbar(file:'' line:undef color:undef)
+	 Gui,printAppl(name:undef args:undef builtin:false)
+	 Gui,printStack(id:0 stack:nil)
 	 case Mode == kill then
+	    currentThread <- undef
 	    Gui,killNode(I)
+	    Gui,status(0)
 	 else
 	    Gui,removeNode(I)
+	    Gui,status(I terminated)
 	 end
 	 case @Threads == nil then
 	    currentThread <- undef
@@ -181,16 +196,23 @@ in
 	 {List.member T @Threads}
       end
 
-      meth setThrPos(id:I file:F line:L name:N args:A)
+      meth setThrPos(id:I name:N args:A<=nil builtin:B<=false
+		     file:F<=undef line:L<=0)
 	 T = {Dictionary.get self.ThreadDic I}
       in
-	 {T setPos(file:F line:L name:N args:A)}
+	 {T setPos(file:F line:L name:N args:A builtin:B)}
       end
       
-      meth getThrPos(id:I file:?F line:?L name:?N args:?A)
+      meth getThrPos(id:I file:?F line:?L name:?N args:?A builtin:?B)
 	 T = {Dictionary.get self.ThreadDic I}
       in
-	 {T getPos(file:F line:L name:N args:A)}
+	 {T getPos(file:F line:L name:N args:A builtin:B)}
+      end
+
+      meth thrIsBuiltin(id:I builtin:?B)
+	 T = {Dictionary.get self.ThreadDic I}
+      in
+	 {T isBuiltin(B)}
       end
 
       meth getThrThr(id:I thr:?T state:?S)
@@ -200,7 +222,8 @@ in
 	 S = {Thread.state T}
       end
       
-      meth step(file:F line:L thr:T id:I name:N args:A builtin:IsBuiltin)
+      meth step(file:F line:L thr:T id:I name:N args:A
+		builtin:IsBuiltin)
 	 case F == '' then
 	    {OzcarMessage NoFileInfo # I}
 	    {Dbg.stepmode @currentThread false}
@@ -209,24 +232,26 @@ in
 	    ThreadManager,remove(T I kill)
 	 else
 	    SourceManager,scrollbar(file:F line:L color:ScrollbarDefaultColor)
-	    ThreadManager,setThrPos(id:I file:F line:L name:N args:A)
-	    Gui,printStackFrame(nr:1 name:N args:A)
+	    ThreadManager,setThrPos(id:I file:F line:L
+				    name:N args:A builtin:IsBuiltin)
+	    Gui,printAppl(name:N args:A builtin:IsBuiltin)
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	 end
       end
       
       meth switch(I)
-	 F L N A T S
+	 F L N A T S B
       in
 	 case I == 1 then
 	    Gui,status(0)
 	 else
-	    ThreadManager,getThrPos(id:I file:F line:L name:N args:A)
+	    ThreadManager,getThrPos(id:I file:F line:L name:N args:A builtin:B)
 	    ThreadManager,getThrThr(id:I thr:T state:S)
 	    currentThread <- T
 	    
 	    Gui,status(I S)
-	    Gui,stackTitle(AltStackTitle # I)
-	    Gui,printStackFrame(nr:1 name:N args:A)
+	    Gui,printAppl(name:N args:A builtin:B)
+	    Gui,printStack(id:I stack:{Dbg.taskstack T 25})
 	    
 	    Gui,selectNode(I)
 	    Gui,displayTree
