@@ -1,6 +1,6 @@
 #!/bin/sh
 # Script that configures the environment to
-# start lemacs for a standalone version of Oz
+# start emacs for a standalone version of Oz
 # MUST reside in <oz dist dir>/bin
 
 #set -vx
@@ -27,13 +27,13 @@ export OZPLATFORM
 : ${OZMACHINE=$OZHOME/platform/$OZPLATFORM/oz.machine.bin}
 #echo "OZMACHINE = $OZMACHINE"
 
-: ${OZWINDOWMANAGER=$OZHOME/platform/$OZPLATFORM/ozwindowmanager}
-
 if [ ${OZWISH-xx} = xx ]
 then
+  # OZWISH=`find blt_wish wish`
   OZWISH=blt_wish
   export OZWISH
 fi
+
 
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
@@ -70,12 +70,12 @@ case "$cmd" in
    oz)
         # where is lucid emacs?
         if [ ${OZEMACS-0} = 0 ]; then
-          if [ -f ${OZHOME}/lemacs/lemacs ]; then
-             OZEMACS=${OZHOME}/lemacs/lemacs
+          if [ -f ${OZHOME}/emacs/emacs ]; then
+             OZEMACS=${OZHOME}/emacs/emacs
           else
 
              IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
-             for name in lemacs emacs; do
+             for name in emacs lemacs; do
                for dir in $PATH; do
                  test -z "$dir" && dir=.
                  if test -f $dir/$name; then
@@ -134,7 +134,14 @@ case "$cmd" in
    ;;
 
    ozwindowmanager)
+        : ${OZWINDOWMANAGER=$OZHOME/platform/$OZPLATFORM/ozwindowmanager}
         exec $OZWINDOWMANAGER "$@"
+   ;;
+
+   ozwish)
+        : ${OZWISH=blt_wish}
+        export OZWISH
+        exec $OZWISH "$@"
    ;;
 
    *)
