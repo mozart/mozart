@@ -35,10 +35,10 @@
 enum ChainElemCode{
     CHAIN_GHOST=1,
     CHAIN_QUESTION_ASKED=2,
-      CHAIN_BEFORE=4,
-      CHAIN_PAST=8,
-      CHAIN_CANT_PUT=16,
-      CHAIN_DUPLICATE=24};
+    CHAIN_BEFORE=4,
+    CHAIN_PAST=8,
+    CHAIN_CANT_PUT=16,
+    CHAIN_DUPLICATE=32};
 
 class ChainElem{
 friend class Chain;
@@ -143,6 +143,11 @@ public:
     return inform!=NULL;}
 
   InformElem *getInform(){return inform;}
+  
+  /* Just for debugging, should be ifdeffat  */
+  ChainElem* getFirst();
+  ChainElem* getLast();
+  
 
   void receiveAnswer(Tertiary*,Site*,int,Site*); // messages 
   void receiveUnAsk(Site*,EntityCond);
@@ -183,7 +188,13 @@ public:
       tmp=tmp->next;}
     return NO;}
   void handleTokenLost(OwnerEntry*,int);
+
+
 };
 
 /* __CHAINHH */
 #endif 
+
+
+
+

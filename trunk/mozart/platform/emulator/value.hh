@@ -929,6 +929,7 @@ public:
   Bool installHandler(EntityCond,TaggedRef,Thread*);
   Bool deinstallHandler(Thread*);
   void installWatcher(EntityCond,TaggedRef);
+  Bool deinstallWatcher(EntityCond,TaggedRef);
 
   void entityProblem();
   void managerProbeFault(Site*,int);
@@ -2162,12 +2163,7 @@ public:
 
   unsigned int getState(){return sec->state;}
 
-  void initOnGlobalize(int index,Chain* ch,CellSec *secX){
-    setTertType(Te_Manager);
-    setIndex(index);
-    setPtr(ch);
-    sec=secX;}
-
+  void initOnGlobalize(int index,Chain* ch,CellSec *secX);
 
   void setOwnCurrent();
   Bool isOwnCurrent();
@@ -2547,11 +2543,7 @@ public:
 
   LockManager() : OzLock((Board*)NULL,Te_Manager){Assert(0);}  
 
-  void initOnGlobalize(int index,Chain* ch,LockSec *secX){
-    setTertType(Te_Manager);
-    setIndex(index);
-    setPtr(ch);
-    sec=secX;}
+  void initOnGlobalize(int index,Chain* ch,LockSec *secX);
 
   Bool hasLock(Thread *t){
     if(sec->locker==t) return TRUE;
