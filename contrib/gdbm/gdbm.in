@@ -9,7 +9,7 @@ import
    Foreign
    Finalize
 export
-   gdbm: GDBM
+   'class': GDBM
 body
    FLoad    = Foreign.load
    Register = Finalize.register
