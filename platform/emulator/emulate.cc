@@ -254,7 +254,11 @@ inline
 Bool hookCheckNeeded(AM *e)
 {
 #ifdef DEBUG_DET
-  Alarm::Handle();   // simulate an alarm
+  static int counter = 100;
+  if (--counter == 0) {
+    Alarm::Handle();   // simulate an alarm
+    counter = 100;
+  }
 #endif
 
   return (e->isSetSFlag());
@@ -330,6 +334,8 @@ Bool hookCheckNeeded(AM *e)
 #   define DISPATCH(INC) { int help=*(PC+INC); INCFPC(INC); DODISPATCH; }
 
 #else // THREADED == 0
+
+#   define asmLbl(INSTR)
 
 #   define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
@@ -407,6 +413,22 @@ void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
       new Suspension(new SuspContinuation(b,prio,PC,Y,G,X,argsToSave));
     b->incSuspCount();
     taggedBecomesSuspVar(APtr)->addSuspension(susp);
+
+    /* Bug fix:
+          declare Y Z
+          {RecLabel Y Z}
+          if Y=b then {Show yes36b} else {Show no36b} fi
+          Z=c
+      we must suspend on the label of OFS too!!
+     */
+
+    if (isCVar(A) && tagged2CVar(A)->getType() == OFSVariable) {
+      TaggedRef lab = ((GenOFSVariable*)tagged2CVar(A))->getLabel();
+      DEREF(lab,labPtr,labTag);
+      if (isAnyVar(labTag)) {
+        taggedBecomesSuspVar(labPtr)->addSuspension(susp);
+      }
+    }
   }
 }
 
@@ -925,15 +947,18 @@ void engine() {
 
  LBLdispatcher:
 
+#ifdef SLOW_DEBUG_CHECK
+  /* These tests make the emulator really sloooooww */
   DebugCheck(blockSignals() == NO,
              error("signalmask not zero"));
   DebugCheckT(unblockSignals());
   DebugCheck ((e->currentSolveBoard != CBB->getSolveBoard ()),
               error ("am.currentSolveBoard and real solve board mismatch"));
 
-  op = CodeArea::getOP(PC);
-
   Assert(!isFreedRefsArray(Y));
+#endif
+
+  op = CodeArea::getOP(PC);
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -1390,20 +1415,16 @@ void engine() {
 
   Det:
   {
-    TaggedRef term = RegAccess(HelpReg1,getRegArg(PC+1));
+    TaggedRef origTerm = RegAccess(HelpReg1,getRegArg(PC+1));
+    TaggedRef term = origTerm;
     DEREF(term,termPtr,tag);
-
-    int argsToSave = getPosIntArg(PC+2);
 
     if (isAnyVar(tag)) {
       /* INCFPC(3); do NOT suspend on next instructions: DET suspensions are
                     now woken up always, even if variable is bound to another var */
-      Suspension *susp =
-        new Suspension(new SuspContinuation(CBB,
-                                            GET_CURRENT_PRIORITY(),
-                                            PC, Y, G, X, argsToSave));
-      CBB->incSuspCount();
-      taggedBecomesSuspVar(termPtr)->addSuspension (susp);
+
+      int argsToSave = getPosIntArg(PC+2);
+      suspendOnVar(origTerm,argsToSave,CBB,PC,X,Y,G,GET_CURRENT_PRIORITY());
       goto LBLcheckEntailment; // mm2 ???
     } else {
       DISPATCH(3);
