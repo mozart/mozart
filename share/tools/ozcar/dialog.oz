@@ -53,6 +53,43 @@ local
       end
    end
 
+   class ServerDialog from TkTools.dialog
+      prop
+	 final
+      meth init(master:Master)
+	 Ticket = {StartServer}
+
+	 TkTools.dialog,tkInit(master:  Master
+			       root:    pointer
+			       title:   'Oz Debugger Server'
+			       bg:      DefaultBackground
+			       buttons: ['Ok'#tkClose]
+			       pack:    false
+			       default: 1)
+
+	 T = {New Tk.label tkInit(parent: self
+				  fg:     SelectedBackground
+				  bg:     DefaultBackground
+				  font:   HelpTitleFont
+				  text:   'Server Started')}
+
+	 V = {New Tk.label tkInit(parent: self
+				  bg:     DefaultBackground
+				  text:   ('Ready to accept remote ' #
+					   'debug sessions with the ' #
+					   'following ticket:\n'))}
+
+	 E = {New Tk.entry tkInit(parent: self
+				  font:   DefaultFont
+				  width:  {VirtualString.length Ticket})}
+      in
+	 {E tk(insert 'end' Ticket)}
+	 %{E tk(conf state:disabled)}
+	 {Tk.send pack(T V E side:top expand:true)}
+	 AboutDialog,tkPack
+      end
+   end
+
    class EvalDialog from BaseEvalDialog.dialog
       prop final
       meth init(master: Master)
@@ -158,7 +195,7 @@ local
 			       title:   'Preferences'
 			       buttons: ['Ok'    # ApplyAndExit
 					 'Apply' # Apply
-					 'Abort' # tkClose]
+					 'Cancel' # tkClose]
 			       pack:    false)
 	 Title = {New Tk.label tkInit(parent: self
 				      fg:     SelectedBackground
@@ -296,6 +333,10 @@ in
 
       meth about
 	 {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
+      end
+
+      meth startServer
+	 {Wait {New ServerDialog init(master:self.toplevel)}.tkClosed}
       end
 
       meth eval

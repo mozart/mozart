@@ -1,9 +1,11 @@
 %%%
-%%% Author:
+%%% Authors:
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Benjamin Lorenz, 1997
+%%%   Leif Kornstaedt, 2001
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -21,33 +23,68 @@
 
 local
 
-   fun {AppOK Name}
-      ({Cget stepDotBuiltin}     orelse Name \= 'Value.\'.\'')
-      andthen
-      ({Cget stepNewNameBuiltin} orelse Name \= 'Name.new')
+   fun {AppOK Data}
+      {Not {IsDet Data}} orelse
+      case {System.printName Data}
+      of 'Value.\'.\'' then {Cget stepDotBuiltin}
+      [] 'Name.new'    then {Cget stepNewNameBuiltin}
+      else true
+      end
    end
 
-   proc {Detach T}
-      try
-	 {Dbg.trace T false}
-	 {Dbg.step T false}
-	 {Thread.resume T}
-      catch
-	 error(kernel(deadThread ...) ...)
-      then skip end
-   end
-
-   proc {OzcarReadEvalLoop S}
-      case S
-      of H|T then
-	 try
-	    {Ozcar PrivateSend(readStreamMessage(H))}
-	 catch E then
-	    {OzcarError 'Whoooops, got an unhandled exception:'}
-	    {Error.printException E}
+   fun {FindEntry Ss T}
+      case Ss of S|Sr then
+	 if {S getThread($)} == T then S
+	 else {FindEntry Sr T}
 	 end
-	 {OzcarMessage 'OzcarReadEvalLoop: waiting for next message...'}
-	 {OzcarReadEvalLoop T}
+      [] nil then unit
+      end
+   end
+
+   fun {RemoveEntry Ss T}
+      case Ss of S|Sr then
+	 if {S getThread($)} == T then Sr
+	 else S|{RemoveEntry Sr T}
+	 end
+      end
+   end
+
+   class ThreadDict
+      feat Dict
+      meth init()
+	 self.Dict = {NewDictionary}
+      end
+      meth put(T Stack) I in
+	 I = {Primitives.getThreadId T}
+	 {Dictionary.put self.Dict I
+	  Stack|{Dictionary.condGet self.Dict I nil}}
+      end
+      meth get(T $)
+	 case {Dictionary.condGet self.Dict {Primitives.getThreadId T} unit}
+	 of unit then unit
+	 elseof Ss then {FindEntry Ss T}
+	 end
+      end
+      meth remove(T) I in
+	 I = {Primitives.getThreadId T}
+	 case {RemoveEntry {Dictionary.get self.Dict I} T} of nil then
+	    {Dictionary.remove self.Dict I}
+	 elseof Ss then
+	    {Dictionary.put self.Dict I Ss}
+	 end
+      end
+      meth size($)
+	 {FoldR {Dictionary.items self.Dict}
+	  fun {$ Ss In} {Length Ss} + In end 0}
+      end
+      meth isEmpty($)
+	 {Dictionary.isEmpty self.Dict}
+      end
+      meth items($)
+	 {FoldR {Dictionary.items self.Dict} Append nil}
+      end
+      meth isKnownI(I $) %--** this causes problems
+	 {Dictionary.member self.Dict I}
       end
    end
 
@@ -55,31 +92,35 @@ in
 
    class ThreadManager
       feat
-	 ThreadDic             %% dictionary that holds various information
-			       %% about debugged threads
+	 ThreadDic             %% dictionary that maps ids of attached threads
+			       %% to StackManager instances
       attr
 	 ReadLoopThread : unit
 
 	 currentThread  : unit
 	 currentStack   : unit
 
-	 SkippedProcs   : nil
-
 	 SwitchSync     : _
-	 detachDone     : unit
 	 switchDone     : unit
 
       meth init
-	 self.ThreadDic = {Dictionary.new}
+	 self.ThreadDic = {New ThreadDict init()}
 	 thread
 	    ReadLoopThread <- {Thread.this}
-	    {OzcarReadEvalLoop {Dbg.stream}}
+	    for M in {Primitives.getEventStream} do
+	       try
+		  ThreadManager,ReadStreamMessage(M)
+	       catch E then
+		  {OzcarError 'Whoooops, got an unhandled exception:'}
+		  {Error.printException E}
+	       end
+	    end
 	 end
       end
 
       meth destroy
 	 Gui,status('Destroying myself -- byebye...')
-	 {Dbg.off}
+	 {Primitives.setMode false}
 	 {Thread.terminate @ReadLoopThread}
 	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
 	 {SendEmacs removeBar}
@@ -92,349 +133,263 @@ in
 	    Gui,status(NoThreads)
 	 else
 	    T = @currentThread
-	    I = {Debug.getId T}
-	    P = try {Debug.getParentId T} catch
-		   error(kernel(deadThread ...) ...) then '?' end
-	    R = if {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
-	    S = {Thread.state T}
-	    N = {Length {Dictionary.items self.ThreadDic}}
+	    I = {Primitives.getThreadId T}
+	    P = {Primitives.getParentId T}
+	    N = {self.ThreadDic size($)}
 	 in
 	    Gui,status(N # ' attached thread' #
 		       if N > 1 then 's, currently selected: ' else ': ' end
 		       # I # '/' # P # ' (' #
-		       if S == terminated then S else R # ', ' # S end # ')')
+		       case {Primitives.threadState T}
+		       of terminated      then 'terminated'
+		       [] runnable        then 'not stopped, runnable'
+		       [] blocked         then 'not stopped, blocked'
+		       [] stoppedRunnable then 'stopped, runnable'
+		       [] stoppedBlocked  then 'stopped, blocked'
+		       end # ')')
 	 end
       end
 
-      meth getThreadDic($)
+      meth getThreadDic($)   %--**
 	 self.ThreadDic
       end
 
-      meth AddToSkippedProcs(Name T I FrameId)
-	 Key = FrameId # I
-      in
-	 SkippedProcs <- Key | @SkippedProcs
-	 {OzcarMessage 'skipping procedure \'' # Name # '\''}
-%        {OzcarShow @SkippedProcs}
-	 {Thread.resume T}
-      end
-
-      meth readStreamMessage(M)
-
+      meth ReadStreamMessage(M)
 	 lock UserActionLock then skip end %% don't process messages too fast..
-
-	 {OzcarMessage 'readStreamMessage: dispatching:'}
-	 {OzcarShow M}
-
-	 case M
-
-	 of breakpoint(thr:T) then
-	    I = {Debug.getId T}
-	 in
-	    if ThreadManager,Exists(I $) then %% already attached thread
-	       M = 'Thread ' # I # ' has reached a breakpoint'
-	       S = {Dictionary.get self.ThreadDic I}
+	 {OzcarMessage 'message: '#{Value.toVirtualString M 5 5}}
+	 case M of breakpoint(thr:T) then
+	    case {self.ThreadDic get(T $)} of unit then skip
+	    elseof S then
+	       N = {Primitives.getThreadName T}
 	    in
-	       {OzcarMessage 'breakpoint reached by attached thread ' # I}
-	       Gui,status(M)
+	       {OzcarMessage 'breakpoint reached by attached thread ' # N}
+	       Gui,status('Thread ' # N # ' has reached a breakpoint')
 	       {S rebuild(true)}
 	       {S setAtBreakpoint(true)}
-	    else
-	       {OzcarMessage ('`breakpoint\' message of unattached' #
-			      ' thread -- ignoring')}
 	    end
-
-	 [] entry(thr:T ...) then
-	    I = {Debug.getId T}
-	 in
-	    if ThreadManager,Exists(I $) then %% already attached thread
-	       Name = {CondSelect M data unit}
-	    in
-	       if {Not {IsDet Name}}
-		  orelse {AppOK {System.printName Name}}
+	 [] entry(thr:T frameID:FrameID ...) then
+	    case {self.ThreadDic get(T $)} of unit then
+	       %% this thread is not (yet) attached
+	       if {Not {self.ThreadDic isKnownI({Primitives.getParentId T} $)}}
 	       then
+		  ThreadManager,Add(T)
+	       elsecase Gui,checkSubThreads($) of !IgnoreText then
+		  {OzcarMessage 'ignoring new subthread'}
+		  {Primitives.detach T}
+	       elseof S then
+		  ThreadManager,Add(T)
+		  case S of !AttachText then skip
+		  [] !Unleash0Text then {Primitives.unleash T 0 false}
+		  [] !Unleash1Text then {Primitives.unleash T 6 false}
+		  end
+	       end
+	    elseof S then Data in
+	       %% thread already attached
+	       Data = {CondSelect M data unit}
+	       if {AppOK Data} then
 		  ThreadManager,M
 	       else
-		  ThreadManager,AddToSkippedProcs(Name T I M.frameID)
+		  {OzcarMessage ('skipping procedure \'' #
+				 {System.printName Data} # '\'')}
+		  {S addToSkippedProcs(FrameID)}
+		  {Primitives.resume T}
 	       end
-
-	    else %% this is a (not yet) attached thread
-	       Q = {Debug.getParentId T}
-	       S = Gui,checkSubThreads($)
-	    in
-	       if S == AttachText orelse
-		  {Not ThreadManager,Exists(Q $)} then
-		  ThreadManager,add(T I Q)
+	    end
+	 [] exit(thr:T frameID:FrameID ...) then
+	    case {self.ThreadDic get(T $)} of unit then skip
+	    elseof S then
+	       if {S isSkippedProc(FrameID $)} then
+		  {OzcarMessage
+		   'ignoring `exit\' message of ignored application'}
+		  {S removeSkippedProc(FrameID)}
+		  {Primitives.resume T}
 	       else
-		  case S
-		  of !IgnoreText then
-		     {OzcarMessage 'ignoring new subthread'}
-		     {Detach T}
-		  elseof U then
-		     ThreadManager,add(T I Q)
-		     {Dbg.step T false}
-		     case U
-		     of !Unleash0Text then
-			{Dbg.unleash T 0}
-		     [] !Unleash1Text then
-			{Dbg.unleash T 6}
-		     end
-		     {Thread.resume T}
-		  end
-	       end
-	    end
-
-	 elseof exit(thr:T frameID:FrameId ...) then
-	    I     = {Debug.getId T}
-	    Key   = FrameId # I
-	    Found = {Member Key @SkippedProcs}
-	 in
-%           {OzcarShow @SkippedProcs # Key # Found}
-	    if Found then
-	       {OzcarMessage 'ignoring `exit\' message of ignored application'}
-	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
-	       {Thread.resume T}
-	    else
-	       Gui,markNode(I stopped)  % thread is not running anymore
-	       Gui,markStack(active)    % stack view has up-to-date content
-	       if T == @currentThread then
-		  Stack = {Dictionary.get self.ThreadDic I}
-	       in
-		  {Stack exit(M)}
-		  {SendEmacs bar(file:{CondSelect M file ''}
-				 line:{CondSelect M line unit}
-				 column:{CondSelect M column unit}
-				 state:runnable)}
-		  {Stack printTop}
-	       end
-	    end
-
-	 elseof term(thr:T) then
-	    I = {Debug.getId T}
-	 in
-	    if ThreadManager,Exists(I $) then
-	       ThreadManager,remove(T I noKill)
-	    else
-	       {OzcarMessage
-		'`term\' message of unattached thread -- ignoring'}
-	    end
-
-	 [] blocked(thr:T) then
-	    I = {Debug.getId T}
-	 in
-	    if ThreadManager,Exists(I $) then
-	       ThreadManager,blocked(thr:T id:I)
-	    else
-	       {OzcarMessage
-		'`blocked\' message of unattached thread -- ignoring'}
-	    end
-
-	 [] ready(thr:T) then
-	    I = {Debug.getId T}
-	 in
-	    if ThreadManager,Exists(I $) then
-	       Gui,markNode(I runnable)
-	       if {Dbg.checkStopped T} then
-		  Gui,markNode(I stopped)
+		  Gui,markNode(T stoppedRunnable)
+		  Gui,markStack(active)
 		  if T == @currentThread then
-		     {SendEmacs configureBar(runnable)}
+		     {S exit(M)}
+		     {SendEmacsBar
+		      {CondSelect M file ''}
+		      {CondSelect M line unit}
+		      {CondSelect M column unit} stoppedRunnable}
+		     {S printTop}
 		  end
 	       end
-	    else
-	       {OzcarMessage
-		'`ready\' message of unattached thread -- ignoring'}
 	    end
-
-	 [] exception(thr:T exc:X) then
-	    I = {Debug.getId T}
-	 in
-	    case X of system(kernel(terminate) ...) then
-	       if ThreadManager,Exists(I $) then
-		  ThreadManager,remove(T I noKill)
-	       end
+	 [] term(thr:T) then
+	    case {self.ThreadDic get(T $)} of unit then skip
 	    else
-	       if ThreadManager,Exists(I $) then
-		  {OzcarMessage 'exception of attached thread'}
-		  Gui,markNode(I exc)
-		  Gui,markNode(I stopped)
-		  {{Dictionary.get self.ThreadDic I} printException(X)}
-	       else
-		  Q = {Debug.getParentId T}
-	       in
-		  {OzcarMessage 'exception of unattached thread'}
-		  ThreadManager,add(T I Q exc(X))
-	       end
+	       ThreadManager,MarkDead(T)
 	    end
-
-	 [] update(thr:T) then
-	    I = {Debug.getId T}
-	 in
-	    if ThreadManager,Exists(I $) then
-	       Stack = {Dictionary.get self.ThreadDic I}
+	 [] blocked(thr:T) then
+	    case {self.ThreadDic get(T $)} of unit then skip
+	    else
+	       Gui,markNode(T blocked)
+	    end
+	 [] ready(thr:T) then
+	    case {self.ThreadDic get(T $)} of unit then skip
+	    else
+	       S = {Primitives.threadState T}
+	       Stopped = case S
+			 of stoppedRunnable then true
+			 [] stoppedBlocked  then true
+			 else false
+			 end
 	    in
-	       {Stack rebuild(true)}
-	    else
-	       {OzcarMessage
-		'`update\' message of unattached thread -- ignoring'}
+	       Gui,markNode(T S)
+	       if Stopped andthen T == @currentThread then
+		  {SendEmacs configureBar(runnable)}
+	       end
 	    end
-
-	 else
-	    {OzcarError 'Unknown message on stream'}
+	 [] exception(thr:T exc:system(kernel(terminate) ...)) then
+	    case {self.ThreadDic get(T $)} of unit then skip
+	    else
+	       ThreadManager,MarkDead(T)
+	    end
+	 [] exception(thr:T exc:X) then
+	    case {self.ThreadDic get(T $)} of unit then
+	       {OzcarMessage 'exception of unattached thread'}
+	       ThreadManager,Add(T exc(X))
+	    elseof S then
+	       {OzcarMessage 'exception of attached thread'}
+	       Gui,markNode(T exc)
+	       {S setException(X)}
+	       Gui,status({S getException($)} clear ExcThreadColor)
+	    end
+	 [] update(thr:T) then
+	    case {self.ThreadDic get(T $)} of unit then skip
+	    elseof S then
+	       {S rebuild(true)}
+	    end
 	 end
       end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-      meth Exists(I $)
-	 {Dictionary.member self.ThreadDic I}
-      end
-
       meth emptyForest($)
-	 {Dictionary.keys self.ThreadDic} == nil
+	 {self.ThreadDic isEmpty($)}
       end
 
-      meth removeSkippedProcs(I)
-	 SkippedProcs <- {Filter @SkippedProcs
-			  fun {$ F} F.2 \= I end}
-      end
-
-      meth add(T I Q Exc<=unit)
+      meth Add(T Exc<=unit)
+	 Q = {Primitives.getParentId T}
 	 IsFirstThread = ThreadManager,emptyForest($)
-	 Stack = {New StackManager init(thr:T id:I)}
+	 Stack = {New StackManager init(T)}
       in
-	 {Dictionary.put self.ThreadDic I Stack}
-	 {OzcarMessage 'attaching thread ' # I # '/' # Q}
+	 {self.ThreadDic put(T Stack)}
+	 {OzcarMessage
+	  'attaching thread ' # {Primitives.getThreadName T} # '/' # Q}
 	 case Exc of exc(X) then   %% exception
-	    Gui,addNode(I Q)
-	    Gui,markNode(I exc)
-	    ThreadManager,switch(I false)
-	    {Stack printException(X)}
+	    Gui,addNode(T exc)
+	    ThreadManager,switch(T false)
+	    {Stack setException(X)}
+	    Gui,status({Stack getException($)} clear ExcThreadColor)
 	 else
-	    Gui,addNode(I Q)
+	    Gui,addNode(T stoppedRunnable)
 	    {Stack rebuild(true)}
-	    if Q == 1 orelse         %% all compiler threads have id #1
-	       IsFirstThread then    %% there's no other attached thread
-	       ThreadManager,switch(I)
-	       Gui,status('Selecting new thread ' # I)
+	    if Q == 1                 %% all compiler threads have id #1
+	       orelse IsFirstThread   %% there's no other attached thread
+	    then
+	       ThreadManager,switch(T)
+	       Gui,status('Selecting new thread ' #
+			  {Primitives.getThreadName T})
 	    end
 	 end
       end
 
-      meth remove(T I Mode Select<=true)
-	 Next in
-	 {OzcarMessage 'removing thread ' # I # ' with mode ' # Mode}
-	 ThreadManager,removeSkippedProcs(I)
-	 if Mode == kill then
-	    Gui,killNode(I Next)
-	    {OzcarMessage 'next node is ' # Next}
-	    {Dictionary.remove self.ThreadDic I}
-	    if ThreadManager,emptyForest($) then
-	       currentThread <- unit
-	       currentStack  <- unit
-	       {SendEmacs removeBar}
-	       Gui,selectNode(0)
-	       Gui,clearStack
-	       if Select then
-		  Gui,status(', thread tree is now empty' append)
-	       end
+      meth Remove(T Select) NextT in
+	 {OzcarMessage 'removing thread ' # {Primitives.getThreadName T}}
+	 Gui,removeNode(T ?NextT)
+	 {self.ThreadDic remove(T)}
+	 if ThreadManager,emptyForest($) then
+	    currentThread <- unit
+	    currentStack  <- unit
+	    {SendEmacs removeBar}
+	    Gui,selectNode(unit)
+	    Gui,clearStack
+	    if Select then
+	       Gui,status(', thread forest now empty' append)
 	    end
-	 else
-	    Gui,markNode(I dead)
-	    Gui,markNode(I stopped)
+	 elseif T == @currentThread andthen Select then
+	    ThreadManager,switch(NextT)
+	    Gui,status(', selected thread ' # {Primitives.getThreadName NextT}
+		       append)
 	 end
+      end
+
+      meth MarkDead(T)
+	 {OzcarMessage 'thread ' # {Primitives.getThreadName T} # ' died'}
+	 Gui,markNode(T terminated)
 	 if T == @currentThread then
-	    if Mode == kill then
-	       if ThreadManager,emptyForest($) then skip else
-		  if Select then
-		     detachDone <- _
-		     ThreadManager,switch(Next)
-		     Gui,status(', new selected thread is ' # Next append)
-		  end
-	       end
-	    else
-	       Gui,status('Thread ' # I # ' died')
-	       {SendEmacs removeBar}
-	       Gui,markStack(active)
-	       Gui,printStack(id:I frames:nil depth:0)
-	    end
+	    Gui,status('Thread ' # {Primitives.getThreadName T} # ' died')
+	    {SendEmacs removeBar}
+	    Gui,markStack(active)
+	    Gui,printStack(thr:T frames:nil)
 	 end
       end
 
-      meth kill(T I Select<=true)
-	 try
-	    {Dbg.trace T false}
-	    {Dbg.step T false}
-	    {Thread.terminate T}
-	 catch error(kernel(deadThread ...) ...) then skip end
+      meth kill(T Select)
+	 {Primitives.terminate T}
 	 if Select then
-	    Gui,status('Thread ' # I # ' has been terminated')
+	    Gui,status('Thread ' # {Primitives.getThreadName T} #
+		       ' has been terminated')
 	 end
-	 ThreadManager,remove(T I kill Select)
+	 ThreadManager,Remove(T Select)
       end
 
       meth termAll
-	 {ForAll {Dictionary.items self.ThreadDic}
-	  proc {$ S}
-	     I = {S getId($)}
-	     T = {S getThread($)}
-	  in
-	     ThreadManager,kill(T I false)
-	     Gui,status('.' append)
-	  end}
+	 for S in {self.ThreadDic items($)} do
+	    T = {S getThread($)}
+	 in
+	    ThreadManager,kill(T false)
+	    Gui,status('.' append)
+	 end
       end
 
       meth termAllButCur
-	 {ForAll {Dictionary.items self.ThreadDic}
-	  proc {$ S}
-	     I = {S getId($)}
-	     T = {S getThread($)}
-	  in
-	     if T \= @currentThread then
-		ThreadManager,kill(T I false)
-		Gui,status('.' append)
-	     end
-	  end}
+	 for S in {self.ThreadDic items($)} do
+	    T = {S getThread($)}
+	 in
+	    if T \= @currentThread then
+	       ThreadManager,kill(T false)
+	       Gui,status('.' append)
+	    end
+	 end
       end
 
       meth detachAll
-	 {ForAll {Dictionary.items self.ThreadDic}
-	  proc {$ S}
-	     I = {S getId($)}
-	     T = {S getThread($)}
-	  in
-	     {Detach T}
-	     ThreadManager,remove(T I kill false)
-	     Gui,status('.' append)
-	  end}
+	 for S in {self.ThreadDic items($)} do
+	    T = {S getThread($)}
+	 in
+	    {Primitives.detach T}
+	    ThreadManager,Remove(T false)
+	    Gui,status('.' append)
+	 end
       end
 
       meth detachAllButCur
-	 {ForAll {Dictionary.items self.ThreadDic}
-	  proc {$ S}
-	     I = {S getId($)}
-	     T = {S getThread($)}
-	  in
-	     if T \= @currentThread then
-		{Detach T}
-		ThreadManager,remove(T I kill false)
-		Gui,status('.' append)
-	     end
-	  end}
+	 for S in {self.ThreadDic items($)} do
+	    T = {S getThread($)}
+	 in
+	    if T \= @currentThread then
+	       {Primitives.detach T}
+	       ThreadManager,Remove(T false)
+	       Gui,status('.' append)
+	    end
+	 end
       end
 
       meth detachAllDead
-	 {ForAll {Dictionary.items self.ThreadDic}
-	  proc {$ S}
-	     I = {S getId($)}
-	     T = {S getThread($)}
-	  in
-	     if {Thread.state T} == terminated then
-		ThreadManager,remove(T I kill false)
-		Gui,status('.' append)
-	     end
-	  end}
-	 if @currentThread \= unit andthen
-	    {Thread.state @currentThread} == terminated then
+	 for S in {self.ThreadDic items($)} do
+	    T = {S getThread($)}
+	 in
+	    case {Primitives.threadState T} of terminated then
+	       ThreadManager,Remove(T false)
+	       Gui,status('.' append)
+	    end
+	 end
+	 if @currentThread \= unit
+	    andthen {Primitives.threadState @currentThread} == terminated
+	 then
 	    thread
 	       {Delay 1000}   %% give the user a chance to read the ' done' ;)
 	       Gui,nextThread %% select next living thread
@@ -442,39 +397,29 @@ in
 	 end
       end
 
-      meth detach(T I)
-	 {Detach T}
-	 Gui,status('Thread ' # I # ' has been detached')
-	 ThreadManager,remove(T I kill)
+      meth detach(T)
+	 {Primitives.detach T}
+	 Gui,status('Thread ' # {Primitives.getThreadName T} #
+		    ' has been detached')
+	 ThreadManager,Remove(T true)
       end
 
       meth entry(thr: T ...)=Frame
-	 I     = {Debug.getId T}
-	 Stack = {Dictionary.get self.ThreadDic I}
+	 Stack = {self.ThreadDic get(T $)}
       in
-	 Gui,markNode(I stopped)  % thread is not running anymore
-	 Gui,markStack(active)    % stack view has up-to-date content
+	 Gui,markNode(T stoppedRunnable)
+	 Gui,markStack(active)
 	 {Stack entry(Frame)}
 	 if T == @currentThread then
-	    F = {CondSelect Frame file ''}
-	    L = {CondSelect Frame line unit}
-	    C = {CondSelect Frame column unit}
-	 in
-	    if {Stack atBreakpoint($)} then
-	       {SendEmacs bar(file:F line:L column:C state:blocked)}
-	    else
-	       {SendEmacs bar(file:F line:L column:C state:runnable)}
-	    end
+	    {SendEmacsBar
+	     {CondSelect Frame file ''}
+	     {CondSelect Frame line unit}
+	     {CondSelect Frame column unit}
+	     if {Stack atBreakpoint($)} then stoppedBlocked
+	     else stoppedRunnable
+	     end}
 	    {Stack printTop}
 	 end
-      end
-
-      meth blocked(thr:T id:I)
-	 Gui,markNode(I blocked)
-	 Gui,markNode(I running)
-%        if {CondSelect {@currentStack getTop($)} dir entry} of exit then
-%           ThreadManager,rebuildCurrentStack
-%        end
       end
 
       meth rebuildCurrentStack
@@ -483,11 +428,14 @@ in
       in
 	 if S == unit then
 	    Gui,status(NoThreads)
-	 elseif {CheckState T} == running then
+	 elsecase {Primitives.threadState T}
+	 of runnable then
+	    Gui,status('Cannot recalculate stack while thread is running')
+	 [] blocked  then
 	    Gui,status('Cannot recalculate stack while thread is running')
 	 else
 	    Gui,status('Recalculating stack of thread ' #
-		       {Debug.getId T} # '...')
+		       {Primitives.getThreadName T} # '...')
 	    {S rebuild(true)}
 	    {S print}
 	    {S emacsBarToTop}
@@ -495,69 +443,62 @@ in
 	 end
       end
 
-      meth switch(I PrintStack<=true)
-	 New in
+      meth switch(T PrintStack<=true) New in
 	 SwitchSync <- New = unit
-
-	 if {IsFree @switchDone} then skip else
+	 if {IsDet @switchDone} then
 	    switchDone <- _
 	 end
-
-	 Gui,selectNode(I)
-
 	 thread
 	    {WaitOr New {Alarm {Cget timeoutToSwitch}}}
-	    if {IsDet New} then skip else
-	       ThreadManager,DoSwitch(I PrintStack)
+	    if {IsFree New} then
+	       Gui,selectNode(T)
+	       ThreadManager,DoSwitch(T PrintStack)
 	    end
 	 end
       end
 
-      meth DoSwitch(I PrintStack)
-	 Stack = {Dictionary.get self.ThreadDic I}
-	 T     = {Stack getThread($)}
-	 S     = {CheckState T}
+      meth DoSwitch(T PrintStack)
+	 Stack = {self.ThreadDic get(T $)}
       in
 	 if @currentStack \= unit then
 	    CurT = @currentThread
 	    CurS = @currentStack
+	    Running = case {Primitives.threadState CurT}
+		      of runnable then true
+		      [] blocked  then true
+		      else false
+		      end
 	 in
-	    Gui,resetLastSelectedFrame
-	    if {CheckState CurT} == running then
-	       {OzcarMessage 'setting `rebuild\' flag' #
-		' of (running) thread ' # {Debug.getId CurT}}
+	    Gui,unselectStackFrame
+	    if Running then
 	       {CurS rebuild(true)}
 	    end
 	 end
 
-	 {OzcarMessage 'switching to thread ' # I}
+	 {OzcarMessage 'switching to thread ' # {Primitives.getThreadName T}}
 	 currentThread <- T
 	 currentStack  <- Stack
 
 	 if PrintStack then
-	    if S == terminated then
+	    case {Primitives.threadState T} of terminated then
 	       {SendEmacs removeBar}
-	       Gui,printStack(id:I frames:nil depth:0)
-	    else
-	       F L C Exc = {Stack getException($)}
-	    in
+	       Gui,printStack(thr:T frames:nil)
+	    elseof S then F L C in
 	       {Stack print}
 	       {Stack getPos(file:?F line:?L column:?C)}
-	       if Exc == nil then
-		 if {Stack atBreakpoint($)} then
-		    {SendEmacs bar(file:F line:L column:C state:blocked)}
-		 else
-		    {SendEmacs bar(file:F line:L column:C state:S)}
-		 end
-	       else
-		  {SendEmacs bar(file:F line:L column:C state:blocked)}
+	       case {Stack getException($)} of unit then
+		  {SendEmacsBar F L C
+		   if {Stack atBreakpoint($)} then stoppedBlocked
+		   else S
+		   end}
+	       elseof Exc then
+		  {SendEmacsBar F L C stoppedBlocked}
 		  Gui,status(Exc clear ExcThreadColor)
 	       end
 	    end
 	 end
 
 	 @switchDone = unit
-	 @detachDone = unit
       end
    end
 end

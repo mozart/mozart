@@ -50,12 +50,11 @@ in
 	    end
 	 end
       end
-      meth ClearQueue
-	 New in
+      meth ClearQueue New in
 	 QueueSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm Timeout}}
-	    if {IsDet New} then skip else
+	    if {IsFree New} then
 	       Smoother,DoClearQueue
 	    end
 	 end

@@ -1,13 +1,15 @@
 %%%
 %%% Authors:
-%%%   Benjamin Lorenz (lorenz@ps.uni-sb.de)
+%%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
-%%% Contributor:
-%%%   Christian Schulte
+%%% Contributors:
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
 %%%   Benjamin Lorenz, 1997
 %%%   Christian Schulte, 1998
+%%%   Leif Kornstaedt, 2001
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -32,14 +34,12 @@ prepare
    BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
 			    {URL.make 'images/ozcar/'}}}
 import
-   Space
-   RecordC
+   BootName(newUnique: NewUniqueName) at 'x-oz://boot/Name'
+   Debug(breakpoint getId getParentId) at 'x-oz://boot/Debug'
    Inspector(inspect: Inspect)
-   Debug at 'x-oz://boot/Debug'
+   Server at 'OzcarServer.ozf'
    Emacs(getOPI condSend)
-   Error(exceptionToMessage extendedVSToVS printException)
-   FD
-   FS
+   Error(exceptionToMessage extendedVSToVS printException registerFormatter)
    Property
    System
    Tk
@@ -47,13 +47,15 @@ import
    BaseEvalDialog(dialog) at 'x-oz://system/EvalDialog'
    OPIEnv(full)
 export
-   'object':     Ozcar
-   'open':       OpenOzcar
-   'close':      CloseOzcar
-   'breakpoint': Breakpoint
+   'object': Ozcar
+   'open':   OpenOzcar
+   'close':  CloseOzcar
+   Breakpoint
+   StartServer
 define
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
+   \insert 'ozcar/error'
 
    \insert 'ozcar/tree'
    \insert 'ozcar/thread'
@@ -76,5 +78,6 @@ define
       {Ozcar off}
    end
 
-   Breakpoint = Debug.breakpoint
+   Breakpoint  = Debug.breakpoint
+   StartServer = Server.start
 end

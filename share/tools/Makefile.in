@@ -160,7 +160,8 @@ EXAMPLEFILES = $(GUMPEXAMPLEFILES:%=$(OZEXGUMP)/%)
 
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
-	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
+	Ozcar.ozf OzcarPrimitives.ozf OzcarServer.ozf OzcarClient.ozf \
+	Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
 	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf \
 	EvalDialog.ozf Inspector.ozf OPIServer.ozf DistributionPanel.ozf \
 	DistributionPanelSrc.ozf
@@ -211,6 +212,13 @@ Explorer.ozf: $(EXPLORERSRC)
 Emacs.ozf: $(EMACSSRC)
 
 Ozcar.ozf: $(OZCARSRC)
+
+OzcarPrimitives.ozf: ozcar/primitives.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+OzcarServer.ozf: ozcar/server.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+OzcarClient.ozf: ozcar/client.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 Profiler.ozf: $(PROFILERSRC)
 
