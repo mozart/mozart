@@ -1132,7 +1132,7 @@ Point is left at the first character of the keyword."
 	  oz-variable-pattern "(?" "\\|" oz-char-pattern "\\|"
 	  oz-number-pattern "\\|"
 	  "[A-Za-z][A-Za-z0-9_]*(?\\|"
-	  "\\[\\]\\|\\.\\.\\.\\|<-\\|:=\\|!!\\|=<\\|>=\\|\\\\=\\|"
+	  "\\[\\]\\|\\.\\.\\.\\|<-\\|<=\\|:=\\|!!\\|=<\\|>=\\|\\\\=\\|"
 	  ":::?\\|==\\|[<>]:\\|=<:\\|>=:\\|=:\\|"
 	  "[+<>*/{}()|#:=.^@$!~_,]\\|\\[\\|\\]\\|\\-")
   "Matches a single Oz token; used by oz-bar.")
@@ -2108,7 +2108,7 @@ This serves to distinguish between the directive `\\else' and the keyword
 The first subexpression matches the keyword proper (for fontification).")
 
 (defconst oz-keywords-matcher-3
-  "[!#|.@,~*/+-]\\|\\[\\]\\|:::?\\|=?<:?\\|>=?:?\\|=:\\|\\\\=:?\\|=="
+  "[!#|.@,~*/+-]\\|\\[\\]\\|:::?\\|=?<[=:]?\\|>=?:?\\|=:\\|\\\\=:?\\|=="
   "Regular expression matching non-identifier keywords and operators.")
 
 (defconst oz-proc-fun-matcher
