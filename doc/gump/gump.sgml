@@ -49,6 +49,9 @@
     <Meta name="html.split" value="section.parser.reference">
     <Meta name="html.split" value="appendix.notation">
     <Meta name="html.split.bib" value="">
+    <!-- declare proglang emacs modes -->
+    <Meta name="proglang.mode" arg1="lambda" arg2="lambda-mode">
+    <Meta name="emacs.package" value="lambda.el">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
