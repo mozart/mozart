@@ -219,23 +219,6 @@ public:
 #define BORROW_LOW_THRESHOLD     ((1<<4))
 #define BORROW_HIGH_THRESHOLD    ((1<<19))
 #endif
-/*
-#define BTRESIZE_CRITICAL
-*/
-
-#ifdef BTRESIZE_CRITICAL
-#define DEFAULT_OWNER_TABLE_SIZE   5000
-#define DEFAULT_BORROW_TABLE_SIZE  5000
-#else
-#define DEFAULT_OWNER_TABLE_SIZE   100
-#define DEFAULT_BORROW_TABLE_SIZE  100
-#endif
-
-static double TABLE_LOW_LIMIT=0.20;
-static double TABLE_EXPAND_FACTOR=2.00;
-
-#define TABLE_BUFFER 50
-#define TABLE_WORTHWHILE_REALLOC 200
 
 extern DSite* creditSiteIn;
 extern DSite* creditSiteOut;

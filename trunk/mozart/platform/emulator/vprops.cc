@@ -151,13 +151,21 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_STOP,
   PROP_INTERNAL_DEBUG_IP,
   PROP_INTERNAL,
-
+  // PERDIO
   PROP_PERDIO_SEIFHANDLER,
   PROP_PERDIO_FLOWBUFFERSIZE,
   PROP_PERDIO_FLOWBUFFERTIME,
   PROP_PERDIO_DEBUG,
   PROP_PERDIO_MINIMAL,
   PROP_PERDIO,
+  // DPTABLE
+  PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
+  PROP_DPTABLE_DEFAULTBORROWTABLESIZE,
+  PROP_DPTABLE_LOWLIMIT,
+  PROP_DPTABLE_EXPANDFACTOR,
+  PROP_DPTABLE_BUFFER,
+  PROP_DPTABLE_WORTHWHILEREALLOC,
+  PROP_DPTABLE,
 
   PROP_CLOSE_TIME,
 
@@ -434,13 +442,36 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
   CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
   CASE_REC(PROP_PERDIO,"perdio",
-	   (4,oz_atom("minimal"),oz_atom("debug"),
+	   (5,oz_atom("minimal"),oz_atom("seifHandler"),oz_atom("debug"),
 	    oz_atom("flowbuffersize"),oz_atom("flowbuffertime")),
 	   SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
 	   SET_BOOL(oz_atom("seifHandler"), ozconf.perdioSeifHandler);
 	   SET_INT(oz_atom("debug"), ozconf.debugPerdio);
 	   SET_INT(oz_atom("flowbuffersize"), ozconf.perdioFlowBufferSize);
 	   SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
+	   );
+  CASE_INT(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
+	   ozconf.dpTableDefaultOwnerTableSize);
+  CASE_INT(PROP_DPTABLE_DEFAULTBORROWTABLESIZE,
+	   ozconf.dpTableDefaultBorrowTableSize);
+  CASE_INT(PROP_DPTABLE_LOWLIMIT, ozconf.dpTableLowLimit);
+  CASE_INT(PROP_DPTABLE_EXPANDFACTOR, ozconf.dpTableExpandFactor);
+  CASE_INT(PROP_DPTABLE_BUFFER, ozconf.dpTableBuffer);
+  CASE_INT(PROP_DPTABLE_WORTHWHILEREALLOC, ozconf.dpTableWorthwhileRealloc);
+  CASE_REC(PROP_DPTABLE,"dpTable",
+	   (6,oz_atom("defaultOwnerTableSize"),
+	    oz_atom("defaultBorrowTableSize"),
+	    oz_atom("lowLimit"),oz_atom("expandFactor"),oz_atom("buffer"),
+	    oz_atom("worthwhileRealloc")),
+	   SET_INT(oz_atom("defaultOwnerTableSize"),
+		   ozconf.dpTableDefaultOwnerTableSize);
+	   SET_INT(oz_atom("defaultBorrowTableSize"),
+		   ozconf.dpTableDefaultBorrowTableSize);
+	   SET_INT(oz_atom("lowLimit"), ozconf.dpTableLowLimit);
+	   SET_INT(oz_atom("expandFactor"), ozconf.dpTableExpandFactor);
+	   SET_INT(oz_atom("buffer"), ozconf.dpTableBuffer);
+	   SET_INT(oz_atom("worthwhileRealloc"), 
+		   ozconf.dpTableWorthwhileRealloc);
 	   );
   CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
   CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
@@ -710,7 +741,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
-    
+    // PERDIO    
     CASE_REC(PROP_PERDIO,
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
 	     SET_NAT(oz_atom("flowbuffersize"),ozconf.perdioFlowBufferSize);
@@ -721,6 +752,44 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 		   return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
 						    "modelChoose",0));
 		 ozconf.perdioMinimal=INT__));
+    // DPTABLE
+    CASE_NAT_DO(PROP_DPTABLE_DEFAULTOWNERTABLESIZE,{
+      ozconf.dpTableDefaultOwnerTableSize=INT__;
+      am.setSFlag(StartGC);
+      return BI_PREEMPT;});
+    CASE_NAT_DO(PROP_DPTABLE_DEFAULTBORROWTABLESIZE,{
+      ozconf.dpTableDefaultBorrowTableSize=INT__;
+      am.setSFlag(StartGC);
+      return BI_PREEMPT;});      
+    CASE_PERCENT_DO(PROP_DPTABLE_LOWLIMIT,{
+      ozconf.dpTableLowLimit=INT__;
+      am.setSFlag(StartGC);
+      return BI_PREEMPT;});      
+    CASE_NAT_DO(PROP_DPTABLE_EXPANDFACTOR,{
+      ozconf.dpTableExpandFactor=INT__;
+      am.setSFlag(StartGC);
+      return BI_PREEMPT;});      
+    CASE_NAT_DO(PROP_DPTABLE_BUFFER, {
+      ozconf.dpTableBuffer=INT__;
+      am.setSFlag(StartGC);
+      return BI_PREEMPT;});      
+    CASE_NAT_DO(PROP_DPTABLE_WORTHWHILEREALLOC,{
+      ozconf.dpTableWorthwhileRealloc=INT__;
+      am.setSFlag(StartGC);
+      return BI_PREEMPT;});      
+    CASE_REC(PROP_DPTABLE,
+	     SET_NAT(oz_atom("defaultOwnerTableSize"), 
+		   ozconf.dpTableDefaultOwnerTableSize);
+	     SET_NAT(oz_atom("defaultBorrowTableSize"),
+		     ozconf.dpTableDefaultBorrowTableSize);
+	     SET_NAT(oz_atom("lowLimit"), ozconf.dpTableLowLimit);
+	     SET_NAT(oz_atom("expandFactor"),
+		     ozconf.dpTableExpandFactor);
+	     SET_NAT(oz_atom("buffer"), ozconf.dpTableBuffer);
+	     SET_NAT(oz_atom("worthwhileRealloc"), 
+		     ozconf.dpTableWorthwhileRealloc);
+	     );
+
     CASE_NAT(PROP_CLOSE_TIME,ozconf.closetime);
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
     CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
@@ -961,12 +1030,24 @@ void initVirtualProperties()
   VirtualProperty::add("internal.suspension",PROP_INTERNAL_SUSPENSION);
   VirtualProperty::add("internal.stop",PROP_INTERNAL_STOP);
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
+  // PERDIO
   VirtualProperty::add("perdio.debug",PROP_PERDIO_DEBUG);
   VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
   VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERTIME);
   VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERSIZE);
   VirtualProperty::add("perdio.seifHandler",PROP_PERDIO_SEIFHANDLER);
   VirtualProperty::add("perdio",PROP_PERDIO);
+  // DPTABLE
+  VirtualProperty::add("dpTable.defaultOwnerTableSize",
+		       PROP_DPTABLE_DEFAULTOWNERTABLESIZE);
+  VirtualProperty::add("dpTable.defaultBorrowTableSize",
+		       PROP_DPTABLE_DEFAULTBORROWTABLESIZE);
+  VirtualProperty::add("dpTable.lowLimit", PROP_DPTABLE_LOWLIMIT);
+  VirtualProperty::add("dpTable.expandFactor", PROP_DPTABLE_EXPANDFACTOR);
+  VirtualProperty::add("dpTable.buffer", PROP_DPTABLE_BUFFER);
+  VirtualProperty::add("dpTable.worthwhileRealloc",
+		       PROP_DPTABLE_WORTHWHILEREALLOC);
+  VirtualProperty::add("dpTable", PROP_DPTABLE);
   //CLOSE
   VirtualProperty::add("close.time",PROP_CLOSE_TIME);
 }
