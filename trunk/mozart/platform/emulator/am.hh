@@ -279,9 +279,6 @@ public:
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
 
-
-  Thread *mkSuspThread ();
-
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
 
