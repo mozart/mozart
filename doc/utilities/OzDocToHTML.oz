@@ -190,6 +190,7 @@ define
 	 % constructing the output:
 	 OutputDirectory: unit CurrentNode: unit NodeCounter: unit
 	 ToWrite: unit
+	 Split: unit
 	 % managing common attributes:
 	 Common: unit BodyCommon: unit
 	 ProgLang: unit
@@ -236,6 +237,7 @@ define
 			   {New MathToGIF.'class' init(@OutputDirectory)}
 			else unit
 			end
+	 Split <- Args.'split'
 	 CurrentNode <- "index.html"
 	 NodeCounter <- 0
 	 ToWrite <- nil
@@ -971,8 +973,9 @@ define
 	 end
       end
       meth PrepareNode(M ?X ?HTML)
-	 if {Member {CondSelect M id unit}
-	     {Dictionary.condGet @Meta 'html.split' nil}}
+	 if @Split
+	    andthen {Member {CondSelect M id unit}
+		     {Dictionary.condGet @Meta 'html.split' nil}}
 	 then
 	    X = @CurrentNode#@TOC#@TOCMode
 	    NodeCounter <- @NodeCounter + 1
@@ -988,7 +991,7 @@ define
 	 TOCMode <- false
       end
       meth PrepareBibNode(?X ?HTML)
-	 if {Dictionary.member @Meta 'html.split.bib'} then
+	 if @Split andthen {Dictionary.member @Meta 'html.split.bib'} then
 	    X = @CurrentNode#@TOC#@TOCMode
 	    CurrentNode <- 'bib.html'
 	    TOC <- nil
