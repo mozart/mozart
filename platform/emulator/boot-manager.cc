@@ -217,8 +217,13 @@ OZ_BI_define(BIBootManager, 1, 1) {
 
     char * if_name = new char[m + 16];
 
+#ifdef DLOPEN_UNDERSCORE
+    strcpy(if_name,     "_mod_int_");
+    strcpy(if_name + 9, mod_name);
+#else
     strcpy(if_name,     "mod_int_");
     strcpy(if_name + 8, mod_name);
+#endif
 
     init_fun_t init_function = (init_fun_t) osDlsym(handle, if_name);
 
@@ -408,7 +413,11 @@ OZ_BI_define(BIloadNative,1,1)
 
   void* handle = OZ_getForeignPointer(hdl);
 
+#ifdef DLOPEN_UNDERSCORE
+  init_fun_t init_function = (init_fun_t) osDlsym(handle,"_oz_init_module");
+#else
   init_fun_t init_function = (init_fun_t) osDlsym(handle,"oz_init_module");
+#endif
 
   // oops, there is no `init_function()'
   if (init_function == 0) {
