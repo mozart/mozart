@@ -51,6 +51,7 @@ public:
   //
   void release() {
     delete src;
+    regfree(re);
     delete re;
   }
 };
@@ -94,7 +95,7 @@ OZ_Return re_error(int code,regex_t* re,int must_free)
   char errbuf[ERRBUFSIZE];
   (void) regerror(code,re,errbuf,ERRBUFSIZE);
   // maybe free the regex_t buffer, if it was newly allocated
-  if (must_free) delete re;
+  if (must_free) { regfree(re); delete re; }
   return OZ_atom(errbuf);
 }
 
