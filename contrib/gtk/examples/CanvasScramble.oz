@@ -21,6 +21,7 @@
 
 functor $
 import
+   Application(exit)
    OS
    System(show)
    GDK    at 'x-oz://system/gtk/GDK.ozf'
@@ -296,9 +297,18 @@ define
       in
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
 	 GTK.window, setTitle("Canvas Demo")
+	 {self signalConnect('delete-event' deleteEvent _)}
 	 GTK.window, add(Notebook)
 	 {Notebook setShowTabs(1)}
 	 {Notebook appendPage(Scramble {New GTK.label new("Fifteen")})}
+      end
+      meth deleteEvent(Args)
+	 %% CAUTION: At this time, the underlying objects has been destroyed.
+	 %% CAUTION: This event is solely intended for oz side cleanup code.
+	 %% CAUTION: If you want eager finalisation of object wrappers then
+	 %% CAUTION: connect the delete event handler using a procedure
+	 %% CAUTION: rather than a object method.
+	 {Application.exit 0}
       end
    end
 

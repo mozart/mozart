@@ -35,6 +35,7 @@ define
 	 CancelButton = @cancelButton
       in
 	 GTK.fileSelection, new("Select File")
+	 {self signalConnect('delete-event' deleteEvent _)}
 	 OkButton     = {self fileSelectionGetFieldOkButton($)}
 	 CancelButton = {self fileSelectionGetFieldCancelButton($)}
 	 {OkButton signalConnect('clicked' proc {$ _}
@@ -53,11 +54,12 @@ define
       meth handleCancel
 	 {Application.exit 0}
       end
-      meth deleteEvent(Event)
-	 %% Caution: At this time, the underlying GTK object
-	 %% Caution: has been destroyed already
-	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side cleanups.
+      meth deleteEvent(Args)
+	 %% CAUTION: At this time, the underlying objects has been destroyed.
+	 %% CAUTION: This event is solely intended for oz side cleanup code.
+	 %% CAUTION: If you want eager finalisation of object wrappers then
+	 %% CAUTION: connect the delete event handler using a procedure
+	 %% CAUTION: rather than a object method.
 	 {Application.exit 0}
       end
    end
