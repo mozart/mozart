@@ -345,20 +345,20 @@
 <!ELEMENT math - - RCDATA>
 <!ATTLIST math
         %common.attr;
-        %display.attr;
+        %inline.attr;
         type NOTATION (%math.notation;) latex
 >
 <!ELEMENT math.extern - O EMPTY>
 <!ATTLIST math.extern
         %common.attr;
-        %display.attr;
+        %inline.attr;
         %extern.attr;
         type (%math.notation;) #IMPLIED
 >
 <!ELEMENT math.choice - - (math|math.extern)+>
 <!ATTLIST math.choice
         %common.attr;
-        %display.attr;
+        %inline.attr;
 >
 
 <!--==================== PICTURE ELEMENT ==========================-->
