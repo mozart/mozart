@@ -105,7 +105,7 @@ particular, it lists the changes from
     it has undergone important modifications to make it compatible with both old C++
     compilers (&eg; <code proglang=sh/gcc 2.95.x/) and the new breed of C++ 
     compilers (&eg; <code proglang=sh/gcc 3.x/) implementing the new multi-vendor
-    standard ABI (Application Binary Interface).
+    standard C++ ABI (Application Binary Interface).
 
     <section id="sec.m125.portability">
       <title/Portability/
@@ -117,13 +117,28 @@ particular, it lists the changes from
 	as implemented &eg; by <code proglang=sh/gcc 3.2/ has changed from what it
 	was in &eg; <code proglang=sh/gcc 2.95.x/ and this had
 	some fundamental and lethal consequences for earlier versions of Mozart.  The
-	design of some datastructures in Mozart was accordingly revised.
+	design of some datastructures in Mozart was accordingly revised.<p>
 
 	<item>Mozart now runs on <name/hppa/ aka <name/linux-parisc/.  While Mozart
 	1.2.5 still is not ready for full 64 bit architectures, it does well under
-	kernels that provide 32 bit addresses in user-space.
-	
+	kernels that provide 32 bit addresses in user-space.<p>
+
+	<item>For users of Gentoo Linux, we now provide ebuilds to install and
+	maintain a Mozart installation using the portage system.<p>
+
+	<item>improved Darwin support<p>
+
+	<item>additional logic to fix the <file/glibc/ problem with time ticks introduced when
+	the Linux kernel bumped <code proglang=sh/HZ/ up to 1000.<p>
      </list>
+
+    <section id="sec.m125.graphics">
+      <title/Graphics/
+      <p><list>
+        <item>fixed the Tk interface to work with Tk 8.4.<p>
+	<item>new optional <file/mozart-gtk/ component providing GTK 1.2 bindings (see
+        download page for further information).<p>
+      </list>
 
     <section id="sec.m125.windows">
       <title/Windows/
