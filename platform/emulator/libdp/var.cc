@@ -748,6 +748,7 @@ Bool ManagerVar::siteInProxyList(DSite* s){
 void ManagerVar::probeFault(DSite *s,int pr){
   if(!siteInProxyList(s)) return;
   if(pr==PROBE_PERM){
+    deregisterSite(s);
     addEntityCond(PERM_SOME);
     return;}
   if(pr==PROBE_TEMP){
