@@ -170,7 +170,7 @@ public:
     kind=k;}
 
   Bool matches(TaggedRef p,Thread* t,EntityCond wc, short k){
-    if(p!=proc) return FALSE;
+    if(oz_deref(p)!=oz_deref(proc)) return FALSE;
     if(t!=thread) return FALSE;
     if(watchcond!=wc) return FALSE;
     if(kind!=k) return FALSE;

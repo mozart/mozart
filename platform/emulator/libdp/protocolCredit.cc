@@ -37,6 +37,7 @@
 /*   Credit protocol                                     */
 /**********************************************************************/
 
+
 void sendPrimaryCredit(DSite *sd,int OTI,Credit c){
   PD((CREDIT,"Sending PrimaryCreds c:%d", c));
   MsgBuffer *bs= msgBufferManager->getMsgBuffer(sd);

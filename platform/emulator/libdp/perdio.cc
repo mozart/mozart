@@ -129,6 +129,7 @@ void initDP()
 /*   Utility routines                                      */
 /* *********************************************************************/
 
+// PER-LOOK simplify
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
@@ -488,8 +489,6 @@ void msgReceived(MsgBuffer* bs)
   MessageType mt = (MessageType) unmarshalHeader(bs);
   PD((MSG_RECEIVED,"msg type %d",mt));
 
-
-
   switch (mt) {
   case M_PORT_SEND:
     {
@@ -572,6 +571,21 @@ void msgReceived(MsgBuffer* bs)
       break;
     }
 
+  case M_DEREGISTER:
+    {
+      int OTI;
+      DSite* rsite;
+      unmarshal_M_REGISTER(bs,OTI,rsite);
+      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
+      OwnerEntry *oe=receiveAtOwner(OTI);
+      if (oe->isVar()) {
+        (GET_VAR(oe,Manager))->deregisterSite(rsite);
+      } else {
+        recDeregister(OT->getOwner(OTI)->getRef(),rsite);
+      }
+      break;
+    }
+
   case M_GET_OBJECT:
   case M_GET_OBJECTANDCLASS:
     {
@@ -631,7 +645,8 @@ void msgReceived(MsgBuffer* bs)
         break;
       }
       Assert(be->isVar());
-      GET_VAR(be,Proxy)->redirect(be->getPtr(),val,be);
+      ProxyVar *pv=GET_VAR(be,Proxy);
+      pv->redirect(be->getPtr(),val,be);
       break;
     }
 

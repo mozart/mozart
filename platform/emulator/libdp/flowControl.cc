@@ -38,6 +38,8 @@
 #include "controlvar.hh"
 #include "dpInterface.hh"
 #include "flowControl.hh"
+#include "var.hh"
+
 FlowControler *flowControler;
 
 void FlowControler::addElement(TaggedRef e){
@@ -45,37 +47,63 @@ void FlowControler::addElement(TaggedRef e){
   while(ptr!=NULL){
     if (ptr->ele == e) return;
     ptr = ptr->next;}
-  FlowControlElement* newE =  (FlowControlElement*) genFreeListManager->getOne_2();
-  newE->next = NULL;
-  newE->ele  = e;
+  FlowControlElement* newE = new FlowControlElement(e);
   if(first==NULL){
     am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
     first = last = newE;
     return;}
   last->next = newE;
-  last = last->next;
-
+  last = newE;
 }
 
-// ERIK-LOOK are the elements removed
+void FlowControler::addElement(TaggedRef e,DSite* s,int i){
+  FlowControlElement *ptr = first;
+  FlowControlElement* newE = new FlowControlElement(e,s,i);
+  if(first==NULL){
+    am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
+    first = last = newE;
+    return;}
+  last->next = newE;
+  last = newE;
+}
+
+Bool FlowControlElement::canSend(){
+  if(kind==FLOW_PORT){
+    return (((PortProxy*)tagged2Const(ele))->canSend());}
+  Assert(kind==FLOW_VAR);
+  return varCanSend(site);}
+
+void FlowControlElement::wakeUp(){
+  if(kind==FLOW_PORT){
+    (((PortProxy*)tagged2Const(ele))->wakeUp());}
+  else{
+    Assert(kind==FLOW_VAR);
+    printf("flow Control release\n");
+    sendRedirect(site,index,ele);}
+  free();}
+
 void FlowControler::wakeUpExecute(unsigned int t){
-     FlowControlElement *ptr = first, *ptrOld = NULL;
-     time = t + ozconf.perdioFlowBufferTime; // Check the user put value....
-     while(ptr!=NULL){
-      if(((PortProxy*)tagged2Const(ptr->ele))->canSend())
-        break;
-      ptrOld = ptr;
-      ptr = ptr->next;}
-    if (ptr==NULL) return;
-    if (ptrOld==NULL)
-      first = ptr->next;
-    else
-      ptrOld->next = ptr->next;
-    if(ptr == last)
-      last = ptrOld;
-    if(first==NULL)
-      am.setMinimalTaskInterval((void*)this,0);
-    ((PortProxy*)tagged2Tert(ptr->ele))->wakeUp();
+  FlowControlElement *ptr,*back;
+  time = t + ozconf.perdioFlowBufferTime; // Check the user put value....
+
+  while(first!=NULL && first->canSend()){
+    ptr=first;
+    first=ptr->next;
+    ptr->wakeUp();}
+  if(first==NULL){
+    last=NULL;
+    am.setMinimalTaskInterval((void*)this,0);
+    return;}
+  back=first;
+  ptr=back->next;
+  while(ptr!=NULL){
+    if(ptr->canSend()){
+      back->next=ptr->next;
+      ptr->wakeUp();
+      ptr=back->next;}
+    back=ptr;
+    ptr=back->next;}
+  last=back;
 }
 
 
@@ -83,6 +111,8 @@ void FlowControler::gcEntries(){
  FlowControlElement *ptr = first;
     while(ptr!=NULL){
       OZ_collectHeapTerm(ptr->ele, ptr->ele);
+      if(ptr->kind == FLOW_VAR){
+        ptr->site->makeGCMarkSite();}
       ptr = ptr->next;}}
 
 Bool FlowControlCheck(unsigned long time, void *v){

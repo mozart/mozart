@@ -38,6 +38,11 @@
 #include "var_simple.hh"
 #include "var_future.hh"
 #include "chain.hh"
+#include "flowControl.hh"
+
+#define USE_ALT_VAR_PROTOCOL FALSE
+
+Bool globalRedirectFlag=AUT_REG;
 
 /* --- Common unification --- */
 
@@ -148,14 +153,12 @@ void ProxyVar::gcRecurseV(void)
 }
 
 static
-OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
+void sendSurrender(BorrowEntry *be,OZ_Term val){
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   marshal_M_SURRENDER(bs,na->index,myDSite,val);
-  CheckNogoods(val,bs,"unify:resources",UNIFY_ERRORMSG,);
   SendTo(na->site,bs,M_SURRENDER,na->site,na->index);
-  return PROCEED;
 }
 
 Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
@@ -203,6 +206,11 @@ Bool ProxyVar::failurePreemption(){
   return hit;
 }
 
+#define ExportControl(Val) \
+{ if(ozconf.perdioMinimal) { \
+     OZ_Return ret=export(Val); \
+     if(ret!=PROCEED) return ret;}}
+
 OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   PD((PD_VAR,"ProxyVar::doBind by thread: %x",oz_currentThread()));
   PD((PD_VAR,"bind proxy b:%d v:%s",getIndex(),toC(r)));
@@ -212,8 +220,8 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
       if(failurePreemption()) return BI_REPLACEBICALL;}
     if (!binding) {
       BorrowEntry *be=BT->getBorrow(getIndex());
-      OZ_Return aux = sendSurrender(be,r);
-      if (aux!=PROCEED) return aux;
+      ExportControl(r);
+      sendSurrender(be,r);
       PD((THREAD_D,"stop thread proxy bind %x",oz_currentThread()));
       binding=r;
     }
@@ -283,6 +291,7 @@ void ManagerVar::gcRecurseV(void)
 }
 
 static void sendAcknowledge(DSite* sd,int OTI){
+  PD((PD_VAR,"sendAck %s",sd->stringrep()));
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_ACKNOWLEDGE(bs,myDSite,OTI);
@@ -290,38 +299,57 @@ static void sendAcknowledge(DSite* sd,int OTI){
 }
 
 // extern
-OZ_Return sendRedirect(DSite* sd,int OTI,TaggedRef val)
+void sendRedirect(DSite* sd,int OTI,TaggedRef val)
 {
+  PD((PD_VAR,"sendRedirect %s",sd->stringrep()));
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(sd);
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_REDIRECT(bs,myDSite,OTI,val);
-  CheckNogoods(val,bs,"unify:resources",UNIFY_ERRORMSG,);
   SendTo(sd,bs,M_REDIRECT,myDSite,OTI);
-  return PROCEED;
 }
 
-OZ_Return ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
+inline Bool queueTrigger(DSite* s){
+  int msgs;
+  if(s->getQueueStatus(msgs)>0) return TRUE;
+  return FALSE;}
+
+// ERIK-LOOK use antoher ozconf.
+
+static inline Bool canSend(DSite* s){
+  int msgs;
+  if(s->getQueueStatus(msgs)>ozconf.perdioFlowBufferSize) return FALSE;
+  return TRUE;}
+
+Bool varCanSend(DSite* s){
+  return canSend(s);}
+
+void ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
 {
+  PD((PD_VAR,"sendRedirectToProxies"));
   ProxyList *pl = proxies;
-  // Assert(pl); // dist. vars are not yet localized again
   while (pl) {
     DSite* sd = pl->sd;
+    Assert(sd!=myDSite);
     if (sd==ackSite) {
-      sendAcknowledge(sd,getIndex());
-    } else {
-      OZ_Return ret = sendRedirect(sd,getIndex(),val);
-      if (ret != PROCEED) {
-        Assert(pl==proxies); // the first redirect must fail!
-        return ret;
-      }
-    }
+      sendAcknowledge(sd,getIndex());}
+    else {
+      if(!canSend(sd)){
+        flowControler->addElement(val,sd,getIndex());}
+      else{
+        if(pl->kind==EXP_REG || queueTrigger(sd)){
+          globalRedirectFlag=EXP_REG;
+          sendRedirect(sd,getIndex(),val);
+          globalRedirectFlag=AUT_REG;}
+        else{
+          Assert(pl->kind==AUT_REG);
+          sendRedirect(sd,getIndex(),val);}}}
     pl=pl->dispose();
   }
   proxies = 0;
-  return PROCEED;
 }
 
-OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
+
+OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
 {
   int OTI=getIndex();
   PD((PD_VAR,"ManagerVar::doBind by thread: %x",oz_currentThread()));
@@ -335,11 +363,9 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
     // because of failure ManagerVar need not be in OwnerTable
     // can now localize this variable
 
-    // send redirect done first to check if r is exportable
+    ExportControl(r);
     EntityInfo *ei=info;
-    OZ_Return ret = sendRedirectToProxies(r, myDSite);
-    Assert((ozconf.perdioMinimal) || (ret==PROCEED));
-    if (ret != PROCEED) return ret;
+    sendRedirectToProxies(r, s);
     oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(OTI)->changeToRef();
     maybeHandOver(ei,r);
@@ -349,6 +375,9 @@ OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
     return PROCEED;
   }
 }
+
+OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r){
+  return bindVInternal(lPtr,r,myDSite);}
 
 void ManagerVar::getStatus(DSite* site,int OTI, TaggedRef tr){
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
@@ -371,9 +400,8 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
   Bool isLocal = oz_isLocalVar(this);
   if (isLocal) {
     // send redirect done first to check if r is exportable
-    OZ_Return ret = sendRedirectToProxies(r, myDSite);
-    Assert((ozconf.perdioMinimal) || (ret==PROCEED));
-    if (ret != PROCEED) return ret;
+    ExportControl(r);
+    sendRedirectToProxies(r, myDSite);
     EntityInfo *ei=info;
     oz_bindLocalVar(this,lPtr,r);
     OT->getOwner(OTI)->changeToRef();
@@ -411,6 +439,13 @@ void ManagerVar::marshal(MsgBuffer *bs)
 {
   int i=getIndex();
   PD((MARSHAL,"var manager o:%d",i));
+  if((!USE_ALT_VAR_PROTOCOL) && globalRedirectFlag==AUT_REG){
+    if(isFuture()){
+      marshalOwnHead(DIF_FUTURE_AUTO,i,bs);}
+    else{
+      marshalOwnHead(DIF_VAR_AUTO,i,bs);}
+    registerSite(bs->getSite());
+    return;}
   if(isFuture()){
     marshalOwnHead(DIF_FUTURE,i,bs);}
   else{
@@ -474,8 +509,8 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs) {
 
 /* --- Unmarshal --- */
 
-static
-void sendRegister(BorrowEntry *be) {
+static void sendRegister(BorrowEntry *be) {
+  PD((PD_VAR,"sendRegister"));
   Assert(creditSiteOut == NULL);
   be->getOneMsgCredit();
   NetAddress *na = be->getNetAddress();
@@ -484,6 +519,19 @@ void sendRegister(BorrowEntry *be) {
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);
 }
 
+static void sendDeRegister(BorrowEntry *be) {
+  PD((PD_VAR,"sendDeRegister"));
+  Assert(creditSiteOut == NULL);
+  be->getOneMsgCredit();
+  NetAddress *na = be->getNetAddress();
+  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
+  marshal_M_DEREGISTER(bs,na->index,myDSite);
+  SendTo(na->site,bs,M_DEREGISTER,na->site,na->index);
+}
+
+void ProxyVar::nowGarbage(BorrowEntry* be){
+  PD((PD_VAR,"nowGarbage"));
+  sendDeRegister(be);}
 
 // extern
 OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
@@ -499,9 +547,11 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
   ProxyVar *pvar = new ProxyVar(oz_currentBoard(),bi,isFuture);
 
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
-  ob->mkVar(val);
-  if(!isAuto) sendRegister((BorrowEntry *)ob);
-  else Assert(0); // PER-TODO
+  ob->changeToVar(val); // PLEASE DONT CHANGE THIS
+  if(!isAuto) {
+    sendRegister((BorrowEntry *)ob);}
+  else{
+    pvar->makeAuto();}
   return val;
 }
 
@@ -535,7 +585,7 @@ VarStatus ProxyVar::checkStatusV()
 inline
 void ManagerVar::localize(TaggedRef *vPtr)
 {
-  if(getInfo()!=NULL) return;
+  Assert(getInfo()==NULL);
   origVar->setSuspList(unlinkSuspList());
   *vPtr=makeTaggedCVar(origVar);
   origVar=0;
@@ -774,4 +824,35 @@ void ManagerVar::newInform(DSite* s,EntityCond ec){
 
 void ProxyVar::wakeAll(){
   oz_checkSuspensionList(this,pc_all);
+}
+
+void recDeregister(TaggedRef tr,DSite* s){
+  OZ_Term vars=digOutVars(tr);
+  while(!oz_isNil(vars)){
+    OZ_Term t=oz_head(vars);
+    DEREF(t,tPtr,_2);
+    if(classifyVar(tPtr)==VAR_MANAGER){
+      oz_getManagerVar(*tPtr)->deAutoSite(s);
+    }
+    vars=oz_tail(vars);}
+}
+
+static ProxyList** findBefore(DSite* s,ProxyList** base ){
+  while((*base)!=NULL){
+    if((*base)->sd==s) return base;
+    base= &((*base)->next);}
+  return NULL;}
+
+
+void ManagerVar::deAutoSite(DSite* s){
+  ProxyList **aux= findBefore(s, &proxies);
+  Assert(aux!=NULL);
+  ProxyList *pl=*aux;
+  pl->kind=EXP_REG;
+}
+
+void ManagerVar::deregisterSite(DSite* s){
+  ProxyList **pl=findBefore(s, &proxies);
+  Assert(pl!=NULL);
+  *pl= (*pl)->next;
 }

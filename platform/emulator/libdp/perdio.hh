@@ -65,6 +65,7 @@ void dumpRemoteMsgBuffer(MsgBuffer*);
 class MsgBufferManager{
 public:
   MsgBuffer* getMsgBuffer(DSite * s){
+    Assert(s!=myDSite);
     Assert(s!=NULL);
     if(s->remoteComm()){
       return getRemoteMsgBuffer(s);}
