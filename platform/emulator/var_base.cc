@@ -124,9 +124,9 @@ void VariableNamer::cleanup()
 
 const char *getVarName(TaggedRef v)
 {
-  return VariableNamer::getName(v);
+  const char *s = VariableNamer::getName(v);
+  return *s ? s : "_";
 }
-
 
 #ifdef DEBUG_STABLE
 Thread *board_constraints_thr = NULL;

@@ -79,23 +79,6 @@ void ThreadQueueImpl::resize () {
   maxsize = new_maxsize;
 }
 
-Board * ThreadQueueImpl::getHighestSolveDebug(void)
-{
-  int asize = size;
-  int ahead = head;
-  int mod = maxsize - 1;
-
-  while (asize) {
-    Board * c = GETBOARD(queue[ahead])->getHighestSolveDebug();
-    if (c) 
-      return c;
-    INC(ahead);
-    asize--;
-  }
-
-  return NULL;
-}
-
 int ThreadQueueImpl::getRunnableNumber()
 {
   int ret=0;
@@ -126,6 +109,7 @@ void ThreadQueueImpl::deleteThread(Thread *th)
   }
 }
 
+#ifdef LOCAL_THREAD_STACK
 void ThreadStackImpl::resize(void)
 {
   int new_maxsize = (maxsize * 3) >> 1;
@@ -144,3 +128,4 @@ void ThreadStackImpl::resize(void)
 }
 
 int ThreadStackImpl::fromBos;
+#endif

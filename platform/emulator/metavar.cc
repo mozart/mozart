@@ -38,7 +38,7 @@
 /*
 char * OZ_printMetaDefault(OZ_Term d)
 {
-  return tagged2String(d, 10);
+  return toC(d);
 }
 */
 

@@ -172,16 +172,5 @@ loop:
 }
 #endif
 
-Board * Board::getHighestSolveDebug(void)
-{
-  Board * r = NULL;
-  
-  for (Board * c = this; !c->_isRoot(); c = c->getParent())
-    if (c->isSolve())
-      r = c;
-
-  return r;
-}
-
 // -------------------------------------------------------------------------
 

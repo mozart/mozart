@@ -71,12 +71,11 @@ int SuspList::lengthProp(void)
 
 //-----------------------------------------------------------------------------
 
-void OrderedSuspList::print(void)
+void OrderedSuspList::printStream(ostream &stream, int depth)
 {
   for (OrderedSuspList * p = this; p != NULL; p = p->n) {
     OZ_Propagator * pr = p->t->getPropagator();
-    cout << "   " << pr->toString() 
-	 << endl << flush;
+    stream << "   " << pr->toString();
   }
 }
 

@@ -6120,10 +6120,8 @@ OZ_C_proc_end
    */
 OZ_Return printInline(TaggedRef term)
 {
-  char *s=OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
-  fprintf(stdout,"%s",s);
-  fflush(stdout);
-  return (PROCEED);
+  oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
+  return PROCEED;
 }
 
 DECLAREBI_USEINLINEREL1(BIprint,printInline)
@@ -6176,17 +6174,6 @@ OZ_Return showInline(TaggedRef term)
 }
 
 DECLAREBI_USEINLINEREL1(BIshow,showInline)
-
-#ifdef PRINT_LONG
-OZ_C_proc_begin(BIprintLong,2)
-{
-  oz_declareArg(0,t);
-  oz_declareIntArg(1,d);
-  taggedPrintLong(t,d,0);
-  return PROCEED;
-}
-OZ_C_proc_end
-#endif
 
 // ---------------------------------------------------------------------------
 // ???
@@ -6243,7 +6230,6 @@ OZ_C_proc_begin(BIgetPrintName,2)
   }
 
   return oz_unifyAtom(out, "");
-  // mm2: memory leak! was: tagged2String(t,ozconf.printDepth));
 }
 OZ_C_proc_end
 
@@ -7793,6 +7779,9 @@ OZ_C_proc_end
  * Table of builtins
  ******************************************************************** */
 
+OZ_C_proc_proto(BIdebugPrint);
+OZ_C_proc_proto(BIdebugPrintLong);
+
 
 BIspec allSpec[] = {
   {"/",   3, BIfdiv,     (IFOR) BIfdivInline},
@@ -8128,8 +8117,10 @@ BIspec allSpec[] = {
   {"Thread.frameVariables", 3, BIthreadFrameVariables},
   {"Thread.location",       2, BIthreadLocation},
 
-#ifdef PRINT_LONG
-  {"printLong",2,BIprintLong},
+#ifdef DEBUG_PRINT
+  // see print.cc
+  {"Debug.print",2,BIdebugPrint},
+  {"Debug.printLong",2,BIdebugPrintLong},
 #endif
 
   {"statisticsReset",     0, BIstatisticsReset},

@@ -292,7 +292,7 @@ void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
   } 
 }
 
-#ifdef PRINT_LONG
+#ifdef DEBUG_PRINT
 void BIfdHeadManager::printDebug(void) {
   for (int i = 0; i < curr_num_of_items; i += 1)
     printDebug(i);
@@ -1073,7 +1073,7 @@ OZ_Boolean BIfdBodyManager::_unifiedVars(void)
   
 }
 
-#ifdef PRINT_LONG
+#ifdef DEBUG_PRINT
 void BIfdBodyManager::printDebug(void) {
   for (int i = 0; i < curr_num_of_vars; i += 1)
     printDebug(i);
@@ -1101,16 +1101,16 @@ void BIfdBodyManager::printTerm(void) {
 void BIfdBodyManager::printTerm(int i) {
   if (*bifdbm_varptr[i] == bifdbm_var[i]) {
     cout << "index=" << i << endl;
-    taggedPrintLong(makeTaggedRef(bifdbm_varptr[i]));
+    ozd_print(makeTaggedRef(bifdbm_varptr[i]));
     cout << endl << flush;
   } else {
     cout << "ATTENTION *bifdbm_varptr[i]!=bifdbm_var[i]. index="
 	 << i << endl;
     cout << "bifdbm_varptr";
-    taggedPrintLong(makeTaggedRef(bifdbm_varptr[i]));
+    ozd_print(makeTaggedRef(bifdbm_varptr[i]));
     cout << endl << flush;
     cout << "bifdbm_var";
-    taggedPrintLong(bifdbm_var[i]);
+    ozd_print(bifdbm_var[i]);
     cout << endl << flush;
   }
 }
