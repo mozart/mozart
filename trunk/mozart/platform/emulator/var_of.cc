@@ -103,10 +103,10 @@ void addFeatOFSSuspensionList(TaggedRef var,
 	TaggedRef tl=prop->FT;
 	DEREF(tl,tailPtr,tailTag);
 	switch (tailTag) {
-	case LITERAL:
+	case TAG_LITERAL:
 	  Assert(tl==AtomNil);
 	  break;
-	case UVAR:
+	case TAG_UVAR:
 	  DoBind(tailPtr, AtomNil);
 	  break;
 	default:
@@ -145,7 +145,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
   TypeOfTerm tTag                = tagTypeOf(term);
   //
   switch (tTag) {
-  case LITERAL:
+  case TAG_LITERAL:
     {
       // Literals have no features:
       if (getWidth()>0) return FALSE;
@@ -177,7 +177,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
       return TRUE;
     }
 
-  case LTUPLE:
+  case TAG_LTUPLE:
     {
       // Get the LTuple corresponding to term:
       LTuple* termLTup=tagged2LTuple(term);
@@ -223,7 +223,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
       return TRUE;
     }
 
-  case SRECORD:
+  case TAG_SRECORD:
   {
     // For all features of var, term should contain the feature.
     // Unify the values of corresponding features.

@@ -117,14 +117,14 @@ void staticAddSpawn(OZ_CtDefinition * def,
 inline 
 OZ_Boolean isPosSmallInt(OZ_Term v) 
 {
-  return oz_isSmallInt(v) && (smallIntValue(v) >= 0);
+  return oz_isSmallInt(v) && (tagged2SmallInt(v) >= 0);
 }
 
 inline 
 OZ_Boolean isPosSmallBoolInt(OZ_Term v) 
 {
   if (oz_isSmallInt(v)) {
-    int vv = smallIntValue(v);
+    int vv = tagged2SmallInt(v);
     return (0 <= vv) && (vv <= 1);
   }
   return OZ_FALSE;
@@ -134,7 +134,7 @@ inline
 OZ_Boolean isPosSmallFDInt(OZ_Term v) 
 {
   if (oz_isSmallInt(v)) {
-    int vv = smallIntValue(v);
+    int vv = tagged2SmallInt(v);
     return (0 <= vv) && (vv <= fd_sup);
   }
   return OZ_FALSE;
@@ -144,7 +144,7 @@ inline
 OZ_Boolean isPosSmallSetInt(OZ_Term v) 
 {
   if (oz_isSmallInt(v)) {
-    int vv = smallIntValue(v);
+    int vv = tagged2SmallInt(v);
     return (0 <= vv) && (vv <= fset_sup);
   }
   return OZ_FALSE;

@@ -87,7 +87,7 @@ static ScStack scStack;
  *
  */
 #define MARKVAR(u) \
-  scTrail.save((int *) u); *u=GCMARK(0);
+  scTrail.save((int *) u); *u=makeTaggedGcMark(NULL);
 
 #define MARKFIELD(d) \
   scTrail.save((int *) d->cacGetMarkField()); d->cacMark(NULL);
@@ -159,7 +159,7 @@ OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
       TaggedRef h = oz_head(f);
       Assert(oz_isRef(h));
       TaggedRef * f_ptr = tagged2Ref(h);
-      Assert(isCVar(*f_ptr));
+      Assert(oz_isCVar(*f_ptr));
       Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
       am.addSuspendVarList(f_ptr);
       f = oz_tail(f);
@@ -207,7 +207,7 @@ void ScStack::check(void) {
 
 inline
 int checkSituatednessExtension(TaggedRef term) {
-  OZ_Extension *ex = oz_tagged2Extension(term);
+  OZ_Extension *ex = tagged2Extension(term);
 
   Assert(ex);
 
@@ -313,55 +313,55 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
     
   again:
     switch (tagTypeOf(x)) {
-    case REF:
+    case TAG_REF:
       if (!x) continue;
-    case REFTAG2:
-    case REFTAG3:
-    case REFTAG4:
+    case TAG_REF2:
+    case TAG_REF3:
+    case TAG_REF4:
       x_ptr = tagged2Ref(x);
       x     = *x_ptr;
       goto again;
       
-    case UNUSED_VAR:
-    case GCTAG:
-    case SMALLINT:
-    case FSETVALUE:
-    case OZFLOAT:
+    case TAG_UNUSED:
+    case TAG_GCMARK:
+    case TAG_SMALLINT:
+    case TAG_FSETVALUE:
+    case TAG_FLOAT:
       continue;
 
-    case LITERAL:
+    case TAG_LITERAL:
       if (!tagged2Literal(x)->checkSituatedness())
 	bads = oz_cons(x,bads);
       continue;
       
-    case EXT:
+    case TAG_EXT:
       if (!checkSituatednessExtension(x))
 	bads = oz_cons(x,bads);
       continue;
       
-    case LTUPLE:
+    case TAG_LTUPLE:
       if (!tagged2LTuple(x)->cacIsMarked())
 	scStack.push(x);
       continue;
 
-    case SRECORD:
+    case TAG_SRECORD:
       if (!tagged2SRecord(x)->cacIsMarked())
 	scStack.push(x);
       continue;
      
-    case OZCONST:
+    case TAG_CONST:
       if (!tagged2Const(x)->checkSituatedness())
 	bads = oz_cons(x,bads);
       continue;
       
-    case UVAR: 
+    case TAG_UVAR: 
       if (!ISGOOD(tagged2VarHome(x))) {
 	bads = oz_cons(makeTaggedRef(x_ptr),bads);
 	MARKVAR(x_ptr);
       }
       continue;
      
-    case CVAR: 
+    case TAG_CVAR: 
       {
 	OzVariable * cv = tagged2CVar(x);
       

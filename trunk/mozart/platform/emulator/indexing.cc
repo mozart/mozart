@@ -86,9 +86,9 @@ int *IHashTable::add(TaggedRef number, int label)
   unsigned int hsh;
   switch (tagTypeOf(number)) {
 
-  case OZFLOAT:  hsh = tagged2Float(number)->hash();  break;
-  case OZCONST:  hsh = tagged2BigInt(number)->hash(); break;
-  case SMALLINT: hsh = smallIntHash(number);          break;    
+  case TAG_FLOAT:    hsh = tagged2Float(number)->hash();  break;
+  case TAG_CONST:    hsh = tagged2BigInt(number)->hash(); break;
+  case TAG_SMALLINT: hsh = smallIntHash(number);          break;    
   default:       Assert(0); return 0;
   }
 
@@ -194,7 +194,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return offset;
   }
 
-  if (isUVar(term)) {
+  if (oz_isUVar(term)) {
     return 0;
   }
 
@@ -227,7 +227,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
       return 0;
     }
 
-    if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
+    if (oz_isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
       return 0;
     }
   }

@@ -218,7 +218,7 @@ OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
 
   if (def->isValidValue(t)) {
     return expectProceed(1, 1);
-  } else if (isGenCtVar(t, ttag)) {
+  } else if (isGenCtVar(t)) {
     OzCtVariable * ctvar = tagged2GenCtVar(t);
 
     // check the kind
@@ -273,10 +273,10 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 
   if (isPosSmallFDInt(descr) && (level >= 1)) { // (1)
     return expectProceed(1, 1);
-  } else if (isGenFDVar(descr, descr_tag) && (level >= 1)) {
+  } else if (isGenFDVar(descr) && (level >= 1)) {
     addSuspend(fd_prop_singl, descr_ptr);
     return expectSuspend(1, 0);
-  } else if (isGenBoolVar(descr, descr_tag) && (level >= 1)) {
+  } else if (isGenBoolVar(descr) && (level >= 1)) {
     addSuspend(descr_ptr);
     return expectSuspend(1, 0);
   } else if (oz_isSTuple(descr) && (level >= 2)) {
@@ -325,10 +325,10 @@ OZ_expect_t OZ_Expect::expectBoolVar(OZ_Term t)
 
   if (isPosSmallBoolInt(t)) {
     return expectProceed(1, 1);
-  } else if (isGenBoolVar(t, ttag)) {
+  } else if (isGenBoolVar(t)) {
     addSpawnBool(tptr);
     return expectProceed(1, 1);
-  } else if (isGenFDVar(t, ttag)) {
+  } else if (isGenFDVar(t)) {
     if (tellBasicBoolConstraint(makeTaggedRef(tptr)) == FAILED)
       return expectFail();
     addSpawnBool(tptr);
@@ -349,7 +349,7 @@ OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
 
   if (isPosSmallFDInt(t)) {
     return expectProceed(1, 1);
-  } else if (isGenBoolVar(t, ttag) || isGenFDVar(t, ttag)) {
+  } else if (isGenBoolVar(t) || isGenFDVar(t)) {
     addSpawn(ps, tptr);
     return expectProceed(1, 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
@@ -416,7 +416,7 @@ OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
 
   if (isFSetValueTag(ttag)) {
     return expectProceed(1, 1);
-  } else if (isGenFSetVar(t, ttag)) {
+  } else if (isGenFSetVar(t)) {
     addSpawn(ps, tptr);
     return expectProceed(1, 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
@@ -469,7 +469,7 @@ OZ_expect_t OZ_Expect::expectRecordVar(OZ_Term t)
 
   if (oz_isRecord(t)) {
     return expectProceed(1, 1);
-  } else if (isGenOFSVar(t, ttag)) {
+  } else if (isGenOFSVar(t)) {
     addSpawn(fd_prop_any, tptr);
     return expectProceed(1, 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
@@ -912,24 +912,24 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     DEREF(v, vptr, vtag);
 
     if (isVariableTag(vtag)) {
-      Assert(!isCVar(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
+      Assert(!isCVarTag(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
-	if (isGenFDVar(v, vtag)) {
+	if (isGenFDVar(v)) {
 	  if (oz_isLocalVar(tagged2CVar(v))) {
 	    addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
 	    continue;
 	  }
-	} else if (isGenFSetVar(v, vtag)) {
+	} else if (isGenFSetVar(v)) {
 	  if (oz_isLocalVar(tagged2CVar(v))) {
 	    addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
 	    continue;
 	  }
-	} else if (isGenBoolVar(v, vtag)) {
+	} else if (isGenBoolVar(v)) {
 	  if (oz_isLocalVar(tagged2CVar(v))) {
 	    addSuspBoolVar(v, prop);
 	    continue;
 	  }
-	} else if (isGenCtVar(v, vtag)) {
+	} else if (isGenCtVar(v)) {
 	  if (oz_isLocalVar(tagged2CVar(v))) {
 	    addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
 	    continue;
@@ -949,7 +949,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     DEREF(v, vptr, vtag);
 
     if (isVariableTag(vtag)) {
-      Assert(isCVar(vtag));
+      Assert(isCVarTag(vtag));
 
       oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(v));

@@ -87,7 +87,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
   if (isLiteralTag(labelTag) && oz_isFree(t)) {
     DEREF(tNumFeats, nPtr, ntag);
     if (!oz_isSmallInt(tNumFeats)) oz_typeError(1,"Int");
-    dt_index numFeats=smallIntValue(tNumFeats);
+    dt_index numFeats=tagged2SmallInt(tNumFeats);
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
 			     : (int)ceil((double)numFeats/FILLFACTOR));
     OzOFVariable *newofsvar=new OzOFVariable(label,size,oz_currentBoard());
@@ -98,15 +98,15 @@ OZ_BI_define(BIsystemTellSize,3,0)
   }
 
   switch (labelTag) {
-  case LTUPLE:
-  case SRECORD:
+  case TAG_LTUPLE:
+  case TAG_SRECORD:
     oz_typeError(0,"Literal");
-  case LITERAL:
+  case TAG_LITERAL:
     break;
-  case UVAR:
+  case TAG_UVAR:
     // FUT
     oz_suspendOn (makeTaggedRef(labelPtr));
-  case CVAR:
+  case TAG_CVAR:
     switch (tagged2CVar(label)->getType()) {
     case OZ_VAR_OF:
       {
@@ -124,17 +124,17 @@ OZ_BI_define(BIsystemTellSize,3,0)
     oz_typeError(0,"Literal");
   }
 
-  Assert(labelTag == LITERAL);
+  Assert(isLiteralTag(labelTag));
 
   // Create record:
   switch (tag) {
-  case LTUPLE:
+  case TAG_LTUPLE:
     return oz_eq(label, AtomCons) ? PROCEED : FAILED;
-  case LITERAL:
+  case TAG_LITERAL:
     return oz_eq(label, t) ? PROCEED : FAILED;
-  case SRECORD:
+  case TAG_SRECORD:
     return oz_eq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
-  case CVAR:
+  case TAG_CVAR:
     if (tagged2CVar(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
        tagged2GenOFSVar(t)->propagateOFS();
@@ -142,13 +142,13 @@ OZ_BI_define(BIsystemTellSize,3,0)
     }
     if (oz_isKinded(t)) oz_typeError(3,"Record");
     // else fall through to creation case
-  case UVAR:
+  case TAG_UVAR:
     // FUT
     {
       // Calculate initial size of hash table:
       DEREF(tNumFeats, nPtr, ntag);
       if (!oz_isSmallInt(tNumFeats)) oz_typeError(1,"Int");
-      dt_index numFeats=smallIntValue(tNumFeats);
+      dt_index numFeats=tagged2SmallInt(tNumFeats);
       dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
                                                      : (int)ceil((double)numFeats/FILLFACTOR));
       // Create newofsvar with unbound variable as label & given initial size:
@@ -186,15 +186,15 @@ OZ_BI_define(BIrecordTell,2,0)
   }
 
   switch (labelTag) {
-  case LTUPLE:
-  case SRECORD:
+  case TAG_LTUPLE:
+  case TAG_SRECORD:
     oz_typeError(0,"Literal");
-  case LITERAL:
+  case TAG_LITERAL:
     break;
-  case UVAR:
+  case TAG_UVAR:
     // FUT
     oz_suspendOn (makeTaggedRef(labelPtr));
-  case CVAR:
+  case TAG_CVAR:
     switch (tagged2CVar(label)->getType()) {
     case OZ_VAR_OF:
       {
@@ -212,16 +212,16 @@ OZ_BI_define(BIrecordTell,2,0)
     oz_typeError(0,"Literal");
   }
 
-  Assert(labelTag == LITERAL);
+  Assert(labelTag == TAG_LITERAL);
   // Create record:
   switch (tag) {
-  case LTUPLE:
+  case TAG_LTUPLE:
     return oz_eq(label, AtomCons) ? PROCEED : FAILED;
-  case LITERAL:
+  case TAG_LITERAL:
     return oz_eq(label, t) ? PROCEED : FAILED;
-  case SRECORD:
+  case TAG_SRECORD:
     return oz_eq(label, tagged2SRecord(t)->getLabel()) ? PROCEED : FAILED;
-  case CVAR:
+  case TAG_CVAR:
     if (tagged2CVar(t)->getType()==OZ_VAR_OF) {
        OZ_Return ret=oz_unify(tagged2GenOFSVar(t)->getLabel(),label);
        tagged2GenOFSVar(t)->propagateOFS();
@@ -229,7 +229,7 @@ OZ_BI_define(BIrecordTell,2,0)
     }
     if (oz_isKinded(t)) oz_typeError(0,"Record");
     // else fall through to creation case
-  case UVAR:
+  case TAG_UVAR:
     // FUT
     {
       // Create newofsvar with unbound variable as label & given initial size:
@@ -253,11 +253,11 @@ OZ_BI_define(BIisRecordCB,1,1)
   OZ_Term t=OZ_in(0);
   DEREF(t, tPtr, tag);
   switch (tag) {
-  case LTUPLE:
-  case LITERAL:
-  case SRECORD:
+  case TAG_LTUPLE:
+  case TAG_LITERAL:
+  case TAG_SRECORD:
     OZ_RETURN(NameTrue);
-  case CVAR:
+  case TAG_CVAR:
     switch (tagged2CVar(t)->getType()) {
     case OZ_VAR_OF:
       OZ_RETURN(NameTrue);
@@ -268,7 +268,7 @@ OZ_BI_define(BIisRecordCB,1,1)
       oz_suspendOnPtr(tPtr);
     }
     break;
-  case UVAR:
+  case TAG_UVAR:
     // FUT
     oz_suspendOnPtr(tPtr);
   default:
@@ -297,10 +297,10 @@ OZ_BI_define(BIwidthC, 2, 0)
 
     // Wait until first argument is a constrained record (OFS, SRECORD, LTUPLE, LITERAL):
     switch (recTag) {
-    case UVAR:
+    case TAG_UVAR:
       // FUT
       oz_suspendOn(rawrec);
-    case CVAR:
+    case TAG_CVAR:
       switch (tagged2CVar(rec)->getType()) {
       case OZ_VAR_OF:
           break;
@@ -311,9 +311,9 @@ OZ_BI_define(BIwidthC, 2, 0)
           oz_suspendOn(rawrec);
       }
       break;
-    case SRECORD:
-    case LITERAL:
-    case LTUPLE:
+    case TAG_SRECORD:
+    case TAG_LITERAL:
+    case TAG_LTUPLE:
       break;
     default:
       oz_typeError(0,"Record");
@@ -321,7 +321,7 @@ OZ_BI_define(BIwidthC, 2, 0)
 
     // Ensure that second argument wid is a FD or integer:
     switch (widTag) {
-    case UVAR:
+    case TAG_UVAR:
       // FUT
     {
         // Create new fdvar:
@@ -331,14 +331,14 @@ OZ_BI_define(BIwidthC, 2, 0)
         Assert(ok==PROCEED); // mm2
         break;
     }
-    case CVAR:
+    case TAG_CVAR:
       if (oz_isKinded(wid) && tagged2CVar(wid)->getType()!=OZ_VAR_FD)
 	return FAILED;
       break;
-    case OZCONST:
+    case TAG_CONST:
       if (!oz_isBigInt(wid)) return FAILED;
       break;
-    case SMALLINT:
+    case TAG_SMALLINT:
         break;
     default:
         return FAILED;
@@ -381,20 +381,20 @@ OZ_Return WidthPropagator::propagate(void)
     DEREF(wid, widptr, widTag);
 
     switch (recTag) {
-    case SRECORD:
-    case LITERAL:
-    case LTUPLE:
+    case TAG_SRECORD:
+    case TAG_LITERAL:
+    case TAG_LTUPLE:
     {
         // Impose width constraint
-        recwidth=(recTag==SRECORD) ? tagged2SRecord(rec)->getWidth() :
-                 ((recTag==LTUPLE) ? 2 : 0);
+        recwidth=(recTag==TAG_SRECORD) ? tagged2SRecord(rec)->getWidth() :
+                 ((recTag==TAG_LTUPLE) ? 2 : 0);
         if (isGenFDVar(wid)) {
             // OzFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
 	  Bool res=oz_unify(makeTaggedSmallInt(recwidth),rawwid); // mm2
 	  if (!res) { result = FAILED; break; }
         } else if (isSmallIntTag(widTag)) {
-            int intwid=smallIntValue(wid);
+            int intwid=tagged2SmallInt(wid);
             if (recwidth!=intwid) { result = FAILED; break; }
         } else if (oz_isBigInt(wid)) {
             // BIGINT case: fail
@@ -405,7 +405,7 @@ OZ_Return WidthPropagator::propagate(void)
         result = PROCEED;
         break;
     }
-    case CVAR:
+    case TAG_CVAR:
     {
         Assert(tagged2CVar(rec)->getType() == OZ_VAR_OF);
         // 1. Impose width constraint
@@ -423,7 +423,7 @@ OZ_Return WidthPropagator::propagate(void)
                 if (!res) { result = FAILED; break; }
             }
         } else if (isSmallIntTag(widTag)) {
-            int intwid=smallIntValue(wid);
+            int intwid=tagged2SmallInt(wid);
             if (recwidth>intwid) { result = FAILED; break; }
         } else if (oz_isBigInt(wid)) {
             // BIGINT case: fail
@@ -441,7 +441,7 @@ OZ_Return WidthPropagator::propagate(void)
             value=newfdwid->getDom().getMinElem();
         } else if (isSmallIntTag(newwidTag)) {
             goodsize=TRUE;
-            value=smallIntValue(wid);
+            value=tagged2SmallInt(wid);
         } else {
             goodsize=FALSE;
 	    value = 0; // make gcc quiet
@@ -504,18 +504,18 @@ OZ_BI_define(BImonitorArity, 3, 0)
     OZ_Term tmprec=OZ_in(0);
     DEREF(tmprec,_2,recTag);
     switch (recTag) {
-    case LTUPLE:
+    case TAG_LTUPLE:
         return oz_unify(arity,makeTupleArityList(2));
-    case LITERAL:
+    case TAG_LITERAL:
         // *** arity is nil
         return oz_unify(arity,AtomNil);
-    case SRECORD:
+    case TAG_SRECORD:
         // *** arity is known set of features of the SRecord
         return oz_unify(arity,tagged2SRecord(tmprec)->getArityList());
-    case UVAR:
+    case TAG_UVAR:
       // FUT
         oz_suspendOn(rec);
-    case CVAR:
+    case TAG_CVAR:
         switch (tagged2CVar(tmprec)->getType()) {
         case OZ_VAR_OF:
             break;
@@ -625,7 +625,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   DEREF(fea,  feaPtr,  feaTag);
 
   // optimize the most common case: adding or reading a feature
-  if (isCVar(termTag) &&
+  if (isCVarTag(termTag) &&
       tagged2CVar(term)->getType()==OZ_VAR_OF &&
       oz_isFeature(fea)) {
     OzOFVariable *ofsvar=tagged2GenOFSVar(term);
@@ -648,7 +648,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   // Wait until Y is a feature:
   if (isVariableTag(feaTag)) {
 
-    if (isCVar(feaTag) && tagged2CVar(fea)->getType()==OZ_VAR_OF) {
+    if (isCVarTag(feaTag) && tagged2CVar(fea)->getType()==OZ_VAR_OF) {
       OzOFVariable *ofsvar=tagged2GenOFSVar(fea);
       if (ofsvar->getWidth()>0) 
 	goto typeError2;
@@ -667,7 +667,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
   Assert(term!=makeTaggedNULL());
 
   switch (termTag) {
-  case CVAR:
+  case TAG_CVAR:
 
     if (tagged2CVar(term)->getType() == OZ_VAR_OF) {
       OzOFVariable *ofsvar=tagged2GenOFSVar(term);
@@ -706,7 +706,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
     }
 
     // else fall through
-  case UVAR:
+  case TAG_UVAR:
     // FUT
     {
       // Create newofsvar:
@@ -723,7 +723,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
       OZ_RETURN(uvar);
     }
     
-  case SRECORD:
+  case TAG_SRECORD:
     {
       // Get the SRecord corresponding to term:
       SRecord* termSRec=makeRecord(term);
@@ -735,10 +735,10 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
       return FAILED;
     }
 
-  case LTUPLE:
+  case TAG_LTUPLE:
     {
       if (!oz_isSmallInt(fea)) return FAILED;
-      int i2 = smallIntValue(fea);
+      int i2 = tagged2SmallInt(fea);
       switch (i2) {
       case 1:
 	OZ_RETURN(tagged2LTuple(term)->getHead());
@@ -748,7 +748,7 @@ OZ_BI_define(BIofsUpArrow, 2, 1) {
       return FAILED;
     }
     
-  case LITERAL:
+  case TAG_LITERAL:
     return FAILED;
     
   default:

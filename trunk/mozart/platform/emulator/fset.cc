@@ -814,7 +814,7 @@ OZ_Boolean FSetValue::operator <= (const FSetValue &s) const
 OZ_Boolean FSetValue::unify(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
-  return (ttag == FSETVALUE) ? (*((FSetValue *) tagged2FSetValue(t)) == *this) : FALSE;
+  return isFSetValueTag(ttag) ? (*((FSetValue *) tagged2FSetValue(t)) == *this) : FALSE;
 }
 
 ostream &FSetValue::print2stream(ostream &o) const

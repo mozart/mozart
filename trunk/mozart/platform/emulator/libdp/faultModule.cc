@@ -86,7 +86,7 @@ OZ_BI_define(BIgetEntityCond,2,0){
     NONVAR(e0, e);
     if(oz_isConst(e)){
       if(isWatcherEligible(e)){
-	ec = getEntityCond(tagged2Tert(e));}}}
+	ec = getEntityCond((Tertiary *) tagged2Const(e));}}}
 
   if(ec!= ENTITY_NORMAL){
     OZ_RETURN(listifyWatcherCond(ec));}

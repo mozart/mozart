@@ -71,12 +71,12 @@ int OZ_isExtension(OZ_Term t)
 
 OZ_Extension *OZ_getExtension(OZ_Term t)
 {
-  return oz_tagged2Extension(oz_deref(t));
+  return tagged2Extension(oz_deref(t));
 }
 
 OZ_Term OZ_extension(OZ_Extension *e)
 {
-  return oz_makeTaggedExtension(e);
+  return makeTaggedExtension(e);
 }
 
 unsigned int OZ_getUniqueId(void)
@@ -103,7 +103,7 @@ void * _OZ_currentBoard()
 
 Bool oz_isChunkExtension(TaggedRef term)
 {
-  return oz_tagged2Extension(term)->isChunkV();
+  return tagged2Extension(term)->isChunkV();
 }
 
 static oz_unmarshalProcType *unmarshalRoutine = 0;

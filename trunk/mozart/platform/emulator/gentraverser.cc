@@ -47,15 +47,15 @@ void GenTraverser::doit()
     //
     switch(tTag) {
 
-    case SMALLINT:
+    case TAG_SMALLINT:
       processSmallInt(t);
       break;
 
-    case OZFLOAT:
+    case TAG_FLOAT:
       processFloat(t);
       break;
 
-    case LITERAL:
+    case TAG_LITERAL:
       {
 	int ind = find(t);
 	if (ind >= 0) {
@@ -66,7 +66,7 @@ void GenTraverser::doit()
 	break;
       }
 
-    case LTUPLE:
+    case TAG_LTUPLE:
       {
 	int ind = find(t);
 	if (ind >= 0) {
@@ -85,7 +85,7 @@ void GenTraverser::doit()
 	break;
       }
 
-    case SRECORD:
+    case TAG_SRECORD:
       {
 	int ind = find(t);
 	if (ind >= 0) {
@@ -115,11 +115,11 @@ void GenTraverser::doit()
 	break;
       }
 
-  case EXT:
+  case TAG_EXT:
     processExtension(t);
     break;
 
-  case OZCONST:
+  case TAG_CONST:
     {
       int ind = find(t);
       if (ind >= 0) {
@@ -216,7 +216,7 @@ void GenTraverser::doit()
       break;
     }
 
-    case FSETVALUE:
+    case TAG_FSETVALUE:
       if (!processFSETValue(t)) {
 	ensureFree(1);
 	putSync();		// will appear after the list;
@@ -225,11 +225,11 @@ void GenTraverser::doit()
       }
       break;
 
-    case UVAR:
+    case TAG_UVAR:
       processUVar(tPtr);
       break;
 
-    case CVAR:
+    case TAG_CVAR:
       {
 	int ind = find(t);
 	if (ind >= 0) {
@@ -246,7 +246,7 @@ void GenTraverser::doit()
 	break;
       }
 
-    case GCTAG:
+    case TAG_GCMARK:
       //
       switch(t) {
       case taggedBATask:

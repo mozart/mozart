@@ -9,13 +9,13 @@
 inline int _oz_isWeakDictionary(OZ_Term t)
 {
   return oz_isExtension(t) &&
-    oz_tagged2Extension(t)->getIdV()==OZ_E_WEAKDICTIONARY;
+    tagged2Extension(t)->getIdV()==OZ_E_WEAKDICTIONARY;
 }
 
 inline WeakDictionary* _tagged2WeakDictionary(OZ_Term t)
 {
   Assert(_oz_isWeakDictionary(t));
-  return (WeakDictionary*) oz_tagged2Extension(t);
+  return (WeakDictionary*) tagged2Extension(t);
 }
 
 inline int oz_isWeakDictionary(OZ_Term t)
@@ -135,7 +135,7 @@ OZ_Return WeakDictionary::getFeatureV(OZ_Term f,OZ_Term& v)
     return PROCEED;
   } else {
     return oz_raise(E_ERROR,E_KERNEL,"WeakDictionary.get",2,
-		    oz_makeTaggedExtension(this),f);
+		    makeTaggedExtension(this),f);
   }
 }
 
@@ -187,7 +187,7 @@ OZ_BI_define(weakdict_put,3,0)
  OZ_declareTerm(2,v);
  TaggedRef w = v;
  DEREF(w,w_ptr,w_tag);
- if (isUVar(w_tag)) {
+ if (isUVarTag(w_tag)) {
    // we must bind the UVAR to a CVAR (simple)
    OZ_Return r = oz_unify(makeTaggedRef(newTaggedCVar(oz_newSimpleVar(tagged2VarHome(*w_ptr)))),
 			  v);

@@ -322,7 +322,7 @@ public:
   void put_int(TaggedRef i) {
     if (oz_isSmallInt(i)) {
       int len;
-      sprintf(buffer,"%d%n",smallIntValue(i),&len);
+      sprintf(buffer,"%d%n",tagged2SmallInt(i),&len);
       buffer += len;
       ensure(0);
     } else {
@@ -402,7 +402,7 @@ public:
       }
       if (!isSmallIntTag(h_tag))
 	return raise_type_error(list);
-      int i = smallIntValue(h);
+      int i = tagged2SmallInt(h);
       if (i<0 || i>255)
 	return raise_type_error(list);
 	
@@ -440,7 +440,7 @@ public:
       }
       if (!isSmallIntTag(h_tag))
 	return raise_type_error(list);
-      int i = smallIntValue(h);
+      int i = tagged2SmallInt(h);
       if (i<0 || i>255)
 	return raise_type_error(list);
 	
@@ -640,7 +640,7 @@ OZ_Return TK::put_record_or_tuple(TaggedRef tcl, int start = 0) {
     TaggedRef as = st->getArityList();
     
     if (start==1 && oz_isCons(as)) {
-      Assert(smallIntValue(oz_head(as))==1);
+      Assert(tagged2SmallInt(oz_head(as))==1);
       as=oz_tail(as);
     }
     if (!oz_isCons(as))
@@ -835,7 +835,7 @@ OZ_Return TK::put_tcl(TaggedRef tcl) {
 	  if (!isSmallIntTag(arg_tag))
 	    return raise_type_error(tcl);
 
-	  int j = smallIntValue(arg);
+	  int j = tagged2SmallInt(arg);
 
 	  if ((j < 0) || (j > 255))
 	    return raise_type_error(tcl);
@@ -1057,7 +1057,7 @@ OZ_Return TK::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 
 OZ_BI_define(BItk_init, 3, 0) {
 
-  tk.init(smallIntValue(oz_deref(OZ_in(0))), 
+  tk.init(tagged2SmallInt(oz_deref(OZ_in(0))), 
 	   oz_deref(OZ_in(1)), 
 	   OZ_in(2));
 
@@ -1163,7 +1163,7 @@ OZ_BI_define(BItk_writeReturnMess,4,0) {
       goto exit;
     }
 
-    frst = tagged2SRecord(mess)->getFeature(newSmallInt(1));
+    frst = tagged2SRecord(mess)->getFeature(makeTaggedSmallInt(1));
 
     if (!frst) {
       s = raise_type_error(mess);;
@@ -1246,7 +1246,7 @@ OZ_BI_define(BItk_writeTuple,2,0) {
 
     Assert(!oz_isVariable(mess));
 
-    frst = tagged2SRecord(mess)->getFeature(newSmallInt(1));
+    frst = tagged2SRecord(mess)->getFeature(makeTaggedSmallInt(1));
 
     if (!frst) {
       s = raise_type_error(mess);;
@@ -1293,7 +1293,7 @@ OZ_BI_define(BItk_writeTagTuple,3,0) {
       goto exit;
     }
 
-    fst = tagged2SRecord(tuple)->getFeature(newSmallInt(1));
+    fst = tagged2SRecord(tuple)->getFeature(makeTaggedSmallInt(1));
     
     if (!fst) {
       s = raise_type_error(tuple);
