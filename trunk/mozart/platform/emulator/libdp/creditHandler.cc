@@ -65,6 +65,7 @@ void marshalCredit(MarshalerBuffer *buf,Credit c) {
   }
   else {
     buf->put(DIF_SECONDARY);
+    printf("marshaling sec\n");
     marshalNumber(buf, c.credit);
     marshalDSite(buf, c.owner);
   }
