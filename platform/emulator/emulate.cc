@@ -103,6 +103,12 @@ void failureNomsg(AM *e, ProgramCounter PC) { HF_BODY(,); }
 #define SHALLOWFAIL if (!NOFLATGUARD()) { goto LBLshallowFail; }
 
 
+#define SUSP_PC(TermPtr,RegsToSave,PC)          \
+   e->pushTask(PC,Y,G,X,RegsToSave);            \
+   addSusp(TermPtr,e->mkSuspension());          \
+   CHECK_CURRENT_THREAD;
+
+
 #define CheckArity(arity,arityExp,pred,cont)                                  \
 if (arity != arityExp && VarArity != arityExp) {                              \
   HF_WARN(applFailure(pred);                                                  \
@@ -216,18 +222,18 @@ void genCallInfo(GenCallInfoClass *gci, int arity, TaggedRef pred,
   static int gencallfailed = 0;
   gencall++;
 
-  DEREF(pred,_1,_2);
+  Assert(!isRef(pred));
 
   Abstraction *abstr;
   if (gci->isMethAppl) {
     if (!isObject(pred) ||
-        NULL == (abstr = getApplyMethod(pred,gci->lit,arity,X[0]))) {
+        NULL == (abstr = getApplyMethod((Object *) tagged2Const(pred),
+                                        gci->lit,arity,X[0]))) {
       ApplMethInfoClass *ami = new ApplMethInfoClass(gci->lit,arity);
       CodeArea::writeOpcode(gci->isTailCall ? TAILAPPLMETHG : APPLMETHG, PC);
       CodeArea::writeAddress(ami, PC+1);
       CodeArea::writeRegIndex(gci->regIndex, PC+2);
       gencallmethfailed++;
-      getApplyMethod(pred,gci->lit,arity,X[0]);
       return;
     }
   } else {
@@ -487,13 +493,8 @@ void ThreadsPool::disposeThread(Thread *th)
   }
 }
 
-#define CHECK_CURRENT_THREAD                    \
-if (e->currentThread->isSuspended()) {          \
-  e->currentThread->board=CBB;                  \
-  Assert(e->currentThread!=e->rootThread);      \
-  goto LBLkillThread;                           \
-}                                               \
-goto LBLpopTask;
+#define CHECK_CURRENT_THREAD goto LBLcheckCurrentThread;
+
 
 inline
 void addSusp(TaggedRef var,Suspension *susp)
@@ -566,8 +567,7 @@ void AM::suspendCond(AskActor *aa)
   aa->setThread(th);
 }
 
-void AM::suspendInline(OZ_CFun fun,int n,
-                       OZ_Term A,OZ_Term B,OZ_Term C,OZ_Term D)
+void AM::suspendInline(int n, OZ_Term A,OZ_Term B,OZ_Term C,OZ_Term D)
 {
   static RefsArray X = allocateStaticRefsArray(4);
   X[0]=A;
@@ -575,7 +575,6 @@ void AM::suspendInline(OZ_CFun fun,int n,
   X[2]=C;
   X[3]=D;
 
-  pushCFun(fun,X,n);
   Suspension *susp=mkSuspension();
   while (--n>=0) {
     DEREF(X[n],ptr,_1);
@@ -1415,13 +1414,10 @@ LBLkillThread:
 
       switch (fun(arity, X)){
       case SUSPEND:
-        {
-          e->pushTaskOutline(PC+3,Y,G,0,0);
-          e->pushCFun(fun,X,arity);
-          Suspension *susp = e->mkSuspension();
-          e->suspendOnVarList(susp);
+          e->pushTaskOutline(PC,Y,G,X,arity);
+          e->suspendOnVarList(e->mkSuspension());
           CHECK_CURRENT_THREAD;
-        }
+
       case FAILED:
         killPropagatedCurrentTaskSusp();
         LOCAL_PROPAGATION(localPropStore.reset());
@@ -1457,8 +1453,8 @@ LBLkillThread:
           e->trail.pushIfVar(XPC(2));
           DISPATCH(4);
         }
-        e->pushTaskOutline(PC+4,Y,G,X,getPosIntArg(PC+3));
-        e->suspendInline(entry->getFun(),1,XPC(2));
+        e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+3));
+        e->suspendInline(1,XPC(2));
         CHECK_CURRENT_THREAD;
       case FAILED:
         SHALLOWFAIL;
@@ -1487,8 +1483,8 @@ LBLkillThread:
             DISPATCH(5);
           }
 
-          e->pushTaskOutline(PC+5,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(entry->getFun(),2,XPC(2),XPC(3));
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+          e->suspendInline(2,XPC(2),XPC(3));
           CHECK_CURRENT_THREAD;
         }
       case FAILED:
@@ -1519,8 +1515,8 @@ LBLkillThread:
             e->trail.pushIfVar(A);
             DISPATCH(5);
           }
-          e->pushTaskOutline(PC+5,Y,G,X,getPosIntArg(PC+4));
-          e->suspendInline(entry->getFun(),2,A,B);
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+          e->suspendInline(2,A,B);
           CHECK_CURRENT_THREAD;
         }
 
@@ -1557,8 +1553,8 @@ LBLkillThread:
             e->trail.pushIfVar(B);
             DISPATCH(6);
           }
-          e->pushTaskOutline(PC+6,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(entry->getFun(),3,A,B,C);
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
+          e->suspendInline(3,A,B,C);
           CHECK_CURRENT_THREAD;
         }
 
@@ -1595,8 +1591,8 @@ LBLkillThread:
             e->trail.pushIfVar(C);
             DISPATCH(7);
           }
-          e->pushTaskOutline(PC+7,Y,G,X,getPosIntArg(PC+6));
-          e->suspendInline(entry->getFun(),4,A,B,C,D);
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+6));
+          e->suspendInline(4,A,B,C,D);
           CHECK_CURRENT_THREAD;
         }
 
@@ -1623,8 +1619,8 @@ LBLkillThread:
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
           TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
-          e->pushTaskOutline(PC+6,Y,G,X,getPosIntArg(PC+5));
-          e->suspendInline(entry->getFun(),3,A,B,C);
+          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
+          e->suspendInline(3,A,B,C);
           CHECK_CURRENT_THREAD;
         }
       case FAILED:
@@ -1657,11 +1653,8 @@ LBLkillThread:
       case PROCEED: DISPATCH(5);
       case FAILED:  JUMP( getLabelArg(PC+3) );
       case SUSPEND:
-        {
-          e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
-          Suspension *susp = e->mkSuspension();
-          addSusp(XPC(2),susp);
-        }
+        e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
+        addSusp(XPC(2),e->mkSuspension());
         CHECK_CURRENT_THREAD;
 
       case SLEEP:
@@ -1831,11 +1824,8 @@ LBLkillThread:
                   woken up always, even if variable is bound to another var */
 
     int argsToSave = getPosIntArg(PC+2);
-    e->pushTask(PC,Y,G,X,argsToSave);
-    Suspension *susp = e->mkSuspension();
-    addSusp(makeTaggedRef(termPtr),susp);
-    CHECK_CURRENT_THREAD;
-  };
+    SUSP_PC(termPtr,argsToSave,PC);
+  }
 
 
   /* det(X) wait until X will be ground */
@@ -1857,7 +1847,7 @@ LBLkillThread:
     if (isCVar(tag)) {
       tagged2CVar(term)->addDetSusp(susp);
     } else {
-      addSusp(makeTaggedRef(termPtr),susp);
+      addSusp(termPtr,susp);
     }
     CHECK_CURRENT_THREAD;
   }
@@ -1877,16 +1867,14 @@ LBLkillThread:
     TaggedRef object  = origObj;
     int arity         = getPosIntArg(PC+3);
 
-    PC = isTailCall ? 0 : PC+4;
+    /* compiler ensures: if object is in X[n], then n == arity+1,
+     * so in case we have to suspend we save one additional argument */
+    Assert(HelpReg!=X || arity+3+1-1==regToInt(getRegArg(PC+2)));
 
-    DEREF(object,_1,_2);
+    DEREF(object,objectPtr,_2);
     if (!isObject(object)) {
       if (isAnyVar(object)) {
-        X[0] = makeMethod(arity,label,X);
-        X[1] = origObj;
-        predArity = 2;
-        predicate = chunkCast(e->suspCallHandler);
-        goto LBLcall;
+        SUSP_PC(objectPtr,arity+3+1,PC);
       }
 
       if (isProcedure(object))
@@ -1898,18 +1886,25 @@ LBLkillThread:
     }
 
     {
-      Abstraction *def = getSendMethod(object,label,arity,X);
+      Object *obj       = (Object *) tagged2Const(object);
+      Abstraction *def = getSendMethod(obj,label,arity,X);
+      if (def == StateLocked) {
+        TaggedRef state = obj->getCell(); DEREF(state,statePtr,_2);
+        Assert(isAnyVar(state));
+        SUSP_PC(statePtr,arity+3+1,PC);
+      }
       if (def == NULL) {
         goto bombSend;
       }
 
-      if (!isTailCall) { CallPushCont(PC); }
+      if (!isTailCall) { CallPushCont(PC+4); }
       CallDoChecks(def,def->getGRegs(),arity+3);
       Y = NULL; // allocateL(0);
       JUMP(def->getPC());
     }
 
   bombSend:
+    PC = isTailCall ? 0 : PC+4;
     X[0] = makeMethod(arity,label,X);
     predArity = 1;
     predicate = chunkCast(object);
@@ -1937,8 +1932,11 @@ LBLkillThread:
     PC = isTailCall ? 0 : PC+3;
 
     DEREF(object,objectPtr,objectTag);
-    if (!isObject(object) ||
-        NULL == (def = getApplyMethod(object,label,arity-3+3,X[0]))) {
+    if (!isObject(object)) {
+      goto bombApply;
+    }
+    def = getApplyMethod((Object *) tagged2Const(object),label,arity-3+3,X[0]);
+    if (def==NULL) {
       goto bombApply;
     }
 
@@ -1981,19 +1979,19 @@ LBLkillThread:
        TaggedRef taggedPredicate = RegAccess(HelpReg,getRegArg(PC+1));
        predArity = getPosIntArg(PC+2);
 
-       PC = isTailCall ? 0 : PC+3;
-
        DEREF(taggedPredicate,predPtr,predTag);
        if (!isConstChunk(taggedPredicate)) {
          if (isAnyVar(predTag)) {
-           X[predArity++] = makeTaggedRef(predPtr);
-           predicate = chunkCast(e->suspCallHandler);
-           goto LBLcall;
+           /* compiler ensures: if pred is in X[n], then n == arity+1,
+            * so we save one additional argument */
+           Assert(HelpReg!=X || predArity==regToInt(getRegArg(PC+1)));
+           SUSP_PC(predPtr,predArity+1,PC);
          }
          HF_WARN(applFailure(taggedPredicate),
                  printArgs(X,predArity));
        }
 
+       PC = isTailCall ? 0 : PC+3;
        predicate = chunkCast(taggedPredicate);
      }
 
@@ -2644,6 +2642,10 @@ LBLkillThread:
       GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
       int arity = getPosIntArg(PC+2);
       TaggedRef pred = G[gci->regIndex];
+      DEREF(pred,predPtr,_1);
+      if (isAnyVar(pred)) {
+        SUSP_PC(predPtr,arity,PC);
+      }
       genCallInfo(gci,arity,pred,PC,X);
       gci->dispose();
       DISPATCH(0);
@@ -2739,6 +2741,17 @@ LBLkillThread:
       }
     }
   }
+
+ LBLcheckCurrentThread:
+  {
+    if (e->currentThread->isSuspended()) {
+      e->currentThread->board=CBB;
+      Assert(e->currentThread!=e->rootThread);
+      goto LBLkillThread;
+    }
+    goto LBLpopTask;
+  }
+
 } // end engine
 
 int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
