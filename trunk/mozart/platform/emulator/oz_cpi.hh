@@ -29,7 +29,7 @@
       O.fail();                                                             \
       return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, P, ""); \
     } else if (O.isSuspending(r))                                           \
-      return O.suspend(OZ_makeSelfThread());                                \
+      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));   \
   }
 
 #define EXPECT_SUSPEND(O, P, F, SC)                                         \
