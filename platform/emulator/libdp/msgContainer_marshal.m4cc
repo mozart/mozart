@@ -414,5 +414,44 @@ include(EMUDIR/msgFormat.m4)
   }
 }
 
+
+define(message,`
+       case $1:
+       msgFields[0].ft=argEnc($3);
+       msgFields[1].ft=argEnc($4);
+       msgFields[2].ft=argEnc($5);
+       msgFields[3].ft=argEnc($6);
+       msgFields[4].ft=argEnc($7);
+       break;')
+
+
+define(argEnc,`ifelse($1,Index,FT_NUMBER,
+		      $1,Index2,FT_NUMBER,
+		      $1,Index3,FT_NUMBER,
+	              $1,Term,FT_TERM,
+	              $1,FullTopTerm,FT_FULLTOPTERM,
+	              $1,Credit,FT_CREDIT,
+	              $1,String,FT_STRING,
+                      $1,Site,FT_SITE,
+                      $1,Site2,FT_SITE,
+		      FT_NONE)')
+
+void MsgContainer::resetMarshaling() {
+  if(checkFlag(MSG_HAS_MARSHALCONT)) {
+    clearFlag(MSG_HAS_MARSHALCONT);
+    if(cont!=0) {
+      transController->returnMarshaler((DPMarshaler *) cont);
+      cont=0;
+    }
+  }
+
+  // Reset fields
+  switch(mt) {
+    include(EMUDIR/msgFormat.m4)
+  default:
+    ;
+  }
+}
+
 // m4 -E -B10000 -DEMUDIR=/home/annan/source/mozart/platform/emulator/libdp msgContainer_marshal.m4cc > msgContainer_marshal.cc
 
