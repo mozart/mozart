@@ -24,30 +24,11 @@
 #ifndef __EXTENSIONHH
 #define __EXTENSIONHH
 
-#ifdef INTERFACE
-#pragma interface
-#endif
-
-#include "tagged.hh"
+#include <stdlib.h>
 
 /*===================================================================
  * Extension
  *=================================================================== */
-
-/*
- * TODO
- *  - browser, debugger support
- *  - copy flag for gc methods
- *  - user defined extension class
- *    (id is a good optimization for system extension, but user should use
- *     a URL to identify its class)
- */
-
-// starts with OZ_E_LAST
-unsigned int oz_newUniqueId();
-int OZ_isExtension(OZ_Term t);
-Extension *OZ_getExtension(OZ_Term t);
-OZ_Term OZ_extension(Extension *e);
 
 enum OZ_Registered_Extension_Id {
   OZ_E_UNDEFINED,
@@ -60,56 +41,50 @@ enum OZ_Registered_Extension_Id {
   OZ_E_LAST,
 };
 
-class Extension {
+class OZ_Extension {
 public:
-  virtual ~Extension();
-  Extension() {}
-  // must allocate on the heap
-  void* operator new(size_t n) {
-    return alignedMalloc(n,sizeof(double));
-  }
-  // implementation signals error and aborts
-  void operator delete(void*,size_t);
+  virtual ~OZ_Extension();
+  OZ_Extension() {}
 
+  void* operator        new(size_t n);
+  void operator         delete(void*,size_t);
   virtual int           getIdV() = 0;
-  virtual Extension *   gcV() = 0;
-
+  virtual OZ_Extension* gcV() = 0;
   virtual void          gcRecurseV() {}
-
-  virtual void          printStreamV(ostream &out,int depth = 10);
-  virtual void          printLongStreamV(ostream &out,int depth = 10,
-					 int offset = 0);
-
+  virtual OZ_Term       printV(int = 10);
+  virtual OZ_Term       printLongV(int = 10, int = 0);
   virtual OZ_Term       typeV();
   virtual OZ_Term       inspectV() { return typeV(); }
-  virtual Bool          isChunkV() { return OK; }
-
-  virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
-
-  virtual OZ_Return     eqV(OZ_Term t)           { return FAILED; }
-
-  virtual Bool          marshalV(MsgBuffer *bs)  { return FALSE; }
-
-  virtual Board *       getBoardInternal() { return 0; }
-  virtual void          setBoardInternal(Board *bb) {}
+  virtual OZ_Boolean    isChunkV() { return OZ_TRUE; }
+  virtual OZ_Term       getFeatureV(OZ_Term fea)   { return 0; }
+  virtual OZ_Return     eqV(OZ_Term t)             { return OZ_FAILED; }
+  virtual OZ_Boolean    marshalV(void *)           { return OZ_FALSE; }
+  virtual void *        __getSpaceInternal()       { return 0; }
+  virtual void          __setSpaceInternal(void *) {}
 };
 
 
-class SituatedExtension: public Extension {
+class OZ_SituatedExtension: public OZ_Extension {
 private:
-  Board *board;
+  void *space;
 public:
-  SituatedExtension(void);
-  SituatedExtension(Board *bb) : Extension(), board(bb) {}
+  OZ_SituatedExtension(void);
+  OZ_SituatedExtension(void *sp) : OZ_Extension(), space(sp) {}
 
-  virtual void          printStreamV(ostream &out,int depth = 10);
   virtual OZ_Term       typeV();
 
-  virtual Board *getBoardInternal()        { return board; }
-  virtual void setBoardInternal(Board *bb) { board = bb; }
+  virtual void * __getSpaceInternal()         { return space; }
+  virtual void   __setSpaceInternal(void *sp) { space = sp; }
 };
 
-typedef OZ_Term (*oz_unmarshalProcType)(MsgBuffer*);
-OZ_Term oz_extension_unmarshal(int type,MsgBuffer*);
-void oz_registerExtension(int type, oz_unmarshalProcType f);
+
+unsigned int oz_newUniqueId(); // starts with OZ_E_LAST
+
+OZ_Boolean OZ_isExtension(OZ_Term);
+OZ_Extension *OZ_getExtension(OZ_Term);
+OZ_Term OZ_extension(OZ_Extension *);
+
+typedef OZ_Term (*oz_unmarshalProcType)(void*);
+OZ_Term oz_extension_unmarshal(int, void*);
+void oz_registerExtension(int, oz_unmarshalProcType);
 #endif

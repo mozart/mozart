@@ -43,7 +43,6 @@
 #include "space.hh"
 #include "debug.hh"
 #include "iso-ctype.hh"
-#include "extension.hh"
 #include "genvar.hh"
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
@@ -51,6 +50,7 @@
 #include "oz_cpi.hh"
 #include "dictionary.hh"
 #include "dpInterface.hh"
+#include "bytedata.hh"
 
 #include <string.h>
 #include <time.h>
@@ -1253,7 +1253,6 @@ TaggedRef vs_suspend(SRecord *vs, int i, TaggedRef arg_rest) {
   }
 }
 
-#include "bytedata.hh"
 static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
   DEREF(vs, vs_ptr, vs_tag);
 
@@ -4005,7 +4004,12 @@ OZ_Return printTerm(OZ_Term t, int fd, Bool newline)
 
   if (newline) {
     char c = '\n';
-    write(fd,&c,1);
+  loop2:
+    if (write(fd,&c,1) < 0) {
+      if (ossockerrno()==EINTR) goto loop2;
+      return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,
+		      OZ_unixError(ossockerrno()));
+    }
   }
 
   return PROCEED;
@@ -4722,7 +4726,7 @@ static int finalizable(OZ_Term& x)
     //    return 1;
   case EXT:
     {
-      Board *b = oz_tagged2Extension(x)->getBoardInternal();
+      Board *b = (Board *)(oz_tagged2Extension(x)->__getSpaceInternal());
       return (!b || oz_isRootBoard(b))?1:2;
     }
   case OZCONST:

@@ -24,7 +24,6 @@
 #ifndef __BYTEDATAH
 #define __BYTEDATAH
 
-#include "extension.hh"
 #include "builtins.hh"
 #include "string.h"
 #include "pickle.hh"
@@ -97,7 +96,7 @@ public:
 // BitString
 // -------------------------------------------------------------------
 
-class BitString: public Extension, public BitData {
+class BitString: public OZ_Extension, public BitData {
 protected:
   friend Bool oz_isBitString(TaggedRef);
   friend void BitString_init();
@@ -110,10 +109,10 @@ public:
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
 				int depth=10,int offset=0);
-  virtual Extension* gcV() { return clone(); }
+  virtual OZ_Extension* gcV() { return clone(); }
   BitString operator=(const BitString&);
-  BitString() : Extension() {}
-  BitString(int w) : Extension(), BitData(w) {}
+  BitString() : OZ_Extension() {}
+  BitString(int w) : OZ_Extension(), BitData(w) {}
   BitString *clone();
 };
 
@@ -184,7 +183,7 @@ public:
 // ByteString
 // -------------------------------------------------------------------
 
-class ByteString: public Extension, public ByteData {
+class ByteString: public OZ_Extension, public ByteData {
 protected:
   friend Bool oz_isByteString(TaggedRef);
   friend void ByteString_init();
@@ -197,10 +196,10 @@ public:
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
 				int depth=10,int offset=0);
-  virtual Extension* gcV() { return clone(); }
+  virtual OZ_Extension* gcV() { return clone(); }
   ByteString operator=(const ByteString&);
-  ByteString() : Extension() {}
-  ByteString(int w) : Extension(), ByteData(w) {}
+  ByteString() : OZ_Extension() {}
+  ByteString(int w) : OZ_Extension(), ByteData(w) {}
   ByteString *clone();
 };
 

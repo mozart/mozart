@@ -21,11 +21,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
-#include "../oz.h"
+#include "../base.hh"
 
 /*
  * The builtin table

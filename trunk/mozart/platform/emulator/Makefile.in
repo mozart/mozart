@@ -84,7 +84,7 @@ CREATEDSRCS=scanner.cc parser.cc
 
 CREATEDFILES=						\
 	instrtab.hh opcodes.hh				\
-	marshalcode.cc register.hh oz.c			\
+	marshalcode.cc register.hh mozart.c		\
 	atoms.hh atoms.cc				\
 	config.h scanner.cc parser.cc			\
 	version.cc initffuns.cc copycode.cc opcodes.cc	\
@@ -288,8 +288,9 @@ install-bin: $(TARGETS) $(BINDIR)
 	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
 
 install-inc: $(INCDIR)
-	$(INSTALL_FILE) $(SRCDIR)/oz.h $(INCDIR)
-	$(INSTALL_FILE) $(BUILDDIR)/oz.c $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/extension.hh $(INCDIR)
+	$(INSTALL_FILE) $(BUILDDIR)/mozart.c $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/oz_cpi.hh $(INCDIR)
 
 install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
@@ -298,7 +299,7 @@ install-module: $(DYNAMIC_MODULETARGETS) $(BINDIR)
 $(BINDIR) $(INCDIR):
 	$(INSTALL_DIR) $@
 
-initffuns.cc oz.c: oz.h $(OZVERSION)
+initffuns.cc mozart.c: mozart.h $(OZVERSION)
 	$(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
 version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
@@ -322,8 +323,8 @@ tags:	$(CREATEDFILES) version.cc
 clean::
 	-rm -f gmon.out  fetchedInstr.dump verb_out.txt
 
-ozlib.lnk: oz.h
-	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
+ozlib.lnk: mozart.h
+	grep FUNDECL mozart.h | grep -v typedef | grep -v define | \
 	sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
 
 scanner.cc: scanner.ll

@@ -25,7 +25,7 @@
  *
  */
 
-#include "extension.hh"
+#include "base.hh"
 #include "builtins.hh"
 
 /*===================================================================
@@ -34,7 +34,7 @@
 
 #define BITS_PER_INT (sizeof(int) * 8)
 
-class BitArray: public Extension {
+class BitArray: public OZ_Extension {
 private:
   int lowerBound, upperBound;
   int *array;
@@ -66,9 +66,9 @@ public:
   }
 
   virtual
-  Extension *gcV(void);
+  OZ_Extension *gcV(void);
   BitArray operator=(const BitArray &);  // fake for compiler
-  BitArray(int lower, int upper): Extension() {
+  BitArray(int lower, int upper): OZ_Extension() {
     Assert(lower <= upper);
     lowerBound = lower;
     upperBound = upper;
@@ -78,7 +78,7 @@ public:
       array[i] = 0;
     COUNT1(sizeBitArrays, sizeof(BitArray));
   }
-  BitArray(const BitArray *b): Extension() {
+  BitArray(const BitArray *b): OZ_Extension() {
     lowerBound = b->lowerBound;
     upperBound = b->upperBound;
     int size = getSize();
@@ -125,7 +125,7 @@ BitArray *tagged2BitArray(TaggedRef term)
  * Bit Arrays
  *=================================================================== */
 
-Extension *BitArray::gcV(void) {
+OZ_Extension *BitArray::gcV(void) {
   BitArray *ret = new BitArray(this);
   return ret;
 }

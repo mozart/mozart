@@ -21,12 +21,7 @@
  *
  */
 
-#if defined(INTERFACE)
-#pragma implementation "extension.hh"
-#endif
-
-#include "extension.hh"
-#include "ozostream.hh"
+#include "base.hh"
 #include "am.hh"
 
 unsigned int oz_newUniqueId() {
@@ -40,12 +35,12 @@ int OZ_isExtension(OZ_Term t)
   return oz_isExtension(oz_deref(t));
 }
 
-Extension *OZ_getExtension(OZ_Term t)
+OZ_Extension *OZ_getExtension(OZ_Term t)
 {
   return oz_tagged2Extension(oz_deref(t));
 }
 
-OZ_Term OZ_extension(Extension *e)
+OZ_Term OZ_extension(OZ_Extension *e)
 {
   return oz_makeTaggedExtension(e);
 }
@@ -55,45 +50,42 @@ unsigned int OZ_getUniqueId(void)
   return oz_newUniqueId();
 }
 
-Extension::~Extension()
+OZ_Extension::~OZ_Extension()
 {
-  error("invoking destructor ~Extension()");
+  error("invoking destructor ~OZ_Extension()");
 }
 
-void Extension::operator delete(void*,size_t)
-{
-  error("invoking Extension::operator delete(void*,size_t)");
+void* OZ_Extension::operator new(size_t n) {
+  return alignedMalloc(n,sizeof(double));
 }
 
-void Extension::printStreamV(ostream &out,int depth)
+void OZ_Extension::operator delete(void*,size_t)
 {
-  out << "extension";
+  error("invoking OZ_Extension::operator delete(void*,size_t)");
 }
 
-void Extension::printLongStreamV(ostream &out,int depth,
-				 int offset)
+OZ_Term OZ_Extension::printV(int depth)
 {
-  printStreamV(out,depth);
-  out << endl;
+  return typeV();
 }
 
-OZ_Term Extension::typeV()
+OZ_Term OZ_Extension::printLongV(int depth, int offset)
+{
+  return oz_pair2(printV(depth),oz_atom("\n"));
+}
+
+OZ_Term OZ_Extension::typeV()
 {
   return oz_atom("extension");
 }
 
-SituatedExtension::SituatedExtension(void)
-  : Extension()
+OZ_SituatedExtension::OZ_SituatedExtension(void)
+  : OZ_Extension()
 {
-  board = oz_currentBoard();
+  space = oz_currentBoard();
 }
 
-void SituatedExtension::printStreamV(ostream &out,int depth)
-{
-  out << "situatedExtension";
-}
-
-OZ_Term SituatedExtension::typeV()
+OZ_Term OZ_SituatedExtension::typeV()
 {
   return oz_atom("situatedExtension");
 }
@@ -106,7 +98,7 @@ Bool oz_isChunkExtension(TaggedRef term)
 static oz_unmarshalProcType *unmarshalRoutine = 0;
 static int unmarshalRoutineArraySize = 0;
 
-OZ_Term oz_extension_unmarshal(int type,MsgBuffer*bs) {
+OZ_Term oz_extension_unmarshal(int type,void*bs) {
   oz_unmarshalProcType f = unmarshalRoutine[type];
   if (f==0) return 0;
   else return f(bs);

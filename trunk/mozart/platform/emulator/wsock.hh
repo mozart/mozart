@@ -46,7 +46,7 @@
 
 #undef min
 #undef max
-#undef FAILED /* used in oz.h as well */
+#undef FAILED /* used in mozart.h as well */
 #undef Bool
 
 

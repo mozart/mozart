@@ -36,7 +36,7 @@
 #include "conf.h"
 #endif
 
-#include "oz.h"
+#include "mozart.h"
 
 #include "machine.hh"
 #include "resources.hh"
@@ -230,7 +230,7 @@ class Float;
 class SmallInt;
 class BigInt;
 class ConstTerm;
-class Extension;
+class OZ_Extension;
 class Cell;
 class SChunk;
 
