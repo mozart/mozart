@@ -185,17 +185,10 @@ in
 		end}
 	    else 
 	       %%  a variable;
+	       TermOut = 
 	       case {IsFdVar TermIn} then 
-		  %%
-		  TermOut =
 		  {String.toAtom {System.valueToVirtualString TermIn 1 1}}
-	       elsecase {IsMetaVar TermIn} then 
-		  %%
-		  TermOut = {AtomConcatAll [{System.printName TermIn}
-					    '<' {MetaGetNameAsAtom TermIn}
-					    ':' {MetaGetDataAsAtom TermIn}
-					    '>']}
-	       else TermOut = {System.printName TermIn }
+	       else {System.printName TermIn }
 	       end
 
 	       %%

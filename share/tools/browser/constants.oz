@@ -81,8 +81,6 @@ T_Space         = {NewName}
 T_Variable      = {NewName}
 %%  ... and FD variable; 
 T_FDVariable    = {NewName}
-%%  ... and Meta variable; 
-T_MetaVariable  = {NewName}
 
 %%
 %% group #4: What for a bullsh$t ??!

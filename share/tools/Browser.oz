@@ -49,8 +49,6 @@ local
    IsVar	  % 
    IsFdVar        % is a FD variable? 
    IsRecordCVar   % is an OFS?
-   IsMetaVar      % is a Meta variable?
-   WatchMetaVar   % 
    MetaGetDataAsAtom % get the constraint data of the meta variable
    MetaGetNameAsAtom % get the name of the constraint system of a meta var
    MetaGetStrength   % get some measure of the informartion of meta var
@@ -154,7 +152,6 @@ local
    CompClassTermObject
    VariableTermObject
    FDVariableTermObject
-   MetaVariableTermObject
    UnknownTermObject
 
    %%
