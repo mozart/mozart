@@ -29,6 +29,8 @@ import
 export
    Parse
    namePI: PI
+   GetSubtree
+   IsOfClass
 body
    PI = {NewName}
 
@@ -212,6 +214,29 @@ body
       O = {New SGMLParser init(File)}
       {O parse()}
       {O get($)}
+   end
+
+   fun {GetSubtree M L ?Mr}
+      if {IsTuple M} then
+         case {Record.toList M} of (X=L(...))|Xr then
+            Mr = {List.toTuple {Label M} Xr}
+            X
+         else
+            Mr = M
+            unit
+         end
+      else
+         {GetSubtree
+          {List.toRecord {Label M}
+           {Filter {Record.toListInd M} fun {$ X#_} {IsInt X} end}} L ?Mr}
+      end
+   end
+
+   fun {IsOfClass M C}
+      case {CondSelect M 'class' nil} of nil then false
+      [] Xs=_|_ then {Member C Xs}
+      elseof X then C == X
+      end
    end
 
    MAXERRORS = 17
