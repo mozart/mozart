@@ -55,8 +55,7 @@ ChainElem** Chain::getFirstNonGhostBase(){
 
 void Chain::makeGhost(ChainElem* ce){
   ce->setFlagAndCheck(CHAIN_GHOST);
-  ce->resetFlagAndCheck(CHAIN_QUESTION_ASKED);
-  ce->site->deinstallProbe(PROBE_TYPE_ALL);}
+  ce->resetFlagAndCheck(CHAIN_QUESTION_ASKED);}
 
 void Chain::removeBefore(DSite* s){
   ChainElem **base,*ce;
@@ -95,33 +94,6 @@ Bool Chain::tempConnectionInChain(){
     ce=ce->next;}
   return NO;}
 
-//
-void Chain::informHandle(OwnerEntry* oe,int OTI,EntityCond ec){
-  EntityCond newEC;
-  InformElem **base=&inform;
-  InformElem *cur=*base;
-  while(cur!=NULL){
-    newEC=cur->watchcond & ec &~cur->foundcond;
-    if(newEC != ENTITY_NORMAL){
-      sendTellError(oe,cur->site,OTI,newEC,TRUE);
-      if(ec & (PERM_ME|PERM_SOME)){
-        *base=cur->next;
-        cur->free();
-        cur=*base;
-        continue;}}
-    base=&(cur->next);
-    cur=*base;}
-}
-
-void Chain::informHandleOK(OwnerEntry* oe,int OTI,EntityCond ec){
-  EntityCond newEC;
-  InformElem *cur=inform;
-  while(cur!=NULL){
-    newEC=cur->foundcond & ~ec;
-    if(newEC != ENTITY_NORMAL){
-      sendTellError(oe,cur->site,OTI,newEC,FALSE);}
-    cur=cur->next;}}
-
 DSite* Chain::setCurrent(DSite* s, Tertiary* t){
   ChainElem *e=new ChainElem(s);
   DSite *toS=last->site;
@@ -132,7 +104,6 @@ DSite* Chain::setCurrent(DSite* s, Tertiary* t){
   ChainElem *de = getFirstNonGhost();
   if(de->site==s){
     de->setFlagAndCheck(CHAIN_DUPLICATE);}
-  tertiaryInstallProbe(s,PROBE_TYPE_ALL,t);
   Assert(last->next==NULL);
   return toS;}
 
@@ -149,7 +120,6 @@ void Chain::removeNextChainElem(ChainElem** base){
 
 void Chain::releaseChainElem(ChainElem *ce){
   PD((CHAIN,"Releasing Element"));
-  ce->getSite()->deinstallProbe(PROBE_TYPE_ALL);
   ce->free();}
 
 /**********************************************************************/

@@ -54,7 +54,8 @@ inline Bool tokenLostCheckManager(Tertiary *t){
   return NO;}
 
 inline void receiveGet_InterestOK(OwnerEntry* oe,DSite* toS,Tertiary* t){
-  getChainFromTertiary(t)->informHandle(oe,t->getIndex(),getEntityCond(t));}
+  triggerInforms(getChainFromTertiary(t)->getInformBase(),oe,t->getIndex(),
+                 getEntityCond(t));}
 
 inline void receiveGet_TokenLost(OwnerEntry* oe,DSite* toS,Tertiary* t){
   PD((ERROR_DET,"TOKEN_LOST message bouncing"));
@@ -370,18 +371,21 @@ void chainReceiveAck(OwnerEntry* oe,DSite* rsite){
 Bool LockSec::secReceiveToken(Tertiary* t,DSite* &toS){
   if(state & Cell_Lock_Next) state = Cell_Lock_Next|Cell_Lock_Valid;
   else state=Cell_Lock_Valid;
-  if(pending->thread!=NULL){
-    locker=pendThreadResumeFirst(&pending);
-    return OK;}
-  Assert(pending->exKind!=MOVEEX);
-  pendThreadRemoveFirst(getPendBase());
-  if(pending==NULL){
-    locker=NULL;
-    if(state!=Cell_Lock_Valid|Cell_Lock_Next) return OK;
-    toS=next;
-    return OK;}
-  unlockComplex(t);
-  return OK;
+  while(pending!=NULL){
+    if(pending->thread!=NULL){
+      locker=pendThreadResumeFirst(&pending);
+      return OK;}
+    if(pending->exKind==MOVEEX){
+      PD((WEIRD,"lock requested but not used"));
+      Assert(state==Cell_Lock_Next|Cell_Lock_Valid);
+      state=Cell_Lock_Invalid;
+      toS=next;
+      return NO;}
+    pendThreadRemoveFirst(getPendBase());}
+  if(state == Cell_Lock_Valid) return OK;
+  toS=next;
+  state=Cell_Lock_Invalid;
+  return NO;
 }
 
 Bool LockSec::secForward(DSite* toS){

@@ -33,6 +33,7 @@
 #include "thr_int.hh"
 #include "controlvar.hh"
 #include "builtins.hh"
+#include "var_ext.hh"
 
 #include "dsite.hh"
 #include "fail.hh"
@@ -43,6 +44,8 @@
 #include "protocolFail.hh"
 #include "protocolState.hh"
 #include "port.hh"
+#include "var.hh"
+#include "var_obj.hh"
 #include "builtins.hh"
 
 Twin *usedTwins;
@@ -53,7 +56,6 @@ Watcher* globalWatcher;
 /**********************************************************************/
 
 void adjustProxyForFailure(Tertiary*,EntityCond,EntityCond);
-void adjustManagerForFailure(Tertiary*,EntityCond,EntityCond);
 
 /**********************************************************************/
 /*   deferoperations                                          */
@@ -72,8 +74,10 @@ OZ_BI_define(BIdefer,0,0)
     switch(ptr->type){
     case DEFER_PROXY_PROBLEM:
       proxyProbeFault(ptr->tert, ptr->prob);
+      break;
     case DEFER_MANAGER_PROBLEM:
       managerProbeFault(ptr->tert,ptr->site, ptr->prob);
+      break;
     case DEFER_ENTITY_PROBLEM:{
       entityProblem(ptr->tert);
       break;}
@@ -97,63 +101,42 @@ void addDeferElement(DeferElement* e){
 DeferElement* newDeferElement(){
   return (DeferElement*) genFreeListManager->getOne_5();}
 
-
 void gcDeferEvents(){
   DeferElement* ptr = DeferdEvents;
   while(ptr!=NULL) {
     ptr->tert=(Tertiary*)ptr->tert->gcConstTerm();
     if(ptr->type==DEFER_MANAGER_PROBLEM)
       ptr->site->makeGCMarkSite();
-    ptr=ptr->next;
-  }
-
+    ptr=ptr->next;}
 }
+
 /**********************************************************************/
 /*   support                                   */
 /**********************************************************************/
 
-
+#define PROBE_UNUSED PROBE_OK
 
 void deferEntityProblem(Tertiary* t){
   DeferElement *e = newDeferElement();
-  e->tert = t;
-  e->type = DEFER_ENTITY_PROBLEM;
+  e->init(DEFER_ENTITY_PROBLEM,t);
   addDeferElement(e);
 }
 
 void deferManagerProbeFault(Tertiary* t,DSite* s, int pr){
   DeferElement *e = newDeferElement();
-  e->tert = t;
-  e->site = s;
-  e->type = DEFER_MANAGER_PROBLEM;
-  e->prob = pr;
+  e->init(s,DEFER_MANAGER_PROBLEM,pr,t);
   addDeferElement(e);
 }
 
 void deferProxyProbeFault(Tertiary* t, int pr){
   DeferElement *e = newDeferElement();
-  e->tert = t;
-  e->prob = pr;
-  e->type = DEFER_PROXY_PROBLEM;
+  e->init(DEFER_PROXY_PROBLEM,pr,t);
   addDeferElement(e);
 }
-
-void tertiaryInstallProbe(DSite* s,ProbeType pt,Tertiary *t){
-  if(s==myDSite) return;
-  ProbeReturn pr=installProbe(s,pt);
-  if(pr==PROBE_INSTALLED) return;
-  if(t->isManager())
-    deferManagerProbeFault(t,s,pr);
-  else
-    deferProxyProbeFault(t,pr);}
-
 void managerInstallProbe(Tertiary* t,ProbeType pt){
   installProbeNoRet(BT->getOriginSite(t->getIndex()),pt);}
 
-void managerDeInstallProbe(Tertiary* t,ProbeType pt){
-  BT->getOriginSite(t->getIndex())->deinstallProbe(pt);}
-
-void genRemoveWatcher(Tertiary* t,Watcher* w){
+void watcherRemoved(Watcher* w, Tertiary* t){
   EntityCond oldC=getSummaryWatchCond(t);
   Watcher** base=getWatcherBase(t);
   while((*base)!=w){
@@ -161,8 +144,7 @@ void genRemoveWatcher(Tertiary* t,Watcher* w){
     Assert((*base)!=NULL);}
   *base= w->next;
   EntityCond newC=getSummaryWatchCond(t);
-  if(t->getTertType()==Te_Manager)
-    adjustManagerForFailure(t,oldC,newC);
+  if(t->getTertType()==Te_Manager){}
   else
     adjustProxyForFailure(t,oldC,newC);
 }
@@ -176,20 +158,33 @@ EntityCond EntityInfo::getSummaryWatchCond(){
   return ec;
 }
 
+void EntityInfo::meToBlocked(){
+  if(entityCond & PERM_ME)
+    entityCond|= PERM_BLOCKED;
+  if(entityCond & TEMP_ME)
+    entityCond|= TEMP_BLOCKED;
+}
+
 /**********************************************************************/
 /*   insert and remove watchers */
 /**********************************************************************/
+
+static Bool checkForExistentHandler(Watcher *w2, Thread* th, EntityCond wc){
+  if(w2==NULL) return FALSE;
+  if(!isHandlerCondition(wc)) return FALSE;
+  Watcher *w=w2;
+  while(w!=NULL){
+    if(w->isHandler() && (w->thread==th)) return TRUE;
+    w=w->next;}
+  return FALSE;
+}
 
 Bool checkForExistentHandler(Tertiary *t,Thread* th,EntityCond wc){
   if(t==NULL){
     Assert(isHandlerCondition(wc));
     return (globalWatcher!=NULL) ;}
-  if(!isHandlerCondition(wc)) return FALSE;
-  Watcher *w=getWatchersIfExist(t);
-  while(w!=NULL){
-    if(w->isHandler() && w->thread==th) return TRUE;
-    w=w->next;}
-  return FALSE;}
+  return checkForExistentHandler(getWatchersIfExist(t),th,wc);
+}
 
 void insertWatcherLocal(Tertiary *t,Watcher *w){
   EntityInfo* info=t->getInfo();
@@ -201,6 +196,13 @@ void insertWatcherLocal(Tertiary *t,Watcher *w){
   info->watchers=w;
 }
 
+void insertWatcher(EntityInfo* ei,Watcher* w,EntityCond &oldEC, EntityCond &newEC){
+  oldEC=ei->getSummaryWatchCond();
+  w->next=ei->watchers;
+  ei->watchers=w;
+  newEC=ei->getSummaryWatchCond();}
+
+
 void insertWatcher(Tertiary *t,Watcher *w, EntityCond &oldEC, EntityCond &newEC){
   EntityInfo* info=t->getInfo();
   if(info==NULL){
@@ -209,10 +211,7 @@ void insertWatcher(Tertiary *t,Watcher *w, EntityCond &oldEC, EntityCond &newEC)
     oldEC=ENTITY_NORMAL;
     newEC=w->watchcond;
     return;}
-  oldEC=getSummaryWatchCond(t);
-  w->next=info->watchers;
-  info->watchers=w;
-  newEC=getSummaryWatchCond(t);
+  insertWatcher(info,w,oldEC,newEC);
 }
 
 /**********************************************************************/
@@ -234,22 +233,23 @@ PendThread* threadTrigger(Tertiary* t,Watcher* w){
     return NULL;
   }
   while(TRUE){
-    while((pd!=NULL) && (pd->thread==NULL)){
-      pd=pd->next;}
     if(pd==NULL) return NULL;
-    if(w->thread==NULL || (pd->thread== w->thread)){
-      return pd;}
-    pd=pd->next;
-    if(pd==NULL) break;}
-  return NULL;}
+    if(pd->thread==NULL){
+      pd=pd->next;
+      continue;}
+    if(w->isSiteBased() && pd->thread!=NULL) return pd;
+    if(!w->isSiteBased() && pd->thread==w->thread) return pd;
+    pd=pd->next;}
+  return NULL;
+}
 
 void dealWithContinue(Tertiary* t,PendThread* pd){
   switch(t->getType()){
   case Co_Cell:{
     switch(pd->exKind){
-    case EXCHANGE:{ // PER-LOOK maybe exchange old ,nw
+    case EXCHANGE:{
       pd->thread->pushCall(BI_exchangeCell,makeTaggedTert(t),
-                                pd->old, pd->nw);
+                                pd->nw, pd->old);
       return;}
     case ASSIGN:{
       pd->thread->pushCall(BI_assign,makeTaggedTert(t),pd->old,pd->nw);
@@ -268,79 +268,92 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
     Assert(0);
   }}
 
-// returns TRUE if watcher to be removed
-Bool entityProblemPerWatcher(Tertiary*t, Watcher* w){
+void invokeHandlerTert(Watcher *w,EntityCond ec,PendThread *pd,Bool &hit){
+  w->invokeHandler(ec,pd->controlvar,hit);
+  pd->thread=NULL;
+}
+
+Bool entityProblemPerWatcher(Tertiary*t, Watcher* w,Bool &hit){
   EntityCond ec=getEntityCond(t) & w->watchcond;
-  if(ec == ENTITY_NORMAL) return FALSE;
+  Assert(ec != ENTITY_NORMAL);
   if(isHandlerCondition(ec)){
     PendThread* pd=threadTrigger(t,w);
     if(pd!=NULL){
       if(w->isRetry()) dealWithContinue(t,pd);
-      pd->thread = NULL;
-      w->invokeHandler(ec,pd->controlvar,makeTaggedTert(t));
+      invokeHandlerTert(w,ec,pd,hit);
       if(w->isPersistent()) return FALSE;
+      watcherRemoved(w,t);
       return TRUE;}
     return FALSE;}
-  w->invokeWatcher(ec,makeTaggedTert(t));
-  return TRUE;}
+  w->invokeWatcher(ec);
+  return TRUE;
+}
+
 
 Bool entityCondMeToBlocked(Tertiary* t){
-  if(getEntityCond(t) & (PERM_ME|TEMP_ME)) {
-    if(getEntityCond(t) & PERM_ME)
-      addEntityCond(t,PERM_BLOCKED);
-    if(getEntityCond(t) & TEMP_ME)
-      addEntityCond(t,TEMP_BLOCKED);
+  if(getEntityCond(t) & PERM_ME|TEMP_ME) {
+    t->getInfo()->meToBlocked();
     return TRUE;}
-  return FALSE;}
+  return FALSE;
+}
+
 
 void entityProblem(Tertiary *t) {
   PD((ERROR_DET,"entityProblem invoked"));
   Watcher* w;
+  Watcher** aux;
+  EntityCond oldC=getSummaryWatchCond(t);
   Bool hit=FALSE;
   if(errorIgnore(t)) {
     if(globalWatcher==NULL) return;
-    w= NULL;}
+    goto global;}
   else{
-    Watcher **aux=getWatcherBase(t);
+    aux=getWatcherBase(t);
     if(aux==NULL){
       if(globalWatcher==NULL) return;
-      w=NULL;}
-    else w= *aux;}
+      goto global;}}
 
-  while(w!=NULL){
-    if(w->watchcond & getEntityCond(t)){
-      if(entityProblemPerWatcher(t,w)){
-        hit=TRUE;
-        Watcher *aux=w->next;
-        genRemoveWatcher(t,w);
-        w=aux;}
-      else w=w->next;}
-    else w=w->next;}
+  while((*aux)!=NULL){
+    if((*aux)->watchcond & getEntityCond(t)){
+      if(entityProblemPerWatcher(t,(*aux),hit)){
+        *aux=(*aux)->next;
+        continue;}}
+    aux= &((*aux)->next);}
 
-  if((!hit) && (globalWatcher!=NULL))
-    entityProblemPerWatcher(t,globalWatcher);
+ global:
+
+  if((!hit) && (globalWatcher!=NULL) &&
+     (globalWatcher->watchcond & getEntityCond(t)))
+    entityProblemPerWatcher(t,globalWatcher,hit);
+
+  EntityCond newC=getSummaryWatchCond(t);
+  if(t->getTertType()!=Te_Manager)
+    adjustProxyForFailure(t,oldC,newC);
 }
 
 /**********************************************************************/
 /*   SECTION::  watcher                */
 /**********************************************************************/
 
-void Watcher::invokeWatcher(EntityCond ec, TaggedRef entity){
-  if(!isFired()){
+void Watcher::invokeWatcher(EntityCond ec){
+if(!isFired()){
     Assert(!isHandler());
     Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
-    tt->pushCall(proc, listifyWatcherCond(ec),entity);}
+    tt->pushCall(proc, listifyWatcherCond(ec));}
+}
+
+void Watcher::varInvokeHandler(EntityCond ec,Bool &hit){
+  Assert(isHandler());
+    am.prepareCall(proc, listifyWatcherCond(ec));
+    hit=TRUE;
 }
 
 void Watcher::invokeHandler(EntityCond ec,TaggedRef controlvar,
-                            TaggedRef entity){
+                            Bool &hit){
   if(!isFired()){
     Assert(isHandler());
-    //    thread->pushCall(proc,listifyWatcherCond(ec));
-    //ControlVarResume(controlvar);}
-    ControlVarApply(controlvar,proc,
-                    oz_cons(listifyWatcherCond(ec),
-                            oz_cons(entity,oz_nil())));}
+    ControlVarApply(controlvar,proc,listifyWatcherCond(ec));
+    hit=TRUE;}
 }
 
 /**********************************************************************/
@@ -432,25 +445,32 @@ void DSite::probeFault(ProbeReturn pr) {
   PD((PROBES,"PROBEfAULT  site:%s",stringrep()));
   int limit=OT->getSize();
   for(int ctr = 0; ctr<limit;ctr++){
-    OwnerEntry *oe = OT->getEntry(ctr);
-    if(oe==NULL) continue;
+    OwnerEntry *oe = OT->getOwner(ctr);
     if(oe->isTertiary()){
       Tertiary *tr=oe->getTertiary();
       PD((PROBES,"Informing Manager"));
       Assert(tr->isManager());
       managerProbeFault(tr,this,pr);}
     else{
-      // TO_BE_IMPLEMENTED vars
+      if(oe->isVar()){
+        GET_VAR(oe,Manager)->probeFault(this,pr);}
     }}
 
   limit=BT->getSize();
   for(int ctr1 = 0; ctr1<limit;ctr1++){
-    BorrowEntry *be = BT->getEntry(ctr1);
-    if(be==NULL) continue;
+    BorrowEntry *be = BT->getBorrow(ctr1);
     if(be->isTertiary()){
-      Tertiary *tr=be->getTertiary();
       if(be->getSite()==this){
-        proxyProbeFault(tr,pr);}}}} // TO_BE_IMPLEMENTED vars
+        proxyProbeFault(be->getTertiary(),pr);}}
+    else{
+      if(be->isVar()){
+        if(be->getSite()==this){
+          if(typeOfBorrowVar(be)==VAR_PROXY){
+            GET_VAR(be,Proxy)->probeFault(pr);}
+          else{
+            Assert(typeOfBorrowVar(be)==VAR_OBJECT);
+            GET_VAR(be,Object)->probeFault(pr);}}}}}
+}
 
 /**********************************************************************/
 /*   SECTION::              chain and error                            */
@@ -460,14 +480,14 @@ void Chain::establish_PERM_SOME(Tertiary* t){
   if(hasFlag(TOKEN_PERM_SOME)) return;
   setFlag(TOKEN_PERM_SOME);
   int OTI=t->getIndex();
-  informHandle(OT->getOwner(OTI),OTI,PERM_SOME);
+  triggerInforms(&inform,OT->getOwner(OTI),OTI,PERM_SOME);
   addEntityCond(t,PERM_SOME);
   entityProblem(t);}
 
 void Chain::establish_TOKEN_LOST(Tertiary* t){
   setFlagAndCheck(TOKEN_LOST);
   int OTI=t->getIndex();
-  informHandle(OT->getOwner(OTI),OTI,PERM_SOME|PERM_ME);
+  triggerInforms(&inform,OT->getOwner(OTI),OTI,PERM_SOME|PERM_ME);
   addEntityCond(t,PERM_SOME|PERM_ME);}
 
 void Chain::shortcutCrashLock(LockManager* lm){
@@ -588,12 +608,14 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
   return;
 }
 
-void InformElem::maybeTrigger(OwnerEntry* oe, int index, EntityCond ec){
+Bool InformElem::maybeTrigger(OwnerEntry* oe, int index, EntityCond ec){
   EntityCond xec= ec & watchcond;
   xec &= ~foundcond;
-  if(xec == ENTITY_NORMAL) return;
+  if(xec == ENTITY_NORMAL) return FALSE;
   foundcond |= xec;
   sendTellError(oe,site,index,xec,TRUE);
+  if(somePermCondition(xec)) return TRUE;
+  return FALSE;
 }
 
 void InformElem::maybeTriggerOK(OwnerEntry* oe, int index, EntityCond ec){
@@ -601,6 +623,21 @@ void InformElem::maybeTriggerOK(OwnerEntry* oe, int index, EntityCond ec){
   if(xec == ENTITY_NORMAL) return;
   foundcond &= ~xec;
   sendTellError(oe,site,index,xec,FALSE);
+}
+
+void triggerInforms(InformElem **base,OwnerEntry* oe,int index,EntityCond ec){
+  while((*base)!=NULL){
+    if((*base)->maybeTrigger(oe,index,ec))
+      (*base) = ((*base)->next);
+    else
+      base= &((*base)->next);}
+}
+
+void triggerInformsOK(InformElem **base,OwnerEntry* oe,int index,EntityCond ec){
+  InformElem *ie=(*base);
+  while(ie!=NULL){
+    ie->maybeTriggerOK(oe,index,ec);
+    ie=ie->next;}
 }
 
   // approximative PER-LOOK
@@ -611,10 +648,8 @@ void Chain::managerSeesSiteTemp(Tertiary *t,DSite* s){
   PD((ERROR_DET,"managerSeesSiteTemp site:%s nr:%d",
       s->stringrep(),index));
 
-  InformElem *cur=inform;  // deal with TEMP_SOME|TEMP_ME watchers
-  while(cur!=NULL){
-    cur->maybeTrigger(oe,index, (TEMP_SOME|TEMP_ME));
-    cur=cur->next;}
+// deal with TEMP_SOME|TEMP_ME watchers
+  triggerInforms(&inform,oe,index,(TEMP_SOME|TEMP_ME));
 
   ChainElem *ce=findAfter(s); // deal with TEMP_BLOCKED handlers
   while(ce!=NULL){
@@ -634,11 +669,9 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
   PD((ERROR_DET,"managerSeesSiteOK site:%s nr:%d",
       s->stringrep(),index));
 
+// deal with TEMP_SOME|TEMP_ME watchers
   if(!(tempConnectionInChain())){
-    InformElem *cur=inform;  // deal with TEMP_SOME|TEMP_ME watchers
-    while(cur!=NULL){
-      cur->maybeTriggerOK(oe,index, (TEMP_SOME|TEMP_ME));
-      cur=cur->next;}}
+    triggerInformsOK(&inform,oe,index,(TEMP_SOME|TEMP_ME));}
 
   ChainElem *ce=findAfter(s); // deal with TEMP_BLOCKED handlers
   while(ce!=NULL){
@@ -653,29 +686,13 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
 /**********************************************************************/
 /**********************************************************************/
 
-void proxyInform(Tertiary* t,EntityCond ec){
-  switch(t->getType()){
-  case Co_Cell:
-  case Co_Lock: break;
-  case Co_Port: return;
-  default: NOT_IMPLEMENTED;}
-  if(someTempCondition(ec)){
-    managerInstallProbe(t,PROBE_TYPE_ALL);}
-  else{
-    managerInstallProbe(t,PROBE_TYPE_PERM);}
-  sendAskError(t,ec);}
+inline void proxyInform(Tertiary* t,EntityCond ec){
+  sendAskError(BT->getBorrow(t->getIndex()),ec);
+}
 
-void proxyDeInform(Tertiary* t,EntityCond ec){
-  switch(t->getType()){
-  case Co_Cell:
-  case Co_Lock: break;
-  case Co_Port: return;
-  default: NOT_IMPLEMENTED;}
-  if(someTempCondition(ec)){
-    managerDeInstallProbe(t,PROBE_TYPE_ALL);}
-  else{
-    managerDeInstallProbe(t,PROBE_TYPE_PERM);}
-  sendUnAskError(t,ec);}
+inline void proxyDeInform(Tertiary* t,EntityCond ec){
+    sendUnAskError(BT->getBorrow(t->getIndex()),ec);
+}
 
 EntityCond askPart(Tertiary* t, EntityCond ec){
   Assert(!(t->isLocal()));
@@ -691,44 +708,113 @@ EntityCond askPart(Tertiary* t, EntityCond ec){
   return ENTITY_NORMAL;
 }
 
-ProbeType managerProbePart(Tertiary* t, EntityCond ec){
-  Assert(!(t->isLocal()));
-  Assert(!(t->isManager()));
-  switch(t->getType()){
-  case Co_Lock:
-  case Co_Cell:
-    if(ec & (TEMP_ME|TEMP_SOME)) return PROBE_TYPE_ALL;
-    if(ec & (PERM_ME|PERM_SOME)) return PROBE_TYPE_PERM;
-    return PROBE_TYPE_NONE;
- case Co_Port:
-    if(ec & (TEMP_ME)) return PROBE_TYPE_ALL;
-    if(ec & (PERM_ME)) return PROBE_TYPE_PERM;
-    return PROBE_TYPE_NONE;
- default:
-    Assert(0);}
-  return PROBE_TYPE_NONE;
-}
+EntityCond varAskPart(EntityCond ec){
+  return ec & (TEMP_SOME|PERM_SOME);}
 
 void adjustProxyForFailure(Tertiary*t, EntityCond oldEC, EntityCond newEC){
   if(askPart(t,newEC)!=askPart(t,oldEC)){
     if(askPart(t,oldEC)!=ENTITY_NORMAL)
       proxyDeInform(t,askPart(t,oldEC));
     proxyInform(t,askPart(t,newEC));}
-  if(managerProbePart(t,oldEC)!=managerProbePart(t,newEC)){
-    ProbeType pt=managerProbePart(t,oldEC);
-    if(pt!=PROBE_TYPE_NONE)
-      getSiteFromTertiaryProxy(t)->deinstallProbe(pt);
-    pt=managerProbePart(t,newEC);
-    if(pt!=PROBE_TYPE_NONE)
-      tertiaryInstallProbe(getSiteFromTertiaryProxy(t),pt,t);}}
-
-// current scheme doesn't need anything else - VARIABLES will
-void initManagerForFailure(Tertiary* t){
-  return;
 }
 
-void adjustManagerForFailure(Tertiary* t,EntityCond oldEC, EntityCond newEC){
-  return;
+
+void varAdjustPOForFailure(int index,EntityCond oldC, EntityCond newC){
+  if(varAskPart(oldC)==varAskPart(newC)) return;
+  if(varAskPart(oldC)!=ENTITY_NORMAL){
+    sendUnAskError(BT->getBorrow(index),oldC);}
+  if(varAskPart(newC)!=ENTITY_NORMAL){
+    sendAskError(BT->getBorrow(index),newC);}
+}
+
+/**********************************************************************/
+/*   SECTION::       installation/deinstallation utility  VARS        */
+/**********************************************************************/
+
+Bool varInstallWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
+                    Thread* th, unsigned int kind) {
+
+  VarKind vk=classifyVar(tPtr);
+  Assert(vk!=VAR_KINDED);
+  if((vk==VAR_FREE) || (vk==VAR_FUTURE)){
+    (void) globalizeFreeVariable(tPtr);
+    Assert(classifyVar(tPtr)==VAR_MANAGER);
+    vk=VAR_MANAGER;}
+
+  EntityInfo *ei=varMakeOrGetEntityInfo(tPtr);
+  if(checkForExistentHandler(ei->watchers,th,wc)) return FALSE;
+  Watcher* w=new Watcher(proc,th,wc,kind);
+  PD((NET_HANDLER,"Watcher installed on var %x",tPtr));
+
+  EntityCond oldC,newC;
+  insertWatcher(ei,w,oldC,newC);
+  switch(vk){
+  case VAR_MANAGER:{
+    if(ei->getEntityCond()!=ENTITY_NORMAL){
+      oz_getManagerVar(*tPtr)->newWatcher(w->isHandler());}
+    break;}
+  case VAR_PROXY:{
+    ProxyVar *pv=oz_getProxyVar(*tPtr);
+    if(ei->getEntityCond()!=ENTITY_NORMAL){
+      pv->newWatcher(w->isHandler());}
+    varAdjustPOForFailure(pv->getIndex(),oldC,newC);
+    break;}
+  case VAR_OBJECT:{
+    ObjectVar *ov=oz_getObjectVar(*tPtr);
+    if(ei->getEntityCond()!=ENTITY_NORMAL){
+      ov->newWatcher(w->isHandler());}
+    //    varAdjustPOForFailure(ov->getIndex(),oldC,newC);
+    Assert(0);
+    break;}
+  default:
+    Assert(0);}
+  return TRUE;
+}
+
+Bool varDeinstallWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
+                      Thread* th, unsigned int kind){
+  VarKind vk=classifyVar(tPtr);
+  Assert(vk!=VAR_KINDED);
+  Assert(vk!=VAR_FREE);
+  Assert(vk!=VAR_FUTURE);
+
+  EntityInfo* ei=varGetEntityInfo(tPtr);
+  if(ei==NULL) return FALSE;
+
+  EntityCond oldC,newC;
+  Watcher** base= &ei->watchers;
+  if(base==NULL) return FALSE;
+  oldC=ei->getSummaryWatchCond();
+
+  Bool found = FALSE;
+  while(*base!=NULL){
+    if((*base)->matches(proc,th,wc,kind)){
+      *base = (*base)->next;
+      found = TRUE;
+      break;}
+    else{
+      base= &((*base)->next);}}
+
+  if(!found) return FALSE;
+
+  PD((NET_HANDLER,"Watcher deinstalled"));
+  newC=ei->getSummaryWatchCond();
+
+  switch(vk){
+  case VAR_MANAGER:{
+    break;}
+  case VAR_PROXY:{
+    ProxyVar *pv=oz_getProxyVar(*tPtr);
+    varAdjustPOForFailure(pv->getIndex(),oldC,newC);
+    break;}
+  case VAR_OBJECT:{
+    ObjectVar *ov=oz_getObjectVar(*tPtr);
+    //    varAdjustPOForFailure(ov->getIndex(),oldC,newC);
+    Assert(0);
+    break;}
+  default:
+    Assert(0);}
+  return TRUE;
 }
 
 /**********************************************************************/
@@ -765,10 +851,10 @@ void adjustManagerForFailure(Tertiary* t,EntityCond oldEC, EntityCond newEC){
 */
 
 // only debug
-Bool checkWatcherCorrectness(Tertiary* t, EntityCond wc,
+Bool checkWatcherCorrectness(Bool eb, EntityCond wc,
                              Thread* th, unsigned int kind){
 // global handler
-  if(t==NULL) {
+  if(!eb) {
     if(!(kind & PERSISTENT)) return FALSE;
     if(kind & RETRY) return FALSE;
     if(th!=NULL) return FALSE;
@@ -777,13 +863,17 @@ Bool checkWatcherCorrectness(Tertiary* t, EntityCond wc,
 
 // handler
   if(isHandlerCondition(wc)){
-    if(t==NULL) return FALSE;
+    if(kind & SITE_BASED){
+      if(th!=NULL) return FALSE;
+      return TRUE;}
+    if(th==NULL) return FALSE;
     return TRUE;}
 
   // watcher
   if(th!=NULL) return FALSE;
   if(kind & PERSISTENT) return FALSE;
   if(kind & RETRY) return FALSE;
+  if(kind & SITE_BASED) return FALSE;
   return TRUE;
 }
 
@@ -817,8 +907,6 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
     EntityCond oldL,newL;
     insertWatcher(cm,w,oldC,newC);
     insertWatcher(lm,tw,oldL,newL);
-    adjustManagerForFailure(cm,oldC,newC);
-    adjustManagerForFailure(lm,oldC,newC);
     if(w->isTriggered(getEntityCond(lm))) entityProblem(lm);
     if(w->isTriggered(getEntityCond(cm))) entityProblem(cm);
     return TRUE;}
@@ -828,8 +916,7 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
     insertWatcherLocal(t,w);
     return TRUE;}
   insertWatcher(t,w,oldC,newC);
-  if(t->isManager())
-    adjustManagerForFailure(t,oldC,newC);
+  if(t->isManager()){}
   else{
     adjustProxyForFailure(t,oldC,newC);}
   if(w->isTriggered(getEntityCond(t))) deferEntityProblem(t);
@@ -873,16 +960,20 @@ Bool deinstallWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   EntityCond newEC=getSummaryWatchCond(t);
 
   if(t->isLocal()) return TRUE;
-  if(t->isProxy())
+  if(!t->isManager())
     adjustProxyForFailure(t,oldEC,newEC);
-  else
-    adjustManagerForFailure(t,oldEC,newEC);
   return TRUE;
 }
 
 /**********************************************************************/
 /*   SECTION::              user interface                            */
 /**********************************************************************/
+
+Bool isVariableSpec(SRecord* condStruct){
+  TaggedRef aux = condStruct->getFeature(OZ_atom("variable"));
+  if(aux==AtomYes) return OK;
+  return NO;
+}
 
 
 EntityCond translateWatcherCond(TaggedRef tr){
@@ -929,10 +1020,11 @@ OZ_Return translateWatcherConds(TaggedRef tr,EntityCond &ec){
 
 
 OZ_Return watcherInstallHelp(SRecord *condStruct,
-                     EntityCond& ec,Thread* &th,short& kind, Tertiary* &entity){
+                     EntityCond& ec,Thread* &th,short& kind, Bool &entity){
   TaggedRef aux;
   kind=0;
   aux = condStruct->getFeature(OZ_atom("cond"));
+  if(aux==0) {return IncorrectFaultSpecification;}
   OZ_Return tr = translateWatcherConds(aux,ec);
   if(tr!=PROCEED) return  tr;
 
@@ -940,6 +1032,7 @@ OZ_Return watcherInstallHelp(SRecord *condStruct,
 
   if(label==AtomWatcher){
     th=NULL;
+    entity=OK;
     return PROCEED;}
 
   if(label!=AtomHandler) {return IncorrectFaultSpecification;}
@@ -952,30 +1045,35 @@ OZ_Return watcherInstallHelp(SRecord *condStruct,
   aux  = condStruct->getFeature(OZ_atom("basis"));
   if(aux== AtomPerThread){
     th = oz_currentThread();
+    entity=OK;
     return PROCEED;}
   if(aux == AtomPerSite){
     th = NULL;
+    kind |= SITE_BASED;
+    entity=OK;
     return PROCEED;}
   if(aux==AtomGlobal){
     th = NULL;
-    entity = NULL;
+    kind |= SITE_BASED;
+    entity = NO;
     return PROCEED;}
   return IncorrectFaultSpecification;
 }
-
 
 OZ_Return WatcherInstall(Tertiary* entity,SRecord *condStruct,TaggedRef proc){
   EntityCond ec    = ENTITY_NORMAL;
   short kind;
   Thread *th;
   TaggedRef aux;
+  Bool eB;
 
-  watcherInstallHelp(condStruct,ec,th,kind,entity);
-  if(!checkWatcherCorrectness(entity,ec,th,kind))
+  watcherInstallHelp(condStruct,ec,th,kind,eB);
+  if(!checkWatcherCorrectness(eB,ec,th,kind))
     {return IncorrectFaultSpecification;}
-  if(installWatcher(entity,ec,proc,th,kind))
-    return PROCEED;
-  return HandlerExists;}
+  if(!eB) entity=NULL;
+  if(installWatcher(entity,ec,proc,th,kind)) return PROCEED;
+  return IncorrectFaultSpecification;
+}
 
 OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,
                            TaggedRef proc){
@@ -983,13 +1081,48 @@ OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,
   short kind;
   Thread *th;
   TaggedRef aux;
+  Bool eB;
 
-  watcherInstallHelp(condStruct,ec,th,kind,entity);
-  if(!checkWatcherCorrectness(entity,ec,th,kind))
+  watcherInstallHelp(condStruct,ec,th,kind,eB);
+  if(!checkWatcherCorrectness(eB,ec,th,kind))
     {return IncorrectFaultSpecification;}
 
-  Assert(checkWatcherCorrectness(entity,ec,th,kind));
+  if(!eB) entity=NULL;
   if(deinstallWatcher(entity,ec,proc,th,kind)) return PROCEED;
+  return IncorrectFaultSpecification;}
+
+OZ_Return VarWatcherInstall(TaggedRef *tr, SRecord *condStruct,
+                            TaggedRef proc){
+  EntityCond ec    = ENTITY_NORMAL;
+  short kind;
+  Thread *th;
+  TaggedRef aux;
+  Bool eB;
+  OZ_Return ret;
+
+  ret=watcherInstallHelp(condStruct,ec,th,kind,eB);
+  if(ret!=PROCEED) return ret;
+  if(!checkWatcherCorrectness(eB,ec,th,kind))
+  if(!eB) {return IncorrectFaultSpecification;}
+
+  if(varInstallWatcher(tr,ec,proc,th,kind)) return PROCEED;
+  return IncorrectFaultSpecification;}
+
+OZ_Return VarWatcherDeinstall(TaggedRef *tr, SRecord *condStruct,
+                            TaggedRef proc){
+  EntityCond ec    = ENTITY_NORMAL;
+  short kind;
+  Thread *th;
+  TaggedRef aux;
+  Bool eB;
+  OZ_Return ret;
+
+  ret=watcherInstallHelp(condStruct,ec,th,kind,eB);
+  if(ret!=PROCEED) return ret;
+  if(!checkWatcherCorrectness(eB,ec,th,kind))
+  if(!eB) {return IncorrectFaultSpecification;}
+
+  if(varDeinstallWatcher(tr,ec,proc,th,kind)) return PROCEED;
   return IncorrectFaultSpecification;}
 
 TaggedRef listifyWatcherCond(EntityCond ec){
@@ -1079,11 +1212,24 @@ void gcGlobalWatcher(){
     globalWatcher = (Watcher*) OZ_hrealloc(globalWatcher,sizeof(Watcher));
     OZ_collectHeapTerm(globalWatcher->proc,globalWatcher->proc);}
 
+// called from gc
+void maybeUnask(Tertiary* t){
+  adjustProxyForFailure(t,getSummaryWatchCond(t),ENTITY_NORMAL);}
 
+void EntityInfo::dealWithWatchers(EntityCond ec){
+  Watcher **base=getWatcherBase();
+  while((*base)!=NULL){
+    if(ec & (*base)->watchcond){
+      (*base)->invokeWatcher(ec);
+      base= &((*base)->next);}
+    else
+      base= &((*base)->next);}
+}
 
 /**********************************************************************/
 /*   SeifHandler                                                      */
 /**********************************************************************/
+
 DSite* gBTI(int i){
   return BT->getBorrow(i)->getNetAddress()->site;}
 

@@ -29,17 +29,10 @@
 #define __PROTOCOLFAILHH
 
 void receiveAskError(OwnerEntry*,DSite*,EntityCond);
-void sendAskError(Tertiary*, EntityCond);
-void receiveTellError(Tertiary*, EntityCond, Bool);
-
+void sendAskError(BorrowEntry*, EntityCond);
+void receiveTellError(BorrowEntry*, EntityCond, Bool);
 void receiveAskError(OwnerEntry *,DSite*,EntityCond);
 void receiveUnAskError(OwnerEntry *,DSite*,EntityCond);
 void sendTellError(OwnerEntry *,DSite*,int,EntityCond,Bool);
-
-void sendUnAskError(Tertiary*,EntityCond);
-
-
-void informInstallHandler(Tertiary* t,EntityCond ec);
-void deinformInstallHandler(Tertiary* t,EntityCond ec);
-
+void sendUnAskError(BorrowEntry*,EntityCond);
 #endif

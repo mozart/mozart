@@ -129,8 +129,6 @@ void initDP()
 /*   Utility routines                                      */
 /* *********************************************************************/
 
-#define GET_VAR(po,T) oz_get##T##Var(*((po)->getPtr()))
-
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
@@ -195,15 +193,6 @@ void pendThreadAddToEnd(PendThread **pt,TaggedRef o,
   *pt=new PendThread(oz_currentThread(),NULL,o,n,controlvar,e);
   suspendOnControlVar2();
 }
-/*
-void pendThreadAddToEnd(PendThread **pt,Thread* th,TaggedRef o,
-                                    TaggedRef n, ExKind e){
-  while(*pt!=NULL){pt= &((*pt)->next);}
-  ControlVarNew(controlvar,oz_rootBoard());
-  *pt=new PendThread(oz_currentThread(),NULL,o,n,controlvar,e);
-  suspendOnControlVar2();
-}
-*/
 
 void pendThreadAddDummyToEnd(PendThread **pt){
   while(*pt!=NULL){pt= &((*pt)->next);}
@@ -310,6 +299,25 @@ void gcPerdioFinalImpl()
   gcTwins();
 }
 
+Bool isTertiaryPending(Tertiary* t){
+  switch(t->getType()){
+  case Co_Lock:
+    if(t->getTertType()==Te_Proxy) return NO;
+    Assert(t->getTertType()==Te_Frame);
+    if(getLockSecFromTert(t)->getPending()==NULL) return NO;
+    return OK;
+  case Co_Cell:
+    if(t->getTertType()==Te_Proxy) return NO;
+    Assert(t->getTertType()==Te_Frame);
+    if(getCellSecFromTert(t)->getPending()==NULL) return NO;
+    return OK;
+  case Co_Port: // ERIK-LOOK
+    return NO;
+  default:
+    Assert(0);}
+  return NO;
+}
+
 /* *********************************************************************/
 /*   globalization                                       */
 /* *********************************************************************/
@@ -373,12 +381,41 @@ void globalizeTert(Tertiary *t)
 /*   Localizing                 should be more localize */
 /**********************************************************************/
 
-// PER-LOOK
-void Object::localize()
-{
+// PER-LOOK serves no purpose??
+void Object::localize(){
   setTertType(Te_Local);
   setBoard(oz_currentBoard());
 }
+
+void localizeCell(Tertiary*t){
+  // PER-LOOK
+  return;}
+
+void localizeLock(Tertiary*t){
+  // PER-LOOK
+  return;}
+
+void localizePort(Tertiary*t){
+  // ERIK-LOOK
+  return;}
+
+void localizeTertiary(Tertiary*t){
+  Assert(t->getTertType()==Te_Manager);
+  switch(t->getType()){
+  case Co_Lock:
+    localizeLock(t);
+    return;
+  case Co_Cell:
+    localizeCell(t);
+    return;
+  case Co_Port:
+    localizePort(t);
+    return;
+  default:
+    Assert(0);
+  }
+}
+
 
 /**********************************************************************/
 /*  Main Receive                                      */
@@ -449,34 +486,6 @@ void msgReceived(MsgBuffer* bs)
 
       break;
       }
-
-  case M_REMOTE_SEND:    /* index string term */
-    {
-      int i;
-      char *biName;
-      OZ_Term t;
-      unmarshal_M_REMOTE_SEND(bs,i,biName,t);
-      PD((MSG_RECEIVED,"REMOTE_SEND: o:%d bi:%s v:%s",i,biName,toC(t)));
-
-      OwnerEntry *oe=receiveAtOwner(i);
-      Tertiary *tert= oe->getTertiary();
-      Builtin *found = string2Builtin(biName);
-      if (!found) {
-        PD((WEIRD,"builtin %s not found",biName));
-        break;
-      }
-
-      RefsArray args=allocateRefsArray(2,NO);
-      args[0]=makeTaggedConst(tert);
-      args[1]=t;
-      int arity=found->getArity();
-      Assert(arity<=2);
-      OZ_Return ret = oz_bi_wrapper(found,args);
-      if (ret != PROCEED) {
-        PD((SPECIAL,"REMOTE_SEND failed: %d\n",ret));
-      }
-      break;
-    }
 
   case M_ASK_FOR_CREDIT:
     {
@@ -649,12 +658,32 @@ void msgReceived(MsgBuffer* bs)
 
   case M_GETSTATUS:
     {
+      DSite* site;
       int OTI;
-      TaggedRef v;
-      unmarshal_M_GETSTATUS(bs,OTI,v);
-      PD((MSG_RECEIVED,"M_GETSTATUS index:%d val:%s",OTI,toC(v)));
+      unmarshal_M_GETSTATUS(bs,site,OTI);
+      PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
-      SiteUnify(v,oz_status(oe->getValue()));
+      (GET_VAR(oe,Manager))->getStatus(site,OTI,oz_status(oe->getValue()));
+      break;
+    }
+
+  case M_SENDSTATUS:
+    {
+      DSite* site;
+      int OTI;
+      TaggedRef status;
+      unmarshal_M_SENDSTATUS(bs,site,OTI,status);
+      PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
+          s->stringrep(),OTI,status));
+      NetAddress na=NetAddress(site,OTI);
+      BorrowEntry *be=BT->find(&na);
+      if(be==NULL){
+        PD((WEIRD,"receive M_SENDSTATUS after gc"));
+        sendCreditBack(site,OTI,1);
+        break;}
+      be->receiveCredit();
+      Assert(be->isVar());
+      (GET_VAR(be,Proxy))->receiveStatus(status);
       break;
     }
 
@@ -834,7 +863,7 @@ void msgReceived(MsgBuffer* bs)
           OTI,site->stringrep(),ec));
       BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
       if(be==NULL) break;
-      receiveTellError(be->getTertiary(),ec,flag);
+      receiveTellError(be,ec,flag);
       break;
     }
 
@@ -875,6 +904,8 @@ void msgReceived(MsgBuffer* bs)
 /*   communication problem                             */
 /**********************************************************************/
 
+// ERIK-LOOK
+
 inline void returnSendCredit(DSite* s,int OTI){
   if(s==myDSite){
     OT->getOwner(OTI)->receiveCredit(OTI);
@@ -909,11 +940,9 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
   switch(mt){
 
   case M_PORT_SEND:{
+
     flag=USUAL_BORROW_CASE;
     break;}
-
-  case M_REMOTE_SEND:{
-    NOT_IMPLEMENTED;}
 
   case M_ASK_FOR_CREDIT:{
     flag=USUAL_BORROW_CASE;
@@ -931,18 +960,18 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
     flag=USUAL_OWNER_CASE;
     break;}
 
-    case M_REGISTER:{
-      flag=USUAL_BORROW_CASE;
-      break;}
+  case M_REGISTER:{
+    flag=USUAL_BORROW_CASE;
+    break;}
 
-    case M_REDIRECT:{
-      if(fc==COMM_FAULT_PERM_NOT_SENT){
-        ResetCP(((MsgBuffer*)fi),M_REDIRECT);
-        unmarshal_M_REDIRECT((MsgBuffer*)fi,s1,OTI,tr);
-        returnSendCredit(s1,OTI);
-        return;}
-      flag=USUAL_OWNER_CASE;
-      break;}
+  case M_REDIRECT:{
+    if(fc==COMM_FAULT_PERM_NOT_SENT){
+      ResetCP(((MsgBuffer*)fi),M_REDIRECT);
+      unmarshal_M_REDIRECT((MsgBuffer*)fi,s1,OTI,tr);
+      returnSendCredit(s1,OTI);
+      return;}
+    flag=USUAL_OWNER_CASE;
+    break;}
 
     case M_ACKNOWLEDGE:{
       flag=USUAL_OWNER_CASE;
@@ -1260,8 +1289,13 @@ OZ_Term getGatePort(DSite* sd){
     b=borrowTable->getBorrow(bi);
     PortProxy *pp = new PortProxy(bi);
     b->mkTertiary(pp);
-    tertiaryInstallProbe(sd,PROBE_TYPE_ALL,pp);
     b->makePersistent();
+    if(sd->siteStatus()!=SITE_OK){
+      if(sd->siteStatus()==SITE_PERM){
+        deferProxyProbeFault(pp,PROBE_PERM);}
+      else{
+        Assert(sd->siteStatus()==SITE_TEMP);
+        deferProxyProbeFault(pp,PROBE_TEMP);}}
     return b->getValue();}
   Assert(b->isPersistent());
   return b->getValue();}

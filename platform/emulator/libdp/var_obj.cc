@@ -32,8 +32,12 @@
 
 #include "var_obj.hh"
 #include "dpMarshaler.hh"
+#include "dpBase.hh"
 #include "gname.hh"
 #include "unify.hh"
+#include "fail.hh"
+
+
 
 void ObjectVar::marshal(MsgBuffer *bs)
 {
@@ -98,6 +102,9 @@ void sendRequest(MessageType mt,BorrowEntry *be)
 
 OZ_Return ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
 {
+  if(!errorIgnore()){
+    //    if(failurePreemption()) return BI_REPLACECALL; mm3
+  }
   addSuspSVar(susp, unstable);
   if (!requested) {
     requested = 1;
@@ -181,4 +188,68 @@ void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
   be->changeToRef();
   BT->maybeFreeBorrowEntry(o->getIndex());
   o->localize();
+}
+
+// failure stuff
+
+Bool ObjectVar::failurePreemption(){
+  Bool hit=FALSE;
+  Assert(info!=NULL);
+  EntityCond oldC=info->getSummaryWatchCond();
+  if(varFailurePreemption(info,hit)){
+    EntityCond newC=info->getSummaryWatchCond();
+    //    varPOAdjustForFailure(getIndex(),oldC,newC);} PER-LOOK
+  }
+  return hit;
+}
+
+void ObjectVar::addEntityCond(EntityCond ec){
+  Bool hit=FALSE;
+  if(info==NULL) info=new EntityInfo();
+  if(!info->addEntityCond(ec)) return;
+  if(isHandlerCondition(ec)){
+    wakeAll();
+    return;}
+  info->dealWithWatchers(ec);
+}
+
+void ObjectVar::subEntityCond(EntityCond ec){
+  Assert(info!=NULL);
+  info->subEntityCond(ec);
+}
+
+void ObjectVar::probeFault(int pr){
+  if(pr==PROBE_PERM){
+    if(requested){
+      addEntityCond(PERM_ME|PERM_BLOCKED);
+      return;}
+    addEntityCond(PERM_ME);
+    return;}
+  if(pr==PROBE_TEMP){
+    if(requested){
+      addEntityCond(TEMP_ME|TEMP_BLOCKED);
+      return;}
+    addEntityCond(TEMP_ME);
+    return;}
+  Assert(pr==PROBE_OK);
+  if(requested){
+      subEntityCond(TEMP_ME|TEMP_BLOCKED);
+      return;}
+  subEntityCond(TEMP_ME);
+}
+
+Bool ObjectVar::errorIgnore(){
+  if(info==NULL) return TRUE;
+  if(info->getEntityCond()==ENTITY_NORMAL) return TRUE;
+  return FALSE;}
+
+void ObjectVar::wakeAll(){ // mm3
+  oz_checkSuspensionList(this,pc_all);
+}
+
+void ObjectVar::newWatcher(Bool b){
+  if(b){
+    wakeAll();
+    return;}
+  info->dealWithWatchers(info->getEntityCond());
 }

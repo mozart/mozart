@@ -79,6 +79,7 @@ enum MessageType {
   M_SEND_GATE,
 
   M_GETSTATUS,              // OTI DIF (implicit 1 credit)
+  M_SENDSTATUS,
 
   M_REQUESTED,
   M_LAST

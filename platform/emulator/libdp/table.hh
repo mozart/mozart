@@ -41,7 +41,7 @@
 #include "genhashtbl.hh"
 #include "perdio.hh"
 
-typedef long Credit;  /* TODO: full credit,long credit? */
+typedef long Credit;
 
 #ifdef DEBUG_CHECK
 Bool withinBorrowTable(int i);
@@ -443,7 +443,7 @@ class OwnerTable {
   void compactify();
 
 public:
-  OwnerEntry* array;  /* TODO move to private */
+  OwnerEntry* array;
   void print();
 
   OZ_Term extract_info();
@@ -635,7 +635,7 @@ public:
   OZ_Term extract_info(int);
 
   void gcBorrowRoot(int);
-  void gcBorrowUnusedFrame(int);
+  void gcBorrowUnusedFrame(Tertiary*);
 
   void copyBorrow(BorrowEntry* from,int i);
 
@@ -644,12 +644,6 @@ public:
     setCreditOB(c);
     unsetFree();
     setFlags(PO_NONE);
-    /*
-      removeFlags(PO_PERSISTENT);
-      It seems as the flags are never reset.
-      This is a hack to avoid leak of the property
-       Persistent. EK
-    */
     netaddr.set(s,i);
     return;}
 
@@ -760,7 +754,6 @@ public:
 
   Bool isPersistent(){
     return (getFlags() & PO_PERSISTENT);}
-
 };
 
 /* ********************************************************************** */

@@ -224,8 +224,6 @@ Bool isWatcherEligible(Tertiary *c){
   return FALSE;
 }
 
-
-// ERIK-LOOK make another for variables
 OZ_BI_define(BIhwInstall,3,0){
   OZ_Term e0        = OZ_in(0);
   OZ_Term c0        = OZ_in(1);
@@ -233,22 +231,24 @@ OZ_BI_define(BIhwInstall,3,0){
 
 
   NONVAR(c0, c);
-  NONVAR(e0, e);
-
   SRecord  *condStruct;
-  if(oz_isSRecord(c)){
-    condStruct = tagged2SRecord(c);}
-  else{
-    return IncorrectFaultSpecification;}
+  if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
+  else return IncorrectFaultSpecification;
 
+  if(isVariableSpec(condStruct)){
+    DEREF(e0,vs_ptr,vs_tag);
+    if(!isVariableTag(vs_tag)) return PROCEED;  // mm3
+    VarKind vk=classifyVar(vs_ptr);            //mm3 - follow
+    if(vk == VAR_KINDED) return IncorrectFaultSpecification;
+    return varWatcherInstall(vs_ptr,condStruct,proc);}
+
+  NONVAR(e0, e);
   Tertiary* tert;
-  if(oz_isConst(e)) {
-    tert = tagged2Tert(e);
-    if(!isWatcherEligible(tert)){
-      return IncorrectFaultSpecification;}}
-  else tert=NULL;
-
+  if(!oz_isConst(e)) return IncorrectFaultSpecification;
+  tert = tagged2Tert(e);
+  if(!isWatcherEligible(tert))return IncorrectFaultSpecification;
   return WatcherInstall(tert,condStruct,proc);
+
 }OZ_BI_end
 
 
@@ -258,33 +258,56 @@ OZ_BI_define(BIhwDeInstall,3,0){
   OZ_Term proc      = OZ_in(2);
 
   NONVAR(c0, c);
-  NONVAR(e0, e);
   SRecord  *condStruct;
-  if(oz_isSRecord(c)){
-    condStruct = tagged2SRecord(c);}
-  else{
-    return IncorrectFaultSpecification;}
+  if(oz_isSRecord(c)) condStruct = tagged2SRecord(c);
+  else return IncorrectFaultSpecification;
 
+  if(isVariableSpec(condStruct)){
+    DEREF(e0,vs_ptr,vs_tag);
+    if(!isVariableTag(vs_tag)) return PROCEED;  // mm3
+    VarKind vk=classifyVar(vs_ptr);            //mm3 - follow
+    if((vk==VAR_KINDED) || (vk==VAR_FREE) ||
+       (vk==VAR_FUTURE)) return IncorrectFaultSpecification;
+    return varWatcherDeinstall(vs_ptr,condStruct,proc);} //mm3 - follow
+
+  NONVAR(e0, e);
+  if(!oz_isConst(e)) return IncorrectFaultSpecification;
   Tertiary* tert;
-  if(oz_isConst(e)) {
-    tert = tagged2Tert(e);
-    if(!isWatcherEligible(tert)){
-      return IncorrectFaultSpecification;}}
-  else tert=NULL;
+  tert = tagged2Tert(e);
+  if(!isWatcherEligible(tert)) return IncorrectFaultSpecification;
   return WatcherDeInstall(tert,condStruct,proc);
 
 }OZ_BI_end
 
-OZ_BI_define(BIgetEntityCond,1,1)
+OZ_BI_define(BIgetEntityCond,2,1)
 {
-  OZ_Term e = OZ_in(0);
-  NONVAR(e, entity);
-  Tertiary *tert = tagged2Tert(entity);
+OZ_Term e0 = OZ_in(0);
+OZ_Term v0 = OZ_in(1);
 
+  NONVAR(v0, v);
+  if(!isAtom(v)) return IncorrectFaultSpecification;
+  if(v==AtomVar) {
+    DEREF(e0,vs_ptr,vs_tag);
+    if(!isVariableTag(vs_tag)) goto normal;     // mm3
+    VarKind vk=classifyVar(vs_ptr);             //mm3 - follow
+    if((vk==VAR_KINDED) || (vk==VAR_FREE) ||
+       (vk==VAR_FUTURE)) goto normal;
+    getEntityCondVar(makeTaggedRef(v));}         // mm3 - follow
+
+  if(v!=AtomNonVar) return IncorrectFaultSpecification;
+
+  NONVAR(e0, e);
+  if(!oz_isConst(e)) return IncorrectFaultSpecification;
+
+  Tertiary *tert = tagged2Tert(entity);
+  if(!isWatcherEligible(tert)) return IncorrectFaultSpecification;
   EntityCond ec = getEntityCond(tert);
-  if(ec == ENTITY_NORMAL)
-    OZ_RETURN(oz_cons(AtomEntityNormal,oz_nil()));
-  OZ_RETURN(listifyWatcherCond(ec));
+  if(ec!= ENTITY_NORMAL){
+    OZ_RETURN(listifyWatcherCond(ec));}
+
+ normal:
+  OZ_RETURN(oz_cons(AtomNormal,oz_nil()));
+
 }OZ_BI_end
 
 
