@@ -82,18 +82,8 @@ fi
 # where is Emacs?
 if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
 
-  CHECKEMACS=${OZHOME}/ozemacs/platform/$OZPLATFORM/bin/emacs
+  CHECKEMACS=${OZHOME}/ozemacs/bin/emacs
   if [ -f $CHECKEMACS ]; then
-
-    EHOME=$OZHOME/ozemacs
-    EMACSLOADPATH=$EHOME/share/emacs/19.29/lisp:$EHOME/share/emacs/site-lisp
-    EMACSDATA=$EHOME/share/emacs/19.29/etc
-    EMACSDOC=$EMACSDATA
-    INFOPATH=$EHOME/info
-    EMACSLOCKDIR=$EHOME/com/emacs/lock
-    EMACSPATH=$EHOME/platform/$OZPLATFORM/bin
-    export EMACSLOADPATH EMACSDATA EMACSDOC
-    export INFOPATH EMACSLOCKDIR EMACSPATH
     OZEMACS=$CHECKEMACS
 
   # Backward compatibility for older ozemacs (19.28)
