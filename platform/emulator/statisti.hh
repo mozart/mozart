@@ -67,6 +67,7 @@ public:
   StatCounter solveFailed;
 
   StatCounter propagatorsCreated;
+  StatCounter propagatorsInvoked;
   StatCounter fdvarsCreated;
 
   Statistics();
