@@ -9,8 +9,7 @@
   -   $Date$ by $Author$
   -   $Revision$
   -
-  - This file is part of Mozart, an implementation
-  - of Oz 3
+  - This file is part of Mozart, an implementation of Oz 3:
   -    http://mozart.ps.uni-sb.de
   -
   - See the file "LICENSE" or
@@ -24,9 +23,8 @@
   <Chapter id="Chapter.Application">
     <Title/Application Support: <<Application>>/
 
-     <Section id="section.application.module">
+    <Section id="section.application.module">
       <Title/The <<Application>> Module/
-
       <P>
         The <<Application>> module provides procedures for accessing the
         application's arguments, and for terminating applications.
@@ -152,10 +150,10 @@
           <Grammar.Rule>?={option name}
             <Grammar.Alt/?={atom}/
           </Grammar.Rule>
-          As mentioned in <Ptr to="section.application.cmdparsing">, options may be notated
-          using single-character short forms.  With the <<char>> specification
-          one or several single-character short forms may be assigned to an
-          option.
+          As mentioned in <Ptr to="section.application.cmdparsing">, options
+          may be notated using single-character short forms.  With the <<char>>
+          specification one or several single-character short forms may be
+          assigned to an option.
           <Grammar.Rule>?={char or chars}
             <Grammar.Alt/?={char} | <<[>>?={char}<<]>>/
           </Grammar.Rule>
@@ -163,10 +161,10 @@
           If no <<type>> is given, then the option does not take an argument.
           (Note that <<true>> will be used as the associated value in this
           case.)  Boolean options have a special status, as has already been
-          described in <Ptr to="section.application.parsingconventions">.  The remaining
-          type specifications, however, require an additional argument.  The
-          <<list(?={primary type})>> annotation interprets its argument as a
-          comma-separated list of elements of a specific type.
+          described in <Ptr to="section.application.parsingconventions">.
+          The remaining type specifications, however, require an additional
+          argument.  The <<list(?={primary type})>> annotation interprets its
+          argument as a comma-separated list of elements of a specific type.
           <Grammar.Rule>?={type}
             <Grammar.Alt/<<bool>>/
             <Grammar.Alt/?={primary type}/
@@ -318,12 +316,13 @@
           option may appear and how several occurrences combine (?={occ}),
           and whether it is a required option (<<optional>>; the default
           is <<true>>) or whether it takes a default value (<<default>>),
-          which it does not by default.
+          which it does not by default.  At most one of <<default>> and
+          <<optional>> may be given.
           <Grammar.Rule>?={option}
             <Grammar.Alt add/?={option name}<<(>>/
+            <Grammar.Alt space/<<   1: ?={occ}>>/
             <Grammar.Alt space/<<   >>[<<char: ?={char or chars}>>]/
             <Grammar.Alt space/<<   >>[<<type: ?={type}>>]/
-            <Grammar.Alt space/<<   >>[<<1: ?={occ}>>]/
             <Grammar.Alt space/<<   >>[<<default: ?={value}>>]/
             <Grammar.Alt space/<<   >>[<<optional: ?={bool}>>]<<)>>/
           </Grammar.Rule>
