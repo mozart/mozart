@@ -4536,8 +4536,12 @@ void PerdioVar::acknowledge(OZ_Term *ptr)
   PD((PD_VAR,"acknowledge"));
   OZ_Term val=u.bindings->val;
   primBind(ptr,val);
-  PD((THREAD_D,"start thread ackowledge %x",u.bindings->thread));
-  oz_resume(u.bindings->thread);
+  if (u.bindings->thread->isDeadThread()) {
+    PD((WEIRD,"dead thread acknowledge %x",u.bindings->thread));
+  } else {
+    PD((THREAD_D,"start thread ackowledge %x",u.bindings->thread));
+    oz_resume(u.bindings->thread);
+  }
 
   PendBinding *tmp=u.bindings->next;
   u.bindings->dispose();
@@ -4551,13 +4555,20 @@ void PerdioVar::redirect(OZ_Term val) {
   PD((PD_VAR,"redirect v:%s",toC(val)));
   while (u.bindings) {
 
-    RefsArray args = allocateRefsArray(2,NO);
-    args[0]=val;
-    args[1]=u.bindings->val;
-    u.bindings->thread->pushCall(BI_Unify,args,2);
-    PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
-    PD((THREAD_D,"start thread redirect %x",u.bindings->thread));
-    oz_resume(u.bindings->thread);
+    if (u.bindings->thread->isDeadThread()) {
+      PD((WEIRD,"dead thread redirect %x",u.bindings->thread));
+      PD((THREAD_D,"dead thread redirect %x",u.bindings->thread));
+      PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
+      SiteUnify(val,u.bindings->val);
+    } else {
+      RefsArray args = allocateRefsArray(2,NO);
+      args[0]=val;
+      args[1]=u.bindings->val;
+      u.bindings->thread->pushCall(BI_Unify,args,2);
+      PD((PD_VAR,"redirect pending unify =%s",toC(u.bindings->val)));
+      PD((THREAD_D,"start thread redirect %x",u.bindings->thread));
+      oz_resume(u.bindings->thread);
+    }
 
     PendBinding *tmp=u.bindings->next;
     u.bindings->dispose();
