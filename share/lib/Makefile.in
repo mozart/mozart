@@ -356,23 +356,24 @@ stage1:
 # stage2: recreate the functors and boot compiler using the stage1 functors
 stage2:
         $(MAKE) install-stage PREFIX=$(STAGE2) \
-        OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
-        OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
-        OZINIT=$(STAGE1)/share/Init.ozf \
-        OZAR=$(STAGE1)/bin/ozar
+                OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
+                OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
+                OZINIT=$(STAGE1)/share/Init.ozf \
+                OZAR=$(STAGE1)/bin/ozar
 
 # stage3: recreate the functors and boot compiler using the stage2
 # boot compiler -- we should compare the generated boot-*.txt files
 # but we don't have a stable comparator yet
 stage3:
-        $(MAKE) boot-init boot-ozc install-stage \
-        PREFIX=$(STAGE3) \
-        OZ_LOAD=prefix=$(URL)/share/=./:.:prefix=/=/:= \
-        OZC=$(SRCDIR)/boot-ozc.sh \
-        OZINIT=Init.ozf \
-        OZAR=ozar \
-        BOOTINITTXTFROM=$(STAGE2)/share/$(BOOTINITTXT) \
-        BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
+        $(MAKE) boot-init boot-ozc \
+                BOOTINITTXTFROM=$(STAGE2)/share/$(BOOTINITTXT) \
+                BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
+        $(MAKE) install-stage \
+                PREFIX=$(STAGE3) \
+                OZ_LOAD=prefix=$(URL)/share/=./:.:prefix=/=/:= \
+                OZC=$(SRCDIR)/boot-ozc.sh \
+                OZINIT=Init.ozf \
+                OZAR=ozar
 
 SAVE=./save
 
