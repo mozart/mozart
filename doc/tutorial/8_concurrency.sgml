@@ -417,7 +417,7 @@ operations pertinent to threads. Some of these are summarized in
   <TD><<{Thread.setThisPriority +P}>></TD>
   <TD>Sets current thread's priority</TD>
 </TR><TR>
-  <TD><<{Property.get priorities priorities(high:?X medium:?Y) }>></TD>
+  <TD><<{Property.get priorities ?Pr }>></TD>
   <TD>Gets system-priority ratios </TD>
 </TR><TR>
   <TD><<{Property.set priorities(high:+X medium:+Y)}>></TD>
@@ -462,7 +462,7 @@ end
 <SECTION id=section.concurrency.demanddriven><TITLE/Demand-driven Execution/
 <!-- DENYS: mozart supports lazy functions -->
 <P>An extreme alternative solution is to make the producer lazy, only
-producing an item when the consumer requests one. A consumer, in the
+producing an item when the consumer requests one. A consumer, in this
 case, constructs the stream with unbound variables (empty boxes). The
 producer waits for the unbound variables (empty boxes) to appear on
 the stream. It then binds the variables (fills the boxes). The general
@@ -504,16 +504,14 @@ local
       end
    end
    proc {Consumer N L}
-      case N==0 then L = nil
-      else
-        X|Xs = L
-      in
-       case X of volvo then
-          case N mod 1000 == 0 then
-           {Browse 'riding a new volvo'}
-          else skip end
+      if N==0 then L = nil
+      else X|Xs = L in
+        case X of volvo then
+          if N mod 1000 == 0 then
+            {Browse 'riding a new volvo'}
+          end
             {Consumer N-1 Xs}
-       else {Consumer N Xs} end
+        else {Consumer N Xs} end
       end
    end
 in
