@@ -250,7 +250,7 @@ Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
   if (sameSRecordArity(abstr->getMethodArity(),arity))
     return abstr;
   defaultsUsed = OK;
-  return lookupDefault(label,arity,X) ? abstr : NULL;
+  return lookupDefault(label,arity,X) ? abstr : (Abstraction*) NULL;
 }
 
 Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
