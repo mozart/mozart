@@ -94,6 +94,7 @@ in
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
 	     F = {New Tk.frame tkInit(parent: self.toplevel
+				      bd:     1
 				      relief: ridge)}
 	  end}
 
