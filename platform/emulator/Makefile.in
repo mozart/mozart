@@ -40,10 +40,10 @@ OZVERSION	= $(TOPDIR)/OZVERSION
 CREATEDOTHERS = \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
-	ozma-p.yy ozma-s.ll config.h
+	config.h
 
 CREATEDSRCS = \
-	scancode.cc copycode.cc opcodes.cc ozma-p.cc ozma-s.cc\
+	scancode.cc copycode.cc opcodes.cc\
 	scanner.cc parser.cc version.cc initffuns.cc
 
 CREATEDFILES = $(CREATEDOTHERS) $(CREATEDSRCS)
@@ -106,7 +106,7 @@ $(FSETTARGETS):
 
 win: ozlib.lnk $(CREATEDFILES)
 
-first: $(CREATEDFILES) $(SRCS) version
+first: $(CREATEDFILES) $(SRCS)
 
 @PROGRAMNAME@: first $(OBJS) $(FDTARGETS) $(FSETTARGETS)
 	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
@@ -119,19 +119,17 @@ first: $(CREATEDFILES) $(SRCS) version
 	 rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
 	 $(RM) $$tmp
 
-install:: install-dir install-bin install-inc
+install:: install-bin install-inc
 
-install-bin: version $(TARGETS)
+install-bin: version $(TARGETS) $(BINDIR)
 	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
 
-install-inc:
+install-inc: $(INCDIR)
 	$(INSTALL_OTHER) $(SRCDIR)/oz.h $(INCDIR)
 	$(INSTALL_OTHER) $(SRCDIR)/oz_cpi.hh $(INCDIR)
 
-install-dir:
-	if test ! -d $(PLATFORMDIR) ; then $(INSTALL_DIR) $(PLATFORMDIR) ; fi
-	if test ! -d $(BINDIR); then $(INSTALL_DIR) $(BINDIR) ; fi
-	if test ! -d $(INCDIR); then $(INSTALL_DIR) $(INCDIR) ; fi
+$(BINDIR) $(INCDIR):
+	$(INSTALL_DIR) $@
 
 initffuns.cc oz.c: oz.h $(OZVERSION)
 	$(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
@@ -175,28 +173,8 @@ parser.hh: parser.yy
 parser.o: parser.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
 
-ozma-s.cc: ozma-s.ll
-	$(LEX) $(LFLAGS) -Pozma $<
-	@$(MV) lex.ozma.c ozma-s.cc
-
-ozma-p.cc ozma.hh: ozma-p.yy
-	$(YACC) $(YFLAGS) -p ozma $<
-	@$(MV) y.tab.c ozma-p.cc
-	@$(MV) y.tab.h ozma.hh
-
-# this special rule ensures that warnings issued in bison.simple
-# are not treated as errors:
-ozma-p.o: ozma-p.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
-
-ozma-s.ll: ozma-s.m4ll
-	$(M4) $(M4_D) $< > $@
-
-ozma-p.yy: ozma-p.m4yy
-	$(M4) $(M4_D) $< > $@
-
 config.h: config.m4h $(OZVERSION)
-	$(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $< > $@
+	$(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $(SRCDIR)/config.m4h > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
@@ -211,7 +189,6 @@ include Makefile.rules
 realclean::
 	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
 		ozlib.lnk *.exe *.map *.imp *.sym \
-		ozma.hh \
 		$(CREATEDFILES) TAGS
 
 distclean::
@@ -220,24 +197,54 @@ distclean::
 
 # dependencies
 marshaler.hh marshalMsg.cc: msgFormat.m4
-scancode.cc copycode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
+scancode.cc copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
 
 # automatic configure
 ${srcdir}/configure: configure.in
-	cd ${srcdir} && autoconf
+	$(ECHO) configure.in was changes: cd ${srcdir} && autoconf -l ..
 
-conf.h: conf.h.in config.status
-	./config.status
+conf.h: conf.h.in
+	$(ECHO) conf.h.in was changed: ./config.status
 
-Makefile: Makefile.in config.status
-	./config.status
+Makefile: Makefile.in
+	$(ECHO) Makefile.in was changed: ./config.status
 
-Makefile.vars: Makefile.vars.in config.status
-	./config.status
+Makefile.vars: Makefile.vars.in
+	$(ECHO) Makefile.vars.in was changed: ./config.status
 
-Makefile.rules: Makefile.rules.in config.status
-	./config.status
+Makefile.rules: Makefile.rules.in
+	$(ECHO) Makefule.rules.in was changed: ./config.status
 
 config.status: configure
-	./config.status --recheck
+	$(ECHO) configure was changed: ./config.status --recheck
 
+
+# ozma
+ozma-s.cc: ozma-s.ll
+	$(LEX) $(LFLAGS) -Pozma $<
+	@$(MV) lex.ozma.c ozma-s.cc
+
+ozma-p.cc ozma.hh: ozma-p.yy
+	$(YACC) $(YFLAGS) -p ozma $<
+	@$(MV) y.tab.c ozma-p.cc
+	@$(MV) y.tab.h ozma.hh
+
+ozma-s.ll ozma-p.yy: instrDefs.m4
+ozma-p.o ozma-s.o: config.h opcodes.hh
+
+# this special rule ensures that warnings issued in bison.simple
+# are not treated as errors:
+ozma-p.o: ozma-p.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
+
+ozma-s.ll: ozma-s.m4ll
+	$(M4) $(M4_D) $< > $@
+
+ozma-p.yy: ozma-p.m4yy
+	$(M4) $(M4_D) $< > $@
+
+ozma.so: ozma-p.o ozma-s.o
+	$(DYNLD) -o $@ ozma-p.o ozma-s.o -lc
+
+realclean::
+	$(RM) ozma-p.cc ozma-p.yy ozma-s.cc ozma-s.ll ozma.hh

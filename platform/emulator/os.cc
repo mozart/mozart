@@ -33,7 +33,9 @@
 
 #include "wsock.hh"
 
-#include "am.hh"
+#include "runtime.hh"
+
+#include "os.hh"
 
 #include <errno.h>
 #include <limits.h>
@@ -42,6 +44,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#if defined(LINUX) || defined(SOLARIS) || defined(SUNOS_SPARC) || defined(IRIX) || defined(OSF1_ALPHA) || defined(FREEBSD) || defined(NETBSD) || defined(IRIX6)
+#   define DLOPEN 1
+#if defined(FREEBSD)
+#define RTLD_NOW 1
+#endif
+#endif
+
+#ifdef DLOPEN
+#ifdef SUNOS_SPARC
+#define RTLD_NOW 1
+extern "C" void * dlopen(char *, int);
+extern "C" char * dlerror(void);
+extern "C" void * dlsym(void *, char *);
+extern "C" int dlclose(void *);
+#else
+#include <dlfcn.h>
+#endif
+#endif
+#ifdef IRIX
+#include <bstring.h>
+#include <sys/time.h>
+#endif
+#ifdef HPUX_700
+#include <dl.h>
+#endif
 
 #if defined(FOPEN_MAX) && !defined(OPEN_MAX)
 #define OPEN_MAX  FOPEN_MAX
@@ -72,10 +100,6 @@ extern "C" void setmode(int,mode_t);
 #ifdef AIX3_RS6000
 #include <sys/select.h>
 #endif
-
-#include "tagged.hh"
-#include "os.hh"
-
 
 static long emulatorStartTime = 0;
 
@@ -1114,4 +1138,119 @@ int WINAPI dll_entry(int a,int b,int c)
 
 }
 
+#endif
+
+/* -----------------------------------------------------------------
+   dynamic link objects files
+   ----------------------------------------------------------------- */
+
+#ifdef _MSC_VER
+#define F_OK 00
+#endif
+
+int osDlopen(char *filename, OZ_Term out)
+{
+  OZ_Term err=NameUnit;
+  OZ_Term ret=NameUnit;
+
+  // filename = expandFileName(filename,ozconf.linkPath);
+
+  // if (!filename) {
+  //  err = oz_atom("expand filename failed");
+  //  goto raise;
+  // }
+
+  if (ozconf.showForeignLoad) {
+    message("Linking file %s\n",filename);
+  }
+
+#ifdef DLOPEN
+#ifdef HPUX_700
+  {
+    shl_t handle;
+    handle = shl_load(filename,
+		      BIND_IMMEDIATE | BIND_NONFATAL |
+		      BIND_NOSTART | BIND_VERBOSE, 0L);
+
+    if (handle == NULL) {
+      goto raise;
+    }
+    ret = oz_int(ToInt32(handle));
+  }
+#else
+  {
+    void *handle=dlopen(filename, RTLD_NOW);
+
+    if (!handle) {
+      err=oz_atom(dlerror());
+      goto raise;
+    }
+    ret = oz_int(ToInt32(handle));
+  }
+#endif
+
+#elif defined(WINDOWS)
+  {
+    void *handle = (void *)LoadLibrary(filename);
+    if (!handle) {
+      err=oz_int(GetLastError());
+      goto raise;
+    }
+    ret = oz_int(ToInt32(handle));
+  }
+#endif
+
+  return oz_unify(out,ret);
+
+raise:
+
+  return oz_raise(E_ERROR,oz_atom("foreign"),"dlOpen",2,
+		  oz_atom(filename),err);
+}
+
+int osDlclose(int handle)
+{
+#ifdef DLOPEN
+  if (dlclose((void *)handle)) {
+    goto raise;
+  }
+#endif
+
+#ifdef WINDOWS
+  FreeLibrary((void *) handle);
+#endif
+
+  return PROCEED;
+
+raise:
+  return oz_raise(E_ERROR,oz_atom("foreign"),"dlClose",1,OZ_int(handle));
+}
+
+#if defined(DLOPEN)
+void *osDlsym(void *handle,const char *name) { return dlsym(handle,name); }
+#elif defined(HPUX_700)
+void *osDlsym(void *handle,const char *name)
+{
+  void *symaddr;
+
+  int symbol = shl_findsym((shl_t*)&handle, name, TYPE_PROCEDURE, &symaddr);
+  if (symbol != 0) {
+    return NULL;
+  }
+
+  return symaddr;
+}
+#elif defined(WINDOWS)
+void *osDlsym(void *handle, const char *name)
+{
+  HMODULE handle = (HMODULE) h;
+  FARPROC ret = GetProcAddress(handle,name);
+  if (ret == NULL) {
+    // try prepending a "_"
+    char buf[1000];
+    sprintf(buf,"_%s",name);
+    ret = GetProcAddress(handle,buf);
+  }
+  return ret;
+}
 #endif

@@ -37,13 +37,11 @@ dnl INITIALIZE
 dnl *****************************************************************
 
 dnl This will check that we are in the Oz directory and initiate
-AC_INIT(oz.h)
+AC_INIT(base.hh)
 
-AC_CANONICAL_HOST
+OZ_INIT
 
 AC_LANG_CPLUSPLUS
-
-AC_PREFIX_DEFAULT(/usr/local/oz)
 
 dnl *****************************************************************
 dnl additional tests
@@ -100,16 +98,6 @@ AC_DEFUN(OZ_CXX_OPTIONS, [
 	])
 
 dnl *****************************************************************
-dnl topdir/oz version
-dnl *****************************************************************
-
-if test "${TOPDIR+set}" != set
-then
-    TOPDIR="$srcdir/.."
-fi
-AC_SUBST(TOPDIR)
-
-dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
 
@@ -117,9 +105,11 @@ AC_MSG_CHECKING(for --enable-wincross)
 AC_ARG_ENABLE(wincross,
   [--enable-wincross  Windows cross compilation (default=no)])
 if test "${enable_wincross}" = yes; then
+    if test -n "$oz_wincross_dir" && test -n "$oz_wincross_prefix"
+    then
         AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
 	CXX=$oz_wincross_dir/$oz_wincross_prefix-gcc
-	LD=$oz_wincross_dir/$oz_wincross_prefix-ld
+	#LD=$oz_wincross_dir/$oz_wincross_prefix-ld
 	RANLIB=$oz_wincross_dir/$oz_wincross_prefix-ranlib
 	#LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
 	platform="win32-i486"
@@ -132,6 +122,10 @@ if test "${enable_wincross}" = yes; then
 	oz_warn_error=
 	AC_DEFINE(GNUWIN32)
 	AC_DEFINE(WINDOWS)
+    else
+	AC_MSG_RESULT(no)
+	AC_MSG_ERROR("oz_wincross_dir and oz_wincross_prefix must be set")
+    fi
 else
         AC_MSG_RESULT(no)
 fi
@@ -210,23 +204,15 @@ AC_CHECK_PROGS(ECHO, echo, echo)
 AC_CHECK_PROGS(SED, gnused sed, sed)
 AC_CHECK_PROGS(AR, gar ar, ar)
 
-topdira=`(cd $TOPDIR; pwd)`
-oz_path=$PATH:$topdira/bin:$topdira:$prefix/bin
-AC_PATH_PROG(PLATFORMSCRIPT, ozplatform, , $oz_path)
-AC_PATH_PROG(DYNLD, ozdynld, ozdynld, $oz_path)
-AC_PATH_PROG(MKINSTALLDIRS, mkinstalldirs, mkinstalldirs, $oz_path)
+OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
+OZ_PATH_PROG(DYNLD, ozdynld)
+OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
 
-AC_PATH_PROG(DEPEND, makedepend, true)
+AC_PATH_PROG(DEPEND, makedepend, makedepend)
 
 dnl *****************************************************************
 dnl platform
 dnl *****************************************************************
-
-
-if test -z "${PLATFORMSCRIPT}"
-then
-  AC_MSG_ERROR(required program \"ozplatform\" not found)
-fi
 
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
@@ -270,14 +256,14 @@ if test "${GXX}" = yes; then
     oz_om=
     if test "${platform}" = linux-i486
     then
-	oz_opt="$oz_opt -m486 -mpentium\
+	oz_opt="$oz_opt -mpentium \
 	    -malign-loops=4 -malign-jumps=4 -malign-functions=4"
 	oz_om="-fomit-frame-pointer"
     fi
-    oz_no="-fno-exceptions -fno-rtti"
-    : ${oz_copt_optimize="$oz_opt $oz_em $oz_no"}
-    : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline $oz_no"}
-    : ${oz_copt_debug="-g3 -DINTERFACE $oz_no"}
+    : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
+    : ${oz_copt_optimize="$oz_opt $oz_em"}
+    : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline"}
+    : ${oz_copt_debug="-g3 -DINTERFACE"}
 fi
 
 if test -n "${SUNPRO}"
@@ -338,6 +324,14 @@ oz_warn=$oz_a
 
 OZ_CXX_OPTIONS("$oz_warn_error",oz_a)
 oz_warn_error=$oz_a
+
+OZ_CXX_OPTIONS("$oz_copt_disable_extension",oz_a)
+if test "$ac_test_CXXFLAGS" != set
+then
+    CXXFLAGS=
+fi
+
+CXXFLAGS="$CXXFLAGS $oz_a"
 
 dnl *****************************************************************
 dnl Checks for libraries.
@@ -483,9 +477,9 @@ esac
 AC_SUBST(COPT)
 
 
-OZ_ENABLE_NO(ozma,[     add assembler],
-	AC_MSG_RESULT(yes (-DOZMA))
-	AC_DEFINE(OZMA)
+OZ_ENABLE_YES(ozma,[     add assembler],
+	AC_MSG_RESULT(yes)
+	TARGETS="$TARGETS ozma.so"
 	)
 
 OZ_ENABLE_YES(threaded,[ threaded code emulator],
@@ -625,3 +619,8 @@ dnl *****************************************************************
 AC_CONFIG_HEADER(conf.h)
 
 AC_OUTPUT(Makefile.vars Makefile Makefile.rules FDLib/Makefile FSetLib/Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
