@@ -915,48 +915,54 @@
               <TH/Operators/
               <TH/Associativity/
             <TR>
-              <TD/<<=>>/
+              <TD/<<X=Y>>/
               <TD/right/
             <TR>
-              <TD/<<&lt;->> <<:=>> <<. :=>>/
+              <TD/<<X&lt;-Y>>&nbsp;&nbsp;&nbsp;<<X:=Y>>&nbsp;&nbsp;&nbsp;<<X.Y:=Z>>/
               <TD/right/
             <TR>
-              <TD/<<orelse>>/
+              <TD/<<X orelse Y>>/
               <TD/right/
             <TR>
-              <TD/<<andthen>>/
+              <TD/<<X andthen Y>>/
               <TD/right/
             <TR>
-              <TD/<<==>> <<\=>> <<&lt;>> <<=&lt;>> <<&gt;>> <<&gt;=>>
-                <<=:>> <<\=:>> <<&lt;:>>  <<=&lt;:>>  <<&gt;:>>  <<&gt;=:>>/
+              <TD/<<X==Y>>&nbsp;&nbsp;&nbsp;<<X\=Y>>&nbsp;&nbsp;&nbsp;
+                  <<X&lt;Y>>&nbsp;&nbsp;&nbsp;<<X=&lt;Y>>&nbsp;&nbsp;&nbsp;
+                  <<X&gt;Y>>&nbsp;&nbsp;&nbsp;<<X&gt;=Y>>/
+            <TR>
+              <TD/<<X=:Y>>&nbsp;&nbsp;&nbsp;<<X\=:Y>>&nbsp;&nbsp;&nbsp;
+                  <<X&lt;:Y>>&nbsp;&nbsp;&nbsp;<<X=&lt;:Y>>&nbsp;&nbsp;&nbsp;
+                  <<X&gt;:Y>>&nbsp;&nbsp;&nbsp;<<X&gt;=:Y>>/
               <TD/none/
             <TR>
-              <TD/<<::>> <<:::>>/
+              <TD/<<X::Y>>&nbsp;&nbsp;&nbsp;<<X:::Y>>/
               <TD/none/
             <TR>
-              <TD/<<|>>/
+              <TD/<<X|Y>>/
               <TD/right/
             <TR>
-              <TD/<<#>>/
+              <TD/<<X#Y>>/
               <TD/mixfix/
             <TR>
-              <TD/<<+>> <<->>/
+              <TD/<<X+Y>>&nbsp;&nbsp;&nbsp;<<X-Y>>/
               <TD/left/
             <TR>
-              <TD><<*>> <</>> <<div>> <<mod>></TD>
+              <TD><<X*Y>>&nbsp;&nbsp;&nbsp;<<X/Y>>&nbsp;&nbsp;&nbsp;
+                  <<X div Y>>&nbsp;&nbsp;&nbsp;<<X mod Y>></TD>
               <TD/left/
             <TR>
-              <TD/<<,>>/
+              <TD/<<X,Y>>/
               <TD/right/
             <TR>
-              <TD/<<~>>/
+              <TD/<<~X>>/
+              <TD/prefix/
+            <TR>
+              <TD/<<X.Y>>&nbsp;&nbsp;&nbsp;<<X^Y>>/
               <TD/left/
             <TR>
-              <TD/<<.>> <<^>>/
-              <TD/left/
-            <TR>
-              <TD/<<@>> <<!!>>/
-              <TD/left/
+              <TD/<<@X>>&nbsp;&nbsp;&nbsp;<<!!X>>/
+              <TD/prefix/
           </Table>
           <Q/Having higher precedence/ means <Q/binding tighter/; &eg;,
           the expression <<c#X.g = Y>> is parsed as <<(c#(X.g)) = Y>>.
