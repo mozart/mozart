@@ -47,10 +47,6 @@
     </P>
 
     <P>
-     The methods of Remote.manager are as follows:
-    </P>
-
-    <P>
       <List>
         <Entry><Span class=index/<<init>>/
           <Index/<<Remote>><And><<manager>><And><<init>>/
@@ -62,25 +58,90 @@
           Creates a new Oz process at ?_{HostV} (specified by a virtual
           string), where <<localhost>> is the computer running the
           current Oz process.
+
         <P>
           ?_{ForkA} (an atom) determines the operating system method
-          to fork the remote Oz process. Currently, <<'automatic'>> and
-          <<'rsh'>> are supported.  <<'rsh'>> creates
-          a shell remotely by using the Unix <<rsh>> command, which in
-          turn creates the new Oz engine.
+          to fork the remote Oz process. Currently, <<'automatic'>>,
+          <<'sh'>>, and <<'rsh'>> are supported.
+
+        <p>
+          <<'rsh'>> creates
+          a shell remotely by using the Unix <code
+          proglang=sh>rsh</code> command, which in turn creates the
+          new Oz engine.
+
+        <para class=apropos proglang=sh><title/<<rsh>> configuration/
+          Remote managers with method <<rsh>> only work properly, if
+          the <<rsh>> command is set up properly. You can test it for
+          the host ?{Host} by executing the following command in the
+          operating system shell:
+          <<<rsh ?{Host} ozengine x-oz://system/RemoteServer.ozf --test>>>
+          If the message
+          <code display proglang=fundamental>Remote: Test succeeded...</code>
+          is printed, your configuration is okay. This requires
+          two things:
+          <list enum>
+            <item>
+               Execution of <<rsh ?{Host}>> must not prompt for a
+               password. This is usually achieved by having a special
+               file <file/.rhosts/ in your home directory. Each entry
+               in that file must be a host name. For those hosts
+               having an entry in that file, <<rsh>> does not prompt for a
+               password.
+
+              <p>
+               Take the following sample <file/.rhosts/ file:
+<code display proglang=none>
+godzilla.ps.uni-sb.de
+bamse.sics.se
+</code>
+               If the <<rsh>> command is now executed on
+               <<bamse.sics.se>> or <<godzilla.ps.uni-sb.de>>, then
+               <<rsh>> does not prompt for a pass word.
+
+              <p>
+               With other words, all host names that you ever want to
+               use with <<Remote.manager>> should be in <file/.rhosts/.
+
+            <item>
+               After the login performed by <<rsh>> the
+               command <<ozengine>> must be
+               executable. This should be always the case, if Mozart
+               has been installed properly on your computer. This in
+               particular requires that <<$OZHOME/bin>> is in your path of
+               executables (<<$OZHOME>> refers to the directory where
+               Mozart has been installed).
+          </list>
+
+        <para class=apropos><title/<<sh>> configuration/
+          <<'sh'>> can only be used, if ?_{HostV} is <<localhost>> and
+          just creates a new Oz engine by using the Unix <code
+          proglang=sh>sh</code> command. You can test whether this
+          method works on your computer by:
+          <<<sh -c 'ozengine x-oz://system/RemoteServer.ozf --test'>>>
+          This should be always the case, if Mozart
+          has been installed properly on your computer. This in
+          particular requires that <<$OZHOME/bin>> is in your path of
+          executables (<<$OZHOME>> refers to the directory where
+          Mozart has been installed).
+
         <P>
-          If ?_{HostV} is <<'localhost'>> and ?_{ForkA}? is
-          <<'automatic'>> a possibly more efficient way of creating
-          new Oz processes is used. As a fallback, the <<'rsh'>>
-          method is used.
+          If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
+          <<'automatic'>> a possibly more efficient way of
+          communication between forked and forking process is used. It
+          takes advantage of shared memory rather than network
+          communication.
+          If your current Oz engine does not support this more
+          efficient alternative, the <<'sh'>>
+          method is used as fall-back.
+
         <P>
           If ?_{DetachB} is <<false>>, a non-detached process is
           created. A non-detached process terminates as soon as
           the creating process does (think of crashes, there will be
           no orphaned processes). A lifetime of a detached process
-          (that is, ?_{DetchB} is <<true>>) is independent of the
-          creating process. (I've taken the notion detach from
-          standard operating system terminology).
+          (that is, ?_{DetachB} is <<true>>) is independent of the
+          creating process.
 
         <Entry><Span class=index/<<link>>/
           <Index/<<Remote>><And><<manager>><And><<link>>/
@@ -99,12 +160,13 @@
           <Entry><Span class=index/<<apply>>/
             <Index/<<Remote>><And><<manager>><And><<apply>>/
           <Synopsis>
+            <code display/apply(?+{Functor} ?_{ModuleR} <= _)/
             <code display/apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)/
             <code display/apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)/
           <Item>
             Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
-            string) serve as base URL for linking the functor's
+            string) serve as base url for resolving the functor's
             import.
           <P>
             The argument for the module is optional.
@@ -124,7 +186,7 @@
             string).
           <P>
             Raises an exception if the module manager already has a
-            module under that particular URL installed.
+            module under that particular url installed.
 
           <Entry><Span class=index/<<ping>>/
             <Index/<<Remote>><And><<manager>><And><<ping>>/

@@ -614,7 +614,92 @@ stops the search engine and closes the object.
     <title/An Example/
 
     <p>
-      To come.
+      Let us take as small constraint problem the fraction problem,
+      which is explained in <ptr.extern to="ozdoc:fdt"
+      key="section.propagators.fractions">. However we will choose
+      here a formulation that artificially increases the search tree
+      in that we do not impose a canonical order and leave out
+      redundant constraints.
+
+    <p>
+      The script as you can try it from the <ref.extern
+      to="ozdoc:opi"/OPI/, looks as follows:
+
+    <p>
+<chunk><title/Fractions script/
+proc {Script Root}
+   sol(a:A b:B c:C d:D e:E f:F g:G h:H i:I) = Root
+   BC = {FD.decl}
+   EF = {FD.decl}
+   HI = {FD.decl}
+in
+   Root ::: 1#9
+   {FD.distinct Root}
+   BC =: 10*B + C
+   EF =: 10*E + F
+   HI =: 10*H + I
+   A*EF*HI + D*BC*HI + G*BC*EF =: BC*EF*HI
+   {FD.distribute ff Root}
+end
+</chunk>
+
+    <p>
+      It is wrapped into a functor that must export a single feature
+      <<script>> under which the script (<<Fraction>> in our case) is
+      available. This is easy, the following does the job:
+
+    <p>
+<chunk><title/Fractions functor/
+functor Fractions
+import FD
+export Script
+define
+   <chunk.ref/Fractions script/
+end
+</chunk>
+
+    <p>
+      If you want to learn more about functors, you should consult
+      <ptr.extern to="ozdoc:apptut">.
+
+    <p>
+      After executing the functor definition in the OPI, we can now
+      start the search engine.
+
+    <p>
+      Let us assume that we want to create two processes on the
+      computers with hostname <<godzilla>> (because it is a double
+      processor machine), and a single process on both <<orca>> and
+      <<grizzly>>. We create a parallel search engine that runs on
+      these hosts as follows:
+<<<E={New Search.parallel init(godzilla:2 orca:1 grizzly:1)}>>>
+
+    <p>
+      Search for all solutions is done as follows
+      <<<Xs={E all(Fractions $)}>>>
+5.4
+    <p>
+      Time used is
+
+    <p>
+      Single solution
+
+    <p>
+      Parallel search engines support a (rudimentary) for of
+      tracing. After
+      <<<{E trace(true)}>>>
+      A window appears
+
+    <p>
+      Using urls.
+
+    <p>
+      Search for best solution works similar. The functor Best solution
+
+    <p>
+      Parallel search engines only work properly, if your computing
+      environment is set up such that the facilities for remote module
+      managers work. What is required for this is described in???.
 
   <subsection id="section.search.parallel.api">
     <title/The Class <<Search.parallel>>/
@@ -629,7 +714,22 @@ stops the search engine and closes the object.
         <<<init(?+{HostA1}:?+{I1} ... ?+{HostAn}:?+{In})>>>
       <item>
         Creates and initializes a new parallel search engine by
-        forking new Oz processes.
+        forking new Oz processes. At host ?_{HostA1} the number of
+        newly forked processes is ?_{I1}, and so on.
+      <p>
+        For example,
+        <<<E={New Search.parallel init(wallaby:1 godzilla:2)}>>>
+        creates a single process at the computer <<wallaby>> and two
+        processes at <<godzilla>>. Equivalently, this can be abbreviated
+        as follows:
+        <<<E={New Search.parallel init(wallaby godzilla:2)}>>>
+        That is, a field with integer feature is assumed to be a
+        host where a single process is to be forked.
+      <p>
+        Process numbers are additive, that is the message
+        <<<init(godzilla:2 godzilla:2)>>>
+        is equivalent to
+        <<<init(godzilla:4)>>>
 
       <entry> <<one>>
         <index class=module/Search<AND>parallel<AND>one/
