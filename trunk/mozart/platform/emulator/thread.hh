@@ -363,7 +363,8 @@ class RunnableThreadBody {
 friend class Thread;
 private:
   TaskStack taskStack;
-  RunnableThreadBody *next;  // for linking in the freelist
+  Object *obj;               /* currebt Object */
+  RunnableThreadBody *next;  /* for linking in the freelist */
 public:
   USEHEAPMEMORY;
   // 
@@ -378,9 +379,12 @@ public:
   void reInit ();		// for the root thread only;
 
   //  gc methods;
-  RunnableThreadBody(int sz) : taskStack(sz) {}
-  RunnableThreadBody *gcRTBody ();
-  void gcRecurse ();
+  RunnableThreadBody(int sz) : taskStack(sz), obj(NULL) {}
+  RunnableThreadBody *gcRTBody();
+  void gcRecurse();
+
+  void setObject(Object *o) { Assert(obj==NULL); obj = o; }
+  void makeRunning();
 };
 
 //
@@ -524,6 +528,7 @@ public:
   Board *getBoardFast ();
   DebugCode (Board *getBoard () { return (board); })
   void setBoard (Board *bp) { board = bp; }
+  void setObject(Object *o);
 
   void setNewPropagator(OZ_Propagator * p) {
     Assert(isNewPropagator());
