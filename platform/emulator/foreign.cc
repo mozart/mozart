@@ -292,11 +292,7 @@ OZ_Term OZ_CToString(char *s)
  * tuple
  * -----------------------------------------------------------------*/
 
-#ifdef COMPAT
-OZ_Term OZ_label1(OZ_Term term)
-#else
 OZ_Term OZ_label(OZ_Term term)
-#endif
 {
   DEREF(term,_,tag);
 
@@ -315,11 +311,7 @@ OZ_Term OZ_label(OZ_Term term)
   return nil();
 }
 
-#ifdef COMPAT
-int OZ_width1(OZ_Term term)
-#else
 int OZ_width(OZ_Term term)
-#endif
 {
   DEREF(term,_,tag);
 
@@ -427,11 +419,7 @@ OZ_Term OZ_tail(OZ_Term list)
  * record
  * -----------------------------------------------------------------*/
 
-#ifdef COMPAT
-OZ_Term OZ_getRecordArg1(OZ_Term term, OZ_Term fea)
-#else
 OZ_Term OZ_getRecordArg(OZ_Term term, OZ_Term fea)
-#endif
 {
   DEREF(term,_1,tag);
   if (isSRecord(tag)) {
@@ -556,92 +544,3 @@ int OZ_onToplevel()
 {
   return am.isToplevel() ? 1 : 0;
 }
-
-/* -----------------------------------------------------------------
- * compat stuff
- * -----------------------------------------------------------------*/
-
-#ifdef COMPAT
-int OZ_isVar(OZ_Term t) {
-  return OZ_isVariable(t);
-}
-
-int OZ_termToInt(OZ_Term term, int* n) {
-  if (OZ_isInt(term)) {
-    *n = OZ_intToC(term);
-    return 1;
-  }
-  return 0;
-}
-
-int OZ_termToFloat(OZ_Term term, float *n)
-{
-  if (OZ_isFloat(term)) {
-    *n = OZ_floatToC(term);
-    return 1;
-  }
-  return 0;
-}
-int OZ_termToString(OZ_Term term, char **s)
-{
-  if (OZ_isAtom(term)) {
-    *s = OZ_atomToC(term);
-    return 1;
-  }
-  return 0;
-}
-
-char *OZ_termToStrXX(OZ_Term term)
-{
-  return OZ_toC(term);
-}
-char *OZ_intTermToString(OZ_Term term)
-{
-  char *s = OZ_toC(term);
-  if (*s == '~') *s = '-';
-  return s;
-}
-
-
-OZ_Term OZ_floatToTermXX (float i)
-{
-  return floatToTerm(i);
-}
-OZ_Term OZ_stringToTerm(char *s)
-{
-  return OZ_CToAtom(s);
-}
-OZ_Term OZ_numberToTerm(char *s)
-{
-  return OZ_CToNumber(s);
-}
-int onToplevel()
-{
-  return OZ_onToplevel();
-}
-int addBuiltin(char *name, int arity, OZ_CFun fun)
-{
-  return BIadd(name,arity,fun,OK) == NULL ? 0 : 1;
-}
-OZ_Term OZ_makeTuple(char *label, int width)
-{
-  return OZ_tuple(OZ_CToAtom(label), width);
-}
-OZ_Term OZ_intToTerm(int i)
-{
-  return OZ_CToInt(i);
-}
-int OZ_label _PROTOTYPE((OZ_Term term, char **label)) {
-  *label = OZ_atomToC(OZ_label1(term));
-  return OK;
-}
-
-int OZ_width _PROTOTYPE((OZ_Term term, int *arity)) {
-  *arity = OZ_width1(term);
-}
-
-OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term term, char *fea)) {
-  return OZ_getRecordArg1(term,OZ_CToAtom(fea));
-}
-
-#endif

@@ -27,8 +27,6 @@ extern "C" {
 #define OZDYNLINKING
 #endif
 
-// #define COMPAT
-
 /* ------------------------------------------------------------------------ *
  * I. type declarations
  * ------------------------------------------------------------------------ */
@@ -83,13 +81,8 @@ extern char *   OZ_toC       _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CToString _PROTOTYPE((char *));
 
 /* tuples */
-#ifdef COMPAT
-extern OZ_Term OZ_label1     _PROTOTYPE((OZ_Term));
-extern int     OZ_width1     _PROTOTYPE((OZ_Term));
-#else
 extern OZ_Term OZ_label     _PROTOTYPE((OZ_Term));
 extern int     OZ_width     _PROTOTYPE((OZ_Term));
-#endif
 extern OZ_Term OZ_tuple     _PROTOTYPE((OZ_Term, int));
 #define OZ_tupleC(s,n) OZ_tuple(OZ_CToAtom(s),n)
 
@@ -101,12 +94,8 @@ extern OZ_Term OZ_head      _PROTOTYPE((OZ_Term));
 extern OZ_Term OZ_tail      _PROTOTYPE((OZ_Term));
 
 /* records */
-#ifdef COMPAT
-extern OZ_Term OZ_getRecordArg1 _PROTOTYPE((OZ_Term, OZ_Term));
-#else
 extern OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term, OZ_Term));
 #define OZ_getRecordArgC(t,s) OZ_getRecordArg(t,OZ_CToAtom(s))
-#endif
 
 /* unification */
 extern OZ_Bool OZ_unify       _PROTOTYPE((OZ_Term, OZ_Term));
@@ -255,28 +244,6 @@ OZ_C_proc_proto(Name)                                                         \
  } else {                                                                     \
    VAR = OZ_atomToC(OZ_getCArg(ARG));                                         \
  }
-
-/* ------------------------------------------------------------------------ *
- * compat
- * ------------------------------------------------------------------------ */
-
-#ifdef COMPAT
-int OZ_termToInt(OZ_Term term, int* n);
-int OZ_termToFloat(OZ_Term term, float *n);
-int OZ_termToString(OZ_Term term, char **s);
-char *OZ_intTermToString(OZ_Term term);
-OZ_Term OZ_stringToTerm(char *s);
-OZ_Term OZ_numberToTerm(char *s);
-OZ_Term OZ_makeTuple(char *, int width);
-int onToplevel();
-int addBuiltin(char *name, int arity, OZ_CFun fun);
-int OZ_isVar(OZ_Term);
-OZ_Term OZ_intToTerm(int i);
-int OZ_label _PROTOTYPE((OZ_Term term, char **label));
-int OZ_width _PROTOTYPE((OZ_Term term, int *arity));
-OZ_Term OZ_getRecordArg _PROTOTYPE((OZ_Term term, char *fea));
-
-#endif
 
 /* ------------------------------------------------------------------------ *
  * end
