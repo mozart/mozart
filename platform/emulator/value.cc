@@ -281,7 +281,7 @@ Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
     TaggedRef feat  = head(def);
     TaggedRef value = deref(rec->getArg(argno));
 
-    if (featureEq(head(arityList),feat)) {
+    if (!isNil(arityList) && featureEq(head(arityList),feat)) {
       arityList = tail(arityList);
       auxX[argno] = X[argnoProvided];
       argnoProvided++;
