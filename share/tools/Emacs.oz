@@ -83,20 +83,35 @@ body
       local
 	 FieldSeparator = case Platform == WindowsPlatform then &; else &: end
 
-	 fun {PathList RawPath} H T in   % RawPath must be of type string
+	 fun {SystemPathList RawPath} H T in % RawPath must be of type string
 	    {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
 	    case T == nil then [H]
-	    else H|{PathList T.2}
+	    else H|{SystemPathList T.2}
 	    end
 	 end
 
+	 fun {HomePathList Home PrefixList}
+	    %% some heuristics where to find the source files
+	    {Append
+	     {Map PrefixList
+	      fun {$ P}
+		 Home # P # '/mozart/share/lib'
+	      end}
+	     {Map PrefixList
+	      fun {$ P}
+		 Home # P # '/mozart/share/tools'
+	      end}}
+	 end
+	 
 	 OzPathEnv = {OS.getEnv 'OZPATH'}
       in
-	 OzPath = case {OS.getEnv 'HOME'} of false then {PathList OzPathEnv}
+	 OzPath = case {OS.getEnv 'HOME'} of false then
+		     {SystemPathList OzPathEnv}
 		  elseof HomeEnv then
-		     HomeEnv#'/mozart/share/lib'|
-		     HomeEnv#'/mozart/share/tools'|
-		     {PathList OzPathEnv}
+		     {Append
+		      {HomePathList HomeEnv
+		       ['' '/Src' '/src' '/Devel' '/devel']}
+		      {SystemPathList OzPathEnv}}
 		  end
       end
 
