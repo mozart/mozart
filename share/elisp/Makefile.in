@@ -53,10 +53,7 @@ Makefile: Makefile.in ../config.status
 	cd .. && ./config.status --recheck
 
 oz.elc oz-extra.elc: %.elc : %.el
-	@echo "(setq byte-compile-compatibility t) \
-	(byte-compile-file \"$<\")" > compile.el
-	$(EMACS) -q -batch -l compile.el
-	@rm -f compile.el
+	$(EMACS) -q -batch -f batch-byte-compile $<
 
 install: all $(ELISPDIR) $(LIBFILES)
 
