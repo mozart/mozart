@@ -4,23 +4,19 @@
 ;; $Id$
 
 ;; BUGS
-;; - `/*' ... `*/' style comments are ignored for purposes of indentation
-;;   for reasons of nesting and line breaks.
+;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
+;;   (Nesting and line breaks are problematic.)
 ;; - Line breaks inside strings, quotes or backquote variables
 ;;   are not allowed for auto-indent.
-;; - fontification does not work after character constants
-;;   such as in {Show &%} or {Show [&thread]}
-;; - in the fragment
+;; - In the fragment
 ;;     {Show (X Y
 ;;           in
 ;;            Z)
-;;   trying to indent the line with the `in' raises an error
-;; - 10thread is not recognized as a keyword as it should be
+;;   trying to indent the line with the `in' raises an error.
+;; - 10thread is not recognized as a keyword as it should be.
 ;;
 ;; TODO
 ;; - should we use the mode-line?
-;; - how about highlighting identifiers after proc, fun, class, meth
-;;   (as in lisp-mode after defun, defconst)?
 ;; - do we still support oz-emacs-connect?
 
 (require 'comint)
@@ -155,9 +151,6 @@ All strings matching this regular expression are removed.")
 
 (defvar oz-want-font-lock t
   "*If non-nil, automatically enter font-lock-mode for oz-mode.")
-
-(defvar oz-highlight-definitions nil
-  "*If non-nil, highlight the identifiers after proc, fun, class, meth.")
 
 (defvar oz-temp-counter 0
   "Internal counter for gensym.")
@@ -1434,6 +1427,16 @@ and initial percent signs."
     "skip" "fail")
   "List of all Oz keywords with identifier syntax.")
 
+(defconst oz-char-matcher
+  (concat "&\\(" "[^\C-@\\\n]" "\\|" "\\\\" "\\("
+	  "[0-7][0-7][0-7]\\|x[0-9A-Fa-f][0-9A-Fa-f]\\|[abfnrtc\\'\"`]"
+	  "\\)" "\\)")
+  "Regular expression matching an ampersand character constant.
+Used only for fontification.")
+
+(defconst oz-directive-matcher
+  "\\(^\\|[^&]\\)\\(\\\\\\([^\'%\n]\\|'[\"-~]'\\)*\\)")
+
 (defconst oz-keywords-matcher-1
   (concat "^\\(" (mapconcat 'identity oz-keywords "\\|") "\\)\\>")
   "Regular expression matching any keyword at the beginning of a line.")
@@ -1471,18 +1474,40 @@ The first subexpression matches the definition's identifier
 The second subexpression matches the definition's identifier
 and is used for fontification.")
 
+(defconst oz-font-lock-keywords-1
+  (list (cons oz-char-matcher 'font-lock-string-face)
+	oz-keywords-matcher-1
+	(cons oz-keywords-matcher-2 1)
+	oz-keywords-matcher-3)
+  "Subdued level highlighting for Oz mode.")
+
+(defconst oz-font-lock-keywords oz-font-lock-keywords-1
+  "Default expressions to highlight in Oz mode.")
+
+(defconst oz-font-lock-keywords-2
+  (cons (list oz-directive-matcher
+	      '(2 font-lock-reference-face))
+	oz-font-lock-keywords-1)
+  "Medium level highlighting for Oz mode.")
+
+(defconst oz-font-lock-keywords-3
+  (append (list (list oz-proc-fun-matcher
+		      '(2 font-lock-function-name-face))
+		(list oz-class-matcher
+		      '(1 font-lock-type-face))
+		(list oz-meth-matcher
+		      '(2 font-lock-function-name-face)))
+	  oz-font-lock-keywords-2)
+  "Gaudy level highlighting for Oz mode.")
+
 (defun oz-set-font-lock-keywords ()
-  (setq font-lock-keywords
-	(append (list oz-keywords-matcher-1
-		      (cons oz-keywords-matcher-2 1)
-		      oz-keywords-matcher-3)
-		(and oz-highlight-definitions
-		     (list (list oz-proc-fun-matcher
-				 '(2 font-lock-function-name-face))
-			   (list oz-class-matcher
-				 '(1 font-lock-type-face))
-			   (list oz-meth-matcher
-				 '(2 font-lock-function-name-face)))))))
+  (make-variable-buffer-local 'font-lock-defaults)
+  (setq font-lock-defaults
+	'((oz-font-lock-keywords oz-font-lock-keywords-1
+	   oz-font-lock-keywords-2 oz-font-lock-keywords-3)
+	  nil nil (("&" . "/")) beginning-of-line)))
+
+;;------------------------------------------------------------
 
 (defun oz-fontify-buffer ()
   (interactive)
