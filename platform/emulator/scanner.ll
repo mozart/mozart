@@ -19,7 +19,7 @@ typedef OZ_Term CTerm;
 #include "parser.hh"
 
 extern "C" int xyreportError(char *kind, char *message,
-                             char *file, int line, int offset);
+                             const char *file, int line, int offset);
 
 
 CTerm xyFileNameAtom;
@@ -256,7 +256,7 @@ static int pop_insert() {
     fclose(xyin);
     xy_switch_to_buffer(bufferStack->buffer);
     xyFileNameAtom = bufferStack->fileNameAtom;
-    char *fileName = OZ_atomToC(xyFileNameAtom);
+    const char *fileName = OZ_atomToC(xyFileNameAtom);
     strncpy(xyFileName, fileName, 99);
     xylino = bufferStack->lino;
     conditional_basep = bufferStack->conditional_basep;
@@ -605,7 +605,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                }
 <COMMENT>.                     ;
 <COMMENT><<EOF>>               { if (cond()) {
-                                   char *file = OZ_atomToC(commentfile);
+                                   const char *file = OZ_atomToC(commentfile);
                                    xyreportError("lexical error",
                                                  "unterminated comment",
                                                  file,commentlino,commentoffset);

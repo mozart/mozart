@@ -155,8 +155,8 @@ extern OZ_Term _FUNDECL(OZ_termType,(OZ_Term));
 
 /* convert: C from/to Oz datastructure */
 
-extern char*   _FUNDECL(OZ_atomToC,(OZ_Term));
-extern OZ_Term _FUNDECL(OZ_atom,(char *));
+extern const char* _FUNDECL(OZ_atomToC,(OZ_Term));
+extern OZ_Term _FUNDECL(OZ_atom,(const char *));
 extern int     _FUNDECL(OZ_featureCmp,(OZ_Term,OZ_Term));
 
 extern int     _FUNDECL(OZ_smallIntMin,(void));
@@ -183,7 +183,7 @@ extern OZ_Term _FUNDECL(OZ_CStringToNumber,(char *));
 extern char *  _FUNDECL(OZ_toC,(OZ_Term, int, int));
 extern int     _FUNDECL(OZ_termGetSize,(OZ_Term, int, int));
 
-extern OZ_Term _FUNDECL(OZ_string,(char *));
+extern OZ_Term _FUNDECL(OZ_string,(const char *));
 extern char *  _FUNDECL(OZ_stringToC,(OZ_Term t));
 
 extern void    _FUNDECL(OZ_printVirtualString,(OZ_Term t));
@@ -253,7 +253,7 @@ extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 extern OZ_Term _FUNDECL(OZ_newName,());
 
 /* print warning */
-extern void _FUNDECL(OZ_warning,(char * ...));
+extern void _FUNDECL(OZ_warning,(const char * ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
 extern char * _FUNDECL(OZ_unixError,(int err));
@@ -261,7 +261,7 @@ extern char * _FUNDECL(OZ_unixError,(int err));
 /* check for toplevel */
 extern int _FUNDECL(OZ_onToplevel,());
 
-extern int _FUNDECL(OZ_addBuiltin,(char *, int, OZ_CFun));
+extern int _FUNDECL(OZ_addBuiltin,(const char *, int, OZ_CFun));
 
 /* replace new builtins */
 struct OZ_BIspec {
@@ -425,7 +425,7 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
 
 
 #define OZ_declareAtomArg(ARG,VAR)              \
- char *VAR;                                     \
+ const char *VAR;                               \
  OZ_nonvarArg(ARG);                             \
  if (! OZ_isAtom(OZ_getCArg(ARG))) {            \
    return OZ_typeError(ARG,"Atom");             \
@@ -524,7 +524,7 @@ extern void        _FUNDECL(OZ_putMetaTermType,(OZ_Term v, OZ_MetaType t));
 extern OZ_Term _FUNDECL(OZ_getMetaTermAttr,(OZ_Term v));
 
 extern OZ_Term   _FUNDECL(OZ_makeHeapChunk,(int s));
-extern char *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
+extern void *    _FUNDECL(OZ_getHeapChunkData,(OZ_Term t));
 extern int       _FUNDECL(OZ_getHeapChunkSize,(OZ_Term t));
 extern int       _FUNDECL(OZ_isHeapChunk,(OZ_Term t));
 extern int       _FUNDECL(OZ_isMetaTerm,(OZ_Term t));

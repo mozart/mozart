@@ -158,15 +158,15 @@ class VariableNamer {
 private:
   static VariableNamer *allnames;
   TaggedRef var;
-  char *name;
+  const char *name;
   VariableNamer *next;
   int length();
 public:
   static void cleanup();
-  static char *getName(TaggedRef var);
-  static void addName(TaggedRef var, char *name);
+  static const char *getName(TaggedRef var);
+  static void addName(TaggedRef var, const char *name);
 };
 
-char *getVarName(TaggedRef v);
+const char *getVarName(TaggedRef v);
 
 #endif

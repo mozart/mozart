@@ -92,7 +92,7 @@ private:
 public:
   TestGenSum(OZ_Term vd, OZ_Term v) : Propagator_VD(vd), _v(v)
   {
-    _aux = (OZ_FiniteDomain *)
+    _aux = (OZ_FiniteDomain *) (void*)
       OZ_hallocChars(reg_l_sz * sizeof(OZ_FiniteDomain));
     _init_aux();
   }
@@ -105,7 +105,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean dup) {
     Propagator_VD::updateHeapRefs(dup);
 
-    OZ_FiniteDomain * new_aux = (OZ_FiniteDomain *)
+    OZ_FiniteDomain * new_aux = (OZ_FiniteDomain *) (void*)
       OZ_hallocChars(reg_l_sz * sizeof(OZ_FiniteDomain));
 
     OZ_updateHeapTerm(_v);

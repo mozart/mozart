@@ -628,7 +628,7 @@ FSetConstraint::FSetConstraint(void)
 }
 
 inline
-FSetConstraint::FSetConstraint(const FSetConstraint &s)
+FSetConstraint::FSetConstraint(const FSetConstraint &s): OZ_FSetConstraint()
 {
   init(s);
 }
@@ -1155,13 +1155,15 @@ OZ_Boolean FSetConstraint::operator <= (const int ii)
 //*****************************************************************************
 
 #define CASTPTR (FSetValue *)
-#define CASTREF * (FSetValue *) &
+#define CASTCONSTPTR (const FSetValue *)
+#define CASTREF * (const FSetValue *) &
 #define CASTTHIS (CASTPTR this)
+#define CASTCONSTTHIS (CASTCONSTPTR this)
 
 
 OZ_FSetValue::OZ_FSetValue(const OZ_FSetConstraint &s)
 {
-  CASTTHIS->init(* (FSetConstraint *) &s);
+  CASTTHIS->init(* (const FSetConstraint *) &s);
 }
 
 OZ_FSetValue::OZ_FSetValue(const OZ_Term t)
@@ -1176,57 +1178,57 @@ OZ_FSetValue::OZ_FSetValue(const OZ_FSetState s)
 
 OZ_Term OZ_FSetValue::getKnownInList(void) const
 {
-  return CASTTHIS->getKnownInList();
+  return CASTCONSTTHIS->getKnownInList();
 }
 
 OZ_Term OZ_FSetValue::getKnownNotInList(void) const
 {
-  return CASTTHIS->getKnownNotInList();
+  return CASTCONSTTHIS->getKnownNotInList();
 }
 
 OZ_Boolean OZ_FSetValue::isIn(int i) const
 {
-  return CASTTHIS->isIn(i);
+  return CASTCONSTTHIS->isIn(i);
 }
 
 OZ_Boolean OZ_FSetValue::isNotIn(int i) const
 {
-  return CASTTHIS->isNotIn(i);
+  return CASTCONSTTHIS->isNotIn(i);
 }
 
 int OZ_FSetValue::getMinElem(void) const
 {
-  return CASTTHIS->getMinElem();
+  return CASTCONSTTHIS->getMinElem();
 }
 
 int OZ_FSetValue::getMaxElem(void) const
 {
-  return CASTTHIS->getMaxElem();
+  return CASTCONSTTHIS->getMaxElem();
 }
 
 int OZ_FSetValue::getNextLargerElem(int i) const
 {
-  return CASTTHIS->getNextLargerElem(i);
+  return CASTCONSTTHIS->getNextLargerElem(i);
 }
 
 int OZ_FSetValue::getNextSmallerElem(int i) const
 {
-  return CASTTHIS->getNextSmallerElem(i);
+  return CASTCONSTTHIS->getNextSmallerElem(i);
 }
 
 OZ_Boolean OZ_FSetValue::operator == (const OZ_FSetValue &y) const
 {
-  return CASTTHIS->operator == (CASTREF y);
+  return CASTCONSTTHIS->operator == (CASTREF y);
 }
 
 OZ_FSetValue OZ_FSetValue::operator & (const OZ_FSetValue &y) const
 {
-  return CASTTHIS->operator & (CASTREF y);
+  return CASTCONSTTHIS->operator & (CASTREF y);
 }
 
 OZ_FSetValue OZ_FSetValue::operator | (const OZ_FSetValue &y) const
 {
-  return CASTTHIS->operator | (CASTREF y);
+  return CASTCONSTTHIS->operator | (CASTREF y);
 }
 
 OZ_FSetValue OZ_FSetValue::operator &= (const OZ_FSetValue &y)
@@ -1241,7 +1243,7 @@ OZ_FSetValue OZ_FSetValue::operator |= (const OZ_FSetValue &y)
 
 OZ_FSetValue OZ_FSetValue::operator - (const OZ_FSetValue &y) const
 {
-  return CASTTHIS->operator - (CASTREF y);
+  return CASTCONSTTHIS->operator - (CASTREF y);
 }
 
 OZ_FSetValue OZ_FSetValue::operator &= (const int y)
@@ -1261,10 +1263,10 @@ OZ_FSetValue OZ_FSetValue::operator -= (const int y)
 
 OZ_FSetValue OZ_FSetValue::operator - (void) const
 {
-  return CASTTHIS->operator - ();
+  return CASTCONSTTHIS->operator - ();
 }
 
-char * OZ_FSetValue::toString() const
+char * OZ_FSetValue::toString()
 {
   static ozstrstream str;
   str.reset();
@@ -1275,17 +1277,21 @@ char * OZ_FSetValue::toString() const
 //-----------------------------------------------------------------------------
 
 #undef CASTPTR
+#undef CASTCONSTPTR
 #undef CASTREF
 #undef CASTTHIS
+#undef CASTCONSTTHIS
 
 
 #define CASTPTR (FSetConstraint *)
-#define CASTREF * (FSetConstraint *) &
+#define CASTCONSTPTR (const FSetConstraint *)
+#define CASTREF * (const FSetConstraint *) &
 #define CASTTHIS (CASTPTR this)
+#define CASTCONSTTHIS (CASTCONSTPTR this)
 
 OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetValue &s)
 {
-  CASTTHIS->init(* (FSetValue *) &s);
+  CASTTHIS->init(* (const FSetValue *) &s);
 }
 
 OZ_FSetConstraint::OZ_FSetConstraint(OZ_FSetState s)
@@ -1295,12 +1301,12 @@ OZ_FSetConstraint::OZ_FSetConstraint(OZ_FSetState s)
 
 OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetConstraint &s)
 {
-  CASTTHIS->init(* (FSetConstraint *) &s);
+  CASTTHIS->init(* (const FSetConstraint *) &s);
 }
 
 OZ_FSetConstraint &OZ_FSetConstraint::operator = (const OZ_FSetConstraint &s)
 {
-  return CASTTHIS->operator = (* (FSetConstraint *) &s);
+  return CASTTHIS->operator = (* (const FSetConstraint *) &s);
 }
 
 void OZ_FSetConstraint::init(OZ_FSetState s)
@@ -1315,52 +1321,52 @@ void OZ_FSetConstraint::init(void)
 
 OZ_Boolean OZ_FSetConstraint::isValue(void) const
 {
-  return CASTTHIS->isValue();
+  return CASTCONSTTHIS->isValue();
 }
 
 OZ_Boolean OZ_FSetConstraint::isIn(int i) const
 {
-  return CASTTHIS->isIn(i);
+  return CASTCONSTTHIS->isIn(i);
 }
 
 OZ_Boolean OZ_FSetConstraint::isNotIn(int i) const
 {
-  return CASTTHIS->isNotIn(i);
+  return CASTCONSTTHIS->isNotIn(i);
 }
 
 OZ_Boolean OZ_FSetConstraint::isEmpty(void) const
 {
-  return CASTTHIS->isEmpty();
+  return CASTCONSTTHIS->isEmpty();
 }
 
 OZ_Boolean OZ_FSetConstraint::isFull(void) const
 {
-  return CASTTHIS->isFull();
+  return CASTCONSTTHIS->isFull();
 }
 
 OZ_Boolean OZ_FSetConstraint::isSubsumedBy(const OZ_FSetConstraint &s) const
 {
-  return CASTTHIS->isSubsumedBy(CASTREF s);
+  return CASTCONSTTHIS->isSubsumedBy(CASTREF s);
 }
 
 OZ_Term OZ_FSetConstraint::getKnownInList(void) const
 {
-  return CASTTHIS->getKnownInList();
+  return CASTCONSTTHIS->getKnownInList();
 }
 
 OZ_Term OZ_FSetConstraint::getKnownNotInList(void) const
 {
-  return CASTTHIS->getKnownNotInList();
+  return CASTCONSTTHIS->getKnownNotInList();
 }
 
 OZ_Term OZ_FSetConstraint::getUnknownList(void) const
 {
-  return CASTTHIS->getUnknownList();
+  return CASTCONSTTHIS->getUnknownList();
 }
 
 OZ_FSetConstraint OZ_FSetConstraint::operator - (void) const
 {
-  return CASTTHIS->operator - ();
+  return CASTCONSTTHIS->operator - ();
 }
 
 OZ_Boolean OZ_FSetConstraint::operator += (int i)
@@ -1380,27 +1386,27 @@ OZ_Boolean OZ_FSetConstraint::operator <<= (const OZ_FSetConstraint& y)
 
 OZ_FSetConstraint OZ_FSetConstraint::operator & (const OZ_FSetConstraint& y) const
 {
-  return CASTTHIS->operator & (CASTREF y);
+  return CASTCONSTTHIS->operator & (CASTREF y);
 }
 
 OZ_FSetConstraint OZ_FSetConstraint::operator | (const OZ_FSetConstraint& y) const
 {
-  return CASTTHIS->operator | (CASTREF y);
+  return CASTCONSTTHIS->operator | (CASTREF y);
 }
 
 OZ_FSetConstraint OZ_FSetConstraint::operator - (const OZ_FSetConstraint& y) const
 {
-  return CASTTHIS->operator - (CASTREF y);
+  return CASTCONSTTHIS->operator - (CASTREF y);
 }
 
 OZ_Term OZ_FSetConstraint::getLubList(void) const
 {
-  return CASTTHIS->getLubList();
+  return CASTCONSTTHIS->getLubList();
 }
 
 OZ_Term OZ_FSetConstraint::getCardTuple(void) const
 {
-  return CASTTHIS->getCardTuple();
+  return CASTCONSTTHIS->getCardTuple();
 }
 
 OZ_Boolean OZ_FSetConstraint::operator <= (const OZ_FSetConstraint &y)
@@ -1420,7 +1426,7 @@ OZ_Boolean OZ_FSetConstraint::operator != (const OZ_FSetConstraint &y)
 
 OZ_Boolean OZ_FSetConstraint::operator == (const OZ_FSetConstraint &y) const
 {
-  return CASTTHIS->operator == (CASTREF y);
+  return CASTCONSTTHIS->operator == (CASTREF y);
 }
 
 OZ_Boolean OZ_FSetConstraint::putCard(int min_card, int max_card)
@@ -1430,25 +1436,25 @@ OZ_Boolean OZ_FSetConstraint::putCard(int min_card, int max_card)
 
 OZ_FSetValue OZ_FSetConstraint::getGlbSet(void) const
 {
-  return CASTTHIS->getGlbSet();
+  return CASTCONSTTHIS->getGlbSet();
 }
 
 OZ_FSetValue OZ_FSetConstraint::getLubSet(void) const
 {
-  return CASTTHIS->getLubSet();
+  return CASTCONSTTHIS->getLubSet();
 }
 
 OZ_FSetValue OZ_FSetConstraint::getUnknownSet(void) const
 {
-  return CASTTHIS->getUnknownSet();
+  return CASTCONSTTHIS->getUnknownSet();
 }
 
 OZ_FSetValue OZ_FSetConstraint::getNotInSet(void) const
 {
-  return CASTTHIS->getNotInSet();
+  return CASTCONSTTHIS->getNotInSet();
 }
 
-char * OZ_FSetConstraint::toString() const
+char * OZ_FSetConstraint::toString()
 {
   static ozstrstream str;
   str.reset();

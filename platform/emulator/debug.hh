@@ -43,7 +43,7 @@ void debugStreamSuspend(ProgramCounter, Thread*, TaggedRef, TaggedRef, Bool);
 void debugStreamCont(Thread*);
 void debugStreamThread(Thread*,Thread* parent=NULL);
 void debugStreamTerm(Thread*);
-void debugStreamCall(ProgramCounter, char*, int, TaggedRef*, Bool, int);
+void debugStreamCall(ProgramCounter, const char*, int, TaggedRef*, Bool, int);
 void debugStreamExit(TaggedRef);
 void debugStreamRaise(Thread*, TaggedRef);
 

@@ -351,7 +351,7 @@ GName *newGName(PrTabEntry *);
 
 PrTabEntry *findCodeGName(GName *);
 
-int loadURL(char *url, OZ_Term out, OZ_Term triggerVar);
+int loadURL(const char *url, OZ_Term out, OZ_Term triggerVar);
 int loadURL(OZ_Term url, OZ_Term out, OZ_Term triggerVar);
 int perdioInit();
 

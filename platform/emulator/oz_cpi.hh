@@ -162,7 +162,7 @@ public:
   int getNextSmallerElem(int) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
-  char * toString(void) const;
+  char * toString(void);
 
   OZ_Boolean operator == (const OZ_FSetValue &) const;
   OZ_FSetValue operator & (const OZ_FSetValue &) const;
@@ -239,7 +239,7 @@ public:
   OZ_Boolean operator == (const OZ_FSetConstraint &) const;
   OZ_Boolean operator <= (const int);
   OZ_Boolean operator >= (const int);
-  char * toString(void) const;
+  char * toString(void);
 };
 
 

@@ -215,15 +215,12 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 BuiltinTab builtinTab(750);
 
 
-BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, IFOR infun)
+BuiltinTabEntry *BIadd(const char *name,int arity, OZ_CFun funn, IFOR infun)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
 
-  if (builtinTab.htAdd(name,builtin) == NO) {
-    warning("BIadd: failed to add %s/%d\n",name,arity);
-    delete builtin;
-    return NULL;
-  }
+  builtinTab.htAdd(name,builtin);
+
   return builtin;
 }
 
@@ -5035,7 +5032,7 @@ OZ_C_proc_end
 #define F_OK 00
 #endif
 
-char *expandFileName(char *fileName,char *path) {
+char *expandFileName(const char *fileName,char *path) {
 
   char *ret;
 
@@ -5118,7 +5115,7 @@ char **arrayFromList(OZ_Term list, char **array, int size)
     if (!OZ_isAtom(hh)) {
       goto bomb;
     }
-    char *fileName = OZ_atomToC(hh);
+    const char *fileName = OZ_atomToC(hh);
 
     char *f = expandFileName(fileName,ozconf.linkPath);
 
@@ -5317,7 +5314,7 @@ OZ_C_proc_begin(BIdlOpen,2)
     void *handle=dlopen(filename, RTLD_NOW);
 
     if (!handle) {
-      err=oz_atom((char *) dlerror());
+      err=oz_atom(dlerror());
       goto raise;
     }
     ret = oz_int(ToInt32(handle));
@@ -5983,7 +5980,7 @@ OZ_C_proc_begin(BIgetPrintName,2)
   case CVAR:    return oz_unifyAtom(out, VariableNamer::getName(OZ_getCArg(0)));
   case LITERAL: {
     Literal *l = tagged2Literal(t);
-    char *s = l->getPrintName();
+    const char *s = l->getPrintName();
     if (s && *s) {
       return oz_unifyAtom(out, s);
     } else {
@@ -6485,27 +6482,6 @@ OZ_Return waitForArbiterInline(TaggedRef val)
 }
 DECLAREBI_USEINLINEREL1(BIwaitForArbiter,waitForArbiterInline)
 
-/* ------- Builtins to handle toplevel variables in the debugger ---------- */
-
-OZ_C_proc_begin(BItopVarInfo,2) // needs work --BL
-{
-  OZ_Term in  = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  char *name = OZ_atomToC(in);
-  return oz_unify(out, nil());
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BItopVars,2) // needs work --BL
-{
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  OZ_Term VarList = nil();
-
-  return oz_unify(out, VarList);
-}
-OZ_C_proc_end
 
 #ifdef UNUSED
 OZ_C_proc_begin(BIindex2Tagged,2)
@@ -7701,9 +7677,6 @@ BIspec allSpec[] = {
   {"Debug.breakpoint",0,BIbreakpoint},
   {"Debug.displayCode", 2, BIdisplayCode},
   {"waitForArbiter", 1, BIwaitForArbiter, (IFOR) waitForArbiterInline},
-
-  {"topVarInfo",2,BItopVarInfo},
-  {"topVars",2,BItopVars},
 
 #ifdef UNUSED
   {"index2Tagged",2,BIindex2Tagged},

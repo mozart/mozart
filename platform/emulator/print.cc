@@ -1513,7 +1513,7 @@ void FDIntervals::printLong(ostream &ofile, int idnt) const
   print(ofile, idnt);
   for (int i = 0; i < high; i += 1)
     ofile << endl << indent(idnt)
-          << "i_arr[" << i << "]@" << (void*) &i_arr[i]
+          << "i_arr[" << i << "]@" << (const void*) &i_arr[i]
           << " left=" << i_arr[i].left << " right=" << i_arr[i].right;
   ofile << endl;
 }

@@ -54,7 +54,7 @@ private:
       return _i_arr[i];
     }
     i_arr_type operator [] (int i) const {
-      AssertFD(0 <= i && i < *(((int *)this) - 1));
+      AssertFD(0 <= i && i < *(((const int *)this) - 1));
       return _i_arr[i];
     }
   } i_arr;
@@ -142,7 +142,7 @@ private:
       return _b_arr[i];
     }
     int operator [] (int i) const {
-      AssertFD(0 <= i && i < *(((int *)this) - 1));
+      AssertFD(0 <= i && i < *(((const int *)this) - 1));
       return _b_arr[i];
     }
   } b_arr;

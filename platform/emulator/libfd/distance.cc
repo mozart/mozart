@@ -24,7 +24,7 @@ OZ_C_proc_begin(fdp_distance, 4)
 
   OZ_EXPECT(pe, 2, expectLiteral);
 
-  char * op = OZ_atomToC(OZ_args[2]);
+  const char * op = OZ_atomToC(OZ_args[2]);
 
   if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 0, expectIntVarSingl);

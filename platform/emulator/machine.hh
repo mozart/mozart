@@ -101,7 +101,7 @@
 #define _ToInt32(p) ((uint32)(p))
 #ifdef DEBUG_CHECK
 inline void* ToPointer(uint32 i) { return _ToPointer(i); }
-inline uint32 ToInt32(void *p) { return _ToInt32(p); }
+inline uint32 ToInt32(const void *p) { return _ToInt32(p); }
 #else
 #define ToPointer(i) _ToPointer(i)
 #define ToInt32(p)   _ToInt32(p)

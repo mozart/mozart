@@ -67,7 +67,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 
     case CVAR:
       {
-        char * n = getVarName(makeTaggedRef(hptr));
+        const char * n = getVarName(makeTaggedRef(hptr));
         o << (!n ? "_" : n);
 
         GenCVariable * cv = tagged2CVar(h);
@@ -110,7 +110,7 @@ problem:
 
 ostream& operator << (ostream& o, const OZ_Propagator &p)
 {
-  char * func_name = builtinTab.getName((void *) p.getHeader()->getHeaderFunc());
+  const char * func_name = builtinTab.getName((void *) p.getHeader()->getHeaderFunc());
   OZ_Term args = p.getParameters();
 
 

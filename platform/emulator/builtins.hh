@@ -28,7 +28,7 @@ void BIaddSpec(BIspec *spec);
 OZ_Term OZ_findBuiltin(char *name, OZ_Term handler);
 
 BuiltinTabEntry *BIinit();
-BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
+BuiltinTabEntry *BIadd(const char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
 
 void threadRaise(Thread *th,OZ_Term E);
 
@@ -42,7 +42,7 @@ public:
   unsigned memRequired(void) {
     return HashTable::memRequired(sizeof(BuiltinTabEntry));
   }
-  char * getName(void * fp) {
+  const char * getName(void * fp) {
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
       BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
@@ -53,7 +53,7 @@ public:
     return "???";
   }
 
-  BuiltinTabEntry *find(char *name) { return (BuiltinTabEntry*) htFind(name); }
+  BuiltinTabEntry *find(const char *name) { return (BuiltinTabEntry*) htFind(name); }
 };
 
 extern BuiltinTab builtinTab;

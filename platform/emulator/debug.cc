@@ -190,7 +190,7 @@ void debugStreamRaise(Thread *tt, TaggedRef exc) {
   gotoBoard(bb);
 }
 
-void debugStreamCall(ProgramCounter debugPC, char *name, int arity,
+void debugStreamCall(ProgramCounter debugPC, const char *name, int arity,
                      TaggedRef *arguments, Bool builtin, int frameId) {
   Board *bb = gotoRootBoard();
 
@@ -475,7 +475,7 @@ static Bool isSpied(TaggedRef def)
   return NO;
 }
 
-static char *getPrintName(TaggedRef def)
+static const char *getPrintName(TaggedRef def)
 {
   if (isAbstraction(def)) {
     return tagged2Abstraction(def)->getPrintName();
@@ -517,7 +517,7 @@ char *binaryInfixes [] = {
 
 Bool isInTable(TaggedRef def, char **table)
 {
-  char *pn = getPrintName(def);
+  const char *pn = getPrintName(def);
   for (char **i=table; *i; i++) {
     if (strcmp(*i,pn) == 0) {
       return OK;

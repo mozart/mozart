@@ -9,14 +9,14 @@ ozostream& flush(ozostream& outs) { return outs.flush(); }
 ozostream ozcout(stdout), ozcerr(stderr);
 
 
-ozostream &ozostream::operator << (char *s)
+ozostream &ozostream::operator << (const char *s)
 {
   Assert(fd);
   fprintf(fd,s);
   return *this;
 }
 
-ozostream &ozostream::operator << (void *p)
+ozostream &ozostream::operator << (const void *p)
 {
   Assert(fd);
   fprintf(fd,"0x%p",p);
@@ -55,7 +55,7 @@ void ozstrstream::resize()
 }
 
 
-ozostream &ozstrstream::operator << (char *s)
+ozostream &ozstrstream::operator << (const char *s)
 {
   while(*s) {
     set(*s++);
@@ -63,7 +63,7 @@ ozostream &ozstrstream::operator << (char *s)
   return *this;
 }
 
-ozostream &ozstrstream::operator << (void *p)
+ozostream &ozstrstream::operator << (const void *p)
 {
   char buf[100];
   sprintf(buf,"0x%p",p);

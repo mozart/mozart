@@ -49,7 +49,7 @@ void **CodeArea::globalInstrTable = NULL;
 
 
 
-Opcode CodeArea::stringToOp(char *s)
+Opcode CodeArea::stringToOp(const char *s)
 {
   for (int i=0; i < (Opcode) OZERROR; i++) {
     if (strcmp(s,opToString[i]) == 0 ) {
@@ -60,7 +60,7 @@ Opcode CodeArea::stringToOp(char *s)
   return OZERROR;
 }
 
-inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
+inline Literal *addToLiteralTab(const char *str, HashTable *table, Bool isName)
 {
   Literal *found = (Literal *) table->htFind(str);
 
@@ -76,20 +76,17 @@ inline Literal *addToLiteralTab(char *str, HashTable *table, Bool isName)
     found = Atom::newAtom(str);
   }
 
-  if (table->htAdd(str,found,NO)) {
-    return found;
-  }
-  error("addToLiteralTab: failed");
-  return NULL;
+  table->htAdd(str,found);
+  return found;
 }
 
 
-Literal *addToAtomTab(char *str)
+Literal *addToAtomTab(const char *str)
 {
   return addToLiteralTab(str,&CodeArea::atomTab,NO);
 }
 
-Literal *addToNameTab(char *str)
+Literal *addToNameTab(const char *str)
 {
   return addToLiteralTab(str,&CodeArea::nameTab,OK);
 }
@@ -127,19 +124,16 @@ AbstractionEntry *AbstractionTable::add(int id)
   if (id == 0)
     return NULL;
 
-  AbstractionEntry *found = (AbstractionEntry *) CodeArea::abstractionTab.htFind(id);
+  AbstractionEntry *found =
+    (AbstractionEntry *) CodeArea::abstractionTab.htFind(id);
 
   if (found != (AbstractionEntry *) htEmpty) {
     return found;
   }
 
   found = new AbstractionEntry(NO);
-  if (CodeArea::abstractionTab.htAdd(id,found)) {
-    return found;
-  }
-
-  Assert(0);
-  return NULL;
+  CodeArea::abstractionTab.htAdd(id,found);
+  return found;
 }
 
 
@@ -191,11 +185,10 @@ void AbstractionEntry::setPred(Abstraction *ab)
 
 
 
-char *getBIName(ProgramCounter PC)
+const char *getBIName(ProgramCounter PC)
 {
   BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC);
   return entry->getPrintName();
-
 }
 
 
@@ -227,7 +220,7 @@ void CodeArea::printDef(ProgramCounter PC)
 
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  char *predName;
+  const char *predName;
   if (!pred)
     predName = "???";
   else if (*pred->getPrintName())

@@ -26,7 +26,7 @@
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
 
 extern "C" {
-void error( char *format ...);
+void error( const char *format ...);
 }
 
 
@@ -1256,7 +1256,8 @@ const OZ_FiniteDomainImpl &OZ_FiniteDomainImpl::operator = (const OZ_FiniteDomai
 }
 
 inline
-OZ_FiniteDomainImpl::OZ_FiniteDomainImpl(const OZ_FiniteDomainImpl &fd) {
+OZ_FiniteDomainImpl::OZ_FiniteDomainImpl(const OZ_FiniteDomainImpl &fd):
+     OZ_FiniteDomain() {
   *this = fd;
 }
 
@@ -1329,8 +1330,8 @@ int OZ_FiniteDomainImpl::initSingleton(int n)
 
 /* gcc-2.6.3 on solaris has problems ...*/
 int intcompare(const void * ii, const void  * jj) {
-  int **i = (int **) ii;
-  int **j = (int **) jj;
+  int * const *i = (int * const *) ii;
+  int * const *j = (int * const *) jj;
   return(**i - **j);
 }
 
@@ -2152,8 +2153,10 @@ void OZ_FiniteDomainImpl::copyExtension(void)
 //
 
 #define CASTPTR (OZ_FiniteDomainImpl *)
-#define CASTREF * (OZ_FiniteDomainImpl *) &
+#define CASTCONSTPTR (const OZ_FiniteDomainImpl *)
+#define CASTREF * (const OZ_FiniteDomainImpl *) &
 #define CASTTHIS (CASTPTR this)
+#define CASTCONSTTHIS (CASTCONSTPTR this)
 
 OZ_FiniteDomain::OZ_FiniteDomain(OZ_Term t)
 {
@@ -2223,42 +2226,42 @@ int OZ_FiniteDomain::initBool(void)
 
 int OZ_FiniteDomain::getSingleElem(void) const
 {
-  return CASTTHIS->singl();
+  return CASTCONSTTHIS->singl();
 }
 
 OZ_Boolean OZ_FiniteDomain::isIn(int i) const
 {
-  return CASTTHIS->contains(i);
+  return CASTCONSTTHIS->contains(i);
 }
 
 OZ_Term OZ_FiniteDomain::getDescr(void) const
 {
-  return CASTTHIS->getAsList();
+  return CASTCONSTTHIS->getAsList();
 }
 
 int OZ_FiniteDomain::getMidElem(void) const
 {
-  return CASTTHIS->midElem();
+  return CASTCONSTTHIS->midElem();
 }
 
 int OZ_FiniteDomain::getNextSmallerElem(int v) const
 {
-  return CASTTHIS->nextSmallerElem(v);
+  return CASTCONSTTHIS->nextSmallerElem(v);
 }
 
 int OZ_FiniteDomain::getNextLargerElem(int v) const
 {
-  return CASTTHIS->nextLargerElem(v);
+  return CASTCONSTTHIS->nextLargerElem(v);
 }
 
 int OZ_FiniteDomain::getLowerIntervalBd(int v) const
 {
-  return CASTTHIS->lowerBound(v);
+  return CASTCONSTTHIS->lowerBound(v);
 }
 
 int OZ_FiniteDomain::getUpperIntervalBd(int v) const
 {
-  return CASTTHIS->upperBound(v);
+  return CASTCONSTTHIS->upperBound(v);
 }
 
 int OZ_FiniteDomain::constrainBool(void)
@@ -2273,17 +2276,17 @@ int OZ_FiniteDomain::intersectWithBool(void)
 
 OZ_FiniteDomain OZ_FiniteDomain::operator & (const OZ_FiniteDomain & y) const
 {
-  return CASTTHIS->operator & (CASTREF y);
+  return CASTCONSTTHIS->operator & (CASTREF y);
 }
 
 OZ_FiniteDomain OZ_FiniteDomain::operator | (const OZ_FiniteDomain & y) const
 {
-  return CASTTHIS->operator | (CASTREF y);
+  return CASTCONSTTHIS->operator | (CASTREF y);
 }
 
 OZ_FiniteDomain OZ_FiniteDomain::operator ~ (void) const
 {
-  return CASTTHIS->operator ~ ();
+  return CASTCONSTTHIS->operator ~ ();
 }
 
 int OZ_FiniteDomain::operator &= (const OZ_FiniteDomain &y)
@@ -2323,22 +2326,22 @@ int OZ_FiniteDomain::operator >= (const int y)
 
 OZ_Boolean OZ_FiniteDomain::operator == (const OZ_FDState s) const
 {
-  return CASTTHIS->operator == (s);
+  return CASTCONSTTHIS->operator == (s);
 }
 
 OZ_Boolean OZ_FiniteDomain::operator != (const OZ_FDState s) const
 {
-  return CASTTHIS->operator != (s);
+  return CASTCONSTTHIS->operator != (s);
 }
 
 OZ_Boolean OZ_FiniteDomain::operator == (const int i) const
 {
-  return CASTTHIS->operator == (i);
+  return CASTCONSTTHIS->operator == (i);
 }
 
 OZ_Boolean OZ_FiniteDomain::operator != (const int i) const
 {
-  return CASTTHIS->operator != (i);
+  return CASTCONSTTHIS->operator != (i);
 }
 
 #define RANGESTR "#"
@@ -2412,7 +2415,7 @@ char *OZ_FiniteDomain::toString() const
 {
   static ozstrstream str;
   str.reset();
-  CASTTHIS->print(str, 0);
+  CASTCONSTTHIS->print(str, 0);
   return str.str();
 }
 
