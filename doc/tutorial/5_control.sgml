@@ -397,7 +397,6 @@ proc {SMerge Xs Ys Zs}
          Zs = Y|Zr
          {SMerge Xs Yr Zr}
       end
-   else {Browse Xs#Ys}
    end
 end
 >>>
@@ -446,7 +445,7 @@ replacing the nesting marker.
 <SUBSECTION><TITLE/Functional Nesting/
 <P>Another form of nesting is called functional nesting: a procedure
 <<{P X ... R}>> could be considered as a function; its result is the
-argument <<R>>. Therefore <<{P X ...}>> could considered as a function
+argument <<R>>. Therefore <<{P X ...}>> could be considered as a function
 call that can be inserted in any expression instead of the result
 argument <<R>>. So <<{Q {P X ... } ... }>> is equivalent to:
 
@@ -468,32 +467,39 @@ end
 <P>There is one more rule to remember. It has to do with a nested
 application inside a record or a tuple as in:
 
-<<<Zs = X|{Merge Xr Ys $}>>>
+<<<Zs = X|{SMerge Xr Ys $}>>>
 
-<P>Here, the nested application goes <EM>after</EM> the record
-construction statement;
-<!-- DENYS: why? you should answer the question -->
-do you see why? Therefore, we get
+<P>Here, the nested application goes <EM>after</EM> the record (or list)
+construction statement. Therefore, we get
 
 <<<
 local Zr in
    Zs = X|Zr
-   {Merge Xr Ys Zr}
+   {SMerge Xr Ys Zr}
 end
 >>>
 
-<P>We can now rewrite our <<Merge>> procedure as shown in <PTR TO="BinMerge2">,
+<P> Doing so makes many recursive procedures be <EM> tail-recursive </EM>.
+Tail-recursive procedures execute with the space efficiency of iterative
+constructs.
+
+
+<P>We can now rewrite our <<SMerge>> procedure as shown in <PTR TO="SMerge2">,
 where we use nested application.
 
-<P><FIGURE ID="BinMerge2" CLASS="Figure">
-<CAPTION>Binary merge of two lists in nested form</CAPTION>
+<P><FIGURE ID="SMerge2" CLASS="Figure">
+<CAPTION>Merging two sorted lists written in nested form</CAPTION>
 <<<
-proc {Merge Xs Ys ?Zs}
+proc {SMerge Xs Ys Zs}
    case Xs#Ys
-   of nil#Ys then Zs = Ys
-   [] Xs#nil then Zs = Xs
-   [] (X|Xr)#Ys then Zs = X|{Merge Ys Xr $}
-   [] Xs#(Y|Yr) then Zs = Y|{Merge Yr Xs $}
+   of nil#Ys then Zs=Ys
+   [] Xs#nil then Zs=Xs
+   [] (X|Xr) # (Y|Yr) then
+      if X=&lt;Y then
+         Zs = X|{SMerge Xr Ys $}
+      else Zr in
+         Zs = Y|{SMerge Xs Yr $}
+      end
    end
 end
 >>>
@@ -512,7 +518,6 @@ accordingly returns <<true>> or <<false>> in its result argument <<B>>.
 <CAPTION>Checking a binary tree</CAPTION>
 <<<
 % What is a binary tree?
-declare
 local
    proc {And B1 B2 ?B}
       if B1 then B = B2 else B = false end
@@ -549,7 +554,6 @@ abstraction devices that help creating generic reusable components.
 <P><FIGURE ID="CheckBinTreeLazy" CLASS="Figure">
 <CAPTION>Checking a binary tree lazily</CAPTION>
 <<<
-declare
 local
    proc {AndThen BP1 BP2 ?B}
       if {BP1} then B = {BP2} else B = false end
@@ -558,7 +562,7 @@ in
    proc {BinaryTree T ?B}
       case T
       of nil then B = true
-      elseof tree(K V T1 T2) then
+      [] tree(K V T1 T2) then
          {AndThen
           proc {$ B1} {BinaryTree T1 B1} end
           proc {$ B2} {BinaryTree T2 B2} end
@@ -572,7 +576,7 @@ end
 
 <SECTION id=control.controlabs><TITLE/Control Abstractions/
 <P>Higher-order procedures are used in Oz to define various control
-abstractions. In modules
+abstractions. In the modules
 <ref.extern to="ozdoc:base" key="chapter.control"/<<Control>>/ and
 <ref.extern to="ozdoc:base" key="section.records.lists"/<<List>>/
 as well as many
@@ -585,6 +589,8 @@ the procedure <<P/1>> instead) to integers from <<From>> to <<To>>
 proceeding in steps <<Step>>. Executing <<{For 1 10 1 Browse}>>
 will display the integers <<1 2 ... 10>>.
 
+<P><FIGURE ID="ForIterator" CLASS="Figure">
+<CAPTION>The For iterator</CAPTION>
 <<<
 local
    proc {HelpPlus C To Step P}
@@ -599,20 +605,21 @@ in proc {For From To Step P}
    end
 end
 >>>
-<!-- Figure 11. The For iterator -->
+</FIGURE>
+
 
 <P>Another control abstraction that is often used is the <<ForAll/2>>
 iterator defined in the <<List>> module. <<ForAll/2>> applies a unary
 procedure on all the elements of a list, in the order defined by the
 list. Think what happens if the list is produced incrementally by
 another concurrent thread?
-<!-- DENYS: well... what? answer the question -->
+
 
 <<<
 proc {ForAll Xs P}
    case Xs
    of nil then skip
-   elseof X|Xr then
+   [] X|Xr then
       {P X}
       {ForAll Xr P}
    end
