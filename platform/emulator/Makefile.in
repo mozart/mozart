@@ -189,8 +189,8 @@ version:
 depend:: Makefile $(CREATEDFILES) $(SRCS)
         $(DEPEND) $(SRCDIR)/wif.cc $(SRCS1:%=$(SRCDIR)/%) $(CREATEDSRCS) > Makefile.deps
 
-# prefered gmake depend!
-# include $(SRCS:.cc=.d)
+## prefered gmake depend!
+## include $(SRCS:.cc=.d)
 
 tags:   $(CREATEDFILES) version.cc
         etags \
