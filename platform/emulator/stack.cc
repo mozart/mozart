@@ -37,16 +37,6 @@ void Stack::resize(int newSize)
   stackEnd = array+newSize;
 }
 
-Stack::Stack(int sz, void *(*allocfun)(size_t t))
-{
-  allocate(sz,allocfun);
-}
-
-void Stack::deallocate(StackEntry *p, int n)
-{
-  free(p);
-}
-
 StackEntry *Stack::reallocate(StackEntry *p, int oldsize, int newsize)
 {
   return (StackEntry*) realloc(p,sizeof(StackEntry) * newsize);

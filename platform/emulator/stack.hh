@@ -44,11 +44,13 @@ protected:
     tos = array;
     stackEnd = array+sz;
   }
-  virtual void deallocate(StackEntry *p, int n);
+  virtual void deallocate(StackEntry *p, int n) { free(p); }
   virtual StackEntry *reallocate(StackEntry *p, int oldsize, int newsize);
 
 public:
-  Stack(int sz = 1000, void *(*allocfun)(size_t t) = malloc);
+  Stack(int sz = 1000, void *(*allocfun)(size_t t) = malloc) {
+    allocate(sz,allocfun);
+  }
   virtual ~Stack() { deallocate(array,stackEnd-array); }
 
   void mkEmpty(void) { tos = array; }
