@@ -126,6 +126,8 @@ main(int argc, char **argv)
     char buf[20];
     int code;
 
+    Tcl_FindExecutable(argv[0]);
+
     interp = Tcl_CreateInterp();
 
     /*
