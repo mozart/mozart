@@ -421,15 +421,6 @@ Cell::Cell(TaggedRef v, Bool mobile) :
  * Ports
  *=================================================================== */
 
-NetAddress *Port::export()
-{
-  if (addr==NULL) {
-    int index = ownerTable->newOTEntry(this,NULL);
-    addr = new NetAddress(localSite,index);
-  }
-  return addr;
-}
-
 
 /*===================================================================
  * Bigint memory management
