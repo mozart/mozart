@@ -532,6 +532,12 @@ TaggedRef *newTaggedCVar(GenCVariable *c) {
 //-----------------------------------------------------------------------------
 // --- Useful functions make...
 
+inline
+TaggedRef derefStepBack(TaggedRef *ptr, TaggedRef val)
+{
+  return ptr ? makeTaggedRef(ptr) : val;
+}
+
 
 // ---------------------------------------------------------------------------
 // --- TaggedRef: conversion: tagged2<Type>

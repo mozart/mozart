@@ -32,7 +32,7 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr,
 	  "usage: %s [-E] [-S file | -f file] [-d] [-c compiler]\n",
 	  argv[0]);
-  exit(1);
+  osExit(1);
 }
 
 static
@@ -124,9 +124,10 @@ void AM::init(int argc,char **argv)
   osInit();
   bigIntInit();
 
-  suspendVarList=makeTaggedNULL();
-  aVarUnifyHandler=makeTaggedNULL();
-  aVarBindHandler=makeTaggedNULL();
+  suspendVarList   = makeTaggedNULL();
+  aVarUnifyHandler = makeTaggedNULL();
+  aVarBindHandler  = makeTaggedNULL();
+  dVarHandler      = makeTaggedNULL();
 
   char *compilerName = OzCompiler;
 
@@ -207,7 +208,7 @@ void AM::init(int argc,char **argv)
   if (compStream == NULL) {
     fprintf(stderr,"Cannot open code input\n");
     sleep(5);
-    exit(1);
+    osExit(1);
   }
 
   checkVersion();
@@ -246,7 +247,7 @@ void AM::init(int argc,char **argv)
   BuiltinTabEntry *entry = BIinit();
   if (!entry) {
     error("BIinit failed");
-    exit(1);
+    osExit(1);
   }
 
   extern void initTagged();
@@ -284,29 +285,16 @@ void AM::checkVersion()
     fprintf(stderr,"*** Wrong version from compiler\n");
     fprintf(stderr,"*** Expected: '%s', got: '%s'\n",OZVERSION,ss);
     sleep(3);
-    exit(1);
+    osExit(1);
   }
 }
 
 void AM::exitOz(int status)
 {
   compStream->csclose();
-  osExit();
-  exit(status);
+  osExit(status);
 }
 
-
-inline
-int AM::setUserAlarmTimer(int ticks)
-{
-  if (ticks<0) {
-    error("gotcha");
-  }
-  int ret=userCounter;
-  userCounter=ticks;
-
-  return ret;
-}
 
 void AM::suspendEngine()
 {
@@ -841,11 +829,16 @@ void AM::reduceTrailOnSuspend()
 
       // this might be a global unconstrained variable; in this case
       // add thread;
-      if(isNotCVar(old_value_tag) && !isLocalVariable(old_value,old_value_ptr))
-	{
-	  Assert(isNotCVar(value));
-	  taggedBecomesSuspVar(old_value_ptr)->addSuspension (thr);
-	}
+      if(isNotCVar(old_value_tag) && !isLocalVariable(old_value,old_value_ptr)) {
+	Assert(isNotCVar(value));
+	taggedBecomesSuspVar(old_value_ptr)->addSuspension (thr);
+      }
+
+      /* spawn askHandler threads for dvars */
+      if (isDVar(value)) {
+	handleAsk(refPtr,isAnyVar(old_value)?makeTaggedRef(old_value_ptr):old_value);
+      }
+
     } // for 
   } // if
   trail.popMark();
@@ -863,11 +856,23 @@ void AM::reduceTrailOnFail()
   trail.popMark();
 }
 
+inline void mkSusp(TaggedRef *ptr, Thread *t)
+{
+  if (t) {
+    taggedBecomesSuspVar(ptr)->addSuspension(t);
+  } else {
+    am.addSuspendVarList(ptr);
+  }
+}
+
+
 /*
  * shallow guards sometimes do not bind variables but only push them
- * return the list of variable in am.suspendVarList
+ * if thread is NULL then we are called from '==':
+ * return the list of variable in am.suspendVarList otherwise
+ * add "thread" to susplist
  */
-void AM::reduceTrailOnShallow()
+void AM::reduceTrailOnShallow(Thread *thread)
 {
   am.suspendVarList = makeTaggedNULL();
 
@@ -886,11 +891,16 @@ void AM::reduceTrailOnShallow()
     /* test if only trailed to create thread and not bound ? */
     if (refPtr!=ptrOldVal) {
       if (isAnyVar(oldVal)) {
-	addSuspendVarList(ptrOldVal);
+	mkSusp(ptrOldVal,thread);
       }
     }
 
-    addSuspendVarList(refPtr);
+    /* spawn askHandler threads for dvars */
+    if (isDVar(value)) {
+      handleAsk(refPtr,isAnyVar(oldVal)?makeTaggedRef(ptrOldVal):makeTaggedNULL());
+    }
+
+    mkSusp(refPtr,thread);
   }
   trail.popMark();
 }
@@ -1449,7 +1459,7 @@ void AM::insertUser(int ms, TaggedRef node)
   osBlockSignals();
 
   if (sleepQueue) {
-    int rest = setUserAlarmTimer(0);
+    int rest = getUserAlarmTimer();
     Assert(isSetSFlag(UserAlarm) || rest > 0);
 
     if (rest <= t) {

@@ -147,7 +147,7 @@ class IHashTable {
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
   ProgramCounter getElse() { return elseLabel; }
 
-  Bool disentailed(GenCVariable *var);
+  Bool disentailed(GenCVariable *var, TaggedRef *varPtr);
 };
 
 #endif

@@ -80,7 +80,7 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 // unifying two fd variables may result in a singleton (ie. determined term),
 // det-nodes are reentered and we achieve completeness.
 
-Bool IHashTable::disentailed(GenCVariable *cvar)
+Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
 {
   switch (cvar->getType()) {
   case FDVariable: 
@@ -94,7 +94,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar)
       // if there is at least one integer member of the domain then goto varLabel
       for (int i = 0; i < size; i++) {
 	for (HTEntry* aux = numberTable[i]; aux!=NULL; aux=aux->getNext()) {
-	  if (cvar->valid(aux->getNumber()))
+	  if (cvar->valid(ptr,aux->getNumber()))
 	    return NO;
 	}
       }
@@ -132,6 +132,9 @@ Bool IHashTable::disentailed(GenCVariable *cvar)
     }
 
   case AVAR:
+  case DVAR:         
+    return ((GenCVariable *)this)->valid(ptr,OZ_int(4711));
+
   default:    
     return NO;
   }
