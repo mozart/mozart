@@ -2567,8 +2567,9 @@ void MsgTermSnapshotImpl::gcStart()
   Assert(!(flags&MTS_SET));
   SntVarLocation* l = locs;
   while(l) {
-    OZ_Term hv = l->getLoc();
-    DEREF(hv,hvp,_tag)
+    OZ_Term hvr = l->getLoc();
+    OZ_Term *hvp = tagged2Ref(hvr);
+    OZ_Term hv = *hvp;
     DebugCode(OZ_Term v = l->getVar(););
     Assert(oz_isExtVar(v));
     Assert(l->getSavedValue() == (OZ_Term) -1);
@@ -2576,7 +2577,7 @@ void MsgTermSnapshotImpl::gcStart()
     //
     // Keep variables. It can also happen that the variable appears in
     // more than one snapshot currently being GCed:
-    if (!oz_isVariable(hv) && !oz_isGCStubVar(hv)) {
+    if (!oz_isRef(hv) && !oz_isVariable(hv) && !oz_isGCStubVar(hv)) {
       GCStubVar *svp = new GCStubVar(hv);
       *hvp = makeTaggedCVar(svp);
     }
