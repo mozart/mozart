@@ -34,7 +34,7 @@ include Makefile.vars
 
 MODULE_NAMES =							\
 	PID Fault DPMisc DPB VirtualSite DPPane Tk Schedule FDP FSP Parser \
-	CompilerSupport Browser Debug Space FDB FSB CTB RecordC
+	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -63,7 +63,7 @@ BIMODSPECS = \
 MODSPECS= \
 	FDP FSP Schedule Tk Parser OS Property Pickle \
 	PID URL FDB FSB CTB RecordC Space System Finalize CTB \
-	CompilerSupport Profile \
+	CompilerSupport Compat Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
 	VirtualSite Application DPPane \
 	$(BIMODSPECS) \
@@ -166,6 +166,8 @@ CTBSRCS = \
 	ct-bi.cc
 RECORDCSRCS = \
 	ofs-bi.cc
+COMPATSRCS = \
+	compat.cc
 
 TKOBJS=	$(TKSRCS:%.cc=%.lo)
 COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
@@ -176,12 +178,13 @@ FDBOBJS=	$(FDBSRCS:%.cc=%.lo)
 FSBOBJS=	$(FSBSRCS:%.cc=%.lo)
 CTBOBJS=	$(CTBSRCS:%.cc=%.lo)
 RECORDCOBJS=	$(RECORDCSRCS:%.cc=%.lo)
+COMPATOBJS=	$(COMPATSRCS:%.cc=%.lo)
 
 
 ALLSRCS= $(SRCS) \
 	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
 	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
-	$(RECORDCSRCS) \
+	$(RECORDCSRCS) $(COMPATSRCS) \
 	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
@@ -266,6 +269,12 @@ RecordC.so: $(RECORDCOBJS)
 
 libRecordC.a: $(RECORDCOBJS)
 	$(AR) -rc $@ $(RECORDCOBJS) && $(RANLIB) $@
+
+Compat.so: $(COMPATOBJS)
+	$(DYNLD) -o $@ $(COMPATOBJS)
+
+libCompat.a: $(COMPATOBJS)
+	$(AR) -rc $@ $(COMPATOBJS) && $(RANLIB) $@
 
 CompilerSupport.so: $(COMPILERSUPPORTOBJS)
 	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
