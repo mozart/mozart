@@ -24,13 +24,14 @@ declare [LP] = {Module.link ['x-oz://contrib/LP.ozf']}
 
 
 declare X Y P in [X Y]:::0#10
-{FCP_FD.'`LessEqOff`' X Y 5 P}
+{FCP_FD.'FD.lessEqOff' X Y 5 P}
 
 /*
 
+
 cond X Y P in
    [X Y]:::0#10
-   {FCP_FD.'`LessEqOff`' X Y 5 P}
+   {FCP_FD.'FD.lessEqOff' X Y 5 P}
    {Propagator.discard P}
    {Show show(P)}
 then {Show show(yes)}
@@ -84,7 +85,7 @@ Is = {Propagator.identifyParameter [X Y 1 X 2 y Y]}
 {Browse Propagator}
 
 declare X Y P B in [X Y]:::0#10 B::0#1
-{FCP_FD.'`Reified.sumC`' [1 1] [X Y] '=<:' 5 B P}
+{FCP_FD.'FD.reified.sumC' [1 1] [X Y] '=<:' 5 B P}
 
 
 {Show show({Propagator.getName P})}
@@ -98,5 +99,18 @@ B = 1
 {Propagator.activate P}
 {Propagator.deactivate P}
 {Show [X Y B P]}
+
+{Browse FCP_FD}
+{Browse Reflect}
+
+declare A B C P in [A B] ::: 1#2 C :: 0#5
+{Browse [A B C]}
+{FCP_FD.'Plus.inactive' A B C P}
+
+{Propagator.activate P}
+
+{Browse FCP_FD}
+{Browse FCP_FS}
+{Browse FCP_RI}
 
 */
