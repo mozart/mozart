@@ -94,7 +94,10 @@ fun instantiate {$ IMPORT}
 	 OzPathEnv = {OS.getEnv 'OZPATH'}
       in
 	 OzPath = case {OS.getEnv 'HOME'} of false then {PathList OzPathEnv}
-		  elseof HomeEnv then HomeEnv#'/Oz/lib'|{PathList OzPathEnv}
+		  elseof HomeEnv then
+		     HomeEnv#'/mozart/share/lib'|
+		     HomeEnv#'/mozart/share/tools'|
+		     {PathList OzPathEnv}
 		  end
       end
 
