@@ -433,13 +433,12 @@ int cdecl asyncHandler(ClientData cd, Tcl_Interp *i, int code)
   return code;
 }
 
-
 static unsigned __stdcall readerThread(void *arg)
 {
   ReaderInfo *ri = (ReaderInfo *)arg;
   int count,i;
 
-  int bufSize  = 10000;
+  int bufSize  = 64*1024;
   char *buffer = (char*) malloc(bufSize+1);
   int used = 0;
 
