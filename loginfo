@@ -18,7 +18,6 @@
 # If the name ALL appears as a regular expression it is always used
 # in addition to the first matching regex or DEFAULT.
 #
-#DEFAULT		/home/ps-home/hydra/CVS/CVSROOT/log.pl %s -m mehl
 ALL		/home/ps-home/hydra/CVS/CVSROOT/log.pl -m mehl %s
 Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
