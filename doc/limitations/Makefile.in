@@ -3,8 +3,8 @@ SRCDIR		= @srcdir@
 
 WHAT = limitations
 MAIN = main.sgml
-WHATCLASS=unused
-PRINTNAME=Limitations
+#WHATCLASS=unused
+#PRINTNAME=Limitations
 
 HTMLEXTRAFILES =
 
