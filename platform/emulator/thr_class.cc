@@ -102,23 +102,6 @@ void Thread::removeExtThreadOutlined ()
   }
 }
 
-/*
- * check if a thread's board is below a failed board
- */
-Bool Thread::isBelowFailed (Board *top)
-{
-  Assert (isRunnable ());
-
-  Board *bb=getBoard();
-  while (bb!=top) {
-    if (bb->isFailed()) {
-      return TRUE;
-    }
-    bb=bb->getParent();
-  }
-  return FALSE;
-}
-
 void Thread::propagatorToNormal()
 {
   Assert(isPropagator());
