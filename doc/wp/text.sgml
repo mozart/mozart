@@ -91,8 +91,90 @@ Te={New Tk.text tkInit(parent:T width:40 height:10 bg:ivory)}
 
   </section>
 
-  <section id="section.text.events">
-    <title/Events and Actions/
+  <section id="section.text.toy">
+    <title/Example: A ToyText Browser/
+
+    <p>
+      <figure id="figure.text.head">
+<chunk><title/Definition of Head/
+local
+   HF={New Tk.font    tkInit(family:helvetica size:18 weight:bold)}
+   HT={New Tk.textTag tkInit(parent:Te)}
+in
+   {HT tk(configure font:HF foreground:orange)}
+   proc {Head E Rs}
+      {Te tk(insert p(0 0) E#'\n' HT)}
+      {HT tkBind(event:  '<1>'
+		 action: proc {$} {Display Rs} end)}
+   end
+end
+</chunk>
+      </figure>
+
+    <p>
+      <figure id="figure.text.body">
+<chunk><title/Definition of Body/
+local
+   BF={New Tk.font    tkInit(family:helvetica size:12 weight:normal)}
+   BT={New Tk.textTag tkInit(parent:Te)}
+   proc {Do Es T Rs}
+      case Es of nil then skip
+      [] E|Er then
+	 case E
+	 of a(ref:R Es) then
+	    RT={New Tk.textTag tkInit(parent:Te)}
+	 in
+	    {RT tk(configure font:BF foreground:blue underline:true)}
+	    {RT tkBind(event: '<1>'
+		       action: proc {$} {Display R|Rs} end)}
+	    {Do Es RT Rs}
+	 else
+	    {Te tk(insert 'end' E T)}
+	 end
+	 {Do Er T Rs}
+      end
+   end
+in
+   {BT tk(configure font:BF)}
+   proc {Body Es Rs}
+      {Do Es BT Rs}
+   end
+end
+</chunk>
+      </figure>
+
+    <p>
+      <figure id="figure.text.display">
+<chunk><title/Definition of Display/
+proc {Display Rs}
+   case Rs of nil then skip
+   [] R|Rr then
+     {Te tk(delete p(0 0) 'end')}
+     {Head ToyText.R.head Rr} {Body ToyText.R.body Rs}
+   end      
+end
+</chunk>
+      </figure>
+
+    <p>
+      <figure id="figure.text.toy">
+      <p>
+        <picture.extern to="toy.gif" type=gif>  
+<chunk class=anonymous><title/ToyBrowse/
+proc {ToyBrowse ToyText Root}
+   T ={New Tk.toplevel tkInit}
+   Te={New Tk.text   tkInit(parent:T width:40 height:8 bg:white wrap:word)}
+   <chunk.ref/Definition of Head/
+   <chunk.ref/Definition of Body/
+   <chunk.ref/Definition of Display/
+in
+   {Tk.send pack(Te)}
+   {Display [Root]}
+end
+{ToyBrowse <chunk.ref/Sample ToyText/ canvas}
+</chunk>
+      </figure>
+
 
   </section>
 
@@ -116,6 +198,29 @@ Te={New Tk.text tkInit(parent:T width:40 height:10 bg:ivory)}
 declare
 T={New Tk.toplevel tkInit}
 <chunk.ref/text display/
+
+
+
+%%
+%% Text Tags
+%%
+
+
+
+
+%%
+%% Example: A ToyText Browser
+%%
+
+declare
+<chunk.ref/ToyBrowse/
+
+
+
+%%
+%% Text Marks
+%%
+
 
 
 
