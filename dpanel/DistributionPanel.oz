@@ -1,7 +1,7 @@
 functor
 import
    Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
-   DPStatistics(siteStatistics) at 'x-oz://boot/DPStatistics'
+   DPStatistics(siteStatistics)
    Error
 export
    Open

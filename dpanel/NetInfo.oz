@@ -25,7 +25,7 @@
 functor
 import
    Colour(list)
-   DPStatistics(getNetInfo) at 'x-oz://boot/DPStatistics'
+   DPStatistics(getNetInfo)
    DPB at 'x-oz://boot/DPB'
 export
    netInfo:NetInfo
