@@ -64,6 +64,13 @@
         <Item>
           tests whether ?_{X} is determined.
 
+        <Entry><Span class=index/<<IsFuture>>/
+          <Index/<<Value>><And><<isFuture>>/
+        <Synopsis>
+          <<{Value.isFuture ?_{X} ??{B}}>>
+        <Item>
+          tests whether ?_{X} is a future.
+
         <Entry><Span class=index/<<IsKinded>>/
           <Index/<<Value>><And><<isKinded>>/
         <Synopsis>
