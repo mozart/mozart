@@ -641,7 +641,7 @@ OZ_Term OZ_recordProp(OZ_Term label, OZ_Term propList)
   return out;
 }
 
-void OZ_setRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
+void OZ_putRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
 {
   DEREF(record,_1,recTag);
   DEREF(feature,_2,feaTag);
@@ -654,7 +654,7 @@ void OZ_setRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
       }
     }
   }
-  OZ_warning("OZ_setRecordArg(%s,%s,%s): failed",
+  OZ_warning("OZ_putRecordArg(%s,%s,%s): failed",
 	     OZ_toC(record),OZ_toC(feature),OZ_toC(value));
 }
 
