@@ -40,7 +40,6 @@
 #include "controlvar.hh"
 //#include "dpMarshaler.hh"
 #include "dpInterface.hh"
-#include "flowControl.hh"
 #include "ozconfig.hh"
 #include "msgContainer.hh"
 
@@ -60,8 +59,16 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   
   PD((PORT,"sendingTo %s %d",site->stringrep(),index));
   send(msgC);
-
-  return PROCEED;
+  if (site->getQueueStatus() < ozconf.dpFlowBufferSize)  
+    {
+      return PROCEED;
+    }
+  else
+    {
+      ControlVarNew(controlvar,oz_rootBoard());
+      msgC->setCntrlVar(controlvar);
+      return suspendOnControlVar();
+    }
 }
 
 //
@@ -70,20 +77,11 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
 {
   Assert(p->getTertType()==Te_Proxy);
   if(getEntityCond(p)!= ENTITY_NORMAL){
-    
     pendThreadAddToEnd(&(((PortProxy*)p)->pending),
 		       msg,msg,NOEX);
     deferEntityProblem(p);
     return SuspendOnControlVarReturnValue;
-    
   }
-  if(((PortProxy*)p)->pending!= NULL || !((PortProxy*)p)->canSend()){
-    pendThreadAddToEnd(&(((PortProxy*)p)->pending),
-		       msg,msg,NOEX);
-    flowControler->addElement(makeTaggedConst(p));
-    return SuspendOnControlVarReturnValue;
-  }
-  Assert(((PortProxy*)p)->pending == NULL);
   return portSendInternal(p,msg);
 }
 
@@ -104,46 +102,6 @@ void gcDistPortRecurseImpl(Tertiary *p)
   }
 }
 
-Bool  PortProxy::canSend(){
-  /*
-    This test is currently commented away. 
-    Problems where experienced when threads
-    where put to sleep because of filled queues. 
-    Erik. 
-  */
-  return TRUE; 
-  
-  BorrowEntry* b = BT->bi2borrow(this->getIndex());
-   NetAddress *na = b->getNetAddress();
-   DSite* site     = na->site;
-   return(site->getQueueStatus() < 
-	  ozconf.dpFlowBufferSize);}
-
-
-void  PortProxy::wakeUp(){
-  OZ_Return ret;
-  PendThread *old;
-  while(pending!=NULL){
-    if(getEntityCond(this)!= ENTITY_NORMAL){
-      entityProblem(this);
-      return;}
-    if(!this->canSend()){
-	flowControler->addElement(makeTaggedConst(this));
-	return;}
-    
-    if (pending->thread != NULL){
-      ret = portSendInternal(this, pending->nw);
-      if(ret!=PROCEED)
-	ControlVarRaise(pending->controlvar, ret);
-      else
-	ControlVarResume(pending->controlvar);
-    }
-    old = pending;
-    pending = pending->next;
-    old->dispose();
-  }
-}
-    
 
 /**************************************************************/
 /*      Failure                                               */
@@ -158,8 +116,8 @@ void port_Temp(PortProxy* pp){
 void port_Ok(PortProxy* pp){
   EntityCond ec = TEMP_FAIL;
   subEntityCond(pp,ec);
-  pp->wakeUp();
 }
+
 void port_Perm(PortProxy* pp){
   EntityCond ec = PERM_FAIL;
   if(!addEntityCond(pp,ec)) return;

@@ -51,7 +51,6 @@ public:
   NO_DEFAULT_CONSTRUCTORS(PortProxy);
   PortProxy(int i): Port(0,Te_Proxy) { setIndex(i); pending = NULL;}
   Bool canSend();
-  void wakeUp();
 };
 
 EntityCond getEntityCondPort(Tertiary* );
