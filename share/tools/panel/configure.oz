@@ -6,7 +6,7 @@
 %%%  Version: $Revision$
 
 
-PanelWidth   = 640
+PanelWidth   = 540
 FrameWidth   = PanelWidth - 30
 PanelHeight  = 370
 
