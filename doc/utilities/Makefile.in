@@ -27,6 +27,7 @@ BUILDTOP        = @BUILDTOP@
 BINDIR          = $(PREFIX)/bin
 DOCDIR          = $(PREFIX)/share/doc
 HOMEURL         = @HOMEURL@
+PLATFORM        = @PLATFORM@
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@

@@ -20,14 +20,17 @@ GIFCONV         = Gif2Functor.oza
 ICONDIR         = $(SRCDIR)/Icons2
 MAKEGIF         = $(OZENGINE) $(GIFCONV)
 GIFS            = $(addsuffix _gif.ozf, Logo Letter Online Offline Away Powered_by_oz Eyes)
+NEWCACHEDIR     = $(PREFIX)/cache/x-oz/contrib/micq
 
 all:            $(GIFCONV) $(GIFS) $(APPLETS)
 
-install:: $(LIB_DIR) $(DEMO_DIR) \
-        $(addprefix $(LIB_DIR)/,$(APPLETS)) \
-        $(DEMO_DIR)/MIM.oza
+install:: $(DEMO_DIR) $(DEMO_DIR)/MIM.oza \
+        $(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(APPLETS))
 
-$(LIB_DIR) $(DEMO_DIR):
+$(NEWCACHEDIR)/% : %
+        $(INSTALL_LIB) $< $@
+
+$(LIB_DIR) $(DEMO_DIR) $(NEWCACHEDIR):
         $(INSTALL_DIR) $@
 $(LIB_DIR)/%.oza: %.oza
         $(INSTALL_LIB) $< $@

@@ -6,6 +6,8 @@ PLATFORM        = @PLATFORM@
 PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
 INSTALL         = @INSTALL@
 INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_DLL     = $(INSTALL) -m 555
+INSTALL_FILE    = $(INSTALL) -m 444
 INSTALL_DIR     = @INSTALL_DIR@
 CC              = @CC@
 CXX             = @CXX@
@@ -46,6 +48,8 @@ PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM) \
                   $(PLATFORMDIR)/GDK.so-$(PLATFORM) \
                   $(PLATFORMFILES_AUX)
 
+NEWCACHEDIR = $(PREFIX)/cache/x-oz/system
+NEWPLATFORMFILES = $(PLATFORMFILES:$(PLATFORMDIR)/%=$(NEWCACHEDIR)/%)
 
 ### end of files to install
 
@@ -148,8 +152,14 @@ veryclean: clean
 distclean: veryclean
         -rm -f conf.h config.* Makefile
 
-install: $(PLATFORMDIR) $(PLATFORMFILES) \
-         $(SHAREDIR) $(SHAREFILES) $(PROVIDETCLLIBS)
+#install: $(PLATFORMDIR) $(PLATFORMFILES) \
+#        $(SHAREDIR) $(SHAREFILES) $(PROVIDETCLLIBS) \
+#       $(NEWPLATFORMFILES)
+
+install: $(NEWCACHEDIR) $(NEWPLATFORMFILES)
+
+$(NEWCACHEDIR)/%.so-$(PLATFORM) : %.so-$(PLATFORM)
+        $(INSTALL_DLL) $< $@
 
 ### GTK install
 

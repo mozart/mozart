@@ -24,6 +24,7 @@ CXXFLAGS        = @CXXFLAGS@ $(CFLAGS)
 INSTALL         = @INSTALL@
 INSTALLPRG      = $(INSTALL) -m 555
 INSTALLFILE     = $(INSTALL) -m 444
+INSTALLDLL      = $(INSTALL) -m 555
 MKINSTALLDIRS   = @INSTALL_DIR@
 
 SHAREDIR = $(PREFIX)/share
@@ -33,6 +34,8 @@ SHAREFILES = \
 PLATFORMDIR = $(PREFIX)/platform/$(PLATFORM)
 PLATFORMFILES = \
         $(PLATFORMDIR)/flex.exe
+NEWCACHEDIR = $(PREFIX)/cache/x-oz/system
+NEWCACHEFILES = $(SHAREFILES:$(SHAREDIR)/%=$(NEWCACHEDIR)/%)
 INCDIR = $(PREFIX)/include
 INCFILES = \
         $(INCDIR)/FlexLexer.h $(INCDIR)/lexer.h
@@ -56,12 +59,17 @@ GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/mozart.h
         $(DYNLD) -o $@ GumpScanner.o
 
 install: all \
-        $(SHAREDIR) $(SHAREFILES) \
         $(PLATFORMDIR) $(PLATFORMFILES) \
-        $(INCDIR) $(INCFILES)
+        $(INCDIR) $(INCFILES) \
+        $(NEWCACHEDIR) $(NEWCACHEFILES)
 
-$(SHAREDIR) $(PLATFORMDIR) $(INCDIR):
+$(SHAREDIR) $(PLATFORMDIR) $(INCDIR) $(NEWCACHEDIR):
         $(MKINSTALLDIRS) $@
+
+$(NEWCACHEDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so
+        $(INSTALLDLL) $< $@
+$(NEWCACHEDIR)/Bison.so-$(PLATFORM): ozbison/Bison.so
+        $(INSTALLFILE) $< $@
 
 $(SHAREDIR)/GumpScanner.so-$(PLATFORM): $(PLATFORMDIR)/GumpScanner.so
         $(RM) $(SHAREDIR)/GumpScanner.so-$(PLATFORM)

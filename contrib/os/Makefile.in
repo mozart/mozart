@@ -7,6 +7,7 @@ VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
 LIB_DIR         = $(PREFIX)/contrib/os
 HOMEURL         = @HOMEURL@
+NEWCACHEDIR     = $(PREFIX)/cache/x-oz/contrib/os
 
 DENYS_EVENTS    = @DENYS_EVENTS@
 ifeq ($(DENYS_EVENTS),yes)
@@ -34,19 +35,27 @@ NATIVES         = io.so-$(PLATFORM) process.so-$(PLATFORM)
 
 LIB_FUNCTORS    = $(addprefix $(LIB_DIR)/,$(FUNCTORS))
 LIB_NATIVES     = $(addprefix $(LIB_DIR)/,$(NATIVES))
+NEW_FUNCTORS    = $(addprefix $(NEWCACHEDIR)/,$(FUNCTORS))
+NEW_NATIVES     = $(addprefix $(NEWCACHEDIR)/,$(NATIVES))
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 all:            $(FUNCTORS) $(NATIVES)
-install:        $(LIB_DIR) $(LIB_FUNCTORS) $(LIB_NATIVES)
+install:        $(NEWCACHEDIR) $(NEW_FUNCTORS) $(NEW_NATIVES)
 
-$(LIB_DIR):
+$(LIB_DIR) $(NEWCACHEDIR):
         $(INSTALL_DIR) $@
 
 $(LIB_FUNCTORS): $(LIB_DIR)/% : %
         $(INSTALL_LIB) $< $@
 
 $(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+        $(INSTALL_DLL) $< $@
+
+$(NEW_FUNCTORS): $(NEWCACHEDIR)/% : %
+        $(INSTALL_LIB) $< $@
+
+$(NEW_NATIVES): $(NEWCACHEDIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
         $(INSTALL_DLL) $< $@
 
 %.ozf: %.oz
