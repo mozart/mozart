@@ -107,7 +107,15 @@ static VSTable vsTable(VS_VSTABLE_SIZE);
 static Bool checkVSMessages(unsigned long clock, void *mbox);
 // ... and the read handler itself:
 // static TaskProcessProc readVSMessages;
+#ifdef USE_FAST_UNMARSHALER
 static Bool readVSMessages(unsigned long clock, void *mbox);
+#else
+static Bool readVSMessagesRobust(unsigned long clock, void *mbox, Bool* error);
+static Bool readVSMessages(unsigned long clock, void *mbox) {
+  int trash;
+  return readVSMessagesRobust(clock,mbox,&trash);
+}
+#endif
 
 //
 // ... and the pair for processing unsent messages:
@@ -388,28 +396,35 @@ VSMsgType getVSMsgType(VSMsgBufferImported *mb)
   return ((VSMsgType) mb->get());
 }
 
+#ifdef USE_FAST_UNMARSHALER
 //
 void decomposeVSInitMsg(VSMsgBuffer *mb, DSite* &s)
 {
   s = unmarshalDSite(mb);
 }
+#else
 //
 void decomposeVSInitMsgRobust(VSMsgBuffer *mb, DSite* &s, int *error)
 {
   s = unmarshalDSiteRobust(mb, error);
 }
+#endif
 
+#ifdef USE_FAST_UNMARSHALER
 //
 void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, DSite* &src)
 {
   src = unmarshalDSite(mb);
 }
+#else
 //
 void decomposeVSSiteIsAliveMsgRobust(VSMsgBuffer *mb, DSite* &src,int *error)
 {
   src = unmarshalDSiteRobust(mb, error);
 }
+#endif
 
+#ifdef USE_FAST_UNMARSHALER
 //
 void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs)
 {
@@ -418,6 +433,7 @@ void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, DSite* &s, VirtualSite* &vs)
   vs = s->getVirtualSite();
   vs->unmarshalResources(mb);
 }
+#else
 //
 void decomposeVSSiteAliveMsgRobust(VSMsgBuffer *mb, DSite* &s, 
 			     VirtualSite* &vs, int *error)
@@ -429,18 +445,23 @@ void decomposeVSSiteAliveMsgRobust(VSMsgBuffer *mb, DSite* &s,
   vs->unmarshalResourcesRobust(mb, &e2);
   *error = e1 || e2;
 }
+#endif
 
 // for decomposeVSSiteDeadMsg see virtual_general.cc
 
+#ifdef USE_FAST_UNMARSHALER
 void decomposeVSYourIndexHereMsg(VSMsgBuffer *mb, int &index)
 {
   index = (int) unmarshalNumber(mb);
 }
+#else
 void decomposeVSYourIndexHereMsgRobust(VSMsgBuffer *mb, int &index, int *error)
 {
   index = (int) unmarshalNumberRobust(mb, error);
 }
+#endif
 
+#ifdef USE_FAST_UNMARSHALER
 //
 void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid)
 {
@@ -448,6 +469,7 @@ void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, DSite* &s, key_t &shmid)
   s = unmarshalDSite(mb);
   shmid = (key_t) unmarshalNumber(mb);
 }
+#else
 //
 void decomposeVSUnusedShmIdMsgRobust(VSMsgBuffer *mb, DSite* &s, 
 				   key_t &shmid, int *error)
@@ -458,6 +480,7 @@ void decomposeVSUnusedShmIdMsgRobust(VSMsgBuffer *mb, DSite* &s,
   shmid = (key_t) unmarshalNumberRobust(mb, &e2);
   *error = e1 || e2;
 }
+#endif
 
 
 //
@@ -470,10 +493,13 @@ static Bool checkVSMessages(unsigned long clock, void *vMBox)
 }
 
 // for readVSMessages see virtual_general.cc
+#ifndef USE_FAST_UNMARSHALER
 #define ROBUST_UNMARSHALER
 #include "virtual_general.cc"
 #undef ROBUST_UNMARSHALER
+#else
 #include "virtual_general.cc"
+#endif
 
 //
 //
@@ -931,7 +957,12 @@ OZ_BI_define(BIVSinitServer,1,0)
   // unmarshaling, but it is NOT recognized as a virtual one
   // (since 'myDSite' has not been yet initialized - a
   // bootstrapping problem! :-))
+#ifdef USE_FAST_UNMARSHALER   
   decomposeVSInitMsg(myVSMsgBufferImported, ms);
+#else
+  int trash;
+  decomposeVSInitMsgRobust(myVSMsgBufferImported, ms, &trash);
+#endif
   myVSMsgBufferImported->unmarshalEnd();
 
   //

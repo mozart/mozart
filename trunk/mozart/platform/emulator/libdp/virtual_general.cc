@@ -74,7 +74,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
   VSMailboxOwned *mbox = (VSMailboxOwned *) vMBox;
   int msgs = MAX_MSGS_ATONCE;
 #ifdef ROBUST_UNMARSHALER
-  int e1, e2=NO;
+  int e1, e2=NO, e3=NO;
 #endif
 
   //
@@ -130,7 +130,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	vsResourceManager.startMsgReceived(sVS);
       } else {
 #ifdef ROBUST_UNMARSHALER
-	sS = unmarshalDSiteRobust(myVSMsgBufferImported, &e1);
+	sS = unmarshalDSiteRobust(myVSMsgBufferImported, &e2);
 #else
 	sS = unmarshalDSite(myVSMsgBufferImported);
 #endif
@@ -161,7 +161,9 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       case VS_M_PERDIO:
 	//
 	DebugVSMsgs(vsSRCounter.recv(););
+	fflush(stdout);
 	msgReceived(myVSMsgBufferImported);
+	fflush(stdout);
 	break;
 
       case VS_M_INVALID:
@@ -177,7 +179,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	  DSite *myS;
 	  //
 	  // 'myS' is supposed to be 'myDSite' - otherwise it is dead;
+#ifdef ROBUST_UNMARSHALER
+	  decomposeVSSiteIsAliveMsgRobust(myVSMsgBufferImported, myS, &e3);
+#else
 	  decomposeVSSiteIsAliveMsg(myVSMsgBufferImported, myS);
+#endif
 
 	  //
 	  if (myS == myDSite) {
@@ -211,7 +217,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	{
 	  DSite *s;
 	  VirtualSite *vs;
+#ifdef ROBUST_UNMARSHALER
+	  decomposeVSSiteAliveMsgRobust(myVSMsgBufferImported, s, vs, &e3);
+#else
 	  decomposeVSSiteAliveMsg(myVSMsgBufferImported, s, vs);
+#endif
 	  s->siteAlive();
 	  break;
 	}
@@ -220,7 +230,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	{
 	  DSite *ds;
 	  VirtualSite *dvs;
+#ifdef ROBUST_UNMARSHALER
+	  decomposeVSSiteDeadMsgRobust(myVSMsgBufferImported, ds, dvs, &e3);
+#else
 	  decomposeVSSiteDeadMsg(myVSMsgBufferImported, ds, dvs);
+#endif
 	  // effectively dead;
 	  if (dvs) 
 	    dvs->killResources();
@@ -232,7 +246,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       case VS_M_YOUR_INDEX_HERE:
 	{
 	  int index;
+#ifdef ROBUST_UNMARSHALER
+	  decomposeVSYourIndexHereMsgRobust(myVSMsgBufferImported, index, &e3);
+#else
 	  decomposeVSYourIndexHereMsg(myVSMsgBufferImported, index);
+#endif
 	  sVS->setVSIndex(index);
 	  break;
 	}
@@ -241,7 +259,11 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 	{
 	  DSite *s;
 	  key_t shmid;
+#ifdef ROBUST_UNMARSHALER
+	  decomposeVSUnusedShmIdMsgRobust(myVSMsgBufferImported, s, shmid, &e3);
+#else
 	  decomposeVSUnusedShmIdMsg(myVSMsgBufferImported, s, shmid);
+#endif
 	  importedVSChunksPoolManager->removeSegmentManager(shmid);
 	  // kill the segment from the virtual site's 'keys' register:
 	  sVS->dropSegManager(shmid);
@@ -261,7 +283,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       //
       vsResourceManager.finishMsgReceived();
 #ifdef ROBUST_UNMARSHALER
-      *error = e1 || e2;
+      *error = e1 || e2 || e3;
 #endif
     } else {
       // is locked - then let's try to read later;

@@ -85,14 +85,15 @@ define(mxzArg,`ifelse($1,Index,int &,
 	           $1,Site2,DSite* &)'
             `ifelse($2,`',`',`,')')
 
-
+#ifdef USE_FAST_UNMARSHALER   
 undefine(`message')
 define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(EMUDIR/msgFormat.m4)
-
+#else
 undefine(`message')
 define(message,`void unmarshalRobust_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(EMUDIR/msgFormat.m4)
+#endif
 
 void marshalDSite(DSite *, MsgBuffer *);
 void marshalVarObject(Object *o, MsgBuffer *bs, GName *gnclass);
@@ -100,15 +101,18 @@ void marshalFullObjectAndClass(Object *o, MsgBuffer* bs);
 void marshalFullObject(Object *o, MsgBuffer* bs);
 
 MessageType unmarshalHeader(MsgBuffer *bs);
+#ifdef USE_FAST_UNMARSHALER   
 void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs);
+void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs);
+#else
 void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error);
 void unmarshalFullObjectRobustInternal(ObjectFields *o, MsgBuffer *bs, 
 				       int *error);
-void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs);
 void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,
 				       int *error);
 void unmarshalFullObjectAndClassRobustInternal(ObjectFields *o,MsgBuffer *bs,
 					       int *error);
+#endif
 
 inline void marshalCredit(Credit credit,MsgBuffer *bs){  
   Assert(sizeof(Credit)==sizeof(int));
@@ -117,32 +121,41 @@ inline void marshalCredit(Credit credit,MsgBuffer *bs){
   PD((CREDIT,"marshal:credit c:%d",credit));
   marshalNumber(credit,bs);}
 
+#ifdef USE_FAST_UNMARSHALER   
 inline Credit unmarshalCredit(MsgBuffer *bs){
   Assert(sizeof(Credit)==sizeof(int));
   Credit c=unmarshalNumber(bs);
   PD((UNMARSHAL,"credit c:%d",c));
   PD((CREDIT,"unmarshal:credit c:%d",c));
   return c;}
+#else
 inline Credit unmarshalCreditRobust(MsgBuffer *bs,int *error){
   Assert(sizeof(Credit)==sizeof(int));
   Credit c=unmarshalNumberRobust(bs,error);
   PD((UNMARSHAL,"credit c:%d",c));
   PD((CREDIT,"unmarshal:credit c:%d",c));
   return c;}
+#endif
 
 // var.cc
+#ifdef USE_FAST_UNMARSHALER   
 OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi);
+#else
 OZ_Term unmarshalBorrowRobust(MsgBuffer *bs,OB_Entry *&ob,int &bi,int *error);
+#endif
 void marshalToOwner(int bi,MsgBuffer *bs);
 void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
 void marshalOwnHead(int tag,int i,MsgBuffer *bs);
 
 //
 void marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
+#ifdef USE_FAST_UNMARSHALER   
 OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag);
-OZ_Term unmarshalTertiaryRobustImpl(MsgBuffer *bs, MarshalTag tag,int *error);
 OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt);
+#else
+OZ_Term unmarshalTertiaryRobustImpl(MsgBuffer *bs, MarshalTag tag,int *error);
 OZ_Term unmarshalOwnerRobustImpl(MsgBuffer *bs,MarshalTag mt,int *error);
+#endif
 void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs);
 void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail);
 

@@ -261,8 +261,11 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 /* ---------------------------------------------------------------------- */
 
 void sendRedirect(DSite*, int, TaggedRef);
+#ifdef USE_FAST_UNMARSHALER   
 OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
+#else
 OZ_Term unmarshalVarRobustImpl(MsgBuffer*,Bool,Bool,int*);
+#endif
 Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
 Bool triggerVariableImpl(TaggedRef *);
 

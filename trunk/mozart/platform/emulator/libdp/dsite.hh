@@ -92,7 +92,6 @@
 //
 void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb);
 VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb); 
-VirtualInfo* unmarshalVirtualInfoRobust(MsgBuffer *mb, int *error); 
 void unmarshalUselessVirtualInfo(MsgBuffer *);
 void dumpVirtualInfo(VirtualInfo* vi);
 
@@ -652,6 +651,7 @@ public:
     DebugCode(mailboxKey = (key_t) 0);
   }
 
+#ifdef USE_FAST_UNMARSHALER   
   //
   // Another type of initialization - unmarshaliing:
   VirtualInfo(MsgBuffer *mb) {
@@ -672,9 +672,10 @@ public:
     //
     mailboxKey = (key_t) unmarshalNumber(mb);
   }
+#else
   //
-  // Another type of initialization - safe unmarshaliing:
-  VirtualInfo(MsgBuffer *mb, int *error) {
+  // Another type of initialization - robust unmarshaling:
+  VirtualInfo(MsgBuffer *mb) {
     Assert(sizeof(ip_address) <= sizeof(unsigned int));
     Assert(sizeof(port_t) <= sizeof(unsigned short));
     Assert(sizeof(time_t) <= sizeof(unsigned int));
@@ -684,15 +685,15 @@ public:
     Assert(sizeof(key_t) == sizeof(unsigned int));
 #endif
     //
-    int e1,e2,e3,e4;
-    address = (ip_address) unmarshalNumberRobust(mb, &e1);
+    int trash;
+    address = (ip_address) unmarshalNumberRobust(mb, &trash);
     port = (port_t) unmarshalShort(mb);  
-    timestamp.start = (time_t) unmarshalNumberRobust(mb, &e2);
-    timestamp.pid = (int) unmarshalNumberRobust(mb, &e3);
+    timestamp.start = (time_t) unmarshalNumberRobust(mb, &trash);
+    timestamp.pid = (int) unmarshalNumberRobust(mb, &trash);
     //
-    mailboxKey = (key_t) unmarshalNumberRobust(mb, &e4);
-    *error = e1 || e2 || e3 || e4;
+    mailboxKey = (key_t) unmarshalNumberRobust(mb, &trash);
   }
+#endif
 
   // 
   // NOTE: marshaling must be complaint with
@@ -737,13 +738,15 @@ char *oz_site2String(DSite *s);
 
 //
 // Marshaller uses that;
+#ifdef USE_FAST_UNMARSHALER   
 DSite* unmarshalDSite(MsgBuffer *);
+#else
 DSite* unmarshalDSiteRobust(MsgBuffer *, int *);
+#endif
 
 //
 // Faking a port from a ticket;
 DSite *findDSite(ip_address a,int port, TimeStamp &stamp);
-DSite *findDSite(ip_address a,int port, TimeStamp &stamp, int *error);
 
 //
 // There is one perdio-wide known "distribition" site object.  

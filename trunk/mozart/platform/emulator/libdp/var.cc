@@ -547,6 +547,7 @@ void ProxyVar::nowGarbage(BorrowEntry* be){
   PD((PD_VAR,"nowGarbage"));  
   sendDeRegister(be);}
 
+#ifdef USE_FAST_UNMARSHALER   
 // extern
 OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
   OB_Entry *ob;
@@ -582,7 +583,7 @@ OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
 
   return val;
 }
-
+#else
 // extern
 OZ_Term unmarshalVarRobustImpl(MsgBuffer* bs, Bool isFuture, 
 			     Bool isAuto, int *error){
@@ -619,6 +620,7 @@ OZ_Term unmarshalVarRobustImpl(MsgBuffer* bs, Bool isFuture,
   } 
   return val;
 }
+#endif
 
 /* --- IsVar test --- */
 
