@@ -10,9 +10,9 @@ import
    
    FS(value intersect reflect include var)
    System
-   Tables(getVar getVarId makeVarTable getPropId makePropTable)
+   Tables(getVar getVarId getPropId)
    Aux(propReflect varReflect vectorToList propLocation mergeSuspLists)
-   Config(propColour edgeColour) 
+   Config(edgeColour) 
 
 define
 
@@ -71,15 +71,18 @@ define
 \ifdef DEBUG
       {System.show makeNode}
 \endif
-      
-      "l(\"cn<"#H.id#">\",n(\"\",[a(\"OBJECT\",\""#H.n
-      #if H.loc == noLoc then ""
-       else "\\n"#H.loc.file#":"#H.loc.line
-       end 
-      #"\"),a(\"COLOR\",\""#Config.propColour#"\"),"
+      Location = if H.loc == noLoc then ""
+		 else H.loc.file#":"#H.loc.line
+		 end 
 
+   in
+      "l(\"cn<"#H.id#">\",n(\"\",["
+      #"a(\"OBJECT\",\""#H.n#"\\n"#Location#"\"),"
+      #"a(\"COLOR\",\""#{Hist get_prop_node_failed(H.id $)}#"\"),"
+      #{Hist get_prop_node_attr(H.id $)}
       #"m(["
       #{Hist insert_menu($)}
+      #{Hist insert_menu_mark_prop(H.id H.n#" ("#Location#")" $)}
       #"menu_entry(\"cg<all>\",\"Constraint graph all constraints\")"
       #",menu_entry(\"scg<"#H.id#">\",\"Single constraint graph of "
       #H.n
@@ -104,15 +107,15 @@ define
       end
    end
 
-   fun {Make Hist Ps}
+   fun {Make VarTable PropTable Hist Ps}
 \ifdef DEBUG
       {System.show make}
 \endif
       
-      VarTable  = {Tables.makeVarTable}
-      PropTable = {Tables.makePropTable}
       Ignore = {FS.var.decl}
    in
+      {Hist reset_mark}
+      
       cg(graph:
 	    case {Map Ps
 		  fun {$ P}
@@ -146,10 +149,6 @@ define
 	    of nil then ""
 	    [] L then "["#{MakeNodes Hist VarTable L}#"]"
 	    end
-	 varTable:
-	    VarTable
-	 propTable:
-	    PropTable
 	)
    end
    
