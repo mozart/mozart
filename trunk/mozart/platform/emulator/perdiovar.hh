@@ -64,12 +64,12 @@ public:
 class PendBinding {
 public:
   TaggedRef val;
-  Thread *thread;
+  TaggedRef controlvar;
   PendBinding *next;
 public:
-  PendBinding() { DebugCheckT(val=4711; thread=0; next=this;) }
-  PendBinding(TaggedRef v,Thread *th,PendBinding *nxt)
-    : val(v), thread(th), next(nxt) {}
+  PendBinding() { DebugCheckT(val=4711; controlvar=0; next=this;) }
+  PendBinding(TaggedRef v,TaggedRef cv,PendBinding *nxt)
+    : val(v), controlvar(cv), next(nxt) {}
   USEFREELISTMEMORY;
 
   void dispose() 
@@ -160,16 +160,20 @@ public:
   void setVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings==0);
-    oz_suspendOnNet(am.currentThread());
+    ControlVarNew(controlvar,oz_rootBoard());
     PD((THREAD_D,"stop thread setVal %x",am.currentThread()));
-    u.bindings=new PendBinding(t,am.currentThread(),0);
+    u.bindings=new PendBinding(t,controlvar,0);
+    am.setSFlag(StopThread); // should be SuspendOnControlVar
+    (void) suspendOnControlVar();
   }
   void pushVal(OZ_Term t) {
     Assert(isProxy());
     Assert(u.bindings!=0);
-    oz_suspendOnNet(am.currentThread());
+    ControlVarNew(controlvar,oz_rootBoard());
     PD((THREAD_D,"stop thread pushVal %x",am.currentThread()));
-    u.bindings->next=new PendBinding(t,am.currentThread(),u.bindings->next);
+    u.bindings->next=new PendBinding(t,controlvar,u.bindings->next);
+    am.setSFlag(StopThread); // should be SuspendOnControlVar
+    (void) suspendOnControlVar();
   }
   void redirect(OZ_Term val);
   void acknowledge(OZ_Term *ptr);

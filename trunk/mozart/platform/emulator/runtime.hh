@@ -108,10 +108,6 @@ OZ_Term oz_newChunk(OZ_Term val)
 #define oz_newVariable() makeTaggedRef(newTaggedUVar(am.currentBoard()))
 #define oz_newToplevelVariable() makeTaggedRef(newTaggedUVar(oz_rootBoard()))
 
-// stop thread: {Wait v}
-void oz_suspendOnNet(Thread *th);
-void oz_resumeFromNet(Thread *th);
-
 /* -----------------------------------------------------------------------
  * # - tuples
  * -----------------------------------------------------------------------*/
@@ -285,33 +281,31 @@ Arity *oz_makeArity(OZ_Term list)
  * control variables
  * -----------------------------------------------------------------------*/
 
-#define ControlVarNew(var)			\
-OZ_Term var = oz_newToplevelVariable();		\
+#define ControlVarNew(var,home)				\
+OZ_Term var = makeTaggedRef(newTaggedUVar(home));	\
 am.addSuspendVarList(var);
 
 
-#define __ControlVarUnify(var,val) 			\
-{OZ_Return _cvaraux = oz_unify(var,val); Assert(_cvaraux==PROCEED); }
-
+void controlVarUnify(TaggedRef var, TaggedRef val);
 
 #define ControlVarResume(var)			\
-__ControlVarUnify(var,NameUnit)
+controlVarUnify(var,NameUnit)
 
 
 #define ControlVarRaise(var,exc) 			\
-__ControlVarUnify(var,OZ_mkTuple(AtomException,1,exc))
+controlVarUnify(var,OZ_mkTuple(AtomException,1,exc))
 
 #define ControlVarUnify(var,A,B) 			\
-__ControlVarUnify(var,OZ_mkTuple(AtomUnify,2,A,B))
+controlVarUnify(var,OZ_mkTuple(AtomUnify,2,A,B))
 
 #define ControlVarApply(var,P,Args)			\
-__ControlVarUnify(var,OZ_mkTuple(AtomApply,2,P,Args))
+controlVarUnify(var,OZ_mkTuple(AtomApply,2,P,Args))
 
 #define ControlVarApplyList(var,PairList)			\
-__ControlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
+controlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
 
 
-extern OZ_Return suspendOnControlVar();
+OZ_Return suspendOnControlVar();
 
 #define SuspendOnControlVar			\
   return suspendOnControlVar();
