@@ -437,6 +437,8 @@ OZ_BI_define(BIObtainNative, 2, 1) {
   char * filename;
   char * mod_name = (char *) 0;
 
+ retry_mod:
+
   if (is_boot) {
     // Might be something linked in statically, so try to find it in table
     
@@ -446,6 +448,14 @@ OZ_BI_define(BIObtainNative, 2, 1) {
 	->getArg(oz_atom(name), module) == PROCEED)
       OZ_RETURN(module);
 
+    // Check whether it is a base module
+    ModuleEntry * E = find_module(base_module_table, name);
+
+    if (E) {
+      link_module(E,NO);
+      goto retry_mod;
+    }
+    
     // Okay, later we will need a filename!
     int n = strlen(ozconf.emuhome);
     int m = strlen(name);
