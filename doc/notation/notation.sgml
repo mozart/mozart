@@ -1103,10 +1103,10 @@
 	The result of the transformation may have references to so-called
 	<Def/Core variables/.  We indicate this by writing them in backquotes;
 	they are not bound lexically, but are looked up in static environment.
-	Examples are <<`.`>> and <<`List.toRecord`>>.  If the print name of a
-	Core variable contains a dot, then it is supposed to be looked up
-	(without the backquotes) in the Base Environment (see <Ptr.Extern
-	to="ozdoc:base">).
+	Examples are <<`List.toRecord`>> and <<`RaiseDebugCheck`>>.  If the
+	print name of a Core variable contains a dot, then it is supposed to
+	be looked up (without the backquotes) in the Base Environment (see
+	<Ptr.Extern to="ozdoc:base">).
 	<!--** what if it does not contain a dot -->
       <Para class=apropos><Title/Errors/
 	When no rule is applicable and the program is not an Oz Core program,
@@ -1648,14 +1648,20 @@ end
 	  <P>
 	    <!--** missing: fd compare -->
 	    <Rewrite>?={statement}
-	      <Rewrite.From/<<?{E1} ?{o} ?{E2}>>/
-	      <Rewrite.To/<<{`?{o}` ?{E2} ?{E1}}>>/
-	      <Rewrite.Condition/where ?{o} <Math/\in/ {<<::>>, <<:::>>}./
+	      <Rewrite.From/<<?{E1} :: ?{E2}>>/
+	      <Rewrite.To/<<{`FD.int` ?{E2} ?{E1}}>>/
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{E1} ::: ?{E2}>>/
+	      <Rewrite.To/<<{`FD.dom` ?{E2} ?{E1}}>>/
 	    </Rewrite>
 	    <Rewrite>?={expression}
-	      <Rewrite.From/<<?{E1} ?{o} ?{E2}>>/
-	      <Rewrite.To/<<{`?{o}R` ?{E2} ?{E1}}>>/
-	      <Rewrite.Condition/where ?{o} <Math/\in/ {<<::>>, <<:::>>}./
+	      <Rewrite.From/<<?{E1} :: ?{E2}>>/
+	      <Rewrite.To/<<{`FD.reified.int` ?{E2} ?{E1}}>>/
+	    </Rewrite>
+	    <Rewrite>?={expression}
+	      <Rewrite.From/<<?{E1} ::: ?{E2}>>/
+	      <Rewrite.To/<<{`FD.reified.dom` ?{E2} ?{E1}}>>/
 	    </Rewrite>
 	<SubSection class=unnumbered>
 	  <Title/Failure/
