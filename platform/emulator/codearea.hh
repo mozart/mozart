@@ -103,11 +103,7 @@ const int codeGCListBlockSize = 10;
 class GCListEntry {
 public:
   GCListTag tag;
-  union {
-    InlineCache *cache;
-    TaggedRef *tagged;
-    AbstractionEntry **entry;
-  } u;
+  ProgramCounter pc;
 };
 
 class CodeGCList {
@@ -128,22 +124,22 @@ public:
   }
     
 
-  CodeGCList *add(void *ptr, GCListTag tag)
+  CodeGCList *add(ProgramCounter ptr, GCListTag tag)
   {
     if (this==NULL || nextFree >= codeGCListBlockSize) {
       CodeGCList *aux = new CodeGCList(this);
       return aux->add(ptr,tag);
     }
 
-    block[nextFree].tag     = tag;
-    block[nextFree].u.cache = (InlineCache*) ptr;
+    block[nextFree].tag = tag;
+    block[nextFree].pc  = ptr;
     nextFree++;
     return this;
   }
 
-  CodeGCList *add(InlineCache *ptr)       { return add(ptr,C_INLINECACHE); }
-  CodeGCList *add(TaggedRef *ptr)         { return add(ptr,C_TAGGED); }
-  CodeGCList *add(AbstractionEntry **ptr) { return add(ptr,C_ABSTRENTRY); }
+  CodeGCList *addInlineCache(ProgramCounter ptr) { return add(ptr,C_INLINECACHE); }
+  CodeGCList *addTagged(ProgramCounter ptr) { return add(ptr,C_TAGGED); }
+  CodeGCList *addAbstractionEntry(ProgramCounter ptr) { return add(ptr,C_ABSTRENTRY); }
 
   void remove(TaggedRef *t);
 
@@ -208,7 +204,7 @@ public:
   }
 
   void protectInlineCache(InlineCache *cache) {
-    gclist = gclist->add(cache);
+    gclist = gclist->addInlineCache((ProgramCounter)cache);
   }
 
   static ProgramCounter printDef(ProgramCounter PC,FILE *out=stderr);
