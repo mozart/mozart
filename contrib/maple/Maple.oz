@@ -35,23 +35,22 @@ functor
    %%      jzimmer 15.7.99
 
 import
+
    OS(getEnv system)
    Compiler(virtualStringToValue)
    ExportMaple(call) at 'maple.so{native}'
    System(show: Show)
 
 export
+
    Call
    Simplify
-   Oz2Maple
+   Solve
 
 prepare
 
    MapleEnvVar = 'MAPLE'
    MapleDefaultPath = "/share/global/linux/maple/bin/maple"
-
-   ParserEnvVar = 'MAPLEPARSER'
-   ParserDefaultPath = "/home/jzimmer/bin/mapleparser/maple2oz"
 
    MapleInfix =  ['+' '-' '*' '/']
    MaplePrefix = ['min' 'abs']
@@ -69,7 +68,7 @@ define
    fun{OzToMaple Term}
       case Term
       of nil then nil
-      [] T|Tr then
+      [] _|_ then
          "{"#{List2Maple Term}#"}"
       else
          if {IsRecord Term} then
@@ -81,7 +80,7 @@ define
                Func#"("#{OzToMaple Term.1}#")"
             else
                case Term
-               of Name#Type then
+               of Name#_ then
                   Name
                else Term end
             end
@@ -113,6 +112,16 @@ define
       Result %NewTerm
    end
 
+   fun{Solve Term}
+      %%Edited  = "27-Jun-1999 16:22"
+      %%Authors = [jzimmer]
+      %%Value   = "The Result of the execution of the Maple(tm) simplification on the given Term."
+      MapleTerm = {OzToMaple Term}
+      Result = {Call solve MapleTerm}
+   in
+      Result %NewTerm
+   end
+
 
    fun {Call Command Args}
       %%Edited  = "27-Jun-1999 16:22"
@@ -127,7 +136,7 @@ define
          #')'
          #', string);'
 
-         Result = {ExportMaple.call CmdString {MapleProgram} {ParserProgram}}
+         Result = {ExportMaple.call CmdString {MapleProgram}}
          Term = {Compiler.virtualStringToValue Result}
       in
          Term
@@ -155,27 +164,6 @@ define
          end
       else
          EnvMaple
-      end
-   end
-
-   fun {ParserProgram}
-      %%Edited  = "20-APR-1999 16:22"
-      %%Authors = [jzimmer]
-      %%Value   = "The location of the maple2oz executable in the file system."
-
-      EnvParser = {OS.getEnv ParserEnvVar}
-   in
-      if EnvParser == false then
-         ExistsParser = {OS.system 'which maple2oz >& /dev/null'}
-      in
-         %{Show ExistsParser}
-         if ExistsParser == 0 then
-            "maple2oz"
-         else
-            ParserDefaultPath
-         end
-      else
-         EnvParser
       end
    end
 
