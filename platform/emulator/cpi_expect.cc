@@ -640,9 +640,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     DEREF(v, vptr, vtag);
 
     if (isAnyVar(vtag)) {
-
-      Assert(!isCVar(vtag) ||
-             (!testResetStoreFlag(v) && !testResetReifiedFlag(v)));
+      Assert(!isCVar(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
       if (isGenFDVar(v, vtag)) {
         addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
