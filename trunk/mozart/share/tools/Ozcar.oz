@@ -7,8 +7,8 @@ declare
 
 local
    
-   \insert 'ozcar/prelude'
    \insert 'ozcar/config'
+   \insert 'ozcar/prelude'
 
    \insert 'ozcar/tree'
    \insert 'ozcar/thread'
