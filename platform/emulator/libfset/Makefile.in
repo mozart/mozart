@@ -23,6 +23,7 @@
 
 include ../Makefile.vars
 
+BUILDTOP        = @BUILDTOP@
 VPATH           = @srcdir@
 FSETDIR         = @srcdir@
 INCS            = -I. -I$(FSETDIR)/.. -I..
@@ -50,7 +51,9 @@ install-prop:
         $(INSTALL_BIN) $(FSETTARGETS) $(bindir)
 
 depend:: Makefile $(FSETLIBSRCS)
-        $(DEPEND) $(FSETLIBSRCS:%=$(FSETDIR)/%) >> Makefile
+        $(DEPEND) $(FSETLIBSRCS:%=$(FSETDIR)/%) > Makefile.deps
+
+-include Makefile.deps
 
 realclean::
         $(RM) *.a *.so
