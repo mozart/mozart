@@ -62,7 +62,7 @@ void Chain::receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   if(aux != ENTITY_NORMAL){
     sendTellError(oe,toS,oe->getTertiary()->getIndex(),aux,TRUE);
     return;}
-  newInform(toS,ec); // PER-LOOK can be reclaimed
+  newInform(toS,ec); 
   PD((NET_HANDLER,"Adding Inform Element"));}
 
 // caused by installing remote watcher/injector
@@ -81,7 +81,7 @@ void receiveAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){
   ManagerVar* mv=GET_VAR(oe,Manager);
   if(mv->getEntityCond() & ec){
     sendTellError(oe,toS,mv->getIndex(),mv->getEntityCond() & ec,TRUE);}
-  mv->newInform(toS,ec); // PER-LOOK can be reclaimed
+  mv->newInform(toS,ec); 
 }
  
 void receiveUnAskError(OwnerEntry *oe,DSite *toS,EntityCond ec){ 

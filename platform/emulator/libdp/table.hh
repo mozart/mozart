@@ -162,7 +162,7 @@ public:
     type=PO_Ref; u.ref=v; flags=PO_NONE; }
 
   void mkVar(TaggedRef v,unsigned short f){
-    type=PO_Var; u.ref=v; }
+    type=PO_Var; u.ref=v; flags=f; }
 
   void mkVar(TaggedRef v){
     type=PO_Var; u.ref=v; flags=PO_NONE;}

@@ -245,6 +245,7 @@ PendThread* threadTrigger(Tertiary* t,Watcher* w){
     break;
   case Co_Cell:
   case Co_Lock:
+    if(t->getTertType()==Te_Proxy) return NULL;
     pd=getPendThreadStartFromCellLock(t);
     break;
   default:
@@ -468,8 +469,7 @@ void DSite::probeFault(ProbeReturn pr) {
       managerProbeFault(tr,this,pr);}
     else{
       if(oe->isVar()){
-	GET_VAR(oe,Manager)->probeFault(this,pr);}
-    }}
+	GET_VAR(oe,Manager)->probeFault(this,pr);}}}
 
   limit=BT->getSize();
   for(int ctr1 = 0; ctr1<limit;ctr1++){
@@ -778,7 +778,6 @@ OZ_Return installWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
     if(ei->getEntityCond()!=ENTITY_NORMAL){
       ov->newWatcher(w->isInjector());}
     varAdjustPOForFailure(ov->getObject()->getIndex(),oldC,newC);
-    Assert(0);
     break;}
   default:
     Assert(0);}
@@ -824,7 +823,6 @@ OZ_Return deinstallWatcher(TaggedRef* tPtr,EntityCond wc,TaggedRef proc,
   case VAR_OBJECT:{
     ObjectVar *ov=oz_getObjectVar(*tPtr);
     varAdjustPOForFailure(ov->getObject()->getIndex(),oldC,newC);
-    Assert(0);
     break;}
   default:
     Assert(0);}
@@ -871,8 +869,13 @@ void transferWatchers(Object* o){
   EntityInfo *lei=new EntityInfo();
   Watcher *ow=cei->watchers;
   Assert(ow!=NULL);
-  CellManager* cm=(CellManager*) o->getState();
+  Assert(stateIsCell(o->getState()));
+  CellManager* cm=(CellManager*) getCell(o->getState());
   LockManager* lm=(LockManager*) o->getLock();
+  if(lm==NULL){
+    cm->setInfo(cei);
+    return;}
+
   cm->setInfo(cei);
   lm->setInfo(lei);
   Watcher* nw=new Watcher(ow->proc,ow->thread,ow->kind,ow->watchcond);
