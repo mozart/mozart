@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -45,13 +45,8 @@ void Propagator_S_VD::updateHeapRefs(OZ_Boolean)
 {
   OZ_updateHeapTerm(_s);
 
-  OZ_Term * new_vd = OZ_hallocOzTerms(_vd_size);
+  _vd = OZ_copyOzTerms(_vd_size, _vd);
 
-  for (int i = _vd_size; i--; ) {
-    new_vd[i] = _vd[i];
-    OZ_updateHeapTerm(new_vd[i]);
-  }
-  _vd = new_vd;
 }
 
 OZ_Term Propagator_S_VD::getParameters(void) const
@@ -76,13 +71,7 @@ Propagator_VS::~Propagator_VS(void)
 
 void Propagator_VS::updateHeapRefs(OZ_Boolean)
 {
-  OZ_Term * new_vs = OZ_hallocOzTerms(_vs_size);
-
-  for (int i = _vs_size; i--; ) {
-    new_vs[i] = _vs[i];
-    OZ_updateHeapTerm(new_vs[i]);
-  }
-  _vs = new_vs;
+  _vs = OZ_copyOzTerms(_vs_size, _vs);
 }
 
 OZ_Term Propagator_VS::getParameters(void) const

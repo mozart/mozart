@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -72,17 +72,11 @@ class SumACProp : public OZ_Propagator
   virtual void updateHeapRefs(OZ_Boolean)
    {
     OZ_updateHeapTerm(_d);
-    OZ_Term *new_a=OZ_hallocOzTerms(size),
-            *new_x=OZ_hallocOzTerms(size);
-    for(int i=size; i--;)
-     {
-      new_a[i]=_a[i];
-      OZ_updateHeapTerm(new_a[i]);
-      new_x[i]=_x[i];
-      OZ_updateHeapTerm(new_x[i]);
-     }
-    _a=new_a;
-    _x=new_x;
+
+    _a = OZ_copyOzTerms(size, _a);
+
+    _x = OZ_copyOzTerms(size, _x);
+
    }
   virtual OZ_Term getParameters(void) const
    {
@@ -472,13 +466,8 @@ void FirstFail::updateHeapRefs(OZ_Boolean)
 {
   OZ_updateHeapTerm(stream);
 
-  OZ_Term * new_reg_fds = OZ_hallocOzTerms(size);
+  reg_fds = OZ_copyOzTerms(size, reg_fds);
 
-  for (int i = size; i--; ) {
-    new_reg_fds[i] = reg_fds[i];
-    OZ_updateHeapTerm(new_reg_fds[i]);
-  }
-  reg_fds = new_reg_fds;
 }
 
 OZ_CFunHeader FirstFail::spawner = fdtest_firstFail;

@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -41,8 +41,9 @@ private:
     reg_tnn=0;
     oldSize = reg_l_sz;
     reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    int fds1 = OZ_getFDSup() + 1;
     for (int i = reg_l_sz; i--; )
-      reg_oldDomSizes[i] = OZ_getFDSup() + 1;
+      reg_oldDomSizes[i] = fds1;
   }
   static OZ_CFunHeader spawner;
 public:
@@ -52,10 +53,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean d)
   {
     Propagator_D_VD_I::updateHeapRefs(d);
-    int * new_reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
-    for (int i = reg_l_sz; i--; )
-      new_reg_oldDomSizes[i] = reg_oldDomSizes[i];
-    reg_oldDomSizes = new_reg_oldDomSizes;
+    reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
   }
 
   virtual ~ExactlyPropagator(void);
@@ -76,8 +74,9 @@ private:
     reg_tnn=0;
     oldSize = reg_l_sz;
     reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    int fds1 = OZ_getFDSup() + 1;
     for (int i = reg_l_sz; i--; )
-      reg_oldDomSizes[i] = OZ_getFDSup() + 1;
+      reg_oldDomSizes[i] = fds1;
   }
   static OZ_CFunHeader spawner;
 public:
@@ -87,10 +86,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean d)
   {
     Propagator_D_VD_I::updateHeapRefs(d);
-    int * new_reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
-    for (int i = reg_l_sz; i--; )
-      new_reg_oldDomSizes[i] = reg_oldDomSizes[i];
-    reg_oldDomSizes = new_reg_oldDomSizes;
+    reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
   }
   virtual ~AtLeastPropagator(void);
   virtual size_t sizeOf(void) { return sizeof(*this); }
@@ -110,8 +106,9 @@ private:
     reg_tnn=0;
     oldSize = reg_l_sz;
     reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
+    int fds1 = OZ_getFDSup() + 1;
     for (int i = reg_l_sz; i--; )
-      reg_oldDomSizes[i] = OZ_getFDSup() + 1;
+      reg_oldDomSizes[i] = fds1;
   }
 static OZ_CFunHeader spawner;
 public:
@@ -120,10 +117,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean d)
   {
     Propagator_D_VD_I::updateHeapRefs(d);
-    int * new_reg_oldDomSizes = OZ_hallocCInts(reg_l_sz);
-    for (int i = reg_l_sz; i--; )
-      new_reg_oldDomSizes[i] = reg_oldDomSizes[i];
-    reg_oldDomSizes = new_reg_oldDomSizes;
+    reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
   }
   virtual ~AtMostPropagator(void);
   virtual size_t sizeOf(void) { return sizeof(*this); }

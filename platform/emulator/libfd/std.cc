@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -160,13 +160,8 @@ void Propagator_D_VD_I::updateHeapRefs(OZ_Boolean)
 {
   OZ_updateHeapTerm(reg_n);
 
-  OZ_Term * new_reg_l = OZ_hallocOzTerms(reg_l_sz);
+  reg_l = OZ_copyOzTerms(reg_l_sz, reg_l);
 
-  for (int i = reg_l_sz; i--; ) {
-    new_reg_l[i] = reg_l[i];
-    OZ_updateHeapTerm(new_reg_l[i]);
-  }
-  reg_l = new_reg_l;
 }
 
 OZ_Term Propagator_D_VD_I::getParameters(void) const
@@ -194,9 +189,8 @@ void Propagator_D_VI_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_n);
   OZ_updateHeapTerm(reg_v);
 
-  int * new_reg_l = OZ_hallocCInts(reg_l_sz);
-  for (int i = reg_l_sz; i--; ) new_reg_l[i] = reg_l[i];
-  reg_l = new_reg_l;
+  reg_l = OZ_copyCInts(reg_l_sz, reg_l);
+
 }
 
 OZ_Term Propagator_D_VI_D::getParameters(void) const
@@ -355,17 +349,9 @@ Propagator_VI_VD_I::~Propagator_VI_VD_I(void)
 
 void Propagator_VI_VD_I::updateHeapRefs(OZ_Boolean)
 {
-  int * new_reg_a = OZ_hallocCInts(reg_sz);
-  OZ_Term * new_reg_x = OZ_hallocOzTerms(reg_sz);
+  reg_a = OZ_copyCInts(reg_sz, reg_a);
+  reg_x = OZ_copyOzTerms(reg_sz, reg_x);
 
-  for (int i = reg_sz; i--; ) {
-    new_reg_a[i] = reg_a[i];
-    new_reg_x[i] = reg_x[i];
-    OZ_ASSERT(OZ_isVariable(new_reg_x[i]) || OZ_isInt(new_reg_x[i]));
-    OZ_updateHeapTerm(new_reg_x[i]);
-  }
-  reg_a = new_reg_a;
-  reg_x = new_reg_x;
 }
 
 OZ_Term Propagator_VI_VD_I::getParametersC(char * lit) const
@@ -406,13 +392,8 @@ Propagator_VD::~Propagator_VD(void)
 
 void Propagator_VD::updateHeapRefs(OZ_Boolean)
 {
-  OZ_Term * new_reg_l = OZ_hallocOzTerms(reg_l_sz);
+  reg_l = OZ_copyOzTerms(reg_l_sz, reg_l);
 
-  for (int i = reg_l_sz; i--; ) {
-    new_reg_l[i] = reg_l[i];
-    OZ_updateHeapTerm(new_reg_l[i]);
-  }
-  reg_l = new_reg_l;
 }
 
 OZ_Term Propagator_VD::getParameters(void) const
@@ -443,16 +424,9 @@ Propagator_VD_VI::~Propagator_VD_VI(void)
 
 void Propagator_VD_VI::updateHeapRefs(OZ_Boolean)
 {
-  int * new_reg_offset = OZ_hallocCInts(reg_sz);
-  OZ_Term * new_reg_l = OZ_hallocOzTerms(reg_sz);
+  reg_l      = OZ_copyOzTerms(reg_sz, reg_l);
+  reg_offset = OZ_copyCInts(reg_sz, reg_offset);
 
-  for (int i = reg_sz; i--; ) {
-    new_reg_offset[i] = reg_offset[i];
-    new_reg_l[i] = reg_l[i];
-    OZ_updateHeapTerm(new_reg_l[i]);
-  }
-  reg_offset = new_reg_offset;
-  reg_l = new_reg_l;
 }
 
 OZ_Term Propagator_VD_VI::getParameters(void) const
@@ -490,20 +464,9 @@ Propagator_VD_VI_VI_I::~Propagator_VD_VI_VI_I(void)
 
 void Propagator_VD_VI_VI_I::updateHeapRefs(OZ_Boolean)
 {
-  int * new_reg_offset = OZ_hallocCInts(reg_sz);
-  int * new_reg_use    = OZ_hallocCInts(reg_sz);
-  OZ_Term * new_reg_l  = OZ_hallocOzTerms(reg_sz);
-
-  for (int i = reg_sz; i--; ) {
-    new_reg_offset[i] = reg_offset[i];
-    new_reg_use[i] = reg_use[i];
-    new_reg_l[i] = reg_l[i];
-    OZ_updateHeapTerm(new_reg_l[i]);
-  }
-  reg_offset = new_reg_offset;
-  reg_use = new_reg_use;
-  reg_l = new_reg_l;
-
+  reg_l      = OZ_copyOzTerms(reg_sz, reg_l);
+  reg_offset = OZ_copyCInts(reg_sz, reg_offset);
+  reg_use    = OZ_copyCInts(reg_sz, reg_use);
 }
 
 OZ_Term Propagator_VD_VI_VI_I::getParameters(void) const
@@ -614,22 +577,10 @@ Propagator_VI_VVD_I::~Propagator_VI_VVD_I(void)
 
 void Propagator_VI_VVD_I::updateHeapRefs(OZ_Boolean)
 {
-  int * new_reg_a = OZ_hallocCInts(reg_sz);
-  int * new_reg_smd_sz = OZ_hallocCInts(reg_sz);
-  int i;
-  for (i = reg_sz; i--; ) {
-    new_reg_a[i] = reg_a[i];
-    new_reg_smd_sz[i] = reg_smd_sz[i];
-  }
-  reg_a = new_reg_a;
-  reg_smd_sz = new_reg_smd_sz;
+  reg_x      = OZ_copyOzTerms(reg_x_sz, reg_x);
+  reg_a      = OZ_copyCInts(reg_sz, reg_a);
+  reg_smd_sz = OZ_copyCInts(reg_sz, reg_smd_sz);
 
-  OZ_Term * new_reg_x = OZ_hallocOzTerms(reg_x_sz);
-  for (i = reg_x_sz; i--; ) {
-    new_reg_x[i] = reg_x[i];
-    OZ_updateHeapTerm(new_reg_x[i]);
-  }
-  reg_x = new_reg_x;
 }
 
 OZ_Term Propagator_VI_VVD_I::getParametersC(char * lit) const
@@ -685,14 +636,7 @@ void Propagator_VD_D_D_D::updateHeapRefs(OZ_Boolean)
   OZ_updateHeapTerm(reg_low);
   OZ_updateHeapTerm(reg_up);
   OZ_updateHeapTerm(reg_b);
-
-  OZ_Term * new_reg_v = OZ_hallocOzTerms(reg_v_sz);
-
-  for (int i = reg_v_sz; i--; ) {
-    new_reg_v[i] = reg_v[i];
-    OZ_updateHeapTerm(new_reg_v[i]);
-  }
-  reg_v = new_reg_v;
+  reg_v = OZ_copyOzTerms(reg_v_sz, reg_v);
 }
 
 Propagator_VD_D_D_D::~Propagator_VD_D_D_D(void)
@@ -760,17 +704,8 @@ Propagator_VI_VD_D::~Propagator_VI_VD_D(void)
 void Propagator_VI_VD_D::updateHeapRefs(OZ_Boolean)
 {
   OZ_updateHeapTerm(reg_d);
-  int *new_a = OZ_hallocCInts(reg_sz);
-  OZ_Term *new_x = OZ_hallocOzTerms(reg_sz);
-
-  for(int i = reg_sz; i--;) {
-    new_a[i]=reg_a[i];
-    new_x[i]=reg_x[i];
-    OZ_updateHeapTerm(new_x[i]);
-  }
-
-  reg_a = new_a;
-  reg_x = new_x;
+  reg_x = OZ_copyOzTerms(reg_sz, reg_x);
+  reg_a = OZ_copyCInts(reg_sz, reg_a);
 }
 
 OZ_Term Propagator_VI_VD_D::getParametersC(char *lit) const

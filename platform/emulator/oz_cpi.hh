@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -558,12 +558,16 @@ public:
 // Miscellaneous
 
 extern void OZ_updateHeapTerm(OZ_Term &);
+extern void OZ_collectHeapBlock(OZ_Term *, OZ_Term *, int);
 
 OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
 
 OZ_Term * OZ_hallocOzTerms(int);
 int *     OZ_hallocCInts(int);
 char *    OZ_hallocChars(int);
+OZ_Term * OZ_copyOzTerms(int, OZ_Term *);
+int *     OZ_copyCInts(int, int *);
+char *    OZ_copyChars(int, char *);
 void      OZ_hfreeOzTerms(OZ_Term *, int);
 void      OZ_hfreeCInts(int *, int);
 void      OZ_hfreeChars(char *, int);

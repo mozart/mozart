@@ -3,7 +3,7 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -69,6 +69,17 @@ OZ_Term * OZ_hallocOzTerms(int n)
   return n == 0 ? (OZ_Term *) NULL : OZMALLOC(OZ_Term, n);
 }
 
+OZ_Term * OZ_copyOzTerms(int n, OZ_Term * frm) {
+  if (n==0)
+    return (OZ_Term *) NULL;
+
+  OZ_Term * to = OZMALLOC(OZ_Term, n);
+
+  OZ_collectHeapBlock(frm, to, n);
+
+  return to;
+}
+
 void OZ_hfreeOzTerms(OZ_Term * ts, int n)
 {
   if (n) OZDISPOSE(OZ_Term, n, ts);
@@ -79,6 +90,29 @@ int *OZ_hallocCInts(int n)
   return n == 0 ? (int *) NULL : OZMALLOC(int, n);
 }
 
+int * OZ_copyCInts(int n, int * frm) {
+  if (n==0)
+    return (int *) NULL;
+
+  int * to  = OZMALLOC(int, n);
+
+  int * ret = to;
+
+  while (n > 4) {
+    to[0] = frm[0]; to[1] = frm[1]; to[2] = frm[2]; to[3] = frm[3];
+    to += 4; frm += 4; n -= 4;
+  }
+
+  switch (n) {
+  case 4: to[3] = frm[3];
+  case 3: to[2] = frm[2];
+  case 2: to[1] = frm[1];
+  case 1: to[0] = frm[0];
+  }
+
+  return ret;
+}
+
 void OZ_hfreeCInts(int * is, int n)
 {
   if (n) OZDISPOSE(int, n, is);
@@ -87,6 +121,17 @@ void OZ_hfreeCInts(int * is, int n)
 char * OZ_hallocChars(int n)
 {
   return n == 0 ? (char *) NULL : OZMALLOC(char, n);
+}
+
+char * OZ_copyChars(int n, char * frm) {
+  if (n==0)
+    return (char *) NULL;
+
+  char * to = OZMALLOC(char, n);
+
+  memcpy(to, frm, n);
+
+  return to;
 }
 
 void OZ_hfreeChars(char * is, int n)

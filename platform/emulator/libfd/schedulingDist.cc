@@ -3,7 +3,7 @@
  *    Joerg Wuertz (wuertz@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -212,31 +212,11 @@ void TaskIntervalsProof::updateHeapRefs(OZ_Boolean duplicate)
 
   OZ_updateHeapTerm(stream);
 
-  OZ_Term * new_reg_fds      = OZ_hallocOzTerms(reg_fds_size);
-  int * new_reg_nb_tasks     = OZ_hallocCInts(reg_nb_tasks_size);
-  int * new_reg_order_vector = OZ_hallocCInts(reg_order_vector_size);
-  OZ_Term * new_reg_pe       = OZ_hallocOzTerms(1);
+  reg_fds          = OZ_copyOzTerms(reg_fds_size, reg_fds);
+  reg_pe           = OZ_copyOzTerms(1, reg_pe);
+  reg_nb_tasks     = OZ_copyCInts(reg_nb_tasks_size, reg_nb_tasks);
+  reg_order_vector = OZ_copyCInts(reg_order_vector_size, reg_order_vector);
 
-  int i;
-  for (i = reg_fds_size; i--; ) {
-    new_reg_fds[i]  = reg_fds[i];
-    OZ_updateHeapTerm(new_reg_fds[i]);
-  }
-
-  for (i = reg_order_vector_size; i--; ) {
-    new_reg_order_vector[i] = reg_order_vector[i];
-  }
-
-  for (i = reg_nb_tasks_size; i--; ) {
-    new_reg_nb_tasks[i] = reg_nb_tasks[i];
-  }
-  new_reg_pe[0] = reg_pe[0];
-  OZ_updateHeapTerm(new_reg_pe[0]);
-
-  reg_fds          = new_reg_fds;
-  reg_nb_tasks     = new_reg_nb_tasks;
-  reg_order_vector = new_reg_order_vector;
-  reg_pe           = new_reg_pe;
 }
 
 //////////
