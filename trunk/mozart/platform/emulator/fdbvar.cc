@@ -310,7 +310,7 @@ Bool GenBoolVariable::valid(TaggedRef val)
 }
 
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
+#ifdef OUTLINE 
 #define inline
 #include "fdbvar.icc"
 #undef inline

@@ -21,7 +21,7 @@
 Bool GenFSetVariable::valid(TaggedRef val)
 {
   Assert(!isRef(val));
-  return (isFSetValue(val) && ((OZ_FSetImpl *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(val)));
+  return (isFSetValue(val) && ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(val)));
 }
 
 void GenFSetVariable::dispose(void) {
@@ -50,7 +50,7 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 		<< *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
       
-      if (! ((OZ_FSetImpl *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term)))
+      if (! ((FSetConstraint *) &_fset)->valid(*(FSetValue *)tagged2FSetValue(term)))
 	goto f;
       
       Bool isLocalVar = am.isLocalSVar(this);
@@ -78,15 +78,15 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
       case FSetVariable: 
 	{
 	  GenFSetVariable * term_var = tagged2GenFSetVar(term);
-	  OZ_FSetImpl * t_fset = (OZ_FSet *) &term_var->getSet();
-	  OZ_FSetImpl * fset = (OZ_FSet *) &getSet();
-	  OZ_FSetImpl new_fset;
+	  OZ_FSetConstraint * t_fset = (OZ_FSetConstraint *) &term_var->getSet();
+	  OZ_FSetConstraint * fset = (OZ_FSetConstraint *) &getSet();
+	  OZ_FSetConstraint new_fset;
 
 #ifdef DEBUG_FSUNIFY 
 	  (*cpi_cout) << "fsunify(var): (" << *fset << " = " << *t_fset << " )";
 #endif
       
-	  if ((new_fset = t_fset->unify(*fset)).getCardMin() == -1)
+	  if ((new_fset = ((FSetConstraint *) t_fset)->unify(*(FSetConstraint *) fset)).getCardMin() == -1)
 	    goto f;
 
 #ifdef DEBUG_FSUNIFY 
@@ -97,16 +97,16 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 	  Bool term_is_local = am.isLocalSVar(term_var);
 	  Bool is_not_installing_script = !am.isInstallingScript();
 	  Bool var_is_constrained = (is_not_installing_script ||
-				     fset->isWeakerThan(new_fset));
+				     ((FSetConstraint *) fset)->isWeakerThan(*((FSetConstraint *) &new_fset)));
 	  Bool term_is_constrained = (is_not_installing_script ||
-				      t_fset->isWeakerThan(new_fset));
+				      ((FSetConstraint *) t_fset)->isWeakerThan(*((FSetConstraint *) &new_fset)));
 
 
 	  switch (var_is_local + 2 * term_is_local) {
 	  case TRUE + 2 * TRUE: // var and term are local
 	    {
 	      if (new_fset.isValue()) {
-		OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
+		OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
 		term_var->propagateUnify(term);
 		propagateUnify(var);
 		doBind(vptr, new_fset_var);
@@ -136,9 +136,9 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 	    } // TRUE + 2 * TRUE:
 	  case TRUE + 2 * FALSE: // var is local and term is global
 	    {
-	      if (t_fset->isWeakerThan(new_fset)) {
+	      if (((FSetConstraint *) t_fset)->isWeakerThan(*((FSetConstraint *) &new_fset))) {
 		if (new_fset.isValue()) {
-		  OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
+		  OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
 		  if (is_not_installing_script) term_var->propagateUnify(term);
 		  if (var_is_constrained) propagateUnify(var);
 		  doBind(vptr, new_fset_var);
@@ -163,9 +163,9 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 	    } // TRUE + 2 * FALSE:
 	  case FALSE + 2 * TRUE: // var is global and term is local
 	    {
-	      if (fset->isWeakerThan(new_fset)){
+	      if (((FSetConstraint *) fset)->isWeakerThan(*((FSetConstraint *) &new_fset))) {
 		if(new_fset.isValue()) {
-		  OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
+		  OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
 		  if (is_not_installing_script) propagateUnify(var);
 		  if (term_is_constrained) term_var->propagateUnify(term);
 		  doBind(tptr, new_fset_var);
@@ -192,7 +192,7 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 	  case FALSE + 2 * FALSE: // var and term is global
 	    {
 	      if (new_fset.isValue()){
-		OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(new_fset));
+		OZ_Term new_fset_var = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
 		if (scp==0) {
 		  propagateUnify(var);
 		  term_var->propagateUnify(term);
@@ -240,7 +240,7 @@ f:
   return FALSE;
 }
 
-OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
+OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 {
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - in - : ";
@@ -251,7 +251,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
 
   DEREF(v, vptr, vtag);
 
-  if (fs && !fs->isValid())
+  if (fs && !((FSetConstraint *) fs)->isValid())
     goto failed;
 
 
@@ -264,9 +264,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
       if (am.isLocalVariable(v, vptr)) {
 	if (isSVar(vtag))
 	  am.checkSuspensionList(v);
-	doBind(vptr, makeTaggedFSetValue(new FSetValue(*fs)));
+	doBind(vptr, makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       } else {
-	am.doBindAndTrail(v, vptr, makeTaggedFSetValue(new FSetValue(*fs)));
+	am.doBindAndTrail(v, vptr, makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       }
       goto proceed;
     }
@@ -294,12 +294,12 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
     if (! fs) goto proceed;
 
     GenFSetVariable * fsvar = tagged2GenFSetVar(v);
-    OZ_FSet set = ((OZ_FSetImpl *) &fsvar->getSet())->unify(*fs);
+    OZ_FSetConstraint set = ((FSetConstraint *) ((OZ_FSetConstraint *) &fsvar->getSet()))->unify(* (FSetConstraint *) fs);
 
-    if (!set.isValid())
+    if (!((FSetConstraint *) &set)->isValid())
       goto failed;
 
-    if (!((OZ_FSetImpl *) &fsvar->getSet())->isWeakerThan(set))
+    if (!((FSetConstraint *) &fsvar->getSet())->isWeakerThan(*((FSetConstraint *) &set)))
       goto proceed;
 
     if (set.isValue()) {
@@ -308,7 +308,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
 	fsvar->becomesFSetValueAndPropagate(vptr);
       } else {
 	fsvar->propagate(v, fs_prop_val);
-	am.doBindAndTrail(v, vptr, makeTaggedFSetValue(new FSetValue(set)));
+	am.doBindAndTrail(v, vptr, makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &set))));
       }
     } else {
       fsvar->propagate(v, fs_prop_bounds);
@@ -326,7 +326,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
   } else if (isFSetValue(vtag)) {
     if (!fs) goto proceed;
     
-    if (fs->valid(*(FSetValue *) tagged2FSetValue(v)))
+    if (((FSetConstraint *) fs)->valid(*(FSetValue *) tagged2FSetValue(v)))
       goto proceed;
     goto failed;
   } 

@@ -20,7 +20,7 @@
 #include "fdhook.hh"
 #include "genvar.hh"
 
-#if defined(OUTLINE) || defined(FDOUTLINE)
+#ifdef OUTLINE 
 #define inline 
 #include "fdbuilti.icc"
 #undef inline 
