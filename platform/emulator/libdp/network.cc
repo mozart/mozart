@@ -2345,13 +2345,13 @@ retry:
     return IP_TIMER;} // ATTENTION - major fault
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
-    if(errno==ENOBUFS) return IP_TIMER;
-    NETWORK_ERROR(("system:socket %d\n",errno));}
+    if(ossockerrno()==ENOBUFS) return IP_TIMER;
+    NETWORK_ERROR(("system:socket %d\n",ossockerrno()));}
   addr.sin_port = htons(port);
 
   if(bind(fd,(sockaddr *) &addr,sizeof(struct sockaddr_in))<0) {
-    PD((WEIRD,"create TcpPort bind redo port:%d errno:%d",
-	port,errno));
+    PD((WEIRD,"create TcpPort bind redo port:%d ossockerrno():%d",
+	port,ossockerrno()));
     osclose(fd);
     smalltries--;
     if(createTcpPort_RETRY() && smalltries>0) goto retry;
@@ -2360,7 +2360,7 @@ retry:
     smalltries=OZConnectTries;
     goto retry;}
   PD((TCP,"createTcpPort: got ip:%u port:%u",ip,port));
-  if (listen(fd,5)<0) {NETWORK_ERROR(("listen %d\n",errno));}
+  if (listen(fd,5)<0) {NETWORK_ERROR(("listen %d\n",ossockerrno()));}
 
   struct sockaddr_in addr1;
 #if __GLIBC__ == 2
@@ -2369,7 +2369,7 @@ retry:
   int length = sizeof(addr1);
 #endif
   if (getsockname(fd, (struct sockaddr *) &addr1, &length) < 0) {
-    NETWORK_ERROR(("getsockname %d\n",errno));
+    NETWORK_ERROR(("getsockname %d\n",ossockerrno()));
   }
   oport=ntohs(addr1.sin_port);
 
@@ -2471,7 +2471,7 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
       if(!((ossockerrno()==EWOULDBLOCK) || (ossockerrno()==EAGAIN)))
 	return tcpError();
       break;}
-    PD((WRITE,"wr:%d try:%d error:%d",ret,len,errno));
+    PD((WRITE,"wr:%d try:%d error:%d",ret,len,ossockerrno()));
 #ifdef SLOWNET
     TSC->writing(ret);
 #endif
@@ -2529,12 +2529,12 @@ inline ipReturn writeI(int fd,BYTE *buf)
     if(ret>0){
       Assert(ret==1);
       return IP_OK;}
-    if (errno == EINTR){
+    if (ossockerrno() == EINTR){
       PD((WEIRD,"write interrupted"));}
     else {
-      if((errno==EWOULDBLOCK) || (errno==EAGAIN)) {
+      if((ossockerrno()==EWOULDBLOCK) || (ossockerrno()==EAGAIN)) {
 	return IP_BLOCK;}
-      NETWORK_ERROR(("writeI %d\n",errno));}}}
+      NETWORK_ERROR(("writeI %d\n",ossockerrno()));}}}
 
 inline ipReturn readI(int fd,BYTE *buf)
 {
@@ -2551,13 +2551,13 @@ inline ipReturn readI(int fd,BYTE *buf)
       return IP_EOF;
     }
 
-    if (errno == EINTR){
+    if (ossockerrno() == EINTR){
       PD((WEIRD,"readI interrupted"));
     } else {
-      if((errno==EWOULDBLOCK) || (errno==EAGAIN)) {
+      if((ossockerrno()==EWOULDBLOCK) || (ossockerrno()==EAGAIN)) {
 	return IP_BLOCK;
       }
-      PD((WEIRD,"readI discoversCRASH errno:%d",errno));
+      PD((WEIRD,"readI discoversCRASH errno:%d",ossockerrno()));
       return IP_NET_CRASH;
     }
   }
@@ -2634,11 +2634,11 @@ int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
       else {readAll=FALSE;}
       return ret;}
     if (ret==0) return -1;
-    if (errno == EINTR){ 
+    if (ossockerrno() == EINTR){ 
       PD((WEIRD,"read interrupted"));
       no_tries--;
       continue;}
-    if(errno==EAGAIN || errno==EWOULDBLOCK){
+    if(ossockerrno()==EAGAIN || ossockerrno()==EWOULDBLOCK){
       PD((WEIRD,"read EAGAIN"));
       no_tries--;
       continue;}
@@ -2780,7 +2780,12 @@ static int acceptHandler(int fd,void *unused)
   Assert(auxbuf-accHbuf == accHbufSize);
   // EK!!
   // fcntl(newFD,F_SETFL,O_NONBLOCK);
-#ifndef __MINGW32__
+#ifdef __MINGW32__
+  unsigned long p = 1;
+  if (0 && ioctlsocket(newFD,FIONBIO,&p) != 0) {
+    message("ioctlsocket failed: %d\n",WSAGetLastError());
+  }
+#else
   fcntl(newFD,F_SETFL,O_NDELAY);
 #endif
   int written = 0;
@@ -2788,7 +2793,7 @@ static int acceptHandler(int fd,void *unused)
     int ret=oswrite(newFD,accHbuf+written,accHbufSize-written);
     written += ret;
     if(written==accHbufSize) break;
-    if(ret<=0 && errno!=EINTR && errno!=EWOULDBLOCK && errno!=EAGAIN ) { 
+    if(ret<=0 && ossockerrno()!=EINTR && ossockerrno()!=EWOULDBLOCK && ossockerrno()!=EAGAIN ) { 
       OZ_warning("Error in OPening, we're closing");
       osclose(newFD);
       return 0;}}
@@ -3077,7 +3082,7 @@ retry:
   PD((TCP,"Opening connection t:%d",tries));
   fd=ossocket(PF_INET,SOCK_STREAM,0);
   if (fd < 0) {
-    if(errno==ENOBUFS){goto  ipOpenNoAnswer;}
+    if(ossockerrno()==ENOBUFS){goto  ipOpenNoAnswer;}
     //fprintf(stderr,"fd < 0 = %d  - interpreted as perm:%d \n",fd,ossockerrno());
 	r->connectionLost();
     return IP_PERM_BLOCK;}
@@ -3086,7 +3091,14 @@ retry:
     goto  ipOpenNoAnswer;}
   
   // EK!!
-#ifndef __MINGW32__
+#ifdef __MINGW32__
+  {
+    unsigned long p = 1;
+    if (0 && ioctlsocket(fd,FIONBIO,&p) != 0) {
+      message("ioctlsocket failed: %d\n",WSAGetLastError());
+    }
+  }
+#else
   fcntl(fd,F_SETFL,O_NDELAY);
 #endif
   if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0 
@@ -3324,10 +3336,10 @@ static int tcpCloseHandler(int fd,void *r0){
   ipReturn ret;
   PD((TCP,"tcpCloseHandler invoked r:%x",r));
   ret=readI(fd,&msg);
-  PD((TCP,"tcpCloseHandler read b:%d r:%d e:%d",msg, ret,errno));
+  PD((TCP,"tcpCloseHandler read b:%d r:%d e:%d",msg, ret,ossockerrno()));
 close_handler_read:
   if(ret!=IP_OK){ // crashed Connection site 
-    PD((ERROR_DET,"crashed Connection site %s error:%d",r->remoteSite->site->stringrep(), errno));
+    PD((ERROR_DET,"crashed Connection site %s error:%d",r->remoteSite->site->stringrep(), ossockerrno()));
     if(ret==IP_EOF || tcpError()!=IP_TEMP_BLOCK)
       r->connectionLost();
     else
