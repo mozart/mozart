@@ -420,7 +420,6 @@ inline int32  GCMARK(int32 S)    { return makeTaggedRef(GCTAG,S); }
 inline void *GCUNMARK(int32 S)   { return tagValueOf(GCTAG,S); }
 inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
-
 /*
  * Check if object in from-space (elem) is already collected.
  *   Then return the forward pointer to to-space.
@@ -1733,7 +1732,7 @@ void TaskStack::gcRecurse()
       break;
 
     case C_CALL_CONT:
-      gcQueue(((SRecord *) oldstack->pop())->gcSRecord());
+      gcQueue(((ConstTerm *) oldstack->pop())->gcConstTerm());
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
       break;
 
