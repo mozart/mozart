@@ -59,11 +59,12 @@ public:
   void gc(void) { OZ_error("Unexpected call of `PropAlloc::gc()'."); }
 };
 
+static const int _EnlargeableArray_margin = 10;
+
 template <class T, class M>
 class EnlargeableArray : public M {
 
 protected:
-  static const int _margin = 10;
 private:
   virtual void _gc(void) {
     T * new_array = (T *) alloc(_size * sizeof(T));
@@ -75,7 +76,7 @@ protected:
   int _size;
   T * _array;
   //
-  void request(int s, int m = _margin) {
+  void request(int s, int m = _EnlargeableArray_margin) {
     if (s >= _size) {
       int old_size = _size;
       _size = s + m;
@@ -122,7 +123,7 @@ protected:
     return _high-1;
   }
 public:
-  PushArray(int s = _margin)
+  PushArray(int s = _EnlargeableArray_margin)
     : EnlargeableArray<T,M>(s), _high(0) { }
   //
   int getHigh(void) { return _high; }
@@ -235,20 +236,21 @@ public:
 //-----------------------------------------------------------------------------
 typedef ResizeableArray<int, PropAlloc> IntPropResizeableArray;
 
+
+static const int _PEL_PropQueue_init_maxsize = 0x10; // must be power of 2
+
 class PEL_PropQueue {
 private:
   int _alive_prop_fncts;
 
   int _read, _write, _size, _maxsize;
 
-  static const int _init_maxsize = 0x10; // must be power of 2
-
   IntPropResizeableArray _queue;
 
   int _failed;
 
   void resize(void) {
-    int new_maxsize = ((_maxsize == 0) ? _init_maxsize : _maxsize *= 2);
+    int new_maxsize = ((_maxsize == 0) ? _PEL_PropQueue_init_maxsize : _maxsize *= 2);
     _queue.resize(new_maxsize);
     if (_write + 1 < _read) {
       for (int i = _read; i < _maxsize; i += 1)
@@ -260,7 +262,7 @@ private:
 
 public:
   PEL_PropQueue(void)
-    : _alive_prop_fncts(0), _read(0), _write(_init_maxsize - 1),
+    : _alive_prop_fncts(0), _read(0), _write(_PEL_PropQueue_init_maxsize - 1),
       _size(0), _maxsize(0), _failed(0) { }
   //
   void enqueue (int fnct_idx) {
@@ -467,7 +469,7 @@ public:
     return 1;
   }
   //
-  virtual int wakeup(int first = 0) {
+  virtual int wakeup(int first) {
     if (first || _profile.isTouchedSingleValue(*_fset))
       _event_lists->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
@@ -481,6 +483,7 @@ public:
     //
     return _fset->isValue();
   }
+  virtual int wakeup(void) { return wakeup(0); }
   //
   OZ_FSetConstraint &operator * (void) { return *_fset; }
   OZ_FSetConstraint * operator -> (void) { return _fset; }
@@ -549,7 +552,7 @@ public:
     return 1;
   }
   //
-  virtual int wakeup(int first = 0) {
+  virtual int wakeup(int first) {
     if (first || _profile.isTouchedSingleValue(*_fd))
       _event_lists->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
@@ -560,6 +563,7 @@ public:
     //
     return _fd->getSize() != 1;
   }
+  virtual int wakeup(void) { return wakeup(0); }
   //
   OZ_FiniteDomain &operator * (void) { return *_fd; }
   OZ_FiniteDomain * operator -> (void) { return _fd; }
