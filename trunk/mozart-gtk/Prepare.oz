@@ -92,6 +92,7 @@ define
 	    case H
 	    of "__extension__" then {Sanitize T}
 	    [] "__signed"      then {Sanitize T}
+	    [] "__inline"      then {Sanitize T}
 	    [] "__volatile"    then "volatile"|{Sanitize T}
 	    [] "__const"       then "const"|{Sanitize T}
 	    [] "__restrict"    then {Sanitize T}
