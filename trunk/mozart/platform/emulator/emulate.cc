@@ -803,11 +803,12 @@ void engine() {
     switch (biFun(XSize, X)) {
     case FAILED:
       killPropagatedCurrentTaskSusp();
+    localhack0:
       HANDLE_FAILURE(0,
 		     applFailure(biFun);printArgs(X,XSize));
     case PROCEED:
       LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-			  goto LBLfailure);
+			goto localhack0;);
       killPropagatedCurrentTaskSusp();
       goto LBLcheckEntailment;
     default:
@@ -945,11 +946,12 @@ void engine() {
 	// no break here
       case FAILED:
 	killPropagatedCurrentTaskSusp();
+      localhack1:
 	HANDLE_FAILURE(PC+3,
 		       applFailure(fun); printArgs(X,arity));
       case PROCEED:
 	LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-			     goto LBLfailure);
+			  goto localhack1;);
 	killPropagatedCurrentTaskSusp();
 	DISPATCH(3);
       default:
