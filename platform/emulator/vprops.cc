@@ -658,7 +658,7 @@ void VirtualProperty::add(char*s,int p) {
 // in addition to the usual OZ_Return values, the following
 // may also return PROP__NOT__READABLE and PROP__NOT__FOUND
 
-OZ_Return GetProperty(TaggedRef k,TaggedRef val)
+OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
 {
   TaggedRef key = k;
   DEREF(key,key_ptr,key_tag);
@@ -671,13 +671,17 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef val)
     if (oz_isInt(entry)) {
       entry = GetEmulatorProperty((EmulatorPropertyIndex)
                                   oz_IntToC(entry));
-      return entry?oz_unify(val,entry):PROP__NOT__READABLE;
-    } else
-      return oz_unify(val,((VirtualProperty*)
-                           OZ_getForeignPointer(entry))->get());
+      if (entry) { val=entry; return PROCEED; }
+      else return PROP__NOT__READABLE;
+    } else {
+      val = ((VirtualProperty*)
+             OZ_getForeignPointer(entry))->get();
+      return PROCEED;
+    }
   dict = tagged2Dictionary(system_registry);
-  if (dict->getArg(key,entry)==PROCEED)
-    return oz_unify(val,entry);
+  if (dict->getArg(key,entry)==PROCEED) {
+    val=entry; return PROCEED;
+  }
   return PROP__NOT__FOUND;
 }
 
@@ -706,37 +710,33 @@ OZ_Return PutProperty(TaggedRef k,TaggedRef v)
   return PROCEED;
 }
 
-OZ_C_proc_begin(BIgetProperty,2)
+OZ_BI_define(BIgetProperty,1,1)
 {
-  OZ_declareArg(0,key);
-  OZ_declareArg(1,val);
-  OZ_Return status = GetProperty(key,val);
+  OZ_declareIN(0,key);
+  OZ_Return status = GetProperty(key,OZ_out(0));
   if (status == PROP__NOT__READABLE)
     return oz_raise(E_ERROR,E_SYSTEM,"getProperty",1,key);
   else if (status == PROP__NOT__FOUND)
     return oz_raise(E_SYSTEM,E_KERNEL,"getProperty",1,key);
   else return status;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIcondGetProperty,3)
+OZ_BI_define(BIcondGetProperty,2,1)
 {
-  OZ_declareArg(0,key);
-  OZ_declareArg(1,def);
-  OZ_declareArg(2,val);
-  OZ_Return status = GetProperty(key,val);
+  OZ_declareIN(0,key);
+  OZ_declareIN(1,def);
+  OZ_Return status = GetProperty(key,OZ_out(0));
   if (status == PROP__NOT__READABLE)
     return oz_raise(E_ERROR,E_KERNEL,"condGetProperty",1,key);
   else if (status == PROP__NOT__FOUND)
-    return oz_unify(def,val);
+    OZ_RETURN(def);
   else return status;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIputProperty,2)
+OZ_BI_define(BIputProperty,2,0)
 {
-  OZ_declareArg(0,key);
-  OZ_declareArg(1,val);
+  OZ_declareIN(0,key);
+  OZ_declareIN(1,val);
   OZ_Return status = PutProperty(key,val);
   if (status == PROP__NOT__WRITABLE)
     return oz_raise(E_ERROR,E_KERNEL,"putProperty",1,key);
@@ -745,7 +745,6 @@ OZ_C_proc_begin(BIputProperty,2)
                     1,oz_atom("putProperty"));
   else return status;
 }
-OZ_C_proc_end
 
 static BIspec vpropSpecs[] = {
   {"GetProperty"    , 2, BIgetProperty    , 0},

@@ -100,24 +100,23 @@ TaggedRef findAliveEntry(TaggedRef group) {
 }
 
 
-OZ_C_proc_begin(BIaddFastGroup,3)
+OZ_BI_define(BIaddFastGroup,2,1)
 {
-  OZ_nonvarArg(0);
-  TaggedRef group = deref(OZ_getCArg(0));
+  OZ_nonvarIN(0);
+  TaggedRef group = deref(OZ_in(0));
 
   if (isCons(group)) {
-    TaggedRef member = cons(OZ_getCArg(1),findAliveEntry(tail(group)));
+    TaggedRef member = cons(OZ_in(1),findAliveEntry(tail(group)));
     tagged2LTuple(group)->setTail(member);
-    return OZ_unify(member,OZ_getCArg(2));
+    OZ_RETURN(member);
   }
   return OZ_typeError(0,"List");
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIdelFastGroup,1)
+OZ_BI_define(BIdelFastGroup,1,0)
 {
-  TaggedRef member = deref(OZ_getCArg(0));
+  TaggedRef member = deref(OZ_in(0));
 
   if (isCons(member)) {
     tagged2LTuple(member)->setHead(NameGroupVoid);
@@ -126,13 +125,12 @@ OZ_C_proc_begin(BIdelFastGroup,1)
 
   return PROCEED;
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIgetFastGroup,2)
+OZ_BI_define(BIgetFastGroup,1,1)
 {
-  OZ_nonvarArg(0);
-  TaggedRef group = OZ_getCArg(0);
+  OZ_nonvarIN(0);
+  TaggedRef group = OZ_in(0);
 
   DEREF(group, _1, _2);
 
@@ -150,18 +148,17 @@ OZ_C_proc_begin(BIgetFastGroup,2)
       group = deref(tail(group));
     }
 
-    if (isNil(group)) return OZ_unify(out,OZ_getCArg(1));
+    if (isNil(group)) OZ_RETURN(out);
   }
 
   return OZ_typeError(0,"List");
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIdelAllFastGroup,2)
+OZ_BI_define(BIdelAllFastGroup,1,1)
 {
-  OZ_nonvarArg(0);
-  TaggedRef group = OZ_getCArg(0);
+  OZ_nonvarIN(0);
+  TaggedRef group = OZ_in(0);
 
   DEREF(group, _1, _2);
 
@@ -182,17 +179,16 @@ OZ_C_proc_begin(BIdelAllFastGroup,2)
   }
 
   Assert(isNil(group));
-  return OZ_unify(out,OZ_getCArg(1));
+  OZ_RETURN(out);
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIgetTclNames,3) {
-  (void) OZ_unify(OZ_getCArg(0), NameTclSlaves);
-  (void) OZ_unify(OZ_getCArg(1), NameTclSlaveEntry);
-  (void) OZ_unify(OZ_getCArg(2), NameTclName);
+OZ_BI_define(BIgetTclNames,0,3) {
+  OZ_out(0)=NameTclSlaves;
+  OZ_out(1)=NameTclSlaveEntry;
+  OZ_out(2)=NameTclName;
   return PROCEED;
-} OZ_C_proc_end
+}
 
 /*
  * Locking
@@ -1165,16 +1161,27 @@ TclSession *ts;                                                 \
 }
 
 
-OZ_C_proc_begin(BIinitTclSession, 4) {
-  int session_no = get_next_tcl_session();
-  int fd = smallIntValue(deref(OZ_args[0]));
-  tcl_sessions[session_no] = new TclSession(fd, deref(OZ_args[1]), OZ_args[2]);
-  OZ_Term sid = cons(newSmallInt(session_no),oz_newVariable());
-  return OZ_unify(OZ_args[3],sid);
-} OZ_C_proc_end
+#define NEW_GET_TCL_SESSION                                     \
+TclSession *ts;                                                 \
+{                                                               \
+  OZ_Term sid=deref(OZ_in(0));                          \
+  if (!isAnyVar(deref(tail(sid)))) {                            \
+    return oz_raise(E_SYSTEM,E_TK,"sessionAlreadyClosed",0);    \
+  }                                                             \
+  ts = tcl_sessions[smallIntValue(head(sid))];                  \
+}
 
-OZ_C_proc_begin(BIcloseTclSession, 1) {
-  OZ_Term sid=deref(OZ_args[0]);
+
+OZ_BI_define(BIinitTclSession, 3,1) {
+  int session_no = get_next_tcl_session();
+  int fd = smallIntValue(deref(OZ_in(0)));
+  tcl_sessions[session_no] = new TclSession(fd, deref(OZ_in(1)), OZ_in(2));
+  OZ_Term sid = cons(newSmallInt(session_no),oz_newVariable());
+  OZ_RETURN(sid);
+}
+
+OZ_BI_define(BIcloseTclSession, 1,0) {
+  OZ_Term sid=deref(OZ_in(0));
 
   if (isAnyVar(deref(tail(sid)))) {
     TclSession ** ts = &tcl_sessions[smallIntValue(head(sid))];
@@ -1183,12 +1190,12 @@ OZ_C_proc_begin(BIcloseTclSession, 1) {
     OZ_unify(tail(sid),NameUnit);
   }
   return PROCEED;
-} OZ_C_proc_end
+}
 
 
-OZ_C_proc_begin(BItclWrite, 2) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclWrite, 2,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1197,11 +1204,11 @@ OZ_C_proc_begin(BItclWrite, 2) {
     OZ_Return s;
 
     ts->reset();
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put('\n');
 
     ts->start_write();
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1210,12 +1217,11 @@ OZ_C_proc_begin(BItclWrite, 2) {
     return s;
   }
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BItclWriteReturn, 4) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclWriteReturn, 4,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1227,13 +1233,13 @@ OZ_C_proc_begin(BItclWriteReturn, 4) {
     ts->put2('o', 'z');
     ts->put2('r', ' ');
     ts->put('[');
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put2(']','\n');
 
-    ts->enterReturn(OZ_args[3], OZ_args[2]);
+    ts->enterReturn(OZ_in(3), OZ_in(2));
 
     ts->start_write();
-    OZ_args[0] = NameTclClosed;
+    OZ_in(0) = NameTclClosed;
     return ts->write();
   exit:
     ts->reset();
@@ -1241,18 +1247,17 @@ OZ_C_proc_begin(BItclWriteReturn, 4) {
     return s;
   }
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BItclWriteReturnMess, 5) {
-  GET_TCL_SESSION;
+OZ_BI_define(BItclWriteReturnMess, 5,0) {
+  NEW_GET_TCL_SESSION;
   /*
-   * OZ_args[0]: tickle object and modifier (for tags and marks)
-   * OZ_args[1]: return message
-   * OZ_args[2]: modifier to be put after arg 1 of above (may be unit)
-   * OZ_args[3]: type cast for return value
+   * OZ_in(0): tickle object and modifier (for tags and marks)
+   * OZ_in(1): return message
+   * OZ_in(2): modifier to be put after arg 1 of above (may be unit)
+   * OZ_in(3): type cast for return value
    */
-  if (OZ_args[1] == NameTclClosed) {
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1260,7 +1265,7 @@ OZ_C_proc_begin(BItclWriteReturnMess, 5) {
     ENTER_TCL_LOCK(ts);
     OZ_Return s;
     TaggedRef ret = NameTclClosed;
-    TaggedRef mess = deref(OZ_args[2]);
+    TaggedRef mess = deref(OZ_in(2));
     TaggedRef frst;
 
     Assert(!isAnyVar(mess));
@@ -1281,21 +1286,21 @@ OZ_C_proc_begin(BItclWriteReturnMess, 5) {
     ts->put2('o', 'z');
     ts->put2('r', ' ');
     ts->put('[');
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put(' ');
     StateExit(ts->put_tcl(frst));
     ts->put(' ');
-    StateExit(ts->put_tcl(OZ_args[3]));
+    StateExit(ts->put_tcl(OZ_in(3)));
     ts->put(' ');
 
     StateExit(ts->put_tcl_return(mess, &ret));
     ts->put2(']','\n');
 
     // Enter return variable and cast
-    ts->enterReturn(ret, OZ_args[4]);
+    ts->enterReturn(ret, OZ_in(4));
 
     ts->start_write();
-    OZ_args[0] = NameTclClosed;
+    OZ_in(0) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1305,12 +1310,11 @@ OZ_C_proc_begin(BItclWriteReturnMess, 5) {
   }
 
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BItclWriteBatch,2) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclWriteBatch,2,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1319,11 +1323,11 @@ OZ_C_proc_begin(BItclWriteBatch,2) {
     OZ_Return s;
 
     ts->reset();
-    StateExit(ts->put_batch(deref(OZ_args[1]),';'));
+    StateExit(ts->put_batch(deref(OZ_in(1)),';'));
     ts->put('\n');
 
     ts->start_write();
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1332,12 +1336,11 @@ OZ_C_proc_begin(BItclWriteBatch,2) {
     return s;
   }
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BItclWriteTuple,3) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclWriteTuple,3,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1345,7 +1348,7 @@ OZ_C_proc_begin(BItclWriteTuple,3) {
     ENTER_TCL_LOCK(ts)
     OZ_Return s;
 
-    TaggedRef mess = deref(OZ_args[2]);
+    TaggedRef mess = deref(OZ_in(2));
     TaggedRef frst;
 
     if (!isSRecord(mess)) {
@@ -1363,13 +1366,13 @@ OZ_C_proc_begin(BItclWriteTuple,3) {
     }
 
     ts->reset();
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put(' ');
-    StateExit(ts->put_record_or_tuple(OZ_args[2]));
+    StateExit(ts->put_record_or_tuple(OZ_in(2)));
     ts->put('\n');
 
     ts->start_write();
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1379,20 +1382,19 @@ OZ_C_proc_begin(BItclWriteTuple,3) {
   }
 
 }
-OZ_C_proc_end
 
 
 
-OZ_C_proc_begin(BItclWriteTagTuple,4) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclWriteTagTuple,4,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
     // not yet put into buffer!
     ENTER_TCL_LOCK(ts)
     OZ_Return s;
-    TaggedRef tuple = deref(OZ_args[3]);
+    TaggedRef tuple = deref(OZ_in(3));
     TaggedRef fst;
 
     Assert(!isAnyVar(tuple));
@@ -1410,17 +1412,17 @@ OZ_C_proc_begin(BItclWriteTagTuple,4) {
     }
 
     ts->reset();
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put(' ');
     StateExit(ts->put_tcl(fst));
     ts->put(' ');
-    StateExit(ts->put_tcl(OZ_args[2]));
+    StateExit(ts->put_tcl(OZ_in(2)));
     ts->put(' ');
     StateExit(ts->put_record_or_tuple(tuple,1));
     ts->put('\n');
 
     ts->start_write();
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1429,11 +1431,10 @@ OZ_C_proc_begin(BItclWriteTagTuple,4) {
     return s;
   }
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BItclWriteFilter,6) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclWriteFilter,6,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1442,17 +1443,17 @@ OZ_C_proc_begin(BItclWriteFilter,6) {
     OZ_Return s;
 
     ts->reset();
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put(' ');
-    StateExit(ts->put_vs(OZ_args[2]));
+    StateExit(ts->put_vs(OZ_in(2)));
     ts->put(' ');
-    StateExit(ts->put_tcl_filter(OZ_args[3], deref(OZ_args[4])));
+    StateExit(ts->put_tcl_filter(OZ_in(3), deref(OZ_in(4))));
     ts->put(' ');
-    StateExit(ts->put_tcl(OZ_args[5]));
+    StateExit(ts->put_tcl(OZ_in(5)));
     ts->put('\n');
 
     ts->start_write();
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1461,7 +1462,6 @@ OZ_C_proc_begin(BItclWriteFilter,6) {
     return s;
   }
 }
-OZ_C_proc_end
 
 
 OZ_Return TclSession::close_hierarchy(Object * o) {
@@ -1512,9 +1512,9 @@ OZ_Return TclSession::close_hierarchy(Object * o) {
 }
 
 
-OZ_C_proc_begin(BItclClose,3) {
-  GET_TCL_SESSION;
-  if (OZ_args[1] == NameTclClosed) {
+OZ_BI_define(BItclClose,3,0) {
+  NEW_GET_TCL_SESSION;
+  if (OZ_in(1) == NameTclClosed) {
     return ts->write();
   } else {
     CHECK_TOPLEVEL;
@@ -1523,7 +1523,7 @@ OZ_C_proc_begin(BItclClose,3) {
     OZ_Return s;
 
     // Perform closing of objects
-    TaggedRef to = OZ_args[2];
+    TaggedRef to = OZ_in(2);
     DEREF(to, to_ptr, to_tag);
 
     Assert(isObject(to));
@@ -1552,7 +1552,7 @@ OZ_C_proc_begin(BItclClose,3) {
 
     // Create close tcl
     ts->reset();
-    StateExit(ts->put_tcl(OZ_args[1]));
+    StateExit(ts->put_tcl(OZ_in(1)));
     ts->put('\n');
 
 
@@ -1573,7 +1573,7 @@ OZ_C_proc_begin(BItclClose,3) {
     ts->close_hierarchy(o);
 
     ts->start_write();
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
     return ts->write();
 
   exit:
@@ -1582,15 +1582,14 @@ OZ_C_proc_begin(BItclClose,3) {
     return s;
   }
 }
-OZ_C_proc_end
 
 
-OZ_C_proc_begin(BItclCloseWeb,2) {
-  GET_TCL_SESSION;
+OZ_BI_define(BItclCloseWeb,2,0) {
+  NEW_GET_TCL_SESSION;
   CHECK_TOPLEVEL;
 
   // Perform closing of objects
-  TaggedRef to = OZ_args[1];
+  TaggedRef to = OZ_in(1);
   DEREF(to, to_ptr, to_tag);
 
   Assert(isObject(to));
@@ -1615,49 +1614,48 @@ OZ_C_proc_begin(BItclCloseWeb,2) {
 
     ts->close_hierarchy(o);
 
-    OZ_args[1] = NameTclClosed;
+    OZ_in(1) = NameTclClosed;
 
     return PROCEED;
   }
 }
-OZ_C_proc_end
 
 
 // ---------------------------------------------------------------------
 // Counters
 // ---------------------------------------------------------------------
 
-OZ_C_proc_begin(BIgenTopName,2) {
-  GET_TCL_SESSION;
-  return OZ_unify(OZ_getCArg(1),ts->genTopName());
-} OZ_C_proc_end
+OZ_BI_define(BIgenTopName,1,1) {
+  NEW_GET_TCL_SESSION;
+  OZ_RETURN(ts->genTopName());
+}
 
-OZ_C_proc_begin(BIgenWidgetName,3) {
-  GET_TCL_SESSION;
-  TaggedRef parent = OZ_getCArg(1);
+OZ_BI_define(BIgenWidgetName,2,1) {
+  NEW_GET_TCL_SESSION;
+  TaggedRef parent = OZ_in(1);
 
   DEREF(parent, p_ptr, p_tag);
 
   if (isAnyVar(p_tag))
     OZ_suspendOn(makeTaggedRef(p_ptr));
 
-  return OZ_unify(OZ_getCArg(2),ts->genWidgetName(parent));
-} OZ_C_proc_end
+  OZ_RETURN(ts->genWidgetName(parent));
+}
 
-OZ_C_proc_begin(BIgenTagName,2) {
-  GET_TCL_SESSION;
-  return OZ_unify(OZ_getCArg(1),ts->genTagName());
-} OZ_C_proc_end
+OZ_BI_define(BIgenTagName,1,1) {
+  NEW_GET_TCL_SESSION;
+  OZ_RETURN(ts->genTagName());
+}
 
-OZ_C_proc_begin(BIgenVarName,2) {
-  GET_TCL_SESSION;
-  return OZ_unify(OZ_getCArg(1),ts->genVarName());
-} OZ_C_proc_end
+OZ_BI_define(BIgenVarName,1,1) {
+  NEW_GET_TCL_SESSION;
+  OZ_RETURN(ts->genVarName());
+}
 
-OZ_C_proc_begin(BIgenImageName,2) {
-  GET_TCL_SESSION;
-  return OZ_unify(OZ_getCArg(1),ts->genImageName());
-} OZ_C_proc_end
+OZ_BI_define(BIgenImageName,1,1) {
+  NEW_GET_TCL_SESSION;
+  OZ_RETURN(ts->genImageName());
+}
 
 // ---------------------------------------------------------------------
 // Add to Builtin-Table

@@ -5618,10 +5618,10 @@ void Site::communicationProblem(MessageType mt,Site*
 /**********************************************************************/
 
 #ifdef DEBUG_PERDIO
-OZ_C_proc_begin(BIdvset,2)
+OZ_BI_define(BIdvset,2,0)
 {
-  OZ_declareIntArg(0,what);
-  OZ_declareIntArg(1,val);
+  OZ_declareIntIN(0,what);
+  OZ_declareIntIN(1,val);
 
   if (val) {
     DV->set(what);
@@ -5630,32 +5630,29 @@ OZ_C_proc_begin(BIdvset,2)
   }
   return PROCEED;
 }
-OZ_C_proc_end
 #endif
 
 Bool openClosedConnection(int);
 void openclose(int);
 void wakeUpTmp(int,int);
 
-OZ_C_proc_begin(BIstartTmp,2)
+OZ_BI_define(BIstartTmp,2,0)
 {
-  OZ_declareIntArg(0,val);
-  OZ_declareIntArg(1,time);
+  OZ_declareIntIN(0,val);
+  OZ_declareIntIN(1,time);
   PD((TCPCACHE,"StartTmp v:%d t:%d",val,time));
   if(openClosedConnection(val)){
     PD((TCPCACHE,"StartTmp; continuing"));
     wakeUpTmp(val,time);}
   return PROCEED;
 }
-  OZ_C_proc_end
 
-  OZ_C_proc_begin(BIcloseCon,1)
+OZ_BI_define(BIcloseCon,1,0)
 {
-  OZ_declareIntArg(0,what);
+  OZ_declareIntIN(0,what);
   openclose(what);
   return PROCEED;
 }
-OZ_C_proc_end
 
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
@@ -5672,9 +5669,8 @@ void wakeUpTmp(int i, int time){
 GenHashNode *getPrimaryNode(GenHashNode* node, int &i);
 GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
 
-OZ_C_proc_begin(BIsiteStatistics,1)
+OZ_BI_define(BIsiteStatistics,0,1)
 {
-  OZ_declareArg(0,out);
   int indx;
   Site* found;
   GenHashNode *node = getPrimaryNode(NULL, indx);
@@ -5760,12 +5756,11 @@ OZ_C_proc_begin(BIsiteStatistics,1)
      oz_cons(oz_pairA("type", oz_atom(str)),
      oz_cons(oz_pairAI("siteHVal", (int) be->getSite()),
      oz_cons(oz_pairAI("indx",be->getOTI()),oz_nil())))),borrowlist);}
- return OZ_unify(out,oz_cons(sitelist,
-                     oz_cons(borrowlist,
-                     oz_cons(ownerlist,oz_nil()))));
+ OZ_RETURN(oz_cons(sitelist,
+                   oz_cons(borrowlist,
+                           oz_cons(ownerlist,oz_nil()))));
 
 }
-OZ_C_proc_end
 
 
 

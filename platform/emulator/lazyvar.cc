@@ -152,10 +152,10 @@ GenLazyVariable::addSuspLazy(Thread*th,int unstable)
   addSuspSVar(th,unstable);
 }
 
-OZ_C_proc_begin(BILazyNew,2)
+OZ_BI_define(BILazyNew,2,0)
 {
-  OZ_Term oz_fun = OZ_getCArg(0);
-  OZ_Term oz_res = OZ_getCArg(1);
+  OZ_Term oz_fun = OZ_in(0);
+  OZ_Term oz_res = OZ_in(1);
   if (!OZ_isProcedure(oz_fun) &&
       !OZ_isObject(oz_fun)    &&
       !OZ_isTuple(oz_fun))
@@ -163,15 +163,12 @@ OZ_C_proc_begin(BILazyNew,2)
   GenLazyVariable *lazy = new GenLazyVariable(oz_fun,oz_res);
   return OZ_unify(oz_res,(OZ_Term)newTaggedCVar((GenCVariable*)lazy));
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BILazyIs,2)
+OZ_BI_define(BILazyIs,1,1)
 {
-  OZ_declareArg(0,var);
-  OZ_declareArg(1,out);
-  return OZ_unify(out,isLazyVar(deref(var))?OZ_true():OZ_false());
+  OZ_declareIN(0,var);
+  OZ_RETURN(isLazyVar(deref(var))?OZ_true():OZ_false());
 }
-OZ_C_proc_end
 
 static BIspec lazySpecs[] = {
   {"Lazy.new", 2, BILazyNew, 0},

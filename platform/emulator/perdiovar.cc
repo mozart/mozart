@@ -156,12 +156,10 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 //-----------------------------------------------------------------------------
 // Implementation of interface functions
 
-OZ_C_proc_begin(PerdioVar_is, 2)
+OZ_BI_define(PerdioVar_is, 1,1)
 {
-  return OZ_unify(OZ_getCArg(1),
-                  isPerdioVar(deref(OZ_getCArg(0)))?NameTrue:NameFalse);
+  OZ_RETURN(isPerdioVar(deref(OZ_in(0)))?NameTrue:NameFalse);
 }
-OZ_C_proc_end
 
 // ---------------------------------------------------------------------
 // Distributed stuff

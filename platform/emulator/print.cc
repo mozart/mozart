@@ -1532,24 +1532,22 @@ void OrderedSuspList::printStream(ostream &stream, int depth)
 // Debug.print Builtins
 // -----------------------------------------------------------------------
 
-OZ_C_proc_begin(BIdebugPrint,2)
+OZ_BI_define(BIdebugPrint,2,0)
 {
-  oz_declareArg(0,t);
-  oz_declareIntArg(1,depth);
+  oz_declareIN(0,t);
+  oz_declareIntIN(1,depth);
   ozd_printStream(t,cerr,depth);
   cerr << endl;
   flush(cerr);
   return PROCEED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIdebugPrintLong,2)
+OZ_BI_define(BIdebugPrintLong,2,0)
 {
-  oz_declareArg(0,t);
-  oz_declareIntArg(1,depth);
+  oz_declareIN(0,t);
+  oz_declareIntIN(1,depth);
   ozd_printLongStream(t,cerr,depth);
   return PROCEED;
 }
-OZ_C_proc_end
 
 #endif

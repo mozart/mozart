@@ -736,4 +736,9 @@ void *VAR;                                      \
   }                                             \
 }
 
+#define OZ_RETURN(V) return ((OZ_result(V)),PROCEED)
+#define OZ_RETURN_INT(I) OZ_RETURN(OZ_int(I))
+#define OZ_RETURN_ATOM(S) OZ_RETURN(oz_atom(S))
+#define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
+
 #endif /* __OZ_H__ */

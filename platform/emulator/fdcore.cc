@@ -30,27 +30,23 @@
 // ---------------------------------------------------------------------
 // misc stuff
 
-OZ_C_proc_begin(BIisFdVar, 1)
+OZ_BI_define(BIisFdVar, 1,0)
 {
-  return isGenFDVar(deref(OZ_getCArg(0))) || isGenBoolVar(deref(OZ_getCArg(0))) ? PROCEED : FAILED;
+  return isGenFDVar(deref(OZ_in(0))) || isGenBoolVar(deref(OZ_in(0))) ? PROCEED : FAILED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIisFdVarB, 2)
+OZ_BI_define(BIisFdVarB, 1,1)
 {
-  return (OZ_unify
-          (OZ_getCArg (1),
-           (isGenFDVar(deref(OZ_getCArg(0))) ||
-            isGenBoolVar(deref(OZ_getCArg(0)))) ? NameTrue : NameFalse));
+  OZ_RETURN((isGenFDVar(deref(OZ_in(0))) ||
+             isGenBoolVar(deref(OZ_in(0)))) ? NameTrue : NameFalse);
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIgetFDLimits, 2)
+OZ_BI_define(BIgetFDLimits, 0,2)
 {
-  return (OZ_unify(OZ_int(0), OZ_getCArg(0)) &&
-    OZ_unify(OZ_int(fd_sup), OZ_getCArg(1))) ? PROCEED : FAILED;
+  OZ_out(0) = OZ_int(0);
+  OZ_out(1) = OZ_int(fd_sup);
+  return PROCEED;
 }
-OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdIs, 2)
 {

@@ -135,34 +135,31 @@ void debugStreamUpdate(Thread *thread) {
 
 // ------------------ Debugging Builtins ---------------------------
 
-OZ_C_proc_begin(BIdebugmode,1)
+OZ_BI_define(BIdebugmode,0,1)
 {
-  return OZ_unify(OZ_getCArg(0),am.debugmode()? NameTrue: NameFalse);
+  OZ_RETURN(am.debugmode()? NameTrue: NameFalse);
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIgetDebugStream,1)
+OZ_BI_define(BIgetDebugStream,0,1)
 {
-  return OZ_unify(OZ_getCArg(0),am.getDebugStreamTail());
+  OZ_RETURN(am.getDebugStreamTail());
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIthreadUnleash,2)
+OZ_BI_define(BIthreadUnleash,2,0)
 {
-  oz_declareThreadArg(0,thread);
-  OZ_declareIntArg(1,frameId);
+  oz_declareThreadIN(0,thread);
+  OZ_declareIntIN(1,frameId);
 
   if (!thread->isDeadThread() && thread->hasStack())
     thread->getTaskStackRef()->unleash(frameId);
 
   return PROCEED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIsetStepFlag,2)
+OZ_BI_define(BIsetStepFlag,2,0)
 {
-  oz_declareThreadArg(0,thread);
-  oz_declareNonvarArg(1,yesno);
+  oz_declareThreadIN(0,thread);
+  oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
     thread->setStep(OK);
@@ -172,12 +169,11 @@ OZ_C_proc_begin(BIsetStepFlag,2)
     oz_typeError(1,"Bool");
   return PROCEED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIsetTraceFlag,2)
+OZ_BI_define(BIsetTraceFlag,2,0)
 {
-  oz_declareThreadArg(0,thread);
-  oz_declareNonvarArg(1,yesno);
+  oz_declareThreadIN(0,thread);
+  oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
     thread->setTrace(OK);
@@ -187,24 +183,20 @@ OZ_C_proc_begin(BIsetTraceFlag,2)
     oz_typeError(1,"Bool");
   return PROCEED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIcheckStopped,2)
+OZ_BI_define(BIcheckStopped,1,1)
 {
-  oz_declareThreadArg(0,thread);
-  oz_declareArg(1,out);
-  return OZ_unify(out, thread->getStop() ? NameTrue : NameFalse);
+  oz_declareThreadIN(0,thread);
+  OZ_RETURN(thread->getStop() ? NameTrue : NameFalse);
 }
-OZ_C_proc_end
 
 // ------------------
 
-OZ_C_proc_begin(BIbreakpointAt, 4)
+OZ_BI_define(BIbreakpointAt, 3,1)
 {
-  OZ_declareArg    (0,file)
-  OZ_declareIntArg (1,line);
-  OZ_declareArg    (2,what);
-  OZ_declareArg    (3,out);
+  OZ_declareIN    (0,file)
+  OZ_declareIntIN (1,line);
+  OZ_declareIN    (2,what);
 
   DEREF(file,_1,_2);
 
@@ -225,12 +217,8 @@ OZ_C_proc_begin(BIbreakpointAt, 4)
     info = info->next;
   }
 
-  if (ok)
-    return OZ_unify(out,OZ_true());
-  else
-    return OZ_unify(out,OZ_false());
+  OZ_RETURN(ok?OZ_true():OZ_false());
 }
-OZ_C_proc_end
 
 void execBreakpoint(Thread *t) {
   if (!t->getTrace() || !t->getStep()) {
@@ -240,27 +228,24 @@ void execBreakpoint(Thread *t) {
   }
 }
 
-OZ_C_proc_begin(BIbreakpoint, 0)
+OZ_BI_define(BIbreakpoint, 0,0)
 {
   if (am.debugmode() && am.onToplevel())
     execBreakpoint(am.currentThread());
   return PROCEED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIdisplayCode, 2)
+OZ_BI_define(BIdisplayCode, 2,0)
 {
-  OZ_declareIntArg(0,pc);
-  OZ_declareIntArg(1,size);
+  OZ_declareIntIN(0,pc);
+  OZ_declareIntIN(1,size);
   displayCode((ProgramCounter)ToPointer(pc),size);
   return PROCEED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIprocedureCode, 2)
+OZ_BI_define(BIprocedureCode, 1,1)
 {
-  oz_declareNonvarArg(0,proc);
-  oz_declareArg(1,out);
+  oz_declareNonvarIN(0,proc);
   if (!isProcedure(proc)) {
     oz_typeError(0,"Procedure");
   }
@@ -269,14 +254,12 @@ OZ_C_proc_begin(BIprocedureCode, 2)
   }
 
   Abstraction *a=tagged2Abstraction(proc);
-  return oz_unifyInt(out,ToInt32(a->getPred()->getPC()));
+  OZ_RETURN_INT(ToInt32(a->getPred()->getPC()));
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIprocedureCoord, 2)
+OZ_BI_define(BIprocedureCoord, 1,1)
 {
-  oz_declareNonvarArg(0,proc);
-  oz_declareArg(1,out);
+  oz_declareNonvarIN(0,proc);
   if (!isProcedure(proc)) {
     oz_typeError(0,"Procedure");
   }
@@ -298,20 +281,17 @@ OZ_C_proc_begin(BIprocedureCoord, 2)
                 cons(OZ_pairAI("PC",ToInt32(definitionPC)),nil())));
     if (column != makeTaggedNULL())
       pairlist = cons(OZ_pairA("column",column),pairlist);
-    return oz_unify(out,OZ_recordInit(OZ_atom("def"), pairlist));
+    OZ_RETURN(OZ_recordInit(OZ_atom("def"), pairlist));
   } else   // should never happen
-    return oz_unify(out,NameUnit);
+    OZ_RETURN(NameUnit);
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIlivenessX, 2)
+OZ_BI_define(BIlivenessX, 1,1)
 {
-  OZ_declareIntArg(0,pc);
-  oz_declareArg(1,out);
+  OZ_declareIntIN(0,pc);
 
-  return oz_unifyInt(out,CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
+  OZ_RETURN_INT(CodeArea::livenessX((ProgramCounter)ToPointer(pc),0,0));
 }
-OZ_C_proc_end
 
 
 /*----------------------------------------------------------------------
@@ -549,11 +529,10 @@ Bool trace(char *s,Board *board,Actor *actor,
 }
 
 // mm2: I need this builtin for debugging!
-OZ_C_proc_begin(BIhalt, 0)
+OZ_BI_define(BIhalt, 0,0)
 {
   mode=OK;
   return PROCEED;
 }
-OZ_C_proc_end
 
 #endif
