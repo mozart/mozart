@@ -20,36 +20,23 @@
 %%%
 
 local
-   class DummyReporter
-      attr Hd: unit Tl: unit
-      meth init() X in
-	 Hd <- X
-	 Tl <- X
-      end
-      meth store(Msg) NewTl in
-	 @Tl = Msg|NewTl
-	 Tl <- NewTl
-      end
-      meth get($)
-	 @Tl = nil
-	 @Hd
-      end
-   end
-
-   O = {New DummyReporter init()}
+   HasErrors = {NewCell false}
 
    AST = {Compiler.parseOzFile 'gump/ProductionTemplates.ozg'
-	  proc {$ M} {O store(M)} end fun {$ _} true end nil}
+	  proc {$ M}
+	     case M of error(...) then
+		{Assign HasErrors true}
+	     else skip
+	     end
+	  end
+	  fun {$ _} true end
+	  nil}
 
-   case {O get($)} of nil then
-      case AST of [fSynTopLevelProductionTemplates(_)] then skip
-      else {Exception.raiseError gump(noProductionTemplates AST)}
-      end
-   elseof _ then
-      skip
-%      {Exception.raiseError gump(errorsInProductionTemplates
-%				 {String.toAtom Ms})}
-      %% Leif??
+   if {Access HasErrors} then
+      {Exception.raiseError gump(errorsInProductionTemplates)}
+   end
+   case AST of [fSynTopLevelProductionTemplates(_)] then skip
+   else {Exception.raiseError gump(noProductionTemplates AST)}
    end
 in
    functor
