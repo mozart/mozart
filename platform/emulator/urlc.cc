@@ -277,7 +277,7 @@ urlc::tmp_file_open(char *file)
                   S_IRUSR | S_IWUSR); // data destination
     if((-1 == lofd) && (EINTR == errno))
       continue;
-    if(0 < lofd)
+    if(0 <= lofd)
       break;
     URLC_PERROR("open");
     return (URLC_EFILE);
