@@ -208,8 +208,8 @@ $(COMPILER_BIG): $(COMPILERSRC)
 
 $(COMPILER_FUN): FunMisc.ozf FunBuiltins.ozf FunSA.ozf FunCode.ozf \
         FunCore.ozf FunUnnest.ozf FunAssembler.ozf FunCompiler.ozf \
-        compiler/FunMake.oz Standard.ozf Pickle.ozf
-        $(COMPILE) -l Pickle=./Pickle.ozf compiler/FunMake.oz -o Compiler.ozf
+        compiler/FunMake.oz Standard.ozf
+        $(COMPILE) -l Pickle compiler/FunMake.oz -o Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
