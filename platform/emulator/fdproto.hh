@@ -31,5 +31,5 @@
 //*****************************************************************************
 // Finite Domains
 
-#include "fdbuilti.dcl"
-#include "fsetbuilti.dcl"
+#include "modFDB.dcl"
+#include "modFSB.dcl"
