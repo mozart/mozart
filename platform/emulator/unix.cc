@@ -687,6 +687,11 @@ OZ_BI_iodefine(unix_getCWD,0,1)
 #define O_SYNC     0
 #endif
 
+#ifndef WINDOWS
+#define O_BINARY 0
+#define O_TEXT   0
+#endif
+
 
 OZ_BI_iodefine(unix_open,3,1)
 {
@@ -723,6 +728,10 @@ OZ_BI_iodefine(unix_open,3,1)
       flags |= O_NONBLOCK;
     } else if (OZ_eqAtom(hd,"O_SYNC"    ) == PROCEED) {
       flags |= O_SYNC;
+    } else if (OZ_eqAtom(hd,"O_BINARY"  ) == PROCEED) {
+      flags |= O_BINARY;
+    } else if (OZ_eqAtom(hd,"O_TEXT"    ) == PROCEED) {
+      flags |= O_TEXT;
     } else {
       return OZ_typeError(1,"enum openFlags");
     }
@@ -1661,8 +1670,7 @@ static OZ_Term mkAddressList(char **lstptr)
 {
   OZ_Term ret = oz_nil();
   while (*lstptr != NULL) {
-    ret = oz_cons(OZ_string(inet_ntoa(**((struct in_addr **) lstptr))),
-                  ret);
+    ret = oz_cons(OZ_string(osinet_ntoa(*lstptr)),ret);
     lstptr++;
   }
   return ret;
