@@ -2181,8 +2181,6 @@ void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
     return;}
   
   if (isObject()) {
-    TaggedRef cl=deref(getClass());
-    Assert(isClass(cl));
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());      
     sendHelpX(M_GET_OBJECT,be);
     return;
@@ -2544,7 +2542,7 @@ void PerdioVar::gcPerdioVar(void)
     gcBorrowNow(getObject()->getIndex());
     ptr = getObject()->gcObject();
     if (isObject()) {
-      gcTagged(u.aclass,u.aclass);
+      u.aclass = u.aclass->gcClass();
     }
   }
 }
@@ -3059,7 +3057,7 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
       if (gnclass) {
 	pvar->setGNameClass(gnclass);
       } else {
-	pvar->setClass(clas);
+	pvar->setClass(tagged2ObjectClass(deref(clas)));
       }
       ob->mkVar(val); 
       return val;}
@@ -3289,10 +3287,10 @@ void Site::msgReceived(MsgBuffer* bs)
 	Assert(0); 
 	error("M_SEND_OBJECT - don't understand");}
       fillInObject(&of,o);
-      TaggedRef cl;
+      ObjectClass *cl;
       if (pv->isObject()) {cl=pv->getClass();}
-      else {cl=findGName(pv->getGNameClass());}
-      o->setClass(tagged2ObjectClass(deref(cl)));
+      else {cl=tagged2ObjectClass(deref(findGName(pv->getGNameClass())));}
+      o->setClass(cl);
 
       pv->primBind(be->getPtr(),makeTaggedConst(o));
       be->mkTertiary(o);
