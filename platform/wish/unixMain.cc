@@ -59,14 +59,14 @@
 #endif
 #endif
 
-#if defined(TK_MAJOR_VERSION) && defined (TK_MINOR_VERSION) && TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4 && !defined(NO_CONST)
 #define CONST_CAST(X,Y) const_cast<X>(Y)
-#else
-#define CONST_CAST(X,Y) (Y)
-#endif
 
-#ifndef CONST
-#define CONST
+#if defined(TK_MAJOR_VERSION) && defined (TK_MINOR_VERSION) && TK_MAJOR_VERSION >= 8 && TK_MINOR_VERSION >= 4
+#define CONST_FOR_ARGV CONST84
+#define CONST_FOR_GETVAR_ARG CONST
+#else
+#define CONST_FOR_ARGV
+#define CONST_FOR_GETVAR_ARG
 #endif
 
 /*
@@ -151,7 +151,7 @@ main(int argc, char **argv)
      * Parse command-line arguments.
      */
 
-    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, CONST_CAST(CONST char**,argv), argTable, 0)
+    if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, CONST_CAST(CONST_FOR_ARGV char**,argv), argTable, 0)
 	    != TCL_OK) {
 	fprintf(stdout, "w %s\n.\n", interp->result);
 	fflush(stdout); /* added mm */
@@ -417,7 +417,7 @@ static void
 Prompt(Tcl_Interp *interp, int partial)
 {
     char *promptCmd = CONST_CAST(char*,Tcl_GetVar(interp,
-	CONST_CAST(CONST char*,partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY));
+	CONST_CAST(CONST_FOR_GETVAR_ARG char*,partial ? "tcl_prompt2" : "tcl_prompt1"), TCL_GLOBAL_ONLY));
     if (promptCmd == NULL) {
 	defaultPrompt:
 	if (!partial) {
