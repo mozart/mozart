@@ -952,7 +952,7 @@ in
       meth toggleEmacs
 	 case {Cget useEmacsBar} then
 	    Gui,status('Not using Emacs Bar')
-	    {Emacs.condSend.interface removeBar}
+	    {SendEmacs removeBar}
 	 else
 	    Gui,status('Using Emacs Bar')
 	 end
