@@ -17,73 +17,91 @@
 
 #include "vs_msgbuffer.hh"
 
+#ifdef VIRTUALSITES
+
+#include <sys/stat.h>
+
 //
 // ('SEM_UNDO' are not usable here, since the semaphore does not really
 // count resources;)
 
-#ifdef VIRTUALSITES
 static struct sembuf block[1] = {
   { 0, -1, 0 }
 };
 static struct sembuf wakeup[1] = {
   { 0, 1, 0 }
 };
-#endif
 
 //
-// compose the 'semkey' : the 'PERDIO' byte, type id and pid beneath; 
+static unsigned int seq_num = 0;
+//
+// compose the 'semkey' :  type id, sequential number, and pid; 
 key_t vsTypeToKey(int type)
 {
   // type is allowed to be 4 bits;
   Assert(!(type & ~0xf));
-  int key_tSize = sizeof(key_t); // in bytes (chars);
-  int idOffset = (key_tSize - 1) * 8; // in bits;
-  int typeOffset = idOffset - VS_KEYTYPE_SIZE;
-  int seqMask = 2^typeOffset - 1;
+  Assert(VS_KEYTYPE_SIZE + VS_SEQ_SIZE + VS_PID_SIZE == 32);
+  Assert(sizeof(key_t) >= (int) sizeof(int32));
+  Assert(seq_num < (int) (1 << VS_SEQ_SIZE));
 
   //
-  return((key_t) ((PERDIO_ID << idOffset) |
-		  (type << typeOffset) |
-		  ((osgetpid()) & seqMask)));
+  int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
+  int seqOffset = idOffset - VS_SEQ_SIZE;
+
+  //
+  return ((key_t) ((type << idOffset) |
+		   (seq_num++ << seqOffset) |
+		   (osgetpid() & VS_PID_MASK)));
 }
 
 //
-VSMsgChunkPool::VSMsgChunkPool(int chunkSizeIn, int chunksNumIn)
-  : chunkSize(chunkSizeIn), chunksNum(chunksNumIn), wakeupMode(FALSE)
+void VSMsgChunkPoolOwned::init(key_t shmkeyIn,
+			       int chunkSizeIn, int chunksNumIn)
 {
+  shmkey = shmkeyIn;
+  chunkSize = chunkSizeIn;
+  chunksNum = chunksNumIn;
+  wakeupMode = FALSE;
   Assert(sizeof(this) <= (unsigned int) chunkSizeIn);
+  initReservedChunk();
   semkey = vsTypeToKey(VS_WAKEUPSEM_KEY);
 }
 
 //
-VSMsgChunkPoolManager::VSMsgChunkPoolManager(int chunkSizeIn,
-					     int chunksNumIn)
-  : chunkSize(chunkSizeIn), chunksNum(chunksNumIn)
+VSMsgChunkPoolManagerOwned::VSMsgChunkPoolManagerOwned(int chunkSizeIn,
+						       int chunksNumIn)
 {
-#ifdef VIRTUALSITES
+  chunkSize = chunkSizeIn;
+  chunksNum = chunksNumIn;
   SemOptArg arg;
 
   // 
   // Get&attach a shared memory page;
   shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
-  if ((shmid = shmget(shmkey, chunkSizeIn*chunksNumIn, IPC_CREAT)) < 0) 
+  if ((int) (shmid = shmget(shmkey, chunkSizeIn*chunksNumIn,
+			    (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0) 
     error("Virtual Sites: failed to allocate a shared memory page");
-  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0) 
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
     error("Virtual Sites:: failed to attach a shared-memory page");
+
+  //
+  // We cannot mark it for destruction right here, since then it
+  // cannot be accessed by any other process ("key already
+  // destroyed");
+  // markDestroy();
 
   // 
   // The first chunk is used for the "pool" object, and the rest - 
   // for "VSMsgChunk" objects;
-  pool = (VSMsgChunkPool *) mem;
-  pool->VSMsgChunkPool::VSMsgChunkPool(chunkSizeIn, chunksNumIn);
-  chunks = (VSMsgChunk *) mem;
-  for (int i = 1; i < chunksNum; i++) // don't try to init the first one;
-    chunks[i].VSMsgChunk::VSMsgChunk();
+  pool = (VSMsgChunkPoolOwned *) mem;
+  pool->init(shmkey, chunkSizeIn, chunksNumIn);
+  chunks = (VSMsgChunkOwned *) mem;
+  // Chunks are initialized lazily - prior usage;
 
   //
   // A semaphore used in the "wakeup" mode;
   semkey = pool->getSemkey();
-  if ((semid = semget(semkey, 1, IPC_CREAT)) < 0)
+  if ((semid = semget(semkey, 1, (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
     error("Virtual Sites: failed to allocate a semphore");
   arg.val = 0;
   if (semctl(semid, 0, SETVAL, arg) < 0)
@@ -97,79 +115,116 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(int chunkSizeIn,
   for (int i = 0; i < mapSize; i++)
     map[i] = (int32) 0xffffffff;     // everything is free originally;
   map[0] &= ~0x1;		// ... but except the one for the pool;
-#endif
 }
 
 //
-VSMsgChunkPoolManager::VSMsgChunkPoolManager(key_t shmkeyIn)
-  : shmkey(shmkeyIn)
+VSMsgChunkPoolManagerImported::VSMsgChunkPoolManagerImported(key_t shmkeyIn)
 {
-#ifdef VIRTUALSITES
+  shmkey = shmkeyIn;
   //
   // we don't know in advance how large it is - so just try to swallow
   // the page "as is";
-  if ((shmid = shmget(shmkey, /* size */ 0, /* args */ 0)) < 0) 
+  if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
     error("Virtual Sites: failed to get a shared memory page");
-  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0) 
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0) 
     error("Virtual Sites:: failed to attach a shared-memory page");
 
   // locations;
-  pool = (VSMsgChunkPool *) mem; // initialized by the owner;
-  pool->VSMsgChunkPool::VSMsgChunkPool();	// actually empty;
-  chunks = ((VSMsgChunk *) mem);
+  pool = (VSMsgChunkPoolImported *) mem; // initialized by the owner;
+  pool->init(shmkeyIn);		 // actually empty;
+  chunks = ((VSMsgChunkImported *) mem);
 
   // Borrow data from the 'VSMsgChunkPool' object
   // This information is necessary for debugging only (like checking 
   // whether a chunk really belongs to the pool);
   chunkSize = pool->getChunkSize();
-  chunksNum = pool->getchunksNum();
+  chunksNum = pool->getChunksNum();
 
   //
   // A semaphore used in the "wakeup" mode;
   semkey = pool->getSemkey();
-  if ((semid = semget(semkey, 1, 0)) < 0)
+  if ((semid = semget(semkey, 1, S_IRWXU)) < 0)
     error("Virtual Sites: failed to find the semphore");
-
-  //
-  // (no usage bitmap at receiver sites;)
-  mapSize = 0;
-  map = (int32 *) 0;
-#endif
 }
 
 //
-void VSMsgChunkPoolManager::destroy()
+void VSMsgChunkPoolManagerOwned::markDestroy()
 {
-#ifdef VIRTUALSITES
+  DebugCode(pool->checkConsistency());
+  //
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
+    if (errno != EIDRM) 
+      error("Virtual Sites: cannot remove the shared memory");
+  }
+
+  //
+  SemOptArg arg;
+  arg.val = 0;			// junk;
+  if (semctl(semid, 0, IPC_RMID, arg) < 0) {
+    if (errno != EIDRM) 
+      error("Virtual Sites: cannot remove the semaphore");
+  }
+}
+
+//
+VSMsgChunkPoolManagerOwned::~VSMsgChunkPoolManagerOwned()
+{
+  DebugCode(pool->checkConsistency());
+  //
+  markDestroy();
+  //
   if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
-  DebugCode(mem = (void *) 0);
-  DebugCode(pool = (VSMsgChunkPool *) 0);
-  DebugCode(chunks = (VSMsgChunk *) 0);
-  DebugCode(chunkSize = chunksNum = -1);
 
   //
-  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0) {
-    error("Virtual Sites: cannot remove the shared memory");
-  }
+  delete map;
+  //
+  DebugCode(chunkSize = chunksNum = 0);
   DebugCode(shmid = 0);
   DebugCode(shmkey = (key_t) 0);
-#endif
+  DebugCode(semid = 0);
+  DebugCode(semkey = (key_t) 0);
+  DebugCode(mem = (void *) 0);
+  DebugCode(chunks = (VSMsgChunkOwned *) 0);
+  DebugCode(pool = (VSMsgChunkPoolOwned *) 0);
+  DebugCode(mapSize = 0);
+  DebugCode(map = (int32 *) 0);
 }
 
 //
-void VSMsgChunkPoolManager::scavengeMemory()
+VSMsgChunkPoolManagerImported::~VSMsgChunkPoolManagerImported()
 {
+  DebugCode(pool->checkConsistency());
+  //
+  if (shmdt((char *) mem) < 0) {
+    error("Virtual Sites: can't detach the shared memory.");
+  }
+
+  //
+  DebugCode(chunkSize = chunksNum = 0);
+  DebugCode(shmid = 0);
+  DebugCode(shmkey = (key_t) 0);
+  DebugCode(semid = 0);
+  DebugCode(semkey = (key_t) 0);
+  DebugCode(mem = (void *) 0);
+  DebugCode(chunks = (VSMsgChunkImported *) 0);
+  DebugCode(pool = (VSMsgChunkPoolImported *) 0);
+}
+
+//
+void VSMsgChunkPoolManagerOwned::scavengeMemory()
+{
+  DebugCode(pool->checkConsistency());
   for (int i = 1; i < chunksNum; i++) // the first one is busy anyway;
-    if (chunks[i].isBusy())
+    if (!(getChunkAddr(i)->isBusy()))
       markFreeInMap(i);
 }
 
 //
-int VSMsgChunkPoolManager::getMsgChunkOutline()
+int VSMsgChunkPoolManagerOwned::getMsgChunkOutline()
 {
-#ifdef VIRTUALSITES
+  DebugCode(pool->checkConsistency());
   int chunkNum;
   SemOptArg arg;
 
@@ -208,22 +263,19 @@ retry:
 
   //
   pool->stopWakeupMode();	// don't care about the semaphore now;
+  Assert(chunkNum != 0);	// zeroth is always busy;
   return (chunkNum);
-#else
-  return -1;
-#endif
 }
 
 //
-void VSMsgChunkPoolManager::wakeupOwner()
+void VSMsgChunkPoolManagerImported::wakeupOwner()
 {
-#ifdef VIRTUALSITES
+  DebugCode(pool->checkConsistency());
   // Note that the "wakeup" mode can be dropped here already (though
   // that's tested in the 'markFree' method), but we don't care!
   while (semop(semid, &wakeup[0], 1) < 0)
     if (errno == EINTR) continue;
     else error("Virtual Sites: unable to wakeup a sender");
-#endif
 }
 
 //
@@ -245,7 +297,7 @@ unsigned int VSChunkPoolRegister::hash(key_t key)
 }
 
 //
-VSMsgChunkPoolManager* VSChunkPoolRegister::find(key_t key)
+VSMsgChunkPoolManagerImported* VSChunkPoolRegister::find(key_t key)
 {
   int hvalue = hash(key);
   GenHashNode *aux = htFindFirst(hvalue);
@@ -255,20 +307,20 @@ VSMsgChunkPoolManager* VSChunkPoolRegister::find(key_t key)
 
     //
     if (key == auxKey) {
-      VSMsgChunkPoolManager *msgChunkPoolManager;
+      VSMsgChunkPoolManagerImported *msgChunkPoolManager;
       GenCast(aux->getEntry(), GenHashEntry*,
-	      msgChunkPoolManager, VSMsgChunkPoolManager*);
+	      msgChunkPoolManager, VSMsgChunkPoolManagerImported*);
       return (msgChunkPoolManager);
     }
 
     //
     aux = htFindNext(aux, hvalue);
   }
-  return ((VSMsgChunkPoolManager *) 0);
+  return ((VSMsgChunkPoolManagerImported *) 0);
 }
 
 //
-void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolManager *pool)
+void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolManagerImported *pool)
 {
   GenHashBaseKey* ghn_bk;
   GenHashEntry* ghn_e;
@@ -281,47 +333,38 @@ void VSChunkPoolRegister::add(key_t key, VSMsgChunkPoolManager *pool)
 }
 
 //
-// Sender site:
-VSMsgBuffer::VSMsgBuffer(VSMsgChunkPoolManager *cpmIn, Site *siteIn) 
-  : cpm(cpmIn), site(siteIn), first(-1)
+void VSChunkPoolRegister::remove(key_t key)
 {
-  DebugCode(current = -1);
-  DebugCode(currentAddr = (VSMsgChunk *) 0);
-  DebugCode(ptr = end = (BYTE *) 0);
-}
+  int hvalue = hash(key);
+  GenHashNode *aux = htFindFirst(hvalue);
+  while(aux) {
+    key_t auxKey;
+    GenCast(aux->getBaseKey(), GenHashBaseKey*, auxKey, key_t);
 
-//
-// Receiver site:
-VSMsgBuffer::VSMsgBuffer(VSMsgChunkPoolManager *cpmIn, int chunkIndex)
-  : cpm(cpmIn), current(chunkIndex), first(chunkIndex)
-{
-  currentAddr = cpm->getChunkAddr(current);
-  ptr = &(currentAddr->buffer[0]);
-  end = ptr + cpm->getChunkDataSize(); // in bytes;
-}
+    //
+    if (key == auxKey) {
+      htSub(hvalue,aux);
+      break;
+    }
 
-//
-void VSMsgBuffer::marshalBegin() 
-{
-  Assert(first < 0);
-  // allocate the first chunk unconditionally
-  // (there are no empty messages?)
-  current = first = cpm->getMsgChunk();
-  currentAddr = cpm->getChunkAddr(current);
-  //
-  ptr = &(currentAddr->buffer[0]);
-  end = ptr + cpm->getChunkDataSize(); // in bytes;
-}
-
-//
-void VSMsgBuffer::unmarshalEnd()
-{
-  while (first >= 0) {
-    VSMsgChunk *chunkAddr = cpm->getChunkAddr(first);
-    first = chunkAddr->next;
-    cpm->releaseChunk(chunkAddr);
+    //
+    aux = htFindNext(aux, hvalue);
   }
-  DebugCode(current = -1);
-  DebugCode(currentAddr = (VSMsgChunk *) 0);
-  DebugCode(ptr = end = (BYTE *) 0);
 }
+
+//
+char* VSMsgBufferOwned::siteStringrep()
+{
+  if (site != (Site *) -1) 
+    return (site->stringrep());
+  else
+    return ("(initializing a new virtual site - it is not yet known)");
+}
+
+//
+char* VSMsgBufferImported::siteStringrep()
+{
+  return ("(an unknown virtual site a message received from)");
+}
+
+#endif // VIRTUALSITES

@@ -98,7 +98,7 @@ unsigned int osSystemTime(); // return current systemtime in milliseconds
 unsigned int osUserTime();   // return current usertime in milliseconds
 unsigned int osTotalTime(); // return total system time in milliseconds
 void osInitSignals();        // initialize signal handler
-void osSetAlarmTimer(int t, Bool interval=OK);
+void osSetAlarmTimer(int t);
 void osBlockSignals(Bool check=NO); // check: check if no other signals are blocked
 void osUnblockSignals();
 
@@ -116,7 +116,7 @@ void osWatchAccept(int fd);
 void osWatchFD(int fd, int mode);
 Bool osIsWatchedFD(int fd, int mode);
 void osClrWatchedFD(int fd, int mode);
-int osBlockSelect(int ticks);
+void osBlockSelect(int ticks);
 void osClearSocketErrors();
 int  osFirstSelect();
 Bool osNextSelect(int fd, int mode);
