@@ -313,9 +313,13 @@ char *OZ_floatToCStringPretty(OZ_Term term)
 {
   OZ_Float f = OZ_floatToC(term);
   sprintf(TmpBuffer,"%g",f);
-  if (f != -HUGE_VAL && f != HUGE_VAL) {
-    for (char *s = TmpBuffer; *s!='.'; s++) {
-      if (*s == 'e') {
+  char *s = TmpBuffer;
+  char c=*s;
+
+  /* check special number: NaN, Inf, -Inf */
+  if (c != 'N' && c != 'I' && (c != '-' || *(s+1)!='I')) {
+    while (c!='.') {
+      if (c == 'e') {
 	for (char *p = s+strlen(s); p >= s; p--) {
 	  *(p+2) = *p;
 	}
@@ -323,12 +327,13 @@ char *OZ_floatToCStringPretty(OZ_Term term)
 	*s = '0';
 	break;
       }
-      if (*s == 0) {
+      if (c == 0) {
 	*s++ = '.';
 	*s++ = '0';
 	*s = 0;
 	break;
       }
+      c=*(++s);
     }
   }
   return ozstrdup(TmpBuffer);
