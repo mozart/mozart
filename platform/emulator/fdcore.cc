@@ -63,7 +63,7 @@ OZ_C_proc_begin(BIfdMin, 2)
   if(isSmallInt(vartag)) {
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
-    int minVal = tagged2GenFDVar(var)->getDom().minElem();
+    int minVal = tagged2GenFDVar(var)->getDom().getMinElem();
     return OZ_unify(OZ_int(minVal), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(OZ_int(0), OZ_getCArg(1));   
@@ -84,7 +84,7 @@ OZ_C_proc_begin(BIfdMax, 2)
   if(isSmallInt(vartag)) {
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
-    int maxVal = tagged2GenFDVar(var)->getDom().maxElem();
+    int maxVal = tagged2GenFDVar(var)->getDom().getMaxElem();
     return OZ_unify(OZ_int(maxVal), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(OZ_int(1), OZ_getCArg(1));   
@@ -106,7 +106,7 @@ OZ_C_proc_begin(BIfdMid, 2)
     return OZ_unify(var, OZ_getCArg(1));   
   } else if (isGenFDVar(var,vartag)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    return OZ_unify(OZ_int(fdomain.midElem()), OZ_getCArg(1));   
+    return OZ_unify(OZ_int(fdomain.getMidElem()), OZ_getCArg(1));   
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(OZ_int(0), OZ_getCArg(1));   
   } else if (isNotCVar(vartag)) {
@@ -138,7 +138,7 @@ OZ_C_proc_begin(BIfdNextSmaller, 3)
     if (value > OZ_intToC(var))
       return OZ_unify(var, OZ_getCArg(2));;   
   } else if (isGenFDVar(var,vartag)) {
-    int nextSmaller = tagged2GenFDVar(var)->getDom().nextSmallerElem(value);
+    int nextSmaller = tagged2GenFDVar(var)->getDom().getNextSmallerElem(value);
     if (nextSmaller != -1) 
       return OZ_unify(OZ_int(nextSmaller), OZ_getCArg(2));
   } else if (isGenBoolVar(var,vartag)) {
@@ -176,7 +176,7 @@ OZ_C_proc_begin(BIfdNextLarger, 3)
     if (value < OZ_intToC(var))
       return OZ_unify(var, OZ_getCArg(2));;   
   } else if (isGenFDVar(var,vartag)) {
-    int nextLarger = tagged2GenFDVar(var)->getDom().nextLargerElem(value);
+    int nextLarger = tagged2GenFDVar(var)->getDom().getNextLargerElem(value);
     if (nextLarger != -1) 
       return OZ_unify(OZ_int(nextLarger), OZ_getCArg(2));
   } else if (isGenBoolVar(var,vartag)) {
@@ -204,7 +204,7 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
     return OZ_unify(makeTaggedLTuple(ltuple), OZ_getCArg(1));
   } else if (isGenFDVar(var,vartag)) {
     OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
-    return OZ_unify(fdomain.getAsList(), OZ_getCArg(1));
+    return OZ_unify(fdomain.getDescr(), OZ_getCArg(1));
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(makeTaggedLTuple(new LTuple(mkTuple(0, 1), AtomNil)), 
 		    OZ_getCArg(1));
@@ -425,7 +425,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
   if(isSmallInt(vtag)) {
     vmin = OZ_intToC(v);
   } else if (isGenFDVar(v,vtag)) {
-    vmin = tagged2GenFDVar(v)->getDom().minElem();
+    vmin = tagged2GenFDVar(v)->getDom().getMinElem();
   } else if (isGenBoolVar(v, vtag)) {
     vmin = 0;
   } else if (isNotCVar(vtag)) {
@@ -465,7 +465,7 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
   if(isSmallInt(vtag)) {
     vmax = OZ_intToC(v);
   } else if (isGenFDVar(v,vtag)) {
-    vmax = tagged2GenFDVar(v)->getDom().maxElem();
+    vmax = tagged2GenFDVar(v)->getDom().getMaxElem();
   } else if (isGenBoolVar(v, vtag)) {
     vmax = 1;
   } else if (isNotCVar(vtag)) {

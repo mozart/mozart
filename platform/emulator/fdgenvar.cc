@@ -75,7 +75,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	  case TRUE + 2 * TRUE: // var and term are local
 	    {
 	      if (intsct == fd_singleton) {
-		TaggedRef int_var = OZ_int(intsct.singl());
+		TaggedRef int_var = OZ_int(intsct.getSingleElem());
 		termVar->propagateUnify(term);
 		propagateUnify(var);
 		doBind(vPtr, int_var);
@@ -118,7 +118,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	    {
 	      if (intsct.getSize() != termDom.getSize()){
 		if (intsct == fd_singleton) {
-		  TaggedRef int_var = OZ_int(intsct.singl());
+		  TaggedRef int_var = OZ_int(intsct.getSingleElem());
 		  termVar->propagateUnify(term);
 		  propagateUnify(var);
 		  doBind(vPtr, int_var);
@@ -152,7 +152,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	    {
 	      if (intsct.getSize() != finiteDomain.getSize()){
 		if(intsct == fd_singleton) {
-		  TaggedRef int_term = OZ_int(intsct.singl());
+		  TaggedRef int_term = OZ_int(intsct.getSingleElem());
 		  propagateUnify(var);
 		  termVar->propagateUnify(term);
 		  doBind(tPtr, int_term);
@@ -185,7 +185,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	  case FALSE + 2 * FALSE: // var and term is global
 	    {
 	      if (intsct == fd_singleton){
-		TaggedRef int_val = OZ_int(intsct.singl());
+		TaggedRef int_val = OZ_int(intsct.getSingleElem());
 		if (prop) {
 		  propagateUnify(var);
 		  termVar->propagateUnify(term);

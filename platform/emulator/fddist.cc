@@ -22,19 +22,19 @@ static int getSize(TaggedRef var) {
 
 inline
 static int getMin(TaggedRef var) {
-  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().minElem() : 0;
+  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMinElem() : 0;
 }
 
 inline
 static int getMax(TaggedRef var) {
-  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().maxElem() : 1;
+  return isGenFDVar(var) ? tagged2GenFDVar(var)->getDom().getMaxElem() : 1;
 }
 
 inline
 static int getMid(TaggedRef var) {
   if (isGenFDVar(var)) {
     OZ_FiniteDomain &dom = tagged2GenFDVar(var)->getDom();
-    return dom.midElem();
+    return dom.getMidElem();
   } else {
     return 0;
   }
@@ -228,7 +228,7 @@ static inline int intMax(int a, int b) { return a > b ? a : b; }
 inline
 static int getMin1(TaggedRef var) {
   if (isGenFDVar(var)) 
-    return tagged2GenFDVar(var)->getDom().minElem();
+    return tagged2GenFDVar(var)->getDom().getMinElem();
   else {
     if (isSmallInt(var))
       return OZ_intToC(var);
@@ -239,7 +239,7 @@ static int getMin1(TaggedRef var) {
 inline
 static int getMax1(TaggedRef var) {
   if (isGenFDVar(var))
-    return tagged2GenFDVar(var)->getDom().maxElem();
+    return tagged2GenFDVar(var)->getDom().getMaxElem();
   else {
     if (isSmallInt(var))
       return OZ_intToC(var);
