@@ -165,8 +165,8 @@
 	There's some good news:  If you are lazy enough that you would
 	trust the packages I built, you can just obtain a copy of my
 	?{packages} directory from <Ref.Extern
-	to="ftp://ftp.mozart-oz.org/pub/mozart/extras/packages.tgz"><File
-	>ftp://ftp.mozart-oz.org/pub/mozart/extras/packages.tgz</File
+	to="http://www.mozart-oz.org/download/mozart-ftp/extras/packages.tgz"><File
+	>http://www.mozart-oz.org/download/mozart-ftp/extras/packages.tgz</File
 	></Ref.Extern> and skip most of the following sections (in fact,
 	all but those about the msvcrt and Emacs).  Be sure to adapt
 	the included <File/tclConfig.sh/ and <File/tkConfig.sh/ files
