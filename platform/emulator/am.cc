@@ -1698,7 +1698,8 @@ void AM::resumeThread(Thread *th) {
         unsetSFlag(StopThread);
       } else {
         th->suspThreadToRunnable();
-        scheduleThread(th);
+        if (!isScheduled(th))
+          scheduleThread(th);
       }
     }
   }

@@ -48,11 +48,15 @@ public:
   void scheduleThread(Thread *th,int pri=-1);
   void scheduleThreadInline(Thread *th,int pri)
   {
+#ifdef DEBUG_CHECK
+    scheduleThread(th,pri);
+#else
     if (pri == MID_PRIORITY) {
       midQueue.enqueue(th);
     } else {
       scheduleThread(th,pri);
     }
+#endif
   }
 
   void rescheduleThread(Thread *th);
