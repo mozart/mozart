@@ -594,7 +594,6 @@ enum TypeOfConst {
   Co_Builtin,
   Co_Cell,
   Co_Space,
-  Co_Port,
 
   /* chunks must stay together and the first one
    * must be Co_Object
@@ -602,6 +601,7 @@ enum TypeOfConst {
    * NOTE: update the builtins: subtree and chunkArity !
    */
   Co_Object,
+  Co_Port,
   Co_Chunk,
   Co_Array,
   Co_Dictionary,    /* 12 */
@@ -1721,7 +1721,6 @@ Bool isProcedure(TaggedRef term)
   switch (tagged2Const(term)->getType()) {
   case Co_Abstraction:
   case Co_Builtin:
-  case Co_Port:
     return OK;
   default:
     return NO;

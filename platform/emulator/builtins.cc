@@ -500,9 +500,6 @@ OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
     case Co_Builtin:
       arity = ((BuiltinTabEntry *) rec)->getArity();
       break;
-    case Co_Port:
-      arity = 1;
-      break;
     default:
       goto typeError;
     }

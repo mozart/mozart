@@ -344,6 +344,7 @@ PrTabEntry *findCodeGName(GName *);
 
 int loadURL(TaggedRef url, OZ_Term out);
 int loadURL(char *url, OZ_Term out);
+int perdioInit();
 
 /* __PERDIOHH */
 #endif
