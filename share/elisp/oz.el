@@ -1095,15 +1095,6 @@ and initial semicolons."
 (defun oz-compiler-filter (proc string)
   (oz-filter proc string))
 
-
-(defun test ()
-  (interactive)
-  (save-excursion
-    (set-buffer "*Oz Emulator*")
-    (goto-char (process-mark (get-buffer-process "*Oz Emulator*")))
-    (insert-before-markers "xxa\n")))
-(test)
-
 (defun oz-filter (proc string)
   (let ((newbuf (process-buffer proc))
 	old-point
