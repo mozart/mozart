@@ -166,8 +166,7 @@ enum ConnectionFlags{
   ACK_MSG_INCOMMING = 64,       // incomplete on back-channel
   WRITE_CON         = 128,      // connection type is WRITE
   MY_DWN            = 256,      // Closed by me
-  TMP_PROBE         = 512,      // Probe for Perm
-  PRM_PROBE         = 1024,     // Probe for Tmp
+  REFERENCE         = 512,      // There are references to this site
   OK_PROBE          = 2048,     // Probe for Ok
   TMP_DWN           = 4096,     // Closed due to Tmp problem
   RC_READING        = 8192,     // ReadCon in midle of read
@@ -506,11 +505,13 @@ public:
     if(f==NULL) {bb=new NetByteBuffer();}
     else{GenCast(f,FreeListEntry*,bb,NetByteBuffer*);}
     bb->init();
+    ++wc;
     //printf("BB take nr:%d \n", ++wc);
     return bb;}
 
   void deleteNetByteBuffer(NetByteBuffer* bb){
     FreeListEntry *f;
+    --wc;
     //printf("BB return %d\n",--wc);
     GenCast(bb,NetByteBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
@@ -836,7 +837,7 @@ int NetMsgBuffer::getWriteLen(){
 
 class NetMsgBufferManager:public FreeListManager{
 public:
-  NetMsgBufferManager():FreeListManager(NetMsgBuffer_CUTOFF){}
+  NetMsgBufferManager():FreeListManager(NetMsgBuffer_CUTOFF){wc=0;}
 
   int wc; // for debug purposes
 
@@ -978,7 +979,6 @@ public:
   void setWriteConnection(WriteConnection *r);
   void setReadConnection(ReadConnection *r);
 
-  int discardUnsentMessage(int msgNum);
 
   void queueMessage(int size){
     Assert(totalMsgSize >=0);
@@ -1251,18 +1251,7 @@ public:
     PD((TCP_INTERFACE,"Removed from writequeue  s:%s",  remoteSite->site->stringrep()));
     clearFlag(WRITE_QUEUE);}
 
-  Bool isProbingPrm(){
-    return testFlag(TMP_PROBE | PRM_PROBE);}
-  Bool isProbingTMP(){
-    return testFlag(TMP_PROBE);}
-  void setProbingPrm(){
-    setFlag(PRM_PROBE);}
-  void setProbingTmp(){
-    setFlag(TMP_PROBE);}
-  void clearProbingPrm(){
-    clearFlag(PRM_PROBE);}
-  void clearProbingTmp(){
-    clearFlag(TMP_PROBE);}
+
   Bool isProbingOK(){
     return testFlag(OK_PROBE);}
   void setProbingOK(){
@@ -1276,6 +1265,12 @@ public:
   void clearProbing(){
     clearFlag(PROBE);}
 
+  Bool hasReferences(){
+    return testFlag(REFERENCE);}
+  void setReference(){
+    setFlag(REFERENCE);}
+  void removeReference(){
+    clearFlag(REFERENCE);}
 
   void setWantsToClose();
   void clearWantsToClose();
@@ -1300,7 +1295,6 @@ public:
     Assert(isCanClose());
     clearFlag(CAN_CLOSE);}
 
-  int discardUnsentMessage(int msgNum);
   Bool canbeClosed(){
     if(isClosing()) return FALSE;
     if(isOpening()) return FALSE;
@@ -1342,22 +1336,9 @@ public:
     sentMsg = NULL;
     sentMsgCtr =0;
     flags=WRITE_CON;
+    setReference();
     remoteSite=s;
     bytePtr = intBuffer + INT_IN_BYTES_LEN;}
-
-  void installProbe(ProbeType pt){
-    if(pt == PROBE_TYPE_PERM && !isProbingPrm()){
-      setProbingPrm();
-      return;}
-    if(pt== PROBE_TYPE_ALL && !isProbingTMP()){
-      setProbingTmp();}}
-
-  void deInstallProbe(ProbeType pt){
-    if(pt == PROBE_TYPE_PERM && isProbingPrm()){
-      clearProbingPrm();
-      return;}
-    if(pt == PROBE_TYPE_PERM && isProbingTMP()){
-      clearProbingTmp();}}
 };
 
 /************************************************************/
@@ -1477,8 +1458,7 @@ public:
 void RemoteSite::zeroReferences(){
   PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)  return;
-  writeConnection->clearProbingTmp();
-  writeConnection->clearProbingPrm();
+  writeConnection->removeReference();
   if(writeConnection->goodCloseCand() && !writeConnection->isTmpDwn() && !writeConnection->isProbing())
     writeConnection->closeConnection();
   else
@@ -1939,8 +1919,7 @@ Bool TcpCache::openMyClosedConnection(unsigned long time){
       w->clearMyInitiative();
       w->setTmpDwn();
       add(w);
-      if(w->isProbingTMP())
-        w->remoteSite->site->probeFault(PROBE_TEMP);}
+      w->remoteSite->site->probeFault(PROBE_TEMP);}
     w = (WriteConnection*) w->next;}
   w = (WriteConnection *)myTail;
   while(w!=NULL && time==0 && w->isHisInitiative())
@@ -2072,17 +2051,6 @@ public:
 /*   SECTION 15: Methods                                            */
 /**********************************************************************/
 
-int RemoteSite::discardUnsentMessage(int msgNum){
-  Message *m  = writeQueue.find(msgNum);
-  if (m != NULL){
-    NetMsgBuffer *bs = m->bs;
-    messageManager->freeMessage(m);
-    return (int) bs;}
-  // EK
-  // Should the message be looked for
-  // among the maybe sent msgs?
-  return writeConnection->discardUnsentMessage(msgNum);}
-
 
 /********************************************************
 
@@ -2114,24 +2082,6 @@ void WriteConnection::storeSentMessage(Message* m) {
   sentMsg = m;
   PD((ACK_QUEUE,"*** QUEUE CHECKED %d***",checkAckQueue()));}
 
-int WriteConnection::discardUnsentMessage(int msgNum){
-  Message *m = sentMsg;
-    if(m != NULL){
-        if(m->getMsgNum() == msgNum){
-            NetMsgBuffer *bs = m->getMsgBuffer();
-            sentMsg = m->next;
-            messageManager->freeMessage(m);
-            return (int) bs;}
-        Message *ptr = m->next;
-        while(ptr != NULL){
-          if(ptr->getMsgNum() == msgNum){
-            NetMsgBuffer *bs = ptr->getMsgBuffer();
-            m->next = ptr->next;
-            messageManager->freeMessage(ptr);
-            return (int) bs;}
-          m->next = ptr;
-          ptr = ptr->next;}}
-    return MSG_SENT;}
 
 /* *****************************************************************
             MsgBuffer operations
@@ -3531,10 +3481,7 @@ void WriteConnection::prmDwn(){
   //fprintf(stderr,"WriteConDead %s %s \n",this->remoteSite->site->stringrep(),myDSite->stringrep());
   PD((TCP,"WriteConnection is taken down fd: %d %d",fd,getFD()));
   tcpCache->remove(this);
-  if(isProbingPrm()||isProbingTMP()){
-    remoteSite->site->probeFault(PROBE_PERM);
-    clearProbingTmp();
-    clearProbingPrm();}
+  remoteSite->site->probeFault(PROBE_PERM);
 
   Message *m = sentMsg;
   sentMsg = NULL;
@@ -3629,8 +3576,7 @@ void WriteConnection::close(closeInitiator type){
   if(isClosing()) clearClosing();
   if(isOpening())
     clearOpening();
-  if(type == TMP_INITIATIVE && isProbingTMP() &&
-     !isProbingOK()){
+  if(type == TMP_INITIATIVE && !isProbingOK()){
     remoteSite->site->probeFault(PROBE_TEMP);
     setProbingOK();}
   if(type!=TMP_INITIATIVE) sentMsgCtr=0;
@@ -3657,7 +3603,7 @@ void WriteConnection::close(closeInitiator type){
     clearFD();
     tcpCache->add(this);
     return;}
-  if(isProbingOK() || isProbingPrm() || isProbingTMP()){
+  if(hasReferences()){
     clearFD();
     setProbing();
     tcpCache->add(this);
@@ -3785,8 +3731,14 @@ void IOQueue::dequeue(Message *m){
 /* SECTION 27:probes                                           */
 /************************************************************/
 
+//
+// This should be removed
+//
+
+
 ProbeReturn RemoteSite::installProbe(ProbeType pt){
-  if(siteStatus() == SITE_PERM)
+  return PROBE_INSTALLED;}
+/*if(siteStatus() == SITE_PERM)
     return PROBE_PERM;
   if(writeConnection==NULL){
     PD((TCP_INTERFACE,"try open %s",site->stringrep()));
@@ -3797,14 +3749,15 @@ ProbeReturn RemoteSite::installProbe(ProbeType pt){
   writeConnection->installProbe(pt);
   if(siteStatus() == SITE_TEMP && pt==PROBE_TYPE_ALL)
     return PROBE_TEMP;
-  return PROBE_INSTALLED;}
+    return PROBE_INSTALLED;}*/
 
 ProbeReturn RemoteSite::deInstallProbe(ProbeType pt){
-  if(siteStatus() == SITE_PERM)
+  return PROBE_DEINSTALLED;}
+/*  if(siteStatus() == SITE_PERM)
     return PROBE_DEINSTALLED;
   Assert(writeConnection!= NULL);
   writeConnection->deInstallProbe(pt);
-  return PROBE_DEINSTALLED;}
+  return PROBE_DEINSTALLED;}*/
 
 void RemoteSite::addWriteQueue(Message* m){
   if(writeConnection)
@@ -3931,7 +3884,6 @@ ipBlockSend:
 
 RemoteSite* createRemoteSite(DSite* site, int readCtr){
   RemoteSite *rSite = remoteSiteManager->allocRemoteSite(site, readCtr);
-  //(void) rSite->installProbe(PROBE_TYPE_PERM); // All site must be probed
   return rSite;
 }
 
@@ -3943,7 +3895,7 @@ void sendAck_RemoteSite(RemoteSite* rs){
   rs->sendAck();}
 
 int discardUnsentMessage_RemoteSite(RemoteSite* s,int msg){
-  return s->discardUnsentMessage(msg);}
+   return MSG_SENT;}
 SiteStatus siteStatus_RemoteSite(RemoteSite* s){
   return s->siteStatus();}
 
