@@ -1,4 +1,5 @@
 %% A replacement for Open, based on contrib/os/io
+%\define WEIRD
 
 local
    READSIZE    = 1024
@@ -32,7 +33,9 @@ in
       File Process
    define
 
+\ifdef WEIRD
       proc {NOOP _} skip end
+\endif
 
       class IOBase
          prop native locking
@@ -64,8 +67,14 @@ in
                      %% closed
                      skip
                   else
+\ifdef WEIRD
+                     {NOOP see(foo)}
+\endif
                      More = {IO.read @ReadFD}
                   in
+\ifdef WEIRD
+                     {NOOP see(foo)}
+\endif
                      if More==unit then
                         ReadFD <- unit
                      elseif Avail==0 then
@@ -75,7 +84,9 @@ in
                      else
                         %% the forced record construction is here
                         %% necessary
+\ifdef WEIRD
                         {NOOP see(foo)} %% <-- WEIRD BUG FIX
+\endif
                         if @Offset\=0 then
                            Buffer <- {ByteString.append
                                       {ByteString.slice
@@ -145,9 +156,15 @@ in
          %% acquired.
          %%
          meth !FillLine(ATLEAST)
+\ifdef WEIRD
+            {NOOP see(foo)}
+\endif
             IOBase,FillBuffer(ATLEAST)
             BUFFER = @Buffer
          in
+\ifdef WEIRD
+            {NOOP see(foo)}
+\endif
             if BUFFER==unit orelse
                {ByteString.length BUFFER}<ATLEAST orelse
                {ByteString.strchr BUFFER @Offset &\n}\=false
