@@ -147,7 +147,6 @@ void AM::init(int argc,char **argv)
 
   ozconf.init();
   osInit();
-  bigIntInit();
   initffuns();
 
   defaultExceptionHdl = makeTaggedNULL();
@@ -261,6 +260,8 @@ void AM::init(int argc,char **argv)
   initFDs();
 
   initMemoryManagement();
+
+  bigIntInit();
 
 // not changeable
   // SizeOfWorkingArea,NumberOfXRegisters,NumberOfYRegisters
