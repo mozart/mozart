@@ -47,7 +47,7 @@ CORE_MODULE_NAMES=      Run OF FS FD CPI OS Space Store Mem Pickle Support
 # CORE_LIBS=    -L. ${CORE_MODULE_NAMES:%=-l%}
 CORE_TARGETS=   ${CORE_MODULE_NAMES:%=lib%.a}
 
-CORE_LIBS=      -L.
+CORE_LIBS=
 LIBS=           $(CORE_LIBS) @LIBS@
 
 INCS=           -I. -I$(SRCDIR)
