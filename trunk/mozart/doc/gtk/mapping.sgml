@@ -121,7 +121,6 @@ end>>>
   <Section>
     <Title/Types/
     <P>
-      <!--** still incomplete -->
       <Ptr to="figure.types"> shows the mapping of the C types onto Oz types.
       Values are converted back and forth transparently, preserving identity
       whenever possible.
@@ -155,18 +154,17 @@ end>>>
     <Para class=apropos><Title/Gdk Events/
       Where a GDK event (a value of the <Code proglang=c/GdkEvent/ union
       type) appears as argument to a callback, a record is constructed using
-      the label to indicate which member it belongs to.
-      <!--** what are the subtrees? -->
+      the label to indicate which member it belongs to.  The features of the
+      record represent the corresponding event structure members.
   <Section>
     <Title/Memory Management/
     <P>
       GTK+ and GDK use reference counting garbage collection for most of
       their datastructures, and the binding safely keeps up this property
       for those items.
-    <P>
+    <Para class=apropos><Title/Manual Management/
       Some data, however, needs manual allocation and deallocation by the
       user.  These types are shown in <Ptr to="figure.manualgc">.
-      <!--** still incomplete -->
       <Figure id="figure.manualgc">
 	<Caption/Manually Managed Data Structures/
 	<Table>
