@@ -2914,7 +2914,18 @@ LBLdispatcher:
   /* The following must be different from the following,
    * otherwise definitionEnd breaks under threaded code
    */
+
   Case(GLOBALVARNAME)
+    {
+      error("under threaded code this must be different from LOCALVARNAME,");
+      error("otherwise CodeArea::adressToOpcode will not work.");
+    }
+  Case(LOCALVARNAME)
+    {
+      error("under threaded code this must be different from GLOBALVARNAME,");
+      error("otherwise CodeArea::adressToOpcode will not work.");
+    }
+
   Case(TASKCATCH)
     {
       error("impossible");
@@ -2932,8 +2943,6 @@ LBLdispatcher:
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
-  Case(LOCALVARNAME)
-
 
 #ifndef THREADED
   default:
