@@ -137,8 +137,8 @@ Bool oz_var_addSuspINLINE(TaggedRef *v, Suspension susp, int unstable = TRUE)
   case OZ_VAR_EXT:
     return ((ExtVar *) ov)->addSuspV(v, susp, unstable);
   case OZ_VAR_SIMPLE:
-    if (ozconf.onlyFutures) {
-      return oz_raise(E_ERROR,E_KERNEL,"onlySuspensionOnFutures",
+    if (ozconf.useFutures) {
+      return oz_raise(E_ERROR,E_KERNEL,"suspendNoFuture",
                       1,makeTaggedRef(v));
     }
     // fall through
