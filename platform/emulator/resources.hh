@@ -65,7 +65,11 @@
 #define HEAPFREE                  75 /* percent */
 #define HEAPTOLERANCE             20 /* percent */
 #define INITIALHEAPTHRESHOLD    2048 /* kByte   */
+#ifdef CS_PROFILE
+#define HEAPBLOCKSIZE        8*1048576 /* byte    */
+#else
 #define HEAPBLOCKSIZE        1048576 /* byte    */
+#endif
 
 #define QUEUEMINSIZE            32
 

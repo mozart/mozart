@@ -1745,6 +1745,19 @@ OZ_C_proc_begin(BIinjectSpace, 2)
 } OZ_C_proc_end
 
 
+#ifdef CS_PROFILE
+OZ_C_proc_begin(BIgetCloneDiff, 2) {
+  declareSpace();
+
+  if (space->isMerged())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
+
+  return OZ_unify(OZ_getCArg(1), space->getSolveActor()->getCloneDiff());
+} OZ_C_proc_end
+
+#endif
+
+
 #undef declareSpace
 
 
@@ -7920,6 +7933,10 @@ BIspec allSpec[] = {
   // Finalization
   {"Finalize.register",          2, BIfinalize_register,          0},
   {"Finalize.setHandler",        1, BIfinalize_setHandler,        0},
+#endif
+
+#ifdef CS_PROFILE
+  {"GetCloneDiff", 2, BIgetCloneDiff, 0},
 #endif
 
   {0,0,0,0}

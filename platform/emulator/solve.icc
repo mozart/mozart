@@ -154,6 +154,12 @@ Board *SolveActor::clone(Board *bb) {
     this->setGround();
   }
 
+#ifdef CS_PROFILE
+  ca->orig_start = cs_orig_start;
+  ca->copy_start = cs_copy_start;
+  ca->copy_size  = cs_copy_size;
+#endif
+
   return copy;
 }
 

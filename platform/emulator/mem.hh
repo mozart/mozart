@@ -37,6 +37,9 @@
 
 extern void *heapMallocOutline(size_t chunk_size);
 
+#ifdef CS_PROFILE
+extern Bool across_chunks;
+#endif
 
 class MemChunks {
 public:

@@ -15,6 +15,10 @@
 
 #include "am.hh"
 
+#ifdef CS_PROFILE
+Bool across_chunks;
+#endif
+
 // ----------------------------------------------------------------
 // heap memory
 
@@ -59,7 +63,9 @@ void *freeListMallocOutline(size_t chunk_size)
 
 void freeListDisposeOutline(void *addr, size_t chunk_size)
 {
+#ifndef CS_PROFILE
   freeListDispose(addr,chunk_size);
+#endif
 }
 
 
@@ -445,6 +451,10 @@ char *getMemFromOS(size_t sz) {
 
   //  DebugCheck(heapTotalSize > thisBlockSz/KB,
   //message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
+
+#ifdef CS_PROFILE
+  across_chunks = OK;
+#endif
 
   heapTop -= sz;
   return heapTop;
