@@ -21,9 +21,15 @@ define
 	 
       meth init(ServerPort)
 	 S P = {NewPort S}
-	 Site = {Filter {DPStatistics.siteStatistics}
-		 fun{$ M} M.state == mine end}.1
+	 Site
       in
+	 case {Filter {DPStatistics.siteStatistics}
+	       fun{$ M} M.state == mine end} of
+	    nil then skip
+	 elseof F|_ then
+	    Site = F
+	 end
+	    
 	 self.site = site(ip:Site.ip port:Site.port pid:Site.pid)
 	 self.serverPort = ServerPort
 	 {Send self.serverPort connecting(P self.site Site.siteid)}
