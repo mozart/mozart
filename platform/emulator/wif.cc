@@ -217,8 +217,12 @@ public:
     return makeTaggedSRecord(s);
   }
 
-  
-  WIF() {
+  WIF() {}
+
+  void init(int fd, TaggedRef d, TaggedRef r) {
+
+    wifInitLiterals();
+
     widget_ctr = 0;
     tag_ctr    = 0;
     var_ctr    = 0;
@@ -227,11 +231,6 @@ public:
     start         = static_buffer;
     end           = start + STRING_BUFFER_SIZE;
     buffer        = start;
-  }
-
-  void init(int fd, TaggedRef d, TaggedRef r) {
-
-    wifInitLiterals();
 
     wif_fd        = fd;
     wif_lock      = NameUnit;
