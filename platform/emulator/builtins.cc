@@ -4748,6 +4748,8 @@ OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
   }
   Cell *cell = tagged2Cell(rec);
 
+  CheckLocalBoard(cell,"cell");
+
   cell->setValue(in);
   return PROCEED;
 }
