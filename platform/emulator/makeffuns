@@ -61,12 +61,14 @@ cat >> $ozc << EOF
 EOF
 
 cat > $initffuns << EOF
+#ifdef WINDOWS
+
 #ifdef HAVE_CONFIG_H
 #include "conf.h"
 #endif
 
-#ifdef WINDOWS
-#include "types.hh"
+#include "base.hh"
+#include "oz.h"
 
 #undef _FUNDECL
 #define _FUNDECL(fun,args) ffuns[i++] = fun
