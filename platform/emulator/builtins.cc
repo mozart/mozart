@@ -3834,35 +3834,35 @@ OZ_BI_define(BIcatAccess,1,1)
     OZ_result(out);
   }
   else {
-    // Check feature is valid for current object
-    Object *self = am.getSelf();
-    if (oz_isFeature(cat) && self &&
-        getRecordFromState(self->getState())->getFeature(cat)) {
-      // Object attribute
-      RecOrCell state = self->getState();
-      OZ_Term old;
-      ret = stateAt(state,cat,old);
-      if(ret==PROCEED) {
-        OZ_RETURN(old);}
+    if (oz_isPair2(cat)) {
+      OZ_Term left = oz_left(cat);
+      DEREF(left, leftptr);
+      if (oz_isDictionary(left) || oz_isArray(left)) {
+        OZ_Term out;
+        ret = genericDot(left, oz_right(cat), out, TRUE);
+        if (ret == SUSPEND) {
+          // Must explicitly suspend on key
+          oz_suspendOn(oz_right(cat));
+        }
+        OZ_result(out);
+      }
       else {
-        OZ_result(old);}
+        // Type Error
+        oz_typeError(0,"Dict#Key, Array#Index");
+      }
     }
     else {
-      if (oz_isPair2(cat)) {
-        OZ_Term left = oz_left(cat);
-        DEREF(left, leftptr);
-        if (oz_isDictionary(left) || oz_isArray(left)) {
-          OZ_Term out;
-          ret = genericDot(left, oz_right(cat), out, TRUE);
-          if (ret == SUSPEND) {
-            // Must explicitly suspend on key
-            oz_suspendOn(oz_right(cat));
-          }
-          OZ_result(out);
-        }
+      // Check for feature
+      Object *self = am.getSelf();
+      if (self && oz_isFeature(cat)) {
+        // Object attribute
+        RecOrCell state = self->getState();
+        OZ_Term old;
+        ret = stateAt(state,cat,old);
+        if(ret==PROCEED) {
+          OZ_RETURN(old);}
         else {
-          // Type Error
-          oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");}
+          OZ_result(old);}
       }
       else {
         // Type Error
@@ -3883,16 +3883,6 @@ OZ_BI_define(BIcatAssign,2,0)
     OZ_Term oldIgnored;
     return exchangeCell(cat,value,oldIgnored);
   }
-  // Check feature is valid for current object
-  Object *self = am.getSelf();
-  if (oz_isFeature(cat) && self &&
-        getRecordFromState(self->getState())->getFeature(cat)) {
-    // Object attribute
-    CheckLocalBoard(self,"object");
-
-    RecOrCell state = self->getState();
-    return stateAssign(state,cat,value);
-  }
   if (oz_isPair2(cat)) {
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
@@ -3907,8 +3897,17 @@ OZ_BI_define(BIcatAssign,2,0)
     }
     else {
       // Type Error
-      oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+      oz_typeError(0,"Dict#Key, Array#Index");
     }
+  }
+  // Check for feature
+  Object *self = am.getSelf();
+  if (oz_isFeature(cat) && self) {
+    // Object attribute
+    CheckLocalBoard(self,"object");
+
+    RecOrCell state = self->getState();
+    return stateAssign(state,cat,value);
   }
   else {
     // Type Error
@@ -3931,37 +3930,37 @@ OZ_BI_define(BIcatExchange,2,1)
     OZ_result(old);
   }
   else {
-    // Check feature is valid for current object
-    Object *self = am.getSelf();
-    if (oz_isFeature(cat) && self &&
-        getRecordFromState(self->getState())->getFeature(cat)) {
-      // Object attribute
-      CheckLocalBoard(self,"object");
-      RecOrCell state = self->getState();
-
-      OZ_Return ret=stateExch(state,cat,old,newVal);
-      if(ret==PROCEED) {
-        OZ_RETURN(old);}
-      else{
+    if (oz_isPair2(cat)) {
+      OZ_Term left = oz_left(cat);
+      DEREF(left, leftptr);
+      // T#K pair
+      if (oz_isDictionary(left) || oz_isArray(left)) {
+        ret = genericExchange(left, oz_right(cat), newVal, old);
+        if (ret == SUSPEND) {
+          // Must explicitly suspend on key
+          oz_suspendOn(oz_right(cat));
+        }
         OZ_result(old);
-        return ret;}
-    } else {
-      if (oz_isPair2(cat)) {
-        OZ_Term left = oz_left(cat);
-        DEREF(left, leftptr);
-        // T#K pair
-        if (oz_isDictionary(left) || oz_isArray(left)) {
-          ret = genericExchange(left, oz_right(cat), newVal, old);
-          if (ret == SUSPEND) {
-            // Must explicitly suspend on key
-            oz_suspendOn(oz_right(cat));
-          }
+      }
+      else {
+        // Type Error
+        oz_typeError(0,"Dict#Key, Array#Index");
+      }
+    }
+    else {
+      // Check for feature
+      Object *self = am.getSelf();
+      if (oz_isFeature(cat) && self) {
+        // Object attribute
+        CheckLocalBoard(self,"object");
+        RecOrCell state = self->getState();
+
+        OZ_Return ret=stateExch(state,cat,old,newVal);
+        if(ret==PROCEED) {
+          OZ_RETURN(old);}
+        else{
           OZ_result(old);
-        }
-        else {
-          // Type Error
-          oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
-        }
+          return ret;}
       }
       else {
         // Type Error
