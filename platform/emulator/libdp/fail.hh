@@ -37,32 +37,9 @@
 #include "dpBase.hh"
 #include "comm.hh"
 #include "genhashtbl.hh"
+#include "interFault.hh"
 
 typedef unsigned int FaultInfo;
-
-enum WatcherKind{
-  WATCHER_RETRY      = 1,
-  WATCHER_PERSISTENT = 2,
-  WATCHER_CELL       = 4,
-  WATCHER_SITE_BASED = 8,
-  WATCHER_INJECTOR   = 16
-};
-
-enum EntityCondFlags{
-  ENTITY_NORMAL = 0,
-  PERM_BLOCKED  = 2,       
-  TEMP_BLOCKED  = 1,
-  PERM_ALL      = 4,
-  TEMP_ALL      = 8,
-  PERM_SOME     = 16,
-  TEMP_SOME     = 32,
-  PERM_ME       = 64,
-  TEMP_ME       = 128,  
-  UNREACHABLE   = 256,
-  TEMP_FLOW     = 512
-};
-
-typedef unsigned int EntityCond;
 
 class EntityInfo{
   friend class Tertiary;
@@ -298,10 +275,10 @@ void gcTwins();
 
 void initProxyForFailure(Tertiary*);
 
-OZ_Return DistHandlerInstall(SRecord*, TaggedRef);
-OZ_Return DistHandlerDeInstall(SRecord*, TaggedRef);
+OZ_Return DistHandlerInstall(SRecord*, TaggedRef,Bool &);
+OZ_Return DistHandlerDeInstall(SRecord*, TaggedRef,Bool &);
 Bool isWatcherEligible(Tertiary*);
-OZ_Return installGlobalWatcher(EntityCond,TaggedRef,int);
+Bool installGlobalWatcher(EntityCond,TaggedRef,int);
 
 
 /**********************   DeferEvents   ******************/
@@ -334,8 +311,9 @@ extern DeferElement* DeferdEvents;
 extern TaggedRef BI_defer;
 void gcDeferEvents();
 void deferProxyProbeFault(Tertiary*,int);
+
 #define IncorrectFaultSpecification oz_raise(E_ERROR,E_SYSTEM,"incorrect fault specification",0)
-#define InjectorAllredyExists oz_raise(E_ERROR,E_SYSTEM,"injector allredy exists",0)
+
 
 void maybeUnask(Tertiary*);
 Bool isVariableSpec(SRecord*);
@@ -347,6 +325,13 @@ void triggerInformsOK(InformElem**,OwnerEntry*,int,EntityCond);
 
 void maybeHandOver(EntityInfo*, TaggedRef);
 void transferWatchers(Object *o);
+
+Bool distHandlerInstallImpl(unsigned short,unsigned short,
+				 Thread*,TaggedRef,TaggedRef);
+Bool distHandlerDeInstallImpl(unsigned short,unsigned short,
+				   Thread*,TaggedRef,TaggedRef);
+
+void dealWithDeferredWatchers();
 
 /* __FAILHH */
 #endif 
