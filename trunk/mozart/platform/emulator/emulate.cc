@@ -11,7 +11,7 @@
   ------------------------------------------------------------------------
 */
 
-// Benni special...
+// Ozcar special...
 //#define STEPWITHDEBUGINFO
 //#define DEBUGMAGIC
 
@@ -278,6 +278,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
   
   if (breakflag) {
     currentThread->startStepMode();
+    currentThread->traced();
     breakflag = NO;
     debugStreamThread(currentThread);
   }
@@ -1061,19 +1062,9 @@ LBLkillToplevelThread:
       goto LBLstart;
     } else {
 
-#if 0
-      if (CTT->traceMode()) {
-	
-	TaggedRef tail = CTT->getStreamTail();
-	
-	OZ_Term debugInfo = OZ_atom("terminated");
-
-	OZ_unify(tail, debugInfo);  // that's it, stream ends here!
-      }
-#endif
       CTT->disposeRunnableThread ();
       CTT = (Thread *) NULL;
-
+      
       goto LBLstart;
     }
   }
@@ -2300,6 +2291,7 @@ LBLdispatcher:
 	   
        if (e->breakflag) {
 	 e->currentThread->startStepMode();
+         e->currentThread->traced();
 	 e->breakflag = NO;
 	 debugStreamThread(e->currentThread);
        }
@@ -2627,6 +2619,8 @@ LBLdispatcher:
 
 	  debugStreamThread(tt);
 	  unlink("/tmp/ozdebugmagic");
+          tt->startStepMode();
+          tt->traced();
 	  tt->stop();
 	}
 #endif

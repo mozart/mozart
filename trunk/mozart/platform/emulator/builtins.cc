@@ -6356,8 +6356,8 @@ OZ_C_proc_begin(BIqueryDebugState,2)
 
   return OZ_unify(out, OZ_mkTupleC("debugState",
 				   3,
-				   thread->traceMode() ? OZ_atom("traceON")
-				                       : OZ_atom("traceOFF"),
+				   thread->isTraced()  ? OZ_atom("Traced")
+				                       : OZ_atom("notTraced"),
 				   thread->stepMode()  ? OZ_atom("stepON")
 				                       : OZ_atom("stepOFF"),
 				   thread->stopped()   ? OZ_atom("stopped")
