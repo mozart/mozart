@@ -383,7 +383,12 @@ start:
  /*************/
  var_var:
 
-  /* prefer binding nonCVars to CVars */
+  /*
+   * The implemented partial order for binding variables to variables is:
+   *   local -> global
+   *   UVAR/SVAR -> CVAR (prefer binding nonCVars to CVars)
+   *   local newer -> local older
+   */
   if (isNotCVar(tag1)) {
     if ( isNotCVar(tag2) && isLocalVariable(term2) &&
 	 (!isLocalVariable(term1) || heapNewer(termPtr2,termPtr1))) {
