@@ -24,10 +24,6 @@
 
    need for thread switching is signaled by 'ThreadSwitch' S-Flag
 
-   "thread queue"
-     - has HEAD and TAIL
-     - HEAD has always the highest priority and is the next to run
-
    "current thread"
      - the currently running thread
 
@@ -59,8 +55,6 @@
      am.currentThread: pointer to the current thread
      am.rootThread: pointer to the root thread
    member data
-     next: the next thread in the thread queue
-     prev: the prev thread in the thread queue
      priority: the thread priority
                -MININT ... +MAXINT
 	       low     ... high priority
