@@ -6187,7 +6187,7 @@ redo:
     case Co_Abstraction:
       return oz_unify(out, ((Abstraction *) cc)->DBGgetGlobals());
     case Co_Object:
-      proc = am.sendHdl;
+      proc = am.sendHdl; // mm2
       goto redo;
 
     default:
@@ -6584,8 +6584,8 @@ OZ_C_proc_begin(BIsetMethApplHdl,1)
   }
 
   if (am.methApplHdl) {
-    oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-	     oz_atom("setMethApplHdl"));
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+		    oz_atom("setMethApplHdl"));
   }
 
   am.methApplHdl = preed;
@@ -6596,8 +6596,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIcomma,2)
 {
   if (!am.methApplHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
-	     oz_atom("setMethApplHdl"));
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+		    oz_atom("setMethApplHdl"));
   }
 
   oz_currentThread->pushCall(am.methApplHdl,OZ_args,2);
@@ -6615,8 +6615,8 @@ OZ_C_proc_begin(BIsetSendHdl,1)
   }
 
   if (am.sendHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
-	     oz_atom("setSendHdl"));
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
+		    oz_atom("setSendHdl"));
   }
 
   am.sendHdl = preed;
@@ -6627,7 +6627,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsend,3)
 {
   if (!am.sendHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,oz_atom("methSendHdl"));
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+		    oz_atom("methSendHdl"));
   }
 
   oz_currentThread->pushCall(am.sendHdl,OZ_args,3);
@@ -6762,8 +6763,8 @@ OZ_C_proc_begin(BIsetNewHdl,1)
   }
 
   if (am.newHdl) {
-    oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
-	     oz_atom("setNewHdl"));
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+		    oz_atom("setNewHdl"));
   }
 
   am.newHdl = preed;
@@ -6774,7 +6775,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BINew,3)
 {
   if (!am.newHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,oz_atom("setNewHdl"));
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+		    oz_atom("setNewHdl"));
   }
 
   oz_currentThread->pushCall(am.newHdl,OZ_args,3);
@@ -6829,8 +6831,8 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   }
 
   if (am.defaultExceptionHandler) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
-	     oz_atom("setDefaultExceptionHandler"));
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
+		    oz_atom("setDefaultExceptionHandler"));
   }
 
   am.defaultExceptionHandler = hdl;
@@ -6841,8 +6843,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIhandleException,1)
 {
   if (!am.sendHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
-	     oz_atom("setDefaultExceptionHandler"));
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+		    oz_atom("setDefaultExceptionHandler"));
   }
 
   oz_currentThread->pushCall(am.defaultExceptionHandler,OZ_args,2);
