@@ -671,7 +671,7 @@ the GDB commands `cd DIR' and `directory'."
        "condis" "not"
        "try" "catch" "finally" "skip" "fail"
        ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@|\\,"
+    "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@\\|\\,"
     ))
 
 (defconst oz-declare-pattern (oz-make-keywords-for-match '("declare")))
