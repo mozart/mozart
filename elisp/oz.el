@@ -65,7 +65,7 @@ starts the machine under gdb")
 (defvar oz-home (concat (or (getenv "OZHOME") "/usr/share/gs/soft/oz") "/")
   "The directory where oz is installed")
 
-(defvar oz-doc-dir (concat oz-home "doc/")
+(defvar oz-doc-dir (concat oz-home "doc/chapters/")
   "The default doc directory")
 
 (defvar oz-preview "xdvi"
@@ -276,7 +276,7 @@ Compiler buffer")
      ("Demo file"              . oz-find-demo-file)
      ("Library file"           . oz-find-lib-file)
 ;     ("Documentation (Text)"          . oz-find-docu-file)
-;     ("Documentation (DVI)"           . oz-find-dvi-file)
+     ("Documentation (DVI)"           . oz-find-dvi-file)
      )
     ("Print"
      ("region"      . oz-print-region)
@@ -653,7 +653,7 @@ the GDB commands `cd DIR' and `directory'."
 	  (mapconcat 'identity args "\\|")
 	  "\\)\\>"))
 
-(defconst oz-begin-pattern
+(setq oz-begin-pattern
       (oz-make-keywords-for-match 
 	         '(
 		   "pred" "proc" "fun"
@@ -666,7 +666,7 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-end-pattern
       (oz-make-keywords-for-match '("end" "fi" "ro")))
 
-(defconst oz-middle-pattern 
+(setq oz-middle-pattern 
       (concat (oz-make-keywords-for-match
 	       '("in" "then" "else" "elseif" "of" "elseof"))
 	      "\\|" "\\[\\]"))
@@ -678,7 +678,7 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-right-pattern "[])}]")
 
 (defvar oz-abstr-pattern "\\<proc\\>\\|\\<pred\\>\\|\\<fun\\>")
-(defvar oz-meth-pattern "\\<meth\\>\\|\\<class\\>\\|\\<create\\>")
+(setq oz-meth-pattern "\\<meth\\>\\|\\<class\\>\\|\\<create\\>")
 
 (defun oz-indent-buffer()
   (interactive)
@@ -1337,7 +1337,7 @@ OZ compiler, machine and error window")
   (interactive)
   (let ((name (read-file-name
 	       "Preview File: "
-	       (concat oz-home "doc/")
+	       oz-doc-dir
 	       nil t)))
     (if (file-exists-p name)
 	(start-process "OZ Doc" "*Preview*" oz-preview name)
