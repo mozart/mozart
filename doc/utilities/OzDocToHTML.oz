@@ -32,6 +32,13 @@ import
    Fontifier('class' noProgLang)
    Thumbnails('class')
    MathToGIF('class')
+   HTML(empty: EMPTY
+	seq: SEQ
+	common: COMMON
+	block: BLOCK
+	pcdata: PCDATA
+	verbatim: VERBATIM
+	toVirtualString)
    Property(get)
 export
    Translate
@@ -51,22 +58,6 @@ define
 
    fun {InitialCapital S}
       case S of C|Cr then {Char.toUpper C}|Cr
-      [] nil then ""
-      end
-   end
-
-   fun {MakeCDATA S}
-      '"'#S#'"'   %--** quotation marks etc.
-   end
-
-   fun {MakePCDATA S}
-      case S of C|Cr then
-	 case C of &< then &&|&l|&t|&;|{MakePCDATA Cr}
-	 [] &> then &&|&g|&t|&;|{MakePCDATA Cr}
-	 [] && then &&|&a|&m|&p|&;|{MakePCDATA Cr}
-	 [] &" then &&|&q|&u|&o|&t|&;|{MakePCDATA Cr}
-	 else C|{MakePCDATA Cr}
-	 end
       [] nil then ""
       end
    end
@@ -103,30 +94,37 @@ define
    end
 
    local
-      fun {FormatTOCLevel TOC Level TopLevel}
+      fun {MakeLIs LIs}
+	 case LIs of li(T)|(Y=ul(...))|Xr then {MakeLIs li(SEQ([T Y]))|Xr}
+	 elseof X|Xr then X|{MakeLIs Xr}
+	 [] nil then nil
+	 end
+      end
+
+      fun {FormatTOCLevel TOC Level LIss}
 	 case TOC of Entry|TOCr then N#Label#Node#Text = Entry in
-	    if N < Level then
-	       '</UL>\n'#{FormatTOCLevel TOC Level - 1 TopLevel}
+	    if N < Level then LIs1|LIs2|LIsr = LIss in
+	       {FormatTOCLevel TOC Level - 1
+		(ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))|LIs2)|LIsr}
 	    elseif N > Level then
-	       '<UL>\n'#{FormatTOCLevel TOC Level + 1 TopLevel}
-	    else
-	       '<LI><A href='#thread {MakeCDATA Node#"#"#Label} end#'>'#
-	       Text#'</A>\n'#{FormatTOCLevel TOCr Level TopLevel}
+	       {FormatTOCLevel TOC Level + 1 nil|LIss}
+	    else LIs|LIsr = LIss in
+	       {FormatTOCLevel TOCr Level
+		(li(a(href: Node#"#"#Label Text))|LIs)|LIsr}
 	    end
 	 [] nil then
-	    if Level > TopLevel then
-	       '</UL>\n'#{FormatTOCLevel TOC Level - 1 TopLevel}
-	    else ""
-	    end
+	    {FoldL LIss
+	     fun {$ In LIs} LIs1 in
+		LIs1 = case In of unit then LIs else In|LIs end
+		ul('class': [toc] SEQ({MakeLIs {Reverse LIs1}}))
+	     end unit}
 	 end
       end
    in
       fun {FormatTOC TOC}
 	 case TOC of Entry|_ then N#_#_#_ = Entry in
-	    '<UL>\n'#
-	    {FormatTOCLevel TOC N N}#
-	    '</UL>\n'
-	 [] nil then ""
+	    {FormatTOCLevel TOC N [nil]}
+	 [] nil then SEQ(nil)
 	 end
       end
    end
@@ -180,12 +178,11 @@ define
 	 % constructing the output:
 	 OutputDirectory: unit CurrentNode: unit NodeCounter: unit
 	 ToWrite: unit
-	 Out: unit
 	 % managing common attributes:
-	 Targets: unit
+	 Common: unit BodyCommon: unit
 	 ProgLang: unit
 	 % front matter:
-	 Title: unit
+	 TopTitle: unit
 	 MyAuthorDB: unit
 	 Authors: unit
 	 Meta: unit
@@ -206,8 +203,10 @@ define
 	 % for Figure:
 	 Floats: unit
 	 FigureCounters: unit
-	 % for Grammar.Alt:
+	 % for Grammar:
+	 GrammarHead: unit
 	 GrammarAltType: unit
+	 GrammarNote: unit
 	 % for List:
 	 InDescription: unit
 	 OLTypes: (X='1'|'a'|'i'|'A'|'I'|X in X)
@@ -221,68 +220,78 @@ define
 	 OutputDirectory <- Args.'out'
 	 {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
 	 MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
-	 MyMathToGIF <- {New MathToGIF.'class' init(@OutputDirectory)}
+	 MyMathToGIF <- if Args.'latexmath' then
+			   {New MathToGIF.'class' init(@OutputDirectory)}
+			else unit
+			end
 	 CurrentNode <- "index.html"
 	 NodeCounter <- 0
 	 ToWrite <- nil
-	 Out <- ""
-	 ProgLang <- [Fontifier.noProgLang]
+	 ProgLang <- Fontifier.noProgLang
 	 Labels <- {NewDictionary}
 	 ToGenerate <- nil
-	 OzDocToHTML, Process(SGML)
+	 OzDocToHTML, Process(SGML unit)
 	 OzDocToHTML, GenerateLabels()
 	 {ForAll @ToWrite
-	  proc {$ VS#File}
-	     {WriteFile VS File}
+	  proc {$ Node#File}
+	     {WriteFile
+	      '<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n'#
+	      {HTML.toVirtualString Node} File}
 	  end}
       end
-      meth PushCommon(M)
+      meth PushCommon(M OldCommon) ID Class in
+	 OldCommon = @ProgLang#@Common
 	 case {CondSelect M proglang unit} of unit then skip
 	 elseof X then
-	    ProgLang <- X|@ProgLang
+	    ProgLang <- X
 	 end
+	 ID = {CondSelect M id unit}
+	 Class = {CondSelect M 'class' unit}
+	 Common <- if ID == unit andthen Class == unit then COMMON
+		   elseif ID == unit then COMMON('class': Class)
+		   elseif Class == unit then COMMON(id: ID)
+		   else COMMON(id: ID 'class': Class)
+		   end
       end
-      meth PopCommon(M)
-	 if {HasFeature M proglang} then
-	    ProgLang <- @ProgLang.2
-	 end
+      meth PopCommon(OldCommon)
+	 ProgLang <- OldCommon.1
+	 Common <- OldCommon.2
       end
-      meth Batch(M I)
+      meth Batch(M I $)
+	 SEQ(OzDocToHTML, BatchSub(M I $))
+      end
+      meth BatchSub(M I $)
 	 if {HasFeature M I} then
 	    case M.I of S=_|_ then
-	       Out <- @Out#{MakePCDATA S}
-	    [] nil then skip
+	       PCDATA(S)|OzDocToHTML, BatchSub(M I + 1 $)
+	    [] nil then
+	       OzDocToHTML, BatchSub(M I + 1 $)
 	    elseof N then
-	       OzDocToHTML, Process(N)
+	       OzDocToHTML, Process(N $)|OzDocToHTML, BatchSub(M I + 1 $)
 	    end
-	    OzDocToHTML, Batch(M I + 1)
-	 else skip
+	 else nil
 	 end
       end
-      meth BatchCode(M I)
+      meth BatchCode(M I $)
+	 SEQ(OzDocToHTML, BatchCodeSub(M I $))
+      end
+      meth BatchCodeSub(M I $)
+	 %--** interpret <Span class=ignore>...</Span> differently
 	 if {HasFeature M I} then
-	    case M.I of S=_|_ then
-	       %--** support <Span class=ignore>...</Span>
-	       Out <- @Out#('<CODE CLASS='#M.display#'>'#
-			    {@MyFontifier
-			     enqueueVirtualString(@ProgLang.1 S '<BR>' $)}#
-			    '</CODE>')
-	    [] nil then skip
+	    case M.I of S=_|_ then VS in
+	       {@MyFontifier enqueueVirtualString(@ProgLang S '<BR>' ?VS)}
+	       code(COMMON: @Common 'class': [M.display]
+		    VERBATIM(VS))|   %--** VERBATIM?
+	       OzDocToHTML, BatchCodeSub(M I + 1 $)
+	    [] nil then
+	       OzDocToHTML, BatchCodeSub(M I + 1 $)
 	    elseof N then
-	       OzDocToHTML, Process(N)
+	       OzDocToHTML, Process(N $)|OzDocToHTML, BatchCodeSub(M I + 1 $)
 	    end
-	    OzDocToHTML, BatchCode(M I + 1)
-	 else skip
+	 else nil
 	 end
       end
-      meth Excursion(M ?VS) Saved in
-	 Saved = @Out
-	 Out <- ""
-	 OzDocToHTML, Batch(M 1)
-	 VS = @Out
-	 Out <- Saved
-      end
-      meth Process(M)
+      meth Process(M $)
 	 Tag = case {Label M} of sect0 then chapter
 	       [] sect1 then section
 	       [] sect2 then subsection
@@ -291,155 +300,163 @@ define
 	       [] 'p.level' then p
 	       elseof X then X
 	       end
+	 OldCommon
+	 Res
       in
-	 OzDocToHTML, PushCommon(M)
+	 OzDocToHTML, PushCommon(M ?OldCommon)
 	 %--------------------------------------------------------------
 	 % Processing Instructions
 	 %--------------------------------------------------------------
 	 if Tag == SGML.namePI then
 	    case M.1 of emdash then
-	       Out <- @Out#' - '
+	       VERBATIM(' - ')
 	    [] endash then
-	       Out <- @Out#'-'
+	       VERBATIM('-')
 	    [] nbsp then
-	       Out <- @Out#'&nbsp;'
+	       VERBATIM('&nbsp;')
 	    [] ellipsis then
-	       Out <- @Out#'...'
+	       VERBATIM('...')
 	    [] slash then
-	       Out <- @Out#'/'
+	       VERBATIM('/')
 	    [] ie then
-	       Out <- @Out#'i.&nbsp;e.'
+	       VERBATIM('i.&nbsp;e.')
 	    [] wrt then
-	       Out <- @Out#'w.&nbsp;r.&nbsp;t.'
+	       VERBATIM('w.&nbsp;r.&nbsp;t.')
 	    [] eg then
-	       Out <- @Out#'e.&nbsp;g.'
+	       VERBATIM('e.&nbsp;g.')
 	    [] resp then
-	       Out <- @Out#'resp.'
+	       VERBATIM('resp.')
 	    [] 'PI:LATEX' then
-	       Out <- @Out#'LaTeX'
+	       VERBATIM('LaTeX')
 	    [] 'PI:EG' then
-	       Out <- @Out#'e.&nbsp;g.'
+	       VERBATIM('e.&nbsp;g.')
 	    else
 	       {Exception.raiseError
-		ozDoc(sgmlToHTML unsupportedProcessingInstruction M.1)}
+		ozDoc(sgmlToHTML unsupportedProcessingInstruction M.1)} unit
 	    end
 	 else
 	    %-----------------------------------------------------------
 	    % Document Structure
 	    %-----------------------------------------------------------
-	    case Tag of book then
+	    case Tag of book then HTML in
 	       Floats <- nil
 	       FigureCounters <- {NewDictionary}
 	       MyBibliographyDB <- {New BibliographyDB.'class'
 				    init(@OutputDirectory)}
 	       BibNode <- _
-	       OzDocToHTML, Process(M.1=front(...))
-	       if {HasFeature M 3} then
-		  OzDocToHTML, Process(M.3=back(...))
-	       end
-	       OzDocToHTML, Process(M.2='body'(...))
-	       case {@MyBibliographyDB process($)} of unit then skip
-	       elseof VS then Title Label X in
-		  Title = 'Bibliography'
-		  OzDocToHTML, CheckBibNode(Title ?X)
-		  ToGenerate <- Label|@ToGenerate
-		  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
-		  @BibNode = @CurrentNode
-		  Out <- @Out#('<H1><A name='#thread {MakeCDATA Label} end#'>'#
-			       Title#'</A></H1>\n'#VS)
-		  OzDocToHTML, PopNode(X)
-	       end
-	       OzDocToHTML, EndNode()
+	       HTML = [OzDocToHTML, Process(M.1=front(...) $)
+		       if {HasFeature M 3} then
+			  OzDocToHTML, Process(M.3=back(...) $)
+		       else EMPTY
+		       end
+		       OzDocToHTML, Process(M.2='body'(...) $)
+		       case {@MyBibliographyDB process($)} of unit then EMPTY
+		       elseof VS then Title Label X HTML1 HTML in
+			  Title = PCDATA('Bibliography')
+			  OzDocToHTML, PrepareBibNode(?X ?HTML1)
+			  ToGenerate <- Label|@ToGenerate
+			  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
+			  @BibNode = @CurrentNode
+			  HTML = SEQ([HTML1
+				      h1(a(name: Label Title))
+				      VERBATIM(VS)])   %--** VERBATIM?
+			  OzDocToHTML, FinishNode(Title X HTML $)
+		       end]
+	       OzDocToHTML, MakeNode(@TopTitle SEQ(HTML))
 	       {@MyFontifier process(case @FontifyMode
 				     of color then 'html-color'
 				     [] mono then 'html-mono'
 				     [] stylesheets then 'html-stylesheets'
 				     end)}
+	       unit
 	    %-----------------------------------------------------------
 	    % Front and Back Matter
 	    %-----------------------------------------------------------
-	    [] front then
+	    [] front then HTML in
 	       Authors <- nil
 	       MyAuthorDB <- {New AuthorDB.'class' init()}
 	       Meta <- {NewDictionary}
-	       OzDocToHTML, Batch(M 1)
-	       OzDocToHTML, StartNode(@Title)
-	       Out <- @Out#'<H1 align=center class=title>'#@Title#'</H1>\n'
-	       case @Authors of nil then skip
-	       else
-		  Out <- @Out#('\n<H2 align=center class=authors>\n'#
-			       OzDocToHTML, FormatAuthors($)#
-			       '</H2>')
-	       end
-	       case @Comic of unit then skip
-	       elseof M then
-		  Out <- @Out#'<P>'
-		  OzDocToHTML, Process(M)
-		  Out <- @Out#'</P>'
-	       end
-	       case @Abstract of unit then skip
-	       elseof A then
-		  Out <- @Out#('<BLOCKQUOTE>\n'#
-			       A#
-			       '</BLOCKQUOTE>\n')
-	       end
+	       OzDocToHTML, Batch(M 1 ?HTML)
+	       'div'(COMMON: @Common
+		     h1(align: center 'class': [title] @TopTitle)
+		     HTML
+		     case @Authors of nil then EMPTY
+		     else
+			h2(align: center 'class': [authors]
+			   OzDocToHTML, FormatAuthors($))
+		     end
+		     case @Comic of unit then EMPTY
+		     elseof M then p(OzDocToHTML, Process(M $))
+		     end
+		     case @Abstract of unit then EMPTY
+		     elseof A then A
+		     end)
 	    [] title then
-	       Title <- OzDocToHTML, Excursion(M $)
+	       TopTitle <- span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	       EMPTY
 	    [] author then
 	       Authors <- {Append @Authors
-			   [author(name: OzDocToHTML, Excursion(M $))]}
+			   [author(name: OzDocToHTML, Process(M $))]}
+	       EMPTY
 	    [] 'author.extern' then
 	       Authors <- {Append @Authors
 			   [{@MyAuthorDB get(M.to M.key $)}]}
+	       EMPTY
 	    [] meta then
 	       {Dictionary.put @Meta M.name
 		{Append {Dictionary.condGet @Meta M.name nil}
 		 [{String.toAtom M.value}]}}
+	       EMPTY
 	    [] abstract then
-	       Abstract <- OzDocToHTML, Excursion(M $)
+	       Abstract <- blockquote(COMMON: @Common
+				      OzDocToHTML, Batch(M 1 $))
+	       EMPTY
 	    [] back then
-	       OzDocToHTML, Batch(M 1)
+	       OzDocToHTML, Batch(M 1 $)
 	    [] 'bib.extern' then BibKey in
 	       {@MyBibliographyDB get(M.to M.key ?BibKey)}
 	       case {CondSelect M id unit} of unit then skip
 	       elseof L then
-		  OzDocToHTML, ID(L @BibNode BibKey)
+		  OzDocToHTML, ID(L @BibNode VERBATIM(BibKey))
 	       end
+	       EMPTY
 	    %-----------------------------------------------------------
 	    % Body and Sectioning Elements
 	    %-----------------------------------------------------------
 	    [] 'body' then
+	       BodyCommon <- @Common
 	       TOC <- nil
 	       TOCMode <- false
 	       Part <- 0
 	       Chapter <- 0
 	       Appendix <- false
-	       OzDocToHTML, Batch(M 1)
-	    [] part then Title X in
+	       OzDocToHTML, Batch(M 1 $)
+	    [] part then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
 	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Excursion(M.1 $)
+			  OzDocToHTML, Batch(M.1 1 $)
 		       else unit
 		       end
-	       OzDocToHTML, CheckNode(M Title ?X)
+	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle(""
 				      fun {$}
 					 Part <- @Part + 1
 					 'Part&nbsp;'#{RomanU @Part}
 				      end
 				      ': ' Title
-				      fun {$ VS}
-					 '<H1 align=center class=part>'#VS#
-					 '</H1>\n'
+				      fun {$ N}
+					 h1(align: center 'class': [part] N)
 				      end
-				      M 1)
-	       OzDocToHTML, Batch(M 2)
-	       OzDocToHTML, PopNode(X)
-	    [] chapter then Title X in
+				      M 1 ?HTML2 ?NodeTitle)
+	       OzDocToHTML, Batch(M 2 ?HTML3)
+	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
+							 HTML2 HTML3) ?HTML4)
+	       SEQ([HTML1 HTML4])
+	    [] chapter then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
 	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Excursion(M.1 $)
+			  OzDocToHTML, Batch(M.1 1 $)
 		       else unit
 		       end
-	       OzDocToHTML, CheckNode(M Title ?X)
+	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle('Chapter&nbsp;'
 				      fun {$}
 					 Chapter <- @Chapter + 1
@@ -448,16 +465,18 @@ define
 					 @Chapter
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H1>'#VS#'</H1>\n' end
-				      M 2)
-	       OzDocToHTML, Batch(M 2)
-	       OzDocToHTML, PopNode(X)
-	    [] appendix then Title X in
+				      fun {$ N} h1(N) end
+				      M 2 ?HTML2 ?NodeTitle)
+	       OzDocToHTML, Batch(M 2 ?HTML3)
+	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
+							 HTML2 HTML3) ?HTML4)
+	       SEQ([HTML1 HTML4])
+	    [] appendix then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
 	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Excursion(M.1 $)
+			  OzDocToHTML, Batch(M.1 1 $)
 		       else unit
 		       end
-	       OzDocToHTML, CheckNode(M Title ?X)
+	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       if @Appendix then skip
 	       else
 		  Appendix <- true
@@ -471,16 +490,18 @@ define
 					 {Alpha @Chapter}
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H1>'#VS#'</H1>\n' end
-				      M 2)
-	       OzDocToHTML, Batch(M 2)
-	       OzDocToHTML, PopNode(X)
-	    [] section then Title X in
+				      fun {$ N} h1(N) end
+				      M 2 ?HTML2 ?NodeTitle)
+	       OzDocToHTML, Batch(M 2 ?HTML3)
+	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
+							 HTML2 HTML3) ?HTML4)
+	       SEQ([HTML1 HTML4])
+	    [] section then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
 	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Excursion(M.1 $)
+			  OzDocToHTML, Batch(M.1 1 $)
 		       else unit
 		       end
-	       OzDocToHTML, CheckNode(M Title ?X)
+	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle('Section&nbsp;'
 				      fun {$}
 					 Section <- @Section + 1
@@ -490,16 +511,18 @@ define
 					 end#'.'#@Section
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H2>'#VS#'</H2>\n' end
-				      M 3)
-	       OzDocToHTML, Batch(M 2)
-	       OzDocToHTML, PopNode(X)
-	    [] subsection then Title X in
+				      fun {$ N} h2(N) end
+				      M 3 ?HTML2 ?NodeTitle)
+	       OzDocToHTML, Batch(M 2 ?HTML3)
+	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
+							 HTML2 HTML3) ?HTML4)
+	       SEQ([HTML1 HTML4])
+	    [] subsection then Title X HTML1 HTML2 HTML3 HTML4 NodeTitle in
 	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Excursion(M.1 $)
+			  OzDocToHTML, Batch(M.1 1 $)
 		       else unit
 		       end
-	       OzDocToHTML, CheckNode(M Title ?X)
+	       OzDocToHTML, PrepareNode(M ?X ?HTML1)
 	       OzDocToHTML, MakeTitle('Section&nbsp;'
 				      fun {$}
 					 SubSection <- @SubSection + 1
@@ -508,39 +531,38 @@ define
 					 end#'.'#@Section#'.'#@SubSection
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H3>'#VS#'</H3>\n' end
-				      M 4)
-	       OzDocToHTML, Batch(M 2)
-	       OzDocToHTML, PopNode(X)
+				      fun {$ N} h3(N) end
+				      M 4 ?HTML2 ?NodeTitle)
+	       OzDocToHTML, Batch(M 2 ?HTML3)
+	       OzDocToHTML, FinishNode(NodeTitle X 'div'(COMMON: @Common
+							 HTML2 HTML3) ?HTML4)
+	       SEQ([HTML1 HTML4])
 	    [] subsubsection then Title in
 	       Title = case {Label M.1} of title then
-			  OzDocToHTML, Excursion(M.1 $)
+			  OzDocToHTML, Batch(M.1 1 $)
 		       else unit
 		       end
-	       Out <- @Out#'<H4>'#Title#'</H4>\n'
-	       OzDocToHTML, Batch(M 2)
+	       'div'(COMMON: @Common
+		     h4(Title)
+		     OzDocToHTML, Batch(M 2 $))
 	    %-----------------------------------------------------------
 	    % Paragraphs
 	    %-----------------------------------------------------------
 	    [] p then
-	       Out <- @Out#'<P>\n'
-	       if {SGML.isOfClass M warning} then
-		  Out <- @Out#'<STRONG>Warning:</STRONG> '
-	       end
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</P>\n'
+	       p(COMMON: @Common
+		 if {SGML.isOfClass M warning} then strong(PCDATA('Warning:'))
+		 else EMPTY
+		 end
+		 OzDocToHTML, Batch(M 1 $))
 	    [] para then
-	       %--** check for class=apropos?
-	       Out <- @Out#'<P class=margin>'
-	       OzDocToHTML, Batch(M.1=title(...) 1)
-	       Out <- @Out#'</P>\n<P>\n'
-	       OzDocToHTML, Batch(M 2)
-	       Out <- @Out#'</P>\n'
+	       %--** copy common attributes from title element to the p element
+	       SEQ([p('class': [margin]
+		      OzDocToHTML, Batch(M.1=title(...) 1 $))
+		    p(COMMON: @Common
+		      OzDocToHTML, Batch(M 2 $))])
 	    [] 'div' then
-	       %--** do more here?
-	       % E.g., format some of these with a different background
-	       % color
-	       OzDocToHTML, Batch(M 1)
+	       'div'(COMMON: @Common
+		     OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
 	    % Lists
 	    %-----------------------------------------------------------
@@ -550,40 +572,36 @@ define
 		  {Exception.raiseError
 		   ozDoc(sgmlToHTML notImplemented M continues)}   %--**
 	       end
-	       if {Label M.1} == entry then X in
-		  Out <- @Out#'</P><DL>\n'
+	       if {Label M.1} == entry then X HTML in
 		  X = @InDescription
 		  InDescription <- true
-		  OzDocToHTML, Batch(M 1)
+		  OzDocToHTML, Batch(M 1 ?HTML)
 		  InDescription <- X
-		  Out <- @Out#'</DL><P>\n'
-	       elseif {HasFeature M enum} then X Y in
-		  Out <- @Out#('</P><OL type='#@OLTypes.1#
-			       case {CondSelect M n unit} of unit then ""
-			       elseof I then ' start='#I
-			       end#'>\n')
+		  BLOCK(dl(COMMON: @Common HTML))
+	       elseif {HasFeature M enum} then X Y HTML in
 		  X = @InDescription
 		  InDescription <- false
 		  Y = @OLTypes
 		  OLTypes <- Y.2
-		  OzDocToHTML, Batch(M 1)
+		  OzDocToHTML, Batch(M 1 ?HTML)
 		  OLTypes <- Y
 		  InDescription <- X
-		  Out <- @Out#'</OL><P>\n'
+		  BLOCK(ol(COMMON: @Common
+			   type: @OLTypes.1
+			   start: {CondSelect M n unit}
+			   HTML))
 	       elseif {HasFeature M n} then
 		  {Exception.raiseError
-		   ozDoc(sgmlToHTML illegalAttributes M)}
-	       else X in
-		  Out <- @Out#'</P><UL>\n'
+		   ozDoc(sgmlToHTML illegalAttributes M)} unit
+	       else X HTML in
 		  X = @InDescription
 		  InDescription <- false
-		  OzDocToHTML, Batch(M 1)
+		  OzDocToHTML, Batch(M 1 ?HTML)
 		  InDescription <- X
-		  Out <- @Out#'</UL><P>\n'
+		  BLOCK(ul(COMMON: @Common HTML))
 	       end
-	    [] entry then ClassName in
-	       Out <- @Out#'<DT>'
-	       OzDocToHTML, Batch(M.1 1)
+	    [] entry then HTML1 ClassName HTML2 in
+	       OzDocToHTML, Batch(M.1 1 ?HTML1)
 	       ClassName = {FoldLTail
 			    {FoldR EntryClasses
 			     fun {$ C#T In}
@@ -592,379 +610,336 @@ define
 			    fun {$ In T|Tr}
 			       In#T#case Tr of nil then "" else ' ' end
 			    end ""}
-	       case ClassName of "" then skip
-	       else
-		  Out <- @Out#'&nbsp;[<I>'#ClassName#'</I>]'
-	       end
-	       Out <- @Out#'</DT>'
+	       HTML2 = case ClassName of "" then EMPTY
+		       else
+			  SEQ([VERBATIM('&nbsp;')
+			       PCDATA('[') i(PCDATA(ClassName)) PCDATA(']')])
+		       end
+	       dt(COMMON: @Common HTML1 HTML2)
 	    [] synopsis then
-	       Out <- @Out#'<DD><BLOCKQUOTE>\n'
-	       %--** suppress justification
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</BLOCKQUOTE></DD>\n'
+	       dd(COMMON: @Common
+		  'class': [synopsis]
+		  blockquote(OzDocToHTML, Batch(M 1 $)))
 	    [] item then
 	       if @InDescription then
-		  Out <- @Out#'<DD>\n'
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#'</DD>\n'
+		  dd(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       else
-		  Out <- @Out#'<LI>\n'
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#'</LI>\n'
+		  li(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       end
 	    %-----------------------------------------------------------
 	    % Math
 	    %-----------------------------------------------------------
-	    [] math then Display in
+	    [] math then Display HTML in
 	       Display = case @MathDisplay of unit then M.display
 			 elseof X then X
 			 end
-	       case Display of display then
-		  Out <- @Out#'</P><BLOCKQUOTE><P>'
-	       [] inline then skip
-	       end
 	       case M.type of 'LATEX' then FileName in
-		  {@MyMathToGIF convertLaTeX(M.1 Display ?FileName)}
-		  Out <- @Out#('<IMG src='#{MakeCDATA FileName}#
-			       ' alt='#{MakeCDATA M.1}#'>')
+		  case @MyMathToGIF of unit then
+		     HTML = code(PCDATA(M.1))
+		  else
+		     {@MyMathToGIF convertLaTeX(M.1 Display ?FileName)}
+		     HTML = img(src: FileName alt: M.1)
+		  end
 	       [] 'HTML' then
-		  Out <- @Out#M.1
+		  HTML = VERBATIM(M.1)
 	       else
 		  {Exception.raiseError
 		   ozDoc(sgmlToHTML unsupportedMathNotation M)}   %--**
 	       end
 	       case Display of display then
-		  Out <- @Out#'</P></BLOCKQUOTE><P>'
-	       [] inline then skip
+		  BLOCK(blockquote(COMMON: @Common p(HTML)))
+	       [] inline then
+		  span(COMMON: @Common HTML)
 	       end
 	    [] 'math.extern' then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
-	    [] 'math.choice' then
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
+	    [] 'math.choice' then HTML in
 	       MathDisplay <- M.display
-	       OzDocToHTML, Process(M.1)   %--** make better choice
+	       OzDocToHTML, Process(M.1 ?HTML)   %--** make better choice
 	       MathDisplay <- unit
+	       HTML
 	    %-----------------------------------------------------------
 	    % Picture Element
 	    %-----------------------------------------------------------
 	    [] picture then
-	       {Exception.raiseError ozdoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozdoc(sgmlToHTML unsupported M)} unit   %--**
 	    [] 'picture.extern' then
-	       case {CondSelect M type unit} of 'gif' then Display IAlign in
+	       case {CondSelect M type unit} of 'gif' then Display HTML in
 		  Display = case @PictureDisplay of unit then M.display
 			    elseof X then X
 			    end
-		  case Display of display then
-		     Out <- @Out#'</P>\n'
-		     IAlign = if {SGML.isOfClass M left} then left
-			      elseif {SGML.isOfClass M right} then right
-			      else center
-			      end
-		     if IAlign \= unit then
-			Out <- @Out#'<DIV align='#IAlign#'>'
-		     end
-		  [] inline then skip
-		  end
-		  if {SGML.isOfClass M thumbnail} then ThumbnailName in
-		     {@MyThumbnails get(M.to ?ThumbnailName)}
-		     Out <- @Out#('<A href='#{MakeCDATA M.to}#'>'#
-				  '<IMG src='#{MakeCDATA ThumbnailName}#
-				  ' alt=""></A>')
-		  else
-		     Out <- @Out#'<IMG src='#{MakeCDATA M.to}#' alt="">'
-		  end
-		  case Display of display then
-		     if IAlign \= unit then
-			Out <- @Out#'</DIV>'
-		     end
-		     Out <- @Out#'<P>\n'
-		  [] inline then skip
+		  HTML = if {SGML.isOfClass M thumbnail} then ThumbnailName in
+			    {@MyThumbnails get(M.to ?ThumbnailName)}
+			    a(href: M.to
+			      img(COMMON: @Common src: ThumbnailName alt: ''))
+			 else
+			    img(COMMON: @Common src: M.to alt: '')
+			 end
+		  case Display of display then Align in
+		     Align = if {SGML.isOfClass M left} then left
+			     elseif {SGML.isOfClass M right} then right
+			     else center
+			     end
+		     BLOCK('div'(align: Align HTML))
+		  [] inline then HTML
 		  end
 	       [] unit then
 		  %--** the notation should be derived from the file name
 		  {Exception.raiseError
-		   ozDoc(sgmlToHTML unspecifiedPictureNotation M)}
+		   ozDoc(sgmlToHTML unspecifiedPictureNotation M)} unit
 	       else
 		  {Exception.raiseError
-		   ozDoc(sgmlToHTML unsupportedPictureNotation M)}   %--**
+		   ozDoc(sgmlToHTML unsupportedPictureNotation M)} unit   %--**
 	       end
-	    [] 'picture.choice' then
+	    [] 'picture.choice' then HTML in
+	       %--** propagate common attributes
 	       PictureDisplay <- M.display
-	       OzDocToHTML, Process(M.1)   %--** make better choice
+	       OzDocToHTML, Process(M.1 ?HTML)   %--** make better choice
 	       PictureDisplay <- unit
+	       HTML
 	    %-----------------------------------------------------------
 	    % Code
 	    %-----------------------------------------------------------
-	    [] code then
-	       case M.display of display then
-		  Out <- @Out#'</P><BLOCKQUOTE><P>'
-	       [] inline then skip
+	    [] code then HTML in
+	       OzDocToHTML, BatchCode(M 1 ?HTML)
+	       case M.display of display then BLOCK(blockquote(p(HTML)))
+	       [] inline then HTML
 	       end
-	       OzDocToHTML, BatchCode(M 1)
-	       case M.display of display then
-		  Out <- @Out#'</P></BLOCKQUOTE><P>'
-	       [] inline then skip
-	       end
-	    [] 'code.extern' then
+	    [] 'code.extern' then HTML in
 	       %--** class=linenumbers
+	       HTML = VERBATIM({@MyFontifier   %--** VERBATIM?
+				enqueueFile(@ProgLang M.to '\n' $)})
 	       case M.display of display then
-		  Out <- @Out#'</P><BLOCKQUOTE><PRE>\n'
-	       [] inline then
-		  Out <- @Out#'<CODE>'
-	       end
-	       Out <- @Out#({@MyFontifier
-			     enqueueFile(@ProgLang.1 M.to '\n' $)})
-	       case M.display of display then
-		  Out <- @Out#'</PRE></BLOCKQUOTE><P>'
-	       [] inline then
-		  Out <- @Out#'</CODE>'
+		  BLOCK(blockquote(COMMON: @Common pre(HTML)))
+	       [] inline then code(COMMON: @Common HTML)
 	       end
 	    [] var then
-	       case M.type of prog then
-		  Out <- @Out#"<CODE>"
-		  Out <- @Out#case {CondSelect M mode unit} of unit then ""
-			      [] 'in' then '+'
-			      [] out then '?'
-			      [] cin then '*'
-			      [] cnin then '$'
-			      end
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#"</CODE>"
+	       case M.type of prog then Annotation in
+		  Annotation = case {CondSelect M mode unit} of unit then ""
+			       [] 'in' then '+'
+			       [] out then '?'
+			       [] cin then '*'
+			       [] cnin then '$'
+			       end
+		  code(COMMON: @Common
+		       PCDATA(Annotation)
+		       OzDocToHTML, Batch(M 1 $))
 	       [] meta then
-		  Out <- @Out#"<I>"
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#"</I>"
+		  i(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       [] env then
-		  Out <- @Out#"<CODE>"
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#"</CODE>"
+		  code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       [] grammar then
-		  Out <- @Out#"&lt;<I>"
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#"</I>&gt;"
+		  span(COMMON: @Common
+		       PCDATA('<')
+		       i(OzDocToHTML, Batch(M 1 $))
+		       PCDATA('>'))
 	       end
 	    %-----------------------------------------------------------
 	    % Cross References
 	    %-----------------------------------------------------------
 	    [] ref then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    [] 'ref.extern' then
 	       %--** key attribute?
-	       Out <- @Out#'<A href='#{MakeCDATA M.to}#'>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</A>'
-	    [] ptr then Node VS in
-	       OzDocToHTML, ID(M.to ?Node ?VS)
-	       Out <- @Out#('<A href='#
-			    thread {MakeCDATA Node#"#"#M.to} end#
-			    '>'#VS#'</A>')
+	       a(COMMON: @Common href: M.to OzDocToHTML, Batch(M 1 $))
+	    [] ptr then Node HTML in
+	       OzDocToHTML, ID(M.to ?Node ?HTML)
+	       a(COMMON: @Common href: Node#"#"#M.to HTML)
 	    [] 'ptr.extern' then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    %-----------------------------------------------------------
 	    % Phrasal Elements
 	    %-----------------------------------------------------------
 	    [] file then
-	       Out <- @Out#'<CODE>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</CODE>'
+	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] kbd then
-	       Out <- @Out#'<KBD>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</KBD>'
+	       kbd(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] key then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    [] samp then
-	       Out <- @Out#'<CODE>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</CODE>'
+	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] name then
-	       %--** format differently, depending on class?
-	       OzDocToHTML, Batch(M 1)
+	       span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] q then
 	       %--** use different quotes, depending on class and/or lang?
 	       if {SGML.isOfClass M terminal} then
-		  Out <- @Out#'"'
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#'"'
+		  span(COMMON: @Common
+		       PCDATA('"') OzDocToHTML, Batch(M 1 $) PCDATA('"'))
 	       elseif {SGML.isOfClass M quasi} then
-		  Out <- @Out#'`'
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#'\''
+		  span(COMMON: @Common
+		       PCDATA('`') OzDocToHTML, Batch(M 1 $) PCDATA('\''))
 	       else
-		  Out <- @Out#'``'
-		  OzDocToHTML, Batch(M 1)
-		  Out <- @Out#'\'\''
+		  span(COMMON: @Common
+		       PCDATA('``') OzDocToHTML, Batch(M 1 $) PCDATA('\'\''))
 	       end
 	    [] span then
-	       if {SGML.isOfClass M ignore} then skip
-	       else
-		  OzDocToHTML, Batch(M 1)
-	       end
+	       span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] def then
-	       Out <- @Out#'<EM>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</EM>'
+	       em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
 	    % Figure
 	    %-----------------------------------------------------------
 	    [] figure then
 	       if {HasFeature M float} then
 		  Floats <- {Append @Floats [M]}
+		  EMPTY
 	       else
-		  Out <- @Out#'</P>'
-		  OzDocToHTML, OutputFigure(M)
-		  Out <- @Out#'<P>'
+		  BLOCK(OzDocToHTML, OutputFigure(M $))
 	       end
 	    [] caption then
-	       {Exception.raiseError ozDoc(sgmlToHTML internalError M)}
+	       {Exception.raiseError ozDoc(sgmlToHTML internalError M)} unit
 	    %-----------------------------------------------------------
 	    % Note
 	    %-----------------------------------------------------------
 	    [] note then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    %-----------------------------------------------------------
 	    % Index
 	    %-----------------------------------------------------------
 	    [] index then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    [] and then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    [] see then
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    %-----------------------------------------------------------
 	    % BNF Markup
 	    %-----------------------------------------------------------
-	    [] 'grammar.rule' then X in
-	       %--** display attribute?
-	       Out <- @Out#'</P><TABLE border=0 cellpadding=0 cellspacing=0>\n'
-	       Out <- @Out#'<TR valign=top><TD>'
-	       OzDocToHTML, Process(M.1)
-	       Out <- @Out#'</TD>\n'
-	       X = @GrammarAltType
+	    [] 'grammar.rule' then X HTML in
+	       %--** respect the display attribute?
+	       X = @GrammarAltType#@GrammarHead
 	       GrammarAltType <- def
-	       OzDocToHTML, Batch(M 2)
-	       GrammarAltType <- X
-	       Out <- @Out#'</TABLE><P>\n'
+	       GrammarHead <- OzDocToHTML, Process(M.1 $)
+	       OzDocToHTML, Batch(M 2 ?HTML)
+	       GrammarAltType <- X.1
+	       GrammarHead <- X.2
+	       BLOCK(table(COMMON: @Common
+			   border: 0 cellpadding: 0 cellspacing: 0
+			   HTML))
 	    [] 'grammar.head' then
-	       OzDocToHTML, Batch(M 1)
-	    [] 'grammar.alt' then
-	       Out <- @Out#case {CondSelect M type @GrammarAltType} of def then
-			      '<TD align=center>&nbsp;::=&nbsp;'
-			   [] add then
-			      '<TD align="center">&nbsp;+=&nbsp;'
-			   [] 'or' then
-			      '<TR valign=top>'#
-			      '<TD></TD><TD align=center>&nbsp;|&nbsp;'
-			   [] space then
-			      '<TR valign=top>'#
-			      '<TD></TD><TD align=center>'
-			   end
+	       span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    [] 'grammar.alt' then HTML1 HTML2 in
+	       HTML1 = case {CondSelect M type @GrammarAltType} of def then
+			  SEQ([td(@GrammarHead)
+			       td(align: center VERBATIM('&nbsp;::=&nbsp;'))])
+		       [] add then
+			  SEQ([td(@GrammarHead)
+			       td(align: center VERBATIM('&nbsp;+=&nbsp;'))])
+		       [] 'or' then
+			  SEQ([td()
+			       td(align: center VERBATIM('&nbsp;|&nbsp;'))])
+		       [] space then
+			  SEQ([td() td()])
+		       end
 	       GrammarAltType <- 'or'
-	       Out <- @Out#'</TD><TD>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</TD>\n'
+	       OzDocToHTML, Batch(M 1 ?HTML2)
+	       tr(COMMON: @Common valign: top
+		  HTML1
+		  td(HTML2)
+		  case @GrammarNote of unit then EMPTY
+		  elseof N then GrammarNote <- unit N
+		  end)
 	    [] 'grammar.note' then
-	       Out <- @Out#'<TD align=left><I>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% '
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</I></TD>'
+	       GrammarNote <- td(COMMON: @Common align: left
+				 i(VERBATIM('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;% ')
+				   OzDocToHTML, Batch(M 1 $)))
+	       EMPTY
 	    [] 'grammar' then
-	       OzDocToHTML, Batch(M 1)
+	       'div'(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
 	    % Tables
 	    %-----------------------------------------------------------
 	    [] table then Title Mr in
 	       %--** display attribute
 	       Title = {SGML.getSubtree M title ?Mr}
-	       Out <- @Out#'</P>'
-	       case Title of unit then skip
-	       else
-		  Out <- @Out#'<P align=center><B>'
-		  OzDocToHTML, Batch(Title 1)
-		  Out <- @Out#'</B></P>\n'
-	       end
-	       Out <- @Out#('<TABLE align=center border='#
-			    if {SGML.isOfClass M dyptic} then 0 else 1 end#
-			    '>\n')
-	       OzDocToHTML, Batch(Mr 1)
-	       Out <- @Out#'</TABLE><P>\n'
+	       BLOCK(table(COMMON: @Common
+			   align: center
+			   border: if {SGML.isOfClass M dyptic} then 0
+				   else 1
+				   end
+			   case Title of unit then EMPTY
+			   else
+			      p(align: center b(OzDocToHTML, Batch(Title 1 $)))
+			   end
+			   OzDocToHTML, Batch(Mr 1 $)))
 	    [] tr then
-	       Out <- @Out#'<TR valign=top>\n'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</TR>\n'
+	       tr(COMMON: @Common valign: top OzDocToHTML, Batch(M 1 $))
 	    [] th then
-	       Out <- @Out#('<TH'#
-			    case {CondSelect M colspan unit} of unit then ""
-			    elseof S then ' colspan='#{MakeCDATA S}
-			    end#
-			    '>\n')
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</TH>\n'
+	       th(COMMON: @Common
+		  colspan: {CondSelect M colspan unit}
+		  OzDocToHTML, Batch(M 1 $))
 	    [] td then
-	       Out <- @Out#('<TD'#
-			    case {CondSelect M colspan unit} of unit then ""
-			    elseof S then ' colspan='#{MakeCDATA S}
-			    end#
-			    '>\n')
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</TD>\n'
+	       td(COMMON: @Common
+		  colspan: {CondSelect M colspan unit}
+		  OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
 	    %--** gump.sgml Specials
 	    %-----------------------------------------------------------
 	    [] comic then
 	       Comic <- M.1
+	       EMPTY
 	    [] em then
-	       Out <- @Out#'<EM>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</EM>'
+	       em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
 	    %--** ozdoc.sgml Specials
 	    %-----------------------------------------------------------
 	    [] tag then
-	       Out <- @Out#'<CODE>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</CODE>'
+	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] attrib then
-	       Out <- @Out#'<CODE>'
-	       OzDocToHTML, Batch(M 1)
-	       Out <- @Out#'</CODE>'
+	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    else
-	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
+	       {Exception.raiseError
+		ozDoc(sgmlToHTML unsupported M)} unit   %--**
 	    end
-	 end
-	 OzDocToHTML, PopCommon(M)
+	 end = Res
+	 OzDocToHTML, PopCommon(OldCommon)
+	 Res
       end
-      meth MakeTitle(PtrText FormatNumber Sep Title LayoutTitle M Level)
-	 Label Text Res
-      in
-	 OzDocToHTML, FlushFloats()
+      meth MakeTitle(PtrText FormatNumber Sep Title LayoutTitle M Level
+		     HTML ?NodeTitle) HTML1 Label Res in
+	 OzDocToHTML, FlushFloats(?HTML1)
 	 if {HasFeature M id} then
 	    Label = M.id
-	    Res = '<A name='#{MakeCDATA Label}#'>'#Text#'</A>'
 	 else
 	    ToGenerate <- Label|@ToGenerate
-	    Res = '<A name='#thread {MakeCDATA Label} end#'>'#Text#'</A>'
 	 end
+	 Res = a(name: Label NodeTitle)
 	 if {SGML.isOfClass M unnumbered} then
 	    if Title == unit then
 	       {Exception.raiseError ozDoc(sgmlToHTML emptySectionTitle M)}
 	    end
-	    Text = Title
+	    NodeTitle = Title
+	    if {HasFeature M id} then
+	       OzDocToHTML, ID(M.id @CurrentNode
+			       SEQ([VERBATIM(PtrText)
+				    PCDATA('``') NodeTitle PCDATA('\'\'')]))
+	    end
 	 else NumberVS in
 	    NumberVS = {FormatNumber}
-	    Text = case Title of unit then NumberVS
-		   else NumberVS#Sep#Title
-		   end
+	    NodeTitle = case Title of unit then PCDATA(NumberVS)
+			else SEQ([VERBATIM(NumberVS#Sep) Title])
+			end
 	    if {HasFeature M id} then
-	       OzDocToHTML, ID(M.id @CurrentNode PtrText#NumberVS)
+	       OzDocToHTML, ID(M.id @CurrentNode VERBATIM(PtrText#NumberVS))
 	    end
 	 end
-	 TOC <- {Append @TOC [Level#Label#@CurrentNode#Text]}
-	 Out <- @Out#{LayoutTitle Res}
+	 TOC <- {Append @TOC [Level#Label#@CurrentNode#NodeTitle]}
+	 HTML = SEQ([HTML1 {LayoutTitle Res}])
       end
-      meth ID(L Node VS)
+      meth ID(L Node HTML)
 	 if {Dictionary.member @Labels L} then
-	    Node#VS = {Dictionary.get @Labels L}
+	    Node#HTML = {Dictionary.get @Labels L}
 	 else
-	    {Dictionary.put @Labels L Node#VS}
+	    {Dictionary.put @Labels L Node#HTML}
 	 end
       end
       meth GenerateLabels()
@@ -982,121 +957,109 @@ define
 	    Next = In + 1
 	 end
       end
-      meth CheckNode(M Title ?X)
+      meth PrepareNode(M ?X ?HTML)
 	 if {Member {CondSelect M id unit}
 	     {Dictionary.condGet @Meta 'html.split' nil}}
 	 then
-	    X = @CurrentNode#@Out#@TOC#@TOCMode
+	    X = @CurrentNode#@TOC#@TOCMode
 	    NodeCounter <- @NodeCounter + 1
 	    CurrentNode <- 'node'#@NodeCounter#'.html'
-	    OzDocToHTML, StartNode(Title)
 	    TOC <- nil
+	    HTML = EMPTY
 	 else
 	    X = unit
-	    if @TOCMode then
-	       Out <- @Out#'<HR>\n'
-	    end
+	    HTML = if @TOCMode then hr()
+		   else EMPTY
+		   end
 	 end
 	 TOCMode <- false
       end
-      meth CheckBibNode(Title ?X)
+      meth PrepareBibNode(?X ?HTML)
 	 if {Dictionary.member @Meta 'html.split.bib'} then
-	    X = @CurrentNode#@Out#@TOC#@TOCMode
+	    X = @CurrentNode#@TOC#@TOCMode
 	    CurrentNode <- 'bib.html'
-	    OzDocToHTML, StartNode(Title)
 	    TOC <- nil
+	    HTML = EMPTY
 	 else
 	    X = unit
-	    if @TOCMode then
-	       Out <- @Out#'<HR>\n'
-	    end
+	    HTML = if @TOCMode then hr()
+		   else EMPTY
+		   end
 	 end
 	 TOCMode <- false
       end
-      meth PopNode(X)
-	 case X of unit then skip
-	 [] C#O#T#M then
-	    OzDocToHTML, EndNode()
+      meth FinishNode(Title X HTML $)
+	 case X of unit then HTML
+	 [] C#T#M then Res in
+	    OzDocToHTML, MakeNode(Title HTML)
 	    CurrentNode <- C
-	    if M then
-	       Out <- O#{FormatTOC @TOC}
-	    else
-	       Out <- O#'<HR>\n'#{FormatTOC @TOC}
-	    end
+	    Res = if M then {FormatTOC @TOC}
+		  else SEQ([hr() {FormatTOC @TOC}])
+		  end
 	    TOC <- {Append T @TOC}
 	    TOCMode <- true
+	    Res
 	 end
       end
-      meth StartNode(Title)
-	 Out <- ('<!DOCTYPE html PUBLIC '#DOCTYPE_PUBLIC#'>\n'#
-		 '<HTML>\n'#
-		 '<HEAD>\n'#
-		 '<TITLE>'#Title#'</TITLE>\n'#
-		 '<LINK rel=stylesheet type="text/css" '#
-		 'href='#{MakeCDATA @StyleSheet}#'>\n'#
-		 '</HEAD>\n'#
-		 '<BODY>\n')
-	 %--** navigation panel
+      meth MakeNode(Title BodyContents) Node in
+	 %--** convert Title to simple text (it might contain tags!)
+	 Node = html(head(title(Title)
+			  link(rel: stylesheet
+			       type: 'text/css'
+			       href: @StyleSheet))
+		     'body'(COMMON: @BodyCommon
+			    %--** navigation panel
+			    BodyContents
+			    OzDocToHTML, FlushFloats($)
+			    hr()
+			    address(case @Authors of nil then EMPTY
+				    else As in
+				       OzDocToHTML, FormatAuthors(?As)
+				       SEQ([As br()])
+				    end
+				    PCDATA('Generated on '#
+					   {FormatDate {OS.localTime}}))))
+	 ToWrite <- Node#(@OutputDirectory#'/'#@CurrentNode)|@ToWrite
       end
-      meth EndNode()
-	 OzDocToHTML, FlushFloats()
-	 Out <- @Out#('<HR>\n'#
-		      '<ADDRESS>\n'#
-		      case @Authors of nil then ""
-		      else
-			 OzDocToHTML, FormatAuthors($)#'<BR>\n'
-		      end#
-		      'Generated on '#{FormatDate {OS.localTime}}#'\n'#
-		      '</ADDRESS>\n'#
-		      '</BODY>\n'#
-		      '</HTML>\n')
-	 ToWrite <- @Out#(@OutputDirectory#'/'#@CurrentNode)|@ToWrite
-	 Out <- ""
-      end
-      meth FlushFloats()
-	 case @Floats of F|Fr then
-	    OzDocToHTML, OutputFigure(F)
+      meth FlushFloats($) HTML in
+	 case @Floats of F|Fr then OldCommon in
+	    OzDocToHTML, PushCommon(F ?OldCommon)
+	    OzDocToHTML, OutputFigure(F ?HTML)
+	    OzDocToHTML, PopCommon(OldCommon)
 	    Floats <- Fr
-	    OzDocToHTML, FlushFloats()
-	 [] nil then skip
+	    SEQ([HTML OzDocToHTML, FlushFloats($)])
+	 [] nil then EMPTY
 	 end
       end
-      meth OutputFigure(M) Class N Number Title Mr1 Caption Mr2 in
-	 Class = case {CondSelect M 'class' 'figure'} of _|_ then
-		    {Exception.raiseError
-		     ozDoc(sgmlToHTML moreThanOneFigureClass M)} unit
-		 elseof X then X
-		 end
+      meth OutputFigure(M $) Class N Number Title Mr1 Caption Mr2 in
+	 Class = {CondSelect M 'class' ['figure']}.1
 	 N = {Dictionary.condGet @FigureCounters Class 0} + 1
 	 {Dictionary.put @FigureCounters Class N}
 	 Number = ({InitialCapital {Atom.toString Class}}#'&nbsp;'#
 		   if @Appendix then {Alpha @Chapter}
 		   else @Chapter
 		   end#'.'#N)
-	 Out <- @Out#'<HR>\n'
-	 case {CondSelect M id unit} of unit then skip
-	 elseof L then
-	    OzDocToHTML, ID(L @CurrentNode Number)
-	    Out <- @Out#'<P><A name='#{MakeCDATA L}#'></A></P>'
-	 end
 	 Title = {SGML.getSubtree M title ?Mr1}
 	 Caption = {SGML.getSubtree Mr1 caption ?Mr2}
-	 case Title of unit then skip
-	 else
-	    Out <- @Out#'<P align=center><B>'
-	    OzDocToHTML, Batch(Title 1)
-	    Out <- @Out#'</B></P>\n'
-	 end
-	 OzDocToHTML, Batch(Mr2 1)
-	 case Caption of unit then
-	    Out <- @Out#'<P><STRONG>'#Number#'.</STRONG></P>'
-	 else
-	    Out <- @Out#'<P><STRONG>'#Number#':</STRONG> '
-	    OzDocToHTML, Batch(Caption.1 1)
-	    Out <- @Out#'</P>'
-	    OzDocToHTML, Batch(Caption 2)
-	 end
-	 Out <- @Out#'<HR>\n'
+	 'div'(COMMON: @Common
+	       hr()
+	       case {CondSelect M id unit} of unit then EMPTY
+	       elseof L then
+		  OzDocToHTML, ID(L @CurrentNode VERBATIM(Number))
+		  p(a(name: L))
+	       end
+	       case Title of unit then EMPTY
+	       else
+		  p(align: center b(OzDocToHTML, Batch(Title 1 $)))
+	       end
+	       OzDocToHTML, Batch(Mr2 1 $)
+	       case Caption of unit then
+		  p(strong(VERBATIM(Number#'.')))
+	       else
+		  p(strong(VERBATIM(Number#':')) PCDATA(' ')
+		    OzDocToHTML, Batch(Caption.1 1 $))
+	       end
+	       hr())
       end
       meth FormatAuthors($)
 	 case @Authors of nil then ""
@@ -1114,18 +1077,17 @@ define
 		   elseif {HasFeature A email} then 'email:'#A.email
 		   else unit
 		   end
-	       case H of unit then N#'\n'
-	       else '<A href='#{MakeCDATA H}#'>'#N#'</A>'
+	       case H of unit then PCDATA(N)
+	       else a(href: H PCDATA(N))
 	       end
 	    end
 	 in
 	    {FoldLTail Ar
 	     fun {$ In A|Ar}
-		In#
-		case Ar of nil then ' and\n'
-		else ',\n'
-		end#{FormatAuthor A}
-	     end {FormatAuthor A}}#'\n'
+		SEQ([In
+		     PCDATA(case Ar of nil then ' and' else ',' end)
+		     {FormatAuthor A}])
+	     end {FormatAuthor A}}
 	 end
       end
    end
