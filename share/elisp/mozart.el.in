@@ -622,7 +622,7 @@ Used as fallback if the environment variable OZHOME is not set."
 						    "/share/tools/images/"))
 				   ))
 			      user-cache
-			      ,@(and OZHOME '(system-cache)))))
+			      ,@(and OZHOME '(global-cache)))))
 	   (or OZPATH (setq OZPATH '(current)))
 	   (or OZINIT
 	       (let (f)
