@@ -865,6 +865,9 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GETLITERALX:
     case GETLITERALY:
     case GETLITERALG:
+    case PUTLITERALX:
+    case PUTLITERALY:
+    case PUTLITERALG:
       {
 	TaggedRef tagged = getTaggedArg(PC+1);
 
