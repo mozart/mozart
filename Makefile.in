@@ -184,5 +184,6 @@ oz-win::
 	for i in ozc ozd ozl; do \
 	  cat oz/platform/winbin/ozwrapper.exe $(PREFIX)/bin/$$i > oz/platform/winbin/$$i.exe;\
         done
+	i386-mingw32-strip oz/platform/win32-i486/*.exe
 	mv oz/platform/winbin oz/bin
 	mv oz oz3
