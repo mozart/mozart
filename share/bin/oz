@@ -98,7 +98,7 @@ case "$cmd" in
    ;;
 
    oz-)
-       exec $ILE oz.compiler.bin $*
+       exec $ILE $ARCHBIN/oz.compiler.bin $*
    ;;
 
    *)
