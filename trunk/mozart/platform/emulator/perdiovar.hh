@@ -79,9 +79,13 @@ public:
   PendBinding *gcPendBinding();
 };
 
+#define PV_FUTURE   0x1
+#define PV_EXPORTED 0x2 /* non-exported futures look like PerdioVars, 
+			   but can be bound to non-exportables */
+
 class PerdioVar: public GenCVariable {
 protected:
-  short isfuture;
+  short flags;
 private:
   short pvtype;
   void *ptr;
@@ -98,24 +102,26 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(PerdioVar);
   PerdioVar(Bool isf) : GenCVariable(PerdioVariable) {
     u.proxies=0;
-    isfuture = (short) isf;
+    flags = isf ? PV_FUTURE : 0;
     setpvType(PV_MANAGER);
   }
 
   PerdioVar(int i, Bool isf) : GenCVariable(PerdioVariable) {
     u.bindings=0;
-    isfuture = (short) isf;
+    flags = isf ? PV_FUTURE : 0;
     setpvType(PV_PROXY);
     setIndex(i);
   }
 
   PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
     setpvType(PV_OBJECTCLASSAVAIL);
-    ptr = o;
-    isfuture = 0;
+    ptr   = o;
+    flags = 0;
   }
 
-  int isFuture() { return (int) isfuture; }
+  int isFuture()      { return (flags&PV_FUTURE); }
+  int isExported()    { return (flags&PV_EXPORTED); }
+  void markExported() { flags |= PV_EXPORTED; }
 
   void setClass(ObjectClass *cl) {
     Assert(isObjectClassAvail());
