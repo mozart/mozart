@@ -411,6 +411,7 @@ public:
 
   void close()
   {
+    CloseHandle(hd);
     hd = 0;
   }
 };
@@ -495,6 +496,7 @@ void registerSocket(int fd)
 {
   OZ_FD_SET(fd,&socketFDs);
   maxSocket = max(fd,maxSocket);
+  Assert(maxSocket<osOpenMax());
 }
 
 
@@ -646,7 +648,9 @@ static fd_set globalFDs[2];     // mask of active read/write FDs
 int osOpenMax()
 {
 #ifdef WINDOWS
-  return OPEN_MAX+FD_SETSIZE;
+  /* socket numbers can grow very large, AM::ioNodes then has problems */
+  return 1000;
+  //  return OPEN_MAX+FD_SETSIZE;
 #else
   int ret = sysconf(_SC_OPEN_MAX);
   if (ret == -1) {
