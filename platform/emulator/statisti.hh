@@ -122,6 +122,7 @@ public:
 
   // RS
   long freeListAllocated;
+  long freeListDisposed;
   long totalAllocated;
   long varVarUnify, recRecUnify,totalUnify;
   long applBuiltin, applProc;
@@ -130,6 +131,10 @@ public:
   long numClosures;
   long sizeStackVars;
   long sizeEnvs;
+
+  long fastcalls,bicalls,nonoptcalls,inlinecalls,inlinedots,
+    sendmsg,applmeth;
+  long nonoptbicalls,nonoptsendmsg;
 
   void derefChain(int n);
   void printDeref();
