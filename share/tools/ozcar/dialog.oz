@@ -80,7 +80,10 @@ local
 	    CurCompUI <- CUI
 	    CurEnv    <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 
-	    {C enqueue(putEnv({{Compiler.getOPICompiler} enqueue(getEnv($))}))}
+	    case {Compiler.getOPI} of false then skip
+	    elseof OPI then
+	       {C enqueue(putEnv({{OPI getCompiler($)} enqueue(getEnv($))}))}
+	    end
 	    {C enqueue(mergeEnv(@CurEnv))}
 	    {Wait {C enqueue(ping($))}}
 	    {CUI reset}
