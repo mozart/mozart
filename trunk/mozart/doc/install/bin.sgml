@@ -87,7 +87,7 @@ to="http://www.mozart-oz.org/download/bintar.shtml"><file>http://www.mozart-oz.o
 % cd /usr/local
 % gzip -cd mozart-?{version}-?{platform}.tar.gz         | tar xvf -
 % gzip -cd mozart-?{version}-?{platform}-contrib.tar.gz | tar xvf -
-% gzip -cd mozart-?{version}-?{platform}-doc.tar.gz     | tar xvf -
+% gzip -cd mozart-?{version}-doc.tar.gz                 | tar xvf -
 </code>
       <p>
         Replace ?{version} and ?{platform} appropriately. Depending on
