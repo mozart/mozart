@@ -78,6 +78,7 @@
 #include "genvar.hh"
 #include "perdiovar.hh"
 #include "gc.hh"
+#include "dictionary.hh"
 
 typedef long Credit;  /* TODO: full credit,long credit? */
 
@@ -152,9 +153,13 @@ enum MessageType {
   M_GET_CLOSUREANDCODE, // OTI SITE (implicit 1 credit)
   M_GET_CLOSURE,        // same as above
   M_GET_CHUNK,          // same as above
+  M_GET_OBJECT,         // same as above
+  M_GET_OBJECTANDCLASS, // same as above
   M_SEND_CLOSUREANDCODE,// NA  N DIFs CODE
   M_SEND_CLOSURE,       // same as above
   M_SEND_CHUNK,         // NA  N DIFs CODE
+  M_SEND_OBJECT,        // NA  N DIFs CODE
+  M_SEND_OBJECTANDCLASS,// NA  N DIFs CODE
   M_REGISTER,           // OTI SITE (implicit 1 credit)
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
@@ -183,8 +188,7 @@ typedef enum {
   M_FLOAT,              // string
   M_ATOM,               // string
   M_NAME,               // ???
-  M_NAMETRUE,           // -
-  M_NAMEFALSE,          // -
+  M_UNIQUENAME,         // ???
   M_RECORD,             //
   M_TUPLE,
   M_LIST,
@@ -195,7 +199,10 @@ typedef enum {
   M_PROC,               // NA CREDIT NAME ARITY
   M_VAR,
   M_BUILTIN,
+  M_DICT,
   DIF_CHUNK,
+  DIF_OBJECT,
+  DIF_CLASS,
   DIF_THREAD,           // NA CREDIT
   DIF_SPACE,            // NA CREDIT
 } MarshallTag;
@@ -1682,18 +1689,24 @@ void Tertiary::gcTertiary() /* TODO -remove use */
   switch (getTertType()) {
 
   case Te_Local:
-    break;
+    return;
 
   case Te_Proxy:
     {
-      if (getType()!=Co_Chunk) {
-        int i=getIndex();
-        BorrowEntry *be = borrowTable->getBorrow(i);
-        be->makeMark();
-        PD(GC,"relocate borrow:%d old %x new %x",i,be,this);
-        be->mkTertiary(this);
+      switch (getType()) {
+      case Co_Chunk:
+      case Co_Object:
+        return;
+      default:
+        {
+          int i=getIndex();
+          BorrowEntry *be = borrowTable->getBorrow(i);
+          be->makeMark();
+          PD(GC,"relocate borrow:%d old %x new %x",i,be,this);
+          be->mkTertiary(this);
+          return;
+        }
       }
-      break;
     }
 
   case Te_Manager:
@@ -1701,7 +1714,7 @@ void Tertiary::gcTertiary() /* TODO -remove use */
       int i=getIndex();
       PD(GC,"relocate owner:%d old%x new %x",i,ownerTable->getOwner(i),this);
       ownerTable->getOwner(i)->mkTertiary(this);
-      break;
+      return;
     }
   case Te_Frame:
     Assert(0);
@@ -1872,8 +1885,24 @@ TaggedRef ProcProxy::getSuspvar()
 
 void PerdioVar::addSuspPerdioVar()
 {
-  if (isTertProxy() && suspList==NULL)
-    sendMessage(this->getIndex(),M_GET_CHUNK);
+  if (isTertProxy() && suspList==NULL) {
+    MessageType msg;
+    switch(u.tert->getType()) {
+    case Co_Chunk:  msg = M_GET_CHUNK;  break;
+    case Co_Object:
+      {
+        Object *o = (Object*)u.tert;
+        if (o->isClass() || !o->getOzClass()->isProxy()) {
+          msg = M_GET_OBJECT;
+        } else {
+          msg = M_GET_OBJECTANDCLASS;
+        }
+        break;
+      }
+    default: Assert(0);
+    }
+    sendMessage(this->getIndex(),msg);
+  }
 }
 
 
@@ -1912,8 +1941,24 @@ void Tertiary::globalize()
     ((Abstraction *)this)->globalize();
     break;
   case Co_Chunk:
-    ((SChunk*)this)->setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
+    {
+      SChunk *sc = (SChunk *) this;
+      if (sc->getGName()==NULL) {
+        sc->setGName(newGName(makeTaggedConst(this),GNT_CHUNK));
+      }
+      break;
+    }
+  case Co_Object: {
+    Object *o = (Object*) this;
+    if (o->getGName()==NULL) {
+      o->setGName(newGName(makeTaggedConst(this),GNT_OBJECT));
+      Object *cl = o->getOzClass();
+      if (!o->isClass() && cl->getGName()==NULL) {
+        cl->globalize();
+      }
+    }
     break;
+  }
   case Co_Port:
     break;
   case Co_Cell:
@@ -1947,7 +1992,8 @@ void Tertiary::globalize()
 void Tertiary::localize()
 {
   switch(getType()) {
-  case Co_Chunk:{
+  case Co_Object:{
+  case Co_Chunk:
   case Co_Port:
   case Co_Abstraction:
     Assert(getTertType()==Te_Manager);
@@ -1974,6 +2020,7 @@ void Tertiary::localize()
 void Tertiary::import()
 {
   switch(getType()) {
+  case Co_Object:
   case Co_Chunk:
   case Co_Abstraction:
     {
@@ -2006,6 +2053,13 @@ void SChunk::import(TaggedRef val)
   Tertiary::import();
   PD(GLOBALIZING,"GLOBALIZING: importing chunk proxy");
   value = val;
+}
+
+void Object::import()
+{
+  Assert(getTertType()==Te_Proxy);
+  Tertiary::import();
+  PD(GLOBALIZING,"GLOBALIZING: importing object");
 }
 
 void CellProxy::convertToFrame(int myIndex){
@@ -2197,7 +2251,7 @@ char *unmarshallString(ByteStream *bs)
 {
   int i = unmarshallNumber(bs);
 
-  char *ret = new char[i+1];  /* TODO: ask Ralph */
+  char *ret = new char[i+1];  /* TODO: ask Ralf */
   int k=0;
   for (; k<i; k++) {
     ret[k] = bs->get();
@@ -2381,6 +2435,17 @@ OZ_Term unmarshallBorrow(ByteStream *bs,OB_Entry *&ob,int &bi){
   return 0;}
 
 
+BorrowEntry *unmarshallBorrowEntry(ByteStream *bs)
+{
+  Site *sd      = unmarshallSiteId(bs);
+  int si        = unmarshallNumber(bs);
+  NetAddress na = NetAddress(sd,si);
+
+  BorrowEntry *ret = borrowTable->find(&na);
+  Assert(ret!=NULL);
+  return ret;
+}
+
 
 /**********************************************************************/
 /*                 MARSHALLING terms                                  */
@@ -2406,16 +2471,17 @@ void trailCycle(OZ_Term *t,int r)
   *t = (r<<tagSize)|GCTAG;
 }
 
-Bool marshallTertiary(Site* sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
+Bool marshallTertiary(Site* sd, Tertiary *t, ByteStream *bs, DebtRec *dr)
 {
-  int tag;
+  MarshallTag tag;
   switch (t->getType()) {
   case Co_Port:        tag = M_PORT;     break;
   case Co_Abstraction: tag = M_PROC;     break;
-  case Co_Cell:        tag = M_CELL;    break;
+  case Co_Cell:        tag = M_CELL;     break;
   case Co_Thread:      tag = DIF_THREAD; break;
   case Co_Space:       tag = DIF_SPACE;  break;
   case Co_Chunk:       tag = DIF_CHUNK;  break;
+  case Co_Object:      tag = ((Object*)t)->isClass()?DIF_CLASS:DIF_OBJECT; break;
   default: return NO;}
 
   switch(t->getTertType()){
@@ -2424,20 +2490,20 @@ Bool marshallTertiary(Site* sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
     // no break here!
   case Te_Manager:
     PD(MARSHALL,"manager");
-    marshallOwnHead(tag,t->getIndex(),bs);
+    marshallOwnHead((int)tag,t->getIndex(),bs);
     break;
   case Te_Frame:{
     PD(MARSHALL,"frame");
     Assert(t->getType()==Co_Cell);
     CellFrame *cf=(CellFrame *)t;
-    marshallOwnHead(tag,cf->getOwnerIndex(),bs);
+    marshallOwnHead((int)tag,cf->getOwnerIndex(),bs);
     break;}
   case Te_Proxy:
     PD(MARSHALL,"proxy");
     if (sd && borrowTable->getOriginSite(t->getIndex())==sd) {
       marshallToOwner(t->getIndex(),bs,dr);
       return OK;}
-    marshallBorrowHead(tag,t->getIndex(),bs,dr);
+    marshallBorrowHead((int)tag,t->getIndex(),bs,dr);
     break;
   default:
     Assert(0);}
@@ -2453,8 +2519,17 @@ Bool marshallTertiary(Site* sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
       break;
     }
   case Co_Chunk:
-      marshallGName(((SChunk *) t)->getGName(),bs);
+    marshallGName(((SChunk *) t)->getGName(),bs);
+    break;
+  case Co_Object:
+    {
+      Object *o = (Object*) t;
+      marshallGName(o->getGName(),bs);
+      if (!o->isClass()) {
+        marshallTertiary(sd,o->getOzClass(),bs,dr);
+      }
       break;
+    }
   }
 
   trailCycle(t->getRef(),bs->refCounter++);
@@ -2488,32 +2563,102 @@ void unmarshallTertiary(ByteStream *bs, TaggedRef *ret, MarshallTag tag, char *c
   ob->mkTertiary(tert);
 }
 
-void marshallVariable(Site * sd, PerdioVar *pvar, ByteStream *bs,DebtRec *dr)
+void marshallVariable(Site *sd, PerdioVar *pvar, ByteStream *bs, DebtRec *dr)
 {
   int i=pvar->getIndex();
   if (pvar->isProxy()) {
     PD(MARSHALL,"var proxy o:%d",i);
-    if(sd && borrowTable->getOriginSite(i)==sd){
+    if(sd && borrowTable->getOriginSite(i)==sd) {
       marshallToOwner(i,bs,dr);
-      return;}
+      return;
+    }
     marshallBorrowHead(M_VAR,i,bs,dr);
-  } else if (pvar->isTertProxy()) {
-    PD(MARSHALL,"var tertproxy o:%d",i);
-    if(sd && borrowTable->getOriginSite(i)==sd){
-      marshallToOwner(i,bs,dr);
-      return;}
-    marshallBorrowHead(DIF_CHUNK,i,bs,dr);
-    marshallGName(pvar->getGName(),bs);
-  } else {  // owner
-    PD(MARSHALL,"var manager o:%d",i);
-    Assert(pvar->isManager());
-    marshallOwnHead(M_VAR,i,bs);
+    return;
   }
+
+  if (pvar->isTertProxy()) {
+    PD(MARSHALL,"var tertproxy o:%d",i);
+    marshallTertiary(sd,pvar->getTertiary(),bs,dr);
+    return;
+  }
+
+  // owner
+  PD(MARSHALL,"var manager o:%d",i);
+  Assert(pvar->isManager());
+  marshallOwnHead(M_VAR,i,bs);
 }
 
 #include "marshallcode.cc"
 
-void marshallTerm(Site * sd, OZ_Term t, ByteStream *bs, DebtRec *dr)
+void marshallSRecord(Site *sd, SRecord *sr, ByteStream *bs, DebtRec *dr)
+{
+  if (sr==NULL) {
+    bs->put(0);
+    return;
+  }
+  bs->put(1);
+  marshallTerm(sd,makeTaggedSRecord(sr),bs,dr);
+}
+
+SRecord *unmarshallSRecord(ByteStream *bs)
+{
+  if (bs->get()==0)
+    return NULL;
+
+  return tagged2SRecord(unmarshallTerm(bs));
+}
+
+
+void marshallDict(Site *sd, OzDictionary *d, ByteStream *bs, DebtRec *dr)
+{
+  int size = d->getSize();
+  marshallNumber(size,bs);
+
+  int i = d->getFirst();
+  i = d->getNext(i);
+  while(i>=0) {
+    marshallTerm(sd,d->getKey(i),bs,dr);
+    marshallTerm(sd,d->getValue(i),bs,dr);
+    i = d->getNext(i);
+    size--;
+  }
+  Assert(size==0);
+}
+
+OzDictionary *unmarshallDict(ByteStream *bs)
+{
+  int size = unmarshallNumber(bs);
+  OzDictionary *ret = new OzDictionary(am.currentBoard,size);
+
+  while(size-- > 0) {
+    TaggedRef key = unmarshallTerm(bs);
+    TaggedRef val = unmarshallTerm(bs);
+    ret->setArg(key,val);
+  }
+  return ret;
+}
+
+void unmarshallObject(Object *o, ByteStream *bs)
+{
+  SRecord *feat = unmarshallSRecord(bs);
+  o->setFreeRecord(feat);
+  o->setState(unmarshallSRecord(bs));
+  o->import();
+  if (o->isClass()) {
+    TaggedRef ff = feat->getFeature(NameOoUnFreeFeat);
+    o->getClass()->import(tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
+                          isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
+                          tagged2Dictionary(feat->getFeature(NameOoDefaults)));
+  }
+}
+
+void marshallObject(Site *sd, Object *o, ByteStream *bs, DebtRec *dr)
+{
+  marshallSRecord(sd,o->getFreeRecord(),bs,dr);
+  marshallSRecord(sd,o->getState(),bs,dr);
+}
+
+void marshallTerm(Site *sd, OZ_Term t, ByteStream *bs, DebtRec *dr)
 {
   OZ_Term *args;
   int argno;
@@ -2550,14 +2695,10 @@ loop:
         PD(MARSHALL,"atom: %s",lit->getPrintName());
         break;
       }
-      if (literalEq(NameTrue,t)) {
-        bs->put(M_NAMETRUE);
-        PD(MARSHALL_CT,"tag M_NAMETRUE  BYTES:1");
-        break;
-      }
-      if (literalEq(NameFalse,t)) {
-        PD(MARSHALL_CT,"tag M_NAMEFALSE  BYTES:1");
-        bs->put(M_NAMEFALSE);
+
+      if (lit->getFlags()&Lit_isUniqueName) {
+        bs->put(M_UNIQUENAME);
+        marshallString(lit->getPrintName(),bs);
         break;
       }
 
@@ -2612,6 +2753,14 @@ loop:
         marshallString(tagged2Builtin(t)->getPrintName(),bs);
         break;
       }
+
+      if (isDictionary(t)) {
+        bs->put(M_DICT);
+        marshallDict(sd,tagged2Dictionary(t),bs,dr);
+        break;
+      }
+
+
       if (!marshallTertiary(sd,tagged2Tert(t),bs,dr)) goto bomb;
       break;
     }
@@ -2687,6 +2836,17 @@ processArgs:
   goto loop;
 }
 
+ObjectClass *getClassFromProxy(TaggedRef c)
+{
+  DEREF(c,_1,_2);
+  if (isObject(c))
+    return tagged2Object(c)->getClass();
+
+  Assert(isPerdioVar(c));
+  Tertiary *tert = tagged2PerdioVar(c)->getTertiary();
+  Assert(tert->getType()==Co_Object);
+  return ((Object*)tert)->getClass();
+}
 
 
 /**********************************************************************/
@@ -2719,28 +2879,34 @@ loop:
     PD(UNMARSHALL,"float");
     return;
 
-  case M_NAMETRUE:  *ret=NameTrue; return;
-  case M_NAMEFALSE: *ret=NameFalse; return;
-
   case M_NAME:
     {
       GName *gname;
-      Bool foundit = unmarshallGName(&gname,ret,bs);
+      Bool foundit    = unmarshallGName(&gname,ret,bs);
       char *printname = unmarshallString(bs);
 
-      if (foundit)
-        return;
-
-      TaggedRef aux;
-      if (strcmp("",printname)==0) {
-        aux = OZ_newName();
-      } else {
-        aux = makeTaggedLiteral(NamedName::newNamedName(printname));
+      if (!foundit) {
+        Name *aux;
+        if (strcmp("",printname)==0) {
+          aux = Name::newName(am.currentBoard);
+        } else {
+          aux = NamedName::newNamedName(printname);
+        }
+        aux->import(gname);
+        *ret = makeTaggedLiteral(aux);
+        gnameTable->gnameAdd(gname,*ret);
       }
-      ((Name*)tagged2Literal(aux))->import(gname);
-      gnameTable->gnameAdd(gname,aux);
-      *ret = aux;
+      delete printname;
+      return;
+    }
 
+  case M_UNIQUENAME:
+    {
+      char *printname = unmarshallString(bs);
+      Literal *lit = addToNameTab(printname);
+      delete printname;
+      Assert(lit->getFlags()&Lit_isUniqueName);
+      *ret = makeTaggedLiteral(lit);
       return;
     }
 
@@ -2844,15 +3010,13 @@ loop:
     }
 
   case DIF_CHUNK:
-  case M_VAR:
     {
       OB_Entry *ob;
       int bi;
-      GName *gname;
-
       OZ_Term val1 = unmarshallBorrow(bs,ob,bi);
 
-      if (tag==DIF_CHUNK && unmarshallGName(&gname,ret,bs)) {
+      GName *gname;
+      if (unmarshallGName(&gname,ret,bs)) {
         gotRef(bs,*ret);
         return;
       }
@@ -2863,17 +3027,75 @@ loop:
         return;
       }
       PD(UNMARSHALL,"var miss: b:%d",bi);
-      PerdioVar *pvar = (tag==M_VAR) ? new PerdioVar(bi)
-                                     : new PerdioVar(new SChunk(bi,gname),bi);
+      PerdioVar *pvar = new PerdioVar(new SChunk(bi,gname),bi);
       TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
       *ret = val;
       ob->mkVar(val);
 
-      if (tag==M_VAR) {
-        sendRegister((BorrowEntry *)ob);
-      } else {
-        gotRef(bs,val);
+      gotRef(bs,val);
+      return;
+    }
+
+  case DIF_CLASS:
+  case DIF_OBJECT:
+    {
+      OB_Entry *ob;
+      int bi;
+      OZ_Term val1 = unmarshallBorrow(bs,ob,bi);
+
+      GName *gname;
+      Bool foundit    = unmarshallGName(&gname,ret,bs);
+
+      TaggedRef clas = (tag==DIF_OBJECT) ? unmarshallTerm(bs) : makeTaggedNULL();
+
+      if (foundit) {
+        gotRef(bs,*ret);
+        return;
       }
+
+      if (val1) {
+        PD(UNMARSHALL,"object hit: b:%d",bi);
+        *ret=val1;
+        return;
+      }
+
+      PD(UNMARSHALL,"object miss: b:%d",bi);
+      Object *obj = new Object(bi,gname);
+      if (tag==DIF_OBJECT) {
+        obj->setClass(getClassFromProxy(clas));
+      } else {
+        obj->setClass();
+        ObjectClass *ocl = new ObjectClass(NULL,NULL,NULL,NO);
+        ocl->setOzClass(obj);
+        obj->setClass(ocl);
+      }
+      PerdioVar *pvar = new PerdioVar(obj,bi);
+      TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+      *ret = val;
+      ob->mkVar(val);
+
+      gotRef(bs,val);
+      return;
+    }
+
+  case M_VAR:
+    {
+      OB_Entry *ob;
+      int bi;
+      OZ_Term val1 = unmarshallBorrow(bs,ob,bi);
+
+      if (val1) {
+        PD(UNMARSHALL,"var/chunk hit: b:%d",bi);
+        *ret=val1;
+        return;
+      }
+      PD(UNMARSHALL,"var miss: b:%d",bi);
+      PerdioVar *pvar = new PerdioVar(bi);
+      TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
+      *ret = val;
+      ob->mkVar(val);
+
+      sendRegister((BorrowEntry *)ob);
       return;
     }
   case M_PROC:
@@ -2901,6 +3123,12 @@ loop:
       return;
     }
 
+  case M_DICT:
+    {
+      *ret = makeTaggedConst(unmarshallDict(bs));
+      gotRef(bs,*ret);
+      return;
+    }
   case M_BUILTIN:
     {
       char *name = unmarshallString(bs);
@@ -2944,6 +3172,8 @@ MessageType answerGet(MessageType mt)
 {
   switch(mt) {
   case M_GET_CHUNK:          return M_SEND_CHUNK;
+  case M_GET_OBJECT:         return M_SEND_OBJECT;
+  case M_GET_OBJECTANDCLASS: return M_SEND_OBJECTANDCLASS;
   case M_GET_CLOSURE:        return M_SEND_CLOSURE;
   case M_GET_CLOSUREANDCODE: return M_SEND_CLOSUREANDCODE;
   default: Assert(0);        return (MessageType) 0;
@@ -3062,13 +3292,15 @@ void siteReceive(ByteStream* bs)
     }
 
   case M_GET_CHUNK:
+  case M_GET_OBJECTANDCLASS:
+  case M_GET_OBJECT:
   case M_GET_CLOSURE:
   case M_GET_CLOSUREANDCODE:
     {
       int na_index=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"GET_CLOSURE[ANDCODE],CHUNK o:%d s:%s",na_index,pSite(rsite));
+      PD(MSG_RECEIVED,"GET_SOMETHING o:%d s:%s",na_index,pSite(rsite));
 
       ByteStream *bs1= bufferManager->getByteStreamMarshal();
 
@@ -3105,6 +3337,17 @@ void siteReceive(ByteStream* bs)
           marshallTerm(rsite,sc->getValue(),bs1,debtRec);
           break;
         }
+      case M_GET_OBJECT:
+      case M_GET_OBJECTANDCLASS:
+        {
+          Assert(tert->getType()==Co_Object);
+          Object *o = (Object*) tert;
+          marshallObject(rsite,o,bs1,debtRec);
+          if (mt==M_GET_OBJECTANDCLASS) {
+            marshallObject(rsite,o->getOzClass(),bs1,debtRec);
+          }
+          break;
+        }
       }
 
       bs1->marshalEnd();
@@ -3121,55 +3364,64 @@ void siteReceive(ByteStream* bs)
     }
 
   case M_SEND_CHUNK:
+  case M_SEND_OBJECT:
+  case M_SEND_OBJECTANDCLASS:
+    {
+      BorrowEntry *b = unmarshallBorrowEntry(bs);
+      PerdioVar *var = b->getVar();
+      Assert(var->isTertProxy());
+
+      Tertiary *tert = var->getTertiary();
+      switch (tert->getType()) {
+      case Co_Chunk:
+        {
+          TaggedRef value = unmarshallTerm(bs);
+          ((SChunk*) tert)->import(value);
+          break;
+        }
+      case Co_Object:
+        {
+          Object *o = (Object *) tert;
+          unmarshallObject(o,bs);
+          if (mt==M_SEND_OBJECTANDCLASS) {
+            Object *clas = o->getOzClass();
+            BorrowEntry *bclas = BT->getBorrow(clas->getIndex());
+            unmarshallObject(clas,bs);
+            PerdioVar *classvar = bclas->getVar();
+            classvar->primBind(bclas->getPtr(),makeTaggedConst(clas));
+            bclas->mkRef();
+          }
+          break;
+        }
+      default: Assert(0);
+      }
+
+      var->primBind(b->getPtr(),makeTaggedConst(tert));
+      b->mkRef();
+
+      bs->unmarshalEnd();
+      break;
+    }
+
   case M_SEND_CLOSURE:
   case M_SEND_CLOSUREANDCODE:
     {
-      Site * sd=unmarshallSiteId(bs);
-      Assert(sd!=mySite);
-      int si=unmarshallNumber(bs);
-      NetAddress na=NetAddress(sd,si);
+      BorrowEntry *b = unmarshallBorrowEntry(bs);
+      Tertiary *tert = b->getTertiary();
+      Assert(isAbstraction(tert) && tert->isProxy());
+      ProcProxy *pp = (ProcProxy*) tert;
 
-      BorrowEntry *b=borrowTable->find(&na);
-      Assert(b!=NULL);
+      int gsize = unmarshallNumber(bs);
+      RefsArray globals = gsize==0 ? 0 : allocateRefsArray(gsize);
 
-      switch(mt) {
-      case M_SEND_CLOSURE:
-      case M_SEND_CLOSUREANDCODE:
-        {
-          Tertiary *tert = b->getTertiary();
-          Assert(isAbstraction(tert) && tert->isProxy());
-          ProcProxy *pp = (ProcProxy*) tert;
-
-          int gsize = unmarshallNumber(bs);
-          RefsArray globals = gsize==0 ? 0 : allocateRefsArray(gsize);
-
-          for (int i=0; i<gsize; i++) {
-            globals[i] = unmarshallTerm(bs);
-          }
-
-          ProgramCounter PC = (mt==M_SEND_CLOSURE) ? NOCODE : unmarshallCode(bs);
-          pp->import(globals,PC);
-          break;
-        }
-      case M_SEND_CHUNK:
-        {
-          PerdioVar *var = b->getVar();
-          Assert(var->isTertProxy());
-
-          if (isSChunk(var->getTertiary())) {
-            TaggedRef value = unmarshallTerm(bs);
-            SChunk *sc = (SChunk*) var->getTertiary();
-            sc->import(value);
-            var->primBind(b->getPtr(),makeTaggedConst(sc));
-            borrowTable->getBorrow(var->getIndex())->mkRef();
-          } else {
-            Assert(0);
-          }
-          break;
-        }
+      for (int i=0; i<gsize; i++) {
+        globals[i] = unmarshallTerm(bs);
       }
+
+      ProgramCounter PC = (mt==M_SEND_CLOSURE) ? NOCODE : unmarshallCode(bs);
+      pp->import(globals,PC);
       bs->unmarshalEnd();
-      PD(MSG_RECEIVED,"SEND_CLOSURE[ANDCODE] s:%s o:%d",pSite(sd),si);
+      PD(MSG_RECEIVED,"SEND_CLOSURE[ANDCODE]");
       break;
     }
 

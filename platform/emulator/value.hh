@@ -29,8 +29,11 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
        AtomMin, AtomMax, AtomMid, AtomLow,
        AtomNaive, AtomSize, AtomNbSusps,
-       NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
-       NameOoDefaultVar,NameOoRequiredArg,
+
+       NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
+       NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
+       NameOoPrintName,
+
        NameUnit,
        AtomKinded, AtomDet, AtomRecord, AtomFSet,
        // Atoms for System.get and System.set
@@ -52,12 +55,13 @@ BI_send;
  * Literal
  *=================================================================== */
 
-const int sizeOfLitFlags = 3;
+const int sizeOfLitFlags = 4;
 const int litFlagsMask   = (1<<sizeOfLitFlags)-1;
 
 #define Lit_isName       1
 #define Lit_isNamedName  2
 #define Lit_hasGName     4
+#define Lit_isUniqueName 8
 
 class Literal {
   int32 flagsAndOthers;
@@ -680,8 +684,11 @@ public:
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
     setTertType(t);
     setBoard(b);}
-  Tertiary(TypeOfConst s,TertType t) : ConstTerm(s) {
-    setTertType(t);}
+  Tertiary(int i, TypeOfConst s,TertType t) : ConstTerm(s)
+  {
+    setTertType(t);
+    setIndex(i);
+  }
 
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
@@ -1173,31 +1180,28 @@ int getWidth(OZ_Term term)
 class ObjectClass {
 private:
   OzDictionary *fastMethods;
-  Literal *printName;
   OzDictionary *defaultMethods;
   SRecord *unfreeFeatures;
-  TaggedRef ozclass;    /* the class as seen by the Oz user */
+  Object *ozclass;    /* the class as seen by the Oz user */
   Bool locking;
 public:
   USEHEAPMEMORY;
 
-  ObjectClass(OzDictionary *fm,Literal *pn,SRecord *uf,OzDictionary *dm,Bool lck)
+  ObjectClass(OzDictionary *fm, SRecord *uf, OzDictionary *dm, Bool lck)
   {
     fastMethods    = fm;
-    printName      = pn;
     unfreeFeatures = uf;
     defaultMethods = dm;
-    ozclass        = AtomNil;
-    locking = lck;
+    ozclass        = NULL;
+    locking        = lck;
   }
 
   Bool supportsLocking() { return locking; }
 
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
-  char *getPrintName()           { return printName->getPrintName(); }
-  TaggedRef getOzClass()         { return ozclass; }
-  void setOzClass(TaggedRef cl)  { ozclass = cl; }
+  Object *getOzClass()           { return ozclass; }
+  void setOzClass(Object *cl)    { ozclass = cl; }
 
   TaggedRef getFeature(TaggedRef lit)
   {
@@ -1208,7 +1212,17 @@ public:
 
   SRecord *getUnfreeRecord() { return unfreeFeatures; }
 
+  char *getPrintName();
+
   ObjectClass *gcClass();
+
+  void import(OzDictionary *fm, SRecord *uf, OzDictionary *dm)
+  {
+    fastMethods    = fm;
+    unfreeFeatures = uf;
+    defaultMethods = dm;
+  }
+
   OZPRINT;
   OZPRINTLONG;
 };
@@ -1219,20 +1233,20 @@ public:
  */
 
 typedef enum {
-  OFlagDeep   = 1,
-  OFlagClass  = 2
+  OFlagClass  = 1
 } OFlag;
 
 
 #define ObjFlagMask ~3
 
-class Object: public ConstTerm {
+class Object: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
   // features are in getPtr()
   int32 state;  // was: SRecord *state, but saves memory on the Alpha
   int32 aclass; // was: ObjectClass *aclass
   int32 flagsAndLock;
+  GName *gname;
 public:
   Object();
   ~Object();
@@ -1243,18 +1257,26 @@ public:
   int  getFlag(OFlag f)   { return (flagsAndLock & ((int) f)); }
 
   Bool isClass()        { return getFlag(OFlagClass); }
-  Bool isDeep()         { return getFlag(OFlagDeep); }
   void setClass()       { setFlag(OFlagClass); }
-  void setIsDeep()      { setFlag(OFlagDeep); }
 
-  Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl, OzLock *lck):
-    ConstTerm(Co_Object)
+  Object(Board *b,SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl, OzLock *lck):
+    Tertiary(b,Co_Object,Te_Local)
   {
     setFreeRecord(feat);
     setClass(ac);
     setState(s);
     if (iscl) setClass();
     flagsAndLock = ToInt32(lck);
+    gname = NULL;
+  }
+
+  Object(int i, GName *gn) : Tertiary(i,Co_Object,Te_Proxy)
+  {
+    setFreeRecord(NULL);
+    setClass(NULL);
+    setState(NULL);
+    flagsAndLock = 0;
+    gname = gn;
   }
 
   void setClass(ObjectClass *c) { aclass = ToInt32(c); }
@@ -1263,17 +1285,17 @@ public:
 
   ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
 
-  char *getPrintName()          { return getClass()->getPrintName(); }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
   Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
                          Bool &defaultsUsed);
 
+  char *getPrintName()          { return getClass()->getPrintName(); }
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
   SRecord *getState()           { return (SRecord*) ToPointer(state); }
   void setState(SRecord *s)     { state = ToInt32(s); }
-  OzDictionary *getDefMethods()  { return getClass()->getDefMethods(); }
-  TaggedRef getOzClass()        { return getClass()->getOzClass(); }
-  Board *getBoard();
+  OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
+  Object *getOzClass()          { return getClass()->getOzClass(); }
+
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
   SRecord *getUnfreeRecord() {
     return isClass() ? (SRecord*) NULL : getClass()->getUnfreeRecord();
@@ -1324,29 +1346,12 @@ public:
 
   Object *gcObject();
 
+  GName *getGName()        { return gname; }
+  void setGName(GName *gn) { gname = gn; }
+  void import();
+
   OZPRINT;
   OZPRINTLONG;
-};
-
-
-/* objects not created on toplevel need a home pointer */
-
-class DeepObject: public Object {
-  friend void ConstTerm::gcConstRecurse(void);
-  friend class Object;
-private:
-  Board *home;
-public:
-  DeepObject();
-  ~DeepObject();
-  DeepObject(DeepObject&);
-  DeepObject(SRecord *s,ObjectClass *cl,
-             SRecord *feat,Bool iscl, Board *bb, OzLock *lck):
-    Object(s,cl,feat,iscl,lck)
-  {
-    setIsDeep();
-    home=bb;
-  };
 };
 
 
@@ -1379,9 +1384,8 @@ public:
     setGName(0);
   };
 
-  SChunk(int i, GName *gn) : Tertiary(0,Co_Chunk,Te_Proxy)
+  SChunk(int i, GName *gn) : Tertiary(i,Co_Chunk,Te_Proxy)
   {
-    setIndex(i);
     value = makeTaggedNULL();
     setGName(gn);
   }
@@ -1827,7 +1831,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  CellManager() : Tertiary(Co_Cell,Te_Manager){Assert(0);}
+  CellManager() : Tertiary(0,Co_Cell,Te_Manager){Assert(0);}
 
   void incCtr(){sec->readCtr++;}
   int getAndInitCtr(){int i=sec->readCtr;sec->readCtr=0;return i;}
@@ -1860,7 +1864,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
- CellProxy(int manager):Tertiary(Co_Cell,Te_Proxy){  // on import
+ CellProxy(int manager):Tertiary(manager,Co_Cell,Te_Proxy){  // on import
    DebugIndexCheck(manager);
    DebugCode(setPrimIndex(NO_INDEX));
    setIndex(manager);}
@@ -2028,10 +2032,7 @@ private:
   // or a valid pointer
 public:
   Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
-  Space(int i, TertType t) : Tertiary(0,Co_Space,t)
-  {
-    setIndex(i);
-  };
+  Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
 
   OZPRINT;
   OZPRINTLONG;
@@ -2118,5 +2119,6 @@ OzLock *tagged2Lock(TaggedRef term)
 char *toC(OZ_Term);
 TaggedRef reverseC(TaggedRef l);
 TaggedRef appendI(TaggedRef x,TaggedRef y);
+TaggedRef getUniqueName(char *s);
 
 #endif

@@ -373,6 +373,8 @@ public:
         key   = ToInt32(cla);
         value = ToInt32(ret);
       }
+      if (ret && ret->isProxy())
+        return NULL;
       return ret;
     }
     return (Abstraction*) ToPointer(value);

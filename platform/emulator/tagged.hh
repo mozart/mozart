@@ -475,12 +475,6 @@ TaggedRef makeTaggedAtom(char *s)
   CHECK_STRPTR(s);
   return makeTaggedLiteral(addToAtomTab(s));
 }
-inline
-TaggedRef makeTaggedName(char *s)
-{
-  CHECK_STRPTR(s);
-  return makeTaggedLiteral(addToNameTab(s));
-}
 
 inline
 TaggedRef makeTaggedSmallInt(int32 s)
@@ -1050,5 +1044,14 @@ public:
   }
 
 };
+
+inline
+unsigned int nextPowerOf2(unsigned int n)
+{
+  for(int i=2;; i*=2) {
+    if (i>=n) return i;
+  }
+}
+
 
 #endif

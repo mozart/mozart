@@ -23,14 +23,6 @@
 void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
-GName *PerdioVar::getGName()
-{
-  switch (u.tert->getType()) {
-  case Co_Chunk: return ((SChunk *) u.tert)->getGName();
-  default: Assert(0); return 0;
-  }
-}
-
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 {
   setSuspList(am.checkSuspensionList(this, getSuspList(), pc_std_unif));

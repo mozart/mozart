@@ -172,6 +172,21 @@ public:
 
     USEFREELISTMEMORY;
 
+  // iteration
+  int getFirst() { return -1; }
+  int getNext(int i) {
+    i++;
+    while (i<size) {
+      if (table[i].value!=makeTaggedNULL())
+        return i;
+      i++;
+    }
+    return -1;
+  }
+
+  TaggedRef getKey(int i)   { return table[i].ident; }
+  TaggedRef getValue(int i) { return table[i].value; }
+
     void print(ostream & = cout, int=0, int=0);
     void printLong(ostream & = cout, int=0, int=0);
     ostream &newprint(ostream &, int depth);

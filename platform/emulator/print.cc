@@ -130,9 +130,7 @@ void tagged2Stream(TaggedRef ref, ostream &stream, int depth, int offset)
     break;
   case BIGINT:
   case SMALLINT:
-    {
-      stream << toC(ref);
-    }
+    stream << toC(ref);
     break;
   case OZCONST:
     tagged2Const(ref)->print(stream,depth,offset);
@@ -789,8 +787,6 @@ PRINT(ObjectClass)
   depth++;
   stream << indent(offset) << "class(fastMethods: ";
   fastMethods->print(stream,depth,offset);
-  stream << ", printName: ";
-  printName->print(stream,depth,offset);
   stream << ",";
   if (unfreeFeatures) {
     stream << ", ";
@@ -805,8 +801,6 @@ PRINTLONG(ObjectClass)
   depth++;
   stream << indent(offset) << "class(fastMethods: ";
   fastMethods->printLong(stream,depth,offset);
-  stream << ", printName: ";
-  printName->printLong(stream,depth,offset);
   stream << ")";
 }
 

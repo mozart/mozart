@@ -24,8 +24,11 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomNbSusps,
-  NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
-  NameOoDefaultVar,NameOoRequiredArg,
+
+  NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
+  NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
+  NameOoPrintName,
+
   NameUnit,
   AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
   // Atoms for System.get and System.set
@@ -43,6 +46,15 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
   BI_Unify,BI_Show,BI_send;
 
+
+
+TaggedRef getUniqueName(char *s)
+{
+  CHECK_STRPTR(s);
+  Literal *ret = addToNameTab(s);
+  ret->setFlag(Lit_isUniqueName);
+  return makeTaggedLiteral(ret);
+}
 
 // Some often used constants
 void initLiterals()
@@ -72,16 +84,20 @@ void initLiterals()
   AtomMerged       = makeTaggedAtom("merged");
   AtomFailed       = makeTaggedAtom("failed");
 
-  NameUnit         = makeTaggedName("unit");
+  NameUnit         = getUniqueName("unit");
 
-  NameTrue         = makeTaggedName(NAMETRUE);
-  NameFalse        = makeTaggedName(NAMEFALSE);
+  NameTrue         = getUniqueName(NAMETRUE);
+  NameFalse        = getUniqueName(NAMEFALSE);
 
-  NameOoAttr       = makeTaggedName("ooAttr");
-  NameOoFreeFeatR  = makeTaggedName("ooFreeFeatR");
-  NameOoFreeFlag   = makeTaggedName("ooFreeFlag");
-  NameOoDefaultVar  = makeTaggedName("ooDefaultVar");
-  NameOoRequiredArg = makeTaggedName("ooRequiredArg");
+  NameOoAttr        = getUniqueName("ooAttr");
+  NameOoFreeFeatR   = getUniqueName("ooFreeFeatR");
+  NameOoFreeFlag    = getUniqueName("ooFreeFlag");
+  NameOoDefaultVar  = getUniqueName("ooDefaultVar");
+  NameOoRequiredArg = getUniqueName("ooRequiredArg");
+  NameOoFastMeth    = getUniqueName("ooFastMeth");
+  NameOoUnFreeFeat  = getUniqueName("ooUnFreeFeat");
+  NameOoDefaults    = getUniqueName("ooDefaults");
+  NameOoPrintName   = getUniqueName("ooPrintName");
 
   AtomMin     = makeTaggedAtom("min");
   AtomMax     = makeTaggedAtom("max");
@@ -273,6 +289,13 @@ Abstraction::Abstraction(TaggedRef name, int arity, GName *gn)
 /*===================================================================
  * ConstTerm
  *=================================================================== */
+
+char *ObjectClass::getPrintName()
+{
+  TaggedRef aux = ozclass->getFeature(NameOoPrintName);
+  return aux ? tagged2Literal(aux)->getPrintName() : "???";
+}
+
 
 char *ConstTerm::getPrintName()
 {
@@ -779,24 +802,6 @@ Arity *mkArity(TaggedRef list)
 /************************************************************************/
 
 /*
- *      Return the minimum of 2 and the least power of 2 which is greater
- *      or equal to i.
- */
-
-inline
-unsigned int nextpowerof2 ( unsigned int i )
-{
-  if ( i && --i ) {
-    unsigned int result = 2;
-    while (i>>=1)
-      result<<=1;
-    return result;
-  } else {
-    return 2;
-  }
-}
-
-/*
  *      Return the truncate of the logarithm of i by base 2.
  */
 
@@ -836,7 +841,7 @@ Arity::Arity ( TaggedRef entrylist , Bool itf)
     DebugCheckT(keytable=0);
     return;
   }
-  size = nextpowerof2((unsigned int)(length(entrylist)*1.5));
+  size = nextPowerOf2((unsigned int)(length(entrylist)*1.5));
   width = 0;
   hashmask = size-1;
   indextable = ::new int[size];
@@ -886,7 +891,7 @@ ArityTable aritytable(ARITYTABLESIZE);
 
 ArityTable::ArityTable ( unsigned int n )
 {
-  size = nextpowerof2(n);
+  size = nextPowerOf2(n);
   table = ::new Arity*[size];
   for ( int i = 0 ; i < size; table[i++] = NULL ) ;
   hashmask = size-1;
