@@ -6,7 +6,8 @@
 and modifications with respect to the specifications
 of the distribution model and the failure model.
 A <EM>limitation</EM> is an operation that is specified
-but not possible in the current release.
+but is not possible or has lower performance
+in the current release.
 A <EM>modification</EM> is an operation that is specified
 but behaves differently in the current release.
 
