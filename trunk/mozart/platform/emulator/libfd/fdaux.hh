@@ -30,6 +30,7 @@
     cerr << "OZ_ASSERT " << #C << " failed (" __FILE__ << ':'   \
 	 << __LINE__ << ")." << endl << flush;	                \
   }
+
 #else
 #define OZ_DEBUGCODE(C)
 #define _OZ_DEBUGPRINT(C)
@@ -114,6 +115,9 @@ public:
   OZ_expect_t expectVector(OZ_Term t, PropagatorExpectMeth expectf) {
     return OZ_Expect::expectVector(t, (OZ_ExpectMeth) expectf);
   }
+  OZ_expect_t expectProperRecord(OZ_Term t, PropagatorExpectMeth expectf) {
+    return OZ_Expect::expectProperRecord(t, (OZ_ExpectMeth) expectf);
+  }
   
   OZ_expect_t expectVectorInt(OZ_Term t) {
     return expectVector(t, (PropagatorExpectMeth) &OZ_Expect::expectInt);
@@ -150,7 +154,12 @@ public:
     
     return r;  
   }
-  
+  OZ_expect_t expectProperRecordIntVarMinMax(OZ_Term t) {
+    return expectProperRecord(t, &PropagatorExpect::expectIntVarMinMax);
+  }
+  OZ_expect_t expectProperRecordInt(OZ_Term t) {
+    return expectProperRecord(t, &PropagatorExpect::expectInt);
+  }
 };
 
 //-----------------------------------------------------------------------------
@@ -439,11 +448,27 @@ public:
 
 #endif
 
+class VectorIterator {
+private:
+  OZ_Term * _vector;
+  int _size, _counter; 
+public:
+  VectorIterator(OZ_Term v) : _counter(0) {
+    _size = OZ_vectorSize(v);
+    _vector = new OZ_Term[_size];
+    OZ_DEBUGCODE(OZ_Term * __a =) OZ_getOzTermVector(v, _vector);
+    OZ_ASSERT((__a - _vector) == _size);
+  }
+  ~VectorIterator(void) { delete [] _vector; }
+  void reset(void) { _counter = 0; }
+  int anyLeft(void) { return _counter < _size; }
+  OZ_Term getNext(void) { return _counter < _size ? _vector[_counter++] : 0; }
+};
 
 /* cannot handle sometimes arrays of size 0 correctly */
 #define DECL_DYN_ARRAY(Type,Var,Size) \
-       _DECL_DYN_ARRAY(Type,Var,Size==0?1:Size) 
-
+_DECL_DYN_ARRAY(Type,Var,Size==0?1:Size) 
+  
 //-----------------------------------------------------------------------------
 #endif
 
