@@ -21,6 +21,7 @@ LIBS		= @LIBS@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
 
 TARGETS		= gdbm.ozf gdbm.so-$(PLATFORM)
 LIB_TARGETS	= $(LIB_DIR)/gdbm.ozf $(LIB_DIR)/gdbm.so-$(PLATFORM)
@@ -37,7 +38,7 @@ $(LIB_DIR)/gdbm.ozf: gdbm.ozf
 	$(INSTALL_LIB) $< $@
 
 $(LIB_DIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
-	$(INSTALL_LIB) $< $@
+	$(INSTALL_DLL) $< $@
 
 gdbm.ozf: gdbm.oz
 	$(COMPILE) $< -o $@

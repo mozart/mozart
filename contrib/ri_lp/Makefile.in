@@ -21,6 +21,7 @@ LIBS		= @LIBS@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
 
 
 USECPLEX = 
@@ -109,7 +110,7 @@ $(LIB_DIR)/%.ozf: %.ozf
 	$(INSTALL_LIB) $< $@
 
 $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
-	$(INSTALL_LIB) $< $@
+	$(INSTALL_DLL) $< $@
 
 #
 # maintenance part
