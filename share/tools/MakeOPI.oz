@@ -25,70 +25,90 @@
 
 \ifdef LILO
 
-{Application.syslet
- 'opi'
+%% THATS STILL ALL HACKED
 
- functor $
+local
 
- import
-    SP.{System          = 'System'
-	Exit            = 'Exit'
-	Print           = 'Print'
-	Show            = 'Show'
-	PutProperty     = 'PutProperty'
-	GetProperty     = 'GetProperty'
-	CondGetProperty = 'CondGetProperty'
-	Foreign         = 'Foreign'
-	Debug           = 'Debug'
-	Error           = 'Error'
-	Finalize        = 'Finalize'}
+   Env=
+   {Adjoin
+    {List.toRecord  'import'
+     {Map ['SP'
+	   'OP'    
+	   'AP'
+	   'CP'
+	   'DP'
+	   'WP'
+	   'Compiler'
+	   'Misc']
+      fun {$ A}
+	 A#{Load 'http://www.ps.uni-sb.de/ozhome/lib/'#A#'.ozf'}.'export'
+      end}}
+    {List.toRecord  'import'
+     {Map ['Panel'
+	   'Browser'
+	   'Explorer'
+	   'CompilerPanel'
+	   'Emacs'
+	   'Ozcar'
+	   'Profiler'
+	   'Gump'
+	   'GumpScanner'
+	   'GumpParser']
+      fun {$ A}
+	 A#{Load 'http://www.ps.uni-sb.de/ozhome/tools/'#A#'.ozf'}.'export'
+      end}}}
+   
+   FakedImport=
+   {Record.map Env fun {$ R}
+		      info(type: {Arity R})
+		   end}
 
-    OP.{OS   = 'OS'
-	Open = 'Open'
-	Load = 'Load'
-	Save = 'Save'
-	URL  = 'URL'}
-	    
-    AP
-    CP
-    DP
-    WP
-    Panel
-    Browser
-    Explorer
-    Compiler
-    CompilerPanel
-    Emacs
-    Ozcar
-    Profiler
-    Gump
-    GumpScanner
-    GumpParser
-    Misc
 
- export
-    'StartOpi': StartOPI
+   functor OpiFunctor
 
- body
-
-    ImportEnv = i('SP':            SP
-		  'OP':            OP
-		  'AP':            AP
-		  'CP':            CP
-		  'DP':            DP
-		  'WP':            WP
-		  'Panel':         Panel
-		  'Browser':       Browser
-		  'Explorer':      Explorer
-		  'Compiler':      Compiler
-		  'CompilerPanel': CompilerPanel
-		  'Emacs':         Emacs
-		  'Ozcar':         Ozcar
-		  'Profiler':      Profiler
-		  'Gump':          Gump
-		  'GumpScanner':   GumpScanner
-		  'GumpParser':    GumpParser
-		  'Misc':          Misc)
+   import
+      SP
+      OP    
+      AP
+      CP
+      DP
+      WP
+      Compiler
+      Misc
+      Panel
+      Browser
+      Explorer
+      CompilerPanel
+      Emacs
+      Ozcar
+      Profiler
+      Gump
+      GumpScanner
+      GumpParser
+      
+   export
+      'StartOpi': StartOPI
+      
+   body
+      ImportEnv = {Record.map
+		   i('SP':            SP
+		     'OP':            OP
+		     'AP':            AP
+		     'CP':            CP
+		     'DP':            DP
+		     'WP':            WP
+		     'Panel':         Panel
+		     'Browser':       Browser
+		     'Explorer':      Explorer
+		     'Compiler':      Compiler
+		    'CompilerPanel': CompilerPanel
+		    'Emacs':         Emacs
+		    'Ozcar':         Ozcar
+		    'Profiler':      Profiler
+		    'Gump':          Gump
+		    'GumpScanner':   GumpScanner
+		    'GumpParser':    GumpParser
+		    'Misc':          Misc)
 
  in
 
@@ -153,8 +173,14 @@
     end
  end
 
- plain}
+in
+{Application.syslet
+ 'opi'
 
+ OpiFunctor
+ 
+ plain}
+end
 
 \else
 
