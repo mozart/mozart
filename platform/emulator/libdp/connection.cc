@@ -48,7 +48,12 @@ void doConnect(ComObj *comObj) {
       oz_int((int) comObj));
   */
   // Send connect(Requestor LocalOzState DistOzState)
-  OZ_Term Requestor=oz_int((int) comObj);
+  // Requestor=requestor(id:SiteId req:comObj)
+  OZ_Term Requestor=OZ_recordInit(oz_atom("requestor"),
+				  oz_cons(oz_pairAA("id",
+						    site->stringrep()),
+					  oz_cons(oz_pairAI("req",(int) comObj),
+						  oz_nil())));
   OZ_Term LocalOzState=OZ_recordInit(oz_atom("localstate"),
 				     oz_cons(oz_pairA("connectionFunctor",
 						      defaultConnectionProcedure),
@@ -75,6 +80,36 @@ void doConnect(ComObj *comObj) {
   doPortSend(((PortWithStream *) tagged2Const(ConnectPort)), command, NULL);
 }
 
+inline OZ_Return parseRequestor(OZ_Term requestor, 
+				ComObj *&comObj, const char *&siteid) {
+  // AN! is any dereffing needed for comObj and siteid?
+  if(OZ_isRecord(requestor)) {
+    SRecord *srequestor = tagged2SRecord(requestor);
+    int index = srequestor->getIndex(oz_atom("id"));
+    if (index>=0) { 
+      OZ_Term t0 = srequestor->getArg(index);
+      NONVAR(t0,t);
+      if(OZ_isAtom(t))
+	siteid=OZ_atomToC(t);
+      else return OZ_FAILED;
+    }
+    else return OZ_FAILED;
+
+    index = srequestor->getIndex(oz_atom("req"));
+    if (index>=0) { 
+      OZ_Term t0 = srequestor->getArg(index);
+      NONVAR(t0,t);
+      if(OZ_isInt(t))
+	comObj=(ComObj *) oz_intToC(t);
+      else return OZ_FAILED;
+    }
+    else return OZ_FAILED;
+    //    printf("parseR %s %d %s\n",toC(requestor),(int) comObj,siteid);
+    return OZ_ENTAILED;
+  }
+  return OZ_FAILED;
+}
+
 OZ_BI_define(BIgetConnGrant,4,0){
   oz_declareNonvarIN(0,requestor);
   OZ_declareTerm(1,type);
@@ -82,6 +117,7 @@ OZ_BI_define(BIgetConnGrant,4,0){
   OZ_declareTerm(3,var) 
 
   OZ_Term tcp=oz_atom("tcp");
+  OZ_Return ret;
   TransController *transController;
   if(oz_eq(type,tcp))
     transController=tcptransController;
@@ -90,9 +126,11 @@ OZ_BI_define(BIgetConnGrant,4,0){
   if(canWait) {
     // If we can wait, then there must be a valid comobj in the 
     // requestor for queing purposes.
-    if(!OZ_isInt(requestor))
-      OZ_error("A requestor must be specified to be able to wait");
-    ComObj *comObj=(ComObj *) oz_intToC(requestor);
+    char *unused;
+    ComObj *comObj;
+    ret=parseRequestor(requestor,comObj,unused);
+    if(ret!=OZ_ENTAILED)
+      return ret;
     comObj->connectVar=var;
     OZ_protect(&(comObj->connectVar)); // Protects connectVar from GC, 
 	                               // must be unprotected when done
@@ -119,10 +157,12 @@ OZ_BI_define(BIfreeConnGrant,2,0){
   oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,grant);
 
-  ComObj *comObj=(ComObj *) oz_intToC(requestor);
-  if(!oz_isSRecord(grant))
-    OZ_typeError(1, "record");
-
+  char *unused;
+  ComObj *comObj;
+  OZ_Return ret;
+  ret=parseRequestor(requestor,comObj,unused);
+  if(ret!=OZ_ENTAILED)
+    return ret;
   SRecord *sgrant = tagged2SRecord(grant);
   int index = sgrant->getIndex(oz_atom("key"));
   if (index>=0) { 
@@ -147,7 +187,7 @@ void transObjReady(ComObj *comObj,TransObj *transObj) {
 }
 
 OZ_BI_define(BIhandover,3,0){
-  OZ_declareTerm(0,requestor);
+  oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,grant);
   OZ_declareTerm(2,settings);
   
@@ -161,18 +201,39 @@ OZ_BI_define(BIhandover,3,0){
   if (index>=0) { 
     OZ_Term t = sgrant->getArg(index);
     ComObj *comObj;
-    if(OZ_isInt(requestor))
-      comObj=(ComObj *) OZ_intToC(requestor);
-    else
+    Bool accepting=FALSE;
+
+    if(oz_eq(requestor,oz_atom("accept"))) {
+      accepting=TRUE;
       comObj=comController->newComObj(NULL);
+    }
+    else {
+      char *siteid;
+      OZ_Return ret;
+      ret=parseRequestor(requestor,comObj,siteid);
+//        printf("bef cmp %s %d %s\n",toC(requestor),(int) comObj,siteid);
+      if(ret!=OZ_ENTAILED)
+	return ret;
+
+      // Using the site from comObj here might not work since comObj might
+      // be corrupted if not in use and deleted! AN!
+      DSite *site=comObj->getSite();
+      if(site==NULL) // this comObj has been reused for accept or unused
+	return OZ_ENTAILED;
+      else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site 
+	                                           // or unused
+	{//printf("cmp %d %s %s\n",strcmp(site->stringrep(),siteid),site->stringrep(),siteid);
+	  return OZ_ENTAILED;}
+    }
+
     TransObj *transObj=(TransObj *) OZ_intToC(t);
     transObj->setUp(comObj->getSite(),comObj,settings);
-    if(OZ_isInt(requestor)) {
+    if(accepting)
+      comObj->accept(transObj);
+    else {
       if(!comObj->handover(transObj)) 
 	handback(comObj,transObj);
     }
-    else
-      comObj->accept(transObj);
   }
   else
     OZ_raiseC("Invalid grant",1);
@@ -190,9 +251,15 @@ void handback(ComObj *comObj, TransObj *transObj) {
 // it was waiting for.
 void comObjDone(ComObj *comObj) {
 //    printf("comObjDone %d %x\n",getpid(),comObj);
+  // Requestor=requestor(id:SiteId req:comObj)
+  OZ_Term Requestor=OZ_recordInit(oz_atom("requestor"),
+				  oz_cons(oz_pairAA("id",
+						    comObj->getSite()->stringrep()),
+					  oz_cons(oz_pairAI("req",(int) comObj),
+						  oz_nil())));
   OZ_Term command=OZ_recordInit(oz_atom("abort"),
 				oz_cons(oz_pair2(oz_int(1),
-						 oz_int((int) comObj)),
+						 Requestor),
 					oz_nil()));
   doPortSend(((PortWithStream *) tagged2Const(ConnectPort)), command, NULL);  
 }
@@ -208,8 +275,18 @@ OZ_BI_define(BIconnFailed,2,0) {
   oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,reason);
 
-  ComObj *comObj=(ComObj *) oz_intToC(requestor);
-  DSite *site=comObj->getSite();
+  DSite *site;
+  char *siteid;
+  ComObj *comObj;
+  OZ_Return ret;
+  ret=parseRequestor(requestor,comObj,siteid);
+  if(ret!=OZ_ENTAILED)
+    return ret;
+  site=comObj->getSite();
+  if(site==NULL) // this comObj has been reused for accept
+    return OZ_ENTAILED;
+  else if(strcmp(site->stringrep(),siteid)!=0) // reused for other site
+    return OZ_ENTAILED;
 
   if(oz_eq(reason,oz_atom("perm"))) {
     site->discoveryPerm();

@@ -62,9 +62,9 @@
   //
   NONE				// GName'd, or "passive";
 
-  //
-  REMOTE_SITE			// remote site ...
-  REMOTE_SITE | CONNECTED	// ... connected (as such);
+  // AN! REMOTE_SITE=>ACTIVE
+  REMOTE_SITE			// Active means connecteable
+  REMOTE_SITE | CONNECTED	// connected
 
   //
   PERM_SITE			// permanently down;
@@ -111,6 +111,7 @@ private:
 
   void disconnect(){
     flags &= (~CONNECTED);
+    comObj=NULL;
     return;}
 
   Bool connect(){
@@ -241,6 +242,7 @@ public:
     unsigned short t=getType();
     if(ActiveSite() && !isPerm() &&
        ((t & CONNECTED) /*|| u.readCtr!=0*/)){ // Check over tests AN!
+      Assert(t & REMOTE_SITE);
       Assert(comObj!=NULL);
       if(comObj->canBeFreed()) {
 	comController->deleteComObj(comObj);
@@ -279,7 +281,7 @@ public:
     setType(REMOTE_SITE);}
 
   // provided to network-comm
-  void dumpRemoteSite(){ // AN! remove readCtr
+  void dumpRemoteSite() {
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
     disconnect();
