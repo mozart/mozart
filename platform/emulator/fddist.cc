@@ -272,7 +272,7 @@ OZ_C_proc_begin(BIfdDistributeMinPairs, 5) {
   int     width  = pair_vector->getWidth();
   int     cur    = 0;
   int     new_cur = 0;
-  TaggedRef tagged_best_pair = NULL;
+  TaggedRef tagged_best_pair = makeTaggedNULL();
   SRecord *best_pair = NULL;
   double     best_costs = (double) OZ_getFDSup();
   TaggedRef tagged_pair;
