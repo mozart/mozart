@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.4.2 (Apr 97)'
+Version                = '1.5.0 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -107,6 +107,7 @@ MagicAtom              = 'noActionPlease'
 %% Geometry
 %%
 ToplevelGeometry       = '510x360+30+40'
+%ToplevelGeometry       = '510x360'
 SourceWindowGeometry   = '511x564+560+50'   %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
@@ -176,7 +177,8 @@ MaxStackBrowseSize     = 15
 
 TimeoutToCalc          =  90 % ms
 TimeoutToRedraw        = 180
-TimeoutToBlock         = 400
+TimeoutToBlock         = 470
+TimeoutToUpdateEnv     = 920
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff

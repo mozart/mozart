@@ -13,16 +13,9 @@ bei "rest-debugs" auf dem stack diese entfernen! ("cont")
  ...ausserdem auch ohne breakpoints Probleme bei blocking!
 C-c C-d C-h mit 'start threads' laesst thread zurueck
 
-Fri Mar 21 16:46:59 MET 1997
-Verzoegerte Anzeige des Environments mit bekannter Technik (siehe
-Klasse Tree) erst nach 2 Sekunden Ruhe (kein step/next click)
-
 Thu Mar 27 15:02:53 MET 1997
 leif special: running... anzeige (irgendwie) realisieren!
               (z.B. blinkende(?) thread nummern im thread tree :-))
-
-Thu Mar 27 18:36:34 MET 1997
-leif special: key shortcuts (insb. C-r !!!!!)
 
 Tue Apr  1 14:37:45 MET DST 1997
 leif special: Action auf args einstellbar Browse <-> Show
