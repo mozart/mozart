@@ -1566,11 +1566,42 @@ void Thread::gcRecurse()
     error("Thread::gcRecurse");
   }
   DebugGCT(Board *sob = notificationBoard);
-  notificationBoard = notificationBoard->gcBoard ();
+  notificationBoard = (notificationBoard->gcGetNotificationBoard ())->gcBoard ();
   DebugGC((sob != (Board *) NULL && notificationBoard == (Board *) NULL),
 	  error ("notification Board is removed in Thread::gcRecurse"));
 }
 
+Board* Board::gcGetNotificationBoard ()
+{
+  GCMETHMSG("Board::gcGetNotificationBoard");
+  Board *bb = this;
+  if (bb == (Board *) NULL)
+    return (bb);
+  Board *nb = this;
+  Actor *auxActor; 
+  while (OK) {
+    if (bb->isRoot () == OK)
+      return (nb);
+    if (bb->isDiscarded () == OK || bb->isFailed () == OK) {
+      auxActor = bb->u.actor;
+      DebugGC((auxActor == (Actor *) NULL ||
+	       ((ConstTerm *) auxActor)->getType () != Co_Actor),
+	      error ("non-actor is got in Board::gcGetNotificationBoard"));
+      bb = auxActor->getBoard ();
+      nb = bb;   // probably not dead;
+      continue;
+    }
+    if (bb->isCommitted () == OK) {
+      bb = bb->u.board;
+    } else {
+      auxActor = bb->u.actor;
+      DebugGC((auxActor == (Actor *) NULL || 
+	       ((ConstTerm *) auxActor)->getType () != Co_Actor),
+	      error ("non-actor is got in Board::gcGetNotificationBoard"));
+      bb = auxActor->getBoard ();
+    }
+  }
+}
 
 Board *Board::gcGetBoardDeref()
 {
