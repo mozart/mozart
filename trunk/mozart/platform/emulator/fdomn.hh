@@ -118,7 +118,7 @@ extern int fd_bv_right_conv[fd_bv_conv_max_high];
 class FDBitVector {
 private:
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-  struct {
+  struct b_arr_t {
     int _b_arr[fd_bv_max_high];
     int &operator [] (int i) /*const*/ {
       Assert(0 <= i && i < fd_bv_max_high);
