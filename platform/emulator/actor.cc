@@ -434,6 +434,16 @@ Bool SolveActor::isStable ()
   return (areNoExtSuspensions ()); 
 }
 
+void SolveActor::printDebug(void)
+{
+  cout << endl << "solveActor @" << this << endl;
+  cout << "solveVar="; taggedPrint(solveVar); cout << endl;
+  cout << "result="; taggedPrint(result); cout << endl;
+  cout << "threads=" << threads << endl;
+  suspList->print(cout);
+  cout.flush();
+}
+
 // ------------------------------------------------------------------------
 
 #ifdef OUTLINE
