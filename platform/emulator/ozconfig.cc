@@ -107,6 +107,10 @@ void ConfigData::init() {
   dpTableBuffer = DP_TABLE_BUFFER;
   dpTableWorthwhileRealloc = DP_TABLE_WORTHWHILE_REALLOC;
 
+  dpLog = FALSE;
+  dpConnectLog = FALSE;
+  dpMessageLog = FALSE;
+
   closetime = DEFAULT_CLOSE_TIME;
 
   /* set osname and cpu */
