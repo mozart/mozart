@@ -59,7 +59,7 @@ local
    end
 
 
-   functor MakeOzc2Html
+   functor MakeOzp2Html
 
    import
       Open
@@ -78,7 +78,7 @@ local
 
       F = {New HtmlOut init}
       
-      Page = {Component.load Syslet.args.ozc}
+      Page = {Component.load Syslet.args.ozp}
       
       {F
        tag(html(head(title(Page.title)
@@ -134,11 +134,11 @@ in
 
    {Application.syslet
 
-    'ozc2html'
+    'ozp2html'
 
-    MakeOzc2Html
+    MakeOzp2Html
 
-    single(ozc(type:string optional:false))
+    single(ozp(type:string optional:false))
 
    }
 

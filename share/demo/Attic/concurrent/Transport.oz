@@ -24,14 +24,22 @@ local
 
    \insert 'transport/country.oz'
    
-   fun {MakeTransport IMPORT}
-      \insert 'CP.env'
-      = IMPORT.'CP'
-      \insert 'WP.env'
-      = IMPORT.'WP'
-      \insert 'OP.env'
-      = IMPORT.'OP'
+   functor MakeTransport prop once
 
+   import
+      Tk
+
+      TkTools
+
+      Applet
+
+      OS
+
+      Search.{SearchBest = 'SearchBest'}
+
+      FD
+
+   body
       \insert 'transport/configure.oz'
       \insert 'transport/widgets.oz'
       \insert 'transport/randomizer.oz'
@@ -44,31 +52,23 @@ local
       \insert 'transport/company.oz'
       \insert 'transport/broker.oz'
 
-   in
+      F = {New Frontend init(toplevel:Applet.toplevel)}
 
-      proc {$ Toplevel Argv} 
-	 F = {New Frontend init(toplevel:Toplevel)}
-      in
-	 case Argv.defaults orelse Argv.random then
-	    {F addDefaults}
-	 else skip
-	 end
-	 case Argv.random then
-	    {F random}
-	 else skip
-	 end
+      case Applet.args.defaults orelse Applet.args.random then
+	 {F addDefaults}
+      else skip
       end
-
+      case Applet.args.random then
+	 {F random}
+      else skip
+      end
+   
    end
 
 in
 
    {Application.applet
     'transport.oza'
-    
-    c('CP': eager
-      'WP': eager
-      'OP': eager)
     
     MakeTransport
 
