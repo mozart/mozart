@@ -46,6 +46,7 @@
 #include "records.hh"
 #include "thread.hh"
 #include "tracer.hh"
+#include "ozdebug.hh"
 
 AM am;
 ConfigData conf;
@@ -221,10 +222,10 @@ void AM::init(int argc,char **argv)
   initAtoms();
   SolveActor::Init();
 
-  globalStore = allocateRefsArray(GLOBAL_STORE_SIZE);
+  toplevelVars = allocateRefsArray(GLOBAL_STORE_SIZE);
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
-  globalStore[0] = makeTaggedSRecord(bi);
+  toplevelVars[0] = makeTaggedSRecord(bi);
 
   IO::init();
 }
@@ -801,6 +802,20 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
   }
 
   trail.popMark();
+}
+
+void AM::pushCall(Board *n, SRecord *def, int arity, RefsArray args)
+{
+  n->addSuspension();
+  ensureTaskStack();
+  currentTaskStack->pushCall(n,def,args,arity);
+}
+
+void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
+{
+  n->addSuspension();
+  ensureTaskStack();
+  currentTaskStack->pushDebug(n, new OzDebug(def,arity,args));
 }
 
 #ifdef OUTLINE

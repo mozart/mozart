@@ -135,23 +135,11 @@ void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
 // Philosophy:
 //   Arguments which are passed around are never variables, but only
 //     REF or bound data
-#define CHECK_NONVAR(term) \
-   DebugCheck(!isRef(term) && isAnyVar(term), \
-              error("CHECK_NONVAR: is variable"));
-
-#define CHECK_ISVAR(term) \
-  DebugCheck(!isAnyVar(term),error("CHECK_ISVAR: is no variable"));
-
-
-#define CHECK_DEREF(term) \
-  DebugCheck(isRef(term) || isAnyVar(term), \
-             error("CHECK_DEREF: is variable or ref"));
-
-#define CHECK_NONNULL(s) \
-  DebugCheck(s == NULL,error("CHECK_NONNULL: is NULL"));
-
-#define CHECKTAG(Tag)\
-  DebugCheck(tagTypeOf(ref) != Tag,error("tagged2" #Tag ": bad tag"));
+#define CHECK_NONVAR(term) Assert(isRef(term) || !isAnyVar(term))
+#define CHECK_ISVAR(term)  Assert(isAnyVar(term))
+#define CHECK_DEREF(term)  Assert(!isRef(term) && !isAnyVar(term))
+#define CHECK_NONNULL(s)   Assert(s != NULL)
+#define CHECKTAG(Tag)      Assert(tagTypeOf(ref) == Tag)
 
 
 // ---------------------------------------------------------------------------
@@ -740,8 +728,7 @@ inline Bool initRefsArray(RefsArray a, int size, Bool init)
 
 inline RefsArray allocateRefsArray(int n, Bool init=OK)
 {
-  DebugCheck(n <= 0,
-             error("allocateRefsArray: size must be greater than 0"););
+  Assert(n > 0);
   RefsArray a = ((RefsArray) heapMalloc((n+1) * sizeof(TaggedRef)));
   a += 1;
   initRefsArray(a,n,init);

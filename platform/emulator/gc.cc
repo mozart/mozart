@@ -174,8 +174,7 @@ inline void *gcRealloc(void *ptr, size_t size)
 
 inline Bool needsNoCollection(TaggedRef t)
 {
-  DebugCheck(t==makeTaggedNULL(),
-             error("needsNoCollection: non NULL TaggedRef expected"););
+  Assert(t!=makeTaggedNULL());
 
   TypeOfTerm tag = tagTypeOf(t);
   return (tag == SMALLINT || tag == ATOM)
@@ -189,16 +188,14 @@ inline Bool needsNoCollection(TaggedRef t)
 
 inline void RebindTrail::gc()
 {
-  DebugCheck(!empty(),
-             error("RebindTrail::gc: trail is not empty"););
+  Assert(empty());
 }
 
 
 // cursor points to next free position
 inline void Trail::gc()
 {
-  DebugCheck(!empty(),
-             error("Trail::gc: trail is not empty"););
+  Assert(empty());
 }
 
 
@@ -614,7 +611,7 @@ inline LTuple *LTuple::gc()
 }
 
 
-inline SRecord *SRecord::gc()
+inline SRecord *SRecord::gcSRecord()
 {
   if (this == NULL) return NULL; /* objects may contain an empty record */
 
@@ -938,7 +935,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     return;
 
   case SRECORD:
-    toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gc());
+    toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord());
     return;
 
   case CONST:
@@ -1063,8 +1060,8 @@ void AM::gc(int msgLevel) {
     }
   performCopying();
 
-  GCPROCMSG("globalStore");
-  am.globalStore = gcRefsArray(am.globalStore);
+  GCPROCMSG("toplevelVars");
+  am.toplevelVars = gcRefsArray(am.toplevelVars);
 
   GCPROCMSG("updating external references to terms into heap");
   ExtRefNode::gc();
@@ -1242,25 +1239,11 @@ void AbstractionTable::gc()
   while(aux != NULL)
     {
       // there may be NULL entries in the table during gc
-      aux->pred = aux->pred->gcAbstraction();
+      aux->pred = (Abstraction *) aux->pred->gcSRecord();
       aux->left->gc();
       aux = aux->right;    // tail recursion optimization
     }
 }
-
-Abstraction *Abstraction::gcAbstraction()
-{
-  if (this == NULL) return NULL;
-
-  CHECKCOLLECTED(*(int*)this,Abstraction*);
-  INFROMSPACE(this);
-  Abstraction *newAddr = (Abstraction*) gcRealloc(this,sizeof(Abstraction));
-
-  setHeapCell((int *)this, GCMARK(newAddr));
-  newAddr->gRegs = gcRefsArray(newAddr->gRegs);
-  return newAddr;
-}
-
 
 void CodeArea::gc()
 {
@@ -1287,6 +1270,7 @@ TaskStack *TaskStack::gc()
       case C_CONT:       pop(3); continue;
       case C_DEBUG_CONT: pop(1); continue;
       case C_CFUNC_CONT: pop(3); continue;
+      case C_CALL_CONT:  pop(2); continue;
       }
     }
 
@@ -1311,7 +1295,12 @@ TaskStack *TaskStack::gc()
       break;
 
     case C_DEBUG_CONT:
-      newStack->gcQueue(((OzDebug*) pop())->gcOzDebug());
+      newStack->gcQueue(((OzDebug *) pop())->gcOzDebug());
+      break;
+
+    case C_CALL_CONT:
+      newStack->gcQueue(((SRecord *) pop())->gcSRecord());
+      newStack->gcQueue(gcRefsArray((RefsArray) pop()));
       break;
 
     case C_CFUNC_CONT:
@@ -1561,8 +1550,8 @@ void SRecord::gcRecurse()
     {
       Object *o      = (Object *) this;
       o->gRegs       = gcRefsArray(o->gRegs);
-      o->cell        = (Cell*)o->cell->gc();
-      o->fastMethods = o->fastMethods->gc();
+      o->cell        = (Cell*)o->cell->gcSRecord();
+      o->fastMethods = o->fastMethods->gcSRecord();
       // "Atom *printName" needs no collection
       break;
     }
@@ -1753,7 +1742,7 @@ void regsInToSpace(TaggedRef *regs, int size)
 
 OzDebug *OzDebug::gcOzDebug()
 {
-  pred = pred->gc();
+  pred = pred->gcSRecord();
   args = gcRefsArray(args);
   return this;
 }

@@ -65,7 +65,7 @@ public:
   Trail trail;
   RebindTrail rebindTrail;
   RefsArray xRegs;
-  RefsArray globalStore;
+  RefsArray toplevelVars;
 
   Thread *currentThread;
   TaskStack* currentTaskStack;    // opt: cache
@@ -127,6 +127,11 @@ public:
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
   Bool isInScope (Board *above, Board* node);
+
+  void ensureTaskStack();
+
+  void pushCall(Board *b, SRecord *def, int arity, RefsArray args);
+  void pushDebug(Board *n, SRecord *def, int arity, RefsArray args);
   void pushTask(Board *n,ProgramCounter pc,
                 RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushNervous (Board *n);

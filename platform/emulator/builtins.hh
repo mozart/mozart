@@ -28,7 +28,6 @@
 // special builtins known in emulate
 enum BIType {
   BIDefault,
-  BIApply,
   BIsolve,
   BIsolveCont,
   BIsolved
@@ -196,6 +195,7 @@ void BIinitCore();
 void BIinitFeatures();
 void BIinitFD(void);
 
+extern TaggedRef suspCallHandler;
 
 class BuiltinTabEntry {
   friend class Debugger;
@@ -205,14 +205,14 @@ public:
   : printname(makeTaggedAtom(name)), arity(arty),fun(fn),
     inlineFun(infun), type(BIDefault)
   {
-    DebugCheck(!isXAtom(printname),error("BuiltinTabEntry:: no atom"));
+    Assert(isXAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,BIFun fn,
                    InlineFunOrRel infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
     printname = OZ_stringToTerm(s);
-    DebugCheck(!isXAtom(printname),error("BuiltinTabEntry:: no atom"));
+    Assert(isXAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,BIFun fn,BIType t,
                    InlineFunOrRel infun=NULL)
@@ -223,7 +223,7 @@ public:
     : arity(arty),fun(NULL), inlineFun(infun), type(t)
   {
     printname = OZ_stringToTerm(s);
-    DebugCheck(!isXAtom(printname),error("BuiltinTabEntry:: no atom"));
+    Assert(isXAtom(printname));
   }
 
   ~BuiltinTabEntry () {}
@@ -283,7 +283,7 @@ private:
 
 class Builtin: public SRecord {
 friend void SRecord::gcRecurse();
-friend SRecord *SRecord::gc ();
+friend SRecord *SRecord::gcSRecord();
 private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend

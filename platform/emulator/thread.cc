@@ -160,7 +160,7 @@ Bool Thread::isScheduled() {
      NOTE: the compiler depends on the order of toplevel queries
      */
 void Thread::queueCont(Board *bb,ProgramCounter PC,RefsArray y) {
-  DebugCheck(!isNormal() || !u.taskStack, error("Thread::queueCont"));
+  Assert(isNormal() && u.taskStack);
   bb->addSuspension();
   u.taskStack->queueCont(bb,PC,y);
   if (this!=am.currentThread && !this->isScheduled()) {
@@ -236,7 +236,7 @@ void Thread::dispose() {
         u.taskStack->dispose();
       }
     }
-    DebugCheck(prev!=0 || next!=0,error("Thread::dispose"));
+    Assert(prev==0 && next==0);
     freeListDispose(this,sizeof(Thread));
   }
 }
@@ -245,17 +245,17 @@ void Thread::dispose() {
 // unlink the thread from the thread queue
 Thread *Thread::unlink() {
   if (prev) {
-    DebugCheck(prev->next!=this,error("Thread::unlink"));
+    Assert(prev->next==this);
     prev->next=next;
   } else {
-    DebugCheck(Head!=this,error("Thread::unlink"));
+    Assert(Head==this);
     Head=next;
   }
   if (next) {
-    DebugCheck(next->prev!=this,error("Thread::unlink"));
+    Assert(next->prev==this);
     next->prev=prev;
   } else {
-    DebugCheck(Tail!=this,error("Thread::unlink"));
+    Assert(Tail==this);
     Tail=prev;
   }
   prev=next=(Thread *) NULL;
@@ -265,19 +265,19 @@ Thread *Thread::unlink() {
 
 int Thread::getPriority()
 {
-  DebugCheck(priority < 0 || priority > 100, error("Thread::getPriority"));
+  Assert(priority >= 0 && priority <= 100);
   return priority;
 }
 
 void Thread::setPriority(int prio)
 {
-  DebugCheck(prio < 0 || prio > 100, error("Thread::setPriority"));
+  Assert(prio >= 0 && prio <= 100);
   priority=prio;
 }
 
 // add a thread to the thread queue
 void Thread::schedule() {
-  DebugCheck(isScheduled(),error("Thread::schedule"));
+  Assert(!isScheduled());
 
   if (this != am.currentThread
       && am.currentThread
@@ -319,20 +319,20 @@ void Thread::insertAfter(Thread *here) {
     next=here->next;
     here->next=this;
     if (next) {
-      DebugCheck(next->prev!=here,error("Thread::insertAfter"));
+      Assert(next->prev==here);
       next->prev=this;
     } else {
-      DebugCheck(Tail!=here,error("Thread::insertAfter"));
+      Assert(Tail==here);
       Tail=this;
     }
   } else {
     next=Head;
     Head=this;
     if (next) {
-      DebugCheck(next->prev!=0,error("Thread::insertAfter"));
+      Assert(next->prev==0);
       next->prev=this;
     } else {
-      DebugCheck(Tail!=0,error("Thread::insertAfter"));
+      Assert(Tail==0);
       Tail=this;
     }
   }
@@ -345,20 +345,20 @@ void Thread::insertBefore(Thread *here) {
     prev=here->prev;
     here->prev=this;
     if (prev) {
-      DebugCheck(prev->next!=here,error("Thread::insertBefore"));
+      Assert(prev->next==here);
       prev->next=this;
     } else {
-      DebugCheck(Tail!=here,error("Thread::insertBefore"));
+      Assert(Tail==here);
       Head=this;
     }
   } else {
     prev=Tail;
     Tail=this;
     if (prev) {
-      DebugCheck(prev->next!=0,error("Thread::insertBefore"));
+      Assert(prev->next==0);
       prev->next=this;
     } else {
-      DebugCheck(Head!=0,error("Thread::insertBefore"));
+      Assert(Head==0);
       Head=this;
     }
   }
@@ -372,14 +372,14 @@ Bool Thread::QueueIsEmpty() {
 
 /* only usage in emulate */
 Thread *Thread::GetFirst() {
-  DebugCheck(Head==0,error("Thread::Start"));
+  Assert(Head!=0);
   Thread *tt = Head;
   Head=tt->next;
   if (Head) {
-    DebugCheck(Head->prev!=tt,error("Thread::Start"));
+    Assert(Head->prev==tt);
     Head->prev= (Thread *) NULL;
   } else {
-    DebugCheck(Tail!=tt,error("Thread::Start"));
+    Assert(Tail==tt);
     Tail=Head;
   }
   tt->prev=tt->next=(Thread *) NULL;
@@ -389,8 +389,7 @@ Thread *Thread::GetFirst() {
 
 TaskStack *Thread::makeTaskStack()
 {
-  DebugCheck(!isNormal() || u.taskStack!=NULL,
-             error("Thread::makeTaskStack"));
+  Assert(isNormal() && !u.taskStack!=NULL);
   u.taskStack = new TaskStack(conf.taskStackSize);
   return u.taskStack;
 }
@@ -400,26 +399,26 @@ void Thread::pushTask(Board *bb,ProgramCounter pc,
                       RefsArray y,RefsArray g,
                       RefsArray x,int i)
 {
-  DebugCheck(!isNormal(),error("Thread::pushTask"));
+  Assert(isNormal());
   bb->addSuspension();
   u.taskStack->pushCont(bb,pc,y,g,x,i);
 }
 
 void Thread::pushTask (Board *bb, BIFun f, RefsArray x, int i)
 {
-  DebugCheck (!isNormal(), error ("Thread::pushTask"));
+  Assert(isNormal());
   bb->addSuspension ();
   u.taskStack->pushCont (bb, f, (Suspension *) NULL, x, i);
 }
 
 TaskStack *Thread::getTaskStack() {
-  DebugCheck(!isNormal(),error("Thread::getTaskStack"));
+  Assert(isNormal());
   return u.taskStack;
 }
 
 Board *Thread::popBoard()
 {
-  DebugCheck(!isNervous(),error("Thread::popBoard"));
+  Assert(isNervous());
   Board *ret = u.board;
   flags = (T_Normal | (flags & T_No_State));
   u.taskStack = (TaskStack *) NULL;
@@ -428,7 +427,7 @@ Board *Thread::popBoard()
 
 SuspContinuation *Thread::popSuspCont()
 {
-  DebugCheck(!isSuspCont(),error("Thread::popSuspension"));
+  Assert(isSuspCont());
   SuspContinuation *ret = u.suspCont;
   flags = T_Normal | (flags & T_No_State);
   u.taskStack = (TaskStack *) NULL;
@@ -437,7 +436,7 @@ SuspContinuation *Thread::popSuspCont()
 
 CFuncContinuation *Thread::popSuspCCont()
 {
-  DebugCheck(!isSuspCCont(),error("Thread::popSuspension"));
+  Assert(isSuspCCont());
   CFuncContinuation *ret = u.suspCCont;
   flags = (T_Normal | (flags & T_No_State));
   u.taskStack = (TaskStack *) NULL;
