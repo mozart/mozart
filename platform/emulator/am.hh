@@ -162,7 +162,7 @@ public:
   Bool isLocalVariable(TaggedRef var);
   Bool isInScope (Board *above, Board* node);
 
-  void ensureTaskStack();
+  TaskStack *ensureTaskStack();
   
   void pushCall(Board *b, SRecord *def, int arity, RefsArray args);
   void pushDebug(Board *n, SRecord *def, int arity, RefsArray args);
