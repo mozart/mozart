@@ -1,4 +1,54 @@
-GTK+/GNOME Memory Management
+1. GTK+/GNOME Memory Management Overview
 
-GTK+ safely handles its widgets automaticly. It uses
-reference counting based GC.
+GDK provides managed and unmanaged data structures. The latter
+do not have a ref count based memory management. Instead, those
+structures are allocated and freed manually.
+
+GTK+ safely handles its widgets automaticly using a
+reference counting based GC. This also applies to the
+canvas structures which are descendants of GTK+ objects.
+
+2. GOZ Memory Managemnt
+
+Managing GDK/GTK objects from oz side has to make sure that
+live objects will not be garbaged at c side. On the other
+hand, garbage collection has to take place as early as possible
+to prevent pollution of memory.
+
+Two things need to be handled:
+
+- The object pointers itself
+- Connected handlers to the objects
+
+2.1 Object pointers
+
+Imported and created objects are refed and stored in a Weak
+Dictionary. The finalizer will then unfref the not longer
+referenced object, thereby possibly triggering c side collection.
+The most specific ref function avialable will be called.
+
+Object import tries to map to an existing object before creating
+a new wrapper.
+
+2.2 Handler
+
+Any unary procedure can be connected to a signal. Since the procedure
+does not need to be closed over the object it refers to, it is necessary
+to maintain a handler list within the object wrapper.
+
+Since oz finalisation is not equivalent to c side death, it is safe
+but invalid to disconnect all registered handlers during finalisation.
+The objects might be still alive for a long time. Therefore a different
+approach has been chosen: All objects provide a default delete event handler
+which will be called on object deletion.
+
+The default delete handler iteratively calls all user connected delete
+handlers and then removes all signal bindings, possibly releasing the
+object wrapper.
+
+Known obstacle: If the user decides to make the deletion handler a method
+of the object wrapper, finalisation will be delayed
+until object deletion has occured.
+
+Implementation note: This is the reason why the handlers list is kept
+within a cell.

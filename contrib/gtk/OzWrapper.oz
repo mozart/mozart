@@ -810,7 +810,7 @@ define
                ((Name == "gtkCanvasItemNew") orelse (@stdPrefix == "Gdk"))
             then
                TextFile, putS({Util.indent 2}#"meth wrapperNew")
-               TextFile, putS({Util.indent 3}#"signals <- {Cell.new nil}")
+               TextFile, putS({Util.indent 3}#"signals <- {Cell.new nil#nil}")
                TextFile, putS({Util.indent 2}#"end")
             end
          end

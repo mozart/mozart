@@ -64,10 +64,6 @@ define
       end
    end
 
-   %% Cleanup related method names
-   CanCleanup     = {NewName}
-   DisableCleanup = {NewName}
-
    %% Create Object from incoming Pointer (Difficult)
    local
       Stream ObjectTable
@@ -89,21 +85,13 @@ define
       thread
          proc {Finalize Stream}
             case Stream
-            of (Key#Object)|Sr then
+            of (_#Object)|Sr then
                %% Decreases Reference count by one if applicable
                %% and removes all registered Handlers
 \ifdef DEBUG
                {System.show 'finalizing '#{String.toAtom {Object toString($)}}}
 \endif
-               %% Object's cleanup handler will be invoked once.
-               %% It may prevent the object from beeing freed.
-               %% In this case, register again for finalisation.
-               if {Object CanCleanup($)} andthen {Object cleanup($)}
-               then
-                  {Object DisableCleanup}
-                  {WeakDictionary.put ObjectTable Key Object}
-               else {Object unref}
-               end
+               {Object unref}
                {Finalize Sr}
             [] nil then skip
             end
@@ -316,44 +304,57 @@ define
       attr
          object  : unit %% Native Object Ptr
          signals : unit %% Cell containing Connected Signals List
-         cleanup : true %% Indicates whether cleanup is possible or not
       meth wrapperNew
-         Signals = {Cell.new nil}
+         Signals = {Cell.new nil#nil}
       in
          signals <- Signals
-         OzBase, signalConnect('delete-event'
-                               proc {$ _}
-                                  {Dispatcher killSignals(Signals)}
-                               end _)
+         %% The delete event is manually connected.
+         %% This special event automatically calls all other
+         %% connected delete events in order of connection.
+         {Dispatcher signalConnect(proc {$ Event}
+                                      {Dispatcher killSignals(Event Signals)}
+                                   end
+                                   @object 'delete-event' _)}
       end
       meth signalConnect(Signal ProcOrMeth $)
          SigHandler = if {IsProcedure ProcOrMeth}
-                      then
-                         fun {$ Event}
-                            {ProcOrMeth Event}
-                            unit
-                         end
+                      then ProcOrMeth
                       else
-                         fun {$ Event}
+                         proc {$ Event}
                             {self ProcOrMeth(Event)}
-                            unit
                          end
                       end
-         SignalId   = {Dispatcher signalConnect(SigHandler @object Signal $)}
-         CurHs NewHs
+         CurSignals NewSignals
       in
-         {Cell.exchange @signals CurHs NewHs}
-         NewHs = SignalId|CurHs
-         SignalId
-     end
+         {Cell.exchange @signals CurSignals NewSignals}
+         case CurSignals
+         of DelHs#SigHs then
+            case Signal
+            of 'delete-event' then
+               NewSignals = {Append DelHs [SigHandler]}#SigHs
+               unit
+            [] Signal then
+               SignalId = {Dispatcher
+                           signalConnect(SigHandler @object Signal $)}
+            in
+               NewSignals = DelHs#(SignalId|SigHs)
+               SignalId
+            end
+         end
+      end
       meth signalDisconnect(SignalId)
-         CurHs NewHs
+         CurSignals NewSignals
       in
-         {Cell.exchange @signals CurHs NewHs}
-         NewHs = {Filter CurHs fun {$ Id}
-                                  SignalId \= Id
-                               end}
-         {Dispatcher signalDisconnect(@object SignalId)}
+         {Cell.exchange @signals CurSignals NewSignals}
+         case CurSignals
+         of DelHs|SigHs then
+            NewHs = {Filter SigHs fun {$ Id}
+                                     SignalId \= Id
+                                  end}
+         in
+            {Dispatcher signalDisconnect(@object SignalId)}
+            NewSignals = DelHs#NewHs
+         end
       end
       meth signalBlock(SignalId)
          {GOZSignal.signalBlock @object SignalId}
@@ -384,15 +385,6 @@ define
       end
       meth getType($)
          unit
-      end
-      meth !CanCleanup($)
-         @cleanup
-      end
-      meth !DisableCleanup
-         cleanup <- false
-      end
-      meth cleanup($)
-         false
       end
    end
 
@@ -453,11 +445,11 @@ define
          Dispatch    = {NewName}
 
          %% Dummy Handler to circumvent problems with event caching
-         fun {EmptyHandler _}
+         proc {EmptyHandler _}
 \ifdef DEBUG
             {System.show 'Empty Handler Called'}
 \endif
-            unit
+            skip
          end
          %% Maxium Polling Delay
          PollDelay = 50
@@ -516,13 +508,22 @@ define
                {GOZSignal.signalDisconnect Object SignalId}
                {Dictionary.remove @handlerDict SignalId}
             end
-            meth killSignals(Signals)
+            meth killSignals(Event Signals)
                HandlerDict = @handlerDict
             in
-               {ForAll {Cell.access Signals}
-                proc {$ SignalId}
-                   {Dictionary.remove HandlerDict SignalId}
-                end}
+               case {Cell.access Signals}
+               of DelHs#SigHs then
+                  %% Execute any delete Event Handler connected
+                  {ForAll DelHs
+                   proc {$ Handler}
+                      {Handler Event}
+                   end}
+                  %% Disconnect any Handlers
+                  {ForAll SigHs
+                   proc {$ SignalId}
+                      {Dictionary.remove HandlerDict SignalId}
+                   end}
+               end
             end
             meth !Start
                @dispatchId = {Thread.this}
@@ -535,7 +536,7 @@ define
                elsecase Stream
                of (Id|Data)|Tail then
                   case {Dictionary.condGet @handlerDict Id EmptyHandler}
-                  of Handler then {Handler {ConvertArgs Data} _}
+                  of Handler then {Handler {ConvertArgs Data}}
                   end
                   stream <- Tail
                   {Dispatcher Dispatch}
@@ -551,9 +552,8 @@ define
          end
       end
    in
-      fun {Exit _}
+      proc {Exit}
          {Dispatcher exit}
-         unit
       end
 
       %% Create Interface
