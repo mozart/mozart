@@ -335,13 +335,46 @@ prepare
    %% Back to my own code
 
 define
+   
+   UTF8
+   local
+      Encoding={Tk.return encoding(system)}
+   in
+      if Encoding=="utf-8" orelse Encoding=="utf8" then
+	 UTF8=true
+      elseif {List.take Encoding 7}=="iso8859" then
+	 UTF8=false
+      else
+	 Names={Tk.returnList encoding(names)}
+      in
+	 if {List.member Names "iso8859-1"} then
+	    {Tk.send encoding(system "iso8859-1")}
+	    UTF8=false
+	 else
+	    D={List.dropWhile Names fun{$ N} {List.take N 7}\="iso8859" end}
+	 in
+	    if D==nil then
+	       if {List.member Names "utf-8"} then
+		  {Tk.send encoding(system "utf-8")}
+		  UTF8=true
+	       elseif {List.member Names "utf8"} then
+		  {Tk.send encoding(system "utf8")}
+		  UTF8=true
+	       else
+		  %% no iso8859 nor utf8 encoding found
+		  %% assume no transcoding
+		  UTF8=false
+	       end
+	    else
+	       {Tk.send encoding(system D.1)}
+	       UTF8=false
+	    end
+	 end
+      end
+   end
 
-   TransIn=if {Property.get 'platform.os'}==win32 then
-	      Trans.u2i
-	   else
-	      fun{$ S} S end
-	   end
-
+   TransIn=if UTF8 then Trans.u2i else fun{$ S} S end end
+	      
    fun{ConvertToType Str Type}
       %
       % This function converts a string into the specified type
@@ -476,7 +509,7 @@ define
    DefLook=look(set:proc{$ P} skip end
 		get:fun{$ P} P end)
 
-   VS2Tk=if Win32 then
+   VS2Tk=if UTF8 then
 	    fun{Parse Msg}
 	       if {VirtualString.is Msg} then
 		  {Trans.i2t {VirtualString.toString Msg}}
