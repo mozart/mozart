@@ -648,7 +648,7 @@ With ARG, start it instead."
 		  oz-bar-overlay start end (current-buffer))))
 	  (or (string-equal state "unchanged")
 	      (oz-bar-configure state)))
-	(if (and (>= start (window-start)) (<= start (window-end)))
+	(if (and (>= start (window-start)) (< start (window-end)))
 	    (goto-char oldpos)
 	  (widen)
 	  (goto-char start)))
@@ -1944,7 +1944,7 @@ and is used for fontification.")
   "Regular expression matching spaces before a TAB character.")
 
 (defconst oz-space-matcher-3
-  "[^\t\n]\\(\t+\\)"
+  "[^\t\n ].*\\(\t+\\)"
   "Regular expression matching TAB characters in the middle of a line.")
 
 (defconst oz-space-matcher-4
