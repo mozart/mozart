@@ -11,6 +11,10 @@
 
 #ifdef ASSEMBLER
 
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "assemble.hh"
+#endif
+
 #include "am.hh"
 #include "assemble.hh"
 
