@@ -552,13 +552,23 @@
                 <Tr><Th/Name/              <Th/OS/   <Th/ARCH/</Tr>
                 <Tr><Th/<<'aix3-rs6000'>>/   <Th/<<'aix3'>>/    <Th/<<'rs6000'>>/</Tr>
                 <Tr><Th/<<'freebsd-i486'>>/  <Th/<<'freebsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'freebsdelf-i486'>>/  <Th/<<'freebsdelf'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'irix5-mips'>>/    <Th/<<'irix'>>/    <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'hpux-700'>>/    <Th/<<'hpux'>>/    <Th/<<'700'>>/</Tr>
+                <Tr><Th/<<'linux-arm'>>/    <Th/<<'linux'>>/ <Th/<<'arm'>>/</Tr>
                 <Tr><Th/<<'linux-i486'>>/    <Th/<<'linux'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'linux-m68k'>>/    <Th/<<'linux'>>/ <Th/<<'m68k'>>/</Tr>
+                <Tr><Th/<<'linux-mips'>>/    <Th/<<'linux'>>/ <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'linux-parisc'>>/    <Th/<<'linux'>>/ <Th/<<'parisc'>>/</Tr>
+                <Tr><Th/<<'linux-ppc'>>/    <Th/<<'linux'>>/ <Th/<<'ppc'>>/</Tr>
+                <Tr><Th/<<'linux-s390'>>/    <Th/<<'linux'>>/ <Th/<<'s390'>>/</Tr>
+                <Tr><Th/<<'linux-sparc'>>/    <Th/<<'linux'>>/ <Th/<<'sparc'>>/</Tr>
                 <Tr><Th/<<'netbsd-i486'>>/   <Th/<<'netbsd'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'netbsd-m68k'>>/   <Th/<<'netbsd'>>/ <Th/<<'m68k'>>/</Tr>
                 <Tr><Th/<<'netbsd-sparc'>>/  <Th/<<'netbsd'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'openbsd-i486'>>/  <Th/<<'openbsd'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
+                <Tr><Th/<<'powermac-darwin'>>/    <Th/<<'powermac'>>/ <Th/<<'darwin'>>/</Tr>
                 <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'solaris-sparc'>>/ <Th/<<'solaris'>>/ <Th/<<'sparc'>>/</Tr>
                 <Tr><Th/<<'sunos-sparc'>>/   <Th/<<'sunos'>>/   <Th/<<'sparc'>>/</Tr>
