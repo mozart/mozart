@@ -94,7 +94,10 @@
     <Title/Loops/
     <P>
       The module <Span class=index/<<Loop>>/ contains procedures that
-      represent recursive versions of common iteration schemes with integers.
+      represent recursive versions of common iteration schemes with
+      integers.  However, for most common iteration patterns, the
+      <code/for/ loop offers a nicer alternative (see <ptr.extern
+      to="ozdoc:loop">).
       <List>
 	<Entry><Span class=index/<<For>>/
 	  <Index/<<Loop>><And><<for>>/
