@@ -70,8 +70,8 @@ void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v)
 
 // generic constraints
 inline
-void staticAddSpawnProp(OZ_GenDefinition * def, 
-			OZ_GenWakeUpDescriptor w,
+void staticAddSpawnProp(OZ_CtDefinition * def, 
+			OZ_CtWakeUp w,
 			OZ_Term * v)
 {
   staticSpawnVarsProp[staticSpawnVarsNumberProp].state.ct.def = def;
@@ -82,8 +82,8 @@ void staticAddSpawnProp(OZ_GenDefinition * def,
 }
 
 inline
-void staticAddSpawn(OZ_GenDefinition * def, 
-		    OZ_GenWakeUpDescriptor w,
+void staticAddSpawn(OZ_CtDefinition * def, 
+		    OZ_CtWakeUp w,
 		    OZ_Term * v)
 {
   staticSpawnVars[staticSpawnVarsNumber].state.ct.def = def;

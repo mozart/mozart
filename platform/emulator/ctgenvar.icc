@@ -48,7 +48,7 @@ Bool isGenCtVar(TaggedRef term, TypeOfTerm tag)
 
 
 inline
-OZ_GenConstraint * unpatchReifiedCt(OZ_Term t) 
+OZ_Ct * unpatchReifiedCt(OZ_Term t) 
 {
   Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
   GenCtVariable * ctv = ((GenCtVariable *) tagValueOf(t));;
@@ -58,7 +58,7 @@ OZ_GenConstraint * unpatchReifiedCt(OZ_Term t)
 }
 
 inline
-void addSuspCtVar(OZ_Term v, Suspension susp, OZ_GenWakeUpDescriptor w)
+void addSuspCtVar(OZ_Term v, Suspension susp, OZ_CtWakeUp w)
 {
   GenCtVariable * ctv = tagged2GenCtVar(v);
 
