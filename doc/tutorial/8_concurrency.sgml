@@ -565,12 +565,13 @@ local
       Xs = volvo|{ByNeed {Producer Xr} $}
    end
    proc {Consumer N Xs}
-      if N==0 then skip end
-      case Xs of X|Xr then
-          if X==volvo andthen N mod 1000 == 0 then
-            {Browse 'riding a new volvo'}
-            {Consumer N-1 Xr}
-          else {Consume N Xr} end
+      if N&gt;0 then
+         case Xs of X|Xr then
+            if X==volvo andthen N mod 1000 == 0 then
+              {Browse 'riding a new volvo'}
+              {Consumer N-1 Xr}
+            else {Consume N Xr} end
+         end  
       end
    end
 in
