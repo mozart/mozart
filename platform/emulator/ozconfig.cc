@@ -61,7 +61,7 @@ void ConfigData::init() {
 
   stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
 
-  gcFlag                = 0; // GC_FLAG;
+  gcFlag                = GC_FLAG;
   gcVerbosity           = GC_VERBOSITY;
   codeGCcycles          = CODE_GC_CYLES;
 
