@@ -140,6 +140,7 @@ void managerInstallProbe(Tertiary* t,ProbeType pt){
 void watcherRemoved(Watcher* w, Tertiary* t){
   EntityCond oldC=getSummaryWatchCond(t);
   Watcher** base=getWatcherBase(t);
+  Assert(base!=NULL);
   while((*base)!=w){
     base=&((*base)->next);
     Assert((*base)!=NULL);}
@@ -930,13 +931,14 @@ OZ_Return deinstallWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   EntityCond oldEC=getSummaryWatchCond(t);
   Bool found = FALSE;
   Watcher **base=getWatcherBase(t);
-  while(*base!=NULL){
-    if((*base)->matches(proc,th,wc,kind)){
-      *base = (*base)->next;
-      found = TRUE;
-      break;}
-    else{ 
-      base= &((*base)->next);}}
+  if(base!=NULL)
+    while(*base!=NULL){
+      if((*base)->matches(proc,th,wc,kind)){
+	*base = (*base)->next;
+	found = TRUE;
+	break;}
+      else{ 
+	base= &((*base)->next);}}
 
   if(!found) return IncorrectFaultSpecification;
 
@@ -1216,12 +1218,13 @@ void maybeUnask(Tertiary* t){
 
 void EntityInfo::dealWithWatchers(TaggedRef tr,EntityCond ec){
   Watcher **base=getWatcherBase();
-  while((*base)!=NULL){
-    if((ec & (*base)->watchcond) && !(*base)->isInjector()){
-      (*base)->invokeWatcher(tr,ec);
-      base= &((*base)->next);}
-    else
-      base= &((*base)->next);}
+  if(base!=NULL)
+    while((*base)!=NULL){
+      if((ec & (*base)->watchcond) && !(*base)->isInjector()){
+	(*base)->invokeWatcher(tr,ec);
+	base= &((*base)->next);}
+      else
+	base= &((*base)->next);}
 }
 
 /**********************************************************************/
