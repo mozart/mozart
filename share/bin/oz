@@ -126,6 +126,18 @@ case "$cmd" in
    oznc)    if [ ${OZCOMPONENTS-xx} = xx ]
             then OZCOMPONENTS="$OZHOME/lib/"
             else $doecho "Using components URL: $OZCOMPONENTS"
+                case $OZCOMPONENTS in
+                http:*)
+                    ;;
+                file:*)
+                    OZPATH=`echo $OZCOMPONENTS | sed 's/^file://'`:$OZPATH
+                    export OZPATH
+                    ;;
+                *)
+                    OZPATH=$OZCOMPONENTS:$OZPATH
+                    export OZPATH
+                    ;;
+                esac
             fi
 
             exec $OZEMULATOR -u "$OZCOMPONENTS"OPI.ozc "$@" -a $OZARGV
