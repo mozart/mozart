@@ -1500,6 +1500,40 @@ define
 	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    [] attrib then
 	       code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    %-----------------------------------------------------------
+	    %--** notation.sgml Specials
+	    %-----------------------------------------------------------
+	    [] 'rewrite' then Vars N in
+	       Vars = {Map {Filter {Record.toListInd M}
+			    fun {$ _#N} {Label N} == 'var' end}
+		       fun {$ _#N} N end}
+	       N = {Length Vars}
+	       BLOCK(table(COMMON: @Common border: 1
+			   case Vars of nil then EMPTY
+			   else
+			      tr(valign: top
+				 td(colspan: 2
+				    {FoldRTail Vars
+				     fun {$ V|Vr In}
+					SEQ([OzDocToHTML, Process(V $)
+					     case Vr of nil then EMPTY
+					     else PCDATA(', ')
+					     end In])
+				     end EMPTY}
+				    PCDATA(' ::=')))
+			   end
+			   tr(valign: top
+			      OzDocToHTML, Process(M.(N + 1) $)
+			      OzDocToHTML, Process(M.(N + 2) $))
+			   OzDocToHTML, Batch(M N + 3 $)))
+	    [] 'rewrite.from' then
+	       td(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    [] 'rewrite.to' then
+	       td(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	    [] 'rewrite.condition' then
+	       tr(COMMON: @Common valign: top
+		  td(colspan: 2
+		     OzDocToHTML, Batch(M 1 $)))
 	    else
 	       {@Reporter error(kind: OzDocError
 				msg: 'unknown element'   %--**
