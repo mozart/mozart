@@ -20,6 +20,7 @@
 
 #include "genvar.hh"
 #include "fdomn.hh"
+#include "fdomn1.hh"
 
 class Indent {
 public:
@@ -1474,7 +1475,7 @@ void FDBitVector::print(ostream &ofile, int idnt) const
 {
   ofile << indent(idnt) << '{';
 
-  int len = mkRaw(fd_bv_left_conv, fd_bv_right_conv);
+  int len = mkRawOutline(fd_bv_left_conv, fd_bv_right_conv);
   for (int i = 0; i < len; i += 1) {
     ofile << ' ' << fd_bv_left_conv[i];
     if (fd_bv_left_conv[i] != fd_bv_right_conv[i])
@@ -1537,10 +1538,10 @@ void FiniteDomain::print(ostream &ofile, int idnt) const
               (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
 }
 
-char * FiniteDomain::descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
-
 void FiniteDomain::printLong(ostream &ofile, int idnt) const
 {
+  static char * descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
+
   ofile << indent(idnt) << "min_elem=" << min_elem
         << " max_elem=" << max_elem << " size=" << getSize()
         << " descr=" << get_iv() << " type=" << descr_type_text[getType()];
