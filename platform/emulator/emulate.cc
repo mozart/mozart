@@ -1124,14 +1124,14 @@ void engine() {
       switch(res) {
 
       case PROCEED:
-        DISPATCH(5);
+        JUMP( getLabelArg(PC+3) );
 
       case SUSPEND:
         {
           TaggedRef A = Xreg(getRegArg(PC+2));
           DEREF(A,APtr,ATag);
           if (isAnyVar(ATag)) {
-            int argsToSave   = getPosIntArg(PC+4);
+            int argsToSave   = getPosIntArg(PC+5);
             Suspension *susp =
               new Suspension(new SuspContinuation(CBB,
                                                   GET_CURRENT_PRIORITY(),
@@ -1143,7 +1143,7 @@ void engine() {
         }
 
       case FAILED:
-        JUMP( getLabelArg(PC+3) );
+        JUMP( getLabelArg(PC+4) );
       }
     }
 
@@ -1158,14 +1158,14 @@ void engine() {
       switch(res) {
 
       case PROCEED:
-        DISPATCH(6);
+        JUMP( getLabelArg(PC+4) );
 
       case SUSPEND:
         {
           TaggedRef A    = Xreg(getRegArg(PC+2));
           TaggedRef B    = Xreg(getRegArg(PC+3));
           DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-          int argsToSave    = getPosIntArg(PC+5);
+          int argsToSave    = getPosIntArg(PC+6);
           Suspension *susp  =
             new Suspension(new SuspContinuation(CBB,
                                                 GET_CURRENT_PRIORITY(),
@@ -1183,7 +1183,7 @@ void engine() {
           goto LBLcheckEntailment;
         }
       case FAILED:
-        JUMP( getLabelArg(PC+4) );
+        JUMP( getLabelArg(PC+5) );
 
       }
     }
@@ -1193,9 +1193,10 @@ void engine() {
       int numbOfCons = e->trail.chunkSize();
 
       if (numbOfCons == 0) {
+        ProgramCounter lab = getLabelArg(PC+1);
         e->trail.popMark();
         shallowCP = NULL;
-        DISPATCH(1);
+        JUMP(lab);
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
@@ -1225,6 +1226,17 @@ void engine() {
       Y = allocateY(posInt);
       DISPATCH(2);
     }
+
+  INSTRUCTION(ALLOCATEL1)  { Y =  allocateY(1); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL2)  { Y =  allocateY(2); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL3)  { Y =  allocateY(3); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL4)  { Y =  allocateY(4); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL5)  { Y =  allocateY(5); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL6)  { Y =  allocateY(6); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL7)  { Y =  allocateY(7); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL8)  { Y =  allocateY(8); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL9)  { Y =  allocateY(9); DISPATCH(1); }
+  INSTRUCTION(ALLOCATEL10) { Y = allocateY(10); DISPATCH(1); }
 
   INSTRUCTION(DEALLOCATEL)
     {
@@ -2049,9 +2061,6 @@ void engine() {
 // -------------------------------------------------------------------------
 
   INSTRUCTION(ERROR)
-  INSTRUCTION(SEQOBSOLETE)
-  INSTRUCTION(SEQWAITOBSOLETE)
-  INSTRUCTION(EXCEPTIONOBSOLETE)
     {
       error("Emulate: ERROR command executed");
       goto LBLerror;
@@ -2082,6 +2091,7 @@ void engine() {
 
   INSTRUCTION(ENDOFFILE)
   INSTRUCTION(LABEL)
+  INSTRUCTION(ENDDEFINITION)
     warning("emulate: Unimplemented command");
     goto LBLcheckEntailment;
 
