@@ -70,8 +70,8 @@ public:
 };
 
 class TimerElement {
-  friend Timers;
-  friend TimerElementManager;
+  friend class Timers;
+  friend class TimerElementManager;
 protected:
   TimerElement *next;
   TimerWakeUpProc proc;
