@@ -76,7 +76,7 @@ set is specified by <<nil>>.
 In context of finite domain constraints for example, <<2#5>> denotes
 the set <Math/\{2,\ldots,5\}/, the specification <<[1 10#20]>> denotes
 the set <Math/\{1,10,\ldots,20\}/, and <<compl(2#5)>> denotes
-<Math/\{1,6,\ldots,\mbox{\tt FD.sup}\}/.
+<Math/\{0,1,6,\ldots,\mbox{\tt FD.sup}\}/.
 
 <P>
 The value of <<FD.inf>> and <<FS.inf>> is <Math/0/ and the value of
