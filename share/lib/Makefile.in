@@ -347,14 +347,14 @@ stage2:
         trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE2) \
         OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
-        OZC=$(STAGE1)/bin/ozc \
+        OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
         OZINIT=$(STAGE1)/share/Init.ozf
 
 # stage2a: recreate only the functors using the stage1 functors
 stage2a:
         $(MAKE) install-main PREFIX=$(STAGE2A) \
         OZ_LOAD=prefix=$(URL)/share/=$(STAGE1)/share/:.:= \
-        OZC=$(STAGE1)/bin/ozc \
+        OZC="$(SRCDIR)/oze.sh $(STAGE1)/bin/ozc" \
         OZINIT=$(STAGE1)/share/Init.ozf
 
 # stage2b: recreate the functors and Ozma file using the stage2a functors
@@ -363,7 +363,7 @@ stage2b:
         trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE2B) \
         OZ_LOAD=prefix=$(URL)/share/=$(STAGE2A)/share/:.:= \
-        OZC=$(STAGE2A)/bin/ozc \
+        OZC="$(SRCDIR)/oze.sh $(STAGE2A)/bin/ozc" \
         OZINIT=$(STAGE2A)/share/Init.ozf
 
 # stage3: recreate the functors and Ozma file using the stage2 Ozma file
@@ -395,7 +395,7 @@ stage3b:
         trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
         $(MAKE) install-stage PREFIX=$(STAGE3B) \
         OZ_LOAD=prefix=$(URL)/share/=$(STAGE3A)/share/:.:= \
-        OZC=$(STAGE3A)/bin/ozc \
+        OZC="$(SRCDIR)/oze.sh $(STAGE3A)/bin/ozc" \
         OZINIT=$(STAGE3A)/share/Init.ozf
 
 SAVE=./save
