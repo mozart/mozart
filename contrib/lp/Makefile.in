@@ -13,6 +13,7 @@ OZL             = @OZL@
 COMPILE         = $(OZC) -c -z 9
 OZTOOL          = @OZTOOL@
 CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
+                  -I$(SRCTOP)/contrib/ri \
                   -I$(BUILDTOP)/platform/emulator \
                   -I$(PREFIX)/include @CPPFLAGS@
 CXXFLAGS        = @CXXFLAGS@
@@ -27,11 +28,11 @@ INSTALL_DLL     = $(INSTALL) -m 555
 
 OZDEPEND        = ozc -c -M
 
-#USECPLEX =
-USECPLEX = 1
+USECPLEX =
+#USECPLEX = 1
 
 
-CFLAGS          =  -O3
+CFLAGS          =  -O3 $(COPT)
 CFLAGS          += -I/usr/local/oz/include
 CFLAGS          += -I$(VPATH)/../ri
 CFLAGS          += -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
