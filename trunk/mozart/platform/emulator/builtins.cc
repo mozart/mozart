@@ -6549,8 +6549,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsetMethApplHdl,1)
 {
   OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
-  if (! isAbstraction(preed)) {
-    oz_typeError(0,"abstraction");
+  if (!isAbstraction(preed) || tagged2Const(preed)->getArity()!=2) {
+    oz_typeError(0,"Procedure/2 (no builtin)");
   }
 
   if (am.methApplHdl) {
@@ -6566,7 +6566,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIcomma,2)
 {
   if (!am.methApplHdl) {
-    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,oz_atom("setMethApplHdl"));
+    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+	     oz_atom("setMethApplHdl"));
   }
 
   oz_currentThread->pushCall(am.methApplHdl,OZ_args,2);
@@ -6579,8 +6580,8 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsetSendHdl,1)
 {
   OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
-  if (! isAbstraction(preed)) {
-    oz_typeError(0,"abstraction");
+  if (!isAbstraction(preed) || tagged2Const(preed)->getArity()!=3) {
+    oz_typeError(0,"Procedure/3 (no builtin)");
   }
 
   if (am.sendHdl) {
@@ -6726,8 +6727,8 @@ DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 OZ_C_proc_begin(BIsetNewHdl,1)
 {
   OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
-  if (! isAbstraction(preed)) {
-    oz_typeError(0,"abstraction");
+  if (!isAbstraction(preed) || tagged2Const(preed)->getArity()!=3) {
+    oz_typeError(0,"Procedure/3 (no builtin)");
   }
 
   if (am.newHdl) {
@@ -6793,9 +6794,9 @@ DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 {
   oz_declareNonvarArg(0,hdl);
-  if (!oz_isProcedure(hdl)) oz_typeError(0,"Procedure");
-
-  if (tagged2Const(hdl)->getArity() != 1) oz_typeError(0,"Procedure/1");
+  if (!oz_isProcedure(hdl) || tagged2Const(hdl)->getArity()!=1) {
+    oz_typeError(0,"Procedure/1");
+  }
 
   if (am.defaultExceptionHandler) {
     oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
