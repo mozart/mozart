@@ -189,7 +189,6 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
   Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
-
   ozstat.propagatorsCreated.incf();
 
   am.suspendPropagator(thr);
@@ -256,6 +255,11 @@ OZ_NonMonotonic::order_t OZ_NonMonotonic::_next_order = 1;
 OZ_NonMonotonic::OZ_NonMonotonic(void) : _order(_next_order++)
 {
   Assert(_next_order);
+
+#ifdef DEBUG_NONMONOTONIC
+    printf("New nonmono order: %d\n", _next_order-1); fflush(stdout);
+#endif
+
 }
 
 // End of File

@@ -558,7 +558,9 @@ OZ_Return OZ_Expect::fail(void)
 OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 			    OZ_PropagatorFlags flags)
 {
-// do initial run with dummy thread
+  OZ_Boolean is_monotonic = p->isMonotonic();
+
+  // do initial run with dummy thread
 
   // Constrain all SVARs and UVARs in staticSuspendVars to FDVARs before
   // OZ_Propagator::run is run.
@@ -582,34 +584,37 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
   }
   
   Thread * thr = am.mkPropagator(am.currentBoard, prio, p);
-
   ozstat.propagatorsCreated.incf();
-  ozstat.propagatorsInvoked.incf();
   
-  Thread * backup_currentThread = am.currentThread;	
-  am.currentThread = thr;				
-  switch (am.runPropagator(thr)) {
-  case FAILED:						
-    am.closeDonePropagator(thr);
-    am.currentThread = backup_currentThread;		
-    staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
+  // only monotonic propagator are run on imposition 
+  if (is_monotonic) {
+    ozstat.propagatorsInvoked.incf();
+    
+    Thread * backup_currentThread = am.currentThread;	
+    am.currentThread = thr;				
+    switch (am.runPropagator(thr)) {
+    case FAILED:						
+      am.closeDonePropagator(thr);
+      am.currentThread = backup_currentThread;		
+      staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
     return FAILED;					        
-  case SLEEP:		
-    am.suspendPropagator(thr);
-    break;						
-  case SCHEDULED:					
-    am.scheduledPropagator(thr);
-    break;						
-  case PROCEED:						
-    am.closeDonePropagator(thr);
+    case SLEEP:		
+      am.suspendPropagator(thr);
+      break;						
+    case SCHEDULED:					
+      am.scheduledPropagator(thr);
+      break;						
+    case PROCEED:						
+      am.closeDonePropagator(thr);
+      am.currentThread = backup_currentThread;              
+      staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
+      return PROCEED;                                     
+    default:						
+      error("Unexpected return value.");			
+    }							
     am.currentThread = backup_currentThread;              
-    staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
-    return PROCEED;                                     
-  default:						
-    error("Unexpected return value.");			
-  }							
-  am.currentThread = backup_currentThread;              
-
+  }
+  
 // only if a propagator survives its first run proper suspension are created
   OZ_Boolean all_local = OZ_TRUE;
 
@@ -674,6 +679,14 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
   }
 
   staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
+
+  // only nonmonotonic propagator are set runnable on imposition 
+  if (! is_monotonic) {
+#ifdef DEBUG_NONMONOTONIC
+    printf("Setting nonmono prop runnable.\n"); fflush(stdout);
+#endif
+    am.scheduledPropagator(thr);
+  }
   return PROCEED;
 }
 
