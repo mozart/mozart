@@ -54,6 +54,9 @@ nil:     Don't start emulator (use command 'run').
          This is useful when you want to use breakpoints.
 ")
 
+(defvar oz-debug-mode nil
+  "*Determines the way how feeding of code is done.")
+
 (defvar oz-indent-chars 3
   "*Indentation of Oz statements with respect to containing block.")
 
@@ -323,7 +326,8 @@ starts the emulator under gdb")
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
     ("-----")
-    ("Connect Oz to Emacs" . oz-emacs-connect)
+    ("Start Debugger" . oz-debug-start)
+    ("Leave Debugger" . oz-debug-stop)
     ))
 
   "The contents of the Oz menu")
@@ -332,6 +336,24 @@ starts the emulator under gdb")
   "Load the definitions for communication from Oz to Emacs" t)
 
 (oz-make-menu oz-menu)
+
+
+;;------------------------------------------------------------
+;; Start/Stop debugger
+;;------------------------------------------------------------
+
+(defun oz-debug-start()
+  "Start the debugger."
+  (interactive)
+  (oz-emacs-connect)
+  (oz-feed-file "/home/ps-home/lorenz/dipl/buggi.oz")
+  (setq oz-debug-mode t))
+
+(defun oz-debug-stop()
+  "Stop the debugger."
+  (interactive)
+  (setq oz-debug-mode nil)
+  (oz-feed-file "/home/ps-home/lorenz/dipl/buggi-stop.oz"))
 
 
 ;;------------------------------------------------------------
@@ -551,17 +573,22 @@ the GDB commands `cd DIR' and `directory'."
 
 (defun oz-feed-region (start end)
   "Feeds the region."
-   (interactive "r")   
-   (oz-send-string (buffer-substring start end))
+  (interactive "r")
+  (if oz-debug-mode
+      (oz-send-string
+       (concat "{Buggi debugProc(proc{$}"
+	       (buffer-substring start end)
+	       "end)}"))
+      (oz-send-string (buffer-substring start end)))
   (oz-zmacs-stuff))
-     
+
 
 (defun oz-feed-line ()
   "Feeds one line."
-   (interactive)
+  (interactive)
    (let* ((line (oz-line-pos)))
      (oz-feed-region (car line) (cdr line)))
-  (oz-zmacs-stuff))
+   (oz-zmacs-stuff))
 
 
 (defun oz-feed-paragraph ()
