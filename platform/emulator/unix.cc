@@ -1709,31 +1709,15 @@ OZ_C_ioproc_begin(unix_getServByName, 3)
 OZ_C_proc_end
 #endif
 
-#ifdef WINDOWS
-/* ignore dir and prefix! */
-#define tempnam(dir,prefix) tmpnam(NULL)
-#endif
-
-OZ_C_ioproc_begin(unix_tempName, 3)
-{
-  OZ_declareVsArg(0, directory);
-  OZ_declareVsArg(1, prefix);
-  OZ_declareArg(2, name);
-
+OZ_C_ioproc_begin(unix_tmpnam, 1) {
   char *filename;
 
-  if (strlen(prefix) > 5)
-    return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,
-                    OZ_string("Maximal 5 characters for Unix.tempName prefix allowed."));
-
-  if (!(filename = tempnam(directory, prefix))) {
-    return raiseUnixError(0,
-                          "Unix.tempName failed.",
-                          "unix");
+  if (!(filename = tmpnam(NULL))) {
+    return raiseUnixError(0, "OS.tmpnam failed.", "os");
   }
   filename = ozstrdup(filename);
 
-  return OZ_unify(name, OZ_string(filename));
+  return OZ_unify(OZ_getCArg(0), OZ_string(filename));
 }
 OZ_C_proc_end
 
@@ -1964,7 +1948,7 @@ OZ_BIspec spec[] = {
   {"OS.getSockName",     2, unix_getSockName},
   {"OS.getHostByName",   2, unix_getHostByName},
   {"OS.pipe",            4, unix_pipe},
-  {"OS.tempName",        3, unix_tempName},
+  {"OS.tmpnam",          3, unix_tmpnam},
   {"OS.wait",            2, unix_wait},
   {"OS.getServByName",   3, unix_getServByName},
   {"OS.uName",           1, unix_uName},
