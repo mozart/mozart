@@ -6,10 +6,15 @@ It is normally invoked as follows:
 <code display/ozengine ?{url} ?{args...}/
 where ?{url} identifies an Oz application (a pickled functor) and
 ?{args...} are the arguments for the application.</p>
-<p>On Unix systems, it is possible to create <em/executable/
+  <p>It is also possible to create <em/executable/
 functors.  These are ordinary functors, except that when one is
 invoked as a shell command, it automatically starts
 <code/ozengine/ on itself.</p>
+  <p>Under Windows, an alternative to <<ozengine>> is provided called
+<<ozenginew>>.  While <<ozengine>> is a console-based application,
+<<ozenginew>> is a GUI-based application.  Its output appears in message
+boxes instead of in a console window.  Other than that, they behave the
+same.</p>
   <p>Instead of supplying arguments on the command line, you can also
 indicate a preference for using a graphical interface for editing an
 application's input parameters:
