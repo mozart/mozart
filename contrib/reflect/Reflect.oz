@@ -39,6 +39,7 @@ export
    PropLocation
    PropIsFailed
    SpaceReflect
+   SpaceReflectRaw
    IsPropagator
    IsDiscardedPropagator
    DiscardPropagator
@@ -74,6 +75,7 @@ define
    IsActivePropagator    = ReflectExport.isActivePropagator
    DeactivatePropagator  = ReflectExport.deactivatePropagator
    ActivatePropagator    = ReflectExport.activatePropagator
+   SpaceReflectRaw       = BIspaceReflect
 
    GetCtVarNameAsAtom       = CTB.getNameAsAtom
    GetCtVarConstraintAsAtom = CTB.getConstraintAsAtom
@@ -190,11 +192,18 @@ define
          % list all procedure ids
          ProcList = {FS.reflect.lowerBoundList
                      {FS.value.make
+                     {Filter
                       {Map PropList
                        fun {$ P}
-                          P.location.propInvoc.invoc
-                       end}}
+                          if P.location == unit
+                          then unit
+                           else P.location.propInvoc.invoc
+                          end
+                       end}
+                      IsInt}
+                     }
                     }
+
       in
          ProcTable = {MakeRecord procTable ProcList}
 \ifdef VERBOSE
@@ -202,33 +211,36 @@ define
 \endif
          {ForAll PropList
           proc {$ P}
-             Proc = P.location.propInvoc
-             Id = Proc.invoc
-          in
-             ProcTable.Id
-             = procedure(id:
-                            Proc.invoc
-                         name:
-                            Proc.name
-                         location:
-                            location(file:   Proc.file
-                                     line:   Proc.line
-                                     column: Proc.column
-                                     path:   Proc.path)
-                         parameters:
-                            {FS.var.lowerBound
-                             {FS.reflect.lowerBound
-                              P.parameters}}
-                         connected_props:
-                            {FS.var.lowerBound
-                             {FS.reflect.lowerBound
-                              P.connected_props}}
-                         connected_procs: _
-                         subsumed_props: {FS.var.lowerBound P.id}
+             if P.location == unit then skip
+             else
+                Proc = P.location.propInvoc
+                Id = Proc.invoc
+             in
+                ProcTable.Id
+                = procedure(id:
+                               Proc.invoc
+                            name:
+                               Proc.name
+                            location:
+                               location(file:   Proc.file
+                                        line:   Proc.line
+                                        column: Proc.column
+                                        path:   Proc.path)
+                            parameters:
+                               {FS.var.lowerBound
+                                {FS.reflect.lowerBound
+                                 P.parameters}}
+                            connected_props:
+                               {FS.var.lowerBound
+                                {FS.reflect.lowerBound
+                                 P.connected_props}}
+                            connected_procs: _
+                            subsumed_props: {FS.var.lowerBound P.id}
 
-                         called_by:
-                            Proc.callerInvoc
-                        )
+                            called_by:
+                               Proc.callerInvoc
+                           )
+             end
           end}
          {Record.forAll ProcTable
           proc {$ Proc}
