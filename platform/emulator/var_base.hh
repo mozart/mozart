@@ -30,13 +30,17 @@
 #ifndef __VAR_BASE_HH
 #define __VAR_BASE_HH
 
+#include "base.hh"
+
 #ifdef INTERFACE
 #pragma interface
 #endif
 
-#ifdef DEBUG_CHECK
+#define CORRECT_UNIFY
 
-#define DEBUG_CONSTRAIN_CVAR(ARGS)
+#if defined(DEBUG_CHECK) && defined(CORRECT_UNIFY)
+
+#define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout);
 
 #else
 
@@ -87,6 +91,15 @@ extern const int varSizes[];
 #define SVAR_EXPORTED  0x1
 #define CVAR_TRAILED   0x2
 #define SVAR_FLAGSMASK 0x3
+
+#define DISPOSE_SUSPLIST(SL)			\
+{						\
+  SuspList * sl = SL;				\
+  while (sl) {					\
+    sl=sl->dispose();				\
+  }						\
+  DebugCode(SL = 0);				\
+}
 
 class OzVariable {
 friend class OzFDVariable;
@@ -452,7 +465,6 @@ OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-//#define CORRECT_UNIFY
 #ifdef CORRECT_UNIFY
 // dealing with global variables
 void bindGlobalVar(OZ_Term *, OZ_Term *);
