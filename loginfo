@@ -44,3 +44,6 @@ Misc/papers/FD-JICSLP96-WS	mail -s "I have changed %s" tmueller,wuertz
 Misc/papers/fset	mail -s "I have changed %s" tmueller,mmueller
 Misc/papers/Indexicals  mail -s "I have changed %s" tmueller,duchier
 Misc/papers/WLP-FSET97  mail -s "I have changed %s" tmueller,mmueller
+Hiwis			mail -s "I have changed %s" tmueller,wuertz
+Hiwis/voelz		mail -s "I have changed %s" voelz
+Hiwis/loeckelt		mail -s "I have changed %s" loeckelt
