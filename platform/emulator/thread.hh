@@ -37,7 +37,7 @@ public:
   static Thread *GetHead();
   static Thread *GetTail();
   static Bool QueueIsEmpty();
-  static void Start();
+  static Thread *GetFirst();
   static void NewCurrent(int prio);
   static void ScheduleSuspension(Suspension *s);
   static void ScheduleWakeup(Board *n);

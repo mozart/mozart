@@ -54,13 +54,13 @@ public:
   MPRINT
   void printTree();
 
-  void addSuspension();
+  inline void addSuspension();
   Actor *getActor();
   Continuation *getBodyPtr();
   Board *getParentBoard();
   ConsList &getScriptRef();
   Board *getBoard();
-  Board *getBoardDeref();
+  inline Board *getBoardDeref();
   Board *gcGetBoardDeref();
   int getSuspCount(void);
   Bool hasSuspension();
@@ -76,7 +76,7 @@ public:
   Bool isWaiting();
   Bool isRoot();
   void newScript(int size);
-  void removeSuspension();
+  inline void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
 		       RefsArray g,RefsArray x,int i);
   void setInstalled();

@@ -142,11 +142,6 @@ Board::~Board() {
   error("mm2: not yet impl");
 }
 
-inline void Board::addSuspension()
-{
-  suspCount++;
-}
-
 inline Actor *Board::getActor()
 {
   DebugCheck(isCommitted(),error("Board::getActor"));
@@ -172,21 +167,6 @@ inline ConsList &Board::getScriptRef()
 inline Board *Board::getBoard()
 {
   return u.board;
-}
-
-/* return NULL if board is dead */
-inline Board *Board::getBoardDeref()
-{
-  Board *bb = this;
-  while (OK) {
-    if (!bb || bb->isDiscarded() || bb->isFailed()) {
-      return NULL;
-    } else if (bb->isCommitted()) {
-      bb = bb->u.board;
-    } else {
-      return bb;
-    }
-  }
 }
 
 inline int Board::getSuspCount()
@@ -270,11 +250,6 @@ inline void Board::newScript(int size)
   script.allocate(size);
 }
 
-inline void Board::removeSuspension()
-{
-  DebugCheck(suspCount<=0, error("removeSuspension"));
-  suspCount--;
-}
 
 inline void Board::setBody(ProgramCounter p,RefsArray y,
 			    RefsArray g,RefsArray x,int i)
