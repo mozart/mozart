@@ -593,19 +593,21 @@ the variable `oz-pedantic-spaces' is non-nil."
      ("Line"               oz-to-emulatorcode-line t)
      ("Paragraph"          oz-to-emulatorcode-paragraph t))
     ("Indent" nil
-     ("Line"               oz-indent-line t)
+     ("Buffer"             oz-indent-buffer t)
      ("Region"             oz-indent-region (mark t))
-     ("Buffer"             oz-indent-buffer t))
+     ("Line"               oz-indent-line t))
     ("Comment" nil
      ("Comment Region"     oz-comment-region (mark t))
      ("Uncomment Region"   oz-uncomment-region (mark t)))
     ("Browse" nil
-     ("Region"             oz-feed-region-browse (mark t))
-     ("Line"               oz-feed-line-browse t))
+     ("Buffer"             oz-browse-buffer t)
+     ("Region"             oz-browse-region (mark t))
+     ("Line"               oz-browse-line t)
+     ("Paragraph"          oz-browse-paragraph t))
     ("Panel"               oz-view-panel t)
+    ("Compiler Panel"      oz-compiler-panel t)
     ("Debugger"            oz-debug-start t)
     ("Profiler"            oz-profiler-start t)
-    ("Compiler Panel"      oz-compiler-panel t)
     ("-----")
     ("Next Oz Buffer"      oz-next-buffer t)
     ("Previous Oz Buffer"  oz-previous-buffer t)
@@ -1877,13 +1879,10 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
   (define-key map "\M-\C-m"      'oz-feed-buffer)
   (define-key map "\C-c\C-p"     'oz-feed-paragraph)
   (define-key map "\M-\C-x"      'oz-feed-paragraph)
-  (define-key map "\C-cb"        'oz-feed-line-browse)
-  (define-key map "\C-c\C-b"     'oz-feed-region-browse)
+  (define-key map "\C-c\C-b"     'oz-browse-region)
 
   (define-key map "\M-n"         'oz-next-buffer)
   (define-key map "\M-p"         'oz-previous-buffer)
-
-  (define-key map "\C-cc"        'oz-compiler-panel)
 
   (define-key map "\C-x "        'oz-breakpoint-key-set)
   (cond (oz-gnu-emacs
@@ -1900,11 +1899,7 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
   (define-key map "\C-c\C-l"     'oz-fontify-buffer)
   (define-key map "\C-c\C-r"     'run-oz)
   (define-key map "\C-c\C-h"     'oz-halt)
-  (define-key map "\C-cm"        'oz-set-other)
-  (define-key map "\C-co"        'oz-other)
-  (define-key map "\C-cd"        'oz-gdb)
   (define-key map "\r"           'oz-electric-terminate-line)
-  (define-key map "\C-cp"        'oz-view-panel)
 
   (define-key map "\M-\C-f"      'forward-oz-expr)
   (define-key map "\M-\C-b"      'backward-oz-expr)
@@ -1924,6 +1919,14 @@ If point is not inside a proc/fun/class definition, move to end of buffer."
       (progn
 	(define-key map "\M-r"         'oz-feed-region)
 	(define-key map "\M-l"         'oz-feed-line)
+
+	(define-key map "\C-cp"        'oz-view-panel)
+	(define-key map "\C-cb"        'oz-browse-line)
+	(define-key map "\C-cc"        'oz-compiler-panel)
+
+	(define-key map "\C-cm"        'oz-set-other)
+	(define-key map "\C-co"        'oz-other)
+	(define-key map "\C-cd"        'oz-gdb)
 
 	(define-key map "\C-c\C-d\C-r" 'oz-debug-start)
 	(define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
@@ -2698,7 +2701,14 @@ feed that many preceding paragraphs as well as the current paragraph."
 			  "\\switch " switches "\n"
 			  (oz-get-region start end))))
 
-(defun oz-feed-region-browse (start end)
+(defun oz-browse-buffer ()
+  "Feed the current buffer to the Oz Compiler.
+Assuming it to contain an expression, it is enclosed by an application
+of the procedure Browse."
+  (interactive)
+  (oz-browse-region (point-min) (point-max)))
+
+(defun oz-browse-region (start end)
   "Feed the current region to the Oz Compiler.
 Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse."
@@ -2707,7 +2717,7 @@ of the procedure Browse."
     (oz-send-string (concat "{Browse\n" contents "}")))
   (oz-zmacs-stuff))
 
-(defun oz-feed-line-browse (arg)
+(defun oz-browse-line (arg)
   "Feed the current line to the Oz Compiler.
 Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse.
@@ -2715,7 +2725,18 @@ With ARG, feed that many lines.  If ARG is negative, feed that many
 preceding lines as well as the current line."
   (interactive "p")
   (let ((region (oz-line-region arg)))
-    (oz-feed-region-browse (car region) (cdr region))))
+    (oz-browse-region (car region) (cdr region))))
+
+(defun oz-browse-paragraph (arg)
+  "Feed the current paragraph to the Oz Compiler.
+Assuming it to contain an expression, it is enclosed by an application
+of the procedure Browse.
+If the point is exactly between two paragraphs, feed the preceding
+paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
+feed that many preceding paragraphs as well as the current paragraph."
+  (interactive "p")
+  (let ((region (oz-paragraph-region arg)))
+    (oz-browse-region (car region) (cdr region))))
 
 (defun oz-view-panel ()
   "Feed `{Panel.open}' to the Oz Compiler."
