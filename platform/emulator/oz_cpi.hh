@@ -296,4 +296,7 @@ int OZ_getFDSup(void);
 
 int OZ_vectorSize(OZ_Term);
 
+OZ_Term * OZ_getOzTermVector(OZ_Term, OZ_Term *);
+int * OZ_getCIntVector(OZ_Term, int *);
+
 #endif // __OZ_CPI_HH__
