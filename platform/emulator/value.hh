@@ -45,8 +45,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
        AtomHeap, AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
-  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM
-;
+  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
+BI_send;
 
 /*===================================================================
  * Literal
@@ -582,6 +582,7 @@ enum TypeOfConst {
   Co_Builtin,  
   Co_Cell,
   Co_Space,
+  Co_Port,
 
   /* chunks must stay together and the first one
    * must be Co_Object
@@ -589,7 +590,6 @@ enum TypeOfConst {
    * NOTE: update the builtins: subtree and chunkArity !
    */
   Co_Object,   
-  Co_Port,
   Co_Chunk,
   Co_Array,
   Co_Dictionary,    /* 12 */
@@ -1631,6 +1631,7 @@ Bool isProcedure(TaggedRef term)
   switch (tagged2Const(term)->getType()) {
   case Co_Abstraction:
   case Co_Builtin:
+  case Co_Port:
     return OK;
   default:
     return NO;
@@ -1710,7 +1711,6 @@ public:
   char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
   IFOR getInlineFun() { return inlineFun; } 
-
 };
 
 

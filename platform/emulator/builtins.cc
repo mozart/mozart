@@ -500,6 +500,9 @@ OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
     case Co_Builtin:
       arity = ((BuiltinTabEntry *) rec)->getArity();
       break;
+    case Co_Port:
+      arity = 1;
+      break;
     default:
       goto typeError;
     }
@@ -6766,7 +6769,6 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   oz_declareNonvarArg(0,hdl);
   if (!oz_isProcedure(hdl)) oz_typeError(0,"Procedure");
 
-  hdl = deref(hdl);
   if (tagged2Const(hdl)->getArity() != 1) oz_typeError(0,"Procedure/1");
   am.defaultExceptionHandler = hdl;
   return PROCEED;
