@@ -218,7 +218,13 @@ Bool GenFSetVariable::unifyFSet(OZ_Term * vptr, OZ_Term var,
 	    break;
 	  } // switch (varIsLocal + 2 * termIsLocal) 
 	  goto t;
-	} // case FSetVariable: 
+	} // case FSetVariable:
+      case LazyVariable:
+	{
+	  return
+	    ((GenLazyVariable*)
+	     tagged2CVar(term))->unifyLazy(tptr,vptr,scp);
+	}
       default: 
 	goto f;
       } // switch(tagged2CVar(term)->getType())
