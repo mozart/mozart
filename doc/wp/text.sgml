@@ -159,7 +159,7 @@ B={New Tk.textTag tkInit(parent:T foreground:brown)}
 <chunk class=anonymous><title/text tag configure/
 {B tk(configure font:{New Tk.font tkInit(size:18)})}
 </chunk>
-      the text portion <kbd/"brown" now appears in that larger font.
+      the text portion <kbd/"brown"/ now appears in that larger font.
 
     <para class=apropos><title/inserting and adding text/
       The <<insert>> command also supports tags directly. The following
