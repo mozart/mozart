@@ -165,7 +165,13 @@ define
    end
 
    proc {ToFile V F}
-      O={New Open.file init(name:F flags:[write create truncate])}
+      O=if {HasFeature Open compressedFile} then
+	   {New Open.compressedFile
+	    init(name:F flags:[write create truncate 9])}
+	else
+	   {New Open.file
+	    init(name:F flags:[write create truncate])}
+	end
    in
       try
 	 {O write(vs:{ToString V})}
@@ -174,7 +180,11 @@ define
       end
    end
    fun {FromFile F}
-      O={New Open.file init(url:F)}
+      O=if {HasFeature Open compressedFile} then
+	   {New Open.compressedFile init(url:F)}
+	else
+	   {New Open.file init(url:F)}
+	end
       S={O read(list:$ size:all)}
    in
       {O close}
