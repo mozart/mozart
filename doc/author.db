@@ -1,9 +1,3 @@
-key:            Benjamin.Lorenz
-lastname:       Lorenz
-firstname:      Benjamin
-www:            http://www.ps.uni-sb.de/~lorenz/
-email:          lorenz@ps.uni-sb.de
-
 key:            Denys.Duchier
 lastname:       Duchier
 firstname:      Denys
@@ -22,6 +16,12 @@ firstname:      Leif
 middlename:     Tobias
 www:            http://www.ps.uni-sb.de/~kornstae/
 email:          kornstae@ps.uni-sb.de
+
+key:            Benjamin.Lorenz
+lastname:       Lorenz
+firstname:      Benjamin
+www:            http://www.ps.uni-sb.de/~lorenz/
+email:          lorenz@ps.uni-sb.de
 
 key:            Michael.Mehl
 lastname:       Mehl
