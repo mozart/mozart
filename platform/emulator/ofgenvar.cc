@@ -5,6 +5,7 @@
 
 #include "genvar.hh"
 #include "ofgenvar.hh"
+#include "bignum.hh"
 
 //-------------------------------------------------------------------------
 //                               for class DynamicTable
@@ -219,6 +220,26 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
         arity=tail(arity);
     }
     return flist;
+}
+
+// Allocate & return sorted list containing all features:
+TaggedRef DynamicTable::getArity() {
+    TaggedRef arity=AtomNil;
+    if (numelem>0) {
+        STuple *stuple=STuple::newSTuple(AtomNil,numelem);
+        TaggedRef *arr=stuple->getRef();
+        for (int ai=0,di=0; di<size; di++) {
+            if (table[di].ident) {
+               arr[ai] = table[di].ident;
+               ai++;
+            }
+        }
+        inplace_quicksort(arr, arr+(numelem-1));
+        for (int i=numelem-1; i>=0; i--) {
+           arity=cons(arr[i],arity);
+        }
+    }
+    return arity;
 }
 
 

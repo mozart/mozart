@@ -230,38 +230,6 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 } // PRINT(GenCVariable)
 
 
-// Swap TaggedRef array elements:
-inline void inplace_swap(TaggedRef* a, TaggedRef* b) {
-  register TaggedRef aux = *a;
-  *a = *b;
-  *b = aux;
-}
-
-// In-place sort of an array of TaggedRef:
-void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
-  register TaggedRef* i;
-  register TaggedRef* j;
-
-  if (first >= last)
-    return;
-  for (i = first, j = last; ; j--) {
-    while (i != j && atomcmp(*i, *j) <= 0)
-      j--;
-    if (i == j)
-      break;
-    inplace_swap(i, j);
-    do
-      i++;
-    while (i != j && atomcmp(*i, *j) <= 0);
-    if (i == j)
-      break;
-    inplace_swap(i, j);
-  } // for
-  inplace_quicksort(first, i-1);
-  inplace_quicksort(i+1, last);
-}
-
-
 // Non-Name Features are output in alphabetic order:
 PRINT(DynamicTable)
 {
@@ -290,7 +258,6 @@ PRINT(DynamicTable)
         if (tmplit && isAtom(tmplit)) arr[ai++]=tmplit;
     }
     // Sort the Atoms according to printName:
-    // (Routine used from records.cc)
     inplace_quicksort(arr, arr+(nAtom-1));
     // Output the Atoms first, in order:
     for (ai=0; ai<nAtom; ai++) {
