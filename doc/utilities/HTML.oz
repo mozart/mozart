@@ -1,3 +1,27 @@
+%%%
+%%% Author:
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%
+%%% Contributors:
+%%%   Tobias Mueller <tmueller@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Leif Kornstaedt, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%   $MOZARTURL$
+%%%
+%%% See the file "LICENSE" or
+%%%   $LICENSEURL$
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 functor
 export
    empty: EMPTY
@@ -75,38 +99,50 @@ define
 	 end
       [] !EMPTY then ""
       [] BLOCK(X) then End#{HTMLToVirtualString X}#Start
-      else Tag Attrs NewStart NewEnd in
+      else Tag Attrs1 Attrs ThisStart ThisEnd NewStart NewEnd in
 	 Tag = {Map {Atom.toString {Label HTML1}} Char.toUpper}
-	 Attrs = {Record.foldLInd HTML1
-		  fun {$ F In X}
-		     if {IsInt F} orelse X == unit then In
-		     else
-			In#' '#F#'='#
-			{MakeCDATA case F of 'class' then
-				      case X of X1|Xr then
-					 {FoldL Xr
-					  fun {$ In X} In#' '#X end X1}
-				      [] nil then X
-				      end
-				   else X
-				   end}
-		     end
-		  end ""}
-	 if Attrs == "" andthen {HasFeature IgnoreIfNoAttr {Label HTML1}} then
+	 Attrs1 = {Record.foldLInd HTML1
+		   fun {$ F In X}
+		      if {IsInt F} orelse X == unit orelse F == id then In
+		      else
+			 In#' '#F#'='#
+			 {MakeCDATA case F of 'class' then
+				       case X of X1|Xr then
+					  {FoldL Xr
+					   fun {$ In X} In#' '#X end X1}
+				       [] nil then X
+				       end
+				    else X
+				    end}
+		      end
+		   end ""}
+	 Attrs = case {CondSelect HTML1 id unit} of unit then Attrs1
+		 elseof X then Attrs1#' id='#{MakeCDATA X}
+		 end
+	 if Attrs1 == "" andthen {HasFeature IgnoreIfNoAttr {Label HTML1}} then
 	    NewStart = ""
 	    NewEnd = ""
 	 else
-	    NewStart = '<'#Tag#Attrs#'>'
+	    NewStart = '<'#Tag#Attrs1#'>'
 	    NewEnd = if {HasFeature NoEndTag {Label HTML1}} then ""
 		     else '</'#Tag#'>'
 		     end
+	 end
+	 if Attrs == "" andthen {HasFeature IgnoreIfNoAttr {Label HTML1}} then
+	    ThisStart = ""
+	    ThisEnd = ""
+	 else
+	    ThisStart = '<'#Tag#Attrs#'>'
+	    ThisEnd = if {HasFeature NoEndTag {Label HTML1}} then ""
+		      else '</'#Tag#'>'
+		      end
 	 end
 	 {Record.foldLInd HTML1
 	  fun {$ F In X}
 	     if {IsInt F} then In#{ToVSSub X NewStart NewEnd}
 	     else In
 	     end
-	  end NewStart}#NewEnd
+	  end ThisStart}#ThisEnd
       end
    end
 
