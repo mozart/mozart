@@ -22,9 +22,7 @@ SRecordArity getArity(TaggedRef arity)
     return mkTupleWidth(smallIntValue(arity));
   }
 
-  int len = length(arity);
-  arity = sortlist(arity,len);
-  Arity *ari = aritytable.find(arity);
+  Arity *ari = oz_makeArity(arity);
   return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
 }
 
@@ -89,7 +87,7 @@ OZ_C_proc_begin(BImakeProc,3)
   OZ_declareArg(2,ret);
   globals = deref(globals);
 
-  int numglobals = length(globals);
+  int numglobals = OZ_length(globals);
   RefsArray gRegs =
     numglobals? allocateRefsArray(numglobals): (RefsArray) NULL;
 
@@ -382,7 +380,7 @@ OZ_C_proc_begin(BIstoreGRegRef,2)
   declareCodeBlock(0,code);
   OZ_declareNonvarArg(1,globals);
   globals = deref(globals);
-  int numglobals = length(globals);
+  int numglobals = OZ_length(globals);
 
   AssRegArray *gregs = new AssRegArray(numglobals);
 
