@@ -47,17 +47,26 @@
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
 
-(defvar oz-machine (concat (getenv "HOME") "/Oz/AM/oz.machine.bin")
-  "The machine for gdb mode and for [oz-other]")
+(defvar oz-emulator (concat (getenv "HOME") "/Oz/AM/oz.machine.bin")
+  "The emulator for gdb mode and for [oz-other]")
 
-(defvar oz-machine-buffer "*Oz Machine*"
-  "The buffername of the Oz Machine output")
+(defvar oz-emulator-buffer "*Oz Emulator*"
+  "The buffername of the Oz Emulator output")
 
-(defvar oz-machine-hook nil
-  "Hook used if non nil for starting the Oz Machine.
+(defvar oz-compiler-buffer "*Oz Compiler*"
+  "The buffername of the Oz Compiler output")
+
+(defvar oz-protocol-buffer "*Oz Protocol*"
+  "The buffername of the Oz Protocol")
+
+(defvar oz-protocol-counter 0
+  "count the number outputs to oz-compiler")
+
+(defvar oz-emulator-hook nil
+  "Hook used if non nil for starting the Oz Emulator.
 For example
-  (setq oz-machine-hook 'oz-start-gdb-machine)
-starts the machine under gdb")
+  (setq oz-emulator-hook 'oz-start-gdb-emulator)
+starts the emulator under gdb")
 
 (defvar oz-wait-for-compiler 5
   "Wait between startup of compiler and engine")
@@ -91,21 +100,8 @@ Compiler buffer")
 (defvar oz-temp-counter 0
   "gensym counter")
 
-(defvar oz-compiler-state "???")
-(defvar oz-machine-state  "???")
-
-(defvar oz-title-format nil
+(defvar oz-title-format "Oz Console"
   "The format string for the window title" )
-(if oz-gnu19
- (setq oz-title-format "Oz Console          C: %s  M: %s")
- )
-(if oz-lucid
- (setq oz-title-format
-       '(("Oz Console: %b   C: "    oz-compiler-state)
-	 ("   M: " oz-machine-state))))
-;       '(("Oz Console: %b   C:  "   (-30 . oz-compiler-state))
-;	 ("   M:  " (-30 . oz-machine-state)))))
-
 
 (defvar oz-old-screen-title
   (if oz-lucid
@@ -146,33 +142,16 @@ Compiler buffer")
 ;;  see function mode-line-format
 ;; gnu19 supports frame-title as constant string
 
-(defun oz-canon-status-string(s)
-  (cond ((string-match "\\<idle\\>" s) s)
-	((string-match "\\<gdb\\>" s) "gdb mode")
-	((string-match "\\<running\\>" s) "running")
-	((string-match "\\<halted\\>" s) "halted")
-	((string-match "\\<booting\\>" s) "booting")
-	( t "???")))
+(defun oz-set-title ()
+  (if oz-gnu19
+      (mapcar '(lambda(scr)
+		 (modify-frame-parameters 
+		  scr
+		  (list (cons 'name oz-title-format))))
+	      (visible-screen-list)))
 
-(defun oz-set-state(state string)
-  "change compiler or machine state and adjust the window titles"
-  (if (string= string "")
-      t
-    (setq string (oz-canon-status-string string))
-    (set state 
-	 (format "%s" 
-		 (substring string 0 
-			    (min 30 (length string)))))
-    (if oz-gnu19
-     (let ((name (format oz-title-format 
-			 oz-compiler-state 
-			 oz-machine-state)))
-       (mapcar '(lambda(scr)
-		  (modify-frame-parameters 
-		   scr
-		   (list (cons 'name name))))
-	       (visible-screen-list))))))
-
+  (if oz-lucid
+      (setq screen-title-format oz-title-format)))
 
 (defun oz-reset-title()
   "reset to the initial window title"
@@ -288,10 +267,10 @@ Compiler buffer")
      ("region"      . oz-to-coresyntax-region)
      ("line"        . oz-to-coresyntax-line  )
      )
-    ("Machine Code"
-     ("buffer"      . oz-to-machinecode-buffer)
-     ("region"      . oz-to-machinecode-region)
-     ("line"        . oz-to-machinecode-line  )
+    ("Emulator Code"
+     ("buffer"      . oz-to-emulatorcode-buffer)
+     ("region"      . oz-to-emulatorcode-region)
+     ("line"        . oz-to-emulatorcode-line  )
      )
     ("Indent"
      ("line"   . oz-indent-line)
@@ -310,8 +289,9 @@ Compiler buffer")
     ("Fontify buffer"         . oz-fontify)
     ("Show/hide"
      ("errors"       . oz-toggle-errors)
+     ("protocol"     . oz-toggle-protocol)
      ("compiler"     . oz-toggle-compiler)
-     ("machine"      . oz-toggle-machine)
+     ("emulator"      . oz-toggle-emulator)
      )
     ("-----")
     ("Start Oz" . run-oz)
@@ -329,20 +309,15 @@ Compiler buffer")
 ;; Start/Stop oz
 ;;------------------------------------------------------------
 
-(defvar oz-machine-visible nil 
-  "???")
 (defvar oz-errors-found nil
   "??? show *Oz Errors* if necessary")
 
 
 (defun run-oz ()
-  "Run the Oz Compiler and Oz Machine.
-Input and output via buffers *Oz Compiler* and *Oz Machine*."
+  "Run the Oz Compiler and Oz Emulator.
+Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (interactive)
-  (oz-check-running)
-  (if (or (get-process "Oz Compiler") (get-buffer-process oz-machine-buffer))
-      (error "Oz already running, try halting Oz"))
-  (start-oz-process)
+  (oz-check-running t)
   (if (not (equal mode-name "Oz"))
       (oz-new-buffer)))
 
@@ -353,70 +328,73 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (interactive)
 
   (message "halting Oz...")
-  (if (and (get-process "Oz Compiler")
-	   (get-buffer-process oz-machine-buffer))
+  (if (and (get-buffer-process oz-compiler-buffer)
+	   (get-buffer-process oz-emulator-buffer))
       (let ((i oz-halt-timeout))
 	(oz-send-string "\\halt \n")
-	(while (and (or (get-process "Oz Compiler")
-			(get-buffer-process oz-machine-buffer))
+	(while (and (or (get-buffer-process oz-compiler-buffer)
+			(get-buffer-process oz-emulator-buffer))
 		    (> i 0))
 	  (sit-for 1)
 	  (sleep-for 1)
 	  (setq i (1- i)))))
 
-  (if (get-process "Oz Compiler")
-      (delete-process "*Oz Compiler*"))
-  (if (get-buffer-process oz-machine-buffer)
-      (delete-process oz-machine-buffer))
+  (if (get-buffer-process oz-compiler-buffer)
+      (delete-process oz-compiler-buffer))
+  (if (get-buffer-process oz-emulator-buffer)
+      (delete-process oz-emulator-buffer))
   (message "")
   (oz-reset-title))
 
 
+(defun oz-check-running(start-flag)
+  (if (and (get-buffer-process oz-compiler-buffer)
+	   (not (get-buffer-process oz-emulator-buffer)))
+      (progn
+	(message "Emulator died for some reason")
+	(delete-process oz-compiler-buffer)))
+  (if (and (not (get-buffer-process oz-compiler-buffer))
+	   (get-buffer-process oz-emulator-buffer))
+      (progn
+	(message "Compiler died for some reason")
+	(delete-process oz-emulator-buffer)))
+  (if (get-buffer-process oz-compiler-buffer)
+      t
+    (let ((file (oz-make-temp-name "/tmp/ozsock")))
+      (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
+      (setq oz-errors-found nil)
+      (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
+      (setq oz-compiler-buffer "*Oz Compiler*")
+      (oz-create-buffer oz-compiler-buffer)
+      (set-process-filter (get-buffer-process oz-compiler-buffer)
+			  'oz-compiler-filter)
+      (bury-buffer oz-compiler-buffer)
 
-(defun oz-check-running()
-  (if (and (get-process "Oz Compiler")
-	   (not (get-buffer-process oz-machine-buffer)))
-      (progn 
-	(oz-set-state 'oz-machine-state "???")
-	(error "Machine has died, for some unknown reason, try halting Oz")))
-  (if (and (not (get-process "Oz Compiler"))
-	   (get-buffer-process oz-machine-buffer))
-      (progn 
-	(oz-set-state 'oz-compiler-state "???")
-	(error "Compiler has died, for some unknown reason, try halting Oz"))))
+      (oz-create-buffer oz-protocol-buffer)
+      (bury-buffer oz-protocol-buffer)
+      (setq oz-protocol-counter 1)
 
-(defun start-oz-process()
-  (let ((file (oz-make-temp-name "/tmp/ozsock")))
-    (setq oz-errors-found nil)
-    (setq oz-machine-visible (get-buffer-window oz-machine-buffer))
+      (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
 
-    (oz-set-state 'oz-compiler-state "booting")
-    (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
-    (oz-create-buffer "*Oz Compiler*")
-    (set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
-    (bury-buffer "*Oz Compiler*")
-    (if oz-wait-for-compiler (sleep-for oz-wait-for-compiler))
+      (if oz-emulator-hook
+	  (funcall oz-emulator-hook file)
+	(setq oz-emulator-buffer "*Oz Emulator*")
+	(make-comint "Oz Emulator" "oz.machine" nil "-emacs" "-S" file)
+	(set-process-filter (get-buffer-process oz-emulator-buffer)
+			    'oz-emulator-filter)
+	(oz-create-buffer oz-emulator-buffer)
+	)
 
-    (if oz-machine-hook
-	(funcall oz-machine-hook file)
-      (oz-set-state 'oz-machine-state "booting")
-      (setq oz-machine-buffer "*Oz Machine*")
-      (make-comint "Oz Machine" "oz.machine" nil "-emacs" "-S" file)
-      (set-process-filter (get-buffer-process oz-machine-buffer)
-			  'oz-machine-filter)
-      (oz-create-buffer oz-machine-buffer)
-;;      (save-excursion
-;;	(set-buffer oz-machine-buffer)
-;;	(define-key (current-local-map) "\C-m" 'comint-send-input))
-   )
+      (bury-buffer oz-emulator-buffer)
 
-    (bury-buffer oz-machine-buffer)
+      ;; make sure buffers exist
+      (oz-create-buffer "*Oz Errors*")
 
-    ;; make sure buffers exist
-    (oz-create-buffer "*Oz Errors*")
+      (oz-set-title)
+      (message "Oz started")
+      ;(sleep-for 10)
+      )))
 
-    (if oz-lucid
-	(setq screen-title-format oz-title-format))))
 
 
 
@@ -424,17 +402,17 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 ;; GDB support
 ;;------------------------------------------------------------
 
-(defun oz-set-machine()
+(defun oz-set-emulator()
   (interactive)
-  (setq oz-machine 
+  (setq oz-emulator 
 	(expand-file-name 
-	 (read-file-name "Choose Machine: "
+	 (read-file-name "Choose Emulator: "
 			 nil
 			 nil
 			 t
 			 nil)))
   (if (getenv "OZMACHINE")
-      (setenv "OZMACHINE" oz-machine)))
+      (setenv "OZMACHINE" oz-emulator)))
 
 (defun oz-gdb()
   (interactive)
@@ -452,13 +430,13 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 	    (concat (getenv "PATH") ":" (getenv "OZHOME") "/bin")))
 
 
-  (if oz-machine-hook
-      (setq oz-machine-hook nil)
-    (setq oz-machine-hook 'oz-start-gdb-machine)
+  (if oz-emulator-hook
+      (setq oz-emulator-hook nil)
+    (setq oz-emulator-hook 'oz-start-gdb-emulator)
     )
 
-  (if oz-machine-hook
-      (message "gdb enabled: %s" oz-machine)
+  (if oz-emulator-hook
+      (message "gdb enabled: %s" oz-emulator)
     (message "gdb disabled")))
 
 
@@ -466,24 +444,24 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
   (interactive)
   (if (getenv "OZMACHINE")
       (setenv "OZMACHINE" nil)
-    (setenv "OZMACHINE" oz-machine))
+    (setenv "OZMACHINE" oz-emulator))
 
   (if (getenv "OZMACHINE")
-      (message "Oz Machine: %s" oz-machine)
-    (message "Oz Machine: global")))
+      (message "Oz Emulator: %s" oz-emulator)
+    (message "Oz Emulator: global")))
 
 
-(defun oz-start-gdb-machine (tmpfile)
-  "Run gdb on oz-machine
+(defun oz-start-gdb-emulator (tmpfile)
+  "Run gdb on oz-emulator
 The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer)))
-    (oz-set-state 'oz-machine-state "gdb")
-    (if oz-gnu19 (gdb (concat "gdb " oz-machine)))
-    (if oz-lucid (gdb oz-machine))
-    (setq oz-machine-buffer (buffer-name (current-buffer)))
-    (comint-send-string (get-buffer-process oz-machine-buffer)
+;    (oz-set-state 'oz-emulator-state "gdb")
+    (if oz-gnu19 (gdb (concat "gdb " oz-emulator)))
+    (if oz-lucid (gdb oz-emulator))
+    (setq oz-emulator-buffer (buffer-name (current-buffer)))
+    (comint-send-string (get-buffer-process oz-emulator-buffer)
 			(concat "run -S " tmpfile "\n"))
     (switch-to-buffer old-buffer)))
 
@@ -521,22 +499,31 @@ the GDB commands `cd DIR' and `directory'."
    (if oz-lucid (setq zmacs-region-stays t)))
 
 (defun oz-send-string(string)
-  (oz-check-running)
-  (or (get-process "Oz Compiler") (start-oz-process))
-  (comint-send-string "Oz Compiler" string)
+  (oz-check-running nil)
+  (comint-send-string (get-buffer-process oz-compiler-buffer) string)
   (if oz-see-compiler-input
-      (oz-compiler-filter (get-process "Oz Compiler") string))
-  (process-send-eof "Oz Compiler"))
+      (oz-protocol string))
+  (process-send-eof (get-buffer-process oz-compiler-buffer)))
+
+(defun oz-protocol (string)
+  (save-excursion
+    (set-buffer oz-protocol-buffer)
+    (goto-char (point-max))
+    (insert-before-markers string)
+    (insert-before-markers
+     (format "%%%%%% ------- %d -------\n" oz-protocol-counter))
+    (setq oz-protocol-counter (1+ oz-protocol-counter))
+    ))
 
 
 ;;------------------------------------------------------------
-;; Feeding the machine
+;; Feeding the emulator
 ;;------------------------------------------------------------
 
 (defun oz-continue()
-  "continue the Oz Machine after an error"
+  "continue the Oz Emulator after an error"
   (interactive)
-  (comint-send-string (get-buffer-process oz-machine-buffer) "c\n"))
+  (comint-send-string (get-buffer-process oz-emulator-buffer) "c\n"))
 
 
 ;;------------------------------------------------------------
@@ -894,6 +881,7 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\M-p"   'oz-previous-buffer)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
+  (define-key map "\C-c\C-p"    'oz-toggle-protocol)
 ;  (if oz-lucid
 ;      (progn
 ;	(define-key map [(control button1)]       'oz-feed-region-browse)
@@ -908,17 +896,17 @@ the GDB commands `cd DIR' and `directory'."
 	;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
 	(define-key map [(control c) (control i)] 'oz-feed-file)
 	(define-key map [(control c) (control h)] 'oz-halt)
-	(define-key map [(control c) (control m)]   'oz-toggle-machine))
+	(define-key map [(control c) (control m)]   'oz-toggle-emulator))
     (define-key map "\C-c\C-h"    'oz-halt)
     (define-key map "\C-c\C-i"    'oz-feed-file)
-    (define-key map "\C-c\C-m"    'oz-toggle-machine))
+    (define-key map "\C-c\C-m"    'oz-toggle-emulator))
 
   (define-key map "\C-c\C-f"    'oz-feed-file)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
   (define-key map "\C-cc"       'oz-precompile-file)
-  (define-key map "\C-cm"       'oz-set-machine)
+  (define-key map "\C-cm"       'oz-set-emulator)
   (define-key map "\C-co"       'oz-other)
   (define-key map "\C-cd"       'oz-gdb)
   (define-key map "\r"		'oz-electric-terminate-line)
@@ -976,8 +964,8 @@ if that value is non-nil."
 ;;------------------------------------------------------------
 
 
-(defun oz-machine-filter (proc string)
-  (oz-filter proc string 'oz-machine-state))
+(defun oz-emulator-filter (proc string)
+  (oz-filter proc string 'oz-emulator-state))
 
 
 (defun oz-compiler-filter (proc string)
@@ -997,8 +985,7 @@ if that value is non-nil."
   (let ((old-buffer (current-buffer)))
     (unwind-protect
 	(let ((newbuf (process-buffer proc))
-	      help-string old-point
-	      match-start match-end
+	      old-point
 	      moving)
 	  (set-buffer newbuf)
 	  (setq moving (= (point) (process-mark proc)))
@@ -1009,19 +996,6 @@ if that value is non-nil."
 	    (setq old-point (point))
 	    (insert-before-markers string)
 	    (set-marker (process-mark proc) (point))
-
-	    ;; show status messages of compiler in mini buffer
-	    (setq help-string string)
-
-      ;; only display the last status message
-	    (while (setq match-start
-			 (string-match oz-status-string help-string))
-	      (setq help-string (substring help-string (+ 1 match-start))))
-
-	    (if (string= string help-string)
-		t
-	      (setq match-end (string-match "\n" help-string))
-	      (oz-set-state state-string (substring help-string 0 match-end)))
             
 	    ;; remove escape characters
 	    (goto-char old-point)
@@ -1049,13 +1023,14 @@ if that value is non-nil."
 (defvar oz-other-buffer-percent 35 
   "
 How many percent of the actual screen will be occupied by the
-OZ compiler, machine and error window")
+OZ compiler, emulator and error window")
 
 (defun oz-show-buffer (buffer)
   (save-excursion
     (let* ((edges (window-edges (selected-window)))
-	   (win (or (get-buffer-window oz-machine-buffer)
-		    (get-buffer-window "*Oz Compiler*")
+	   (win (or (get-buffer-window oz-emulator-buffer)
+		    (get-buffer-window oz-compiler-buffer)
+		    (get-buffer-window oz-protocol-buffer)
 		    (get-buffer-window "*Oz Errors*")
 		    (split-window (selected-window)
 				  (/ (* (- (nth 3 edges) (nth 1 edges))
@@ -1065,8 +1040,8 @@ OZ compiler, machine and error window")
       )
     )
 
-  (bury-buffer oz-machine-buffer)
-  (bury-buffer "*Oz Compiler*")
+  (bury-buffer oz-emulator-buffer)
+  (bury-buffer oz-compiler-buffer)
   (bury-buffer "*Oz Errors*")
   (bury-buffer buffer))
 
@@ -1088,16 +1063,10 @@ OZ compiler, machine and error window")
 (defun oz-hide-errors()
   (interactive)
   (setq oz-errors-found nil)
-  (let ((show-machine (or (get-buffer-window oz-machine-buffer)
-			  (get-buffer-window "*Oz Temp*")
-			  (get-buffer-window "*Oz Compiler*")
-			  (get-buffer-window "*Oz Errors*"))))
-    (if (get-buffer "*Oz Errors*") 
-	(delete-windows-on "*Oz Errors*"))
-    (if (get-buffer "*Oz Temp*") 
-	(delete-windows-on "*Oz Temp*"))
-    (if (and oz-machine-visible show-machine)
-	(oz-show-buffer oz-machine-buffer))))
+  (if (get-buffer "*Oz Errors*") 
+      (delete-windows-on "*Oz Errors*"))
+  (if (get-buffer "*Oz Temp*") 
+      (delete-windows-on "*Oz Temp*")))
 
 
 (defun oz-show-error(string)
@@ -1126,22 +1095,22 @@ OZ compiler, machine and error window")
 
     (oz-show-buffer buf)))
 
+(defun oz-toggle-protocol()
+  (interactive)
+  (setq oz-errors-found nil)
+  (oz-toggle-window oz-protocol-buffer))
+
 (defun oz-toggle-compiler()
   (interactive)
   (setq oz-errors-found nil)
-  (if (get-buffer-window "*Oz Compiler*")
-      (progn
-	(delete-windows-on "*Oz Compiler*")
-	(if oz-machine-visible
-	    (oz-show-buffer oz-machine-buffer)))
-    (oz-toggle-window "*Oz Compiler*")))
+  (oz-toggle-window oz-compiler-buffer))
 
 
-(defun oz-toggle-machine()
+(defun oz-toggle-emulator()
   (interactive)
   (setq oz-errors-found nil)
-  (oz-toggle-window oz-machine-buffer)
-  (setq oz-machine-visible (get-buffer-window oz-machine-buffer)))
+  (oz-toggle-window oz-emulator-buffer))
+
 
 
 (defun oz-toggle-errors()
@@ -1243,16 +1212,16 @@ OZ compiler, machine and error window")
    (oz-directive-on-region start end "\\core" ".i" t))
 
 
-(defun oz-to-machinecode-buffer()
+(defun oz-to-emulatorcode-buffer()
   (interactive)
-  (oz-to-machinecode-region (point-min) (point-max)))
+  (oz-to-emulatorcode-region (point-min) (point-max)))
 
-(defun oz-to-machinecode-line()
+(defun oz-to-emulatorcode-line()
   (interactive)
   (let ((line (oz-line-pos)))
-    (oz-to-machinecode-region (car line) (cdr line))))
+    (oz-to-emulatorcode-region (car line) (cdr line))))
 
-(defun oz-to-machinecode-region (start end)
+(defun oz-to-emulatorcode-region (start end)
    (interactive "r")
    (oz-directive-on-region start end "\\machine" ".ham" nil))
 
