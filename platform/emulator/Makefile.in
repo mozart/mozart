@@ -112,7 +112,7 @@ RUNSRCS=\
 	susp_queue.cc thr_int.cc suspendable.cc
 
 SPACESRCS=\
-	board.cc distributor.cc space.cc
+	board.cc distributor.cc
 
 MEMSRCS=\
 	g-collect.cc mem.cc liveness.cc

@@ -31,61 +31,7 @@
 #endif
 
 #include "base.hh"
-#include "tagged.hh"
 #include "stack.hh"
-#include "mem.hh"
-
-
-class Equation {
-public:
-  TaggedRef left, right;
-};
-
-
-class Script {
-public:
-  Equation * eqs;
-  int      size;
-
-public:
-
-  Script(void) : size(0) {}
-  ~Script() {}
-
-  void gCollect(void);
-  void sClone(void);
-
-  void allocate(int n) {
-    Assert(n > 0);
-    size = n;
-    eqs  = (Equation *) freeListMalloc(n * sizeof(Equation)); 
-  }
-
-  void setEmpty(void) {
-    size = 0;
-    Assert(!(eqs = 0));
-  }
-
-  void dispose(void) {
-    if (size > 0) {
-      freeListDispose(eqs, size * sizeof(Equation));
-      size = 0;
-    }
-    Assert(!(eqs = 0));
-  }
-
-  int getSize(void) { 
-    return size; 
-  }
-
-  Equation & operator[] (int i) { 
-    return eqs[i]; 
-  }
-
-  OZPRINT;
-
-};
-
 
 
 enum TeType {
@@ -117,8 +63,6 @@ public:
     return getTeType() == Te_Mark;
   }
 
-  int chunkSize(void);
-
 
   /*
    * Pushing
@@ -149,7 +93,7 @@ public:
    *
    */
 
-  void unwind(void);
+  TaggedRef unwind(Board *);
 
   void unwindFailed(void);
 

@@ -56,7 +56,6 @@
 #include "ozconfig.hh"
 
 #include "os.hh"
-#include "space.hh"
 
 // GARBAGE COLLECTION HACK
 inline
@@ -1208,7 +1207,7 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   
   unsigned int timeToSleep;
 
-  oz_installPath(oz_rootBoard());
+  oz_rootBoard()->install();
   osSetAlarmTimer(0);
 
   if((int) timeUntilClose > 0)

@@ -216,12 +216,18 @@ public:
   // Script and script installation
   //
 private:
-  Script script;
+  TaggedRef script;
+
+  OZ_Return installScript(Bool isMerging);
+
+  Board * installDown(Board *);
+
+  void setScript(TaggedRef s) {
+    script = s;
+  }
 
 public:
-  Script & getScript(void) { 
-    return script; 
-  }
+  Bool install(void);
 
   //
   // Suspension list
@@ -346,14 +352,14 @@ public:
   // Installation control
   //
 private:
-  static Bool _isInstalling;
+  static Bool _ignoreWakeUp;
 
 public:
-  static Bool isInstalling(void) {
-    return Board::_isInstalling;
+  static Bool mustIgnoreWakeUp(void) {
+    return Board::_ignoreWakeUp;
   }
-  static void setInstalling(Bool ii) {
-    Board::_isInstalling = ii;
+  static void ignoreWakeUp(Bool iwu) {
+    Board::_ignoreWakeUp = iwu;
   }
 
   //

@@ -30,7 +30,6 @@
 #include "board.hh"
 #include "thr_int.hh"
 #include "prop_int.hh"
-#include "space.hh"
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"

@@ -40,7 +40,6 @@
 #include "os.hh"
 #include "codearea.hh"
 #include "thr_int.hh"
-#include "space.hh"
 #include "debug.hh"
 #include "iso-ctype.hh"
 #include "var_base.hh"

@@ -908,9 +908,6 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
   printStream(stream,depth);
   stream << endl;
 
-  stream << indent(offset) << "Script: " << endl;
-  script.printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
-  
   if (isRoot()) 
     return;
 
@@ -918,21 +915,6 @@ void Board::printLongStream(ostream &stream, int depth, int offset)
   getParentInternal()->printLongStream(stream,PRINT_DEPTH_DEC(depth),offset+2);
   stream << "Local propagator queue: " << &lpq << endl;
 }
-
-void Script::printStream(ostream &stream, int depth)
-{
-  if (getSize() <= 0) {
-    stream << "- empty -";
-    return;
-  }
-  for (int i = 0; i < getSize(); i++) {
-    ozd_printStream((*this)[i].left,stream,depth);
-    stream << " = ";
-    ozd_printStream((*this)[i].right,stream,depth);
-    stream << ", ";
-  }
-}
-
 
 void ThreadsPool::printThreads() {
   cout << "Threads" << endl;

@@ -34,7 +34,6 @@
 
 #include "builtins.hh"
 #include "os.hh"
-#include "space.hh"
 #include "newmarshaler.hh"
 
 #ifdef VIRTUALSITES
