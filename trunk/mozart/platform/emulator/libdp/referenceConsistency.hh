@@ -138,11 +138,18 @@ public:
 void marshalCredit(MarshalerBuffer*,RRinstance*);
 void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *,int oti);
 
+#ifdef USE_FAST_UNMARSHALER
+RRinstance  *unmarshalCredit(MarshalerBuffer *buf,int *error);
+RRinstance  *unmarshalCreditToOwner(MarshalerBuffer *buf,
+				    MarshalTag mt, int &oti)
+#else
+
+
 RRinstance  *unmarshalCreditRobust(MarshalerBuffer *buf,int *error);
 RRinstance  *unmarshalCreditToOwnerRobust(MarshalerBuffer *buf,
 					  MarshalTag mt, int &oti,
 					  int *error);
-
+#endif
 
 
 RRinstance *CreateRRinstance(int type, int val1, int val2);
