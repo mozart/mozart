@@ -45,9 +45,10 @@ cvs rtag -b 2.0.0 Oz
 	Emulator
 	Compiler/backend
 	Compiler/frontend
-	lib
+	lib			# must be done after install compiler !
 
    make install
+	make dirs
 	bin
 	elisp
 	ozwish
