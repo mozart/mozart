@@ -52,6 +52,22 @@ extern "C" int dlclose(void *);
 #include "dictionary.hh"
 
 /********************************************************************
+ * Macros that overload stuff from foreign.cc
+ ******************************************************************** */
+
+#define OZ_unify(t1, t2) \
+  (am.fastUnify(t1,t2,OK) ? PROCEED : FAILED)
+
+#define OZ_float(f) \
+  makeTaggedFloat(f)
+
+#define OZ_atom(s) \
+  makeTaggedAtom(s)
+
+#define OZ_int(i) \
+  makeInt(i)
+
+/********************************************************************
  * Macros
  ******************************************************************** */
 
@@ -4597,7 +4613,7 @@ OZ_C_proc_end
 OZ_Return BIexchangeCellInline(TaggedRef c, TaggedRef inState, TaggedRef &outState)
 {
   NONVAR(c,rec);
-  outState = OZ_newVariable();
+  outState = makeTaggedRef(newTaggedUVar(am.currentBoard));
 
   if (!isCell(rec)) {
     TypeErrorT(0,"Cell");
@@ -5547,7 +5563,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
     break;
   }
 
-  TaggedRef newVar = OZ_newVariable();
+  TaggedRef newVar = makeTaggedRef(newTaggedUVar(am.currentBoard));
   TaggedRef old = cell1->exchangeValue(newVar);
   OZ_Return ret = OZ_unify(old,cons(val,newVar));
 
@@ -6445,13 +6461,11 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIforeignFDProps, 1)
 {
-  return OZ_unify(OZ_args[0],
 #ifdef FOREIGNFDPROPS
-                                          NameTrue
+  return OZ_unify(OZ_args[0], NameTrue);
 #else
-                                          NameFalse
+  return OZ_unify(OZ_args[0], NameFalse);
 #endif
-                                          );
 }
 OZ_C_proc_end
 
@@ -6812,28 +6826,6 @@ OZ_C_proc_begin(BIsetSelf,1)
     TypeErrorT(0,"Object");
   }
   am.changeSelf(tagged2Object(obj));
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-
-OZ_C_proc_begin(BIoogetCounterSelf,1)
-{
-  return OZ_unifyInt(OZ_getCArg(0),0);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIoosetCounterSelf,1)
-{
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIsetModeToDeep,0)
-{
-  Assert(0);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -7269,10 +7261,7 @@ BIspec allSpec2[] = {
   {"<-",              2,BIassign,              (IFOR) assignInline},
   {"copyRecord",      2,BIcopyRecord,          0},
   {"makeClass",        9,BImakeClass,          0},
-  {"setModeToDeep",    0,BIsetModeToDeep,      0},
   {"setMethApplHdl",   1,BIsetMethApplHdl,     0},
-  {"oogetCounterSelf", 1,BIoogetCounterSelf,   0},
-  {"oosetCounterSelf", 1,BIoosetCounterSelf,   0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
   {"ooGetLock",        1,BIooGetLock,          (IFOR) ooGetLockInline},
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
