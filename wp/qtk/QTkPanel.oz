@@ -38,7 +38,6 @@ import
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType)
-   System(show:Show)
 
 export
    Register
@@ -155,13 +154,11 @@ define
 	    self.MarkerTag={New Tk.canvasTag tkInit(parent:self.Canvas)}
 	    {ForAll {Record.toList B}
 	     proc{$ D}
-		{Show adding#D}
 		{self addPanel({Record.subtract D feature})}
 	     end}
 	    if @Frames\=nil then {self Select({List.nth @Frames 1})} end
 	    {self.Canvas tkBind(event:"<Configure>"
 				action:self#Resize)}
-	    {Show features#Features}
 	 end
       end
 
@@ -298,7 +295,6 @@ define
 			     {Subtracts D [title]}
 			     handle O})}
 	    {CondSelect M.1 handle _}=O
-	    {Show M.1}
 	    Rec=r(object:O
 		  title:D.title
 		  tag:{New Tk.canvasTag tkInit(parent:self.Canvas)})

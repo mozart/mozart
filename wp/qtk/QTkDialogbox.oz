@@ -58,6 +58,28 @@ local
       meth load(...)=M
 	 {self {Record.adjoin M Diag(cmd:tk_getOpenFile)}}
       end
+      meth chooseDirectory(initialdir:_ <=_
+			   title:_ <=_
+			   mustexist:_ <=_
+			   1:_)=M
+	 {Record.forAllInd M
+	  proc{$ I V}
+	     Err={CheckType
+		  case I
+		  of initialdir then vs
+		  [] title then vs
+		  [] mustexist then boolean
+		  [] 1 then free
+		  end V}
+	  in
+	     if Err==unit then skip else
+		{Exception.raiseError qtk(typeError I dialogbox Err M)}
+	     end
+	  end}
+	 try
+	    {ReturnTk unit {Record.adjoin M tk_chooseDirectory} vs}
+	 catch _ then M.1=nil end
+      end
       meth color(initialcolor:_  <= _
 		 title:_         <= _
 		 1:_)=M

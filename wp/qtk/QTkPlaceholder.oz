@@ -105,7 +105,7 @@ define
 	 lock
 	    A C
 	 in
-	    {SplitParams M [1] A C}
+	    {SplitParams M [1 hidden] A C}
 	    QTkClass,A
 	    if {HasFeature C 1} then
 	       NC P B=C.1
@@ -133,15 +133,18 @@ define
 	       end
 	       if {IsFree NC} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
 	       if NC\=empty then {ForAll @Pack proc{$ R} if R.obj==NC then P=R end end} end
-	       if @Child\=empty then {Tk.send grid(forget @Child)} end
+	       if NC==empty then {Tk.send grid(forget @Child)} end
 	       if NC\=empty then
 		  if {IsFree P} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
-		  {ExecTk unit grid(NC row:0 column:0
-				    sticky:P.sticky
-				    padx:P.padx
-				    pady:P.pady)}
+		  if {Not {CondSelect C hidden false}} then
+		     if @Child\=empty then {Tk.send grid(forget @Child)} end
+		     {ExecTk unit grid(NC row:0 column:0
+				       sticky:P.sticky
+				       padx:P.padx
+				       pady:P.pady)}
+		     Child<-NC
+		  end
 	       end
-	       Child<-NC
 	    end
 	 end
       end

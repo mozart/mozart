@@ -28,11 +28,12 @@
 functor
 
 import
-%   System(show:Show)
+   System(show:Show)
    Tk
    Error
    QTk at 'QTkBare.ozf'
    Property(get)
+   Trans at 'TkTranslator.ozf'
    
 export
 
@@ -78,7 +79,7 @@ export
    ParentFeature
    EventDict
    StoreInEventDict
-
+   VS2Tk
    
 prepare
    MapLabelToObject={NewName}
@@ -333,6 +334,14 @@ prepare
 
    %% Back to my own code
 
+define
+
+   TransIn=if {Property.get 'platform.os'}==win32 then
+	      Trans.u2i
+	   else
+	      fun{$ S} S end
+	   end
+
    fun{ConvertToType Str Type}
       %
       % This function converts a string into the specified type
@@ -357,7 +366,7 @@ prepare
 	 [] pixel then try
 			  {String.toInt Str}
 		       catch _ then {String.toAtom Str} end
-	 [] vs then Str
+	 [] vs then {TransIn Str}
 	 [] color then
 	    if {List.nth Str 1}==35 then %#RRGGBB
 	       BPV=({Length Str}-1) div 3
@@ -444,7 +453,6 @@ prepare
       end
    end
 
-define
 
    Lock={NewLock}
    NoArgs={NewName}
@@ -467,13 +475,29 @@ define
 
    DefLook=look(set:proc{$ P} skip end
 		get:fun{$ P} P end)
+
+   VS2Tk=if Win32 then
+	    fun{Parse Msg}
+	       if {VirtualString.is Msg} then
+		  {Trans.i2t {VirtualString.toString Msg}}
+	       elseif {Record.is Msg} then
+		  {Record.map Msg Parse}
+	       else
+		  Msg
+	       end
+	    end
+	 in
+	    Parse
+	 else
+	    fun{$ M} M end
+	 end
    
    proc{ExecTk Obj Msg}
       if {Access AssertLevel}.all==none then
-	 {Tk.send 'catch'(v("{") b([Obj Msg]) v("}"))}
+	 {Tk.send 'catch'(v("{") b([Obj {VS2Tk Msg}]) v("}"))}
       else
 	 if {Tk.returnInt 'catch'(v("{") b([Obj Msg]) v("}"))}==1 then
-	    {Exception.raiseError qtk(execFailed Obj Msg)}
+	    {Exception.raiseError qtk(execFailed Obj {VS2Tk Msg})}
 	 end
       end
    end
@@ -567,8 +591,12 @@ define
 	    if {IsFree V} then unit else
 	       "A free variable"
 	    end
-	 [] vs then
+	 [] svs then
 	    if {VirtualString.is V} then unit else
+	       "A virtual string"
+	    end
+	 [] vs then
+	    if {VirtualString.is V} orelse {Record.is V} andthen {Label V}==v andthen {Arity V}==[1] andthen {VirtualString.is V.1} then unit else
 	       "A virtual string"
 	    end
 	 [] color then
@@ -1877,7 +1905,14 @@ define
 		     self.defaultLook = {NewLook}
 		     self.ToplevelClass    = {GetToplevelClass self}
 		     self.build       = fun{$ Desc}
-					   fun{Loop Desc1}
+					   WhenCreated={NewCell nil}
+					   fun{Loop Desc2}
+					      Desc1=if {HasFeature Desc2 onCreation} then
+						       {Assign WhenCreated Desc2.onCreation|{Access WhenCreated}}
+						       {Record.subtract Desc2 onCreation}
+						    else
+						       Desc2
+						    end
 					      Alias={Dictionary.condGet self.Aliases {Label Desc1} unit}
 					      Desc={ApplyLook Desc1 self.defaultLook}
 					   in
@@ -1890,8 +1925,20 @@ define
 						 {Loop {Alias Desc}}
 					      end
 					   end
+					   Win={Loop Desc}
 					in
-					   {Loop Desc}
+					   {ForAll {Reverse {Access WhenCreated}}
+					    proc{$ D}
+					       if {Procedure.is D} then {D}
+					       elsecase D of L#R then
+						  if {Port.is L} then
+						     {Port.send L R}
+						  else
+						     {L R}
+						  end
+					       end
+					    end}
+					   Win
 					end
 		     self.Widgets     = {NewDictionary}
 		     self.Aliases     = {NewDictionary}
@@ -2132,6 +2179,36 @@ define
 		     end
 		  end
 		  meth !MapLabelToObject(R $)
+		     WhenCreated={NewCell nil}
+		     fun{Loop R}
+			if {IsDet R} andthen {Record.is R} then
+			   if {HasFeature R onCreation} then
+			      {Assign WhenCreated R.onCreation|{Access WhenCreated}}
+			      {Record.map {Record.subtract R onCreation} Loop}
+			   else
+			      {Record.map R Loop}
+			   end
+			else
+			   R
+			end
+		     end
+		     {Wait {Tk.return update(idletasks)}}
+		     Win={self MapLabelToObject2({Loop R} $)}
+		  in
+		     {ForAll {Reverse {Access WhenCreated}}
+		      proc{$ D}
+			 if {Procedure.is D} then {D}
+			 elsecase D of L#R then
+			    if {Port.is L} then
+			       {Port.send L R}
+			    else
+			       {L R}
+			    end
+			 end
+		      end}
+		     Win		     
+		  end
+		  meth MapLabelToObject2(R $)
 		     %% applies look to R
 		     R1={ApplyLook R self.defaultLook}
 		     %% alias ?
@@ -2143,7 +2220,7 @@ define
 			{self MapFlatLabelToObject(R1 $)}
 		     else
 			%% yes => maps the alias and loops
-			{self MapLabelToObject({Record.adjoinAt {Alias R} parent R.parent} $)}
+			{self MapLabelToObject2({Record.adjoinAt {Alias R} parent R.parent} $)}
 		     end
 		  end
 		  meth MapFlatLabelToObject(R1 $)

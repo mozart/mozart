@@ -38,6 +38,7 @@ import
 	    builder:            Builder
 	    qTkClass:           QTkClass
 	    qTkAction:          QTkAction
+	    vS2Tk:              VS2Tk
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType)
@@ -240,7 +241,7 @@ define
 
       meth getText(...)=M
 	 lock
-	    {TReturnTk self {Record.adjoin M get} no}
+	    {TReturnTk self {Record.adjoin M get} vs}
 	 end
       end
 

@@ -112,6 +112,7 @@ define
 	    end
 	    {self tk(create window 0 0 anchor:nw window:self.Child)} % Displays the window
 	    %% update of the size of the child
+	    {Wait {Tk.return update(idletasks)}}
 	    {self.Child tkBind(event:"<Configure>"
 			       action:self#Resize)}
 	    {self Resize}

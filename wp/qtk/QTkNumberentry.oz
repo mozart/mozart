@@ -109,6 +109,35 @@ define
    
       meth numberentry(...)=M
 	 lock
+	    proc{PInit}
+	       thread
+		  {self.Entry bind(event:  '<KeyPress-Up>'
+				   action: self # Inc(1))}
+		  {self.Entry bind(event:  '<KeyPress-Down>'
+				   action: self # Inc(~1))}
+		  {self.Entry bind(event:  '<Shift-KeyPress-Up>'
+				   action: self # Inc(10))}
+		  {self.Entry bind(event:  '<Shift-KeyPress-Down>'
+				   action: self # Inc(~10))}
+		  {self.Entry bind(event:  '<KeyRelease-Up>'
+				   action: self # IncStop)}
+		  {self.Entry bind(event:  '<KeyRelease-Down>'
+				   action: self # IncStop)}
+		  {self.Entry bind(event:  '<FocusOut>'
+				   action: self # CheckValue)}
+		  {self.Inc bind(event:  '<ButtonPress-1>'
+				 action: self # Inc(1))}
+		  {self.Inc bind(event:  '<ButtonRelease-1>'
+				 action: self # IncStop)}
+		  {self.Dec bind(event:  '<ButtonPress-1>'
+				 action: self # Inc(~1))}
+		  {self.Dec bind(event:  '<ButtonRelease-1>'
+				 action: self # IncStop)}
+		  {self.Entry set({CondSelect M init @Min})}
+		  {self CheckValue(exec:false)}
+	       end
+	    end
+	 in
 	    {Assert self.widgetType self.typeInfo {Record.subtract {Record.adjoin M Init} QTkDesc}}
 	    self.action={CondSelect M action proc{$} skip end}
  	    Min<-{CondSelect M min 1}
@@ -123,32 +152,7 @@ define
 			 td(glue:ns
 			    button(image:{Lib get(name:'mini-inc.xbm' image:$)} handle:self.Inc glue:ns)
 			    button(image:{Lib get(name:'mini-dec.xbm' image:$)} handle:self.Dec glue:ns)))
-	 end
-	 thread
-	    {self.Entry bind(event:  '<KeyPress-Up>'
-			     action: self # Inc(1))}
-	    {self.Entry bind(event:  '<KeyPress-Down>'
-			     action: self # Inc(~1))}
-	    {self.Entry bind(event:  '<Shift-KeyPress-Up>'
-			     action: self # Inc(10))}
-	    {self.Entry bind(event:  '<Shift-KeyPress-Down>'
-			     action: self # Inc(~10))}
-	    {self.Entry bind(event:  '<KeyRelease-Up>'
-			     action: self # IncStop)}
-	    {self.Entry bind(event:  '<KeyRelease-Down>'
-			     action: self # IncStop)}
-	    {self.Entry bind(event:  '<FocusOut>'
-			     action: self # CheckValue)}
-	    {self.Inc bind(event:  '<ButtonPress-1>'
-			   action: self # Inc(1))}
-	    {self.Inc bind(event:  '<ButtonRelease-1>'
-			   action: self # IncStop)}
-	    {self.Dec bind(event:  '<ButtonPress-1>'
-			   action: self # Inc(~1))}
-	    {self.Dec bind(event:  '<ButtonRelease-1>'
-			   action: self # IncStop)}
-	    {self.Entry set({CondSelect M init @Min})}
-	    {self CheckValue(exec:false)}
+	    {PInit}
 	 end
 	 thread
 	    {Wait self.EReturn}

@@ -3,6 +3,17 @@
 
 <P> This section describes several miscellaneous point of QTk.
 
+<section ID="misc.accents"><TITLE>Accentuated characters support for Windows</TITLE>
+<P>
+Undex Linux, Unix and Macintosh OSX, the Tcl/Tk process that serves as the effective front-end of QTk uses the same iso8859-1 character encoding as Mozart. However under Windows, Tcl/Tk can unfortunately not be configured to use iso8859-1, it can use utf-8 only. Many characters are common between these two sets, but there are also many differences eg accentuated characters. On the Windows platform, QTk implements a translation on the fly between these two sets, so that one should only deal with the iso8859-1 character set on all possible platforms Mozart can run on. The translation works as follow:
+<list>
+<item> If a character has an equivalent in both sets then it is directly translated.
+<item> The euro currency symbool doesn't exist in iso8859-1 while it does in utf-8. The character number 158 has been trivially chosen to represent it at the Oz side.
+<item> Several other characters exist in utf-8 but not in iso8859-1. These characters are translated by an escape sequence at the Oz side: <<27|N|X1|..|Xn>> where <<N>> is the number of <<X.>> present, and the <<X.>> are the utf-8 encoding of the character.
+</list>
+In practice, developpers using QTk don't have to worry about character encoding issues, their application will run fine with accentuated characters on all platforms, including Windows.
+
+</p>
 <section ID="misc.color"><TITLE>Colors</TITLE>
 
 <P>
