@@ -510,13 +510,15 @@ inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS, Ext_OB_TIndex extOTI)
 void msgReceived(MsgContainer* msgC,DSite *sender)
 {
   Assert(oz_onToplevel());
+  DebugCode(OT->checkEntries());
 
-  
   MessageType mt = msgC->getMessageType();
 
   PD((MSG_RECEIVED,"msg type %d",mt));
-  //  if (mt != M_PING)
-  //  printf("msg received %d pid:%d\n ",mt,myDSite->getTimeStamp()->pid);
+  //    if (mt != M_PING)
+  //      fprintf(stdout, "msg received %d pid:%d\n ",
+  //  	    mt, myDSite->getTimeStamp()->pid);
+  fflush(stdout);
   switch (mt) {
   case M_PORT_SEND:   
     {
@@ -1067,6 +1069,8 @@ void msgReceived(MsgContainer* msgC,DSite *sender)
     OZ_error("siteReceive: unknown message %d\n",mt);
     break;
   }
+
+  DebugCode(OT->checkEntries());
 }
 
 

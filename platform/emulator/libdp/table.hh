@@ -101,17 +101,23 @@ public:
     type=PO_Ref; u.ref=v;
   }
 
-  void mkVar(TaggedRef v,unsigned short f){
-    type=PO_Var; u.ref=v; flags=f; }
+  void mkVar(TaggedRef v, unsigned short f) {
+    Assert(oz_isRef(v) && oz_isVar(*(tagged2Ref(v))));
+    type=PO_Var; u.ref=v; flags=f;
+  }
 
   void mkVar(TaggedRef v){
-    type=PO_Var; u.ref=v; }
+    Assert(oz_isRef(v) && oz_isVar(*(tagged2Ref(v))));
+    type=PO_Var; u.ref=v;
+  }
 
   void changeToRef(){ 
     Assert(isVar()); type=PO_Ref; }
 
   void changeToVar(TaggedRef v){
-    type=PO_Var; u.ref=v;}
+    Assert(oz_isRef(v) && oz_isVar(*(tagged2Ref(v))));
+    type=PO_Var; u.ref=v;
+  }
 
   void changeToTertiary(Tertiary* t){
     type=PO_Tert; setTert(t);}
@@ -299,6 +305,7 @@ public:
 
   //
   OwnerEntry* extOTI2ownerEntry(Ext_OB_TIndex extOTI) {
+    Assert(!table[extOTI2ownerTableIndex(extOTI)].isFree());
     return (table[extOTI2ownerTableIndex(extOTI)].getOE());
   }
   
@@ -340,6 +347,10 @@ public:
   int getLocalized() { int ret=localized; localized = 0; return (ret); }
   OZ_Term extract_info();
   void print();
+
+#if defined(DEBUG_CHECK)
+  void checkEntries();
+#endif
 };
 
 extern OwnerTable *ownerTable;

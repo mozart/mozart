@@ -336,15 +336,19 @@ public:
   //
   void gcStart() {
     Assert(gcExpVars == (OZ_Term) 0);
-    if (expVars)
+    if (expVars) {
       gcExpVars = gcStartOVP(expVars);
-    DebugCode(expVars = (OzValuePatch *) 0;);
+      DebugCode(expVars = (OzValuePatch *) -1;);
+      Assert(gcExpVars != (OZ_Term) 0);
+    }
   }
   void gcFinish() {
     Assert(expVars == (OzValuePatch *) 0);
-    if (gcExpVars)
+    if (gcExpVars) {
       expVars = gcFinishOVP(gcExpVars);
-    DebugCode(gcExpVars = (OZ_Term) 0;);
+      gcExpVars = (OZ_Term) 0;
+      Assert(expVars != (OzValuePatch *) 0;);
+    }
   }
 
   //

@@ -73,8 +73,7 @@ OzValuePatch* gcFinishOVP(OZ_Term ot)
 
   //
   do {
-    OZ_Term *otp;
-    _DEREF(ot, otp);
+    DEREF(ot, _otp);
 
     Assert(!oz_isRef(ot));
     Assert(oz_isVarOrRef(ot));	// due to 'gcStartOVP()';
@@ -86,13 +85,13 @@ OzValuePatch* gcFinishOVP(OZ_Term ot)
 
     OzValuePatch *ovp = (OzValuePatch *) oz_getExtVar(ot);
     if (ovp->val) {
-      // must be installed at 'otp': deinstall it;
       Assert(ovp->status == OVP_installed);
-      Assert(otp);
       OZ_Term *vp = tagged2Ref(ovp->loc);
-      Assert(vp == otp);	// location must be kept;
-      *vp = ovp->val;
-      DebugCode(ovp->val = (OZ_Term) 0;);
+      OZ_Term v = ovp->val;
+      DEREF(v, _vp);
+      *vp = v;
+      // must be reset for 'gcStartOVP()'/'gcFinishOVP()':
+      ovp->val = (OZ_Term) 0;
       DebugCode(ovp->status = OVP_uninstalled;);
     }
 
