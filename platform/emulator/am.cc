@@ -120,6 +120,8 @@ void AM::init(int argc,char **argv)
 
   suspCallHandler=makeTaggedNULL();
   suspendVarList=makeTaggedNULL();
+  aVarUnifyHandler=makeTaggedNULL();
+  aVarBindHandler=makeTaggedNULL();
 
   int c;
 
