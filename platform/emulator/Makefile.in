@@ -298,3 +298,4 @@ lib-%:
 check:	oz.emulator.bin
 	$(MAKE) test
 	$(MAKE) lib-check
+
