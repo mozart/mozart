@@ -690,7 +690,10 @@ in
 		  %--** {self.SuspendButton tk(configure state: disabled)}
 		  {self.InterruptMenuItem tk(entryconfigure state: disabled)}
 	       [] switch(SwitchName B) then
-		  {self.SwitchRec.SwitchName tkSet(B)}
+		  case {HasFeature self.SwitchRec SwitchName} then
+		     {self.SwitchRec.SwitchName tkSet(B)}
+		  else skip
+		  end
 	       [] switches(Rec) then
 		  {Record.forAllInd self.SwitchRec
 		   proc {$ SwitchName Variable}
@@ -1028,6 +1031,13 @@ in
 			    font: SwitchFont
 			    variable: System
 			    action: {MkAction Switch(system)})}
+	 Gump = {New Tk.variable tkInit(false)}
+	 GumpSw = {New Tk.checkbutton
+		   tkInit(parent: ParsingFrame
+			  text: 'Allow Gump definitions'
+			  font: SwitchFont
+			  variable: Gump
+			  action: {MkAction Switch(gump)})}
 
 	 SAFrame = {New Tk.frame tkInit(parent: Column2
 					highlightthickness: 0)}
@@ -1222,7 +1232,7 @@ in
 			 side: left anchor: w)
 		    pack(ParsingFrame SAFrame CoreFrame
 			 padx: 24 pady: 8 anchor: w)
-		    pack(ParsingLabel ExpressionSw SystemSw anchor: w)
+		    pack(ParsingLabel ExpressionSw SystemSw GumpSw anchor: w)
 		    pack(SALabel StaticAnalysisSw anchor: w)
 		    pack(CoreLabel CoreSw RealCoreSw DebugValueSw DebugTypeSw
 			 anchor: w)
@@ -1270,6 +1280,7 @@ in
 				   warnforward: WarnForward
 				   expression: Expression
 				   system: System
+				   gump: Gump
 				   staticanalysis: StaticAnalysis
 				   core: Core
 				   realcore: RealCore
@@ -1288,7 +1299,7 @@ in
 			self.MaxNumberOfErrors.entry DoMaxErrors
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
 			WarnRedeclSw WarnUnusedSw WarnForwardSw ExpressionSw
-			SystemSw StaticAnalysisSw CoreSw RealCoreSw
+			SystemSw GumpSw StaticAnalysisSw CoreSw RealCoreSw
 			DebugValueSw DebugTypeSw CodeGenSw OutputCodeSw
 			FeedToEmulatorSw ThreadedQueriesSw ProfileSw
 			RunWithDebuggerSw DebugInfoControlSw
