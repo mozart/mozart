@@ -965,7 +965,9 @@ void VarFix::_cacFix(void) {
     return;
   
   do {
-    TaggedRef * to = (TaggedRef *) pop();
+    StackEntry e;
+    pop1(e);
+    TaggedRef * to = (TaggedRef *) e;
 
     Assert(oz_isRef(*to));
 
@@ -1759,9 +1761,10 @@ void LTuple::_cacRecurse() {
 void CacStack::_cacRecurse(void) {
 
   while (!isEmpty()) {
-    TaggedRef tp  = (TaggedRef) pop();  
-    void * ptr    = tagValueOf(tp);
-    TypeOfPtr how = (TypeOfPtr) tagTypeOf(tp);
+    StackEntry tp;
+    pop1(tp);  
+    void * ptr    = tagValueOf((TaggedRef) tp);
+    TypeOfPtr how = (TypeOfPtr) tagTypeOf((TaggedRef) tp);
     
     switch(how) {
     case PTR_LTUPLE:    
@@ -1792,7 +1795,9 @@ void CacStack::_cacRecurse(void) {
 	Assert(how & PTR_LOCAL_SUSPLIST);
 
 	SuspList ** sl = (SuspList **) ptr;
-	Board    *  bb = (Board *) pop();
+	StackEntry e;
+	pop1(e);
+	Board    *  bb = (Board *) e;
 
 	for (int i = how - PTR_LOCAL_SUSPLIST; i--; )
 	  sl[i] = sl[i]->_cacLocalRecurse(bb);

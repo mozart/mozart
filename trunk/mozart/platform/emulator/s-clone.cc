@@ -34,22 +34,22 @@
  *
  */
 
-class CpTrail: public Stack {
+class CpTrail: public FastStack {
 public:
-  CpTrail() : Stack(1024, Stack_WithMalloc) {}
+  CpTrail() : FastStack() {}
   ~CpTrail() {}
   
   void save(int * p) {
     // Save content and address
-    ensureFree(2);
-    push((StackEntry) *p, NO);
-    push((StackEntry) p,  NO);
+    push2((StackEntry) *p, (StackEntry) p);
   }
 
   void unwind(void) {
     while (!isEmpty()) {
-      int * p = (int *) pop();
-      int   v = (int)   pop();
+      StackEntry e1, e2;
+      pop2(e1,e2);
+      int * p = (int *) e2;
+      int   v = (int)   e1;
       *p = v;
     } 
   }
@@ -71,6 +71,10 @@ static Bool across_redid = NO;
 #endif
 
 Board * Board::clone(void) {
+
+  cpTrail.init();
+  varFix.init();
+  cacStack.init();
 
 #ifdef CS_PROFILE
   across_redid  = NO;
@@ -147,6 +151,10 @@ redo:
 #ifdef DEBUG_CHECK
   isCollecting = NO;
 #endif
+
+  cpTrail.exit();
+  varFix.exit();
+  cacStack.exit();
 
   return copy;
 }
