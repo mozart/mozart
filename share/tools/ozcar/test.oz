@@ -10,9 +10,7 @@ local
        in
 	  Z = X + Y
 	  {Show 'Z'#Z}
-	  thread
-	     {AA}
-	  end
+	  {AA}
 	  {B Z}
        end
    B = proc{$ X}

@@ -10,18 +10,21 @@ class Frontend from Dialog
    
       ThreadActionFrame
       ThreadTreeFrame
-      ThreadInfoFrame
+      CallTraceFrame
+      BrowserFrame
 
       ThreadTree
+      Browzcar
       StatusLabel
-      ThreadInfoText
+      CallTraceText
 
    attr
       CurrentThread
    
    meth init
       self.toplevel = {New Tk.toplevel tkInit(title:TitleName)}
-      {Tk.batch [wm(iconname   self.toplevel IconName)
+      {Tk.batch [wm(geometry   self.toplevel '708x492')
+		 wm(iconname   self.toplevel IconName)
 		 wm(iconbitmap self.toplevel BitMap)]}
 
       %Menu,init
@@ -58,21 +61,24 @@ class Frontend from Dialog
       
       {ForAll [self.ThreadActionFrame   # ""
 	       self.ThreadTreeFrame     # "Thread Tree"
-	       self.ThreadInfoFrame     # "Thread Information"]
+	       self.CallTraceFrame      # "Call Trace"
+	       self.BrowserFrame        # "Environment Browser"]
        proc{$ F}
 	  F.1 = {New TitleFrame tkInit(parent:self.toplevel
 				       title:F.2
 				       bd:BorderSize
 				       relief:ridge)}
        end}
-      
+
       {Tk.batch [pack(self.MenuBar self.ThreadActionFrame side:top fill:x)
 		 pack(self.ThreadTreeFrame side:left fill:y)
-		 pack(self.ThreadInfoFrame expand:yes fill:both)]}
+		 pack(self.CallTraceFrame expand:yes fill:both)
+		 pack(self.BrowserFrame expand:yes fill:both)]}
 
       self.ThreadTree = {New Tree init(parent:self.ThreadTreeFrame
-				       width:300 height:500)}
-			       
+				       width:ThreadTreeWidth
+				       height:ThreadTreeHeight)}
+
       local
 	 Bs = {Map ['step' 'cont' 'stack']
 	       fun {$ B}
@@ -84,14 +90,27 @@ class Frontend from Dialog
 	 {Tk.send pack(b(Bs) side:right padx:2)}
       end
 
-      self.ThreadInfoText = {New Tk.text tkInit(parent: self.ThreadInfoFrame
-						font:   DefaultFont
-						width:  50
-						bd:     SmallBorderSize)}
       self.StatusLabel = {New Tk.label tkInit(parent:self.ThreadActionFrame
 					      text:"No current Thread")}
-      {Tk.batch [pack(self.ThreadInfoText expand:yes fill:both)
-		 pack(self.StatusLabel side:left fill:x)]}
+
+      self.CallTraceText = {New Tk.text tkInit(parent: self.CallTraceFrame
+					       font:   DefaultFont
+					       width:  CallTraceTextWidth
+					       height: CallTraceTextHeight
+					       cursor: CallTraceTextCursor
+					       bd:     SmallBorderSize)}
+      local
+	 SB = {New Tk.scrollbar tkInit(parent:self.CallTraceText)}
+      in
+	 {Tk.addYScrollbar self.CallTraceText SB}
+	 {Tk.batch [pack(self.CallTraceText expand:yes fill:both side:left)
+		    %pack(SB expand:no fill:y side:right)
+		    pack(self.StatusLabel side:left fill:x)]}
+      end
+
+      self.Browzcar = {New BrowserClass
+		       init(origWindow: self.BrowserFrame)}
+      {ForAll [createWindow] self.Browzcar}
    end
 
    meth send(Action)
@@ -104,16 +123,50 @@ class Frontend from Dialog
    %in
       CurrentThread <- T
       Frontend,printStatus("Current Thread:  #" # I #
-			   " (state: " # {Thread.state T} # ")")
+			   "  (" # {Thread.state T} # ")")
       {self.ThreadTree select(T)}
    end
 
-   meth stepThread(file:F line:L thr:T)
+   meth stepThread(file:F line:L thr:T name:N args:A)
       {self highlight(file:F line:L)}  % ignore T for now -- sometime later we
                                        % might have different colors for
                                        % different threads
+      local
+	 W    = self.CallTraceText
+         Args = {FormatArgs A}
+	 File = {Str.rchr {Atom.toString F} &/}.2
+      in
+         {ForAll [tk(conf state:normal)
+		  tk(insert 'end'
+          {Thread.id T} # ' ' # File # ':' # L #' {' # N)
+		  tk(conf state:disabled)] W}
+	  
+	  {ForAll Args
+	   proc {$ A}
+	      T = {TagCounter get($)}
+	      Ac = {New Tk.action
+		    tkInit(parent:W
+			   action:proc{$}
+				     S = A.3
+				  in
+				     {self.Browzcar browse(S)}
+				  end)}
+	   in
+	      {ForAll [tk(conf state:normal)
+		       tk(insert 'end' ' ')
+		       tk(insert 'end' A.2 T)
+		       tk(conf state:disabled)
+		       tk(tag bind T '<1>' Ac)
+		       tk(tag conf T font:BoldFont)] W}
+	   end}
+	   
+	  {ForAll [tk(conf state:normal)
+		   tk(insert 'end' '}\n') 
+		   tk(conf state:disabled)
+		   tk(yview 'end')] W}
+      end
    end
-   
+
    meth newThread(T I)
       {ForAll [add(T I) display] self.ThreadTree}
       {self switch(T I)}
@@ -133,39 +186,9 @@ class Frontend from Dialog
    end
    
    meth stackThread(T)
-      S = {Dbg.taskstack T}
-      S1 S2 S3
+      S = {Filter {Dbg.taskstack T} fun {$ E} E \= toplevel end}
    in
-      S1 = {List.filter S fun{$ T}  %% only show "proc" and "builtin" for now
-			     L = {Label T}
-			  in
-			     L == builtin orelse L == 'proc' /* end */
-			  end}
-      S2 = {Map S1 fun {$ T}
-		      L = {Label T}
-		   in
-		      case L
-		      of     builtin then T
-		      elseof 'proc' then   /* end (huhu Emacs!) */ 
-			 {Record.filterInd T fun {$ F Gaga}
-						F == file orelse
-						F == line orelse
-						F == name orelse
-						F == 'G'
-					     end}
-		      end
-		   end}
-      {Browse S2}
-
-      {self.ThreadInfoText tk(delete '1.0' 'end')}
-      {ForAll S2
-       proc{$ E}
-	  case {Label E} == builtin
-	  then
-	     {self.ThreadInfoText tk(insert 'end' 'builtin(' # E.1 # ')\n')}
-	  else
-	     {self.ThreadInfoText tk(insert 'end' 'proc('# E.name # ')\n')}
-	  end
-       end}
+      {self.Browzcar browse(S)}
    end
+   
 end
