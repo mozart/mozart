@@ -2108,7 +2108,7 @@ void PerdioVar::addSuspPerdioVar(Thread *el)
     return;
   }
   if (isURL() && suspList==NULL) {
-    int ret=loadURL(getURL(),findGName(getGName()));
+    int ret=loadURL(getURL(),oz_newVariable());
     if (ret != PROCEED) {
       warning("mm2: load URL failed not impl");
     }
