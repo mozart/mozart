@@ -67,6 +67,8 @@ OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 // propagators
 
 class WidthPropagator : public OZ_Propagator {
+private:
+  static OZ_CFun spawner;
 protected:
   OZ_Term rawrec, rawwid;
 public:
@@ -79,12 +81,13 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return run(void);
-  virtual ostream &print(ostream& o) const {
-    return o << "widthC propagator";
-  }
+  virtual OZ_CFun getSpawner(void) const {return spawner; }
+  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
 };
 
 class MonitorArityPropagator : public OZ_Propagator {
+private:
+  static OZ_CFun spawner;
 protected:
   OZ_Term X, K, L, FH, FT;
 public:
@@ -101,10 +104,9 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return run(void);
-  virtual ostream &print(ostream& o) const {
-    return o << "monitorArity propagator";
-  }
-
+  virtual OZ_CFun getSpawner(void) const {return spawner; }
+  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
+  
   TaggedRef getX(void) { return X; }
   TaggedRef getK(void) { return K; }
   TaggedRef getFH(void) { return FH; }

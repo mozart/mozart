@@ -8,6 +8,8 @@
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 
+#define STORE_FLAG 1
+#define REIFIED_FLAG 2
 
 class SVariable {
   
@@ -60,14 +62,36 @@ public:
     suspList = new SuspList(thr, suspList);
   }
 
-  void setExclusive(void) {
-    suspList = (SuspList *) (((long) suspList) | 1);
+  void setStoreFlag(void) {
+    suspList = (SuspList *) (((long) suspList) | STORE_FLAG);
   }
-  OZ_Boolean testResetExclusive(void) {
-    OZ_Boolean r = ((long)suspList) & 1;
-    suspList = (SuspList *) (((long) suspList) & ~1);
+  void resetStoreFlag(void) {
+    suspList = (SuspList *) (((long) suspList) & ~STORE_FLAG);
+  }
+  OZ_Boolean testStoreFlag(void) {
+    return ((long)suspList) & STORE_FLAG;
+  }
+  OZ_Boolean testResetStoreFlag(void) {
+    OZ_Boolean r = testStoreFlag();
+    resetStoreFlag();
     return r;
   }
+  
+  void setReifiedFlag(void) {
+    suspList = (SuspList *) (((long) suspList) | REIFIED_FLAG);
+  }
+  void resetReifiedFlag(void) {
+    suspList = (SuspList *) (((long) suspList) & ~REIFIED_FLAG);
+  }
+  OZ_Boolean testReifiedFlag(void) {
+    return ((long)suspList) & REIFIED_FLAG;
+  }
+  OZ_Boolean testResetReifiedFlag(void) {
+    OZ_Boolean r = testReifiedFlag();
+    resetReifiedFlag();
+    return r;
+  }
+
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 };
