@@ -67,6 +67,7 @@ void debugStreamTerm(Thread*);
 void debugStreamException(Thread*, TaggedRef);
 void debugStreamEntry(OzDebug*, int);
 void debugStreamExit(OzDebug*, int);
+void debugStreamUpdate(Thread*);
 
 OZ_C_proc_proto(BIdebugmode)
 OZ_C_proc_proto(BIaddEmacsThreads)

@@ -107,6 +107,12 @@ void debugStreamExit(OzDebug *dbg, int frameId) {
   am.debugStreamMessage(dbg->toRecord("exit",am.currentThread,frameId));
 }
 
+void debugStreamUpdate(Thread *thread) {
+  TaggedRef pairlist =
+    cons(OZ_pairA("thr",makeTaggedConst(thread)),nil());
+  am.debugStreamMessage(OZ_recordInit(OZ_atom("update"), pairlist));
+}
+
 // ------------------ Debugging Builtins ---------------------------
 
 OZ_C_proc_begin(BIdebugmode,1)
