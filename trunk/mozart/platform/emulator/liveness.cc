@@ -35,7 +35,7 @@
 
 static int yUsageVector[StaticYUsageVectorSize];
 
-#ifdef DEBUG_LIVECALC
+#if defined(DEBUG_LIVECALC)
 // Whenever liveness zeroes the contents of a register we actually
 // place a fresh +ve/-ve int (maintained by yMarker/xMarker)
 // there. This gives some debugging info when tracking down buggy
@@ -49,7 +49,10 @@ static int yMarker = 1;
    #define VOID_XREG(X,i)           X[i] = makeTaggedNULL()
    #define VOID_YREG(Y,i)           Y->setArg(i,makeTaggedNULL())
 #endif
-
+#if defined(DEBUG_PRINTLIVECALC)
+static int xMarker = makeTaggedNULL();
+static int yMarker = makeTaggedNULL();
+#endif
 
 #define GETREGARG(pc) XRegToInt(getXRegArg(pc))
 
@@ -197,15 +200,15 @@ public:
       } else {
         // Reg i is not live
         if (X) {
-#ifdef DEBUG_LIVECALC
-          printf("X Register (cached) [%d] => %d\n", i, xMarker);
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+          printf("X(0x%x) Register (cached) [%d] => %d\n", X, i, xMarker);
 #endif
           VOID_XREG(X,i);
         }
         else {
           if (Y) {
-#ifdef DEBUG_LIVECALC
-            printf("Y Register (cached) [%d] => %d\n", i, yMarker);
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+            printf("Y(0x%x) Register (cached) [%d] => %d\n", Y, i, yMarker);
 #endif
             VOID_YREG(Y,i);
           }
@@ -266,8 +269,8 @@ int CodeArea::livenessX(ProgramCounter from, TaggedRef *X,int xMax)
   if (X) {
     for (int i=0; i<xMax; i++) {
       if (xUsage[i]!=1) {
-#ifdef DEBUG_LIVECALC
-	printf("X Register [%d] => %d\n", i, xMarker);
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+	printf("X(0x%x) Register [%d] => %d\n", X, i, xMarker);
 #endif
 	VOID_XREG(X,i);
       }
@@ -821,8 +824,8 @@ void CodeArea::livenessGY(ProgramCounter from, Frame* aFrame,
   if (!yZeroed && Y) {
     for (int i=0; i<yMax; i++) {
       if (yUsage[i]!=1) {
-#ifdef DEBUG_LIVECALC
-        printf("Y Register [%d] => %d\n", i, yMarker);
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+        printf("Y(0x%x) Register [%d] => %d\n", Y, i, yMarker);
 #endif
         VOID_YREG(Y,i);
       }
