@@ -32,7 +32,7 @@
 TaggedRef static_var[MAXFDBIARGS];
 TaggedRefPtr static_varptr[MAXFDBIARGS];
 TypeOfTerm static_vartag[MAXFDBIARGS];
-float static_coeff_float[MAXFDBIARGS];
+double static_coeff_double[MAXFDBIARGS];
 int static_coeff_int[MAXFDBIARGS];
 Bool static_sign_bit[MAXFDBIARGS];
 
@@ -40,8 +40,8 @@ Bool static_bool_a[MAXFDBIARGS];
 Bool static_bool_b[MAXFDBIARGS];
 int static_int_a[MAXFDBIARGS];
 int static_int_b[MAXFDBIARGS];
-float static_float_a[MAXFDBIARGS];
-float static_float_b[MAXFDBIARGS];
+double static_double_a[MAXFDBIARGS];
+double static_double_b[MAXFDBIARGS];
 
 int static_index_offset[MAXFDBIARGS];
 int static_index_size[MAXFDBIARGS];
@@ -730,7 +730,7 @@ Bool BIfdBodyManager::introduce(TaggedRef v)
 
 
 int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
-				  Bool sign_bits[], float coeffs[])
+				  Bool sign_bits[], double coeffs[])
 {
   // 1st pass: mark first occ of a var and sum up coeffs of further occs 
   for (int i = 0; i < ts; i++) {
@@ -757,7 +757,7 @@ int BIfdBodyManager::simplifyBody(int ts, STuple &a, STuple &x,
     if (isAnyVar(var_from) && isTaggedIndex(*varptr_from))
       *varptr_from = var_from;
 
-    float coeffs_from = coeffs[from];
+    double coeffs_from = coeffs[from];
 
     if (coeffs_from == 0.0 || var_from == newSmallInt(0)) continue;
 
