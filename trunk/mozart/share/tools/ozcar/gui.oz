@@ -383,7 +383,7 @@ in
 	    case Highlight then
 	       L = case F.line == unit then unit else {Abs F.line} end
 	    in
-	       SourceManager,delayedBar(file:F.file line:L column:F.column)
+	       {Emacs delayedBar(file:F.file line:L column:F.column)}
 	       Gui,SelectStackFrame(FrameNr)
 	    else
 	       Gui,SelectStackFrame(0)
@@ -458,8 +458,8 @@ in
 	 {New Tk.action
 	  tkInit(parent: W
 		 action: Ozcar # frameClick(frame:Frame))}
-	 LineEnd    = FrameNr # DotEnd
-	 UpToDate   = 1 > 0 %SourceManager,isUpToDate(Frame.time $)
+	 LineEnd     = FrameNr # DotEnd
+	 UpToDate    = 1 > 0 % {Emacs isUpToDate(Frame.time $)}
       in
 
 	 {OzcarMessage '  printing frame #' # FrameNr}
@@ -689,7 +689,7 @@ in
 		  else
 		     Gui,UnselectStackFrame
 		     Gui,markNode({Thread.id T} running)
-		     SourceManager,configureBar(running)
+		     {Emacs configureBar(running)}
 		     Gui,markStack(inactive)
 		     {Thread.resume @currentThread}
 		  end
@@ -726,7 +726,7 @@ in
 			Gui,UnselectStackFrame
 			Gui,markNode(I running)
 			Gui,markStack(inactive)
-			SourceManager,configureBar(running)
+			{Emacs configureBar(running)}
 			{Thread.resume T}
 		     end
 		  end
@@ -761,7 +761,7 @@ in
 			Gui,markNode({Thread.id T} running)
 			Gui,markStack(inactive)
 			Gui,doStatus('Continuing thread #' # I)
-			SourceManager,configureBar(running)
+			{Emacs configureBar(running)}
 			{Thread.resume T}
 		     end
 		  end
@@ -788,7 +788,7 @@ in
 			   {Thread.suspend T}
 			   {ForAll [rebuild(true) print
 				    getPos(file:F line:L column:C)] Stack}
-			   SourceManager,bar(file:F line:L column:C state:S)
+			   {Emacs bar(file:F line:L column:C state:S)}
 			else
 			   {Stack rebuild(true)}
 			end

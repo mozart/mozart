@@ -41,18 +41,18 @@ local
 	 T div 3600 # 'h' # H div 60 # 'm' # H mod 60 # 's'
       end
    end
-   
+
 in
 
    class Gui from Menu Dialog Help Time.repeat
 
       prop
 	 locking
-      
+
       feat
 	 toplevel
 	 menuBar
-      
+
 	 ButtonFrame
 	 SortBox
 	 SortMenu
@@ -60,7 +60,7 @@ in
 	 BarCanvas
 	 ProcText
 	 SumText
-      
+
 	 StatusFrame
 	 StatusText
 
@@ -68,7 +68,7 @@ in
 	 Stats          : nil
 	 StatsCount     : 0
 	 ResetTime      : {OS.time}
-      
+
 	 TagList    : nil
 	 SortList   : [calls closures samples heap]
 	 SortBy     : calls
@@ -83,20 +83,20 @@ in
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
 		    wm(iconbitmap self.toplevel BitMap)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
-	 
+
 	 Menu,init
 	 Dialog,init
 	 Help,init
 
 	 Time.repeat,setRepAll(action:update delay:ConfigUpdate)
-	 
+
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
 	     F = {New Tk.frame tkInit(parent: self.toplevel
 				      bd:     SmallBorderSize
 				      relief: ridge)}
 	  end}
-      
+
 	 {Tk.batch [grid(self.menuBar       row:0 column:0
 			 sticky:we columnspan:2)
 		    grid(self.ButtonFrame   row:1 column:0
@@ -104,7 +104,7 @@ in
 		    grid(self.StatusFrame   row:6 column:0
 			 sticky:we columnspan:2)
 		   ]}
-      
+
 	 %% the buttons
 	 local
 	    Bs = {Map [UpdateButtonText ResetButtonText]
@@ -155,15 +155,15 @@ in
 			     activeborderwidth: SmallBorderSize
 			     transient:   yes
 			     tearoff:     no)}
-         {ForAll @SortList
-          proc {$ S}
+	 {ForAll @SortList
+	  proc {$ S}
 	     {New Tk.menuentry.command tkInit(parent: self.SortMenu
 					      label:  S
 					      action: self # DoSortBy(S)) _}
-          end}
-	 
+	  end}
+
 	 %% border line
-         local
+	 local
 	    F = {New Tk.frame tkInit(parent: self.toplevel
 				     height: SmallBorderSize
 				     bd:     NoBorderSize
@@ -171,7 +171,7 @@ in
 	 in
 	    {Tk.send grid(F row:2 column:0 sticky:we columnspan:3)}
 	 end
- 
+
 	 %% status line
 	 self.StatusText =
 	 {New Tk.text tkInit(parent: self.StatusFrame
@@ -195,7 +195,7 @@ in
 					  bg:     DefaultBackground)}
 	 {self.BarCanvas tkBind(event:  HelpEvent
 				action: self # help(BarCanvasTitle))}
-	 
+
 	 %% ...the text widget for detailed output...
 	 self.ProcText =
 	 {New TitleText tkInit(parent: self.toplevel
@@ -210,7 +210,7 @@ in
 			       bg:     DefaultBackground)}
 	 {self.ProcText tkBind(event:  HelpEvent
 			      action: self # help(ProcTextTitle))}
-	 
+
 	 %% ...and the text widget for general output
 	 self.SumText =
 	 {New TitleText tkInit(parent: self.toplevel
@@ -225,7 +225,7 @@ in
 			       bg:     DefaultBackground)}
 	 {self.SumText tkBind(event:  HelpEvent
 			      action: self # help(SumTextTitle))}
-	 
+
 	 {Tk.batch [grid(self.BarCanvas  row:3 column:0 sticky:nswe rowspan:2)
 		    grid(self.ProcText    row:3 column:1 sticky:nswe)
 		    grid(self.SumText    row:4 column:1 sticky:nswe)
@@ -237,8 +237,8 @@ in
       end
 
       meth PrintSortMenu
-         X = {Tk.returnInt winfo(pointerx '.')}
-         Y = {Tk.returnInt winfo(pointery '.')}
+	 X = {Tk.returnInt winfo(pointerx '.')}
+	 Y = {Tk.returnInt winfo(pointery '.')}
 	 N = {Where @SortList @SortBy}
       in
 	 {Tk.send tk_popup(self.SortMenu X Y N)}
@@ -252,7 +252,7 @@ in
 	 Gui,UpdateBars
 	 Gui,doStatus(' done' append)
       end
-      
+
       meth UpdateBars
 	 case @Stats == nil then
 	    Gui,DeleteBars(false)
@@ -265,7 +265,7 @@ in
 	    Max        = case SortedData == nil then 0.1 else
 			    {Int.toFloat SortedData.1.@SortBy} + 0.1 end
 	    XStretch   = 207.0
-	 
+
 	    fun {YStretch I}
 	       (I-1)*32
 	    end
@@ -313,7 +313,7 @@ in
 	 case RemoveEmacsBar then
 	    {self.BarCanvas tk(conf scrollregion: q(7 3 7 3))}
 	    case {Cget emacs} then
-	       SourceManager,removeBar
+	       {Emacs removeBar}
 	    else skip end
 	 else skip end
 	 {ForAll @TagList
@@ -323,17 +323,17 @@ in
 	 TagList    <- nil
 	 StatsCount <- 0
       end
-      
+
       meth DeleteProcInfo
 	 Gui,Clear(self.ProcText)
 	 Gui,Disable(self.ProcText)
       end
-      
+
       meth DeleteSummary
 	 Gui,Clear(self.SumText)
 	 Gui,Disable(self.SumText)
       end
-      
+
       meth UpdateProcInfo(S)
 	 Gui,Clear(self.ProcText)
 	 case S == nil then skip else
@@ -347,11 +347,11 @@ in
 		       ' Heap: ' # {FormatSize S.heap})
 	    Gui,Disable(self.ProcText)
 	    case {Cget emacs} then
-	       SourceManager,bar(file:S.file line:S.line state:runnable)
+	       {Emacs bar(file:S.file line:S.line state:runnable)}
 	    else skip end
 	 end
       end
-      
+
       meth UpdateSumInfo
 	 case @Stats == nil then
 	    Gui,Clear(self.SumText)
@@ -374,16 +374,16 @@ in
 	    Gui,Disable(self.SumText)
 	 end
       end
-	 
+
       meth status(S M<=clear C<=DefaultForeground)
 	 New in
-         StatusSync <- New = unit
-         thread
-            {WaitOr New {Alarm TimeoutToStatus}}
-            case {IsDet New} then skip else
+	 StatusSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToStatus}}
+	    case {IsDet New} then skip else
 	       Gui,doStatus(S M C)
-            end
-         end
+	    end
+	 end
       end
 
       meth doStatus(S M<=clear C<=DefaultForeground)
@@ -401,7 +401,7 @@ in
       meth toggleEmacs
 	 case {Cget emacs} then
 	    Gui,doStatus('Not using Emacs Bar')
-	    SourceManager,removeBar
+	    {Emacs removeBar}
 	 else
 	    Gui,doStatus('Using Emacs Bar')
 	 end
@@ -419,7 +419,6 @@ in
 		      P \= 'prof-string.oz'  andthen
 		      P \= 'prof-tk.oz'      andthen
 		      P \= 'prof-prelude.oz' andthen
-		      P \= 'prof-source.oz'  andthen
 		      P \= 'prof-config.oz'  andthen
 		      P \= 'TkTools.oz'      andthen
 		      P \= 'Time.oz'
@@ -431,12 +430,12 @@ in
 	 {Profile.reset}
 	 Stats      <- nil
 	 ResetTime  <- {OS.time}
-	 
+
 	 Gui,DeleteBars
 	 Gui,DeleteProcInfo
 	 Gui,DeleteSummary
       end
-      
+
       meth action(A)
 	 lock
 	    case A
@@ -445,7 +444,7 @@ in
 	       Gui,update
 	       {Delay 200} %% just to look nice... ;)
 	       Gui,doStatus(' done' append)
-	       
+
 	    [] !ResetButtonText then
 	       Gui,doStatus('Resetting...')
 	       Gui,reset
@@ -454,25 +453,25 @@ in
 	    end
 	 end
       end
-      
+
       meth Clear(Widget)
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')] Widget}
       end
-      
+
       meth Enable(Widget)
 	 {Widget tk(conf state:normal)}
       end
-      
+
       meth Append(Widget Text Color<=DefaultForeground)
 	 {ForAll [tk(insert 'end' Text)
 		  tk(conf fg:Color)] Widget}
       end
-      
+
       meth Disable(Widget)
 	 {Widget tk(conf state:disabled)}
       end
-      
+
       meth DeleteLine(Widget Nr)
 	 {Widget tk(delete Nr#'.0' Nr#DotEnd)}
       end
