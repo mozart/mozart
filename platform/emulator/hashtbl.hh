@@ -123,6 +123,9 @@ public:
 };
 
 //
+#define K_SHIFT		4
+
+//
 // Only 'intlong' keys are supported by now;
 class HashTableFastReset {
 private:
@@ -134,7 +137,7 @@ private:
 
   //
 private:
-  int hashFunc(intlong i) { return (((unsigned) i) % tableSize); }
+  int hashFunc(intlong i) { return ((((unsigned) i)>>K_SHIFT) % tableSize); }
   int findIndex(intlong i);
   void mkTable();
   void resize();
