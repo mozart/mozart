@@ -187,19 +187,19 @@ void handleApplMethInfo(ProgramCounter PC, HashTable *ht)
 
 /* the compiler stores AbstractionEntries as ints */
 
-TaggedRef checkAE(AbstractionEntry *ae, HashTable *ht)
+static
+AbstractionEntry *checkAE(AbstractionEntry *ae, HashTable *ht)
 {
-  TaggedRef aet = oz_int((ToInt32(ae)));
-  CheckHT(TaggedRef,ae);
-  return aet;
+  CheckHT(AbstractionEntry *,ae);
+  return ae;
 }
 
 
 static
 void handlePredicateRef(ProgramCounter PC, HashTable *ht)
 {
-  int i = OZ_intToC(checkAE((AbstractionEntry*) getAdressArg(PC),ht));
-  CodeArea::writeAddress(ToPointer(i),PC);
+  AbstractionEntry *ae = checkAE((AbstractionEntry*) getAdressArg(PC),ht);
+  CodeArea::writeAddress(ae,PC);
 }
 
 
@@ -270,16 +270,22 @@ void handleHashTable(ProgramCounter PC, HashTable *ht)
 
 
 
-ProgramCounter copyCode(ProgramCounter start, OzDictionary *dict, Bool makecopy)
+ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy)
 {
   HashTable *ht = new HashTable(HT_INTKEY,100);
 
-  // copy dict into ht
-  int i = dict->getFirst();
-  i = dict->getNext(i);
-  while(i != -1) {
-    ht->htAdd(dict->getKey(i),ToPointer(dict->getValue(i)));
-    i = dict->getNext(i);
+  // copy alist into ht
+  TaggedRef one = OZ_int(1), two = OZ_int(2);
+  while(OZ_isCons(alist)) {
+    TaggedRef pair = OZ_head(alist);
+    TaggedRef key = deref(OZ_subtree(pair,one));
+    TaggedRef value = deref(OZ_subtree(pair,two));
+    if (OZ_isForeignPointer(key))
+      ht->htAdd(ToInt32(OZ_getForeignPointer(key)),
+                OZ_getForeignPointer(value));
+    else   // a name
+      ht->htAdd(ToInt32(key), ToPointer(value));
+    alist = OZ_tail(alist);
   }
 
   int sizeOfDef = sizeOf(DEFINITION);
@@ -301,12 +307,11 @@ ProgramCounter copyCode(ProgramCounter start, OzDictionary *dict, Bool makecopy)
     ret = start;
   }
 
-  ProgramCounter PC = start;
+  ProgramCounter PC = ret;
 
-  ProgramCounter ende = start+size;
+  ProgramCounter ende = ret+size;
 
   while (PC<ende) {
-    ProgramCounter oldPC = PC;
     Opcode op = CodeArea::getOpcode(PC++);
 
     switch(op) {
@@ -315,8 +320,6 @@ ProgramCounter copyCode(ProgramCounter start, OzDictionary *dict, Bool makecopy)
 
     default: Assert(0); break;
     }
-
-    displayCode(oldPC,1);
   }
 
   delete ht;

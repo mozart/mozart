@@ -25,6 +25,6 @@
 
 
 
-#include "dictionary.hh"
+#include "value.hh"
 
-ProgramCounter copyCode(ProgramCounter start, OzDictionary *dict, Bool makecopy);
+ProgramCounter copyCode(ProgramCounter start, TaggedRef alist, Bool makecopy);
