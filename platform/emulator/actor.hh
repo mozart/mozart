@@ -203,6 +203,7 @@ public:
   TaggedRef genEnumed (Board *newSolveBB);
   TaggedRef genEnumedFail ();
   TaggedRef genFailed ();
+  void printDebug();
 
 private:
   WaitActor* getTopWaitActor ();
