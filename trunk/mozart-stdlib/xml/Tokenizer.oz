@@ -1,10 +1,8 @@
 functor
 export
-   NewFromString
    NewFromURL
-   NewLazyFromURL
+   NewFromString
 prepare
-
    %% ================================================================
    %% {IsNameChar C}
    %%     returns true iff C may legally occur in an XML name
@@ -18,383 +16,570 @@ prepare
       C==&.           orelse
       C==&:
    end
-
-   %% ================================================================
-   %% {ScanSpaces +Sin ?Sout}
-   %%     skips leading spaces in Sin and returns the tail which is
-   %% either empty or begins with a non-space character
-   %% ================================================================
-
    CharIsSpace = Char.isSpace
-   fun {ScanSpaces S}
-      case S
-      of H|T andthen {CharIsSpace H} then {ScanSpaces T}
-      else S end
-   end
+   DecToInt = o(&0:0 &1:1 &2:2 &3:3 &4:4 &5:5 &6:6 &7:7 &8:8 &9:9)
+   HexToInt = o(&0:0 &1:1 &2:2 &3:3 &4:4 &5:5 &6:6 &7:7 &8:8 &9:9
+		&a:10 &b:11 &c:12 &d:13 &e:14 &f:15
+		&A:10 &B:11 &C:12 &D:13 &E:14 &F:15)
+   CharUpcase = Char.toUpper
+   fun {Upcase S} {Map S CharUpcase} end
+   DefaultEntityRecord =
+   o(amp : string("\&")
+     lt  : string("<")
+     gt  : string(">")
+     apos: string("'")
+     quot: string("\""))
+   RecToDict = Record.toDictionary
 
-   %% ================================================================
-   %% {ScanEntityRef +Sin ?C +Sout}
-   %%     We have just encountered a `&´ and now we must recognize the
-   %% entity reference.  We only support entity references that denote
-   %% single characters: thus output C is the corresponding character.
-   %% ================================================================
+   class Tokenizer
+      prop final
+      attr
+	 Filename         : unit
+	 File             : unit
+	 Buffer           : nil
+	 Line             : 1
+	 Stack            : nil
+	 EntityTable      : unit
+	 PreviousFilename : unit
+	 FileOpen         : unit
 
-   fun {ScanEntityRef L H}
-      case L
-      of    &a|&m|&p|&;|T then H=&& T
-      []       &l|&t|&;|T then H=&< T
-      []       &g|&t|&;|T then H=&> T
-      [] &a|&p|&o|&s|&;|T then H=&' T
-      [] &q|&u|&o|&t|&;|T then H=&" T
-      []          &#|&x|T then {ScanCharRefHex T 0 H}
-      []             &#|T then {ScanCharRefDec T 0 H}
-      else
-	 {Exception.raiseError
-	  xml(tokenize(scanEntityRef L))}
-	 unit
+      meth initFromString(TXT FNull FOpen)
+	 Buffer      <- TXT
+	 FileOpen    <- FOpen
+	 File        <- FNull
+	 EntityTable <- {RecToDict DefaultEntityRecord}
       end
-   end
 
-   fun {ScanCharRefDec L I H}
-      case L
-      of &0|T then {ScanCharRefDec T I*10   H}
-      [] &1|T then {ScanCharRefDec T I*10+1 H}
-      [] &2|T then {ScanCharRefDec T I*10+2 H}
-      [] &3|T then {ScanCharRefDec T I*10+3 H}
-      [] &4|T then {ScanCharRefDec T I*10+4 H}
-      [] &5|T then {ScanCharRefDec T I*10+5 H}
-      [] &6|T then {ScanCharRefDec T I*10+6 H}
-      [] &7|T then {ScanCharRefDec T I*10+7 H}
-      [] &8|T then {ScanCharRefDec T I*10+8 H}
-      [] &9|T then {ScanCharRefDec T I*10+9 H}
-      [] &;|T then H=I T
-      else
-	 {Exception.raiseError
-	  xml(tokenize(scanCharRefDec L))}
-	 unit
+      meth initFromURL(FName FOpen)
+	 Filename    <- FName
+	 FileOpen    <- FOpen
+	 File        <- {FOpen FName}
+	 EntityTable <- {RecToDict DefaultEntityRecord}
       end
-   end
 
-   fun {ScanCharRefHex L I H}
-      case L
-      of &0|T then {ScanCharRefHex T I*16    H}
-      [] &1|T then {ScanCharRefHex T I*16+1  H}
-      [] &2|T then {ScanCharRefHex T I*16+2  H}
-      [] &3|T then {ScanCharRefHex T I*16+3  H}
-      [] &4|T then {ScanCharRefHex T I*16+4  H}
-      [] &5|T then {ScanCharRefHex T I*16+5  H}
-      [] &6|T then {ScanCharRefHex T I*16+6  H}
-      [] &7|T then {ScanCharRefHex T I*16+7  H}
-      [] &8|T then {ScanCharRefHex T I*16+8  H}
-      [] &9|T then {ScanCharRefHex T I*16+9  H}
-      [] &a|T then {ScanCharRefHex T I*16+10 H}
-      [] &b|T then {ScanCharRefHex T I*16+11 H}
-      [] &c|T then {ScanCharRefHex T I*16+12 H}
-      [] &d|T then {ScanCharRefHex T I*16+13 H}
-      [] &e|T then {ScanCharRefHex T I*16+14 H}
-      [] &f|T then {ScanCharRefHex T I*16+15 H}
-      [] &A|T then {ScanCharRefHex T I*16+10 H}
-      [] &B|T then {ScanCharRefHex T I*16+11 H}
-      [] &C|T then {ScanCharRefHex T I*16+12 H}
-      [] &D|T then {ScanCharRefHex T I*16+13 H}
-      [] &E|T then {ScanCharRefHex T I*16+14 H}
-      [] &F|T then {ScanCharRefHex T I*16+15 H}
-      [] &;|T then H=I T
-      else
-	 {Exception.raiseError
-	  xml(tokenize(scanCharRefHex L))}
-	 unit
+      meth GetCoord($)
+	 coord(@Filename @Line)
       end
-   end
 
-
-   %% ================================================================
-   %% {ScanValue +Sin ?Val ?Sout}
-   %%     Scans a quoted attribute value
-   %% ================================================================
-
-   local
-      fun {Loop L C Val}
-	 case L
-	 of &&|T then H Val2 in
-	    Val=H|Val2
-	    {Loop {ScanEntityRef T H} C Val2}
-	 [] H|T then
-	    if H==C then Val=nil T
-	    else Val2 in Val=H|Val2 {Loop T C Val2} end
-	 end
-      end
-   in
-      fun {ScanValue Sin Val}
-	 case Sin
-	 of &"|T then {Loop T &" Val}
-	 [] &'|T then {Loop T &' Val}
-	 else
-	    {Exception.raiseError
-	     xml(tokenize(scanValue Sin))}
-	    unit
-	 end
-      end
-   end
-
-   %% ================================================================
-   %% {ScanName +Sin ?Name ?Sout}
-   %%     reads an XML name (identifier).
-   %% ================================================================
-
-   fun {ScanName Sin Name}
-      case Sin
-      of H|T andthen {IsNameChar H} then Name2 in
-	 Name=H|Name2 {ScanName T Name2}
-      else Name=nil Sin end
-   end
-
-   %% ================================================================
-   %% {ScanAttr +Sin ?Attr ?Sout}
-   %%     scans an attribute declaration Name=Value and returns Attr
-   %% of the form Name|Value.
-   %% ================================================================
-
-   fun {ScanAttr Sin Attr}
-      Name Value
-   in
-      Attr=Name|Value
-      case {ScanSpaces {ScanName Sin Name}}
-      of &=|T then {ScanValue {ScanSpaces T} Value}
-      []    T then {Exception.raiseError
-		    xml(tokenize(scanAttr T))}
-	 unit
-      end
-   end
-
-   %% ================================================================
-   %% {ScanEtag +Sin ?Tag ?Sout}
-   %%     scans an end tag. returns Tag=etag(Name) where Name is the
-   %% name of the tag.
-   %% ================================================================
-
-   fun {ScanEtag Sin Tag}
-      Name
-   in
-      Tag=etag(Name)
-      case {ScanSpaces {ScanName Sin Name}}
-      of &>|T then T
-      [] T then
-	 {Exception.raiseError
-	  xml(tokenize(scanEtag T))}
-	 unit
-      end
-   end
-
-   %% ================================================================
-   %% {ScanStag +Sin ?Tag ?Sout}
-   %%     scans a start tag and returns Tag=stag(Name Alist Empty)
-   %% where Name is the name of the tag, Alist is the list of
-   %% attributes, and Empty is a boolean indicating whether the
-   %% element is empty (i.e. if the tag ends with `/>')
-   %% ================================================================
-
-   fun {ScanStag Sin Tag}
-      Name Alist Empty
-   in
-      Tag=stag(Name Alist Empty)
-      {ScanAlist {ScanName Sin Name} Alist Empty}
-   end
-
-   %% ================================================================
-   %% {ScanAlist +Sin ?Alist ?Empty ?Sout}
-   %%     scans the attribute declarations on a start tag.  returns
-   %% Alist, the list of attribute declarations (where each is of the
-   %% form Name|Value), and Empty (see above).
-   %% ================================================================
-
-   fun {ScanAlist Sin Alist Empty}
-      case {ScanSpaces Sin}
-      of &/|&>|T then Alist=nil Empty=true  T
-      []    &>|T then Alist=nil Empty=false T
-      []       T then Alist2 Attr in
-	 Alist=Attr|Alist2
-	 {ScanAlist {ScanAttr T Attr} Alist2 Empty}
-      end
-   end
-
-   %% ================================================================
-   %% {ScanText +Sin ?Text ?Sout}
-   %%     scans character data and returns Text=text(Chars) where
-   %% Chars is the data with entities and CDATA sections expanded.
-   %% ================================================================
-
-   local
-      fun {Loop Sin Chars}
-	 case Sin
-	 of &&|T then H Chars2 in
-	    Chars=H|Chars2
-	    {Loop {ScanEntityRef T H} Chars2}
-	 [] &<|&!|&[|T then {CDATA T Chars}
-	 [] &<|_ then Chars=nil Sin
-	 [] H|T  then Chars2 in
-	    Chars=H|Chars2 {Loop T Chars2}
-	 [] nil  then Chars=nil nil
-	 end
-      end
-      fun {CDATA Sin Chars}
-	 case {ScanSpaces Sin}
-	 of &C|&D|&A|&T|&A|T then
-	    case {ScanSpaces T}
-	    of &[|T then {CDATALoop T Chars}
-	    else {Exception.raiseError
-		  xml(tokenize(cdata1 Sin))}
-	       unit
-	    end
-	 else {Exception.raiseError
-	       xml(tokenize(cdata2 Sin))}
-	    unit
-	 end
-      end
-      fun {CDATALoop Sin Chars}
-	 case Sin
-	 of &]|&]|&>|T then {Loop T Chars}
-	 [] H|T then Chars2 in
-	    Chars=H|Chars2 {CDATALoop T Chars2}
-	 else {Exception.raiseError
-	       xml(tokenize(cdata3))}
-	    unit
-	 end
-      end
-   in
-      fun {ScanText Sin Text}
-	 Chars
-      in
-	 Text=text(Chars)
-	 {Loop Sin Chars}
-      end
-   end
-
-   %% ================================================================
-   %% {ScanComment +Sin ?Comment ?Sout}
-   %%     we have just read `<!--' and we must now read up to the
-   %% closing `-->'.  Returns Comment=comment(Chars) where Chars is
-   %% the text of the comment.
-   %% ================================================================
-
-   local
-      fun {Loop Sin Chars}
-	 case Sin
-	 of &-|&-|&>|T then Chars=nil T
-	 [] H|T then Chars2 in
-	    Chars=H|Chars2 {Loop T Chars2}
-	 else
-	    {Exception.raiseError
-	     xml(tokenize(scanComment))}
-	    unit
-	 end
-      end
-   in
-      fun {ScanComment Sin Comment}
-	 Chars
-      in
-	 Comment=comment(Chars)
-	 {Loop Sin Chars}
-      end
-   end
-
-   %% ================================================================
-   %% {ScanPI +Sin ?PI ?Sout}
-   %%     we have just read `<?' indicating the start of a processing
-   %% instruction, we must now read the name of the target and then
-   %% its arguments up to the closing `?>'.  Returns PI=pi(Name Args)
-   %% where Name is the name of the pi's target and Args is its
-   %% argument text.
-   %% ================================================================
-
-   local
-      fun {Loop Sin Args}
-	 case Sin
-	 of &?|&>|T then Args=nil T
-	 [] H|T then Args2 in
-	    Args=H|Args2 {Loop T Args2}
-	 else
-	    {Exception.raiseError
-	     xml(tokenize(scanPI))}
-	    unit
-	 end
-      end
-   in
-      fun {ScanPI Sin PI}
-	 Name Args
-      in
-	 PI=pi(Name Args)
-	 {Loop {ScanName Sin Name} Args}
-      end
-   end
-
-   %% ================================================================
-   %% {ScanNext +Sin ?Token ?Sout}
-   %%     scans the next token.  Returns unit if Sin is empty.
-   %% ================================================================
-
-   fun {ScanNext Sin Token}
-      case Sin
-      of nil           then Token=unit nil
-      [] &<|&/|T       then {ScanEtag    T Token}
-      [] &<|&!|&-|&-|T then {ScanComment T Token}
-      [] &<|&?|T       then {ScanPI      T Token}
-      [] &<|&!|&[|_    then {ScanText  Sin Token}
-      [] &<|T          then {ScanStag    T Token}
-      else                  {ScanText  Sin Token} end
-   end
-
-   %% ================================================================
-   %% {New +String ?Tokenizer}
-   %%     A tokenizer is an ADT that exports a `get' function which
-   %% returns the next token in the input string.  The tokenizer is
-   %% initialized with input string String.  `get' returns unit when
-   %% the input has been exhausted.
-   %% ================================================================
-
-   fun {NewFromString String}
-      C={NewCell String}
-      fun {Get}
-	 OldString NewString
-      in
-	 {Exchange C OldString NewString}
-	 {ScanNext OldString $ NewString}
-      end
-   in
-      tokenizer(
-	 get : Get)
-   end
-
-import
-   Open(file:File)
-define
-
-   %% ================================================================
-   %% {NewFromURL     +URL ?Tokenizer}
-   %% {NewLazyFromURL +URL ?Tokenizer}
-   %%     take input from the given URL.  There is a lazy version
-   %% which reads input in a demand driven fashion; this saves memory.
-   %% ================================================================
-
-   fun {NewFromURL U}
-      O={New File init(url:U)}
-   in
-      try {NewFromString
-	   {O read(list:$ size:all)}}
-      finally
-	 try {O close} catch _ then skip end
-      end
-   end
-
-   fun {NewLazyFromURL U}
-      O={New File init(url:U)}
-      fun lazy {More} L T N in
-	 {O read(list:L tail:T len:N)}
-	 T = if N==0 then {O close} nil
-	     else {More} end
+      meth FillBuffer($)
 	 L
+      in
+	 {@File read(list:L tail:nil size:1024 len:_)}
+	 if L==nil then
+	    case @Stack
+	    of o(FN FO BU LI)|LL then
+	       PreviousFilename <- @Filename
+	       Filename         <- FN
+	       File             <- FO
+	       Buffer           <- BU
+	       Line             <- LI
+	       Stack            <- LL
+	       Tokenizer,FillBuffer($)
+	    else false end
+	 else Buffer<-L true end
+      end
+
+      meth GET($)
+	 case @Buffer
+	 of H|T then
+	    Buffer<-T
+	    if H==&\n then Line<-@Line+1 end
+	    H
+	 elseif Tokenizer,FillBuffer($)
+	 then   Tokenizer,GET($)
+	 else false end
+      end
+
+      meth UNGET(C)
+	 if C\=false then
+	    Buffer <- C|@Buffer
+	    if C==&\n then Line<-@Line-1 end
+	 end
+      end
+
+      meth PEEK($)
+	 case @Buffer
+	 of H|_ then H
+	 elseif Tokenizer,FillBuffer($)
+	 then   Tokenizer,PEEK($)
+	 else false end
+      end
+
+      meth PushFile(FName)
+	 if @File\=unit then
+	    Stack<-o(@Filename @File @Buffer @Line)|@Stack
+	 end
+	 Filename <- FName
+	 File     <- {@FileOpen FName}
+	 Buffer   <- nil
+	 Line     <- 1
+      end
+
+      meth ERROR(R)
+	 raise xml(tokenizer(file : @Filename
+			     line : @Line
+			     info : R))
+	 end
+      end
+
+      meth SkipSpaces C in
+	 Tokenizer,GET(C)
+	 if C==false then skip
+	 elseif {CharIsSpace C} then
+	    Tokenizer,SkipSpaces
+	 else
+	    Tokenizer,UNGET(C)
+	 end
+      end
+
+      %% we have just encountered a & and now we must recognize the
+      %% entity reference
+
+      meth ScanEntityRef(Value)
+	 case Tokenizer,PEEK($)
+	 of false then
+	    Tokenizer,ERROR(entityRefEOF)
+	 [] &# then C in
+	    Tokenizer,GET(_)
+	    Tokenizer,ScanCharRef(C)
+	    case Tokenizer,GET($)
+	    of &; then Value=string([C])
+	    else
+	       Tokenizer,ERROR(charRefMissingSemiColon)
+	    end
+	 else Name in
+	    Tokenizer,ScanName(Name)
+	    if Name==nil then
+	       Tokenizer,ERROR(entityRefNoName)
+	    else
+	       A = {StringToAtom Name}
+	       V = {CondSelect @EntityTable A unit}
+	    in
+	       if V==unit then
+		  Tokenizer,ERROR(entityRefUnknown(A))
+	       else
+		  Tokenizer,SkipSpaces
+		  case Tokenizer,GET($)
+		  of &; then Value=V
+		  else
+		     Tokenizer,ERROR(entityRefMissingSemiColon)
+		  end
+	       end
+	    end
+	 end
+      end
+
+      meth ScanCharRef($)
+	 case Tokenizer,PEEK($)
+	 of &x then
+	    Tokenizer,GET(_)
+	    Tokenizer,ScanCharRefHex(0 $)
+	 else
+	    Tokenizer,ScanCharRefDec(0 $)
+	 end
+      end
+
+      meth ScanCharRefDec(Accu $) D in
+	 Tokenizer,GET(D)
+	 case {CondSelect DecToInt D unit}
+	 of unit then
+	    Tokenizer,UNGET(D) Accu
+	 [] I then
+	    Tokenizer,ScanCharRefDec(Accu*10+I $)
+	 end
+      end
+
+      meth ScanCharRefHex(Accu $) D in
+	 Tokenizer,GET(D)
+	 case {CondSelect HexToInt D unit}
+	 of unit then
+	    Tokenizer,UNGET(D) Accu
+	 [] I then
+	    Tokenizer,ScanCharRefHex(Accu*16+I $)
+	 end
+      end
+
+      meth ScanValue(Value)
+	 case Tokenizer,GET($)
+	 of &" then Tokenizer,ScanDelim(&" Value)
+	 [] &' then Tokenizer,ScanDelim(&' Value)
+	 else
+	    Tokenizer,ERROR(expectedQuotedValue)
+	 end
+      end
+
+      meth ScanDelim(Q V)
+	 case Tokenizer,GET($)
+	 of false then
+	    Tokenizer,ERROR(valueEOF)
+	 [] && then S1 S2 in
+	    Tokenizer,ScanEntityRef(S1)
+	    case S1 of string(S1) then
+	       {Append S1 S2 V}
+	    else
+	       Tokenizer,ERROR(illegalEntityTypeInValue(S1))
+	    end
+	    Tokenizer,ScanDelim(Q S2)
+	 [] C then
+	    if C==Q then V=nil
+	    else V2 in
+	       V=C|V2
+	       Tokenizer,ScanDelim(Q V2)
+	    end
+	 end
+      end
+
+      meth ScanName(Name) C in
+	 Tokenizer,GET(C)
+	 if C==false then Name=nil
+	 elseif {IsNameChar C} then Name2 in
+	    Name=C|Name2
+	    Tokenizer,ScanName(Name2)
+	 else
+	    Name=nil
+	    Tokenizer,UNGET(C)
+	 end
+      end
+
+      meth ScanAttr(Name Value)
+	 Tokenizer,SkipSpaces
+	 Tokenizer,ScanName(Name)
+	 Tokenizer,SkipSpaces
+	 case Tokenizer,GET($)
+	 of &= then
+	    Tokenizer,SkipSpaces
+	    Tokenizer,ScanValue(Value)
+	 else
+	    Tokenizer,ERROR(expectedEqualSignInAttrib(Name))
+	 end
+      end
+
+      %% we have just read </
+      meth ScanEtag(Tag Coord) Name in
+	 Tokenizer,SkipSpaces
+	 Tokenizer,ScanName(Name)
+	 Tokenizer,SkipSpaces
+	 case Tokenizer,GET($)
+	 of &> then
+	    Tag=etag(Name Coord)
+	 else
+	    Tokenizer,ERROR(expectedEtagRangle)
+	 end
+      end
+
+      %% we have just read <
+      meth ScanStag(Tag Coord) Name Alist Empty in
+	 Tag=stag(Name Alist Empty Coord)
+	 Tokenizer,SkipSpaces
+	 Tokenizer,ScanName(Name)
+	 Tokenizer,ScanAlist(Alist Empty)
+      end
+
+      meth ScanAlist(Alist Empty)
+	 Tokenizer,SkipSpaces
+	 case Tokenizer,PEEK($)
+	 of false then
+	    Tokenizer,ERROR(alistEOF)
+	 [] &/ then
+	    Tokenizer,GET(_)
+	    case Tokenizer,GET($)
+	    of false then
+	       Tokenizer,ERROR(alistEOF)
+	    [] &> then Alist=nil Empty=true
+	    else
+	       Tokenizer,ERROR(expectedEmptyTagRangle)
+	    end
+	 [] &> then
+	    Tokenizer,GET(_)
+	    Alist=nil Empty=false
+	 else Name Value Alist2 in
+	    Alist=(Name|Value)|Alist2
+	    Tokenizer,ScanAttr(Name Value)
+	    Tokenizer,ScanAlist(Alist2 Empty)
+	 end
+      end
+
+      %% the tokenizer will not guarantee the invariant that all
+      %% all adjacent text tokens are collapsed.  Instead, we will
+      %% leave that job to a higher abstraction.
+
+      meth ScanText(Token Coord) Text in
+	 Token=text(Text Coord)
+	 Tokenizer,ScanTEXT(Text)
+      end
+
+      meth ScanTEXT(Text) C in
+	 Tokenizer,GET(C)
+	 if C==false then Text=nil
+	 elseif C==&& orelse C==&< then
+	    Text=nil
+	    Tokenizer,UNGET(C)
+	 else Text2 in
+	    Text=C|Text2
+	    Tokenizer,ScanTEXT(Text2)
+	 end
+      end
+
+      %% we have just read <![
+      meth ScanCDATA(Text Coord)
+	 raise notImplemented(scanCDATA) end
+      end
+
+      %% we have just read <!--
+      meth ScanComment(Comment Coord) Text in
+	 Comment=comment(Text Coord)
+	 Tokenizer,ScanCOMMENT(Text)
+      end
+
+      meth ScanCOMMENT(Text) C1 in
+	 Tokenizer,GET(C1)
+	 case C1
+	 of false then
+	    Tokenizer,ERROR(commentEOF)
+	 [] &- then C2 in
+	    Tokenizer,GET(C2)
+	    case C2
+	    of false then
+	       Tokenizer,ERROR(commentEOF)
+	    [] &- then C3 in
+	       Tokenizer,GET(C3)
+	       case C3
+	       of false then
+		  Tokenizer,ERROR(commentEOF)
+	       [] &> then Text=nil
+	       else Text2 in
+		  Text=C1|Text2
+		  Tokenizer,UNGET(C3)
+		  Tokenizer,UNGET(C2)
+		  Tokenizer,ScanCOMMENT(Text2)
+	       end
+	    else Text2 in
+	       Text=C1|C2|Text2
+	       Tokenizer,ScanCOMMENT(Text2)
+	    end
+	 else Text2 in
+	    Text=C1|Text2
+	    Tokenizer,ScanCOMMENT(Text2)
+	 end
+      end
+
+      %% we have just read <?
+      meth ScanPI(PI Coord) Text in
+	 PI=pi({ScanName} Text Coord)
+	 Tokenizer,ScanPIX(Text)
+      end
+
+      meth ScanPIX(Text) C1 in
+	 Tokenizer,GET(C1)
+	 case C1
+	 of false then
+	    Tokenizer,ERROR(piEOF)
+	 [] &? then C2 in
+	    Tokenizer,GET(C2)
+	    case C2
+	    of false then
+	       Tokenizer,ERROR(piEOF)
+	    [] &> then Text=nil
+	    else Text2 in
+	       Text=C1|Text2
+	       Tokenizer,UNGET(C2)
+	       Tokenizer,ScanPIX(Text2)
+	    end
+	 else Text2 in
+	    Text=C1|Text2
+	    Tokenizer,ScanPIX(Text2)
+	 end
+      end
+
+      meth ScanToken(Token) C1 Coord in
+	 Tokenizer,GET(C1)
+	 Tokenizer,GetCoord(Coord)
+	 case C1
+	 of false then Token=unit
+	 [] &< then C2 in
+	    Tokenizer,GET(C2)
+	    case C2
+	    of false then
+	       Tokenizer,ERROR(tokenEOF)
+	    [] &/ then Tokenizer,ScanEtag(Token Coord)
+	    [] &? then Tokenizer,ScanPI(Token Coord)
+	    [] &! then C3 in
+	       Tokenizer,GET(C3)
+	       case C3
+	       of false then
+		  Tokenizer,ERROR(tokenEOF)
+	       [] &- then C4 in
+		  Tokenizer,GET(C4)
+		  case C4
+		  of false then
+		     Tokenizer,ERROR(tokenEOF)
+		  [] &- then
+		     Tokenizer,ScanComment(Token Coord)
+		  else
+		     Tokenizer,ERROR(expectedComment)
+		  end
+	       [] &[ then
+		  Tokenizer,ScanCDATA(Token Coord)
+	       else
+		  Tokenizer,UNGET(C3)
+		  Token=doctype(Coord)
+		  Tokenizer,ScanDoctype
+	       end
+	    else
+	       Tokenizer,UNGET(C2)
+	       Tokenizer,ScanStag(Token Coord)
+	    end
+	 [] && then
+	    case Tokenizer,ScanEntityRef($)
+	    of string(S) then Token=text(S Coord)
+	    [] pi(S)     then Token=pi(S Coord)
+	    [] system(S) then
+	       Tokenizer,PushFile(S)
+	       Tokenizer,ScanToken(Token)
+	    end
+	 else
+	    Tokenizer,UNGET(C1)
+	    Tokenizer,ScanText(Token Coord)
+	 end
+      end
+
+      %% we have just read <!
+      meth ScanDoctype Name in
+	 Tokenizer,ScanName(Name)
+	 case {Upcase Name}
+	 of "DOCTYPE" then
+	    Tokenizer,ScanDOCTYPE
+	 else
+	    Tokenizer,ERROR(expectedDoctype)
+	 end
+      end
+
+      meth ScanDOCTYPE
+	 Tokenizer,SkipSpaces
+	 case Tokenizer,PEEK($)
+	 of false then
+	    Tokenizer,ERROR(doctypeEOF)
+	 [] &[ then
+	    Tokenizer,GET(_)
+	    Tokenizer,ScanDoctypeBody
+	 [] &" then
+	    Tokenizer,ScanDelim(&" _)
+	    Tokenizer,ScanDOCTYPE
+	 [] &' then
+	    Tokenizer,ScanDelim(&' _)
+	    Tokenizer,ScanDOCTYPE
+	 else
+	    Tokenizer,ScanName(_)
+	    Tokenizer,ScanDOCTYPE
+	 end
+      end
+
+      meth ScanDoctypeBody
+	 Tokenizer,SkipSpaces
+	 case Tokenizer,GET($)
+	 of false then
+	    Tokenizer,ERROR(doctypeEOF)
+	 [] &] then
+	    Tokenizer,SkipSpaces
+	    case Tokenizer,GET($)
+	    of false then
+	       Tokenizer,ERROR(doctypeEOF)
+	    [] &> then skip
+	    else
+	       Tokenizer,ERROR(expectedDoctypeRangle)
+	    end
+	 [] &< then
+	    case Tokenizer,GET($)
+	    of false then
+	       Tokenizer,ERROR(doctypeEOF)
+	    [] &! then
+	       if Tokenizer,PEEK($)==&- then
+		  Tokenizer,GET(_)
+		  case Tokenizer,GET($)
+		  of false then
+		     Tokenizer,ERROR(doctypeEOF)
+		  [] &- then
+		     Tokenizer,ScanComment(_)
+		     Tokenizer,ScanDoctypeBody
+		  [] C then
+		     Tokenizer,ERROR(unexpectCharInDoctype(C))
+		  end
+	       else S in
+		  Tokenizer,ScanName(S)
+		  case {Upcase S}
+		  of "ENTITY" then Name Type Value in
+		     Tokenizer,SkipSpaces
+		     Tokenizer,ScanName(Name)
+		     Tokenizer,SkipSpaces
+		     if {Member Tokenizer,PEEK($) [&' &"]} then
+			Type = string
+		     else TName in
+			Tokenizer,ScanName(TName)
+			case {Upcase TName}
+			of "SYSTEM" then Type=system
+			[] "PI"     then Type=pi
+			else
+			   Tokenizer,ERROR(unpexpectedEntityType(TName))
+			end
+		     end
+		     Tokenizer,SkipSpaces
+		     Tokenizer,ScanValue(Value)
+		     @EntityTable.{StringToAtom Name} := Type(Value)
+		     Tokenizer,SkipSpaces
+		     case Tokenizer,GET($)
+		     of false then
+			Tokenizer,ERROR(entityDeclEOF)
+		     [] &> then
+			Tokenizer,ScanDoctypeBody
+		     [] C then
+			Tokenizer,ERROR(unpextecCharInEntityDecl(C))
+		     end
+		  else
+		     %% for anything else, we skip until the next >
+		     Tokenizer,SkipToRangle
+		     Tokenizer,ScanDoctypeBody
+		  end
+	       end
+	    [] C then
+	       Tokenizer,ERROR(expectedBangInDoctype(C))
+	    end
+	 [] C then
+	    Tokenizer,ERROR(unexpectedCharInDoctype(C))
+	 end
+      end
+
+      meth SkipToRangle
+	 case Tokenizer,GET($)
+	 of &> then skip
+	 else Tokenizer,SkipToRangle end
+      end
+
+      meth getToken($)
+	 Tokenizer,ScanToken($)
+      end
+   end
+import
+   Open(file:OpenFileClass)
+define
+   local
+      fun {OpenFile F}
+	 {New OpenFileClass init(url:F)}
       end
    in
-      {NewFromString {More}}
+      fun {NewFromURL FName}
+	 Tok={New Tokenizer initFromURL(FName OpenFile)}
+	 fun {Get} {Tok getToken($)} end
+      in
+	 tokenizer(get:Get)
+      end
+
+      fun {NewFromString TXT}
+	 Null={New OpenFileClass init(name:'/dev/null')}
+	 {Null close}
+	 Tok={New Tokenizer initFromString(TXT Null OpenFile)}
+	 fun {Get} {Tok getToken($)} end
+      in
+	 tokenizer(get:Get)
+      end
    end
 end
