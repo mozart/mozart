@@ -27,7 +27,7 @@
     <<'x-oz://system/Inspector'>>.  It exports the following
     application programmer's interface:
     <LIST>
-      <ENTRY><<Inspect>>
+      <ENTRY><<inspect>>
       <SYNOPSIS>
 	<<{Inspector.inspect ?_{X}}>>
       <ITEM>
@@ -78,6 +78,12 @@
 	<<Inspector.configure>>, <<Inspector.configureN>> and
         <<Inspector.close>>. This object is creating using the above
         <<Inspector.new>> function.
+      <ENTRY><<reflect>>
+      <SYNOPSIS>
+        <<Inspector.reflect>>
+      <ITEM>
+        exports the reflection function used by the inspector to reflect
+        deep space values. Use on your own risk.
     </LIST>
   <SECTION id="section.configure.methods"><TITLE/Inspector object methods/
    <P>
