@@ -45,23 +45,27 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B)
   TaggedRef term1 = A;
   TaggedRef term2 = B;
 
-  FASTDEREF(term1,term1Ptr,_1);
+  DEREF(term1,term1Ptr,_1);
 
   if (proto == term1) {
-    FASTDEREF(term2,term2Ptr,_2);
+    DEREF(term2,term2Ptr,_2);
     if (term2 != proto || term1Ptr != term2Ptr) {
       doBind(term1Ptr,B);
     }
     return OK;
   } else {
-    FASTDEREF(term2,term2Ptr,_2);
+    DEREF(term2,term2Ptr,_2);
     if (proto == term2) {
       doBind(term2Ptr,A);
       return OK;
     }
   }
-  
+
+#ifdef FASTSS
+  return fastUnifyOutline(term1,term1Ptr,B);
+#else
   return unify(A,B);
+#endif
 }
 
 inline
