@@ -44,7 +44,7 @@ private:
 public:
   void gc();
 
-  Trail (int sizeInit = 10): Stack(sizeInit) { lastMark = tos; }
+  Trail (int sizeInit = 200): Stack(sizeInit) { lastMark = tos; }
 
   void pushRef(TaggedRef *val, TaggedRef old)
   {
