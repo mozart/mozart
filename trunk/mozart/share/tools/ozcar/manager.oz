@@ -17,7 +17,7 @@ in
    
    Manager =
    {New
-    class from UrObject
+    class
        feat
 	  Stream            %% info stream of the emulator
 	  ReadLoopThread    %% we need to kill it when closing the manager
@@ -66,21 +66,21 @@ in
 	  elseof thr then
 	     T = M.thr.1
 	     I = M.thr.2
-	     E = self,exists(T $)
+	     E = {self exists(T $)}
 	  in
 	     case E then
 		{Message "Got known thread (id " # I # ")"}
 	     else
 		{Message "Got new thread (id " # I # ")"}
-		self,add(T I)
+		{self add(T I)}
 	     end
 	     
 	  elseof term then
 	     T = M.thr.1
-	     E = self,exists(T $)
+	     E = {self exists(T $)}
 	  in
 	     case E then
-		self,remove(T)
+		{self remove(T)}
 		{Ozcar removeThread(T M.par.1 M.par.2)}
 	     else
 		skip
