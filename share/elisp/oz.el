@@ -1033,9 +1033,10 @@ the GDB commands `cd DIR' and `directory'."
     (modify-syntax-entry ?\` "\"" table)
     (modify-syntax-entry ?%  "<" table)
     (modify-syntax-entry ?\n ">" table)
-;; emacs does not support two comment formats !!!
-;    (modify-syntax-entry ?/ ". 14" table)
-;    (modify-syntax-entry ?* ". 23" table)
+;    (modify-syntax-entry ?%  "< b" table)
+;    (modify-syntax-entry ?\n "> b" table)
+;    (modify-syntax-entry ?/ "_ 14" table)
+;    (modify-syntax-entry ?* "_ 23" table)
     (setq oz-mode-syntax-table table)
     (set-syntax-table oz-mode-syntax-table)))
 
@@ -1062,6 +1063,8 @@ the GDB commands `cd DIR' and `directory'."
   (setq comment-end "")
   (make-local-variable 'comment-start-skip)
   (setq comment-start-skip "/\\*+ *\\|% *")
+  (make-local-variable 'parse-sexp-ignore-comments)
+  (setq parse-sexp-ignore-comments t)
   (set (make-local-variable 'compilation-last-buffer)
        (get-buffer-create oz-compiler-buffer))
 )
