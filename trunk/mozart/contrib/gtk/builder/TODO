@@ -1,0 +1,9 @@
+-- allow children to be specified in feature `children' instead of under
+   features 1..N (will facilitate to generate specs, without using
+   Adjoin and List.toRecord)
+
+-- support the canvas in GBuilderWidgets
+
+-- handle freeing on destroy signal (e.g., makeStrArr in GBuilderTypes):
+   some fromOz conversions in GBuilderTypes allocate data structures
+   which need to be explicitly freed, this currently never happens
