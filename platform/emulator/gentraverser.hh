@@ -45,8 +45,6 @@
 #include "dictionary.hh"
 #include "gname.hh"
 
-//#define USE_ROBUST_UNMARSHALER
-
 //
 #define GT_STACKSIZE	4096
 
@@ -56,6 +54,15 @@
 // #define CrazyDebug(Code)
 #else
 #define CrazyDebug(Code)
+#endif
+
+// Exception handling for robust unmarshaler
+#ifndef USE_FAST_UNMARSHALER
+extern jmp_buf unmarshal_error_jmp;
+#define RAISE_UNMARSHAL_ERROR longjmp(unmarshal_error_jmp,1)
+// #define RAISE_UNMARSHAL_ERROR OZ_error("here")
+#define TRY_UNMARSHAL_ERROR if(setjmp(unmarshal_error_jmp)==0)
+#define CATCH_UNMARSHAL_ERROR else
 #endif
 
 //
@@ -1288,13 +1295,8 @@ private:
   CrazyDebug(void decDebugNODES() { debugNODES--; });
 
   //
-#ifdef USE_FAST_UNMARSHALER
   void buildValueOutline(OZ_Term value, BTFrame *frame,
 			 BuilderTaskType type);
-#else
-  void buildValueOutlineRobust(OZ_Term value, BTFrame *frame,
-			       BuilderTaskType type);
-#endif
 
   //
   // Handling binary areas involves pushing a task into the stack (the
@@ -1413,7 +1415,6 @@ public:
     Assert(gname);
     putTask(BT_chunkMemo, gname, n);
   }
-  // knownChunk se general_builder_methods.hh
 
   //
   void buildClass(GName *gname, int flags) {
@@ -1624,12 +1625,124 @@ public:
     }
   }
 
-#ifndef USE_FAST_UNMARSHALER
-#include "robust_builder_methods.hh"
-#else
-#include "fast_builder_methods.hh"
-#endif  
+  //
+  // 'buildValue' is the main actor: it pops tasks;
+  void buildValue(OZ_Term value) {
+    CrazyDebug(incDebugNODES(););
+    GetBTFrame(frame);
+    GetBTTaskType(frame, type);
+    if (type == BT_spointer) {
+      GetBTTaskPtr1(frame, OZ_Term*, spointer);
+      DiscardBTFrame(frame);
+      SetBTFrame(frame);
+      Assert(value);
+      *spointer = value;
+    } else {
+      buildValueOutline(value, frame, type);
+    }
+  }
 
+  void buildValueRemember(OZ_Term value, int n) {
+    buildValue(value);
+    set(value, n);
+  }
+  
+  //
+  // Process 'intermediate' tasks: nowadays it is abstracted away,
+  // since we have to be eager with processing them 'cause of
+  // cross-references!
+  void processSync() {
+    GetBTFrame(frame);
+    GetBTTaskType(frame, type);
+    buildValueOutline(0, frame, type); // there is no value;
+  }
+  
+  //
+  void buildList() {
+    LTuple *l = new LTuple();
+    buildValue(makeTaggedLTuple(l));
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 2);
+    PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
+    PutBTTaskPtr(frame, BT_spointer, l->getRefHead());
+    SetBTFrame(frame);
+  }
+  void buildListRemember(int n) {
+    LTuple *l = new LTuple();
+    OZ_Term list = makeTaggedLTuple(l);
+    buildValue(list);
+    set(list, n);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 2);
+    PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
+    PutBTTaskPtr(frame, BT_spointer, l->getRefHead());
+    SetBTFrame(frame);
+  }
+  
+  //
+  void buildDictionary(int size) {
+    OzDictionary *aux = new OzDictionary(am.currentBoard(), size);
+    aux->markSafe();
+    //
+    buildValue(makeTaggedConst(aux));
+    //
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, size);
+    while(size-- > 0) {
+      PutBTTaskPtr(frame, BT_dictKey, aux);
+    }
+    SetBTFrame(frame);
+  }
+  
+  //
+  void buildDictionaryRemember(int size, int n) {
+    OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
+    aux->markSafe();
+    //
+    OZ_Term dict = makeTaggedConst(aux);
+    buildValue(dict);
+    set(dict, n);
+    //
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, size);
+    while(size-- > 0) {
+      PutBTTaskPtr(frame, BT_dictKey, aux);
+    }
+    SetBTFrame(frame);
+  }
+  
+  void knownChunk(OZ_Term chunkTerm) {
+    buildValue(chunkTerm);
+    putTask(BT_spointer, &blackhole);
+  }
+  
+  void knownClass(OZ_Term classTerm) {
+    buildValue(classTerm);
+    putTask(BT_spointer, &blackhole); // class features;
+  }
+  
+  //
+  // There is a need for 'knownProc' since a user is not supposed to
+  // understand the structure of closure's (Oz) terms that are to be
+  // skipped;
+  void knownProcRemember(OZ_Term procTerm, int memoIndex) {
+    buildValue(procTerm);
+    set(procTerm, memoIndex);
+    
+    //
+    Abstraction *pp = (Abstraction *) tagged2Const(procTerm);
+    Assert(isAbstraction(pp));
+    int gsize = pp->getPred()->getGSize();
+    //
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, gsize+2); // 'name' and 'file' as well;
+    for (int i = 0; i < gsize; i++) {
+    PutBTTaskPtr(frame, BT_spointer, &blackhole);
+    }
+    PutBTTaskPtr(frame, BT_spointer, &blackhole); // name;
+    PutBTTaskPtr(frame, BT_spointer, &blackhole); // file;
+    SetBTFrame(frame);
+  }
 
   //
 #ifdef DEBUG_CHECK

@@ -199,12 +199,12 @@ void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error)
 void unmarshalFullObjectRobustInternal(ObjectFields *o, MsgBuffer *bs, 
 				       int *error)
 {
-  TaggedRef t = newUnmarshalTermRobustInternal(bs);
+  TaggedRef t = newUnmarshalTermInternal(bs);
   if(t == 0) { *error = OK; return; }
   o->feat  =  oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
-  o->state = newUnmarshalTermRobustInternal(bs);
+  o->state = newUnmarshalTermInternal(bs);
   if(o->state == 0) { *error = false; return; }
-  o->lock  = newUnmarshalTermRobustInternal(bs);
+  o->lock  = newUnmarshalTermInternal(bs);
   *error = (o->lock == 0);
 }
 #endif
@@ -232,7 +232,7 @@ void unmarshalFullObjectAndClassRobustInternal(ObjectFields *o,MsgBuffer *bs,
 {
   int e;
   unmarshalFullObjectRobustInternal(o,bs,&e);
-  o->clas = newUnmarshalTermRobustInternal(bs);
+  o->clas = newUnmarshalTermInternal(bs);
   *error = (e || (o->clas == 0));
 }
 #endif
