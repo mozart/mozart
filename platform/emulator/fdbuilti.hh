@@ -207,6 +207,7 @@ OZ_C_proc_proto(BIfdGenLessEqB);
 OZ_C_proc_proto(BIfdCardBI);
 OZ_C_proc_proto(BIfdInB);
 OZ_C_proc_proto(BIfdIsIntB);
+OZ_C_proc_proto(BIfdCardBIBin);
 
 // fdwatch.cc
 OZ_C_proc_proto(BIfdWatchDom1);
@@ -269,6 +270,7 @@ OZ_C_proc_proto(BIfdGenLinEqB_body);
 OZ_C_proc_proto(BIfdGenLinNotEqB_body);
 OZ_C_proc_proto(BIfdGenLessEqB_body);
 OZ_C_proc_proto(BIfdCardBI_body);
+OZ_C_proc_proto(BIfdCardBIBin_body);
 OZ_C_proc_proto(BIfdInB_body);
 OZ_C_proc_proto(BIfdIsIntB_body);
 
@@ -552,6 +554,14 @@ public:
                         newSmallInt(c_val));
   }
 
+  Bool areIdentVar(int a, int b) {
+    DebugCheck((a < 0 || a >= curr_num_of_items) ||
+               (b < 0 || b >= curr_num_of_items),
+               error("index overflow."));
+    return (bifdhm_varptr[a] == bifdhm_varptr[b] &&
+            isAnyVar(bifdhm_vartag[a]));
+  }
+
   void printDebug(void) {
     for (int i = 0; i < curr_num_of_items; i += 1)
       printDebug(i);
@@ -691,7 +701,6 @@ public:
                error("index overflow."));
     return (bifdbm_varptr[a] == bifdbm_varptr[b] &&
             isAnyVar(bifdbm_vartag[a]));
-
   }
 
   FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
