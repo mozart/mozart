@@ -38,9 +38,9 @@
                      out => [],
                      BI  => BIsendPort},
 
-     'newServiceVar'
-     =>            { in  => ['+port'],
+     'sendRecv' => { in  => ['+port','value'],
                      out => ['value'],
-                     BI  => BInewServiceVar },
+                     BI  => BIsendRecvPort},
+
      );
 1;;
