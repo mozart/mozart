@@ -924,7 +924,7 @@
 	    it instead by <Code proglang=oz>{Profiler.close}</Code>.
 	</List>
     <Appendix id="appendix.keybindings">
-      <Title/Key Binding Summary/
+      <Title/Summary of Oz-Specific Emacs Key Bindings/
       <P>
 	In this appendix, we present a summary table of all Oz-specific
 	Emacs key bindings.  This is intended as a convenient reference;
