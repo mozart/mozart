@@ -46,7 +46,7 @@
 
 
 (setq oz-compiler-state "not running")
-(setq oz-machine-state  "not runnnig")
+(setq oz-machine-state  "not running")
 
 
 
