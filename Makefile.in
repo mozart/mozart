@@ -17,7 +17,7 @@ PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
 
 DISTDIR=        dist
 
-FILES=          README* LICENSE BUGS
+FILES=          README* LICENSE
 ALLFILES=       $(FILES:%=$(PREFIX)/%)
 
 DIRS=           bin demo include lib platform tools man
