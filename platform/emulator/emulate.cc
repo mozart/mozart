@@ -5,7 +5,8 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Benjamin Lorenz (lorenz@ps.uni-sb.de)
+ *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
