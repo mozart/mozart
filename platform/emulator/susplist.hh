@@ -86,6 +86,8 @@ public:
     return ret;
   }
 
+  Bool hasSuspAt(Board *);
+
   int length(void);
   int lengthProp(void);
 
