@@ -63,14 +63,26 @@ in
 
 	 elseof thr then
 	    T = M.thr.1
+	    I = M.thr.2
 	    E = self,exists(T $)
 	 in
 	    case E then
-	       {Message "Got known thread (id " # {Thread.id T} # ")"}
+	       {Message "Got known thread (id " # I # ")"}
 	    else
-	       {Message "Got new thread (id " # {Thread.id T} # ")"}
+	       {Message "Got new thread (id " # I # ")"}
 	       self,add(T)
-	       {Ozcar newThread(T)}
+	       {Ozcar newThread(T I)}
+	    end
+
+	 elseof term then
+	    T = M.thr.1
+	    E = self,exists(T $)
+	 in
+	    case E then
+	       self,remove(T)
+	       {Ozcar removeThread(T M.par.1 M.par.2)}
+	    else
+	       skip
 	    end
 	    
 	 else skip end

@@ -9,14 +9,13 @@ class Frontend from Dialog
       MenuBar
    
       ThreadActionFrame
-      ThreadSelectorFrame
+      ThreadTreeFrame
       ThreadInfoFrame
 
+      ThreadTree
       StatusLabel
       ThreadInfoText
 
-      V
-   
    attr
       CurrentThread
    
@@ -58,7 +57,7 @@ class Frontend from Dialog
        nil}
       
       {ForAll [self.ThreadActionFrame   # ""
-	       self.ThreadSelectorFrame # "Thread Selector"
+	       self.ThreadTreeFrame     # "Thread Tree"
 	       self.ThreadInfoFrame     # "Thread Information"]
        proc{$ F}
 	  F.1 = {New TitleFrame tkInit(parent:self.toplevel
@@ -68,11 +67,12 @@ class Frontend from Dialog
        end}
       
       {Tk.batch [pack(self.MenuBar self.ThreadActionFrame side:top fill:x)
-		 pack(self.ThreadSelectorFrame side:left fill:y)
+		 pack(self.ThreadTreeFrame side:left fill:y)
 		 pack(self.ThreadInfoFrame expand:yes fill:both)]}
 
-      self.V = {New Tk.variable tkInit(0)}
-
+      self.ThreadTree = {New Tree init(parent:self.ThreadTreeFrame
+				       width:300 height:500)}
+			       
       local
 	 Bs = {Map ['step' 'cont' 'stack']
 	       fun {$ B}
@@ -86,6 +86,7 @@ class Frontend from Dialog
 
       self.ThreadInfoText = {New Tk.text tkInit(parent: self.ThreadInfoFrame
 						font:   DefaultFont
+						width:  50
 						bd:     SmallBorderSize)}
       self.StatusLabel = {New Tk.label tkInit(parent:self.ThreadActionFrame
 					      text:"No current Thread")}
@@ -97,26 +98,27 @@ class Frontend from Dialog
       {{Thread.getName @CurrentThread} Action}
    end
 
-   meth newThread(T)
-      Id = {Thread.id T}
-      R  = {New Tk.radiobutton tkInit(parent:  self.ThreadSelectorFrame
-				      variable:self.V
-				      value:   Id   text: "ID " # Id
-				      action:  self # switch(Id))}
-   in
-      {Tk.send pack(R side:top pady:3 fill:x anchor:w)}
-      {self.V tkSet(Id)}
-      self,switch(Id)
+   meth switch(T I)
+      CurrentThread <- T
+      Frontend,printStatus("Current Thread:  #" # I #
+			   " (state: " # {Thread.state T} # ")")
+      {self.ThreadTree select(T)}
    end
    
-   meth switch(Id)
-      T = {Dbg.threadByID Id}
-   in
-      CurrentThread <- T
-      Frontend,printStatus("Current Thread:  #" # Id #
-			   " (state: " # {Thread.state T} # ")")
+   meth newThread(T I)
+      {ForAll [add(T I) display] self.ThreadTree}
+      self,switch(T I)
    end
-
+   
+   meth removeThread(T P I)
+      {self.ThreadTree remove(T)}
+      case @CurrentThread == T then
+	 {self switch(P I)}
+      else
+	 {self.ThreadTree display}
+      end
+   end
+   
    meth printStatus(S)
       {self.StatusLabel tk(conf text:S)}
    end
