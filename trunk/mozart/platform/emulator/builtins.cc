@@ -3843,7 +3843,7 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
   if (!oz_isSRecord(initState)) {
     if (dummyRecord==0) {
       dummyRecord = OZ_recordInitC("noattributes",
-				   oz_list(OZ_pair2(OZ_newName(),OZ_atom("novalue")),0));
+				   oz_list(OZ_pair2(OZ_newName(),taggedVoidValue),0));
       OZ_protect(&dummyRecord);
     }
     initState = dummyRecord;

@@ -64,7 +64,7 @@ OZ_BI_define(BIgetOpcode,1,1)
 
   Opcode oc = stringToOpcode(opname);
   if (oc == OZERROR) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
+    return oz_raise(E_ERROR,AtomAssembler,
 		    "unknownInstruction",1,OZ_in(0));
   }
   OZ_RETURN_INT(oc);
@@ -77,7 +77,7 @@ OZ_BI_define(BIgetInstructionSize,1,1)
 
   Opcode oc = stringToOpcode(opname);
   if (oc == OZERROR) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
+    return oz_raise(E_ERROR,AtomAssembler,
 		    "unknownInstruction",1,OZ_in(0));
   }
   OZ_RETURN_INT(sizeOf(oc));
@@ -90,7 +90,7 @@ OZ_BI_define(BIallocateCodeBlock,2,2)
   oz_declareNonvarIN(1,globals);
 
   if (size < 0) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
+    return oz_raise(E_ERROR,AtomAssembler,
 		    "illegalCodeBlockSize",1,OZ_in(0));
   }
   int numGlobals = OZ_length(globals);
@@ -151,7 +151,7 @@ OZ_BI_define(BIstoreOpcode,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
   if (i < 0 || i >= (int) OZERROR) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
+    return oz_raise(E_ERROR,AtomAssembler,
 		    "unknownInstruction",1,OZ_in(1));
   }
   code->writeOpcode((Opcode) i);
@@ -214,7 +214,7 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
   OZ_declareVirtualString(1,name);
   Builtin *bi = string2Builtin(name);
   if (!bi) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
+    return oz_raise(E_ERROR,AtomAssembler,
 		    "builtinUndefined",1,OZ_in(1));
   }
   code->writeBuiltin(bi);
@@ -227,7 +227,7 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,i);
   if (i < 0) {
-    return oz_raise(E_ERROR,OZ_atom("assembler"),
+    return oz_raise(E_ERROR,AtomAssembler,
 		    "registerIndexOutOfRange",1,OZ_in(1));
   }
   code->writeReg(i);
@@ -463,7 +463,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     }
     int j = smallIntValue(index);
     if (j < 0 || j >= NumberOfXRegisters) {
-      return oz_raise(E_ERROR,OZ_atom("assembler"),
+      return oz_raise(E_ERROR,AtomAssembler,
 		      "registerIndexOutOfRange",1,OZ_in(1));
     }
     loc->in(i) = j;
@@ -480,7 +480,7 @@ OZ_BI_define(BIstoreLocation,2,0)
     }
     int j = smallIntValue(index);
     if (j < 0 || j >= NumberOfXRegisters) {
-      return oz_raise(E_ERROR,OZ_atom("assembler"),
+      return oz_raise(E_ERROR,AtomAssembler,
 		      "registerIndexOutOfRange",1,OZ_in(1));
     }
     loc->out(i) = j;
