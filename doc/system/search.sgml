@@ -741,7 +741,7 @@ end
         Creates and initializes a new parallel search engine by
         forking new Oz processes. At host ?_{HostA1} the number of
         newly forked processes is ?_{I1} and the fork method
-        ?_{ForkA1} is used (see <ptr to="remote.sgml> for a discussion
+        ?_{ForkA1} is used (see <ptr to="remote.sgml"> for a discussion
         of fork methods), and so on.
       <p>
         For example,
