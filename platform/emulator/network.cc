@@ -273,6 +273,7 @@ protected:
   int totlen;  /* include header */
   int type;
   Site *site;
+  
   RemoteSite *remotesite;
   int availableSpace();
   
@@ -286,11 +287,14 @@ protected:
   
 public:
   NetMsgBuffer(){}
-  
   void init(){type=BS_None;first=NULL;start=NULL;last=NULL;
   site=NULL;remotesite=NULL;}
-  void setSite(Site *s);
-  Site* getSite();
+  void init(Site *s){type=BS_None;first=NULL;start=NULL;last=NULL;
+  site=s;remotesite=NULL;}
+  void setSite(Site *s){
+  site = s;}
+  Site* getSite(){
+  return site;}
   char *siteStringrep();
   int getTotLen();
   void removeFirst(){
@@ -301,7 +305,6 @@ public:
     first=bb->next;
     byteBufferManager->deleteByteBuffer(bb);}
   
-
   ByteBuffer* getAnother();
 
   void getSingle();
@@ -433,11 +436,6 @@ public:
     first=last=NULL;
   }
 };
-
-void NetMsgBuffer::setSite(Site *s){
-  site = s;}
-Site* NetMsgBuffer::getSite(){
-  return site;}
 char* NetMsgBuffer::siteStringrep(){
   return site->stringrep();}
 int NetMsgBuffer::getTotLen() {return totlen;}
@@ -529,7 +527,8 @@ public:
     NetMsgBuffer *bb;
     if(f==NULL) {bb=new NetMsgBuffer();}
     else{GenCast(f,FreeListEntry*,bb,NetMsgBuffer*);}
-    bb->setSite(s);
+    bb->NetMsgBuffer();
+    bb->init(s);
     return bb;}
   
   void deleteNetMsgBuffer(NetMsgBuffer* b){
@@ -2514,8 +2513,10 @@ int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
   return ret;
 }
 
-
-inline ipReturn interpret(MsgBuffer *bs,tcpMessageType type){
+// EK something funny is happening here
+// try to remove the inine. Might work...
+//inline 
+ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type){
   if(type==TCP_PACKET){
     PD((TCP,"interpret-packet"));      
     PD((TCP,"received TCP_PACKET"));
@@ -2600,11 +2601,7 @@ static int tcpReadHandler(int fd,void *r0)
     m=NULL;
     //EK
     rem=0-tcpHeaderSize;
-    
-    // ATTENTION 
-    // Must insert the correct Site later....
-
-    bs=netMsgBufferManager->getNetMsgBuffer(NULL);
+    bs=netMsgBufferManager->getNetMsgBuffer(r->remoteSite->site);
     PD((TCP,"readHandler from scratch r:%x",r));
     bs->getSingle();
     pos=bs->initForRead(len);}
@@ -2666,7 +2663,11 @@ start:
 	Assert(r->isIncomplete());
 	messageManager->freeMessage(m);}
       // EK check this out...
-      else{netMsgBufferManager->freeNetMsgBuffer(bs);}
+      // ATTENTION
+      // Here we must dump all the ByteBuffers, they should
+      // have been removed dynamicly during marshaling.
+      // ATTENTION
+      else{netMsgBufferManager->dumpNetMsgBuffer(bs);}
       goto close;}
     bs->afterInterpret();    
     if(rem==0){goto fin;}
@@ -2683,7 +2684,12 @@ maybe_redo:
 fin:
   if(rem==0){
     if(m==NULL){
-      netMsgBufferManager->freeNetMsgBuffer(bs);
+      // EK check this out...
+      // ATTENTION
+      // Here we must dump all the ByteBuffers, they should
+      // have been removed dynamicly during marshaling.
+      // ATTENTION
+      netMsgBufferManager->dumpNetMsgBuffer(bs);
       return 0;}
     Assert(r->isIncomplete());
     messageManager->freeMessage(m);}
@@ -2791,9 +2797,11 @@ static int acceptHandler(int fd,void *unused)
   auxbuf += netIntSize;
   int2net(auxbuf, bufSize - 10);
   auxbuf += netIntSize;
-  for (char *pv = PERDIOVERSION; *pv; pv++, auxbuf++) {
-    *auxbuf = *pv;
+  for (char *pv = PERDIOVERSION; *pv;) {
+    PD((TCP,"Writing %c %d",*pv,auxbuf));
+    *auxbuf++ = *pv++;
   }
+  PD((TCP,"Writing 0 %d",auxbuf));
   *auxbuf++ = 0;
   Assert(auxbuf-buf == bufSize);
 

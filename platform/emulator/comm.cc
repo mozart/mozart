@@ -10,17 +10,7 @@
   State: $State$
   ------------------------------------------------------------------------
 */
-#if defined(INTERFACE)
-#pragma implementation "perdio.hh"
-#endif
 
-#if defined(INTERFACE)
-#pragma implementation "msgbuffer.hh"
-#endif
-
-#if defined(INTERFACE)
-#pragma implementation "comm.hh"
-#endif
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -195,6 +185,7 @@ SiteHashTable* secondarySiteTable=new SiteHashTable(SECONDARY_SITE_TABLE_SIZE);
 /**********************************************************************/
 
 Site *unmarshalPSite(MsgBuffer *buf){
+  PD((UNMARSHAL,"Psite"));
   MarshalTag mt= (MarshalTag) buf->get();
   Site tryS;
   tryS.unmarshalBaseSite(buf);
@@ -216,6 +207,7 @@ void primaryToSecondary(Site *s,int hvalue){
   secondarySiteTable->insertSecondary(s,hvalue2);}
 
 Site* unmarshalSite(MsgBuffer *buf){
+  PD((UNMARSHAL,"site"));
   MarshalTag mt= (MarshalTag) buf->get();
   FindType rc;
   int hvalue;
@@ -342,6 +334,7 @@ int BaseSite::hashPrimary(){
 /**********************************************************************/
 
 void Site :: marshalPSite(MsgBuffer *buf){
+  PD((MARSHAL,"Psite"));
   if(flags & PERM_SITE){
     buf->put(DIF_PERM);
     return;}
@@ -349,6 +342,7 @@ void Site :: marshalPSite(MsgBuffer *buf){
   marshalBaseSite(buf);}
 
 void Site::marshalSite(MsgBuffer *buf){
+  PD((MARSHAL,"Site"));
   unsigned int type=getType();
   if(type & PERM_SITE){
     buf->put(DIF_PERM);
@@ -360,7 +354,7 @@ void Site::marshalSite(MsgBuffer *buf){
     marshalBaseSite(buf);    
     marshalVirtualInfo(vi,buf);
     return;}
-  Assert(type & REMOTE_SITE);
+  Assert((type & REMOTE_SITE) || (this==mySite) );
   buf->put(DIF_REMOTE);
   marshalBaseSite(buf);
   return;}
@@ -394,6 +388,6 @@ void siteZeroActiveRef(Site *s){
   return;}
 
 Site* initMySite(ip_address a,port_t p,time_t t){
-  return =new Site(a,p,t);}
+  return new Site(a,p,t);}
 
 
