@@ -367,8 +367,8 @@
       The module <Span class=index/<<Object>>/ contains procedures operating
       on objects.
     <P>
-      The system procedures that define the behaviour of Oz objects and classes
-      are also given in this section.
+      The system procedures that define the behaviour of &Oz; objects and
+      classes are also given in this section.
       <List>
 	<Entry><Span class=index/<<IsObject>>/
 	  <Index class=tails/<<Object>><And><<is>>/
