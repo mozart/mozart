@@ -24,11 +24,6 @@
  *
  */
 
-
-#if defined(INTERFACE)
-#pragma implementation "perdio.hh"
-#endif
-
 #if defined(INTERFACE)
 #pragma implementation "msgbuffer.hh"
 #endif
@@ -55,6 +50,7 @@
 #include "msgbuffer.hh"
 #include "vs_comm.hh"
 #include "chain.hh"
+#include "genhashtbl.hh"
 
 #define SITE_CUTOFF           100
 
@@ -425,6 +421,8 @@ char *BaseSite::stringrep()
           getPort(), getTimeStamp()->start,getTimeStamp()->pid);
   return buf;
 }
+
+char *oz_site2String(Site *s) { return s->stringrep(); }
 
 int BaseSite::hashSecondary(){
   BYTE *p=(BYTE*)&address;

@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __dvar__hh__
-#define __dvar__hh__
+#ifndef __perdiovar__hh__
+#define __perdiovar__hh__
 
 
 #if defined(INTERFACE)
@@ -37,6 +37,8 @@
 #include "oz.h"
 #include "perdio_debug.hh"
 #include "am.hh"
+
+char *oz_site2String(Site *s);
 
 enum PV_TYPES {
   PV_MANAGER,
@@ -152,15 +154,16 @@ public:
 
   void registerSite(Site* sd) {
     Assert(isManager());
-    u.proxies = new ProxyList(sd,u.proxies);
-  }
-
-  Bool isRegistered(Site* sd) {
-    Assert(isManager());
+    // test if already registered
     for (ProxyList *pl = u.proxies; pl != 0; pl=pl->next) {
-      if (pl->sd==sd) return OK;
+      if (pl->sd==sd) {
+        PD((WEIRD,"REGISTER o:%d s:%s already registered",
+            getIndex(),
+            oz_site2String(sd)));
+        return;
+      }
     }
-    return NO;
+    u.proxies = new ProxyList(sd,u.proxies);
   }
 
   int hasVal() { Assert(isProxy()); return u.bindings!=0; }
@@ -186,10 +189,14 @@ public:
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
   void addSusp(TaggedRef *v, Suspension susp, int unstable);
-  Bool valid(TaggedRef v);
+  Bool valid(TaggedRef v) {
+    Assert(!oz_isRef(v) && !oz_isVariable(v));
+    return (isObject()) ? FALSE : TRUE;
+  }
+
   void primBind(TaggedRef *lPtr,TaggedRef v);
 
-  void dispose(void);
+  void dispose(void) {}
 
   void gcRecurse(void);
 

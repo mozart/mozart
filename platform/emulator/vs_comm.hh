@@ -38,6 +38,7 @@
 #include "comm.hh"
 #include "vs_msgbuffer.hh"
 #include "vs_mailbox.hh"
+#include "am.hh"
 
 //
 // Perdio messages contain a "virtual sites" header;

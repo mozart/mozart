@@ -87,13 +87,12 @@
 #include <string.h>
 
 #include "os.hh"
-#include "perdio.hh"
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
 #include "perdio_debug.hh"
 #include "builtins.hh"
-
+#include "genhashtbl.hh"
 
 /* ************************************************************************ */
 /*  SECTION 1:  Enums & Defines                                            */
@@ -131,9 +130,6 @@
 #define OZWritePortNumber 9500
 
 
-
-static Bool net_timer_set;
-int tempTimeCtr=0;
 
 #include <netdb.h>
 

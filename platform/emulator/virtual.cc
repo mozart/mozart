@@ -24,7 +24,6 @@
  */
 
 #include "base.hh"
-#include "perdio.hh"
 #include "perdio_debug.hh"
 #include "genvar.hh"
 #include "gc.hh"

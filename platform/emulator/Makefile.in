@@ -40,7 +40,7 @@ STATIC_MODULELIBS=      -L. ${MODULE_NAMES:%=-l%}
 STATIC_MODULETARGETS=   $(MODULE_NAMES:%=lib%.a)
 DYNAMIC_MODULETARGETS=  $(MODULE_NAMES:%=%.so)
 
-CORE_MODULES=   Perdio Run OF FS FD CPI OS Space Store Mem Support
+CORE_MODULES=   DP Run OF FS FD CPI OS Space Store Mem Support
 #CORE_LIBS=     -L. ${CORE_MODULES:%=-l%}
 CORE_TARGETS=   ${CORE_MODULES:%=lib%.a}
 
@@ -119,7 +119,9 @@ SPACESRCS=\
 MEMSRCS=\
         gc.cc mem.cc liveness.cc
 
-PERDIOSRCS=\
+DPSRCS=\
+        dp_gname.cc dp_msgType.cc dp_table.cc \
+        dp_pendThread.cc \
         perdio.cc components.cc network.cc comm.cc perdio_debug.cc \
         virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
         marshaler.cc perdiovar.cc
@@ -146,7 +148,7 @@ SRCS= \
         $(SUPPORTSRCS) $(MEMSRCS) $(STORESRCS) \
         $(SPACESRCS) $(RUNSRCS) $(OSSRCS) \
         $(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
-        $(PERDIOSRCS)
+        $(DPSRCS)
 
 OBJS=   $(SRCS:%.cc=%.o) $(OTHERSRCS:%.cc=%.o)
 
@@ -213,8 +215,8 @@ Debug.so: $(DEBUGOBJS)
 libDebug.a: $(DEBUGOBJS)
         $(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
 
-libPerdio.a: $(PERDIOSRCS:%.cc=%.o)
-        $(AR) -rc $@ $(PERDIOSRCS:%.cc=%.o) && $(RANLIB) $@
+libDP.a: $(DPSRCS:%.cc=%.o)
+        $(AR) -rc $@ $(DPSRCS:%.cc=%.o) && $(RANLIB) $@
 
 libOF.a: $(OFSRCS:%.cc=%.o)
         $(AR) -rc $@ $(OFSRCS:%.cc=%.o) && $(RANLIB) $@
@@ -348,12 +350,6 @@ parser.o: parser.cc
 
 config.h: config.m4h $(OZVERSION)
         $(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $(SRCDIR)/config.m4h > $@
-
-#/usr/include/signal.h is broken on Linux:
-#os.cc: In function `void osBlockSignals(int = 0)':
-#os.cc:208: warning: assignment of negative value `-1' to `long unsigned int'
-os.o: os.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c $< -o $@
 
 # dependencies
 -include Makefile.deps

@@ -30,11 +30,21 @@
 #pragma implementation "marshaler.hh"
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include "conf.h"
-#endif
-
 #include "wsock.hh"
+#include "codearea.hh"
+#include "indexing.hh"
+#include "dp_table.hh"
+#include "dp_gname.hh"
+#include "perdio_debug.hh"
+#include "genvar.hh"
+#include "perdiovar.hh"
+#include "gc.hh"
+#include "dictionary.hh"
+#include "urlc.hh"
+#include "marshaler.hh"
+#include "comm.hh"
+#include "msgbuffer.hh"
+#include "extension.hh"
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -48,20 +58,34 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#include "codearea.hh"
-#include "indexing.hh"
 
-#include "perdio.hh"
-#include "perdio_debug.hh"
-#include "genvar.hh"
-#include "perdiovar.hh"
-#include "gc.hh"
-#include "dictionary.hh"
-#include "urlc.hh"
-#include "marshaler.hh"
-#include "comm.hh"
-#include "msgbuffer.hh"
-#include "extension.hh"
+/* ************************************************************************ */
+/*  SECTION ::  provided to marshaler from perdio.cc */
+/* ************************************************************************ */
+
+OZ_Term unmarshalTertiary(MsgBuffer*,MarshalTag);
+OZ_Term unmarshalOwner(MsgBuffer*,MarshalTag);
+Site *unmarshalGNameSite(MsgBuffer*);
+OZ_Term unmarshalVar(MsgBuffer*);
+Site* unmarshalSite(MsgBuffer*);
+void unmarshalUnsentSite(MsgBuffer*);
+Credit unmarshalCreditOutline(MsgBuffer*);
+
+Bool marshalTertiary(Tertiary *,MarshalTag, MsgBuffer*);
+void marshalVar(PerdioVar *,MsgBuffer*);
+void marshalSite(Site *,MsgBuffer*);
+void marshalCreditOutline(Credit c,MsgBuffer *bs);
+void marshalDIF(MsgBuffer *bs, MarshalTag tag);
+
+void addGName(GName*,TaggedRef);
+TaggedRef oz_findGName(GName*);
+void deleteGName(GName*);
+
+// isn't this a variety of globalization - ATTENTION
+PerdioVar *var2PerdioVar(TaggedRef *);
+
+void SiteUnifyCannotFail(TaggedRef,TaggedRef); // ATTENTION
+void pushUnify(Thread *,TaggedRef,TaggedRef); // ATTENTION - for compponents
 
 /* *****************************************************************************
                        ORGANIZATION
@@ -393,7 +417,7 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
   GName gname;
   unmarshalGName1(&gname,bs);
 
-  TaggedRef aux = findGNameOutline(&gname);
+  TaggedRef aux = oz_findGName(&gname);
   if (aux) {
     if (ret) *ret = aux; // ATTENTION
     return 0;

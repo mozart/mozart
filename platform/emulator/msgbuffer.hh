@@ -31,7 +31,7 @@
 #pragma interface
 #endif
 
-#include "perdio.hh"
+#include "tagged.hh"
 #include "comm.hh"
 
 #define MSGFLAG_TEXTMODE  0x1
@@ -121,5 +121,16 @@ public:
 };
 
 extern MsgBufferManager *msgBufferManager;
+
+/* RS: have to GC the byte stream again !!!!!!!!!*/
+#define CheckNogoods(val,bs,msg,Cleanup)                                \
+  { OZ_Term nogoods = bs->getNoGoods();                                 \
+    if (!oz_isNil(nogoods)) {                                           \
+       Cleanup;                                                         \
+       return raiseGeneric(msg,                                         \
+                           oz_mklist(OZ_pairA("Resources",nogoods),     \
+                                     OZ_pairA("Contained in",val)));    \
+    }                                                                   \
+  }
 
 #endif // __MSGBUFFER_HH

@@ -678,7 +678,7 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
     // kost@ : Note that effectively the time spent in wait
     // may be greater than specified;
     *ptimeout = (int) (osTotalTime() - currentSystemTime);
-    Assert(*ptimeout >= 0); // mm2: *ptimeout is unsigned!!!
+    //    Assert(*ptimeout >= 0); // mm2: *ptimeout is unsigned!!!
     osBlockSignals();
   }
 

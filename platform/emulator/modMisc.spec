@@ -6,10 +6,6 @@
     ###
 
 
-    'PerdioVar.is'      => { in  => ['value'],
-                             out => ['+bool'],
-                             BI  =>   PerdioVar_is},
-
     'crash'             => { in  => [],
                              out => [],
                              BI  => BIcrash,

@@ -16,6 +16,7 @@
 #endif
 
 #include "vs_msgbuffer.hh"
+#include "os.hh"
 
 #ifdef VIRTUALSITES
 

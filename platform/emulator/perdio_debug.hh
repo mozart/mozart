@@ -27,6 +27,8 @@
 #ifndef __PERDIO_DEBUG_HH
 #define __PERDIO_DEBUG_HH
 
+#include "base.hh"
+
 enum DEBUGType {
   MSG_RECEIVED, // 0                    // protocol -layer
   MSG_SENT,

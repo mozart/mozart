@@ -42,7 +42,6 @@
 #include "allgenvar.hh"
 #include "dictionary.hh"
 #include "fdhook.hh"
-#include "perdio.hh"
 #include "marshaler.hh"
 #include "copycode.hh"
 #include "trace.hh"

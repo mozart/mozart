@@ -34,7 +34,6 @@
 #include "codearea.hh"
 #include "indexing.hh"
 
-#include "perdio.hh"
 #include "perdio_debug.hh"
 #include "genvar.hh"
 #include "gc.hh"
@@ -83,6 +82,8 @@
 
 #include "componentBuffer.cc"
 
+// perdio
+OZ_Term getGatePort(Site*);
 
 /* ********************************************************************** */
 /*              BUILTINS                                                  */
