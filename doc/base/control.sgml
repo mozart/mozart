@@ -30,7 +30,7 @@
 	<Item>
 	  blocks until at least one of ?_{X} or&nbsp;?_{Y} is determined.
 
-	<Entry><<!!>>
+	<Entry><Span class=index/<<!!>>/
 	  <Index/<<Value>><And><<'!!'>>/
 	<Synopsis>
 	  <<{Value.'!!' ?_{X} ?_{Y}}>>
