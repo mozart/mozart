@@ -64,7 +64,7 @@ define
 
    class EvalDialog from TkTools.dialog
       prop locking
-      feat Expr Result
+      feat AcquireEnvProc Expr Result
       attr
 	 CurComp: unit CurCompUI: unit Self: unit
 	 EvalThread: unit SpinnerLock: unit
@@ -74,9 +74,11 @@ define
 		  buttons: Buttons <= nil
 		  focus:   Focus   <= 0
 		  env:     Env     <= env()
+		  acquireEnvProc: AcquireEnv  <= unit
 		  'self':  S       <= unit)
 	 CurComp <- {New Compiler.engine init()}
 	 {@CurComp enqueue(mergeEnv(Env))}
+	 self.AcquireEnvProc = AcquireEnv
 	 CurCompUI <- {New Compiler.interface init(@CurComp)}
 	 Self <- S
 	 SpinnerLock <- {NewLock}
@@ -194,6 +196,12 @@ define
 	       {@CurComp enqueue(setSwitch(threadedqueries false))}
 	       {@CurCompUI sync()}
 	       {@CurCompUI clear()}
+	       case self.AcquireEnvProc of unit then skip
+	       elseof AcquireEnv then Env Self0 in
+		  {AcquireEnv ?Env ?Self0}
+		  {@CurComp enqueue(putEnv(Env))}
+		  Self <- Self0
+	       end
 	       case @Self of unit then
 		  {@CurComp
 		   enqueue(feedVirtualString(VS2 return(result: ?R)))}
