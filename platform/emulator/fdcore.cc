@@ -56,7 +56,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdMin, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -77,7 +77,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdMax, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -98,7 +98,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdMid, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -119,7 +119,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdNextSmaller, 3)
 {
-  ExpectedTypes(EM_FD "," EM_INT "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_INT);
   
   OZ_getCArgDeref(1, val, valptr, valtag);
 
@@ -157,7 +157,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdNextLarger, 3)
 {
-  ExpectedTypes(EM_FD "," EM_INT "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_INT);
 
   OZ_getCArgDeref(1, val, valptr, valtag);
 
@@ -195,7 +195,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdGetAsList, 2)
 {
-  ExpectedTypes(EM_FD "," EM_FDDESCR);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
   
   OZ_getCArgDeref(0, var, varptr, vartag);
   
@@ -218,7 +218,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdGetCardinality, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(0, var, varptr, vartag);
 
@@ -242,7 +242,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
@@ -278,7 +278,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutGe, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
@@ -314,7 +314,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutList, 2) 
 {
-  ExpectedTypes(EM_FD "," EM_FDDESCR);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
   
   OZ_Expect pe;
   OZ_expect_t r = pe.expectDomDescr(OZ_getCArg(1));
@@ -338,7 +338,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
-  ExpectedTypes(EM_FD "," EM_INT);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
   
   OZ_getCArgDeref(1, n, nptr, ntag);
 
@@ -377,7 +377,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdWatchSize, 3)
 {
-  ExpectedTypes(EM_FD "," EM_INT "," EM_TNAME);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vsize = 0;
@@ -417,7 +417,7 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
 
 OZ_C_proc_begin(BIfdWatchMin, 3)
 {
-  ExpectedTypes(EM_FD "," EM_INT "," EM_TNAME);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vmin = -1;
@@ -457,7 +457,7 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
 
 OZ_C_proc_begin(BIfdWatchMax, 3)
 {
-  ExpectedTypes(EM_FD "," EM_INT "," EM_TNAME);
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vmax = -1;
