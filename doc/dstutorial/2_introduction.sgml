@@ -32,7 +32,7 @@ application functionality, distribution structure,
 fault tolerance, security, and open computing.
 
 <P>The current Mozart release completely separates
-application functionality and distribution structure,
+application functionality from distribution structure,
 and provides primitives for fault-tolerance,
 open computing, and partial support for security.
 Current research is focused on completing
