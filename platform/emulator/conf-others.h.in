@@ -122,6 +122,8 @@
 /* does .align n align to n */
 #undef AS_HAS_MULTIPLE_ALIGN
 
+/* can we insert opcodes before instructions */
+#undef AS_CAN_OPCODE_MAP
 
 /* Define if dlopen needs a leading underscore. */
 #undef DLOPEN_UNDERSCORE

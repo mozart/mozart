@@ -93,15 +93,18 @@ inline void *andPointer(void *p, int i) { return (void*) ((intlong)p&(intlong)i)
 
 #if defined(AS_HAS_MULTIPLE_ALIGN) || defined(AS_HAS_POWER_ALIGN)
 
-#define INLINEOPCODEMAP
 #define OPCODEALIGN 4
 
 #ifdef AS_HAS_MULTIPLE_ALIGN
-#define OPCODEALIGNINSTR ".align 16"
+#define OPCODEALIGNINSTR ".align 16,0xff"
 #endif
 
 #ifdef AS_HAS_POWER_ALIGN
-#define OPCODEALIGNINSTR ".align 4"
+#define OPCODEALIGNINSTR ".align 4,0xff"
+#endif
+
+#if defined(AS_CAN_OPCODE_MAP)
+#define INLINEOPCODEMAP
 #endif
 
 #endif

@@ -205,7 +205,7 @@ public:
   static Opcode adressToOpcode(AdressOpcode adr) {
 #ifdef THREADED
 #ifdef INLINEOPCODEMAP
-    return Opcode (*((int32 *) (((char *) adr) - (1<<OPCODEALIGN))));
+    return Opcode (*((int32 *) (((char *) adr) - sizeof(long))));
 #else
     void * ret = opcodeTable->htFind((void *) adr);
     Assert(ret != htEmpty);
