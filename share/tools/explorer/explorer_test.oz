@@ -293,15 +293,15 @@ proc {P2 _ _} skip end
 %% Check reset, clear, or close
 %%
 declare
-create ShowCloseInfo from BaseObject
-   meth close {Show close_info} end
-end
-create ShowCloseCmp from BaseObject
-   meth close {Show close_compare} end
-end
-create ShowCloseStat from BaseObject
-   meth close {Show close_stat} end
-end
+ShowCloseInfo = {New class $ from BaseObject
+			meth close {Show close_info} end
+		     end noop}
+ShowCloseCmp  = {New class $ from BaseObject
+			meth close {Show close_compare} end
+		     end noop}
+ShowCloseStat = {New class $ from BaseObject
+			meth close {Show close_stat} end
+		     end noop}
 
 {Explorer add(information fun {$ _ _}
 			     proc {$} {Show get_rid_info} end
