@@ -134,12 +134,12 @@ fun {Type T}
                    lexin:{Type lex} lexout:{Type lex})
    [] v   then   v(head:{Type vhd} subcat:{Type lvn}
                    lexin:{Type lex} lexout:{Type lex})
-   [] vhd then vhd(form:{Type for} lf:{Type lf})
+   [] vhd then vhd(form:{Type 'for'} lf:{Type lf})
    [] nhd then nhd(agree:{Type agr} lf:{Type a})
    else _
    end
    /*
-   [] for then finite + nonfinite + pastparticiple + infinitival
+   [] 'for' then finite + nonfinite + pastparticiple + infinitival
    [] agr then agr(num   : singular + plural
                    person: first + second + third
                    gender: masculine + feminine + neuter)
