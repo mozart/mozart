@@ -67,7 +67,7 @@ pidModule.o: ../modPID-if.cc
 ../PID.so: ../dp.so pidModule.o
 	rm -f dp.so
 	ln ../dp.so dp.so
-	$(DYNLD) -o $@ pidModule.o dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+	$(DYNLD) -o $@ pidModule.o dp.so $(LIBS)
 
 ../libPID.a: $(COREOBJS) pidModule.o
 	$(AR) -rc $@ pidModule.o && $(RANLIB) $@
@@ -78,7 +78,7 @@ faultModule.o: ../modFault-if.cc
 ../Fault.so: ../dp.so faultModule.o 
 	rm -f dp.so
 	ln ../dp.so dp.so
-	$(DYNLD) -o $@ faultModule.o dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+	$(DYNLD) -o $@ faultModule.o dp.so $(LIBS)
 
 ../libFault.a: $(COREOBJS) faultModule.o
 	$(AR) -rc $@ faultModule.o && $(RANLIB) $@
@@ -89,7 +89,7 @@ dpMiscModule.o: ../modPID-if.cc
 ../DPMisc.so: ../dp.so dpMiscModule.o 
 	rm -f dp.so
 	ln ../dp.so dp.so
-	$(DYNLD) -o $@ dpMiscModule.o dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+	$(DYNLD) -o $@ dpMiscModule.o dp.so $(LIBS)
 
 ../libDPMisc.a: $(COREOBJS) dpMiscModule.o
 	$(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
@@ -98,7 +98,7 @@ dpMiscModule.o: ../modPID-if.cc
 ../VirtualSite.so: ../dp.so $(VSOBJS)
 	rm -f dp.so
 	ln ../dp.so dp.so
-	$(DYNLD) -o $@ $(VSOBJS) dp.so $(LIBS) -Xlinker -rpath $(BINDIR)
+	$(DYNLD) -o $@ $(VSOBJS) dp.so $(LIBS)
 
 ../libVirtualSite.a: $(COREOBJS)  $(VSOBJS)
 	$(AR) -rc $@ $(VSOBJS) && $(RANLIB) $@
