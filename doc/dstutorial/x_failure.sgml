@@ -145,11 +145,11 @@ to continue waiting or not.
 <P>Applications find out about fault states
 by installing <EM>distribution handlers</EM>
 on language entities.
-When the application tries to do an operation
-on an entity, then the handler is called
-instead if the entity has a problem.
-The handler is called in the context
-of the thread
+When the application attempts an operation
+on an entity with a problem,
+then the handler is called instead.
+The handler is called in the context of the thread
+that attempted the operation.
 If the entity works again later
 (which is possible with <<tempFail>>
 and <<remoteProblem>>) then the
@@ -175,13 +175,17 @@ fault states given above, i.e., a subset of
 <SUBSUBSECTION><TITLE>Handler levels</TITLE>
 
 <P>There are three levels of handlers:
-global, on a site, and in a thread.
-The level determines <EM>which</EM> handler is called.
+<<global>>, which is installed for all sites,
+<<site>>, which is installed on one particular site,
+and <<thread(T)>>, which is installed in the thread whose
+identifier is <<T>> (obtained by <<{Thread.this T}>>).
+The level determines <EM>which</EM> handler is called
+in a given situation.
 A thread-based handler overrides
 a site-based handler, which overrides a global handler.
 It does not matter what the fault condition is.
 If a thread-based handler exists for
-the current thread, then none of the
+the current thread, then neither of the
 others will ever be called there.
 If a site-based handler exists on the
 current site, then the global handler
