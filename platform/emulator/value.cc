@@ -36,6 +36,8 @@
 #include "controlvar.hh"
 
 #include <stdarg.h>
+#include <string.h>
+#include <ctype.h>
 
 /*===================================================================
  * global names and atoms
@@ -52,6 +54,8 @@ TaggedRef
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
+  BI_ByNeedAssign,
+  BI_waitStatus,
   BI_unknown,
   BI_PROP_LPQ,
 
@@ -1357,58 +1361,38 @@ OZ_Term oz_list(OZ_Term t1, ...)
   return ret;
 }
 
-/*===================================================================
- * BuiltinTab
- *=================================================================== */
+/*
+ * Builtins
+ *
+ */
 
-Builtin * cfunc2Builtin(void * f) {
-  extern TaggedRef dictionary_of_builtins;
+void Builtin::initname(void) {
+  Assert(mod_name);
 
-  {
-    OzDictionary * d = tagged2Dictionary(dictionary_of_builtins);
-    
-    for (int i=d->getNext(d->getFirst()); i>=0; i=d->getNext(i)) {
-      
-      TaggedRef v = d->getValue(i);
-      if (v && oz_isBuiltin(v)) {
-	Builtin * bi = tagged2Builtin(v);
-	if (bi->getFun() == (OZ_CFun) f) return bi;
-      }
-    }
+  int ml = strlen(mod_name);
+  int bl = strlen(bi_name);
+
+  int nq = isalpha(bi_name[0]) ? 0 : 1;
+
+  char * s = new char[ml + bl + 2 + 2 * nq];
+
+  memcpy((void *) s,             mod_name, ml);
+  s[ml] = '.';
+  memcpy((void *) (s + ml + 1 + nq), bi_name, bl);
+
+  if (nq) {
+    s[ml+1]    = '\'';
+    s[ml+bl+2] = '\'';
+    s[ml+bl+3] = '\0';
+  } else {
+    s[ml+bl+1] = '\0';
   }
 
-  extern TaggedRef dictionary_of_modules;
+  mod_name = NULL;
+  bi_name  = (const char *) oz_atomNoDup(s);
 
-  {
-    OzDictionary * d = tagged2Dictionary(dictionary_of_modules);
+}  
 
-    for (int i=d->getNext(d->getFirst()); i>=0; i=d->getNext(i)) {
-
-      TaggedRef v = d->getValue(i);
-      
-      if (oz_isSRecord(v)) {
-	
-	TaggedRef as = tagged2SRecord(v)->getArityList();
-	
-	while (oz_isCons(as)) {
-	  TaggedRef bt = tagged2SRecord(v)->getFeature(oz_head(as));
-	  
-	  if (bt && oz_isBuiltin(bt) && 
-	      (tagged2Builtin(bt)->getFun() == (OZ_CFun) f)) 
-	    return tagged2Builtin(bt);
-	  
-	  as = oz_tail(as);
-	
-	}
-	
-      }
-    }
-
-  }
-
-  
-  return tagged2Builtin(BI_unknown);
-}
 
 /*===================================================================
  * LockLocal

@@ -27,6 +27,7 @@
 #include "builtins.hh"
 #include "codearea.hh"
 #include "var_base.hh"
+#include "boot-manager.hh"
 
 static
 SRecordArity getArity(TaggedRef arity)
@@ -212,7 +213,7 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
 {
   OZ_declareCodeBlockIN(0,code);
   OZ_declareVirtualString(1,name);
-  Builtin *bi = string2Builtin(name);
+  Builtin *bi = string2CBuiltin(name);
   if (!bi) {
     return oz_raise(E_ERROR,AtomAssembler,
 		    "builtinUndefined",1,OZ_in(1));

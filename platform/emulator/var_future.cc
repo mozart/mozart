@@ -61,8 +61,6 @@ Bool Future::kick(TaggedRef *ptr)
   if (oz_isProcedure(function)) {
     Thread* thr    = oz_newThreadInject(bb);
     OZ_Term newvar = oz_newVar(bb);
-    OZ_Term BI_ByNeedAssign=
-      makeTaggedConst(new Builtin("byNeedAssign", 2, 0, BIbyNeedAssign, OK));
     thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
     thr->pushCall(function,newvar);
   } else {
@@ -95,8 +93,6 @@ Bool Future::kick(TaggedRef *ptr)
 
     OZ_Term newvar = oz_newVar(bb);
     Thread *thr = oz_newThreadInject(bb);
-    OZ_Term BI_ByNeedAssign=
-      makeTaggedConst(new Builtin("byNeedAssign", 2, 0, BIbyNeedAssign, OK));
     thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
     thr->pushCall(BI_dot,fut,fea,newvar);
   }
