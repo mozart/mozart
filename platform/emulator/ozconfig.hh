@@ -78,7 +78,10 @@ public:
   // Info needed for flowcontrol in ports
   int perdioFlowBufferSize;
   int perdioFlowBufferTime;
-  
+
+  int closetime;
+
+  int numToplevelVars;
 
   int dumpCore;
 
