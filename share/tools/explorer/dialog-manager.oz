@@ -75,7 +75,7 @@ local
 	 {Tk.batch [pack({New Tk.radiobutton tkInit(parent:   Color.inner
 						    value:    color
 						    variable: ColorVar
-						    text:     'Full color')}
+						    text:     'Full Color')}
 			 {New Tk.radiobutton tkInit(parent:   Color.inner
 						    value:    grey
 						    variable: ColorVar
@@ -83,7 +83,7 @@ local
 			 {New Tk.radiobutton tkInit(parent:   Color.inner
 						    value:    mono
 						    variable: ColorVar
-						    text:     'Black & white')}
+						    text:     'Black & White')}
 			 side:left pady:Pad)
 		    pack({New Tk.radiobutton tkInit(parent:   Orient.inner
 						    value:    false
@@ -95,7 +95,7 @@ local
 						    text:     'Landscape')}
 			 side:left pady:Pad)
 		    pack({New Tk.label tkInit(parent: Size.inner
-					      text:   'Maximal size:')}
+					      text:   'Maximal Size:')}
 			 SizeEntry side:left pady:Pad)
 		    pack(Color Orient Size side:top fill:x)
 		    focus(SizeEntry)]}
@@ -141,22 +141,22 @@ local
 			  tkInit(parent:   Drawing.inner
 				 anchor:   w
 				 variable: IsHide
-				 text:     'Hide failed subtrees')}
+				 text:     'Hide Failed Subtrees')}
 			 row:0 column:0 columnspan:3 sticky:ew)
 		    grid({New Tk.checkbutton
 			  tkInit(parent:   Drawing.inner
 				 anchor:   w
 				 variable: IsScale
-				 text:     'Scale to fit')}
+				 text:     'Scale to Fit')}
 			 row:1 column:0 columnspan:3 sticky:ew)
 		    grid({New Tk.label tkInit(parent: Drawing.inner
 					      anchor: w
-					      text:  'Update every ')}
+					      text:  'Update Every ')}
 			 row:3 column:0)
 		    grid(Update row:3 column:1)
 		    grid({New Tk.label tkInit(parent: Drawing.inner
 					      anchor: w
-					      text:  ' solutions')}
+					      text:  ' Solutions')}
 			 row:3 column:2) 
 		    pack(Drawing)
 		    focus(Update)]}
@@ -279,11 +279,6 @@ local
 in
 
    class DialogManager
-      attr CurPath: nil
-
-      meth init
-	 CurPath <- {Unix.getCWD}
-      end
 
       meth guiOptions(What)
 	 {Wait {New case What
@@ -299,19 +294,13 @@ in
 	 case {Tk.return
 	       tk_getSaveFile(filetypes:  q(q('Postscript Files' q('.ps'))
 					    q('All Files'        '*'))
-			      initialdir: @CurPath
 			      parent:     self.toplevel
 			      title:      TitleName#': Export Postscript')}
 	 of nil then skip
-	 elseof Filename then
-	    O    = self.options.postscript 
-	    Path = {Reverse {List.dropWhile {Reverse Filename}
-			     fun {$ C} C\=&/ end}}
-	 in
-	    CurPath <- Path
+	 elseof S then O = self.options.postscript in
 	    {self.canvas postscript(colormode: {Dictionary.get O color}
 				    rotate:    {Dictionary.get O orientation}
-				    file:      Filename
+				    file:      S
 				    height:    {Dictionary.get O height}
 				    width:     {Dictionary.get O width})}
 	    
