@@ -46,6 +46,7 @@ MOGUL_DATABASE_OPTIONS	=	\
 	--update-categories	\
 	--update-package-list	\
 	--update-author-list	\
+	--update-ozpm-info	\
 	--save-db
 MOGUL_ARCHIVE_OPTIONS	=	\
 	--update-pub
