@@ -722,12 +722,6 @@ TaggedRef oz_safeDeref(TaggedRef t) {
   return t;
 }
 
-// mm2: this is the wrong file here
-#define OZ_getCArgDeref(N, V, VPTR, VTAG) \
-  OZ_Term V = OZ_getCArg(N); \
-  DEREF(V, VPTR, VTAG);
-
-
 // ---------------------------------------------------------------------------
 // Binding
 // ---------------------------------------------------------------------------
@@ -969,8 +963,7 @@ class TaggedPtr {
   int32 tagged;
 public:
   TaggedPtr(void *p,int t) {
-    Assert(t >= 0 && t <=3)
-    tagged = (ToInt32(p)<<2) || t;
+    set(p,t);
   }
   void init()         { tagged = 0; }
   TaggedPtr()         { init(); }
@@ -979,7 +972,14 @@ public:
   void setType(int t) { Assert(t >=0 && t <=3); tagged = (tagged&~3)|t; }
   int getIndex()      { return tagged>>2; }
   void *getPtr()      { return ToPointer(tagged&~3); }
-
+  void set(void *p,int t) {
+    Assert(t >= 0 && t <=3);
+    tagged = (ToInt32(p)<<2) || t;
+  }
+  void set(int val,int t) {
+    Assert(t >= 0 && t <=3);
+    tagged = (val<<2) || t;
+  }
   void setIndex(int i) {
     Assert(i>=0 && i < 1<<30);
     int oldtype = getType();

@@ -398,12 +398,7 @@ OZ_Term OZ_int(int i)
  */
 int OZ_intToC(OZ_Term term)
 {
-  term = oz_deref(term);
-  if (oz_isSmallInt(term)) {
-    return smallIntValue(term);
-  }
-
-  return tagged2BigInt(term)->getInt();
+  return oz_intToC(oz_deref(term));
 }
 
 OZ_Term OZ_CStringToInt(char *str)

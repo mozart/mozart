@@ -883,6 +883,16 @@ TaggedRef oz_int(int i)
     return newSmallInt(i);
 }
 
+inline
+int oz_intToC(TaggedRef term)
+{
+  if (oz_isSmallInt(term)) {
+    return smallIntValue(term);
+  }
+
+  return tagged2BigInt(term)->getInt();
+}
+
 OZ_Term oz_long(long i);
 OZ_Term oz_unsignedLong(unsigned long i);
 

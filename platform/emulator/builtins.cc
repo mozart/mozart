@@ -1692,7 +1692,7 @@ OZ_BI_define(BIthreadIsSuspended,1,1)
 } OZ_BI_end
 
 OZ_Term threadState(Thread *th) {
-  if (!th || th->isDeadThread()) {
+  if (th->isDeadThread()) {
     return oz_atom("terminated");
   }
   if (th->isRunnable()) {

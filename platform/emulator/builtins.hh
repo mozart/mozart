@@ -226,7 +226,7 @@ TT VAR;                                         \
 
 #define oz_declareThread(ARG,VAR)                               \
  oz_declareTypeIN(ARG,VAR,Thread*,Thread);                      \
- if (!(VAR) || (VAR)->isDeadThread())                           \
+ if ((VAR)->isDeadThread())                             \
    return oz_raise(E_ERROR,E_KERNEL,"deadThread",1,OZ_in(ARG));
 
 #define oz_declareDictionaryIN(ARG,VAR) \
@@ -302,6 +302,15 @@ char *VAR;                                      \
   if (!oz_onToplevel() && !oz_isCurrentBoard(GETBOARD(Object))) {       \
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));   \
   }
+
+
+#define OZ_getCArgDeref(N, V, VPTR, VTAG) \
+  OZ_Term V = OZ_getCArg(N); \
+  DEREF(V, VPTR, VTAG);
+
+#define OZ_getINDeref(N, V, VPTR, VTAG)         \
+  OZ_Term V = OZ_in(N);                         \
+  DEREF(V, VPTR, VTAG);
 
 /* -----------------------------------------------------------------------
  * suspend

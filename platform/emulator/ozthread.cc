@@ -39,11 +39,7 @@ public:
 
   virtual
   void printStreamV(ostream &out,int depth = 10) {
-    if (thread) {
-      out << "<Thread " << (thread->getID() & THREAD_ID_MASK) << ">";
-    } else {
-      out << "<Thread dead>";
-    }
+    out << "<Thread " << (thread->getID() & THREAD_ID_MASK) << ">";
   }
 
   virtual
@@ -52,8 +48,15 @@ public:
   virtual
   Extension *gcV(void) { return new OzThread(*this); }
 
+  // mm2: possible bug: eqV may fail when dead thread is compared!
   virtual
-  void gcRecurseV(void) { thread = thread->gcThread(); }
+  void gcRecurseV(void) {
+    Thread *tmpThread = thread->gcThread();
+    if (!tmpThread) {
+      tmpThread=new Thread(*thread);
+      tmpThread->setBoardInternal(am.rootBoardGC());
+    }
+  }
 
   virtual
   OZ_Return eqV(OZ_Term term);
@@ -67,7 +70,6 @@ Bool oz_isThread(TaggedRef term)
     tagged2Extension(term)->getIdV() == OZ_E_THREAD;
 }
 
-// mm2: this may return 0, if thread is dead & collected!
 Thread *oz_ThreadToC(TaggedRef term)
 {
   Assert(oz_isThread(term));
