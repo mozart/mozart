@@ -81,7 +81,7 @@ public:
   FDIntervals * operator += (const int);
   void init(int, int, int, int);
   FDIntervals * complement(FDIntervals *);
-  FDIntervals * complement(int * , int *);
+  FDIntervals * complement(int, int * , int *);
   void copy(FDIntervals *);
   int union_iv(const FDIntervals &, const FDIntervals &);
   int intersect_iv(FDIntervals &, const FDIntervals &);
