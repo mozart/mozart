@@ -129,7 +129,10 @@ public:
 
 #ifdef PROFILE_INSTR
   unsigned long instr[PROFILE_INSTR_MAX];
+  unsigned long instrCollapsable[PROFILE_INSTR_MAX][PROFILE_INSTR_MAX];
   void printInstr();
+  void printInstrCollapsable();
+  void printInstrReset();
 #endif
 
 #ifdef HEAP_PROFILE

@@ -182,19 +182,31 @@ CaseOneReg(FUNRETURN,``
      }'')
 
 
-CaseOneRegGImpossible(CREATEVARIABLE,
-   ``{
-       ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
-       Reg1(getRegArg(PC+1)) = fastnewTaggedUVar(e);
+Case(CREATEVARIABLEX)
+     {
+       Xreg(getRegArg(PC+1)) = fastnewTaggedUVar(e);
        DISPATCH(2);
-     }'')
+     }
+Case(CREATEVARIABLEY)
+     {
+       ProfileCode(if (CAP) CAP->getPred()->szVars += sizeof(TaggedRef));
+       ProfileCode(COUNT1(sizeStackVars,sizeof(TaggedRef)));
+       Yreg(getRegArg(PC+1)) = fastnewTaggedUVar(e);
+       DISPATCH(2);
+     }
 
-CaseOneRegGImpossible(CREATEVARIABLEMOVE,
-   ``{
-       ProfileCode(if(&(Reg1(0))==&Y[0]){COUNT1(sizeStackVars,sizeof(TaggedRef));});
-       Reg1(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = fastnewTaggedUVar(e);
+Case(CREATEVARIABLEMOVEX)
+     {
+       Xreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = fastnewTaggedUVar(e);
        DISPATCH(3);
-     }'')
+     }
+Case(CREATEVARIABLEMOVEY)
+     {
+       ProfileCode(if (CAP) CAP->getPred()->szVars += sizeof(TaggedRef));
+       ProfileCode(COUNT1(sizeStackVars,sizeof(TaggedRef)));
+       Yreg(getRegArg(PC+1)) = Xreg(getRegArg(PC+2)) = fastnewTaggedUVar(e);
+       DISPATCH(3);
+     }
 
   
   Case(UNIFYXX) ONREG2(Unify,X,X);
