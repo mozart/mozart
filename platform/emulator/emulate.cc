@@ -2302,7 +2302,7 @@ LBLdispatcher:
 
   Case(DEFINITIONCOPY)
     {
-      //      error("DEFINITIONCOPY: not yet implemented");
+      error("DEFINITIONCOPY: not yet implemented");
     }
   Case(DEFINITION)
     {
