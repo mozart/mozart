@@ -190,7 +190,7 @@ local
 	 true
       end
       meth !HideTree
-	 isDirty <- True
+	 true
       end
       meth hideUndrawn
 	 true

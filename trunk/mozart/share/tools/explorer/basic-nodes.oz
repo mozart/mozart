@@ -20,14 +20,13 @@ local
    end
    
    class Node from UrObject
-      attr
-	 isDirty: True % Is the node not appropriately layouted?
       feat
 	 mom           % The mom of this node (False if topmost node) 
    end
    
    class Inner from Node
       attr
+	 isDirty:    True  % No layout computed
 	 kids:       nil   % The list of nodes below
 	 toDo:       nil   % What is to be done (nil if nothing)
 	 isSolBelow: False % Is there a solution below

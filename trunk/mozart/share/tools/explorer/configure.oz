@@ -153,3 +153,9 @@ CursorColor          = case IsColor then
 			  white # % EntryColor
 			  black   % CursorColor 
 		       end
+
+
+NodePrefix = {String.toAtom {Tk.getPrefix}}
+TreePrefix = {String.toAtom {Tk.getPrefix}}
+LinkPrefix = {String.toAtom {Tk.getPrefix}}
+

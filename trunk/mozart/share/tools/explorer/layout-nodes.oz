@@ -186,8 +186,7 @@ local
 	    MyByX               = MomByX + NewOffset - OldOffset
 	 in
 	    <<moveNode(MomX MyX MyByX MyY Scale)>>
-	    isDirty <- False
-	    offset  <- NewOffset
+	    offset <- NewOffset
 	 else
 	    {self.canvas.initTags Above}
 	    <<drawTree(Break MomX MyY Scale Font)>>
@@ -220,7 +219,7 @@ local
 	 Shape = <<LayoutNode Layout($ 0.0)>>
       in
 	 {self.canvas {GetBoundingBox Shape}}
-	 <<LayoutNode Adjust(Break RootX 0.0 RootY Scale Font [self.tree])>>
+	 <<LayoutNode Adjust(Break RootX 0.0 RootY Scale Font nil)>>
       end
 
       meth !Layout(?Shape Offset)
@@ -248,7 +247,7 @@ local
 	       <<moveNode(MomX MyX MyByX MyY Scale)>>
 	       case @isHidden then true else
 		  {AdjustKids @kids Break MyX MyByX MyY+VerSpace
-		   Scale Font self.tree|Above}
+		   Scale Font TreePrefix#self.suffix|Above}
 	       end
 	    else
 	       {self.canvas.initTags Above}
