@@ -281,7 +281,7 @@ This is set when gdb is active.")
   "If non-nil, hook used as second process filter for the Oz Emulator.
 This is set when gdb is active.")
 
-(defvar OZ-HOME "@prefix@/lib/elisp"
+(defvar OZ-HOME "@prefix@"
   "Directory where Oz is installed.
 Only used as fallback if the environment variable OZHOME is not set.")
 
