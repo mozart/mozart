@@ -95,7 +95,7 @@ private:
   Bool useit;
 #endif
 
-  DebugCode (Bool checkIsPropagator (Thread *thr););
+  DebugCode (Bool checkIsPropagator (Thread *thr);)
 public:
   LocalPropagationStore ()
   : in_local_propagation(FALSE)
