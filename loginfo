@@ -28,13 +28,11 @@ Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz
 Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,schulte,tmueller
 Oz/demo		mail -s "I have changed %s" schulte,wuertz
 Oz/elisp	mail -s "I have changed %s" scheidhr
-Oz		/project/ps/etc/cvs2news %s
 Misc/papers/ozam 	mail -s "I have changed %s" mehl scheidhr schulte
 Misc/papers/TypeMemo	mail -s "I have changed %s" niehren mmueller
 Misc/papers/TypeType	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Rolls	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Style	mail -s "I have changed %s" niehren mmueller
-#Oz		mail -s "I have changed %s" mehl
 Misc/papers/Oz20        mail -s "I have changed %s" mmueller,tmueller
 Misc/papers/oopp        mail -s "I have changed %s" mmueller henz schulte
 Misc/papers/WLP-FDCD	mail -s "I have changed %s" tmueller,wuertz
