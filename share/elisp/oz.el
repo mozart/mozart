@@ -387,7 +387,8 @@ starts the emulator under gdb")
 
 (defun oz-debug-devel-start()
   (interactive)
-  (setq oz-devel-debugger t))
+  (setq oz-devel-debugger (not oz-devel-debugger))
+  (message "Now using %s debugger" (if oz-devel-debugger "devel" "stable))
 
 (defun oz-debug-stop()
   "Stop the debugger."
