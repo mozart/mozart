@@ -29,6 +29,11 @@ GDBM_LIBHOME = $(OZHOME)/platform/OzPlatform/tools/gdbm
 INCLUDES  = -I$(OZHOME)/include INCS
 LIBRARIES = LIBS
 
+#define COMPILE(FILE) \
+        OZRC=./Dump/**/FILE.oz; export OZRC; \
+        $(STACK); \
+        $(OZE)
+
 all:: gdbm.dl gdbm.ozc
 
 install:: install.dl install.ozc
@@ -57,13 +62,13 @@ gdbm.dl: gdbm.o
 gdbm.ozc: gdbm.oz save.oz halt.oz ozrc.oz
         OZRC=ozrc.oz; export OZRC; \
         GLOBALSTKSIZE=8000000; export GLOBALSTKSIZE; \
-        $(OZHOME)/bin/oze
+        $(OZHOME)/bin/oznc
 
 save.oz: Makefile
         ( echo \{Save NewGdbm \'$$PWD/gdbm.ozc\' ; \
           echo 'x(url:' \'file\:$(GDBM_HOME)/gdbm.ozc\' ; \
-          echo 'include:nil' ; \
-          echo 'components:[_]' ; \
+          echo 'include:unit' ; \
+          echo 'components:_' ; \
           echo 'resources:nil)}' ) > save.oz
 
 halt.oz: Imakefile
@@ -71,7 +76,6 @@ halt.oz: Imakefile
 
 ozrc.oz: Imakefile
         ( echo '\s -threadedqueries' ; \
-          echo '\feed Load' ; \
           echo '\feed gdbm.oz' ; \
           echo '\feed save.oz' ; \
           echo '\feed halt.oz' ) > ozrc.oz
