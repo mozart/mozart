@@ -61,7 +61,7 @@ OZ_BI_define(ostime_gmtime,1,1) {
   OZ_RETURN(make_time(gmtime(&timebuf)));
 } OZ_BI_end
 
-OZ_BI_define(ostime_localime,1,1) {
+OZ_BI_define(ostime_localtime,1,1) {
   OZ_declareLong(0,t);
   time_t timebuf = (time_t) t;
 
