@@ -1155,14 +1155,6 @@ int WINAPI dll_entry(int a,int b,int c)
 int osDlopen(char *filename, OZ_Term& ret)
 {
   OZ_Term err=NameUnit;
-  //OZ_Term ret=NameUnit;
-
-  // filename = expandFileName(filename,ozconf.linkPath);
-
-  // if (!filename) {
-  //  err = oz_atom("expand filename failed");
-  //  goto raise;
-  // }
 
   if (ozconf.showForeignLoad) {
     message("Linking file %s\n",filename);
