@@ -1214,7 +1214,7 @@ FSetValue FSetValue::operator - (void) const
 
     z._card = findBitsSet(fset_high, z._in);
     z._other = !_other;
-    if (_other) z._card += fs_sup - 32*fset_high + 1;
+    if (z._other) z._card += fs_sup - 32*fset_high + 1;
 
   }
   else {
@@ -3395,6 +3395,11 @@ OZ_FSetValue::OZ_FSetValue(const OZ_Term t)
 }
 
 OZ_FSetValue::OZ_FSetValue(const OZ_FSetState s)
+{
+  CASTTHIS->init(s);
+}
+
+void OZ_FSetValue::init(OZ_FSetState s)
 {
   CASTTHIS->init(s);
 }
