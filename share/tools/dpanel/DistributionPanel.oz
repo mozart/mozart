@@ -3,6 +3,7 @@ import
    Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
    DPPane(siteStatistics) at 'x-oz://boot/DPPane'
    Connection
+   System
 export
    Open
    OpenNetInfo
@@ -23,8 +24,10 @@ define
 	 S P = {NewPort S}
 	 Site = {Filter {DPPane.siteStatistics} fun{$ M} M.state == mine end}.1
       in
-	 self.site = site(ip:Site.ip port:Site.port)
+	 {System.show init(Tick Site)}
+	 self.site = site(ip:Site.ip port:Site.port pid:Site.pid)
 	 self.serverPort = {Connection.take Tick}
+	 {System.show self.site}
 	 {Send self.serverPort connecting(P self.site Site.siteid)}
 	 thread {ForAll S self} end
       end
