@@ -27,8 +27,10 @@ by means of a new exception, <<serverError>>.
 when it tries to do operations
 on entities that have problems.
 All distributed exceptions are of the
-form <<system(dp(C) ...)>> where <<C>> is any fault state
-as defined before except <<ok>>.
+form <<system(dp(condition:FS ...) ...)>> where
+<<FS>> is the list of actual fault states
+as defined before, except for <<ok>> since it
+is not wrong behavior.
 
 <P>Assume that we have two new abstractions.
 <<{SafeSend Prt X}>> sends to a port
@@ -53,7 +55,7 @@ thread
     proc {$ S}
        try
           S="Hello world"
-       catch system(dp(C) ...) then skip end
+       catch system(dp(...) ...) then skip end
     end}
 end
 
@@ -106,11 +108,10 @@ Note that we also catch exceptions during the
 proc {SafeSend Prt X}
    try
       {Send Prt X}
-   catch system(dp(C) ...) then
-      case C
-      of permFail(...) then
+   catch system(dp(conditions:FS) ...) then
+      if {Fault.member permFail FS} then
          raise serverError end
-      [] tempFail(...) then
+      else if {Fault.member tempFail FS} then
          {Delay 100} {SafeSend Prt X}
       else
          skip
@@ -134,15 +135,12 @@ local
          cond {Wait X} then skip
          [] {Wait Time} then raise serverError end
          end
-      catch system(dp(C) ...) then
-         case C
-         of permFail(...) then
+      catch system(dp(conditions:FS ...) ...) then
+         if {Fault.member permFail FS} orelse
+            {Fault.member remoteProblem(permSome)} then
             raise serverError end
-         [] remoteProblem(permFail:_ ...) then
-            raise serverError end
-         [] tempFail(...) then
-            {Delay 100} {InnerSafeWait X Time}
-         [] remoteProblem(tempFail:_ ...) then
+         if {Fault.member tempFail FS} orelse
+            {Fault.member remoteProblem(tempSome) FS} then
             {Delay 100} {InnerSafeWait X Time}
          else
             skip
