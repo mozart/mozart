@@ -59,16 +59,6 @@ void printBanner()
 #endif
 
 #ifdef DEBUG_CHECK
-#ifdef LTQ
-  warning("Local thread queue turned on.");
-#endif
-
-#ifndef TM_LP
-  warning("Local propagation turned off.");
-#endif
-#endif
-
-#ifdef DEBUG_CHECK
   printf("Compile Flags:"
          " DEBUG_CHECK"
 #ifdef DEBUG_DET
@@ -376,13 +366,6 @@ Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
     doBind(refPtr,value);
   }
 
-/*
-  temporarily deactivated 'cause of DECLAREBI_USEINLINEFUN2
-
-  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-                           localPropStore.isInLocalPropagation()));
-                           */
-
   return result;
 }
 
@@ -439,12 +422,6 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
   int argSize;
   RefsArray args1, args2;
 
-/*
-  temporarily deactivated 'cause of DECLAREBI_USEINLINEFUN2
-
-  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-                           localPropStore.isInLocalPropagation()));
-                           */
 start:
   DEREFPTR(term1,termPtr1,tag1);
   DEREFPTR(term2,termPtr2,tag2);
@@ -705,9 +682,6 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
         checkSuspensionList(term, pc_std_unif);
       }
     }
-
-    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-                             localPropStore.isInLocalPropagation()););
   }
 
   /* second step: mark binding for non-local variable in trail;     */

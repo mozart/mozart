@@ -52,34 +52,6 @@ void LocalPropagationQueue::resize () {
   maxsize = new_maxsize;
 }
 
-// s must be power of 2
-void LocalPropagationQueue::backupQueue (int s) {
-  backup_head = head;
-  backup_tail = tail;
-  backup_size = size;
-  backup_maxsize = maxsize;
-  backup_queue = queue;
-
-  DebugCode(int i; for (i = 1; i; i <<= 1) if (i == s) break;
-            if (!i) error("size expected to be power of 2."););
-
-  tail = (maxsize = s) - 1;
-  size = head = 0;
-  queue = new queue_t[maxsize];
-}
-
-void LocalPropagationQueue::restoreQueue () {
-  Assert(size == 0);
-
-  delete queue;
-
-  head = backup_head;
-  tail = backup_tail;
-  size = backup_size;
-  maxsize = backup_maxsize;
-  queue = backup_queue;
-}
-
 void LocalPropagationQueue::printDebug () {
   int psize = size, phead = head;
 
@@ -112,7 +84,6 @@ Bool LocalPropagationStore::checkIsPropagator (Thread *thr)
 #endif
 
 Bool LocalPropagationStore::propagate_locally () {
-  in_local_propagation = TRUE;
   Board *currentBoard = am.currentBoard;
   Thread *savedCurrentThread = am.currentThread;
   RefsArray args;
@@ -179,7 +150,6 @@ Bool LocalPropagationStore::propagate_locally () {
     }
 
   }
-  in_local_propagation = FALSE;
   am.currentThread = savedCurrentThread;
   return (TRUE);
 }

@@ -22,9 +22,6 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
                          TaggedRef * tptr2, TaggedRef term2,
                          Bool prop)
 {
-  LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
-                           localPropStore.isInLocalPropagation()););
-
   switch (getType()){
   case FDVariable:
     {
@@ -59,8 +56,6 @@ Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1,
     return FALSE;
   }
 
-  LOCAL_PROPAGATION(if (! localPropStore.isInLocalPropagation())
-                    if (! localPropStore.do_propagation()) return FALSE;)
   return TRUE;
 }
 
