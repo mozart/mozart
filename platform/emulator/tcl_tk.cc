@@ -324,8 +324,7 @@ OZ_C_proc_begin(BIisTclFilter, 3) {
       return s;
     }
   }
-  Assert(0);
-  return FAILED;
+  error("isTclFilter");
 } OZ_C_proc_end
 
 
@@ -877,7 +876,7 @@ OZ_C_proc_begin(BIaddFastGroup,3)
     tagged2LTuple(group)->setTail(member);
     return OZ_unify(member,OZ_getCArg(2));
   }
-  return FAILED;
+  return OZ_typeError(0,"List");
 } 
 OZ_C_proc_end
 
@@ -937,11 +936,10 @@ OZ_C_proc_begin(BIgetFastGroup,2)
       group = deref(tail(group));
     }
 
-    return isNil(group) ? OZ_unify(out,OZ_getCArg(1)) : FAILED;
+    if (isNil(group)) return OZ_unify(out,OZ_getCArg(1));
   }
   
-  return FAILED;
-
+  return OZ_typeError(0,"List");
 } 
 OZ_C_proc_end
 

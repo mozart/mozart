@@ -95,6 +95,56 @@ void ThreadsPool::scheduleThread (Thread *th) {
   }
 }
 
+void ThreadsPool::updateCurrentQueue()
+{
+  Assert(currentQueue->isEmpty());
+  if (nextPrioInd != -1) {
+    //  pick up the next one;
+    int npri = nextPrio[nextPrioInd--];
+    Assert ((npri < currentPriority));
+    currentPriority = npri;
+    currentQueue = &queues[npri];
+  } else {
+    //  reset 'currentQueue' and 'currentPriority';
+    //  Note that already allocated queues stay allocated, of course.
+    currentPriority = -1;
+    currentQueue = (ThreadQueue *) NULL;
+  }
+}
+
+void ThreadsPool::deleteThread(Thread *th1)
+{
+  Bool found=NO;
+  ThreadQueue *thq = currentQueue;
+  int prioInd = nextPrioInd;
+  while (thq && !found) {
+    int size=thq->getSize();
+    while (size) {
+      Thread *th = thq->dequeue();
+      if (th == th1) {
+	found = OK;
+      } else {
+	thq->enqueue(th);
+      }
+    }
+    if (prioInd >= 0) {
+      int pri = nextPrio[prioInd--];
+      thq = &queues[pri];
+    } else {
+      thq = 0;
+    }
+  }
+  if (currentQueue->isEmpty()) {
+    updateCurrentQueue();
+  }
+}
+
+void ThreadsPool::rescheduleThread(Thread *th)
+{
+  deleteThread(th);
+  scheduleThread(th);
+}
+
 
 Board * ThreadsPool::getHighestSolveDebug(void) 
 {

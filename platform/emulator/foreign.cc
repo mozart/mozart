@@ -1264,6 +1264,9 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
 
 OZ_Term OZ_mkTupleC(char *label,int arity,...)
 {
+  if (arity == 0) {
+    return OZ_atom(label);
+  }
   va_list ap;
   va_start(ap,arity);
 
@@ -1374,6 +1377,15 @@ int OZ_length(OZ_Term list)
   return length(list);
 }
 
+
+OZ_Term OZ_toList(int len, OZ_Term *tuple)
+{
+  OZ_Term l = nil();
+  while (--len >= 0) {
+    l = cons(tuple[len],l);
+  }
+  return l;
+}
 
 /* -----------------------------------------------------------------
  * pairs
@@ -1624,6 +1636,11 @@ OZ_Return OZ_raise(OZ_Term exc)
 
 OZ_Return OZ_raiseC(char *label,int arity,...)
 {
+  if (arity == 0) {
+    am.exception = OZ_atom(label);
+    return RAISE;
+  }
+
   va_list ap;
   va_start(ap,arity);
 
