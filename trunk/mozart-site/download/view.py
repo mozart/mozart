@@ -624,44 +624,25 @@ def page_macosx(mozart_version):
 # Debian
 ######################################################################
 
-debian_re = re.compile("debian")
-
 def page_debian(mozart_version):
-    l = []
-    for p in mozart_packages:
-        if p.mozart_version == mozart_version:
-            for e in p.entries:
-                os = e.table['os']
-                if os and debian_re.match(os):
-                    l.append(e)
-    l = presort_entries(l)
-    page_begin("Debian Packages for Mozart "+mozart_version)
-    page_releases('debian',mozart_version)
+    page_begin("Debian Packages for Mozart")
     page_feedback()
-    page_section("Automated Updates")
-    page_div_begin()
-    print """
-    <p>The easiest way to to obtain the Debian packages for Mozart is
-    to add the following line to your <file>/etc/apt/sources.list</file>:</p>
-    <pre>deb ftp://ftp.mozart-oz.org/pub/mozart/latest/debian ./</pre>
-    <p>and to run <code>apt-get update</code> (to update your local package
-    database), followed by either:</p>
-    <pre>apt-get install mozart mozart-contrib mozart-doc-html</pre>
-    <p>(in case you have not previously installed Mozart on your
-    system) or <code>apt-get upgrade</code>. If you <code>update</code>
-    and <code>upgrade</code> regularly, you will always have the most recent
-    version of Mozart on your system. Of course, you can also manually
-    download the packages and install them using your favourite package
-    manager.</p>
-    """
-    page_div_end()
     page_section("Download")
     page_div_begin()
-    page_table_begin()
-    page_table_header("Debian Packages")
-    print_entries_by_module(l,"debian")
-    page_table_end()
+    print """<p><a href='http://www.debian.org/'>Debian</a> (stable) packages
+for Mozart are provided through the package repository at</p>
+<pre>deb http://www.mozart-oz.org/download/debian stable main</pre>
+<p>To get access to the repository, add this line to your
+<file>/etc/apt/sources.list</file> and run <code>apt-get update</code>
+to update your local package database.</p>
+<p>A complete installation of Mozart can be obtained with the command</p>
+<pre>apt-get install mozart mozart-doc mozart-stdlib mozart-gtk</pre>
+<p>To stay in sync, you should regularly run <code>apt-get upgrade</code>.</p>
+<p>We also provide Debian source packages; they are available at</p>
+<pre>deb-src http://www.mozart-oz.org/download/debian stable main</pre>
+"""
     page_div_end()
+    page_license()
     page_end()
 
 ######################################################################
