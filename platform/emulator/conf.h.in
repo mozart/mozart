@@ -40,6 +40,7 @@
 #undef FREEBSD
 #undef IRIX
 #undef OS2
+#undef RHAPSODY
 
 #undef ARCH_I486
 #undef ARCH_SPARC
@@ -89,7 +90,10 @@
 
 
 /* Define if you have the sbrk function.  */
+#ifdef RHAPSODY
+/* will probably work on final Rhapsody release */
 #undef HAVE_SBRK
+#endif
 
 /* Define if you have the dlopen function.  */
 #undef HAVE_DLOPEN
