@@ -409,21 +409,24 @@ void Object::localize(){
 }
 
 void localizeCell(Tertiary*t){
-   CellFrame *cf=(CellFrame *)t;
-   TaggedRef tr=cf->getCellSec()->getContents();    
-   t->setTertType(Te_Local);
-   t->setBoard(am.currentBoard());
-   CellLocal *cl=(CellLocal*) t;
-   cl->setValue(tr);
-   return;}
+  CellManager *cm=(CellManager *)t;
+  TaggedRef tr=cm->getCellSec()->getContents();    
+  // Removing the chain. Was forgeten.
+  free(cm->getChain());
+  t->setTertType(Te_Local);
+  t->setBoard(am.currentBoard());
+  CellLocal *cl=(CellLocal*) t;
+  cl->setValue(tr);
+  return;}
 
 void localizeLock(Tertiary*t){
-  LockFrame *lf=(LockFrame *)t;
-  Thread *th=lf->getLockSec()->getLocker();
+  LockManager *lm=(LockManager *)t;
+  Thread *th=lm->getLockSec()->getLocker();
+  free(lm->getChain());
   t->setTertType(Te_Local);
   t->setBoard(am.currentBoard());
   LockLocal *ll=(LockLocal*) t;
-  ll->convertToLocal(th,lf->getLockSec()->getPending());
+  ll->convertToLocal(th,lm->getLockSec()->getPending());
   return;}
 
 void localizePort(Tertiary*t){
