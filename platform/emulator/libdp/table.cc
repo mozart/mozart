@@ -214,7 +214,7 @@ void OwnerTable::freeOwnerEntry(int i)
 ((po)->isTertiary() ? makeTaggedConst((po)->getTertiary()) : (po)->getRef())
 
 OZ_Term OwnerTable::extract_info(){ 
-  OZ_Term list;
+  OZ_Term list=oz_nil();
   OZ_Term credit;
   
   for(int ctr = 0; ctr<size;ctr++){
@@ -222,7 +222,6 @@ OZ_Term OwnerTable::extract_info(){
     if(oe==NULL){continue;}
     Assert(oe!=NULL);
     credit=oe->ocreditHandler.extract_info();
-
     list=
       oz_cons(OZ_recordInit(oz_atom("oe"),
 	oz_cons(oz_pairAI("index", ctr),
@@ -300,14 +299,12 @@ OZ_Term BorrowEntry::extract_info(int index) {
 		oz_nil()))))))), 
 	oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
 */
-
   bcreditHandler.extract_info(primCred, secCred);
-
   return OZ_recordInit(oz_atom("be"),
      oz_cons(oz_pairAI("index", index),
      oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
      oz_cons(oz_pairA("na", na),
-     oz_cons(oz_pairAI("secCred", secCred),
+     oz_cons(oz_pairA("secCred", secCred),
      oz_cons(oz_pairA("primCred",primCred),
 	     oz_nil()))))));
 }
