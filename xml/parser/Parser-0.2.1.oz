@@ -5,10 +5,14 @@ export
    Parse
    NewContext
    NoParent
-\ifdef TOKENIZER
-   NewTokenizer
-\endif
+require
+   URL(make     : URLMake
+       toString : URLToString
+       resolve  : URLResolve)
 prepare
+   ROOT_TAG=root(xname:unit)
+   proc {SKIP} skip end
+
    %% ================================================================
    %% the up-links provided by the `parent' features introduce a huge
    %% number of cycles in the parse tree and thus make it very hard
@@ -36,25 +40,31 @@ prepare
    DictClone = Dictionary.clone
    RecToDict = Record.toDictionary
    VS2A = VirtualString.toAtom
-   VS2S = VirtualString.toString
 
    CharIsAlNum = Char.isAlNum
    CharIsSpace = Char.isSpace
-   CharUpcase  = Char.toUpper
-
-   fun {Upcase S} {Map S CharUpcase} end
 
    %% ================================================================
-   %% {VS2SFast S}
-   %%     is like VS2S but is intended to be applied to values which
-   %% are either strings or virtual strings built from strings by
-   %% tupling.  It checks for the common case that the main constructor
-   %% is a tupling constructor: if not, then the argument is already
-   %% a string.
+   %% used to split the target of a PI from its arguments: split at,
+   %% and remove, the first sequence of whitespaces
    %% ================================================================
 
-   fun {VS2SFast S}
-      case S of _#_ then {VS2S S} else S end
+   fun {Split S L}
+      case S
+      of nil then L=nil nil
+      [] H|T then
+	 if {CharIsSpace H} then L=nil {DropSpaces T}
+	 else L2 in L=H|L2 {Split T L2} end
+      end
+   end
+   fun {DropSpaces L}
+      case L
+      of nil then nil
+      [] H|T then
+	 if {CharIsSpace H}
+	 then {DropSpaces T}
+	 else L end
+      end
    end
 
    %% ================================================================
@@ -103,18 +113,9 @@ prepare
      quot: string("\""))
 
    %% ================================================================
-   %% we use DevNull just to have a file object when actually taking
-   %% input from a string
-   %% ================================================================
-
-   proc {DevNull Msg}
-      Msg.list=Msg.tail Msg.len=0
-   end
-
-   %% ================================================================
-   %% its extremely annoying, but XML says that attribute xmlns can be
-   %% be spelled with any capitalization.  Here, we provide a table to
-   %% quickly check whether a given atom is really one of the 32
+   %% it's extremely annoying, but XML says that attribute xmlns can
+   %% be be spelled with any capitalization.  Here, we provide a table
+   %% to quickly check whether a given atom is really one of the 32
    %% possible spellings of xmlns.  This way we can avoid doing case
    %% normalization just to check this.
    %% ================================================================
@@ -351,14 +352,16 @@ prepare
 	 %%-----------------------------------------------------------
 	 %% tokenizer
 	 %%-----------------------------------------------------------
-	 Filename    : unit	% URL of current input
-	 File        : unit	% file object used for reading
-	 Buffer      : nil	% buffered input
-	 Line        : 1	% current line in current file
-	 Stack       : nil	% stack of interrupted inputs
-	 EntityTable : unit	% table mapping entity names to values
-	 FileOpen    : unit	% function to open a URL for input
-	 Coord       : unit	% coord(@Filename @Line) saved for reuse in same line
+	 Filename     : unit	% URL of current input
+	 Buffer       : nil	% buffered input
+	 Line         : 1	% current line in current file
+	 Stack        : nil	% stack of interrupted inputs
+	 EntityTable  : unit	% table mapping entity names to values
+	 Coord        : unit	% coord(@Filename @Line) saved for reuse in same line
+	 SavedCoord   : unit
+	 SavedToken   : unit
+	 KeepComments : false
+	 OpenWithTail : unit
 	 %%-----------------------------------------------------------
 	 %% namespace context
 	 %%-----------------------------------------------------------
@@ -375,7 +378,6 @@ prepare
 	 CONTENTS    : nil
 	 PSTACK      : nil
 	 COORD       : unit
-
       meth init(
 	      string      : UserBuffer      <= nil
 	      url         : UserURL         <= unit
@@ -383,39 +385,40 @@ prepare
 	      context     : UserContext     <= unit
 	      strip       : UserStripTable  <= unit
 	      fileopen    : UserFileOpen    <= unit
-	      root        : UserRoot        <= _)
+	      root        : UserRoot        <= _
+	      keepcomments: UserKeepComments<= false)
 	 if UserContext==unit then
-	    CONTEXT <- {NewContext}
+	    CONTEXT   <- {NewContext}
 	 else
-	    CONTEXT <- UserContext
+	    CONTEXT   <- UserContext
 	 end
-	 PSTACK      <- nil
-	 Line        <- 1
-	 Stack       <- nil
-	 Coord       <- unit
-	 STRIP       <- UserStripTable
-	 Buffer      <- UserBuffer
-	 FileOpen    <- UserFileOpen
-	 EntityTable <- {RecToDict DefaultEntityRecord}
-	 if UserURL\=unit then
-	    Filename <- UserURL
-	    File     <- {UserFileOpen UserURL}
-	 elseif UserFile\=unit then
-	    Filename <- UserFile
-	    File     <- {UserFileOpen UserFile}
+	 PSTACK       <- nil
+	 Line         <- 1
+	 Stack        <- nil
+	 Coord        <- unit
+	 SavedCoord   <- unit
+	 SavedToken   <- unit
+	 STRIP        <- UserStripTable
+	 EntityTable  <- {RecToDict DefaultEntityRecord}
+	 OpenWithTail <- UserFileOpen
+	 if UserURL\=unit then U={URLMake UserURL} in
+	    Filename  <- {VS2A {URLToString U}}
+	    Buffer    <- {UserFileOpen U nil SKIP}
+	 elseif UserFile\=unit then U={URLMake UserFile} in
+	    Filename  <- {VS2A {URLToString U}}
+	    Buffer    <- {UserFileOpen U nil SKIP}
 	 else
-	    File     <- DevNull
+	    Buffer    <- UserBuffer
 	 end
-	 INDEX       <- 1
-	 TAG         <- unit
+	 INDEX        <- 1
+	 TAG          <- ROOT_TAG
 	 local L in
-	    PARENT   <- root(children:L index:0 parent:unit)
-	    CONTENTS <- L
+	    PARENT    <- root(children:L index:0 parent:unit file:@Filename)
+	    CONTENTS  <- L
 	    UserRoot = @PARENT
 	 end
-\ifndef TOKENIZER
+	 KeepComments<- UserKeepComments
 	 Parser,PARSE()
-\endif
       end
 
       %% =============================================================
@@ -428,76 +431,24 @@ prepare
 	 else C end
       end
 
-      meth FillBuffer($)
-	 L
-      in
-	 {@File read(list:L tail:nil size:1024 len:_)}
-	 if L==nil then
-	    %% current input has been exhausted: we need
-	    %% to return to the input that caused the
-	    %% "include" that just ended.
-	    case @Stack
-	    of o(FN FO BU LI)|LL then
-	       Filename         <- FN
-	       File             <- FO
-	       Buffer           <- BU
-	       Line             <- LI
-	       Stack            <- LL
-	       Parser,FillBuffer($)
-	    else false end
-	 else Buffer<-L true end
-      end
-
-      %% get the next character of input
-      
-      meth GET($)
-	 case @Buffer
-	 of H|T then
-	    Buffer<-T
-	    if H==&\n then Line<-@Line+1 Coord<-unit end
-	    H
-	 elseif Parser,FillBuffer($)
-	 then   Parser,GET($)
-	 else false end
-      end
-
-      %% put back a character to be read again later
-      %%
-      %% there is no limit to how many characters may be
-      %% put back. however, it is possible for the following
-      %% situation to happen: we read reading from URL1, get C1,
-      %% pop the stack, now we are reading again from URL2,
-      %% get C2, put back C2, put back C1.  When C1 is read
-      %% again, it will have the incorrect coordinate
-      %% coord(URL2 -1).  This situation is extremely unlikely
-      %% and it only affects error reporting by introducing
-      %% some inaccuracy.  It is not worth fixing.
-
-      meth UNGET(C)
-	 if C\=false then
-	    Buffer <- C|@Buffer
-	    if C==&\n then Line<-@Line-1 Coord<-unit end
-	 end
-      end
-
-      %% just peek at the next character without actually reading it
-
-      meth PEEK($)
-	 case @Buffer
-	 of H|_ then H
-	 elseif Parser,FillBuffer($)
-	 then   Parser,PEEK($)
-	 else false end
-      end
-
       meth PushFile(FName)
-	 if @File\=unit then
-	    Stack<-o(@Filename @File @Buffer @Line)|@Stack
-	 end
-	 Filename <- {VS2A FName}
-	 File     <- {@FileOpen FName}
-	 Buffer   <- nil
+	 CurrentFilename = @Filename
+	 CurrentLine     = @Line
+	 FullURL         = {URLResolve CurrentFilename FName}
+	 FullFName       = {VS2A {URLToString FullURL}}
+      in
+	 Buffer   <- {@OpenWithTail FullURL @Buffer
+		      proc {$}
+			 Filename <- CurrentFilename
+			 Line     <- CurrentLine
+		      end}
 	 Line     <- 1
+	 Filename <- FullFName
+      end
+
+      meth restoreFileInfo(FName LNum)
+	 Filename <- FName
+	 Line     <- LNum
       end
 
       meth TERROR(R)
@@ -507,174 +458,198 @@ prepare
 	 end
       end
 
-      meth SkipSpaces C in
-	 Parser,GET(C)
-	 if C==false then skip
-	 elseif {CharIsSpace C} then
-	    Parser,SkipSpaces
-	 else
-	    Parser,UNGET(C)
+      %% When skipping spaces we need to keep track of lines
+
+      meth SkipSpaces
+	 case @Buffer
+	 of nil then skip
+	 [] H|T then
+	    if {CharIsSpace H} then
+	       if H==&\n then Line<-@Line+1 Coord<-unit end
+	       Buffer<-T Parser,SkipSpaces
+	    end
 	 end
       end
 
       %% we have just encountered a & and now we must recognize the
-      %% entity reference
+      %% entity reference.  returns:
+      %% charref(C) for character references
+      %% entityref(A) for named entity references
+      %% someone else must do the interpretation
 
-      meth ScanEntityRef(Value)
-	 case Parser,PEEK($)
-	 of false then
-	    Parser,TERROR(entityRefEOF)
-	 [] &# then C in
-	    Parser,GET(_)
-	    Parser,ScanCharRef(C)
-	    case Parser,GET($)
-	    of &; then Value=string([C])
-	    else
-	       Parser,TERROR(charRefMissingSemiColon)
-	    end
+      meth ScanEntityRef($)
+	 case @Buffer
+	 of &#|&x|L then Buffer<-L Parser,ScanCharRefHex(0 $)
+	 [] &#|L    then Buffer<-L Parser,ScanCharRefDec(0 $)
 	 else Name in
 	    Parser,ScanName(Name)
-	    if Name==nil then
-	       Parser,TERROR(entityRefNoName)
-	    else
-	       A = {StringToAtom Name}
-	       V = {CondSelect @EntityTable A unit}
+	    Parser,SkipSpaces
+	    case @Buffer
+	    of &;|L then Buffer<-L Key={VS2A Name}
+	       Def={CondSelect @EntityTable Key unit}
 	    in
-	       if V==unit then
-		  Parser,TERROR(entityRefUnknown(A))
+	       if Def==unit then
+		  Parser,TERROR(unknownEntityRef(Key)) unit
+	       else Def end
+	    else
+	       Parser,TERROR(expectedRefSemiColon) unit
+	    end
+	 end
+      end
+
+      meth ScanCharRefHex(Accu $)
+	 case @Buffer
+	 of H|T then
+	    Buffer<-T
+	    if H==&; then Buffer<-T charref(Accu)
+	    else I={CondSelect HexToInt H unit} in
+	       if I==unit then
+		  Parser,TERROR(badCharInCharRef(H)) unit
 	       else
-		  Parser,SkipSpaces
-		  case Parser,GET($)
-		  of &; then Value=V
-		  else
-		     Parser,TERROR(entityRefMissingSemiColon)
-		  end
+		  Parser,ScanCharRefHex(Accu*16+I $)
 	       end
 	    end
-	 end
-      end
-
-      meth ScanCharRef($)
-	 case Parser,PEEK($)
-	 of &x then
-	    Parser,GET(_)
-	    Parser,ScanCharRefHex(0 $)
 	 else
-	    Parser,ScanCharRefDec(0 $)
+	    Parser,TERROR(charrefEOF) unit
 	 end
       end
 
-      meth ScanCharRefDec(Accu $) D I in
-	 Parser,GET(D)
-	 {CondSelect DecToInt D unit I}
-	 if I==unit then Parser,UNGET(D) Accu
+      meth ScanCharRefDec(Accu $)
+	 case @Buffer
+	 of H|T then
+	    Buffer<-T
+	    if H==&; then charref(Accu)
+	    else I={CondSelect DecToInt H unit} in
+	       if I==unit then
+		  Parser,TERROR(badCharInCharRef(H)) unit
+	       else
+		  Parser,ScanCharRefDec(Accu*10+I $)
+	       end
+	    end
 	 else
-	    Parser,ScanCharRefDec(Accu*10+I $)
+	    Parser,TERROR(charrefEOF) unit
 	 end
       end
 
-      meth ScanCharRefHex(Accu $) D I in
-	 Parser,GET(D)
-	 {CondSelect HexToInt D unit I}
-	 if I==unit then Parser,UNGET(D) Accu
-	 else
-	    Parser,ScanCharRefHex(Accu*16+I $)
+      meth ScanSQ($)
+	 case @Buffer
+	 of nil then Parser,TERROR(quotedValueEOF) unit
+	 [] H|T then Buffer<-T
+	    if H==&' then nil else
+	       if H==&\n then Line<-@Line+1 Coord<-unit end
+	       H|(Parser,ScanSQ($))
+	    end
 	 end
       end
-
-      meth ScanValue(Value)
-	 case Parser,GET($)
-	 of &" then Parser,ScanDelim(&" Value)
-	 [] &' then Parser,ScanDelim(&' Value)
-	 else
-	    Parser,TERROR(expectedQuotedValue)
+      
+      meth ScanDQ($)
+	 case @Buffer
+	 of nil then Parser,TERROR(quotedValueEOF) unit
+	 [] H|T then Buffer<-T
+	    if H==&" then nil else
+	       if H==&\n then Line<-@Line+1 Coord<-unit end
+	       H|(Parser,ScanDQ($))
+	    end
 	 end
       end
-
-      meth ScanDelim(Q V)
-	 case Parser,GET($)
-	 of false then
-	    Parser,TERROR(valueEOF)
-	 [] && then S1 S2 in
-	    Parser,ScanEntityRef(S1)
-	    case S1 of string(S1) then
-	       {Append S1 S2 V}
+      
+      meth ScanSQExpand($)
+	 case @Buffer
+	 of nil then Parser,TERROR(quotedValueEOF) unit
+	 [] H|T then Buffer<-T
+	    case H
+	    of &' then nil
+	    [] && then
+	       case Parser,ScanEntityRef($)
+	       of charref(C) then C|(Parser,ScanSQExpand($))
+	       [] text(S) then {Append S Parser,ScanSQExpand($)}
+	       [] Tok then Parser,TERROR(illegalEntityRefInQuotedValue(Tok)) unit
+	       end
 	    else
-	       Parser,TERROR(illegalEntityTypeInValue(S1))
-	    end
-	    Parser,ScanDelim(Q S2)
-	 [] C then
-	    if C==Q then V=nil
-	    else V2 in
-	       V=C|V2
-	       Parser,ScanDelim(Q V2)
+	       if H==&\n then Line<-@Line+1 Coord<-unit end
+	       H|(Parser,ScanSQExpand($))
 	    end
 	 end
       end
 
-      meth ScanName(Name) C in
-	 Parser,GET(C)
-	 if C==false then Name=nil
-	 elseif {IsNameChar C} then Name2 in
-	    Name=C|Name2
-	    Parser,ScanName(Name2)
-	 else
-	    Name=nil
-	    Parser,UNGET(C)
+      meth ScanDQExpand($)
+	 case @Buffer
+	 of nil then Parser,TERROR(quotedValueEOF) unit
+	 [] H|T then Buffer<-T
+	    case H
+	    of &" then nil
+	    [] && then
+	       case Parser,ScanEntityRef($)
+	       of charref(C) then C|(Parser,ScanDQExpand($))
+	       [] text(S) then {Append S Parser,ScanDQExpand($)}
+	       [] Tok then Parser,TERROR(illegalEntityRefInQuotedValue(Tok)) unit
+	       end
+	    else
+	       if H==&\n then Line<-@Line+1 Coord<-unit end
+	       H|(Parser,ScanDQExpand($))
+	    end
 	 end
+      end
+
+      meth ScanValue($)
+	 case @Buffer
+	 of &"|L then Buffer<-L Parser,ScanDQ($)
+	 [] &'|L then Buffer<-L Parser,ScanSQ($)
+	 else Parser,TERROR(expectedQuotedValue) unit end
+      end
+
+      meth ScanValueExpand($)
+	 case @Buffer
+	 of &"|L then Buffer<-L Parser,ScanDQExpand($)
+	 [] &'|L then Buffer<-L Parser,ScanSQExpand($)
+	 else Parser,TERROR(expectedQuotedValue) unit end
+      end
+
+      meth ScanName($)
+	 case @Buffer
+	 of H|T andthen {IsNameChar H} then
+	    Buffer<-T
+	    H|(Parser,ScanName($))
+	 else nil end
       end
 
       meth ScanAttr(Name Value)
 	 Parser,SkipSpaces
 	 Parser,ScanName(Name)
 	 Parser,SkipSpaces
-	 case Parser,GET($)
-	 of &= then
+	 case @Buffer
+	 of &=|L then Buffer<-L
 	    Parser,SkipSpaces
-	    Parser,ScanValue(Value)
+	    Parser,ScanValueExpand(Value)
 	 else
 	    Parser,TERROR(expectedEqualSignInAttrib(Name))
 	 end
       end
 
       %% we have just read </
-      meth ScanEtag(Tag) Name in
-	 Parser,SkipSpaces
+      meth ScanEtag($) Name in
+	 %% Parser,SkipSpaces
 	 Parser,ScanName(Name)
 	 Parser,SkipSpaces
-	 case Parser,GET($)
-	 of &> then
-	    Tag=etag(Name @COORD)
-	 else
-	    Parser,TERROR(expectedEtagRangle)
-	 end
+	 case @Buffer
+	 of &>|L then Buffer<-L etag(Name @SavedCoord)
+	 else Parser,TERROR(expectedEtagRangle) unit end
       end
 
       %% we have just read <
       meth ScanStag(Tag) Name Alist Empty in
-	 Tag=stag(Name Alist Empty @COORD)
-	 Parser,SkipSpaces
+	 Tag=stag(Name Alist Empty @SavedCoord)
+	 %% Parser,SkipSpaces
 	 Parser,ScanName(Name)
 	 Parser,ScanAlist(Alist Empty)
       end
 
       meth ScanAlist(Alist Empty)
 	 Parser,SkipSpaces
-	 case Parser,PEEK($)
-	 of false then
-	    Parser,TERROR(alistEOF)
-	 [] &/ then
-	    Parser,GET(_)
-	    case Parser,GET($)
-	    of false then
-	       Parser,TERROR(alistEOF)
-	    [] &> then Alist=nil Empty=true
-	    else
-	       Parser,TERROR(expectedEmptyTagRangle)
-	    end
-	 [] &> then
-	    Parser,GET(_)
-	    Alist=nil Empty=false
+	 case @Buffer
+	 of nil     then Parser,TERROR(alistEOF)
+	 [] &/|&>|L then Buffer<-L Alist=nil Empty=true
+	 [] &>|L    then Buffer<-L Alist=nil Empty=false
 	 else Name Value Alist2 in
 	    Alist=(Name|Value)|Alist2
 	    Parser,ScanAttr(Name Value)
@@ -682,24 +657,38 @@ prepare
 	 end
       end
 
-      %% the tokenizer will not guarantee the invariant that all
-      %% all adjacent text tokens are collapsed.  Instead, we will
-      %% leave that job to a higher abstraction.
+      %% the tokenizer guarantees the invariant that there are no
+      %% consecutive text tokens.  They are automatically collapsed
+      %% on the fly.
 
       meth ScanText(Token) Text in
-	 Token=text(Text @COORD)
+	 Token=text(Text @SavedCoord)
 	 Parser,ScanTEXT(Text)
       end
 
-      meth ScanTEXT(Text) C in
-	 Parser,GET(C)
-	 if C==false then Text=nil
-	 elseif C==&& orelse C==&< then
-	    Text=nil
-	    Parser,UNGET(C)
-	 else Text2 in
-	    Text=C|Text2
-	    Parser,ScanTEXT(Text2)
+      meth ScanTEXT($)
+	 case @Buffer
+	 of nil then nil
+	 [] H|T then
+	    case H
+	    of &\n then Buffer<-T Line<-@Line+1 Coord<-unit
+	       H|(Parser,ScanTEXT($))
+	    [] &&  then
+	       Buffer<-T
+	       case Parser,ScanEntityRef($)
+	       of charref(C) then C|(Parser,ScanTEXT($))
+	       [] text(S) then {Append S Parser,ScanTEXT($)}
+	       [] system(S) then
+		  Parser,PushFile(S)
+		  Parser,ScanTEXT($)
+	       [] pi(Name Args) then
+		  SavedToken <- pi(Name Args Parser,GetCoord($))
+		  nil
+	       [] Def then
+		  Parser,TERROR(bizzareEntityDef(Def)) unit
+	       end
+	    [] &< then nil
+	    else Buffer<-T H|(Parser,ScanTEXT($)) end
 	 end
       end
 
@@ -710,231 +699,153 @@ prepare
 
       %% we have just read <!--
       meth ScanComment(Comment) Text in
-	 Comment=comment(Text @COORD)
+	 Comment=comment(Text @SavedCoord)
 	 Parser,ScanCOMMENT(Text)
       end
 
-      meth ScanCOMMENT(Text) C1 in
-	 Parser,GET(C1)
-	 case C1
-	 of false then
-	    Parser,TERROR(commentEOF)
-	 [] &- then C2 in
-	    Parser,GET(C2)
-	    case C2
-	    of false then
-	       Parser,TERROR(commentEOF)
-	    [] &- then C3 in
-	       Parser,GET(C3)
-	       case C3
-	       of false then
-		  Parser,TERROR(commentEOF)
-	       [] &> then Text=nil
-	       else Text2 in
-		  Text=C1|Text2
-		  Parser,UNGET(C3)
-		  Parser,UNGET(C2)
-		  Parser,ScanCOMMENT(Text2)
-	       end
-	    else Text2 in
-	       Text=C1|C2|Text2
-	       Parser,ScanCOMMENT(Text2)
-	    end
-	 else Text2 in
-	    Text=C1|Text2
-	    Parser,ScanCOMMENT(Text2)
+      meth ScanCOMMENT($)
+	 case @Buffer
+	 of nil then Parser,TERROR(commentEOF) unit
+	 [] &-|&-|&>|L then Buffer<-L nil
+	 [] H|L then
+	    Buffer<-L
+	    if H==&\n then Line<-@Line+1 Coord<-unit end
+	    H|(Parser,ScanCOMMENT($))
 	 end
       end
 
       %% we have just read <?
-      meth ScanPI(PI) Text in
-	 PI=pi(Parser,ScanName($) Text @COORD)
-	 Parser,ScanPIX(Text)
+      meth ScanPI(Tok) Data in
+	 Tok=pi(Parser,ScanName($) Data @SavedCoord)
+	 Parser,SkipSpaces
+	 Parser,ScanPIX(Data)
       end
 
-      meth ScanPIX(Text) C1 in
-	 Parser,GET(C1)
-	 case C1
-	 of false then
-	    Parser,TERROR(piEOF)
-	 [] &? then C2 in
-	    Parser,GET(C2)
-	    case C2
-	    of false then
-	       Parser,TERROR(piEOF)
-	    [] &> then Text=nil
-	    else Text2 in
-	       Text=C1|Text2
-	       Parser,UNGET(C2)
-	       Parser,ScanPIX(Text2)
-	    end
-	 else Text2 in
-	    Text=C1|Text2
-	    Parser,ScanPIX(Text2)
+      meth ScanPIX($)
+	 case @Buffer
+	 of nil then Parser,TERROR(piEOF) unit
+	 [] &?|&>|L then Buffer<-L nil
+	 [] H|L then
+	    Buffer<-L
+	    if H==&\n then Line<-@Line+1 Coord<-unit end
+	    H|(Parser,ScanPIX($))
 	 end
       end
 
-      meth GetToken(Token) C1 in
-	 Parser,GET(C1)
-	 COORD <- Parser,GetCoord($)
-	 case C1
-	 of false then Token=unit
-	 [] &< then C2 in
-	    Parser,GET(C2)
-	    case C2
-	    of false then
-	       Parser,TERROR(tokenEOF)
-	    [] &/ then Parser,ScanEtag(Token)
-	    [] &? then Parser,ScanPI(Token)
-	    [] &! then C3 in
-	       Parser,GET(C3)
-	       case C3
-	       of false then
-		  Parser,TERROR(tokenEOF)
-	       [] &- then C4 in
-		  Parser,GET(C4)
-		  case C4
-		  of false then
-		     Parser,TERROR(tokenEOF)
-		  [] &- then
-		     Parser,ScanComment(Token)
-		  else
-		     Parser,TERROR(expectedComment)
-		  end
-	       [] &[ then
-		  Parser,ScanCDATA(Token)
-	       else
-		  Parser,UNGET(C3)
-		  Token=doctype(@COORD)
-		  Parser,ScanDoctype
-	       end
-	    else
-	       Parser,UNGET(C2)
-	       Parser,ScanStag(Token)
-	    end
-	 [] && then
-	    case Parser,ScanEntityRef($)
-	    of string(S) then Token=text(S @COORD)
-	    [] pi(S)     then Token=pi(S @COORD)
-	    [] system(S) then
-	       Parser,PushFile(S)
-	       Parser,GetToken(Token)
-	    end
-	 else
-	    Parser,UNGET(C1)
-	    Parser,ScanText(Token)
+      meth ScanEntityRefToken(Tok)
+	 case Parser,ScanEntityRef($)
+	 of charref(C) then Data in
+	    Tok=text(C|Data @SavedCoord)
+	    Parser,ScanTEXT(Data)
+	 [] text(S) then Data in
+	    Tok=text({Append S Data} @SavedCoord)
+	    Parser,ScanTEXT(Data)
+	 [] pi(Name Data) then
+	    Tok=pi(Name Data @SavedCoord)
+	 [] system(S) then
+	    Parser,PushFile(S)
+	    Parser,ScanToken(Tok)
+	 [] Def then
+	    Parser,TERROR(bizzareEntityDef(Def))
+	 end
+      end
+
+      meth ScanToken($)
+	 SavedCoord <- Parser,GetCoord($)
+	 case @Buffer
+	 of nil           then unit
+	 [] &<|&/|L       then Buffer<-L Parser,ScanEtag($)
+	 [] &<|&?|L       then Buffer<-L Parser,ScanPI($)
+	 [] &<|&!|&-|&-|L then Buffer<-L Parser,ScanComment($)
+	 [] &<|&!|&[|L    then Buffer<-L Parser,ScanCDATA($)
+	 [] &<|&!|L       then Buffer<-L Parser,ScanDoctype($)
+	 [] &<|L          then Buffer<-L Parser,ScanStag($)
+	 [] &&|L          then Buffer<-L Parser,ScanEntityRefToken($)
+	 else                            Parser,ScanText($) end
+      end
+
+      meth GetToken($)
+	 %% @SavedToken is normally unit, it is pi(...) when
+	 %% the last token was text(...) and an entity ref
+	 %% was scanned and then discovered to be a PI.
+	 case @SavedToken
+	 of unit then Parser,ScanToken($)
+	 [] Tok  then SavedToken<-unit Tok
 	 end
       end
 
       %% we have just read <!
-      meth ScanDoctype Name in
-	 Parser,ScanName(Name)
-	 case {Upcase Name}
-	 of "DOCTYPE" then
-	    Parser,ScanDOCTYPE
-	 else
-	    Parser,TERROR(expectedDoctype)
+      meth ScanDoctype($)
+	 case @Buffer
+	 of &D|&O|&C|&T|&Y|&P|&E|L then Buffer<-L
+	    Parser,ScanDoctypeHead($)
+	 else Parser,TERROR(expectedDoctype) unit end
+      end
+
+      meth ScanDoctypeHead($)
+	 Parser,SkipSpaces
+	 case @Buffer
+	 of nil then Parser,TERROR(doctypeEOF) unit
+	 [] H|T then
+	    Buffer<-T
+	    case H
+	    of &[ then Parser,ScanDoctypeBody($)
+	    [] &" then Parser,ScanDQ(_) Parser,ScanDoctypeHead($)
+	    [] &' then Parser,ScanSQ(_) Parser,ScanDoctypeHead($)
+	    else Parser,ScanName(_) Parser,ScanDoctypeHead($)
+	    end
 	 end
       end
 
-      meth ScanDOCTYPE
+      meth ScanDoctypeBody($)
 	 Parser,SkipSpaces
-	 case Parser,PEEK($)
-	 of false then
-	    Parser,TERROR(doctypeEOF)
-	 [] &[ then
-	    Parser,GET(_)
-	    Parser,ScanDoctypeBody
-	 [] &" then
-	    Parser,ScanDelim(&" _)
-	    Parser,ScanDOCTYPE
-	 [] &' then
-	    Parser,ScanDelim(&' _)
-	    Parser,ScanDOCTYPE
-	 else
-	    Parser,ScanName(_)
-	    Parser,ScanDOCTYPE
-	 end
-      end
-
-      meth ScanDoctypeBody
-	 Parser,SkipSpaces
-	 case Parser,GET($)
-	 of false then
-	    Parser,TERROR(doctypeEOF)
-	 [] &] then
+	 case @Buffer
+	 of nil then Parser,TERROR(doctypeEOF) unit
+	 [] &]|&>|L then Buffer<-L Parser,ScanToken($)
+	 [] &<|&!|&E|&N|&T|&I|&T|&Y|L then Name in Buffer<-L
 	    Parser,SkipSpaces
-	    case Parser,GET($)
-	    of false then
-	       Parser,TERROR(doctypeEOF)
-	    [] &> then skip
-	    else
-	       Parser,TERROR(expectedDoctypeRangle)
+	    Parser,ScanName(Name)
+	    Parser,SkipSpaces
+	    case @Buffer
+	    of &P|&I|L then Data Fun Arg in Buffer<-L
+	       Parser,SkipSpaces
+	       Parser,ScanValue(Data)
+	       {Split Data Fun Arg}
+	       @EntityTable.{VS2A Name} := pi(Fun Arg)
+	    [] &S|&Y|&S|&T|&E|&M|L then Data in Buffer<-L
+	       Parser,SkipSpaces
+	       Parser,ScanValue(Data)
+	       @EntityTable.{VS2A Name} := system(Data)
+	    else Data in
+	       Parser,ScanValue(Data)
+	       @EntityTable.{VS2A Name} := text(Data)
 	    end
-	 [] &< then
-	    case Parser,GET($)
-	    of false then
-	       Parser,TERROR(doctypeEOF)
-	    [] &! then
-	       if Parser,PEEK($)==&- then
-		  Parser,GET(_)
-		  case Parser,GET($)
-		  of false then
-		     Parser,TERROR(doctypeEOF)
-		  [] &- then
-		     Parser,ScanCOMMENT(_)
-		     Parser,ScanDoctypeBody
-		  [] C then
-		     Parser,TERROR(unexpectCharInDoctype(C))
-		  end
-	       else S in
-		  Parser,ScanName(S)
-		  case {Upcase S}
-		  of "ENTITY" then Name Type Value in
-		     Parser,SkipSpaces
-		     Parser,ScanName(Name)
-		     Parser,SkipSpaces
-		     if {Member Parser,PEEK($) [&' &"]} then
-			Type = string
-		     else TName in
-			Parser,ScanName(TName)
-			case {Upcase TName}
-			of "SYSTEM" then Type=system
-			[] "PI"     then Type=pi
-			else
-			   Parser,TERROR(unpexpectedEntityType(TName))
-			end
-		     end
-		     Parser,SkipSpaces
-		     Parser,ScanValue(Value)
-		     @EntityTable.{StringToAtom Name} := Type(Value)
-		     Parser,SkipSpaces
-		     case Parser,GET($)
-		     of false then
-			Parser,TERROR(entityDeclEOF)
-		     [] &> then
-			Parser,ScanDoctypeBody
-		     [] C then
-			Parser,TERROR(unpextecCharInEntityDecl(C))
-		     end
-		  else
-		     %% for anything else, we skip until the next >
-		     Parser,SkipToRangle
-		     Parser,ScanDoctypeBody
-		  end
-	       end
-	    [] C then
-	       Parser,TERROR(expectedBangInDoctype(C))
+	    Parser,SkipSpaces
+	    case @Buffer
+	    of nil then Parser,TERROR(entityDeclEOF) unit
+	    [] &>|L then Buffer<-L Parser,ScanDoctypeBody($)
+	    [] H|_ then Parser,TERROR(unexpectedEntityDeclRangle(H)) unit
 	    end
-	 [] C then
-	    Parser,TERROR(unexpectedCharInDoctype(C))
+	 [] &<|&!|&-|&-|L then Buffer<-L
+	    Parser,ScanCOMMENT(_)
+	    Parser,ScanDoctypeBody($)
+	 [] &<|L then Buffer<-L
+	    Parser,SkipToRangle
+	    Parser,ScanDoctypeBody($)
+	 [] C|_ then Parser,TERROR(unexpectedCharInDoctype(C)) unit
 	 end
       end
 
       meth SkipToRangle
-	 case Parser,GET($)
-	 of &> then skip
-	 else Parser,SkipToRangle end
+	 case @Buffer
+	 of nil then Parser,TERROR(doctypeEOF)
+	 [] H|T then
+	    Buffer<-T
+	    case H
+	    of &>  then skip
+	    [] &\n then Line<-@Line+1 Coord<-unit Parser,SkipToRangle
+	    else Parser,SkipToRangle end
+	 end
       end
 
       %% =============================================================
@@ -987,12 +898,10 @@ prepare
       end
 
       meth PARSE()
-	 case (T=@LOOK in
-		 if T==unit then Parser,GetToken($)
-		 else LOOK<-unit T end)
+	 case Parser,GetToken($)
 	 of unit then
 	    @CONTENTS=nil
-	    if @TAG\=unit then
+	    if @TAG.xname\=unit then
 	       Parser,ERROR(nonTerminatedElement(@PARENT))
 	    end
 	 [] stag(Name Alist Empty Coord) then
@@ -1026,20 +935,20 @@ prepare
 	    else
 	       CONTENTS <- Children
 	       STACK    <- (Tail|OParent)|@STACK
-	       TAG      <- Tag2.xname
+	       TAG      <- Tag2
 	    end
 	    Parser,PARSE()
 	 [] etag(Name Coord) then Tag in
 	    {@CONTEXT.intern Name Tag}
-	    if @TAG\=Tag.xname then
-	       Parser,ERROR(mismatchedEtag(found:Tag.xname wanted:@TAG coord:Coord))
+	    if @TAG.xname\=Tag.xname then
+	       Parser,ERROR(mismatchedEtag(found:Tag wanted:@TAG coord:Coord))
 	    else
 	       @CONTENTS=nil
 	       case @STACK
 	       of (Tail|Par)|Stack then
 		  CONTENTS <- Tail
 		  PARENT   <- Par
-		  TAG      <- {CondSelect {CondSelect Par tag unit} xname unit}
+		  TAG      <- {CondSelect Par tag ROOT_TAG}
 		  STACK    <- Stack
 		  Parser,PARSE()
 	       else Parser,ERROR(unexpectedErrorAtEtag(Tag Coord)) end
@@ -1056,38 +965,11 @@ prepare
 	    INDEX    <- @INDEX+1
 	    CONTENTS <- L
 	    Parser,PARSE()
-	 [] text(Chars Coord) then Parser,PARSETXT(Chars Coord)
-	 [] comment(_ _) then
-	    %% ignore
-	    Parser,PARSE()
-	 end
-      end
-
-      meth PARSETXT(VS Coord)
-	 %% when invoking PARSETXT, there is never a saved @LOOK token
-	 Tok = Parser,GetToken($)
-      in
-	 case Tok
-	 of text(Chars _) then Parser,PARSETXT(VS#Chars Coord)
-	 else
-	    LOOK <- Tok
-	    %% are we in an element where white space text nodes should
-	    %% be stripped? the @STRIP table is supposed to map xnames
-	    %% to true.
-	    if {CondSelect @STRIP @TAG false} then
-	       SS = {VS2SFast VS}
-	    in
-	       if {AllSpaces SS} then skip else L in
-		  @CONTENTS = text(data   : {MakeBS SS}
-				   coord  : Coord
-				   parent : @PARENT
-				   index  : @INDEX)|L
-		  INDEX    <- @INDEX+1
-		  CONTENTS <- L
-	       end
-	    else
-	       L in
-	       @CONTENTS = text(data   : {MakeBS VS}
+	 [] text(Chars Coord) then
+	    if {CondSelect @STRIP @TAG.xname false}
+	       andthen {AllSpaces Chars}
+	    then skip else L in
+	       @CONTENTS = text(data   : {MakeBS Chars}
 				coord  : Coord
 				parent : @PARENT
 				index  : @INDEX)|L
@@ -1095,25 +977,62 @@ prepare
 	       CONTENTS <- L
 	    end
 	    Parser,PARSE()
+	 [] comment(Data Coord) then
+	    if @KeepComments then L in
+	       @CONTENTS = comment(data   : {MakeBS Data}
+				   coord  : Coord
+				   parent : @PARENT
+				   index  : @INDEX)|L
+	       INDEX    <- @INDEX+1
+	       CONTENTS <- L
+	    end
+	    Parser,PARSE()
 	 end
       end
-
-      meth getToken($) Parser,GetToken($) end
    end
 import
-   Open(file:File)
+   Open(file:OpenFile)
 define
-   fun {FileOpen FName}
-      {New File init(url:FName)}
+   %% ================================================================
+   %% this function is the trick to take care of "includes". It is
+   %% invoked when we want to start including from url U.  Tail is the
+   %% (lazy) string of current input and Restore is a procedure to be
+   %% invoked when we run out of input from U to restore the state in
+   %% the parser that identifies filename and line number; these need
+   %% to be restored to what they were before starting reading from U.
+   %%
+   %% CAUTION: there is the possibility that lookahead occasioned by
+   %% pattern matching may cause the previous state to be restored a
+   %% bit too soon (before that last few characters of the include
+   %% have been effectively consumed).  I have not thought of a case
+   %% where this would matter, i.e. where parsing would continue but
+   %% line numbers would be slightly off.  I think the simpler, faster
+   %% design is worth the unlikely risk that coordinates might be
+   %% slightly off: after all they are only relevant to error reports
+   %% and need only be precise enough to help the user quickly locate
+   %% the problem.
+   %% ================================================================
+   
+   fun {FileOpenWithTail U Tail Restore}
+      O={New OpenFile init(url:U)}
+      %% the string on input is lazily computed to reduce memory
+      %% requirements
+      fun lazy {More} L T N in
+	 {O read(list:L tail:T size:1024 len:N)}
+	 T = if N==0
+		%% when we run out of data in this file, we restore
+		%% the previous state (filename+line) and continue
+		%% with the previous lazy input string
+	     then {O close} {Restore} Tail
+		%% otherwise, the tail is computed by a lazy recursive
+		%% call
+	     else {More} end
+	 L
+      end
+   in
+      {More}
    end
    proc {Parse Init Root}
-      {New Parser {Adjoin Init init(root:Root fileopen:FileOpen)} _}
+      {New Parser {Adjoin Init init(root:Root fileopen:FileOpenWithTail)} _}
    end
-\ifdef TOKENIZER
-   fun {NewTokenizer Init}
-      O={New Parser {AdjoinAt Init fileopen FileOpen}}
-   in
-      fun {$} {O getToken($)} end
-   end
-\endif
 end
