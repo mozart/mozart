@@ -1048,6 +1048,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
         TaggedRef uvar=makeTaggedRef(newTaggedUVar(home));
         return pe.spawn(
             new MonitorArityPropagator(rec,kill,feattail,uvar,uvar),
+	    OZ_getMediumPrio(),
             OFS_flag);
     }
 
