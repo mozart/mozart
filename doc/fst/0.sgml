@@ -66,6 +66,10 @@
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
 
+    <Meta name="latex.picture.width" arg1="pic.fset_steiner_naive" arg2="\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.fset_steiner_order" arg2="\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.crew_browser" arg2="\linewidth">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value="revised">
     <Title/Problem Solving with Finite Set Constraints in &oz;. A Tutorial./
