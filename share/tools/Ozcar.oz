@@ -45,9 +45,10 @@ import
    BaseEvalDialog at 'x-oz://system/EvalDialog'
    
 export
-   'object': Ozcar
-   'open':   OpenOzcar
-   'close':  CloseOzcar
+   'object':     Ozcar
+   'open':       OpenOzcar
+   'close':      CloseOzcar
+   'breakpoint': Breakpoint
 define
    \insert 'ozcar/config'
    \insert 'ozcar/prelude'
@@ -72,4 +73,6 @@ define
    proc {CloseOzcar}
       {Ozcar off}
    end
+
+   Breakpoint = Debug.breakpoint
 end
