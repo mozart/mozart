@@ -1160,41 +1160,62 @@ define
 	    %-----------------------------------------------------------
 	    [] 'note.gui' then
 	       if {HasFeature M mouse} then
-		  BLOCK(p('class': [margin]
-			  COMMON: @Common
-			  OzDocToHTML,Batch(M 1 $)
-			  img(src: 'note-gui-'#M.mouse#'.gif'
-			      align: middle
-			      alt: case M.mouse
+		  Img = img(src:   'note-gui-'#M.mouse#'.gif'
+			    align: middle
+			    alt:   case M.mouse
 				   of l1 then 'Left mouse click'
 				   [] l2 then 'Left mouse double-click'
 				   [] r1 then 'Right mouse click'
 				   [] r2 then 'Right mouse double-click'
 				   [] m1 then 'Middle mouse click'
 				   [] m2 then 'Middle mouse double-click'
-				   end)))
+				   end)
+	       in
+		  BLOCK(table('class':     [margin]
+			      COMMON:      @Common
+			      border:      0
+			      cellspacing: 0
+			      cellpadding: 2
+			      tr(td(OzDocToHTML,Batch(M 1 $))
+				 td(Img))))
 	       else
 		  EMPTY	       
 	       end
 	    [] 'menu' then
-	       BLOCK(table(COMMON:      @Common
-			   bgcolor:     '#aaaaaa'
-			   width:       130
-			   border:      1
-			   cellpadding: 3
-			   cellspacing: 0
-			   local
-			      L=td(align: left
-				   OzDocToHTML,Batch(M 1 $))
-			   in
-			      if {HasFeature M key} then
-				 tr({AdjoinAt L width '85%'}
-				    td(align:right
-				       PCDATA(M.key)))
-			      else
-				 tr(L)
-			      end
-			   end))
+	       Menu  = table(bgcolor:     '#cccccc'
+			     width:       130
+			     border:      1
+			     cellpadding: 3
+			     cellspacing: 0
+			     local
+				L=td(align: left
+				     OzDocToHTML,Batch(M 1 $))
+			     in
+				if {HasFeature M key} then
+				   tr({AdjoinAt L width '85%'}
+				      td(align:right
+					 PCDATA(M.key)))
+				else
+				   tr(L)
+				end
+			     end)
+	       Mouse = if {HasFeature M mouse} then
+			  img(src:   'note-gui-'#M.mouse#'.gif'
+			      align: middle
+			      alt:   case M.mouse
+				     of l1 then 'Left mouse click'
+				     [] l2 then 'Left mouse double-click'
+				     [] r1 then 'Right mouse click'
+				     [] r2 then 'Right mouse double-click'
+				     [] m1 then 'Middle mouse click'
+				     [] m2 then 'Middle mouse double-click'
+				     end)
+		       else EMPTY
+		       end
+	    in
+	       BLOCK(table(COMMON:@Common
+			   tr(td(Menu)
+			      td(Mouse))))
 	       
 	    %-----------------------------------------------------------
 	    %--** ozdoc.sgml Specials
