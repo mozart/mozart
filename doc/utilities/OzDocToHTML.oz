@@ -621,12 +621,13 @@ define
                          elseof X then X
                          end
                case Display of display then
-                  Out <- @Out#'</P><BLOCKQUOTE>'
+                  Out <- @Out#'</P><BLOCKQUOTE><P>'
                [] inline then skip
                end
                case M.type of 'LATEX' then FileName in
                   {@MyMathToGIF convertLaTeX(M.1 Display ?FileName)}
-                  Out <- @Out#'<IMG src='#{MakeCDATA FileName}#'>'
+                  Out <- @Out#('<IMG src='#{MakeCDATA FileName}#
+                               ' alt='#{MakeCDATA M.1}#'>')
                [] 'HTML' then
                   Out <- @Out#M.1
                else
@@ -634,7 +635,7 @@ define
                    ozDoc(sgmlToHTML unsupportedMathNotation M)}   %--**
                end
                case Display of display then
-                  Out <- @Out#'</BLOCKQUOTE><P>'
+                  Out <- @Out#'</P></BLOCKQUOTE><P>'
                [] inline then skip
                end
             [] 'math.extern' then
@@ -667,10 +668,10 @@ define
                   if {SGML.isOfClass M thumbnail} then ThumbnailName in
                      {@MyThumbnails get(M.to ?ThumbnailName)}
                      Out <- @Out#('<A href='#{MakeCDATA M.to}#'>'#
-                                  '<IMG src='#{MakeCDATA ThumbnailName}#'>'#
-                                  '</A>')
+                                  '<IMG src='#{MakeCDATA ThumbnailName}#
+                                  ' alt=""></A>')
                   else
-                     Out <- @Out#'<IMG src='#{MakeCDATA M.to}#'>'
+                     Out <- @Out#'<IMG src='#{MakeCDATA M.to}#' alt="">'
                   end
                   case Display of display then
                      if IAlign \= unit then
@@ -696,12 +697,12 @@ define
             %-----------------------------------------------------------
             [] code then
                case M.display of display then
-                  Out <- @Out#'</P><BLOCKQUOTE>'
+                  Out <- @Out#'</P><BLOCKQUOTE><P>'
                [] inline then skip
                end
                OzDocToHTML, BatchCode(M 1)
                case M.display of display then
-                  Out <- @Out#'</BLOCKQUOTE><P>'
+                  Out <- @Out#'</P></BLOCKQUOTE><P>'
                [] inline then skip
                end
             [] 'code.extern' then
@@ -1076,7 +1077,7 @@ define
          case {CondSelect M id unit} of unit then skip
          elseof L then
             OzDocToHTML, ID(L @CurrentNode Number)
-            Out <- @Out#'<A name='#{MakeCDATA L}#'></A>'
+            Out <- @Out#'<P><A name='#{MakeCDATA L}#'></A></P>'
          end
          Title = {SGML.getSubtree M title ?Mr1}
          Caption = {SGML.getSubtree Mr1 caption ?Mr2}
@@ -1087,7 +1088,8 @@ define
             Out <- @Out#'</B></P>\n'
          end
          OzDocToHTML, Batch(Mr2 1)
-         case Caption of unit then skip
+         case Caption of unit then
+            Out <- @Out#'<P><STRONG>'#Number#'.</STRONG></P>'
          else
             Out <- @Out#'<P><STRONG>'#Number#':</STRONG> '
             OzDocToHTML, Batch(Caption.1 1)
