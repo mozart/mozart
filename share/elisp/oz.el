@@ -402,7 +402,7 @@ starts the emulator under gdb")
       (oz-send-string (concat "{Ozcar bpAt('"
 			      (buffer-file-name)
 			      "' "
-			      (count-lines (point-min) (point))
+			      (count-lines (point-min) (+ (point) 1))
 			      flag
 			      ")}"))
     (message oz-breakpoint-error)))
