@@ -1180,6 +1180,7 @@ void initDPCore()
   isPerdioInitialized = isPerdioInitializedImpl;
   portSend = portSendImpl;
   cellDoExchange = cellDoExchangeImpl;
+  objectExchange = objectExchangeImpl;
   cellDoAccess = cellDoAccessImpl;
   cellAtAccess = cellAtAccessImpl;
   cellAtExchange = cellAtExchangeImpl;
