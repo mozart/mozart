@@ -12,6 +12,10 @@ fun
    {NewProfiler IMPORT}
    \insert 'Standard.env'
       = IMPORT.'Standard'
+   \insert 'SP.env'
+      = IMPORT.'SP'
+   \insert 'OP.env'
+      = IMPORT.'OP'
    \insert 'WP.env'
       = IMPORT.'WP'
    \insert 'Browser.env'

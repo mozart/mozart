@@ -12,6 +12,8 @@ fun
    {NewOzcar IMPORT}
    \insert 'Standard.env'
       = IMPORT.'Standard'
+   \insert 'SP.env'
+      = IMPORT.'SP'
    \insert 'WP.env'
       = IMPORT.'WP'
    \insert 'Browser.env'
