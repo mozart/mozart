@@ -384,18 +384,18 @@ inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
  *
  */
 inline
-void storeForward (int32* fromPtr, void *newValue, Bool domark=OK)
+void storeForward (int32* fromPtr, void *newValue)
 {
   if (opMode == IN_TC) {
     savedPtrStack.pushPtr(fromPtr, (int32) *fromPtr);
   }
   DebugGC(opMode == IN_GC
           && MemChunks::list->inChunkChain((void *)fromPtr),
-          error ("storing marked value in 'TO' space"));
+          error("storing marked value in 'TO' space"));
   DebugGC(opMode == IN_GC
-          && from->inChunkChain ((void *) newValue),
-          error ("storing (marked) ref in to FROM-space"));
-  *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
+          && from->inChunkChain(newValue),
+          error("storing (marked) ref in to FROM-space"));
+  *fromPtr = GCMARK(newValue);
 }
 
 inline
@@ -699,27 +699,25 @@ SuspContinuation *SuspContinuation::gcCont()
   return ret;
 }
 
-#define GCBIT (((unsigned int32) 1)<<(8*sizeof(int32)-1))
-
 inline Bool refsArrayIsMarked(RefsArray r)
 {
-  return (r[-1]&GCBIT) ? OK : NO;
+  return GCISMARKED(r[-1]);
 }
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  storeForward((int32 *) &r[-1], ToPointer(ToInt32(ptr)|GCBIT),NO);
+  storeForward(&r[-1],ptr);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
 {
-  return (RefsArray) ToPointer(r[-1]&~GCBIT);
+  return (RefsArray) GCUNMARK(r[-1]);
 }
 
 
 // Structure of type 'RefsArray' (see ./tagged.h)
 // r[0]..r[n-1] data
-// r[-1] gc bit set --> has already been copied
+// r[-1] gc tag set --> has already been copied
 
 RefsArray gcRefsArray(RefsArray r)
 {
@@ -910,7 +908,6 @@ SRecord *SRecord::gcSRecord()
       return this;
     sz = sizeof(Cell);
     break;
-  case R_CHUNK:
   case R_RECORD:
     sz = sizeof(SRecord);
     break;
@@ -2243,8 +2240,6 @@ void SRecord::gcRecurse()
       bi->gRegs = gcRefsArray(bi->gRegs);
       break;
     }
-  case R_CHUNK:
-    break;
 
   case R_RECORD:
     gcTagged(u.label, u.label);
