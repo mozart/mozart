@@ -173,7 +173,7 @@ public:
   
   FiniteDomain &operator -=(const int not_in); 
   FiniteDomain &operator +=(const int is_in); 
-  FiniteDomain &operator =(const int singl);
+  FiniteDomain &operator &=(const int singl);
   
   int minElem(void) const {return lower;}
   int maxElem(void) const {return upper;}
@@ -200,6 +200,8 @@ public:
 	      bitArray->getSize() != upper - lower + 1) ? OK : NO;
     case singleton:
       return (lower == upper) ? OK : NO;
+    case boolish:
+      return (isInDomain(0) == OK || isInDomain(1) == OK) ? OK : NO;
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
       return NO;
@@ -224,7 +226,7 @@ public:
     case singleton:
       return (lower == upper) ? NO : OK;
     case boolish:
-      return (isInDomain(0) == OK || isInDomain(1) == OK) ? OK : NO;
+      return (isInDomain(0) == OK || isInDomain(1) == OK) ? NO : OK;
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
       return NO;

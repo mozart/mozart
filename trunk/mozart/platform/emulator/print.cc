@@ -18,17 +18,21 @@ exported:
 
 #include <ctype.h>
 
+#include "actor.hh"
 #include "builtins.hh"
 #include "bignum.hh"
+#include "board.hh"
 #include "cell.hh"
 #include "codeArea.hh"
+#include "fdgenvar.hh"
 #include "fdomn.hh"
 #include "genvar.hh"
-#include "fdgenvar.hh"
 #include "misc.hh"
 #include "records.hh"
 #include "taskstack.hh"
 #include "term.hh"
+#include "thread.hh"
+
 
 #define PRINT(C) \
      void C::print(ostream &stream, int depth, int offset)
@@ -44,13 +48,14 @@ exported:
 //-----------------------------------------------------------------------------
 //                         Miscellaneous stuff
 
+// mm2
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
   Suspension* s = sl->getSusp();
   if (s->isDead() == OK)
     return NO;
-  if (s->getNode()->isDead() == OK)
+  if (!s->getNode()->getBoardDeref())
     return NO;
   return OK;
 }
@@ -434,7 +439,7 @@ PRINT(SuspList){
     else if (sl->getSusp()->getCCont())
       stream << "ccont ";
     else
-      stream << "node ";
+      stream << "board ";
     sl->getSusp()->getNode()->print(stream, 0);
     stream << endl;
   } // for
@@ -527,17 +532,163 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 
 PRINTLONG(ConstTerm)
 {
-  error("mm2: not impl");
+  switch (typeOf()) {
+  case Co_Board:
+    ((Board *) this)->printLong(stream, depth, offset);
+  case Co_Thread:
+    ((Thread *) this)->printLong(stream, depth, offset);
+  case Co_Actor:
+    ((Actor *) this)->printLong(stream, depth, offset);
+  default:
+    error("ConstTerm::printLong");
+  }
 }
 
 PRINT(ConstTerm)
 {
-  error("mm2: not impl");
+  switch (typeOf()) {
+  case Co_Board:
+    ((Board *) this)->print(stream, depth, offset);
+  case Co_Thread:
+    ((Thread *) this)->print(stream, depth, offset);
+  case Co_Actor:
+    ((Actor *) this)->print(stream, depth, offset);
+  default:
+    error("ConstTerm::print");
+  }
+}
+
+void Board::Print()
+{
+  cout << "class Board" << endl
+       << "  Current: ";
+  Current->print(cout,0,0);
+  cout << endl
+       << "  Root:    ";
+  Root->print(cout,0,0);
+  cout << endl;
 }
 
 PRINT(Board)
 {
-  error("mm2: not impl");
+  if (!this) {
+    stream << indent(offset) << "(NULL Board)";
+    return;
+  }
+
+  if (isRoot()) {
+    stream << "Root ";
+  } else if (isWait()) {
+    stream << "Wait ";
+  } else if (isAsk()) {
+    stream << "Ask ";
+  }
+
+  stream << indent(offset)
+    << "Board @"
+    << this;
+  if (isInstalled()) {
+    stream << " Installed";
+  }
+  if (isNervous()) {
+    stream << " Nervous";
+  }
+  if (isWaitTop()) {
+    stream << " WaitTop";
+  }
+  if (isPathMark()) {
+    stream << " PathMark";
+  }
+  if (isFailed()) {
+    stream << " Failed";
+  }
+}
+
+PRINTLONG(Board)
+{
+  print(stream,depth,offset);
+  stream << endl;
+}
+
+PRINT(Actor)
+{
+  if (!this) {
+    stream << indent(offset) << "(NULL Actor)";
+    return;
+  }
+
+  stream << indent(offset)
+    << "Actor @"
+    << this;
+}
+
+PRINTLONG(Actor)
+{
+  print(stream,depth,offset);
+  stream << endl;
+}
+
+void Thread::Print()
+{
+  cout << "class Thread" << endl
+       << "  Current: ";
+  Current->print(cout,0,0);
+  cout << endl
+       << "  Root:    ";
+  Root->print(cout,0,0);
+  cout << endl
+       << "  Queue:" << endl;
+  for (Thread *th=Head; th; th = th->next) {
+    th->print(cout,0,4);
+    if (th == Head) {
+      cout << " HEAD";
+    }
+    if (th == Tail) {
+      cout << " TAIL";
+    }
+    if (th == Root) {
+      cout << " ROOT";
+    }
+    if (th == Current) {
+      cout << " CURRENT";
+    }
+    cout << endl;
+  }
+}
+
+PRINT(Thread)
+{
+  if (!this) {
+    stream << indent(offset) << "(NULL Thread)";
+    return;
+  }
+
+  stream << indent(offset)
+    << "Thread @" << this
+    << " [ prio: " << priority
+    << ", ";
+  if (isNormal()) {
+    stream << " Normal (#";
+    if (taskStack) {
+      stream << taskStack->getUsed()-1;
+    } else {
+      stream << "NULL";
+    }
+    stream << ")";
+  }
+  if (isWarm()) {
+    stream << " Warm";
+  }
+  if (isNervous()) {
+    stream << " Nervous";
+  }
+  stream << " ]";
+}
+
+PRINTLONG(Thread)
+{
+  this->print(stream,depth,offset);
+  stream << endl;
 }
 
 PRINTLONG(Atom)

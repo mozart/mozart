@@ -22,7 +22,6 @@
   ------------------------------------------------------------------------
 */
 
-
 #include "../include/config.h"
 #include "types.hh"
 
@@ -44,6 +43,7 @@
   if (e->isToplevel()) { \
     prefixError(); message("*** TOPLEVEL FAILED: "); \
     { MSG; } message("\n"); \
+    DebugTrace(tracerOn(); trace("toplevel failed")); \
     if (pc) { JUMP(pc); } else { goto LBLfindWork; } \
   } else { goto LBLfailure; } \
 }
@@ -51,6 +51,7 @@
   if (e->isToplevel()) { \
     prefixError(); message("*** TOPLEVEL FAILED: "); \
     { MSG; } message("\n"); \
+    DebugTrace(tracerOn(); trace("toplevel failed")); \
     if (pc) { JUMP(pc); } else { goto LBLfindWork; } \
   } else { MSG; goto LBLfailure; } \
 }
@@ -297,15 +298,21 @@ inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 #define Greg(N) RegAccess(G,N)
 
 
-// pop a continuation from the process stack
-//   into the machine registers PC,Y,G,X
-// inline void ProcessNode::popTask(TaskFlag &flag,Board *&node,
-//                ProgramCounter &PC, RefsArray &Y, RefsArray &G,
-//                int XSize, RefsArray &X)
-//  via a macro because c++ compiler cannot handle ref parameter very efficient
 
+/* install new board, continue only if successful
+   opt:
+     if already installed do nothing
+ */
 
-
+#define INSTALLPATH(bb)							      \
+  if (CBB != bb) {							      \
+    switch (e->installPath(bb)) {					      \
+    case INST_REJECTED:							      \
+      goto LBLfindWork;							      \
+    case INST_FAILED:							      \
+      goto LBLfailure;							      \
+    }									      \
+  }
 void engine() {
   
 // ------------------------------------------------------------------------
@@ -394,7 +401,7 @@ void engine() {
 
  LBLerror:
  LBLstart:
-  DebugTrace(debugger.debug("run"));
+  DebugTrace(trace("start"));
 
 // ------------------------------------------------------------------------
 // *** gc
@@ -426,37 +433,49 @@ void engine() {
 
     DebugCheckT(CAA = NULL);
 
-// linux doesn't like:    asm("! POPTASKSTART:");
-
+    // POPTASK
     if (!e->currentTaskStack) {
       {
 	Thread *c = Thread::GetCurrent();
-	if (c->flags&T_RootTask) {
-	  tmpBB = Board::GetRoot();
-	  PC = c->continuation->getPC();
-	  Y = c->continuation->getY();
-	  G = c->continuation->getG();					     
-	  XSize = c->continuation->getXSize();				     
-	  c->continuation->getX(X);					     
-	  c->taskStack=(TaskStack *) NULL;				     
-	  c->flags = T_Normal;						     
-	  goto LBLTaskCont;						     
+	if (c->isNervous()) {
+	  tmpBB = c->popBoard();
+	  goto LBLTaskNervous;
 	}
-	if (c->flags&T_Nervous) {
-	  tmpBB = c->board;						     
-	  c->taskStack=(TaskStack *) NULL;				     
-	  c->flags = T_Normal;						     
-	  goto LBLTaskNervous;						     
+	if (c->isWarm()) {
+	  Suspension *susp = c->popSuspension();
+	  tmpBB = susp->getNode();
+	  SuspContinuation *cont = susp->getCont();
+	  if (cont) {
+	    PC = cont->getPC();
+	    Y = cont->getY();
+	    G = cont->getG();
+	    XSize = cont->getXSize();
+	    cont->getX(X);
+	    goto LBLTaskCont;
+	  } else {
+	    CFuncContinuation *ccont = susp->getCCont();
+	    if (ccont) {
+	      stateFunc = ccont->getCFunc();
+	      currentTaskSusp = susp;
+	      XSize = ccont->getXSize();
+	      ccont->getX(X);
+	      goto LBLTaskCFuncCont;
+	    } else {
+	      goto LBLTaskNervous;
+	    }
+	  }
 	}
-	if (c->flags==T_Normal) {
-	  goto LBLTaskEmpty;
-	}
-	error("Thread::popTask");
-      }									     
+	DebugCheck(!c->isNormal()||(c->taskStack && !c->taskStack->isEmpty()),
+		   error("engine::POPTASK"));
+	goto LBLTaskEmpty;
+      }
     } else {
       TaskStack *taskStack = e->currentTaskStack;
       TaskStackEntry *topCache = taskStack->getTop() - 1;
       TaskStackEntry e = TaskStackPop(topCache);
+      if (taskStack->isEmpty(e)) {
+	goto LBLTaskEmpty;
+      }
       tmpBB = (Board *) e;
       switch (getContFlag(tmpBB)){
       case C_CONT:
@@ -481,10 +500,12 @@ void engine() {
 	taskStack->setTop(topCache);
 	goto LBLTaskCont;
       case C_NERVOUS:
+	error("mm2: never here");
 	tmpBB = clrContFlag(tmpBB, C_NERVOUS);
 	taskStack->setTop(topCache);
 	goto LBLTaskNervous;
       case C_CFUNC_CONT:
+	error("mm2: never here");
 	tmpBB = clrContFlag(tmpBB, C_CFUNC_CONT);
 	if (taskStack->isEmpty(e)) goto LBLTaskEmpty;
 	stateFunc = (StateFun) TaskStackPop(--topCache);
@@ -513,25 +534,14 @@ void engine() {
     goto LBLstart;
 
   LBLTaskNervous:
-    if (tmpBB->isDead()) {
-      goto LBLfindWork;
-    }
-    // nervous already done
+    // nervous already done ?
     if (!tmpBB->isNervous()) {
       goto LBLfindWork;
     }
 
-    DebugTrace(debugger.debug(tmpBB,"nervous"));
+    DebugTrace(trace("nervous",tmpBB));
 
-    {
-      Bool isDeadNerv = NO;
-      if (!e->installPath(tmpBB->getBoardDeref(),isDeadNerv)) {
-	DebugCheck(isDeadNerv,
-		   error("dead2: Should never happen");
-		   goto LBLfindWork);
-	goto LBLfailure;
-      }
-    }
+    INSTALLPATH(tmpBB);
 
     goto LBLreduce;
 
@@ -539,22 +549,7 @@ void engine() {
   LBLTaskCFuncCont:
 
     tmpBB->removeSuspension();
-
-    if (CBB != tmpBB) {
-
-      if (tmpBB->isDead()) {
-	goto LBLfindWork;
-      }
-
-      Bool isDeadCont = NO;
-      if (!e->installPath(tmpBB,isDeadCont)) {
-	DebugCheck(isDeadCont,
-		   error("dead1: Should never happen");
-		   goto LBLfindWork;);
-	goto LBLfailure;
-      }
-    }
-
+    INSTALLPATH(tmpBB);
 
     switch (stateFunc(XSize, X)) {
     case FAILED:
@@ -586,20 +581,7 @@ void engine() {
     DebugCheckT(GPlus = G; YPlus = Y);
     tmpBB->removeSuspension();
 
-    if (CBB != tmpBB) {
-
-      if (tmpBB->isDead()) {
-	goto LBLfindWork;
-      }
-
-      Bool isDeadCont = NO;
-      if (!e->installPath(tmpBB->getBoardDeref(),isDeadCont)) {
-	DebugCheck(isDeadCont,
-		   error("dead1: Should never happen");
-		   goto LBLfindWork;);
-	goto LBLfailure;
-      }
-    }
+    INSTALLPATH(tmpBB);
 
     goto LBLemulate;
   }
@@ -637,7 +619,7 @@ void engine() {
   CodeArea::recordInstr(PC);
 #endif
 
-  DebugTrace( if (!debugger.emulate(PC,Y,G,CBB,CAA))
+  DebugTrace( if (!trace("emulate",CBB,CAA,PC,Y,G))
 	      {
 		goto LBLfailure;
 	      }
@@ -1734,9 +1716,9 @@ void engine() {
 
 	tmpBB = CBB;
 
-	Board::SetCurrent(CBB->getParentBoardDeref());
+	Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
 
-	tmpBB->setBoard(CBB);
+	tmpBB->setCommitted(CBB);
 
 	tmpBB->getActor()->setCommitted();
 	CBB->removeSuspension();
@@ -1762,9 +1744,9 @@ void engine() {
 
 	tmpBB = CBB;
 
-	Board::SetCurrent(CBB->getParentBoardDeref());
+	Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
 
-	tmpBB->setBoard(CBB);
+	tmpBB->setCommitted(CBB);
 
 	tmpBB->getActor()->setCommitted();
 	CBB->removeSuspension();
@@ -1778,7 +1760,7 @@ void engine() {
 
     LBLsuspendBoard1:
       markDirtyRefsArray(Y);
-      DebugTrace(debugger.debug(CBB,"suspend clause",CAA));
+      DebugTrace(trace("suspend clause",CBB,CAA));
 
       CAA = CBB->getActor();
 
@@ -1787,7 +1769,7 @@ void engine() {
 	e->deinstallOne(OK);
 
       LBLexecuteNext:
-	DebugTrace(debugger.debug(CBB,"next clause",CAA));
+	DebugTrace(trace("next clause",CBB,CAA));
 
 	LOADCONT(CAA->getNext());
 
@@ -1795,7 +1777,7 @@ void engine() {
       }
 
       // suspend a actor
-      DebugTrace(debugger.debug(CBB,"suspend actor",CAA));
+      DebugTrace(trace("suspend actor",CBB,CAA));
 
       goto LBLfindWork;
     }
@@ -1843,23 +1825,21 @@ void engine() {
     {
       // check unit commit
       if ( !CAA->hasNext() && CAA->isLeaf() ) {
-	CBB->removeSuspension();
-	Board *w = new WaitBoard(NULL);
-	IncfProfCounter(waitCounter,sizeof(WaitBoard));
-	w->setBoard(CBB);
-	Board::SetCurrent(w);
+	error("mm2");
+	// am.pushTask(thenCode);
 	DISPATCH(1);
       }
 
       // create a node
-      Board::SetCurrent(new WaitBoard(CAA));
+      Board::NewCurrentWait(CAA);
+      IncfProfCounter(waitCounter,sizeof(Board));
       goto LBLcreateBoard;
     }
 
   INSTRUCTION(ASKCLAUSE)
     {
-      Board::SetCurrent(new AskBoard(CAA));
-      IncfProfCounter(askCounter,sizeof(AskBoard));
+      Board::NewCurrentAsk(CAA);
+      IncfProfCounter(askCounter,sizeof(Board));
 
     LBLcreateBoard:
 
@@ -1880,13 +1860,12 @@ void engine() {
 
       e->pushTask(CBB,savedPC,Y,G);
       int aux_prio =
-	Thread::GetCurrentPriority() > Thread::UserPriority
-	? Thread::UserPriority
+	Thread::GetCurrentPriority() > Thread::GetUserPriority()
+	? Thread::GetUserPriority()
 	: Thread::GetCurrentPriority();
 
       Thread::ScheduleCurrent();
       Thread::NewCurrent(aux_prio);
-      e->currentTaskStack = Thread::GetCurrentTaskStack();
 
       IncfProfCounter(procCounter,sizeof(Thread)+TaskStack::DefaultSize*4);
       DISPATCH(2);
@@ -1964,80 +1943,80 @@ void engine() {
 // ------------------------------------------------------------------------
  LBLreduceActor:
   {
-    DebugTrace(debugger.debug(CBB,"reduce actor",CAA));
+    DebugTrace(trace("reduce actor",CBB,CAA));
 
     if ( CAA->hasNext() ) {
       goto LBLexecuteNext;
     }
 
+    if (CAA->isAsk()) {
 // check if else clause must be activated
-    if ( CAA->isLeaf() ) {
+      if ( CAA->isLeaf() ) {
 
 // rule: if else ... fi
 //   push the else cont on parent && remove actor
-      LOADCONT(CAA->getNext());
-      PC = CastAskActor(CAA)->getElsePC();
-      if (PC != NOCODE) {
-	Board::SetCurrent(CBB->getParentBoardDeref());
-	CAA->setCommitted();
-	CBB->removeSuspension();
-	goto LBLemulateIfProcess;
-      }
+	LOADCONT(CAA->getNext());
+	PC = CastAskActor(CAA)->getElsePC();
+	if (PC != NOCODE) {
+	  CAA->setCommitted();
+	  CBB->removeSuspension();
+	  goto LBLemulateIfProcess;
+	}
 
 // rule: if fi --> false
 
-      CAA->setCommitted();
-      Board::SetCurrent(CBB->getParentBoardDeref());
-      CBB->removeSuspension();
+	CAA->setCommitted();
+	Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
+	CBB->removeSuspension();
 
-      HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
-    }
-
+	HANDLE_FAILURE(0,message("reducing 'if fi' to 'false'"));
+      }
+    } else {
 // rule: or <sigma> ro (unit commit rule)
-    if ( CastWaitActor(CAA)->isThereOneChild() &&
-	 CastWaitActor(CAA)->getChild()->isWait() ) {
-      WaitBoard *waitNode = CastWaitActor(CAA)->getChild();
+      if ( CastWaitActor(CAA)->isThereOneChild() &&
+	   CastWaitActor(CAA)->getChild()->isWait() ) {
+	Board *waitNode = CastWaitActor(CAA)->getChild();
     // cannot optimize: we need an explicit reference to the child !!!
 
 // bug fixed: 23.6.93
 //  first set board, then install the script
 //    because the home pointer of the variables
 //    in wait node must point to their new board ! (isLocal / trailing)
-      waitNode->setBoard(CBB);
+	waitNode->setCommitted(CBB);
 
-      if (!e->installScript(waitNode->getScriptRef())) {
-	HANDLE_FAILURE(0,
-		       message("unit commit failed");
-		       CBB->removeSuspension();
-		       CAA->setCommitted();
-		       goto LBLreduce;
-		       );
-      }
+	if (!e->installScript(waitNode->getScriptRef())) {
+	  HANDLE_FAILURE(0,
+			 message("unit commit failed");
+			 CBB->removeSuspension();
+			 CAA->setCommitted();
+			 goto LBLreduce;
+			 );
+	}
 
-      if (waitNode->isWaitTop() &&
-	  !waitNode->hasSuspension()) {
-	CAA->setCommitted ();
-	CBB->removeSuspension();
-	goto LBLreduce;
-      }
+	if (waitNode->isWaitTop() &&
+	    !waitNode->hasSuspension()) {
+	  CAA->setCommitted();
+	  CBB->removeSuspension();
+	  goto LBLreduce;
+	}
 
-      Board::SetCurrent(waitNode);
+	Board::SetCurrent(waitNode);
 
-      LOADCONT(waitNode->getBodyPtr());
+	LOADCONT(waitNode->getBodyPtr());
 
 // unit commit & WAITTOP
 //  or guard not completed they can never happen ???
 // e.g. or X = 1 [] false ro
 //    --> surrounding 'ask' may fire or 'process' may be removed
-      if (PC == NOCODE) {
-	goto LBLreduce;
-      }
+	if (PC == NOCODE) {
+	  goto LBLreduce;
+	}
 
 // unit commit & WAIT
 // e.g. or X = 1 ... then ... [] false ro
-      goto LBLemulateIfProcess;
+	goto LBLemulateIfProcess;
+      }
     }
-
 // no rule: suspend longer
     goto LBLfindWork;
   }
@@ -2063,7 +2042,7 @@ void engine() {
 // ------------------------------------------------------------------------
 
  LBLreduce:
-  DebugTrace(debugger.debug(CBB,"reduce control node"));
+  DebugTrace(trace("reduce control node",CBB));
 
   CBB->unsetNervous();
 
@@ -2075,9 +2054,9 @@ void engine() {
 
       tmpBB = CBB;
 
-      Board::SetCurrent(CBB->getParentBoardDeref());
+      Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
 
-      tmpBB->setBoard(CBB);
+      tmpBB->setCommitted(CBB);
 
       tmpBB->getActor()->setCommitted();
       CBB->removeSuspension();
@@ -2109,8 +2088,9 @@ void engine() {
     goto LBLfindWork;
 
 // WAIT: no rule
+  } else {
+    DebugCheck(!CBB->isRoot(),error("reduce"));
   }
-  DebugCheck(!CBB->isRoot(),error("reduce"));
   goto LBLfindWork;
 
 
@@ -2121,12 +2101,13 @@ void engine() {
 // *** FAILURE
 // ------------------------------------------------------------------------
  LBLfailure:
-  DebugTrace(debugger.debug(CBB,"fail"));
+  DebugTrace(trace("fail",CBB));
 
-  e->deinstallOne(NO);
-
+  // mm2: all this should be done by CBB->fail();
+  CBB->setFailed();
   CAA=CBB->getActor();
   CAA->failChild(CBB);
+  e->deinstallOne(NO);
   goto LBLreduceActor;
 
 // ----------------- end failure ------------------------------------------

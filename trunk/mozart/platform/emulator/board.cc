@@ -20,7 +20,25 @@
 #define inline
 #endif
 
-
+/* some random comments:
+   flags:
+     type:
+       Ask - Wait - Root
+         with addition WaitTop
+     needs entailment & failure check
+       Nervous
+     constraints are realized on heap with BIND
+       Installed
+     garbage collector
+       PathMark
+     state
+       active: -
+       committed: Committed (entailed or unit committed)
+       failed: Failed (constraints are inconsistent)
+       discarded: Discarded (sibling is committed)
+         -> dead = failed or discarded
+       */
+     
 /*
   class Board
   member data:
@@ -35,38 +53,61 @@
     A series of boards linked with 'parent' is seen as one board with
     the topmost board A as representant.
     It points immediately to A or is a chained link to A,
-     if Sp_Board is not set
+     if Bo_Board is not set
     */
 
 /*
   enum BoardFlags
-    Sp_None: is a commited board
-    Sp_Ask: is an conditional board
-    Sp_Wait: is a disjunctive board
-    Sp_Root: is the root board
-    Sp_Installed: board is installed
-    Sp_Nervous
-    Sp_WaitTop
+    Bo_Ask: is an conditional board
+    Bo_Wait: is a disjunctive board
+    Bo_Root: is the root board
+      Bo_WaitTop
+    Bo_Installed: board is installed
+    Bo_Nervous: board should be visited to check entailment/failure
+    Bo_Failed: board has failed
+    Bo_Committed
+    Bo_Discarded
     */    
 
 enum BoardFlags {
-  Sp_None	= 0,
-  Sp_Ask	= 1<<0,
-  Sp_Wait	= 1<<1,
-  Sp_Root	= 1<<2,
-  Sp_Installed	= 1<<3,
-  Sp_Nervous	= 1<<4,
-  Sp_WaitTop	= 1<<5,
+  Bo_Ask	= 1<<0,
+  Bo_Wait	= 1<<1,
+  Bo_Root	= 1<<2,
+  Bo_Installed	= 1<<3,
+  Bo_Nervous	= 1<<4,
+  Bo_WaitTop	= 1<<5,
+  Bo_PathMark	= 1<<6,
+  Bo_Failed	= 1<<7,
+  Bo_Committed	= 1<<8,
+  Bo_Discarded	= 1<<9,
 };
 
-Board *Board::Root = new RootBoard;
-Board *Board::Current = Board::Root;
+Board *Board::Root;
+Board *Board::Current;
+
+void Board::Init() {
+  Root = new Board(NULL,Bo_Root);
+  Root->setInstalled();
+  SetCurrent(Root,NO);
+}
+void Board::NewCurrentAsk(Actor *a)
+{
+  Board *b=new Board(a,Bo_Ask);
+  SetCurrent(b,OK);
+}
+
+void Board::NewCurrentWait(Actor *a)
+{
+  Board *b=new Board(a,Bo_Wait);
+  SetCurrent(b,OK);
+}
 
 #ifdef DEBUG_CHECK
-static Board *oldBoard=NULL;
+static Board *oldBoard = Board::GetRoot();
 #endif
 void Board::SetCurrent(Board *c, Bool checkNotGC)
 {
+  DebugCheck(!c,error("Board::SetCurrent"));
   DebugCheck(checkNotGC &&
 	     (!oldBoard
 	      || oldBoard != Current),
@@ -89,10 +130,14 @@ Board *Board::GetRoot()
 Board::Board(Actor *a,int type)
 : ConstTerm(Co_Board)
 {
+  DebugCheck(!a && type!=Bo_Root,error("Board::Board"));
+
   flags=type;
+  if (a) {
+    a->addChild(this);
+  }
   suspCount=0;
   actor=a;
-  script=NULL;
 }
 
 Board::~Board() {
@@ -114,9 +159,9 @@ inline Continuation *Board::getBodyPtr()
   return &body;
 }
 
-inline Board *Board::getParentBoardDeref()
+inline Board *Board::getParentBoard()
 {
-  return actor->getBoardDeref();
+  return actor->getBoard();
 }
 
 inline ConsList &Board::getScriptRef()
@@ -124,9 +169,21 @@ inline ConsList &Board::getScriptRef()
   return script;
 }
 
+inline Board *Board::getBoard()
+{
+  return board;
+}
+
+/* return NULL if board is dead */
 inline Board *Board::getBoardDeref()
 {
-  return flags==Sp_None ? board->getBoardDeref() : this;
+  if (isDiscarded() || isFailed()) {
+    return NULL;
+  } else if (isCommitted()) {
+    return board->getBoardDeref();
+  } else {
+    return this;
+  }
 }
 
 inline int Board::getSuspCount()
@@ -141,42 +198,61 @@ inline Bool Board::hasSuspension()
 
 inline Bool Board::isAsk()
 {
-  return flags&Sp_Ask ? OK : NO;
+  return flags & Bo_Ask ? OK : NO;
 }
 
 inline Bool Board::isCommitted()
 {
-  return flags == Sp_None ? OK : NO;
+  return flags == Bo_Committed ? OK : NO;
 }
 
-inline Bool Board::isDead()
+/* are we a sibling of a committed board ?
+   caution: handle root node correctly */
+inline Bool Board::isDiscarded()
 {
-  return flags == Sp_None && board == (Board *) NULL ? OK : NO;
+  Bool ret=NO;
+  if (flags & Bo_Discarded) {
+    ret = OK;
+  } else if (actor && actor->isCommitted()) {
+    flags |= Bo_Discarded;
+    ret = OK;
+  }
+  return ret;
+}
+
+inline Bool Board::isFailed()
+{
+  return flags & Bo_Failed ? OK : NO;
 }
 
 inline Bool Board::isInstalled()
 {
-  return flags&Sp_Installed ? OK : NO;
+  return flags&Bo_Installed ? OK : NO;
 }
 
 inline Bool Board::isNervous()
 {
-  return flags&Sp_Nervous ? OK : NO;
+  return flags&Bo_Nervous ? OK : NO;
+}
+
+inline Bool Board::isPathMark()
+{
+  return flags&Bo_PathMark ? OK : NO;
 }
 
 inline Bool Board::isWaitTop()
 {
-  return flags&Sp_WaitTop ? OK : NO;
+  return flags&Bo_WaitTop ? OK : NO;
 }
 
 inline Bool Board::isWait()
 {
-  return flags&Sp_Wait ? OK : NO;
+  return flags&Bo_Wait ? OK : NO;
 }
 
 inline Bool Board::isRoot()
 {
-  return flags&Sp_Root ? OK : NO;
+  return flags&Bo_Root ? OK : NO;
 }
 
 inline void Board::newScript(int size)
@@ -199,14 +275,24 @@ inline void Board::setBody(ProgramCounter p,RefsArray y,
   body.setX(x,i);
 }
 
+inline void Board::setFailed()
+{
+  flags |= Bo_Failed;
+}
+
 inline void Board::setInstalled()
 {
-  flags |= Sp_Installed;
+  flags |= Bo_Installed;
 }
 
 inline void Board::setNervous()
 {
-  flags |= Sp_Nervous;
+  flags |= Bo_Nervous;
+}
+
+inline void Board::setPathMark()
+{
+  flags |= Bo_PathMark;
 }
 
 inline void Board::setScript(int i,TaggedRef *v,TaggedRef r)
@@ -215,47 +301,34 @@ inline void Board::setScript(int i,TaggedRef *v,TaggedRef r)
   script[i].setRight(r);
 }
 
-inline void Board::setBoard(Board *s)
+inline void Board::setCommitted(Board *s)
 {
-  flags = Sp_None;
+  flags = Bo_Committed;
   board = s;
 }
 
 inline void Board::setWaitTop()
 {
-  flags |= Sp_WaitTop;
+  flags |= Bo_WaitTop;
 }
 
 inline void Board::unsetInstalled()
 {
-  flags &= ~Sp_Installed;
+  flags &= ~Bo_Installed;
 }
 
 inline void Board::unsetNervous()
 {
-  flags &= ~Sp_Nervous;
+  flags &= ~Bo_Nervous;
+}
+
+inline void Board::unsetPathMark()
+{
+  flags &= ~Bo_PathMark;
 }
 
 // -------------------------------------------------------------------------
 
-AskBoard::AskBoard(Actor *a) : Board(a,Sp_Ask)
-{
-  a->addChild(this);
-}
-
-// -------------------------------------------------------------------------
-
-WaitBoard::WaitBoard(Actor *a) : Board(a, Sp_Wait)
-{
-  a->addChild(this);
-}
-
-// -------------------------------------------------------------------------
-
-RootBoard::RootBoard() : Board(NULL, Sp_Root)
-{
-  setInstalled();
-}
 
 #ifdef OUTLINE
 #include "board.icc"
