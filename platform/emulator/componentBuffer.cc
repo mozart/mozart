@@ -1,3 +1,6 @@
+/* magic marker for start of saved components */
+/* HACK ALERT: */
+#define PERDIOMAGICSTART       M_FILE
 
 class MarshalInfo {
 public:
@@ -70,7 +73,7 @@ class ByteStream: public MsgBuffer {
 public:
   Site *getSite(){return (Site*) NULL;}
   char *siteStringrep() {return "toFile";}
-  void skipHeader();
+  Bool skipHeader();
 
   void setMarshalInfo(MarshalInfo *mi){info=mi;}
 
@@ -277,8 +280,8 @@ public:
     info->names=t;}
 
   Bool knownAsNewName(OZ_Term t){
-    if(member(t,info->names)) {return OK;}
-    return NO;}
+    return member(t,info->names);
+  }
 
   void gnameMark(GName* gname){ if (info) gname->markURL(info->currentURL);}
 };
@@ -382,7 +385,8 @@ void ByteStream::marshalBegin(){
   type=BS_Marshal;
   posMB=first->head()+tcpHeaderSize;
   endMB=first->tail();
-  pos=NULL;}
+  pos=NULL;
+}
 
 void ByteStream::dumpByteBuffers(){
   while(first!=last) {
@@ -427,7 +431,20 @@ void ByteStream::beforeInterpret(int len){
   else{
     curpos=endpos+len-1;}}
 
-void ByteStream::skipHeader(){get(); }
+Bool ByteStream::skipHeader()
+{
+  // if PERDIOMAGICSTART is a printable character, we may run into
+  // problems, if we load an executable component
+  Assert(PERDIOMAGICSTART < ' ');
+
+  while(1) {
+    BYTE ret = get();
+    if (ret<=0) return NO;
+    if (ret==PERDIOMAGICSTART)
+      return OK;
+  }
+}
+
 
 BYTE* ByteStream::initForRead(int &len){
   Assert(type==BS_None);
