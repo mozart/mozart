@@ -7,7 +7,6 @@ MAIN = 0.sgml
 
 SGMLSRCS = \
         fset_tutorial.sgml              \
-        fset_example.sgml        \
         fset_crew_problem.oz                            \
         fset_example_steiner.sgml                       \
         fset_example_hamming.sgml                       \

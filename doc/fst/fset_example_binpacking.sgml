@@ -1,6 +1,6 @@
 <!-- ********************************************************************** -->
 
-<Section id="fset.examples.binpacking"> <Title/Packing Files onto
+<Chapter id="fset.examples.binpacking"> <Title/Packing Files onto
 Disks/
 
 <Para><Title/Problem Specification./ Suppose, you want to copy a set
@@ -97,4 +97,4 @@ produces the following result:
 The input data for this solver can be easily obtained from the
 respective operating system by using the module <<OS>> [see ... for details].
 
-</Section>
+</Chapter>

@@ -1,6 +1,6 @@
 <!-- ********************************************************************** -->
 
-<Section id="fset.examples.golf"> <Title/Scheduling a Golf Tournament/
+<Chapter id="fset.examples.golf"> <Title/Scheduling a Golf Tournament/
 
 
 <Para><Title/Problem Specification./ There are <Math>32</Math>
@@ -89,4 +89,4 @@ heap memory. On the other hand an recomputation depth of
 <Note foot/<<declare S = {Search.one.depth {Golf 9 8} 10 _}>>/
 decreases the required heap memory to <Math>19.3</Math> MB.
 
-</Section>
+</Chapter>

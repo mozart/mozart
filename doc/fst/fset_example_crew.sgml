@@ -1,6 +1,6 @@
 <!-- ********************************************************************** -->
 
-<Section id="fset.examples.crew"> <Title/A Crew Allocation Problem/
+<Chapter id="fset.examples.crew"> <Title/A Crew Allocation Problem/
 
 
 <Para><Title/Problem Specification./ A small air-line has to assign
@@ -159,4 +159,4 @@ and invoking the &oz; Browser on the solution node results in:
 solution list. Each sublist denotes the assignment for an individual
 flight.
 
-</Section>
+</Chapter>
