@@ -281,6 +281,8 @@ const int OzMaxInt = INT_MAX>>tagSize;
 const int OzMinInt = -OzMaxInt;
 const unsigned long OzMaxUnsignedLong = ~0;
 
+const TaggedRef TaggedOzMaxInt = makeTaggedSmallInt(OzMaxInt);
+const TaggedRef TaggedOzMinInt = makeTaggedSmallInt(OzMinInt);
 
 inline
 TaggedRef newSmallInt(int val)
@@ -862,6 +864,9 @@ Bool oz_numberEq(TaggedRef a, TaggedRef b)
   default:       return NO;
   }
 }
+
+extern TaggedRef TaggedOzOverMaxInt;
+extern TaggedRef TaggedOzOverMinInt;
 
 /*===================================================================
  * Tertiary

@@ -2016,13 +2016,6 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnNumbers(A,B);
 }
 
-
-OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out)
-{
-  return callPlus ?  BIplusInline(A,B,out) : BIminusInline(A,B,out);
-}
-
-
 #undef BIGOP
 
 /* -----------------------------------

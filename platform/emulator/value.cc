@@ -463,18 +463,23 @@ static void *bigint_realloc(void *ptr, size_t old_size, size_t new_size)
   return ret;
 }
 
-void bigIntInit()
-{
-  mp_set_memory_functions(bigint_alloc,bigint_realloc,bigint_dealloc);
-}
-
-
 BigInt *newBigInt()                { return new BigInt(); }
 BigInt *newBigInt(long i)          { return new BigInt(i); }
 BigInt *newBigInt(unsigned long i) { return new BigInt(i); }
 BigInt *newBigInt(int i)           { return new BigInt(i); }
 BigInt *newBigInt(unsigned int i)  { return new BigInt(i); }
 BigInt *newBigInt(char *s)         { return new BigInt(s); }
+
+TaggedRef TaggedOzOverMaxInt;
+TaggedRef TaggedOzOverMinInt;
+
+void bigIntInit()
+{
+  mp_set_memory_functions(bigint_alloc,bigint_realloc,bigint_dealloc);
+  TaggedOzOverMaxInt = makeTaggedConst(newBigInt(OzMaxInt+1));
+  TaggedOzOverMinInt = makeTaggedConst(newBigInt(OzMinInt-1));
+}
+
 
 
 
