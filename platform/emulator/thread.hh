@@ -500,6 +500,12 @@ public:
   void pushTask(SolveActor * sa) { item.threadBody->pushTask(sa); }
   void pushDebug (OzDebug *d);
   void pushCall (TaggedRef pred, RefsArray  x, int n);
+  void pushCatch(TaggedRef pred) {
+    item.threadBody->taskStack.pushCatch(pred);
+  }
+  TaggedRef findCatch(TaggedRef &traceback) {
+    return item.threadBody->taskStack.findCatch(traceback);
+  }
   void pushJob();
   void pushSetCaa(AskActor *aa);
   void pushSelf(Object *obj);

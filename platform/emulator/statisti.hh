@@ -122,7 +122,7 @@ public:
   long cvar;
   long dynamicTable, dynamicTableLen;
   long taskStack,taskStackLen;
-  long cLocal,cJob,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
+  long cCatch,cLocal,cJob,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
   long cCallCont, cCFuncCont;
   long abstraction,deepObject,flatObject,cell,space,chunk;
   long builtin;

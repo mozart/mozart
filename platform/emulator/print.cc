@@ -1370,11 +1370,17 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 
     case C_CALL_CONT:
       {
-        SRecord *s = (SRecord *) pop();
+        TaggedRef pred = (TaggedRef) ToInt32(pop());
         RefsArray X = (RefsArray) pop();
-        message("\tC_CALL_CONT: Pred=0x%x\n", s);
+        message("\tApplication of %s\n", toC(pred));
         printX(stdout,X);
-        if (!verbose) break;
+        break;
+      }
+
+    case C_CATCH:
+      {
+        TaggedRef pred = (TaggedRef) ToInt32(pop());
+        message("\tCatch %s\n",toC(pred));
         break;
       }
 
@@ -1467,7 +1473,8 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
         }
         out = cons(OZ_mkTupleC("builtin",2,
                                OZ_atom(builtinTab.getName((void *) biFun)),
-                               args),out);
+                               OZ_toList(getRefsArraySize(X),X)),
+                   out);
         break;
       }
 
@@ -1480,9 +1487,18 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 
     case C_CALL_CONT:
       {
-        SRecord *s = (SRecord *) pop();
+        TaggedRef pred = (TaggedRef) ToInt32(pop());
         RefsArray X = (RefsArray) pop();
-        out = cons(OZ_atom("call"),out);
+        out = cons(OZ_mkTupleC("apply",2,pred,
+                               OZ_toList(getRefsArraySize(X),X)),
+                   out);
+        break;
+      }
+
+    case C_CATCH:
+      {
+        TaggedRef pred = (TaggedRef) ToInt32(pop());
+        out = cons(OZ_mkTupleC("catch",1,pred),out);
         break;
       }
 

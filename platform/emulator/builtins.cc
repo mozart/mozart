@@ -2970,6 +2970,10 @@ OZ_C_proc_begin(BIthreadState,2)
     return OZ_unifyAtom(out,"terminated");
   }
   if (th->isRunnable()) {
+    /* terminated but not yet removed from scheduler */
+    if (th!=am.currentThread && th->isEmpty()) {
+      return OZ_unifyAtom(out,"terminated");
+    }
     return OZ_unifyAtom(out,"runnable");
   }
   return OZ_unifyAtom(out,"blocked");
@@ -5487,6 +5491,26 @@ OZ_C_proc_begin(BIapply,2)
 OZ_C_proc_end
 
 // ------------------------------------------------------------------------
+// --- Catch
+// ------------------------------------------------------------------------
+
+OZ_C_proc_begin(BIcatch,1)
+{
+  OZ_Term proc = OZ_getCArg(0);
+
+  DEREF(proc,procPtr,_2);
+  if (isAnyVar(proc)) OZ_suspendOn(makeTaggedRef(procPtr));
+  if (!isProcedure(proc) && !isObject(proc)) {
+    TypeErrorT(0,"Procedure or Object");
+  }
+
+  am.currentThread->pushCatch(proc);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
+// ------------------------------------------------------------------------
 // --- special Cell access
 // ------------------------------------------------------------------------
 
@@ -7048,10 +7072,8 @@ OZ_C_proc_begin(BIbiExceptionHandler,3)
     errorTrailer();
   }
 
-  // see BIthreadTerminate
-  Bool isLocal=am.currentThread->terminate();
-  if (isLocal) return FAILED;
-  return BI_TERMINATE;
+  // mm2: if (!am.isToplevel()) return FAILED;
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7298,6 +7320,7 @@ BIspec allSpec2[] = {
   {"garbageCollection",0,BIgarbageCollection,   0},
 
   {"apply",          2, BIapply,                0},
+  {"catch",          1, BIcatch,                0},
 
   {"eq",             2, BIsystemEq,             0},
   {"eqB",            3, BIsystemEqB,            0},

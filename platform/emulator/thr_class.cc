@@ -198,6 +198,9 @@ Bool Thread::terminate()
 
     switch (cFlag) {
     case C_LOCAL:
+#ifdef TERMINATE_ONLY_JOB
+    case C_JOB: // mm2: in case of JOB too?
+#endif
       return OK;
 
     default:
