@@ -106,7 +106,7 @@ there is any problem during the
 startup phase, that is
 during <<Connection.take>> and <<Pickle.load>>.
 
-<SUBSECTION><TITLE>Definition of <<SafeSend>> and <<SafeWait>></TITLE>
+<SUBSECTION id="safesend"><TITLE>Definition of <<SafeSend>> and <<SafeWait>></TITLE>
 
 <P>We define <<SafeSend>> and <<SafeWait>> in the basic model.
 To make things easier to read, we use the two utility
@@ -178,7 +178,8 @@ The duration of the time-out is an argument to <<SafeWait>>.
 
 <SUBSECTION><TITLE>Utilities to check for fault states</TITLE>
 
-<P>In the above example and later on in this chapter,
+<P>In the above example and later on in this chapter
+(e.g., in <ptr to="exception.based">),
 we use the utility functions <<FOneOf>> and <<FSomeOf>>
 to simplify checking for fault states.
 We specify these functions as follows.
