@@ -91,6 +91,7 @@ You may consider using the following options:
         --with-regex-inc=DIR    where to find regex.h
         --with-regex-lib=DIR    where to find the library
         --with-regex-ldflags=LDFLAGS    uses these flags for linking
+        --disable-contrib-regex ignore regex contribution
 
 We expect a POSIX compliant regex library.  You may retrieve such a
 package from
