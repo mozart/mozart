@@ -80,17 +80,6 @@ OZ_C_proc_begin(BIbuiltin,3)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIunixIsLinked,0)
-{
-#ifdef LINKUNIX
-  return PROCEED;
-#else
-  return FAILED;
-#endif
-}
-OZ_C_proc_end
-
-
 extern void BIinitCore(void);
 extern void BIinitSpecial(void);
 extern void BIinitSystem(void);
@@ -98,9 +87,7 @@ extern void BIinitFD(void);
 extern void BIinitMeta(void);
 extern void BIinitObjects();
 
-#ifdef LINKUNIX
 extern void MyinitUnix();
-#endif
 
 
 BuiltinTabEntry *BIinit()
@@ -121,11 +108,7 @@ BuiltinTabEntry *BIinit()
   BIinitFD();
   BIinitMeta();
   
-#ifdef LINKUNIX
   MyinitUnix();
-#endif
-
-  BIadd("unixIsLinked",0,BIunixIsLinked);
 
   return bi;
 }
