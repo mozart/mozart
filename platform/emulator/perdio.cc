@@ -4890,7 +4890,7 @@ int loadURL(char *url, OZ_Term out)
   }
 bomb:
   if (!loadHook) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("loadHook"));
   }
 
@@ -4910,7 +4910,7 @@ OZ_C_proc_begin(BIsetLoadHook,1)
     oz_typeError(0,"Procedure/2 (no builtin)");
   }
 
-  if (0&&loadHook) {
+  if (loadHook) {
     return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
                     oz_atom("setLoadHook"));
   }

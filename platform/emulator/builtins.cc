@@ -2658,7 +2658,7 @@ OZ_C_proc_begin(BIthreadID,2)
   oz_declareArg(1,out);
 
   if (th->isProxy())
-    return oz_raise(E_ERROR,E_KERNEL,"threadId Proxy not impl",0);
+    return oz_raise(E_ERROR,E_SYSTEM,"threadId Proxy not impl",0);
 
   return oz_unifyInt(out, th->getID());
 }
@@ -2798,7 +2798,7 @@ OZ_C_proc_begin(BIthreadPreempt,1)
   oz_declareThreadArg(0,th);
 
   if (th->isProxy())
-    return oz_raise(E_ERROR,E_KERNEL,"threadPreempt Proxy not impl",0);
+    return oz_raise(E_ERROR,E_SYSTEM,"threadPreempt Proxy not impl",0);
 
   if (th == am.currentThread) {
     return BI_PREEMPT;
@@ -6574,7 +6574,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIcomma,2)
 {
   if (!am.methApplHdl) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("setMethApplHdl"));
   }
 
@@ -6593,7 +6593,7 @@ OZ_C_proc_begin(BIsetSendHdl,1)
   }
 
   if (am.sendHdl) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
                     oz_atom("setSendHdl"));
   }
 
@@ -6605,7 +6605,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIsend,3)
 {
   if (!am.sendHdl) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("methSendHdl"));
   }
 
@@ -6753,7 +6753,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BINew,3)
 {
   if (!am.newHdl) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("setNewHdl"));
   }
 
@@ -6809,7 +6809,7 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   }
 
   if (am.defaultExceptionHandler) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackInstalledTwice",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
                     oz_atom("setDefaultExceptionHandler"));
   }
 
@@ -6821,7 +6821,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIhandleException,1)
 {
   if (!am.sendHdl) {
-    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
                     oz_atom("setDefaultExceptionHandler"));
   }
 
@@ -6838,7 +6838,8 @@ OZ_C_proc_begin(BIgetDefaultExceptionHandler,1)
   OZ_Term hdl = am.defaultExceptionHandler;
 
   if (hdl==makeTaggedNULL()) {
-    return am.raise(E_ERROR,E_KERNEL,"exceptionHandlerNotSet",0);
+    return am.raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
+                    oz_atom("setDefaultExceptionHandler"));
   }
 
   return OZ_unify(ret,hdl);
