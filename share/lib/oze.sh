@@ -4,6 +4,7 @@
 : ${SRCDIR=.}
 : ${OZPLATFORM=`$SRCDIR/../bin/ozplatform`}
 : ${OZPREFIX=/usr/local/oz}
+: ${OZINIT="$BUILDTOP/share/lib/Init.ozf"}
 
 if test "x$OZMAKE_COPYALWAYS" = xyes
 then
@@ -34,4 +35,4 @@ fi
 url=$1
 shift
 
-exec $OZEMULATOR -u $url -- $*
+exec $OZEMULATOR -init $OZINIT -u $url -- $*
