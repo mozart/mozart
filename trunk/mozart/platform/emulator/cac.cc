@@ -99,8 +99,6 @@
 
 #define _cacPendThreadEmul       gCollectPendThreadEmul
 
-#define _cacRefsArray            gCollectRefsArray
-
 #define _cacSuspList             gCollectSuspList
 #define _cacLocalSuspList        gCollectLocalSuspList
 
@@ -141,8 +139,6 @@
 #define _cacLocalRecurse         sCloneLocalRecurse
 
 #define _cacPendThreadEmul       sClonePendThreadEmul
-
-#define _cacRefsArray            sCloneRefsArray
 
 #define _cacSuspList             sCloneSuspList
 #define _cacLocalSuspList        sCloneLocalSuspList
@@ -326,54 +322,33 @@ void exitCheckSpace() {
 
 
 /*
- *   Collection of terms
- *
- */
-
-
-/*
  * RefsArrays
  *
  */
 
-// Structure of type 'RefsArray' (see ./tagged.h)
-// r[0]..r[n-1] data
-// r[-1] gc tag set --> has already been copied
+RefsArray * RefsArray::_cac(void) {
+  if (!this)
+    return this;
+  if (cacIsMarked())
+    return cacGetFwd();
 
-#define RAGCTag (1<<31)
+  int l = getLen();
 
-#define RefsArrayIsMarked(r) (r[-1]&RAGCTag)
+  RefsArray * t = RefsArray::allocate(l,NO);
 
-#define RefsArrayMark(r,ptr) \
-  STOREFWDNOMARK((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag));
+  OZ_cacBlock(getArgsRef(), t->getArgsRef(), l);
 
-#define RefsArrayUnmark(r) \
- ((RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase)))
-
-inline
-RefsArray _cacRefsArray(RefsArray r) {
-  if (r == NULL)
-    return r;
-
-  GCDBG_NOTINTOSPACE(r);
-
-  if (RefsArrayIsMarked(r)) {
-    return RefsArrayUnmark(r);
-  }
-
-  int sz = getRefsArraySize(r);
-
-  RefsArray aux = allocateRefsArray(sz,NO);
-
-  RefsArrayMark(r,aux);
-
-  OZ_cacBlock(r, aux, sz);
+  STOREFWDFIELD(this,t);
   
-  return aux;
+  return t;
 }
 
 
-//
+/*
+ *   Collection of terms
+ *
+ */
+
 #ifdef G_COLLECT
 
 #define NEEDSCOPYING(bb) (OK)
@@ -1441,7 +1416,7 @@ OzDebug *OzDebug::gCollectOzDebug(void) {
   OzDebug *ret;
   cacReallocStatic(OzDebug,this,ret,sizeof(OzDebug));
   
-  ret->Y   = gCollectRefsArray(ret->Y);
+  ret->Y = Y->gCollect();
 
   OZ_gCollectBlock(&(ret->CAP),&(ret->CAP),2);
   
@@ -1467,7 +1442,7 @@ TaskStack * TaskStack::_cac(void) {
 
   while (1) {
     ProgramCounter PC    = (ProgramCounter) *(--newtop);
-    RefsArray      * Y   = (RefsArray *)      --newtop;
+    RefsArray     ** Y   = (RefsArray **)     --newtop;
     TaggedRef      * CAP = (TaggedRef *)      --newtop;
     
 #ifdef G_COLLECT
@@ -1483,8 +1458,8 @@ TaskStack * TaskStack::_cac(void) {
 #ifdef G_COLLECT
       gCollectCode(pc);
 #endif
-      (void) CodeArea::livenessX(pc,*Y,getRefsArraySize(*Y));
-      *Y = _cacRefsArray(*Y);
+      (void) CodeArea::livenessX(pc,*Y);
+      *Y = (*Y)->_cac();
     } else if (PC == C_LOCK_Ptr) {
       oz_cacTerm(*CAP, *CAP);
     } else if (PC == C_SET_SELF_Ptr) {
@@ -1500,18 +1475,14 @@ TaskStack * TaskStack::_cac(void) {
       ;
     } else if (PC == C_DEBUG_CONT_Ptr) {
 #ifdef G_COLLECT
-      *Y = (RefsArray) ((OzDebug *) *Y)->gCollectOzDebug();
-#else
-      //*Y = (RefsArray) ((OzDebug *) *Y)->gCollectOzDebug();
-      //Assert(0);
+      *Y = (RefsArray *) ((OzDebug *) *Y)->gCollectOzDebug();
 #endif
     } else if (PC == C_CALL_CONT_Ptr) {
       oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));
-      *CAP = makeTaggedVerbatim((void *) 
-			     _cacRefsArray((RefsArray) 
-					   tagged2Verbatim(*CAP)));
+      *CAP = makeTaggedVerbatim(((RefsArray *) 
+				 tagged2Verbatim(*CAP))->_cac());
     } else { // usual continuation
-      *Y   = _cacRefsArray(*Y);
+      *Y   = (*Y)->_cac();
       oz_cacTerm(*CAP, *CAP);
     }
 

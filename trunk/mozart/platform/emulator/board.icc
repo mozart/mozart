@@ -256,10 +256,10 @@ void Board::inject(TaggedRef proc, int arity) {
   Thread *it = oz_newThreadInject(this);
 
   if (arity == 1) {
-    RefsArray args = allocateRefsArray(1, NO);
-    args[0] = getRootVar();
+    RefsArray * args = RefsArray::allocate(1, NO);
+    args->setArg(0,getRootVar());
 
-    it->pushCall(proc, args, 1);
+    it->pushCall(proc, args);
   } else {
     Assert(arity == 0);
     it->pushCall(proc, NULL, 0);

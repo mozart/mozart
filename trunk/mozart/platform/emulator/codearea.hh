@@ -158,8 +158,8 @@ public:
 
   static ProgramCounter printDef(ProgramCounter PC,FILE *out=stderr);
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-			     int frameId, RefsArray Y, Abstraction *G);
-  static TaggedRef getFrameVariables(ProgramCounter, RefsArray, Abstraction *);
+			     int frameId, RefsArray * Y, Abstraction *G);
+  static TaggedRef getFrameVariables(ProgramCounter, RefsArray*, Abstraction *);
   static void getDefinitionArgs(ProgramCounter PC, XReg &reg, int &next, 
 				TaggedRef &file, int &line, int &colum,
 				TaggedRef &predName);
@@ -171,7 +171,10 @@ public:
 private:
   static int livenessXInternal(ProgramCounter from, TaggedRef *X,int n, int*xUsage);
 public:
-  static int livenessX(ProgramCounter from, TaggedRef *X=0,int n=0);
+  static int livenessX(ProgramCounter from, TaggedRef *, int);
+  static int livenessX(ProgramCounter from, RefsArray * ra) {
+    return livenessX(from,ra->getArgsRef(),ra->getLen());
+  }
 
   static ProgramCounter definitionStart(ProgramCounter from);
   static ProgramCounter definitionEnd(ProgramCounter from);
@@ -308,7 +311,7 @@ public:
   static ProgramCounter writeYRegIndex(int index, ProgramCounter ptr)
   {
 #ifdef FASTREGACCESS
-    index *= sizeof(TaggedRef); 
+    index = index*sizeof(TaggedRef) + sizeof(int); 
 #else
 #ifdef CHECKREGACCESS
     index = ((index << 2) | 2);
@@ -604,8 +607,8 @@ extern OZ_Location * OZ_ID_LOC;
 
 #endif
 
-#define YRegToInt(N) ((N) / sizeof(TaggedRef))
-#define YRegToPtr(Y,N) ((TaggedRef *) (((intlong) (Y)) + (N)))
+#define YRegToInt(N) ((N-sizeof(int)) / sizeof(TaggedRef))
+#define YRegToPtr(Y,N) Y->getFastArgRef(N)
 
 #define GRegToInt(N) ((N) / sizeof(TaggedRef))
 #define GRegToPtr(G,N) ((TaggedRef *) (((intlong) (G)) + (N)))
@@ -623,11 +626,11 @@ TaggedRef * XRegToPtr(XReg N) {
   return &(XREGS[N]);
 }
 inline
-TaggedRef * YRegToPtr(RefsArray Y, YReg N) {
-  return Y+N;
+TaggedRef * YRegToPtr(RefsArray * Y, YReg N) {
+  return Y->getArgRef(N);
 }
 inline
-TaggedRef * GRegToPtr(RefsArray G, GReg N) {
+TaggedRef * GRegToPtr(TaggedRef * G, GReg N) {
   return G+N;
 }
 
