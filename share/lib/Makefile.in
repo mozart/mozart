@@ -106,7 +106,7 @@ BASESRC1 = \
 	VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
 	Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
 	Exception.oz Functor.oz BitArray.oz BitString.oz \
-	ByteString.oz
+	ByteString.oz ForeignPointer.oz
 BASESRC = $(BASESRC1:%=base/%) Base.oz
 
 Base.ozf: $(BASESRC) BaseBuiltins.ozf
