@@ -6,5 +6,5 @@ compiler-Builtins.oz
 compiler-Env.oz
 *.ozp
 *.ozf
-ozc ozserver ozvsserver functor2env
+ozc ozserver ozvsserver functor2env ozar
 stage1 stage2 stage2a stage2b stage3 stage3a stage3b save
