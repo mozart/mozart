@@ -2580,9 +2580,14 @@ if test "${enable_tmphack+set}" = set; then
   :
 fi
 
-if test -n "${enable_tmphack}" && test $enable_tmphack != no
+if test -n "${enable_tmphack}"
 then
-    oz_tmphack_host=$enable_tmphack
+    if test $enable_tmphack = no
+    then
+        oz_tmphack_host=
+    else
+        oz_tmphack_host=$enable_tmphack
+    fi
 fi
 
 if test -n "$oz_tmphack_host"
@@ -2605,7 +2610,7 @@ case $platform in
     linux*)
 
     echo $ac_n "checking for --enable-lstatic""... $ac_c" 1>&6
-echo "configure:2609: checking for --enable-lstatic" >&5
+echo "configure:2614: checking for --enable-lstatic" >&5
     # Check whether --enable-lstatic or --disable-lstatic was given.
 if test "${enable_lstatic+set}" = set; then
   enableval="$enable_lstatic"
@@ -2630,7 +2635,7 @@ esac
 
 
     echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:2634: checking for --enable-finalization" >&5
+echo "configure:2639: checking for --enable-finalization" >&5
     # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"
@@ -2655,7 +2660,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-foreign-pointer""... $ac_c" 1>&6
-echo "configure:2659: checking for --enable-foreign-pointer" >&5
+echo "configure:2664: checking for --enable-foreign-pointer" >&5
     # Check whether --enable-foreign-pointer or --disable-foreign-pointer was given.
 if test "${enable_foreign_pointer+set}" = set; then
   enableval="$enable_foreign_pointer"
