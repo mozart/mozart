@@ -152,8 +152,9 @@ AC_DEFUN(OZ_INIT, [
     ;;
 
     *)
-      OZ_PATH_PROG(OZPLATFORM,ozplatform)
-      PLATFORM=`$OZPLATFORM`
+        OZ_PATH_PROG(OZPLATFORM,ozplatform)
+        PLATFORM=`$OZPLATFORM`
+        OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
     ;;
   esac
   OZ_PATH_SRCDIR
@@ -173,7 +174,6 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(CPPFLAGS)
   AC_SUBST(LDFLAGS)
   OZ_BUILD_DATE
-  OZ_PATH_PROG(OZTOOL,oztool,[OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"])
   AC_SUBST(PLATFORM)
 ])
 
