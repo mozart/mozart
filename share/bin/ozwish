@@ -1,6 +1,6 @@
 #!/bin/sh
-TCL_LIBRARY=/usr/share/gs/soft/oz/lib/tcl/lib/tcl
-TK_LIBRARY=/usr/share/gs/soft/oz/lib/tcl/lib/tk
+TCL_LIBRARY=$OZHOME/lib/tcl/lib/tcl
+TK_LIBRARY=$OZHOME/lib/tcl/lib/tk
 export TCL_LIBRARY
 export TK_LIBRARY
 exec $OZHOME/platform/$OZPLATFORM/blt_wish "$@"
