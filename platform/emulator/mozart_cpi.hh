@@ -658,10 +658,21 @@ protected:
                 int_e   = 0x80,
                 drop_e  = 0x100} _state;
   //
-  OZ_Boolean isSort(State_e s) const;
-  void setSort(State_e s);
-  OZ_Boolean isState(State_e s) const;
-  void setState(State_e s);
+  OZ_Boolean isState(State_e s) const {
+    return _state & s;
+  }
+  void setState(State_e s) {
+    _state = State_e(_state | s);
+    Assert(!(isState(glob_e) && isState(loc_e)));
+  }
+  OZ_Boolean isSort(State_e s) const {
+    return _state & s;
+  }
+  void setSort(State_e s) {
+    _state = State_e(_state | s);
+    Assert(!(isSort(sgl_e) && isSort(bool_e) && isSort(int_e)));
+    Assert(!(isSort(val_e) && isSort(var_e)));
+  }
   //
   int _nb_refs;
   OZ_Term var, * varPtr;
@@ -687,26 +698,6 @@ public:
   int operator == (OZ_CPIVar &v) const { return v.var == var; } // tmueller: new stuff
 };
 
-inline
-OZ_Boolean OZ_CPIVar::isState(State_e s) const {
-  return _state & s;
-}
-inline
-void OZ_CPIVar::setState(State_e s) {
-  _state = State_e(_state | s);
-  Assert(!(isState(glob_e) && isState(loc_e)));
-}
-
-inline
-OZ_Boolean OZ_CPIVar::isSort(State_e s) const {
-  return _state & s;
-}
-inline
-void OZ_CPIVar::setSort(State_e s) {
-  _state = State_e(_state | s);
-  Assert(!(isSort(sgl_e) && isSort(bool_e) && isSort(int_e)));
-  Assert(!(isSort(val_e) && isSort(var_e)));
-}
 
 //-----------------------------------------------------------------------------
 // class OZ_FDIntVar
@@ -1081,6 +1072,16 @@ public:
   void collectVarsOn(void);
   void collectVarsOff(void);
 
+  OZ_Boolean isSuspending(OZ_expect_t r) {
+    return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
+  }
+  OZ_Boolean isFailing(OZ_expect_t r) {
+    return (r.accepted == -1);
+  }
+  OZ_Boolean isExceptional(OZ_expect_t r) {
+    return (r.accepted == -2);
+  }
+
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
@@ -1128,23 +1129,7 @@ public:
   OZ_Return impose(OZ_Propagator * p);
   OZ_Return suspend(void);
   OZ_Return fail(void);
-  OZ_Boolean isSuspending(OZ_expect_t r);
-  OZ_Boolean isFailing(OZ_expect_t r);
-  OZ_Boolean isExceptional(OZ_expect_t r);
 };
-
-inline
-OZ_Boolean OZ_Expect::isSuspending(OZ_expect_t r) {
-  return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
-}
-inline
-OZ_Boolean OZ_Expect::isFailing(OZ_expect_t r) {
-  return (r.accepted == -1);
-}
-inline
-OZ_Boolean OZ_Expect::isExceptional(OZ_expect_t r) {
-  return (r.accepted == -2);
-}
 
 template <class RTYPE>
 class _OZ_ParamIterator {
