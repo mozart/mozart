@@ -274,9 +274,10 @@ Bool hookCheckNeeded(AM *e)
 
 /* macros are faster ! */
 #define emulateHook(e,def,arity,arguments) \
- (!hookCheckNeeded(e) ? FALSE : emulateHookOutline(e, def, arity, arguments))
+ (hookCheckNeeded(e) && emulateHookOutline(e, def, arity, arguments))
 
 #define emulateHook0(e) emulateHook(e,NULL,0,NULL)
+
 
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
