@@ -6878,20 +6878,6 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIhandleException,1)
-{
-  if (!am.sendHdl) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
-                    oz_atom("setDefaultExceptionHandler"));
-  }
-
-  oz_currentThread->pushCall(am.defaultExceptionHandler,OZ_args,2);
-
-  am.emptySuspendVarList();
-  return BI_REPLACEBICALL;
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIgetDefaultExceptionHandler,1)
 {
   OZ_declareArg(0,ret);
@@ -7566,7 +7552,6 @@ BIspec allSpec[] = {
   {"biExceptionHandler",         1, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
   {"getDefaultExceptionHandler", 1, BIgetDefaultExceptionHandler, 0},
-  {"handleException",            1, BIhandleException,            0},
 
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
