@@ -672,27 +672,27 @@ With ARG, start it instead."
 
 (make-face 'bar-running)
 (set-face-foreground 'bar-running "white")
-(set-face-background 'bar-running (if oz-is-color "#d0d0d0" "black"))
+(set-face-background 'bar-running (if oz-is-color "#a0a0a0" "black"))
 
 (make-face 'bar-running-here)
-(set-face-foreground 'bar-running-here "white")
-(set-face-background 'bar-running-here (if oz-is-color "#909090" "black"))
+(set-face-foreground 'bar-running-here "#707070")
+(set-face-background 'bar-running-here (if oz-is-color "#d0d0d0" "white"))
 
 (make-face 'bar-runnable)
 (set-face-foreground 'bar-runnable "white")
-(set-face-background 'bar-runnable (if oz-is-color "#9090e0" "black"))
+(set-face-background 'bar-runnable (if oz-is-color "#7070c0" "black"))
 
 (make-face 'bar-runnable-here)
-(set-face-foreground 'bar-runnable-here "white")
-(set-face-background 'bar-runnable-here (if oz-is-color "#5050a0" "black"))
+(set-face-foreground 'bar-runnable-here "#5050a0")
+(set-face-background 'bar-runnable-here (if oz-is-color "#d0d0d0" "white"))
 
 (make-face 'bar-blocked)
 (set-face-foreground 'bar-blocked "white")
-(set-face-background 'bar-blocked (if oz-is-color "#d85858" "black"))
+(set-face-background 'bar-blocked (if oz-is-color "#d05050" "black"))
 
 (make-face 'bar-blocked-here)
-(set-face-foreground 'bar-blocked-here "white")
-(set-face-background 'bar-blocked-here (if oz-is-color "#b03030" "black"))
+(set-face-foreground 'bar-blocked-here "#d05050")
+(set-face-background 'bar-blocked-here (if oz-is-color "#d0d0d0" "white"))
 
 (defvar oz-bar-overlay nil)
 (defvar oz-bar-overlay-here nil)
@@ -724,8 +724,10 @@ With ARG, start it instead."
 	      (while (= (char-syntax (following-char)) cs)
 		(forward-char))
 	      (setq end2 (point)))
-	    (if (> (point) end2)
+	    (if (> start2 end1)
 		(setq start2 start1 end2 end1))
+	    (if (> end2 end1)
+		(setq end2 end1))
 	    (or oz-bar-overlay
 		(cond (oz-gnu-emacs
 		       (setq oz-bar-overlay (make-overlay start1 end1)
