@@ -51,6 +51,9 @@ inline
 Abstraction *getApplyMethod(Object *obj, ApplMethInfoClass *ami, 
 			    SRecordArity arity, RefsArray X)
 {
+  if (!obj->isClass())
+      return NULL;
+
   Assert(isFeature(ami->methName));
   return ami->methCache.lookup(obj,ami->methName,arity,X);
 }
