@@ -49,14 +49,21 @@ is required to finish this definition.</p>
 the builtin to return integer ?{d} as an Oz integer.  This should only
 be used when the builtin has one unique output value.</p>
 
-    <p>Finally <code/extern "C" { ... }/ defines the native functor.  It
-must contain the definition of procedure
-<code/<span class=ignore/ /oz_init_module/ whose purpose is to perform
-arbitrary initializations and then return a table of builtins.  Each
+    <p>Finally procedure <code/<span class=ignore/ /oz_init_module/
+implements the native functor: it performs
+arbitrary initializations and then returns a table of builtins.  Each
 entry in this table consists of (1) the name of the export, (2) the
 input arity, (3) the output arity, (4) the procedure implementing the
 builtin.  The table must be terminated by an entry whose fields are
 all zero.</p>
+    <p>Note that global variable <code/n/ is explicitly initialized by
+<code/<span class=ignore/ /oz_init_module/ rather than with a static
+initializer.  Here, it probably makes no difference, but you cannot in
+general rely on the fact that constructors for global objects will be
+properly invoked when the native functor is loaded.  What actually
+happens varies from one system to another.  The only reliable
+technique is to perform all initializations in
+<code/<span class=ignore/ /oz_init_module/.</p>
   </section>
 
   <section id=section.counter.global.compilation>
@@ -64,14 +71,15 @@ all zero.</p>
     <p>We must now make this native module available as a
 <em/shared object library/.  First we must compile it and create
 <file/counter.o/:
-<code display proglang=sh>oztool c++ -I${OZHOME}/include -c counter.cc</code>
+<code display proglang=sh>oztool c++ -c counter.cc</code>
 Then we must produce a platform specific shared object library:
-<code display proglang=sh>oztool ld counter.o -o counter.so-`ozplatform`</code>
+<code display proglang=sh
+>oztool ld counter.o -o counter.so-`oztool platform`</code>
 You may find it useful to create a <file/Makefile/ of the form:
 <code.extern display proglang=makefile to="mkfile.xmp">
 </p>
     <p><code proglang=sh/oztool/<index/<code proglang=sh/oztool//
-is a script that invokes
+is a program that invokes
 the facility named as its first argument with appropriate options.
 For example, it is essential to invoke the same C++ compiler and with
 the same &eg; code generation options as were used for building the Oz
@@ -81,7 +89,8 @@ compiled without <em/run time information/ (option
 <code proglang=sh/-fno-rtti/ for g++) and without support for C++ exceptions
 (option <code proglang=sh/-fno-exceptions/ for g++).
 <code proglang=sh/oztool c++/ automatically invokes the right
-compiler with the right options.</p>
+compiler with the right options.  <code proglang=sh/oztool/ is
+documented in <ptr.extern to="ozdoc:tools" key="chapter.oztool">.</p>
     <p>Even more complicated is how to create a DLL from a
 compiled object file: it varies depending on the system, compiler and
 linker used.  Under Windows, the sequence of necessary incantations is

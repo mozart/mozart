@@ -91,19 +91,16 @@ OZ_BI_define(counter_free,1,0)
 }
 OZ_BI_end
 
-extern "C"
+OZ_C_proc_interface * oz_init_module(void)
 {
-  OZ_C_proc_interface * oz_init_module(void)
-  {
-    static OZ_C_proc_interface table[] = {
-      {"new",0,1,counter_new},
-      {"get",1,1,counter_get},
-      {"set",2,0,counter_set},
-      {"next",1,1,counter_next},
-      {"free",1,0,counter_free},
-      {0,0,0,0}
-    };
-    Counter::id = OZ_getUniqueId();
-    return table;
-  }
+  static OZ_C_proc_interface table[] = {
+    {"new",0,1,counter_new},
+    {"get",1,1,counter_get},
+    {"set",2,0,counter_set},
+    {"next",1,1,counter_next},
+    {"free",1,0,counter_free},
+    {0,0,0,0}
+  };
+  Counter::id = OZ_getUniqueId();
+  return table;
 }
