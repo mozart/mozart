@@ -533,14 +533,16 @@ local
       end
    end
    proc {Consumer N Xs}
-      if N==0 then Xs = nil
-      else X|Xr = L in
-        if X == volvo then
-          if N mod 1000 == 0 then
-            {Browse 'riding a new volvo'}
-          end
-          {Consumer N-1 Xr}
-        else {Consumer N Xr} end
+      if N=<0 then skip
+      else X|Xr = Xs in
+         if X == volvo then
+            if N mod 1000 == 0 then
+               {Browse 'riding a new volvo'}
+            end
+            {Consumer N-1 Xr}
+         else
+            {Consumer N Xr}
+         end
       end
    end
 in
