@@ -346,7 +346,7 @@ OZ_BI_define(BIwidthC, 2, 0)
 	    break;
 	  }
 
-	case EVAR_STATUS_FUTURE:
+	case EVAR_STATUS_READONLY:
 	case EVAR_STATUS_FAILED:
 	case EVAR_STATUS_DET:
 	case EVAR_STATUS_UNKNOWN:

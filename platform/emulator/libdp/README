@@ -94,7 +94,7 @@ port.cc
 
 var.hh
 var.cc
-	distributed simple variables and futures
+	distributed simple variables and readonlys
 
 var_obj.hh
 var_obj.cc

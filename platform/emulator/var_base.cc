@@ -364,34 +364,32 @@ extern void oz_forceWakeUp(SuspList **);
  *
  * (SIQU=SIMPLE_QUIET, ROQU=READONLY_QUIET, RO=READONLY, FAIL=FAILED)
  *
- * L=  R=| OPT   | SIQU  | SI    | EXT   | ROQU  | RO    | FU    | FAIL  | OF    | CT    | FS    | BOOL  | FD    |
- * ---------------------------------------------------------------------------------------------------------------
- * OPT   | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * SIQU  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * SI    | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * EXT   | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * ROQU  | NOOP  | NOOP  | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * RO    | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * FU    | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * FAIL  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  |
- * ---------------------------------------------------------------------------------------------------------------
- * OF    | R->OF | R->OF | R->OF | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
- * ---------------------------------------------------------------------------------------------------------------
- * CT    | R->CT | R->CT | R->CT | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | NOOP  | CLASH | CLASH | CLASH |
- * ---------------------------------------------------------------------------------------------------------------
- * FS    | R->FS | R->FS | R->FS | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | NOOP  | CLASH | CLASH |
- * ---------------------------------------------------------------------------------------------------------------
- * BOOL  | R->BO | R->BO | R->BO | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
- * FD    | R->FD | R->FD | R->FD | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
- * ---------------------------------------------------------------------------------------------------------------
+ * L=  R=| OPT   | SIQU  | SI    | EXT   | ROQU  | RO    | FAIL  | OF    | CT    | FS    | BOOL  | FD    |
+ * -------------------------------------------------------------------------------------------------------
+ * OPT   | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * SIQU  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * SI    | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * EXT   | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * ROQU  | NOOP  | NOOP  | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * RO    | R->SI | R->SI | NOOP  | NOOP  | R->RO | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * FAIL  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  |
+ * -------------------------------------------------------------------------------------------------------
+ * OF    | R->OF | R->OF | R->OF | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
+ * -------------------------------------------------------------------------------------------------------
+ * CT    | R->CT | R->CT | R->CT | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | NOOP  | CLASH | CLASH | CLASH |
+ * -------------------------------------------------------------------------------------------------------
+ * FS    | R->FS | R->FS | R->FS | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | NOOP  | CLASH | CLASH |
+ * -------------------------------------------------------------------------------------------------------
+ * BOOL  | R->BO | R->BO | R->BO | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
+ * FD    | R->FD | R->FD | R->FD | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
+ * -------------------------------------------------------------------------------------------------------
  *
  * Comments (kost@, raph+fsp):
  * -  The transitions R->SI and R->RO actually reflect the fact that the
@@ -400,8 +398,7 @@ extern void oz_forceWakeUp(SuspList **);
  *                  Notably, the distribution one;
  * -  ReadOnly -> * is, and has to be, handled by the ReadOnly::bind.
  *                  Don't return 'SUSPEND' here!
-
- * -  Ct -> Future  cannot proceed: unification of Ct"s require a Ct or a non-variable
+ * -  Ct ->ReadOnly cannot proceed: unification of Ct"s require a Ct or a non-variable
  *                  at the right hand side, which is not possible due to the nature.
  * -  Ct -> Ext     cannot proceed either: don't know how to make a Ct out of it!
  * -  Ct -> Failed  currently the unification fails
