@@ -63,7 +63,8 @@ public:
 
   // for the solve combinator
   StatCounter solveAlt;
-  StatCounter solveClone;
+  StatCounter solveCloned;
+  StatCounter solveCreated;
   StatCounter solveSolved;
   StatCounter solveFailed;
 
@@ -75,6 +76,12 @@ public:
   StatCounter runableThreads;
 
   Statistics();
+
+  OZ_Term getSpaces();
+  OZ_Term getFD();
+  OZ_Term getTime();
+  OZ_Term getThreads();
+
   void print(FILE *fd);
   void printIdle(FILE *fd);
   void printRunning(FILE *fd);
@@ -93,10 +100,11 @@ public:
     localVariableCounter, protectedCounter;
 #endif
 
-  void incSolveAlt(void)    { solveAlt.incf();}
-  void incSolveClone(void)  { solveClone.incf();}
-  void incSolveSolved(void) { solveSolved.incf(); }
-  void incSolveFailed(void) { solveFailed.incf(); }
+  void incSolveAlt(void)     { solveAlt.incf();}
+  void incSolveCloned(void)  { solveCloned.incf();}
+  void incSolveCreated(void) { solveCreated.incf();}
+  void incSolveSolved(void)  { solveSolved.incf(); }
+  void incSolveFailed(void)  { solveFailed.incf(); }
 
 #ifdef HEAP_PROFILE
   void initCount();

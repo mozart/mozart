@@ -1730,6 +1730,7 @@ OZ_C_proc_begin(BInewSpace, 2) {
   Board* CBB = am.currentBoard;
   int    CPP = am.currentThread->getPriority();
 
+  ozstat.incSolveCreated();
   // creation of solve actor and solve board
   SolveActor *sa = new SolveActor(CBB, CPP);
 
@@ -6055,6 +6056,116 @@ int AM::getValue(TaggedRef feat, TaggedRef out)
 
 #undef STRCASE
 
+OZ_C_proc_begin(BISystemGetThreads,1) {
+  return OZ_unify(OZ_getCArg(0),ozstat.getThreads());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetPriorities,1) {
+  OZ_Term high   = OZ_pairAI("high",   0);
+  OZ_Term middle = OZ_pairAI("middle", 0);
+
+  return OZ_recordInit(OZ_atom("priorities"),
+                       OZ_cons(high,
+                         OZ_cons(middle,nil())));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetTime,1) {
+  return OZ_unify(OZ_getCArg(0),ozstat.getTime());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetGC,1) {
+  return OZ_unify(OZ_getCArg(0),nil());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetPrint,1) {
+  OZ_Term depth = OZ_pairAI("depth", ozconf.printDepth);
+  OZ_Term width = OZ_pairAI("width", ozconf.printWidth);
+
+  return OZ_recordInit(OZ_atom("print"),
+                       OZ_cons(depth,
+                         OZ_cons(width,nil())));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetFD,1) {
+  return OZ_unify(OZ_getCArg(0),ozstat.getFD());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetSpaces,1) {
+  return OZ_unify(OZ_getCArg(0),ozstat.getSpaces());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetMessages,1) {
+  return OZ_unify(OZ_getCArg(0),nil());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetMemory,1) {
+  return OZ_unify(OZ_getCArg(0),nil());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetLimits,1) {
+  OZ_Term intl  = OZ_pair2(OZ_atom("int"), OZ_pair2(OZ_int(OzMinInt),
+                                                    OZ_int(OzMaxInt)));
+  return OZ_recordInit(OZ_atom("limits"),
+                       OZ_cons(intl,nil()));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetArgv,1) {
+  TaggedRef out = nil();
+  for(int i=ozconf.argC-1; i>=0; i--) {
+    out = cons(OZ_atom(ozconf.argV[i]),out);
+  }
+  return OZ_unify(OZ_getCArg(0),out);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetStandalone,1) {
+  return OZ_unify(OZ_getCArg(0),am.isStandalone() ? NameTrue : NameFalse);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetHome,1) {
+  return OZ_unifyAtom(OZ_getCArg(0),ozconf.ozHome);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemGetPlatform,1) {
+  return OZ_unify(OZ_getCArg(0),
+                  OZ_pair2(OZ_atom(ozconf.osname),OZ_atom(ozconf.cpu)));
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BISystemSetPriorities,2) {
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemSetGC,2) {
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemSetPrint,2) {
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemSetMessages,2) {
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 // --------------------------------------------------------------------------
 // SETVALUE
 // --------------------------------------------------------------------------
@@ -7381,6 +7492,29 @@ BIspec allSpec2[] = {
 
   {"System.setParameter",2,BIsystemSetParameter},
   {"System.getParameter",2,BIsystemGetParameter},
+
+  {"SystemGetThreads",    1, BISystemGetThreads},
+  {"SystemGetPriorities", 1, BISystemGetPriorities},
+  {"SystemGetTime",       1, BISystemGetTime},
+  {"SystemGetGC",         1, BISystemGetGC},
+  {"SystemGetPrint",      1, BISystemGetPrint},
+  {"SystemGetFD",         1, BISystemGetFD},
+  {"SystemGetSpaces",     1, BISystemGetSpaces},
+  {"SystemGetMessages",   1, BISystemGetMessages},
+  {"SystemGetMemory",     1, BISystemGetMemory},
+  {"SystemGetLimits",     1, BISystemGetLimits},
+  {"SystemGetArgv",       1, BISystemGetArgv},
+  {"SystemGetStandalone", 1, BISystemGetStandalone},
+  {"SystemGetHome",       1, BISystemGetHome},
+  {"SystemGetPlatform",   1, BISystemGetPlatform},
+
+  {"SystemSetPriorities", 1, BISystemSetPriorities},
+  {"SystemSetPrint",      1, BISystemSetPrint},
+  {"SystemSetGC",         1, BISystemSetGC},
+  {"SystemSetMessages",   1, BISystemSetMessages},
+
+
+
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
   {"suspensions",2,BIsuspensions},
