@@ -313,8 +313,8 @@ all basic Oz types.
 There are additional modules, called <EM>system modules</EM>,
 that are part of the system but loaded only when needed.
 Furthermore, an application can define more
-modules by means of functors that
-importing from other modules.
+modules by means of functors that are
+imported from other modules.
 
 <P>All base modules are unsited.
 For example, a procedure that does additions
