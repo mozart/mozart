@@ -1,22 +1,15 @@
 solaris-sparc linux-i486
 config.h version.cc text2pickle.exe
 Makefile Makefile.rules Makefile.vars Makefile.deps
-conf.h OZCONF.h
+OZCONF.h
 oztool.sh
-instrtab.hh opcodes.hh optostr.hh
-opcodes.cc
-copycode.cc
+instrtab.hh opcodes.hh
+opcodes.cc picklecode.cc
 ozlib.lnk
-mozart.c
-initffuns.cc
-components.cc
-newmarshalcode.cc
-marshalMsg.cc
 atoms.hh atoms.cc
 config.status
 config.cache
 config.log
-perdio.cc
 *-if.cc
 *.lo
 .gdbinit
