@@ -5748,44 +5748,6 @@ OZ_BI_define(BIaddr,1,1)
 
 // ---------------------------------------------------------------------------
 
-#ifdef UNUSED
-OZ_BI_define(BIindex2Tagged,1,1)
-{
-  OZ_Term in  = OZ_in(0);
-
-  if (!OZ_isSmallInt(in)) {
-    OZ_warning("Invalid index for builtin `index2Tagged'");
-    OZ_RETURN(nil());
-  }
-  if (OZ_intToC(in) > am.toplevelVarsCount) {
-    OZ_warning("Index too big for builtin `index2Tagged'");
-    OZ_RETURN(nil());
-  }
-  OZ_RETURN(am.toplevelVars[OZ_intToC(in)]);
-}
-#endif
-
-
-#ifdef UNUSED
-extern OZ_Term make_time(const struct tm*);  // defined in unix.cc
-
-OZ_BI_define(BItime2localTime,1,1)
-{
-  OZ_Term in  = OZ_in(0);
-  
-  if (!OZ_isInt(in)) {
-    OZ_warning("Invalid first argument for builtin `time2localTime'");
-    OZ_RETURN(nil());
-  }
-  else {
-    time_t time = time_t(OZ_intToC(in));
-    OZ_RETURN(make_time(localtime(&time)));
-  }
-}
-#endif
-
-// ---------------------------------------------------------------------------
-
 
 OZ_BI_define(BIshowBuiltins,0,0)
 {
@@ -7259,11 +7221,6 @@ BIspec allSpec[] = {
   {"Debug.procedureCode",      2, BIprocedureCode},
   {"Debug.procedureCoord",     2, BIprocedureCoord},
   {"Debug.livenessX",          2, BIlivenessX},
-
-#ifdef UNUSED
-  {"index2Tagged",  2,BIindex2Tagged},
-  {"time2localTime",2,BItime2localTime},
-#endif
 
   // Builtins for the Thread module
 
