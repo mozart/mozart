@@ -60,7 +60,14 @@ define
       end
    in
 
-      url({Map
+      url(
+	 ascii(proc {$}
+		  if {URL.toString "föo"}=="f%f6o" then skip
+		  else raise url_ascii_failed end end
+	       end
+	       keys:[url])
+	 
+	 |{Map
 	   [
 	    test(title:"fielding1"
 		 base :"http://a/b/c/d;p?q"
@@ -75,7 +82,7 @@ define
 		     "?y"	#"http://a/b/c/?y"
 		     "g?y"	#"http://a/b/c/g?y"
 		     %%"#s"	#"(current document)#s"
-                     "g#s"	#"http://a/b/c/g#s"
+		     "g#s"	#"http://a/b/c/g#s"
 		     "g?y#s"	#"http://a/b/c/g?y#s"
 		     ";x"	#"http://a/b/c/;x"
 		     "g;x"	#"http://a/b/c/g;x"
