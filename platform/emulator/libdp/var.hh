@@ -270,7 +270,7 @@ EntityCond varGetEntityCond(TaggedRef*);
 
 void maybeUnaskVar(BorrowEntry*);
 Bool errorIgnoreVar(BorrowEntry*);
-Bool varFailurePreemption(EntityInfo*, Bool&);
+Bool varFailurePreemption(TaggedRef t,EntityInfo*, Bool&);
 void varPOAdjustForFailure(int,EntityCond,EntityCond);
 
 #endif

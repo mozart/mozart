@@ -113,7 +113,7 @@ public:
 
   Watcher** getWatcherBase(){return &watchers;}
 
-  void dealWithWatchers(EntityCond);
+  void dealWithWatchers(TaggedRef t,EntityCond);
 };
 
 #define TWIN_GC    1
@@ -223,9 +223,9 @@ public:
 
   Watcher* getNext(){return next;}
 
-  void varInvokeHandler(EntityCond,Bool &);
-  void invokeHandler(EntityCond,TaggedRef, Bool &);
-  void invokeWatcher(EntityCond);
+  void varInvokeHandler(TaggedRef t,EntityCond,Bool &);
+  void invokeHandler(TaggedRef t,EntityCond,TaggedRef, Bool &);
+  void invokeWatcher(TaggedRef t,EntityCond);
 
   Thread* getThread(){Assert(thread!=NULL);return thread;}
 

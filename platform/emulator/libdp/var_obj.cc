@@ -196,7 +196,7 @@ Bool ObjectVar::failurePreemption(){
   Bool hit=FALSE;
   Assert(info!=NULL);
   EntityCond oldC=info->getSummaryWatchCond();
-  if(varFailurePreemption(info,hit)){
+  if(varFailurePreemption(oz_makeExtVar(this),info,hit)){
     EntityCond newC=info->getSummaryWatchCond();
     //    varPOAdjustForFailure(getIndex(),oldC,newC);} PER-LOOK
   }
@@ -210,7 +210,7 @@ void ObjectVar::addEntityCond(EntityCond ec){
   if(isHandlerCondition(ec)){
     wakeAll();
     return;}
-  info->dealWithWatchers(ec);
+  info->dealWithWatchers(oz_makeExtVar(this),ec);
 }
 
 void ObjectVar::subEntityCond(EntityCond ec){
@@ -251,5 +251,5 @@ void ObjectVar::newWatcher(Bool b){
   if(b){
     wakeAll();
     return;}
-  info->dealWithWatchers(info->getEntityCond());
+  info->dealWithWatchers(oz_makeExtVar(this),info->getEntityCond());
 }

@@ -268,8 +268,8 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
     Assert(0);
   }}
 
-void invokeHandlerTert(Watcher *w,EntityCond ec,PendThread *pd,Bool &hit){
-  w->invokeHandler(ec,pd->controlvar,hit);
+void invokeHandlerTert(Tertiary* t,Watcher *w,EntityCond ec,PendThread *pd,Bool &hit){
+  w->invokeHandler(makeTaggedTert(t),ec,pd->controlvar,hit);
   pd->thread=NULL;
 }
 
@@ -280,12 +280,12 @@ Bool entityProblemPerWatcher(Tertiary*t, Watcher* w,Bool &hit){
     PendThread* pd=threadTrigger(t,w);
     if(pd!=NULL){
       if(w->isRetry()) dealWithContinue(t,pd);
-      invokeHandlerTert(w,ec,pd,hit);
+      invokeHandlerTert(t,w,ec,pd,hit);
       if(w->isPersistent()) return FALSE;
       watcherRemoved(w,t);
       return TRUE;}
     return FALSE;}
-  w->invokeWatcher(ec);
+  w->invokeWatcher(makeTaggedTert(t),ec);
   return TRUE;
 }
 
@@ -335,24 +335,24 @@ void entityProblem(Tertiary *t) {
 /*   SECTION::  watcher                */
 /**********************************************************************/
 
-void Watcher::invokeWatcher(EntityCond ec){
+void Watcher::invokeWatcher(TaggedRef t,EntityCond ec){
 if(!isFired()){
     Assert(!isHandler());
     Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
-    tt->pushCall(proc, listifyWatcherCond(ec));}
+    tt->pushCall(proc, t,listifyWatcherCond(ec));}
 }
 
-void Watcher::varInvokeHandler(EntityCond ec,Bool &hit){
+void Watcher::varInvokeHandler(TaggedRef t,EntityCond ec,Bool &hit){
   Assert(isHandler());
-    am.prepareCall(proc, listifyWatcherCond(ec));
+    am.prepareCall(proc, t,listifyWatcherCond(ec));
     hit=TRUE;
 }
 
-void Watcher::invokeHandler(EntityCond ec,TaggedRef controlvar,
+void Watcher::invokeHandler(TaggedRef t,EntityCond ec,TaggedRef controlvar,
                             Bool &hit){
   if(!isFired()){
     Assert(isHandler());
-    ControlVarApply(controlvar,proc,listifyWatcherCond(ec));
+    ControlVarApply(controlvar,proc,oz_list(t,listifyWatcherCond(ec)));
     hit=TRUE;}
 }
 
@@ -1216,11 +1216,11 @@ void gcGlobalWatcher(){
 void maybeUnask(Tertiary* t){
   adjustProxyForFailure(t,getSummaryWatchCond(t),ENTITY_NORMAL);}
 
-void EntityInfo::dealWithWatchers(EntityCond ec){
+void EntityInfo::dealWithWatchers(TaggedRef tr,EntityCond ec){
   Watcher **base=getWatcherBase();
   while((*base)!=NULL){
     if(ec & (*base)->watchcond){
-      (*base)->invokeWatcher(ec);
+      (*base)->invokeWatcher(tr,ec);
       base= &((*base)->next);}
     else
       base= &((*base)->next);}
