@@ -2,7 +2,9 @@
 #include "types.hh"
 #include "error.hh"
 
-define(Size,`ifelse($1,`',0,1)')
+define(Size,`ifelse($1,`',0,
+                    $1,Cache,CacheSize,
+                    1)')
 
 define(makeInstr,
      `ifelse($1,0,case $2:,
