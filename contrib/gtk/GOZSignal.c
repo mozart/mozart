@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <string.h> /* for memcpy */
 #include "GOZData.h"
+#if defined(__CYGWIN32__) || defined(__MINGW32__)
+#include <windows.h>
+#endif
 
 /*
  * Signal Handling/Marshalling from Host Language <-> G(D|T)K
@@ -691,6 +694,44 @@ OZ_BI_define (native_get_color_list, 1, 1) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
+#if defined(__CYGWIN32__) || defined(__MINGW32__)
+
+/*
+ * On Windows, Gdk blocks on stdin during init if  input redirection is used,
+ * as for example within emacs.
+ * The solution is to reconnect stdin to a pipe and undo this change after
+ * gdk/gtk init. gdk still obtains its input.
+ */
+
+static HANDLE stdInHandle, pipeInHandle, pipeOutHandle;
+
+OZ_BI_define(native_redirect_stdin, 0, 0) {
+  SECURITY_ATTRIBUTES saAttr;
+  saAttr.nLength              = sizeof(SECURITY_ATTRIBUTES);
+  saAttr.lpSecurityDescriptor = NULL;
+  saAttr.bInheritHandle       = TRUE;
+  stdInHandle = GetStdHandle(STD_INPUT_HANDLE);
+  if (!CreatePipe(&pipeInHandle, &pipeOutHandle, &saAttr, 0)) {
+    fprintf(stderr, "error creating pipe\n"); fflush(stderr);
+    exit(0);
+  }
+  if (!SetStdHandle(STD_INPUT_HANDLE, pipeInHandle)) {
+    fprintf(stderr, "error redirecting stdin\n"); fflush(stderr);
+    exit(0);
+  }
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define(native_reset_stdin, 0, 0) {
+  if (!SetStdHandle(STD_INPUT_HANDLE, stdInHandle)) {
+    fprintf(stderr, "error redirecting stdin\n"); fflush(stderr);
+    exit(0);
+  }
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+#endif
+
 /*
  * Define Interface
  */
@@ -724,6 +765,10 @@ static OZ_C_proc_interface oz_interface[] = {
   {"makeStrArr", 2, 1, native_make_str_arr},
   {"makeColorArr", 1, 1, native_make_color_array},
   {"getColorList", 1, 1, native_get_color_list},
+#if defined(__CYGWIN32__) || defined(__MINGW32__)
+  {"redirectStdIn", 0, 0, native_redirect_stdin},
+  {"resetStdIn", 0, 0, native_reset_stdin},
+#endif
   {0, 0, 0, 0}
 };
 
