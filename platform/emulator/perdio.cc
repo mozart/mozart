@@ -4880,8 +4880,11 @@ void LockFrame::unlockComplex(){
       Site *toS=getNext();
       lockSendLockBorrow(be,toS);
       networkSiteDec(toS);      
-      setState(Lock_Requested);
-      lockSendGet(be);
+      if(getPending()!=NULL){
+	setState(Lock_Requested);
+	lockSendGet(be);
+	return;}
+      setState(Lock_Invalid);
       return;}
     setLocker(pendThreadResumeFirst(getPendBase()));
     return;}
