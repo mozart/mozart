@@ -1,11 +1,12 @@
 /*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, W-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: scheidhr & mehl
-  */
+ * Hydra Project, DFKI Saarbruecken,
+ * Stuhlsatzenhausweg 3, W-66123 Saarbruecken, Phone (+49) 681 302-5312
+ * $Id$
+ * Author: scheidhr & mehl & lorenz
+ */
 
 /*
- * rudimentary debug support
+ *  famous debug support
  */
 
 
@@ -20,28 +21,6 @@
 #include "runtime.hh"
 #include "debug.hh"
 
-unsigned long OzDebug::goalCounter = 1;
-
-// if this is OK we trace every call, otherwise only those abstractions
-// with spy points on them, should be member of an own class
-static Bool stepMode = NO;  
-static Bool skipMode = NO;  
-
-OZ_C_proc_begin(BItraceOn, 0)
-{
-  stepMode = OK;
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BItraceOff, 0)
-{
-  stepMode = NO;
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
 void dbgMessage(char *s)
 {
   fprintf(stderr,s);
@@ -53,40 +32,125 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
-void debugStreamThread(Thread *tt) {
-  TaggedRef tail    = am.threadStreamTail;
-  TaggedRef newTail = OZ_newVariable();
-
-  TaggedRef pairlist = 
-    OZ_cons(OZ_pairA("thr",
-		     OZ_mkTupleC("#",2,makeTaggedConst(tt),
-				 OZ_int(tt->getID()))),
-	    OZ_nil());
+static void toggleBoard() {
+  static Board *saved = am.rootBoard;
+  Board *b;
   
-  TaggedRef entry = OZ_recordInit(OZ_atom("thr"), pairlist);
-  OZ_unify(tail, OZ_cons(entry, newTail));
-  am.threadStreamTail = newTail;
+  b = am.currentBoard;
+/*
+  am.installPath(saved); gives the following loop:
+#50205 0x10c2dc in AM::mkWakeupThread (this=0x1c82b8, bb=0x6b8ee8)
+    at am.icc:305
+#50206 0x108ed0 in AM::reduceTrailOnSuspend (this=0x1c82b8) at am.cc:802
+#50207 0x10b994 in AM::deinstallCurrent (this=0x1c82b8) at am.icc:89
+#50208 0x10ba98 in AM::deinstallPath (this=0x1c82b8, top=0x66a518)
+    at am.icc:100
+#50209 0x108ba0 in AM::installPath (this=0x1c82b8, to=0x66a518) at am.cc:737
+#50210 0x1147c8 in toggleBoard () at debug.cc:40
+#50211 0x114a38 in debugStreamThread (tt=0x6b8ebc, p=0x6c32ac) at debug.cc:81
+#50212 0x122a5c in Thread::Thread (this=0x6b8ebc, flags=0, prio=1, bb=0x6b8ee8)
+    at thread.icc:85
+#50213 0x10c2dc in AM::mkWakeupThread (this=0x1c82b8, bb=0x6b8ee8)
+    at am.icc:305
+#50214 0x108ed0 in AM::reduceTrailOnSuspend (this=0x1c82b8) at am.cc:802
+#50215 0x10b994 in AM::deinstallCurrent (this=0x1c82b8) at am.icc:89
+#50216 0x6560c in engine (init=0) at emulate.cc:2508
+#50217 0x6c988 in OZ_main (argc=3, argv=0xeffff164) at foreign.cc:1975
+#50218 0x48270 in main (argc=3, argv=0xeffff164) at main.cc:5
+*/
+
+  am.currentBoard = saved;
+  saved = b;
 }
 
-void debugStreamTerm(Thread *tt, TaggedRef p) {
+void debugStreamSuspend(Thread *tt) {
+  toggleBoard();
+
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
-  Thread *par = (Thread*)tagged2Const(OZ_deref(p));
 
   TaggedRef pairlist = 
-    OZ_cons(OZ_pairA("thr",
-		     OZ_mkTupleC("#",2,makeTaggedConst(tt),
-				 OZ_int(tt->getID()))),
-	    OZ_cons(OZ_pairA("par", OZ_mkTupleC("#",2,p,OZ_int(par->getID()))),
-		    OZ_nil()));
+    cons(OZ_pairA("thr",
+		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
+			      OZ_int(tt->getID()))),
+	 nil());
+  
+  TaggedRef entry = OZ_recordInit(OZ_atom("susp"), pairlist);
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+  toggleBoard();
+}
+
+void debugStreamCont(Thread *tt) {
+  toggleBoard();
+
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
+
+  TaggedRef pairlist = 
+    cons(OZ_pairA("thr",
+		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
+			      OZ_int(tt->getID()))),
+	 nil());
+  
+  TaggedRef entry = OZ_recordInit(OZ_atom("cont"), pairlist);
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+  toggleBoard();
+}
+
+void debugStreamThread(Thread *tt, Thread *p) {
+  toggleBoard();
+
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
+  TaggedRef pairlist;
+
+  if (p)
+    pairlist = 
+      cons(OZ_pairA("thr",
+		    OZ_mkTupleC("#",2,makeTaggedConst(tt),
+				OZ_int(tt->getID()))),
+	   cons(OZ_pairA("par", OZ_mkTupleC("#",2,makeTaggedConst(p),
+					    OZ_int(p->getID()))),
+		nil()));
+  else
+    pairlist = 
+      cons(OZ_pairA("thr",
+		    OZ_mkTupleC("#",2,makeTaggedConst(tt),
+				OZ_int(tt->getID()))),
+	   nil());
+  
+  TaggedRef entry = OZ_recordInit(OZ_atom("thr"), pairlist);
+
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+
+  toggleBoard();
+}
+
+void debugStreamTerm(Thread *tt) {
+  toggleBoard();
+
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
+
+  TaggedRef pairlist = 
+    cons(OZ_pairA("thr",
+		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
+			      OZ_int(tt->getID()))),
+	 nil());
   
   TaggedRef entry = OZ_recordInit(OZ_atom("term"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
+  toggleBoard();
 }
 
 void debugStreamCall(ProgramCounter PC, char *name, 
-		     int arity, TaggedRef *arguments) {
+		     int arity, TaggedRef *arguments, bool builtin) {
+
+  toggleBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
@@ -95,7 +159,16 @@ void debugStreamCall(ProgramCounter PC, char *name,
   int line, abspos;
   
   am.currentThread->stop();
-  CodeArea::getDebugInfoArgs(PC,file,line,abspos,comment);
+
+  if (PC == NOCODE) {
+    file = OZ_atom("");
+    line = 1;
+    abspos = 1;
+    comment = OZ_atom("");
+  }
+  else
+    CodeArea::getDebugInfoArgs(PC,file,line,abspos,comment);
+  
   TaggedRef arglist = CodeArea::argumentList(arguments, arity);
   
   TaggedRef pairlist = 
@@ -106,11 +179,14 @@ void debugStreamCall(ProgramCounter PC, char *name,
 	      cons(OZ_pairAI("line", line),
 		   cons(OZ_pairAA("name", name),
 			cons(OZ_pairA("args", arglist),
-			     OZ_nil())))));
+			     cons(OZ_pairA("builtin", 
+					   builtin ? OZ_true() : OZ_false()),
+				  OZ_nil()))))));
   
   TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
   am.threadStreamTail = newTail;
+  toggleBoard();
 }
 
 // ------------------ explore a thread's taskstack ---------------------------
@@ -136,7 +212,7 @@ OZ_C_proc_begin(BItaskStack,3)
   }
 
   TaskStack *taskstack = thread->getTaskStackRef();
-  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth));
+  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth+1));
 }
 OZ_C_proc_end
 
@@ -159,21 +235,62 @@ OZ_C_proc_begin(BIlocation,2)
 }
 OZ_C_proc_end
 
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIgetThreadByID, 2)
+OZ_C_proc_begin(BIsetStepMode,2)
 {
-  OZ_declareArg(0,id);
-  OZ_declareArg(1,out);
-  unsigned long n = OZ_intToC(id);
-
-#ifdef THREADARRAY
-  return OZ_unify(out, am.threadArray[n]);
-#else
-  return OZ_unify(out, nil());
-#endif
+  OZ_Term chunk = deref(OZ_getCArg(0));
+  OZ_declareNonvarArg(1, yesno);
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = (Thread*) rec;
+  
+  if (OZ_isTrue(yesno))
+    thread->startStepMode();
+  else if (OZ_isFalse(yesno))
+    thread->stopStepMode();
+  else warning("setStepMode: invalid argument");
+  return PROCEED;
 }
 OZ_C_proc_end
+
+OZ_C_proc_begin(BItraceThread,2)
+{
+  OZ_Term chunk = deref(OZ_getCArg(0));
+  OZ_declareNonvarArg(1, yesno);
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = (Thread*) rec;
+  
+  if (OZ_isTrue(yesno))
+    thread->traced();
+  else if (OZ_isFalse(yesno))
+    thread->notTraced();
+  else warning("traceThread: invalid argument");
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIqueryDebugState,2)
+{
+  OZ_Term chunk = deref(OZ_getCArg(0));
+  OZ_Term out   = OZ_getCArg(1);
+  
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = (Thread*) rec;
+
+  return oz_unify(out, OZ_mkTupleC("debugState",
+				   3,
+				   thread->isTraced()  ? oz_atom("Traced")
+				                       : oz_atom("notTraced"),
+				   thread->stepMode()  ? oz_atom("stepON")
+				                       : oz_atom("stepOFF"),
+				   thread->stopped()   ? oz_atom("stopped")
+				                       : oz_atom("running")
+				   ));
+			      
+}
+OZ_C_proc_end
+
+
 
 OZ_C_proc_begin(BIspy, 1)
 {
@@ -284,265 +401,6 @@ Bool isInTable(TaggedRef def, char **table)
   return NO;
 }
 
-typedef enum {
-  PORT_ENTER,
-  PORT_EXIT,
-  PORT_FAIL,
-  PORT_SUSPEND,
-  PORT_ELSE,
-  PORT_LAST
-} DBGPort;
-
-
-static char *portMap[PORT_LAST];
-
-
-static int initPortMap()
-{
-  portMap[PORT_EXIT]    = "Exit:    ";
-  portMap[PORT_FAIL]    = "Fail:    ";
-  portMap[PORT_ENTER]   = "Enter:   ";
-  portMap[PORT_SUSPEND] = "Suspend: ";
-  portMap[PORT_ELSE]    = "         ";
-  return 1;
-}
-
-
-static int dummy = initPortMap();
-
-
-void printCall(DBGPort port, TaggedRef def, int arity, TaggedRef *argss,
-	       unsigned long goal)
-{
-//  prefixError(); // to show up emulator buffer in emacs
-  
-  fprintf(stderr,"\t%c %s%5d ",
-	  isSpied(def) ? '*' : ' ',
-	  portMap[port],
-	  goal);
-
-  if (arity == 3 && isInTable(def,ternaryInfixes)) {
-    // print it as "X + Y = Z"
-    dbgPrint(argss[0]);
-    fprintf(stderr," %s ",getPrintName(def));
-    dbgPrint(argss[1]);
-    fprintf(stderr," = ");
-    dbgPrint(argss[2]);
-    fprintf(stderr," ? ");
-    return;
-  }
-  
-  if (arity == 2 && isInTable(def,binaryInfixes)) {
-    // print it as "X < Y"
-    dbgPrint(argss[0]);
-    fprintf(stderr," %s ",getPrintName(def));
-    dbgPrint(argss[1]);
-    fprintf(stderr," ? ");
-    return;
-  }
-  
-  fprintf(stderr,"{%s", getPrintName(def));
-  for(int i=0; i<arity; i++) {
-    dbgMessage(" ");    
-    dbgPrint(argss[i]);
-  }
-
-  if (port != PORT_ELSE) {
-    dbgMessage("} ? ");
-  } else {
-    dbgMessage("}\n");
-  }
-}
-
-
-void OzDebug::printCall()
-{
-  ::printCall(PORT_ELSE, pred, getRefsArraySize(args), args, goalNum);
-}
-
-
-typedef enum {
-  DBG_NONE,
-  DBG_SKIP,
-  DBG_LEAP,
-  DBG_EMUL,
-  DBG_CREEP,
-  DBG_DEPTH,
-  DBG_STACK,
-  DBG_SPY,
-  DBG_NOSPY,
-  DBG_HELP,
-  DBG_NODBG
-} dbgOption;
-
-
-const struct {
-  char *command;
-  dbgOption val;
-} commandArray[] = {
-     {"s", DBG_SKIP},
-     {"l", DBG_LEAP},
-     {"m", DBG_EMUL},
-     {"c", DBG_CREEP},
-     {"",  DBG_CREEP},
-     {"+", DBG_SPY},
-     {"-", DBG_NOSPY},
-     {"h", DBG_HELP},
-     {"?", DBG_HELP},
-     {"n", DBG_NODBG},
-     {NULL, DBG_NONE}
-   };
-
-
-dbgOption dbgReadInput(int &helpArg)
-{
-  char buf[1000];
-  gets(buf);
-  for (int i=0; commandArray[i].command; i++) {
-    if (strcmp(buf,commandArray[i].command) == 0) {
-      return commandArray[i].val;
-    }
-  }
-  
-  if (strncmp(buf,"<",1) == 0) {
-    if (sscanf(buf+1,"%d",&helpArg) != -1) {
-      return DBG_DEPTH;
-    }
-  }
-
-  if (strncmp(buf,"g",1) == 0) {
-    if (sscanf(buf+1,"%d",&helpArg) != -1) {
-      return DBG_STACK;
-    }
-  }
-
-  return DBG_NONE;
-}
-
-void showCall(DBGPort port, Board * /* b */, TaggedRef def,
-	      int arity, TaggedRef *args,
-	      unsigned long goal)
-{
-  Bool goon = OK;
-  while(goon) {
-    printCall(port, def, arity, args, goal);
-    int help=0;
-
-    switch (dbgReadInput(help)) {
-
-    case DBG_SPY:
-      setSpyFlag(def);
-      break;
-
-    case DBG_NOSPY:
-      unsetSpyFlag(def);
-      break;
-
-    case DBG_NODBG:
-      stepMode = NO;
-      skipMode = NO;
-      am.unsetSFlag(DebugMode);
-      return;
-
-    case DBG_DEPTH:
-      fprintf(stderr,"   Switching print depth to %d\n",help);
-      ozconf.printDepth = help;
-      break;
-
-    case DBG_STACK:
-      am.currentThread->printTaskStack(NOCODE,NO,help);
-      break;
-
-    case DBG_EMUL:
-      tracerOn(); trace("debug");
-      break;
-
-    case DBG_SKIP:
-      if (port == PORT_EXIT) {
-	fprintf(stderr, "   skip not applicable to this port\n");
-      } else {
-	if (isAbstraction(def)) {
-	  skipMode  = OK;
-	  stepMode = NO;
-	}
-	goon = NO;
-      }
-      break;
-
-    case DBG_CREEP:
-      stepMode = OK;
-      skipMode  = NO;
-      goon = NO;
-      break;
-
-    case DBG_LEAP:
-      stepMode = NO;
-      skipMode  = NO;
-      goon = NO;
-      break;
-
-    case DBG_NONE:
-      dbgMessage("\n   Command not understood, possible values:\n");
-    case DBG_HELP:
-      dbgMessage("\n\tl       leap\n");
-      dbgMessage("\t<cr>    creap\n");
-      dbgMessage("\ts       skip\n");
-      dbgMessage("\t+       spy this\n");
-      dbgMessage("\t-       nospy this\n");
-      dbgMessage("\tn       nodebug\n");
-      dbgMessage("\tm       machine debugger\n");
-      dbgMessage("\t< <n>   set print depth to <n>\n\n");
-      break;
-
-    default:
-      error("never go here");
-      break;
-    }
-  }
-
-  if (port == PORT_ENTER &&
-      isAbstraction(def)) {
-    am.pushDebug(def,arity,args);
-  }
-}
-
-
-void enterCall(Board *b, TaggedRef def, int arity, TaggedRef *args)
-{
-  if (skipMode ||
-      stepMode == NO && isSpied(def) == NO) {
-    return;
-  }
-
-  showCall(PORT_ENTER,b,def,arity,args,OzDebug::goalCounter);
-}
-
-void exitCall(OZ_Return bol, OzDebug *deb)
-{ 
-  if (skipMode == NO &&
-      stepMode == NO &&
-      isSpied(deb->pred) == NO ||
-      !am.isSetSFlag(DebugMode)) {
-    return;
-  }
-
-  DBGPort port = PORT_EXIT;
-  if (bol == FAILED) 
-    port = PORT_FAIL;
-  showCall(port,NULL,deb->pred,
-	   deb->args ? getRefsArraySize(deb->args) : 0,
-	   deb->args,
-	   deb->goalNum);
-
-  delete deb;
-}
-
-void exitBuiltin(OZ_Return bol, TaggedRef bi, int arity, TaggedRef *args)
-{
-  if (stepMode == OK && am.isSetSFlag(DebugMode)) {
-    exitCall(bol, new OzDebug(bi,arity,args));
-  }
-}
 
 
 /*
