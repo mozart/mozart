@@ -199,7 +199,7 @@ public:
   {
     InlineCacheList *aux = this;
     while(aux) {
-      for (int i=0; i<aux->nextFree; i++) {
+      for (int i=aux->nextFree; i--;) {
 	aux->block[i]->invalidate();
       }
       aux = aux->next;
@@ -787,7 +787,7 @@ void Script::gc()
     
     FDPROFILE_GC(cp_size_script, sz);
 
-    for(int i = 0; i < numbOfCons; i++){
+    for (int i = numbOfCons; i--; ){
 #ifdef DEBUG_CHECK
       //  This is the very useful consistency check.
       //  'Equations' with non-variable at the left side are figured out;
@@ -868,7 +868,7 @@ RefsArray gcRefsArray(RefsArray r)
 
   refsArrayMark(r,aux);
 
-  for(int i = sz-1; i >= 0; i--)
+  for (int i = sz; i--; )
     gcTagged(r[i],aux[i]);
 
   return aux;
@@ -965,7 +965,7 @@ inline Bool isDirectVar(TaggedRef t)
 inline
 void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
 {
-  for(int i = sz-1; i>=0; i--) {
+  for (int i = sz; i--; ) {
     if (isDirectVar(oldBlock[i])) {
       gcTagged(oldBlock[i],newBlock[i]);
     }
@@ -1164,7 +1164,7 @@ SuspList * SuspList::gc()
 
   SuspList *ret = NULL;
 
-  for(SuspList* help = this; help != NULL; help = help->next) {
+  for (SuspList* help = this; help != NULL; help = help->next) {
     Thread *aux = (help->getElem ())->gcThread ();
     if (!aux) {
       continue;
@@ -1327,7 +1327,7 @@ DynamicTable* DynamicTable::gc(void)
     // Take care of all TaggedRefs in the table:
     ptrStack.push(ret,PTR_DYNTAB);
     // (no storeForward needed since only one place points to the dynamictable)
-    for (dt_index i=0; i<size; i++) {
+    for (dt_index i=size; i--; ) {
         if (table[i].ident!=makeTaggedNULL()
 	    && (!isRef(table[i].ident) && isAnyVar(table[i].ident))) {
             gcTagged(table[i].ident, ret->table[i].ident);
@@ -1340,13 +1340,13 @@ DynamicTable* DynamicTable::gc(void)
 
 void DynamicTable::gcRecurse()
 {
-    for (dt_index i=0; i<size; i++) {
-        if (table[i].ident!=makeTaggedNULL()
-	    && (isRef(table[i].ident) || !isAnyVar(table[i].ident))) {
-            gcTagged(table[i].ident, table[i].ident);
-            gcTagged(table[i].value, table[i].value);
-        }
+  for (dt_index i=size; i--; ) {
+    if (table[i].ident!=makeTaggedNULL()
+	&& (isRef(table[i].ident) || !isAnyVar(table[i].ident))) {
+      gcTagged(table[i].ident, table[i].ident);
+      gcTagged(table[i].value, table[i].value);
     }
+  }
 }
 
 
@@ -1491,7 +1491,7 @@ void AM::gc(int msgLevel)
 
   { /* initialize X regs; this IS necessary ! */
     int sz = getRefsArraySize(xRegs);
-    for (int j=0; j < sz; j++) {
+    for (int j=sz; j--; ) {
       xRegs[j] = makeTaggedNULL();
     }
   }
@@ -1718,7 +1718,7 @@ void Arity::gc()
   while(aux) {
     GCMETHMSG("Arity::gc");
     if (!aux->isTuple()) {
-      for (int i = 0; i < aux->size; i++) {
+      for (int i = aux->size; i--; ) {
 	if (aux->keytable[i] != makeTaggedNULL()) {
 	  gcTagged(aux->keytable[i],aux->keytable[i]);
 	}
@@ -1733,7 +1733,7 @@ void ArityTable::gc()
 {
   GCMETHMSG("ArityTable::gc");
 
-  for (int i = 0; i < size; i++) {
+  for (int i = size; i--; ) {
     if (table[i] != NULL) {
       (table[i])->gc();
     }
@@ -1979,7 +1979,7 @@ void ConstTerm::gcConstRecurse()
 	TaggedRef *oldargs = a->getArgs();
 	TaggedRef *newargs = (TaggedRef*) gcRealloc(oldargs,
 						    sizeof(TaggedRef)*a->getWidth());
-	for (int i=0; i < a->getWidth(); i++) {
+	for (int i=a->getWidth(); i--; ) {
 	  gcTagged(oldargs[i],newargs[i]);
 	}
 	
@@ -2326,7 +2326,7 @@ void WaitActor::gcRecurse()
   FDPROFILE_GC(cp_size_waitactor, (num+1)*sizeof(Board *));
 	
   *newChildren++ = (Board *) num;
-  for (int i=0; i < num; i++) {
+  for (int i=num; i--; ) {
     if (children[i]) {
       newChildren[i] = children[i]->gcBoard();
       Assert(newChildren[i]);
@@ -2399,7 +2399,7 @@ CpBag * CpBag::gc(void) {
 inline
 void gcTaggedBlockRecurse(TaggedRef *block,int sz)
 {
-  for(int i = sz-1; i>=0; i--) {
+  for (int i = sz; i--; ) {
     if (!isDirectVar(block[i])) {
       gcTagged(block[i],block[i]);
     }
