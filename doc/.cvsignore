@@ -7,5 +7,5 @@ ced.sgml
 ced.el
 ozdoc.ced
 xref.db
-index.db
+index.db idx.html
 global-xref-db.xml
