@@ -31,6 +31,9 @@
 #pragma interface
 #endif
 
+// this is only needed for the becomesBool hack
+#include "fdbvar.hh"
+
 inline
 void GenFDVariable::dispose(void) {
   finiteDomain.disposeExtension();
@@ -84,7 +87,7 @@ void GenFDVariable::installPropagators(GenFDVariable * glob_var,
 				       Board * glob_home)
 {
   for (int i = 0; i < fd_prop_any; i += 1)
-    fdSuspList[i] = am.installPropagators(fdSuspList[i],
+    fdSuspList[i] = oz_installPropagators(fdSuspList[i],
 					  glob_var->fdSuspList[i],
 					  glob_home);
 }
@@ -134,14 +137,9 @@ void addSuspFDVar(TaggedRef v, Suspension susp, OZ_FDPropState list_index)
 
 inline 
 GenBoolVariable * GenFDVariable::becomesBool(void) { 
-  relinkSuspListToItself();
-  setType(BoolVariable); 
-  
+  relinkSuspListToItself(); // mm2: should return the suspList
   finiteDomain.disposeExtension();
-    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
-  //    freeListDispose(((char *)this) + sizeof(GenCVariable), 
-  //		    sizeof(GenFDVariable) - sizeof(GenCVariable));
-  return (GenBoolVariable *) this;
+  return new(this) GenBoolVariable(suspList);
 }
 
 inline

@@ -63,6 +63,8 @@ public:
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
+  GenFDVariable(DummyClass *) : GenCVariable(FDVariable,(DummyClass*)0) {}
+
   GenFDVariable() : GenCVariable(FDVariable) {
     ozstat.fdvarsCreated.incf();
     finiteDomain.initFull();
