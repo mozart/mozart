@@ -234,6 +234,22 @@ define
 	   fun {$ Id} Database,condGet(Id unit $) end}
 	  fun {$ X} X\=unit end}
       end
+      %%
+      meth get_ozpm_info($)
+	 info(
+	    authors:
+	       {Map
+		{Filter
+		 {Map Database,condGet('*author list*' nil $)
+		  fun {$ ID} Database,CondGet(ID unit $) end}
+		 fun {$ X} X\=unit end}
+		fun {$ X#_} X end}
+	    packages:
+	       {Filter
+		{Map Database,condGet('*package list*' nil $)
+		 fun {$ ID} Database,CondGet(ID unit $) end}
+		fun {$ X} X\=unit end})
+      end
    end
    %%
    local
