@@ -120,7 +120,6 @@ void sendSurrender(BorrowEntry *be,OZ_Term val);
 void sendRedirect(Site* sd,int OTI,TaggedRef val);
 void sendAcknowledge(Site* sd,int OTI);
 void sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite,int OTI);
-void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 void sendCreditBack(Site* sd,int OTI,Credit c);
 void sendPrimaryCredit(Site *sd,int OTI,Credit c);
 void sendSecondaryCredit(Site* s,Site* site,int index,Credit c);
@@ -146,6 +145,8 @@ void cellSendReadAns(Site*,Site*,int,TaggedRef);
 void cellSendRemoteRead(Site* toS,Site* mS,int mI,Site* fS);
 void cellSendContents(TaggedRef tr,Site* toS,Site *mS,int mI);
 void cellSendRead(BorrowEntry *be,Site *dS);
+static OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,
+                                Thread *th,ExKind e);
 
 void lockReceiveGet(OwnerEntry* oe,LockManager*,Site*);
 void lockReceiveDump(LockManager*,Site*);
@@ -299,8 +300,8 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called"));
   if(DV->on(SITE_OP)){
-    TaggedRef tr=oz_atom("SITE_OP: site unify complete");
-    th->pushCall(BI_Show,tr);}
+    th->pushCall(BI_Show,oz_atom("SITE_OP: site unify complete"));
+  }
 #endif
   pushUnify(th,val1,val2);
   am.scheduleThread(th);
@@ -981,7 +982,7 @@ void OwnerTable::ownerCheck(OwnerEntry *oe,int OTI){
   Assert(oe->hasFullCredit());
   if (oe->isTertiary()) {
     Tertiary *te=oe->getTertiary();
-    Assert(te->getTertType()==Te_Manager);
+    Assert(te->isManager());
     te->localize();}
   else{
     PD((PD_VAR,"localize var o:%d",OTI));
@@ -2066,25 +2067,25 @@ Bool withinBorrowTable(int i){
 /* ******************************************************************* */
 
 Site* getNASiteFromTertiary(Tertiary* t){
-  if(t->getTertType()==Te_Manager){
+  if(t->isManager()){
     return mySite;}
-  Assert(!(t->getTertType()==Te_Proxy));
+  Assert(!(t->isProxy()));
   return BT->getOriginSite(t->getIndex());}
 
 int getNAIndexFromTertiary(Tertiary* t){
-  if(t->getTertType()==Te_Manager){
+  if(t->isManager()){
     return t->getIndex();}
-  Assert(!(t->getTertType()==Te_Proxy));
+  Assert(!(t->isProxy()));
   return BT->getOriginIndex(t->getIndex());}
 
 inline int getStateFromLockOrCell(Tertiary*t){
   if(t->getType()==Co_Cell){
-    if(t->getTertType()==Te_Manager){
+    if(t->isManager()){
       return ((CellManager*)t)->getSec()->getState();}
     Assert(t->getTertType()==Te_Frame);
     return ((CellFrame*)t)->getSec()->getState();}
   Assert(t->getType()==Co_Lock);
-  if(t->getTertType()==Te_Manager){
+  if(t->isManager()){
     return ((LockManager*)t)->getSec()->getState();}
   Assert(t->getTertType()==Te_Frame);
   return ((LockFrame*)t)->getSec()->getState();}
@@ -2129,7 +2130,7 @@ void tertiaryInstallProbe(Site *s,ProbeType pt,Tertiary *t){
   if(s==mySite) return;
   ProbeReturn pr=s->installProbe(pt,0);
   if(pr==PROBE_INSTALLED) return;
-  if(t->getTertType() == Te_Manager)
+  if(t->isManager())
     t->managerProbeFault(s,pr);
   else
     t->proxyProbeFault(pr);}
@@ -2139,7 +2140,7 @@ inline void deinstallProbe(Site *s,ProbeType pt){
   s->deinstallProbe(pt);}
 
 Chain* getChainFromTertiary(Tertiary *t){
-  Assert(t->getTertType()==Te_Manager);
+  Assert(t->isManager());
   if(t->getType()==Co_Cell){
     return ((CellManager *)t)->getChain();}
   Assert(t->getType()==Co_Lock);
@@ -2287,14 +2288,6 @@ inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o,
 
 inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t){
   return pendThreadAddToEnd(pt,t,0,0,NOEX);}
-
-inline void pendThreadAddToNonFirst(PendThread **pt,Thread *t){
-  if(isRealThread(t)){
-    oz_suspendOnNet(t);
-    PD((THREAD_D,"stop thread addToNonFirst %x",t));}
-  if(*pt!=NULL){pt= &((*pt)->next);}
-  *pt=new PendThread(t,NULL);
-  return;}
 
 inline Bool basicThreadIsPending(PendThread *pt,Thread*t){
   while(pt!=NULL){
@@ -2576,7 +2569,7 @@ void BorrowTable::gcBorrowTableUnusedFrames()
     BorrowEntry *b=getBorrow(i);
     if(!b->isFree()){
       Assert((b->isVar()) || (b->getTertiary()->getTertType()==Te_Frame)
-             || (b->getTertiary()->getTertType()==Te_Proxy));
+             || (b->getTertiary()->isProxy()));
       if(!(b->isGCMarked())) {b->gcBorrowUnusedFrame(i);}}}
 }
 
@@ -2661,7 +2654,7 @@ void BorrowTable::gcBorrowTableFinal()
       } else{
         if(t->maybeHasInform() && t->getType()!=Co_Port)
           maybeUnask(b);
-        Assert(t->getTertType()==Te_Proxy);
+        Assert(t->isProxy());
         borrowTable->maybeFreeBorrowEntry(i);
       }
     }
@@ -2877,21 +2870,21 @@ void Tertiary::globalizeTert()
 }
 
 inline void convertCellProxyToFrame(Tertiary *t){
-  Assert(t->getTertType()==Te_Proxy);
+  Assert(t->isProxy());
   CellFrame *cf=(CellFrame*) t;
   cf->convertFromProxy();}
 
 inline void convertLockProxyToFrame(Tertiary *t){
-  Assert(t->getTertType()==Te_Proxy);
+  Assert(t->isProxy());
   LockFrame *lf=(LockFrame*) t;
   lf->convertFromProxy();}
 
 inline void maybeConvertLockProxyToFrame(Tertiary *t){
-  if(t->getTertType()==Te_Proxy){
+  if(t->isProxy()){
     convertLockProxyToFrame(t);}}
 
 inline void maybeConvertCellProxyToFrame(Tertiary *t){
-  if(t->getTertType()==Te_Proxy){
+  if(t->isProxy()){
     convertCellProxyToFrame(t);}}
 
 PerdioVar *var2PerdioVar(TaggedRef *tPtr){
@@ -2946,7 +2939,7 @@ void Tertiary::localize()
 {
   switch(getType()) {
   case Co_Port:{
-    Assert(getTertType()==Te_Manager);
+    Assert(isManager());
     PD((GLOBALIZING,"GLOBALIZING: localizing tertiary manager"));
     setTertType(Te_Local);
     Assert(am.onToplevel());
@@ -2954,14 +2947,14 @@ void Tertiary::localize()
     return;}
 
   case Co_Cell:{
-    Assert(getTertType()==Te_Manager);
+    Assert(isManager());
     PD((GLOBALIZING,"localizing cell manager"));
     CellManager *cm=(CellManager*)this;
     cm->localize();
     return;}
 
   case Co_Lock:{
-    Assert(getTertType()==Te_Manager);
+    Assert(isManager());
     PD((GLOBALIZING,"localizing lock manager"));
     LockManager *lm=(LockManager*)this;
     lm->localize();
@@ -2970,7 +2963,7 @@ void Tertiary::localize()
   case Co_Thread:
   case Co_Space:
   case Co_Object:{
-    Assert(getTertType()==Te_Manager);
+    Assert(isManager());
     PD((GLOBALIZING,"localizing object/space/thread manager"));
     setTertType(Te_Local);
     Assert(am.onToplevel());
@@ -3811,21 +3804,23 @@ int PortWaitTimeK = 1;
 Thread *getDefaultThread(){
   return DefaultThread;}
 
-void portWait(Thread *th, int queueSize, int restTime, Tertiary *t){
+OZ_Return portWait(int queueSize, int restTime, Tertiary *t)
+{
   PD((ERROR_DET,"PortWait q: %d r: %d", queueSize, restTime));
   int v = queueSize - PortSendTreash;
   int time;
-  if(v<0) return;
+  if(v<0) return PROCEED;
   int tot=PortWaitTimeK * queueSize;
   if(restTime && restTime < tot) tot = restTime;
-  if (v < PortWaitTimeSlice)
+  if (v < PortWaitTimeSlice) {
     time = v;
-  else
-    {time = PortWaitTimeSlice;
-    th->pushCall(BI_portWait,makeTaggedTert(t),
-                 makeTaggedSmallInt(tot - PortWaitTimeSlice));
-    }
-  th->pushCall(BI_Delay,makeTaggedSmallInt(time));
+  } else {
+    time = PortWaitTimeSlice;
+    am.prepareCall(BI_portWait,makeTaggedTert(t),
+                   oz_int(tot - PortWaitTimeSlice));
+  }
+  am.prepareCall(BI_Delay,oz_int(time));
+  return BI_REPLACEBICALL;
 }
 
 Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCond ec){
@@ -3843,8 +3838,10 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
     else{
       if(w->isHandler()){
         ret = TRUE;
-        if(!w->isContinueHandler())
-          th->pushCall(BI_send,makeTaggedTert(t),msg);
+        if(!w->isContinueHandler()) {
+          Assert(th == am.currentThread());
+          am.prepareCall(BI_send,makeTaggedTert(t),msg);
+        }
         w->invokeHandler(ec,this,th);}
       else{
         w->invokeWatcher(ec,this);}
@@ -3858,28 +3855,34 @@ Bool Tertiary::startHandlerPort(Thread* th, Tertiary* t, TaggedRef msg, EntityCo
     }}
   return ret;}
 
-OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
-  int pi = p->getIndex();
-  BorrowEntry* b=BT->getBorrow(pi);
+OZ_Return portSend(Tertiary *p, TaggedRef msg)
+{
+  BorrowEntry* b = BT->getBorrow(p->getIndex());
   NetAddress *na = b->getNetAddress();
-  Site* site = na->site;
-  int index = na->index;
+  Site* site     = na->site;
+  int index      = na->index;
   int dummy;
   Bool wait = FALSE;
   switch(getEntityCondPort(p)){
   case PERM_BLOCKED|PERM_ME:{
     PD((ERROR_DET,"Port is PERM"));
-    if(!p->startHandlerPort(th, p, msg, PERM_BLOCKED|PERM_ME))
-      oz_suspendOnNet(th);
-    return BI_REPLACEBICALL;}
+    if(p->startHandlerPort(am.currentThread(), p, msg, PERM_BLOCKED|PERM_ME))
+      return BI_REPLACEBICALL;
+    /* no handler --> suspend forever: */
+    ControlVarNew(var);
+    SuspendOnControlVar;
+  }
   case TEMP_BLOCKED|TEMP_ME:{
     PD((ERROR_DET,"Port is Tmp size:%d treash:%d",
         site->getQueueStatus(dummy),PortSendTreash));
     wait = TRUE;
-    if(p->startHandlerPort(th, p, msg, TEMP_BLOCKED|TEMP_ME))
-      return BI_REPLACEBICALL;}
+    if(p->startHandlerPort(am.currentThread(), p, msg, TEMP_BLOCKED|TEMP_ME))
+      return BI_REPLACEBICALL;
+    break;
+  }
   case ENTITY_NORMAL: break;
-  default: Assert(0);}
+  default: Assert(0);
+  }
 
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
@@ -3901,9 +3904,8 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
 
 
   SendTo(site,bs,M_PORT_SEND,site,index);
-  if(wait)
-    portWait(th,site->getQueueStatus(dummy), 0, p);
-  return PROCEED;
+  return wait ? portWait(site->getQueueStatus(dummy), 0, p)
+              : PROCEED;
   }
 
 /**********************************************************************/
@@ -4194,7 +4196,7 @@ Bool CellSec::secReceiveRemoteRead(Site* toS,Site* mS, int mI){
 
 void cellReceiveGet(OwnerEntry* oe,CellManager* cm,Site* toS){
   Assert(cm->getType()==Co_Cell);
-  Assert(cm->getTertType()==Te_Manager);
+  Assert(cm->isManager());
   Chain *ch=cm->getChain();
   Site* current=ch->setCurrent(toS,cm);
   PD((CELL,"CellMgr Received get from %s",toS->stringrep()));
@@ -4211,12 +4213,12 @@ void cellReceiveGet(OwnerEntry* oe,CellManager* cm,Site* toS){
 
 void cellReceiveDump(CellManager *cm,Site *fromS){
   Assert(cm->getType()==Co_Cell);
-  Assert(cm->getTertType()==Te_Manager);
+  Assert(cm->isManager());
   if((cm->getChain()->getCurrent()!=fromS) || (cm->getState()!=Cell_Lock_Invalid)){
     PD((WEIRD,"CELL dump not needed"));
     return;}
   TaggedRef tr=oz_newVariable();
-  (void) cellDoExchange((Tertiary *)cm,tr,tr,DummyThread);
+  (void) cellDoExchange((Tertiary *)cm,tr,tr,DummyThread,EXCHANGE);
   return;}
 
 void cellReceiveForward(BorrowEntry *be,Site *toS,Site* mS,int mI){
@@ -4234,7 +4236,7 @@ void cellReceiveForward(BorrowEntry *be,Site *toS,Site* mS,int mI){
 void cellReceiveContentsManager(OwnerEntry *oe,TaggedRef val,int mI){
   CellManager *cm=(CellManager*)oe->getTertiary();
   Assert(cm->getType()==Co_Cell);
-  Assert(cm->getTertType()==Te_Manager);
+  Assert(cm->isManager());
   if(tokenLostCheckManager(cm)) return; // ERROR-HOOK ATTENTION
   chainReceiveAck(oe,mySite);
   CellSec *sec=cm->getSec();
@@ -4273,7 +4275,7 @@ void cellReceiveRemoteRead(BorrowEntry *be,Site* mS,int mI,Site* fS){
 
 void cellReceiveRead(OwnerEntry *oe,Site* fS){
   CellManager* cm=(CellManager*) oe->getTertiary();
-  Assert(cm->getTertType()==Te_Manager);
+  Assert(cm->isManager());
   Assert(cm->getType()==Co_Cell);
   CellSec *sec=cm->getSec();
   oe->getOneCreditOwner();
@@ -4284,7 +4286,7 @@ void cellReceiveRead(OwnerEntry *oe,Site* fS){
   cellSendRemoteRead(ch->getCurrent(),mySite,cm->getIndex(),fS);}
 
 void cellReceiveReadAns(Tertiary* t,TaggedRef val){
-  Assert((t->getTertType()==Te_Manager)|| (t->getTertType()==Te_Frame));
+  Assert((t->isManager())|| (t->getTertType()==Te_Frame));
   getCellSecFromFrameOrManager(t)->secReceiveReadAns(val);}
 
 /**********************************************************************/
@@ -4348,9 +4350,9 @@ void CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,ExKind exKind)
   default: Assert(0);}}
 
 inline CellSec *getCellSecFromTert(Tertiary *c){
-  if(c->getTertType()==Te_Manager){
+  if(c->isManager()){
     return ((CellManager*)c)->getSec();}
-  Assert(c->getTertType()!=Te_Proxy);
+  Assert(!c->isProxy());
   return ((CellFrame*)c)->getSec();}
 
 inline Bool maybeInvokeHandler(Tertiary* t,Thread* th){
@@ -4389,7 +4391,7 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,Ex
       cellLockSendGet(be);
       if(c->errorIgnore()) return ret;
       break;}
-    Assert(c->getTertType()==Te_Manager);
+    Assert(c->isManager());
     if(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST)){
       Site *toS=((CellManager*)c)->getChain()->setCurrent(mySite,c);
       sendPrepOwner(index);
@@ -4405,32 +4407,32 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,Ex
 }
 
 static
-OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th, ExKind e)
+OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread *th,ExKind e)
 {
   PD((SPECIAL,"exchange old:%d new:%s type:%d",toC(old),toC(nw),e));
-  if(c->getTertType()==Te_Proxy){
+  if(c->isProxy()){
     convertCellProxyToFrame(c);}
   PD((CELL,"CELL: exchange on %s-%d",getNASiteFromTertiary(c)->stringrep(),
       getNAIndexFromTertiary(c)));
   return getCellSecFromTert(c)->exchange(c,old,nw,th,e);
 }
 
-OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
-   return cellDoExchange(c,old,nw,th, EXCHANGE);}
+OZ_Return cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw){
+   return cellDoExchange(c,old,nw,am.currentThread(),EXCHANGE);}
 
-OZ_Return cellAssignExchange(Tertiary *c,TaggedRef fea,TaggedRef val,Thread* th){
-   return cellDoExchange(c,fea,val,th, ASSIGN);}
+OZ_Return cellAssignExchange(Tertiary *c,TaggedRef fea,TaggedRef val){
+   return cellDoExchange(c,fea,val,am.currentThread(), ASSIGN);}
 
-OZ_Return cellAtExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
-  return cellDoExchange(c,old,nw,th, AT);}
+OZ_Return cellAtExchange(Tertiary *c,TaggedRef old,TaggedRef nw){
+  return cellDoExchange(c,old,nw,am.currentThread(), AT);}
 
 OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   switch(state){
   case Cell_Lock_Valid:{
     PD((CELL,"CELL: access on valid"));
     Assert(fea == 0);
-    pushUnify(am.currentThread(),val,contents);
-    return PROCEED;}
+    return oz_unify(val,contents);
+  }
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: access on requested"));
@@ -4475,7 +4477,7 @@ OZ_Return cellAtAccess(Tertiary *c, TaggedRef fea, TaggedRef val){
 
 OZ_Return cellDoAccess(Tertiary *c, TaggedRef val){
   if(am.onToplevel() && c->handlerExists(am.currentThread()))
-    return cellDoExchange(c,val,val,am.currentThread());
+    return cellDoExchange(c,val,val);
   else
     return cellDoAccess(c,val,0);}
 
@@ -4628,7 +4630,7 @@ void chainReceiveAck(OwnerEntry* oe,Site* rsite){
 }
 
   ChainAnswer answerChainQuestion(Tertiary *t){
-  if(t->getTertType()==Te_Proxy){
+  if(t->isProxy()){
     return PAST_ME;}
   switch(getStateFromLockOrCell(t)){
   case Cell_Lock_Invalid:
@@ -4755,7 +4757,7 @@ Bool LockSec::secForward(Site* toS){
 
 void lockReceiveGet(OwnerEntry* oe,LockManager* lm,Site* toS){
   Assert(lm->getType()==Co_Lock);
-  Assert(lm->getTertType()==Te_Manager);
+  Assert(lm->isManager());
   Chain *ch=lm->getChain();
   PD((LOCK,"LockMgr Received get from %s",toS->stringrep()));
   Site* current=ch->setCurrent(toS,lm);
@@ -4772,7 +4774,7 @@ void lockReceiveGet(OwnerEntry* oe,LockManager* lm,Site* toS){
 
 void lockReceiveDump(LockManager* lm,Site *fromS){
   Assert(lm->getType()==Co_Lock);
-  Assert(lm->getTertType()==Te_Manager);
+  Assert(lm->isManager());
   LockSec* sec=lm->getSec();
   if((lm->getChain()->getCurrent()!=fromS) || (sec->getState()!=Cell_Lock_Invalid)){
     PD((WEIRD,"WEIRD- LOCK dump not needed"));
@@ -4784,7 +4786,7 @@ void lockReceiveDump(LockManager* lm,Site *fromS){
 void lockReceiveTokenManager(OwnerEntry* oe,int mI){
   Tertiary *t=oe->getTertiary();
   Assert(t->getType()==Co_Lock);
-  Assert(t->getTertType()==Te_Manager);
+  Assert(t->isManager());
   if(tokenLostCheckManager(t)) return; // ERROR-HOOK ATTENTION
   LockManager*lm=(LockManager*)t;
   chainReceiveAck(oe,mySite);
@@ -4844,7 +4846,7 @@ void secLockToNext(LockSec* sec,Tertiary* t,Site* toS){
     NetAddress *na=be->getNetAddress();
     lockSendToken(na->site,na->index,toS);
     return;}
-  Assert(t->getTertType()==Te_Manager);
+  Assert(t->isManager());
   OwnerEntry *oe=OT->getOwner(index);
   oe->getOneCreditOwner();
   lockSendToken(mySite,index,toS);}
@@ -4857,7 +4859,7 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
     be->getOneMsgCredit();
     cellLockSendGet(be);
     return;}
-  Assert(t->getTertType()==Te_Manager);
+  Assert(t->isManager());
   OwnerEntry *oe=OT->getOwner(index);
   Chain* ch=((LockManager*) t)->getChain();
   Site* current=ch->setCurrent(mySite,t);
@@ -4918,7 +4920,7 @@ void LockSec::unlockComplex(Tertiary* tert){
       return;}
     Thread *th=pending->thread;
     if(th==DummyThread){
-      Assert(tert->getTertType()==Te_Manager);
+      Assert(tert->isManager());
       pendThreadRemoveFirst(getPendBase());
       unlockComplex(tert);
       return;}
@@ -5012,7 +5014,7 @@ void lockSendTokenFailure(Site* toS,Site *mS, int mI){
 void lockReceiveCantPut(OwnerEntry *oe,int mI,Site* rsite, Site* bad){
   LockManager* lm=(LockManager*)oe->getTertiary();
   Assert(lm->getType()==Co_Lock);
-  Assert(lm->getTertType()==Te_Manager);
+  Assert(lm->isManager());
   PD((ERROR_DET,"Proxy cant Put"));
   Chain *ch=lm->getChain();
   ch->removeBefore(bad);
@@ -5023,7 +5025,7 @@ void lockReceiveCantPut(OwnerEntry *oe,int mI,Site* rsite, Site* bad){
 void cellReceiveCantPut(OwnerEntry* oe,TaggedRef val,int mI,Site* rsite, Site* badS){
   CellManager* cm=(CellManager*)oe->getTertiary();
   Assert(cm->getType()==Co_Cell);
-  Assert(cm->getTertType()==Te_Manager);
+  Assert(cm->isManager());
   PD((ERROR_DET,"Proxy cant Put"));
   Chain *ch=cm->getChain();
   ch->removeBefore(badS);
@@ -5174,7 +5176,7 @@ void informInstallHandler(Tertiary* t,EntityCond ec){
   case Co_Cell:
   case Co_Lock: break;
   default: NOT_IMPLEMENTED;}
-  if(t->getTertType()==Te_Manager){
+  if(t->isManager()){
     Chain *ch=getChainFromTertiary(t);
     ch->newInform(mySite,ec);
     if(someTempCondition(ec) && !ch->hasFlag(INTERESTED_IN_TEMP)){
@@ -5200,7 +5202,7 @@ Bool Tertiary::installHandler(EntityCond wc,TaggedRef proc,Thread* th, Bool Cont
     Assert(wc==TEMP_BLOCKED|PERM_BLOCKED);
     informInstallHandler(this,wc);
     return TRUE;}
-  if(getTertType()==Te_Manager) return TRUE;
+  if(isManager()) return TRUE;
   tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_PERM,this);
   return TRUE;}
 
@@ -5233,7 +5235,7 @@ void Tertiary::installWatcher(EntityCond wc,TaggedRef proc, Bool pr){
   if(managerPart(wc) != ENTITY_NORMAL && getType()!=Co_Port){
     informInstallHandler(this,managerPart(wc));
     return;}
-  if(this->getTertType() == Te_Manager){
+  if(this->isManager()){
     return;}
   if(someTempCondition(wc) && getType()!=Co_Port)
     tertiaryInstallProbe(getSiteFromTertiaryProxy(this),PROBE_TYPE_ALL,this);
@@ -5252,12 +5254,19 @@ Bool Tertiary::deinstallWatcher(EntityCond wc, TaggedRef proc){
     base= &((*base)->next);}
   return NO;}
 
-void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, Thread * th){
+void Watcher::invokeHandler(EntityCond ec,Tertiary* entity, Thread * th)
+{
   Assert(isHandler());
-  th->pushCall(proc,
-                   makeTaggedTert(entity),
-                   (ec & PERM_BLOCKED)?AtomPermBlocked:AtomTempBlocked);
-  if(entity->getType()!=Co_Port) oz_resumeFromNet(th);}
+  TaggedRef arg0 = makeTaggedTert(entity);
+  TaggedRef arg1 = (ec & PERM_BLOCKED)?AtomPermBlocked:AtomTempBlocked;
+  if(entity->getType()==Co_Port) {
+    am.prepareCall(proc,arg0,arg1);
+  } else {
+    Assert(th!=am.currentThread());
+    th->pushCall(proc,arg0,arg1);
+    oz_resumeFromNet(th);
+  }
+}
 
 
 void Watcher::invokeWatcher(EntityCond ec,Tertiary* entity){
@@ -5275,19 +5284,19 @@ Bool LockSec::threadIsPending(Thread *t){
 Bool Tertiary::threadIsPending(Thread* th){
   switch(getType()){
   case Co_Cell: {
-    if(getTertType()==Te_Proxy) {return NO;}
+    if(isProxy()) {return NO;}
     if(getTertType()==Te_Frame){
       return ((CellFrame*)this)->getSec()->threadIsPending(th);}
-    Assert(getTertType()==Te_Manager);
+    Assert(isManager());
     return ((CellManager*)this)->getSec()->threadIsPending(th);}
   case Co_Lock:{
-  if(getTertType()==Te_Proxy) {return NO;}
+  if(isProxy()) {return NO;}
     if(getTertType()==Te_Frame){
       return ((LockFrame*)this)->getSec()->threadIsPending(th);}
-    Assert(getTertType()==Te_Manager);
+    Assert(isManager());
   return ((LockManager*)this)->getSec()->threadIsPending(th);}
   case Co_Port:{
-    Assert(getTertType()==Te_Proxy);
+    Assert(isProxy());
     return ((PortProxy*)this)->threadIsPending(th);}
   default:
     NOT_IMPLEMENTED;}
@@ -5316,7 +5325,7 @@ void receiveTellError(Tertiary *t,Site* mS,int mI,EntityCond ec,Bool set){
   t->resetEntityCondManager(ec);}
 
 void Tertiary::releaseWatcher(Watcher* w){
-  if(getTertType()!=Te_Manager){
+  if(!isManager()){
     EntityCond ec=managerPart(w->watchcond);
     switch(getType()){
     case Co_Cell:
@@ -5353,7 +5362,7 @@ void Tertiary::entityProblem(){
     Assert(obj->getType() == Co_Object);}
   PendThread *pd;
 
-  if(getTertType()==Te_Proxy)
+  if(isProxy())
     pd = NULL;
   else{
     if(getType()==Co_Cell){
@@ -5373,9 +5382,10 @@ void Tertiary::entityProblem(){
     Thread *cThread = pd->thread;
     if(ww!=NULL){
       Watcher *w = *ww;
-      Assert(getTertType()!=Te_Proxy);
+      Assert(!isProxy());
       pd->thread = DummyThread;
       if(w->isContinueHandler()){
+        Assert(cThread!=am.currentThread());
         if(getType()==Co_Cell){
           switch(pd->exKind){
           case EXCHANGE:{cThread->pushCall(BI_exchangeCell,makeTaggedTert(this), pd->old, pd->nw); break;}
@@ -5722,7 +5732,7 @@ void Tertiary::proxyProbeFault(int pr){
   case Co_Cell:
   case Co_Lock:{
     int state;
-    if(getTertType()==Te_Proxy){
+    if(isProxy()){
       state=Cell_Lock_Invalid;}
     else{
       state=getStateFromLockOrCell(this);}
@@ -5752,7 +5762,7 @@ void Site::probeFault(ProbeReturn pr){
     if(oe->isTertiary()){
       Tertiary *tr=oe->getTertiary();
       PD((PROBES,"Informing Manager"));
-      Assert(tr->getTertType()==Te_Manager);
+      Assert(tr->isManager());
       tr->managerProbeFault(this,pr);}} // TO_BE_IMPLEMENTED vars
   limit=BT->getSize();
   for(int ctr1 = 0; ctr1<limit;ctr1++){
@@ -6040,17 +6050,15 @@ OZ_BI_define(BIportWait,2,0)
    oz_declareIntIN(1,t);
    Tertiary *tert = tagged2Tert(prt);
    int dummy;
-   portWait(am.currentThread(),
-            getSiteFromTertiaryProxy(tert)-> getQueueStatus(dummy),
-            t,tert);
-   return PROCEED;
+   return portWait(getSiteFromTertiaryProxy(tert)-> getQueueStatus(dummy),
+                   t,tert);
 } OZ_BI_end
 
 void wakeUpTmp(int i, int time){
   PD((TCPCACHE,"Starting DangelingThread"));
   Thread *tt = am.mkRunnableThread(LOW_PRIORITY, oz_rootBoard());
-  tt->pushCall(BI_startTmp, makeTaggedSmallInt(i), makeTaggedSmallInt(time));
-  tt->pushCall(BI_Delay, makeTaggedSmallInt(time));
+  tt->pushCall(BI_startTmp, oz_int(i), oz_int(time));
+  tt->pushCall(BI_Delay, oz_int(time));
   am.scheduleThread(tt);}
 
 GenHashNode *getPrimaryNode(GenHashNode* node, int &i);

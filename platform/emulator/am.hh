@@ -129,6 +129,7 @@ private:
   TaggedRef _currentUVarPrototype; // opt: cache
 
   TaggedRef suspendVarList;
+  CallList *preparedCalls;      // for BI_REPLACEBICALL
 
   int threadSwitchCounter;
   int userCounter;
@@ -241,6 +242,7 @@ public:
 
   Bool isStandalone() { return isStandaloneF; }
 
+  TaggedRef getSuspendVarList(void) { return suspendVarList; }
   void emptySuspendVarList(void) { suspendVarList = 0; }
   void addSuspendVarList(TaggedRef t)
   {
@@ -256,6 +258,12 @@ public:
     addSuspendVarList(makeTaggedRef(t));
   }
 
+  void prepareCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0,
+                   TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0);
+
+  void prepareCall(TaggedRef pred, RefsArray args);
+
+  void pushPreparedCalls();
 
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
