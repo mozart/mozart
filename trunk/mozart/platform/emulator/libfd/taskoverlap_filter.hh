@@ -73,9 +73,6 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
   //
   //--------------------------------------------------
   int x_card, y_card, o_card;
-  int x_init_card = x->getSize();
-  int y_init_card = y->getSize();
-  int o_init_card = o->getSize();
   do {
     x_card = x->getSize();
     y_card = y->getSize();
@@ -155,23 +152,23 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
   //   a clause is entailed if no prop fncts are left and
   //   the basic constraints are subsumed
   if (engine_cl1.hasNoPropsLeft() &&
-      x_init_card <= cl1_t1->getSize() &&
-      y_init_card <= cl1_t2->getSize() &&
-      o_init_card <= cl1_o->getSize()) {
+      x->getSize() <= cl1_t1->getSize() &&
+      y->getSize() <= cl1_t2->getSize() &&
+      o->getSize() <= cl1_o->getSize()) {
     CDM(("cl1 entailed\n"));
     goto vanish;
   }
   if (engine_cl2.hasNoPropsLeft() &&
-      x_init_card <= cl2_t1->getSize() &&
-      y_init_card <= cl2_t2->getSize() &&
-      o_init_card <= cl2_o->getSize()) {
+      x->getSize() <= cl2_t1->getSize() &&
+      y->getSize() <= cl2_t2->getSize() &&
+      o->getSize() <= cl2_o->getSize()) {
     CDM(("cl2 entailed\n"));
     goto vanish;
   }
   if (engine_cl3.hasNoPropsLeft() &&
-      x_init_card <= cl3_t1->getSize() &&
-      y_init_card <= cl3_t2->getSize() &&
-      o_init_card <= cl3_o->getSize()) {
+      x->getSize() <= cl3_t1->getSize() &&
+      y->getSize() <= cl3_t2->getSize() &&
+      o->getSize() <= cl3_o->getSize()) {
     CDM(("cl3 entailed\n"));
     goto vanish;
   }
