@@ -72,8 +72,7 @@ public:
   }
 
   void popMark() {
-    DebugCheck(lastMark != tos-1,
-	       error("trail inconsistent"););
+    Assert(lastMark == tos-1);
     lastMark -= (unsigned long) Stack::pop();
   }
 
