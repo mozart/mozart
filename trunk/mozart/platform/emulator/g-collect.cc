@@ -990,15 +990,12 @@ void Builder::gCollect()
   }
 
   //
-  // In addition, we have to GC the BuilderIndexTable as well:
-  const int *ttsTop = getTTSTop();
-  const int *ttsBottom = getTTSBottom();
-  const int *ttsI = ttsTop;
-
-  //
-  while (--ttsI >= ttsBottom) {
-    OZ_Term &tte = getRef(*ttsI);
+  // In addition, we have to GC the BuilderRefTable<OZ_Term> as well:
+  OZ_Term *tp = valueRT->getFirstRef();
+  while (tp) {
+    OZ_Term &tte = *tp;
     oz_gCollectTerm(tte, tte);
+    tp = valueRT->getNextRef(tp);
   }
 }
 

@@ -24,12 +24,6 @@
 
 #include "byteBuffer.hh"
 
-#define BYTE_MODE_MARSHALING 0
-#define BYTE_MODE_UNMARSHALING 1
-#define BYTE_MODE_NONE 2
-#define BYTE_MODE_WRITING 3
-#define BYTE_MODE_READING 4
-
 // Utilities
 inline void ByteBuffer::int2net(int i)
 {

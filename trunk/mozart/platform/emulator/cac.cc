@@ -1153,7 +1153,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
       Assert(bb->cacIsAlive());      
       ret->__setSpaceInternal(bb->gCollectBoard());
     }
-  
+
     cacStack.push((OZ_Container *) ret,PTR_EXTENSION);
     STOREFWDFIELD(this, (OZ_Container *) ret);
     return (ConstTerm *) (OZ_Container *) ret;

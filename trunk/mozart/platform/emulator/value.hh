@@ -71,9 +71,12 @@ extern Board *oz_rootBoardOutline();
 
 
 #define Lit_isName          2
+// named names are names;
 #define Lit_isNamedName     4
 #define Lit_hasGName        8
+// unique names are named names;
 #define Lit_isUniqueName   16
+// copyable names are named names;
 #define Lit_isCopyableName 32
 
 const int sizeOfLitFlags  = 6;

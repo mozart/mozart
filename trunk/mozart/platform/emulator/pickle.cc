@@ -34,17 +34,22 @@
 #include "gname.hh"
 #include "boot-manager.hh"
 
-#define RETURN_ON_ERROR(ERROR)             \
-        if (ERROR) { (void) b->finish(); return ((OZ_Term) 0); }
+#define RETURN_ON_ERROR(ERROR)          	\
+  if (ERROR) {					\
+    Assert(0);					\
+    (void) b->finish();				\
+    return ((OZ_Term) 0);			\
+}
 
 //
 // init stuff - must be called;
 static Bool isInitialized;
 void initPickleMarshaler()
 {
-  isInitialized = OK;
-  Assert(DIF_LAST == 52);  /* new dif(s) added? */
-  initRobustMarshaler();	// called once - from here;
+  if (!isInitialized) {
+    isInitialized++;
+    initRobustMarshaler();	// called once - from here;
+  }
 }
 
 //
@@ -72,58 +77,133 @@ void Pickler::processFloat(OZ_Term floatTerm)
 inline 
 void Pickler::processLiteral(OZ_Term litTerm)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  int litTermInd = rememberTerm(litTerm);
 
   //
-  marshalLiteral(bs, litTerm, litTermInd);
+  VisitNodeM2ndP(litTerm, vIT, bs, index, return);
+
+  //
+  Literal *lit = tagged2Literal(litTerm);
+  if (lit->isAtom()) {
+    if (index) {
+      marshalDIF(bs, DIF_ATOM_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_ATOM);
+    }
+    marshalString(bs, ((Atom *) lit)->getPrintName());
+
+  } else if (lit->isUniqueName()) {
+    if (index) {
+      marshalDIF(bs, DIF_UNIQUENAME_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_UNIQUENAME);
+    }
+    marshalString(bs, ((NamedName *) lit)->printName);
+
+  } else if (lit->isCopyableName()) {
+    if (index) {
+      marshalDIF(bs, DIF_COPYABLENAME_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_COPYABLENAME);
+    }
+    marshalString(bs, ((NamedName *) lit)->printName);
+
+  } else {
+    if (index) {
+      marshalDIF(bs, DIF_NAME_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_NAME);
+    }
+    if (lit->isNamedName()) 
+      marshalString(bs, ((NamedName *) lit)->printName);
+    else
+      marshalString(bs, "");
+    marshalGName(bs, ((Name *) lit)->globalize());
+  }
 }
 
 //
 inline 
-void Pickler::processBigInt(OZ_Term biTerm, ConstTerm *biConst)
+void Pickler::processBigInt(OZ_Term biTerm)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  marshalBigInt(bs, biTerm, biConst);
+
+  //
+  VisitNodeM2ndP(biTerm, vIT, bs, index, return);
+
+  if (index) {
+    marshalDIF(bs, DIF_BIGINT_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_BIGINT);
+  }
+  marshalString(bs, toC(biTerm));
 }
 
 //
-Bool Pickler::processNoGood(OZ_Term resTerm, Bool trail)
+inline 
+void Pickler::processNoGood(OZ_Term resTerm)
 {
   OZ_error("Pickler::processNoGood is called!");
-  return (OK);
 }
 
 //
+inline 
 void Pickler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  Builtin *bi= (Builtin *) biConst;
+
+  //
+  VisitNodeM2ndP(biTerm, vIT, bs, index, return);
+
+  //
+  Builtin *bi = (Builtin *) biConst;
   const char *pn = bi->getPrintName();
   Assert(!bi->isSited());
 
   //
-  marshalDIF(bs, DIF_BUILTIN);
-  rememberNode(this, bs, biTerm);
+  if (index) {
+    marshalDIF(bs, DIF_BUILTIN_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_BUILTIN);
+  }
   marshalString(bs, pn);
 }
 
 //
-void Pickler::processExtension(OZ_Term t)
+inline 
+void Pickler::processExtension(OZ_Term et)
 {
-  Assert(tagged2Extension(t)->toBePickledV());
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
+  OZ_Extension *ext = tagged2Extension(et);
+  Assert(ext->toBePickledV());
 
   //
-  marshalDIF(bs,DIF_EXTENSION);
-  rememberNode(this,bs,t);
-  marshalNumber(bs, tagged2Extension(t)->getIdV());
+  VisitNodeM2ndP(et, vIT, bs, index, return);
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_EXTENSION_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_EXTENSION);
+  }
+  marshalNumber(bs, ext->getIdV());
   // Pickling must be defined for this entity:
-  Bool p = tagged2Extension(t)->pickleV(bs);
-  Assert(p);
+  ext->pickleV(bs, this);
 }
 
 //
+inline 
 Bool Pickler::processObject(OZ_Term term, ConstTerm *objConst)
 {
   OZ_error("Pickler::processObject is called!");
@@ -131,32 +211,46 @@ Bool Pickler::processObject(OZ_Term term, ConstTerm *objConst)
 }
 
 //
+inline 
 void Pickler::processLock(OZ_Term term, Tertiary *tert)
 {
   OZ_error("Pickler::processLock is called!");
 }
 
+inline 
 Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
 {
-  //  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();	 
+
+  //
+  VisitNodeM2ndP(term, vIT, bs, index, return(OK));
+
+  //
   Assert(cloneCells() && tert->isLocal());
-  marshalDIF(bs, DIF_CLONEDCELL);
-  rememberNode(this, bs, term);
+  if (index) {
+    marshalDIF(bs, DIF_CLONEDCELL_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_CLONEDCELL);
+  }
   return (NO);
 }
 
-void Pickler::processPort(OZ_Term term, Tertiary *tert)
+inline 
+void Pickler::processPort(OZ_Term termcellTerm, Tertiary *tert)
 {
   OZ_error("Pickler::processPort is called!");
 }
 
+inline 
 void Pickler::processResource(OZ_Term term, Tertiary *tert)
 {
   OZ_error("Pickler::processResource is called!");
 }
 
 //
+inline 
 void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
   OZ_error("Pickler::processVar is called!");
@@ -164,25 +258,21 @@ void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 
 //
 inline 
-void Pickler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
-{
-  Assert(repNumber >= 0);
-  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-
-  //
-  marshalDIF(bs, DIF_REF);
-  marshalTermRef(bs, repNumber);
-}
-
-//
-inline 
 Bool Pickler::processLTuple(OZ_Term ltupleTerm)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
 
   //
-  marshalDIF(bs, DIF_LIST);
-  rememberNode(this, bs, ltupleTerm);
+  VisitNodeM2ndP(ltupleTerm, vIT, bs, index, return(OK));
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_LIST_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_LIST);
+  }
   return (NO);
 }
 
@@ -190,18 +280,29 @@ Bool Pickler::processLTuple(OZ_Term ltupleTerm)
 inline 
 Bool Pickler::processSRecord(OZ_Term srecordTerm)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  SRecord *rec = tagged2SRecord(srecordTerm);
-  TaggedRef label = rec->getLabel();
 
   //
+  VisitNodeM2ndP(srecordTerm, vIT, bs, index, return(OK));
+
+  //
+  SRecord *rec = tagged2SRecord(srecordTerm);
   if (rec->isTuple()) {
-    marshalDIF(bs, DIF_TUPLE);
-    rememberNode(this, bs, srecordTerm);
+    if (index) {
+      marshalDIF(bs, DIF_TUPLE_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_TUPLE);
+    }
     marshalNumber(bs, rec->getTupleWidth());
   } else {
-    marshalDIF(bs, DIF_RECORD);
-    rememberNode(this, bs, srecordTerm);
+    if (index) {
+      marshalDIF(bs, DIF_RECORD_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_RECORD);
+    }
   }
 
   //
@@ -212,14 +313,22 @@ Bool Pickler::processSRecord(OZ_Term srecordTerm)
 inline 
 Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 { 
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   SChunk *ch    = (SChunk *) chunkConst;
-  GName *gname  = globalizeConst(ch, bs);
+  GName *gname  = globalizeConst(ch);
   Assert(gname);
 
   //
-  marshalDIF(bs,DIF_CHUNK);
-  rememberNode(this, bs, chunkTerm);
+  VisitNodeM2ndP(chunkTerm, vIT, bs, index, return(OK));
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_CHUNK_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_CHUNK);
+  }
   marshalGName(bs, gname);
 
   //
@@ -227,6 +336,7 @@ Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 }
 
 //
+inline 
 Bool Pickler::processFSETValue(OZ_Term fsetvalueTerm)
 {
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -235,66 +345,105 @@ Bool Pickler::processFSETValue(OZ_Term fsetvalueTerm)
 }
 
 //
+inline 
 Bool Pickler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
-  OzDictionary *d = (OzDictionary *) dictConst;
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  Assert(d->isSafeDict());
 
   //
-  marshalDIF(bs,DIF_DICT);
-  rememberNode(this, bs, dictTerm);
+  VisitNodeM2ndP(dictTerm, vIT, bs, index, return(OK));
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_DICT_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_DICT);
+  }
+  //
+  OzDictionary *d = (OzDictionary *) dictConst;
+  Assert(d->isSafeDict());
   marshalNumber(bs, d->getSize());
   return (NO);
 }
 
+inline 
 Bool Pickler::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  OzArray *array = (OzArray *) arrayConst;
-  Assert(cloneCells());
 
   //
-  marshalDIF(bs, DIF_ARRAY);
-  rememberNode(this, bs, arrayTerm);
+  VisitNodeM2ndP(arrayTerm, vIT, bs, index, return(OK));
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_ARRAY_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_ARRAY);
+  }
+  //
+  OzArray *array = (OzArray *) arrayConst;
+  Assert(cloneCells());
   marshalNumber(bs, array->getLow());
   marshalNumber(bs, array->getHigh());
   return (NO);
 }
 
 //
+inline 
 Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
-  ObjectClass *cl = (ObjectClass *) classConst;
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  Assert(!cl->isSited());
-  GName *gn = globalizeConst(cl, bs);
-  Assert(gn);
 
   //
-  marshalDIF(bs, DIF_CLASS);
-  rememberNode(this, bs, classTerm);
+  VisitNodeM2ndP(classTerm, vIT, bs, index, return(OK));
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_CLASS_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_CLASS);
+  }
+
+  //
+  ObjectClass *cl = (ObjectClass *) classConst;
+  Assert(!cl->isSited());
+  GName *gn = globalizeConst(cl);
+  Assert(gn);
   marshalGName(bs, gn);
   marshalNumber(bs, cl->getFlags());
   return (NO);
 }
 
 //
+inline 
 Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
+  int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
-  Abstraction *pp = (Abstraction *) absConst;
 
   //
-  GName* gname = globalizeConst(pp, bs);
+  VisitNodeM2ndP(absTerm, vIT, bs, index, return(OK));
+
+  //
+  if (index) {
+    marshalDIF(bs, DIF_PROC_DEF);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIF(bs, DIF_PROC);
+  }
+
+  Abstraction *pp = (Abstraction *) absConst;
+  GName* gname = globalizeConst(pp);
   Assert(gname);
   PrTabEntry *pred = pp->getPred();
   Assert(!pred->isSited());
   ProgramCounter start;
-
-  //
-  marshalDIF(bs, DIF_PROC);
-  rememberNode(this, bs, absTerm);
 
   //
   marshalGName(bs, gname);
@@ -320,7 +469,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 
   //
   MarshalerCodeAreaDescriptor *desc = 
-    new MarshalerCodeAreaDescriptor(start, start + nxt);
+    new MarshalerCodeAreaDescriptor(start, start + nxt, lIT);
   traverseBinary(pickleCode, desc);
 
   //
@@ -346,45 +495,57 @@ inline
 void ResourceExcavator::processSmallInt(OZ_Term siTerm) {}
 inline 
 void ResourceExcavator::processFloat(OZ_Term floatTerm) {}
+
 inline 
-void ResourceExcavator::processLiteral(OZ_Term litTerm) {}
+void ResourceExcavator::processLiteral(OZ_Term litTerm)
+{
+  VisitNodeTrav(litTerm, vIT, return);
+}
 inline 
-void ResourceExcavator::processBigInt(OZ_Term biTerm, ConstTerm *biConst) {}
+void ResourceExcavator::processBigInt(OZ_Term biTerm)
+{
+  VisitNodeTrav(biTerm, vIT, return);
+}
 
 //
 inline 
-Bool ResourceExcavator::processNoGood(OZ_Term resTerm, Bool trail)
+void ResourceExcavator::processNoGood(OZ_Term resTerm)
 {
+  VisitNodeTrav(resTerm, vIT, return);
   addNogood(resTerm);
-  return (OK);
 }
 inline 
 void ResourceExcavator::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
-  rememberTerm(biTerm);
-  if (((Builtin *) biConst)->isSited())
-    (void) processNoGood(biTerm, OK);
+  VisitNodeTrav(biTerm, vIT, return);
+  if (((Builtin *) biConst)->isSited()) {
+    addNogood(biTerm);
+  }
 }
 inline 
-void ResourceExcavator::processExtension(OZ_Term t)
+void ResourceExcavator::processExtension(OZ_Term et)
 {
-  if (!tagged2Extension(t)->toBePickledV())
-    (void) processNoGood(t, NO);
+  VisitNodeTrav(et, vIT, return);
+  if (!tagged2Extension(et)->toBePickledV()) {
+    addNogood(et);
+  }
 }
+inline 
 Bool ResourceExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
-  rememberTerm(objTerm);
+  VisitNodeTrav(objTerm, vIT, return(TRUE));
   addResource(objTerm);
   return (TRUE);
 }
+inline 
 void ResourceExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
 {
-  rememberTerm(lockTerm);
   addResource(lockTerm);
 }
+inline 
 Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
 {
-  rememberTerm(cellTerm);
+  VisitNodeTrav(cellTerm, vIT, return(TRUE));
   if (cloneCells() && tert->isLocal()) {
     return (NO);
   } else {
@@ -392,92 +553,87 @@ Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
     return (OK);
   }
 }
+inline 
 void ResourceExcavator::processPort(OZ_Term portTerm, Tertiary *tert)
 {
-  rememberTerm(portTerm);
   addResource(portTerm);
 }
 inline 
 void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 {
-  rememberTerm(rTerm);
   addResource(rTerm);
 }
 
 //
 inline 
-void ResourceExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
+void ResourceExcavator::processVar(OZ_Term v, OZ_Term *vRef)
 {
-  rememberVarLocation(varTerm);
-  addResource(makeTaggedRef(varTerm));
+  addResource(makeTaggedRef(vRef));
 }
 
 //
 inline 
-void ResourceExcavator::processRepetition(OZ_Term t, OZ_Term *tPtr,
-					  int repNumber) {}
-inline 
 Bool ResourceExcavator::processLTuple(OZ_Term ltupleTerm)
 {
-  rememberTerm(ltupleTerm);
+  VisitNodeTrav(ltupleTerm, vIT, return(TRUE));
   return (NO);
 }
 inline 
 Bool ResourceExcavator::processSRecord(OZ_Term srecordTerm)
 {
-  rememberTerm(srecordTerm);
+  VisitNodeTrav(srecordTerm, vIT, return(TRUE));
   return (NO);
 }
 inline 
 Bool ResourceExcavator::processChunk(OZ_Term chunkTerm,
 				     ConstTerm *chunkConst)
 {
-  rememberTerm(chunkTerm);
+  VisitNodeTrav(chunkTerm, vIT, return(TRUE));
   return (NO);
 }
 
 //
+inline 
 Bool ResourceExcavator::processFSETValue(OZ_Term fsetvalueTerm)
 {
-  rememberTerm(fsetvalueTerm);
   return (NO);
 }
 
 //
-Bool ResourceExcavator::processDictionary(OZ_Term dictTerm,
-					  ConstTerm *dictConst)
+inline Bool
+ResourceExcavator::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
+  VisitNodeTrav(dictTerm, vIT, return(TRUE));
   OzDictionary *d = (OzDictionary *) dictConst;
-  rememberTerm(dictTerm);
   if (d->isSafeDict()) {
     return (NO);
   } else {
-    (void) processNoGood(dictTerm, OK);
+    addNogood(dictTerm);
     return (OK);
   }
 }
 
 //
-Bool ResourceExcavator::processArray(OZ_Term arrayTerm,
-				     ConstTerm *arrayConst)
+inline Bool
+ResourceExcavator::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
 {
-  rememberTerm(arrayTerm);
+  VisitNodeTrav(arrayTerm, vIT, return(TRUE));
   if (cloneCells()) {
     return (NO);
   } else {
-    (void) processNoGood(arrayTerm, OK);
+    addNogood(arrayTerm);
     return (OK);
   }
 }
 
 //
-Bool ResourceExcavator::processClass(OZ_Term classTerm,
-				     ConstTerm *classConst)
+inline Bool
+ResourceExcavator::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
+  VisitNodeTrav(classTerm, vIT, return(TRUE));
   ObjectClass *cl = (ObjectClass *) classConst;
-  rememberTerm(classTerm);
   if (cl->isSited()) {
-    (void) processNoGood(classTerm, OK);
+    addNogood(classTerm);
     return (OK);		// done - a leaf;
   } else {
     return (NO);
@@ -485,18 +641,20 @@ Bool ResourceExcavator::processClass(OZ_Term classTerm,
 }
 
 //
-Bool ResourceExcavator::processAbstraction(OZ_Term absTerm,
-					   ConstTerm *absConst)
+inline Bool
+ResourceExcavator::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
-  Abstraction *pp = (Abstraction *) absConst;
-  PrTabEntry *pred = pp->getPred();
+  VisitNodeTrav(absTerm, vIT, return(TRUE));
 
   //
-  rememberTerm(absTerm);
+  Abstraction *pp = (Abstraction *) absConst;
+  PrTabEntry *pred = pp->getPred();
+  //
   if (pred->isSited()) {
-    (void) processNoGood(absTerm, OK);
+    addNogood(absTerm);
     return (OK);		// done - a leaf;
   } else {
+    //
     ProgramCounter start = pp->getPC() - sizeOf(DEFINITION);
     XReg reg;
     int nxt, line, colum;
@@ -506,10 +664,12 @@ Bool ResourceExcavator::processAbstraction(OZ_Term absTerm,
 
     //
     MarshalerCodeAreaDescriptor *desc = 
-      new MarshalerCodeAreaDescriptor(start, start + nxt);
+      new MarshalerCodeAreaDescriptor(start, start + nxt, 
+				      (AddressHashTableO1Reset *) 0);
     traverseBinary(traverseCode, desc);
     return (NO);
   }
+  Assert(0);
 }
 
 //
@@ -522,8 +682,9 @@ void ResourceExcavator::processSync() {}
 #undef	TRAVERSERCLASS
 
 //
-Pickler pickler;
-ResourceExcavator re;
+static MarshalerDict md(ValuesITInitSize);
+ResourceExcavator re(&md);
+Pickler pickler(&md);
 Builder unpickler;
 
 //
@@ -534,634 +695,576 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
   Assert(oz_onToplevel());
   Builder *b;
 
-#ifndef USE_FAST_UNMARSHALER
-  TRY_UNMARSHAL_ERROR {
-#endif
-    while(1) {
-      b = &unpickler;
-      MarshalTag tag = (MarshalTag) bs->get();
-      dif_counter[tag].recv();	// kost@ : TODO: needed?
-      //      printf("tag: %d\n", tag);
+  while(1) {
+    b = &unpickler;
+    MarshalTag tag = (MarshalTag) bs->get();
+    Assert(tag < DIF_LAST);
+    dif_counter[tag].recv();	// kost@ : TODO: needed?
+    //      printf("tag: %d\n", tag);
 
-      switch (tag) {
+    switch (tag) {
 
-      case DIF_SMALLINT: 
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  OZ_Term ozInt = OZ_int(unmarshalNumberRobust(bs, &error));
-	  RETURN_ON_ERROR(error || !OZ_isSmallInt(ozInt));
-#else
-	  OZ_Term ozInt = OZ_int(unmarshalNumber(bs));
-#endif
-	  b->buildValue(ozInt);
-	  break;
-	}
+    case DIF_SMALLINT: 
+      {
+	OZ_Term ozInt = OZ_int(unmarshalNumber(bs));
+	b->buildValue(ozInt);
+	break;
+      }
 
-      case DIF_FLOAT:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  double f = unmarshalFloatRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  double f = unmarshalFloat(bs);
-#endif
-	  b->buildValue(OZ_float(f));
-	  break;
-	}
+    case DIF_FLOAT:
+      {
+	double f = unmarshalFloat(bs);
+	b->buildValue(OZ_float(f));
+	break;
+      }
 
-      case DIF_NAME:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  char *printname = unmarshalStringRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  OZ_Term value;
-	  GName *gname    = unmarshalGNameRobust(&value, bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  char *printname = unmarshalString(bs);
-	  OZ_Term value;
-	  GName *gname    = unmarshalGName(&value, bs);
-#endif
+    case DIF_NAME_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	char *printname = unmarshalString(bs);
+	OZ_Term value;
+	GName *gname    = unmarshalGName(&value, bs);
 
-	  if (gname) {
-	    Name *aux;
-	    if (strcmp("", printname) == 0) {
-	      aux = Name::newName(am.currentBoard());
-	    } else {
-	      aux = NamedName::newNamedName(strdup(printname));
-	    }
-	    aux->import(gname);
-	    value = makeTaggedLiteral(aux);
-	    b->buildValue(value);
-	    addGName(gname, value);
+	if (gname) {
+	  Name *aux;
+	  if (strcmp("", printname) == 0) {
+	    aux = Name::newName(am.currentBoard());
 	  } else {
-	    b->buildValue(value);
+	    aux = NamedName::newNamedName(strdup(printname));
 	  }
-
-	  //
-	  b->set(value, refTag);
-	  delete [] printname;
-	  break;
-	}
-
-      case DIF_COPYABLENAME:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag      = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  char *printname = unmarshalStringRobust(bs, &error);
-	  RETURN_ON_ERROR(error || (printname == NULL))
-#else
-	  int refTag      = unmarshalRefTag(bs);
-	  char *printname = unmarshalString(bs);
-#endif
-	  OZ_Term value;
-
-	  NamedName *aux = NamedName::newCopyableName(strdup(printname));
+	  aux->import(gname);
 	  value = makeTaggedLiteral(aux);
 	  b->buildValue(value);
-	  b->set(value, refTag);
-	  delete [] printname;
-	  break;
-	}
-
-      case DIF_UNIQUENAME:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag      = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  char *printname = unmarshalStringRobust(bs, &error);
-	  RETURN_ON_ERROR(error || (printname == NULL));
-#else
-	  int refTag      = unmarshalRefTag(bs);
-	  char *printname = unmarshalString(bs);
-#endif
-	  OZ_Term value;
-
-	  value = oz_uniqueName(printname);
+	  addGName(gname, value);
+	} else {
 	  b->buildValue(value);
-	  b->set(value, refTag);
-	  delete [] printname;
-	  break;
-	}
-
-      case DIF_ATOM:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  char *aux  = unmarshalStringRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  char *aux  = unmarshalString(bs);
-#endif
-	  OZ_Term value = OZ_atom(aux);
-	  b->buildValue(value);
-	  b->set(value, refTag);
-	  delete [] aux;
-	  break;
-	}
-
-      case DIF_BIGINT:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  char *aux  = unmarshalStringRobust(bs, &error);
-	  RETURN_ON_ERROR(error || (aux == NULL));
-#else
-	  char *aux  = unmarshalString(bs);
-#endif
-	  b->buildValue(OZ_CStringToNumber(aux));
-	  delete [] aux;
-	  break;
-	}
-
-      case DIF_LIST:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-#endif
-	  b->buildListRemember(refTag);
-	  break;
-	}
-
-      case DIF_TUPLE:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  int argno  = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  int argno  = unmarshalNumber(bs);
-#endif
-	  b->buildTupleRemember(argno, refTag);
-	  break;
-	}
-
-      case DIF_RECORD:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-#endif
-	  b->buildRecordRemember(refTag);
-	  break;
-	}
-
-      case DIF_REF:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int i = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error || !b->checkIndexFound(i));
-#else
-	  int i = unmarshalNumber(bs);
-#endif
-	  b->buildValue(b->get(i));
-	  break;
 	}
 
 	//
-      case DIF_OWNER:
-      case DIF_OWNER_SEC:
-#ifdef USE_FAST_UNMARSHALER
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected pickle tag (DIF_OWNER, %d)\n",tag); 
-#else
-	OZ_warning("unmarshal: unexpected pickle tag (DIF_OWNER, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
+	b->setTerm(value, refTag);
+	delete [] printname;
 	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_RESOURCE_T:
-      case DIF_PORT:
-      case DIF_THREAD_UNUSED:
-      case DIF_SPACE:
-      case DIF_CELL:
-      case DIF_LOCK:
-      case DIF_OBJECT:
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected tertiary (%d)\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected tertiary (%d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_RESOURCE_N:
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected resource (DIF_RESOURCE_N, %d)\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected resource (DIF_RESOURCE_N, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_CHUNK:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  OZ_Term value;
-	  GName *gname = unmarshalGNameRobust(&value, bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  OZ_Term value;
-	  GName *gname = unmarshalGName(&value, bs);
-#endif
-	  if (gname) {
-	    b->buildChunkRemember(gname, refTag);
-	  } else {
-	    b->knownChunk(value);
-	    b->set(value, refTag);
-	  }
-	  break;
-	}
-
-      case DIF_CLASS:
-	{
-	  OZ_Term value;
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  GName *gname = unmarshalGNameRobust(&value, bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int flags = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  GName *gname = unmarshalGName(&value, bs);
-	  int flags = unmarshalNumber(bs);
-#endif
-
-	  if (gname) {
-	    b->buildClassRemember(gname,flags,refTag);
-	  } else {
-	    b->knownClass(value);
-	    b->set(value,refTag);
-	  }
-	  break;
-	}
-
-      case DIF_VAR:
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected variable (DIF_VAR, %d)\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected variable (DIF_VAR, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_FUTURE: 
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected future (DIF_FUTURE, %d)\n",tag);
-#else
-	OZ_error("unmarshal: unexpected future (DIF_FUTURE, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_VAR_AUTO: 
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected auto var (DIF_VAR_AUTO, %d)\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected auto var (DIF_VAR_AUTO, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_FUTURE_AUTO: 
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected auto future (DIF_FUTURE_AUTO, %d)\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected auto future (DIF_FUTURE_AUTO, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_VAR_OBJECT:
-#ifdef USE_FAST_UNMARSHALER   
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected object var (DIF_VAR_OBJECT, %d)\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected object var (DIF_VAR_OBJECT, %d)\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#else
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#endif
-
-      case DIF_PROC:
-	{ 
-	  OZ_Term value;
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag    = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  GName *gname  = unmarshalGNameRobust(&value, bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int arity     = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int gsize     = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int maxX      = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int line      = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int column    = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  // in ByteCode"s;
-	  int codesize  = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  RETURN_ON_ERROR(maxX < 0 || maxX > NumberOfXRegisters); // maxX is the number of X registers used
-#else
-	  int refTag    = unmarshalRefTag(bs);
-	  GName *gname  = unmarshalGName(&value, bs);
-	  int arity     = unmarshalNumber(bs);
-	  int gsize     = unmarshalNumber(bs);
-	  int maxX      = unmarshalNumber(bs);
-	  int line      = unmarshalNumber(bs);
-	  int column    = unmarshalNumber(bs);
-	  int codesize  = unmarshalNumber(bs); // in ByteCode"s;
-#endif
-
-	  //
-	  if (gname) {
-	    //
-	    CodeArea *code = new CodeArea(codesize);
-	    ProgramCounter start = code->getStart();
-	    ProgramCounter pc = start + sizeOf(DEFINITION);
-	    //
-	    BuilderCodeAreaDescriptor *desc =
-	      new BuilderCodeAreaDescriptor(start, start+codesize, code);
-	    b->buildBinary(desc);
-
-	    //
-	    b->buildProcRemember(gname, arity, gsize, maxX, line, column, 
-				 pc, refTag);
-	  } else {
-	    Assert(oz_isAbstraction(oz_deref(value)));
-	    // ('zero' descriptions are not allowed;)
-	    BuilderCodeAreaDescriptor *desc =
-	      new BuilderCodeAreaDescriptor(0, 0, 0);
-	    b->buildBinary(desc);
-
-	    //
-	    b->knownProcRemember(value, refTag);
-	  }
-	  break;
-	}
-
-	//
-	// 'DIF_CODEAREA' is an artifact due to the non-recursive
-	// unmarshaling of code areas: in order to unmarshal an Oz term
-	// that occurs in an instruction, unmarshaling of instructions
-	// must be interrupted and later resumed; 'DIF_CODEAREA' tells the
-	// unmarshaler that a new code area chunk begins;
-      case DIF_CODEAREA:
-	{
-	  BuilderOpaqueBA opaque;
-	  BuilderCodeAreaDescriptor *desc = 
-	    (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
-	  //
-#ifndef USE_FAST_UNMARSHALER
-	  switch (unpickleCodeRobust(bs, b, desc)) {
-	  case UCR_ERROR:
-	    (void) b->finish();
-	    return 0;
-	  case UCR_DONE:
-	    b->finishFillBinary(opaque);
-	    break;
-	  case UCR_SUSPEND:
-	    b->suspendFillBinary(opaque);
-	    break;
-	  default:
-	    Assert(0); return ((OZ_Term) 0);
-	  }
-#else
-	  if (unpickleCode(bs, b, desc))
-	    b->finishFillBinary(opaque);
-	  else
-	    b->suspendFillBinary(opaque);
-#endif
-	  break;
-	}
-
-      case DIF_DICT:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  int size   = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  int size   = unmarshalNumber(bs);
-#endif
-	  Assert(oz_onToplevel());
-	  b->buildDictionaryRemember(size,refTag);
-	  break;
-	}
-
-      case DIF_ARRAY:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  int low    = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-	  int high   = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  int low    = unmarshalNumber(bs);
-	  int high   = unmarshalNumber(bs);
-#endif
-	  Assert(oz_onToplevel());
-	  b->buildArrayRemember(low, high, refTag);
-	  break;
-	}
-
-      case DIF_BUILTIN:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  char *name = unmarshalStringRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  char *name = unmarshalString(bs);
-#endif
-	  Builtin * found = string2CBuiltin(name);
-
-	  OZ_Term value;
-	  if (!found) {
-	    OZ_warning("Builtin '%s' not in table.", name);
-	    value = oz_nil();
-	    delete [] name;
-	  } else {
-	    if (found->isSited()) {
-	      OZ_warning("Unpickling sited builtin: '%s'", name);
-	    }
-	
-	    delete [] name;
-	    value = makeTaggedConst(found);
-	  }
-	  b->buildValue(value);
-	  b->set(value, refTag);
-	  break;
-	}
-
-      case DIF_EXTENSION:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-	  int type = unmarshalNumberRobust(bs, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-	  int type = unmarshalNumber(bs);
-#endif
-	  OZ_Term value = oz_extension_unmarshal(type, bs);
-	  if (value == 0) {
-#ifndef USE_FAST_UNMARSHALER
-	    (void) b->finish();
-	    return ((OZ_Term) 0);
-#else
-	    OZ_error("Trouble with unmarshaling an extension!");
-	    b->buildValue(oz_nil());
-	    break;
-#endif
-	  } else {
-	    b->buildValue(value);
-	    b->set(value, refTag);
-	  }
-	  break;
-	}
-
-      case DIF_FSETVALUE:
-	b->buildFSETValue();
-	break;
-
-      case DIF_REF_DEBUG:
-#ifndef USE_FAST_UNMARSHALER   
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#else
-	OZ_error("not implemented!"); 
-	b->buildValue(oz_nil());
-	break;
-#endif
-
-	//
-	// 'DIF_SYNC' and its handling is a part of the interface
-	// between the builder object and the unmarshaler itself:
-      case DIF_SYNC:
-	b->processSync();
-	break;
-
-      case DIF_CLONEDCELL:
-	{
-#ifndef USE_FAST_UNMARSHALER
-	  int error;
-	  int refTag = unmarshalRefTagRobust(bs, b, &error);
-	  RETURN_ON_ERROR(error);
-#else
-	  int refTag = unmarshalRefTag(bs);
-#endif
-	  b->buildClonedCellRemember(refTag);
-	  break;
-	}
-
-      case DIF_EOF: 
-	return (b->finish());
-
-      default:
-#ifndef USE_FAST_UNMARSHALER   
-	(void) b->finish();
-	return ((OZ_Term) 0);
-#else
-#ifdef DEBUG_CHECK
-	OZ_error("unmarshal: unexpected tag: %d\n",tag);
-#else
-	OZ_warning("unmarshal: unexpected tag: %d\n",tag);
-#endif
-	b->buildValue(oz_nil());
-	break;
-#endif
       }
-    }
-#ifndef USE_FAST_UNMARSHALER   
-  }
-  CATCH_UNMARSHAL_ERROR { 
-    (void) b->finish();
-    return ((OZ_Term) 0);
-  }
+
+    case DIF_NAME:
+      {
+	char *printname = unmarshalString(bs);
+	OZ_Term value;
+	GName *gname    = unmarshalGName(&value, bs);
+
+	if (gname) {
+	  Name *aux;
+	  if (strcmp("", printname) == 0) {
+	    aux = Name::newName(am.currentBoard());
+	  } else {
+	    aux = NamedName::newNamedName(strdup(printname));
+	  }
+	  aux->import(gname);
+	  value = makeTaggedLiteral(aux);
+	  b->buildValue(value);
+	  addGName(gname, value);
+	} else {
+	  b->buildValue(value);
+	}
+
+	//
+	delete [] printname;
+	break;
+      }
+
+    case DIF_COPYABLENAME_DEF:
+      {
+	int refTag      = unmarshalRefTag(bs);
+	char *printname = unmarshalString(bs);
+	OZ_Term value;
+
+	NamedName *aux = NamedName::newCopyableName(strdup(printname));
+	value = makeTaggedLiteral(aux);
+	b->buildValue(value);
+	b->setTerm(value, refTag);
+	delete [] printname;
+	break;
+      }
+
+    case DIF_COPYABLENAME:
+      {
+	char *printname = unmarshalString(bs);
+	OZ_Term value;
+
+	NamedName *aux = NamedName::newCopyableName(strdup(printname));
+	value = makeTaggedLiteral(aux);
+	b->buildValue(value);
+	delete [] printname;
+	break;
+      }
+
+    case DIF_UNIQUENAME_DEF:
+      {
+	int refTag      = unmarshalRefTag(bs);
+	char *printname = unmarshalString(bs);
+	OZ_Term value;
+
+	value = oz_uniqueName(printname);
+	b->buildValue(value);
+	b->setTerm(value, refTag);
+	delete [] printname;
+	break;
+      }
+
+    case DIF_UNIQUENAME:
+      {
+	char *printname = unmarshalString(bs);
+	OZ_Term value;
+
+	value = oz_uniqueName(printname);
+	b->buildValue(value);
+	delete [] printname;
+	break;
+      }
+
+    case DIF_ATOM_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	char *aux  = unmarshalString(bs);
+	OZ_Term value = OZ_atom(aux);
+	b->buildValue(value);
+	b->setTerm(value, refTag);
+	delete [] aux;
+	break;
+      }
+
+    case DIF_ATOM:
+      {
+	char *aux  = unmarshalString(bs);
+	OZ_Term value = OZ_atom(aux);
+	b->buildValue(value);
+	delete [] aux;
+	break;
+      }
+
+    case DIF_BIGINT:
+      {
+	char *aux  = unmarshalString(bs);
+	b->buildValue(OZ_CStringToNumber(aux));
+	delete [] aux;
+	break;
+      }
+
+    case DIF_BIGINT_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	char *aux  = unmarshalString(bs);
+	OZ_Term value = OZ_CStringToNumber(aux);
+	b->buildValue(value);
+	b->setTerm(value, refTag);
+	delete [] aux;
+	break;
+      }
+
+    case DIF_LIST_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	b->buildListRemember(refTag);
+	break;
+      }
+
+    case DIF_LIST:
+      b->buildList();
+      break;
+
+    case DIF_TUPLE_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	int argno  = unmarshalNumber(bs);
+	b->buildTupleRemember(argno, refTag);
+	break;
+      }
+
+    case DIF_TUPLE:
+      {
+	int argno  = unmarshalNumber(bs);
+	b->buildTuple(argno);
+	break;
+      }
+
+    case DIF_RECORD_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	b->buildRecordRemember(refTag);
+	break;
+      }
+
+    case DIF_RECORD:
+      b->buildRecord();
+      break;
+
+    case DIF_REF:
+      {
+	int i = unmarshalNumber(bs);
+	b->buildValueRef(i);
+	break;
+      }
+
+      //
+    case DIF_OWNER:
+#ifdef DEBUG_CHECK
+      OZ_error("unmarshal: unexpected pickle tag (DIF_OWNER, %d)\n",tag); 
+#else
+      OZ_warning("unmarshal: unexpected pickle tag (DIF_OWNER, %d)\n",tag);
 #endif
+      b->buildValue(oz_nil());
+      break;
+
+    case DIF_PORT_DEF:
+    case DIF_PORT:
+    case DIF_CELL_DEF:
+    case DIF_CELL:
+    case DIF_LOCK_DEF:
+    case DIF_LOCK:
+    case DIF_OBJECT_DEF:
+    case DIF_OBJECT:
+#ifdef DEBUG_CHECK
+      OZ_error("unmarshal: unexpected tertiary (%d)\n",tag);
+#else
+      OZ_warning("unmarshal: unexpected tertiary (%d)\n",tag);
+#endif
+      b->buildValue(oz_nil());
+      break;
+
+    case DIF_RESOURCE_DEF:
+    case DIF_RESOURCE:
+#ifdef DEBUG_CHECK
+      OZ_error("unmarshal: unexpected resource (DIF_RESOURCE, %d)\n",tag);
+#else
+      OZ_warning("unmarshal: unexpected resource (DIF_RESOURCE, %d)\n",tag);
+#endif
+      b->buildValue(oz_nil());
+      break;
+
+    case DIF_CHUNK_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	OZ_Term value;
+	GName *gname = unmarshalGName(&value, bs);
+	if (gname) {
+	  b->buildChunkRemember(gname, refTag);
+	} else {
+	  b->knownChunk(value);
+	  b->setTerm(value, refTag);
+	}
+	break;
+      }
+
+    case DIF_CHUNK:
+      {
+	OZ_Term value;
+	GName *gname = unmarshalGName(&value, bs);
+	if (gname) {
+	  b->buildChunk(gname);
+	} else {
+	  b->knownChunk(value);
+	}
+	break;
+      }
+
+    case DIF_CLASS_DEF:
+      {
+	OZ_Term value;
+	int refTag = unmarshalRefTag(bs);
+	GName *gname = unmarshalGName(&value, bs);
+	int flags = unmarshalNumber(bs);
+	if (gname) {
+	  b->buildClassRemember(gname,flags,refTag);
+	} else {
+	  b->knownClass(value);
+	  b->setTerm(value,refTag);
+	}
+	break;
+      }
+
+    case DIF_CLASS:
+      {
+	OZ_Term value;
+	GName *gname = unmarshalGName(&value, bs);
+	int flags = unmarshalNumber(bs);
+	if (gname) {
+	  b->buildClass(gname, flags);
+	} else {
+	  b->knownClass(value);
+	}
+	break;
+      }
+
+    case DIF_VAR_OBJECT:
+    case DIF_VAR_OBJECT_DEF:
+#ifdef DEBUG_CHECK
+      OZ_error("unmarshal: unexpected object var (DIF_VAR_OBJECT, %d)\n",tag);
+#else
+      OZ_warning("unmarshal: unexpected object var (DIF_VAR_OBJECT, %d)\n",tag);
+#endif
+      b->buildValue(oz_nil());
+      break;
+
+    case DIF_PROC_DEF:
+      { 
+	OZ_Term value;
+	int refTag    = unmarshalRefTag(bs);
+	GName *gname  = unmarshalGName(&value, bs);
+	int arity     = unmarshalNumber(bs);
+	int gsize     = unmarshalNumber(bs);
+	int maxX      = unmarshalNumber(bs);
+	int line      = unmarshalNumber(bs);
+	int column    = unmarshalNumber(bs);
+	int codesize  = unmarshalNumber(bs); // in ByteCode"s;
+
+	//
+	if (gname) {
+	  //
+	  CodeArea *code = new CodeArea(codesize);
+	  ProgramCounter start = code->getStart();
+	  ProgramCounter pc = start + sizeOf(DEFINITION);
+	  //
+	  BuilderCodeAreaDescriptor *desc =
+	    new BuilderCodeAreaDescriptor(start, start+codesize, code);
+	  b->buildBinary(desc);
+
+	  //
+	  b->buildProcRemember(gname, arity, gsize, maxX, line, column, 
+			       pc, refTag);
+	} else {
+	  Assert(oz_isAbstraction(oz_deref(value)));
+	  // ('zero' descriptions are not allowed;)
+	  BuilderCodeAreaDescriptor *desc =
+	    new BuilderCodeAreaDescriptor(0, 0, 0);
+	  b->buildBinary(desc);
+
+	  //
+	  b->knownProcRemember(value, refTag);
+	}
+	break;
+      }
+
+    case DIF_PROC:
+      { 
+	OZ_Term value;
+	GName *gname  = unmarshalGName(&value, bs);
+	int arity     = unmarshalNumber(bs);
+	int gsize     = unmarshalNumber(bs);
+	int maxX      = unmarshalNumber(bs);
+	int line      = unmarshalNumber(bs);
+	int column    = unmarshalNumber(bs);
+	int codesize  = unmarshalNumber(bs); // in ByteCode"s;
+
+	//
+	if (gname) {
+	  //
+	  CodeArea *code = new CodeArea(codesize);
+	  ProgramCounter start = code->getStart();
+	  ProgramCounter pc = start + sizeOf(DEFINITION);
+	  //
+	  BuilderCodeAreaDescriptor *desc =
+	    new BuilderCodeAreaDescriptor(start, start+codesize, code);
+	  b->buildBinary(desc);
+
+	  //
+	  b->buildProc(gname, arity, gsize, maxX, line, column, pc);
+	} else {
+	  Assert(oz_isAbstraction(oz_deref(value)));
+	  // ('zero' descriptions are not allowed;)
+	  BuilderCodeAreaDescriptor *desc =
+	    new BuilderCodeAreaDescriptor(0, 0, 0);
+	  b->buildBinary(desc);
+
+	  //
+	  b->knownProc(value);
+	}
+	break;
+      }
+
+      //
+      // 'DIF_CODEAREA' is an artifact due to the non-recursive
+      // unmarshaling of code areas: in order to unmarshal an Oz term
+      // that occurs in an instruction, unmarshaling of instructions
+      // must be interrupted and later resumed; 'DIF_CODEAREA' tells the
+      // unmarshaler that a new code area chunk begins;
+    case DIF_CODEAREA:
+      {
+	BuilderOpaqueBA opaque;
+	BuilderCodeAreaDescriptor *desc = 
+	  (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
+	//
+	if (unpickleCode(bs, b, desc))
+	  b->finishFillBinary(opaque);
+	else
+	  b->suspendFillBinary(opaque);
+	break;
+      }
+
+    case DIF_DICT_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	int size   = unmarshalNumber(bs);
+	Assert(oz_onToplevel());
+	b->buildDictionaryRemember(size,refTag);
+	break;
+      }
+
+    case DIF_DICT:
+      {
+	int size   = unmarshalNumber(bs);
+	Assert(oz_onToplevel());
+	b->buildDictionary(size);
+	break;
+      }
+
+    case DIF_ARRAY_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	int low    = unmarshalNumber(bs);
+	int high   = unmarshalNumber(bs);
+	Assert(oz_onToplevel());
+	b->buildArrayRemember(low, high, refTag);
+	break;
+      }
+
+    case DIF_ARRAY:
+      {
+	int low    = unmarshalNumber(bs);
+	int high   = unmarshalNumber(bs);
+	Assert(oz_onToplevel());
+	b->buildArray(low, high);
+	break;
+      }
+
+    case DIF_BUILTIN_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	char *name = unmarshalString(bs);
+	Builtin * found = string2CBuiltin(name);
+
+	OZ_Term value;
+	if (!found) {
+	  OZ_warning("Builtin '%s' not in table.", name);
+	  value = oz_nil();
+	  delete [] name;
+	} else {
+	  if (found->isSited()) {
+	    OZ_warning("Unpickling sited builtin: '%s'", name);
+	  }
+	  delete [] name;
+	  value = makeTaggedConst(found);
+	}
+	b->buildValue(value);
+	b->setTerm(value, refTag);
+	break;
+      }
+
+    case DIF_BUILTIN:
+      {
+	char *name = unmarshalString(bs);
+	Builtin * found = string2CBuiltin(name);
+
+	OZ_Term value;
+	if (!found) {
+	  OZ_warning("Builtin '%s' not in table.", name);
+	  value = oz_nil();
+	  delete [] name;
+	} else {
+	  if (found->isSited()) {
+	    OZ_warning("Unpickling sited builtin: '%s'", name);
+	  }
+	  delete [] name;
+	  value = makeTaggedConst(found);
+	}
+	b->buildValue(value);
+	break;
+      }
+
+    case DIF_EXTENSION_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	int type = unmarshalNumber(bs);
+	OZ_Term value = oz_extension_unmarshal(type, bs, b);
+	if (value == 0) {
+	  OZ_error("Trouble with unmarshaling an extension!");
+	  b->buildValue(oz_nil());
+	  break;
+	} else {
+	  b->buildValue(value);
+	  b->setTerm(value, refTag);
+	}
+	break;
+      }
+
+    case DIF_EXTENSION:
+      {
+	int type = unmarshalNumber(bs);
+	OZ_Term value = oz_extension_unmarshal(type, bs, b);
+	if (value == 0) {
+	  OZ_error("Trouble with unmarshaling an extension!");
+	  b->buildValue(oz_nil());
+	  break;
+	} else {
+	  b->buildValue(value);
+	}
+	break;
+      }
+
+    case DIF_FSETVALUE:
+      b->buildFSETValue();
+      break;
+
+      //
+      // 'DIF_SYNC' and its handling is a part of the interface
+      // between the builder object and the unmarshaler itself:
+    case DIF_SYNC:
+      b->processSync();
+      break;
+
+    case DIF_CLONEDCELL_DEF:
+      {
+	int refTag = unmarshalRefTag(bs);
+	b->buildClonedCellRemember(refTag);
+	break;
+      }
+
+    case DIF_CLONEDCELL:
+      b->buildClonedCell();
+      break;
+
+    case DIF_EOF: 
+      return (b->finish());
+
+    case DIF_UNUSED0:
+    case DIF_UNUSED1:
+    case DIF_UNUSED2:
+    case DIF_UNUSED3:
+    case DIF_UNUSED4:
+    case DIF_UNUSED5:
+    case DIF_UNUSED6:
+    case DIF_UNUSED7:
+    case DIF_UNUSED8:
+      OZ_error("unmarshal: unexpected UNUSED tag: %d\n",tag);
+      b->buildValue(oz_nil());
+      break;
+
+    case DIF_VAR:
+    case DIF_VAR_DEF:
+    case DIF_VAR_AUTO:
+    case DIF_VAR_AUTO_DEF:
+    case DIF_FUTURE:
+    case DIF_FUTURE_DEF:
+    case DIF_FUTURE_AUTO:
+    case DIF_FUTURE_AUTO_DEF:
+      OZ_error("unmarshal: unexpected var/future tag: %d\n",tag);
+      b->buildValue(oz_nil());
+      break;
+
+    default:
+      OZ_error("unmarshal: unexpected tag: %d\n",tag);
+      b->buildValue(oz_nil());
+      break;
+    }
+  }
 }
 

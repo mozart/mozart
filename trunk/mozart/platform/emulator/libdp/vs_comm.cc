@@ -488,18 +488,9 @@ void VirtualSite::marshalLocalResources(MarshalerBuffer *mb,
 
 //
 // The 'segKeys' array is allocated with "
-#ifndef USE_FAST_UNMARSHALER
-void VirtualSite::unmarshalResourcesRobust(MarshalerBuffer *mb, int *error)
-#else
 void VirtualSite::unmarshalResources(MarshalerBuffer *mb)
-#endif
 {
-#ifndef USE_FAST_UNMARSHALER
-  segKeysNum = unmarshalNumberRobust(mb, error);
-  if(*error) return;
-#else
   segKeysNum = unmarshalNumber(mb);
-#endif
   Assert(segKeysNum);
   if (segKeysNum > segKeysArraySize) {
     int acc = segKeysNum, bits = 0;
@@ -518,15 +509,8 @@ void VirtualSite::unmarshalResources(MarshalerBuffer *mb)
   Assert(segKeysArraySize >= segKeysNum);
 
   //
-#ifndef USE_FAST_UNMARSHALER
-  for (int i = 0; i < segKeysNum; i++) {
-    segKeys[i] = (key_t) unmarshalNumberRobust(mb, error);
-    if(*error) return;
-  }
-#else
   for (int i = 0; i < segKeysNum; i++) 
     segKeys[i] = (key_t) unmarshalNumber(mb);
-#endif
 }
 
 //

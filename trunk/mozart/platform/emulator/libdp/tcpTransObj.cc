@@ -167,17 +167,16 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   writeBuffer->putInt(acknum);     // Ack
   writeBuffer->putInt(0xFFFFFFFF); // Placeholder for framesize
   writeBuffer->put(msgC->getMessageType());  // MessageType
-  if(cont) {
+  if (cont) {
     Assert(msgC->getMessageType()<C_FIRST);
     writeBuffer->put(CF_CONT);     // CF
     Assert(msgC->getMsgNum()!=NO_MSG_NUM);
     writeBuffer->putInt(msgC->getMsgNum());
+  } else {
+    Assert(msgC->getMsgNum()==NO_MSG_NUM);
+    writeBuffer->put(CF_FIRST);
+    mess_counter[msgC->getMessageType()].send();
   }
-  else
-    {
-      Assert(msgC->getMsgNum()==NO_MSG_NUM);
-      writeBuffer->put(CF_FIRST);
-    }
 
   writeBuffer->setSite(site);
   msgC->marshal(writeBuffer, tcptransController);
@@ -282,17 +281,18 @@ unmarshalReturn TCPTransObj::unmarshal() {
     GenCast(b,BYTE,type,MessageType);
     cf=readBuffer->get();          // CF
 
-    if(cf==CF_FIRST){
-      msgC=comObj->getMsgContainer();
+    //
+    if (cf == CF_FIRST) {
+      msgC = comObj->getMsgContainer();
+      msgC->setMessageType(type);
+      Assert(!msgC->checkFlag(MSG_HAS_UNMARSHALCONT));
+    } else {
+      Assert(cf == CF_CONT);
+      msgnum = readBuffer->getInt();   // MsgNr
+      msgC = comObj->getMsgContainer(msgnum);
+      Assert(type == msgC->getMessageType());
     }
-    else {
-      Assert(cf==CF_CONT);
-      msgnum=readBuffer->getInt();   // MsgNr
-      msgC=comObj->getMsgContainer(msgnum);
-    }
-
-    Assert(msgC!=NULL);
-    msgC->setMessageType(type);
+    Assert(msgC != (MsgContainer *) 0);
 
     // Unmarshal data
     readBuffer->setSite(site);
@@ -312,8 +312,7 @@ unmarshalReturn TCPTransObj::unmarshal() {
 	  return U_CLOSED;
       }
       return U_MORE;
-    }
-    else {
+    } else {
       // Contents somehow corrupted.
       // Since messages have to be delivered in order we cannot just
       // discard this frame. Using TCP something must be seriously wrong.

@@ -96,10 +96,8 @@ void marshalFloat(PickleMarshalerBuffer *bs, double d);
 void marshalGName(PickleMarshalerBuffer *bs, GName *gname);
 void marshalSmallInt(PickleMarshalerBuffer *bs, OZ_Term siTerm);
 void marshalFloat(PickleMarshalerBuffer *bs, OZ_Term floatTerm);
-void marshalLiteral(PickleMarshalerBuffer *bs, OZ_Term litTerm, int litTermInd);
-void marshalBigInt(PickleMarshalerBuffer *bs, OZ_Term biTerm, ConstTerm *biConst);
 //
-void marshalProcedureRef(GenTraverser *gt,
+void marshalProcedureRef(AddressHashTableO1Reset *lIT,
 			 AbstractionEntry *entry, PickleMarshalerBuffer *bs);
 void marshalRecordArity(GenTraverser *gt,
 			SRecordArity sra, PickleMarshalerBuffer *bs);
@@ -113,17 +111,8 @@ void marshalHashTableRef(GenTraverser *gt,
 
 
 //
-#ifdef USE_FAST_UNMARSHALER
-
 char *unmarshalString(PickleMarshalerBuffer *bs);
 char *unmarshalVersionString(PickleMarshalerBuffer *bs);
-
-#else
-
-char *unmarshalStringRobust(PickleMarshalerBuffer *bs, int *error);
-char *unmarshalVersionStringRobust(PickleMarshalerBuffer *, int *error);
-
-#endif
 
 #endif
 

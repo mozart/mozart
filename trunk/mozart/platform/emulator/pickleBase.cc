@@ -301,9 +301,6 @@ void marshalTermRef(PickleMarshalerBuffer *bs, int lbl)
 #undef  MARSHALERBUFFER
 
 //
-#ifdef USE_FAST_UNMARSHALER
-
-//
 static
 char *getString(PickleMarshalerBuffer *bs, unsigned int i)
 {
@@ -334,49 +331,6 @@ char *unmarshalVersionString(PickleMarshalerBuffer *bs)
   unsigned int i = bs->get();
   return getString(bs,i);
 }
-
-#else
-
-//
-static
-char *getStringRobust(PickleMarshalerBuffer *bs, unsigned int i, int *error)
-{
-  char *ret = new char[i+1];
-  if (ret == (char *) 0) {
-    *error = OK;
-    return ((char *) 0);
-  }
-  for (unsigned int k=0; k<i; k++) {
-    if (bs->atEnd()) {
-      delete ret;
-      *error = OK;
-      return ((char *) 0);
-    }
-    ret[k] = bs->get();
-  }
-  ret[i] = '\0';
-  *error = NO;
-  return (ret);
-}
-
-//
-char *unmarshalStringRobust(PickleMarshalerBuffer *bs, int *error)
-{
-  char *string;
-  unsigned int i = unmarshalNumberRobust(bs,error);
-  if(*error) return NULL;
-  string = getStringRobust(bs,i,error);
-  return string;
-}
-
-//
-char *unmarshalVersionStringRobust(PickleMarshalerBuffer *bs, int *error)
-{
-  unsigned int i = bs->get();
-  return getStringRobust(bs,i,error);
-}
-
-#endif
 
 #endif
 

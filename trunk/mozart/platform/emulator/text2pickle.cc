@@ -451,59 +451,6 @@ public:
 };
 
 
-
-/************************************************************/
-
-class TermTag {
-public:
-  char *label;
-  int value;
-  TermTag *next;
-
-  static int tagCounter;
-
-  TermTag(char *lbl, TermTag *nxt): label(strdup(lbl)), next(nxt) 
-  {
-    value = tagCounter++;
-  }
-};
-
-int TermTag::tagCounter = 0;
-
-
-class TermTagTable {
-  static const int tableSize = 1024;  /* fixed size, cannot grow :-( */
-  TermTag *table[tableSize];
-public:
-  TermTagTable() 
-  {
-    for (int i=0; i<tableSize; i++) {
-      table[i] = NULL;
-    }
-  }
- 
-  TermTag *find(char *lbl)
-  {
-    int key = hash(lbl)%tableSize;
-    TermTag *aux = table[key];
-    while(aux) {
-      if (strcmp(lbl,aux->label)==0)
-	return aux;
-      aux = aux->next;
-    }
-    return NULL;
-  }
-
-  TermTag *add(char *lbl)
-  {
-    Assert(!find(lbl));
-    int key = hash(lbl)%tableSize;
-    table[key] = new TermTag(lbl,table[key]);
-    return table[key];
-  }
-};
-
-
 /************************************************************/
 
 typedef 
@@ -518,7 +465,7 @@ union {
   Label *labelDef;
   Opcode opcode;
   MarshalTag mtag;
-  TermTag *ttag;
+  unsigned ttag;		// do nothing with labels (kept as an int);
 } Tagvalue;
 
 
@@ -580,8 +527,8 @@ void pickle(TaggedPair *aux, PickleMarshalerBuffer *out)
     case TAG_STRING:    marshalString(out, aux->val.string); break;
     case TAG_COMMENT:   marshalComment(out, aux->val.string); break;
     case TAG_DIF:       marshalDIF(out, aux->val.mtag); break;
-    case TAG_TERMDEF:   marshalTermDef(out, aux->val.ttag->value); break;
-    case TAG_TERMREF:   marshalTermRef(out, aux->val.ttag->value); break;
+    case TAG_TERMDEF:   marshalTermDef(out, aux->val.ttag); break;
+    case TAG_TERMREF:   marshalTermRef(out, aux->val.ttag); break;
     default:            Assert(0);
     }
     aux = aux->next;
@@ -641,7 +588,6 @@ TaggedPair *unpickle(FILE *in)
   TaggedPair *ret = NULL;
   TaggedPair **lastPair = &ret; /* pointer to the end for adding new items */
 
-  TermTagTable termTags;
   Tagvalue val;
 
   /* old version */
@@ -690,11 +636,12 @@ TaggedPair *unpickle(FILE *in)
     case TAG_STRING:    val.string = strdup(scanString(in)); break;
     case TAG_COMMENT:   val.string = scanComment(in); break;
     case TAG_DIF:       val.mtag = char2Tag(scanString(in)); break;
-    case TAG_LABELDEF:  val.labelDef = stack->labels.defLabel(scanString(in),PC); break;
+    case TAG_LABELDEF:
+      val.labelDef = stack->labels.defLabel(scanString(in),PC);
+      break;
     case TAG_EOF:       goto end;
-    case TAG_TERMDEF:   val.ttag = termTags.add(scanString(in)); break;
-    case TAG_TERMREF:   val.ttag = termTags.find(scanString(in)); Assert(val.ttag); break;
-
+    case TAG_TERMDEF:
+    case TAG_TERMREF:   val.ttag = scanInt(in); break;
     default:
       OZ_error("unknown tag: '%c'\n",tag);
     }

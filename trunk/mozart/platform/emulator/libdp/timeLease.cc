@@ -69,9 +69,9 @@ void RRinstance_TL::marshal_RR(MarshalerBuffer *buf){
   marshalNumber(buf, seconds);
 }
 
-void RRinstance_TL::unmarshal_RR(MarshalerBuffer *buf, int *error){
-  seconds = unmarshalNumberRobust(buf, error);
-  if (*error) {seconds = 0; return;}
+void RRinstance_TL::unmarshal_RR(MarshalerBuffer *buf)
+{
+  seconds = unmarshalNumber(buf);
 }
 
 /*********************** TL *************************/

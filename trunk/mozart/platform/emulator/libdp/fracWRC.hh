@@ -45,7 +45,7 @@ public:
   RRinstance_WRC(RRinstance *n);
   RRinstance_WRC(int e, int d, RRinstance *n);
   void marshal_RR(MarshalerBuffer *buf);
-  void unmarshal_RR(MarshalerBuffer *buf, int *error);
+  void unmarshal_RR(MarshalerBuffer *buf);
   virtual ~RRinstance_WRC(){}
 };
 
