@@ -46,12 +46,12 @@ LDFLAGS  += -L/linux/CPLEX
 LIBS     += -lcplex
 endif
 
-CXX     = oztool c++
+CXX     = $(OZTOOL) c++
 
 DEPEND   = $(CXX) $(CFLAGS) -MM
 
 #LD = ozdynld
-LD = oztool ld
+LD = $(OZTOOL) ld
 
 
 CPPSRCS  =      aux.cc \
@@ -136,3 +136,17 @@ depend:
         $(DEPEND) $(CSRCS) $(CPPSRCS) > Makefile.deps
 
 -include Makefile.deps
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+        ./config.status
+
+config.status: configure
+        ./config.status --recheck
