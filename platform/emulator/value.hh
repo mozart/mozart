@@ -2052,6 +2052,14 @@ extern DbgInfo *allDbgInfos;
 
 #define PR_SITED   0x1
 
+class PrTabEntryProfile {
+public:
+  unsigned int numClosures, numCalled, heapUsed, samples, lastHeap;
+  PrTabEntryProfile(void) {
+    numClosures = numCalled = heapUsed = samples = lastHeap = 0;
+  }
+};
+
 class PrTabEntry {
 private:
   unsigned short arity;
@@ -2063,11 +2071,12 @@ private:
   int maxX;
 public:
   PrTabEntry *next;
-  unsigned int numClosures, numCalled, heapUsed, samples, lastHeap, szVars;
   static PrTabEntry *allPrTabEntries;
-  static void printPrTabEntries();
+
   static TaggedRef getProfileStats();
   static void profileReset();
+
+  PrTabEntryProfile * pprof;
 
   ProgramCounter PC;
 
@@ -2101,10 +2110,16 @@ public:
     Assert((int)arity == getWidth(arityInit)); /* check for overflow */
     PC = NOCODE;
     info = oz_nil();
-    numClosures = numCalled = heapUsed = samples = lastHeap = szVars = 0;
+    pprof = NULL;
     next = allPrTabEntries;     
     allPrTabEntries = this;
     DebugCheckT(gSize=-1);
+  }
+
+  PrTabEntryProfile * getProfile(void) {
+    if (!pprof)
+      pprof = new PrTabEntryProfile();
+    return pprof;
   }
 
   PrTabEntry(TaggedRef name, SRecordArity arityInit,
@@ -2120,6 +2135,11 @@ public:
     int colu    = OZ_intToC(OZ_getArg(pos,2));
     
     init(name, arityInit, fil, lin, colu, fl, maxX);
+  }
+
+  ~PrTabEntry(void) {
+    if (pprof)
+      delete pprof;
   }
 
   PrTabEntry(TaggedRef name, SRecordArity arityInit,
@@ -2157,8 +2177,6 @@ public:
   TaggedRef getFile() { return file; }
 
   CodeArea *getCodeBlock();
-
-  void patchFileAndLine();
 
   static void gCollectPrTabEntries(void);
 };

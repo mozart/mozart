@@ -815,10 +815,12 @@ void AM::handleAlarm(int ms)
   if (ms>0) 
     emulatorClock += (unsigned long) ms;
 
-  if (ozstat.currPropagator) {
-    ozstat.currPropagator->incSamples();
-  } else if (ozstat.currAbstr) {
-    ozstat.currAbstr->samples++;
+  if (am.profileMode()) {
+    if (ozstat.currPropagator) {
+      ozstat.currPropagator->incSamples();
+    } else if (ozstat.currAbstr) {
+      ozstat.currAbstr->getProfile()->samples++;
+    }
   }
 
   if (threadSwitchCounter > 0) {

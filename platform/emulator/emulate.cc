@@ -2652,7 +2652,8 @@ Case(GETVOID)
 	predd->setGSize(size);
       }
       
-      predd->numClosures++;
+      if (am.profileMode())
+	predd->getProfile()->numClosures++;
       
       if (isTailCall) { // was DEFINITIONCOPY?
 	TaggedRef list = oz_deref(XPC(1));
@@ -3345,13 +3346,14 @@ Case(GETVOID)
 
   Case(PROFILEPROC)
     {
+
       static int sizeOfDef = -1;
       if (sizeOfDef==-1) sizeOfDef = sizeOf(DEFINITION);
       
       Assert(CodeArea::getOpcode(PC-sizeOfDef) == DEFINITION);
       PrTabEntry *pred = getPredArg(PC-sizeOfDef+3); /* this is faster */
 
-      pred->numCalled++;
+      pred->getProfile()->numCalled++;
       if (pred!=ozstat.currAbstr) {
 	CTS->pushAbstr(ozstat.currAbstr);
 	ozstat.leaveCall(pred);

@@ -3039,12 +3039,6 @@ bomb:
 
 #ifdef MISC_BUILTINS
 
-OZ_BI_define(BIstatisticsPrint, 1,0)
-{
-  oz_declareVirtualStringIN(0,file);
-  return PROCEED;
-} OZ_BI_end
-
 #ifdef PROFILE_INSTR
 OZ_BI_define(BIinstructionsPrint, 0,0)
 {
@@ -3087,12 +3081,6 @@ OZ_BI_define(BIbiPrint, 0,0)
 } OZ_BI_end
 #endif
 
-
-OZ_BI_define(BIstatisticsPrintProcs, 0,0)
-{
-  PrTabEntry::printPrTabEntries();
-  return PROCEED;
-} OZ_BI_end
 
 #endif
 
