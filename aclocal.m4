@@ -1236,7 +1236,7 @@ AC_DEFUN(OZ_ARG_WITH_LIB_DIR,[
   done
   # add them to LDFLAGS and oz_lib_path
   IFS=$oz_tmp_IFS
-  : ${oz_lib_path="/usr/local/lib"}
+  : ${oz_lib_path=""}
   for oz_tmp1 in $oz_tmp_dirs DONE; do
     if test "$oz_tmp1" != DONE; then
       OZ_ADDTO_LDFLAGS(-L$oz_tmp1)
