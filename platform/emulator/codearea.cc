@@ -345,6 +345,7 @@ Bool CodeArea::getNextDebugInfoArgs(ProgramCounter PC,
       comment = getTaggedArg(PC+4);
       return OK;
     case DEFINITION:
+    case DEFINITIONCOPY:
       PC += getLabelArg(PC+2);
       break;
     case ENDOFFILE:
@@ -365,6 +366,7 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
     Opcode op = getOpcode(PC);
     switch (op) {
     case DEFINITION:
+    case DEFINITIONCOPY:
       PC += getLabelArg(PC+2);
       break;
     case ENDDEFINITION:
@@ -418,7 +420,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
                                  TaggedRef &file, TaggedRef &line,
                                  TaggedRef &column, TaggedRef &predName)
 {
-  Assert(getOpcode(PC) == DEFINITION);
+  Assert(getOpcode(PC) == DEFINITION || getOpcode(PC) == DEFINITIONCOPY);
   PrTabEntry *pred = getPredArg(PC+3);
 
   reg      = regToInt(getRegArg(PC+1));
@@ -612,6 +614,16 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                getPosIntArg(PC+5));
       DISPATCH();
 
+    case TESTLESSEQ:
+    case TESTLESS:
+      fprintf (ofile,
+               "(x(%d) x(%d) %p %d)\n",
+               regToInt(getRegArg(PC+2)),
+               regToInt(getRegArg(PC+3)),
+               computeLabelArg(PC,PC+4),
+               getPosIntArg(PC+5));
+      DISPATCH();
+
     case INLINEREL1:
       fprintf (ofile,
                "(%s x(%d) %d)\n",
@@ -630,6 +642,15 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                getPosIntArg(PC+4));
       DISPATCH();
 
+    case INLINEPLUS1:
+    case INLINEMINUS1:
+      fprintf (ofile,
+               "(x(%d) x(%d) %d)\n",
+               regToInt(getRegArg(PC+2)),
+               regToInt(getRegArg(PC+3)),
+               getPosIntArg(PC+4));
+      DISPATCH();
+
     case INLINEFUN2:
     case INLINEREL3:
     case INLINEEQEQ:
@@ -642,9 +663,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                getPosIntArg(PC+5));
       DISPATCH();
 
+    case INLINEPLUS:
+    case INLINEMINUS:
     case INLINEUPARROW:
       {
-        TaggedRef literal = getLiteralArg(PC+2);
         fprintf (ofile,
                  "(x(%d) x(%d) x(%d) %d)\n",
                  regToInt(getRegArg(PC+1)),
@@ -842,6 +864,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       DISPATCH();
 
     case DEFINITION:
+    case DEFINITIONCOPY:
       {
         defCount++;
 
