@@ -749,6 +749,10 @@ inline
 Float *Float::gc()
 {
   COUNT(ozfloat);
+
+  if (opMode == IN_TC)
+    return this;
+
   Float *ret =  newFloat(value);
   return ret;
 }
@@ -756,6 +760,9 @@ Float *Float::gc()
 inline
 BigInt *BigInt::gc()
 {
+  if (opMode == IN_TC)
+    return this;
+
   CHECKCOLLECTED(*(int *)&value.d, BigInt *);
   COUNT(bigInt);
 
