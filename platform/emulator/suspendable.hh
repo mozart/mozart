@@ -150,6 +150,9 @@ public:
     return !isThread();
   }
 
+  Bool _wakeup(Board *, PropCaller);
+  Bool _wakeupLocal(Board *, PropCaller);
+
   /*
    * Common to threads and propagators
    */
@@ -157,11 +160,6 @@ public:
   FLAGTESTS(Tagged)
   FLAGTESTS(Runnable)
   FLAGTESTS(External)
-
-  Bool _wakeup(Board *, PropCaller);
-  Bool wakeup(Board *, PropCaller);
-
-  Bool _wakeupLocal(Board *, PropCaller);
 
   /*
    * Threads 
