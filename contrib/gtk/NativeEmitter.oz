@@ -25,6 +25,7 @@ import
    Open
    Util
    System(show)
+   OS(getCWD)
 export
    'funcEmitter'    : Emitter
    'fieldEmitter'   : FieldEmitter
