@@ -618,9 +618,11 @@ define
                if {IsFree @WholeTOC} then
                   @WholeTOC = SEQ([hr() {FormatTOC @TOC ~1} hr()])
                end
-               {@MyLaTeXToGIF
-                process({Dictionary.condGet @Meta 'latex.package' nil}
-                        @Reporter)}
+               case @MyLaTeXToGIF of unit then skip
+               elseof O then
+                  {O process({Dictionary.condGet @Meta 'latex.package' nil}
+                             @Reporter)}
+               end
                {@MyThumbnails process(@Reporter)}
                {ForAll @ChunkLinks
                 proc {$ Name#LinkedTitle}
@@ -1039,7 +1041,9 @@ define
             [] picture then
                case {CondSelect M type unit}
                of 'LATEX' then FileName in
-                  {@MyLaTeXToGIF convertPicture(M.1 ?FileName)}
+                  case @MyLaTeXToGIF of unit then FileName='/dev/null'
+                  elseof O then {O convertPicture(M.1 ?FileName)}
+                  end
                   OzDocToHTML, PictureExtern("" M FileName $)
                elseof N then
                   {@Reporter error(kind: OzDocError
@@ -1058,8 +1062,10 @@ define
                   OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
                [] 'latex' then DIR FileName in
                   DIR = {Property.get 'ozdoc.src.dir'}
-                  {@MyLaTeXToGIF
-                   convertPicture({ReadFile DIR#'/'#M.to} ?FileName)}
+                  case @MyLaTeXToGIF of unit then FileName='/dev/null'
+                  elseof O then
+                     {O convertPicture({ReadFile DIR#'/'#M.to} ?FileName)}
+                  end
                   OzDocToHTML, PictureExtern("" M FileName $)
                [] unit then
                   %--** the notation should be derived from the file name
