@@ -420,29 +420,30 @@ overrides a more general level.
 The most general is <EM>default site-based</EM>,
 which determines what exceptions are raised
 if the entity is not enabled at the site or thread level.
-Next is site-based, which detects a fault for a
+Next is <EM>site-based</EM>, which detects a fault for a
 specific entity when an operation is tried on one
 particular site.
 Finally, the most fine-grained is 
-thread-based, which detects the fault for a
+<EM>thread-based</EM>, which detects a fault for a
 specific entity when an operation
-is attempted in a particular thread.
+is tried in a particular thread.
 
 <P>The site-based and thread-based levels have to
 be enabled specifically for a given entity.
-The call <<{Fault.enable Entity Level FStates}>> is
+The function <<{Fault.enable Entity Level FStates}>> is
 used, where <<Level>> is either <<site>> or
 <<'thread'(T)>>.
-The thread <<T>> is either the atom <<this>> (for the current thread),
+The thread <<T>> is either the atom <<this>>
+(which means the current thread),
 or a thread identifier.
 Any thread's identifier
 can be obtained by executing <<{Thread.this T}>>
 in the thread.
 
-<P>The thread level is the most specific; if it is enabled 
+<P>The thread-based level is the most specific; if it is enabled 
 it overrides the two others in its thread.
-The site level, if it is enabled, overrides the default.
-If neither a thread nor a site level are
+The site-based level, if it is enabled, overrides the default.
+If neither a thread-based nor a site-based level are
 enabled, then the default is used.
 Even if the actual fault state does not give an exception,
 the mere fact that a level is enabled always overrides the
@@ -450,16 +451,17 @@ next higher level.
 
 <P>For example, assume that the cell <<C>>
 is on a site with
-default detection for <<[tempFail permFail]>>,
-and a thread-specific detection for <<[permFail]>>
+default detection for <<[tempFail permFail]>>
+and thread-based detection for <<[permFail]>>
 in thread <<T1>>.
 What happens if many threads try to do
 an exchange if C's actual fault state
 is <<tempFail>>?
 Then thread <<T1>> will block, since it is set up
 to detect only <<permFail>>.
-All other threads will raise the exception <<tempFail>>
-(since it is enabled by default).
+All other threads will raise the exception <<tempFail>>,
+since the default covers it
+and there is no enable at the site or thread levels.
 Thread <<T1>> will continue the operation when and
 if the <<tempFail>> state goes away.
 
@@ -486,7 +488,9 @@ FOOT>Note that each site has its own <<Fault>> module.</NOTE>
 The calls <<{Fault.enable E 'thread'(T) ...}>> 
 and <<{Fault.install E 'thread'(T) ...}>> will work anywhere.
 A procedure containing these calls may be passed around
-the network at will, and will work correctly anywhere.
+the network at will, and will work correctly anywhere
+if <<T>> identifies a thread on the site
+where the procedure is executed.
 
 <SECTION id="advanced.model"><TITLE>Advanced model</TITLE>
 
