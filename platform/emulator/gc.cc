@@ -257,6 +257,9 @@ public:
   static void print()
   {
     for (ThreadList *aux = allthreads; aux; aux=aux->next) {
+      printf("\n\n");
+      message("Thread: id=%d\n",aux->elem->getID());
+      message("----------------\n",aux->elem->getID());
       aux->elem->printTaskStack(NOCODE,NO);
     }
   }
