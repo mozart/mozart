@@ -1,19 +1,9 @@
 /*
  *  Authors:
- *    Tobias Müller (tmueller@ps.uni-sb.de)
- *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
- *  Contributors:
- *    Michael Mehl (mehl@dfki.de)
- *    Denys Duchier (duchier@ps.uni-sb.de)
- * 
  *  Copyright:
- *    Tobias Müller, 1999
- *    Kostja Popow, 1999
  *    Christian Schulte, 1999
- *    Michael Mehl, 1999
- *    Denys Duchier, 1999
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -37,68 +27,89 @@
 
 #include "susp_queue.hh"
 
+void SuspQueue::reset(void) {
+  if (isEmpty())
+    return;
 
-void SuspQueue::resize(void) {
-  int new_maxsize = (maxsize * 3) >> 1;
-  Suspendable ** new_queue = 
-    (Suspendable **) heapMalloc(sizeof(Suspendable *) * new_maxsize);
+  SuspList * sl = last;
 
-  int h = head;
-  
-  for (int i = 0; i < size; i++) {
-    new_queue[i] = queue[h];
-    INC(h);
-  }
-  
-  freeListDispose (queue, maxsize * sizeof(Suspendable *));
-  queue = new_queue;
-  head = 0;
-  tail = size - 1;
-  maxsize = new_maxsize;
+  do { 
+    sl = sl->dispose();
+  } while (sl != last);
+
+  init();
 }
 
+int SuspQueue::getSize(void) {
+  if (isEmpty())
+    return 0;
+  
+  int n = 0;
 
+  SuspList * sl = last;
+
+  do {
+    n++; sl = sl->getNext();
+  } while (sl != last);
+
+  return n;
+}
+    
 Bool SuspQueue::isIn(Suspendable * s) {
-  int h = head;
+  if (isEmpty())
+    return NO;
+  
+  SuspList * sl = last;
 
-  for (int i = size; i--; ) {
-    if (queue[h] == s) 
+  do {
+    if (sl->getSuspendable() == s)
       return OK;
-    INC(h);
-  }
+    sl = sl->getNext();
+  } while (sl != last);
 
   return NO;
 }
 
 void SuspQueue::remove(Suspendable * s) {
-  int h = head;
-  
-  for (int i = size; i--; ) {
-    if (queue[h] == s) {
-      for (int j = i-1; j-- ; ) {
-	int last=h;
-	INC(h);
-	queue[last] = queue[h];
-      }
-      size--;
-      tail = tail-1; if (tail < 0 && size>0) tail = maxsize-1;
+  if (isEmpty())
+    return;
+
+  SuspList * sl = last;
+
+  do {
+    SuspList * nl = sl->getNext();
+
+    if (nl->getSuspendable() == s) {
+      if (nl == sl)
+	init();
+      else
+	sl->setNext(nl->dispose());
       return;
     }
-    INC(h);
-  }
+
+    sl = nl;
+  } while (sl != last);
+
 }
 
-SuspQueue * SuspQueue::merge(SuspQueue * sq) {
-  if (!this)
-    return sq;
+void SuspQueue::merge(SuspQueue & sq) {
+  // Merge entries from sq to this
+  if (sq.isEmpty())
+    return;
 
-  if (!sq)
-    return this;
-
-  while (!isEmpty())
-    sq->enqueue(dequeue());
-
-  return sq;
+  if (isEmpty()) {
+    last = sq.last;
+  } else {
+#ifdef DEBUG_CHECK
+    int n1 = getSize(), n2 = sq.getSize();
+#endif
+    SuspList * head = last->getNext();
+    last->setNext((sq.last)->getNext());
+    (sq.last)->setNext(head);
+#ifdef DEBUG_CHECK
+    Assert(n1 + n2 == getSize());
+#endif
+  }
   
 };
 

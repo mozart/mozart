@@ -287,6 +287,7 @@ void AM::init(int argc,char **argv)
   propLocation    = NO;
 
   threadsPool.init();
+  SuspList::init();
 
   // builtins
   initLiterals();
