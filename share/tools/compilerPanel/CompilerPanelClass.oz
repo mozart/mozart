@@ -1182,7 +1182,7 @@ in
 				      font: SwitchFont
 				      variable: DebugInfoControl
 				      action: {MkAction
-					       Switch(debuginfocontrol)})}
+					       Switch(controlflowinfo)})}
 	 DebugInfoVarnames = {New Tk.variable tkInit(false)}
 	 DebugInfoVarnamesSw = {New Tk.checkbutton
 				tkInit(parent: DebuggerFrame
@@ -1190,7 +1190,7 @@ in
 				       font: SwitchFont
 				       variable: DebugInfoVarnames
 				       action: {MkAction
-						Switch(debuginfovarnames)})}
+						Switch(staticvarnames)})}
 
 	 Queue = {New TkTools.note tkInit(parent: self.Book
 					  text: 'Query Queue')}
@@ -1318,8 +1318,8 @@ in
 				   threadedqueries: ThreadedQueries
 				   profile: Profile
 				   runwithdebugger: RunWithDebugger
-				   debuginfocontrol: DebugInfoControl
-				   debuginfovarnames: DebugInfoVarnames)
+				   controlflowinfo: DebugInfoControl
+				   staticvarnames: DebugInfoVarnames)
 	 self.ToGray = [Remove Pickle Unpickle
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
 			self.MaxNumberOfErrors.entry DoMaxErrors

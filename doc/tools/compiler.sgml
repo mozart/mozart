@@ -138,13 +138,13 @@ to ?{STRING}./
 option if you want to take advantage of
 <ref.extern to="ozdoc:ozcar"/<em/The Mozart Debugger//.  The <code/-g/
 option is actually an abbreviation for the combination of
-<code/--debuginfocontrol/ and <code/--debuginfovarnames/./
+<code/--controlflowinfo/ and <code/--staticvarnames/./
 
-	<entry/<code/--(no)debuginfocontrol//
+	<entry/<code/--(no)controlflowinfo//
 	<item/Include control flow information/
 
-	<entry/<code/--(no)debuginfovarnames//
-	<item/Include variable information/
+	<entry/<code/--(no)staticvarnames//
+	<item/Include static variable name information/
 
 	<entry/<code/-p/, <code/--(no)profile//
 	<item/Emits code with profiling information.  Use this option
