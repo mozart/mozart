@@ -333,6 +333,35 @@ dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
 
 AC_CHECK_HEADERS(dlfcn.h)
 
+AC_DEFUN(OZ_CHECK_DLOPEN_UNDERSCORE,[
+if test "$ac_cv_lib_dl_dlopen" = yes || \
+   test "$ac_cv_func_dlopen" = yes; then
+  AC_CACHE_CHECK([whether dlopen needs leading underscore],
+    oz_cv_dlopen_underscore,[
+    if test -n "$oz_dlopen_underscore"; then
+      oz_cv_dlopen_underscore=$oz_dlopen_underscore
+    else
+      cat > conftest.$ac_ext <<EOF
+extern "C"
+int foo() { return 1; }
+EOF
+      if AC_TRY_EVAL(ac_compile); then
+        oz_tmp=`(strings -a conftest.o | grep foo) 2>/dev/null`
+        if expr "$oz_tmp" : '_' 1>/dev/null 2>&1; then
+          oz_cv_dlopen_underscore=yes;
+        else
+          oz_cv_dlopen_underscore=no;
+        fi
+      else
+        AC_MSG_ERROR([test bombed])
+      fi
+      rm -rf conftest.$ac_ext conftest.o
+    fi])
+  if test "$oz_cv_dlopen_underscore" = yes; then
+    AC_DEFINE(DLOPEN_UNDERSCORE)
+  fi
+fi])
+
 dnl *****************************************************************
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl *****************************************************************
@@ -364,6 +393,8 @@ fi
 dnl *****************************************************************
 dnl MISC
 dnl *****************************************************************
+
+OZ_CHECK_DLOPEN_UNDERSCORE
 
 # AC_CHECK_SIZEOF(int)
 # AC_C_BIGENDIAN
