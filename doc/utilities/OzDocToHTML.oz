@@ -1733,8 +1733,8 @@ define
          end
       end
       meth OutputAnswers($)
-         SEQ({FoldR @Exercises
-              proc {$ ID#Number#See In ?HTML}
+         SEQ({FoldL @Exercises
+              proc {$ In ID#Number#See ?HTML}
                  case {Dictionary.condGet @Answers ID unit} of unit then VS in
                     VS = {Value.toVirtualString ID 0 0}
                     {@Reporter warn(kind: OzDocWarning
