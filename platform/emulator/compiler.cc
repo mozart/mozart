@@ -274,6 +274,7 @@ SRecordArity getArity(TaggedRef arity)
     return mkTupleWidth(tagged2SmallInt(arity));
   } else {
     Assert(oz_isSmallInt(oz_checkList(arity)));
+    arity = packlist(arity);
     TaggedRef sortedarity = arity;
     if (!isSorted(arity)) {
       int len;
