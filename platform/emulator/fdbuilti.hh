@@ -184,7 +184,9 @@ OZ_C_proc_proto(BIfdPlus)
 OZ_C_proc_proto(BIfdMinus)
 OZ_C_proc_proto(BIfdMult)
 OZ_C_proc_proto(BIfdDiv)
+OZ_C_proc_proto(BIfdDivInterval)
 OZ_C_proc_proto(BIfdMod)
+OZ_C_proc_proto(BIfdModInterval)
 OZ_C_proc_proto(BIfdPlus_rel)
 OZ_C_proc_proto(BIfdMult_rel)
 OZ_C_proc_proto(BIfdSquare)
@@ -312,7 +314,9 @@ OZ_C_proc_proto(BIfdMinus_body)
 OZ_C_proc_proto(BIfdMult_body)
 OZ_C_proc_proto(BIfdSquare_body)
 OZ_C_proc_proto(BIfdDiv_body)
+OZ_C_proc_proto(BIfdDivInterval_body)
 OZ_C_proc_proto(BIfdMod_body)
+OZ_C_proc_proto(BIfdModInterval_body)
 OZ_C_proc_proto(BIfdAnd_body)
 OZ_C_proc_proto(BIfdOr_body)
 OZ_C_proc_proto(BIfdNot_body)
@@ -393,6 +397,9 @@ OZ_Bool genericHead_x_y_z_det_x_or_y(int OZ_arity, OZ_Term OZ_args[],
 
 OZ_Bool genericHead_x_y_c(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
                           OZ_CFun BI_body, FDPropState target_list);
+
+OZ_Bool genericHead_x_y_c_Div(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
+                          OZ_CFun BI_body, Bool nestable, FDPropState target_list);
 
 OZ_Bool genericHead_x_y(int OZ_arity, OZ_Term OZ_args[], OZ_CFun OZ_self,
                         OZ_CFun BI_body, FDPropState target_list,

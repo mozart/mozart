@@ -1033,8 +1033,12 @@ void BIinitFD(void)
   BIadd("fdSquare_body", 2, BIfdSquare_body);
   BIadd("fdDiv", 3, BIfdDiv);
   BIadd("fdDiv_body", 3, BIfdDiv_body);
+  BIadd("fdDivInterval", 3, BIfdDivInterval);
+  BIadd("fdDivInterval_body", 3, BIfdDivInterval_body);
   BIadd("fdMod", 3, BIfdMod);
   BIadd("fdMod_body", 3, BIfdMod_body);
+  BIadd("fdModInterval", 3, BIfdModInterval);
+  BIadd("fdModInterval_body", 3, BIfdModInterval_body);
   BIadd("fdPlus_rel", 3, BIfdPlus_rel);
   BIadd("fdMult_rel", 3, BIfdMult_rel);
 
