@@ -478,7 +478,6 @@ void AM::suspendEngine()
 
   while (1) {
 
-    Assert(!(isSetSFlag(StartGC)));
     checkStatus(NO);
 
     if (!threadsPool.threadQueuesAreEmpty())
