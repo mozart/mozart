@@ -46,7 +46,7 @@ PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
 DISTRIBUTIONPANELSRC1 = \
 	GUI.oz Main.oz MessageInfo.oz SiteInfo.oz \
 	Widgets.oz Colour.oz FieldDisplay.oz Graph.oz NetInfo.oz TableInfo.oz \
-	DistributionPanelSrc.oz AdvancedListBox.oz TitleGraph.oz
+	AdvancedListBox.oz TitleGraph.oz DistributionPanel.oz
 DISTRIBUTIONPANELSRC = $(DISTRIBUTIONPANELSRC1:%=dpanel/%)
 
 BROWSERSRC1 = \
@@ -161,7 +161,8 @@ FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
 	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf \
-	EvalDialog.ozf Inspector.ozf OPIServer.ozf DistributionPanel.ozf
+	EvalDialog.ozf Inspector.ozf OPIServer.ozf DistributionPanel.ozf \
+	DistributionPanelSrc.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -235,8 +236,8 @@ Inspector.ozf: $(INSPECTOROBJS)
 
 %.ozf: dpanel/%.oz
 	$(COMPILE) $< -o $@
-DistributionPanel.ozf: $(DISTRIBUTIONPANELSRC1:%=%f)
-	$(LINK) DistributionPanelSrc.ozf -o $@
+DistributionPanelSrc.ozf: $(DISTRIBUTIONPANELSRC1:%=%f)
+	$(LINK) Main.ozf -o $@
 
 #---------------------------------------------------------------------
 # Syslets
