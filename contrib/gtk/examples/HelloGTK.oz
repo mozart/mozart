@@ -23,7 +23,7 @@ functor $
 import
    Application
    System(show)
-   GTK at 'x-oz://system/gtk/GTK.ozf'
+   GTK
 define
    %% Create Toplevel window class
    class MyToplevel from GTK.window

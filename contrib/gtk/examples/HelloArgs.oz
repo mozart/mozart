@@ -21,10 +21,9 @@
 
 functor $
 import
-   GDK    at 'x-oz://system/gtk/GDK.ozf'
-   GTK    at 'x-oz://system/gtk/GTK.ozf'
-   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   Application(exit)
    System(show)
+   GTK GTKCANVAS
 define
    %% Create Toplevel window class
    class CanvasToplevel from GTK.window
@@ -32,20 +31,22 @@ define
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("Hello Canvas")
+	 {self signalConnect('delete-event' deleteEvent _)}
+      end
+      meth deleteEvent(Args)
+	 {self gtkClose}
+	 {Application.exit 0}
       end
    end
 
    Toplevel = {New CanvasToplevel new}
 
-   %% Setup colors
-   Black = {GDK.makeColor '#000000'}
-   
    %% Setup canvas
-   MyCanvas = {New Canvas.canvas new(false)}
-   {MyCanvas setUsize(400 400)}
-   {MyCanvas setScrollRegion(0.0 0.0 400.0 400.0)}
+   Canvas = {New GTKCANVAS.canvas new(false)}
+   {Canvas setUsize(400 400)}
+   {Canvas setScrollRegion(0.0 0.0 400.0 400.0)}
    %% Make Canvas child of toplevel
-   {Toplevel add(MyCanvas)}
+   {Toplevel add(Canvas)}
 
    %% GtkArgs are working as follows
    %% 1. Allocate Structure with name and argument
@@ -60,8 +61,8 @@ define
    ArgW = {GTK.makeArg "width" 0}
    ArgH = {GTK.makeArg "height" 0}
    %% Limited to one arg!
-   {MyCanvas getv(1 ArgW)}
-   {MyCanvas getv(1 ArgH)}
+   {Canvas getv(1 ArgW)}
+   {Canvas getv(1 ArgH)}
    TextStr = {VirtualString.toString
 	      "Hi, I am a "#
 	      {GTK.getArg unit ArgW}#
@@ -70,16 +71,17 @@ define
 	      " Canvas!"}
    {GTK.freeArg ArgW}
    {GTK.freeArg ArgH}
-   TextItem = ['text'#TextStr
-	       'x'#150.0
-	       'y'#100.0
-	       'font'#
-	       '-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1'
-	       'fill_color_gdk'#Black]
+   
+   ItemFont = '-adobe-helvetica-medium-r-normal--18-*-72-72-p-*-iso8859-1'
+   TextDesc = text(parent         : {Canvas rootItem($)}
+		   text           : TextStr
+		   x              : 150.0
+		   y              : 100.0
+		   font           : ItemFont
+		   fill_color_gdk : {Canvas itemColor('#000000' $)})
 	      
    %% Create our item (member of root group); ignore item object
-   _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
-			 TextItem $)}
+   _ = {Canvas newItem(TextDesc $)}
 
    %% Make it all visible
    {Toplevel showAll}

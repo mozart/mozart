@@ -24,18 +24,12 @@ import
    Application(exit)
    OS
    System(show)
-   GDK    at 'x-oz://system/gtk/GDK.ozf'
-   GTK    at 'x-oz://system/gtk/GTK.ozf'
-   Canvas at 'x-oz://system/gtk/GTKCANVAS.ozf'
+   GTK GTKCANVAS
 define
    %% Some Global Variables
    PieceSize = 50
-   Font = "-adobe-helvetica-bold-r-normal--24-240-75-75-p-138-iso8859-1"
-   
-   %% Setup the Colors
-   Black = {GDK.makeColor '#000000'}
-   White = {GDK.makeColor '#FFFFFF'}
-   
+   Font      = "-adobe-helvetica-bold-r-normal--24-240-75-75-p-138-iso8859-1"
+      
    fun {IsEmpty ItemArr I}
       case {Dictionary.get ItemArr I}
       of none then true
@@ -69,18 +63,23 @@ define
       {ToHex (C div 16)}#{ToHex (C mod 16)}
    end
    
-   class MyCanvas from Canvas.canvas
+   class MyCanvas from GTKCANVAS.canvas
       attr
 	 itemArr %% Item Dictionary
 	 posArr  %% Position Dictionary
+	 black   %% Black Color
+	 white   %% White Color
       meth new
 	 XDim = (PieceSize * 4 + 1)
 	 YDim = (PieceSize * 4 + 1)
       in
-	 Canvas.canvas, new(false)
-	 Canvas.canvas, setUsize(XDim YDim)
-	 Canvas.canvas, setScrollRegion(0.0 0.0
-					{Int.toFloat XDim} {Int.toFloat YDim})
+	 GTKCANVAS.canvas, new(false)
+	 GTKCANVAS.canvas, setUsize(XDim YDim)
+	 GTKCANVAS.canvas,
+	 setScrollRegion(0.0 0.0
+			 {Int.toFloat XDim} {Int.toFloat YDim})
+	 @black = {self itemColor('#000000' $)}
+	 @white = {self itemColor('#FFFFFF' $)}
       end
       meth getPieceColor(Piece $)
 	 Y      = Piece div 4
@@ -91,7 +90,7 @@ define
 	 ColStr = {VirtualString.toAtom
 		   "#"#{MakeHex R}#{MakeHex G}#{MakeHex B}}
       in
-	 {GDK.makeColor ColStr}
+	 {self itemColor(ColStr $)}
       end
       meth checkVictory(I $)
 	 if I < 15
@@ -124,29 +123,36 @@ define
       in
 	 if I < 15
 	 then
-	    X  = I mod 4
-	    Y  = I div 4
-	    X1 = {Int.toFloat (X * PieceSize)}
-	    Y1 = {Int.toFloat (Y * PieceSize)}
-	    Group = {self newItem(Root {{New Canvas.canvasGroup noop}
-					getType($)}
-				  ['x'#X1 'y'#Y1] $)}
-	    _     = {self newItem(Group {self rectGetType($)}
-				  ['x1'#0.0 'y1'#0.0
-				   'x2'#{Int.toFloat PieceSize}
-				   'y2'#{Int.toFloat PieceSize}
-				   'fill_color_gdk'#{self getPieceColor(I $)}
-				   'outline_color_gdk'#Black
-				   'width_pixels'#0] $)}
-	    Text = {self newItem(Group {self textGetType($)}
-				 ['text'#{Int.toString (I + 1)}
-				  'x'#25.0 'y'#25.0 'font'#Font
-				  'anchor'#GTK.'ANCHOR_CENTER'
-				  'fill_color_gdk'#Black] $)}
+	    X              = I mod 4
+	    Y              = I div 4
+	    X1             = {Int.toFloat (X * PieceSize)}
+	    Y1             = {Int.toFloat (Y * PieceSize)}
+	    Group#GroupObj = {self newWrappedItem(group(parent : Root
+							x      : X1
+							y      : Y1) $)}
+	    _     = {self
+		     newItem(
+			rectangle(parent             : Group
+				  x1                 : 0
+				  y1                 : 0
+				  x2                 : PieceSize
+				  y2                 : PieceSize
+				  fill_color_gdk     : {self getPieceColor(I $)}
+				  outline_color_gdk  : @black
+				  width_pixels       : 0) $)}
+	    Text = {self newItem(text(parent         : Group
+				      text           : {Int.toString (I + 1)}
+				      x              : 25.0
+				      y              : 25.0
+				      anchor         : GTK.'ANCHOR_CENTER'
+				      font           : Font
+				      fill_color_gdk : @black) $)}
 	    proc {PieceEvent [Event]}
 	       case {Label Event}
-	       of 'GDK_ENTER_NOTIFY' then {Text set('fill_color_gdk' White)}
-	       [] 'GDK_LEAVE_NOTIFY' then {Text set('fill_color_gdk' Black)}
+	       of 'GDK_ENTER_NOTIFY' then
+		  {self configureItem(Text options(fill_color_gdk : @white))}
+	       [] 'GDK_LEAVE_NOTIFY' then
+		  {self configureItem(Text options(fill_color_gdk : @black))}
 	       [] 'GDK_BUTTON_PRESS' then
 		  Pos = {Dictionary.get PosArr I}
 		  X   = Pos mod 4
@@ -161,7 +167,7 @@ define
 		     {Dictionary.put PosArr I NewPos}
 		     {Dictionary.put ItemArr Pos none}
 		     {Dictionary.put ItemArr NewPos some(Group)}
-		     {Group move(MX MY)}
+		     {GroupObj move(MX MY)}
 		     MyCanvas, checkVictory(0 _)
 		  [] _ then skip
 		  end
@@ -169,9 +175,9 @@ define
 	       end
 	    end
 	 in
-	    {Dictionary.put ItemArr I some(Group)}
+	    {Dictionary.put ItemArr I some(GroupObj)}
 	    {Dictionary.put PosArr I I}
-	    {Group signalConnect('event' PieceEvent _)}
+	    {GroupObj signalConnect('event' PieceEvent _)}
 	    MyCanvas, fillBoard((I + 1) Root)
 	 else
 	    {Dictionary.put ItemArr I none}
@@ -181,7 +187,7 @@ define
       meth createBoard($)
 	 @itemArr = {Dictionary.new}
 	 @posArr  = {Dictionary.new}
-	 MyCanvas, fillBoard(0 {self root($)})
+	 MyCanvas, fillBoard(0 {self rootItem($)})
 	 @itemArr#@posArr
       end
    end
