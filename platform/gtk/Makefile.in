@@ -16,10 +16,13 @@ CPPFLAGS        = -I. -I$(VPATH) @CPPFLAGS@
 CFLAGS          = -I. -I$(VPATH) @CFLAGS@
 LDFLAGS         = @LDFLAGS@ $(LIBS)
 LN_S            = @LN_S@
+OZTOOL          = @OZTOOL@
 PERL            = @PERL@
 
 GOZWRIGHT       = $(PERL) $(VPATH)/gozwright.pl
 GOZCONST        = $(PERL) $(VPATH)/genconstants.pl
+
+ALL_INCLUDES    = -I$(VPATH)/../emulator
 
 GTK_HEADER_PREFIX = @GTK_HDRS@
 GDK_HEADER_PREFIX = @GDK_HDRS@
@@ -52,7 +55,7 @@ bootstrap: all
 
 
 $(OBJECTS): %.o: %.c
-        oztool $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
+        $(OZTOOL) $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
 
 goz.c: $(ALL_HEADERS)
         $(GOZWRIGHT) --c-wrappers $^ > $@
@@ -67,7 +70,7 @@ gozinterface.c: goz.c gozsupport.c
         $(GOZWRIGHT) --interface $^ > $@
 
 GTK.so-$(PLATFORM): $(OBJECTS)
-        oztool ld $(LDFLAGS) $(OBJECTS) -o $@
+        $(OZTOOL) ld $(LDFLAGS) $(OBJECTS) -o $@
 
 clean:
         -rm -f gozinterface.c goz.c *.o *~ core
