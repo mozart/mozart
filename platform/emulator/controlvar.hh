@@ -61,8 +61,12 @@ _controlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
 
 OZ_Return suspendOnControlVar();
 
+void suspendOnControlVar2();
+
 #define SuspendOnControlVar                     \
   return suspendOnControlVar();
+
+#define SuspendOnControlVarReturnValue BI_REPLACEBICALL
 
 /* -----------------------------------------------------------------------
  * MISC

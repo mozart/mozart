@@ -30,7 +30,7 @@
 
 void receiveAskError(OwnerEntry*,DSite*,EntityCond);
 void sendAskError(Tertiary*, EntityCond);
-void receiveTellError(Tertiary*, DSite*, int, EntityCond, Bool);
+void receiveTellError(Tertiary*, EntityCond, Bool);
 
 void receiveAskError(OwnerEntry *,DSite*,EntityCond);
 void receiveUnAskError(OwnerEntry *,DSite*,EntityCond);
@@ -38,6 +38,8 @@ void sendTellError(OwnerEntry *,DSite*,int,EntityCond,Bool);
 
 void sendUnAskError(Tertiary*,EntityCond);
 
+
 void informInstallHandler(Tertiary* t,EntityCond ec);
+void deinformInstallHandler(Tertiary* t,EntityCond ec);
 
 #endif

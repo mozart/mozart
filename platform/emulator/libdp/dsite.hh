@@ -465,6 +465,9 @@ public:
 
     return PROBE_PERM;}
 
+  ProbeReturn installProbe(ProbeType pt){// ERIK-LOOK
+    installProbe(pt,PROBE_INTERVAL);}
+
   ProbeReturn deinstallProbe(ProbeType pt){
     unsigned short t=getType();
     if(t & CONNECTED){
@@ -741,5 +744,12 @@ GenHashNode *getSecondaryNode(GenHashNode* node, int &i);
 
 //
 void gcDSiteTable();
+
+// ERIK-LOOK  PROBE_INTERVAL
+inline void installProbeNoRet(DSite *s,ProbeType pt){
+  (void) s->installProbe(pt);}
+
+inline ProbeReturn installProbe(DSite *s,ProbeType pt){
+  return s->installProbe(pt);}
 
 #endif // __DSITE_HH

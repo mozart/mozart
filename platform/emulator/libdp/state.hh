@@ -40,13 +40,6 @@
 /*  SECTION: class CellSec, CellProxy, CellManager                    */
 /**********************************************************************/
 
-#define DummyThread ((Thread*)0x1)
-#define MoveThread  ((Thread*)NULL)
-
-inline Bool isRealThread(Thread* t){
-  if((t==MoveThread) || (t==DummyThread)) return FALSE;
-  return TRUE;}
-
 class CellSec:public CellSecEmul{
 friend class CellFrame;
 friend class CellManager;
@@ -71,14 +64,14 @@ public:
 
   unsigned int stateWithoutAccessBit(){return state & (~Cell_Lock_Access_Bit);}
 
-  void addPendBinding(Thread*,TaggedRef);
+  PendThread* getPending(){return pending;}
   DSite* getNext(){return next;}
   PendThread** getPendBase(){return &pending;}
 
   void gcCellSec();
-  OZ_Return exchange(Tertiary*,TaggedRef,TaggedRef,Thread*,ExKind);
+  OZ_Return exchange(Tertiary*,TaggedRef,TaggedRef,ExKind);
   OZ_Return access(Tertiary*,TaggedRef,TaggedRef);
-  OZ_Return exchangeVal(TaggedRef,TaggedRef,Thread*,TaggedRef,ExKind);
+  OZ_Return exchangeVal(TaggedRef,TaggedRef,ExKind);
 
   Bool secReceiveRemoteRead(DSite*,DSite*,int);
   void secReceiveReadAns(TaggedRef);
@@ -86,6 +79,8 @@ public:
   Bool secForward(DSite*,TaggedRef&);
   // failure
   Bool cellRecovery(TaggedRef);
+  TaggedRef unpendCell(PendThread*,TaggedRef);
+  void dummyExchange(CellManager*);
 };
 
 class CellProxy : public Tertiary {
@@ -113,11 +108,15 @@ public:
 
   Chain *getChain() {return chain;}
   void setChain(Chain *ch) { chain = ch; }
-  void initOnGlobalize(int index,Chain* ch,CellSec *secX);
+
+  void init(int index,Chain *ch, CellSec *secX){
+    setTertType(Te_Manager);
+    setIndex(index);
+    setChain(ch);
+    sec=secX;}
 
   void setOwnCurrent();
   Bool isOwnCurrent();
-  void init();
   DSite* getCurrent();
   void gcCellManager();
 
@@ -125,7 +124,6 @@ public:
   PendThread *getPendBinding(){return sec->pendBinding;}
 
   // failure
-  void initForFailure();
   void tokenLost();
 };
 
@@ -196,6 +194,7 @@ public:
   void resetAccessBit(){state &= ~Cell_Lock_Access_Bit;}
 
   Bool isPending(Thread *th);
+  PendThread* getPending(){return pending;}
 
   DSite* getNext(){return next;}
 
@@ -261,19 +260,22 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(LockManager);
   LockManager() {Assert(0);}
 
-  void initOnGlobalize(int index,Chain* ch,LockSec *secX);
+  void init(int index,Chain *ch, LockSec *secX){
+    setTertType(Te_Manager);
+    setIndex(index);
+    setChain(ch);
+    sec=secX;}
+
   Chain *getChain() {return chain;}
   void setChain(Chain *ch) { chain = ch; }
 
   void gcLockManager();
   void setOwnCurrent();
   Bool isOwnCurrent();
-  void init();
   DSite* getCurrent();
 
   // failure
   void probeFault(DSite*, int);
-  void initForFailure();
   void tokenLost();
 };
 
@@ -312,10 +314,10 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
   if(t->isProxy()){
     convertCellProxyToFrame(t);}}
 
-
 Chain* getChainFromTertiary(Tertiary*);
 CellSec *getCellSecFromTert(Tertiary *c);
 int getStateFromLockOrCell(Tertiary*);
+PendThread* getPendThreadStartFromCellLock(Tertiary *);
 
 //
 OZ_Return cellDoExchangeInternal(Tertiary *, TaggedRef, TaggedRef,
@@ -341,8 +343,6 @@ ConstTerm* auxGcDistLockImpl(Tertiary *t);
 
 void globalizeCell(CellLocal*, int);
 void globalizeLock(LockLocal*, int);
-
-Tertiary *getOtherTertFromObj(Tertiary*, Tertiary*);
 
 void cellLock_Perm(int state,Tertiary* t);
 void cellLock_Temp(int state,Tertiary* t);

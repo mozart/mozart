@@ -128,6 +128,7 @@ public:
     if(t==timestamp.start) return 0;
     if(t<timestamp.start) return 1;
     return 0-1;}
+
   int checkTimeStamp(TimeStamp *t){
     int aux = checkTimeStamp(t->start);
     if (aux!=0) return aux;

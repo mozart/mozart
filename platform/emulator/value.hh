@@ -2331,14 +2331,16 @@ enum ExKind{
   EXCHANGE    = 0,
   ASSIGN      = 1,
   AT          = 2,
-  NOEX        = 3,
+  NOEX        = 3, // lock
   ACCESS      = 4,
   DEEPAT      = 5,
-  REMOTEACCESS = 6
+  REMOTEACCESS= 6,
+  MOVEEX      = 7,
+  DUMMY       = 8
 };
 
 //
-// PER-LOOK remove thread field
+//
 class PendThread{
 public:
   Thread *thread;
@@ -2349,14 +2351,17 @@ public:
   ExKind    exKind;
   PendThread(Thread *th,PendThread *pt):
     next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(NOEX) {}
+  PendThread(Thread *th,PendThread *pt,ExKind e):
+    next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(e) {}
   PendThread(Thread *th,PendThread *pt,TaggedRef o, TaggedRef n, TaggedRef cv,
              ExKind e)
     :next(pt), thread(th),old(o),nw(n), exKind(e), controlvar(cv) {}
+  PendThread(Thread *th,PendThread *pt,TaggedRef cv,ExKind e)
+    :next(pt), thread(th),old(0),nw(0), exKind(e), controlvar(cv) {}
   USEFREELISTMEMORY;
   void dispose(){freeListDispose(this,sizeof(PendThread));}
 };
 
-// kost@ PER-LOOK should these be interface methods?
 Thread* pendThreadResumeFirst(PendThread **pt);
 OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home);
 void gcPendThreadEmul(PendThread**);

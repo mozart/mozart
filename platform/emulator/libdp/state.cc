@@ -30,6 +30,7 @@
 #endif
 
 #include "base.hh"
+#include "value.hh"
 #include "perdio.hh"
 #include "state.hh"
 #include "chain.hh"
@@ -38,9 +39,6 @@
 #include "table.hh"
 
 //
-static inline void sendPrepOwner(int index){
-  OwnerEntry *oe=OT->getOwner(index);
-  oe->getOneCreditOwner();}
 
 /**********************************************************************/
 /*  Exported Utility                       */
@@ -65,15 +63,31 @@ int getStateFromLockOrCell(Tertiary*t){
   Assert(t->isFrame());
   return ((LockFrame*)t)->getSec()->getState();}
 
-/**********************************************************************/
-/*  Utility                       */
-/**********************************************************************/
-
 CellSec *getCellSecFromTert(Tertiary *c){
   if(c->isManager()){
     return ((CellManager*)c)->getCellSec();}
   Assert(!c->isProxy());
   return ((CellFrame*)c)->getCellSec();}
+
+LockSec *getLockSecFromTert(Tertiary *c){
+  if(c->isManager()){
+    return ((LockManager*)c)->getLockSec();}
+  Assert(!c->isProxy());
+  return ((LockFrame*)c)->getLockSec();}
+
+PendThread* getPendThreadStartFromCellLock(Tertiary* t){
+  if(t->getType()==Co_Cell){
+    getCellSecFromTert(t)->getPending();}
+  Assert(t->getType()==Co_Lock);
+  getLockSecFromTert(t)->getPending();}
+
+/**********************************************************************/
+/*  Utility                       */
+/**********************************************************************/
+
+static inline void sendPrepOwner(int index){
+  OwnerEntry *oe=OT->getOwner(index);
+  oe->getOneCreditOwner();}
 
 /**********************************************************************/
 /*  Globalizing                       */
@@ -84,9 +98,10 @@ void globalizeCell(CellLocal* cl, int myIndex){
   TaggedRef val1=cl->getValue();
   CellManager* cm=(CellManager*) cl;
   CellSec* sec=new CellSec(val1);
-  Chain* ch=newChain();
-  ch->init(myDSite);
-  cm->initOnGlobalize(myIndex,ch,sec);}
+  Chain* ch=new Chain(myDSite);
+  cm->init(myIndex,ch,sec);
+  initManagerForFailure(cm);
+}
 
 void globalizeLock(LockLocal* ll, int myIndex){
   PD((LOCK,"globalize lock index:%d",myIndex));
@@ -95,142 +110,145 @@ void globalizeLock(LockLocal* ll, int myIndex){
   PendThread* pt=ll->getPending();
   LockManager* lm=(LockManager*) ll;
   LockSec* sec=new LockSec(th,pt);
-  Chain* ch=newChain();
-  ch->init(myDSite);
-  lm->initOnGlobalize(myIndex,ch,sec);}
-
-void CellManager::initOnGlobalize(int index,Chain* ch,CellSec *secX){
-  setTertType(Te_Manager);
-  setIndex(index);
-  setChain(ch);
-  sec=secX;
-  initForFailure();}
-
-void LockManager::initOnGlobalize(int index,Chain* ch,LockSec *secX){
-  setTertType(Te_Manager);
-  setIndex(index);
-  setChain(ch);
-  sec=secX;
-  initForFailure();}
-
+  Chain* ch=new Chain(myDSite);
+  lm->init(myIndex,ch,sec);
+  initManagerForFailure(lm);
+}
 
 void convertCellProxyToFrame(Tertiary *t){
   Assert(t->isProxy());
   CellFrame *cf=(CellFrame*) t;
-  cf->convertFromProxy();}
+  cf->convertFromProxy();
+}
 
 void convertLockProxyToFrame(Tertiary *t){
   Assert(t->isProxy());
   LockFrame *lf=(LockFrame*) t;
-  lf->convertFromProxy();}
-
+  lf->convertFromProxy();
+}
 
 /**********************************************************************/
 /*   basic cell routine */
 /**********************************************************************/
 
-OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, Thread *th,
-                               TaggedRef controlvar, ExKind exKind)
-{
-  if(!isRealThread(th))
-    return PROCEED;
+TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
+  val = oz_deref(val);
+  if(pt==NULL) return val;
+  switch(pt->exKind){
+  case ACCESS:{
+    ControlVarUnify(pt->controlvar,pt->old,val);
+    return val;}
+  case DEEPAT:{
+    TaggedRef tr = tagged2SRecord(val)->getFeature(pt->nw);
+    if(tr) {
+      ControlVarUnify(pt->controlvar,tr,pt->old);}
+    else{
+      ControlVarRaise(pt->controlvar,
+          OZ_makeException(E_ERROR,E_OBJECT,"@",2,val,pt->nw));}
+    return val;}
+  case ASSIGN:{
+    if (tagged2SRecord(val)->replaceFeature(pt->old,pt->nw)) {
+      ControlVarResume(pt->controlvar);
+      return val;}
+    ControlVarRaise(pt->controlvar,
+         OZ_makeException(E_ERROR,E_OBJECT,"<-",3,val,pt->old,pt->nw));
+    return val;}
+  case AT:{
+    TaggedRef tr = tagged2SRecord(val)->getFeature(pt->old);
+    if(tr) {
+      ControlVarUnify(pt->controlvar,tr,pt->nw);
+      return val;}
+    ControlVarRaise(pt->controlvar,
+                    OZ_makeException(E_ERROR,E_OBJECT,"@",2,val,pt->nw));}
+  case REMOTEACCESS:{
+   cellSendReadAns(((DSite*)(pt->old)),((DSite*)(pt->nw)),
+                   (int)(pt->controlvar),val);
+   return val;}
+  case EXCHANGE:{
+    Assert(pt->old!=0);
+    Assert(pt->nw!=0);
+    ControlVarUnify(pt->controlvar,val,pt->old);
+    return pt->nw;}
 
-  TaggedRef exception;
-  Bool inplace = (th==oz_currentThread());
+  case DUMMY:
+    return val;
+
+ default:{
+   Assert(0);}}
+
+ return 0;
+}
+
+
+OZ_Return CellSec::exchangeVal(TaggedRef old, TaggedRef nw, ExKind exKind){
+  contents = oz_deref(contents);
   switch (exKind){
   case ASSIGN:{
-    contents = oz_deref(contents);
     if (!tagged2SRecord(contents)->replaceFeature(old,nw)) {
-      exception = OZ_makeException(E_ERROR,E_OBJECT,"<-",3,contents,old,nw);
-      goto exception;
-    }
-    goto exit;
-  }
+      return OZ_raise(OZ_makeException(E_ERROR,E_OBJECT,"<-",3,contents,old,nw));}
+    return PROCEED;}
+
   case AT:{
-    contents = oz_deref(contents);
     TaggedRef tr = tagged2SRecord(contents)->getFeature(old);
-    if(tr) {
-      if (inplace) {
-        return oz_unify(tr,nw);
-      } else {
-        ControlVarUnify(controlvar,tr,nw);
-        return PROCEED;
-      }
-    }
-    exception = OZ_makeException(E_ERROR,E_OBJECT,"@",2, contents, old);
-    goto exception;
-  }
+    if(tr) {return oz_unify(tr,nw);}
+    return OZ_raise(OZ_makeException(E_ERROR,E_OBJECT,"@",2, contents, old));}
+
   case EXCHANGE:{
     Assert(old!=0 && nw!=0);
     TaggedRef tr=contents;
     contents = nw;
-    if (inplace) {
-      return oz_unify(tr,old);
-    } else {
-      ControlVarUnify(controlvar,tr,old);
-      return PROCEED;
-    }
-  }
-  case REMOTEACCESS:{
-    cellSendReadAns((DSite*)th,(DSite*)old,(int)nw,contents);
-    return PROCEED;
-  }
+    return oz_unify(tr,old);}
+
   default:
-    Assert(0);
-  }
+    Assert(0);}}
 
-exception:
-  if (inplace) {
-    return OZ_raise(exception);
-  } else {
-    ControlVarRaise(controlvar,exception);
-    return PROCEED;
-  }
+void CellSec::dummyExchange(CellManager* c){
+  Assert(state==Cell_Lock_Invalid);
+  PD((CELL,"CELL: exchange on invalid"));
+  state=Cell_Lock_Requested;
+  pendThreadAddDummyToEnd(&pending);
+  int index=c->getIndex();
+  Assert(c->isManager());
+  Assert(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST));
+  DSite *toS=((CellManager*)c)->getChain()->setCurrent(myDSite,c);
+  sendPrepOwner(index);
+  cellLockSendForward(toS,myDSite,index);}
 
-exit:
-  if (!inplace) {
-    ControlVarResume(controlvar);
-  }
-  return PROCEED;
-}
-
-OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,Thread* th,
-                            ExKind exKind){
-  OZ_Return ret = PROCEED;
+OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,ExKind exKind){
   switch(state){
   case Cell_Lock_Valid:{
     PD((CELL,"CELL: exchange on valid"));
-    return exchangeVal(old,nw,th,0,exKind);
+    return exchangeVal(old,nw,exKind);
   }
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: exchange on requested"));
-    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind,c->getBoardInternal());
-    if(errorIgnore(c)) return ret;
-    break;}
+    pendThreadAddToEnd(&pending,old,nw,exKind);
+    if(errorIgnore(c)) return SuspendOnControlVarReturnValue;
+    if(entityCondMeToBlocked(c)) deferEntityProblem(c);
+    return SuspendOnControlVarReturnValue;}
   case Cell_Lock_Invalid:{
     PD((CELL,"CELL: exchange on invalid"));
     state=Cell_Lock_Requested;
-    Assert(isRealThread(th) || th==DummyThread);
-    ret = pendThreadAddToEnd(&pending,th,old,nw,exKind,c->getBoardInternal());
+    pendThreadAddToEnd(&pending,old,nw,exKind);
     int index=c->getIndex();
     if(c->isFrame()){
       BorrowEntry* be=BT->getBorrow(index);
       be->getOneMsgCredit();
-      cellLockSendGet(be);
-      if(errorIgnore(c)) return ret;
-      break;}
-    Assert(c->isManager());
-    if(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST)){
-      DSite *toS=((CellManager*)c)->getChain()->setCurrent(myDSite,c);
-      sendPrepOwner(index);
-      cellLockSendForward(toS,myDSite,index);
-      if(errorIgnore(c)) return ret;}
-    break;}
+      cellLockSendGet(be);}
+    else{
+      Assert(c->isManager());
+      if(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST)){
+        DSite *toS=((CellManager*)c)->getChain()->setCurrent(myDSite,c);
+        sendPrepOwner(index);
+        cellLockSendForward(toS,myDSite,index);}}
+    if(errorIgnore(c)) return SuspendOnControlVarReturnValue;
+    if(entityCondMeToBlocked(c)) deferEntityProblem(c);
+    return SuspendOnControlVarReturnValue;}
   default: Assert(0);
   }
-  maybeStateError(c,th);
-  return ret;
+  Assert(0);
+  return PROCEED;
 }
 
 
@@ -239,58 +257,46 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
   case Cell_Lock_Valid:{
     PD((CELL,"CELL: access on valid"));
     Assert(fea == 0);
-    return oz_unify(val,contents);
-  }
+    return oz_unify(val,contents);}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
     PD((CELL,"CELL: access on requested"));
-    break;}
+    pendThreadAddToEnd(&pending,val,fea,fea ? DEEPAT : ACCESS);
+    if(!errorIgnore(c)){
+      if(entityCondMeToBlocked(c)) deferEntityProblem(c);}
+    return  SuspendOnControlVarReturnValue;}
   case Cell_Lock_Invalid:{
     PD((CELL,"CELL: access on invalid"));
     break;}
   default: Assert(0);}
 
   int index=c->getIndex();
-
-  if (pendBinding !=NULL);
-    goto exit;
   if(!c->isManager()) {
     Assert(c->isFrame());
     PD((CELL,"Sending to mgr read"));
     BorrowEntry *be=BT->getBorrow(index);
     be->getOneMsgCredit();
-    cellSendRead(be,myDSite);
-    goto exit;
-  }
-  PD((CELL,"ShortCircuit mgr sending to tokenholder"));
-  if(((CellManager*)c)->getChain()->getCurrent() == myDSite){
-    return fea ? cellAtExchangeImpl(c,val,fea):
-      cellDoExchangeImpl(c,val,val);
-  }
+    cellSendRead(be,myDSite);}
+  else{ // ERIK-LOOK PER-LOOK
+    Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
+    sendPrepOwner(index);
+    cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
+                       myDSite,index,myDSite);}
 
-  sendPrepOwner(index);
-  cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
-                     myDSite,index,myDSite);
-exit:
-  Thread* th=oz_currentThread();
-  ControlVarNew(controlvar,c->getBoardInternal());
-  pendBinding=new PendThread(th,pendBinding,val,fea,
-                             controlvar,fea ? DEEPAT : ACCESS);
-
-  if(!errorIgnore(c)) {
-    maybeStateError(c,th);}
-  SuspendOnControlVar;
+  pendThreadAddToEnd(&pending,val,fea,fea ? DEEPAT : ACCESS);
+  if(!errorIgnore(c)){
+    if(entityCondMeToBlocked(c)) deferEntityProblem(c);}
+  return SuspendOnControlVarReturnValue;
 }
 
-OZ_Return cellDoExchangeInternal(Tertiary *c, TaggedRef old, TaggedRef nw,
-                                 Thread *th, ExKind e)
-{
+
+OZ_Return cellDoExchangeInternal(Tertiary *c,TaggedRef old,TaggedRef nw,ExKind e){
   PD((SPECIAL,"exchange old:%d new:%s type:%d",toC(old),toC(nw),e));
   maybeConvertCellProxyToFrame(c);
   PD((CELL,"CELL: exchange on %s-%d",
       (c->isManager()?myDSite:BT->getOriginSite(c->getIndex()))->stringrep(),
       (c->isManager()?c->getIndex():BT->getOriginIndex(c->getIndex()))));
-  return getCellSecFromTert(c)->exchange(c,old,nw,th,e);
+  return getCellSecFromTert(c)->exchange(c,old,nw,e);
 }
 
 static
@@ -304,31 +310,17 @@ OZ_Return cellDoAccessImpl(Tertiary *c,TaggedRef val,TaggedRef fea){
 /*   interface */
 /**********************************************************************/
 
-OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw)
-{
-   return cellDoExchangeInternal(c,old,nw,oz_currentThread(),EXCHANGE);
-}
+OZ_Return cellDoExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw){
+   return cellDoExchangeInternal(c,old,nw,EXCHANGE);}
 
-OZ_Return cellAssignExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef val)
-{
-   return cellDoExchangeInternal(c,fea,val,oz_currentThread(), ASSIGN);
-}
+OZ_Return cellAssignExchangeImpl(Tertiary *c,TaggedRef fea,TaggedRef val){
+   return cellDoExchangeInternal(c,fea,val,ASSIGN);}
 
-OZ_Return cellAtExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw)
-{
-  return cellDoExchangeInternal(c,old,nw,oz_currentThread(), AT);
-}
+OZ_Return cellAtExchangeImpl(Tertiary *c,TaggedRef old,TaggedRef nw){
+  return cellDoExchangeInternal(c,old,nw,AT);}
 
 OZ_Return cellAtAccessImpl(Tertiary *c, TaggedRef fea, TaggedRef val){
   return cellDoAccessImpl(c,val,fea);}
-
-/* PER-HANDLE
-OZ_Return cellDoAccessImpl(Tertiary *c, TaggedRef val){
-  if(oz_onToplevel() && c->handlerExists(oz_currentThread()))
-    return cellDoExchangeImpl(c,val,val);
-  else
-    return cellDoAccessImpl(c,val,0);}
-*/
 
 OZ_Return cellDoAccessImpl(Tertiary *c, TaggedRef val){
   if(oz_onToplevel())
@@ -351,33 +343,22 @@ void LockProxy::lock(Thread *t){
 /*   Lock - interface                             */
 /**********************************************************************/
 
-void lockLockProxyImpl(Tertiary *t, Thread *thr)
-{
+void lockLockProxyImpl(Tertiary *t, Thread *thr){
   Assert(t->isProxy());
   ((LockProxy *)t)->lock(thr);
 }
 
-void lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr)
-{
-  LockSec *ls = (LockSec *) (lmu->getSec());
-  ls->lockComplex(thr, lmu);
-}
-void unlockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr)
-{
-  LockSec *ls = (LockSec *) (lmu->getSec());
-  ls->unlockComplex(lmu);
-}
+void lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr){
+  getLockSecFromTert(lmu)->lockComplex(thr,lmu);}
 
-void lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr)
-{
-  LockSec *ls = (LockSec *) (lfu->getSec());
-  ls->lockComplex(thr, lfu);
-}
-void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr)
-{
-  LockSec *ls = (LockSec *) (lfu->getSec());
-  ls->unlockComplex(lfu);
-}
+void unlockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr){
+  getLockSecFromTert(lmu)->unlockComplex(lmu);}
+
+void lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr){
+  getLockSecFromTert(lfu)->lockComplex(thr,lfu);}
+
+void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr){
+  getLockSecFromTert(lfu)->unlockComplex(lfu);}
 
 /**********************************************************************/
 /*   Lock - interface                             */
@@ -414,31 +395,32 @@ void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
 
 void LockSec::lockComplex(Thread *th,Tertiary* t){
   PD((LOCK,"lockComplex in state:%d",state));
-  Board *home = t->getBoardInternal();
+  Assert(t->getBoardInternal()==oz_rootBoard());
   switch(state){
   case Cell_Lock_Valid|Cell_Lock_Next:{
     Assert(getLocker()!=th);
     Assert(getLocker()!=NULL);
-    if(pending==NULL){
-      (void) pendThreadAddToEnd(getPendBase(),MoveThread,home);}}
+    pendThreadAddMoveToEnd(getPendBase());}
   case Cell_Lock_Valid:{
     Assert(getLocker()!=th);
     Assert(getLocker()!=NULL);
-    (void) pendThreadAddToEnd(getPendBase(),th,home);
+    pendThreadAddToEnd(getPendBase(),th);
     if(errorIgnore(t)) return;
     break;}
   case Cell_Lock_Next|Cell_Lock_Requested:
   case Cell_Lock_Requested:{
-    (void) pendThreadAddToEnd(getPendBase(),th,home);
+    pendThreadAddToEnd(getPendBase(),th);
     if(errorIgnore(t)) return;
     break;}
   case Cell_Lock_Invalid:{
-    (void) pendThreadAddToEnd(getPendBase(),th,home);
+    pendThreadAddToEnd(getPendBase(),th);
     secLockGet(this,t,th);
     if(errorIgnore(t)) return;
     break;}
   default: Assert(0);}
-  maybeStateError(t,th);}
+  if(entityCondMeToBlocked(t)) deferEntityProblem(t);
+}
+
 
 void LockSec::unlockPending(Thread *t){
   PendThread **pt=&pending;
@@ -456,24 +438,26 @@ void LockSec::unlockComplex(Tertiary* tert){
       state=Cell_Lock_Invalid;
       return;}
     Thread *th=pending->thread;
-    if(th==DummyThread){
-      Assert(tert->isManager());
-      pendThreadRemoveFirst(getPendBase());
-      unlockComplex(tert);
-      return;}
-    if(th==MoveThread){
+    if(th==NULL && pending->exKind==MOVEEX){
       pendThreadRemoveFirst(getPendBase());
       secLockToNext(this,tert,next);
       state=Cell_Lock_Invalid;
       if(pending==NULL) return;
       secLockGet(this,tert,NULL);
       return;}
+    if(th==NULL){
+      Assert(tert->isManager());
+      pendThreadRemoveFirst(getPendBase());
+      unlockComplex(tert);
+      return;}
+
     locker=pendThreadResumeFirst(getPendBase());
     return;}
   if(pending!=NULL){
     locker=pendThreadResumeFirst(getPendBase());
     return;}
-  return;}
+  return;
+}
 
 /**********************************************************************/
 /*   gc                             */
@@ -484,7 +468,7 @@ void gcDistCellRecurseImpl(Tertiary *t)
   gcEntityInfoImpl(t);
   switch (t->getTertType()) {
   case Te_Proxy:
-    gcProxy(t);
+    gcProxyRecurse(t);
     break;
   case Te_Frame: {
     CellFrame *cf=(CellFrame*)t;
@@ -524,7 +508,7 @@ void gcDistLockRecurseImpl(Tertiary *t)
     break;}
 
   case Te_Proxy:{
-    gcProxy(t);
+    gcProxyRecurse(t);
     break;}
 
   default:{
@@ -562,12 +546,11 @@ ConstTerm* auxGcDistLockImpl(Tertiary *t)
 }
 
 void CellSec::gcCellSec(){
-  gcPendThread(&pendBinding);
+  gcPendThread(&pending);
   switch(stateWithoutAccessBit()){
   case Cell_Lock_Next|Cell_Lock_Requested:{
     next->makeGCMarkSite();}
   case Cell_Lock_Requested:{
-    gcPendThread(&pending);
     return;}
   case Cell_Lock_Next:{
     next->makeGCMarkSite();}
@@ -580,7 +563,7 @@ void CellSec::gcCellSec(){
 
 void CellFrame::gcCellFrame(){
   Tertiary *t=(Tertiary*)this;
-  gcProxy(t);
+  gcProxyRecurse(t);
   PD((GC,"relocate cellFrame:%d",t->getIndex()));
   getCellSec()->gcCellSec();}
 
@@ -605,7 +588,7 @@ void LockSec::gcLockSec(){
 
 void LockFrame::gcLockFrame(){
   Tertiary *t=(Tertiary*)this;
-  gcProxy(t);
+  gcProxyRecurse(t);
   PD((GC,"relocate lockFrame:%d",t->getIndex()));
   getLockSec()->gcLockSec();}
 
@@ -617,98 +600,67 @@ void LockManager::gcLockManager(){
   oe->gcPO(this);
   getLockSec()->gcLockSec();}
 
-
-/* ******************************************************************* */
-/*  object                            */
-/* ******************************************************************* */
-
-Tertiary* getOtherTertFromObj(Tertiary* o, Tertiary* lockORcell){
-  Assert(o->getType()==Co_Object);
-  Assert(!(o->isProxy()));
-  Object *object = (Object *) o;
-  if(object->getLock()==NULL && object->getLock()==lockORcell)
-    return getCell(object->getState());
-  return object->getLock();
-}
 /**********************************************************************/
 /*   failure                             */
 /**********************************************************************/
 
-void LockManager::initForFailure(){return;}
-void CellManager::initForFailure(){return;}
-
-void cellLock_Perm(int state,Tertiary* t){return;}
-void cellLock_Temp(int state,Tertiary* t){return;}
-void cellLock_OK(int state,Tertiary* t){return;}
-
-/*
-PER-HANDLE
-
-void LockManager::initForFailure(){
-  Watcher *w = getWatchersIfExist(this);
-  while(w!=NULL){
-    if(managerPart(w->getWatchCond()) != ENTITY_NORMAL){
-      getChain()->newInform(myDSite,w->getWatchCond());}
-    w = w->getNext();}}
-
-void CellManager::initForFailure(){
-  Watcher *w = getWatchersIfExist(this);
-  while(w!=NULL){
-    if(managerPart(w->getWatchCond()) != ENTITY_NORMAL){
-      getChain()->newInform(myDSite,w->getWatchCond());}
-    w = w->getNext();}}
-
+// all these are proxies detecting manager is down
 void cellLock_Perm(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{
-    // ATTENTION PER I added Perm_block /EK
-    if(setEntityCondOwn(t,PERM_SOME|PERM_ME|PERM_BLOCKED)) break;
+    if(addEntityCond(t,PERM_SOME|PERM_ME)) break;
     return;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
-    if(setEntityCondOwn(t,PERM_SOME|PERM_BLOCKED|PERM_ME)) break;
-               // ATTENTION note that we don't know if we'll be blocked maybe TEMP?
+    if(addEntityCond(t,PERM_SOME|PERM_ME|PERM_BLOCKED)) break;
     return;}
   case Cell_Lock_Valid|Cell_Lock_Next:
-  case Cell_Lock_Valid:{
-    if(setEntityCondOwn(t,PERM_ALL|PERM_SOME)) break;
-    return;}
-  default: {
-    Assert(0);}}
-  entityProblem(t);}
+    if(addEntityCond(t,PERM_SOME)) break;
+    return;
+  case Cell_Lock_Valid:
+    if(addEntityCond(t,PERM_SOME|PERM_ALL)) break;
+    return;
+  default:
+    Assert(0);}
+  entityProblem(t);
+}
+
 
 void cellLock_Temp(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{
-    if(setEntityCondOwn(t,TEMP_SOME|TEMP_ME)) break;
+    if(addEntityCond(t,TEMP_SOME|TEMP_ME)) break;
     return;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
-    if(setEntityCondOwn(t,TEMP_SOME|TEMP_ME|TEMP_BLOCKED)) break;
-                   // ATTENTION: note that we don't know if we'll be blocked
+    if(addEntityCond(t,TEMP_SOME|TEMP_ME|TEMP_BLOCKED)) break;
     return;}
   case Cell_Lock_Valid|Cell_Lock_Next:
-  case Cell_Lock_Valid:{
-    if(setEntityCondOwn(t,TEMP_SOME|TEMP_ALL)) break;
-    return;}
-  default: {
-    Assert(0);}}
-  entityProblem(t);}
+    if(addEntityCond(t,TEMP_SOME)) break;
+    return;
+  case Cell_Lock_Valid:
+    if(addEntityCond(t,TEMP_SOME|TEMP_ALL)) break;
+    return;
+  default:
+    Assert(0);}
+  entityProblem(t);
+}
 
 void cellLock_OK(int state,Tertiary* t){
   switch(state){
   case Cell_Lock_Invalid:{
-    if(resetEntityCondProxy(t,TEMP_SOME|TEMP_ME)) break;
+    subEntityCond(t,TEMP_SOME|TEMP_ME);
     return;}
   case Cell_Lock_Requested|Cell_Lock_Next:
   case Cell_Lock_Requested:{
-    if(resetEntityCondProxy(t,TEMP_SOME|TEMP_ME|TEMP_BLOCKED)) break;
+    subEntityCond(t,TEMP_SOME|TEMP_ME);
     return;}
   case Cell_Lock_Valid|Cell_Lock_Next:
-  case Cell_Lock_Valid:{
-    if(resetEntityCondProxy(t,TEMP_SOME|TEMP_ALL)) break;
+    subEntityCond(t,TEMP_SOME);
+    return;
+ case Cell_Lock_Valid:{
+    subEntityCond(t,TEMP_SOME|TEMP_ALL);
     return;}
   default: {
-    Assert(0);}}}
-
-*/
+    Assert(0);}}
+}

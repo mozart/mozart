@@ -59,13 +59,6 @@ OZ_Term getGatePort(DSite*);
 
 //
 //
-void pendThreadRemoveFirst(PendThread **pt);
-OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o,
-                             TaggedRef n, ExKind e, Board* home);
-
-inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, Board* home){
-  return pendThreadAddToEnd(pt,t,0,0,NOEX,home);}
-
 MsgBuffer* getRemoteMsgBuffer(DSite *);
 void dumpRemoteMsgBuffer(MsgBuffer*);
 
@@ -96,14 +89,34 @@ inline Bool SEND_SHORT(DSite* s){
   return NO;}
 
 DSite* getSiteFromTertiaryProxy(Tertiary*);
+
+void gcProxyRecurseImpl(Tertiary*);
+void gcManagerRecurseImpl(Tertiary*);
+
+// MERGER CON OZ_Return raiseGeneric(char *msg, OZ_Term arg);
 OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);
-void gcProxy(Tertiary*);
-void gcManager(Tertiary*);
+
 void gcPendThread(PendThread **pt);
 
 BorrowEntry *receiveAtBorrow(DSite*,int);
 OwnerEntry *maybeReceiveAtOwner(DSite*,int);
 
+void pendThreadRemoveFirst(PendThread **pt);
+
+void pendThreadAddToEnd(PendThread **,TaggedRef,TaggedRef, ExKind);
+void pendThreadAddToEnd(PendThread **,Thread*);
+
+void pendThreadAddDummyToEnd(PendThread **);
+void pendThreadAddRAToEnd(PendThread **,DSite* , DSite*, int);
+void pendThreadAddMoveToEnd(PendThread **);
+
+void cellifyObject(Object*);
+
+#define NOT_IMPLEMENTED                                         \
+  {                                                             \
+    OZ_warning("in file %s at line %d: not implemented - perdio",       \
+            __FILE__,__LINE__);                                 \
+    Assert(0);}                                                 \
 //
 Bool isPerdioInitializedImpl();
 void gcProxyRecurseImpl(Tertiary *t);
@@ -114,13 +127,6 @@ void gcFrameToProxyImpl();
 void gcPerdioFinalImpl();
 void gcPerdioRootsImpl();
 void dpExitImpl();
-
-#define NOT_IMPLEMENTED                                                 \
-  {                                                                     \
-    OZ_warning("in file %s at line %d: not implemented - perdio",       \
-               __FILE__,__LINE__);                                      \
-    Assert(0);                                                          \
-  }
 
 /* __PERDIOHH */
 #endif

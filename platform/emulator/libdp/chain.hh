@@ -47,11 +47,19 @@ protected:
   ChainElem* next;
   unsigned int flags;
 public:
-  ChainElem(){Assert(0);}
+
+  void* operator new(size_t size) {
+    Assert(size==12);
+    return (ChainElem *)genFreeListManager->getOne_3();}
+
+  void free(){
+    genFreeListManager->putOne_3((FreeListEntry*) this);}
+
+  ChainElem(DSite* s){site=s;flags=0;next=NULL;}
+
+  void reinit(DSite* s){site=s;flags=0;}
 
   DSite *getSite(){ return site;}
-
-  void init(DSite *s);
 
   Bool flagIsSet(ChainElemCode cec){return cec & flags;}
 
@@ -77,26 +85,28 @@ protected:
   short unsigned int watchcond;
   short unsigned int foundcond;
 public:
-  InformElem(){Assert(0);}
 
-  void init(DSite* s,EntityCond c);
+  void* operator new(size_t size) {
+    Assert(size==12);
+    return (InformElem *)genFreeListManager->getOne_3();}
 
-  EntityCond wouldTrigger(EntityCond c){
-    EntityCond ec= ((watchcond & c) & (~(foundcond)));
-    foundcond |= ec;
-    return ec;}
+  InformElem(DSite *s,EntityCond ec){
+    site=s;
+    watchcond=ec;
+    foundcond=0;}
 
-  EntityCond wouldTriggerOK(EntityCond c){
-    EntityCond ec= (foundcond & c);
-    foundcond &= ~ec;
-    return ec;}
+  void free(){
+    genFreeListManager->putOne_3((FreeListEntry*) this);}
+
+  void maybeTrigger(OwnerEntry*, int, EntityCond);
+  void maybeTriggerOK(OwnerEntry*, int, EntityCond);
 };
 
 enum ChainFlags{
   INTERESTED_IN_OK=1,
-  INTERESTED_IN_TEMP=2,
-  TOKEN_PERM_SOME=8,
-  TOKEN_LOST=4};
+  TOKEN_TEMP_SOME =2,
+  TOKEN_PERM_SOME=4,
+  TOKEN_LOST=8};
 
 enum ChainAnswer{
   BEFORE_ME=1,
@@ -111,9 +121,18 @@ protected:
   unsigned int flags;
 
 public:
-  Chain(){Assert(0);}
+  void* operator new(size_t size) {
+    Assert(size==16);
+    return (Chain *)genFreeListManager->getOne_4();}
 
-  void init(DSite*);
+  void free(){
+    genFreeListManager->putOne_4((FreeListEntry*) this);}
+
+  Chain(DSite* s){
+    ChainElem *e=new ChainElem(s);
+    inform=NULL;
+    flags=0;
+    first=last=e;}
 
   void setFlagAndCheck(int f){
     Assert(!hasFlag(f));
@@ -141,47 +160,48 @@ public:
   ChainElem* getFirst(){return first;}
   ChainElem* getLast(){return last;}
 
+  void removeBefore(DSite*);
+  void gcChainSites();
+
   // failure
-  Bool basicSiteExists(ChainElem*,DSite*); // accessing list of chain elements
-  Bool siteExists(DSite* s) {return basicSiteExists(getFirstNonGhost(),s);}
+  // ghosts are chain elements where error recovery mechanism has
+  //    asked them but they have not answered but would have been
+  //    removed by normal chain operation
+
   ChainElem **getFirstNonGhostBase();
   ChainElem *getFirstNonGhost() {return *getFirstNonGhostBase();}
   void makeGhost(ChainElem*);
-  void releaseChainElem(ChainElem*);
-  void removePerm(ChainElem**);
-  void removeBefore(DSite*);
+  Bool removeGhost(DSite*);  // returns TRUE if ghost removed, FALSE if no
+                             // corresponding ghost exists
+
+  Bool siteExists(DSite* s); // return TRUE if non-ghost elem with site s exists
+
   ChainElem *findAfter(DSite*);
-  Bool removeGhost(DSite*);
+  void releaseChainElem(ChainElem*);
+
+  void newInform(DSite*,EntityCond);
+
   Bool tempConnectionInChain();
   void removeNextChainElem(ChainElem** base);
-  void newInform(DSite*,EntityCond);
-  void gcChainSites();
+
+  void receiveAskError(OwnerEntry*,DSite*,EntityCond);
   void receiveAnswer(Tertiary*,DSite*,int,DSite*);
-  Bool siteOfInterest(DSite*);
   void managerSeesSitePerm(Tertiary*,DSite* ); // probe
   void managerSeesSiteTemp(Tertiary*,DSite* );
   void managerSeesSiteOK(Tertiary*,DSite* );
-  void removeInformOnPerm(DSite*);
-  void dealWithTokenLostBySite(OwnerEntry*,int,DSite*);
   void shortcutCrashLock(LockManager*);       // shortcutting chain methods
   void shortcutCrashCell(CellManager*,TaggedRef);
-  void handleTokenLost(OwnerEntry*,int);
+  void handleTokenLost(Tertiary*,OwnerEntry*,int);
   void informHandle(OwnerEntry*,int,EntityCond);
-  void probeTemp(Tertiary*);
-  void deProbeTemp();
+  void informHandleOK(OwnerEntry*,int,EntityCond);
   void receiveUnAsk(DSite*,EntityCond);
-
-  void informHandleTempOnAdd(OwnerEntry*,Tertiary*,DSite*s);
-  /* PER-HANDLE
-  void releaseInformElem(InformElem*);  // manipulating one inform element
-  */
+  void establish_PERM_SOME(Tertiary*);
+  void establish_TOKEN_LOST(Tertiary*);
 };
 
-Chain* newChain();
-
-void freeInformElem(InformElem*);
-
+#ifdef DEBUG_PERDIO
 int printChain(Chain*);
+#endif
 
 /* __CHAINHH */
 #endif
