@@ -438,7 +438,7 @@ Bool AM::hookCheckNeeded()
 
 #define INCFPC(N) PC += N
 
-//#define WANT_INSTRPROFILE
+// #define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
@@ -495,8 +495,8 @@ Bool AM::hookCheckNeeded()
 
 #ifdef LINUX_I486
 /* This does NOT pay off */
-/*   #define Reg1 asm("%esi") */
-#define Reg1 
+#define Reg1 asm("%esi")
+#define XReg1 
 #define Reg2
 #define Reg3
 #define Reg4
@@ -1057,26 +1057,8 @@ LBLinstallThread:
   //  current thread always has a stack, and it might not 
   // be marked as dead;
   Assert(CTT->hasStack ());
-
-// ------------------------------------------------------------------------
-// *** pop a task
-// ------------------------------------------------------------------------
-LBLpopTask:
-  {
-    Assert(!CTT->isSuspended());
-    Assert(CBB==currentDebugBoard);
-
-    emulateHookPopTask(e, goto LBLpreemption);
-
-    DebugCheckT(CAA = NULL);
-
-LBLpopTaskNoPreempt:
-    TaskStack *taskstack     = CTS;
-    TaskStackEntry *topCache = taskstack->getTop();
-    PopFrameNoDecl(topCache,PC,Y,G);
-    taskstack->setTop(topCache);
-    goto LBLemulate;
-  }
+  
+  goto LBLpopTask;
 
   /*
    *  Kill a thread at the toplevel - i.e. just dispose it;
@@ -2061,7 +2043,23 @@ LBLdispatcher:
     }
 
   Case(RETURN)
-    goto LBLpopTask;
+    LBLpopTask:
+      {
+	Assert(!CTT->isSuspended());
+	Assert(CBB==currentDebugBoard);
+
+	emulateHookPopTask(e, goto LBLpreemption);
+
+	DebugCheckT(CAA = NULL);
+
+      LBLpopTaskNoPreempt:
+	TaskStack *taskstack     = CTS;
+	TaskStackEntry *topCache = taskstack->getTop();
+	PopFrameNoDecl(topCache,PC,Y,G);
+	taskstack->setTop(topCache);
+	JUMP(PC);
+      }
+
 
 
 // ------------------------------------------------------------------------
