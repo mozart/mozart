@@ -4,7 +4,9 @@
 # Public domain.
 
 # INSTALL_DIR_CHMOD=775 to also give write permission to group members
+# INSTALL_DIR_CHMOD=    to only get default (from umask)
 
+: ${INSTALL_DIR_CHMOD=775}
 if test -z "$INSTALL_DIR_CHMOD"; then
 dochmod(){ true; }
 else
