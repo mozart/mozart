@@ -263,7 +263,8 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     for (int i=def->getArity()-1; i>=0; i--) {
       dinfo = cons(arguments[i],dinfo);
     }
-    dinfo = cons(OZ_int(frameId),dinfo);
+    time_t feedtime = CodeArea::findTimeStamp(PC);
+    dinfo = cons(OZ_int(frameId),cons(OZ_int(feedtime),dinfo));
 
     if (currentThread->stepMode() || def->getPred()->getSpyFlag()) {
       debugStreamCall(PC, def->getPrintName(), def->getArity(),
@@ -1330,7 +1331,12 @@ LBLsuspendThread:
     if (e->debugmode() && CTT->isTraced()) {
       TaskStackEntry *auxtos = CTT->getTaskStackRef()->getTop();
       PopFrame(auxtos,debugPC,Y,G);
-      PopFrame(auxtos,debuginfoPC,_Y,_G);
+
+      ProgramCounter debuginfoPC;
+      RefsArray _Y,_G;
+      do {
+	PopFrameNoDecl(auxtos,debuginfoPC,_Y,_G);
+      } while (debuginfoPC == C_DEBUG_CONT_Ptr);
 
       TaggedRef name = OZ_atom("Unknown");
       TaggedRef args = nil();
@@ -2425,7 +2431,8 @@ LBLdispatcher:
 
 	 if (!isTailCall) e->pushTask(PC,Y,G);
 	 
-	 OZ_Term dinfo = OZ_int(0);
+	 time_t feedtime = CodeArea::findTimeStamp(PC);
+	 OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
 	 OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
 	 
 	 e->currentThread->pushDebug(dbg);
@@ -2446,6 +2453,14 @@ LBLdispatcher:
        case SUSPEND:
 	 {
 	   if (!isTailCall) e->pushTask(PC,Y,G);
+
+	   if (e->debugmode()) {
+	     time_t feedtime = CodeArea::findTimeStamp(PC);
+	     OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
+	     OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
+	     e->currentThread->pushDebug(dbg);
+	   }
+	   
 	   e->pushCFun(biFun,X,predArity);
 	   e->suspendOnVarList(CTT);
 	   goto LBLsuspendThread;
