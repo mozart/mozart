@@ -3015,15 +3015,15 @@ fi
 	    else
 	      oz_opt="-O3 -pipe -fschedule-insns2 -fregmove -fstrict-aliasing"
 	    fi
-	    oz_om="-mcpu=pentium -fomit-frame-pointer"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    ;;
 	2.95.*)
 	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
-	    oz_om="-mcpu=pentium -fomit-frame-pointer"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    ;;
 	*)
 	    oz_opt="-O3 -pipe -fstrict-aliasing"
-	    oz_om="-mpentium -fomit-frame-pointer"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    ;;
 	esac
 	;;
