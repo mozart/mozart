@@ -87,23 +87,20 @@
 	  is the final class from which compiler engines can be instantiated.
 	  This is described in detail in <Ptr to="section.api.engines">.
 
-	<Entry><<genericInterface>>
+	<Entry><<interface>>
 	<Synopsis>
-	  <<Compiler.genericInterface>>
+	  <<Compiler.interface>>
 	<Item>
 	  is a class providing a simple mechanism to create
-	  compiler interfaces.  It is described in detail in <Ptr
-	  to="section.api.interfaces">.
+	  compiler interfaces.  It is described in detail in
+	  <Ptr to="section.api.interfaces">.
 
 	<Entry><<parseOzFile>>
 	<Synopsis>
 	  <<{Compiler.parseOzFile ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
-	<Item>
-	  <P.silent><!--**-->
-
 	<Entry><<parseOzVirtualString>>
 	<Synopsis>
-	  <<{Compiler.parseOzFile ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
+<<{Compiler.parseOzVirtualString ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
 	<Item>
 	  <P.silent><!--**-->
 

@@ -102,13 +102,13 @@
     <Para class=apropos><Title/Methods/
       <List>
 	<Entry>
-	  <<init(?+{NarratorO} ?+{ServeOneL} &lt;= unit ??{B} &lt;= unit)>>
+	  <<init(?+{NarratorO} ?+{ServeOneL} &lt;= unit ??{L} &lt;= unit)>>
 	<Item>
 	  <P.silent><!--**-->
 	<Entry><<reset()>>
 	<Item>
 	  <P.silent><!--**-->
-	<Entry><<setVerbosity(?+{B})>>
+	<Entry><<setVerbosity(?+{L})>>
 	<Item>
 	  <P.silent><!--**-->
 	<Entry><<hasErrors(??{B})>>
@@ -129,4 +129,5 @@
       </List>
   <Section>
     <Title/Example/
+      <!--** from ozdoc -->
 </Appendix>
