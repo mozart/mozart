@@ -34,11 +34,12 @@ INSTALL		= @INSTALL@
 INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 
-LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc
+LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
+	   $(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc
 
 .PHONY: bootstrap all install clean veryclean distclean tags
 
-all: oz.elc
+all: oz.elc oz-extra.elc
 
 bootstrap: all
 
@@ -51,7 +52,7 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-oz.elc: oz.el
+oz.elc oz-extra.elc: %.elc : %.el
 	@echo "(setq byte-compile-compatibility t) \
 	(byte-compile-file \"$<\")" > compile.el
 	$(EMACS) -q -batch -l compile.el
@@ -77,6 +78,6 @@ distclean: clean
 	-rm -f Makefile oz.el
 
 tags:
-	etags oz.el
+	etags oz.el oz-extra.el
 
 check:
