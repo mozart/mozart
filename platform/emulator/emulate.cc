@@ -261,8 +261,7 @@ bombGenCall:
      FALSE: can continue
    */
 
-Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, 
-			    int arity, TaggedRef *arguments)
+Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *arguments)
 {
   // without signal blocking;
   if (isSetSFlag(ThreadSwitch)) {
@@ -284,7 +283,6 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
   }
 
   if (def && debugmode() && currentThread->stepMode()) {
-    //enterCall(currentBoard,makeTaggedConst(def),arity,arguments);
 #ifndef STEPWITHDEBUGINFO
     //Board *b = am.currentBoard;
     //am.currentBoard = am.rootBoard;
@@ -353,14 +351,14 @@ Bool AM::hookCheckNeeded()
 
 
 /* macros are faster ! */
-#define emulateHookCall(e,def,arity,arguments,Code) 		\
-    if (e->hookCheckNeeded()) {					\
-      if (e->emulateHookOutline(PC, def, arity, arguments)) {	\
-	Code;							\
-      }								\
+#define emulateHookCall(e,def,arguments,Code)		\
+    if (e->hookCheckNeeded()) {				\
+      if (e->emulateHookOutline(PC, def, arguments)) {	\
+	Code;						\
+      }							\
     }
 
-#define emulateHookPopTask(e,Code) emulateHookCall(e,0,0,0,Code)
+#define emulateHookPopTask(e,Code) emulateHookCall(e,0,0,Code)
 
 
 #define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G)
@@ -376,11 +374,11 @@ Bool AM::hookCheckNeeded()
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,Arity)				\
-     Y = NULL;							\
-     G = gRegs;							\
-     emulateHookCall(e,Pred,Arity,X,				\
-		     e->pushTask(Pred->getPC(),NULL,G,X,Arity);	\
+#define CallDoChecks(Pred,gRegs)						\
+     Y = NULL;									\
+     G = gRegs;									\
+     emulateHookCall(e,Pred,X,							\
+		     e->pushTask(Pred->getPC(),NULL,G,X,Pred->getArity());	\
 		     goto LBLpreemption;);
 
 
@@ -1378,7 +1376,7 @@ LBLdispatcher:
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
-      CallDoChecks(entry->getAbstr(),entry->getGRegs(), entry->getAbstr()->getArity());
+      CallDoChecks(entry->getAbstr(),entry->getGRegs());
 
       IHashTable *table = entry->indexTable;
       if (table) {
@@ -2135,7 +2133,7 @@ LBLdispatcher:
 
       if (!isTailCall) CallPushCont(PC+6);
       ChangeSelf(obj);
-      CallDoChecks(def,def->getGRegs(),getWidth(arity));
+      CallDoChecks(def,def->getGRegs());
       JUMP(def->getPC());
     }
 
@@ -2185,7 +2183,7 @@ LBLdispatcher:
     }
     
     if (!isTailCall) { CallPushCont(PC); }
-    CallDoChecks(def,def->getGRegs(),getWidth(arity));
+    CallDoChecks(def,def->getGRegs());
     JUMP(def->getPC());
 
 
@@ -2269,7 +2267,7 @@ LBLdispatcher:
 	   if (!isTailCall) { CallPushCont(PC); }
 	 }
        
-	 CallDoChecks(def,def->getGRegs(),def->getArity());
+	 CallDoChecks(def,def->getGRegs());
 	 JUMP(def->getPC());
        }
 
