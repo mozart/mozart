@@ -101,6 +101,7 @@ enum EmulatorPropertyIndex {
   // ARGV
   PROP_ARGV,
   // MISC
+  PROP_ROOT_URL,
   PROP_STANDALONE,
   PROP_HOME,
   PROP_OZ_CONFIGURE_HOME,
@@ -359,6 +360,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	out = cons(oz_atom(ozconf.argV[i]),out);
       return out;
     }
+  CASE_ATOM(PROP_ROOT_URL,ozconf.url);
   CASE_BOOL(PROP_STANDALONE,!ozconf.runningUnderEmacs);
   CASE_ATOM(PROP_HOME,ozconf.ozHome);
   CASE_ATOM(PROP_OZ_CONFIGURE_HOME,OZ_CONFIGURE_PREFIX);
@@ -848,6 +850,7 @@ void initVirtualProperties()
   VirtualProperty::add("limits",PROP_LIMITS);
   // ARGV
   VirtualProperty::add("argv",PROP_ARGV);
+  VirtualProperty::add("root.url",PROP_ROOT_URL);
   // MISC
   VirtualProperty::add("oz.standalone",PROP_STANDALONE);
   VirtualProperty::add("oz.conf.home",PROP_HOME);
