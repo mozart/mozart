@@ -394,17 +394,17 @@ extern void oz_forceWakeUp(SuspList **);
  * ---------------------------------------------------------------------------------------------------------------
  * FU    | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
  * ---------------------------------------------------------------------------------------------------------------
- * FAIL  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * FAIL  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  |
  * ---------------------------------------------------------------------------------------------------------------
- * OF    | R->OF | R->OF | R->OF | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
+ * OF    | R->OF | R->OF | R->OF | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
  * ---------------------------------------------------------------------------------------------------------------
- * CT    | R->CT | R->CT | R->CT | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | NOOP  | CLASH | CLASH | CLASH |
+ * CT    | R->CT | R->CT | R->CT | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | NOOP  | CLASH | CLASH | CLASH |
  * ---------------------------------------------------------------------------------------------------------------
- * FS    | R->FS | R->FS | R->FS | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | CLASH | NOOP  | CLASH | CLASH |
+ * FS    | R->FS | R->FS | R->FS | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | NOOP  | CLASH | CLASH |
  * ---------------------------------------------------------------------------------------------------------------
- * BOOL  | R->BO | R->BO | R->BO | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
+ * BOOL  | R->BO | R->BO | R->BO | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
  * ---------------------------------------------------------------------------------------------------------------
- * FD    | R->FD | R->FD | R->FD | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
+ * FD    | R->FD | R->FD | R->FD | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | NOOP  | NOOP  |
  * ---------------------------------------------------------------------------------------------------------------
  *
  * Comments (kost@, raph+fsp):
@@ -418,8 +418,8 @@ extern void oz_forceWakeUp(SuspList **);
  * -  Ct -> Future  cannot proceed: unification of Ct"s require a Ct or a non-variable
  *                  at the right hand side, which is not possible due to the nature.
  * -  Ct -> Ext     cannot proceed either: don't know how to make a Ct out of it!
- * -  Ct -> Failed  actually suspends on the right-hand side.  This forces
- *                  the failed value to raise its exception.
+ * -  Ct -> Failed  currently the unification fails
+ * -  Failed -> Var currently not implemented (the failed value raises its exception).
  *
  */
 
@@ -485,11 +485,6 @@ OZ_Return oz_var_cast(TaggedRef * & fp, Board * fb, TypeOfVariable tt) {
     // makes the right-hand side needed
     // Note: The unification of readonlys is a demanding operation
     return oz_var_makeNeeded(fp);
-
-  case VTP(OF,FAILED): case VTP(CT,FAILED): case VTP(FS,FAILED):
-  case VTP(BOOL,FAILED): case VTP(FD,FAILED):
-    // forces the failed value to raise its exception
-    return oz_var_addSusp(fp, oz_currentThread());
 
   default:
     return PROCEED;
