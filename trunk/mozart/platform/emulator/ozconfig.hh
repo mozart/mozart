@@ -86,6 +86,7 @@ public:
   char *osname, *cpu;
   char *ozPath;
 
+  char *emuexe;
   char *emuhome;
 
   /* command line arguments visible from Oz */
