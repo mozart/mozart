@@ -36,10 +36,9 @@ TaggedRef NameTclName,
 
 TaggedRef tcl_dict;
 
-int raiseTk(char *label,int arity,...)
-{
-  OZ_Term tt=OZ_tuple(OZ_atom("tk"),arity+1);
-  OZ_putArg(tt,0,OZ_atom(label));
+int raiseTk(char *label_a, char *label_b,int arity,...)  {
+  OZ_Term tt=OZ_tuple(OZ_atom(label_a),arity+1);
+  OZ_putArg(tt,0,OZ_atom(label_b));
 
   va_list ap;
   va_start(ap,arity);
@@ -55,7 +54,7 @@ int raiseTk(char *label,int arity,...)
 
 OZ_Return raise_os_error()
 {
-  return raiseTk("os",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
+  return raiseTk("unix","unix",2,OZ_int(errno),OZ_atom(OZ_unixError(errno)));
 }
 
 OZ_Return raise_type_error(TaggedRef tcl)
@@ -64,7 +63,7 @@ OZ_Return raise_type_error(TaggedRef tcl)
 }
 
 OZ_Return raise_closed(TaggedRef tcl) {
-  return raiseTk("alreadyClosed",1,tcl);
+  return raiseTk("tk","alreadyClosed",1,tcl);
 }
 
 extern
