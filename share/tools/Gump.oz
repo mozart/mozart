@@ -26,8 +26,8 @@
 functor
 import
    Open(file pipe text)
-   OS(system)
-   Property(get)
+   OS(system getEnv)
+   Property(get condGet)
    Debug at 'x-oz://boot/Debug'
    BisonModule(generate) at 'Bison.so{native}'
 export
