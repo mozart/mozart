@@ -4819,8 +4819,6 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
   return makeTaggedSRecord(rec);
 }
 
-static TaggedRef dummyRecord;
-
 inline
 OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 {
@@ -4828,11 +4826,11 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 
   /* state is _allways_ a record, this makes life somewhat easier */
   if (!oz_isSRecord(initState)) {
-    if (dummyRecord==makeTaggedNULL()) {
-      SRecord *rec = SRecord::newSRecord(OZ_atom("noattributes"),
-					 aritytable.find(oz_cons(OZ_newName(),oz_nil())));
-      rec->setArg(0,OZ_atom("novalue"));
-      dummyRecord = makeTaggedSRecord(rec);
+    static TaggedRef dummyRecord = 0;
+    if (dummyRecord==0) {
+      dummyRecord = OZ_recordInitC("noattributes",
+				   oz_list(OZ_pair2(OZ_newName(),OZ_atom("novalue")),0));
+      OZ_protect(&dummyRecord);
     }
     initState = dummyRecord;
   }
@@ -5208,8 +5206,3 @@ OZ_BI_define(BIinspect, 1, 1)
 } OZ_BI_end
 
 #endif
-
-void initObjectBuiltins(void) {
-  dummyRecord = makeTaggedNULL();
-  OZ_protect(&dummyRecord);
-}

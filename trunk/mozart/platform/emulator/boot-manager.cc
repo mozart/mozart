@@ -427,8 +427,5 @@ void initBuiltins() {
   bi_raise      = string2Builtin("raise");
   bi_raiseError = string2Builtin("raiseError");
   bi_raiseDebug = string2Builtin("raiseDebug");
-
-  initObjectBuiltins();
-
 }
 
