@@ -53,6 +53,8 @@
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
 
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
 
