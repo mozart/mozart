@@ -141,6 +141,9 @@ define
 	 for C in {CondSelect R categories nil} do
 	    {Q.put 'category:       '#C#'\n'}
 	 end
+	 for P in {CondSelect R platform nil} do
+	    {Q.put 'platform:       '#P#'\n'}
+	 end
 	 if {CondSelect R tar nil}\=nil then
 	    for EXT in R.tar do
 	       {Q.put  'url-pkg:        '#
@@ -287,10 +290,19 @@ define
 		      mogul  : R.mogul
 		      format : {self get_format($)}
 		     )}
+	 PkgPlatform =
+	 case {CondSelect R platform unit}
+	 of unit then 'source'
+	 elseof P then P end
+	 PlatformsSofar =
+	 {CondSelect {CondSelect @DB R.mogul unit} platform nil}
+	 PP = if {Member PkgPlatform PlatformsSofar} then P else
+		 {AdjoinAt P platform PkgPlatform|PlatformsSofar}
+	      end
       in
-	 @DB.(R.mogul) := P
+	 @DB.(R.mogul) := PP
 	 {self trace('updated entry for '#R.mogul)}
-	 {self mogul_trace_package(P)}
+	 {self mogul_trace_package(PP)}
       end
 
       meth mogul_put_contact(R)
@@ -546,13 +558,14 @@ define
 	 %% 2. ozmake --create --package PKG
 	 %%    where PKG's directory is given by --mogulpkgdir and PKG's
 	 %%    filename is computed from the package's MOGUL id
+	 %%    This step is skipped if the PKG was explicitly given
 	 %%
 	 %% 3. ozmake --mogul=put --package PKG
 	 %%
 	 %% 4. ozmake --mogul=export
 	 %%
 	 {self set_database_ignore(true)}
-	 {self makefile_read}
+	 {self makefile_read_maybe_from_package}
 	 %% install docs if necessary
 	 if {self get_doc_targets($)}\=nil then
 	    ILIBS = {self get_includelibs($)}
@@ -596,12 +609,22 @@ define
 	    DIR = {self get_mogulpkgdir($)}
 	    MOG = {self get_mogul($)}
 	    VER = {self get_version($)}
-	    PKG = {Path.resolve DIR {Utils.mogulToPackagename MOG}}
+	    GIV = {self get_package_given($)}
+	    PKG = if GIV
+		  then {self get_package($)}
+		  else {Path.resolve DIR {Utils.mogulToPackagename MOG}} end
 	 in
-	    {self set_package(PKG)}
-	    {self create}
+	    if GIV then skip else
+	       {self set_package(PKG)}
+	       {self create}
+	    end
 	    if VER\=unit then
-	       FIL = {Path.resolve DIR {Utils.mogulToFilename MOG}#'-'#VER#'.pkg'}
+	       FIL = {Path.resolve DIR {Utils.mogulToFilename MOG}#'-'#VER#'.pkg'
+		      if {self platform_given($)} then
+			 case {self get_platform($)}
+			 of 'source' then nil
+			 elseof P then '.'#P end
+		      else nil end}
 	    in
 	       {self exec_cp(PKG FIL)}
 	    end

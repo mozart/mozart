@@ -44,23 +44,8 @@ doc.html:
 	cp $(SRCDIR)/HELP.html $(SRCDIR)/index.html
 endif
 
-ifeq ($(HTML_TO_TEXT),lynx)
 doc.text:
-	$(LYNX) -dump $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
-endif
-
-ifeq ($(HTML_TO_TEXT),elinks)
-doc.text:
-	$(ELINKS) -dump $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
-endif
-
-ifeq ($(HTML_TO_TEXT),UNDEFINED)
-doc.text:
-	echo >&2 "neither lynx nor elinks were found"
-	echo >&2 "but one of them is necessary to build the (text) documentation"
-	echo >&2 "(see http://lynx.browser.org/)"
-	exit -1
-endif
+	$(SRCDIR)/htmltotext.sh $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
 
 other.doc: have.xsltproc ozmake.xml ozmake.xsl
 	$(XSLTPROC) -o ozmake.html \

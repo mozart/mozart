@@ -1,60 +1,114 @@
 -*-outline-*-
 
-we need to distinguish between compile-time and run-time
-dependencies.  We only need to rebuild a target if a compile time
-dependency changed.  However, we need to build all run-time dependencies.
+* TODO
+** --create must use the new naming conventions (see below)
 
-* BUILD TARGET (TOOL!=OZL)
-** build build-time dependencies (requires) -- this is a recursive process
-** build target if outdated
-   with respect to (1) source (2) requires
+	SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
 
-* BUILD TARGET (TOOL==OZL)
+* extending MOGUL support to allow for many instances per package
 
-** build "source" which is an ozf file
-   build its build-time dependencies -- this is a recursive process
+** instance
 
-** build the ozf run-time dependencies (imports) -- i.e. the files which will be linked
-   this is also a recursive process
+   has everything that a package used to have (1) except url-doc which
+   is more properly something we should associate with the package
+   itself, (2) but with format and platform
 
-** build target if outdated
+** package
 
-* BUILD ALL
-** build "install" targets
-** build all their run-time dependencies (not just ozf) -- this can be
-   a recursive process provided we guard against loops
+   has additional fields for its instances (header "instance").  Each
+   instance is referenced by a name of the form:  PACKAGE:ID and
+   resides in a file PACKAGE:ID.mogul.  For example, for the mozart
+   stdlib, we could have:
 
-we also need to guard against loops in the build-time dependencies
-and signal an error when such a loop is found.
+	mozart.mogul
+	mozart-stdlib.mogul
+	mozart-stdlib:1.mogul
+	mozart-stdlib:2.mogul
+	mozart-stdlib:7.mogul
 
-======================================================================
+   inside of mozart-stdlib.mogul, we would have additional fields:
 
-get_depends_ozl(T $)
-get_depends_build(T $)
-get_depends_install(T $)
+	instance: mozart-stdlib:1.mogul
+	instance: mozart-stdlib:2.mogul
+	instance: mozart-stdlib:7.mogul
 
-* get_depends_ozl(T $)
+   for each package, there would be one instance that would be
+   explicitly distinguished as the primary representative.  This is
+   the one that would provide all the info for the package itself.
+   Typically, this should be the latest "source" release.
 
-T is ozf file to be created by the ozl tool, i.e. from another ozf
-file.  Here we want to gather all recursive ozf run-time dependencies.
-Then we will want to build them which will take care of the build-time
-dependencies.
+* extending ozmake to support multiple instances of packages
 
-Note that if a run-time dependency is an ozl linked ozf file, then we
-don't want to recursively gather its deps - that's all taken care of
-by the recursive build.
+  In order to leverage HTTP as a means of obtaining packages, we
+  cannot assume a smart server.  Instead, we need a smart client and
+  some naming conventions that it can take advantage of.
 
-Note also that the build system should be made more robust to signal
-an error when we recursively attempt to build the same target.
+  Until now, here was the situation.  For a package:
 
-* get_depends_build(T $)
+	mogul:/SECTION/PACKAGE
 
-these are computed from the requires and may well include .so for
-example.  This is not recursive.
+  we could obtain it from a MOGUL archive using:
 
-* get_depends_install(T $)
+	/SECTION/PACKAGE/SECTION-PACKAGE.pkg
+  or	/SECTION/PACKAGE/SECTION-PACKAGE-VERSION.pkg
 
-This is computed from the imports for normal ozf files and is
-recursive.  For ozl-linked ozf files, the imports are recursively
-inspected for .so files, but ozf files are not recorded since they are
-already linked in.
+  Now, we wish to add FORMAT and PLATFORM information:
+
+	/SECTION/PACKAGE/SECTION-PACKAGE__FORMAT__PLATFORM.pkg
+	/SECTION/PACKAGE/SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
+
+  We can fault back to the previous format if nothing is found with
+  the new one.
+
+** what archives must guarantee
+
+   it should always be possible to get the most recent version of a
+   package without having to know what it is; therefore
+
+	SECTION-PACKAGE__FORMAT__PLATFORM.pkg
+
+   should always refer to the most recent version (a link or a copy).
+
+** what about the notions of alpha, beta, stable?
+
+   I'd say that if we wanted that, all that's necessary to not mess up
+   everyone else is simply to not link such files as most recent.
+   They'd be there - you could ask for them specifically - but they
+   would not cause any harm.
+
+** what about old files that do not follow the format above?
+
+   as a safety precaution, if we have:
+
+	SECTION-PACKAGE-VERSION.pkg
+
+   then we should now write out:
+
+	SECTION-PACKAGE__1.2.5__source__VERSION.pkg
+
+   just to be sure.
+
+** archive indexes
+
+   it should also be possible to obtain, from an archive, an index of
+   the software it holds - this should also be possible per package
+
+	SECTION-PACKAGE.listing
+
+   should contains one line per package instance available
+
+	SECTION-PACKAGE__1.2.5__source__0.81.pkg
+	SECTION-PACKAGE__1.3.0__source__0.82.pkg
+	SECTION-PACKAGE__1.3.0__source__0.83.pkg
+	SECTION-PACKAGE__1.3.0__win32-i486__0.82.pkg
+	SECTION-PACKAGE__1.3.0__win32-i486__0.83.pkg
+
+**********************************************************************
+
+until now we also assumed that the MOGUL database and the ozmake
+database would have the same kind of content.  However, now, the MOGUL
+database can hold several instance for each package, while for ozmake
+there should only be one instance installed.
+
+the ozmake db is a db of packages while the mogul db is one of
+instances.
