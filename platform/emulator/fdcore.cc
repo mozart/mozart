@@ -138,7 +138,7 @@ OZ_C_proc_begin(BIfdNextSmaller, 3)
     if (value > OZ_intToC(var))
       return OZ_unify(var, OZ_getCArg(2));;
   } else if (isGenFDVar(var,vartag)) {
-    int nextSmaller = tagged2GenFDVar(var)->getDom().getNextSmallerElem(value);
+    int nextSmaller = tagged2GenFDVar(var)->getDom().getNextSmallerEl(value);
     if (nextSmaller != -1)
       return OZ_unify(OZ_int(nextSmaller), OZ_getCArg(2));
   } else if (isGenBoolVar(var,vartag)) {
@@ -176,7 +176,7 @@ OZ_C_proc_begin(BIfdNextLarger, 3)
     if (value < OZ_intToC(var))
       return OZ_unify(var, OZ_getCArg(2));;
   } else if (isGenFDVar(var,vartag)) {
-    int nextLarger = tagged2GenFDVar(var)->getDom().getNextLargerElem(value);
+    int nextLarger = tagged2GenFDVar(var)->getDom().getNextLargerEl(value);
     if (nextLarger != -1)
       return OZ_unify(OZ_int(nextLarger), OZ_getCArg(2));
   } else if (isGenBoolVar(var,vartag)) {
@@ -316,8 +316,8 @@ OZ_C_proc_begin(BIfdPutList, 2)
 {
   ExpectedTypes(EM_FD "," EM_FDDESCR);
 
-  OZ_PropagatorExpect pe;
-  OZ_expect_t r = pe.expectDomainDescription(OZ_getCArg(1));
+  OZ_Expect pe;
+  OZ_expect_t r = pe.expectDomDescr(OZ_getCArg(1));
   if (pe.isFailing(r)) {
     TypeError(1, "");
   } else if (pe.isSuspending(r)) {
