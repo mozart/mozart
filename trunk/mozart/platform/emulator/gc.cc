@@ -557,9 +557,6 @@ Bool needsNoCollection(TaggedRef t)
 
 Bool gcProtect(TaggedRef *ref)
 {
-  if (needsNoCollection(*ref))
-    return OK;
-    
   if (extRefs->find(ref))
     return NO;
 
@@ -572,7 +569,7 @@ Bool gcUnprotect(TaggedRef *ref)
   ExtRefNode *aux = (ExtRefNode*) extRefs->find(ref);
 
   if (aux == NULL)
-    return needsNoCollection(*ref);
+    return NO;
 
   extRefs = (ExtRefNode*) extRefs->remove(aux);
   return OK;
