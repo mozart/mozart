@@ -172,7 +172,7 @@ The function <<QTk.newImageLibrary>> returns an empty image library. An image li
 
 <ITEM> <<get(name:A image:V)>>: Binds <<V>> to the image in the image library that has the name <<A>>. The returned image is similar the images built using then <<QTk.newImage>> function. However, if you modify these images after they were created inside the image library, the image library won't be updated. You need to explicitly save and reload the modified image into the library.
 
-<ITEM> <<getNames(V)>>: Binds <<V>> to a list of atoms that are all the names of all avalaible images in the library.
+<ITEM> <<getNames(V)>>: Binds <<V>> to a list of atoms that are all the names of all available images in the library.
 
 <ITEM> <<remove(name:A)>>: Removes the image named <<A>> from the library if present, does nothing otherwise.
 </LIST>
@@ -181,7 +181,7 @@ Image libraries can be also be saved and loaded to files:
 <LIST>
 <ITEM> <<{QTk.saveImageLibrary L VS}>>: This procedure saves the image library <<L>> to a file named <<VS>>.
 
-<ITEM> <<{QTk.loadImageLibray VS}>>: This function returns an image library loaded from the file <<VS>>.
+<ITEM> <<{QTk.loadImageLibrary VS}>>: This function returns an image library loaded from the file <<VS>>.
 </LIST>
 Saved image libraries are functors that you can directly import and link into your application's functor. To achieve this, you must do the following:
 
@@ -482,7 +482,7 @@ Menu description records are records of the form <<menu(E1 E2 .. Ex param1:value
 <p>
 Menu descriptions usage:
 <list>
-<item> As the <<menu>> parameter of the <<td>> or <<lr>> <em>toplevel</em> widget. This menu's items will be displayed in a menubar accross the top of the window. These menus will behave according to the interface guidelines of their platforms. For every menu set as a menubar, a clone menu is made (see below).
+<item> As the <<menu>> parameter of the <<td>> or <<lr>> <em>toplevel</em> widget. This menu's items will be displayed in a menubar across the top of the window. These menus will behave according to the interface guidelines of their platforms. For every menu set as a menubar, a clone menu is made (see below).
 <item> As the <<menu>> parameter of a <<menubutton>> widget. This is the most usual way of using menu declarations.
 <item> As the parameter of the function <<QTk.buildMenu>>. This function returns an Oz object representing the described menu. This object can be used as the <<menu>> parameter of a <<menubutton>> widget, or alternatively be displayed anywhere on the screen using its <<post>> method (see below). <em>Warning:</em> <<QTk.buildMenu>> requires that the menu description specifies a <<parent>> parameter set to a QTk window existing inside the display where the menu is to be posted. Example:
 <<<T={QTk.build td(title:"Test")}
@@ -524,7 +524,7 @@ The menu description support the following parameters:
 <item><<relief:A>>: Specifies the 3-D effect desired for the widget.  Must be one of these atoms: <<raised>>, <<sunken>>, <<flat>>, <<ridge>>, <<solid>> or <<groove>>. The value
     indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
     should appear to protrude from the screen, relative to the exterior of the widget. 
-<item><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanims consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
+<item><<takefocus:B>>: Determines whether the window accepts the focus during keyboard traversal (e.g., Tab and Shift-Tab). Before setting the focus to a window, the traversal mechanism consult the value of the <<takeFocus>> option. A value of <<false>> means that the widget should be skipped entirely during keyboard traversal. <<true>> means that the widget should receive the input focus as long as it is viewable (it and all of its ancestors are mapped). <<B>> must be a boolean.
 
 <ITEM> <<tearoff:B>>: Specifies whether or not the menu should include a tear-off entry at the top. The default menu bindings arrange for the menu to be torn off when the tear-off entry is invoked. <<B>> must be a boolean.
 
@@ -1118,7 +1118,7 @@ If the event type is <<KeyPress>> or <<KeyRelease>>, then detail may be specifie
         the type of the argument and the argument itself.  <Ptr
         to="misc.events.event-args"> shows the valid types. Actual types used are the trivial mapping from the specified type.
         When the event is raised, all specified arguments are appended to the
-        <<action>> to execute in the order they appear in the list.
+        <<action>> to execute in the order they appear in the list. Below is a list of all the valid arguments; where two names appear together, they are synonyms. 
 
         <Figure id="misc.events.event-args">
           <Caption/Event arguments./

@@ -24,8 +24,10 @@ end
 
 <P>
 
-The very first widget you can use to build a window must be either <<td>> or <<lr>>. This particular widget is called the toplevel widget. A toplevel widget is a <<td>> or <<lr>> widget with added features and functionality. This section will only describe these new parameters, see the specific <<td>> and <<lr>> documentation for the other supported parameters (See <ptr to="chapter.widgets.tdlr">).
-
+The very first widget you can use to build a window must be either <<td>> or <<lr>>. This particular widget is called the toplevel widget. A toplevel widget is a <<td>> or <<lr>> widget with added features and functionality. This section will only describe these new parameters, see the specific <<td>> and <<lr>> documentation for the other supported parameters (See <ptr to="chapter.widgets.tdlr">). 
+</p>
+<p>
+There is an exception to the previous rule : the <<handle>> parameter is not supported by the <<toplevel>> widget. Instead, use the returned value of the QTk builder used to create the window. In the example above, the <<Toplevel>> variable <em>is</em> the handle of the toplevel widget.
 </P>
 <P>
 Note that the <<glue>> parameter is <<nswe>> by default and that can't be changed (the toplevel widget is always glued to the border of the window).

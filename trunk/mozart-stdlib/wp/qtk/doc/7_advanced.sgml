@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.advanced">
-  <TITLE>QTk advanced topics</TITLE>
+  <TITLE>Advanced topics</TITLE>
 
 <section ID="misc.look"><TITLE>Looks</TITLE>
 
@@ -165,7 +165,7 @@ And supports the following functions and procedures:
 <item> <<MyBuilder.defaultLook>>: defines the default <<look>> (<ptr to="misc.look">) for widgets.
 <item> <<{MyBuilder.setAlias AliasName Alias}>>: defines an alias (see above).
 <item> <<{MyBuilder.unSetAlias AliasName}>>: removes an alias from the alias database of <<MyBuilder>>.
-<item> <<{MyBuilder.getAlias AliasName}>>: returns the function applied to transform the <<AliasName>> alias description in the window description record. Altough an alias can be specified in three different forms (record, function or class), <<getAlias>> returns only a one parameter function that is semantically equivalent to the initial alias specification.
+<item> <<{MyBuilder.getAlias AliasName}>>: returns the function applied to transform the <<AliasName>> alias description in the window description record. Although an alias can be specified in three different forms (record, function or class), <<getAlias>> returns only a one parameter function that is semantically equivalent to the initial alias specification.
 <item> <<{MyBuilder.getWidgetList}>>: returns the list of all widgets defined in <<MyBuilder>>.
 <item> <<{MyBuilder.getAliasList}>>: returns the list of all aliases defined in <<MyBuilder>>.
 </list>
