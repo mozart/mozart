@@ -26,7 +26,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomMin, AtomMax, AtomMid,
   AtomNaive, AtomSize, AtomConstraints,
   AtomDistributed, AtomMobile, AtomFetched,
-  NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag;
+  NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
+  NameOoDefaultVar,NameOoRequiredArg;
 
 
 // Some often used constants
@@ -63,6 +64,8 @@ void initLiterals()
   NameOoAttr       = makeTaggedName("ooAttr");
   NameOoFreeFeatR  = makeTaggedName("ooFreeFeatR");
   NameOoFreeFlag   = makeTaggedName("ooFreeFlag");
+  NameOoDefaultVar  = makeTaggedName("ooDefaultVar");
+  NameOoRequiredArg = makeTaggedName("ooRequiredArg");
 
   AtomMin          = makeTaggedAtom("min");
   AtomMax          = makeTaggedAtom("max");
