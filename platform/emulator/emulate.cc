@@ -2129,7 +2129,7 @@ LBLdispatcher:
       switch(t->getTertType()){
       case Te_Local:{
         if(!e->isToplevel()){
-          if((t->getTertType!=Te_Local) || (e->currentBoard != ((LockLocal*)t)->getBoard())) {
+          if (e->currentBoard != ((LockLocal*)t)->getBoard()) {
             (void) e->raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
             goto LBLraise;}}
         if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
