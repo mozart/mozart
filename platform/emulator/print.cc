@@ -566,7 +566,6 @@ PRINT(Abstraction)
   CHECKDEPTH;
   stream << "P:"
 	 << getPrintName() << "/" << getArity();
-//	 << "@" << this;
 }
 
 PRINT(Object)
@@ -586,6 +585,12 @@ PRINT(Object)
     getRecord(state)->print(stream,depth+1,offset);
   }
   stream << ">";
+}
+
+PRINT(ObjectClass)
+{
+  CHECKDEPTH;
+  stream << "C:" << getPrintName();
 }
 
 PRINT(BuiltinTabEntry)
@@ -751,6 +756,7 @@ PRINTLONG(ConstTerm)
   case Co_HeapChunk:  ((HeapChunk *) this)->printLong(stream, depth, offset); break;
   case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
   case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
+  case Co_Class:      ((ObjectClass *) this)->printLong(stream,depth,offset);      break;
   case Co_Cell:	      
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:   ((CellLocal *)   this)->printLong(stream,depth,offset); break;
@@ -796,6 +802,7 @@ PRINT(ConstTerm)
   case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset); break;
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;
+  case Co_Class:       ((ObjectClass *) this)->print(stream,depth,offset);      break;
   case Co_Cell:        ((CellLocal *) this)->print(stream,depth,offset);        break;
   case Co_Port:        ((Port *) this)->print(stream,depth,offset);        break;
   case Co_Space:       ((Space *) this)->print(stream,depth,offset);       break;
@@ -831,28 +838,15 @@ PRINTLONG(HeapChunk)
 }
 
 
-PRINT(ObjectClass)
-{
-  CHECKDEPTH;
-  depth++;
-  stream << indent(offset) << "class(fastMethods: ";
-  fastMethods->print(stream,depth,offset);
-  stream << ",";
-  if (unfreeFeatures) {
-    stream << ", ";
-    unfreeFeatures->print(stream,depth,offset);
-  }
-  stream << ")";
-}
 
 PRINTLONG(ObjectClass)
 {
   CHECKDEPTHLONG;
-  depth++;
-  stream << indent(offset) << "class(fastMethods: ";
-  fastMethods->printLong(stream,depth,offset);
-  stream << ")";
+  stream << indent(offset)
+	 << "Class: "
+	 << getPrintName() << endl;
 }
+
 
 void AM::print()
 {
