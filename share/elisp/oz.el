@@ -1069,8 +1069,10 @@ OZ compiler, emulator and error window")
 
 (defun oz-toggle-window(buffername)
   (if (get-buffer buffername)
-      (if (get-buffer-window buffername t)
-	  (delete-windows-on buffername t)
+      (if (get-buffer-window buffername nil)
+	  (if oz-gnu19
+	      (delete-windows-on buffername t)
+	    (delete-windows-on buffername))
 	(oz-show-buffer (get-buffer buffername)))))
 
 
