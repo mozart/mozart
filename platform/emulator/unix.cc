@@ -176,7 +176,7 @@ static char* h_strerror(const int err) {
     return "Retry later again.";
   case NO_RECOVERY:
     return "Unexpected non-recoverable server failure.";
-#if defined(SOLARIS_SPARC) || defined(LINUX)
+#if defined(SOLARIS) || defined(LINUX)
   case NO_ADDRESS:
 #endif
 #if defined(SUNOS_SPARC)
