@@ -224,7 +224,7 @@ public:
 
 
 /* any combination of the following must be different from GCTAG,
- * otherwise getRef() will not work
+ * otherwise getCycleRef() will not work
  */
 #define Lit_isName          2
 #define Lit_isNamedName     4
@@ -260,7 +260,7 @@ public:
 
   Literal *gc();
 
-  TaggedRef *getRef() { return (TaggedRef*)&flagsAndOthers; }
+  TaggedRef *getCycleRef() { return (TaggedRef*)&flagsAndOthers; }
 
   inline unsigned int hash();  
 };
@@ -687,6 +687,7 @@ public:
   void setHead(TaggedRef term) { args[0] = term;}
   void setTail(TaggedRef term) { args[1] = term;}
   TaggedRef *getRef()          { return args; }
+  TaggedRef *getCycleRef()     { return args; }
   TaggedRef *getRefTail()      { return args+1; }
   TaggedRef *getRefHead()      { return args; }
 };
@@ -754,6 +755,9 @@ int fastlength(OZ_Term l)
  *=================================================================== */
 
 /* must not match GCTAG (ie <> 13 (1101) !!!! */
+const int Co_Bits = 16;
+const int Co_Mask = (1<<Co_Bits)-1;
+
 enum TypeOfConst {
   Co_Foreign_Pointer,
   Co_Extended,
@@ -790,48 +794,41 @@ enum TertType {
 #define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
 
 class ConstTerm {
-protected:
-  union {
-    TaggedRef tagged;
-    void *padForAlpha;   // otherwise we get lots of warnings
-  } ctu;
+private:
+  int32 tag;
 public:
   USEHEAPMEMORY;
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(ConstTerm);
-  ConstTerm(TypeOfConst t)  { setTagged(t,NULL); }
+  ConstTerm(TypeOfConst tag) : tag(tag) {}
 
-  Bool gcIsMarked(void) {
-    return GCISMARKED(ctu.tagged);
-  }
-  void gcMark(ConstTerm * fwd) {
-    ctu.tagged = GCMARK(fwd);
-  }
-  void ** gcGetMarkField(void) {
-    return (void **) &ctu.tagged;
-  }
+  Bool gcIsMarked(void)        { return GCISMARKED(tag); }
+  void gcMark(ConstTerm * fwd) { tag = GCMARK(fwd); }
+  void ** gcGetMarkField(void) { return (void **) &tag; }
   ConstTerm * gcGetFwd(void) {
     Assert(gcIsMarked());
-    return (ConstTerm *) GCUNMARK((int) ctu.tagged);
+    return (ConstTerm *) GCUNMARK(tag);
   }
   ConstTerm *gcConstTerm(void);
   ConstTerm *gcConstTermSpec(void);
   void gcConstRecurse(void);
 
-  void setTagged(TypeOfConst t, void *p) {
-    ctu.tagged = makeTaggedRef2p((TypeOfTerm)t,p);
-  }
-  TypeOfConst getType()     { return (TypeOfConst) tagTypeOf(ctu.tagged); }
+  TypeOfConst getType() { return (TypeOfConst) (tag & Co_Mask); }
 
+  void setVal(int val) {
+    tag = (tag & Co_Mask) | (val << Co_Bits);
+  }
+  int getVal() {
+    return tag >> Co_Bits;
+  }
   const char *getPrintName();
   int getArity();
-  void *getPtr() {
-    return isNullPtr(ctu.tagged) ? NULL : tagValueOf(ctu.tagged);
-  }
-  void setPtr(void *p)  { setTagged(getType(),p); }
-  TaggedRef *getRef()   { return &ctu.tagged; }
+
+  TaggedRef *getCycleRef() { return (TaggedRef *) &tag; }
+  
 
   /* optimized isChunk test */
+  // mm2: why (int) cast?
   Bool isChunk() { return (int) getType() >= (int) Co_Object; }
 };
 
@@ -870,7 +867,7 @@ public:
 
 class Tertiary: public ConstTerm {
 private:
-  TaggedPtr tagged;
+  TaggedPtr tagged; // TertType + Board || TertType + OTI
   EntityInfo* info;
 public:
 
@@ -1098,10 +1095,10 @@ public:
   NO_DEFAULT_CONSTRUCTORS2(ExtendedConst);
   ExtendedConst():ConstTerm(Co_Extended){}
   ExtendedConst(TypeOfExtendedConst t):ConstTerm(Co_Extended) {
-    setTagged(Co_Extended,(void*)t);
+    setVal(t);
   }
   TypeOfExtendedConst getXType() {
-    return (TypeOfExtendedConst) ToInt32(getPtr());
+    return (TypeOfExtendedConst) getVal();
   }
   ExtendedConst* gc(void);
 };
@@ -1396,6 +1393,7 @@ public:
   TaggedRef getArg(int i) { return tagged2NonVariable(args+i); }
   void setArg(int i, TaggedRef t) { args[i] = t; }
   TaggedRef *getRef() { return args; }
+  TaggedRef *getCycleRef() { return args; }
   TaggedRef *getRef(int i) { return args+i; }
   TaggedRef &operator [] (int i) {return args[i];}
   
@@ -1618,7 +1616,7 @@ RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 class Object: public Tertiary {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-  // ObjectClass *cl is in ptr field of ConstTerm
+  ObjectClass *cl;
   RecOrCell state;
   OzLock *lock;
   SRecord *freeFeatures;
@@ -1643,12 +1641,12 @@ public:
     lock = 0;
   }
 
-  void setClass(ObjectClass *c) { setPtr(c); }
+  void setClass(ObjectClass *c) { cl=c; }
 
   OzLock *getLock() { return lock; }
   void setLock(OzLock *l) { lock=l; }
 
-  ObjectClass *getClass()       { return (ObjectClass*) getPtr(); }
+  ObjectClass *getClass()       { return cl; }
   OzDictionary *getMethods()    { return getClass()->getfastMethods(); }
   const char *getPrintName()    { return getClass()->getPrintName(); }
   RecOrCell getState()          { return state; }
@@ -1822,9 +1820,10 @@ Bool isChunk(TaggedRef t)
 class OzArray: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
-  int offset, width;
+  TaggedRef *args;
+  int offset, width; // mm2: put one into ConstTerm tag?
 
-  TaggedRef *getArgs() { return (TaggedRef*) getPtr(); }
+  TaggedRef *getArgs() { return args; }
 
 public:
   NO_DEFAULT_CONSTRUCTORS(OzArray);
@@ -1839,13 +1838,12 @@ public:
     width = high-low+1;
     if (width <= 0) {
       width = 0;
-      setPtr(NULL); // mm2: attention if globalize gname!
+      args = NULL; // mm2: attention if globalize gname!
     } else {
-      TaggedRef *args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
+      args = (TaggedRef*) int32Malloc(sizeof(TaggedRef)*width);
       for(int i=0; i<width; i++) {
 	args[i] = initvalue;
       }
-      setPtr(args);
     }
   }
   
@@ -2017,18 +2015,16 @@ public:
 class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-  // PrTabEntry *pred is in ptr field of ConstTerm
+  PrTabEntry *pred;
   RefsArray gRegs;
 public:
   OZPRINTLONG;
   NO_DEFAULT_CONSTRUCTORS(Abstraction);
   Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-    : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs)
-  { 
-    setPtr(prd);
-  }
+    : ConstTermWithHome(b,Co_Abstraction), pred(prd), gRegs(gregs)
+  { }
 
-  PrTabEntry *getPred()  { return (PrTabEntry *) getPtr(); }
+  PrTabEntry *getPred()  { return pred; }
   RefsArray &getGRegs()  { return gRegs; }
   ProgramCounter getPC() { return getPred()->getPC(); }
   int getArity()         { return getPred()->getArity(); }
@@ -2169,6 +2165,7 @@ class CellLocal:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
+  void *dummy; // mm2
 public:                
   OZPRINTLONG;
 
@@ -2268,6 +2265,7 @@ class CellManager:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   CellSec *sec;
+  Chain *chain;
 public:
   OZPRINT;
 
@@ -2276,7 +2274,8 @@ public:
 
   CellSec* getSec(){return sec;}
 
-  Chain *getChain() {return (Chain*) getPtr();}
+  Chain *getChain() {return chain;}
+  void setChain(Chain *ch) { chain = ch; }
 
   unsigned int getState(){return sec->state;}
 
@@ -2296,7 +2295,8 @@ public:
 class CellProxy:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  int holder;
+  int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
+  void *dummy; // mm2
 public:
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(CellProxy);
@@ -2309,6 +2309,7 @@ class CellFrame:public Tertiary{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   CellSec *sec;
+  void *forward;
 public:
   OZPRINT;
 
@@ -2334,11 +2335,8 @@ public:
 
   unsigned int getState(){return sec->state;}
 
-
-
-  void myStoreForward(void* forward){setPtr(forward);}
-
-  void* getForward(){return getPtr();}
+  void myStoreForward(void* f) { forward = f; }
+  void* getForward()           { return forward; }
 
   CellSec* getSec(){return sec;}
     
@@ -2483,20 +2481,21 @@ class LockLocal:public OzLock{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   PendThread *pending;
+  Thread *locker;
 public:                
   OZPRINT;
   NO_DEFAULT_CONSTRUCTORS(LockLocal);
   LockLocal(Board *b) : OzLock(b,Te_Local){
     pending=NULL;
-    setPtr(NULL);
+    locker = NULL;
     pending= NULL;}
 
   PendThread* getPending(){return pending;}
   void setPending(PendThread *pt){pending=pt;}
   PendThread** getPendBase(){return &pending;}
   
-  Thread * getLocker(){return (Thread*) getPtr();}
-  void setLocker(Thread *t){setPtr(t);}
+  Thread * getLocker() { return locker; }
+  void setLocker(Thread *t) { locker=t; }
   Bool hasLock(Thread *t){return (t==getLocker()) ? TRUE : FALSE;}
 
   void unlockComplex();
@@ -2537,7 +2536,7 @@ private:
   PendThread* pending;
   Site* next;
   Thread *locker;
-
+  
 public:
   NO_DEFAULT_CONSTRUCTORS2(LockSec);
   LockSec(Thread *t,PendThread *pt){ // on globalize
@@ -2592,6 +2591,7 @@ class LockFrame:public OzLock{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   LockSec *sec;
+  void *forward;
 public:
   OZPRINT;
 
@@ -2621,9 +2621,8 @@ public:
 
   unsigned int getState(){return sec->state;}
 
-  void myStoreForward(void* forward){setPtr(forward);}
-
-  void* getForward(){return getPtr();}
+  void myStoreForward(void* f) { forward=f; }
+  void* getForward() { return forward; }
     
   void convertToProxy(){
     setTertType(Te_Proxy);
@@ -2660,6 +2659,7 @@ class LockManager:public OzLock{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   LockSec *sec;
+  Chain *chain;
 public:
   OZPRINT;
 
@@ -2690,8 +2690,8 @@ public:
     if((sec->state==Cell_Lock_Valid) && sec->pending==NULL) return;
     sec->unlockComplex((Tertiary*) this);}
 
-  Chain *getChain() {return (Chain*) getPtr();}
-
+  Chain *getChain() {return chain;}
+  void setChain(Chain *ch) { chain = ch; }
   PendThread* getPending(){return sec->pending;}
 
   void localize();
@@ -2708,6 +2708,7 @@ class LockProxy:public OzLock{
 friend void ConstTerm::gcConstRecurse(void);
 private:
   int holder;
+  void *dummy; // mm2
 public:
   OZPRINT;
 

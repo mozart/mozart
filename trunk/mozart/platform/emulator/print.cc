@@ -1344,7 +1344,7 @@ void SChunk::printLongStream(ostream &stream, int depth, int offset)
   ozd_printLongStream(value,stream,depth,offset+2);
   stream << indent(offset)
     << " home:"<<endl;
-  ((Board *)getPtr())->printLongStream(stream,depth,offset);
+  GETBOARD(this)->printLongStream(stream,depth,offset);
 }
 
 void SRecord::printLongStream(ostream &stream, int depth, int offset)
