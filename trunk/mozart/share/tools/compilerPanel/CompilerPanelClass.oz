@@ -718,6 +718,14 @@ in
 		  CompilerPanel, ShowInfo(VS)
 	       [] info(VS Coord) then
 		  CompilerPanel, ShowInfo(VS Coord)
+	       [] message(Record Coord) then VSCell in
+		  VSCell = {NewCell ""}
+		  {Error.msg
+		   proc {$ X}
+		      {Assign VSCell {Access VSCell}#{Error.formatLine X}}
+		   end
+		   Record}
+		  CompilerPanel, ShowInfo({Access VSCell} Coord)
 	       [] displaySource(Title _ VS) then
 		  {New SourceWindow init(self.TopLevel Title VS) _}
 	       [] toTop() then
