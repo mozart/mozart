@@ -46,6 +46,11 @@
 extern int h_errno;
 #endif
 
+#ifdef WINDOWS
+#define xxh_errno ossockerrno()
+#endif
+
+
 #include <time.h>
 #include <sys/stat.h>
 
@@ -602,9 +607,16 @@ OZ_BI_iodefine(unix_stat,1,1)
   OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(__MINGW32__))
+
 OZ_BI_iodefine(unix_uName,0,1)
 {
+#ifdef WINDOWS
+  OZ_Term t2=OZ_pairAS("machine","unknown");
+  OZ_Term t3=OZ_pairAS("nodename",oslocalhostname());
+  OZ_Term t4=OZ_pairAS("release","unknown");
+  OZ_Term t5=OZ_pairAS("sysname","WIN32");
+  OZ_Term t6=OZ_pairAS("version","unknown");
+#else
   struct utsname buf;
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR("uname");
@@ -615,6 +627,7 @@ OZ_BI_iodefine(unix_uName,0,1)
   OZ_Term t5=OZ_pairAS("sysname",buf.sysname);
   OZ_Term t6=OZ_pairAS("version",buf.version);
 
+#endif
   OZ_Term pairlist = oz_cons(t2,oz_cons(t3,oz_cons(t4,oz_cons(t5,oz_cons(t6,oz_nil())))));
 
 #if defined(SUNOS_SPARC) || defined(LINUX)
@@ -627,7 +640,6 @@ OZ_BI_iodefine(unix_uName,0,1)
 
   OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
 } OZ_BI_ioend
-#endif
 
 
 OZ_BI_iodefine(unix_chDir,1,0)
@@ -1791,7 +1803,6 @@ retry:
 #if defined(__MINGW32__)
 NotAvail("OS.getServByName",   2,1, unix_getServByName);
 NotAvail("OS.wait",            0,2, unix_wait);
-NotAvail("OS.uName",           0,1, unix_uName);
 NotAvail("OS.getpwnam",        1,1, unix_getpwnam);
 #endif
 

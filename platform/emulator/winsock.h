@@ -946,6 +946,12 @@ struct hostent PASCAL FAR * gethostbyaddr (const char FAR * addr,
                                     int type);
 #endif
 
+#ifndef EINPROGRESS
+#define xxEINPROGRESS             WSAEINPROGRESS
+#endif
+#ifndef EADDRNOTAVAIL
+#define xxEADDRNOTAVAIL           WSAEADDRNOTAVAIL
+#endif
 
 
 #endif  /* _WINSOCKAPI_ */
