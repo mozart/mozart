@@ -781,15 +781,14 @@ OZ_BI_define(BIurl_load,1,1)
   return URL_get(url,OZ_out(0),URL_LOAD);
 } OZ_BI_end
 
-OZ_C_proc_begin(BIload,2)
+OZ_BI_define(BIload,2,0)
 {
   OZ_Term loader = registry_get(AtomLoad);
   if (loader==0) 
     loader = BI_url_load;
-  am.prepareCall(loader,OZ_getCArg(0),OZ_getCArg(1));
+  am.prepareCall(loader,OZ_in(0),OZ_in(1));
   return BI_REPLACEBICALL;
-}
-OZ_C_proc_end
+} OZ_BI_end
 
 
 OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)

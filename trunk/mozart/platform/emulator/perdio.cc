@@ -184,7 +184,7 @@ void sendRegister(BorrowEntry *);
 int printChain(Chain*);
 void insertDangelingEvent(Tertiary*);
 EntityCond getEntityCondPort(Tertiary*);
-OZ_C_proc_proto(BIapply);
+OZ_BI_proto(BIapply);
 
 void sendObject(Site* sd, Object *o, Bool);
 
