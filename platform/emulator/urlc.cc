@@ -41,10 +41,6 @@
 #include "os.hh"
 #include "urlc.hh"
 
-#ifdef WINDOWS
-#define EINPROGRESS WSAEINPROGRESS
-#endif
-
 
 /* ## define to 2 if debugging messages and perror wanted;
              to 1 if perror wanted;
