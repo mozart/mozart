@@ -264,17 +264,22 @@ under the Getting Started/Documentation
           <p>
           <list>
           <item> Temporary files are put under
-                 <file/"C:\TEMP"/ by default
-                 (instead of <file/"C:\"/).  
-                 Creating many files directly under "C:\" made
+                 <file/C:\TEMP/ by default
+                 (instead of <file/C:\/).  
+                 Creating many files directly under <file/C:\/ made
                  Windows NT freeze.
           <item> Subprocesses started from Mozart
                  do not open new console windows.
           <item> Mozart is not longer confused by
-                 other programs such as fortify by
+                 other programs such as <file/fortify/ by
                  complete rewrite of communication
                  between Mozart and Tk
-                 (bug 338)
+                 (bug 338).
+          <item> <file/ozd/ now looks in the registry to see
+                 whether it can figure out where Emacs is installed.
+                 Furthermore, <file/ozd/ depended upon <file/bash/ as
+                 command interpreter to start Emacs&emdash;now it also
+                 works with <file/command.com/ and <file/cmd.exe/.
           </list>
 
         <subsection>
