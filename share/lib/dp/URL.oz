@@ -212,18 +212,29 @@ local
       case {HasFeature Url query}     then '?'#Url.query     else '' end #
       case {HasFeature Url fragment}  then "#"#Url.fragment  else '' end
    end
+
+         
+   fun {VsToUrl V}
+      {StringToUrl {VirtualString.toString V}}
+   end
    
+   fun {UrlToAtom U}
+      {VirtualString.toAtom {UrlToVs U}}
+   end
+
 in
 
-   RURL = rurl(vsToUrl:  fun {$ V}
-			    {StringToUrl {VirtualString.toString V}}
-			 end
-	       isAbsUrl: UrlIsAbs
-	       resolve:  UrlResolve 
-	       urlToVs:  UrlToVs
-	       urlToKey: fun {$ U}
-			    {VirtualString.toAtom {UrlToVs U}}
-			 end)
+   functor prop once
+
+   export
+      fromVs:   VsToUrl
+      isAbsUrl: UrlIsAbs
+      resolve:  UrlResolve 
+      toVs:     UrlToVs
+      toAtom:   UrlToAtom
+   body
+      skip
+   end
 
 end
 

@@ -45,7 +45,7 @@ SPSRC   = Debug Foreign Error ErrorRegistry Finalize
 OPSRC   = Open
 APSRC   = GetArgs Syslet Servlet Applet Application
 CPSRC   = Search FD Schedule FS
-DPSRC   = Connection Remote VirtualSite Fault
+DPSRC   = Connection Remote VirtualSite Fault URL
 WPSRC   = Tk TkTools
 MISCSRC = Misc
 
@@ -83,12 +83,12 @@ Makefile: Makefile.in ../config.status
 # Init
 #---------------------------------------------------------------------
 
-INITSRC1 = Resolve.oz Prop.oz Module.oz RURL.oz
+INITSRC1 = Resolve.oz Prop.oz Module.oz
 INITSRC = $(INITSRC1:%=init/%) Init.oz \
 	../url-defaults.oz ../functor-defaults.oz
 
-Init.ozf: $(INITSRC)
-	OZMAINIT="" $(COMPILE) Init.oz -o Init.ozf
+Init.ozf: URL.ozf $(INITSRC)
+	OZMAINIT="" $(COMPILE) -l URL Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
 # Standard
