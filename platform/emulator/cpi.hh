@@ -32,12 +32,12 @@
 #endif
 
 #include <stdarg.h>
-#include "mozart_cpi.hh"
 #include "builtins.hh"
 #include "var_base.hh"
 #include "cpi_heap.hh"
 #include "fdomn.hh"
 #include "unify.hh"
+#include "mozart_cpi.hh"
 
 #if defined(OUTLINE)
 #define inline
