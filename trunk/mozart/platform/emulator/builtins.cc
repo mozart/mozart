@@ -1187,6 +1187,14 @@ NEW_DECLAREBI_USEINLINEFUN2(BIuparrowNonBlocking,uparrowInlineNonBlocking)
 OZ_Return uparrowInlineBlocking(TaggedRef, TaggedRef, TaggedRef&);
 NEW_DECLAREBI_USEINLINEFUN2(BIuparrowBlocking,uparrowInlineBlocking)
 
+OZ_BI_define(BIuparrowBlockingWrapper,3,0)
+{
+  OZ_Term out;
+  uparrowInlineBlocking(OZ_in(0),OZ_in(1),out);
+  return oz_unify(OZ_in(2),out);
+} OZ_BI_end
+
+
 
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
@@ -1255,7 +1263,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
 	x[0]=termOrig;
 	x[1]=feaOrig;
 	x[2]=out;
-	OZ_Thread thr=OZ_makeSuspendedThread(BIuparrowBlocking,x,3); 
+	OZ_Thread thr=OZ_makeSuspendedThread(BIuparrowBlockingWrapper,x,3); 
 	OZ_addThread(feaOrig,thr);
 	return PROCEED;                     
       }
@@ -5405,9 +5413,9 @@ OZ_BI_define(BIdeepFeed,2,0)
  * Browser: special builtins: getsBound, intToAtom
  * --------------------------------------------------------------------- */
 
-OZ_BI_define(_getsBound_dummyB, 1,1)
+OZ_BI_define(_getsBound_dummyB, 2,0)
 {
-  OZ_RETURN(NameTrue);
+  return oz_unify(OZ_in(1),NameTrue);
 } OZ_BI_end
 
 
@@ -5645,6 +5653,9 @@ OZ_BI_define(BIcopyRecord,1,1)
 } OZ_BI_end
 
 
+OZ_C_proc_proto(BIatWithState)
+OZ_C_proc_proto(BIassignWithState)
+
 inline
 SRecord *getStateInline(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val)
 {
@@ -5731,12 +5742,14 @@ OZ_Return atInline(TaggedRef fea, TaggedRef &out)
 }
 NEW_DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
-OZ_BI_define(BIatWithState,2,1)
+OZ_BI_define(BIatWithState,3,0)
 {
   oz_declareNonvarIN(0,state);
   OZ_Term fea = OZ_in(1);
-
-  return doAt(tagged2SRecord(deref(state)),fea,OZ_out(0));
+  OZ_Term out;
+  int ret = doAt(tagged2SRecord(deref(state)),fea,out);
+  if (ret!=PROCEED) return ret;
+  return OZ_unify(OZ_in(2),out);
 } OZ_BI_end
 
 
