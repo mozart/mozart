@@ -44,15 +44,16 @@
  */
 
 // starts with OZ_E_LAST
-int oz_newUniqueId();
+unsigned int oz_newUniqueId();
 
 enum OZ_Registered_Extension_Id {
-  OZ_E_USER,
+  OZ_E_UNDEFINED,
   OZ_E_BITARRAY,
   OZ_E_BITSTRING,
   OZ_E_BYTESTRING,
   OZ_E_THREAD,
   OZ_E_HEAPCHUNK,
+  OZ_E_CHUNK,
   OZ_E_LAST,
 };
 
@@ -61,9 +62,9 @@ public:
   virtual ~Extension() {}
   Extension() : ConstTerm(Co_Extension) {}
 
-  virtual int           getIdV() { return 0; }
-
+  virtual int           getIdV() = 0;
   virtual Extension *   gcV() = 0;
+
   virtual void          gcRecurseV() {}
 
   virtual void          printStreamV(ostream &out,int depth = 10);
@@ -73,7 +74,7 @@ public:
   virtual OZ_Term       typeV();
   virtual OZ_Term       inspectV() { return typeV(); }
 
-  virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
+  virtual OZ_Term       getFeatureV(OZ_Term fea) { return makeTaggedNULL(); }
 
   virtual OZ_Return     eqV(OZ_Term t)           { return FAILED; }
 
