@@ -529,7 +529,7 @@ the GDB commands `cd DIR' and `directory'."
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
        "div" "mod"
-       "not" "process" "in"
+       "not" "thread" "in"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
     ))
@@ -544,7 +544,7 @@ the GDB commands `cd DIR' and `directory'."
 		   "local"
 		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
-		   "not" "process"
+		   "not" "thread"
 		   )))
 
 (defconst oz-left-pattern "[[({]")
