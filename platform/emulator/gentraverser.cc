@@ -35,12 +35,37 @@
 #include "gname.hh"
 
 //
+struct GCGTITEntry {
+  OZ_Term term;
+  int index;
+};
+
+//
 // Just 'gCollectTerm' all the entries in it;
 void GTIndexTable::gCollectGTIT()
 {
+  const int asize = getSize();
+  if (asize == 0)
+    return;
+
+  //
+  GCGTITEntry *ta = new GCGTITEntry[asize];
   HashNodeLinked *n = getFirst();
-  while (n) {
-    OZ_Term &t = (OZ_Term &) n->key.fint;
+  int i = 0;
+  do {
+    ta[i].term = (OZ_Term) n->key.fint;
+    ta[i].index = ToInt32(n->value);
+    n = getNext(n);
+    i++;
+  } while (n);
+  Assert(i == asize);
+
+  //
+  unwindGTIT();
+
+  //
+  for (i = 0; i < asize; i++) {
+    OZ_Term t = ta[i].term;
     // Either it's an (immediate) non-variable, or it's a reference to
     // a variable (the distribution layer prepares GC by installing a
     // special pseudo-snapshot of a value before gc step begins).
@@ -58,6 +83,8 @@ void GTIndexTable::gCollectGTIT()
       }
 #endif
       oz_gCollectTerm(t, t);
+
+      //
       // Now, the GC occasionaly adds (is free to!) references, so:
       DEREF(t, tp, _tagt);
       if (oz_isVariable(t))
@@ -68,9 +95,13 @@ void GTIndexTable::gCollectGTIT()
 	     (!isVar && !oz_isRef(t)));
 #endif
     }
+
     //
-    n = getNext(n);
+    htAdd((intlong) t, ToPointer(ta[i].index));
   }
+
+  //
+  delete ta;
 }
 
 //
