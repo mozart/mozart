@@ -41,7 +41,7 @@ export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/share/RunTimeLibrary.ozf=RunTimeLibrary.ozf:prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
 
-SPSRC   = Debug Foreign Error ErrorRegistry Finalize
+SPSRC   = Foreign Error ErrorRegistry Finalize
 OPSRC   = Open
 APSRC   = GetArgs Syslet Servlet Applet Application
 CPSRC   = Search FD Schedule FS
