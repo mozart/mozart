@@ -20,7 +20,7 @@ SGMLSRCS0 = \
 
 SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
 
-HTMLEXTRAFILES =
+HTMLEXTRAFILES = danger.gif
 
 OZDOCHTMLFLAGS = --autoindex
 

@@ -27,4 +27,546 @@
 
 <Chapter id="Chapter.Search">
   <Title/Search Engines: <<Search>>/
+
+<p>
+This chapter describes various search engines. The engines
+fall into the following categories.
+<para><title/Basic Search Engines./
+Easy to use engines for single, all, and
+best solution search.
+
+<para><title/General Purpose Search Engines./
+These engines offer additional support for:
+<list>
+<entry><<Recomputation>>
+<item>Recomputation allows to trade space for time, allowing to solve
+problems which otherwise would use too much memory.
+<entry><<Killing.>>
+<item>
+The execution of engines can be killed.
+<entry><<Output.>>
+<item>Solutions computed can be returned as procedures or
+first-class computation spaces.
+</list>
+
+<para><title/Search Object./
+The search object supports demand-driven search for single, all, and
+best solutions. Search can be stopped and resumed as
+needed. The object supports recomputation and the different kinds of
+output as described above.
+
+<para><title/The Oz Explorer./
+Besides of the engines described here, Mozart features the Oz
+Explorer, an interactive graphical search engine. A short description
+of its use can be found in <ptr.extern to="ozdoc:fdt"
+key="section.problem.explorer">. Reference information on the Oz
+Explorer can be found in <ptr.extern to="ozdoc:tools"
+key="chapter.explorer">, a research paper is&nbsp;<ptr
+to="Explorer.97">.
+
+<p>
+<section id="VanillaSearch"><title/Basic Search Engines/
+<index class=module/Search<and>base/
+
+<p>
+All these engines take a script as input and return a list of its
+solutions.
+<p>
+
+<list>
+<entry><<base.one>>
+<Synopsis>
+<<<
+{Search.base.one ?+{ScriptP} ??{Xs}}
+>>>
+<Item>
+returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search. If
+no solution exists, <<nil>> is returned.
+<p>
+As an example,
+<<<
+{Search.base.one proc {$ X}
+                    choice
+                       choice X=ape [] X=bear end
+                    [] X=cat
+                    end
+                 end}
+>>>
+returns the list <<[ape]>>.
+
+<entry><<base.all>>
+<Synopsis>
+<<<
+{Search.base.all ?+{ScriptP} ??{Xs}}
+>>>
+<item>
+returns the list of all solutions of the script ?+{ScriptP} (a
+unary procedure) obtained by depth-first serach.
+
+As an example,
+<<<
+{Search.base.all proc {$ X}
+                    choice
+                       choice X=ape [] X=bear end
+                    [] X=cat
+                    end
+                 end}
+>>>
+returns the list <<[ape bear cat]>>.
+
+<entry><<Search.base.best>>
+<Synopsis>
+<<<
+{Search.base.best ?+{ScriptP} ?+{OrderP} ??{Xs}}
+>>>
+<item>
+returns a singleton list containing the best solution with respect to
+the order ?+{OrderP} (a binary procedure) of the script ?+{ScriptP} (a
+unary procedure) obtained by branch and bound search. If no solution
+does exist, <<nil>> is returned.
+<p>
+The branch and bound strategy works as follows. When a solution is
+found, all the remaining alternatives are constrained to be <em/better/ with respect to the order
+?+{OrderP}. The binary procedure
+?+{OrderP} is applied with its first argument being the previous
+solution, and its second argument the root variable of a space for one
+of the remaining alternatives.
+
+<p>
+For instance, the following script constrains its root variable to a
+pair of integers, such that a certain equation holds between its
+components.
+<<<
+proc {Script Root}
+   X={FD.int 1#10} Y={FD.int 1#10}
+in
+   Y =: 10 - X - 2*Y
+   Root = X#Y
+   {FD.distribute split Root}
+end
+>>>
+
+<p>
+With the order
+<<<
+proc {MaxSum Old New}
+   Old.1 + Old.2 <: New.1 + New.2
+end
+>>>
+we can search for a solution with maximal sum of <<X>> and <<Y>> by
+<<<
+{SearchBest Script MaxSum}
+>>>
+This returns the singleton list <<[7#1]>>.
+
+<p>
+Similarly, we can search for the solution with the maximal product, by using
+the order:
+<<<
+proc {MaxProduct Old New}
+   Old.1 * Old.2 <: New.1 * New.2
+end
+>>>
+in:
+<<<
+{SearchBest Script MaxProduct}
+>>>
+This returns the singleton list <<[4#2]>>.
+</list>
+</section>
+
+<section id="GeneralSearch">
+<title/General Purpose Search Engines/
+
+<p>
+This section describes the search engines found in the module
+<<Search>>. All of these engines support recomputation, the possibility
+to stop their execution and various kinds of output.
+
+<para><title/Recomputation./
+Problem solvers which create a large number of variables or
+propagators or problem solvers for which the search tree is very deep
+might use too much memory to be feasible. The search engines described in
+this section feature support for so-called <def/
+recomputation/. Recomputation reduces the space requirements for
+these problems in that it trades space for time.
+
+<p>
+Search engines that do not use recomputation, create a copy of a
+computation space in each distribution step. This copy is needed such
+that the engine is able to follow more than one alternative of a choice.
+
+<p>
+If, for instance, a single solution search engine finds a solution after
+200 distribution steps (&ie; the search tree has a depth of 201), 200
+copies are created and stored by the engine.
+
+<p>
+Recomputation reduces the number of copies needed: Instead of creating a
+copy in each distribution step, only every <math/n/-th distribution step a
+copy is created. A space for which no copy has been created can be
+recomputed from a copy located higher above in the search tree by
+recomputing some distribution steps. In the worst case, <math/n-1/
+distribution steps have to be recomputed. The parameter <math/n/ is the
+so-called <def/recomputation distance/. A recomputation distance of
+<math/n/ means that the <em/space/ needed <em/decreases/ by a factor of
+<math/n/ and that the <em/time/ needed <em/increases/ by a factor of
+<math/n/.
+
+<p>
+The following search engines take the recomputation distance as an
+argument (it is denoted by ?{RcdI}). A value of <<2>>  for ?{RcdI}
+means that only each second distribution step a copy is created. The
+value <<1>>  for ?{RcdI} means that in each distrbution step a copy is
+created, that is no recomputation is used. Values less than <<1>> mean
+that none but an initial copy is created: from this initial copy all
+other spaces are recomputed.
+
+<p>
+Recomputation can also <em/reduce/ both <em/space and time/
+requirements.  Searching a single solution of a problem solver which
+features a good heuristic (&ie; there are only very few failures)
+creates copies which are not used.  Recomputation avoids this, resulting
+in improvement with respect to both space and time.
+
+<p class=danger> Recomputation requires that the distribution
+strategy used in the script be <em/deterministic/. Deterministic
+means that the created choices and their order are identical
+in repeated runs of the script. This is true for all strategies
+in the finite domain module, but for example not for strategies
+with randomized components.
+
+<para><title/Killing the Engine./
+All engines described in this section return a nullary procedure, which
+is denoted by ?+{KillP}. Applying this procedure kills the search
+engine.
+
+<p>
+A search engine, which can be stopped and resumed is described in
+Section&nbsp;<ptr to="sec.search.object">.
+
+<para><title/Different Types of Output./
+Each of the engines is provided with three different types of
+output. The first kind returns a list of solutions as the engines in
+<ptr to="VanillaSearch">. The second kind returns a list of unary
+procedures. Applying one of these procedures merges a copy of the
+succeeded space and gives reference to its root variable variable by the
+actual argument of the procedure application.  The third kind returns a
+list of succeeded spaces.
+
+
+<subsection><title/Single Solution Search/
+
+<p>
+<index class=module/Search<and>one/
+
+<list>
+<entry><<one.depth>>
+<index class=module/Search<and>one<and>depth/
+<Synopsis>
+<<<
+{Search.one.depth ?+{ScriptP} ?+{RcdI}
+                  ??{KillP} ??{Xs}}
+>>>
+<item>
+returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search. If
+no solution exists, <<nil>> is returned.
+
+<p>
+For instance, the procedure <<Search.base.one>> (see
+<Ptr to="VanillaSearch">) can be defined as:
+<<<
+fun {Search.base.one ScriptP}
+   {Search.one.depth ScriptP 1 _}
+end
+>>>
+
+<p>
+Suppose that <<Script>> is a script for which search does not terminate
+because it keeps on creating choices forever. It could look like the
+following:
+<<<
+proc {Script X}
+   &cdots;
+   choice {Script X} [] {Script X} end
+end
+>>>
+If <<Search.one.depth>> is applied to this particular script by
+<<<
+Solutions={Search.one.depth Script 1 KillP}
+>>>
+the search engine can be killed by applying <<KillP>> as follows:
+<<<
+{KillP}
+>>>
+
+<p>
+Note that a script which keeps on computing forever even without search
+(&ie;, because it contains an infinite recursion or loop) can not be
+killed.
+
+
+<entry><<one.depthS>>
+<index/Search<and>one<and>depthS/
+<Synopsis>
+<<<
+{Search.one.depthS ?+{ScriptP} ?+{RcdI}
+                   ??{KillP} ??{Spaces}}
+>>>
+<item>
+returns a singleton list containing the first succeeded space for the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search. If
+no solution exists, <<nil>> is returned.
+
+
+<entry><<one.depthP>>
+<index/Search<and>one<and>depthP/
+<Synopsis>
+<<<
+{Search.one.depthP ?+{ProblemP} ?+{RcdI}
+                   ??{KillP} ??{Ps}}
+>>>
+<item>
+Similar to <<Search.one.depthS>>, but returns a list of unary procedures
+as output.
+<p>
+<<Search.one.depthP>> can be defined using
+<<Search.one.depthS>> as follows:
+<<<
+fun {Search.one.depthP Script RcdI ?KillP}
+   {Map thread
+           {Search.one.depthS Script RcdI ?KillP}
+        end
+        fun {$ SuccSpace}
+           proc {$ Root}
+              {Space.merge SuccSpace Root}
+           end
+        end}
+end
+>>>
+
+<entry><<one.bound>>
+<index class=module/Search<and>one<and>bound/
+<synopsis><<{Search.one.bound ?+{ScriptP} ?+{BoundI} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<one.boundS>>
+<index class=module/Search<and>one<and>boundS/
+<synopsis><<{Search.one.boundS ?+{ScriptP} ?+{BoundI} ?+{RcdI} ??{KillP} ??{Spaces}>>
+<entry><<one.boundP>>
+<index class=module/Search<and>one<and>boundP/
+<synopsis><<{Search.one.boundP ?+{ScriptP} ?+{BoundI} ?+{RcdI} ??{KillP} ??{Ps}>>
+<item>returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by depth-first search, where
+the depth of the search tree explored is less than or equal to ?+{BoundI}.
+
+<p>
+If there is no solution in a depth less than or equal to
+?+{BoundI}, but there might be solutions deeper in the tree,
+<<cut>> is returned. In case the entire search tree has a depth
+less than ?+{BoundI} and no solution exists, <<nil>> is
+returned.
+
+<p>
+Otherwise the output is a singleton list containing the
+solution (<<Search.one.bound>>), a succeeded space
+(<<Search.one.boundS>>), or a procedure (<<Search.one.boundP>>).
+
+<p>
+For instance
+<<<
+{Search.one.bound proc {$ X}
+                     choice fail [] fail end
+                  end
+                  1 1 _}
+>>>
+returns the output <<nil>>, whereas
+<<<
+{Search.one.bound proc {$ X}
+                     choice
+                        choice fail [] fail end
+                     [] choice fail [] fail end
+                     end
+                  end
+                  1 1 _}
+>>>
+returns the output <<cut>>.
+
+<entry><<one.iter>>
+<index class=module/Search<and>one<and>iter/
+<synopsis><<{Search.one.iter ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<one.iterS>>
+<index class=module/Search<and>one<and>iterS/
+<synopsis><<{Search.one.iterS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<one.iterP>>{Search.one.iterP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<index class=module/Search<and>one<and>iterP/
+<item>
+returns a singleton list containing the first solution of the script
+?+{ScriptP} (a unary procedure) obtained by iterative deepening
+depth-first search. If no solution exists, <<nil>> is returned.
+<p>
+Iterative deepening applies <<Search.one.bound>> to ?+{ScriptP} with
+depth-bounds 1, 2, 4, 8, &ellipsis; until either a solution is
+found or <<Search.one.bound>> returns <<nil>>.
+</list>
+</subsection>
+
+
+<subsection>
+<title/All Solution Search/
+<p>
+<list>
+<entry><<all>>
+<index class=module/Search<and>all/
+<synopsis><<{Search.all ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<allS>>{Search.allS ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<index class=module/Search<and>allS/
+<entry><<allP>>{Search.allP ?+{ScriptP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<index class=module/Search<and>allP/
+<item>
+returns the list of all solutions of the script ?+{ScriptP} (a unary
+procedure) obtained by depth-first search.
+<p>
+The output is a list of solutions (<<Search.all>>), a list of succeeded
+spaces (<<Search.allS>>), or a list of procedures (<<Space.allP>>).
+</list>
+</subsection>
+
+<subsection id=section.best.solution.search>
+<title/Best Solution Search/
+<p>
+<index scope=section.best.solution.search class=module/best/
+
+<list>
+<entry><<best.bab>>
+<index class=module/Search<and>best<and>bab/
+<synopsis><<{Search.best.bab ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<best.babS>>
+<index class=module/Search<and>best<and>babP/
+<synopsis><<{Search.best.babS ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<best.babP>>
+<index class=module/Search<and>best<and>babS/
+<synopsis><<{Search.best.babP ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<item>
+returns a singleton list containing the best solution with respect to
+the order ?+{OrderP} (a binary procedure) of the script ?+{ScriptP} (a
+unary procedure) obtained by branch and bound search. If no solution
+does exist, <<nil>> is returned.
+<p>
+The branch and bound strategy works as follows. When a solution is
+found, all the remaining alternatives are constrained to be
+<em/better/ with respect to the order ?+{OrderP}. The binary procedure
+?+{OrderP} is applied with its first argument being the previous
+solution, and its second argument the root variable of a space for one
+of the remaining alternatives.
+
+<entry><<best.restart>>
+<index class=module/Search<and>best<and>restart/
+<synopsis><<{Search.best.restart ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Xs}}>>
+<entry><<best.restartS>>
+<index class=module/Search<and>best<and>restartP/
+<synopsis><<{Search.best.restartS ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Spaces}}>>
+<entry><<best.restartP>>
+<index class=module/Search<and>best<and>restartS/
+<synopsis><<{Search.best.restartP ?+{ScriptP} ?+{OrderP} ?+{RcdI} ??{KillP} ??{Ps}}>>
+<item>
+returns a singleton list containing the best solution with respect to
+the order ?+{OrderP} (a binary procedure) of the script ?+{ScriptP} (a
+unary procedure) obtained by branch and bound search. If no solution
+does exist, <<nil>> is returned.
+<p>
+The restart strategy works as follows. When a solution is found,
+search is restarted for ?+{ScriptP} with the additional constraint
+stating that the solution must be better with respect to the order
+?+{OrderP}. The binary procedure ?+{OrderP} is applied with
+the previous solution as first argument, and the root variable of the
+script ?+{ScriptP} as its second argument.
+</list>
+</subsection>
+</section>
+
+<section id=sec.search.object>
+<title/<<Search.object>>/
+<p>
+The object <<Search.object>> implements a demand driven search engine
+which supports recomputation, single, all, and best solution search
+and different kinds of output in the same way as the search engines in
+the previous section.
+
+<index class=module scope=sec.search.object/search<and>object/
+
+<list>
+<entry><<script>>
+<index class=module/Search<and>object<and>script/
+<Synopsis>
+<<<
+script(?+{ScriptP}
+       ?+{OrderP} <= _
+       rcd:?+{RcdI} <= 1)
+>>>
+<item>
+Initializes the object for the script ?+{Script} (a unary
+procedure). If the optional argument ?+{OrderP} (a binary procedure)
+is given, the object uses a branch and bound strategy for best
+solution search.
+<p>
+?+{RcdI} is the recomputation distance (see
+<ptr to="GeneralSearch">).
+
+<entry><<next>>
+<index class=module/Search<and>object<and>next/
+<synopsis><<next(??{Xs})>>
+<entry><<nextS>>
+<index class=module/Search<and>object<and>nextP/
+<synopsis><<nextS(??{Spaces})>>
+<entry><<nextP>>
+<index class=module/Search<and>object<and>nextS/
+<synopsis><<nextP(??{Ps})>>
+<item>
+returns a singleton list which contains the next solution. If no
+further solution exists, <<nil>> is returned. If the search is stopped
+by a message <<stop>>, <<stopped>> is returned.
+<p>
+The object releases its state immediately.
+
+<entry><<last>>
+<index class=module/Search<and>object<and>last/
+<synopsis><<last(??{Xs})>>
+<entry><<lastS>>
+<index class=module/Search<and>object<and>lastS/
+<synopsis><<lastS(??{Spaces})>>
+<entry><<lastP>>
+<index class=module/Search<and>object<and>lastP/
+<synopsis><<lastP(??{Ps})>>
+<item>
+returns a singleton list which contains the last solution. If no
+further solution exists, <<nil>> is returned. If the search is stopped
+by a message <<stop>>, <<stopped>> is returned.
+<p>
+The object releases its state immediately.
+If the object has been initialized for best solution search,
+the last solution is the best solution.
+
+<entry><<stop>>
+<index class=module/Search<and>object<and>stop/
+<Synopsis>
+<<<
+stop
+>>>
+<item>
+stops the search engine. The search engine can be restarted by
+<<next>>, <<nextS>>, <<nextP>>, <<last>>, <<lastS>>, and <<lastP>>.
+
+<entry><<close>>
+<index class=module/Search<and>object<and>close/
+<Synopsis>
+<<<
+close
+>>>
+<item>
+stops the search engine and closes the object.
+</list>
+</section>
+
+
 </Chapter>

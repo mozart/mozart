@@ -41,6 +41,7 @@
 <!ENTITY emdash PI "emdash">
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY ellipsis PI "ellipsis">
+<!ENTITY cdots PI "cdots">
 <!ENTITY slash PI "slash">
 <!ENTITY ie PI "ie">
 <!ENTITY eg PI "eg">
@@ -158,6 +159,7 @@
     <Meta name="html.split"       value="chapter.tk">
     <Meta name="html.split"       value="chapter.tktools">
 
+    <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
 
@@ -221,6 +223,13 @@
   </Part>
 
   <Back>
-    <Bib.Extern id="LEWINE.91" to="system.bib" key="LEWINE:91">
+    <Bib.Extern id="LEWINE.91"   to="system.bib" key="LEWINE:91">
+    <Bib.Extern id="Explorer.97" to="system.bib" key="Explorer.97">
+    <Bib.Extern id="Caseau.95" to="system.bib" key="Caseau.95">
+    <Bib.Extern id="Baptiste.95A" to="system.bib" key="Baptiste.95A">
+    <Bib.Extern id="Martin.96" to="system.bib" key="Martin.96">
+    <Bib.Extern id="Wuertz.96b" to="system.bib" key="Wuertz.96b">
+    <Bib.Extern id="Wuertz.96c" to="system.bib" key="Wuertz.96c">
+    <Bib.Extern id="Muellermueller.wlp.97" to="system.bib" key="Muellermueller.wlp.97">
 
 </BOOK>

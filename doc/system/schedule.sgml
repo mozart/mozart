@@ -27,4 +27,266 @@
 
 <Chapter id="Chapter.Schedule">
   <Title/Scheduling Support: <<Schedule>>/
+
+<p>
+This chapters contains the description of propagators and procedures,
+which are included for scheduling applications.
+
+<p>
+Except of <<Schedule.disjoint>>, the
+following conventions hold.  The argument ?{StartR} is a record of
+finite domain integers denoting start times of tasks. The argument
+?{DurR} is a record of integers denoting durations of tasks. The
+argument ?{UseR} is a record of integers denoting the resource usage
+of tasks. The arities of ?{StartR}, ?{DurR} and ?{UseR} must be
+equal.
+
+<p>
+For distribution procedures (see <Ptr
+to="section.schedule.distribute">), ?{StartR} must contain the feature
+<<pe>> denoting the task, which is to be scheduled last, &ie; the
+makespan of the schedule.  The integers and literals
+occurring in ?{TasksAvv} denote the tasks to be scheduled. Each element
+of ?{TasksAvv} must occur in the arity of ?{StartR}. The tasks
+occurring in the vectors <math/{\tt TasksA}_i/ are scheduled on the same
+resource. More information on scheduling in Oz can be found
+in&nbsp;<ptr to=wuertz.96b> and&nbsp;<ptr to=wuertz.96c>.
+
+<section id="section.schedule.unary">
+  <title/Serialization for Unary Resources/
+
+<p>
+To serialize a unary resource which can execute at most one task
+simultaneously, means that the tasks must be scheduled non-overlapping
+in time.
+
+<p>
+<list>
+
+<entry>
+<index class=module/<<Schedule>><and><<serializedDisj>>/
+<<serializedDisj>>
+<synopsis>
+<<<
+{Schedule.serializedDisj ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+creates a propagator, which states that all tasks <math/{\tt TasksA}_i/
+scheduled on the same resource
+must not overlap in time. The propagator does the same propagation as
+the conjunction of all reified  constraints modelling that two tasks
+must not overlap in time, &ie;
+<<<
+(?{StartR}.?{T1} + ?{DurR}.?{T1} =&lt;: ?{StartR}.?{T2}) +
+(?{StartR}.?{T2} + ?{DurR}.?{T2} =&lt;: ?{StartR}.?{T1}) =: 1
+>>>
+where ?{T1} and ?{T2? are two tasks out of ?{TasksAvv}.
+
+<entry>
+<index class=module/<<Schedule>><and><<serialized>>/
+<<serialized>>
+<synopsis>
+<<<
+{Schedule.serialized ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+creates a propagator, which states that all tasks <math/{\tt TasksA}_i/
+scheduled on the same resource
+must not overlap in time. The propagator does stronger propagation than
+ <<Schedule.serializedDisj>> by using so-called edge-finding. This
+type of edge-finding is a generalization of a technique described in
+<ptr to=martin.96>.
+
+<entry>
+<index class=module/<<Schedule>><and><<taskIntervals>>/
+<<taskIntervals>>
+<synopsis>
+<<<
+{Schedule.taskIntervals ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+creates a propagator, which states that all tasks <math/{\tt TasksA}_i/
+scheduled on the same resource
+must not overlap in time. The propagator does even stronger propagation than
+ <<Schedule.serialized>> by using so-called
+task-intervals&nbsp;<ptr to=caseau.95>. The propagation of this propagator is
+slightly weaker than the propagation described in&nbsp;<ptr to=caseau.95>.
+</list>
+
+
+
+
+
+
+<section id="section.schedule.distribute">
+  <title/Distribution/
+
+<p>
+<list>
+<entry>
+<index class=module/<<Schedule>><and><<firstsDist>>/
+<<firstsDist>>
+<synopsis>
+<<<
+{Schedule.firstsDist ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+distributes  the tasks occurring in ?{TasksAvv}, such that every
+resource is serialized. More details can be found
+in&nbsp;<ptr to=baptiste.95a>.
+
+<entry>
+<index class=module/<<Schedule>><and><<lastsDist>>/
+<<lastsDist>>
+<synopsis>
+<<<
+{Schedule.lastsDist ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+distributes  the tasks occurring in ?{TasksAvv}, such that every
+resource is serialized. More details can be found
+in&nbsp;<ptr to=baptiste.95a>.
+
+<entry>
+<index class=module/<<Schedule>><and><<firstsLastsDist>>/
+<<firstsLastsDist>>
+<synopsis>
+<<<
+{Schedule.firstsLastsDist ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+distributes  the tasks occurring in ?{TasksAvv}, such that every
+resource is serialized. More details can be found
+in&nbsp;<ptr to=baptiste.95a>.
+
+<entry>
+<index class=module/<<Schedule>><and><<taskIntervalsDistP>>/
+<<taskIntervalsDistP>>
+<synopsis>
+<<<
+{Schedule.taskIntervalsDistP ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+distributes  the tasks occurring in ?{TasksAvv}, such that every
+resource is serialized. This strategy is well suited for proving
+optimality.  More details can be found in&nbsp;<ptr to=caseau.95>. The
+distribution strategy implemented in Oz differs slightly from the one
+described in&nbsp;<ptr to=caseau.95>.
+
+<entry>
+<index class=module/<<Schedule>><and><<taskIntervalsDistO>>/
+<<taskIntervalsDistO>>
+<synopsis>
+<<<
+{Schedule.taskIntervalsDistO ?+{TasksAvv} ?+{StartR} ?+{DurR}}
+>>>
+<item>
+distributes  the tasks occurring in ?{TasksAvv}, such that every
+resource is serialized. This strategy is well suited for finding good
+solutions in combination with local search techniques.  More details can
+be found in&nbsp;<ptr to=caseau.95>. The
+distribution strategy implemented in Oz differs slightly from the one
+described in&nbsp;<ptr to=caseau.95>.
+</list>
+
+
+
+<section id="section.schedule.cumulative">
+  <Title/Cumulative Scheduling/
+
+<p>
+<list>
+<entry>
+<index class=module/<<Schedule>><and><<cumulative>>/
+<<cumulative>>
+<synopsis>
+<<<
+{Schedule.cumulative ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+>>>
+<item>
+creates a propagator, which states that for all resources <math/i/ and time
+instants <math/x/, the resource usage does not exceed the available capacity:
+<math display>
+\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x &lt; {\tt StartR.}t +
+{\tt DurR.}t\}}} {\tt UseR.}t \leq {\tt CapI}_i
+</math>
+This propagator does not use edge-finding.
+
+<entry>
+<index class=module/<<Schedule>><and><<cumulativeEF>>/
+<<cumulativeEF>>
+<synopsis>
+<<<
+{Schedule.cumulativeED ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+>>>
+<item>
+creates a propagator, which states that for all resources <math/i/ and time
+instants <math/x/, the resource usage does not exceed the available capacity:
+<math display>
+\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x < {\tt StartR.}t +
+{\tt DurR.}t\}}} {\tt UseR.}t \leq {\tt CapI}_i
+</math><p>
+This propagator  generalizes the edge-finding propagation in
+<<Schedule.serialized>> to deal with non-unary resources.
+
+<entry>
+<index class=module/<<Schedule>><and><<cumulativeTI>>/
+<<schedule.cumulativeTI>>
+<synopsis>
+<<<
+{Schedule.cumulativeTI ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+>>>
+<item>
+creates a propagator, which states that for all resources <math/i/ and time
+instants <math/x/, the resource usage does not exceed the available capacity:
+<math display>
+\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x < {\tt StartR.}t +
+{\tt DurR.}t\}}} {\tt UseR.}t \leq {\tt CapI}_i
+</math>
+<p>
+This propagator generalizes the edge-finding propagation in
+<<Schedule.taskIntervals>> to deal with non-unary resources.
+
+<entry>
+<index class=module/<<Schedule>><and><<cumulativeUp>>/
+<<cumulativeUp>>
+<synopsis>
+<<<
+{Schedule.cumulativeUp ?+{TasksAvv} ?+{StartR} ?+{DurR} ?+{UseR} ?+{CapIv}}
+>>>
+<item>
+creates a propagator, which states that for all resources <math/i/ and time
+instants <math/x/, the resource is at least as large as the available capacity:
+<math display>
+\sum_{\hsmash{\{t \in {\tt TasksA}_i \mid {\tt StartR.}t \leq x < {\tt StartR.}t +
+{\tt DurR.}t\}}} {\tt UseR.}t \geq {\tt CapI}_i
+</math>
+</list>
+
+
+<section id="section.schedule.misc">
+  <title/Miscellaneous Propagators/
+
+<p>
+<list>
+<entry>
+<index class=module/<<Schedule>><and><<disjoint>>/
+<<schedule.disjoint>>
+<synopsis>
+<<<
+{Schedule.disjoint ?+{D1} ?+{I1} ?+{D2} ?+{I2}}
+>>>
+<item>
+creates a propagator for <math/{\tt D1}+{\tt I1}\leq{\tt D2} \;\vee\;
+{\tt D2}+{\tt I2}\leq{\tt D1}/.
+Its operational semantics is defined by
+<<<
+or D1+I1 =<: D2
+[] D2+I2 =<: D1
+end
+>>>
+</list>
+
+</section>
+
 </Chapter>
