@@ -584,6 +584,8 @@ define
 	       TopTOC = if @SomeSplit then EMPTY
 			else SEQ([hr() {FormatTOC @TOC} hr()])
 			end
+	       {@Reporter startSubPhase('converting LaTeX sections to GIF')}
+	       {@MyLaTeXToGIF process()}
 	       unit
 	    %-----------------------------------------------------------
 	    % Front and Back Matter

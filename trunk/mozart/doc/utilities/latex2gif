@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: $ by $Author: $
-#   $Revision: $
+#   $Date: 1998/07/30 23:09:31 $ by $Author: kornstae $
+#   $Revision: 1.2 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -23,20 +23,14 @@
 # WARRANTIES.
 #
 
-if [ $# -lt 1 -o $# -gt 2 ]
+if [ $# -ne 2 ]
 then
-    echo usage: `basename $0` \<input file\> [\<output file\>] 1>&2
+    echo usage: `basename $0` \<input file\> \<output directory\> 1>&2
     exit 2
 fi
 
 infile=$1
-
-if [ $# -eq 1 ]
-then
-    outfile=`basename $infile .tex`.gif
-else
-    outfile=$2
-fi
+outdir=$2
 
 tmpdir=/tmp/ps2gif.$$
 mkdir $tmpdir
@@ -50,11 +44,15 @@ dvips x.dvi -o x.ps 1>&2
 (cat x.ps; echo quit) |
 gs -q -dNOPAUSE \
 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
--sDEVICE=ppmraw -sOutputFile=x.ppm - 1>&2
+-sDEVICE=ppmraw -sOutputFile=latex%d.ppm - 1>&2
 
-pnmcrop < x.ppm | ppmtogif) > $outfile
+for i in latex*.ppm; do
+    o=`basename $i .ppm`.gif
+    pnmcrop < $i | ppmtogif -interlace -transparent rgbi:1/1/1 > $o
+    echo Wrote $o 1>&2
+done)
 
-echo Wrote $outfile 1>&2
+mv $tmpdir/latex*.gif $outdir
 
 rm -rf $tmpdir
 
