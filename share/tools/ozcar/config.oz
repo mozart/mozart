@@ -4,14 +4,17 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% some helpers
+
 S2A = String.toAtom  %% string to atom
 fun {VS2A X}         %% virtual string to atom
    {S2A {VirtualString.toString X}}
 end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
+
 Version                = 'Jul 6 1997'
 TitleName              = 'Oz Debugger'
 IconName               = 'Ozcar'
@@ -21,6 +24,7 @@ Platform               = local
 			 in
 			    {VS2A X#'-'#Y}
 			 end
+WindowsPlatform        = 'win32-i486'
 
 NameOfBenni            = 'Benjamin Lorenz'
 EmailOfBenni           = 'lorenz@ps.uni-sb.de'
@@ -99,9 +103,11 @@ TermButtonText         = ' term'
 StackAction            = {NewName}
 ResetAction            = {NewName}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Types, Names and Atoms
 %%
+
 ArrayType              = '<array>'
 ThreadType             = '<thread>'
 CellType               = '<cell>'
@@ -131,10 +137,11 @@ FalseName              = 'false'
 
 NoAction               = {NewName}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-%ToplevelGeometry       = '510x360+46+3'
+
 ToplevelGeometry       = '510x360'
 
 ThreadTreeWidth        = 120
@@ -155,13 +162,28 @@ PadYButton             = 3
 
 ScrollbarWidth         = 10
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Fonts
 %%
-SmallFont              = '6x13'
-SmallBoldFont          = '6x13bold'
-DefaultFont            = '7x13'
-BoldFont               = '7x13bold'
+
+SmallFont
+SmallBoldFont
+DefaultFont
+BoldFont
+
+case Platform == WindowsPlatform then
+   SmallFont           = '-*-courier new-medium-r-*-*-12-*-*-*-*-*-*-*'
+   SmallBoldFont       = '-*-courier new-bold-r-*-*-12-*-*-*-*-*-*-*'
+   DefaultFont         = SmallFont
+   BoldFont            = SmallBoldFont
+else
+   SmallFont           = '6x13'
+   SmallBoldFont       = '6x13bold'
+   DefaultFont         = '7x13'
+   BoldFont            = '7x13bold'
+end
+
 ThreadTreeFont         = DefaultFont
 ThreadTreeBoldFont     = BoldFont
 ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
@@ -170,32 +192,38 @@ StatusFont             = TitleFont
 HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-18-*-*-*-*-*-*-*'
 HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
 %%
+
 HomeDir                = {VS2A {OS.getEnv 'HOME'} # '/'}
 
-OzUnixPath             = {OS.getEnv 'OZPATH'}
+OzRawPath              = {OS.getEnv 'OZPATH'}
+FieldSeparator         = case Platform == WindowsPlatform then &; else &: end
 OzPath
+
 local
-   fun {PathList UnixPath} % UnixPath must be of type string
+   fun {PathList RawPath} % RawPath must be of type string
       H T P in
-      {List.takeDropWhile UnixPath fun {$ C} C \= &: end H T}
+      {List.takeDropWhile RawPath fun {$ C} C \= FieldSeparator end H T}
       P = {VS2A H#'/'}
       case T == nil then P|nil
       else P|{PathList T.2}
       end
    end
 in
-   OzPath = {PathList OzUnixPath}
+   OzPath = {PathList OzRawPath}
 end
 
 BitMapDir              = {System.get home} # '/lib/bitmaps/'
 BitMap                 = '@' # BitMapDir # 'debugger.xbm'
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Miscellaneous
 %%
+
 TextCursor             = left_ptr
 
 MaxStackSize           = 40
@@ -213,6 +241,7 @@ HelpEvent              = '<3>'
 
 PrintDepth             = 2  % for System.valueToVirtualString
 PrintWidth             = 3
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Colors and colormodel related stuff
@@ -234,7 +263,7 @@ DeadThreadText
 ProcColor
 BuiltinColor
 
-case Tk.isColor andthen Platform \= 'win32-i486' then
+case Tk.isColor andthen Platform \= WindowsPlatform then
    %% main window
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
@@ -281,6 +310,7 @@ else
    ProcColor               = black
    BuiltinColor            = black
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% the config object to read/write changeable options
