@@ -10,6 +10,7 @@ public:
   virtual void unmarshalEnd()=0;
   virtual BYTE get()=0;	 
   virtual void put(BYTE)=0;
+  virtual char* siteStringrep()=0;
   virtual Site* getSite()=0;                    // overrided for network/vsite comm
   virtual void addRes(OZ_Term)                  {} // only for load/save - noop for rest
   virtual void addURL(OZ_Term)                  {} // only for load/save - noop for rest
