@@ -18,7 +18,7 @@
 
 OZ_C_proc_begin(BIstringToOp,2)
 {
-  OZ_declareStringArg("stringToOp",0,str);
+  OZ_declareAtomArg("stringToOp",0,str);
   OZ_Term out = OZ_getCArg(1);
 
   Opcode oc = CodeArea::stringToOp(str);
