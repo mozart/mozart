@@ -33,11 +33,10 @@ SRCTOP          = @SRCTOP@
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
 INSTALL_DIR     = @INSTALL_DIR@
-CED             = @CED@
 HOMEURL         = @HOMEURL@
 OZDOC           = @OZDOC@
 
-FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db
+FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog author.db
 LIBFILES        = $(addprefix $(SHDOCDIR)/,$(FILES))
 
 EMACS           = emacs
@@ -45,8 +44,6 @@ EMACS           = emacs
 SUBDIRS         = @SUBDIRS@
 
 .PHONY: all quick bootstrap check install clean veryclean distclean depend installps $(DOCDIR)/idx idx/index.html
-
-all bootstrap:: $(CED)
 
 Makefile: Makefile.in config.status
         ./config.status
@@ -71,9 +68,6 @@ $(DOCDIR)/idx/index.html: idx/index.html $(DOCDIR)/idx
 $(LIBFILES): $(SHDOCDIR)/% : %
         $(INSTALL_FILE) $< $@
 
-ozdoc.ced: ozdoc.dtd ozdoc.dcl ced.cat ced.el
-        $(EMACS) -q -batch -l ced.el
-
 all quick check install clean veryclean distclean installps depend::
         dirs="$(SUBDIRS)"; \
         for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
@@ -89,13 +83,13 @@ clean::
 
 veryclean::
         -rm -f *~
-        -rm -f $(CED) xref.db index.db
+        -rm -f xref.db index.db
         -rm -f global-xref-db.xml
 
 distclean::
         -rm -f *~
-        -rm -f $(CED) xref.db index.db idx.html
-        -rm -f ced.el catalog
+        -rm -f xref.db index.db idx.html
+        -rm -f catalog
         -rm -f Makefile Makefile.common config.log config.status config.cache
 
 PSDOCDIRS       = apptut base browser bugs changes compiler \
