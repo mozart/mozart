@@ -64,7 +64,7 @@ if ($status) then
   goto next
 endif
 
-dvips /tmp/$tmpfile > /dev/null
+dvips /tmp/$tmpfile >& /dev/null
 
 next:
 rm /tmp/$tmpfile* /tmp/$ozfile* /tmp/oz2tex_preamble*
