@@ -683,7 +683,7 @@ void BorrowCreditHandler::print() {
     Assert(0);}
 }
 
-void BorrowCreditHandler::extract_info(OZ_Term primCred,OZ_Term secCred) {
+void BorrowCreditHandler::extract_info(OZ_Term &primCred,OZ_Term &secCred) {
   OwnerCreditExtension *next;
   switch(getExtendFlags()){
   case CH_PERSISTENT:
