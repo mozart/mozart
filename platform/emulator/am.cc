@@ -1234,12 +1234,32 @@ Thread *AM::createThread(int prio,int compMode)
   return tt;
 }
 
-void AM::wakeUpThread(Thread *tt)
+/*
+ * wake up a thread suspended on the reduction of a conditional actor
+ *
+ * - remove all local tasks from stack
+ * - reschedule if suspended
+ */
+void AM::cleanUpThread(Thread *tt)
 {
-  scheduleThread(tt);
-  tt->unsetSuspended();
-  if (currentSolveBoard) {
-    incSolveThreads(currentSolveBoard);
+  /*
+   * remove all local tasks
+   */
+  Board *bb=tt->getBoardFast();
+  while (currentBoard != bb) {
+    if (!tt->discardLocalTasks()) {
+      error("cleanUpThread: impossible");
+    }	
+    bb=bb->getParentFast();
+  }
+  tt->setBoard(currentBoard);
+
+  if (tt->isSuspended()) {
+    scheduleThread(tt);
+    tt->unsetSuspended();
+    if (currentSolveBoard) {
+      incSolveThreads(currentSolveBoard);
+    }
   }
 }
 
@@ -1485,14 +1505,6 @@ void AM::pushTaskOutline(ProgramCounter pc,
 			 RefsArray y,RefsArray g,RefsArray x,int i)
 {
   pushTask(pc,y,g,x,i);
-}
-
-void AM::createTask()
-{
-  if (currentThread->getCompMode() != PARMODE) {
-    currentThread->switchCompMode();
-    currentThread->switchCompMode();
-  }
 }
 
 #ifdef OUTLINE
