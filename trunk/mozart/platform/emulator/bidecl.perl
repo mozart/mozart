@@ -2,10 +2,99 @@
 ###
 ### Here we declare all builtins in a general format which can be used
 ### to generate both the table of builtins used by the emulator and the
-### information used by the compiler.
+### information used by the Oz compiler.
 ###
-### + means det
-### ! means that the arg may be overwritten
+###	bidecl.perl -ctable
+###		generates the table of builtins for the emulator
+###	bidecl.perl -oztable
+###		generates the table of builtins for the Oz compiler
+###
+### Each entry has the form: 'NAME' => { ... }, where 'NAME' is the
+### string by which the builtin is known to the emulator.  The associative
+### array describing the builtin contains at least:
+###	in  => [...],
+###	out => [...],
+### describing respectively the input and output arguments.  Each argument
+### is described by a type, possibly annotated by a prefix indicating
+### the determinacy condition.  Thus an integer argument might be specified
+### in one of these ways:
+###	 'int'		possibly non-determined
+###	'+int'		determined
+###	'*int'		kinded (e.g. an FD variable)
+### '+int' (resp. '*int') indicates that the builtin will suspend until
+### this argument is determined (resp. kinded).
+###
+### Furthermore, there are builtins that overwrite their input arguments.
+### This should be indicated by the prefix `!' (which should come first).
+### Thus '!+value' indicates an argument for which the builtin will suspend
+### until it is determined and which may be overwriten by its execution.
+###
+### A type may be simple or complex:
+###
+### SIMPLE    ::= abstraction		(not yet known to compiler)
+###		| atom
+###		| array
+###		| bool
+###		| cell
+###		| char
+###		| chunk
+###		| comparable
+###		| class
+###		| dictionary
+###		| feature
+###		| float
+###		| foreignPointer	(not yet known to compiler)
+###		| int
+###		| literal
+###		| lock
+###		| name
+###		| number
+###		| object
+###		| port
+###		| procedure
+###		| procedure/1
+###		| procedureOrObject	(not yet known to compiler)
+###		| record
+###		| recordC
+###		| recordCOrChunk
+###		| space
+###		| string
+###		| thread
+###		| tuple
+###		| value
+###		| virtualString
+###
+### COMPLEX   ::= [SIMPLE]		(list of SIMPLE)
+###		| [SIMPLE#SIMPLE]	(list of pairs of SIMPLE)
+###
+### determinacy annotations for subtypes of complex types are not yet
+### supported.
+###
+### Old style builtins have at least: bi => OLDBI, where OLDBI is the name
+### of the C procedure that implements it (normally defined using
+### OZ_C_proc_begin(OLDBI,...)).  ibi => OLDIBI, is for the case where the
+### builtin also has an inline version implemented by OLDIBI.  Whether this
+### is an inline fun or rel is determined by the output arity: 0 means rel,
+### 1 means fun.
+###
+### New style builtins have only: BI => NEWBI, where NEWBI is the name of
+### the C procedure that implements it and defined using
+### OZ_BI_define(NEWBI,...,...).
+###
+### Old style boolean funs sometimes have a corresponding rel that can be
+### used in shallow guards.  This is indicated by: 'shallow' => 'REL' where
+### REL is the string by which the rel is known to the emulator.
+###
+### eqeq => 1, indicates that the builtin can be specially compiled using
+### the eqeq instruction.
+###
+### ifdef => MACRO, indicates that the entry for this builtin in the
+### emulator's table should be bracketed by #ifdef MACRO ... #endif.
+###
+### doesNotReturn => 1, indicates that the builtin does not return and
+### therefore that the code following it will never be executed.  For
+### example 'raise'.
+###
 
 $builtins = {
     '/'		=> { in  => ['+float','+float'],
@@ -147,7 +236,7 @@ $builtins = {
 		     bi  => BItan,
 		     ibi => BIinlineTan},
   
-    'Atan'	=> { in  => ['+float','+float'],
+    'Atan'	=> { in  => ['+float'],
 		     out => ['+float'],
 		     bi  => BIatan,
 		     ibi => BIinlineAtan},
@@ -172,7 +261,7 @@ $builtins = {
 		     bi  => BIround,
 		     ibi => BIinlineRound},
   
-    'Atan2'	=> { in  => ['+float'],
+    'Atan2'	=> { in  => ['+float','+float'],
 		     out => ['+float'],
 		     bi  => BIatan2,
 		     ibi => BIatan2Inline},
@@ -912,6 +1001,10 @@ $builtins = {
 			     BI  => BIneq},
 
     # dynamic libraries
+
+    'isForeignPointer'	=> { in  => ['+value'],
+			     out => ['+bool'],
+			     BI  => BIisForeignPointer },
 
     'dlOpen'		=> { in  => ['+virtualString'],
 			     out => ['+foreignPointer'],
