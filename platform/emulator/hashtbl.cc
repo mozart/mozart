@@ -316,9 +316,13 @@ const double AHT_MAXLOAD = 0.5;
 //
 void AddressHashTable::mkEmpty()
 {
+  const int totalBits = sizeof(unsigned int)*8;
+  rsBits = totalBits - bits;
+  slsBits = min(bits, rsBits);
+
   counter = 0;
   percent = (int) (AHT_MAXLOAD * tableSize);
-  for (int i = 0; i < tableSize; i++)
+  for (int i = tableSize; i--; )
     table[i].setEmpty();
   DebugCode(nsearch = 0;);
   DebugCode(tries = 0;);
@@ -326,10 +330,14 @@ void AddressHashTable::mkEmpty()
 }
 
 //
-AddressHashTable::AddressHashTable(int s)
+AddressHashTable::AddressHashTable(int sz)
 {
-  incStepMod = nextPrime(s);
-  tableSize = nextPrime(incStepMod+1);
+  tableSize = 128;
+  bits = 7;
+  while (tableSize < sz) {
+    tableSize = tableSize * 2;
+    bits++;
+  }
   table = new AHT_HashNode[tableSize];
   mkEmpty();
 }
@@ -340,29 +348,18 @@ AddressHashTable::~AddressHashTable()
   delete [] table;
 }
 
-//
-// kost@ : use now double hashing with the home-grown addition:
-//         multiply the value we're hashing on with a prime number.
-//         Without this modification we gain 2 orders of magnitude of
-//         improvement over the "linear probing", and with it we get 3
-//         orders (based on dp_huge).
-//
+// These functions are not really used - just for debugging;
 inline
 unsigned int AddressHashTable::primeHashFunc(intlong i)
 {
-  return ((((unsigned) i) * 397) % tableSize);
+  Assert(sizeof(unsigned int)*8 == 32);
+  return ((((unsigned int) i) * ((unsigned int) 0x9e3779b9)) >> rsBits);
 }
 inline
 unsigned int AddressHashTable::incHashFunc(intlong i)
 {
-  return (1 + ((((unsigned) i) * 617) % incStepMod));
-}
-
-inline
-unsigned int AddressHashTable::getStepN(unsigned int pkey,
-					unsigned int ikey, int i)
-{
-  return ((pkey + i*ikey) % tableSize);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
 }
 
 //
@@ -377,17 +374,18 @@ unsigned AddressHashTable::memRequired(int valSize)
 void AddressHashTable::resize()
 {
   int oldSize = tableSize;
-  incStepMod = nextPrime(tableSize*2);
-  tableSize = nextPrime(incStepMod+1);
+
+  tableSize = tableSize * 2;
+  bits++; 
   counter = 0;
   percent = (int) (AHT_MAXLOAD * tableSize);
   AHT_HashNode* neu = new AHT_HashNode[tableSize];
   AHT_HashNode* old = table;    
   table = neu;
   int i;
-  for (i = 0; i < tableSize; i++) 
+  for (i = tableSize; i--; ) 
     neu[i].setEmpty();
-  for (i = 0; i < oldSize; i++) {
+  for (i = oldSize; i--; ) {
     if (! old[i].isEmpty()) 
       htAdd((old[i].getKey()), old[i].getValue());
   }
@@ -395,42 +393,82 @@ void AddressHashTable::resize()
 }
 
 //
-inline
-unsigned int AddressHashTable::findIndex(intlong i)
+void AddressHashTable::htAdd(intlong i, void *val)
 {
-  unsigned int pkey = primeHashFunc(i);
-  unsigned int ikey = incHashFunc(i);
-  unsigned int key = pkey;
-  int step = 1;
+  if (counter > percent) resize();
+
   //
-  while (! table[key].isEmpty() && (table[key].getKey()) != i)
-    key = getStepN(pkey, ikey, step++);
+  Assert(val != htEmpty);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  unsigned int pkey = m >> rsBits;
+  Assert(pkey == primeHashFunc(i));
+  unsigned int ikey = 0;
+  int key = (int) pkey;
+  DebugCode(int step = 1;);
+
+  //
+  while (1) {
+    if (table[key].isEmpty()) {
+      // certainly not there;
+      table[key].setKey(i);
+      table[key].setValue(val);
+      counter++;
+      break;
+    } else if (table[key].getKey() == i) {
+      // already there;
+      Assert(table[key].getValue() == val);
+      break;
+    } else {
+      // next hop:
+      if (ikey == 0) {
+	ikey = ((m << slsBits) >> rsBits) | 0x1;
+	Assert(ikey == incHashFunc(i));
+	Assert(ikey < tableSize);
+      }
+      key -= ikey;
+      if (key < 0)
+	key += tableSize;
+      DebugCode(step++;);
+    }
+  }
   DebugCode(nsearch++;);
   DebugCode(tries += step);
-  DebugCode(if (step > maxtries) { maxtries = step; });
-  return (key);
-}
-
-//
-void AddressHashTable::htAdd(intlong k, void *val)
-{
-  Assert(val != htEmpty);
-
-  if (counter > percent)
-    resize();
-
-  unsigned int key = findIndex(k);
-  if (table[key].isEmpty())
-    counter++;
-  table[key].setKey(k);
-  table[key].setValue(val);
 }
 
 void *AddressHashTable::htFind(intlong i)
 {
-  unsigned int key = findIndex(i);
-  return ((table[key].isEmpty())
-	  ? htEmpty : table[key].getValue());
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  unsigned int pkey = m >> rsBits;
+  Assert(pkey == primeHashFunc(i));
+  unsigned int ikey = 0;
+  int key = (int) pkey;
+  DebugCode(int step = 1;);
+
+  //
+  while (1) {
+    if (table[key].isEmpty()) {
+      // certainly not there;
+      DebugCode(nsearch++;);
+      DebugCode(tries += step);
+      return (htEmpty);
+    } else if (table[key].getKey() == i) {
+      DebugCode(nsearch++;);
+      DebugCode(tries += step);
+      return (table[key].getValue());
+    } else {
+      // next hop:
+      if (ikey == 0) {
+	ikey = ((m << slsBits) >> rsBits) | 0x1;
+	Assert(ikey == incHashFunc(i));
+	Assert(ikey < tableSize);
+      }
+      key -= ikey;
+      if (key < 0)
+	key += tableSize;
+      DebugCode(step++;);
+    }
+  }
+  Assert(0);
 }
 
 #ifdef DEBUG_CHECK
@@ -512,7 +550,7 @@ void AddressHashTableFastReset::mkEmpty()
 {
   DebugCode(nsearchAcc += nsearch;);
   DebugCode(triesAcc += tries;);
-  DebugCode(printStatistics(DEBUG_THRESHOLD));
+  // DebugCode(printStatistics(DEBUG_THRESHOLD));
   pass++;
   if (pass == (unsigned int) 0xffffffff) {
     pass = 1;
@@ -548,12 +586,13 @@ AddressHashTableFastReset::~AddressHashTableFastReset()
 /*
 unsigned int AddressHashTableFastReset::primeHashFunc(intlong i)
 {
+  // multiplying by a prime number is supposedly better for dp_huge.
   // return ((((unsigned) i) * 397) % tableSize);
   return (((unsigned) i) % tableSize);
 }
 unsigned int AddressHashTableFastReset::incHashFunc(intlong i)
 {
-  //   return (1 + ((((unsigned) i) * 617) % incStepMod));
+  // return (1 + ((((unsigned) i) * 617) % incStepMod));
   return (1 + (((unsigned) i) % incStepMod));
 }
 */
@@ -664,6 +703,7 @@ void* AddressHashTableFastReset::htFind(intlong i)
       DebugCode(step++;);
     }
   }
+  Assert(0);
 }
 
 void AddressHashTableFastReset::htAddLastNotFound(intlong k, void *val)
