@@ -37,35 +37,24 @@
    class SolveActor
    ------------------------------------------------------------------------ */
 
-TaggedRef SolveActor::genSolved()
-{
-  if (this->isDebug()) {
-    SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
+TaggedRef SolveActor::genSolved() {
+  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
-    Assert(solveBoard->isSolve());
-    stuple->setArg(0, AtomEntailed);
+  Assert(solveBoard->isSolve());
+  stuple->setArg(0, AtomEntailed);
 
-    return makeTaggedSRecord(stuple);
-  } else {
-    return AtomSucceeded;
-  }
+  return makeTaggedSRecord(stuple);
 }
 
-TaggedRef SolveActor::genStuck()
-{
-  if (this->isDebug()) {
-    SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
+TaggedRef SolveActor::genStuck() {
+  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
-    Assert(solveBoard->isSolve());
-    stuple->setArg(0, AtomSuspended);
-    return makeTaggedSRecord(stuple);
-  } else {
-    return AtomSucceeded;
-  }
+  Assert(solveBoard->isSolve());
+  stuple->setArg(0, AtomSuspended);
+  return makeTaggedSRecord(stuple);
 }
 
-TaggedRef SolveActor::genChoice(int noOfClauses)
-{
+TaggedRef SolveActor::genChoice(int noOfClauses) {
   SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
 
   Assert(!solveBoard->isCommitted());
@@ -74,24 +63,21 @@ TaggedRef SolveActor::genChoice(int noOfClauses)
   return makeTaggedSRecord(stuple);
 }
 
-TaggedRef SolveActor::genFailed ()
-{
+TaggedRef SolveActor::genFailed() {
   return AtomFailed;
 }
 
-TaggedRef SolveActor::genUnstable(TaggedRef arg)
-{
+TaggedRef SolveActor::genUnstable(TaggedRef arg) {
   SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
   stuple->setArg(0, arg);
   return makeTaggedSRecord(stuple);
 }
 
-Bool SolveActor::isDebugBlocked() {
-  return isDebug() && (getThreads()==0) && !am.isStableSolve(this);
+Bool SolveActor::isBlocked() {
+  return ((getThreads()==0) && !am.isStableSolve(this));
 }
 
-Bool SolveActor::checkExtSuspList()
-{
+Bool SolveActor::checkExtSuspList() {
   SuspList *tmpSuspList = suspList;
 
   suspList = NULL;
@@ -139,17 +125,14 @@ Bool SolveActor::checkExtSuspList()
   return (suspList == NULL);
 }
 
-SolveActor::SolveActor(Board *bb, int prio, Bool debug)
+SolveActor::SolveActor(Board *bb, int prio)
  : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cps(NULL),
-   localThreadQueue(NULL)
-{
+   localThreadQueue(NULL) {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
   bb->decSuspCount();         // don't count this actor!
   solveBoard->decSuspCount(); // Initially there is no task!
-  if (debug)
-    this->setDebug();
 }
 
 // ------------------------------------------------------------------------

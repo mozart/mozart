@@ -40,7 +40,7 @@ private:
   LocalThreadQueue * localThreadQueue;
   int threads;
 public:
-  SolveActor(Board *bb, int prio, Bool debug);
+  SolveActor(Board *bb, int prio);
 
   Board *getSolveBoard() { return solveBoard; }
 
@@ -60,7 +60,7 @@ public:
   Board *clone(Board *bb);
   void clearResult(Board *bb);
 
-  Bool isDebugBlocked();
+  Bool isBlocked();
 
   TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
