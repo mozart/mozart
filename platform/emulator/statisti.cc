@@ -228,6 +228,7 @@ void Statistics::initCount() {
   maxStackDepth = 0;
   maxEnvSize = 0;
   sizeClosures = numClosures = sizeGs = 0;
+  sizeObjects = sizeRecords = sizeLists = 0;
   sizeStackVars = sizeEnvs = numEnvAllocs = 0;
   numDerefs = longestDeref = 0;
   for(int i=0; i<=maxDerefLength; i++) {
@@ -320,6 +321,11 @@ void Statistics::printCount() {
   PrintVarPercent(sizeClosures,totalAllocated);
   PrintVar(szAbstr);
   PrintFloat(avrgNumGs);
+  PrintVarPercent(sizeObjects,totalAllocated);
+  PrintVarPercent(sizeRecords,totalAllocated);
+  PrintVarPercent(sizeLists,totalAllocated);
+  int freeListSize = getMemoryInFreeList();
+  PrintVarPercent(freeListSize,totalAllocated);
 
   PrintVarPercent(sizeStackVars,totalAllocated);
 
@@ -373,7 +379,7 @@ void Statistics::printDeref()
 void Statistics::derefChain(int n)
 {
   if (n>8)
-    warning("gotcha");
+    warning("long reference chain (length=%d)",n);
   numDerefs++;
   longestDeref = max(n,longestDeref);
   n = min(n,maxDerefLength);

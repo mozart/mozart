@@ -22,10 +22,15 @@
 # define ProfileCode(Code)
 #endif
 
+extern int gcing;
 
-#define COUNT1(WHAT,n) ProfileCode(ozstat.WHAT += n)
+#define COUNTIT(WHAT,n) ozstat.WHAT += n
+#define COUNT1(WHAT,n) ProfileCode(if (gcing) {COUNTIT(WHAT,n);})
 #define COUNT(WHAT)    COUNT1(WHAT,1)
 #define CountMax(What,Value) ProfileCode(ozstat.What = max(ozstat.What,Value))
+
+// also count during GC
+#define CountGC(What,n) COUNTIT(WHAT,n)
 
 class StatCounter {
 public:
@@ -127,6 +132,7 @@ public:
   long varVarUnify, recRecUnify,totalUnify;
   long maxStackDepth;
   long sizeClosures, numClosures, sizeGs;
+  long sizeObjects,sizeRecords,sizeLists;
   long sizeStackVars;
   long sizeEnvs, numEnvAllocs, maxEnvSize;
 
@@ -136,13 +142,14 @@ public:
   long numNewName, numNewNamedName;
   long numThreads;
 
-  void derefChain(int n);
-  void printDeref();
-  long lenDeref;
-  long numDerefs;
-  long longestDeref;
+
+  // those are also counted during GC
+  long lenDeref, numDerefs, longestDeref;
   const int maxDerefLength = 10;
   long lengthDerefs[maxDerefLength+1];
+
+  void derefChain(int n);
+  void printDeref();
 #endif
 };
 
