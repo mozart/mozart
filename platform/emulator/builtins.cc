@@ -344,31 +344,6 @@ OZ_BI_define(BIprocedureEnvironment,1,1)
 } OZ_BI_end
 
 
-OZ_BI_define(BIgetProcInfo,1,1)
-{
-  oz_declareNonvarIN(0,p);
-
-  if (!oz_isAbstraction(p)) {
-    oz_typeError(0,"Abstraction");
-  }
-
-  OZ_RETURN(tagged2Abstraction(p)->getPred()->getInfo());
-} OZ_BI_end
-
-OZ_BI_define(BIsetProcInfo,2,0)
-{
-  oz_declareNonvarIN(0,p);
-  oz_declareIN(1,t);
-
-  if (!oz_isAbstraction(p)) {
-    oz_typeError(0,"Abstraction");
-  }
-
-  tagged2Abstraction(p)->getPred()->setInfo(t);
-  return PROCEED;
-} OZ_BI_end
-
-
 OZ_Return isCellInline(TaggedRef cell)
 {
   NONVAR( cell, term);
@@ -5427,8 +5402,7 @@ OZ_BI_define(BIsetOPICompiler,1,0)
   if (!oz_isObject(obj)) {
     oz_typeError(0,"Object");
   } else if (am.getOpiCompiler()!=makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"opiCompilerAlreadySet",1,
-                    oz_atom("setOPICompiler"));
+    return oz_raise(E_ERROR,E_SYSTEM,"opiCompilerAlreadySet",0);
   } else {
     am.setOpiCompiler(obj);
     return PROCEED;
@@ -5463,18 +5437,6 @@ OZ_BI_define(BIisBuiltin,1,1)
   oz_declareNonvarIN(0,val);
 
   OZ_RETURN(oz_isBuiltin(val)?NameTrue:NameFalse);
-} OZ_BI_end
-
-OZ_BI_define(BIgetBuiltinName,1,1)
-{
-  oz_declareNonvarIN(0,val);
-
-  if (!oz_isConst(val))
-    oz_typeError(0,"builtin");
-  ConstTerm *cnst = tagged2Const(val);
-  if (cnst->getType() != Co_Builtin)
-    oz_typeError(0,"builtin");
-  OZ_RETURN(((Builtin *) cnst)->getName());
 } OZ_BI_end
 
 OZ_BI_define(BInameVariable,2,0)
