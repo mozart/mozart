@@ -43,7 +43,7 @@ export OZ_LIB = $(OZLIB)
 export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
 SPSRC = System Debug Foreign Error ErrorRegistry Finalize
-OPSRC = Open Pickle
+OPSRC = Open
 APSRC = GetArgs Syslet Servlet Applet Application
 CPSRC = Search FD Schedule FS
 DPSRC = Connection Remote VirtualSite Fault
@@ -62,12 +62,6 @@ FUNCTORS = \
         $(WPSRC:%=%.ozf) \
         $(MISCSRC:%=%.ozf) \
         Compiler.ozf
-
-PEANUTS = \
-        System Property Pickle Finalize OS
-
-PEANUTSFUNCTORS = \
-        $(PEANUTS:%=%.ozf)
 
 SYSLETS = ozc ozserver ozvsserver
 
@@ -139,9 +133,6 @@ Standard.ozf: Init.ozp
         $(COMPILE) $< -o $@
 %.ozf: compiler/%.oz Standard.ozf
         $(COMPILE) $< -o $@
-
-module-Peanuts.oz:
-        echo "[$(PEANUTS:%='%')]" > module-Peanuts.oz
 
 # op dependencies
 Open.ozf: op/HtmlTable.oz
@@ -303,7 +294,6 @@ clean:
         -rm -f compiler-Version.oz compiler-Builtins.oz
         -rm -f compiler-Opcodes.oz
         -rm -f envgen compiler-Env.oz
-        -rm -f module-Peanuts.oz
         -rm -f Init.ozp ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
         -rm -f $(SYSLETS)
 
