@@ -9999,6 +9999,7 @@ else
   
   oz_ok=yes;
   oz_saved="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS -D$ARCH"
   if test "$oz_cv_has_byte_and_p2align" = yes; then
     CPPFLAGS="$CPPFLAGS -DAS_HAS_BYTE_AND_P2ALIGN -save-temps"
   elif test "$oz_cv_has_byte_and_align" = yes; then
@@ -10018,7 +10019,7 @@ if test "$cross_compiling" = yes; then
   oz_cv_can_inline_opcode_map=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 10022 "configure"
+#line 10023 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10077,7 +10078,7 @@ int main()
 FAKE_ ##N : \
 asm(".byte " OP##N##_STRING); \
 ALIGNED_LABEL(N); \
-asm(" LABEL" OP##N##_STRING":");
+asm("LABEL" OP##N##_STRING":");
 
 /*
  * appear to use the C++ label
@@ -10089,12 +10090,13 @@ asm(" LABEL" OP##N##_STRING":");
 asm("movl \$LABEL"OP##N##_STRING",%0" : "=m" (*ptr)); ++ptr;
 
 #define DO(N) \
-if (!equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
+if (N!=n-- || !equal(OP##N##_VALUE,((char*)*(bytecode-1))[-1])) return 1
 
 #define DISPATCH goto **bytecode++
 
 int engine(void**bytecode)
 {
+  int n;
   if (! bytecode)
     {
       void** ptr = program;
@@ -10107,6 +10109,7 @@ int engine(void**bytecode)
       return 0;
     }
 
+  n = 5;
   DISPATCH;
   CASE(0) { DO(0); return 0; }
   CASE(1) { DO(1); DISPATCH; }
@@ -10122,7 +10125,7 @@ bool equal(int want,int have)
 }
 
 EOF
-if { (eval echo configure:10126: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10129: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   oz_cv_can_inline_opcode_map=yes
 else
@@ -10152,12 +10155,12 @@ fi
 
 
 echo $ac_n "checking alignment of secondary tag for const terms""... $ac_c" 1>&6
-echo "configure:10156: checking alignment of secondary tag for const terms" >&5
+echo "configure:10159: checking alignment of secondary tag for const terms" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic ok for cross compilation" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 10161 "configure"
+#line 10164 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10177,7 +10180,7 @@ int main()
   return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
 }
 EOF
-if { (eval echo configure:10181: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10184: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""ok" 1>&6
 else
@@ -10192,13 +10195,13 @@ fi
 
 
 echo $ac_n "checking if alignment of secondary tags for extensions needs padding""... $ac_c" 1>&6
-echo "configure:10196: checking if alignment of secondary tags for extensions needs padding" >&5
+echo "configure:10199: checking if alignment of secondary tags for extensions needs padding" >&5
 if test "$cross_compiling" = yes; then
   echo "$ac_t""assume optimistic no for cross compilation" 1>&6
   needs_padding=no
 else
   cat > conftest.$ac_ext <<EOF
-#line 10202 "configure"
+#line 10205 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10225,7 +10228,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10229: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10232: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""no" 1>&6
   needs_padding=no
@@ -10244,12 +10247,12 @@ NEEDS_PADDING=0
 
 if test "$needs_padding" = "yes"; then
 echo $ac_n "checking if padding works""... $ac_c" 1>&6
-echo "configure:10248: checking if padding works" >&5
+echo "configure:10251: checking if padding works" >&5
 if test "$cross_compiling" = yes; then
   { echo "configure: error: we should not get here when cross compiling" 1>&2; exit 1; }
 else
   cat > conftest.$ac_ext <<EOF
-#line 10253 "configure"
+#line 10256 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -10280,7 +10283,7 @@ int main()
   return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
 }
 EOF
-if { (eval echo configure:10284: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:10287: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   echo "$ac_t""yes" 1>&6
   NEEDS_PADDING=1
