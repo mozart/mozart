@@ -390,7 +390,7 @@ State isTupleInline(TaggedRef t)
 	return FAILED;
       }
   }
-  return isTuple(tag) ? PROCEED : FAILED;
+  return isTuple(term) ? PROCEED : FAILED;
 }
 
 DECLAREBI_USEINLINEREL1(BIisTuple,isTupleInline)
@@ -423,7 +423,6 @@ OZ_C_proc_begin(BIrecordC,1)
 
   switch (tag) {
   case LTUPLE:
-  case STUPLE:
     return FAILED;
   case LITERAL:
   case SRECORD:
@@ -467,7 +466,6 @@ OZ_C_proc_begin(BIrecordCSize,2)
 
   switch (tag) {
   case LTUPLE:
-  case STUPLE:
     return FAILED;
   case LITERAL:
   case SRECORD:
@@ -500,7 +498,6 @@ State isRecordCInline(TaggedRef t)
   DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
-  case STUPLE:
     return FAILED;
   case LITERAL:
   case SRECORD:
@@ -529,7 +526,6 @@ OZ_C_proc_begin(BIisRecordCVar,1)
   DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
-  case STUPLE:
     return FAILED;
   case LITERAL:
   case SRECORD:
@@ -554,7 +550,6 @@ OZ_C_proc_begin(BIisRecordCVarB,2)
   DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
-  case STUPLE:
     return FAILED;
   case LITERAL:
   case SRECORD:
@@ -573,22 +568,6 @@ OZ_C_proc_begin(BIisRecordCVarB,2)
 }
 OZ_C_proc_end
 
-
-State isNoNumberInline(TaggedRef t)
-{
-  NONSUVAR( t, term, tag );
-  if (isCVar(tag)) {
-      switch (tagged2CVar(term)->getType()) {
-      case OFSVariable:
-          return SUSPEND;
-      default:
-          return FAILED;
-      }
-  }
-  return isNoNumber(tag) ? PROCEED : FAILED;
-}
-
-DECLAREBI_USEINLINEREL1(BIisNoNumber,isNoNumberInline)
 
 
 State isProcedureInline(TaggedRef t)
@@ -769,22 +748,16 @@ State tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
 	return PROCEED;
       }
 
-      // list constructor
-      if (i == 2 && sameLiteral(label,AtomCons)){
-	TaggedRef newVar = am.currentUVarPrototype;
-	out = cons(newVar,newVar);
-	return PROCEED;
-      }
-
       {
-	STuple *s = STuple::newSTuple(label,i);
+	SRecord *s =
+	  SRecord::newSRecord(label,i);
 
 	TaggedRef newVar = am.currentUVarPrototype;
 	for (int j = 0; j < i; j++) {
 	  s->setArg(j,newVar);
 	}
 
-	out = makeTaggedSTuple(s);
+	out = s->normalize();
 	return PROCEED;
       }
     }
@@ -821,10 +794,7 @@ State labelInline(TaggedRef term, TaggedRef &out)
 
   switch (tag) {
   case LTUPLE:
-    out = tagged2LTuple(term)->getLabel();
-    return PROCEED;
-  case STUPLE:
-    out = tagged2STuple(term)->getLabel();
+    out = AtomCons;
     return PROCEED;
   case LITERAL:
     out = term;
@@ -1087,7 +1057,6 @@ OZ_C_proc_begin(BIlabelC,2)
   TaggedRef thelabel=makeTaggedNULL();
   switch (tag) {
   case LTUPLE:
-  case STUPLE:
     return FAILED;
   case LITERAL:
     thelabel=term;
@@ -1215,7 +1184,6 @@ OZ_C_proc_begin(BImonitorArity, 3)
     DEREF(tmprec,_2,recTag);
     switch (recTag) {
     case LTUPLE:
-    case STUPLE:
         return FAILED;
     case LITERAL:
         // *** arity is nil
@@ -1296,7 +1264,6 @@ LBLagain:
 
   if (isAnyVar(feaTag)) {
     switch (termTag) {
-    case STUPLE:
     case LTUPLE:
     case SRECORD:
     case SVAR:
@@ -1315,21 +1282,6 @@ LBLagain:
   }
 
   switch (termTag) {
-  case STUPLE:
-    {
-      if (!isSmallInt(fea)) {
-	if (!dot && isBigInt(fea)) { return FAILED; }
-	goto typeError1t;
-      }
-      int i = smallIntValue(fea);
-      STuple *st = tagged2STuple(term);
-      if (i < 1 || i > st->getSize ()) {
-	if (dot) goto typeError1t;
-	return FAILED;
-      }
-      if (out) *out = st->getArg(i-1);
-      return PROCEED;
-    }
   case LTUPLE:
     {
       if (!isSmallInt(fea)) {
@@ -1614,7 +1566,6 @@ State uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
     // Constrain term to a record:
     switch (termTag) {
     case LTUPLE:
-    case STUPLE:
         return FAILED;
     case LITERAL:
         break;
@@ -1773,9 +1724,6 @@ State widthInline(TaggedRef term, TaggedRef &out)
   switch (tag) {
   case LTUPLE:
     out = OZ_CToInt(2);
-    return PROCEED;
-  case STUPLE:
-    out = OZ_CToInt(tagged2STuple(term)->getSize());
     return PROCEED;
   case SRECORD:
   record:
@@ -2357,7 +2305,7 @@ OZ_C_proc_begin(BIcopyRecord,2)
   case SRECORD:
     {
       SRecord *rec0 = tagged2SRecord(rec);
-      SRecord *rec1 = rec0->copySRecord();
+      SRecord *rec1 = SRecord::newSRecord(rec0);
       return OZ_unify(out,makeTaggedSRecord(rec1));
     }
   case LITERAL:
@@ -2371,12 +2319,9 @@ OZ_C_proc_end
 
 
 
-/*****************************************************************************/
-
-
-// ---------------------------------------------------------------------------
-// Feature Builtins
-// ---------------------------------------------------------------------------
+/*===================================================================
+ * Records
+ *=================================================================== */
 
 State BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
 {
@@ -2400,19 +2345,21 @@ State BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
     default:
       TypeError2("adjoin",1,"Record",t0,t1);
     }
+  case LTUPLE:
   case SRECORD:
     {
-      SRecord *rec = tagged2SRecord(t0);
+      SRecord *rec= makeRecord(t0);
       switch (tag1) {
       case LITERAL:
 	{
 	  SRecord *newrec = rec->replaceLabel(t1);
-	  out = makeTaggedSRecord(newrec);
+	  out = newrec->normalize();
 	  return PROCEED;
 	}
       case SRECORD:
+      case LTUPLE:
 	{
-	  out = makeTaggedSRecord(rec->adjoin(tagged2SRecord(t1)));
+	  out = rec->adjoin(makeRecord(t1));
 	  return PROCEED;
 	}
       case UVAR:
@@ -2435,6 +2382,7 @@ State BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
     case UVAR:
     case SVAR:
     case SRECORD:
+    case LTUPLE:
     case LITERAL:
       return SUSPEND;
     case CVAR:
@@ -2488,8 +2436,7 @@ OZ_C_proc_begin(BIadjoinAt,4)
       if (!isFeature(tag1)) {
 	TypeError3("adjoinAt",1,"Literal",rec,fea,value);
       }
-      SRecord *newrec = rec1->adjoinAt(fea,value);
-      return OZ_unify(out,makeTaggedSRecord(newrec));
+      return OZ_unify(out,rec1->adjoinAt(fea,value));
     }
 
   case UVAR:
@@ -2526,13 +2473,13 @@ loop:
     if (isAnyVar(pair)) return makeTaggedRef(pairPtr);
     if (!isPair(pair)) goto bomb;
 
-    TaggedRef fea = tagged2STuple(pair)->getArg(0);
+    TaggedRef fea = tagged2SRecord(pair)->getArg(0);
     DEREF(fea,feaPtr,_f1);
 
     if (isAnyVar(fea)) return makeTaggedRef(feaPtr);
     if (!isFeature(fea)) goto bomb;
 
-    LTuple *lt=new LTuple;
+    LTuple *lt=new LTuple();
     *next=makeTaggedLTuple(lt);
     lt->setHead(fea);
     next=lt->getRefTail();
@@ -2571,6 +2518,7 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     case LITERAL:
       return SUSPEND;
     case SRECORD:
+    case LTUPLE:
       if (recordFlag) {
 	return SUSPEND;
       }
@@ -2590,8 +2538,8 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   if (isNil(arity)) { // adjoin nothing
     switch (tag0) {
     case SRECORD:
+    case LTUPLE:
       if (recordFlag) {
-	SRecord *rec = tagged2SRecord(t0);
 	out = t0;
 	return PROCEED;
       }
@@ -2625,12 +2573,10 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       return PROCEED;
     }
   case SRECORD:
+  case LTUPLE:
     if (recordFlag) {
-      SRecord *rec1 = tagged2SRecord(t0);
-      int len=lengthOfList(arity);
-      arity = sortlist(arity,len);
-      SRecord *newrec = rec1->adjoinList(arity,list);
-      out = makeTaggedSRecord(newrec);
+      SRecord *rec1 = makeRecord(t0);
+      out = rec1->adjoinList(arity,list);
       return PROCEED;
     }
     goto typeError0;
@@ -2655,7 +2601,8 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   }
 }
 
-State adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out, Bool recordFlag) 
+State adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
+		     Bool recordFlag) 
 {
   return adjoinPropListInline(t0,list,out,recordFlag);
 }
@@ -2703,6 +2650,9 @@ State BIarityInline(TaggedRef term, TaggedRef &out)
   switch (tag) {
   case SRECORD:
     out = tagged2SRecord(term)->getArityList();
+    return PROCEED;
+  case LTUPLE:
+    out = makeTupleArityList(2);
     return PROCEED;
   case LITERAL:
     out = AtomNil;
@@ -2794,11 +2744,10 @@ State BIassignConcurInline(TaggedRef rec, TaggedRef fea, TaggedRef value, Tagged
   if ( isFeature(feaTag) ) {
  
     if ( isSRecord(recTag) ) {
-      SRecord *recOut = tagged2SRecord(rec)->replaceFeature(fea,value);
-      if (recOut == NULL) {
+      out = tagged2SRecord(rec)->replaceFeature(fea,value);
+      if (out == makeTaggedNULL()) {
 	goto bomb;
       }
-      out = makeTaggedSRecord(recOut);
       return PROCEED;
     }
 
@@ -4582,7 +4531,6 @@ OZ_C_proc_begin(BIgenericSet, 3)
 
   if (isAnyVar(feaTag)) {
     switch (termTag) {
-    case STUPLE:
     case LTUPLE:
     case SRECORD:
     case SVAR:
@@ -4597,18 +4545,6 @@ OZ_C_proc_begin(BIgenericSet, 3)
   }
 
   switch (termTag) {
-  case STUPLE:
-    {
-      if (!isSmallInt(fea)) {
-	return FAILED;
-      }
-      int i = smallIntValue(fea);
-      if (i < 1 || i > tagged2STuple(term)->getSize ()) {
-	return FAILED;
-      }
-      tagged2STuple(term)->setArg(i-1,val);
-      return PROCEED;
-    }
   case LTUPLE:
     {
       if (!isSmallInt(fea)) {
@@ -4628,9 +4564,8 @@ OZ_C_proc_begin(BIgenericSet, 3)
     }
     
   case SRECORD:
-  record:
     {
-      if ( ! isLiteral(feaTag) ) {
+      if ( ! isFeature(feaTag) ) {
 	return FAILED;
       }
       SRecord *rec = tagged2SRecord(term);
@@ -4642,14 +4577,14 @@ OZ_C_proc_begin(BIgenericSet, 3)
     
   case UVAR:
   case SVAR:
-    if (!isLiteral(feaTag) && !isSmallInt(fea)) {
+    if (!isFeature(feaTag)) {
       return FAILED;
     }
     return SUSPEND;
 
   case CVAR:
     {
-      if (!isLiteral(feaTag) && !isSmallInt(fea)) {
+      if (!isFeature(feaTag)) {
         return FAILED;
       }
       if (tagged2CVar(term)->getType()!=OFSVariable) return FAILED;
@@ -5741,7 +5676,7 @@ OZ_C_proc_begin(BIcloneObjectRecord,4)
   }
 
   SRecord *in  = tagged2SRecord(record);
-  SRecord *rec = SRecord::newSRecord(in->getLabel(),in->getTheArity());
+  SRecord *rec = SRecord::newSRecord(in);
 
   OZ_Term proto = am.currentUVarPrototype;
   Assert(isLiteral(varOnHeap));
@@ -5783,7 +5718,6 @@ BIspec allSpec[] = {
   {"isRecordB",2,BIisRecordB,     NO, (IFOR) isRecordBInline},
   {"isRecordC",1,BIisRecordC,     NO, (IFOR) isRecordCInline},
   {"isRecordCB",2,BIisRecordCB,   NO, (IFOR) isRecordCBInline},
-  {"isNoNumber",1,BIisNoNumber,   NO, (IFOR) isNoNumberInline},
   {"isProcedure",1,BIisProcedure, NO, (IFOR) isProcedureInline},
   {"isProcedureB",2,BIisProcedureB,NO,(IFOR) isProcedureBInline},
   {"Chunk.is",2,BIisChunk,        NO, (IFOR) isChunkInline},

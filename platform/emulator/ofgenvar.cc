@@ -332,7 +332,7 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
 TaggedRef DynamicTable::getArityList(TaggedRef tail) {
     TaggedRef arity=tail;
     if (numelem>0) {
-        STuple *stuple=STuple::newSTuple(AtomNil,numelem);
+        SRecord *stuple=SRecord::newSRecord(AtomNil,numelem);
         TaggedRef *arr=stuple->getRef();
         for (unsigned int ai=0,di=0; di<size; di++) {
             if (table[di].value!=makeTaggedNULL()) {
