@@ -14,7 +14,6 @@
 #include "board.hh"
 #include "genvar.hh"
 #include "dictionary.hh"
-#include "perdiotables.hh"
 #include "ip.hh"
 
 /*===================================================================
@@ -416,11 +415,6 @@ Cell::Cell(TaggedRef v, Bool mobile) :
   if (mobile)
     setDistFlag(Mobile);
 }
-
-/*===================================================================
- * Ports
- *=================================================================== */
-
 
 /*===================================================================
  * Bigint memory management
