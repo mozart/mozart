@@ -1,3 +1,5 @@
 Makefile
-ozwish
-ozwish.noresolv
+oz.wish.bin
+oz.wish.bin.noresolv
+tcl7.5
+tk4.1
