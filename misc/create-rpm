@@ -35,8 +35,8 @@ then
    exit 1;
 fi
 BUILDDIR=$1
-SRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.bz2`
-DOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.bz2`
+BUSRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.gz`
+BUDOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.gz`
 DSTDIR=$2
 OZHOME=/usr/lib/mozart
 
@@ -44,7 +44,7 @@ OZHOME=/usr/lib/mozart
 # Find version
 #
 
-VERSION=`(echo ${SRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.bz2/\1/')`
+VERSION=`(echo ${BUSRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.gz/\1/')`
 BUILD=`(echo $Revision$ | sed 's|.*\.\([1-9][0-9]*\).*|\1|')`
 
 #
@@ -62,7 +62,7 @@ setenv PATH ${OZHOME}/bin:\${PATH}
 EOF
 
 chmod a+x oz.sh oz.csh
-tar cf - oz.csh oz.sh | bzip2 -9 > ${RPMSRC}/mozart-profiles.tar.bz2
+tar cf - oz.csh oz.sh | gzip -9 > ${RPMSRC}/mozart-profiles.tar.gz
 rm -f oz.sh oz.csh
 
 
@@ -138,17 +138,21 @@ static char * mozart_xpm[] = {
 "                        *&*                                          "};
 EOF
 
-cp ${SRCTAR} ${DOCTAR} ${RPMSRC}
+cp ${BUSRCTAR} ${BUDOCTAR} ${RPMSRC}
+
+SRCTAR=mozart-${VERSION}-src.tar.gz
+DOCTAR=mozart-${VERSION}-doc.tar.gz
+SPEC=mozart-$VERSION-$BUILD.spec
 
 # Generate redhat spec file
 cd $TMPDIR
-cat > ${RPMSPEC}/mozart-$VERSION-$BUILD.spec <<EOF
+cat > $RPMSPEC/$SPEC <<EOF
 # Spec file for Mozart, an efficient and distributed implementation of Oz
 # Author: Christian Schulte, 1998
 # Copyright: Christian Schulte, 1998, 1999
 Name: mozart
-Version: ${VERSION}
-Release: ${BUILD}
+Version: $VERSION
+Release: $BUILD
 Summary: Mozart, an efficient and distributed implementation of Oz
 Copyright: Free
 Vendor: Mozart Consortium
@@ -157,9 +161,9 @@ Group: Development/Languages
 Packager: Christian Schulte <schulte@ps.uni-sb.de>
 Icon: mozart.xpm
 
-Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-src.tar.bz2
-Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/mozart-${VERSION}-doc.tar.bz2
-Source2: mozart-profiles.tar.bz2
+Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${SRCTAR}
+Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${DOCTAR}
+Source2: mozart-profiles.tar.gz
 
 BuildRoot: /var/tmp/mozart-${VERSION}
 
@@ -200,56 +204,46 @@ This package contains a collection of contributed software packages
 for Mozart that might come in handy for applications like a regular
 expression package, data base interfaces, and so on.
 %prep
-rm -rf \$RPM_BUILD_DIR/mozart-${VERSION}
-mkdir -p \$RPM_BUILD_DIR/mozart-${VERSION}
-cd \$RPM_BUILD_DIR/mozart-${VERSION}
-bzip2 -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-src.tar.bz2 | tar xf -
-mkdir tmp-doc
-cd tmp-doc
-bzip2 -dc \$RPM_SOURCE_DIR/mozart-${VERSION}-doc.tar.bz2 | tar xf -
-mv mozart/doc ..
-cd ..
-chown -R root .
-chgrp -R root .
-chmod -R a+rX,g-w,o-w .
-rm -rf tmp-doc 
+%setup -q
 
 %build
-cd \$RPM_BUILD_DIR/mozart-${VERSION}/mozart
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
 ./configure --prefix=\$RPM_BUILD_ROOT$OZHOME
-
 make
 
 %install
-cd \$RPM_BUILD_DIR/mozart-${VERSION}
 PREFIX=\$RPM_BUILD_ROOT$OZHOME
-rm -rf \$PREFIX
+# config files
+mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
+(cd \$RPM_BUILD_ROOT/etc/profile.d; \
+ gzip -dc \$RPM_SOURCE_DIR/mozart-profiles.tar.gz | tar xf -)
+# documentation files
 mkdir -p \$PREFIX
-# install docs
-rm -rf doc/demo/applets
-cp -a doc \$PREFIX
+(cd \$PREFIX; \
+ gzip -dc \$RPM_SOURCE_DIR/$DOCTAR | tar xf -; \
+ mv mozart/doc .; \
+ rm -rf mozart; \
+ rm -rf doc/demo/applets; \
+ chown -R root .; \
+ chgrp -R root .; \
+ chmod -R a+rX,g-w,o-w .)
 # Generic install
-(cd mozart && make install)
+make install
 # Strip binaries and shared objects
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
 find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
-# config files
-mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
-cd \$RPM_BUILD_ROOT/etc/profile.d
-bzip2 -dc \$RPM_SOURCE_DIR/mozart-profiles.tar.bz2 | tar xf -
-
 
 %clean
 rm -rf \$RPM_BUILD_ROOT
 %files
-%doc mozart-${VERSION}/mozart/README mozart-${VERSION}/mozart/LICENSE mozart-${VERSION}/mozart/LICENSE.html
+%doc README LICENSE LICENSE.html LICENSE.rtf
 %config /etc/profile.d/oz.sh
 %config /etc/profile.d/oz.csh
 $OZHOME/LICENSE
 $OZHOME/LICENSE.html
+$OZHOME/LICENSE.rtf
 $OZHOME/bin
 $OZHOME/cache
 $OZHOME/include
@@ -267,9 +261,9 @@ EOF
 #
 
 rpm -ba --clean ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
-rm -f ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
-rm -f ${RPMSRC}/mozart-$VERSION.tar.*
-rm -f ${RPMSRC}/mozart-doc-$VERSION.tar.*
+rm -f ${RPMSPEC}/${SPEC}
+rm -f ${RPMSRC}/${SRCTAR}
+rm -f ${RPMSRC}/${DOCTAR}
 rm -f ${RPMSRC}/mozart-profiles.tar.*
 
 #
