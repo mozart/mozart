@@ -213,17 +213,6 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
 
 void OwnerTable::freeOwnerEntry(int i)
 {
-  // kost@ : refs that are exported resources must be retracted
-  // explicitly: otherwise, RHT will be confused when a 'ref' OT entry
-  // is re-allocated behind the RHT's back;
-  if (array[i].isRef()) {
-    OZ_Term ref = array[i].getRef();
-    DEREF(ref, refPtr, _tag);
-    if (oz_isVariable(ref))
-      RHT->deleteFound(makeTaggedRef(refPtr));
-    else
-      RHT->deleteFound(ref);
-  }
   array[i].setFree();
   array[i].uOB.nextfree=nextfree;
   nextfree=i;

@@ -824,11 +824,9 @@ void WeakStack::recurse(void)
   }
 }
 
-// isNowMarked(t) returns true iff
-//	t is a marked name, extension, const, var
-// the logic is adapted from gcTagged(TaggedRef&,TaggedRef&)
-// and simplified according to a suggestion by Christian.
-inline int isNowMarked(OZ_Term t) {
+//
+Bool isGCMarkedTerm(OZ_Term t)
+{
  redo:
   switch (tagTypeOf(t)) {
   case TAG_REF:
@@ -893,7 +891,7 @@ void WeakDictionary::weakGC()
   dt_index i;
   for (i=table->size; i--; ) {
     TaggedRef t = table->getValue(i);
-    if (t!=0 && !isNowMarked(t)) {
+    if (t!=0 && !isGCMarkedTerm(t)) {
       numelem--;
       if (stream) {
 	if (!list) newstream=list=oz_newFuture(oz_rootBoard());
