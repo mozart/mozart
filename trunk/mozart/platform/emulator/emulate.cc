@@ -652,8 +652,8 @@ loop:
       setCurrent(currentBoard->getParentFast());
       tmpBB->unsetInstalled();
       tmpBB->setCommitted(currentBoard);
-
       currentBoard->decSuspCount();
+
       return CE_CONT;
     }
     return CE_NOTHING;
@@ -673,6 +673,7 @@ loop:
 	tmpBB->unsetInstalled();
 	tmpBB->setCommitted(currentBoard);
 	currentBoard->decSuspCount();
+
 	goto loop;
       }
 
@@ -763,11 +764,11 @@ loop:
 	    ozstat.incSolveAlt();
 
 	    waitBoard->setCommitted(solveBB);
+	    solveBB->incSuspCount(waitBoard->getSuspCount()-1);
+
 	    if (!installScript(waitBoard->getScriptRef())) {
 	      return CE_FAIL;
 	    }
-
-	    solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
 	    if (waitBoard->isWaitTop()) {
 	      goto loop;
@@ -826,12 +827,11 @@ loop:
 	      Board *waitBoard = wa->getChildRefAt(clauseNo);
 
 	      waitBoard->setCommitted(solveBB);
+	      solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
 	      if (!installScript(waitBoard->getScriptRef())) {
 		return CE_FAIL;
 	      }
-
-	      solveBB->incSuspCount(waitBoard->getSuspCount()-1);
 
 	      if (waitBoard->isWaitTop()) {
 		goto loop;
@@ -1152,11 +1152,16 @@ void engine()
 
 	Continuation *cont;
 	Actor *aa;
+	DebugCode (Thread *savedCT = e->currentThread);
+	DebugCode (e->currentThread = (Thread *) 0x6b6f7374);
 	switch (e->checkEntailment(cont,aa)) {
 	case CE_FAIL:
+	  DebugCode (e->currentThread = savedCT);
 	  e->pushSolve();
 	  HF_NOMSG;
+
 	case CE_SOLVE_CONT:
+	  DebugCode (e->currentThread = savedCT);
 	  Assert(currentDebugBoard==CBB->getParentFast());
 	  DebugCheckT(currentDebugBoard=CBB);
 	  Assert(CBB->isSolve());
@@ -1166,7 +1171,9 @@ void engine()
 	  e->createTask();
 	  LOADCONT(cont);
 	  goto LBLemulate;
+
 	case CE_CONT:
+	  DebugCode (e->currentThread = savedCT);
 	  {
 	    Thread *tt=0;
 	    if (aa->isAsk()) {
@@ -1181,7 +1188,9 @@ void engine()
 	    tt->pushCont(cont);
 	    goto LBLpopTask;
 	  }
+
 	case CE_NOTHING:
+	  DebugCode (e->currentThread = savedCT);
 	  goto LBLpopTask;
 	}
       }
@@ -1301,6 +1310,7 @@ LBLkillThread:
 	
       Continuation *cont;
       Actor *aa;
+      DebugCode (e->currentThread = (Thread *) 0x6b6f7374);
       switch (e->checkEntailment(cont,aa)) {
       case CE_FAIL:
 	if (nb) e->decSolveThreads(nb);
@@ -2371,12 +2381,13 @@ LBLkillThread:
 	DebugCheckT(currentDebugBoard=CBB);
 
 	waitBoard->setCommitted(CBB);   // by kost@ 4.10.94
+	CBB->incSuspCount(waitBoard->getSuspCount()-1);
+
 	Bool ret = e->installScript(waitBoard->getScriptRef());
 	if (!ret) {
 	  HF_NOMSG;
 	}
 	Assert(ret!=NO);
-	CBB->incSuspCount(waitBoard->getSuspCount()-1);
 	DISPATCH(1);
       }
 
@@ -2406,6 +2417,7 @@ LBLkillThread:
 	tmpBB->unsetInstalled();
 	tmpBB->setCommitted(CBB);
 	CBB->decSuspCount();
+
 	goto LBLpopTask;
       }
 
@@ -2419,12 +2431,14 @@ LBLkillThread:
 	DebugCheckT(currentDebugBoard=CBB);
 
 	bb->setCommitted(CBB);    // by kost@ 4.10.94
+	CBB->incSuspCount(bb->getSuspCount()-1);
+
 	Bool ret = e->installScript(bb->getScriptRef());
 	if (!ret) {
 	  HF_NOMSG;
 	}
+
 	Assert(ret != NO);
-	CBB->incSuspCount(bb->getSuspCount()-1);
 	goto LBLpopTask;
       }
 
@@ -2803,13 +2817,24 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
       DebugTrace(trace("reduce actor unit commit",waitBoard,waa));
       if (waitBoard->isWaiting()) {
 	waitBoard->setCommitted(currentBoard); // do this first !!!
-	if (!installScript(waitBoard->getScriptRef())) {
-	  return CE_FAIL;
-	}
 
+	// kost@: 'incSuspCount' moved from behind, because
+	// otherwise the current board can be found to be 
+	// entailed - that may be not true;
 	/* add the suspension from the committed board
 	   remove the suspension for the board itself */
 	currentBoard->incSuspCount(waitBoard->getSuspCount()-1);
+
+	DebugCode (if (!currentThread) 
+		   currentThread = (Thread *) 0x6b6f7374;);
+
+	if (!installScript(waitBoard->getScriptRef())) {
+	  DebugCode (if (currentThread == (Thread *) 0x6b6f7374)
+		     currentThread = (Thread *) NULL;);
+	  return CE_FAIL;
+	}
+	DebugCode (if (currentThread == (Thread *) 0x6b6f7374)
+		   currentThread = (Thread *) NULL;);
 
 	/* unit commit & WAITTOP */
 	if (waitBoard->isWaitTop()) {
