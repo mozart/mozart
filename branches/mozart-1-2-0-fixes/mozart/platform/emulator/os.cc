@@ -601,7 +601,7 @@ int osSystem(char *cmd)
   
   //prepare the command to be executed to be passed
   //as an argument to cmd.exe via the /c switch
-  char* buf = (char*) malloc(sizeof(strlen(cmd)+6));
+  char* buf = (char*) malloc(strlen(cmd)+6);
   sprintf(buf, "/c \"%s\"",cmd);
 
 
@@ -614,20 +614,48 @@ int osSystem(char *cmd)
 		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
 		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
-  si.hStdInput = INVALID_HANDLE_VALUE;
+
+  // "If the parent process only wishes to redirect one or two standard
+  // handles, specifying GetStdHandle() for the specific handles causes
+  // the child to create the standard handle as it normally would without
+  // redirection."
+  // Source: http://support.microsoft.com/support/kb/articles/Q190/3/51.ASP
+  //
+  // "If you use any of the fields, you should set values in all of them.
+  // The child received an invalid handle for any device you leave NULL."
+  // Source: http://msdn.microsoft.com/library/default.asp?
+  //         url=/library/en-us/dnw98bk/html/makingmodifyingprocesses.asp
+  HANDLE hChildStdInput;
+  {
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+    HANDLE wh;
+    if (!CreatePipe(&hChildStdInput,&wh,&sa,0))
+      return 1;
+    CloseHandle(wh);
+  }
+  si.hStdInput = hChildStdInput;
+
+  //si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
   PROCESS_INFORMATION pinf;
- 
+
   //CreateProcess() alone fails to run the cmd internals
   //such as copy, dir, etc .. 
   //So, we are providing the %sysdir%\cmd.exe as image name
-  BOOL success = CreateProcess(strcat(sysdir,"\\cmd.exe"),buf,NULL,NULL,TRUE,0,NULL,NULL,&si,&pinf);
-  free(buf);  
+  BOOL success =
+    CreateProcess(strcat(sysdir,"\\cmd.exe"),buf,
+		  NULL,NULL,TRUE,0,NULL,NULL,&si,&pinf);
+  free(buf);
+  CloseHandle(hChildStdInput);
 
   if (!success)
     return 1;
- 
+
   DWORD ret = WaitForSingleObject(pinf.hProcess,INFINITE);
 
   if (ret == WAIT_FAILED || GetExitCodeProcess(pinf.hProcess,&ret) == FALSE)
