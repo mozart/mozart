@@ -129,6 +129,7 @@ extern void initBuiltins();
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
 extern void initVirtualProperties();
+extern void initExtensions(); /* extensions */
 
 void AM::init(int argc,char **argv)
 {  
@@ -301,6 +302,9 @@ void AM::init(int argc,char **argv)
   if (!perdioInit()) {
     warning("Perdio initialization failed");
   }
+
+  //
+  initExtensions();
 
 #ifdef PICKLE2TEXTHACK
   if (p2t) {
