@@ -80,9 +80,9 @@ public:
     OZ_updateHeapTerm(rawwid);
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const {return spawner; }
-  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {return spawner; }
+  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
 };
 
 class MonitorArityPropagator : public OZ_Propagator {
@@ -103,9 +103,9 @@ public:
     OZ_updateHeapTerm(FT);
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
-  virtual OZ_Return run(void);
-  virtual OZ_CFun getSpawner(void) const {return spawner; }
-  virtual OZ_Term getArguments(void) const { return OZ_nil(); }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {return spawner; }
+  virtual OZ_Term getParameters(void) const { return OZ_nil(); }
   
   TaggedRef getX(void) { return X; }
   TaggedRef getK(void) { return K; }

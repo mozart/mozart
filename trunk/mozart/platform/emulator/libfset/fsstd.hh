@@ -17,7 +17,7 @@ public:
     OZ_updateHeapTerm(_v);
     OZ_updateHeapTerm(_b);
   }
-  virtual OZ_Term getArguments(void) const {
+  virtual OZ_Term getParameters(void) const {
     return OZ_cons(_v, 
 		   OZ_cons(OZ_int(_i),
 			   OZ_cons(_b, OZ_nil())));
@@ -40,7 +40,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) {
     OZ_updateHeapTerm(_v);
   }
-  virtual OZ_Term getArguments(void) const {
+  virtual OZ_Term getParameters(void) const {
     return OZ_cons(_v, 
 		   OZ_cons(OZ_int(_i),OZ_nil()));
   }
@@ -62,7 +62,7 @@ public:
     OZ_updateHeapTerm(_x);
     OZ_updateHeapTerm(_y);
   }
-  virtual OZ_Term getArguments(void) const {
+  virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, OZ_cons(_y, OZ_nil()));
   }
 };
@@ -84,7 +84,7 @@ public:
     OZ_updateHeapTerm(_y);
     OZ_updateHeapTerm(_z);
   }
-  virtual OZ_Term getArguments(void) const {
+  virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, 
 		   OZ_cons(_y,
 			   OZ_cons(_z, OZ_nil())));
@@ -107,7 +107,7 @@ public:
     OZ_updateHeapTerm(_s);
     OZ_updateHeapTerm(_d);
   }
-  virtual OZ_Term getArguments(void) const {
+  virtual OZ_Term getParameters(void) const {
     return OZ_cons(_s, OZ_cons(_d, OZ_nil()));
   }
 };
