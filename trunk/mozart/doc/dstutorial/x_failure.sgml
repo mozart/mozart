@@ -156,6 +156,8 @@ on entities with problems will
 either block or raise an exception instead of performing
 the operation.
 
+<SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
+
 <P>By default, an exception will be raised on fault states
 <<tempFail>> or <<permFail>>.
 A <<remoteProblem>> is ignored, i.e., the operation
@@ -164,8 +166,8 @@ The following operations are provided to change this behavior:
 <LIST>
 <ITEM> <<proc {Fault.defaultEnable FStates}>> sets the global default.
 <<FStates>> is a list of fault states that cause exceptions.
-When the system starts up, it is as if the
-call <<{Fault.defaultEnable [tempFail,permFail]}>> had been done.
+When the system starts up, the defaults are set up as if
+the call <<{Fault.defaultEnable [tempFail,permFail]}>> had been done.
 
 <ITEM> <<fun {Fault.enable Entity Level FStates}>> is a more targeted
 way to do fault detection.
@@ -191,6 +193,63 @@ enabled for that level.
 Both functions raise an exception if their arguments
 do not have the correct type.
 
+<SUBSECTION><TITLE>Exception formats</TITLE>
+
+<P>The exceptions raised have the format
+<<system(dp(entity:E type:T conditions:FS op:OP) ...)>>,
+where the four arguments are defined as follows:
+<LIST>
+<ITEM> <<E>> is the entity on which the operation was attempted.
+See below, Limitations of Current Release.
+<ITEM> <<T>> is the type of the entity, which is one
+of <<variable>>, <<cell>>, <<lock>>, <<port>>, or <<object>>.
+<ITEM> <<FS>> is the list of actual fault states occurring
+at the site on which the operation was attempted.
+This list is a subset of the list for which fault detection
+was enabled.
+Each fault state in <<FS>> may have an extra
+field <<info:>> that gives additional information about
+the fault.
+The possible elements of <<FS>> are
+currently the following:
+<LIST>
+<ITEM> <<tempFail(info:I)>> or <<permFail(info:I)>>,
+where <<I>> is in {<<state>>, <<owner>>}.
+<ITEM> <<remoteProblem(tempSome)>>, <<remoteProblem(permSome)>>,
+<<remoteProblem(tempAll)>>, or
+<<remoteProblem(permAll)>>.
+</LIST>
+
+<ITEM> <<OP>> indicates which attempted operation caused the exception.
+The possible values of <<OP>> are currently:
+<LIST>
+<ITEM> For logic variables: <<tell(X T)>>, <<ask>>, or <<isDet>>,
+where <<X>> is the variable and <<T>> is what it is attempted
+to bind with.
+<ITEM> For cells: 
+<<exchange(Old New)>>, 
+<<assign(New)>>, 
+<<access(Old)>>, or
+<<accessDeep(Old)>>,
+where <<Old>> is the cell content before the attempted operation
+and <<New>> is the cell content after the attempted operation.
+<ITEM> For locks: <<lock>>.
+<ITEM> For ports: <<send(Msg)>>,
+where <<Msg>> is the message attempted to be sent to the port.
+<ITEM> For objects: 
+<<attrExchange(Attr Old New)>>,
+<<attrAssign(Attr New)>>,
+<<attrAccess(Attr Old)>>, or
+<<attrAccessDeep(Attr Old)>>,
+where <<Attr>> is the name of the attribute,
+<<Old>> is the attribute value before the attempted operation,
+and <<New>> is the attribute value after the attempted operation.
+</LIST>
+
+</LIST>
+
+<SUBSECTION><TITLE>Levels of fault detection</TITLE>
+
 <P>There are three levels of fault detection,
 depending on where the attempted operation is executed.
 The most general is
@@ -211,6 +270,9 @@ it overrides the two others in its thread.
 The site level, if it is enabled, overrides the global level.
 Finally, if neither a thread nor a site level are
 enabled, then the global level is used.
+It doesn't matter what the actual fault states are;
+the thread level always overrides the site level,
+which always overrides the global level.
 
 <P>For example, let's say that the cell <<C>>
 has a global detection for <<[tempFail,permFail]>>
@@ -249,34 +311,6 @@ for a given set of fault states.
 The possible entities, levels, and fault states
 are the same.
 
-<P>A thread-based handler overrides
-a site-based handler, which overrides a global handler.
-It does not matter what the fault condition is.
-If a thread-based handler exists for
-the current thread, then neither of the
-others will ever be called there.
-If a site-based handler exists on the
-current site, then the global handler
-will never be called there.
-
-<P>For example, let's say that the cell <<C>>
-has two handlers:
-The first has level <<thread(T1)>> and
-set of conditions <<[permFail]>>.
-The second has level <<global>> and
-set of conditions <<[tempFail,permFail]>>.
-Let's say that the cell's fault state is <<tempFail>>
-and that many threads are trying
-to do exchange on <<C>>.
-Then thread <<T1>> will block, since its handler is only
-waiting for <<permFail>>, and no action is
-defined for any other fault state.
-All other threads will replace the exchange
-by a call to the
-global handler with condition <<permFail>>.
-
-<SUBSECTION><TITLE>Installing and deinstalling handlers</TITLE>
-
 <P>Handlers are installed and deinstalled with the
 following two built-in operations:
 <LIST>
@@ -292,66 +326,17 @@ enabled for that level.
 Both functions raise an exception if their arguments
 do not have the correct type.
 
-<SUBSECTION><TITLE>How handlers are called</TITLE>
-
 <P>A handler <<HandlerProc>> is a three-argument
-procedure that is called as <<{HandlerProc E FS Op}>>.
-The arguments to this call are defined as follows:
-<LIST>
-<ITEM> <<E>> is the language entity on which the handler was
-installed.
-<ITEM> <<FS>> is a subset of the handler conditions
-under which the handler was installed.
-Each fault condition in <<FS>> may have an extra
-field <<info:>> that gives additional information about
-the fault.
-The possible elements of <<FS>> are
-currently the following:
-<LIST>
-<ITEM> <<tempFail(info:I)>> where <<I>> is in {<<state>>, <<owner>>}.
-<ITEM> <<permFail(info:I)>> where <<I>> is in {<<state>>, <<owner>>}.
-<ITEM> <<remoteProblem(tempSome)>>.
-<ITEM> <<remoteProblem(permSome)>>.
-<ITEM> <<remoteProblem(tempAll)>>.
-<ITEM> <<remoteProblem(permAll)>>.
-</LIST>
-
-<ITEM> <<Op>> indicates which operation the handler call replaces.
-The possible values of <<Op>> are currently:
-<LIST>
-<ITEM> For logic variables: <<tell(X T)>>, <<ask>>, <<isDet>>,
-where <<X>> is the variable and <<T>> is what it is attempted
-to bind with.
-<ITEM> For cells: 
-<<exchange(Old New)>>, 
-<<assign(New)>>, 
-<<access(Old)>>, 
-<<accessDeep(Old)>>,
-where <<Old>> is the cell content before the attempted operation
-and <<New>> is the cell content after the attempted operation.
-<ITEM> For locks: <<lock>>.
-<ITEM> For ports: <<send(Msg)>>,
-where <<Msg>> is the message attempted to be sent to the port.
-<ITEM> For objects: 
-<<attrExchange(Attr Old New)>>,
-<<attrAssign(Attr New)>>,
-<<attrAccess(Attr Old)>>,
-<<attrAccessDeep(Attr Old)>>,
-where <<Attr>> is the name of the attribute,
-<<Old>> is the attribute value before the attempted operation,
-and <<New>> is the attribute value after the attempted operation.
-</LIST>
-
-</LIST>
+procedure that is called as <<{HandlerProc E FS OP}>>.
+The arguments <<E>>, <<FS>>, and <<OP>>,
+are exactly the same arguments as given
+in the exception, if exceptions are enabled.
 
 <SUBSECTION><TITLE>Eager failure detection</TITLE>
 
 <P>Fault handlers detect failure when an operation is attempted.
 One often wants to be informed as soon as the site finds out
 about the failure.
-
-<SECTION><TITLE>Limitations of the current release</TITLE>
-
 
 
 <SECTION><TITLE>Fault states for language entities</TITLE>
@@ -524,6 +509,9 @@ occur because the object-record can be absent.
 Since in both cases the object
 cannot be used, we simply consider the new failure modes
 to be instances of <<permFail>> and <<tempFail>>.
+
+<SECTION><TITLE>Limitations of current release</TITLE>
+
 
 
 </CHAPTER>
