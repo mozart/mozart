@@ -78,8 +78,6 @@ public:
 
   SVariable(Board * h) : suspList(NULL), home(h) {}
 
-  Bool dealloc(void);
-
   void dispose(void) {
     suspList->disposeList();
     freeListDispose(this,sizeof(*this));
