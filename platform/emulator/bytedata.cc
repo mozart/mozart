@@ -388,7 +388,7 @@ OZ_BI_define(BIByteString_make,1,1)
     OZ_Term elt = OZ_head(list);
     int c;
     // verify that each is ok as a byte
-    if (!OZ_isSmallInt(elt) || (c=OZ_intToC(elt))<0 || i>255) {
+    if (!OZ_isSmallInt(elt) || (c=OZ_intToC(elt))<0 || c>255) {
       oz_typeError(0,"list of bytes");
     }
     // initialize the corresponding byte of the ByteString
