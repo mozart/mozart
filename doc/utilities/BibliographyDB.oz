@@ -70,8 +70,6 @@ prepare
    end
 define
    BIBTEX    = 'bibtex'
-   BIBINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bib.path'} end}
-   BSTINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bst.path'} end}
 
    class TextFile from Open.text Open.file
       prop final
@@ -224,8 +222,8 @@ define
                                     end
                                  end '\\bibdata{'}#'}\n')}
             {@AuxFile close()}
-            {OS.putEnv 'BSTINPUTS' BSTINPUTS}
-            {OS.putEnv 'BIBINPUTS' BIBINPUTS}
+            {OS.putEnv 'BSTINPUTS' {Property.get 'ozdoc.bst.path'}}
+            {OS.putEnv 'BIBINPUTS' {Property.get 'ozdoc.bib.path'}}
             case {OS.system BIBTEX#' '#@AuxFileName} of 0 then File in
                File = {New TextFile init(name: @AuxFileName#'.bbl'
                                          flags: [read])}

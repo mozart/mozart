@@ -26,6 +26,7 @@
 functor
 import
    %% System Modules
+   Property(get)
    OS(system localTime)
    Narrator('class')
    ErrorListener('class')
@@ -46,7 +47,6 @@ import
         pcdata: PCDATA
         verbatim: VERBATIM
         toVirtualString clean)
-   Property(get)
 export
    Translate
 prepare
