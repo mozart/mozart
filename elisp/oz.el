@@ -126,31 +126,13 @@ Note that this variable is only checked once when oz.el is loaded."
 (put 'oz-emulator 'variable-interactive
      "fChoose Oz Emulator binary: ")
 
-(defcustom oz-compiler-boot-file
-  (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
-  "*Path to the old Oz Compiler's boot file for \\[oz-other]."
+(defcustom oz-components-url
+  (concat "file:" (getenv "HOME") "/Oz/lib/")
+  "*URL relative to which the Oz Components are loaded (used by \\[oz-other])."
   :type 'string
   :group 'oz)
-(put 'oz-compiler-boot-file 'variable-interactive
-     "fChoose Oz Compiler boot file: ")
-
-(defcustom oz-use-new-compiler
-  (not (null (getenv "OZUSENEWCOMPILER")))
-  "*If non-nil, use the new Oz Compiler.
-This has the effect of not opening the *Oz Compiler* buffer and feeding
-everything into the *Oz Emulator* buffer."
-  :type 'boolean
-  :group 'oz)
-(put 'oz-use-new-compiler 'variable-interactive
-     "XUse New Oz Compiler? (t or nil): ")
-
-(defcustom oz-new-compiler-url
-  (concat "file:" (getenv "HOME") "/Oz/lib/OPI.ozc")
-  "*URL of the new Oz Compiler for gdb mode and for \\[oz-other]."
-  :type 'string
-  :group 'oz)
-(put 'oz-new-compiler-url 'variable-interactive
-     "sURL of the Oz Compiler component: ")
+(put 'oz-components-url 'variable-interactive
+     "sBase URL of the Oz components: ")
 
 (defcustom oz-gdb-autostart t
   "*If non-nil, start emulator immediately when in gdb mode.
@@ -205,10 +187,6 @@ run the emulator when you issue the command `run' to gdb."
 
 (defvar oz-is-color
   (and (eq window-system 'x) (x-display-color-p)))
-
-(defvar oz-using-new-compiler nil
-  "If non-nil, indicates that the new Oz Compiler is currently running.
-This variable should not be changed by the user.")
 
 (defvar oz-read-emulator-output nil
   "Non-nil iff output currently comes from the emulator.
@@ -477,7 +455,6 @@ STRING should be given if the last search was by `string-match' on STRING."
     ("Feed Line"           oz-feed-line t)
     ("Feed Paragraph"      oz-feed-paragraph t)
     ("Feed File"           oz-feed-file t)
-    ("Precompile File"     oz-precompile-file (not oz-using-new-compiler))
     ("-----")
     ("Find" nil
      ("Documentation Demo" oz-find-docdemo-file t)
@@ -509,7 +486,7 @@ STRING should be given if the last search was by `string-match' on STRING."
     ("Panel"               oz-view-panel t)
     ("Debugger"            oz-debug-start t)
     ("Profiler"            oz-profiler-start t)
-    ("Compiler Panel"      oz-compiler-panel oz-using-new-compiler)
+    ("Compiler Panel"      oz-compiler-panel)
     ("-----")
     ("Next Oz Buffer"      oz-next-buffer t)
     ("Previous Oz Buffer"  oz-previous-buffer t)
@@ -683,47 +660,35 @@ With ARG, start it instead."
 ;; Start/Stop Oz
 ;;------------------------------------------------------------
 
-(defun run-oz (&optional toggle-new-compiler)
+(defun run-oz ()
   "Start the Oz System.
-If the variable `oz-use-new-compiler' is non-nil, start the new Oz Compiler
-unless TOGGLE-NEW-COMPILER is non-nil.  If `oz-new-compiler' is nil,
-start the old Oz Compiler unless TOGGLE-NEW-COMPILER is non-nil.
 Handle input and output via the buffers whose names are found in
 variables `oz-compiler-buffer' and `oz-emulator-buffer'."
-  (interactive "P")
+  (interactive)
   (save-excursion
-    (oz-check-running
-     t (if toggle-new-compiler (not oz-use-new-compiler) oz-use-new-compiler)))
+    (oz-check-running t))
   (or (equal mode-name "Oz")
       (equal mode-name "Oz-Gump")
       (equal mode-name "Oz-Machine")
       (oz-new-buffer)))
 
 (defun oz-halt (force)
-  "Halt Oz Compiler and Emulator.
-If FORCE is nil, send the `\\halt' directive and wait for the processes
+  "Halt Oz System.
+If FORCE is nil, send the `\\halt' directive and wait for the process
 to terminate.  Waiting time is limited by variable `oz-halt-timeout';
-after this delay, the processes are simply killed if still living.
-If FORCE is non-nil, kill the processes immediately."
+after this delay, the process is simply killed if still living.
+If FORCE is non-nil, kill it immediately."
   (interactive "P")
   (message "Halting Oz ...")
   (if (and (not force) (oz-is-running))
       (let* ((i oz-halt-timeout)
-	     (cproc (if oz-using-new-compiler
-			(get-buffer-process oz-emulator-buffer)
-		      (get-buffer-process oz-compiler-buffer)))
-	     (eproc (if oz-win32
-			cproc
-		      (get-buffer-process oz-emulator-buffer))))
+	     (proc (get-buffer-process oz-emulator-buffer)))
 	(oz-send-string "\\halt")
-	(while (and (or (eq (process-status eproc) 'run)
-			(eq (process-status cproc) 'run))
+	(while (and (eq (process-status proc) 'run)
 		    (> i 0))
 	  (message "Halting Oz ... %s" i)
 	  (sleep-for 1)
 	  (setq i (1- i)))))
-  (if (get-buffer-process oz-compiler-buffer)
-      (delete-process oz-compiler-buffer))
   (if (get-buffer-process oz-emulator-buffer)
       (delete-process oz-emulator-buffer))
   (cond ((get-buffer oz-temp-buffer)
@@ -739,41 +704,12 @@ If FORCE is non-nil, kill the processes immediately."
   (oz-set-title oz-old-frame-title))
 
 (defun oz-is-running ()
-  (cond (oz-using-new-compiler
-	 (get-buffer-process oz-emulator-buffer))
-	(oz-win32
-	 (get-buffer-process oz-compiler-buffer))
-	((and (get-buffer-process oz-compiler-buffer)
-	      (not (get-buffer-process oz-emulator-buffer)))
-	 (message "Emulator died.")
-	 (delete-process oz-compiler-buffer)
-	 nil)
-	((and (not (get-buffer-process oz-compiler-buffer))
-	      (get-buffer-process oz-emulator-buffer))
-	 (message "Compiler died.")
-	 (delete-process oz-emulator-buffer)
-	 nil)
-	(t
-	 (and (get-buffer-process oz-compiler-buffer)
-	      (get-buffer-process oz-emulator-buffer)))))
+  (get-buffer-process oz-emulator-buffer))
 
-(defun oz-check-running (start-flag use-new-compiler)
+(defun oz-check-running (start-flag)
   (if (not (oz-is-running))
-      (let ((file (concat (oz-make-temp-name "/tmp/ozpipeout") ":"
-			  (oz-make-temp-name "/tmp/ozpipein"))))
+      (progn
 	(if (not start-flag) (message "Oz died.  Restarting ..."))
-	(setq oz-using-new-compiler use-new-compiler)
-	(define-key oz-mode-map "\C-cc"
-	  (if oz-using-new-compiler 'oz-compiler-panel 'oz-precompile-file))
-	(cond (oz-using-new-compiler
-	       t)
-	      (oz-win32
-	       (setq oz-read-emulator-output nil)
-	       (make-comint "Oz Compiler"
-			    "ozcompiler" nil "+E"))
-	      (t
-	       (make-comint "Oz Compiler"
-			    "oz.compiler" nil "-emacs" "-S" file)))
 	(oz-create-buffer oz-compiler-buffer 'compiler)
 	(save-excursion
 	  (set-buffer oz-compiler-buffer)
@@ -785,41 +721,31 @@ If FORCE is non-nil, kill the processes immediately."
 	       nil)
 	  (set (make-local-variable 'compilation-last-buffer)
 	       (current-buffer)))
-	(if (not oz-using-new-compiler)
-	    (set-process-filter (get-buffer-process oz-compiler-buffer)
-				'oz-compiler-filter))
 	(bury-buffer oz-compiler-buffer)
 
 	(if oz-emulator-hook
-	    (funcall oz-emulator-hook file)
+	    (funcall oz-emulator-hook)
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (cond ((and oz-using-new-compiler oz-win32)
+	  (cond (oz-win32
 		 (setq oz-read-emulator-output t)
-		 (let ((compilercomp
-			(or (getenv "OZCOMPILERCOMP")
-			    (concat "file:" (oz-home) "/lib/OPI.ozc"))))
+		 (let ((components
+			(or (getenv "OZCOMPONENTS")
+			    (concat "file:" (oz-home) "/lib/"))))
 		   (make-comint "Oz Emulator" "ozemulator" nil "-E"
-				"-u" compilercomp)))
-		(oz-using-new-compiler
-		 (setq oz-read-emulator-output t)
-		 (make-comint "Oz Emulator" "oznc" nil "-E"))
-		(oz-win32 t)
+				"-u" (concat components "OPI.ozc"))))
 		(t
-		 (make-comint "Oz Emulator"
-			      "oz.emulator" nil "-emacs" "-S" file)))
+		 (setq oz-read-emulator-output t)
+		 (make-comint "Oz Emulator" "oznc" nil "-E")))
 	  (oz-create-buffer oz-emulator-buffer 'emulator)
-	  (if (or oz-using-new-compiler (not oz-win32))
-	      (set-process-filter (get-buffer-process oz-emulator-buffer)
-				  'oz-emulator-filter))
+	  (set-process-filter (get-buffer-process oz-emulator-buffer)
+			      'oz-emulator-filter)
 	  (bury-buffer oz-emulator-buffer))
 
 	(oz-set-title oz-frame-title)
 	(message "Oz started.")))
 
   (if start-flag
-      (if (and oz-emulator-hook
-	       (or oz-using-new-compiler
-		   (not oz-gdb-autostart)))
+      (if oz-emulator-hook
 	  (oz-show-buffer (get-buffer oz-emulator-buffer))
 	(oz-show-buffer (get-buffer oz-compiler-buffer)))))
 
@@ -828,14 +754,14 @@ If FORCE is non-nil, kill the processes immediately."
 ;; GDB Support
 ;;------------------------------------------------------------
 
-(defun oz-set-other (set-compiler)
-  "Set the value of environment variables OZEMULATOR or OZBOOT.
-If SET-COMPILER is non-nil, set the compiler boot file (can also
-be done via \\[oz-set-compiler]); if it is nil, set the emulator
+(defun oz-set-other (set-components)
+  "Set the value of environment variables OZEMULATOR or OZCOMPONENTS.
+If SET-COMPONENTS is non-nil, set the Components base URL (can also
+be done via \\[oz-set-components]); if it is nil, set the emulator
 binary (can also be done via \\[oz-set-emulator]."
   (interactive "P")
-  (if set-compiler
-      (oz-set-compiler)
+  (if set-components
+      (oz-set-components)
     (oz-set-emulator)))
 
 (defun oz-set-emulator ()
@@ -851,38 +777,28 @@ Can be selected by \\[oz-other-emulator]."
   (if (getenv "OZEMULATOR")
       (setenv "OZEMULATOR" oz-emulator)))
 
-(defun oz-set-compiler ()
-  "Set the value of variables `oz-compiler-boot-file' or `oz-new-compiler-url'.
-This is to specify an alternative Oz Compiler boot file or URL,
-depending on the setting of the variable `oz-use-new-compiler'.
-Can be selected by \\[oz-other-compiler]."
+(defun oz-set-components ()
+  "Set the value of variable `oz-components-url'.
+Can be selected by \\[oz-other-components]."
   (interactive)
-  (if oz-use-new-compiler
-      (progn
-	(setq oz-new-compiler-url
-	      (concat
-	       "file://"
-	       (expand-file-name
-		(read-file-name "Oz Compiler component file: "
-				nil nil t nil))))
-	(if (getenv "OZCOMPILERCOMP")
-	    (setenv "OZCOMPILERCOMP" oz-new-compiler-url)))
-    (setq oz-compiler-boot-file
-	  (expand-file-name
-	   (read-file-name (format "Oz Compiler boot file (default %s): "
-				   oz-compiler-boot-file)
-			   nil oz-compiler-boot-file t nil)))
-    (if (getenv "OZBOOT")
-	(setenv "OZBOOT" oz-compiler-boot-file))))
+  (setq oz-components-url
+	(concat
+	 "file://"
+	 (expand-file-name
+	  (read-file-name (format "Oz components base URL (default %s): "
+				  oz-components-url)
+			  nil oz-components-url t nil))))
+  (if (getenv "OZCOMPONENTS")
+      (setenv "OZCOMPONENTS" oz-components-url)))
 
-(defun oz-other (set-compiler)
-  "Switch between global and local Oz Emulator or Oz Compiler boot file.
-If SET-COMPILER is non-nil, switch the compiler boot file (via
-\\[oz-other-emulator]); if it is nil, switch the emulator binary
-\(via \\[oz-other-compiler])."
+(defun oz-other (set-components)
+  "Switch between global and local Oz Emulator or Oz Components.
+If SET-COMPONENTS is non-nil, switch the Components base URL (via
+\\[oz-other-components]); if it is nil, switch the emulator binary
+\(via \\[oz-other-emulator])."
   (interactive "P")
-  (if set-compiler
-      (oz-other-compiler)
+  (if set-components
+      (oz-other-components)
     (oz-other-emulator)))
 
 (defun oz-other-emulator ()
@@ -897,26 +813,16 @@ or can be set by \\[oz-set-emulator]."
 	 (setenv "OZEMULATOR" oz-emulator)
 	 (message "Oz Emulator: %s" oz-emulator))))
 
-(defun oz-other-compiler ()
-  "Switch between global and local Oz Compiler boot file or URL.
-Depending on the value of the variable `oz-use-new-compiler',
-either select the boot file given by the environment variable OZBOOT
-or the URL given by the environment variable OZCOMPILERCOMP.
-These can be set by \\[oz-set-compiler]."
+(defun oz-other-components ()
+  "Switch between global and local Oz Components base URL.
+These can be set by \\[oz-set-components]."
   (interactive)
-  (if oz-use-new-compiler
-      (cond ((getenv "OZCOMPILERCOMP")
-	     (setenv "OZCOMPILERCOMP" nil)
-	     (message "Oz Compiler URL: global"))
-	    (t
-	     (setenv "OZCOMPILERCOMP" oz-new-compiler-url)
-	     (message "Oz Compiler URL: %s" oz-new-compiler-url)))
-    (cond ((getenv "OZBOOT")
-	   (setenv "OZBOOT" nil)
-	   (message "Oz Compiler boot file: global"))
-	  (t
-	   (setenv "OZBOOT" oz-compiler-boot-file)
-	   (message "Oz Compiler boot file: %s" oz-compiler-boot-file)))))
+  (cond ((getenv "OZCOMPONENTS")
+	 (setenv "OZCOMPONENTS" nil)
+	 (message "Oz Components base URL: global"))
+	(t
+	 (setenv "OZCOMPONENTS" oz-components-url)
+	 (message "Oz Components base URL: %s" oz-components-url))))
 
 (defun oz-gdb ()
   "Toggle debugging of the Oz Emulator with gdb.
@@ -946,19 +852,17 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
 	 (setq oz-emulator-hook 'oz-start-gdb-emulator)
 	 (message "gdb enabled: %s" oz-emulator))))
 
-(defun oz-start-gdb-emulator (file)
+(defun oz-start-gdb-emulator ()
   "Run the Oz Emulator under gdb.
 This is hooked into the variable `oz-emulator-hook' via \\[oz-gdb].
 The directory containing FILE becomes the initial working directory
 and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
-	(init-str (if oz-using-new-compiler
-		      (concat "set args -u "
-			      (or (getenv "OZCOMPILERCOMP")
-				  (concat "file:" (oz-home) "/lib/OPI.ozc"))
-			      "\n")
-		    (concat "set args -S " file "\n"))))
+	(init-str (concat "set args -u "
+			  (or (getenv "OZCOMPONENTS")
+			      (concat "file:" (oz-home) "/lib/"))
+			  "OPI.ozc\n")))
     (cond ((get-buffer oz-emulator-buffer)
 	   (delete-windows-on oz-emulator-buffer)
 	   (kill-buffer oz-emulator-buffer)))
@@ -1030,10 +934,8 @@ feed that many preceding paragraphs as well as the current paragraph."
 (defun oz-send-string (string)
   "Feed STRING to the Oz Compiler, restarting it if it died."
   (save-excursion
-    (oz-check-running nil oz-use-new-compiler))
-  (let ((proc (get-buffer-process (if oz-using-new-compiler
-				      oz-emulator-buffer
-				    oz-compiler-buffer))))
+    (oz-check-running nil))
+  (let ((proc (get-buffer-process oz-emulator-buffer)))
     (comint-send-string proc string)
     (comint-send-string proc "\n")
     (save-excursion
@@ -1708,6 +1610,8 @@ Negative arg -N means kill N Oz expressions after the cursor."
   (define-key map "\M-n"         'oz-next-buffer)
   (define-key map "\M-p"         'oz-previous-buffer)
 
+  (define-key map "\C-cc"        'oz-compiler-panel)
+
   (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
   (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
   (define-key map "\C-x "        'oz-breakpoint-key-set)
@@ -1729,7 +1633,6 @@ Negative arg -N means kill N Oz expressions after the cursor."
   (define-key map "\C-c\C-l"     'oz-fontify-buffer)
   (define-key map "\C-c\C-r"     'run-oz)
   (define-key map "\C-c\C-h"     'oz-halt)
-  (define-key map "\C-cc"        'oz-precompile-file)
   (define-key map "\C-cm"        'oz-set-other)
   (define-key map "\C-co"        'oz-other)
   (define-key map "\C-cd"        'oz-gdb)
@@ -2224,31 +2127,16 @@ The ARG is interpreted just as with \\[recenter]."
 ;;------------------------------------------------------------
 ;; Filtering Process Output
 ;;------------------------------------------------------------
-;; Under Win32 the emulator is started by the compiler, so its output
-;; goes into the compiler buffer.  The compiler makes sure that the
-;; compiler and emulator outputs are always separated by special
-;; characters so that the emulator output can be redirected into
-;; its own buffer.
-;;
-;; With the new Oz compiler we have a similar situation:  The compiler
-;; is run by the emulator and the output has to be separated as above.
-
-(defun oz-compiler-filter (proc string)
-  "Filter for Oz Compiler output."
-  (if (not oz-win32)
-      (oz-filter proc string (process-buffer proc))
-    (oz-split-output proc string)))
+;; The compiler makes sure that its output is always delimited by
+;; control characters so that the outputs from the emulator and from
+;; the compiler can be separated into two buffers.
 
 (defun oz-emulator-filter (proc string)
   "Filter for Oz Emulator output."
-  (if (not oz-using-new-compiler)
-      (oz-filter proc string (process-buffer proc))
-    (oz-split-output proc string)))
+  (if (oz-split-output proc string)))
 
 ;; If you ever change these constants, also adapt the
-;; following files accordingly:
-;;    Oz/Compiler/frontend/cFunctions.cc
-;;    Oz/tools/compiler/EmacsInterface.oz
+;; file Oz/lib/compiler/EmacsInterface.oz accordingly.
 (defvar oz-emulator-output-start (char-to-string 5)
   "Regex that matches when emulator output begins.")
 (defvar oz-emulator-output-end   (char-to-string 6)
@@ -2269,10 +2157,9 @@ Return nil if the whole STRING goes into the current buffer."
 
 (defun oz-split-output (proc string)
   "Split the process output STRING into Oz Compiler and Oz Emulator output.
-With the new Oz compiler as well as under Win32 with the old compiler, the
-output from both Emulator and Compiler comes from the same process.  Both
-outputs are separated by oz-emulator-output-{start,end} sequences.  After
-splitting, the outputs are passed to the common oz-filter."
+The output from both Emulator and Compiler comes from the same process.
+Both outputs are separated by oz-emulator-output-{start,end} sequences.
+After splitting, the outputs are passed to the common oz-filter."
   (let (switch-col)
     (while (setq switch-col (oz-have-to-switch-outbuffer string))
       (oz-filter proc (substring string 0 switch-col) (oz-current-outbuffer))
@@ -2532,27 +2419,7 @@ If it is, then remove it."
 	(insert string)
 	(write-region (point-min) (point-max) file-1 nil 'quiet)
 	(kill-buffer (current-buffer))))
-    (if oz-using-new-compiler
-	(oz-send-string (concat directive " '" file-1 "'"))
-      (let ((buf (get-buffer oz-temp-buffer)))
-	(if buf
-	    (save-excursion
-	      (set-buffer buf)
-	      (erase-buffer))))
-      (shell-command (concat "touch " file-2))
-      (start-process "Oz Temp" oz-temp-buffer "tail" "+1f" file-2)
-      (message nil)
-      (oz-send-string (concat directive " '" file-1 "'"))
-      (let ((buf (get-buffer oz-temp-buffer)))
-	(oz-show-buffer buf)
-	(cond ((string-match "\\.ozc$" file-2)
-	       (save-excursion
-		 (set-buffer buf)
-		 (oz-mode)))
-	      ((string-match "\\.ozm$" file-2)
-	       (save-excursion
-		 (set-buffer buf)
-		 (ozm-mode)))))))
+    (oz-send-string (concat directive " '" file-1 "'")))
   (oz-zmacs-stuff))
 
 (defun oz-feed-region-browse (start end)
@@ -2580,23 +2447,12 @@ of the procedure Browse."
 (defun oz-compiler-panel ()
   "Feed `{`Compiler` openPanel()}' to the Oz Compiler."
   (interactive)
-  (if oz-using-new-compiler
-      (oz-send-string
-       (concat "\\switch +threadedqueries\n"
-	       "{`Compiler` openPanel()}"))
-    (error "Compiler panel not supported with the old compiler")))
+  (oz-send-string "\\switch +threadedqueries\n{`Compiler` openPanel()}"))
 
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
   (interactive "fFeed file: ")
   (oz-send-string (concat "\\threadedfeed '" file "'")))
-
-(defun oz-precompile-file (file)
-  "Precompile an Oz file."
-  (interactive "fPrecompile file: ")
-  (if oz-using-new-compiler
-      (error "Precompiling not supported with the new compiler")
-    (oz-send-string (concat "\\precompile '" file "'"))))
 
 (defun oz-find-dvi-file ()
   "View a file from the Oz documentation directory."
