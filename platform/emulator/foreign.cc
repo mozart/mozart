@@ -1396,6 +1396,12 @@ OZ_Return OZ_writeSelect(int fd,OZ_Term l,OZ_Term r)
   return am.select(fd,SEL_WRITE,l,r) ? PROCEED : FAILED;
 }
 
+OZ_Return OZ_acceptSelect(int fd,OZ_Term l,OZ_Term r)
+{
+  am.acceptSelect(fd,l,r);
+  return PROCEED;
+}
+
 void OZ_deSelect(int fd)
 {
   am.deSelect(fd);

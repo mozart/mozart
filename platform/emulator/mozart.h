@@ -237,6 +237,7 @@ void OZ_addBISpec _PROTOTYPE((OZ_BIspec *spec));
 
 extern OZ_Return OZ_readSelect  _PROTOTYPE((int, OZ_Term, OZ_Term));
 extern OZ_Return OZ_writeSelect _PROTOTYPE((int, OZ_Term, OZ_Term));
+extern OZ_Return OZ_acceptSelect _PROTOTYPE((int, OZ_Term, OZ_Term));
 extern void    OZ_deSelect    _PROTOTYPE((int));
 
 /* garbage collection */
