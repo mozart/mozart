@@ -38,4 +38,29 @@ public:
   virtual size_t sizeOf(void) { return sizeof(*this); }
 };
 
+//-----------------------------------------------------------------------------
+class CPIteratePropagatorCumTI : public Propagator_VD_VI_VI_I {
+private:
+  static OZ_CFunHeader spawner;
+public:
+  CPIteratePropagatorCumTI(OZ_Term x, OZ_Term durations, OZ_Term use, 
+			 OZ_Term cap) 
+    : Propagator_VD_VI_VI_I(x, durations, use, cap) {}
+
+  CPIteratePropagatorCumTI(OZ_Term tasks, OZ_Term starts, OZ_Term durs,
+			 OZ_Term use, OZ_Term cap);
+  
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+private:
+  OZ_NonMonotonic _nm;
+public:
+  virtual OZ_Boolean isMonotonic(void) const { return OZ_FALSE; }
+  virtual OZ_NonMonotonic::order_t getOrder(void) const {
+    return _nm.getOrder();
+  }
+  virtual size_t sizeOf(void) { return sizeof(*this); }
+};
+
+
 #endif // __SCHED_HH__
