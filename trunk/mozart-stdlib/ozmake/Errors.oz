@@ -483,7 +483,7 @@ prepare
 	       items: [hint(l:'Value' m:oz(V))])
       [] ozmake(mogul:validate(ID1 ID2)) then
 	 error(kind : TITLE_MOGUL
-	       msg  : 'encountered MOGUL id not the namespace of your root MOGUL id'
+	       msg  : 'encountered MOGUL id not in the namespace of your root MOGUL id'
 	       items: [hint(l:'Expected' m:ID1#'/...')
 		       hint(l:'Found' m:ID2)])
       [] ozmake(contact:filenotfound(F)) then
