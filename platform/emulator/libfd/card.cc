@@ -84,14 +84,14 @@ OZ_C_proc_end
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_sumCNR, 4)
+OZ_C_proc_begin(fdp_sumCNR, 5)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_VECT OZ_EM_FD "," OZ_EM_LIT "," OZ_EM_FD "," OZ_EM_FD);
 
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 0, expectVectorInt);
-  OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectVectorVectorIntVarMinMax);
   OZ_EXPECT(pe, 2, expectLiteral);
   OZ_EXPECT(pe, 3, expectIntVarMinMax);
   OZ_EXPECT(pe, 4, expectIntVarMinMax);
