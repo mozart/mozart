@@ -261,7 +261,7 @@ char *mess_names[M_LAST] = {
 /*   SECTION 3:: Utility routines                                      */
 /* *********************************************************************/
 
-inline void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI)
+void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
   if (!literalEq(nil(),nogoods)) {
@@ -2087,7 +2087,7 @@ int getNAIndexFromTertiary(Tertiary* t){
   Assert(!(t->isProxy()));
   return BT->getOriginIndex(t->getIndex());}
 
-inline int getStateFromLockOrCell(Tertiary*t){
+int getStateFromLockOrCell(Tertiary*t){
   if(t->getType()==Co_Cell){
     if(t->isManager()){
       return ((CellManager*)t)->getSec()->getState();}
@@ -2258,7 +2258,7 @@ inline Bool isRealThread(Thread* t){
   if((t==MoveThread) || (t==DummyThread)) return FALSE;
   return TRUE;}
 
-inline void pendThreadRemove(PendThread *pt, Thread *th){
+void pendThreadRemove(PendThread *pt, Thread *th){
   while(pt!=NULL && pt->thread != th)
     pt = pt->next;
   Assert(pt!=NULL);
@@ -2266,7 +2266,7 @@ inline void pendThreadRemove(PendThread *pt, Thread *th){
   pt->old = 0;
   pt->nw = 0;}
 
-inline Thread* pendThreadResumeFirst(PendThread **pt){
+Thread* pendThreadResumeFirst(PendThread **pt){
   PendThread *tmp=*pt;
   Assert(tmp!=NULL);
   Thread *t=tmp->thread;
@@ -2277,14 +2277,14 @@ inline Thread* pendThreadResumeFirst(PendThread **pt){
   tmp->dispose();
   return t;}
 
-inline void pendThreadRemoveFirst(PendThread **pt){
+void pendThreadRemoveFirst(PendThread **pt){
   PendThread *tmp=*pt;
   Assert(tmp!=NULL);
   Assert(!isRealThread(tmp->thread));
   *pt=tmp->next;  
   tmp->dispose();}
   
-inline OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o, 
+OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o, 
 				    TaggedRef n, ExKind e, Board *home)
 {
   while(*pt!=NULL){pt= &((*pt)->next);}
@@ -3015,7 +3015,7 @@ inline Credit unmarshalCredit(MsgBuffer *bs){
 Credit unmarshalCreditOutline(MsgBuffer *bs){
   return unmarshalCredit(bs);}
 
-inline void marshalOwnHead(int tag,int i,MsgBuffer *bs){
+void marshalOwnHead(int tag,int i,MsgBuffer *bs){
   PD((MARSHAL_CT,"OwnHead"));
   bs->put(tag);
   mySite->marshalSite(bs);

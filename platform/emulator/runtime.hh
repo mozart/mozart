@@ -510,7 +510,6 @@ struct BIspec {
   int inArity;
   int outArity;
   OZ_CFun fun;
-  IFOR ifun;
   Bool native;
 };
 
@@ -525,8 +524,7 @@ public:
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
       Builtin * abit = (Builtin *) hn->value;
-      if (abit->getInlineFun() == (IFOR) fp ||
-	  abit->getFun() == (OZ_CFun) fp)
+      if (abit->getFun() == (OZ_CFun) fp)
 	return hn->key.fstr;
     }
     return "???";
@@ -535,8 +533,7 @@ public:
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
       Builtin * abit = (Builtin *) hn->value;
-      if (abit->getInlineFun() == (IFOR) fp ||
-	  abit->getFun() == (OZ_CFun) fp)
+      if (abit->getFun() == (OZ_CFun) fp)
 	return abit;
     }
     return (Builtin *) NULL;
@@ -551,7 +548,7 @@ extern BuiltinTab builtinTab;
 
 // (see builtins.hh)
 Builtin *BIadd(const char *name,int inArity,int outArity, OZ_CFun fun,
-	       Bool native, IFOR infun=(IFOR) NULL);
+	       Bool native);
 void BIaddSpec(BIspec *spec); // add specification to builtin table
 
 

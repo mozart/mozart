@@ -1081,9 +1081,6 @@ void ThreadsPool::printThreads()
        << "  running: ";
   _currentThread->printStream(cout,-1);
   cout << endl
-       << "  toplevel:    ";
-  _rootThread->printStream(cout,-1);
-  cout << endl
        << "  runnable:" << endl;
 
   if (!hiQueue.isEmpty()) {
@@ -1110,8 +1107,6 @@ void ThreadQueue::printThreads()
     th->printStream(cout,-1);
     if (th == am.currentThread())
       cout << " RUNNING ";
-    if (th == am.rootThread())
-      cout << " ROOT ";
     cout << endl;
     enqueue(th);
   }

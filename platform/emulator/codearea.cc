@@ -369,9 +369,6 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
       break;
     case ENDDEFINITION:
       return PC;
-    case CREATENAMEDVARIABLEX:
-    case CREATENAMEDVARIABLEY:
-    case CREATENAMEDVARIABLEG:
     case TASKXCONT:
     case TASKCFUNCONT:
     case TASKDEBUGCONT:
@@ -581,15 +578,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	       regToInt(getRegArg(PC+3)));
       DISPATCH();
 
-    case GETLISTVARVARX:
-    case GETLISTVARVARY:
-    case GETLISTVARVARG:
-      fprintf (ofile, "(%d x(%d) x(%d))\n",
-	       regToInt(getRegArg(PC+1)),
-	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)));
-      DISPATCH();
-
     case MOVEMOVEXYXY:
     case MOVEMOVEYXXY:
     case MOVEMOVEYXYX:
@@ -597,15 +585,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       fprintf (ofile, "(%d %d %d %d)\n",
 	      regToInt(getRegArg(PC+1)), regToInt(getRegArg(PC+2)),
 	      regToInt(getRegArg(PC+3)), regToInt(getRegArg(PC+4)));
-      DISPATCH();
-
-    case SHALLOWTEST1:
-      fprintf (ofile,
-	       "(%s x(%d) %p %d)\n",
-	       getBIName(PC+1),
-	       regToInt(getRegArg(PC+2)),
-	       computeLabelArg(PC,PC+3),
-	       getPosIntArg(PC+4));
       DISPATCH();
 
     case TESTLITERALX:
@@ -626,6 +605,18 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	DISPATCH();
       }
 
+    case TESTRECORDX:
+    case TESTRECORDY:
+    case TESTRECORDG:
+      error("done by Leif");
+      DISPATCH();
+
+    case TESTLISTX:
+    case TESTLISTY:
+    case TESTLISTG:
+      error("done by Leif");
+      DISPATCH();
+
     case TESTBOOLX:
     case TESTBOOLY:
     case TESTBOOLG:
@@ -640,26 +631,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	DISPATCH();
       }
 
-    case SHALLOWTEST2:
-      fprintf (ofile,
-	       "(%s x(%d) x(%d) %p %d)\n",
-	       getBIName(PC+1),
-	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)),
-	       computeLabelArg(PC,PC+4),
-	       getPosIntArg(PC+5));
-      DISPATCH();
-
-    case TESTLESSEQ:
-    case TESTLESS:
-      fprintf (ofile,
-	       "(x(%d) x(%d) %p %d)\n",
-	       regToInt(getRegArg(PC+1)),
-	       regToInt(getRegArg(PC+2)),
-	       computeLabelArg(PC,PC+3),
-	       getPosIntArg(PC+4));
-      DISPATCH();
-
     case TESTLE:
     case TESTLT:
       fprintf (ofile,
@@ -671,24 +642,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	       getPosIntArg(PC+5));
       DISPATCH();
 
-    case INLINEREL1:
-      fprintf (ofile,
-	       "(%s x(%d) %d)\n",
-	       getBIName(PC+1),
-	       regToInt(getRegArg(PC+2)),
-	       getPosIntArg(PC+3));
-      DISPATCH();
-
-    case INLINEFUN1:
-    case INLINEREL2:
-      fprintf (ofile,
-	       "(%s x(%d) x(%d) %d)\n",
-	       getBIName(PC+1),
-	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)),
-	       getPosIntArg(PC+4));
-      DISPATCH();
-
     case INLINEPLUS1:
     case INLINEMINUS1:
       fprintf (ofile,
@@ -696,18 +649,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	       regToInt(getRegArg(PC+1)),
 	       regToInt(getRegArg(PC+2)),
 	       getPosIntArg(PC+3));
-      DISPATCH();
-
-    case INLINEFUN2:
-    case INLINEREL3:
-    case INLINEEQEQ:
-      fprintf (ofile,
-	       "(%s x(%d) x(%d) x(%d) %d)\n",
-	       getBIName(PC+1),
-	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)),
-	       regToInt(getRegArg(PC+4)),
-	       getPosIntArg(PC+5));
       DISPATCH();
 
     case INLINEPLUS:
@@ -745,24 +686,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 		 regToInt(getRegArg(PC+2)),
 		 getPosIntArg(PC+3));
       }
-      DISPATCH();
-
-    case INLINEFUN3:
-      fprintf (ofile,
-	       "(%s x(%d) x(%d) x(%d) x(%d) %d)\n",
-	       getBIName(PC+1),
-	       regToInt(getRegArg(PC+2)),
-	       regToInt(getRegArg(PC+3)),
-	       regToInt(getRegArg(PC+4)),
-	       regToInt(getRegArg(PC+5)),
-	       getPosIntArg(PC+6));
-      DISPATCH();
-
-    case CALLBUILTIN:
-      fprintf (ofile,
-	       "(%s %d)\n",
-	       getBIName(PC+1),
-	       getPosIntArg(PC+2));
       DISPATCH();
 
     case CALLBI: // mm2
@@ -839,9 +762,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case TAILCALLX:
     case TAILCALLY:
     case TAILCALLG:
-    case WEAKDETX:
-    case WEAKDETY:
-    case WEAKDETG:
       {
 	Reg reg = regToInt(getRegArg(PC+1));
 	fprintf(ofile, "(%d %d)\n", reg, getPosIntArg(PC+2));
@@ -855,16 +775,12 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       fprintf(ofile, "(%d)\n", getPosIntArg(PC+1));
       DISPATCH();
 
-    case SETNUMBER:
     case UNIFYNUMBER:
       {
 	fprintf(ofile, "(%s)\n", toC(getNumberArg(PC+1)));
       }
       DISPATCH();
 
-    case PUTNUMBERX:
-    case PUTNUMBERY:
-    case PUTNUMBERG:
     case GETNUMBERX:
     case GETNUMBERY:
     case GETNUMBERG:
@@ -921,7 +837,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case SETCONSTANT:
     case UNIFYLITERAL:
-    case SETLITERAL:
     case GLOBALVARNAME:
     case LOCALVARNAME:
       {
@@ -982,54 +897,17 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	fprintf(ofile, " %d)\n", regToInt(getRegArg(PC+3)));
       }
       DISPATCH();
-    case GETRECORDVARSX:
-    case GETRECORDVARSY:
-    case GETRECORDVARSG:
-      {
-	TaggedRef literal = getLiteralArg(PC+1);
-	fprintf(ofile, "(%s ", toC(literal));
-	SRecordArity sra = (SRecordArity) getAdressArg(PC+2);
-	if (sraIsTuple(sra))
-	  fprintf(ofile, "%d", getTupleWidth(sra));
-	else
-	  fprintf(ofile, "%s", toC(sraGetArityList(sra)));
-	fprintf(ofile, " %d ", regToInt(getRegArg(PC+3)));
-	XRegisterIndexListClass *xlist = GetXList(PC+4);
-	if (xlist->getLength()) {
-	  fprintf(ofile,"[");
-	  for (int j=0; j<xlist->getLength(); j++) {
-	    fprintf(ofile,"%sx(%d)",j?" ":"",xlist->get(j));
-	  }
-	  fprintf(ofile,"])\n");
-	} else
-	  fprintf(ofile,"nil)\n");
-      }
-      DISPATCH();
-
     case PUTCONSTANTX:
     case PUTCONSTANTY:
     case PUTCONSTANTG:
     case GETLITERALX:
     case GETLITERALY:
     case GETLITERALG:
-    case PUTLITERALX:
-    case PUTLITERALY:
-    case PUTLITERALG:
       {
 	TaggedRef tagged = getTaggedArg(PC+1);
 
 	fprintf(ofile, "(%s %d)\n", toC(tagged),
 		 regToInt(getRegArg(PC+2)));
-      }
-      DISPATCH();
-
-    case CREATENAMEDVARIABLEX:
-    case CREATENAMEDVARIABLEY:
-    case CREATENAMEDVARIABLEG:
-      {
-	TaggedRef literal = getLiteralArg(PC+2);
-	fprintf(ofile, "(%s %d)\n", toC(literal),
-		 regToInt(getRegArg(PC+1)));
       }
       DISPATCH();
 
@@ -1051,24 +929,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 
     case THREADX:
       fprintf(ofile, "(%d %p)\n", getPosIntArg(PC+1), computeLabelArg(PC,PC+2));
-      DISPATCH();
-
-    case BRANCHONNONVARX:
-    case BRANCHONNONVARY:
-    case BRANCHONNONVARG:
-      {
-	Reg reg = regToInt(getRegArg(PC+1));
-	fprintf(ofile, "(%d %p)\n", reg, computeLabelArg(PC,PC+2));
-      }
-      DISPATCH();
-
-    case SWITCHONTERMX:
-    case SWITCHONTERMY:
-    case SWITCHONTERMG:
-      {
-	Reg reg = regToInt(getRegArg(PC+1));
-	fprintf(ofile, "(%d ...)\n", reg);
-      }
       DISPATCH();
 
     case MATCHX:

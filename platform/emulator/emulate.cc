@@ -268,11 +268,9 @@ void deallocateY(RefsArray a)
 
 #define NOFLATGUARD   (shallowCP)
 
-#define SHALLOWFAIL   if (shallowCP) { goto LBLshallowFail; }
-
 #define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
 
-#define DoSwitchOnTerm(indexTerm,table,isMatch)				\
+#define DoSwitchOnTerm(indexTerm,table)					\
       TaggedRef term = indexTerm;					\
       DEREF(term,termPtr,_2);						\
 									\
@@ -282,7 +280,7 @@ void deallocateY(RefsArray a)
 	JUMPRELATIVE(offset);						\
       } else {								\
 	TaggedRef *sp = sPointer;					\
-	int offset = switchOnTermOutline(term,termPtr,table,sp,isMatch);\
+	int offset = switchOnTermOutline(term,termPtr,table,sp);	\
 	sPointer = sp;							\
 	if (offset) {							\
 	  JUMPRELATIVE(offset);						\
@@ -396,6 +394,30 @@ bombGenCall:
   return OK;
 }
 
+
+
+static
+Bool changeMarshaledFastCall(ProgramCounter PC,TaggedRef pred, 
+			     int tailcallAndArity)
+{
+  if (isAbstraction(pred)) {
+    Abstraction *abstr = tagged2Abstraction(pred);
+    AbstractionEntry *entry = AbstractionTable::add(abstr);
+    CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
+    CodeArea::writeAddress(entry, PC+1);
+    return OK;
+  }
+
+  if (0 && isBuiltin(pred)) { // Leif check here !!!!!!!!!!!!!
+    Assert((tailcallAndArity&1)==0); // there is no tail version  for CALLBI
+    Builtin* entry = tagged2Builtin(pred);
+    CodeArea::writeBuiltin(entry,PC+1);
+    CodeArea::writeOpcode(CALLBI, PC);
+    return OK;
+  }
+
+  return NO;
+}
 
 
 // -----------------------------------------------------------------------
@@ -746,21 +768,6 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
   return ret;
 }
 
-TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
-{
-  Assert(isLiteral(name));
-  toplevelVarsCount = regIndex;
-  int size = getRefsArraySize(toplevelVars);
-  if (LessIndex(size,regIndex)) {
-    int newSize = int(size*1.5);
-    message("resizing store for toplevel vars from %d to %d\n",size,newSize);
-    toplevelVars = resize(toplevelVars,newSize);
-    // no deletion of old array --> GC does it
-  }
-  TaggedRef ret = oz_newVariable();
-  VariableNamer::addName(ret,tagged2Literal(name)->getPrintName());
-  return ret;
-}
 
 /*
  * check stability after thread is finished
@@ -1016,46 +1023,11 @@ LBLdispatcher:
       IHashTable *table = entry->indexTable;
       if (table) {
 	PC = entry->getPC();
-	DoSwitchOnTerm(X[0],table,OK);
+	DoSwitchOnTerm(X[0],table);
       } else {
 	JUMPABSOLUTE(entry->getPC());
       }
     }
-
-  Case(CALLBUILTIN)
-    {
-      COUNT(bicalls);
-      Builtin* bi = GetBI(PC+1);
-
-#ifdef PROFILE_BI
-      bi->incCounter();
-#endif
-      OZ_Return res = oz_bi_wrapper(bi,X);
-      if (res == PROCEED) { DISPATCH(3); }
-      switch (res) {
-      case FAILED:	  HF_BI(bi);
-      case RAISE:	  RAISE_THREAD;
-      case BI_TYPE_ERROR: RAISE_TYPE(bi);
-	 
-      case SUSPEND:
-	PushContX(PC,Y,G,X,getPosIntArg(PC+2));
-	SUSPENDONVARLIST;
-
-      case BI_PREEMPT:
-	PushContX(PC+3,Y,G,X,getPosIntArg(PC+2));
-	return T_PREEMPT;
-
-      case BI_REPLACEBICALL: 
-	argsToSave = getPosIntArg(PC+2);
-	PC += 3;
-	goto LBLreplaceBICall;
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
 
   Case(CALLBI)
     {
@@ -1134,153 +1106,6 @@ LBLdispatcher:
       }
     }
 
-
-  Case(INLINEREL1)
-    {
-      COUNT(inlinecalls);
-      InlineRel1 rel         = (InlineRel1)GetBI(PC+1)->getInlineFun();
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-
-      Assert(rel != NULL);
-
-      OZ_Return res = rel(XPC(2));
-      if (res==PROCEED) { DISPATCH(4); }
-      if (res==FAILED) {
-	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
-		 cons(XPC(2),nil()));
-      }
-
-      switch(res) {
-      case SUSPEND:
-	if (shallowCP) {
-	  e->trail.pushIfVar(XPC(2));
-	  goto LBLsuspendShallow;
-	}
-	CheckLiveness(PC,getPosIntArg(PC+3));
-	PushContX(PC,Y,G,X,getPosIntArg(PC+3));
-	suspendInline(CTT,XPC(2));
-	return T_SUSPEND;
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
-		    cons(XPC(2),nil()));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
-  Case(INLINEREL2)
-    {
-      COUNT(inlinecalls);
-      InlineRel2 rel         = (InlineRel2)GetBI(PC+1)->getInlineFun();
-      Assert(rel != NULL);
-
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      OZ_Return res = rel(XPC(2),XPC(3));
-      if (res==PROCEED) { DISPATCH(5); }
-
-      if (res==FAILED) {
-	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
-		 cons(XPC(2),cons(XPC(3),nil())));
-      }
-
-      switch(res) {
-
-      case SUSPEND:
-	if (shallowCP) {
-	  e->trail.pushIfVar(XPC(2));
-	  e->trail.pushIfVar(XPC(3));
-	  goto LBLsuspendShallow;
-	}
-	
-	CheckLiveness(PC,getPosIntArg(PC+4));
-	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
-	suspendInline(CTT,XPC(2),XPC(3));
-	return T_SUSPEND;
-
-      case BI_PREEMPT:
-	CheckLiveness(PC,getPosIntArg(PC+4));
-	PushContX(PC+5,Y,G,X,getPosIntArg(PC+4));
-	return T_PREEMPT;
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_REPLACEBICALL: 
-	argsToSave = getPosIntArg(PC+4);
-	PC += 5;
-	goto LBLreplaceBICall;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
-		    cons(XPC(2),cons(XPC(3),nil())));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
-  Case(INLINEREL3)
-    {
-      COUNT(inlinecalls);
-      InlineRel3 rel = (InlineRel3)GetBI(PC+1)->getInlineFun();
-      Assert(rel != NULL);
-
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      OZ_Return res = rel(XPC(2),XPC(3),XPC(4));
-      if (res==PROCEED) { DISPATCH(6); }
-      if (res==FAILED) {
-	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
-		 cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
-      }
-      
-      switch(res) {
-      case SUSPEND:
-	if (shallowCP) {
-	  e->trail.pushIfVar(XPC(2));
-	  e->trail.pushIfVar(XPC(3));
-	  e->trail.pushIfVar(XPC(4));
-	  goto LBLsuspendShallow;
-	}
-	
-	CheckLiveness(PC,getPosIntArg(PC+5));
-	PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	suspendInline(CTT,XPC(2),XPC(3),XPC(4));
-	return T_SUSPEND;
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_PREEMPT:
-	CheckLiveness(PC,getPosIntArg(PC+5));
-	PushContX(PC+6,Y,G,X,getPosIntArg(PC+5));
-	return T_PREEMPT;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
-		    cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
-
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
 
   Case(INLINEMINUS)
     {
@@ -1405,109 +1230,6 @@ LBLdispatcher:
       default:    Assert(0);
       }
     }
-
-  Case(INLINEFUN1)
-    {
-      COUNT(inlinecalls);
-      InlineFun1 fun = (InlineFun1)GetBI(PC+1)->getInlineFun();
-      Assert(fun != NULL);
-
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      // XPC(3) maybe the same register as XPC(2)
-      OZ_Return res = fun(XPC(2),XPC(3));
-      if (res==PROCEED) { DISPATCH(5); }
-      if (res==FAILED) {
-	SHALLOWFAIL;
-	Assert(0);
-      }
-
-      switch(res) {
-      case SUSPEND:
-	{
-	  TaggedRef A=XPC(2);
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    goto LBLsuspendShallow;
-	  }
-	  CheckLiveness(PC,getPosIntArg(PC+4));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
-	  suspendInline(CTT,A);
-	  return T_SUSPEND;
-	}
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_REPLACEBICALL: 
-	argsToSave = MaxToSave(3,4);
-	PC += 5;
-	goto LBLreplaceBICall;
-
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
-			cons(XPC(2),nil()));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
-  Case(INLINEFUN2)
-    {
-      COUNT(inlinecalls);
-      InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
-      Assert(fun != NULL);
-      
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      // note: XPC(4) is maybe the same as XPC(2) or XPC(3) !!
-      OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
-
-      if (res==PROCEED) { DISPATCH(6); }
-      if (res==FAILED) {
-	SHALLOWFAIL;
-	HF_APPLY(OZ_atom(GetBI(PC+1)->getPrintName()),
-		 cons(XPC(2),cons(XPC(3),cons(oz_newVariable(), nil()))));
-      }
-
-      switch(res) {
-      case SUSPEND:
-	{
-	  TaggedRef A=XPC(2);
-	  TaggedRef B=XPC(3);
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    e->trail.pushIfVar(B);
-	    goto LBLsuspendShallow;
-	  }
-	  CheckLiveness(PC,getPosIntArg(PC+5));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	  suspendInline(CTT,A,B);
-	  return T_SUSPEND;
-	}
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_REPLACEBICALL: 
-	argsToSave = MaxToSave(4,5);
-	PC += 6;
-	goto LBLreplaceBICall;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
-			cons(XPC(2),cons(XPC(3),nil())));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-     }
 
   Case(INLINEDOT)
     {
@@ -1651,72 +1373,6 @@ LBLdispatcher:
     }
 
 
-  Case(INLINEFUN3)
-    {
-      COUNT(inlinecalls);
-      InlineFun3 fun = (InlineFun3)GetBI(PC+1)->getInlineFun();
-      Assert(fun != NULL);
-
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      // note XPC(5) is maybe the same as XPC(2) or XPC(3) or XPC(4) !!
-      OZ_Return res = fun(XPC(2),XPC(3),XPC(4),XPC(5));
-      if (res==PROCEED) { DISPATCH(7); }
-      if (res==FAILED)  { SHALLOWFAIL; Assert(0); }
-
-      switch(res) {
-
-      case SUSPEND:
-	{
-	  TaggedRef A=XPC(2);
-	  TaggedRef B=XPC(3);
-	  TaggedRef C=XPC(4);
-	  if (shallowCP) {
-	    e->trail.pushIfVar(A);
-	    e->trail.pushIfVar(B);
-	    e->trail.pushIfVar(C);
-	    goto LBLsuspendShallow;
-	  }
-	  CheckLiveness(PC,getPosIntArg(PC+6));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+6));
-	  suspendInline(CTT,A,B,C);
-	  return T_SUSPEND;
-	}
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN(GetBI(PC+1)->getPrintName(),
-			cons(XPC(2),cons(XPC(3),cons(XPC(4),nil()))));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
-  Case(INLINEEQEQ)
-    {
-      InlineFun2 fun = (InlineFun2)GetBI(PC+1)->getInlineFun();
-      Assert(fun != NULL);
-
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      // note XPC(4) is maybe the same as XPC(2) or XPC(3) !!
-      OZ_Return res = fun(XPC(2),XPC(3),XPC(4));
-      if (res==PROCEED) { DISPATCH(6); }
-
-      Assert(res==SUSPEND);
-      CheckLiveness(PC,getPosIntArg(PC+5));
-      PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-      SUSPENDONVARLIST;
-    }
-
-#undef SHALLOWFAIL
-
 // ------------------------------------------------------------------------
 // INSTRUCTIONS: Shallow guards stuff
 // ------------------------------------------------------------------------
@@ -1727,180 +1383,6 @@ LBLdispatcher:
       e->shallowHeapTop = heapTop;
       e->trail.pushMark();
       DISPATCH(3);
-    }
-
-  Case(SHALLOWTEST1)
-    {
-      COUNT(inlinecalls);
-      InlineRel1 rel = (InlineRel1)GetBI(PC+1)->getInlineFun();
-      Assert(rel != NULL);
-
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      OZ_Return res = rel(XPC(2));
-      if (res==PROCEED) { DISPATCH(5); }
-      if (res==FAILED)  { JUMPRELATIVE(getLabelArg(PC+3)); }
-
-      switch(res) {
-
-      case SUSPEND:
-	CheckLiveness(PC,getPosIntArg(PC+4));
-	PushContX(PC,Y,G,X,getPosIntArg(PC+4));
-	addSusp(XPC(2), CTT);
-	return T_SUSPEND;
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),cons(XPC(2),nil()));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
-  Case(SHALLOWTEST2)
-    {
-      COUNT(inlinecalls);
-      InlineRel2 rel = (InlineRel2)GetBI(PC+1)->getInlineFun();
-      Assert(rel != NULL);
-      
-#ifdef PROFILE_BI
-      GetBI(PC+1)->incCounter();
-#endif
-      OZ_Return res = rel(XPC(2),XPC(3));
-      if (res==PROCEED) { DISPATCH(6); }
-      if (res==FAILED)  { JUMPRELATIVE(getLabelArg(PC+4)); }
-
-      switch(res) {
-
-      case SUSPEND:
-	{
-	  CheckLiveness(PC,getPosIntArg(PC+5));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-	  suspendInline(CTT,XPC(2),XPC(3));
-	  return T_SUSPEND;
-	}
-
-      case RAISE:
-	RAISE_THREAD;
-
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1(GetBI(PC+1)->getPrintName(),
-		    cons(XPC(2),cons(XPC(3),nil())));
-
-      case SLEEP:
-      default:
-	Assert(0);
-      }
-    }
-
-  Case(TESTLESS)
-    {
-      COUNT(inlinecalls);
-      
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-      
-      if (tagA == tagB) {
-	if (tagA == SMALLINT) {
-	  if (smallIntLess(A,B)) 
-	    goto LessThenCase;
-	  else
-	    goto LessElseCase;
-	}
-	
-	if (isFloat(tagA)) {
-	  if (floatValue(A) < floatValue(B))
-	    goto LessThenCase;
-	  else
-	    goto LessElseCase;
-	}
-	
-	if (tagA == LITERAL) {
-	  if (isAtom(A) && isAtom(B)) {
-	    if  (strcmp(tagged2Literal(A)->getPrintName(),
-			   tagged2Literal(B)->getPrintName()) < 0)
-	      goto LessThenCase;
-	    else
-	      goto LessElseCase;
-	  }
-	}
-      }
-      tmpRet = BILessOrLessEq(OK,XPC(1),XPC(2));
-      auxString = "<";
-      goto LBLhandleLess;
-    }
-
-  Case(TESTLESSEQ)
-    {
-      COUNT(inlinecalls);
-      
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-      
-      if (tagA == tagB) {
-	if (tagA == SMALLINT) {
-	  if (smallIntLE(A,B)) 
-	    goto LessThenCase;
-	  else
-	    goto LessElseCase;
-	}
-	
-	if (isFloat(tagA)) {
-	  if (floatValue(A) <= floatValue(B))
-	    goto LessThenCase;
-	  else
-	    goto LessElseCase;
-	}
-	
-	if (tagA == LITERAL) {
-	  if (isAtom(A) && isAtom(B)) {
-	    if  (strcmp(tagged2Literal(A)->getPrintName(),
-			   tagged2Literal(B)->getPrintName()) <= 0)
-	      goto LessThenCase;
-	    else
-	      goto LessElseCase;
-	  }
-	}
-      }
-      tmpRet = BILessOrLessEq(NO,XPC(1),XPC(2));
-      auxString = "=<";
-      goto LBLhandleLess;
-
-    }
-  
-    {
-    LessThenCase:
-      DISPATCH(5); 
-    LessElseCase: 
-      JUMPRELATIVE(getLabelArg(PC+3));
-    }
-
-  LBLhandleLess:
-    {
-      switch(tmpRet) {
-	
-      case PROCEED: goto LessThenCase;
-      case FAILED:  goto LessElseCase;
-	
-      case SUSPEND:
-	{
-	  CheckLiveness(PC,getPosIntArg(PC+4));
-	  PushContX(PC,Y,G,X,getPosIntArg(PC+4));
-	  suspendInline(CTT,XPC(1),XPC(2));
-	  return T_SUSPEND;
-	}
-      
-      case BI_TYPE_ERROR:
-	RAISE_TYPE1(auxString,cons(XPC(1),cons(XPC(2),nil())));
-	
-      default:
-	Assert(0);
-      }
     }
 
 #define LT_IF(T) if (T) THEN_CASE else ELSE_CASE
@@ -2232,30 +1714,6 @@ LBLdispatcher:
     JUMPRELATIVE( getLabelArg(PC+1) );
 
   
-  /*
-   * weakDet(X) woken up and continues with next instruction,
-   * WHENEVER something happens to X, even if variable is bound to another var
-   */
-  Case(WEAKDETX) ONREG(WeakDet,X);
-  Case(WEAKDETY) ONREG(WeakDet,Y);
-  Case(WEAKDETG) ONREG(WeakDet,G);
-  WeakDet:
-  {
-    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+1));
-    DEREF(term,termPtr,tag);
-
-    if (!isAnyVar(tag)) {
-      DISPATCH(3);
-    }
-    int argsToSave = getPosIntArg(PC+2);
-
-    INCFPC(3); /* suspend on NEXT instructions: WeakDET suspensions are
-                  woken up always, even if variable is bound to another var */
-
-    SUSP_PC(termPtr,argsToSave,PC);
-  }
-
-
   Case(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
   Case(TAILSENDMSGY) isTailCall = OK; ONREG(SendMethod,Y);
   Case(TAILSENDMSGG) isTailCall = OK; ONREG(SendMethod,G);
@@ -2604,12 +2062,6 @@ LBLdispatcher:
 	  PC = aa->getElsePC();
 
 	  aa->disposeAsk();
-
-	  // rule: if else fail fi --> fail
-	  // mm2: this should be removed (compiler should generate code!)
-	  if (PC == NOCODE) {
-	    HF_COND;
-	  }
 
 	  goto LBLemulate;
 	}
@@ -3082,21 +2534,18 @@ LBLdispatcher:
 	  case TESTLITERALX:
 	  case TESTNUMBERX:
 	  case TESTBOOLX:
-	  case SWITCHONTERMX:
 	  case MATCHX:
 	    dbg->data = Xreg(getRegArg(PC+7));
 	    break;
 	  case TESTLITERALY:
 	  case TESTNUMBERY:
 	  case TESTBOOLY:
-	  case SWITCHONTERMY:
 	  case MATCHY:
 	    dbg->data = Yreg(getRegArg(PC+7));
 	    break;
 	  case TESTLITERALG:
 	  case TESTNUMBERG:
 	  case TESTBOOLG:
-	  case SWITCHONTERMG:
 	  case MATCHG:
 	    dbg->data = Greg(getRegArg(PC+7));
 	    break;

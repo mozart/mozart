@@ -223,7 +223,6 @@ void handleHashTable(ProgramCounter PC, HashTable *ht)
 
 	
   newtable->addList(table->listLabel);
-  newtable->addVar(table->varLabel);
 
   int entries = table->numentries;
 
