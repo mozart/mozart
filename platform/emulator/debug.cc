@@ -577,7 +577,7 @@ Bool trace(char *s,Board *board,Actor *actor,
   while (1) {
     printf("\nBREAK");
     if (am.isSetSFlag()) {
-      printf("[S:0x%x=",board);
+      printf("[S:0x%p=",board);
       if (am.isSetSFlag(ThreadSwitch)) {
 	printf("P");
       }
@@ -640,7 +640,7 @@ Bool trace(char *s,Board *board,Actor *actor,
       {
 	static ProgramCounter from=0;
 	static int size=0;
-	sscanf(&command[1],"%x %d",&from,&size);
+	sscanf(&command[1],"%p %d",&from,&size);
 	if (size == 0)
 	  size = 10;
 	CodeArea::display(from,size);
@@ -650,11 +650,11 @@ Bool trace(char *s,Board *board,Actor *actor,
       {
 	ProgramCounter from=0;
 	int size=0;
-	sscanf(&command[1],"%x %d",&from,&size);
-	printf("%x:",from);
+	sscanf(&command[1],"%p %d",&from,&size);
+	printf("%p:",from);
 	for (int i = 0; i < 20; i++)
 	  printf(" %d",getWord(from+i));
-	printf("\n%x:\n",from+20);
+	printf("\n%p:\n",from+20);
       }
       break;
     case 'T':

@@ -35,6 +35,11 @@ extern int gcing;
 // also count during GC
 #define CountGC(What,n) COUNTIT(WHAT,n)
 
+#ifdef PROFILE_INSTR
+#define PROFILE_INSTR_MAX 256
+#define PROFILE_BI_MAX    256
+#endif
+
 class StatCounter {
 public:
   unsigned long sinceIdle;
@@ -109,6 +114,11 @@ public:
   void initCount();
   void printCount();
 
+#ifdef PROFILE_INSTR
+  long instr[PROFILE_INSTR_MAX];
+  long bi[PROFILE_BI_MAX];
+  void printInstr();
+#endif
 
 #ifdef HEAP_PROFILE
   long literal;
