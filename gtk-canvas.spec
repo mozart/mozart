@@ -33,6 +33,9 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/usr/local
 make install
 
+%post
+ldconfig
+
 %files
 /usr/local/lib/libart_lgpl.so.2.2.0
 /usr/local/lib/libart_lgpl.so.2
