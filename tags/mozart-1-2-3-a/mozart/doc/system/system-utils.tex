@@ -1,0 +1,10 @@
+\newcommand{\hsmash}{\relax
+  \ifmmode\expandafter\mathpalette\expandafter\mathHSMASH
+  \else\expandafter\makeHSMASH\fi}
+\newcommand{\mathHSMASH}[2]{%
+ #1 #2}
+\newcommand{\makeHSMASH}[1]{%
+ #1}
+\newcommand{\empset}{\mbox{$\emptyset$}}
+\newcommand{\uniset}{\mbox{${\cal U}$}}
+\newcommand{\codeinline}[2]{ \mbox{\tt #2}}

@@ -1,0 +1,67 @@
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SHDOCDIR	= $(PREFIX)/share/doc
+DOCDIR		= $(PREFIX)/doc
+BUILDDIR	= @BUILDDIR@
+SRCTOP		= @SRCTOP@
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+HOMEURL         = @HOMEURL@
+
+JAVA_BIN	= @JAVA_BIN@
+JAVA_THREADS	= @JAVA_THREADS@
+JAVA		= $(JAVA_BIN)java  $(JAVA_THREADS)
+JAVAC		= $(JAVA_BIN)javac $(JAVA_THREADS)
+JAR		= $(JAVA_BIN)jar   $(JAVA_THREADS)
+COMPILE		= $(JAVAC) -classpath $(SRCDIR)/xsl.jar -d .
+NEWCOMPILE	= $(JAVAC) -classpath $(SRCDIR)/xsl-new.jar -d .
+
+LATEXHANDLER	= com/jclark/xsl/sax/LaTeXOutputHandler.class
+NXMLHANDLER	= com/jclark/xsl/sax/NXMLOutputHandler.class
+TEXTHANDLER	= com/jclark/xsl/sax/TextOutputHandler.class
+EXTEND_CLASSES	= TeX.class ID.class Msg.class Meta.class Meta\$$ChunkInfo.class
+HANDLER_CLASSES	= $(LATEXHANDLER) $(NXMLHANDLER) $(TEXTHANDLER)
+CLASSES		= $(EXTEND_CLASSES) $(HANDLER_CLASSES)
+
+.PHONY: all quick bootstrap check install clean veryclean distclean depend bootquick
+
+all bootstrap:: $(CLASSES)
+
+bootquick::
+
+Meta\$$ChunkInfo.class: Meta.class
+
+$(LATEXHANDLER): LaTeXOutputHandler.java
+	$(COMPILE) $<
+
+$(NXMLHANDLER): NXMLOutputHandler.java
+	$(COMPILE) $<
+
+$(TEXTHANDLER): TextOutputHandler.java
+	$(COMPILE) $<
+
+MapOutputHandler.class Key.class: %.class : %.java
+	$(NEWCOMPILE) $<
+
+%.class: %.java
+	$(COMPILE) $<
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+veryclean clean::
+	-rm -rf *~ *.class com org META-INF
+
+distclean:: veryclean
+	-rm -f Makefile
+
+oz-jar: $(CLASSES)
+	$(JAR) xf $(SRCDIR)/xsl.jar
+	$(JAR) cf $(SRCDIR)/oz.jar com org $(EXTEND_CLASSES)
+
+oz-new-jar: MapOutputHandler.class Msg.class Key.class
+	$(JAR) xf $(SRCDIR)/xsl-new.jar
+	$(JAR) cf $(SRCDIR)/oz-new.jar com org MapOutputHandler*.class Mozart*.class

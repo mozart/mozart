@@ -1,0 +1,96 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY linker             SYSTEM "linker.sgml">
+<!ENTITY compiler	    SYSTEM "compiler.sgml">
+<!ENTITY debugger	    SYSTEM "debugger.sgml">
+<!ENTITY profiler	    SYSTEM "profiler.sgml">
+<!ENTITY oztool		    SYSTEM "oztool.sgml">
+<!ENTITY ozengine	    SYSTEM "ozengine.sgml">
+<!ENTITY convert	    SYSTEM "convert.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+    <meta name="proglang.mode" arg1="sh" arg2="sh-mode">
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
+    <!-- Splitting the document into different HTML nodes -->
+
+    <Meta name="html.split"       value="chapter.compiler">
+    <Meta name="html.split"       value="section.compiler.modes">
+    <Meta name="html.split"       value="section.compiler.general">
+    <Meta name="html.split"       value="section.compiler.outputfiles">
+    <Meta name="html.split"       value="section.compiler.state">
+
+    <Meta name="html.split"       value="chapter.debugger">
+    <Meta name="html.split"       value="chapter.profiler">
+
+    <Meta name="html.split"       value="chapter.linker">
+    <Meta name="html.split"       value="section.linker.basic">
+    <Meta name="html.split"       value="section.linker.include">
+    <Meta name="html.split"       value="section.linker.pickling">
+    <Meta name="html.split"       value="section.linker.misc">
+
+    <Meta name="html.split"       value="chapter.oztool">
+    <Meta name="html.split"       value="chapter.ozengine">
+    <Meta name="html.split"       value="chapter.convert">
+
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+    <Meta name="html.split.toc"   value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title/Oz Shell Utilities/
+    <Author.Extern to="author.db" key="Denys.Duchier">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Abstract>
+      <P.silent><!--**-->
+    </Abstract>
+  <Body>
+  
+    &ozengine;
+    &compiler;
+    &linker;
+    &debugger;
+    &profiler;
+    &oztool;
+    &convert;
+
+  <Back>
+</Book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
