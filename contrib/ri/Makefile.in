@@ -32,6 +32,7 @@ CFLAGS          += -I/usr/local/oz/include
 LDFLAGS         = -L$(VPATH)
 
 CXX             = $(OZTOOL) c++
+CC              = $(OZTOOL) cc
 LD              = $(OZTOOL) ld
 DEPEND          = $(CXX) $(CFLAGS) -MM
 
@@ -92,6 +93,9 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 
 %.o: %.cc
         $(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
+
+%.o: %.c
+        $(CC) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 #----------------------------------------------------------------------
 # Maintenance

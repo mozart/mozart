@@ -18,7 +18,7 @@ declare [R] = {Module.link [{OS.getEnv 'HOME'}#'/Programming/Oz/VisualizeConstra
 declare X Y C in {ForAll [X Y] proc {$ V} V = {RI.var.bounds 0.0 10.0} end}
 {RI.lessEqMeta X Y C}
 
-{Show {R.propName C}}
+{Show {R.propName C}}....h
 {Show {R.propCoordinates C}}
 {Show C}
 
