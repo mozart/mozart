@@ -125,10 +125,10 @@ OZDOC2XML       = $(SRCTOP)/doc/xsl/ozdoc2xml
 CLASSPATH       = $(SRCTOP)/doc/xsl/oz.jar
 
 $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
-        ( nsgmls -c../catalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1 }
+        ( nsgmls -c../catalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1; }
 $(WHAT).tex: $(WHAT)-ready.xml
         $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
-        || { rm -f $@; exit -1 }
+        || { rm -f $@; exit -1; }
 
 export TEXINPUTS = $(SRCDIR):$(SRCTOP)/doc/xsl:../xsl:$(shell echo $$TEXINPUTS)
 export BSTINPUTS = .:$(SRCDIR):$(shell echo $$BSTINPUTS)
@@ -192,12 +192,12 @@ $(WHAT).code: $(WHAT).xml
 # create an annotated version of the input
 
 $(WHAT)-annotated.xml: $(WHAT).xml
-        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-annotate.xsl $@ || { rm -f $@; exit -1 }
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-annotate.xsl $@ || { rm -f $@; exit -1; }
 
 # extract file of elisp for performing hiliting
 
 $(WHAT)-hilite.el: $(WHAT)-annotated.xml
-        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-hilite.xsl $@ || { rm -f $@; exit -1 }
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-hilite.xsl $@ || { rm -f $@; exit -1; }
 
 # generate hilited code
 
@@ -223,7 +223,7 @@ $(WHAT)-hilite.xml: $(WHAT)-hilite.el
                 --eval $(EMACSDO3) \
                 --eval $(EMACSDO4) \
                 --eval $(EMACSDO5) \
-                --load $(WHAT)-hilite.el > $@ || { rm -f $@; exit -1 }
+                --load $(WHAT)-hilite.el > $@ || { rm -f $@; exit -1; }
 
 # create document with preface of hilited code
 
@@ -237,12 +237,12 @@ $(WHAT)-prefaced.xml: $(WHAT)-hilite.xml $(WHAT)-annotated.xml
 # now replace code with hilited code
 
 $(WHAT)-defaced.xml: $(WHAT)-prefaced.xml
-        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-deface.xsl $@ || { rm -f $@; exit -1 }
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-deface.xsl $@ || { rm -f $@; exit -1; }
 
 # extract db for cross doc refs
 
 $(WHAT)-xref-db.xml: $(WHAT).xml
-        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-xref.xsl $@ || { rm -f $@; exit -1 }
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-xref.xsl $@ || { rm -f $@; exit -1; }
 
 #
 
@@ -253,7 +253,7 @@ $(WHAT)-with-db.xml: $(WHAT)-defaced.xml ../global-xref-db.xml
         echo "</OZDOC.READY>" >> $@
 
 $(WHAT)-ready.xml: $(WHAT)-with-db.xml
-        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-ready.xsl $@ || { rm -f $@; exit -1 }
+        $(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-ready.xsl $@ || { rm -f $@; exit -1; }
 
 clean::
         -rm -f $(WHAT).xml $(WHAT)-annotated.xml $(WHAT)-hilite.el
@@ -265,7 +265,7 @@ FILES_ONE       = $(WHAT)-new.pics $(WHAT)-new.el $(WHAT)-new.xml
 $(FILES_ONE): $(WHAT).xml
         $(JAVA) -cp $(NEWCLASSPATH) com.jclark.xsl.sax.Driver \
                 $< $(SRCTOP)/doc/xsl/ozdoc-one.xsl $(WHAT)-new.xml basename=$(WHAT)-new \
-        || { rm -f $(FILES_ONE); exit -1 }
+        || { rm -f $(FILES_ONE); exit -1; }
 
 clean::
         -rm -f $(FILES_ONE)
@@ -281,7 +281,7 @@ $(WHAT)-new-hilite.xml: $(WHAT)-new.el
                 --eval $(EMACSDO3) \
                 --eval $(EMACSDO4) \
                 --eval $(EMACSDO5) \
-                --load $(WHAT)-new.el > $@ || { rm -f $@; exit -1 }
+                --load $(WHAT)-new.el > $@ || { rm -f $@; exit -1; }
 
 ../global-xref-db.xml:
         cd .. && $(MAKE) global-xref-db.xml
