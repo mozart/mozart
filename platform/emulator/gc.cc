@@ -2934,12 +2934,6 @@ void Board::gcRecurse()
   script.Script::gc();
 }
 
-inline
-ObjectClass *ObjectClass::gcClass()
-{
-  return (ObjectClass *) gcConstTerm();
-}
-
 
 
 Actor *Actor::gcActor()
