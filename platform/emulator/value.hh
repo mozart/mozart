@@ -1525,7 +1525,7 @@ public:
   ProgramCounter PC;
 
   PrTabEntry (TaggedRef name, SRecordArity arityInit, int numbOfGRegs)
-  : printname(name), gRegs (numbOfGRegs), spyFlag(NO)
+  : printname(name), spyFlag(NO), gRegs (numbOfGRegs)
   {
       Assert(isLiteral(name));
       methodArity = arityInit;
@@ -1680,7 +1680,7 @@ private:
 public:
 
   Builtin(BuiltinTabEntry *fn, TaggedRef handler)
-    : suspHandler(handler), fun(fn), ConstTerm(Co_Builtin)
+    : fun(fn), suspHandler(handler), ConstTerm(Co_Builtin)
     {}
 
   OZPRINT;

@@ -42,12 +42,13 @@ public:
   static Bool areRegsInHeap(TaggedRef *regs, int size);
 
 private:
+
   int xsize;
   char *block;
   MemChunks *next;
 
 public:
-  MemChunks(char *bl, MemChunks *n, int sz) : block(bl), next(n), xsize(sz) {};
+  MemChunks(char *bl, MemChunks *n, int sz) : xsize(sz), block(bl), next(n) {};
   void deleteChunkChain();
   Bool inChunkChain(void *value);
   void print();
