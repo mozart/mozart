@@ -167,7 +167,7 @@ void extractResources(OZ_Term in, Bool cloneCells,
 //
 // Interface procedures;
 inline
-void pickleTerm(PickleBuffer *bs, OZ_Term term, Bool cloneCells)
+void pickleTerm(PickleMarshalerBuffer *bs, OZ_Term term, Bool cloneCells)
 {
   pickler.init(cloneCells);
   pickler.prepareTraversing((Opaque *) bs);
@@ -177,15 +177,15 @@ void pickleTerm(PickleBuffer *bs, OZ_Term term, Bool cloneCells)
 }
 
 //
-OZ_Term unpickleTermInternal(PickleBuffer *);
+OZ_Term unpickleTermInternal(PickleMarshalerBuffer *);
 
 //
 // Interface procedures. 
 inline
 #ifdef USE_FAST_UNMARSHALER   
-OZ_Term unpickleTerm(PickleBuffer *bs)
+OZ_Term unpickleTerm(PickleMarshalerBuffer *bs)
 #else
-OZ_Term unpickleTermRobust(PickleBuffer *bs)
+OZ_Term unpickleTermRobust(PickleMarshalerBuffer *bs)
 #endif
 {
   unpickler.prepareBuild();

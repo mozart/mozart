@@ -73,7 +73,7 @@ Bool pickleCode(GenTraverser *gt, GTAbstractEntity *arg)
 {
   MarshalerCodeAreaDescriptor *desc = (MarshalerCodeAreaDescriptor *) arg;
   // ('bs' could be also saved in the argument;)
-  PickleBuffer *bs = (PickleBuffer *) gt->getOpaque();
+  PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) gt->getOpaque();
   Assert(bs);
   ProgramCounter start = desc->getStart(), end = desc->getEnd();
   ProgramCounter PC = desc->getCurrent();
@@ -258,7 +258,7 @@ define(opAction,
 // Returning 'OK' means we are done (with the code area); 
 // 'pc' can be zero meaning "discard the code". If it is non-zero,
 // then it is supposed to be large enough to hold the whole code;
-Bool unpickleCode(PickleBuffer *bs, Builder *b, 
+Bool unpickleCode(PickleMarshalerBuffer *bs, Builder *b, 
 		   BuilderCodeAreaDescriptor *desc)
 {
   int ozValuesCnt = ozValuesBAPickles;
@@ -343,7 +343,7 @@ define(opAction,
 // 'pc' can be zero meaning "discard the code". If it is non-zero,
 // then it is supposed to be large enough to hold the whole code;
 // Returning 'ERR' means that the buffer can not be marshalled.
-UCRReturn unpickleCodeRobust(PickleBuffer *bs, Builder *b,
+UCRReturn unpickleCodeRobust(PickleMarshalerBuffer *bs, Builder *b,
                              BuilderCodeAreaDescriptor *desc)
 {
   int ozValuesCnt = ozValuesBAPickles;

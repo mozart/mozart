@@ -50,9 +50,6 @@ unsigned int RobustMarshaler_Max_Shift;
 unsigned int RobustMarshaler_Max_Hi_Byte;
 
 //
-int32* NMMemoryManager::freelist[NMMM_SIZE];
-
-//
 // Stuff needed for to check that no overflow is done in unmarshalNumber()
 void initRobustMarshaler()
 {
@@ -356,7 +353,7 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MarshalerBuffer *bs, int *error)
 // with 'putOzValueCA' processor. Note that writing into a code area
 // is that code area's business;
 class CodeAreaLocation : public GTAbstractEntity,
-			 public NMMemoryManager {
+			 public CppObjMemory {
 private:
   ProgramCounter ptr;
   CodeArea *code;
