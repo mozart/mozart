@@ -295,11 +295,6 @@ loop:
 
   switch ( tag1 ) {
 
-  case TAG_FSETVALUE:
-    if (((FSetValue *) tagged2FSetValue(term1))->unify(term2))
-      goto next;
-    goto fail;
-
   case TAG_LTUPLE:
     {
       LTuple *lt1 = tagged2LTuple(term1);
@@ -348,6 +343,10 @@ loop:
     }
   case TAG_CONST:
     switch (tagged2Const(term1)->getType()) {
+    case Co_FSetValue:
+      if (((FSetValue *) tagged2FSetValue(term1))->unify(term2))
+	goto next;
+      break;
     case Co_BigInt:
       if (bigIntEq(term1,term2))
 	goto next;

@@ -182,9 +182,6 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
   case TAG_CONST:
     tagged2Const(ref)->printStream(stream,depth);
     break;
-  case TAG_FSETVALUE:
-    ((FSetValue *) tagged2FSetValue(ref))->print(stream,depth);
-    break;
   default:
     stream << "<unknown tag " << (int) tagTypeOf(ref) << ">";
     break;
@@ -251,10 +248,6 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     }
   case TAG_CONST:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
-    break;
-  case TAG_FSETVALUE:
-    ((FSetValue *) tagged2FSetValue(ref))
-      ->print(stream,depth);
     break;
   default:
     stream << "unknown tag " << (int) tagTypeOf(ref) << endl;
@@ -685,6 +678,9 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_BigInt:
     ((BigInt *) this)->printLongStream(stream, depth, offset);
     break;
+  case Co_FSetValue:
+    ((FSetValue *) (((ConstFSetValue *) this)->getValue()))->print(stream,depth,offset);
+    break;
   case Co_Abstraction:
     ((Abstraction *) this)->printLongStream(stream,depth,offset);
     break;
@@ -770,6 +766,9 @@ void ConstTerm::printStream(ostream &stream, int depth)
 {
   switch (getType()) {
   case Co_BigInt:      ((BigInt *) this)->printStream(stream, depth);
+    break;
+  case Co_FSetValue:
+    ((FSetValue *) (((ConstFSetValue *) this)->getValue()))->print(stream,depth);
     break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
     break;

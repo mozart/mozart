@@ -414,7 +414,7 @@ OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
 {
   DEREF(t, tptr, ttag);
 
-  if (isFSetValueTag(ttag)) {
+  if (oz_isFSetValue(t)) {
     return expectProceed(1, 1);
   } else if (isGenFSetVar(t)) {
     addSpawn(ps, tptr);
@@ -435,7 +435,7 @@ OZ_expect_t OZ_Expect::expectFSetValue(OZ_Term t)
 
   DEREF(t, tptr, ttag);
 
-  if (isFSetValueTag(ttag)) {
+  if (oz_isFSetValue(t)) {
     return expectProceed(1, 1);
   } else if (oz_isFree(t)||oz_isKinded(t)) {
     addSuspend(fs_prop_val, tptr);

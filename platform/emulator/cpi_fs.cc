@@ -37,7 +37,7 @@ void OZ_FSetVar::ask(OZ_Term v)
   var = v;
   varPtr = _vptr;
   //
-  if (isFSetValueTag(vtag)) {
+  if (oz_isFSetValue(v)) {
     // 
     // found finite set value
     //
@@ -67,7 +67,7 @@ void OZ_FSetVar::read(OZ_Term v)
   var    = v;
   varPtr = _vptr;
   //
-  if (isFSetValueTag(vtag)) {
+  if (oz_isFSetValue(v)) {
     //
     // finite set value
     //
@@ -163,7 +163,7 @@ void OZ_FSetVar::readEncap(OZ_Term v)
   var    = v;
   varPtr = _vptr;
   //
-  if (isFSetValueTag(vtag)) {
+  if (oz_isFSetValue(v)) {
     //
     // found finite set value
     //

@@ -544,6 +544,7 @@ enum TypeOfConst {
   Co_Cell,
   Co_Space,
   Co_Resource,
+  Co_FSetValue,
 
   //
   // chunks must stay together and the first one must be Co_Object
@@ -885,6 +886,49 @@ Bool oz_numberEq(TaggedRef a, TaggedRef b)
 
 extern TaggedRef TaggedOzOverMaxInt;
 extern TaggedRef TaggedOzOverMinInt;
+
+/*
+ * FSetValue: FIX TOBIAS
+ *
+ */
+
+class ConstFSetValue : public ConstTerm {
+private:
+  OZ_FSetValue * _fsv;
+  
+public:
+  USEFREELISTMEMORY;
+  NO_DEFAULT_CONSTRUCTORS2(ConstFSetValue)
+
+  ConstFSetValue(OZ_FSetValue * fsv) : ConstTerm(Co_FSetValue) {
+    _fsv = fsv;
+  }
+  void dispose(void) {
+    freeListDispose(this,sizeof(Co_FSetValue));
+  }
+  OZ_FSetValue * getValue(void) {
+    return _fsv;
+  }
+  ConstFSetValue * gCollect(void);
+};
+
+inline 
+int oz_isFSetValue(TaggedRef t) {
+  return oz_isConst(t) && tagged2Const(t)->getType() == Co_FSetValue;
+}
+
+inline 
+OZ_FSetValue * tagged2FSetValue(TaggedRef t) {
+  Assert(oz_isFSetValue(t));
+  return ((ConstFSetValue *) tagged2Const(t))->getValue();
+}
+
+inline
+TaggedRef makeTaggedFSetValue(OZ_FSetValue * fsv) {
+  // FIX TOBIAS: THIS ALLOCATES MEMORY ON THE HEAP!
+  return makeTaggedConst(new ConstFSetValue(fsv));
+}
+
 
 /*===================================================================
  * Tertiary
