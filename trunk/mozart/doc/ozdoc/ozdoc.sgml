@@ -10,9 +10,15 @@
 <!ENTITY NIX "<P.SILENT//">
 ]>
 <BOOK PROGLANG=SGML>
+    <META NAME="html.split" value="chapter.intro">
+    <META NAME="html.split" value="chapter.docstruct">
+    <META NAME="html.split" value="chapter.bnf">
+    <META NAME="html.split" value="chapter.principles">
+    <META NAME="html.split" value="chapter.description">
+    <META NAME="html.split" value="chapter.extending">
     <TITLE>Oz Documentation DTD
     <AUTHOR.EXTERN TO="author.db" KEY="denys.duchier">
-    <CHAPTER>
+    <CHAPTER ID=chapter.intro>
       <TITLE/Introduction/
 
       <P>The Oz Documentation DTD provides a means to markup technical
@@ -86,7 +92,7 @@
 	and some other few elements.  Phrase elements however require
 	an end tag.</P>
 
-    <CHAPTER>
+    <CHAPTER ID=chapter.docstruct>
       <TITLE/General structure of a document according to the Oz DTD/
 
       <P><CODE DISPLAY>
@@ -216,7 +222,7 @@
 	  according to the target format select on nsgmls's
 	  command-line.</P>
 
-    <CHAPTER>
+    <CHAPTER ID=chapter.bnf>
       <TITLE/BNF Description of the DTD/
 
       <P>This description is a simplified idealization of the DTD.  It
@@ -316,7 +322,6 @@
 	    <GRAMMAR.ALT OR/<TAG/PICTURE.CHOICE//
 	    <GRAMMAR.ALT OR/<TAG/CODE//
 	    <GRAMMAR.ALT OR/<TAG/CODE.EXTERN//
-	    <GRAMMAR.ALT OR/<TAG/CODE.ANNOTATED//
 	    <GRAMMAR.ALT OR/<TAG/VAR//
 	    <GRAMMAR.ALT OR/<TAG/REF//
 	    <GRAMMAR.ALT OR/<TAG/PTR//
@@ -332,6 +337,7 @@
 	    <GRAMMAR.ALT OR/<TAG/DEF//
 	    <GRAMMAR.ALT OR/<TAG/FIGURE//
 	    <GRAMMAR.ALT OR/<TAG/NOTE//
+	    <GRAMMAR.ALT OR/<TAG/GRAMMAR//
 	    <GRAMMAR.ALT OR/<TAG/GRAMMAR.RULE//
 	    <GRAMMAR.ALT OR/<TAG/TABLE//
 	  </GRAMMAR.RULE>
@@ -355,13 +361,10 @@
 	    <GRAMMAR.ALT>(<TAG/PICTURE/ | <TAG/PICTURE.EXTERN/)+</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/CODE//
-	    <GRAMMAR.ALT>?={TEXT}</GRAMMAR.RULE>
+	    <GRAMMAR.ALT>(?={TEXT}<TAG/VAR/|<TAG/SPAN/)*</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/CODE.EXTERN//
 	    <GRAMMAR.ALT>?={EMPTY}</GRAMMAR.RULE>
-	  <GRAMMAR.RULE>
-	    <GRAMMAR.HEAD/<TAG/CODE.ANNOTATED//
-	    <GRAMMAR.ALT>(?={TEXT}|<TAG/VAR/)*</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/VAR//
 	    <GRAMMAR.ALT>?={TEXT}</GRAMMAR.RULE>
@@ -413,24 +416,19 @@
 	    <GRAMMAR.ALT>?={...P}</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/?={INDEXING}/
-	    <GRAMMAR.ALT/<TAG/INDEX//
-	    <GRAMMAR.ALT OR/<TAG/INDEX.BEGIN//
-	    <GRAMMAR.ALT OR/<TAG/INDEX.END//</GRAMMAR.RULE>
+	    <GRAMMAR.ALT/<TAG/INDEX//</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/INDEX//
 	    <GRAMMAR.ALT/<TAG/AND/+ <TAG/SEE/?/</GRAMMAR.RULE>
-	  <GRAMMAR.RULE>
-	    <GRAMMAR.HEAD/<TAG/INDEX.BEGIN//
-	    <GRAMMAR.ALT/<TAG/AND/+ <TAG/SEE/?/</GRAMMAR.RULE>
-	  <GRAMMAR.RULE>
-	    <GRAMMAR.HEAD/<TAG/INDEX.END//
-	    <GRAMMAR.ALT/?={EMPTY}/</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/AND//
 	    <GRAMMAR.ALT/?={TEXT or PHRASE}*/</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/SEE//
 	    <GRAMMAR.ALT/<TAG/AND/+/</GRAMMAR.RULE>
+	  <GRAMMAR.RULE>
+	    <GRAMMAR.HEAD/<TAG/GRAMMAR//
+	    <GRAMMAR.ALT/<TAG/GRAMMAR.RULE/+/</GRAMMAR.RULE>
 	  <GRAMMAR.RULE>
 	    <GRAMMAR.HEAD/<TAG/GRAMMAR.RULE//
 	    <GRAMMAR.ALT/<TAG/VAR/ <TAG/GRAMMAR.ALT/+/</GRAMMAR.RULE>
@@ -467,7 +465,7 @@
 	    <GRAMMAR.ALT/?={EMPTY}/</GRAMMAR.RULE>
 	</GRAMMAR></P>
 
-    <CHAPTER>
+    <CHAPTER ID=chapter.principles>
       <TITLE/General Principles of the DTD/
 
       <SECTION>
@@ -565,7 +563,7 @@
 	  interpretation will depend on the kind of thing which is
 	  being referred to.</P>
 
-    <CHAPTER>
+    <CHAPTER ID=chapter.description>
       <TITLE/Description of all elements/
 
       <P>Since the content models are already provided by the BNF
@@ -711,7 +709,6 @@
 	  <ITEM>this is similar in design to the <TAG/MATH/ elements.
 	  <ENTRY><TAG/CODE/
 	  <ENTRY><TAG/CODE.EXTERN/
-	  <ENTRY><TAG/CODE.ANNOTATED/
 	  <ITEM><TAG/CODE/ contains program code in a programming
 	      language; which programming language may be specified
 	      using the <ATTRIB/PROGLANG/ attribute. All elements
@@ -724,13 +721,12 @@
 	      an element with an explicit <ATTRIB/PROGLANG/ attribute.
 	      The choice of programming language may serve to obtain
 	      appropriate highlighting of code.
-	    <P><TAG/CODE/ contains raw program text.  Sometimes,
+	    <P><TAG/CODE/ contains mostly raw program text.  Sometimes,
 	      however, it is desirable to annotate variables within
 	      the code, for example with mode specifications, or
 	      simply to indicate a meta-variable (as opposed to a
-	      language level variable).  Element <TAG/CODE.ANNOTATED/
-	      is intended for this purpose and allows to mix raw text
-	      and occurrences of <TAG/VAR/.
+	      language level variable).  For this reason occurrences
+	      of <TAG/VAR/ and <TAG/SPAN/ are also permitted.
 	    <PARA><TITLE/Code Abbreviations/
 	      For convenience, the Oz Documentation DTD supports the
 	      following abbreviations:
@@ -738,11 +734,11 @@
 		<TR>
 		  <TD><CODE><![ CDATA [<<...>>]]></CODE>
 		  <TD><CODE><![ RCDATA
-			[<CODE.ANNOTATED>...</CODE.ANNOTATED>]]></CODE>
+			[<CODE>...</CODE>]]></CODE>
 		<TR>
 		  <TD><CODE><![ CDATA [<<<...>>>]]></CODE>
 		  <TD><CODE><![ RCDATA
-			[<CODE.ANNOTATED DISPLAY>...</CODE.ANNOTATED>]]></CODE>
+			[<CODE DISPLAY>...</CODE>]]></CODE>
 		<TR>
 		  <TD><CODE><![ CDATA [?+{X}]]></CODE>
 		  <TD><CODE><![ RCDATA [<VAR MODE=IN  >X</VAR>]]></CODE>
@@ -767,7 +763,7 @@
 		[<<{List.map ?+{L1} ?+{F} ??{L2}}>>]]></CODE>
 	  <ENTRY><TAG/VAR/
 	  <ITEM>may occur in ordinary text and also in
-	      <TAG/CODE.ANNOTATED/ elements.  <TAG/VAR/ serves to
+	      <TAG/CODE/ elements.  <TAG/VAR/ serves to
 	      identify <LIST INLINE ENUM><ITEM>programming language
 	      variables <ITEM>meta variables <ITEM>environment
 	      variables <ITEM>non-terminal symbols in a
@@ -783,7 +779,7 @@
 		      <ENTRY><NAME TYPE="SGML.IDENT"/META/
 		      <ITEM>meta variable
 		      <ENTRY><NAME TYPE="SGML.IDENT"/ENV/
-		      <ITEM>environment variable
+ 		      <ITEM>environment variable
 		      <ENTRY><NAME TYPE="SGML.IDENT"/GRAMMAR/
 		      <ITEM>grammar non-terminal
 		    </LIST>
@@ -969,8 +965,6 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
 		      <![ RCDATA [<NOTE CLASS=FOOT>...</NOTE>]]></CODE>
 	      </LIST>
 	  <ENTRY><TAG/INDEX/
-	  <ENTRY><TAG/INDEX.BEGIN/
-	  <ENTRY><TAG/INDEX.END/
 	  <ITEM><TAG/INDEX/ is allowed everywhere in the scope of the
 	      <TAG/BOOK/ element.
 	      <CODE DISPLAY><![ RCDATA [<INDEX>foo</INDEX>]]></CODE>
@@ -1017,6 +1011,7 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
 		    <CODE/par.bar1/ and <CODE/par.bar2/ (presumably
 		    consecutive).
 	      </LIST>
+	  <ENTRY><TAG/GRAMMAR/
 	  <ENTRY><TAG/GRAMMAR.RULE/
 	  <ENTRY><TAG/GRAMMAR.ALT/
 	  <ENTRY><TAG/GRAMMAR.NOTE/
@@ -1026,7 +1021,10 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
 	      of a sequence of <TAG/GRAMMAR.ALT/ elements.  Each
 	      <TAG/GRAMMAR.ALT/ element may end with a
 	      <TAG/GRAMMAR.NOTE/ element that provides an inline
-	      comment for the element.
+	      comment for the element. <TAG/GRAMMAR/ contains a
+	      sequence of <TAG/GRAMMAR.RULE/ elements that belong
+	      together: it could provide the additional service of
+	      ensuring pleasant vertical alignment.
 	      <LIST CLASS=ATTRIBS>
 		<ENTRY><ATTRIB/TYPE/
 		<ITEM><TAG/GRAMMAR.ALT/ can be further specified using
@@ -1092,7 +1090,7 @@ CLASS=SOCALLED>upgrades</Q>; down the drain, where it belongs!]]></CODE>
 	      </LIST>
 	</LIST></P>
 
-    <CHAPTER>
+    <CHAPTER ID=chapter.extending>
       <TITLE/Extending the DTD/
 
       <P>For a particular document, it may be desirable to slightly
