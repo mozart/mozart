@@ -24,6 +24,8 @@
 
 $module_init_fun_name = "sched_init";
 
+$module_name          = "Schedule";
+
 %builtins_all =
 (
     'disjoint'         => { in  => ['int','+int','int','+int'],
