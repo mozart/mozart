@@ -184,6 +184,7 @@ case "$cmd" in
          echo "###";
          cat $tempfile) > $outfile
         chmod +x $outfile
+	echo ""
    ;;
 
    ozwindowmanager)
