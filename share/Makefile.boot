@@ -13,7 +13,7 @@ BUILDDOC=$(BUILDTOP)/contrib/doc
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
 
-BOOTEMU=$(BUILDTOP)/platform/emulator/oz.emulator.bin
+BOOTEMU=$(BUILDTOP)/platform/emulator/emulator.exe
 BOOTCOM=$(BOOTEMU) -u $(BUILDLIB)/ozc --
 BOOTENG=$(SRCTOP)/share/ozengine.sh
 BOOTAR=$(BOOTENG) $(BUILDTOP)/share/lib/ozar

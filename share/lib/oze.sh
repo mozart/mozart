@@ -19,9 +19,9 @@ then
         $BUILDTOP/platform/emulator/$OZPLATFORM \
         $OZPREFIX/platform/$OZPLATFORM
     do
-        if test -x $d/oz.emulator.bin
+        if test -x $d/emulator.exe
         then
-            OZEMULATOR=$d/oz.emulator.bin
+            OZEMULATOR=$d/emulator.exe
             break
         fi
     done

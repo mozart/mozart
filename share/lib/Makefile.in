@@ -325,7 +325,7 @@ distclean: veryclean
 #---------------------------------------------------------------------
 #    make check
 # Test a new emulator with
-#    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
+#    make check OZEMULATOR=$(HOME)/Oz/Emulator/emulator.exe
 
 .PHONY: bootstrap stage1 stage2 stage3
 .PHONY: save restore
