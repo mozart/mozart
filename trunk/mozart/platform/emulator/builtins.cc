@@ -3115,20 +3115,6 @@ OZ_C_proc_begin(BIisString,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIisProperString,2)
-{
-  OZ_Term in=OZ_getCArg(0);
-  OZ_Term out=OZ_getCArg(1);
-
-  OZ_Term var;
-  if (!OZ_isProperString(in,&var)) {
-    if (var == 0) return OZ_unify(out,NameFalse);
-    OZ_suspendOn(var);
-  }
-  return OZ_unify(out,NameTrue);
-}
-OZ_C_proc_end
-
 #endif /* BUILTINS2 */
 
 #ifdef BUILTINS1
@@ -4350,6 +4336,19 @@ OZ_C_proc_begin(BIstringIsFloat, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIstringIsAtom, 2) {
+  OZ_Term in = OZ_getCArg(0);
+  OZ_Term out= OZ_getCArg(1);
+
+  OZ_Term var;
+  if (!OZ_isProperString(in,&var)) {
+    if (var == 0) return OZ_unify(out,NameFalse);
+    OZ_suspendOn(var);
+  }
+  return OZ_unify(out,NameTrue);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIstringToInt, 2)
 {
   OZ_declareProperStringArg(0,str);
@@ -4488,7 +4487,6 @@ FLOATFUN(tan, BItan, BIinlineTan)
 FLOATFUN(atan,BIatan,BIinlineAtan) 
 FLOATFUN(ceil,BIceil,BIinlineCeil)
 FLOATFUN(floor,BIfloor,BIinlineFloor)
-FLOATFUN(fabs, BIfabs, BIinlineFabs)
 FLOATFUN(ozround, BIround, BIinlineRound)
 #undef FLOATFUN
 
@@ -4908,6 +4906,21 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
   }
 
   return OZ_unify(tagged2Dictionary(dict)->keys(),out);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdictionaryEntries,2)
+{
+  OZ_Term d   = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  NONVAR( d, dict, _1 );
+  if (!isDictionary(dict)) {
+    TypeErrorT(0,"Dictionary");
+  }
+
+  return OZ_unify(tagged2Dictionary(dict)->pairs(),out);
 }
 OZ_C_proc_end
 
@@ -6980,33 +6993,32 @@ extern BIspec allSpec1[];
 #ifdef BUILTINS1
 
 BIspec allSpec1[] = {
-  {"/",  3,BIfdiv,    (IFOR) BIfdivInline},
-  {"*",  3,BImult,    (IFOR) BImultInline},
-  {"div",3,BIdiv,     (IFOR) BIdivInline},
-  {"mod",3,BImod,     (IFOR) BImodInline},
-  {"-",  3,BIminus,   (IFOR) BIminusInline},
-  {"+",  3,BIplus,    (IFOR) BIplusInline},
+  {"/",   3, BIfdiv,     (IFOR) BIfdivInline},
+  {"*",   3, BImult,     (IFOR) BImultInline},
+  {"div", 3, BIdiv,      (IFOR) BIdivInline},
+  {"mod", 3, BImod,      (IFOR) BImodInline},
+  {"-",   3, BIminus,    (IFOR) BIminusInline},
+  {"+",   3, BIplus,     (IFOR) BIplusInline},
+  {"Max", 3, BImax,      (IFOR) BImaxInline},
+  {"Min", 3, BImin,      (IFOR) BIminInline},
   
-  {"Max", 3,BImax,      (IFOR) BImaxInline},
-  {"Min", 3,BImin,      (IFOR) BIminInline},
+  {"<",    3, BIlessFun,   (IFOR) BIlessInlineFun},
+  {"=<",   3, BIleFun,     (IFOR) BIleInlineFun},
+  {">",    3, BIgreatFun,  (IFOR) BIgreatInlineFun},
+  {">=",   3, BIgeFun,     (IFOR) BIgeInlineFun},
+  {"=:=",  2, BInumeqFun,  (IFOR) BInumeqInlineFun},
+  {"=\\=", 2, BInumneqFun, (IFOR) BInumneqInlineFun},
   
-  {"<", 3,BIlessFun,      (IFOR) BIlessInlineFun},
-  {"=<",3,BIleFun,        (IFOR) BIleInlineFun},
-  {">", 3,BIgreatFun,     (IFOR) BIgreatInlineFun},
-  {">=",3,BIgeFun,        (IFOR) BIgeInlineFun},
-  {"=:=",2,BInumeqFun,    (IFOR) BInumeqInlineFun},
-  {"=\\=",2,BInumneqFun,  (IFOR) BInumneqInlineFun},
+  {"=<Rel",   2, BIle,     (IFOR) BIleInline},
+  {"<Rel",    2, BIless,   (IFOR) BIlessInline},
+  {">=Rel",   2, BIge,     (IFOR) BIgeInline},
+  {">Rel",    2, BIgreat,  (IFOR) BIgreatInline},
+  {"=:=Rel",  2, BInumeq,  (IFOR) BInumeqInline},
+  {"=\\=Rel", 2, BInumneq, (IFOR) BInumneqInline},
   
-  {"=<Rel",2,BIle,       (IFOR) BIleInline},
-  {"<Rel",2,BIless,      (IFOR) BIlessInline},
-  {">=Rel",2,BIge,       (IFOR) BIgeInline},
-  {">Rel",2,BIgreat,     (IFOR) BIgreatInline},
-  {"=:=Rel",2,BInumeq,   (IFOR) BInumeqInline},
-  {"=\\=Rel",2,BInumneq, (IFOR) BInumneqInline},
-  
-  {"~",2,BIuminus,    (IFOR) BIuminusInline},
-  {"+1",2,BIadd1,     (IFOR) BIadd1Inline},
-  {"-1",2,BIsub1,     (IFOR) BIsub1Inline},
+  {"~",  2, BIuminus,   (IFOR) BIuminusInline},
+  {"+1", 2, BIadd1,     (IFOR) BIadd1Inline},
+  {"-1", 2, BIsub1,     (IFOR) BIsub1Inline},
   
   {"Exp",  2, BIexp,   (IFOR) BIinlineExp},
   {"Log",  2, BIlog,   (IFOR) BIinlineLog},
@@ -7020,16 +7032,14 @@ BIspec allSpec1[] = {
   {"Ceil", 2, BIceil,  (IFOR) BIinlineCeil},
   {"Floor",2, BIfloor, (IFOR) BIinlineFloor},
   {"Abs",  2, BIabs,   (IFOR) BIabsInline},
-
-  {"fabs", 2, BIfabs,  (IFOR) BIinlineFabs},
-  {"Float.round",2, BIround, (IFOR) BIinlineRound},
+  {"Float.round", 2, BIround, (IFOR) BIinlineRound},
+  {"Float.atan2", 3, BIatan2, (IFOR) BIatan2Inline},
 
   {"fPow",3,BIfPow, (IFOR) BIfPowInline},
-  {"Float.atan2",3,BIatan2, (IFOR) BIatan2Inline},
 
   /* conversion: float <-> int <-> virtualStrings */
-  {"IntToFloat",2,BIintToFloat,  (IFOR) BIintToFloatInline},
-  {"FloatToInt",2,BIfloatToInt,  (IFOR) BIfloatToIntInline},
+  {"IntToFloat", 2, BIintToFloat,  (IFOR) BIintToFloatInline},
+  {"FloatToInt", 2, BIfloatToInt,  (IFOR) BIfloatToIntInline},
 
   {"Int.toString",    2, BIintToString,		0},
   {"Float.toString",  2, BIfloatToString,	0},
@@ -7037,24 +7047,26 @@ BIspec allSpec1[] = {
   {"String.toFloat",  2, BIstringToFloat,	0},
   {"String.isInt",    2, BIstringIsInt,		0},
   {"String.isFloat",  2, BIstringIsFloat,	0},
+  {"String.isAtom",   2, BIstringIsAtom,	0},
 
-  {"IsArray",   2, BIisArray,   (IFOR) isArrayInline},
-  {"NewArray",  4, BIarrayNew,	0},
+  {"IsArray",    2, BIisArray,   (IFOR) isArrayInline},
+  {"NewArray",   4, BIarrayNew,	 0},
   {"Array.high", 2, BIarrayHigh, (IFOR) arrayHighInline},
   {"Array.low",  2, BIarrayLow,  (IFOR) arrayLowInline},
-  {"Get",  3, BIarrayGet,  (IFOR) arrayGetInline},
-  {"Put",  3, BIarrayPut,  (IFOR) arrayPutInline},
+  {"Get",        3, BIarrayGet,  (IFOR) arrayGetInline},
+  {"Put",        3, BIarrayPut,  (IFOR) arrayPutInline},
 
-  {"NewDictionary",     1, BIdictionaryNew,	0},
-  {"IsDictionary",      2, BIisDictionary,     (IFOR) isDictionaryInline},
-  {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
-  {"Dictionary.condGet",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
+  {"NewDictionary",      1, BIdictionaryNew,	0},
+  {"IsDictionary",       2, BIisDictionary,     (IFOR) isDictionaryInline},
+  {"Dictionary.get",     3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
+  {"Dictionary.condGet", 4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
+  {"Dictionary.put",     3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
+  {"Dictionary.remove",  2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
+  {"Dictionary.member",  3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
+  {"Dictionary.keys",    2, BIdictionaryKeys,    0},
+  {"Dictionary.entries", 2, BIdictionaryEntries, 0},
   {"Dictionary.deepGetIf",  4, BIdictionaryDeepGetIf,
    (IFOR) dictionaryDeepGetIfInline},
-  {"Dictionary.put",    3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
-  {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
-  {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
-  {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
   {"NewLock",	      1,BInewLock,	 0},
   {"Lock",	      1,BIlockLock,	 0},
@@ -7085,11 +7097,11 @@ BIspec allSpec1[] = {
   {"Char.toAtom",   2, BIcharToAtom,	0},
   {"Char.type",     2, BIcharType,	0},
 
-  {"Adjoin",          3,BIadjoin,           (IFOR) BIadjoinInline},
-  {"AdjoinList",      3,BIadjoinList,       0},
-  {"record",      3,BImakeRecord,       0},
-  {"Arity",           2,BIarity,            (IFOR) BIarityInline},
-  {"AdjoinAt",        4,BIadjoinAt,         0},
+  {"Adjoin",          3, BIadjoin,           (IFOR) BIadjoinInline},
+  {"AdjoinList",      3, BIadjoinList,       0},
+  {"record",          3, BImakeRecord,       0},
+  {"Arity",           2, BIarity,            (IFOR) BIarityInline},
+  {"AdjoinAt",        4, BIadjoinAt,         0},
 
   {0,0,0,0}
 };
@@ -7098,55 +7110,54 @@ BIspec allSpec1[] = {
 #ifdef BUILTINS2
 
 BIspec allSpec2[] = {
-  {"IsNumber",2,BIisNumberB,      (IFOR) BIisNumberBInline},
-  {"IsInt"   ,2,BIisIntB,         (IFOR) BIisIntBInline},
-  {"IsFloat" ,2,BIisFloatB,       (IFOR) BIisFloatBInline},
-  {"IsRecord",2,BIisRecordB,      (IFOR) isRecordBInline},
-  {"IsTuple",2,BIisTupleB,        (IFOR) isTupleBInline},
-  {"IsLiteral",2,BIisLiteralB,    (IFOR) isLiteralBInline},
-  {"IsCell",2,BIisCellB,          (IFOR) isCellBInline},
-  {"IsPort",2,BIisPortB,          (IFOR) isPortBInline},
-  {"IsProcedure",2,BIisProcedureB,(IFOR) isProcedureBInline},
-  {"IsName",2,BIisNameB,          (IFOR) isNameBInline},
-  {"IsAtom",2,BIisAtomB,          (IFOR) isAtomBInline},
-  {"IsBool", 2,BIisBoolB,         (IFOR) isBoolBInline},
-  {"IsUnit", 2,BIisUnitB,         (IFOR) isUnitBInline},
-  {"IsChunk",2,BIisChunkB,        (IFOR) isChunkBInline},
-  {"IsRecordC",2,BIisRecordCB,    (IFOR) isRecordCBInline},
-  {"IsObject", 2,BIisObjectB, 	  (IFOR) BIisObjectBInline},
-  {"IsClass", 2,BIisClassB,	  (IFOR) BIisClassBInline},
-  {"IsString", 2,BIisString,      0},
-  {"IsProperString", 2,BIisProperString, 0},
+  {"IsNumber",        2, BIisNumberB,    (IFOR) BIisNumberBInline},
+  {"IsInt"   ,        2, BIisIntB,       (IFOR) BIisIntBInline},
+  {"IsFloat" ,        2, BIisFloatB,     (IFOR) BIisFloatBInline},
+  {"IsRecord",        2, BIisRecordB,    (IFOR) isRecordBInline},
+  {"IsTuple",         2, BIisTupleB,     (IFOR) isTupleBInline},
+  {"IsLiteral",       2, BIisLiteralB,   (IFOR) isLiteralBInline},
+  {"IsCell",          2, BIisCellB,      (IFOR) isCellBInline},
+  {"IsPort",          2, BIisPortB,      (IFOR) isPortBInline},
+  {"IsProcedure",     2, BIisProcedureB, (IFOR) isProcedureBInline},
+  {"IsName",          2, BIisNameB,      (IFOR) isNameBInline},
+  {"IsAtom",          2, BIisAtomB,      (IFOR) isAtomBInline},
+  {"IsBool",          2, BIisBoolB,      (IFOR) isBoolBInline},
+  {"IsUnit",          2, BIisUnitB,      (IFOR) isUnitBInline},
+  {"IsChunk",         2, BIisChunkB,     (IFOR) isChunkBInline},
+  {"IsRecordC",       2, BIisRecordCB,   (IFOR) isRecordCBInline},
+  {"IsObject",        2, BIisObjectB,    (IFOR) BIisObjectBInline},
+  {"IsClass",         2, BIisClassB,     (IFOR) BIisClassBInline},
+  {"IsString",        2, BIisString,     0},
+  {"IsVirtualString", 2, BIvsIs,         0},
+  {"IsFree",          2, BIisFree,       (IFOR) isFreeInline},
+  {"IsKinded",        2, BIisKinded,     (IFOR) isKindedInline},
+  {"IsDet",           2, BIisDet,        (IFOR) isDetInline},
+
+  {"isNumberRel",    1, BIisNumber,    (IFOR) BIisNumberInline},
+  {"isIntRel"   ,    1, BIisInt,       (IFOR) BIisIntInline},
+  {"isFloatRel" ,    1, BIisFloat,     (IFOR) BIisFloatInline},
+  {"isRecordRel",    1, BIisRecord,    (IFOR) isRecordInline},
+  {"isTupleRel",     1, BIisTuple,     (IFOR) isTupleInline},
+  {"isLiteralRel",   1, BIisLiteral,   (IFOR) isLiteralInline},
+  {"isCellRel",      1, BIisCell,      (IFOR) isCellInline},
+  {"isPortRel",      1, BIisPort,      (IFOR) isPortInline},
+  {"isProcedureRel", 1, BIisProcedure, (IFOR) isProcedureInline},
+  {"isNameRel",      1, BIisName,      (IFOR) isNameInline},
+  {"isAtomRel",      1, BIisAtom,      (IFOR) isAtomInline},
+  {"isBoolRel",      1, BIisBool,      (IFOR) isBoolInline},
+  {"isUnitRel",      1, BIisUnit,      (IFOR) isUnitInline},
+  {"isChunkRel",     1, BIisChunk,     (IFOR) isChunkInline},
+  {"isRecordCRel",   1, BIisRecordC,   (IFOR) isRecordCInline},
+  {"isClassRel",     1, BIisClass,     (IFOR) BIisClassInline},
+  {"isObjectRel",    1, BIisObject,    (IFOR) BIisObjectInline},
+  {"IsFreeRel",      1, BIisFreeRel,   (IFOR) isFreeRelInline},
+  {"IsKindedRel",    1, BIisKindedRel, (IFOR) isKindedRelInline},
+  {"IsDetRel",       1, BIisDetRel,    (IFOR) isDetRelInline},
 
   {"Wait",   1, BIisValue,            (IFOR) isValueInline},
   {"WaitOr", 2, BIwaitOr,             (IFOR) 0},
 
-  {"isNumberRel",1,BIisNumber,       (IFOR) BIisNumberInline},
-  {"isIntRel"   ,1,BIisInt,          (IFOR) BIisIntInline},
-  {"isFloatRel" ,1,BIisFloat,        (IFOR) BIisFloatInline},
-  {"isRecordRel",1,BIisRecord,       (IFOR) isRecordInline},
-  {"isTupleRel",1,BIisTuple,         (IFOR) isTupleInline},
-  {"isLiteralRel",1,BIisLiteral,     (IFOR) isLiteralInline},
-  {"isCellRel",1,BIisCell,           (IFOR) isCellInline},
-  {"isPortRel",1,BIisPort,           (IFOR) isPortInline},
-  {"isProcedureRel",1,BIisProcedure, (IFOR) isProcedureInline},
-  {"isNameRel",1,BIisName,           (IFOR) isNameInline},
-  {"isAtomRel",1,BIisAtom,           (IFOR) isAtomInline},
-  {"isBoolRel",  1,BIisBool,         (IFOR) isBoolInline},
-  {"isUnitRel",  1,BIisUnit,         (IFOR) isUnitInline},
-  {"isChunkRel",  1,BIisChunk,       (IFOR) isChunkInline},
-  {"isRecordCRel",1,BIisRecordC,     (IFOR) isRecordCInline},
-  {"isClassRel", 1,BIisClass,        (IFOR) BIisClassInline},
-  {"isObjectRel", 1,BIisObject,      (IFOR) BIisObjectInline},
 
-  {"IsFreeRel",   1, BIisFreeRel,   (IFOR) isFreeRelInline},
-  {"IsKindedRel", 1, BIisKindedRel, (IFOR) isKindedRelInline},
-  {"IsDetRel",    1, BIisDetRel,    (IFOR) isDetRelInline},
-  {"IsFree",   2, BIisFree,   (IFOR) isFreeInline},
-  {"IsKinded", 2, BIisKinded, (IFOR) isKindedInline},
-  {"IsDet",    2, BIisDet,    (IFOR) isDetInline},
-
-  {"IsVirtualString",      2, BIvsIs,    0},
   {"virtualStringLength",  3, BIvsLength, 0},
 
   {"getUnit", 1,BIgetUnit,  	   0},
@@ -7178,7 +7189,7 @@ BIspec allSpec2[] = {
 
   {"HasFeature", 3, BIhasFeatureB,  (IFOR) hasFeatureBInline},
   {"CondSelect", 4, BImatchDefault, (IFOR) matchDefaultInline},
-  {"Width",      2, BIwidth,       (IFOR) widthInline},
+  {"Width",      2, BIwidth,        (IFOR) widthInline},
 
   {"AtomToString",    2, BIatomToString,	(IFOR) atomToStringInline},
   {"StringToAtom",    2, BIstringToAtom,	0},
