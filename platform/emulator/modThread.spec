@@ -42,7 +42,7 @@
                        out => ['+atom'],
                        BI  => BIthreadState},
 
-     'create'     => { in  => ['+procedure'],
+     'create'     => { in  => ['+procedure/0'],
                        out => [],
                        BI  => BIthreadCreate},
      );
