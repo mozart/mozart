@@ -42,6 +42,8 @@
 <!ENTITY chapter.linking     SYSTEM "link.sgml">
 <!ENTITY chapter.module      SYSTEM "module.sgml">
 
+<!entity chapter.distrib.chat system "chat.sgml">
+
 <!ENTITY % proglang.values.local "|sh|makefile">
 <!ENTITY % p.mix.local "|em">
 <!ELEMENT em - - (#PCDATA)>
@@ -83,6 +85,10 @@
       &chapter.client.server.intro;
       &chapter.client.server.db;
       &chapter.client.server.ozc;
+</part>
+<part id=part.distributed.applications proglang=oz>
+      <title/Distributed Applications/
+      &chapter.distrib.chat;
 </part>
 <PART id=part.managing.modules>
   <Title/Managing Modules/
