@@ -1,0 +1,11 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT	= tutorial
+MAIN	= tutorial.sgml
+SGMLSRCS =
+
+
+
+
