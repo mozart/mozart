@@ -780,23 +780,15 @@ Bool isFeature(TaggedRef lab) { return isLiteral(lab) || isInt(lab); }
 #define CHECK_FEATURE(lab) \
 Assert(!isRef(lab) && !isAnyVar(lab) && isFeature(lab));
 
+
+int featureEqOutline(TaggedRef a, TaggedRef b);
+
 inline
 int featureEq(TaggedRef a,TaggedRef b)
 {
   CHECK_FEATURE(a);
   CHECK_FEATURE(b);
-  if (isLiteral(a)) {
-    // Note: if b is no literal this also returns NO
-    return literalEq(a,b);
-  }
-  TypeOfTerm tagA = tagTypeOf(a);
-  TypeOfTerm tagB = tagTypeOf(b);
-  if (tagA != tagB) return NO;
-  switch(tagA) {
-  case SMALLINT: return smallIntEq(a,b);
-  case BIGINT:   return bigIntEq(a,b);
-  default:       return NO;
-  }
+  return a == b || featureEqOutline(a,b);
 }
 
 /*
