@@ -906,6 +906,7 @@ void engine(Bool init)
 # define op (Opcode) -1
 #else
   if (init) {
+    CodeArea::init(NULL);
     return;
   }
   Opcode op = (Opcode) -1;
