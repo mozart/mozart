@@ -41,7 +41,7 @@
 #define OZ_NONDEBUGCODE(C)
 extern "C" void oz_fsetdebugprint(char *format ...);
 #define _OZ_DEBUGPRINT(C) oz_fsetdebugprint C
-#define OZ_DEBUGPRINT(C) /*_OZ_DEBUGPRINT(C)*/
+#define OZ_DEBUGPRINT(C) _OZ_DEBUGPRINT(C)
 #define OZ_ASSERT(C)                                    \
   if (! (C)) {                                          \
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",    \
