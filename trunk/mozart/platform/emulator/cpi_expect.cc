@@ -25,7 +25,12 @@
  */
 
 #include "cpi.hh"
-#include "var_all.hh"
+#include "var_base.hh"
+#include "var_ct.hh"
+#include "var_fd.hh"
+#include "var_bool.hh"
+#include "var_fs.hh"
+#include "var_of.hh"
 #include "prop_int.hh"
 
 void splitfname(const char * fname, char * &dirname, char * &basename)
@@ -933,7 +938,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 	  }
 	}
 	 
-	oz_var_addSuspINLINE(vptr, prop);
+	oz_var_addSusp(vptr, prop);
 	all_local &= oz_isLocalVar(tagged2CVar(*vptr));
 	
     }
@@ -948,7 +953,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     if (isVariableTag(vtag)) {
       Assert(isCVar(vtag));
       
-      oz_var_addSuspINLINE(vptr, prop);
+      oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(v));
     }
   }

@@ -39,12 +39,12 @@
 #include "debug.hh"
 #include "prop_int.hh"
 #include "space.hh"
+#include "var_of.hh"
 #include "codearea.hh"
 #include "builtins.hh"
 #include "indexing.hh"
 
 #include "boot-manager.hh"
-#include "var_all.hh"
 #include "dictionary.hh"
 #include "marshaler.hh"
 #include "copycode.hh"
