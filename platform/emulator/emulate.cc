@@ -1801,9 +1801,8 @@ LBLdispatcher:
 
       case SUSPEND:
 	if (shallowCP) {
-	  e->emptySuspendVarList();
 	  e->trail.pushIfVar(XPC(2));
-	  DISPATCH(4);
+	  goto LBLsuspendShallow;
 	}
 	e->pushTask(PC,Y,G,X,getPosIntArg(PC+3));
 	e->suspendInline(1,XPC(2));
@@ -1836,10 +1835,9 @@ LBLdispatcher:
       case SUSPEND:
 	{
 	  if (shallowCP) {
-	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(XPC(2));
 	    e->trail.pushIfVar(XPC(3));
-	    DISPATCH(5);
+	    goto LBLsuspendShallow;
 	  }
 
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
@@ -1874,11 +1872,10 @@ LBLdispatcher:
       case SUSPEND:
 	{
 	  if (shallowCP) {
-	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(XPC(2));
 	    e->trail.pushIfVar(XPC(3));
 	    e->trail.pushIfVar(XPC(4));
-	    DISPATCH(6);
+	    goto LBLsuspendShallow;
 	  }
 
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
@@ -1915,10 +1912,8 @@ LBLdispatcher:
 	{
 	  TaggedRef A=XPC(2);
 	  if (shallowCP) {
-	    XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
-	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
-	    DISPATCH(5);
+	    goto LBLsuspendShallow;
 	  }
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(1,A);
@@ -1955,11 +1950,9 @@ LBLdispatcher:
 	  TaggedRef A=XPC(2);
 	  TaggedRef B=XPC(3);
 	  if (shallowCP) {
-	    XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
-	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
 	    e->trail.pushIfVar(B);
-	    DISPATCH(6);
+	    goto LBLsuspendShallow;
 	  }
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(2,A,B);
@@ -2008,10 +2001,8 @@ LBLdispatcher:
 	  {
 	    TaggedRef A=XPC(1);
 	    if (shallowCP) {
-	      XPC(3) = makeTaggedRef(newTaggedUVar(CBB));
-	      e->emptySuspendVarList();
 	      e->trail.pushIfVar(A);
-	      DISPATCH(7);
+	      goto LBLsuspendShallow;
 	    }
 	    e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
 	    e->suspendInline(1,A);
@@ -2111,12 +2102,10 @@ LBLdispatcher:
 	  TaggedRef B=XPC(3);
 	  TaggedRef C=XPC(4);
 	  if (shallowCP) {
-	    XPC(5) = makeTaggedRef(newTaggedUVar(CBB));
-	    e->emptySuspendVarList();
 	    e->trail.pushIfVar(A);
 	    e->trail.pushIfVar(B);
 	    e->trail.pushIfVar(C);
-	    DISPATCH(7);
+	    goto LBLsuspendShallow;
 	  }
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+6));
 	  e->suspendInline(3,A,B,C);
@@ -2148,9 +2137,6 @@ LBLdispatcher:
 	DISPATCH(6);
       case SUSPEND:
 	{
-	  // mm2: bug?
-	  TaggedRef A=XPC(2);
-	  TaggedRef B=XPC(3);
 	  e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
 	  Thread *thr=e->mkSuspThread();
 	  e->suspendOnVarList(thr);
@@ -2243,14 +2229,17 @@ LBLdispatcher:
 	DISPATCH(1);
       }
 
-      int argsToSave = getPosIntArg(shallowCP+2);
-      e->pushTask(shallowCP,Y,G,X,argsToSave);
-      Thread *thr = e->mkSuspThread ();
-      shallowCP = NULL;
-      e->reduceTrailOnShallow(thr);
-      goto LBLsuspendThread;
+    LBLsuspendShallow:
+      {
+	e->emptySuspendVarList();
+	int argsToSave = getPosIntArg(shallowCP+2);
+	e->pushTask(shallowCP,Y,G,X,argsToSave);
+	shallowCP = NULL;
+	Thread *thr = e->mkSuspThread();
+	e->reduceTrailOnShallow(thr);
+	goto LBLsuspendThread;
+      }
     }
-
 
 // -------------------------------------------------------------------------
 // CLASS: Environment
