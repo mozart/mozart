@@ -1,0 +1,6 @@
+config.log
+config.cache
+config.status
+test
+make-test
+Makefile
