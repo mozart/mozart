@@ -87,7 +87,7 @@ OZ_Boolean isPosSmallSetInt(OZ_Term v);
   OZ_expect_t r = O.F(OZ_in(P));					\
   if (O.isFailing(r)) {							\
     TypeError(P, C);							\
-  } else if (O.isSuspending(r) || pe.isExceptional(r)) {		\
+  } else if (O.isSuspending(r) || O.isExceptional(r)) {			\
     for (OZ_Term * v = O.getSuspVar(); v != NULL; v = O.getSuspVar())	\
       am.addSuspendVarList(v);						\
     return SUSPEND;							\
