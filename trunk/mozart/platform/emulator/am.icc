@@ -255,8 +255,7 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
 inline 
 void AM::suspThreadToRunnable(Thread *tt)
 {
-  //Assert(tt->isSuspended());
-  if(!tt->isSuspended()){warning("old assertion would crash am.icc");}
+  Assert(tt->isSuspended() || tt->getPStop());
 
   tt->markRunnable();
 
