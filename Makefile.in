@@ -128,9 +128,9 @@ WINCACHEDIR=    oz/cache/$(HOMECACHE)
 PACKDIR=        /tmp/pack
 
 
-.PHONY: source doc $(PLATFORMS)
+.PHONY: src doc $(PLATFORMS)
 
-source: $(PACKDIR)
+src: $(PACKDIR)
         (cd $(PACKDIR); \
          (cd $(SRCTOP)/..; \
           $(TAR) -cf - mozart) | $(TAR) -xf - ; \
@@ -140,7 +140,7 @@ source: $(PACKDIR)
          $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz
         rm -rf $(PACKDIR)/mozart
 
-doc:    $(PACKDIR)
+doc: $(PACKDIR)
         (cd $(PACKDIR); \
         (cd $(PREFIX); \
          $(TAR) -cf - doc) | $(TAR) -xf -; \
