@@ -210,7 +210,7 @@ and that no command will be bound to C-c followed by a letter."
 
 (eval-and-compile
   (eval '(defcustom oz-root-functor
-	   "@HOMEURL@/share/OPI.ozf"
+	   "x-oz://system/OPI.ozf"
 	   "*Name of the root functor to load on startup."
 	   :type 'string
 	   :group 'oz)))
