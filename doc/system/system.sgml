@@ -25,7 +25,7 @@
   <Title/Miscelleanous System Support: <<System>>/
 
   <p>
-    The module <<System>> contains procedures providing functionality
+    The <<System>> module contains procedures providing functionality
     related to the Mozart Engine. 
 
   <section id="section.system.control">

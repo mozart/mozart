@@ -405,9 +405,9 @@ communication across sites works better because of designed flow
 control mechanism that suspends producers when the network buffers are
 full</NOTE>. There are a number of ways to solve this problem. One is
 to create a bounded buffer between producers and consumers which we
-will discuss later. Another way is to control experimentally the
-rate of thread execution so that the consumers get a larger time-slice
-than the producers do.
+will discuss later. Another way is to change the
+thread execution speed (by changing the thread's priority)
+so that consumers get more time-slices than producers.
 
 <P>The modules <<Thread>>, and <<Property>>, provide a number of
 operations pertinent to threads. Some of these are summarized in 
