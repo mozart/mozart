@@ -218,6 +218,8 @@ Atom *Atom::newAtom(char *str)
 
 Name *Name::newName(Board *home)
 {
+  COUNT(numNewName);
+
   Name *ret = (Name*) heapMalloc(sizeof(Name));
   ret->init();
   ret->homeOrGName = ToInt32(home);
@@ -229,6 +231,8 @@ Name *Name::newName(Board *home)
 
 NamedName *NamedName::newNamedName(char *pn)
 {
+  COUNT(numNewNamedName);
+
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
   ret->homeOrGName = ToInt32(am.rootBoard);

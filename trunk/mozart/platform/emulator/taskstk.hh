@@ -57,6 +57,7 @@ public:
     *(newTop+2) = pc;
     
     tos = newTop+frameSz;
+    CountMax(maxStackDepth,(tos-array)*sizeof(StackEntry));
   }
 
 
