@@ -128,17 +128,20 @@ TAR=		tar
 PACKDIR=	/tmp/pack
 MPD=		$(PACKDIR)/mozart
 WIN32CACHEDIR=  $(MPD)/cache/$(HOMECACHE)
+NOTDIRSRCTOP	= $(notdir $(SRCTOP))
 
 .PHONY: src doc $(PLATFORMS)
 
 src: $(PACKDIR)
+	echo "[" $(NOTDIRSRCTOP) "]"
+	test -n $(NOTDIRSRCTOP) || { echo "bad"; exit 1; }
 	(cd $(PACKDIR); \
 	 (cd $(SRCTOP)/..; \
-	  $(TAR) -cf - mozart) | $(TAR) -xf - ; \
-	 tbr=`find mozart -name CVS -type d 2>/dev/null` ; \
+	  $(TAR) -cf - $(NOTDIRSRCTOP)) | $(TAR) -xf - ; \
+	 tbr=`find $(NOTDIRSRCTOP) -name CVS -type d 2>/dev/null` ; \
 	 rm -rf $$tbr ; \
-	 find mozart -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
-	 mv mozart mozart-`$(OZVERSION)`.$(OZBUILD); \
+	 find $(NOTDIRSRCTOP) -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
+	 mv $(NOTDIRSRCTOP) mozart-`$(OZVERSION)`.$(OZBUILD); \
 	 $(TAR) -cf - mozart-`$(OZVERSION)`.$(OZBUILD) ) | \
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-src.tar.gz
 	rm -rf $(PACKDIR)/mozart-`$(OZVERSION)`.$(OZBUILD)
