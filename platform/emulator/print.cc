@@ -1392,12 +1392,6 @@ void ThreadQueueImpl::printStream(ostream &stream, int depth)
   }
 }
 
-#ifdef LOCAL_THREAD_STACK
-void ThreadStackImpl::printStream(ostream &stream, int depth)
-{
-}
-#endif
-
 void FDIntervals::printLong(ostream &stream, int idnt) const
 {
   stream << endl << indent(idnt) << "high=" << endl;
