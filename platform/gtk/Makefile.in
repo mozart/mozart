@@ -20,6 +20,7 @@ OZTOOL          = @OZTOOL@
 PERL            = @PERL@
 
 ENABLE_CANVAS   = @have_canvas@
+HAVE_GTK_CANVAS = @have_gtk_canvas@
 CANVAS_HEADER   = @canvas_header@
 CANVAS_LIB      = @canvas_lib@
 
@@ -51,19 +52,25 @@ ALL_INCLUDES         = -I$(VPATH)/../emulator
 BUILD_SCRIPT         = $(VPATH)/goz_build_native.perl
 BUILD                = $(PERL) $(BUILD_SCRIPT)
 BUILD_GTK            = $(BUILD) --includes="gtk/gtk.h"
-BUILD_CANVAS   = $(BUILD) --includes=$(CANVAS_HEADER)
+BUILD_CANVAS         = $(BUILD) --includes=$(CANVAS_HEADER)
 
 # specs
 SPECS_PATH           = $(VPATH)/../../share/lib/gtk/specs
 GTK_SPECS            = $(SPECS_PATH)/gtk/*.spec
 GDK_SPECS            = $(SPECS_PATH)/gdk/*.spec
-CANVAS_SPECS   = $(SPECS_PATH)/gnome-canvas/*.spec
+CANVAS_SPECS         = $(SPECS_PATH)/gnome-canvas/*.spec
 
 # objects
 GTK_OBJECTS          = goz_gtk_interface.o goz_gtk_wrappers.o
 GDK_OBJECTS          = goz_gdk_interface.o goz_gdk_wrappers.o
+# The canvas api uses the gome_canvas prefix.
+# If we use the gtk+ canvas we have to rename the names via macros.
+# This is done in gnome_gtk_canvas_renamer
+ifeq ($(HAVE_GTK_CANVAS),yes)
+    GTK_CANVAS_OBJECTS = gnome_gtk_canvas_renamer.o
+endif
 ifeq ($(ENABLE_CANVAS),yes)
-    CANVAS_OBJECTS = goz_gnome_canvas_interface.o goz_gnome_canvas_wrappers.o
+    CANVAS_OBJECTS = goz_gnome_canvas_interface.o goz_gnome_canvas_wrappers.o $(GTK_CANVAS_OBJECTS)
 else
     CANVAS_OBJECTS =
 endif
@@ -111,7 +118,7 @@ GDK.so-$(PLATFORM): $(GDK_OBJECTS) goz_support.o
 
 ### end of GDK
 
-### Gnome Canvas
+### Canvas
 
 goz_gnome_canvas_wrappers.c: $(CANVAS_SPECS)
          $(BUILD_CANVAS) --c-wrappers $^ > $@
@@ -122,7 +129,10 @@ goz_gnome_canvas_interface.c: goz_gnome_canvas_wrappers.c
 GnomeCanvas.so-$(PLATFORM): $(CANVAS_OBJECTS) goz_support.o
         $(OZTOOL) ld $(LDFLAGS) `gnome-config --libs gnomeui` $(CANVAS_OBJECTS) goz_support.o -o $@
 
-### end of Gnome Canvas
+gnome_gtk_canvas_renamer.c: $(CANVAS_SPECS)
+        $(BUILD_CANVAS) --gnome $^ > $@
+
+### end of Canvas
 
 clean:
         -rm -f goz_gtk_interface.c           goz_gtk_wrappers.c          \

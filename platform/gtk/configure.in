@@ -74,6 +74,38 @@ LIBS="$LIBS $GLIB_LIBS"
 AC_MSG_RESULT(ok)
 
 dnl *********************************************************************
+dnl ** GTK
+dnl *********************************************************************
+
+dnl Check for the GTK+ config tool
+AC_PATH_PROG(gtk_path, gtk-config)
+if test -z $gtk_path; then
+    AC_MSG_ERROR(The gtk-config script, which is part of the GTK+ library, could no be found. Please make sure you have a working installation of GTK+ on your system, otherwise GTK+ support can not be enabled. GTK+ can be found at http://www.gtk.org)
+fi
+
+dnl Check for the right GTK+ version
+AC_MSG_CHECKING(for GTK+ version)
+GTK_VERSION=`$gtk_path --version`
+case $GTK_VERSION in
+    1.2.*) ;;
+    *)     AC_MSG_ERROR(Your GTK+ library is too old, please update to version 1.2.x. The current version can be found at http://www.gtk.org)
+esac
+AC_MSG_RESULT($GTK_VERSION is ok)
+
+dnl Set compiler flags
+AC_MSG_CHECKING(for GTK+ compile flags)
+GTK_CFLAGS=`$gtk_path --cflags`
+GTK_LIBS=`$gtk_path --libs`
+GTK_HDRS=`$gtk_path --prefix`/include/gtk
+GDK_HDRS=`$gtk_path --prefix`/include/gdk
+CFLAGS="$CFLAGS $GTK_CFLAGS"
+LIBS="$LIBS $GTK_LIBS"
+AC_MSG_RESULT(ok)
+
+AC_SUBST(GTK_HDRS)
+AC_SUBST(GDK_HDRS)
+
+dnl *********************************************************************
 dnl ** Gnome/GTK+ Canvas Stuff
 dnl *********************************************************************
 
@@ -151,49 +183,21 @@ if test x$have_canvas = xyes; then
     if test x$have_gnome = xyes; then
         canvas_header=${gnome_header_path}/${gnome_header}
         canvas_lib=${gnome_lib_path}/${gnome_lib}
+        have_gtk_canvas=no
     else
+        have_gtk_canvas=yes
         canvas_header="gtk-canvas.h"
         canvas_lib=${gtk_canvas_lib_path}/${gtk_canvas_lib}
     fi
 else
     canvas_header=
     canvas_lib=
+    have_gtk_canvas=
 fi
 AC_SUBST(have_canvas)
+AC_SUBST(have_gtk_canvas)
 AC_SUBST(canvas_header)
 AC_SUBST(canvas_lib)
-
-dnl *********************************************************************
-dnl ** GTK
-dnl *********************************************************************
-
-dnl Check for the GTK+ config tool
-AC_PATH_PROG(gtk_path, gtk-config)
-if test -z $gtk_path; then
-    AC_MSG_ERROR(The gtk-config script, which is part of the GTK+ library, could no be found. Please make sure you have a working installation of GTK+ on your system, otherwise GTK+ support can not be enabled. GTK+ can be found at http://www.gtk.org)
-fi
-
-dnl Check for the right GTK+ version
-AC_MSG_CHECKING(for GTK+ version)
-GTK_VERSION=`$gtk_path --version`
-case $GTK_VERSION in
-    1.2.*) ;;
-    *)     AC_MSG_ERROR(Your GTK+ library is too old, please update to version 1.2.x. The current version can be found at http://www.gtk.org)
-esac
-AC_MSG_RESULT($GTK_VERSION is ok)
-
-dnl Set compiler flags
-AC_MSG_CHECKING(for GTK+ compile flags)
-GTK_CFLAGS=`$gtk_path --cflags`
-GTK_LIBS=`$gtk_path --libs`
-GTK_HDRS=`$gtk_path --prefix`/include/gtk
-GDK_HDRS=`$gtk_path --prefix`/include/gdk
-CFLAGS="$CFLAGS $GTK_CFLAGS"
-LIBS="$LIBS $GTK_LIBS"
-AC_MSG_RESULT(ok)
-
-AC_SUBST(GTK_HDRS)
-AC_SUBST(GDK_HDRS)
 
 dnl *********************************************************************
 dnl ** Glade

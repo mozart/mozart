@@ -2002,13 +2002,75 @@ LIBS="$LIBS $GLIB_LIBS"
 echo "$ac_t""ok" 1>&6
 
 
+# Extract the first word of "gtk-config", so it can be a program name with args.
+set dummy gtk-config; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:2009: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_gtk_path'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$gtk_path" in
+  /*)
+  ac_cv_path_gtk_path="$gtk_path" # Let the user override the test with a path.
+  ;;
+  ?:/*)
+  ac_cv_path_gtk_path="$gtk_path" # Let the user override the test with a dos path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$PATH"
+  for ac_dir in $ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_gtk_path="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+gtk_path="$ac_cv_path_gtk_path"
+if test -n "$gtk_path"; then
+  echo "$ac_t""$gtk_path" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+if test -z $gtk_path; then
+    { echo "configure: error: The gtk-config script" 1>&2; exit 1; }
+fi
+
+echo $ac_n "checking for GTK+ version""... $ac_c" 1>&6
+echo "configure:2046: checking for GTK+ version" >&5
+GTK_VERSION=`$gtk_path --version`
+case $GTK_VERSION in
+    1.2.*) ;;
+    *)     { echo "configure: error: Your GTK+ library is too old" 1>&2; exit 1; }
+esac
+echo "$ac_t""$GTK_VERSION is ok" 1>&6
+
+echo $ac_n "checking for GTK+ compile flags""... $ac_c" 1>&6
+echo "configure:2055: checking for GTK+ compile flags" >&5
+GTK_CFLAGS=`$gtk_path --cflags`
+GTK_LIBS=`$gtk_path --libs`
+GTK_HDRS=`$gtk_path --prefix`/include/gtk
+GDK_HDRS=`$gtk_path --prefix`/include/gdk
+CFLAGS="$CFLAGS $GTK_CFLAGS"
+LIBS="$LIBS $GTK_LIBS"
+echo "$ac_t""ok" 1>&6
+
+
+
+
+
 have_gnome=yes
 have_canvas=yes
 
 # Extract the first word of "gnome-config", so it can be a program name with args.
 set dummy gnome-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2012: checking for $ac_word" >&5
+echo "configure:2074: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_gnome_config'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2049,13 +2111,13 @@ fi
 gnome_header="libgnomeui/gnome-canvas.h"
 gnome_header_paths="/usr/include /usr/local/include /opt/include /opt/gnome/include /usr/local/gnome/include"
 echo $ac_n "checking for Gnome headers""... $ac_c" 1>&6
-echo "configure:2053: checking for Gnome headers" >&5
+echo "configure:2115: checking for Gnome headers" >&5
 if test x$have_gnome_config = xyes; then
     gnome_header_path=`$gnome_config --includedir gnomeui`
 
 ac_safe=`echo "${gnome_header_path}/${gnome_header}" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for ${gnome_header_path}/${gnome_header}""... $ac_c" 1>&6
-echo "configure:2059: checking for ${gnome_header_path}/${gnome_header}" >&5
+echo "configure:2121: checking for ${gnome_header_path}/${gnome_header}" >&5
 if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2082,7 +2144,7 @@ else
 
 ac_safe=`echo "${path}/${gnome_header}" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for ${path}/${gnome_header}""... $ac_c" 1>&6
-echo "configure:2086: checking for ${path}/${gnome_header}" >&5
+echo "configure:2148: checking for ${path}/${gnome_header}" >&5
 if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2113,13 +2175,13 @@ fi
 gnome_lib="libgnomeui.so"
 gnome_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib"
 echo $ac_n "checking for Gnome libraries""... $ac_c" 1>&6
-echo "configure:2117: checking for Gnome libraries" >&5
+echo "configure:2179: checking for Gnome libraries" >&5
 if test x$have_gnome_config = xyes; then
     gnome_lib_path=`$gnome_config --libdir gnomeui`
 
 ac_safe=`echo "${gnome_lib_path}/${gnome_lib}" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for ${gnome_lib_path}/${gnome_lib}""... $ac_c" 1>&6
-echo "configure:2123: checking for ${gnome_lib_path}/${gnome_lib}" >&5
+echo "configure:2185: checking for ${gnome_lib_path}/${gnome_lib}" >&5
 if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2146,7 +2208,7 @@ else
 
 ac_safe=`echo "${path}/${gnome_lib}" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for ${path}/${gnome_lib}""... $ac_c" 1>&6
-echo "configure:2150: checking for ${path}/${gnome_lib}" >&5
+echo "configure:2212: checking for ${path}/${gnome_lib}" >&5
 if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2177,14 +2239,14 @@ fi
 if test x$have_gnome = xno; then
 
     echo $ac_n "checking for GTK+ canvas library""... $ac_c" 1>&6
-echo "configure:2181: checking for GTK+ canvas library" >&5
+echo "configure:2243: checking for GTK+ canvas library" >&5
     gtk_canvas_lib="libgtkcanvas.so"
     gtk_canvas_lib_paths="/usr/lib /usr/local/lib /opt/lib /opt/gnome/lib /usr/local/gnome/lib /usr/lib/gtk-canvas /usr/local/lib/gtk-canvas /opt/lib/gtk-canvas"
     for path in $gtk_canvas_lib_paths ; do
 
 ac_safe=`echo "${path}/${gtk_canvas_lib}" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for ${path}/${gtk_canvas_lib}""... $ac_c" 1>&6
-echo "configure:2188: checking for ${path}/${gtk_canvas_lib}" >&5
+echo "configure:2250: checking for ${path}/${gtk_canvas_lib}" >&5
 if eval "test \"`echo '$''{'ac_cv_file_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2213,17 +2275,17 @@ fi
 
     ac_safe=`echo "gtk-canvas.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for gtk-canvas.h""... $ac_c" 1>&6
-echo "configure:2217: checking for gtk-canvas.h" >&5
+echo "configure:2279: checking for gtk-canvas.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2222 "configure"
+#line 2284 "configure"
 #include "confdefs.h"
 #include <gtk-canvas.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2227: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:2289: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2255,76 +2317,18 @@ if test x$have_canvas = xyes; then
     if test x$have_gnome = xyes; then
         canvas_header=${gnome_header_path}/${gnome_header}
         canvas_lib=${gnome_lib_path}/${gnome_lib}
+        have_gtk_canvas=no
     else
+        have_gtk_canvas=yes
         canvas_header="gtk-canvas.h"
         canvas_lib=${gtk_canvas_lib_path}/${gtk_canvas_lib}
     fi
 else
     canvas_header=
     canvas_lib=
+    have_gtk_canvas=
 fi
 
-
-
-
-
-# Extract the first word of "gtk-config", so it can be a program name with args.
-set dummy gtk-config; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2275: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_gtk_path'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$gtk_path" in
-  /*)
-  ac_cv_path_gtk_path="$gtk_path" # Let the user override the test with a path.
-  ;;
-  ?:/*)
-  ac_cv_path_gtk_path="$gtk_path" # Let the user override the test with a dos path.
-  ;;
-  *)
-  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$PATH"
-  for ac_dir in $ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_gtk_path="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-gtk_path="$ac_cv_path_gtk_path"
-if test -n "$gtk_path"; then
-  echo "$ac_t""$gtk_path" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-if test -z $gtk_path; then
-    { echo "configure: error: The gtk-config script" 1>&2; exit 1; }
-fi
-
-echo $ac_n "checking for GTK+ version""... $ac_c" 1>&6
-echo "configure:2312: checking for GTK+ version" >&5
-GTK_VERSION=`$gtk_path --version`
-case $GTK_VERSION in
-    1.2.*) ;;
-    *)     { echo "configure: error: Your GTK+ library is too old" 1>&2; exit 1; }
-esac
-echo "$ac_t""$GTK_VERSION is ok" 1>&6
-
-echo $ac_n "checking for GTK+ compile flags""... $ac_c" 1>&6
-echo "configure:2321: checking for GTK+ compile flags" >&5
-GTK_CFLAGS=`$gtk_path --cflags`
-GTK_LIBS=`$gtk_path --libs`
-GTK_HDRS=`$gtk_path --prefix`/include/gtk
-GDK_HDRS=`$gtk_path --prefix`/include/gdk
-CFLAGS="$CFLAGS $GTK_CFLAGS"
-LIBS="$LIBS $GTK_LIBS"
-echo "$ac_t""ok" 1>&6
 
 
 
@@ -2335,7 +2339,7 @@ GLADE_FAIL="not found. Glade support will be disabled."
 # Extract the first word of "libglade-config", so it can be a program name with args.
 set dummy libglade-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2339: checking for $ac_word" >&5
+echo "configure:2343: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_libglade_config'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2556,13 +2560,14 @@ s%@PLATFORMSCRIPT@%$PLATFORMSCRIPT%g
 s%@perl_path@%$perl_path%g
 s%@PERL@%$PERL%g
 s%@glib_path@%$glib_path%g
-s%@gnome_config@%$gnome_config%g
-s%@have_canvas@%$have_canvas%g
-s%@canvas_header@%$canvas_header%g
-s%@canvas_lib@%$canvas_lib%g
 s%@gtk_path@%$gtk_path%g
 s%@GTK_HDRS@%$GTK_HDRS%g
 s%@GDK_HDRS@%$GDK_HDRS%g
+s%@gnome_config@%$gnome_config%g
+s%@have_canvas@%$have_canvas%g
+s%@have_gtk_canvas@%$have_gtk_canvas%g
+s%@canvas_header@%$canvas_header%g
+s%@canvas_lib@%$canvas_lib%g
 s%@libglade_config@%$libglade_config%g
 s%@GLADE_CFLAGS@%$GLADE_CFLAGS%g
 s%@GLADE_LIBS@%$GLADE_LIBS%g
