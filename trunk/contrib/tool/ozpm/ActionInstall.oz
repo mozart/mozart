@@ -9,9 +9,6 @@ import
 	  args          : Args
 	  dirPrefix     : DirPrefix
 	  pathLocalDB   : PATHLOCALDB)
-   FileUtils(createPath : CreatePath
-	     addToPath  : AddToPath
-	     dirname    : Dirname)
    Application(exit)
    System(showInfo:Print)
    Pickle(load save)
@@ -55,8 +52,10 @@ define
 	 %% getting this far means the package can be installed
 	 %%
 	 for File in PInfo.filelist do
-	    {CreatePath {Dirname {AddToPath DirPrefix File}}}
-	    {A extract(File {AddToPath DirPrefix File})}
+	    F = {DirPrefix resolve(File $)}
+	 in
+	    {F mkdirs}
+	    {A extract(File {F toString($)})}
 	 end
 	 %% update ozpminfo
 	 {Pickle.save {Record.adjoin
