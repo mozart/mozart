@@ -634,9 +634,6 @@ OZ_BI_define(BIisCopyablePredicateRef,1,1)
 
 #ifndef MODULES_LINK_STATIC
 
-OZ_C_proc_interface mod_int_CompilerSupport[] = {
-#include "modCompilerSupport.tbl"
- {0,0,0,0}
-};
+#include "modCompilerSupport-if.cc"
 
 #endif
