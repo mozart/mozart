@@ -1,13 +1,13 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
@@ -15,11 +15,11 @@
  *  This file is part of Mozart, an implementation 
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -49,7 +49,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term)
   printf("fd-int %s\n", isLocalVar ? "local" : "global"); fflush(stdout);
 #endif
 
-  if (!am.inEqEq() && (isNotInstallingScript || isLocalVar)) 
+  if (!am.inEqEq() && (isNotInstallingScript || isLocalVar))
     propagate(fd_prop_singl);
 
   if (isLocalVar) {
@@ -58,7 +58,7 @@ OZ_Return OzFDVariable::bind(TaggedRef * vPtr, TaggedRef term)
   } else {
     DoBindAndTrail(vPtr, term);
   }
-      
+
   return PROCEED;
 }
 
@@ -76,7 +76,7 @@ OZ_Return OzFDVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr)
 	 : "fd NOT installing script\n");
   fflush(stdout);
 #endif
-    
+
   TaggedRef term = *tPtr;
   OzVariable *cv=tagged2CVar(term);
   if (cv->getType()!=OZ_VAR_FD) return FAILED;
@@ -307,6 +307,150 @@ int OzFDVariable::intersectWithBool(void)
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 {
+//-----------------------------------------------------------------------------
+#ifdef TMUELLER
+
+  DEREF(v, vptr, vtag);
+
+  if (fd && (*fd == fd_empty))
+    goto failed;
+
+  if (oz_isFree(v)) {
+    //
+    // tell finite domain constraint to an unconstrained variable
+    //
+    if (! fd) goto fdvariable;
+
+    // fd is singleton domain and hence v becomes integer. otherwise ..
+    if (fd->getSize() == 1) {
+      if (oz_isLocalVariable(vptr)) {
+	if (!isUVar(vtag))
+	  oz_checkSuspensionListProp(tagged2CVar(v));
+	bindLocalVar(vptr, newSmallInt(fd->getSingleElem()));
+      } else {
+	bindGlobalVar(vptr, newSmallInt(fd->getSingleElem()));
+      }
+      goto proceed;
+    }
+
+    // .. create an constrained variable
+  fdvariable:
+    OzVariable * cv =
+      (fd
+       ? (*fd == fd_bool
+	  ? (OzVariable *) new OzBoolVariable(oz_currentBoard())
+	  : new OzFDVariable(*fd, oz_currentBoard())
+	  )
+       : new OzFDVariable(oz_currentBoard()));
+    OZ_Term *  tcv = newTaggedCVar(cv);
+
+    if (oz_isLocalVariable(vptr)) {
+      if (!isUVar(vtag)) {
+	oz_checkSuspensionListProp(tagged2CVar(v));
+	cv->setSuspList(tagged2CVar(v)->unlinkSuspList());
+      }
+      bindLocalVar(vptr, makeTaggedRef(tcv));
+    } else {
+      bindGlobalVar(vptr, makeTaggedRef(tcv));
+    }
+
+    goto proceed;
+  } else if (isGenFDVar(v, vtag)) {
+    //
+    // tell finite domain constraint to a finite domain variable
+    //
+    if (! fd) goto proceed;
+
+    OzFDVariable * fdvar = tagged2GenFDVar(v);
+    OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
+    Board * fdvarhome = fdvar->getBoardInternal();
+
+    if (dom == fd_empty)
+      goto failed;
+
+    if (dom.getSize() == fdvar->getDom().getSize())
+      goto proceed;
+
+    if (dom == fd_singl) {
+      //
+      // singleton domain
+      //
+      if (oz_isLocalVar(fdvar)) {
+	fdvar->getDom() = dom;
+	fdvar->becomesSmallIntAndPropagate(vptr);
+      } else {
+	int singl = dom.getSingleElem();
+	fdvar->propagate(fd_prop_singl);
+	bindGlobalVar(vptr, newSmallInt(singl));
+      }
+    } else if (dom == fd_bool) {
+      // 
+      // boolean domain
+      //
+      if (oz_isLocalVar(fdvar)) {
+	fdvar->becomesBoolVarAndPropagate(vptr);
+      } else {
+	fdvar->propagate(fd_prop_bounds);
+	castGlobalVar(vptr, *newTaggedCVar(new OzBoolVariable(fdvarhome)));
+      }
+    } else {
+      // 
+      // proper finite domain
+      //
+      fdvar->propagate(fd_prop_bounds);
+      if (oz_isLocalVar(fdvar)) {
+	fdvar->getDom() = dom;
+      } else {
+	constrainGlobalVar(vptr, dom);
+      }
+    }
+    goto proceed;
+  } else if (isGenBoolVar(v, vtag)) {
+    //
+    // tell finite domain constraint to a boolean variable
+    //
+    if (! fd) goto proceed;
+
+    int dom = fd->intersectWithBool();
+
+    if (dom == -2) goto failed;
+    if (dom == -1) goto proceed;
+
+    OzBoolVariable * boolvar = tagged2GenBoolVar(v);
+    if (oz_isLocalVar(boolvar)) {
+      boolvar->becomesSmallIntAndPropagate(vptr, dom);
+    } else {
+      boolvar->propagate();
+      bindGlobalVar(vptr, newSmallInt(dom));
+    }
+    goto proceed;
+  } else if (isSmallIntTag(vtag)) {
+    //
+    // tell finite domain constraint to a integer
+    //
+    if (! fd) goto proceed;
+
+    if (fd->isIn(smallIntValue(v)))
+      goto proceed;
+  } else if (oz_isVariable(v)) {
+    // 
+    // future stuff, no idea what is going on here 
+    TaggedRef newVar = oz_newVariable();
+    OZ_Return ret = tellBasicConstraint(newVar, fd);
+    Assert(ret == PROCEED);
+    return oz_unify(makeTaggedRef(vptr), newVar);
+  }
+
+failed:
+
+  return FAILED;
+
+proceed:
+
+  return PROCEED;
+
+#else
+//-----------------------------------------------------------------------------
 #ifdef DEBUG_TELLCONSTRAINTS
   cout << "tellBasicConstraint - in - : ";
   oz_print(v);
@@ -354,10 +498,10 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	cv->setSuspList(tagged2SVarPlus(v)->unlinkSuspList());
       }
       DoBind(vptr, makeTaggedRef(tcv));
-    } else { 
+    } else {
       DoBindAndTrail(vptr, makeTaggedRef(tcv));
     }
-    
+
     goto proceed;
 // tell finite domain constraint to finite domain variable
   } else if (isGenFDVar(v, vtag)) {
@@ -365,11 +509,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     OzFDVariable * fdvar = tagged2GenFDVar(v);
     OZ_FiniteDomain dom = (fdvar->getDom() & *fd);
-    
-    if (dom == fd_empty) 
+
+    if (dom == fd_empty)
       goto failed;
 
-    if (dom.getSize() == fdvar->getDom().getSize()) 
+    if (dom.getSize() == fdvar->getDom().getSize())
       goto proceed;
 
     if (dom == fd_singl) {
@@ -408,7 +552,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     if (! fd) goto proceed;
 
     int dom = fd->intersectWithBool();
-    
+
     if (dom == -2) goto failed;
     if (dom == -1) goto proceed;
 
@@ -423,7 +567,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 // tell finite domain constraint to integer, i.e. check for compatibility
   } else if (isSmallIntTag(vtag)) {
     if (! fd) goto proceed;
-    
+
     if (fd->isIn(smallIntValue(v)))
       goto proceed;
   } else if (oz_isVariable(v)) {
@@ -431,8 +575,8 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     OZ_Return ret = tellBasicConstraint(newVar, fd);
     Assert(ret == PROCEED);
     return oz_unify(makeTaggedRef(vptr), newVar);
-  } 
-  
+  }
+
 failed:
 
   return FAILED;
@@ -447,6 +591,8 @@ proceed:
 #endif
 
   return PROCEED;
+
+#endif /* TMUELLER */
 }
 
 // inline DISABLED CS
@@ -468,7 +614,7 @@ void OzFDVariable::propagate(OZ_FDPropState state,
     OzVariable::propagateLocal(fdSuspList[fd_prop_singl], prop_eq);
     OzVariable::propagateLocal(fdSuspList[fd_prop_bounds], prop_eq);
   }
-  if (suspList) 
+  if (suspList)
     OzVariable::propagate(suspList, prop_eq);
 }
 
@@ -489,7 +635,7 @@ void OzFDVariable::restoreFromCopy(OzFDVariable * c) {
 }
 
 
-#ifdef OUTLINE 
+#ifdef OUTLINE
 #define inline
 #include "var_fd.icc"
 #undef inline
