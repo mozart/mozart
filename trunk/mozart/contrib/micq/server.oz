@@ -156,7 +156,7 @@ define
 	    catch _ then {WriteLog ID#" is not online"} end
 	       
 	    if C\=nil then
-	       {C serverLogout() "Can't logout "#ID }
+	       {C serverLogout() "Can not logout "#ID }
 	    end
 	 end
       end
@@ -197,8 +197,9 @@ define
 	 catch _ then {WriteLog "Could not return value in 'search for friends'"} end
       end
       
-      meth !S_login(passwd:PW id:ID client:C1 host:H<='<unknown>')
+      meth !S_login(passwd:PW id:ID client:C1 host:H)
 	 proc{Autologout ID}
+	    {Delay 1000}
 	    if {DB isOnline(id:ID online:$)}\=false then
 	       try
 		  {self S_logout(id:ID)}
@@ -214,7 +215,7 @@ define
 	 proc{C M Log}
 	    try {C1 M}
 	    catch networkFailure(X) then 
-	       {WriteLog "Networkfailure ["#{Label X}#"]: "#Log#" ("#ID#" on host "#H#")"}
+	       {WriteLog "* Networkfailure ["#{Label X}#"]: "#Log#" ("#ID#" on host "#H#")"}
 	       {Autologout ID}
 	       raise networkFailure(X) end
 	    end
@@ -777,9 +778,9 @@ define
 	 thread
 	    {Thread.setThisPriority high}
 	    proc{SaveLoop}
-	       {Delay 10*60000}
+	       {Delay 20*60000}
 	       {DB saveAll(dir: Args.dbdir)}
-	       {WriteLog "Autosave\n"}
+	       {WriteLog "Autosave"}
 	       {SaveLoop}
 	    end
 	 in
@@ -793,7 +794,7 @@ define
    end
    OSinfo = {OS.uName}
 in
-   {Property.put 'errors.toplevel' proc {$} skip end}
+   {Property.put 'errors.toplevel' proc {$} {WriteLog "* Unhandled exception"} skip end}
    {System.showInfo  "Server is running on "#OSinfo.nodename#" ("#OSinfo.sysname#" "# 
     OSinfo.release#" "# OSinfo.machine#")"}
 end
