@@ -36,6 +36,8 @@
 #include "conf.h"
 #endif
 
+#include "oz.h"
+
 #include "machine.hh"
 #include "resources.hh"
 #include "config.h"
@@ -122,13 +124,6 @@ typedef PosInt Reg;
 typedef unsigned int32 TaggedRef;
 
 enum PropCaller {pc_propagator = 0, pc_std_unif = 1, pc_cv_unif = 2};
-
-// duplicated from oz.h !!! Not nice, but ...
-typedef unsigned int OZ_Term;
-typedef unsigned int OZ_Return;
-extern "C" {
-  typedef int (* OZ_IOHandler)(int,void *);
-}
 
 typedef OZ_Return (*InlineRel1)(TaggedRef In1);
 typedef OZ_Return (*InlineRel2)(TaggedRef In1, TaggedRef In2);
