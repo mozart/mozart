@@ -30,7 +30,7 @@
     (
      'is'       => { in  => ['+value'],
                      out => ['+bool'],
-                     bi  => BIisIntB},
+                     bi  => BIisInt},
 
      'toFloat'  => { in     => ['+int'],
                      out    => ['+float'],

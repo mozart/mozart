@@ -603,9 +603,10 @@ OZ_Return oz_addSuspendVarList(TaggedRef*);
 OZ_Return oz_addSuspendVarList(TaggedRef);
 OZ_Return oz_addSuspendVarList2(TaggedRef,TaggedRef);
 OZ_Return oz_addSuspendVarList3(TaggedRef,TaggedRef,TaggedRef);
+
+OZ_Return oz_addSuspendInArgs1(OZ_Term * _OZ_LOC[]);
 OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]);
 OZ_Return oz_addSuspendInArgs3(OZ_Term * _OZ_LOC[]);
-
 
 
 /* -----------------------------------------------------------------------

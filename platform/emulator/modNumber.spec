@@ -28,7 +28,7 @@
     (
      'is'       => { in  => ['+value'],
                      out => ['+bool'],
-                     bi  => BIisNumberB},
+                     bi  => BIisNumber},
 
      'abs'      => { in  => ['+number'],
                      out => ['+number'],

@@ -224,6 +224,7 @@ Bool oz_isName(TaggedRef term) {
 
 #define oz_isTrue(t)  oz_eq((t),NameTrue)
 #define oz_isFalse(t) oz_eq((t),NameFalse)
+#define oz_isUnit(t)  oz_eq((t),NameUnit)
 
 inline
 Bool oz_isBool(TaggedRef term) {

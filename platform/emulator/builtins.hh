@@ -56,7 +56,7 @@ OZ_BI_define(Name,1,0)                                  \
   oz_declareIN(0,arg1);                                 \
   OZ_Return state = InlineName(arg1);                   \
   if (state == SUSPEND) {                               \
-    oz_suspendOn(arg1);                                 \
+    oz_suspendOnInArgs1;                                \
   } else {                                              \
     return state;                                       \
   }                                                     \
@@ -97,7 +97,7 @@ OZ_BI_define(Name,1,1)                                  \
   OZ_Return state = InlineName(arg1,aux);               \
   OZ_result(aux);                                       \
   if (state==SUSPEND) {                                 \
-    oz_suspendOn(arg1);                                 \
+    oz_suspendOnInArgs1;                                \
   } else {                                              \
     return state;                                       \
   }                                                     \
@@ -127,7 +127,7 @@ OZ_BI_define(BIfun,1,1)                         \
   switch (r) {                                  \
   case PROCEED: OZ_RETURN(oz_true());           \
   case FAILED : OZ_RETURN(oz_false());          \
-  case SUSPEND: oz_suspendOn(OZ_in(0));         \
+  case SUSPEND: oz_suspendOnInArgs1;            \
   default     : return r;                       \
   }                                             \
 } OZ_BI_end
@@ -268,11 +268,13 @@ char *VAR;                                      \
 
 #define oz_suspendOn(v)         return oz_addSuspendVarList(v)
 #define oz_suspendOn2(v1,v2)    return oz_addSuspendVarList2(v1,v2)
-#define oz_suspendOnInArgs2     return oz_addSuspendInArgs2(_OZ_LOC)
 #define oz_suspendOn3(v1,v2,v3) return oz_addSuspendVarList3(v1,v2,v3)
-#define oz_suspendOnInArgs3     return oz_addSuspendInArgs3(_OZ_LOC)
 
 #define oz_suspendOnPtr(vPtr)   return oz_addSuspendVarList(vPtr)
+
+#define oz_suspendOnInArgs1     return oz_addSuspendInArgs1(_OZ_LOC)
+#define oz_suspendOnInArgs2     return oz_addSuspendInArgs2(_OZ_LOC)
+#define oz_suspendOnInArgs3     return oz_addSuspendInArgs3(_OZ_LOC)
 
 /* -----------------------------------------------------------------------
  * C <-> Oz conversions
