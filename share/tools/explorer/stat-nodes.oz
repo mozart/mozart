@@ -13,14 +13,14 @@ local
       [] N|Nr then MDT DNT SNT FNT UNT in
 	 case N.kind
 	 of succeeded then
-	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI+1 FNT=FNI UNT=UNI  succeeded
+	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI+1 FNT=FNI UNT=UNI  s
 	 [] failed then
-	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI+1 UNT=UNI  failed
+	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI+1 UNT=UNI  f
 	 [] blocked then
-	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI UNT=UNI+1  blocked
+	    MDT={Max D+1 MDI} DNT=DNI SNT=SNI FNT=FNI UNT=UNI+1  b
 	 [] choose then
-	    choose({GetStat {N getKids($)} D+1 MDI ?MDT
-		    DNI+1 ?DNT SNI ?SNT FNI ?FNT UNI ?UNT})
+	    c({GetStat {N getKids($)} D+1 MDI ?MDT
+	       DNI+1 ?DNT SNI ?SNT FNI ?FNT UNI ?UNT})
 	 end
 	 |{GetStat Nr D MDT ?MDO DNT ?DNO SNT ?SNO FNT ?FNO UNT ?UNO}
       end
@@ -33,50 +33,50 @@ in
 		       meth stat($)
 			  D DN SN FN UN
 		       in
-			  stat(shape:     choose({GetStat @kids 1 1 ?D 1
-						  ?DN 0 ?SN 0 ?FN 0 ?UN})
-			       start:     {self.mom findDepth(1 $)}
-			       depth:     D
-			       choose:    DN
-			       succeeded: SN
-			       failed:    FN
-			       blocked:   UN)
+			  stat(shape: c({GetStat @kids 1 1 ?D 1
+					     ?DN 0 ?SN 0 ?FN 0 ?UN})
+			       start: {self.mom findDepth(1 $)}
+			       depth: D
+			       c:     DN
+			       s:     SN
+			       f:     FN
+			       b:     UN)
 		       end
 		    end
 		 failed:
 		    class $
 		       meth stat($)
-			  stat(shape:     failed
-			       start:     {self.mom findDepth(1 $)}
-			       depth:     1
-			       choose:    0
-			       succeeded: 0
-			       failed:    1
-			       blocked:   0)
+			  stat(shape: failed
+			       start: {self.mom findDepth(1 $)}
+			       depth: 1
+			       c:     0
+			       s:     0
+			       f:     1
+			       b:     0)
 		       end
 		    end
 		 succeeded:
 		    class $
 		       meth stat($)
-			  stat(shape:     succeeded
-			       start:     {self.mom findDepth(1 $)}
-			       depth:     1
-			       choose:    0
-			       succeeded: 1
-			       failed:    0
-			       blocked:   0)
+			  stat(shape: succeeded
+			       start: {self.mom findDepth(1 $)}
+			       depth: 1
+			       c:     0
+			       s:     1
+			       f:     0
+			       b:     0)
 		       end
 		    end
 		 blocked:
 		    class $
 		       meth stat($)
-			  stat(shape:     blocked
-			       start:     {self.mom findDepth(1 $)}
-			       depth:     1
-			       choose:    0
-			       succeeded: 0
-			       failed:    0
-			       blocked:   1)
+			  stat(shape: blocked
+			       start: {self.mom findDepth(1 $)}
+			       depth: 1
+			       c:     0
+			       s:     0
+			       f:     0
+			       b:     1)
 		       end
 		    end
 		 sentinel: EmptyClass)
