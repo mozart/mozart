@@ -13,6 +13,8 @@
 #pragma implementation "fdprofil.hh"
 #endif
 
+#ifdef PROFILE_FD
+
 #include <iostream.h>
 #include <limits.h>
 
@@ -351,3 +353,5 @@ void TaggedRefSet::print(TaggedRefSet * st) {
 }
 
 TaggedRefSet FDVarsTouched;
+
+#endif

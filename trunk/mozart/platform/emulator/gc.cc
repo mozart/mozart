@@ -197,10 +197,8 @@ public:
 
   static void print()
   {
-    ThreadList *aux = allthreads;
-    while(aux) {
-      aux->elem->printTaskStack(NULL,NO);
-      aux = aux->next;
+    for (ThreadList *aux = allthreads; aux; aux=aux->next) {
+      aux->elem->printTaskStack(NOCODE,NO);
     }
   }
   
@@ -628,15 +626,14 @@ Literal *Literal::gc()
   if (opMode == IN_GC || isLocalBoard(getBoardFast())) {
     GCMETHMSG("Literal::gc");
     CHECKCOLLECTED(ToInt32(printName), Literal *);
+    COUNT(literal);
     varCount++;
     Name *aux = (Name *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
     storeForward(&printName, aux);
 
-    PROFILE_CODE1(if (opMode == IN_TC) {
-		    FDProfiles.inc_item(cp_size_literal, sizeof(*this));
-		  })
+    FDPROFILE_GC(cp_size_literal,sizeof(*this));
 
     return (aux);
   } else {
@@ -663,6 +660,7 @@ void Literal::gcRecurse ()
 inline
 Float *Float::gc()
 {
+  COUNT(ozfloat);
   Float *ret =  newFloat(value);
   return ret;
 }
@@ -671,6 +669,7 @@ inline
 BigInt *BigInt::gc()
 {
   CHECKCOLLECTED(*(int *)&value.d, BigInt *);
+  COUNT(bigInt);
 
   BigInt *ret = new BigInt();
   mpz_set(&ret->value,&value);
@@ -684,12 +683,11 @@ void Script::gc()
   GCMETHMSG("Script::gc");
   if(first){
     int sz = numbOfCons*sizeof(Equation);
+    COUNT1(scriptLen,sz);
     Equation *aux = (Equation*)gcRealloc(first,sz);
     GCNEWADDRMSG(aux);
     
-    PROFILE_CODE1(if (opMode == IN_TC) {
-		    FDProfiles.inc_item(cp_size_script, sz);
-		  })
+    FDPROFILE_GC(cp_size_script, sz);
 
     for(int i = 0; i < numbOfCons; i++){
 #ifdef DEBUG_CHECK
@@ -759,16 +757,15 @@ RefsArray gcRefsArray(RefsArray r)
 
   Assert(!isFreedRefsArray(r));
   int sz = getRefsArraySize(r);
+  COUNT(refsArray);
+  COUNT1(refsArrayLen,sz);
 
   RefsArray aux = allocateRefsArray(sz,NO);
   GCNEWADDRMSG(aux);
 
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_refsarray, 
-				      (sz + 1) * sizeof(TaggedRef));
-		})
+  FDPROFILE_GC(cp_size_refsarray, (sz + 1) * sizeof(TaggedRef));
 
-    if (isDirtyRefsArray(r)) {
+  if (isDirtyRefsArray(r)) {
     markDirtyRefsArray(aux);
   }
 
@@ -813,15 +810,14 @@ CFuncContinuation *CFuncContinuation::gcCont(void)
 {
   GCMETHMSG("CFuncContinuation::gcCont");
   CHECKCOLLECTED(ToInt32(cFunc), CFuncContinuation *);
-  
+
+  COUNT(suspCFun);
   CFuncContinuation *ret = (CFuncContinuation*) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CFUNCONT);
   storeForward(&cFunc, ret);
   
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_cfunccont, sizeof(*this));
-		})
+  FDPROFILE_GC(cp_size_cfunccont, sizeof(*this));
 
   return ret;
 }
@@ -830,15 +826,15 @@ Continuation *Continuation::gc()
 {
   GCMETHMSG("Continuation::gc");
   CHECKCOLLECTED(ToInt32(pc), Continuation *);
-  
+
+  COUNT(continuation);
   Continuation *ret = (Continuation *) gcRealloc(this,sizeof(Continuation));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_CONT);
   storeForward(&pc, ret);
   
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_cont, sizeof(Continuation));
-		})
+  FDPROFILE_GC(cp_size_cont, sizeof(Continuation));
+
   return ret;
 }
 
@@ -863,13 +859,12 @@ SuspContinuation *SuspContinuation::gcCont()
     CHECKCOLLECTED(ToInt32(pc), SuspContinuation *)
   }
 
+  COUNT(suspCont);
   SuspContinuation *ret = (SuspContinuation*) gcRealloc(this, sizeof(*this));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret, PTR_SUSPCONT);
   
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_suspcont, sizeof(*this));
-		});
+  FDPROFILE_GC(cp_size_suspcont, sizeof(*this));
 
   Assert(opMode != IN_TC || isInTree(board->getBoardFast()));
 
@@ -909,6 +904,8 @@ STuple *STuple::gc()
   GCMETHMSG("STuple::gc");
   CHECKCOLLECTED(label, STuple *);
 
+  COUNT(sTuple);
+  COUNT1(sTupleLen,size);
   int len = (size-1)*sizeof(TaggedRef)+sizeof(STuple);
 
   STuple *ret = (STuple*) gcRealloc(this,len);
@@ -916,9 +913,8 @@ STuple *STuple::gc()
   ptrStack.push(ret,PTR_STUPLE);
   storeForward((int *) &label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getSize());
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_stuple, len);
-		})
+  FDPROFILE_GC(cp_size_stuple, len);
+
   return ret;
 }
 
@@ -929,13 +925,12 @@ LTuple *LTuple::gc()
   GCMETHMSG("LTuple::gc");
   CHECKCOLLECTED(args[0], LTuple *);
       
+  COUNT(lTuple);
   LTuple *ret = (LTuple*) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_LTUPLE);
 
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_ltuple, sizeof(*this));
-		})
+  FDPROFILE_GC(cp_size_ltuple, sizeof(*this));
 
   gcTaggedBlock(args,ret->args,2);
   
@@ -950,7 +945,8 @@ SRecord *SRecord::gcSRecord()
   GCMETHMSG("SRecord::gcSRecord");
   if (this==NULL) return NULL;
   CHECKCOLLECTED(label, SRecord *);
-  
+  COUNT(sRecord);
+  COUNT1(sRecordLen,getWidth());
   int len = (getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord);
 
   SRecord *ret = (SRecord*) gcRealloc(this,len);
@@ -959,9 +955,7 @@ SRecord *SRecord::gcSRecord()
   storeForward((int32*)&label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getWidth());
 
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_record, len);
-		})
+  FDPROFILE_GC(cp_size_record, len);
 
   return ret;
 }
@@ -979,16 +973,15 @@ Suspension *Suspension::gcSuspension()
 
   Board *bb=getBoardFast();
   if (!bb->gcIsAlive()) {
-    // mm2 warning("gcSuspension: dead\n");
+    DebugCheckT(warning("gcSuspension: dead\n"));
     return 0;
   }
 
+  COUNT(suspension);
   Suspension *newSusp = (Suspension *) gcRealloc(this, sizeof(*this));
   GCNEWADDRMSG(newSusp);
 
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_size_susp, sizeof(*this));
-		})
+  FDPROFILE_GC(cp_size_susp, sizeof(*this));
 
   if (flag & S_thread) {
     newSusp->item.thread = item.thread->gcThread();
@@ -1036,10 +1029,9 @@ SuspList * SuspList::gc()
       continue;
     }
     ret = new SuspList(aux, ret);
-    
-    PROFILE_CODE1(if (opMode == IN_TC) {
-      FDProfiles.inc_item(cp_size_susplist, sizeof(SuspList));
-    })
+    COUNT(suspList);
+
+    FDPROFILE_GC(cp_size_susplist, sizeof(SuspList));
   }
   GCNEWADDRMSG (ret);
   return (ret);
@@ -1057,26 +1049,19 @@ void GenCVariable::gc(void)
   switch (getType()){
   case FDVariable:
     ((GenFDVariable*)this)->gc();
-    PROFILE_CODE1(if (opMode == IN_TC) {
-      FDProfiles.inc_item(cp_size_fdvar, sizeof(GenFDVariable));
-    });
+    FDPROFILE_GC(cp_size_fdvar, sizeof(GenFDVariable));
+
     break;
   case OFSVariable:
     ((GenOFSVariable*)this)->gc();
-    PROFILE_CODE1(if (opMode == IN_TC) {
-      FDProfiles.inc_item(cp_size_ofsvar, sizeof(GenOFSVariable));
-    });
+    FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
     break;
   case MetaVariable:
     ((GenMetaVariable*)this)->gc();
-    PROFILE_CODE1(if (opMode == IN_TC) {
-      FDProfiles.inc_item(cp_size_metavar, sizeof(GenMetaVariable));
-    });
+    FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
     break;
   case BoolVariable:
-    PROFILE_CODE1(if (opMode == IN_TC) {
-      FDProfiles.inc_item(cp_size_boolvar, sizeof(GenBoolVariable));
-    });
+    FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case AVAR:
     ((AVar *) this)->gc();
@@ -1104,6 +1089,7 @@ TaggedRef gcVariable(TaggedRef var)
     if (!bb) return nil();
     INTOSPACE (bb);
     TaggedRef ret= makeTaggedUVar(bb);
+    COUNT(uvar);
     GCNEWADDRMSG(ret);
     return ret;
   }
@@ -1123,10 +1109,9 @@ TaggedRef gcVariable(TaggedRef var)
     cv_size = sizeof(SVariable);
 
     SVariable *new_cv = (SVariable*)gcRealloc(cv,cv_size);
-      
-    PROFILE_CODE1(if (opMode == IN_TC) {
-      FDProfiles.inc_item(cp_size_svar, cv_size);
-    });
+    COUNT(svar);
+
+    FDPROFILE_GC(cp_size_svar, cv_size);
 	
     storeForward(&cv->suspList, new_cv);
       
@@ -1149,10 +1134,11 @@ TaggedRef gcVariable(TaggedRef var)
   }
 
   Board *bb = gv->home->gcBoard();
-  if (!bb) return nil();
+  if (!bb) return nil(); }
 
   int gv_size = gv->getSize();
-      
+
+  COUNT(cvar);
   GenCVariable *new_gv = (GenCVariable*)gcRealloc(gv, gv_size);
 
   storeForward(&gv->suspList, new_gv);
@@ -1176,9 +1162,7 @@ void OZ_FiniteDomain::gc(void)
   Assert(isConsistent());
 #endif
 
-  PROFILE_CODE1(if (opMode == IN_TC) {
-    FDProfiles.inc_item(cp_size_fdvar, getDescrSize());
-  });
+  FDPROFILE_GC(cp_size_fdvar, getDescrSize());
 
   copyExtension();
 }
@@ -1213,12 +1197,12 @@ DynamicTable* DynamicTable::gc(void)
 
     Assert(isPwrTwo(size));
     // Copy the table:
+    COUNT(dynamicTable);
+    COUNT1(dynamicTableLen,size);
     size_t len = (size-1)*sizeof(HashElement)+sizeof(DynamicTable);
     DynamicTable* ret = (DynamicTable*) gcRealloc(this,len);
       
-    PROFILE_CODE1(if (opMode == IN_TC) {
-		     FDProfiles.inc_item(cp_size_ofsvar, len);
-		   })
+    FDPROFILE_GC(cp_size_ofsvar, len);
 	
     GCNEWADDRMSG(ret);
     // Take care of all TaggedRefs in the table:
@@ -1380,6 +1364,7 @@ void AM::gc(int msgLevel)
 
   INITCHECKSPACE;
   initMemoryManagement();
+  INITCOUNT();
 
   { /* initialize X regs; this IS necessary ! */
     int sz = getRefsArraySize(xRegs);
@@ -1408,10 +1393,8 @@ void AM::gc(int msgLevel)
   ThreadsPool::doGC ();
   Assert(rootThread);
 
-  if (FDcurrentTaskSusp != (Suspension *) NULL) {
-    warning("FDcurrentTaskSusp must be NULL!");
-    FDcurrentTaskSusp = FDcurrentTaskSusp->gcSuspension();
-  }
+  Assert(!FDcurrentTaskSusp);
+
 #ifdef DEBUG_STABLE
   board_constraints = board_constraints->gc(NO);
 #endif
@@ -1503,12 +1486,15 @@ void processUpdateStack(void)
 	switch(tagTypeOf(newVar)){
 	case UVAR:
 	  *tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(newVar)));
+	  COUNT(uvar);
 	  break;
 	case SVAR:
 	  *tt = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
+	  COUNT(svar);
 	  break;
 	case CVAR:
 	  *tt = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
+	  COUNT(cvar);
 	  break;
 	default:
 	  Assert(NO);
@@ -1550,8 +1536,6 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   setPathMarks(fromCopyBoard);
   toCopyBoard = fromCopyBoard->gcBoard();
   Assert(toCopyBoard);
-
-  // kost@ : FDcurrentTaskSusp ??? mm2
 
   performCopying();
 
@@ -1619,7 +1603,7 @@ inline void AbstractionEntry::gcAbstractionEntry()
 {
   abstr = (Abstraction *) abstr->gcConstTerm();
   if (abstr == NULL) {
-    DebugGCT(warning("abstraction entry dead\n")); // mm2;
+    // DebugCheckT(warning("abstraction entry dead\n")); // mm2;
     g = 0;
     return;
   }
@@ -1686,6 +1670,8 @@ void TaskStack::gc(TaskStack *newstack)
   /* allocate new stack and save reference for 
    * TaskStack::gcRecurse on the new stack
    */
+  COUNT(taskStack);
+  COUNT1(taskStackLen,getMaxSize());
   newstack->allocate(getMaxSize(),heapMalloc);
   newstack->push(this);
 }
@@ -1705,18 +1691,20 @@ void TaskStack::gcRecurse()
 
     switch (cFlag){
 
-    case C_NERVOUS:   break;
-    case C_SOLVE:     break;
-    case C_LOCAL:     break;
-    case C_JOB:       break;
+    case C_NERVOUS:   COUNT(cNervous); break;
+    case C_SOLVE:     COUNT(cSolve);   break;
+    case C_LOCAL:     COUNT(cLocal);   break;
+    case C_JOB:       COUNT(cJob);     break;
 
     case C_CONT: 
+      COUNT(cCont);
       // PC is already queued
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
       break;
       
     case C_XCONT:
+      COUNT(cXCont);
       // PC is already queued
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // Y 
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));  // G
@@ -1724,19 +1712,23 @@ void TaskStack::gcRecurse()
       break;
 
     case C_DEBUG_CONT: 
+      COUNT(cDebugCont);
       gcQueue(((OzDebug *) oldstack->pop())->gcOzDebug());
       break;
 
     case C_EXCEPT_HANDLER:
+      COUNT(cExceptHandler);
       gcQueue(((Chunk *) oldstack->pop())->gcConstTerm());
       break;
 
     case C_CALL_CONT: 
+      COUNT(cCallCont);
       gcQueue(((ConstTerm *) oldstack->pop())->gcConstTerm());
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
       break;
 
     case C_CFUNC_CONT:
+      COUNT(cCFuncCont);
       gcQueue(oldstack->pop());                // OZ_CFun
       gcQueue(((Suspension*) oldstack->pop())->gcSuspension());	
       gcQueue(gcRefsArray((RefsArray) oldstack->pop()));
@@ -1852,6 +1844,7 @@ ConstTerm *ConstTerm::gcConstTerm()
       case Co_Abstraction: 
 	  CheckLocal((Abstraction *) this);
 	  sz = sizeof(Abstraction);
+	  COUNT(abstraction);
 	  // DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(bb));
 	  break;
 
@@ -1860,23 +1853,29 @@ ConstTerm *ConstTerm::gcConstTerm()
 	  Object *o = (Object *) this;
 	  CheckLocal(o);
 	  sz = o->isDeep() ? sizeof(DeepObject): sizeof(Object);
+	  COUNT1(deepObject,o->isDeep()?1:0);
+	  COUNT1(flatObject,o->isDeep()?0:1);
 	  break;
 	}
       case Co_Cell:
 	  CheckLocal((Cell *) this);
 	  sz = sizeof(Cell);
+	  COUNT(cell);
 	  break;
 
       case Co_Builtin:
 	switch (((Builtin *) this)->getType()) {
 	case BIsolveCont:
 	  sz = sizeof(OneCallBuiltin);
+	  COUNT(oneCallBuiltin);
 	  break;
 	case BIsolved:
 	  sz = sizeof(SolvedBuiltin);
+	  COUNT(solvedBuiltin);
 	  break;
 	default:
 	  sz = sizeof(Builtin);
+	  COUNT(builtin);
 	}
 	break;
       default:
@@ -1897,6 +1896,7 @@ HeapChunk * HeapChunk::gc(void)
 {
   GCMETHMSG("HeapChunk::gc");
 
+  COUNT(heapChunk);
   HeapChunk * ret = (HeapChunk *) gcRealloc(this, sizeof(HeapChunk));
 
   ret->chunk_data = copyChunkData();
@@ -1918,6 +1918,7 @@ Thread *Thread::gcThread()
   if (this==0) return 0;
   CHECKCOLLECTED(*getGCField(), Thread *);
 
+  COUNT(thread);
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);
   ThreadList::add(ret);
@@ -2022,12 +2023,11 @@ Board * Board::gcBoard()
 
   Assert(opMode != IN_TC || isInTree(bb));
 
+  COUNT(board);
   size_t sz = sizeof(Board);
   Board *ret = (Board *) gcRealloc(bb,sz);
       
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		   FDProfiles.inc_item(cp_size_board, sz);
-		 })
+  FDPROFILE_GC(cp_size_board, sz);
 	
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_BOARD);
@@ -2053,6 +2053,7 @@ ObjectClass *ObjectClass::gcClass()
   GCMETHMSG("ObjectClass::gcClass");
   CHECKCOLLECTED(*getGCField(), ObjectClass *);
 
+  COUNT(objectClass);
   ObjectClass *ret = (ObjectClass *) gcRealloc(this,sizeof(*this));
   GCNEWADDRMSG(ret);
   storeForward(getGCField(), ret);
@@ -2078,19 +2079,20 @@ Actor *Actor::gcActor()
   // by kost@; flags are needed for getBoardFast
   size_t sz;
   if (isWait()) {
+    COUNT(waitActor);
     sz = sizeof(WaitActor);
   } else if (isAsk () == OK) {
+    COUNT(askActor);
     sz = sizeof(AskActor);
   } else {
+    COUNT(solveActor);
     sz = sizeof (SolveActor);
   }
   Actor *ret = (Actor *) gcRealloc(this,sz);
       
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		   FDProfiles.inc_item(isWait() ? cp_size_waitactor
-				       : (isAsk() ? cp_size_askactor
-					  : cp_size_solveactor), sz);
-		 })
+  FDPROFILE_GC(isWait() ? cp_size_waitactor
+		: (isAsk() ? cp_size_askactor
+		   : cp_size_solveactor), sz);
 	
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_ACTOR);
@@ -2120,11 +2122,10 @@ void WaitActor::gcRecurse()
   next.gcRecurse ();
 
   int32 num = ToInt32(childs[-1]);
+  COUNT1(waitChild,num);
   Board **newChilds=(Board **) heapMalloc((num+1)*sizeof(Board *));
       
-  PROFILE_CODE1(if (opMode == IN_TC) {
-		   FDProfiles.inc_item(cp_size_waitactor, (num+1)*sizeof(Board *));
-		 })
+  FDPROFILE_GC(cp_size_waitactor, (num+1)*sizeof(Board *));
 	
   *newChilds++ = (Board *) num;
   for (int i=0; i < num; i++) {
@@ -2174,7 +2175,7 @@ DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
   if (aa->isCommitted()) return 0;
   Board *bb=aa->getBoardFast();
   if (!bb->gcIsAlive()) {
-    // mm2 warning("SolveActor::StackEntryGC: dead node\n");
+    // DebugCheckT(warning("SolveActor::StackEntryGC: dead node\n")); // mm2
     return 0;
   }
   if (opMode == IN_TC && !isInTree(bb)) return 0;
@@ -2192,6 +2193,7 @@ void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
 	current = current->next;
     } else {
       push (el);
+      COUNT(solveDLLStack);
       if (current == rd)
 	c = s;
     }

@@ -110,7 +110,11 @@ void Statistics::print(FILE *fd)
   fprintf(fd,"    clones:       %d\n",   solveClone.total);
   fprintf(fd,"    solutions:    %d\n",   solveSolved.total);
   fprintf(fd,"    failures:     %d\n\n", solveFailed.total);
-  
+
+#ifdef HEAP_PROFILE
+  printCount();
+#endif
+
   fprintf(fd,"******************************\n");
   fprintf(fd,"***   End of Statistics    ***\n");
   fprintf(fd,"******************************\n\n");
@@ -243,3 +247,103 @@ void Statistics::printGcMsg(int level)
     fflush(stdout);
   }
 }
+
+#ifdef HEAP_PROFILE
+void Statistics::initCount() {
+  literal=0;
+  ozfloat=0;
+  bigInt=0;
+  scriptLen=0;
+  refsArray=0;
+  refsArrayLen=0;
+  continuation=0;
+  suspCFun=0;
+  suspCont=0;
+  sTuple=0;
+  sTupleLen=0;
+  lTuple=0;
+  sRecord=0;
+  sRecordLen=0;
+  suspension=0;
+  suspList=0;
+  uvar=0;
+  svar=0;
+  cvar=0;
+  dynamicTable= dynamicTableLen=0;
+  taskStack=taskStackLen=0;
+  cNervous=cSolve=cLocal=cJob=cCont=cXCont=cDebugCont=cExceptHandler=0;
+  cCallCont= cCFuncCont=0;
+  abstraction=deepObject=flatObject=cell=0;
+  oneCallBuiltin=solvedBuiltin=builtin=0;
+  heapChunk=thread=0;
+  board=objectClass=0;
+  askActor=waitActor=solveActor=waitChild=0;
+  solveDLLStack=0;
+}
+
+#include "ofgenvar.hh"
+
+void Statistics::printCount() {
+  printf("Heap after last GC:\n\n");
+  printf("values:\n");
+  printf("literal         %d (%dB)\n",literal,sizeof(Literal));
+  printf("ozfloat         %d (%dB)\n",ozfloat,sizeof(Float));
+  printf("bigInt          %d (%dB)\n",bigInt,sizeof(BigInt));
+  printf("sTuple          %d (%dB)\n",sTuple,sizeof(STuple));
+  printf("sTupleLen       %d (%dB)\n",sTupleLen,sizeof(TaggedRef));
+  printf("lTuple          %d (%dB)\n",lTuple,sizeof(LTuple));
+  printf("sRecord         %d (%dB)\n",sRecord,sizeof(SRecord));
+  printf("sRecordLen      %d (%dB)\n",sRecordLen,sizeof(TaggedRef));
+  printf("abstraction     %d (%dB)\n",abstraction,sizeof(Abstraction));
+  printf("deepObject      %d (%dB)\n",deepObject,sizeof(DeepObject));
+  printf("flatObject      %d (%dB)\n",flatObject,sizeof(Object));
+  printf("objectClass     %d (%dB)\n",objectClass,sizeof(ObjectClass));
+  printf("cell            %d (%dB)\n",cell,sizeof(Cell));
+  printf("oneCallBuiltin  %d (%dB)\n",oneCallBuiltin,sizeof(OneCallBuiltin));
+  printf("solvedBuiltin   %d (%dB)\n",solvedBuiltin,sizeof(SolvedBuiltin));
+  printf("builtin         %d (%dB)\n",builtin,sizeof(Builtin));
+  printf("heapChunk       %d (%dB)\n",heapChunk,sizeof(HeapChunk));
+  
+  printf("refsArray       %d (%dB)\n",refsArray,0);
+  printf("refsArrayLen    %d (%dB)\n",refsArrayLen,sizeof(TaggedRef));
+
+  printf("\nVariables:\n");
+  printf("uvar            %d (%dB)\n",uvar,sizeof(TaggedRef));
+  printf("svar            %d (%dB)\n",svar,sizeof(SVariable));
+  printf("cvar            %d (%dB)\n",cvar,sizeof(GenCVariable));
+
+  printf("\nLocal spaces\n");
+  printf("scriptLen       %d (%dB)\n",scriptLen,sizeof(Equation));
+  printf("board           %d (%dB)\n",board,sizeof(Board));
+  printf("askActor        %d (%dB)\n",askActor,sizeof(AskActor));
+  printf("waitActor       %d (%dB)\n",waitActor,sizeof(WaitActor));
+  printf("solveActor      %d (%dB)\n",solveActor,sizeof(SolveActor));
+  printf("waitChild       %d (%dB)\n",waitChild,sizeof(Board *));
+  printf("solveDLLStack   %d (%dB)\n",solveDLLStack,sizeof(DLLStackEntry *));
+
+  printf("\nThreads\n");
+  printf("thread          %d (%dB)\n",thread,sizeof(Thread));
+  printf("taskStack       %d (%dB)\n",taskStack,sizeof(TaskStack));
+  printf("taskStackLen    %d (%dB)\n",taskStackLen,0);
+  printf("cNervous        %d (%dB)\n",cNervous,4);
+  printf("cSolve          %d (%dB)\n",cSolve,4);
+  printf("cLocal          %d (%dB)\n",cLocal,4);
+  printf("cJob            %d (%dB)\n",cJob,4);
+  printf("cCont           %d (%dB)\n",cCont,12);
+  printf("cXCont          %d (%dB)\n",cXCont,16);
+  printf("cDebugCont      %d (%dB)\n",cDebugCont,8);
+  printf("cExceptHandler  %d (%dB)\n",cExceptHandler,8);
+  printf("cCallCont       %d (%dB)\n",cCallCont,12);
+  printf("cCFuncCont      %d (%dB)\n",cCFuncCont,16);
+
+  printf("continuation    %d (%dB)\n",continuation,sizeof(Continuation));
+  printf("suspCFun        %d (%dB)\n",suspCFun,sizeof(CFuncContinuation));
+  printf("suspCont        %d (%dB)\n",suspCont,sizeof(SuspContinuation));
+  printf("suspension      %d (%dB)\n",suspension,sizeof(Suspension));
+  printf("suspList        %d (%dB)\n",suspList,sizeof(SuspList));
+
+  printf("\nOFS\n");
+  printf("dynamicTable    %d (%dB)\n",dynamicTable,sizeof(DynamicTable));
+  printf("dynamicTableLen %d (%dB)\n",dynamicTableLen,sizeof(HashElement));
+}
+#endif
