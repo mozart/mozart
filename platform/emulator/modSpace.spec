@@ -62,7 +62,7 @@
 			     out => [],
 			     BI  => BIinjectSpace},
 
-     'register'         => { in  => ['+int'],
+     'choose'           => { in  => ['+int'],
                              out => ['value'],
                              BI  => BIregisterSpace},
      );
