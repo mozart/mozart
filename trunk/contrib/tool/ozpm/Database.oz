@@ -2,7 +2,7 @@ functor
 export
    'class' : Database
 import
-   Path(make) at 'x-oz://duchier/sp/Path.ozf'
+   Path(make) at 'x-ozlib://duchier/sp/Path.ozf'
    Pickle(load save)
 define
    fun lazy {LoadDB F}
