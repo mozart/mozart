@@ -34,15 +34,31 @@
 
 class IncludeRPropagator : public Propagator_S_D_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   IncludeRPropagator(OZ_Term s, OZ_Term d, OZ_Term r)
     : Propagator_S_D_D(s, d, r) {}
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
+  }
+};
+
+//-----------------------------------------------------------------------------
+
+class EqualRPropagator : public Propagator_S_S_D {
+private:
+  static OZ_PropagatorProfile profile;
+public:
+  EqualRPropagator(OZ_Term x, OZ_Term y, OZ_Term r)
+    : Propagator_S_S_D(x, y, r) {}
+
+  virtual OZ_Return propagate(void);
+  
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
@@ -50,15 +66,15 @@ public:
 
 class IsInRPropagator : public Propagator_S_I_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   IsInRPropagator(OZ_Term v, OZ_Term i, OZ_Term b)
     : Propagator_S_I_D(v, i, b) { }
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &spawner;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 };
 
@@ -66,7 +82,7 @@ public:
 
 class BoundsPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 
   int _s_ub_card, _d_ub, _s_ub;
   OZ_Term _s, _d, _r;
@@ -77,8 +93,8 @@ public:
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
   virtual size_t sizeOf(void) {
     return sizeof(BoundsPropagator);
@@ -100,7 +116,7 @@ public:
 
 class BoundsNPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 
   int _size, * _d_ub;
   OZ_Term * _s, * _d, * _r;
@@ -131,8 +147,8 @@ public:
 
   virtual OZ_Return propagate(void);
   
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
   virtual size_t sizeOf(void) {
     return sizeof(BoundsNPropagator);
@@ -160,7 +176,7 @@ public:
 
 class PartitionReifiedPropagator : public OZ_Propagator {
 protected:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 
   IndexSets * _i_sets;
 
@@ -178,8 +194,8 @@ public:
   
   virtual size_t sizeOf(void) { return sizeof(PartitionReifiedPropagator); }
 
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 
   virtual void updateHeapRefs(OZ_Boolean) {
@@ -209,7 +225,7 @@ public:
 
 class PartitionProbingPropagator : public OZ_Propagator {
 protected:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 
   IndexSets * _i_sets;
 
@@ -226,8 +242,8 @@ public:
   
   virtual size_t sizeOf(void) { return sizeof(PartitionProbingPropagator); }
 
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 
   virtual void updateHeapRefs(OZ_Boolean) {
@@ -248,7 +264,7 @@ public:
 
 class PartitionReified1Propagator : public PartitionReifiedPropagator {
 protected:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 
   OZ_Term _cost;
 
@@ -260,8 +276,8 @@ public:
   
   virtual size_t sizeOf(void) { return sizeof(PartitionReified1Propagator); }
 
-  virtual OZ_CFunHeader * getHeader(void) const {
-    return &header;
+  virtual OZ_PropagatorProfile * getProfile(void) const {
+    return &profile;
   }
 
   virtual void updateHeapRefs(OZ_Boolean gc) {

@@ -38,6 +38,6 @@ public:
   virtual size_t sizeOf(void) { return sizeof(CDSuppl); }
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-  virtual OZ_CFunHeader * getHeader(void) const { return NULL; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return NULL; }
 };
 

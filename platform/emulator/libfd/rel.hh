@@ -30,12 +30,12 @@
 
 class NotEqOffPropagator : public Propagator_D_D_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   NotEqOffPropagator(OZ_Term x, OZ_Term y,  int c) 
     : Propagator_D_D_I(x, y, c) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -43,12 +43,12 @@ public:
 
 class LessEqOffPropagator : public Propagator_D_D_I {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   LessEqOffPropagator(OZ_Term x, OZ_Term y,  int c) 
     : Propagator_D_D_I(x, y, c) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -56,12 +56,12 @@ public:
 
 class MinimumPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   MinimumPropagator(OZ_Term x, OZ_Term y,  OZ_Term z) 
     : Propagator_D_D_D(x, y, z) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -69,12 +69,12 @@ public:
 
 class MaximumPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   MaximumPropagator(OZ_Term x, OZ_Term y,  OZ_Term z) 
     : Propagator_D_D_D(x, y, z) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -82,12 +82,12 @@ public:
 
 class IntersectionPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   IntersectionPropagator(OZ_Term x, OZ_Term y,  OZ_Term z) 
     : Propagator_D_D_D(x, y, z) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -95,12 +95,12 @@ public:
 
 class UnionPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   UnionPropagator(OZ_Term x, OZ_Term y,  OZ_Term z) 
     : Propagator_D_D_D(x, y, z) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -108,12 +108,12 @@ public:
 
 class SubSetPropagator : public Propagator_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   SubSetPropagator(OZ_Term x, OZ_Term y) 
     : Propagator_D_D(x, y) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
 
@@ -121,11 +121,11 @@ public:
 
 class DistinctPropagator : public Propagator_VD {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DistinctPropagator(OZ_Term x) : Propagator_VD(x) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
   /*
 private:
@@ -143,12 +143,12 @@ public:
 
 class DistinctOffsetPropagator : public Propagator_VD_VI {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DistinctOffsetPropagator(OZ_Term l, OZ_Term offset) 
     : Propagator_VD_VI(l, offset) {}
   
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
   virtual OZ_Return propagate(void);
 };
  

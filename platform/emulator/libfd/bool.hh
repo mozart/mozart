@@ -33,78 +33,78 @@
 
 class ConjunctionPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   ConjunctionPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
 
 class DisjunctionPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   DisjunctionPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
   
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
 
 class XDisjunctionPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   XDisjunctionPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
 
 class ImplicationPropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   ImplicationPropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
 
 class EquivalencePropagator : public Propagator_D_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   EquivalencePropagator(OZ_Term x, OZ_Term y, OZ_Term z) 
     : Propagator_D_D_D(x, y, z) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 //-----------------------------------------------------------------------------
 
 class NegationPropagator : public Propagator_D_D {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 public:
   NegationPropagator(OZ_Term x, OZ_Term y) 
     : Propagator_D_D(x, y) { };
 
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const { return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };
 
 

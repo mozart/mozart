@@ -32,12 +32,12 @@
 
 class LinEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   LinEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile;}
   virtual OZ_Term getParameters(void) const {
     return Propagator_VI_VD_D::getParametersC(SUM_OP_EQ);
   }
@@ -45,12 +45,12 @@ public:
 
 class LinLessEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   LinLessEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile;}
   virtual OZ_Term getParameters(void) const { 
     return Propagator_VI_VD_D::getParametersC(SUM_OP_LEQ);
   }
@@ -58,12 +58,12 @@ public:
 
 class LinGreaterEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   LinGreaterEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile;}
   virtual OZ_Term getParameters(void) const { 
     return Propagator_VI_VD_D::getParametersC(SUM_OP_EQ);
   }
@@ -71,12 +71,12 @@ public:
 
 class LinNotEqAbsPropagator : public Propagator_VI_VD_D {
 private:
-  static OZ_CFunHeader header;
+  static OZ_PropagatorProfile profile;
 public:
   LinNotEqAbsPropagator(OZ_Term a, OZ_Term x, OZ_Term d)
     : Propagator_VI_VD_D(a, x, d) {}
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {return &header;}
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile;}
   virtual OZ_Term getParameters(void) const { 
     return Propagator_VI_VD_D::getParametersC(SUM_OP_NEQ);
   }

@@ -54,7 +54,7 @@ OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
 
 class WidthPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 protected:
   OZ_Term rawrec, rawwid;
 public:
@@ -67,13 +67,13 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(WidthPropagator); }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
 };
 
 class MonitorArityPropagator : public OZ_Propagator {
 private:
-  static OZ_CFunHeader spawner;
+  static OZ_PropagatorProfile profile;
 protected:
   OZ_Term X, K, L, FH, FT;
 public:
@@ -90,7 +90,7 @@ public:
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return propagate(void);
-  virtual OZ_CFunHeader * getHeader(void) const {return &spawner; }
+  virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
   
   TaggedRef getX(void) { return X; }
