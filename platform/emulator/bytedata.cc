@@ -304,9 +304,25 @@ OZ_BI_define(BIBitString_toList,1,1)
 // ByteData
 // -------------------------------------------------------------------
 
+#include <ctype.h>
+
 void ByteData::bytePrintStream(ostream& out) {
   int w = getWidth();
-  for (int i=0; i<w; i++) out << get(i);
+  for (int i=0; i<w; i++) {
+    BYTE b = get(i);
+    if (isalnum(b) || ispunct(b)) out << get(i);
+    else if (b=='\n') out << "\\n";
+    else if (b=='\t') out << "\\t";
+    else if (b=='\r') out << "\\r";
+    else {
+      // output in octal notation
+      int d1 = b / 64;
+      b -= b % 64;
+      int d2 = b / 8;
+      int d3 = b % 8;
+      out << "\\" << d1 << d2 << d3;
+    }
+  }
 }
 
 Bool ByteData::equal(ByteData *s) {
@@ -371,9 +387,13 @@ void ByteString_init() {
 }
 
 OZ_Term ByteString::printV(int depth) {
+  ostrstream *out = new ostrstream;
+  bytePrintStream(*out);
+  int len = out->pcount();
+  OZ_Term t = OZ_mkByteString(out->str(),len);
+  delete out;
   return oz_pair2(oz_atom("<ByteString \""),
-                  oz_pair2(oz_makeTaggedExtension(this),
-                           oz_atom("\">")));
+                  oz_pair2(t,oz_atom("\">")));
 }
 
 ByteString* ByteString::clone() {
