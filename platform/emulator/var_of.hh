@@ -113,6 +113,8 @@ public:
 
 typedef unsigned long dt_index;
 
+// Return true iff argument is a power of two
+extern Bool isPwrTwo(dt_index s);
 
 class HashElement {
 friend class DynamicTable;
@@ -240,13 +242,6 @@ private:
         }
         return i;
     }
-
-    // Return true iff argument is a power of two
-    static Bool isPwrTwo(dt_index s) {
-        Assert(s>0);
-        return (s & (s-1))==0;
-        // while ((s&1)==0) s=(s>>1); return (s==1);
-    }
 };
 
 
@@ -274,10 +269,17 @@ public:
         dynamictable=DynamicTable::newDynamicTable();
     }
 
-    // Create new table of given size (pwr. of 2) in given space:
+    // With new table of given size (must be pwr. of 2) in given space:
     GenOFSVariable(Board* home, dt_index size)
     : GenCVariable(OFSVariable,home) {
         label=makeTaggedRef(newTaggedUVar(home));
+        dynamictable=DynamicTable::newDynamicTable(size);
+    }
+
+    // With new table of given size (must be pwr. of 2):
+    GenOFSVariable(dt_index size)
+    : GenCVariable(OFSVariable) {
+        label=makeTaggedRef(newTaggedUVar(am.currentBoard));
         dynamictable=DynamicTable::newDynamicTable(size);
     }
 
