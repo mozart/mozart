@@ -915,9 +915,11 @@ void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
   default:
     break;
   }
+#ifdef DEBUG_CHECK
   if(s==myDSite){
     OZ_warning("sec credit error: please inform andreas@sics.se");
     return;}
+#endif
   giveBackSecCredit(s,c);
 }
 

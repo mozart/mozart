@@ -40,6 +40,7 @@
 #include "dpDebug.hh"
 #include "genhashtbl.hh"
 #include "perdio.hh"
+#include "protocolCredit.hh"
 
 #ifdef DEBUG_CHECK
 Bool withinBorrowTable(int i);

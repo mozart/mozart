@@ -38,17 +38,17 @@ ExportedProxyVar::ExportedProxyVar(ProxyVar *pv, DSite *dest)
   Assert(pv->getIdV() == OZ_EVAR_PROXY);
   int bi = pv->getIndex();
   DebugCode(bti = bi;);
-  DebugCode(isMarshaled = NO;);
+  isMarshaled = NO;
 
   //
   PD((MARSHAL,"var proxy bi: %d", bi));
   isFuture = pv->isFuture();
-  if (dest && borrowTable->getOriginSite(bi) == dest) {
+  ms = borrowTable->getOriginSite(bi);
+  if (dest && ms == dest) {
+    isToOwner = OK;
     saveMarshalToOwner(bi, oti, ct, credit, scm);
-    // used for distinguishing between these cases during marshaling,
-    // as well as GC needs it:
-    ms = (DSite *) 0;
   } else {
+    isToOwner = NO;
     saveMarshalBorrowHead(bi, ms, oti, ct, credit, scm);
   }
 }
@@ -58,20 +58,34 @@ void ExportedProxyVar::marshal(ByteBuffer *bs)
 {
 //    DebugCode(PD((MARSHAL,"exported var proxy bi:%d", bi)););
   Assert(isMarshaled == NO);
-  DebugCode(isMarshaled = OK;);
+  isMarshaled = OK;
   //
-  if (ms)
+  if (isToOwner)
+    marshalToOwnerSaved(bs, oti, ct, scm);
+  else
     marshalBorrowHeadSaved(bs, (isFuture ? DIF_FUTURE : DIF_VAR),
 			   ms, oti, ct, credit, scm);
-  else
-    marshalToOwnerSaved(bs, ct, oti, scm);
 }
 
 //
 void ExportedProxyVar::gCollectRecurseV()
 {
   DebugCode(PD((GC, "ExportedProxyVar b:%d", bti)););
-  if (ms) ms->makeGCMarkSite();
+  ms->makeGCMarkSite();
   if (scm) scm->makeGCMarkSite();
 }
 
+//
+void ExportedProxyVar::disposeV()
+{
+  Assert(isEmptySuspList());
+  //
+  if (!isMarshaled) {
+    if (isToOwner) {
+      discardToOwnerSaved(ms, oti, ct, scm);
+    } else {
+      discardBorrowHeadSaved(ms, oti, ct, credit, scm);
+    }
+  }
+  freeListDispose(this, sizeof(ExportedProxyVar));
+}
