@@ -36,6 +36,7 @@ AC_INIT(lib)
 OZ_INIT
 OZ_DENYS_EVENTS
 OZ_SITE_PROPERTY
+OZ_GTK_ENABLED
 
 dnl *****************************************************************
 dnl locations
