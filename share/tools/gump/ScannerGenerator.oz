@@ -84,7 +84,7 @@ local
 	       stop
 	    elseif {OS.system 'ozdynld '#
 		    {MakeFileName T ".o"}#' -o '#
-		    {MakeFileName T ".dl"}#' -lc'} \= 0
+		    {MakeFileName T ".so"}#' -lc'} \= 0
 	    then
 	       {Rep error(kind: 'system error'
 			  msg: 'invocation of ozdynld failed')}
@@ -416,13 +416,13 @@ in
 %   [create currentMode delete getAtom getLength getNextMatch getString
 %    input setMode switchToBuffer unput]
 %   {Record.toList
-%    {Foreign.load {Class.getFeature T filenameprefix}#"MyScanner.dl"}}
+%    {Foreign.load {Class.getFeature T filenameprefix}#"MyScanner.so"}}
 %   fun {$ F X} F#X end}}
 LexerO = fRecord(fAtom('#' unit)
 		 [fApply(fOpApply('.' [fVar('Class' unit)
 				       fAtom('getFeature' unit)] unit)
 			 [T fAtom('filenameprefix' unit)] unit)
-		  fAtom({MakeFileName T ".dl"} unit)])
+		  fAtom({MakeFileName T ".so"} unit)])
 	       in
 LexerLoad =
 fEq(fVar('`lexer`' unit)
