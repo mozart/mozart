@@ -25,6 +25,7 @@ in
    local
       D = 4711
    in
+      {Debug.breakpoint}
       {Browse {A 47 11 $}}
    end
 end
