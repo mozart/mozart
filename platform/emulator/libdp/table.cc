@@ -508,7 +508,7 @@ DSite* BorrowEntry::getSmallSecondaryCredit(Credit &cred){
       cred=OWNER_GIVE_CREDIT_SIZE;
       getMaster()->getBig()->requestCreditE(OWNER_GIVE_CREDIT_SIZE);
       return myDSite;}
-    case PO_SLAVE:{
+    case PO_EXTENDED|PO_SLAVE:{
       if(getSlave()->getSmall_Slave(cred)){
         addFlags(PO_MASTER);
         break;}
@@ -517,6 +517,7 @@ DSite* BorrowEntry::getSmallSecondaryCredit(Credit &cred){
       createSecMaster();
       break;}
     default:{
+      OZ_error("secondary credit error");
       Assert(0);}
     }
   }
@@ -550,6 +551,7 @@ DSite* BorrowEntry::getOneSecondaryCredit(){
       createSecMaster();
       break;}
     default:{
+      OZ_error("secondary credit error");
       Assert(0);}
 
     }
@@ -576,6 +578,7 @@ void BorrowEntry::addPrimaryCreditExtended(Credit c){
     overflow=getMaster()->addPrimaryCredit_Master(c);
     break;
   default:
+    OZ_error("secondary credit error");
     Assert(0);}}
   if(overflow>0){
     giveBackCredit(overflow);}
