@@ -27,17 +27,6 @@
 \insert Errors.oz
 
 local
-   proc {FromFile FileName ?NewBufferState}
-      NewBufferState = {LexBase.createFromFile FileName}
-      if NewBufferState == 0 then
-	 {Exception.raiseError gump(fileNotFound FileName)}
-      end
-   end
-
-   proc {FromVirtualString VS ?NewBufferState}
-      NewBufferState = {LexBase.createFromVirtualString VS}
-   end
-
    proc {FinalizeScanner S}
       {S close()}
    end
@@ -78,14 +67,14 @@ in
       end
       meth scanFile(FileName) Buffer in
 	 lock
-	    Buffer = {FromFile FileName}
+	    Buffer = {LexBase.createFromFile FileName}
 	    BufferList <- Buffer|@BufferList
 	    {self.lexer.switchToBuffer @LexerAddr Buffer}
 	 end
       end
       meth scanVirtualString(VS) Buffer in
 	 lock
-	    Buffer = {FromVirtualString VS}
+	    Buffer = {LexBase.createFromVirtualString VS}
 	    BufferList <- Buffer|@BufferList
 	    {self.lexer.switchToBuffer @LexerAddr Buffer}
 	 end
