@@ -101,6 +101,7 @@
 	  ( AtomLocation,    "location"),
 	  ( AtomMedium,      "medium"),
 	  ( AtomNames,       "names"),
+          ( AtomCells,       "cells"),
 	  ( AtomOn,	     "on"),
 	  ( AtomPropagate,   "propagate"),
 	  ( AtomPropagators, "propagators"),

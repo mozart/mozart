@@ -86,6 +86,8 @@
 
 #define DEFAULT_BWL_MS		50
 
+#define DEFAULT_PICKLE_CELLS	0
+
 #define DEFAULT_TRAIL_SIZE      1024
 
 #define SHOW_IDLE_MESSAGE	0

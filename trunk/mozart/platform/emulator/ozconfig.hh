@@ -68,6 +68,8 @@ public:
   int bwlIterationsPerMS;
   int bwlMSs;
 
+  int pickleCells;
+
   int debugIP;
   int debugPerdio;
   
