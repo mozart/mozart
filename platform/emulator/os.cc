@@ -328,7 +328,6 @@ static SigHandler handlers[] = {
   {SIGINT, "SIGINT", NO,handlerDefault,0},
   {SIGTERM,"SIGTERM",NO,handlerDefault,0},
   {SIGUSR1,"SIGUSR1",NO,handlerDefault,0},
-  {SIGSEGV,"SIGSEGV",NO,handlerDefault,0},
   {SIGFPE, "SIGFPE", NO,handlerDefault,0},
 
 #ifdef SIGHUP
@@ -336,9 +335,6 @@ static SigHandler handlers[] = {
 #endif
 #ifdef SIGUSR2
   {SIGUSR2,"SIGUSR2",NO,handlerDefault,0},
-#endif
-#ifdef SIGBUS
-  {SIGBUS,"SIGBUS",NO,handlerDefault,0},
 #endif
 #ifdef SIGKILL
   {SIGKILL,"SIGKILL",NO,handlerDefault,0},
@@ -903,17 +899,12 @@ void osInitSignals()
 #ifdef SIGUSR1
   osSignal(SIGUSR1,handlerUSR1);
 #endif
-#ifdef SIGBUS
-  osSignal(SIGBUS,handlerBUS);
-#endif
 #ifdef SIGPIPE
   osSignal(SIGPIPE,handlerPIPE);
 #endif
 #ifdef SIGCHLD
   osSignal(SIGCHLD,handlerCHLD);
 #endif
-
-  osSignal(SIGSEGV,handlerSEGV);
 
   // do not allow to overload SIGALRM
 #ifdef SIGALRM
@@ -1554,7 +1545,7 @@ int WINAPI dll_entry(int a,int b,int c)
    stack dump
    ----------------------------------------------------------------- */
 
-#if !defined(WINDOWS) && !defined(DEBUG_CHECK)
+#if 0 && !defined(WINDOWS) && !defined(DEBUG_CHECK)
 
 /* try to attach gdb to us and print a stack dump */
 
