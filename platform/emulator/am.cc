@@ -40,6 +40,7 @@
 #include "fdomn.hh"
 #include "trace.hh"
 #include "newmarshaler.hh"
+#include "cpi.hh"
 
 AM am;
 
@@ -255,6 +256,7 @@ void AM::init(int argc,char **argv)
   (void) engine(OK);
 
   initFDs();
+  initCPI();
 
   initMemoryManagement();
 

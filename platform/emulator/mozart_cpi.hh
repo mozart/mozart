@@ -510,6 +510,7 @@ inline OZ_Propagator::OZ_Propagator(void) {}
 #ifdef TMUELLER
 class ozdeclspec OZ_CPIVar {
   friend class OZ_Expect;
+  friend void initCPI(void);
 private:
   static int _first_run;
   static OZ_Term _vars_removed;

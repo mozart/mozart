@@ -108,6 +108,9 @@ void staticAddSpawn(OZ_CtDefinition * def,
                     OZ_CtWakeUp w,
                     OZ_Term * v);
 
+
+void initCPI(void);
+
 #if !defined(OUTLINE)
 #include "cpi.icc"
 #else
