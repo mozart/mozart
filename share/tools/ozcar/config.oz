@@ -157,8 +157,8 @@ ThreadTreeBoldFont     = BoldFont
 ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
 TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 StatusFont             = TitleFont
-HelpTitleFont       = '-adobe-new century schoolbook-*-i-*-*-16-*-*-*-*-*-*-*'
-HelpFont               = BoldFont
+HelpTitleFont          = '-adobe-helvetica-bold-r-*-*-20-*-*-*-*-*-*-*'
+HelpFont               = '-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
