@@ -47,7 +47,7 @@ Explorer <<{ExploreOne {Steiner 9}}>> yields as solution
 The search tree has depth <Math/50/, <Math/4545/ choice nodes, and
 <Math/4521/ failure nodes.
 
-<PICTURE.extern display to="fset_steiner_naive.gif" type=GIF>
+<PICTURE.extern id="pic.fset_steiner_naive" display to="fset_steiner_naive.gif" type=GIF>
 
 <Para><Title/Improving the Model./ A promising way to improve the
 efficiency of a constraint model (where the corresponding problem does
@@ -75,7 +75,7 @@ This code is to be inserted right before the distribution. Solving the
 Steiner problem of order <Math>9</Math> results in the following
 search tree.
 
-<PICTURE.extern display to="fset_steiner_order.gif" type=GIF>
+<PICTURE.extern id="pic.fset_steiner_order" display to="fset_steiner_order.gif" type=GIF>
 
 We see that the number of choice nodes decreases from <Math/4545/ to
 <Math/565/ and the number of failure nodes decreases from <Math/4521/

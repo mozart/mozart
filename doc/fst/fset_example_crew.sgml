@@ -153,7 +153,7 @@ Running the solver by
 and invoking the &oz; Browser on the solution node results in:
 
 <P>
-<PICTURE.extern display to="crew_browser.gif" type=GIF>
+<PICTURE.extern id="pic.crew_browser" display to="crew_browser.gif" type=GIF>
 
 <P> The flights are to be attended in the order they appear in the
 solution list. Each sublist denotes the assignment for an individual
