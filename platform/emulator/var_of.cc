@@ -421,7 +421,7 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode *scp)
 Bool OzOFVariable::disentailed(Literal *l, int tupleArity) {
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (oz_isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
+    if (oz_isLiteral(tmp) && !oz_eq(makeTaggedLiteral(l),tmp)) return TRUE;
     return (dynamictable->hasExtraFeatures(tupleArity));
 }
 
@@ -430,7 +430,7 @@ Bool OzOFVariable::disentailed(Literal *l, int tupleArity) {
 Bool OzOFVariable::disentailed(Literal *l, Arity *recordArity) {
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (oz_isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
+    if (oz_isLiteral(tmp) && !oz_eq(makeTaggedLiteral(l),tmp)) return TRUE;
     return (dynamictable->hasExtraFeatures(recordArity));
 }
 
@@ -441,7 +441,7 @@ Bool OzOFVariable::valid(TaggedRef val)
     if (getWidth()>0) return FALSE;
     TaggedRef tmp=label;
     DEREF(tmp,_1,_2);
-    if (oz_isLiteral(tmp) && !literalEq(tmp,val)) return FALSE;
+    if (oz_isLiteral(tmp) && !oz_eq(tmp,val)) return FALSE;
     return TRUE;
 }
 

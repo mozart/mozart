@@ -51,8 +51,9 @@ VariableNamer *allnames = NULL;
 
 const char *oz_varGetName(TaggedRef v)
 {
+  v = oz_safeDeref(v);
   for (VariableNamer *i = allnames; i!=NULL; i = i->next) {
-    if (OZ_isVariable(i->var) && oz_eq(i->var,v)) {
+    if (OZ_isVariable(i->var) && oz_eq(oz_safeDeref(i->var),v)) {
       return i->name;
     }
   }
