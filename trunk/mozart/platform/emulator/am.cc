@@ -34,7 +34,7 @@
 
 #include "../include/config.h"
 
-#include "sun-proto.h"
+#include "sunproto.h"
 
 #include "actor.hh"
 #include "am.hh"
@@ -47,7 +47,7 @@
 #include "records.hh"
 #include "thread.hh"
 #include "unify.hh"
-#include "fdbuiltin.hh"
+#include "fdbuilti.hh"
 
 AM am;
 
