@@ -617,6 +617,21 @@ OZ_C_proc_begin(BIsystemTellSize,3)
 
   // Wait for label
   DEREF(label,labelPtr,labelTag);
+  DEREF(t, tPtr, tag);
+
+  /* most probable case first */
+  if (isLiteral(labelTag) && isNotCVar(tag)) {
+    DEREF(tNumFeats, nPtr, ntag);
+    if (!isSmallInt(tNumFeats)) TypeErrorT(1,"Int");
+    dt_index numFeats=smallIntValue(tNumFeats);
+    dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
+			     : (int)ceil((double)numFeats/FILLFACTOR));
+    GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
+    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+    Assert(ok);
+    return PROCEED;
+  }
+
   switch (labelTag) {
   case LTUPLE:
   case SRECORD:
@@ -645,7 +660,6 @@ OZ_C_proc_begin(BIsystemTellSize,3)
   }
 
   // Create record:
-  DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
   case LITERAL:
@@ -688,7 +702,17 @@ OZ_C_proc_begin(BIrecordTell,2)
   TaggedRef t = OZ_getCArg(1);
 
   // Wait for label
+  DEREF(t, tPtr, tag);
   DEREF(label,labelPtr,labelTag);
+
+  /* most probable case first */
+  if (isLiteral(labelTag) && isNotCVar(tag)) {
+    GenOFSVariable *newofsvar=new GenOFSVariable(label);
+    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+    Assert(ok);
+    return PROCEED;
+  }
+
   switch (labelTag) {
   case LTUPLE:
   case SRECORD:
@@ -717,7 +741,6 @@ OZ_C_proc_begin(BIrecordTell,2)
   }
 
   // Create record:
-  DEREF(t, tPtr, tag);
   switch (tag) {
   case LTUPLE:
   case LITERAL:
@@ -1100,6 +1123,14 @@ OZ_C_proc_begin(BIlabelC,2)
   DEREF(term,termPtr,tag);
   TaggedRef lbldrf=lbl;
   DEREF(lbldrf,_,lbltag);
+
+  /* most probable case first */
+  if (isLiteral(lbltag) && isNotCVar(tag)) {
+    GenOFSVariable *newofsvar=new GenOFSVariable(lbl);
+    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
+    Assert(ok);
+    return PROCEED;
+  }
 
   // Constrain term to a record:
   // Get the term's label, if it exists
@@ -1530,6 +1561,28 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     DEREF(term, termPtr, termTag);
     DEREF(fea,  feaPtr,  feaTag);
     int suspFlag=FALSE;
+
+    // optimize the most common case: adding or reading a feature
+    if (isCVar(termTag) && tagged2CVar(term)->getType()==OFSVariable &&
+	isFeature(feaTag)) {
+      GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+
+      TaggedRef t=ofsvar->getFeatureValue(fea);
+      if (t!=makeTaggedNULL()) {
+	// Feature exists
+	out=t;
+	return PROCEED;
+      } 
+      
+      if (am.currentBoard == ofsvar->getBoardFast()) {
+	TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
+	Bool ok=ofsvar->addFeatureValue(fea,uvar);
+	Assert(ok);
+	ofsvar->propagateOFS();
+	out=uvar;
+	return PROCEED;
+      }
+    }
 
     // Constrain term to a record:
     switch (termTag) {
