@@ -148,7 +148,11 @@ int OZ_FDIntVar::read(OZ_Term v)
 
       if (cvar->testReifiedFlag()) {
       // may already be a reified var; then the type is incorrect
-        if (cvar->isBoolPatched()) goto global_bool; else goto global_fd;
+        if (cvar->isBoolPatched()) {
+          goto global_bool;
+        } else {
+          goto global_fd;
+        }
       } else if (cvar->getType() == OZ_VAR_BOOL) {
       global_bool:
         setSort(bool_e);
@@ -240,6 +244,97 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
    (initial_width > ((OZ_FiniteDomainImpl *)domPtr)->getWidth()         \
      ? fd_prop_bounds : fd_prop_any)
 
+#ifdef TMUELLER
+OZ_Boolean OZ_FDIntVar::tell(void)
+{
+  // someone else has already determined it
+  if (!oz_isVariable(*varPtr)) {
+    return OZ_FALSE;
+  }
+  //
+  if (testReifiedFlag(var)) {
+    unpatchReifiedFD(var, isSort(bool_e));
+  }
+  //
+  if (!testResetStoreFlag(var)) {
+    // the constraint has already been told, i.e., there were at least
+    // two OZ_FDIntVar connected to the same store variable
+    return OZ_FALSE;
+  } else if(!isTouched()) {
+    // no constraints have been imposed by the current propagator run.
+    // note the cases caches integers too.
+    return OZ_TRUE;
+  } else if (isSort(int_e)) {
+    //
+    // there is a finite domain variable in the store
+    //
+    if (*domPtr == fd_singl) {
+      //
+      // propagation produced singleton
+      //
+      if (isState(loc_e)) {
+        // local variable
+        tagged2GenFDVar(var)->becomesSmallIntAndPropagate(varPtr);
+      } else {
+        // global variable
+        int int_val = domPtr->getSingleElem();
+        // restore the original constraint
+        *domPtr = dom;
+        // wake up
+        tagged2GenFDVar(var)->propagate(fd_prop_singl);
+        bindGlobalVarToValue(varPtr, newSmallInt(int_val));
+      }
+    } else if (*domPtr == fd_bool) {
+      //
+      // propagation produced boolean domain
+      //
+      if (isState(loc_e)) {
+        // local variable
+        tagged2GenFDVar(var)->becomesBoolVarAndPropagate(varPtr);
+      } else {
+        // global variable
+        // restore the original constraint
+        *domPtr = dom;
+        // wake up
+        tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
+        // cast store variable to boolean varaible
+        Board * fdvarhome = tagged2GenFDVar(var)->getBoardInternal();
+        OZ_Term * newboolvar = newTaggedCVar(new OzBoolVariable(fdvarhome));
+        castGlobalVar(varPtr, newboolvar);
+      }
+      return OZ_TRUE;
+    } else {
+      //
+      // propagation produced proper domain
+      //
+      tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
+      if (isState(glob_e)) {
+        // restore the original constraint
+        *domPtr = dom;
+        // constrain global variable
+        constrainGlobalVar(varPtr, *domPtr);
+      }
+      return OZ_TRUE;
+    }
+  } else {
+    //
+    // there is a finite domain variable in the store
+    //
+    Assert(isSort(bool_e) && *domPtr == fd_singl); // boolean variable
+
+    if (isState(loc_e)) {
+      // local variable
+      tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);
+    } else {
+      // global variable
+      tagged2GenBoolVar(var)->propagate();
+      int int_val = domPtr->getSingleElem();
+      bindGlobalVarToValue(varPtr, newSmallInt(int_val));
+    }
+  }
+  return OZ_FALSE;
+}
+#else
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
   if (!oz_isVariable(*varPtr))
@@ -298,6 +393,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
   }
   return OZ_FALSE;
 }
+#endif
 
 void OZ_FDIntVar::fail(void)
 {
