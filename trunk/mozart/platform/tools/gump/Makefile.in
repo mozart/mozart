@@ -20,7 +20,7 @@ LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
 CFLAGS		= -O6
 
-DYNLDIR		= $(PREFIX)/platform/@platform@/tools/gump
+DYNLDIR		= $(PREFIX)/platform/@platform@/share/gump
 INCDIR		= $(PREFIX)/include
 
 INSTALL		= @INSTALL@
@@ -29,7 +29,7 @@ INSTALLFILE	= $(INSTALL) -m 444
 INSTALLSRC	= @INSTALLSRC@
 MKINSTALLDIRS	= @MKINSTALLDIRS@
 
-PACKAGE		= www.ps.uni-sb.de/ozhome/tools/gump
+PACKAGE		= www.ps.uni-sb.de/ozhome/share/gump
 CACHE_DIR	= $(PREFIX)/platform/@platform@/cache/$(PACKAGE)
 GUMP_FILES	= GumpScanner.dl flex ozbison.dl
 DYNLDIR_FILES	= $(addprefix $(DYNLDIR)/,$(GUMP_FILES))
