@@ -16,8 +16,7 @@ listed here will be removed in future releases.
 
 <SECTION><TITLE>Performance limitations</TITLE>
 
-<P>These limitations reduce performance but do not affect
-language semantics.
+<P>These reduce performance but do not affect language semantics.
 They can safely be ignored if performance is not an issue.
 
 <list>
@@ -80,12 +79,15 @@ In future releases, the delay will be very short and
 based on adaptive observation of actual network behavior.
 </list>
 
-<SECTION><TITLE>Language limitations</TITLE>
+<SECTION><TITLE>Functionality limitations</TITLE>
 
-<P>These limitations affect what operations are available
-to the programmer.
+<P>These affect what operations are available to the programmer.
 They document where
 the full language specification is not implemented.
+We hope that this undergrowth of limitations is thin
+enough to let the flowers of Oz grow unwithered.<NOTE
+FOOT>C. A. R. Hoare, <em>The Emperor's Old Clothes</em>,
+1980 Turing Award Lecture.</NOTE>
 
 <list>
 <item>On Windows, the <<Remote>> module has limited functionality.
