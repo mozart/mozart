@@ -238,9 +238,11 @@ including raising the same exceptions.
 <ITEM> If there is a problem in the distributed execution preventing
 its successful completion, then the call <<{C Msg}>> will raise
 the exception <<remoteObjectError>>.
+It is unspecified how much of the remote object's method
+was executed before the failure.
 <ITEM> If there is a problem communicating with the client,
-then the server tries repeatedly during a short period to communicate
-with the client and then gives up.
+then the server tries to communicate
+with the client during a short time period and then gives up.
 This does not affect the continued execution of the server.
 </LIST>
 
@@ -312,7 +314,7 @@ We've put the object calls inside a <<try>> just
 to demonstrate the fault-tolerance.
 The simplest way to see it work is to kill
 the remote process and to call the object again.
-It also works if the remote process if killed
+It also works if the remote process is killed
 during an object call, of course.
 
 <<<
@@ -328,7 +330,7 @@ end
 <SUBSECTION id="guard.based"><TITLE>Guard-based fault tolerance</TITLE>
 
 <P>The simplest way to implement fault-tolerant stationary objects
-is by using a <EM>guard</EM>.  A guard watches
+is to use a <EM>guard</EM>.  A guard watches
 over a computation, and if there is a distribution fault, then it
 gracefully terminates the computation.
 To be precise, we introduce the procedure <<Guard>> with the
@@ -348,7 +350,7 @@ Guards are defined in <ptr to="guards">.
 </LIST>
 <P>With the procedure <<Guard>>, we define <<NewSafeStat>> as follows.
 Note that this definition is almost identical to the
-definition of stationary objects in <ptr to="making.stationary.objects">.
+definition of <<NewStat>> in <ptr to="making.stationary.objects">.
 The only difference is that all distributed operations are put
 in guards.
 
