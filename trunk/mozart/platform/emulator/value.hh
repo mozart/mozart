@@ -15,6 +15,8 @@
 #pragma interface
 #endif
 
+#include "perdiotables.hh"
+
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -1754,12 +1756,14 @@ class Port: public DistObject {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef strm;
+  NetAddress *addr;
 public:
   Port();
   ~Port();
   Port(Port&);
 
-  Port(Board *b,TaggedRef s) : DistObject(b, Co_Port), strm(s) {}
+  Port(Board *b,TaggedRef s) : DistObject(b, Co_Port), strm(s), addr(0) {}
+  Port(NetAddress *na);
 
   TaggedRef exchangeStream(TaggedRef newStream)
   { 
@@ -1767,6 +1771,16 @@ public:
     strm = newStream;
     return ret; 
   }
+
+  TaggedRef getStream() { return strm; }
+
+  TaggedRef *getStreamRef() { return &strm; }
+
+  NetAddress *getAddress() { return addr; }
+
+  NetAddress *export();
+
+  Bool isLocal() { return (addr==NULL || addr->isLocal()); }
 
   OZPRINT;
   OZPRINTLONG;

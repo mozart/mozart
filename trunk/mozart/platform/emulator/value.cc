@@ -14,6 +14,8 @@
 #include "board.hh"
 #include "genvar.hh"
 #include "dictionary.hh"
+#include "perdiotables.hh"
+#include "ip.hh"
 
 /*===================================================================
  * global names and atoms
@@ -217,6 +219,14 @@ int ConstTerm::getArity()
 }
 
 /*===================================================================
+ * Ports
+ *=================================================================== */
+
+Port::Port(NetAddress *na) : DistObject(am.rootBoard, Co_Port), 
+  strm(makeTaggedNULL()), addr(na) 
+{}
+
+/*===================================================================
  * Object
  *=================================================================== */
 
@@ -406,6 +416,20 @@ Cell::Cell(TaggedRef v, Bool mobile) :
   if (mobile)
     setDistFlag(Mobile);
 }
+
+/*===================================================================
+ * Ports
+ *=================================================================== */
+
+NetAddress *Port::export()
+{
+  if (addr==NULL) {
+    int index = ownerTable->newOTEntry(this,NULL);
+    addr = new NetAddress(localSite,index);
+  }
+  return addr;
+}
+
 
 /*===================================================================
  * Bigint memory management
