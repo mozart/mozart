@@ -104,7 +104,7 @@ SHT_HashNode* StringHashTable::getNext(SHT_HashNode *hn)
   if (n) {
     return (n);
   } else {
-    unsigned int key = hashFunc(hn->getKey().fstr);
+    unsigned int key = hashFunc(hn->getKey());
     hn = &table[key];
     for (hn++; hn < table+tableSize; hn++) {
       if (!hn->isEmpty())
@@ -153,7 +153,7 @@ static inline
 SHT_HashNode* checkKey(SHT_HashNode *hn, const char *s)
 {
   Assert(!(hn->isEmpty()));
-  while (strcmp((hn->getKey()).fstr, s) != 0) {
+  while (strcmp((hn->getKey()), s) != 0) {
     hn = hn->getNext();
     if (!hn)
       return ((SHT_HashNode* ) 0);
@@ -183,7 +183,7 @@ void StringHashTable::resize()
       SHT_HashNode* hn = &old[i];
       int num = 1;
       do {
-	htAdd((hn->getKey()).fstr, hn->getValue());
+	htAdd((hn->getKey()), hn->getValue());
 	SHT_HashNode* sn = hn;
 	hn = hn->getNext();
 	if (num > 1) 
@@ -258,7 +258,7 @@ void StringHashTable::print()
       SHT_HashNode* hn = &table[i];
       do {
 	printf("table[%d] = <%s,0x%p>\n",
-	       i, (hn->getKey()).fstr, (hn->getValue()));
+	       i, (hn->getKey()), (hn->getValue()));
 	hn = hn->getNext();
       } while (hn);
     }
@@ -298,7 +298,7 @@ unsigned StringHashTable::memRequired(int valSize)
       int num = 1;
       do {
 	mem += valSize;
-	mem += strlen((hn->getKey()).fstr);
+	mem += strlen((hn->getKey()));
 	if (num > 1)
 	  mem += sizeof(SHT_HashNode);
 	hn = hn->getNext();
@@ -389,7 +389,7 @@ void AddressHashTable::resize()
     neu[i].setEmpty();
   for (i = 0; i < oldSize; i++) {
     if (! old[i].isEmpty()) 
-      htAdd((old[i].getKey()).fint, old[i].getValue());
+      htAdd((old[i].getKey()), old[i].getValue());
   }
   delete [] old;
 }
@@ -403,7 +403,7 @@ unsigned int AddressHashTable::findIndex(intlong i)
   unsigned int key = pkey;
   int step = 1;
   //
-  while (! table[key].isEmpty() && (table[key].getKey()).fint != i)
+  while (! table[key].isEmpty() && (table[key].getKey()) != i)
     key = getStepN(pkey, ikey, step++);
   DebugCode(nsearch++;);
   DebugCode(tries += step);
@@ -440,7 +440,7 @@ void AddressHashTable::print()
   for(int i = 0; i < tableSize; i++) {
     if (!table[i].isEmpty())
       printf("table[%d] = <%ld,0x%p>\n",
-	     i, (table[i].getKey()).fint, table[i].getValue());
+	     i, (table[i].getKey()), table[i].getValue());
   }
   printStatistic();
 }
@@ -453,7 +453,7 @@ void AddressHashTable::printStatistic()
   //
   for (int i = 0; i < tableSize; i++) {
     if (!table[i].isEmpty()) {
-      unsigned int pkey = primeHashFunc((table[i].getKey()).fint);
+      unsigned int pkey = primeHashFunc((table[i].getKey()));
       sum++;
       if (pkey != i)
 	// that is, an alien entry took place here;
@@ -477,142 +477,230 @@ void AddressHashTable::printStatistic()
 
 //
 const double AHTFR_MAXLOAD = 0.5;
-// above this do usual sequential reset;
-const double DUMMYRESET = 0.33;
 
 // print statistics if on average there are more than tries per search:
 #define DEBUG_THRESHOLD		2
 
 //
-//
+// Note: 'mkTable()' resets the 'pass';
 void AddressHashTableFastReset::mkTable()
 {
+  const int totalBits = sizeof(unsigned int)*8;
+  // leave exactly 'bits':
+  rsBits = totalBits - bits;
+  // would like to drop all of the pkey's bits, but have to retain at
+  // least 'bits':
+  slsBits = min(bits, rsBits);
+
   counter = 0;
   percent = (int) (AHTFR_MAXLOAD * tableSize);
-  prev = (AHT_HashNodeLinked *) 0;
-  table = new AHT_HashNodeLinked[tableSize];
+  table = new AHT_HashNodeCnt[tableSize];
+  // '1' just in order to avoid troubles with 'printStatistics():
+  pass = 1;
+  lastKey = -1;
+  DebugCode(lastK = -1);
   DebugCode(nsearch = 0;);
   DebugCode(tries = 0;);
   DebugCode(maxtries = 0;);
-  mkEmpty(TRUE);
+  DebugCode(nsearchAcc = 0;);
+  DebugCode(triesAcc = 0;);
+  mkEmpty();
+}
+
+//
+void AddressHashTableFastReset::mkEmpty()
+{
+  DebugCode(nsearchAcc += nsearch;);
+  DebugCode(triesAcc += tries;);
+  DebugCode(printStatistics(DEBUG_THRESHOLD));
+  pass++;
+  if (pass == (unsigned int) 0xffffffff) {
+    pass = 1;
+    for (int i = tableSize; i--; )
+      table[i].setCnt(0);
+  }
+  counter = 0;
+  DebugCode(nsearch = 0;);
+  DebugCode(tries = 0;);
+  DebugCode(maxtries = 0;);
 }
 
 //
 AddressHashTableFastReset::AddressHashTableFastReset(int sz)
 {
-  incStepMod = nextPrime(sz);
-  tableSize = nextPrime(incStepMod+1);
+  tableSize = 128;
+  bits = 7;
+  while (tableSize < sz) {
+    tableSize = tableSize * 2;
+    bits++;
+  }
   mkTable();
 }
 
 AddressHashTableFastReset::~AddressHashTableFastReset() 
 {
   delete [] table;
-  DebugCode(prev = (AHT_HashNodeLinked *) -1);
 }
 
 //
+// We're used to have also a division scheme.
+// There, the hashing functions were:
+/*
+unsigned int AddressHashTableFastReset::primeHashFunc(intlong i)
+{
+  // return ((((unsigned) i) * 397) % tableSize);
+  return (((unsigned) i) % tableSize);
+}
+unsigned int AddressHashTableFastReset::incHashFunc(intlong i)
+{
+  //   return (1 + ((((unsigned) i) * 617) % incStepMod));
+  return (1 + (((unsigned) i) % incStepMod));
+}
+*/
+// and 'tableSize', 'incStepMod' where calculated as follows:
+/*
+  incStepMod = nextPrime(sz);
+  tableSize = nextPrime(incStepMod+1);
+*/
+// The scheme worked pretty much the same in turms of collisions,
+// but is much more computationally expensive.
+
+// These functions are not really used - just for debugging;
 inline
 unsigned int AddressHashTableFastReset::primeHashFunc(intlong i)
 {
-  return ((((unsigned) i) * 397) % tableSize);
+  // golden cut = 0.6180339887 = A/w, 32bit integers w = 4294967296,
+  // thus A = 2654435769.2829335552
+  // .. on a 64bit architecture A = 11400714819323198485
+  Assert(sizeof(unsigned int)*8 == 32);
+  return ((((unsigned int) i) * ((unsigned int) 0x9e3779b9)) >> rsBits);
 }
 inline
 unsigned int AddressHashTableFastReset::incHashFunc(intlong i)
 {
-  return (1 + ((((unsigned) i) * 617) % incStepMod));
-}
-
-inline
-unsigned int AddressHashTableFastReset::getStepN(unsigned int pkey,
-						 unsigned int ikey, int i)
-{
-  return ((pkey + i*ikey) % tableSize);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
 }
 
 //
-inline
-unsigned int AddressHashTableFastReset::findIndex(intlong i)
+void AddressHashTableFastReset::htAdd(intlong i, void *val)
 {
-  unsigned int pkey = primeHashFunc(i);
-  unsigned int ikey = incHashFunc(i);
-  unsigned int key = pkey;
-  int step = 1;
-  //
-  while (! table[key].isEmpty() && (table[key].getKey()).fint != i)
-    key = getStepN(pkey, ikey, step++);
-  DebugCode(nsearch++;);
-  DebugCode(tries += step);
-  DebugCode(if (step > maxtries) { maxtries = step; });
-  return (key);
-}
-
-void AddressHashTableFastReset::htAdd(intlong k, void *val)
-{
-  Assert(val != htEmpty);
-
-  //
   if (counter > percent) resize();
 
   //
-  unsigned int key = findIndex(k);
-  if (table[key].isEmpty()) { // may be already in there;
-    table[key].setKey(k);
-    table[key].setValue(val);
-    table[key].setPrev(prev);
+  Assert(val != htEmpty);
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  unsigned int pkey = m >> rsBits;
+  Assert(pkey == primeHashFunc(i));
+  unsigned int ikey = 0;
+  int key = (int) pkey;
+  DebugCode(int step = 1;);
 
-    //
-    prev = &table[key];
-    counter++;
-  } else {
-    Assert(table[key].getValue() == val);
-  }
-}
-
-//
-void AddressHashTableFastReset::mkEmpty(Bool force)
-{
-  // DebugCode(printStatistics(DEBUG_THRESHOLD));
-  if (force || counter > (int) (DUMMYRESET * tableSize)) {
-    for (int i = 0; i < tableSize; i++) {
-      table[i].setEmpty();
+  //
+  while (1) {
+    if (table[key].getCnt() < pass) {
+      // certainly not there;
+      table[key].setKey(i);
+      table[key].setValue(val);
+      table[key].setCnt(pass);
+      counter++;
+      break;
+    } else if (table[key].getKey() == i) {
+      // already there;
+      Assert(table[key].getValue() == val);
+      break;
+    } else {
+      // next hop:
+      if (ikey == 0) {
+	ikey = ((m << slsBits) >> rsBits) | 0x1;
+	Assert(ikey == incHashFunc(i));
+	Assert(ikey < tableSize);
+      }
+      key -= ikey;
+      if (key < 0)
+	key += tableSize;
+      DebugCode(step++;);
     }
-    prev = (AHT_HashNodeLinked *) 0;
-  } else {
-    while (prev) {
-      AHT_HashNodeLinked *node = prev;
-      prev = prev->getPrev();
-      node->setEmpty();
-    }
   }
-  counter = 0;
-  DebugCode(nsearch = 0;);
-  DebugCode(tries = 0;);
-  DebugCode(maxtries = 0;);
+  DebugCode(nsearch++;);
+  DebugCode(tries += step);
 }
 
 //
 void* AddressHashTableFastReset::htFind(intlong i)
 {
-  unsigned int key = findIndex(i);
-  return ((table[key].isEmpty())
-	  ? htEmpty : table[key].getValue());
+  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  unsigned int pkey = m >> rsBits;
+  Assert(pkey == primeHashFunc(i));
+  unsigned int ikey = 0;
+  int key = (int) pkey;
+  DebugCode(int step = 1;);
+
+  //
+  while (1) {
+    if (table[key].getCnt() < pass) {
+      // certainly not there;
+      DebugCode(lastK = i;);
+      lastKey = key;
+      DebugCode(nsearch++;);
+      DebugCode(tries += step);
+      return (htEmpty);
+    } else if (table[key].getKey() == i) {
+      DebugCode(lastK = -1);
+      DebugCode(lastKey = -1);
+      DebugCode(nsearch++;);
+      DebugCode(tries += step);
+      return (table[key].getValue());
+    } else {
+      // next hop:
+      if (ikey == 0) {
+	ikey = ((m << slsBits) >> rsBits) | 0x1;
+	Assert(ikey == incHashFunc(i));
+	Assert(ikey < tableSize);
+      }
+      key -= ikey;
+      if (key < 0)
+	key += tableSize;
+      DebugCode(step++;);
+    }
+  }
+}
+
+void AddressHashTableFastReset::htAddLastNotFound(intlong k, void *val)
+{
+  Assert(lastKey != -1);
+  Assert(val != htEmpty);
+  Assert(k == lastK);
+  Assert(table[lastKey].getCnt() < pass);
+
+  //
+  if (counter > percent) {
+    resize();
+    htAdd(k, val);
+  } else {
+    table[lastKey].setKey(k);
+    table[lastKey].setValue(val);
+    table[lastKey].setCnt(pass);
+    DebugCode(lastKey = -1;);
+    counter++;
+  }
 }
 
 //
 void AddressHashTableFastReset::resize()
 {
   int oldSize = tableSize;
-  AHT_HashNodeLinked* old = table;    
+  unsigned int oldPass = pass;
+  AHT_HashNodeCnt* old = table;    
 
-  incStepMod = nextPrime(tableSize*2);
-  tableSize = nextPrime(incStepMod+1);
+  tableSize = tableSize * 2;
+  bits++; 
   mkTable();
 
   //
-  for (int i = 0; i < oldSize; i++) {
-    if (! old[i].isEmpty()) 
-      htAdd((old[i].getKey()).fint, old[i].getValue());
+  for (int i = oldSize; i--; ) {
+    if (old[i].getCnt() == oldPass)
+      htAdd((old[i].getKey()), old[i].getValue());
   }
 
   //
@@ -624,9 +712,9 @@ void AddressHashTableFastReset::resize()
 void AddressHashTableFastReset::print()
 {
   for(int i = 0; i < tableSize; i++) {
-    if (!table[i].isEmpty()) {
+    if (table[i].getCnt() == pass) {
       printf("table[%d] = <%ld,0x%p>\n", i,
-	     (table[i].getKey()).fint, table[i].getValue());
+	     (table[i].getKey()), table[i].getValue());
     }
   }
   printStatistics();
@@ -639,8 +727,8 @@ void AddressHashTableFastReset::printStatistics(int th)
 
   //
   for(int i = 0; i < tableSize; i++) {
-    if (!table[i].isEmpty()) {
-      unsigned int pkey = primeHashFunc((table[i].getKey()).fint);
+    if (table[i].getCnt() == pass) {
+      unsigned int pkey = primeHashFunc((table[i].getKey()));
       sum++;
       if (pkey != i)
 	// that is, an alien entry took place here;
