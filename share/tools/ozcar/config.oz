@@ -46,6 +46,7 @@ FileLineSeparator      = ' '
 %% Types, Names and Atoms
 %%
 ArrayType              = '<array>'
+ThreadType             = '<thread>'
 CellType               = '<cell>'
 ClassType              = '<class>' /* end */
 DictionaryType         = '<dict>'

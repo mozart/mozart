@@ -57,6 +57,7 @@ in
 		    feature: about)]
 	      feature: help)
 	  ]}
+%	 {self.menuBar.help tk(conf tearoff:false)}
 	 %{self.menuBar tk(conf borderwidth:2)}
       end
    end
