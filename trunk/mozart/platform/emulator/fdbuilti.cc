@@ -464,7 +464,17 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
   // normally);
   prop = createPropagator (f, a, x);
   addPropagators (prop, t);
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    localPropStore.push (prop);
+  } else {
+    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
+    prop->cContToRunnable ();
+    am.scheduleThread (prop);
+  }
+#else
   localPropStore.push (prop);
+#endif
 
   return (PROCEED);
 }
@@ -477,7 +487,17 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t1, FDPropState t2,
   prop = createPropagator (f, a, x);
   addPropagator (0, prop, t1);
   addPropagator (1, prop, t2);
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    localPropStore.push (prop);
+  } else {
+    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
+    prop->cContToRunnable ();
+    am.scheduleThread (prop);
+  }
+#else
   localPropStore.push (prop);
+#endif
 
   return (PROCEED);
 }
@@ -501,7 +521,17 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
 
   prop = createPropagator (f, a, x);
   addPropagators (prop, t);
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    localPropStore.push (prop);
+  } else {
+    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
+    prop->cContToRunnable ();
+    am.scheduleThread (prop);
+  }
+#else
   localPropStore.push (prop);
+#endif
 
   return (PROCEED);
 }
@@ -527,7 +557,17 @@ OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t,
   prop = createPropagator (f, a, x);
   addPropagators (prop, t);
   prop->markStable ();
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    localPropStore.push (prop);
+  } else {
+    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
+    prop->cContToRunnable ();
+    am.scheduleThread (prop);
+  }
+#else
   localPropStore.push (prop);
+#endif
 
   return (PROCEED);
 }

@@ -219,7 +219,6 @@ public:
   void pushTaskOutline(ProgramCounter pc,
 		       RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
-  void pushSolve();
   void pushLocal();
 
  private:

@@ -40,9 +40,15 @@ SuspList * SuspList::stable_wake(void) {
     Board *b = thr->getBoardFast ();
 
     if (b == am.currentBoard) {
+#ifndef TM_LP
+      if (localPropStore.isUseIt ())
+	localPropStore.push (thr);
+      else
+	am.scheduleThread (thr);
+#else
       localPropStore.push (thr);
+#endif      
     } else {
-      thr->cContToRunnable ();
       am.scheduleThread (thr);
     }
 

@@ -286,7 +286,7 @@ Bool AM::hookCheckNeeded()
 {
 #ifdef DEBUG_DET
   static int counter = 100;
-  if (--counter == 0) {
+  if (--counter < 0) {
     handleAlarm();   // simulate an alarm
     counter = 100;
   }
@@ -529,6 +529,8 @@ void AM::suspendCond(AskActor *aa)
   Thread *th = currentThread->getJob ();
 
   Assert (th->isSuspended ());
+  //  we put in either the same thread, or a part of it;
+  Assert (currentThread == aa->getThread ());
   aa->setThread (th);
 }
 
@@ -1019,7 +1021,7 @@ void engine()
 // *** RUN: Main Loop
 // ------------------------------------------------------------------------
  LBLschedule:
-  
+
   e->currentThread->setBoard (CBB);
   e->scheduleThread(e->currentThread);
   e->currentThread=(Thread *) NULL;
@@ -1147,7 +1149,6 @@ void engine()
 
     case PROCEED:
       // Note: e->currentThread must be reset in 'LBLkillXXX';
-      // e->currentThread = (Thread *) NULL;
       LOCAL_PROPAGATION (if (!(localPropStore.do_propagation ()))
 			 goto localhack0;);
       if (e->isToplevel ()) {
@@ -1212,7 +1213,7 @@ void engine()
   }
 
   //  INVARIANT:
-  //  current thread always has a stack, and it should not 
+  //  current thread always has a stack, and it might not 
   // be marked as dead;
   Assert(e->currentThread->hasStack ());
 
@@ -1233,9 +1234,12 @@ LBLpopTask:
 
     TaskStack *taskstack = e->currentThread->getTaskStackRef ();
     TaskStackEntry *topCache = taskstack->getTop();
-    TaskStackEntry topElem=TaskStackPop(topCache-1);
-    ContFlag cFlag = getContFlag(ToInt32(topElem));
+    TaskStackEntry topElem;
+    ContFlag cFlag;
 
+  next_task:
+    topElem = TaskStackPop (topCache-1);
+    cFlag = getContFlag (ToInt32 (topElem));
 
     /* RS: Optimize most probable case:
      *  - do not handle C_CONT in switch --> faster
@@ -1296,7 +1300,6 @@ LBLpopTask:
 	goto LBLpopTask;
       }
 
-
     /* unraised exception */
     case C_EXCEPT_HANDLER:
 	taskstack->setTop(topCache-1);
@@ -1321,11 +1324,6 @@ LBLpopTask:
     case C_LOCAL:
       {
 	error("C_LOCAL task detected");
-      }
-
-    case C_SOLVE:
-      {
-	error("C_SOLVE task");
       }
 
     case C_CFUNC_CONT:
@@ -1381,6 +1379,15 @@ LBLpopTask:
 	  RAISE_BI(INFO_BI);
 	} // switch
       }
+
+    case C_SET_CAA:
+      {
+	CAA = (AWActor *) TaskStackPop (--topCache);
+	taskstack->setTop (topCache);
+
+	goto next_task;
+      }
+
 
     default:
       error("invalid task type");
@@ -1540,28 +1547,34 @@ LBLkillThread:
 	Thread *tt=0;
 
 	if (aa->isAsk()) {
-	  tt=AskActor::Cast(aa)->getThread();
-	  if (tt) {
-	    if (tt->isSuspended ()) {
-	      Assert (tt->getBoardFast () == CBB);
-	      tt->suspThreadToRunnable ();
-	    } else {
-	      //
-	      //  The following assertion holds because 
-	      // there must be a continuation (possibly empty) 
-	      // after each conditional;
-	      Assert (tt != e->currentThread);
-	      tt->cleanUp (CBB);
-	    }
+	  tt = AskActor::Cast(aa)->getThread ();
+	  Assert (tt);
+
+	  //
+	  if (tt->isSuspended ()) {
+	    Assert (tt->getBoardFast () == CBB);
+	    tt->suspThreadToRunnable ();
+
+	    //
+	    tt->pushCont (cont);
+	    e->scheduleThread (tt);
 	  } else {
-	    tt = new Thread (aa->getPriority (), CBB);
+	    //  The following assertion holds because 
+	    // there must be a continuation (possibly empty) 
+	    // after each conditional;
+	    Assert (tt != e->currentThread);
+	    Assert (e->isScheduled (tt));
+
+	    //
+	    tt->cleanUp (CBB);
+	    tt->pushCont (cont);
 	  }
 	} else {
+	  //  any other actor;
 	  tt = new Thread (aa->getPriority (), CBB);
+	  tt->pushCont (cont);
+	  e->scheduleThread (tt);
 	}
-
-	tt->pushCont (cont);
-	e->scheduleThread (tt);
 
 	if (nb) e->decSolveThreads(nb->getBoardFast());
 	Assert (tt->isInSolve () || !e->currentSolveBoard);
@@ -3316,17 +3329,23 @@ LBLsuspendThread:
     switch (e->handleFailure(cont,aa)) {
     case CE_CONT:
       DebugCheckT(currentDebugBoard=e->currentBoard);
+
+      //
       if (!e->currentThread) {
-	/*
-	 * NOTE: thread must started immediately because of CAA
-	 *  this is very bad !
-	 */
-	e->currentThread = new Thread (aa->getPriority (), CBB);
-	e->restartThread ();
+	Thread *thr = new Thread (aa->getPriority (), CBB);
+	thr->pushCont (cont);
+	thr->pushSetCaa ((AskActor *) aa);;
+	e->scheduleThread (thr);
+
+	// 
+	goto LBLstart;
+      } else {
+	CAA=aa;
+	LOADCONT(cont);
+
+	//
+	goto LBLemulate; // no thread switch allowed here (CAA)
       }
-      CAA=aa;
-      LOADCONT(cont);
-      goto LBLemulate; // no thread switch allowed here (CAA)
 
     case CE_NOTHING:
       if (e->currentThread) {
@@ -3340,13 +3359,13 @@ LBLsuspendThread:
       HF_FAIL(OZ_CToAtom("noInfo"));
 
     case CE_SUSPEND:
-      if (e->currentThread) {
-	DebugCheckT(currentDebugBoard=e->currentBoard);
-	e->suspendCond(AskActor::Cast(aa));
-	CHECK_CURRENT_THREAD;
-      } else {
-	goto LBLstart;
-      }
+      Assert (e->currentThread);
+      Assert (aa->isAsk ());
+      DebugCheckT(currentDebugBoard=e->currentBoard);
+
+      //
+      e->suspendCond(AskActor::Cast(aa));
+      CHECK_CURRENT_THREAD;
     }
   }
 } // end engine
@@ -3399,38 +3418,58 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 
   if (aa->isAsk()) {
     AskActor *aaa = AskActor::Cast(aa);
-    aaout=aaa;
-    if (aaa->hasNext()) {
-      cont = aaa->getNext();
-      Thread *tt=aaa->getThread();
-      if (tt && tt != currentThread) {
-	if (tt->isSuspended()) { // fast test
-	  // 
-	  //  It means that all the clauses are elaborated already, 
-	  // and 'tt' suspends on the conditional itself;
+    Thread *tt = aaa->getThread ();
 
-	  Assert (tt->getBoardFast () == currentBoard);
-	  tt->suspThreadToRunnable ();
-	} else if (tt->isBelowFailed(currentBoard)) { // slow test
+    //
+    Assert (tt);
+    aaout = aaa;
+
+    // 
+    //  The first case: there is(are) still clause(s) to build up;
+    if (aaa->hasNext()) {
+      // 
+      if (tt != currentThread) {
+	//  ... it means actually that the currentThread was a local one, 
+	// and it was handled just above, so here:
+	Assert (currentThread == (Thread *) NULL);
+	//  The following holds because the thread in the actor 
+	// might be suspended only if all the clauses are built up
+	// (that is NOT the case here);
+	Assert (!(tt->isSuspended ()));
+	// ... because it's not the current one;
+	Assert (isScheduled (tt)); 
+
+	//
+	if (tt->isBelowFailed(currentBoard)) { // slow test
 	  //  ... and this means that 'tt' is still trying to 
 	  // build up the same (failed) board - we discard 
 	  // everything in there, and continue with the next guard;
 	  tt->cleanUp (currentBoard);
+
+	  //
+	  cont = aaa->getNext ();  // 'nextClause';
+	  tt->pushCont(cont);
+	  tt->pushSetCaa (aaa);
+	  //  don't schedule it again;
 	}
 
-	tt->pushCont(cont);
-	scheduleThread (tt);
-	/*
-	 * tt is executing another clause: don't disturb him
-	 */
-	return CE_NOTHING;
-      }
-      return CE_CONT;
-    }
-    /* check if else clause must be activated */
-    if (aaa->isLeaf()) {
+	//
+	// tt is executing another clause: don't disturb him
+	DebugCode (cont = (Continuation *) NULL);
+	return (CE_NOTHING);
+      } else {
+	//  ... it means that the 'main' thread has failed 
+	// inside a guard - then just continue with the next one;
+	cont = aaa->getNext ();	   // 'nextClause';
 
-      /* rule: if else ... fi */
+	//
+	return (CE_CONT);
+      }
+    }
+
+    // 
+    //  The second case: should we activate the 'else' clause?
+    if (aaa->isLeaf()) {
       aaa->setCommitted();
       currentBoard->decSuspCount();
 
@@ -3442,23 +3481,57 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 	return CE_FAIL;
       }
 
-      Thread *tt=aaa->getThread();
-      if (tt && tt != currentThread) {
-	if (tt->isSuspended ()) {
-	  Assert (tt->getBoardFast () == currentBoard);
-	  tt->suspThreadToRunnable ();
-	} else {
-	  tt->cleanUp (currentBoard);
-	}
+      // 
+      if (tt != currentThread) {
+	//  ... the same as above: it wasn't the 'main' thread;
+	Assert (currentThread == (Thread *) NULL);
+	//  That's actually the complementary case for just above;
+	Assert (tt->isSuspended ());
+	Assert (!(isScheduled (tt)));
+	//  The following must hold because 'tt' can suspend 
+	// only in the board where the actor itself is located;
+	Assert (tt->getBoardFast () == currentBoard);
 
-	tt->pushCont(cont);
+	//
+	tt->suspThreadToRunnable ();
+	tt->pushCont (cont);	// no 'SetCaa' is ever needed;
 	scheduleThread (tt);
-	return CE_NOTHING;
+
+	//
+	DebugCode (cont = (Continuation *) NULL);
+	return (CE_NOTHING);
+      } else {
+	//  ... the 'main' thread;
+	return (CE_CONT);
       }
-      return CE_CONT;
     }
-    return CE_SUSPEND;
+
+    //
+    //  The third case: all the guard are built up, 
+    // not all of them are failed, and none of them are entailed;
+    if (tt != currentThread) {
+      //  ... not the 'main' thread;
+      Assert (currentThread == (Thread *) NULL);
+      //  The assertions below are the same as for the 'leaf' case above;
+      Assert (tt->isSuspended ());
+      Assert (!(isScheduled (tt)));
+      Assert (tt->getBoardFast () == currentBoard);
+
+      // 
+      DebugCode (cont = (Continuation *) NULL);
+      return (CE_NOTHING);
+    } else {
+      //  ... the 'main' thread;
+      //  Note that it's cleaned up already;
+      Assert (currentThread);
+
+      //
+      DebugCode (cont = (Continuation *) NULL);
+      return (CE_SUSPEND);
+    }
   }
+
+  // 
   if (aa->isWait()) {
     WaitActor *waa = WaitActor::Cast(aa);
     aaout=waa;
@@ -3500,15 +3573,18 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 
 	/* unit commit & WAITTOP */
 	if (waitBoard->isWaitTop()) {
-	  if (!currentThread) {
+	  if (!currentThread && currentBoard != rootBoard) {
 	    // mm2: entailment check ???
 	    // kost@:  Yes! This can happen;
-	    currentThread = new Thread (waa->getPriority (), currentBoard);
-	    //  Don't schedule it, but rather go there directly.
-	    // Is this correct, BTW? 
+	    Thread *thr = new Thread (currentBoard);
+	    thr->wakeupToRunnable ();
+
+	    //  fairness: don't go there directly, but:
+	    scheduleThread (thr);
 	  }
 	  return CE_NOTHING;
 	}
+
 	cont=waitBoard->getBodyPtr();
 	return CE_CONT;
       }
@@ -3529,8 +3605,12 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
   if (!fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
     return CE_FAIL;
   }
-  if (!currentThread) {
-    currentThread = new Thread (saa->getPriority (), currentBoard);
+  if (!currentThread && currentBoard != rootBoard) {
+    Thread *thr = new Thread (currentBoard);
+    thr->wakeupToRunnable ();
+
+    //
+    scheduleThread (thr);
   }
   return CE_NOTHING;
 }
