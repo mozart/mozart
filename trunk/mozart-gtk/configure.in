@@ -5,7 +5,7 @@ SRCDIR=`cd $srcdir && pwd`
 AC_SUBST(SRCDIR)
 SRCTOP="$SRCDIR"
 OZ_PATH_PROG(OZTOOL,oztool,AC_MSG_ERROR([oztool not found]))
-dnl OZ_PATH_PROG(OZDOC,ozdoc,AC_MSG_ERROR([ozdoc not found]))
+OZ_PATH_PROG(OZDOC,ozdoc,AC_MSG_ERROR([ozdoc not found]))
 PLATFORM=`$OZTOOL platform || exit 1`
 AC_SUBST(PLATFORM)
 OZ_PROG_MAKE
