@@ -171,7 +171,9 @@ static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
 
 #define GET_CURRENT_PRIORITY() e->currentThread->getPriority()
 
-HookValue emulateHookOutline(AM *e, Abstraction *def, int arity, TaggedRef *args)
+HookValue emulateHookOutline(AM *e, Abstraction *def,
+                             int arity,
+                             TaggedRef *arguments)
 {
   // without signal blocking;
   if (e->isSetSFlag(ThreadSwitch)) {
@@ -198,7 +200,7 @@ HookValue emulateHookOutline(AM *e, Abstraction *def, int arity, TaggedRef *args
   unblockSignals();
 
   if (def && e->isSetSFlag(DebugMode)) {
-    enterCall(e->currentBoard,def,arity,args);
+    enterCall(e->currentBoard,def,arity,arguments);
   }
 
   return HOOK_OK;
@@ -206,21 +208,26 @@ HookValue emulateHookOutline(AM *e, Abstraction *def, int arity, TaggedRef *args
 
 
 
-inline Bool hookCheckNeeded(AM *e)
+inline
+Bool hookCheckNeeded(AM *e)
 {
 #ifdef DEBUG_DET
-  Alarm::Handle(0);   // simulate an alarm
+  Alarm::Handle();   // simulate an alarm
 #endif
 
   return (e->isSetSFlag()) ? OK:NO;
 }
 
-inline HookValue emulateHook(AM *e, Abstraction *def, int arity, TaggedRef *args)
+inline
+HookValue emulateHook(AM * e,
+                      Abstraction * def,
+                      int arity,
+                      TaggedRef * arguments)
 {
   if (!hookCheckNeeded(e)) {
     return HOOK_OK;
   }
-  return emulateHookOutline(e,def,arity,args);
+  return emulateHookOutline(e, def, arity, arguments);
 }
 
 
