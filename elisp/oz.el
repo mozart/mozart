@@ -110,6 +110,10 @@ run the emulator when you issue the command `run' to gdb.")
 (defvar oz-emulator (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "*Path to the Oz Emulator for gdb mode and for \\[oz-other].")
 
+(defvar oz-new-compiler-url
+  (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
+  "*URL of the new Oz Compiler for gdb mode.")
+
 (defvar oz-boot (concat (getenv "HOME") "/Oz/Compiler/backend/ozboot.ql")
   "*Path to the Oz Compiler boot file for \\[oz-other].")
 
@@ -757,7 +761,9 @@ The directory containing FILE becomes the initial working directory
 and source-file directory for gdb.  If you wish to change this, use
 the gdb commands `cd DIR' and `directory'."
   (let ((old-buffer (current-buffer))
-	(init-str (concat "set args -S " file "\n")))
+	(init-str (if oz-using-new-compiler
+		      (concat "set args -u " oz-new-compiler-url "\n")
+		    (concat "set args -S " file "\n"))))
     (if oz-gnu19 (gdb (concat "gdb " oz-emulator)))
     (if oz-lucid (gdb oz-emulator))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
