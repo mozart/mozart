@@ -48,7 +48,7 @@ make install
 * variables
 
 before running configure the following variables can be set
- (default: /usr/local/{include,lib})
+ (default for {lib,inc}_dir is: /usr/local/{include,lib})
 
   $oz_x11_lib_dir
   $oz_x11_inc_dir
@@ -70,9 +70,8 @@ before running configure the following variables can be set
 
 * targets
 
- make [bootstrap]
-  compile the system
-   creates the components in lib using the assembler version of ozbatch
+ make bootstrap
+  compile the system using local components and binaries
 
  make all
   in the top level directory this is the same as make bootstrap
@@ -80,7 +79,7 @@ before running configure the following variables can be set
         have already been installed
 
  make install
-  install the system under $prefix
+  install the system under $PREFIX
 
  make clean
   clean up
@@ -99,7 +98,7 @@ before running configure the following variables can be set
 
 * Installation structure created when doing 'make install'
 
-  under $prefix/ the following directories are populated
+  under $PREFIX/ the following directories are populated
 
     bin/
         scripts
