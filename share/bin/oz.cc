@@ -1,12 +1,34 @@
-#define NOGDI
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <process.h>
+#include <io.h>
 
+BOOL getFileName(char *fname)
+{
+  static char   filterList[] = "Emacs binary (emacs.exe)" \
+    "\0" \
+    "emacs.exe" \
+    "\0\0";
+
+  fname[ 0 ] = 0;
+
+  OPENFILENAME  of;
+  memset( &of, 0, sizeof( OPENFILENAME ) );
+  of.lStructSize = sizeof( OPENFILENAME );
+  of.hwndOwner = NULL;
+  of.lpstrFilter = (LPSTR) filterList;
+  of.lpstrDefExt = "";
+  of.nFilterIndex = 1L;
+  of.lpstrFile = fname;
+  of.nMaxFile = _MAX_PATH;
+  of.lpstrTitle = "Where is the emacs binary?";
+  of.Flags = OFN_HIDEREADONLY|OFN_FILEMUSTEXIST|OFN_NOCHANGEDIR;
+  return GetOpenFileName( &of );
+}
 
 void
-OzPanic(char *format,...)
+OzPanic(int quit, char *format,...)
 {
   va_list argList;
   char buf[1024];
@@ -17,19 +39,42 @@ OzPanic(char *format,...)
   MessageBeep(MB_ICONEXCLAMATION);
   MessageBox(NULL, buf, "Fatal Error in Oz",
              MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-  ExitProcess(1);
+  if (quit)
+    ExitProcess(1);
 }
 
+char *getParent(char *path, int levelsup)
+{
+  char *ret = strdup(path);
+  for(int i=0; i<levelsup; i++) {
+    char *aux = strrchr(ret,'\\');
+    if (aux==NULL) {
+      return NULL;
+    }
+    *aux = '\0';
+  }
+  return ret;
+}
+char *getEmacsHome(char *path)
+{
+  char buf[MAX_PATH];
+
+  MessageBox(NULL,
+             "When you start Oz for the first time,\nyou have to specify where the Emacs binary resides.\n",
+             "Cannot find Emacs",
+             MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+
+  BOOL ret = getFileName(buf);
+  if (ret == FALSE)
+    return NULL;
+  return getParent(buf,2);
+}
 
 char *getOzHome(char *path)
 {
-  char *ret = strdup(path);
-  for(int i=0; i<3; i++) {
-    char *aux = strrchr(ret,'\\');
-    if (aux==NULL) {
-      OzPanic("Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
-    }
-    *aux = '\0';
+  char *ret = getParent(path,3);
+  if (ret == NULL) {
+    OzPanic(1,"Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
   }
   return ret;
 }
@@ -37,8 +82,65 @@ char *getOzHome(char *path)
 void ozSetenv(const char *var, const char *value)
 {
   if (SetEnvironmentVariable(var,value) == FALSE) {
-    OzPanic("setenv %s=%s failed",var,value);
+    OzPanic(1,"setenv %s=%s failed",var,value);
   }
+}
+
+
+/* Todo: version should not be wired. */
+char *reg_path = "SOFTWARE\\DFKI\\Oz\\1.9.9";
+
+char *getRegistry(char *var)
+{
+  DWORD value_type = REG_SZ;
+  DWORD buf_size = MAX_PATH;
+  char buf[MAX_PATH];
+  int rc = 0;
+
+  HKEY hk;
+  if (RegOpenKey(HKEY_LOCAL_MACHINE,
+                 reg_path,
+                 &hk) != ERROR_SUCCESS)
+    goto end;
+
+  if (RegQueryValueEx(hk,
+                      var,
+                      0,
+                      &value_type,
+                      (LPBYTE)buf,
+                      &buf_size) == ERROR_SUCCESS)
+    {
+      rc = 1;
+    }
+
+ end:
+  RegCloseKey(hk);
+
+  return rc==1 ? strdup(buf) : NULL;
+}
+
+int setRegistry(char *var, const char *value)
+{
+  HKEY hk;
+
+  int ret = RegCreateKey(HKEY_LOCAL_MACHINE,
+                         "SOFTWARE\\DFKI\\Oz\\1.9.9",
+                         &hk);
+  if (ret != ERROR_SUCCESS)
+    return 0;
+
+  if (RegSetValueEx(hk,
+                    var,
+                    0,
+                    REG_SZ,
+                    (CONST BYTE *) value,
+                    strlen(value)+1) == ERROR_SUCCESS) {
+    RegCloseKey(hk);
+    return 1;
+  }
+
+  RegCloseKey(hk);
+  return 0;
 }
 
 int PASCAL
@@ -49,9 +151,14 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   char *ozhome = getenv("OZHOME");
 
   if (ozhome == NULL) {
+    ozhome = getRegistry("OZHOME");
+  }
+
+  if (ozhome == NULL) {
     GetModuleFileName(NULL, buffer, sizeof(buffer));
     ozhome = getOzHome(buffer);
     ozSetenv("OZHOME",ozhome);
+    setRegistry("OZHOME",ozhome);
   }
 
   const char *ozplatform = "win32-i486";
@@ -83,39 +190,51 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 
   PROCESS_INFORMATION pinf;
 
-  sprintf(buffer,"%s/platform/%s/ozcompiler",ozhome,ozplatform);
+  char *ehome = getenv("EMACSHOME");
+  if (ehome==NULL && (ehome=getRegistry("EMACSHOME"))==NULL) {
+  getehome:
+    ehome = getEmacsHome(buffer);
+    if (ehome == NULL)
+      OzPanic(1,"Cannot find Emacs.");
+    ozSetenv("EMACSHOME",ehome);
+    setRegistry("EMACSHOME",ehome);
+  }
 
-  char *emacs_dir = "c:/emacs-19.30";
+  sprintf(buffer,"%s/bin/emacs.exe",ehome);
+  char *ebin = strdup(buffer);
 
-  sprintf(buffer,"%s/lisp",emacs_dir);
+  if (access(ebin,X_OK)) {
+    OzPanic(0,"Emacs binary '%s' does not exist.",ebin);
+    goto getehome;
+  }
+  sprintf(buffer,"%s/lisp",ehome);
   ozSetenv("EMACSLOADPATH",buffer);
 
-  sprintf(buffer,"%s/etc",emacs_dir);
+  sprintf(buffer,"%s/etc",ehome);
   ozSetenv("EMACSDATA",buffer);
 
-  sprintf(buffer,"%s/bin",emacs_dir);
+  sprintf(buffer,"%s/bin",ehome);
   ozSetenv("EMACSPATH",buffer);
 
-  sprintf(buffer,"%s/lock",emacs_dir);
+  sprintf(buffer,"%s/lock",ehome);
   ozSetenv("EMACSLOCKDIR",buffer);
 
-  sprintf(buffer,"%s/info",emacs_dir);
+  sprintf(buffer,"%s/info",ehome);
   ozSetenv("INFOPATH",buffer);
 
-  sprintf(buffer,"%s/etc",emacs_dir);
+  sprintf(buffer,"%s/etc",ehome);
   ozSetenv("EMACSDOC","%s/etc");
 
   ozSetenv("EMACSDOTERM","CMD");
 
-  char *ozemacs = "c:/emacs-19.30/bin/emacs.exe";
   sprintf(buffer,"%s -l %s/lib/elisp/oz.elc -f run-oz",
-          ozemacs,ozhome);
+          ebin,ozhome);
 
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,
                            DETACHED_PROCESS,NULL,NULL,&si,&pinf);
 
   if (ret!=TRUE) {
-    OzPanic("Cannot start Oz.\nError = %d.",errno);
+    OzPanic(1,"Cannot start Oz.\nError = %d.",errno);
   }
   return 0;
 }
