@@ -100,7 +100,22 @@ Segment::~Segment()
   writer = 0;
 } 
 
+
+static HashTable livenesscache(HT_INTKEY,100);
+
+
 int CodeArea::livenessX(ProgramCounter from, TaggedRef *X,int maxX)
+{
+  void *aux = livenesscache.htFind(ToInt32(from));
+  if (aux != htEmpty) {
+    return ToInt32(aux);
+  }
+  int ret = livenessXInternal(from,X,maxX);
+  livenesscache.htAdd(ToInt32(from),ToPointer(ret));
+  return ret;
+}
+
+int CodeArea::livenessXInternal(ProgramCounter from, TaggedRef *X,int maxX)
 {
   if (maxX<=0) maxX = NumberOfXRegisters;
   int *xUsage = new int[maxX];
