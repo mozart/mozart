@@ -242,7 +242,7 @@ determined. This is shown in <Ptr to="figure.scheduling.starttimes">.
 <figure id=figure.scheduling.starttimes>
 <caption/Assigning start times./
 <chunk><title/Assign start times/
-choice skip end
+{Space.waitStable}
 {Record.forAll Start proc {$ S} 
                         S={FD.reflect.min S} 
                      end}
