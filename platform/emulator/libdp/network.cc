@@ -3506,18 +3506,20 @@ void WriteConnection::prmDwn(){
 
   if(!isWritePending())
     return;
-  if(isInWriteQueue())
-    clearInWriteQueue();
-    if(fd!=LOST)OZ_unregisterWrite(fd);
 
-    if(isIncomplete()) {
-      clearIncomplete();
+  if(fd!=LOST) OZ_unregisterWrite(fd);
+
+  if(isIncomplete()) {
+    clearIncomplete();
       Assert(current != NULL);
       remoteSite->site->communicationProblem(current->msgType, current->site,
                                              current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
                                              (FaultInfo) current->bs);
       messageManager->freeMessage(current);
-      current = NULL;}}
+      current = NULL;}
+  if(isInWriteQueue())
+    clearInWriteQueue();
+}
 
 /************************************************************/
 /* SECTION 24: closing                                       */

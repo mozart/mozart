@@ -39,6 +39,17 @@
 #include "dpInterface.hh"
 #include "dpResource.hh"
 
+
+char *dpresource_names[UD_last] = {
+  "unknown",
+
+  "thread",
+  "array",
+  "dictionary"
+
+};
+
+
 ResourceHashTable *resourceTable;
 
 /*
