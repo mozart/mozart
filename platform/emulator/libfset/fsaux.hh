@@ -176,20 +176,24 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class PropagatorController_S_S {
+class OZ_ParamIterator {
+public:
+  virtual OZ_Return leave(int vars_left = 0) = 0;
+  virtual OZ_Return fail(void) = 0;
+  virtual OZ_Return vanish(void) = 0;
+};
+
+class PropagatorController_S_S : public OZ_ParamIterator {
 protected:
   OZ_FSetVar &v1, &v2;
 public:
   PropagatorController_S_S(OZ_FSetVar &i1, OZ_FSetVar &i2)
     : v1(i1), v2(i2) {}
 
-  OZ_Return leave(void) {
-    return (v1.leave() | v2.leave()) ? OZ_SLEEP : OZ_ENTAILED;
-  }
-  OZ_Return leave1(void) {
+  OZ_Return leave(int vars_left = 0) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
-    return (r1 + r2 <= 1) ? OZ_ENTAILED : OZ_SLEEP;
+    return (r1 + r2 <= vars_left) ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     v1.leave();
@@ -203,21 +207,18 @@ public:
   }
 };
 
-class PropagatorController_S_S_S {
+class PropagatorController_S_S_S : public OZ_ParamIterator {
 protected:
   OZ_FSetVar &v1, &v2, &v3;
 public:
   PropagatorController_S_S_S(OZ_FSetVar &i1, OZ_FSetVar &i2, OZ_FSetVar &i3)
     : v1(i1), v2(i2), v3(i3) {}
 
-  OZ_Return leave(void) {
-    return (v1.leave()|v2.leave()|v3.leave())  ? OZ_SLEEP : OZ_ENTAILED;
-  }
-  OZ_Return leave1(void) {
+  OZ_Return leave(int vars_left = 0) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
     int r3 = v3.leave() ? 1 : 0;
-    return (r1 + r2 + r3 <= 1) ? OZ_ENTAILED : OZ_SLEEP;
+    return (r1 + r2 + r3 <= vars_left) ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     v1.leave();
@@ -241,13 +242,10 @@ public:
   PropagatorController_S_D(OZ_FSetVar &i1, OZ_FDIntVar &i2)
     : v1(i1), v2(i2) {}
 
-  OZ_Return leave(void) {
-    return (v1.leave() | v2.leave()) ? OZ_SLEEP : OZ_ENTAILED;
-  }
-  OZ_Return leave1(void) {
+  OZ_Return leave(int vars_left = 0) {
     int r1 = v1.leave() ? 1 : 0;
     int r2 = v2.leave() ? 1 : 0;
-    return (r1 + r2 <= 1) ? OZ_ENTAILED : OZ_SLEEP;
+    return (r1 + r2 <= vars_left) ? OZ_ENTAILED : OZ_SLEEP;
   }
   OZ_Return vanish(void) {
     v1.leave();

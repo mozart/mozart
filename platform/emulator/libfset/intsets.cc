@@ -88,7 +88,7 @@ OZ_Return FSetsMinPropagator::propagate(void)
 
   OZ_DEBUGPRINTTHIS("out: ");
 
-  return P.leave1();
+  return P.leave(1);
 
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
@@ -154,7 +154,7 @@ OZ_Return FSetsMaxPropagator::propagate(void)
 
   OZ_DEBUGPRINTTHIS("out: ");
 
-  return P.leave1();
+  return P.leave(1);
 
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");

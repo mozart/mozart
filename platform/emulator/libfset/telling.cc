@@ -103,7 +103,7 @@ OZ_Return IncludePropagator::propagate(void)
 
     OZ_DEBUGPRINTTHIS("out: ");
 
-    return ent ? P.vanish() : P.leave1();
+    return ent ? P.vanish() : P.leave(1);
   }
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
@@ -143,7 +143,7 @@ OZ_Return ExcludePropagator::propagate(void)
 
     OZ_DEBUGPRINTTHIS("out: ");
 
-    return ent ? P.vanish() : P.leave1();
+    return ent ? P.vanish() : P.leave(1);
   }
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
