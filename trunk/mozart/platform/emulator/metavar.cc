@@ -13,6 +13,8 @@
 #pragma implementation "metavar.hh"
 #endif
 
+#include <string.h>
+
 #include "am.hh"
 
 #include "genvar.hh"
@@ -57,7 +59,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     DebugCode(printf("0x%x\n", ret_value));
 #endif
     
-    if (ret_value == meta_failed) return FALSE;
+    if (ret_value & meta_failed) return FALSE;
 
     // start unification for meta-var and meta-var
     
@@ -227,33 +229,33 @@ Bool GenMetaVariable::isStrongerThan(TaggedRef d)
 //-----------------------------------------------------------------------------
 // Implementation of interface functions
 
-OZ_MetaType OZ_introMetaVar(OZ_UnifyMetaDet unify_md,
+OZ_MetaType OZ_introMetaTerm(OZ_UnifyMetaDet unify_md,
 			    OZ_UnifyMetaMeta unify_mm,
 			    OZ_PrintMeta print_m,
-			    OZ_IsUnique unique_m,
+			    OZ_IsSingleValue sgl_val_m,
 			    char * name_m)
 {
   return OZ_MetaType(::new MetaTag(unify_md, unify_mm,
-				   print_m, unique_m, ozstrdup(name_m)));
+				   print_m, sgl_val_m, strdup(name_m)));
 }
 
-OZ_Term OZ_makeMetaVar(OZ_MetaType t, OZ_Term d)
+OZ_Term OZ_makeMetaTerm(OZ_MetaType t, OZ_Term d)
 {
   return makeTaggedRef(newTaggedCVar(new GenMetaVariable((MetaTag *) t, d)));
 }
 
-OZ_Bool OZ_constrainMetaVar(OZ_Term v, OZ_MetaType t, OZ_Term d)
+OZ_Bool OZ_constrainMetaTerm(OZ_Term v, OZ_MetaType t, OZ_Term d)
 {
   TaggedRef v_deref = deref(v);
   
   if (!isAnyVar(v_deref) ||
-      (OZ_isMetaVar(v_deref) &&
+      (OZ_isMetaTerm(v_deref) &&
        ((GenMetaVariable *) tagged2CVar(v_deref))->check(t, d)
        == meta_unconstrained)) {
     return PROCEED;
   }
 
-  return OZ_unify(v, OZ_makeMetaVar(t, d));
+  return OZ_unify(v, OZ_makeMetaTerm(t, d));
 }  
 
 OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
@@ -262,7 +264,7 @@ OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
   Bool suspNotAdded = TRUE;
   
   for (int i = OZ_arity; i--; )
-    if (!OZ_isUnique(OZ_getCArg(i))) {
+    if (!OZ_isSingleValue(OZ_getCArg(i))) {
       OZ_addThread(OZ_args[i], susp);
       suspNotAdded = FALSE;
     }
@@ -273,7 +275,7 @@ OZ_Bool OZ_suspendMetaProp(OZ_CFun OZ_self, OZ_Term * OZ_args, int OZ_arity)
   return PROCEED;
 }
 
-OZ_MetaType OZ_getMetaVarType(OZ_Term v)
+OZ_MetaType OZ_getMetaTermType(OZ_Term v)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
@@ -281,14 +283,14 @@ OZ_MetaType OZ_getMetaVarType(OZ_Term v)
   return NULL;
 }
 
-void OZ_putMetaVarType(OZ_Term v, OZ_MetaType t)
+void OZ_putMetaTermType(OZ_Term v, OZ_MetaType t)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
     ((GenMetaVariable *) tagged2CVar(v))->putTag((MetaTag *)t);
 }
 
-OZ_Term OZ_getMetaVarData(OZ_Term v)
+OZ_Term OZ_getMetaTermValue(OZ_Term v)
 {
   v = deref(v);
   if (isCVar(v) && tagged2CVar(v)->getType() == MetaVariable)
@@ -296,14 +298,14 @@ OZ_Term OZ_getMetaVarData(OZ_Term v)
   return makeTaggedNULL();
 }
 
-int OZ_isUnique(OZ_Term v)
+int OZ_isSingleValue(OZ_Term v)
 {
   v = deref(v);
 
   if (!isAnyVar(v)) {
     return TRUE;
-  } else if (OZ_isMetaVar(v)) {
-    return ((GenMetaVariable *) tagged2CVar(deref(v)))->isUnique();
+  } else if (OZ_isMetaTerm(v)) {
+    return ((GenMetaVariable *) tagged2CVar(deref(v)))->isSingleValue();
   } else {
     return FALSE;
   }
@@ -314,7 +316,7 @@ int OZ_areIdentVars(OZ_Term v1, OZ_Term v2)
 {
   DEREF(v1, vptr1, vtag1);
   DEREF(v2, vptr2, vtag2);
-  return (vptr1 == vptr2) ? PROCEED : FAILED;
+  return isAnyVar(vtag1) && (vptr1 == vptr2) ? PROCEED : FAILED;
 }
 
 
@@ -354,15 +356,17 @@ char * OZ_getHeapChunk(TaggedRef t, char * buf)
   return buf;
 }
 
-void OZ_putHeapChunk(OZ_Term t, char * buf)
+OZ_Term OZ_putHeapChunk(OZ_Term t, char * buf)
 {
-  NotHeapChunkWarning(t, OZ_putHeapChunk, );
+  NotHeapChunkWarning(t, OZ_putHeapChunk, t);
   
   HeapChunk * hc = (HeapChunk *) tagged2Const(t);
   char * hc_data = hc->getChunkData();
   
   for (int i = hc->getChunkSize(); i--; )
     hc_data[i] = buf[i];
+
+  return t;
 }
 
 int OZ_isHeapChunk(OZ_Term t)
@@ -371,7 +375,7 @@ int OZ_isHeapChunk(OZ_Term t)
 }
 
 
-int OZ_isMetaVar(OZ_Term t)
+int OZ_isMetaTerm(OZ_Term t)
 {
   t = deref(t);
   return isCVar(t) ? tagged2CVar(t)->getType()==MetaVariable : FALSE;
