@@ -53,7 +53,7 @@
 #define GC_FLAG		1
 #define GC_VERBOSITY	0
 
-#define HEAPMAXSIZE	     1048576 /* kByte   */
+#define HEAPMAXSIZE	   64 * 1024 /* kByte   */
 #define HEAPMINSIZE	        1024 /* kByte   */
 #define HEAPFREE	          75 /* percent */
 #define HEAPTOLERANCE	          20 /* percent */
