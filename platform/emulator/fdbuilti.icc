@@ -89,14 +89,16 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
   processLocalFromTo(from_b, to_b+1);
   
   for (int i = from, j = from_p; i < to+1; i += 1, j += 1) {
-    if (isTouched(j) && *bifdbm_dom[j] == fd_singleton &&
-	tagTypeOf(deref(*bifdbm_varptr[j])) != SMALLINT) {
-      tagged2GenFDVar(bifdbm_var[j])->
-	becomesSmallIntAndPropagate(bifdbm_varptr[j]);
-    } else if(*bifdbm_dom[i] != fd_singleton &&
-       bifdbm_dom[j] != &__CDVoidFiniteDomain) {
-      tagged2GenFDVar(bifdbm_var[j])->
-	relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
+    if (bifdbm_vartag[j] == CVAR) {
+      if (isTouched(j) && *bifdbm_dom[j] == fd_singleton &&
+	  tagTypeOf(deref(*bifdbm_varptr[j])) != SMALLINT) {
+	tagged2GenFDVar(bifdbm_var[j])->
+	  becomesSmallIntAndPropagate(bifdbm_varptr[j]);
+      } else if(*bifdbm_dom[i] != fd_singleton &&
+		bifdbm_dom[j] != &__CDVoidFiniteDomain) {
+	tagged2GenFDVar(bifdbm_var[j])->
+	  relinkSuspListTo(tagged2GenFDVar(bifdbm_var[i]));
+      }
     }
     doBind(bifdbm_varptr[j], makeTaggedRef(bifdbm_varptr[i]));
   }
