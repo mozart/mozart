@@ -757,7 +757,7 @@ labels: <<failure>>, <<error>>, and <<system>>.
 <P><LIST>
 
  <ITEM><<failure>>: indicates the attempt to perform an inconsistent
- equality operation on the store of Oz, recall <EM>SECTION ???</EM>.
+ equality operation on the store of Oz. <!-- , recall <EM>SECTION ???</EM>. -->
 
  <ITEM><<error>>: indicates a runtime error which should not occur such
 as applying a nonprocedure to some argument or adding an integer to an
