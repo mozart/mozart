@@ -182,8 +182,13 @@ int execute(char **argv, bool dontQuote)
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+
   PROCESS_INFORMATION pi;
-  DWORD ret = CreateProcess(NULL,buffer,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
+  DWORD ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",buffer);
   }
