@@ -1080,7 +1080,7 @@ $builtins = {
     'recordWidth'       => { in  => ['record'],
                              out => ['int'],
                              BI  => BIrecordWidth,
-                             native => false,
+                             native => true,
                              unused => true},
 
     ###* Chunks
@@ -2455,11 +2455,6 @@ $builtins = {
                              BI  => BIsetProcNames,
                              native => true},
 
-    'getProcPos'        => { in  => ['+procedure'],
-                             out => ['+literal','+int'],
-                             BI  => BIgetProcPos,
-                             native => true},
-
     ###* RegSets for the Compiler
     'RegSet.new'        => { in  => ['+int','+int'],
                              out => ['+chunk'],
@@ -2527,11 +2522,6 @@ $builtins = {
                                      out => ['+bool'],
                                      bi  => ozparser_fileExists,
                                      native => true},
-
-    'copyCode'          => { in  => ['+abstraction','+dictionary'],
-                             out => [],
-                             BI  => BIcopyCode,
-                             native => true},
 
 
     ###* CodeArea: Allocation, Modification
@@ -3652,7 +3642,17 @@ $builtins = {
 
     #* Unclassified
 
-    ##* setAbstractionTabDefaultEntry not used any more ???
+    ##* not used any more ???
+
+    'getProcPos'        => { in  => ['+procedure'],
+                             out => ['+literal','+int'],
+                             BI  => BIgetProcPos,
+                             native => true},
+
+    'copyCode'          => { in  => ['+abstraction','+dictionary'],
+                             out => [],
+                             BI  => BIcopyCode,
+                             native => true},
 
     'setAbstractionTabDefaultEntry' => { in  => ['value'],
       out => [],
