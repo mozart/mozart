@@ -97,9 +97,6 @@
 #define _cacLocalInline          gCollectLocalInline
 #define _cacLocalRecurse         gCollectLocalRecurse
 
-#define _cacExtension            gCollectExtension
-#define _cacExtensionRecurse     gCollectExtensionRecurse
-
 #define _cacPendThreadEmul       gCollectPendThreadEmul
 
 #define _cacRefsArray            gCollectRefsArray
@@ -142,9 +139,6 @@
 
 #define _cacLocalInline          sCloneLocalInline
 #define _cacLocalRecurse         sCloneLocalRecurse
-
-#define _cacExtension            sCloneExtension
-#define _cacExtensionRecurse     sCloneExtensionRecurse
 
 #define _cacPendThreadEmul       sClonePendThreadEmul
 
@@ -723,49 +717,6 @@ SRecord *SRecord::_cacSRecord(void) {
 }
 
 
-/*
- * Extension
- *
- */
-
-inline
-TaggedRef _cacExtension(TaggedRef term) {
-  OZ_Extension *ex = tagged2Extension(term);
-
-  Assert(ex);
-
-  void ** spa = ex->__getSpaceRefInternal();
-
-
-  // hack alert: write forward into something
-  if ((*((int32*)spa))&1) {
-    return makeTaggedExtension((OZ_Extension *)ToPointer((*(int32*)spa)&~1));
-  }
-
-  Board *bb=(Board*)(*spa);
-
-  if (bb) {
-    Assert(bb->cacIsAlive());
-    if (!NEEDSCOPYING(bb))
-      return term;
-  }
-
-  OZ_Extension *ret = ex->_cacV();
-
-  if (bb)
-    ret->__setSpaceInternal(bb->_cacBoard());
-
-  cacStack.push(ret,PTR_EXTENSION);
-
-  int32 *fromPtr = (int32*)spa;
-
-  CPTRAIL(fromPtr);
-
-  *fromPtr = ToInt32(ret)|1;
-
-  return makeTaggedExtension(ret);
-}
-
 // ===================================================================
 // Weak Dictionaries
 
@@ -860,8 +811,6 @@ Bool isGCMarkedTerm(OZ_Term t)
       else
         return ((Name*)lit)->cacIsMarked();
     }
-  case TAG_EXT:
-    return ((*(int32*) tagged2Extension(t)->__getSpaceRefInternal())&1);
   case TAG_CONST:
     return (tagged2Const(t)->cacIsMarked());
   case TAG_VAR:
@@ -1166,11 +1115,11 @@ void ConstTerm::_cacConstRecurse(void) {
 #ifdef G_COLLECT
 
 inline
-ConstTerm *ConstTerm::gCollectConstTermInline(void) {
+ConstTerm * ConstTerm::gCollectConstTermInline(void) {
   Assert(this);
 
   if (cacIsMarked())
-    return cacGetFwd();
+    return (ConstTerm *) cacGetFwd();
 
   int sz;
 
@@ -1180,6 +1129,25 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
      * Unsituated types
      *
      */
+
+  case Co_Extension: {
+    OZ_Extension * ex = (OZ_Extension *) this;
+    Assert(ex);
+
+    Board * bb = (Board *) ex->__getSpaceInternal();
+
+    OZ_Extension * ret = ex->gCollectV();
+    Assert(((ConstTerm *) ret)->getType() == Co_Extension);
+
+    if (bb) {
+      Assert(bb->cacIsAlive());
+      ret->__setSpaceInternal(bb->gCollectBoard());
+    }
+
+    cacStack.push(ret,PTR_EXTENSION);
+    STOREFWDFIELD(this, ret);
+    return (ConstTerm *) ret;
+  }
 
   case Co_Float: {
     ConstTerm * ret = new Float(((Float *) this)->getValue());
@@ -1306,7 +1274,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
   Assert(this);
 
   if (cacIsMarked())
-    return cacGetFwd();
+    return (ConstTerm *) cacGetFwd();
 
   int sz;
 
@@ -1316,6 +1284,29 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
      * Unsituated types
      *
      */
+
+  case Co_Extension: {
+    // This is in fact situated
+    OZ_Extension * ex = (OZ_Extension *) this;
+    Assert(ex);
+    Board * bb = (Board *) ex->__getSpaceInternal();
+
+    if (bb) {
+      Assert(bb->cacIsAlive());
+      if (!NEEDSCOPYING(bb))
+        return this;
+    }
+
+    OZ_Extension * ret = ex->sCloneV();
+
+    if (bb) {
+      ret->__setSpaceInternal(bb->sCloneBoard());
+    }
+
+    cacStack.push(ret,PTR_EXTENSION);
+    STOREFWDFIELD(this, ret);
+    return (ConstTerm *) ret;
+  }
 
   case Co_Float:
   case Co_BigInt:
@@ -1832,11 +1823,11 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     case TAG_GCMARK:     goto DO_GCMARK;
     case TAG_SMALLINT:   goto DO_SMALLINT;
     case TAG_LITERAL:    goto DO_LITERAL;
-    case TAG_EXT:        goto DO_EXT;
     case TAG_LTUPLE:     goto DO_LTUPLE;
     case TAG_SRECORD:    goto DO_SRECORD;
     case TAG_CONST:      goto DO_CONST;
     case TAG_VAR:        goto DO_D_VAR;
+    case TAG_UNUSED_EXT:       goto DO_UNUSED;
     case TAG_UNUSED_FLOAT:     goto DO_UNUSED;
     case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
     case TAG_UNUSED_UVAR:      goto DO_UNUSED;
@@ -1855,11 +1846,11 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
     case TAG_GCMARK:     goto DO_GCMARK;
     case TAG_SMALLINT:   goto DO_SMALLINT;
     case TAG_LITERAL:    goto DO_LITERAL;
-    case TAG_EXT:        goto DO_EXT;
     case TAG_LTUPLE:     goto DO_LTUPLE;
     case TAG_SRECORD:    goto DO_SRECORD;
     case TAG_CONST:      goto DO_CONST;
     case TAG_VAR:        goto DO_I_VAR;
+    case TAG_UNUSED_EXT:       goto DO_UNUSED;
     case TAG_UNUSED_FLOAT:     goto DO_UNUSED;
     case TAG_UNUSED_FSETVALUE: goto DO_UNUSED;
     case TAG_UNUSED_UVAR:      goto DO_UNUSED;
@@ -1876,10 +1867,6 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
 
   DO_LITERAL:
      *t = makeTaggedLiteral(tagged2Literal(aux)->_cac());
-     continue;
-
-  DO_EXT:
-     *t = _cacExtension(aux);
      continue;
 
   DO_LTUPLE:

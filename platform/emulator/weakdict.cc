@@ -72,9 +72,10 @@ void gCollectWeakDictionariesPreserve()
        previousWeakList=oz_tail(previousWeakList))
     {
       OZ_Term t = oz_head(previousWeakList);
+      if (tagged2Const(t)->cacIsMarked())
+        continue;
       WeakDictionary*d = _tagged2WeakDictionary(t);
-      if (! (((int32)d->__getSpaceInternal())&1) && /* not already gc marked */
-          ((Board*)d->__getSpaceInternal())->cacIsAlive() &&
+      if (((Board*)d->__getSpaceInternal())->cacIsAlive() &&
           d->stream!=0 &&
           !d->isEmpty())
         // gc has the side effect of entering the copy into

@@ -206,32 +206,6 @@ void ScStack::check(void) {
 
 
 inline
-int checkSituatednessExtension(TaggedRef term) {
-  OZ_Extension *ex = tagged2Extension(term);
-
-  Assert(ex);
-
-  // hack alert: write forward into vtable!
-  if ((*(int32*)ex)&1)
-    return OK;
-
-  Board *bb=(Board*)(ex->__getSpaceInternal());
-
-  if (!bb || ISGOOD(bb))
-    return OK;
-
-
-  int32 *fromPtr = (int32*)ex;
-
-  scTrail.save(fromPtr);
-
-  *fromPtr |= 1;
-
-  return NO;
-}
-
-
-inline
 int Name::checkSituatedness(void) {
   if (cacIsMarked())
     return OK;
@@ -259,6 +233,17 @@ int ConstTerm::checkSituatedness(void) {
     return OK;
 
   switch (getType()) {
+  case Co_Extension: {
+    OZ_Extension * ex = (OZ_Extension *) this;
+    Assert(ex);
+    Board * bb = (Board *) (ex->__getSpaceInternal());
+    if (!bb || ISGOOD(bb))
+      return OK;
+    MARKFIELD(this);
+    return NO;
+  }
+  break;
+
     /*
      * ConstTermWithHome
      *
@@ -326,17 +311,13 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
     case TAG_UNUSED_SVAR:
     case TAG_UNUSED_FSETVALUE:
     case TAG_UNUSED_FLOAT:
+    case TAG_UNUSED_EXT:
     case TAG_GCMARK:
     case TAG_SMALLINT:
       continue;
 
     case TAG_LITERAL:
       if (!tagged2Literal(x)->checkSituatedness())
-        bads = oz_cons(x,bads);
-      continue;
-
-    case TAG_EXT:
-      if (!checkSituatednessExtension(x))
         bads = oz_cons(x,bads);
       continue;
 

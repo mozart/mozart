@@ -489,6 +489,7 @@ const int Co_Bits = 16;
 const int Co_Mask = (1<<Co_Bits)-1;
 
 enum TypeOfConst {
+  Co_Extension = OZ_CONTAINER_TAG,
   Co_Float,
   Co_BigInt,
   Co_Foreign_Pointer,
@@ -525,27 +526,14 @@ enum TertType {
 
 #define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
 
-class ConstTerm {
-private:
-  int32 tag;
+class ConstTerm : public OZ_Container {
 public:
   USEHEAPMEMORY;
   OZPRINTLONG
   ConstTerm() { Assert(0); }
-  void init(TypeOfConst t) { tag = t<<1; }
-  ConstTerm(TypeOfConst t) { init(t); }
-  Bool cacIsMarked(void) {
-    return tag&1;
-  }
-  void cacMark(ConstTerm * c) {
-    tag = ToInt32(c) | 1;
-  }
-  int32 ** cacGetMarkField(void) {
-    return (int32 **) &tag;
-  }
-  ConstTerm * cacGetFwd(void) {
-    Assert(cacIsMarked());
-    return (ConstTerm *) (tag&~1);
+  //  void init(TypeOfConst t) { tag = t<<1; }
+  ConstTerm(TypeOfConst t) {
+    init(t);
   }
 
   ConstTerm *gCollectConstTermInline(void);
@@ -610,6 +598,26 @@ public:
   }
 };
 
+/*
+ * Extensions
+ *
+ */
+
+inline
+Bool oz_isExtension(TaggedRef t) {
+  return oz_isConst(t) && tagged2Const(t)->getType() == Co_Extension;
+}
+
+inline
+OZ_Extension * tagged2Extension(TaggedRef t) {
+  Assert(oz_isExtension(t));
+  return (OZ_Extension *) tagged2Const(t);
+}
+
+inline
+TaggedRef makeTaggedExtension(OZ_Extension * s) {
+  return makeTaggedConst((ConstTerm *) s);
+}
 
 /*===================================================================
  * Float

@@ -709,6 +709,32 @@ _FUNDECL(void*,_OZ_new_OZ_Extension,(size_t n));
 _FUNDECL(OZ_Boolean,_OZ_isLocal_OZ_Extension,(void*));
 _FUNDECL(void*,_OZ_currentBoard,());
 
+#define OZ_CONTAINER_TAG 0
+
+class OZ_Container {
+public:
+  unsigned int tag;
+  void init(unsigned int t) {
+    tag = t << 1;
+  }
+  void initAsExtension(void) {
+    init(OZ_CONTAINER_TAG);
+  }
+  unsigned int cacIsMarked(void) {
+    return tag&1;
+  }
+  void cacMark(OZ_Container * c) {
+    tag = ((unsigned int) c) | 1;
+  }
+  unsigned int ** cacGetMarkField(void) {
+    return (unsigned int **) &tag;
+  }
+  OZ_Container * cacGetFwd(void) {
+    Assert(cacIsMarked());
+    return (OZ_Container *) (tag&~1);
+  }
+};
+
 #include "extension.hh"
 
 #endif

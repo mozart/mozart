@@ -50,16 +50,20 @@ enum OZ_Registered_Extension_Id {
 //
 class MarshalerBuffer;
 
-//
-class OZ_Extension {
+class OZ_Extension : public OZ_Container {
 private:
   void *space;
 public:
-  OZ_Extension(void) { space = _OZ_currentBoard(); }
-  OZ_Extension(void *sp) : space(sp) {}
+  OZ_Extension(void) {
+    OZ_Container::initAsExtension();
+    space = _OZ_currentBoard();
+
+  }
+  OZ_Extension(void *sp) : space(sp) {
+    OZ_Container::initAsExtension();
+  }
 
   void *  __getSpaceInternal(void)      { return space; }
-  void ** __getSpaceRefInternal(void)   { return &space; }
   void    __setSpaceInternal(void * sp) { space = sp;   }
 
 public:

@@ -64,7 +64,7 @@ enum TypeOfTerm {
   TAG_CONST     = 10,   // 1010
 
   TAG_SMALLINT  =  6,   // 0110
-  TAG_EXT       =  7,   // 0111
+  TAG_UNUSED_EXT       =  7,   // 0111
   TAG_UNUSED_FLOAT     = 11    // 1011
 };
 
@@ -260,9 +260,6 @@ inline Bool isSmallIntTag(TypeOfTerm tag) {
 inline Bool isConstTag(TypeOfTerm tag) {
   return tag==TAG_CONST;
 }
-inline Bool isExtensionTag(TypeOfTerm tag) {
-  return tag==TAG_EXT;
-}
 inline Bool isGcMarkTag(TypeOfTerm tag) {
   return tag==TAG_GCMARK;
 }
@@ -276,7 +273,6 @@ inline Bool isGcMarkTag(TypeOfTerm tag) {
 #define isSRecordTag(tag)   ((tag)==TAG_SRECORD)
 #define isSmallIntTag(tag)  ((tag)==TAG_SMALLINT)
 #define isConstTag(tag)     ((tag)==TAG_CONST)
-#define isExtensionTag(tag) ((tag)==TAG_EXT)
 #define isGcMarkTag(tag)    ((tag)==TAG_GCMARK)
 
 #endif
@@ -312,9 +308,6 @@ inline Bool oz_isSmallInt(TaggedRef term) {
 inline Bool oz_isConst(TaggedRef term) {
   GCDEBUG(term); return _hasTag(term,TAG_CONST);
 }
-inline Bool oz_isExtension(TaggedRef term) {
-  GCDEBUG(term); return _hasTag(term,TAG_EXT);
-}
 inline Bool oz_isGcMark(TaggedRef term) {
   return _hasTag(term,TAG_GCMARK);
 }
@@ -328,7 +321,6 @@ inline Bool oz_isGcMark(TaggedRef term) {
 #define oz_isSRecord(term)     _hasTag(term,TAG_SRECORD)
 #define oz_isSmallInt(term)    _hasTag(term,TAG_SMALLINT)
 #define oz_isConst(term)       _hasTag(term,TAG_CONST)
-#define oz_isExtension(term)   _hasTag(term,TAG_EXT)
 #define oz_isGcMark(term)      _hasTag(term,TAG_GCMARK)
 
 #endif
@@ -372,10 +364,6 @@ inline ConstTerm * tagged2Const(TaggedRef ref) {
   GCDEBUG(ref); CHECK_TAG(TAG_CONST);
   return (ConstTerm *) tagValueOf2(TAG_CONST,ref);
 }
-inline OZ_Extension * tagged2Extension(TaggedRef ref) {
-  GCDEBUG(ref); CHECK_TAG(TAG_EXT);
-  return (OZ_Extension *) tagValueOf2(TAG_EXT,ref);
-}
 inline void * tagged2GcUnmarked(TaggedRef ref) {
   CHECK_TAG(TAG_GCMARK);
   return (void *) tagValueOf2(TAG_GCMARK,ref);
@@ -416,8 +404,6 @@ inline TaggedRef tagged2NonVariable(TaggedRef *term) {
   ((Literal *) tagValueOf2(TAG_LITERAL,((TaggedRef) (ref))))
 #define tagged2Const(ref) \
   ((ConstTerm *) tagValueOf2(TAG_CONST,((TaggedRef) (ref))))
-#define tagged2Extension(ref) \
-  ((OZ_Extension *) tagValueOf2(TAG_EXT,((TaggedRef) (ref))))
 #define tagged2GcUnmarked(ref) \
   ((void *) tagValueOf2(TAG_GCMARK,((TaggedRef) (ref))))
 
@@ -467,9 +453,6 @@ inline TaggedRef makeTaggedLiteral(Literal *s) {
 inline TaggedRef makeTaggedConst(ConstTerm *s) {
   CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_CONST,s);
 }
-inline TaggedRef makeTaggedExtension(OZ_Extension *s) {
-  CHECK_POINTER_N(s); return makeTaggedRef2p(TAG_EXT,s);
-}
 inline TaggedRef makeTaggedGcMark(void * s) {
   return makeTaggedRef2p(TAG_GCMARK,s);
 }
@@ -490,7 +473,6 @@ inline TaggedRef makeTaggedMiscp(void * s) {
 #define makeTaggedSRecord(s)   makeTaggedRef2p(TAG_SRECORD,   s)
 #define makeTaggedLiteral(s)   makeTaggedRef2p(TAG_LITERAL,   s)
 #define makeTaggedConst(s)     makeTaggedRef2p(TAG_CONST,     s)
-#define makeTaggedExtension(s) makeTaggedRef2p(TAG_EXT,       s)
 #define makeTaggedGcMark(s)    makeTaggedRef2p(TAG_GCMARK,    s)
 #define makeTaggedSmallInt(s)  _makeTaggedSmallInt(s)
 #define makeTaggedMiscp(s)     makeTaggedRef2p((TypeOfTerm)0, s)
