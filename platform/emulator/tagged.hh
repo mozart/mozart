@@ -271,6 +271,9 @@ inline ConstTerm * tagged2Const(TaggedRef ref) {
   Assert(oz_isConst(ref));
   return (ConstTerm *) tagValueOf2(LTAG_CONST0,ref);
 }
+inline void * tagged2Verbatim(TaggedRef t) {
+  return (void *) _tagValueOfVerbatim(t);
+}
 inline void * tagged2UnmarkedPtr(TaggedRef ref) {
   Assert(oz_isMark(ref));
   return (void *) tagValueOf2(LTAG_MARK0,ref);
@@ -402,20 +405,23 @@ TaggedRef tagged2NonVariable(TaggedRef * t) {
   return oz_isVar(*t) ? makeTaggedRef(t) : *t;
 }
 
-inline TaggedRef * newTaggedRef(TaggedRef *t) {
-  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
+inline 
+TaggedRef * newTaggedRef(TaggedRef *t) {
+  TaggedRef * ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedRef(t);
   return ref;
 }
 
-inline TaggedRef * newTaggedOptVar(TaggedRef proto) {
-  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
+inline 
+TaggedRef * newTaggedOptVar(TaggedRef proto) {
+  TaggedRef * ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ref = proto;
   return (ref);
 }
 
-inline TaggedRef * newTaggedVar(OzVariable * c) {
-  TaggedRef *ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
+inline 
+TaggedRef * newTaggedVar(OzVariable * c) {
+  TaggedRef * ref = (TaggedRef *) oz_heapMalloc(sizeof(TaggedRef));
   *ref = makeTaggedVar(c);
   return ref;
 }
