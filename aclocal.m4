@@ -1316,7 +1316,7 @@ AC_DEFUN(OZ_EMACS_OPTIONS,[
   AC_ARG_WITH(emacs-options,
     [--with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-[file])],
     [oz_cv_emacs_options="$with_emacs_options"],
-    [oz_cv_emacs_options="-q --no-site-[file]])
+    [oz_cv_emacs_options="-q --no-site-[file]"])
   EMACS_OPTIONS="$oz_cv_emacs_options"
   AC_SUBST(EMACS_OPTIONS)
   AC_MSG_RESULT($EMACS_OPTIONS)])
