@@ -67,7 +67,7 @@ OZ_CFun FSetCardPropagator::header = fsp_card;
 
 OZ_Return IncludePropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   OZ_FSetVar s(_s);
   OZ_FDIntVar d(_d);
@@ -87,18 +87,18 @@ OZ_Return IncludePropagator::propagate(void)
       FailOnInvalid(*s += d->getSingleElem());
   }
 
-  OZ_DEBUGPRINT("out: "<< *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave1();
 
 failure:
-  OZ_DEBUGPRINT("fail: "<< *this);
+  OZ_DEBUGPRINTTHIS("fail: ");
   return P.fail();
 }
 
 OZ_Return ExcludePropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   OZ_FSetVar s(_s);
   OZ_FDIntVar d(_d);
@@ -116,18 +116,18 @@ OZ_Return ExcludePropagator::propagate(void)
       FailOnInvalid(*s -= d->getSingleElem());
   }
 
-  OZ_DEBUGPRINT("out: "<< *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave1();
 
 failure:
-  OZ_DEBUGPRINT("fail: "<< *this);
+  OZ_DEBUGPRINTTHIS("fail: ");
   return P.fail();
 }
 
 OZ_Return FSetCardPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   OZ_FSetVar s(_s);
   OZ_FDIntVar d(_d);
@@ -140,15 +140,15 @@ OZ_Return FSetCardPropagator::propagate(void)
   FailOnInvalid(s->putCard(d->getMinElem(), d->getMaxElem()));
 
   if (*d == fd_singl) {
-    OZ_DEBUGPRINT("entailed: "<< *d << ' ' << *this);
+    OZ_DEBUGPRINT(("entailed: %s %s",d->toString(),this->toString()));
     return P.vanish();
   }
 
-  OZ_DEBUGPRINT("out: "<< *this);
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail: "<< *this);
+  OZ_DEBUGPRINTTHIS("fail: ");
   return P.fail();
 }

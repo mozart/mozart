@@ -142,7 +142,7 @@ OZ_CFun FSetDiffPropagator::header = fsp_diff;
 
 OZ_Return FSetIntersectionPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
@@ -152,45 +152,45 @@ OZ_Return FSetIntersectionPropagator::propagate(void)
     xt = x;  yt = y;  zt = z;
 
     if (z->isEmpty()) {
-      OZ_DEBUGPRINT("replace: (z empty)" << *this);
+      OZ_DEBUGPRINTTHIS("replace: (z empty)");
       P.vanish();
       return replaceBy(new FSetDisjointPropagator(_x, _y));
     }
     if (x->isSubsumedBy(*y)) {
-      OZ_DEBUGPRINT("replace: (x subsumbed by y)" << *this);
+      OZ_DEBUGPRINTTHIS("replace: (x subsumbed by y)");
       P.vanish();
-      return OZ_DEBUGRETURNPRINT(replaceBy(_x, _z));
+      return OZ_DEBUGRETURNPRINT(("%d",replaceBy(_x, _z)));
     }
     if (y->isSubsumedBy(*x)) {
-      OZ_DEBUGPRINT("replace: (y subsumbed by xy)" << *this);
+      OZ_DEBUGPRINTTHIS("replace: (y subsumbed by xy)");
       P.vanish();
-      return OZ_DEBUGRETURNPRINT(replaceBy(_y, _z));
+      return OZ_DEBUGRETURNPRINT(("%d",replaceBy(_y, _z)));
     }
 
     FailOnInvalid(*x <= -(- *z & *y)); // lub
-    OZ_DEBUGPRINT("x=" << *x);
+    OZ_DEBUGPRINT(("x=%s",x->toString()));
     FailOnInvalid(*y <= -(- *z & *x)); // lub
-    OZ_DEBUGPRINT("y=" << *y);
+    OZ_DEBUGPRINT(("y=%s",y->toString()));
 
     FailOnInvalid(*z <<= (*x & *y)); // glb
-    OZ_DEBUGPRINT("z=" << *z);
+    OZ_DEBUGPRINT(("z=%s",z->toString()));
     FailOnInvalid(*x >= *z); // glb
-    OZ_DEBUGPRINT("x=" << *x);
+    OZ_DEBUGPRINT(("x=%s",x->toString()));
     FailOnInvalid(*y >= *z); // glb
-    OZ_DEBUGPRINT("y=" << *y);
+    OZ_DEBUGPRINT(("y=%s",y->toString()));
 
   } while (xt <= x || yt <= y || zt <= z);
 
     return OZ_DEBUGRETURNPRINT(P.leave1());
 
 failure:
-  OZ_DEBUGPRINT("failed " << *this);
+  OZ_DEBUGPRINTTHIS("failed ");
   return P.fail();
 }
 
 OZ_Return FSetUnionPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
@@ -216,66 +216,66 @@ OZ_Return FSetUnionPropagator::propagate(void)
     }
 
     FailOnInvalid(*x >= (*z & - *y)); // glb
-    OZ_DEBUGPRINT("x=" << *x);
+    OZ_DEBUGPRINT(("x=%s",x->toString()));
     FailOnInvalid(*y >= (*z & - *x)); // glb
-    OZ_DEBUGPRINT("y=" << *y);
+    OZ_DEBUGPRINT(("y=%s",y->toString()));
 
     FailOnInvalid(*z <<= (*x | *y)); // lub
-    OZ_DEBUGPRINT("z=" << *z);
+    OZ_DEBUGPRINT(("z=%s",z->toString()));
     FailOnInvalid(*x <= *z); // lub
-    OZ_DEBUGPRINT("x=" << *x);
+    OZ_DEBUGPRINT(("x=%s",x->toString()));
     FailOnInvalid(*y <= *z); // lub
-    OZ_DEBUGPRINT("y=" << *y);
+    OZ_DEBUGPRINT(("y=%s",y->toString()));
 
   } while (xt <= x || yt <= y || zt <= z);
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave1();
 
 failure:
-  OZ_DEBUGPRINT("failed " << *this);
+  OZ_DEBUGPRINTTHIS("failed ");
   return P.fail();
 }
 
 OZ_Return FSetSubsumePropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("int " << *this);
+  OZ_DEBUGPRINTTHIS("int ");
   OZ_FSetVar x(_x), y(_y);
   PropagatorController_S_S P(x, y);
 
   FailOnInvalid(*x <= *y);
   FailOnInvalid(*y >= *x);
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave1(); /* is entailed if only
                         one var is left */
 
 failure:
-  OZ_DEBUGPRINT("failed " << *this);
+  OZ_DEBUGPRINTTHIS("failed ");
   return P.fail();
 }
 
 OZ_Return FSetDisjointPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
   OZ_FSetVar x(_x), y(_y);
   PropagatorController_S_S P(x, y);
 
   FailOnInvalid(*x != *y);
   FailOnInvalid(*y != *x);
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   return P.leave1(); /* is entailed if only
                         one var is left */
 
 failure:
-  OZ_DEBUGPRINT("failed " << *this);
+  OZ_DEBUGPRINTTHIS("failed ");
   return P.fail();
 }
 
 OZ_Return FSetDistinctPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
   OZ_FSetVar x(_x), y(_y);
   PropagatorController_S_S P(x, y);
 

@@ -32,7 +32,7 @@ OZ_CFun IsInPropagator::spawner = fsp_isIn;
 
 OZ_Return IsInPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   OZ_FDIntVar b(_b);
   OZ_FSetVar v(_v);
@@ -42,23 +42,23 @@ OZ_Return IsInPropagator::propagate(void)
     FailOnEmpty(*b &= 1);
     b.leave();
     v.leave();
-    OZ_DEBUGPRINT("entailed: "<< *this);
+    OZ_DEBUGPRINTTHIS("entailed: ");
     return OZ_ENTAILED;
   }
   if (v->isNotIn(_i)) {
     FailOnEmpty(*b &= 0);
     b.leave();
     v.leave();
-    OZ_DEBUGPRINT("entailed: "<< *this);
+    OZ_DEBUGPRINTTHIS("entailed: ");
     return OZ_ENTAILED;
   }
-  OZ_DEBUGPRINT("sleep: "<< *this);
+  OZ_DEBUGPRINTTHIS("sleep: ");
   b.leave();
   v.leave();
   return SLEEP;
 
 failure:
-  OZ_DEBUGPRINT("fail: "<< *this);
+  OZ_DEBUGPRINTTHIS("fail: ");
   b.fail();
   v.fail();
   return FAILED;

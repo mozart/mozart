@@ -28,7 +28,7 @@ OZ_CFun MonitorInPropagator::header = fsp_monitorIn;
 
 OZ_Return MonitorInPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   OZ_Stream stream(_stream);
   OZ_FSetVar fsetvar(_fsetvar);
@@ -67,7 +67,7 @@ OZ_Return MonitorInPropagator::propagate(void)
     }
   }
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
 
   stream.leave();
   _stream = stream.getTail();
@@ -75,7 +75,7 @@ OZ_Return MonitorInPropagator::propagate(void)
   return vanish ? OZ_ENTAILED : SLEEP;
 
 failure:
-  OZ_DEBUGPRINT("fail " << *this);
+  OZ_DEBUGPRINTTHIS("fail ");
 
   stream.fail();
   fsetvar.fail();
