@@ -325,6 +325,8 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
   Board * copy = (Board *) space->getSpace()->clone();
 
+  copy->setParent(CBB);
+
 #ifdef CS_PROFILE
   copy->orig_start = cs_orig_start;
   copy->copy_start = cs_copy_start;
