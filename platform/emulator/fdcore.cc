@@ -238,6 +238,8 @@ OZ_C_proc_begin(BIfdPutList, 3)
   if (isNotCVar(listtag)) {
     return addNonResSuspForDet(list, listptr, listtag,
                                createNonResSusp(OZ_self, OZ_args, OZ_arity));
+  } else if (isNil(list)) {
+    return FAILED;
   } else if (! isLTuple(listtag)) {
     TypeError(1, "");
   }
