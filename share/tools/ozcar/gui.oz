@@ -3,6 +3,21 @@
 
 local
    
+   fun {IsDefList X}
+      S = {Space.new fun {$} {IsList X} end}
+      V = thread {Space.askVerbose S} end
+   in
+      case V
+      of succeeded(entailed)
+      then
+	 {Space.merge S}
+      [] blocked(_)
+      then
+	 {Space.inject S proc {$ _} fail end}
+	 false
+      end
+   end
+   
    fun {FormatArgs A}
       {Map A
        fun {$ X}
@@ -27,13 +42,13 @@ local
 	 elsecase {IsDictionary X} then DictionaryType
 	 elsecase {IsFloat X}      then FloatType
 	 elsecase {IsInt X}        then MagicAtom
-	 elsecase {IsList X}       then ListType
 	 elsecase {IsUnit  X}      then UnitType
 	 elsecase {IsName X}       then NameType
 	 elsecase {IsLock X}       then LockType
 	 elsecase {IsObject X}     then ObjectType
 	 elsecase {IsPort X}       then PortType
 	 elsecase {IsProcedure X}  then ProcedureType
+	 elsecase {IsDefList X}    then ListType
 	 elsecase {IsTuple X}      then TupleType
 	 elsecase {IsRecord X}     then RecordType
 	 elsecase {IsChunk X}      then ChunkType
@@ -338,7 +353,7 @@ in
 	       ' ' # BraceLeft #
 	       case FrameName == '' then '$' else FrameName end
 	       LineTag)}
-	  
+
 	 {ForAll FrameArgs
 	  proc {$ Arg}
 	     case Arg.1 == MagicAtom then
@@ -371,7 +386,7 @@ in
 		  tk(tag bind LineTag '<1>' LineAction)] W}
 	 
 	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
-	    %LastSelectedFrame <- undef
+	    LastSelectedFrame <- undef
 	    Gui,SelectStackFrame(LineTag)
 	    Gui,printEnv(frame:FrameNr vars:Frame.env)
 	 else skip end
@@ -382,7 +397,14 @@ in
       in
 	 {OzcarMessage 'printing complete stack of size ' # Size}
 	 {W title(AltStackTitle # I)}
-	 
+	 /*
+	 local
+	    AllTags = {{W w($)} tkReturn(tag names $)}
+	 in
+	    {Show AllTags}
+	    {W tk(tag delete AllTags)}
+	 end
+	 */ 
 	 Gui, Clear(W)
 	 Gui,Append(W {MakeLines Size})  % Tk is _really_ stupid...
 	 
@@ -512,13 +534,15 @@ in
       end
 
       meth loadStatus(File Ack)
-	 {Delay TimeoutToMessage}
-	 case {IsDet Ack} then skip else
-	    RealFile = {LookupPath File}
-	 in
-	    Gui,rawStatus('Loading file ' # RealFile # '...')
-	    {Wait Ack}
-	    Gui,rawStatus(' done' append)
+	 case {UnknownFile File} then skip else
+	    {Delay TimeoutToMessage}
+	    case {IsDet Ack} then skip else
+	       RealFile = {LookupPath File}
+	    in
+	       Gui,rawStatus('Loading file ' # RealFile # '...')
+	       {Wait Ack}
+	       Gui,rawStatus(' done' append)
+	    end
 	 end
       end
       

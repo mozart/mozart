@@ -252,7 +252,7 @@ in
 	 in
 	    %{{O getStack($)} update}
 	    {{O getStack($)} print}
-	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
+	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
 	       SourceManager,scrollbar(file:'' line:undef color:undef
 				       what:both)

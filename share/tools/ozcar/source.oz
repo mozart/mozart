@@ -188,7 +188,7 @@ in
       end
 	 
       meth scrollbar(file:F line:L color:C what:What<=appl ack:Ack<=unit)
-	 case F == undef orelse F == '' orelse F == noDebugInfo then
+	 case {UnknownFile F} then
 	    SourceManager,EraseScrollbar(What)
 	 else
 	    RealF = {LookupPath F}
