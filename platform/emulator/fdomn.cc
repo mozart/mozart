@@ -890,15 +890,18 @@ int FiniteDomain::initList(int list_len,
   return size;
 }
 
+
+/* gcc-2.6.3 on solaris has problems ...*/
+#ifndef __GNUC__
 static
 int intcompare(int ** i, int ** j) {return(**i - **j);}
-/*
+#else
 int intcompare(const void * ii, const void  * jj) {
   int **i = (int **) ii;
   int **j = (int **) jj;
   return(**i - **j);
 }
-*/
+#endif
 
 int FiniteDomain::simplify(int list_len, int * list_left, int * list_right)
 {
