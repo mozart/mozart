@@ -411,5 +411,137 @@ in
 end
 >>>
 A binary-merge <<{Merge X Y Z}>> is simply <<{MMerge [X Y] Z}>>.
+<SECTION><TITLE/Nondeterministic Programs and Search/
+<P>
+Oz allows much of the nondeterministic and search-oriented programming
+as Prolog. This type of programming comes in a little bit different flavour
+than Prolog. While Prolog comes ready with a default search strategy based
+on backtracking, Oz allows programmers to devise their suitable search 
+strategies in a way that is separate and orthogonal from the nondeterministic
+specification of a problem.
+<P> To be able to do this Oz has a specific linguistic constructs that create
+choice point without specifying how they will be explored. A completely 
+separate program can then specify the search strategy.
+
+<SUBSECTION><TITLE/Choice Construct/
+
+<<<
+proc {DApp Xs Ys Zs}
+   choice
+      Xs = nil Ys = Zs then skip
+   [] X Xr Zr in
+      Xs = X|Xr Zs = X|Zr then
+      {DApp Xr Ys Zr}
+   end
+end
+>>>
+
+<SUBSECTION><TITLE/Define Clause Grammer/
+<<<
+Sentence(P) --> NounPhrase(X P1 P) VerbPhrase(X P1)
+NounPhrase(X P1 P) --> Determiner(X P2 P1 P) Noun(X P3) RelClause(X P3 P2) 
+NounPhrase(X P P) --> Name(X)
+VerbPhrase(X P) --> TransVerb(X Y P1) NounPhrase(Y P1 P) | InstransVerb(X P)
+RelClause(X P1 and(P1 P2)) --> [that] VerbPhrase(X P2) 
+RelClause(_ P P) --> []
+Determiner(X P1 P2 all(X imp(P1 P2))) --> [every] 
+Determiner(X P1 P2 exits(X and(P1 P2))) --> [a]
+Noun(X man(X)) --> [man] 
+Noun(X woman(X)) --> [woman]
+name(john) --> [john] 
+name(jan) --> [jan]
+TransVerb(X Y loves(X Y)) --> [loves]
+IntransVerb(X lives(X))  --> [lives]
+>>>
+
+<<<
+proc {Sentence P S0#S}
+   X P1 S1 in
+   {NounPhrase X P1 P S0#S1}
+   {VerbPhrase X P1 S1#S}
+end
+proc {NounPhrase X P1 P S0#S}
+   choice
+      P2 P3 S1 S2 in
+      {Determiner X P2 P1 P S0#S1}
+      {Noun X P3 S1#S2}
+      {RelClause X P3 P2 S2#S}
+   [] {Name X S0#S}
+      P1 = P
+   end
+end
+proc {VerbPhrase X P S0#S}
+   choice
+      Y P1 S1 in
+      {TransVerb X Y P1 S0#S1}
+      {NounPhrase Y P1 P S1#S}
+   [] {IntransVerb X P S0#S}
+   end
+end
+proc {TransVerb X Y Z S0#S}
+   S0 = loves|S
+   Z = loves(X Y)
+end
+proc {IntransVerb X Y S0#S}
+   S0 = lives|S
+   Y = lives(X)
+end   
+proc {Name X S0#S}
+   S0 = X|S
+   choice
+      X = john
+   []
+      X = jan
+   end
+end
+proc {Noun X Y S0#S}
+   choice
+      S0 = man|S
+      Y = man(X)
+   [] S0 = woman|S
+      Y = woman(X)
+   end
+end
+proc {Determiner X P1 P2 P S0#S}
+   choice
+      S0 = every|S
+      P = all(X imp(P1 P2))
+   [] S0 = a|S
+      P = exists(X and(P1 P2))
+   end
+end
+proc {RelClause X P1 P S0#S}
+   P2 in
+   choice
+      S1 in
+      S0 = that|S1
+      P = and(P1 P2)
+      {VerbPhrase X P2 S1#S}
+   [] S0 = S
+      P = P1
+   end
+end
+		 
+declare
+proc {Main P}
+   {Sentence P [every man that lives loves a woman]#nil}
+end
+>>>
+<SUBSECTION><TITLE/Some Search Procedures/
+
+
+<SUBSECTION><TITLE/Dis Construct/
+
+
+<SUBSECTION><TITLE/Dynamic Predicates/
+
+<SUBSECTION><TITLE/The Basic Space Library/
+
+<SUBSECTION><TITLE/Example: A Simple Expert System/
+
+
+
+
+
 
 </CHAPTER>
