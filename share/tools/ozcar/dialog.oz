@@ -67,6 +67,7 @@ local
 	 CurCompUI  : unit
 	 CurEnv     : unit
 	 EvalThread : unit
+	 Self       : unit
 
 	 SlashList  : SL
 
@@ -78,7 +79,16 @@ local
 	 in
 	    CurComp   <- C
 	    CurCompUI <- CUI
-	    CurEnv    <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
+	    CurEnv    <- {Record.adjoinList env
+			  {Filter {Append AuxEnv.'G' AuxEnv.'Y'}
+			   fun {$ V#W}
+			      case V of 'self' then Self <- W false
+			      else true
+			      end
+			   end}}
+	    case {IsFree @Self} then Self <- unit
+	    else skip
+	    end
 
 	    case {Emacs.getOPI} of false then skip
 	    elseof OPI then
@@ -104,7 +114,7 @@ local
 
 	 proc {Doit V}
 	    case @EvalThread == unit then Sync in
-	       try Self R in
+	       try R in
 		  EvalThread <- {Thread.this}
 		  {OzcarMessage 'Doit: ' # V}
 		  thread
@@ -121,12 +131,11 @@ local
 		     end
 		  end
 		  {EvalInit}
-		  Self = {CondSelect @CurEnv 'self' unit}
 		  {@CurComp enqueue(setSwitch(expression true))}
 		  {@CurComp enqueue(setSwitch(threadedqueries false))}
 		  {@CurComp enqueue(setSwitch(debuginfovarnames true))}
 		  {@CurComp enqueue(setSwitch(debuginfocontrol true))}
-		  case Self of unit then
+		  case @Self of unit then
 		     {@CurComp
 		      enqueue(feedVirtualString(V return(result: ?R)))}
 		  else
@@ -140,7 +149,7 @@ local
 		     %% in
 		     %%    {`send` eval(`result`) Class1 `self`}
 		     %% end
-		     {@CurComp enqueue(mergeEnv(env('`self`': Self)))}
+		     {@CurComp enqueue(mergeEnv(env('`self`': @Self)))}
 		     {@CurComp
 		      enqueue(feedVirtualString('{`send` eval($) ' #
 						'class meth eval($)\n' #
