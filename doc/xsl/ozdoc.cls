@@ -1120,9 +1120,9 @@
 
 %% DTD doc support
 
-\newcommand{\DTDTAG}[1]{\texttt}
-\newcommand{\DTDATTRIB}[1]{\texttt}
-\newcommand{\DTDPI}[1]{\texttt}
+\newcommand{\DTDTAG}{\texttt}
+\newcommand{\DTDATTRIB}{\texttt}
+\newcommand{\DTDPI}{\texttt}
 
 %%
 
