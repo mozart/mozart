@@ -29,10 +29,12 @@
     Text widgets display (as suggested by the name) one or more lines
     of text, where the text can be edited. It offers commands to
     manipulate segments of text and to embed other widgets into the
-    flow of text.
+    flow of text. This chapter attempts to give a short overview on
+    text widgets, for the details consult <ref.extern
+    to="&tkcmd/text.htm"/<kbd/text//.
 
   <section id="section.text.widget">
-    <title/Inserting Text/
+    <title/Manipulating Text/
 
     <p>
       Let us start with a very simple example where we want to display
@@ -45,49 +47,114 @@
         <p>
           <picture.extern to="display.gif" type=gif>
 <chunk class=anonymous><title/text display/
-Te={New Tk.text tkInit(parent:T width:40 height:10 bg:ivory)}
-{Te tk(insert 'end'
-       <chunk.ref/Sample text/)}
+T={New Tk.text tkInit(parent:W width:28 height:5 bg:white)}
+{T tk(insert 'end' "The quick brown fox jumps over the lazy dog.")}
 </chunk>
       </figure>
 
     <p>
-      You will immediately note two things. Firstly, not the whole
-      text is visible. Similar to <ref
+      Similar to <ref
       to="section.widgets-2.listbox"/listboxes/, a text widget
       supports scanning: The text can be scanned by pressing the
       second mouse button and moving the mouse pointer while the
-      button is still being pressed. Secondly, the text is wrapped
-      where word boundaries (that is, spaces) are not taken into
-      account. Changing the wrapping such that word boundaries are
-      preserved, can be done as follows:
+      button is still being pressed. And of course, in the same way as
+      canvas widgets scrollbars can be attached to a text widget.
+
+    <p>
+      The text is wrapped where word boundaries (that is,
+      spaces) are not taken into account. Changing the wrapping such
+      that word boundaries are preserved can be done as follows:
 <chunk class=anonymous><title/wrap:word/
-{Te tk(configure wrap:word)}
+{T tk(configure wrap:word)}
 </chunk>
 
     <p>
       Positions in the displayed text can be referred to by
-      <def/positions/.
+      <def/positions/. A position can be denoted by a tickle
+      <<p(?_{L} ?_{C})>>, where ?_{L} gives the line (starting from
+      one) and ?_{C} the position in that line (also starting from
+      zero). Positions also can take modifiers, for more details on
+      this issue see <ref.extern
+      to="&tkcmd/text.htm"/<kbd/text//. Another helpful position is
+      <<'end'>> which refers to the position after the last character.
 
     <p>
-      Getting text.
+      Portions of the text can be retrieved. For example,
+<chunk class=anonymous><title/text get/
+{T tkReturnAtom(get p(1 4) p(1 9) $)}
+</chunk>
+      returns the atom <<quick>>.
 
     <p>
-      Inserting text.
+      Positions also specify where to insert text, for example
+<chunk class=anonymous><title/text insert/
+{T tk(insert p(1 4) "very very ")}
+</chunk>
+      inserts the text directly before quick.
 
     <p>
-      Deleting text.
+      In the same way text can also be deleted. For example
+<chunk class=anonymous><title/text delete/
+{T tk(delete p(1 4) p(1 14))}
+</chunk>
+      deletes again the text <<"very very ">>.
 
     <p>
-      Special positions.
+      We do not discuss here how to employ a text widget as a powerful
+      editor, please see again <ref.extern
+      to="&tkcmd/text.htm"/<kbd/text//. If you try to place a cursor
+      inside the text widget and make some character strokes, you will
+      notice that by default a text widget accepts input. To prevent a
+      user from altering the text in a display only situation the
+      widget can be configured as follows:
+<chunk class=anonymous><title/text disabled/
+{T tk(configure state:disabled)}
+</chunk>
 
-    <p>
-      Display only.
 
   </section>
 
   <section id="section.text.tags">
-    <title/Text Tags/
+    <title/Text Tags and Marks/
+
+    <p>
+<chunk class=anonymous><title/text tag init/
+B={New Tk.textTag tkInit(parent:T foreground:brown)}
+</chunk>
+
+    <p>
+<chunk class=anonymous><title/text tag add/
+{B tk(add p(1 10) p(1 15))}
+</chunk>
+
+    <p>
+<chunk class=anonymous><title/text tag configure/
+{B tk(configure font:{New Tk.font tkInit(size:18)})}
+</chunk>
+
+    <p>
+<chunk class=anonymous><title/text tag insert/
+{T tk(insert 'end' "\nDogs are ")}
+{T tk(insert 'end' "brown" B)}
+{T tk(insert 'end' " as well.")}
+</chunk>
+
+    <p>
+      <figure id="figure.text.tags">
+        <caption/Using tags with text widgets./
+        <picture.extern to="text-tags.gif" type=gif>
+      </figure>
+
+    <p>
+      In the same way as described in <ptr to="section.canvas.tags">
+      for canvas tags, events can be attached to text tags.
+
+    <p>
+      In addition to tags, text widgets also support
+      <def/marks/. Marks refer to positions in the text rather than to
+      particular characters as tags do. They are supported by the
+      class <<Tk.textMark>>. For their use, see again <ref.extern
+      to="&tkcmd/text.htm"/<kbd/text//.
 
   </section>
 
@@ -99,9 +166,8 @@ Te={New Tk.text tkInit(parent:T width:40 height:10 bg:ivory)}
 <chunk><title/Definition of Head/
 local
    HF={New Tk.font    tkInit(family:helvetica size:18 weight:bold)}
-   HT={New Tk.textTag tkInit(parent:Te)}
+   HT={New Tk.textTag tkInit(parent:T font:HF foreground:orange)}
 in
-   {HT tk(configure font:HF foreground:orange)}
    proc {Head E Rs}
       {Te tk(insert p(0 0) E#'\n' HT)}
       {HT tkBind(event:  '<1>'
@@ -116,26 +182,25 @@ end
 <chunk><title/Definition of Body/
 local
    BF={New Tk.font    tkInit(family:helvetica size:12 weight:normal)}
-   BT={New Tk.textTag tkInit(parent:Te)}
-   proc {Do Es T Rs}
+   BT={New Tk.textTag tkInit(parent:T font:BF)}
+   proc {Do Es CT Rs}
       case Es of nil then skip
       [] E|Er then
          case E
          of a(ref:R Es) then
-            RT={New Tk.textTag tkInit(parent:Te)}
+            RT={New Tk.textTag tkInit(parent:Te font:BF
+                                      foreground:blue underline:true)}
          in
-            {RT tk(configure font:BF foreground:blue underline:true)}
             {RT tkBind(event: '<1>'
                        action: proc {$} {Display R|Rs} end)}
             {Do Es RT Rs}
          else
-            {Te tk(insert 'end' E T)}
+            {T tk(insert 'end' E CT)}
          end
-         {Do Er T Rs}
+         {Do Er CT Rs}
       end
    end
 in
-   {BT tk(configure font:BF)}
    proc {Body Es Rs}
       {Do Es BT Rs}
    end
@@ -149,7 +214,7 @@ end
 proc {Display Rs}
    case Rs of nil then skip
    [] R|Rr then
-     {Te tk(delete p(0 0) 'end')}
+     {T tk(delete p(0 0) 'end')}
      {Head ToyText.R.head Rr} {Body ToyText.R.body Rs}
    end
 end
@@ -162,13 +227,13 @@ end
         <picture.extern to="toy.gif" type=gif>
 <chunk class=anonymous><title/ToyBrowse/
 proc {ToyBrowse ToyText Root}
-   T ={New Tk.toplevel tkInit}
-   Te={New Tk.text   tkInit(parent:T width:40 height:8 bg:white wrap:word)}
+   W={New Tk.toplevel tkInit}
+   T={New Tk.text tkInit(parent:W width:40 height:8 bg:white wrap:word)}
    <chunk.ref/Definition of Head/
    <chunk.ref/Definition of Body/
    <chunk.ref/Definition of Display/
 in
-   {Tk.send pack(Te)}
+   {Tk.send pack(T)}
    {Display [Root]}
 end
 {ToyBrowse <chunk.ref/Sample ToyText/ canvas}
@@ -178,10 +243,7 @@ end
 
   </section>
 
-  <section id="section.text.marks">
-    <title/Text Marks/
 
-  </section>
 
 <![ %EXTRA; [
 <section><title/Examples/
@@ -196,8 +258,22 @@ end
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/text display/
+{Tk.send pack(T)}
+
+<chunk.ref/wrap:word/
+
+{Browse <chunk.ref/text get/}
+
+<chunk.ref/text insert/
+
+<chunk.ref/text delete/
+
+<chunk.ref/text disabled/
+
+
+{W tkClose}
 
 
 
@@ -205,6 +281,21 @@ T={New Tk.toplevel tkInit}
 %% Text Tags
 %%
 
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/text display/
+{Tk.send pack(W)}
+
+<chunk.ref/text tag init/
+
+<chunk.ref/text tag add/
+
+<chunk.ref/text tag configure/
+
+<chunk.ref/text tag insert/
+
+
+{W tkClose}
 
 
 
@@ -215,11 +306,6 @@ T={New Tk.toplevel tkInit}
 declare
 <chunk.ref/ToyBrowse/
 
-
-
-%%
-%% Text Marks
-%%
 
 
 

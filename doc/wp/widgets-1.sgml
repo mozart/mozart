@@ -51,7 +51,7 @@
         <P>
           <Picture.Extern to="toplevel-1.gif" type=gif>
 <chunk class=anonymous><title/{Tk.toplevel tkInit}/
-T={New Tk.toplevel tkInit(width:150 height:50)}
+W={New Tk.toplevel tkInit(width:150 height:50)}
 </chunk>
       </Figure>
 
@@ -67,10 +67,10 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
 
     <P>
       A widget object can be sent a message with label <<tk>> to change the
-      appearance or behaviour of its widget. For example, the background
-      color of the toplevel widget <<T>> can be changed to purple by
+      appearance or behavior of its widget. For example, the background
+      color of the toplevel widget <<W>> can be changed to purple by
 <chunk class=anonymous><title/{Tk.toplevel tk(configure)}/
-{T tk(configure background:purple)}
+{W tk(configure background:purple)}
 </chunk>
       Additionally, widget objects understand messages
       to query the state of a widget.  We will discuss these messages later.
@@ -88,13 +88,17 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
       explains this structure and shows how to build messages such that they
       are understood by widgets.
 
+    <p>
+      Reference information on toplevel widgets can be found in
+      <ref.extern to="&tkcmd;/toplevel.htm"/<kbd/toplevel//.
+
   <Section id="section.widgets-1.tickles">
-    <Title/The Graphics Engine, Tickles and Widget Messages/
+    <Title/The Graphics Engine, Tickles, and Widget Messages/
 
     <P>
       Widget objects as well as instances of other classes defined in the
       <<Tk>> module are built as object oriented frontends to a single
-      graphical agent, the so-called <Def/graphics engine/.
+      graphical agent, the <Def/graphics engine/.
 
     <SubSection>
       <Title/The Graphics Engine/
@@ -106,10 +110,10 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
         the layout of a widget on the screen.
 
       <P>
-        The messages the engine understands are so-called <Def/tickles/.
-        The procedures <<Tk.send>> and <<Tk.batch>> take a tickle or a list of
-        tickles and send it to the graphics engine.  We use these
-        two procedures especially to send tickles for geometry
+        The messages the engine understands are <Def/tickles/. The
+        procedures <<Tk.send>> and <<Tk.batch>> take a tickle or a
+        list of tickles and send it to the graphics engine.  We use
+        these two procedures especially to send tickles for geometry
         management, as is discussed in <Ptr to="chapter.geometry">.
 
       <P>
@@ -123,16 +127,18 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
       <P>
         Tickles are used to describe messages for the graphics engine.
         A tickle is either a boolean value, the name <<unit>>, a
-        virtual string, a record
-        that has neither a name as label nor as feature, or a tickle
-        object.  A <def/tickle object/ is an instance of a class the
-        Tk module provides.
+        virtual string, a record that has neither a name as label nor
+        as feature, or a tickle object.  A <def/tickle object/ is an
+        instance of a class the Tk module provides, unless otherwise
+        mentioned (the only exception is the class <<Tk.listener>>,
+        see <ptr to="section.widgets-2.action">).
 
       <P>
-        An initialization message with label <<tkInit>> must be a record
-        without integer features.  The field of a feature must be a
-        tickle.  Only the special features <<parent>>, <<action>>, and <<args>>
-        may take different values.  These features we will discuss later.
+        An initialization message with label <<tkInit>> must be a
+        record without integer features.  The field of a feature must
+        be a tickle.  Only the special features <<parent>>,
+        <<action>>, <<url>>, and <<args>> may take different values.
+        These features we will discuss later.
 
       <P>
         To the features we refer to as <Def/configuration options/, or
@@ -157,9 +163,9 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
         that follow a particular structure. This means that each
         tickle sent to the graphics engine is first translated to a
         string. The translation is generic, for our purposes here it
-        suffices to give a
-        short example. The full translation details can be found in
-        <Ptr.extern to="ozdoc:system" key="chapter.tk">.
+        suffices to give a short example. The full translation details
+        can be found in <Ptr.extern to="ozdoc:system"
+        key="chapter.tk">.
 
       <P>
         For example,
@@ -188,7 +194,7 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
               <TH/Example/
               <TH/Translation/
               <TH/Mnemonic/
-              <th/Explanation/
+              <th/Used/
             <TR>
               <TD/<<o(10 12 fill:yellow)>>/
               <TD proglang=tcl/<<10 12 -fill yellow>>/
@@ -234,13 +240,13 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
     <Title/Frames/
 
     <P>
-      Frame widgets are similar to toplevel widgets in that they serve as
-      containers for other widgets.  The difference is that a frame is used
-      as container within other widgets, whereas a toplevel widget is
-      the outermost
-      container.  The main purpose of frames is to determine geometrical
-      layouts for the widgets they contain.  More on geometry management we
-      see in <Ptr to="chapter.geometry">.
+      Frame widgets are similar to toplevel widgets in that they serve
+      as containers for other widgets.  The difference is that a frame
+      is used as container within other widgets, whereas a toplevel
+      widget is the outermost container.  The main purpose of frames
+      is to determine geometrical layouts for the widgets they
+      contain.  More on geometry management we see in <Ptr
+      to="chapter.geometry">.
 
     <SubSection id="section.widgets-1.relief">
       <Title/Relief Options/
@@ -261,7 +267,7 @@ T={New Tk.toplevel tkInit(width:150 height:50)}
 <chunk class=anonymous><title/Tk.frame/
 Fs={Map [groove ridge flat sunken raised]
     fun {$ R}
-       {New Tk.frame tkInit(parent:T width:2#c height:1#c
+       {New Tk.frame tkInit(parent:W width:2#c height:1#c
                             relief:R borderwidth:4)}
     end}
 {{Nth Fs 3} tk(configure background:black)}
@@ -271,7 +277,7 @@ Fs={Map [groove ridge flat sunken raised]
 
       <P>
         The <<tkInit>> message contains the option <<parent>> which links the
-        frames into its parent, the toplevel widget&nbsp;<<T>>.  All widgets
+        frames into its parent, the toplevel widget&nbsp;<<W>>.  All widgets
         but toplevels need a parent widget, this is discussed in <Ptr
         to="section.widgets-1.hierarchy">.
 
@@ -282,7 +288,7 @@ Fs={Map [groove ridge flat sunken raised]
 
       <P>
         Note that we left out the code to create the toplevel widget.  Here
-        and in the following we assume that the variable&nbsp;<<T>> is bound
+        and in the following we assume that the variable&nbsp;<<W>> is bound
         to a toplevel widget.  The <ref.extern
         to="WindowProgramming.oz"/example file/, however, contains the
         code needed to create the toplevel widget.
@@ -367,7 +373,7 @@ Fs={Map [groove ridge flat sunken raised]
       <p>
         The full Tk-reference information for each widget is shipped with
         the Mozart distribution. For an example, see the reference information
-        for a <ref.extern to="&tkcmd;/frame.htm"/<kbd/frame//.
+        for <ref.extern to="&tkcmd;/frame.htm"/<kbd/frame//.
 
       <p>
         Reference information on options that are supported by all
@@ -380,9 +386,9 @@ Fs={Map [groove ridge flat sunken raised]
 
     <P>
       Widgets are arranged in a hierarchy.  Each widget has a single
-      <def/parent/.
-      The only exceptions can be toplevel widget objects, which do not have
-      to have a parent.  The parent of a widget is given by the option
+      <def/parent/. The only exceptions can be toplevel widget
+      objects, which do not have to have a parent.  The parent of a
+      widget is given by the option
       <<parent>> in the <<tkInit>> message.  Usually parent widgets are
       containers.  To the parent of a widget we also refer to as its
       <def/master/.
@@ -416,6 +422,7 @@ Fs={Map [groove ridge flat sunken raised]
       directly to the graphics engine, &eg; by <<Tk.send>> or
       <<Tk.batch>>, issues a runtime error.
 
+
   <Section id="section.widgets-1.label">
     <Title/Label Widgets/
 
@@ -431,8 +438,8 @@ Fs={Map [groove ridge flat sunken raised]
         <P>
           <Picture.Extern to="labels.gif" type=gif>
 <chunk class=anonymous><title/Tk.label/
-L1={New Tk.label tkInit(parent:T bitmap:info)}
-L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
+L1={New Tk.label tkInit(parent:W bitmap:info)}
+L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
 {Tk.send pack(L1 L2 side:left padx:2#m pady:2#m)}
 </chunk>
       </Figure>
@@ -490,9 +497,9 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
     C=(I-1) mod 5
  in
     {Tk.batch [grid(row:R*2   column:C
-                    {New Tk.label tkInit(parent:T bitmap:D)})
+                    {New Tk.label tkInit(parent:W bitmap:D)})
                grid(row:R*2+1 column:C
-                    {New Tk.label tkInit(parent:T text:D)})]}
+                    {New Tk.label tkInit(parent:W text:D)})]}
  end}
 </chunk>
         </Figure>
@@ -501,6 +508,7 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
         Bitmaps have two colors, which can be configured with the
         <<foreground>> and <<background>> options.  The color of the bitmaps'
         pixels is given by the foreground color.
+
 
     <SubSection id="section.widgets-1.fonts">
       <Title/Font Options/
@@ -533,13 +541,12 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
  proc {$ Family}
     {ForAll [normal bold]
      proc {$ Weight}
-        F = {New Tk.font  tkInit(family: Family
-                                 weight: Weight
-                                 size:   12)}
-        L = {New Tk.label tkInit(parent: T
-                                 text:   ('A '#Weight#' '#
-                                          Family#' font.')
-                                 font:   F)}
+        F={New Tk.font  tkInit(family: Family
+                               weight: Weight
+                               size:   12)}
+        L={New Tk.label tkInit(parent: W
+                               text:   'A '#Weight#' '#Family#' font.'
+                               font:   F)}
      in
         {Tk.send pack(L)}
      end}
@@ -555,6 +562,7 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
         how the font looks. <<Tk.font>> supports more options, for a
         complete overview consult <Ref.extern
         to="&tkcmd;/font.htm"/<kbd/font//.
+
 
   <Section id="section.widgets-1.images">
     <Title/Images/
@@ -575,12 +583,11 @@ L2={New Tk.label tkInit(parent:T text:'Labels: bitmaps and text')}
         <P>
           <Picture.Extern to="images-1.gif" type=gif>
 <chunk class=anonymous><title/Tk.image/
-D  = {Property.get 'oz.home'}#'/doc/wp/'
-I  = {New Tk.image tkInit(type:photo format:ppm
-                          file:D#'truck-left.ppm')}
-L1 = {New Tk.label tkInit(parent:T image:I)}
-L2 = {New Tk.label tkInit(parent:T image:I)}
-L3 = {New Tk.label tkInit(parent:T image:I)}
+D ={Property.get 'oz.home'}#'/doc/wp/'
+I ={New Tk.image tkInit(type:photo format:ppm file:D#'truck-left.ppm')}
+L1={New Tk.label tkInit(parent:W image:I)}
+L2={New Tk.label tkInit(parent:W image:I)}
+L3={New Tk.label tkInit(parent:W image:I)}
 {Tk.send pack(L1 L2 L3 padx:1#m pady:1#m side:left)}
 </chunk>
       </Figure>
@@ -625,6 +632,12 @@ L3 = {New Tk.label tkInit(parent:T image:I)}
       abstraction is presented that eases the handling of images
       considerably.
 
+    <p>
+      Reference information on images can be found in
+      <ref.extern to="&tkcmd;/image.htm"/<kbd/image//.
+
+
+
   <Section id="section.widgets-1.messages">
     <Title/Messages/
 
@@ -646,7 +659,7 @@ L3 = {New Tk.label tkInit(parent:T image:I)}
 S ='Text extending over several lines.'
 Ms={Map [left#200 center#100 right#50]
     fun {$ J#A}
-       {New Tk.message tkInit(parent:T text:S justify:J aspect:A)}
+       {New Tk.message tkInit(parent:W text:S justify:J aspect:A)}
     end}
 {Tk.send pack(b(Ms) side:left padx:2#m pady:2#m)}
 </chunk>
@@ -662,6 +675,11 @@ Ms={Map [left#200 center#100 right#50]
       For example a value of <<100>> means that the text is as high
       as wide, a value of <<200>> means that the text is twice as wide
       as high.
+
+    <p>
+      Reference information on message widgets can be found in
+      <ref.extern to="&tkcmd;/message.htm"/<kbd/message//.
+
 
 <![ %EXTRA; [
 <chunk><title/EXAMPLES/
@@ -681,7 +699,7 @@ declare
 <chunk.ref/{Tk.toplevel tk(configure)}/
 
 %% Closing the toplevel widget
-{T tkClose}
+{W tkClose}
 
 
 %%
@@ -689,11 +707,11 @@ declare
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/Tk.frame/
 
 
-{T tkClose}
+{W tkClose}
 
 
 %%
@@ -701,10 +719,11 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/Tk.label/
 
 <chunk.ref/label configure/
+
 
 
 %%
@@ -713,14 +732,17 @@ T={New Tk.toplevel tkInit}
 
 <chunk.ref/Bitmap Options/
 
-{T tkClose}
+
+{W tkClose}
 
 
 declare
-T={New Tk.toplevel tkInit(bg:white)}
+W={New Tk.toplevel tkInit}
 <chunk.ref/predefined/
 
-{T tkClose}
+
+{W tkClose}
+
 
 
 %%
@@ -728,11 +750,12 @@ T={New Tk.toplevel tkInit(bg:white)}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/Tk.font/
 
 
-{T tkClose}
+{W tkClose}
+
 
 
 %%
@@ -740,14 +763,14 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W ={New Tk.toplevel tkInit}
 <chunk.ref/Tk.image/
 
 <chunk.ref/Tk.image configure/
 
 
+{W tkClose}
 
-{T tkClose}
 
 
 %%
@@ -755,11 +778,11 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit(bg:white)}
+W ={New Tk.toplevel tkInit(bg:white)}
 <chunk.ref/Tk.message/
 
 
-{T tkClose}
+{W tkClose}
 
 
 

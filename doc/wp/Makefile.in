@@ -23,7 +23,7 @@ WIDGETS2 = \
 CANVAS = \
         barchart tags waitdone
 TEXT = \
-        display toy
+        display toy text-tags
 TOOLS = \
         dialog error menubar
 
@@ -37,7 +37,7 @@ HTMLEXTRAFILES0 = \
         $(TOOLS:%=tools/%.gif) \
         queen.xbm magnifier.xbm \
         truck-left.ppm truck-right.ppm \
-        wp.gif back.gif
+        wp.gif
 HTMLEXTRAFILES = \
         $(addprefix pictures/,$(HTMLEXTRAFILES0))
 OZDOCHTMLFLAGS = --autoindex

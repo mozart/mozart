@@ -65,7 +65,11 @@
 <Book proglang=oz>
   <Front>
     <Meta name="html.split"       value="chapter.introduction">
+
     <Meta name="html.split"       value="chapter.started">
+    <Meta name="html.split"       value="section.started.first">
+    <Meta name="html.split"       value="section.started.architecture">
+    <Meta name="html.split"       value="section.started.implementation">
 
     <Meta name="html.split"       value="chapter.widgets-1">
     <Meta name="html.split"       value="section.widgets-1.toplevel">
@@ -103,8 +107,10 @@
     <Meta name="html.split"       value="section.canvas.tags">
     <Meta name="html.split"       value="section.canvas.animated">
 
-
     <Meta name="html.split"       value="chapter.text">
+    <Meta name="html.split"       value="section.text.widget">
+    <Meta name="html.split"       value="section.text.tags">
+    <Meta name="html.split"       value="section.text.toy">
 
     <Meta name="html.split"       value="chapter.tools">
     <Meta name="html.split"       value="section.tools.dialogs">
@@ -120,9 +126,9 @@
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
+
     <Meta name=latex.package value="pstricks">
-    <Meta name=latex.package value="rotating">
-    <Meta name=latex.package value="pifont">
+    <Meta name=latex.package value="pst-node">
 
     <Title/Window Programming in Mozart/
       <Author.Extern to="author.db" key="Christian.Schulte">
@@ -132,10 +138,13 @@
         <Picture.Extern to="wp.gif" type=gif>
       </Picture.Choice>
     <Abstract>
-      This paper describes how to do window programming in Mozart.  The Mozart
-      window interface is based on the Tk toolkit which in turn is based on
-      the script language Tcl.  It provides a high level abstraction of Tk
-      widgets allowing for object-oriented and concurrent window programming.
+      This document is an introduction to window programming in
+      Mozart. Mozart uses a high-level object-oriented interface to Tk
+      for window programming. The interface inherits from &Oz; concurrency,
+      objects and first-class procedures. From Tk the interface
+      inherits a set of powerful graphical abstractions. This document
+      exemplifies both aspects: the basic usage of the graphical
+      abstractions and how to profit from &Oz;'s language features.
     </Abstract>
   <Body>
     &intro;
@@ -148,6 +157,8 @@
     &tools;
     &data;
   <Back>
-    <Bib.Extern id="Ousterhout.94"  to="wp.bib" key="Ousterhout.94">
-    <Bib.Extern id="HarrisonMcLennan.98"  to="wp.bib" key="HarrisonMcLennan.98">
+    <Bib.Extern id="Ousterhout.94"
+                to="wp.bib" key="Ousterhout.94">
+    <Bib.Extern id="HarrisonMcLennan.98"
+                to="wp.bib" key="HarrisonMcLennan.98">
 </Book>
