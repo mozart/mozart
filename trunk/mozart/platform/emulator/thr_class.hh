@@ -37,7 +37,7 @@ enum ThreadFlag {
   T_stack  = 0x000008,   // it has an (allocated) stack;
 
   //
-  T_xxx    = 0x000010,   //
+  T_catch  = 0x000010,   // has or has had an exception handler
   T_solve  = 0x000020,   // it was created in a search CS 
                            // (former notificationBoard);
 
@@ -497,12 +497,19 @@ public:
   void pushTask(SolveActor * sa) { item.threadBody->pushTask(sa); }
   void pushDebug (OzDebug *d);
   void pushCall (TaggedRef pred, RefsArray  x, int n); 
+
+
+  Bool hasCatchFlag() { return (state.flags & T_catch); }
+  void setCatchFlag() { state.flags |= T_catch; }
   void pushCatch(TaggedRef pred) {
+    setCatchFlag();
     item.threadBody->taskStack.pushCatch(pred);
   }
   TaggedRef findCatch(TaggedRef &traceback) {
     return item.threadBody->taskStack.findCatch(traceback);
   }
+
+
   void pushSelf(Object *obj);
   void pushSetModeTop();
   void pushActor(Actor *aa) {
