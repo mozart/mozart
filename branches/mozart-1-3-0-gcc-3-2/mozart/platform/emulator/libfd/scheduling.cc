@@ -80,7 +80,7 @@ OZ_Return SchedCardPropagator::propagate(void)
 
   return P.leave();
 
-failure:
+ failure:
   OZ_DEBUGPRINTTHIS("fail");
   return P.fail();
 }
