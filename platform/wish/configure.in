@@ -300,6 +300,8 @@ then
     oz_tk_lib_tcl_dir=$with_tk_lib_tcl
 fi
 
+: ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.0}
+
 if test "$oz_coolness" != yes && test ! -f "$oz_tk_lib_tcl_dir/tk.tcl"
 then
     AC_MSG_ERROR("$oz_tk_lib_tcl_dir/tk.tcl" not found)
