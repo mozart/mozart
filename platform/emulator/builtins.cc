@@ -3480,7 +3480,7 @@ static OZ_Return bombArith(char *type)
 
 static OZ_Return suspendOnNumbers(TaggedRef A, TaggedRef B)
 {
-  suspendTest(A,B,isNumber,"int or float (uniformly for all arguments)");
+  suspendTest(A,B,isNumber,"int or float\nuniformly for all arguments");
 }
 
 inline Bool isNumOrAtom(TaggedRef t)
@@ -3490,7 +3490,7 @@ inline Bool isNumOrAtom(TaggedRef t)
 
 static OZ_Return suspendOnNumbersAndAtoms(TaggedRef A, TaggedRef B)
 {
-  suspendTest(A,B,isNumOrAtom,"int, float or atom (uniformly for all arguments)");
+  suspendTest(A,B,isNumOrAtom,"int, float or atom\nuniformly for all arguments");
 }
 
 static OZ_Return suspendOnFloats(TaggedRef A, TaggedRef B)
@@ -3832,7 +3832,7 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
   if (isAnyVar(A) || isAnyVar(B))
     return SUSPEND;
 
-  oz_typeError(-1,"Float x Float or Int x Int or Atom x Atom");
+  oz_typeError(-1,"int, float or atom\nuniformly for all arguments");
 }
 
 
