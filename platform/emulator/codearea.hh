@@ -174,6 +174,7 @@ private:
   void scanArity(CompStream *fd);
   void scanNumber(CompStream *fd);
   void scanPosint(CompStream *fd);
+  void scanCache(CompStream *fd);
   void scanPredicateRef(CompStream *fd);
   void scanGenCallInfo(CompStream *fd);
   void scanApplMethInfo(CompStream *fd);

@@ -169,6 +169,53 @@ DebugCheckT(MemChunks *from);
 
 
 /**************************************************
+ *  Invalidating of inline caches
+ **************************************************/
+
+const inlineCacheListBlockSize = 100;
+
+class InlineCacheList {
+  InlineCacheList *next;
+  int nextFree;
+  ProgramCounter block[inlineCacheListBlockSize];
+
+public:
+  InlineCacheList(InlineCacheList *nxt) { nextFree=0; next=nxt; }
+
+  InlineCacheList *add(ProgramCounter ptr)
+  {
+    if (nextFree < inlineCacheListBlockSize) {
+      block[nextFree] = ptr;
+      nextFree++;
+      return this;
+    } else {
+      InlineCacheList *aux = new InlineCacheList(this);
+      return aux->add(ptr);
+    }
+  }
+
+  void cacheListGC()
+  {
+    InlineCacheList *aux = this;
+    while(aux) {
+      for (int i=0; i<aux->nextFree; i++) {
+        *(aux->block[i]) = 0;
+      }
+      aux = aux->next;
+    }
+  }
+};
+
+
+static InlineCacheList *cacheList = new InlineCacheList(NULL);
+
+void protectInlineCache(ProgramCounter ptr)
+{
+  cacheList = cacheList->add(ptr);
+}
+
+
+/**************************************************
  *  Dumping of threads
  **************************************************/
 
@@ -1441,6 +1488,7 @@ void AM::gc(int msgLevel)
   MemChunks *oldChain = MemChunks::list;
 
   VariableNamer::cleanup();  /* drop bound variables */
+  cacheList->cacheListGC();  /* invalidate inline caches */
 
   INITCHECKSPACE;
   initMemoryManagement();
