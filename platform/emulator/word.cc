@@ -214,6 +214,19 @@ OZ_BI_define(BIwordTimes, 2, 1) {
   OZ_RETURN_WORD(w1->size, TRUNCATE(w1->value * w2->value, w1->size));
 } OZ_BI_end
 
+OZ_BI_define(BIwordDiv, 2, 1) {
+  OZ_declareWord(0, w1);
+  OZ_declareWord(1, w2);
+  if (w1->size != w2->size) {
+    return OZ_raiseDebug(OZ_makeException(OZ_atom("system"), OZ_atom("kernel"),
+                                          "Word.binop", 2,
+                                          OZ_in(0), OZ_in(1)));
+  } else if (w2->value == 0) {
+    return oz_raise(E_ERROR, E_KERNEL, "div0", 1, OZ_in(0));
+  }
+  OZ_RETURN_WORD(w1->size, TRUNCATE(w1->value / w2->value, w1->size));
+} OZ_BI_end
+
 OZ_BI_define(BIwordMod, 2, 1) {
   OZ_declareWord(0, w1);
   OZ_declareWord(1, w2);
@@ -221,6 +234,8 @@ OZ_BI_define(BIwordMod, 2, 1) {
     return OZ_raiseDebug(OZ_makeException(OZ_atom("system"), OZ_atom("kernel"),
                                           "Word.binop", 2,
                                           OZ_in(0), OZ_in(1)));
+  } else if (w2->value == 0) {
+    return oz_raise(E_ERROR, E_KERNEL, "mod0", 1, OZ_in(0));
   }
   OZ_RETURN_WORD(w1->size, TRUNCATE(w1->value % w2->value, w1->size));
 } OZ_BI_end
