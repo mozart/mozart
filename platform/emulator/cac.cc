@@ -1610,25 +1610,6 @@ void SuspQueue::_cac(void) {
  ****************************************************************************/
 
 inline
-DistBag * DistBag::_cac(void) {
-  DistBag *  copy = (DistBag *) 0;
-  DistBag ** cur  = &copy;
-  DistBag *  old  = this;
-  
-  while (old) {
-    DistBag * one = new DistBag(old->dist->_cac());
-    *cur = one;
-    cur  = &(one->next);
-    old  = old->next;
-  }
-
-  *cur = 0;
-
-  return copy;
-}
-
-
-inline
 void Board::_cacRecurse() {
   Assert(!isCommitted() && !isFailed());
 
@@ -1642,7 +1623,10 @@ void Board::_cacRecurse() {
   OZ_cacBlock(&script,&script,3);
 
   cacStack.push(&suspList, PTR_SUSPLIST);
-  setDistBag(getDistBag()->_cac());
+  Distributor * d = getDistributor();
+  if (d) {
+    setDistributor(d->_cac());
+  }
   cacStack.push((SuspList **) &nonMonoSuspList, PTR_SUSPLIST);
 
 #ifdef CS_PROFILE
