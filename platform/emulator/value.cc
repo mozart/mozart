@@ -30,7 +30,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomDistributed, AtomMobile, AtomFetched,
   NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
   NameOoDefaultVar,NameOoRequiredArg,
-  NameUnit;
+  NameUnit,
+  VarIdle, VarRunning;
 
 
 // Some often used constants
@@ -82,6 +83,11 @@ void initLiterals()
   AtomMobile      = makeTaggedAtom("mobile");
   AtomFetched     = makeTaggedAtom("fetched");
   AtomDistributed = makeTaggedAtom("distributed");
+
+  VarIdle         = NameUnit;
+  VarRunning      = NameUnit;
+  OZ_protect(&VarIdle);
+  OZ_protect(&VarRunning);
 }
 
 

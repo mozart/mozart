@@ -29,7 +29,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomDistributed, AtomMobile, AtomFetched,
        NameOoAttr,NameOoFreeFeatR,NameOoFreeFlag,
        NameOoDefaultVar,NameOoRequiredArg,
-       NameUnit;
+       NameUnit,
+       VarIdle, VarRunning;
 
 /*===================================================================
  * Literal
