@@ -161,7 +161,7 @@ entity at a given level.
 <entry/<code/{Fault.installWatcher Entity FStates WatcherProc}//
 <item>Install a watcher for fault detection on a given entity
 for a given set of fault states.
-More than one watcher can be installed on an entity.
+Any number of watchers can be installed on an entity.
 Therefore this call always succeeds.
 The watcher <<{WatcherProc Entity AFStates}>> is called
 in its own thread as soon as the site detects a fault.
@@ -171,6 +171,15 @@ in its own thread as soon as the site detects a fault.
 This call always succeeds.
 
 </list>
+On a given entity at the <<global>> level,
+exactly one enable can be done or one handler installed.
+At the <<site>> level, one enable or handler
+can be installed per site.
+At the <<'thread'(_)>> level, one enable or handler
+can be installed per thread.
+To do another enable or install,
+first a disable or deinstall must be done.
+
 
 <section><title/Limitations of the current release/
 
