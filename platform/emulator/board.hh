@@ -97,7 +97,7 @@ public:
 };
 
 #ifndef OUTLINE
-#include board.icc
+#include "board.icc"
 #endif
 
 #endif
