@@ -45,12 +45,9 @@
 #if defined(__WATCOMC__) || defined(__BORLANDC__)
 #define ozcdecl __export __cdecl
 #define OZWIN
-#elif defined(__CYGWIN32__) || defined(__MINGW32__)
+#elif defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
 #define ozcdecl __cdecl
-#define OZWIN
-#elif defined(_MSC_VER)
-#define ozcdecl __cdecl
-#undef ozdeclspec
+#undef  ozdeclspec
 #define ozdeclspec __declspec( dllexport )
 #define OZWIN
 #else
@@ -305,7 +302,7 @@ typedef struct {
 
 
 /* declare here, so C linkage is used */
-OZ_C_proc_interface * ozcdecl oz_init_module();
+ozdeclspec OZ_C_proc_interface * ozcdecl oz_init_module();
 
 #define OZ_DATUM_UNKNOWNERROR -1
 #define OZ_DATUM_OUTOFMEMORY  -2
