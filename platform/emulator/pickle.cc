@@ -339,17 +339,3 @@ void marshalTermRef(int lbl, MsgBuffer *bs)
     marshalNumber(lbl,bs);
   }
 }
-
-
-
-void splitversion(char *vers, char *&major, int &minordiff)
-{
-  major = vers;
-  char *minor = strrchr(vers,'#');
-  if (minor) {
-    minor++;
-  } else {
-    minor = "0";
-  }
-  minordiff = atoi(PERDIOMINOR) - atoi(minor);
-}

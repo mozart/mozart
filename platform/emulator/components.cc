@@ -212,16 +212,12 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
   return OZ_raise(makeGenericExc(id,msg,arg));
 }
 
-#define M_FILE          (PERDIOMAGICSTART)
 
-//
-// Per: More seriously: The bytes 'M_FILE' and 'DIF_PRIMARY' are not
-// really necessary;
-void marshal_M_FILE(MsgBuffer * buf,char* str,TaggedRef t) {
+void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
-  buf->put(M_FILE);
-  buf->put(DIF_PRIMARY);
-  marshalString(str, buf);
+  buf->put(PERDIOMAGICSTART);
+  buf->put(PERDIOMAGICSTART);
+  marshalString(PERDIOVERSION, buf);
   marshalTermRT(t, buf);
   buf->marshalEnd();
   return;
@@ -249,7 +245,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
   ByteStream* bs=bufferManager->getByteStream();
   if (textmode)
     bs->setTextmode();
-  marshal_M_FILE(bs,PERDIOVERSION,in);
+  saveTerm(bs,in);
 
   OZ_Return ret=onlyFutures(bs->getResources());
   if (ret != PROCEED) {
@@ -491,6 +487,31 @@ OZ_BI_define(BIexport,1,0)
 // class ByteSource
 // ===================================================================
 
+static
+Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
+{
+  refTable->reset();
+  Assert(refTrail->isEmpty());
+  char c = buf->get(); // second PERDIOMAGICSTART
+  vers = unmarshalString(buf);
+  int major,minor;
+  if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
+    if (strcmp(vers,"3.0.10#15")!=0) { // hard coded old version format
+      return NO;
+    }
+    major = 1;
+    minor = 0;
+  }
+
+  buf->setVersion(major,minor);
+
+  t = unmarshalTerm(buf);
+  buf->unmarshalEnd();
+  refTrail->unwind();
+  return OK;
+}
+
+
 OZ_Return
 ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 {
@@ -506,7 +527,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
   char *versiongot = 0;
   OZ_Term val;
 
-  if(stream->skipHeader() && unmarshal_SPEC(stream,versiongot,val)){
+  if(stream->skipHeader() && loadTerm(stream,versiongot,val)){
     stream->afterInterpret();
     bufferManager->dumpByteStream(stream);
     delete versiongot;

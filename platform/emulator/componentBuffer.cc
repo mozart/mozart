@@ -86,6 +86,7 @@ class ByteStream: public MsgBuffer {
   int type;
 
   OZ_Term  resources;
+  int perdioMajor, perdioMinor;
 
 public:
 
@@ -219,8 +220,20 @@ public:
   virtual void init() {
     MsgBuffer::init();
     resources = oz_nil();
-    type=BS_None;first=NULL;last=NULL;pos=NULL; }
+    type=BS_None;first=NULL;last=NULL;pos=NULL;
+    perdioMajor = PERDIOMAJOR;
+    perdioMinor = PERDIOMINOR;
+  }
   ByteStream(){ init(); }
+
+  void setVersion(int major, int minor) {
+    perdioMajor = major;
+    perdioMinor = minor;
+  }
+
+  virtual void getVersion(int *major, int *minor) {
+    *major = perdioMajor; *minor = perdioMinor; }
+
 
   /* marshal    beg:first->head()  pos=next free slot OR null */
                    /* INTERFACE  pos=first->head()  endpos= first free slot */

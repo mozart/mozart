@@ -38,9 +38,9 @@
 #include "gc.hh"
 #include "dictionary.hh"
 #include "urlc.hh"
+#include "msgbuffer.hh"
 #include "marshaler.hh"
 #include "site.hh"
-#include "msgbuffer.hh"
 #include "pickle.hh"
 
 #include <sys/types.h>
@@ -212,7 +212,7 @@ void marshalGName(GName *gname, MsgBuffer *bs)
   misc_counter[MISC_GNAME].send();
 
   Comment((bs,"GNAMESTART"));
-  gname->site->marshalSite(bs);
+  gname->site->marshalSiteForGName(bs);
   for (int i=0; i<fatIntDigits; i++) {
     marshalNumber(gname->id.number[i],bs);
   }
@@ -718,13 +718,8 @@ loop:
       GName *gname;
       char *printname;
 
-      if (bs->oldFormat()) {
-        gname     = unmarshalGName(ret,bs);
-        printname = unmarshalString(bs);
-      } else {
-        printname = unmarshalString(bs);
-        gname     = unmarshalGName(ret,bs);
-      }
+      printname = unmarshalString(bs);
+      gname     = unmarshalGName(ret,bs);
 
       if (gname) {
         Name *aux;
@@ -1032,30 +1027,6 @@ void initMarshaler(){
 }
 
 
-
-Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t)
-{
-  refTable->reset();
-  Assert(refTrail->isEmpty());
-  if(buf->get()==DIF_SECONDARY) {Assert(0);return NO;}
-  vers=unmarshalString(buf);
-  char *major;
-  int minordiff;
-  splitversion(vers,major,minordiff);
-  if (strncmp(PERDIOMAJOR,major,strlen(PERDIOMAJOR))!=0) {
-    return NO;}
-  if (minordiff > 1 || /* we only support the last minor */
-      minordiff < 0) { /* emulator older than component */
-    return NO;
-  }
-  if (minordiff) {
-    buf->setOldFormat();
-  }
-  t=unmarshalTerm(buf);
-  buf->unmarshalEnd();
-  refTrail->unwind();
-  return OK;
-}
 
 
 /* *********************************************************************/

@@ -105,9 +105,25 @@ public:
     marshalNumber(timestamp.start,buf);
     marshalNumber(timestamp.pid,buf);
   }
+  void marshalBaseSiteForGName(MsgBuffer* buf){
+    marshalNumber(address,buf);
+    marshalNumber(timestamp.start,buf);
+    marshalNumber(timestamp.pid,buf);
+  }
   void unmarshalBaseSite(MsgBuffer* buf){
     address=unmarshalNumber(buf);
     port=unmarshalShort(buf);
+    timestamp.start=unmarshalNumber(buf);
+    timestamp.pid=unmarshalNumber(buf);
+  }
+
+  void unmarshalBaseSiteGName(MsgBuffer* buf){
+    address=unmarshalNumber(buf);
+    int major, minor;
+    buf->getVersion(&major,&minor);
+    if (minor==0) {
+      port=unmarshalShort(buf);
+    }
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }
@@ -164,11 +180,8 @@ public:
   void setGCFlag() { flags |= NSITE_GC_MARK; }
   void resetGCFlag() { flags &= ~NSITE_GC_MARK; }
   Bool hasGCFlag() { return (flags & NSITE_GC_MARK); }
-  void marshalSite(MsgBuffer *buf) {
-    // can be optimized: DIF_PASSIVE is not really needed;
-    marshalDIF(buf,DIF_PASSIVE);
-    marshalBaseSite(buf);
-  }
+  void marshalSite(MsgBuffer *buf) { marshalBaseSite(buf); }
+  void marshalSiteForGName(MsgBuffer *buf) { marshalBaseSiteForGName(buf); }
 };
 
 //
