@@ -24,6 +24,8 @@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
+SRCDIRA		= @srcdira@
+TOPDIRA		= @TOPDIRA@
 SHELL		= @SH@
 LEX		= @LEX@
 LFLAGS		= -8
@@ -32,7 +34,7 @@ YFLAGS		= -d
 MV		= @MV@
 SED		= @SED@
 ECHO		= @@ECHO@
-M4A		= -DOZINCDIR=$(TOPDIR)/include -DOZSRCDIR=$(SRCDIR)
+M4A		= -DOZINCDIR=$(TOPDIRA)/include -DOZSRCDIR=$(SRCDIRA)
 M4		= @M4@ $(M4A)
 M4_S		= @M4_S@ $(M4A)
 RM		= @RM@ -f
@@ -44,7 +46,7 @@ RANLIB		= @RANLIB@
 AR		= @AR@
 
 INSTALL		= @INSTALL@
-INSTALL_DIR	= $(TOPDIR)/mkinstalldirs
+INSTALL_DIR	= $(TOPDIRA)/mkinstalldirs
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_OTHER   = $(INSTALL) -m 444
 LIBS            = @LIBS@
@@ -52,7 +54,7 @@ LDFLAGS		= @LDFLAGS@
 
 DEFS		= @DEFS@
 CWARN		= @CWARN@
-INCS		= -I. -I$(SRCDIR) -I$(TOPDIR)/include
+INCS		= -I. -I$(SRCDIRA) -I$(TOPDIRA)/include
 CPPFLAGS	= @CPPFLAGS@ $(INCS) $(DEFS)
 CFLAGS		= @CFLAGS@ $(CWARN) $(CUSR)
 CXXFLAGS	= $(CFLAGS)
