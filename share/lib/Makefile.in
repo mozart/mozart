@@ -37,12 +37,13 @@ OZMA		= $(OZBATCH) $(OZFLAGS) --ozma
 # exports
 export SRCDIR
 export OZLIB
-export OZMAFILE = Init.ozc
+export OZMAINIT = Init.ozc
 export OZMAFILE = ozbatch.ozm
 export OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
 export OZPATH = .:compiler:ozcar:$SRCDIR
 export OZ_PI = 1
-export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/
+export OZ_LIB = $(OZLIB)
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
 
 OZVERSION	= $(TOPDIR)/OZVERSION
 
@@ -420,7 +421,7 @@ tags:
 	$(ALLSRCS)
 
 bootstrap: ${OZMA_LIB}
-	make Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh
+	make Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=.
 
 #
 # testing components locally
