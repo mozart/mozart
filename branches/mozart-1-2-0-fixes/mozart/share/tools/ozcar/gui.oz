@@ -383,7 +383,7 @@ in
       end
 
       meth ProcessClick(V)
-	 {Browser.browse V}
+	 {Inspect V}
 	 LastClicked <- V
       end
 

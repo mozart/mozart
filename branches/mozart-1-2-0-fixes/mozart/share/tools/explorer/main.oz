@@ -264,6 +264,16 @@ in
 		     else false
 		     end
 		  else true end
+	       elseif What==visual andthen
+		  {List.sub {Arity OM} [1 title]}
+	       then O=self.Options.visual in
+		  if {HasFeature OM title} then T=OM.title in
+		     if {VirtualString.is T} then
+			{Dictionary.put O title T} true
+		     else false
+		     end
+		  else true
+		  end
 	       else false
 	       end
 	    then

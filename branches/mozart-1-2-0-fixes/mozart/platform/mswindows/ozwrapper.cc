@@ -33,8 +33,11 @@ int main(int argc, char **argv)
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
   PROCESS_INFORMATION pi;
-  BOOL ret = CreateProcess(NULL,cmdline,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
+  BOOL ret = CreateProcess(NULL,cmdline,NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",cmdline);
   }

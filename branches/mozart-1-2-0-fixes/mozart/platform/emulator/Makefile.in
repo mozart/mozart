@@ -61,7 +61,7 @@ BIMODSPECS = \
 	Lock Name Number Object Port Procedure Record \
 	String Thread Time Tuple Unit Value VirtualString \
 	BitString ByteString Word InterFault \
-	WeakDictionary $(SITE_PROPERTY_SPECS) \
+	WeakDictionary Alice $(SITE_PROPERTY_SPECS) \
 	INTERNAL # do not include this at compiler (things will blow up!)
 
 MODSPECS= \
@@ -90,7 +90,7 @@ OTHERSRCS= \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
 	builtins.cc vprops.cc debug.cc interFault.cc \
-	system.cc
+	system.cc alice.cc
 
 SUPPORTSRCS=\
 	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
@@ -120,12 +120,12 @@ SPACESRCS=\
 	board.cc distributor.cc
 
 MEMSRCS=\
-	g-collect.cc mem.cc liveness.cc
+	g-collect.cc cmem.cc mem.cc liveness.cc
 
 PICKLESRCS=\
 	gname.cc site.cc \
 	gentraverser.cc marshalerBase.cc pickleBase.cc \
-        pickle.cc components.cc byteBuffer.cc
+        pickle.cc components.cc componentBuffer.cc byteBuffer.cc
 
 OFSRCS=	var_of.cc
 
@@ -364,7 +364,8 @@ emulator.dll: $(PRGDEP)
 	tail +3 emulator.def | \
 	awk '{ print "++'\''"$$1"'\''.'\''emulator.dll'\''" }' \
 	> emulator.cmd && \
-	$(DLLWRAP) --driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
+	$(DLLWRAP) --target i386-mingw32 \
+	--driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
 	$(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator0.def $(OBJS) $(LIBS)
 
 text2pickle.exe: $(TEXT2PICKLEOBJS)
@@ -484,7 +485,6 @@ g-collect.o: cac.cc
 s-clone.o: cac.cc
 text2pickle.o: marshalerBase.cc
 text2pickle.o: pickleBase.cc
-components.o: componentBuffer.cc
 
 # automatic configure
 #${srcdir}/configure: configure.in

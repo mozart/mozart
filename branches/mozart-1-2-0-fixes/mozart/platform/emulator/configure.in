@@ -50,7 +50,7 @@ dnl additional tests
 dnl *****************************************************************
 
 dnl *****************************************************************
-dnl windows cross compilation
+dnl cross compilation
 dnl *****************************************************************
 
 AC_CHECK_TOOL(AS, as)
@@ -58,11 +58,10 @@ AC_CHECK_TOOL(DLLTOOL, dlltool)
 AC_CHECK_TOOL(DLLWRAP, dllwrap)
 
 case "$target" in
-   NONE)
-	EMULATOR_EXE=emulator.exe
-   ;;
-   i386-mingw32) 
-        AC_MSG_RESULT(cross compiling for windows)
+    NONE)
+	;;
+    i386-mingw32|i386-mingw32msvc)
+	AC_MSG_RESULT(cross compiling for windows)
 	oz_malloc_obj=
 
 	# va-start makes problems under mingw32
@@ -70,16 +69,12 @@ case "$target" in
 
 	# -DINTERFACE does not work
 	oz_copt_debug="-g"
-
-	EMULATOR_EXE=emulator.dll
-   ;;
-
-   *)
+	;;
+    *)
 	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
-    ;;
+	;;
 esac
-
-AC_SUBST(EMULATOR_EXE)
+AC_SUBST(target)
 
 dnl *****************************************************************
 dnl Checks for programs.
@@ -105,6 +100,7 @@ AC_ARG_WITH(sunpro,
 	AC_MSG_RESULT(no))
 
 OZ_CXX_CHOOSE
+OZ_CC_CHOOSE
 AC_LANG_CPLUSPLUS
 OZ_PROG_FLEX
 OZ_PROG_BISON
@@ -143,6 +139,20 @@ ARCH=ARCH_`echo $PLATFORM|sed -e 's/.*_//'`
 OS=`echo $PLATFORM|sed -e 's/_.*//'`
 AC_DEFINE_UNQUOTED($ARCH)
 AC_DEFINE_UNQUOTED($OS)
+
+dnl *****************************************************************
+dnl Build mode: executable or DLL
+dnl *****************************************************************
+
+case "$platform" in
+    win32*)
+	EMULATOR_EXE=emulator.dll
+	;;
+    *)
+	EMULATOR_EXE=emulator.exe
+	;;
+esac
+AC_SUBST(EMULATOR_EXE)
 
 dnl *****************************************************************
 dnl Compiler, Linker, and m4 options
@@ -295,19 +305,25 @@ case $platform in
 	oz_enable_modules_static=yes
         ;;
     win32*)
-	oz_enable_modules_static=yes
-	TOOLLDCMD="sh `pwd`/$target-oztool ld"
 	AC_DEFINE(WINDOWS)
-	AC_DEFINE(ARCH_I486)
-	LDFLAGS="$LDFLAGS"
-	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
-	if test "$host_os" = cygwin32
-	then LD=gcc # otherwise it allways uses -lm which has reference to _errno
+	oz_enable_modules_static=yes
+	if test "$target" = NONE
+	then # compiling for mingw32 under cygwin
+	    OZ_CXX_OPTIONS(-mno-cygwin,oz_cxx_mingw)
+	    CXX="$CXX $oz_cxx_mingw"
+	    OZ_CC_OPTIONS(-mno-cygwin,oz_cc_mingw)
+	    CC="$CC $oz_cc_mingw"
+	    LD="$CC"
+	    TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
+	else # cross-compiling
+	    AC_DEFINE(ARCH_I486)
+	    TOOLLDCMD="sh `pwd`/$target-oztool ld"
 	fi
+	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
     ;;
     *rhapsody | *darwin)
 	AC_DEFINE(RHAPSODY)
-	TOOLLDCMD="ld -dynamic -bundle -undefined suppress"
+	TOOLLDCMD="$CC -dynamic -bundle -undefined suppress"
 	oz_enable_modules_static=yes
     ;;
     *)
@@ -461,7 +477,11 @@ dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup s
 
 AC_CHECK_FUNC(setpgid,AC_DEFINE(HAVE_SETPGID))
 
-if test -z "${enable_wincross}"; then
+case $platform in
+win32*)
+    AC_DEFINE(USE_MALLOC)
+    ;;
+*)
     AC_CHECK_FUNCS(dlopen)
 
     AC_CHECKING(whether we could allocate Oz heap with malloc ...)
@@ -841,7 +861,8 @@ main()
         AC_DEFINE(USE_MALLOC)
         ;;
     esac
-fi
+    ;;
+esac
 
 AC_CHECK_FUNC(strdup,AC_DEFINE(HAVE_STRDUP))
 
@@ -863,6 +884,15 @@ int foo() { return 1; }
 EOF
       if AC_TRY_EVAL(ac_compile); then
         oz_tmp=`(strings -a conftest.o | grep foo) 2>/dev/null`
+        ## on some platforms strings -a does not do the job
+        ## but nm works fine (e.g. Darwin). So, in case we did
+        ## not get a result with strings -a, we try it again
+        ## here with nm and remove the stuff preceding the
+        ## identifier that we are interested in
+        if test -z "$oz_tmp"; then
+          oz_tmp=`(nm conftest.o | grep foo) 2>/dev/null`
+          oz_tmp=`expr "$oz_tmp" : '.* . \(.*\)' 2>/dev/null`
+        fi
         if expr "$oz_tmp" : '_' 1>/dev/null 2>&1; then
           oz_cv_dlopen_underscore=yes;
         else
@@ -1455,7 +1485,7 @@ dnl ------------------------------------------------------------------
 
 OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
 AC_SUBST(OZTOOL_CXX)
-OZ_CC_CHOOSE
+dnl OZ_CC_CHOOSE
 AC_LANG_SAVE
 AC_LANG_C
 OZ_CC_FIRST_OPTION($PICOPTIONSCC,OZTOOLDYNOPTCC)
@@ -1472,7 +1502,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf-others.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in extension.hh:extension.in i386-mingw32-oztool .gdbinit)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in extension.hh:extension.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded

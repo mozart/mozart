@@ -26,16 +26,16 @@ local
       from TkTools.dialog
       prop final
 
-      meth init(master:Master)
+      meth init(master:Master title:T)
 	 TkTools.dialog,tkInit(master:  Master
-			       title:   TitleName#': About'
+			       title:   T#': About'
 			       buttons: ['Okay'#tkClose]
 			       focus:   1
 			       pack:    false
 			       default: 1)
 	 Title = {New Tk.label tkInit(parent:     self
 				      font:       AboutFont
-				      text:       TitleName
+				      text:       T
 				      foreground: blue)}
 
 	 Author = {New Tk.label tkInit(parent: self
@@ -53,7 +53,7 @@ local
       from TkTools.dialog
       prop final
 
-      meth init(master:M options:O)
+      meth init(master:M options:O title:TitleName)
 
 	 proc {Okay}
 	    SizeString={SizeEntry tkReturn(get $)}
@@ -126,7 +126,7 @@ local
       from TkTools.dialog
       prop final
 
-      meth init(master:M options:O)
+      meth init(master:M options:O title:TitleName)
 
 	 proc {Okay}
 	    {Dictionary.put O hide   {IsHide tkReturnInt($)}==1}
@@ -202,7 +202,7 @@ local
 	 from TkTools.dialog
 	 prop final
 
-	 meth init(master:M options:O)
+	 meth init(master:M options:O title:TitleName)
 
 	    proc {Okay}
 	       SD={DistS2I {Search tkReturn(get $)}}
@@ -299,7 +299,9 @@ in
 		    [] drawing    then DrawingDialog
 		    end
 		    init(master:  self.toplevel
-			 options: self.options.What)}.tkClosed}
+			 options: self.options.What
+			 title:   {Dictionary.get self.options.visual
+				   title})}.tkClosed}
       end
 
       meth postscript
@@ -307,7 +309,8 @@ in
 	       tk_getSaveFile(filetypes:  q(q('Postscript Files' q('.ps'))
 					    q('All Files'        '*'))
 			      parent:     self.toplevel
-			      title:      TitleName#': Export Postscript')}
+			      title:      {Dictionary.get self.options.visual
+					   title}#': Export Postscript')}
 	 of nil then skip
 	 elseof S then O = self.options.postscript in
 	    {self.canvas postscript(colormode: {Dictionary.get O color}
@@ -320,14 +323,18 @@ in
       end
 
       meth about
-	 {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
+	 {Wait {New AboutDialog
+		init(master:self.toplevel
+		     title: {Dictionary.get self.options.visual title}
+		    )}.tkClosed}
       end
 
       meth error(M)
 	 {Wait {New TkTools.error
 		tkInit(master:  self.toplevel
 		       text:    M
-		       title:   TitleName#': Error Message')}.tkClosed}
+		       title:   ({Dictionary.get self.options.visual title}#
+				 ': Error Message'))}.tkClosed}
       end
 
    end

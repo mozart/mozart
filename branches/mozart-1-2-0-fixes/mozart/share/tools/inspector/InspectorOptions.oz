@@ -128,11 +128,18 @@ define
       local
 	 BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
 				  {URL.make 'images/inspector/'}}}
+
+	 fun {TranslateToUrl Ss}
+	    case Ss
+	    of S|Sr then if S == &\\ then &/ else S end|{TranslateToUrl Sr}
+	    [] nil  then nil
+	    end
+	 end
       in
 	 fun {Root X}
 	    F = {Tk.localize BitmapUrl#X}
 	 in
-	    {ShortName F} 
+	    {TranslateToUrl {VirtualString.toString {ShortName F}}}
 	 end
       end
       %% Context Menu Title Preparation Functions
@@ -673,7 +680,7 @@ define
 					 float        # 'Floating Point Number'
 					 port         # 'Port'
 					 atom         # 'Atom'
-					 variableref  # 'Relation Variable Ref'
+					 variableref  # 'Co-Reference Usage'
 					 hashtuple    # 'Hashtuple'
 					 pipetuple    # 'Piped List'
 					 cell         # 'Cell'
@@ -691,7 +698,7 @@ define
 					 background   # 'TreeWidget Background'
 					 proxy        # 'Mapped Background'
 					 selection    # 'Selection Background'
-					 ref          # 'Ref'
+					 ref          # 'Co-Reference Definition'
 					 label        # 'Label'
 					 feature      # 'Feature'
 					 chunk        # 'Chunk'

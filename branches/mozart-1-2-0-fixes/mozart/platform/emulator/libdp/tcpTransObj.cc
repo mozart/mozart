@@ -158,7 +158,7 @@ TransController *TCPTransObj::getTransController() {
 inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   int num=msgC->getMsgNum();
   Bool cont=msgC->checkFlag(MSG_HAS_MARSHALCONT);
-  writeBuffer->putBegin();
+  writeBuffer->marshalBegin();
 
   PD((TCP_INTERFACE,"---marshal: %s nr:%d ack:%d cont:%d",
       mess_names[msgC->getMessageType()],num,acknum,
@@ -176,7 +176,7 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   else
     writeBuffer->put(CF_FIRST);
 
-  writeBuffer->fixsite=site;       // Fix because the marshaler uses site
+  writeBuffer->setSite(site);
   msgC->marshal(writeBuffer, tcptransController);
 
   Assert(writeBuffer->availableSpace()>=0); // Room for trailer?
@@ -189,7 +189,7 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
     comObj->msgSent(msgC);
     writeBuffer->put(CF_FINAL);
   }
-  writeBuffer->putEnd();           // Size will be written now
+  writeBuffer->marshalEnd();           // Size will be written now
 }
 
 // Return 0 means invoke again, return 1 means done
@@ -249,7 +249,8 @@ int TCPTransObj::writeHandler(int fd) {
     return 1;
 }
 
-inline unmarshalReturn TCPTransObj::unmarshal() {
+inline
+unmarshalReturn TCPTransObj::unmarshal() {
   BYTE b;
   int acknum;
   int framesize;
@@ -282,7 +283,7 @@ inline unmarshalReturn TCPTransObj::unmarshal() {
     msgC->setMessageType(type);
 
     // Unmarshal data
-    readBuffer->fixsite=site;
+    readBuffer->setSite(site);
     readBuffer->setFrameSize(framesize-TRAILER); // How much can be unm.
     if (msgC->unmarshal(readBuffer, tcptransController)) {
       // Frame contents successfully unmarshaled.
@@ -364,7 +365,7 @@ int TCPTransObj::readHandler(int fd) {
   // Interpret (Allways interpret complete frames.)
   unmarshalReturn contin=U_MORE;
 
-  readBuffer->getBegin();
+  readBuffer->unmarshalBegin();
   while(contin==U_MORE) {
     Assert(this->fd!=-1 && this->fd==fd);
     if(readBuffer->canGet(MUSTREAD))     // Includes previously read bytes
@@ -373,7 +374,7 @@ int TCPTransObj::readHandler(int fd) {
       break;
   }
   if(contin!=U_CLOSED)    // transobj could be passed on
-    readBuffer->getEnd(); 
+    readBuffer->unmarshalEnd(); 
 
   return 0;
 }

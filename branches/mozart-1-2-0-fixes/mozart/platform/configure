@@ -896,7 +896,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$INSTALL_DIR"
@@ -923,7 +923,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
   
   
   case "$target" in
-    i386-mingw32) 
+    i386-mingw32|i386-mingw32msvc)
 	PLATFORM=win32-i486
 	platform="win32-i486"
 	ozplatform=$platform
@@ -992,7 +992,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZPLATFORM"
@@ -1001,7 +1001,7 @@ fi
 	
     fi
     
-	PLATFORM=`$OZPLATFORM`
+	PLATFORM=`$OZPLATFORM || exit 1`
 	
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $PATH | sed -e 's/:://g'`
@@ -1047,7 +1047,7 @@ else
 fi
 
     case "$host_os" in
-      cygwin32) ;;
+      cygwin*) ;;
       *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
     esac
     if test ! -n "$OZTOOL"
@@ -1160,9 +1160,12 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
   
 
 
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+
 : ${oz_enable_wish=yes}
 echo $ac_n "checking for --enable-wish""... $ac_c" 1>&6
-echo "configure:1166: checking for --enable-wish" >&5
+echo "configure:1169: checking for --enable-wish" >&5
 # Check whether --enable-wish or --disable-wish was given.
 if test "${enable_wish+set}" = set; then
   enableval="$enable_wish"
@@ -1177,15 +1180,23 @@ if test -n "${enable_wish}"; then
 fi
 echo "$ac_t""$oz_enable_wish" 1>&6
 
+PLATFORMDIRS="emulator"
+
+case $platform in
+    win32*)
+	PLATFORMDIRS="$PLATFORMDIRS mswindows"
+	;;
+    *)
+	;;
+esac
+
 if test "${oz_enable_wish}" = yes; then
-    PLATFORMDIRS="emulator wish tools"
-else
-    PLATFORMDIRS="emulator tools"
+    PLATFORMDIRS="$PLATFORMDIRS wish"
 fi
 
 
     echo $ac_n "checking for --enable-gtk""... $ac_c" 1>&6
-echo "configure:1189: checking for --enable-gtk" >&5
+echo "configure:1200: checking for --enable-gtk" >&5
     # Check whether --enable-gtk or --disable-gtk was given.
 if test "${enable_gtk+set}" = set; then
   enableval="$enable_gtk"
@@ -1208,16 +1219,7 @@ if test "${GTK_ENABLED}" = yes; then
     PLATFORMDIRS="$PLATFORMDIRS gtk"
 fi
 
-case "$target" in
-   NONE) 
-   ;;
-   i386-mingw32) 
-    PLATFORMDIRS="$PLATFORMDIRS mswindows"
-    ;;
-
-   *) { echo "configure: error: "can only cross-compile for target i386-mingw32 not for $target"" 1>&2; exit 1; }
-    ;;
-esac
+PLATFORMDIRS="$PLATFORMDIRS tools"
 
 
 

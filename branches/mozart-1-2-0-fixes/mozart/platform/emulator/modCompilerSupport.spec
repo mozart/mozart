@@ -50,10 +50,6 @@ $module_init_fun_name = "compiler_init";
 				     out => [],
 				     BI  => BInameVariable},
 
-    'newNamedName'		=> { in  => ['+atom'],
-				     out => ['+literal'],
-				     BI  => BInewNamedName},
-
     'newCopyableName'		=> { in  => ['+atom'],
 				     out => ['+literal'],
 				     BI  => BInewCopyableName},

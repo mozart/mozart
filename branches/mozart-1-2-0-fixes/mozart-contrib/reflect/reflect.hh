@@ -46,14 +46,29 @@
     OZ_error("%s:%d assertion '%s' failed",__FILE__,__LINE__,#Cond);    \
   }
 
+#define _DEBUGPRINT(A)                           \
+printf("(%s:%d) ", __FILE__, __LINE__);         \
+printf A;                                       \
+printf("\n");                                   \
+fflush(stdout)
+
+#ifdef PROGRESS
+
+#define DEBUGPRINT(A) printf("+"); fflush(stdout)
+
+#else
+
 #define DEBUGPRINT(A)                           \
 printf("(%s:%d) ", __FILE__, __LINE__);         \
 printf A;                                       \
 printf("\n");                                   \
 fflush(stdout)
 
+#endif
+
 #else
 #define DEBUGPRINT(A)
+#define _DEBUGPRINT(A)
 #define DEBUG_ASSERT(EXPR)
 #endif
 
@@ -85,24 +100,24 @@ public:
   virtual int getIdV(void) { return _id; }
 
   virtual OZ_Extension * sCloneV(void) {
-    DEBUGPRINT("sCloneV\n");
+    DEBUGPRINT(("sCloneV\n"));
     return new PropagatorReference(_p);
   }
 
   virtual void sCloneRecurseV(void) {
-    DEBUGPRINT("sCloneRecursiveV\n");
+    DEBUGPRINT(("sCloneRecursiveV\n"));
     if (_p) {
       _p = (Propagator *) ((Suspendable *) _p)->sCloneSuspendable();
     }
   }
 
   virtual OZ_Extension * gCollectV(void) {
-    DEBUGPRINT("gCollectV\n");
+    DEBUGPRINT(("gCollectV\n"));
     return new PropagatorReference(_p);
   }
 
   virtual void gCollectRecurseV(void) {
-    DEBUGPRINT("gCollectRecursiveV\n");
+    DEBUGPRINT(("gCollectRecursiveV\n"));
     if (_p) {
       _p = (Propagator *) ((Suspendable *) _p)->gCollectSuspendable();
     }

@@ -50,7 +50,7 @@
 		       F^head^lf = [persuade uther kuno [beat kuno cornwall]]
 		    end)}
 
-{Browse {GrammarAgent next($)}}
+{Inspect {GrammarAgent next($)}}
 
 
 % generate all sentences in perfect tense

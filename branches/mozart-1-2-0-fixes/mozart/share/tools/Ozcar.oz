@@ -34,7 +34,7 @@ prepare
 import
    Space
    RecordC
-   Browser(browse)
+   Inspector(inspect: Inspect)
    Debug at 'x-oz://boot/Debug'
    Emacs(getOPI condSend)
    Error(exceptionToMessage extendedVSToVS printException)

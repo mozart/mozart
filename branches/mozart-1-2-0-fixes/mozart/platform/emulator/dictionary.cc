@@ -33,6 +33,7 @@
 #include "am.hh"
 #include "ozostream.hh"
 #include "builtins.hh"
+#include "sort.hh"
 
 // Return true iff argument is zero or a power of two
 Bool isPwrTwo(dt_index s) {
@@ -378,26 +379,29 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
   return flist;
 }
 
+inline
+Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
+  return featureCmp(a,b) <= 0;
+}
+
 // Allocate & return sorted list containing all features:
 // Takes optional tail as input argument.
 TaggedRef DynamicTable::getArityList(TaggedRef tail) {
-    TaggedRef arity=tail;
-    if (numelem>0) {
-        SRecord *stuple=SRecord::newSRecord(AtomNil,numelem);
-        TaggedRef *arr=stuple->getRef();
-        for (int ai=0,di=0; di<size; di++) {
-            if (table[di].value!=makeTaggedNULL()) {
-    	       Assert(oz_isFeature(table[di].ident));
-               arr[ai] = table[di].ident;
-               ai++;
-            }
-        }
-        inplace_quicksort(arr, arr+(numelem-1));
-        for (int i=numelem-1; i>=0; i--) {
-           arity=oz_cons(arr[i],arity);
-        }
-    }
-    return arity;
+  TaggedRef arity=tail;
+  if (numelem>0) {
+    // put elements into array
+    NEW_TEMP_ARRAY(TaggedRef, arr, numelem);
+    for (int ai=0,di=0; di<size; di++)
+      if (table[di].value!=makeTaggedNULL()) {
+	Assert(oz_isFeature(table[di].ident));
+	arr[ai++] = table[di].ident;
+      }
+    fastsort<TaggedRef,order_taggedref_by_feat>(arr,numelem);
+
+    for (int i = numelem; i--; )
+      arity=oz_cons(arr[i],arity);
+  }
+  return arity;
 }
 
 // Return _unsorted_ list containing all features:
@@ -489,41 +493,6 @@ TaggedRef DynamicTable::toRecord(TaggedRef lbl)
   }
 }
 
-/*
- * inplace quicksort using featureCmp
- */
-
-// Swap TaggedRef array elements:
-inline void inplace_swap(TaggedRef* a, TaggedRef* b) {
-  register TaggedRef aux = *a;
-  *a = *b;
-  *b = aux;
-}
-
-// In-place sort of an array of TaggedRef:
-void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
-  register TaggedRef* i;
-  register TaggedRef* j;
-
-  if (first >= last)
-    return;
-  for (i = first, j = last; ; j--) {
-    while (i != j && featureCmp(*i, *j) <= 0)
-      j--;
-    if (i == j)
-      break;
-    inplace_swap(i, j);
-    do
-      i++;
-    while (i != j && featureCmp(*i, *j) <= 0);
-    if (i == j)
-      break;
-    inplace_swap(i, j);
-  } // for
-  inplace_quicksort(first, i-1);
-  inplace_quicksort(i+1, last);
-}
-
 OZ_Term registry_get(OZ_Term k)
 {
   OZ_Term v;
@@ -559,7 +528,7 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
       arr[ai++]=tmplit;
   }
   // Sort the Atoms according to printName:
-  inplace_quicksort(arr, arr+(nAtomOrInt-1));
+  fastsort<TaggedRef,order_taggedref_by_feat>(arr,nAtomOrInt);
 
   // Output the Atoms first, in order:
   for (ai=0; ai<nAtomOrInt; ai++) {

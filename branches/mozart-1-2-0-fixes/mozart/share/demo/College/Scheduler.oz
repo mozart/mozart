@@ -36,7 +36,7 @@ import
 
    Compiler
 
-   Browser(browse: Browse)
+   Inspector(inspect: Inspect)
 
    Graphics(drawSchedule: DrawSchedule)
 
@@ -833,8 +833,8 @@ define
 	 problemDescription <- P
       end
 
-      meth browseProblem
-	 {Browse @problemDescription}
+      meth inspectProblem
+	 {Inspect @problemDescription}
       end
 
       meth constrainProblem
@@ -897,8 +897,8 @@ define
       meth anyTime
 	 {@solver stop}
       end
-      meth browse
-	 {Browse {Map @solution fun {$ X} {Record.subtract X ordering} end}}
+      meth inspect
+	 {Inspect {Map @solution fun {$ X} {Record.subtract X ordering} end}}
       end
       meth text
 	 {LaTeX show @solution}
