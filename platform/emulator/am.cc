@@ -920,7 +920,7 @@ Bool AM::hasOFSSuspension(SuspList *suspList)
 {
     while (suspList) {
         Thread *thr = suspList->getElem ();
-        if (!(thr->isDeadThread () || thr->isPropagated ()) &&
+        if (!thr->isDeadThread () &&
             thr->isPropagator() && thr->isOFSThread ()) return TRUE;
         suspList = suspList->getNext();
     }
@@ -943,7 +943,9 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
     while (suspList) {
         Thread *thr = suspList->getElem ();
 
-        if (thr->isDeadThread () || thr->isPropagated ()) {
+        // The added condition ' || thr->isPropagated () ' is incorrect
+        // since isPropagated means only that the thread is runnable
+        if (thr->isDeadThread ()) {
             suspList=suspList->getNext();
             continue;
         }
