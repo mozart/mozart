@@ -4,25 +4,25 @@
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -53,6 +53,7 @@
 // partial order required:
 //  Simple<<Future<<Distributed<<everything
 //  Bool<<FD
+// see int cmpCVar(OzVariable *, OzVariable *)
 
 enum TypeOfVariable {
   OZ_VAR_EXT,
@@ -97,13 +98,13 @@ protected:
   SuspList * suspList;
 
 public:
-  TypeOfVariable getType(void) { 
-    return u.var_type; 
+  TypeOfVariable getType(void) {
+    return u.var_type;
   }
 
   void setType(TypeOfVariable t){
     u.var_type = t;
-  }  
+  }
 
   OzVariable() { Assert(0); }
   OzVariable(TypeOfVariable t, DummyClass *) { setType(t); };
@@ -114,30 +115,30 @@ public:
 
   USEFREELISTMEMORY;
 
-  Board *getBoardInternal() { 
-    return (Board *)(homeAndFlags&~SVAR_FLAGSMASK); 
+  Board *getBoardInternal() {
+    return (Board *)(homeAndFlags&~SVAR_FLAGSMASK);
   }
-  void setHome(Board *h) { 
-    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h); 
+  void setHome(Board *h) {
+    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h);
   }
 
-  Bool isExported(void) { 
-    return homeAndFlags&SVAR_EXPORTED; 
+  Bool isExported(void) {
+    return homeAndFlags&SVAR_EXPORTED;
   }
-  void markExported() { 
-    homeAndFlags |= SVAR_EXPORTED; 
+  void markExported() {
+    homeAndFlags |= SVAR_EXPORTED;
   }
-  
-  Bool isTrailed(void) { 
-    return homeAndFlags&CVAR_TRAILED; 
+
+  Bool isTrailed(void) {
+    return homeAndFlags&CVAR_TRAILED;
   }
-  void setTrailed(void) { 
-    homeAndFlags |= CVAR_TRAILED; 
+  void setTrailed(void) {
+    homeAndFlags |= CVAR_TRAILED;
   }
   void unsetTrailed(void) {
     homeAndFlags &= ~CVAR_TRAILED;
   }
-  
+
 
   void disposeS(void) {
     for (SuspList * l = suspList; l; l = l->dispose());
@@ -159,7 +160,7 @@ public:
   }
 
 protected:
-  
+
   void propagate(SuspList *& sl, PropCaller unifyVars) {
     oz_checkAnySuspensionList(&sl, this->getBoardInternal(), unifyVars);
   }
@@ -201,7 +202,7 @@ public:
     resetStoreFlag();
     return r;
   }
-  
+
   void setReifiedFlag(void) {
     suspList = (SuspList *) (((long) suspList) | REIFIED_FLAG);
   }
@@ -222,11 +223,11 @@ public:
     if (markExternal && !oz_onToplevel())
       getBoardInternal()->checkExtSuspension(susp);
   }
-  
+
   OZPRINTLONG;
 
   void installPropagatorsG(OzVariable *glob_var) {
-    Assert(this->getType() == glob_var->getType() || 
+    Assert(this->getType() == glob_var->getType() ||
 	   (this->getType() == OZ_VAR_BOOL &&
 	    glob_var->getType() == OZ_VAR_FD));
     suspList = oz_installPropagators(suspList,
@@ -235,16 +236,16 @@ public:
   }
 
   // needed to catch multiply occuring reified vars in propagators
-  void patchReified(OZ_FiniteDomain * d, Bool isBool) { 
-    u.patchDomain = d; 
+  void patchReified(OZ_FiniteDomain * d, Bool isBool) {
+    u.patchDomain = d;
     if (isBool) {
-      u.patchDomain =  
+      u.patchDomain =
 	(OZ_FiniteDomain*) ToPointer(ToInt32(u.patchDomain) | u_bool);
     }
     setReifiedFlag();
   }
-  void unpatchReified(Bool isBool) { 
-    setType(isBool ? OZ_VAR_BOOL : OZ_VAR_FD); 
+  void unpatchReified(Bool isBool) {
+    setType(isBool ? OZ_VAR_BOOL : OZ_VAR_FD);
     resetReifiedFlag();
   }
   OZ_Boolean isBoolPatched(void) { return (u.var_type & u_mask) == u_bool; }
@@ -252,8 +253,8 @@ public:
   OZ_Boolean isFSetPatched(void) { return (u.var_type & u_mask) == u_fset; }
   OZ_Boolean isCtPatched(void) { return (u.var_type & u_mask) == u_ct; }
 
-  OZ_FiniteDomain * getReifiedPatch(void) { 
-    return (OZ_FiniteDomain *)  (u.var_type & ~u_mask); 
+  OZ_FiniteDomain * getReifiedPatch(void) {
+    return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
 };
 
@@ -380,19 +381,19 @@ int oz_isNonKinded(TaggedRef r)
 
 // only SVar and their descendants can be exclusive
 inline
-void setStoreFlag(OZ_Term t) 
+void setStoreFlag(OZ_Term t)
 {
   tagged2SVarPlus(t)->setStoreFlag();
 }
 
 inline
-void setReifiedFlag(OZ_Term t) 
+void setReifiedFlag(OZ_Term t)
 {
   tagged2SVarPlus(t)->setReifiedFlag();
 }
 
 inline
-OZ_Boolean testReifiedFlag(OZ_Term t) 
+OZ_Boolean testReifiedFlag(OZ_Term t)
 {
   return tagged2CVar(t)->testReifiedFlag();
 }
@@ -404,34 +405,34 @@ void patchReified(OZ_FiniteDomain * fd, OZ_Term t, Bool isBool)
 }
 
 inline
-OZ_Boolean testBoolPatched(OZ_Term t) 
+OZ_Boolean testBoolPatched(OZ_Term t)
 {
   return tagged2CVar(t)->isBoolPatched();
 }
 
 inline
-OZ_Boolean testResetStoreFlag(OZ_Term t) 
+OZ_Boolean testResetStoreFlag(OZ_Term t)
 {
   return tagged2SVarPlus(t)->testResetStoreFlag();
 }
 
 inline
-OZ_Boolean testStoreFlag(OZ_Term t) 
+OZ_Boolean testStoreFlag(OZ_Term t)
 {
   return tagged2SVarPlus(t)->testStoreFlag();
 }
 
 inline
-OZ_Boolean testResetReifiedFlag(OZ_Term t) 
+OZ_Boolean testResetReifiedFlag(OZ_Term t)
 {
   return tagged2SVarPlus(t)->testResetReifiedFlag();
 }
 
 inline
-OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool) 
+OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
 {
   OzVariable * v = tagged2CVar(t);
-  
+
   v->unpatchReified(isBool);
   return v->getReifiedPatch();
 }
