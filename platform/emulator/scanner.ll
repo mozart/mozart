@@ -491,7 +491,7 @@ static void transBody(char c, char *text, int &i, int &j) {
 	  hexstring[1] = text[++j];
 	  hexstring[2] = '\0';
 	  int hexnum = (int) strtol(hexstring, NULL, 16);
-	  if (hexnum == 0)
+	  if (hexnum == 0 && cond())
 	    xyreportError("lexical error",
 			  "character in hexadecimal notation =< 0",
 			  xyFileName,xylino,xycharno() + (j - jstart));
@@ -512,7 +512,7 @@ static void transBody(char c, char *text, int &i, int &j) {
 	  octstring[2] = text[j];
 	  octstring[3] = '\0';
 	  int octnum = (int) strtol(octstring, NULL, 8);
-	  if (octnum == 0 || octnum > 255)
+	  if ((octnum == 0 || octnum > 255) && cond())
 	    xyreportError("lexical error",
 			  "character in octal notation =< 0 or >= 256",
 			  xyFileName,xylino,xycharno() + (j - jstart));
@@ -537,7 +537,7 @@ static void stripTrans(char c) {
 
 static void trans(char c) {
   if (xytext[0] == c) {
-    if (!xy_systemVariables && c == '`')
+    if (!xy_systemVariables && c == '`' && cond())
       xyreportError("lexical error",
 		    "use of system variables not allowed in user programs",
 		    xyFileName,xylino,xycharno());
@@ -644,7 +644,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				     conditional[conditional_p] = 0;
 				   else
 				     conditional[conditional_p] = 1;
-				 } else
+				 } else if (cond())
 				   xyreportError("macro directive error",
 						 "\\endif without previous corresponding \\ifdef or \\ifndef",
 						 xyFileName,xylino,xycharno());
@@ -673,12 +673,11 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 <DIRECTIVE>{
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
@@ -703,19 +702,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -727,12 +726,11 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
   [A-Za-z0-9]+                 { return SWITCHNAME; }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
@@ -770,19 +768,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -799,19 +797,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -826,19 +824,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag)
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -853,19 +851,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -880,19 +878,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -905,19 +903,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -929,19 +927,19 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
   {BLANK}                      ;
   .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
+  \n                           { if (errorFlag && cond())
 				   xyreportError("directive error",
 						 "illegal directive syntax",
 						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
+				 errorFlag = 0;
 				 xylino++;
 				 xylastline = xytext + 1;
 				 BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
+  <<EOF>>                      { if (cond())
+				   xyreportError("directive error",
+						 "unterminated directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
@@ -1093,15 +1091,15 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "with"/\(                      { return with; }
 
 {OZATOM}                       { stripTrans('\''); return OZATOM; }
-"'"[^']*"'"                    { xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return OZATOM;}
+"'"[^']*"'"                    { if (cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return OZATOM;}
 {OZATOM}/\(                    { stripTrans('\''); return ATOM_LABEL; }
-"'"[^']*"'"/\(                 { xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return ATOM_LABEL;}
+"'"[^']*"'"/\(                 { if (cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return ATOM_LABEL;}
 {VARIABLE}                     { trans('`'); return VARIABLE; }
-"`"[^`]*"`"                    { xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
+"`"[^`]*"`"                    { if (cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
 {VARIABLE}/\(                  { trans('`'); return VARIABLE_LABEL; }
-"`"[^`]*"`"/\(                 { xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
+"`"[^`]*"`"/\(                 { if (cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
 {STRING}                       { stripTrans('\"'); return STRING; }
-"\""[^\"]*"\""                 { xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return STRING;}
+"\""[^\"]*"\""                 { if (cond()) xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return STRING;}
 
 "&"{ANYCHAR}                   { int i = 0;
 				 int j = 1;
@@ -1118,15 +1116,17 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 xylastline = xytext + 1;
 			       }
 
-\\[a-zA-Z]+                    { xyreportError("lexical error",
-					       "unknown directive",
-					       xyFileName,xylino,xycharno());
+\\[a-zA-Z]+                    { if (cond())
+				   xyreportError("lexical error",
+						 "unknown directive",
+						 xyFileName,xylino,xycharno());
 				 BEGIN(IGNOREDIRECTIVE);
 			       }
 
-.                              { xyreportError("lexical error",
-					       "illegal character",
-					       xyFileName,xylino,xycharno());
+.                              { if (cond())
+				   xyreportError("lexical error",
+						 "illegal character",
+						 xyFileName,xylino,xycharno());
 			       }
 
 <<EOF>>                        { BEGIN(DIRECTIVE);
