@@ -20,6 +20,7 @@ makefile(
 		'QTkNumberentry_bitmap.ozf'
 		: ['QTkImageLibBoot.ozf' 'mini-inc.xbm' 'mini-dec.xbm'])
    lib     : ['QTk.ozf' 'QTkDevel.ozf' 'QTkBare.ozf']
+   %%src     : ['QTk.ozf' 'QTkDevel.ozf' 'QTkBare.ozf']
    rules   : o(
 		'QTk.ozf' : ozl('QTkBare.ozf'))
    doc     : [
