@@ -220,7 +220,7 @@ For example
 	  (set-face-font 'oz-italic (concat (car font) "medium-o" (cdr font)) scr)
 	  ))))
 
-(oz-default-font)
+;(oz-default-font)
 
 ;;------------------------------------------------------------
 ;; Menus
