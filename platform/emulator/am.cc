@@ -394,6 +394,22 @@ Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
 }
 
 
+Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
+{
+  Board *bb=tagged2VarHome(var);
+  if (bb->isCommitted()) {
+    bb=bb->getBoardFast();
+    *varPtr=makeTaggedUVar(bb);
+  }
+  return  bb == currentBoard;
+}
+
+Bool AM::isLocalSVarOutline(SVariable *var)
+{
+  Board *home = var->getHomeUpdate();
+  return home == currentBoard;
+}
+
 #define Swap(A,B,Type) { Type help=A; A=B; B=help; }
 
 Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2, Bool prop)
@@ -457,12 +473,12 @@ start:
    *   local newer -> local older
    */
   if (isNotCVar(tag1)) {
-    if ( isNotCVar(tag2) && isLocalVariable(term2) &&
+    if ( isNotCVar(tag2) && isLocalVariable(term2,termPtr2) &&
 	 /*
 	  * prefer also binding of UVars: otherwise if we bind SVar to UVar
 	  * suspensions attached to SVar will be woken, which is redundant! 
 	  */
-	 (!isLocalVariable(term1) ||
+	 (!isLocalVariable(term1,termPtr1) ||
 	  (isUVar(term2) && !isUVar(term1)) ||
 	   heapNewer(termPtr2,termPtr1))) {
       genericBind(termPtr2, term2, termPtr1, *termPtr1, prop);
@@ -686,7 +702,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
   
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
-  if ( !isLocalVariable(var) || !prop ) {
+  if ( !isLocalVariable(var,varPtr) || !prop ) {
     trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
     if (isSVar(var)) {
@@ -834,10 +850,11 @@ void AM::reduceTrailOnSuspend()
 
       // this might be a global unconstrained variable; in this case
       // add thread;
-      if(isNotCVar(old_value_tag) && !isLocalVariable(old_value)) {
-	Assert(isNotCVar(value));
-	taggedBecomesSuspVar(old_value_ptr)->addSuspension (thr);
-      }
+      if(isNotCVar(old_value_tag) && !isLocalVariable(old_value,old_value_ptr))
+	{
+	  Assert(isNotCVar(value));
+	  taggedBecomesSuspVar(old_value_ptr)->addSuspension (thr);
+	}
     } // for 
   } // if
   trail.popMark();
