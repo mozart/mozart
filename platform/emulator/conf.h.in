@@ -76,6 +76,9 @@
 /* RS profiling */
 #undef RS_PROFILE
 
+/* use a debug malloc library */
+#undef DMALLOC
+
 /* conf.h.in.  Generated automatically from - by autoheader.  */
 
 /* Define if using alloca.c.  */

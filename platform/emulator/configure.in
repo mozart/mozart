@@ -529,24 +529,50 @@ AC_SUBST(PEANUTS)
 
 
 dnl *****************************************************************
+dnl dmalloc
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-dmalloc)
+AC_ARG_WITH(dmalloc,
+    [--with-dmalloc
+        use debugging malloc library dmalloc ])
+
+if test "$with_dmalloc" = "yes"
+then
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(dmalloc,main,true,AC_MSG_ERROR(cannot find lib dmalloc))
+    AC_DEFINE(DMALLOC)
+elif test -n "$with_dmalloc"
+then
+    AC_MSG_ERROR(only yes allowed)
+else
+    AC_MSG_RESULT(no)
+fi
+
+
+dnl *****************************************************************
 dnl malloc
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --with-malloc)
-AC_ARG_WITH(malloc,
-    [--with-malloc=<obj>
-        use malloc from object file <obj> (default: NONE)])
-if test -n "$with_malloc"
+if test -z "$with_dmalloc"
 then
-    oz_malloc_obj=$with_malloc
-fi
+    AC_MSG_CHECKING(for --with-malloc)
+    AC_ARG_WITH(malloc,
+        [--with-malloc=<obj>
+            use malloc from object file <obj> (default: NONE)])
 
-if test -n "$oz_malloc_obj" && test -r $oz_malloc_obj
-then
-    LIBS="$LIBS $oz_malloc_obj"
-    AC_MSG_RESULT(yes (\"$oz_malloc_obj\"))
-else
-    AC_MSG_RESULT(no)
+    if test -n "$with_malloc"
+    then
+        oz_malloc_obj=$with_malloc
+    fi
+
+    if test -n "$oz_malloc_obj" && test -r $oz_malloc_obj
+    then
+        LIBS="$LIBS $oz_malloc_obj"
+        AC_MSG_RESULT(yes (\"$oz_malloc_obj\"))
+    else
+        AC_MSG_RESULT(no)
+    fi
 fi
 
 dnl *****************************************************************

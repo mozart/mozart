@@ -111,7 +111,7 @@ void scanFreeList(void) {
 //   USESBRK
 //   USEMALLOC
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS) || defined(LINUX) || defined(IRIX)
+#if !defined(DMALLOC) && (defined(SUNOS_SPARC) || defined(SOLARIS) || defined(LINUX) || defined(IRIX) )
 #define USESBRK
 #else
 #define USEMALLOC
