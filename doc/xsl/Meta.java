@@ -35,4 +35,18 @@ public class Meta {
     public static String pictureWidthGet(String id) {
         return (String) picwid_map.get(id.toUpperCase());
     }
+  private static Hashtable category_map = new Hashtable();
+  public static boolean entryCategoryPut(String cls,String nam) {
+    category_map.put(cls.toUpperCase(),nam);
+    return true;
+  }
+  public static boolean entryCategoryExists(String cls) {
+    return category_map.containsKey(cls.toUpperCase());
+  }
+  public static String entryCategoryGet(String cls) {
+    return (String) category_map.get(cls.toUpperCase());
+  }
+  public static boolean equal(String s1,String s2) {
+    return s1.compareToIgnoreCase(s2)==0;
+  }
 }
