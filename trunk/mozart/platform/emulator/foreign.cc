@@ -1907,21 +1907,6 @@ OZ_Term OZ_newName()
 {
   return oz_newName();
 }
-/* -----------------------------------------------------------------
- * 
- * -----------------------------------------------------------------*/
-
-int OZ_addBuiltin(const char *name, int inArity, int outArity, OZ_CFun fun)
-{
-  return BIadd(name,inArity,outArity,fun,OK) == NULL ? 0 : 1;
-}
-
-void OZ_addBISpec(OZ_BIspec *spec)
-{
-  for (int i=0; spec[i].name; i++) {
-    OZ_addBuiltin(spec[i].name,spec[i].inArity,spec[i].outArity,spec[i].fun);
-  }
-}
 
 // don't raise errors, because debug info is never included!
 // use OZ_raiseError
