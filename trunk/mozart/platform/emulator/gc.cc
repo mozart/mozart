@@ -666,6 +666,10 @@ SRecord *SRecord::gcSRecord()
   switch(getType()) {
 
   case R_ABSTRACTION:
+    if (opMode == IN_TC &&
+	isLocalBoard (((Abstraction *) this)->getBoard ()) == NO) {
+      return (this);
+    }
     size = sizeof(Abstraction);
     break;
   case R_OBJECT:
@@ -673,8 +677,8 @@ SRecord *SRecord::gcSRecord()
     break;
   case R_CELL:
     if (opMode == IN_TC &&
-	!isLocalBoard(((Cell*)this)->getBoard()) ) {
-      return this;
+	isLocalBoard(((Cell*)this)->getBoard()) == NO) {
+      return (this);
     }
     size = sizeof(Cell);
     break;
@@ -1719,10 +1723,12 @@ void SRecord::gcRecurse()
 
   case R_ABSTRACTION:
     {
+      varCount++; 
       Abstraction *a = (Abstraction *) this;
       DebugCheck (isFreedRefsArray (a->gRegs),
 		  error ("freed 'g' refs (abs) array in SRecord::gcRecurse ()"));
       a->gRegs = gcRefsArray(a->gRegs);
+      a->home = a->home->gcBoard ();
       break;
     }
     
