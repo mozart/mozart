@@ -2437,13 +2437,11 @@ void LockSec::gcLockSec(){
   if(state & Cell_Lock_Next){
     getNext()->makeGCMarkSite();}
   PD((GC,"relocate Lock in state %d",state));
-  if(pending!=NULL){
+  if(state & Cell_Lock_Valid)
+    locker=locker->gcThread();
+  if(pending!=NULL)
     gcPendThread(&pending);
-    return;}
-  else{
-    if(state & Cell_Lock_Valid){
-      locker=locker->gcThread();}
-    return;}}
+  return;}
 
 void LockFrame::gcLockFrame(){
   Tertiary *t=(Tertiary*)this;
