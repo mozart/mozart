@@ -29,6 +29,7 @@
 #include "debug.hh"
 #include "codearea.hh"
 #include "am.hh"
+#include "board.hh"
 
 TaggedRef OzDebug::toRecord(OZ_Term label, Thread *thread, int frameId) {
   TaggedRef pairlist = oz_nil();
@@ -69,7 +70,9 @@ TaggedRef OzDebug::getFrameVariables() {
 
 // ------------------ debug stream messages ---------------------------
 
+// only threads at the toplevel can be traced
 #define DBG_MESSAGE(MSG) \
+  Assert(oz_isRootBoard(GETBOARD(thread))); \
   OZ_MAKE_RECORD_S(MSG,1,{"thr"},{oz_thread(thread)},r); \
   am.debugStreamMessage(r);
 
