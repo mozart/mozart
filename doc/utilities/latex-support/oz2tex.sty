@@ -18,10 +18,11 @@
 \newcommand{\ozdefault}{pcr}
 \DeclareRobustCommand{\ozfamily}{%
   \not@math@alphabet \ozfamily \ozmath \fontfamily \ozdefault \selectfont}
-\DeclareRobustCommand{\ozfont}{\normalfont\small\ozfamily}
-\DeclareRobustCommand{\ozkeyfont}{\normalfont\small\ozfamily\upshape\bfseries}
-\DeclareRobustCommand{\ozcommentfont}{\normalfont\small\ozfamily\itshape}
-\DeclareRobustCommand{\ozquotefont}{\normalfont\small\ozfamily\bfseries}
+\DeclareRobustCommand{\ozfontsize}{\small}
+\DeclareRobustCommand{\ozfont}{\normalfont\ozfontsize\ozfamily}
+\DeclareRobustCommand{\ozkeyfont}{\normalfont\ozfontsize\ozfamily\upshape\bfseries}
+\DeclareRobustCommand{\ozcommentfont}{\normalfont\ozfontsize\ozfamily\itshape}
+\DeclareRobustCommand{\ozquotefont}{\normalfont\ozfontsize\ozfamily\bfseries}
 
 \newcommand{\copies@zero}[1]{}
 \newcommand{\copies@one}[1]{#1}
