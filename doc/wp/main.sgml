@@ -85,6 +85,11 @@
     <Meta name="html.split"       value="section.geometry.anchor">
 
     <Meta name="html.split"       value="chapter.widgets-2">
+    <Meta name="html.split"       value="section.widgets-2.button">
+    <Meta name="html.split"       value="section.widgets-2.otherbuttons">
+    <Meta name="html.split"       value="section.widgets-2.return">
+    <Meta name="html.split"       value="section.widgets-2.menu">
+
     <Meta name="html.split"       value="chapter.tools">
     <Meta name="html.split"       value="chapter.canvas">
     <Meta name="html.split"       value="chapter.text">

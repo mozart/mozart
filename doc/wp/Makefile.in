@@ -17,13 +17,15 @@ GEOMETRY = \
 	packer-ipad packer-left packer-pad packer-plain \
 	packer-resize-both packer-resize-expand \
 	packer-resize-fill widget-anchor
+WIDGETS2 = \
+	button check-and-radio check-and-radio-action menu
 HTMLEXTRAFILES0 = \
 	$(STARTED:%=started/%.gif) \
 	$(WIDGETS1:%=widgets-1/%.gif) \
 	$(GEOMETRY:%=geometry/%.gif) \
-	button.gif check-and-radio-action.gif check-and-radio.gif dialog.gif \
-	entry.gif error.gif file.gif help.gif \
-	listbox.gif menu.gif  scales.gif \
+	$(WIDGETS2:%=widgets-2/%.gif) \
+	dialog.gif entry.gif error.gif file.gif help.gif \
+	listbox.gif scales.gif \
 	tools-menubar.gif \
 	queen.xbm truck-left.ppm truck-right.ppm
 HTMLEXTRAFILES = \
