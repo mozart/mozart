@@ -804,10 +804,9 @@ void AM::reduceTrailOnSuspend()
       DebugCheck (isLocalVariable (oldVal) && isNotCVar(oldVal),
 		  error ("the right var is local  and unconstrained");
 		  return;);
-      if(!isLocalVariable(oldVal)) { // add susps to global vars
-	SVariable *svar = taggedBecomesSuspVar (ptrOldVal);
-	svar->addSuspension (susp);
-      }
+      // add susps to global non-cvars
+      if(!isLocalVariable(oldVal) && isNotCVar(tagOldVal)) 
+	taggedBecomesSuspVar(ptrOldVal)->addSuspension (susp);
     }
 #ifdef DEBUG_CHECK
     TaggedRef aux = value;
@@ -817,7 +816,8 @@ void AM::reduceTrailOnSuspend()
     if (isUVar (tag) == OK)
       error ("UVar is found as value in trail;");
 #endif
-    tagged2SuspVar(value)->addSuspension(susp);
+    if (isNotCVar(value))
+      tagged2SuspVar(value)->addSuspension(susp);
     *refPtr = value;
   }
   trail.popMark();
@@ -860,8 +860,7 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
     DebugCheck(!isAnyVar(*refPtr),
 	       error("Non-variable on trail"));
     
-    SVariable *svar = taggedBecomesSuspVar(refPtr);
-    svar->addSuspension(susp);
+    taggedBecomesSuspVar(refPtr)->addSuspension(susp);
   }
 
   trail.popMark();
