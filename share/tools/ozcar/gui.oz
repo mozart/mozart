@@ -454,7 +454,7 @@ in
 	  tkInit(parent: W
 		 action: Ozcar # frameClick(frame:Frame))}
 	 LineEnd    = FrameNr # DotEnd
-	 UpToDate   = true %SourceManager,isUpToDate(Frame.time $)
+	 UpToDate   = 1 > 0 %SourceManager,isUpToDate(Frame.time $)
       in
 	 
 	 {OzcarMessage '  printing frame #' # FrameNr}
