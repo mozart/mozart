@@ -64,7 +64,7 @@ FUNCTORS = \
         $(MISCSRC:%=%.ozf) \
         RunTimeLibrary.ozf Compiler.ozf
 
-SYSLETS = ozc ozserver ozvsserver
+SYSLETS = ozc ozserver ozvsserver ozar
 
 .PHONY: all
 
@@ -225,6 +225,9 @@ ozserver: Standard.ozf MakeOzServer.oz
 
 ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
         $(COMPILESYSLET) MakeOzVSServer.oz -o $@
+
+ozar: URL.ozf ar/Main.oz ar/Archiver.oz ../functor-defaults.oz ../url-defaults.oz
+        $(COMPILESYSLET) -l URL=URL.ozf ar/Main.oz -o $@
 
 #---------------------------------------------------------------------
 # Installation
