@@ -52,7 +52,9 @@
 <!ENTITY part.application SYSTEM "application.sgml">
 <!ENTITY part.constraints SYSTEM "constraints.sgml">
 <!ENTITY part.distributed SYSTEM "distributed.sgml">
-<!ENTITY part.open        SYSTEM "open.sgml">
+<!ENTITY part.open        SYSTEM "op.sgml">
+<!ENTITY chapter.os       SYSTEM "os.sgml">
+<!ENTITY chapter.open     SYSTEM "open.sgml">
 <!ENTITY part.system      SYSTEM "system.sgml">
 <!ENTITY part.window      SYSTEM "window.sgml">
 <!ENTITY chapter.tk       SYSTEM "tk.sgml">
@@ -120,4 +122,6 @@
   &part.open;
   &part.system;
   &part.window;
+  <Back>
+    <Bib.Extern id="LEWINE.91" to="system.bib" key="LEWINE:91"> 
 </BOOK>
