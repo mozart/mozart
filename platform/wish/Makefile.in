@@ -21,7 +21,7 @@ TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
 TKLIBTCLDIR     = @oz_tk_lib_tcl_dir@
 
 
-OZWISH		= wif.exe
+OZWISH		= tk.exe
 SRCS		= @SRCS@
 OBJS		= ${SRCS:.c=.o}
 
