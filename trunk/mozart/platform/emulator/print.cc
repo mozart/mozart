@@ -956,8 +956,13 @@ PRINTLONG(SolveActor)
   suspList->print(stream,DEC(depth),offset+2);
 }
 
-void AM::printThreads()
+void ThreadsPool::printThreads()
 {
+  int pri, prioInd = nextPrioInd;
+  ThreadQueue *thq;
+  Thread *th;
+  int size;
+
   cout << "Threads" << endl
        << "  running: ";
   currentThread->print(cout,0,0);
@@ -966,24 +971,35 @@ void AM::printThreads()
   rootThread->print(cout,0,0);
   cout << endl
        << "  runnable:" << endl;
-  for (Thread *th=threadsHead; th; th = th->next) {
-    th->print(cout,0,4);
-    if (th == threadsHead) {
-      cout << " HEAD";
-    }
-    if (th == threadsTail) {
-      cout << " TAIL";
-    }
-    if (th == rootThread) {
-      cout << " ROOT";
-    }
-    if (th == currentThread) {
-      cout << " RUNNING";
-    }
-    cout << endl;
-  }
-}
+  
+  thq = currentQueue;
+  pri = currentPriority;
+  while (thq) {
+    cout << "  prio = " << pri << endl;
+    size = thq->getSize ();
+    cout << "    there are " << size << " threads" << endl;
 
+    while (size) {
+      th = thq->dequeue ();
+      th->print (cout,0,4);
+      if (th == currentThread)
+	cout << " RUNNING ";
+      if (th == rootThread)
+	cout << " ROOT ";
+      cout << endl;
+      thq->enqueue (th);
+      size--;
+    }
+
+    if (prioInd >= 0) {
+      pri = nextPrio[prioInd--];
+      thq = &queues[pri];
+    } else {
+      thq = (ThreadQueue *) NULL;
+    }
+  }
+}    
+    
 PRINT(Thread)
 {
   CHECKDEPTH;
