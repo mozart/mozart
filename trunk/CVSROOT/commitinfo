@@ -1,2 +1,3 @@
-ALL /CVS/CVSROOT/checkperm
-Oz  /CVS/CVSROOT/checkin_denied
+ALL   /CVS/CVSROOT/checkperm
+OzPar /CVS/CVSROOT/checkperm
+Oz    /CVS/CVSROOT/checkin_denied
