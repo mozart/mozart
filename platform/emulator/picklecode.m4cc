@@ -341,7 +341,6 @@ define(opAction,
 Bool unpickleCodeRobust(PickleBuffer *bs, Builder *b, 
 			BuilderCodeAreaDescriptor *desc)
 {
-  int e; 
   int ozValuesCnt = ozValuesBAPickles;
   ProgramCounter PC = desc->getCurrent();
   ProgramCounter lastPC;

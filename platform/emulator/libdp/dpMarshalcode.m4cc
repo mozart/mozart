@@ -356,7 +356,6 @@ define(opAction,
 Bool dpUnmarshalCodeRobust(ByteBuffer *bs, Builder *b, 
 			   BuilderCodeAreaDescriptor *desc)
 {
-  int e; 
   int ozValuesCnt = ozValuesBADP;
   ProgramCounter PC = desc->getCurrent();
   ProgramCounter lastPC;

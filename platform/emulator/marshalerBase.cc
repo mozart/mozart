@@ -564,27 +564,29 @@ char *getStringRobust(MarshalerBuffer *bs, unsigned int i, int *error)
 double unmarshalFloatRobust(MarshalerBuffer *bs, int *overflow)
 {
   static DoubleConv dc;
-  int o1, o2;
   if (lowendian) {
-    dc.u.i[0] = unmarshalNumberRobust(bs, &o1);
-    dc.u.i[1] = unmarshalNumberRobust(bs, &o2);
+    dc.u.i[0] = unmarshalNumberRobust(bs, overflow);
+    if(*overflow) return 0.0;
+    dc.u.i[1] = unmarshalNumberRobust(bs, overflow);
+    if(*overflow) return 0.0;
   } else {
-    dc.u.i[1] = unmarshalNumberRobust(bs, &o1);
-    dc.u.i[0] = unmarshalNumberRobust(bs, &o2);
+    dc.u.i[1] = unmarshalNumberRobust(bs, overflow);
+    if(*overflow) return 0.0;
+    dc.u.i[0] = unmarshalNumberRobust(bs, overflow);
+    if(*overflow) return 0.0;
   }
-  *overflow = o1 || o2;
   return dc.u.d;
 }
 
 //
 char *unmarshalStringRobust(MarshalerBuffer *bs, int *error)
 {
-  int e1,e2;
   char *string;
   misc_counter[MISC_STRING].recv();
-  unsigned int i = unmarshalNumberRobust(bs,&e1);
-  string = getStringRobust(bs,i,&e2);
-  *error = e1 || e2;
+  unsigned int i = unmarshalNumberRobust(bs,error);
+  if(*error) return NULL;
+  string = getStringRobust(bs,i,error);
+  if(*error) return NULL;
   return string;
 }
 
@@ -592,17 +594,17 @@ char *unmarshalStringRobust(MarshalerBuffer *bs, int *error)
 static
 void unmarshalGName1Robust(GName *gname, MarshalerBuffer *bs, int *error)
 {
-  int e1,e2;
-  gname->site=unmarshalSiteRobust(bs, &e1);
-  for (int i=0; (i<fatIntDigits && !e1); i++) {
+  gname->site=unmarshalSiteRobust(bs, *error);
+  if(*error) return;
+  for (int i=0; i<fatIntDigits; i++) {
     int e;
     unsigned int num;
     num = unmarshalNumberRobust(bs, &e);
-    e1 = e || (num > maxDigit);
+    if(*error || (num > maxDigit)) return;
     gname->id.number[i] = num;
   }
-  gname->gnameType = (GNameType) unmarshalNumberRobust(bs, &e2);
-  *error = e1 || e2 || (gname->gnameType > MAX_GNT);
+  gname->gnameType = (GNameType) unmarshalNumberRobust(bs, error);
+  *error = *error || (gname->gnameType > MAX_GNT);
 }
 
 //
@@ -611,6 +613,7 @@ GName *unmarshalGNameRobust(TaggedRef *ret, MarshalerBuffer *bs, int *error)
   misc_counter[MISC_GNAME].recv();
   GName gname;
   unmarshalGName1Robust(&gname,bs,error);
+  if(*error) return &gname;
   
   TaggedRef aux = oz_findGName(&gname);
   if (aux) {
@@ -1244,18 +1247,17 @@ ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
 ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,
 				      MarshalerBuffer *bs, int *error)
 { 
-  int e1,e2;
-  int nGRegs = unmarshalNumberRobust(bs, &e1);
+  int nGRegs = unmarshalNumberRobust(bs, error);
+  if(*error) return ((ProgramCounter) 0);
   AssRegArray *gregs = PC ? AssRegArray::allocate(nGRegs) : 0;
 
   for (int i = 0; i < nGRegs; i++) {
-    unsigned int reg = unmarshalNumberRobust(bs, &e2);
-    e1 = e1 || e2;
+    unsigned int reg = unmarshalNumberRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     if (PC) {
       (*gregs)[i].set(reg>>2,(reg&3));
     }
   }
-  *error = e1;
 
   return (writeAddress(gregs, PC));
 }
@@ -1264,27 +1266,26 @@ ProgramCounter unmarshalGRegRefRobust(ProgramCounter PC,
 ProgramCounter unmarshalLocationRobust(ProgramCounter PC, MarshalerBuffer *bs,
 				     int *error) 
 {
-  int e1,e2;
-  int inAr = unmarshalNumberRobust(bs, &e1);
-  int outAr = unmarshalNumberRobust(bs, &e2);
+  int inAr = unmarshalNumberRobust(bs, error);
+  if(*error) return ((ProgramCounter) 0);
+  int outAr = unmarshalNumberRobust(bs, error);
+  if(*error) return ((ProgramCounter) 0);
 
   OZ_Location::initLocation();
 
-  e1 = e1 || e2;
   for (int i = 0; i < inAr+outAr; i++) {
-    int n = unmarshalNumberRobust(bs, &e2);
-    e1 = e1 || e2;
+    int n = unmarshalNumberRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     OZ_Location::set(i,n);
   }
-  *error = e1;
   return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
 }
 
 //
 static inline
-RecordArityType unmarshalRecordArityTypeRobust(MarshalerBuffer *bs, int *overflow)
+RecordArityType unmarshalRecordArityTypeRobust(MarshalerBuffer *bs, int *error)
 {
-  return ((RecordArityType) unmarshalNumberRobust(bs, overflow));
+  return ((RecordArityType) unmarshalNumberRobust(bs, error));
 }
 
 //
@@ -1295,15 +1296,15 @@ ProgramCounter unmarshalRecordArityRobust(Builder *b, ProgramCounter pc,
 					  MarshalerBuffer *bs, int *error) 
 {
   RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+  if(*error) return ((ProgramCounter) 0);
   if (pc) {
     if (at == RECORDARITY) {
       CodeAreaLocation *loc = new CodeAreaLocation(pc);
       b->getOzValue(putRealRecordArityCA, loc);
       return (CodeArea::allocateWord(pc));
     } else {
-      int e;
-      int width = unmarshalNumberRobust(bs, &e);
-      *error = *error || e || (at != TUPLEWIDTH);
+      int width = unmarshalNumberRobust(bs, error);
+      if(*error || (at != TUPLEWIDTH)) return ((ProgramCounter) 0);
       return (CodeArea::writeInt(mkTupleWidth(width), pc));
     }
   } else {
@@ -1322,19 +1323,19 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
 				     int *error) 
 {
   if (pc) {
-    int e1,e2,e3,e4;
     PredIdLocation *loc = new PredIdLocation(pc);
 
     //
     b->getOzValue(getPredIdNameCA, loc);
     //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e1);
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     if (at == RECORDARITY) {
       b->getOzValue(saveRecordArityPredIdCA, loc);
-      e1 = NO;
     } else {
       Assert(at == TUPLEWIDTH);
-      int width = unmarshalNumberRobust(bs, &e1);
+      int width = unmarshalNumberRobust(bs, error);
+      if(*error) return ((ProgramCounter) 0);
       // set 'SRecordArity' directly (and there will be no arity
       // list);
       loc->setSRA(mkTupleWidth(width));
@@ -1342,14 +1343,16 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
     //
     b->getOzValue(saveFileCA, loc);
     //
-    loc->setLine(unmarshalNumberRobust(bs, &e2));
-    loc->setColumn(unmarshalNumberRobust(bs, &e3));
+    loc->setLine(unmarshalNumberRobust(bs, error));
+    if(*error) return ((ProgramCounter) 0);
+    loc->setColumn(unmarshalNumberRobust(bs, error));
+    if(*error) return ((ProgramCounter) 0);
     //
     b->getOzValue(saveFlagsListCA, loc);
     //
-    loc->setMaxX(unmarshalNumberRobust(bs, &e4));
+    loc->setMaxX(unmarshalNumberRobust(bs, error));
+    if(*error) return ((ProgramCounter) 0);
 
-    *error = e1 || e2 || e3 || e4;
     //
     return (CodeArea::allocateWord(pc));
 
@@ -1358,6 +1361,7 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
     b->discardOzValue();	// name;
     //
     RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     if (at == RECORDARITY) {
       b->discardOzValue();	// arity list;
     } else {
@@ -1383,8 +1387,8 @@ ProgramCounter unmarshalPredIdRobust(Builder *b, ProgramCounter pc,
 ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc, 
 					     MarshalerBuffer *bs, int *error) 
 {
-  int e1,e2,e3;
-  int compact = unmarshalNumberRobust(bs, &e1);
+  int compact = unmarshalNumberRobust(bs, error);
+  if(*error) return ((ProgramCounter) 0);
 
   //
   if (pc) {
@@ -1393,30 +1397,30 @@ ProgramCounter unmarshalCallMethodInfoRobust(Builder *b, ProgramCounter pc,
     //
     b->getOzValue(getCallMethodInfoNameCA, loc);
     //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     if (at == RECORDARITY) {
       b->getOzValue(saveCallMethodInfoRecordArityCA, loc);
-      e3 = NO;
     } else {
       Assert(at == TUPLEWIDTH);
-      int width = unmarshalNumberRobust(bs, &e3);
+      int width = unmarshalNumberRobust(bs, error);
+      if(*error) return ((ProgramCounter) 0);
       loc->setSRA(mkTupleWidth(width));
     }
 
     //
-    *error = e1 || e2 || e3;
     return (CodeArea::allocateWord(pc));
   } else {
     b->discardOzValue();	// name;
     //
-    RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+    RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     if (at == RECORDARITY)
       b->discardOzValue();
     else
       skipNumber(bs);
 
     //
-    *error = e1 || e2;
     return ((ProgramCounter) 0);
   }
 }
@@ -1427,12 +1431,14 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 {
   //
   if (pc) {
-    int e1,e2,e3,e4;
-    int sz = unmarshalNumberRobust(bs, &e1);
-    int elseLabel = unmarshalNumberRobust(bs, &e2); /* the else label */
-    int listLabel = unmarshalNumberRobust(bs, &e3);
-    int nEntries = unmarshalNumberRobust(bs, &e4);
-    e1 = e1 || e2 || e3 || e4;
+    int sz = unmarshalNumberRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
+    int elseLabel = unmarshalNumberRobust(bs, error); /* the else label */
+    if(*error) return ((ProgramCounter) 0);
+    int listLabel = unmarshalNumberRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
+    int nEntries = unmarshalNumberRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
     IHashTable *table;
 
     //
@@ -1442,10 +1448,11 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 
     //
     for (int i = 0; i < nEntries; i++) {    
-      int termTag = unmarshalNumberRobust(bs, &e2);
-      int label = unmarshalNumberRobust(bs, &e3);
+      int termTag = unmarshalNumberRobust(bs, error);
+      if(*error) return ((ProgramCounter) 0);
+      int label = unmarshalNumberRobust(bs, error);
+      if(*error) return ((ProgramCounter) 0);
       HashTableEntryDesc *desc = new HashTableEntryDesc(table, label);
-      e1 = e1 || e2 || e3;
 
       //
       switch (termTag) {
@@ -1453,16 +1460,16 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 	{
 	  b->getOzValue(getHashTableRecordEntryLabelCA, desc);
 	  //
-	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
+	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+	  if(*error) return ((ProgramCounter) 0);
 	  if (at == RECORDARITY) {
 	    b->getOzValue(saveRecordArityHashTableEntryCA, desc);
-	    e3 = NO;
 	  } else {
 	    Assert(at == TUPLEWIDTH);
-	    int width = unmarshalNumberRobust(bs, &e3);
+	    int width = unmarshalNumberRobust(bs, error);
+	    if(*error) return ((ProgramCounter) 0);
 	    desc->setSRA(mkTupleWidth(width));
 	  }
-	  e1 = e1 || e2 || e3;
 	  break;
 	}
 
@@ -1474,26 +1481,25 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 	b->getOzValue(getHashTableNumEntryLabelCA, desc);
 	break;
 
-      default: e1 = OK; break;
+      default: *error = OK; break;
       }
     }
 
-    *error = e1;
     // 
     // The hash table is stored already, albeit it is not yet filled
     // up;
     return (CodeArea::writeIHashTable(table, pc));
   } else {
-    int e1,e2;
     skipNumber(bs);		// size
     skipNumber(bs);		// elseLabel
     skipNumber(bs);		// listLabel
-    int nEntries = unmarshalNumberRobust(bs, &e1);
+    int nEntries = unmarshalNumberRobust(bs, error);
+    if(*error) return ((ProgramCounter) 0);
 
     //
     for (int i = 0; i < nEntries; i++) {
-      int termTag = unmarshalNumberRobust(bs, &e2);
-      e1 = e1 || e2;
+      int termTag = unmarshalNumberRobust(bs, error);
+      if(*error) return ((ProgramCounter) 0);
       skipNumber(bs);		// label
 
       //
@@ -1502,8 +1508,8 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 	{
 	  b->discardOzValue();
 	  //
-	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, &e2);
-	  e1 = e1 || e2;
+	  RecordArityType at = unmarshalRecordArityTypeRobust(bs, error);
+	  if(*error) return ((ProgramCounter) 0);
 	  if (at == RECORDARITY)
 	    b->discardOzValue();
 	  else
@@ -1519,7 +1525,7 @@ ProgramCounter unmarshalHashTableRefRobust(Builder *b, ProgramCounter pc,
 	b->discardOzValue();
 	break;
 
-      default: e1 = OK; break;
+      default: *error = OK; break;
       }
     }
 
@@ -1533,25 +1539,23 @@ ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
 					   MarshalerBuffer *bs, CodeArea *code, 
 					   int *error)
 {
-  int e1,e2;
   AbstractionEntry *entry = 0;
-  Bool copyable = unmarshalNumberRobust(bs, &e1);
+  Bool copyable = unmarshalNumberRobust(bs, error);
+  if(*error) return ((ProgramCounter) 0);
   if (copyable) {
     MarshalTag tag = (MarshalTag) bs->get();
     if (tag == DIF_REF) {
-      int i = unmarshalNumberRobust(bs, &e2);
+      int i = unmarshalNumberRobust(bs, error);
+      if(*error) return ((ProgramCounter) 0);
       entry = (AbstractionEntry*) ToPointer(b->get(i));
     } else {
       Assert(tag == DIF_ABSTRENTRY);
-      int e;
-      int refTag = unmarshalRefTagRobust(bs, b, &e);
-      e2 = e || (tag != DIF_ABSTRENTRY);
+      int refTag = unmarshalRefTagRobust(bs, b, error);
+      if(*error || (tag != DIF_ABSTRENTRY)) return ((ProgramCounter) 0);
       entry = new AbstractionEntry(OK);
       b->set(ToInt32(entry),refTag);
     }
   }
-  else e2 = NO;
-  *error = e1 || e2;
   return ((pc && !(*error)) ? code->writeAbstractionEntry(entry,pc)
 	  : (ProgramCounter) pc);
 }
