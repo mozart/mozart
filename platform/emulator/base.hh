@@ -368,8 +368,6 @@ OZ_Term oz_thread(Thread *tt);
 
 // see am.cc
 void handlerUSR1(int);
-void handlerINT(int);
-void handlerTERM(int);
 void handlerSEGV(int);
 void handlerBUS(int);
 void handlerPIPE(int);
