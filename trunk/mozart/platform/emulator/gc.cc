@@ -720,7 +720,7 @@ inline Bool refsArrayIsMarked(RefsArray r)
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  storeForward(&r[-1],ptr);
+  storeForward((int32*)&r[-1],ptr);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
@@ -907,7 +907,7 @@ SRecord *SRecord::gcSRecord()
   SRecord *ret = (SRecord*) gcRealloc(this,len);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
-  storeForward(&label, ret);
+  storeForward((int32*)&label, ret);
   gcTaggedBlock(getRef(),ret->getRef(),getWidth());
 
   PROFILE_CODE1(if (opMode == IN_TC) {
