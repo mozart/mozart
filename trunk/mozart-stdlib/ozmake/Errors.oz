@@ -530,6 +530,22 @@ prepare
 	       msg  : 'only bin and lib targets allowed on feature \`provides\''
 	       items: [hint(l:'Target' m:A)
 		       hint(l:'Section' m:S)])
+      [] ozmake(makefile:authornotok(S)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'author should be either a mogul id or a person\'s full name'
+	       items: [hint(l:'Author' m:S)
+		       line('this is a non mogul id containing either `:\' or `/\'')])
+      [] ozmake(mogul:secclash(Pkg Sec)) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'mogul ID1 denotes a package but is used as section by package ID2'
+	       items: [hint(l:'ID1' m:Sec)
+		       hint(l:'ID2' m:Pkg)])
+      [] ozmake(create:packageorguess) then
+	 error(kind : TITLE_CREATE
+	       msg  : 'I do not know in what file to create the package'
+	       items: [line('either provide an explicit --package=FILE argument')
+		       line('or the makefile should contain a MOGUL id from which')
+		       line('I can automatically derive a plausible package filename')])
       end
    end
 define

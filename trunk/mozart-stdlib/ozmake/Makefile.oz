@@ -129,13 +129,23 @@ define
 
 	 %% process author feature
 
-	 if {HasFeature R author} then
-	    if {IsVirtualString R.author} then
-	       {self set_author([{MakeByteString R.author}])}
-	    elseif {Not {IsList R.author}} orelse {Not {All R.author IsVirtualString}} then
-	       raise ozmake(makefile:badauthor(R.author)) end
+	 local S={CondSelect R author nil} in
+	    if S==nil then skip
+	    elseif {IsVirtualString S} then
+	       if {Utils.authorOK S} then
+		  {self set_author([{MakeByteString S}])}
+	       else
+		  raise ozmake(makefile:authornotok(S)) end
+	       end
+	    elseif {Not {IsList S}} orelse {Not {All S IsVirtualString}} then
+	       raise ozmake(makefile:badauthor(S)) end
 	    else
-	       {self set_author({Map R.author MakeByteString})}
+	       for X in S do
+		  if {Utils.authorOK X} then skip else
+		     raise ozmake(makefile:authornotok(X)) end
+		  end
+	       end
+	       {self set_author({Map S MakeByteString})}
 	    end
 	 end
 

@@ -280,6 +280,21 @@ define
 	 @ExtractDir
       end
 
+      meth get_package_or_guess($)
+	 if {self get_package_given($)} then
+	    {self get_package($)}
+	 else
+	    MOG = {self get_mogul($)}
+	    VER = {self get_version($)}
+	    PKG = {Path.resolveAtom
+		   {self get_builddir($)}
+		   {Utils.mogulToFilename MOG}#if VER==unit then nil else '-'#VER end#'.pkg'}
+	 in
+	    {self trace('package argument not given, using: '#PKG)}
+	    PKG
+	 end
+      end
+
       meth set_default_use_makepkg(B)
 	 if @UseMakePkg==unit then
 	    UseMakePkg<-(B==true)
