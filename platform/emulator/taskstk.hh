@@ -172,8 +172,8 @@ public:
   void pushDebug(OzDebug *deb)   { pushFrame(C_DEBUG_CONT_Ptr,deb,0); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
   void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
-  void pushActor(Actor *ac)       { pushFrame(C_ACTOR_Ptr,ac,NULL); }
-  void discardActor()             { discardFrame(C_ACTOR_Ptr); }
+  void pushActor(Actor *ac)      { pushFrame(C_ACTOR_Ptr,ac,NULL); }
+  void discardActor()            { discardFrame(C_ACTOR_Ptr); }
 
   int tasks();
 };
