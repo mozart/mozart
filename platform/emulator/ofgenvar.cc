@@ -1,3 +1,4 @@
+
 /*
  *  Authors:
  *    Peter van Roy (pvr@info.ucl.ac.be)
@@ -40,35 +41,37 @@
 
 
 // (Arguments are dereferenced)
-Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
-			      TaggedRef *tPtr, TaggedRef term,
-			      ByteCode *scp)
+OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
+				 ByteCode *scp)
 {
+  TaggedRef bindInRecordCaseHack = term;
+
+  if (!oz_isRef(term)) {
+    TaggedRef var = *vPtr;
     TypeOfTerm tTag = tagTypeOf(term);
-    TaggedRef bindInRecordCaseHack = term;
-      
     switch (tTag) {
     case LITERAL:
       {
-        // Literals have no features:
-        if (getWidth()>0) return FALSE;
+	// Literals have no features:
+	if (getWidth()>0) return FALSE;
 
-        // Get local/global flag:
-        Bool vLoc=am.isLocalSVar(this);
+	// Get local/global flag:
+	Bool vLoc=am.isLocalSVar(this);
 
-        // Bind OFSVar to the Literal:
-        if (vLoc) doBind(vPtr, term);
-        else am.doBindAndTrail(var, vPtr, term);
+	// Bind OFSVar to the Literal:
+	if (vLoc) doBind(vPtr, term);
+	else am.doBindAndTrail(vPtr, term);
 
         // Unify the labels:
         if (!oz_unify(term,label,scp)) return FALSE; // mm_u
 
         // Update the OFS suspensions:
-        if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
+        if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),
+					      TRUE);
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (scp==0) propagate(var, suspList, pc_cv_unif);
+        if (scp==0) propagate(suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -105,13 +108,14 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
                 // Add the extra features to S_ofs suspensions:
                 am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
 	    } else {
-                am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
+                am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),
+					    TRUE);
 	    }
         }
 
         // Bind OFSVar to the LTuple:
         if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-        else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
+        else am.doBindAndTrail(vPtr, bindInRecordCaseHack);
 
         // Unify the labels:
         if (!oz_unify(AtomCons,label,scp)) return FALSE; // mm_u
@@ -122,7 +126,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (scp==0) propagate(var, suspList, pc_cv_unif);
+        if (scp==0) propagate(suspList, pc_cv_unif);
         return TRUE;
       }
 
@@ -161,7 +165,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Bind OFSVar to the SRecord:
         if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-        else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
+        else am.doBindAndTrail(vPtr, bindInRecordCaseHack);
   
         // Unify the labels:
         if (!oz_unify(termSRec->getLabel(),label,scp))  // mm_u
@@ -188,7 +192,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Propagate changes to the suspensions:
         // (this routine is actually GenCVariable::propagate)
-        if (scp==0) propagate(var, suspList, pc_cv_unif);
+        if (scp==0) propagate(suspList, pc_cv_unif);
 
         // Take care of linking suspensions
         if (!vLoc) {
@@ -199,205 +203,208 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         }
         return TRUE;
       }
-  
-    case CVAR:
-      {
-	if (tagged2CVar(term)->getType()!=OFSVariable) {
-	  return FALSE;
-	}
-	Assert(term!=var);
-
-        // Get the GenOFSVariable corresponding to term:
-        GenOFSVariable* termVar=tagged2GenOFSVar(term);
-        Assert(termVar!=NULL);
-
-        // Get local/global flags:
-        Bool vLoc=am.isLocalSVar(this);
-        Bool tLoc=am.isLocalSVar(termVar);
-  
-        GenOFSVariable* newVar=NULL;
-        GenOFSVariable* otherVar=NULL;
-        TaggedRef* nvRefPtr=NULL;
-        TaggedRef* otherPtr=NULL;
-        long varWidth=getWidth();
-        long termWidth=termVar->getWidth();
-        if (vLoc && tLoc) {
-            // Reuse the largest table (optimization to improve unification speed):
-            if (varWidth>termWidth) {
-                newVar=this;
-                nvRefPtr=vPtr;
-                otherVar=termVar; // otherVar must be smallest
-		otherPtr=tPtr;
-            } else {
-		newVar=termVar;
-		nvRefPtr=tPtr;
-		otherVar=this; // otherVar must be smallest
-		otherPtr=vPtr;
-	    }
-        } else if (vLoc && !tLoc) {
-            // Reuse the var:
-            newVar=this;
-            nvRefPtr=vPtr;
-            otherVar=termVar;
-        } else if (!vLoc && tLoc) {
-            // Reuse the term:
-            newVar=termVar;
-            nvRefPtr=tPtr;
-            otherVar=this;
-        } else if (!vLoc && !tLoc) {
-            // Reuse the largest table (this improves unification speed):
-            if (varWidth>termWidth) {
-                // Make a local copy of the var's DynamicTable:
-                DynamicTable* dt=dynamictable->copyDynamicTable();
-                // Make a new GenOFSVariable with the new DynamicTable:
-                newVar=new GenOFSVariable(*dt);
-                nvRefPtr=newTaggedCVar(newVar);
-                otherVar=termVar; // otherVar must be smallest
-	    } else {
-		// Same as above, but in opposite order:
-		DynamicTable* dt=termVar->getTable()->copyDynamicTable();
-                newVar=new GenOFSVariable(*dt);
-                nvRefPtr=newTaggedCVar(newVar);
-                otherVar=this; // otherVar must be smallest
-	    }
-        } else Assert(FALSE);
-        Assert(nvRefPtr!=NULL);
-        Assert(newVar!=NULL);
-        Assert(otherVar!=NULL);
-
-        // Take care of OFS suspensions, part 1/2 (before merging tables):
-        Bool vOk=vLoc && am.hasOFSSuspension(suspList);
-        TaggedRef vList = 0;
-        if (vOk) {
-            // Calculate the extra features in var:
-            vList=termVar->dynamictable->extraFeatures(dynamictable);
-        }
-        Bool tOk=tLoc && am.hasOFSSuspension(termVar->suspList);
-        TaggedRef tList = 0;
-        if (tOk) {
-            // Calculate the extra features in term:
-            tList=dynamictable->extraFeatures(termVar->dynamictable);
-        }
-
-        // Merge otherVar's DynamicTable into newVar's DynamicTable.
-        // (During the merge, calculate the list of feature pairs that correspond.)
-        PairList* pairs;
-        otherVar->dynamictable->merge(newVar->dynamictable, pairs);
-        long mergeWidth=newVar->getWidth();
-
-        // Take care of OFS suspensions, part 2/2 (after merging tables):
-        if (vOk && (vList!=AtomNil /*mergeWidth>termWidth*/)) {
-            // Add the extra features to S_ofs suspensions:
-            am.addFeatOFSSuspensionList(var,suspList,vList,FALSE);
-        }
-        if (tOk && (tList!=AtomNil /*mergeWidth>varWidth*/)) {
-            // Add the extra features to S_ofs suspensions:
-            am.addFeatOFSSuspensionList(term,termVar->suspList,tList,FALSE);
-        }
-        
-        // Bind both var and term to the (possibly reused) newVar:
-        // Because of cycles, these bindings must be done _before_ the unification
-	// If in glob/loc unification, the global is not constrained, then bind
-	// the local to the global and relink the local's suspension list
-        if (vLoc && tLoc) {
-            // bind to var without trailing:
-            doBind(otherPtr, makeTaggedRef(nvRefPtr));
-        } else if (vLoc && !tLoc) {
-            // Global term is constrained if result has more features than term:
-            if (mergeWidth>termWidth)
-                am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-				    newVar, otherVar);
-            else
-                doBind(vPtr, makeTaggedRef(tPtr));
-        } else if (!vLoc && tLoc) {
-            // Global var is constrained if result has more features than var:
-	    if (mergeWidth>varWidth)
-                am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-				    newVar, otherVar);
-	    else
-		doBind(tPtr, makeTaggedRef(vPtr));
-        } else if (!vLoc && !tLoc) {
-            // bind to new term with trailing:
-            am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(nvRefPtr),
-				newVar, this);
-            am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(nvRefPtr),
-				newVar, termVar);
-        } else Assert(FALSE);
-
-        // Unify the labels:
-        if (!oz_unify(termVar->label,label,scp))  // mm_u
-            { pairs->free(); return FALSE; }
-        // Must be literal or variable:
-        TaggedRef tmp=label;
-        DEREF(tmp,_1,_2);
-	if (!oz_isLiteral(tmp) && !oz_isVariable(tmp))
-            { pairs->free(); return FALSE; }
-  
-        // Unify the corresponding feature values in the two variables:
-        // Return FALSE upon encountering the first failing unification
-        // Return TRUE if all unifications succeed
-        PairList* p=pairs;
-        Bool success=TRUE;
-        TaggedRef t1, t2;
-        while (p->getpair(t1, t2)) {
-            Assert(!p->isempty());
-            if (oz_unify(t1, t2, scp)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?  // mm_u
-                // Unification successful
-            } else {
-                // Unification failed
-                success=FALSE;
-                break;
-            }
-            p->nextpair();
-        }
-        Assert(!success || p->isempty());
-        pairs->free();
-        if (!success) return FALSE;
-        // At this point, unification is successful
-  
-        // Propagate changes to the suspensions:
-        // (this routine is actually GenCVariable::propagate)
-	if (scp==0) {
-	  propagate(var, suspList, pc_cv_unif);
-	  termVar->propagate(term, termVar->suspList, pc_cv_unif);
-	}
-
-        // Take care of linking suspensions
-        if (vLoc && tLoc) {
-            otherVar->relinkSuspListTo(newVar);
-        } else if (vLoc && !tLoc) {
-	    if (mergeWidth>termWidth) {
-                // Suspension* susp=new Suspension(am.currentBoard);
-                // Assert(susp!=NULL);
-                // termVar->addSuspension(susp);
-	    } else {
-		relinkSuspListTo(termVar);
-	    }
-        } else if (!vLoc && tLoc) {
-	    if (mergeWidth>varWidth) {
-                // Suspension* susp=new Suspension(am.currentBoard);
-                // Assert(susp!=NULL);
-                // addSuspension(susp);
-	    } else {
-		termVar->relinkSuspListTo(this);
-	    }
-        } else if (!vLoc && !tLoc) {
-  	    if (scp==0) {
-	      // Suspension* susp=new Suspension(am.currentBoard);
-	      // Assert(susp!=NULL);
-	      // termVar->addSuspension(susp);
-	      // addSuspension(susp);
-	    }
-        } else Assert(FALSE);
-
-        return TRUE;
-      }
-  
     default:
-        // All other types fail when unified with an open feature structure
-        // error("unexpected case in unifyOFS");
-        return FALSE;
+      return FALSE;
     }
+  } else {
+    // var - var unification
+    TaggedRef var = *vPtr;
+
+    TaggedRef *tPtr = tagged2Ref(term);
+    term = *tPtr;
+    GenCVariable *cv = tagged2CVar(term);
+    if (cv->getType()!=OFSVariable) {
+      return FALSE;
+    }
+    Assert(*tPtr!=*vPtr);
+
+    // Get the GenOFSVariable corresponding to term:
+    GenOFSVariable* termVar=(GenOFSVariable *)cv;
+    Assert(termVar!=NULL);
+
+    // Get local/global flags:
+    Bool vLoc=am.isLocalSVar(this);
+    Bool tLoc=am.isLocalSVar(termVar);
+  
+    GenOFSVariable* newVar=NULL;
+    GenOFSVariable* otherVar=NULL;
+    TaggedRef* nvRefPtr=NULL;
+    TaggedRef* otherPtr=NULL;
+    long varWidth=getWidth();
+    long termWidth=termVar->getWidth();
+    if (vLoc && tLoc) {
+      // Reuse the largest table (optimization to improve unification speed):
+      if (varWidth>termWidth) {
+	newVar=this;
+	nvRefPtr=vPtr;
+	otherVar=termVar; // otherVar must be smallest
+	otherPtr=tPtr;
+      } else {
+	newVar=termVar;
+	nvRefPtr=tPtr;
+	otherVar=this; // otherVar must be smallest
+	otherPtr=vPtr;
+      }
+    } else if (vLoc && !tLoc) {
+      // Reuse the var:
+      newVar=this;
+      nvRefPtr=vPtr;
+      otherVar=termVar;
+    } else if (!vLoc && tLoc) {
+      // Reuse the term:
+      newVar=termVar;
+      nvRefPtr=tPtr;
+      otherVar=this;
+    } else if (!vLoc && !tLoc) {
+      // Reuse the largest table (this improves unification speed):
+      if (varWidth>termWidth) {
+	// Make a local copy of the var's DynamicTable:
+	DynamicTable* dt=dynamictable->copyDynamicTable();
+	// Make a new GenOFSVariable with the new DynamicTable:
+	newVar=new GenOFSVariable(*dt);
+	nvRefPtr=newTaggedCVar(newVar);
+	otherVar=termVar; // otherVar must be smallest
+      } else {
+	// Same as above, but in opposite order:
+	DynamicTable* dt=termVar->getTable()->copyDynamicTable();
+	newVar=new GenOFSVariable(*dt);
+	nvRefPtr=newTaggedCVar(newVar);
+	otherVar=this; // otherVar must be smallest
+      }
+    } else Assert(FALSE);
+    Assert(nvRefPtr!=NULL);
+    Assert(newVar!=NULL);
+    Assert(otherVar!=NULL);
+    
+    // Take care of OFS suspensions, part 1/2 (before merging tables):
+    Bool vOk=vLoc && am.hasOFSSuspension(suspList);
+    TaggedRef vList = 0;
+    if (vOk) {
+      // Calculate the extra features in var:
+      vList=termVar->dynamictable->extraFeatures(dynamictable);
+    }
+    Bool tOk=tLoc && am.hasOFSSuspension(termVar->suspList);
+    TaggedRef tList = 0;
+    if (tOk) {
+      // Calculate the extra features in term:
+      tList=dynamictable->extraFeatures(termVar->dynamictable);
+    }
+
+    // Merge otherVar's DynamicTable into newVar's DynamicTable.
+    // (During the merge, calculate the list of feature pairs that correspond.)
+    PairList* pairs;
+    otherVar->dynamictable->merge(newVar->dynamictable, pairs);
+    long mergeWidth=newVar->getWidth();
+
+    // Take care of OFS suspensions, part 2/2 (after merging tables):
+    if (vOk && (vList!=AtomNil /*mergeWidth>termWidth*/)) {
+      // Add the extra features to S_ofs suspensions:
+      am.addFeatOFSSuspensionList(var,suspList,vList,FALSE);
+    }
+    if (tOk && (tList!=AtomNil /*mergeWidth>varWidth*/)) {
+      // Add the extra features to S_ofs suspensions:
+      am.addFeatOFSSuspensionList(term,termVar->suspList,tList,FALSE);
+    }
+
+    // Bind both var and term to the (possibly reused) newVar:
+    // Because of cycles, these bindings must be done _before_ the unification
+    // If in glob/loc unification, the global is not constrained, then bind
+    // the local to the global and relink the local's suspension list
+    if (vLoc && tLoc) {
+      // bind to var without trailing:
+      doBind(otherPtr, makeTaggedRef(nvRefPtr));
+    } else if (vLoc && !tLoc) {
+      // Global term is constrained if result has more features than term:
+      if (mergeWidth>termWidth) {
+	DoBindAndTrailAndIP(tPtr, makeTaggedRef(vPtr),
+			    newVar, otherVar);
+      } else {
+	doBind(vPtr, makeTaggedRef(tPtr));
+      }
+    } else if (!vLoc && tLoc) {
+      // Global var is constrained if result has more features than var:
+      if (mergeWidth>varWidth) {
+	DoBindAndTrailAndIP(vPtr, makeTaggedRef(tPtr),
+			    newVar, otherVar);
+      } else {
+	doBind(tPtr, makeTaggedRef(vPtr));
+      }
+    } else if (!vLoc && !tLoc) {
+      // bind to new term with trailing:
+      DoBindAndTrailAndIP(vPtr, makeTaggedRef(nvRefPtr),
+			  newVar, this);
+      DoBindAndTrailAndIP(tPtr, makeTaggedRef(nvRefPtr),
+			  newVar, termVar);
+    } else Assert(FALSE);
+
+    // Unify the labels:
+    if (!oz_unify(termVar->label,label,scp))  // mm_u
+      { pairs->free(); return FALSE; }
+    // Must be literal or variable:
+    TaggedRef tmp=label;
+    DEREF(tmp,_1,_2);
+    if (!oz_isLiteral(tmp) && !oz_isVariable(tmp))
+      { pairs->free(); return FALSE; }
+  
+    // Unify the corresponding feature values in the two variables:
+    // Return FALSE upon encountering the first failing unification
+    // Return TRUE if all unifications succeed
+    PairList* p=pairs;
+    Bool success=TRUE;
+    TaggedRef t1, t2;
+    while (p->getpair(t1, t2)) {
+      Assert(!p->isempty());
+      if (oz_unify(t1, t2, scp)) { // CAN ARGS BE _ANY_ TAGGEDREF* ?  // mm_u
+	// Unification successful
+      } else {
+	// Unification failed
+	success=FALSE;
+	break;
+      }
+      p->nextpair();
+    }
+    Assert(!success || p->isempty());
+    pairs->free();
+    if (!success) return FALSE;
+    // At this point, unification is successful
+
+    // Propagate changes to the suspensions:
+    // (this routine is actually GenCVariable::propagate)
+    if (scp==0) {
+      propagate(suspList, pc_cv_unif);
+      termVar->propagate(termVar->suspList, pc_cv_unif);
+    }
+
+    // Take care of linking suspensions
+    if (vLoc && tLoc) {
+      otherVar->relinkSuspListTo(newVar);
+    } else if (vLoc && !tLoc) {
+      if (mergeWidth>termWidth) {
+	// Suspension* susp=new Suspension(am.currentBoard);
+	// Assert(susp!=NULL);
+	// termVar->addSuspension(susp);
+      } else {
+	relinkSuspListTo(termVar);
+      }
+    } else if (!vLoc && tLoc) {
+      if (mergeWidth>varWidth) {
+	// Suspension* susp=new Suspension(am.currentBoard);
+	// Assert(susp!=NULL);
+	// addSuspension(susp);
+      } else {
+	termVar->relinkSuspListTo(this);
+      }
+    } else if (!vLoc && !tLoc) {
+      if (scp==0) {
+	// Suspension* susp=new Suspension(am.currentBoard);
+	// Assert(susp!=NULL);
+	// termVar->addSuspension(susp);
+	// addSuspension(susp);
+      }
+    } else Assert(FALSE);
+
+    return TRUE;
+  }
 }
 
 

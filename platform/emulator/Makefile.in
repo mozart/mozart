@@ -91,7 +91,8 @@ CXXSRCS= \
 	comm.cc marshaler.cc liveness.cc gc.cc \
 	vprops.cc promise.cc \
         vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
-	ctgenvar.cc
+	ctgenvar.cc \
+	simplevar.cc
 
 FDSRCS=\
 	fdbuilti.cc fdomn.cc fdcore.cc \

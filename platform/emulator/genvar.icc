@@ -33,58 +33,26 @@
 
 
 inline
-OZ_Return GenCVariable::unify(TaggedRef * tptr1,
-			      TaggedRef *tptr2, TaggedRef term2,
+OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef term2, 
 			      ByteCode *scp)
 {
-  TaggedRef term1 = *tptr1;
-
   switch (getType()){
   case FDVariable:
-    {
-      if (! ((GenFDVariable *)this)->unifyFD(tptr1, term1, tptr2, term2, scp))
-	return FAILED;
-    }
-  break;
+    return ((GenFDVariable *)this)->unifyV(tptr1, term2, scp);
   case FSetVariable:
-    {
-      if (! ((GenFSetVariable *)this)
-	  ->unifyFSet(tptr1, term1, tptr2, term2, scp))
-	return FAILED;
-    }
-    break;
+    return ((GenFSetVariable *)this)->unifyV(tptr1, term2, scp);
   case OFSVariable:
-    if (! ((GenOFSVariable *)this)
-	->unifyOFS(tptr1, term1, tptr2, term2, scp)) {
-      return FAILED;
-    }
-    break;
+    return ((GenOFSVariable *)this)->unifyV(tptr1, term2, scp);
   case MetaVariable:
-    {
-      if (! ((GenMetaVariable *)this)
-	  ->unifyMeta(tptr1, term1, tptr2, term2, scp))
-	return FAILED;
-    }
-    break;
+    return ((GenMetaVariable *)this)->unifyV(tptr1, term2, scp);
   case BoolVariable:
-    {
-      if (! ((GenBoolVariable *)this)
-	  ->unifyBool(tptr1, term1, tptr2, term2, scp))
-	return FAILED;
-    }
-    break;
+    return ((GenBoolVariable *)this)->unifyV(tptr1, term2, scp);
   case PerdioVariable:
-    return ((PerdioVar *)this)
-      ->unifyPerdioVar(tptr1, tptr2==0?&term2:tptr2, scp);
-
+    return ((PerdioVar *)this)->unifyV(tptr1, term2, scp);
   case CtVariable:
-    if (! ((GenCtVariable*) this)->unifyCt(tptr1, term1, tptr2, term2, scp))
-      return FAILED;
-    break;
-
+    return ((GenCtVariable*) this)->unifyV(tptr1, term2, scp);
   default:
-    return unifyV(tptr1, term1, tptr2, term2, scp);
-
+    return unifyV(tptr1, term2, scp);
   }
       
   return PROCEED;

@@ -524,7 +524,7 @@ void BIfdBodyManager::processLocalFromTo(int from, int to)
 	  becomesBoolVarAndPropagate(bifdbm_varptr[i]);
 	vars_left = OZ_TRUE;
       } else {
-	tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_prop_bounds);
+	tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_bounds);
 	vars_left = OZ_TRUE;
       }
     }
@@ -600,8 +600,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  tagged2GenFDVar(bifdbm_var[i])->
 	    becomesSmallIntAndPropagate(bifdbm_varptr[i]);
 	} else {
-	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_prop_singl);
-	  am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+	  tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_singl);
+	  am.doBindAndTrail(bifdbm_varptr[i],
 			    OZ_int(bifdbm_dom[i]->getSingleElem()));
 	}
       } else if (*bifdbm_dom[i] == fd_bool) {
@@ -610,23 +610,23 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  tagged2GenFDVar(bifdbm_var[i])->
 	    becomesBoolVarAndPropagate(bifdbm_varptr[i]);
 	} else {
-	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_prop_bounds);
+	  tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_bounds);
 	  GenBoolVariable * newboolvar = new GenBoolVariable();
 	  OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
-	  am.doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
-				 makeTaggedRef(newtaggedboolvar),
-				 newboolvar, tagged2GenBoolVar(bifdbm_var[i]));
+	  DoBindAndTrailAndIP(bifdbm_varptr[i],
+			      makeTaggedRef(newtaggedboolvar),
+			      newboolvar, tagged2GenBoolVar(bifdbm_var[i]));
 	}
 
       } else {
 
-	tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_prop_bounds);
+	tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_bounds);
 	if (bifdbm_var_state[i] == fdbm_global) {
 	  GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	  OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
-	  am.doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
-				 makeTaggedRef(newtaggedfdvar),
-				 newfdvar, tagged2GenFDVar(bifdbm_var[i]));
+	  DoBindAndTrailAndIP(bifdbm_varptr[i],
+			      makeTaggedRef(newtaggedfdvar),
+			      newfdvar, tagged2GenFDVar(bifdbm_var[i]));
 	} 
 	
 	vars_left = OZ_TRUE;
@@ -639,8 +639,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	tagged2GenBoolVar(bifdbm_var[i])->
 	  becomesSmallIntAndPropagate(bifdbm_varptr[i], *bifdbm_dom[i]);
       } else {
-	tagged2GenBoolVar(bifdbm_var[i])->propagate(bifdbm_var[i]);
-	am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+	tagged2GenBoolVar(bifdbm_var[i])->propagate();
+	am.doBindAndTrail(bifdbm_varptr[i],
 			  OZ_int(bifdbm_dom[i]->getSingleElem()));
       }
     } else {
@@ -651,19 +651,19 @@ void BIfdBodyManager::processFromTo(int from, int to)
       if (*bifdbm_dom[i] == fd_singl) {
 	OZ_Term smallInt = OZ_int(bifdbm_dom[i]->getSingleElem());
 	am.checkSuspensionList(bifdbm_var[i]);
-	am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i], smallInt);
+	am.doBindAndTrail(bifdbm_varptr[i], smallInt);
       } else if (*bifdbm_dom[i] == fd_bool) {
 	GenBoolVariable * newboolvar = new GenBoolVariable();
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	am.checkSuspensionList(bifdbm_var[i]);
-	am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+	am.doBindAndTrail(bifdbm_varptr[i],
 			  makeTaggedRef(newtaggedboolvar));
 	vars_left = OZ_TRUE;
       } else {
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
 	am.checkSuspensionList(bifdbm_var[i]);
-	am.doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+	am.doBindAndTrail(bifdbm_varptr[i],
 			  makeTaggedRef(newtaggedfdvar));
 	vars_left = OZ_TRUE;
       }
@@ -696,30 +696,30 @@ void BIfdBodyManager::processNonRes(void)
 	tagged2GenFDVar(bifdbm_var[0])->
 	  becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
-	tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_prop_singl);
-	am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
+	tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_singl);
+	am.doBindAndTrail(bifdbm_varptr[0],
 			  OZ_int(bifdbm_dom[0]->getSingleElem()));
       }
     } else if (*bifdbm_dom[0] == fd_bool) {
-      tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_prop_bounds);
+      tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
 	GenBoolVariable * newboolvar = new GenBoolVariable();
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
-	am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
-			       makeTaggedRef(newtaggedboolvar),
-			       newboolvar, tagged2GenFDVar(bifdbm_var[0]));
+	DoBindAndTrailAndIP(bifdbm_varptr[0],
+			    makeTaggedRef(newtaggedboolvar),
+			    newboolvar, tagged2GenFDVar(bifdbm_var[0]));
       } else {
 	tagged2GenFDVar(bifdbm_var[0])->
 	  becomesBoolVarAndPropagate(bifdbm_varptr[0]);
       }
     } else {
-      tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_prop_bounds);
+      tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_bounds);
       if (bifdbm_var_state[0] == fdbm_global) {
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
 	OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
-	am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
-			       makeTaggedRef(newtaggedfdvar),
-			       newfdvar, tagged2GenFDVar(bifdbm_var[0]));
+	DoBindAndTrailAndIP(bifdbm_varptr[0],
+			    makeTaggedRef(newtaggedfdvar),
+			    newfdvar, tagged2GenFDVar(bifdbm_var[0]));
       } 
     }
 
@@ -730,8 +730,8 @@ void BIfdBodyManager::processNonRes(void)
       tagged2GenBoolVar(bifdbm_var[0])->
 	becomesSmallIntAndPropagate(bifdbm_varptr[0], *bifdbm_dom[0]);
     } else {
-      tagged2GenBoolVar(bifdbm_var[0])->propagate(bifdbm_var[0]);
-      am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
+      tagged2GenBoolVar(bifdbm_var[0])->propagate();
+      am.doBindAndTrail(bifdbm_varptr[0],
 			OZ_int(bifdbm_dom[0]->getSingleElem()));
     }
   } else {
@@ -742,19 +742,19 @@ void BIfdBodyManager::processNonRes(void)
     if (*bifdbm_dom[0] == fd_singl) {
       OZ_Term smallInt = OZ_int(bifdbm_dom[0]->getSingleElem());
       am.checkSuspensionList(bifdbm_var[0]);
-      am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], smallInt);
+      am.doBindAndTrail(bifdbm_varptr[0], smallInt);
     } else if (*bifdbm_dom[0] == fd_bool) {
       GenBoolVariable * newboolvar = new GenBoolVariable();
       OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
       am.checkSuspensionList(bifdbm_var[0]);
-      am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
+      am.doBindAndTrail(bifdbm_varptr[0],
 			makeTaggedRef(newtaggedboolvar));
       vars_left = OZ_TRUE;
     } else {
       GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
       OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0]);
-      am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], 
+      am.doBindAndTrail(bifdbm_varptr[0], 
 			makeTaggedRef(newtaggedfdvar));
       vars_left = OZ_TRUE;
     }
@@ -842,7 +842,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
     } else {
       bifdbm_domain[0].initFull();
       bifdbm_dom[0] = &bifdbm_domain[0];
-      *vptr = bifdbm_var[0] = makeTaggedSVar(new SVariable(tagged2VarHome(v)));
+      *vptr = bifdbm_var[0] = oz_newVar(tagged2VarHome(v));
       bifdbm_varptr[0] = vptr;
       bifdbm_vartag[0] = pm_svar;
     }
