@@ -811,7 +811,7 @@ the GDB commands `cd DIR' and `directory'."
 (if oz-mode-syntax-table
     ()
   (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?_ "_" table)
+    (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\\ "\\" table)
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
