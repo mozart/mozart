@@ -1,6 +1,7 @@
 PLATFORM    = $(shell ozplatform)
 
 M4          = m4
+RM          = rm -f
 
 CXX         = oztool c++
 
@@ -63,8 +64,8 @@ programs: ex_a.cc ex_b.cc ex_c.cc constdata.cc reified_less.cc sync.cc
         $(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 clean:
-        -rm *.o
-        -rm *.so-$(PLATFORM)
-        -rm *.s
-        -rm *~
-        -rm $(EXAMPLESM4:.m4cc=.cc)
+        $(RM) *.o
+        $(RM) *.so-$(PLATFORM)
+        $(RM) *.s
+        $(RM) *~
+        $(RM) $(EXAMPLESM4:.m4cc=.cc)

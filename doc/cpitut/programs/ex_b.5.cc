@@ -1,4 +1,4 @@
-OZ_C_proc_begin(fd_add_nestable, 3)
+OZ_BI_define(fd_add_nestable, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD","OZ_EM_FD","OZ_EM_FD);
 
@@ -10,10 +10,10 @@ OZ_C_proc_begin(fd_add_nestable, 3)
   OZ_EXPECT_SUSPEND(pe,2,expectIntVar,susp_count);
 
   if (susp_count > 1)
-    return pe.suspend(OZ_makeSelfSuspendedThread());
+    return pe.suspend();
 
-  return pe.impose(new AddProp(OZ_args[0],
-                               OZ_args[1],
-                               OZ_args[2]));
+  return pe.impose(new AddProp(OZ_in(0),
+                               OZ_in(1),
+                               OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end

@@ -21,9 +21,14 @@ public:
     return sizeof(PropXY);
   }
 
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_x);
-    OZ_updateHeapTerm(_y);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_x);
+    OZ_gCollectTerm(_y);
+  }
+
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_x);
+    OZ_sCloneTerm(_y);
   }
 
   virtual OZ_Term getParameters() const {
@@ -79,7 +84,7 @@ failure:
   return OZ_FAILED;
 }
 
-OZ_C_proc_begin(fd_lessEq, 2)
+OZ_BI_define(fd_lessEq, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD","OZ_EM_FD);
 
@@ -88,10 +93,10 @@ OZ_C_proc_begin(fd_lessEq, 2)
   OZ_EXPECT(pe, 0, expectIntVar);
   OZ_EXPECT(pe, 1, expectIntVar);
 
-  return pe.impose(new LessEqProp(OZ_args[0],
-                                  OZ_args[1]));
+  return pe.impose(new LessEqProp(OZ_in(0),
+                                  OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 
@@ -143,7 +148,7 @@ failure:
   return OZ_FAILED;
 }
 
-OZ_C_proc_begin(fd_greater, 2)
+OZ_BI_define(fd_greater, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD","OZ_EM_FD);
 
@@ -152,10 +157,10 @@ OZ_C_proc_begin(fd_greater, 2)
   OZ_EXPECT(pe, 0, expectIntVar);
   OZ_EXPECT(pe, 1, expectIntVar);
 
-  return pe.impose(new GreaterProp(OZ_args[0],
-                                   OZ_args[1]));
+  return pe.impose(new GreaterProp(OZ_in(0),
+                                   OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //------------------------
 // class ReifiedLessEqProp
@@ -174,10 +179,16 @@ public:
     return sizeof(ReifiedLessEqProp);
   }
 
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_x);
-    OZ_updateHeapTerm(_y);
-    OZ_updateHeapTerm(_r);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_x);
+    OZ_gCollectTerm(_y);
+    OZ_gCollectTerm(_r);
+  }
+
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_x);
+    OZ_sCloneTerm(_y);
+    OZ_sCloneTerm(_r);
   }
 
   virtual OZ_Term getParameters() const {
@@ -194,7 +205,7 @@ OZ_PropagatorProfile ReifiedLessEqProp::profile;
 
 include(reifiedLess.1.cc)
 
-OZ_C_proc_begin(fd_reifiedLessEq, 3)
+OZ_BI_define(fd_reifiedLessEq, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD","OZ_EM_FD","OZ_EM_FD);
 
@@ -204,17 +215,17 @@ OZ_C_proc_begin(fd_reifiedLessEq, 3)
   OZ_EXPECT(pe, 1, expectIntVar);
   OZ_EXPECT(pe, 2, expectIntVar);
 
-  return pe.impose(new ReifiedLessEqProp(OZ_args[0],
-                                         OZ_args[1],
-                                         OZ_args[2]));
+  return pe.impose(new ReifiedLessEqProp(OZ_in(0),
+                                         OZ_in(1),
+                                         OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //-----------------
 // function fd_init
 
-OZ_C_proc_begin(fd_init, 0)
+OZ_BI_define(fd_init, 0, 0)
 {
 #ifndef NDEBUG
   printf("fd_start=0x%p\n", (void *) fd_start);
@@ -223,7 +234,7 @@ OZ_C_proc_begin(fd_init, 0)
 
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_BI_proto(fd_init);
 OZ_BI_proto(fd_lessEq);

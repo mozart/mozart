@@ -1,4 +1,4 @@
-OZ_C_proc_begin(fd_init, 0)
+OZ_BI_define(fd_init, 0, 0)
 {
 #ifndef NDEBUG
   printf("fd_start=0x%p\n", (void *) fd_start);
@@ -6,4 +6,4 @@ OZ_C_proc_begin(fd_init, 0)
 #endif
   return PROCEED;
 }
-OZ_C_proc_end
+OZ_BI_end

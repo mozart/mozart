@@ -20,7 +20,8 @@ public:
     return &profile;
   }
   virtual OZ_Term getParameters(void) const;
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
 };
 
 OZ_PropagatorProfile ElementProp::profile;

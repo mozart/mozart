@@ -8,9 +8,14 @@ public:
   ConnectProp(OZ_Term fsvar, OZ_Term fdvar)
     : _fs(fsvar), _fd(fdvar)  {}
 
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_fd);
-    OZ_updateHeapTerm(_fs);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_fd);
+    OZ_gCollectTerm(_fs);
+  }
+
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_fd);
+    OZ_sCloneTerm(_fs);
   }
 
   virtual size_t sizeOf(void) {
