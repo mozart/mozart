@@ -44,6 +44,7 @@ prepare
 	 EntityTable      : unit
 	 PreviousFilename : unit
 	 FileOpen         : unit
+	 Coord            : unit
 
       meth initFromString(TXT FNull FOpen)
 	 Buffer      <- TXT
@@ -60,7 +61,13 @@ prepare
       end
 
       meth GetCoord($)
-	 coord(@Filename @Line)
+	 C = @Coord
+      in
+	 if C==unit then
+	    C = coord(@Filename @Line)
+	 in
+	    Coord<-C C
+	 else C end
       end
 
       meth FillBuffer($)
@@ -85,7 +92,7 @@ prepare
 	 case @Buffer
 	 of H|T then
 	    Buffer<-T
-	    if H==&\n then Line<-@Line+1 end
+	    if H==&\n then Line<-@Line+1 Coord<-unit end
 	    H
 	 elseif Tokenizer,FillBuffer($)
 	 then   Tokenizer,GET($)
@@ -95,7 +102,7 @@ prepare
       meth UNGET(C)
 	 if C\=false then
 	    Buffer <- C|@Buffer
-	    if C==&\n then Line<-@Line-1 end
+	    if C==&\n then Line<-@Line-1 Coord<-unit end
 	 end
       end
 
@@ -560,6 +567,13 @@ prepare
 	 Tokenizer,ScanToken($)
       end
    end
+
+   class DevNull
+      meth init skip end
+      meth read(list:L tail:T size:_ len:N)
+	 L=T N=0
+      end
+   end
 import
    Open(file:OpenFileClass)
    Fast at 'FastTokenizer.ozf'
@@ -577,9 +591,7 @@ define
       end
 
       fun {NewFromString TXT}
-	 Null={New OpenFileClass init(name:'/dev/null')}
-	 {Null close}
-	 Tok={New Tokenizer initFromString(TXT Null OpenFile)}
+	 Tok={New Tokenizer initFromString(TXT {New DevNull init} OpenFile)}
 	 fun {Get} {Tok getToken($)} end
       in
 	 tokenizer(get:Get)

@@ -6,6 +6,7 @@ makefile(
 	  'NameSpaces.ozf'
 	  'SAX.ozf'
 	  'NewParser.ozf'
+	  'FastSAX.ozf'
 	 ]
    depends :
       o('ozmakedoc.exe':['Parser.ozf' 'NameSpaces.ozf'])
