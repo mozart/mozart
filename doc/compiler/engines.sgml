@@ -11,13 +11,11 @@
     <Title/Macro Definitions/
     <P>
       The list of macro names currently defined is used by the parser to
-      resolve macro directives such as <<\ifdef>>.  Note that the scope
-      of the <<\define>> and <<\undef>> macro directives is limited to a
-      single compilation and does not update this list.
+      resolve macro directives such as <<\ifdef>>.
     <P>
       Initially, this list only consists of macro names describing the
-      Oz version number, &eg;, when running Oz&nbsp;3.0.9, the list is
-      <<['Oz_3' 'Oz_3_0' 'Oz_3_0_9']>>.
+      Oz version number, &eg;, when running Oz&nbsp;3.0.10, the list is
+      <<['Oz_3' 'Oz_3_0' 'Oz_3_0_10']>>.
   <Section>
     <Title/Compiler Switches/
     <P>
