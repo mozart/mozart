@@ -1,4 +1,4 @@
-;;; -*-emacs-lisp-*-
+;;;
 ;;; Authors:
 ;;;   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 ;;;   Michael Mehl <mehl@ps.uni-sb.de>
@@ -2945,3 +2945,9 @@ When in emulator buffer, visit place indicated in next callstack line."
 (provide 'oz)
 
 ;;}}}
+
+;;; Local Variables: ***
+;;; mode: emacs-lisp ***
+;;; byte-compile-dynamic-docstrings: nil ***
+;;; byte-compile-compatibility: t ***
+;;; End: ***
