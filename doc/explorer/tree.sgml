@@ -84,7 +84,7 @@
           <Td>thin border</Td>
         </Tr>
         <Tr>
-          <Td>blocked</Td><td><p.silent>&nbsp;</td>
+          <Td>suspended</Td><td><p.silent>&nbsp;</td>
           <Td><Picture.Extern id="pic.c-blocked"
                               inline to="pictures/c-blocked.ps.gz" type=ps info="-width 40"></Td>
           <Td>orange</Td>
@@ -118,9 +118,9 @@
     Failed nodes are drawn as rectangular boxes.
   </Para>
 
-  <Para Class=Apropos><Title/Blocked nodes/
-    Blocked nodes are drawn as stars. If the search tree contains a
-    blocked node, it cannot be further explored. If the corresponding
+  <Para Class=Apropos><Title/Suspended nodes/
+    Suspended nodes are drawn as stars. If the search tree contains a
+    suspended node, it cannot be further explored. If the corresponding
     computation space becomes stable, the node will change to a node
     corresponding to the now stable space.
   </Para>

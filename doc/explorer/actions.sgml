@@ -167,7 +167,7 @@
 <<<stat(c: &ellipsis; % number of choice nodes
      s: &ellipsis; % number of solved nodes
      f: &ellipsis; % number of failed nodes
-     b: &ellipsis; % number of blocked nodes
+     b: &ellipsis; % number of suspended nodes
      start: &ellipsis; % depth of current node
      depth: &ellipsis; % depth of current subtree
      shape: &ellipsis; % describes current subtree
