@@ -77,10 +77,10 @@ Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity,
 // *** EXCEPTION stuff
 // -----------------------------------------------------------------------
 
+
 #define RAISE_APPLY(fun,args)                           \
   (void) oz_raise(E_ERROR,E_KERNEL,"apply",2,fun,args); \
   RAISE_THREAD;
-
 
 static
 void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
@@ -3251,13 +3251,14 @@ Case(GETVOID)
 
       if (oz_isAbstraction(pred)) {
         CodeArea *code = CodeArea::findBlock(PC);
-        code->unprotect((TaggedRef*)(PC+1));
+        code->unprotectTagged((TaggedRef*)(PC+1));
         AbstractionEntry *entry = new AbstractionEntry(NO);
         entry->setPred(tagged2Abstraction(pred));
         CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
         code->writeAbstractionEntry(entry, PC+1);
         DISPATCH(0);
       }
+
       if (oz_isBuiltin(pred) || oz_isObject(pred)) {
         isTailCall = tailcallAndArity & 1;
         if (!isTailCall) PC += 3;
