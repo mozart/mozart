@@ -101,6 +101,7 @@ FSValueType            = '<fs val>'
 FSVarType              = '<fs var>'
 FDVarType              = '<fd var>'
 ForeignPointerType     = '<foreign>'
+UnboundType            = '_'
 UnknownType            = '<???>'
 
 

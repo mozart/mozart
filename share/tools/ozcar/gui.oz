@@ -96,7 +96,7 @@ local
 	 elseif {IsRecordC X}          then KindedRecordType
 	 else                                 UnknownType
 	 end
-      else                                    {System.printName X}
+      else                                  UnboundType % {System.printName X}
       end
    end
 
