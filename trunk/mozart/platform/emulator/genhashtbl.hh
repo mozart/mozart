@@ -224,6 +224,18 @@ public:
   Construct_7(){one=two=three=four=five=six=seven=NULL;}
 };
 
+class Construct_6{
+  void* one;
+  void* two;
+  void* three;
+  void* four;
+  void* five;
+  void* six;
+public:
+  Construct_6(){one=NULL;two=NULL;three=NULL;four=NULL;five=NULL;six=NULL;}
+};
+
+
 class Construct_5{
   void* one;
   void* two;
@@ -259,6 +271,7 @@ public:
 };
 
 #define CUTOFF_7  500
+#define CUTOFF_6  500
 #define CUTOFF_5  500
 #define CUTOFF_4  500
 #define CUTOFF_3  500
@@ -266,6 +279,7 @@ public:
 
 class GenFreeListManager{
   FreeListManager* flm_7;
+  FreeListManager* flm_6; // used by defer elements
   FreeListManager* flm_5;
   FreeListManager* flm_4;
   FreeListManager* flm_3; // used for OwnerCreditExtennsion,BorrowCreditExtension, 
@@ -277,6 +291,7 @@ public:
   
   GenFreeListManager(){
     flm_7=new FreeListManager(CUTOFF_7);
+    flm_6=new FreeListManager(CUTOFF_6);
     flm_5=new FreeListManager(CUTOFF_5);
     flm_4=new FreeListManager(CUTOFF_4);
     flm_3=new FreeListManager(CUTOFF_3);
@@ -288,11 +303,18 @@ public:
     delete tmp;
     return;}
 
+  void putOne_6(FreeListEntry *f){
+    if(flm_6->putOne(f)) return;
+    Construct_6 *tmp=(Construct_6*) f;
+    delete tmp;
+    return;}
+
   void putOne_5(FreeListEntry *f){
     if(flm_5->putOne(f)) return;
     Construct_5 *tmp=(Construct_5*) f;
     delete tmp;
     return;}
+
 
   void putOne_4(FreeListEntry *f){
     if(flm_4->putOne(f)) return;
@@ -331,6 +353,11 @@ public:
     FreeListEntry* tmp=flm_5->getOne();
     if(tmp!=NULL) return tmp;
     return (FreeListEntry*) new Construct_5();}
+
+  FreeListEntry *getOne_6(){
+    FreeListEntry* tmp=flm_6->getOne();
+    if(tmp!=NULL) return tmp;
+    return (FreeListEntry*) new Construct_6();}
 
   FreeListEntry *getOne_7(){
     FreeListEntry* tmp=flm_7->getOne();
