@@ -320,7 +320,7 @@ void showCall(DBGPort port, Board *b, SRecord *def, int arity, TaggedRef *args,
       break;
 
     case DBG_STACK:
-      am.currentTaskStack->printDebug(NO,help);
+      am.currentThread->taskStack.printDebug(NO,help);
       break;
 
     case DBG_EMUL:
@@ -516,7 +516,7 @@ Bool trace(char *s,Board *board,Actor *actor,
       mode = OK;
       return OK;
     case 't':
-      am.currentTaskStack->printLong(cout,10,0);
+      am.currentThread->taskStack.printLong(cout,10,0);
       break;
     case 'A':
       am.print();
