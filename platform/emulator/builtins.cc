@@ -2892,14 +2892,25 @@ OZ_BI_define(BIsendPort,2,0)
   return oz_sendPort(prt,val);
 } OZ_BI_end
 
-// this simply gets a new variable in the home space of the port
-OZ_BI_define(BInewServiceVar,1,1)
+OZ_BI_define(BIsendRecvPort,2,1)
 {
   oz_declareNonvarIN(0,prt);
+  oz_declareIN(1,val);
+
   if (!oz_isPort(prt)) {
     oz_typeError(0,"Port");
   }
-  OZ_RETURN(oz_newVar(tagged2Port(prt)->getBoardInternal()->derefBoard()));
+
+  TaggedRef rv = oz_newVar(tagged2Port(prt)->getBoardInternal()->derefBoard());
+
+  TaggedRef ms = oz_pair2(val,rv);
+
+  OZ_Return s = oz_sendPort(prt,ms);
+
+  if (s != PROCEED)
+    return s;
+
+  OZ_RETURN(rv);
 } OZ_BI_end
 
 
