@@ -37,7 +37,7 @@ define
    \gumpscannerprefix 'XSL_Scanner_'
    scanner XSL_Scanner from GS
       meth scanAll($) X Y in
-         GS,getToken(X,Y)
+         GS,getToken(X Y)
          if X=='EOF' then nil
          else X(Y)|XSL_Scanner,scanAll($) end
       end

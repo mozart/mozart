@@ -31,7 +31,7 @@ define
          fun {MORE Node Stack Info Yes No}
             Selected
          in
-            {Exchange Acc Selected Node|Selected}
+            {Exchange Accu Selected Node|Selected}
             {No}
          end
          %%
@@ -68,7 +68,7 @@ define
       elseof element(Type Qual) then {ELEMENT Type Qual}
       elseof root               then SelectRoot
       elseof id(ID)             then {SelectId ID}
-      elseof here(QUAL)         then {WithQualification QUAL}
+      elseof here(QUAL)         then {WITHQUALIFICATION QUAL}
       elseof ancestor(PAT)      then {SelectAncestor PAT}
       elseof attribute(ATTR)    then {SelectAttribute ATTR}
       end
@@ -109,7 +109,7 @@ define
    in {SEQ L} end
    %%
    fun {SelectUpOne Q}
-      P = {WithQualification Q}
+      P = {WITHQUALIFICATION Q}
    in
       fun {$ Node Stack Info Yes No}
          case Stack of nil then {No}
@@ -139,7 +139,7 @@ define
    proc {FindId ID Info Node Stack}
       if {Info.getid Node}==ID then
          raise idFound(Node Stack) end
-      else Stack2 = Node|Stack
+      else Stack2 = Node|Stack in
          {ForAll Node.content
           proc {$ N}
              {FindId ID Info N Stack2}
