@@ -56,8 +56,12 @@ CPPEXTRAFLAGS = $(shell $(GTKCONFIG) --cflags gtk) $(GTKCANVASFLAGS)
 
 ifeq ($(PLATFORM), win32-i486)
 CXXPLAFLAGS = -fnative-struct
+DOC =
+INSTALL_DOC =
 else
 CXXPLAFLAGS =
+DOC = doc
+INSTALL_DOC = $(DOC_DIR) install_doc
 endif
 CXXEXTRAFLAGS = $(CXXPLAFLAGS) $(GTKFLAGS) $(GTKCANVASFLAGS) -I$(SRCDIR) -I.
 
@@ -173,7 +177,7 @@ EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
 # Rules
 #---------------------------------------------------------------------
 
-all: $(TARGETS) binding doc
+all: $(TARGETS) binding $(DOC)
 
 %.o: %.cc
 	OZTOOL_CXX="@CXX@" \
@@ -213,10 +217,11 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 .PHONY: all doc install clean veryclean distclean bootstrap depend
 
 install: $(LIB_DIR) $(LIB_TARGETS) $(EXAMPLES_DIR) $(EXAMPLES_TARGETS) \
-	install_names $(DOC_DIR)
-	for i in doc-install/*; do $(INSTALL_FILE) $$i $(DOC_DIR); done
+	install_names $(INSTALL_DOC)
 install_names:
 	cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
+install_doc:
+	for i in doc-install/*; do $(INSTALL_FILE) $$i $(DOC_DIR); done
 
 #---------------------------------------------------------------------
 # Create Parser Files
