@@ -346,7 +346,7 @@ in
 end
 >>>
 
-<P> This raises a <<server_error> if there is
+<P> This raises a <<server_error>> if there is
 a permanent server failure
 and retries each 100 ms if there is a
 temporary failure.
@@ -357,6 +357,9 @@ that the server has crashed.
 
 <P> To keep the client from blocking 
 indefinitely, it must time out.
+We need a time out since the server
+drops a problematic client like a hot potato.
+The time out is an argument to <<SafeWait>>.
 
 </CHAPTER>
 
