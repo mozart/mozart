@@ -37,6 +37,7 @@
 #include "dpInterface.hh"
 
 #define MSGFLAG_TEXTMODE  0x1
+#define MSGFLAG_ATEND     0x2
 
 class MsgBuffer {
 private:
@@ -69,6 +70,9 @@ public:
 
   void setTextmode() { flags |= MSGFLAG_TEXTMODE; }
   Bool textmode()    { return (flags&MSGFLAG_TEXTMODE); }
+
+  void markEnd()  { flags |= MSGFLAG_ATEND; }
+  Bool atEnd()    { return (flags&MSGFLAG_ATEND); }
 
   // NON-virtual!
   BYTE get(){
