@@ -26,7 +26,7 @@ functor
 import
    OS(localTime)
    Open( file: File)
-
+   System(show showInfo)
 export
    log : Log
    
@@ -83,5 +83,3 @@ define
       end
    end
 end
-
-	    
