@@ -486,6 +486,7 @@ struct BIspec {
   int outArity;
   OZ_CFun fun;
   IFOR ifun;
+  Bool native;
 };
 
 
@@ -525,7 +526,7 @@ extern BuiltinTab builtinTab;
 
 // (see builtins.hh)
 Builtin *BIadd(const char *name,int inArity,int outArity, OZ_CFun fun,
-		       IFOR infun=(IFOR) NULL);
+	       Bool native, IFOR infun=(IFOR) NULL);
 void BIaddSpec(BIspec *spec); // add specification to builtin table
 
 

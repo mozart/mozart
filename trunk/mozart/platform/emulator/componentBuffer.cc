@@ -29,16 +29,6 @@
 /* HACK ALERT: */
 #define PERDIOMAGICSTART       M_FILE
 
-class MarshalInfo {
-public:
-  OZ_Term resources,names;
-  MarshalInfo() { 
-    resources = nil(); 
-    names     = nil(); 
-  }
-  void addRes(OZ_Term res) { resources = cons(res,resources); }
-};
-
 
 #define BYTEBUFFER_CUTOFF 100
 #define BYTEBUFFER_SIZE 2048
@@ -87,14 +77,11 @@ class ByteStream: public MsgBuffer {
   BYTE *endpos; 
   int totlen;  /* include header */
   int type;
-  MarshalInfo *info;
 
 public:  
   Site *getSite(){return (Site*) NULL;}
   char *siteStringrep() {return "toFile";}
   Bool skipHeader();
-
-  void setMarshalInfo(MarshalInfo *mi){info=mi;}
 
   int availableSpace(){
     Assert(last!=NULL);
@@ -208,7 +195,7 @@ public:
 
   void init() { 
     MsgBuffer::init(); 
-    type=BS_None;first=NULL;last=NULL;info=NULL;pos=NULL; }
+    type=BS_None;first=NULL;last=NULL;pos=NULL; }
   ByteStream(){ init(); }
 
   /* marshal    beg:first->head()  pos=next free slot OR null */
@@ -284,18 +271,6 @@ public:
     PD((MARSHAL_BE,"unmarshal end"));
     type=BS_None;
     Assert(pos==NULL);}
-
-// new stuff
-
-  void addRes(OZ_Term t){
-    info->addRes(t);}
-
-  void marshaledProcHasNames(TaggedRef t){
-    info->names=t;}
-
-  Bool knownAsNewName(OZ_Term t){
-    return member(t,info->names);
-  }
 };
 
 

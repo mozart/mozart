@@ -27,9 +27,13 @@
 #pragma interface
 #endif
 
-class MsgBuffer{
+class MsgBuffer {
 public: 
   Bool unmarshallingOld;
+
+  OZ_Term resources, nogoods;
+  OZ_Term names; /// goes away soon, when functors work
+
   BYTE* posMB;
   BYTE* endMB;
   virtual void marshalBegin() = 0;	
@@ -39,7 +43,12 @@ public:
   virtual BYTE getNext()=0;
   virtual void putNext(BYTE)=0;
 
-  void init() { unmarshallingOld=NO; }
+  void init() { 
+    resources = nil(); 
+    names     = nil(); 
+    nogoods   = nil();
+    unmarshallingOld=NO; 
+  }
   BYTE get(){
     if(posMB==endMB){
       return getNext();}
@@ -57,13 +66,13 @@ public:
 
   virtual char* siteStringrep()=0;
   virtual Site* getSite()=0;                    // overrided for network/vsite comm
-  virtual void addRes(OZ_Term)                  {} // only for load/save - noop for rest
-  virtual void addURL(OZ_Term)                  {} // only for load/save - noop for rest
-  virtual Bool saveAnyway(OZ_Term)              {return NO;} // only for load/save - returns NO for rest
-  virtual void marshaledProcHasNames(TaggedRef) {} // only for load/save - noop for rest
-  virtual Bool knownAsNewName(OZ_Term)          {return NO;} // only for load/save - returns NO for rest
   virtual void unmarshalReset()                 {} // only for network receovery
 
+  void addRes(OZ_Term t)    { resources = cons(t,resources); }
+  void addNogood(OZ_Term t) { nogoods = cons(t,nogoods); }
+  OZ_Term getNoGoods() { return nogoods; }
+  void marshaledProcHasNames(TaggedRef t){ names=t;}
+  Bool knownAsNewName(OZ_Term t){ return member(t,names); }
 };
 
 MsgBuffer* getComponentMsgBuffer();

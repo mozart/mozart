@@ -53,6 +53,7 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomNew, AtomSend, AtomApply, AtomApplyList,
 
   NameUnit,
+  NameNonExportable,
   AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
   // Atoms for System.get and System.set
   AtomActive, AtomAtoms, AtomBuiltins, AtomCache, AtomCommitted, 
@@ -125,7 +126,8 @@ void initLiterals()
   AtomUnify        = makeTaggedAtom("unify");
   AtomException    = makeTaggedAtom("exception");
 
-  NameUnit         = getUniqueName("unit");
+  NameUnit          = getUniqueName("unit");
+  NameNonExportable = getUniqueName("nonExportable");
 
   NameTrue         = getUniqueName(NAMETRUE);
   NameFalse        = getUniqueName(NAMEFALSE);

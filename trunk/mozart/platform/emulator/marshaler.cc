@@ -491,9 +491,8 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 void marshalDict(OzDictionary *d, MsgBuffer *bs)
 {
   if (!d->isSafeDict()) {
-    warning("Marshaling unsafe dictionary (keys: %s), will expire soon!!\n",
-	    toC(d->keys()));
-    bs->addRes(makeTaggedConst(d));
+    bs->addNogood(makeTaggedConst(d));
+    return;
   }
   int size = d->getSize();
   marshalNumber(size,bs);
@@ -532,21 +531,18 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalDict((OzDictionary *) t,bs);
       return;
     }
-  case Co_Array:
-    {
-      PD((MARSHAL,"array"));
-      marshalDIF(bs,DIF_ARRAY);
-      bs->addRes(makeTaggedConst(t));  
-      // mm2
-      warning("marshal array not impl");
-      return;
-    }
+
   case Co_Builtin:
     {
       PD((MARSHAL,"builtin"));
       marshalDIF(bs,DIF_BUILTIN);
       PD((MARSHAL_CT,"tag DIF_BUILTIN BYTES:1"));
-      marshalString(((Builtin *)t)->getPrintName(),bs);
+      Builtin *bi= (Builtin *)t;
+      if (bi->isNative()) {
+	// warning("marshaling native builtin: %s",bi->getPrintName());
+	// goto bomb;
+      }
+      marshalString(bi->getPrintName(),bs);
       break;
     }
   case Co_Chunk:
@@ -608,16 +604,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_LOCK,bs)) return;
     break;
-  case Co_Thread:
-    PD((MARSHAL,"thread"));
-    bs->addRes(makeTaggedConst(t));
-    if (marshalTertiary((Tertiary *) t,DIF_THREAD,bs)) return;
-    break;
-  case Co_Space:
-    PD((MARSHAL,"space"));
-    bs->addRes(makeTaggedConst(t));
-    if (marshalTertiary((Tertiary *) t,DIF_SPACE,bs)) return;
-    break;
+
   case Co_Cell:
     PD((MARSHAL,"cell"));
     bs->addRes(makeTaggedConst(t));
@@ -628,11 +615,29 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     bs->addRes(makeTaggedConst(t));
     if (marshalTertiary((Tertiary *) t,DIF_PORT,bs)) return;
     break;
+
+    /*
+      case Co_Thread:
+      PD((MARSHAL,"thread"));
+      bs->addRes(makeTaggedConst(t));
+      if (marshalTertiary((Tertiary *) t,DIF_THREAD,bs)) return;
+      break;
+      case Co_Space:
+      PD((MARSHAL,"space"));
+      bs->addRes(makeTaggedConst(t));
+      if (marshalTertiary((Tertiary *) t,DIF_SPACE,bs)) return;
+      break;
+      */
+
   default:
-    error("marshalConst(%d) not impl",t->getType());
+    goto bomb;
   }
 
   trailCycle(t->getRef(),bs,6);
+  return;
+
+bomb:
+  bs->addNogood(makeTaggedConst(t));
 }
 
 void marshalTerm(OZ_Term t, MsgBuffer *bs)
@@ -784,9 +789,8 @@ loop:
 
   default:
   bomb:
-    warning("Cannot marshal %s",toC(t));
-    bs->addRes(t);
-    marshalTerm(nil(),bs);
+    bs->addNogood(t);
+    marshalTerm(NameNonExportable,bs); // to make ByetStream consistent
     break;
   }
 
@@ -1171,6 +1175,10 @@ loop:
 	warning("Builtin '%s' not in table.", name);
 	*ret = nil();
 	return;
+      }
+
+      if (found->isNative()) {
+	//warning("Unmarshalling native builtin: '%s'", name);
       }
 
       *ret = makeTaggedConst(found);
