@@ -15,6 +15,7 @@ SYNOPSIS
         ozmake [--build] FILES...
         ozmake --install FILES...
         ozmake --install --package=PKG
+        ozmake --uninstall [--package=PKG]
         ozmake --clean
         ozmake --veryclean
         ozmake --create --package=FILE
@@ -193,6 +194,16 @@ ozmake --install --package=PKG
         default: false
         whether to remove files left over from a previous installation
         of this package
+
+UNINSTALL
+
+ozmake --uninstall
+        uninstall package described by makefile
+ozmake --uninstall --package=PKG
+        uninstall package named by mogul id PKG
+
+-e, --uninstall
+        uninstall a package
 
 CLEAN
 

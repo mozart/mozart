@@ -32,7 +32,7 @@ prepare
       package( single char:&p type:string)
       database(single         type:string)
 
-      action(single type:atom(build install clean veryclean create publish extract list help) default:build)
+      action(single type:atom(build install clean veryclean create publish extract list help uninstall) default:build)
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
       fullbuild(single type:bool)
@@ -43,6 +43,7 @@ prepare
       extract(  char:&x alias:action#extract)
       list(     char:&l alias:action#list)
       help(     char:&h alias:action#help)
+      uninstall(char:&e alias:action#uninstall)
 
       grade(single type:atom(none up down same any))
       upgrade(  char:&U alias:[action#install grade#up])
@@ -119,6 +120,7 @@ define
       [] extract   then {Man extract}
       [] list      then {Man list}
       [] help      then {Help.help}
+      [] uninstall then {Man uninstall}
       end
       {Application.exit 0}
    catch E then

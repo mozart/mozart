@@ -196,5 +196,9 @@ define
       meth database_get_package(MOG $)
 	 {CondSelect @Mogul2Package MOG unit}
       end
+
+      meth database_remove_package(MOG)
+	 {Dictionary.remove @Mogul2Package MOG}
+      end
    end
 end

@@ -54,6 +54,7 @@ define
 	 PublishDir : unit
 	 Archive    : 'http://www.mozart-oz.org/mogul/pkg'
 	 LineWidth  : 70
+	 NoMakefile : true
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -281,5 +282,8 @@ define
 
       meth set_linewidth(N) LineWidth<-N end
       meth get_linewidth($) @LineWidth end
+
+      meth set_no_makefile(B) NoMakefile<-B end
+      meth get_no_makefile($) @NoMakefile end
    end
 end

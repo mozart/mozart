@@ -362,6 +362,7 @@ define
 	    if {Path.exists F} then
 	       {self trace('reading makefile: '#F)}
 	       Makefile,makefile_from_record({Utils.compileFile F false})
+	       {self set_no_makefile(false)}
 	    elseif {self get_makefile_given($)} then
 	       raise ozmake(makefile:filenotfound(F)) end
 	    else
@@ -432,6 +433,7 @@ define
 	 if Blurb    \=unit then MAK.blurb     := Blurb end
 	 if InfoText \=unit then MAK.info_text := InfoText end
 	 if InfoHtml \=unit then MAK.info_html := InfoHtml end
+	 MAK.released:= {Utils.dateCurrentToAtom}
 	 {Dictionary.toRecord makefile MAK}
       end
 
