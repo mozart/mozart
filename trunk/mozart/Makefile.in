@@ -63,7 +63,7 @@ INSTALL_DIR=	@INSTALL_DIR@
 ######################################################################
 
 OZVERSION=	$(SRCTOP)/OZVERSION
-FILES=		LICENSE LICENSE.html
+FILES=		README LICENSE LICENSE.html
 ALLFILES=	$(FILES:%=$(PREFIX)/%)
 
 # sub directories for recursive makes
