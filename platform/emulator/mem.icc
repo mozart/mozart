@@ -31,22 +31,23 @@
 #pragma interface
 #endif
 
+
 inline
 void * freeListMalloc(size_t size) {
   Assert(((size & 3) == 0) && (size > 0));
 
   if (size < freeListMaxSize) {
     COUNT1(freeListAllocated,size);
-    register void ** fl = &(FreeList[size]);
-    register void * aux = *fl;
+    register FreeListMem ** fl = &(FreeList[size]);
+    register FreeListMem * aux = *fl;
 
     if (aux) {
-      *fl = *((void **) aux);
+      *fl = (FreeListMem*) ToPointer(aux->next);
 #ifdef DEBUG_MEM
       {
         char *s=(char *)aux;
-        s+=sizeof(void*);
-        for (int i=size-sizeof(void*); i--;) {
+        s+=sizeof(FreeListMem);
+        for (int i=size-sizeof(FreeListMem); i--;) {
           Assert(*s++==0x5a)
         }
       }
@@ -72,26 +73,26 @@ void freeListDisposeNoClean(void * addr, size_t size) {
   Assert((size & 3) == 0);
   Assert(size > 0);
 
-  register void ** fl;
+  register FreeListMem** fl;
 
   if (size < freeListMaxSize) {
     COUNT1(freeListDisposed,size);
     fl = &(FreeList[size]);
 #ifdef DEBUG_MEM
     {
-      void * aux = *fl;
+      FreeListMem *aux = *fl;
       while (aux) {
         Assert(aux != addr);
-        aux = * (void **) aux;
+        aux = (FreeListMem*) ToPointer(aux->next);
       }
     }
 #endif
-    *((void **) addr) = *fl;
-    *fl = addr;
+    FreeListMem* aux = (FreeListMem*)addr;
+    aux->next = ToInt32(*fl);
+    *fl = aux;
   } else {
     freeListChop(addr, size);
   }
-
 }
 
 inline
