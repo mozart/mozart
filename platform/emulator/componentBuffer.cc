@@ -214,9 +214,10 @@ public:
 
   /* init */
 
-  void init(){ByteStream();
-    type=BS_None;first=NULL;last=NULL;info=NULL;pos=NULL;}
-  ByteStream(){type=BS_None;first=NULL;last=NULL;info=NULL;pos=NULL;}
+  void init() { 
+    MsgBuffer::init(); 
+    type=BS_None;first=NULL;last=NULL;info=NULL;pos=NULL; }
+  ByteStream(){ init(); }
 
   /* marshal    beg:first->head()  pos=next free slot OR null */
                    /* INTERFACE  pos=first->head()  endpos= first free slot */
