@@ -44,9 +44,9 @@ void fdp_init(void)
   fd_dist_init();
 
 #ifdef OZ_DEBUG
-  oz_fsetdebugprint("*** DEBUG-FDLIB ***");
+  oz_debugprint("*** DEBUG-FDLIB ***");
 #elif OZ_PROFILE
-  oz_fsetdebugprint("*** PROFILE-FDLIB ***");
+  oz_debugprint("*** PROFILE-FDLIB ***");
 #endif
 
   TwicePropagator::profile =             "fdp_twice";

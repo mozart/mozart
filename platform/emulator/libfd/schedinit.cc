@@ -33,9 +33,9 @@
 void sched_init(void)
 {
 #ifdef OZ_DEBUG
-  oz_fsetdebugprint("*** DEBUG-FDLIB ***");
+  oz_debugprint("*** DEBUG-FDLIB ***");
 #elif OZ_PROFILE
-  oz_fsetdebugprint("*** PROFILE-FDLIB ***");
+  oz_debugprint("*** PROFILE-FDLIB ***");
 #endif
 
   SchedCardPropagator::profile =         "sched_disjoint_card";
