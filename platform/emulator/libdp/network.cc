@@ -2644,7 +2644,6 @@ Bool tcpAckReader(ReadConnection *r, int ack){
   BYTE *buf = buffer;
   int fd=r->getFD();
   Assert(fd!=LOST);
-  ipReturn ret;
   PD((TCP,"tcpAckReader r:%x a:%d",r, ack));    
   *buf=(BYTE) TCP_MSG_ACK_FROM_READER;
   uniquefyInt(buf + 1, ack);
@@ -3843,11 +3842,9 @@ int RemoteSite::
 sendTo(NetMsgBuffer *bs, MessageType msg,
        DSite *storeS, int storeInd)
 {
-  int msgNum,ret;
-  Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,
-storeS,msg,storeInd);
+  int msgNum;
+  Message *m=messageManager->allocMessage(bs,NO_MSG_NUM,storeS,msg,storeInd);
   
-
   switch (siteStatus()){
   case SITE_TEMP:{
     queueMessage(m->getMsgBuffer()->getTotLen());  
@@ -4010,7 +4007,12 @@ void initNetwork()
   tcpCache = new TcpCache();
   tcpOpenMsgBuffer= new TcpOpenMsgBuffer();
 
-  ipReturn ret=createTcpPort(OZReadPortNumber,ip,p,tcpFD);
+  /* RS: on Windows there seems to be a bug: reusing a port too
+   * quickly leads to ECONNREFUSED. So we try to use a port number
+   * randomly choosen between 9000 and 1000.
+   */
+  int portno = OZReadPortNumber  + (osgetpid()%1000);
+  ipReturn ret=createTcpPort(portno,ip,p,tcpFD);
   if (ret<0){
     PD((WEIRD,"timer"));
     Assert(ret==IP_TIMER);
