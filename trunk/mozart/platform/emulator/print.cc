@@ -1118,7 +1118,7 @@ PRINTLONG(Thread)
   this->print(stream,depth,offset);
   stream << endl;
   if (hasStack ()) 
-    item.threadBody->taskStack.printTaskStack(NO,depth);
+    item.threadBody->taskStack.printTaskStack(ozconf.errorThreadDepth);
 }
 
 PRINTLONG(Literal)

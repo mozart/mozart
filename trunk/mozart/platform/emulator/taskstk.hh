@@ -110,9 +110,8 @@ public:
   TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
   ~TaskStack() { Assert(0); }
 
-  void printTaskStack(Bool verbose = NO, int depth = 1000);
-  TaggedRef getTaskStack(Thread *tt = NULL,
-			 Bool verbose = NO, int depth = 1000);
+  void printTaskStack(int depth);
+  TaggedRef getTaskStack(Thread *tt, Bool verbose, int depth);
   TaggedRef getFrameVariables(int frameId);
 
   Bool isEmpty() { return ::isEmpty(tos); }
