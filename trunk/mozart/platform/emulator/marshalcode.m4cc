@@ -71,8 +71,7 @@ define(opAction,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Label,marshalLabel(getLabelArg(PC++),bs);,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
-        $1,NLiveRegs,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,         
-        $1,IsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
+        $1,NLiveRegs,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,ArityAndIsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Dummy,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,PredicateRef,marshalPredicateRef((AbstractionEntry*) getAdressArg(PC++),bs);,
@@ -232,7 +231,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     Opcode op = CodeArea::getOpcode(PC++);
 
     if (op==GENFASTCALL) {
-      op = (*(PC+1))==0 ? FASTCALL : FASTTAILCALL;
+      op = (getNumberArg(PC+1) & 1)==0 ? FASTCALL : FASTTAILCALL;
     }
     /* fastcalls need special handling */
     if (op==FASTCALL || op==FASTTAILCALL) {
@@ -344,7 +343,6 @@ define(opAction,
         $1,Label,PC=unmarshalLabel(PC,bs);,
         $1,Count,PC=unmarshalNum(PC,bs);,
         $1,NLiveRegs,PC=unmarshalNum(PC,bs);,
-        $1,IsTail,PC=unmarshalNum(PC,bs);,
         $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
         $1,PredicateRef,PC=unmarshalPredicateRef(PC,bs);,
