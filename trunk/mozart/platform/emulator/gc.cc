@@ -700,11 +700,13 @@ SRecord *SRecord::gcSRecord()
 inline
 Bool isInTree (Board *b)
 {
+  DebugGC((opMode == IN_GC), error ("'isInTree(Board *)' is called in GC"));
+  Board *rb = am.rootBoard;
   while (b != (Board *)NULL) {
-    DebugCheck ((b->isCommitted () == OK),
-		error ("committed board in 'isInTree (Board *)'"));
-    DebugCheck ((b == am.rootBoard),
-		error ("isInTree (Board *): root Board is reached"));
+    DebugCheck((b->isCommitted () == OK),
+	       error ("committed board in 'isInTree (Board *)'"));
+    DebugCheck((b == am.rootBoard),
+	       error ("isInTree (Board *): root Board is reached"));
     if (b == fromCopyBoard)
       return OK;
     b = b->getParentBoard();
@@ -717,6 +719,7 @@ Bool isInTree (Board *b)
 inline
 Bool isInTree (Actor *a)
 {
+  DebugGC((opMode == IN_GC), error ("'isInTree(Actor *)' is called in GC"));
   DebugCheck((a->isCommitted () == OK),
 	     error ("committed actor in isInTree(Actor *)"));
   Board *b = a->getBoard ()->gcGetBoardDeref ();
@@ -1488,7 +1491,7 @@ void Thread::gcRecurse()
   GCREF(prev);
 
   if (resSusp != NULL)
-   resSusp->gcSuspension(OK);
+   resSusp->gcSuspension((opMode == IN_TC) ? OK : NO);
   if (isNormal()) {
     GCREF(u.taskStack);
   } else if (isSuspCont()) {
