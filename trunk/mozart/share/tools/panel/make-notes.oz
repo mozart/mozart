@@ -7,6 +7,7 @@
 
 local
    Border       = 2
+   LargeBorder  = 5
    LabelWidth   = 8
    SquareSize   = 10
    ButtonWidth  = 6
@@ -336,6 +337,7 @@ local
 	 Left   = {New Tk.frame tkInit(parent:            Border.inner
 				       highlightthickness: 0)}
 	 Right  = {New Tk.frame tkInit(parent:            Border.inner
+				       border:            LargeBorder
 				       highlightthickness: 0)}
 	 FR     = {MakeRecord a frame|{Append {Map F.left GetFeature}
 				 {Map F.right GetFeature}}}
