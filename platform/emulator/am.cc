@@ -1282,7 +1282,11 @@ Thread *AM::createThread(int prio)
 #endif
   if (currentSolveBoard != (Board *) NULL) {
     incSolveThreads (currentSolveBoard);
+#ifdef NEWCOUNTER
+    tt->setNotificationBoard (currentBoard);
+#else
     tt->setNotificationBoard (currentSolveBoard);
+#endif
   }
   IncfProfCounter(procCounter,sizeof(Thread));
   scheduleThread(tt);
