@@ -3,6 +3,7 @@ message(M_REMOTE_SEND,Index,String,Term)
 
 message(M_ASK_FOR_CREDIT,Index,Site)
 message(M_OWNER_CREDIT,Index,Credit)
+message(M_OWNER_SEC_CREDIT,Site,Index,Credit)
 message(M_BORROW_CREDIT,Site,Index,Credit)
 
 message(M_REGISTER,Index,Site)
@@ -19,12 +20,9 @@ message(M_CELL_DUMP,Index,Site)
 message(M_CELL_ACK,Index,Site,Index2)
 message(M_CELL_DIDSEND,Index,Site,Index2)
 message(M_CELL_DIDGET,Index,Site,Index2)	
-message(M_CELL_ANS_DIDSEND,Index,Site,Index2,Index2)
-message(M_CELL_ANS_DIDGET,Index,Site,Index2,Index2)
+message(M_CELL_ANS_DIDSEND,Index,Site,Index2,Index3)
+message(M_CELL_ANS_DIDGET,Index,Site,Index2,Index3)
 message(M_CELL_CANTPUT,Index,Site,Index2,Term)
-
-
- 
 
 message(M_LOCK_GET,Index,Site)
 message(M_LOCK_TOKEN,Site,Index)
