@@ -158,7 +158,6 @@ local
 						     ' / Exec Statement')}
 
 	 ExprLabel = {New Tk.label tkInit(parent: Frame.inner
-					  width:  6
 					  anchor: w
 					  text:   'Query:')}
 	 ExprEntry = {New TkExtEntry tkInit(parent:     Frame.inner
@@ -167,7 +166,6 @@ local
 					    background: DefaultBackground
 					    width:      40)}
 	 ResultLabel = {New Tk.label tkInit(parent: Frame.inner
-					    width:  6
 					    anchor: w
 					    text:   'Result:')}
 	 ResultEntry = {New Tk.label tkInit(parent:     Frame.inner
