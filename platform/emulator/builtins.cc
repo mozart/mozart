@@ -42,6 +42,7 @@
 #include "os.hh"
 #include "codearea.hh"
 #include "debug.hh"
+#include "copycode.hh"
 
 #include "wsock.hh"
 
@@ -7741,6 +7742,29 @@ OZ_C_proc_end
 
 #endif
 
+
+/********************************************************************
+ * Copy Code
+ ******************************************************************** */
+
+
+/* only for testing: */
+
+OZ_C_proc_begin(BIcopyCode,2)
+{
+  oz_declareNonvarArg(0,proc);
+  oz_declareNonvarArg(1,dict);
+
+  if (!isAbstraction(proc)) { oz_typeError(0,"Abstraction"); }
+  if (!isDictionary(dict))  { oz_typeError(1,"Dictionary"); }
+
+  (void) copyCode(tagged2Abstraction(proc)->getPC(), tagged2Dictionary(dict),OK);
+  
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 /********************************************************************
  * Table of builtins
  ******************************************************************** */
@@ -8163,9 +8187,11 @@ BIspec allSpec[] = {
   {"RegSet.complementToList",    2, BIregSet_complementToList,    0},
 
   // Oz parser
-  {"ozparser_parseFile",         3, ozparser_parseFile},
-  {"ozparser_parseVirtualString",3, ozparser_parseVirtualString},
-  {"ozparser_fileExists",        2, ozparser_fileExists},
+  {"ozparser_parseFile",         3, ozparser_parseFile,           0},
+  {"ozparser_parseVirtualString",3, ozparser_parseVirtualString,  0},
+  {"ozparser_fileExists",        2, ozparser_fileExists,          0},
+
+  {"copyCode",                   2, BIcopyCode,                   0},
 
 #ifdef FINALIZATION
   // Finalization
