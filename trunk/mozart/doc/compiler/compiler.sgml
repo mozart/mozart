@@ -39,12 +39,11 @@
     <Title/The Mozart Compiler/
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Abstract>
-      <P.silent><!--**-->
-	This document describes how to use the Oz Compiler in the Mozart
-	implementation from within Oz programs.
-      <P class=warning>
-	The material in this document is still incomplete and subject
-	to change.
+      This document describes how to use the Oz Compiler in the Mozart
+      implementation from within Oz programs.
+    <P class=warning>
+      The material in this document is still incomplete and subject
+      to change.
     </Abstract>
   <Body>
     <Chapter id="chapter.intro">

@@ -58,30 +58,27 @@
       <List>
 	<Entry>The <Q/Quiet/ Interface
 	<Item>
-	  <P.silent><!--**-->
-	    See <Ptr to="program.quietInterface">.
+	  See <Ptr to="program.quietInterface">.
 	<Entry>The Emacs Interface
 	<Item>
-	  <P.silent><!--**-->
-	    See <Ptr to="program.emacsInterface">.
+	  See <Ptr to="program.emacsInterface">.
 	<Entry>The Compiler Panel
 	<Item>
-	  <P.silent><!--**-->
-	    See <Ptr to="program.compilerPanel">.
+	  See <Ptr to="program.compilerPanel">.
       </List>
       <Figure float id="program.quietInterface" class=program>
 	<Caption>The <Q/Quiet/ Interface.</Caption>
-	<P><!--**-->
+	<P>
 	  <Code.Extern display to="QuietInterface.oz">
       </Figure>
       <Figure float id="program.emacsInterface" class=program>
 	<Caption>The Emacs Interface.</Caption>
-	<P><!--**-->
+	<P>
 	  <Code.Extern display to="EmacsInterface.oz">
       </Figure>
       <Figure float id="program.compilerPanel" class=program>
 	<Caption>The Compiler Panel.</Caption>
-	<P><!--**-->
+	<P>
 	  <Code.Extern display to="CompilerPanel.oz">
       </Figure>
 </Chapter>
