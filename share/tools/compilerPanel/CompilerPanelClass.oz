@@ -1362,13 +1362,13 @@ in
       meth DequeueQuery()
 	 case {self.QueryList tkReturnListInt(curselection $)}
 	 of [N] then
-	    {Compiler.genericInterface, getCompiler($)
+	    {Compiler.genericInterface, getNarrator($)
 	     dequeue({Nth @QueryIdsHd N + 1})}
 	 else skip
 	 end
       end
       meth Interrupt()
-	 {Compiler.genericInterface, getCompiler($) interrupt()}
+	 {Compiler.genericInterface, getNarrator($) interrupt()}
       end
       meth Reset()
 	 CompilerPanel, ClearTaskQueue()
@@ -1377,7 +1377,7 @@ in
 	 %--** {self.Compiler init()}
       end
       meth ClearTaskQueue()
-	 {Compiler.genericInterface, getCompiler($) clearQueue()}
+	 {Compiler.genericInterface, getNarrator($) clearQueue()}
       end
       meth AboutDialog()
 	 Dialog = {New TkTools.dialog tkInit(master: self.TopLevel
