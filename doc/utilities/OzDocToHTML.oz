@@ -279,7 +279,7 @@ define
          TOC: unit TOCMode: unit WholeTOC: unit
          Part: unit Chapter: unit Section: unit SubSection: unit
          Appendix: unit
-         Labels: unit ToGenerate: unit
+         DefaultNodes: unit Labels: unit ToGenerate: unit
          % for Math and Math.Choice:
          MathDisplay: unit
          MyLaTeXToGIF: unit
@@ -354,6 +354,7 @@ define
                SomeSplit <- false
                Threading <- [nav(N)]
                ProgLang <- Fontifier.noProgLang
+               DefaultNodes <- {NewDictionary}
                Labels <- {NewDictionary}
                ToGenerate <- nil
                AutoIndex <- Args.'autoindex'
@@ -366,10 +367,12 @@ define
                {DoThreading {Reverse @Threading} unit nil}
                {@Reporter startSubPhase('generating cross-reference labels')}
                OzDocToHTML, GenerateLabels()
-               {ForAll {Dictionary.items @Labels}
-                proc {$ N#T}
+               {ForAll {Dictionary.entries @Labels}
+                proc {$ L#(N#T)}
                    if {IsFree N} then
-                      N#T = 'file:///dev/null'#PCDATA('???')
+                      N = {Dictionary.condGet @DefaultNodes L
+                           'file:///dev/null'}#"#"#L
+                      T = PCDATA('*')
                    end
                 end}
                {@Reporter startSubPhase('writing output files')}
@@ -473,7 +476,7 @@ define
       in
          case {CondSelect M id unit} of unit then skip
          elseof I then
-            OzDocToHTML, EnterID(I @CurrentNode PCDATA('*'))
+            {Dictionary.put @DefaultNodes I @CurrentNode}
          end
          OzDocToHTML, PushCommon(M ?OldCommon)
          %--------------------------------------------------------------
@@ -737,7 +740,7 @@ define
                {@MyBibliographyDB get(M.to M.key ?BibKey)}
                case {CondSelect M id unit} of unit then skip
                elseof L then
-                  OzDocToHTML, EnterID(L @BibNode VERBATIM(BibKey))
+                  OzDocToHTML, ID(L @BibNode VERBATIM(BibKey))
                end
                EMPTY
             %-----------------------------------------------------------
@@ -1529,10 +1532,9 @@ define
             end
             NodeTitle = Title
             if {HasFeature M id} then
-               OzDocToHTML, EnterID(M.id @CurrentNode
-                                    SEQ([VERBATIM(PtrText)
-                                         PCDATA('``') NodeTitle
-                                         PCDATA('\'\'')]))
+               OzDocToHTML, ID(M.id @CurrentNode
+                               SEQ([VERBATIM(PtrText)
+                                    PCDATA('``') NodeTitle PCDATA('\'\'')]))
             end
          else NumberVS in
             NumberVS = {FormatNumber}
@@ -1541,32 +1543,16 @@ define
                         end
             if {HasFeature M id} then
                case {Label M} of subsubsection then
-                  OzDocToHTML, EnterID(M.id @CurrentNode
-                                       SEQ([VERBATIM(PtrText)
-                                            PCDATA('``') NodeTitle
-                                            PCDATA('\'\'')]))
+                  OzDocToHTML, ID(M.id @CurrentNode
+                                  SEQ([VERBATIM(PtrText)
+                                       PCDATA('``') NodeTitle PCDATA('\'\'')]))
                else
-                  OzDocToHTML, EnterID(M.id @CurrentNode
-                                       VERBATIM(PtrText#NumberVS))
+                  OzDocToHTML, ID(M.id @CurrentNode VERBATIM(PtrText#NumberVS))
                end
             end
          end
          TOC <- {Append @TOC [Level#TheLabel#@CurrentNode#NodeTitle]}
          HTML = SEQ([HTML1 {LayoutTitle Res}])
-      end
-      meth EnterID(L Node HTML)
-         if {Dictionary.member @Labels L} then Node0 HTML0 in
-            Node0#HTML0 = {Dictionary.get @Labels L}
-            if {IsFree HTML0} then
-               Node0 = Node
-               HTML0 = HTML
-            else
-               {Dictionary.put @Labels L Node#HTML}
-            end
-         else
-            {@MyCrossReferencer put(L Node#"#"#L HTML)}
-            {Dictionary.put @Labels L Node#HTML}
-         end
       end
       meth ID(L Node HTML)
          if {Dictionary.member @Labels L} then
@@ -1741,7 +1727,7 @@ define
          HTML = SEQ([hr()
                      case {CondSelect M id unit} of unit then EMPTY
                      elseof L then
-                        OzDocToHTML, EnterID(L @CurrentNode VERBATIM(Number))
+                        OzDocToHTML, ID(L @CurrentNode VERBATIM(Number))
                         p(a(name: L))
                      end
                      case Title of unit then EMPTY
@@ -1845,7 +1831,7 @@ define
                ToGenerate <- L|@ToGenerate
             elseof X then
                L = X
-               OzDocToHTML, EnterID(X @IdxNode SeeHTML)
+               OzDocToHTML, ID(X @IdxNode SeeHTML)
             end
             if IsTails then
                OzDocToHTML, IndexTails(Ands.2 [Ands.1] L SeeHTML)
