@@ -562,8 +562,10 @@ TaggedRef createNamedVariable(int regIndex, TaggedRef name, AM *e)
     e->toplevelVars = resize(e->toplevelVars,newSize);
     // no deletion of old array --> GC does it
   }
-  SVariable *svar = new SVariable(e->currentBoard, name);
-  return makeTaggedRef(newTaggedSVar(svar));
+  SVariable *svar = new SVariable(e->currentBoard);
+  TaggedRef ret = makeTaggedRef(newTaggedSVar(svar));
+  VariableNamer::addName(ret,name);
+  return ret;
 }
 
 static

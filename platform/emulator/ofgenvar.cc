@@ -401,15 +401,13 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
                 // Make a local copy of the var's DynamicTable.
                 DynamicTable* dt=dynamictable->copyDynamicTable();
                 // Make a new GenOFSVariable with the new DynamicTable:
-                TaggedRef pn=tagged2CVar(var)->getName();
-                newVar=new GenOFSVariable(*dt, pn);
+                newVar=new GenOFSVariable(*dt);
                 nvRefPtr=newTaggedCVar(newVar);
                 otherVar=termVar; // otherVar must be smallest
             } else {
                 // Same as above, but in opposite order:
                 DynamicTable* dt=termVar->getTable()->copyDynamicTable();
-                TaggedRef pn=tagged2CVar(term)->getName();
-                newVar=new GenOFSVariable(*dt, pn);
+                newVar=new GenOFSVariable(*dt);
                 nvRefPtr=newTaggedCVar(newVar);
                 otherVar=this; // otherVar must be smallest
             }

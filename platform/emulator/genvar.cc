@@ -10,7 +10,7 @@
 */
 
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(NOPRAGMA)
 #pragma implementation "genvar.hh"
 #endif
 
@@ -18,8 +18,8 @@
 #include "genvar.hh"
 #include "am.hh"
 
-GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn, Board * n) :
-  SVariable(n == NULL ? am.currentBoard : n, pn)
+GenCVariable::GenCVariable(TypeOfGenCVariable t, Board * n) :
+  SVariable(n == NULL ? am.currentBoard : n)
 {
   setType(t);
 }

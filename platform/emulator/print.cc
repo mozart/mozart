@@ -82,6 +82,7 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
     return;
   }
 
+  TaggedRef origRef = ref;
   DEREF(ref,refPtr,tag)
   switch(tag) {
   case UVAR:
@@ -89,10 +90,10 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
            << hex << (int) refPtr << dec;
     break;
   case SVAR:
-    tagged2SVar(ref)->print(stream,depth,offset);
+    tagged2SVar(ref)->print(stream,depth,offset,origRef);
     break;
   case CVAR:
-    tagged2CVar(ref)->print(stream, depth, offset);
+    tagged2CVar(ref)->print(stream, depth, offset,origRef);
     break;
   case STUPLE:
     tagged2STuple(ref)->print(stream,depth,offset);
@@ -131,23 +132,33 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   }
 }
 
+char *getVarName(TaggedRef v)
+{
+  TaggedRef n = VariableNamer::getName(v);
+  DEREF(n,_1,_2);
+  if (!OZ_isAtom(n)) {
+    n = AtomVoid;
+  }
+  return tagged2Literal(n)->getPrintName();
+}
 
-PRINT(SVariable)
+void SVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 {
   stream << "SV:"
-         << getPrintName()
+         << getVarName(v)
          << "@"
          << this
          << (isEffectiveList(suspList) == OK ? "*" : "");
 }
 
-PRINT(GenCVariable){
+void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
+{
   switch(getType()){
   case FDVariable:
     {
       stream << indent(offset)
              << "<CV: "
-             << getPrintName()
+             << getVarName(v)
              << " @"
              << this;
       if (isEffectiveList(suspList) == OK)
@@ -537,10 +548,10 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
     break;
 
   case SVAR:
-    tagged2SVar(ref)->printLong(stream,depth,offset);
+    tagged2SVar(ref)->printLong(stream,depth,offset,AtomVoid);
     break;
   case CVAR:
-    tagged2CVar(ref)->printLong(stream, depth, offset);
+    tagged2CVar(ref)->printLong(stream, depth, offset,AtomVoid);
     break;
   case STUPLE:
     tagged2STuple(ref)->printLong(stream,depth,offset);
@@ -794,11 +805,11 @@ PRINTLONG(Literal)
 }
 
 
-PRINTLONG(SVariable)
+void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
 {
   stream << indent(offset)
          << "SV "
-         << getPrintName()
+         << getVarName(v)
          << " @"
          << this
          << endl
@@ -812,10 +823,11 @@ PRINTLONG(SVariable)
   stream << endl;
 }
 
-PRINTLONG(GenCVariable){
+void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
+{
   stream << indent(offset)
          << "CV "
-         << getPrintName()
+         << getVarName(v)
          << " @"
          << this
          << endl
