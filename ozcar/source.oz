@@ -4,7 +4,7 @@
 local
 
    proc {MagicEmacsBar File Line State}
-      {Delay 5} %% needed for Emacs
+      {Delay 5} %% needed for Emacs (??)
       {Print {VS2A 'oz-bar ' # File # ' ' # Line # ' ' # State}}
       {Delay 5}
    end
