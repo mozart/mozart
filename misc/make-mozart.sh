@@ -169,8 +169,9 @@ $use_src-stdlib/configure --prefix=$PREFIX/install
 #
 make
 make install
+make src
 
 # src, doc & std are used by make-mozart-rpm.sh
 cd $PREFIX
 cd $build
-(USER=root; make src doc std ${PLAT})
+(USER=root; make src doc ${PLAT})

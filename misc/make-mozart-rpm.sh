@@ -34,6 +34,7 @@ PREFIX=`pwd`
 
 packageroot="$PREFIX/packages/$PLAT"
 build=$PREFIX/build-$PLAT
+build-stdlib=$PREFIX/build-stdlib-$PLAT
 dst=$PREFIX
 PATH=$packageroot/bin:$PATH
 LD_LIBRARY_PATH=$packageroot/lib:$LD_LIBRARY_PATH
@@ -76,5 +77,5 @@ export with_gmp with_zlib with_gdbm with_regex
 set -x
 
 #
-echo executing "$use_src/misc/create-rpm $build $dst"
-$use_src/misc/create-rpm $build $dst
+echo executing "$use_src/misc/create-rpm $build $build-stdlib $dst"
+$use_src/misc/create-rpm $build $build-stdlib $dst

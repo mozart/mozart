@@ -32,11 +32,28 @@ TMPDIR=/tmp
 : ${PACKAGER:="Konstantin Popov (mozart-oz.org)"}
 
 #
+COPYLIBS=yes
+
+#
+# check whether copying of the 'libgcc_s' and 'libstdc++' libraries
+# is dislabled;
+while [ 1 ]; do
+    case $1 in
+        --no-lib-copies)
+        COPYLIBS=no
+        shift 1
+        continue
+        ;;
+    esac
+    break
+done
+
+#
 # Read dir
 #
 if test $# -lt 3
 then
-   echo "usage: create-rpm <build-dir> <build-stdlib-dir> <dst-dir>" 1>&2;
+   echo "usage: create-rpm [--no-lib-copies] <build-dir> <build-stdlib-dir> <dst-dir>" 1>&2;
    echo "          <build-dir> is the place where Mozart has been built" 1>&2;
    echo "          <build-stdlib-dir> is the place where Mozart Standard Library has been built" 1>&2;
    exit 1;
@@ -241,52 +258,54 @@ mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
 mkdir -p \$PREFIX
 # Generic install
 make install
-# inspect the emulator.exe for being dynamically linked against
-# libstdc++.so.5 and libgcc_s.so, and if so - copy the library(s) into
-# $PREFIX/platform/$PLTFRM/lib:
 PLTFRM=\`\$PREFIX/bin/ozplatform\`
-found=""
-dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep libgcc_s.so && eval '' || eval ''\`
-for e in \$dynlib ; do
-    match=\`echo \$e | grep "/.*libgcc_s.so" && eval '' || eval ''\`
-    if [ "\$match" != "" ]; then
+if [ "$COPYLIBS" = "yes" ]; then
+    # inspect the emulator.exe for being dynamically linked against
+    # libstdc++.so.5 and libgcc_s.so, and if so - copy the library(s) into
+    # $PREFIX/platform/$PLTFRM/lib:
+    found=""
+    dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep libgcc_s.so && eval '' || eval ''\`
+    for e in \$dynlib ; do
+        match=\`echo \$e | grep "/.*libgcc_s.so" && eval '' || eval ''\`
+        if [ "\$match" != "" ]; then
         found=\$match
         break
-    fi
-done
-if [ "\$found" != "" ]; then
-    lib=""
-    for e in \`echo \$found | tr '/' ' '\` ; do
-        lib=\$e
+        fi
     done
-    mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
-    /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    unset lib
-fi
-unset found
-unset dynlib
-found=""
-dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep "libstdc++.so" && eval '' || eval ''\`
-for e in \$dynlib ; do
-    match=\`echo \$e | grep "/.*libstdc++.so" && eval '' || eval ''\`
-    if [ "\$match" != "" ]; then
+    if [ "\$found" != "" ]; then
+        lib=""
+        for e in \`echo \$found | tr '/' ' '\` ; do
+        lib=\$e
+        done
+        mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
+        /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        unset lib
+    fi
+    unset found
+    unset dynlib
+    found=""
+    dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep "libstdc++.so" && eval '' || eval ''\`
+    for e in \$dynlib ; do
+        match=\`echo \$e | grep "/.*libstdc++.so" && eval '' || eval ''\`
+        if [ "\$match" != "" ]; then
         found=\$match
         break
-    fi
-done
-if [ "\$found" != "" ]; then
-    lib=""
-    for e in \`echo \$found | tr '/' ' '\` ; do
-        lib=\$e
+        fi
     done
-    mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
-    /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
-    unset lib
+    if [ "\$found" != "" ]; then
+        lib=""
+        for e in \`echo \$found | tr '/' ' '\` ; do
+        lib=\$e
+        done
+        mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
+        /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        unset lib
+    fi
+    unset found
+    unset dynlib
 fi
-unset found
-unset dynlib
 
 # Strip binaries and shared objects
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
