@@ -4,3 +4,31 @@ what needs to be done:
 - also save section files
 - also save author files
 - cause --publish to create a pkg, install doc, and update db
+
+A makefile can now also contain contact info in the form of
+a single record or a list of such records. A makefile with
+contact info need not contribute anything else.
+
+makefile(
+  contact :
+    o(
+       mogul : 'mogul:/duchier/denys'
+       name  : 'Denys Duchier'
+       email : 'duchier@ps.uni-sb.de'
+       www   : 'http://www.ps.uni-sb.de/~duchier/'))
+
+ozmake --mogul=put		(DONE!)
+ozmake --mogul=put -p PKG
+ozmake --mogul=del -p MOG
+ozmake --mogul=del -p PKG
+ozmake --mogul=print
+ozmake --mogul=print -p PKG
+ozmake --mogul=db		(DONE!)
+ozmake --mogul=db -p MOG
+ozmake --mogul=db -p PKG
+ozmake --mogul=fix
+
+CURRENTLY:
+
+writing Message.oz to parse MOGUL entries and figure out stuff
+like what section entries to actually generate.

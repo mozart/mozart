@@ -35,6 +35,7 @@ prepare
       tmpdir(    single type:string)
 
       makefile(single char:&m type:string)
+      contactfile(single      type:string)
       usemakepkg( single type:bool)
       package( single char:&p type:string)
       database(single         type:string)
@@ -43,8 +44,8 @@ prepare
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
-			      uninstall edit mogul checkneeded
-			      %%again
+			      uninstall edit checkneeded
+			      %%mogul
 			     ))
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
@@ -58,7 +59,6 @@ prepare
       help(     char:&h alias:action#help)
       uninstall(char:&e alias:action#uninstall)
       edit(             alias:action#edit)
-      mogul(            alias:action#mogul)
       checkneeded(      alias:[action#checkneeded grade#freshen])
       %% again(            alias:action#again)
 
@@ -98,6 +98,11 @@ prepare
 
       exe(single type:atom(default no yes both multi))
       makepkgfile(single type:string)
+
+      %%mogulaction(single type:atom(package contact section list))
+      %%contact(single alias:[action#mogul mogulaction#contact])
+
+      mogul(single type:string)
       )
 
    OPTLIST =
@@ -125,6 +130,7 @@ prepare
     archive        # set_archive          # true
     tmpdir         # set_tmpdir           # true
     makefile       # set_makefile         # false
+    contactfile    # set_contactfile      # false
     usemakepkg     # set_use_makepkg      # false
     package        # set_package          # false
     moguldatabase  # set_moguldatabase    # true
@@ -150,6 +156,7 @@ prepare
     moguldbdir     # set_moguldbdir       # true
     exe            # set_exe              # true
     makepkgfile    # set_makepkgfile      # true
+    mogul          # set_mogul_action     # false
    ]
       
 define
@@ -158,6 +165,8 @@ define
 	 Args = if {HasFeature Args_ action} then Args_
 		elseif {HasFeature Args_ config} then
 		   {AdjoinAt Args_ action config}
+		elseif {HasFeature Args_ mogul} then
+		   {AdjoinAt Args_ action mogul}
 		else
 		   {AdjoinAt Args_ action build}
 		end

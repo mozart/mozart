@@ -74,15 +74,21 @@ define
 	 FF={Path.maybeAddPlatform F}
 	 DST={Path.resolve {self get_builddir($)} FF}%look in build dir
       in
+	 if {self exec_exists(DST $)} then DST
+	    /*
 	 if {Path.exists DST} orelse
 	    ({self get_justprint($)} andthen Executor,simulated_exists(DST $))
 	 then DST
+	    */
 	 else
 	    SRC={Path.resolve {self get_srcdir($)} FF}%else in source dir
 	 in
+	    if {self exec_exists(SRC $)} then SRC
+	    /*
 	    if {Path.exists SRC} orelse
 	       ({self get_justprint($)} andthen Executor,simulated_exists(SRC $))
 	    then SRC
+	       */
 	    else raise ozmake(filenotfound:{Path.toAtom FF}) end end
 	 end
       end
@@ -185,8 +191,10 @@ define
 	 %% here is a temporary fix. The right thing to do is
 	 %% to extend ozl with --rooturl=URL to let it know
 	 %% from where to resolve the imports
-	 URI={Path.toString {URL.toBase {self get_uri($)}}}
-	 L3 = if DIR\=nil then '--rewrite='#DIR#'/='#URI|L2 else L2 end
+	 URI=case {self maybe_get_uri($)}
+	     of unit then unit
+	     [] U then {Path.toString {URL.toBase U}} end
+	 L3 = if DIR\=nil andthen URI\=unit then '--rewrite='#DIR#'/='#URI|L2 else L2 end
 	 L4 = if {self get_veryVerbose($)} then '--verbose'|L3 else L3 end
       in
 	 {self xtrace({Utils.listToVS ozl|L4})}
@@ -307,6 +315,16 @@ define
       meth get_simulated_mtime(F $) S={self get_superman($)} in
 	 if S\=unit then {S get_simulated_mtime(F $)}
 	 else @MKFILE.{Path.toAtom F} end
+      end
+
+      %% check if a file/directory exists
+
+      meth exec_exists(F $)
+	 if {self get_justprint($)} then
+	    if     {self simulated_deleted(F $)} then false
+	    elseif {self simulated_exists( F $)} then true
+	    else {Path.exists F} end
+	 else {Path.exists F} end
       end
 
       %% creating a directory hierarchy

@@ -1,5 +1,32 @@
 -*-outline-*-
 
+* version 0.73
+** makefiles now support the 'contact' feature to specify MOGUL contact
+   information:
+
+       makefile(
+         ...
+         contact :
+           o(
+              mogul : 'mogul:/duchier/denys'
+              name  : 'Denys Duchier'
+              email : 'duchier@ps.uni-sb.de'
+              www   : 'http://www.ps.uni-sb.de/~duchier/'))
+
+   the value on the contact feature can also be a list of records as shown
+   above.  A makefile with contact info need not also actually provide anything
+   else (like modules): instead, it can be used to automatically generate MOGUL
+   entries (see below).
+** ozmake --mogul=... now permits to manage the MOGUL entries associated with
+   packages you provide.
+*** ozmake --mogul=put
+    creates all mogul entries associated with the package: this includes the
+    package entry (if it provides any targets) and the contact entries (if
+    any).
+*** ozmake --mogul=db
+    lists all your MOGUL entries made available to the MOGUL librarian for
+    download.
+
 * version 0.72
 ** ozmake --config=... now permits to manage predefined defaults
    defaults can always be explicitly overriden on the command line

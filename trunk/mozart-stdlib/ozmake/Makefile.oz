@@ -13,7 +13,8 @@ prepare
    RULE_EXISTS = rule(tool:unit file:unit options:nil)
 
    VALID_MAKEFILE_FEATURES = [bin lib doc src depends rules uri mogul author released clean veryclean
-			      blurb info_text info_html subdirs submakefiles requires categories version]
+			      blurb info_text info_html subdirs submakefiles requires categories version
+			      contact]
 
 define
 
@@ -188,6 +189,52 @@ define
 	    else
 	       raise ozmake(makefile:badcategories(R.categories)) end
 	    end
+	 end
+
+	 %% process contact feature
+	 if {HasFeature R contact} then
+	    L = case R.contact
+		of _|_ then R.contact
+		else [R.contact] end
+	 in
+	    for C in L do
+	       if {IsRecord C} then
+		  for F#V in {Record.toListInd C} do
+		     case F
+		     of mogul then
+			if {IsVirtualString V} andthen {Utils.isMogulID V} then skip
+			else raise ozmake(makefile:contactmogul(V)) end end
+		     [] name  then
+			if {Not {IsVirtualString V}} then
+			   raise ozmake(makefile:contactname(V)) end
+			end
+		     [] name_for_index then
+			if {Not {IsVirtualString V}} then
+			   raise ozmake(makefile:contactnameforindex(V)) end
+			end
+		     [] email then
+			if {Not {IsVirtualString V}} then
+			   raise ozmake(makefile:contactemail(V)) end
+			end
+		     [] www   then
+			if {Not {IsVirtualString V}} then
+			   raise ozmake(makefile:contactwww(V)) end
+			end
+		     else
+			raise ozmake(makefile:illegalfeature(F V)) end
+		     end
+		  end
+		  if {Not {HasFeature C mogul}} then
+		     raise ozmake(makefile:contactmissingmogul(C)) end
+		  end
+		  if {Not {HasFeature C name}} then
+		     raise ozmake(makefile:contactmissingname(C)) end
+		  end
+	       else
+		  raise ozmake(makefile:badcontact(C)) end
+	       end
+	    end
+	    {self set_contact(L)}
 	 end
 
 	 %% process subdirs feature
@@ -516,6 +563,7 @@ define
 	 Requires  = {self get_requires($)}
 	 Categories= {self get_categories($)}
 	 Version   = {self get_version($)}
+	 Contact   = {self get_contact($)}
       in
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
@@ -526,7 +574,14 @@ define
 			 fun {$ R} Tool=R.tool in
 			    Tool(R.file R.options)
 			 end}
-	 MAK.uri     := {self get_uri($)}
+	 %% if there are no targets, the uri is unnecessary
+	 if {self maybe_get_uri($)}\=unit
+	    orelse MAK.bin\=nil
+	    orelse MAK.lib\=nil
+	    orelse MAK.doc\=nil
+	 then
+	    MAK.uri  := {self get_uri($)}
+	 end
 	 MAK.mogul   := {self get_mogul($)}
 	 if Clean    \=unit then MAK.clean     := Clean     end
 	 if Veryclean\=unit then MAK.veryclean := Veryclean end
@@ -537,6 +592,7 @@ define
 	 if Requires \=unit then MAK.requires  := Requires  end
 	 if Categories\=nil then MAK.categories:= Categories end
 	 if Version  \=unit then MAK.version   := Version   end
+	 if Contact  \=unit then MAK.contact   := Contact   end
 	 MAK.released:= {Utils.dateCurrentToAtom}
 	 %% grab also all the recursive makefiles
 	 MAK.subdirs := {self get_subdirs($)}

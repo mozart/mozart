@@ -9,7 +9,8 @@ prepare
    TITLE_INSTALL   = 'ozmake [install] error'
    TITLE_MAKEFILE  = 'ozmake [makefile] error'
    TITLE_UNINSTALL = 'ozmake [uninstall] error'
-   TITLE_MOGUL     = 'ozmake [mogul] error'
+   TITLE_MOGUL     = 'ozmake [mogul package] error'
+   TITLE_CONTACT   = 'ozmake [mogul contact] error'
    fun {OzMakeErrorFormatter E}
       case E
       of ozmake(get_uri) then
@@ -318,6 +319,44 @@ prepare
 	 error(kind : TITLE_MAKEFILE
 	       msg  : 'value of feature \'version\' must be a virtual string of ints separated by single dots'
 	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:contactmogul(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad \'mogul\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:contactname(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad \'name\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(V))
+		       line('expected a virtual string')])
+      [] ozmake(makefile:contactnameforindex(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad \'name_for_index\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(V))
+		       line('expected a virtual string')])
+      [] ozmake(makefile:contactemail(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad \'email\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(V))
+		       line('expected a virtual string')])
+      [] ozmake(makefile:contactwww(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad \'www\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(V))
+		       line('expected a virtual string')])
+      [] ozmake(makefile:badcontact(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(V))
+		       line('expected a record with features in [mogul name name_for_index email www]')
+		       line('or a list of such records')])
+      [] ozmake(makefile:contactmissingmogul(C)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'missing \'mogul\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(C))])
+      [] ozmake(makefile:contactmissingname(C)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'missing \'name\' feature in makefile\'s \'contact\' feature'
+	       items: [hint(l:'Value' m:oz(C))])
       [] ozmake(uninstall:missingpackageormogul) then
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'no package or makefile'
@@ -368,6 +407,28 @@ prepare
 		       line('this is the URL corresponding to the directory')
 		       line('specified by --moguldbdir=DIR and for which')
 		       line('you can also setup a default')])
+      [] ozmake(mogul:unknownaction(S)) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'unrecognized --mogul action'
+	       items: [hint(l:'Action' m:S)])
+      [] ozmake(mogul:ambiguousaction(S L)) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'ambiguous --mogul action'
+	       items: [hint(l:'Action' m:S)
+		       hint(l:'Choices' m:list(L ' '))])
+      [] ozmake(contact:filenotfound(F)) then
+	 error(kind : TITLE_CONTACT
+	       msg  : 'contact file not found'
+	       items: [hint(l:'File' m:F)])
+      [] ozmake(contact:notrecord(V)) then
+	 error(kind : TITLE_CONTACT
+	       msg  : 'content of contact file should be a record'
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(contact:badfeat(F V)) then
+	 error(kind : TITLE_CONTACT
+	       msg  : 'bad contact feature'
+	       items: [hint(l:'Feature' m:F)
+		       hint(l:'Value' m:oz(V))])
       end
    end
 define

@@ -50,6 +50,10 @@ define
 	 T_full = {Path.maybeAddPlatform Target}
 	 T_src  = {Path.resolve SrcDir T_full}
 	 T_dst  = {Path.resolve DstDir T_full}
+	 T_file = if     {self exec_exists(T_dst $)} then T_dst
+		  elseif {self exec_exists(T_src $)} then T_src
+		  else unit end
+	 /*
 	 T_file = if {Path.exists T_dst} orelse
 		     ({self get_justprint($)} andthen {self simulated_exists(T_dst $)})
 		  then T_dst
@@ -57,6 +61,7 @@ define
 		     ({self get_justprint($)} andthen {self simulated_exists(T_src $)})
 		  then T_src
 		  else unit end
+	 */
       in
 	 if T_file==unit then
 	    {self trace(Target#' is missing')}

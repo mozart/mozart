@@ -115,7 +115,7 @@ define
 		  {Path.resolve DIR "MAKEPKG.oz"})}
 	 %% write a makefile.oz if none was provided in the package
 	 %% this is for compatibility with older packages
-	 if {Not {Path.exists {Path.resolve DIR "makefile.oz"}}} then
+	 if {Not {self exec_exists({Path.resolve DIR "makefile.oz"} $)}} then
 	    {self exec_write_to_file(
 		     {Value.toVirtualString
 		      {UnByteStringify

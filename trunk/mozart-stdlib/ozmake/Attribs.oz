@@ -98,6 +98,8 @@ define
 	 Exe         : default
 	 Makepkgfile : unit
 	 MustExtract : true
+	 MogulAction : unit
+	 Contact     : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -301,6 +303,9 @@ define
 	    {@Superman get_makefile_given($)}
 	 else @MakeFileGiven end
       end
+
+      meth set_contact(L) Contact<-L end
+      meth get_contact($) @Contact end
 
       meth set_database(F)
 	 Database<-{Path.expand F}
@@ -830,5 +835,8 @@ define
 
       meth set_must_extract(B) MustExtract<-B end
       meth get_must_extract($) @MustExtract end
+
+      meth set_mogul_action(A) MogulAction<-{self mogul_validate_action(A $)} end
+      meth get_mogul_action($) @MogulAction end
    end
 end
