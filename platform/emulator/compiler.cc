@@ -100,7 +100,7 @@ OZ_BI_define(BIallocateCodeBlock,2,2)
   }
 
   CodeArea *code = new CodeArea(size);
-  const int maxX=-1; // should never suspend
+  const int maxX=1; // uses only X[0] in tailCall(x(0) 0)
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
 				   mkTupleWidth(0), AtomEmpty, 0, -1, oz_nil(),
 				   maxX);
