@@ -378,12 +378,6 @@ void oz_checkExtSuspension(Suspension susp, Board *varHome);
 
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
 
-#ifdef DEBUG_STABLE
-extern SuspList * board_constraints;
-void printBC(ostream &, Board *);
-void printBCDebug(Board * = NULL); 
-#endif
-
 // printing (see foreign.cc)
 void oz_printStream(OZ_Term term, ostream &out,
 		    int depth=-1, int width=-1);
