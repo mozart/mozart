@@ -72,8 +72,24 @@ define
 	 {QuoteUsing CMD QUOTE}
       end
    end
-   ToCommandVS=ToProgramVS
 
+   ToCommandVS
+   if Windows.isWin then
+      if Windows.isOldWin then
+	 fun {!ToCommandVS CMD}
+	    'COMMAND.COM /C'#{QuoteUsing CMD QUOTE}
+	 end
+      else
+	 fun {!ToCommandVS CMD}
+	    First|Rest = CMD
+	 in
+	    First#{QuoteUsing Rest QUOTE}
+	 end
+      end
+   else
+      !ToCommandVS=ToProgramVS
+   end
+	
    proc {Execute VS}
       %{System.showInfo 'EXECUTING: '#VS}
       if {OS.system VS}\=0 then raise shell(VS) end end
