@@ -531,7 +531,7 @@ in
 				feature: default
 				action:  proc {$}
 					    {System.set messages(idle: false
-								 gc:   true)}
+								 gc:   false)}
 					    {self update(false)}
 					 end)])
 	       frame(text:    'Output'

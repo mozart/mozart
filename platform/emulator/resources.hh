@@ -51,7 +51,7 @@
 #define OZ_PATH		".:/usr/local/oz/lib"
 
 #define GC_FLAG		1
-#define GC_VERBOSITY	1
+#define GC_VERBOSITY	0
 
 #define TASKFRAMESIZE   3
  
