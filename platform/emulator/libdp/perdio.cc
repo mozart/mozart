@@ -521,7 +521,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
 
   MessageType mt = msgC->getMessageType();
   creditSiteIn=msgC->getImplicitMessageCredit();
-  //  if(creditSiteIn!=NULL) printf("creditSiteIn: %x",creditSiteIn);
+  //  if(creditSiteIn!=NULL) printf("creditSiteIn: %x\n",creditSiteIn);
 
   // this is a necessary check - you should never receive
   // a message from a site that you think is PERM or TEMP
@@ -657,7 +657,7 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
 //        printf("M_GET_LAZY index:%d site:%s\n",
 //           OTI, rsite->stringrep());
       //
-      OwnerEntry *oe = OT->getOwner(OTI);
+      OwnerEntry *oe = receiveAtOwner(OTI);
 
       //
       OZ_Term t = oe->getTertTerm();
