@@ -102,5 +102,10 @@ inline void *andPointer(void *p, int i) { return (void*) ((intlong)p&(intlong)i)
 /* consistency check */
 inline int isPointer(void *p) { return (((intlong)p) & mallocBase) != 0;}
 
+// Memory management gets a register
+#if __GNUC__ >= 2 && defined(sparc) && defined(REGOPT)
+#define HEAPCURINTOREGISTER 1
+#endif
+
 #endif
 
