@@ -89,7 +89,7 @@ public:
   void setPriority(int prio);
 
 private:
-  Thread() : ConstTerm(Co_Thread) { init(); }
+  Thread() : ConstTerm(Co_Thread) { init(); resSusp = NULL; }
   void init();
   Bool isScheduled();
   void insertFromTail();
