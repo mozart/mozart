@@ -221,10 +221,13 @@ outerLoop2:
         {
           AbstractionEntry *ae = (AbstractionEntry *) getAdressArg(PC+1);
           Abstraction *ab = ae->getAbstr();
-          ISREAD_TO(ab->getArity());
+          if (ab==0) {
+            ISREAD_TO(getPosIntArg(PC+2)>>1);
+          } else {
+            ISREAD_TO(ab->getArity());
+          }
           BREAK;
         }
-
       case MARSHALLEDFASTCALL:
         {
           int i  = getPosIntArg(PC+2)>>1;
