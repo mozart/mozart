@@ -118,8 +118,8 @@
           Allow Gump definitions.  If this switch is off, Gump keywords are
           parsed as ordinary atoms.
       </List>
-      The remaining Gump-related switches are described in&nbsp;<Ptr
-      to="mozart-gump">.
+      The remaining Gump-related switches are described in <Ptr.Extern
+      to="ozdoc:gump">.
   <Section class=unnumbered>
     <Title/II&dot; Static Analysis/
     <P>

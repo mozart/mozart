@@ -100,7 +100,7 @@
           data structures:  Because it is much more powerful than
           <<System.virtualStringToValue>>, it can also be much less
           efficient.  Rather, you should use pickling and unpickling
-          of data structures&nbsp;<Ptr to="mozart-ap">.<!--**-->
+          of data structures&nbsp;<Ptr.Extern to="ozdoc:system">.
 
         <Entry><<engine>>
         <Synopsis>

@@ -61,8 +61,6 @@
     <Meta name="entry.category" value="face">
     <Meta name="entry.category" value="function">
 
-    <Meta name="link.bib" arg1="ozdoc:compiler" arg2="mozart-compiler">
-
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Oz Programming Interface/
@@ -234,9 +232,9 @@
               <Entry class=command><Span class=index/<<oz-gump-mode>>/
               <Item>
                 This is the major mode for editing Oz code with embedded
-                Gump specifications&nbsp;<Ptr to="Mozart-Gump">.  Loading
-                a file with extension <File/.ozg/ automatically puts a
-                buffer in Oz-Gump mode.  You can tell a buffer is in
+                Gump specifications (see <Ptr.Extern to="ozdoc:gump">).
+                Loading a file with extension <File/.ozg/ automatically
+                puts a buffer in Oz-Gump mode.  You can tell a buffer is in
                 Oz-Gump mode by the string <Samp/Oz-Gump/ in its mode line.
             </List>
           <Para class=apropos><Title/Oz Mode Hook/
@@ -792,8 +790,8 @@
               exists and is readable, it is fed to the compiler.
           </List>
         <Para class=apropos><Title/Compiler Environment/
-          The environment available when running Mozart from the &OPI;
-          is an enriched base environment&nbsp;<Ptr to="Mozart-Base">.
+          The environment available when running Mozart from the &OPI; is
+          an enriched base environment (see <Ptr.Extern to="ozdoc:base">).
           All of Mozarts system modules and tools are available under
           variables named like the corresponding modules, &eg;, the
           functionality of the open programming component is available
@@ -1281,8 +1279,5 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
             Express the regular expression by a string.
         </List>
   <Back>
-    <Bib.Extern id="Mozart-Base" to="mozart.bib" key="Mozart-Base">
-    <Bib.Extern id="Mozart-Compiler" to="mozart.bib" key="Mozart-Compiler">
-    <Bib.Extern id="Mozart-Gump" to="mozart.bib" key="Mozart-Gump">
     <Bib.Extern id="stallman91" to="opi.bib" key="stallman91">
 </Book>
