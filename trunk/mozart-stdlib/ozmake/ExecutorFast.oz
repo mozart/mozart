@@ -21,6 +21,10 @@ define
 	 if Gumpdir\=unit then
 	    {BatchCompiler enqueue(setGumpDirectory(Gumpdir))}
 	 end
+	 if Debug then
+	    {BatchCompiler enqueue(setSwitch(controlflowinfo true))}
+	    {BatchCompiler enqueue(setSwitch(staticvarnames true))}
+	 end
 	 {BatchCompiler enqueue(setSwitch(expression true))}
 	 {BatchCompiler enqueue(setSwitch(feedtoemulator true))}
 	 local R in

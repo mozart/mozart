@@ -1,5 +1,8 @@
 -*-outline-*-
 
+* version 0.79
+** fixed "fast" compiler invocation to also pass debug switch
+
 * version 0.78
 ** automatically remove spurious trailing slashes on MOGUL IDs.
 ** `provides' in submakefiles are now really not forgotten
