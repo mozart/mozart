@@ -72,17 +72,34 @@ typedef void (*ProcessNodeProc)(OZ_Term, Opaque*, NodeProcessor*);
 
 //
 // 'NodeProcessorStack' keeps OZ_Term"s to be traversed.
+// Basically only allocation routines are used from 'Stack';
 class NodeProcessorStack : protected Stack {
 public:
   NodeProcessorStack() : Stack(1024, Stack_WithMalloc) {}
   ~NodeProcessorStack() {}
 
   //
-  void put(OZ_Term term) {
-    Stack::push((StackEntry) term);
+  void ensureFree(int n) {
+    if (stackEnd <= tos+n)
+      resize(n);
   }
-  OZ_Term get() { return ((OZ_Term) pop()); }
-  OZ_Term lookup() { return ((OZ_Term) topElem()); }
+
+  //
+  // we don't use 'push' from Stack because we care about
+  // space ourselves;
+  void put(OZ_Term term) {
+    checkConsistency();
+    *tos++ = ToPointer(term);
+  }
+  OZ_Term get() {
+    checkConsistency();
+    Assert(isEmpty() == NO);
+    return (ToInt32(*(--tos)));
+  }
+  OZ_Term lookup() {
+    checkConsistency();
+    return (ToInt32(topElem()));
+  }
 };
 
 //
@@ -112,6 +129,7 @@ public:
   //
   // Define the first node & start the action;
   void start(OZ_Term t, ProcessNodeProc p, Opaque* o) {
+    clear();
     put(t);
     proc = p;
     opaque = o;
@@ -124,11 +142,14 @@ public:
   // If 'suspend()' is called (by 'ProcessNodeProc') then 'start(...)'
   // will return; it can be later resumed by using 'resume()';
   void suspend() { keepRunning = NO; }
-  void add(OZ_Term t) { put(t); } // adds a new entry to the process stack;
+  void add(OZ_Term t) {
+    ensureFree(1);
+    put(t);
+  } // adds a new entry to the process stack;
 
   //
-  void resume() { doit(); }       // see 'suspend()';
-  void clear() { tos = array; }   // deletes all entries in process queue;
+  void resume() { doit(); } // see 'suspend()';
+  void clear() { mkEmpty(); } // deletes all entries in process queue;
 
   //
   Opaque* getOpaque() { return (opaque); }
@@ -228,6 +249,7 @@ public:
   void traverse(OZ_Term t, Opaque* o) {
     reset();
     //
+    ensureFree(1);
     put(t);
     DebugCode(proc = (ProcessNodeProc) -1;); // not used;
     opaque = o;
@@ -327,7 +349,7 @@ enum BuilderTaskType {
   //
   // Mostly, the only thing to be done with a term is to place it at a
   // given location (including the topmost task):
-  BT_spointer = 0,              // (keep this value!)
+  BT_spointer = 0,              // (keep this value!!!)
   // A variation of this is to do also a next task:
   BT_spointer_iterate,
   // When constructing subtree in a bottom-up fashion, the node is to
@@ -442,13 +464,9 @@ typedef StackEntry BTFrame;
   PTYPE ptr = (PTYPE) *(frame-3);
 
 #define DiscardBTFrame(frame)                           \
-  setTop(frame - bsFrameSize);
-#define DiscardSetBTFrame(frame)                        \
-  setTop(frame = frame - bsFrameSize);
+  frame = frame - bsFrameSize;
 #define DiscardBT2Frames(frame)                         \
-  setTop(frame - bsFrameSize - bsFrameSize);
-#define DiscardSetBT2Frames(frame)                      \
-  setTop(frame = frame - bsFrameSize - bsFrameSize);
+  frame = frame - bsFrameSize - bsFrameSize;
 
 // Special: lookup the type of the next frame...
 #define GetNextTaskType(frame, type)                    \
@@ -474,51 +492,53 @@ typedef StackEntry BTFrame;
 #define GetNextBTFrameArg1(frame, ATYPE, arg)           \
   ATYPE arg = (ATYPE) ToInt32(*(frame - bsFrameSize - 1));
 
-//
 #define EnsureBTSpace(frame,n)                          \
-  setTop(frame = ensureFree(n * bsFrameSize));
-#define EnsureBTSpace1Frame(frame)                              \
-  setTop(frame = ensureFree(bsFrameSize));
+  frame = ensureFree(frame, n * bsFrameSize);
+#define EnsureBTSpace1Frame(frame)                      \
+  frame = ensureFree(frame, bsFrameSize);
+#define SetBTFrame(frame)                               \
+  setTop(frame);
+
 #define PutBTTaskPtr(frame,type,ptr1)                   \
   DebugCode(*(frame) = ToPointer(0xffffffff););         \
   *(frame+1) = ptr1;                                    \
   *(frame+2) = ToPointer(type);                         \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTTask(frame,type)                           \
   DebugCode(*(frame) = ToPointer(0xffffffff););         \
   DebugCode(*(frame+1) = ToPointer(0xffffffff););       \
   *(frame+2) = ToPointer(type);                         \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTTask2Args(frame,type,arg1,arg2)            \
   *(frame) = ToPointer(arg2);                           \
-  *(frame+1) = arg1;                            \
+  *(frame+1) = arg1;                                    \
   *(frame+2) = ToPointer(type);                         \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTTaskPtrArg(frame,type,ptr,arg)             \
   *(frame) = ToPointer(arg);                            \
   *(frame+1) = ptr;                                     \
   *(frame+2) = ToPointer(type);                         \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTEmptyFrame(frame)                          \
   DebugCode(*(frame) = ToPointer(0xffffffff););         \
   DebugCode(*(frame+1) = ToPointer(0xffffffff););       \
   DebugCode(*(frame+2) = ToPointer(0xffffffff););       \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTFramePtr(frame,ptr)                        \
   DebugCode(*(frame) = ToPointer(0xffffffff););         \
   DebugCode(*(frame+1) = ToPointer(0xffffffff););       \
   *(frame+2) = ptr;                                     \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTFrameArg(frame,arg)                        \
   DebugCode(*(frame) = ToPointer(0xffffffff););         \
   DebugCode(*(frame+1) = ToPointer(0xffffffff););       \
   *(frame+2) = ToPointer(arg);                          \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 #define PutBTFrame3Args(frame,arg1,arg2,arg3)           \
   *(frame) = ToPointer(arg3);                           \
   *(frame+1) = ToPointer(arg2);                         \
   *(frame+2) = ToPointer(arg1);                         \
-  setTop(frame = frame + bsFrameSize);
+  frame = frame + bsFrameSize;
 
 //
 class BuilderStack : protected Stack {
@@ -527,53 +547,63 @@ public:
   ~BuilderStack() {}
 
   //
-  void putTask(BuilderTaskType type, void* ptr1, uint32 arg2) {
-    StackEntry *newTop = ensureFree(bsFrameSize);
-    *(newTop) = ToPointer(arg2);
-    *(newTop+1) = ptr1;
-    *(newTop+2) = ToPointer(type);
-    tos = newTop + bsFrameSize;
-  }
-  void putTask(BuilderTaskType type, uint32 arg1, uint32 arg2) {
-    StackEntry *newTop = ensureFree(bsFrameSize);
-    *(newTop) = ToPointer(arg2);
-    *(newTop+1) = ToPointer(arg1);
-    *(newTop+2) = ToPointer(type);
-    tos = newTop + bsFrameSize;
-  }
-  void putTask(BuilderTaskType type, void* ptr) {
-    StackEntry *newTop = ensureFree(bsFrameSize);
-    DebugCode(*(newTop) = ToPointer(0xffffffff););
-    *(newTop+1) = ptr;
-    *(newTop+2) = ToPointer(type);
-    tos = newTop + bsFrameSize;
-  }
-  void putTask(BuilderTaskType type, uint32 arg) {
-    StackEntry *newTop = ensureFree(bsFrameSize);
-    DebugCode(*(newTop) = ToPointer(0xffffffff););
-    *(newTop+1) = ToPointer(arg);
-    *(newTop+2) = ToPointer(type);
-    tos = newTop + bsFrameSize;
-  }
-  void putTask2ndArg(BuilderTaskType type, uint32 arg) {
-    StackEntry *newTop = ensureFree(bsFrameSize);
-    *(newTop) = ToPointer(arg);
-    DebugCode(*(newTop+1) = ToPointer(0xffffffff););
-    *(newTop+2) = ToPointer(type);
-    tos = newTop + bsFrameSize;
-  }
-  void putTask(BuilderTaskType type) {
-    StackEntry *newTop = ensureFree(bsFrameSize);
-    DebugCode(*(newTop) = ToPointer(0xffffffff););
-    DebugCode(*(newTop+1) = ToPointer(0xffffffff););
-    *(newTop+2) = ToPointer(type);
-    tos = newTop + bsFrameSize;
-  }
-
-  //
   StackEntry *getTop()            { return tos; }
   void setTop(StackEntry *newTos) { tos = newTos; }
   void clear() { tos = array; }
+  //
+  StackEntry *ensureFree(StackEntry *frame, int n)
+  {
+    if (stackEnd <= frame + n) {
+      setTop(frame);
+      resize(n);
+      frame = tos;
+    }
+    return (frame);
+  }
+
+  //
+  void putTask(BuilderTaskType type, void* ptr1, uint32 arg2) {
+    StackEntry *newTop = Stack::ensureFree(bsFrameSize);
+    *(newTop) = ToPointer(arg2);
+    *(newTop+1) = ptr1;
+    *(newTop+2) = ToPointer(type);
+    setTop(newTop + bsFrameSize);
+  }
+  void putTask(BuilderTaskType type, uint32 arg1, uint32 arg2) {
+    StackEntry *newTop = Stack::ensureFree(bsFrameSize);
+    *(newTop) = ToPointer(arg2);
+    *(newTop+1) = ToPointer(arg1);
+    *(newTop+2) = ToPointer(type);
+    setTop(newTop + bsFrameSize);
+  }
+  void putTask(BuilderTaskType type, void* ptr) {
+    StackEntry *newTop = Stack::ensureFree(bsFrameSize);
+    DebugCode(*(newTop) = ToPointer(0xffffffff););
+    *(newTop+1) = ptr;
+    *(newTop+2) = ToPointer(type);
+    setTop(newTop + bsFrameSize);
+  }
+  void putTask(BuilderTaskType type, uint32 arg) {
+    StackEntry *newTop = Stack::ensureFree(bsFrameSize);
+    DebugCode(*(newTop) = ToPointer(0xffffffff););
+    *(newTop+1) = ToPointer(arg);
+    *(newTop+2) = ToPointer(type);
+    setTop(newTop + bsFrameSize);
+  }
+  void putTask2ndArg(BuilderTaskType type, uint32 arg) {
+    StackEntry *newTop = Stack::ensureFree(bsFrameSize);
+    *(newTop) = ToPointer(arg);
+    DebugCode(*(newTop+1) = ToPointer(0xffffffff););
+    *(newTop+2) = ToPointer(type);
+    setTop(newTop + bsFrameSize);
+  }
+  void putTask(BuilderTaskType type) {
+    StackEntry *newTop = Stack::ensureFree(bsFrameSize);
+    DebugCode(*(newTop) = ToPointer(0xffffffff););
+    DebugCode(*(newTop+1) = ToPointer(0xffffffff););
+    *(newTop+2) = ToPointer(type);
+    setTop(newTop + bsFrameSize);
+  }
 };
 
 //
@@ -663,6 +693,7 @@ public:
     if (type == BT_spointer) {
       GetBTTaskPtr1(frame, OZ_Term*, spointer);
       DiscardBTFrame(frame);
+      SetBTFrame(frame);
       *spointer = value;
     } else {
       buildValueOutline(value, frame, type);
@@ -687,6 +718,7 @@ public:
     EnsureBTSpace(frame, 2);
     PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
     PutBTTaskPtr(frame, BT_spointer, l->getRefHead());
+    SetBTFrame(frame);
   }
   void buildListRemember(int n) {
     LTuple *l = new LTuple();
@@ -697,6 +729,7 @@ public:
     EnsureBTSpace(frame, 2);
     PutBTTaskPtr(frame, BT_spointer, l->getRefTail());
     PutBTTaskPtr(frame, BT_spointer, l->getRefHead());
+    SetBTFrame(frame);
   }
 
   //
@@ -714,12 +747,14 @@ public:
     EnsureBTSpace(frame, 2);
     PutBTEmptyFrame(frame);
     PutBTTask(frame, BT_takeRecordLabel);
+    SetBTFrame(frame);
   }
   void buildRecordRemember(int n) {
     GetBTFrame(frame);
     EnsureBTSpace(frame, 2);
     PutBTFrameArg(frame, n);
     PutBTTask(frame, BT_takeRecordLabelMemo);
+    SetBTFrame(frame);
   }
 
   //
@@ -734,6 +769,7 @@ public:
     while(size-- > 0) {
       PutBTTaskPtr(frame, BT_dictKey, aux);
     }
+    SetBTFrame(frame);
   }
 
   //
@@ -750,6 +786,7 @@ public:
     while(size-- > 0) {
       PutBTTaskPtr(frame, BT_dictKey, aux);
     }
+    SetBTFrame(frame);
   }
 
   //
@@ -802,6 +839,7 @@ public:
     PutBTFramePtr(frame, pc);
     PutBTFrame3Args(frame, arity, gsize, maxX);
     PutBTTaskPtr(frame, BT_proc, gname);
+    SetBTFrame(frame);
   }
   void buildProcRemember(GName *gname,
                          int arity, int gsize, int maxX, ProgramCounter pc,
@@ -812,6 +850,7 @@ public:
     PutBTFramePtr(frame, pc);
     PutBTFrame3Args(frame, arity, gsize, maxX);
     PutBTTaskPtr(frame, BT_procMemo, gname);
+    SetBTFrame(frame);
   }
   void knownProc(OZ_Term procTerm) {
     buildValue(procTerm);
@@ -824,6 +863,7 @@ public:
     for (int i = 0; i < gsize + 1; i++) {
       PutBTTaskPtr(frame, BT_spointer, &blackhole);
     }
+    SetBTFrame(frame);
   }
 };
 
