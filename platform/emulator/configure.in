@@ -151,13 +151,15 @@ AC_ARG_WITH(sunpro,
 
 OZ_CXX_CHOOSE
 
-AC_PROG_LEX
-AC_PROG_YACC
+OZ_PROG_FLEX
+OZ_PROG_BISON
 AC_PROG_LN_S
+OZ_PROG_MAKE
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
-AC_CHECK_PROGS(M4, gm4 m4, m4)
+OZ_PROG_M4
+OZ_PROG_PERL
 
 AC_CHECK_PROGS(SED, gnused sed, sed)
 if test -z "$AR"; then
@@ -395,10 +397,10 @@ then
     oz_lib_path="$oz_gmp_lib_dir $oz_lib_path"
 
     OZ_CHECK_HEADER_PATH(gmp.h,,
-	    AC_MSG_ERROR(required GNU MP include file not found))
+	    [AC_MSG_ERROR(required GNU MP include file not found)])
 	    
     OZ_CHECK_LIB_PATH(gmp, mpz_init, ,
-	    AC_MSG_ERROR(required GNU MP lib not found))
+	    [AC_MSG_ERROR(required GNU MP lib not found)])
 else
     AC_MSG_RESULT(no)
 fi
