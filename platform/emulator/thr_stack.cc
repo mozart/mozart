@@ -62,6 +62,11 @@ Bool TaskStack::findCatch()
       return TRUE;
     }
 
+    if (PC==C_ACTOR_Ptr) {
+      AWActor *aw = (AWActor *) Y;
+      aw->setCommitted();
+    }
+
     if (PC==C_LOCK_Ptr) { 
       OzLock *lck = (OzLock *) Y;
       lck->unlock();
