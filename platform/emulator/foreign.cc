@@ -1069,7 +1069,7 @@ void OZ_printVirtualString(OZ_Term t)
   }
 }
 
-OZ_Term OZ_termToVS(OZ_Term t)
+OZ_Term OZ_toVirtualString(OZ_Term t,int depth, int width)
 {
   switch (tagTypeOf(deref(t))) {
   case SMALLINT:
@@ -1082,7 +1082,7 @@ OZ_Term OZ_termToVS(OZ_Term t)
   case LTUPLE:
   case SRECORD:
   case OZCONST:
-    return OZ_string(toC(t));
+    return OZ_string(OZ_toC(t,depth,width));
   case LITERAL:
     if (OZ_isAtom(t)) return t;
     return OZ_string(toC(t));
@@ -1486,8 +1486,8 @@ OZ_Return OZ_raise(OZ_Term exc)
  * Suspending builtins
  * -----------------------------------------------------------------*/
 
-OZ_Thread OZ_makeThread(OZ_Return (*fun)(int,OZ_Term[]),
-			OZ_Term *args,int arity)
+OZ_Thread OZ_makeSuspendedThread(OZ_Return (*fun)(int,OZ_Term[]),
+				 OZ_Term *args,int arity)
 {
 #ifdef SHOW_SUSPENSIONS
   static int xxx=0;
@@ -1503,6 +1503,15 @@ OZ_Thread OZ_makeThread(OZ_Return (*fun)(int,OZ_Term[]),
     new Thread (am.currentBoard,
 		ozconf.defaultPriority,
 		fun, args, arity);
+}
+
+void OZ_makeRunnableThread(OZ_Return (*fun)(int,OZ_Term[]),
+			   OZ_Term *args,int arity)
+{
+  Thread *tt = new Thread (am.currentBoard,
+			   ozconf.defaultPriority,
+			   fun, args, arity);
+  am.scheduleThread(tt);
 }
 
 void OZ_addThread(OZ_Term var, OZ_Thread thr)
