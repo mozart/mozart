@@ -163,8 +163,8 @@ install-bin: version $(TARGETS) $(BINDIR)
 	$(INSTALL_BIN) $(TARGETS) $(BINDIR)
 
 install-inc: $(INCDIR)
-	$(INSTALL_SRC) $(SRCDIR)/oz.h $(INCDIR)
-	$(INSTALL_SRC) $(SRCDIR)/oz_cpi.hh $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/oz.h $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/oz_cpi.hh $(INCDIR)
 
 install-wif: libwif.so $(BINDIR)
 	$(INSTALL_BIN) libwif.so $(BINDIR)
