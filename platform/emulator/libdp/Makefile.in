@@ -127,7 +127,7 @@ cleaner::
 	-rm -f *.a *.so $(CREATEDFILES)
 
 veryclean::
-	-rm -f *.a *.so Makefile.deps $(CREATEDFILES)
+	-rm -f *.a *.so Makefile.deps TAGS $(CREATEDFILES)
 
 #
 # special dependencies...
@@ -135,3 +135,12 @@ ALLOBJS=$(COREOBJS) $(VSOBJS) $(MODULEOBJS)
 dpMarshaler.hh marshalMsg.cc: msgFormat.m4
 $(ALLOBJS): dpMarshaler.hh
 
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES)
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\2/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h 

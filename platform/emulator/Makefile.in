@@ -403,6 +403,7 @@ version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
 depend:: version.cc $(ALLSRCS)
 	$(MAKE) first
 	$(DEPEND) $^ > Makefile.deps
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
 
 BUILDDIR=$(shell pwd)
 tags:	$(CREATEDFILES) version.cc
@@ -413,6 +414,7 @@ tags:	$(CREATEDFILES) version.cc
 	-o $(SRCDIR)/TAGS \
 	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
 	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/*/*c $(SRCDIR)/*/*h
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) tags); done
 
 clean::
 	-rm -f gmon.out  fetchedInstr.dump verb_out.txt
