@@ -99,6 +99,9 @@ void marshalVariable(PerdioVar *, MsgBuffer *);
 SRecord *unmarshalSRecord(MsgBuffer *);
 void unmarshalUnsentSRecord(MsgBuffer *);
 void unmarshalTerm(MsgBuffer *, OZ_Term *);
+void marshalNumber(unsigned int i, MsgBuffer *bs);
+int unmarshalNumber(MsgBuffer *bs);
+int unmarshalUnsentNumber(MsgBuffer *bs);
 
 #define CheckD0Compatibility \
    if (ozconf.perdiod0Compatiblity) goto bomb;
@@ -309,45 +312,6 @@ MessageType unmarshalHeader(MsgBuffer *bs){
 /*   SECTION 6:  simple ground marshaling/unmarshaling                 */
 /* *********************************************************************/
 
-#define SBit (1<<7)
-
-void marshalNumber(unsigned int i, MsgBuffer *bs)
-{
-  while(i >= SBit) {
-    bs->put((i%SBit)|SBit);
-    i /= SBit;}
-  bs->put(i);
-}
-
-int unmarshalNumber(MsgBuffer *bs)
-{
-  unsigned int ret = 0, shft = 0;
-  unsigned int c = bs->get();
-  while (c >= SBit) {
-    ret += ((c-SBit) << shft);
-    c = bs->get();
-    shft += 7;
-  }
-  ret |= (c<<shft);
-  return (int) ret;
-}
-
-int unmarshalUnsentNumber(MsgBuffer *bs) // ATTENTION
-{
-  unsigned int ret = 0, shft = 0;
-  unsigned int c = bs->get();
-  while (c >= SBit) {
-    ret += ((c-SBit) << shft);
-    c = bs->get();
-    shft += 7;
-  }
-  ret |= (c<<shft);
-  return (int) ret;
-}
-
-#undef SBit
-
-
 const int shortSize = 2;
 
 void marshalShort(unsigned short i, MsgBuffer *bs){
@@ -424,23 +388,18 @@ char *unmarshalString(MsgBuffer *bs)
   int i = unmarshalNumber(bs);
 
   char *ret = new char[i+1];
-  int k=0;
-  for (; k<i; k++) {
+  for (int k=0; k<i; k++) {
     ret[k] = bs->get();
   }
-  PD((UNMARSHAL_CT,"String BYTES:%d",k));
+  PD((UNMARSHAL_CT,"String BYTES:%d",i));
   ret[i] = '\0';
   return ret;
 }
 
 void unmarshalUnsentString(MsgBuffer *bs)
 {
-  misc_counter[MISC_STRING].recv();
-  int i = unmarshalNumber(bs);
-
-  int k=0;
-  for (; k<i; k++) {bs->get();}
-  PD((UNMARSHAL_CT,"String BYTES:%d",k));
+  char *aux = unmarshalString(bs);
+  delete [] aux;
 }
 
 
@@ -1486,3 +1445,40 @@ void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs){
 /* *********************************************************************/
 
 #include "marshalMsg.cc"
+
+
+/* *********************************************************************/
+/*   SECTION 20: The following go at the very end,                     */
+/*               so they will not be inlined                           */
+/* *********************************************************************/
+
+#define SBit (1<<7)
+
+
+void marshalNumber(unsigned int i, MsgBuffer *bs)
+{
+  while(i >= SBit) {
+    bs->put((i%SBit)|SBit);
+    i /= SBit;}
+  bs->put(i);
+}
+
+int unmarshalNumber(MsgBuffer *bs)
+{
+  unsigned int ret = 0, shft = 0;
+  unsigned int c = bs->get();
+  while (c >= SBit) {
+    ret += ((c-SBit) << shft);
+    c = bs->get();
+    shft += 7;
+  }
+  ret |= (c<<shft);
+  return (int) ret;
+}
+
+int unmarshalUnsentNumber(MsgBuffer *bs) // ATTENTION
+{
+  return unmarshalNumber(bs);
+}
+
+#undef SBit
