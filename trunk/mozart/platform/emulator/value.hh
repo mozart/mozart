@@ -1549,6 +1549,9 @@ private:
   // Never change order, the garbage collector relies on it!
   TaggedRef features, unfreeFeatures, fastMethods, defaultMethods;
   int flags;
+
+  Bool lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder);
+
 public:
   USEHEAPMEMORY;
   OZPRINTLONG
@@ -1594,13 +1597,12 @@ public:
     return tagged2SRecord(features); 
   }
 
-  Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
+  Abstraction *getMethod(TaggedRef label, SRecordArity arity, 
+			 Bool reorder,
 			 Bool &defaultsUsed);
 
   TaggedRef getFallbackNew(void);
   TaggedRef getFallbackApply(void);
-
-  Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
 
   TaggedRef classGetFeature(TaggedRef lit) {
     return getFeatures()->getFeature(lit);
