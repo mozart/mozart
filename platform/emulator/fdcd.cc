@@ -39,12 +39,26 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 
   if (! isSTuple(p_tupletag)) TypeError(0, "");
   if (! isSTuple(b_tupletag)) TypeError(1, "");
+
+  STuple &p = *tagged2STuple(p_tuple);
+  STuple &b = *tagged2STuple(b_tuple);
+
+  if (isLiteral(v_tupletag)) {
+    // reduce to sum(b) >= 1
+    int p_size = p.getSize();
+    TaggedRef tone = newSmallInt(1), tmone = newSmallInt(-1);
+    STuple * st = STuple::newSTuple(p.getLabel(), p_size);
+    
+    for (int i = 0; i < p_size; i++) (*st)[i] = tmone;
+    
+    TaggedRefPtr new_args = allocateRegs(makeTaggedSTuple(st), b_tuple, tone);
+    return BIfdGenLinLessEq(3, new_args);
+  }
+  
   if (! isSTuple(v_tupletag)) TypeError(2, "");
   if (! isSTuple(vp_tupletag)) TypeError(3, "");
 
-  STuple &p = *tagged2STuple(p_tuple);
   STuple &v = *tagged2STuple(v_tuple);
-  STuple &b = *tagged2STuple(b_tuple);
   STuple &vp = *tagged2STuple(vp_tuple);
 
   const int clauses = p.getSize();
@@ -101,6 +115,10 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   OZ_getCArgDeref(0, b_tuple, b_tupleptr, b_tupletag);
   OZ_getCArgDeref(1, v_tuple, v_tupleptr, v_tupletag);
   OZ_getCArgDeref(2, vp_tuple, vp_tupleptr, vp_tupletag);
+
+  // Has already been reduced to sum(b) >= 1
+  if (isLiteral(v_tupletag)) return PROCEED;
+
 
   if (! isSTuple(b_tupletag)) TypeError(0, "");
   if (! isSTuple(v_tupletag)) TypeError(1, "");
