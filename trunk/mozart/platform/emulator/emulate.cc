@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.353  1996/08/08 17:39:55  tmueller
+  removed too nervous assertion
+
   Revision 1.352  1996/07/31 12:55:34  scheidhr
   new machine instructions
 
@@ -3185,7 +3188,7 @@ LBLdispatcher:
 
       //  The following must hold because 'tt' can suspend 
       // only in the board where the actor itself is located;
-      Assert (tt->getBoardFast () == CBB);
+      // Assert (tt->getBoardFast () == CBB); // MM check, seems to be wrong!
 
       //
       tt->suspThreadToRunnable ();
