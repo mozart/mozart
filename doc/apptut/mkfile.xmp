@@ -1,0 +1,8 @@
+PLATFORM = $(shell ozplatform)
+NATIVES  = counter
+TARGETS  = $(addsuffix .so-$(PLATFORM),$(NATIVES))
+all: $(TARGETS)
+%.so-$(PLATFORM): %.o
+        ozdynld $< -o $@
+%.o: %.cc
+        c++ -I${OZHOME}/include -c $< -o $@
