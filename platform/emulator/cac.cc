@@ -498,7 +498,7 @@ DynamicTable * DynamicTable::_cac(void) {
 //
 
 // replicated from dictionary.cc;
-static const double GDT_IDEALENTRIES	= 1.0; // wrt the number of slots;
+static const double GDT_IDEALENTRIES	= 0.7;
 static const int GDT_MINFULL		= 4;   // 
 
 //
@@ -563,16 +563,21 @@ DictHashTable* DictHashTable::_cac(void)
   if (entries >= (tableSize / GDT_MINFULL)) {
     // no compactification - reconstruct it isomorphically;
     an = (DictNode *) CAC_MALLOC(tableSize * sizeof(DictNode));
+    DebugCode(int eS = 0;);
+    DebugCode(int oS = 0;);
+    DebugCode(int pS = 0;);
 
     //
     for (int i = tableSize; i--; ) {
       DictNode *n = &table[i];
       if (!n->isEmpty()) {
 	if (!n->isPointer()) {
+	  DebugCode(oS++);
 	  DictNode *nn = &an[i];
 	  (void) new (nn) DictNode(*n);
 	  OZ_cacBlock((TaggedRef *) n, (TaggedRef *) nn, 2);
 	} else {
+	  DebugCode(pS++);
 	  DictNode *sptr = n->getDictNodeSPtr();
 	  DictNode *eptr = n->getDictNodeEPtr();
 	  int bytes = ((char *) eptr) - ((char *) sptr);
@@ -586,10 +591,18 @@ DictHashTable* DictHashTable::_cac(void)
 	}
       } else {
 	(void) new (&an[i]) DictNode; // empty;
+	DebugCode(eS++);
       }
     }
 
-    //      
+    //
+#if defined(DEBUG_CHECK)
+//      if (tableSize >= 10000) {
+//        fprintf(stdout,
+//  	      "=(pid=%d)tabSize=%d, entries=%d, empty=%d, ord=%d, pts=%d\n",
+//  	      osgetpid(), tableSize, entries, eS, oS, pS);
+//      }
+#endif
     DictHashTable *dht = new DictHashTable(*this);
     dht->table = an;
     return (dht);
@@ -614,7 +627,10 @@ DictHashTable* DictHashTable::_cac(void)
     Assert(sizeIndex < 0 || dictHTSizes[sizeIndex] < tableSize);
     sizeIndex++;
     Assert(sizeIndex >= 0 && dictHTSizes[sizeIndex] >= tableSize);
-    Assert(dictHTSizes[sizeIndex] < oldSize);	// must not oscillate;
+    // Must not oscillate:
+    Assert(dictHTSizes[sizeIndex] < oldSize);
+    // Next GC should not attempt compactification:
+    Assert(entries >= (dictHTSizes[sizeIndex] / GDT_MINFULL));
     // construct the table anew;
     mkEmpty();
 
