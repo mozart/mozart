@@ -1,3 +1,7 @@
-Makefile
 *~
+Makefile
 apptut-html
+latex.db
+Webget.oz
+Form.oz LMF.oz DB.oz
+chat-server.oz chat-client.oz chat-gui.oz
