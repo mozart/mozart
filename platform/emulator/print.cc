@@ -481,6 +481,7 @@ PRINT(Suspension)
     if (isExtSusp()) stream << 'E';
     if (isSurvSusp()) stream << 'S';
     if (isUnifySusp()) stream << 'U';
+    if (isLocalSusp()) stream << 'L';
     stream << "] -> ";
 
     if (getCont())
