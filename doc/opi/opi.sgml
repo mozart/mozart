@@ -434,7 +434,7 @@
       <Section>
 	<Title/Comments/
 	  <P>
-	    <Index/Comments/
+	    <Index/comments/
 	    <List>
 	      <Entry class=command><Span class=index/<<oz-fill-paragraph>>/
 		<<&amp;optional ?_{JUSTIFY}>>
