@@ -15,10 +15,6 @@
 #ifndef __PERDIO_DEBUG_HH
 #define __PERDIO_DEBUG_HH
 
-#ifdef DEBUG_PERDIO 
-
-#include <stdarg.h>
-
 enum DEBUGType {
   SEND_EMIT,	// 0
   SEND_DONE,
@@ -63,6 +59,10 @@ enum DEBUGType {
   LAST
 };
 
+#ifdef DEBUG_PERDIO 
+
+#include <stdarg.h>
+
 extern char *debugTypeStr[];
 
 class DebugVector{
@@ -103,10 +103,6 @@ void PD(int i,char *format,...)
 inline
 void PD(int i,char *format,...) {}
 
-#define BUFFER 0
-#define MARSHALL_BE 0
-
 #endif 
-
 
 #endif
