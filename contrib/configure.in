@@ -94,6 +94,16 @@ AC_ARG_ENABLE(contrib-text,
 AC_MSG_RESULT($oz_cv_enable_contrib_text)
 OZ_ADDTO_CONTRIBDIRS(text)
 
+AC_MSG_CHECKING([for --enable-contrib-dpanel])
+AC_ARG_ENABLE(contrib-dpanel,
+  [--enable-contrib-dpanel,
+        whether to build the distributed panel (default: yes)],
+  [oz_cv_enable_contrib_dpanel=$enableval],
+  [: ${oz_cv_enable_contrib_dpanel:=$oz_enable_contrib_dpanel}
+   : ${oz_cv_enable_contrib_dpanel:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_dpanel)
+OZ_ADDTO_CONTRIBDIRS(dpanel)
+
 AC_SUBST(CONTRIBDIRS)
 AC_CONFIG_SUBDIRS($CONTRIBDIRS)
 
