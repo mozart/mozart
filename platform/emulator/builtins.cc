@@ -5035,13 +5035,11 @@ char **arrayFromList(OZ_Term list, char **array, int size)
   while(OZ_isCons(list)) {
 
     if (i >= size-1) {
-      OZ_warning("linkObjectFiles: too many arguments");
       goto bomb;
     }
 
     OZ_Term hh = head(deref(list));
     if (!OZ_isAtom(hh)) {
-      OZ_warning("linkObjectFiles: List with atoms expected");
       goto bomb;
     }
     char *fileName = OZ_atomToC(hh);
@@ -5049,7 +5047,6 @@ char **arrayFromList(OZ_Term list, char **array, int size)
     char *f = expandFileName(fileName,ozconf.linkPath);
 
     if (!f) {
-      OZ_warning("linkObjectFiles(%s): expand filename failed",fileName);
       goto bomb;    
     }
 
@@ -5116,7 +5113,6 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
     for (int i=0; ofiles[i] != NULL; i++) {
       char *f = ofiles[i];
       if (commandUsed + strlen(f) >= commandSize-1) {
-	OZ_warning("linkObjectFiles: too many arguments");
 	unlink(tempfile);
 	delete [] f;
 	goto raise;
@@ -5187,7 +5183,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
   return PROCEED;
 
 raise:
-  return am.raise(E_ERROR,E_KERNEL,"foreign",2,OZ_atom("linkFiles"),list);
+  return am.raise(E_ERROR,OZ_atom("foreign"),"linkFiles",1,list);
 }
 OZ_C_proc_end
 
@@ -5251,7 +5247,7 @@ OZ_C_proc_begin(BIdlOpen,2)
   return OZ_unify(out,ret);
 
 raise:
-  return am.raise(E_ERROR,E_KERNEL,"foreign",3,OZ_atom("dlOpen"),
+  return am.raise(E_ERROR,OZ_atom("foreign"),"dlOpen",2,
 		  OZ_getCArg(0),err);
 }
 OZ_C_proc_end
@@ -5287,8 +5283,7 @@ OZ_C_proc_begin(BIdlClose,1)
   return PROCEED;
 
 raise:
-  return am.raise(E_ERROR,E_KERNEL,"foreign",2,
-		  OZ_atom("dlClose"),OZ_int(handle));
+  return am.raise(E_ERROR,OZ_atom("foreign"),"dlClose",1,OZ_int(handle));
 }
 OZ_C_proc_end
 
@@ -5341,8 +5336,7 @@ OZ_C_proc_begin(BIfindFunction,3)
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
-    return am.raise(E_ERROR,E_KERNEL,"foreign", 3,
-		    OZ_atom("cannotFindFunction"), 
+    return am.raise(E_ERROR, OZ_atom("foreign"), "cannotFindFunction", 3,
 		    OZ_getCArg(0), 
 		    OZ_getCArg(1),
 		    OZ_getCArg(2)
