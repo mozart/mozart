@@ -257,21 +257,18 @@ void Statistics::initCount() {
 }
 
 
-void Statistics::enterCall(PrTabEntry  *a)
+void Statistics::leaveCall(PrTabEntry  *newp)
 {
-  if (a)
-    a->lastHeap = getUsedMemoryBytes();
-  currAbstr = a;
-}
-
-void Statistics::leaveCall(PrTabEntry  *old)
-{
+  int usedHeap = getUsedMemoryBytes();
   if (currAbstr) {
     Assert(currAbstr->lastHeap>0);
-    currAbstr->heapUsed += getUsedMemoryBytes() - currAbstr->lastHeap;
+    currAbstr->heapUsed += usedHeap - currAbstr->lastHeap;
     currAbstr->lastHeap = 0;
   }
-  currAbstr = old;
+  if (newp)
+    newp->lastHeap = usedHeap;
+
+  currAbstr = newp;
 }
 
 
