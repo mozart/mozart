@@ -53,7 +53,7 @@ class HTEntry {
     : label(lbl), next(nxt) 
   {
     u.number = num;
-    gcStaticProtect(&u.number);
+    oz_staticProtect(&u.number);
   };
 
   HTEntry(Literal *name, SRecordArity arity, int lbl, HTEntry *nxt) 

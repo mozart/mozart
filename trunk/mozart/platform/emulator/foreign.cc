@@ -845,7 +845,7 @@ Bool isNiceList(OZ_Term l, int width) {
   if (width <= 0) return NO;
 
   while (oz_isCons(l) && width--> 0) {
-    l = oz_deref(tail(l));
+    l = oz_deref(oz_tail(l));
   }
   
   if (oz_isNil(l)) return OK;
@@ -895,24 +895,24 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
       int next    = 1;
 
       while (oz_isCons(as) && next <= ozconf.printWidth &&
-	     oz_isSmallInt(head(as)) && 
-	     smallIntValue(head(as)) == next) {
-	term2Buffer(out, sr->getFeature(head(as)), depth-1);
+	     oz_isSmallInt(oz_head(as)) && 
+	     smallIntValue(oz_head(as)) == next) {
+	term2Buffer(out, sr->getFeature(oz_head(as)), depth-1);
 	out << ' ';
-	as = tail(as);
+	as = oz_tail(as);
 	next++;
       }
       Assert(oz_isCons(as));
 
       if (next <= ozconf.printWidth) {
 	
-	feature2buffer(out,sr,head(as),depth-1);
+	feature2buffer(out,sr,oz_head(as),depth-1);
 	next++;
-	as = tail(as);
+	as = oz_tail(as);
 	while (next <= ozconf.printWidth && oz_isCons(as)) {
 	  out << ' ';
-	  feature2buffer(out,sr,head(as),depth-1);
-	  as = tail(as);
+	  feature2buffer(out,sr,oz_head(as),depth-1);
+	  as = oz_tail(as);
 	  next++;
 	}
       }
@@ -934,8 +934,8 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
       out << '[';
       OZ_Term l = makeTaggedLTuple(list);
       while (oz_isCons(l)) {
-	term2Buffer(out, head(l), depth-1);
-	l = oz_deref(tail(l));
+	term2Buffer(out, oz_head(l), depth-1);
+	l = oz_deref(oz_tail(l));
 	if (oz_isCons(l)) {
 	  out << ' ';
 	}
@@ -1235,14 +1235,14 @@ OZ_Term OZ_atom(const char *s)
 /* convert a C string (char*) to an Oz string */
 OZ_Term OZ_string(const char *s)
 {
-  if (!s) { return nil(); }
+  if (!s) { return oz_nil(); }
   const char *p=s;
   while (*p!='\0') {
     p++;
   }
-  OZ_Term ret = nil();
+  OZ_Term ret = oz_nil();
   while (p!=s) {
-    ret = cons(makeInt((unsigned char)*(--p)), ret);
+    ret = oz_cons(makeInt((unsigned char)*(--p)), ret);
   }
   return ret;
 }
@@ -1250,8 +1250,8 @@ OZ_Term OZ_string(const char *s)
 void string2buffer(ostream &out,OZ_Term list)
 {
   OZ_Term tmp = oz_deref(list);
-  for (; oz_isCons(tmp); tmp=oz_deref(tail(tmp))) {
-    OZ_Term hh = oz_deref(head(tmp));
+  for (; oz_isCons(tmp); tmp=oz_deref(oz_tail(tmp))) {
+    OZ_Term hh = oz_deref(oz_head(tmp));
     if (!oz_isSmallInt(hh)) {
       message("no small int %s",toC(hh));
       printf(" in string %s\n",toC(list));
@@ -1585,12 +1585,12 @@ OZ_Term OZ_getArg(OZ_Term term, int pos)
 
 OZ_Term OZ_nil()
 {
-  return nil();
+  return oz_nil();
 }
 
 OZ_Term OZ_cons(OZ_Term hd,OZ_Term tl)
 {
-  return cons(hd,tl);
+  return oz_cons(hd,tl);
 }
 
 OZ_Term OZ_head(OZ_Term term)
@@ -1600,7 +1600,7 @@ OZ_Term OZ_head(OZ_Term term)
     OZ_warning("OZ_head: no cons");
     return 0;
   }
-  return head(term);
+  return oz_head(term);
 }
 
 OZ_Term OZ_tail(OZ_Term term)
@@ -1610,7 +1610,7 @@ OZ_Term OZ_tail(OZ_Term term)
     OZ_warning("OZ_tail: no cons");
     return 0;
   }
-  return tail(term);
+  return oz_tail(term);
 }
 
 /*
@@ -1626,9 +1626,9 @@ int OZ_length(OZ_Term l)
 
 OZ_Term OZ_toList(int len, OZ_Term *tuple)
 {
-  OZ_Term l = nil();
+  OZ_Term l = oz_nil();
   while (--len >= 0) {
-    l = cons(tuple[len],l);
+    l = oz_cons(tuple[len],l);
   }
   return l;
 }
@@ -1709,7 +1709,7 @@ OZ_Term OZ_adjoinAt(OZ_Term rec, OZ_Term fea, OZ_Term val)
   if (!oz_isFeature(fea) || !oz_isRecord(rec)) return 0;
 
   if (oz_isLiteral(rec)) {
-    SRecord *srec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
+    SRecord *srec = SRecord::newSRecord(rec,aritytable.find(oz_cons(fea,oz_nil())));
     srec->setArg(0,val);
     return makeTaggedSRecord(srec);
   } else {
@@ -1790,23 +1790,23 @@ OZ_Term OZ_newVariable()
  * -----------------------------------------------------------------*/
 
 void OZ_registerReadHandler(int fd,OZ_IOHandler fun,void *val) {
-  am.select(fd,SEL_READ,fun,val);
+  oz_io_select(fd,SEL_READ,fun,val);
 }
 
 void OZ_unregisterRead(int fd) {
-  am.deSelect(fd,SEL_READ);
+  oz_io_deSelect(fd,SEL_READ);
 }
 
 void OZ_registerWriteHandler(int fd,OZ_IOHandler fun,void *val) {
-  am.select(fd,SEL_WRITE,fun,val);
+  oz_io_select(fd,SEL_WRITE,fun,val);
 }
 
 void OZ_unregisterWrite(int fd) {
-  am.deSelect(fd,SEL_WRITE);
+  oz_io_deSelect(fd,SEL_WRITE);
 }
 
 void OZ_registerAcceptHandler(int fd,OZ_IOHandler fun,void *val) {
-  am.acceptSelect(fd,fun,val);
+  oz_io_acceptSelect(fd,fun,val);
 }
 
 
@@ -1814,20 +1814,20 @@ void OZ_registerAcceptHandler(int fd,OZ_IOHandler fun,void *val) {
 
 
 OZ_Return OZ_readSelect(int fd,OZ_Term l,OZ_Term r) {
-  return am.select(fd,SEL_READ,l,r) ? PROCEED : FAILED;
+  return oz_io_select(fd,SEL_READ,l,r) ? PROCEED : FAILED;
 }
 
 OZ_Return OZ_writeSelect(int fd,OZ_Term l,OZ_Term r) {
-  return am.select(fd,SEL_WRITE,l,r) ? PROCEED : FAILED;
+  return oz_io_select(fd,SEL_WRITE,l,r) ? PROCEED : FAILED;
 }
 
 OZ_Return OZ_acceptSelect(int fd,OZ_Term l,OZ_Term r) {
-  am.acceptSelect(fd,l,r);
+  oz_io_acceptSelect(fd,l,r);
   return PROCEED;
 }
 
 void OZ_deSelect(int fd) {
-  am.deSelect(fd);
+  oz_io_deSelect(fd);
 }
 
 
@@ -1837,8 +1837,7 @@ void OZ_deSelect(int fd) {
 
 int OZ_protect(OZ_Term *t)
 {
-  if (!gcProtect(t)) {
-    OZ_warning("protect: failed");
+  if (!oz_protect(t)) {
     return 0;
   }
   return 1;
@@ -1846,8 +1845,7 @@ int OZ_protect(OZ_Term *t)
 
 int OZ_unprotect(OZ_Term *t)
 {
-  if (!gcUnprotect(t)) {
-    OZ_warning("unprotect: failed");
+  if (!oz_unprotect(t)) {
     return 0;
   }
   return 1;
@@ -1965,8 +1963,8 @@ OZ_Return OZ_raiseC(char *label,int arity,...)
 OZ_Return OZ_raiseError(OZ_Term exc)
 {
   OZ_Term ret = OZ_record(oz_atom("error"),
-			  cons(oz_int(1),
-			       cons(oz_atom("debug"),nil())));
+			  oz_cons(oz_int(1),
+			       oz_cons(oz_atom("debug"),oz_nil())));
   OZ_putSubtree(ret,oz_int(1),exc);
   OZ_putSubtree(ret,oz_atom("debug"),NameUnit);
 
@@ -2008,8 +2006,8 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
 
 
   OZ_Term ret = OZ_record(cat,
-			  cons(OZ_int(1),
-			       cons(OZ_atom("debug"),OZ_nil())));
+			  oz_cons(OZ_int(1),
+			       oz_cons(OZ_atom("debug"),OZ_nil())));
   OZ_putSubtree(ret,OZ_int(1),exc);
   OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
   return ret;
@@ -2135,7 +2133,7 @@ OZ_Term OZ_newChunk(OZ_Term val)
 
 int OZ_onToplevel()
 {
-  return am.onToplevel() ? 1 : 0;
+  return oz_onToplevel();
 }
 
 /* -----------------------------------------------------------------

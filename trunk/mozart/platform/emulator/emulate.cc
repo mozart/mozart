@@ -122,9 +122,9 @@ void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
 
   OZ_Term tt=OZ_tupleC("apply",iarity+oarity+1);
 
-  OZ_Term args=nil();
+  OZ_Term args=oz_nil();
   for (int j = iarity; j--;) {
-    args=cons(X[map == OZ_ID_MAP? j : map[j]],args);
+    args=oz_cons(X[map == OZ_ID_MAP? j : map[j]],args);
   }
   am.setExceptionInfo(OZ_mkTupleC("fapply",3,
 				  makeTaggedConst(bi),
@@ -134,7 +134,7 @@ void set_exception_info_call(Builtin *bi,OZ_Term *X, int *map=OZ_ID_MAP)
 
 static
 OZ_Term biArgs(OZ_Location *loc, OZ_Term *X) {
-  OZ_Term out=nil();
+  OZ_Term out=oz_nil();
   for (int i=loc->getOutArity(); i--; ) {
     out=oz_cons(oz_newVariable(),out);
   }
@@ -186,7 +186,7 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
   RAISE_THREAD;
 
 #define RAISE_TYPE1_FUN(fun,args) \
-  RAISE_TYPE1(fun, appendI(args,cons(oz_newVariable(),nil())));
+  RAISE_TYPE1(fun, appendI(args,oz_cons(oz_newVariable(),oz_nil())));
 
 #define RAISE_TYPE_NEW(bi,loc) \
   RAISE_TYPE1(bi->getPrintName(), biArgs(loc,X));
@@ -200,9 +200,9 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 
 Bool AM::hf_raise_failure()
 {
-  if (!onToplevel() &&
+  if (!oz_onToplevel() &&
       (!currentThread()->hasCatchFlag() || 
-       !isCurrentBoard(GETBOARD(currentThread())))) {
+       !oz_isCurrentBoard(GETBOARD(currentThread())))) {
     return OK;
   }
   exception.info  = NameUnit;
@@ -1225,7 +1225,7 @@ LBLdispatcher:
       switch(tmpRet) {
       case PROCEED:       DISPATCH(auxInt);
       case BI_TYPE_ERROR: RAISE_TYPE1_FUN(auxString, 
-					  cons(auxTaggedA,cons(auxTaggedB,nil())));
+					  oz_cons(auxTaggedA,oz_cons(auxTaggedB,oz_nil())));
 
       case SUSPEND:
 	{
@@ -1282,7 +1282,7 @@ LBLdispatcher:
 	  RAISE_THREAD;
 
 	case BI_TYPE_ERROR:
-	  RAISE_TYPE1_FUN(".", cons(XPC(1), cons(feature, nil())));
+	  RAISE_TYPE1_FUN(".", oz_cons(XPC(1), oz_cons(feature, oz_nil())));
 
 	case SLEEP:
 	default:
@@ -1324,7 +1324,7 @@ LBLdispatcher:
 
       Object *self = e->getSelf();
 
-      if (!e->onToplevel() && !e->isCurrentBoard(GETBOARD(self))) {
+      if (!oz_onToplevel() && !oz_isCurrentBoard(GETBOARD(self))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
 	RAISE_THREAD;
      }
@@ -1369,13 +1369,13 @@ LBLdispatcher:
 
       case FAILED:
 	HF_APPLY(OZ_atom("^"),
-		 cons(XPC(1),cons(XPC(2),nil())));
+		 oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
 
       case RAISE:
 	RAISE_THREAD;
 
       case BI_TYPE_ERROR:
-	RAISE_TYPE1_FUN("^",cons(XPC(1),cons(XPC(2),nil())));
+	RAISE_TYPE1_FUN("^",oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
 
       case SLEEP:
       default:
@@ -1448,7 +1448,7 @@ LBLdispatcher:
 	}
       
       case BI_TYPE_ERROR:
-	RAISE_TYPE1(auxString,cons(XPC(1),cons(XPC(2),nil())));
+	RAISE_TYPE1(auxString,oz_cons(XPC(1),oz_cons(XPC(2),oz_nil())));
 	
       default:
 	Assert(0);
@@ -1593,7 +1593,7 @@ LBLdispatcher:
 		    OZ_atom("Lock"),
 		    OZ_int(1),
 		    OZ_string(""));
-    RAISE_TYPE1("lock",cons(aux,nil()));
+    RAISE_TYPE1("lock",oz_cons(aux,oz_nil()));
     RAISE_THREAD;
   }
   
@@ -1601,15 +1601,15 @@ LBLdispatcher:
   Thread *th=e->currentThread();
   
   if(t->isLocal()){
-    if(!e->onToplevel()){
-      if (!e->isCurrentBoard(GETBOARD((LockLocal*)t))) {
+    if(!oz_onToplevel()){
+      if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
 	RAISE_THREAD;}}
     if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
     if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
     goto no_lock;}
 
-  if(!e->onToplevel()){
+  if(!oz_onToplevel()){
     (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
     RAISE_THREAD;
   }
@@ -1699,7 +1699,7 @@ LBLdispatcher:
 	Bool copyOnce = predd->isCopyOnce();
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
 			       predd->getFile(), predd->getLine(), predd->getColumn(),
-			       nil(), // mm2: inherit native?
+			       oz_nil(), // mm2: inherit native?
 			       predd->getMaxX());
 	predd->PC = copyCode(preddPC,list,copyOnce==NO);
 	predd->setGSize(size);
@@ -1771,7 +1771,7 @@ LBLdispatcher:
     if (oz_isProcedure(object)) 
       goto bombSend;
 
-    RAISE_APPLY(object, cons(makeMessage(arity,label,X),nil()));
+    RAISE_APPLY(object, oz_cons(makeMessage(arity,label,X),oz_nil()));
 
   bombSend:
     if (!isTailCall) PC = PC+6;
@@ -1804,7 +1804,7 @@ LBLdispatcher:
     if (!oz_isClass(cls)) {
       oz_raise(E_ERROR,E_KERNEL,"type",5,
 	       oz_atom(","),
-	       cons(origCls,cons(makeMessage(arity,ami->methName,X),nil())),
+	       oz_cons(origCls,oz_cons(makeMessage(arity,ami->methName,X),oz_nil())),
 	       oz_atom("class"),
 	       oz_int(1),
 	       oz_atom(""));
@@ -2390,7 +2390,7 @@ LBLdispatcher:
 #endif
        Y = NULL;  // sa here unused
        //       Assert(e->currentBoard()->isSolve());
-       //Assert(!e->onToplevel());
+       //Assert(!oz_onToplevel());
        Assert(CTS->isEmpty()); // approximates one LTQ task
        
        // postpone poping task from taskstack until 
@@ -2484,7 +2484,7 @@ LBLdispatcher:
 
   Case(DEBUGENTRY)
     {
-      if ((e->debugmode() || CTT->getTrace()) && e->onToplevel()) {
+      if ((e->debugmode() || CTT->getTrace()) && oz_onToplevel()) {
 	int line = smallIntValue(getNumberArg(PC+2));
 	if (line < 0) {
 	  execBreakpoint(e->currentThread());
@@ -2703,7 +2703,7 @@ LBLdispatcher:
 	predicate = tagged2Const(pred);
 	goto LBLcall;
       }
-      RAISE_APPLY(pred,cons(OZ_atom("proc or builtin expected."),nil()));
+      RAISE_APPLY(pred,oz_cons(OZ_atom("proc or builtin expected."),oz_nil()));
     }
 
   Case(GENCALL) 

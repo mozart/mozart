@@ -209,30 +209,30 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
   //     instruction
   getNextDebugInfoArgs(PC,file,line,colum,comment);
 
-  TaggedRef pairlist = nil();
+  TaggedRef pairlist = oz_nil();
   pairlist =
-    cons(OZ_pairAI("time",findTimeStamp(PC)),
-	 cons(OZ_pairA("data",makeTaggedConst(CAP)),
-	      cons(OZ_pairA("file",file),
-		   cons(OZ_pairAI("line",line < 0? -line: line),
-			cons(OZ_pairA("column",OZ_int(colum)),
-			     cons(OZ_pairAI("PC",(int)PC),
-				  cons(OZ_pairA("kind",OZ_atom("call")),
-				       cons(OZ_pairA("origin",
+    oz_cons(OZ_pairAI("time",findTimeStamp(PC)),
+	 oz_cons(OZ_pairA("data",makeTaggedConst(CAP)),
+	      oz_cons(OZ_pairA("file",file),
+		   oz_cons(OZ_pairAI("line",line < 0? -line: line),
+			oz_cons(OZ_pairA("column",OZ_int(colum)),
+			     oz_cons(OZ_pairAI("PC",(int)PC),
+				  oz_cons(OZ_pairA("kind",OZ_atom("call")),
+				       oz_cons(OZ_pairA("origin",
 						     OZ_atom("dbgGetDef")),
 					    pairlist))))))));
   if (frameId != -1)
-    pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+    pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
   else
-    pairlist = cons(OZ_pairA("vars",getFrameVariables(PC,Y,CAP)),pairlist);
+    pairlist = oz_cons(OZ_pairA("vars",getFrameVariables(PC,Y,CAP)),pairlist);
 
   return OZ_recordInit(OZ_atom("entry"), pairlist);
 }
 
 TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
 				      RefsArray Y, Abstraction *CAP) {
-  TaggedRef locals = nil();
-  TaggedRef globals = nil();
+  TaggedRef locals = oz_nil();
+  TaggedRef globals = oz_nil();
 
   ProgramCounter aux = definitionEnd(PC);
 
@@ -243,7 +243,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
       if (Y) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
 	if (!literalEq(aux1, AtomEmpty) && Y[i] != makeTaggedNULL()) {
-	  locals = cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
+	  locals = oz_cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
 	}
       }
       aux += sizeOf(getOpcode(aux));
@@ -255,7 +255,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
 	TaggedRef aux1 = getLiteralArg(aux+1);
 	if (!literalEq(aux1, AtomEmpty)) {
-	  globals = cons(OZ_mkTupleC("#", 2, aux1, CAP->getG(i)), globals);
+	  globals = oz_cons(OZ_mkTupleC("#", 2, aux1, CAP->getG(i)), globals);
 	}
 	aux += sizeOf(getOpcode(aux));
       }
@@ -264,9 +264,9 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
   }
 
   TaggedRef pairlist =
-    cons(OZ_pairA("Y", locals),
-	 cons(OZ_pairA("G", globals),
-	      nil()));
+    oz_cons(OZ_pairA("Y", locals),
+	 oz_cons(OZ_pairA("G", globals),
+	      oz_nil()));
 
   TaggedRef ret = OZ_recordInit(OZ_atom("v"), pairlist);
   return ret;

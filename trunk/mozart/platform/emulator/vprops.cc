@@ -138,12 +138,13 @@ enum EmulatorPropertyIndex {
 // static variables.  Each arity is computed only the 1st time
 // it is needed.
 
+static
 OZ_Arity mkArity(int n,...)
 {
   va_list(ap);
   va_start(ap,n);
-  OZ_Term list = nil();
-  for (int i=0;i<n;i++) list = cons(va_arg(ap,OZ_Term),list);
+  OZ_Term list = oz_nil();
+  for (int i=0;i<n;i++) list = oz_cons(va_arg(ap,OZ_Term),list);
   va_end(ap);
   return OZ_makeArity(list);
 }
@@ -355,9 +356,9 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     // ARGV
   case PROP_ARGV:
     {
-      TaggedRef out = nil();
+      TaggedRef out = oz_nil();
       for(int i=ozconf.argC-1; i>=0; i--)
-	out = cons(oz_atom(ozconf.argV[i]),out);
+	out = oz_cons(oz_atom(ozconf.argV[i]),out);
       return out;
     }
   CASE_ATOM(PROP_ROOT_URL,ozconf.url);
@@ -701,7 +702,7 @@ OZ_Return GetProperty(TaggedRef k,TaggedRef& val)
 
 OZ_Return PutProperty(TaggedRef k,TaggedRef v)
 {
-  if (!am.onToplevel()) return PROP__NOT__GLOBAL;
+  if (!oz_onToplevel()) return PROP__NOT__GLOBAL;
   TaggedRef key = k;
   DEREF(key,key_ptr,key_tag);
   if (oz_isVariable(key_tag)) oz_suspendOnPtr(key_ptr);

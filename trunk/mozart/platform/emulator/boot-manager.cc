@@ -108,14 +108,14 @@ static ModuleEntry module_table[] = {
 
 
 inline TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I) {
-  OZ_Term l = nil();
+  OZ_Term l = oz_nil();
 
   Builtin *bi;
 
   while (I && I->name) {
     bi = new Builtin(I->name,I->inArity,I->outArity,I->func,OK);
  
-    l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
+    l = oz_cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
 

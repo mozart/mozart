@@ -419,11 +419,11 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
   TaggedRef flist=AtomNil;
   TaggedRef arity=sr.getArityList();
   while (oz_isCons(arity)) {
-    TaggedRef feat=head(arity);
+    TaggedRef feat=oz_head(arity);
     if (!lookup(feat)) {
-      flist=cons(feat,flist);
+      flist=oz_cons(feat,flist);
     }
-    arity=tail(arity);
+    arity=oz_tail(arity);
   }
   return flist;
 }
@@ -444,7 +444,7 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
         }
         inplace_quicksort(arr, arr+(numelem-1));
         for (int i=numelem-1; i>=0; i--) {
-           arity=cons(arr[i],arity);
+           arity=oz_cons(arr[i],arity);
         }
     }
     return arity;
@@ -457,7 +457,7 @@ TaggedRef DynamicTable::getKeys()
   for (int di=0; di<size; di++) {
     if (table[di].value!=makeTaggedNULL()) {
       Assert(oz_isFeature(table[di].ident));
-      arity=cons(table[di].ident,arity);
+      arity=oz_cons(table[di].ident,arity);
     }
   }
   return arity;
@@ -472,7 +472,7 @@ TaggedRef DynamicTable::getPairs() {
       SRecord *sr = SRecord::newSRecord(AtomPair,2);
       sr->setArg(0, table[di].ident);
       sr->setArg(1, table[di].value);
-      arity=cons(makeTaggedSRecord(sr),arity);
+      arity=oz_cons(makeTaggedSRecord(sr),arity);
     }
   }
   return arity;
@@ -485,7 +485,7 @@ TaggedRef DynamicTable::getItems()
   for (int di=0; di<size; di++) {
     if (table[di].value!=makeTaggedNULL()) {
       Assert(oz_isFeature(table[di].ident));
-      items=cons(table[di].value,items);
+      items=oz_cons(table[di].value,items);
     }
   }
   return items;

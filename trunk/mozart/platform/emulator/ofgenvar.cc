@@ -118,8 +118,8 @@ OZ_Return GenOFSVariable::unifyV(TaggedRef *vPtr, TaggedRef term,
                 // Calculate feature or list of features 'flist' that are
                 // in LTUPLE and not in OFS.
                 TaggedRef flist=AtomNil;
-                if (!arg2) flist=cons(makeTaggedSmallInt(2),flist);
-                if (!arg1) flist=cons(makeTaggedSmallInt(1),flist);
+                if (!arg2) flist=oz_cons(makeTaggedSmallInt(2),flist);
+                if (!arg1) flist=oz_cons(makeTaggedSmallInt(1),flist);
                 // Add the extra features to S_ofs suspensions:
                 addFeatOFSSuspensionList(var,suspList,flist,TRUE);
 	    } else {

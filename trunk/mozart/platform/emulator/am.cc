@@ -40,50 +40,6 @@
 AM am;
 
 /* -------------------------------------------------------------------------
- * IONodes
- * -------------------------------------------------------------------------*/
-
-class IONode {
-public:
-  int fd;
-  OZ_IOHandler handler[2];
-  void *readwritepair[2];
-  IONode *next;
-  IONode(int f, IONode *nxt): fd(f), next(nxt) {
-    handler[0] = handler[1] = 0;
-    readwritepair[0] = readwritepair[1] = 0;
-  }
-};
-
-static
-IONode *ioNodes = NULL;
-
-static
-IONode *findIONode(int fd)
-{
-  IONode *aux = ioNodes;
-  while(aux) {
-    if (aux->fd == fd) return aux;
-    aux = aux->next;
-  }
-  ioNodes = new IONode(fd,ioNodes);
-  return ioNodes;
-}
-
-
-static
-int hasPendingSelect()
-{
-  IONode *aux = ioNodes;
-  while(aux) {
-    if (aux->handler[SEL_READ] || aux->handler[SEL_WRITE]) return OK;
-    aux = aux->next;
-  }
-  return NO;
-}
-
-
-/* -------------------------------------------------------------------------
  * Init and exit AM
  * -------------------------------------------------------------------------*/
 
@@ -473,13 +429,13 @@ Bool AM::isLocalUVarOutline(TaggedRef var, TaggedRef *varPtr)
     bb=bb->derefBoard();
     *varPtr=makeTaggedUVar(bb);
   }
-  return isCurrentBoard(bb);
+  return oz_isCurrentBoard(bb);
 }
 
 Bool AM::isLocalSVarOutline(SVariable *var)
 {
   Board *home = var->getHomeUpdate();
-  return isCurrentBoard(home);
+  return oz_isCurrentBoard(home);
 }
 
 
@@ -494,14 +450,14 @@ Bool AM::installScript(Script &script)
     if (res == PROCEED) continue;
     if (res == FAILED) {
       ret = NO;
-      if (!onToplevel()) {
+      if (!oz_onToplevel()) {
 	break;
       }
     } else {
       // mm2: instead of failing, this should corrupt the space
       (void) am.emptySuspendVarList();
       ret = NO;
-      if (!onToplevel()) {
+      if (!oz_onToplevel()) {
 	break;
       }
     }
@@ -841,7 +797,7 @@ exit:
 oz_BFlag oz_isBetween(Board *to, Board *varHome)
 {
   while (1) {
-    if (am.isCurrentBoard(to)) return B_BETWEEN;
+    if (oz_isCurrentBoard(to)) return B_BETWEEN;
     if (to == varHome) return B_NOT_BETWEEN;
     Assert(!oz_isRootBoard(to));
     to = to->getParentAndTest();
@@ -928,7 +884,7 @@ Bool AM::wakeUpBoard(Thread *tt, Board *home)
   // Note that we don't need to schedule the wakeup for the board
   // because in both cases there is a thread which will check 
   // entailment for us;
-  if (isCurrentBoard(bb) || bb->isNervous ()) {
+  if (oz_isCurrentBoard(bb) || bb->isNervous ()) {
 #ifdef DEBUG_CHECK
     // because of assertions in decSuspCount and getSuspCount
     if (bb->isFailed()) {
@@ -1372,19 +1328,6 @@ void AM::reduceTrailOnEqEq()
  * MISC
  * -------------------------------------------------------------------------*/
 
-int AM::awakeIO(int, void *var) {
-  am.awakeIOVar((TaggedRef) var);
-  return 1;
-}
-
-void AM::awakeIOVar(TaggedRef var)
-{
-  Assert(onToplevel());
-  Assert(oz_isCons(var));
-
-  OZ_unifyInThread(OZ_head(var),OZ_tail(var));
-}
-
 #ifdef DEBUG_CHECK
 static Board *oldBoard = (Board *) NULL;
 static Board *oldSolveBoard = (Board *) NULL; 
@@ -1393,7 +1336,7 @@ static Board *oldSolveBoard = (Board *) NULL;
 void AM::setCurrent(Board *c, Bool checkNotGC)
 {
   Assert(!c->isCommitted() && !c->isFailed());
-  Assert(!checkNotGC || isCurrentBoard(oldBoard));
+  Assert(!checkNotGC || oz_isCurrentBoard(oldBoard));
 
   _currentBoard = c;
   _currentUVarPrototype = makeTaggedUVar(c);
@@ -1411,110 +1354,6 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
     _currentSolveBoard = c->getSolveBoard();
     wasSolveSet = NO;
     DebugCode (oldSolveBoard = _currentSolveBoard); 
-  }
-}
-
-
-void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
-{
-  if (!onToplevel()) {
-    warning("select only on toplevel");
-    return;
-  }
-  IONode *ion = findIONode(fd);
-  ion->readwritepair[mode]=val;
-  ion->handler[mode]=fun;
-  osWatchFD(fd,mode);
-}
-
-
-void AM::acceptSelect(int fd, OZ_IOHandler fun, void *val)
-{
-  if (!onToplevel()) {
-    warning("select only on toplevel");
-    return;
-  }
-
-  IONode *ion = findIONode(fd);
-  ion->readwritepair[SEL_READ]=val;
-  ion->handler[SEL_READ]=fun;
-  osWatchAccept(fd);
-}
-
-int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
-{
-  if (!onToplevel()) {
-    warning("select only on toplevel");
-    return OK;
-  }
-  if (osTestSelect(fd,mode)==1) {
-    OZ_unifyInThread(l,r);
-    return OK;
-  }
-  IONode *ion = findIONode(fd);
-  ion->readwritepair[mode]=(void *) cons(l,r);
-  gcProtect((TaggedRef *) &(ion->readwritepair[mode]));
-
-  ion->handler[mode]=awakeIO;
-  osWatchFD(fd,mode);
-  return OK;
-}
-
-void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
-{
-  if (!onToplevel()) {
-    warning("acceptSelect only on toplevel");
-    return;
-  }
-
-  IONode *ion = findIONode(fd);
-  ion->readwritepair[SEL_READ]=(void *) cons(l,r);
-  gcProtect((TaggedRef *) &(ion->readwritepair[SEL_READ]));
-
-  ion->handler[SEL_READ]=awakeIO;
-  osWatchAccept(fd);
-}
-
-void AM::deSelect(int fd)
-{
-  deSelect(fd,SEL_READ);
-  deSelect(fd,SEL_WRITE);
-}
-
-void AM::deSelect(int fd,int mode)
-{
-  osClrWatchedFD(fd,mode);
-  IONode *ion = findIONode(fd);
-  ion->readwritepair[mode]  = 0;
-  (void) gcUnprotect((TaggedRef *) &(ion->readwritepair[mode]));
-  ion->handler[mode]  = 0;
-}
-
-
-// called if IOReady (signals are blocked)
-void AM::handleIO()
-{
-  unsetSFlag(IOReady);
-  int numbOfFDs = osFirstSelect();
-
-  // find the nodes to awake
-  for (int index = 0; numbOfFDs > 0; index++) {
-    for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
-
-      if (osNextSelect(index, mode) ) {
-
-	numbOfFDs--;
-
-	IONode *ion = findIONode(index);
-	if ((ion->handler[mode]) &&  /* Perdio: handlers may do a deselect for other fds*/
-	    (ion->handler[mode])(index, ion->readwritepair[mode])) {
-	  ion->readwritepair[mode] = 0;
-	  (void) gcUnprotect((TaggedRef *)&(ion->readwritepair[mode]));
-	  ion->handler[mode] = 0;
-	  osClrWatchedFD(index,mode);
-	}
-      }
-    }
   }
 }
 
@@ -1554,16 +1393,6 @@ void AM::handleTasks()
   }
 }
 
-//
-// called from signal handler
-void AM::checkIO()
-{
-  int numbOfFDs = osCheckIO();
-  if (!isCritical() && (numbOfFDs > 0)) {
-    setSFlag(IOReady);
-  }
-}
-
 void AM::suspendEngine()
 {
   deinstallPath(_rootBoard);
@@ -1590,7 +1419,7 @@ void AM::suspendEngine()
     }
 
     if (isSetSFlag(IOReady)) {
-      handleIO();
+      oz_io_handle();
     }
 
     if (isSetSFlag(TasksReady)) {
@@ -1654,7 +1483,7 @@ void AM::checkStatus()
   if (isSetSFlag(IOReady)) {
     deinstallPath(_rootBoard);
     osBlockSignals();
-    handleIO();
+    oz_io_handle();
     osUnblockSignals();
   }
   if (isSetSFlag(TasksReady)) {
@@ -1829,7 +1658,7 @@ Bool AM::isStableSolve(SolveActor *sa)
 {
   if (sa->getThreads() != 0) 
     return NO;
-  if (isCurrentBoard(sa->getSolveBoard()) &&
+  if (oz_isCurrentBoard(sa->getSolveBoard()) &&
       !trail.isEmptyChunk())
     return NO;
   // simply "don't worry" if in all other cases it is too weak;
@@ -1951,7 +1780,7 @@ void AM::handleAlarm(unsigned int ms)
 
   checkGC();
 
-  checkIO();
+  oz_io_check();
 
   // tasks are actually checked twice - here and in the 'USR2'
   // handler; but these are very light-weight checks;
@@ -2046,7 +1875,7 @@ void AM::wakeUser()
   unsigned int now = osTotalTime();
 
   while (sleepQueue && sleepQueue->time<=now) {
-    awakeIOVar(sleepQueue->node);
+    oz_io_awakeVar(sleepQueue->node);
     OzSleep *aux = sleepQueue->next;
     delete sleepQueue;
     sleepQueue = aux;
@@ -2072,7 +1901,7 @@ Thread *AM::mkLPQ(Board *bb, int prio)
   th->setBody(allocateBody());
   bb->incSuspCount();
   checkDebug(th,bb);
-  //Assert(isCurrentBoard(bb));
+  //Assert(oz_isCurrentBoard(bb));
 
 #ifdef DEBUG_THREADCOUNT
   th->markLPQThread();
@@ -2101,7 +1930,7 @@ Thread *AM::mkLPQ(Board *bb, int prio)
 int AM::commit(Board *bb, Thread *tt)
 {
   Assert(!currentBoard()->isCommitted());
-  Assert(isCurrentBoard(bb->getParent()));
+  Assert(oz_isCurrentBoard(bb->getParent()));
 
   AWActor *aw = AWActor::Cast(bb->getActor());
 
@@ -2280,7 +2109,7 @@ char flagChar(StatusBit flag)
  */
 void AM::failBoard()
 {
-  Assert(!onToplevel());
+  Assert(!oz_onToplevel());
   Board *bb=currentBoard();
   Assert(bb->isInstalled());
 
@@ -2349,11 +2178,11 @@ void AM::pushPreparedCalls(Thread *thr)
 void AM::suspendOnVarList(Thread *thr)
 {
   while (oz_isCons(_suspendVarList)) {
-    OZ_Term v=head(_suspendVarList);
+    OZ_Term v=oz_head(_suspendVarList);
     Assert(oz_isVariable(*tagged2Ref(v)));
     
     addSuspAnyVar(tagged2Ref(v),thr);
-    _suspendVarList=tail(_suspendVarList);
+    _suspendVarList=oz_tail(_suspendVarList);
   }
 }
 
