@@ -1268,8 +1268,6 @@ void OwnerTable::print(){
 
 #define BORROW_GC_MARK 1
 
-int borrowEntryToIndex(BorrowEntry *b);
-
 class BorrowEntry: public OB_Entry {
 friend class BorrowTable;
 private:
@@ -1797,8 +1795,6 @@ void BorrowTable::print(){
 }
 
 #endif
-
-inline int borrowEntryToIndex(BorrowEntry *b){return borrowTable->ptr2Index(b);}
 
 #ifdef DEBUG_PERDIO
 
@@ -4630,11 +4626,11 @@ void sendAcknowledge(Site* sd,int OTI)
 }
 
 
-void PerdioVar::acknowledge(OZ_Term *ptr)
+void PerdioVar::acknowledge(OZ_Term *p)
 {
   PD((PD_VAR,"acknowledge"));
   OZ_Term val=u.bindings->val;
-  primBind(ptr,val);
+  primBind(p,val);
   if (u.bindings->thread->isDeadThread()) {
     PD((WEIRD,"dead thread acknowledge %x",u.bindings->thread));
   } else {
@@ -5845,7 +5841,7 @@ int loadURL(char *url, OZ_Term out)
       time_t timestamp;
       int OTI;
       {
-	char *last = index(url,':');
+	char *last = strchr(url,':');
 	if (!last) goto bomb;
 
 	int len=last-url;
@@ -6062,6 +6058,12 @@ BIspec perdioSpec[] = {
 
 void BIinitPerdio()
 {
+#ifdef DEBUG_PERDIO
+  DV = new DebugVector();
+#endif
+
+  initIp();
+
   BIaddSpec(perdioSpec);
   
   OZ_protect(&ozport);

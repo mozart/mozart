@@ -310,8 +310,8 @@ public:
 
 #define _DECL_DYN_ARRAY(Type,Var,Size) _DynArray<Type> Var(Size)
 
-void * freeListMalloc(size_t chunk_size);
-void freeListDispose(void *addr, size_t chunk_size);
+void * freeListMallocOutline(size_t chunk_size);
+void freeListDisposeOutline(void *addr, size_t chunk_size);
 
 template <class T>
 class _DynArray {
@@ -319,8 +319,8 @@ private:
   T * array;
   int size;
 public:
-  _DynArray(int sz) { size = sz; array = (T*) freeListMalloc(sz*sizeof(T)); };
-  ~_DynArray() { freeListDispose(array,size*sizeof(T)); }
+  _DynArray(int sz) { size = sz; array = (T*) freeListMallocOutline(sz*sizeof(T)); };
+  ~_DynArray() { freeListDisposeOutline(array,size*sizeof(T)); }
   T &operator[] (int i) { return array[i]; }
   operator T * () { return array; }
 };

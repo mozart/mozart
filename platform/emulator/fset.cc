@@ -431,16 +431,17 @@ OZ_Boolean OZ_FSetImpl::valid(const FSetValue &fs) const
   if (fs._card < _card_min || _card_max < fs._card) 
     goto failure;
 
-  for (int i = fset_high; i--; ) {
-    if (_in[i] & ~fs._in[i])
-      goto failure;
-    if (_not_in[i] & fs._in[i])
-      goto failure;
-  }
+  {
+    for (int i = fset_high; i--; ) {
+      if (_in[i] & ~fs._in[i])
+	goto failure;
+      if (_not_in[i] & fs._in[i])
+	goto failure;
+    }
   
-  DEBUG_FSETIR("TRUE" << endl);
-  return OZ_TRUE;
-
+    DEBUG_FSETIR("TRUE" << endl);
+    return OZ_TRUE;
+  }
 failure:
   DEBUG_FSETIR("FALSE" << endl);
   return OZ_FALSE;
@@ -892,9 +893,9 @@ FSetValue OZ_FSetImpl::getNotInSet(void) const
   return FSetValue(_not_in);  
 }
 
-OZ_Boolean OZ_FSetImpl::operator >= (const int i)
+OZ_Boolean OZ_FSetImpl::operator >= (const int ii)
 {
-  int lower_word = div32(i), lower_bit = mod32(i);
+  int lower_word = div32(ii), lower_bit = mod32(ii);
 
   for (int i = 0; i < lower_word; i += 1)
     _not_in[i] = ~0;
@@ -903,9 +904,9 @@ OZ_Boolean OZ_FSetImpl::operator >= (const int i)
   return normalize();
 }
 
-OZ_Boolean OZ_FSetImpl::operator <= (const int i)
+OZ_Boolean OZ_FSetImpl::operator <= (const int ii)
 {
-  int upper_word = div32(i), upper_bit = mod32(i);
+  int upper_word = div32(ii), upper_bit = mod32(ii);
   
   for (int i = upper_word + 1; i < fset_high; i += 1)
     _not_in[i] = ~0;

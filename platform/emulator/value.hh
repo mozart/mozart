@@ -479,7 +479,7 @@ protected:
  public:
   USEHEAPMEMORY;
 
-  LTuple(void) {COUNT1(sizeLists,sizeof(LTuple));} // called by putlist and the like
+  LTuple(void) {COUNT1(sizeLists,sizeof(LTuple);)} // called by putlist and the like
   LTuple(TaggedRef head, TaggedRef tail) 
   { COUNT1(sizeLists,sizeof(LTuple)); args[0] = head; args[1] = tail; }
 
