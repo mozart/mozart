@@ -33,7 +33,3 @@ in
    \insert 'ozcar/ozcar'
 
 end
-
-\ifdef SAVE
-Ozcar = {NewOzcar Compile Error Tk TkTools Browse}
-\endif
