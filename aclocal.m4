@@ -347,6 +347,7 @@ AC_DEFUN(OZ_ARG_WITH_CXX,[
     oz_cv_with_cxx=$with_cxx)
   : ${CCC:=$oz_cv_with_cxx}
   : ${CCC:=$oz_with_cxx}
+  : ${CXX:=$CCC}
 ])
 
 dnl ==================================================================
