@@ -40,19 +40,15 @@ extern Propagator * imposed_propagator;
 // propagators
 
 void WidthPropagator::gCollect(void) {
-  oz_gCollectTerm(rawrec,rawrec);
-  oz_gCollectTerm(rawwid,rawwid);
+  OZ_gCollectBlock(&rawrec, &rawrec, 2);
 }
 
 void WidthPropagator::sClone(void) {
-  oz_sCloneTerm(rawrec,rawrec);
-  oz_sCloneTerm(rawwid,rawwid);
+  OZ_sCloneBlock(&rawrec, &rawrec, 2);
 }
 
 void MonitorArityPropagator::gCollect(void) {
-  oz_gCollectTerm(X,X);
-  oz_gCollectTerm(K,K);
-  oz_gCollectTerm(L,L);
+  OZ_gCollectBlock(&X, &X, 3);
   if (FH)
     oz_gCollectTerm(FH,FH);
   if (FT)
@@ -60,13 +56,11 @@ void MonitorArityPropagator::gCollect(void) {
 }
  
 void MonitorArityPropagator::sClone(void) {
-  oz_sCloneTerm(X,X);
-  oz_sCloneTerm(K,K);
-  oz_sCloneTerm(L,L);
+  OZ_sCloneBlock(&X, &X, 3);
   if (FH)
-    oz_sCloneTerm(FH,FH);
+    OZ_sCloneBlock(&FH,&FH,1);
   if (FT)
-    oz_sCloneTerm(FT,FT);
+    OZ_sCloneBlock(&FT,&FT,1);
 }
 
 /* -------------------------------------------------------------------------

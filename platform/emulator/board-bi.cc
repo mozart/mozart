@@ -126,7 +126,7 @@ public:
     BaseDistributor * t = 
       (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
 
-    oz_sCloneTerm(var, t->var);
+    OZ_sCloneBlock(&var, &(t->var), 1);
 
     return (Distributor *) t;
   }
