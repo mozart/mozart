@@ -300,16 +300,16 @@ public:
 class FL_Manager {
 
 private:
-  FL_Small * small[FL_SizeToIndex(FL_MaxSize) + 1];
-  FL_Large * large;
+  static FL_Small * small[];
+  static FL_Large * large;
 
 private:
-  void refill(const size_t s);
+  static void refill(const size_t s);
 
 public:  
-  void init(void);
+  static void init(void);
 
-  void * alloc(const size_t s) {
+  static void * alloc(const size_t s) {
     Assert(FL_IsValidSize(s));
     if (s > FL_MaxSize) {
       return heapMalloc(s);
@@ -324,7 +324,7 @@ public:
     }
   }
   
-  void free(void * p, const size_t s) {
+  static void free(void * p, const size_t s) {
     Assert(FL_IsValidSize(s));
     if (s > FL_MaxSize) {
       FL_Large * f = (FL_Large *) p;
@@ -338,19 +338,16 @@ public:
     }
   }
 
-  unsigned int getSize(void);
+  static unsigned int getSize(void);
 
 };
 
-extern FL_Manager FLM;
-
-
-#define freeListMalloc(s)    (FLM.alloc((s)))
+#define freeListMalloc(s)    (FL_Manager::alloc((s)))
 
 #ifdef CS_PROFILE
 #define freeListDispose(p,s)
 #else
-#define freeListDispose(p,s) FLM.free((p),(s))
+#define freeListDispose(p,s) FL_Manager::free((p),(s))
 #endif
 
 #endif
