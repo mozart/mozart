@@ -2112,4 +2112,6 @@ void initFDs()
 
   BIfdHeadManager::initStaticData();
   BIfdBodyManager::initStaticData();
+
+  __CDVoidFiniteDomain.initFull();
 }
