@@ -203,7 +203,7 @@ public:
 #define INFINITE_CREDIT            (0-1)
 #define PERSISTENT_CRED            (0-1)
 
-#ifdef 1
+#ifdef DEBUG_CREDIT
 
 #define START_CREDIT_SIZE        (256)
 #define OWNER_GIVE_CREDIT_SIZE   (16)
