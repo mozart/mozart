@@ -40,7 +40,8 @@ terminates as soon as one of the generators runs out of values.
       <item>iterates over the elements of list ?{L}.  At each
 iteration, <code/X/ is bound to the next element in ?{L}.  The
 generator runs out when all elements in ?{L} have been consumed.
-      <entry/<code/X in ?{E1};?{E2};?{E3}//
+      <entry/<code/X in  ?{E1};?{E2};?{E3}//
+      <entry/<code/X in (?{E1};?{E2};?{E3})//
       <item/this iterator is intended to have a C-like flavor.  ?{E1}
 is the initial value, ?{E2} is the boolean condition, and ?{E3} is the
 next value.  The iterator runs out when ?{E2} evaluates to <code/false/./
