@@ -114,6 +114,25 @@
 	   "DFKI Oz Programming Interface.")))
 
 (eval-and-compile
+  (eval '(defcustom OZ-HOME "@prefix@"
+	   "*Directory where Oz is installed.
+Used as fallback if the environment variable OZHOME is not set."
+	   :type 'string
+	   :group 'oz)))
+(put 'OZ-HOME 'variable-interactive
+     "DOz installation directory: ")
+
+(eval-and-compile
+  (eval '(defun oz-home ()
+	   "Return the path of the Oz installation directory."
+	   (let ((ret (getenv "OZHOME")))
+	     (if ret
+		 ret
+	       (message "OZHOME not set, using fallback: %s" OZ-HOME)
+	       (setenv "OZHOME" OZ-HOME)
+	       OZ-HOME)))))
+
+(eval-and-compile
   (eval '(defcustom oz-want-font-lock t
 	   "*If non-nil, automatically enter font-lock-mode for oz-mode."
 	   :type 'boolean
@@ -180,7 +199,8 @@ Note that this variable is only checked once when oz.el is loaded."
 	       (concat "prefix=http\\://www.ps.uni-sb.de/ozhome/="
 		       "~/mozart/share/lib/stage1/:"
 		       "prefix=http\\://www.ps.uni-sb.de/ozhome/="
-		       "~/mozart/share/tools/stage1/"))
+		       "~/mozart/share/tools/stage1/:"
+		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
 	   "*Search path for the Oz Components (used by \\[oz-other])."
 	   :type 'string
 	   :group 'oz)))
@@ -280,19 +300,6 @@ This is set when gdb is active.")
 (defvar oz-emulator-filter-hook nil
   "If non-nil, hook used as second process filter for the Oz Emulator.
 This is set when gdb is active.")
-
-(defvar OZ-HOME "@prefix@"
-  "Directory where Oz is installed.
-Only used as fallback if the environment variable OZHOME is not set.")
-
-(defun oz-home ()
-  "Return the path of the Oz installation directory."
-  (let ((ret (getenv "OZHOME")))
-    (if ret
-	ret
-      (message "OZHOME not set, using fallback: %s" OZ-HOME)
-      (setenv "OZHOME" OZ-HOME)
-      OZ-HOME)))
 
 (defvar oz-doc-dir (concat (oz-home) "/doc/")
   "Directory containing the Oz documentation.")
