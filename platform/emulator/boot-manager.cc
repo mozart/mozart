@@ -55,7 +55,6 @@ TaggedRef dictionary_of_modules;
 #include "modCTB-if.cc"
 #include "modFinalize-if.cc"
 #include "modProfile-if.cc"
-#include "modForeign-if.cc"
 #include "modFault-if.cc"
 #include "modDistribution-if.cc"
 
@@ -105,7 +104,6 @@ static ModuleEntry module_table[] = {
   {"System",          mod_int_System},
   {"Finalize",        mod_int_Finalize},
   {"Profile",         mod_int_Profile},
-  {"Foreign",         mod_int_Foreign},
   {"Fault",           mod_int_Fault},
   {"Distribution",    mod_int_Distribution},
   {"CTB",             mod_int_CTB},
@@ -253,31 +251,6 @@ OZ_BI_define(BIBootManager, 1, 1) {
 } OZ_BI_end
 
 
-OZ_BI_define(BIdlLoad,1,1)
-{
-  oz_declareVirtualStringIN(0,filename);
-
-  TaggedRef hdl;
-  TaggedRef res = osDlopen(filename,hdl);
-  if (res) return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,
-                           oz_atom(filename),res);
-
-  void* handle = OZ_getForeignPointer(hdl);
-
-  init_fun_t init_function = (init_fun_t) osDlsym(handle,"oz_init_module");
-
-  // oops, there is no `init_function()'
-  if (init_function == 0) {
-    return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,
-                    OZ_in(0));
-  }
-
-  // `init_function()' returns the interface table
-  OZ_C_proc_interface * i_table = (*init_function)();
-
-  OZ_RETURN(oz_pair2(hdl, ozInterfaceToRecord(i_table, 0, OK)));
-} OZ_BI_end
-
 extern void BIinitPerdio();
 
 OZ_BI_proto(BIcontrolVarHandler);
@@ -291,7 +264,6 @@ OZ_BI_proto(BIportWait);
 
 // include all builtin modules
 //
-#include "modBoot-if.cc"
 #include "modArray-if.cc"
 #include "modAtom-if.cc"
 #include "modBitArray-if.cc"
@@ -325,7 +297,6 @@ OZ_BI_proto(BIportWait);
 #include "modByteString-if.cc"
 
 static ModuleEntry bi_module_table[] = {
-  {"Boot",              mod_int_Boot},
   {"Array",             mod_int_Array},
   {"Atom",              mod_int_Atom},
   {"BitArray",          mod_int_BitArray},
@@ -444,11 +415,6 @@ void initBuiltins() {
   //
   static struct { char* oldName; char* newName; }
   *help_ptr, help_table[] = {
-    //
-    // Boot
-    //
-    {"builtin",         "Boot.builtin"},
-    {"BootManager",     "Boot.manager"},
     //
     // Array
     //
@@ -801,8 +767,8 @@ void initBuiltins() {
   BI_url_load =
     makeTaggedConst(new Builtin("URL.load", 1, 1, BIurl_load, OK));
   // this actually _is_ in the builtin table
-  BI_boot_manager = getBuiltin_oz("Boot.manager");
-
+  BI_boot_manager =
+    makeTaggedConst(new Builtin("BOOTMANAGER", 1, 1, BIBootManager, OK));
 
   bi_raise      = getBuiltin_c("Exception.raise");
   bi_raiseError = getBuiltin_c("Exception.raiseError");

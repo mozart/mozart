@@ -67,32 +67,6 @@ OZ_Return cellAtExchange(Tertiary*,TaggedRef,TaggedRef);
 OZ_Return cellAssignExchange(Tertiary*,TaggedRef,TaggedRef);
 
 /********************************************************************
- * `builtin`
- ******************************************************************** */
-
-OZ_BI_define(BIbuiltin,2,1)
-{
-  OZ_declareVirtualStringIN(0,name);
-  OZ_declareIntIN(1,arity);
-
-  Builtin *found = string2Builtin(name);
-
-  if (!found) {
-    return oz_raise(E_ERROR,E_SYSTEM,"builtinUndefined",1,
-                    oz_atom(name));
-  }
-
-  if (arity!=-1 && arity != found->getArity()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"builtinArity",3,
-                    oz_atom(name),oz_int(arity),
-                    makeTaggedSmallInt(found->getArity()));
-  }
-
-  OZ_RETURN(makeTaggedConst(found));
-} OZ_BI_end
-
-
-/********************************************************************
  * Type tests
  ******************************************************************** */
 
