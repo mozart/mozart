@@ -1095,7 +1095,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       int n;
       char * s = OZ_virtualStringToC(oz_tagged2Extension(term)->printV(depth),
 				     &n);
-      out << s;
+      while (n--) out << *s++;
     }
     break;
   case OZCONST:
@@ -1123,7 +1123,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   }
 }
 
-char *OZ_toC(OZ_Term term, int depth, int width)
+char *OZ__toC(OZ_Term term, int depth, int width,int* len)
 {
   static char *tmpString = 0;
   if (tmpString) {
@@ -1133,9 +1133,15 @@ char *OZ_toC(OZ_Term term, int depth, int width)
   ostrstream *out = new ostrstream;
 
   oz_printStream(term,*out,depth,width);
+  if (len!=0) *len = out->pcount();
 
   tmpString = strAndDelete(out);
   return tmpString;
+}
+
+char* OZ_toC(OZ_Term term, int depth, int width)
+{
+  return OZ__toC(term,depth,width,0);
 }
 
 char *toC(OZ_Term term)
