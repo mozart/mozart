@@ -3160,7 +3160,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs, MarshallInfo *mi)
       TaggedRef names = pp->getPred()->getNames();
       Bool hasNames = !literalEq(names,NameUnit);
       marshallNumber(hasNames,bs);
-      if (hasNames) {
+      if (hasNames && mi) {
         mi->names = names;
       }
       marshallTerm(sd,pp->getName(),bs,mi);
@@ -3350,7 +3350,7 @@ loop:
         marshallString(lit->getPrintName(),bs);
         PD((MARSHALL,"unique name: %s",lit->getPrintName()));
       } else {
-        if (member(t,mi->names)) {
+        if (mi && member(t,mi->names)) {
           marshallDIF(bs,DIF_NEWNAME);
         } else {
           marshallDIF(bs,DIF_NAME);
