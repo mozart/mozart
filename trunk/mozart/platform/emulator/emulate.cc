@@ -1557,15 +1557,16 @@ LBLkillToplevelThread:
 	goto LBLpreemption;
       }
     } else {
+
       // Tell the debugger about termination of current thread
       TaggedRef dbgVar = e->currentThread->getDebugVar();
       OZ_Term dbgTuple = OZ_mkTupleC("debugInfo",
 				     5,
-				     OZ_int(0),
 				     OZ_atom("nofile"),
+				     OZ_int(0),
+				     OZ_atom("finished"),
 				     OZ_atom(""),
-				     OZ_atom(""),
-				     OZ_atom("finished")
+				     OZ_atom("")
 				     );
       OZ_unify(dbgVar,dbgTuple);
 
