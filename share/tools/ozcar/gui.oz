@@ -90,6 +90,8 @@ local
 	   meth unset L <- false end
 	   meth is($) @L end
 	end init}
+
+   StackTag
    
 in
 
@@ -263,6 +265,13 @@ in
 			 action: self # help(T.2))}
 
 	  end}
+
+	 %% the global stack tag, to make Tk happy (and me!! :-))
+	 StackTag = 4711 * 4711
+	 {ForAll [tk(conf state:normal)
+		  tk(insert 'end' "" StackTag)
+		  tk(conf state:disabled)] self.StackText}
+	 
 	 {Tk.batch [grid(self.ThreadTree    row:3 column:0
 			 sticky:nswe rowspan:2)
 		    grid(self.StackText     row:3 column:1 sticky:nswe
@@ -403,21 +412,25 @@ in
       in
 	 case LSF \= T then
 	    case LSF > 0 then
-	       {W tk(tag conf LSF
-		     relief:flat borderwidth:0
-		     background: DefaultBackground
-		     foreground: DefaultForeground)}
+	       Gui,DeactivateLine(LSF)
 	    else skip end
 	    case T > 0 then
-	       {W tk(tag conf T
-		     relief:raised borderwidth:0
-		     background: SelectedBackground
-		     foreground: SelectedForeground)}
+	       Gui,ActivateLine(T)
 	    else skip end
 	    LastSelectedFrame <- T
 	 else skip end
       end
 
+      meth UnselectStackFrame
+	 W   = self.StackText
+	 LSF = @LastSelectedFrame
+      in
+	 case LSF > 0 then
+	    Gui,DeactivateLine(LSF)
+	    LastSelectedFrame <- 0
+	 else skip end
+      end
+      
       meth printStackFrame(frame:Frame delete:Delete<=true)
 	 W          = self.StackText
 	 FrameNr    = Frame.nr                 % frame number
@@ -449,9 +462,13 @@ in
 		  else
 		     ' <- '
 		  end # FrameNr #
-		  ' ' # BraceLeft #
-		  case FrameName == '' then '$' else FrameName end
-		  LineTag)}
+		  case FrameName == suspension then
+		     ' suspending conditional or procedure appl'
+		  else
+		     ' {' #
+		     case FrameName == '' then '$' else FrameName end
+		  end
+		  q(StackTag LineTag))}
 	    
 	    {ForAll FrameArgs
 	     proc {$ Arg}
@@ -466,17 +483,18 @@ in
 				   {Lck unset}
 				end)}
 	     in
-		{ForAll [tk(insert LineEnd ' ' LineTag)
-			 tk(insert LineEnd Arg.1 q(LineTag ArgTag))
+		{ForAll [tk(insert LineEnd ' ' q(StackTag LineTag))
+			 tk(insert LineEnd Arg.1 q(StackTag LineTag ArgTag))
 			 tk(tag bind ArgTag '<1>' ArgAction)
 			 tk(tag conf ArgTag font:BoldFont)] W}
 	     end}
 	    
-	    {ForAll [tk(insert LineEnd BraceRight #
+	    {ForAll [tk(insert LineEnd
+			case FrameName == suspension then '' else '}' end #
 			case UpToDate then nil else
 			   ' (source has changed)' end #
 			case Delete then NL else nil end
-			LineTag)
+			q(StackTag LineTag))
 		     tk(tag add  LineTag LineEnd) % extend tag to whole line
 		     tk(tag bind LineTag '<1>' LineAction)] W}
 	    
@@ -612,11 +630,19 @@ in
       
       meth markStack(How)
 	 case How
-	 of active   then {self.StackText tk(conf fg:DefaultForeground)}
-	 [] inactive then {self.StackText tk(conf fg:OldStackColor)}
+	 of active   then
+	    {OzcarMessage 'activating stack'}
+	    {ForAll [tk(tag 'raise' StackTag)
+		     tk(tag conf StackTag foreground:DefaultForeground)
+		    ] self.StackText}
+	 [] inactive then
+	    {OzcarMessage 'deactivating stack'}
+	    {ForAll [tk(tag 'raise' StackTag)
+		     tk(tag conf StackTag foreground:OldStackColor)
+		    ] self.StackText}
 	 else skip end
       end
-
+      
       meth action(A)
 	 lock
 	    case {IsName A} then skip else
@@ -649,6 +675,7 @@ in
 		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
+		     Gui,UnselectStackFrame
 		     Gui,markNode({Thread.id T} running)
 		     SourceManager,configureBar(running)
 		     Gui,markStack(inactive)
@@ -688,9 +715,7 @@ in
 			   {Dbg.stepmode T false}
 			end
 			
-			{ForAll [resetReservedTags({Stack getSize($)})
-				 /*resetTags*/] self.StackText}
-			
+			Gui,UnselectStackFrame
 			Gui,markNode(I running)
 			Gui,markStack(inactive)
 			SourceManager,configureBar(running)
@@ -822,7 +847,29 @@ in
 	 {ForAll [tk(conf state:normal)
 		  tk(delete '0.0' 'end')] Widget}
       end
+
+      meth resetReservedTags(Size)
+	 {self.StackText resetReservedTags(Size)}
+      end
       
+      meth DeactivateLine(Tag)
+	 {ForAll [tk(tag 'raise' Tag)
+		  tk(tag conf Tag
+		     relief:flat borderwidth:0
+		     background: DefaultBackground
+		     foreground: DefaultForeground)
+		 ] self.StackText}
+      end
+      
+      meth ActivateLine(Tag)
+	 {ForAll [tk(tag 'raise' Tag)
+		  tk(tag conf Tag
+		     relief:raised borderwidth:0
+		     background: SelectedBackground
+		     foreground: SelectedForeground)
+		 ] self.StackText}
+      end
+
       meth Enable(Widget)
 	 {Widget tk(conf state:normal)}
       end
