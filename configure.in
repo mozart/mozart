@@ -38,7 +38,7 @@ OZ_INIT
 BUILDTOP=`pwd`
 AC_SUBST(BUILDTOP)
 
-AC_CONFIG_SUBDIRS(platform share contrib)
+AC_CONFIG_SUBDIRS(platform share contrib doc)
 
 AC_OUTPUT(Makefile)
 
