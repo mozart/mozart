@@ -81,20 +81,31 @@ OZ_BI_define (oz_glade_xml_new_with_domain, 1, 3)
   OZ_RETURN (OZ_makeForeignPointer (obj));
 } OZ_BI_end
 
-OZ_BI_define (oz_glade_xml_signal_connect, 0, 2)
+OZ_BI_define (oz_glade_xml_signal_connect_full, 0, 3)
 {
   OZ_declareForeignType (0, self, GladeXML* );
-  OZ_declareString      (1, handler_name);
+  OZ_declareAtom        (1, handler_name);
   OZ_declareInt         (2, id);
 
   glade_xml_signal_connect_full (self,
-				  (const char *) handler_name,
-				  (GladeXMLConnectFunc) connect_function,
-				  (gpointer) id);
+				 handler_name,
+				 (GladeXMLConnectFunc) connect_function,
+				 (gpointer) id);
 
   return OZ_ENTAILED;
 } OZ_BI_end
 
+OZ_BI_define (oz_glade_xml_get_widget, 1, 2)
+{
+  GtkWidget *widget;
+
+  OZ_declareForeignType (0, self, GladeXML*);
+  OZ_declareAtom        (1, name);
+
+  widget = glade_xml_get_widget (self, name);
+
+  OZ_RETURN (OZ_makeForeignPointer (widget));
+}Z_BI_end
 
 /*****************************************************************************
  * Oz interface definition
@@ -107,7 +118,8 @@ oz_init_module()
     {"init",                       0, 0, oz_glade_init},
     {"xmlNew",                     1, 2, oz_glade_xml_new},
     {"xmlNewWithDomain",           1, 3, oz_glade_xml_new_with_domain},
-    {"xmlSignalConnect",           0, 4, oz_glade_xml_signal_connect},
+    {"xmlSignalConnectFull",       0, 4, oz_glade_xml_signal_connect_full},
+    {"xmlGetWidget",               1, 2, oz_glade_xml_get_widget},
     {0, 0, 0, 0}
   };
 
