@@ -32,7 +32,6 @@
 
 #include "newmarshaler.hh"
 
-int gopa;
 //
 #define RememberNode(node,bs)			\
   int ind = remember(node);			\
@@ -180,7 +179,7 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
     Builder *b = &builder;
     MarshalTag tag = (MarshalTag) bs->get();
 
-    dif_counter[tag].recv();	// kost@ : needed?
+    dif_counter[tag].recv();	// kost@ : TODO: needed?
     switch(tag) {
 
     case DIF_SMALLINT: 
