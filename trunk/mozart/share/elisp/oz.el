@@ -1077,6 +1077,7 @@ the GDB commands `cd DIR' and `directory'."
 	(define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
 	(define-key map "\C-c\C-b\C-r"  'oz-feed-region-browse)
 	)
+    (define-key map "\C-c\C-f" 'oz-feed-file)
     (define-key map "\M-\C-m"  'oz-feed-buffer)
     (define-key map "\M-r"     'oz-feed-region)
     (define-key map "\M-l"     'oz-feed-line)
@@ -1084,7 +1085,8 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-cb"    'oz-feed-line-browse)
     (define-key map "\C-c\C-b" 'oz-feed-region-browse)
     (define-key map "\M-n"     'oz-next-buffer)
-    (define-key map "\M-p"     'oz-previous-buffer))
+    (define-key map "\M-p"     'oz-previous-buffer)
+    )
 
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
@@ -1096,7 +1098,6 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-m"    'oz-toggle-emulator))
 
   (define-key map "\C-c\C-e"    'oz-toggle-emulator)
-  (define-key map "\C-c\C-f"    'oz-feed-file)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
