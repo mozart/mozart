@@ -242,10 +242,6 @@ run the emulator when you issue the command `run' to gdb."
 (defvar oz-is-color
   (and (eq window-system 'x) (x-display-color-p)))
 
-(defvar oz-read-emulator-output nil
-  "Non-nil iff output currently comes from the emulator.
-This variable should not be changed by the user.")
-
 (defvar oz-mode-map (make-sparse-keymap)
   "Keymap used in oz-mode buffers.")
 (defvar oz-compiler-buffer-map nil
@@ -268,6 +264,10 @@ This variable should not be changed by the user.")
 
 (defvar oz-emulator-hook nil
   "If non-nil, hook used for starting the Oz Emulator.
+This is set when gdb is active.")
+
+(defvar oz-emulator-filter-hook nil
+  "If non-nil, hook used as second process filter for the Oz Emulator.
 This is set when gdb is active.")
 
 (defvar OZ-HOME "@prefix@/lib/elisp"
@@ -303,13 +303,17 @@ Used for popping up the corresponding buffer.")
   "Regex specifying what to remove from Compiler and Emulator output.
 All strings matching this regular expression are removed.")
 
-(defconst oz-bar-pattern
-  "\'oz-bar \\([^ ]*\\) \\([0-9]+\\) \\([0-9]+\\) \\([^ ]*\\)\'"
-  "Regex for reading messages from the Oz debugger or profiler.")
+(defconst oz-socket-pattern
+  "\'oz-socket \"\\([^\"]*\\)\" \\([0-9]+\\)\'"
+  "Regex for reading the information about the compiler socket.")
 
 (defconst oz-show-temp-pattern
   "\'oz-show-temp \\([^ ]*\\)\'"
   "Regex for reading messages from the Oz compiler.")
+
+(defconst oz-bar-pattern
+  "\'oz-bar \\([^ ]*\\) \\([0-9]+\\) \\([0-9]+\\) \\([^ ]*\\)\'"
+  "Regex for reading messages from the Oz debugger or profiler.")
 
 (defvar oz-gump-indentation nil
   "Non-nil iff Gump syntax is to be used for indentation.")
@@ -838,45 +842,39 @@ If FORCE is non-nil, kill it immediately."
 
 (defun oz-check-running (start-flag)
   (if (not (oz-is-running))
-      (progn
+      (let ((filter 'oz-filter))
 	(if (not start-flag) (message "Oz died.  Restarting ..."))
-	(oz-create-buffer oz-compiler-buffer 'compiler)
-	(save-excursion
-	  (set-buffer oz-compiler-buffer)
-	  (set (make-local-variable 'compilation-error-regexp-alist)
-	       '((oz-error-pattern 2 3 5)))
-	  (set (make-local-variable 'compilation-parsing-end)
-	       (point))
-	  (set (make-local-variable 'compilation-error-list)
-	       nil)
-	  (set (make-local-variable 'compilation-last-buffer)
-	       (current-buffer)))
-	(bury-buffer oz-compiler-buffer)
 
 	(if oz-emulator-hook
-	    (funcall oz-emulator-hook)
+	    (progn
+	      (funcall oz-emulator-hook)
+	      (setq filter
+		    (process-filter (get-buffer-process oz-emulator-buffer))))
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (setq oz-read-emulator-output t)
 	  (if oz-win32
 	      (make-comint "Oz Emulator" "ozemulator" nil "-u"
-			   "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc")
-	    (make-comint "Oz Emulator" "opi" nil))
-	  (oz-create-buffer oz-emulator-buffer 'emulator)
-	  (set-process-filter (get-buffer-process oz-emulator-buffer)
-			      'oz-emulator-filter)
-	  (bury-buffer oz-emulator-buffer))
+			   "http://www.ps.uni-sb.de/ozhome/bin/opi")
+	    (make-comint "Oz Emulator" "~/xx/Oz/lib/stage1/bin/opi" nil))
+	  (oz-create-buffer oz-emulator-buffer 'emulator))
+
+	(let ((proc (get-buffer-process oz-emulator-buffer)))
+	  (setq oz-emulator-filter-hook filter)
+	  (set-process-filter proc 'oz-emulator-filter))
+	(oz-show-buffer (get-buffer oz-emulator-buffer))
+	(bury-buffer oz-emulator-buffer)
 
 	(oz-set-title oz-frame-title)
-	(message "Oz started.")))
-
-  (if start-flag
-      (if oz-emulator-hook
-	  (save-excursion
-	    (set-buffer oz-compiler-buffer)
-	    (insert "For compiler output, watch the buffer "
-		    oz-emulator-buffer ".\n")
-	    (oz-show-buffer (get-buffer oz-emulator-buffer)))
+	(message "Oz started."))
+    (if start-flag
 	(oz-show-buffer (get-buffer oz-compiler-buffer)))))
+
+(defun oz-socket (host port)
+  (make-comint "Oz Compiler" (cons host port))
+  (oz-create-buffer oz-compiler-buffer 'compiler)
+  (set-process-filter (get-buffer-process oz-compiler-buffer)
+		      'oz-compiler-filter)
+  (oz-show-buffer (get-buffer oz-compiler-buffer))
+  (bury-buffer oz-compiler-buffer))
 
 
 ;;------------------------------------------------------------
@@ -1055,25 +1053,25 @@ feed that many preceding paragraphs as well as the current paragraph."
   "Feed STRING to the Oz Compiler, restarting it if it died.
 If SYSTEM is non-nil, it is a command for the system and is to be
 compiled using a default set of switches."
-  (save-excursion
-    (oz-check-running nil))
-  (let ((proc (get-buffer-process oz-emulator-buffer))
-	(eof (concat (char-to-string 4) "\n")))
-    (save-excursion
-      (set-buffer oz-compiler-buffer)
-      (setq oz-compiler-output-start (point-max))
-      (setq oz-next-error-marker nil))
-    (if system
-	(comint-send-string
-	 proc
-	 (concat "\\pushSwitches\n"
-		 "\\switch +threadedqueries -verbose "
-		 "-expression -runwithdebugger\n"
-		 string
-		 "\n\\popSwitches"))
-      (comint-send-string proc string))
-    (comint-send-string proc "\n")
-    (comint-send-string proc eof)))
+  (if (not (get-buffer-process oz-compiler-buffer))
+      (error "Oz Compiler socket does not exist; maybe Oz is not running")
+    (let ((proc (get-buffer-process oz-compiler-buffer))
+	  (eof (concat (char-to-string 4) "\n")))
+      (save-excursion
+	(set-buffer oz-compiler-buffer)
+	(setq oz-compiler-output-start (point-max))
+	(setq oz-next-error-marker nil))
+      (if system
+	  (comint-send-string
+	   proc
+	   (concat "\\pushSwitches\n"
+		   "\\switch +threadedqueries -verbose "
+		   "-expression -runwithdebugger\n"
+		   string
+		   "\n\\popSwitches"))
+	(comint-send-string proc string))
+      (comint-send-string proc "\n")
+      (comint-send-string proc eof))))
 
 
 ;;------------------------------------------------------------
@@ -2301,52 +2299,64 @@ The ARG is interpreted just as with \\[recenter]."
 ;;------------------------------------------------------------
 ;; Filtering Process Output
 ;;------------------------------------------------------------
-;; The compiler makes sure that its output is always delimited by
-;; control characters so that the outputs from the emulator and from
-;; the compiler can be separated into two buffers.
-
-;; If you ever change these constants, also adapt the
-;; file Oz/lib/compiler/EmacsInterface.oz accordingly.
-(defvar oz-emulator-output-start (char-to-string 5)
-  "Regex that matches when emulator output begins.")
-(defvar oz-emulator-output-end   (char-to-string 6)
-  "Regex that matches when compiler output begins.")
-
-(defun oz-have-to-switch-outbuffer (string)
-  "Return the column from which output has to go into the other buffer.
-Return nil if the whole STRING goes into the current buffer."
-  (if oz-read-emulator-output
-      (string-match oz-emulator-output-end string)
-    (string-match oz-emulator-output-start string)))
-
-(defun oz-current-outbuffer ()
-  "Return the buffer into which output currently has to be redirected."
-  (get-buffer (if oz-read-emulator-output
-		  oz-emulator-buffer
-		oz-compiler-buffer)))
 
 (defun oz-emulator-filter (proc string)
-  "Split the process output STRING into Oz Compiler and Oz Emulator output.
-The output from both Emulator and Compiler comes from the same process.
-Both outputs are separated by oz-emulator-output-{start,end} sequences.
-After splitting, the outputs are passed to the common oz-filter."
-  (let (switch-col)
-    (while (setq switch-col (oz-have-to-switch-outbuffer string))
-      (oz-filter proc (substring string 0 switch-col) (oz-current-outbuffer))
-      (setq oz-read-emulator-output (not oz-read-emulator-output))
-      (setq string (substring string (1+ switch-col))))
-    (oz-filter proc string (oz-current-outbuffer))))
+  ;; look for oz-socket:
+  (let ((start 0))
+    (while (string-match oz-socket-pattern string start)
+      (let ((host (oz-match-string 1 string))
+	    (port (string-to-number (oz-match-string 2 string))))
+	(setq start (match-beginning 0))
+	(setq string (concat (substring string 0 start)
+			     (substring string (match-end 0))))
+	(save-excursion
+	  (oz-socket host port)))))
+  (funcall oz-emulator-filter-hook proc string))
 
-(defun oz-filter (proc string buffer)
+(defun oz-compiler-filter (proc string)
+  ;; look for oz-show-temp:
+  (let ((start 0))
+    (while (string-match oz-show-temp-pattern string start)
+      (let ((filename (oz-match-string 1 string)) buf)
+	(setq start (match-beginning 0))
+	(setq string (concat (substring string 0 start)
+			     (substring string (match-end 0))))
+	(save-excursion
+	  (setq buf (get-buffer oz-temp-buffer))
+	  (if (null buf)
+	      (setq buf (generate-new-buffer oz-temp-buffer)))
+	  (oz-show-buffer buf)
+	  (set-buffer buf)
+	  (insert-file-contents filename t nil nil t)
+	  (delete-file filename)
+	  (cond ((string-match "\\.ozi$" filename) (oz-mode))
+		((string-match "\\.ozm$" filename) (ozm-mode)))))))
+  ;; look for oz-bar:
+  (let ((start 0))
+    (while (string-match oz-bar-pattern string start)
+      (let ((file   (oz-match-string 1 string))
+	    (line   (string-to-number (oz-match-string 2 string)))
+	    (column (string-to-number (oz-match-string 3 string)))
+	    (state  (oz-match-string 4 string)))
+	(setq start (match-beginning 0))
+	(setq string (concat (substring string 0 start)
+			     (substring string (match-end 0))))
+	(save-excursion
+	  (oz-bar file line column state)))))
+  (oz-filter proc string))
+
+(defun oz-filter (proc string)
   (let ((old-buffer (current-buffer)))
     (unwind-protect
-	(let (errs-found start-of-output end-of-output)
-	  (set-buffer buffer)
+	(let (moving errs-found start-of-output)
+	  (set-buffer (process-buffer proc))
+	  (setq moving (= (point) (process-mark proc)))
 	  (save-excursion
-	    ;; insert the text:
-	    (goto-char (point-max))
+	    ;; insert the text, moving the process marker:
+	    (goto-char (process-mark proc))
 	    (setq start-of-output (point))
-	    (insert string)
+	    (insert-before-markers string)
+	    (set-marker (process-mark proc) (point))
 
 	    ;; look for error messages in output:
 	    (goto-char start-of-output)
@@ -2358,57 +2368,14 @@ After splitting, the outputs are passed to the common oz-filter."
 	    ;; remove escape characters:
 	    (goto-char start-of-output)
 	    (while (re-search-forward oz-remove-pattern nil t)
-	      (replace-match "" nil t))
+	      (replace-match "" nil t)))
 
-	    ;; look for oz-show-temp:
-	    (goto-char start-of-output)
-	    (while (re-search-forward oz-show-temp-pattern nil t)
-	      (save-excursion
-		(let ((filename (oz-match-string 1)) buf)
-		  (replace-match "" nil t)
-		  (setq buf (get-buffer oz-temp-buffer))
-		  (if (null buf)
-		      (setq buf (generate-new-buffer oz-temp-buffer)))
-		  (oz-show-buffer buf)
-		  (set-buffer buf)
-		  (insert-file-contents filename t nil nil t)
-		  (delete-file filename)
-		  (cond ((string-match "\\.ozi$" filename)
-			 (oz-mode))
-			((string-match "\\.ozm$" filename)
-			 (ozm-mode))))))
-
-	    ;; look for oz-bar information:
-	    (goto-char start-of-output)
-	    (while (re-search-forward oz-bar-pattern nil t)
-	      (save-excursion
-		(let ((file   (oz-match-string 1))
-		      (line   (string-to-number (oz-match-string 2)))
-		      (column (string-to-number (oz-match-string 3)))
-		      (state  (oz-match-string 4)))
-		  (replace-match "" nil t)
-		  (oz-bar file line column state))))
-
-	    (setq end-of-output (point-max)))
-
-	  (cond (errs-found
-		 (goto-char errs-found)
-		 (oz-show-buffer buffer))
-		((equal (point) start-of-output)
-		 (goto-char end-of-output)))
-	  (if (eq (process-buffer proc) buffer)
-	      (set-marker (process-mark proc) end-of-output))
-
-	  (save-selected-window
-	    (walk-windows
-	     (function
-	      (lambda (window)
-		(if (eq (window-buffer window) buffer)
-		    (cond (errs-found
-			   (set-window-point window errs-found)
-			   (set-window-start window errs-found))
-			  ((>= (window-point window) start-of-output)
-			   (set-window-point window end-of-output)))))))))
+	  (if errs-found
+	      (progn
+		(goto-char errs-found)
+		(oz-show-buffer (current-buffer)))
+	    (if moving
+		(goto-char (process-mark proc)))))
       (set-buffer old-buffer))))
 
 
@@ -2417,7 +2384,7 @@ After splitting, the outputs are passed to the common oz-filter."
 ;;------------------------------------------------------------
 
 (defun oz-show-buffer (buffer)
-  (if (not (get-buffer-window buffer))
+  (if (and buffer (not (get-buffer-window buffer)))
       (let ((win (or (get-buffer-window oz-emulator-buffer)
 		     (get-buffer-window oz-compiler-buffer)
 		     (get-buffer-window oz-temp-buffer)
@@ -2443,7 +2410,15 @@ After splitting, the outputs are passed to the common oz-filter."
 	   (define-key oz-compiler-buffer-map "\C-c\C-c" 'oz-goto-next-error)
 	   (use-local-map oz-compiler-buffer-map)
 	   (setq mode-name "Oz-Output")
-	   (setq major-mode 'oz-mode))
+	   (setq major-mode 'oz-mode)
+	   (set (make-local-variable 'compilation-error-regexp-alist)
+		'((oz-error-pattern 2 3 5)))
+	   (set (make-local-variable 'compilation-parsing-end)
+		(point))
+	   (set (make-local-variable 'compilation-error-list)
+		nil)
+	   (set (make-local-variable 'compilation-last-buffer)
+		(current-buffer)))
 	  ((eq which 'emulator)
 	   (if (not oz-emulator-buffer-map)
 	       (setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
