@@ -15,8 +15,11 @@
 %%%
 %%%
 
-%\define FEGRAMED
+%% 
+%\define    DEBUG_OPEN
+\undef     DEBUG_OPEN
 
+%\define FEGRAMED
 
 \ifndef NODECLARE
 
@@ -54,13 +57,15 @@ local
    %%  from 'core.oz';
    IntToAtom      %  
    RealArity      %  'real' record arity;
+   IsVar	  %  
    IsFdVar        %  is a FD variable? 
    IsRecordCVar   %  is an OFS?
    WatchDomain    %  fires when the variable's domain is changed;
    IsMetaVar      %  is a Meta variable? 
    WatchMetaVar   %  fires when the variable's constraint is strengthened
    MetaGetDataAsAtom %  get the constraint data of the meta variable
-   MetaGetNameAsAtom %  get the name of the constraint system of the meta var 
+   MetaGetNameAsAtom %  get the name of the constraint system of the meta var
+   TestC          %  does it has a feature?
    MetaGetStrength   %  get some measure of the informartion of meta var
    EQ             %  pointers equality;
    GetsBound      %  fires iff its argument is bound to something;
@@ -299,6 +304,7 @@ local
    %% end
    %%
 in
+
    %%
    %%  Various builtins to support meta-(oz)kernel browser's functionality; 
 \insert 'browser/core.oz'
@@ -333,7 +339,7 @@ in
 \ifdef FEGRAMED
   \insert 'browser/fegramed.oz'
 \endif
-   
+
    %%
    %%
    %%  BrowsersPool: provides the passing of terms to be browsed; 
