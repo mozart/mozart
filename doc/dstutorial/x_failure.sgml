@@ -512,7 +512,14 @@ to be instances of <<permFail>> and <<tempFail>>.
 
 <SECTION><TITLE>Limitations of current release</TITLE>
 
-
+<P>The current release has the following limitations:
+<LIST>
+<ITEM>If an exception is raised or a handler invoked
+for an object, then the entity argument <<E>> is undefined.
+<ITEM>The global level for handlers is not implemented.
+If an attempt is made to install a global handler,
+then a <<notImplemented>> exception is given.
+</LIST>
 
 </CHAPTER>
 
