@@ -7,7 +7,7 @@ declare
 
 local
    
-   \insert 'ozcar-prelude'
+   \insert 'prelude'
    \insert 'config'
 
    \insert 'tree'
