@@ -2313,7 +2313,7 @@ ConstTerm *ConstTerm::gcConstTerm() {
   case Co_HeapChunk:
     return ((HeapChunk *) this)->gc();
   case Co_BitArray:
-    return ((BitArray *) this)->gc();
+    return this;
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
@@ -2517,13 +2517,6 @@ HeapChunk * HeapChunk::gc(void) {
   ret->chunk_data = copyChunkData();
 
   storeFwdField(this,ret);
-  return ret;
-}
-
-BitArray *BitArray::gc(void) {
-  BitArray *ret = (BitArray *) gcReallocStatic(this, sizeof(BitArray));
-  ret->array = copyArray();
-  storeFwdField(this, ret);
   return ret;
 }
 

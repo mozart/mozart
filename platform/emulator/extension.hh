@@ -39,7 +39,7 @@ public:
   SituatedExtension(Board *bb) : ConstTermWithHome(bb,Co_SituatedExtension) {}
   virtual int getTypeV() { return 0; }
   virtual SituatedExtension *gcV() = 0;
-  virtual void          gcRecurseV() = 0;
+  virtual void          gcRecurseV() {}
   virtual void          printStreamV(ostream &out,int depth = 10);
   virtual void          printLongStreamV(ostream &out,int depth = 10,
                                          int offset = 0);
@@ -63,7 +63,7 @@ public:
   ConstExtension() : ConstTerm(Co_ConstExtension) {}
   virtual int getTypeV() { return 0; }
   virtual ConstExtension *gcV() = 0;
-  virtual void          gcRecurseV() = 0;
+  virtual void          gcRecurseV() {}
   virtual void          printStreamV(ostream &out,int depth = 10);
   virtual void          printLongStreamV(ostream &out,int depth = 10,
                                          int offset = 0);
