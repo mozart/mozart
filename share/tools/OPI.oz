@@ -25,12 +25,22 @@
 %%% WARRANTIES.
 %%%
 
-local
+functor
+import
+   Application(getCmdArgs)
+   Module(manager)
+   System(printError)
+   Property(get put)
+   OS(getEnv)
+   Open(file)
+   Compiler(engine)
+   Emacs(interface)
+prepare
    Spec = record(host(single type: string default: unit))
 
    %% List of all functors
    local
-      ModuleDefs = \insert ../functor-defaults
+      ModuleDefs = \insert '../functor-defaults'
    in
       Modules = {FoldL [ModuleDefs.lib
 			ModuleDefs.tools
@@ -62,102 +72,90 @@ local
       [] F|Fr then {Dots M.F Fr}
       end
    end
-in
-   functor
-   import
-      Application(getCmdArgs)
-      Module(manager)
-      System(printError)
-      Property(get put)
-      OS(getEnv)
-      Open(file)
-      Compiler(engine)
-      Emacs(interface)
-   define
-      Args = {Application.getCmdArgs Spec}
+define
+   Args = {Application.getCmdArgs Spec}
 
+   local
+      OZVERSION = {Property.get 'oz.version'}
+      DATE      = {Property.get 'oz.date'}
+   in
+      {System.printError
+       'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
+   end
+
+   {Property.put 'oz.standalone' false}
+
+   OPICompiler = {New Compiler.engine init()}
+   {OPICompiler enqueue(setSwitch(warnunused true))}
+
+   local
+      ModMan = {New Module.manager init}
+   in
+      %% Get system modules
       local
-	 OZVERSION = {Property.get 'oz.version'}
-	 DATE      = {Property.get 'oz.date'}
+	 Env = {List.toRecord env
+		{Map Modules
+		 fun {$ ModName}
+		    ModName#{ModMan link(name:ModName $)}
+		 end}}
       in
-	 {System.printError
-	  'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
+	 {OPICompiler enqueue(mergeEnv(Env))}
       end
 
-      {Property.put 'oz.standalone' false}
+      %% Provide shortcuts
+      {ForAll ShortCuts
+       proc {$ SC}
+	  Module = {ModMan link(name:{Label SC} $)}
+	  Env    = {Record.map SC
+		    fun lazy {$ Fs}
+		       {Dots Module Fs}
+		    end}
+       in
+	  {OPICompiler enqueue(mergeEnv(Env))}
+       end}
+   end
 
-      OPICompiler = {New Compiler.engine init()}
-      {OPICompiler enqueue(setSwitch(warnunused true))}
+   CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
+   Sock = {CompilerUI getSocket($)}
+   {Property.put 'opi.compiler' CompilerUI}
 
-      local
-	 ModMan = {New Module.manager init}
-      in
-	 %% Get system modules
-	 local
-	    Env = {List.toRecord env
-		   {Map Modules
-		    fun {$ ModName}
-		       ModName#{ModMan link(name:ModName $)}
-		    end}}
-	 in
-	    {OPICompiler enqueue(mergeEnv(Env))}
-	 end
+   %% Make the error handler non-halting
+   {Property.put 'errors.toplevel'    proc {$} skip end}
+   {Property.put 'errors.subordinate' proc {$} fail end}
 
-	 %% Provide shortcuts
-	 {ForAll ShortCuts
-	  proc {$ SC}
-	     Module = {ModMan link(name:{Label SC} $)}
-	     Env    = {Record.map SC
-		       fun lazy {$ Fs}
-			  {Dots Module Fs}
-		       end}
-	  in
-	    {OPICompiler enqueue(mergeEnv(Env))}
-	  end}
-      end
-
-      CompilerUI = {New Emacs.interface init(OPICompiler Args.host)}
-      Sock = {CompilerUI getSocket($)}
-      {Property.put 'opi.compiler' CompilerUI}
-
-      %% Make the error handler non-halting
-      {Property.put 'errors.toplevel'    proc {$} skip end}
-      {Property.put 'errors.subordinate' proc {$} fail end}
-      
-      % Try to load some ozrc file:
-      local
-	 fun {FileExists FileName}
-	    try F in
-	       F = {New Open.file init(name: FileName flags: [read])}
-	       {F close()}
-	       true
-	    catch _ then false
-	    end
-	 end
-      in
-	 case {OS.getEnv 'HOME'} of false then skip
-	 elseof HOME then
-	    OZRC = {OS.getEnv 'OZRC'}
-	 in
-	    case OZRC \= false andthen {FileExists OZRC} then
-	       {OPICompiler enqueue(feedFile(OZRC))}
-	    elsecase {FileExists HOME#'/.oz/ozrc'} then
-	       {OPICompiler enqueue(feedFile(HOME#'/.oz/ozrc'))}
-	    elsecase {FileExists HOME#'/.ozrc'} then   % note: deprecated
-	       {OPICompiler enqueue(feedFile(HOME#'/.ozrc'))}
-	    else
-	       skip
-	    end
+   %% Try to load some ozrc file
+   local
+      fun {FileExists FileName}
+	 try F in
+	    F = {New Open.file init(name: FileName flags: [read])}
+	    {F close()}
+	    true
+	 catch _ then false
 	 end
       end
-
-      proc {CompilerReadEvalLoop} VS0 VS in
-	 {Sock readQuery(?VS0)}
-	 VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
-	 {OPICompiler enqueue(feedVirtualString(VS))}
-	 {CompilerReadEvalLoop}
+   in
+      case {OS.getEnv 'HOME'} of false then skip
+      elseof HOME then
+	 OZRC = {OS.getEnv 'OZRC'}
+      in
+	 case OZRC \= false andthen {FileExists OZRC} then
+	    {OPICompiler enqueue(feedFile(OZRC))}
+	 elsecase {FileExists HOME#'/.oz/ozrc'} then
+	    {OPICompiler enqueue(feedFile(HOME#'/.oz/ozrc'))}
+	 elsecase {FileExists HOME#'/.ozrc'} then   % note: deprecated
+	    {OPICompiler enqueue(feedFile(HOME#'/.ozrc'))}
+	 else
+	    skip
+	 end
       end
+   end
 
+   proc {CompilerReadEvalLoop} VS0 VS in
+      {Sock readQuery(?VS0)}
+      VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
+      {OPICompiler enqueue(feedVirtualString(VS))}
       {CompilerReadEvalLoop}
    end
+
+   {CompilerReadEvalLoop}
 end
