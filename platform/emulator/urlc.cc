@@ -33,6 +33,10 @@
               */
 #define URLC_RESOLVER 0
 
+#ifndef LINUX
+#define herror(x) perror(x)
+#endif
+
 #ifndef URLC_DEBUG
 #define URLC_PERROR(s)
 #define URLC_HERROR(s)
