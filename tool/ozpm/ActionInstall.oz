@@ -1,5 +1,5 @@
 functor
-export Run
+export Run Install
 import
    Resolve(localize)
    OS(unlink tmpnam)
@@ -60,7 +60,9 @@ define
 	    {A extract(File {AddToPath DirPrefix File})}
 	 end
 	 %% update ozpminfo
-	 {Pickle.save {Record.adjoinAt PInfo lsla PLS}
+	 {Pickle.save {Record.adjoin
+		       {Record.adjoinAt PInfo lsla PLS}
+		       ipackage}
 	  |{List.filter LOCALDB
 	    fun{$ Entry}
 	       Entry.id\=PInfo.id %% forcing an install keeps only one version

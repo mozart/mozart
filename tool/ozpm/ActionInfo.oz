@@ -10,7 +10,7 @@ import
    Application(exit)
    System(showInfo:Print)
 export
-   Run
+   Run View
 define
    proc {Run}
       I L

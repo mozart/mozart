@@ -2,6 +2,8 @@ functor
 export
    Expand FileTree Mkdir Rmtree Exists WithSlash FullName
    Dirname Basename AddToPath CreatePath
+   IsExtension
+   ExtractExtension
 import
    URL(toVirtualStringExtended isAbsolute make toBase toVirtualStringExtended resolve) Resolve(expand)
    OS(getDir stat system unlink)
@@ -158,5 +160,21 @@ define
       if {OS.stat P}.type\=dir then
 	 raise error(unableToCreateDirectory P) end
       end
+   end
+   %%
+   %%
+   fun{ExtractExtension Name}
+      Flag
+      L={List.takeWhile {Reverse {VirtualString.toString Name}}
+	 fun{$ C}
+	    if C\=&. then true else Flag=unit false end
+	 end}
+   in
+      if {IsFree Flag} then "" else {Reverse L} end
+   end
+   %%
+   %%
+   fun{IsExtension Ext Name}
+      {VirtualString.toString Ext}=={ExtractExtension Name}
    end
 end

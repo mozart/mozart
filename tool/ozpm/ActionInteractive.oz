@@ -3,8 +3,12 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(lcoalDB mogulDB)
+   Global(localDB mogulDB readDB)
+   ActionInstall(install:Install)
+   ActionInfo(view)
    System(show:Show)
+   Browser(browse:Browse)
+   FileUtils(isExtension:IsExtension)
 define
 
    ArchiveManager
@@ -12,11 +16,14 @@ define
 
    class ListDataView
       feat
-	 infoPane
+	 parent
 	 setTitle
 	 handle
-      meth init(INFO ST Desc)
-	 self.infoPane=INFO
+      attr
+	 info
+	 title
+      meth init(Parent ST Desc)
+	 self.parent=Parent
 	 self.setTitle=ST
 	 Desc=listbox(glue:nswe
 		      bg:white
@@ -25,13 +32,27 @@ define
 		      handle:self.handle)
       end
       meth display(Info)
-	 skip
-      end
+	 info<-Info
+	 {self.setTitle Info.title}
+	 {self.handle set({List.map Info.info fun{$ I} I.id end})}
+     end
       meth get(Info)
+	 Info=@info
 	 skip
       end
-      meth selec
-	 skip
+      meth getClass(C)
+	 C=ListDataView
+      end
+      meth select
+	 N={self.handle get(firstselection:$)}
+	 D
+      in
+	 try
+	    Info={List.nth @info.info N}
+	 in
+	    D=r(info:Info)
+	 catch _ then D=unit end
+	 {self.parent displayInfo(D)}
       end
    end
 
@@ -39,18 +60,69 @@ define
       feat
 	 setTitle
 	 handle
-      meth init(ST Desc)
+	 parent
+      attr
+	 info
+      meth init(Parent ST Desc)
+	 self.parent=Parent
 	 self.setTitle=ST
 	 Desc=listbox(glue:nswe
 		      bg:white
 		      tdscrollbar:true
+		      lrscrollbar:true
 		      handle:self.handle)
       end
-      meth display(Info)
-	 skip
+      meth display(Inf)
+	 info<-Inf
+	 if Inf==unit then
+	    {self.setTitle ""}
+	    {self.handle set(nil)}
+	 else
+	    Info=Inf.info
+	 in
+	    {self.setTitle {VirtualString.toString Info.id}}
+	    local
+	       L1={List.filter
+		   {List.map
+		    {Record.toListInd Info}
+		    fun{$ En}
+		       I#V=En
+		    in
+		       case I
+		       of lsla then unit
+		       [] filelist then unit
+		       [] id then unit
+		       else
+			  if {List.is V} then
+			     I#":"#{List.drop
+				    {VirtualString.toString
+				     {List.foldL V fun{$ S X} S#","#X end ""}}
+				    1}
+			  elseif {VirtualString.is V} then
+			     I#":"#{VirtualString.toString V}
+			  else
+			     unit
+			  end
+		       end
+		    end}
+		   fun{$ L} L\=unit end}
+	       L2=if {HasFeature Info filelist} then
+		     ""|"Contains the following files :"|""|{List.map Info.filelist fun{$ R} R end}
+		  else
+		     nil
+		  end
+	       L={List.append L1 L2}
+	    in
+	       {self.handle set(L)}
+	    end
+	 end
       end
       meth get(Info)
+	 Info=@info
 	 skip
+      end
+      meth getClass(C)
+	 C=InfoView
       end
    end
    
@@ -61,8 +133,13 @@ define
 	 dataLabel
 	 infoPlace
 	 infoLabel
+	 installButton
+	 desinstallButton
 
-      attr data info
+      attr
+	 data
+	 info
+	 curpkg
 
       meth run
 	 InteractiveManager,init
@@ -73,11 +150,12 @@ define
 	 TitleLook={QTk.newLook}
 	 InfoMain
 	 DataMain
-	 {TitleLook.set label(text:"" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2)}
+	 {TitleLook.set label(text:"" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2 justify:left anchor:w)}
 	 %%
-	 info<-{New InfoView init(proc{$ Title} {self.infoLabel set(text:Title)} end
+	 info<-{New InfoView init(self
+				  proc{$ Title} {self.infoLabel set(text:Title)} end
 				  InfoMain)}
-	 data<-{New ListDataView init(@info
+	 data<-{New ListDataView init(self
 				      proc{$ Title} {self.dataLabel set(text:Title)} end
 				      DataMain)}
 	 MenuDesc=
@@ -115,7 +193,11 @@ define
 				 glue:w)
 			tbbutton(text:'Mogul'
 				 action:self#displayMogul
-				 glue:w))
+				 glue:w)
+			tbbutton(text:'File...'
+				 action:self#displayFile
+				 glue:w)
+		       )
 				 
 %			tbbutton(text:'Install' glue:w)
 %			tbbutton(text:'Remove' glue:w)
@@ -130,7 +212,7 @@ define
 			     label(look:TitleLook
 				   handle:self.dataLabel)
 			     tbbutton(text:"Detach"
-				      action:proc{$} skip end
+				      action:self#detach(@data)
 				      glue:e))
 			  placeholder(handle:self.dataPlace glue:nswe
 				      DataMain
@@ -140,12 +222,25 @@ define
 			     label(look:TitleLook
 				   handle:self.infoLabel)
 			     tbbutton(text:"Detach"
-				      action:proc{$} skip end
+				      action:self#detach(@info)
 				      glue:e))
 			  placeholder(handle:self.infoPlace glue:nswe
 				      InfoMain
 				     )
 			 ))
+	 %%
+	 ActionBarDesc=
+	 lr(glue:swe
+	    button(glue:w
+		   text:"Install"
+		   handle:self.installButton
+		   action:self#install
+		   state:disabled)
+	    button(glue:w
+		   text:"Desinstall"
+		   handle:self.desinstallButton
+		   action:self#desinstall
+		   state:disabled))
 	 %%
 	 StatusBar
 	 StatusBarDesc=
@@ -159,18 +254,147 @@ define
 		 MenuDesc
 		 ToolbarDesc
 		 MainWindowDesc
+		 ActionBarDesc
 		 StatusBarDesc)
+	 Window={QTk.build Desc}
       in
-	 {{QTk.build Desc} show(wait:true)}
+	 {Window show}
+	 {Wait Global.localDB}
+	 {Wait Global.mogulDB}
+	 {self displayInstalled}
+	 {Window wait}
 	 {Application.exit 0}
       end
 
+      meth detach(What)
+	 Class={What getClass($)}
+	 Window
+	 Desc
+	 N={New Class init(self
+			   proc{$ Title} {Window set(title:Title)} end
+			   Desc)}
+	 Window={QTk.build td(Desc)}
+	 {N display({What get($)})}
+      in
+	 {Window show}
+      end
+
       meth displayInstalled
-	 {@data display({self.archiveManager list($)})}
+	 {@data display(r(info:{Global.readDB} title:"Installed package"))}
       end
 
       meth displayMogul
-	 {@data display(self.mogulDB)}
+	 {@data display(r(info:Global.mogulDB.packages title:"Available packages from MOGUL"))}
       end
+
+      meth displayFile
+	 File={QTk.dialogbox load($
+				  filetypes:q(q("Mozart Packages" "*.pkg"))
+				  title:"Select a package")}
+      in
+	 if File==nil then skip else
+	    Package#List={ActionInfo.view File}
+	    Info={Record.adjoinAt Package
+		  url_pkg [File]}
+	 in
+	    {@data display(r(info:[Info]
+			     title:File))}
+	    {self displayInfo(r(info:Info))}
+	 end
+      end
+
+      meth displayInfo(Info)
+	 {ForAll [installButton desinstallButton]
+	  proc{$ B} {self.B set(state:disabled)} end}
+	 if Info==unit then
+	    curpkg<-unit
+	 else
+	    curpkg<-Info.info
+	    case {Label @curpkg}
+	    of ipackage then {self.desinstallButton set(state:normal)}
+	    [] package then
+	       if {HasFeature @curpkg url_pkg} andthen
+		  {List.some @curpkg.url_pkg fun{$ URL} {IsExtension "pkg" URL} end}
+	       then
+		  {self.installButton set(state:normal)}
+	       end
+	    else skip end
+	 end
+	 {@info display(Info)}
+      end
+
+      meth install
+	 Packages={List.filter @curpkg.url_pkg fun{$ URL} {IsExtension "pkg" URL} end}
+	 LB
+	 Ok
+	 N={NewCell 1}
+      in
+	 {{QTk.build td(title:"Install a package"
+			listbox(padx:10 pady:10
+				glue:nswe
+				tdscrollbar:true
+				handle:LB
+				action:proc{$}
+					  {Assign N {LB get(firstselection:$)}}
+				       end
+				height:{Length Packages}
+				init:Packages)
+			lr(glue:swe
+			   button(text:"Ok"
+				  action:toplevel#close
+				  return:Ok)
+			   button(text:"Cancel"
+				  action:toplevel#close)))} show(modal:true)}
+	 {LB set(selection:[true])} % select the first element
+	 {Wait Ok} % wait for the window to close
+	 {Show Ok}
+	 {Show {Access N}}
+	 if Ok andthen {Access N}>0 then
+	    ToInstall={List.nth Packages {Access N}}
+	 in
+	    case {Install ToInstall false}
+	    of success(pkg:P) then
+	       {{QTk.build td(title:"Installation succeeded"
+			      label(padx:10 pady:10
+				    text:P.id#" was successfully installed")
+			      button(glue:s
+				     text:"Close"
+				     action:toplevel#close))} show(wait:true modal:true)}
+	       {self displayInstalled}
+	    []  nameclash(name:N loc:L pkg:P) then
+	       {{QTk.build td(title:"Installation failed"
+			      label(padx:10 pady:10
+				    text:"Unable to install package '"#P.id#"'\n"#
+				    "The file '"#N#"' is conflicting with the installed package '"#L.id#"'")
+			      button(glue:s
+				     text:"Close"
+				     action:toplevel#close))} show(wait:true modal:true)}
+	    [] alreadyinstalled(loc:L pkg:P) then
+	       {{QTk.build td(title:"Installation failed"
+			      label(padx:10 pady:10
+				    text:
+				       if {HasFeature P version} then
+					  "Unable to install package '"#P.id#"', version "#P.version
+				       else
+					  "Unable to install package '"#P.id#"'"
+				       end#"\n"#
+				    if {HasFeature L version} then
+				       "This package is already installed in version "#L.version
+				    else
+				       "A package of the same id is already installed"
+				    end)
+			      button(glue:s
+				     text:"Close"
+				     action:toplevel#close))} show(wait:true modal:true)}
+	    end
+	 end
+      end
+
+      meth desinstall
+	 {{QTk.build td(label(text:"Not yet implemented")
+			button(text:"Close" action:toplevel#close
+			       glue:s))} show(wait:true modal:true)}
+      end
+      
    end
 end
