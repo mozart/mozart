@@ -45,6 +45,19 @@
     <Meta name="html.split.index" value="">
     <Meta name="html.split.toc"   value="">
 
+    <Meta name="latex.fullwidth" value="table.info.threads">
+    <Meta name="latex.fullwidth" value="table.heap.usage">
+    <Meta name="latex.fullwidth" value="table.problem.solving">
+
+    <Meta name="latex.table.spec" arg1="table.info.threads"    arg2="LP{0.45\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.heap.usage"      arg2="LP{0.45\linewidth}">
+    <Meta name="latex.table.spec" arg1="table.problem.solving" arg2="LP{0.45\linewidth}">
+
+    <Meta name="latex.picture.width" arg1="runtime-load.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="runtime-dist.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="threads-runnable.gif" arg2="0.5\linewidth">
+    <Meta name="latex.picture.width" arg1="memory-heap.gif" arg2="0.5\linewidth">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
     <Title/Oz Panel/
@@ -100,7 +113,7 @@ The information the panel displays is described in
 <section id="chapter.usage.threads">
   <title/Information on Threads/
 
-  <P><table>
+  <P><table id="table.info.threads">
     <tr>
       <th colspan=2>Runtime</th>
     </tr>
@@ -126,13 +139,13 @@ The information the panel displays is described in
         </tr>
         <tr>
           <td>
-            <Picture.Extern to="runtime-load.gif" type=gif>
+            <Picture.Extern id="runtime-load.gif" to="runtime-load.gif" type=gif>
           </td>
           <td>Operating system load of the Mozart engine.</td>
         </tr>
         <tr>
           <td>
-            <Picture.Extern to="runtime-dist.gif" type=gif>
+            <Picture.Extern id="runtime-dist.gif" to="runtime-dist.gif" type=gif>
           </td>
           <td>Relative distribution of entire computation time.</td>
         </tr>
@@ -153,7 +166,7 @@ The information the panel displays is described in
         </tr>
         <tr>
           <td>
-            <Picture.Extern to="threads-runnable.gif" type=gif>
+            <Picture.Extern id="threads-runnable.gif" to="threads-runnable.gif" type=gif>
           </td>
           <td>Number of currently runnable threads..</td>
         </tr>
@@ -182,7 +195,7 @@ The information the panel displays is described in
 <section id="chapter.usage.memory">
   <title/Information on Memory/
 
-  <P><table>
+  <P><table id="table.heap.usage">
     <tr>
       <th colspan=2>Heap Usage</th>
     </tr>
@@ -205,7 +218,7 @@ The information the panel displays is described in
         </tr>
         <tr>
           <td>
-            <Picture.Extern to="memory-heap.gif" type=gif>
+            <Picture.Extern id="memory-heap.gif" to="memory-heap.gif" type=gif>
           </td>
           <td>Displays the three values from above.</td>
         </tr>
@@ -261,7 +274,7 @@ The information the panel displays is described in
 <section id="chapter.usage.problem">
   <title/Information on Problem Solving/
 
-  <P><table>
+  <P><table id="table.problem.solving">
     <tr>
       <th colspan=2>Finite Domain Constraints</th>
     </tr>
