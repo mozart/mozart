@@ -220,8 +220,8 @@ M={R apply(F $)}
 but it's all right since we are not pickling the functor.
 In fact, it's quite possible for
 functors to have external references.
-/index/computed functor/
-/index/functor<and>computed/
+<index/computed functor/
+<index/functor<and>computed/
 Such functors are called <em>computed functors</em>.
 They can only be pickled if the external references
 are to stateless entities.
@@ -237,7 +237,7 @@ We give this solution later in the tutorial.
 
 <SECTION><TITLE>Servers</TITLE>
 
-/index/server/
+<index/server/
 <P>A server is a long-lived computation that provides a service to clients.
 We will show progressively how to build different kinds of servers.
 
@@ -288,7 +288,7 @@ the computation spaces become separate again.
 
 <SUBSECTION><TITLE>The hello server with stationary objects</TITLE>
 
-/index/stationary object<and>example/
+<index/stationary object<and>example/
 <P>The previous section shows how to build a basic server
 using a port to collect messages.
 There is in fact a much simpler way,
