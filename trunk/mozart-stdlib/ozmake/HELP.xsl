@@ -117,6 +117,7 @@ SPAN.BUILTIN      { color: #DA70D6; }
   <DT><B>provides</B></DT>
   <DD><SPAN CLASS="MODULE">ozmake</SPAN></DD>
 </DL>
+<!--
 <DL>
   <DT><B>download prebuilt tool</B></DT>
   <xsl:call-template name="PREBUILT">
@@ -126,8 +127,11 @@ SPAN.BUILTIN      { color: #DA70D6; }
     <xsl:with-param name="VERSION" select="$OZMAKEVERSION"/>
   </xsl:call-template>
 </DL>
+-->
 <HR/>
+<!--
   <P CLASS="WARNING">ozmake is now in beta-release - feedback is extremely welcome</P>
+-->
 <P>see <A HREF="CHANGES">CHANGES</A> for a list of changes between
 successive versions of <FILE>ozmake</FILE>.</P>
 </xsl:if>

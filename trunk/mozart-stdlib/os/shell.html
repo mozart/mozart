@@ -2,7 +2,7 @@
 <HTML>
 <HEAD>
 <!-- EDIT -->
-<TITLE>Mozart Standard Library</TITLE>
+<TITLE>Mozart Standard Library: Shell</TITLE>
 <STYLE>
 BODY {
 	background-color: white;
@@ -49,18 +49,33 @@ SPAN.BUILTIN      { color: #DA70D6; }
 </HEAD>
 <BODY>
 <!-- EDIT -->
-<H1>Mozart Standard Library</H1>
+<H1>Shell Support</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/os/Shell.ozf</SPAN>
+</DL>
 <HR>
 
-<P>The standard library currently contains the following sections:
-<UL>
-<LI><A href="../mozart-ozmake/index.html">ozmake tool</A>
-<LI><A href="adt/index.html">Abstract datatypes</A>
-<LI><A href="net/index.html">Network support</A>
-<LI><A href="os/index.html">Operating system support</A>
-<LI><A href="wp/index.html">GUI programming</A>
-<LI><A href="xml/index.html">XML Support</A>
-</UL>
+<P>This module attempts to provide a portable interface for invoking
+the platform's shell
+
+<H2>Exports</H2>
+<P>The module exports:
+<DL>
+<DT><CODE>{Shell.executeProgram +L}</CODE>
+<DT><CODE>{Shell.executeCommand +L}</CODE>
+<DD>executes a program (resp. a shell command).  <CODE>L</CODE> is a
+list of virtual strings for the program/command and its arguments.
+They are each appropriately quoted before being handed to the platform's
+real shell. If execution is not successful, an exception <CODE>shell(VS)</CODE>
+is raised where <CODE>VS</CODE> is the virtual string that was actually passed
+to the shell for execution.
+<DT><CODE>{Shell.toUserVS +L ?VS}</CODE>
+<DD>returns a virtual string representation of the program/command invocation
+<CODE>L</CODE> which is only appropriate for displaying to a user because
+quoting is omitted.
+</DL>
 
 <HR>
 </BODY>
