@@ -1,10 +1,34 @@
 %% -*-oz-*-
 functor
 export
-   new : NewParser
+   Parse
+   NewContext
+   NoParent
 prepare
+   %% ================================================================
+   %% the up-links provided by the `parent' features introduce a huge
+   %% number of cycles in the parse tree and thus make it very hard
+   %% for the Inspector to display the data structure.  The NoParent
+   %% function recursively removes the parent feature.
+   %% ================================================================
+   fun {NoParent X}
+      case {Label X}
+      of root then
+	 {AdjoinAt X children {Map X.children NoParent}}
+      [] element then
+	 {Adjoin {Record.subtract X parent}
+	  element(
+	     children : {Map X.children NoParent}
+	     alist    : {Map X.alist AttrNoParent})}
+      else {Record.subtract X parent} end
+   end
+   fun {AttrNoParent A}
+      {Record.subtract A parent}
+   end
+
+   %%
+
    MakeBS = ByteString.make
-   StringToken = String.token
    DictClone = Dictionary.clone
    RecToDict = Record.toDictionary
    VS2A = VirtualString.toAtom
@@ -128,6 +152,192 @@ prepare
 	 )
 
    %% ================================================================
+   %% namespace context
+   %% ================================================================
+
+   %% like {Member &: S} but specialized for speed
+   fun {HasColon S}
+      case S of nil then false
+      [] H|T then H==&: orelse {HasColon T} end
+   end
+
+   %% line {StringToken S &: Prefix Suffix} but specialized for speed
+   proc {SplitName S Prefix Suffix}
+      case S of H|T then
+	 if H==&: then Prefix=nil Suffix=T
+	 else Prefix2 in
+	    Prefix=H|Prefix2
+	    {SplitName T Prefix2 Suffix}
+	 end
+      end
+   end
+
+   fun {NewContext}
+      D={NewDictionary}
+   in
+      D.unit := '' %% install the no-name-space for attributes
+      {NewContextWrap D {NewDictionary}}
+   end
+
+   fun {NewContextWrap PrefixTable NameTable}
+      
+      %% =============================================================
+      %% {Intern +Name ?QName}
+      %%     takes a string Name and returns the unique record
+      %% describing the fully qualified name:
+      %%
+      %%          qname( uri:URI name:LOC xname:XLOC )
+      %%
+      %% where URI is the uri bound to the prefix, LOC is the local
+      %% part of the name, and XLOC is the atom obtained by concatenating
+      %% LOC followed by ' @ ' followed by URI. XLOC can be used as
+      %% a key uniquely identifying the name.  When URI is '' we just
+      %% use LOC as XLOC.
+      %% =============================================================
+
+      fun {Intern Name}
+	 PrefixA SuffixA
+	 %% I expect the common case to be a name without prefix
+	 %% i.e. in the default namespace.  Thus, I first check
+	 %% if the name contains a `:' to avoid unnecessary consing
+	 %% when splitting
+	 if {HasColon Name}
+	 then Prefix Suffix in
+	    {SplitName Name Prefix Suffix}
+	    if Prefix==nil then
+	       PrefixA=''
+	    else
+	       {StringToAtom Prefix PrefixA}
+	    end
+	    {StringToAtom Suffix SuffixA}
+	 else PrefixA='' SuffixA={StringToAtom Name} end
+      in
+	 {InternExplicit PrefixA SuffixA}
+      end
+      proc {PutPrefix Prefix URI}
+	 PrefixTable.{VS2A Prefix} := {VS2A URI}
+      end
+      %% prefix -> uri is the table that needs to be cloned
+      %% uri * name -> qname
+      fun {InternExplicit PrefixA SuffixA}
+	 MaybeURI={CondSelect PrefixTable PrefixA unit}
+	 URI=if MaybeURI==unit then
+		%% namespace prefix not declared, we let it default
+		%% to denoting a uri that is string-equal to the prefix
+		PrefixTable.PrefixA := PrefixA
+		PrefixA
+	     else MaybeURI end
+	 MaybeSubTable={CondSelect NameTable URI unit}
+	 SubTable=
+	 if MaybeSubTable==unit then
+	    T={NewDictionary}
+	 in
+	    NameTable.URI := T
+	    T
+	 else MaybeSubTable end
+	 MaybeName = {CondSelect SubTable SuffixA unit}
+      in
+	 if MaybeName==unit then
+	    XName = if URI=='' then SuffixA else
+		       {VS2A SuffixA#' @ '#URI}
+		    end
+	    R=qname(
+		 uri   : URI
+		 name  : SuffixA
+		 xname : XName)
+	 in
+	    SubTable.SuffixA := R
+	    R
+	 else MaybeName end
+      end
+      fun {Clone}
+	 {NewContextWrap {DictClone PrefixTable} NameTable}
+      end
+      proc {Extend L}
+	 case L
+	 of nil then skip
+	 [] (PrefixA|ValueA)|L then
+	    PrefixTable.PrefixA := ValueA
+	    {Extend L}
+	 end
+      end
+      fun {InternAlist L}
+	 case L
+	 of nil then nil
+	 [] (PrefixA#SuffixA#ValueA)|L then
+	    ({InternExplicit PrefixA SuffixA}|ValueA)
+	    |{InternAlist L}
+	 end
+      end
+   in
+      context(
+	 intern         : Intern
+	 internExplicit : InternExplicit
+	 clone          : Clone
+	 extend         : Extend
+	 internAlist    : InternAlist
+	 putPrefix      : PutPrefix
+	 )
+   end
+
+   %% ================================================================
+   %% {ProcessAlist +IN ?OUT ?NS}
+   %%     takes as input a list where each element is of the form
+   %% (Attr|Value) where both Attr and Value are strings and returns
+   %% two lists, one for normal attributes (OUT) and one for namespace
+   %% declarations (NS). OUT is a list of elements of the form
+   %% (PrefA#NamA#ValA) where all 3 components are atoms, PrefA is the
+   %% namespace prefix ('' if none), NamA is the local part of the
+   %% attribute name, and ValA is the value.  NS is a list of elements
+   %% of the form (PrefA|ValA) where both are also atoms and PrefA is
+   %% the namespace prefix, and ValA the namespace URI.
+   %%
+   %% As a special case, PrefA for an attribute will be unit if the
+   %% attribute had no explicit prefix.  The reason is that in this
+   %% case the attribute's name is not in the current default namespace
+   %% but rather in the no-name-space which we denote by unit as
+   %% PrefixA.
+   %% ================================================================
+
+   proc {ProcessAlist IN OUT NS}
+      case IN
+      of nil then OUT=nil NS=nil
+      [] (Attr|Value)|IN then
+	 PrefixA SuffixA ValueA={StringToAtom Value}
+      in
+	 if {HasColon Attr}
+	 then Prefix Suffix in
+	    {SplitName Attr Prefix Suffix}
+	    if Prefix==nil then
+	       PrefixA=''
+	    else
+	       {StringToAtom Prefix PrefixA}
+	    end
+	    {StringToAtom Suffix SuffixA}
+	 else PrefixA=unit SuffixA={StringToAtom Attr} end
+	 if PrefixA==unit then
+	    if {HasFeature XMLNS SuffixA} then NS2 in
+	       %% default namespace declaration
+	       NS=(''|ValueA)|NS2
+	       {ProcessAlist IN OUT NS2}
+	    else OUT2 in
+	       %% attribute in no-namespace
+	       OUT=(unit#SuffixA#ValueA)|OUT2
+	       {ProcessAlist IN OUT2 NS}
+	    end
+	 elseif {HasFeature XMLNS PrefixA} then NS2 in
+	    %% namespace declaration
+	    NS=(SuffixA|ValueA)|NS2
+	    {ProcessAlist IN OUT NS2}
+	 else OUT2 in
+	    %% qualified attribute
+	    OUT=(PrefixA#SuffixA#ValueA)|OUT2
+	    {ProcessAlist IN OUT2 NS}
+	 end
+      end
+   end
+
+   %% ================================================================
    %% the big tokenizer+parser combo
    %% ================================================================
 
@@ -146,11 +356,9 @@ prepare
 	 FileOpen    : unit	% function to open a URL for input
 	 Coord       : unit	% coord(@Filename @Line) saved for reuse in same line
 	 %%-----------------------------------------------------------
-	 %% namespace support
+	 %% namespace context
 	 %%-----------------------------------------------------------
-	 PrefixTable : unit
-	 NameTable   : unit
-	 NeedCopy    : false
+	 CONTEXT     : unit
 	 %%-----------------------------------------------------------
 	 %% parser
 	 %%-----------------------------------------------------------
@@ -162,25 +370,20 @@ prepare
 	 TAG         : unit
 	 CONTENTS    : nil
 	 PSTACK      : nil
+	 COORD       : unit
 
       meth init(
 	      string      : UserBuffer      <= nil
 	      url         : UserURL         <= unit
 	      file        : UserFile        <= unit
-	      prefixtable : UserPrefixTable <= unit
-	      nametable   : UserNameTable   <= unit
-	      striptable  : UserStripTable  <= unit
+	      context     : UserContext     <= unit
+	      strip       : UserStripTable  <= unit
 	      fileopen    : UserFileOpen    <= unit
 	      root        : UserRoot        <= _)
-	 if UserPrefixTable==unit then
-	    PrefixTable <- {NewDictionary}
+	 if UserContext==unit then
+	    CONTEXT <- {NewContext}
 	 else
-	    PrefixTable <- UserPrefixTable
-	 end
-	 if UserNameTable==unit then
-	    NameTable <- {NewDictionary}
-	 else
-	    NameTable <- UserNameTable
+	    CONTEXT <- UserContext
 	 end
 	 PSTACK      <- nil
 	 Line        <- 1
@@ -429,21 +632,21 @@ prepare
       end
 
       %% we have just read </
-      meth ScanEtag(Tag Coord) Name in
+      meth ScanEtag(Tag) Name in
 	 Parser,SkipSpaces
 	 Parser,ScanName(Name)
 	 Parser,SkipSpaces
 	 case Parser,GET($)
 	 of &> then
-	    Tag=etag(Name Coord)
+	    Tag=etag(Name @COORD)
 	 else
 	    Parser,TERROR(expectedEtagRangle)
 	 end
       end
 
       %% we have just read <
-      meth ScanStag(Tag Coord) Name Alist Empty in
-	 Tag=stag(Name Alist Empty Coord)
+      meth ScanStag(Tag) Name Alist Empty in
+	 Tag=stag(Name Alist Empty @COORD)
 	 Parser,SkipSpaces
 	 Parser,ScanName(Name)
 	 Parser,ScanAlist(Alist Empty)
@@ -477,8 +680,8 @@ prepare
       %% all adjacent text tokens are collapsed.  Instead, we will
       %% leave that job to a higher abstraction.
 
-      meth ScanText(Token Coord) Text in
-	 Token=text(Text Coord)
+      meth ScanText(Token) Text in
+	 Token=text(Text @COORD)
 	 Parser,ScanTEXT(Text)
       end
 
@@ -495,13 +698,13 @@ prepare
       end
 
       %% we have just read <![
-      meth ScanCDATA(Text Coord)
+      meth ScanCDATA(Text)
 	 raise notImplemented(scanCDATA) end
       end
 
       %% we have just read <!--
-      meth ScanComment(Comment Coord) Text in
-	 Comment=comment(Text Coord)
+      meth ScanComment(Comment) Text in
+	 Comment=comment(Text @COORD)
 	 Parser,ScanCOMMENT(Text)
       end
 
@@ -538,8 +741,8 @@ prepare
       end
 
       %% we have just read <?
-      meth ScanPI(PI Coord) Text in
-	 PI=pi(Parser,ScanName($) Text Coord)
+      meth ScanPI(PI) Text in
+	 PI=pi(Parser,ScanName($) Text @COORD)
 	 Parser,ScanPIX(Text)
       end
 
@@ -565,9 +768,9 @@ prepare
 	 end
       end
 
-      meth GetToken(Token) C1 Coord in
+      meth GetToken(Token) C1 in
 	 Parser,GET(C1)
-	 Parser,GetCoord(Coord)
+	 COORD <- Parser,GetCoord($)
 	 case C1
 	 of false then Token=unit
 	 [] &< then C2 in
@@ -575,8 +778,8 @@ prepare
 	    case C2
 	    of false then
 	       Parser,TERROR(tokenEOF)
-	    [] &/ then Parser,ScanEtag(Token Coord)
-	    [] &? then Parser,ScanPI(Token Coord)
+	    [] &/ then Parser,ScanEtag(Token)
+	    [] &? then Parser,ScanPI(Token)
 	    [] &! then C3 in
 	       Parser,GET(C3)
 	       case C3
@@ -588,32 +791,32 @@ prepare
 		  of false then
 		     Parser,TERROR(tokenEOF)
 		  [] &- then
-		     Parser,ScanComment(Token Coord)
+		     Parser,ScanComment(Token)
 		  else
 		     Parser,TERROR(expectedComment)
 		  end
 	       [] &[ then
-		  Parser,ScanCDATA(Token Coord)
+		  Parser,ScanCDATA(Token)
 	       else
 		  Parser,UNGET(C3)
-		  Token=doctype(Coord)
+		  Token=doctype(@COORD)
 		  Parser,ScanDoctype
 	       end
 	    else
 	       Parser,UNGET(C2)
-	       Parser,ScanStag(Token Coord)
+	       Parser,ScanStag(Token)
 	    end
 	 [] && then
 	    case Parser,ScanEntityRef($)
-	    of string(S) then Token=text(S Coord)
-	    [] pi(S)     then Token=pi(S Coord)
+	    of string(S) then Token=text(S @COORD)
+	    [] pi(S)     then Token=pi(S @COORD)
 	    [] system(S) then
 	       Parser,PushFile(S)
 	       Parser,GetToken(Token)
 	    end
 	 else
 	    Parser,UNGET(C1)
-	    Parser,ScanText(Token Coord)
+	    Parser,ScanText(Token)
 	 end
       end
 
@@ -673,7 +876,7 @@ prepare
 		  of false then
 		     Parser,TERROR(doctypeEOF)
 		  [] &- then
-		     Parser,ScanComment(_)
+		     Parser,ScanCOMMENT(_)
 		     Parser,ScanDoctypeBody
 		  [] C then
 		     Parser,TERROR(unexpectCharInDoctype(C))
@@ -729,55 +932,8 @@ prepare
       end
 
       %% =============================================================
-      %% NAMESPACE MANAGER
+      %% NAMESPACE CONTEXT
       %% =============================================================
-
-      %% =============================================================
-      %% Intern(+Name ?QName)
-      %%     takes a string Name and returns the unique record
-      %% describing the fully qualified name:
-      %%
-      %%          qname( uri:URI name:LOC xname:XLOC )
-      %%
-      %% where URI is the uri bound to the prefix, LOC is the local
-      %% part of the name, and XLOC is the atom obtained by concatenating
-      %% LOC followed by ' @ ' followed by URI. XLOC can be used as
-      %% a key uniquely identifying the name.
-      %% =============================================================
-
-      meth Intern(Name $)
-	 Prefix Suffix
-	 %% !!! IS IT REALLY MORE EFFICIENT TO TEST FIRST?
-	 if {Member &: Name}
-	 then {StringToken Name &: Prefix Suffix}
-	 else Prefix=nil Suffix=Name end
-	 PrefixA={StringToAtom Prefix}
-	 SuffixA={StringToAtom Suffix}
-      in
-	 Parser,InternExplicit(PrefixA SuffixA $)
-      end
-
-      meth InternExplicit(PrefixA SuffixA $)
-	 MaybeURI={CondSelect @PrefixTable PrefixA unit}
-	 URI=if MaybeURI==unit then
-		%% namespace prefix not declared, we let it default
-		%% to denoting a uri that is string-equal to the prefix
-		@PrefixTable.PrefixA := PrefixA
-		PrefixA
-	     else MaybeURI end
-	 FullName = {VS2A SuffixA#' @ '#URI}
-	 R1={CondSelect @NameTable FullName unit}
-      in
-	 if R1==unit then
-	    R=qname(
-		 uri   : URI
-		 name  : SuffixA
-		 xname : FullName)
-	 in
-	    @NameTable.FullName := R
-	    R
-	 else R1 end
-      end
 
       %%--------------------------------------------------------------
       %% ProcessElement(+Tag1 +Alist1 ?Tag2 ?Alist2)
@@ -792,91 +948,16 @@ prepare
       %%--------------------------------------------------------------
 
       meth ProcessElement(Tag1 Alist1 Tag2 Alist2)
-	 AlistMid
+	 AlistMid AlistNS
       in
-	 NeedCopy <- true
-	 Parser,ProcessAlist(Alist1 AlistMid)
-	 Parser,Intern(Tag1 Tag2)
-	 Parser,InternAlist(AlistMid Alist2)
-      end
-
-      meth InternAlist(Alist $)
-	 case Alist
-	 of nil then nil
-	 [] (PrefA#NamA#ValA)|L then
-	    ((Parser,InternExplicit(PrefA NamA $))|ValA)
-	    |(Parser,InternAlist(L $))
+	 {ProcessAlist Alist1 AlistMid AlistNS}
+	 PSTACK <- @CONTEXT|@PSTACK
+	 if AlistNS\=nil then C={@CONTEXT.clone} in
+	    CONTEXT <- C
+	    {C.extend AlistNS}
 	 end
-      end
-
-      %%--------------------------------------------------------------
-      %% ProcessAlist(+AlistIN ?AlistOUT)
-      %%     takes as input a list where each element is of the form
-      %% (Attr|Value) where both Attr and Value are strings and returns
-      %% a list where each element is of the form (PrefA#NamA#ValA)
-      %% where all 3 components are atoms and PrefA is the namespace
-      %% prefix, NamA is the local part of the attribute name, and
-      %% ValA is the value.
-      %%--------------------------------------------------------------
-
-      meth ProcessAlist(AlistIN AlistOUT)
-	 case AlistIN
-	 of nil then
-	    AlistOUT=nil
-	    %% we keep the same prefix table for this scope
-	    %% since there were no namespace declarations
-	    PSTACK <- @PrefixTable|@PSTACK
-	 [] (Attr|Value)|AlistIN then
-	    Prefix Suffix
-	    if {Member &: Attr}
-	    then {StringToken Attr &: Prefix Suffix}
-	    else Prefix=nil Suffix=Attr end
-	    PrefixA={VS2A Prefix}
-	    SuffixA={VS2A Suffix}
-	    ValueA={VS2A Value}
-	 in
-	    %% check if this is a namespace declaration
-	    if Prefix==nil then
-	       if {HasFeature XMLNS SuffixA} then
-		  %% default namespace declaration
-		  %% we clone the prefix table and use
-		  %% the updated clone for this scope
-		  if @NeedCopy then
-		     NeedCopy    <- false
-		     PSTACK      <- @PrefixTable|@PSTACK
-		     PrefixTable <- {DictClone @PrefixTable}
-		  end
-		  PrefixTable.'' := {VS2A Value}
-		  Parser,ProcessAlist(AlistIN AlistOUT)
-	       else
-		  AlistOUT2
-	       in
-		  AlistOUT=(PrefixA#SuffixA#ValueA)|AlistOUT2
-		  Parser,ProcessAlist(AlistIN AlistOUT2)
-	       end
-	    elseif {HasFeature XMLNS PrefixA} then
-	       %% namespace declaration
-	       %% if the declaration is really new, then
-	       %% again we need to clone the prefix table
-	       %% an use the updated clone for this scope
-	       if {CondSelect @PrefixTable SuffixA unit}==ValueA then
-		  Parser,ProcessAlist(AlistIN AlistOUT)
-	       else
-		  if @NeedCopy then
-		     NeedCopy    <- false
-		     PSTACK      <- @PrefixTable|@PSTACK
-		     PrefixTable <- {DictClone @PrefixTable}
-		  end
-		  PrefixTable.SuffixA := ValueA
-		  Parser,ProcessAlist(AlistIN AlistOUT)
-	       end
-	    else
-	       AlistOUT2
-	    in
-	       AlistOUT=(PrefixA#SuffixA#ValueA)|AlistOUT2
-	       Parser,ProcessAlist(AlistIN AlistOUT2)
-	    end
-	 end
+	 {@CONTEXT.intern Tag1 Tag2}
+	 {@CONTEXT.internAlist AlistMid Alist2}
       end
 
       %% =============================================================
@@ -911,6 +992,7 @@ prepare
 	 [] stag(Name Alist Empty Coord) then
 	    Tag2 Alist2 Elem Children Tail Alist3 OParent
 	 in
+	    %% this will always push the CONTEXT on the PSTACK
 	    Parser,ProcessElement(Name Alist Tag2 Alist2)
 	    Elem = element(
 		      tag      : Tag2
@@ -930,6 +1012,11 @@ prepare
 	       Children=nil
 	       CONTENTS <- Tail
 	       PARENT   <- OParent
+	       %% we now need to pop the CONTEXT from the PSTACK
+	       case @PSTACK of H|T then
+		  CONTEXT <- H
+		  PSTACK  <- T
+	       end
 	    else
 	       CONTENTS <- Children
 	       STACK    <- (Tail|OParent)|@STACK
@@ -937,7 +1024,7 @@ prepare
 	    end
 	    Parser,PARSE()
 	 [] etag(Name Coord) then Tag in
-	    Parser,Intern(Name Tag)
+	    {@CONTEXT.intern Name Tag}
 	    if @TAG\=Tag.xname then
 	       Parser,ERROR(mismatchedEtag(found:Tag.xname wanted:@TAG coord:Coord))
 	    else
@@ -951,7 +1038,7 @@ prepare
 		  Parser,PARSE()
 	       else Parser,ERROR(unexpectedErrorAtEtag(Tag Coord)) end
 	       case @PSTACK
-	       of H|T then PrefixTable<-H PSTACK<-T
+	       of H|T then CONTEXT<-H PSTACK<-T
 	       else Parser,ERROR(unexpectedEndOfPSTACK) end
 	    end
 	 [] pi(Target Args Coord) then L in
@@ -1011,7 +1098,7 @@ define
    fun {FileOpen FName}
       {New File init(url:FName)}
    end
-   proc {NewParser Init Root}
+   proc {Parse Init Root}
       {New Parser {Adjoin Init init(root:Root fileopen:FileOpen)} _}
    end
 end
