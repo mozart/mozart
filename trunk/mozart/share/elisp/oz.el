@@ -2204,7 +2204,7 @@ splitting, the outputs are passed to the common oz-filter."
 		((equal (point) start-of-output)
 		 (goto-char end-of-output)))
 	  (if (eq (process-buffer proc) buffer)
-	      (set-marker (process-mark proc) (point)))
+	      (set-marker (process-mark proc) end-of-output))
 
 	  (save-selected-window
 	    (walk-windows
