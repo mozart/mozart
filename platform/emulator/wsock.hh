@@ -32,6 +32,10 @@
 #ifndef __WSOCK_H__
 #define __WSOCK_H__
 
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #ifdef WINDOWS
 
 #define NOMINMAX

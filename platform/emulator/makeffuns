@@ -60,6 +60,10 @@ cat >> $ozc << EOF
 EOF
 
 cat > $initffuns << EOF
+#ifdef HAVE_CONFIG_H
+#include "conf.h"
+#endif
+
 #ifdef WINDOWS
 #include "types.hh"
 
