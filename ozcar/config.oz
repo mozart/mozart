@@ -224,9 +224,9 @@ else
    SelectedForeground      = white
 
    %% source window
-   ScrollbarApplColor      = black
-   ScrollbarBlockedColor   = black
-   ScrollbarStackColor     = black
+   ScrollbarApplColor      = '#010000'
+   ScrollbarBlockedColor   = '#000100'
+   ScrollbarStackColor     = '#000001'
 
    %% thread forest window
    RunningThreadColor      = black
