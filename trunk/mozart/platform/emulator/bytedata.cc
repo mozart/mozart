@@ -130,7 +130,7 @@ void unmarshalBitString(MsgBuffer*bs,OZ_Term*ret) {
 }
 
 void BitString_init() {
-  ByteString::type_id = registerConstExtension(unmarshalBitString);
+  BiString::type_id = registerConstExtension(unmarshalBitString);
 }
 
 BitString* BitString::clone() {
