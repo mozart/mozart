@@ -129,7 +129,7 @@
       <P.silent>
       This reference manual explains all abstractions provided to
       extend &moz3; constraint capabilities. It is intended to be used
-      in conjunction with <Ptr.Extern to="ozdoc:cpitut">.
+      in conjunction with the document <Ptr.Extern to="ozdoc:cpitut">.
 
     </Abstract>
 

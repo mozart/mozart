@@ -18,8 +18,7 @@ heap. This is typically required when the member function
 <Synopsis> <<OZ_Boolean OZ_isPosSmallInt(OZ_Term val);>>
 
 <Item> This function returns <<OZ_TRUE>> if <<val>> denotes an integer
-contained in the finite set <math>\{0, \ldots, OZ_getFDSup()\}</math>.
-Otherwise it returns <<OZ_FALSE>>.
+contained in the finite set <math>\{0, \ldots, \mbox{\tt OZ\_getFDSup()}\}</math>.  Otherwise it returns <<OZ_FALSE>>.
 
 
 <Entry class="function"><<OZ_hallocOzTerms>>
@@ -66,6 +65,29 @@ and the value of <<n>> must denote the correct size of the block.
 <<OZ_hallocChars()>>. The first argument <<is>> points to a memory
 block and the value of <<n>> must denote the correct size of the
 block.
+
+
+<Entry class="function"><<OZ_copyOzTerms>>
+<Index class=proglang><<OZ_copyOzTerms>></Index>
+<Synopsis> <<OZ_Term * OZ_copyOzTerms(int n, OZ_Term * ts);>>
+
+<Item> Copies <<n>> <<OZ_Term>>s from <<ts>> and returns the location of the
+copy. If <<n>> is equal to <math/0/ it returns <<(OZ_Term *) NULL>>.
+
+
+<Entry class="function"><<OZ_copyCInts>>
+<Index class=proglang><<OZ_copyCInts>></Index>
+<Synopsis> <<int * OZ_copyCInts(int n, int * is);>>
+
+<Item> Copies <<n>> <<int>>s from <<is>> and returns the location of the
+copy. If <<n>> is equal to <math/0/ it returns <<(int *) NULL>>.
+
+<Entry class="function"><<OZ_copyChars>>
+<Index class=proglang><<OZ_copyChars>></Index>
+<Synopsis> <<char * OZ_copyChars(int n, char * cs);>>
+
+<Item> Copies <<n>> <<char>>s from <<cs>> and returns the location of the
+copy. If <<n>> is equal to <math/0/ it returns <<(char *) NULL>>.
 
 
 <Entry class="function"><<OZ_findEqualVars>>
@@ -140,8 +162,7 @@ exception has to be raised. The message printed is composed using the
 <Index class=proglang><<OZ_getFDInf>></Index>
 <Synopsis> <<int OZ_getFDInf(void);>>
 
-<Item>
-This function returns the value of the smallest element a finite
+<Item> This function returns the value of the smallest element a finite
 domain which is represented by an instance of the class
 <<OZ_FiniteDomain>> can take. The value returned is <math/0/.
 
@@ -160,17 +181,18 @@ domain which is represented by an instance of the class
 <Index class=proglang><<OZ_getFSetInf>></Index>
 <Synopsis> <<int OZ_getFSetInf(void);>>
 
-<Item> This function returns the minimal element a Finite Set can
-hold. The current value is <math/0/.
+<Item> This function returns the value of the smallest element a finite
+set value which is represented by an instance of the class
+<<OZ_FSetValue>> can take. The value returned is <math/0/.
 
 
 <Entry class="function"><<OZ_getFSetSup>>
 <Index class=proglang><<OZ_getFSetSup>></Index>
 <Synopsis> <<int OZ_getFSetSup(void);>>
 
-<Item> This function returns the maximal element a Finite Set can
-hold. It may depend on compiler settings, but normally should be the
-same as <<OZ_getFDSup()>>.
+<Item> This function returns the value of the largest element a finite
+set value which is represented by an instance of the class
+<<OZ_FSetValue>> can take. The value returned is <math/134\;217\;726/.
 
 
 <Entry class="function"><<OZ_vectorSize>>
