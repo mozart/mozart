@@ -38,7 +38,6 @@
 #include "value.hh"
 #include "statisti.hh"
 
-inline
 void OZ_PropagatorProfile::profileReset(void) {
   OZ_PropagatorProfile * aux = getFirst();
   while (aux) {
@@ -50,7 +49,6 @@ void OZ_PropagatorProfile::profileReset(void) {
 }
 
 
-inline
 void PrTabEntry::profileReset(void) {
   PrTabEntry * aux = allPrTabEntries;
   while (aux) {
@@ -63,7 +61,6 @@ void PrTabEntry::profileReset(void) {
 }
 
 
-inline
 void Statistics::initProfile(void) {
   currAbstr = NULL;
   PrTabEntry::profileReset();
