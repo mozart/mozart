@@ -46,6 +46,8 @@ define
 		   'update-author-list'(type:bool)
 		   'update-author-list-html'(type:bool)
 		   %%
+		   'update-ozpm-info'(type:bool)
+		   %%
 		   'mogul-top'(type:string)
 		  )}
    catch error(ap(usage Msg) ...) then

@@ -328,6 +328,22 @@ define
 	 end
       end
       %%
+      meth 'update-ozpm-info'(V)=M
+	 if V then
+	    try
+	       if @db==unit then
+		  {Raise mogul('update-ozpm-info'(no_db_is_opened))}
+	       end
+	       {Pickle.save
+		info(authors  : Admin,get_authors($)
+		     packages : Admin,get_packages($))
+		{RelativeTo @mogulDIR 'ozpm.info'}}
+	    catch mogul(...)=E then
+	       Admin,addReport(M E)
+	    end
+	 end
+      end
+      %%
       meth 'mogul-top'(V) mogulTOP<-V end
       meth getTop($) @mogulTOP end
       meth getCssLink($)
