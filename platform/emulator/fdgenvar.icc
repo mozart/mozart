@@ -34,20 +34,24 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
     home = getHome();
     switch (state) {
     case fd_det:
-      fdSuspList[fd_det] = fdSuspList[fd_det]->propagate_p(home);
+      if (fdSuspList[fd_det])
+	fdSuspList[fd_det] = fdSuspList[fd_det]->propagate_p(home);
     case fd_bounds:
-      fdSuspList[fd_bounds] = fdSuspList[fd_bounds]->propagate_p(home);
+      if (fdSuspList[fd_bounds])
+	fdSuspList[fd_bounds] = fdSuspList[fd_bounds]->propagate_p(home);
     case fd_size:
-      fdSuspList[fd_size] = fdSuspList[fd_size]->propagate_p(home);
+      if (fdSuspList[fd_size])
+	fdSuspList[fd_size] = fdSuspList[fd_size]->propagate_p(home);
     default:
       break;
     }
   } else {
-      GenCVariable::propagate(var, fdSuspList[fd_det], term, prop_eq);
-      GenCVariable::propagate(var, fdSuspList[fd_bounds], term, prop_eq);
-      GenCVariable::propagate(var, fdSuspList[fd_size], term, prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_det], term, prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_bounds], term, prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_size], term, prop_eq);
   }
-  GenCVariable::propagate(var, suspList, term, prop_eq);
+  if (suspList) 
+    GenCVariable::propagate(var, suspList, term, prop_eq);
 }
 
 inline
