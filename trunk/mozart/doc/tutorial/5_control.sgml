@@ -281,7 +281,7 @@ the key of the node in the tree and the input key. Notice the use of
 <<if ... then ... elseif ... else ... end>> with the obvious meaning.
 
 <P><FIGURE ID="TreeInsert" CLASS="Figure">
-<CAPTION>Tree insertion</CAPTION>
+<CAPTION>Inserting a node (key and value) in a binary tree</CAPTION>
 <<<
 proc {Insert Key Value TreeIn ?TreeOut}
    if TreeIn == nil then TreeOut = tree(Key Value nil nil)
@@ -407,7 +407,7 @@ sorted list <<Zs>>.
 
 
 <P><FIGURE ID="SMerge" CLASS="Figure">
-<CAPTION>Merging two sorted lists</CAPTION>
+<CAPTION>Merging of two sorted lists</CAPTION>
 <<<
 proc {SMerge Xs Ys Zs}
    case Xs#Ys
@@ -503,7 +503,7 @@ local Zr in
 end
 >>>
 
-<P> Doing so makes many recursive procedures be <EM> tail-recursive </EM>. 
+<P> Doing so makes many recursive procedures be <EM>tail-recursive</EM>. 
 Tail-recursive procedures execute with the space efficiency of iterative 
 constructs.
 

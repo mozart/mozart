@@ -211,7 +211,7 @@ the following form:
 <P>A method call invokes the method defined in the class argument. A
 method call can only be used inside method definitions. This is
 because a method call takes the current object denoted by <<self>> as
-implicit argument. The method could be defined in the class <<C>> or inherited
+implicit argument. The method could be defined at the class <<C>> or inherited
 from a super class. Inheritance will be explained shortly.
 
 
@@ -338,7 +338,7 @@ class B from A ... end
 <P>Second, after striking out all overridden methods each remaining
 method should have a unique label and is defined only in one class in
 the hierarchy. Hence, class <<C>> in the following example is not
-valid because the two methods labeled <<m>> remains.
+valid because the two methods labeled <<m>> remain.
 
 <<<
 class A1 meth m(...) ... end end
@@ -383,8 +383,15 @@ the effort. This is important when there is a shared common ancestor.
 <ITEM> Oz restricts multiple inheritance in a way that most
 the problems with it do not occur.
 
+<!--
 <ITEM>Oz forces the programming methodology that when a method-name conflict 
-between immediate super classes occur, one has to define the method locally to overrides the conflict-causing methods.
+between immediate super classes occur, 
+-->
+<ITEM>Oz enforces a programming methodology which requres one to
+override a method which is defined at more than one superclass, one
+has to define the method locally to overrides the conflict-causing
+methods.
+
 
 <ITEM>There is another problem with multiple inheritance when sibling
 super-classes share (directly or indirectly) a common ancestor-class
@@ -845,8 +852,8 @@ P = {New BHPoint init(2 0)}
 {P move(1 2)}
 >>>
 
-<P>This pretty much covers most of object system. What is left is how
-to deal with concurrent threads sharing common space of objects.
+<P>This pretty much covers most of the object system. What is left is how
+to deal with concurrent threads sharing a common space of objects.
 
 <P><FIGURE ID="bhClass" CLASS="Figure">
 <CAPTION>The class BHPoint</CAPTION>

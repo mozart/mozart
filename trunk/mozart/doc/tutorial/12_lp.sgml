@@ -365,7 +365,7 @@ in concurrent logic programming languages (also known as
 committed-choice languages).
 
 <P> As a typical example from concurrent logic programming let us
-defined the indeterministic binary merge, where the arrival timing of elements
+define the indeterministic binary merge, where the arrival timing of elements
 on the two streams <<Xs>> and <<Ys>> determines the order of elements
 on the resulting stream <<Zs>>.
 
@@ -386,7 +386,7 @@ In general binary-stream merge is inefficient, specially when multiple
 of these are used to connect multiple threads to a simple server thread.
 An efficient way to implement a constant-time multi-merge operator is
 defined below by using cells and streams instread. The procedure
-<<{MMerge STs L}>> has to arguments STs may be either nil, a list of streams
+<<{MMerge STs L}>> has two arguments STs may be either nil, a list of streams
 to merged, or of the form <<merge(ST1 ST2)>> where each <<STi>> is again
 of the same form as <<STs>>.
 <<<
