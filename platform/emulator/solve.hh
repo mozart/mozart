@@ -99,7 +99,6 @@ public:
     localThreadQueue = NULL;
   }
   LocalThreadQueue * getLocalThreadQueue(void) {
-    Assert(localThreadQueue);
     return localThreadQueue;
   }
   void setLocalThreadQueue(LocalThreadQueue * ltq) {
