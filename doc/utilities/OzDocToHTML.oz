@@ -186,6 +186,17 @@ define
       end
    end
 
+   fun {TransformAnds M P}
+      {Record.mapInd M
+       fun {$ F X}
+	  if {IsInt F} andthen {Label X} == and then
+	     {Record.mapInd X
+	      fun {$ F Y} if {IsInt F} then {P Y} else Y end end}
+	  else X
+	  end
+       end}
+   end
+
    local
       fun {GetNext Ts}
 	 case Ts of T|Tr then
@@ -1067,11 +1078,19 @@ define
 	    %-----------------------------------------------------------
 	    % Index
 	    %-----------------------------------------------------------
-	    [] index then Ands in
+	    [] index then NewM Ands in
 	       %--** scope?
 	       IndexSortAs <- {CondSelect M 'sort.as' unit}
-	       OzDocToHTML, BatchSub(M 1 ?Ands)
-	       OzDocToHTML, Index(M Ands $)
+	       NewM = if {SGML.isOfClass M menu} then
+			 {TransformAnds M
+			  fun {$ And} q('class': [menu] And) end}
+		      elseif {SGML.isOfClass M module} then
+			 {TransformAnds M
+			  fun {$ And} code(display: inline And) end}
+		      else M
+		      end
+	       OzDocToHTML, BatchSub(NewM 1 ?Ands)
+	       OzDocToHTML, Index(NewM Ands $)
 	    [] and then SortAs Item in
 	       SortAs = case {CondSelect M 'sort.as' unit}
 			of unit then @IndexSortAs
@@ -1514,8 +1533,11 @@ define
 	 [] inline then HTML
 	 end
       end
-      meth Index(M Ands $) SeeHTML in
-	 if {SGML.isOfClass M tails} orelse {HasFeature M id} then L in
+      meth Index(M Ands $) IsTails L in
+	 IsTails = ({SGML.isOfClass M tails}
+		    orelse {SGML.isOfClass M menu}
+		    orelse {SGML.isOfClass M module})
+	 if IsTails orelse {HasFeature M id} then SeeHTML in
 	    SeeHTML = SEQ({List.foldRTail Ands
 			   fun {$ A|Ar In}
 			      case A of _#X then X else A end|
@@ -1529,25 +1551,27 @@ define
 	       L = X
 	       OzDocToHTML, ID(X @IdxNode SeeHTML)
 	    end
-	    if {SGML.isOfClass M tails} then
+	    if IsTails then
 	       OzDocToHTML, IndexTails(Ands.2 [Ands.1] L SeeHTML)
 	    end
+	 else
+	    L = unit
 	 end
-	 case {CondSelect M see unit} of unit then L in
-	    ToGenerate <- L|@ToGenerate
-	    {@MyIndexer enter(Ands a(href: @CurrentNode#"#"#L
-				     PCDATA('here')))}   %--**
+	 case {CondSelect M see unit} of unit then L2 in
+	    ToGenerate <- L2|@ToGenerate
+	    {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2
+				       PCDATA('here')))}   %--**
 	    a(name: L)
 	 elseof X then Node HTML in
 	    OzDocToHTML, ID(X ?Node ?HTML)
-	    {@MyIndexer enter(Ands SEQ([PCDATA('see ')
-					a(href: Node#"#"#X HTML)]))}
+	    {@MyIndexer enter(L Ands SEQ([PCDATA('see ')
+					  a(href: Node#"#"#X HTML)]))}
 	    EMPTY
 	 end
       end
       meth IndexTails(Ands Prefix L HTML)
 	 case Ands of A|Ar then
-	    {@MyIndexer enter({Append Ands Prefix}
+	    {@MyIndexer enter(unit {Append Ands Prefix}
 			      SEQ([PCDATA('see ')
 				   a(href: @IdxNode#"#"#L HTML)]))}
 	    OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML)
