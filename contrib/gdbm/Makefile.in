@@ -6,7 +6,9 @@ PROTOCOL	= @PROTOCOL@
 DIR_LOAD	= $(prefix)/cache/$(PROTOCOL)/$(PACKAGE)
 DIR_DLOAD	= $(prefix)/platform/$(PLATFORM)/cache/$(PACKAGE)
 
-OZBATCH		= @OZBATCH@
+OZC		= @OZC@
+COMPILE		= $(OZC) -c
+#COMPILE		= $(OZC) -l Standard -c
 OZDYNLD		= @OZDYNLD@
 MKINSTALLDIRS	= @MKINSTALLDIRS@
 
@@ -21,7 +23,7 @@ INSTALL_DIR	= $(MKINSTALLDIRS)
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_LIB	= $(INSTALL) -m 444
 
-FILES_LOAD	= gdbm.ozc
+FILES_LOAD	= gdbm.ozf
 FILES_DLOAD	= gdbm.so
 
 LIB_FILES_LOAD	= $(addprefix $(DIR_LOAD)/,$(FILES_LOAD))
@@ -30,7 +32,7 @@ LIB_FILES_DLOAD	= $(addprefix $(DIR_DLOAD)/,$(FILES_DLOAD))
 .PHONY: all install install-load install-dload \
 	clean veryclean distclean bootstrap
 
-all: gdbm.so gdbm.ozc
+all: gdbm.so gdbm.ozf
 bootstrap: all
 
 install: install-load install-dload
@@ -52,11 +54,11 @@ gdbm.o: gdbm.cc
 gdbm.so: gdbm.o
 	$(OZDYNLD) -o gdbm.so gdbm.o $(LDFLAGS) $(LIBS)
 
-gdbm.ozc: gdbm.oz
-	$(OZBATCH) -c gdbm.oz
+gdbm.ozf: gdbm.oz
+	$(COMPILE) gdbm.oz -o gdbm.ozf
 
 clean veryclean:
-	-$(RM) *~ *.bak *.o *.so *.ozc
+	-$(RM) *~ *.bak *.o *.so *.ozf
 
 distclean: clean
 	-$(RM) config.* Makefile gdbm.oz
