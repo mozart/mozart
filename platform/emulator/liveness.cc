@@ -296,6 +296,7 @@ outerLoop2:
         ISREAD(GETREGARG(PC+2));
         break;
 
+      case DEFINITIONCOPY:
       case DEFINITION:
         {
           AssRegArray *list           = (AssRegArray*) getAdressArg(PC+5);
@@ -307,6 +308,9 @@ outerLoop2:
             }
           }
 
+          if (op==DEFINITIONCOPY) { // Michael please check !!!
+            ISREAD(GETREGARG(PC+1));
+          }
           ISWRITE(GETREGARG(PC+1));
           CONTINUE(getLabelArg(PC+2));
         }
