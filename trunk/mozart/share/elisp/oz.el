@@ -67,6 +67,9 @@ nil:     Don't start emulator (use command 'run').
 (defvar oz-emulator (concat (getenv "HOME") "/Oz/Emulator/oz.emulator.bin")
   "The emulator for gdb mode and for [oz-other]")
 
+(defvar oz-boot (concat (getenv "HOME") "/Oz/Compiler/ozboot.ql")
+  "The compiler for tel mode and for [oz-other]")
+
 (defvar oz-emulator-buffer "*Oz Emulator*"
   "The buffername of the Oz Emulator output")
 
@@ -420,6 +423,13 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 ;; GDB support
 ;;------------------------------------------------------------
 
+(defun oz-set-other (comp)
+  (interactive "P")
+  (if comp
+      (oz-set-compiler)
+    (oz-set-emulator)))
+
+
 (defun oz-set-emulator()
   (interactive)
   (setq oz-emulator 
@@ -431,6 +441,18 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			 nil)))
   (if (getenv "OZEMULATOR")
       (setenv "OZEMULATOR" oz-emulator)))
+
+(defun oz-set-compiler ()
+  (interactive)
+  (setq oz-boot
+	(expand-file-name 
+	 (read-file-name "Choose Compiler Boot File: "
+			 nil
+			 nil
+			 t
+			 nil)))
+  (if (getenv "OZBOOT")
+      (setenv "OZBOOT" oz-boot)))
 
 (defun oz-gdb()
   (interactive)
@@ -462,7 +484,13 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
     (message "gdb disabled")))
 
 
-(defun oz-other()
+(defun oz-other (comp)
+  (interactive "P")
+  (if comp
+      (oz-other-compiler)
+    (oz-other-emulator)))
+
+(defun oz-other-emulator ()
   (interactive)
   (if (getenv "OZEMULATOR")
       (setenv "OZEMULATOR" nil)
@@ -471,6 +499,16 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (getenv "OZEMULATOR")
       (message "Oz Emulator: %s" oz-emulator)
     (message "Oz Emulator: global")))
+
+(defun oz-other-compiler ()
+  (interactive)
+  (if (getenv "OZBOOT")
+      (setenv "OZBOOT" nil)
+    (setenv "OZBOOT" oz-boot))
+
+  (if (getenv "OZBOOT")
+      (message "Oz Compiler: %s" oz-boot)
+    (message "Oz Compiler: global")))
 
 
 (defun oz-start-gdb-emulator (tmpfile)
@@ -997,7 +1035,7 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
   (define-key map "\C-cc"       'oz-precompile-file)
-  (define-key map "\C-cm"       'oz-set-emulator)
+  (define-key map "\C-cm"       'oz-set-other)
   (define-key map "\C-co"       'oz-other)
   (define-key map "\C-cd"       'oz-gdb)
   (define-key map "\r"		'oz-electric-terminate-line)
