@@ -421,7 +421,7 @@ void DPMarshaler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
   } else {
     Assert(t);                  // we should not get here without 't'!
     marshalDIF(bs, DIF_SUSPEND);
-    suspend(t);
+    suspend(makeTaggedRef(tPtr)); // can be a variable;
   }
 }
 

@@ -337,7 +337,7 @@ public:
   //
   int rememberVarLocation(OZ_Term *p) {
     Assert(oz_isVariable(*p));
-    Assert(findLocation(p) == -1);
+    Assert(findVarLocation(p) == -1);
     int index = getSize();
     htAdd((intlong) p, ToPointer(index));
     return (index);
