@@ -1,10 +1,10 @@
 <!--
   - Authors:
-  -   Seif Haridi (seif@sics.se)
   -   Nils Franzen (nilsf@sics.se)
+  -   Simon Lindblom (simon@sics.se)
   -
   - Copyright:
-  -   Seif Haridi, Nils Franzen, 1998
+  -   Nils Franzen, Simon Lindblom, 1998
   -
   - Last change:
   -   $Date$ by $Author$
@@ -27,7 +27,7 @@
 <P>bla..
 <SECTION><TITLE/Existing Applicatinos/
 <P>Here follows a list of precompiled applications
-<TABLE><TR><TH/Name/ <TH/URL/ <TH/Author/</TR>
+<TABLE><TR><TH/Name/ <TH/Status/ <TH/Author/</TR>
 <TR><TD/GO - a japanese borad game/ <TD/comming soon/ <TD/Lars Rasmusson/</TR>
 <TR><TD/Chat/ <TD/comming soon/ <TD/Lars Rasmusson/</TR>
 <TR><TD/Chess/ <TD/comming soon/ <TD/Nils Franzen/</TR>
@@ -38,7 +38,7 @@
 <P>This section describes the interface for writing your own
 applications. The code for an application consists of two parts, a server-part
 and a client-part. The design of the application interface was to keep it small and
-clean. We don not force the application programmer to adapt to some to
+clean. We do not force the application programmer to adapt to some to
 distribution scheme, rather we use the most basic primitives for
 distribution that the system provides: <<Tickets>>.
 
