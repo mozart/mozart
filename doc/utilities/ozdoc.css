@@ -120,3 +120,31 @@ SPAN.entrycategorybracket {
 }
 
 .margin A { color: white; }
+
+.PAPERYEAR,.PAPERAUTHOR {
+  font-weight:bold;
+}
+
+MENU.PAPERLINKS LI {
+  list-style-type:none;
+}
+
+.PAPERLINKS P {
+  display:inline;
+  text-indent:-40px;
+  font-weight:normal;
+  font-style:italic;
+}
+
+SPAN.BIBAUTHOR {
+  font-size:small;
+  font-style:italic;
+}
+
+P.LI {
+  margin-top:0px;
+  margin-bottom:0px;
+  font-weight:bold;
+  text-indent:-20px;
+  margin-left:20px;
+}
