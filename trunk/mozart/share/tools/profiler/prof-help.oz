@@ -43,15 +43,15 @@ local
      BarCanvasTitle #
      ('Procedure Bar Chart' #
       ('Procedures are presented as annotated bars. You can click ' #
-       'on them to get further information in the `' # BarTextTitle #
+       'on them to get further information in the `' # ProcTextTitle #
        '\' window.'))
      
-     BarTextTitle #
+     ProcTextTitle #
      ('Procedure Information' #
       ('Detailed information about the currently selected procedure ' #
        'is given here.'))
      
-     GenTextTitle #
+     SumTextTitle #
      ('Summary Information' #
       ('A summary of interesting profiling values is printed here.'))
      

@@ -58,8 +58,8 @@ in
 	 SortMenu
 
 	 BarCanvas
-	 BarText
-	 GenText
+	 ProcText
+	 SumText
       
 	 StatusFrame
 	 StatusText
@@ -197,38 +197,38 @@ in
 				action: self # help(BarCanvasTitle))}
 	 
 	 %% ...the text widget for detailed output...
-	 self.BarText =
+	 self.ProcText =
 	 {New TitleText tkInit(parent: self.toplevel
-			       title:  BarTextTitle
+			       title:  ProcTextTitle
 			       wrap:   none
 			       state:  disabled
-			       width:  BarTextWidth
-			       height: BarTextHeight
+			       width:  ProcTextWidth
+			       height: ProcTextHeight
 			       bd:     SmallBorderSize
 			       cursor: TextCursor
 			       font:   DefaultFont
 			       bg:     DefaultBackground)}
-	 {self.BarText tkBind(event:  HelpEvent
-			      action: self # help(BarTextTitle))}
+	 {self.ProcText tkBind(event:  HelpEvent
+			      action: self # help(ProcTextTitle))}
 	 
 	 %% ...and the text widget for general output
-	 self.GenText =
+	 self.SumText =
 	 {New TitleText tkInit(parent: self.toplevel
-			       title:  GenTextTitle
+			       title:  SumTextTitle
 			       wrap:   none
 			       state:  disabled
-			       width:  GenTextWidth
-			       height: GenTextHeight
+			       width:  SumTextWidth
+			       height: SumTextHeight
 			       bd:     SmallBorderSize
 			       cursor: TextCursor
 			       font:   DefaultFont
 			       bg:     DefaultBackground)}
-	 {self.GenText tkBind(event:  HelpEvent
-			      action: self # help(GenTextTitle))}
+	 {self.SumText tkBind(event:  HelpEvent
+			      action: self # help(SumTextTitle))}
 	 
 	 {Tk.batch [grid(self.BarCanvas  row:3 column:0 sticky:nswe rowspan:2)
-		    grid(self.BarText    row:3 column:1 sticky:nswe)
-		    grid(self.GenText    row:4 column:1 sticky:nswe)
+		    grid(self.ProcText    row:3 column:1 sticky:nswe)
+		    grid(self.SumText    row:4 column:1 sticky:nswe)
 		    grid(rowconfigure    self.toplevel 3 weight:1)
 		    grid(rowconfigure    self.toplevel 4 weight:1)
 		    grid(columnconfigure self.toplevel 0 weight:5)
@@ -256,10 +256,14 @@ in
       meth UpdateBars
 	 case @Stats == nil then
 	    Gui,DeleteBars(false)
+	    Gui,UpdateSumInfo
 	 else
-	    RawData    = @Stats
+	    RawData    = {Filter @Stats fun {$ X}
+					   X.@SortBy >= ConfigThreshold.@SortBy
+					end}
 	    SortedData = {Sort RawData fun {$ X Y} X.@SortBy > Y.@SortBy end}
-	    Max        = {Int.toFloat SortedData.1.@SortBy} + 0.1
+	    Max        = case SortedData == nil then 0.1 else
+			    {Int.toFloat SortedData.1.@SortBy} + 0.1 end
 	    XStretch   = 207.0
 	 
 	    fun {YStretch I}
@@ -300,36 +304,40 @@ in
 	     end}
 	    {self.BarCanvas
 	     tk(conf scrollregion: q(7 3 XStretch {YStretch @StatsCount}+40))}
-	    Gui,UpdateProcInfo(SortedData.1)
+	    Gui,UpdateProcInfo({CondSelect SortedData 1 nil})
+	    Gui,UpdateSumInfo
 	 end
       end
 
-      meth DeleteSummary
-	 Gui,Clear(self.GenText)
-	 Gui,Disable(self.GenText)
-      end
-      
       meth DeleteBars(RemoveEmacsBar<=true)
+	 case RemoveEmacsBar then
+	    {self.BarCanvas tk(conf scrollregion: q(7 3 7 3))}
+	    case {Cget emacs} then
+	       SourceManager,removeBar
+	    else skip end
+	 else skip end
 	 {ForAll @TagList
 	  proc {$ T}
 	     {self.BarCanvas tk(delete T)}
 	  end}
-	 TagList <- nil
-	 case RemoveEmacsBar then
-	    Gui,UpdateProcInfo(nil)
-	 else
-	    Gui,UpdateProcInfo('')
-	 end
+	 TagList    <- nil
+	 StatsCount <- 0
+      end
+      
+      meth DeleteProcInfo
+	 Gui,Clear(self.ProcText)
+	 Gui,Disable(self.ProcText)
+      end
+      
+      meth DeleteSummary
+	 Gui,Clear(self.SumText)
+	 Gui,Disable(self.SumText)
       end
       
       meth UpdateProcInfo(S)
-	 Gui,Clear(self.BarText)
-	 case S
-	 of nil then
-	    case {Cget emacs} then SourceManager,removeBar else skip end
-	 [] ''  then skip
-	 else
-	    Gui,Append(self.BarText
+	 Gui,Clear(self.ProcText)
+	 case S == nil then skip else
+	    Gui,Append(self.ProcText
 		       ' Name: ' # {CheckName S.name} # '\n' #
 		       ' File: ' # {StripPath S.file} # '\n' #
 		       ' Line: ' # S.line # '\n' #
@@ -337,27 +345,34 @@ in
 		       ' Clos: ' # S.closures # '\n' #
 		       ' Smpl: ' # S.samples # '\n' #
 		       ' Heap: ' # {FormatSize S.heap})
+	    Gui,Disable(self.ProcText)
 	    case {Cget emacs} then
 	       SourceManager,bar(file:S.file line:S.line state:runnable)
 	    else skip end
 	 end
-	 Gui,Disable(self.BarText)
       end
       
-      meth UpdateGenInfo
-	 Calls    = {FoldL @Stats fun {$ A S} A+S.calls end 0}
-	 Closures = {FoldL @Stats fun {$ A S} A+S.closures end 0}
-	 Heap     = {FoldL @Stats fun {$ A S} A+S.heap end 0}
-	 TimeDiff = {OS.time} - @ResetTime
-      in
-	 Gui,Clear(self.GenText)
-	 Gui,Append(self.GenText
-		    ' Procs:    ' # @StatsCount       # '\n' #
-		    ' Calls:    ' # Calls             # '\n' #
-		    ' Closures: ' # Closures          # '\n' #
-		    ' Heap:     ' # {FormatSize Heap} # '\n' #
-		    ' Time:     ' # {FormatTime TimeDiff})
-	 Gui,Disable(self.GenText)
+      meth UpdateSumInfo
+	 case @Stats == nil then
+	    Gui,Clear(self.SumText)
+	    Gui,Append(self.SumText ' No info available')
+	    Gui,Disable(self.SumText)
+	 else
+	    Procs    = {Length @Stats}
+	    Calls    = {FoldL @Stats fun {$ A S} A+S.calls end 0}
+	    Closures = {FoldL @Stats fun {$ A S} A+S.closures end 0}
+	    Heap     = {FoldL @Stats fun {$ A S} A+S.heap end 0}
+	    TimeDiff = {OS.time} - @ResetTime
+	 in
+	    Gui,Clear(self.SumText)
+	    Gui,Append(self.SumText
+		       ' Procs:    ' # Procs             # '\n' #
+		       ' Calls:    ' # Calls             # '\n' #
+		       ' Closures: ' # Closures          # '\n' #
+		       ' Heap:     ' # {FormatSize Heap} # '\n' #
+		       ' Time:     ' # {FormatTime TimeDiff})
+	    Gui,Disable(self.SumText)
+	 end
       end
 	 
       meth status(S M<=clear C<=DefaultForeground)
@@ -410,16 +425,15 @@ in
 		      P \= 'Time.oz'
 		   end}
 	 Gui,UpdateBars
-	 Gui,UpdateGenInfo
       end
 
       meth reset
 	 {Profile.reset}
 	 Stats      <- nil
-	 StatsCount <- 0
 	 ResetTime  <- {OS.time}
 	 
 	 Gui,DeleteBars
+	 Gui,DeleteProcInfo
 	 Gui,DeleteSummary
       end
       
