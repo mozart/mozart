@@ -17,6 +17,7 @@ import
    MakeGUI     at 'MakeGUI.ozf'
    Config      at 'Config.ozf'
    Mogul       at 'Mogul.ozf'
+   ExecutorFast at 'ExecutorFast.ozf'
 define
    class Manager
       from
@@ -35,6 +36,7 @@ define
 	 MakeGUI    .'class'
 	 Config     .'class'
 	 Mogul      .'class'
+	 ExecutorFast.'class'
 
       meth init
 	 {self exec_init}

@@ -111,6 +111,7 @@ define
 	 MogulUrl    : unit
 	 ConfigAction: unit
 	 TarTargets  : nil
+	 Fast        : false
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -911,5 +912,8 @@ define
 
       meth set_provides_targets(L) ProvidesTargets<-L end
       meth get_provides_targets($) @ProvidesTargets end
+
+      meth set_fast(B) Fast<-B end
+      meth get_fast($) @Fast end
    end
 end

@@ -19,7 +19,8 @@ makefile(
 	     'Extractor.ozf' 'Lister.ozf' 'Help.ozf'
 	     'Uninstaller.ozf' 'Errors.ozf' 'Windows.ozf'
 	     'MakeGUI.ozf' 'Fixes.ozf' 'DatabaseLib.ozf'
-	     'Config.ozf' 'Mogul.ozf' 'Pickler.ozf']
+	     'Config.ozf' 'Mogul.ozf' 'Pickler.ozf'
+	     'ExecutorFast.ozf']
 	 'Help.ozf' :
 	    ['Utils.ozf' 'Path.ozf' 'Windows.ozf'
 	     'Shell.ozf' 'HELP.txt'])

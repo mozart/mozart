@@ -136,6 +136,14 @@ define
       %% Oz compiler
 
       meth OZC(DST SRC Options)
+	 if {self get_fast($)} then
+	    {self OZC_FAST(DST SRC Options)}
+	 else
+	    {self OZC_SLOW(DST SRC Options)}
+	 end
+      end
+
+      meth OZC_SLOW(DST SRC Options)
 	 %% we need the chDir in order for the .so created by Gump to end up
 	 %% the appropriate directory.  This is fairly aggravating: we should
 	 %% NEVER change or rely on the current directory being one thing or
@@ -176,6 +184,58 @@ define
 	       catch shell(CMD) then
 		  raise ozmake(build:shell(CMD)) end
 	       end
+	    end
+	 finally
+	    if {Not HaveGumpdir} andthen DIR\=nil andthen DSTDir\=nil then
+	       try {OS.chDir CUR} catch _ then skip end
+	    end
+	    {self subresolver_pop()}
+	 end
+      end
+
+      meth OZC_FAST(DST SRC Options)
+	 %% we need the chDir in order for the .so created by Gump to end up
+	 %% the appropriate directory.  This is fairly aggravating: we should
+	 %% NEVER change or rely on the current directory being one thing or
+	 %% another.  Fortunately, starting with version 1.2.3 we now have the
+	 %% --gumpdir option.
+	 DSTDir = {Path.dirname DST}
+	 SRCDir = {Path.dirname SRC}
+	 DIR = if DSTDir==SRCDir then nil
+	       elseif DSTDir==nil then "."
+	       else DSTDir end
+	 HaveGumpdir = {Fixes.condGet gumpdir false}
+	 CUR = if HaveGumpdir then unit else {OS.getCWD} end
+	 DSTBase SRCBase
+      in
+	 if HaveGumpdir then
+	    DSTBase = DST
+	    SRCBase = SRC
+	 else
+	    DSTBase = {Path.basename DST}
+	    SRCBase = {Path.basename SRC}
+	 end
+	 {self subresolver_push(DST SRC)}
+	 try
+	    Executor,exec_mkdir(DIR)
+	    if {Not HaveGumpdir} andthen DIR\=nil andthen DSTDir\=nil then {OS.chDir DSTDir} end
+	    L1 = [SRCBase '-o' DSTBase]
+	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
+	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
+	    L4 = if DIR\=nil andthen HaveGumpdir then '--gumpdir='#DIR|L3 else L3 end
+	    ArgDebug      = {self get_optlevel($)}==debug
+	    ArgExecutable = {Member executable Options}
+	    ArgGumpdir    = if DIR\=nil andthen HaveGumpdir then DIR else unit end
+	 in
+	    {self xtrace({Utils.listToVS ozc|L4})}
+	    if {self get_justprint($)} then
+	       %% record time of simulated build
+	       Executor,SimulatedTouch(DST)
+	    else
+	       {self exec_fast_ozc(SRCBase DSTBase
+				   debug      : ArgDebug
+				   executable : ArgExecutable
+				   gumpdir    : ArgGumpdir)}
 	    end
 	 finally
 	    if {Not HaveGumpdir} andthen DIR\=nil andthen DSTDir\=nil then
@@ -504,7 +564,11 @@ define
 	 end 
       end
 
-
+      meth exec_save_with_header(R F H C)
+	 Executor,exec_mkdir({Path.dirname F})
+	 {self trace('writing '#F)}
+	 {Pickle.saveWithHeader R F H C}
+      end
    end
 
 end
