@@ -246,7 +246,7 @@ void Statistics::printIdle(FILE *fd)
   int totalHeap = getUsedMemory()+heapUsed.total;
   
   if (ozconf.showIdleMessage) {
-    fprintf(fd,"idle (");
+    fprintf(fd,"idle  ");
     printTime(fd,"r: ", timeUtime.sinceidle());
     printPercent(fd," (",
 		 timeForPropagation.sinceidle(),
@@ -258,7 +258,7 @@ void Statistics::printIdle(FILE *fd)
 		 timeForGC.sinceidle(),
 		 timeUtime.sinceidle());
     printMem(fd,"%%g), h: ", (totalHeap-heapUsed.sinceIdle)*KB);
-    fprintf(fd,")\n");
+    fprintf(fd,"\n");
     fflush(fd);
   }
   heapUsed.sinceIdle = totalHeap;
