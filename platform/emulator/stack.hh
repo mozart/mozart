@@ -71,9 +71,7 @@ protected:
     int auxsz = sz*sizeof(StackEntry);
     array = alloc==Stack_WithMalloc 
          ? (StackEntry*)malloc(auxsz):(StackEntry*)freeListMalloc(auxsz);
-    if(array==NULL) { // mm2: bad message and crash follows
-      OZ_error("Cannot alloc stack memory at %s:%d.", __FILE__, __LINE__);
-    }
+    Assert(array);
     tos = array;
     stackEnd = array+sz;
   }

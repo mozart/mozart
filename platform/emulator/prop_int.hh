@@ -185,15 +185,4 @@ void oz_sleepPropagator(Propagator * prop)
   prop->unmarkUnifyPropagator();
 }
 
-inline
-void oz_resetLocalPropagatorQueue(Board *bb) {
-  LocalPropagatorQueue *lpq = bb->getLocalPropagatorQueue();
-  if (!lpq)
-    return;
-
-  lpq->getLPQThread()->getTaskStackRef()->makeEmpty();
-  lpq->dispose();
-  bb->setLocalPropagatorQueue(NULL);
-}
-
 #endif

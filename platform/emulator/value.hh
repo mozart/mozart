@@ -947,7 +947,7 @@ int featureCmp(TaggedRef a,TaggedRef b)
   case OZCONST:
     return tagged2BigInt(a)->cmp(tagged2BigInt(b));
   default:
-    OZ_error("featureCmp");
+    Assert(0);
     return 0;
   }
 }
@@ -1919,7 +1919,7 @@ public:
     fl = oz_deref(fl);
     while (oz_isCons(fl)) {
       OZ_Term ff=oz_deref(oz_head(fl));
-      if (oz_eq(ff,OZ_atom("sited"))) { flags |= PR_SITED; }
+      if (oz_eq(ff,AtomSited)) { flags |= PR_SITED; }
       fl = oz_deref(oz_tail(fl));
     }
     Assert(oz_isNil(fl));
@@ -1976,7 +1976,7 @@ public:
   int getFlags()   { return flags; }
   OZ_Term getFlagsList() {
     OZ_Term ret = oz_nil();
-    if (isSited()) ret = oz_cons(OZ_atom("sited"),ret);
+    if (isSited()) ret = oz_cons(AtomSited,ret);
     return ret;
   }
 

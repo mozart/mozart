@@ -28,6 +28,27 @@
 
 #include "base.hh"
 #include "am.hh"
+#include "value.hh"
+
+OZ_Extension::~OZ_Extension() { 
+  OZ_error("invoking destructor ~OZ_Extension()"); 
+}
+
+void OZ_Extension::operator delete(void*,size_t) { 
+  OZ_error("invoking OZ_Extension::operator delete(void*,size_t)"); 
+}
+
+OZ_Term OZ_Extension::typeV() { 
+  return AtomExtension; 
+}
+
+OZ_Term OZ_Extension::printLongV(int depth, int offset) {
+  return OZ_pair2(printV(depth),AtomNewLine); 
+}
+
+OZ_Term OZ_SituatedExtension::typeV() { 
+  return AtomSituatedExtension; 
+}
 
 unsigned int oz_newUniqueId() {
   static unsigned int counter=OZ_E_LAST;
