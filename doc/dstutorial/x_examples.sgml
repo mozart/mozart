@@ -291,7 +291,7 @@ Srv={NewStat HelloWorld hw(_)} % Requires an initial method
 The class <<HelloWorld>> can be replaced by any class.
 The only difference between this and creating
 a centralized object is that <<New>> is replaced by <<NewStat>>.
-This specifies the distributed behavior of the object
+This specifies the distributed semantics of the object
 independently of the object's class.
 
 <SUBSECTION><TITLE>Making stationary objects</TITLE>
