@@ -148,6 +148,8 @@ public:
   int selectOrFailChildren(int l, int r);
 
   void dispose(void);
+
+  Bool isAliveUpToSolve(void);
  
   void pushChoice(WaitActor *wa);
   void pushChoices(CpStack *pcps);
