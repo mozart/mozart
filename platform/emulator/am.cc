@@ -1043,18 +1043,6 @@ OZ_Return oz_addSuspendVarList2(TaggedRef t1,TaggedRef t2) {
   return SUSPEND;
 }
 
-OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]) {
-  TaggedRef t1 = OZ_in(0);
-  DEREF(t1,t1ptr);
-  if (oz_isVar(t1))
-    (void) am.addSuspendVarListInline(t1ptr);
-  TaggedRef t2 = OZ_in(1);
-  DEREF(t2,t2ptr);
-  if (oz_isVar(t2))
-    (void) am.addSuspendVarListInline(t2ptr);
-  return SUSPEND;
-}
-
 OZ_Return oz_addSuspendVarList3(TaggedRef t1, TaggedRef t2, TaggedRef t3) {
   DEREF(t1,t1ptr);
   if (oz_isVar(t1))
@@ -1065,6 +1053,24 @@ OZ_Return oz_addSuspendVarList3(TaggedRef t1, TaggedRef t2, TaggedRef t3) {
   DEREF(t3,t3ptr);
   if (oz_isVar(t3))
     (void) am.addSuspendVarListInline(t3ptr);
+  return SUSPEND;
+}
+
+OZ_Return oz_addSuspendInArgs1(OZ_Term * _OZ_LOC[]) {
+  TaggedRef t = OZ_in(0);
+  DEREF(t,tptr);
+  return am.addSuspendVarListInline(tptr);
+}
+
+OZ_Return oz_addSuspendInArgs2(OZ_Term * _OZ_LOC[]) {
+  TaggedRef t1 = OZ_in(0);
+  DEREF(t1,t1ptr);
+  if (oz_isVar(t1))
+    (void) am.addSuspendVarListInline(t1ptr);
+  TaggedRef t2 = OZ_in(1);
+  DEREF(t2,t2ptr);
+  if (oz_isVar(t2))
+    (void) am.addSuspendVarListInline(t2ptr);
   return SUSPEND;
 }
 

@@ -117,18 +117,6 @@ OZ_BI_define(BIwaitOrF,1,1)
 } OZ_BI_end
 
 
-OZ_BI_define(BIisLiteral, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isLiteral(term)));
-} OZ_BI_end
-
-OZ_BI_define(BIisAtom, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isAtom(term)));
-} OZ_BI_end
-
 OZ_BI_define(BIwaitStatus,2,1)
 {
   oz_declareNonvarIN(0,status);
@@ -205,41 +193,37 @@ OZ_BI_define(BIisDet,1,1)
 
 #undef CheckStatus
 
-OZ_BI_define(BIisName, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isName(term)));
+#define BI_TESTDEF(BINAME,TEST)                        \
+OZ_BI_define(BINAME, 1,1)                              \
+{ TaggedRef t = OZ_in(0);                              \
+ redo:                                                 \
+  if (TEST(t))     { OZ_RETURN(oz_true());           } \
+  if (oz_isRef(t)) { t = * tagged2Ref(t); goto redo; } \
+  if (oz_isVar(t)) { oz_suspendOnInArgs1;            } \
+  OZ_RETURN(oz_false());                               \
 } OZ_BI_end
 
-OZ_BI_define(BIisTuple, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isTuple(term)));
-} OZ_BI_end
+BI_TESTDEF(BIisLiteral,        oz_isLiteral)
+BI_TESTDEF(BIisAtom,           oz_isAtom)
+BI_TESTDEF(BIisName,           oz_isName)
+BI_TESTDEF(BIisTuple,          oz_isTuple)
+BI_TESTDEF(BIisRecord,         oz_isRecord)
+BI_TESTDEF(BIisProcedure,      oz_isProcedure)
+BI_TESTDEF(BIisChunk,          oz_isChunk)
+BI_TESTDEF(BIisExtension,      oz_isExtension)
+BI_TESTDEF(BIisCell,           oz_isCell)
+BI_TESTDEF(BIisUnit,           oz_isUnit)
+BI_TESTDEF(BIisBool,           oz_isBool)
+BI_TESTDEF(BIisFloat,          oz_isFloat)
+BI_TESTDEF(BIisInt,            oz_isInt)
+BI_TESTDEF(BIisNumber,         oz_isNumber)
+BI_TESTDEF(BIisPort,           oz_isPort)
+BI_TESTDEF(BIisLock,           oz_isLock)
+BI_TESTDEF(BIisArray,          oz_isArray)
+BI_TESTDEF(BIisForeignPointer, OZ_isForeignPointer)
+BI_TESTDEF(BIisObject,         oz_isObject)
 
-OZ_BI_define(BIisRecord, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isRecord(term)));
-} OZ_BI_end
-
-OZ_BI_define(BIisProcedure, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isProcedure(term)));
-} OZ_BI_end
-
-OZ_BI_define(BIisChunk, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isChunk(term)));
-} OZ_BI_end
-
-OZ_BI_define(BIisExtension, 1, 1)
-{
-  oz_declareNonvarIN(0,t);
-  OZ_RETURN(oz_bool(oz_isExtensionPlus(t)));
-} OZ_BI_end
+#undef BI_TESTDEF
 
 OZ_BI_define(BIprocedureArity, 1,1)
 {
@@ -252,11 +236,6 @@ OZ_BI_define(BIprocedureArity, 1,1)
   }
 } OZ_BI_end
 
-OZ_BI_define(BIisCell, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isCell(term)));
-} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Tuple
@@ -720,25 +699,10 @@ raise:
 
 OZ_DECLAREBI_USEINLINEREL3(BIdotAssign,genericSet)
 
-// ---------------------------------------------------------------------
-// Unit
-// ---------------------------------------------------------------------
-
-OZ_BI_define(BIisUnit, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isLiteral(term) && oz_eq(term,NameUnit)));
-} OZ_BI_end
 
 // ---------------------------------------------------------------------
 // Bool things
 // ---------------------------------------------------------------------
-
-OZ_BI_define(BIisBool, 1, 1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_bool(oz_isBool(term)));
-} OZ_BI_end
 
 OZ_BI_define(BInot, 1, 1)
 {
@@ -2648,48 +2612,6 @@ OZ_BI_define(BIintToString, 1,1)
    type X
    ----------------------------------- */
 
-inline
-OZ_Return BIisFloatInline(TaggedRef num)
-{
-  DEREF(num,_);
-
-  if (oz_isVar(num)) {
-    return SUSPEND;
-  }
-
-  return oz_isFloat(num) ? PROCEED : FAILED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisFloatB,BIisFloatInline)
-
-inline
-OZ_Return BIisIntInline(TaggedRef num)
-{
-  DEREF(num,_);
-
-  if (oz_isVar(num)) {
-    return SUSPEND;
-  }
-
-  return oz_isInt(num) ? PROCEED : FAILED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisIntB,BIisIntInline)
-
-
-inline
-OZ_Return BIisNumberInline(TaggedRef num)
-{
-  DEREF(num,_);
-
-  if (oz_isVar(num)) {
-    return SUSPEND;
-  }
-
-  return oz_isNumber(num) ? PROCEED : FAILED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisNumberB,BIisNumberInline)
 
 
 /* -----------------------------------------------------------------------
@@ -2835,12 +2757,6 @@ OZ_DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 // ---------------------------------------------------------------------
 // Ports
 // ---------------------------------------------------------------------
-
-OZ_BI_define(BIisPort, 1, 1)
-{
-  oz_declareNonvarIN(0,t);
-  OZ_RETURN(oz_isPort(t) ? oz_true() : oz_false());
-} OZ_BI_end
 
 // use VARS or FUTURES for ports
 // #define VAR_PORT
@@ -3025,12 +2941,6 @@ OZ_BI_define(BInewLock,0,1)
   OZ_RETURN(makeTaggedConst(new LockLocal(oz_currentBoard())));
 } OZ_BI_end
 
-OZ_BI_define(BIisLock, 1,1)
-{
-  oz_declareNonvarIN(0,term);
-  OZ_RETURN(oz_isLock(term) ? oz_true() : oz_false());
-} OZ_BI_end
-
 // ---------------------------------------------------------------------
 // Cell
 // ---------------------------------------------------------------------
@@ -3134,16 +3044,6 @@ OZ_BI_define(BIarrayNew,3,1)
   OZ_RETURN(makeTaggedConst(array));
 } OZ_BI_end
 
-
-inline
-OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
-{
-  NONVAR( t, term );
-  out = oz_bool(oz_isArray(term));
-  return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BIisArray,isArrayInline)
 
 inline
 OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
@@ -3371,12 +3271,6 @@ OZ_BI_define(BIbiPrint, 0,0)
 /* -----------------------------------------------------------------
    dynamic link objects files
    ----------------------------------------------------------------- */
-
-OZ_BI_define(BIisForeignPointer,1,1)
-{
-  oz_declareNonvarIN(0,p);
-  OZ_RETURN(oz_bool(OZ_isForeignPointer(p)));
-} OZ_BI_end
 
 // currently the ozm format has lines mentionning
 // foreign pointers with hexadecimal addresses.  these
@@ -3844,16 +3738,6 @@ OZ_BI_define(BIsend,3,0)
   am.emptySuspendVarList();  
   return BI_REPLACEBICALL;
 } OZ_BI_end
-
-inline
-OZ_Return BIisObjectInline(TaggedRef t)
-{ 
-  DEREF(t,_1);
-  if (oz_isVar(t)) return SUSPEND;
-  return oz_isObject(t) ?  PROCEED : FAILED;
-}
-
-OZ_DECLAREBOOLFUN1(BIisObjectB,BIisObjectInline)
 
 
 inline
