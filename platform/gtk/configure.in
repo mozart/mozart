@@ -80,9 +80,18 @@ dnl *********************************************************************
 
 AC_PATH_PROG(gtkpath, gtk-config)
 if test -z $gtkpath; then
-    AC_MSG_ERROR(You need the GTK library to enable GTK support. It can be found at http://www.gtk.org)
+    AC_MSG_ERROR(The gtk-config script, which is part of the GTK+ library, could no be found. Please make sure you have a working installation of GTK+ on your system, otherwise GTK+ support can not be enabled. GTK+ can be found at http://www.gtk.org)
 fi
-AC_MSG_CHECKING(for GTK compile flags)
+
+AC_MSG_CHECKING(for GTK+ version)
+GTK_VERSION=`$gtkpath --version`
+case $GTK_VERSION in
+    1.2.*) ;;
+    *)     AC_MSG_ERROR(Your GTK+ library is too old, please update to version 1.2.x. The current version can be found at http://www.gtk.org)
+esac
+AC_MSG_RESULT(ok)
+
+AC_MSG_CHECKING(for GTK+ compile flags)
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
 GTK_HDRS=`$gtkpath --prefix`/include/gtk
