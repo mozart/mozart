@@ -11,21 +11,50 @@
 
 /* -----------------------------------------------------------------------
  * TODO
- *
- *   cell protocol
- *     test
- *   object protocol
- *     locks
- *   ?stationary object?, dictionary, array
- *     all
- *   builtins for threads and spaces
- *   pendlinkHandle simplify
+
+ * --- high priority ---
+ *   perdio prelude
+ *     Site.init: setMethHdl, setSendHdl, ....
+ *   dictionary, array
  *   builtin
  *     classify secure/insecure
  *   ip
  *     cache does not work together with close detection
- *     fairness for IO
  *     errors
+ *   save
+ *     saving proxies for resources raises exception
+ *     url=unit: save without support
+ *     isGround: save and check that no variables saved
+ *     getUrls:  save and look at the urls
+ *     isFixed: save and check that resources empty
+ *     IDEA: implement {Flatten X ?Xs} Xs is a list of a reachable nodes
+ *   Code
+ *     must have global name
+ *   Unification
+ *     must stop thread immediately
+ *   URL
+ *     implementation for HTTP and FTP protocol
+ *   Failure handling
+
+ * --- medium priority ---
+ *   threads
+ *   port close
+ *   spaces
+ *     Space.ask[Verbose] may suspend?
+ *     Space.merge may fail.
+ *     Space.clone may suspend
+ *     Space.clone should return a local clone
+ *     Space.choose may fail, suspend
+ *     Space.inject may fail, suspend
+ *   gname
+ *     use ip class Site
+ *   marshal/unmarshal
+ *     ref technique for Site*
+
+ * --- low priority ---
+ *   pendlinkHandle simplify
+ *   ip
+ *     fairness for IO
  *     flow control
  *     timer
  *     unregisterAccept
@@ -33,8 +62,6 @@
  *        and does not want to accept any more until it can close some other
  *        connections. 
  *     void OZ_registerTimer(int ms,OZ_TimeHandler,void *);
- *   port
- *     close: must fail client?
  *   gen hashtable
  *     if hash value is negative: crash!
  *   owner table
@@ -49,35 +76,10 @@
  *   ConstTerm/Tertiary
  *     unify and rename to Entity
  *   malloc bug for refTrail if sending Lists>100000 elements
- *   spaces
- *     Space.ask[Verbose] may suspend?
- *     Space.merge may fail.
- *     Space.clone may suspend
- *     Space.clone should return a local clone
- *     Space.choose may fail, suspend
- *     Space.inject may fail, suspend
- *   gname
- *     use ip class Site
- *   marshal/unmarshal
- *     ref technique for Site*, GName*, and PrTabEntry*
- *   SAVE
- *     Saving proxies for resources must suspend until manager is
- *       persistent
- *   GETURLS
- *     How to implement? Cycles!
- *     same for IsFixed, IsGround, ...
- *     IDEA: implement {Flatten X ?Xs} Xs is a list of a reachable nodes
- *   URL
- *     implementation for HTTP and FTP protocol
  *   how to interface I/O - emulator?
  *     IDEA: create OS threads
  *           communicate via shared memory
- *   FAILURE handling
- *   perdio prelude
- *     setMethHdl, setSendHdl, ....
- *   version number
- *     during initial connection
- *     SAVE/LOAD
+
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
