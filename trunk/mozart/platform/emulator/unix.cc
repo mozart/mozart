@@ -1448,7 +1448,7 @@ OZ_BI_define(unix_pipe,2,2) {
                           "os");
   }
 
-  int pid = (int) pinf.hProcess;
+  int pid = pinf.dwProcessId;
   CloseHandle(wh1);
   CloseHandle(wh1);
   SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
