@@ -36,6 +36,7 @@
 
     <Title/Interfacing to C and C++/
      <Author.Extern to="author.db" key="Michael.Mehl">
+     <Author.Extern to="author.db" key="Tobias.Mueller">
      <Author.Extern to="author.db" key="Christian.Schulte">
      <Author.Extern to="author.db" key="Ralf.Scheidhauer">
     <Abstract>
