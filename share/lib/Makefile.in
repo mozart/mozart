@@ -411,7 +411,7 @@ stage3:
         OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/ \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=$(STAGE2)/lib/Init.ozc \
-        OZ_TRACE_LOAD=1 OZMAFILE=$(STAGE2)/ozbatch.ozm
+        OZ_TRACE_LOAD=1 OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
 
 check:
         make stage1-bootstrap clean stage2
