@@ -22,9 +22,9 @@
 local
 
    fun {AppOK Name}
-      ({Cget stepDotBuiltin}     orelse Name \= '.')
+      ({Cget stepDotBuiltin}     orelse Name \= 'Record.\'.\'')
       andthen
-      ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
+      ({Cget stepNewNameBuiltin} orelse Name \= 'Name.new')
    end
 
    proc {Detach T}
