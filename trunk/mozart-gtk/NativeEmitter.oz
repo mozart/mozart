@@ -143,14 +143,6 @@ define
       fun {Generic M P}
 	 "GOZ_declareForeignType("#M#case P of "" then ", " else " "#P#", " end
       end
-
-      fun {CleanPointers Ps}
-	 case Ps
-	 of &[|&]|Pr then &*|{CleanPointers Pr}
-	 [] P|Pr     then P|{CleanPointers Pr}
-	 [] nil      then nil
-	 end
-      end
       
       fun {IsEnumType T}
 	 case T of 'enum'(...) then true else false end
@@ -343,7 +335,7 @@ define
 			  [] arg(type("gchar" "*[]") _) then
 			     {Base "GOZ_declareStringList"}#f
 			  [] arg(type(Type Ptrs) _) then
-			     {Generic Type {CleanPointers Ptrs}}#f
+			     {Generic Type {Util.cleanPointers Ptrs}}#f
 			  end
 	 in
 	    TextFile, putS({Util.toString "\t"#ArgDecl#I#", Arg"#I#");"})
