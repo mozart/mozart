@@ -104,8 +104,8 @@
     <meta name="html.split.index" value="">
 
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
-    <meta name=proglang        arg1="java" arg2="java-mode">
-    <meta name=proglang        arg1="fundamental" arg2="fundamental-mode">
+    <meta name="proglang.mode" arg1="java" arg2="java-mode">
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
 
     <meta name="latex.table.spec" arg1="table.url.resolution"
 	  arg2="llp{0.6\linewidth}">
