@@ -180,40 +180,12 @@ starts the emulator under gdb")
 ;;------------------------------------------------------------
 
 
-
-(defvar oz-small-font      "-adobe-courier-medium-r-normal--*-100-*-*-m-*-iso8859-1")
-(defvar oz-std-font        "-adobe-courier-medium-r-normal--*-120-*-*-m-*-iso8859-1")
-(defvar oz-large-font      "-adobe-courier-medium-r-normal--*-140-*-*-m-*-iso8859-1")
-(defvar oz-very-large-font "-adobe-courier-medium-r-normal--*-180-*-*-m-*-iso8859-1")
-
-(defun oz-small-font()
-  (interactive)
-  (oz-set-font oz-small-font))
-
-(defun oz-std-font()
-  (interactive)
-  (oz-set-font oz-std-font))
-
-(defun oz-large-font()
-  (interactive)
-  (oz-set-font oz-large-font))
-
-(defun oz-very-large-font()
-  (interactive)
-  (oz-set-font oz-very-large-font))
-
-(defun oz-set-font(font)
-  (set-default-font font))
-
 (defun oz-set-fontlock-keywords()
   (setq font-lock-keywords (list oz-keywords)))
 
 ; workaround for a bug in older font-lock modes  
 (setq font-lock-mode-hook '(oz-set-fontlock-keywords))
 
-      
-
-; (oz-std-font)
 
 ;;------------------------------------------------------------
 ;; Menus
@@ -277,11 +249,11 @@ starts the emulator under gdb")
      ("Other Demo"              . oz-find-demo-file)
      ("Modules File"            . oz-find-modules-file)
      )
-;    ("Print"
-;     ("Region"                  . oz-print-region)
-;     ("Buffer (Portrait)"	. oz-print-buffer)
-;     ("Buffer (Landscape)"	. oz-print-buffer-landscape)
-;     )
+    ("Print"
+     ("Region"                  . oz-print-region)
+     ("Buffer (Portrait)"	. oz-print-buffer)
+     ("Buffer (Landscape)"	. oz-print-buffer-landscape)
+     )
     ("Core Syntax"
      ("Buffer"      . oz-to-coresyntax-buffer)
      ("Region"      . oz-to-coresyntax-region)
@@ -1248,7 +1220,7 @@ OZ compiler, emulator and error window")
      (if (get-buffer "*Oz Temp*") 
 	 (progn (delete-windows-on "*Oz Temp*")
 		(kill-buffer "*Oz Temp*")))
-     (start-process "Oz Temp" "*Oz Temp*" "tail" "-f" file-2)
+     (start-process "Oz Temp" "*Oz Temp*" "tail" "+1" "-f" file-2)
      (message "")
      (oz-send-string (concat directive " '" file-1 "'"))
      (let ((buf (get-buffer "*Oz Temp*")))
