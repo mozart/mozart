@@ -176,7 +176,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
   Case(UNIFYGY) ONREG2(Unify,G,Y);
   Case(UNIFYGG) ONREG2(Unify,G,G);
   {
-    Unify:
+  Unify: asmLbl(UNIFY);
       TaggedRef A = RegAccess(HelpReg1,getRegArg(PC+1));
       TaggedRef B = RegAccess(HelpReg2,getRegArg(PC+2));
       if ( !e->fastUnify(A,B,NOFLATGUARD) ) {
@@ -191,17 +191,17 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
   Case(PUTRECORDG) IMPOSSIBLE("PUTRECORDG");
   Case(PUTRECORDY) ONREG(PutRecord,Y);
   Case(PUTRECORDX) ONREG(PutRecord,X);
-         PutRecord:
-          {
-            TaggedRef label = getLiteralArg(PC+1);
-            SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
-            SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-		 
-            RegAccess(HelpReg,getRegArg(PC+3)) = makeTaggedSRecord(srecord);
-	    sPointer = srecord->getRef();
-
-	    DISPATCH(4);
-          }
+  {
+  PutRecord: asmLbl(PUTRECORD);
+    TaggedRef label = getLiteralArg(PC+1);
+    SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
+    SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+    
+    RegAccess(HelpReg,getRegArg(PC+3)) = makeTaggedSRecord(srecord);
+    sPointer = srecord->getRef();
+    
+    DISPATCH(4);
+  }
 
   Case(PUTCONSTANTX)
   Case(PUTINTX)
@@ -264,47 +264,47 @@ Case(SETVOID)
   Case(GETRECORDX) ONREG(GetRecord,X);
   Case(GETRECORDY) ONREG(GetRecord,Y);
   Case(GETRECORDG) ONREG(GetRecord,G);
-      GetRecord:
-         {
-	   TaggedRef label = getLiteralArg(PC+1);
-	   SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
-		 
-  	   TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
-	   DEREF(term,termPtr,tag);
+  {
+  GetRecord: asmLbl(GETRECORD);
+    TaggedRef label = getLiteralArg(PC+1);
+    SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
 
-	   if (isAnyVar(term)) {
-	     SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-	     if(isCVar(term) == OK){
-	       // fill w/unb. var.
-               srecord->initArgs();
-	       TaggedRef srecordRef=makeTaggedSRecord(srecord);
-	       if(tagged2CVar(term)->unifyOutline(termPtr, term, 
-						  &srecordRef, srecordRef,
-						  NOFLATGUARD)) {
-		 sPointer = srecord->getRef();
-		 SetReadMode;
-		 DISPATCH(4);
-	       }
-	     } else {
-	       e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),
-			       NOFLATGUARD);
+    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
+    DEREF(term,termPtr,tag);
+
+    if (isAnyVar(term)) {
+      SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
+      if(isCVar(term) == OK){
+	// fill w/unb. var.
+	srecord->initArgs();
+	TaggedRef srecordRef=makeTaggedSRecord(srecord);
+	if(tagged2CVar(term)->unifyOutline(termPtr, term, 
+					   &srecordRef, srecordRef,
+					   NOFLATGUARD)) {
+	  sPointer = srecord->getRef();
+	  SetReadMode;
+	  DISPATCH(4);
+	}
+      } else {
+	e->bindToNonvar(termPtr, term,makeTaggedSRecord(srecord),
+			NOFLATGUARD);
 		     
-	       sPointer = srecord->getRef();
-	       SetWriteMode;
-	       DISPATCH(4);
-	     }
-	   }
+	sPointer = srecord->getRef();
+	SetWriteMode;
+	DISPATCH(4);
+      }
+    }
 		 
-	   if (isSRecord(tag) &&
-	       tagged2SRecord(term)->compareSortAndArity(label,ff)) {
-	     sPointer = tagged2SRecord(term)->getRef();
-	     SetReadMode;
-	     DISPATCH(4);
-	   }
+    if (isSRecord(tag) &&
+	tagged2SRecord(term)->compareSortAndArity(label,ff)) {
+      sPointer = tagged2SRecord(term)->getRef();
+      SetReadMode;
+      DISPATCH(4);
+    }
 
-	   SHALLOWFAIL;
-	   HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
-	 }
+    SHALLOWFAIL;
+    HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
+  }
 
 
   CaseOneReg(TESTCONST,
@@ -623,31 +623,32 @@ Case(GETVOID)
   Case(UNIFYVALVARGX) ONREG2(UnifyValVar,G,X);
   Case(UNIFYVALVARGY) ONREG2(UnifyValVar,G,Y);
   Case(UNIFYVALVARGG) ONREG2(UnifyValVar,G,G);
-   UnifyValVar:
-     {
-       Reg reg = getRegArg(PC+1);
+  {
+  UnifyValVar: asmLbl(UNIFYVALVAR);
+
+    Reg reg = getRegArg(PC+1);
 	
-       if (InWriteMode) {
-	 TaggedRef *sp = GetSPointerWrite(sPointer);
-	 *sp = RegAccess(HelpReg1,reg);
+    if (InWriteMode) {
+      TaggedRef *sp = GetSPointerWrite(sPointer);
+      *sp = RegAccess(HelpReg1,reg);
 
-	 *(sp+1) = e->currentUVarPrototype();
-	 RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sp+1);
+      *(sp+1) = e->currentUVarPrototype();
+      RegAccess(HelpReg2,getRegArg(PC+2)) = makeTaggedRef(sp+1);
 
-	 sPointer += 2;
-	 DISPATCH(3);
-       }
-       if ( !e->fastUnify(RegAccess(HelpReg1,reg), makeTaggedRef(sPointer),
-			  NOFLATGUARD) ) {
-	 SHALLOWFAIL;
-	 HF_TELL(*sPointer, RegAccess(HelpReg1,reg));
-       }
+      sPointer += 2;
+      DISPATCH(3);
+    }
+    if ( !e->fastUnify(RegAccess(HelpReg1,reg), makeTaggedRef(sPointer),
+		       NOFLATGUARD) ) {
+      SHALLOWFAIL;
+      HF_TELL(*sPointer, RegAccess(HelpReg1,reg));
+    }
 
-       RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
+    RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
 
-       sPointer += 2;
-       DISPATCH(3);
-     }
+    sPointer += 2;
+    DISPATCH(3);
+  }
   
 
 Case(UNIFYCONSTANT)

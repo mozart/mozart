@@ -351,14 +351,15 @@ Bool AM::isNotPreemptiveScheduling(void)
   }
 }
 
+#define DET_COUNTER 10000
 inline
 Bool AM::hookCheckNeeded()
 {
-#ifdef DEBUG_DET
-  static int counter = 100;
+#if defined(DEBUG_DET)
+  static int counter = DET_COUNTER;
   if (--counter < 0) {
     handleAlarm();   // simulate an alarm
-    counter = 100;
+    counter = DET_COUNTER;
   }
 #endif
   
@@ -933,6 +934,7 @@ LBLerror:
 // ------------------------------------------------------------------------
 
 LBLpreemption:
+  asmLbl(PREEMPT_THREAD);
   SaveSelf;
   Assert(GETBOARD(CTT)==CBB);
   Assert(CTT->isRunnable());
@@ -945,6 +947,7 @@ LBLpreemption:
 // *** execute runnable thread
 // ------------------------------------------------------------------------
 LBLstart:
+  asmLbl(GET_THREAD);
   Assert(CTT==0);
 
   // check status register
@@ -973,6 +976,7 @@ LBLstart:
   // more than once in the threads pool;
   Assert(!CTT->isDeadThread() && CTT->isRunnable());
 
+  asmLbl(INSTALL_BOARD);
   // Install board
   {
     Board *bb=GETBOARD(CTT);
@@ -1086,7 +1090,7 @@ LBLstart:
    */
 LBLterminateThread:
   {
-    asmLbl(terminateThread);
+    asmLbl(TERMINATE_THREAD);
 
     DebugTrace(trace("kill thread", CBB));
     Assert(CTT);
@@ -1230,7 +1234,7 @@ LBLcheckEntailmentAndStability:
    */
 LBLdiscardThread:
   {
-    asmLbl(discardThread);
+    asmLbl(DISCARD_THREAD);
 
     Assert(CTT);
     Assert(!CTT->isDeadThread());
@@ -1278,7 +1282,7 @@ LBLdiscardThread:
    */
 LBLsuspendThread:
   {
-    asmLbl(suspendThread);
+    asmLbl(SUSPEND_THREAD);
 
     DebugTrace(trace("suspend runnable thread", CBB));
 
@@ -1373,15 +1377,15 @@ LBLsuspendThread:
 // ------------------------------------------------------------------------
 
  LBLemulate:
-  asmLbl(emulate);
+  asmLbl(EMULATE);
   Assert(CBB==currentDebugBoard);
 
   JUMP( PC );
 
-  asmLbl(endEmulate);
+  asmLbl(END_EMULATE);
 #ifndef THREADED
 LBLdispatcher:
-  asmLbl(dispatch);
+  asmLbl(DISPATCH);
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -2382,6 +2386,7 @@ LBLdispatcher:
   Case(TAILCALLG) isTailCall = OK; ONREG(Call,G);
 
  Call:
+  asmLbl(TAILCALL);
    {
      {
        TaggedRef taggedPredicate = RegAccess(HelpReg,getRegArg(PC+1));
@@ -3313,7 +3318,7 @@ LBLdispatcher:
 
 LBLshallowFail:
   {
-    asmLbl(shallowFail);
+    asmLbl(SHALLOW_FAIL);
     if (e->trail.isEmptyChunk()) {
       e->trail.popMark();
     } else {
@@ -3331,7 +3336,7 @@ LBLshallowFail:
    *  - current thread must be runnable.
    */
 LBLfailure:
-  asmLbl(failure);
+  asmLbl(DEEP_FAIL);
   DebugTrace(trace("fail",CBB));
 
   Assert(!e->isToplevel());
