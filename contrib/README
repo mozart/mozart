@@ -1,0 +1,28 @@
+Each contribution needs to be configured and installed separately
+because each may need to be linked with specific libraries not required
+by the rest of the system.
+
+Each contribution has a global name, e.g.:
+
+	www.ps.uni-sb.de/ozhome/contrib/gdbm
+
+An architecture independent file gdbm.ozc is referenced by:
+
+	http://www.ps.uni-sb.de/ozhome/contrib/gdbm/gdbm.ozc
+
+An architecture dependent file, such as a (C++) shared object library
+gdbm.so is referenced by:
+
+	www.ps.uni-sb.de/ozhome/contrib/gdbm/gdbm.so
+
+./configure --prefix=$HOME/.oz
+
+	should cause the all arch independent files to get installed in
+
+	$HOME/.oz/cache/http/www.ps.uni-sb.de/ozhome/contrib/gdbm
+
+	and all architecture dependent files e.g. on linux in
+
+	$HOME/.oz/platform/linux-i486/www.ps.uni-sb.de/ozhome/contrib/gdbm
+
+By default the prefix should be $OZHOME (typically /usr/local/oz)
