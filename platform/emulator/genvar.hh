@@ -197,7 +197,7 @@ OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-void addSuspCVarOutline(TaggedRef v, Thread *el, int unstable=TRUE);
+void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable=TRUE);
 
 #include "fsgenvar.hh"
 #include "fdgenvar.hh"
@@ -209,7 +209,7 @@ void addSuspCVarOutline(TaggedRef v, Thread *el, int unstable=TRUE);
 #include "lazyvar.hh"
 
 #ifdef OUTLINE
-void addSuspCVar(TaggedRef v, Thread *el, int unstable=TRUE);
+void addSuspCVar(TaggedRef *v, Thread *el, int unstable=TRUE);
 #else
 #include "genvar.icc"
 #endif
