@@ -559,6 +559,9 @@ the network.
 
 <SUBSECTION><TITLE>Timing and memory problems</TITLE>
 
+<P>When the distribution structure of an application
+is changed, then one must be careful not to cause
+timing and memory problems.
 <LIST>
 <ITEM>When a reference <<X>> is shared between sites and
 <<X>> refers to unused modules then the modules will be loaded into
