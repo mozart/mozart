@@ -78,6 +78,8 @@ void error(const char *format, ...)
 
   va_end(ap);
 
+  osStackDump();
+
   DebugCheckT(osUnblockSignals());
 
   //

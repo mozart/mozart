@@ -157,6 +157,7 @@ void AM::init(int argc,char **argv)
   ozconf.argC = 0;
 
   /* enter emulator path */
+  ozconf.emuexe  = strdup(argv[0]);
   ozconf.emuhome = strdup(argv[0]);
 
   {

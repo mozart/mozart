@@ -188,4 +188,7 @@ TaggedRef osDlopen(char *filename, OZ_Term& out);
 int osDlclose(void* handle);
 void *osDlsym(void *handle,const char *name);
 
+
+void osStackDump();
+
 #endif
