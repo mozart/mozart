@@ -192,9 +192,17 @@ in
 				 name:N args:A builtin:B)
 	 Gui,markNode(I blocked)
 	 case T == @currentThread then
-	    SourceManager,scrollbar(file:F line:L
-				    color:ScrollbarBlockedColor what:appl)
-	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
+	    case F == '' orelse F == 'nofile' orelse F == 'noDebugInfo' then
+	       {OzcarMessage 'Thread #' # I #
+		' blocks without line number information'}
+	       SourceManager,scrollbar(file:'' line:undef
+				       color:undef what:both)
+	    else
+	       SourceManager,scrollbar(file:F line:L
+				       color:ScrollbarBlockedColor what:appl)
+	       SourceManager,scrollbar(file:'' line:undef
+				       color:undef what:stack)
+	    end
 	    Gui,printAppl(id:I name:N args:A builtin:B
 			  file:F line:L time:Time)
 	    Gui,printStack(id:I stack:{Dbg.taskstack T 25} top:B)
@@ -285,8 +293,15 @@ in
 	    {Thread.resume @currentThread}
 	 else
 	    SourceManager,scrollbar(file:'' line:undef color:undef what:stack)
-	    SourceManager,scrollbar(file:F line:L
-				    color:ScrollbarApplColor what:appl)
+	    local
+	       Ack
+	    in
+	       thread
+		  SourceManager,scrollbar(file:F line:L ack:Ack
+					  color:ScrollbarApplColor what:appl)
+	       end
+	       thread Gui,loadStatus(F Ack) end
+	    end
 	    Gui,printAppl(id:I name:N args:A builtin:IsBuiltin time:Time
 			  file:F line:L)
 	    ThreadManager,setThrPos(id:I file:F line:L time:Time

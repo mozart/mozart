@@ -22,10 +22,11 @@ class Gui from Menu Dialog
       ApplFileText
    
       StatusFrame
-      StatusLabel
+      StatusText
 
    attr
       LastSelectedFrame : undef
+      LockFrameClick    : false
 
    meth init
       %% create the main window, but delay showing it
@@ -56,7 +57,7 @@ class Gui from Menu Dialog
       local
 	 %% Tk has some problems printing centered text :-(
 	 Bs = {Map [' step' ' next' /* ' finish' */ ' cont' ' forget'
-		    /* ' stack' */ ]
+		    ' stack' ]
 	       fun {$ B}
 		  {New Tk.button tkInit(parent:      self.ButtonFrame
 					text:        B
@@ -74,6 +75,7 @@ class Gui from Menu Dialog
       self.ApplPrefix = {New Tk.label tkInit(parent: self.ApplFrame
 					     text:   ApplPrefixText)}
       self.ApplText   = {New Tk.text tkInit(parent: self.ApplFrame
+					    state:  disabled
 					    height: 1
 					    width:  0
 					    bd:     SmallBorderSize
@@ -83,6 +85,7 @@ class Gui from Menu Dialog
       self.ApplFilePrefix = {New Tk.label tkInit(parent: self.ApplFileFrame
 						 text:   ApplFilePrefixText)}
       self.ApplFileText   = {New Tk.text tkInit(parent: self.ApplFileFrame
+						state:  disabled
 						height: 1
 						width:  0
 						bd:     SmallBorderSize
@@ -104,10 +107,15 @@ class Gui from Menu Dialog
       end
       
       %% status line
-      self.StatusLabel  = {New Tk.label tkInit(parent:self.StatusFrame
-					       text:StatusInitText)}
-      {Tk.send pack(self.StatusLabel side:left fill:x)}
-      
+      self.StatusText = {New Tk.text tkInit(parent: self.StatusFrame
+					    state:  disabled
+					    height: 1
+					    width:  0
+					    bd:     SmallBorderSize
+					    cursor: TextCursor
+					    font:   BoldFont)}
+      {Tk.send pack(self.StatusText side:left padx:3 fill:x expand:yes)}
+
       %% create the thread tree object...
       self.ThreadTree = {New Tree tkInit(parent: self.toplevel
 					 title:  TreeTitle
@@ -120,6 +128,7 @@ class Gui from Menu Dialog
        proc {$ T}
 	  T.1 = {New ScrolledTitleText tkInit(parent: self.toplevel
 					      title:  T.2
+					      wrap:   none
 					      state:  disabled
 					      width:  T.3
 					      bd:     SmallBorderSize
@@ -167,6 +176,14 @@ class Gui from Menu Dialog
 	       tk(delete '0.0' 'end')] Widget}
    end
 
+   meth Enable(Widget)
+      {Widget tk(conf state:normal)}
+   end
+   
+   meth Append(Widget Text)
+      {Widget tk(insert 'end' Text)}
+   end
+   
    meth Disable(Widget)
       {Widget tk(conf state:disabled)}
    end
@@ -198,13 +215,16 @@ class Gui from Menu Dialog
    end
    
    meth frameClick(nr:I frame:F tag:T)
-      Gui,SelectStackFrame(T)
-      Gui,printEnv(frame:I vars:F.vars)
-      SourceManager,scrollbar(file:F.file line:{Abs F.line}
-			      color:ScrollbarStackColor what:stack)
-      case {Cget verbose} then
-	 {Debug.displayCode F.'PC' 7}
-      else skip end
+      {Delay 70} % > TIME_SLICE
+      case @LockFrameClick then skip else
+	 Gui,SelectStackFrame(T)
+	 Gui,printEnv(frame:I vars:F.vars)
+	 SourceManager,scrollbar(file:F.file line:{Abs F.line}
+				 color:ScrollbarStackColor what:stack)
+	 case {Cget verbose} then
+	    {Debug.displayCode F.'PC' 5}
+	 else skip end
+      end
    end
    
    meth SelectStackFrame(T)
@@ -227,17 +247,22 @@ class Gui from Menu Dialog
       W = self.StackText
       S = {List.filter Stack fun{$ X}
 				{Label X} == 'proc'
-				% andthen X.name \= 'Toplevel abstraction'
+				andthen X.name \= 'Toplevel abstraction'
 			     end}
-      SL = {List.length S}
+      ArgList = {List.filter Stack fun{$ X}
+				      {Label X} == 'args'
+				   end}
+      SL            = {List.length S}
+      ArgListLength = {List.length ArgList}
    in
+      
+      Gui,Clear(W)
+      
       case S == nil then
-	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')
-		  %tk(insert 'end' "  nil")
-		  tk(conf state:disabled)] W}
+	 Gui,Disable(W)
 	 {self.StackText title(StackTitle)}
 	 Gui,printEnv(frame:0)
+	 
       else
 	 {self.StackText title(AltStackTitle # ThrID)}
 	 case Top orelse SL == 1 then
@@ -246,30 +271,53 @@ class Gui from Menu Dialog
 	    Gui,printEnv(frame:2 vars:S.2.1.vars)
 	 end
 	 
-	 {ForAll [tk(conf state:normal)
-		  tk(delete '0.0' 'end')] W}
 	 {List.forAllInd S
 	  proc{$ I F}
-	     T = {TagCounter get($)}
-	     Ac = {New Tk.action
-		   tkInit(parent: W
-			  action: Ozcar # frameClick(nr:I frame:F tag:T))}
+	     T    = {TagCounter get($)}
+	     Ac   = {New Tk.action
+		     tkInit(parent: W
+			    action: Ozcar # frameClick(nr:I frame:F tag:T))}
+	     Args = case I > ArgListLength then
+		       nil
+		    else
+		       {FormatArgs {List.nth ArgList I}.1}
+		    end
 	  in
-     	     {ForAll [tk(insert 'end'
-		      {PrintF ' ' # I # ' ' # case F.name == ''
-					      then '$' else F.name
-					      end 35} #
-		      {StripPath F.file} # FileLineSeparator #
-		      {Abs F.line} # NL T)
-		      tk(tag bind T '<1>' Ac)
-		      tk(tag conf T font:BoldFont)] W}
+     	     {W tk(insert 'end' ' ' # I # ' {' # case F.name == ''
+						 then '$' else F.name
+						 end T)}
+	     {ForAll Args
+	      proc {$ A}
+		 TA = {TagCounter get($)}
+		 Ac = {New Tk.action
+		       tkInit(parent:W
+			      action:proc{$}
+					S = A.3
+				     in
+					LockFrameClick <- true
+					{Browse S}
+					{Delay 90}
+					LockFrameClick <- false
+				     end)}
+	      in
+		 {ForAll [tk(insert 'end' ' ' T)
+			  tk(insert 'end' A.2 q(T TA))
+			  tk(tag bind TA '<1>' Ac)
+			  %tk(tag 'raise' TA)
+			  tk(tag conf TA font:BoldFont)] W}
+	      end}
+	     
+	     {ForAll [tk(insert 'end' '}  [' # {StripPath F.file} #
+			 FileLineSeparator # {Abs F.line} # ']' # NL T)
+		      tk(tag bind T '<1>' Ac)] W}
+
 	     case I == 1 andthen (Top orelse SL == 1)
 		orelse I == 2 andthen {Not Top} then
 		LastSelectedFrame <- undef
 		Gui,SelectStackFrame(T)
 	     else skip end
 	  end}
-	 {W tk(conf state:disabled)}
+	 Gui,Disable(W)
       end
    end
    
@@ -359,18 +407,38 @@ class Gui from Menu Dialog
    end
 
    meth status(I S<=nil)
-      {self.StatusLabel tk(conf text:
-			      case I of
-				 ~1 then StatusEndText
-			      elseof
-				 0  then StatusInitText
-			      else
-				 'Current Thread:  #' # I # '  (' # S # ')'
-			      end)}
+      W = self.StatusText
+   in
+      Gui,Clear(W)
+      Gui,Append(W case I of
+		      ~1 then StatusEndText
+		   elseof
+		      0  then StatusInitText
+		   else
+		      'Current Thread: #' # I # ' (' # S # ')'
+		   end)
+      Gui,Disable(W)
+   end
+   
+   meth rawStatus(S M<=clear)
+      W = self.StatusText
+   in
+      case M == clear then
+	 Gui,Clear(W)
+      else
+	 Gui,Enable(W)
+      end
+      Gui,Append(W S)
+      Gui,Disable(W)
    end
 
-   meth rawStatus(S)
-      {self.StatusLabel tk(conf text:S)}
+   meth loadStatus(F Ack)
+      {Delay 1000}
+      case {IsDet Ack} then skip else
+	 Gui,rawStatus('Loading file ' # F # '...')
+	 {Wait Ack}
+	 Gui,rawStatus(' done' append)
+      end
    end
    
    meth action(A)
