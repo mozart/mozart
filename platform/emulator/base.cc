@@ -40,14 +40,15 @@
 
 void prefixError()
 {
-  if (ozconf.runningUnderEmacs)
+  if (ozconf.runningUnderEmacs) {
     fputc(MSG_ERROR,stderr);
+    fflush(stderr);
+  }
 }
 
 void prefixWarning()
 {
-  if (ozconf.runningUnderEmacs)
-    fputc(MSG_WARN,stderr);
+  prefixError();
 }
 
 extern char *AMVersion, *AMDate, *ozplatform;
