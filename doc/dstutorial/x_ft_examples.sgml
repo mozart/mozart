@@ -219,7 +219,6 @@ fun {FSomeOf FS AFS}
 end
 >>>
 
-
 <SECTION><TITLE>Fault-tolerant stationary objects</TITLE>
 
 <P>To be useful in practice,
@@ -245,13 +244,13 @@ This does not affect the continued execution of the server.
 </LIST>
 
 <P>We present two quite different ways of implementing
-this specification, one using watchers and the other
-using exceptions.
-The watcher-based technique is the shortest and simplest to understand.
+this specification, one using guards and
+the other using exceptions.
+The guard-based technique is the shortest and simplest to understand.
 The exception-based technique is similar to what one would
 do in standard languages such as Java.
 
-<SUBSECTION><TITLE>Watcher-based stationary objects</TITLE>
+<SUBSECTION id="guard.based"><TITLE>Guard-based stationary objects</TITLE>
 
 <P>The simplest way to implement fault-tolerant stationary objects
 is by using a <EM>guard</EM>.  A guard watches
@@ -262,19 +261,103 @@ following specification:
 <LIST>
 <ITEM> <<{Guard E FS S1 S2}>> guards entity <<E>> for
 fault states <<FS>> during statement <<S1>>.
-That is, it first executes <<S1>>;
-if there is a fault on <<E>> in <<S1>> then it interrupts <<S1>> when
-a faulty operation is attempted on any entity.
+That is, it first executes <<S1>>.
+If there is no fault, then <<S1>> completes normally.
+If there is a fault on <<E>> in <<FS>>, then it interrupts <<S1>> as
+soon as a faulty operation is attempted on any entity.
 It then executes statement <<S2>>.
-<<S1>> should never raise distribution exceptions.
+<<S1>> must not raise any distribution exceptions.
 The application is responsible
 for cleaning up from the partial work done in <<S1>>.
 Guards are defined in <ptr to="guards">.
 </LIST>
-<P>With the above procedure, we define <<NewSafeStat>> as follows:
+<P>With the procedure <<Guard>>, we define <<NewSafeStat>> as follows.
+Note that this definition is almost identical to the
+definition of stationary objects in <ptr to="making.stationary.objects">.
+The only difference is that all distributed operations are placed
+inside of guards.
 
+<chunk><title/Guard-based stationary object/
+proc {MakeStat PO ?StatP}
+   S P={NewPort S}
+   N={NewName}
+in
+   % Client interface to server:
+   <chunk.ref/Client side/
+   % Server implementation:
+   <chunk.ref/Server side/
+end
 
-<SUBSUBSECTION id="guards"><TITLE>Guards</TITLE>
+proc {NewSafeStat Class Init Object}
+   Object={MakeStat {New Class Init}}
+end
+</chunk>
+
+<P>The client raises an exception if there is
+a problem with the server.
+<chunk><title/Client side/
+proc {StatP M}
+   R W T
+in
+   {Fault.enable R 'thread'(this) nil _}
+   {Guard P [permFail]
+    proc {$}
+       {Send P M#R}
+       if R==N then skip else raise R end end
+    end
+    proc {$} raise remoteObjectError end end}
+end
+</chunk>
+
+<P>If there is a problem with a client,
+the server terminates the client request gracefully.
+<chunk><title/Server side/
+thread
+   {ForAll S
+    proc{$ M#R}
+       thread RL in
+          try {PO M} RL=N catch X then RL=X end
+          {Guard R [permFail remoteProblem(permSome)]
+           proc {$} R=RL end
+           proc {$} skip end}
+       end
+   end}
+end
+</chunk>
+
+<SUBSUBSECTION id="guards"><TITLE>Guard definition</TITLE>
+
+<P>The procedure <<Guard>> is defined in terms of a watcher.
+It first disables all exception raising on <<E>>.
+Then it installs a watcher on <<E>> that
+waits for a fault in <<FS>>.
+If a fault occurs, then <<S1>> is interrupted
+with an exception <<N>>
+that causes <<S2>> to be executed.
+The unforgeable and unique name <<N>>
+occurs nowhere else in the system.
+
+<<<
+declare
+proc {Guard E FS S1 S2}
+   N={NewName}
+   proc {W E FS} raise N end end
+in
+   {Fault.enable E 'thread'(this) nil _}
+   {Fault.installWatcher E FS W _}
+   try
+      {S1}
+   catch X then
+      if X==N then
+         {S2}
+      else
+         {Fault.deInstallWatcher E W _}
+         raise X end
+      end
+   end
+   {Fault.deInstallWatcher E W _}
+end
+>>>
 
 <SUBSECTION><TITLE>Exception-based stationary objects</TITLE>
 
