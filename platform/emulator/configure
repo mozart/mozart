@@ -3228,7 +3228,7 @@ EOF
 #define RHAPSODY 1
 EOF
 
-	TOOLLDCMD="$CC -dynamic -bundle -undefined suppress"
+	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
 	oz_enable_modules_static=yes
     ;;
     *)
