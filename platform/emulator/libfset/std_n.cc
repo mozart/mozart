@@ -113,24 +113,21 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
     }
   }
   {
-    OZ_Return r = P.leave();
+    int j = 0;
 
-    if (r == OZ_SLEEP) {
-
-      int j = 0;
-      for (i = 0; i < _vs_size; i += 1) {
-	if (vs[i]->isValue()) {
-	  _u |= vs[i]->getGlbSet();
-	  continue;
-	}
-	_vs[j] = _vs[i];
-	j += 1;
+    for (i = 0; i < _vs_size; i += 1) {
+      
+      if (vs[i]->isValue()) {
+	_u |= vs[i]->getGlbSet();
+	continue;
       }
-      _vs_size = j;
+      _vs[j] = _vs[i];
+      j += 1;
     }
-
+    _vs_size = j;
+    
     OZ_DEBUGPRINTTHIS("out ");
-    return r;
+    return P.leave();
   }
 
  failure:
@@ -286,27 +283,22 @@ OZ_Return FSetUnionNPropagator::propagate(void)
   } while (doagain);
 
   {
-    OZ_Return r = P.leave();
-
-    if (r == OZ_SLEEP) {
-
-      int j = 0;
-      for (i = 0; i < _vs_size; i += 1) {
-	if (vs[i]->isEmpty())
-	  continue;
-
-	if (i != j) {
-	  _vs[j] = _vs[i];
-	  _aux[j] = _aux[i];
-	}
-	j += 1;
+    int j = 0;
+    for (i = 0; i < _vs_size; i += 1) {
+      if (vs[i]->isEmpty())
+	continue;
+      
+      if (i != j) {
+	_vs[j] = _vs[i];
+	_aux[j] = _aux[i];
       }
-
-      _vs_size = j;
+      j += 1;
     }
+    
+    _vs_size = j;
 
     _OZ_DEBUGPRINTTHIS("out ");
-    return r;
+    return P.leave();
   }
 
 failure:
@@ -469,25 +461,20 @@ OZ_Return FSetPartitionPropagator::propagate(void)
     OZ_DEBUGPRINT((" %d:%d", count, _vs_size));
   }
   {
-    OZ_Return r = P.leave();
-
-    if (r == OZ_SLEEP) {
-
-      int j = 0;
-      for (i = 0; i < _vs_size; i += 1) {
-	if (vs[i]->isEmpty())
-	  continue;
-	if (i != j) {
-	  _vs[j] = _vs[i];
-	  _aux[j] = _aux[i];
-	}
-	j += 1;
+    int j = 0;
+    for (i = 0; i < _vs_size; i += 1) {
+      if (vs[i]->isEmpty())
+	continue;
+      if (i != j) {
+	_vs[j] = _vs[i];
+	_aux[j] = _aux[i];
       }
-      _vs_size = j;
+      j += 1;
     }
-
+    _vs_size = j;
+    
     _OZ_DEBUGPRINTTHIS("out ");
-    return r;
+    return P.leave();
   }
 
 failure:
