@@ -54,6 +54,8 @@ if [ ${OZ_PI-xx} = xx ]; then
         PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
         export PATH
         #echo "PATH = $PATH"
+        MANPATH=${OZHOME}/man:${MANPATH}
+        export MANPATH
         OZ_PI=1
         export OZ_PI
 fi
