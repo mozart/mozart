@@ -1532,7 +1532,7 @@ TaggedRef PrTabEntry::getProfileStats()
 
   {
     OZ_PropagatorProfile *aux = OZ_PropagatorProfile::getFirst();
-    TaggedRef noname = oz_atom("nofile");
+    TaggedRef noname = oz_atom("");
     while(aux) {
       if (aux->getSamples() || aux->getCalls()) {
 	SRecord *rec = SRecord::newSRecord(ps,arity);
