@@ -193,8 +193,7 @@ BINFILES = $(OZBIN)/ozbatch $(OZBIN)/ozserver
 BITMAPS1 = \
         mini-dec.xbm mini-inc.xbm \
         compiler.xbm compilermask.xbm \
-        zig-zag.xbm lines-lr.xbm lines-rl.xbm \
-        grid-25.xbm grid-50.xbm \
+        lines-lr.xbm lines-rl.xbm grid-25.xbm grid-50.xbm \
         browserMIcon.xbm browserIcon.xbm stop.xbm \
         debugger.xbm
 BITMAPS = $(BITMAPS1:%=$(BITMAPDIR)/%) \
