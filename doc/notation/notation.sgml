@@ -433,7 +433,7 @@
 	      <<in>> ?={statement} <<end>>/
 	    <Grammar.Alt/<<proc>> { ?={atom} } <Q class=terminal/<<{>>/
 	      ?={expression} { ?={pattern} } <Q class=terminal/<<}>>//
-	    <Grammar.Alt type=space/?={in statement}/
+	    <Grammar.Alt type=space/?={in phrase}/
 	    <Grammar.Alt type=space/<<end>>/
 	    <Grammar.Alt/<<fun>> { ?={atom} } <Q class=terminal/<<{>>/
 	      ?={expression} { ?={pattern} } <Q class=terminal/<<}>>//
@@ -485,7 +485,7 @@
 	    <Grammar.Alt/<<proc>> { ?={atom} } <Q class=terminal/<<{>>/
 	      <Q class=terminal/<<$>>/ { ?={pattern} }
 	      <Q class=terminal/<<}>>//
-	    <Grammar.Alt type=space/?={in statement}/
+	    <Grammar.Alt type=space/?={in phrase}/
 	    <Grammar.Alt type=space/<<end>>/
 	    <Grammar.Alt/<<fun>> { ?={atom} } <Q class=terminal/<<{>>/
 	      <Q class=terminal/<<$>>/ { ?={pattern} }
@@ -571,8 +571,14 @@
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}//
 	  <Grammar.Rule/?={in expression}
 	    <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={expression}//
+	  As procedure or method body both a statements and an expression may
+	  be possible, depending on whether the procedure's or method's head
+	  contains a nesting marker&nbsp;(<<$>>) or not.
+	  <Grammar.Rule/?={in phrase}
+	    <Grammar.Alt/?={in statement}/
+	    <Grammar.Alt/?={in expression}//
 	  <Grammar.Rule/?={declaration part}
-	    <Grammar.Alt/?={variable} | <Q class=terminal/<<_>>//
+	    <Grammar.Alt/?={variable}/
 	    <Grammar.Alt/?={statement}/
 	    <Grammar.Alt/?={declaration part} ?={declaration part}//
 	<Para class=apropos><Title/Patterns/
@@ -627,13 +633,10 @@
 	      ?={int}/
 	    <Grammar.Alt/<<unit>> | <<true>> | <<false>>//
 	<Para class=apropos><Title/Methods/
-	  As method body both a statements and an expression may be
-	  possible, depending on whether the ?={method head} contains a
-	  nesting marker (<<$>>) or not.
 	  <Grammar.Rule/?={method}
 	    <Grammar.Alt/<<meth>> ?={method head}
 	      [ <Q class=terminal/<<=>>/ ?={variable} ]/
-	    <Grammar.Alt type=space/( ?={in statement} | ?={in expression} )/
+	    <Grammar.Alt type=space/?={in phrase}/
 	    <Grammar.Alt type=space/<<end>>//
 	  <Grammar.Rule/?={method head}
 	    <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} | ?={atom}/
@@ -986,25 +989,71 @@
 	    <TD/?{E}, ?{E1}, &ellipsis;/
 	    <TD/?={expression}/
 	  <TR>
+	    <TD/?{SE}/
+	    <TD/?={statement} or ?={expression}/
+	  <TR>
 	    <TD/?{P}, ?{P1}, &ellipsis;, ?{Pk}, ?{Pn}/
 	    <TD/?={pattern}/
 	</Table>
       <Section>
 	<Title/Abbreviations/
-	<P>
-	  <Rewrite>?={statement}
+	<SubSection class=unnumbered>
+	  <Title/Procedure Definition/
+	  <P>
+	    <Rewrite>?={statement}
 	    <Rewrite.From
+/<<proc {?{E} ?{P1} &ellipsis; ?{Pn}}
+   ?{SE}
+end>>/
+	      <Rewrite.To
+/<<local X in
+   X = ?{E}
+   proc {X ?{P1} &ellipsis; ?{Pn}}
+      ?{SE}
+   end
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+	    <Rewrite>
+	      <Rewrite.From
 /<<proc {?{E1} ?{P1} &ellipsis; ?{Pk} &ellipsis; ?{Pn}}
    ?{E2}
 end>>/
-	    <Rewrite.To
+	      <Rewrite.To
 /<<proc {?{E1} ?{P1} &ellipsis; ?{Pk'} &ellipsis; ?{Pn}}
    X = ?{E2}
 end>>/
-	    <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Pk} and no other <<$>>
-	      occurs in ?{P1} &ellipsis; ?{Pn}.  ?{Pk'}&nbsp;is the result of
-	      replacing the&nbsp;<<$>> in&nbsp;?{Pk} by&nbsp;<<X>>./
-	  </Rewrite>
+	      <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Pk} and no
+		other&nbsp;<<$>> occurs in ?{P1} &ellipsis; ?{Pn}.
+		?{Pk'}&nbsp;is the result of replacing the&nbsp;<<$>>
+		in&nbsp;?{Pk} by&nbsp;<<X>>./
+	    </Rewrite>
+	    <Rewrite>
+	      <Rewrite.From
+/<<fun {?{E1} ?{P1} &ellipsis; ?{Pn}}
+   ?{E2}
+end>>/
+	      <Rewrite.To
+/<<proc {?{E1} ?{P1} &ellipsis; ?{Pn} X}
+   X = ?{E2}
+end>>/
+	      <Rewrite.Condition/if no&nbsp;<<$>> occurs in
+		?{P1} &ellipsis; ?{Pn}./
+	    </Rewrite>
+	    <Rewrite>
+	      <Rewrite.From
+/<<proc {?{E} ?{P1} &ellipsis; ?{Pn}}
+   ?{SE}
+end>>/
+	      <Rewrite.To
+/<<proc {?{E} X1 &ellipsis; Xn}
+   case X1#&ellipsis;#Xn
+   of ?{P1}#&ellipsis;#?{Pn} then SE
+   end
+end>>/
+	      <Rewrite.Condition/if ?{P1} &ellipsis; ?{Pn} are not
+		distinct variables./
+	    </Rewrite>
   <Back>
     <Bib.Extern id="ISO_8859_1" to="notation.bib" key="ISO_8859_1">
 </Book>
