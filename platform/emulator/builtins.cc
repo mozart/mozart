@@ -160,6 +160,67 @@ OZ_C_proc_begin(Name,3)					\
 OZ_C_proc_end
 
 
+// When InlineName suspends, then Name creates thread containing BlockName
+#define DECLAREBINOBLOCK_USEINLINEFUN2(Name,BlockName,InlineName) \
+OZ_C_proc_begin(Name,3)					          \
+{							          \
+  OZ_Term help;						          \
+							          \
+  OZ_Term arg0 = OZ_getCArg(0);				          \
+  OZ_Term arg1 = OZ_getCArg(1);				          \
+  OZ_Return state=InlineName(arg0,arg1,help);		          \
+  switch (state) {					          \
+  case SUSPEND:						          \
+    {                                                             \
+      RefsArray x=allocateRefsArray(3, NO);                       \
+      x[0]=OZ_getCArg(0);                                         \
+      x[1]=OZ_getCArg(1);                                         \
+      x[2]=OZ_getCArg(2);                                         \
+      OZ_Thread thr=OZ_makeSuspendedThread(BlockName,x,3);        \
+      OZ_addThread(arg0,thr);                                     \
+      OZ_addThread(arg1,thr);                                     \
+      return PROCEED;                                             \
+    }                                                             \
+  case PROCEED:						          \
+    return(OZ_unify(help,OZ_getCArg(2)));		          \
+  default:						          \
+    return state;					          \
+  }							          \
+							          \
+}							          \
+OZ_C_proc_end 
+
+
+// When InlineName suspends, then create thread on second argument
+#define DECLARETHR2BI_USEINLINEFUN2(Name,InlineName) \
+OZ_C_proc_begin(Name,3)                                           \
+{                                                                 \
+  OZ_Term help;                                                   \
+                                                                  \
+  OZ_Term arg0 = OZ_getCArg(0);                                   \
+  OZ_Term arg1 = OZ_getCArg(1);                                   \
+  OZ_Return state=InlineName(arg0,arg1,help);                     \
+  switch (state) {                                                \
+  case SUSPEND:                                                   \
+    {                                                             \
+      RefsArray x=allocateRefsArray(3, NO);                       \
+      x[0]=OZ_getCArg(0);                                         \
+      x[1]=OZ_getCArg(1);                                         \
+      x[2]=OZ_getCArg(2);                                         \
+      OZ_Thread thr=OZ_makeSuspendedThread(Name,x,3);             \
+      OZ_addThread(arg1,thr);                                     \
+      return PROCEED;                                             \
+    }                                                             \
+  case PROCEED:                                                   \
+    return(OZ_unify(help,OZ_getCArg(2)));                         \
+  default:                                                        \
+    return state;                                                 \
+  }                                                               \
+                                                                  \
+}                                                                 \
+OZ_C_proc_end
+
+
 #define DECLAREBI_USEINLINEFUN3(Name,InlineName)	\
 OZ_C_proc_begin(Name,4)					\
 {							\
@@ -1309,8 +1370,23 @@ OZ_C_proc_begin(BIlabelC,2)
   DEREF(thelabeldrf,_1,_2);
   // One of the two must be a literal:
   if (!isLiteral(thelabeldrf) && !isLiteral(lbldrf)) {
-      // Suspend if at least one of the two is a variable:
-      OZ_suspendOn2(thelabel,lbl);
+      // If neither are literals, then both must be variables:
+      if (isAnyVar(thelabeldrf) && isAnyVar(lbldrf)) {
+          // Create a thread with this task:
+          RefsArray x=allocateRefsArray(2, NO);
+          x[0]=OZ_getCArg(0);
+          x[1]=OZ_getCArg(1);
+          OZ_Thread thr=OZ_makeSuspendedThread(BIlabelC,x,2);
+          OZ_addThread(lbl,thr);
+          OZ_addThread(thelabel,thr);
+          return PROCEED;
+          // OZ_suspendOn2(thelabel,lbl);
+      } else {
+          // Label argument is not a literal:
+          TypeErrorT(1,"Literal");
+          // TypeErrorMessage2("labelC","Labels must be literals",thelabel,lbl);
+          return FAILED;
+      }
       // return OZ_suspendOnVar2(thelabel,lbl);
   }
   if (!isAnyVar(lbltag) && !isLiteral(lbldrf)) return FAILED;
@@ -1715,15 +1791,26 @@ OZ_C_proc_begin(BItestCB, 3)
 OZ_C_proc_end
 
 
+// Create new thread on suspension:
+OZ_Return uparrowInline(TaggedRef, TaggedRef, TaggedRef&);
+DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
+
+// Block current thread on suspension:
+OZ_Return uparrowInlineBlocking(TaggedRef, TaggedRef, TaggedRef&);
+DECLAREBI_USEINLINEFUN2(BIuparrowBlocking,uparrowInlineBlocking)
+
 
 /*
  * NOTE: similar functions are dot, genericSet, uparrow
  */
 // X^Y=Z: add feature Y to open feature structure X (Tell operation).
-OZ_Return uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bool blocking)
 {
-    DEREF(fea,  feaPtr,  feaTag);
+    TaggedRef termOrig=term;
+    TaggedRef feaOrig=fea;
     DEREF(term, termPtr, termTag);
+    DEREF(fea,  feaPtr,  feaTag);
+    int suspFlag=FALSE;
 
     // Constrain term to a record:
     switch (termTag) {
@@ -1756,18 +1843,33 @@ OZ_Return uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
     }
 
     // Wait until Y is a literal:
-    if (isNotCVar(feaTag)) return SUSPEND;
+    if (isNotCVar(feaTag)) suspFlag=TRUE;
     if (isCVar(feaTag)) {
         switch (tagged2CVar(fea)->getType()) {
         case OFSVariable:
 	  {
             GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
             if (ofsvar->getWidth()>0) return FAILED;
-            return SUSPEND;
+            suspFlag=TRUE;
 	  }
         default:
             return FAILED;
       }
+    }
+    if (suspFlag) {
+        if (blocking) {
+            return SUSPEND;
+        } else {
+            // Create thread containing relational blocking version of uparrow:
+            RefsArray x=allocateRefsArray(3, NO);
+            out=makeTaggedRef(newTaggedUVar(am.currentBoard));
+            x[0]=termOrig;
+            x[1]=feaOrig;
+            x[2]=out;
+            OZ_Thread thr=OZ_makeSuspendedThread(BIuparrowBlocking,x,3); 
+            OZ_addThread(feaOrig,thr);
+            return PROCEED;                     
+        }
     }
     if (!isFeature(feaTag)) goto typeError2;
 
@@ -1865,7 +1967,17 @@ typeError1:
 typeError2:
     TypeErrorT(1,"Feature");
 }
-DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
+
+
+OZ_Return uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+{
+    return genericUparrowInline(term, fea, out, FALSE);
+}
+
+OZ_Return uparrowInlineBlocking(TaggedRef term, TaggedRef fea, TaggedRef &out)
+{
+    return genericUparrowInline(term, fea, out, TRUE);
+}
 
 
 OZ_Return hasSubtreeAtInline(TaggedRef term, TaggedRef fea)
