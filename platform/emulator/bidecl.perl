@@ -2165,11 +2165,6 @@ $builtins = {
 
     ###* Debugger Internal
 
-    'Debug.mode'	=> { in  => [],
-			     out => ['+bool'],
-			     BI  => BIdebugmode,
-			     native => true},
-
     'Debug.getStream'	=> { in  => [],
 			     out => ['value'],
 			     BI  => BIgetDebugStream,
