@@ -15,6 +15,7 @@
 <!ENTITY debugger	    SYSTEM "debugger.sgml">
 <!ENTITY profiler	    SYSTEM "profiler.sgml">
 <!ENTITY oztool		    SYSTEM "oztool.sgml">
+<!ENTITY ozengine	    SYSTEM "ozengine.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -56,6 +57,7 @@
     <Meta name="html.split"       value="section.linker.misc">
 
     <Meta name="html.split"       value="chapter.oztool">
+    <Meta name="html.split"       value="chapter.ozengine">
 
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
@@ -72,10 +74,11 @@
     </Abstract>
   <Body>
   
-      &compiler;
-      &linker;
-      &debugger;
-      &profiler;
+    &ozengine;
+    &compiler;
+    &linker;
+    &debugger;
+    &profiler;
     &oztool;
 
   <Back>
