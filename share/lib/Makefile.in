@@ -159,7 +159,7 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	|| (rm -f $@; exit 1)
 
 BIDECL=../../platform/emulator/bidecl.perl
-compiler-Builtins.oz: ../../platform/emulator/builtins.spec
+compiler-Builtins.oz: ../../platform/emulator/modBuiltins.spec
 	perl $(BIDECL) -file $< -oztable > $@
 
 compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4

@@ -28,7 +28,7 @@ functor $
 
 import
    Profile.{mode reset getInfo}
-      from 'x-oz-boot:Profile'
+      from 'x-oz://boot/Profile'
 
    Property.{get}
    
