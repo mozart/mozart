@@ -39,15 +39,15 @@ protected:
   BYTE *data;
 public:
   BYTE *allocate(int bytes) {
-    return (BYTE *) oz_heapMalloc(bytes);
+    return ((BYTE *) _OZ_new_OZ_Extension(bytes));
   }
   virtual int getSize() = 0;    // number of bytes in data array
   BYTE *cloneData() {
     int size = getSize();
     if (size==0) return NULL;
     BYTE * newData = allocate(size);
-    memcpy((void*)newData,(const void*)data,size);
-    return newData;
+    memcpy((void*) newData, (const void*) data, size);
+    return (newData);
   }
   virtual void sCloneRecurseV(void) {}
   virtual void gCollectRecurseV(void) {}
