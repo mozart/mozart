@@ -71,7 +71,18 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 {
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
 
-  if (! isSTuple(deref(tagged_xtc, bifdhm_varptr[i], bifdhm_vartag[i]))) {
+  deref(tagged_xtc, bifdhm_varptr[i], bifdhm_vartag[i]);
+
+  if (isLiteral(bifdhm_vartag[i])) {
+    if (tagged_xtc == AtomPair) {
+      bifdhm_var[i] = newSmallInt(0);
+      bifdhm_vartag[i] = SMALLINT;
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  if (! isSTuple(bifdhm_vartag[i])) {
     bifdhm_var[i] = tagged_xtc;
     return TRUE;
   }
