@@ -27,8 +27,18 @@
 
 #include <limits.h>
 
+#pragma implementation "count.hh"
+
 #include "count.hh"
 #include "auxcomp.hh"
+
+//-----------------------------------------------------------------------------
+// BaseCount
+
+BaseCountPropagator::~BaseCountPropagator()
+{
+  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
+}
 
 //-----------------------------------------------------------------------------
 // Exactly
@@ -47,130 +57,6 @@ OZ_BI_define(fdp_exactly, 3, 0)
 }
 OZ_BI_end
 
-ExactlyPropagator::~ExactlyPropagator(void)
-{
-  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
-}
-
-OZ_Return ExactlyPropagator::propagate(void)
-{
-  if (reg_l_sz == 0)
-    return replaceByInt(reg_n, 0);
-
-  int &v = reg_v, &l_sz = reg_l_sz;
-  OZ_FDIntVar n_var(reg_n);
-  DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-  PropagatorController_VV_V P(l_sz, l, n_var);
-  /*
-    tn denotes number items in list which are v and tnn number of
-    items which are definitively not v
-  */
-  int tn = 0, tnn = 0, i;
-
-  int n_in_l = 0;
-  for (i = l_sz; i--; ) {
-    l[i].read(reg_l[i]);
-    // find out if n_var occurs in l_reg
-    n_in_l |= (&(*n_var) == &(*l[i]));
-    if (l[i]->getSize() < reg_oldDomSizes[i]) {
-      if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
-	tn += 1;
-      else {
-	if (! l[i]->isIn(v))
-	  tnn += 1;
-      }
-    }
-  }
-
-
-  reg_tn += tn;
-  reg_tnn += tnn;
-  tn = reg_tn;
-  tnn = reg_tnn;
-
-loop:
-  if (*n_var == fd_singl) {
-    int n = n_var->getSingleElem();
-    if ((oldSize - tnn < n) || (tn > n)) {
-      goto failure;
-    }
-    if (tn == n) {
-      for (i = l_sz; i--; )
-	if (*l[i] != fd_singl)
-	  FailOnEmpty(*l[i] -= v);
-      return P.vanish();
-    } else if (oldSize - tnn == n) {
-      for (i = l_sz; i--; )
-	if (l[i]->isIn(v))
-	  FailOnEmpty(*l[i] &= v);
-      return P.vanish();
-    }
-  } else {
-    if ((oldSize - tnn < n_var->getMinElem()) ||
-	 (tn > n_var->getMaxElem())) {
-      goto failure;
-    }
-    if (tn == n_var->getMaxElem()) {
-      for (i = l_sz; i--; )
-	if (*l[i] != fd_singl)
-	  FailOnEmpty(*l[i] -= v);
-      FailOnEmpty(*n_var &= tn);
-      return P.vanish();
-    } else if (oldSize - tnn == n_var->getMinElem()) {
-      for (i = l_sz; i--; )
-	if (l[i]->isIn(v))
-	  FailOnEmpty(*l[i] &= v);
-      FailOnEmpty(*n_var &= oldSize - tnn);
-      return P.vanish();
-    }
-
-    int oldIn = n_var->isIn(v);
-
-    FailOnEmpty(*n_var <= oldSize - tnn);
-    FailOnEmpty(*n_var >= tn);
-
-    if (n_in_l) {
-      // in case 'n_var' occurs in `reg_l' constraining n_var might
-      // have removed v from `reg_l'
-      if (oldIn && !n_var->isIn(v)) {
-	reg_tnn++;
-	tnn = reg_tnn;
-	goto loop;
-      } else if ((oldIn == 1) && (*n_var == fd_singl)) {
-	reg_tn++;
-	tn = reg_tn;
-	goto loop;
-      }
-    }
-  }
-
-  int from, to;
-  for (from = 0, to = 0; from < l_sz; from += 1) {
-    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
-    else {
-      if (!l[from]->isIn(v)) {}
-      else {
-	reg_oldDomSizes[to] = l[from]->getSize();
-	reg_l[to] = reg_l[from];
-	to++;
-      }
-    }
-  }
-
-  l_sz = to;
-
-  // if n_var occurs in reg_l we must consider the case that
-  // the list becomes empty but n_var is still a FD.
-  if (l_sz == 0) {
-    FailOnEmpty(*n_var &= n_var->getMinElem());
-  }
-
-  return P.leave();
-
-failure:
-  return P.fail();
-}
-
 //-----------------------------------------------------------------------------
 // AtLeast
 
@@ -188,106 +74,6 @@ OZ_BI_define(fdp_atLeast, 3, 0)
 }
 OZ_BI_end
 
-AtLeastPropagator::~AtLeastPropagator(void)
-{
-  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
-}
-
-OZ_Return AtLeastPropagator::propagate(void)
-{
-  if (reg_l_sz == 0) return replaceByInt(reg_n, 0);
-
-  int &v = reg_v, &l_sz = reg_l_sz;
-  OZ_FDIntVar n_var(reg_n);
-  DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-  PropagatorController_VV_V P(l_sz, l, n_var);
-
-  int tn = 0, tnn = 0, i;
-
-  for (i = l_sz; i--; ) {
-    l[i].read(reg_l[i]);
-    if (l[i]->getSize() < reg_oldDomSizes[i]) {
-      if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
-	tn += 1;
-      else {
-	if (! l[i]->isIn(v))
-	  tnn += 1;
-      }
-    }
-  }
-
-  reg_tn += tn;
-  reg_tnn += tnn;
-  tn = reg_tn;
-  tnn = reg_tnn;
-
-loop:
-  if (*n_var == fd_singl) {
-    int n = n_var->getSingleElem();
-    if (oldSize - tnn == n) {
-      for (i = l_sz; i--; )
-	if (l[i]->isIn(v))
-	  FailOnEmpty(*l[i] &= v);
-      return P.vanish();
-    } else if  (oldSize - tnn < n) {
-      goto failure;
-    } else if (tn >= n) {
-      return P.vanish();
-    }
-  } else {
-    int oldIn=0, newIn=0;
-    if (n_var->isIn(v)) oldIn = 1;
-    if (oldSize - tnn == n_var->getMinElem()) {
-      for (i = l_sz; i--; )
-	if (l[i]->isIn(v))
-	  FailOnEmpty(*l[i] &= v);
-      FailOnEmpty(*n_var <= oldSize - tnn);
-      return P.vanish();
-    } else if  (oldSize - tnn < n_var->getMinElem()) {
-      goto failure;
-    } else if (tn >= n_var->getMaxElem()) {
-      return P.vanish();
-    }
-
-    FailOnEmpty(*n_var <= oldSize - tnn);
-    if (n_var->isIn(v)) newIn = 1;
-    if (newIn != oldIn) {
-      reg_tnn++; tnn=reg_tnn;
-      goto loop;
-    }
-    else {
-      if ((oldIn==1) && (*n_var == fd_singl)) {
-      reg_tn++; tn=reg_tn;
-      goto loop;
-      }
-    }
-  }
-
-  int from, to;
-  for (from = 0, to = 0; from < l_sz; from += 1) {
-    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
-    else {
-      if (!l[from]->isIn(v)) {}
-      else {
-	reg_oldDomSizes[to] = l[from]->getSize();
-	reg_l[to] = reg_l[from];
-	to++;
-      }
-    }
-  }
-
-  l_sz = to;
-
-  if (l_sz == 0) {
-    FailOnEmpty(*n_var &= n_var->getMinElem());
-  }
-
-  return P.leave();
-
-failure:
-  return P.fail();
-}
-
 //-----------------------------------------------------------------------------
 // AtMost
 
@@ -304,106 +90,6 @@ OZ_BI_define(fdp_atMost, 3, 0)
   return pe.impose(new AtMostPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
 OZ_BI_end
-
-AtMostPropagator::~AtMostPropagator(void)
-{
-  OZ_hfreeCInts(reg_oldDomSizes, reg_l_sz);
-}
-
-OZ_Return AtMostPropagator::propagate(void)
-{
-  if (reg_l_sz == 0) return PROCEED;
-
-  int &v = reg_v, &l_sz = reg_l_sz;
-  OZ_FDIntVar n_var(reg_n);
-  DECL_DYN_ARRAY(OZ_FDIntVar, l, l_sz);
-  PropagatorController_VV_V P(l_sz, l, n_var);
-
-  int tn = 0, tnn = 0, i;
-
-  for (i = l_sz; i--; ) {
-    l[i].read(reg_l[i]);
-    if (l[i]->getSize() < reg_oldDomSizes[i]) {
-      if (*l[i] == fd_singl && l[i]->getSingleElem() == v)
-	tn += 1;
-      else {
-	if (! l[i]->isIn(v))
-	  tnn += 1;
-      }
-    }
-  }
-
-  reg_tn += tn;
-  reg_tnn += tnn;
-  tn = reg_tn;
-  tnn = reg_tnn;
-
-loop:
-  if (*n_var == fd_singl) {
-    int n = n_var->getSingleElem();
-    if (tn == n) {
-      for (i = l_sz; i--; )
-	if (*l[i] != fd_singl)
-	  FailOnEmpty(*l[i] -= v);
-      return P.vanish();
-    } else if  (tn > n) {
-      goto failure;
-    } else if (oldSize - tnn <= n) {
-      return P.vanish();
-    }
-  } else {
-    int oldIn=0, newIn=0;
-    if (n_var->isIn(v)) oldIn = 1;
-    if (n_var->getMaxElem() == tn) {
-      for (i = l_sz; i--; )
-	if (*l[i] != fd_singl)
-	  FailOnEmpty(*l[i] -= v);
-      FailOnEmpty(*n_var >= tn);
-      return P.vanish();
-    } else if  (tn > n_var->getMaxElem()) {
-      goto failure;
-    } else if (oldSize - tnn <= n_var->getMinElem()) {
-      return P.vanish();
-    }
-
-    FailOnEmpty(*n_var >= tn);
-    if (n_var->isIn(v)) newIn = 1;
-    if (newIn != oldIn) {
-      reg_tnn++; tnn=reg_tnn;
-      goto loop;
-    }
-    else {
-      if ((oldIn==1) && (*n_var == fd_singl)) {
-      reg_tn++; tn=reg_tn;
-      goto loop;
-      }
-    }
-  }
-
-  int from, to;
-  for (from = 0, to = 0; from < l_sz; from += 1) {
-    if ((*l[from] == fd_singl) && (l[from]->getMinElem() == v)) {}
-    else {
-      if (!l[from]->isIn(v)) {}
-      else {
-	reg_oldDomSizes[to] = l[from]->getSize();
-	reg_l[to] = reg_l[from];
-	to++;
-      }
-    }
-  }
-
-  l_sz = to;
-
-  if (l_sz == 0) {
-    return P.vanish();
-  }
-
-  return P.leave();
-
-failure:
-  return P.fail();
-}
 
 //-----------------------------------------------------------------------------
 
