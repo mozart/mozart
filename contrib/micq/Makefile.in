@@ -6,17 +6,18 @@ SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 HOMEURL         = @HOMEURL@
 LIB_DIR         = $(PREFIX)/contrib/micq
-OZC             = @OZC@ --baseurl=$(BUILDTOP)/contrib/micq/
+OZC             = @OZC@
+OZC_FLAGS       = --baseurl=$(BUILDTOP)/contrib/micq/
+COMPILE         = $(OZC) $(OZC_FLAGS)
 OZL             = @OZL@
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 APPLETS         = server.oza client.oza
-EXECUTES        = micq client
 
 all:            $(APPLETS)
 %.ozf: %.oz
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 install:        $(LIB_DIR) $(addprefix $(LIB_DIR)/,$(APPLETS))
 $(LIB_DIR):
         $(INSTALL_DIR) $@
@@ -29,29 +30,29 @@ client.oza: client
         $(OZL) $< -o $@
 
 micq: startserver.oz server.ozf defaultsettings.ozf
-        $(OZC) -x $< -o $@
+        $(COMPILE) -x $< -o $@
 
 client: startclient.oz client.ozf
-        $(OZC) -x $< -o $@
+        $(COMPILE) -x $< -o $@
 
 server.ozf: server.oz methods.ozf database.ozf mobility.ozf newaccountgui.ozf \
         log.ozf  sysadm.ozf
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 
 addapplicationgui.ozf: addapplicationgui.oz methods.ozf
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 client.ozf : client.oz methods.ozf clientgui.ozf newfriendsgui.ozf \
         defaultsettings.ozf dialoggui.ozf mobility.ozf
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 clientgui.ozf : clientgui.oz messagedisplay.ozf manager.ozf \
         defaultsettings.ozf popup.ozf messagegui.ozf editaccount.ozf \
         draganddrop.ozf addapplicationgui.ozf configureclient.ozf \
         editapplicationgui.ozf
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 messagegui.ozf : messagegui.oz popup.ozf
-        $(OZC) -c $< -o $@
+        $(COMPILE) -c $< -o $@
 
 clean veryclean:
         -rm *~ *.ozf *.oza micq client
