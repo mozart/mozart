@@ -482,7 +482,8 @@ local
       end
       meth generate(I ?AST $)
 	 case @symbol of fVar('INITIAL' _) then   % predefined by flex
-	    AST = fEq(@symbol fInt(0 unit) unit)
+	    AST = fAnd(fEq(@symbol fInt(0 unit) unit)
+		       fEq(@symbol @symbol unit))
 	    ""
 	 else
 	    AST = fEq(@symbol fInt(I unit) unit)
