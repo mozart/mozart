@@ -127,3 +127,8 @@ Makefile: Makefile.in config.status
 
 config.status: configure
 	./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps

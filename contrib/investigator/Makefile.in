@@ -58,6 +58,8 @@ OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
 TARGETS		= Investigator.ozf
 LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
 
+.PHONY: depend clean distclean bootstrap
+
 all:     $(TARGETS)
 install: $(LIB_TARGETS)
 
@@ -92,7 +94,7 @@ $(LIB_DIR)/Investigator.ozf: Investigator.ozf
 #----------------------------------------------------------------------
 
 depend: Makefile $(CSRCS) $(OZSRCS) $(OZGSRCS)
-	$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
+#	$(DEPEND) $(CSRCS:%=$(SRCDIR)/%) > Makefile.deps
 	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
 	>> Makefile.deps
 
@@ -121,3 +123,8 @@ Makefile: Makefile.in config.status
 
 config.status: configure
 	./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps
