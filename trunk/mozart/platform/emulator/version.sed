@@ -6,11 +6,7 @@
 #define AMDate "HEREGOESDATE"
 
 
-#ifdef WINDOWS
-char *ozplatform = "win32-i486";
-#else
 char *ozplatform = "OZPLATFORM";
-#endif
 
 void version()
 {
