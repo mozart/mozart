@@ -27,16 +27,16 @@
 // Strings are limited to MAX_DP_STRING
 message(M_PORT_SEND,Index,Term)
 
-message(M_UPDATE_REFERENCE,Index,Site)
+message(M_UPDATE_REFERENCE,Index)
 message(M_OWNER_REF,Credit,Index,Index2,Index3)
 message(M_BORROW_REF,Term)
 
-message(M_REGISTER,Index,Site)
-message(M_DEREGISTER,Index,Site)
+message(M_REGISTER,Index)
+message(M_DEREGISTER,Index)
 message(M_REDIRECT,Site,Index,Term)
-message(M_ACKNOWLEDGE,Site,Index)
-message(M_SURRENDER,Index,Site,Term)
-message(M_GETSTATUS,Site,Index)
+message(M_ACKNOWLEDGE,Index)
+message(M_SURRENDER,Index,Term)
+message(M_GETSTATUS,Index)
 message(M_SENDSTATUS,Site,Index,Term)
 
 message(M_CELL_LOCK_GET,Index,Site)
