@@ -292,10 +292,10 @@ void AM::init(int argc,char **argv)
 // ----------------------- unification
 
 // unify and manage rebindTrail
-Bool AM::unify(TaggedRef *ref1, TaggedRef *ref2)
+Bool AM::unify(TaggedRef t1, TaggedRef t2)
 {
-  Bool result;
-  result = performUnify(ref1, ref2);
+  CHECK_NONVAR(t1); CHECK_NONVAR(t2);
+  Bool result = performUnify(&t1, &t2);
 
   // unwindRebindTrail
   TaggedRef *refPtr;
