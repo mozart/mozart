@@ -31,6 +31,9 @@ public:
   ChainElem *getNext(){
     return next;}
 
+  void deinstallProbe(ProbeType pt){
+    site->deinstallProbe(pt);}
+
 };
 
 class InformElem{
@@ -75,7 +78,7 @@ public:
   
   void setCurrent(Site* s);
 
-  Bool siteRemove(Site*);
+  int siteRemove(Site*);
   Bool siteExists(Site*);
 
   void installProbeAfterAck(){
