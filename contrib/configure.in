@@ -37,7 +37,7 @@ AC_CHECK_PROGS(RM, rm)
 
 OZ_INIT
 
-CONTRIBDIRS=
+CONTRIBDIRS="tk ap"
 
 AC_DEFUN(OZ_ADDTO_CONTRIBDIRS,[
   if test "$oz_cv_enable_contrib_$1" = yes; then
