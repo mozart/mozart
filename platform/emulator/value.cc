@@ -38,54 +38,14 @@
  * global names and atoms
  *=================================================================== */
 
-TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
-  AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
-  AtomEntailed, AtomSuspended, AtomBlocked,
-  AtomEmpty, AtomUpper, AtomLower, AtomDigit,
-  AtomCharSpace, AtomPunct, AtomOther,
-  NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
-  AtomMin, AtomMax, AtomMid,
-  AtomNaive, AtomSize, AtomNbSusps,
-  AtomDebugCallC, AtomDebugCallF, AtomDebugCondC, AtomDebugCondF,
-  AtomDebugLockC, AtomDebugLockF, AtomDebugNameC, AtomDebugNameF,
-  AtomException, AtomUnify,
-
-  AtomExport, AtomManager, AtomBoot,
-
-  NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
-  NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
-  NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
-  AtomNew, AtomApply, AtomApplyList,
-
-  NameUnit, NameGroupVoid,
-  NameNonExportable,
-  AtomKinded, AtomDet, AtomRecord, AtomLow, AtomFSet,
-  // Atoms for System.get and System.set
-  AtomActive, AtomAtoms, AtomBuiltins, AtomCache, AtomCommitted,
-  AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth,
-  AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh,
-  AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad,
-  AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate,
-  AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension,
-  AtomStopOnToplevelFailure, AtomSystem, AtomThread,
-  AtomTotal, AtomDetailed, AtomBrowser, AtomApplet,
-  AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
-  AtomDebugIP, AtomDebugPerdio,
-  // Atoms for NetError Handlers
-  AtomTempBlocked, AtomPermBlocked,
-  AtomTempMe, AtomPermMe,
-  AtomTempAllOthers, AtomPermAllOthers,
-  AtomTempSomeOther, AtomPermSomeOther, AtomEntityNormal,
-  AtomPerm, AtomTemp,AtomTempHome,AtomTempForeign,
-  AtomPermHome,AtomPermForeign,
-  AtomContinue, AtomRetry,
-  AtomYes,AtomNo,AtomPerSite,AtomPerThread,AtomAll,AtomAny,
-  AtomHandler,AtomWatcher,
-
+TaggedRef
   RecordFailure,
-  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
+
+  NameTrue, NameFalse,
+
   BI_Unify,BI_portWait,BI_send,BI_probe,BI_Delay,BI_startTmp,
   BI_load, BI_fail, BI_url_load, BI_boot_manager,
+
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,
   BI_controlVarHandler,
@@ -103,184 +63,17 @@ TaggedRef getUniqueName(const char *s)
   return makeTaggedLiteral(ret);
 }
 
-// Some often used constants
 void initLiterals()
 {
-  AtomNil   = oz_atom("nil");
-  AtomCons  = oz_atom("|");
-  AtomPair  = oz_atom("#");
-  AtomVoid  = oz_atom("_");
+  initAtomsAndNames();
 
-  AtomBool  = oz_atom("bool");
-  AtomSup   = oz_atom("sup");
-  AtomCompl = oz_atom("compl");
+  NameTrue  = getUniqueName(NAMETRUE);
+  NameFalse = getUniqueName(NAMEFALSE);
 
-  AtomEmpty     = oz_atom("");
-  AtomUpper     = oz_atom("upper");
-  AtomLower     = oz_atom("lower");
-  AtomDigit     = oz_atom("digit");
-  AtomCharSpace = oz_atom("space");
-  AtomPunct     = oz_atom("punct");
-  AtomOther     = oz_atom("other");
+  RecordFailure = OZ_recordInitC("failure",
+                                 oz_list(OZ_pairA("debug",NameUnit),0));
 
-  AtomSucceeded    = oz_atom("succeeded");
-  AtomAlt          = oz_atom("alternatives");
-  AtomEntailed     = oz_atom("entailed");
-  AtomSuspended    = oz_atom("suspended");
-  AtomBlocked      = oz_atom("blocked");
-  AtomMerged       = oz_atom("merged");
-  AtomFailed       = oz_atom("failed");
-
-  AtomDebugCallC   = oz_atom("call/c");
-  AtomDebugCallF   = oz_atom("call/f");
-  AtomDebugCondC   = oz_atom("conditional/c");
-  AtomDebugCondF   = oz_atom("conditional/f");
-  AtomDebugLockC   = oz_atom("lock/c");
-  AtomDebugLockF   = oz_atom("lock/f");
-  AtomDebugNameC   = oz_atom("name generation/c");
-  AtomDebugNameF   = oz_atom("name generation/f");
-
-  AtomUnify        = oz_atom("unify");
-  AtomException    = oz_atom("exception");
-
-  AtomExport       = oz_atom("export");
-  AtomManager      = oz_atom("manager");
-  AtomBoot         = oz_atom("Boot");
-
-  NameUnit          = getUniqueName("unit");
-  NameGroupVoid     = getUniqueName("group(void)");
-  NameNonExportable = getUniqueName("nonExportable");
-
-  NameTrue         = getUniqueName(NAMETRUE);
-  NameFalse        = getUniqueName(NAMEFALSE);
-
-  NameOoAttr        = getUniqueName("ooAttr");
-  NameOoFreeFeatR   = getUniqueName("ooFreeFeatR");
-  NameOoFreeFlag    = getUniqueName("ooFreeFlag");
-  NameOoDefaultVar  = getUniqueName("ooDefaultVar");
-  NameOoRequiredArg = getUniqueName("ooRequiredArg");
-  NameOoFastMeth    = getUniqueName("ooFastMeth");
-  NameOoUnFreeFeat  = getUniqueName("ooUnFreeFeat");
-  NameOoDefaults    = getUniqueName("ooDefaults");
-  NameOoPrintName   = getUniqueName("ooPrintName");
-  NameOoLocking     = getUniqueName("ooLocking");
-  NameOoFallback    = getUniqueName("ooFallback");
-  NameOoId          = getUniqueName("ooId");
-
-  AtomNew           = oz_atom("new");
-  AtomApply         = oz_atom("apply");
-  AtomApplyList     = oz_atom("applyList");
-
-  AtomMin     = oz_atom("min");
-  AtomMax     = oz_atom("max");
-  AtomMid     = oz_atom("mid");
-  AtomNaive   = oz_atom("naive");
-  AtomSize    = oz_atom("size");
-  AtomNbSusps = oz_atom("nbSusps");
-
-  AtomLow          = oz_atom("low");
-
-  // For system set and get
-  AtomActive                = oz_atom("active");
-  AtomAtoms                 = oz_atom("atoms");
-  AtomBuiltins              = oz_atom("builtins");
-  AtomCache                 = oz_atom("cache");
-  AtomCommitted             = oz_atom("committed");
-  AtomCloned                = oz_atom("cloned");
-  AtomCode                  = oz_atom("code");
-  AtomCopy                  = oz_atom("copy");
-  AtomCreated               = oz_atom("created");
-  AtomDebug                 = oz_atom("debug");
-  AtomDepth                 = oz_atom("depth");
-  // AtomFailed
-  AtomFeed                  = oz_atom("feed");
-  AtomForeign               = oz_atom("foreign");
-  AtomFree                  = oz_atom("free");
-  AtomFreelist              = oz_atom("freelist");
-  AtomGC                    = oz_atom("gc");
-  AtomHigh                  = oz_atom("high");
-  AtomHints                 = oz_atom("hints");
-  AtomIdle                  = oz_atom("idle");
-  AtomInt                   = oz_atom("int");
-  AtomInvoked               = oz_atom("invoked");
-  AtomLimits                = oz_atom("limits");
-  AtomLoad                  = oz_atom("load");
-  AtomLocation              = oz_atom("location");
-  // AtomMax
-  AtomMedium                = oz_atom("medium");
-  // AtomMin
-  AtomNames                 = oz_atom("names");
-  AtomOn                    = oz_atom("on");
-  AtomPropagate             = oz_atom("propagate");
-  AtomPropagators           = oz_atom("propagators");
-  AtomRun                   = oz_atom("run");
-  AtomRunnable              = oz_atom("runnable");
-  AtomShowSuspension        = oz_atom("showSuspension");
-  // AtomSize
-  AtomStopOnToplevelFailure = oz_atom("stopOnToplevelFailure");
-  // AtomSucceeded
-  AtomSystem                = oz_atom("system");
-  AtomThread                = oz_atom("thread");
-  AtomThreshold             = oz_atom("threshold");
-  AtomTolerance             = oz_atom("tolerance");
-  AtomTotal                 = oz_atom("total");
-  AtomUser                  = oz_atom("user");
-  AtomVariables             = oz_atom("variables");
-  AtomWidth                 = oz_atom("width");
-  AtomHeap                  = oz_atom("heap");
-  AtomDetailed              = oz_atom("detailed");
-  AtomBrowser               = oz_atom("browser");
-  AtomApplet                = oz_atom("applet");
-
-  // AtomFree                  = oz_atom("free");
-  AtomKinded                = oz_atom("kinded");
-  AtomDet                   = oz_atom("det");
-  AtomRecord                = oz_atom("record");
-  AtomFSet                  = oz_atom("fset");
-  // AtomInt                   = oz_atom("int");
-
-  AtomDebugIP               = oz_atom("debugIP");
-  AtomDebugPerdio           = oz_atom("debugPerdio");
-
-  // Atom Handlers
-  AtomTempBlocked             = oz_atom("tempBlocked");
-  AtomPermBlocked             = oz_atom("permBlocked");
-  AtomTempMe                  = oz_atom("tempMe");
-  AtomPermMe                  = oz_atom("permMe");
-  AtomTempAllOthers           = oz_atom("tempAllOthers");
-  AtomPermAllOthers           = oz_atom("permAllOthers");
-  AtomTempSomeOther           = oz_atom("tempSomeOther");
-  AtomPermSomeOther           = oz_atom("permSomeOther");
-  AtomEntityNormal            = oz_atom("entityNormal");
-  AtomTemp                    = oz_atom("temp");
-  AtomTempHome                = oz_atom("tempHome");
-  AtomTempForeign             = oz_atom("tempForeign");
-  AtomPerm                    = oz_atom("perm");
-  AtomPermHome                = oz_atom("permHome");
-  AtomPermForeign             = oz_atom("permForeign");
-  AtomContinue                = oz_atom("continue");
-  AtomRetry                   = oz_atom("retry");
-  AtomYes                     = oz_atom("yes");
-  AtomNo                      = oz_atom("no");
-  AtomPerSite                 = oz_atom("perSite");
-  AtomPerThread               = oz_atom("perThread");
-  AtomHandler                 = oz_atom("handler");
-  AtomWatcher                 = oz_atom("watcher");
-  AtomAny                     = oz_atom("any");
-  AtomAll                     = oz_atom("all");
-
-  RecordFailure = OZ_record(OZ_atom("failure"),
-                            OZ_cons(OZ_atom("debug"),OZ_nil()));
-  OZ_putSubtree(RecordFailure,OZ_atom("debug"),NameUnit);
   OZ_protect(&RecordFailure);
-
-  E_ERROR = oz_atom("error");
-  E_KERNEL= oz_atom("kernel");
-  E_OBJECT= oz_atom("object");
-  E_TK    = oz_atom("tk");
-  E_OS    = oz_atom("os");
-  E_SYSTEM= oz_atom("system");
-
 }
 
 /*===================================================================
