@@ -14,80 +14,35 @@
 #pragma implementation "fdhook.hh"
 #endif
 
-#include "types.hh"
-
 #include "am.hh"
-#include "board.hh"
-#include "suspensi.hh"
-#include "trail.hh"
-#include "thread.hh"
+
 #include "fdhook.hh"
-
-Suspension* FDcurrentTaskSusp = NULL;
-
-void reviveCurrentTaskSusp(void) {
-  Assert(FDcurrentTaskSusp != NULL);
-  Assert(FDcurrentTaskSusp->isResistant());
-  Assert(!FDcurrentTaskSusp->isDead());
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
-  FDcurrentTaskSusp->unmarkPropagated();
-  FDcurrentTaskSusp->unmarkUnifySusp();
-#ifndef NEWCOUNTER
-  am.currentBoard->incSuspCount();
-#endif
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
-  FDcurrentTaskSusp->setBoard(am.currentBoard);
-  FDcurrentTaskSusp = NULL;
-}
-
-
-void killPropagatedCurrentTaskSusp() {
-  if (FDcurrentTaskSusp == NULL) return;
-
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
-  Assert(FDcurrentTaskSusp->isResistant());
-  Assert(!FDcurrentTaskSusp->isDead());
-
-  // constructive disjunction ???
-  if (!FDcurrentTaskSusp->isPropagated()) {
-    FDcurrentTaskSusp = NULL;
-    return;
-  }
-
-  FDcurrentTaskSusp->markDead();
-#ifdef NEWCOUNTER
-  am.currentBoard->decSuspCount();
-#endif
-  am.checkExtSuspension(FDcurrentTaskSusp);
-  FDcurrentTaskSusp = NULL;
-}
-
 
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
 {
 #ifdef DEBUG_STABLE
-  static Suspension * board_constraints_susp = NULL;
-  if (board_constraints_susp != elem->getSusp()) {
-    board_constraints_susp = elem->getSusp();
-    board_constraints = new SuspList(board_constraints_susp,board_constraints);
+  static Thread *board_constraints_thr = NULL;
+  if (board_constraints_thr != elem->getElem ()) {
+    board_constraints_thr = elem->getElem ();
+    board_constraints = 
+      new SuspList(board_constraints_thr, board_constraints);
   }
 #endif
   
-  updateExtSuspension (hoome->getBoardFast(), elem->getSusp());
+  (elem->getElem ())->updateExtThread (hoome->getBoardFast());
   elem->setNext(list);
   return elem;
 }
 
-Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
+Thread* createPropagator (OZ_CFun func, int arity, RefsArray xregs)
 {
-  Suspension * s = makeHeadSuspension(func, xregs, arity);
-
-  s->headInit();
-
-  Assert(FDcurrentTaskSusp == NULL);
+  // Assert(FDcurrentTaskSusp == NULL);
+  Assert(!(am.currentThread->isPropagator ()));
   
-  FDcurrentTaskSusp = s;
-  return s;
+  Thread *thr = makeHeadThread (func, xregs, arity);
+  thr->headInit();
+
+  return (thr);
 }
 
 #ifdef DEBUG_STABLE
@@ -97,22 +52,31 @@ void printBCDebug(Board * b) { printBC(cerr, b); }
 
 void printBC(ostream &ofile, Board * b)
 {
-  for (SuspList * sl = board_constraints; sl != NULL; sl = sl->getNext()) {
-    Suspension * s = sl->getSusp();
-    if (s->isDead())
+  SuspList *sl;
+  Board *hb;
+
+  sl = board_constraints; 
+  board_constraints = (SuspList *) NULL;
+
+  while (sl != NULL) {
+    Thread *thr = sl->getElem ();
+    if (thr->isDeadThread () ||
+	(hb = thr->getBoardFast ()) == NULL ||
+	hb->isFailed ()) {
+      sl = sl->dispose ();
       continue;
-    if (s->getBoardFast() == NULL)
-      continue;
-    
-    if (sl->isCondSusp())
-      ofile << ((CondSuspList*)sl)->getCondNum() << " conds";
-    else 
-      ofile << "true";
-    
-    s->print(ofile);
-    ofile << "  " << (void *) b << endl;
-    
-  } 
+    }
+
+    thr->print (ofile);
+    ofile << endl;
+    if (b) { 
+      ofile << "    ---> " << (void *) b << endl; 
+    }
+
+    sl = sl->getNext();
+    board_constraints = new SuspList (thr, board_constraints);
+  }
+
   ofile.flush();
 }
 #endif

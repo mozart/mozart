@@ -47,12 +47,11 @@ public:
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
 
-  void addSuspension(Suspension *susp)
+  void addSuspension (Thread *thr)
   {
-    extern void updateExtSuspension(Board *home, Suspension *s);
-    updateExtSuspension (getBoardFast(), susp);
+    thr->updateExtThread (getBoardFast());
 
-    suspList = new SuspList(susp,suspList);
+    suspList = new SuspList(thr, suspList);
   }
 
   void print(ostream &stream, int depth, int offset, TaggedRef v);

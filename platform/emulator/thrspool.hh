@@ -50,16 +50,15 @@ private:
   // there is no runnable thread;
   int currentPriority;
 
-  //  Adjust a 'nextPrio' stack for the new thread with the 
-  // pri != currentPriority;
-  void scheduleThreadOutline (Thread *th, int pri);
 protected:
   //
 public:
   //  formerly in AM;
   Thread *currentThread;
   Thread *rootThread;
-  Thread *threadsFreeList;
+  //
+  //  used by thread constructors;
+  ThreadBodyFreeListEl *threadBodyFreeList;
 
   ThreadsPool () {};
   ~ThreadsPool () {};
@@ -71,19 +70,13 @@ public:
   //
   void doGC ();
 
-  Thread *newThread (int p,Board *h);
-  // ... in emulate.cc; 
-  void disposeThread (Thread *th);
-
   void scheduleThread (Thread *th);
   Bool threadQueueIsEmpty ();
   Thread *getFirstThread ();
 
   //  misc;
   int getNextThPri () { return (currentPriority); }
-  Bool isScheduled (Thread *thr) {
-    return (queues[thr->getPriority ()].isScheduled (thr));
-  }
+  Bool isScheduled (Thread *thr);
 };
 
 #ifndef OUTLINE

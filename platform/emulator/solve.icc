@@ -29,9 +29,9 @@ void SolveActor::addSuspension(SuspList *l)
 }
 
 inline
-void SolveActor::addSuspension(Suspension *susp)
+void SolveActor::addSuspension (Thread *thr)
 {
-  suspList = new SuspList(susp, suspList);
+  suspList = new SuspList (thr, suspList);
 }
 
 inline

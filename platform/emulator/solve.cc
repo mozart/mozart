@@ -29,10 +29,8 @@
  *      result: reference to the control variable 
  *         (recall that there is single control variable, but not three 
  *           as in kernel definition);
- *      suspList: list of external suspensions; 
- *      threads: the number of _active_ threads
- *         (recall that all threads (in emulator's sense) are 'active' ones
- *          in kernel definition's sense);
+ *      suspList: list of external threads; 
+ *      threads: the number of *runnable* threads!
  */
 
 /* ------------------------------------------------------------------------
@@ -171,14 +169,27 @@ Bool SolveActor::checkExtSuspList()
 
   suspList = NULL;
   while (tmpSuspList) {
-    Suspension *susp = tmpSuspList->getElem();
+    Thread *thr = tmpSuspList->getElem ();
 
-    if (susp->isDead()) {
-      tmpSuspList = tmpSuspList->dispose();
+    /*
+     *  kost@
+     *  Note that i've preserved here a limitation of stability 
+     * check: no propagators (i.e. former "resistant" suspensions") 
+     * might suspend on global variables; otherwise, no stability 
+     * will be reached (precisely speaking, they must go away - 
+     * then stability can be reached);
+     *  This limitation was introduced with the "resistant" 
+     * suspensions (Hi, Tobias!). 
+     *
+     */
+
+    if (thr->isDeadThread () ||
+	(thr->isPropagated () && !(thr->isPropagator ()))) {
+      tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
 
-    Board *bb = susp->getBoardFast();
+    Board *bb = thr->getBoardFast ();
 
     while (1) {
       bb = bb->getSolveBoard();
@@ -189,8 +200,8 @@ Bool SolveActor::checkExtSuspList()
     }
 
     if (bb == 0) {
-      susp->markDead ();
-      tmpSuspList = tmpSuspList->dispose();
+      thr->disposeSuspendedThread ();
+      tmpSuspList = tmpSuspList->dispose ();
     } else {
       SuspList *helpList = tmpSuspList;
       tmpSuspList = tmpSuspList->getNext();
@@ -217,8 +228,8 @@ void SolveActor::setSolveBoard(Board *bb) {
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
 }
 
-void SolveActor::add_stable_susp(Suspension * s) {
-  stable_sl = new SuspList(s, stable_sl);
+void SolveActor::add_stable_susp (Thread *thr) {
+  stable_sl = new SuspList (thr, stable_sl);
 }
 
 // ------------------------------------------------------------------------

@@ -590,9 +590,9 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
   while (suspList) {
     PROFILE_CODE1(FDProfiles.inc_item(susps_per_checksusplist);)
 
-    Suspension * susp = suspList->getElem();
+    Thread *thr = suspList->getElem();
 
-    if (susp->isDead()) {
+    if (thr->isDeadThread ()) {
       suspList = suspList->dispose();
       continue;
     }
@@ -600,12 +600,12 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 PROFILE_CODE1
   (
    if (var->getBoardFast() == am.currentBoard) {
-     if (susp->getBoardFast() == am.currentBoard)
+     if (thr->getBoardFast() == am.currentBoard)
        FDProfiles.inc_item(from_home_to_home_hits); 
      else
        FDProfiles.inc_item(from_home_to_deep_hits);
    } else {
-     Board * b = susp->getBoardFast();
+     Board * b = thr->getBoardFast();
      if (b == var->getBoardFast())
        FDProfiles.inc_item(from_deep_to_home_misses);
      else if (am.isBetween(b, var->getBoardFast())==B_BETWEEN)
@@ -615,27 +615,32 @@ PROFILE_CODE1
    }
    )
   
-  // already propagated susps remain in suspList
-    if (susp->isPropagated()) {
-      Assert(susp->isResistant());
-      if (calledBy &&  !susp->isUnifySusp()) {
-	switch (isBetween(susp->getBoardFast(), var->getBoardFast())) {
-	case B_BETWEEN:
-	  susp->markUnifySusp();
-	  break;
-	case B_DEAD:
-	  susp->markDead();
-	  suspList = suspList->dispose();
-	  continue;
-	case B_NOT_BETWEEN:
-	  break;
+ // already propagated susps remain in suspList
+    if (thr->isPropagated ()) {
+      if (thr->isPropagator ()) {
+	if (calledBy && !(thr->isUnifyThread ())) {
+	  switch (isBetween(thr->getBoardFast (), var->getBoardFast ())) {
+	  case B_BETWEEN:
+	    thr->markUnifyThread ();
+	    break;
+	  case B_DEAD:
+	    //  keep the thread itself alive - it will be discarded
+	    // *properly* in the emulator;
+	    suspList = suspList->dispose ();
+	    continue;
+	  case B_NOT_BETWEEN:
+	    break;
+	  }
 	}
+      } else {
+	//  non-propagator, i.e. it just goes away;
+	suspList = suspList->dispose();
+	continue;
       }
     } else {
-      Bool disposeFlag=susp->wakeUp(var->getBoardFast(), calledBy);
-      if (disposeFlag) {
-	Assert(susp->isDead());
-	suspList = suspList->dispose();
+      if (thr->wakeUp (var->getBoardFast (), calledBy)) {
+	Assert (thr->isDeadThread () || thr->isPropagated ());
+	suspList = suspList->dispose ();
 	continue;
       }
     }
@@ -711,21 +716,30 @@ void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
 }
 
 /*
-  install every board from the currentBoard to 'n'
-  and move cursor to 'n'
-
-  algm
-    find common parent board of 'to' and 'currentBoard'
-    deinstall until common parent (go upward)
-    install (go downward)
-  pre:
-     'to' ist not deref'd
-     'to' may be committed, failed or discarded
-   ret:
-     INST_OK         installation successful
-     INST_FAILED     installation of board failed
-     INST_REJECTED   'to' is failed or discarded board
-     */
+ *
+ *  Install every board from the currentBoard to 'n'
+ * and move cursor to 'n'
+ *
+ *  Algorithm:
+ *   find common parent board of 'to' and 'currentBoard'
+ *   deinstall until common parent (go upward)
+ *   install (go downward)
+ *
+ *  Pre-conditions:
+ *  - 'to' ist not deref'd;
+ *  - 'to' may be committed, failed or discarded;
+ *
+ *  Return values and post-conditions:
+ *  - INST_OK:
+ *      installation successful, currentBoard == 'to';
+ *  - INST_FAILED:
+ *      installation of *some* board on the "down" path has failed,
+ *      'am.currentBoard' points to that board;
+ *  - INST_REJECTED:
+ *      *some* board on the "down" path is already failed or discarded,
+ *      'am.currentBoard' stays unchanged;
+ *
+ */
 InstType AM::installPath(Board *to)
 {
   if (to->isInstalled()) {
@@ -792,8 +806,9 @@ void AM::reduceTrailOnSuspend()
     Board * bb = currentBoard;
     bb->newScript(numbOfCons);
 
-    // one single suspension for all
-    Suspension * susp = new Suspension(bb);
+    //
+    // one single suspended thread for all;
+    Thread *thr = new Thread (bb);
   
     for (int index = 0; index < numbOfCons; index++) {
       TaggedRef * refPtr, value, old_value;
@@ -810,14 +825,14 @@ void AM::reduceTrailOnSuspend()
 
       unBind(refPtr, value);
 
-      // value is always global variable, so add always a suspension
-      taggedBecomesSuspVar(refPtr)->addSuspension(susp);
+      // value is always global variable, so add always a thread;
+      taggedBecomesSuspVar(refPtr)->addSuspension (thr);
 
       // this might be a global unconstrained variable; in this case
-      // add a suspension
+      // add thread;
       if(isNotCVar(old_value_tag) && !isLocalVariable(old_value)) {
 	Assert(isNotCVar(value));
-	taggedBecomesSuspVar(old_value_ptr)->addSuspension (susp);
+	taggedBecomesSuspVar(old_value_ptr)->addSuspension (thr);
       }
     } // for 
   } // if
@@ -856,7 +871,7 @@ void AM::reduceTrailOnShallow()
 
     unBind(refPtr,value);
 
-    /* test if only trailed to create suspension and not bound ? */
+    /* test if only trailed to create thread and not bound ? */
     if (refPtr!=ptrOldVal) {
       if (isAnyVar(oldVal)) {
 	addSuspendVarList(ptrOldVal);
@@ -876,8 +891,8 @@ void AM::reduceTrailOnShallow()
 Bool AM::hasOFSSuspension(SuspList *suspList)
 {
     while (suspList) {
-        Suspension *susp=suspList->getElem();
-        if (susp->isOFSSusp()) return TRUE;
+        Thread *thr = suspList->getElem ();
+        if (!(thr->isDeadThread ()) && thr->isOFSThread ()) return TRUE;
         suspList = suspList->getNext();
     }
     return FALSE;
@@ -896,15 +911,16 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
 				  Bool determ)
 {
     while (suspList) {
-        Suspension *susp=suspList->getElem();
+        Thread *thr = suspList->getElem ();
 
-        if (susp->isDead()) {
+        if (thr->isDeadThread () ||
+	    (thr->isPropagated () && !(thr->isPropagator ()))) {
             suspList=suspList->getNext();
             continue;
         }
 
-        if (susp->isOFSSusp()) {
-            CFuncContinuation *cont=susp->getCCont();
+        if (thr->isOFSThread ()) {
+            CFuncContinuation *cont = thr->getCCont ();
             RefsArray xregs=cont->getX();
 
 	    // Only add features if var and fvar are the same:
@@ -1097,9 +1113,9 @@ void AM::incSolveThreads(Board *nb,int n)
 	sa->incThreads(n);
 	if (isStableSolve(sa)) {
 #ifdef NEWCOUNTER
-	  bb->incSuspCount ();
-	  scheduleWakeup (bb, OK);
+	  scheduleThread (new Thread (sa->getPriority (), bb, OK));
 #else
+	  does not work;
 	  scheduleSolve(bb);
 #endif
 	}
@@ -1114,64 +1130,28 @@ void AM::decSolveThreads(Board *bb)
   incSolveThreads(bb,-1);
 }
 
-void AM::setExtSuspension(Board *varHome, Suspension *susp)
+#ifdef DEBUG_CHECK
+/*
+ *  Just check whether the 'bb' is located beneath some (possibly dead) 
+ * solve board;
+ */
+Bool AM::isInSolveDebug (Board *bb)
 {
-  Board *bb = currentBoard;
-  Bool wasFound = NO;
-  Assert(!varHome->isCommitted());
-
-  while (bb != varHome) {
-    Assert(!bb->isRoot());
-    Assert(!bb->isCommitted() && !bb->isFailed());
+  while (!bb->isRoot()) {
+    Assert(!bb->isCommitted());
     if (bb->isSolve()) {
+      Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
-      sa->addSuspension(susp);
-      wasFound = OK;
+      if (!sa->isCommitted()) {
+	return (OK);
+      }
     }
     bb = bb->getParentFast();
   }
-  if (wasFound == OK)
-    susp->setExtSusp ();
+
+  return (NO);
 }
-
-// expects susp to be external
-Bool AM::_checkExtSuspension (Suspension *susp)
-{
-  Assert(susp->isExtSusp());
-  
-  Board *sb = susp->getBoardFast();
-
-  sb = sb->getSolveBoard();
-  
-  Bool wasFound = (sb != 0);
-  while (sb) {
-    Assert(sb->isSolve());
-    
-    SolveActor *sa = SolveActor::Cast(sb->getActor());
-    if (isStableSolve(sa)) {
-#ifdef NEWCOUNTER
-      sb->incSuspCount ();
-      scheduleWakeup (sb, OK);
-#else
-      scheduleSolve(sb);
 #endif
-      /*
-       * Note:
-       *  The observation is that some actors which have
-       *  imposed instability could be discarded by reduction
-       *  of other such actors. It means, that the stability
-       *  condition can not be COMPLETELY controlled by the 
-       *  absence of active threads; 
-       * Note too:
-       *  If the node is not yet stable, it means that there
-       *  are other external suspension(s) and/or threads.
-       *  Therefore it need not be waked.
-       */
-    }
-    sb=sa->getBoardFast()->getSolveBoard();
-  }
-  return wasFound;
-}
 
 Bool AM::isStableSolve(SolveActor *sa)
 {
@@ -1187,7 +1167,6 @@ Bool AM::isStableSolve(SolveActor *sa)
 /* ------------------------------------------------------------------------
  * Threads
  *
- * memory optimization: threadsFreeList
  * running thread: currentThread
  * toplevel: rootThread and toplevelQueue
  * ------------------------------------------------------------------------ */
@@ -1195,89 +1174,6 @@ Bool AM::isStableSolve(SolveActor *sa)
 void AM::pushDebug(Chunk *def, int arity, RefsArray args)
 {
   currentThread->pushDebug(new OzDebug(def,arity,args));
-}
-
-void AM::scheduleSuspCont(Board *bb, int prio, Continuation *c,
-			  Bool wasExtSusp)
-{
-  Thread *th = newThread(prio,bb);
-  if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    incSolveThreads(bb);
-  }
-  th->pushCont(c->getPC(),c->getY(),c->getG(),
-	       c->getX(),c->getXSize(), NO);
-  scheduleThread(th);
-}
-
-void AM::scheduleSuspCCont(Board *bb, int prio,
-			   CFuncContinuation *c, Bool wasExtSusp,
-			   Suspension *s)
-{
-  Thread *th = newThread(prio,bb);
-  if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    incSolveThreads(bb);
-  }
-  th->pushCFunCont(c->getCFunc(),s,c->getX(),c->getXSize(),NO);
-  scheduleThread(th);
-}
-
-
-// create a new thread after wakeup (nervous)
-void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
-{
-  Assert(!bb->isCommitted());
-  Thread *th = newThread(bb->getActor()->getPriority(),bb);
-  if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    incSolveThreads(bb);
-  }
-  th->pushNervous();
-  bb->setNervous();
-  scheduleThread(th);
-}
-
-Thread *AM::createThread(int prio)
-{
-  Thread *tt = newThread(prio,currentBoard);
-
-#ifdef NEWCOUNTER
-  currentBoard->incSuspCount();
-#endif
-  if (currentSolveBoard != (Board *) NULL) {
-    incSolveThreads (currentSolveBoard);
-  }
-  IncfProfCounter(procCounter,sizeof(Thread));
-  scheduleThread(tt);
-  return tt;
-}
-
-
-/*
- * wake up a thread suspended on the reduction of a conditional actor
- *
- * - remove all local tasks from stack
- * - reschedule if suspended
- */
-void AM::cleanUpThread(Thread *tt)
-{
-  /*
-   * remove all local tasks
-   */
-  Board *bb=tt->getBoardFast();
-  while (currentBoard != bb) {
-    if (!tt->discardLocalTasks()) {
-      error("cleanUpThread: impossible");
-    }	
-    bb=bb->getParentFast();
-  }
-  tt->setBoard(currentBoard);
-
-  if (tt->isSuspended()) {
-    scheduleThread(tt);
-    tt->unsetSuspended();
-    if (currentSolveBoard) {
-      incSolveThreads(currentSolveBoard);
-    }
-  }
 }
 
 /*
@@ -1301,7 +1197,8 @@ public:
 void AM::pushToplevel(ProgramCounter pc)
 {
   Assert(rootThread->isEmpty());
-  rootBoard->incSuspCount();
+  // kost@ : MOD!!! TODO?
+  // rootBoard->incSuspCount();
   rootThread->pushCont(pc,toplevelVars,NULL,NULL,0,OK);
   if (rootThread!=currentThread && !isScheduled(rootThread)) {
     scheduleThread(rootThread);
@@ -1309,7 +1206,7 @@ void AM::pushToplevel(ProgramCounter pc)
 }
 
 /*
- * in dispose: check if there more toplevel tasks
+ * in dispose: check if there are more toplevel tasks
  */
 void AM::checkToplevel()
 {

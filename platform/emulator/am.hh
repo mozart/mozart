@@ -18,43 +18,17 @@
 
 #include <setjmp.h>
 
+#include "types.hh"
+
 #include "tagged.hh"
 #include "term.hh"
 #include "constter.hh"
 
-#include "actor.hh"
-#include "board.hh"
-
-#include "hashtbl.hh"
-
-#include "suspensi.hh"
-#include "variable.hh"
-
-#include "opcodes.hh"
-# include "codearea.hh"
-
-#include "statisti.hh"
-
 #include "stack.hh"
-#  include "taskstk.hh"
-
+#include "taskstk.hh"
 #include "trail.hh"
-#include "bignum.hh"
 
-#include "records.hh"
-
-#include "builtins.hh"
-#include "compiler.hh"
-#include "debug.hh"
-#include "os.hh"
-#include "thread.hh"
 #include "thrspool.hh"
-#include "verbose.hh"
-#include "cell.hh"
-#include "objects.hh"
-
-#include "dllstack.hh"
-# include "solve.hh"
 
 // -----------------------------------------------------------------------
 
@@ -75,7 +49,6 @@ enum BFlag {
 };
 
 enum JumpReturns {
-  NOEXCEPTION = 0,
   SEGVIO = 1,
   BUSERROR = 2
 };
@@ -129,7 +102,7 @@ public:
   TaggedRef suspendVarList;
   void emptySuspendVarList(void) { suspendVarList = makeTaggedNULL(); }
   void addSuspendVarList(TaggedRef * t);
-  void suspendOnVarList(Suspension *susp);
+  void suspendOnVarList(Thread *thr);
 
   void suspendInline(int n,
 		     OZ_Term A,OZ_Term B=makeTaggedNULL(),
@@ -142,25 +115,9 @@ public:
 
   void printBoards();
 
-  //
-  //  schedule various kinds of jobs;
-  void scheduleSuspCont(Board *bb, int prio, Continuation *c,
-			Bool wasExtSusp);
-  void scheduleSuspCCont(Board *bb, int prio,
-			 CFuncContinuation *c, Bool wasExtSusp,
-			 Suspension *s=0);
-#ifndef NEWCOUNTER
-  void scheduleSolve(Board *b);
-#endif
-  void scheduleWakeup(Board *b, Bool wasExtSusp);
-
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
-
-  Thread *createThread(int prio);
-  void cleanUpThread(Thread *tt);
-  Thread *getJob();
 
   int catchError() { return setjmp(engineEnvironment); }
 public:
@@ -209,20 +166,19 @@ public:
   Bool emulateHookOutline(Abstraction *def=NULL,
 			  int arity=0, TaggedRef *arguments=NULL);
   Bool hookCheckNeeded();
-  Suspension *mkSuspension();
+  Thread *mkSuspThread ();
   void suspendCond(AskActor *aa);
 
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
 
-  
   Bool isToplevel();
   Bool isToplevelFailure();
 
   void gc(int msgLevel);  // ###
   void doGC();
   Bool idleGC();
-// coping of trees (and terms);
+  // coping of trees (and terms);
   Board* copyTree (Board* node, Bool *isGround);
 
   void awakeIOVar(TaggedRef var);
@@ -262,7 +218,6 @@ public:
   void pushTaskOutline(ProgramCounter pc,
 		       RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
-  void pushNervous();
   void pushSolve();
   void pushLocal();
 
@@ -279,19 +234,11 @@ public:
   SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				 SuspList * suspList, PropCaller calledBy);
   BFlag isBetween(Board * to, Board * varHome);
-  void setExtSuspension (Board *varHome, Suspension *susp);
-private:
-  Bool _checkExtSuspension(Suspension * susp);
-public:
-  Bool checkExtSuspension(Suspension * susp) {
-    if (susp->isExtSusp())
-      return _checkExtSuspension(susp);
-    return NO;
-  }
   void incSolveThreads (Board *bb,int n=1);
   void decSolveThreads (Board *bb);
+  DebugCode (Bool isInSolveDebug (Board *bb););
 
-// debugging --> see file ../builtins/debug.C
+  // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);
   State setValue(TaggedRef feature, TaggedRef value);
 
@@ -316,9 +263,39 @@ public:
 
 extern AM am;
 
-#ifdef OUTLINE
-void updateExtSuspension(Board *varHome, Suspension *susp);
-#else
+#include "dllstack.hh"
+
+#include "actor.hh"
+#include "board.hh"
+
+#include "hashtbl.hh"
+
+#include "statisti.hh"
+
+#include "lps.hh"
+
+#include "thread.hh"
+#include "susplist.hh"
+#include "variable.hh"
+
+#include "solve.hh"
+
+#include "opcodes.hh"
+#include "codearea.hh"
+
+#include "bignum.hh"
+
+#include "records.hh"
+
+#include "builtins.hh"
+#include "compiler.hh"
+#include "debug.hh"
+#include "os.hh"
+#include "verbose.hh"
+#include "cell.hh"
+#include "objects.hh"
+
+#ifndef OUTLINE
 #include "am.icc"
 #endif
 

@@ -19,21 +19,21 @@
 
 
 /*
- * - if you ever change this check POPTASK, ie. in other words:
- *   keep your hands off this definition if you don't
- *   fully understand the macro POPTASK
- * - there are 4 tag bits  */
+ * - if you ever change this then check POPTASK, 
+ *  i.e. in other words: keep your hands off this definition 
+ *  if you don't fully understand the macro POPTASK
+ * - there are 4 tag bits  
+ */
 enum ContFlag {
   C_CONT       = 0,  // a continuation without X registers
   C_XCONT      = 1,  // a continuation with    X registers
-  C_NERVOUS    = 2,  // check for stability & distribution after solved
-  C_CFUNC_CONT = 3,  // a continuation  to call a c-function
-  C_DEBUG_CONT = 4,  // a continuation for debugging
-  C_CALL_CONT  = 5,  // an application
-  C_JOB        = 6,  // job marker
-  C_SOLVE      = 7,  // the SOLVE combinator
-  C_LOCAL      = 8,  // a local computation space
-  C_EXCEPT_HANDLER = 9 
+  C_CFUNC_CONT = 2,  // a continuation  to call a c-function
+  C_DEBUG_CONT = 3,  // a continuation for debugging
+  C_CALL_CONT  = 4,  // an application
+  C_JOB        = 5,  // job marker
+  C_SOLVE      = 6,  // the SOLVE combinator
+  C_LOCAL      = 7,  // a local computation space
+  C_EXCEPT_HANDLER = 8 
 };
 
 
@@ -118,9 +118,6 @@ public:
   void gc(TaskStack *newstack);
   void gcRecurse();
 
-  // for debugging
-  TaggedRef TaskStack::DBGmakeList();
-
   void pushCall(Chunk *pred, RefsArray  x, int i)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
@@ -139,20 +136,17 @@ public:
     push(ToPointer(C_EXCEPT_HANDLER), NO);
   }
 
-  void pushNervous() { push(ToPointer(C_NERVOUS)); }
   void pushSolve()   { push(ToPointer(C_SOLVE)); }
   void pushLocal()   { push(ToPointer(C_LOCAL)); }
 
-  void pushCFunCont(OZ_CFun f, Suspension* s,
-		    RefsArray  x, int i, Bool copy)
+  void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
-    ensureFree(4);
+    ensureFree(3);
 
     Assert(MemChunks::areRegsInHeap(x, i));
     push(i>0 ? (copy ? copyRefsArray(x, i) : x) : NULL, NO);
-    push(s, NO);
     push((TaskStackEntry)f,NO);
     push(ToPointer(C_CFUNC_CONT), NO);
   }
@@ -204,7 +198,7 @@ public:
   }
 
   int getSeqSize();
-  int hasJob();
+  DebugCode (int hasJobDebug (););
   void copySeq(TaskStack *newStack,int size);
   static int frameSize(ContFlag);
 
