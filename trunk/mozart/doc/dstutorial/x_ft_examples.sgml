@@ -612,13 +612,13 @@ up after 10 tries.
    end
 </chunk>
 
-<SECTION><TITLE>A fault-tolerant broadcast channel service</TITLE>
+<SECTION><TITLE>A fault-tolerant broadcast channel</TITLE>
 
 <P>We can use the fault-tolerant stationary object
 (see <ptr to="fault.tolerant.stationary.objects">)
-to define a simple open fault-tolerant broadcase channel service.
-This can be used as part of the implementation of
-an IRC application.
+to define a simple open fault-tolerant broadcast channel.
+This is a useful abstraction; for example it
+can be used as the heart of a chat tool such as IRC.
 The service has a client/server structure
 and is aware of permanent crashes of clients or the server.
 In case of a client crash, the system continues to work.
@@ -765,7 +765,7 @@ end
 for unregistering, to the user-defined handler procedure,
 and to its user identification.
 
-<P>A user accesses the channel service only through a client. 
+<P>A user accesses the broadcast channel only through a client. 
 The client provides
 the user with a method for sending a message through the channel
 and a method for leaving the channel.
@@ -824,10 +824,10 @@ meth broadcast(SenderID Msg)
     Sync
     proc {DoConcurrentForAll Ls PrevSync FinalSync}
        case Ls
-       of L|Ls then
+       of L|Ls2 then
        NewSync in
           thread {P L} PrevSync=NewSync end
-          {DoConcurrentForAll Ls NewSync FinalSync}
+          {DoConcurrentForAll Ls2 NewSync FinalSync}
        [] nil then
           PrevSync=FinalSync
        end
@@ -875,7 +875,8 @@ end
 
 <P>The non-fault-tolerant version of <ptr to="channel.definition">
 is easily extended to detect client and server crashes.
-We give the small extensions to the client and server definitions.
+This section
+gives the small extensions to the client and server definitions.
 
 <SUBSUBSECTION><TITLE>Client definition</TITLE>
 
