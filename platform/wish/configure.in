@@ -80,10 +80,10 @@ case "$platform" in
         : ${WINDLLDIR=$windlldir}
         for i in tcl80.dll tk80.dll msvcrt.dll; do
           dll=$WINDLLDIR/$i
-          AC_MSG_CHECKING(checking DLL $dll)
+          AC_MSG_CHECKING(for DLL $dll)
           if test -f $dll
           then AC_MSG_RESULT(yes)
-          else AC_MSG_ERROR(required DLL  $dll include files not found)
+          else AC_MSG_ERROR(required DLL $dll not found)
           fi
         done
    ;;
@@ -99,7 +99,7 @@ AC_SUBST(SRCS)
 AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
 
-AC_MSG_CHECKING(checking for S.u.S.E. Linux)
+AC_MSG_CHECKING(for S.u.S.E. Linux)
 if test -f "/sbin/SuSEconfig"
 then
   OZSUSE=yes
@@ -263,12 +263,12 @@ oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
 OZ_CHECK_HEADER_PATH(tcl8.0.h,
     AC_DEFINE(HAVE_TCL8_0_H),
     OZ_CHECK_HEADER_PATH(tcl.h,,
-            AC_MSG_ERROR(required tcl8.0.h/tcl.h include file not found)))
+            AC_MSG_ERROR(required tcl8.0.h or tcl.h include file not found)))
 
 OZ_CHECK_LIB_PATH(tcl8.0, Tcl_Init, ,
     OZ_CHECK_LIB_PATH(tcl, Tcl_Init, ,
         OZ_CHECK_LIB_PATH(tcl80, Tcl_Init, ,
-            AC_MSG_ERROR(required lib "-ltcl80/tcl" not found))))
+            AC_MSG_ERROR(required tcl80 or tcl library not found))))
 
 AC_SUBST(oz_tcl_lib_tcl_dir)
 
