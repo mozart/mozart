@@ -231,6 +231,27 @@ void CodeArea::printDef(ProgramCounter PC)
           toC(file),line,PC);
 }
 
+TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
+{
+  TaggedRef file, comment;
+  int line, abspos;
+  ProgramCounter pc;
+
+  pc = definitionStart(PC);
+  if (pc == NOCODE) {
+    return OZ_atom("toplevel");
+  }
+
+  Reg reg;
+  ProgramCounter next;
+  PrTabEntry *pred;
+
+  getDefinitionArgs(pc,reg,next,file,line,pred);
+
+  return OZ_mkTupleC("proc",4,OZ_atom(pred ? pred->getPrintName() : "???"),
+                     file,OZ_int(line),OZ_int(PC));
+}
+
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
 {
   ProgramCounter ret = definitionEnd(from);

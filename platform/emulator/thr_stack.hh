@@ -91,6 +91,8 @@ public:
 
   void printTaskStack(ProgramCounter pc = NOCODE,
                       Bool verbose = NO, int depth = 10000);
+  TaggedRef dbgGetTaskStack(ProgramCounter pc = NOCODE,
+                       int depth = 10000);
 
   Bool isEmpty(TaskStackEntry t) { return (t == emptyTaskStackEntry); }
   Bool isEmpty()                 { return isEmpty(*(tos-1)); }

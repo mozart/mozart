@@ -97,7 +97,7 @@ private:
   } state;
 
 protected:
-  TaggedRef group;
+  Group *group;
 
   //  Note that other flags are removed;
   void markDeadThread () {
@@ -128,11 +128,11 @@ public:
 
   TaggedRef getExceptionHandler()
   {
-    return group ? tagged2Group(group)->getExceptionHandler() : 0;
+    return group ? group->getExceptionHandler() : 0;
   }
 
-  void setGroup(TaggedRef gr) { Assert(isGroup(gr)); group = gr; }
-  TaggedRef getGroup() { return group; }
+  void setGroup(Group *gr) { group = gr; }
+  Group *getGroup() { return group; }
 
   //  priority;
   int getPriority() {
@@ -539,6 +539,8 @@ public:
   //
   void printTaskStack (ProgramCounter pc,
                        Bool verbose = NO, int depth = 10000);
+
+  TaggedRef dbgGetTaskStack(ProgramCounter pc, int depth = 10000);
 
   //
   //  Gets the size of the stack segment with the top-level job,

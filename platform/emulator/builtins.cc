@@ -4079,7 +4079,7 @@ OZ_C_proc_begin(BInewGroup,2)
 
   Group *gr = new Group(am.currentThread->getGroup());
   Thread *tt = new Thread (am.currentThread->getPriority(),am.currentBoard);
-  tt->setGroup(makeTaggedConst(gr));
+  tt->setGroup(gr);
   tt->pushCall(proc,0,0);
   am.scheduleThread(tt);
   return OZ_unify(out,makeTaggedConst(gr));
@@ -4107,7 +4107,7 @@ OZ_C_proc_begin(BInewGroupHdl,3)
   Group *gr = new Group(am.currentThread->getGroup());
   gr->setExceptionHandler(hdl);
   Thread *tt = new Thread (am.currentThread->getPriority(),am.currentBoard);
-  tt->setGroup(makeTaggedConst(gr));
+  tt->setGroup(gr);
   tt->pushCall(proc,0,0);
   am.scheduleThread(tt);
   return OZ_unify(out,makeTaggedConst(gr));
@@ -6226,10 +6226,11 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIbiExceptionHandler,2)
+OZ_C_proc_begin(BIbiExceptionHandler,3)
 {
   OZ_Term val=OZ_getCArg(0);
   OZ_Term list=OZ_getCArg(1);
+  OZ_Term traceBack=OZ_getCArg(2);
 
   if (ozconf.errorVerbosity > 0) {
     errorHeader();
@@ -6282,6 +6283,18 @@ OZ_C_proc_begin(BIbiExceptionHandler,2)
             }
           }
         }
+      } else if (literalEq(lab,OZ_atom("hf"))) {
+        message("ERROR: Failure\n");
+        OZ_Term arg0 = OZ_getArg(val,0);
+        message("In Expression: {%s",
+                OZ_isAtom(arg0) ?
+                tagged2Literal(deref(arg0))->getPrintName():toC(arg0));
+        OZ_Term args = OZ_getArg(val,1);
+        while (OZ_isCons(args)) {
+          printf(" %s",toC(OZ_head(args)));
+          args = OZ_tail(args);
+        }
+        printf("}\n");
       } else if (literalEq(lab,OZ_atom("type")) ||
                  literalEq(lab,OZ_atom("ftype"))) {
         message("ERROR: Illtyped application\n");
@@ -6314,12 +6327,26 @@ OZ_C_proc_begin(BIbiExceptionHandler,2)
       }
     }
     if (ozconf.errorVerbosity > 1) {
-      am.currentThread->printTaskStack(NOCODE);
+      message("\n");
+      message("Stack dump:\n");
+      message("\n");
+      while (OZ_isCons(traceBack)) {
+        OZ_Term tt=OZ_head(traceBack);
+        OZ_Term lab = OZ_label(tt);
+        if (OZ_eq(lab,OZ_atom("proc"))) {
+          message(" In procedure %s",toC(OZ_getArg(tt,0)));
+          printf(" (File %s",toC(OZ_getArg(tt,1)));
+          printf(", Line %s",toC(OZ_getArg(tt,2)));
+          printf(", PC = %s)\n",toC(OZ_getArg(tt,3)));
+        } else {
+          message("[  %s ]\n",toC(tt));
+        }
+        traceBack=OZ_tail(traceBack);
+      }
     }
     errorTrailer();
   }
-  OZ_Term var = OZ_newVariable();
-  OZ_suspendOn(var);
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -6669,7 +6696,7 @@ BIspec allSpec2[] = {
   {"System.setErrorDepth", 2, BIsetErrorDepth, 0},
   {"System.setErrorWidth", 2, BIsetErrorWidth, 0},
 
-  {"biExceptionHandler",         2, BIbiExceptionHandler,         0},
+  {"biExceptionHandler",         3, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
   {0,0,0,0}
 };

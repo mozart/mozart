@@ -200,7 +200,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 
 
 #define HF_BI                                                           \
-   HF_FAIL(OZ_mkTupleC("type",2,                                        \
+   HF_FAIL(OZ_mkTupleC("hf",2,                                  \
                        OZ_atom(builtinTab.getName((void *) biFun)),     \
                        makeListOfX(predArity,X)));
 
@@ -2835,22 +2835,17 @@ LBLsuspendThread:
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
-       Thread *tt = e->currentThread;
-       if (e->currentThread && e->currentThread->isRThread()) {
-         if (PC != NOCODE) e->pushTask(PC,Y,G);
-       } else {
-         tt = new Thread (ozconf.defaultPriority,am.currentBoard);
-         am.scheduleThread(tt);
-       }
+       TaggedRef traceBack = nil();
 
-       Group *gr = 0;
-       TaggedRef tmpGr = tt->getGroup();
-       if (tmpGr) { gr = tagged2Group(tmpGr); }
-
-       TaggedRef pred = 0;
-       if (gr) {
-         pred = gr->getExceptionHandler();
+       if (e->currentThread) {
+         traceBack=e->currentThread->dbgGetTaskStack(PC);
        }
+       Thread *tt = new Thread (ozconf.systemPriority,am.currentBoard);
+       tt->setGroup(0);
+       am.scheduleThread(tt);
+
+       Group *gr = e->currentThread ? e->currentThread->getGroup() : 0;
+       TaggedRef pred = gr ? gr->getExceptionHandler() : 0;
 
        if (!pred) {
          pred = e->defaultExceptionHandler;
@@ -2858,17 +2853,14 @@ LBLsuspendThread:
 
        /* exception is already in X[0],
           but should somehow be reflected !!! */
-       RefsArray argsArray = allocateY(2);
+       RefsArray argsArray = allocateY(3);
        argsArray[0]=X[0];
        argsArray[1]=e->dbgGetSpaces();
-       tt->pushCall(deref(pred),argsArray,2);
+       argsArray[2]=traceBack;
+       tt->pushCall(deref(pred),argsArray,3);
 
-       if (e->currentThread && e->currentThread->isRThread()) {
-         goto LBLpopTask;
-       } else {
-         e->currentThread=(Thread *) NULL;
-         goto LBLstart;
-       }
+       e->currentThread=(Thread *) NULL;
+       goto LBLstart;
      }
    }
 

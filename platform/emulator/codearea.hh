@@ -112,6 +112,7 @@ public:
   CodeArea(CompStream *fd, int size, ProgramCounter &pc);
 
   static void printDef(ProgramCounter PC);
+  static TaggedRef dbgGetDef(ProgramCounter PC);
   static void getDefinitionArgs(ProgramCounter PC,
                                 Reg &reg, ProgramCounter &next, TaggedRef &file,
                                 int &line, PrTabEntry *&pred);

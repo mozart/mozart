@@ -579,13 +579,14 @@ class Group : public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef exceptionHandler;
-  TaggedRef parent;
+  Group *parent;
 public:
-  Group(TaggedRef p) : ConstTerm(Co_Group), parent(p)
+  Group *gcGroup();
+
+  Group(Group *p) : ConstTerm(Co_Group), parent(p)
   {
     if (parent) {
-      Assert(isGroup(parent));
-      exceptionHandler = tagged2Group(parent)->getExceptionHandler();
+      exceptionHandler = parent->getExceptionHandler();
     } else {
       exceptionHandler = 0;
     }
@@ -594,7 +595,7 @@ public:
   void      setExceptionHandler(TaggedRef hdl) { exceptionHandler = hdl; }
   TaggedRef getExceptionHandler()              { return exceptionHandler; }
 
-  TaggedRef getParent()  { return parent; }
+  Group *getParent()  { return parent; }
 };
 
 /*===================================================================
@@ -1734,5 +1735,6 @@ Space *tagged2Space(TaggedRef term)
  *=================================================================== */
 
 char *toC(OZ_Term);
+TaggedRef reverseC(TaggedRef l);
 
 #endif

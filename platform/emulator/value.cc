@@ -170,6 +170,24 @@ TaggedRef append(TaggedRef x,TaggedRef y)
   return ret;
 }
 
+/*
+ * destructive reverse of a list
+ */
+TaggedRef reverseC(TaggedRef l)
+{
+  TaggedRef out=nil();
+  l=deref(l);
+  while (isCons(l)) {
+    LTuple *lt=tagged2LTuple(l);
+    TaggedRef next=deref(lt->getTail());
+    lt->setTail(out);
+    out = l;
+    l = next;
+  }
+  Assert(isNil(l));
+  return out;
+}
+
 TaggedRef Object::getArityList()
 {
   TaggedRef ret = getFreeRecord()->getArityList();

@@ -1001,7 +1001,8 @@ Thread *Thread::gcThread ()
   if (isRunnable () || hasStack ()) {
     ThreadList::add (newThread);
   }
-  gcTagged(group,newThread->group);
+  newThread->group = group->gcGroup();
+
   ptrStack.push (newThread, PTR_THREAD);
 
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
@@ -1859,6 +1860,25 @@ void TaskStack::gc(TaskStack *newstack)
 //                           NODEs
 //*********************************************************************
 
+Group *Group::gcGroup ()
+{
+  GCMETHMSG ("Group::gcGroup");
+
+  if (!this) return 0;
+  CHECKCOLLECTED (ToInt32 (parent), Group*);
+
+  // COUNT(group);
+  Group *newGroup = (Group *) gcRealloc (this, sizeof (*this));
+  GCNEWADDRMSG (newGroup);
+
+  gcTagged(exceptionHandler,newGroup->exceptionHandler);
+  newGroup->parent=parent->gcGroup();
+
+  storeForward (&parent, newGroup);
+
+  return (newGroup);
+}
+
 void ConstTerm::gcConstRecurse()
 {
   varCount++;
@@ -1951,7 +1971,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Group:
     {
       Group *gr = (Group *) this;
-      gcTagged(gr->parent, gr->parent);
+      gr->parent = gr->parent->gcGroup();
       gcTagged(gr->exceptionHandler, gr->exceptionHandler);
       break;
     }
