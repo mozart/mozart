@@ -533,7 +533,6 @@ void initBuiltins() {
   BI_send         = getBuiltin_oz("Port.send"           );
   BI_exchangeCell = getBuiltin_oz("Cell.exchangeFun"    );
   BI_assign       = getBuiltin_oz("Object.'<-'"         );
-  BI_Delay        = getBuiltin_oz("Time.delay"          );
   BI_Unify        = getBuiltin_oz("Value.'='"           );
 
   // Exclusively used (not in builtin table)

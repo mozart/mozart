@@ -58,7 +58,12 @@ void FlowControler::addElement(TaggedRef e){
     ptr = ptr->next;}
   FlowControlElement* newE = new FlowControlElement(e);
   if(first==NULL){
+#ifdef DENYS_EVENTS
+    static OZ_Term dp_event_flowControl = oz_atom("dp.flowControl");
+    OZ_eventPush(dp_event_flowControl);
+#else
     am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
+#endif
     first = last = newE;
     return;}
   last->next = newE;
@@ -69,7 +74,12 @@ void FlowControler::addElement(TaggedRef e,DSite* s,int i){
   FlowControlElement *ptr = first;
   FlowControlElement* newE = new FlowControlElement(e,s,i);
   if(first==NULL){
+#ifdef DENYS_EVENTS
+    static OZ_Term dp_event_flowControl = oz_atom("dp.flowControl");
+    OZ_eventPush(dp_event_flowControl);
+#else
     am.setMinimalTaskInterval((void*)this,ozconf.perdioFlowBufferTime);
+#endif
     first = last = newE;
     return;}
   last->next = newE;
@@ -90,6 +100,31 @@ void FlowControlElement::wakeUp(){
     printf("flow Control release\n");
     sendRedirect(site,index,ele);}
   free();}
+
+#ifdef DENYS_EVENTS
+Bool FlowControler::doTask(){
+  FlowControlElement *ptr,*back;
+
+  while(first!=NULL && first->canSend()){
+    ptr=first;
+    first=ptr->next;
+    ptr->wakeUp();}
+  if(first==NULL){
+    last=NULL;
+    return FALSE;}
+  back=first;
+  ptr=back->next;
+  while(ptr!=NULL){
+    if(ptr->canSend()){
+      back->next=ptr->next;
+      ptr->wakeUp();
+      ptr=back->next;}
+    back=ptr;
+    ptr=back->next;}
+  last=back;
+  return TRUE;
+}
+#else
 
 void FlowControler::wakeUpExecute(unsigned int t){
   FlowControlElement *ptr,*back;
@@ -114,7 +149,7 @@ void FlowControler::wakeUpExecute(unsigned int t){
     ptr=back->next;}
   last=back;
 }
-
+#endif
 
 void FlowControler::gcEntries(){
  FlowControlElement *ptr = first;
@@ -124,6 +159,7 @@ void FlowControler::gcEntries(){
         ptr->site->makeGCMarkSite();}
       ptr = ptr->next;}}
 
+#ifndef DENYS_EVENTS
 Bool FlowControlCheck(unsigned long time, void *v){
   return flowControler->wakeUpCheck(time);
 }
@@ -132,3 +168,10 @@ Bool FlowControlExecute(unsigned long time, void *v){
   flowControler->wakeUpExecute(time);
   return TRUE;
 }
+#else
+OZ_BI_define(BIdp_task_flowControl,0,1)
+{
+  OZ_RETURN_BOOL(flowControler->doTask());
+}
+OZ_BI_end
+#endif

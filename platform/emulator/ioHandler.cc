@@ -161,10 +161,28 @@ void oz_io_deSelect(int fd)
   oz_io_deSelect(fd,SEL_WRITE);
 }
 
+#ifdef DENYS_EVENTS
+static int io_event_sent = 0;
+#endif
+
 // called if IOReady (signals are blocked)
 void oz_io_handle()
+#ifdef DENYS_EVENTS
+{
+  if (io_event_sent) return;
+  {
+    static TaggedRef io = oz_atom("io");
+    OZ_eventPush(io);
+    io_event_sent = 1;
+  }
+}
+OZ_BI_define(io_handler,1,0)
+#endif
 {
   am.unsetSFlag(IOReady);
+#ifdef DENYS_EVENTS
+  io_event_sent = 0;
+#endif
   int numbOfFDs = osFirstSelect();
 
   // find the nodes to awake
@@ -186,12 +204,21 @@ void oz_io_handle()
       }
     }
   }
+#ifdef DENYS_EVENTS
+  return PROCEED;
 }
+OZ_BI_end
+#else
+}
+#endif
 
 //
 // called from signal handler
 void oz_io_check()
 {
+#ifdef DENYS_EVENTS
+  if (am.isSetSFlag(IOReady)) return;
+#endif
   int numbOfFDs = osCheckIO();
   if (!am.isCritical() && (numbOfFDs > 0)) {
     am.setSFlag(IOReady);

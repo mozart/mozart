@@ -1076,8 +1076,10 @@ void initDPCore()
   flowControler    = new FlowControler();
   msgBufferManager = new MsgBufferManager();
 
+#ifndef DENYS_EVENTS
   if(!am.registerTask((void*)flowControler, FlowControlCheck, FlowControlExecute))
     OZ_error("Unable to register FlowControl task");
+#endif
 
   BI_defer = makeTaggedConst(new Builtin("defer", 0, 0, BIdefer, OK));
   globalWatcher = NULL;
@@ -1138,11 +1140,24 @@ Tertiary* getTertiaryFromOTI(int i){
 
 #ifndef MODULES_LINK_STATIC
 
+#ifdef DENYS_EVENTS
+OZ_BI_proto(BIdp_task_tmpDown);
+OZ_BI_proto(BIdp_task_myDown);
+OZ_BI_proto(BIdp_task_probe);
+OZ_BI_proto(BIdp_task_flowControl);
+#endif
+
 extern "C"
 {
   OZ_C_proc_interface * mod_int_DPB(void)
   {
     static OZ_C_proc_interface i_table[] = {
+#ifdef DENYS_EVENTS
+      {"task.tmpDown",0,1,BIdp_task_tmpDown},
+      {"task.myDown",0,1,BIdp_task_myDown},
+      {"task.probe",0,1,BIdp_task_probe},
+      {"task.flowControl",0,1,BIdp_task_flowControl},
+#endif
       {0,0,0,0}
     };
 

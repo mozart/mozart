@@ -3200,34 +3200,16 @@ OZ_BI_define(BIalarm,2,0) {
   if (t <= 0)
     return oz_unify(NameUnit,out);
 
+#ifdef DENYS_EVENTS
+  TaggedRef var = oz_newVariable();
+  OZ_eventPush(OZ_mkTupleC("delay",2,OZ_in(0),var));
+  OZ_in(0)=makeTaggedSmallInt(-1);
+  return oz_unify(out,var);
+#else
   am.insertUser(t,oz_cons(NameUnit,out));
   return PROCEED;
+#endif
 } OZ_BI_end
-
-
-OZ_BI_define(BIdelay,1,0) {
-  oz_declareIntIN(0,t);
-
-  if (!oz_onToplevel()) {
-    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("io"));
-  }
-
-  if (t <= 0)
-    return PROCEED;
-
-  TaggedRef var = oz_newVariable();
-
-  am.insertUser(t,oz_cons(NameUnit,var));
-  DEREF(var, var_ptr, var_tag);
-
-  if (isVariableTag(var_tag)) {
-    am.addSuspendVarList(var_ptr);
-    OZ_in(0) = makeTaggedSmallInt(-1);
-    return SUSPEND;
-  }
-  return PROCEED;
-} OZ_BI_end
-
 
 OZ_BI_define(BItimeTime,0,1) {
   time_t ttt;

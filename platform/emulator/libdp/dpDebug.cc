@@ -127,12 +127,19 @@ OZ_BI_define(BIstartTmp,2,0)
 
 TaggedRef BI_startTmp;
 
-void wakeUpTmp(int i, int time) {
-  PD((TCPCACHE,"Starting DangelingThread"));
-  Thread *tt = oz_newThread(LOW_PRIORITY);
-  tt->pushCall(BI_startTmp, oz_int(i), oz_int(time));
-  tt->pushCall(BI_Delay, oz_int(time));
-}
+// DENYS: BI_Delay is now removed from the system
+// Delay is defined in Base in terms of Alarm.  I am
+// commenting out the function below with Erik's agreement.
+//
+// void wakeUpTmp(int i, int time) {
+//   PD((TCPCACHE,"Starting DangelingThread"));
+//   Thread *tt = oz_newThread(LOW_PRIORITY);
+//   tt->pushCall(BI_startTmp, oz_int(i), oz_int(time));
+//   tt->pushCall(BI_Delay, oz_int(time));
+// }
+//
+// The code above can be more easily written in Oz:
+// thread {Delay T} {StartTmp I T} end
 
 
 void _PD(int i,char *format,...)

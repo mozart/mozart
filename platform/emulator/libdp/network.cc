@@ -1560,11 +1560,14 @@ class TcpCache {
   int close_size;
   int open_size;
   int max_size;
+#ifndef DENYS_EVENTS
   unsigned long tmpTime;
   unsigned long probeTime;
   unsigned long myTime;
   unsigned long curTime;
+#endif
 
+#ifndef DENYS_EVENTS
   void setMinTime(int time){
     int testTime = time + 1;
     if(time < min(min(tmpTime?WKUPTMP_TIME:testTime,
@@ -1573,22 +1576,49 @@ class TcpCache {
       //printf("SettingMinTime %d\n",time);
       am.setMinimalTaskInterval((void*)this, time);}
   }
+#endif
+
+#ifdef DENYS_EVENTS
+  static OZ_Term dp_event_tmpDown;
+  static OZ_Term dp_event_probe;
+  static OZ_Term dp_event_myDown;
+public:
+  static void init()
+    {
+      dp_event_tmpDown = oz_atom("dp.tmpDown");
+      dp_event_probe   = oz_atom("dp.probe");
+      dp_event_myDown  = oz_atom("dp.myDown");
+    }
+private:
+#endif
 
   void newTmpDwn(){
+#ifdef DENYS_EVENTS
+    OZ_eventPush(dp_event_tmpDown);
+#else
     if(!tmpTime){
       setMinTime(WKUPTMP_TIME);
       tmpTime=curTime+WKUPTMP_TIME;}
+#endif
   }
 
   void newProbe(){
+#ifdef DENYS_EVENTS
+    OZ_eventPush(dp_event_probe);
+#else
     if(!probeTime){
       setMinTime(WKUPPRB_TIME);
     probeTime=curTime+WKUPPRB_TIME;}
+#endif
   }
   void newMyDwn(){
+#ifdef DENYS_EVENTS
+    OZ_eventPush(dp_event_myDown);
+#else
     if(!myTime)   {
       setMinTime(WKUPMYC_TIME);
       myTime=curTime+WKUPMYC_TIME;}
+#endif
   }
 
 
@@ -1766,9 +1796,11 @@ public:
     openCon             = TRUE;
     probes              = FALSE;
     shutDwn             = FALSE;
+#ifndef DENYS_EVENTS
     tmpTime             = 0;
     myTime              = 0;
     probeTime           = 0;
+#endif
     PD((TCPCACHE,"max_size:%d",max_size));}
 
   void nowAccept(){
@@ -1885,15 +1917,23 @@ public:
   Bool openMyClosedConnection(unsigned long time);
   Bool startProbe();
 
+#ifndef DENYS_EVENTS
   void wakeUp(unsigned long time);
   Bool checkWakeUp(unsigned long time);
+#endif
 };
 
+#ifdef DENYS_EVENTS
+OZ_Term TcpCache::dp_event_tmpDown;
+OZ_Term TcpCache::dp_event_probe;
+OZ_Term TcpCache::dp_event_myDown;
+#endif
 
 /************************************************************/
 /* SECTION 12a:  WakeUps of the TCP-cache                   */
 /************************************************************/
 
+#ifndef DENYS_EVENTS
 void  TcpCache::wakeUp(unsigned long time){
   if (myTime && myTime<time)
     if( openMyClosedConnection(time))
@@ -1928,6 +1968,7 @@ Bool wakeUpTcpCache(unsigned long time, void *v){
 
 Bool checkTcpCache(unsigned long time, void *v){
   return tcpCache->checkWakeUp(time);}
+#endif
 
 Bool TcpCache::openTmpBlockedConnection(){
   PD((TCPCACHE,"OpeningTmps %x %x",tmpHead, tmpTail));
@@ -1940,6 +1981,14 @@ Bool TcpCache::openTmpBlockedConnection(){
     w->clearTmpDwn();
     w->open();}
   return tmpHead!=NULL;}
+
+#ifdef DENYS_EVENTS
+OZ_BI_define(BIdp_task_tmpDown,0,1)
+{
+  OZ_RETURN_BOOL(tcpCache->openTmpBlockedConnection());
+}
+OZ_BI_end
+#endif
 
 Bool TcpCache::openMyClosedConnection(unsigned long time){
   /*  if(time)
@@ -1972,6 +2021,14 @@ Bool TcpCache::openMyClosedConnection(unsigned long time){
     w->open();}
   return myHead!=NULL;}
 
+#ifdef DENYS_EVENTS
+OZ_BI_define(BIdp_task_myDown,0,1)
+{
+  OZ_RETURN_BOOL(tcpCache->openMyClosedConnection(am.getEmulatorClock()));
+}
+OZ_BI_end
+#endif
+
 Bool TcpCache::startProbe(){
   if(probeHead!=NULL){
     WriteConnection *w = ((WriteConnection *) getLast(probeHead, probeTail));
@@ -1988,7 +2045,13 @@ Bool TcpCache::startProbe(){
   return probeHead!=NULL;
 }
 
-
+#ifdef DENYS_EVENTS
+OZ_BI_define(BIdp_task_probe,0,1)
+{
+  OZ_RETURN_BOOL(tcpCache->startProbe());
+}
+OZ_BI_end
+#endif
 
 /************************************************************/
 /* SECTION 12b:  Exported to Perdio                           */
@@ -4070,7 +4133,15 @@ void initNetwork()
   int tcpFD;
   PD((TCP_INTERFACE,"Init Network"));
 
-
+#ifdef DENYS_EVENTS
+  TcpCache::init();
+  {
+    // this event causes the event handler to start
+    // perdio task processing threads
+    static OZ_Term dp_event_init = oz_atom("dp.init");
+    OZ_eventPush(dp_event_init);
+  }
+#endif
   writeConnectionManager = new WriteConnectionManager();
   readConnectionManager = new ReadConnectionManager();
   netMsgBufferManager = new NetMsgBufferManager();
@@ -4100,14 +4171,16 @@ void initNetwork()
   OZ_registerAcceptHandler(tcpFD,acceptHandler,NULL);
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
   tcpCache->nowAccept();  // can be removed ??
-
+#ifndef DENYS_EVENTS
   if(!am.registerTask((void*) tcpCache, checkTcpCache, wakeUpTcpCache))
     OZ_error("Unable to register TCPCACHE task");
-
+#endif
 
 #ifdef SLOWNET
+#ifndef DENYS_EVENTS
   TSC = new TSCQueue();
   if(!am.registerTask(NULL, checkIncTimeSlice, incTimeSlice))
+#endif
     OZ_error("Unable to register TSC task");
   TSC_LATENCY = 300;
   TSC_TOTAL_A = 4000;

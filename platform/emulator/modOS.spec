@@ -23,190 +23,195 @@
 ###
 
 %builtins_all =
-(
-    'getDir'            => { in  => ['+virtualString'],
+    (
+     'getDir'           => { in  => ['+virtualString'],
                              out => ['+[string]'],
                              BI  => unix_getDir},
 
-    'stat'              => { in  => ['+virtualString'],
+     'stat'             => { in  => ['+virtualString'],
                              out => ['+record'],
                              BI  => unix_stat},
 
-    'chDir'             => { in  => ['+virtualString'],
+     'chDir'            => { in  => ['+virtualString'],
                              out => [],
                              BI  => unix_chDir},
 
-    'getCWD'            => { in  => [],
+     'getCWD'           => { in  => [],
                              out => ['+atom'],
                              BI  => unix_getCWD},
 
-    'open'              => { in  => ['+virtualString','+[atom]','+[atom]'],
+     'open'             => { in  => ['+virtualString','+[atom]','+[atom]'],
                              out => ['+int'],
                              BI  => unix_open},
 
-    'fileDesc'  => { in  => ['+atom'],
-                             out => ['+int'],
-                             BI  => unix_fileDesc},
+     'fileDesc' => { in  => ['+atom'],
+                     out => ['+int'],
+                     BI  => unix_fileDesc},
 
-    'close'             => { in  => ['+int'],
+     'close'            => { in  => ['+int'],
                              out => [],
                              BI  => unix_close},
 
-    'write'             => { in  => ['+int','+virtualString'],
+     'write'            => { in  => ['+int','+virtualString'],
                              out => ['+value'],
                              BI  => unix_write},
 
-    'read'              => { in  => ['+int','+int','value','value','int'],
+     'read'             => { in  => ['+int','+int','value','value','int'],
                              out => [],
                              BI  => unix_read},
 
-    'lSeek'             => { in  => ['+int','+int','+atom'],
+     'lSeek'            => { in  => ['+int','+int','+atom'],
                              out => ['+int'],
                              BI  => unix_lSeek},
 
-    'unlink'            => { in  => ['+virtualString'],
+     'unlink'           => { in  => ['+virtualString'],
                              out => [],
                              BI  => unix_unlink},
 
-    'readSelect'        => { in  => ['+int'],
+     'readSelect'       => { in  => ['+int'],
                              out => [],
                              BI  => unix_readSelect},
 
-    'writeSelect'       => { in  => ['+int'],
+     'writeSelect'      => { in  => ['+int'],
                              out => [],
                              BI  => unix_writeSelect},
 
-    'acceptSelect'      => { in  => ['+int'],
+     'acceptSelect'     => { in  => ['+int'],
                              out => [],
                              BI  => unix_acceptSelect},
 
-    'deSelect'  => { in  => ['+int'],
-                             out => [],
-                             BI  => unix_deSelect},
+     'deSelect' => { in  => ['+int'],
+                     out => [],
+                     BI  => unix_deSelect},
 
-    'system'            => { in  => ['+virtualString'],
+     'system'           => { in  => ['+virtualString'],
                              out => ['+int'],
                              BI  => unix_system},
 
-    'getEnv'            => { in  => ['+virtualString'],
+     'getEnv'           => { in  => ['+virtualString'],
                              out => ['+value'],
                              BI  => unix_getEnv},
 
-    'putEnv'            => { in  => ['+virtualString','+virtualString'],
+     'putEnv'           => { in  => ['+virtualString','+virtualString'],
                              out => [],
                              BI  => unix_putEnv},
 
-    'time'              => { in  => [],
+     'time'             => { in  => [],
                              out => ['+int'],
                              BI  => unix_time},
 
-    'gmTime'            => { in  => [],
+     'gmTime'           => { in  => [],
                              out => ['+record'],
                              BI  => unix_gmTime},
 
-    'localTime' => { in  => [],
+     'localTime'        => { in  => [],
                              out => ['+record'],
                              BI  => unix_localTime},
 
-    'srand'             => { in  => ['+int'],
+     'srand'            => { in  => ['+int'],
                              out => [],
                              BI  => unix_srand},
 
-    'rand'              => { in  => [],
+     'rand'             => { in  => [],
                              out => ['+int'],
                              BI  => unix_rand},
 
-    'randLimits'        => { in  => [],
+     'randLimits'       => { in  => [],
                              out => ['+int','+int'],
                              BI  => unix_randLimits},
 
-    'socket'            => { in  => ['+atom','+atom','+virtualString'],
+     'socket'           => { in  => ['+atom','+atom','+virtualString'],
                              out => ['+int'],
                              BI  => unix_socket},
 
-    'bind'              => { in  => ['+int','+int'],
+     'bind'             => { in  => ['+int','+int'],
                              out => [],
                              BI  => unix_bindInet},
 
-    'listen'            => { in  => ['+int','+int'],
+     'listen'           => { in  => ['+int','+int'],
                              out => [],
                              BI  => unix_listen},
 
-    'connect'   => { in  => ['+int','+virtualString','+int'],
-                             out => [],
-                             BI  => unix_connectInet},
+     'connect'  => { in  => ['+int','+virtualString','+int'],
+                     out => [],
+                     BI  => unix_connectInet},
 
-    'accept'            => { in  => ['+int'],
+     'accept'           => { in  => ['+int'],
                              out => ['+int','+string','+int'],
                              BI  => unix_acceptInet},
 
-    'shutDown'  => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => unix_shutDown},
+     'shutDown' => { in  => ['+int','+int'],
+                     out => [],
+                     BI  => unix_shutDown},
 
-    'send'              => { in  => ['+int','+virtualString','+[atom]'],
+     'send'             => { in  => ['+int','+virtualString','+[atom]'],
                              out => ['+value'],
                              BI  => unix_send},
 
-    'sendTo'            => { in  => ['+int','+virtualString','+[atom]',
+     'sendTo'           => { in  => ['+int','+virtualString','+[atom]',
                                      '+virtualString','+int'],
                              out => ['+value'],
                              BI  => unix_sendToInet},
 
-    'receiveFrom'       => { in  => ['+int','+int','+[atom]','value','value'],
+     'receiveFrom'      => { in  => ['+int','+int','+[atom]','value','value'],
                              out => ['+string','+int','+int'],
                              BI  => unix_receiveFromInet},
 
-    'getSockName'       => { in  => ['+int'],
+     'getSockName'      => { in  => ['+int'],
                              out => ['+int'],
                              BI  => unix_getSockName},
 
-    'getHostByName'     => { in  => ['+virtualString'],
+     'getHostByName'    => { in  => ['+virtualString'],
                              out => ['+record'],
                              BI  => unix_getHostByName},
 
-    'pipe'              => { in  => ['+virtualString','value'],
+     'pipe'             => { in  => ['+virtualString','value'],
                              out => ['+int','+int#int'],
                              BI  => unix_pipe},
 
-    'exec'              => { in  => ['+virtualString','value','+bool'],
+     'exec'             => { in  => ['+virtualString','value','+bool'],
                              out => ['+int'],
                              BI  => unix_exec},
 
-    'tmpnam'            => { in  => [],
+     'tmpnam'           => { in  => [],
                              out => ['+string'],
                              BI  => unix_tmpnam},
 
-    'wait'              => { in  => [],
+     'wait'             => { in  => [],
                              out => ['+int','+int'],
                              BI  => unix_wait},
 
-    'getServByName'     => { in  => ['+virtualString','+virtualString'],
+     'getServByName'    => { in  => ['+virtualString','+virtualString'],
                              out => ['+int'],
                              BI  => unix_getServByName},
 
-    'uName'             => { in  => [],
+     'uName'            => { in  => [],
                              out => ['+record'],
                              BI  => unix_uName},
 
-    'getpwnam'          => { in  => ['+virtualString'],
+     'getpwnam'         => { in  => ['+virtualString'],
                              out => ['+record'],
                              BI  => unix_getpwnam},
 
-    'signal'            => { in  => ['+atom','+procedure'],
+     'signal'           => { in  => ['+atom','+procedure'],
                              out => [],
                              BI  => unix_signalHandler},
 
-    'kill'              => { in  => ['+int','+atom'],
+     'kill'             => { in  => ['+int','+atom'],
                              out => ['+int'],
                              BI  => unix_kill},
 
-    'setpgid'           => { in  => ['+int','+int'],
-                             out => ['+int'],
-                             BI  => unix_setpgid },
+     'setpgid'           => { in  => ['+int','+int'],
+                              out => ['+int'],
+                              BI  => unix_setpgid },
 
-    'getPID'            => { in  => [],
-                             out => ['+int'],
-                             BI  => unix_getpid },
+     'getPID'            => { in  => [],
+                              out => ['+int'],
+                              BI  => unix_getpid },
 
- );
+
+     'ioHandler'        => { in  => ['value'],
+                             out => [],
+                             BI  => io_handler,
+                             ifdef => DENYS_EVENTS },
+     );
