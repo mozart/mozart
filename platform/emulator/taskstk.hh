@@ -182,6 +182,11 @@ public:
     pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), i>0 ? copyRefsArray(x, i) : NULL);
   }
 
+  void pushCallNoCopy(TaggedRef pred, RefsArray  x)
+  {
+    pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), x);
+  }
+
   void pushLTQ(SolveActor *sa)   { pushFrame(C_LTQ_Ptr,sa,0); }
   void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
   void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
@@ -326,6 +331,11 @@ public:
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
 
     pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), i>0 ? copyRefsArray(x, i) : NULL);
+  }
+
+  void pushCallNoCopy(TaggedRef pred, RefsArray  x)
+  {
+    pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), x);
   }
 
   void pushLTQ(SolveActor *sa)   { pushFrame(C_LTQ_Ptr,sa,0); }
