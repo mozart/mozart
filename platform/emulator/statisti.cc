@@ -287,7 +287,7 @@ void Statistics::printIdle(FILE *fd)
 void Statistics::initGcMsg(int level)
 {
   if (level > 0) {
-    printf("Heap garbage collection... ");
+    printf("Heap garbage collection...");
     fflush(stdout);
   }
 
