@@ -602,7 +602,7 @@ in
 	    Gui,DeleteToEnd(stack W FrameNr+1)
 	    Gui,DeleteLine(stack W FrameNr)
 	 else skip end
-	 case {IsSpecialFrameName FrameName} then
+	 case Frame.kind \= 'call' then
 	    Gui,Enqueue(stack
 			o(W insert LineEnd Arrow # FrameNr # ' ' # FrameName
 			  q(StackTag LineActTag LineColTag)))
@@ -626,7 +626,7 @@ in
 	    Gui,Enqueue(stack o(W tag conf ProcTag font:BoldFont))
 	 end
 	 case FrameArgs of unit then
-	    case {IsSpecialFrameName FrameName} then skip
+	    case Frame.kind \= 'call' then skip
 	    else Gui,Enqueue(stack
 			     o(W insert LineEnd ' ...'
 			       q(StackTag LineActTag LineColTag)))
@@ -650,7 +650,7 @@ in
 	 end
 	 Gui,Enqueue(stack
 		     o(W insert LineEnd
-		       case {IsSpecialFrameName FrameName} then
+		       case Frame.kind \= 'call' then
 			  '' else '}'
 		       end # case UpToDate then nil else
 				' (source has changed)' end #
