@@ -51,38 +51,30 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var,
 inline
 Bool AM::fastUnify(TaggedRef A, TaggedRef B, Bool prop)
 {
-  COUNT(totalUnify);
-  if (!prop) goto bomb;
+  TaggedRef proto = currentUVarPrototype();
+  TaggedRef term1 = A;
+  TaggedRef term2 = B;
   
-  {
-    TaggedRef proto = currentUVarPrototype();
-    TaggedRef term1 = A;
-    TaggedRef term2 = B;
-    
-    DEREF(term1,term1Ptr,_1);
-    
-    if (proto == term1) {
-      DEREF(term2,_2,_3);
-      if (!isAnyVar(term2)) {
-	COUNT(varVarUnify);
-	doBind(term1Ptr,term2);
-	goto exit;	
-      }
-    } 
-    DEREF(term2,term2Ptr,_2);
-    if (proto == term2 && !isAnyVar(term1)) {
-      doBind(term2Ptr,term1);
+  DEREF(term1,term1Ptr,tag1);
+  DEREF(term2,term2Ptr,tag2);
+  
+  if (!isAnyVar(term2)) {
+    if (proto == term1 && prop) {
+      doBind(term1Ptr,term2);
       goto exit;
     }
-    if (term1==term2 && !isAnyVar(term1)) {
+    if (term1==term2) {
       goto exit;
     }
+  } else if (!isAnyVar(term1) && proto==term2 && prop) {
+    doBind(term2Ptr,term1);
+    goto exit;
   }
- bomb:
-  COUNT1(totalUnify,-1);
+
   return unify(A,B,prop);
 
  exit:
+  COUNT(totalUnify);
   return OK;
 }
 
