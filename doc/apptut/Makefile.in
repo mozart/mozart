@@ -12,11 +12,12 @@ SGMLSRCS = \
         conc-cheap.sgml conc-patterns.sgml
 HTMLEXTRAFILES =
 CHUNKFILES = \
-        chat-server.oz chat-client.oz chat-gui.oz
+        chat-server.oz chat-client.oz chat-gui.oz Webget.oz
 
 include ../Makefile.common
 
 all:: $(CHUNKFILES)
+quick:: $(CHUNKFILES)
 
 chat-server.oz: $(MAIN) $(SGMLSRCS)
         $(DOCIFY) --type=chunk --in=$< --out='Chat Server' >$@
@@ -24,6 +25,8 @@ chat-client.oz: $(MAIN) $(SGMLSRCS)
         $(DOCIFY) --type=chunk --in=$< --out='Chat Client' >$@
 chat-gui.oz: $(MAIN) $(SGMLSRCS)
         $(DOCIFY) --type=chunk --in=$< --out='Chat GUI' >$@
+Webget.oz: $(MAIN) $(SGMLSRCS)
+        $(DOCIFY) --type=chunk --in=$< --out='Webget.oz' >$@
 
 install:: $(CHUNKFILES)
         for i in $(CHUNKFILES); do $(INSTALL_FILE) $$i $(DOCDIR); done
