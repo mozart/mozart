@@ -510,7 +510,7 @@ the variable `oz-pedantic-spaces' is non-nil."
 	 (oz-make-menu-gnu oz-mode-map
 			   (list (cons "menu-bar" (cons nil list)))))
 	(oz-lucid-emacs
-	 (setq oz-menubar (oz-make-menu-lucid list)))))
+	 (setq oz-menubar (car (oz-make-menu-lucid list))))))
 
 (defun oz-make-menu-gnu (map list)
   (if list
@@ -1853,8 +1853,7 @@ if that value is non-nil."
   (setq major-mode 'oz-mode)
   (setq mode-name "Oz")
   (oz-mode-variables)
-  (if (and oz-lucid-emacs (not (assoc "Oz" current-menubar)))
-      (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
+  (oz-set-lucid-menu)
   (set (make-local-variable 'oz-gump-indentation) nil)
   (oz-set-font-lock-defaults)
   (if (and oz-want-font-lock window-system)
@@ -1889,22 +1888,22 @@ if that value is non-nil."
   (setq major-mode 'oz-gump-mode)
   (setq mode-name "Oz-Gump")
   (oz-mode-variables)
-  (if (and oz-lucid-emacs (not (assoc "Oz" current-menubar)))
-      (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
+  (oz-set-lucid-menu)
   (set (make-local-variable 'oz-gump-indentation) t)
   (oz-gump-set-font-lock-defaults)
   (if (and oz-want-font-lock window-system)
       (font-lock-mode 1))
   (run-hooks 'oz-mode-hook))
 
-(defun oz-insert-menu (menu list)
-  "Add the Oz menu to the menu bar.
-Take care not to move it too much to the right."
-  (cond ((null list)
-	 menu)
-	((null (car list))
-	 (cons (car menu) list))
-	(t (cons (car list) (oz-insert-menu menu (cdr list))))))
+(defun oz-set-lucid-menu ()
+  "Add the Oz menu to the menu bar."
+  (if oz-lucid-emacs
+      (progn
+	(setq mode-popup-menu (cons "Oz Mode Menu" (cdr oz-menubar)))
+	(if (and (featurep 'menubar) current-menubar)
+	    (progn
+	      (set-buffer-menubar current-menubar)
+	      (add-submenu nil oz-menubar))))))
 
 ;;}}}
 ;;{{{ Lisp Paragraph Filling Commands
@@ -2430,8 +2429,7 @@ The ARG is interpreted just as with \\[recenter]."
 	 nil)
     (set (make-local-variable 'compilation-last-buffer)
 	 (current-buffer))
-    (if oz-lucid-emacs
-	(set-buffer-menubar (append current-menubar oz-menubar)))
+    (oz-set-lucid-menu)
     (erase-buffer)))
 
 (defun oz-create-emulator-buffer (buffer)
@@ -2441,8 +2439,7 @@ The ARG is interpreted just as with \\[recenter]."
 	(setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
     (oz-set-mouse-error-key oz-emulator-buffer-map)
     (use-local-map oz-emulator-buffer-map)
-    (if oz-lucid-emacs
-	(set-buffer-menubar (append current-menubar oz-menubar)))
+    (oz-set-lucid-menu)
     (erase-buffer)))
 
 (defun oz-toggle-compiler ()
