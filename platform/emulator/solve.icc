@@ -50,7 +50,7 @@ void SolveActor::inject(int prio, TaggedRef proc) {
   args[0] = makeTaggedRef(&solveVar);
 
   Thread *it = new Thread(prio, solveBoard, OK);
-  it->pushCall(makeTaggedConst((Abstraction *) tagValueOf(proc)), args, 1);
+  it->pushCall(proc, args, 1);
   am.scheduleThread(it);
 }
 
