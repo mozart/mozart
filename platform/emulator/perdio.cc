@@ -104,7 +104,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <string.h>
+#include <strings.h>
 #include "runtime.hh"
 #include "ip.hh"
 #include "codearea.hh"
@@ -125,7 +125,7 @@ class ByteStream;
 class DebtRec;
 DebtRec* debtRec;
 
-TaggedRef currentURL;
+TaggedRef currentURL=0;
 
 
 void marshallTerm(Site* sd,OZ_Term t, ByteStream *bs);
@@ -4670,7 +4670,7 @@ public:
   {}
 };
 
-OZ_C_proc_begin(BIexport,2)
+OZ_C_proc_begin(BInewGate,2)
 {
   OZ_declareArg(0,in);
   OZ_declareArg(1,out);
@@ -4760,6 +4760,57 @@ int loadURL(TaggedRef url, OZ_Term out)
   return loadURL(s,out);
 }
 
+int loadFile(char *filename,OZ_Term out)
+{
+  int fd = open(filename,O_RDONLY);
+  if (fd < 0) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"open",1,
+                    oz_atom(OZ_unixError(errno)));
+  }
+
+  ByteStream *bs=bufferManager->getByteStream();
+  bs->getSingle();
+
+  int max;
+  int len=0;
+  BYTE *pos=bs->initForRead(max);
+
+  while (TRUE) {
+    int ret=osread(fd,pos,max);
+    if (ret < 0) {
+      if (errno==EINTR) continue;
+      return oz_raise(E_ERROR,OZ_atom("perdio"),"read",1,
+                      oz_atom(OZ_unixError(errno)));
+    }
+    len+=ret;
+    if (ret < max) {
+      bs->afterRead(ret);
+      break;
+    }
+    bs->afterRead(max);
+    pos=bs->beginRead(max);
+  }
+
+  if (len==0) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"fileEmpty",1,
+                      oz_atom(filename));
+  }
+
+  bs->beforeInterpret(0);
+  bs->unmarshalBegin();
+
+  OZ_Term val = unmarshallTerm(bs);
+
+  bs->unmarshalEnd();
+
+  bs->afterInterpret();
+
+  bufferManager->freeByteStream(bs);
+  SiteUnify(val,out);
+  return PROCEED;
+}
+
+OZ_Term loadHook;
 int loadURL(char *url, OZ_Term out)
 {
   switch (url[0]) {
@@ -4768,47 +4819,7 @@ int loadURL(char *url, OZ_Term out)
       if (strncmp(url,"file:",5)!=0) goto bomb;
 
       char *filename = url+5;
-
-      int fd = open(filename,O_RDONLY);
-      if (fd < 0) {
-        return oz_raise(E_ERROR,OZ_atom("perdio"),"open",1,
-                        oz_atom(OZ_unixError(errno)));
-      }
-
-      ByteStream *bs=bufferManager->getByteStream();
-      bs->getSingle();
-
-      int max;
-      BYTE *pos=bs->initForRead(max);
-      int len=0;
-
-      while (TRUE) {
-        int ret=osread(fd,pos,max);
-        if (ret < 0) {
-          if (errno==EINTR) continue;
-          return oz_raise(E_ERROR,OZ_atom("perdio"),"read",1,
-                          oz_atom(OZ_unixError(errno)));
-        }
-        if (ret < max) {
-          bs->afterRead(ret);
-          break;
-        }
-        bs->afterRead(max);
-        pos=bs->beginRead(max);
-      }
-
-      bs->beforeInterpret(0);
-      bs->unmarshalBegin();
-
-      OZ_Term val = unmarshallTerm(bs);
-
-      bs->unmarshalEnd();
-
-      bs->afterInterpret();
-
-      bufferManager->freeByteStream(bs);
-      SiteUnify(val,out);
-      return PROCEED;
+      return loadFile(filename,out);
     }
   case 'o':
     {
@@ -4872,9 +4883,36 @@ int loadURL(char *url, OZ_Term out)
     }
   }
 bomb:
-  return oz_raise(E_ERROR,OZ_atom("perdio"),"url protocol error",1,
-                  oz_atom(url));
+  if (!loadHook) {
+    return oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,
+                    oz_atom("loadHook"));
+  }
+
+  Thread *tt = am.mkRunnableThread(DEFAULT_PRIORITY, am.currentBoard);
+  RefsArray args = allocateRefsArray(2,NO);
+  args[0]=oz_atom(url);
+  args[1]=out;
+  tt->pushCall(loadHook, args, 2);
+  am.scheduleThread (tt);
+  return PROCEED;
 }
+
+OZ_C_proc_begin(BIsetLoadHook,1)
+{
+  oz_declareNonvarArg(0,pred);
+  if (!isAbstraction(pred) || tagged2Const(pred)->getArity()!=2) {
+    oz_typeError(0,"Procedure/2 (no builtin)");
+  }
+
+  if (loadHook) {
+    return oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+                    oz_atom("setLoadHook"));
+  }
+
+  loadHook = pred;
+  return PROCEED;
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIload,2)
 {
@@ -4887,6 +4925,17 @@ OZ_C_proc_begin(BIload,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIloadFile,2)
+{
+  OZ_declareVirtualStringArg(0,filename);
+  OZ_declareArg(1,out);
+
+  INIT_IP(0);
+
+  return loadFile(filename,out);
+}
+OZ_C_proc_end
+
 BIspec perdioSpec[] = {
   {"startSite",      2, BIStartSite, 0},
   {"connectSite",    3, BIConnectSite, 0},
@@ -4895,9 +4944,11 @@ BIspec perdioSpec[] = {
   {"startServer",    2, BIstartServer, 0},
   {"startClient",    3, BIstartClient, 0},
 
-  {"save",    2, BIsave, 0},
-  {"load",    2, BIload, 0},
-  {"export",    2, BIexport, 0},
+  {"save",        2, BIsave, 0},
+  {"load",        2, BIload, 0},
+  {"loadFile",    2, BIloadFile, 0},
+  {"setLoadHook", 1, BIsetLoadHook, 0},
+  {"newGate",      2, BInewGate, 0},
 
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
@@ -4927,6 +4978,7 @@ void BIinitPerdio()
   Assert(sizeof(PortManager)==sizeof(PortLocal));
 
   currentURL=0;
+  loadHook=0;
 }
 
 
