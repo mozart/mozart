@@ -277,7 +277,7 @@ local
    fun {PickFont Fs Scale}
       case Fs of nil then False
       [] F|Fr then
-	 case F.scale=<Scale then F else {PickFont Fr Scale} end
+	 case F.scale=<Scale then F.name else {PickFont Fr Scale} end
       end
    end
 
@@ -333,7 +333,6 @@ in
 
       meth scale(Scale)
 	 Font     = {PickFont NumberFonts Scale}
-	 FontName = case Font==False then False else Font.name end
 	 Canvas   = self.canvas
 	 Numbers  = Canvas.numbers
       in
@@ -345,9 +344,9 @@ in
 	       elsecase CF==False then
 		  {ForAll @NumberNodes
 		   proc {$ Node}
-		      {Node redrawNumber(Scale FontName)}
+		      {Node redrawNumber(Scale Font)}
 		   end}
-	       else {Numbers tk(itemconf font:FontName)}
+	       else {Numbers tk(itemconf font:Font)}
 	       end
 	    end
 	    curFont <- Font
@@ -426,10 +425,7 @@ in
       meth getNumber(Node ?N)
 	 NewNumber = @CurNumber
       in
-	 {Node getNumber(@scale case @curFont of !False then False
-				elseof CF then CF.name
-				end
-			 NewNumber ?N)}
+	 {Node getNumber(@scale @curFont NewNumber ?N)}
 	 case NewNumber==N then
 	    CurNumber   <- NewNumber + 1
 	    NumberNodes <- Node|@NumberNodes
@@ -444,6 +440,27 @@ in
 	 {Numbers tk(raise)}
       end
 
+      meth hideNumbers
+	 case @curFont\=False andthen @NumberNodes\=nil then
+	    {self.canvas.numbers tk(delete)}
+	 else true
+	 end
+      end
+
+      meth unhideNumbers
+	 Font    = @curFont
+	 Scale   = @scale
+	 Numbers = @NumberNodes
+      in
+	 case Font\=False andthen Numbers\=nil then
+	    {ForAll @NumberNodes
+	     proc {$ Node}
+		{Node redrawNumber(Scale Font)}
+	     end}
+	 else true
+	 end
+      end
+      
       meth makeDirty(Ns)
 	 {MakeDirty Ns}
       end

@@ -50,7 +50,7 @@ local
       local
 	 fun {FindLeftGaps A Bs PrevGap ?Width}
 	    case Bs of nil then Width=PrevGap nil
-	    [] B|Br then Gap = {FindGap A B} in
+	    [] B|Br then Gap={FindGap A B} in
 	       Gap-PrevGap|{FindLeftGaps {MergeShapes A B Gap} Br Gap ?Width}
 	    end
 	 end
@@ -265,7 +265,9 @@ local
 
 in
 
-   LayoutNodes = c(inner: LayoutNode
-		   leaf:  LayoutLeaf)
+   LayoutNodes = c(choose:    LayoutNode
+		   blocked:   LayoutLeaf
+		   failed:    LayoutLeaf
+		   succeeded: LayoutLeaf)
    
 end

@@ -155,13 +155,13 @@ in
 			     command(label:   'Leftmost'
 				     action:  self # moveFrom(leftMost)
 				     state:   disabled
-				     event:   minus
+				     event:   '<minus>'
 				     key:     '-'
 				     feature: leftMost)
 			     command(label:   'Rightmost'
 				     action:  self # moveFrom(rightMost)
 				     state:   disabled
-				     event :  plus
+				     event :  '<plus>'
 				     key:     '+'
 				     feature: rightMost)
 			     separator
@@ -174,13 +174,13 @@ in
 			     command(label:   'Previous Solution'
 				     action:  self # moveFrom(prevSol)
 				     state:   disabled
-				     event:   less
+				     event:   '<less>'
 				     key:     '<'
 				     feature: prevSol)
 			     command(label:   'Next Solution'
 				     action:  self # moveFrom(nextSol)
 				     state:   disabled
-				     event:   greater
+				     event:   '<greater>'
 				     key:     '>'
 				     feature: nextSol)]
 		      feature:move)
