@@ -29,7 +29,7 @@ import
    Tk
    TkTools
    Listener('class')
-   Browser(browse)
+   Inspector(inspect)
    Emacs(condSend)
 export
    'class': CompilerPanel

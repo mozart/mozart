@@ -59,7 +59,7 @@ local
      ('Access to Values' #
       ('All bold printed Oz values in the stack and the environment' #
        ' windows can be examined by clicking' #
-       ' on them. This will activate the Browser. Moreover, by feeding' #
+       ' on them. This will activate the Inspector. Moreover, by feeding' #
        ' the expression' #
        '\n\n    {Ozcar lastClickedValue($)},' #
        '\n\n you get access to the last clicked value from the OPI.'))
@@ -102,17 +102,17 @@ local
      ('The Stack' #
       ('You can navigate through the stack either by clicking on a ' #
        'specific line or by using the `Up\' and `Down\' (cursor) keys.\n' #
-       '\nYou can browse a variable by clicking ' #
+       '\nYou can inspect a variable by clicking ' #
        'on its type information.'))
 
      LocalEnvTitle #
      ('The Local Environment' #
-      ('You can browse a local variable by clicking ' #
+      ('You can inspect a local variable by clicking ' #
        'on its type information.'))
 
      GlobalEnvTitle #
      ('The Global Environment' #
-      ('You can browse a global variable by clicking ' #
+      ('You can inspect a global variable by clicking ' #
        'on its type information.'))
 
      StepButtonBitmap #
