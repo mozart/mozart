@@ -171,6 +171,35 @@ static long emulatorStartTime = 0;
 
 #endif
 
+#ifndef WINDOWS
+// ===================================================================
+// we save the result of sysconf(_SC_CLK_TCK) in a global variable.
+// this is actually faster than calling sysconf each time.
+//
+// why both inner and outer variables (see below)? because at the
+// moment some Linux installations are suffering from the recent bump
+// of HZ from 100 to 1000 in some new kernels.  glibc is a bit
+// schizophrenic: times(&buffer) returns a number of ticks that needs
+// to be divided by 10*sysconf(_SC_CLK_TCK) yet the clock_t values in
+// the buffer must just be divided by sysconf(_SC_CLK_TCK).  Therefore
+// inner is for the buffer stuff and outer is for the ticks returned
+// by times.
+//
+// configure checks for the bug and, if present, defines
+// CLK_TCK_BUG_RATIO to the integer ratio of outer over inner as
+// observed in its test.
+// ===================================================================
+
+static int    INNER_TICKS_PER_SEC_AS_INT;
+static double INNER_TICKS_PER_SEC_AS_DOUBLE;
+#ifdef CLK_TCK_BUG_RATIO
+static int    OUTER_TICKS_PER_SEC_AS_INT;
+static double OUTER_TICKS_PER_SEC_AS_DOUBLE;
+#else
+#define OUTER_TICKS_PER_SEC_AS_INT    INNER_TICKS_PER_SEC_AS_INT
+#define OUTER_TICKS_PER_SEC_AS_DOUBLE INNER_TICKS_PER_SEC_AS_DOUBLE
+#endif
+#endif
 
 // return current usertime in milliseconds
 unsigned int osUserTime()
@@ -187,7 +216,7 @@ unsigned int osUserTime()
   struct tms buffer;
 
   times(&buffer);
-  return (unsigned int)(buffer.tms_utime*1000.0/(double)sysconf(_SC_CLK_TCK));
+  return (unsigned int)(buffer.tms_utime*1000.0/INNER_TICKS_PER_SEC_AS_DOUBLE);
 #endif
 }
 
@@ -206,7 +235,7 @@ unsigned int osSystemTime()
   struct tms buffer;
 
   times(&buffer);
-  return (unsigned int)(buffer.tms_stime*1000.0/(double)sysconf(_SC_CLK_TCK));
+  return (unsigned int)(buffer.tms_stime*1000.0/INNER_TICKS_PER_SEC_AS_DOUBLE);
 #endif
 }
 
@@ -229,7 +258,7 @@ unsigned int osTotalTime()
 
   struct tms buffer;
   int t = times(&buffer) - emulatorStartTime;
-  return (unsigned int) (t*1000.0/(double)sysconf(_SC_CLK_TCK));
+  return (unsigned int) (t*1000.0/OUTER_TICKS_PER_SEC_AS_DOUBLE);
 
 #endif
 }
@@ -1123,7 +1152,9 @@ char *osinet_ntoa(char *ip)
 #endif
 }
 
-
+#if !defined(WINDOWS) && !defined(SUNOS_SPARC)
+int OUTER_TICKS_PER_10MS_AS_INT;
+#endif
 
 void osInit()
 {
@@ -1181,6 +1212,19 @@ void osInit()
   struct tms buffer;
   emulatorStartTime = times(&buffer);;
 
+#endif
+
+#ifndef WINDOWS
+  INNER_TICKS_PER_SEC_AS_INT = sysconf(_SC_CLK_TCK);
+  INNER_TICKS_PER_SEC_AS_DOUBLE = (double) INNER_TICKS_PER_SEC_AS_INT;
+#ifdef CLK_TCK_BUG_RATIO
+  OUTER_TICKS_PER_SEC_AS_INT = CLK_TCK_BUG_RATIO * INNER_TICKS_PER_SEC_AS_INT;
+  OUTER_TICKS_PER_SEC_AS_DOUBLE = (double) OUTER_TICKS_PER_SEC_AS_INT;
+#endif
+#endif
+
+#if !defined(WINDOWS) && !defined(SUNOS_SPARC)
+  OUTER_TICKS_PER_10MS_AS_INT = OUTER_TICKS_PER_SEC_AS_INT / 100;
 #endif
 }
 
@@ -1674,11 +1718,9 @@ int osgetEpid()
   struct tms buffer;
   do {
     ticks = times(&buffer);
-  } while (ticks==emulatorStartTime);
-  ticks = ticks % sysconf(_SC_CLK_TCK);
+  } while ((ticks-emulatorStartTime)<OUTER_TICKS_PER_10MS_AS_INT);
+  ticks = ticks % 100;
 #endif
-  // kost@ : removed assertion: 'ticks' is unsigned!
-  // Assert(ticks>=0);
   Assert(ticks<100);
   unsigned int pid = (unsigned int) osgetpid();
   // check that the 6 highest bits only sign-extend the 7th highest bit
