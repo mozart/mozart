@@ -21,51 +21,35 @@
 #  WARRANTIES.
 #
 
-RPMROOT=/tmp/rpmroot # usr/src/redhat
+RPMROOT=/usr/src/redhat
 RPMSRC=$RPMROOT/SOURCES
 RPMSPEC=$RPMROOT/SPECS
 TMPDIR=/tmp
-CVSROOT=munchkin:/CVS
-OZDOCHOME=/usr/local/oz/doc
 
 #
 # Dinf destination dir
 #
-if test $# -lt 1
+if test $# -lt 3
 then
-   echo "usage: create-rpm <destination-dir>" 1>&2;
+   echo "usage: create-rpm <src-tar> <doc-tar> <dst-dir>" 1>&2;
    exit 1;
 fi
-DESTDIR=$1
+SRCTAR=$1
+DOCTAR=$2
+DSTDIR=$3
 
 #
-# First step: Generate sources
-#
-
-# Get mozart sources and clean away cvs stuff
-cd $TMPDIR
-cvs -d $CVSROOT get mozart 2>/dev/null 1>/dev/null
-rm -rf ./*/CVS ./*/*/CVS ./*/*/*/CVS ./*/*/*/*/CVS
-rm -rf ./*/.cvsignore ./*/*/.cvsignore ./*/*/*/.cvsignore ./*/*/*/*/.cvsignore
-
 # Find version
-VERSION=`mozart/OZVERSION`-`date +"%m%d%y"`
+#
+
+VERSION=`(echo ${SRCTAR} | sed 's/.*mozart-\(.*-.*\)-src.tar.gz/\1/')`
 BUILD=1
 
-# Source
-tar cf - mozart | gzip -9 -c > ${RPMSRC}/mozart-${VERSION}.tar.gz
-rm -rf $TMPDIR/mozart
 
-# Get precompiled documentation
-cd $TMPDIR
-cp -a ${OZDOCHOME} .
-rm -rf ${TMPDIR}/doc/demo/applets
-rm -rf ${TMPDIR}/doc/tcl8.0-tk8.0-man-html
-rm -f ${TMPDIR}/doc/tcltk
-tar cf - doc | gzip -9 -c > ${RPMSRC}/mozart-doc-${VERSION}.tar.gz
-rm -rf $TMPDIR/doc
+#
+# Build sh files
+#
 
-# Pack config files and put into SOURCES
 cd $TMPDIR
 
 cat > oz.sh <<EOF
@@ -81,6 +65,8 @@ EOF
 chmod a+x oz.sh oz.csh
 tar cf - oz.csh oz.sh | gzip -9 -c > ${RPMSRC}/mozart-profiles.tar.gz
 rm -f oz.sh oz.csh
+
+cp ${SRCTAR} ${DOCTAR} ${RPMSRC}
 
 # Generate redhat spec file
 cd $TMPDIR
@@ -98,8 +84,8 @@ Url: http://mozart.ps.uni-sb.de/
 Group: Development/Languages
 Packager: Christian Schulte <schulte@ps.uni-sb.de>
 
-Source0: mozart-${VERSION}.tar.gz
-Source1: mozart-doc-${VERSION}.tar.gz
+Source0: mozart-${VERSION}-src.tar.gz
+Source1: mozart-${VERSION}-doc.tar.gz
 Source2: mozart-profiles.tar.gz
 
 BuildRoot: /var/tmp/mozart-${VERSION}
@@ -109,13 +95,31 @@ Mozart is an efficient and distributed implementation of Oz.
 
 Mozart is jointly developed by DFKI and SICS.
 
+%package doc
+Summary: Mozart documentation
+Group: Development/Languages
+
+%description doc
+Mozart is an efficient and distributed implementation of Oz.
+
+Documentation
+
+%package contrib
+Summary: Mozart contributions
+Group: Development/Languages
+
+%description contrib
+Mozart is an efficient and distributed implementation of Oz.
+
+Contributed stuff (gdbm, regex, ...)
+
 %prep
 %setup -c -a 1
 %setup -c -D -T -a 2
 
 %build
 cd mozart
-CFLAGS="\$RPM_OPT_FLAGS" CXXFLAGS="\$RPM_OPT_FLAGS" ./configure --prefix=\$RPM_BUILD_ROOT/usr/local/mozart
+CFLAGS="-O0" CXXFLAGS="-O0" ./configure --prefix=\$RPM_BUILD_ROOT/usr/local/mozart
 
 make
 
@@ -148,7 +152,18 @@ rm -rf \$RPM_BUILD_ROOT
 %doc mozart/README mozart/LICENSE mozart/LICENSE.html
 %config /etc/profile.d/oz.sh
 %config /etc/profile.d/oz.csh
-/usr/local/mozart
+/usr/local/mozart/LICENSE
+/usr/local/mozart/LICENSE.html
+/usr/local/mozart/bin
+/usr/local/mozart/cache
+/usr/local/mozart/include
+/usr/local/mozart/platform
+/usr/local/mozart/share
+%files doc
+/usr/local/mozart/doc
+/usr/local/mozart/examples
+%files contrib
+/usr/local/mozart/contrib
 EOF
 
 #
