@@ -58,8 +58,8 @@ local
 	 case     {IsArray X}            then ArrayType
 	 elsecase {BitArray.is X}        then BitArrayType
 	 elsecase {IsThread X}           then ThreadType
-	 elsecase {IsAtom X}           then {System.valueToVirtualString X 0 0}
-	 elsecase {IsBool X}           then {System.valueToVirtualString X 0 0}
+	 elsecase {IsAtom X}             then {Value.toVirtualString X 0 0}
+	 elsecase {IsBool X}             then {Value.toVirtualString X 0 0}
 	 elsecase {IsCell X}             then CellType
 	 elsecase {IsClass X}            then ClassType
 	 elsecase {IsDictionary X}       then DictionaryType
