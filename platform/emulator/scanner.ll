@@ -56,13 +56,13 @@ static void xy_input(char *buf, int &result, const int max_size) {
   // read one line into buf
   int curpos = 0;
   int c = fgetc(xyin);
-  while(c != EOF && c != '\n' && curpos < max_size) {
+  while(c != EOF && c != OZEOF && c != '\n' && curpos < max_size) {
     buf[curpos++] = c;
     c = fgetc(xyin);
   }
   buf[curpos++] = c;
 
-  if (c == EOF) {
+  if (c == EOF || c == OZEOF) {
     if (curpos == 1)   // did we read other chars than EOF?
       result = YY_NULL;
     else
