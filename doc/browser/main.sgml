@@ -194,8 +194,8 @@ Methods of the <<Browser.'class'>> are summarized in the
 <ptr to=sec.browser.applicationBrowsers >.
 </section>
 
-<section id=sec.browser.browsedInformation><title/Browsing
-Constrained Terms: A Look Under The Hood/
+<section id=sec.browser.browsedInformation><title/What Is Browsed: A
+Look Under The Hood/
 <p>
 &Oz; Browser displays the current information about values of variables.
 This information is stated by means of constraints stored in constraint
@@ -218,7 +218,7 @@ value or a record <math/l(l_1\col x_1,\;\ldots,\;l_n\col x_n)/, and
 <math>n_1,\ldots,n_k</math> are integers which are allowed to be an element of a
 finite domain.
 
-<item> Open feature constraints of the form <math/x\deq l(l_1\col x_1,\;\ldots,\;l_n\col x_n\;\ldots)/, where <math/x,\;x_1,\ldots,x_n/ are
+<item> Feature constraints of the form <math/x\deq l(l_1\col x_1,\;\ldots,\;l_n\col x_n\;\ldots)/, where <math/x,\;x_1,\ldots,x_n/ are
 variables.
 </list>
 
@@ -270,9 +270,10 @@ created iteratively; at each step a variable <math>y</math> is extracted from <m
 and one of the following rules is applied:
 <p>
 <list>
-<item> If the constraint store does not contain any binding for <math>y</math>, then
-a leaf node labeled by <math>y</math> is created that represent the variable
-itself. The variable <math>y</math> is added to <math>\P</math>.
+<item> If the constraint store does not contain any binding for or a
+constraint on <math>y</math>, then a leaf node labeled by
+<math>y</math> is created that represent the variable itself. The
+variable <math>y</math> is added to <math>\P</math>.
 
 <item> If there is an equation of the form <math>y\deq z</math>, then
 <math/\{z\}\cap\P/
@@ -295,7 +296,7 @@ node labeled by <math>y</math> is created that represent that record. The variab
 labeled by <math>y</math> is created that represent the corresponding finite
 domain. The variable <math>y</math> is added to <math>\P</math>.
 
-<item> If there is an open feature constraint of the form <math/y\deq
+<item> If there is an feature constraint of the form <math/y\deq
 l(l_1\col x_1,\;\ldots,\;l_n\col x_n\;\ldots)/, then a non-leaf node
 labeled by <math>y</math> is created that represent that partially known record.
 The variable <math>y</math> is added to <math>\P</math>. The set <math/\{x_1,\ldots,x_n\}\cap\P/ is
@@ -374,19 +375,28 @@ chunks, spaces and threads can be requested by setting the <<Names And
 Procedures>> option.
 </section>
 
-<section id=sec.browser.theOutputFormat/<title/The Output Format/
+<section id=sec.browser.theOutputFormat/<title/The Basic Output Format/
 <p>
-In this section the form of tree terms is considered, that is divided
-into the following issues:
+
+This section describes the simplest Oz value's representation the
+Browser supports. In this case the Browser thinks of a value as of a
+tree that leaf nodes are primitive values and non-leaf nodes are
+records. Note that equal subtrees are represented as many times as
+they occur; this is a simplification with respect to the value graph
+described in <ptr to=sec.browser.browsedInformation >. More concise
+representations are discussed in <ptr
+to=sec.browser.detectingOfCoreferencesAndCycles >.
+
+<p>
+The description is divided into the following issues:
+
 <list>
 <item> Browsing of arbitrarily deep and wide terms.
 <item> Using parenthesis to override the term constructor precedences.
 <item> Printing layout for compound terms.
 </list>
 
-The form of cyclic terms is presented in
-<ptr to=sec.browser.detectingOfCoreferencesAndCycles >.
-
+<p>
 <index/terms<and>viewing forms/
 <index/viewing forms<and>completely/
 <index/viewing forms<and>partially/
@@ -491,13 +501,12 @@ the <<Options>> menu.  All terms in the buffer can be removed via the
 be removed via the <<Clear All But Last>> entry.
 </section>
 
-<section id=sec.browser.detectingOfCoreferencesAndCycles><title/The Form of Cyclic terms/
-<p>
+<section id=sec.browser.detectingOfCoreferencesAndCycles><title/Represntation of Rational Trees/
 
-In cyclic terms one must represent edge(s) in the constraint graph that
-starts in a node below its target. Such edges are also called
-<Q/backward/ edges. Cyclic terms are built accordingly to the following
-rules:
+<p>
+The Browser can represent a cyclic tree, i.e. a tree-like graph that
+contains <Q/backward/ edges (edges starting in a node below its
+target). A cyclic tree representation is built as follows:
 <list>
 <item> A subterm representing a target node obtains a unique prefix
 of the form <<C>><math>N</math><<=>>, where <math>N</math> is a number.
@@ -513,21 +522,19 @@ For example, the value of <math>X</math> determined by the expression
   in {Browse X}
 </code>
 is browsed as << <![RCDATA[C1=a(f1:C1 f2:<N: `N`> f3:<N: `N`>)]]> >>.
+
 <p>
 <index/representation<and>tree/
 <index/representation<and>graph/
 <index/representation<and>minimal graph/
-The Browser does not use normally the graph construction algorithm given
-in <ptr to=sec.browser.browsedInformation >, but its weaker version
-without cycle checking. In this case a constraint graph to be browsed is
-considered to be a tree.
-<p>
-There is also a further representation option&nbsp;&emdash; building a <Q/minimal/
-graph. In this case equal subgraphs are represented only once; all
-subsequent subgraphs that are equal to an already created
-one <note foot/Two graphs are equal here iff they are unifiable./
-are represented as a reference to it. For instance, the Browser output
-for the example above would be << <![RCDATA[R1=a(f1:R1 f2:R2=<N: `N`> f3:R2)]]> >>.
+A textual representation of a value graph described in <ptr
+to=sec.browser.browsedInformation > is generated using the <Q/minimal
+graph/ representation option.  Informally speaking, in this mode equal
+subgraphs are represented only once; all subsequent subgraphs that are
+equal to an already created one <note foot/Two graphs are equal here
+iff they are unifiable./ are represented as a reference to it. For
+instance, the Browser output for the example above would be <<
+<![RCDATA[R1=a(f1:R1 f2:R2=<N: `N`> f3:R2)]]> >>.
 <p>
 <index class=menu/Options<and>Representation<and>Tree/
 <index class=menu/Options<and>Representation<and>Graph/
@@ -662,7 +669,7 @@ browsed as <<`A`>>, and not as <<A>>.
 extended format, without any respect to the current value of the option
 <<Names And Procedures>>.
 
-<item> Open feature structures are converted to records, that is, their
+<item> Feature constraints are converted to records, that is, their
 representation does not contain ellipses just before the closing
 parentheses.
 
