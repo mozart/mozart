@@ -28,11 +28,11 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_Term reflect_propagator(Suspension susp)
+OZ_Term reflect_propagator(Suspendable * susp)
 {
-  Propagator * prop = susp.getPropagator();
+  Propagator * prop = SuspToPropagator(susp);
   OZ_Propagator * p = prop->getPropagator();
-  Board * b = GETBOARD(susp.getPropagator());
+  Board * b = GETBOARD(susp);
 
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_type, atom_prop)},
@@ -49,9 +49,9 @@ OZ_Term reflect_propagator(Suspension susp)
 
 //-----------------------------------------------------------------------------
 
-OZ_Term reflect_thread(Suspension susp)
+OZ_Term reflect_thread(Suspendable * susp)
 {
-  Board * b = GETBOARD(susp.getThread());
+  Board * b = GETBOARD(susp);
 
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_type, atom_thread)},
@@ -70,9 +70,9 @@ OZ_Term reflect_susplist(SuspList * sl)
   OZ_Term cl = OZ_nil();
 
   for (SuspList * p = sl; p != NULL; p = p->getNext()) {
-    Suspension susp = p->getSuspension();
+    Suspendable * susp = p->getSuspendable();
 
-    cl = OZ_cons((susp.isPropagator()
+    cl = OZ_cons((susp->isPropagator()
                   ? reflect_propagator(susp)
                   : reflect_thread(susp)), cl);
   }

@@ -153,12 +153,12 @@ OZ_Term reflect_space_susplist(ReflectStack &rec_stack,
   OZ_Term term_props = OZ_nil();
 
   for (SuspList * p = susplist; p != NULL; p = p->getNext()) {
-    Suspension susp = p->getSuspension();
+    Suspendable * susp = p->getSuspendable();
 
-    if (susp.isPropagator()) {
-      Propagator * prop = susp.getPropagator();
+    if (susp->isPropagator()) {
+      Propagator * prop = SuspToPropagator(susp);
 
-      if (!prop->isDeadPropagator()) {
+      if (!prop->isDead()) {
         Bool is_reflected;
         DEBUGPRINT(("ptable.add(%p)", prop));
         int id = ptable.add(prop, is_reflected);
