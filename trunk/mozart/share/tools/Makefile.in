@@ -22,7 +22,6 @@ OZC		= @OZC@
 LN_S		= @LN_S@
 
 COMPILE		= $(OZC) $(OZFLAGS) -c
-EXEC		= $(OZC) $(OZFLAGS) -x
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -98,12 +97,9 @@ TOOLSFILES = \
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
-	ProductionTemplates.ozf
+	ProductionTemplates.ozf OPI.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
-
-SYSLETS = opi
-BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
 IMAGES1 = \
 	compiler.xbm compilermask.xbm \
@@ -114,7 +110,7 @@ IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
 .PHONY: all install bootstrap
 
-all: Makefile $(FUNCTORS) $(SYSLETS)
+all: Makefile $(FUNCTORS)
 
 include $(SRCTOP)/share/Makefile.boot
 
@@ -127,10 +123,7 @@ bootstrap: boot-all
 %.ozf: %.oz
 	$(COMPILE) $< -o $@
 
-opi: MakeOPI.oz ../functor-defaults.oz
-	$(EXEC) $< -o $@
-
-
+OPI.ozf: OPI.oz ../functor-defaults.oz
 
 CompilerPanel.ozf: $(COMPILERPANELSRC) ../url-defaults.oz
 
@@ -169,13 +162,12 @@ ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
 install: install-main install-images install-cache
 
 install-main: all \
-	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS) \
-	$(OZBIN) $(BINFILES)
+	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS)
 
 install-images: \
 	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
 
-$(OZBIN) $(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
+$(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
 	$(INSTALL_DIR) $@
 
 $(OZTOOLS)/%.oz: %.oz
@@ -192,9 +184,6 @@ $(IMAGESDIR)/%: images/%
 
 $(OZCARIMAGESDIR)/%: ozcar/images/%
 	$(INSTALL_FILE) $< $@
-
-$(OZBIN)/%: %
-	$(INSTALL_BIN) $< $@
 
 CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
 CACHELINK = $(CACHEDIR)/ozhome
