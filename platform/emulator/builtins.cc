@@ -325,7 +325,7 @@ OZ_Return isKindedRelInline(TaggedRef term) {
     switch (tagged2CVar(term)->getType()) {
       // mm2: generalize
     case LazyVariable: kinded=tagged2LazyVar(term)->isKinded(); break;
-    case PROMISE:      kinded=tagged2Promise(term)->isKinded(); break;
+    case FUTURE:       kinded=tagged2Future(term)->isKinded(); break;
     default: break;
     }
     return kinded?PROCEED:FAILED;
@@ -5938,9 +5938,6 @@ OZ_BI_define(BIat,1,1)
   DEREF(fea, feaPtr, feaTag);
   if (!oz_isFeature(fea)) {
     if (oz_isVariable(fea)) {
-      if (isPromise(fea)) {
-        // mm2
-      }
       oz_suspendOnPtr(feaPtr);
     }
     if (oz_isCell(fea)) {
@@ -5949,6 +5946,7 @@ OZ_BI_define(BIat,1,1)
       OZ_result(out);
       return ret;
     }
+    // mm2
     oz_typeError(0,"Feature|Promise|Cell");
   }
 
@@ -5986,15 +5984,13 @@ OZ_BI_define(BIassign,2,0)
   DEREF(fea, feaPtr, feaTag);
   if (!oz_isFeature(fea)) {
     if (oz_isVariable(fea)) {
-      if (isPromise(fea)) {
-        // mm2
-      }
       oz_suspendOnPtr(feaPtr);
     }
     if (oz_isCell(fea)) {
       OZ_Term oldIgnored;
       return exchangeCell(fea,value,oldIgnored);
     }
+    // mm2
     oz_typeError(0,"Feature|Promise|Cell"); // mm2: new name: assignable
   }
 
@@ -6043,9 +6039,6 @@ OZ_BI_define(BIexchange,2,1)
 
   if (!oz_isFeature(fea)) {
     if (oz_isVariable(fea)) {
-      if (isPromise(fea)) {
-        // mm2: todo
-      }
       oz_suspendOnPtr(feaPtr);
       return SUSPEND;
     }
@@ -6055,6 +6048,7 @@ OZ_BI_define(BIexchange,2,1)
       OZ_result(oldVal);
       return ret;
     }
+    // mm2
     oz_typeError(1,"Feature|Promise|Cell");
   }
 

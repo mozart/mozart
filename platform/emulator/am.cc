@@ -489,7 +489,7 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 
 /* Define a partial order on CVARs:
  *
- *              Promise
+ *              Future
  *                |
  *                |
  *               Lazy
@@ -510,8 +510,8 @@ int cmpCVar(GenCVariable *v1, GenCVariable *v2)
 {
   TypeOfGenCVariable t1 = v1->getType();
   TypeOfGenCVariable t2 = v2->getType();
-  if (t1==PROMISE)   return  1;
-  if (t2==PROMISE)   return -1;
+  if (t1==FUTURE)   return  1;
+  if (t2==FUTURE)   return -1;
   if (t1==LazyVariable)   return  1;
   if (t2==LazyVariable)   return -1;
   if (t1==PerdioVariable) return  1;
@@ -700,6 +700,7 @@ cvar:
     goto fail;
 
   case LITERAL:
+  case PROMISE:
     /* literals and constants unify if their pointers are equal */
   default:
     goto fail;

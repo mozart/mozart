@@ -1062,8 +1062,8 @@ GenCVariable * GenCVariable::gc(void) {
     sz = sizeof(PerdioVar);       break;
   case LazyVariable:
     sz = sizeof(GenLazyVariable); break;
-  case PROMISE:
-    sz = sizeof(Promise); break;
+  case FUTURE:
+    sz = sizeof(Future); break;
   default:
     Assert(0);
   }
@@ -1092,7 +1092,7 @@ void GenLazyVariable::gcRecurse(void) {
 }
 
 inline
-void Promise::gcRecurse(void) {
+void Future::gcRecurse(void) {
   OZ_collectHeapTerm(requested,requested);
 }
 
@@ -1145,8 +1145,8 @@ void GenCVariable::gcRecurse(void) {
     ((PerdioVar *) this)->gcRecurse(); break;
   case LazyVariable:
     ((GenLazyVariable*) this)->gcRecurse(); break;
-  case PROMISE:
-    ((Promise*) this)->gcRecurse(); break;
+  case FUTURE:
+    ((Future*) this)->gcRecurse(); break;
   default:
     Assert(0);
   }
@@ -1491,9 +1491,9 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
         // All the following jumps are resolved to jumps in the switch-table!
       case GCTAG:     goto DO_GCTAG;
       case SMALLINT:  goto DO_SMALLINT;
-      case UNUSED:    goto DO_UNUSED;
       case FSETVALUE: goto DO_FSETVALUE;
       case LITERAL:   goto DO_LITERAL;
+      case PROMISE:   goto DO_PROMISE;
       case LTUPLE:    goto DO_LTUPLE;
       case SRECORD:   goto DO_SRECORD;
       case OZFLOAT:   goto DO_OZFLOAT;
@@ -1580,9 +1580,6 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     to = aux;
     return;
 
-  case UNUSED: DO_UNUSED:
-    return;
-
   case FSETVALUE: DO_FSETVALUE:
     if (isInGc) {
       to = makeTaggedFSetValue(((FSetValue *) tagged2FSetValue(aux))->gc());
@@ -1601,6 +1598,23 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
         to = aux;
       }
       return;
+    }
+
+  case PROMISE: DO_PROMISE:
+    {
+      // mm2: how to handle copy mode???
+      TaggedRef *varPtr = tagged2Promise(aux);
+      TaggedRef var = *varPtr;
+      if (GCISMARKED(var)) {
+        to = makeTaggedPromise((TaggedRef *) GCUNMARK(var));
+        return;
+      } else {
+        TaggedRef *newVarPtr = newTaggedRef(varPtr);
+        to = makeTaggedPromise(newVarPtr);
+        varFix.defer(varPtr,newVarPtr); // mm2
+        gcTagged(*newVarPtr,*newVarPtr,isInGc,NO,NO); // mm2
+        return;
+      }
     }
 
   case LTUPLE: DO_LTUPLE:
