@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 # Oz startup script.
 
 
@@ -58,7 +57,7 @@ fi
 if [ ${OZ_PI-xx} = xx ]; then
   # where Oz searches for files:
   : ${OZPATH=.}
-  OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
+  OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
   export OZPATH
   # increment path
   PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
