@@ -34,6 +34,12 @@ define
          DirName <- Dir
          N <- 0
       end
+      meth convertPicture(VS ?OutFileName)
+         LaTeXToGIFClass, OpenLaTex()
+         {@File write(vs: VS#'\n\\clearpage\n')}
+         N <- @N + 1
+         OutFileName = 'latex'#@N#'.gif'
+      end
       meth convertMath(VS Display ?OutFileName)
          LaTeXToGIFClass, OpenLaTex()
          {@File write(vs: case Display of display then '\\[\n'#VS#'\n\\]\n'
@@ -54,20 +60,24 @@ define
          else skip
          end
       end
-      meth process()
-         {@File write(vs: '\\end{document}\n')}
-         {@File close()}
-         try
-            case
-               {OS.system LATEX2GIF#' '#@FileName#' '#@DirName}
-            of 0 then skip
-            elseof I then
-               {Exception.raiseError ozDoc(latexToGif I)}
+      meth process(Reporter)
+         case @File of unit then skip
+         else
+            {@File write(vs: '\\end{document}\n')}
+            {@File close()}
+            {Reporter startSubPhase('converting LaTeX sections to GIF')}
+            try
+               case
+                  {OS.system LATEX2GIF#' '#@FileName#' '#@DirName}
+               of 0 then skip
+               elseof I then
+                  {Exception.raiseError ozDoc(latexToGif I)}
+               end
+            finally
+               {OS.unlink @FileName}
+               File <- unit
+               FileName <- unit
             end
-         finally
-            {OS.unlink @FileName}
-            File <- unit
-            FileName <- unit
          end
       end
    end
