@@ -52,6 +52,10 @@
 ;; - {Show [bla fasel
 ;;              droehn
 ;;   is indented incorrectly.
+;; - {Tk.batch [tk(self.CurrentQuery configure state: normal)
+;;              tk(self.CurrentQuery delete '0' 'end')
+;;              tk(self.CurrentQuery configure state:
+;;                    disabled)]}
 
 (require 'comint)
 (require 'compile)
@@ -805,7 +809,11 @@ If FORCE is non-nil, kill it immediately."
 
   (if start-flag
       (if oz-emulator-hook
-	  (oz-show-buffer (get-buffer oz-emulator-buffer))
+	  (save-excursion
+	    (set-buffer oz-compiler-buffer)
+	    (insert "For compiler output, watch the buffer "
+		    oz-emulator-buffer ".\n")
+	    (oz-show-buffer (get-buffer oz-emulator-buffer)))
 	(oz-show-buffer (get-buffer oz-compiler-buffer)))))
 
 
