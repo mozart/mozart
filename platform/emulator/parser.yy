@@ -442,7 +442,7 @@ static CTerm decls[DEPTH];
 
 file		: queries ENDOFFILE
 		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseError");
+		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
 		      YYABORT;
 		    } else {
 		      yyoutput = $1;
@@ -451,7 +451,7 @@ file		: queries ENDOFFILE
 		  }
 		| prodClauseList ENDOFFILE
 		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseError");
+		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
 		      YYABORT;
 		    } else {
 		      yyoutput = newCTerm("fSynTopLevelProductionTemplates",$1);
@@ -459,7 +459,7 @@ file		: queries ENDOFFILE
 		    }
 		  }
 		| error
-		  { yyoutput = newCTerm("parseError");
+		  { yyoutput = newCTerm("parseError",OZ_int(yynerrs));
 		    YYABORT;
 		  }
 		;
@@ -1456,8 +1456,9 @@ void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
     while(n)
       s[--n] = ' ';
     append(s);
-    append("^-- *** here\n%**\n");
+    append("^-- *** here\n");
   }
+  append("%**\n");
 }
 
 static void xyerror(char *s) {
