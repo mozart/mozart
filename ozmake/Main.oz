@@ -34,7 +34,10 @@ prepare
       package( single char:&p type:string)
       database(single         type:string)
 
-      action(single type:atom(build install clean veryclean create publish extract list help uninstall) default:build)
+      action(single type:atom(build install clean veryclean
+			      create publish extract list help
+			      uninstall)
+	     default:build)
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
       fullbuild(single type:bool)
