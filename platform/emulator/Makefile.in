@@ -211,10 +211,12 @@ first: version $(CREATEDFILES) $(SRCS)
         $(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
 @tmphack_programname@: first $(OBJS)
-        $(LD) $(LDFLAGS) $(LDOPT) -o /tmp/ozemu$$$$ $(OBJS) $(LIBS) && \
+        tmp=/tmp/ozemu$$$$; \
+        trap "$(RM) $$tmp; exit 1" 1 2 15; \
+         $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
          echo 'moving ...' && \
-         rcp /tmp/ozemu$$$$ @tmphack_host@:`pwd`/$@ && \
-         rm -f /tmp/ozemu$$$$
+         rcp $$tmp @tmphack_host@:`pwd`/$@ && \
+         $(RM) $$tmp
 
 install: install-dir install-bin install-inc
         for d in $(SUBDIRS); do (cd $$d; $(MAKE) install); done
@@ -223,8 +225,8 @@ install-bin: $(TARGETS)
         $(INSTALL_BIN) $(TARGETS) $(bindir)
 
 install-inc:
-        $(INSTALL_OTHER) oz.h $(incdir)
-        $(INSTALL_OTHER) oz_cpi.hh $(incdir)
+        $(INSTALL_OTHER) $(OZDIR)/oz.h $(incdir)
+        $(INSTALL_OTHER) $(OZDIR)/oz_cpi.hh $(incdir)
 
 install-dir:
         if test ! -d $(platformdir) ; then $(INSTALL_DIR) $(platformdir) ; fi
