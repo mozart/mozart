@@ -65,6 +65,8 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 /* *********************************************************************/
 
 MsgBufferManager* msgBufferManager = new MsgBufferManager();
+int  globalWriteCounter = 0;
+int  globalReadCounter  = 0;
 
 /* *********************************************************************/
 /*   init;                                                             */
@@ -141,7 +143,7 @@ void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
       OZ_warning("send message '%s' contains nogoods: %s",
 		 mess_names[mt],toC(nogoods));
     }}
-  if(ret==ACCEPTED) return;
+  if(ret==ACCEPTED) {globalWriteCounter++; return;}
   if(ret==PERM_NOT_SENT){
     toS->communicationProblem(mt,sS,sI,COMM_FAULT_PERM_NOT_SENT,
 			      (FaultInfo) bs);
@@ -503,7 +505,7 @@ void msgReceived(MsgBuffer* bs)
   Assert(creditSiteIn==NULL);
   Assert(creditSiteOut==NULL);
   MessageType mt = (MessageType) unmarshalHeader(bs);
-
+  globalReadCounter++;
   // this is a necessary check - you should never receive
   // a message from a site that you think is PERM or TEMP
   // this can happen - though it is very rare
