@@ -16,10 +16,10 @@ local
    end
    
    local
-      fun {Correct F}
+      fun {LastDebug F}
 	 case F == nil then nil else
-	    case {Label F.1} == debug then
-	       {Correct F.2}
+	    case {Label F.1} == debug andthen {Label F.2.1} == debug then
+	       {LastDebug F.2}
 	    else
 	       F
 	    end
@@ -28,7 +28,9 @@ local
       proc {DoStackForAllInd Xs I P}
 	 case Xs
 	 of _|nil   then skip
-	 [] X|Y|Z|T then
+	 [] X|D|A|B then
+	    Y|Z|T = {LastDebug D|A|B}
+	 in
 	    case {Label Z} == builtin then
 	       {P I {S2F I 0 enter X.file X.line Y.1.2.1 Z.name Z.args true}}
 	    else
@@ -41,7 +43,7 @@ local
       end
    in
       proc {StackForAllInd Xs P}
-	 {DoStackForAllInd Xs.2 1 P}
+	 {DoStackForAllInd {LastDebug Xs}.2 1 P}
       end
    end
    

@@ -58,17 +58,20 @@ in
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
 	    case {Thread.is T} then
-	       Ok = ({Cget stepRecordBuiltin} orelse Name \= 'record')
-	            andthen
-	            ({Cget stepDotBuiltin}    orelse Name \= '.')
-	            andthen
-	            ({Cget stepWidthBuiltin}  orelse Name \= 'Width')
-	            andthen
-		    ({Cget stepSystemProcedures} orelse
-		     Name == ''       orelse
-		     Name == '`,`'    orelse
-		     Name == '`send`' orelse
-		     {Atom.toString Name}.1 \= 96)
+	       Ok =
+	       ({Cget stepRecordBuiltin}  orelse Name \= 'record')
+	       andthen
+	       ({Cget stepDotBuiltin}     orelse Name \= '.')
+	       andthen
+	       ({Cget stepWidthBuiltin}   orelse Name \= 'Width')
+	       andthen
+	       ({Cget stepNewNameBuiltin} orelse Name \= 'NewName')
+	       andthen
+	       ({Cget stepSystemProcedures} orelse
+		Name == ''       orelse
+		Name == '`,`'    orelse
+		Name == '`send`' orelse
+		{Atom.toString Name}.1 \= 96)
 	    in
 	       case Ok then
 		  case {Dmember self.ThreadDic I} then skip else

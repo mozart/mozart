@@ -11,9 +11,11 @@ class TitleFrame from Tk.frame
       Tk.frame,{Record.subtract M title}
       case T == '' then skip
       else
-	 self.Label = {New Tk.label tkInit(parent:self text:T
-					   font:TitleFont
-					   bd:1 relief:raised)}
+	 self.Label = {New Tk.label tkInit(parent: self
+					   text:   T
+					   font:   TitleFont
+					   bd:     SmallBorderSize
+					   relief: raised)}
 	 {Tk.send grid(self.Label row:0 column:0 sticky:we)}
       end
    end
@@ -34,9 +36,10 @@ local
 	 self.W  = {New self.widget
 		    {Record.subtract {Record.adjoinAt M parent self} title}}
 	 local
-	    SY     = {New Tk.scrollbar tkInit(parent:self
-					      width:12
-					      elementborderwidth:1)}
+	    SY     = {New Tk.scrollbar
+		      tkInit(parent: self
+			     width:  ScrollbarWidth
+			     elementborderwidth: SmallBorderSize)}
 	 in
 	    {Tk.addYScrollbar self.W SY}
 	    {Tk.batch [grid(self.W row:1 column:0 sticky:nswe)
