@@ -18,7 +18,6 @@
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
-<!ENTITY null "">
 
 <!-- Processing Instructions -->
 <!ENTITY slash PI "slash">

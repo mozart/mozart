@@ -207,10 +207,9 @@ local
 	 case T2 of fNoElse(_) then ""
 	 else NL#'else'#IN#NL#{OzBlock T2}#EX
 	 end#NL#PO#'end'
-      [] fCase(T Css E _) then
+      [] fCase(T Cs E _) then
 	 PU#'case '#{OutputOz T}#' of '#
-	 {LI {Map Css fun {$ Cs} {LI {Map Cs OutputOz} NL#'[] '} end}
-	  NL#'elseof '}#
+	 {LI {Map Cs OutputOz} NL#'[] '}#
 	 case E of fNoElse(_) then ""
 	 else NL#'else'#IN#NL#{OzBlock E}#EX
 	 end#NL#PO#'end'

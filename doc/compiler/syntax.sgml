@@ -57,7 +57,7 @@
 	<Grammar.Alt/<<fLocal(?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt
 	  /<<fBoolCase(?={phrase} ?={phrase} ?={opt else} ?={coord})>>/
-	<Grammar.Alt/<<fCase(?={phrase} [[?={case clause}]&null;]>>/
+	<Grammar.Alt/<<fCase(?={phrase} [?={case clause}]>>/
 	<Grammar.Alt space/<<      ?={opt else} ?={coord})>>/
 	<Grammar.Alt/<<fLockThen(?={phrase} ?={phrase} ?={coord})>>/
 	<Grammar.Alt/<<fLock(?={phrase} ?={coord})>>/
