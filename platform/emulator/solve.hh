@@ -43,11 +43,12 @@ private:
   DLLStack orActors;
   TaggedRef solveVar;
   TaggedRef result;
+  TaggedRef guidance;
   Board *boardToInstall;
   SuspList *suspList;
   int threads;
 public:
-  SolveActor (Board *bb, int prio, TaggedRef resTR);
+  SolveActor (Board *bb, int prio, TaggedRef resTR, TaggedRef guiTR=0);
   void setSolveBoard(Board *bb);
   Board *getSolveBoard() { return solveBoard; }
   ~SolveActor ();
@@ -67,6 +68,8 @@ public:
   TaggedRef* getSolveVarRef () { return (&solveVar); }
   TaggedRef getSolveVar () { return (solveVar); }
   TaggedRef getResult () { return (makeTaggedRef (&result)); }
+  TaggedRef getGuidance() { return (guidance); }
+  void setGuidance(TaggedRef guiTR) { guidance = guiTR; }
   void pushWaitActor (WaitActor *a);
   void pushWaitActorsStackOf (SolveActor *sa);
   WaitActor *getDisWaitActor ();
@@ -77,6 +80,7 @@ public:
   TaggedRef genSolved ();
   TaggedRef genStuck ();
   TaggedRef genEnumed (Board *newSolveBB);
+  TaggedRef genChoice (int noOfClauses);
   TaggedRef genEnumedFail ();
   TaggedRef genFailed ();
   void printDebugKP();

@@ -2126,6 +2126,7 @@ void SolveActor::gcRecurse ()
 
   boardToInstall = boardToInstall->gcBoard ();
   gcTagged (solveVar, solveVar);
+  gcTagged (guidance, guidance);
   gcTagged (result, result);
   suspList = suspList->gc(NO);
   orActors.gc (SolveActor::StackEntryGC);   // higher order :))

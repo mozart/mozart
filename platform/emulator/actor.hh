@@ -26,7 +26,8 @@ enum ActorFlags {
   Ac_Wait       = 0x02,
   Ac_Solve      = 0x04,
   Ac_Committed  = 0x08,
-  Ac_EatWaits   = 0x10 // in disjunction with Ac_Solve
+  Ac_EatWaits   = 0x10, // in disjunction with Ac_Solve
+  Ac_Guided     = 0x20  // in disjunction with Ac_Solve
 };
 
 class Actor : public ConstTerm {
@@ -55,8 +56,10 @@ public:
   Bool isAskWait () { return ((flags & (Ac_Ask|Ac_Wait)) ? OK : NO); }
   Bool isSolve () { return ((flags & Ac_Solve) ? OK : NO); }
   Bool isEatWaits() { return ((flags & Ac_EatWaits) ? OK : NO); }
+  Bool isGuided() { return ((flags & Ac_Guided) ? OK : NO); }
   void setCommitted() { flags |= Ac_Committed; }
   void setEatWaits() { flags |= Ac_EatWaits; }
+  void setGuided() { flags |= Ac_Guided; }
 };
 
 // ------------------------------------------------------------------------
@@ -133,8 +136,10 @@ public:
   // returns the first created child; this child is unlinked from the actor;
   Board *getChildRef ();
   // the same, but a child is not unlinked from the actor;
+  Board *getChildRefAt(int i) { return childs[i]; }
   void decChilds () { childCount--; }    // for search;
   /* see also: isLeaf() */
+  int getChildCount() { return childCount; };
   Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
   Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
 
