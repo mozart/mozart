@@ -6,7 +6,7 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Per Brand, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -197,6 +197,7 @@ void OwnerTable::resize(){
   return;}
 
 int OwnerTable::newOwner(OwnerEntry *&oe){
+  Assert(perdioInitialized);
   if(nextfree == END_FREE) resize();
   int index = nextfree;
   nextfree = array[index].uOB.nextfree;
@@ -852,7 +853,7 @@ Bool BorrowEntry::addSecCredit_Slave(Credit c,BorrowCreditExtension *slave){
 
 static inline void refClear(BorrowEntry* b){
   if(b->isRef())
-    BT->maybeFreeBorrowEntry(BT->ptr2Index(b));}
+    (void) BT->maybeFreeBorrowEntry(BT->ptr2Index(b));}
 
 
 void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
@@ -1055,6 +1056,7 @@ int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
   int index=nextfree;
   nextfree= array[index].uOB.nextfree;
   BorrowEntry* oe = &(array[index]);
+  Assert(oe->isFree());
   oe->initBorrow(c,sd,off); 
   Assert(oe->getFlags() == PO_NONE);
   /* PER-LOOK
@@ -1069,10 +1071,10 @@ int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
   PD((TABLE,"borrow insert: b:%d",index));
   return index;}
 
-void BorrowTable::maybeFreeBorrowEntry(int index){
+Bool BorrowTable::maybeFreeBorrowEntry(int index){
   BorrowEntry *b = &(array[index]);
   if(b->isExtended()){
-    if(b->getExtendFlags() & PO_MASTER) return;
+    if(b->getExtendFlags() & PO_MASTER) return FALSE;
     Assert(b->getExtendFlags()==PO_SLAVE);
     b->removeSlave();}
   Assert(!b->isExtended());
@@ -1083,7 +1085,7 @@ void BorrowTable::maybeFreeBorrowEntry(int index){
   nextfree=index;
   no_used--;
   PD((TABLE,"borrow delete: b:%d",index));
-  return;}
+  return TRUE;}
 
 void BorrowTable::copyBorrowTable(BorrowEntry *oarray,int osize){
   hshtbl->clear();
@@ -1110,6 +1112,7 @@ fin:
 
 
 void OB_Entry::gcPO() {
+  Assert(!isFree());
   if (isGCMarked()) return;
   makeGCMark();
   if (isTertiary()) {
@@ -1216,7 +1219,7 @@ void BorrowTable::gcBorrowTableFinal()
     BorrowEntry *b=getBorrow(i);
     
     if(b->isVar()) {
-      if(b->isGCMarked()) {
+      if(b->isGCMarked()){
 	b->removeGCMark();
 	b->getSite()->makeGCMarkSite();
 	PD((GC,"BT b:%d mark variable found",i));} 
@@ -1308,7 +1311,6 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
   int frames = 0;
   unsigned long start_time = osTotalTime();
   int j=0;
-  //  print();
   for(int i=0;i<size;i++){
     be = getBorrow(i);
     if(!be->isFree()) 

@@ -7,7 +7,8 @@
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Erik Klintskog, 1998
+ *    Per Brand, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -41,26 +42,10 @@
 #include "dpInterface.hh"
 #include "flowControl.hh"
 #include "ozconfig.hh"
-/**********************************************************************/
-/*   SECTION Port protocol                                       */
-/**********************************************************************/
-
-/* PER-HANDLE
-EntityCond getEntityCondPort(Tertiary* p){
-  EntityCond ec = getEntityCond(p);
-  int dummy;
-  if(ec!=ENTITY_NORMAL)return ec;
-  if(getSiteFromTertiaryProxy(p)->getQueueStatus(dummy)>=PortSendTreash)
-    return TEMP_BLOCKED|TEMP_ME;
-  return ENTITY_NORMAL;}
-*/
-
 
 /**********************************************************************/
 /*   SECTION Port protocol                                       */
 /**********************************************************************/
-
-
 
 OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
   Assert(p->getTertType()==Te_Proxy);
@@ -104,10 +89,6 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
     
     pendThreadAddToEnd(&(((PortProxy*)p)->pending),
 		       msg,msg,NOEX);
-    if(getEntityCond(p) & PERM_ME)
-      addEntityCond(p, PERM_BLOCKED);
-    else
-      addEntityCond(p, TEMP_BLOCKED);
     deferEntityProblem(p);
     return SuspendOnControlVarReturnValue;
     
@@ -129,10 +110,10 @@ void gcDistPortRecurseImpl(Tertiary *p)
   //
   gcEntityInfoImpl(p);
   if (p->isProxy()) {
-    gcProxyRecurse(p);
+    gcProxyRecurseImpl(p);
     gcPendThread(&(((PortProxy*)p)->pending));
   } else {
-    gcManagerRecurse(p);
+    gcManagerRecurseImpl(p);
     PortWithStream *pws = (PortWithStream *) p;
     OZ_collectHeapTerm(pws->strm,pws->strm);
   }
@@ -159,10 +140,6 @@ void  PortProxy::wakeUp(){
   PendThread *old;
   while(pending!=NULL){
     if(getEntityCond(this)!= ENTITY_NORMAL){
-      if(getEntityCond(this) & PERM_ME)
-	addEntityCond(this, PERM_BLOCKED);
-      else
-	addEntityCond(this, TEMP_BLOCKED);
       entityProblem(this);
       return;}
     if(!this->canSend()){
@@ -187,21 +164,18 @@ void  PortProxy::wakeUp(){
 
 
 void port_Temp(PortProxy* pp){
-  EntityCond ec = TEMP_ME;
-  if(pp->pending) ec |= TEMP_BLOCKED;
+  EntityCond ec = TEMP_FAIL;
   if(!addEntityCond(pp,ec)) return;
   entityProblem(pp);     
 }
 void port_Ok(PortProxy* pp){
-  EntityCond ec = TEMP_ME;
-  if(pp->pending) ec |=TEMP_BLOCKED;
+  EntityCond ec = TEMP_FAIL;
   subEntityCond(pp,ec);
   pp->wakeUp();
 }
 void port_Perm(PortProxy* pp){
   //printf("SettingPerm to port %s\n",BT->getBorrow(pp->getIndex())->getNetAddress()->site->stringrep());
-  EntityCond ec = PERM_ME;
-  if(pp->pending) ec |=PERM_BLOCKED;
+  EntityCond ec = PERM_FAIL;
   if(!addEntityCond(pp,ec)) return;
   entityProblem(pp);     
 }
