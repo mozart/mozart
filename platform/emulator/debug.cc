@@ -64,8 +64,10 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
 
   am.currentThread->deleteContFlag();
 
-  if (!am.runChildren)
+  if (!am.runChildren) {
     am.currentThread->startStepMode();
+    am.currentThread->stop();
+  }
 
   if (debugPC == NOCODE) {
     file    = OZ_atom("noDebugInfo");
