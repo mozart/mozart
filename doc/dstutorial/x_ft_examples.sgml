@@ -919,8 +919,9 @@ end
 
 <P>The non-fault-tolerant version of <ptr to="channel.definition">
 is easily extended to detect client and server crashes.
-First, the channel must be created
-by calling <<NewSafeStat>> instead of <<NewStat>>:
+First, the server and all clients must be created
+by calling <<NewSafeStat>> instead of <<NewStat>>.
+This means creating the server as follows:
 <<<
 S={NewSafeStat ChannelServer init(S)}
 >>>
@@ -982,6 +983,20 @@ meth broadcastCrashEvent(CrashID)
       end}
 end
 >>>
+
+<P>The procedure <<MakeNewClient>> has to be changed
+to call <<NewSafeStat>> instead of <<NewStat>>:
+<<<
+meth getMakeNewClient(MakeNewClient)
+   proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
+      StaticClientObj={NewSafeStat
+         ChannelClient
+         init(self.selfStatic StaticClientObj
+              UserID UserMessageHandler)}
+   end
+end
+>>>
+
 
 
 
