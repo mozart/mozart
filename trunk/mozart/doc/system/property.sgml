@@ -194,6 +194,12 @@
           <Td/Run time in milliseconds./
         </Tr>
         <Tr>
+          <Td/<<idle>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Idle time in milliseconds./
+        </Tr>
+        <Tr>
           <Td/<<copy>>/
           <Td/no/
           <Td/<<Int>>/
@@ -287,6 +293,14 @@
           <Td/yes/
           <Td/<<Bool>>/
           <Td/Whether garbage collection is invoked automatically./
+        </Tr>
+        <Tr>
+          <Td/<<codeCycle>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/After how many garbage collections also code garbage
+          collection is performed (zero means no code garbage
+          collection)./
         </Tr>
       </Table>
     </P>
@@ -403,17 +417,6 @@
       <Table>
         <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
         <Tr>
-          <Td/<<hints>>/
-          <Td/yes/
-          <Td/<<Bool>>/
-          <Td/Whether error messages contain hint information./
-        </Tr>
-        <Tr>
-          <Td/<<location>>/
-          <Td/yes/
-          <Td/<<Bool>>/
-          <Td/Whether error messages contain location information./
-        </Tr>
         <Tr>
           <Td/<<debug>>/
           <Td/yes/
