@@ -1733,7 +1733,7 @@ OZ_BI_define(unix_pipe,2,2) {
   CloseHandle(pinf.hProcess);
   CloseHandle(pinf.hThread);
   CloseHandle(wh1);
-  CloseHandle(wh1);
+  CloseHandle(rh2);
   SetStdHandle((DWORD)STD_OUTPUT_HANDLE,saveout);
   SetStdHandle((DWORD)STD_ERROR_HANDLE,saveerr);
   SetStdHandle((DWORD)STD_INPUT_HANDLE,savein);
