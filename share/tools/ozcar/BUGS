@@ -1,0 +1,8 @@
+$Id$
+
+Thu Sep 19 01:40:54 MET DST 1996
+breakflag in am: Es koennte passieren, dass der falsche
+Thread angehalten wird -- wenn naemlich genau zwischen
+Builtin "breakpoint" und proc/builtin call eine Threadumschaltung
+stattfindet. Abhilfe: Dies verhindern oder je ein breakflag
+pro Thread (hm....)
