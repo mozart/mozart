@@ -559,6 +559,7 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
 {
   SuspList* retSuspList = NULL;
 #ifdef DEBUG_CHECK
+  // see the reduction of solve actor by the enumeration; 
   if (dontPropagate == OK)
     return (suspList);
 #endif
@@ -649,8 +650,23 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
     checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term, svar);
+#ifdef DEBUG_CHECK
+    Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
+    if (hb->isReflected () == OK)
+      error ("the variable from reflected board is bound");
+    Board *sb = hb->getSolveBoard ();
+    if (sb != (Board *) NULL && sb->isReflected () == OK)
+      error ("the variable in reflected search problem is bound");
+#endif
   }
-
+#ifdef DEBUG_CHECK
+  if (isUVar (var)) {
+    Board *hb = (tagged2VarHome (var))->getBoardDeref ();
+    if (hb->isReflected () == OK)
+      error ("UVar from reflected board is bound???");
+  }
+#endif
+  
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
   if ( ! isLocalVariable(var) ) {
@@ -747,6 +763,14 @@ void AM::reduceTrailOnUnitCommit()
     trail.popRef(refPtr,value);
 
     bb->setScript(index,refPtr,*refPtr);
+#ifdef DEBUG_CHECK
+    TaggedRef aux = value;
+    DEREF(aux, ptr, tag);
+    if (isAnyVar (tag) == NO)
+      error ("non-variable is found in AM::reduceTrailOnUnitCommit ()");
+    if (isUVar (tag) == OK)
+      error ("UVar is found as value in trail;");
+#endif
     *refPtr = value;
   }
   trail.popMark();
@@ -809,6 +833,17 @@ void AM::reduceTrailOnFail()
     TaggedRef *refPtr;
     TaggedRef value;
     trail.popRef(refPtr,value);
+/* 
+ *  Don't works??? Sometimes the machine gets UVars ???
+#ifdef DEBUG_CHECK
+    TaggedRef aux = value;
+    DEREF(aux, ptr, tag);
+    if (isAnyVar (tag) == NO)
+      error ("non-variable is found in AM::reduceTrailOnFail ()");
+    if (isUVar (tag) == OK)
+      error ("UVar is found as value in trail;");
+#endif
+ */
     *refPtr = value;
   }
   trail.popMark();

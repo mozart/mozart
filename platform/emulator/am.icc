@@ -54,7 +54,6 @@ Bool AM::fastUnify(TaggedRef A, TaggedRef B)
     doBind(term1Ptr,B);
     return OK;
   }
-  
 
   if (proto == term2) {
     doBind(term2Ptr,A);
