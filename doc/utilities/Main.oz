@@ -145,6 +145,7 @@ define
       in
          {OS.putEnv 'PATH' SBIN_PATH#':'#{OS.getEnv 'PATH'}}
          {OS.putEnv 'OZDOC_ELISP_PATH' ELISP_PATH}
+         {OS.putEnv 'EMACS_UNIBYTE' 'yes'}
       end
       %% The actual translation
       case Args.1 of _|_ then
