@@ -16,7 +16,7 @@ local
 	 CurNs CurCopy
       in
 	 <<findPathAndCopy(?CurNs ?CurCopy)>>
-	 case {self.solve CurCopy CurNs}
+	 case {Solve CurCopy CurNs}
 	 of solved(P _) then P
 	 else False
 	 end
@@ -52,7 +52,7 @@ local
 	    CurNs CurCopy
 	 in
 	    <<findPathAndCopy(?CurNs ?CurCopy)>>
-	    case {self.solve CurCopy CurNs}
+	    case {Solve CurCopy CurNs}
 	    of choice(P _) then P
 	    else False
 	    end
