@@ -174,11 +174,23 @@ if test "${GXX}" = yes; then
 
     if test "${enable_warnings}" != no
     then
+	case `$CXX -dumpversion` in
+	2.*)
 	oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
 	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
 	    -Wnested-externs -Wsynth \
 	    -Winline \
 	    -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
+	;;
+        3.*)
+	oz_warn="-Wall -W -Wno-trigraphs -Wno-undef -Wimport -Wbad-function-cast \
+	    -Wcast-qual -Wconversion -Wimplicit-function-dec -Wimplicit-int -Wmissing-braces \
+	    -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wparentheses \
+	    -Wsequence-point -Wpointer-arith -Wno-sign-compare -Wunknown-pragmas \
+	    -Wstrict-prototypes -Wno-write-strings -Wreturn-type -Wsynth -Wno-reorder \
+	    -Wno-uninitialized -Wunreachable-code -Wno-unused -Winline -Wdeprecated"
+	;;
+	esac
         test "$enable_errors" != no && \
 	oz_warn_error="-Werror"
     fi
@@ -217,7 +229,7 @@ if test "${GXX}" = yes; then
 
     : ${oz_copt_optimize="$oz_opt $oz_om"}
     : ${oz_copt_profile="$oz_opt -pg"}
-    : ${oz_copt_debug="-g3 -DINTERFACE"}
+    : ${oz_copt_debug="-g3 -DINTERFACE -fno-inline -fno-default-inline -fno-inline-functions"}
 fi
 
 if test -n "${SUNPRO}"
@@ -1314,6 +1326,93 @@ BOOOOOOOM
   AC_MSG_RESULT(no),
   AC_MSG_RESULT(no))
 
+dnl ------------------------------------------------------------------
+dnl check alignment of secondary tag
+dnl ------------------------------------------------------------------
+
+AC_MSG_CHECKING([alignment of secondary tag for const terms])
+AC_TRY_RUN([
+class Tag {
+public:
+  unsigned int tag;
+};
+class Const : public Tag {
+private:
+  void*ptr;
+};
+int main()
+{
+  Const c;
+  return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
+}],
+  AC_MSG_RESULT([ok]),
+  AC_MSG_ERROR([Aargh... alignment conditions for secondary tags
+are not satisfied on your platform/compiler combination]),
+  AC_MSG_RESULT([assume optimistic ok for cross compilation]))
+
+AC_MSG_CHECKING([if alignment of secondary tags for extensions needs padding])
+AC_TRY_RUN([
+class Tag {
+public:
+  unsigned int tag;
+};
+class Ext : public Tag {
+public:
+  void* ptr;
+  virtual void foo() {}
+};
+class User : public Ext {
+public:
+  void* uptr;
+public:
+  virtual void baz(){}
+};
+int main()
+{
+  User u;
+  return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
+}],
+  AC_MSG_RESULT(no)
+  needs_padding=no,
+  AC_MSG_RESULT(yes)
+  needs_padding=yes,
+  AC_MSG_RESULT([assume optimistic no for cross compilation])
+  needs_padding=no)
+
+NEEDS_PADDING=0
+AC_SUBST(NEEDS_PADDING)
+if test "$needs_padding" = "yes"; then
+AC_MSG_CHECKING([if padding works])
+AC_TRY_RUN([
+class Tag {
+public:
+  unsigned int tag;
+};
+class Pad {
+private:
+  unsigned int _pad;
+};
+class Ext : public Pad, public Tag {
+public:
+  void* ptr;
+  virtual void foo() {}
+};
+class User : public Ext {
+public:
+  void* uptr;
+public:
+  virtual void baz(){}
+};
+int main()
+{
+  User u;
+  return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
+}],
+  AC_MSG_RESULT(yes)
+  NEEDS_PADDING=1,
+  AC_MSG_RESULT(no),
+  AC_MSG_ERROR([we should not get here when cross compiling]))
+fi
 
 dnl ------------------------------------------------------------------
 dnl Configure oztool.sh
@@ -1334,7 +1433,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf-others.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in i386-mingw32-oztool .gdbinit)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in extension.hh:extension.in i386-mingw32-oztool .gdbinit)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
