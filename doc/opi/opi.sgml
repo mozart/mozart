@@ -784,7 +784,7 @@
 	    <TR/<TD/<<Show>>/<TD/<<System.show>>//
 	    <TR/<TD/<<Print>>/<TD/<<System.print>>//
 	    <TR/<TD/<<Browse>>/<TD/<<Browser.browse>>//
-	    <TR/<TD/<<Inspect>>/<TD/<<Inspector.inspect>>//
+<!--	    <TR/<TD/<<Inspect>>/<TD/<<Inspector.inspect>>//-->
 	    <TR/<TD/<<Load>>/<TD/<<Pickle.load>>//
 	    <TR/<TD/<<Save>>/<TD/<<Pickle.save>>//
 	    <TR/<TD/<<SearchOne>>/<TD/<<Search.base.one>>//
@@ -844,6 +844,7 @@
 	    Assuming it to contain an expression, enclose it by an
 	    application of the procedure <Code proglang=oz>Browse</Code>.
 	</List>
+<!--
       <Para class=apropos><Title/<Span class=index/Inspector//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-inspect-buffer>>/
@@ -858,6 +859,7 @@
 	    Assuming it to contain an expression, enclose it by an
 	    application of the procedure <Code proglang=oz>Inspect</Code>.
 	</List>
+-->
       <Para class=apropos><Title/<Span class=index/Panel//
 	<List>
 	  <Entry class=command><Span class=index/<<oz-open-panel>>/
