@@ -62,6 +62,8 @@ OZ_Term atom_var, atom_any, atom_type, atom_fd, atom_fs, atom_bool,
 //=============================================================================
 // interface to the Oz loader
 
+char oz_module_name[] = "Reflect";
+
 extern "C"
 {
   OZ_C_proc_interface * oz_init_module(void)
