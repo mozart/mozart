@@ -1451,7 +1451,7 @@ and initial percent signs."
 
 (defconst oz-char-matcher
   (concat "&\\(" "[^\C-@\\\n]" "\\|" "\\\\" "\\("
-	  "[0-7][0-7][0-7]\\|x[0-9A-Fa-f][0-9A-Fa-f]\\|[abfnrtc\\'\"`]"
+	  "[0-7][0-7][0-7]\\|x[0-9A-Fa-f][0-9A-Fa-f]\\|[abfnrtv\\'\"`]"
 	  "\\)" "\\)")
   "Regular expression matching an ampersand character constant.
 Used only for fontification.")
