@@ -90,7 +90,7 @@ Board::Board(Board * p)
     threads(0), suspList(0), nonMonoSuspList(0)
 {
   Assert(p==NULL || !p->isCommitted());
-  parent = p;
+  setParentInternal(p);
   if (p) {
     result  = oz_newVar(p);
     rootVar = oz_newVar(this);
@@ -274,7 +274,7 @@ TaggedRef Board::merge(Board *bb, Bool sibling) {
 			      merge(bb->getLocalPropagatorQueue()));
 
   // Mark as merged
-  parent = bb;
+  setParentInternal(bb);
   setCommitted();
 
   // Must be before script installation
