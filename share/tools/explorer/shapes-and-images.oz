@@ -137,15 +137,15 @@ local
 
 in
 
-   Images = images(succeeded: SucceededImage
-                   blocked:   BlockedImage
-                   choose:    ChooseImage
-                   failed:    FailedImage)
+   Images = images(succeeded: !SucceededImage
+                   blocked:   !BlockedImage
+                   choose:    !ChooseImage
+                   failed:    !FailedImage)
 
-   Shapes = shapes(succeeded: SucceededShape
-                   blocked:   BlockedShape
-                   choose:    ChooseShape
-                   failed:    FailedShape
-                   hidden:    HiddenShape)
+   Shapes = shapes(succeeded: !SucceededShape
+                   blocked:   !BlockedShape
+                   choose:    !ChooseShape
+                   failed:    !FailedShape
+                   hidden:    !HiddenShape)
 
 end
