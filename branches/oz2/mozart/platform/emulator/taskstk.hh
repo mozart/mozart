@@ -32,7 +32,7 @@ extern ProgramCounter
 
 typedef StackEntry TaskStackEntry;
 
-#define frameSz 3
+#define frameSz TASKFRAMESIZE
 
 
 class TaskStack: public Stack {
@@ -77,6 +77,10 @@ public:
 
   TaskStack(int s): Stack(s,Stack_WithFreelist) { makeEmpty(); }
   ~TaskStack() { Assert(0); }
+
+  int suggestNewSize() {
+    return max(ozconf.stackMinSize,(getMaxSize() + getUsed()) >> 1);
+  }
 
   void printTaskStack(ProgramCounter pc = NOCODE,
 		      Bool verbose = NO, int depth = 10000);

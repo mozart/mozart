@@ -24,8 +24,8 @@ int TaskStack::tasks()
 void TaskStack::checkMax()
 {
   int maxSize = getMaxSize();
-  if (ozconf.stackMaxSize != -1 &&
-      maxSize >= ozconf.stackMaxSize) {
+
+  if (maxSize >= ozconf.stackMaxSize) {
     int newMaxSize = (maxSize*3)/2;
 
 loop:
