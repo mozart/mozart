@@ -385,7 +385,7 @@ in
 			  fill:  CursorColor
 			  width: LinkWidth
 			  tags:  Connection)}
-	       {Connection tk(raise)}
+	       {Connection tk('raise')}
 	    end
 	 end
       end
@@ -412,7 +412,7 @@ in
 	 Numbers = self.canvas.numbers
       in
 	 {Numbers tk(itemconfigure fill:LineColor)}
-	 {Numbers tk(raise)}
+	 {Numbers tk('raise')}
       end
 
       meth hideNumbers
