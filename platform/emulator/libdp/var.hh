@@ -69,17 +69,21 @@ class ProxyVar : public ProxyManagerVar {
 private:
   TaggedRef binding;
   TaggedRef status;
-  Bool is_future;
+  short is_future;
+  short is_auto;
 public:
   ProxyVar(Board *bb, int i,Bool isF) : 
-    ProxyManagerVar(bb,i), binding(0),status(0), is_future(isF){ }
+    ProxyManagerVar(bb,i), binding(0),status(0), is_future(isF),is_auto(FALSE){ }
+
+  void makeAuto(){is_auto=TRUE;}
+  Bool isAuto(){return is_auto==1;}
 
   int getIdV() { return OZ_EVAR_PROXY; }
   OZ_Term statusV();
   VarStatus checkStatusV();
   ExtVar *gcV() { return new ProxyVar(*this); }
   void gcRecurseV(void);
-  void disposeV(void) {
+  void disposeV(void) { // PER-LOOK when is this used
     disposeS();
     freeListDispose(this,sizeof(ProxyVar));
   }
@@ -108,6 +112,8 @@ public:
   void wakeAll();
 
   TaggedRef getTaggedRef();
+
+  void nowGarbage(BorrowEntry*); 
 };
 
 inline
@@ -131,8 +137,10 @@ public:
   DSite* sd;
   ProxyListKind kind; 
   ProxyList *next;
-public: // PER-TODO
-  ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt),kind(EXP_REG){}
+public: 
+  // pb2
+  // ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt),kind(EXP_REG){}
+  ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt),kind(AUT_REG){}
 
   USEFREELISTMEMORY;
 
@@ -143,6 +151,8 @@ public: // PER-TODO
     return n;
   }
   ProxyList *gcProxyList();
+
+  void unAuto(){kind=EXP_REG;}
 };
 
 class ManagerVar : public ProxyManagerVar {
@@ -151,7 +161,7 @@ private:
   OzVariable *origVar;
   InformElem *inform; // for failure
 protected:
-  OZ_Return sendRedirectToProxies(OZ_Term val, DSite* ackSite);
+  void sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:
   ManagerVar(OzVariable *ov, int index)
     :  ProxyManagerVar(ov->getHome1(),index), inform(NULL), 
@@ -164,6 +174,7 @@ public:
   void gcRecurseV(void);
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
+  OZ_Return bindVInternal(TaggedRef *vptr, TaggedRef t,DSite* );
   OZ_Return forceBindV(TaggedRef*p, TaggedRef v);
   OZ_Return addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE);
   void disposeV(void) {
@@ -196,6 +207,7 @@ public:
   Bool siteInProxyList(DSite*);
 
   void deregisterSite(DSite* sd);
+  void deAutoSite(DSite*);
   void surrender(TaggedRef*, TaggedRef);
   void requested(TaggedRef*);
   void marshal(MsgBuffer*);
@@ -234,7 +246,7 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 
 /* ---------------------------------------------------------------------- */
 
-OZ_Return sendRedirect(DSite*, int, TaggedRef);
+void sendRedirect(DSite*, int, TaggedRef);
 OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
 Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
 
@@ -276,7 +288,13 @@ Bool errorIgnoreVar(BorrowEntry*);
 Bool varFailurePreemption(TaggedRef t,EntityInfo*, Bool&);
 void varPOAdjustForFailure(int,EntityCond,EntityCond);
 
+void recDeregister(TaggedRef,DSite*);
+
+Bool varCanSend(DSite*);
 #endif
+
+
+
 
 
 

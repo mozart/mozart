@@ -28,6 +28,7 @@
 #pragma implementation "table.hh"
 #endif
 
+#include "base.hh"
 #include "table.hh"
 #include "value.hh"
 #include "var.hh"
@@ -628,10 +629,16 @@ void BorrowEntry::print_entry(int nr) {
   case PO_NONE:
     secCred = "0";
     sprintf(primCred, "%ld", uOB.credit);
+
     break;
   default:
     Assert(0);}
-  
+
+  if(!initialized()){
+    printf("<%d>\t not initialized \t %d\t %s\t\t %s\n", nr, 
+	   netaddr.index, primCred, secCred);
+    return;}
+
   printf("<%d>\t %s\t %d\t %s\t\t %s\n", nr, toC(PO_getValue(this)), 
 	 netaddr.index, primCred, secCred);
 }
@@ -649,13 +656,7 @@ void BorrowTable::print(){
     if(!(array[i].isFree())){
       b=getBorrow(i);
       b->print_entry(i);
-#ifdef XXDEBUG_PERDIO
-      b->print();
-    } else {
-      printf("<%d> FREE: next:%d\n",i,array[i].uOB.nextfree);
-#endif
-    }
-  }
+    }}
   printf("-----------------------------------------------\n");  
 }
 
@@ -848,6 +849,11 @@ Bool BorrowEntry::addSecCredit_Slave(Credit c,BorrowCreditExtension *slave){
 
 /* public */
 
+static inline void refClear(BorrowEntry* b){
+  if(b->isRef())
+    BT->maybeFreeBorrowEntry(BT->ptr2Index(b));}
+
+
 void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
   switch(getExtendFlags()){
   case PO_EXTENDED|PO_SLAVE|PO_MASTER|PO_BIGCREDIT:{
@@ -874,17 +880,22 @@ void BorrowEntry::addSecondaryCredit(Credit c,DSite *s){
   case PO_EXTENDED|PO_MASTER|PO_BIGCREDIT:{
     if(s==myDSite){
       addSecCredit_MasterBig(c,getMaster());
+      refClear(this);
       return;}
     break;}
 
   case PO_EXTENDED|PO_MASTER:{
     if(s==myDSite){
       addSecCredit_Master(c,getMaster());
+      refClear(this);
       return;}
     break;}
   default:
     break;
   }
+  if(s==myDSite){
+    OZ_warning("sec credit error: please inform andreas@sics.se");
+    return;}
   giveBackSecCredit(s,c);
 }
 
@@ -933,6 +944,8 @@ void BorrowEntry::giveBackSecCredit(DSite *s,Credit c){
 
 void BorrowEntry::freeBorrowEntry(){
   Assert(!isExtended());
+  if(isVar() && typeOfBorrowVar(this)==VAR_PROXY){
+    GET_VAR(this,Proxy)->nowGarbage(this);}
   if(!isPersistent())
     giveBackCredit(getCreditOB());}
 
@@ -945,7 +958,8 @@ void BorrowEntry::gcBorrowRoot(int i) {
     return;
   }
   if(isRef()) {
-    gcPO(); // PER-LOOK - this is probably incorrect 
+    Assert(isExtended());
+    gcPO(); 
     return;}
   Assert(isTertiary());
   if(isTertiaryPending(getTertiary())) gcPO();
@@ -1174,7 +1188,8 @@ void BorrowTable::gcFrameToProxy(){
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-    if((!b->isFree()) && (!b->isVar())){
+    Assert(!b->isRef() || b->isExtended());
+    if((b->isTertiary())){
       Tertiary *t=b->getTertiary();
       if(t->isFrame()) {
 	if((t->getType()==Co_Cell)
@@ -1194,10 +1209,7 @@ void BorrowTable::gcBorrowTableFinal()
   int i;
   for(i=0;i<size;i++) {
     BorrowEntry *b=getBorrow(i);
-
-    if (b->isFree())
-      continue;
-
+    
     if(b->isVar()) {
       if(b->isGCMarked()) {
 	b->removeGCMark();
@@ -1209,15 +1221,17 @@ void BorrowTable::gcBorrowTableFinal()
 	borrowTable->maybeFreeBorrowEntry(i);
       }} 
     else {
-      Tertiary *t = b->getTertiary();
-      if(b->isGCMarked()) {
-	b->removeGCMark();
-	b->getSite()->makeGCMarkSite();
-	PD((GC,"BT b:%d mark tertiary found",i));}
-      else{
-	if(!errorIgnore(t)) maybeUnask(t);
-	Assert(t->isProxy());
-	borrowTable->maybeFreeBorrowEntry(i);
+      if(b->isTertiary()){
+	Tertiary *t = b->getTertiary();
+	if(b->isGCMarked()) {
+	  b->removeGCMark();
+	  b->getSite()->makeGCMarkSite();
+	  PD((GC,"BT b:%d mark tertiary found",i));}
+	else{
+	  if(!errorIgnore(t)) maybeUnask(t);
+	  Assert(t->isProxy());
+	  borrowTable->maybeFreeBorrowEntry(i);
+	}
       }
     }
   }

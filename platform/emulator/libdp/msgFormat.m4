@@ -32,6 +32,7 @@ message(M_OWNER_SEC_CREDIT,Site,Index,Credit)
 message(M_BORROW_CREDIT,Site,Index,Credit)
 
 message(M_REGISTER,Index,Site)
+message(M_DEREGISTER,Index,Site)
 message(M_REDIRECT,Site,Index,Term)
 message(M_ACKNOWLEDGE,Site,Index)
 message(M_SURRENDER,Index,Site,Term)
