@@ -2771,7 +2771,34 @@ OZ_BI_define(BInewPort,1,1)
   return oz_unify(OZ_in(0),fut);
 } OZ_BI_end
 
+#define FAST_DOPORTSEND
 
+#ifdef FAST_DOPORTSEND
+void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
+  if (home==(Board*)NULL || home==oz_currentBoard()) {
+    OZ_Term newFut = oz_newFuture(oz_currentBoard());
+    OZ_Term lt     = oz_cons(val,newFut);
+    OZ_Term oldFut = port->exchangeStream(newFut);
+    DEREF(oldFut,ptr);
+    oz_bindFuture(ptr,lt);
+  } else {
+    OZ_Term newFut = oz_newFuture(home);
+    OZ_Term newVar = oz_newVariable(home);
+    OZ_Term lt     = oz_cons(newVar,newFut);
+    OZ_Term oldFut = port->exchangeStream(newFut);
+    // this a send to a port in a super-ordinated space
+    // perform unification in the port's space
+    // it has already been verified that val is at least
+    // situated in that space.
+    // -- I don't really understand why we need to do this.
+    // -- (1) does bindFuture trail otherwise?
+    // -- (2) why do I need newVar?
+    Thread * t = oz_newThreadInject(home);
+    t->pushCall(BI_Unify,RefsArray::make(val,newVar));
+    t->pushCall(BI_bindFuture,RefsArray::make(oldFut,lt));
+  }
+}
+#else
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
   if (home != (Board *) NULL) {
     OZ_Term newFut = oz_newFuture(home);
@@ -2794,6 +2821,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     OZ_unifyInThread(val,oz_head(lt)); 
   }
 }
+#endif
 
 #endif
 
