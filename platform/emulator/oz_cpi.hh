@@ -169,6 +169,7 @@ public:
 private:
   OZ_Term ** suspendVars;
   int spawnVarsNumber,  suspendVarsNumber;
+  OZ_Boolean collect;
 protected:
   void addSpawn(OZ_FDPropState, OZ_Term *);
   void addSuspend(OZ_Term *);
