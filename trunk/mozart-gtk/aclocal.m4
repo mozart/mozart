@@ -1503,18 +1503,25 @@ changequote([,])
   AC_SUBST(OZLOADWIN)
 ])
 
-dnl OZ_FILTER_CFLAGS
+dnl OZ_FILTER_CPPFLAGS
 dnl   remove from VAR the options that cause a warning with the
 dnl   compiler
 
-AC_DEFUN(OZ_FILTER_CFLAGS,[
+AC_DEFUN(OZ_FILTER_CPPFLAGS,[
    oz_tmp="$$1"
    oz_accu=
    oz_sav_CPPFLAGS="$CPPFLAGS"
    for oz_opt in $oz_tmp; do
-     CPPFLAGS="$oz_opt"
-     AC_TRY_COMPILE([],[],
-       oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}")
+     case $oz_opt in
+     -I*)
+       CPPFLAGS="$oz_opt"
+       AC_TRY_CPP([],
+         oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}")
+       ;;
+     *)
+       oz_accu="${oz_accu}${oz_accu:+ }${oz_opt}"
+       ;;
+     esac
    done
    CPPFLAGS="$oz_sav_CPPFLAGS"
    $1="$oz_accu"
