@@ -68,7 +68,6 @@ local
 	 local
 	    Width = {WC get($)} - 1
 	 in
-	    {OzcarMessage 'tree width = ' # Width}
 	    width <- Width
 	 end
       end
@@ -241,7 +240,6 @@ in
 	 local
 	    Height = ThreadTreeStretchY * (@width + 3)
 	 in
-	    {OzcarMessage 'Tk.canvas scrollregion: _ _ _ ' # Height}
 	    {self tk(conf scrollregion:q(0 0 ThreadTreeWidth Height))}
 	 end
       end
