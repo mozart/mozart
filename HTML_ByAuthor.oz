@@ -26,13 +26,19 @@ define
    fun{GetAuthorList}
       As={Manager get_authors($)}
    in
-      {Filter {Map {Record.toListInd As}
-	       fun{$ I#X}
-		  {Manager condGetId(I unit $)}#{Map X fun{$ Y}
-							{Manager condGetId(Y unit $)}
-						     end}
-	       end}
-       fun{$ X} X.1\=unit end}
+      {Sort
+       {Filter
+	{Map {Record.toListInd As}
+	 fun{$ I#X}
+	    {Manager condGetId(I unit $)} #
+	    {Map X fun{$ Y} {Manager condGetId(Y unit $)} end}
+	 end}
+	fun{$ X} X.1\=unit end}
+       fun {$ X Y}
+	  %% this totally sucks
+	  {VirtualString.toAtom {X.1 getSlot('name_for_index' $)}}<
+	  {VirtualString.toAtom {Y.1 getSlot('name_for_index' $)}}
+       end}
    end
    
    proc{UpdatePage}
