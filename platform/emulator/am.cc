@@ -136,6 +136,9 @@ extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
 extern void initVirtualProperties();
 extern void initExtensions(); /* extensions */
+#ifdef DENYS_EVENTS
+extern void initEvents();
+#endif
 
 void AM::init(int argc,char **argv)
 {
@@ -315,6 +318,11 @@ void AM::init(int argc,char **argv)
   //
   initExtensions();
 
+#ifdef DENYS_EVENTS
+  //
+  initEvents();
+#endif
+
   // init x args
   {
     for (int i=NumberOfXRegisters; i--; )
@@ -415,7 +423,9 @@ void AM::handleTasks()
 // a variable that is set to 0 or to a pointer to a procedure
 // to check the status of children processes (see contrib/os/process.cc)
 
+#ifndef DENYS_EVENTS
 void (*oz_child_handle)() = 0;
+#endif
 
 // The engine goes to sleep by performing an indefinite select,
 // but we also want the engine to wake up when a child process
@@ -592,7 +602,11 @@ void AM::checkStatus(Bool block)
 
   if (isSetSFlag(ChildReady)) {
     unsetSFlag(ChildReady);
+#ifdef DENYS_EVENTS
+    OZ_eventPush(oz_atom("SIGCHLD"));
+#else
     if (oz_child_handle!=0) (*oz_child_handle)();
+#endif
   }
 
   if (block)
