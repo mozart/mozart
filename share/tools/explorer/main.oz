@@ -7,15 +7,6 @@
 
 local
 
-   proc {OpiError V M}
-      E = {System.get errors}
-   in
-      {System.showError '*** Explorer Configuration Error'} 
-      {System.showError ('*** '# V # ': ' #
-			 {System.valueToVirtualString M E.depth E.width})}
-      {System.showError ''}
-   end
-
    local
       MoveProc = {Tk.getId}
    in
@@ -159,7 +150,8 @@ in
 	       else false
 	       end
 	    then skip
-	    else {OpiError 'Action adding' Add}
+	    else
+	       {`RaiseError` explorer(actionAdd Add)}
 	    end
 	 end
       end
@@ -183,7 +175,8 @@ in
 	       else false
 	       end
 	    then skip
-	    else {OpiError 'Action deletion' Del}
+	    else
+	       {`RaiseError` explorer(actionDel Del)}
 	    end
 	 end
       end
@@ -278,7 +271,8 @@ in
 	       case @MyManager of unit then skip elseof M then
 		  {M updateAfterOption}
 	       end
-	    else {OpiError 'Option configuration' OM}
+	    else
+	       {`RaiseError` explorer(option OM)}
 	    end
 	 end
       end
