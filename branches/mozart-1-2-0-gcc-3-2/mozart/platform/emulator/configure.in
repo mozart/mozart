@@ -160,7 +160,8 @@ dnl *****************************************************************
 
 : ${oz_copt_default=$CXXFLAGS}
 CXXFLAGS=
-export EMULATE_CXXFLAGS=
+EMULATE_CXXFLAGS=""
+export EMULATE_CXXFLAGS
 AC_SUBST(EMULATE_CXXFLAGS)
 
 if test "${GXX}" = yes; then

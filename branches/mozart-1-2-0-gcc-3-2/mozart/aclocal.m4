@@ -233,6 +233,10 @@ AC_DEFUN(OZ_CHECK_VERSION,[
   oz_tmp_want="[$3]"
   oz_tmp_IFS="$IFS"
   IFS="$IFS._-"
+  oz_tmp_got="$oz_tmp_got"
+  oz_tmp_want="$oz_tmp_want"
+  IFS=""
+  IFS="$oz_tmp_IFS"
   set $oz_tmp_got DONE
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
@@ -246,7 +250,6 @@ AC_DEFUN(OZ_CHECK_VERSION,[
     fi
     [shift]
   done
-  IFS=$oz_tmp_IFS
   [$1]=$oz_tmp__ok])
 
 dnl ------------------------------------------------------------------
