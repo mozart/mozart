@@ -151,6 +151,12 @@ void ProfileDataTotal::operator += (ProfileData &y) {
   }
 }
 
+
+void ProfileList::gc(void) { 
+  if (board) board = board->gcBoard(); 
+}
+
+
 void ProfileHost::print_total_average(void) {
   total.init();
   ProfileList * aux = head;
