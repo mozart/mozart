@@ -1749,6 +1749,12 @@ $builtins = {
                              module=>'os',
                              native => true},
 
+    'OS.chDir'          => { in  => ['+virtualString'],
+                             out => [],
+                             BI  => unix_chDir,
+                             module=>'os',
+                             native => true},
+
     'OS.getCWD'         => { in  => [],
                              out => ['+atom'],
                              BI  => unix_getCWD,
