@@ -191,7 +191,6 @@ if (predArity != arityExp && VarArity != arityExp) {                       \
 
 
 
-
 #define IMPOSSIBLE(INSTR) error("%s: impossible instruction",INSTR)
 
 
@@ -2815,7 +2814,6 @@ LBLsuspendThread:
          {
            Abstraction *def;
            if (typ==Co_Object) {
-             /* {Obj Msg} --> {Obj Msg Methods} */
              Object *o = (Object*) predicate;
              if (o->isClass()) {
                DORAISE(OZ_mkTupleC("applyFailure",1,
@@ -2824,6 +2822,7 @@ LBLsuspendThread:
              }
              CheckArity(1,makeTaggedConst(o));
              def = o->getAbstraction();
+             /* {Obj Msg} --> {Send Msg Methods Obj} */
              X[predArity++] = o->getSlowMethods();
              X[predArity++] = makeTaggedConst(o);
              if (!isTailCall) {

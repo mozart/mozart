@@ -1377,13 +1377,13 @@ public:
   AssRegArray gRegs;
   ProgramCounter PC;
 
-  PrTabEntry (TaggedRef name, int arityInit, int numbOfGRegs)
-  : printname(name),
-    arity ((unsigned short) arityInit), gRegs (numbOfGRegs), spyFlag(NO)
+  PrTabEntry (TaggedRef name, SRecordArity arityInit, int numbOfGRegs)
+  : printname(name), gRegs (numbOfGRegs), spyFlag(NO)
   {
-      Assert(arityInit==(unsigned short) arityInit);
       Assert(isLiteral(name));
-      methodArity = mkTupleWidth(arityInit);
+      methodArity = arityInit;
+      arity =  (unsigned short) getWidth(arityInit);
+      Assert((int)arity == getWidth(arityInit));
   }
 
   OZPRINTLONG;
