@@ -320,11 +320,8 @@ in
 	 ThreadManager,remove(T I kill Select)
       end
 
-      meth killAll($)
-	 E = {Dictionary.items self.ThreadDic}
-	 DeleteCount = {Length E}
-      in
-	 {ForAll E
+      meth termAll
+	 {ForAll {Dictionary.items self.ThreadDic}
 	  proc {$ S}
 	     I = {S getId($)}
 	     T = {S getThread($)}
@@ -332,10 +329,48 @@ in
 	     ThreadManager,kill(T I false)
 	     Gui,doStatus('.' append)
 	  end}
-	 DeleteCount
       end
 
-      meth removeAllDead
+      meth termAllButCur
+	 {ForAll {Dictionary.items self.ThreadDic}
+	  proc {$ S}
+	     I = {S getId($)}
+	     T = {S getThread($)}
+	  in
+	     case T == @currentThread then skip else
+		ThreadManager,kill(T I false)
+		Gui,doStatus('.' append)
+	     end
+	  end}
+      end
+
+      meth detachAll
+	 {ForAll {Dictionary.items self.ThreadDic}
+	  proc {$ S}
+	     I = {S getId($)}
+	     T = {S getThread($)}
+	  in
+	     {Detach T}
+	     ThreadManager,remove(T I kill false)
+	     Gui,doStatus('.' append)
+	  end}
+      end
+
+      meth detachAllButCur
+	 {ForAll {Dictionary.items self.ThreadDic}
+	  proc {$ S}
+	     I = {S getId($)}
+	     T = {S getThread($)}
+	  in
+	     case T == @currentThread then skip else
+		{Detach T}
+		ThreadManager,remove(T I kill false)
+		Gui,doStatus('.' append)
+	     end
+	  end}
+      end
+
+      meth detachAllDead
 	 {ForAll {Dictionary.items self.ThreadDic}
 	  proc {$ S}
 	     I = {S getId($)}
@@ -346,14 +381,17 @@ in
 		Gui,doStatus('.' append)
 	     else skip end
 	  end}
-	 {Delay 1000}   %% give the user a chance to read the dots... ;)
-	 Gui,nextThread %% select next living thread
+	 case @currentThread \= unit andthen
+	    {Thread.state @currentThread} == terminated then
+	    thread
+	       {Delay 1000}   %% give the user a chance to read the ' done' ;)
+	       Gui,nextThread %% select next living thread
+	    end
+	 else skip end
       end
 
       meth detach(T I)
-	 {Dbg.trace T false}      %% thread is not traced anymore
-	 {Dbg.step T false}       %% no step mode, run as you like!
-	 {Thread.resume T}        %% run, run to freedom!! :-)
+	 {Detach T}
 	 Gui,doStatus('Thread #' # I # ' is not traced anymore')
 	 ThreadManager,remove(T I kill)
       end
@@ -414,7 +452,7 @@ in
 	 Gui,selectNode(I)
 
 	 thread
-	    {WaitOr New {Alarm TimeoutToSwitch}}
+	    {WaitOr New {Alarm {Cget timeoutToSwitch}}}
 	    case {IsDet New} then skip else
 	       ThreadManager,DoSwitch(I PrintStack)
 	    end
