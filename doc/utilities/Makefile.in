@@ -48,7 +48,7 @@ FUNCTORS = \
 SYSLETS = ozdoc
 ELS = ozdoc.el
 ELCS = $(ELS:%.el=%.elc)
-SHELLSCRIPTS = fontify latex2gif gif2thumbnail ps2gif
+SHELLSCRIPTS = fontify latex2gif gif2thumbnail
 
 BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
