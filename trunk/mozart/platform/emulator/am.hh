@@ -158,7 +158,9 @@ public:
   void pushToplevel(ProgramCounter pc);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
+
   Thread *createThread(int prio,int compMode);
+  void wakeUpThread(Thread *tt);
 
   int catchError() { return setjmp(engineEnvironment); }
 public:
@@ -212,11 +214,14 @@ public:
 			   RefsArray X, int argsToSave);
   Suspension *mkSuspension(int prio, OZ_CFun bi,
 			   RefsArray X, int argsToSave);
+  void suspendCond(AskActor *aa);
+
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
 
   
   Bool isToplevel();
+  Bool isToplevelFailure();
 
   void gc(int msgLevel);  // ###
   void doGC();
