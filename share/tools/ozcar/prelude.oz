@@ -69,7 +69,7 @@ proc {OzcarMessage M}
    else skip end
 end
 proc {OzcarError M}
-   {System.showInfo OzcarErrorPrefix # M}
+   {System.showError OzcarErrorPrefix # M}
 end
 
 fun {V2VS X}
