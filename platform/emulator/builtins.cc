@@ -26,7 +26,7 @@ BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, Bool replace,
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,funn,infun);
 
-  if (builtinTab.aadd(builtin,name,replace) == (unsigned) htEmpty) {
+  if (builtinTab.aadd(builtin,name,replace) == NO) {
     warning("BIadd: failed to add %s/%d\n",name,arity);
     delete builtin;
     return((BuiltinTabEntry *) NULL);
@@ -38,7 +38,7 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t, Bool replace)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,t);
 
-  if (builtinTab.aadd(builtin,name,replace) == (unsigned) htEmpty) {
+  if (builtinTab.aadd(builtin,name,replace) == NO) {
     warning("BIadd: failed to add %s/%d\n",name,arity);
     delete builtin;
     return((BuiltinTabEntry *) NULL);
