@@ -275,7 +275,7 @@ if ("$option" eq "-body") {
 	void initAtomsAndNames() {
 
 	    for (int i = $atoms; i--; )
-		_StaticAtomTable[i] = oz_atom(_StaticAtomChars[i]);
+		_StaticAtomTable[i] = oz_atomNoDup(_StaticAtomChars[i]);
              
 	    for (int i = $names; i--; )
 		_StaticNameTable[i] = oz_uniqueName(_StaticNameChars[i]);
