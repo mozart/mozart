@@ -157,14 +157,13 @@ void Pickler::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
 }
 
 //
-OZ_Term Pickler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
+void Pickler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
 {
   OZ_error("Pickler::processCVar is called!");
-  return ((OZ_Term) 0);
 }
 
 //
-void Pickler::processRepetition(OZ_Term t, int repNumber)
+void Pickler::processRepetition(OZ_Term t, OZ_Term *tPtr, int repNumber)
 {
   Assert(repNumber >= 0);
   PickleBuffer *bs = (PickleBuffer *) getOpaque();
@@ -386,23 +385,19 @@ void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 //
 void ResourceExcavator::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
 {
-#ifdef DEBUG_CHECK
-  OZ_Term term = processCVar(uv, uvarTerm);
-  Assert(term == (OZ_Term) 0);
-#else
-  (void) processCVar(uv, uvarTerm);
-#endif
+  processCVar(uv, uvarTerm);
 }
 
 //
-OZ_Term ResourceExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
+void ResourceExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
 {
+  rememberVarLocation(cvarTerm);
   addResource(makeTaggedRef(cvarTerm));
-  return ((OZ_Term) 0);
 }
 
 //
-void ResourceExcavator::processRepetition(OZ_Term t, int repNumber) {}
+void ResourceExcavator::processRepetition(OZ_Term t, OZ_Term *tPtr,
+                                          int repNumber) {}
 Bool ResourceExcavator::processLTuple(OZ_Term ltupleTerm)
 {
   rememberTerm(ltupleTerm);

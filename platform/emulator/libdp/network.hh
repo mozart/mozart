@@ -33,15 +33,15 @@
 #include "msgType.hh"
 #include "comm.hh"
 
-#include "msgContainer.hh"
-
 #ifdef INTERFACE
 #pragma interface
 #endif
 
 class ComObj;
 ComObj* createComObj(DSite*, int recCtr);
+void comController_startGCComObjs();
 void comController_gcComObjs();
+void comController_finishGCComObjs();
 
 //
 // Run this when starting;

@@ -30,17 +30,22 @@
 
 #include "var_base.hh"
 
-enum {
+//
+typedef enum {
   OZ_EVAR_PROXY,
   OZ_EVAR_MANAGER,
   OZ_EVAR_LAZY,
+  OZ_EVAR_EMANAGER,
+  OZ_EVAR_EPROXY,
+  OZ_EVAR_GCSTUB,
   OZ_EVAR_LAST
-};
+} ExtVarType;
 
+//
 class ExtVar : public OzVariable {
 public:
   ExtVar(Board *bb) : OzVariable(OZ_VAR_EXT,bb) {}
-  virtual int           getIdV() = 0;
+  virtual ExtVarType    getIdV() = 0;
   virtual OzVariable*   gCollectV() = 0;
   virtual void          gCollectRecurseV() = 0;
   virtual OzVariable*   sCloneV() = 0;
@@ -59,7 +64,7 @@ public:
   virtual int getSuspListLengthV() { return getSuspListLengthS(); }
 
   virtual void printStreamV(ostream &out,int depth = 10) {
-    out << "<extvar: #" << getIdV() << ">";
+    out << "<extvar: #" << (int) getIdV() << ">";
   }
   virtual void printLongStreamV(ostream &out,int depth = 10, int offset = 0) {
     printStreamV(out,depth); out << endl;
@@ -87,7 +92,5 @@ inline
 OZ_Term oz_makeExtVar(ExtVar *ev) {
   return makeTaggedCVar(ev);
 }
-
-unsigned int oz_newVarId();
 
 #endif

@@ -1,9 +1,12 @@
 /*
  *  Authors:
- *    Michael Mehl (mehl@dfki.de)
+ *    Konstantin Popov <kost@sics.se>
+ *
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
  *
  *  Copyright:
- *    Michael Mehl (1998)
+ *    Konstantin Popov (2000)
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -21,8 +24,8 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(VAR_ALL)
-#pragma implementation "var_ext.hh"
+#if defined(INTERFACE)
+#pragma implementation "var_gcstub.hh"
 #endif
 
-#include "var_ext.hh"
+#include "var_gcstub.hh"

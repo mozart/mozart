@@ -32,8 +32,8 @@
 #pragma interface
 #endif
 
-#include "var_ext.hh"
 #include "dpBase.hh"
+#include "var_ext.hh"
 #include "table.hh"
 
 #define USE_ALT_VAR_PROTOCOL ozconf.perdioUseAltVarProtocol
@@ -48,7 +48,7 @@ public:
   OZ_Term statusV() = 0;
   VarStatus checkStatusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
-  virtual int getIdV() = 0;
+  virtual ExtVarType getIdV() = 0;
   virtual OzVariable *gCollectV(void) = 0;
   virtual void gCollectRecurseV(void) = 0;
   virtual OzVariable *sCloneV(void) { Assert(0); return NULL; }
@@ -85,7 +85,7 @@ public:
   void makeAuto(){is_auto=TRUE;}
   Bool isAuto(){return is_auto==1;}
 
-  int getIdV() { return OZ_EVAR_PROXY; }
+  ExtVarType getIdV() { return (OZ_EVAR_PROXY); }
   OZ_Term statusV();
   VarStatus checkStatusV();
   OzVariable *gCollectV() { return new ProxyVar(*this); }
@@ -105,7 +105,7 @@ public:
 
   void redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void acknowledge(TaggedRef *vPtr, BorrowEntry *be);
-  void marshal(ByteBuffer *);
+  void marshal(ByteBuffer *) { OZ_error("ProxyVar::marshal!?"); }
 
   Bool isFuture(){ return is_future;}
   void addEntityCond(EntityCond);
@@ -180,7 +180,7 @@ public:
   OzVariable * getOrigVar(void) {
     return tagged2CVar(origVar);
   }
-  int getIdV() { return OZ_EVAR_MANAGER; }
+  ExtVarType getIdV() { return (OZ_EVAR_MANAGER); }
   OZ_Term statusV();
   VarStatus checkStatusV();
   OzVariable *gCollectV() { return new ManagerVar(*this); }
@@ -272,15 +272,6 @@ Bool marshalVariable(TaggedRef *tPtr, ByteBuffer *bs);
 Bool triggerVariable(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */
-
-enum VarKind{
-  VAR_PROXY,
-  VAR_MANAGER,
-  VAR_LAZY,
-  VAR_FREE,
-  VAR_FUTURE,
-  VAR_KINDED,
-};
 
 VarKind classifyVar(TaggedRef *);
 

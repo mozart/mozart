@@ -34,6 +34,9 @@
 #include "var.hh"
 #include "var_ext.hh"
 #include "var_obj.hh"
+#include "var_emanager.hh"
+#include "var_eproxy.hh"
+#include "msgContainer.hh"
 #include "dpMarshaler.hh"
 #include "unify.hh"
 #include "var_simple.hh"
@@ -152,7 +155,7 @@ void sendSurrender(BorrowEntry *be,OZ_Term val){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_SURRENDER(na->index,myDSite,val);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  SendTo(na->site,msgC,3);
+  sendTo(na->site,msgC,3);
 }
 
 Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit,TaggedRef term){
@@ -234,8 +237,9 @@ OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   }
 }
 
-void ProxyVar::redoStatus(TaggedRef val,TaggedRef status){
-  SiteUnify(status,oz_status(val));
+void ProxyVar::redoStatus(TaggedRef val, TaggedRef status)
+{
+  OZ_unifyInThread(status, oz_status(val));
 }
 
 void ProxyVar::redirect(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be)
@@ -308,7 +312,7 @@ static void sendAcknowledge(DSite* sd,int OTI){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_ACKNOWLEDGE(myDSite,OTI);
 
-  SendTo(sd,msgC,3);
+  sendTo(sd,msgC,3);
 }
 
 // extern
@@ -319,7 +323,7 @@ void sendRedirect(DSite* sd,int OTI,TaggedRef val)
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_REDIRECT(myDSite,OTI,val);
 
-  SendTo(sd,msgC,3);
+  sendTo(sd,msgC,3);
 }
 
 inline Bool queueTrigger(DSite* s){
@@ -398,12 +402,13 @@ void varGetStatus(DSite* site,int OTI, TaggedRef tr){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
   msgC->put_M_SENDSTATUS(myDSite,OTI,tr);
 
-  SendTo(site,msgC,3);
+  sendTo(site,msgC,3);
 }
 
-void ProxyVar::receiveStatus(TaggedRef tr){
+void ProxyVar::receiveStatus(TaggedRef tr)
+{
   Assert(status!=0);
-  SiteUnify(status,tr);
+  OZ_unifyInThread(status, tr);
   status=0;
 }
 
@@ -455,23 +460,6 @@ void ManagerVar::marshal(ByteBuffer *bs)
 }
 
 //
-void ProxyVar::marshal(ByteBuffer *bs)
-{
-  DSite *sd=bs->getSite();
-  int i=getIndex();
-  PD((MARSHAL,"var proxy o:%d",i));
-  if (sd && borrowTable->getOriginSite(i) == sd) {
-    marshalToOwner(bs, i);
-  } else {
-    if (isFuture()) {
-      marshalBorrowHead(bs, DIF_FUTURE, i);
-    } else {
-      marshalBorrowHead(bs, DIF_VAR, i);
-    }
-  }
-}
-
-
 ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
@@ -488,30 +476,63 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
 Bool marshalVariable(TaggedRef *tPtr, ByteBuffer *bs)
 {
   const TaggedRef var = *tPtr;
-  if (oz_isManagerVar(var)) {
-    oz_getManagerVar(var)->marshal(bs);
-  } else if (oz_isProxyVar(var)) {
-    oz_getProxyVar(var)->marshal(bs);
-  } else if (oz_isLazyVar(var)) {
-    oz_getLazyVar(var)->marshal(bs);
-  } else if (oz_isFree(var) || isFuture(var)) {
+  if (oz_isExtVar(var)) {
+    ExtVarType evt = oz_getExtVar(var)->getIdV();
+    switch (evt) {
+    case OZ_EVAR_MANAGER:
+      oz_getManagerVar(var)->marshal(bs);
+      break;
+    case OZ_EVAR_PROXY:
+      oz_getProxyVar(var)->marshal(bs);
+      break;
+    case OZ_EVAR_LAZY:
+      oz_getLazyVar(var)->marshal(bs);
+      break;
+    case OZ_EVAR_EMANAGER:
+      oz_getEManagerVar(var)->marshal(bs);
+      break;
+    case OZ_EVAR_EPROXY:
+      oz_getEProxyVar(var)->marshal(bs);
+      break;
+    case OZ_EVAR_GCSTUB:
+      Assert(0);
+      break;
+    default:
+      Assert(0);
+      break;
+    }
+    return (TRUE);
+  } else if (oz_isFree(var) || oz_isFuture(var)) {
     Assert(perdioInitialized);
     globalizeFreeVariable(tPtr)->marshal(bs);
+    return (TRUE);
   } else {
-    return FALSE;
+    return (FALSE);
   }
-  return TRUE;
+  Assert(0);
 }
 
 // Return 'TRUE' if successful (that is, the variable is bound)
 Bool triggerVariable(TaggedRef *tPtr){
   Assert(tPtr!=NULL);
   const TaggedRef var = *tPtr;
-  if (isFuture(var)) {
-    switch (((Future*) oz_getVar(tPtr))->kick(tPtr)) {
+  if (oz_isFuture(var)) {
+    // kost@ : 'oz_isFuture(var)' does NOT mean that the 'var' is of
+    // type Future: it can be also a manager var keeping a future!
+    Future *fut;
+    if (oz_isManagerVar(var)) {
+      ManagerVar *mv = oz_getManagerVar(var);
+      fut = (Future *) mv->getOrigVar();
+    } else {
+      fut = (Future *) tagged2CVar(var);
+    }
+    Assert(fut->getType() == OZ_VAR_FUTURE);
+
+    //
+    switch (fut->kick(tPtr)) {
     case PROCEED: return (TRUE);
     case SUSPEND: return (FALSE);
-      // kost@ : I dunno how to handle it. Those who introduced
+      // kost@ : I dunno how to handle it. Those who have introduced
       // 'RAISE' as a return value of 'Future::kick' should have fixed
       // this part as well.
     case RAISE: return (FALSE);
@@ -531,7 +552,7 @@ static void sendRegister(BorrowEntry *be) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_REGISTER(na->index,myDSite);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  SendTo(na->site,msgC,3);
+  sendTo(na->site,msgC,3);
 }
 
 static void sendDeRegister(BorrowEntry *be) {
@@ -542,7 +563,7 @@ static void sendDeRegister(BorrowEntry *be) {
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_DEREGISTER(na->index,myDSite);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  SendTo(na->site,msgC,3);
+  sendTo(na->site,msgC,3);
 }
 
 void ProxyVar::nowGarbage(BorrowEntry* be){
@@ -632,7 +653,7 @@ void sendGetStatus(BorrowEntry *be){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_GETSTATUS(myDSite,na->index);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
-  SendTo(na->site,msgC,3);
+  sendTo(na->site,msgC,3);
 }
 
 OZ_Term ProxyVar::statusV()
@@ -675,35 +696,58 @@ void oz_dpvar_localize(TaggedRef *vPtr) {
   oz_getManagerVar(*vPtr)->localize(vPtr);
 }
 
+//
 // FAILURE structure fundamentals
-
-VarKind classifyVar(TaggedRef* tPtr){
-  TaggedRef tr= *tPtr;
-  if(oz_isProxyVar(tr)){
-    return VAR_PROXY;}
-  if(oz_isManagerVar(tr)){
-    return VAR_MANAGER;}
-  if(oz_isLazyVar(tr)){
-    return VAR_LAZY;}
-  if(oz_isFree(tr)){
-    return VAR_FREE;}
-  if(isFuture(tr)){
-    return VAR_FUTURE;}
-  return VAR_KINDED;
+VarKind classifyVar(TaggedRef* tPtr)
+{
+  TaggedRef tr = *tPtr;
+  if (oz_isExtVar(tr)) {
+    ExtVarType evt = oz_getExtVar(tr)->getIdV();
+    switch (evt) {
+    case OZ_EVAR_MANAGER:
+      return (VAR_MANAGER);
+    case OZ_EVAR_PROXY:
+      return (VAR_PROXY);
+    case OZ_EVAR_LAZY:
+      return (VAR_LAZY);
+    case OZ_EVAR_EMANAGER:
+      Assert(0);
+      return (VAR_MANAGER);
+    case OZ_EVAR_EPROXY:
+      Assert(0);
+      return (VAR_PROXY);
+    case OZ_EVAR_GCSTUB:
+      Assert(0);
+      return (VAR_PROXY);
+    default:
+      Assert(0);
+      return (VAR_PROXY);
+    }
+  } else if (oz_isFree(tr)) {
+    return (VAR_FREE);
+  } else if (oz_isFuture(tr)) {
+    return (VAR_FUTURE);
+  } else {
+    return (VAR_KINDED);
+  }
+  Assert(0);
 }
 
-
-EntityInfo* varGetEntityInfo(TaggedRef* tPtr){
-  switch(classifyVar(tPtr)){
+//
+EntityInfo* varGetEntityInfo(TaggedRef* tPtr)
+{
+  switch (classifyVar(tPtr)) {
   case VAR_MANAGER:
-    return oz_getManagerVar(*tPtr)->getInfo();
+    return (oz_getManagerVar(*tPtr)->getInfo());
   case VAR_PROXY:
-    return oz_getProxyVar(*tPtr)->getInfo();
+    return (oz_getProxyVar(*tPtr)->getInfo());
   case VAR_LAZY:
-    return oz_getLazyVar(*tPtr)->getInfo();
+    return (oz_getLazyVar(*tPtr)->getInfo());
   default:
-    Assert(0);}
-  return NULL;}
+    break;
+  }
+  Assert(0); return ((EntityInfo *) 0);
+}
 
 EntityInfo* varMakeEntityInfo(TaggedRef* tPtr){
   EntityInfo* ei= new EntityInfo();
@@ -872,15 +916,26 @@ void ManagerVar::wakeAll(){
   oz_checkSuspensionList(this,pc_all);
 }
 
-void recDeregister(TaggedRef tr,DSite* s){
+//
+// kost@ : "deautosite"ing relies on the fact that when a variable
+// manager is bound, its value - including all variables! - is
+// immediately exported, thus, local variables become variable
+// managers and can be marked 'EXP_REG', which, in turn, disables
+// auto-exportation for (variables that occur in) their future values.
+// Should that exportation happen some time later, it can also happen
+// after the arrival of the 'deregister' message, so the effect of the
+// message will be lost.
+void recDeregister(TaggedRef tr,DSite* s)
+{
   OZ_Term vars = extractVars(tr);
-  while(!oz_isNil(vars)){
-    OZ_Term t=oz_head(vars);
-    DEREF(t,tPtr,_2);
-    if(classifyVar(tPtr)==VAR_MANAGER){
-      oz_getManagerVar(*tPtr)->deAutoSite(s);
-    }
-    vars=oz_tail(vars);}
+  while (!oz_isNil(vars)) {
+    OZ_Term t = oz_head(vars);
+    OZ_Term *tp = tagged2Ref(t);
+    Assert(oz_isVariable(*tp));
+    if (classifyVar(tp) == VAR_MANAGER)
+      oz_getManagerVar(*tp)->deAutoSite(s);
+    vars = oz_tail(vars);
+  }
 }
 
 static ProxyList** findBefore(DSite* s,ProxyList** base ){

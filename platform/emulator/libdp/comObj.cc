@@ -79,6 +79,8 @@ void ComObj::send(MsgContainer *msgC,int priority) {
     break;
   }
 
+  //
+  msgC->takeSnapshot();
   queues.enqueue(msgC,priority); // After check queues.hasQueued()
 }
 
@@ -838,13 +840,17 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
   return msgC;
 }
 
-void ComObj::msgSent(MsgContainer *msgC) {
-  if(msgC->getMessageType()<C_FIRST) {
-    Assert(msgC->getMsgNum()!=-1);
+void ComObj::msgSent(MsgContainer *msgC)
+{
+  if (msgC->getMessageType() < C_FIRST) {
+    Assert(msgC->getMsgNum() != -1);
     queues.insertUnacked(msgC);
-  }
-  else
+  } else {
+    // kost@ : it's here 'cause there is neither proper destructor for
+    // MsgContainer"s nor a flag saying "that's an outgoing message":
+    msgC->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(msgC);
+  }
 }
 
 void ComObj::msgPartlySent(MsgContainer *msgC) {
@@ -912,10 +918,6 @@ void ComObj::connectionLost(void *info) {
     //  printf("An unknown connection was lost");
     //      comController->deleteComObj(this);
   }
-}
-
-void ComObj::gcComObj() {
-  queues.gcMsgCs();
 }
 
 void ComObj::installProbe(int lowerBound, int higherBound, int interval) {
@@ -1017,11 +1019,33 @@ void comController_acceptHandler(TransObj *transObj) {
   comObj->accept(transObj);
 }
 
-void ComController::gcComObjs() {
-  ComObj *tmp=list;
-  while(tmp!=NULL) {
+//
+void ComController::gcComObjs()
+{
+  ComObj *tmp = list;
+  while (tmp) {
     tmp->gcComObj();
-    tmp=tmp->next;
+    tmp = tmp->next;
+  }
+}
+
+//
+void ComController::startGCComObjs()
+{
+  ComObj *tmp = list;
+  while (tmp) {
+    tmp->startGCComObj();
+    tmp = tmp->next;
+  }
+}
+
+//
+void ComController::finishGCComObjs()
+{
+  ComObj *tmp = list;
+  while (tmp) {
+    tmp->finishGCComObj();
+    tmp = tmp->next;
   }
 }
 

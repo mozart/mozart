@@ -69,11 +69,12 @@ void MsgContainer::marshal(ByteBuffer *bb,
           dpm->genFullToplevel();
           fullTopFlag = NO;
         }
-        ret = (void *) dpMarshalTerm(bb, dpm, (TaggedRef) msgFields[i].arg);
+        ret = (void *) dpMarshalTerm(bb, dpm,
+                                     (TaggedRef) msgFields[i].arg, msgTS);
       } else {
         dpm = (DPMarshaler *) cont;
         fullTopFlag = NO;
-        ret = (void *) dpMarshalTerm(bb, dpm);
+        ret = (void *) dpMarshalTerm(bb, dpm, msgTS);
       }
       if(ret==(void *) 0) {
         msgFields[i].ft=FT_NONE;
@@ -415,6 +416,8 @@ void MsgContainer::gcMsgC() {
   else if(checkFlag(MSG_HAS_UNMARSHALCONT) && cont != 0){
 //    printf("gcollect builder msgC: %x\n ",this);
     ((Builder *) cont)->gCollect();}
+  if (msgTS)
+    gcTermSnapshot(msgTS);
 
   //
   switch(mt) {

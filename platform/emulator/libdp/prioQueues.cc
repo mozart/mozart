@@ -78,30 +78,104 @@ inline void u_insertUnacked(MsgContainer *&unackedList,MsgContainer *msgC) {
   }
 }
 
-inline void u_gcQueue(Queue const &q) {
-  Assert(((q.first==NULL) && (q.last==NULL))||
-         ((q.first!=NULL) && (q.last!=NULL)));
+//
+static inline
+void u_gcQueue(Queue const &q)
+{
+  MsgContainer *tmp = q.first;
+  while (tmp) {
+    tmp->gcMsgC();
+    tmp = tmp->next;
+  }
+}
 
-  MsgContainer *tmp=q.first;
-  while(tmp!=NULL) {
+//
+static inline
+void u_startGCQueue(Queue const &q)
+{
+  Assert(((q.first == NULL) && (q.last == NULL)) ||
+         ((q.first != NULL) && (q.last != NULL)));
+  MsgContainer *tmp = q.first;
+  while (tmp) {
+    tmp->gcStart();
+    tmp=tmp->next;
+  }
+}
+
+//
+static inline
+void u_finishGCQueue(Queue const &q)
+{
+  MsgContainer *tmp = q.first;
+  while (tmp) {
+    tmp->gcFinish();
+    tmp = tmp->next;
+  }
+}
+
+//
+static inline
+void u_gcUnackedList(MsgContainer *unackedList)
+{
+  MsgContainer *tmp = unackedList;
+  while (tmp) {
+    tmp->gcMsgC();
+    tmp = tmp->next;
+  }
+}
+
+//
+static inline
+void u_startGCUnackedList(MsgContainer *unackedList)
+{
+  MsgContainer *tmp = unackedList;
+  while (tmp) {
+    tmp->gcStart();
+    tmp = tmp->next;
+  }
+}
+
+//
+static inline
+void u_finishGCUnackedList(MsgContainer *unackedList)
+{
+  MsgContainer *tmp = unackedList;
+  while (tmp) {
+    tmp->gcFinish();
+    tmp = tmp->next;
+  }
+}
+
+//
+static inline
+void u_gcRecList(MsgContainer *recList)
+{
+  MsgContainer *tmp = recList;
+  while (tmp) {
     tmp->gcMsgC();
     tmp=tmp->next;
   }
 }
 
-inline void u_gcUnackedList(MsgContainer *unackedList) {
-  MsgContainer *tmp=unackedList;
-  while(tmp!=NULL) {
-    tmp->gcMsgC();
-    tmp=tmp->next;
+//
+static inline
+void u_startGCRecList(MsgContainer *recList)
+{
+  MsgContainer *tmp = recList;
+  while (tmp) {
+    tmp->gcStart();
+    tmp = tmp->next;
   }
 }
 
-inline void u_gcRecList(MsgContainer *recList) {
-  MsgContainer *tmp=recList;
-  while(tmp!=NULL) {
-    tmp->gcMsgC();
-    tmp=tmp->next;
+//
+static inline
+void u_finishGCRecList(MsgContainer *recList)
+{
+  MsgContainer *tmp = recList;
+  while (tmp) {
+    tmp->gcFinish();
+    tmp = tmp->next;
   }
 }
 
@@ -201,6 +275,9 @@ int PrioQueues::msgAcked(int num,Bool resend,Bool calcrtt) {
   while(cur!=NULL) {
     prev=cur;
     cur=cur->next;
+    // kost@ : it's here 'cause there is neither a proper destructor for
+    // MsgContainer"s nor a flag saying "that's an outgoing message":
+    prev->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(prev);
   }
   return ret;
@@ -240,6 +317,7 @@ MsgContainer *PrioQueues::getRec(int num) {
 //      recList=tmp->next;
 //        else
 //      prev->next=tmp->next;
+//        tmp->deleteSnapshot();
 //        msgContainerManager->deleteMsgContainer(tmp);
 //        return;
 //      }
@@ -277,6 +355,7 @@ void PrioQueues::clear5() {
     tmp=list;
     list=list->next;
     // Assume for now that prio5 msgs are never in unackedList
+    tmp->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(tmp);
   }
   // Take care of unacked prio5 msgs.
@@ -290,6 +369,7 @@ void PrioQueues::clearAll() {
     msgC=qs[i-1].first;
     while(msgC!=NULL) {
       qs[i-1].first=msgC->next;
+      msgC->deleteSnapshot();
       msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_NOT_SENT);
       msgC=qs[i-1].first;
     }
@@ -298,20 +378,42 @@ void PrioQueues::clearAll() {
   msgC=unackedList;
   while(msgC!=NULL) {
     unackedList=msgC->next;
+    msgC->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_MAYBE_SENT);
     msgC=unackedList;
   }
   msgC=recList;
   while(msgC!=NULL) {
     recList=msgC->next;
+    msgC->deleteSnapshot();
     msgContainerManager->deleteMsgContainer(msgC);
     msgC=recList;
   }
 }
 
-void PrioQueues::gcMsgCs() {
-  for(int i=1;i<=5;i++)
+//
+void PrioQueues::gcMsgCs()
+{
+  for (int i = 1; i<=5; i++)
     u_gcQueue(qs[i-1]);
   u_gcUnackedList(unackedList);
   u_gcRecList(recList);
+}
+
+//
+void PrioQueues::startGCMsgCs()
+{
+  for (int i = 1; i<=5; i++)
+    u_startGCQueue(qs[i-1]);
+  u_startGCUnackedList(unackedList);
+  u_startGCRecList(recList);
+}
+
+//
+void PrioQueues::finishGCMsgCs()
+{
+  for(int i=1;i<=5;i++)
+    u_finishGCQueue(qs[i-1]);
+  u_finishGCUnackedList(unackedList);
+  u_finishGCRecList(recList);
 }

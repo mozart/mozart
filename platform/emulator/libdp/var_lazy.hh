@@ -36,18 +36,6 @@
 #include "var_ext.hh"
 #include "var.hh"
 
-// The protocol flag;
-typedef enum {
-  OBJECT,
-  OBJECT_AND_CLASS
-} LazyFlag ;
-
-//
-typedef enum {
-  LT_OBJECT,
-  LT_CLASS
-} LazyType;
-
 class LazyVar : public ExtVar {
 protected:
   int index;                    // borrow index;
@@ -67,13 +55,13 @@ public:
   void setIndex(int indexIn) { index = indexIn; }
 
   //
-  virtual int getIdV() { return OZ_EVAR_LAZY; }
+  virtual ExtVarType getIdV() { return (OZ_EVAR_LAZY); }
   virtual OZ_Term statusV();
   virtual VarStatus checkStatusV();
   virtual OZ_Return addSuspV(TaggedRef *v, Suspendable * susp);
   virtual LazyType getLazyType() = 0;
   virtual void sendRequest() = 0;
-  virtual Bool validV(TaggedRef v) { return FALSE; }
+  virtual Bool validV(TaggedRef v) { return (TRUE); }
   virtual OzVariable* gCollectV() { Assert(0); return NULL; }
   virtual OzVariable* sCloneV() { Assert(0); return NULL; }
   virtual void gCollectRecurseV(void);
@@ -105,21 +93,22 @@ public:
   TaggedRef getTaggedRef();
 };
 
+//
 inline
 Bool oz_isLazyVar(TaggedRef v) {
-  return oz_isExtVar(v) && oz_getExtVar(v)->getIdV()==OZ_EVAR_LAZY;
+  return (oz_isExtVar(v) && oz_getExtVar(v)->getIdV() == OZ_EVAR_LAZY);
 }
 
+//
 inline
-LazyVar *oz_getLazyVar(TaggedRef v) {
+LazyVar* oz_getLazyVar(TaggedRef v) {
   Assert(oz_isLazyVar(v));
-  return (LazyVar*) oz_getExtVar(v);
+  return ((LazyVar *) oz_getExtVar(v));
 }
-
 inline
 LazyVar* getLazyVar(TaggedRef *tPtr) {
-  Assert(classifyVar(tPtr)==VAR_LAZY);
-  return oz_getLazyVar(*tPtr);
+  Assert(classifyVar(tPtr) == VAR_LAZY);
+  return (oz_getLazyVar(*tPtr));
 }
 
 #endif

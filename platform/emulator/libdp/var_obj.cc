@@ -31,9 +31,10 @@
 #pragma implementation "var_obj.hh"
 #endif
 
-#include "var_obj.hh"
-#include "dpMarshaler.hh"
 #include "dpBase.hh"
+#include "var_obj.hh"
+#include "msgContainer.hh"
+#include "dpMarshaler.hh"
 #include "gname.hh"
 #include "unify.hh"
 #include "fail.hh"
@@ -76,7 +77,7 @@ void ObjectVar::sendRequest()
 
   //
   msgC->put_M_GET_LAZY(na->index, sendClass, myDSite);
-  SendTo(na->site, msgC, 3);
+  sendTo(na->site, msgC, 3);
 }
 
 void ObjectVar::gCollectRecurseV(void)

@@ -41,7 +41,19 @@ void GTIndexTable::gCollectGTIT()
   HashNodeLinked *n = getFirst();
   while (n) {
     OZ_Term &t = (OZ_Term &) n->key.fint;
+    // Either it's an (immediate) non-variable, or it's a reference to
+    // a variable (the distribution layer prepares GC by installing a
+    // special pseudo-snapshot of a value before gc step begins).
+    // Observe that variables are NOT stored directly in hash nodes!
+#ifdef DEBUG_CHECK
+    if (oz_isRef(t)) {
+      Assert(oz_isVariable(*tagged2Ref(t)));
+    } else {
+      Assert(!oz_isVariable(t));
+    }
+#endif
     oz_gCollectTerm(t, t);
+    //
     n = getNext(n);
   }
 }
@@ -57,8 +69,8 @@ void GenTraverser::gCollect()
   gCollectGTIT();
 
   //
-  while (--ptr >= bottom) {
-    OZ_Term& t = (OZ_Term&) *ptr;
+  while (ptr > bottom) {
+    OZ_Term& t = (OZ_Term&) *(--ptr);
     OZ_Term tc = t;
     DEREF(tc, tPtr, tTag);
 
@@ -121,10 +133,10 @@ void GenTraverser::doit()
       {
         int ind = findTerm(t);
         if (ind >= 0) {
-          processRepetition(t, ind);
-          continue;
+          processRepetition(t, tPtr, ind);
+        } else {
+          processLiteral(t);
         }
-        processLiteral(t);
         break;
       }
 
@@ -132,8 +144,8 @@ void GenTraverser::doit()
       {
         int ind = findTerm(t);
         if (ind >= 0) {
-          processRepetition(t, ind);
-          continue;
+          processRepetition(t, tPtr, ind);
+          break;
         }
 
         //
@@ -154,8 +166,8 @@ void GenTraverser::doit()
       {
         int ind = findTerm(t);
         if (ind >= 0) {
-          processRepetition(t, ind);
-          continue;
+          processRepetition(t, tPtr, ind);
+          break;
         }
 
         //
@@ -183,43 +195,43 @@ void GenTraverser::doit()
         break;
       }
 
-  case TAG_EXT:
-    processExtension(t);
-    break;
+    case TAG_EXT:
+      processExtension(t);
+      break;
 
-  case TAG_CONST:
-    {
-      int ind = findTerm(t);
-      if (ind >= 0) {
-        processRepetition(t, ind);
-        continue;
-      }
-
-      //
-      ConstTerm *ct = tagged2Const(t);
-      switch (ct->getType()) {
-
-      case Co_BigInt:
-        processBigInt(t, ct);
-        break;
-
-      case Co_Dictionary:
-        if (!processDictionary(t, ct)) {
-          OzDictionary *d = (OzDictionary *) ct;
-          // kost@ : what the hell is going on here???
-          int i = d->getFirst();
-          i = d->getNext(i);
-          // (pairs will be added on the receiver site in reverse order);
-          ensureFree(i+i);
-          while(i>=0) {
-            put(d->getValue(i));
-            put(d->getKey(i));
-            i = d->getNext(i);
-          }
+    case TAG_CONST:
+      {
+        int ind = findTerm(t);
+        if (ind >= 0) {
+          processRepetition(t, tPtr, ind);
+          break;
         }
-        break;
 
-      case Co_Array:
+        //
+        ConstTerm *ct = tagged2Const(t);
+        switch (ct->getType()) {
+
+        case Co_BigInt:
+          processBigInt(t, ct);
+          break;
+
+        case Co_Dictionary:
+          if (!processDictionary(t, ct)) {
+            OzDictionary *d = (OzDictionary *) ct;
+            // kost@ : what the hell is going on here???
+            int i = d->getFirst();
+            i = d->getNext(i);
+            // (pairs will be added on the receiver site in reverse order);
+            ensureFree(i+i);
+            while(i>=0) {
+              put(d->getValue(i));
+              put(d->getKey(i));
+              i = d->getNext(i);
+            }
+          }
+          break;
+
+        case Co_Array:
         if (!processArray(t, ct)) {
           OzArray *array = (OzArray *) ct;
           ensureFree(array->getWidth());
@@ -229,97 +241,102 @@ void GenTraverser::doit()
         }
         break;
 
-      case Co_Builtin:
-        processBuiltin(t, ct);
-        break;
+        case Co_Builtin:
+          processBuiltin(t, ct);
+          break;
 
-      case Co_Chunk:
-        if (!processChunk(t, ct)) {
-          SChunk *ch = (SChunk *) ct;
-          if (keepRunning) {
-            t = ch->getValue();
-            goto bypass;
-          } else
-            put(ch->getValue());
-        }
-        break;
-
-      case Co_Class:
-        if (!processClass(t, ct)) {
-          ObjectClass *cl = (ObjectClass *) ct;
-          SRecord *fs = cl->getFeatures();
-          if (keepRunning) {
-            t = fs ? makeTaggedSRecord(fs) : oz_nil();
-            goto bypass;
-          } else
-            put(fs ? makeTaggedSRecord(fs) : oz_nil());
-        }
-        break;
-
-      case Co_Abstraction:
-        {
-          if (!processAbstraction(t, ct)) {
-            Abstraction *pp = (Abstraction *) ct;
-            int gs = pp->getPred()->getGSize();
-            //
-            // in the stream: file, name, registers, code area:
-            ensureFree(gs+2);
-            for (int i=0; i < gs; i++)
-              put(pp->getG(i));
-            //
-            put(pp->getName());
-            put(pp->getPred()->getFile());
+        case Co_Chunk:
+          if (!processChunk(t, ct)) {
+            SChunk *ch = (SChunk *) ct;
+            if (keepRunning) {
+              t = ch->getValue();
+              goto bypass;
+            } else
+              put(ch->getValue());
           }
+          break;
+
+        case Co_Class:
+          if (!processClass(t, ct)) {
+            ObjectClass *cl = (ObjectClass *) ct;
+            SRecord *fs = cl->getFeatures();
+            if (keepRunning) {
+              t = fs ? makeTaggedSRecord(fs) : oz_nil();
+              goto bypass;
+            } else
+              put(fs ? makeTaggedSRecord(fs) : oz_nil());
+          }
+          break;
+
+        case Co_Abstraction:
+          {
+            if (!processAbstraction(t, ct)) {
+              Abstraction *pp = (Abstraction *) ct;
+              int gs = pp->getPred()->getGSize();
+              //
+              // in the stream: file, name, registers, code area:
+              ensureFree(gs+2);
+              for (int i=0; i < gs; i++)
+                put(pp->getG(i));
+              //
+              put(pp->getName());
+              put(pp->getPred()->getFile());
+            }
+          }
+          break;
+
+        case Co_Object:
+          if (!processObject(t, ct)) {
+            //
+            Object *o = (Object *) tagged2Const(t);
+
+            //
+            SRecord *sr = o->getFreeRecord();
+            OZ_Term tsr;
+            if (sr)
+              tsr = makeTaggedSRecord(sr);
+            else
+              tsr = oz_nil();
+            put(tsr);
+
+            //
+            put(makeTaggedConst(getCell(o->getState())));
+
+            //
+            OZ_Term tlck;
+            if (o->getLock())
+              tlck = makeTaggedConst(o->getLock());
+            else
+              tlck = oz_nil();
+            put(tlck);
+          }
+          break;
+
+        case Co_Lock:
+          processLock(t, (Tertiary *) ct);
+          break;
+
+        case Co_Cell:
+          if (!processCell(t, (Tertiary *) ct) &&
+              ((Tertiary *) ct)->isLocal()) {
+            t = ((CellLocal *) ct)->getValue();
+            goto bypass;
+          }
+          break;
+
+        case Co_Port:
+          processPort(t, (Tertiary *) ct);
+          break;
+        case Co_Resource:
+          processResource(t, (Tertiary *) ct);
+          break;
+
+        default:
+          processNoGood(t,OK);
+          break;
         }
-        break;
-
-      case Co_Object:
-        if (!processObject(t, ct)) {
-          //
-          Object *o = (Object *) tagged2Const(t);
-          SRecord *sr = o->getFreeRecord();
-          OZ_Term tsr;
-          if (sr)
-            tsr = makeTaggedSRecord(sr);
-          else
-            tsr = oz_nil();
-          put(tsr);
-          //
-          put(makeTaggedConst(getCell(o->getState())));
-          //
-          OZ_Term tlck;
-          if (o->getLock())
-            tlck = makeTaggedConst(o->getLock());
-          else
-            tlck = oz_nil();
-          put(tlck);
-        }
-        break;
-
-      case Co_Lock:
-        processLock(t, (Tertiary *) ct);
-        break;
-
-      case Co_Cell:
-        if (!processCell(t, (Tertiary *) ct) && ((Tertiary *) ct)->isLocal()) {
-          t = ((CellLocal *) ct)->getValue();
-          goto bypass;
-        }
-        break;
-
-      case Co_Port:
-        processPort(t, (Tertiary *) ct);
-        break;
-      case Co_Resource:
-        processResource(t, (Tertiary *) ct);
-        break;
-
-      default:
-        processNoGood(t,OK);
         break;
       }
-      break;
-    }
 
     case TAG_FSETVALUE:
       if (!processFSETValue(t)) {
@@ -334,26 +351,24 @@ void GenTraverser::doit()
       break;
 
     case TAG_UVAR:
+      // marshaled&exported UVar"s become CVar"s, so:
+      Assert(findLocation(tPtr) < 0);
       processUVar(t, tPtr);
       break;
 
     case TAG_CVAR:
       {
-        int ind = findTerm(t);
+        // Note: we remember locations of variables, - not the
+        // variables themselves! This works, since values and
+        // variables cannot co-reference.
+        int ind = findLocation(tPtr);
         if (ind >= 0) {
-          processRepetition(t, ind);
-          continue;
+          processRepetition(t, tPtr, ind);
+          break;
         }
 
         //
-        OZ_Term value;
-        if ((value = processCVar(t, tPtr))) {
-          if (keepRunning) {
-            t = value;
-            goto bypass;
-          } else
-            put(value);
-        }
+        processCVar(t, tPtr);
         break;
       }
 

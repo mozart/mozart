@@ -39,16 +39,14 @@
 #include "mbuffer.hh"
 #include "msgType.hh"
 #include "dsite.hh"
-#include "msgContainer.hh"
 #include "byteBuffer.hh"
 
 //
 void initDP();
 
 //
-// Per said it must be here;
-//  void SendTo(DSite *toS,MarshalerBuffer *bs,MessageType mt,DSite *sS,int sI);
-void SendTo(DSite* toS,MsgContainer *msgC,int priority);
+// void sendTo(DSite *toS,MarshalerBuffer *bs,MessageType mt,DSite *sS,int sI);
+void sendTo(DSite* toS,MsgContainer *msgC,int priority);
 
 //
 // kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.
@@ -61,37 +59,10 @@ void msgReceived(MsgContainer *,DSite *);
 // Used by networklayer to do pinging.
 void sendPing(DSite*);
 
-
 //
 OZ_Term getGatePort(DSite*);
 
 //
-//
-//  MarshalerBuffer* getRemoteMarshalerBuffer(DSite *);
-//  void dumpRemoteMarshalerBuffer(MarshalerBuffer*);
-
-//  class MarshalerBufferManager{
-//  public:
-//    MarshalerBuffer* getMarshalerBuffer(DSite * s){
-//      Assert(s!=myDSite);
-//      Assert(s!=NULL);
-//      if(s->remoteComm()){
-//        return NULL;}// getRemoteMarshalerBuffer(s);}
-//      return (*getVirtualMarshalerBuffer)(s);}
-
-//    void dumpMarshalerBuffer(MarshalerBuffer *m){ // only for marshaled/write stuff (not read)
-//      DSite *s=m->getSite();
-//      if(s->remoteComm()){
-//        printf("DUMPING NETMarshalerBuffer\n");
-//        //  dumpRemoteMarshalerBuffer(m);
-//      }
-//      else{
-//        Assert(s!=NULL);
-//        (*dumpVirtualMarshalerBuffer)(m);}}
-//  };
-
-//  extern MarshalerBufferManager *msgBufferManager;
-
 void globalizeTert(Tertiary *t);
 
 inline Bool SEND_SHORT(DSite* s){
@@ -129,13 +100,15 @@ void cellifyObject(Object*);
 Bool isPerdioInitializedImpl();
 void gcProxyRecurseImpl(Tertiary *t);
 void gcManagerRecurseImpl(Tertiary *t);
-void gcBorrowTableUnusedFramesImpl();
-void gcFrameToProxyImpl();
-void gcPerdioFinalImpl();
-void gcPerdioRootsImpl();
-void dpExitImpl();
 
-void SiteUnify(TaggedRef, TaggedRef);
+//
+void gcPerdioStartImpl();
+void gcPerdioRootsImpl();
+void gcBorrowTableUnusedFramesImpl();
+void gcPerdioFinalImpl();
+
+//
+void dpExitImpl();
 
 Bool localizeTertiary(Tertiary*);
 Bool isTertiaryPending(Tertiary*);

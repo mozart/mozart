@@ -274,7 +274,7 @@ inline unmarshalReturn TCPTransObj::unmarshal() {
 
     // Unmarshal data
     readBuffer->fixsite=site;
-    // kost@ '!' handle error conditions!
+    // kost@ : handle error conditions!
     (void) msgC->unmarshal(readBuffer, tcptransController);
 
     t=readBuffer->get();

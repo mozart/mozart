@@ -60,4 +60,10 @@ OZ_Term oz_extension_unmarshalCont(int type, void *bs,
 //
 void dpAddExtensions();
 
+//
+#if defined(DEBUG_CHECK)
+void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *cont);
+// DPMExtDesc *cont
+#endif
+
 #endif

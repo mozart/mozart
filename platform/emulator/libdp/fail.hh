@@ -39,8 +39,6 @@
 #include "genhashtbl.hh"
 #include "interFault.hh"
 
-typedef unsigned int FaultInfo;
-
 class EntityInfo{
   friend class Tertiary;
 public:

@@ -33,8 +33,7 @@
 #include "value.hh"
 #include "var.hh"
 #include "var_obj.hh"
-#include "mbuffer.hh"
-//#include "dpMarshaler.hh"
+#include "msgContainer.hh"
 #include "state.hh"
 #include "fail.hh"
 #include "protocolState.hh"
@@ -950,7 +949,7 @@ void BorrowEntry::moreCredit(){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_ASK_FOR_CREDIT(na->index,myDSite);
   msgC->setImplicitMessageCredit(cS);
-  SendTo(na->site,msgC,3);
+  sendTo(na->site,msgC,3);
 }
 
 void BorrowEntry::giveBackCredit(Credit c){

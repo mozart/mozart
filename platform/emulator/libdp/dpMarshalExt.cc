@@ -171,7 +171,10 @@ public:
 };
 
 //
-static void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *cont);
+#if !defined(DEBUG_CHECK)
+static
+#endif
+void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *cont);
 // DPMExtDesc *cont
 
 //
@@ -204,7 +207,10 @@ void marshalByteArray(ByteBuffer *mb, GenTraverser *gt,
 }
 
 //
-static void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *arg)
+#if !defined(DEBUG_CHECK)
+static
+#endif
+void dpMarshalByteArrayCont(GenTraverser *gt, GTAbstractEntity *arg)
 {
   ByteBuffer *bs = (ByteBuffer *) gt->getOpaque();
   Assert(arg->getType() == GT_ExtensionSusp);

@@ -262,13 +262,13 @@ void marshalProcedureRef(GenTraverser *gt,
   Bool copyable = entry && entry->isCopyable();
   marshalNumber(bs, copyable);
   if (copyable) {
-    int ind = gt->findPtr(entry);
+    int ind = gt->findLocation(entry);
     if (ind >= 0) {
       marshalDIF(bs, DIF_REF);
       marshalTermRef(bs, ind);
     } else {
       marshalDIF(bs, DIF_ABSTRENTRY);
-      rememberNode(gt, bs, entry);
+      rememberLocation(gt, bs, entry);
     }
   } else {
     Assert(entry==NULL || entry->getAbstr() != NULL);
@@ -1236,7 +1236,7 @@ ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
       Assert(tag == DIF_ABSTRENTRY);
       int refTag = unmarshalRefTag(bs);
       entry = new AbstractionEntry(OK);
-      b->set(ToInt32(entry),refTag);
+      b->setNoGC(ToInt32(entry), refTag);
     }
   }
   return (pc ? code->writeAbstractionEntry(entry,pc) : (ProgramCounter) pc);
@@ -1554,7 +1554,7 @@ ProgramCounter unmarshalProcedureRefRobust(Builder *b, ProgramCounter pc,
       int refTag = unmarshalRefTagRobust(bs, b, error);
       if(*error || (tag != DIF_ABSTRENTRY)) return ((ProgramCounter) 0);
       entry = new AbstractionEntry(OK);
-      b->set(ToInt32(entry),refTag);
+      b->setNoGC(ToInt32(entry),refTag);
     }
   }
   return ((pc && !(*error)) ? code->writeAbstractionEntry(entry,pc)

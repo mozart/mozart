@@ -5,6 +5,7 @@ void MsgContainer::init(DSite *site) {
   flags=0;
   destination = site;
   creditSite = NULL;
+  msgTS = (MsgTermSnapshot *) 0;
   next = NULL;
   msgNum=-1;
   sendTime=-1;
@@ -117,3 +118,5 @@ void MsgContainerManager::deleteMsgContainer(MsgContainer* msgC,FaultCode fc) {
 }
 
 int MsgContainerManager::getCTR(){ return wc;}
+
+MsgContainerManager* msgContainerManager;
