@@ -74,6 +74,7 @@ The Mozart repository structure is as follows:
 
 
     contrib/
+      conf.in	-- conf.all caches global configuration values
 		-- Libraries and tools that can be there or not
       gdbm/ 
       regex/
