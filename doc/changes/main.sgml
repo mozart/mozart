@@ -103,12 +103,6 @@ particular, it lists the changes from
   <chapter id="chapter.m130">
     <title/Mozart 1.3.0/
     <p>Mozart 1.3.0 is still under development.
-    <list>
-      <item>The Ozcar manual has been largely reworked to be more precise
-        and readable.  Ozcar itself has been extended by an (experimental)
-        feature to debug threads remotely, which can also be used for
-        debugging of distributed applications.
-    </list>
 
     <section id="sec.m130.byneed">
       <title/Redesign of by-need synchronization/
@@ -161,6 +155,16 @@ particular, it lists the changes from
           Entries) can now be updated with the <<:=>> operator and
           the current value retrieved with the <<@>> operator.
           More details in <ptr.extern to="ozdoc:base" key="chapter.infix">.
+
+    <section id="sec.m130.ozcar">
+      <title/Ozcar/
+      <p>
+      <list>
+        <item>The Ozcar manual has been largely reworked for improved precision
+          and readability.  Ozcar itself has been extended by the ability
+          to debug threads remotely.  This feature also supports the debugging
+          of distributed applications.
+      </list>
 
     <section id="sec.m130.gc">
       <title/Garbage Collection/
