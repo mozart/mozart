@@ -181,7 +181,7 @@ LIBFILES = \
 	$(TYCS:tyc/%=$(OZLIB)/%)
 
 COMPONENTS = \
-	Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
+	Init.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
 	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
 	GumpScanner.ozc GumpParser.ozc Misc.ozc \
@@ -190,7 +190,7 @@ COMPONENTS = \
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 STAGEEXTRAFILES = $(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc $(OZLIB)/ozbatch.ozm
 
-SYSLETS = ozbatch ozserver
+SYSLETS = opi ozbatch ozserver
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
 
 BITMAPS1 = \
@@ -220,24 +220,23 @@ ozbatch.ozm: MakeAssembly.oz \
 	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
 	$(MV) -f /tmp/$$$$.ozm $@
 
-ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
-	SP.ozc SP.env OP.ozc OP.env \
-	AP.ozc AP.env tyc/SP.tyc tyc/OP.tyc tyc/AP.tyc tyc/Gump.tyc
-	$(EXECWITHSTD) MakeBatch.oz
+opi: MakeOPI.oz $(DUMPINTRO) \
+	Init.ozc SP.ozc SP.env OP.ozc OP.env Compiler.env AP.ozc $(TYCS)
+	$(EXECWITHSTD) $<
 
-ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) AP.ozc \
-	SP.ozc OP.ozc
-	$(EXECWITHSTD) MakeOzServer.oz
+ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
+	Init.ozc SP.ozc SP.env OP.ozc OP.env AP.ozc AP.env $(TYCS)
+	$(EXECWITHSTD) $<
+
+ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) \
+	Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
+	$(EXECWITHSTD) $<
 
 Base.ozc: Standard.ozc
 	@$(ECHO) > /dev/null
 
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
 	OZMAINIT="" $(EXEC) DumpInitial.oz
-
-OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc AP.ozc Compiler.env $(TYCS) \
-	SP.ozc OP.ozc
-	$(COMPILE) -l AP OPI.oz -o OPI.ozc
 
 StandardModules.ozc: AP/StandardModules.oz
 	$(COMPILE)  $< -o $@
@@ -315,10 +314,7 @@ $(OZLIB)/%.env: %.env
 $(OZLIB)/%.tyc: tyc/%.tyc
 	$(INSTALLFILE) $< $@
 
-$(OZBIN)/ozbatch: ozbatch
-	$(INSTALLPRG) $< $@
-
-$(OZBIN)/ozserver: ozserver
+$(OZBIN)/%: %
 	$(INSTALLPRG) $< $@
 
 %.typ: %.env

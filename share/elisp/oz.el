@@ -857,11 +857,10 @@ If FORCE is non-nil, kill it immediately."
 	    (funcall oz-emulator-hook)
 	  (setq oz-emulator-buffer "*Oz Emulator*")
 	  (setq oz-read-emulator-output t)
-	  (let ((url "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc"))
-	    (if oz-win32
-		(make-comint "Oz Emulator" "ozemulator" nil "-u" url)
-	      (make-comint "Oz Emulator" "ozengine" nil url)))
-		       
+	  (if oz-win32
+	      (make-comint "Oz Emulator" "ozemulator" nil "-u"
+			   "http://www.ps.uni-sb.de/ozhome/lib/OPI.ozc")
+	    (make-comint "Oz Emulator" "opi" nil))
 	  (oz-create-buffer oz-emulator-buffer 'emulator)
 	  (set-process-filter (get-buffer-process oz-emulator-buffer)
 			      'oz-emulator-filter)
@@ -881,7 +880,7 @@ If FORCE is non-nil, kill it immediately."
 
 
 ;;------------------------------------------------------------
-;; GDB Support
+;; Testing Locally and Support for GDB
 ;;------------------------------------------------------------
 
 (defun oz-set-other (set-components)
