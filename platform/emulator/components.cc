@@ -485,6 +485,12 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
   return PROCEED;
 }
 
+OZ_Return loadDatum(OZ_Datum dat,OZ_Term out,OZ_Term triggerVar)
+{
+  ByteSourceDatum src(dat,TRUE);
+  return src.getTerm(out,triggerVar);
+}
+
 OZ_Return loadFD(int fd, OZ_Term out,OZ_Term triggerVar)
 {
   ByteSourceFD src(fd,TRUE);
@@ -881,17 +887,17 @@ OZ_C_proc_begin(BIWget,2)
 OZ_C_proc_end
 
 
-
-OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum *d)
+OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 {
-  return FAILED;
+  return saveDatum(t,*d,OZ_unit(),OZ_nil(),OZ_unit(),OZ_nil());
 }
 
 
-OZ_Return OZ_datumToValue(OZ_Datum *d,OZ_Term *t)
+OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 {
-  return FAILED;
+  return loadDatum(d,t,0);
 }
+
 
 OZ_C_proc_begin(BInewGate,2)
 {
