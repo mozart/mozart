@@ -903,9 +903,9 @@ public:
   VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn,
                       key_t shmKey, int chunkIndex)
     : VSMsgBuffer(shmKey, chunkIndex), cpm(cpmIn) {
-    Assert(currentAddr == (VSMsgChunkImported *) 0);
-    Assert(posMB == (BYTE *) 0);
-    Assert(endMB == (BYTE *) 0);
+    DebugCode(currentAddr = (VSMsgChunkImported *) 0);
+    DebugCode(posMB = (BYTE *) 0);
+    DebugCode(endMB = (BYTE *) 0);
   }
   virtual ~VSMsgBufferImported() {
     OZ_error("VSMsgBufferImported destroyed?");
@@ -918,6 +918,9 @@ public:
   //
   // Mark (shared) memory chunks free (so the sender could reuse them);
   void releaseChunks() {
+    Assert(currentAddr == (VSMsgChunkImported *) 0);
+    Assert(posMB == (BYTE *) 0);
+    Assert(endMB == (BYTE *) 0);
     Assert(isNotVoid());
     Assert(firstChunkNum >= 0);
     int currentNum = firstChunkNum;

@@ -1591,6 +1591,14 @@ OZ_BI_define(unix_exec,3,1){
         RETURN_UNIX_ERROR("setrlimit");
       }
 
+#ifdef DEBUG_CHECK
+      // kost@ : leave 'std???' in place in debug mode since otherwise
+      // one cannot see what forked sites are trying to say us.
+      // However, this makes e.g. the 'detach' functionality of remote
+      // servers non-working (but who wants it in debug mode anyway?)
+      for (int i=2; i<FD_SETSIZE; i++)
+        close(i);
+#else
       if (do_kill) {
         for (int i=2; i<FD_SETSIZE; i++)
           close(i);
@@ -1603,6 +1611,7 @@ OZ_BI_define(unix_exec,3,1){
         osdup(dn);
         osdup(dn);
       }
+#endif
 
       if (execvp(s,argv)  < 0) {
         RETURN_UNIX_ERROR("execvp");

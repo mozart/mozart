@@ -63,6 +63,9 @@ void OZ_error(const char *format, ...)
   else
     fprintf(stderr, "\a");
 
+#ifdef DEBUG_CHECK
+  fprintf(stderr, "\n(going to report an error in pid %d)", osgetpid());
+#endif
   fprintf(stderr, "\n*** Internal Error: "
 #ifndef DEBUG_CHECK
           "Please send a bug report to oz-bugs@ps.uni-sb.de ***\n"

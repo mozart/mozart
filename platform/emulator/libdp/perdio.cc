@@ -110,15 +110,15 @@ static void initDPCore();
 void initDP()
 {
   //
-#ifdef DEBUG_CHECK
-  // fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
-  // fflush(stderr);
-  // sleep(10);
-#endif
-
   if (perdioInitialized)
     return;
   perdioInitialized = OK;
+
+#ifdef DEBUG_CHECK
+//   fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
+//   fflush(stderr);
+//   sleep(10);
+#endif
 
   //
   initDPCore();
@@ -952,12 +952,18 @@ enum CommCase{
     USUAL_BORROW_CASE
   };
 
-#define ResetCP(buf,mt) {\
-  buf->unmarshalReset();\
-  MessageType mt1=unmarshalHeader(buf);\
-  Assert(mt1==mt);}
+#define ResetCP(buf,mt) {                               \
+  buf->unmarshalReset();                                \
+  buf->unmarshalBegin();                                \
+  MessageType mt1=unmarshalHeader(buf);                 \
+  Assert(mt1==mt);                                      \
+}
 
 // LOOK-PER: not working code
+
+// kost@ : 'communicationProblem(...)' handles message buffers (or
+// whatever else - streams, etc.) on its own: must do
+// 'unmarshalBegin'/'unmarshalEnd';
 void DSite::communicationProblem(MessageType mt, DSite* storeSite,
                                  int storeIndex, FaultCode fc,
                                  FaultInfo fi) {

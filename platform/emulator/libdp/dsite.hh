@@ -44,6 +44,8 @@
 /*   SECTION :: Site                                                  */
 /**********************************************************************/
 
+//
+// 'REMOTE'/'VIRTUAL' just says HOW to communicate with...
 #define REMOTE_SITE           0x1
 #define VIRTUAL_SITE          0x2
 #define VIRTUAL_INFO          0x4
@@ -233,7 +235,7 @@ public:
 
   void putInSecondary(){
     Assert(!(MY_SITE & getType()));
-    setType(getType()|SECONDARY_TABLE_SITE);}
+    setType(getType() | SECONDARY_TABLE_SITE);}
 
   Bool isInSecondary(){
     if(getType() & SECONDARY_TABLE_SITE) return OK;
@@ -242,7 +244,7 @@ public:
   //
   Bool isConnected() { return ((getType() & CONNECTED)); }
 
-  Bool isPerm(){return getType() & PERM_SITE;}
+  Bool isPerm(){return (getType() & PERM_SITE);}
 
   Bool canBeFreed(){
     Assert(!isGCMarkedSite());
@@ -323,7 +325,7 @@ public:
 
   void makeActiveVirtual() {
     // (in fact, it means that it was "(active) remote virtual";)
-    Assert((getType()) & VIRTUAL_INFO);
+    Assert(getType() & VIRTUAL_INFO);
     Assert(u.readCtr == 0);
     setType(VIRTUAL_SITE | VIRTUAL_INFO);
   }
@@ -338,6 +340,15 @@ public:
     info = vi;
     Assert(u.readCtr == 0);
     setType(REMOTE_SITE | VIRTUAL_INFO);
+  }
+
+  void addVirtualInfoToActive(VirtualInfo *vi) {
+    // Note that it cannot happen that a site is actual virtual one
+    // but does not have a virtual info;
+    Assert(getType() & REMOTE_SITE);
+    Assert(!(getType() & VIRTUAL_INFO));
+    info = vi;
+    setType(getType() | VIRTUAL_INFO);
   }
 
   //

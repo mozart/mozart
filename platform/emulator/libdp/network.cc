@@ -2668,7 +2668,9 @@ ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool ValidMsg)
       TSC->addRead(bsNew);
       bs->unmarshalEnd();
 #else
+      bs->unmarshalBegin();
       msgReceived(bs);
+      bs->unmarshalEnd();
 #endif
     }
     //else printf("ThrowingAway!!!\n");
@@ -4022,7 +4024,9 @@ void TSCQueue::incTime(unsigned long aTime){
     }
     else{
       NetMsgBuffer* nb = (NetMsgBuffer*)tptr->c;
+      bs->unmarshalBegin();
       msgReceived(nb);
+      bs->unmarshalEnd();
       reading(nb->getslownetTotLen());
       tmp = tptr->e;
       //netMsgBufferManager->dumpNetMsgBuffer(nb);

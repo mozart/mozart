@@ -391,6 +391,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       }
 
       //
+      myVSMsgBufferImported->unmarshalBegin();
       msgType = getVSMsgType(myVSMsgBufferImported);
 
       //
@@ -451,6 +452,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       }
 
       //
+      myVSMsgBufferImported->unmarshalEnd();
       myVSMsgBufferImported->releaseChunks();
       myVSMsgBufferImported->cleanup();
     } else {
@@ -681,15 +683,18 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 
     //
     // Install the 'read-from-virtual-sites' & 'delayed-write' handlers;
-    am.registerTask((void *) myVSMailboxManager->getMailbox(),
-                    checkVSMessages, readVSMessages);
-    am.registerTask((void *) &vsSiteQueue,
-                    checkMessageQueue, processMessageQueue);
-    am.registerTask((void *) &vsProbingObject,
-                    checkProbes, processProbes);
-    am.registerTask((void *) myVSChunksPoolManager,
-                    checkGCMsgChunks, processGCMsgChunks);
-
+    if (!am.registerTask((void *) myVSMailboxManager->getMailbox(),
+                         checkVSMessages, readVSMessages))
+      OZ_error("virtual sites: unable to register a task");
+    if (!am.registerTask((void *) &vsSiteQueue,
+                         checkMessageQueue, processMessageQueue))
+      OZ_error("virtual sites: unable to register a task");
+    if (!am.registerTask((void *) &vsProbingObject,
+                         checkProbes, processProbes))
+      OZ_error("virtual sites: unable to register a task");
+    if (!am.registerTask((void *) myVSChunksPoolManager,
+                         checkGCMsgChunks, processGCMsgChunks))
+      OZ_error("virtual sites: unable to register a task");
   }
 
   //
@@ -826,6 +831,7 @@ OZ_BI_define(BIVSinitServer,1,0)
 
   //
   // (we must read-in the type field);
+  myVSMsgBufferImported->unmarshalBegin();
   msgType = getVSMsgType(myVSMsgBufferImported);
   Assert(msgType == VS_M_INIT_VS);
 
@@ -835,6 +841,7 @@ OZ_BI_define(BIVSinitServer,1,0)
   // (since 'myDSite' has not been yet initialized - a
   // bootstrapping problem! :-))
   decomposeVSInitMsg(myVSMsgBufferImported, ms);
+  myVSMsgBufferImported->unmarshalEnd();
 
   //
   Assert(!myDSite->hasVirtualInfo());
@@ -856,14 +863,18 @@ OZ_BI_define(BIVSinitServer,1,0)
 
   //
   // Install the 'read-from-virtual-sites' & 'delayed-write' handlers;
-  am.registerTask((void *) myVSMailboxManager->getMailbox(),
-                  checkVSMessages, readVSMessages);
-  am.registerTask((void *) &vsSiteQueue,
-                  checkMessageQueue, processMessageQueue);
-  am.registerTask((void *) &vsProbingObject,
-                  checkProbes, processProbes);
-  am.registerTask((void *) myVSChunksPoolManager,
-                  checkGCMsgChunks, processGCMsgChunks);
+  if (!am.registerTask((void *) myVSMailboxManager->getMailbox(),
+                       checkVSMessages, readVSMessages))
+      OZ_error("virtual sites: unable to register a task");
+  if (!am.registerTask((void *) &vsSiteQueue,
+                       checkMessageQueue, processMessageQueue))
+      OZ_error("virtual sites: unable to register a task");
+  if (!am.registerTask((void *) &vsProbingObject,
+                       checkProbes, processProbes))
+      OZ_error("virtual sites: unable to register a task");
+  if (!am.registerTask((void *) myVSChunksPoolManager,
+                       checkGCMsgChunks, processGCMsgChunks))
+      OZ_error("virtual sites: unable to register a task");
 
   //
   return (PROCEED);

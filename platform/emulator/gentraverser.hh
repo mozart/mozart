@@ -304,6 +304,10 @@ protected:
   virtual Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst) = 0;
   virtual Bool processClass(OZ_Term classTerm, ConstTerm *classConst) = 0;
   virtual Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst) = 0;
+  // Instructions in a code area (e.g. in an abstraction) are considered
+  // to be subtrees. Those, in turn, can be leafs (without OZ_Term"s)
+  // or non-leafs (containing OZ_Term"s).
+  // virtual
 
   //
   // There is also an optimization for tail-recursive (well, sort of)
