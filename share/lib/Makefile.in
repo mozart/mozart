@@ -78,7 +78,7 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPMisc DPinit ConnectionFunctor AcceptFunctor ConnectAcceptModule $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
-GTKSRC  = GTK GDK Glade
+GTKSRC  = GTK GDK Glade GnomeCanvas
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC  = Macro BackquoteMacro LoopMacro
 
@@ -227,26 +227,38 @@ Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
 TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies and rules
-GTKSPECS   = $(VPATH)/gtk/gtk/*.spec
-GDKSPECS   = $(VPATH)/gtk/gdk/*.spec
-BUILDERSRC = $(VPATH)/gtk/builder.perl
-BUILDER    = $(PERL) $(BUILDERSRC)
+SPECS_PATH         = $(VPATH)/gtk/specs
+GTK_SPECS          = $(SPECS_PATH)/gtk/*.spec
+GDK_SPECS          = $(SPECS_PATH)/gdk/*.spec
+GNOME_CANVAS_SPECS = $(SPECS_PATH)/gnome-canvas/*.spec
+BUILDER_SRC        = $(VPATH)/gtk/builder.perl
+BUILDER            = $(PERL) $(BUILDER_SRC)
 
 GTK.ozf: gtkclasses.oz gtkexports.oz
 
+gtkclasses.oz: $(GTK_SPECS) $(BUILDER_SRC)
+        $(BUILDER) --oz-classes $(GTK_SPECS) > $@
+
+gtkexports.oz: $(GTK_SPECS) $(BUILDER_SRC)
+        $(BUILDER) --oz-exportlist $(GTK_SPECS) > $@
+
 GDK.ozf: gdkclasses.oz gdkexports.oz
 
-gtkclasses.oz: $(GTKSPECS) $(BUILDERSRC)
-        $(BUILDER) --oz-classes $(GTKSPECS) > $@
+gdkclasses.oz: $(GDK_SPECS) $(BUILDER_SRC)
+        $(BUILDER) --oz-classes $(GDK_SPECS) > $@
 
-gdkclasses.oz: $(GDKSPECS) $(BUILDERSRC)
-        $(BUILDER) --oz-classes $(GDKSPECS) > $@
+gdkexports.oz: $(GDK_SPECS) $(BUILDER_SRC)
+        $(BUILDER) --oz-exportlist $(GDK_SPECS) > $@
 
-gtkexports.oz: $(GTKSPECS) $(BUILDERSRC)
-        $(BUILDER) --oz-exportlist $(GTKSPECS) > $@
+GnomeCanvas.ozf: gnome-canvas-classes.oz gnome-canvas-exports.oz
 
-gdkexports.oz: $(GDKSPECS) $(BUILDERSRC)
-        $(BUILDER) --oz-exportlist $(GDKSPECS) > $@
+gnome-canvas-classes.oz: $(GNOME_CANVAS_SPECS) $(BUILDER_SRC)
+        $(BUILDER) --oz-classes $(GNOME_CANVAS_SPECS) > $@
+
+gnome-canvas-exports.oz: $(GNOME_CANVAS_SPECS) $(BUILDER_SRC)
+        $(BUILDER) --oz-exportlist $(GNOME_CANVAS_SPECS) > $@
+
+
 
 # compiler dependencies
 COMPILERSRC1 = \
