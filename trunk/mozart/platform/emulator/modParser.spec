@@ -6,16 +6,16 @@ $cmode='dyn';
 (
     ###* Parser
 
-    'Parser.parseFile'		=> { in     => ['+virtualString','+record'],
-				     out    => ['+value'],
-				     bi     => parser_parseFile,
-				     module => libparser,
-				     native => true},
+    'file'		=> { in     => ['+virtualString','+record'],
+			     out    => ['+value'],
+			     bi     => parser_parseFile,
+			     module => libparser,
+			     native => true},
 
-    'Parser.parseVirtualString' => { in     => ['+virtualString','+record'],
-				     out    => ['+value'],
-				     bi     => parser_parseVirtualString,
-				     module => libparser,
-				     native => true},
+    'virtualString' => { in     => ['+virtualString','+record'],
+			 out    => ['+value'],
+			 bi     => parser_parseVirtualString,
+			 module => libparser,
+			 native => true},
 
  );
