@@ -1573,8 +1573,8 @@ fi
 
 
 
-: ${oz_inc_path="/usr/local/include /usr/local/include/tcl8.0 /usr/local/include/tk8.0"}
-: ${oz_lib_path="/usr/local/lib"}
+: ${oz_inc_path="/usr/local/include /usr/pkg/include"}
+: ${oz_lib_path="/usr/local/lib /usr/pkg/lib"}
 
 # Check whether --with-x11 or --without-x11 was given.
 if test "${with_x11+set}" = set; then
