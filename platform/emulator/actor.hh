@@ -128,6 +128,8 @@ public:
   void failChildInternal(Board *n);
   Board *getChild();
   // returns the first created child; this child is unlinked from the actor;
+  Board *getChildRef ();
+  // the same, but a child is not unlinked from the actor; 
   void decChilds ();    // for search; 
   Bool hasOneChild();
   Bool hasNoChilds();
@@ -184,6 +186,7 @@ public:
   TaggedRef genSolved ();
   TaggedRef genStuck ();
   TaggedRef genEnumed (Board *newSolveBB);
+  TaggedRef genEnumedFail ();
   TaggedRef genFailed ();
 
 private:
