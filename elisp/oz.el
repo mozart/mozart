@@ -120,7 +120,7 @@ everything into the *Oz Emulator* buffer."
 
 (defcustom oz-new-compiler-url
   (concat "file:" (getenv "HOME") "/Oz/tools/compiler/Compiler.ozc")
-  "*URL of the new Oz Compiler for gdb mode."
+  "*URL of the new Oz Compiler for gdb mode and for \\[oz-other]."
   :type 'string
   :group 'oz)
 
@@ -770,15 +770,25 @@ Can be selected by \\[oz-other-emulator]."
       (setenv "OZEMULATOR" oz-emulator)))
 
 (defun oz-set-compiler ()
-  "Set the value of environment variable OZBOOT.
-This is to specify an alternative Oz Compiler boot file.
+  "Set the value of environment variables OZBOOT or OZCOMPILERCOMP.
+This is to specify an alternative Oz Compiler boot file or URL,
+depending on the setting of the variable `oz-use-new-compiler'.
 Can be selected by \\[oz-other-compiler]."
   (interactive)
-  (setq oz-compiler-boot-file
-	(expand-file-name
-	 (read-file-name "Choose Compiler boot file: " nil nil t nil)))
-  (if (getenv "OZBOOT")
-      (setenv "OZBOOT" oz-compiler-boot-file)))
+  (if oz-use-new-compiler
+      (progn
+	(setq oz-new-compiler-url
+	      (concat
+	       "file://"
+	       (expand-file-name
+		(read-file-name "Choose Compiler file: " nil nil t nil))))
+	(if (getenv "OZCOMPILERCOMP")
+	    (setenv "OZCOMPILERCOMP" oz-new-compiler-url)))
+    (setq oz-compiler-boot-file
+	  (expand-file-name
+	   (read-file-name "Choose Compiler boot file: " nil nil t nil)))
+    (if (getenv "OZBOOT")
+	(setenv "OZBOOT" oz-compiler-boot-file))))
 
 (defun oz-other (set-compiler)
   "Switch between global and local Oz Emulator or Oz Compiler boot file.
@@ -803,16 +813,25 @@ or can be set by \\[oz-set-emulator]."
 	 (message "Oz Emulator: %s" oz-emulator))))
 
 (defun oz-other-compiler ()
-  "Switch between global and local Oz Compiler boot file.
-The local boot file is given by the environment variable OZBOOT
-or can be set by \\[oz-set-compiler]."
+  "Switch between global and local Oz Compiler boot file or URL.
+Depending on the value of the variable `oz-use-new-compiler',
+either select the boot file given by the environment variable OZBOOT
+or the URL given by the environment variable OZCOMPILERCOMP.
+These can be set by \\[oz-set-compiler]."
   (interactive)
-  (cond ((getenv "OZBOOT")
-	 (setenv "OZBOOT" nil)
-	 (message "Oz Compiler: global"))
-	(t
-	 (setenv "OZBOOT" oz-compiler-boot-file)
-	 (message "Oz Compiler: %s" oz-compiler-boot-file))))
+  (if oz-use-new-compiler
+      (cond ((getenv "OZCOMPILERCOMP")
+	     (setenv "OZCOMPILERCOMP" nil)
+	     (message "Oz Compiler URL: global"))
+	    (t
+	     (setenv "OZCOMPILERCOMP" oz-new-compiler-url)
+	     (message "Oz Compiler URL: %s" oz-new-compiler-url)))
+    (cond ((getenv "OZBOOT")
+	   (setenv "OZBOOT" nil)
+	   (message "Oz Compiler boot file: global"))
+	  (t
+	   (setenv "OZBOOT" oz-compiler-boot-file)
+	   (message "Oz Compiler boot file: %s" oz-compiler-boot-file)))))
 
 (defun oz-gdb ()
   "Toggle debugging of the Oz Emulator with gdb.
