@@ -50,6 +50,9 @@ $module_init_fun_name = "fdp_init";
                           out    => ['*int'],
                           bi     => BIfdd_selVarNbSusps},
 
+ 'ff'   => { in =>  ['+value'],
+                      out => ['value'],
+                      bi => fdd_test_ff },
  #
  # Propagators
  #

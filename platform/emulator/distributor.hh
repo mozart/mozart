@@ -47,14 +47,13 @@ class DistBag {
 private:
   Distributor * dist;
   DistBag     * next;
-  Bool          isUnary;
 
-  DistBag(Distributor *d, DistBag *b, Bool iu) {
-    dist = d; next = b; isUnary = iu;
+  DistBag(Distributor *d, DistBag *b) {
+    dist = d; next = b;
   }
 
-  DistBag(Distributor *d, Bool iu) {
-    dist = d; isUnary = iu;
+  DistBag(Distributor *d) {
+    dist = d;
   }
 
   void dispose(void);
@@ -62,10 +61,7 @@ private:
 public:
   USEFREELISTMEMORY;
 
-  DistBag * addIt(Distributor *d, Bool isUnary);
-  DistBag * add(Distributor * d) {
-    return addIt(d,NO);
-  }
+  DistBag * add(Distributor * d);
 
   DistBag * get(Distributor ** d);
 

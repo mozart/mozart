@@ -124,6 +124,14 @@ public:
   }
 
   virtual int BaseDistributor::commit(Board * bb, int l, int r) {
+
+    if (num==1 && l==1 && r==1) {
+      int ret = oz_unify(var,makeTaggedSmallInt(1));
+      Assert(ret==PROCEED);
+      dispose();
+      return 1;
+    }
+
     if (l > num+1) {
       num = 0;
     } else {
@@ -142,15 +150,6 @@ public:
 
   virtual void dispose(void) {
     freeListDispose(this, sizeof(BaseDistributor));
-  }
-
-  void BaseDistributor::unitCommit() {
-    Assert(num==1 && offset==0);
-
-    int ret = oz_unify(var,makeTaggedSmallInt(1));
-    Assert(ret==PROCEED);
-
-    dispose();
   }
 
   virtual Distributor * BaseDistributor::gc(void) {
@@ -455,7 +454,7 @@ void Board::checkStability(void) {
 
       if (n == 1) {
         // Is the distributor unary?
-        ((BaseDistributor *) d)->unitCommit();
+        d->commit(this,1,1);
         return;
       } else {
         // don't decrement counter of parent board!
@@ -924,10 +923,7 @@ OZ_BI_define(BIregisterSpace, 1, 1) {
 
     BaseDistributor * bd = new BaseDistributor(bb,i);
 
-    if (i==1)
-      bb->setDistBag(bb->getDistBag()->addIt(bd,OK));
-    else
-      bb->addToDistBag(bd);
+    bb->addToDistBag(bd);
 
     OZ_out(0) = bd->getVar();
   }
