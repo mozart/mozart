@@ -2,4 +2,4 @@
 OZWISHHOME=/project/ps/soft/tcl-beta
 OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish
 export OZWISHHOME OZWISH
-exec $OZHOME/bin/ozwisg $@
+exec $OZHOME/bin/ozwish $@
