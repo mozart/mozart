@@ -50,6 +50,7 @@ TaggedRef lastAtom;
 TaggedRef moreAtom;
 TaggedRef entailedAtom;
 TaggedRef stableAtom;
+TaggedRef unstableAtom;
 TaggedRef failedAtom;
 
 void SolveActor::Init()
@@ -69,6 +70,7 @@ void SolveActor::Init()
   moreAtom       = makeTaggedAtom (SEARCH_MORE);
   entailedAtom   = makeTaggedAtom (SEARCH_ENTAILED);
   stableAtom     = makeTaggedAtom (SEARCH_STABLE);
+  unstableAtom   = makeTaggedAtom (SEARCH_UNSTABLE);
   failedAtom     = makeTaggedAtom (SEARCH_FAILED);
 
 }
@@ -201,6 +203,13 @@ TaggedRef SolveActor::genChoice (int noOfClauses)
 TaggedRef SolveActor::genFailed ()
 {
   return (failedAtom);
+}
+
+TaggedRef SolveActor::genUnstable (TaggedRef arg)
+{
+  STuple *stuple = STuple::newSTuple (unstableAtom, 1);
+  stuple->setArg (0, arg);
+  return (makeTaggedSTuple (stuple));
 }
 
 // private members; 

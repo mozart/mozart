@@ -20,6 +20,9 @@ enum BIType {
   BIsolve,
   BIsolveEatWait,
   BIsolveGuided,
+  BIsolveGuidedEatWait,
+  BIsolveDebug,
+  BIsolveDebugGuided,
   BIsolveCont,
   BIsolved
 };
