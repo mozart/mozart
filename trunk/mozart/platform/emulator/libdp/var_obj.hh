@@ -99,10 +99,11 @@ private:
     Assert(isObjectClassNotAvail());
     return u.gnameClass;
   }
-  Object *getObject() { return obj; }
+
   ObjectClass *getClass() { Assert(isObjectClassAvail()); return u.aclass; }
 
 public:
+  Object *getObject() { return obj; }
   void marshal(MsgBuffer*);
   void sendObject(DSite*, int, ObjectFields&, BorrowEntry*);
   void sendObjectAndClass(ObjectFields&, BorrowEntry*);
@@ -115,6 +116,7 @@ public:
   void wakeAll();
   Bool failurePreemption();
   void newWatcher(Bool);
+  TaggedRef getTaggedRef();
 };
 
 inline
