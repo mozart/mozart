@@ -92,7 +92,7 @@ define
 	       '<UL>\n'#{FormatTOCLevel TOC Level + 1 TopLevel}
 	    else
 	       '<LI><A href='#thread {MakeCDATA Node#"#"#Label} end#'>'#
-	       Text#'</A></LI>\n'#{FormatTOCLevel TOCr Level TopLevel}
+	       Text#'</A>\n'#{FormatTOCLevel TOCr Level TopLevel}
 	    end
 	 [] nil then
 	    if Level > TopLevel then
@@ -278,9 +278,9 @@ define
 	       end
       in
 	 OzDocToHTML, PushCommon(M)
-	    %--------------------------------------------------------------
-	    % Processing Instructions
-	    %--------------------------------------------------------------
+	 %--------------------------------------------------------------
+	 % Processing Instructions
+	 %--------------------------------------------------------------
 	 if Tag == SGML.namePI then
 	    case M.1 of emdash then
 	       Out <- @Out#' - '
@@ -533,7 +533,7 @@ define
 	       end
 	    [] entry then
 	       Out <- @Out#'<DT>'
-	       OzDocToHTML, Batch(M 1)
+	       OzDocToHTML, Batch(M.1 1)
 	       Out <- @Out#'</DT>'
 	    [] synopsis then
 	       {Exception.raiseError ozDoc(sgmlToHTML unsupported M)}   %--**
