@@ -107,9 +107,9 @@ proc {SafeSend Prt X}
    try
       {Send Prt X}
    catch system(dp(conditions:FS) ...) then
-      if {Fault.member permFail FS} then
+      if {FMember permFail FS} then
          raise serverError end
-      elseif {Fault.member tempFail FS} then
+      elseif {FMember tempFail FS} then
          {Delay 100} {SafeSend Prt X}
       else skip end
    end
@@ -132,9 +132,9 @@ local
          [] {Wait Time} then raise serverError end
          end
       catch system(dp(conditions:FS ...) ...) then
-         if {Fault.someOf [permFail,remoteProblem(permSome)] FS} then
+         if {FSomeOf [permFail,remoteProblem(permSome)] FS} then
             raise serverError end
-         if {Fault.someOf [tempFail,remoteProblem(tempSome)] FS} then
+         if {FSomeOf [tempFail,remoteProblem(tempSome)] FS} then
             {Delay 100} {InnerSafeWait X Time}
          else skip end
       end
@@ -166,6 +166,59 @@ indefinitely, it must time out.
 We need a time-out since otherwise a client
 will be stuck when the server drops it like a hot potato.
 The time-out is an argument to <<SafeWait>>.
+
+<SUBSECTION><TITLE>Utilities for fault tolerance</TITLE>
+
+<P>In the above example and later on in this chapter,
+we use the utility functions <<FMember>> and <<FSomeOf>>
+to simplify checking for fault conditions.
+We specify these functions as follows.
+
+<P>The call <<{FMember permFail FS}>> checks whether the
+fault state <<permFail>> occurs in the set of actual
+fault conditions <<FS>>.  Extra information in <<FS>>
+is not taken into account in the membership check.
+The function <<FMember>> is defined as follows:
+<<<
+fun {FMember F FS}
+   if FS==nil then false
+   else F2|FS2=FS in
+      case F2
+      of permFail(...) then
+         if F==permFail then true else {FMember F FS2} end
+      [] tempFail(...) then
+         if F==tempFail then true else {FMember F FS2} end
+      [] remoteProblem(I ...) then
+         if F==remoteProblem(I) then true else {FMember F FS2} end
+      else {FMember F FS2}
+      end
+   end
+end
+>>>
+
+<P>The call <<{FSomeOf [permFail, remoteProblem(permSome)] FS}>> checks
+whether either of <<permFail>> or <<remoteProblem(permSome)>> occurs
+in the set <<FS>>.
+Just like for <<FMember>>, extra information in <<FS>> is
+not taken into account in the membership check.
+The function <<FSomeOf>> is defined as follows:
+<<<
+fun {FSomeOf FS1 FS2}
+   if FS2==nil then false
+   else F|FS=FS2 in
+      case F
+      of permFail(...) then
+         if {Member permFail FS1} then true else {FSomeOf FS1 FS} end
+      [] tempFail(...) then
+         if {Member tempFail FS1} then true else {FSomeOf FS1 FS} end
+      [] remoteProblem(I ...) then
+         if {Member remoteProblem(I) FS1} then true else {FSomeOf FS1 FS} end
+      else {FSomeOf FS1 FS}
+      end
+   end
+end
+>>>
+
 
 <SECTION><TITLE>Fault-tolerant stationary objects</TITLE>
 
@@ -237,9 +290,9 @@ send, then wait 100 ms and try again.
       try
          {Send P M#R}
       catch system(dp(conditions:FS ...) ...) then
-         if {Fault.member permFail FS} then
+         if {FMember permFail FS} then
             raise remoteObjectError end
-         elseif {Fault.member tempFail FS} then
+         elseif {FMember tempFail FS} then
             {Delay 100}
             {StatP M}
          else skip end
@@ -261,9 +314,9 @@ wait 100 ms and try again.
       try
          if R==N then skip else raise R end end
       catch system(dp(conditions:FS ...) ...) then
-         if {Fault.someOf [permFail,remoteProblem(permSome)] FS} then
+         if {FSomeOf [permFail,remoteProblem(permSome)] FS} then
             raise remoteObjectError end
-         elseif {Fault.someOf [tempFail,remoteProblem(tempSome)] FS} then
+         elseif {FSomeOf [tempFail,remoteProblem(tempSome)] FS} then
             {Delay 100} {EndLoop R}
          else skip end
       end
@@ -302,7 +355,7 @@ up after 10 tries.
          try
             R=N
          catch system(dp(conditions:FS ...) ...) then
-            if {Fault.member tempFail FS} then
+            if {FMember tempFail FS} then
                {Delay 2000}
                {TryToBind Count-1 R N}
             else skip end
