@@ -63,22 +63,14 @@ local
 	 end
       end
    in
-      fun {MakeFileName fVar(X _) Ext}
-	 {String.toAtom {MakeFileNameSub {Atom.toString X} Ext}}
-      end
-      fun {MakeFileNameGumpdir T Ext}
-	 Gumpdir = {Property.condGet 'oz.gump.directory' unit}
-	 FN      = {MakeFileName T Ext}
-      in
-	 if Gumpdir==unit then FN else
-	    S={VirtualString.toString Gumpdir}
-	 in
-	    case {Reverse S} of H|_ andthen (H==&/ orelse H==&\\) then
-	       {VirtualString.toAtom Gumpdir#FN}
-	    else OS={Property.get 'platform.os'}
-	       SEP = if OS==win32 then "\\" else "/" end
-	    in
-	       {VirtualString.toAtom Gumpdir#SEP#FN}
+      fun {MakeFileName fVar(X _) Ext Dir} FN in
+	 FN = {MakeFileNameSub {Atom.toString X} Ext}
+	 case Dir of unit then {String.toAtom FN}
+	 else S in
+	    S = {VirtualString.toString Dir}
+	    case {Reverse S} of &/|_ then {VirtualString.toAtom Dir#FN}
+	    [] &\\|_ then {VirtualString.toAtom Dir#FN}
+	    else {VirtualString.toAtom Dir#'/'#FN}
 	    end
 	 end
       end

@@ -1860,10 +1860,10 @@ in
 	 if {Globals getFlag(outputSimplified $)} then
 	    {WriteVSFile
 	     {FormatStringToVirtualString {Globals output(T $)}}
-	     {MakeFileName T ".simplified"}}
+	     {MakeFileName T ".simplified" {Globals getFlag(directory $)}}}
 	 end
 	 F = if {Globals getFlag(verbose $)} then
-		{MakeFileName T ".output"}
+		{MakeFileName T ".output" {Globals getFlag(directory $)}}
 	     else ''
 	     end
 	 {PTG generateTables(Globals F P Rep ?SynMeth ?Tables)}
