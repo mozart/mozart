@@ -678,7 +678,7 @@ OZ_Return tcl_write(int fd, char * buff, int len, TaggedRef out) {
     return OZ_unifyInt(out,0);
   }
 
-  while ((ret = write(fd, buff, len)) < 0) {
+  while ((ret = oswrite(fd, buff, len)) < 0) {
     if (errno != EINTR) {
       tcl_buffer.reset();
       return ret_unix_error(out);

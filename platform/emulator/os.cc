@@ -24,8 +24,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifdef _MSC_VER
-#define OPEN_MAX  20 /* !!!!!!!!!!!! */
+#ifdef FOPEN_MAX
+#define OPEN_MAX  FOPEN_MAX
+#endif
+
+#ifdef MAX_OPEN
+#define OPEN_MAX  MAX_OPEN
 #endif
 
 #ifdef WINDOWS
@@ -57,8 +61,15 @@ static long openMax;
 // return current usertime in milliseconds
 unsigned int osUserTime()
 {
-#ifdef WINDOWS
-  return ((1000*clock())/CLOCKS_PER_SEC);
+#if defined(WINDOWS) && !defined(GNUWIN32)
+  FILETIME ct,et,kt,ut;
+  /* only NT supports this */
+  if (GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut) == FALSE) {
+    return ((1000*clock())/CLOCKS_PER_SEC);
+  }
+
+  return (ut.dwLowDateTime/10000);
+
 #else
   struct tms buffer;
 
@@ -70,7 +81,7 @@ unsigned int osUserTime()
 // return current systemtime in milliseconds
 unsigned int osSystemTime()
 {
-#ifdef WINDOWS
+#if defined(WINDOWS) && !defined(GNUWIN32)
   return 0;
 #else
   struct tms buffer;
@@ -79,6 +90,8 @@ unsigned int osSystemTime()
   return (unsigned int)(buffer.tms_stime*1000.0/(double)sysconf(_SC_CLK_TCK));
 #endif
 }
+
+
 
 #ifdef WINDOWS
 class TimerThread {
@@ -144,7 +157,7 @@ static
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(GNUWIN32)
   signal(signo,(__sig_func)fun);
 #endif
   return NULL;
@@ -245,6 +258,84 @@ extern "C" void __builtin_delete (void *ptr)
 
 #ifdef HPUX_700
 #include <time.h>
+#endif
+
+
+#ifdef GNUWIN32
+
+const int wrappedHDStart = 30; /* !!!!!!!!!!!!! */
+
+class WrappedHandles {
+public:
+  static int nextno;
+  static WrappedHandles *allHandles;
+  HANDLE hd;
+  int fd;
+  WrappedHandles *next;
+  WrappedHandles(HANDLE h)
+  {
+    hd = h;
+    fd = nextno++;
+    next = allHandles;
+    allHandles = this;
+  }
+
+  static HANDLE find(int f)
+  {
+    WrappedHandles *aux = allHandles;
+    while(aux) {
+      if (f == aux->fd)
+        return aux->hd;
+      aux = aux->next;
+    }
+    return 0;
+  }
+};
+
+int WrappedHandles::nextno = wrappedHDStart;
+
+WrappedHandles *WrappedHandles::allHandles = NULL;
+
+int lowread(int fd, void *buf, int sz)
+{
+  if (fd < wrappedHDStart)
+    return read(fd,buf,sz);
+
+  HANDLE hd = WrappedHandles::find(fd);
+  Assert(hd!=0);
+
+  unsigned int ret;
+  if (ReadFile(hd,buf,sz,&ret,0)==FALSE)
+    return -1;
+  return ret;
+}
+
+
+int lowwrite(int fd, void *buf, int sz)
+{
+  if (fd < wrappedHDStart)
+    return write(fd,buf,sz);
+
+  HANDLE hd = WrappedHandles::find(fd);
+  Assert(hd!=0);
+
+  unsigned int ret;
+  if (WriteFile(hd,buf,sz,&ret,0)==FALSE)
+    return -1;
+  return ret;
+}
+
+int _hdopen(int handle, int flags)
+{
+  WrappedHandles *wh = new WrappedHandles((HANDLE)handle);
+  return wh->fd;
+}
+
+#else
+
+#define lowread(fd,buf,sz) read(fd,buf,sz)
+#define lowwrite(fd,buf,sz) read(fd,buf,sz)
+
 #endif
 
 
@@ -516,12 +607,17 @@ int osTestSelect(int fd, int mode)
     return 1;
 
   /* for a disk file hopefully input will not block */
+#ifndef GNUWIN32
   HANDLE h = (HANDLE)_os_handle(fd);
+#endif
   IOChannel *ch = findChannel(fd);
   //  fprintf(stderr,"before GFT(%d,%d)\n",h,fd); fflush(stderr);
   if (!FD_ISSET(fd,&isSocket) &&
-      ch == NULL &&
-      GetFileType(h) != FILE_TYPE_PIPE) {
+      ch == NULL
+#ifndef GNUWIN32
+       && GetFileType(h) != FILE_TYPE_PIPE
+#endif
+      ) {
     //    fprintf(stderr,"after GFT(%d), success\n",h); fflush(stderr);
     return 1;
   }
@@ -681,8 +777,9 @@ int osread(int fd, void *buf, unsigned int len)
     int ret;
       if (FD_ISSET(fd,&isSocket))
         ret = recv(fd,((char*)buf)+1,len-1,0);
-      else
-        ret = read(fd,((char*)buf)+1,len-1);
+      else {
+        ret = lowread(fd,((char*)buf)+1,len-1);
+      }
     if (ret<0)
       return ret;
     ch->status=NO;
@@ -691,7 +788,7 @@ int osread(int fd, void *buf, unsigned int len)
     return ret+1;
   }
 #endif
-  return read(fd, buf, len);
+  return lowread(fd, buf, len);
 }
 
 
@@ -700,7 +797,7 @@ int oswrite(int fd, void *buf, unsigned int len)
 {
   if (FD_ISSET(fd,&isSocket))
     return send(fd, (char *)buf, len, 0);
-  return write(fd, buf, len);
+  return lowwrite(fd, buf, len);
 }
 
 int osclose(int fd)
@@ -740,9 +837,5 @@ void ossleep(int secs)
 
 int osgetpid()
 {
-#ifdef WINDOWS
-  return 4711;
-#else
   return getpid();
-#endif
 }

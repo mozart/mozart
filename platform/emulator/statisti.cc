@@ -24,7 +24,7 @@
 #include "fdomn.hh"
 
 
-#ifndef OSF1_ALPHA
+#if !defined(OSF1_ALPHA) && !defined(WINDOWS)
 extern "C" void *sbrk(int incr);
 #endif
 

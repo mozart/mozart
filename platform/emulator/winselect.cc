@@ -67,7 +67,6 @@ IOChannel *lookupChannel(int fd)
   return aux;
 }
 
-
 unsigned __stdcall readerThread(void *arg)
 {
   IOChannel *sr = (IOChannel *)arg;
@@ -80,7 +79,7 @@ unsigned __stdcall readerThread(void *arg)
       ret = recv(sr->fd, &sr->chr, sizeof(char),0);
     else
 #endif
-      ret = read(sr->fd, &sr->chr, sizeof(char));
+      ret = lowread(sr->fd, &sr->chr, sizeof(char));
     if (ret<0) {
       break;
     }
@@ -94,7 +93,7 @@ unsigned __stdcall readerThread(void *arg)
     ResetEvent(sr->char_consumed);
   }
   sr->status = NO;
-  sr->thrd = NULL;
+  sr->thrd = 0;
   _endthreadex(0);
   return 0;
 }
@@ -108,7 +107,11 @@ unsigned __stdcall acceptThread(void *arg)
   FD_ZERO(&readfds);
   FD_SET(sr->fd,&readfds);
 
+#ifdef GNUWIN32
+  int ret = -1;
+#else
   int ret = select(1,&readfds,NULL,NULL,NULL);
+#endif
   if (ret<=0) {
     warning ("acceptThread(%d) failed, error=%d\n",
             sr->fd,WSAGetLastError());
@@ -116,7 +119,7 @@ unsigned __stdcall acceptThread(void *arg)
     sr->status = OK;
     SetEvent(sr->char_avail);
   }
-  sr->thrd = NULL;
+  sr->thrd = 0;
   _endthreadex(0);
   return 0;
 }
@@ -132,7 +135,7 @@ Bool createReader(int fd, Bool doAcceptSelect)
 {
   IOChannel *sr = findChannel(fd);
 
-  if (sr->thrd != NULL)
+  if (sr->thrd != 0)
     return OK;
 
   ResetEvent(sr->char_avail);
@@ -142,7 +145,7 @@ Bool createReader(int fd, Bool doAcceptSelect)
   sr->thrd = _beginthreadex(NULL,0,
                             doAcceptSelect ? &acceptThread : &readerThread,
                             sr,0,&thrid);
-  if (sr->thrd != NULL) {
+  if (sr->thrd != 0) {
     return OK;
   }
 
@@ -186,7 +189,7 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
   int nh = 0;
   int i;
   for (i=0; i< maxfd; i++) {
-    if (FD_ISSET(i,fds) && findChannel(i)->thrd!=NULL) {
+    if (FD_ISSET(i,fds) && findChannel(i)->thrd!=0) {
       wait_hnd[nh++] = findChannel(i)->char_avail;
     }
   }

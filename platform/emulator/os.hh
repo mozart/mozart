@@ -26,12 +26,8 @@
 
 #define pid_t int
 
-// sleep
-#include <dos.h>
-
 // getpid
 #include <process.h>
-
 
 #endif
 
@@ -136,6 +132,10 @@ int osClockTickToMs(int cl)
 #define _hdopen(file,flags) _open_osfhandle(file,flags)
 #define _os_handle(fd) _get_osfhandle(fd)
 #define SIGUSR1 SIGINT
+#endif
+
+#ifdef GNUWIN32
+extern int _hdopen(int, int flags);
 #endif
 
 #endif

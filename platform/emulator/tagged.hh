@@ -121,12 +121,16 @@ TaggedRef makeTaggedRef(TypeOfTerm tag, void *ptr)
   return makeTaggedRef(tag,ToInt32(ptr));
 }
 
+#ifdef DEBUG_CHECK
 inline
 TypeOfTerm tagTypeOf(TaggedRef ref)
 {
   GCDEBUG(ref);
   return _tagTypeOf(ref);
 }
+#else
+#define tagTypeOf(ref) _tagTypeOf(ref)
+#endif
 
 
 
