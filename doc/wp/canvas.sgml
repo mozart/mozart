@@ -249,7 +249,7 @@ O={New Tk.canvasTag tkInit(parent:C)}
 
     <para class=apropos><title/configuring items/
 <index class=tails/item<and>configuration/
-      Items can be configured by using the command <<itemconfigure>>,
+      Items can be configured with the command <<itemconfigure>>,
       which is similar to the command <<configure>> for widgets. The
       color of all rectangle and oval items in our previous example
       can be changed by:
@@ -290,7 +290,8 @@ Colors={New class $ from BaseObject
             end noop}
 {O tkBind(event:  '<3>'
           action: proc {$}
-                     {O tk(itemconfigure fill:{Colors get($)})}
+                     {O tk(itemconfigure
+                           fill:{Colors get($)})}
                   end)}
 </chunk>
     <p>
@@ -329,7 +330,8 @@ in
       meth init(parent:P done:D stopped:S)
          {self tkInit(parent:P)}
          {P tk(create bitmap 0 0
-               bitmap:'@'#{Property.get 'oz.home'}#'/doc/wp/magnifier.xbm'
+               bitmap:'@'#{Property.get 'oz.home'}#
+                      '/doc/wp/magnifier.xbm'
                tags:self foreground:blue)}
          thread {self move(D S)} end
       end

@@ -42,8 +42,8 @@
     <P>
 <index class=tails/<<TkTools>><and><<dialog>>/
       A dialog displays some graphical information and several buttons.
-      The class <<TkTools.dialog>> provides a simple abstraction to build
-      dialogs.
+      A simple abstraction to build dialogs is
+      provided by the class <<TkTools.dialog>>.
 
     <P>
       <Ptr to="figure.tools.dialog"> shows an example dialog for deleting
@@ -169,8 +169,7 @@ E={New TkTools.error
       and entries, where the label determines the kind of entry to be created.
 
     <P>
-      <Ptr to="figure.tools.menubar"> shows an example for the creation of
-      a menubar.  The procedure <<TkTools.menubar>> takes two widgets and
+      <Ptr to="figure.tools.menubar"> shows an example for menubar creation. The procedure <<TkTools.menubar>> takes two widgets and
       two menubar specifications as input and returns a frame containing the
       widgets for the menubar.  The widget given as first argument serves
       as parent for the menubar's frame, whereas the widget given as
@@ -191,33 +190,27 @@ E={New TkTools.error
 V={New Tk.variable tkInit(0)}
 B={TkTools.menubar W W
    [menubutton(text:'Test' underline:0
-               menu:
-                  [command(label:   'About test'
-                           action:  Browse#about
-                           key:     alt(a)
-                           feature: about)
-                   separator
-                   command(label:   'Quit'
-                           action:  W#tkClose
-                           key:     ctrl(c)
-                           feature: quit)]
-               feature: test)
+               menu: [command(label:   'About test'
+                              action:  Browse#about
+                              key:     alt(a)
+                              feature: about)
+                      separator
+                      command(label:   'Quit'
+                              action:  W#tkClose
+                              key:     ctrl(c)
+                              feature: quit)]
+                      feature: test)
     menubutton(text:'Options' underline:0
-               menu:
-                  [checkbutton(label: 'Incremental'
-                               var:   {New Tk.variable tkInit(false)})
-                   separator
-                   cascade(label: 'Size'
-                           menu:
-                              [radiobutton(label: 'Small'
-                                           var:   V
-                                           value: 0)
-                               radiobutton(label: 'Middle'
-                                           var:   V
-                                           value: 1)
-                               radiobutton(label: 'Large'
-                                           var:   V
-                                           value: 2)])])]
+               menu: [checkbutton(label: 'Incremental'
+                                  var: {New Tk.variable tkInit(false)})
+                      separator
+                      cascade(label: 'Size'
+                              menu: [radiobutton(label:'Small'
+                                                 var:V value:0)
+                                     radiobutton(label:'Middle'
+                                                 var:V value:1)
+                                     radiobutton(label:'Large'
+                                                 var:V value: 2)])])]
    nil}
 F={New Tk.frame tkInit(parent:W width:10#c height:5#c bg:ivory)}
 {Tk.send pack(B F fill:x)}
@@ -315,7 +308,9 @@ A={New Tk.menuentry.command tkInit(parent:B.test.menu
 <index class=tails/<<TkTools>><and><<images>>/
 <chunk class=anonymous><title/TkTools.images/
 U='http://www.mozart-oz.org/home/doc/wp/'
-I={TkTools.images [U#'wp.gif' U#'queen.xbm' U#'truck-left.ppm']}
+I={TkTools.images [U#'wp.gif'
+                   U#'queen.xbm'
+                   U#'truck-left.ppm']}
 </chunk>
       binds <<I>> to a record with features <<wp>>, <<queen>>, and
       <<'truck-left'>>, where the fields are the corresponding images.

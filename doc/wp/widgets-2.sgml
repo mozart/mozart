@@ -39,7 +39,7 @@
 
     <P>
     <para class=apropos><title/actions/
-      <def/Button/ widgets are similar to label widgets in that they display text,
+      <def/Button/ widgets are similar to label widgets: they display text,
       bitmaps, or images.  Additionally, they provide for <Def/actions/:
       pressing the mouse button over the button widget, invokes an
       action.  An action is either a procedure or a pair of object and
@@ -222,7 +222,7 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
     <Title/Querying Tickle Objects/
 
     <P>
-      In the previous section we queried the state of a Tk variable with the
+      In the previous section we queried a Tk-variable's state with the
       methods <<tkReturnInt>> and <<tkReturnAtom>>.  In fact it is possible to
       query the state of all tickle objects, in particular to query the state
       of widgets.
@@ -445,7 +445,7 @@ CEs={Map Cs fun {$ C}
       events which allows to mattach actions to abitrary widgets.
 
     <p>
-      Reference information on menus and menubuttons can be found in
+      Reference information can be found in
       <ref.extern to="&tkcmd;/menu.htm"/<kbd/menu// and <ref.extern
       to="&tkcmd;/menubutton.htm"/<kbd/menubutton//.
 
@@ -475,7 +475,7 @@ CEs={Map Cs fun {$ C}
 
     <para class=apropos><title/event patterns/
       The program in <Ptr to="figure.widgets-2.event-menu"> does what we
-      want.  The value <<'&lt;Button-1&gt;'>> for the <<event>> option is
+      want: <<'&lt;Button-1&gt;'>> for the <<event>> option is
       the so-called <Def/event pattern/.  The value for the <<args>> option
       describes that the action should invoked with two arguments.  The
       first (second) one should be an integer giving the ?{x} (?{y})
@@ -701,7 +701,7 @@ CEs={Map Cs fun {$ C}
       that they will run in that order.
 
     <p>
-      To that aim the class <<Tk.listener>> is provided. An instance
+      The class <<Tk.listener>> fixes this. An instance
       of a subclass of <<Tk.listener>> has a thread of its own in
       which it serves action messages in order of invocation.
       For example, in
@@ -732,7 +732,7 @@ B2={New Tk.button tkInit(parent:W text:'Two' action: L#b2)}
 
     <p>
       An additional message ?_{M} to be served can be given to a
-      listener by the method <<tkServe(?_{M})>>. For example, by
+      listener by the method <<tkServe>>. For example, by
 <chunk class=anonymous><title/tkServe/
 {L tkServe(b1)}
 </chunk>
@@ -954,8 +954,7 @@ S={New Tk.scrollbar tkInit(parent:W)}
 <chunk class=anonymous><title/wm title/
 W={New Tk.toplevel tkInit(title:'Something different')}
 </chunk>
-      creates a toplevel widget with the title <Samp/Something different/
-      rather than <Samp/Oz Window/.
+      creates a toplevel widget with the title <Samp/Something different/.
 
     <para class=apropos><title/withdrawn toplevels/
       Sometimes it is important to create a toplevel widget in a <Def
