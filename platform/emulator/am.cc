@@ -264,6 +264,7 @@ void AM::init(int argc,char **argv)
   currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;
+  shallowHeapTop = NULL;
   setCurrent(rootBoard,OK);
   currentSolveBoard = (Board *) NULL; 
   wasSolveSet = NO; 
@@ -360,6 +361,8 @@ Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, ByteCode *scp)
 // unify and manage rebindTrail
 Bool AM::unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
 {
+  Assert(shallowHeapTop && scp || shallowHeapTop==0 && scp==0);
+
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
   Bool result = performUnify(&t1, &t2, scp);
 
@@ -511,15 +514,15 @@ start:
 	 (!isLocalVariable(term1,termPtr1) ||
 	  (isUVar(term2) && !isUVar(term1)) ||
 	   heapNewer(termPtr2,termPtr1))) {
-      genericBind(termPtr2, term2, termPtr1, *termPtr1, scp);
+      genericBind(termPtr2, term2, termPtr1, *termPtr1);
     } else {
-      genericBind(termPtr1, term1, termPtr2, *termPtr2, scp);
+      genericBind(termPtr1, term1, termPtr2, *termPtr2);
     }
     return OK;
   }
   
   if (isNotCVar(tag2)) {
-    genericBind(termPtr2, term2, termPtr1, *termPtr1, scp);
+    genericBind(termPtr2, term2, termPtr1, *termPtr1);
     return OK;
   }
 
@@ -634,6 +637,9 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 				   SuspList * suspList,
 				   PropCaller calledBy)
 {
+  if (shallowHeapTop!=0)
+    return suspList;
+
   SuspList * retSuspList = NULL;
 
   // see the reduction of solve actor by the enumeration; 
@@ -739,25 +745,22 @@ Bool checkHome(TaggedRef *vPtr) {
 // exception from general rule that arguments are never variables!
 //  term may be an 
 void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
-		     TaggedRef *termPtr, TaggedRef term,
-		     ByteCode *scp)
+		     TaggedRef *termPtr, TaggedRef term)
      /* bind var to term;         */  
 {
   Assert(!isCVar(var) && !isRef(term));
 
   /* first step: do suspensions */
-  if (scp==0) {
-    if (isSVar(var)) {
-      checkSuspensionList(var, pc_std_unif);
-    }
-    if (isSVar(term)) {
-      checkSuspensionList(term, pc_std_unif);
-    }
+  if (isSVar(var)) {
+    checkSuspensionList(var, pc_std_unif);
+  }
+  if (isSVar(term)) {
+    checkSuspensionList(term, pc_std_unif);
   }
 
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
-  if ( !isLocalVariable(var,varPtr) || scp ) {
+  if ( !isLocalVariable(var,varPtr)) {
     Assert(checkHome(varPtr));
     trail.pushRef(varPtr,var);
   } else  { // isLocalVariable(var)
@@ -785,10 +788,9 @@ void AM::doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t)
  * ... and install propagators
  */
 void AM::doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
-			     GenCVariable * lv, GenCVariable * gv,
-			     ByteCode *scp)
+			     GenCVariable * lv, GenCVariable * gv)
 {
-  lv->installPropagators(gv,scp);
+  lv->installPropagators(gv);
   Assert(checkHome(vp));
   trail.pushRef(vp, v);
   

@@ -53,7 +53,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 
       if (scp==0 && (isNotInstallingScript || isLocalVar)) propagate(var);
 
-      if (scp==0 && am.isLocalSVar(this)) {
+      if (am.isLocalSVar(this)) {
 	doBind(vPtr, term);
 	if (disp) dispose();
       } else {
@@ -72,8 +72,8 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  Bool isConstrained = ! am.isInstallingScript();
 	  GenBoolVariable * termvar = tagged2GenBoolVar(term);
 
-	  Bool varIsLocal =  (scp==0 && am.isLocalSVar(this));
-	  Bool termIsLocal = (scp==0 && am.isLocalSVar(termvar));
+	  Bool varIsLocal =  am.isLocalSVar(this);
+	  Bool termIsLocal = am.isLocalSVar(termvar);
 	  
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
@@ -144,9 +144,9 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		termvar->propagate(term, pc_cv_unif);
 	      }
 	      am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
-				     bool_var, this, scp);
+				     bool_var, this);
 	      am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
-				     bool_var, termvar, scp);
+				     bool_var, termvar);
 	      
 	      break;
 	    }
@@ -169,8 +169,8 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	  Bool isConstrainedVar = isNotInstallingScript || (intsct != -1);
 	  Bool isConstrainedTerm = isNotInstallingScript; 
 
-	  Bool varIsLocal =  (scp==0 && am.isLocalSVar(this));
-	  Bool termIsLocal = (scp==0 && am.isLocalSVar(termvar));
+	  Bool varIsLocal =  am.isLocalSVar(this);
+	  Bool termIsLocal = am.isLocalSVar(termvar);
        
 	  switch (varIsLocal + 2 * termIsLocal) {
 	  case TRUE + 2 * TRUE: // var and term are local
@@ -222,7 +222,7 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  if (isConstrainedVar) propagate(var, pc_cv_unif);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-					 this, termvar, scp);
+					 this, termvar);
 		}
 		break;
 	      }
@@ -274,9 +274,9 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		    termvar->propagate(term, fd_prop_bounds, pc_cv_unif);
 		  }
 		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
-					 bool_var, this, scp);
+					 bool_var, this);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
-					 bool_var, termvar, scp);
+					 bool_var, termvar);
 		}
 		break; 
 	      } 

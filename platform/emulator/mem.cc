@@ -253,7 +253,7 @@ void *ozMalloc(int chunk_size)
       old = sbrk(0);
     }
     void *ret_val = sbrk(chunk_size);
-    lastBrk = old;
+    lastBrk = sbrk(0);
     if (ret_val == (caddr_t) - 1) {
       fprintf(stderr,"Virtual memory exhausted\n");
       osExit(1);
@@ -311,9 +311,8 @@ void MemChunks::deleteChunkChain()
 Bool MemChunks::inChunkChain(void *value)
 {
   for (MemChunks *aux = this; aux != NULL; aux = aux->next) {
-    if ((aux->block <= (char *) value)
-	&& ((char*) value <= aux->block + aux->xsize))
-      return OK; 
+    if (aux->isInBlock((char*)value))
+      return OK;
   }
   return NO;
 }

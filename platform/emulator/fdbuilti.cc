@@ -250,7 +250,7 @@ void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
     if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_uvar) {
     if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
-    if (am.isLocalUVar(bifdhm_var[i])) {
+    if (am.isLocalUVar(bifdhm_var[i],&bifdhm_var[i])) {
       OZ_Term * taggedfdvar = newTaggedCVar(new GenFDVariable());
       addSuspFDVar(*taggedfdvar, thr, target);
       doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
@@ -702,8 +702,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	  am.doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
 				 makeTaggedRef(newtaggedboolvar),
-				 newboolvar, tagged2GenBoolVar(bifdbm_var[i]),
-				 0);
+				 newboolvar, tagged2GenBoolVar(bifdbm_var[i]));
 	}
 
       } else {
@@ -714,7 +713,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	  OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
 	  am.doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
 				 makeTaggedRef(newtaggedfdvar),
-				 newfdvar, tagged2GenFDVar(bifdbm_var[i]), 0);
+				 newfdvar, tagged2GenFDVar(bifdbm_var[i]));
 	} 
 	
 	vars_left = OZ_TRUE;
@@ -795,7 +794,7 @@ void BIfdBodyManager::processNonRes(void)
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
 			       makeTaggedRef(newtaggedboolvar),
-			       newboolvar, tagged2GenFDVar(bifdbm_var[0]), 0);
+			       newboolvar, tagged2GenFDVar(bifdbm_var[0]));
       } else {
 	tagged2GenFDVar(bifdbm_var[0])->
 	  becomesBoolVarAndPropagate(bifdbm_varptr[0]);
@@ -807,7 +806,7 @@ void BIfdBodyManager::processNonRes(void)
 	OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
 	am.doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
 			       makeTaggedRef(newtaggedfdvar),
-			       newfdvar, tagged2GenFDVar(bifdbm_var[0]), 0);
+			       newfdvar, tagged2GenFDVar(bifdbm_var[0]));
       } 
     }
 
@@ -918,7 +917,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
 
     ozstat.fdvarsCreated.incf();
 
-    bifdbm_var_state[0] = (am.isLocalUVar(v)? fdbm_local : fdbm_global);
+    bifdbm_var_state[0] = (am.isLocalUVar(v,vptr)? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
       GenFDVariable * fdvar = new GenFDVariable();
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);

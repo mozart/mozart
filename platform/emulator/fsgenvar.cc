@@ -63,7 +63,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
       if (scp==0 && (isNotInstallingScript || isLocalVar)) 
 	propagate(var, fs_prop_val);
       
-      if (scp==0 && isLocalVar) {
+      if (isLocalVar) {
 	doBind(vptr, term);
 	if (disp) dispose();
       } else {
@@ -93,8 +93,8 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	  (*cpi_cout) << " -> " << new_fset;
 #endif
       
-	  Bool var_is_local = (scp==0 && am.isLocalSVar(this));
-	  Bool term_is_local = (scp==0 && am.isLocalSVar(term_var));
+	  Bool var_is_local  = am.isLocalSVar(this);
+	  Bool term_is_local = am.isLocalSVar(term_var);
 	  Bool is_not_installing_script = !am.isInstallingScript();
 	  Bool var_is_constrained = (is_not_installing_script ||
 				     fset->isWeakerThan(new_fset));
@@ -150,7 +150,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 		  if (is_not_installing_script) term_var->propagateUnify(term);
 		  if (var_is_constrained) propagateUnify(var);
 		  am.doBindAndTrailAndIP(term, tptr, makeTaggedRef(vptr),
-					 this, term_var, scp);
+					 this, term_var);
 		}
 	      } else {
 		if (is_not_installing_script) term_var->propagateUnify(term);
@@ -177,7 +177,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 		  if (is_not_installing_script) propagateUnify(var);
 		  if (term_is_constrained) term_var->propagateUnify(term);
 		  am.doBindAndTrailAndIP(var, vptr, makeTaggedRef(tptr),
-					 term_var, this, scp);
+					 term_var, this);
 		}
 	      } else {
 		if (term_is_constrained) term_var->propagateUnify(term);
@@ -207,9 +207,9 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 		  term_var->propagateUnify(term);
 		}
 		am.doBindAndTrailAndIP(var, vptr, makeTaggedRef(var_val),
-				       c_var, this, scp);
+				       c_var, this);
 		am.doBindAndTrailAndIP(term, tptr, makeTaggedRef(var_val),
-				       c_var, term_var, scp);
+				       c_var, term_var);
 	      }
 	      break;
 	    } // FALSE + 2 * FALSE: 
@@ -318,7 +318,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSet * fs)
 	OZ_Term * loctaggedfsvar = newTaggedCVar(locfsvar);
 	am.doBindAndTrailAndIP(v, vptr,
 			       makeTaggedRef(loctaggedfsvar),
-			       locfsvar, tagged2GenFSetVar(v), OZ_FALSE);
+			       locfsvar, tagged2GenFSetVar(v));
       }
     }
     goto proceed;

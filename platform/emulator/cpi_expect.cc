@@ -654,7 +654,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       } else {
 	Assert(isUVar(vtag));
 	addSuspUVar(vptr, thr);
-	all_local &= am.isLocalUVar(v);
+	all_local &= am.isLocalUVar(v,vptr);
       }
     }
   }

@@ -51,7 +51,7 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
       if (scp==0 && (isNotInstallingScript || isLocalVar)) 
 	propagate(var, fd_prop_singl);
 
-      if (scp==0 && isLocalVar) {
+      if (isLocalVar) {
 	doBind(vPtr, term);
 	if (disp) dispose();
       } else {
@@ -80,8 +80,8 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 	  }
 	  
 	  // bind - trail - propagate
-	  Bool varIsLocal =  (scp==0 && am.isLocalSVar(this));
-	  Bool termIsLocal = (scp==0 && am.isLocalSVar(termVar));
+	  Bool varIsLocal =  am.isLocalSVar(this);
+	  Bool termIsLocal = am.isLocalSVar(termVar);
 
 	  Bool isNotInstallingScript = !am.isInstallingScript();
 	  Bool varIsConstrained = isNotInstallingScript ||
@@ -154,13 +154,13 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 		    if (isNotInstallingScript) termVar->propagateUnify(term);
 		    if (varIsConstrained) bvar->propagateUnify(var);
 		    am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-					   bvar, termVar, scp);
+					   bvar, termVar);
 		  } else {
 		    setDom(intsct);
 		    if (isNotInstallingScript) termVar->propagateUnify(term);
 		    if (varIsConstrained) propagateUnify(var);
 		    am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-					   this, termVar, scp);
+					   this, termVar);
 		  }
 		}
 	      } else {
@@ -191,13 +191,13 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 		    if (isNotInstallingScript) propagateUnify(var);
 		    if (termIsConstrained) tbvar->propagateUnify(term);
 		    am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-					   tbvar, this, scp);
+					   tbvar, this);
 		  } else {
 		    termVar->setDom(intsct);
 		    if (isNotInstallingScript) propagateUnify(var);
 		    if (termIsConstrained) termVar->propagateUnify(term);
 		    am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-					   termVar, this, scp);
+					   termVar, this);
 		  }
 		}
 	      } else {
@@ -236,17 +236,17 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
 		if (intsct == fd_bool) {
 		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
 					 (GenBoolVariable *) c_var, 
-					 this, scp);
+					 this);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
 					 (GenBoolVariable *) c_var, 
-					 termVar, scp);
+					 termVar);
 		} else {
 		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
 					 (GenFDVariable *) c_var, 
-					 this, scp);
+					 this);
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
 					 (GenFDVariable *) c_var, 
-					 termVar, scp);
+					 termVar);
 		}
 	      }
 	      break;
@@ -394,8 +394,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
 	am.doBindAndTrailAndIP(v, vptr,
 			       makeTaggedRef(newtaggedboolvar),
-			       newboolvar, tagged2GenBoolVar(v),
-			       OZ_FALSE);
+			       newboolvar, tagged2GenBoolVar(v));
       }
     } else {
       fdvar->propagate(v, fd_prop_bounds);
@@ -406,7 +405,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	OZ_Term * loctaggedfdvar = newTaggedCVar(locfdvar);
 	am.doBindAndTrailAndIP(v, vptr,
 			       makeTaggedRef(loctaggedfdvar),
-			       locfdvar, tagged2GenFDVar(v), OZ_FALSE);
+			       locfdvar, tagged2GenFDVar(v));
       }
     }
     goto proceed;
