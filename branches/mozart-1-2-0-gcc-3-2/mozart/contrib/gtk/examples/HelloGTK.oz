@@ -29,16 +29,15 @@ define
    class MyToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-	 GTK.window, signalConnect('delete_event' deleteEvent _)
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("Hello GTK")
+	 {self signalConnect('delete-event' deleteEvent _)}
       end
-      meth deleteEvent(Event)
-	 %% Caution: At this time, the underlying GTK object has been destroyed already
-	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
-	 {System.show 'delete Event occured'}
-	 {self close}
+      meth deleteEvent(Args)
+	 %% This handler must decide whether to keep the object alive or not
+	 %% Calling gtkClose terminates the object for sure
+	 {System.show 'deleteEvent occured'}
+	 {self gtkClose}
 	 {Application.exit 0}
       end
    end
@@ -49,7 +48,7 @@ define
 	 GTK.button, newWithLabel("Hello, GTK!")
 	 GTK.button, signalConnect('clicked' clickedEvent _)
       end
-      meth clickedEvent(Event)
+      meth clickedEvent(Args)
 	 {System.show 'ClickedEvent occured'}
       end
    end

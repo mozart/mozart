@@ -23,7 +23,8 @@ functor $
 import
    Application(exit)
    System(show)
-   GTK GTKCANVAS
+   GTK at 'x-oz://system/gtk/GTK.ozf'
+   GTKCANVAS at 'x-oz://system/gtk/GTKCANVAS.ozf'
 define
    %% Create Toplevel window class
    class CanvasToplevel from GTK.window

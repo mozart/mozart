@@ -23,7 +23,8 @@
 #ifndef __GOZ_DATA_H__
 #define __GOZ_DATA_H__
 
-#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define GOZ_(name) name ## _
 
@@ -31,8 +32,13 @@
  * Basic Types
  */
 
+//#define GOZ_declareBool(i, val) \
+//  OZ_declareInt(i, GOZ_(val)); gboolean val = (gboolean) GOZ_(val)
 #define GOZ_declareBool(i, val) \
-  OZ_declareInt(i, GOZ_(val)); gboolean val = (gboolean) GOZ_(val)
+  OZ_declareBool(i, GOZ_(val)); gboolean val = (gboolean) GOZ_(val)
+
+#define GOZ_bool(val) \
+  ((val) ? OZ_true() : OZ_false())
 
 #define GOZ_declareChar(i, val) \
   OZ_declareInt(i, GOZ_(val)); gchar val = (gchar) GOZ_(val)
@@ -109,20 +115,37 @@
 
 /* Generic Gtk Object Type */
 #define GOZ_declareObject(i, val) \
-  OZ_declareForeignType(i, val, GtkObject *)
+  OZ_declareForeignType(i, val, GtkObject *);
 
-/* String Handling */
+/*  #define GOZ_declareObject(i, val) \ */
+/*    OZ_declareForeignType(i, val, GtkObject *); \ */
+/*    if (!GTK_IS_OBJECT(val)) { \ */
+/*      fprintf(stderr, \ */
+/*      "%s: %d: CRITICAL: pointer is not an object; aborting process\n", \ */
+/*              __FILE__, __LINE__); \ */
+/*      exit(EXIT_FAILURE); \ */
+/*    } else if (GTK_OBJECT_DESTROYED(val)) { \ */
+/*      fprintf(stderr, \ */
+/*       "%s: %d: CRITICAL: deleted object to be used; aborting process\n", \ */
+/*       __FILE__, __LINE__); \ */
+/*      exit(EXIT_FAILURE); \ */
+/*    } */
+
+/*
+ * Platform specific String Handling
+ */
 #if defined(__CYGWIN32__) || defined(__MINGW32__)
 static inline gchar *goz_import_string(gchar *source) {
   GError *res;
-  return g_locale_to_utf8(strdup(source), &res);
+  /* To be discussed: g_strdup(source) <-> source  */
+  return g_locale_to_utf8(source, &res);
 }
 
 #define GOZ_importString(str) \
   goz_import_string(str);
 #else
 #define GOZ_importString(str) \
-  strdup(str);
+  g_strdup(str);
 #endif
 
 #define GOZ_declareString(i, val) \
@@ -131,23 +154,27 @@ static inline gchar *goz_import_string(gchar *source) {
   OZ_isUnit (GOZ_(val)) ? \
   val = NULL : val = GOZ_importString((gchar *) OZ_virtualStringToC(GOZ_(val), NULL));
 
+#define GOZ_declareSimpleString(i, val) \
+  gchar *val; \
+  OZ_declareTerm(i, GOZ_(val)) \
+  val = GOZ_importString((gchar *) OZ_virtualStringToC(GOZ_(val), NULL));
+
 static inline gchar *GOZ_stringToC(OZ_Term val) {
   return GOZ_importString((gchar *) OZ_virtualStringToC(val, NULL));
 }
 
-/* GList Handling */
+/*
+ * GList Handling
+ */
 static inline OZ_Term goz_import_glist(GList *ptr) {
   GList *anchor = ptr;
-  OZ_Term cons  = OZ_atom("nil");
+  OZ_Term cons  = OZ_nil();
 
   ptr = g_list_reverse(ptr);
   while (ptr != NULL) {
     cons = OZ_cons(OZ_makeForeignPointer(ptr->data), cons);
     ptr  = g_list_next(ptr);
   }
-  /* To be checked */
-  g_list_free(anchor);
-
   return cons;
 }
 
@@ -182,5 +209,86 @@ static inline GList *goz_export_glist(OZ_Term cons) {
   if (OZ_isVariable(t_val)) {\
     OZ_suspendOn(t_val); \
   }
+
+/*
+ * Generic Handler Argument Handling
+*/
+#define GOZ_ARG_bool(val) \
+  OZ_mkTuple(OZ_atom("bool"), 1, GOZ_bool(val));
+
+#define GOZ_ARG_int(val) \
+  OZ_mkTuple(OZ_atom("int"), 1, OZ_int(val));
+
+#define GOZ_ARG_double(val) \
+  OZ_mkTuple(OZ_atom("double"), 1, OZ_float(val));
+
+#define GOZ_ARG_string(val) \
+  OZ_mkTuple(OZ_atom("string"), 1, OZ_string(val));
+
+#define GOZ_ARG_pointer(val) \
+  OZ_mkTuple(OZ_atom("pointer"), 1, OZ_makeForeignPointer(val));
+
+/* This is only suitable for GTk Objects */
+#define GOZ_ARG_object(val) \
+  OZ_mkTuple(OZ_atom("object"), 1, OZ_makeForeignPointer(val));
+
+/* These two objects are no GTK objects but are provided for convenience */
+#define GOZ_ARG_accel(val) \
+  OZ_mkTuple(OZ_atom("accel"), 1, OZ_makeForeignPointer(val));
+
+#define GOZ_ARG_style(val) \
+  OZ_mkTuple(OZ_atom("style"), 1, OZ_makeForeignPointer(val));
+
+/*
+ * This is a simple collection of known GDK objects
+ */
+
+/* GDK Event */
+#define GOZ_ARG_event(val) \
+  OZ_mkTuple(OZ_atom("event"), 1, val);
+
+/* GDK Color */
+#define GOZ_ARG_color(val) \
+  OZ_mkTuple(OZ_atom("color"), 1, OZ_makeForeignPointer(val));
+
+/* GDK ColorContext */
+#define GOZ_ARG_context(val) \
+  OZ_mkTuple(OZ_atom("context"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Colormap */
+#define GOZ_ARG_map(val) \
+  OZ_mkTuple(OZ_atom("map"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Cursor */
+#define GOZ_ARG_cursor(val)\
+  OZ_mkTuple(OZ_atom("cursor"), 1, OZ_makeForeignPointer(val));
+
+/* GDK DragContext */
+#define GOZ_ARG_drag(val)\
+  OZ_mkTuple(OZ_atom("drag"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Drawable */
+#define GOZ_ARG_drawable(val) \
+  OZ_mkTuple(OZ_atom("drawable"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Font */
+#define GOZ_ARG_font(val) \
+  OZ_mkTuple(OZ_atom("font"), 1, OZ_makeForeignPointer(val));
+
+/* GDK GC */
+#define GOZ_ARG_gc(val) \
+  OZ_mkTuple(OZ_atom("gc"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Image */
+#define GOZ_ARG_image(val) \
+  OZ_mkTuple(OZ_atom("image"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Visual */
+#define GOZ_ARG_visual(val) \
+  OZ_mkTuple(OZ_atom("visual"), 1, OZ_makeForeignPointer(val));
+
+/* GDK Window */
+#define GOZ_ARG_window(val) \
+  OZ_mkTuple(OZ_atom("window"), 1, OZ_makeForeignPointer(val));
 
 #endif

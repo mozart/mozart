@@ -22,15 +22,20 @@
 functor $
 import
 export
-   tokens        : Tokens
-   toString      : ToString
-   toAtom        : ToAtom
-   checkPrefix   : CheckPrefix
-   stripPrefix   : StripPrefix
-   cutPrefix     : CutPrefix
-   translateName : TranslateName
-   firstLower    : FirstLower
-   indent        : Indent
+   tokens            : Tokens
+   toString          : ToString
+   toAtom            : ToAtom
+   checkPrefix       : CheckPrefix
+   stripPrefix       : StripPrefix
+   cutPrefix         : CutPrefix
+   translateName     : TranslateName
+   downTranslate     : MakeClassPrefix
+   firstLower        : FirstLower
+   firstUpper        : FirstUpper
+   indent            : Indent
+   filterGdkTypes    : FilterGdkTypes
+   filterGtkTypes    : FilterGtkTypes
+   filterCanvasTypes : FilterCanvasTypes
 define
    %%
    %% Tokenizer
@@ -99,7 +104,9 @@ define
       case Xs
       of X|Xr then
 	 case Ys
-	 of Y|Yr then if {Char.toUpper X} == {Char.toUpper Y} then {CutPrefix Xr Yr} else Ys end
+	 of Y|Yr then
+	    if {Char.toUpper X} == {Char.toUpper Y}
+	    then {CutPrefix Xr Yr} else Ys end
 	 [] nil  then nil
 	 end
       [] nil  then Ys
@@ -141,11 +148,80 @@ define
       end
    end
 
+   fun {FirstUpper Vs}
+      case Vs
+      of V|Vr then {Char.toUpper V}|Vr
+      [] V    then V
+      end
+   end
+
+   %%
+   %% Name Translation gtkDoo -> gtk_Doo_
+   %%
+
+   local
+      fun {MakeClassPrefixIter Ss NewSs Flag}
+	 case Ss
+	 of S|Sr then
+	    if {Char.isLower S}
+	    then {MakeClassPrefixIter Sr S|NewSs true}
+	    elseif Flag
+	    then {MakeClassPrefixIter Sr {Char.toLower S}|&_|NewSs false}
+	    else {MakeClassPrefixIter Sr {Char.toLower S}|NewSs true}
+	    end
+	 [] nil  then {Reverse &_|NewSs}
+	 end
+      end
+   in
+      fun {MakeClassPrefix Ss}
+	 {MakeClassPrefixIter {FirstLower {ToString Ss}} nil true}
+      end
+   end
+   
    %%
    %% Indentation
    %%
 
    fun {Indent N}
       if N == 0 then "" else "   "#{Indent (N - 1)} end
+   end
+
+   %%
+   %% Gdk/Gtk/GtkCanvas Function Filter
+   %%
+
+   fun {FilterGdkTypes Type}
+      if {IsName Type}
+      then false
+      else
+	 TypeS = {TranslateName {ToString Type}}
+      in
+	 {CheckPrefix "gdk" TypeS}
+      end
+   end
+   
+   fun {FilterGtkTypes Type}
+      if {IsName Type}
+      then false
+      else
+	 TypeS = {TranslateName {ToString Type}}
+      in
+	 if {CheckPrefix "gdk" TypeS}
+	 then false
+	 elseif {CheckPrefix "gtkCanvas" TypeS}
+	 then false
+	    else true
+	 end
+      end
+   end
+   
+   fun {FilterCanvasTypes Type}
+      if {IsName Type}
+      then false
+      else
+	 TypeS = {TranslateName {ToString Type}}
+      in
+	 {CheckPrefix "gtkCanvas" TypeS}
+      end
    end
 end

@@ -22,7 +22,6 @@
 functor $
 import
    System(show)
-   Application
    GTK at 'x-oz://system/gtk/GTK.ozf'
 define
    Is = ["Maximum" "Minimum" "Average" "Projection"]
@@ -35,27 +34,23 @@ define
       in
 	 GTK.list, new
 	 GTK.list, appendItems(Items)
+	 GTK.list, signalConnect('select-child'
+				 proc {$ [Item]}
+				    {System.show 'handler got'#
+				     GTK.list, childPosition(Item $)}
+				 end _)
       end
    end
 
    class MyToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-	 GTK.window, signalConnect('delete_event' deleteEvent _)
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("List Test")
 	 GTK.window, add({New MyList new})
 	 GTK.window, showAll
       end
-      meth deleteEvent(Event)
-	 %% Caution: At this time, the underlying GTK object has been destroyed already
-	 %% Caution: Destruction also includes all attached child objects.
-	 %% Caution: This event is solely intended to do OZ side cleanup via calling close
-	 {System.show 'delete Event occured'}
-	 {self close}
-	 {Application.exit 0}
-      end
    end
 
-   Toplevel = {New MyToplevel new}
+   _ = {New MyToplevel new}
 end
