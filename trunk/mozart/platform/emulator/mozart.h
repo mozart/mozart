@@ -290,5 +290,7 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
 }
 #endif
 
+#include "oz_meta.h"
+#include "oz_fd.h"
 
 #endif // __FOREIGN_H

@@ -7,7 +7,7 @@
 #endif
 
 #include "genvar.hh"
-#include "oz_meta.h"
+#include "oz.h"
 
 //-----------------------------------------------------------------------------
 // Here goes the private part, not accessible by oz.h
