@@ -172,7 +172,6 @@ public:
   TaggedRef aVarBindHandler;
   TaggedRef dVarHandler;
 
-  TaggedRef biExceptionHandler;
   TaggedRef defaultExceptionHandler;
 
   unsigned long lastThreadID;
