@@ -86,7 +86,6 @@ Thread * oz_newThreadPropagate(Board *bb)
 {
   Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,oz_newId());
   bb->incSuspCount();
-  oz_checkDebug(th,bb);
   return th;
 }
 
