@@ -36,13 +36,6 @@
 #include "mem.hh"
 
 /*
- * The macros are still broken (some casts missing?)
- *   However, the inline functions are okay...
- */
-
-#define NO_TAG_OPTS 1
-
-/*
  * There are two different classes of tags:
  *  - Short tags (stag_t). They span 3 bits and do not
  *    distinguish between literals and small integers.
@@ -109,14 +102,62 @@ enum ltag_t {
 
 
 
+
+/*
+ * Tagging & untagging: low level routines
+ *
+ */
+
+#define __ltag_ptr(t,lt) ((TaggedRef) (((int) (t))+(lt)))
+#define __stag_ptr(t,st) ((TaggedRef) (((int) (t))+(st)))
+
+#define __ltag_int(t,lt) ((TaggedRef) ((((int) (t))<<LTAG_BITS)+(lt)))
+#define __stag_int(t,st) ((TaggedRef) ((((int) (t))<<STAG_BITS)+(st)))
+
+#define __unltag_ptr(c,t,lt)   ((c) ((t)-(lt)))
+#define __unstag_ptr(c,t,st)   ((c) ((t)-(st)))
+
 #define __tagged2stag(t) ((stag_t) ((t) & STAG_MASK))
-#define __hasStag(t,st)  !(((t)-(st)) & STAG_MASK)
+#define __hasStag(t,st)  !(__unstag_ptr(int,t,st) & STAG_MASK)
 
 #define __tagged2ltag(t) ((ltag_t) ((t) & LTAG_MASK))
-#define __hasLtag(t,lt)  !(((t)-(lt)) & LTAG_MASK)
+#define __hasLtag(t,lt)  !(__unltag_ptr(int,t,lt) & LTAG_MASK)
 
 
-#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
+// FIXME
+
+#define ARITHMETIC_SHIFTS
+
+#ifdef ARITHMETIC_SHIFTS
+
+#define __unltag_int(t) (((int) (t))>>LTAG_BITS)
+#define __unstag_int(t) (((int) (t))>>STAG_BITS)
+
+#else
+
+inline
+int __unltag_int(TaggedRef t) {
+  int i = (int) t;
+  return (i<0) ? ~((~i)>>LTAG_BITS) : (i>>LTAG_BITS);
+}
+inline
+int __unstag_int(TaggedRef t) {
+  int i = (int) t;
+  return (i<0) ? ~((~i)>>STAG_BITS) : (i>>STAG_BITS);
+}
+
+#endif
+
+
+
+
+
+/*
+ * Testing and accessing tags
+ *
+ */
+
+#if defined(DEBUG_CHECK)
 
 inline ltag_t tagged2ltag(TaggedRef t) { return __tagged2ltag(t); }
 inline stag_t tagged2stag(TaggedRef t) { return __tagged2stag(t); }
@@ -166,31 +207,6 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
 #define oz_isMark(t)     hasStag(t,STAG_MARK)
 
 
-/*
- * Tagging & untagging: low level
- *
- */
-
-#define __unltag_ptr(t,lt)   ((void *) ((t)-(lt)))
-#define __unstag_ptr(t,st)   ((void *) ((t)-(st)))
-
-// FIXME
-#define ARITHMETIC_SHIFTS
-
-#ifdef ARITHMETIC_SHIFTS
-#define __unltag_int(t) (((int) t)>>LTAG_BITS)
-#define __unstag_int(t) (((int) t)>>STAG_BITS)
-#else
-ERROR
-#endif
-
-
-#define __ltag_ptr(t,lt) ((TaggedRef) (((int) t)+(lt)))
-#define __stag_ptr(t,st) ((TaggedRef) (((int) t)+(st)))
-
-#define __ltag_int(t,lt) ((TaggedRef) (((t)<<LTAG_BITS)+(lt)))
-#define __stag_int(t,st) ((TaggedRef) (((t)<<STAG_BITS)+(st)))
-
 
 /*
  * Small integers
@@ -220,7 +236,9 @@ ERROR
  *
  */
 
-#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
+#define SHIT_HAPPEN 1
+
+#if defined(DEBUG_CHECK) || defined(SHIT_HAPPEN)
 
 inline
 TaggedRef * tagged2Ref(TaggedRef t) {
@@ -230,55 +248,55 @@ TaggedRef * tagged2Ref(TaggedRef t) {
 inline
 OzVariable * tagged2Var(TaggedRef t) {
   Assert(oz_isVar(t));
-  return (OzVariable *) __unstag_ptr(t,STAG_VAR);
+  return __unstag_ptr(OzVariable *,t,STAG_VAR);
 }
 inline
 SRecord * tagged2SRecord(TaggedRef t) {
   Assert(oz_isSRecord(t));
-  return (SRecord *) __unstag_ptr(t,STAG_SRECORD);
+  return __unstag_ptr(SRecord *,t,STAG_SRECORD);
 }
 inline
 LTuple * tagged2LTuple(TaggedRef t) {
   Assert(oz_isLTuple(t));
-  return (LTuple *) __unstag_ptr(t,STAG_LTUPLE);
+  return __unstag_ptr(LTuple *,t,STAG_LTUPLE);
 }
 inline
 Literal * tagged2Literal(TaggedRef t) {
   Assert(oz_isLiteral(t));
-  return (Literal *) __unltag_ptr(t,LTAG_LITERAL);
+  return __unltag_ptr(Literal *,t,LTAG_LITERAL);
 }
 inline
 ConstTerm * tagged2Const(TaggedRef t) {
   Assert(oz_isConst(t));
-  return (ConstTerm *) __unstag_ptr(t,STAG_CONST);
+  return __unstag_ptr(ConstTerm *,t,STAG_CONST);
 }
 inline
 void * tagged2UnmarkedPtr(TaggedRef t) {
   Assert(oz_isMark(t));
-  return (void *) __unstag_ptr(t,STAG_MARK);
+  return __unstag_ptr(void *,t,STAG_MARK);
 }
 inline
 int tagged2UnmarkedInt(TaggedRef t) {
   Assert(oz_isMark(t));
-  return (int) __unstag_int(t);
+  return __unstag_int(t);
 }
 inline
 int tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
-  return (int) __unltag_int(t);
+  return __unltag_int(t);
 }
 
 #else
 
-#define tagged2Ref(t)         ((TaggedRef *) (t))
-#define tagged2Var(t)         ((OzVariable *) __unstag_ptr(t,STAG_VAR))
-#define tagged2SRecord(t)     ((SRecord *) __unstag_ptr(t,STAG_SRECORD))
-#define tagged2LTuple(t)      ((LTuple *) __unstag_ptr(t,STAG_LTUPLE))
-#define tagged2Literal(t)     ((Literal *) __unltag_ptr(t,LTAG_LITERAL))
-#define tagged2Const(t)       ((ConstTerm *) __unstag_ptr(t,STAG_CONST))
-#define tagged2UnmarkedPtr(t) ((void *) __unstag_ptr(t,STAG_MARK))
-#define tagged2UnmarkedInt(t) ((int) __unstag_int(t))
-#define tagged2SmallInt(t)    ((int) __unltag_int(t))
+#define tagged2Ref(t)         ((TaggedRef *)  (t))
+#define tagged2Var(t)         __unstag_ptr(OzVariable *,t, STAG_VAR)
+#define tagged2SRecord(t)     __unstag_ptr(SRecord *,   t, STAG_SRECORD)
+#define tagged2LTuple(t)      __unstag_ptr(LTuple *,    t, STAG_LTUPLE)
+#define tagged2Literal(t)     __unltag_ptr(Literal *,   t, LTAG_LITERAL)
+#define tagged2Const(t)       __unstag_ptr(ConstTerm *, t, STAG_CONST)
+#define tagged2UnmarkedPtr(t) __unstag_ptr(void *,      t, STAG_MARK)
+#define tagged2UnmarkedInt(t) __unstag_int(t)
+#define tagged2SmallInt(t)    __unltag_int(t)
 
 #endif
 
@@ -289,7 +307,7 @@ int tagged2SmallInt(TaggedRef t) {
  *
  */
 
-#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
+#if defined(DEBUG_CHECK) || defined(SHIT_HAPPEN)
 
 inline
 TaggedRef makeTaggedRef(TaggedRef * p) {
@@ -466,7 +484,7 @@ TaggedRef * newTaggedVar(OzVariable * c) {
  *
  */
 
-#if defined(DEBUG_CHECK) || defined(NO_TAG_OPTS)
+#if defined(DEBUG_CHECK)
 
 inline Bool oz_eq(TaggedRef t1, TaggedRef t2) {
   Assert(t1==oz_safeDeref(t1));
