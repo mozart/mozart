@@ -620,7 +620,7 @@ public:
 
   OZPRINT;
   OZPRINTLONG;
-  void gcRecurse(int,Bool);
+  void gcRecurse();
   LTuple *gc();
 
   TaggedRef getHead()          { return tagged2NonVariable(args); }

@@ -51,9 +51,6 @@ void LocalPropagationQueue::resize () {
   int index = size - 1;
   int old_size = size;
 
-  DebugCode(message("Resizing local propagation queue 0x%x --> 0x%x.\n",
-		    maxsize, new_maxsize));
-  
   while (size) {
     Thread *thr = dequeue ();
     new_queue[index].thr = thr;
