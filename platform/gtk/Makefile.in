@@ -92,7 +92,7 @@ bootstrap: all
 
 
 $(OBJECTS): %.o: %.c $(BUILD_SCRIPT)
-	$(OZTOOL) $(CXX) $(CFLAGS) -c $(ALL_INCLUDES) $< -o $@
+	$(OZTOOL) $(CXX) $(CPPFLAGS) -c $(ALL_INCLUDES) $< -o $@
 
 ### GTK
 
