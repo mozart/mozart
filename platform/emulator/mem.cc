@@ -708,11 +708,13 @@ char *getMemFromOS(size_t sz) {
   }
 
   /* align heapEnd to word boundaries */
-  while(ToInt32(heapEnd)%WordSize != 0) {
+  while (ToInt32(heapEnd)%WordSize != 0) {
     // OZ_warning("*** WEIRD: getMemFromOS: alignment problem***\n");
     thisBlockSz--;
     heapEnd++;
   }
+  // mm2: I recommend this patch (not tested)
+  // thisBlockSz -= (thisBlockSz%WordSize);  // round down to next word
 
   /* initialize with zeros */
   DebugCheckT(memset(heapEnd,0,thisBlockSz));
