@@ -279,8 +279,8 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
 
   //  return oz_unify(resources,bs->resources);
   if (!oz_isNil(res)) {
-    return raiseGeneric("save:resources",
-			"Resources found during save",
+    return raiseGeneric("pickle:resources",
+			"Resources found during pickling",
 			oz_mklist(OZ_pairA("Resources",res),
 				  OZ_pairA("Filename",oz_atom(filename))));
   }
