@@ -23,6 +23,10 @@
 #include <sys/types.h>
 #include <iostream.h>
 
+#ifdef AIX3_RS6000
+#include <sys/select.h>
+#endif
+
 #ifdef WINDOWS
 
 #define pid_t int
