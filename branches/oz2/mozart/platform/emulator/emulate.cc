@@ -2731,7 +2731,7 @@ LBLdispatcher:
        LocalThreadQueue * ltq = sa->getLocalThreadQueue();
 	
        Assert(!ltq->isEmpty());
-	
+
        unsigned int starttime = osUserTime();
        Thread * backup_currentThread = CTT;
 
