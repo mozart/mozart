@@ -253,7 +253,6 @@ void Statistics::initCount() {
 
 #ifdef PROFILE_INSTR
   for (int i = 0; i < PROFILE_INSTR_MAX; i++) instr[i] = 0;
-  for (int i = 0; i < PROFILE_BI_MAX; i++) bi[i] = 0;
 #endif
 
   currAbstr = NULL;
@@ -435,9 +434,12 @@ void Statistics::derefChain(int n)
 void Statistics::printInstr()
 {
   printf("Instruction profile:\n");
+  unsigned long sum = 0;
   for (int i=0; i<PROFILE_INSTR_MAX; i++) {
+    sum += instr[i];
     if (instr[i]!=0)
-      printf("%010d x %s\n",instr[i],CodeArea::opToString[i]);
+      printf("%010ud x %s\n",instr[i],CodeArea::opToString[i]);
   }
+  printf("----------\n%010ud\n",sum);
 }
 #endif
