@@ -50,7 +50,7 @@
 
      '^'	    => { in  => ['*recordCOrChunk','+feature'],
 		         out => ['value'],
-		         bi  => BIuparrowBlocking},
+		         bi  => BIofsUpArrow},
 
      );
 1;;
