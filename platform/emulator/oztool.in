@@ -6,22 +6,22 @@
 # oztool platform       echoes the oz platform
 
 # determine oztool includes
-if test "${oztool_includes-NONE}" = NONE; then
+if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
   if test -n "$OZHOME" && test -r "$OZHOME/include/mozart.h"; then
-    oztool_includes="-I$OZHOME/include"
+    OZTOOL_INCLUDES="-I$OZHOME/include"
   else
     oz_tmp=`dirname $0`
     oz_tmp=`cd $oz_tmp/.. & pwd`
     if test -r "$oz_tmp/include/mozart.h"; then
-      oztool_includes="-I$oz_tmp/include"
+      OZTOOL_INCLUDES="-I$oz_tmp/include"
     else
-      oztool_includes="-I@prefix@/include";
+      OZTOOL_INCLUDES="-I@prefix@/include";
     fi
   fi
 fi
 
-: ${oztool_cxx="@OZTOOL_CXX@ @CDYNOPT@ $oztool_includes"}
-: ${oztool_cc="cc @CDYNOPT@ $oztool_includes"}
+: ${oztool_cxx="@OZTOOL_CXX@ @CDYNOPT@ $OZTOOL_INCLUDES"}
+: ${oztool_cc="cc @CDYNOPT@ $OZTOOL_INCLUDES"}
 : ${oztool_ld="@TOOLLDCMD@ @LDFLAGS@"}
 : ${oztool_platform="@platform@"}
 
