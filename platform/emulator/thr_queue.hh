@@ -53,7 +53,7 @@ public:
   Bool isAllocated () { return (maxsize); }
 
   int suggestNewSize() {
-    return max(min(size * 2,(maxsize + size) >> 1), QUEUEMINSIZE);
+    return max(min(size * 2,(maxsize + size + 1) >> 1), QUEUEMINSIZE);
   }
 
   void enqueue (Thread * th) {
