@@ -52,23 +52,13 @@
 	   :prefix "oz-")))
 
 (eval-and-compile
-  (eval '(defcustom OZ-HOME "@prefix@"
+  (eval '(defcustom oz-prefix "@prefix@"
 	   "*Directory where Mozart is installed.
 Used as fallback if the environment variable OZHOME is not set."
 	   :type 'string
 	   :group 'mozart)))
-(put 'OZ-HOME 'variable-interactive
+(put 'oz-prefix 'variable-interactive
      "DMozart installation directory: ")
-
-(eval-and-compile
-  (eval '(defun oz-home ()
-	   "Return the path of the Mozart installation directory."
-	   (let ((ret (getenv "OZHOME")))
-	     (if ret
-		 ret
-	       (message "OZHOME not set, using fallback: %s" OZ-HOME)
-	       (setenv "OZHOME" OZ-HOME)
-	       OZ-HOME)))))
 
 (eval-and-compile
   (eval '(defcustom oz-change-title t
@@ -77,6 +67,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	   :group 'mozart)))
 (put 'oz-change-title 'variable-interactive
      "XChange frame title while Mozart is running? (t or nil): ")
+(defvar *oz-change-title* oz-change-title)
 
 (eval-and-compile
   (eval '(defcustom oz-frame-title
@@ -86,6 +77,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	   :group 'mozart)))
 (put 'oz-frame-title 'variable-interactive
      "sFrame title to use while Mozart is running: ")
+(defvar *oz-frame-title* oz-frame-title)
 
 (eval-and-compile
   (eval '(defcustom oz-prepend-line t
@@ -94,6 +86,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	   :group 'mozart)))
 (put 'oz-prepend-line 'variable-interactive
      "XPrepend a \\line directive to all Oz queries? (t or nil): ")
+(defvar *oz-prepend-line* oz-prepend-line)
 
 (eval-and-compile
   (eval '(defcustom oz-default-host "localhost"
@@ -102,60 +95,100 @@ Used as fallback if the environment variable OZHOME is not set."
 	   :group 'mozart)))
 (put 'oz-default-host 'variable-interactive
      "sDefault host name to use for socket connections: ")
+(defvar *oz-default-host* oz-default-host)
 
-(eval-and-compile
-  (eval '(defcustom oz-build-dir
-	   (concat (getenv "HOME") "/mozart")
-	   "*Path to the Mozart build directory for testing locally."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-build-dir 'variable-interactive
-     "sPath to the Mozart build directory: ")
+(defvar *OZ_PI* (getenv "OZ_PI"))
 
-(eval-and-compile
-  (eval '(defcustom oz-emulator
-	   (or (getenv "OZEMULATOR")
-	       (concat oz-build-dir "/platform/emulator/emulator.exe"))
-	   "*Path to the Mozart Emulator for gdb mode and for \\[oz-other]."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-emulator 'variable-interactive
-     "fMozart Emulator binary: ")
+(defvar *OZHOME*
+  (or (getenv "OZ_HOME")
+      (getenv "OZHOME")
+      oz-prefix))
 
-(eval-and-compile
-  (eval '(defcustom oz-functor-path
-	   (or (getenv "OZ_LOAD")
-	       (concat "prefix=x-oz\\://system/="
-		       oz-build-dir "/share/lib/:"
-		       "prefix=x-oz\\://system/="
-		       oz-build-dir "/share/tools/:"
-		       "prefix=x-oz\\://boot/="
-		       oz-build-dir "/platform/emulator/:"
-		       "cache=~/.oz/cache:cache=" (oz-home) "/cache"))
-	   "*Search path for the Oz functors (used by \\[oz-other])."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-functor-path 'variable-interactive
-     "sOz functor search path: ")
+(defvar oz-platform
+  (and *OZHOME*
+       (substring
+	(shell-command-to-string
+	 (concat *OZHOME* "/bin/ozplatform")) 0 -1)))
 
-(eval-and-compile
-  (eval '(defcustom oz-root-functor
-	   "x-oz://system/OPI.ozf"
-	   "*Name of the root functor to load on startup."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-root-functor 'variable-interactive
-     "sName of the root functor to load on startup: ")
+(defun oz-platform ()
+  (cond (oz-platform)
+	(*OZHOME*
+	 (setq oz-platform
+	       (substring
+		(shell-command-to-string
+		 (concat *OZHOME* "/bin/ozplatform")) 0 -1))
+	 oz-platform)
+	(t (error "Cannot determine Oz platform"))))
 
-(eval-and-compile
-  (eval '(defcustom oz-gdb-autostart t
-	   "*If non-nil, start emulator immediately when in gdb mode.
-If nil, you have the possibility to first set breakpoints and only
-run the emulator when you issue the command `run' to gdb."
-	   :type 'boolean
-	   :group 'mozart)))
-(put 'oz-gdb-autostart 'variable-interactive
-     "XStart emulator immediately when in gdb mode? (t or nil): ")
+(defconst oz-tmp-buffer " Oz Tmp")
+(defun oz-tmp-buffer () (get-buffer-create oz-tmp-buffer))
+
+(defun oz-escape-path-separator (s &rest l)
+  (save-excursion
+    (set-buffer (oz-tmp-buffer))
+    (widen)
+    (erase-buffer)
+    (insert s)
+    (let ((seps (cons path-separator l)) sep repl)
+      (while seps
+	(goto-char (point-min))
+	(setq sep  (car seps)
+	      seps (cdr seps)
+	      repl (concat "\\" sep))
+	(while (re-search-forward (regexp-quote sep) nil t)
+	  (replace-match repl t t))))
+    (buffer-substring-no-properties (point-min) (point-max))))
+
+(defvar *OZLOAD*
+  (or (getenv "OZ_SEARCH_LOAD")
+      (getenv "OZ_LOAD")
+      (getenv "OZLOAD")
+      (concat
+       "cache="
+       (oz-escape-path-separator
+	(expand-file-name "~/.oz/cache"))
+       path-separator
+       "cache="
+       (oz-escape-path-separator
+	(expand-file-name
+	 (concat oz-prefix "/cache"))))))
+
+(defvar *OZPATH*
+  (or (getenv "OZ_SEARCH_PATH")
+      (getenv "OZ_PATH")
+      (getenv "OZPATH")
+      (concat
+       "." path-separator
+       (oz-escape-path-separator
+	(expand-file-name
+	 (concat oz-prefix "/share"))))))
+
+(defvar *OZEMULATOR* (getenv "OZEMULATOR"))
+(defvar *OZINIT* (getenv "OZINIT"))
+(defvar *OZ_TRACE_LOAD* (getenv "OZ_TRACE_LOAD"))
+(defvar *OZ_TRACE_MODULE* (getenv "OZ_TRACE_MODULE"))
+
+(defvar *OZ_LD_LIBRARY_PATH*
+  (or (getenv "LD_LIBRARY_PATH")
+      (and oz-platform
+	   (concat
+	    (expand-file-name
+	     (concat "~/.oz/platform/" (oz-platform) "/lib"))
+	    (let ((d *OZHOME*))
+	      (if (equal d "") (setq d nil))
+	      (if d
+		  (concat
+		   path-separator
+		   (expand-file-name
+		    (concat d "/platform/" (oz-platform) "/lib")))
+		""))))))
+
+(defvar *OZ_DYLD_LIBRARY_PATH*
+  (or (getenv "DYLD_LIBRARY_PATH")
+      *OZ_LD_LIBRARY_PATH*))
+
+(defvar *oz-root-functor* "x-oz://system/OPI.ozf")
+(defvar *oz-gdb* nil) ;; nil,t,auto
 
 (eval-and-compile
   (eval '(defcustom oz-other-buffer-size 35
@@ -164,6 +197,7 @@ run the emulator when you issue the command `run' to gdb."
 	   :group 'mozart)))
 (put 'oz-other-buffer-size 'variable-interactive
      "nPercentage of screen to use for Oz windows: ")
+(defvar *oz-other-buffer-size* oz-other-buffer-size)
 
 (eval-and-compile
   (eval '(defcustom oz-popup-on-error t
@@ -172,6 +206,7 @@ run the emulator when you issue the command `run' to gdb."
 	   :group 'mozart)))
 (put 'oz-popup-on-error 'variable-interactive
      "XPop up Oz buffers on error? (t or nil): ")
+(defvar *oz-popup-on-error* oz-popup-on-error)
 
 (eval-and-compile
   (eval '(defcustom oz-halt-timeout 30
@@ -180,106 +215,574 @@ run the emulator when you issue the command `run' to gdb."
 	   :group 'mozart)))
 (put 'oz-halt-timeout 'variable-interactive
      "nNumber of seconds to wait for shutdown of the Mozart sub-process: ")
+(defvar *oz-halt-timeout* oz-halt-timeout)
 
-(eval-and-compile
-  (eval '(defcustom oz-compile-command "ozc -c %s"
-	   "Default shell command to do a compilation.
-This may contain at most one occurrence of `%s', which is replaced by the
-current buffer's file name."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-compile-command 'variable-interactive
-     "sShell command to do an Oz compilation: ")
-
-(eval-and-compile
-  (eval '(defcustom oz-application-command "%s"
-	   "Default shell command to do execute an Oz application.
-This may contain at most one occurrence of `%s', which is replaced by the
-current buffer's file name, minus the `.oz' or `.ozg' extension."
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-application-command 'variable-interactive
-     "sShell command to invoke an Oz application: ")
-
-(eval-and-compile
-  (eval '(defcustom oz-engine-program
-	   (concat (oz-home) "/bin/ozengine")
-	   "Default Oz engine to run the OPI"
-	   :type 'string
-	   :group 'mozart)))
-(put 'oz-engine-program 'variable-interactive
-     "sDefault Oz engine to run the OPI: ")
+(defvar *oz-compile-command* "ozc -c \"%s\"")
+(defvar *oz-application-command* "%s")
+(defvar *oz-engine-program*
+  (if *OZHOME* (concat *OZHOME* "/bin/ozengine") "ozengine"))
 
 ;;}}}
 ;;{{{ Oz Profiles
 
 (eval-and-compile
-  (eval '(defcustom oz-profiles nil
-	   "*An alist of profiles for multiple Mozart versions"
-	   :group 'mozart
-	   :type '(alist :key-type symbol
-			 :value-type
-			 (alist
-			  :key-type symbol
-			  :options ((OZ-HOME                string)
-				    (oz-change-title        boolean)
-				    (oz-frame-title         string)
-				    (oz-prepend-line        boolean)
-				    (oz-default-host        string)
-				    (oz-build-dir           string)
-				    (oz-emulator            string)
-				    (oz-functor-path        string)
-				    (oz-root-functor        string)
-				    (oz-gdb-autostart       boolean)
-				    (oz-other-buffer-size   integer)
-				    (oz-popup-on-error      boolean)
-				    (oz-halt-timeout        integer)
-				    (oz-compile-command     string)
-				    (oz-application-command string)
-				    (oz-engine-program      string)))))))
+  (defvar oz-format-1 "%t\n\t\t   %h"))
 
-(defvar oz-profile-undo nil)
+(eval-and-compile
+  (eval
+   `(defcustom
+      oz-profiles nil
+      "*An alist of profiles for multiple Mozart versions"
+      :group 'mozart
+      :type
+      '(repeat
+	(list
+	 :tag "Profile"
+	 (symbol :tag "Name   ")
+	 (choice
+	  :tag "Type   "
+	  :value default
+	  (const default)
+	  (const installed)
+	  (const build))
+	(set
+	 :tag "Options"
+	 :inline t
+	 (group
+	  (const :doc "Oz installation directory"
+		 :format ,oz-format-1
+		 OZHOME)
+	  directory)
+	 (group
+	  (const :doc "methods used by the resolver to resolve URIs"
+		 :format ,oz-format-1
+		 OZLOAD)
+	  (repeat
+	   :tag "Methods"
+	   (choice
+	    :tag "Method"
+	    (const :tag "User Cache" user-cache)
+	    (const :tag "Global Cache" global-cache)
+	    (group
+	     :tag "Cache"
+	     (const :tag "Cache" cache)
+	     (string :tag "Directory"))
+	    (group
+	     :tag "Root"
+	     (const :tag "Root" root)
+	     (string :tag "Directory"))
+	    (group
+	     :tag "Prefix"
+	     (const :tag "Prefix" prefix)
+	     (string :tag "Match String")
+	     (string :tag "Replacement String"))
+	    (group
+	     :tag "Pattern"
+	     (const :tag "Pattern" pattern)
+	     (string :tag "Match Pattern")
+	     (string :tag "Replacement Pattern"))
+	    (group
+	     :tag "All"
+	     (const :tag "All" all)
+	     (string :tag "Directory"))
+	    (const :tag "Block default lookup" block))))
+	 (group
+	  (const :doc "directories to search for \\insert directives"
+		 :format ,oz-format-1
+		 OZPATH)
+	  (repeat
+	   :tag "Directories"
+	   (choice
+	    (const  :tag "Current Directory"   current)
+	    (const  :tag "Global Installation" global)
+	    directory)))
+	 (group
+	  (const :doc "whether the resolver should output tracing information"
+		 :format ,oz-format-1
+		 OZ_TRACE_LOAD)
+	  boolean)
+	 (group
+	  (const :doc "whether the module manager should output tracing information"
+		 :format ,oz-format-1
+		 OZ_TRACE_MODULE)
+	  boolean)
+	 (group
+	  (const :doc "additional directories to search for dynamically linked libraries"
+		 :format ,oz-format-1
+		 LD_LIBRARY_PATH)
+	  (repeat :tag "Directories" directory))
+	 (group
+	  (const :doc "additional directories to search for MacOS X dylib libraries"
+		 :format ,oz-format-1
+		 DYLD_LIBRARY_PATH)
+	  (repeat :tag "Directories" directory))
+	  (group
+	   (const :doc "path to emulator.exe"
+		  :format ,oz-format-1
+		  OZEMULATOR)
+	   file)
+	  (group
+	   (const :doc "path to Init.ozf"
+		  :format ,oz-format-1
+		  OZINIT))
+	  (group
+	   (const :doc "additional directories to search for executable programs"
+		  :format ,oz-format-1
+		  PATH)
+	   (repeat
+	    :tag "Directories" directory))
+	  (group
+	   (const :tag "Change Title"
+		  :doc "whether to change the Emacs frame title\nwhile Mozart is running"
+		  :format ,oz-format-1
+		  change-title)
+	   boolean)
+	  (group
+	   (const :tag "Frame Title"
+		  :doc "string to be used as Emacs frame title\nwhile Mozart is running"
+		  :format ,oz-format-1
+		  frame-title)
+	   string)
+	  (group
+	   (const :tag "Prepend Line"
+		  :doc "whether to prepend a \\line directive to all Oz queries"
+		  :format ,oz-format-1
+		  prepend-line)
+	   boolean)
+	  (group
+	   (const :tag "Default Host"
+		  :doc "default name of host to use for creating socket connections"
+		  :format ,oz-format-1
+		  default-host)
+	   string)
+	  (group
+	   (const :tag "Source Directory"
+		  :doc "directory containing the Mozart sources"
+		  :format ,oz-format-1
+		  source-dir)
+	   directory)
+	  (group
+	   (const :tag "Build Directory"
+		  :doc "directory containing the Mozart build"
+		  :format ,oz-format-1
+		  build-dir)
+           directory)
+	  (group
+	   (const :tag "Secondary Build Directory"
+		  :doc "another directory containing a Mozart build.\nThis is useful when the Build Directory contains\nonly a partial build.  The Secondary Build Directory should\ncontain a full build that supplies the missing pieces."
+		  :format ,oz-format-1
+		  build-dir-too)
+	   directory)
+	  (group
+	   (const :tag "Root Functor"
+		  :doc "URI of the root functor to load on startup"
+		  :format ,oz-format-1
+		  root-functor)
+	   (string :value "x-oz://system/OPI.ozf"))
+	  (group
+	   (const :tag "Run Under GDB"
+		  :doc "whether to run Mozart under GDB for debugging the implementation"
+		  :format ,oz-format-1
+		  gdb)
+	   (choice
+	    (const :tag "No" nil)
+	    (const :tag "Yes" t)
+	    (const :tag "Yes + Auto Start" auto)))
+	  (group
+	   (const :tag "Other Buffer Size"
+		  :doc "percentage of screen to use for Oz Compiler/Emulator/Temp window"
+		  :format ,oz-format-1
+		  other-buffer-size)
+	   integer)
+	  (group
+	   (const :tag "Popup On Error"
+		  :doc "whether to pop up Compiler resp. Emulator buffer upon error"
+		  :format ,oz-format-1
+		  popup-on-error)
+	   boolean)
+	  (group
+	   (const :tag "Halt Timeout"
+		  :doc "number of seconds to wait for shutdown in oz-halt"
+		  :format ,oz-format-1
+		  halt-timeout)
+	   integer)
+	  (group
+	   (const :tag "Compile Command"
+		  :doc "default shell command to do a compilation\nThis may contain at most one occurrence of `%s', which is\nreplaced by the current buffer's file name"
+		  :format ,oz-format-1
+		  compile-command)
+	   (string :value "ozc -c %s"))
+	  (group
+	   (const :tag "Application Command"
+		  :doc "default shell command to execute an Oz application\nThis may contain at most one occurrence of `%s', which\nis replaced by the current buffer's file name, minus the\n`.oz' or `.ozg' extension."
+		  :format ,oz-format-1
+		  application-command)
+	   (string :value "%s"))
+	  (group
+	   (const :tag "Engine Program"
+		  :doc "default Oz engine to run the OPI"
+		  engine-program)
+	   (string :value ,(concat oz-prefix "/bin/ozengine")))))))))
 
-(defun oz-profile-undo ()
-  "Undo the bindings established by the current profile."
-  (interactive)
-  (let ((l oz-profile-undo))
+(defun oz-simple-directory (d)
+  (if (string-equal (substring d -1) "/")
+      (substring d 0 -1)
+    d))
+
+(defun oz-push-method (m)
+  (if methods (setq methods (cons path-separator methods)))
+  (setq methods (cons m methods)))
+
+(defun oz-dirs-to-search-path (l user global)
+  (let ((methods nil)
+	(l OZPATH) d)
     (while l
-      (eval (car l))
-      (setq l (cdr l)))
-    (setq oz-profile-undo nil)))
+      (setq d (car l) l (cdr l))
+      (cond ((eq d 'user)
+	     (setq d user))
+	    ((eq d 'global)
+	     (setq d global)))
+      (if (stringp d)
+	  (oz-push-method
+	   (oz-simple-directory d))))
+    (apply (function concat) (reverse methods))))
 
-(defun oz-profile-save-var (var)
-  (setq oz-profile-undo
-	(cons `(set ',var ',(eval ,var)) oz-profile-undo)))
+(defvar *OZ_PATH* nil)
 
-(defun oz-profile-save-envvar (var)
-  (setq oz-profile-undo
-	(cons `(setenv ',var ',(getenv var)) oz-profile-undo)))
+(defvar oz-environment-variables
+  '("PATH"
+    "OZ_PI"
+    "OZ_HOME" "OZHOME"
+    "OZINIT"
+    "OZ_SEARCH_LOAD" "OZ_LOAD" "OZLOAD"
+    "OZ_SEARCH_PATH" "OZ_PATH" "OZPATH"
+    "OZEMULATOR"
+    "OZ_TRACE_LOAD"
+    "OZ_TRACE_MODULE"
+    "LD_LIBRARY_PATH"
+    "DYLD_LIBRARY_PATH"))
+
+(defun oz-environment-snapshot ()
+  (mapcar
+   (function (lambda (v) (cons v (getenv v))))
+   oz-environment-variables))
+
+(defun oz-environment-install ()
+  (setenv "OZ_PI" "1")
+  (if (and *OZ_PATH* (not (equal *OZ_PATH* "")))
+      (setenv "PATH" (concat *OZ_PATH* path-separator (getenv "PATH"))))
+  (when *OZHOME*
+    (setenv "OZHOME" *OZHOME*)
+    (setenv "OZ_HOME" *OZHOME*))
+  (when *OZLOAD*
+    (setenv "OZ_SEARCH_LOAD" *OZLOAD*)
+    (setenv "OZ_LOAD" *OZLOAD*)
+    (setenv "OZLOAD" *OZLOAD*))
+  (when *OZPATH*
+    (setenv "OZ_SEARCH_PATH" *OZPATH*)
+    (setenv "OZ_PATH" *OZPATH*)
+    (setenv "OZPATH" *OZPATH*))
+  (when *OZINIT*
+    (setenv "OZINIT" *OZINIT*))
+  (setenv "OZ_TRACE_LOAD" *OZ_TRACE_LOAD*)
+  (setenv "OZ_TRACE_MODULE" *OZ_TRACE_MODULE*)
+  (when (and *OZ_LD_LIBRARY_PATH* (not (equal *OZ_LD_LIBRARY_PATH* "")))
+    (let ((p (getenv "LD_LIBRARY_PATH")))
+      (setenv "LD_LIBRARY_PATH"
+	      (if p
+		  (concat *OZ_LD_LIBRARY_PATH* path-separator p)
+		*OZ_LD_LIBRARY_PATH*))))
+  (when (and *OZ_DYLD_LIBRARY_PATH* (not (equal *OZ_DYLD_LIBRARY_PATH* "")))
+    (let ((p (getenv "DYLD_LIBRARY_PATH")))
+      (setenv "DYLD_LIBRARY_PATH"
+	      (if p
+		  (concat *OZ_DYLD_LIBRARY_PATH* path-separator p)
+		*OZ_DYLD_LIBRARY_PATH*))))
+  (when *OZEMULATOR*
+    (setenv "OZEMULATOR"
+	    (and (not (equal *OZEMULATOR* "")) *OZEMULATOR*))))
+
+(defvar oz-elisp-variables
+  '(*OZHOME*
+    *OZLOAD*
+    *OZPATH*
+    *OZINIT*
+    *OZ_TRACE_LOAD*
+    *OZ_TRACE_MODULE*
+    *OZ_LD_LIBRARY_PATH*
+    *OZ_DYLD_LIBRARY_PATH*
+    *OZEMULATOR*
+    *OZ_PATH*
+    *oz-change-title*
+    *oz-frame-title*
+    *oz-prepend-line*
+    *oz-default-host*
+    *oz-root-functor*
+    *oz-gdb*
+    *oz-other-buffer-size*
+    *oz-popup-on-error*
+    *oz-halt-timeout*
+    *oz-compile-command*
+    *oz-application-command*
+    *oz-engine-program*))
+
+(defun oz-elisp-snapshot ()
+  (mapcar
+   (function (lambda (v) (cons v (symbol-value v))))
+   oz-elisp-variables))
+
+(defvar *oz-snapshot* nil)
+
+(defun oz-snapshot-take ()
+  (setq *oz-snapshot*
+	(list (oz-environment-snapshot)
+	      (oz-elisp-snapshot))))
+
+(defun oz-environment-snapshot-revert (l)
+  (while l
+    (setenv (caar l) (cdar l))
+    (setq l (cdr l))))
+
+(defun oz-elisp-snapshot-revert (l)
+  (while l
+    (set (caar l) (cdar l))
+    (setq l (cdr l))))
+
+(defun oz-snapshot-revert ()
+  (oz-environment-snapshot-revert (car *oz-snapshot*))
+  (oz-elisp-snapshot-revert (cadr *oz-snapshot*))
+  (setq *oz-snapshot* nil))
+
+(defun oz-profile-install (profile)
+  (let* ((name  (car  profile))
+	 (type  (cadr profile))
+	 (alist (cddr profile))
+	 (OZHOME            (cadr (assq 'OZHOME              alist)))
+	 (OZLOAD            (cadr (assq 'OZLOAD              alist)))
+	 (OZPATH            (cadr (assq 'OZPATH              alist)))
+	 (OZ_TRACE_LOAD     (cadr (assq 'OZ_TRACE_LOAD       alist)))
+	 (OZ_TRACE_MODULE   (cadr (assq 'OZ_TRACE_MODULE     alist)))
+	 (LD_LIBRARY_PATH   (cadr (assq 'LD_LIBRARY_PATH     alist)))
+	 (DYLD_LIBRARY_PATH (cadr (assq 'DYLD_LIBRARY_PATH   alist)))
+	 (OZEMULATOR        (cadr (assq 'OZEMULATOR          alist)))
+	 (OZINIT            (cadr (assq 'OZINIT              alist)))
+	 (PATH              (cadr (assq 'PATH                alist)))
+	 (change-title            (assq 'change-title        alist))
+	 (frame-title             (assq 'frame-title         alist))
+	 (prepend-line            (assq 'prepend-line        alist))
+	 (default-host            (assq 'default-host        alist))
+	 (source-dir              (assq 'source-dir          alist))
+	 (build-dir               (assq 'build-dir           alist))
+	 (build-dir-too           (assq 'build-dir-too       alist))
+	 (root-functor            (assq 'root-functor        alist))
+	 (gdb                     (assq 'gdb                 alist))
+	 (other-buffer-size       (assq 'other-buffer-size   alist))
+	 (popup-on-error          (assq 'popup-on-error      alist))
+	 (halt-timeout            (assq 'halt-timeout        alist))
+	 (compile-command         (assq 'compile-command     alist))
+	 (application-command     (assq 'application-command alist))
+	 (engine-program          (assq 'engine-program      alist))
+	 )
+    (cond ((eq type 'default))
+	  ((eq type 'installed)
+	   (or OZHOME (error "No OZHOME in profile"))
+	   (or OZLOAD (setq OZLOAD '(user-cache system-cache)))
+	   (or OZPATH (setq OZPATH '(current system)))
+	   (or LD_LIBRARY_PATH (setq LD_LIBRARY_PATH '(user global)))
+	   (or DYLD_LIBRARY_PATH (setq DYLD_LIBRARY_PATH LD_LIBRARY_PATH))
+	   (or PATH (setq PATH '(user global)))
+	   )
+	  ((eq type 'build)
+	   (or build-dir (error "No build-dir in profile"))
+	   (or OZLOAD (setq OZLOAD
+			    `((prefix "x-oz://system/"
+				      ,(concat (cadr build-dir) "/share/lib/"))
+			      (prefix "x-oz://system/"
+				      ,(concat (cadr build-dir) "/share/tools/"))
+			      (prefix "x-oz://boot/"
+				      ,(concat (cadr build-dir) "/platform/emulator/"))
+			      ,@(and
+				 build-dir-too
+				 `((prefix "x-oz://system/"
+					   ,(concat (cadr build-dir-too) "/share/lib/"))
+				   (prefix "x-oz://system/"
+					   ,(concat (cadr build-dir-too) "/share/tools/"))
+				   (prefix "x-oz://boot/"
+					   ,(concat (cadr build-dir-too) "/platform/emulator/"))))
+			      ,@(and
+				 source-dir
+				 `((prefix "x-oz://system/images/inspector/"
+					   ,(concat (cadr source-dir)
+						    "/share/tools/inspector/images/"))
+				   (prefix "x-oz://system/images/"
+					   ,(concat (cadr source-dir)
+						    "/share/lib/images/"))
+				   (prefix "x-oz://system/images/"
+					   ,(concat (cadr source-dir)
+						    "/share/tools/images/"))
+				   ))
+			      user-cache
+			      ,@(and OZHOME '(system-cache)))))
+	   (or OZPATH (setq OZPATH '(current)))
+	   (or OZINIT
+	       (let (f)
+		 (setq f (concat (cadr build-dir) "/share/lib/Init.ozf"))
+		 (if (file-exists-p f)
+		     (setq OZINIT f)
+		   (if build-dir-too
+		       (setq f (concat (cadr build-dir-too) "/share/lib/Init.ozf"))
+		     (if (file-exists-p f)
+			 (setq OZINIT f))))))
+	   (or LD_LIBRARY_PATH
+	       (setq LD_LIBRARY_PATH '(user global)))
+	   (or DYLD_LIBRARY_PATH
+	       (setq DYLD_LIBRARY_PATH LD_LIBRARY_PATH))
+	   (or PATH (setq PATH '(user global)))
+	   (or OZEMULATOR
+	       (setq OZEMULATOR (concat (cadr build-dir) "/platform/emulator/emulator.exe")))
+	   )
+	  (t (error "Unkown profile type: %s" type)))
+
+    (if OZHOME (setq *OZHOME* OZHOME))
+    (if *OZHOME* (setq *OZHOME* (oz-simple-directory *OZHOME*)))
+    (setq *OZINIT*
+	  (or OZINIT
+	      (concat *OZHOME* "/share/Init.ozf")))
+    (if OZLOAD
+	(let ((blocks nil)
+	      (methods nil)
+	      (specs OZLOAD) spec)
+	  (while specs
+	    (setq spec (car specs) specs (cdr specs))
+	    (cond ((eq spec 'user-cache)
+		   (oz-push-method "cache=~/.oz/cache"))
+		  ((eq spec 'global-cache)
+		   (if *OZHOME*
+		       (oz-push-method
+			(concat "cache="
+				(oz-escape-path-separator
+				 (concat *OZHOME* "/cache"))))))
+		  ((eq spec 'block)
+		   (setq blocks t))
+		  ((consp spec)
+		   (cond ((eq (car spec) 'cache)
+			  (oz-push-method
+			   (concat "cache="
+				   (oz-escape-path-separator
+				    (oz-simple-directory (cadr spec))))))
+			 ((eq (car spec) 'root)
+			  (oz-push-method
+			   (concat "root="
+				   (oz-escape-path-separator
+				    (oz-simple-directory (cadr spec))))))
+			 ((eq (car spec) 'prefix)
+			  (oz-push-method
+			   (concat "prefix="
+				   (oz-escape-path-separator
+				    (cadr spec) "=")
+				   "="
+				   (oz-escape-path-separator
+				    (cadr (cdr spec))))))
+			 ((eq (car spec) 'pattern)
+			  (oz-push-method
+			   (concat "pattern="
+				   (oz-escape-path-separator
+				    (cadr spec) "=")
+				   "="
+				   (oz-escape-path-separator
+				    (cadr (cdr spec))))))
+			 ((eq (car spec) 'all)
+			  (oz-push-method
+			   (concat "all="
+				   (oz-escape-path-separator
+				    (oz-simple-directory (cadr spec))))))))
+		  (t (error "unexpected OZLOAD method: %s" spec))))
+	  (if blocks (oz-push-method "="))
+	  (setq *OZLOAD* (apply (function concat) (reverse methods)))
+	  ))
+    (if OZPATH (setq *OZPATH* (oz-dirs-to-search-path
+			       OZPATH nil
+			       (and *OZHOME*
+				    (concat *OZHOME* "/share")))))
+    (if OZ_TRACE_LOAD (setq *OZ_TRACE_LOAD* ""))
+    (if OZ_TRACE_MODULE (setq *OZ_TRACE_MODULE* ""))
+    (if LD_LIBRARY_PATH
+	(setq *OZ_LD_LIBRARY_PATH*
+	      (oz-dirs-to-search-path
+	       LD_LIBRARY_PATH
+	       (expand-file-name
+		(concat "~/.oz/platform/" (oz-platform) "/lib"))
+	       (and *OZHOME*
+		    (expand-file-name
+		     (concat *OZHOME* "/platform/" (oz-platform) "/lib"))))))
+    (if DYLD_LIBRARY_PATH
+	(setq *OZ_DYLD_LIBRARY_PATH*
+	      (oz-dirs-to-search-path
+	       DYLD_LIBRARY_PATH
+	       (expand-file-name
+		(concat "~/.oz/platform/" (oz-platform) "/lib"))
+	       (and *OZHOME*
+		    (expand-file-name
+		     (concat *OZHOME* "/platform/" (oz-platform) "/lib"))))))
+    (if OZEMULATOR (setq *OZEMULATOR* OZEMULATOR))
+    (if PATH
+	(setq *OZ_PATH*
+	      (oz-dirs-to-search-path
+	       PATH
+	       (expand-file-name "~/.oz/bin")
+	       (and *OZHOME*
+		    (expand-file-name
+		     (concat *OZHOME* "/bin"))))))
+    (setq *oz-change-title*
+	  (if change-title (cadr change-title) oz-change-title))
+    (setq *oz-frame-title*
+	  (if frame-title  (cadr frame-title)  oz-frame-title))
+    (setq *oz-prepend-line*
+	  (if prepend-line (cadr prepend-line) oz-prepend-line))
+    (setq *oz-default-host*
+	  (if default-host (cadr default-host) oz-default-host))
+    (if root-functor
+	(setq *oz-root-functor* (cadr root-functor)))
+    (if gdb (setq *oz-gdb* (cadr gdb)))
+    (setq *oz-other-buffer-size*
+	  (if other-buffer-size (cadr other-buffer-size) oz-other-buffer-size))
+    (setq *oz-popup-on-error*
+	  (if popup-on-error (cadr popup-on-error) oz-popup-on-error))
+    (setq *oz-halt-timeout*
+	  (if halt-timeout (cadr halt-timeout) oz-halt-timeout))
+    (if compile-command
+	(setq *oz-compile-command* (cadr compile-command)))
+    (if application-command
+	(setq *oz-application-command* (cadr application-command)))
+    (if engine-program
+	(setq *oz-engine-program* (cadr engine-program)))
+    )
+  (oz-environment-install)
+  )
+
+(defvar oz-current-profile nil)
 
 (defun oz-set-profile (name)
-  "Select a profile from the alist oz-profiles.
-This makes it easy to run multiple Mozart versions in the same
-Emacs session, or the same version with different parameters.
-A profile is an alist which provides specific bindings for variables
-(and possibly affecting also the environment variable OZHOME)."
+  "Select and install a profile from the list `oz-profiles'
+of user-defined profiles. NAME is the name of a profile, or
+nil to revert to the defaults."
   (interactive
    (list (completing-read
 	  "Profile: "
-	  (mapcar (function
-		   (lambda (p) (list (format "%s" (car p)))))
-		  oz-profiles)
-	  nil t (format "%s" (caar oz-profiles)))))
-  (if (equal name "") nil
-    (oz-profile-undo)
-    (oz-profile-save-envvar "OZHOME")
-    (let* ((key (intern name))
-	   (alist (cdr (assq key oz-profiles))))
-      (while alist
-	(oz-profile-save-var (caar alist))
-	(set (caar alist) (cdar alist))
-	(setq alist (cdr alist))))
-    (setenv "OZHOME" OZ-HOME)))
+	  (mapcar
+	   (function (lambda (p) (list (format "%s" (car p)))))
+	   oz-profiles) nil t)))
+  (when (oz-is-running)
+    (if (y-or-n-p "Oz is currently running.  Kill it?")
+	(oz-halt t)
+      (error "Cannot install a profile while Oz is running")))
+  (oz-snapshot-revert)
+  (setq oz-current-profile name)
+  (oz-snapshot-take)
+  (when (not (equal name ""))
+    (let ((profile (assq (intern name) oz-profiles)))
+      (if profile (oz-profile-install profile)
+	(error "Unknown profile: %s" name)))))
 
 ;;}}}
 ;;{{{ Variables/Initialization
@@ -299,10 +802,6 @@ A profile is an alist which provides specific bindings for variables
 (defvar oz-buffered-send-string nil
   "List of buffered calls to oz-send-string.
 These are performed only when the Oz Compiler is known to be running.")
-
-(defvar oz-emulator-hook nil
-  "If non-nil, hook used for starting the Oz Emulator.
-This is set when gdb is active.")
 
 (defvar oz-emulator-filter-hook nil
   "If non-nil, hook used as second process filter for the Oz Emulator.
@@ -341,7 +840,7 @@ All strings matching this regular expression are removed.")
 
 (defun oz-set-title (frame-title)
   "Set the title of the Emacs frame."
-  (cond ((not oz-change-title) t)
+  (cond ((not *oz-change-title*) t)
 	(oz-gnu-emacs
 	 (mapcar (function (lambda (scr)
 			     (modify-frame-parameters
@@ -487,7 +986,7 @@ See variable `compilation-parse-errors-function' for the interface it uses."
     (goto-char end)
     (skip-chars-backward " \t\n")
     (setq end (point)))
-  (if oz-prepend-line
+  (if *oz-prepend-line*
       (concat "\\line " (number-to-string (1+ (count-lines 1 start)))
 	      " '" (or (buffer-file-name) (buffer-name)) "' % fromemacs\n"
 	      (buffer-substring start end))
@@ -558,7 +1057,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
       (progn
 	(message "Halting Oz ...")
 	(if (not force)
-	    (let* ((i oz-halt-timeout)
+	    (let* ((i *oz-halt-timeout*)
 		   (proc (get-buffer-process oz-emulator-buffer)))
 	      (oz-send-string "{Application.exit 0}" t)
 	      (while (and (eq (process-status proc) 'run)
@@ -587,21 +1086,22 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
 (defun oz-start-if-not-running ()
   (if (not (oz-is-running))
       (progn
-	(cond (oz-emulator-hook
-	       (funcall oz-emulator-hook)
+	(oz-set-profile oz-current-profile)
+	(cond (*oz-gdb*
+	       (oz-start-gdb-emulator)
 	       (oz-prepare-emulator-buffer
 		(process-filter (get-buffer-process oz-emulator-buffer)) t))
 	      (t
 	       (setq oz-emulator-buffer "*Oz Emulator*")
-	       (oz-make-comint oz-engine-program oz-root-functor)
+	       (oz-make-comint *oz-engine-program* *oz-root-functor*)
 	       (oz-prepare-emulator-buffer 'oz-filter t)))
-	(oz-set-title oz-frame-title)
+	(oz-set-title *oz-frame-title*)
 	(message "Oz started."))))
 
 (defun oz-attach ()
   (let (host port)
     (cond ((>= (length command-line-args-left) 1)
-	   (setq host oz-default-host
+	   (setq host *oz-default-host*
 		 port (string-to-number (car command-line-args-left))
 		 command-line-args-left (cdr command-line-args-left)))
 	  (t
@@ -660,7 +1160,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
   ;; look for oz-socket:
   (let ((start 0))
     (while (string-match oz-socket-pattern string start)
-      (let ((host (or (oz-match-string 2 string) oz-default-host))
+      (let ((host (or (oz-match-string 2 string) *oz-default-host*))
 	    (port (string-to-number (oz-match-string 3 string)))
 	    (port2 (string-to-number (oz-match-string 4 string))))
 	(setq start (match-beginning 0))
@@ -721,7 +1221,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
 	    ;; look for error messages in output:
 	    (goto-char start-of-output)
 	    (setq errs-found
-		  (and oz-popup-on-error
+		  (and *oz-popup-on-error*
 		       (re-search-forward oz-error-string nil t)
 		       (match-beginning 0)))
 
@@ -755,7 +1255,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
 		     (get-buffer-window oz-temp-buffer)
 		     (split-window (get-largest-window)
 				   (/ (* (window-height (get-largest-window))
-					 (- 100 oz-other-buffer-size))
+					 (- 100 *oz-other-buffer-size*))
 				      100)))))
 	(set-window-buffer win buffer)
 	(set-buffer buffer)
@@ -805,10 +1305,10 @@ If it is, then delete the corresponding window."
   "Feed the current buffer to the Oz Compiler."
   (interactive)
   (let ((file (buffer-file-name)))
-    (if (and oz-prepend-line file (buffer-modified-p)
+    (if (and *oz-prepend-line* file (buffer-modified-p)
 	     (y-or-n-p (format "Save buffer %s first? " (buffer-name))))
 	(save-buffer))
-    (if (and oz-prepend-line file (not (buffer-modified-p)))
+    (if (and *oz-prepend-line* file (not (buffer-modified-p)))
 	(oz-feed-file file)
       (oz-feed-region (point-min) (point-max))))
   (oz-zmacs-stuff))
@@ -1216,89 +1716,6 @@ With ARG, stop it instead."
 ;;}}}
 ;;{{{ Testing Locally and Support for GDB
 
-(defun oz-set-other (set-functor-path)
-  "Set the value of environment variables OZEMULATOR resp. OZ_LOAD.
-If SET-FUNCTOR-PATH is non-nil, set the functor search path (can also
-be done via \\[oz-set-functor-path]); if it is nil, set the emulator
-binary (can also be done via \\[oz-set-emulator])."
-  (interactive "P")
-  (if set-functor-path
-      (call-interactively 'oz-set-functor-path)
-    (oz-set-emulator)))
-
-(defun oz-set-emulator ()
-  "Set the value of variable `oz-emulator'.
-This is the emulator used for debugging with gdb.
-Can be selected by \\[oz-other-emulator]."
-  (interactive)
-  (setq oz-emulator
-	(expand-file-name
-	 (read-file-name (format "Oz Emulator binary (default %s): "
-				 oz-emulator)
-			 nil oz-emulator t nil)))
-  (if (getenv "OZEMULATOR")
-      (setenv "OZEMULATOR" oz-emulator)))
-
-(defun oz-set-functor-path (arg)
-  "Set the value of variable `oz-functor-path'.
-Can be selected by \\[oz-other-functor-path]."
-  (interactive "sOz functor search path: ")
-  (setq oz-functor-path arg)
-  (if (getenv "OZ_LOAD")
-      (setenv "OZ_LOAD" oz-functor-path)))
-
-(defun oz-other (set-functor-path)
-  "Toggle between global and local Oz Emulator resp. Oz functors.
-If SET-FUNCTOR-PATH is non-nil, toggle the functor search path (via
-\\[oz-other-functor-path]); if it is nil, toggle the emulator binary
-\(via \\[oz-other-emulator])."
-  (interactive "P")
-  (if set-functor-path
-      (oz-other-functor-path)
-    (oz-other-emulator)))
-
-(defun oz-other-emulator ()
-  "Toggle between global and local Oz Emulator.
-The local emulator is given by the user option `oz-emulator';
-see \\[oz-set-emulator]."
-  (interactive)
-  (cond ((getenv "OZEMULATOR")
-	 (setenv "OZEMULATOR" nil)
-	 (message "Oz Emulator: global"))
-	(t
-	 (setenv "OZEMULATOR" oz-emulator)
-	 (message "Oz Emulator: %s" oz-emulator))))
-
-(defun oz-other-functor-path ()
-  "Toggle between global and local Oz functor search path.
-The local functors are given by the user option `oz-functor-path';
-see \\[oz-set-functor-path]."
-  (interactive)
-  (cond ((getenv "OZ_LOAD")
-	 (setenv "OZ_LOAD" nil)
-	 (message "Oz functor search path: global"))
-	(t
-	 (setenv "OZ_LOAD" oz-functor-path)
-	 (message "Oz functor search path: %s" oz-functor-path))))
-
-(defun oz-gdb ()
-  "Toggle debugging of the Oz Emulator with gdb.
-The emulator to use for debugging is set via \\[oz-set-emulator]."
-  (interactive)
-  (if (getenv "OZ_PI")
-      t
-    (setenv "OZ_PI" "1")
-    (setenv "OZPATH"
-	    (concat (or (getenv "OZPATH") ".") ":"
-		    (oz-home) ":"
-		    (oz-home) "/share")))
-  (cond (oz-emulator-hook
-	 (setq oz-emulator-hook nil)
-	 (message "gdb disabled"))
-	(t
-	 (setq oz-emulator-hook 'oz-start-gdb-emulator)
-	 (message "gdb enabled: %s" oz-emulator))))
-
 (defun oz-start-gdb-emulator ()
   ;; Run the Oz Emulator under gdb.
   ;; This is hooked into the variable `oz-emulator-hook' via \\[oz-gdb].
@@ -1306,19 +1723,19 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
   ;; and source-file directory for gdb.  If you wish to change this, use
   ;; the gdb commands `cd DIR' and `directory'.
   (let ((old-buffer (current-buffer))
-	(init-str (concat "set args -u " oz-root-functor "\n")))
+	(init-str (concat "set args -u " *oz-root-functor* "\n")))
     (cond ((get-buffer oz-emulator-buffer)
 	   (delete-windows-on oz-emulator-buffer)
 	   (kill-buffer oz-emulator-buffer)))
     (cond (oz-gnu-emacs
-	   (gdb (concat "gdb " oz-emulator)))
+	   (gdb (concat "gdb " *OZEMULATOR*)))
 	  (oz-lucid-emacs
-	   (gdb oz-emulator)))
+	   (gdb *OZEMULATOR*)))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
     (comint-send-string
      (get-buffer-process oz-emulator-buffer)
      init-str)
-    (if oz-gdb-autostart
+    (if (eq *oz-gdb* 'auto)
 	(comint-send-string
 	 (get-buffer-process oz-emulator-buffer)
 	 "run\n"))
@@ -1334,12 +1751,12 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
   "Compile an Oz program non-interactively."
   (interactive (list (if (buffer-file-name)
 			 (read-from-minibuffer "Oz compilation command: "
-					       oz-compile-command nil nil
+					       *oz-compile-command* nil nil
 					       '(oz-compile-history . 1))
 		       (error "Buffer has no file name"))))
-  (setq oz-compile-command command)
+  (setq *oz-compile-command* command)
   (let* ((file (buffer-file-name))
-	 (real-command (format oz-compile-command (or file ""))))
+	 (real-command (format *oz-compile-command* (or file ""))))
     (if (and file (buffer-modified-p)
 	     (y-or-n-p (format "Save buffer %s first? " (buffer-name))))
 	(save-buffer))
@@ -1357,15 +1774,15 @@ The first subexpression matches the file name without the extension.")
   (interactive (list (if (oz-is-running)
 			 (error "Only one Oz may be running")
 		       (read-from-minibuffer "Oz application invocation: "
-					     oz-application-command nil nil
+					     *oz-application-command* nil nil
 					     '(oz-application-history . 1)))))
-  (setq oz-application-command command)
+  (setq *oz-application-command* command)
   (let* ((file (buffer-file-name))
 	 (app (if file
 		  (if (string-match oz-application-name-pattern file)
 		      (oz-match-string 1 file))))
 	 (real-command (concat "ozd -E --opi -- "
-			       (format oz-application-command (or app "")))))
+			       (format *oz-application-command* (or app "")))))
     (oz-make-comint "/bin/sh" "-c" real-command)
     (oz-prepare-emulator-buffer 'oz-filter t)))
 
