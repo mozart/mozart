@@ -2912,7 +2912,6 @@ start:
     if(m!=NULL){
       fprintf(stderr,"dumping incomplete read\n");
       Assert(r->isIncomplete());
-      m = r->getCurQueue();
       messageManager->freeMessage(m);}
 
     netMsgBufferManager->dumpNetMsgBuffer(bs);
