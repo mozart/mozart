@@ -287,7 +287,6 @@ public:
   }
 
   Bool wasExtThread () {
-    Assert (isDeadThread ());	// already killed!
     return (state.flags & T_ext);
   }
 
