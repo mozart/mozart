@@ -723,11 +723,6 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
   _DEREF(term,termPtr,tag);
 
 
-#define FASTDEREF(term, termPtr, tag)                                         \
-  TaggedRef *termPtr;                                                         \
-  _DEREF(term,termPtr,tag);
-
-
 #define DEREFPTR(termPtr, term, tag)                                          \
   register TaggedRef term = *termPtr;                                         \
   while(IsRef(term)) {                                                        \
