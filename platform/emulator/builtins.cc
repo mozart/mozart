@@ -4147,10 +4147,16 @@ OZ_BI_define(BIexchange,2,1)
   if (stateIsCell(state)) {
     rec = getRecordFromState(state);
     if (!rec) {      
-      // mm2: hey men
-      return oz_raise(E_ERROR,E_SYSTEM,
-		      "ooExchOnDistObjectNotImplemented",3,
-		      makeTaggedSRecord(rec),fea,newVal);
+      Tertiary* t=getCell(state);
+      if(!oz_onToplevel())
+	return oz_raise(E_ERROR,E_OBJECT,
+		      "exchange",3,
+		      makeTaggedConst(am.getSelf()),fea,newVal);
+      OZ_Term old;
+      old=oz_newVariable();
+      int ret=(*objectExchange)(t,fea,old,newVal);
+      OZ_out(0) = old;
+      return ret;
     }
   } else {
     rec = getRecord(state);
