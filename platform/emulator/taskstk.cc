@@ -60,36 +60,29 @@ int TaskStack::getSeqSize()
 
   while (1) {
     if (isEmpty()) {
-      /*
-       * mm2: hack to fix a bug: 
-       *  Thread is in SEQMODE instead of ALLSEQMODE
-       *  don't know why this happens ...
-       */
-      return -(oldTos-tos);
+      tos=oldTos;
+      return 0;
     }
     TaskStackEntry entry=*(--tos);
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
-    if (cFlag == C_COMP_MODE) {
-      Assert(getCompMode(entry)==PARMODE);
+    if (cFlag == C_JOB) {
+      Assert(oldTos-tos-1 != 0);
       return oldTos-tos-1;
     }
+    Assert(cFlag != C_LOCAL && cFlag != C_SOLVE);
     tos = tos - frameSize(cFlag) + 1;
   }
 }
 
 /*
  * copySeq: copy the sequential part of newStack
- *  NOTE: the tos of newStack points to the compMode task
+ *  NOTE: the tos of newStack points to the JOB task
  */
 void TaskStack::copySeq(TaskStack *newStack,int len)
 {
   TaskStackEntry *next=newStack->tos+1;
 
-  /*
-   * mm2: hack part II (see above)
-   */
-  if (len < 0) { len=-len; next--; }
   for (;len>0;len--) {
     push(*next++);
   }
@@ -114,7 +107,7 @@ Chunk *TaskStack::findExceptionHandler()
 int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
-  case C_COMP_MODE:
+  case C_JOB:
   case C_NERVOUS:
   case C_SOLVE:  
   case C_LOCAL:  

@@ -1186,7 +1186,7 @@ void AM::pushDebug(Chunk *def, int arity, RefsArray args)
 void AM::scheduleSuspCont(Board *bb, int prio, Continuation *c,
 			  Bool wasExtSusp)
 {
-  Thread *th = newThread(prio,bb,PARMODE);
+  Thread *th = newThread(prio,bb);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
   }
@@ -1199,7 +1199,7 @@ void AM::scheduleSuspCCont(Board *bb, int prio,
 			   CFuncContinuation *c, Bool wasExtSusp,
 			   Suspension *s)
 {
-  Thread *th = newThread(prio,bb,PARMODE);
+  Thread *th = newThread(prio,bb);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
   }
@@ -1212,7 +1212,7 @@ void AM::scheduleSuspCCont(Board *bb, int prio,
 void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
 {
   Assert(!bb->isCommitted());
-  Thread *th = newThread(bb->getActor()->getPriority(),bb,PARMODE);
+  Thread *th = newThread(bb->getActor()->getPriority(),bb);
   if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     incSolveThreads(bb);
   }
@@ -1221,9 +1221,9 @@ void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
   scheduleThread(th);
 }
 
-Thread *AM::createThread(int prio,int compMode)
+Thread *AM::createThread(int prio)
 {
-  Thread *tt = newThread(prio,currentBoard,compMode);
+  Thread *tt = newThread(prio,currentBoard);
 
 #ifdef NEWCOUNTER
   currentBoard->incSuspCount();
@@ -1235,6 +1235,7 @@ Thread *AM::createThread(int prio,int compMode)
   scheduleThread(tt);
   return tt;
 }
+
 
 /*
  * wake up a thread suspended on the reduction of a conditional actor

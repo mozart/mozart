@@ -30,7 +30,7 @@ enum ContFlag {
   C_CFUNC_CONT = 3,  // a continuation  to call a c-function
   C_DEBUG_CONT = 4,  // a continuation for debugging
   C_CALL_CONT  = 5,  // an application
-  C_COMP_MODE  = 6,  // switch to seq/par mode
+  C_JOB        = 6,  // job marker
   C_SOLVE      = 7,  // the SOLVE combinator
   C_LOCAL      = 8,  // a local computation space
   C_EXCEPT_HANDLER = 9 
@@ -187,15 +187,11 @@ public:
     push(ToPointer(C_DEBUG_CONT));
   }
 
-  static TaskStackEntry makeCompMode(int mode) {
-    return ToPointer((mode<<4) | C_COMP_MODE);
-  }
-  static int getCompMode(TaskStackEntry e) {
-    return (ToInt32(e)>>4);
-  }
-  void pushCompMode(int mode)
+  void pushJob()
   {
-    push(makeCompMode(mode));
+    if (!isEmpty()) {
+      push(ToPointer(C_JOB));
+    }
   }
 
   int getSeqSize();
