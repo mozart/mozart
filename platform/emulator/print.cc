@@ -546,11 +546,6 @@ PRINT(SuspList)
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
     if (isEffectiveSusp(sl) ) {
       stream << indent(offset);
-      if (sl->isCondSusp()) {
-	stream << ((CondSuspList*)sl)->getCondNum() << " conds";
-      } else {
-	stream << "true";
-      }
       sl->getSusp()->print(stream);
       stream << endl;
     }

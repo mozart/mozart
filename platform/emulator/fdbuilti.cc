@@ -144,12 +144,12 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   case 3:
     s += 1;
     susp = createNonResSusp(func, xregs, arity);
-    addSuspOnlyToUVar(varptr, new CondSuspList(susp, NULL, isConstrained));
+    addSuspOnlyToUVar(varptr, new SuspList(susp, NULL));
     return TRUE;
   case 4:
     s += 1;
     susp = createNonResSusp(func, xregs, arity);
-    addSuspSVar(var, new CondSuspList(susp, NULL, isConstrained));
+    addSuspSVar(var, new SuspList(susp, NULL));
     return TRUE;
   case 5:
     return FALSE;
@@ -210,9 +210,9 @@ void BIfdHeadManager::addForIntSusp(int i, Suspension * susp)
     if (vtag == CVAR) {
       addSuspFDVar(bifdhm_var[i], new SuspList(susp, NULL), fd_det);
     } else if (vtag == UVAR) {
-      addSuspOnlyToUVar(bifdhm_varptr[i], new CondSuspList(susp, NULL, isDet));
+      addSuspOnlyToUVar(bifdhm_varptr[i], new SuspList(susp, NULL));
     } else if (vtag == SVAR) {
-      addSuspSVar(bifdhm_var[i], new CondSuspList(susp, NULL, isDet));
+      addSuspSVar(bifdhm_var[i], new SuspList(susp, NULL));
     } else {
       error("Unexpected tag in addSuspForInt, got 0x%x.", vtag);
     }
@@ -228,9 +228,9 @@ void BIfdHeadManager::addForFDishSusp(int i, Suspension * susp)
   if (!(vtag == SMALLINT || vtag == CVAR))
     if (vtag == UVAR) {
       addSuspOnlyToUVar(bifdhm_varptr[i],
-			new CondSuspList(susp, NULL, isConstrained));
+			new SuspList(susp, NULL));
     } else if (vtag == SVAR) {
-      addSuspSVar(bifdhm_var[i], new CondSuspList(susp, NULL, isConstrained));
+      addSuspSVar(bifdhm_var[i], new SuspList(susp, NULL));
     } else {
       error("Unexpected tag in addSuspForInt, got 0x%x.", vtag);
     }
@@ -692,13 +692,13 @@ void BIfdBodyManager::processNonRes(void)
     if (*bifdbm_dom[0] == fd_singleton) {
       TaggedRef newsmallint = newSmallInt(bifdbm_dom[0]->singl());
       am.checkSuspensionList(bifdbm_var[0], newsmallint);
-      addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
+      addSuspSVar(bifdbm_var[0], new SuspList(susp, NULL));
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], newsmallint);
     } else {
       GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar));
-      addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
+      addSuspSVar(bifdbm_var[0], new SuspList(susp, NULL));
       am.doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], 
 		     makeTaggedRef(newtaggedfdvar));
       vars_left = TRUE;

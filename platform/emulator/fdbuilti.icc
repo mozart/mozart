@@ -293,9 +293,9 @@ OZ_Bool addNonResSuspForDet(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
   if (isGenFDVar(v,vt)) {
     addSuspFDVar(v, new SuspList(s, NULL), fd_det);
   } else if (isSVar(vt)) {
-    addSuspSVar(v, new CondSuspList(s, NULL, isDet));
+    addSuspSVar(v, new SuspList(s, NULL));
   } else if (isUVar(vt)) {
-    addSuspOnlyToUVar(vp, new CondSuspList(s, NULL, isDet));
+    addSuspOnlyToUVar(vp, new SuspList(s, NULL));
   } else {
     error("unexpected term found");
     return FAILED;
@@ -308,9 +308,9 @@ OZ_Bool addNonResSuspForCon(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
 				Suspension * s)
 {
   if (isSVar(vt)) {
-    addSuspSVar(v, new CondSuspList(s, NULL, isConstrained));
+    addSuspSVar(v, new SuspList(s, NULL));
   } else if (isUVar(vt)) {
-    addSuspOnlyToUVar(vp, new CondSuspList(s, NULL, isConstrained));
+    addSuspOnlyToUVar(vp, new SuspList(s, NULL));
   } else if (isGenFDVar(v,vt)) {
     addSuspFDVar(v, new SuspList(s, NULL));
   } else {
