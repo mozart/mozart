@@ -6,7 +6,7 @@
 
 <Chapter id="chapter.proccells">
   <Title/Procedures, Cells, and Spaces/
-  <Section>
+  <Section id="section.proccells.procedures">
     <Title/Procedures/
     <P>
       The module <Span class=index/<<Procedure>>/ specifies operations on
@@ -37,7 +37,7 @@
 	  <<<{Procedure.arity ?_{P}} == {Length ?_{Xs}}>>>
       </List>
 
-  <Section>
+  <Section id="section.proccells.cells">
     <Title/Cells/
     <P>
       The module <Span class=index/<<Cell>>/ contains procedures operating
@@ -80,7 +80,7 @@
       </List>
 
 
-      <section >
+      <section  id="section.proccells.spaces">
         <title/Spaces/
 
 <p>
