@@ -132,6 +132,7 @@ This is set when gdb is active.")
 Only used as fallback if the environment variable OZHOME is not set.")
 
 (defun oz-home ()
+  "Return the path of the Oz installation directory."
   (let ((ret (getenv "OZHOME")))
     (if ret
 	ret
@@ -690,8 +691,14 @@ If FORCE is non-nil, kill the processes immediately."
 	  (if oz-emulator-hook
 	      (funcall oz-emulator-hook file)
 	    (setq oz-emulator-buffer "*Oz Emulator*")
-
-	    (cond (oz-using-new-compiler
+	    (cond ((and oz-using-new-compiler oz-win32)
+		   (setq oz-read-emulator-output t)
+		   (let ((compilercomp
+			  (or (getenv "OZCOMPILERCOMP")
+			      (concat (oz-home) "/lib/Compiler.ozc"))))
+		     (make-comint "Oz Emulator" "ozemulator" nil "-E"
+				  "-u" compilercomp)))
+		  (oz-using-new-compiler
 		   (setq oz-read-emulator-output t)
 		   (make-comint "Oz Emulator" "oznc" nil "-E"))
 		  (oz-win32 t)
