@@ -70,8 +70,6 @@ inline WeakDictionary* tagged2WeakDictionary(OZ_Term t)
   return (WeakDictionary*) OZ_getExtension(OZ_deref(t));
 }
 
-extern int OZ_isFinalizable(OZ_Term&);
-
 #define OZ_declareWeakDict(ARG,VAR) \
 OZ_declareType(ARG,VAR,WeakDictionary*,"weakDictionary",\
 	oz_isWeakDictionary,tagged2WeakDictionary)
