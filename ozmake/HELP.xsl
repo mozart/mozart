@@ -48,6 +48,10 @@ SPAN.MODULE {
 	color		: steelblue;
 }
 A {	color		: steelblue; }
+SPAN.TOOL {
+  font-family:"lucida console",courier,monospace;
+  color:steelblue;
+}
 SPAN.META {
   font-style:italic;
   font-family:"lucida console",courier,monospace;
