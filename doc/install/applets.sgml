@@ -38,9 +38,9 @@
     do the necessary modifications for you. If that fails for some
     reason, please follow the instructions below, but use
 <code display>
-C:\mozart\bin\ozenginew.exe "%1"
+"C:\Program Files\Mozart\bin\ozenginew.exe" "%1"
 </code>
-   as application (assuming that you installed Mozart under <Kbd>C:\mozart)</Kbd>.
+   as application (assuming that you installed Mozart under <Kbd>C:\Program Files\Mozart)</Kbd>.
 
 
   <Section id="section.applets.oz">
