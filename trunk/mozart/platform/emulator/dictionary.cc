@@ -10,7 +10,6 @@
 #pragma implementation "dictionary.hh"
 #endif
 
-#include "am.hh"
 #include "dictionary.hh"
 
 
@@ -302,13 +301,6 @@ Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
         }
     }
     return TRUE;
-}
-
-// Return a sorted difference list of all the features currently in the dynamic table.
-// The head is the return value and the tail is returned through an argument.
-TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail)
-{
-    return getOpenArityList(ftail,am.currentBoard);
 }
 
 TaggedRef DynamicTable::getOpenArityList(TaggedRef* ftail, Board* home)

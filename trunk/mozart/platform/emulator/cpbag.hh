@@ -82,8 +82,4 @@ public:
 
 // ------------------------------------------------------------------------
 
-#ifndef OUTLINE
-#include "actor.hh"
-#endif
-
 #endif // __CPSTACK_H_
