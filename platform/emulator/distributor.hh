@@ -39,19 +39,17 @@ class Distributor {
 public:
   USEFREELISTMEMORY;
 
-  virtual int isAlive(void);
-
-  virtual int getAlternatives(void);
-
-  virtual int commit(Board *, int, int);
+  virtual int isAlive(void) = 0;
+  virtual int getAlternatives(void) = 0;
+  virtual int commit(Board *, int, int) = 0;
 
   void dispose(void) {
     freeListDispose(this, sizeOf());
   }
 
-  virtual int sizeOf(void);
+  virtual int sizeOf(void) = 0;
 
-  virtual Distributor * gc(void);
+  virtual Distributor * gc(void) = 0;
 
 };
 
