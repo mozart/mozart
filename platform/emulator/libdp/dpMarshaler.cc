@@ -52,11 +52,13 @@ TaggedRef newObjectProxy(Object*, GName*, GName*, TaggedRef);
 void marshalCreditOutline(Credit credit,MsgBuffer *bs){  
   marshalCredit(credit,bs);}
 
+#ifdef USE_FAST_UNMARSHALER
 Credit unmarshalCreditOutline(MsgBuffer *bs){
   return unmarshalCredit(bs);}
-
+#else
 Credit unmarshalCreditRobustOutline(MsgBuffer *bs, int *error){
   return unmarshalCreditRobust(bs,error);}
+#endif
 
 /**********************************************************************/
 /*  basic borrow, owner */
@@ -180,6 +182,7 @@ void marshalObjectInternal(Object *o, MsgBuffer *bs, GName *gnclass)
   marshalGName(gnclass,bs);
 }
 
+#ifdef USE_FAST_UNMARSHALER
 void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs)
 {
   TaggedRef t = newUnmarshalTerm(bs);
@@ -187,6 +190,7 @@ void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs)
   o->state = newUnmarshalTerm(bs);
   o->lock  = newUnmarshalTerm(bs);
 }
+#else
 void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error)
 {
   newUnmarshalerStartBatch();
@@ -203,17 +207,20 @@ void unmarshalFullObjectRobustInternal(ObjectFields *o, MsgBuffer *bs,
   o->lock  = newUnmarshalTermRobustInternal(bs);
   *error = (o->lock == 0);
 }
+#endif
 
 void fillInObject(ObjectFields *of, Object *o){
   o->setFreeRecord(of->feat);
   o->setState(tagged2Tert(of->state));
   o->setLock(oz_isNil(of->lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(of->lock));}
 
+#ifdef USE_FAST_UNMARSHALER
 void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs)
 {
   unmarshalFullObject(o,bs);
   o->clas = newUnmarshalTerm(bs);
 }
+#else
 void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,
 				       int *error)
 {
@@ -228,6 +235,7 @@ void unmarshalFullObjectAndClassRobustInternal(ObjectFields *o,MsgBuffer *bs,
   o->clas = newUnmarshalTermRobustInternal(bs);
   *error = (e || (o->clas == 0));
 }
+#endif
 
 void fillInObjectAndClass(ObjectFields *of, Object *o){
   fillInObject(of,o);
@@ -346,9 +354,12 @@ static char *tagToComment(MarshalTag tag)
 
 // for unmarshalTertiaryImpl see dpMarshaler_general.cc
 // for unmarshalOwnerImpl see dpMarshaler_general.cc
+#ifndef USE_FAST_UNMARSHALER
 #define ROBUST_UNMARSHALER
 #include "dpMarshaler_general.cc"
 #undef ROBUST_UNMARSHALER
+#else
 #include "dpMarshaler_general.cc"
+#endif
 
 

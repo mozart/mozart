@@ -318,16 +318,19 @@ enum RecordArityType {
   TUPLEWIDTH
 };
 
+#ifdef USE_FAST_UNMARSHALER
 //
 inline
 RecordArityType unmarshalRecordArityType(MsgBuffer *bs) {
   return ((RecordArityType) unmarshalNumber(bs));
 }
+#else
 //
 inline
 RecordArityType unmarshalRecordArityTypeRobust(MsgBuffer *bs, int *overflow) {
   return ((RecordArityType) unmarshalNumberRobust(bs, overflow));
 }
+#endif
 inline
 void marshalRecordArityType(RecordArityType type, MsgBuffer *bs) {
   marshalNumber(type, bs);
@@ -1215,10 +1218,13 @@ private:
   CrazyDebug(void decDebugNODES() { debugNODES--; });
 
   //
+#ifdef USE_FAST_UNMARSHALER
   void buildValueOutline(OZ_Term value, BTFrame *frame,
 			 BuilderTaskType type);
+#else
   void buildValueOutlineRobust(OZ_Term value, BTFrame *frame,
 			       BuilderTaskType type);
+#endif
 
   //
 public:
@@ -1510,8 +1516,11 @@ public:
     }
   }
 
+#ifndef USE_FAST_UNMARSHALER
 #include "robust_builder_methods.hh"
+#else
 #include "fast_builder_methods.hh"
+#endif  
 
 
   //

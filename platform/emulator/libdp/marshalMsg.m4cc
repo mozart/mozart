@@ -93,6 +93,7 @@ define(argEnc,`ifelse($1,Index,marshalNumber(i1,buf);,
 
 include(EMUDIR/msgFormat.m4)
 
+#ifdef USE_FAST_UNMARSHALER   
 undefine(`argEnc')
 undefine(`arg')
 undefine(`message')
@@ -139,6 +140,7 @@ define(argEnc,`ifelse($1,Index,i1=unmarshalNumber(buf);,
 
 include(EMUDIR/msgFormat.m4)
 
+#else
 //robust unmarshaling
 undefine(`argEnc')
 undefine(`arg')
@@ -152,7 +154,8 @@ define(message,`
 	int e=NO;
         Assert(creditSiteIn==NULL);	
 	if(buf->get()==DIF_SECONDARY){
-	  creditSiteIn=unmarshalDSite(buf);
+	  creditSiteIn=unmarshalDSiteRobust(buf,&e);
+	  if(e) messageError(dsite,NO);
 	  PD((CREDIT,"Found sec creds %s",creditSiteIn->stringrep()));
 	}
 	argEnc($2)
@@ -187,4 +190,6 @@ define(argEnc,`ifelse($1,Index,i1=unmarshalNumberRobust(buf,&e);if(e) messageErr
                    $1,Site2,s2=unmarshalDSiteRobust(buf,&e);if(e) messageError(dsite,ds);,)')
 
 include(EMUDIR/msgFormat.m4)
+
+#endif
 

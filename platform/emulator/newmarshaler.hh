@@ -44,10 +44,12 @@ extern unsigned int RobustMarshaler_Max_Shift;
 // (sizeof(int)-RobustMarshaler_Max_Shift)^2
 extern unsigned int RobustMarshaler_Max_Hi_Byte;
 
+#ifdef USE_FAST_UNMARSHALER   
 inline int unmarshalRefTag(MsgBuffer *bs)
 {
   return unmarshalNumber(bs);
 }
+#else
 inline int unmarshalRefTagRobust(MsgBuffer *bs, Builder *builder, int *error)
 {
   int e;
@@ -55,10 +57,14 @@ inline int unmarshalRefTagRobust(MsgBuffer *bs, Builder *builder, int *error)
   *error = e || !builder->checkNewIndex(rt); // RefTags are found in order?
   return rt;
 }
+#endif
 OZ_Return oz_export(OZ_Term t);
 
+#ifdef USE_FAST_UNMARSHALER   
 GName* unmarshalGName(TaggedRef*,MsgBuffer*);
+#else
 GName* unmarshalGNameRobust(TaggedRef*,MsgBuffer*,int*);
+#endif
 void marshalGName(GName *gname, MsgBuffer *bs);
 
 class SendRecvCounter {
@@ -253,17 +259,21 @@ void newMarshalerFinishBatch()
 }
 
 //
+#ifdef USE_FAST_UNMARSHALER   
 OZ_Term newUnmarshalTermInternal(MsgBuffer *);
+#else
 OZ_Term newUnmarshalTermRobustInternal(MsgBuffer *);
+#endif
 
 //
 // Interface procedures. 
+#ifdef USE_FAST_UNMARSHALER   
 inline
 OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 {
   return newUnmarshalTermInternal(bs);
 }
-
+#else
 inline
 OZ_Term newUnmarshalTermRobust(MsgBuffer *bs)
 {
@@ -271,6 +281,7 @@ OZ_Term newUnmarshalTermRobust(MsgBuffer *bs)
   OZ_Term n = newUnmarshalTermRobustInternal(bs);
   return n;
 }
+#endif
 
 inline
 void newUnmarshalerStartBatch()

@@ -200,6 +200,7 @@ void marshalFloat(double d, MsgBuffer *bs)
 
 
 #ifndef TEXT2PICKLE
+#ifdef USE_FAST_UNMARSHALER   
 double unmarshalFloat(MsgBuffer *bs)
 {
   static DoubleConv dc;
@@ -212,6 +213,7 @@ double unmarshalFloat(MsgBuffer *bs)
   }
   return dc.u.d;
 }
+#else
 double unmarshalFloatRobust(MsgBuffer *bs, int *overflow)
 {
   static DoubleConv dc;
@@ -226,8 +228,9 @@ double unmarshalFloatRobust(MsgBuffer *bs, int *overflow)
   *overflow = o1 || o2;
   return dc.u.d;
 }
+#endif
 
-
+#ifdef USE_FAST_UNMARSHALER   
 static
 char *getString(MsgBuffer *bs, unsigned int i)
 {
@@ -244,6 +247,7 @@ char *getString(MsgBuffer *bs, unsigned int i)
   ret[i] = '\0';
   return ret;
 }
+#else
 static
 char *getStringRobust(MsgBuffer *bs, unsigned int i, int *error)
 {
@@ -264,7 +268,9 @@ char *getStringRobust(MsgBuffer *bs, unsigned int i, int *error)
   *error = NO;
   return ret;
 }
+#endif
 
+#ifdef USE_FAST_UNMARSHALER   
 char *unmarshalString(MsgBuffer *bs)
 {
   misc_counter[MISC_STRING].recv();
@@ -272,6 +278,14 @@ char *unmarshalString(MsgBuffer *bs)
 
   return getString(bs,i);
 }
+
+/* a version of unmarshalString that is more stable against garbage input */
+char *unmarshalVersionString(MsgBuffer *bs)
+{
+  unsigned int i = bs->get();
+  return getString(bs,i);
+}
+#else
 char *unmarshalStringRobust(MsgBuffer *bs, int *error)
 {
   int e1,e2;
@@ -284,11 +298,12 @@ char *unmarshalStringRobust(MsgBuffer *bs, int *error)
 }
 
 /* a version of unmarshalString that is more stable against garbage input */
-char *unmarshalVersionString(MsgBuffer *bs)
+char *unmarshalVersionStringRobust(MsgBuffer *bs, int *error)
 {
   unsigned int i = bs->get();
-  return getString(bs,i);
+  return getStringRobust(bs,i,error);
 }
+#endif
 
 #endif
 
@@ -384,6 +399,7 @@ BYTE unmarshalByte(MsgBuffer *bs)
   return bs->get();
 }
 
+#ifndef USE_FAST_UNMARSHALER   
 unsigned int unmarshalNumberRobust(MsgBuffer *bs, int *overflow)
 {
   unsigned int ret = 0, shft = 0;
@@ -407,7 +423,7 @@ unsigned int unmarshalNumberRobust(MsgBuffer *bs, int *overflow)
   *overflow = NO;
   return ret;
 }
-
+#else
 unsigned int unmarshalNumber(MsgBuffer *bs)
 {
   unsigned int ret = 0, shft = 0;
@@ -420,6 +436,7 @@ unsigned int unmarshalNumber(MsgBuffer *bs)
   ret |= (c<<shft);
   return ret;
 }
+#endif
 
 void skipNumber(MsgBuffer *bs)
 {
