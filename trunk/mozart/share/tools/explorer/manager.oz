@@ -553,11 +553,6 @@ in
 	 end
       end
       
-\ifdef EXPLORER_DEBUG
-      meth debug(M)
-	 {@curNode M}
-      end
-\endif
       meth close
 	 <<UrObject close>>
 	 {self.explorer ManagerClosed}

@@ -212,12 +212,6 @@ in
 	 {@MyManager.menu.search.all  invoke}
       end
 
-\ifdef EXPLORER_DEBUG
-      meth debug(M)
-	 {@MyManager debug(M)}
-      end
-\endif
-      
       meth close
 	 case @MyManager of !False then true elseof M then {M close} end
 	 <<UrObject close>>

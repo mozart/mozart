@@ -13,8 +13,7 @@ LOCALFILES = \
 	configure.oz nodes.oz toplevel-manager.oz \
 	default-actions.oz search-nodes.oz \
 	df-nodes.oz stat-nodes.oz \
-	dialog-manager.oz shapes-and-images.oz status-manager.oz \
-	debug-nodes.oz
+	dialog-manager.oz shapes-and-images.oz status-manager.oz
 
 BITMAPS = \
 	explorer.xbm

@@ -27,11 +27,6 @@ local
 
    \insert action-nodes.oz
 
-\ifdef EXPLORER_DEBUG
-   \insert debug-nodes.oz
-\endif
-   
-
    class FailedNode
       from
 	 BasicNodes.leaf
@@ -42,9 +37,6 @@ local
 	 TkNodes.failed
 	 StatNodes.failed
 	 ActionNodes.failed
-\ifdef EXPLORER_DEBUG
-         DebugNodes.failed
-\endif
       
       feat
 	 kind: failed
@@ -66,10 +58,6 @@ local
 	 TkNodes.unstable
 	 StatNodes.unstable
 	 ActionNodes.unstable
-\ifdef EXPLORER_DEBUG
-         DebugNodes.unstable
-\endif
-      
       
       feat
 	 kind: unstable
@@ -85,9 +73,6 @@ local
 	 StatNodes.solved
 	 HideNodes.leaf
 	 ActionNodes.solved
-\ifdef EXPLORER_DEBUG
-         DebugNodes.solved
-\endif
       
       feat
 	 kind: solved
@@ -104,9 +89,6 @@ local
 	 StatNodes.choice
 	 LayoutNodes.inner
 	 ActionNodes.choice
-\ifdef EXPLORER_DEBUG
-         DebugNodes.choice
-\endif
       
       feat
 	 kind: choice
