@@ -105,51 +105,6 @@ Literal *addToNameTab(const char *str)
 }
 
 
-AbstractionTable CodeArea::abstractionTab(4000);
-
-/*
-  AbstractionEntry::defaultEntry: for bug fix. If you feed
-
-  declare P1 P2 Px in
-
-  proc {P1 X} true end
-  proc {Px X} false end
-  Px=P1
-  proc {P2 X} true end
-
-  this gives toplevel failure. Afterwards feed
-   {P2 1}
-  this SEGV, since FASTCALL points to an unfilled AbstractionEntry.
-  Use defaultEntry for all newly created AbstractionEntry. Set by a builtin.
-
-*/
-
-
-AbstractionEntry *AbstractionTable::add(Abstraction *abstr)
-{
-  AbstractionEntry *ret = new AbstractionEntry(NO);
-  ret->setPred(abstr);
-  return ret;
-}
-
-AbstractionEntry *AbstractionTable::add(int id)
-{
-  if (id == 0)
-    return NULL;
-
-  AbstractionEntry *found =
-    (AbstractionEntry *) CodeArea::abstractionTab.htFind(id);
-
-  if (found != (AbstractionEntry *) htEmpty) {
-    return found;
-  }
-
-  found = new AbstractionEntry(NO);
-  CodeArea::abstractionTab.htAdd(id,found);
-  return found;
-}
-
-
 /*
   we store the absolute adress of the indices in the
   instruction tables
