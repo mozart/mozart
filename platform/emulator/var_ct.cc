@@ -103,11 +103,8 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
 }
 #endif
 
-// `var' and `vptr' belongs to `this', i.e., is a `OzCtVariable
-// `term' and `tptr' are either values or other constrained variable
-// (preferably `OzCtVariable' of the right kind. Unification is
-// implemented such, that `OzCtVariable's of the sam ekind are
-// compatible with each other.
+// Unification is implemented such, that `OzCtVariable's of the same
+// kind are compatible with each other.
 #ifdef CORRECT_UNIFY
 //-----------------------------------------------------------------------------
 OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
@@ -117,12 +114,23 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
   OZ_Term right_var       = *right_varptr;
   OzVariable * right_cvar = tagged2CVar(right_var);
   //
+  OzCtVariable * right_ctvar = (OzCtVariable *) right_cvar;
+  Bool left_var_is_local  = oz_isLocalVar(this);
+  Bool right_var_is_local = oz_isLocalVar(right_ctvar);
+  //
+  if (!left_var_is_local && right_var_is_local) {
+    DEBUG_CONSTRAIN_CVAR(("global-local (swapping)"));
+    //
+    // left variable is global and right variable is local
+    //
+    // swap variables to be unified and recurse
+    return unify(right_varptr, left_varptr);
+  }
   if (right_cvar->getType() != OZ_VAR_CT) {
     DEBUG_CONSTRAIN_CVAR(("expected ct-var on right hand-side\n"));
     goto failed;
   }
   {
-    OzCtVariable * right_ctvar = (OzCtVariable *) right_cvar;
     OZ_Ct * right_constr       = right_ctvar->getConstraint();
     OZ_Ct * left_constr        = getConstraint();
 
@@ -137,52 +145,48 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     if (! unified_constr->isValid()) {
       goto failed;
     }
-    {
-      Bool left_var_is_local  = oz_isLocalVar(this);
-      Bool right_var_is_local = oz_isLocalVar(right_ctvar);
+    if (left_var_is_local && right_var_is_local) {
+      DEBUG_CONSTRAIN_CVAR(("local-local"));
       //
-      if (left_var_is_local && right_var_is_local) {
-        DEBUG_CONSTRAIN_CVAR(("local-local"));
+      // left and right variable are local
+      //
+      if (unified_constr->isValue()) {
+        // unified_constr is a value
+        OZ_Term unified_value = unified_constr->toValue();
+        // wake up
+        right_ctvar->propagateUnify();
+        propagateUnify();
         //
-        // left and right variable are local
+        bindLocalVarToValue(left_varptr, unified_value);
+        bindLocalVarToValue(right_varptr, unified_value);
+        // dispose variables
+        dispose();
+        right_ctvar->dispose();
+      } else if (heapNewer(left_varptr, right_varptr)) {
+        // bind left variable to right variable
+        right_ctvar->copyConstraint(unified_constr);
+        // wake up
+        propagateUnify();
+        right_ctvar->propagateUnify();
         //
-        if (unified_constr->isValue()) {
-          // unified_constr is a value
-          OZ_Term unified_value = unified_constr->toValue();
-          // wake up
-          right_ctvar->propagateUnify();
-          propagateUnify();
-          //
-          bindLocalVarToValue(left_varptr, unified_value);
-          bindLocalVarToValue(right_varptr, unified_value);
-          // dispose variables
-          dispose();
-          right_ctvar->dispose();
-        } else if (heapNewer(left_varptr, right_varptr)) {
-          // bind left variable to right variable
-          right_ctvar->copyConstraint(unified_constr);
-          // wake up
-          propagateUnify();
-          right_ctvar->propagateUnify();
-          //
-          relinkSuspListTo(right_ctvar);
-          bindLocalVar(left_varptr, right_varptr);
-          // dispose left variable
-          dispose();
-        } else {
-          // bind right variable to left variable
-          copyConstraint(unified_constr);
-          // wake up
-          right_ctvar->propagateUnify();
-          propagateUnify();
-          //
-          right_ctvar->relinkSuspListTo(this);
-          //
-          bindLocalVar(right_varptr, left_varptr);
-          // dispose right variable
-          right_ctvar->dispose();
-        }
-      } else if (left_var_is_local && !right_var_is_local) {
+        relinkSuspListTo(right_ctvar);
+        bindLocalVar(left_varptr, right_varptr);
+        // dispose left variable
+        dispose();
+      } else {
+        // bind right variable to left variable
+        copyConstraint(unified_constr);
+        // wake up
+        right_ctvar->propagateUnify();
+        propagateUnify();
+        //
+        right_ctvar->relinkSuspListTo(this);
+        //
+        bindLocalVar(right_varptr, left_varptr);
+        // dispose right variable
+        right_ctvar->dispose();
+      }
+    } else if (left_var_is_local && !right_var_is_local) {
         DEBUG_CONSTRAIN_CVAR(("local-global"));
         //
         // left variable is local and right variable is global
@@ -211,13 +215,6 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
           // dispose left variable
           dispose();
         }
-      } else if (!left_var_is_local && right_var_is_local) {
-        DEBUG_CONSTRAIN_CVAR(("global-local"));
-        //
-        // left variable is global and right variable is local
-        //
-        // swap variables to be unified and recurse
-        return unify(right_varptr, left_varptr);
       } else if (!left_var_is_local && !right_var_is_local) {
         DEBUG_CONSTRAIN_CVAR(("global-global"));
         //
@@ -239,11 +236,12 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
           right_ctvar->propagateUnify();
           //
           bindGlobalVar(left_varptr, right_varptr);
-          constrainGlobalVar(right_varptr, unified_constr);
+          if (right_constr->isWeakerThan(unified_constr)) {
+            constrainGlobalVar(right_varptr, unified_constr);
+          }
         }
       }
     }
-  }
   //
   DEBUG_CONSTRAIN_CVAR(("SUCCEEDED\n"));
   return TRUE;

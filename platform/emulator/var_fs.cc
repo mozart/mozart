@@ -119,15 +119,30 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
 //-----------------------------------------------------------------------------
 OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 {
+  DEBUG_CONSTRAIN_CVAR(("unifyFS "));
+  //
   OZ_Term right_var       = * right_varptr;
   OzVariable * right_cvar = tagged2CVar(right_var);
+  OzFSVariable * right_fsvar    = (OzFSVariable *) right_cvar;
+  //
+  Bool left_var_is_local  = oz_isLocalVar(this);
+  Bool right_var_is_local = oz_isLocalVar(right_fsvar);
+  //
+  if (!left_var_is_local && right_var_is_local) {
+    DEBUG_CONSTRAIN_CVAR(("global-local (swapping)"));
+    //
+    // left variable is global and right variable is local
+    //
+    // swap variables to be unified and recurse
+    return unify(right_varptr, left_varptr);
+  }
   //
   if (right_cvar->getType() != OZ_VAR_FS) {
     goto failed;
   }
+  //
   {
     // compute unified set constraint ...
-    OzFSVariable * right_fsvar    = (OzFSVariable *) right_cvar;
     OZ_FSetConstraint * right_set =
       (OZ_FSetConstraint *) &right_fsvar->getSet();
     OZ_FSetConstraint * left_set  =
@@ -138,9 +153,6 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     if (unified_set.getCardMin() == -1) {
       goto failed;
     }
-    Bool left_var_is_local  = oz_isLocalVar(this);
-    Bool right_var_is_local = oz_isLocalVar(right_fsvar);
-    //
     if (left_var_is_local && right_var_is_local) {
       DEBUG_CONSTRAIN_CVAR(("local-local"));
       //
@@ -216,13 +228,6 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         // dispose left variable
         dispose();
       }
-    } else if (!left_var_is_local && right_var_is_local) {
-      DEBUG_CONSTRAIN_CVAR(("global-local"));
-      //
-      // left variable is global and right variable is local
-      //
-      // swap variables to be unified and recurse
-      return unify(right_varptr, left_varptr);
     } else if (!left_var_is_local && !right_var_is_local) {
       DEBUG_CONSTRAIN_CVAR(("global-global"));
       //
@@ -244,7 +249,10 @@ OZ_Return OzFSVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         right_fsvar->propagateUnify();
         //
         bindGlobalVar(left_varptr, right_varptr);
-        constrainGlobalVar(right_varptr, unified_set);
+        if (((FSetConstraint *) right_set)
+            ->isWeakerThan(*((FSetConstraint *) &unified_set))) {
+          constrainGlobalVar(right_varptr, unified_set);
+        }
       }
     }
   }
