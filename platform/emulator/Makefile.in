@@ -277,15 +277,15 @@ realclean::
 TESTDIR=$(SRCDIR)/../test
 OZTEST=$(TESTDIR)/oztest
 $(OZTEST):
-        (cd $(TESTDIR); ./configure; make clean all)
+        (cd $(TESTDIR) && ./configure && make clean all)
 
 test: $(OZTEST)
-        (OZEMULATOR=./oz.emulator.bin; export OZEMULATOR; \
-         OZ_LOAD='root=$(TESTDIR)'; export OZ_LOAD; \
+        (OZEMULATOR=./oz.emulator.bin && export OZEMULATOR && \
+         OZ_LOAD='root=$(TESTDIR)' && export OZ_LOAD && \
          $(OZTEST) --verbose $(TESTARGS))
 
 test-lib:
-        (OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
-         cd $(SRCDIR)/../lib; \
-         ./configure; \
+        (OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR && \
+         cd $(SRCDIR)/../lib && \
+         ./configure && \
          make realclean stage1 clean stage2 cean stage3)
