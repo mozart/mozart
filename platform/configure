@@ -1180,15 +1180,23 @@ if test -n "${enable_wish}"; then
 fi
 echo "$ac_t""$oz_enable_wish" 1>&6
 
+PLATFORMDIRS="emulator"
+
+case $platform in
+    win32*)
+        PLATFORMDIRS="$PLATFORMDIRS mswindows"
+        ;;
+    *)
+        ;;
+esac
+
 if test "${oz_enable_wish}" = yes; then
-    PLATFORMDIRS="emulator wish tools"
-else
-    PLATFORMDIRS="emulator tools"
+    PLATFORMDIRS="$PLATFORMDIRS wish"
 fi
 
 
     echo $ac_n "checking for --enable-gtk""... $ac_c" 1>&6
-echo "configure:1192: checking for --enable-gtk" >&5
+echo "configure:1200: checking for --enable-gtk" >&5
     # Check whether --enable-gtk or --disable-gtk was given.
 if test "${enable_gtk+set}" = set; then
   enableval="$enable_gtk"
@@ -1211,13 +1219,7 @@ if test "${GTK_ENABLED}" = yes; then
     PLATFORMDIRS="$PLATFORMDIRS gtk"
 fi
 
-case $platform in
-    win32*)
-        PLATFORMDIRS="$PLATFORMDIRS mswindows"
-        ;;
-    *)
-        ;;
-esac
+PLATFORMDIRS="$PLATFORMDIRS tools"
 
 
 
