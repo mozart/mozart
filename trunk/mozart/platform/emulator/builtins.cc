@@ -1724,7 +1724,6 @@ OZ_C_proc_begin(BIsetC, 3)
             // Unify newofsvar and term (which is also an ofsvar):
             Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
             Assert(ok2);
-            LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
             return PROCEED;
         }
     }
@@ -1915,7 +1914,6 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
                 Assert(ok2);
                 // newofsvar->propagateFeature();
-                LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()););
                 return PROCEED;
             }
             break;
