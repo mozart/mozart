@@ -151,7 +151,7 @@ local
 		     %% end
 		     {@CurComp enqueue(mergeEnv(env('`self`': @Self)))}
 		     {@CurComp
-		      enqueue(feedVirtualString('{`send` eval($) ' #
+		      enqueue(feedVirtualString('{Object.send eval($) ' #
 						'class meth eval($)\n' #
 						V # '\nend end `self`}'
 						return(result: ?R)))}
