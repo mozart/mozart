@@ -9,7 +9,6 @@ local
    Border       = 2
    LabelWidth   = 8
    SquareSize   = 10
-   TextWidth    = 18
    ButtonWidth  = 6
 
    fun {GetFeature X}
@@ -142,7 +141,6 @@ local
 				 anchor:             w
 				 var:                V
 				 action:             self # invoke)>>
-%				 width:              TextWidth)>>
 	 self.Var    = V
 	 self.Action = A
 	 Saved <- S
@@ -212,7 +210,6 @@ local
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w)}
-%				      width:  TextWidth)}
 	    S1 = {New Scale init(parent: P
 				 range:  {CondSelect L range 1#100}
 				 action: L.action
@@ -222,14 +219,13 @@ local
 				      text:   {CondSelect L dim ''})}
 	 in
 	    R.{GetFeature L}=S1
-	    grid(L1 sticky:e column:0 row:N) |
+	    grid(L1 sticky:w column:0 row:N) |
 	    grid(S1 sticky:e column:1 row:N) | 
 	    grid(L2 sticky:w column:2 row:N) | TclR	    
 	 [] number    then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w)}
-%				      width:  TextWidth)}
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = case {HasFeature L color} orelse {HasFeature L stipple} then
 		    C = {CondSelect L color black}
@@ -246,7 +242,6 @@ local
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w)}
-%				      width:  TextWidth)}
 	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = {New Tk.label tkInit(parent: P
 				      anchor: e
@@ -267,7 +262,6 @@ local
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w)}
-%				      width:  TextWidth)}
 	    L3 = {New Tk.label  tkInit(parent:P anchor:e)}
 	    L2 = {New PrintTime init(parent: P
 				     dim:    L3)}
@@ -303,7 +297,6 @@ local
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w)}
-%				      width:  TextWidth)}
 	    E2 = {New Entry init(parent: P
 				 action: L.action
 				 top:    L.top)}
