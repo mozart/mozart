@@ -17,7 +17,7 @@ BITMAPS = debugger.xbm
 
 LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
 
-LIBFILES = ${LOCALFILES:%.oz=$(OZCAR)/%.oz}
+LIBFILES = ${LOCALFILES:%.oz=$(OZCAR)/%.oz} $(OZCAR)/version.oz
 
 all::	../Ozcar.oz
 
