@@ -35,7 +35,6 @@ AC_INIT(gozsupport.h)
 
 AC_SUBST(EXTRALDFLAGS)
 
-dnl ******************************************************************
 OZ_INIT
 
 OZ_CC_CHOOSE
@@ -83,7 +82,7 @@ AC_PATH_PROG(gtkpath, gtk-config)
 if test -z $gtkpath; then
     AC_MSG_ERROR(You need the GTK library to enable GTK support. It can be found at http://www.gtk.org)
 fi
-AC_MSG_CHECKING(for Gtk compile flags)
+AC_MSG_CHECKING(for GTK compile flags)
 GTK_CFLAGS=`$gtkpath --cflags`
 GTK_LIBS=`$gtkpath --libs`
 GTK_HDRS=`$gtkpath --prefix`/include/gtk
@@ -93,6 +92,24 @@ LIBS="$LIBS $GTK_LIBS"
 AC_SUBST(GTK_HDRS)
 AC_SUBST(GDK_HDRS)
 AC_MSG_RESULT(ok)
+
+dnl *********************************************************************
+dnl ** Glade
+dnl *********************************************************************
+
+ENABLE_GLADE="no"
+GLADE_FAIL="not found. Glade support will be disabled."
+AC_PATH_PROG(libglade_config, libglade-config, $GLADE_FAIL)
+if test "$libglade_config" != "$GLADE_FAIL"; then
+    ENABLE_GLADE="yes"
+    GLADE_CFLAGS=`$libglade_config --cflags`
+    GLADE_LIBS=`$libglade_config --libs`
+    GFLAGS="$CFLAGS $GLADE_CFLAGS"
+    LIBS="$LIBS $GLADE_LIBS"
+    AC_SUBST(GLADE_CFLAGS)
+    AC_SUBST(GLADE_LIBS)
+fi
+AC_SUBST(ENABLE_GLADE)
 
 dnl *****************************************************************
 dnl FINALIZE
