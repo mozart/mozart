@@ -23,7 +23,7 @@ Dbg = dbg(on:           proc {$}
 
 IsBuiltin = {`Builtin` 'isBuiltin' 2}
 
-fun {NewCompiler}
+fun {UsingNewCompiler}
    %% return true when using new compiler, false otherwise
    try {{`Builtin` 'getOPICompiler' 1} _} true
    catch error(...) then false
