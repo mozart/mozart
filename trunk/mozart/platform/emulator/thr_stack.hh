@@ -96,7 +96,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  void printDebug(Bool verbose, int depth = 10000);
+  void printDebug(ProgramCounter pc, Bool verbose, int depth = 10000);
   
   void checkNode (Board *n)
   {
