@@ -2552,34 +2552,6 @@ OZ_C_proc_begin(BIchunkWidth, 2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIrecordWidth, 2)
-{
-  OZ_Term arg = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  DEREF(arg, argPtr, argTag);
-
-  switch (argTag) {
-  case CVAR:
-    switch (tagged2CVar(arg)->getType ()) {
-    case OFSVariable:
-      {
-	GenOFSVariable *ofsVar = tagged2GenOFSVar(arg);
-	return (OZ_unify (out, makeTaggedSmallInt(ofsVar->getWidth ())));
-      }
-
-    default:
-      TypeErrorT(0, "Record");
-    }
-
-  case SRECORD:
-    return (OZ_unify (out, makeTaggedSmallInt(tagged2SRecord(arg)->getWidth ())));
-
-  default:
-    TypeErrorT(0, "Record");
-  }
-}
-OZ_C_proc_end
 
 /* ---------------------------------------------------------------------
  * Threads
@@ -5623,31 +5595,6 @@ OZ_C_proc_end
  * Browser: special builtins: getsBound, intToAtom
  * --------------------------------------------------------------------- */
 
-OZ_C_proc_begin(_getsBound_dummy, 0)
-{
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
-OZ_C_proc_begin(BIgetsBound, 1)
-{
-  OZ_Term v = OZ_getCArg(0);
-
-  DEREF(v, vPtr, vTag);
-  
-  if (isAnyVar(vTag)){
-    Thread *thr =
-      (Thread *) OZ_makeSuspendedThread (_getsBound_dummy, NULL, 0);
-    SuspList *vcsl = new SuspList(thr, NULL);
-    addSuspAnyVar(vPtr, vcsl);
-  }
-
-  return PROCEED;
-}
-OZ_C_proc_end
-
-
 OZ_C_proc_begin(_getsBound_dummyB, 2)
 {
   return (OZ_unify (OZ_getCArg (1), NameTrue));
@@ -5794,15 +5741,6 @@ OZ_Return showInline(TaggedRef term)
 }
 
 DECLAREBI_USEINLINEREL1(BIshow,showInline)
-
-OZ_C_proc_begin(BIprintLong,1)
-{
-  OZ_Term args0 = OZ_getCArg(0);
-  taggedPrintLong(args0);
-
-  return PROCEED;
-}
-OZ_C_proc_end
 
 // ---------------------------------------------------------------------------
 // ???
@@ -6273,214 +6211,6 @@ OZ_C_proc_begin(BIaddr,2)
     return OZ_unifyInt(out,ToInt32(valPtr));
   }
   return OZ_unifyInt(out,ToInt32(tagValueOf(valTag,val)));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIsuspensions,2)
-{
-  OZ_declareArg(0,val);
-  OZ_declareArg(1,out);
-
-  DEREF(val,valPtr,valTag);
-  switch (valTag) {
-  case UVAR:
-    return OZ_unify(out,nil());
-  case SVAR:
-  case CVAR:
-    return OZ_unify(out,tagged2SuspVar(val)->DBGmakeSuspList());
-  default:
-    return OZ_unify(out,nil());
-  }
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIglobals,2)
-{
-  OZ_declareNonvarArg(0,proc);
-  OZ_declareArg(1,out);
-
-  DEREF(proc,ptr,tag);
-  if (isConst(proc)) {
-    ConstTerm *cc = tagged2Const(proc);
-    switch (cc->getType()) {
-    case Co_Builtin:
-      return OZ_unify(out,nil());
-    case Co_Abstraction:
-      return OZ_unify(out, ((Abstraction *) cc)->DBGgetGlobals());
-    case Co_Object:
-      return OZ_unify(out,
-		      ((Object *) cc)->getAbstraction()->DBGgetGlobals());
-    default:
-      break;
-    }
-  }
-  TypeErrorT(1,"Procedure or Object");
-}
-OZ_C_proc_end
-
-
-// ---------------------------------------------------------------------------
-// Debugging: set a break
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIhalt,0)
-{
-  tracerOn();
-  return PROCEED;
-}
-OZ_C_proc_end
-
-// ---------------------------------------------------------------------------
-// Debugging: special builtins for Benni
-// ---------------------------------------------------------------------------
-
-OZ_C_proc_begin(BIglobalThreadStream,1)
-{
-  return OZ_unify(OZ_getCArg(0), am.threadStreamTail);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIcurrentThread,1)
-{
-  return OZ_unify(OZ_getCArg(0),
-		  makeTaggedConst(am.currentThread));
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIsetStepMode,2)
-{
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  char   *onoff = toC(OZ_getCArg(1));
-  
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
- 
-  if (!strcmp(onoff, "on"))
-    thread->startStepMode();
-  else if (!strcmp(onoff, "off"))
-    thread->stopStepMode();
-  else warning("setStepMode: invalid second argument: must be 'on' or 'off'");
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIstopThread,1)
-{
-  OZ_Term chunk  = deref(OZ_getCArg(0));
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-  
-  thread->stop();
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIcontThread,1)
-{
-  OZ_Term chunk  = deref(OZ_getCArg(0));
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-  
-  thread->cont();
-  am.scheduleThread(thread);
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIqueryDebugState,2)
-{
-  OZ_Term chunk = deref(OZ_getCArg(0));
-  OZ_Term out   = OZ_getCArg(1);
-  
-  ConstTerm *rec = tagged2Const(chunk);
-  Thread *thread = (Thread*) rec;
-
-  return OZ_unify(out, OZ_mkTupleC("debugState",
-				   3,
-				   thread->isTraced()  ? OZ_atom("Traced")
-				                       : OZ_atom("notTraced"),
-				   thread->stepMode()  ? OZ_atom("stepON")
-				                       : OZ_atom("stepOFF"),
-				   thread->stopped()   ? OZ_atom("stopped")
-				                       : OZ_atom("running")
-				   ));
-			      
-}
-OZ_C_proc_end
-
-
-/* ------- Builtins to handle toplevel variables in the debugger ---------- */
-
-OZ_C_proc_begin(BItopVarInfo,2) // needs work --BL
-{
-  OZ_Term in  = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  
-  char *name = OZ_atomToC(in);
-  return OZ_unify(out, nil());
-}
-OZ_C_proc_end   
-
-OZ_C_proc_begin(BItopVars,2) // needs work --BL
-{
-  OZ_Term in = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  OZ_Term VarList = nil();
-
-  return OZ_unify(out, VarList);
-}
-OZ_C_proc_end   
-
-OZ_C_proc_begin(BIindex2Tagged,2)
-{
-  OZ_Term in  = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-
-  if (!OZ_isSmallInt(in)) {
-    OZ_warning("Invalid index for builtin `index2Tagged'");
-    return OZ_unify(out, nil());
-  }
-  if (OZ_intToC(in) > am.toplevelVarsCount) {
-    OZ_warning("Index too big for builtin `index2Tagged'");
-    return OZ_unify(out, nil());
-  }
-  return OZ_unify(out, am.toplevelVars[OZ_intToC(in)]);
-}
-OZ_C_proc_end   
-
-
-extern OZ_Term make_time(const struct tm*);  // defined in unix.cc
-
-OZ_C_proc_begin(BItime2localTime,2)
-{
-  OZ_Term in  = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  
-  if (!OZ_isInt(in)) {
-    OZ_warning("Invalid first argument for builtin `time2localTime'");
-    return OZ_unify(out, nil());
-  }
-  else {
-    time_t time = time_t(OZ_intToC(in));
-    return OZ_unify(out, make_time(localtime(&time)));
-  }
-}
-OZ_C_proc_end
-
-// ---------------------------------------------------------------------------
-
-
-OZ_C_proc_begin(BIshowBuiltins,0)
-{
-  builtinTab.print();
-  return(PROCEED);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BItraceBack, 0)
-{
-  am.currentThread->printTaskStack(NOCODE);
-  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7145,7 +6875,6 @@ BIspec allSpec2[] = {
   {"NewChunk",	      2,BInewChunk,	0},
   {"chunkArity",      2,BIchunkArity,	0},
   {"chunkWidth",      2,BIchunkWidth,	0},
-  {"recordWidth",     2,BIrecordWidth,  0},
 
   {"NewName",         1,BInewName,	0},
 
@@ -7179,8 +6908,6 @@ BIspec allSpec2[] = {
   {"deepReadCell",   2, BIdeepReadCell,		0},
   {"deepFeed",       2, BIdeepFeed,		0},
 
-  {"getsBound",      1, BIgetsBound,		0},
-  {"getsBoundB",     2, BIgetsBoundB,		0},
 
   {"connectLingRef", 1, BIconnectLingRef,	0},
   {"getLingRefFd",   1, BIgetLingRefFd,		0},
@@ -7189,28 +6916,6 @@ BIspec allSpec2[] = {
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
-  {"showBuiltins",0,BIshowBuiltins},
-
-  {"onToplevel",1,BIonToplevel},
-  {"addr",2,BIaddr},
-  {"suspensions",2,BIsuspensions},
-  {"globals",2,BIglobals},
-
-  // Debugging
-  {"globalThreadStream",1,BIglobalThreadStream},
-  {"currentThread",1,BIcurrentThread},
-  {"setStepMode",2,BIsetStepMode},
-  {"stopThread",1,BIstopThread},
-  {"contThread",1,BIcontThread},
-  {"queryDebugState",2,BIqueryDebugState},
-  {"Debug.breakpoint",0,BIbreakpoint},
-
-  {"topVarInfo",2,BItopVarInfo},
-  {"topVars",2,BItopVars},
-  {"index2Tagged",2,BIindex2Tagged},
-  {"time2localTime",2,BItime2localTime},
-
-  //
 
   {"Thread.is",2,BIthreadIs},
   {"Thread.id",2,BIthreadID},
@@ -7232,19 +6937,17 @@ BIspec allSpec2[] = {
   {"Thread.children",2,BIthreadChildren},
 #endif
 
-  {"printLong",1,BIprintLong},
+  // Browser support
+  {"getsBoundB", 2, BIgetsBoundB,		0},
+  {"onToplevel", 1, BIonToplevel},
+  {"addr",       2, BIaddr},
 
-  {"halt",0,BIhalt},
-  {"traceBack",0,BItraceBack},
-
-  {"taskstack",   2, BItaskStack},
-  {"location",    2, BIlocation},
-  {"getThreadByID",2,BIgetThreadByID},
-  {"spy",         1, BIspy},
-  {"nospy",       1, BInospy},
-  {"traceOn",     0, BItraceOn},
-  {"traceOff",    0, BItraceOff},
+  // Old debug stuff
+  {"Debug.breakpoint",  0, BIbreakpoint},
   {"Debug.displayCode", 2, BIdisplayCode},
+  {"dumpThreads",       0, BIdumpThreads},
+  {"listThreads",       1, BIlistThreads},
+
 
   // System functionality
   {"Print",                       1, BIprint,  (IFOR) printInline},
@@ -7286,9 +6989,6 @@ BIspec allSpec2[] = {
 
 
   {"getTermSize",4,BIgetTermSize},
-
-  {"dumpThreads",0,BIdumpThreads},
-  {"listThreads",1,BIlistThreads},
 
   {"foreignFDProps", 1, BIforeignFDProps},
 
