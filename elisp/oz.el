@@ -2465,11 +2465,9 @@ of the procedure Browse."
 
 (defun oz-mouse-goto-error (event)
   (interactive "e")
-  (let ((buf (if oz-lucid
-		 (event-buffer event)
-	       (window-buffer (posn-window (event-end event))))))
-    (or (eq buf (current-buffer))
-	(switch-to-buffer-other-window buf)))
+  (set-buffer (if oz-lucid
+		  (event-buffer event)
+		(window-buffer (posn-window (event-end event)))))
   (goto-char (if oz-lucid
 		 (event-closest-point event)
 	       (posn-point (event-end event))))
@@ -2494,12 +2492,9 @@ When in emulator buffer, visit place indicated in next callstack line."
     (save-excursion
       (cond ((eq old-buffer comp-buffer)
 	     (oz-goto-error-start)
-	     (setq error-data (oz-fetch-next-error-data))
-	     (switch-to-buffer-other-window old-buffer))
+	     (setq error-data (oz-fetch-next-error-data)))
 	    ((eq old-buffer emu-buffer)
-	     (setq error-data (oz-fetch-next-callstack-data))
-	     (if error-data
-		 (switch-to-buffer-other-window old-buffer)))
+	     (setq error-data (oz-fetch-next-callstack-data)))
 	    ((bufferp comp-buffer)
 	     (set-buffer comp-buffer)
 	     (cond ((and oz-next-error-marker
