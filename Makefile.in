@@ -34,14 +34,14 @@ VPATH=		@srcdir@
 PREFIX=		@prefix@
 
 BINDIR=		$(PREFIX)/bin
-LIBDIR=		$(PREFIX)/lib
-TOOLSDIR=	$(LIBDIR)/tools
-ELISPDIR=	$(LIBDIR)/elisp
-IMAGESDIR=	$(LIBDIR)/images
+SHAREDIR=	$(PREFIX)/share
+TOOLSDIR=	$(SHAREDIR)/tools
+ELISPDIR=	$(SHAREDIR)/elisp
+IMAGESDIR=	$(SHAREDIR)/images
 CACHEDIR= 	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
 CACHETOOLS= 	$(CACHEDIR)/tools
 CACHEBIN=	$(CACHEDIR)/bin
-LIBCACHE=	$(CACHEDIR)/lib
+SHARECACHE=	$(CACHEDIR)/share
 URL=		http\\://www.ps.uni-sb.de/ozhome
 
 ######################################################################
@@ -74,7 +74,7 @@ FILES=		LICENSE
 ALLFILES=	$(FILES:%=$(PREFIX)/%)
 
 COMMONFILES=	LICENSE \
-		bin include lib tools cache
+		bin include share tools cache
 
 DEMOFILES=	demo
 
@@ -147,19 +147,9 @@ pack-all: common $(PLATFORMS)
 
 home: mini-common wish-linux src linuxz
 
-src:
-	(cd $(SRCDIR)/Emulator; make veryclean; $(CVS) update)
-	(cd $(SRCDIR); $(TAR) vzcf dist/oz-emu.tgz Emulator)
-	(cd $(SRCDIR); $(CVS) update -l;
-	 $(TAR) vzcf dist/oz-misc.tgz \
-	  Imake.tmpl Imakefile ozmkmf include bin elisp CVS
-	(cd $(SRCDIR)/lib; make veryclean; $(CVS) update)
-	(cd $(SRCDIR)/TestFiles; $(CVS) update)
-	(cd $(SECDIR); $(TAR) vzcf dist/oz-lib.tgz lib TestFiles)
-
 mini-common: $(DISTDIR)
 	(cd $(PREFIX)/..; \
-	$(TAR) -zvcf - oz/bin oz/include oz/lib) > \
+	$(TAR) -zvcf - oz/bin oz/include oz/share) > \
 	   $(DISTDIR)/mini-`$(OZVERSION)`.tgz
 
 common: $(DISTDIR)
@@ -180,7 +170,7 @@ $(PLATFORMS): $(DISTDIR)
 oz-win::
 	rm -rf oz oz3 oz-`$(OZVERSION)`
 	( cd $(PREFIX)/..; \
-	  $(TAR) cf - oz/?*.exe oz/demo oz/include oz/lib \
+	  $(TAR) cf - oz/?*.exe oz/demo oz/include oz/share \
 		   oz/tools \
 		   oz/LICENSE \
 		   oz/bin/opi \
@@ -188,12 +178,12 @@ oz-win::
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/tcldoc \
          ) | $(TAR) xf -
-	rm -f oz/demo/rundemo oz/lib/ozbatch.ozm
-	$(INSTALL_DIR) $(WINCACHEDIR)/lib
+	rm -f oz/demo/rundemo oz/share/ozbatch.ozm
+	$(INSTALL_DIR) $(WINCACHEDIR)/share
 	$(INSTALL_DIR) $(WINCACHEDIR)/tools
 	$(INSTALL_DIR) $(WINCACHEDIR)/bin
-	mv oz/lib/images oz/lib/?*.ozf $(WINCACHEDIR)/lib
+	mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
 	mv oz/tools/images oz/tools/?*.ozf $(WINCACHEDIR)/tools
 	mv oz/bin/opi $(WINCACHEDIR)/bin
-	(cd oz/lib/wish; rm -rf tk tcl; mv tcl8.0 tcl; mv tk8.0 tk)
+	(cd oz/share/wish; rm -rf tk tcl; mv tcl8.0 tcl; mv tk8.0 tk)
 	mv oz oz3
