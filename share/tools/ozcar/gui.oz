@@ -87,6 +87,7 @@ local
 	 elsecase {IsSpace X}            then SpaceType
 	 elsecase {FS.value.is X}        then FSValueType
 	 elsecase {Foreign.pointer.is X} then ForeignPointerType
+	 elsecase {Promise.is X}         then PromiseType
 	 else                                 UnknownType
 	 end
       elsecase {IsKinded X} then
@@ -459,7 +460,7 @@ in
 	 Y#G = case V == unit then
 		  nil # nil
 	       else
-		  {Reverse V.'Y'} # {Reverse V.'G'}
+		  V.'Y' # V.'G'
 	       end
       in
 	 Gui,Enqueue(env {self.LocalEnvText resetTags($)})
