@@ -191,7 +191,6 @@ protected:
   CodeArea *nextBlock;
   ProgramCounter wPtr;    /* write pointer for the code block */
   ProgramCounter curInstr;/* start of current instruction */
-  time_t timeStamp;       /* feed time */
   Bool referenced;        /* for GC */
 public:
   CodeGCList *gclist;
@@ -204,18 +203,6 @@ public:
   static void init(void **instrtab);
 
 public:
-  static time_t findTimeStamp(ProgramCounter PC)
-  {
-
-    CodeArea *aux = allBlocks;
-    while (aux) {
-      if (aux->codeBlock<=PC && PC<aux->codeBlock+aux->size)
-        return aux->timeStamp;
-      aux = aux->nextBlock;
-    }
-    return (time_t) 0;
-  }
-
   Bool isReferenced(void) {
     return referenced;
   }

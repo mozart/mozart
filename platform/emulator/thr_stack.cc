@@ -92,7 +92,8 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
   if (PC == C_DEBUG_CONT_Ptr) {
     OzDebug *dbg = (OzDebug *) Y;
     Atom * dothis = (Atom *) (int) G;
-    return dbg->toRecord((dothis == DBG_EXIT_ATOM)?"exit":"entry",thread,frameId);
+    return dbg->toRecord((dothis == DBG_EXIT_ATOM)? AtomExit: AtomEntry,
+                         thread,frameId);
   }
 
   if (PC == C_CATCH_Ptr) {

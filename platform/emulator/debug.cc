@@ -30,10 +30,10 @@
 #include "codearea.hh"
 #include "am.hh"
 
-TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
+TaggedRef OzDebug::toRecord(OZ_Term label, Thread *thread, int frameId) {
   TaggedRef pairlist = oz_nil();
   if (data != makeTaggedNULL()) {
-    pairlist = oz_cons(OZ_pairA("data",data),pairlist);
+    pairlist = oz_cons(OZ_pair2(AtomData,data),pairlist);
   }
   if (arity >= 0) {
     TaggedRef arglist = oz_nil();
@@ -42,28 +42,25 @@ TaggedRef OzDebug::toRecord(const char *label, Thread *thread, int frameId) {
         arguments[i] = OZ_newVariable();
       arglist = oz_cons(arguments[i], arglist);
     }
-    pairlist = oz_cons(OZ_pairA("args",arglist),pairlist);
+    pairlist = oz_cons(OZ_pair2(AtomArgs,arglist),pairlist);
   }
   if (frameId == -1) {
-    pairlist = oz_cons(OZ_pairA("vars",getFrameVariables()),pairlist);
+    pairlist = oz_cons(OZ_pair2(AtomVars,getFrameVariables()),pairlist);
   } else {
-    pairlist = oz_cons(OZ_pairAI("frameID",frameId),pairlist);
+    pairlist = oz_cons(OZ_pair2(AtomFrameID,OZ_int(frameId)),pairlist);
   }
   int iline = smallIntValue(getNumberArg(PC+2));
   pairlist =
-    oz_cons(OZ_pairAI("time",CodeArea::findTimeStamp(PC)),
-         oz_cons(OZ_pairA("thr",oz_thread(thread)),
-              oz_cons(OZ_pairA("file",getTaggedArg(PC+1)),
-                   oz_cons(OZ_pairAI("line",iline < 0? -iline: iline),
-                        oz_cons(OZ_pairA("column",getTaggedArg(PC+3)),
-                             oz_cons(OZ_pairA("origin",
-                                           OZ_atom("debugFrame")),
-                                  oz_cons(OZ_pairAI("PC",(int)PC),
-                                       oz_cons(OZ_pairA("kind",
-                                                     getTaggedArg(PC+4)),
-                                            pairlist))))))));
+    oz_cons(OZ_pair2(AtomThr,oz_thread(thread)),
+        oz_cons(OZ_pair2(AtomFile,getTaggedArg(PC+1)),
+            oz_cons(OZ_pair2(AtomLine,OZ_int(iline < 0? -iline: iline)),
+                oz_cons(OZ_pair2(AtomColumn,getTaggedArg(PC+3)),
+                    oz_cons(OZ_pair2(AtomOrigin,AtomDebugFrame),
+                        oz_cons(OZ_pair2(AtomPC,OZ_int((int) PC)),
+                            oz_cons(OZ_pair2(AtomKind,getTaggedArg(PC+4)),
+                                pairlist)))))));
 
-  return OZ_recordInit(OZ_atom((OZ_CONST char*)label), pairlist);
+  return OZ_recordInit(label,pairlist);
 }
 
 TaggedRef OzDebug::getFrameVariables() {
@@ -103,13 +100,13 @@ void debugStreamException(Thread *thread, TaggedRef exc) {
 
 void debugStreamEntry(OzDebug *dbg, int frameId) {
   oz_currentThread()->setStop();
-  am.debugStreamMessage(dbg->toRecord("entry",oz_currentThread(),frameId));
+  am.debugStreamMessage(dbg->toRecord(AtomEntry,oz_currentThread(),frameId));
 }
 
 void debugStreamExit(OzDebug *dbg, int frameId) {
   oz_currentThread()->setStep();
   oz_currentThread()->setStop();
-  am.debugStreamMessage(dbg->toRecord("exit",oz_currentThread(),frameId));
+  am.debugStreamMessage(dbg->toRecord(AtomExit,oz_currentThread(),frameId));
 }
 
 void debugStreamUpdate(Thread *thread) {
