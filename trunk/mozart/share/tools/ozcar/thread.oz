@@ -392,7 +392,7 @@ in
 
       meth detach(T I)
 	 {Detach T}
-	 Gui,doStatus('Thread #' # I # ' is not traced anymore')
+	 Gui,doStatus('Thread #' # I # ' has been detached')
 	 ThreadManager,remove(T I kill)
       end
 

@@ -275,6 +275,8 @@ local
    class SettingsDialog from TkTools.dialog
       prop
 	 final
+      attr
+	 ReturnSync : _
       meth init(master:Master)
 	 TkVerbose            = {New Tk.variable tkInit({Cget verbose})}
 	 TkStepDotBuiltin     = {New Tk.variable tkInit({Cget stepDotBuiltin})}
@@ -284,7 +286,7 @@ local
 				  tkInit({Cget envSystemVariables})}
 
 	 proc {Apply}
-	    {FocusToTop}
+	    {DoFocusToTop}
 
 	    local
 	       Verbose = {TkVerbose tkReturnInt($)} > 0
@@ -312,22 +314,35 @@ local
 	    {self tkClose}
 	 end
 
-	 proc {CheckFocusApplyAndExit}
+	 proc {CheckApplyAndExit}
 	    Top = {Tk.getTclName self.toplevel}
 	    Cur = {Tk.return focus(displayof:self.toplevel)}
 	 in
 	    case Cur == Top then
 	       {ApplyAndExit}
-	    else skip end
+	    else
+	       @ReturnSync = unit
+	    end
 	 end
 
-	 proc {FocusToTop}
-	    {Thread.preempt {Thread.this}}
+	 proc {DoFocusToTop}
 	    {Tk.send focus(self.toplevel)}
 	 end
 
+	 proc {FocusToTop}
+	    {Wait @ReturnSync}
+	    {DoFocusToTop}
+	 end
+
+	 proc {FocusFromTop}
+	    ReturnSync <- _
+	 end
+
 	 TkTools.dialog,tkInit(master:  Master
-			       root:    pointer
+			       root:
+				  %({Tk.returnInt winfo(pointerx '.')}-169 #
+				  % {Tk.returnInt winfo(pointery '.')}-127)
+			       master # 143 # 77
 			       title:   'Preferences'
 			       buttons: ['Ok'    # ApplyAndExit
 					 'Apply' # Apply
@@ -346,23 +361,23 @@ local
 	 TSwiLabel   = {New Tk.label tkInit(parent: DummyFrame2
 					    text:   'Thread Switch:')}
 	 TSwiEntry   = {New TkTools.numberentry
-			tkInit(parent:      DummyFrame2
-			       focusparent: self.toplevel
-			       min:         0
-			       max:         2000
-			       val:         {Cget timeoutToSwitch}
-			       width:       5)}
+			tkInit(parent:       DummyFrame2
+			       returnaction: FocusToTop
+			       min:          0
+			       max:          2000
+			       val:          {Cget timeoutToSwitch}
+			       width:        5)}
 	 TSwiLabel2  = {New Tk.label tkInit(parent: DummyFrame2
 					    text:   'ms')}
 	 TEnvLabel   = {New Tk.label tkInit(parent: DummyFrame2
 					    text:   'Env Update:')}
 	 TEnvEntry   = {New TkTools.numberentry
-			tkInit(parent:      DummyFrame2
-			       focusparent: self.toplevel
-			       min:         0
-			       max:         5000
-			       val:         {Cget timeoutToUpdateEnv}
-			       width:       5)}
+			tkInit(parent:       DummyFrame2
+			       returnaction: FocusToTop
+			       min:          0
+			       max:          5000
+			       val:          {Cget timeoutToUpdateEnv}
+			       width:        5)}
 	 TEnvLabel2  = {New Tk.label tkInit(parent: DummyFrame2
 					    text:   'ms')}
 %---------------
@@ -374,21 +389,21 @@ local
 	 WidthLabel = {New Tk.label tkInit(parent: DummyFrame
 					   text:   'Width:')}
 	 WidthEntry = {New TkTools.numberentry
-		       tkInit(parent:      DummyFrame
-			      focusparent: self.toplevel
-			      min:         1
-			      max:         20
-			      val:         {Cget printWidth}
-			      width:       3)}
+		       tkInit(parent:       DummyFrame
+			      returnaction: FocusToTop
+			      min:          1
+			      max:          20
+			      val:          {Cget printWidth}
+			      width:        3)}
 	 DepthLabel = {New Tk.label tkInit(parent: DummyFrame
 					   text:   'Depth:')}
 	 DepthEntry = {New TkTools.numberentry
-		       tkInit(parent:      DummyFrame
-			      focusparent: self.toplevel
-			      min:         0
-			      max:         5
-			      val:         {Cget printDepth}
-			      width:       3)}
+		       tkInit(parent:       DummyFrame
+			      returnaction: FocusToTop
+			      min:          0
+			      max:          5
+			      val:          {Cget printDepth}
+			      width:        3)}
 %---------------
 	 StepFrame = {New TkTools.textframe
 			tkInit(parent:  self
@@ -419,14 +434,15 @@ local
 
       in
 
-	 %% how to close the dialog
-	 {self.toplevel tkBind(event:'<Return>' action:CheckFocusApplyAndExit)}
-	 {self.toplevel tkBind(event:'<Escape>' action:self#tkClose)}
+	 {self.toplevel tkBind(event:'<Tab>'       action:FocusFromTop)}
+	 {self.toplevel tkBind(event:'<Shift-Tab>' action:FocusFromTop)}
+	 {self.toplevel tkBind(event:'<Return>'    action:CheckApplyAndExit)}
+	 {self.toplevel tkBind(event:'<Escape>'    action:self#tkClose)}
 
-	 {StepDot       tkBind(event:'<Return>' action:FocusToTop)}
-	 {StepNewName   tkBind(event:'<Return>' action:FocusToTop)}
-	 {SystemVButton tkBind(event:'<Return>' action:FocusToTop)}
-	 {DDButton      tkBind(event:'<Return>' action:FocusToTop)}
+	 {StepDot       tkBind(event:'<Return>'    action:FocusToTop)}
+	 {StepNewName   tkBind(event:'<Return>'    action:FocusToTop)}
+	 {SystemVButton tkBind(event:'<Return>'    action:FocusToTop)}
+	 {DDButton      tkBind(event:'<Return>'    action:FocusToTop)}
 
 	 {Tk.batch [grid(Title row:0 column:1 columnspan:2 sticky:we pady:2)
 		    grid(TimeoutFrame    row:1 column:1 columnspan:2
