@@ -25,6 +25,14 @@ import
    Pickle(load)
    Util at 'Util.ozf'
 define
+   %% To create GLADE Support Infos
+   %% 1. Build MozartGTK and Alice GTK (SEAM)
+   %% 2. cp <BUILDGTKSEAM>/prepare/gtkraw.c <BUILDMOZARTGTK>
+   %% 3. ozengine Generator.ozf OzWrapper.ozf
+   %% 4. make AliceClassInfo.ozf
+   %% 5. ozengine AliceClassInfo.ozf
+   %% 6. Use the three files (Gdk|Gtk|GtkCanvas)Classes.aml
+
    class TextFile from Open.file Open.text end
 
    {List.forAll
