@@ -1,0 +1,21 @@
+AC_INIT(FlexLexer.h)
+OZ_INIT
+TOPDIRA=`(cd $TOPDIR; pwd)`
+AC_SUBST(TOPDIRA)
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AC_LANG_CPLUSPLUS
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_CHECK_PROGS(RM, rm)
+OZ_PATH_PROG(DYNLD, ozdynld)
+OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
+AC_SUBST(platform)
+AC_CONFIG_SUBDIRS(ozflex)
+AC_OUTPUT(Makefile ozbison/Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))
