@@ -82,27 +82,84 @@
 
 <Book proglang=oz>
   <Front>
+
     <Meta name="html.split" value="chapter.intro">
+
     <Meta name="html.split" value="chapter.constraints">
+    <Meta name="html.split" value="section.constraints.constraints">
+    <Meta name="html.split" value="section.constraints.propagation">
+    <Meta name="html.split" value="section.constraints.spaces">
+    <Meta name="html.split" value="section.constraints.intdom">
+    <Meta name="html.split" value="section.constraints.incomplete">
+    <Meta name="html.split" value="section.constraints.dast">
+    <Meta name="html.split" value="section.constraints.example">
+    <Meta name="html.split" value="section.constraints.distribution">
+    <Meta name="html.split" value="section.constraints.order">
+    <Meta name="html.split" value="section.constraints.models">
+
     <Meta name="html.split" value="chapter.problem">
+    <Meta name="html.split" value="section.problem.script">
+    <Meta name="html.split" value="section.problem.money">
+    <Meta name="html.split" value="section.problem.explorer">
+    <Meta name="html.split" value="section.problem.primitives">
+    <Meta name="html.split" value="section.problem.watching">
+    <Meta name="html.split" value="section.problem.safe">
     <Meta name="html.split" value="problem.ex.b">
-    <Meta name="html.split" value="chapter.elemination">
+
+    <Meta name="html.split" value="chapter.elimination">
+    <Meta name="html.split" value="section.elimination.grocery">
+    <Meta name="html.split" value="section.elimination.family">
+    <Meta name="html.split" value="section.elimination.zebra">
+
     <Meta name="html.split" value="chapter.scripts">
+    <Meta name="html.split" value="section.scripts.queens">
+    <Meta name="html.split" value="section.scripts.change">
+
     <Meta name="html.split" value="chapter.minimizing">
+    <Meta name="html.split" value="section.minimizing.mapcolor">
+    <Meta name="html.split" value="section.minimizing.conference">
+
     <Meta name="html.split" value="chapter.propagators">
+    <Meta name="html.split" value="section.propagators.fractions">
+    <Meta name="html.split" value="section.propagators.pythagoras">
+    <Meta name="html.split" value="section.propagators.squares">
+    <Meta name="html.split" value="section.propagators.exercises">
+
     <Meta name="html.split" value="chapter.reified">
+    <Meta name="html.split" value="section.reified.started">
+    <Meta name="html.split" value="section.reified.photo">
+    <Meta name="html.split" value="section.reified.srat">
+    <Meta name="html.split" value="section.reified.bin">
     <Meta name="html.split" value="reified.ex.a">
     <Meta name="html.split" value="reified.ex.b">
     <Meta name="html.split" value="reified.ex.c">
     <Meta name="html.split" value="reified.ex.d">
     <Meta name="html.split" value="reified.ex.e">
+
     <Meta name="html.split" value="chapter.user-defined">
-    <Meta name="html.split" value="chapter.branchandbound">
+    <Meta name="html.split" value="section.user-defined.naive">
+    <Meta name="html.split" value="section.user-defined.split">
+
+    <Meta name="html.split" value="chapter.bab">
+    <Meta name="html.split" value="section.bab.align">
+    <Meta name="html.split" value="section.bab.warehouses">
+
     <Meta name="html.split" value="chapter.scheduling">
+    <Meta name="html.split" value="section.scheduling.house">
+    <Meta name="html.split" value="section.scheduling.bridge">
+    <Meta name="html.split" value="section.scheduling.edgefinding">
+    <Meta name="html.split" value="section.scheduling.strongser">
+    <Meta name="html.split" value="section.scheduling.hard">
+
     <Meta name="html.split" value="chapter.packing">
+
     <Meta name="html.split" value="appendix.traps">
+
     <Meta name="html.split" value="appendix.golden-rules">
+
     <Meta name="html.split" value="appendix.data">
+
+
     <Meta name="html.split.toc"     value="">
     <Meta name="html.split.bib"     value="">
     <Meta name="html.split.answers" value="">
@@ -110,6 +167,7 @@
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
+
     <Meta name=latex.package value="pstricks">
     <Meta name=latex.package value="rotate">
     <Meta name=latex.package value="pifont">

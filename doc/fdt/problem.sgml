@@ -55,7 +55,7 @@ We then obtain an executable script by
 implementing the model and distribution strategy
 with the predefined abstractions available in Oz.
 
-<section>
+<section id="section.problem.script">
   <title/Format of Scripts/<p>
 
 In Oz, a script takes the form of a
@@ -98,7 +98,7 @@ is returned as the single element of a list;
 otherwise, the empty list is returned.
 </section>
 
-<section id="SecConMoney">
+<section id="section.problem.money">
   <title/Example: Send More Money/<p>
 
 We will now write a script for the Send
@@ -483,7 +483,8 @@ end
 
 </section>
 
-<section><title/New Primitives/<p>
+<section id="section.problem.primitives">
+  <title/New Primitives/<p>
 
 This section gives you an idea of the new Oz
 primitives needed to express search engines
@@ -551,7 +552,7 @@ the module <<FD>>.  We have already seen
 <<FD.distinct>>  (creates a propagator) and
 <<FD.distribute>>  (creates a distributor) in the
 script for the Send More Money Puzzle (see
-<Ptr to="SecConMoney">).
+<Ptr to="section.problem.money">).
 
 <para><title/infix notations/
 For some of the procedures of the module <<FD>>,
@@ -591,7 +592,8 @@ end
 </figure>
 </section>
 
-<section><title/Watching Propagators/
+<section id="section.problem.watching">
+  <title/Watching Propagators/
 
 <p>
 It is illuminating to watch the effect of
@@ -616,7 +618,8 @@ propagator that performs interval rather than
 domain propagation.
 </section>
 
-<section><title/Example: Safe/<p>
+<section id="section.problem.safe">
+  <title/Example: Safe/<p>
 
 <subsection class=unnumbered>
   <title/Problem Specification/
@@ -662,7 +665,10 @@ end
 </chunk>
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
 <Ptr to="ProgSafe"> shows a script for the Safe
 Puzzle.  The statement
 <<<

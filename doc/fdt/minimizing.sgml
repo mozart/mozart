@@ -44,7 +44,8 @@ two-dimensional distribution strategy suffices.
 For each of the two examples we will develop a
 parameterized script.
 
-<section><title/Example: Coloring a Map/
+<section id="section.minimizing.mapcolor">
+  <title/Example: Coloring a Map/
 
 <subsection class=unnumbered>
   <title/Problem Specification/
@@ -168,7 +169,8 @@ since the particular color given to a country does
 not matter.
 </section>
 
-<section id="SecFDConference"><title/Example: Conference/
+<section id="section.minimizing.conference">
+  <title/Example: Conference/
 
 <p>
 This example will employ the constraint provided

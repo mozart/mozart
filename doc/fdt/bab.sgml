@@ -29,7 +29,7 @@
   -
   -->
 
-<chapter id=chapter.branchandbound>
+<chapter id=chapter.bab>
 <title/Branch and Bound/<p>
 
 In this chapter we focus on computing an optimal solution according
@@ -39,10 +39,10 @@ have used a rather ad-hoc strategy there. This strategy lacks generality and
 does not provide either for a proof of optimality.
 <p>
 
-In this section we introduce a general schema to compute an optimal
+<para><title/branch and bound/
+In this chapter we introduce a general schema to compute an optimal
 solution according to an arbitrary cost function and show how it is
-available in Oz. This schema is called
-<para><title/branch and bound/<def/branch and bound/ and is available
+available in Oz. This schema is called <def/branch and bound/ and is available
 by  procedures like <<ExploreBest>> (see <Ptr.extern to="ozdoc:tools"
 key="chapter.explorer"> and <Ptr.extern to="ozdoc:system"
 key="chapter.search"> for more
@@ -61,7 +61,7 @@ the ordering. The first argument of <<Order>> is the previous solution,
 and the second argument is an alternative solution we are searching for.
 
 
-<section id="sec.BAB.align">
+<section id="section.bab.align">
 <title/Example: Aligning for a Photo, Revisited/
 
 <p>
@@ -131,7 +131,7 @@ the second solution satisfies two preferences. Following this approach we
 finally arrive at the optimal solution with six satisfied preferences.
 </section>
 
-<section id="sec.BAB.warehouses">
+<section id="section.bab.warehouses">
 <title/Example: Locating Warehouses/<p>
 
 This example features branch and bound to compute an optimal solution, a

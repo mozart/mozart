@@ -29,7 +29,7 @@
   -
   -->
 
-<chapter id=chapter.elemination>
+<chapter id=chapter.elimination>
 <title/Elimination of Symmetries and Defined Constraints/
 
 <p>
@@ -42,7 +42,8 @@ introduces defined constraints, a means for
 writing modular and concise scripts.
 
 
-<section id="SecFDGrocery"><title/Example: Grocery/
+<section id="section.elimination.grocery">
+  <title/Example: Grocery/
 
 <p>
 This example illustrates that elimination of
@@ -161,7 +162,8 @@ of the problem is now found after exploring 44
 nodes.
 </section>
 
-<section id="SecFDFamily"><title/Example: Family/
+<section id="section.elimination.family">
+  <title/Example: Family/
 <p>
 
 <para class=apropos><title/defined constraints/
@@ -341,7 +343,8 @@ creates a propagator for the constraint saying
 that the sum of the ages of all kids equals <<60>>.
 </section>
 
-<section><title/Example: Zebra Puzzle/
+<section id="section.elimination.zebra">
+  <title/Example: Zebra Puzzle/
 
 <p>
 This example shows a clever problem

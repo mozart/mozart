@@ -32,7 +32,8 @@
 In this section we show how the user can program his or her own
 distributors.
 
-<section><title/A Naive Distribution Strategy/
+<section id="section.user-defined.naive">
+  <title/A Naive Distribution Strategy/
 
 <p>
 The distributor we program in this section implements a rather naive
@@ -112,7 +113,8 @@ value. The distribution is done if no undetermined variables are left.
 
 </section>
 
-<section><title/A Domain-Splitting Distributor/
+<section  id="section.user-defined.split">
+  <title/A Domain-Splitting Distributor/
 
 <p>
 In this section we program a distributor for the domain-splitting

@@ -83,7 +83,7 @@ operators <<=:>>, <<\=:>> <<<:>>, <<>:>>, <<=<:>>, and
 Incidentally, interval and domain propagators for the
 modulo constraint can be created with the procedures
 <<{FD.modI X Y Z}>> and <<{FD.modD X Y Z}>>,
-respectively (see <ptr to=SecFDIntDomProp>).
+respectively (see <ptr to="section.constraints.intdom">).
 
 <p>
 There is an easy way to check whether a statement
@@ -184,7 +184,8 @@ of <<A>>, say, as if they were independent
 variables.  On the other hand, the propagator
 created by <<{FD.times A A $}>>  exploits this
 coreference to provide better propagation.  The
-Pythagoras Puzzle (see <ptr to=SecFDPythagoras>) is a problem, where
+Pythagoras Puzzle (see <ptr to="section.propagators.pythagoras">) is a
+problem, where
 exploiting coreferences is essential).
 </section>
 
@@ -218,6 +219,6 @@ The trick exploits that propagators can compute
 internally with integers larger than <<FD.sup>>,
 and that the compiler does not eliminate the
 auxiliary variable.  The Grocery Puzzle in
-<ptr to=SecFDGrocery> uses this trick.
+<ptr to="section.elimination.grocery"> uses this trick.
 </section>
 </appendix>
