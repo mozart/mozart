@@ -327,8 +327,9 @@ public:
   int lookup(SRecord *rec, TaggedRef feature)
   {
     if (key!=rec->getSRecordArity()) {
-      key   = rec->getSRecordArity();
-      value = rec->getIndex(feature); // is ok even if index==-1 !
+      value = rec->getIndex(feature);
+      if (value!=-1)
+	key   = rec->getSRecordArity();
     }
     return value;
   }
@@ -339,7 +340,7 @@ public:
     if (ToInt32(cla) != key) {
       Bool defaultsUsed;
       Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
-      if (!defaultsUsed) {
+      if (!defaultsUsed && ret) {
 	key   = ToInt32(cla);
 	value = ToInt32(ret);
       }
