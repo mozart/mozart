@@ -32,6 +32,7 @@ import
    Narrator('class')
    ErrorListener('class')
    SGML(namePI parse)
+   XML(namePI parse) at 'XMLOzdoc.ozf'
    OzDocToHTML(translate)
    OS(getEnv putEnv)
    URL
@@ -44,6 +45,7 @@ import
 prepare
    Spec = record('in'(single char: &i type: string optional: false)
 		 'parser'(single type: string default: unit)
+		 'xml'(alias:'parser'#xml)
 		 'type'(single char: &t type: string optional: false
 			validate: alt(when(chunk false) when(true true)))
 		 'html'(alias: 'type'#"html-stylesheets")
@@ -263,6 +265,7 @@ define
 	 {Reporter startPhase('parsing input file')}
 	 SGML.namePI = {NewName}
 	 SGMLParser = case Args.'parser' of unit then SGML.parse
+		      [] xml then XML.namePI=SGML.namePI XML.parse
 		      elseof ParserURL then Parser in
 			 Parser = try
 				     case {Module.link [ParserURL]} of [M] then
