@@ -275,6 +275,11 @@ class VariableExcavator;
 // network.
 //
 
+#if defined(DEBUG_CHECK)
+class MsgTermSnapshot;
+class MsgTermSnapshotImpl;
+#endif
+
 //
 class DPMarshaler : public GenTraverser {
   friend class VariableExcavator;
@@ -291,6 +296,7 @@ private:
   Bool doToplevel;
 #if defined(DEBUG_CHECK)
   OZ_Term mValue;
+  MsgTermSnapshotImpl *mts;
 #endif
 
   //
@@ -335,6 +341,11 @@ public:
     mValue = t;
     GenTraverser::traverse(t);
   }
+  void prepareTraversing(Opaque *o, MsgTermSnapshot *mtsIn) {
+    mts = (MsgTermSnapshotImpl *) mtsIn;
+    GenTraverser::prepareTraversing(o);
+  }
+  virtual void appTCheck(OZ_Term term);
 #endif
 
   //
@@ -542,6 +553,11 @@ public:
   void gcStart();
   void gc();
   void gcFinish();
+
+  //
+#if defined(DEBUG_CHECK)
+  void checkVar(OZ_Term t);
+#endif
 };
 
 //
@@ -628,7 +644,7 @@ DPMarshaler* dpMarshalTerm(ByteBuffer *bs, DPMarshaler *dpm,
   Assert(dpm->isFinished());
   Assert(mts);
   //
-  dpm->prepareTraversing((Opaque *) bs);
+  dpm->prepareTraversing((Opaque *) bs DebugArg(mts));
   //
   dpMarshalerStartBatch(bs, dpm, mts);
   //

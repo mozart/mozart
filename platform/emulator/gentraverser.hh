@@ -168,7 +168,7 @@ protected:
 
 public:
   NodeProcessorStack() : Stack(GT_STACKSIZE, Stack_WithMalloc) {}
-  ~NodeProcessorStack() {}
+  DebugCode(virtual) ~NodeProcessorStack() {}
   //
   void mkEmpty(void) {
     DebugCode(rbuf.init());
@@ -182,10 +182,16 @@ public:
   }
 
   //
+#if defined(DEBUG_CHECK)
+  virtual void appTCheck(OZ_Term term) {}
+#endif
+
+  //
   // we don't use 'push' from Stack because we care about
   // space ourselves;
   void put(OZ_Term term) {
     Assert(!oz_isMark(term) && !oz_isVar(term));
+    DebugCode(appTCheck(term));
     checkConsistency();
     *tos++ = ToPointer(term);
   }

@@ -802,6 +802,7 @@ void Builder::gCollect()
     case BT_chunkMemo:
       {
 	GetBTTaskPtr1(frame, GName*, gname);
+	overwriteGName(gname, fillNode);
 	gCollectGName(gname);
 	//
 	NextBTFrame(frame);
@@ -845,6 +846,7 @@ void Builder::gCollect()
 	GetBTTaskPtr1(frame, ObjectClass*, oc);
 	ObjectClass *noc = (ObjectClass *) oc->gCollectConstTerm();
 	ReplaceBTTask1stPtrOnly(frame, noc);
+	// yet unset features are already initialized to zero;
 	//
 	NextBTFrame(frame);
 	break;			// case;
@@ -857,6 +859,7 @@ void Builder::gCollect()
       {
 	NextBTFrame(frame);
 	GetBTTaskPtr1(frame, GName*, gname);
+	overwriteGName(gname, fillNode);
 	gCollectGName(gname);
 	//
 	NextBT3Frames(frame);
@@ -872,6 +875,7 @@ void Builder::gCollect()
 	//
 	NextBTFrame(frame);
 	GetBTTaskPtr1(frame, GName*, gname);
+	overwriteGName(gname, fillNode);
 	gCollectGName(gname);
 	//
 	NextBT3Frames(frame);
@@ -884,8 +888,13 @@ void Builder::gCollect()
     case BT_closureElem_iterate:
       {
 	GetBTTaskPtr1(frame, Abstraction*, ap);
+	GetBTTaskArg2(frame, int, ind);
 	Abstraction *nap = (Abstraction *) ap->gCollectConstTerm();
 	ReplaceBTTask1stPtrOnly(frame, nap);
+	// Patch the 'TO'-space abstraction (there can be several
+	// G-registers (and, thus, their patches), but the abstraction
+	// itself is copied exactly once!);
+	nap->initG(ind, fillNode);
 	//
 	NextBTFrame(frame);
 	break;			// case;
