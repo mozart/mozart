@@ -80,7 +80,7 @@ WPSRC = $(WPSRC1:%=wp/%) WP.oz
 COMPILERSRC1 = \
 	InsertAll.oz CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
 	FormatStrings.oz Builtins.oz CoreLanguage.oz Annotate.oz \
-	StaticAnalysis.oz POTypes.oz RegSet.oz CodeGen.oz CodeStore.oz \
+	StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz Interface.oz \
 	GenericInterface.oz QuietInterface.oz
@@ -229,9 +229,8 @@ FunBuiltins.ozc: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
 FunSA.ozc: SP-new.env CP-new.env compiler/Misc-new.env \
 	compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
 
-FunCode.ozc: SP-new.env compiler/Misc-new.env compiler/RegSet.oz \
-	compiler/CodeStore.oz compiler/CodeEmitter.oz compiler/CodeGen.oz \
-	$(STANDARD)
+FunCode.ozc: SP-new.env compiler/Misc-new.env compiler/CodeStore.oz \
+	compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
 
 FunCore.ozc: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
 	compiler/CoreLanguage.oz $(STANDARD)
