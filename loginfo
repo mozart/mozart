@@ -6,5 +6,6 @@ Oz/handbook	mail -s "I have changed %s" scheidhr
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz/papers	mail -s "I have changed %s" scheidhr
 Oz/graphic/oz	mail -s "I have changed %s" wuertz,zenner
+GNU	mail -s "I have changed `echo %s| awk \{ print \$1 \}`" mehl
 Hydra	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s" -S
 Oz	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed  %s" -S
