@@ -152,6 +152,10 @@
 			     out => ['+int','+string','+int'],
 			     BI  => unix_accept_nonblocking},
 
+     'acceptNonblocking_noDnsLookup'	=> { in  => ['+int'],
+			     out => ['+int','+string','+int'],
+			     BI  => unix_accept_nonblocking_noDnsLookup},
+
      'shutDown'	=> { in  => ['+int','+int'],
 		     out => [],
 		     BI  => unix_shutDown},
