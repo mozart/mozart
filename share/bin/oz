@@ -27,22 +27,21 @@ fi
 #echo $OZPLATFORM
 export OZPLATFORM
 
-setOZC() {
+# set OZCOMPILER
 if [ ${OZCOMPILER-xx} = xx ]; then
 	OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin
-else
-	echo "Using Oz Compiler: $OZCOMPILER"
+#else
+#	echo "Using Oz Compiler: $OZCOMPILER"
 fi
-}
 
 
-setOZE() {
+# set OZEMULATOR
 if [ ${OZEMULATOR-xx} = xx ]; then
 	OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
-else
-	echo "Using Oz Emulator: $OZEMULATOR"
+#else
+#	echo "Using Oz Emulator: $OZEMULATOR"
 fi
-}
+
 
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
@@ -129,7 +128,6 @@ case "$cmd" in
    ;;
 
    oz.compiler)
-	setOZC "$@"
         if [ X$1 = X"-emacs" ]; then
 	  shift
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
@@ -141,7 +139,6 @@ case "$cmd" in
    ;;
 
    oz.emulator)
-	setOZE "$@"
 	if [ X$1 = X"-emacs" ]; then
 		shift
 		exec $OZEMULATOR -E "$@"
@@ -153,17 +150,14 @@ case "$cmd" in
    ;;
 
    ozsa)  # standalone system
-	setOZE "$@"
         exec $OZEMULATOR -E "$@"
    ;;
 
    oz-)
-	setOZC "$@"
 	exec $OZILE $OZCOMPILER "$@"
    ;;
 
    ozc)
-	setOZC "$@"
 	set -e
         for file in $@; do
             # +p /dev/null --> do not load ~/.ozrc
@@ -173,7 +167,6 @@ case "$cmd" in
    ;;
 
    ozsac)
-	setOZC "$@"
         if [ $# -ne 2 ]; then
 	   echo "Usage: $0 infile outfile"
 	   exit 1
