@@ -872,34 +872,13 @@ Promise *Promise::gcPromise()
  *  If threads is dead, returns (Thread *) NULL;
  */
 
-// mm2: why do threads need another gcmarking scheme????
-inline
-Bool Thread::gcIsMarked() {
-  return IsMarkedPointer(item.threadBody);
-}
-
-inline
-void Thread::gcMark(Thread * fwd) {
-  Assert(!gcIsMarked());
-  if (!isInGc)
-    cpTrail.save((int32 *) &item.threadBody);
-  item.threadBody = (RunnableThreadBody *) MarkPointer(fwd);
-}
-
-inline
-Thread * Thread::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return (Thread *) UnMarkPointer(item.threadBody);
-}
-
-
 inline
 Thread *Thread::gcThreadInline() {
   if (!this)
     return (Thread *) NULL;
 
   if (gcIsMarked())
-    return gcGetFwd();
+    return (Thread *) gcGetFwd();
 
   if (isDeadThread())
     return (Thread *) NULL;
@@ -927,7 +906,7 @@ Thread *Thread::gcThreadInline() {
 
   gcStack.push(newThread, PTR_THREAD);
 
-  gcMark(newThread);
+  storeFwdField(this, newThread);
 
   return newThread;
 }
@@ -1315,12 +1294,13 @@ Thread *Thread::gcDeadThread() {
 
   Assert(inToSpace(am.rootBoardGC()));
   newThread->setBoard(am.rootBoardGC());
-  //  newThread->state.flags=0;
-  Assert(newThread->item.threadBody==NULL);
+  // newThread->state.flags=T_dead;
+  // newThread->item.threadBody=NULL;
+  // Assert(newThread->item.threadBody==NULL);
 
-  storeFwd ((int32 *)&item.threadBody, newThread);
-  setSelf(getSelf()->gcObject());
-  getAbstr()->gcPrTabEntry();
+  storeFwdField(this, newThread);
+  setSelf(0);
+  setAbstr(0);
 
   return (newThread);
 }

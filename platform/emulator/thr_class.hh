@@ -168,9 +168,6 @@ public:
   USEHEAPMEMORY;
   OZPRINTLONG;
 
-  Bool gcIsMarked();
-  void gcMark(Thread *);
-  Thread * gcGetFwd();
   Thread *gcThread();
   Thread *gcThreadInline();
   Thread *gcDeadThread();
