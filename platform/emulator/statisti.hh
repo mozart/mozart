@@ -17,7 +17,7 @@
 #endif
 
 #ifdef AM_PROFILE
-#   define IncfProfCounter(C,N) am.stat.C += N
+#   define IncfProfCounter(C,N) ozstat.C += N
 #else
 #   define IncfProfCounter(C,N)
 #endif
@@ -77,5 +77,7 @@ public:
   void incSolveSolved(void)      { solveSolved.incf(); }
   void incSolveFailed(void)      { solveFailed.incf(); }
 };
+
+extern Statistics ozstat;
 
 #endif

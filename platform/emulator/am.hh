@@ -77,51 +77,6 @@ enum InstType {
   INST_REJECTED
 };
 
-// this class contains the configurable parameters
-class ConfigData {
-public:
-  int printDepth;
-
-  int showForeignLoad;	// show message on load
-  int showFastLoad;	// show message on fast load
-  int showIdleMessage;	// show message on idle
-  int showSuspension;   // show message when a suspension is created
-
-  int stopOnToplevelFailure;  // enter the debugger on TOPLEVEL FAILURE
-
-  int gcFlag;                 // request GC to run
-  int gcVerbosity;            // GC verbosity level
-  unsigned int heapMaxSize;
-  unsigned int heapMargin;
-  unsigned int heapIncrement;
-  unsigned int heapIdleMargin;
-  
-  int systemPriority;
-  int defaultPriority;
-  int timeSlice;
-
-  int taskStackSize;
-
-  int errorVerbosity;
-
-  int dumpCore;
-
-  int cellHack;		/* enable/disable dot access on cells */
-
-  int runningUnderEmacs;
-
-  char *ozPath;
-  char *linkPath;
-
-  /* command line arguments visible from Oz */
-  char **argV;
-  int argC;
-  
-public:
-  ConfigData() {};
-  void init();
-};
-
 // this class contains the central global data
 class AM {
 friend void engine();
@@ -149,9 +104,6 @@ public:
   jmp_buf engineEnvironment;
 
   Board **ioNodes;		// node that must be waked up on io
-
-  Statistics stat;
-  ConfigData conf;
 
 #ifdef DEBUG_CHECK
   Bool dontPropagate;
