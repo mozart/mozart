@@ -75,7 +75,7 @@
           <Td>thick border</Td>
         </Tr>
         <Tr>
-          <Td Colspan=2>failed</Td>
+          <Td>failed</Td><td><p.silent>&nbsp;</td>
           <Td><Picture.Extern id="pic.c-failed"
                               inline to="pictures/c-failed.ps.gz" type=ps info="-width 40"></Td>
           <Td>red</Td>
@@ -84,7 +84,7 @@
           <Td>thin border</Td>
         </Tr>
         <Tr>
-          <Td Colspan=2>blocked</Td>
+          <Td>blocked</Td><td><p.silent>&nbsp;</td>
           <Td><Picture.Extern id="pic.c-blocked"
                               inline to="pictures/c-blocked.ps.gz" type=ps info="-width 40"></Td>
           <Td>orange</Td>
