@@ -99,10 +99,11 @@ void OwnerEntry::localize(int index)
   if (isVar()) {
     if(GET_VAR(this,Manager)->getInfo()==NULL)
       oz_dpvar_localize(getPtr());
-    else return;}
-  else {
-    if(isTertiary()){
-      localizeTertiary(getTertiary());}
+    else return;
+  } else {
+    if(isTertiary() &&
+       !localizeTertiary(getTertiary()))
+      return;
   }
   OT->freeOwnerEntry(index);
 }
