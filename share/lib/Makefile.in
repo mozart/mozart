@@ -44,8 +44,9 @@ export OZMAFILE = ozbatch.ozm
 export OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
 export OZPATH = .:compiler:ozcar:$SRCDIR
 export OZ_PI = 1
+OZ_NOLOAD =
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/:$(OZ_NOLOAD)
 
 OZVERSION       = $(TOPDIR)/OZVERSION
 
@@ -221,7 +222,7 @@ ozbatch.ozm: MakeAssembly.oz \
 
 ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
         SP.ozc SP.env OP.ozc OP.env \
-        AP.ozc AP.env
+        AP.ozc AP.env tyc/SP.tyc tyc/OP.tyc tyc/AP.tyc tyc/Gump.tyc
         $(EXECWITHSTD) MakeBatch.oz
 
 ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) AP.ozc \
@@ -440,8 +441,8 @@ tags:
 
 bootstrap:
         $(MAKE) Init.ozc ozbatch CP.ozc Compiler.ozc Gump.ozc \
-                OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=.
-        $(MAKE) all OZBATCH=./ozbatch OZ_LIB=. OZINIT=./Init.ozc
+                OZBATCH=$(SRCDIR)/ozbatch.sh OZ_LIB=. OZ_NOLOAD="="
+        $(MAKE) all OZBATCH=./ozbatch OZ_LIB=. OZ_NOLOAD="=" OZINIT=./Init.ozc
 
 #
 # testing components locally
@@ -464,13 +465,13 @@ stage1-bootstrap:
 
 stage2:
         $(MAKE) install-main2 PREFIX=$(STAGE2) \
-        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/:.:= \
         OZBATCH=$(STAGE1)/bin/ozbatch \
         OZINIT=$(STAGE1)/lib/Init.ozc
 
 stage3:
         $(MAKE) install-main2 PREFIX=$(STAGE3) \
-        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/ \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:= \
         OZBATCH=$(SRCDIR)/ozbatch.sh \
         OZINIT=$(STAGE2)/lib/Init.ozc \
         OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
