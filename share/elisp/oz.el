@@ -647,9 +647,14 @@ If ARG is given, reindent that many lines above and below point as well."
 	  (if (and dont-change-empty-lines (oz-is-empty)) t
 	    (let ((col (save-excursion (oz-calc-indent))))
 	      ;; a negative result means: do not change indentation
-	      (cond ((>= col 0)
-		     (delete-horizontal-space)
-		     (indent-to col))))))
+	      (if (>= col 0)
+		  (if (or (progn (beginning-of-line)
+				 (not (looking-at "\t* ? ? ? ? ? ? ?")))
+			  (progn (goto-char (match-end 0))
+				 (/= (current-column) col)))
+		      (progn
+			(delete-horizontal-space)
+			(indent-to col)))))))
       (if (oz-is-left)
 	  (skip-chars-forward " \t")))))
 
