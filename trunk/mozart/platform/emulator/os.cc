@@ -710,9 +710,11 @@ int nonBlockSelect(int nfds, fd_set *readfds, fd_set *writefds)
 
 void registerSocket(int fd)
 {
+#ifdef WINDOWS
   if (fd>=wrappedHDStart) {
     OZ_error("registerSocket: %d >= wrappedHDStart(=%d)\n",fd,wrappedHDStart);
   }
+#endif
   OZ_FD_SET(fd,&socketFDs);
   maxSocket = max(fd,maxSocket);
 }
