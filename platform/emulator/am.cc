@@ -253,7 +253,7 @@ void AM::init(int argc,char **argv)
   toplevelVars[0] = makeTaggedConst(bi);
   
   osInit();
-  ioNodes = new Board*[osOpenMax()];
+  ioNodes = new TaggedRef[osOpenMax()];
 
   if (!isStandalone()) {
     osWatchReadFD(compStream->csfileno());
@@ -944,18 +944,29 @@ void AM::addFeatOFSSuspensionList(TaggedRef var,
  * MISC
  * -------------------------------------------------------------------------*/
 
-void AM::awakeNode(Board *node)
+void AM::awakeIOVar(TaggedRef var)
 {
-  if (!node) return;
+#ifdef SEQIMPL
+  DEREF(var,varPtr,varTag);
+  Assert(isSVar(var));
 
-  node = node->getBoardFast();
+  SVariable *sv=tagged2SuspVar(var);
+  SuspList *sl = sv->getSuspList();
+  Assert(sl->length()==1);
+  Suspension *susp = sl->getElem();
+  Assert(!susp->isDead());
+  Assert(susp->wakeUp(rootBoard,pc_std_unif));
+  sl = sl->dispose();
+  Assert(!sl);
+#else
+  deinstallPath(rootBoard);
 
-#ifndef NEWCOUNTER
-  node->decSuspCount();
+  Assert(isCons(var));
+  if (OZ_unify(head(var),tail(var)) != PROCEED) {
+    warning("select or sleep failed");
+  }
 #endif
-  scheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!! (KP???)
 }
-
 
 #ifdef DEBUG_CHECK
 static Board *oldBoard = (Board *) NULL;
@@ -1003,17 +1014,16 @@ Bool AM::loadQuery(CompStream *fd)
   return ret;
 }
 
-void AM::select(int fd)
+OZ_Bool AM::readSelect(int fd,TaggedRef l,TaggedRef r)
 {
-  if (currentBoard == rootBoard) {
-    warning("select not allowed on toplevel");
-    return;
+  if (currentBoard != rootBoard) {
+    warning("select only on toplevel");
+    return PROCEED;
   }
-  if (osTestSelect(fd)) return;
-  currentBoard->incSuspCount();
-  Assert(currentBoard);
-  ioNodes[fd]=currentBoard;
+  if (osTestSelect(fd)) return OZ_unify(l,r);
+  ioNodes[fd]=cons(l,r);
   osWatchReadFD(fd);
+  return PROCEED;
 }
 
 // called if IOReady (signals are blocked)
@@ -1035,8 +1045,8 @@ void AM::handleIO()
   for ( int index = 0; numbOfFDs > 0; index++ ) {
     if ( osNextReadSelect(index) ) {
       numbOfFDs--;
-      awakeNode(ioNodes[index]);
-      ioNodes[index] = NULL;
+      awakeIOVar(ioNodes[index]);
+      ioNodes[index] = makeTaggedNULL();
       osClrWatchedReadFD(index);
     }
   }
@@ -1506,7 +1516,7 @@ int AM::wakeUser()
     return 0;
   }
   while (sleepQueue && sleepQueue->time==0) {
-    awakeNode((Board *) tagged2Const(sleepQueue->node));
+    awakeIOVar(sleepQueue->node);
     Sleep *tmp = sleepQueue->next;
     delete sleepQueue;
     sleepQueue = tmp;

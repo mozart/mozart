@@ -1358,8 +1358,8 @@ void AM::gc(int msgLevel)
   for(int i = 0; i < osOpenMax(); i++) {
     if (osIsWatchedReadFD(i)) {
       if (i != compStream->csfileno()) {
-	ioNodes[i] = ioNodes[i]->gcBoard();
-	if (!ioNodes[i]) {
+	gcTagged(ioNodes[i],ioNodes[i]);
+	if (ioNodes[i] == makeTaggedNULL()) {
 	  osClrWatchedReadFD(i);
 	  DebugCheckT(warning("selectNode discarded/failed"));
 	}
