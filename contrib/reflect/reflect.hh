@@ -130,7 +130,7 @@ public:
 
   void activate(void) {
     Suspendable * susp = (Suspendable *) _p;
-    (void) susp->wakeup(oz_currentBoard(), pc_propagator);
+    (void) susp->_wakeup(oz_currentBoard(), pc_propagator);
     susp->setActive();
   }
 
