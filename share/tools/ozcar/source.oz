@@ -18,8 +18,9 @@ local
    end
 
    proc {MagicEmacsScrollbar F L C}
+      {Delay 2} %% needed for Emacs
       {Print {VS2A 'oz-scrollbar ' # F # ' ' # L # ' ' # C}}
-      {Delay 10} %% needed for Emacs
+      {Delay 2}
    end
    
    class SourceWindow from Tk.text
