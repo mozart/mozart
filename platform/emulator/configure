@@ -2193,7 +2193,7 @@ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lccmalloc  $LIBS"
+LIBS="-lccmalloc -L/linux/lib $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 2199 "configure"
 #include "confdefs.h"
@@ -2227,7 +2227,7 @@ fi
 #define CCMALLOC 1
 EOF
 
-    LIBS="$LIBS -lccmalloc"
+    LIBS="$LIBS -L/linux/lib -lccmalloc"
 elif test -n "$with_ccmalloc"
 then
     { echo "configure: error: only yes allowed" 1>&2; exit 1; }
