@@ -333,7 +333,6 @@ sub write_oz_bi_definition {
 	  } else { #pointers
 	      print clean_type($real_type) . " arg$i;\n";
 	  }
-	  next;
       } else {
 	  #
 	  # First lookup the translation table
