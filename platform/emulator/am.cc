@@ -432,7 +432,7 @@ void AM::init(int argc,char **argv)
 
     OZ_Term (*ozmaFunc)(const char *);
     if (ozmaLib) {
-      OZ_Term out = oz_newVariable();
+      OZ_Term out;
       int ret = osDlopen(ozmaLib, out);
       if (ret != PROCEED) {
 	fprintf(stderr, "can not open ozma library %s\n",ozmaLib);

@@ -383,20 +383,19 @@ OZ_TermType OZ_typeOf(OZ_Term t)
 // Built-ins
 
 
-OZ_C_proc_begin(BImetaIsVar, 1)
+OZ_BI_define(BImetaIsVar, 1,0)
 { 
-  return isGenMetaVar(deref(OZ_getCArg(0))) ? PROCEED : FAILED;
+  return isGenMetaVar(deref(OZ_in(0))) ? PROCEED : FAILED;
 }
-OZ_C_proc_end
 
-OZ_C_proc_begin(BImetaIsVarB, 2)
-{ 
-  return (OZ_unify 
-	  (OZ_getCArg(1), 
-	   isGenMetaVar(deref(OZ_getCArg(0))) ? NameTrue : NameFalse));
+OZ_BI_define(BImetaIsVarB, 1,1)
+{
+  OZ_RETURN(isGenMetaVar(deref(OZ_in(0))) ? NameTrue : NameFalse);
 }
-OZ_C_proc_end
 
+#define OZ_getINDeref(N, V, VPTR, VTAG) \
+  OZ_Term V = OZ_in(N); \
+  DEREF(V, VPTR, VTAG);
 
 OZ_C_proc_begin(BImetaGetDataAsAtom, 2)
 { 
