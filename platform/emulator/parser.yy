@@ -320,6 +320,7 @@ static CTerm decls[DEPTH];
 %type <t>  phrase
 %type <t>  hashes
 %type <t>  phrase2
+%type <t>  procFlags
 %type <t>  compare
 %type <t>  fdCompare
 %type <t>  fdIn
@@ -590,10 +591,12 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = $2; }
                 | '{' coord phrase phraseList '}'
                   { $$ = newCTerm("fApply",$3,$4,$2); }
-                | proc coord '{' phrase phraseList '}' inSequence end
-                  { $$ = newCTerm("fProc",$4,$5,$7,$2); }
-                | _fun_ coord '{' phrase phraseList '}' inSequence end
-                  { $$ = newCTerm("fFun",$4,$5,$7,$2); }
+                | proc coord procFlags '{' phrase phraseList '}'
+                  inSequence end
+                  { $$ = newCTerm("fProc",$5,$6,$8,$3,$2); }
+                | _fun_ coord procFlags '{' phrase phraseList '}'
+                  inSequence end
+                  { $$ = newCTerm("fFun",$5,$6,$8,$3,$2); }
                 | class
                   { $$ = $1; }
                 | local coord sequence _in_ sequence end
@@ -632,6 +635,12 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = $1; }
                 | parserSpecification
                   { $$ = $1; }
+                ;
+
+procFlags       : /* empty */
+                  { $$ = nilAtom; }
+                | atom procFlags
+                  { $$ = consList($1,$2); }
                 ;
 
 compare         : COMPARE
