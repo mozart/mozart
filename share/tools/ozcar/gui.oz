@@ -787,6 +787,7 @@ in
       meth ContinueTo(T Frame)
 	 Gui,UnselectStackFrame
 	 Gui,MarkRunning(T)
+	 {@currentStack setAtBreakpoint(false)}
 	 case Frame.frameID of unit then
 	    {Dbg.unleash T 0}
 	 elseof FrameID then
@@ -929,6 +930,7 @@ in
 		     {Stack print}
 		     {Stack getPos(file:F line:L column:C)}
 		     {SendEmacs bar(file:F line:L column:C state:S)}
+		     Gui,markNode(I stopped)  % thread is not running anymore
 		  else
 		     {Stack rebuild(true)}
 		  end
