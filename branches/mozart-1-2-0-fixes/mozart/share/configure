@@ -1836,7 +1836,7 @@ case $platform in
     win32*)
 	;;
     *)
-	SHAREDIRS="bin $PLATFORMDIRS"
+	SHAREDIRS="bin $SHAREDIRS"
 	;;
 esac
 
