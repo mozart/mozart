@@ -641,9 +641,12 @@ With ARG, start it instead."
 ;;------------------------------------------------------------
 
 (defun run-oz (&optional toggle-new-compiler)
-  "Run the Oz Compiler and Oz Emulator.
-Handle input and output via buffers whose names are found in
-variables oz-compiler-buffer and oz-emulator-buffer."
+  "Start the Oz System.
+If the variable `oz-use-new-compiler' is non-nil, start the new Oz Compiler
+unless TOGGLE-NEW-COMPILER is non-nil.  If `oz-new-compiler' is nil,
+start the old Oz Compiler unless TOGGLE-NEW-COMPILER is non-nil.
+Handle input and output via the buffers whose names are found in
+variables `oz-compiler-buffer' and `oz-emulator-buffer'."
   (interactive "P")
   (oz-check-running
    t (if toggle-new-compiler (not oz-use-new-compiler) oz-use-new-compiler))
