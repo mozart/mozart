@@ -99,7 +99,8 @@ OZ_C_proc_begin(sched_cpIterate, 2)
   OZ_EXPECT(pe, 1, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new CPIteratePropagator(OZ_args[0], OZ_args[1]),  OZ_getPropagatorPrio() - 1);
+  return pe.spawn(new CPIteratePropagator(OZ_args[0], OZ_args[1]),
+                  OZ_getLowPrio());
 }
 OZ_C_proc_end
 
@@ -770,7 +771,8 @@ OZ_C_proc_begin(sched_disjunctive, 2)
   OZ_EXPECT(pe, 1, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new DisjunctivePropagator(OZ_args[0], OZ_args[1]),  OZ_getPropagatorPrio() - 1);
+  return pe.spawn(new DisjunctivePropagator(OZ_args[0], OZ_args[1]),
+                  OZ_getLowPrio());
 }
 OZ_C_proc_end
 
@@ -878,7 +880,7 @@ OZ_C_proc_begin(sched_cpIterateCap, 4)
   OZ_EXPECT(pe, 3, expectInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]),  OZ_getPropagatorPrio() - 1);
+  return pe.spawn(new CPIteratePropagatorCap(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]),  OZ_getLowPrio());
 }
 OZ_C_proc_end
 
@@ -1644,7 +1646,7 @@ OZ_C_proc_begin(sched_cpIterateCapUp, 4)
   OZ_EXPECT(pe, 3, expectInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.spawn(new CPIteratePropagatorCapUp(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]),  OZ_getPropagatorPrio() - 1);
+  return pe.spawn(new CPIteratePropagatorCapUp(OZ_args[0], OZ_args[1], OZ_args[2], OZ_args[3]),  OZ_getLowPrio());
 }
 OZ_C_proc_end
 
