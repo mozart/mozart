@@ -5,6 +5,7 @@ export
    Items   toList:Items
    Keys    arity:Keys
    Entries toListInd:Entries
+   Clone Exchange ToRecord
 prepare
    fun {Get M Key} M.Key end
    proc {Put M Key Value} M.Key := Value end
@@ -67,5 +68,26 @@ prepare
       if Lo>Hi then nil else
 	 (Lo#A.Lo)|{ArrayToListX A Lo+1 Hi}
       end
+   end
+   DictClone = Dictionary.clone
+   ArrayClone = Array.clone
+   fun {Clone M}
+      if {IsDictionary M} then {DictClone M}
+      elseif {IsRecord M} then M
+      else {ArrayClone M} end
+   end
+   DictExchange = Dictionary.exchange
+   ArrayExchange = Array.exchange
+   proc {Exchange M Key Old New}
+      if {IsDictionary M} then {DictExchange M Key Old New}
+      elseif {IsRecord M} then M.Key=Old=New
+      else {ArrayExchange M Key Old New} end
+   end
+   DictToRecord = Dictionary.toRecord
+   ArrayToRecord = Array.toRecord
+   fun {ToRecord Label M}
+      if {IsDictionary M} then {DictToRecord Label M}
+      elseif {IsRecord M} then {Adjoin M Label}
+      else {ArrayToRecord Label M} end
    end
 end
