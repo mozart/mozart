@@ -47,7 +47,7 @@ TaggedRef
   NameTrue, NameFalse,
 
   BI_Unify,BI_send,BI_Delay,
-  BI_load, BI_fail, BI_url_load, BI_boot_manager,
+  BI_load, BI_fail, BI_url_load, BI_obtain_native,
 
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,BI_lockLock,

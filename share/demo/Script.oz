@@ -10,21 +10,17 @@ fun {Compiler Spec Mode}
    DY    = Spec.Y
 
 
-   fun {StateDomains Sizes SX SY}
-      {Map Sizes fun{$ S}
-		    square(x: {FD.int 0#{Max SX-S 0}}
-			   y: {FD.int 0#{Max SY-S 0}}
-			   chosen: {FD.int 0#1}
-			   size:   S)
-		 end}
-   end
-
-      % Area covered by the chosen squares.
-   fun {Covered Squares Sum}
-      case Squares of nil then Sum
-      [] S|Sr
-      then {Covered Sr {FD.plus {FD.times S.chosen S.size*S.size} Sum}}
-      end
+   %% Area covered by the chosen squares.
+   proc {Covered Sqs}
+      {FD.sum {Tuple.map Sqs fun {$ Sq}
+				Area = Sq.d * Sq.d
+				Res   
+			     in
+				Res :: [0 Area]
+				{FD.times S.chosen Area Res}
+				Res
+			     end}
+       '=<:' DX*DY}
    end
 
 
@@ -35,21 +31,29 @@ in
       Sqs = {Tuple.map fun {$ D}
 			  square(x:      {FD.int 0#{Max 0 DX-D}}
 				 y:      {FD.int 0#{Max 0 DY-D}}
-				 chosen: {FD.bool})
+				 d:      D   
+				 placed: {FD.bool})
 		       end}
 
-      {Covered Squares 0} =<: SX*SY
-      %% find at least one
-      {FoldL Squares fun{$ I Sq} {FD.plus I Sq.chosen} end  0} >: 0
-      %% Squares must not overlap pairwise
+      %% The placed squares must fit the target
+      {Covered Sqs}
+
+      %% At least one square must be placed
+      {FD.sum {Record.map Sqs fun {$ Sq} Sq.d end} '>:' 0}
+      
+      %% Squares must not overlap
       {NoOverlap Squares}
+      
       %% Redundant constraints
       {Capacity Squares SX SY x}
       {Capacity Squares SY SX y}
+      
       %% The master rectangle must be splittable
       {Splitting Squares}
+      
       %% Remove symmetries
       {NoPermutation Squares SY}
+      
       %% Enumerate squares
       {Enumerate Squares Mode}
    end
