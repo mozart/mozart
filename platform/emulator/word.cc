@@ -42,6 +42,11 @@ unsigned int unmarshalNumber(MsgBuffer *);
 #endif
 
 class Word: public OZ_Extension {
+private:
+  Word(const Word &w): OZ_Extension() {
+    size = w.size;
+    value = w.value;
+  }
 public:
   unsigned int size;
   unsigned int value;
@@ -51,11 +56,6 @@ public:
     size = s;
     value = TRUNCATE(v, s);
   }
-
-  //  Word(const Word &w) {
-  //    size = w.size;
-  //    value = w.value;
-  //  }
 
   int getIdV(void) {
     return OZ_E_WORD;
