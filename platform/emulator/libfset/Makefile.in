@@ -22,24 +22,23 @@
 #  WARRANTIES.
 
 
-srcdir		= @srcdir@
 VPATH		= @srcdir@
-FSDIR		= @srcdir@
-FDINCS		= -I.. -I$(srcdir)/..
+FSETDIR		= @srcdir@
+FDINCS		= -I.. -I$(FSETDIR)/..
 CFLAGS		= $(COPT) $(DEFS) $(INCS) $(FDINCS) $(CWARN) $(CUSR)
 CXXFLAGS	= $(CFLAGS)
 DEPEND		= @DEPEND@ $(DEFS) $(INCS) $(FDINCS)
-TARGETS		= libfset.a
+FSETTARGETS	= @FSETTARGETS@
 
-FSETLIBSRCS =	$(FSDIR)/standard.cc $(FSDIR)/telling.cc \
-		$(FSDIR)/testing.cc $(FSDIR)/fsaux.cc \
-		$(FSDIR)/intsets.cc $(FSDIR)/monitor.cc \
-		$(FSDIR)/reified.cc $(FSDIR)/fsstd.cc \
-		$(FSDIR)/std_n.cc
+FSETLIBSRCS =	standard.cc telling.cc \
+		testing.cc fsaux.cc \
+		intsets.cc monitor.cc \
+		reified.cc fsstd.cc \
+		std_n.cc
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
-all: $(TARGETS)
+all: $(FSETTARGETS)
 
 fsetlib.so: $(FSETLIBOBJS)
 	$(DYNLD) -o $@ $(FSETLIBOBJS)
@@ -48,11 +47,13 @@ libfset.a: $(FSETLIBOBJS)
 	$(AR) -rc $@ $(FSETLIBOBJS)
 	$(RANLIB) $@
 
-install-bin:
-	$(INSTALL_BIN) $(TARGETS) $(bindir)
+install: @INSTALL_PROP@
+
+install-prop:
+	$(INSTALL_BIN) $(FSETTARGETS) $(bindir)
 
 depend: $(FSETLIBSRCS) 
-	$(DEPEND) $(FSETLIBSRCS) >> Makefile
+	$(DEPEND) `for f in $(FSETLIBSRCS); do echo $(FSETDIR)/$$f; done` >> Makefile
 
 tags:
 	etags --regex='/OZ_C[^(]+([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
@@ -73,3 +74,8 @@ veryclean: realclean
 
 .cc.E:
 	$(CXX) $(CXXFLAGS) -E -o $@ $<
+
+@tmphack_target@:
+	$(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && \
+		rcp /tmp/$$$$.o @tmphack_host@:`pwd`/$@; \
+		rm -f /tmp/$$$$.o
