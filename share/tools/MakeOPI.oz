@@ -51,64 +51,32 @@ in
        = IMPORT.'SP'
        \insert OP.env
        = IMPORT.'OP'
+       \insert Emacs.env
+       = IMPORT.'Emacs'
        \insert Compiler.env
        = IMPORT.'Compiler'
 
-       class TextFile from Open.file Open.text
+       class TextSocket from Open.socket Open.text
 	  prop final
 	  meth readQuery($) S in
 	     Open.text, getS(?S)
 	     case S of false then ""
 	     elseof [4] then ""   % ^D
 	     elseof [4 13] then ""   % ^D^M
-	     else S#'\n'#TextFile, readQuery($)
-	     end
-	  end
-       end
-
-       local
-	  MSG_ERROR = [17]
-	  EMU_OUT_START = [5]
-	  EMU_OUT_END = [6]
-       in
-	  class CompilerInterfaceEmacs from Compiler.genericInterface
-	     prop final
-	     meth init(CompilerObject)
-		Compiler.genericInterface, init(CompilerObject Serve)
-	     end
-	     meth Serve(Ms)
-		case Ms of M|Mr then
-		   case M of info(VS) then
-		      {System.printInfo EMU_OUT_END#VS#EMU_OUT_START}
-		   [] info(VS _) then
-		      {System.printInfo EMU_OUT_END#VS#EMU_OUT_START}
-		   [] message(Record _) then
-		      {Error.msg
-		       proc {$ X}
-			  {System.printInfo
-			   EMU_OUT_END#{Error.formatLine X}#EMU_OUT_START}
-		       end
-		       Record}
-		   [] displaySource(Title Ext VS) then Name File in
-		      Name = {OS.tmpnam}#Ext
-		      File = {New Open.file
-			      init(name: Name
-				   flags: [write create truncate])}
-		      {File write(vs: VS)}
-		      {File close()}
-		      {Print {String.toAtom
-			      {VirtualString.toString 'oz-show-temp '#Name}}}
-		   [] toTop() then
-		      {System.printInfo EMU_OUT_END#MSG_ERROR#EMU_OUT_START}
-		   else skip
-		   end
-		   CompilerInterfaceEmacs, Serve(Mr)
-		end
+	     else S#'\n'#TextSocket, readQuery($)
 	     end
 	  end
        end
     in
-       proc {StartOPI _ _} OPICompiler CompilerReadEvalLoop in
+       proc {StartOPI _ _} Sock OPICompiler CompilerReadEvalLoop in
+	  local Port in
+	     thread
+		Sock = {New TextSocket server(port: ?Port)}
+	     end
+	     {Print {VirtualString.toAtom
+		     'oz-socket "'#{OS.uName}.nodename#'" '#Port}}
+	  end
+
 	  OPICompiler = {New Compiler.compilerClass init()}
 	  local
 	     Env = {Record.foldL IMPORT Adjoin BaseAndStandard}
@@ -116,8 +84,7 @@ in
 	     {OPICompiler enqueue(mergeEnv(Env))}
 	  end
 
-	  {{`Builtin` setOPICompiler 1}
-	   {New CompilerInterfaceEmacs init(OPICompiler)}}
+	  {New Emacs.interface init(OPICompiler Sock) _}
 
 	  local
 	     OZVERSION = {System.property.get 'oz.version'}
@@ -153,10 +120,8 @@ in
 	     end
 	  end
 
-	  proc {CompilerReadEvalLoop} File VS0 VS in
-	     File = {New TextFile init(name: stdin flags: [read])}
-	     {File readQuery(?VS0)}
-	     {File close()}
+	  proc {CompilerReadEvalLoop} VS0 VS in
+	     {Sock readQuery(?VS0)}
 	     VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
 	     {OPICompiler enqueue(feedVirtualString(VS))}
 	     {CompilerReadEvalLoop}
