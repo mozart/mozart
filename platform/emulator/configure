@@ -1230,7 +1230,7 @@ else
   case $PLATFORM in
     win32*)
 	oztmp=`pwd`
-	oztmp=`cygpath -a -w "$tmp"`
+	oztmp=`cygpath -a -w "$oztmp"`
 	oztmp=`expr "$oztmp" : "\(.\):"`
 	if test -n "$oztmp"; then
 	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
@@ -1242,7 +1242,7 @@ else
 	if test -n "$oztmp"; then
 	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
 	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
-	  oz_cv_OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	  oz_cv_OZLOADWIN="${oz_cv_OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
 	fi
 	;;
     *) oz_cv_OZLOADWIN=
