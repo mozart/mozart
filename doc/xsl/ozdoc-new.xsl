@@ -845,14 +845,20 @@
 <!-- literate programming: chunks -->
 
 <template match="CHUNK">
-  <txt:usemap>\begin{CHUNK}{</txt:usemap>
+  <variable name="env">
+    <choose>
+      <when test="@CLASS and @CLASS='ANONYMOUS'">CHUNKANON</when>
+      <otherwise>CHUNK</otherwise>
+    </choose>
+  </variable>
+  <txt:usemap>\begin{<value-of select="$env"/>}{</txt:usemap>
   <apply-templates select="TITLE"/>
   <txt:usemap>}</txt:usemap>
   <call-template name="maybe.label"/>
   <txt:usemap name="code">
     <apply-templates select="CHUNK.SILENT"/>
   </txt:usemap>
-  <txt:usemap>\end{CHUNK}</txt:usemap>
+  <txt:usemap>\end{<value-of select="$env"/>}</txt:usemap>
 </template>
 
 <template match="CHUNK.REF">
