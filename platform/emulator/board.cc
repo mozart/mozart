@@ -131,12 +131,6 @@ Board* Board::getSolveBoard ()
   return bb;
 }
 
-Bool Board::underReflected()
-{
-  Board *bb=this ? getSolveBoard() : 0;
-  return bb && bb->isReflected();
-}
-
 Board::Board(Actor *a,int typ)
 : ConstTerm(Co_Board)
 {

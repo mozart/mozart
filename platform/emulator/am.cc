@@ -245,7 +245,6 @@ void AM::init(int argc,char **argv)
 
   extern void initTagged();
   initTagged();
-  SolveActor::Init();
 
   toplevelVars = allocateRefsArray(ozconf.numToplevelVars);
 
@@ -567,6 +566,15 @@ BFlag AM::isBetween(Board *to, Board *varHome)
   }
 }
 
+Bool AM::isBelow(Board *below, Board *above)
+{
+  while (1) {
+    if (below == above) return OK;
+    if (below == rootBoard) return NO;
+    below = below->getParentFast();
+  }
+}
+
 // val is used because it may be a variable which must suspend.
 //  if det X then ... fi
 //  X = Y
@@ -668,13 +676,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty() ||
                              localPropStore.isInLocalPropagation()););
     DebugCheckT(Board *hb=tagged2SuspVar(var)->getBoardFast());
-    Assert(!hb->isReflected());
-    Assert(!hb->getSolveBoard() ||
-           !hb->getSolveBoard()->isReflected());
   }
-
-  Assert(!isUVar(var) ||
-         !tagged2VarHome(var)->getBoardFast()->isReflected());
 
   /* second step: mark binding for non-local variable in trail;     */
   /* also mark such (i.e. this) variable in suspention list;        */
@@ -1042,7 +1044,6 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
     wasSolveSet = NO;
     DebugCode (oldSolveBoard = currentSolveBoard);
   }
-  Assert (!currentSolveBoard || !(currentSolveBoard->isReflected ()));
 }
 
 Bool AM::loadQuery(CompStream *fd)
@@ -1141,7 +1142,6 @@ void AM::incSolveThreads(Board *bb)
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
-      Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
       //
       Assert (!sa->isCommitted());
@@ -1161,7 +1161,6 @@ void AM::decSolveThreads(Board *bb)
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
-      Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
 
       //
@@ -1190,7 +1189,6 @@ Bool AM::isInSolveDebug (Board *bb)
   while (!bb->isRoot()) {
     Assert(!bb->isCommitted());
     if (bb->isSolve()) {
-      Assert(!bb->isReflected());
       SolveActor *sa = SolveActor::Cast(bb->getActor());
       if (!sa->isCommitted()) {
         return (OK);

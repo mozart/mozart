@@ -72,8 +72,7 @@ enum BoardFlags {
   Bo_Failed     = 0x0100,
   Bo_Committed  = 0x0200,
   Bo_Waiting    = 0x0800,
-  Bo_Reflected  = 0x1000,       // for debugging of solve combinator;
-  Bo_NervousSolve= 0x2000
+  Bo_NervousSolve= 0x1000
 };
 
 
@@ -114,7 +113,6 @@ public:
 //  Board *getRef() { return u.ref; }
   Continuation *getBodyPtr() { return &body; }
   Board* getSolveBoard ();
-  Bool underReflected();
   Script &getScriptRef() { return script; }
   int getSuspCount(void);
   Bool hasSuspension(void);
@@ -130,8 +128,6 @@ public:
   Bool isWaiting() { return flags & Bo_Waiting ? OK : NO; }
   Bool isRoot() { return flags & Bo_Root ? OK : NO; }
   Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
-  void setReflected () { flags |= Bo_Reflected; }
-  Bool isReflected () { return ((flags & Bo_Reflected) ? OK : NO); }
   void newScript(int size);
   void setBody(ProgramCounter p,RefsArray y,
                RefsArray g,RefsArray x,int i);

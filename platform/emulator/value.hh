@@ -21,7 +21,9 @@
 extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomLess, AtomGreater, AtomSame, AtomUncomparable,
        AtomInt, AtomFloat, AtomTuple, AtomProcedure, AtomCell,
-       AtomChunk,
+       AtomChunk, AtomSpace,
+       AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
+       AtomEntailed, AtomSuspended, AtomBlocked,
        AtomRecord, AtomAtom, AtomName, AtomUnknown,
        AtomClosed, AtomVariable,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl;
@@ -498,6 +500,7 @@ enum TypeOfConst {
   Co_Object,
   Co_Builtin,
   Co_Cell,
+  Co_Space,
   Co_Chunk
 };
 
@@ -1340,12 +1343,6 @@ Abstraction *tagged2Abstraction(TaggedRef term)
 // special builtins known in emulate
 enum BIType {
   BIDefault,
-  BIsolve,
-  BIsolveEatWait,
-  BIsolveDebug,
-  BIsolveDebugEatWait,
-  BIsolveCont,
-  BIsolved,
   BIraise
 };
 
@@ -1423,34 +1420,6 @@ public:
   BuiltinTabEntry *getBITabEntry()  { return fun; }
 };
 
-/*
- * Essential Note:
- *  If gregs == NULL, *that* builtin was already applied,
- *  and 'isSeen' says 'OK'!
- *  'hasSeen' removes simply the gregs;
- */
-class OneCallBuiltin: public Builtin {
-public:
-  USEHEAPMEMORY;
-
-  OneCallBuiltin (BuiltinTabEntry *fn, RefsArray gregs)
-    : Builtin (fn, (TaggedRef) 0, gregs) {}
-
-  Bool isSeen ()        { return (gRegs == NULL); }
-  RefsArray &getGRegs() { return(gRegs); }
-  void hasSeen ()       { gRegs = (RefsArray) NULL; }
-};
-
-class SolvedBuiltin: public Builtin {
-public:
-  USEHEAPMEMORY;
-
-  SolvedBuiltin(BuiltinTabEntry *fn, RefsArray gregs)
-    : Builtin (fn, (TaggedRef) 0, gregs) {}
-
-  RefsArray &getGRegs() { return(gRegs); }
-};
-
 inline
 Bool isBuiltin(ConstTerm *s)
 {
@@ -1505,6 +1474,48 @@ Cell *tagged2Cell(TaggedRef term)
 {
   Assert(isCell(term));
   return (Cell *) tagged2Const(term);
+}
+
+/*===================================================================
+ * Space
+ *=================================================================== */
+
+class Space: public ConstTerm {
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  Board *home, *solve;
+  // The solve pointer can be:
+  // - 0 (the board is failed and has been discarded by the garbage
+  //      collector)
+  // - 1 (the space has been merged)
+  // or a valid pointer
+public:
+  Space(Board *h, Board *s) :
+    ConstTerm(Co_Space), home(h), solve(s) {};
+
+  OZPRINT;
+  OZPRINTLONG;
+
+  SolveActor *getSolveActor();
+  Board *getSolveBoard() { return solve; }
+  Board *getBoardFast();
+  void  merge() { solve = (Board *) 1; }
+  Bool isFailed();
+  Bool isMerged();
+};
+
+
+inline
+Bool isSpace(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Space;
+}
+
+inline
+Space *tagged2Space(TaggedRef term)
+{
+  Assert(isSpace(term));
+  return (Space *) tagged2Const(term);
 }
 
 /*===================================================================

@@ -37,32 +37,6 @@
    class SolveActor
    ------------------------------------------------------------------------ */
 
-BuiltinTabEntry *solveContBITabEntry = NULL;
-BuiltinTabEntry *solvedBITabEntry    = NULL;
-
-TaggedRef solvedAtom;
-TaggedRef choiceAtom;
-TaggedRef entailedAtom;
-TaggedRef stableAtom;
-TaggedRef unstableAtom;
-TaggedRef failedAtom;
-
-void SolveActor::Init()
-{
-  solveContBITabEntry
-    = new BuiltinTabEntry("*once-only*", 1, BIsolveCont); // local Entry;
-  solvedBITabEntry
-    = new BuiltinTabEntry("*reflected*", 1, BIsolved);    // local Entry;
-
-  solvedAtom     = makeTaggedAtom (SEARCH_SOLVED);
-  choiceAtom     = makeTaggedAtom (SEARCH_CHOICE);
-  entailedAtom   = makeTaggedAtom (SEARCH_ENTAILED);
-  stableAtom     = makeTaggedAtom (SEARCH_STABLE);
-  unstableAtom   = makeTaggedAtom (SEARCH_UNSTABLE);
-  failedAtom     = makeTaggedAtom (SEARCH_FAILED);
-
-}
-
 void SolveActor::pushWaitActor (WaitActor *a)
 {
   orActors.push ((DLLStackEntry *) a);
@@ -96,56 +70,51 @@ WaitActor* SolveActor::getDisWaitActor ()
 
 TaggedRef SolveActor::genSolved()
 {
-  RefsArray contGRegs = allocateRefsArray(1);
-  SRecord *stuple = SRecord::newSRecord(solvedAtom, 2);
+  if (this->isDebug()) {
+    SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
-  Assert(solveBoard->isSolve());
-  contGRegs[0] = makeTaggedConst(solveBoard);
-  stuple->setArg(0, makeTaggedConst
-                 (new SolvedBuiltin(solvedBITabEntry, contGRegs)));
-  stuple->setArg(1, entailedAtom);
+    Assert(solveBoard->isSolve());
+    stuple->setArg(0, AtomEntailed);
 
-  return makeTaggedSRecord(stuple);
+    return makeTaggedSRecord(stuple);
+  } else {
+    return AtomSucceeded;
+  }
 }
 
 TaggedRef SolveActor::genStuck()
 {
-  RefsArray contGRegs = allocateRefsArray(1);
-  SRecord *stuple = SRecord::newSRecord(solvedAtom, 2);
+  if (this->isDebug()) {
+    SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
 
-  Assert(solveBoard->isSolve());
-  contGRegs[0] = makeTaggedConst(solveBoard);
-  stuple->setArg(0, makeTaggedConst
-                 (new SolvedBuiltin(solvedBITabEntry, contGRegs)));
-  stuple->setArg(1, stableAtom);
-  return makeTaggedSRecord(stuple);
+    Assert(solveBoard->isSolve());
+    stuple->setArg(0, AtomSuspended);
+    return makeTaggedSRecord(stuple);
+  } else {
+    return AtomSucceeded;
+  }
 }
 
 TaggedRef SolveActor::genChoice(int noOfClauses)
 {
-  SRecord *stuple = SRecord::newSRecord(choiceAtom, 2);
-  RefsArray contGRegs;
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
 
-  contGRegs    = allocateRefsArray(1);
-  contGRegs[0] = makeTaggedConst(solveBoard);
   Assert(!solveBoard->isCommitted());
-  stuple->setArg(0, makeTaggedConst
-                 (new OneCallBuiltin(solveContBITabEntry, contGRegs)));
-  stuple->setArg(1, makeTaggedSmallInt(noOfClauses));
+  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
 
   return makeTaggedSRecord(stuple);
 }
 
 TaggedRef SolveActor::genFailed ()
 {
-  return failedAtom;
+  return AtomFailed;
 }
 
-TaggedRef SolveActor::genUnstable (TaggedRef arg)
+TaggedRef SolveActor::genUnstable(TaggedRef arg)
 {
-  SRecord *stuple = SRecord::newSRecord(unstableAtom, 1);
+  SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
   stuple->setArg(0, arg);
-  return makeTaggedSRecord (stuple);
+  return makeTaggedSRecord(stuple);
 }
 
 // private members;
@@ -162,6 +131,10 @@ WaitActor* SolveActor::getNextWaitActor()
 void SolveActor::unlinkLastWaitActor ()
 {
   orActors.unlinkLast();
+}
+
+Bool SolveActor::isDebugBlocked() {
+  return isDebug() && (getThreads()==0) && !am.isStableSolve(this);
 }
 
 Bool SolveActor::checkExtSuspList()
@@ -215,21 +188,20 @@ Bool SolveActor::checkExtSuspList()
 
 // Note that there is one thread ALREADY AT THE CREATION TIME!
 
-SolveActor::SolveActor (Board *bb, int prio,
-                        TaggedRef resTR, TaggedRef guiTR)
- : Actor (Ac_Solve, bb, prio), result (resTR), guidance (guiTR),
-   suspList (NULL), threads (1), stable_sl(NULL)
+SolveActor::SolveActor(Board *bb, int prio, Bool debug)
+ : Actor (Ac_Solve, bb, prio),
+   suspList (NULL), threads (0), stable_sl(NULL)
 {
-  solveBoard = NULL;
-  solveVar   = makeTaggedNULL();
-}
-
-void SolveActor::setSolveBoard(Board *bb) {
-  solveBoard = bb;
+  result     = makeTaggedRef(newTaggedUVar(bb));
+  solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
+  bb->decSuspCount();         // don't count this actor!
+  solveBoard->decSuspCount(); // Initially there is no task!
+  if (debug)
+    this->setDebug();
 }
 
-void SolveActor::add_stable_susp (Thread *thr) {
+void SolveActor::add_stable_susp(Thread *thr) {
   stable_sl = new SuspList (thr, stable_sl);
 }
 

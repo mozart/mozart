@@ -52,4 +52,80 @@ Bool SolveActor::stable_wake(void) {
   return FALSE;
 }
 
+inline
+void SolveActor::inject(int prio, TaggedRef proc) {
+  // thread creation for {proc root}
+  RefsArray args = allocateRefsArray(1, NO);
+  args[0] = makeTaggedRef(&solveVar);
+
+  Thread *it = new Thread(prio, solveBoard, OK);
+  it->pushCall(makeTaggedConst((Abstraction *) tagValueOf(proc)), args, 1);
+  am.scheduleThread(it);
+}
+
+inline
+TaggedRef SolveActor::merge(Board *bb) {
+  solveBoard->setCommitted(bb);
+  bb->incSuspCount(solveBoard->getSuspCount());
+
+  // adjoin the list of or-actors to the list in actual solve actor!
+  Board *csb = am.currentSolveBoard;
+  if (csb != (Board *) NULL)
+    SolveActor::Cast(csb->getActor())->pushWaitActorsStackOf(this);
+
+  return solveVar;
+}
+
+inline
+Board *SolveActor::clone(Board *bb) {
+  ozstat.incSolveClone();
+  Board *copy = (Board *) am.copyTree(solveBoard, (Bool *) NULL);
+
+  SolveActor::Cast(copy->getActor())->setBoard(bb);
+
+  return copy;
+}
+
+inline
+int SolveActor::choose(int left, int right) {
+  WaitActor *wa = this->getDisWaitActor();
+
+  if (!wa)
+    return -1;
+
+  int n = wa->selectOrFailChildren(left, right);
+
+  if (n==0) {
+    wa->dispose();
+    return 0;
+  } else if (n==1) {
+    Board *waitBoard = wa->getChildRefAt(0);
+
+    waitBoard->setCommitted(solveBoard);
+    Assert(!solveBoard->isCommitted());
+    solveBoard->incSuspCount(waitBoard->getSuspCount()-1);
+
+    if (!am.installScript(waitBoard->getScriptRef()))
+      return 0;
+
+    if (waitBoard->isWaitTop())
+      return 1;
+
+    am.currentThread->pushCont(waitBoard->getBodyPtr());
+  } else {
+    // push back wait actor!
+    this->pushWaitActor(wa);
+  }
+
+  return 1;
+}
+
+inline
+void SolveActor::clearResult(Board* bb) {
+  if (OZ_isVariable(result))
+    return;
+
+  result = makeTaggedRef(newTaggedUVar(bb));
+}
+
 #endif  // __SOLVE_ICC_

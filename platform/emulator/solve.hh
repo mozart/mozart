@@ -33,10 +33,6 @@ public:
     Assert(a->isSolve());
     return ((SolveActor *) a);
   }
-  static void Init();
-//  This is 'de facto' the "solve actor";
-//  If BIsolve is applied, CFuncCont is generated containing request to call
-// this procedure (type OZ_CFun!);
 //  Very special thing:
 // The procedure that converts the DLLStackEntry to the Actor* (in our case),
 // collects it and returns the DLLStackEntry again (for gc);
@@ -46,37 +42,34 @@ private:
   DLLStack orActors;
   TaggedRef solveVar;
   TaggedRef result;
-  TaggedRef guidance;
   SuspList *suspList;
   SuspList *stable_sl;
   int threads;
 public:
-  SolveActor (Board *bb, int prio,
-              TaggedRef resTR, TaggedRef guiTR=0);
+  SolveActor(Board *bb, int prio, Bool debug);
 
-  void setSolveBoard(Board *bb);
   Board *getSolveBoard() { return solveBoard; }
 
   void gcRecurse();
 
-  void incThreads () { threads++; }
-  int decThreads () {           // just return the new value;
-    Assert (threads > 0);
-    return (--threads);
-  }
-  int getThreads() { return threads; }
-  void addSuspension (Thread *thr);
-  void addSuspension (SuspList *l);
+  void incThreads() { threads++; }
+  int  decThreads() { Assert (threads > 0); return (--threads); }
+  int  getThreads() { return threads; }
+
+  void addSuspension(Thread *thr);
+  void addSuspension(SuspList *l);
   Bool areNoExtSuspensions();
 
-  TaggedRef* getSolveVarRef() { return (&solveVar); }
-  TaggedRef getSolveVar() { return (solveVar); }
+  void inject(int prio, TaggedRef proc);
+  int choose(int left, int right);
+  TaggedRef merge(Board* bb);
+  Board *clone(Board *bb);
+  void clearResult(Board *bb);
+
+  Bool isDebugBlocked();
 
   TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
-
-  TaggedRef getGuidance() { return (guidance); }
-  void setGuidance(TaggedRef guiTR) { guidance = guiTR; }
 
   void pushWaitActor (WaitActor *a);
   void pushWaitActorsStackOf (SolveActor *sa);
@@ -84,7 +77,7 @@ public:
 
   Bool stable_wake(void);
   void add_stable_susp (Thread *thr);
-  void setBoard (Board *bb) { board = bb; }
+  void setBoard(Board *bb) { board = bb; }
 
   TaggedRef genSolved();
   TaggedRef genStuck();
