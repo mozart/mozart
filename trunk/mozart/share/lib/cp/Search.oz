@@ -25,6 +25,7 @@ functor
 
 import
    ParSearch(engine: ParallelEngine) at 'x-oz://system/ParSearch.ozf'
+   Space
    
 export
    one:      OneModule
@@ -52,6 +53,8 @@ prepare
       S
    end
 
+define
+   
    fun {WrapP S}
       proc {$ X}
 	 {Space.merge {Space.clone S} X}
