@@ -102,7 +102,7 @@ local
 			elsecase {IsLazy Data} then
 			   LazyVarType
 			else
-			   UnboundType
+			   {System.printName Data}
 			end
 		     else Kind
 		     end
