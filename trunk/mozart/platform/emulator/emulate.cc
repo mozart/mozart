@@ -26,6 +26,11 @@
 #pragma implementation "emulate.hh"
 #endif
 
+
+// experimental feature to check if all branches are correctly reached
+// #define CheckBranch(X) printf(X); printf("\n")
+#define CheckBranch
+
 #include "../include/config.h"
 #include "types.hh"
 
@@ -1965,10 +1970,89 @@ void engine() {
 
 
 
+
+// ------------------------------------------------------------------------
+// *** Emulate if process node is ok
+// ------------------------------------------------------------------------
+ LBLemulateCheckSwitch:
+  if (e->isSetSFlag(ThreadSwitch)) {
+    CheckBranch("emulateIf");
+    e->pushTask(CBB,PC,Y,G,X,XSize);
+    goto LBLschedule;
+  }
+  goto LBLemulate;
+
+// ----------------- end emulate if process -------------------------------
+
+
+// ------------------------------------------------------------------------
+// *** REDUCE Board
+// ------------------------------------------------------------------------
+
+ LBLreduce:
+  DebugTrace(trace("reduce board",CBB));
+
+  CBB->unsetNervous();
+
+  if (CBB->isAsk()) {
+    if ( e->entailment() ) {
+      LOADCONT(CBB->getBodyPtr());
+
+      e->trail.popMark();
+
+      tmpBB = CBB;
+
+      tmpBB->getActor()->setCommitted();
+      Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
+      tmpBB->unsetInstalled();
+      tmpBB->setCommitted(CBB);
+
+      CBB->removeSuspension();
+
+      goto LBLemulateCheckSwitch;
+    }
+  } else if (CBB->isWait ()) {
+// WAITTTOP
+    if (CBB->isWaitTop()) {
+
+// WAITTOP: top commit
+      if ( e->entailment() ) {
+	goto LBLtopCommit;
+      }
+
+      DebugCheck(CastWaitActor(CBB->getActor())->hasOneChild(),
+		 error("reduce: waittop: can not happen");
+		 goto LBLerror;);
+
+// WAITTOP: no rule
+      goto LBLfindWork;
+    }
+
+    DebugCheck(CastWaitActor(CBB->getActor())->hasOneChild(),
+	       error("reduce: wait: unit commit can not happen");
+	       goto LBLerror;);
+    goto LBLfindWork;
+
+// WAIT: no rule
+  } else {
+    DebugCheck(!CBB->isRoot(),error("reduce"));
+  }
+  goto LBLfindWork;
+
+// ----------------- end reduce -------------------------------------------
+
+// ------------------------------------------------------------------------
+// *** FAILURE
+// ------------------------------------------------------------------------
+ LBLfailure:
+  DebugTrace(trace("fail",CBB));
+
+  CAA=Board::FailCurrent();
+
 // ------------------------------------------------------------------------
 // *** REDUCE Actor
 // ------------------------------------------------------------------------
- LBLreduceActor:
+
   {
     DebugTrace(trace("reduce actor",CBB,CAA));
 
@@ -1987,7 +2071,7 @@ void engine() {
 	if (PC != NOCODE) {
 	  CAA->setCommitted();
 	  CBB->removeSuspension();
-	  goto LBLemulateIfProcess;
+	  goto LBLemulateCheckSwitch;
 	}
 
 /* rule: if fi --> false */
@@ -2030,7 +2114,7 @@ void engine() {
 
 	  DebugCheck(PC == NOCODE,error("reduce actor"));
 
-	  goto LBLemulateIfProcess;
+	  goto LBLemulateCheckSwitch;
 	}
       }
     }
@@ -2041,84 +2125,6 @@ void engine() {
 
 // ----------------- end reduce actor --------------------------------------
 
-
-// ------------------------------------------------------------------------
-// *** Emulate if process node is ok
-// ------------------------------------------------------------------------
- LBLemulateIfProcess:
-  if (e->isSetSFlag(ThreadSwitch)) {
-    e->pushTask(CBB,PC,Y,G,X,XSize);
-    goto LBLschedule;
-  }
-  goto LBLemulate;
-
-// ----------------- end emulate if process -------------------------------
-
-
-// ------------------------------------------------------------------------
-// *** REDUCE Board
-// ------------------------------------------------------------------------
-
- LBLreduce:
-  DebugTrace(trace("reduce board",CBB));
-
-  CBB->unsetNervous();
-
-  if (CBB->isAsk()) {
-    if ( e->entailment() ) {
-      LOADCONT(CBB->getBodyPtr());
-
-      e->trail.popMark();
-
-      tmpBB = CBB;
-
-      tmpBB->getActor()->setCommitted();
-      Board::SetCurrent(CBB->getParentBoard()->getBoardDeref());
-      tmpBB->unsetInstalled();
-      tmpBB->setCommitted(CBB);
-
-      CBB->removeSuspension();
-
-      goto LBLemulateIfProcess;
-    }
-  } else if (CBB->isWait ()) {
-// WAITTTOP
-    if (CBB->isWaitTop()) {
-
-// WAITTOP: top commit
-      if ( e->entailment() ) {
-	goto LBLtopCommit;
-      }
-
-      DebugCheck(CastWaitActor(CBB->getActor())->hasOneChild(),
-		 error("reduce: waittop: can not happen");
-		 goto LBLerror;);
-
-// WAITTOP: no rule
-      goto LBLfindWork;
-    }
-
-    DebugCheck(CastWaitActor(CBB->getActor())->hasOneChild(),
-	       error("reduce: wait: unit commit can not happen");
-	       goto LBLerror;);
-    goto LBLfindWork;
-
-// WAIT: no rule
-  } else {
-    DebugCheck(!CBB->isRoot(),error("reduce"));
-  }
-  goto LBLfindWork;
-
-// ----------------- end reduce -------------------------------------------
-
-// ------------------------------------------------------------------------
-// *** FAILURE
-// ------------------------------------------------------------------------
- LBLfailure:
-  DebugTrace(trace("fail",CBB));
-
-  CAA=Board::FailCurrent();
-  goto LBLreduceActor;
 
 // ----------------- end failure ------------------------------------------
 }
