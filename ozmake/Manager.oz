@@ -2,7 +2,7 @@ functor
 export
    'class' : Manager
 import
-   Makefile    at 'Makefile.ozf'
+   Makefile    at 'Makefiler.ozf'
    Executor    at 'Executor.ozf'
    Attribs     at 'Attribs.ozf'
    Builder     at 'Builder.ozf'
