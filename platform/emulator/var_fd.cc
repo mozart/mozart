@@ -84,7 +84,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
       switch (varIsLocal + 2 * termIsLocal) {
       case TRUE + 2 * TRUE: // var and term are local
         {
-          if (tPtr < vPtr) { // bind var to term
+          if (heapNewer(vPtr, tPtr)) { // bind var to term
             if (intsct == fd_singleton) {
               TaggedRef int_term = newSmallInt(intsct.singl());
               propagate(var, l_dom, int_term, pc_cv_unif);
