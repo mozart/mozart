@@ -36,7 +36,7 @@ FSETLIBSRCS =	standard.cc telling.cc \
 
 FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
 
-all:: $(FSETTARGETS)
+all: $(FSETTARGETS)
 
 fsetlib.so: $(FSETLIBOBJS)
 	$(DYNLD) -o $@ $(FSETLIBOBJS)
