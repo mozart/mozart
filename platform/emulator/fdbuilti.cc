@@ -1496,7 +1496,7 @@ void BIfdBodyManager::printTerm(int i) {
 // Introduce FD Built-ins to the Emulator
 
 static
-BIspec biSpec[] = {
+BIspec fdSpec[] = {
 // fdprofil.cc
   {"fdReset", 0, BIfdReset},
   {"fdDiscard", 0, BIfdDiscard},
@@ -1696,7 +1696,7 @@ BIspec biSpec[] = {
 
 void BIinitFD(void)
 {
-  BIaddSpec(biSpec);
+  BIaddSpec(fdSpec);
 }
 
 
