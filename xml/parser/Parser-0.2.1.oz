@@ -105,11 +105,11 @@ prepare
    %% ================================================================
 
    DefaultEntityRecord =
-   o(amp : string("\&")
-     lt  : string("<")
-     gt  : string(">")
-     apos: string("'")
-     quot: string("\""))
+   o(amp : text("\&")
+     lt  : text("<")
+     gt  : text(">")
+     apos: text("'")
+     quot: text("\""))
 
    %% ================================================================
    %% it's extremely annoying, but XML says that attribute xmlns can
