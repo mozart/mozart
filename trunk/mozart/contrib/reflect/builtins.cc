@@ -163,8 +163,7 @@ OZ_BI_define(BIReflectPropagatorCoordinates, 1, 1)
     OZ_RETURN(oz_false());
   }
 
-  OZ_Term r = oz_propGetName(((PropagatorReference*) se1)
-			     ->getPropagator());
+  OZ_Term r = oz_propGetName(((PropagatorReference*) se1)->getPropagator());
 
   DEBUGPRINT(("BIReflectPropagatorCoordinates out\n"));
 
