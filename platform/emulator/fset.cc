@@ -236,20 +236,25 @@ OZ_Term getAsList(const int * bv, int neg = 0, int other = 0)
   return hd ? makeTaggedLTuple(hd) : OZ_nil();
 }
 
+#ifndef BIGFSET
+
 static
 void setBits(OZ_Term t, int high, int * bv, int neg = 0)
 {
-  for (; OZ_isCons(t); t = OZ_tail(t)) {
-    OZ_Term vt = OZ_head(t);
-    DEREF(vt, vtptr, vttag);
+  DEREF(t, tptr, ttag);
 
-    if (isSmallIntTag(vttag)) {
-      int v = OZ_intToC(OZ_head(t));
+  if (oz_isSTuple(t) && tagged2SRecord(t)->getWidth() == 1) {
+    setBits((*tagged2SRecord(t))[0], high, bv, !neg);
+  } else {
+    if (isSmallIntTag(ttag)) {
+      int v = OZ_intToC(t);
       if (0 <= v && v < 32 * high)
         bv[div32(v)] |= (1 << mod32(v));
-    } else if (oz_isSTuple(vt)) {
-      SRecord &t = *tagged2SRecord(vt);
-      OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
+    } else if (OZ_isNil(t)) {
+      ;
+    } else if (oz_isSTuple(t)) {
+      SRecord &st = *tagged2SRecord(t);
+      OZ_Term t0 = oz_deref(st[0]), t1 = oz_deref(st[1]);
 
       int l = OZ_intToC(t0);
       int r = OZ_intToC(t1);
@@ -258,14 +263,40 @@ void setBits(OZ_Term t, int high, int * bv, int neg = 0)
         for (int i = l; i <= r; i += 1)
           if (0 <= i && i < 32 * high)
             bv[div32(i)] |= (1 << mod32(i));
+    } else if (OZ_isCons(t)) {
+      for (; OZ_isCons(t); t = OZ_tail(t)) {
+        OZ_Term vt = OZ_head(t);
+        DEREF(vt, vtptr, vttag);
+
+        if (isSmallIntTag(vttag)) {
+          int v = OZ_intToC(vt);
+          if (0 <= v && v < 32 * high)
+            bv[div32(v)] |= (1 << mod32(v));
+        } else if (oz_isSTuple(vt)) {
+          SRecord &t = *tagged2SRecord(vt);
+          OZ_Term t0 = oz_deref(t[0]), t1 = oz_deref(t[1]);
+
+          int l = OZ_intToC(t0);
+          int r = OZ_intToC(t1);
+
+          if (l <= r)
+            for (int i = l; i <= r; i += 1)
+              if (0 <= i && i < 32 * high)
+                bv[div32(i)] |= (1 << mod32(i));
+        } else {
+          error("Unexpected case when creating finite set.");
+        }
+      }
     } else {
       error("Unexpected case when creating finite set.");
     }
+
+    if (neg)
+      for (int i = high; i--; )
+        bv[i] = ~bv[i];
   }
-  if (neg)
-    for (int i = high; i--; )
-      bv[i] = ~bv[i];
 }
+#endif
 
 static
 void printBits(ostream &o, int high, const int * bv, int neg = 0, int other=0)

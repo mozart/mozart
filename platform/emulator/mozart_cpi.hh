@@ -198,7 +198,7 @@ _OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 #define _OZ_EM_FDSUP    "134 217 726"
 #define _OZ_EM_FSETINF  "0"
 // loeckelt: change?
-#define _OZ_EM_FSETSUP  "63"
+#define _OZ_EM_FSETSUP  "134 217 726"
 #define _OZ_EM_INTMAX   "134 217 727"
 
 #define OZ_EM_LIT       "literal"
@@ -904,9 +904,7 @@ public:
   void collectVarsOff(void);
 
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
-  OZ_expect_t expectFSetDescr(OZ_Term descr) {
-    return _expectFSetDescr(descr, 3);
-  }
+  OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectBoolVar(OZ_Term);
