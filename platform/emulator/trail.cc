@@ -9,6 +9,10 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef __GNUC__
+#pragma implementation "trail.hh"
+#endif
+
 #include "types.hh"
 
 #include "trail.hh"

@@ -9,6 +9,10 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef __GNUC__
+#pragma implementation "fdomn.hh"
+#endif
+
 #include "fdomn.hh"
 
 #ifdef OUTLINE

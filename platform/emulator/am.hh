@@ -12,6 +12,10 @@
 #ifndef __AMH
 #define __AMH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include <setjmp.h>
 #include <unistd.h>
 #include <sys/types.h>

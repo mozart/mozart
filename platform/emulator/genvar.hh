@@ -19,6 +19,10 @@
 #ifndef __GENVAR__H__
 #define __GENVAR__H__
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "term.hh"
 #include "indexing.hh"
 

@@ -26,6 +26,10 @@
 */
 
 
+#ifdef __GNUC__
+#pragma implementation "am.hh"
+#endif
+
 #include <signal.h>
 
 #include "../include/config.h"

@@ -10,6 +10,10 @@
 #ifndef __MEMORYH
 #define __MEMORYH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 
 

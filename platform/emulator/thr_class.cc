@@ -10,6 +10,10 @@
   ------------------------------------------------------------------------
 */
 
+#ifdef __GNUC__
+#pragma implementation "thread.hh"
+#endif
+
 /* some random comments on threads:
 
    threads are 'switch'ed, if

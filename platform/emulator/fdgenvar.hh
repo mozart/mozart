@@ -1,6 +1,10 @@
 #ifndef __GENFDVAR__H__
 #define __GENFDVAR__H__
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "genvar.hh"
 #include "fdomn.hh"
 

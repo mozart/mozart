@@ -16,6 +16,10 @@ exported:
   ------------------------------------------------------------------------
 */
 
+#ifdef __GNUC__
+#pragma implementation "print.hh"
+#endif
+
 #include <ctype.h>
 
 #include "actor.hh"

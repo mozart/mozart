@@ -13,6 +13,10 @@
 #ifndef __ACTORH
 #define __ACTORH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "types.hh"
 #include "suspension.hh"
 

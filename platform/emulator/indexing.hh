@@ -12,6 +12,10 @@
 #ifndef __INDEXINGH
 #define __INDEXINGH
 
+#ifdef __GNUC__
+#pragma interface
+#endif
+
 #include "term.hh"
 #include "bignum.hh"
 

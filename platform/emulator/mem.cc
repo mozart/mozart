@@ -7,6 +7,10 @@
   State: $State$
 */
 
+#ifdef __GNUC__
+#pragma implementation "mem.hh"
+#endif
+
 #include "types.hh"
 
 #include "mem.hh"
