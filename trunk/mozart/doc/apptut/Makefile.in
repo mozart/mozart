@@ -1,4 +1,6 @@
 SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
 
 WHAT = apptut
 MAIN = main.sgml
@@ -7,4 +9,4 @@ SGMLSRCS = \
 	module.sgml native.sgml
 HTMLEXTRAFILES =
 
-include $(SRCTOP)/doc/Makefile.common
+include ../Makefile.common
