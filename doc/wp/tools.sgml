@@ -120,7 +120,7 @@ E={New Tk.entry tkInit(parent:D bg:wheat width:20)}
 	  <Picture.Extern to="error.gif" type=gif>
 <chunk class=anonymous><title/error/
 E={New TkTools.error
-   tkInit(master:T
+   tkInit(master:W
           text: 'Error in system configuration: '#
 	        'too much memory.')}
 </chunk>
@@ -162,8 +162,8 @@ E={New TkTools.error
     <P>
       <Ptr to="figure.tools.menubar"> shows an example for the creation of
       a menubar.  The procedure <<TkTools.menubar>> takes two widgets and
-      two menubar sepcifications as input and returns a frame containg the
-      widgets for the menubar.  The widget gievn as first argument serves
+      two menubar specifications as input and returns a frame containing the
+      widgets for the menubar.  The widget given as first argument serves
       as parent for the menubar's frame, whereas the widget given as
       second argument receives the key bindings for the accelerators.
       The specification given as third (fourth) argument describe the
@@ -175,40 +175,39 @@ E={New TkTools.error
 	<P>
 	  <Picture.Extern to="menubar.gif" type=gif>
 <chunk class=anonymous><title/menubar/
-SizeVar = {New Tk.variable tkInit(0)}
-Bar =
-{TkTools.menubar T T
- [menubutton(text:'Test' underline:0
-	     menu:
-		[command(label:   'About test'
-			 action:  Browse # about
-			 key:     alt(a)
-			 feature: about)
-		 separator
-		 command(label:   'Quit'
-			 action:  T # tkClose
-			 key:     ctrl(c)
-			 feature: quit)]
-	     feature: test)
-  menubutton(text:'Options' underline:0
-	     menu:
-		[checkbutton(label: 'Incremental'
-			     var:   {New Tk.variable tkInit(false)})
-		 separator
-		 cascade(label: 'Size'
-			 menu:
-			    [radiobutton(label: 'Small'
-					 var:   SizeVar
-					 value: 0)
-			     radiobutton(label: 'Middle'
-					 var:   SizeVar
-					 value: 1)
-			     radiobutton(label: 'Large'
-					 var:   SizeVar
-					 value: 2)])])]
- nil}
-Dummy = {New Tk.frame tkInit(parent:T width:10#c height:5#c bg:ivory)}
-{Tk.send pack(Bar Dummy fill:x)}
+V={New Tk.variable tkInit(0)}
+B={TkTools.menubar W W
+   [menubutton(text:'Test' underline:0
+	       menu:
+		  [command(label:   'About test'
+			   action:  Browse#about
+			   key:     alt(a)
+			   feature: about)
+		   separator
+		   command(label:   'Quit'
+			   action:  W#tkClose
+			   key:     ctrl(c)
+			   feature: quit)]
+	       feature: test)
+    menubutton(text:'Options' underline:0
+	       menu:
+		  [checkbutton(label: 'Incremental'
+			       var:   {New Tk.variable tkInit(false)})
+		   separator
+		   cascade(label: 'Size'
+			   menu:
+			      [radiobutton(label: 'Small'
+					   var:   V
+					   value: 0)
+			       radiobutton(label: 'Middle'
+					   var:   V
+					   value: 1)
+			       radiobutton(label: 'Large'
+					   var:   V
+					   value: 2)])])]
+   nil}
+F={New Tk.frame tkInit(parent:W width:10#c height:5#c bg:ivory)}
+{Tk.send pack(B F fill:x)}
 </chunk>
       </Figure>
 
@@ -258,7 +257,7 @@ Dummy = {New Tk.frame tkInit(parent:T width:10#c height:5#c bg:ivory)}
 
     <P>
       The <<feature>> options for menubuttons and menu entries attach features
-      to the created objects such that the object get accesible by these
+      to the created objects such that the object get accessible by these
       features.  For instance, to disable the <Q class=menu/About test/ entry
       is possible with
 <chunk class=anonymous><title/entryconfigure/
@@ -266,7 +265,7 @@ Dummy = {New Tk.frame tkInit(parent:T width:10#c height:5#c bg:ivory)}
 </chunk>
 
     <P>
-      The menus attached to menubuttons or to cascade entries can be acessed
+      The menus attached to menubuttons or to cascade entries can be accessed
       under the feature <<menu>>.  For instance the first tear off entry from
       the <Q class=menu/Test/ menu can be removed with
       <<<{Bar.test.menu tk(configure tearoff:false)}>>>
@@ -275,14 +274,13 @@ Dummy = {New Tk.frame tkInit(parent:T width:10#c height:5#c bg:ivory)}
       further entries.  The following statement adds a menu entry just before
       the <<Quit>> entry:
 <chunk class=anonymous><title/add menuentry/
-Added={New Tk.menuentry.command 
-       tkInit(parent:Bar.test.menu
-              before:Bar.test.quit
-              label: 'Exit')}
+A={New Tk.menuentry.command tkInit(parent:B.test.menu
+				   before:B.test.quit
+				   label: 'Exit')}
 </chunk>
       which can be deleted and removed from the menu again by:
 <chunk class=anonymous><title/close menuentry/
-{Added tkClose}
+{A tkClose}
 </chunk>
 
   <section id="section.tools.images">
@@ -333,7 +331,7 @@ declare
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/error/
 
 
@@ -343,7 +341,7 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/menubar/
 
 <chunk.ref/entryconfigure/
