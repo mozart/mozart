@@ -39,9 +39,11 @@ define
    end
    %%
    fun {ListRegularFiles Path}
-      for F in {OS.getDir Path} collect:COL do
-	 if F\="." andthen F\=".." andthen {OS.stat Path#'/'#F}.type=='reg'
-	 then {COL F} end
-      end
+      try
+	 for F in {OS.getDir Path} collect:COL do
+	    if F\="." andthen F\=".." andthen {OS.stat Path#'/'#F}.type=='reg'
+	    then {COL F} end
+	 end
+      catch _ then nil end
    end
 end
