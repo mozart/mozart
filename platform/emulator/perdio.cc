@@ -5571,10 +5571,11 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url,
   bufferManager->freeByteStream(bs); 
 
   close(fd);
-
   
-  return (OZ_unify(urls,mi.urlsFound) && OZ_unify(resources,mi.resources)) 
-    ? PROCEED : FAILED;
+  if (!literalEq(deref(urls),NameUnit) && !OZ_unify(urls,mi.urlsFound))
+    return FAILED;
+
+  return OZ_unify(resources,mi.resources) ? PROCEED : FAILED;
 }
 
 
