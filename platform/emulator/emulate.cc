@@ -2835,6 +2835,9 @@ LBLkillThread:
 	}
       }
     } else {
+      if (ozconf.showSolveFailure) {
+	HF_BODY("solve failed","");
+      }
       //  Reduce (i.e. with failure in this case) the solve actor;
       //  The solve actor goes simply away, and the 'failed' atom is bound to
       // the result variable; 
