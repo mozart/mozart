@@ -461,6 +461,8 @@ public:
     : ThreadState (inFlags, inPri) {}
 };
 
+extern char * ctHeap, * ctHeapTop;
+
 //
 //  Generic 'Thread' class;
 //  It contains a reference to either a kind of continuation, or
@@ -539,6 +541,7 @@ public:
   OZ_Return runNewPropagator(void) {
     Assert(isNewPropagator());
     ozstat.propagatorsInvoked.incf();
+    ctHeap = ctHeapTop;
     return item.propagator->run();
   }
   OZ_Propagator * getNewPropagator(void) {
