@@ -72,10 +72,6 @@ int GenHashNode::getLength(){
 /*      HIDDEN MEMBER FUNCTIONS                                           */
 /* ********************************************************************** */
 
-inline void GenHashTable::init(int low,int high){
-  int i;
-  for(i=low; i<high; i++) {
-    table[i].makeEmpty();}}
 
 inline void
 GenHashTable::basic_htAdd(int ke,GenHashBaseKey* kb, GenHashEntry *en){
@@ -155,10 +151,6 @@ void GenHashTable::compactify(){
   PERDIO_DEBUG(TABLE,"TABLE:hash-table resize complete");
   PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   free(oldtable);}
-
-inline void GenHashTable::clear(){
-  counter=0;
-  init(0,tableSize);}
 
 /* ********************************************************************** */
 /*      VISIBLE MEMBER FUNCTIONS                                           */
