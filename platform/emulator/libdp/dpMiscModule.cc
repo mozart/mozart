@@ -316,7 +316,14 @@ OZ_BI_define(BIsockoptBroadcast,1,0)
 OZ_BI_define(BIgetMsgCntr,0,1)
 {
   initDP();
-  OZ_RETURN(oz_pairII(globalWriteCounter,globalReadCounter));
+  //  OZ_RETURN(oz_pairII(globalWriteCounter,globalReadCounter));
+  OZ_RETURN(OZ_recordInit(oz_atom("globalMsgStatistics"),
+                          oz_cons(oz_pairAI("sent",globalSendCounter),
+                          oz_cons(oz_pairAI("received",globalRecCounter),
+                          oz_cons(oz_pairAI("oswritten",globalOSWriteCounter),
+                          oz_cons(oz_pairAI("osread",globalOSReadCounter),
+                          oz_cons(oz_pairAI("cont",globalContCounter),
+                                  oz_nil())))))));
 }OZ_BI_end
 
 #ifndef MODULES_LINK_STATIC

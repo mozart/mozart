@@ -69,9 +69,11 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 
 MsgContainerManager* msgContainerManager;
 
-int  globalWriteCounter = 0;
-int  globalReadCounter  = 0;
-
+int  globalSendCounter = 0;
+int  globalRecCounter  = 0;
+int  globalOSWriteCounter = 0;
+int  globalOSReadCounter = 0;
+int  globalContCounter = 0;
 
 /* *********************************************************************/
 /*   init;                                                             */
@@ -135,6 +137,8 @@ void initDP()
 /* *********************************************************************/
 
 void SendTo(DSite* toS,MsgContainer *msgC,int priority) {
+  globalSendCounter++;
+
   int ret=toS->sendTo(msgC,priority);
 
   if(ret==ACCEPTED) return;
@@ -513,11 +517,11 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
   Assert(creditSiteIn==NULL);
   Assert(creditSiteOut==NULL);
 
+  globalRecCounter++;
+
   MessageType mt = msgC->getMessageType();
   creditSiteIn=msgC->getImplicitMessageCredit();
   //  if(creditSiteIn!=NULL) printf("creditSiteIn: %x",creditSiteIn);
-
-  globalReadCounter++;
 
   // this is a necessary check - you should never receive
   // a message from a site that you think is PERM or TEMP
