@@ -1259,7 +1259,7 @@ LBLdispatcher:
 	XPC(2) = rec->getArg(index);
 	DISPATCH(5);
       }
-      (void) oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedSRecord(rec),fea);
+      (void) oz_raise(E_ERROR,E_OBJECT,"@",2,makeTaggedConst(self),fea);
       RAISE_THREAD;
     }
 
@@ -1295,7 +1295,7 @@ LBLdispatcher:
       }
       
       (void) oz_raise(E_ERROR,E_OBJECT,"<-",3,
-		      makeTaggedSRecord(rec), fea, XPC(2));
+		      makeTaggedConst(self), fea, XPC(2));
       RAISE_THREAD;
     }
 
