@@ -56,7 +56,7 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     DEREF(bi, bi_ptr, bi_tag);
     if (isNotCVar(bi_tag)) {
       GenFDVariable * fdvar = new GenFDVariable();
-      fdvar->getDom().init(0, OZ_intToC(p[i]) + 2);
+      fdvar->getDom().initRange(0, OZ_intToC(p[i]) + 2);
       doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
     } else {
       error("Unexpected CVar found.");
@@ -294,7 +294,7 @@ OZ_Return CDPropagator::run(void)
     } else {
       not_failed_clause = c;
 
-      if (x[idx_b(c)].maxElem() == 2) {
+      if (x[idx_b(c)].getMaxElem() == 2) {
         Bool top_commit = TRUE;
         for (v = variables; v-- && top_commit; )
           if (x.isNotCDVoid(idx_vp(c, v)))
@@ -382,10 +382,10 @@ OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[],
   OZ_Return ret_val = BI_body(last_index, OZ_args);
   x.restore();
 
-  Assert(x[0].maxElem() >= 2);
+  Assert(x[0].getMaxElem() >= 2);
   if (ret_val == PROCEED) {
-    x[0] <= (x[0].maxElem() - 1);
-    Assert(x[0].maxElem() >= 2);
+    x[0] <= (x[0].getMaxElem() - 1);
+    Assert(x[0].getMaxElem() >= 2);
   } else {
     x[0] &= 0;
   }
@@ -445,7 +445,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
     for (int i = 0; i < b_size; i++) {
       OZ_Term b_i = b[i];
       DEREF(b_i, b_i_ptr, b_i_tag);
-      int max_elem = isSmallInt(b_i_tag) ? smallIntValue(b_i) : tagged2GenFDVar(b_i)->getDom().maxElem();
+      int max_elem = isSmallInt(b_i_tag) ? smallIntValue(b_i) : tagged2GenFDVar(b_i)->getDom().getMaxElem();
 
       switch (max_elem) {
       case 2:
@@ -517,12 +517,12 @@ OZ_Return CDSuppl::run(void)
   OZ_Return ret_val = ((Thread *) thr)->runPropagator();
   am.currentThread = backup_currentThread;
 
-  OZ_ASSERT(b->maxElem() >= 2);
+  OZ_ASSERT(b->getMaxElem() >= 2);
 
   if (ret_val == PROCEED) {
     ((Thread *) thr)->closeDonePropagatorCD();
-    *b <= (b->maxElem() - 1);
-    OZ_ASSERT(b->maxElem() >= 2);
+    *b <= (b->getMaxElem() - 1);
+    OZ_ASSERT(b->getMaxElem() >= 2);
   } else if (ret_val == FAILED) {
     ((Thread *) thr)->closeDonePropagatorCD();
     *b &= 0;

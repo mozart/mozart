@@ -69,10 +69,8 @@ protected:
   int min_elem, max_elem, size;
   void * descr;
 public:
-  void FiniteDomainInit(void * d);
 
   OZ_FiniteDomain(void) : descr((void *) 0) {}
-  OZ_FiniteDomain(void * d);
   OZ_FiniteDomain(OZ_FDState state);
   OZ_FiniteDomain(const OZ_FiniteDomain &);
   OZ_FiniteDomain(OZ_Term);
@@ -80,42 +78,43 @@ public:
   int constrainBool(void);
   void copyExtension(void);
   void dispose(void);
-  OZ_Term getAsList(void) const;
 
-  int init(int, int);
+  int initRange(int, int);
   int initSingleton(int);
-  int init(OZ_Term);
+  int initDescr(OZ_Term);
   int initFull(void);
   int initEmpty(void);
   int initBool(void);
 
-  OZ_Boolean isIn(int i) const;
-  int midElem(void) const;
-  int nextSmallerElem(int v) const;
-  int nextLargerElem(int v) const;
-
+  const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
+  OZ_Boolean operator == (const OZ_FDState) const;
+  OZ_Boolean operator == (const int) const;
   OZ_Boolean operator != (const OZ_FDState) const;
   OZ_Boolean operator != (const int) const;
+
   OZ_FiniteDomain operator & (const OZ_FiniteDomain &) const;
+  OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const;
+  OZ_FiniteDomain operator ~ (void) const;
+
   int operator &= (const OZ_FiniteDomain &);
   int operator &= (const int);
   int operator += (const int);
   int operator -= (const int);
   int operator -= (const OZ_FiniteDomain &);
   int operator <= (const int);
-  const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
-  OZ_Boolean operator == (const OZ_FDState) const;
-  OZ_Boolean operator == (const int) const;
   int operator >= (const int);
-  OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const;
-  OZ_FiniteDomain operator ~ (void) const;
 
   ostream &print(ostream &) const;
-  int singl(void) const;
+  OZ_Boolean isIn(int i) const;
 
+  int getMidElem(void) const;
+  int getNextSmallerElem(int v) const;
+  int getNextLargerElem(int v) const;
   int getSize(void) const { return size; }
-  int minElem(void) const { return min_elem; }
-  int maxElem(void) const { return max_elem; }
+  int getMinElem(void) const { return min_elem; }
+  int getMaxElem(void) const { return max_elem; }
+  int getSingleElem(void) const;
+  OZ_Term getDescr(void) const;
 };
 
 
@@ -125,7 +124,7 @@ ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
 }
 
 //-----------------------------------------------------------------------------
-// class Propagator
+// class OZ_Propagator
 
 // virtual base class; never create an object of this class
 class OZ_Propagator {

@@ -228,8 +228,8 @@ public:
   int initSingleton(int);
   int initList(int list_len, int * list_left, int * list_right,
                int list_min, int list_max);
-  int init(int, int);
-  int init(OZ_Term);
+  int initRange(int, int);
+  int initDescr(OZ_Term);
   int initBool(void);
 
   int getSize(void) const {return size;}

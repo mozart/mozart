@@ -1383,8 +1383,8 @@ OZ_Return WidthPropagator::run(void)
         recwidth=recvar->getWidth(); // current actual width of record
         if (isGenFDVar(wid)) {
             // Build fd with domain recwidth..fd_sup:
-            OZ_FiniteDomain slice=new OZ_FiniteDomain();
-            slice.init(recwidth,fd_sup);
+            OZ_FiniteDomain slice;
+            slice.initRange(recwidth,fd_sup);
             OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
             if (dom.getSize() > (dom & slice).getSize()) {
                 GenFDVariable *fdcon=new GenFDVariable(slice);
@@ -1408,7 +1408,7 @@ OZ_Return WidthPropagator::run(void)
         if (isGenFDVar(wid)) {
             GenFDVariable *newfdwid=tagged2GenFDVar(wid);
             goodsize=(newfdwid->getDom().getSize())==1;
-            value=newfdwid->getDom().minElem();
+            value=newfdwid->getDom().getMinElem();
         } else if (isSmallInt(newwidTag)) {
             goodsize=TRUE;
             value=smallIntValue(wid);
