@@ -18,16 +18,9 @@
 
 #define NOMINMAX
 #define Bool WinBool
-#define Sleep WinSleep
-#define FLOAT WinFLOAT
 
 #include <winsock.h>
 
-#undef MAX_PRIORITY
-#undef MIN_PRIORITY
 #undef Bool
-#undef CONST
-#undef FLOAT
-#undef Sleep
 
 #endif

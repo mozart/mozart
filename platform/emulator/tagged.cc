@@ -44,8 +44,8 @@ void initTagged()
   tts[BIGINT]   = "BIGINT";    //  7
   tts[8]        = "REF";       //  8
   tts[SVAR]     = "SVAR";      //  9
-  tts[CONST]    = "CONST";     // 10
-  tts[FLOAT]    = "FLOAT";     // 11
+  tts[OZCONST]  = "OZCONST";     // 10
+  tts[OZFLOAT]  = "OZFLOAT";     // 11
   tts[12]       = "REF";       // 12
   tts[GCTAG]    = "GCTAG";     // 13
   tts[SRECORD]  = "SRECORD";   // 14

@@ -1295,9 +1295,9 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   case STUPLE:   toTerm = makeTaggedSTuple(tagged2STuple(auxTerm)->gc()); break;
   case SRECORD:  toTerm = makeTaggedSRecord(tagged2SRecord(auxTerm)->gcSRecord()); break;
   case BIGINT:   toTerm = makeTaggedBigInt(tagged2BigInt(auxTerm)->gc()); break;
-  case FLOAT:    toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());   break;
+  case OZFLOAT:  toTerm = makeTaggedFloat(tagged2Float(auxTerm)->gc());   break;
 
-  case CONST:
+  case OZCONST:
     {
       ConstTerm *con=tagged2Const(auxTerm)->gcConstTerm();
       toTerm = con ? makeTaggedConst(con) : nil();
@@ -1598,7 +1598,7 @@ void ArityTable::gc()
   }
 }
 
-inline void AbstractionEntry::gcAbstractionEntries()
+void AbstractionEntry::gcAbstractionEntries()
 {
   // there may be NULL entries in the table during gc
   AbstractionEntry *aux = allEntries;

@@ -471,11 +471,11 @@ char *OZ_toC1(OZ_Term term, int depth)
   case STUPLE:
   case SRECORD:
   case LTUPLE:
-  case CONST:
+  case OZCONST:
     return tagged2String(term, depth);
   case LITERAL:
     return OZ_literalToC(term);
-  case FLOAT:
+  case OZFLOAT:
     return OZ_floatToCString(term);
   case BIGINT:
   case SMALLINT:
@@ -625,7 +625,7 @@ OZ_Term OZ_termToVS(OZ_Term t)
   switch (tagTypeOf(t)) {
   case SMALLINT:
   case BIGINT:
-  case FLOAT:
+  case OZFLOAT:
     return t;
   case UVAR:
   case SVAR:
@@ -633,7 +633,7 @@ OZ_Term OZ_termToVS(OZ_Term t)
   case LTUPLE:
   case STUPLE:
   case SRECORD:
-  case CONST:
+  case OZCONST:
     return OZ_CToAtom(OZ_toC(t));
   case LITERAL:
     if (isAtom(t)) return t;

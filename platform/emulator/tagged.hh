@@ -51,11 +51,11 @@ enum TypeOfTerm {
 
   LITERAL          = 15,   // 1111
 
-  CONST            = 10,   // 1010
+  OZCONST          = 10,   // 1010
 
   SMALLINT         =  6,   // 0110
   BIGINT           =  7,   // 0111
-  FLOAT            = 11    // 1011
+  OZFLOAT          = 11    // 1011
 // 12 = 1100 unusable \
 //  8 = 1000 unusable  >  recognized as reference
 //  4 = 0100 unusable /
@@ -318,7 +318,7 @@ Bool isTuple(TaggedRef term) {
 
 inline
 Bool isFloat(TypeOfTerm tag) {
-  return (tag == FLOAT);
+  return (tag == OZFLOAT);
 }
 
 inline
@@ -372,7 +372,7 @@ Bool isNumber(TaggedRef term) {
 
 inline
 Bool isConst(TypeOfTerm tag) {
-  return (tag == CONST);
+  return (tag == OZCONST);
 }
 
 inline
@@ -502,7 +502,7 @@ inline
 TaggedRef makeTaggedFloat(Float *s)
 {
   CHECK_POINTER(s);
-  return makeTaggedRef(FLOAT,s);
+  return makeTaggedRef(OZFLOAT,s);
 }
 
 
@@ -510,7 +510,7 @@ inline
 TaggedRef makeTaggedConst(ConstTerm *s)
 {
   CHECK_POINTER(s);
-  return makeTaggedRef(CONST,s);
+  return makeTaggedRef(OZCONST,s);
 }
 
 // getArg() and the like may never return variables
@@ -649,8 +649,8 @@ inline
 Float *tagged2Float(TaggedRef ref)
 {
   GCDEBUG(ref);
-  CHECKTAG(FLOAT);
-  return (Float *) tagValueOf(FLOAT,ref);
+  CHECKTAG(OZFLOAT);
+  return (Float *) tagValueOf(OZFLOAT,ref);
 }
 
 inline
@@ -666,8 +666,8 @@ inline
 ConstTerm *tagged2Const(TaggedRef ref)
 {
   GCDEBUG(ref);
-  CHECKTAG(CONST);
-  return (ConstTerm *) tagValueOf(CONST,ref);
+  CHECKTAG(OZCONST);
+  return (ConstTerm *) tagValueOf(OZCONST,ref);
 }
 
 inline
