@@ -41,10 +41,6 @@ TypeOfTerm tag;                                                               \
  *  --> for FD
  */
 
-#define OZ_getCArgDeref(N, V, VPTR, VTAG) \
-  OZ_Term V = OZ_getCArg(N); \
-  DEREF(V, VPTR, VTAG);
-
 #define CREATE_SUSP_SELF(S)                                                   \
   Suspension *S = (Suspension *) OZ_makeSelfThread();
 
