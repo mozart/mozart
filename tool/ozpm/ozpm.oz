@@ -12,6 +12,8 @@ import
    Open
    Browser(browse:Browse)
    FileUtils(expand:Expand withSlash:WithSlash fullName:FullName
+	     exists:Exists
+	     mkdir:Mkdir
 	     fileTree:FileTree dirname:Dirname)
    Resolve
    Message(parse:Parse slurp:Slurp)
@@ -28,19 +30,13 @@ define
    INFO  = "ozpm.info"
 
    proc{CreatePath P}
-      Stat
-   in
-      try
-	 Stat={OS.stat P}
-      catch system(os(...) ...) then % inexistant directory
-	 if {OS.system "mkdir "#P}\=0 then
-	    raise error(unableToCreateDirectory P) end
+      if {Exists P} then skip else
+	 if {Exists {Dirname P}}==false then
+	    {CreatePath {Dirname P}}
 	 end
+	 {Mkdir P}
       end
-      if {IsFree Stat} then
-	 Stat={OS.stat P}
-      end
-      if Stat.type\=dir then % not a directory
+      if {OS.stat P}.type\=dir then
 	 raise error(unableToCreateDirectory P) end
       end
    end
@@ -62,7 +58,8 @@ define
 	 L={List.map OzpmInfo fun{$ R} R.name end}
       end
 
-      meth install(Package switch:Switch<=none result:Result<=_)
+      meth install(Package switch:Switch<=none result:Result<=_ prefix:Pref<=OZPMPKG)
+	 Prefix={WithSlash {Expand Pref}}
 	 PackageFile={Resolve.localize Package}.1
 	 A = {New Archive.'class' init(PackageFile)}
 	 PLS={A lsla($)}
@@ -111,13 +108,14 @@ define
 	    %%
 	    {ForAll PInfo.filelist
 	     proc{$ File}
-		{A extract(File OZPMPKG#File)}
+		{CreatePath {Dirname Prefix#File}}
+		{A extract(File Prefix#File)}
 	     end}
 	    %% update ozpminfo
 	    {Pickle.save {Record.adjoinAt PInfo lsla PLS}|
 	     {List.filter OzpmInfo
 	      fun{$ Entry}
-		 Entry.name\=PInfo.name %% forcing an install keeps only one version
+		 Entry.id\=PInfo.id %% forcing an install keeps only one version
 	      end}
 	     OZPMINFO}
 	    Result=success(pkg:PInfo)
@@ -125,19 +123,10 @@ define
 	 end
       end
       
-      meth info(Name Info)
+      meth info(Id Info)
 	 L={List.dropWhile OzpmInfo
 	    fun{$ Entry}
-	       Entry.name\=Name
-	    end}
-      in
-	 Info=if L==nil then notFound else L.1 end
-      end
-
-      meth infoN(Name Info)
-	 L={List.dropWhile OzpmInfo
-	    fun{$ Entry}
-	       Entry.pkg\=Name
+	       Entry.id\=Id
 	    end}
       in
 	 Info=if L==nil then notFound else L.1 end
@@ -298,13 +287,13 @@ define
    end
    
    Args={Application.getArgs
-	 record('action'(single type:atom(install create view check interactive remove help) default:interactive)
+	 record('action'(single type:atom(install create info check interactive remove help) default:interactive)
 		%%
 		%% aliases for actions
 		%%
 		'install'(alias:['action'#install '<install>'#true])
 		'create'( alias:['action'#create  '<create>' #true])
-		'info'(   alias:['action'#view    '<info>'   #true])
+		'info'(   alias:['action'#info    '<info>'   #true])
 		'list'(   alias:['action'#list    '<list>'   #true])
 		'check'(  alias:['action'#check   '<check>'  #true])
 		'interactive'(alias:['action'#interactive '<interactive>'#true])
@@ -411,15 +400,30 @@ define
 	  end
        end}
    end
-    
+
    case Action
    of list then % list all installed packages
       {ForAll {ArchiveManager list($)} Print}
       {Application.exit 0}
    [] info then % view the contents of a package
+      %%
+      %% determine it is a package file or an installed file
+      %%
       I L
    in
-      {ArchiveManager view(Args.'view' I L)}
+      %% first : try to use it as a file
+      try
+	 {ArchiveManager view(Args.'in' I L)}
+      catch _ then
+	 %% second : consider it as an installed package
+	 {ArchiveManager info(Args.'in' I)}
+	 if I==notFound then
+	    {Print "Package '"#Args.'in'#"' is not found and not installed."}
+	    {Application.exit 1}
+	 else
+	    L=I.lsla
+	 end
+      end
       {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
@@ -431,11 +435,11 @@ define
    [] install then % install/update a specified package
       R
    in
-      {ArchiveManager install(Args.'install' switch:if {HasFeature Args 'force'} then
-						       switch(force:unit)
-						    else
-						       switch()
-						    end result:R)}
+      {ArchiveManager install(Args.'in' switch:if {HasFeature Args 'force'} then
+						  switch(force:unit)
+					       else
+						  switch()
+					       end result:R)}
       case {Label R}
       of success then
 	 {Print "Package "#R.pkg.name#" was successfully installed"}
