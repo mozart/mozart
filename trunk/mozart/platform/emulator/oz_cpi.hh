@@ -41,7 +41,7 @@
     OZ_expect_t r = O.F(P);							\
     if (O.isFailing(r)) {							\
       O.fail();									\
-      return OZ_typeError(expectedType, A, "");					\
+      return OZ_typeErrorCPI(expectedType, A, "");				\
     } else if (O.isSuspending(r) || O.isExceptional(r))				\
       return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));	\
   }
@@ -53,7 +53,7 @@
     OZ_expect_t r = O.F(P);							\
     if (O.isFailing(r)) {							\
       O.fail();									\
-      return OZ_typeError(expectedType, A, "");					\
+      return OZ_typeErrorCPI(expectedType, A, "");					\
     } else if (O.isSuspending(r)) {						\
       SC += 1;									\
     } else if (O.isExceptional(r)) {						\
@@ -522,7 +522,7 @@ int * OZ_findSingletons(int, OZ_Term *); // static return value
 
 OZ_Boolean OZ_isEqualVars(OZ_Term, OZ_Term);
 
-OZ_Return OZ_typeError(char *, int, char *);
+OZ_Return OZ_typeErrorCPI(char *, int, char *);
 
 int OZ_getFDInf(void);
 int OZ_getFDSup(void);

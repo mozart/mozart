@@ -39,7 +39,7 @@ OZ_C_proc_begin(fsp_isIn, 3)
   if (!OZ_isVariable(OZ_args[2]) && 
       !(OZ_isTrue(OZ_args[2]) || OZ_isFalse(OZ_args[2]))) {
     pe.fail();                                             
-    return OZ_typeError(expectedType, 2, "");           
+    return OZ_typeErrorCPI(expectedType, 2, "");           
   }
   
   return pe.impose(new IsInPropagator(OZ_args[1],
