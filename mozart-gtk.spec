@@ -68,3 +68,5 @@ make install
 /usr/lib/mozart/doc/add-ons/gtk/node3.html
 /usr/lib/mozart/doc/add-ons/gtk/node4.html
 /usr/lib/mozart/doc/add-ons/gtk/node5.html
+/usr/lib/mozart/doc/add-ons/gtk/ozdoc.css
+/usr/lib/mozart/doc/add-ons/gtk/page.gif
