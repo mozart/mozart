@@ -71,6 +71,10 @@ void adjustProxyForFailure(Tertiary*,EntityCond,EntityCond);
 /**********************************************************************/
 /*   deferoperations                                          */
 /**********************************************************************/
+//NOTE Used to uniform the interfaces. Probefaults and entity poblems are 
+//NOTE usualy assyncrounusly discovered by the networklayer. It might though
+//NOTE be the case that these things are discovered during unmarshal. Then 
+//NOTE we need to postpone them to keep all the invariants.
 
 TaggedRef BI_defer;
 
@@ -82,8 +86,12 @@ OZ_BI_define(BIdefer,0,0)
   DeferdEvents = NULL;
   while(ptr){
     switch(ptr->type){
-    case DEFER_PROXY_PROBLEM:
+    case DEFER_PROXY_TERT_PROBLEM:
       proxyProbeFault(ptr->tert, ptr->prob);
+      break;
+    case DEFER_PROXY_VAR_PROBLEM:
+      if(oz_isProxyVar(oz_deref(ptr->pvar))){
+	oz_getProxyVar(oz_deref(ptr->pvar))->probeFault(ptr->prob);}
       break;
     case DEFER_MANAGER_PROBLEM:
       managerProbeFault(ptr->tert,ptr->site, ptr->prob);
@@ -95,7 +103,7 @@ OZ_BI_define(BIdefer,0,0)
     }
     old = ptr;
     ptr = ptr->next;
-    genFreeListManager->putOne_5((FreeListEntry*)old);
+    genFreeListManager->putOne_6((FreeListEntry*)old);
   }
   return PROCEED;
 } OZ_BI_end
@@ -109,12 +117,16 @@ void addDeferElement(DeferElement* e){
 }
 
 DeferElement* newDeferElement(){
-  return (DeferElement*) genFreeListManager->getOne_5();}
+  return (DeferElement*) genFreeListManager->getOne_6();}
 
 void gcDeferEvents(){
   DeferElement* ptr = DeferdEvents;
   while(ptr!=NULL) {
-    ptr->tert=(Tertiary*)ptr->tert->gCollectConstTerm();
+    if(ptr->type == DEFER_PROXY_VAR_PROBLEM){
+      OZ_collectHeapTermUnsafe( ptr->pvar, ptr->pvar);
+    }
+    else{
+      ptr->tert=(Tertiary*)ptr->tert->gCollectConstTerm();}
     if(ptr->type==DEFER_MANAGER_PROBLEM)
       ptr->site->makeGCMarkSite();
     ptr=ptr->next;}
@@ -138,11 +150,18 @@ void deferManagerProbeFault(Tertiary* t,DSite* s, int pr){
   addDeferElement(e);
 }
 
-void deferProxyProbeFault(Tertiary* t, int pr){
+void deferProxyTertProbeFault(Tertiary* t, int pr){
   DeferElement *e = newDeferElement();
-  e->init(DEFER_PROXY_PROBLEM,pr,t);
+  e->init(DEFER_PROXY_TERT_PROBLEM,pr,t);
   addDeferElement(e);
 }
+
+void deferProxyVarProbeFault(TaggedRef v, int pr){
+  DeferElement *e = newDeferElement();
+  e->init(DEFER_PROXY_VAR_PROBLEM,pr,v);
+  addDeferElement(e);
+}
+
 void managerInstallProbe(Tertiary* t,ProbeType pt){
   installProbeNoRet(BT->getOriginSite(t->getIndex()),pt);}
 

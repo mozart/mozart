@@ -49,5 +49,8 @@ class DSite;
 class ChainElem;
 class ObjectFields;
 class GName;
-
+class ProxyVar;
 #endif 
+
+
+
