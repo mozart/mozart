@@ -482,6 +482,13 @@ TaggedRef makeTaggedAtom(char *s)
 }
 
 inline
+TaggedRef makeTaggedName(char *s)
+{
+  CHECK_STRPTR(s);
+  return makeTaggedRef(ATOM,addToNameTab(s));
+}
+
+inline
 TaggedRef makeTaggedAtom(Atom *s)
 {
   CHECK_POINTER(s);
