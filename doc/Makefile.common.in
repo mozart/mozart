@@ -11,7 +11,9 @@ OZDOCFLAGS      =
 DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
 DOCDIR          = $(PREFIX)/doc/$(WHAT)
-PRINTDOCDIR     = $(PREFIX)/doc/print/$(WHATCLASS)
+PRINTDOCDIR     = $(PREFIX)/print/$(WHATCLASS)
+
+PRINTLINK       = http://www.mozart-oz.org/download/print.cgi
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -47,7 +49,7 @@ Makefile: $(SRCDIR)/Makefile.in ../config.status
 
 $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         rm -f latex.db && \
-        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTNAME); \
+        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
         else opt=; fi; \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=../ozdoc.css \
@@ -71,10 +73,10 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
         do { test $$i = NONE || cp -p $$i $(WHAT)-tex; } done
 
 quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
+        else opt=; fi; \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=../ozdoc.css \
-        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTNAME); \
-        else opt=; fi; \
         --link=Top,../index.html $$opt \
         --bib-path=$(SRCDIR):$(SRCTOP)/doc \
         --bst-path=$(SRCTOP)/doc/utilities \
@@ -97,13 +99,11 @@ install:: $(WHAT)-html/index.html $(DOCDIR)
 %.pdf: %.ps
         ps2pdf $< $@
 
-%.gz: %
-        gzip -9 -c < $< > $@
-
-installps:: $(WHAT).ps.gz $(WHAT).pdf.gz $(PRINTDOCDIR)
-        $(INSTALL_FILE) $(WHAT).ps.gz $(PRINTDOCDIR)/$(PRINTNAME).ps.gz
-        $(INSTALL_FILE) $(WHAT).pdf.gz $(PRINTDOCDIR)/$(PRINTNAME).pdf.gz
-
+installps:: $(WHAT).ps $(WHAT).pdf $(PRINTDOCDIR)
+        if [ $(PRINTNAME) ]; then \
+                $(INSTALL_FILE) $(WHAT).ps  $(PRINTDOCDIR)/$(PRINTNAME).ps; \
+                $(INSTALL_FILE) $(WHAT).pdf $(PRINTDOCDIR)/$(PRINTNAME).pdf; \
+        fi
 
 $(DOCDIR):
         $(INSTALL_DIR) $@

@@ -2,8 +2,8 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 SRCTOP          = @SRCTOP@
 
-WHATCLASS=unused
-PRINTNAME=Demo
+#WHATCLASS=unused
+#PRINTNAME=Demo
 WHAT = demo
 MAIN = main.sgml
 PERL = perl

@@ -3,8 +3,8 @@ SRCDIR          = @srcdir@
 
 WHAT = contrib
 MAIN = contrib.sgml
-WHATCLASS=reference
-PRINTNAME=Contributions
+#WHATCLASS=reference
+#PRINTNAME=Contributions
 SGMLSRCS = regex.sgml gdbm.sgml compat.sgml
 HTMLEXTRAFILES =
 
