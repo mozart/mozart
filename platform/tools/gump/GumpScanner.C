@@ -3,17 +3,17 @@
 //   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 //
 // Copyright:
-//   Leif Kornstaedt, 1996, 1997
+//   Leif Kornstaedt, 1996-1998
 //
 // Last change:
 //   $Date$ by $Author$
 //   $Revision$
 //
 // This file is part of Mozart, an implementation of Oz 3:
-//    $MOZARTURL$
+//   $MOZARTURL$
 //
 // See the file "LICENSE" or
-//    $LICENSEURL$
+//   $LICENSEURL$
 // for information on usage and redistribution
 // of this file, and for a DISCLAIMER OF ALL
 // WARRANTIES.
@@ -47,15 +47,9 @@ struct yy_buffer_state {
 #define YY_BUFFER_EOF_PENDING 2
 };
 
-#define OZ_declareBufferArg(ARG,VAR)            \
- yy_buffer_state *VAR;                          \
- OZ_nonvarArg(ARG);                             \
- if (! OZ_isInt(OZ_getCArg(ARG))) {             \
-   return OZ_typeError(ARG,"Int");              \
- } else {                                       \
-   VAR = (yy_buffer_state *)                    \
-         OZ_intToC(OZ_getCArg(ARG));            \
- }
+#define OZ_declareBufferArg(ARG,VAR)                    \
+ OZ_declareForeignPointerArg(ARG,_Tmp);                 \
+ yy_buffer_state *VAR = (yy_buffer_state *) _Tmp;
 
 static void init_buffer(yy_buffer_state *p) {
   p->yy_buf_pos = &p->yy_ch_buf[0];
@@ -68,6 +62,7 @@ static void init_buffer(yy_buffer_state *p) {
 OZ_C_proc_begin(gump_createFromFile, 2)
 {
   OZ_declareVirtualStringArg(0, file);
+  OZ_declareArg(1, res);
   FILE *f = fopen(file, "rb");
   if (f == NULL)
     return OZ_unify(OZ_getCArg(1), OZ_int(0));
@@ -82,13 +77,14 @@ OZ_C_proc_begin(gump_createFromFile, 2)
   p->yy_fill_buffer = 1;
   init_buffer(p);
 
-  return OZ_unify(OZ_getCArg(1), OZ_int((int) p));
+  return OZ_unify(res, OZ_makeForeignPointer(p));
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(gump_createFromVirtualString, 2)
 {
   OZ_declareVirtualStringArg(0, s);
+  OZ_declareArg(1, res);
   yy_size_t size = strlen(s);
 
   yy_buffer_state *p = new yy_buffer_state;
@@ -102,7 +98,7 @@ OZ_C_proc_begin(gump_createFromVirtualString, 2)
   p->yy_fill_buffer = 0;
   init_buffer(p);
 
-  return OZ_unify(OZ_getCArg(1), OZ_int((int) p));
+  return OZ_unify(res, OZ_makeForeignPointer(p));
 }
 OZ_C_proc_end
 
@@ -140,10 +136,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(gump_close, 1)
 {
-#ifndef linux
-  // This is commented our under Linux because it seems to make
-  // the emulator crash at times.  The cause has not yet been found.
-
+  // Must never be invoked twice on the same foreign pointer!
   OZ_declareBufferArg(0, p);
 
   if (p->yy_input_file)
@@ -151,7 +144,6 @@ OZ_C_proc_begin(gump_close, 1)
   if (p->yy_is_our_buffer)
     delete[] p->yy_ch_buf;
   delete p;
-#endif
 
   return PROCEED;
 }
