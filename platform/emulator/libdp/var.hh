@@ -210,12 +210,10 @@ public:
   void deregisterSite(DSite* sd);
   void deAutoSite(DSite*);
   void surrender(TaggedRef*, TaggedRef);
-  void requested(TaggedRef*);
   void marshal(MsgBuffer*);
   void getStatus(DSite*, int, TaggedRef);
 
-  inline
-  void localize(TaggedRef *vPtr);
+  inline void localize(TaggedRef *vPtr);
   Bool isFuture(){ // mm3
     if(origVar->getType()==OZ_VAR_FUTURE) return TRUE;
     return FALSE;}
@@ -252,6 +250,7 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 void sendRedirect(DSite*, int, TaggedRef);
 OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
 Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs, GenTraverser *);
+Bool triggerVariableImpl(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */
 

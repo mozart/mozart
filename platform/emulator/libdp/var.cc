@@ -126,27 +126,11 @@ void ProxyManagerVar::gcSetIndex(int i)
 
 /* --- ProxyVar --- */
 
-/*
-static
-void sendRequested(BorrowEntry *be){
-  be->getOneMsgCredit();
-  NetAddress *na = be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  marshal_M_REQUESTED(bs,na->index);
-  SendTo(na->site,bs,M_REQUESTED,na->site,na->index);
-}
-*/
-
 OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspension susp, int unstable)
 {
-  // mm2: always send requested, maybe this should be done only once!
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
-
   BorrowEntry *be=BT->getBorrow(getIndex());
-  //  if(isFuture()){  NOT SUPPORTED in this release - another
-  //  sendRequested(be);} protocol necessary
-
   addSuspSVar(susp, unstable);
   return SUSPEND;
 }
@@ -289,10 +273,13 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspension susp, int unstable)
 {
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
+
+  /*
   if (origVar->getType()==OZ_VAR_FUTURE) {
     if (((Future *)origVar)->kick(vPtr))
       return PROCEED;
   }
+  */
   addSuspSVar(susp, unstable);
   return SUSPEND;
 }
@@ -438,24 +425,10 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
 void ManagerVar::surrender(TaggedRef *vPtr, TaggedRef val)
 {
   OZ_Return ret = bindV(vPtr,val);
-  /*
-  if (ret == SUSPEND) {
-    Assert(origVar->getType()==OZ_VAR_FUTURE);
-    Bool ret=((Future *)origVar)->kick(vPtr);
-    Assert(!ret);
-    am.emptySuspendVarList();
-    return;
-  }
-  */
   Assert(ret==PROCEED);
 }
 
-void ManagerVar::requested(TaggedRef *vPtr)
-{
-  if(isFuture()){
-    int ret = ((Future *)origVar)->kick(vPtr);
-  }
-}
+void requested(TaggedRef*);
 
 /* --- Marshal --- */
 
@@ -491,6 +464,7 @@ void ProxyVar::marshal(MsgBuffer *bs)
   }
 }
 
+
 ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
@@ -523,6 +497,13 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
     return FALSE;
   }
   return TRUE;
+}
+
+Bool triggerVariableImpl(TaggedRef *tPtr){
+  const TaggedRef var = *tPtr;
+  if(isFuture(var)){
+    return ((Future*) oz_getVar(tPtr))->kick(tPtr);}
+  return FALSE;
 }
 
 /* --- Unmarshal --- */

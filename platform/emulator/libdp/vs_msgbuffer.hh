@@ -1048,8 +1048,8 @@ public:
 
   //
   DSite* getSite() {
-    OZ_error("there is no 'getSite' method for VSMsgBufferImported!");
-    return ((DSite *) -1);
+    //    OZ_error("there is no 'getSite' method for VSMsgBufferImported!");
+    return ((DSite *) 0);
   }
 };
 

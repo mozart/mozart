@@ -600,7 +600,12 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
-    if (!bs->visit(makeTaggedRef(tPtr)) || (*marshalVariable)(tPtr, bs, NULL))
+    if (!bs->visit(makeTaggedRef(tPtr)))
+      break;
+    if((*triggerVariable)(tPtr)){
+      marshalTerm(t,bs);
+      return;}
+    if((*marshalVariable)(tPtr, bs, NULL))
       break;
     t=makeTaggedRef(tPtr);
     goto bomb;
