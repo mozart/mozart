@@ -22,8 +22,6 @@
 
 #include <ctype.h>
 
-#include "../include/config.h"
-
 #include "gc.hh"
 #include "builtins.hh"
 #include "actor.hh"
@@ -1544,7 +1542,9 @@ void AM::gc(int msgLevel)
   board_constraints = board_constraints->gc(NO);
 #endif
 
-  Thread::GC();
+  threadsFreeList = NULL;
+  GCREF(threadsHead);
+  GCREF(threadsTail);
 
   GCPROCMSG("ioNodes");
   for(int i = 0; i < IO::openMax; i++)
@@ -1900,13 +1900,6 @@ HeapChunk * HeapChunk::gc(void)
   GCNEWADDRMSG(ret);
   storeForward(getGCField(), ret);
   return ret;
-}
-
-void Thread::GC()
-{
-  FreeList = NULL;
-  GCREF(Head);
-  GCREF(Tail);
 }
 
 Thread *Thread::gc()

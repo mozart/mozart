@@ -107,9 +107,6 @@ public:
   RefsArray xRegs;
   RefsArray toplevelVars;
 
-  Thread *currentThread;
-  Thread *rootThread;
-
   Board *currentBoard;
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
@@ -124,6 +121,42 @@ public:
   Bool dontPropagate;
   // is used by consistency checking of a copy of a search tree;
 #endif
+
+  /* Threads */
+  Thread *currentThread;
+  Thread *threadsHead;
+  Thread *threadsTail;
+
+  Thread *rootThread;
+  Toplevel *toplevelQueue;
+
+  Thread *threadsFreeList;
+
+  void initThreads();
+  void printThreads();
+
+  void AM::scheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
+  void AM::scheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
+                             Suspension *s=0);
+  void AM::scheduleSolve(Board *b);
+  void AM::scheduleWakeup(Board *b, Bool wasExtSusp);
+
+  void AM::pushToplevel(ProgramCounter pc);
+  void AM::checkToplevel();
+  void AM::addToplevel(ProgramCounter pc);
+
+  Thread *AM::newThread(int p,Board *h);
+  void AM::disposeThread(Thread *th);
+  Bool AM::isScheduled(Thread *th);
+  void AM::scheduleThread(Thread *th);
+  Bool AM::threadQueueIsEmpty();
+  Thread *AM::getFirstThread();
+  Thread *AM::unlinkThread(Thread *th);
+  void AM::insertFromHead(Thread *th);
+  void AM::insertAfter(Thread *th,Thread *here);
+  void AM::insertFromTail(Thread *th);
+  void AM::insertBefore(Thread *th, Thread *here);
+
 public:
   AM() {};
   void init(int argc,char **argv);
@@ -163,6 +196,29 @@ public:
   void reduceTrailOnFail();
   void reduceTrailOnShallow(Suspension *susp,int numbOfCons);
 
+  // in emulate.cc
+  Bool emulateHookOutline(Abstraction *def=NULL,
+                          int arity=0, TaggedRef *arguments=NULL);
+  Bool hookCheckNeeded();
+  Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
+                           RefsArray Y, RefsArray G,
+                           RefsArray X, int argsToSave);
+  Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
+                           RefsArray X, int argsToSave);
+  void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
+                    RefsArray X, RefsArray Y, RefsArray G, int prio);
+  void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave,
+                           Board *b,
+                           ProgramCounter PC, RefsArray X, RefsArray Y,
+                           RefsArray G, int prio);
+  TaggedRef createNamedVariable(int regIndex, TaggedRef name);
+  void suspendInlineRel(TaggedRef A, TaggedRef B, int noArgs,
+                        OZ_CFun fun, ByteCode *shallowCP);
+  void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C,
+                        TaggedRef &Out,
+                        int noArgs, OZ_CFun fun, InlineFun2 inFun,
+                        ByteCode *shallowCP);
+
   Bool isToplevel();
 
   void gc(int msgLevel);  // ###
@@ -194,10 +250,8 @@ public:
   void pushCall(Board *b, SRecord *def, int arity, RefsArray args);
   void pushDebug(Board *n, SRecord *def, int arity, RefsArray args);
   void pushTask(Board *n,ProgramCounter pc,
-                RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushTaskOutline(Board *n,ProgramCounter pc,
-                       RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
-  void pushCFun(Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
+                RefsArray y,RefsArray g,RefsArray x=0,int i=0);
+  void pushCFun(Board *n, OZ_CFun f, RefsArray x=0, int i=0);
   void pushNervous(Board *n);
 
   void genericBind(TaggedRef *varPtr, TaggedRef var,
@@ -229,7 +283,7 @@ public:
   State getValue(TaggedRef feature, TaggedRef out);
   State setValue(TaggedRef feature, TaggedRef value);
 
-  void RestartProcess();
+  void restartThread();
 };
 
 extern AM am;

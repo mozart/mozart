@@ -17,8 +17,6 @@
 
 #include <signal.h>
 
-#include "../include/config.h"
-
 #include "actor.hh"
 #include "am.hh"
 #include "bignum.hh"
@@ -31,7 +29,7 @@
 #include "thread.hh"
 #include "unify.hh"
 #include "fdbuilti.hh"
-
+#include "verbose.hh"
 
 AM am;
 
@@ -266,7 +264,7 @@ void AM::init(int argc,char **argv)
   currentSolveBoard = (Board *) NULL;
   wasSolveSet = NO;
 
-  Thread::Init();
+  initThreads();
 
   // builtins
   BuiltinTabEntry *entry = BIinit();
@@ -547,7 +545,7 @@ Bool AM::_checkExtSuspension (Suspension *susp)
 
     SolveActor *sa = SolveActor::Cast (sb->getActor ());
     if (sa->isStable () == OK) {
-      Thread::ScheduleSolve (sb);
+      scheduleSolve (sb);
       // Note:
       //  The observation is that some actors which have imposed instability
       // could be discarded by reduction of other such actors. It means,
@@ -581,7 +579,7 @@ void AM::incSolveThreads (Board *bb,int n)
       Assert(sa->getBoard());
       sa->incThreads (n);
       if (sa->isStable () == OK) {
-        Thread::ScheduleSolve (bb);
+        scheduleSolve (bb);
       }
     }
     bb = bb->getParentBoard ();
@@ -808,7 +806,7 @@ void AM::awakeNode(Board *node)
 #ifndef NEWCOUNTER
   node->decSuspCount();
 #endif
-  Thread::ScheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!!
+  scheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!!
 }
 
 // exception from general rule that arguments are never variables!
@@ -920,7 +918,7 @@ void AM::reduceTrailOnUnitCommit()
   trail.popMark();
 }
 
-
+// only used in deinstall
 void AM::reduceTrailOnSuspend()
 {
   int numbOfCons = trail.chunkSize();
@@ -1013,28 +1011,6 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
   trail.popMark();
 }
 
-void AM::pushCall(Board *n, SRecord *def, int arity, RefsArray args)
-{
-#ifndef NEWCOUNTER
-  n->incSuspCount();
-#endif
-  currentThread->taskStack.pushCall(n,def,args,arity);
-}
-
-void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
-{
-#ifndef NEWCOUNTER
-  n->incSuspCount();
-#endif
-  currentThread->taskStack.pushDebug(n, new OzDebug(def,arity,args));
-}
-
-void AM::pushTaskOutline(Board *n,ProgramCounter pc,
-                         RefsArray y,RefsArray g,RefsArray x,int i)
-{
-  pushTask(n, pc, y, g, x, i);
-}
-
 #ifdef DEBUG_CHECK
 static Board *oldBoard = (Board *) NULL;
 static Board *oldSolveBoard = (Board *) NULL;
@@ -1072,7 +1048,147 @@ Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
   return fastUnify(ref1, ref2, prop);
 }
 
+void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
+{
+  currentThread->pushDebug(n,new OzDebug(def,arity,args));
+}
 
+/* ------------------------------------------------------------------------
+ * Threads
+ *
+ * runnable queue: threadsHead, threadsTail
+ * memory optimization: threadsFreeList
+ * running thread: currentThread
+ * toplevel: rootThread and toplevelQueue
+ * ------------------------------------------------------------------------ */
+
+void AM::initThreads()
+{
+  threadsHead     = (Thread *) NULL;
+  threadsTail     = (Thread *) NULL;
+  threadsFreeList = (Thread *) NULL;
+
+  currentThread = (Thread *) NULL;
+
+  rootThread = newThread(conf.defaultPriority,rootBoard);
+  toplevelQueue = (Toplevel *) NULL;
+}
+
+
+void AM::scheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
+{
+  Board *bb = c->getBoard()->getBoardDeref();
+  Thread *th = newThread(c->getPriority(),bb);
+  if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    incSolveThreads(bb);
+    th->setNotificationBoard(bb);
+  }
+  th->pushCont(bb,c->getPC(),c->getY(),c->getG(),
+               c->getX(),c->getXSize(), NO);
+  scheduleThread(th);
+}
+
+void AM::scheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
+                           Suspension *s)
+{
+  Thread *th = newThread(c->getPriority(),c->getBoard());
+  Board *bb = c->getBoard()->getBoardDeref();
+  if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    incSolveThreads(bb);
+    th->setNotificationBoard(bb);
+  }
+  th->pushCFunCont(bb,c->getCFunc(),s,c->getX(),c->getXSize(),NO);
+  scheduleThread(th);
+}
+
+
+// create a new thread to reduce a solve actor;
+void AM::scheduleSolve (Board *b)
+{
+  Assert(b == b->getBoardDeref());
+  Assert(!b->isCommitted() && b->isSolve());
+
+  // message("ScheduleSolve (@0x%x)\n", (void *) b->getActor ());
+
+  Thread *th = newThread(b->getActor()->getPriority(),NULL);
+  Board *nb = b->getParentBoard()->getSolveBoard();
+  incSolveThreads (nb);
+  th->setNotificationBoard (nb);
+  th->pushNervous(b);
+  b->setNervous();
+  scheduleThread(th);
+}
+
+// create a new thread after wakeup (nervous)
+void AM::scheduleWakeup(Board *b, Bool wasExtSusp)
+{
+  Assert(b == b->getBoardDeref());
+  Thread *th = newThread(b->getActor()->getPriority(),b);
+  if (currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
+    incSolveThreads (b);
+    th->setNotificationBoard(b);
+  }
+  th->pushNervous(b);
+  b->setNervous();
+  scheduleThread(th);
+}
+
+
+/*
+ * Toplevel is a queue of toplevel queries, which must be executed
+ * sequentially.
+ *   see checkToplevel()  called when disposing a thread
+ *       addToplevel()    called when a new query arrives
+ */
+class Toplevel {
+public:
+  ProgramCounter pc;
+  Toplevel *next;
+  Toplevel(ProgramCounter p, Toplevel *nxt) : pc(p), next(nxt) {}
+};
+
+/*
+ * push a new toplevel continuation to the rootThread
+ * PRE: the rootThread is empty
+ * called from checkToplevel and addToplevel
+ */
+void AM::pushToplevel(ProgramCounter pc)
+{
+  Assert(rootThread->isEmpty());
+  rootBoard->incSuspCount();
+  rootThread->pushCont(rootBoard,pc,toplevelVars);
+  if (rootThread!=currentThread && !isScheduled(rootThread)) {
+    scheduleThread(rootThread);
+  }
+}
+
+/*
+ * in dispose: check if there more toplevel tasks
+ */
+void AM::checkToplevel()
+{
+  if (toplevelQueue) {
+    Verbose((VERB_THREAD,"checkToplevel: pushNext: 0x%x\n",this));
+    Toplevel **last;
+    for (last = &toplevelQueue;
+         ((*last)->next) != NULL;
+         last = &((*last)->next)) {
+    }
+    pushToplevel((*last)->pc);
+    *last = (Toplevel *) NULL;
+  }
+}
+
+void AM::addToplevel(ProgramCounter pc)
+{
+  if (rootThread->isEmpty()) {
+    Verbose((VERB_THREAD,"addToplevel: push\n"));
+    pushToplevel(pc);
+  } else {
+    Verbose((VERB_THREAD,"addToplevel: delay\n"));
+    toplevelQueue = new Toplevel(pc,toplevelQueue);
+  }
+}
 
 #ifdef OUTLINE
 #define inline

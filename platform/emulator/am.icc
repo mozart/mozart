@@ -19,6 +19,7 @@
 #include "thread.hh"
 #include "unify.hh"
 #include "genvar.hh"
+#include "verbose.hh"
 
 // optimize: inline ....
 inline
@@ -130,32 +131,6 @@ Bool AM::installScript(Script &script)
   return ret;
 }
 
-
-inline
-void AM::pushTask(Board *n,ProgramCounter pc,
-                         RefsArray y,RefsArray g,
-                         RefsArray x,int i)
-{
-#ifndef NEWCOUNTER
-  n->incSuspCount();
-#endif
-  currentThread->taskStack.pushCont(n,pc,y,g,x,i);
-}
-
-inline
-void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
-{
-#ifndef NEWCOUNTER
-  n->incSuspCount();
-#endif
-  currentThread->taskStack.pushCFunCont(n, f, (Suspension *) NULL, x, i);
-}
-
-inline
-void AM::pushNervous(Board *n) {
-  currentThread->taskStack.pushNervous(n);
-}
-
 inline
 Bool AM::entailment ()
 {
@@ -254,16 +229,235 @@ Bool AM::isEmptyTrailChunk ()
 }
 
 inline
-Bool AM::isToplevel() {
+Bool AM::isToplevel()
+{
   return currentBoard == rootBoard ? OK : NO;
 }
 
+
+void AM::pushCall(Board *b, SRecord *def, int arity, RefsArray args)
+{
+  currentThread->pushCall(b,def,args,arity);
+}
+void AM::pushTask(Board *n,ProgramCounter pc,
+                  RefsArray y,RefsArray g,RefsArray x=0,int i=0)
+{
+  currentThread->pushCont(n,pc,y,g,x,i);
+}
+void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x=0, int i=0)
+{
+  currentThread->pushCFunCont(n, f, (Suspension *) NULL, x, i);
+}
+
+void AM::pushNervous(Board *n)
+{
+  currentThread->pushNervous(n);
+}
+
+/* ------------------------------------------------------------------------
+ * Threads
+ * ------------------------------------------------------------------------ */
+
 // unset the ThreadSwitch flag and reset the processCounter
 inline
-void AM::RestartProcess()
+void AM::restartThread()
 {
   unsetSFlag(ThreadSwitch);
   ProcessCounter=msToClockTick(conf.timeSlice);
+}
+
+inline
+Thread *AM::newThread(int p,Board *h)
+{
+#ifdef NEWCOUNTER
+  h->incSuspCount();
+#endif
+  Thread *th = threadsFreeList;
+  if (th) {
+    threadsFreeList = th->next;
+  } else {
+    th=new Thread(conf.taskStackSize);
+  }
+  th->init(p,h);
+  return th;
+}
+
+// free the memory of the thread (there are no references to it anymore)
+inline
+void AM::disposeThread(Thread *th)
+{
+  Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
+  if (th == rootThread) {
+    rootThread->init(conf.defaultPriority,rootBoard);
+    checkToplevel();
+  } else {
+    /* dispose thread: */
+    th->next=threadsFreeList;
+    threadsFreeList = th;
+  }
+}
+
+// check if the thread is scheduled
+inline
+Bool AM::isScheduled(Thread *th)
+{
+  return th->prev!=NULL || th->next!=NULL || threadsHead==th;
+}
+
+// add a thread to the thread queue
+inline
+void AM::scheduleThread(Thread *th)
+{
+  Assert(!isScheduled(th));
+
+  if (th != currentThread
+      && currentThread
+      && th->getPriority() > currentThread->getPriority()) {
+    insertFromHead(th);
+    setSFlag(ThreadSwitch);
+  } else {
+    insertFromTail(th); // or insertFromHead();
+  }
+}
+
+inline
+Bool AM::threadQueueIsEmpty()
+{
+  return threadsHead ? NO : OK;
+}
+
+/* only usage in emulate */
+inline
+Thread *AM::getFirstThread()
+{
+  Assert(threadsHead!=0);
+  Thread *tt = threadsHead;
+  Verbose((VERB_THREAD,"Thread::GetFirst = 0x%x\n",tt));
+  threadsHead=tt->next;
+  if (threadsHead) {
+    Assert(threadsHead->prev==tt);
+    threadsHead->prev= (Thread *) NULL;
+  } else {
+    Assert(threadsTail==tt);
+    threadsTail=threadsHead;
+  }
+  tt->prev=tt->next=(Thread *) NULL;
+
+#ifdef DEBUG_CHECK
+  Thread *tmp = threadsHead;
+  while (tmp != (Thread *) NULL) {
+    if (tmp->getPriority() > tt->getPriority())
+      error ("Thread::GetFirst (): wrong task is got");
+    tmp = tmp->next;
+  }
+#endif
+  return tt;
+}
+
+// unlink the thread from the thread queue
+inline
+Thread *AM::unlinkThread(Thread *th)
+{
+  if (th->prev) {
+    Assert(th->prev->next==th);
+    th->prev->next=th->next;
+  } else {
+    Assert(threadsHead==th);
+    threadsHead=th->next;
+  }
+  if (th->next) {
+    Assert(th->next->prev==th);
+    th->next->prev=th->prev;
+  } else {
+    Assert(threadsTail==th);
+    threadsTail=th->prev;
+  }
+  th->prev=th->next=(Thread *) NULL;
+  return th;
+}
+
+// insert into priority queue searching from head
+//  before the first one with a lower priority
+inline
+void AM::insertFromHead(Thread *th)
+{
+  Thread *here;
+  for (here = threadsHead; here; here=here->prev) {
+    if (here->getPriority() < th->getPriority()) {
+      break;
+    }
+  }
+  insertBefore(th,here);
+}
+
+// insert 'this' after 'here', if here = 0 then at head
+inline
+void AM::insertAfter(Thread *th,Thread *here)
+{
+  th->prev=here;
+  if (here) {
+    th->next=here->next;
+    here->next=th;
+    if (th->next) {
+      Assert(th->next->prev==here);
+      th->next->prev=th;
+    } else {
+      Assert(threadsTail==here);
+      threadsTail=th;
+    }
+  } else {
+    th->next=threadsHead;
+    threadsHead=th;
+    if (th->next) {
+      Assert(th->next->prev==0);
+      th->next->prev=th;
+    } else {
+      Assert(threadsTail==0);
+      threadsTail=th;
+    }
+  }
+}
+
+// insert into priority queue searching from tail
+//  after the last one with the same or a higher priority
+inline
+void AM::insertFromTail(Thread *th)
+{
+  Thread *here;
+  for (here = threadsTail; here; here=here->prev) {
+    if (here->getPriority() >= th->getPriority()) {
+      break;
+    }
+  }
+  insertAfter(th,here);
+}
+
+// insert 'this' before 'here', if here = 0 then at tail
+inline
+void AM::insertBefore(Thread *th, Thread *here)
+{
+  th->next=here;
+  if (here) {
+    th->prev=here->prev;
+    here->prev=th;
+    if (th->prev) {
+      Assert(th->prev->next==here);
+      th->prev->next=th;
+    } else {
+      Assert(threadsHead==here);
+      threadsHead=th;
+    }
+  } else {
+    th->prev=threadsTail;
+    threadsTail=th;
+    if (th->prev) {
+      Assert(th->prev->next==0);
+      th->prev->next=th;
+    } else {
+      Assert(threadsHead==0);
+      threadsHead=th;
+    }
+  }
 }
 
 #endif  // __AM_ICC

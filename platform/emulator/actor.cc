@@ -20,7 +20,6 @@
 #include "board.hh"
 #include "tagged.hh"
 #include "builtins.hh"
-#include "../include/config.h"
 
 /*
  * class Actor:

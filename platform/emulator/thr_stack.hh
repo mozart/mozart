@@ -6,20 +6,8 @@
   Version: $Revision$
   State: $State$
 
+  Stack of tasks in threads
   ------------------------------------------------------------------------
-
-  exported variables/classes:  process task stack class
-
-  exported procedures:
-
-  ------------------------------------------------------------------------
-
-  internal static variables:
-
-  internal procedures:
-
-  ------------------------------------------------------------------------
-
 */
 
 #ifndef __TASKSTACKH
