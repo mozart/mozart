@@ -26,6 +26,10 @@ fi
 
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
 : ${OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe}
+: ${OZ_LD_LIBRARY_PATH="$HOME/.oz/platform/$OZPLATFORM/lib:$OZHOME/platform/$OZPLATFORM/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"}
+
+LD_LIBRARY_PATH=$OZ_LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
 
 # set OZPATH & PATH
 if test -z "${OZ_PI}"
