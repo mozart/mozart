@@ -54,7 +54,7 @@ local
 	 {Dbg.off}
 	 {Tk.send wm(withdraw self.toplevel)}
 	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
-	 {Emacs.condSend.interface removeBar}
+	 {SendEmacs removeBar}
       end
 
       meth conf(...)=M

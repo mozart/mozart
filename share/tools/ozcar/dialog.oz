@@ -59,9 +59,9 @@ local
 	 AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
 	 Self
 	 Env = {Record.adjoinList
-		case {Emacs.getOPI} of false then env
-		elseof OPI then
-		   {{OPI getNarrator($)} enqueue(getEnv($))}
+		case {Cget emacsInterface} of false then env
+		elseof I then
+		   {{I getNarrator($)} enqueue(getEnv($))}
 		end
 		{Filter {Append AuxEnv.'G' AuxEnv.'Y'}
 		 fun {$ V#W}
