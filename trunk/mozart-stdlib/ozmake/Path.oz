@@ -60,6 +60,7 @@ import
    OS      at 'x-oz://system/OS.ozf'
    Shell   at 'Shell.ozf'
    Property
+   Windows at 'Windows.ozf'
 define
    %% turn the argument into a URL record, if it is not
    %% already one, protecting special characters
@@ -92,10 +93,32 @@ define
    fun {IsRelative P} {URL.isRelative {ToURL P}} end
    fun {IsAbsolute P} {URL.isAbsolute {ToURL P}} end
 
-   fun {ToString P}
-      {VSToString
-       {URL.toVirtualStringExtended
-	{ToURL P} FULL_RAW}}
+   %% On Win95/98 (aka old Windows), we need to use old style
+   %% pathnames with \ instead of /.
+   
+   ToString
+   if Windows.isOldWin then
+      fun {DeS L}
+	 case L of nil then nil
+	 [] &/|L then &\\|{DeS L}
+	 [] H|L then H|{DeS L} end
+      end
+   in
+      fun {!ToString P}
+	 U={ToURL P}
+	 S={VSToString
+	    {URL.toVirtualStringExtended U FULL_RAW}}
+      in
+	 if {CondSelect U scheme unit}==unit andthen
+	    {CondSelect U authority unit}==unit
+	 then {DeS S} else S end
+      end
+   else
+      fun {!ToString P}
+	 {VSToString
+	  {URL.toVirtualStringExtended
+	   {ToURL P} FULL_RAW}}
+      end
    end
 
    fun {ToAtom P} {StringToAtom {ToString P}} end
