@@ -1,17 +1,16 @@
-/*
-  Perdio Project, DFKI & SICS,
-  Universit"at des Saarlandes
-  Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
-  SICS
-  Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
-  Author: brand,scheidhr, mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  network layer
-  ------------------------------------------------------------------------
-*/
+/* -----------------------------------------------------------------------
+ *  (c) Perdio Project, DFKI & SICS
+ *  Universit"at des Saarlandes
+ *    Postfach 15 11 59, D-66041 Saarbruecken, Phone (+49) 681 302-5312
+ *  SICS
+ *    Box 1263, S-16428 Sweden, Phone (+46) 8 7521500
+ *  Author: brand,scheidhr, mehl
+ *  Last modified: $Date$ from $Author$
+ *  Version: $Revision$
+ *  State: $State$
+ *
+ *  network layer
+ * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
 
@@ -873,7 +872,6 @@ public:
     setObject(from->getObject());
     pendLink=from->pendLink;
     netaddr.set(from->netaddr.site,from->netaddr.index);
-    // mm2 : can this happen for bound PerdioVars?
     from->getObject().setIndex(i);}
 
   void initBorrow(Credit c,int s,int i){
@@ -1077,6 +1075,9 @@ void BorrowEntry::moreCredit(){
   int ret= reliableSend0(site,bs);
   Assert(ret==PROCEED); // TODO
   delete bs;}
+
+
+
 
 int sendRegister(BorrowEntry *be) {
   ByteStream *bs= new ByteStream();
@@ -2150,17 +2151,17 @@ loop:
   return;
 
 processArgs:
-  OZ_Term arg0 = *args;
+  OZ_Term arg0 = tagged2NonVariable(args);
   trailCycle(args);
   marshallTerm(sd,arg0,bs,dr);
   args++;
   if (argno == 1) return;
   for(int i=1; i<argno-1; i++) {
-    marshallTerm(sd,*args,bs,dr);
+    marshallTerm(sd,tagged2NonVariable(args),bs,dr);
     args++;
   }
   // tail recursion optimization
-  t = *args;
+  t = tagged2NonVariable(args);
   goto loop;
 }
 
@@ -2415,7 +2416,9 @@ void siteReceive(BYTE *msg,int len)
       if (ozconf.debugPerdio) {
 	printf("siteReceive: SITE '%s'\n",OZ_toC(t,10,10));
       }
-      sendPort(ozport,t);
+      if (OZ_unify(ozport,t) != PROCEED) {
+	printf("mm2: ups");
+      }
       break;
     }
   case M_PORTSEND:    /* M_PORTSEND index term */
@@ -2792,7 +2795,7 @@ int sendSurrender(BorrowEntry *be,OZ_Term val)
   int index = na->index;
   marshallNumber(index,bs);
   marshallMySite(bs);
-  marshallTerm(site,val,bs,debtRec);
+  domarshallTerm(site,val,bs);
 
   PERDIO_DEBUG2(MSG_SENT,"MSG_SENT:SURRENDER sd:%d,index:%d",
 		site,index);
@@ -2803,17 +2806,19 @@ int sendSurrender(BorrowEntry *be,OZ_Term val)
       delete bs;
       return ret;
     }
-    // mm2
+
     PERDIO_DEBUG(DEBT_SEC,"DEBT_SEC:surrender");
     PendEntry *pe=pendEntryManager->newPendEntry(bs,site);
     debtRec->handler(pe);
     return PROCEED;
   }
 
-  // mm2: I don't understand this!!
   PERDIO_DEBUG(DEBT_MAIN,"DEBT_MAIN:surrender");
   PendEntry *pe= pendEntryManager->newPendEntry(bs,site,be);
   be->inDebtMain(pe);
+  if(!debtRec->isEmpty()){
+    debtRec->handler(pe);
+  }
   return PROCEED;
 }
 
@@ -2824,7 +2829,7 @@ int sendRedirect(int sd,int OTI,TaggedRef val)
 
   marshallNetAddress2(lookupLocalSite(),OTI,bs);
 
-  marshallTerm(sd,val,bs,debtRec);
+  domarshallTerm(sd,val,bs);
 
   PERDIO_DEBUG2(MSG_SENT,"MSG_SENT:REDIRECT sd:%d,index:%d",
 		sd,index);
@@ -2922,59 +2927,33 @@ int sendCreditBack(int sd,int OTI,Credit c)
     return am.raise(E_ERROR,OZ_atom("ip"),"uninitialized",0);	\
   }
 
-OZ_C_proc_begin(BIreliableSend3,3)
-{
-  CHECK_INIT;
 
-  PERDIO_DEBUG(SEND_EMIT,"SEND_EMIT:reliable send3");
-  OZ_declareIntArg(0,sd);
-  OZ_declareArg(1,value);
+OZ_C_proc_begin(BIstartClient,3)
+{
+  OZ_declareVirtualStringArg(0,host);
+  OZ_declareIntArg(1,port);
   OZ_declareArg(2,out);
 
-  if(sendSite(sd,value)==0) {
-    PERDIO_DEBUG(SEND_DONE,"SEND_DONE:reliable send3");
-    return OZ_unifyAtom(out,"true");}
-  return OZ_unifyAtom(out,"false"); 
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIreliableSend,2)
-{
-  CHECK_INIT;
-
-  PERDIO_DEBUG(SEND_EMIT,"SEND_EMIT:reliable send");
-  OZ_declareIntArg(0,sd);
-  OZ_declareArg(1,value);
-
-  int ret = sendSite(sd,value);
-  if (ret == PROCEED) {
-    PERDIO_DEBUG(SEND_DONE,"SEND_DONE:reliable send");
+  if (ipInit(0,siteReceive) < 0) {
+    return OZ_raiseC("ip",2,OZ_atom("ip init failed"),
+		     OZ_atom(OZ_unixError(lastIpError())));
   }
-  return ret;
-}
-OZ_C_proc_end
 
-
-OZ_C_proc_begin(BIunreliableSend,2)
-{
-  CHECK_INIT;
-
-  PERDIO_DEBUG(SEND_EMIT,"SEND_EMIT:unreliable send");
-  OZ_declareIntArg(0,sd);
-  OZ_declareArg(1,value);
+  int sd=lookupSite(host,port,0);
 
   ByteStream *bs=new ByteStream();
   bs->put(M_SITESEND);
-  domarshallTerm(sd,value,bs);
+  domarshallTerm(sd,out,bs);
+
   if(debtRec->isEmpty()){
-    int ret=unreliableSend(sd,bs->getPtr(),bs->getLen());
+    int ret=reliableSend0(sd,bs);
     delete bs;
-    if(ret==0){
+    if(ret==PROCEED){
       PERDIO_DEBUG(SEND_DONE,"SEND_DONE:reliable send");
       return PROCEED;}
-    return OZ_raiseC("unreliableSend",1);
+    return OZ_raiseC("startClient",1,OZ_atom("reliableSend failed"));
   }
-  PERDIO_DEBUG(DEBT,"DEBT:unreliableSend");
+  PERDIO_DEBUG(DEBT,"DEBT:reliableSend");
   PendEntry *pe;
   pe=pendEntryManager->newPendEntry(bs,sd);
   debtRec->handler(pe);
@@ -2983,63 +2962,24 @@ OZ_C_proc_begin(BIunreliableSend,2)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIstartSite,2)
+OZ_C_proc_begin(BIstartServer,2)
 {
   OZ_declareIntArg(0,p);
   OZ_declareArg(1,stream);
 
-  if (ozport!=0) {
-    return OZ_raise(OZ_mkTupleC("perdio",1,OZ_atom("site already started")));
-  }
-  ozport = makeTaggedConst(new PortWithStream(am.rootBoard, stream));
   if (ipInit(p,siteReceive) < 0) {
-    ozport=0;
     return OZ_raiseC("ip",2,OZ_atom("ip init failed"),
 		     OZ_atom(OZ_unixError(lastIpError())));
   }
-  return PROCEED;
-}
-OZ_C_proc_end
 
-OZ_C_proc_begin(BIstartSite3,3)
-{
-  OZ_declareIntArg(0,p);
-  OZ_declareArg(1,stream);
-  OZ_declareArg(2,out);
-
-  if (ozport!=0) {
-    OZ_unifyAtom(out,"false");
-    return PROCEED;
-  }
   ozport = makeTaggedConst(new PortWithStream(am.rootBoard, stream));
-  if (ipInit(p,siteReceive) < 0) {
-    OZ_unifyAtom(out,"false");
-    return PROCEED;}
-  OZ_unifyAtom(out,"true");
   return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(BIlookupSite,4)
-{
-  CHECK_INIT;
-
-  OZ_declareVirtualStringArg(0,host);
-  OZ_declareIntArg(1,port);
-  OZ_declareIntArg(2,timestamp);
-  OZ_declareArg(3,out);
-
-  return OZ_unifyInt(out,lookupSite(host,port,timestamp));
 }
 OZ_C_proc_end
 
 BIspec perdioSpec[] = {
-  {"reliableSend",   2, BIreliableSend, 0},
-  {"reliableSend3",  3, BIreliableSend3, 0},
-  {"unreliableSend", 2, BIunreliableSend, 0},
-  {"startSite",      2, BIstartSite, 0},
-  {"startSite3",     3, BIstartSite3, 0},
-  {"lookupSite",     4, BIlookupSite, 0},
+  {"startServer",    2, BIstartServer, 0},
+  {"startClient",    3, BIstartClient, 0},
   {0,0,0,0}
 };
 
