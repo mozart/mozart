@@ -52,7 +52,7 @@ so that it knows how to display it.
 For example, if the
 servlet outputs HTML,
 you have to print something like:
-<<<Content-type: text/html\n\n>>>
+<P><code>Content-type: text/html\n\n</code>
 <P>The <<Open.html>> class has support for this
 (see example below).
 
@@ -61,14 +61,15 @@ you have to print something like:
 <p>The following example follows this structure.
 It uses a class <<Open.html>> to generate HTML code on the fly.
 You can test it by sending a URL that looks like this:
-<<<
+<P>
+<code>
 http://www.yourdomain.edu/~yourname/small.cgi?number=3D10&text=3DHi+Guys
->>>
+</code>
 <p>In this example,
 the value <<10>> is passed
-for the argument 'number'
+for the argument <code>number</code>
 and the value <<"Hi+Guys">> for 
-the argument 'text'
+the argument <code>text</code>
 (in CGI argument syntax,
 the plus is used to quote a space).
 
@@ -103,9 +104,11 @@ end
 >>>
 
 <P>In order to compile this servlet,
-you have to do
-<<<ozc --execpath=$OZHOME -x small.oz -o small.cgi>>>
-
+you have to do:
+<P>
+<code>
+ozc --execpath=$OZHOME -x small.oz -o small.cgi
+</code>
 <P>The <<execpath>> argument is needed because the
 servlet needs an absolute path.
 Usually, servlets are executed by the Web server
