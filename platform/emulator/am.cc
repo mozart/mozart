@@ -205,9 +205,11 @@ void AM::init(int argc,char **argv)
   }
 
   if (compStream == NULL) {
-    fprintf(stderr,"Cannot open code input\n");	
+    fprintf(stderr,"Cannot open code input\n");
+    sleep(5);
     exit(1);
   }
+
   checkVersion();
 
   extern void DLinit(char *name);
@@ -341,9 +343,7 @@ void AM::suspendEngine()
     userCounter = ticksleft;
   }
 
-  if (ozconf.showIdleMessage) {
-    printf("running...\n");
-  }
+  ozstat.printRunning(stdout);
   
   // restart alarm
   osSetAlarmTimer(CLOCK_TICK/1000);
@@ -1084,6 +1084,17 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
   ioNodes[fd].readwritepair[mode]=cons(l,r);
   osWatchFD(fd,mode);
   return OK;
+}
+
+void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
+{
+  if (!isToplevel()) {
+    warning("acceptSelect only on toplevel");
+    return;
+  }
+
+  ioNodes[fd].readwritepair[SEL_READ]=cons(l,r);
+  osWatchAccept(fd);
 }
 
 void AM::deSelect(int fd)
