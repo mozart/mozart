@@ -46,10 +46,11 @@ ExportedProxyVar::ExportedProxyVar(ProxyVar *pv, DSite *dest)
   ms = borrowTable->getOriginSite(bi);
   if (dest && ms == dest) {
     isToOwner = OK;
-    saveMarshalToOwner(bi, oti, credit);
+    saveMarshalToOwner(bi, oti, remoteRef);
   } else {
     isToOwner = NO;
-    saveMarshalBorrowHead(bi, ms, oti, credit);
+    saveMarshalBorrowHead(bi, ms, oti, remoteRef);
+    ec = pv->getInfo()?(pv->getInfo()->getEntityCond()&PERM_FAIL):ENTITY_NORMAL;
   }
 }
 
@@ -61,10 +62,10 @@ void ExportedProxyVar::marshal(ByteBuffer *bs)
   isMarshaled = OK;
   //
   if (isToOwner)
-    marshalToOwnerSaved(bs, credit, oti);
+    marshalToOwnerSaved(bs, remoteRef, oti);
   else
     marshalBorrowHeadSaved(bs, (isFuture ? DIF_FUTURE : DIF_VAR),
-			   ms, oti, credit);
+			   ms, oti, remoteRef,ec);
 }
 
 //
@@ -72,15 +73,6 @@ void ExportedProxyVar::gCollectRecurseV()
 {
   DebugCode(PD((GC, "ExportedProxyVar b:%d", bti)););
   ms->makeGCMarkSite();
-#ifdef SEC_CREDIT_HANDLER
-  /*
-    ERIK, this an fix for the sec-credit algorithm, 
-    where credit could contain dsite refs. Not applicable
-    to all distributed gc algorithms. 
-
-   */
-  if (credit.owner) credit.owner->makeGCMarkSite();
-#endif
 }
 
 //
@@ -90,11 +82,19 @@ void ExportedProxyVar::disposeV()
   //
   if (!isMarshaled) {
     if (isToOwner) {
-      discardToOwnerSaved(ms, oti, credit);
+      discardToOwnerSaved(ms, oti, remoteRef);
     } else {
-      discardBorrowHeadSaved(ms, oti, credit);
+      discardBorrowHeadSaved(ms, oti, remoteRef);
     }
   }
   oz_freeListDispose(this, sizeof(ExportedProxyVar));
 }
+
+
+
+
+
+
+
+
 
