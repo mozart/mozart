@@ -183,18 +183,38 @@ if test "${GXX}" = yes; then
 	oz_warn_error="-Werror"
     fi
 
-    case `$CXX -dumpversion` in
-    2.95.*) oz_opt="-O3 -pipe -fschedule-insns2";;
-    *)      oz_opt="-O3 -pipe -fstrict-aliasing";;
-    esac
-    oz_om=
+    oz_opt=""
+    oz_om=""
     case ${platform} in
     *-i486) 
-	oz_opt="$oz_opt -mpentium"
-	oz_om="-fomit-frame-pointer"
-        ;;
+	case `$CXX -dumpversion` in
+	2.95.*)
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	    oz_om="-mcpu=pentium -fomit-frame-pointer"
+	    ;;
+	*)
+	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_om="-mpentium -fomit-frame-pointer"
+	    ;;
+	esac
+	;;
+
+    *-sparc)
+	case `$CXX -dumpversion` in
+	2.95.*)
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+            oz_om="-mcpu=v8 -fdelayed-branch"
+	    ;;
+	*)
+	    oz_opt="-O3 -pipe -fstrict-aliasing"
+            oz_om="-mv8 -fdelayed-branch"
+	    ;;
+	esac
+	;;
+
     *)  ;;
     esac
+
     : ${oz_copt_optimize="$oz_opt $oz_om"}
     : ${oz_copt_profile="$oz_opt -pg"}
     : ${oz_copt_debug="-g3 -DINTERFACE"}
