@@ -54,15 +54,20 @@ public:
   int pos;
 };
 
-inline
-Bool order_by_max_inc(const varinfo &x, const varinfo &y) {
-  return x.max < y.max;
-}
+class Order_VarInfo_By_Max_Inc {
+public:
+  Bool operator()(const varinfo& x, const varinfo& y) {
+    return x.max < y.max;
+  }
+};
 
-inline
-Bool order_by_min_dec(const varinfo &x, const varinfo &y) {
-  return x.min > y.min;
-}
+class Order_VarInfo_By_Min_Dec {
+public:
+  Bool operator()(const varinfo& x, const varinfo& y) {
+    return x.min > y.min;
+  }
+};
+
 
 OZ_Return BoundsDistinctPropagator::propagate(void)
 {
@@ -95,7 +100,8 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   }
   
   // Sort variables in ascending order of max
-  fastsort<varinfo,order_by_max_inc>(xi, n);
+  Order_VarInfo_By_Max_Inc ilt;
+  fastsort(xi, n, ilt);
 
   // Propagate lower bounds
   for (i = 0; i < n; i++) {
@@ -126,7 +132,8 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   }
 
   // Sort variables in descending order of min
-  fastsort<varinfo,order_by_min_dec>(xi, n);
+  Order_VarInfo_By_Min_Dec dlt;
+  fastsort(xi, n, dlt);
 
   // Propagate upper bounds
   for (i = 0; i < n; i++) {

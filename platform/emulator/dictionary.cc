@@ -379,10 +379,12 @@ TaggedRef DynamicTable::extraSRecFeatures(SRecord &sr) {
   return flist;
 }
 
-static inline
-Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
-  return featureCmp(a,b) < 0;
-}
+class Order_TaggedRef_By_Feat {
+public:
+  Bool operator()(const TaggedRef& a, const TaggedRef& b) {
+    return featureCmp(a, b) <= 0;
+  }
+};
 
 // Allocate & return sorted list containing all features:
 // Takes optional tail as input argument.
@@ -396,7 +398,8 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
 	Assert(oz_isFeature(table[di].ident));
 	arr[ai++] = table[di].ident;
       }
-    fastsort<TaggedRef,order_taggedref_by_feat>(arr,numelem);
+    Order_TaggedRef_By_Feat lt;
+    fastsort(arr, numelem, lt);
 
     for (int i = numelem; i--; )
       arity=oz_cons(arr[i],arity);
@@ -528,7 +531,8 @@ ostream &DynamicTable::newprint(ostream &out, int depth)
       arr[ai++]=tmplit;
   }
   // Sort the Atoms according to printName:
-  fastsort<TaggedRef,order_taggedref_by_feat>(arr,nAtomOrInt);
+  Order_TaggedRef_By_Feat lt;
+  fastsort(arr, nAtomOrInt, lt);
 
   // Output the Atoms first, in order:
   for (ai=0; ai<nAtomOrInt; ai++) {

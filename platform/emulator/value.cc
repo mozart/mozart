@@ -650,10 +650,12 @@ Bool isSorted(TaggedRef list)
   
 }
 
-static inline
-Bool order_taggedref_by_feat(const TaggedRef& a, const TaggedRef& b) {
-  return featureCmp(a,b) < 0;
-}
+class Order_Taggedref_By_Feat {
+public:
+  Bool operator()(const TaggedRef& a, const TaggedRef& b) {
+    return featureCmp(a,b) <= 0;
+  }
+};
 
 // mm2: optimize for already sorted list! (see isSorted)
 // sort list using quicksort and duplicants
@@ -670,8 +672,9 @@ TaggedRef sortlist(TaggedRef list,int len)
     l = tagged2LTuple(l)->getTail();
   }
 
-  // sort array of elements 
-  fastsort<TaggedRef,order_taggedref_by_feat>(r,len);
+  // sort array of elements
+  Order_Taggedref_By_Feat lt;
+  fastsort(r, len, lt);
 
   // remove duplicates
   int j = 1;
