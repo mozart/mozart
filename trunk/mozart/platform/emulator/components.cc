@@ -837,7 +837,7 @@ OZ_Return URL_get(const char*url,OZ_Term out,URLAction act)
     goto url_local;
   }
 #endif
-  if (strncmp(url,"file:/",6)==0) { url+=5; goto url_local; }
+  if (strncmp(url,"file:",5)==0) { url+=5; goto url_local; }
   {
     const char*s=url;
     while (isalnum(*s)) s++;
