@@ -773,6 +773,12 @@ dnl ------------------------------------------------------------------
 
 OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
 AC_SUBST(OZTOOL_CXX)
+OZ_CC_CHOOSE
+AC_LANG_SAVE
+AC_LANG_C
+OZ_CC_OPTIONS(-fpic -Kpic,OZTOOLDYNOPTCC)
+AC_LANG_RESTORE
+AC_SUBST(OZTOOLDYNOPTCC)
 
 dnl *****************************************************************
 dnl FINALIZE

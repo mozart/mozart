@@ -843,7 +843,7 @@ AC_DEFUN(OZ_CXX_OPTIONS, [
             echo 'void f(){}' > oz_conftest.c
             for ozm_opt in $1
             do
-                AC_MSG_CHECKING(compiler option $ozm_opt)
+                AC_MSG_CHECKING(c++ compiler option $ozm_opt)
                 ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
                 AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
                     if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
@@ -852,6 +852,33 @@ AC_DEFUN(OZ_CXX_OPTIONS, [
                         eval "oz_cv_gxxopt_$ozm_ropt=no"
                     fi)
                 if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+                    ozm_out="$ozm_out $ozm_opt"
+                    AC_MSG_RESULT(yes)
+                else
+                    AC_MSG_RESULT(no)
+                fi
+            done
+            rm -f oz_conftest*
+        fi
+        $2="$ozm_out"
+        ])
+
+AC_DEFUN(OZ_CC_OPTIONS, [
+        ozm_out=
+        if test -n "$1"
+        then
+            echo 'void f(){}' > oz_conftest.c
+            for ozm_opt in $1
+            do
+                AC_MSG_CHECKING(cc compiler option $ozm_opt)
+                ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+                AC_CACHE_VAL(oz_cv_gccopt_$ozm_ropt,
+                    if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+                        eval "oz_cv_gccopt_$ozm_ropt=yes"
+                    else
+                        eval "oz_cv_gccopt_$ozm_ropt=no"
+                    fi)
+                if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
                     ozm_out="$ozm_out $ozm_opt"
                     AC_MSG_RESULT(yes)
                 else
@@ -1063,7 +1090,7 @@ dnl ------------------------------------------------------------------
 dnl OZ_ARG_WITH_INC_DIR
 dnl
 dnl maybe adds some directories to CPPFLAGS
-dnl --with-lib-dirs=d1,...,dn
+dnl --with-inc-dirs=d1,...,dn
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_ARG_WITH_INC_DIR,[
