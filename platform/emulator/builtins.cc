@@ -4724,6 +4724,36 @@ OZ_C_proc_begin(BIexchangeCell,3)
 OZ_C_proc_end
 
 
+OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
+{
+  NONVAR(c,rec,_1);
+
+  if (!isCell(rec)) {
+    TypeErrorT(0,"Cell");
+  }
+  Cell *cell = tagged2Cell(rec);
+
+  out = cell->getValue();
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEFUN1(BIaccessCell,BIaccessCellInline)
+
+OZ_Return BIassignCellInline(TaggedRef c, TaggedRef in)
+{
+  NONVAR(c,rec,_1);
+
+  if (!isCell(rec)) {
+    TypeErrorT(0,"Cell");
+  }
+  Cell *cell = tagged2Cell(rec);
+
+  cell->setValue(in);
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEREL2(BIassignCell,BIassignCellInline)
+
 /********************************************************************
  * Arrays
  ******************************************************************** */
@@ -7160,6 +7190,8 @@ BIspec allSpec1[] = {
 
   {"NewCell",         2,BInewCell,       0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
+  {"Access",          2,BIaccessCell,   (IFOR) BIaccessCellInline},
+  {"Assign",          2,BIassignCell,   (IFOR) BIassignCellInline},
 
   {"IsChar",        2, BIcharIs,        0},
   {"Char.isAlNum",  2, BIcharIsAlNum,   0},

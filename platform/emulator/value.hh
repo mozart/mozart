@@ -1757,6 +1757,7 @@ public:
   OZPRINTLONG;
 
   TaggedRef getValue() { return val; }
+  void setValue(TaggedRef v) { val=v; }
   TaggedRef exchangeValue(TaggedRef v) {
     TaggedRef ret = val;
     val = v;
