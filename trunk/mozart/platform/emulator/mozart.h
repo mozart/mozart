@@ -203,9 +203,6 @@ extern int       _FUNDECL(OZ_getUniqueId,(void));
     } 						\
   }
 
-/*
- * mm2: should we support this ?
- */
 extern OZ_Term _FUNDECL(OZ_termType,(OZ_Term));
 
 /* convert: C from/to Oz datastructure */
