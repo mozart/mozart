@@ -77,8 +77,8 @@ veryclean: clean
 distclean: veryclean
 	-rm -f conf.h config.* Makefile
 
-install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
-	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+install: $(PLATFORMDIR) $(PROVIDETCLLIBS)
+	$(INSTALL_BIN) GTK.so-$(PLATFORM) $(PLATFORMDIR)/GTK.so
 
 Makefile: Makefile.in
 	./config.status
