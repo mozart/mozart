@@ -53,9 +53,13 @@ public:
   ThreadsPool () {};
   ~ThreadsPool () {};
 
-  Thread *currentThread()           { return _currentThread; }
-  void unsetCurrentThread()         { _currentThread=0; }
-  void setCurrentThread(Thread *th) { _currentThread=th; }
+  Thread *currentThread()           {
+    return _currentThread;
+  }
+  void unsetCurrentThread()         {
+    _currentThread=0;
+  }
+  void setCurrentThread(Thread *);
 
   void initThreads();
 
@@ -65,18 +69,20 @@ public:
   //
   void doGC ();
 
-  void scheduleThread(Thread *th,int pri=-1);
-  void scheduleThreadInline(Thread *th,int pri)
-  {
-#ifdef DEBUG_CHECK
-    scheduleThread(th,pri);
-#else
+  void scheduleThread(Thread *th) {
+    Assert(!isScheduledSlow(th));
+
+    int pri = th->getPriority();
+
     if (pri == MID_PRIORITY) {
       midQueue.enqueue(th);
+    } else if (pri == HI_PRIORITY) {
+      hiQueue.enqueue(th);
+      if (hiCounter<0) hiCounter=ozconf.hiMidRatio;
     } else {
-      scheduleThread(th,pri);
+      lowQueue.enqueue(th);
+      if (lowCounter<0) lowCounter=ozconf.midLowRatio;
     }
-#endif
   }
 
   void rescheduleThread(Thread *th);

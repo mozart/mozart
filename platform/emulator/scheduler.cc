@@ -143,15 +143,16 @@ LBLrunThread:
     ozstat.leaveCall(CTT->abstr);
     CTT->abstr = 0;
     e->cachedStack = CTT->getTaskStackRef();
-    e->cachedSelf  = CTT->getSelf();
-    CTT->setSelf(0);
+    e->cachedSelf  = (Object *) 0;
 
     int ret=engine(NO);
 
     CTT->setAbstr(ozstat.currAbstr);
     ozstat.leaveCall(NULL);
-    e->saveSelf();
-    Assert(!e->cachedSelf);
+    if (e->getSelf()) {
+      CTT->pushSelf(e->getSelf());
+      e->cachedSelf = (Object *) NULL;
+    }
 
     switch (ret) {
     case T_PREEMPT:
@@ -178,7 +179,7 @@ LBLpreemption:
   DebugTrace(ozd_trace("thread preempted"));
   Assert(GETBOARD(CTT)==CBB);
   /*  Assert(CTT->isRunnable()|| (CTT->isStopped())); ATTENTION */
-  am.threadsPool.scheduleThreadInline(CTT, CTT->getPriority());
+  am.threadsPool.scheduleThread(CTT);
   am.threadsPool.unsetCurrentThread();
   goto LBLstart;
 
@@ -435,9 +436,12 @@ LBLraise:
     if (e->exception.debug) {
       OZ_Term traceBack;
       foundHdl =
-        CTT->getTaskStackRef()->findCatch(CTT,e->exception.pc,
-                                          e->exception.y, e->exception.cap,
-                                          &traceBack,e->debugmode());
+        CTT->getTaskStackRef()->findCatch(CTT,
+                                          e->exception.pc,
+                                          e->exception.y,
+                                          e->exception.cap,
+                                          &traceBack,
+                                          e->debugmode());
 
       OZ_Term loc = oz_getLocation(CBB);
       e->exception.value = formatError(e->exception.info,e->exception.value,

@@ -762,7 +762,6 @@ TaggedRef makeMessage(SRecordArity srecArity, TaggedRef label, TaggedRef *X)
 // short names
 # define CBB (oz_currentBoard())
 # define CTT (oz_currentThread())
-# define CPP (CTT->getPriority())
 # define CTS (e->cachedStack)
 
 int engine(Bool init)

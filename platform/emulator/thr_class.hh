@@ -103,7 +103,6 @@ private:
   //  Sparc, for instance, has a ldsb/stb instructions -
   // so, this is exactly as efficient as just two integers;
   Board *board;
-  Object *self;
   struct {
     int pri:    sizeof(char) * 8;
     int flags:  (sizeof(int) - sizeof(char)) * sizeof(char) * 8;
@@ -115,7 +114,7 @@ private:
 public:
   NO_DEFAULT_CONSTRUCTORS(Thread)
   Thread(int flags, int prio, Board *bb, int id)
-    : board(bb), id(id), abstr(0), self(0), threadBody(0)
+    : board(bb), id(id), abstr(0), threadBody(0)
   {
     state.flags = flags;
     state.pri   = prio;
@@ -170,9 +169,6 @@ public:
 
   void setAbstr(PrTabEntry *a) { abstr = a; }
   PrTabEntry *getAbstr()       { return abstr; }
-
-  void setSelf(Object *o) { self = o; }
-  Object *getSelf()       { return self; }
 
   int getPriority() {
     Assert(state.pri >= LOW_PRIORITY && state.pri <= HI_PRIORITY);
@@ -293,6 +289,10 @@ public:
   void pushCatch() {
     setCatchFlag();
     threadBody->taskStack.pushCatch();
+  }
+
+  void pushSelf(Object * s) {
+    threadBody->taskStack.pushSelf(s);
   }
 
   Bool isEmpty() {

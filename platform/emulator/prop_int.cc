@@ -216,7 +216,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
     oz_resetLocalPropagatorQueue(bb);
     return PROCEED;
   } else {
-    am.prepareCall(BI_PROP_LPQ);
+    am.prepareCall(BI_PROP_LPQ, (RefsArray) NULL);
     return BI_REPLACEBICALL;
   }
 
