@@ -306,6 +306,7 @@ void AM::init(int argc,char **argv)
 Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
 {
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
+  rebindTrail.init(isToplevel() && prop);
   Bool result = performUnify(&t1, &t2, prop);
 
   // unwindRebindTrail
@@ -473,7 +474,7 @@ start:
  /*************/
  unify_args:
 
-  rebind (termPtr2, term1);
+  rebind(termPtr2, term1);
 
   for (int i = 0; i < argSize-1; i++ ) {
     if (!performUnify(args1+i,args2+i, prop)) {
@@ -722,16 +723,16 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
         if (susp->isOFSSusp()) {
             // Add the feature or list to the diff. list in xRegs[1] and xRegs[2]
             CFuncContinuation *cont=susp->getCCont();
-            RefsArray xRegs=cont->getX();
+            RefsArray xregs=cont->getX();
             if (flist) {
                 if (isLiteral(flist))
-                    xRegs[1]=cons(flist,xRegs[1]);
+                    xregs[1]=cons(flist,xregs[1]);
                 else {
                     // flist must be a list
                     Assert(isLTuple(flist));
                     TaggedRef tmplist=flist;
                     while (tmplist!=AtomNil) {
-                        xRegs[1]=cons(head(tmplist),xRegs[1]);
+                        xregs[1]=cons(head(tmplist),xregs[1]);
                         tmplist=tail(tmplist);
                     }
                 }
@@ -739,11 +740,11 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
             if (determined) {
                 // FS is det.: tail of list must be bound to nil: (always succeeds)
 		// Do *not* use unification to do this binding!
-                TaggedRef tail=xRegs[2];
-		DEREF(tail,tailPtr,tailTag);
+                TaggedRef tl=xregs[2];
+		DEREF(tl,tailPtr,tailTag);
 		switch (tailTag) {
 		case LITERAL:
-		    Assert(tail==AtomNil);
+		    Assert(tl==AtomNil);
 		    break;
 		case UVAR:
 		    doBind(tailPtr, AtomNil);
@@ -751,7 +752,7 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
 		default:
 		    Assert(FALSE);
 		}
-                // Bool ok=am.unify(xRegs[2],AtomNil);
+                // Bool ok=am.unify(xregs[2],AtomNil);
                 // Assert(ok);
             }
         }
@@ -1033,15 +1034,13 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 void AM::pushCall(Board *n, SRecord *def, int arity, RefsArray args)
 {
   n->incSuspCount();
-  ensureTaskStack();
-  currentTaskStack->pushCall(n,def,args,arity);
+  currentThread->taskStack.pushCall(n,def,args,arity);
 }
 
 void AM::pushDebug(Board *n, SRecord *def, int arity, RefsArray args)
 {
   n->incSuspCount();
-  ensureTaskStack();
-  currentTaskStack->pushDebug(n, new OzDebug(def,arity,args));
+  currentThread->taskStack.pushDebug(n, new OzDebug(def,arity,args));
 }
 
 void AM::pushTaskOutline(Board *n,ProgramCounter pc,
