@@ -60,6 +60,11 @@ void initMemoryManagement(void) {
   for(int i=freeListMaxSize; i--; )
     FreeList[i] = NULL;
 
+#ifdef LINKED_QUEUES
+  extern void initLinkedQueueFreeList();
+  initLinkedQueueFreeList();
+#endif
+
   nextChopSize = 8; // Do not change until you know what you are doing!
 
   // init heap memory
@@ -90,8 +95,9 @@ unsigned int getMemoryInFreeList() {
 
   for (int i=0; i<freeListMaxSize; i++) {
     ptr = FreeList[i];
+    int incr = i<<2;
     while(ptr != NULL) {
-      sum += i;
+      sum += incr;
       ptr = *(void **)ptr;
     }
   }
@@ -120,7 +126,7 @@ void freeListChop(void * addr, size_t size) {
     nextChopSize += 4;
 
   register size_t s     = size;
-  register void ** fl   = &(FreeList[cs]);
+  register void ** fl   = &(FreeList[cs>>2]);
   register void * prev  = *fl;
   register void * small = addr;
 
