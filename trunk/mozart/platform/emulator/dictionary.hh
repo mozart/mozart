@@ -401,8 +401,8 @@ public:
   void markSafe()   { isSafe=OK; }
   int getSize()     { return table->numelem; }
 
-  TaggedRef clone() {
-    OzDictionary *aux = new OzDictionary(GETBOARD(this), table);
+  TaggedRef clone(Board * b) {
+    OzDictionary *aux = new OzDictionary(b, table);
     if (isSafe) 
       aux->markSafe();
     return makeTaggedConst(aux);
