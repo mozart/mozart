@@ -75,19 +75,21 @@
 
 <!-- Distributed programming -->
 
-<!ENTITY chapter.connection  SYSTEM "connection.sgml">
-<!ENTITY chapter.fault       SYSTEM "fault.sgml">
-<!ENTITY chapter.remote      SYSTEM "remote.sgml">
-<!ENTITY chapter.resolve     SYSTEM "resolve.sgml">
-<!ENTITY chapter.urlurl      SYSTEM "url.sgml">
-<!ENTITY chapter.discovery   SYSTEM "discovery.sgml">
+<!ENTITY chapter.connection   SYSTEM "connection.sgml">
+<!ENTITY chapter.fault        SYSTEM "fault.sgml">
+<!ENTITY chapter.remote       SYSTEM "remote.sgml">
+<!ENTITY chapter.resolve      SYSTEM "resolve.sgml">
+<!ENTITY chapter.urlurl       SYSTEM "url.sgml">
+<!ENTITY chapter.discovery    SYSTEM "discovery.sgml">
+<!ENTITY chapter.dpinit       SYSTEM "dpinit.sgml">
+<!ENTITY chapter.dpstatistics SYSTEM "dpstatistics.sgml">
 
 
 <!-- Open programming -->
 
 <!ENTITY chapter.os       SYSTEM "os.sgml">
 <!ENTITY chapter.open     SYSTEM "open.sgml">
-
+ 
 <!-- System programming -->
 
 <!ENTITY chapter.system          SYSTEM "system.sgml">
@@ -96,16 +98,16 @@
 <!ENTITY chapter.error           SYSTEM "error.sgml">
 <!ENTITY chapter.errorformatters SYSTEM "errorformatters.sgml">
 <!ENTITY chapter.property        SYSTEM "property.sgml">
-
+ 
 <!-- Window programming -->
 
 <!ENTITY chapter.tk       SYSTEM "tk.sgml">
 <!ENTITY chapter.tktools  SYSTEM "tktools.sgml">
 
-<!-- Misc -->
+<!-- Misc --> 
 
 <!ENTITY chapter.objectsupport SYSTEM "object.sgml">
-
+ 
 ]>
 
 
@@ -115,10 +117,12 @@
     <Meta name=latex.package value="pifont">
 
     <Meta name=latex.input value="system-utils.tex">
-
+  
     <Meta name=latex.table.spec arg1="table.prop.application"
 	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.dp"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.dpLog"
 	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.errors"
 	  arg2="lllp{0.6\linewidth}">
@@ -215,9 +219,11 @@
     <Meta name="html.split"       value="chapter.urlurl">
     <Meta name="html.split"       value="chapter.resolve">
     <Meta name="html.split"       value="chapter.discovery">
+    <Meta name="html.split"       value="chapter.dpinit">
+    <Meta name="html.split"       value="chapter.dpstatistics">
 
     <!-- Open programming -->
-
+  
     <Meta name="html.split"       value="chapter.os">
     <Meta name="html.split"       value="chapter.open">
 
@@ -229,6 +235,7 @@
     <Meta name="html.split"       value="chapter.property">
     <Meta name="html.split"       value="section.property.application">  
     <Meta name="html.split"       value="section.property.dp">  
+    <Meta name="html.split"       value="section.property.dpLog">  
     <Meta name="html.split"       value="section.property.errors">  
     <Meta name="html.split"       value="section.property.fd">  
     <Meta name="html.split"       value="section.property.gc">  
@@ -299,12 +306,12 @@
       for practical programming; these are documented here.
     </Abstract>
 
-
+ 
   <Part id="Part.Application">
-    <Title/Application Programming/
+    <Title/Application Programming/ 
     &chapter.application;
-    &chapter.module;
-  </Part>
+    &chapter.module; 
+  </Part> 
 
   <Part id="Part.Constraints">
     <Title/Constraint Programming/
@@ -326,6 +333,8 @@
     &chapter.resolve;
     &chapter.fault;
     &chapter.discovery;
+    &chapter.dpinit;
+    &chapter.dpstatistics;
   </Part>
 
   <Part id="Part.Open">
