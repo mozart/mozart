@@ -47,8 +47,8 @@
     <Meta name=status value=draft>
 
     <TITLE>Distributed Programming in Mozart - A Tutorial Introduction</TITLE>
-    <Author.Extern to="author.db" key="Seif.Haridi">
     <Author.Extern to="author.db" key="Peter.VanRoy">
+    <Author.Extern to="author.db" key="Seif.Haridi">
     <Author.Extern to="author.db" key="Per.Brand">
     <Comic>
       <Picture.Choice>
