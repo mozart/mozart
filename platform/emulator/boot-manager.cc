@@ -371,6 +371,11 @@ void link_ext_modules() {
 
 }
 
+#ifdef DLOPEN_UNDERSCORE
+#define USC "_"
+#else
+#define USC ""
+#endif
 
 OZ_BI_define(BIObtainNative, 2, 1) {
   oz_declareIN(0, is_boot_tagged);
@@ -400,33 +405,24 @@ OZ_BI_define(BIObtainNative, 2, 1) {
 
     filename = new char[n + m + 64];
 
-    strcpy(filename,             ozconf.emuhome);
-    strcpy(filename + n,         "/");
-    strcpy(filename + n + 1,     name);
-    strcpy(filename + n + m + 1, ".so");
+    strcpy(filename, ozconf.emuhome);
+    strcat(filename, "/");
+    strcat(filename, name);
+    strcat(filename, ".so");
 
     // We have to set the interface identifier
     if_identifier = new char[m + 16];
 
-#ifdef DLOPEN_UNDERSCORE
-    strcpy(if_identifier,     "_mod_int_");
-    strcpy(if_identifier + 9, name);
-#else
-    strcpy(if_identifier,     "mod_int_");
-    strcpy(if_identifier + 8, name);
-#endif
+    strcpy(if_identifier, USC "mod_int_");
+    strcat(if_identifier, name);
   } else {
     // Here the identifier is always the same
-#ifdef DLOPEN_UNDERSCORE
-    if_identifier = "_oz_init_module";
-#else
-    if_identifier = "oz_init_module";
-#endif
+    if_identifier = USC "oz_init_module";
     filename      = name;
   }
 
-  TaggedRef hdl;
-  TaggedRef res = osDlopen(filename,hdl);
+  void *handle;
+  TaggedRef res = osDlopen(filename,&handle);
 
   if (res) {
     struct stat buf;
@@ -450,9 +446,6 @@ OZ_BI_define(BIObtainNative, 2, 1) {
                     file_atom,res);
   }
 
-
-  void* handle = OZ_getForeignPointer(hdl);
-
   init_function = (init_fun_t) osDlsym(handle,if_identifier);
 
   // oops, there is no `init_function()'
@@ -462,12 +455,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
   }
 
   if (!mod_name) {
-#ifdef DLOPEN_UNDERSCORE
-    char * name_sym = "_oz_module_name";
-#else
-    char * name_sym = "oz_module_name";
-#endif
-
+    char * name_sym = USC "oz_module_name";
     mod_name = (char *)  osDlsym(handle,name_sym);
   }
 

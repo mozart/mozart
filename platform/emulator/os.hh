@@ -184,7 +184,7 @@ extern int _hdopen(int, int flags);
 #define PathSeparator ':'
 #endif
 
-TaggedRef osDlopen(char *filename, OZ_Term& out);
+TaggedRef osDlopen(char *filename, void **out);
 int osDlclose(void* handle);
 void *osDlsym(void *handle,const char *name);
 
