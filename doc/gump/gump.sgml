@@ -80,6 +80,7 @@
     <Comic>
       <Picture.Choice>
 	<Picture.Extern to="gump.gif" type=gif>
+        <Picture.Extern to="gump-comic.ps.gz" type=ps>
       </Picture.Choice>
     <Abstract>
       This manual describes &Gump;, the front-end generator for &Oz;.
