@@ -106,15 +106,20 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   if (n < 2)
     return PROCEED;
   
+  if (hasEqualVars())
+    return FAILED;
+
+  // Do bounds propagation
   static const int no_max = OZ_getFDSup() + 1;
   static const int no_min = OZ_getFDInf() - 1;
 
   DECL_DYN_ARRAY(OZ_FDIntVar, x, n);
   PropagatorController_VV P(n, x);
+  DECL_DYN_ARRAY(varinfo,xi,n);
+  DECL_DYN_ARRAY(int,u,n);
 
-  varinfo xi[n];
-  
   int i;
+
 
   // Get access to variables and set up variable infos
   for (i = n; i--; ) {
@@ -124,16 +129,10 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
     xi[i].pos = i;
   }
   
-  // Check for equality
-  if (hasEqualVars())
-    goto failure;
-  
   // Sort variables in ascending order of max
-  // FIXME: Do bucket sort for permutations
   sort_max(xi, n);
 
-  int u[n];
-
+  // Propagate lower bounds
   for (i = 0; i < n; i++) {
     int bmm  = no_max;
     u[i] = xi[i].min;
@@ -161,17 +160,10 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
     }
   }
 
-  /*
-  printf("\nMIN PHASE\n");
-  
-  for (i = 0; i<n; i++) {
-    printf("[%d]=%d .. %d, ",xi[i].pos,xi[i].min,xi[i].max);
-  }
-  */
-
   // Sort variables in descending order of min
   sort_min(xi, n);
 
+  // Propagate upper bounds
   for (i = 0; i < n; i++) {
     int bmm = no_min;
     u[i] = xi[i].max;
@@ -199,16 +191,41 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
     }
   }
 
-  /*
-  printf("\nMAX PHASE\n");
-  
-  for (i = 0; i<n; i++) {
-    printf("[%d]=%d .. %d, ",xi[i].pos,xi[i].min,xi[i].max);
+  // Eliminate singletons
+  {
+    int elim = 0;
+
+    for (i = 0; i < n; i++) {
+      if (xi[i].min == xi[i].max) {
+	// This is a singleton
+	// Invariant: the mins are sorted descending
+	// That is:  j < i: xi[j].min > xi[i].min: no overlap possible
+	// And:      j > i: xi[i].min > xi[j].min:
+	//   Overlap, iff xi[j].max >= xi[i].min
+	// Strictness, since they have been propagated!
+	for (int j = i+1; j< n; j++) 
+	  if (xi[j].max >= xi[i].min) 
+	    goto next;
+	elim = 1;
+	reg_l[xi[i].pos] = (OZ_Term) NULL;
+      }
+    next: ;
+    }
+
+    if (elim) {
+      int f = 0;
+      while (reg_l[f]) { f++; }
+      int t = f++;
+      while (f < n) {
+	if (reg_l[f])
+	  reg_l[t++] = reg_l[f];
+	f++;
+      }
+      n = t;
+    }
+
   }
-
-  printf("\n");
-  */
-
+  
   return P.leave();
   
  failure:
