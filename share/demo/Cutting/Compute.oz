@@ -94,14 +94,16 @@ define
       
       meth display(S)
 	 Sol <- S
-	 {For 1 {Width S.squares} 1
+	 D = S.d
+	 X = S.x
+	 Y = S.y
+      in
+	 {For 1 {Width X} 1
 	  proc {$ I}
-	     Sq = S.squares.I
-	     D  = Sq.d
-	     X0 = Sq.x * PlateWidth + 1 + PlateBd + CanvasBd
-	     X1 = X0 + D*PlateWidth - 1 - PlateBd
-	     Y0 = Sq.y * PlateWidth + 1 + PlateBd + CanvasBd
-	     Y1 = Y0 + D*PlateWidth - 1 - PlateBd
+	     X0 = X.I * PlateWidth + 1 + PlateBd + CanvasBd
+	     X1 = X0 + D.I*PlateWidth - 1 - PlateBd
+	     Y0 = Y.I * PlateWidth + 1 + PlateBd + CanvasBd
+	     Y1 = Y0 + D.I*PlateWidth - 1 - PlateBd
 	  in
 	     {self tk(create rectangle X0 Y0 X1 Y1
 		      fill:    GlassColor
@@ -110,15 +112,15 @@ define
 	  end}
       end
 
-      meth Animate(CutInfo Dir x:X y:Y)
+      meth Animate(CutInfo x:X y:Y)
 	 if {IsFree @BreakAnim} then
 	    X0#X1=X Y0#Y1=Y
 	 in
 	    case CutInfo
 	    of nil then skip
-	    [] info(cut:Cut L R) then
+	    [] info(cut:Cut dir:Dir L R) then
 	       case Dir
-	       of x then
+	       of y then
 		  Tk.canvas,tk(create line
 			       Cut*PlateWidth+CanvasBd+2
 			       Y0*PlateWidth+CanvasBd+2
@@ -128,9 +130,9 @@ define
 			       width: 1
 			       fill:  CutColor)
 		  {WaitOr @BreakAnim {Alarm CutDelay}}
-		  PlateCanvas,Animate(L y x:X0#Cut y:Y0#Y1)
-		  PlateCanvas,Animate(R y x:Cut#X1 y:Y0#Y1)
-	       [] y then
+		  PlateCanvas,Animate(L x:X0#Cut y:Y0#Y1)
+		  PlateCanvas,Animate(R x:Cut#X1 y:Y0#Y1)
+	       [] x then
 		  Tk.canvas,tk(create line
 			       X0*PlateWidth+CanvasBd+2
 			       Cut*PlateWidth+CanvasBd+2
@@ -140,8 +142,8 @@ define
 			       width: 1
 			       fill:  CutColor)
 		  {WaitOr @BreakAnim {Alarm CutDelay}}
-		  PlateCanvas,Animate(L x x:X0#X1 y:Y0#Cut)
-		  PlateCanvas,Animate(R x x:X0#X1 y:Cut#Y1)
+		  PlateCanvas,Animate(L x:X0#X1 y:Y0#Cut)
+		  PlateCanvas,Animate(R x:X0#X1 y:Cut#Y1)
 	       end
 	    end
 	 end
@@ -151,7 +153,7 @@ define
 	 S = @Sol
       in
 	 BreakAnim <- _
-	 PlateCanvas,Animate(S.cuts x x:0#S.x y:0#S.y)
+	 PlateCanvas,Animate(S.cuts x:0#S.dx y:0#S.dy)
 	 {WaitOr @BreakAnim {Alarm AnimDelay}}
 	 Tk.canvas,tk(delete animate)
       end
