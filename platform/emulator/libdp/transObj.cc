@@ -76,6 +76,7 @@ void TransController::addRunning(ComObj *comObj) {
 void TransController::switchRunning(ComObj *inList,ComObj *newc) {
   PD((TCPCACHE,"switch running from %x to %x",inList,newc));
 //    fprintf(logfile,"pd_tcpcache switch running from %x to %x\n",(int) inList,(int) newc);
+  Assert(newc->next_cache==(ComObj *) 0x44);
   ComObj *prev=NULL;
   ComObj *tmp=running;
   while(tmp!=NULL && tmp!=inList) {
@@ -92,6 +93,7 @@ void TransController::switchRunning(ComObj *inList,ComObj *newc) {
   if(running_last==inList)
     running_last=newc;
   newc->next_cache=tmp->next_cache;
+  DebugCode(inList->next_cache=(ComObj *) 0x44);
 }
 
 // When (possibly now) resources are available comObj->transObjReady
@@ -239,6 +241,7 @@ ComObj *TransController::getFirst(ComObj *&list, ComObj *&list_last) {
   ComObj *first=list;
   if(first!=NULL) {
     list=first->next_cache;
+    DebugCode(first->next_cache=(ComObj *) 0x44);
     if(list==NULL)
       list_last=NULL;
   }
@@ -250,6 +253,7 @@ ComObj *TransController::getFirst(ComObj *&list, ComObj *&list_last) {
 void TransController::addLast(ComObj *&list,ComObj *&list_last,ComObj *c) {
   PD((TCPCACHE,"''''''''''addLast %x %x %x",list,list_last,c));
 //    fprintf(logfile,"pd_tcpcache ''''''''''addLast %x %x %x\n",(int) list,(int) list_last,(int) c);
+  Assert(c->next_cache==(ComObj *) 0x44);
   if(list_last!=NULL) {
     list_last->next_cache=c;
     list_last=c;
@@ -290,6 +294,7 @@ void TransController::remove(ComObj *&list,ComObj *&list_last,ComObj *c) {
       }
       if(list_last==c)
         list_last=prev;
+      DebugCode(if(c!=NULL) c->next_cache=(ComObj *) 0x44);
       return;
     }
     else {
@@ -297,7 +302,6 @@ void TransController::remove(ComObj *&list,ComObj *&list_last,ComObj *c) {
       cur=cur->next_cache;
     }
   }
-  DebugCode(if(c!=NULL) c->next_cache=NULL);
 }
 
 Bool TransController::closeOne() {

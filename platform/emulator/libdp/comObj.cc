@@ -77,7 +77,7 @@ void ComObj::init(DSite *site) {
   connectgrantrequested=FALSE;
   queues.init();
 
-  DebugCode(next_cache=NULL);
+  DebugCode(next_cache=(ComObj *)0x44);
 }
 
 // Specifying priority -1 means accepting the default as in msgFormat.m4 and
