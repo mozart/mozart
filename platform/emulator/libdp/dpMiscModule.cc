@@ -293,7 +293,7 @@ OZ_BI_define(BIsockoptBroadcast,1,0)
   int on = 1;
   //
   if (
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(__FreeBSD__)
       setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
                  (void *) &on, (socklen_t) sizeof(on))
 #else
