@@ -32,7 +32,7 @@ in
 	 {TkTools.menubar self.toplevel self.toplevel
 	  [MB(text: 'File'
 	      menu:
-		 [C(label:   'Quit'
+		 [C(label:   'Close'
 		    action:  self # off
 		    key:     ctrl(c)
 		    feature: quit)]
