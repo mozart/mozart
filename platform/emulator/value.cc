@@ -1331,3 +1331,11 @@ void PrTabEntry::profileReset()
     aux = aux->next;
   }
 }
+
+int featureEqOutline(TaggedRef a, TaggedRef b)
+{
+  Assert(a != b); // already check in featureEq
+
+  return tagTypeOf(a) == BIGINT && tagTypeOf(b) == BIGINT && bigIntEq(a,b);
+}
+
