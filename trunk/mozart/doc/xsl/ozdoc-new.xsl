@@ -1231,12 +1231,20 @@
 <!-- back matter -->
 
 <template match="BACK">
-  <for-each select="BIB.EXTERN[position()=1]">
-    <txt:usemap><text>
-\bibliographystyle{plain}
-\bibliography{</text></txt:usemap>
+  <for-each select="BIB.EXTERN">
+      <txt:usemap><text>
+\nocite{</text></txt:usemap>
+        <value-of select="string(@KEY)"/>
+      <txt:usemap><text>}
+\mozartBibAdd{</text></txt:usemap>
     <value-of select="substring-before((string(@TO)),'.bib')"/>
-    <txt:usemap>}</txt:usemap>
+      <txt:usemap><text>}
+</text></txt:usemap>
+    <if test="position()=last()">
+      <txt:usemap><text>
+\mozartBibDo
+</text></txt:usemap>
+    </if>
   </for-each>
 </template>
 
