@@ -30,7 +30,7 @@ inline Bool isPrime(int prime)
   if (prime%2 == 0) {
     return NO;
   }
-  for(int i=3; i<=sqrt(prime); i+=2) {
+  for(int i=3; i*i<=prime; i+=2) {
     if (prime%i == 0) {
       return NO;
     }
