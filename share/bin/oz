@@ -52,7 +52,7 @@ fi
 : ${OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin}
 
 # set OZPATH & PATH
-if [ X$cmd = Xoze -o ${OZ_PI-xx} = xx ]; then
+if [ X$cmd = Xoze -o X${OZ_PI-xx} = Xxx ]; then
   # where Oz searches for files:
   : ${OZPATH=.}
   OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
