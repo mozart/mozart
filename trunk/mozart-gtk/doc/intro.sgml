@@ -123,15 +123,35 @@ end>>>
   <Section proglang=sh>
     <Title/Building from Sources/
     <P>
-      The GTK+ language binding is part of the Mozart source tree.
-      To compile it, use the following options to configure:
-      <<<configure --enable-contrib-gtk --with-gtk-canvas-dir=?{DIR}>>>
+      The GTK+ language binding is available as a
+      <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=rpm">
+      <File>source RPM</File></Ref.Extern>
+      or can be obtained directly from cvs via
+      <<<cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get mozart-gtk>>>
+      To compile the CVS sources, use the following option to configure:
+      <<<configure --with-gtk-canvas-dir=?{DIR}>>>
       where ?{DIR} is the directory in which the GTK Canvas has been
-      installed.
+      installed. Otherwise, issue the
+      <<<rpm --rebuild mozart-gtk&lt;version&gt;.rpm>>> command.
     <Para class=apropos><Title/Compiling the GTK Canvas/
-      To compile the GTK Canvas, <Ref.Extern
-      to="ftp://ftp.mozart-oz.org/pub/mozart/extras/gtk-canvas.tgz"/obtain
-      the sources/ and compile them using the standard <<configure; make;
-      make install>> procedure.  The configure prefix used here yields
-      the value of ?{DIR} above.
+      The GTK Canvas is available as a
+      <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=rpm">
+      <File>source RPM</File></Ref.Extern>
+      or can be obtained directly from cvs via
+      <<<cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get gtk-canvas>>>
+      To compile the CVS sources, use the standard
+      <<configure; make; make install>> procedure.  The configure prefix
+      used here yields the value of ?{DIR} above. Otherwise, issue the
+      <<<rpm --rebuild gt-canvas&lt;version&gt;.rpm>>> command. 
+    <Para class=apropos><Title/Windows/
+      Compiling the sources on Windows requires a number of
+      <Ref.Extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/wingtk.tar.gz"><File>libraries</File></Ref.Extern>.
+      After downloading and extracting the archive,
+      edit the gtk-config and imlib-config files
+      in the freshly created bin directory to match your setup.
+      Afterwards, using the cvs sources you should be able to compile the
+      binding.
+    <P>
+      For user convenience, the gtk binding is shipped as part of
+      the binary window distribution of mozart.
 </Chapter>
