@@ -33,9 +33,12 @@ local
    end
 
    fun {FormatTime T}
-      case     T < 60    then T             # 's'
-      elsecase T < 60*60 then T div 60      # 'm' # T mod 60      # 's'
-      else                    T div (60*60) # 'h' # T mod (60*60) # 'm'
+      case T < 60 then
+	 T # 's'
+      elsecase T < 3600 then
+	 T div 60 # 'm' # T mod 60 # 's'
+      else H = T mod 3600 in
+	 T div 3600 # 'h' # H div 60 # 'm' # H mod 60 # 's'
       end
    end
    
@@ -254,7 +257,7 @@ in
 	 else
 	    RawData    = @Stats
 	    SortedData = {Sort RawData fun {$ X Y} X.@SortBy > Y.@SortBy end}
-	    Max        = {Int.toFloat SortedData.1.@SortBy}
+	    Max        = {Int.toFloat SortedData.1.@SortBy} + 0.1
 	    XStretch   = 207.0
 	 
 	    fun {YStretch I}
