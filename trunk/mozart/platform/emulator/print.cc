@@ -1336,8 +1336,8 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
   TaskStackEntry *p = getTop();
   
   while (isEmpty() == NO && depth-- > 0) {
-    TaskStackEntry topElem=pop();
-    ContFlag flag = (ContFlag) ToInt32(topElem);
+    TaggedPC topElem = ToInt32(pop());
+    ContFlag flag = getContFlag(topElem);
     switch (flag){
     case C_COMP_MODE:
       switch (((int) topElem)>>4) {
@@ -1354,7 +1354,7 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
       break;
     case C_CONT:
       {
-	ProgramCounter PC = (ProgramCounter) pop();
+	ProgramCounter PC = getPC(C_CONT,topElem);
 	RefsArray Y = (RefsArray) pop();
 	RefsArray G = (RefsArray) pop();
 	if (verbose) {
@@ -1366,7 +1366,7 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
       break;
     case C_XCONT:
       {
-	ProgramCounter PC = (ProgramCounter) pop();
+	ProgramCounter PC = getPC(C_XCONT,topElem);
 	RefsArray Y = (RefsArray) pop();
 	RefsArray G = (RefsArray) pop();
 	RefsArray X = (RefsArray) pop();

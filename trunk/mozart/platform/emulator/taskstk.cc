@@ -61,29 +61,26 @@ int TaskStack::getSeqSize()
   while (1) {
     Assert(!isEmpty());
     TaskStackEntry entry=*(--tos);
-    ContFlag cFlag = (ContFlag) ToInt32(entry);
+    ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag){
     case C_COMP_MODE:
       Assert(getCompMode(entry)==PARMODE);
       return oldTos-tos-1;
 
-    case C_NERVOUS:
-      break;
+    case C_NERVOUS: break;
+    case C_SOLVE:   break;
 
     case C_LOCAL:
       tos++;
       return -(oldTos-tos);
 
-    case C_SOLVE:
-      break;
-
     case C_CONT:
-      tos-=3; // PC Y G
+      tos-=2; // PC Y G
       break;
       
     case C_XCONT:
-      tos-=4; // PC Y G X
+      tos-=3; // PC Y G X
       break;
 
     case C_DEBUG_CONT: 
@@ -134,27 +131,20 @@ Bool TaskStack::discardLocalTasks()
 
   while (!isEmpty()) {
     TaskStackEntry entry=*(--tos);
-    ContFlag cFlag = (ContFlag) ToInt32(entry);
+    ContFlag cFlag = getContFlag(ToInt32(entry));
 
     switch (cFlag){
-    case C_COMP_MODE:
-      break;
-
-    case C_NERVOUS:
-      break;
-
-    case C_LOCAL:
-      return OK;
-
-    case C_SOLVE:
-      return OK;
+    case C_COMP_MODE: break;
+    case C_NERVOUS:   break;
+    case C_LOCAL:     return OK;
+    case C_SOLVE:     return OK;
 
     case C_CONT:
-      tos-=3; // PC Y G
+      tos-=2; // Y G
       break;
       
     case C_XCONT:
-      tos-=4; // PC Y G X
+      tos-=3; // Y G X
       break;
 
     case C_DEBUG_CONT: 
