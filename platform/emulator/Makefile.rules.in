@@ -40,10 +40,3 @@ clean::
 
 .m4hh.hh:
 	$(M4) $(M4_S) $(M4_D) $< > $@ || (rm -f $@; exit 1)
-
-@oz_tmphack_target@:
-	tmp=/tmp/ozobj$$$$.o; \
-	trap "rm -f $$tmp; exit 1" 1 2 15; \
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $$tmp $< && \
-		rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
-		rm -f $$tmp
