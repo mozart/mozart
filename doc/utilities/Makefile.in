@@ -24,6 +24,7 @@ VPATH           = @srcdir@
 BINDIR          = $(PREFIX)/bin
 DOCDIR          = $(PREFIX)/share/doc
 ELISPDIR        = $(PREFIX)/share/elisp
+CSSDIR          = /www/css
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
@@ -47,6 +48,7 @@ BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
 ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
+CSSFILES = $(CSSDIR)/ozdoc.css
 
 .PHONY: bootstrap all clean veryclean distclean
 
@@ -69,8 +71,9 @@ ozdoc: $(FUNCTORS)
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
 install: $(ELISPDIR) $(ELISPFILES)
+install: $(CSSDIR) $(CSSFILES)
 
-$(BINDIR) $(DOCDIR) e$(ELISPDIR):
+$(BINDIR) $(DOCDIR) $(ELISPDIR) $(CSSDIR):
         $(INSTALL_DIR) $@
 
 $(BINFILES): $(BINDIR)/% : %
@@ -83,6 +86,9 @@ $(DOCFILES): $(DOCDIR)/% : %
         $(INSTALL_FILE) $< $@
 
 $(ELISPFILES): $(ELISPDIR)/% : %
+        $(INSTALL_FILE) $< $@
+
+$(CSSFILES): $(CSSDIR)/% : %
         $(INSTALL_FILE) $< $@
 
 clean:
