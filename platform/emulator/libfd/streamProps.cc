@@ -71,6 +71,7 @@ void DisjunctivePropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
   int * new_reg_durs    = OZ_hallocCInts(reg_size);
   OZ_Term * new_reg_fds = OZ_hallocOzTerms(reg_size);
 
+  OZ_updateHeapTerm(stream);
   for (int i = reg_size; i--; ) {
     new_reg_durs[i] = reg_durs[i];
     new_reg_fds[i] = reg_fds[i];
@@ -215,9 +216,9 @@ reifiedloop:
     goto reifiedloop;
   }
 
-  if (!st.isValid()) 
+  if (!st.isValid()) {
     goto failure;
-  
+  }
 
   stream = st.getTail();
 
@@ -288,6 +289,7 @@ OZ_C_proc_end
 void DistinctPropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
 {
   OZ_Term * new_reg_fds = OZ_hallocOzTerms(reg_size);
+  OZ_updateHeapTerm(stream);
   for (int i = reg_size; i--; ) {
     new_reg_fds[i] = reg_fds[i];
     OZ_updateHeapTerm(new_reg_fds[i]);
