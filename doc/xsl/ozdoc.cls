@@ -20,7 +20,11 @@
 \RequirePackage{times}
 \RequirePackage{mathptm}
 
-\newif\ifmozart@hyper \mozart@hypertrue
+% turning off hyperref support because the newer version of
+% hyperref (2003/01/22) appears to be incompatible in a way
+% that I have not elucidated yet and therefore not fixed.
+\newif\ifmozart@hyper \mozart@hyperfalse % \mozart@hypertrue
+
 \DeclareOption{nohyper}{\mozart@hyperfalse}
 
 % pass options down to book class
