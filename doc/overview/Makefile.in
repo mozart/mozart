@@ -10,7 +10,7 @@ WHAT            = overview
 DOCDIR          = $(PREFIX)/doc/$(WHAT)
 
 FILES = index.html getstarted.html tutorials.html reference.html \
-        ozdoc.css page.gif
+        ozdoc.css page.gif overview.gif
 
 all:
 quick:
@@ -28,7 +28,7 @@ $(DOCDIR)/%: %
         $(INSTALL_FILE) $< $@
 $(DOCDIR)/ozdoc.css: $(SRCDIR)/../utilities/ozdoc.css
         $(INSTALL_FILE) $< $@
-$(DOCDIR)/page.gif: $(SRCDIR)/../utilities/page.gif
+$(DOCDIR)/%.gif: $(SRCDIR)/../utilities/%.gif
         $(INSTALL_FILE) $< $@
 
 Makefile: $(SRCDIR)/Makefile.in ../config.status
