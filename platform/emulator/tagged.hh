@@ -178,20 +178,6 @@ Bool isRef(TaggedRef term) {
 
 
 inline
-Bool isUVar(TypeOfTerm tag) {
-  return (tag == UVAR) ;
-}
-
-inline
-Bool isUVar(TaggedRef term) {
-  GCDEBUG(term);
-  DebugCheck(isRef(term),
-             error("isUVar: illegal Arg: REF");
-             return NO;);
-  return ((term & 14) == 0);   // mask 1110
-}
-
-inline
 Bool isSVar(TypeOfTerm tag) {
   return (tag == SVAR);
 }
@@ -199,9 +185,7 @@ Bool isSVar(TypeOfTerm tag) {
 inline
 Bool isSVar(TaggedRef term) {
   GCDEBUG(term);
-  DebugCheck(isRef(term),
-             error("isSVar: illegal Arg: REF");
-             return NO;);
+  Assert(!isRef(term));
   return isSVar(tagTypeOf(term));
 }
 
@@ -214,41 +198,71 @@ Bool isCVar(TypeOfTerm tag) {
 inline
 Bool isCVar(TaggedRef term) {
   GCDEBUG(term);
-  DebugCheck(isRef(term),
-             error("isCVar: illegal Arg: REF");
-             return NO;);
+  Assert(!isRef(term));
   return isCVar(tagTypeOf(term));
 }
 
 
-inline
-Bool isNotCVar(TypeOfTerm tag) {
-  return ((tag & 6) == 0);
-}
+/*
+ * Optimized tests for some most often used types: no untagging needed
+ * for type tests!
+ * Use macros if not DEBUG_CHECK, since gcc creates awful code
+ * for inline function version
+ */
+
+#define _isAnyVar(val)  (((unsigned int) val&2)==0)       /* mask = 0010 */
+#define _isNotCVar(val) (((unsigned int) val&6)==0)       /* mask = 0110 */
+#define _isUVar(val)    (((unsigned int) val&14)==0)      /* mask = 1110 */
+#define _isLTuple(val)  (((unsigned int) val&13)==0)      /* mask = 1101 */
+
+#ifdef DEBUG_CHECK
+
+inline Bool isLTuple(TypeOfTerm tag) { return _isLTuple(tag);}
 
 inline
-Bool isNotCVar(TaggedRef term) {
+Bool isLTuple(TaggedRef term) {
   GCDEBUG(term);
-  DebugCheck(isRef(term),
-             error("isNotCVar: illegal Arg: REF");
-             return NO;);
-  return ((term & 6) == 0);  // mask = 0110
+  Assert(!isRef(term));
+  return _isLTuple(term);
 }
 
+
+inline Bool isUVar(TypeOfTerm tag) { return _isUVar(tag);}
 
 inline
-Bool isAnyVar(TypeOfTerm tag) {
-  return ((tag & 2) == 0);   // mask = 0010
+Bool isUVar(TaggedRef term) {
+  GCDEBUG(term);
+  Assert(!isRef(term));
+  return _isUVar(term);
 }
+
+inline Bool isAnyVar(TypeOfTerm tag) { return _isAnyVar(tag); }
 
 inline
 Bool isAnyVar(TaggedRef term) {
   GCDEBUG(term);
-  DebugCheck(isRef(term),
-             error("isAnyVar: illegal Arg: REF");
-             return NO;);
-  return ((term & 2) == 0);
+  Assert(!isRef(term));
+  return _isAnyVar(term);
 }
+
+inline Bool isNotCVar(TypeOfTerm tag) { return _isNotCVar(tag);}
+
+inline
+Bool isNotCVar(TaggedRef term) {
+  GCDEBUG(term);
+  Assert(!isRef(term));
+  return _isNotCVar(term);
+}
+
+
+#else
+
+#define isAnyVar(term)  _isAnyVar(term)
+#define isNotCVar(term) _isNotCVar(term)
+#define isUVar(term)    _isUVar(term)
+#define isLTuple(term)  _isLTuple(term)
+
+#endif
 
 
 
@@ -283,20 +297,6 @@ inline
 Bool isRecord(TaggedRef term) {
   GCDEBUG(term);
   return isRecord(tagTypeOf(term));
-}
-
-inline
-Bool isLTuple(TypeOfTerm tag) {
-  return (tag == LTUPLE);
-}
-
-inline
-Bool isLTuple(TaggedRef term) {
-  GCDEBUG(term);
-  DebugCheck(isRef(term),
-             error("isLTuple: illegal Arg: REF");
-             return NO;);
-  return ((term & 13) == 0); // mask = 1101
 }
 
 inline
@@ -377,7 +377,7 @@ Bool isInt(TaggedRef term) {
 
 inline
 Bool isNumber(TypeOfTerm tag) {
-  return (isFloat(tag) || isInt(tag));
+  return (isInt(tag) || isFloat(tag));
 }
 
 inline
@@ -588,10 +588,7 @@ TaggedRef *tagged2Ref(TaggedRef ref)
 {
   GCDEBUG(ref);
 // cannot use CHECKTAG(REF); because only last two bits must be zero
-  DebugCheck((ref & 3) != 0,
-             error("tagged2Ref: no REF");
-             return NULL;);
-
+  Assert((ref & 3) == 0);
   return (TaggedRef *) ref;
 }
 
