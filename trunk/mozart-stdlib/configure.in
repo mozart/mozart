@@ -1,5 +1,7 @@
 AC_INIT(mozart-stdlib.hhc)
 AC_PREFIX_DEFAULT(/usr/local/oz)
+BUILDDIR=`pwd`
+AC_SUBST(BUILDDIR)
 AC_CONFIG_AUX_DIR(ozmake)
 AC_PATH_PROG(OZENGINE,ozengine,$prefix/bin:$PATH)
 AC_SUBST(OZENGINE)

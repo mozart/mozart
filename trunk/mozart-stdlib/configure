@@ -523,6 +523,8 @@ fi
 
 
 
+BUILDDIR=`pwd`
+
 ac_aux_dir=
 for ac_dir in ozmake $srcdir/ozmake; do
   if test -f $ac_dir/install-sh; then
@@ -545,7 +547,7 @@ ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
 # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:549: checking for $ac_word" >&5
+echo "configure:551: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -725,6 +727,7 @@ s%@includedir@%$includedir%g
 s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
+s%@BUILDDIR@%$BUILDDIR%g
 s%@OZENGINE@%$OZENGINE%g
 s%@subdirs@%$subdirs%g
 

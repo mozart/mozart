@@ -4,6 +4,7 @@ PREFIX		= @prefix@
 CYGPATH		= $(SRCDIR)/cygpath.sh
 CYG_PREFIX	= $(shell $(CYGPATH) $(PREFIX))
 OZENGINE	= @OZENGINE@
+BUILDDIR	= @BUILDDIR@
 
 all: build.ozmake
 	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX)
@@ -13,3 +14,22 @@ build.ozmake:
 
 install: all
 	$(OZENGINE) ozmake/ozmake.ozf --prefix=$(CYG_PREFIX) --install --nosavedb
+
+export CLEANDIR
+
+clean:
+	$(MAKE) CLEANDIR="$(BUILDDIR)"          clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/adt"      clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/os"       clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/wp"       clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/wp/qhtml" clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/wp/qtk"   clean.dir
+	$(MAKE) CLEANDIR="$(BUILDDIR)/xml"      clean.dir
+	cd ozmake && $(MAKE) clean
+
+clean.dir:
+	-cd $(CLEANDIR) && rm -f *~ *.ozf
+
+distclean: clean
+	-cd ozmake && $(MAKE) distclean
+	-rm -f Makefile config.cache config.log config.status
