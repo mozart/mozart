@@ -726,12 +726,17 @@ repeat:
       sc->import(value);
 
       //
-      value = chunkTerm;
       if (doMemo) {
 	GetBTTaskArg2(frame, int, memoIndex);
-	set(value, memoIndex);
+	OZ_Term *drp = tagged2Ref(get(memoIndex));
+	Assert(oz_isUVar(*drp));
+	*drp = chunkTerm;
+	update(chunkTerm, memoIndex);
 	doMemo = NO;
       }
+
+      //
+      value = chunkTerm;
       DiscardBTFrame(frame);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
@@ -809,7 +814,12 @@ repeat:
       overwriteGName(gname, objTerm);
       if (doMemo) {
 	GetBTFrameArg2(frame, int, memoIndex);
-	set(objTerm, memoIndex);
+	OZ_Term *drp = tagged2Ref(get(memoIndex));
+	Assert(oz_isUVar(*drp));
+	*drp = objTerm;
+	// we do not need to have the indirection over that auxiliary
+	// heap ref anymore:
+	update(objTerm, memoIndex);
 	doMemo = NO;
       }
       DiscardBTFrame(frame);
@@ -821,6 +831,8 @@ repeat:
     }
 
   case BT_procFile:
+    // 'value' cannot reference the procedure itself (since the
+    // procedure is not created&remembered yet);
     ReplaceBTTask1stArg(frame, BT_proc, value);
     break;
 
