@@ -24,7 +24,8 @@ HTMLEXTRAFILES0 = \
         explain arrow-r post search draw \
         memory-heap \
         runtime-dist runtime-load \
-        threads-runnable
+        threads-runnable \
+        nicebrowser emb_nicebrowser
 
 HTMLEXTRAFILES = \
         $(HTMLEXTRAFILES0:%=pictures/%.gif)

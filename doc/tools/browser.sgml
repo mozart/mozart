@@ -112,34 +112,35 @@ modes.
 <index/<code/Browser.object//
 <index/<code/Browser.browse//
 <index/<code/Browser.close//
-The 'Browser' module of the &Oz; Prelude defines three variables:
+The <code/Browser/ module exports the following values:
 <list>
-<entry><<BrowserClass>>
+<entry><<Browser.'class'>>
 <index class=module/init/
 <index class=module/browse/
 <item> is an &Oz; class that implements the Browser.
-<entry><<Browser>>
-<item> is an instance of <<BrowserClass>> <note foot/Actually,
+<entry><<Browser.object>>
+<item> is an instance of <<Browser.'class'>> <note foot/Actually,
 two <em/distinct/ things are called 'Browser' here: first, this is the
 tool described in this chapter itself, and, second, this is a particular
-instance of the tool (a <<BrowserClass>> object)./:
+instance of the tool (a <<Browser.'class'>> object)./:
 <code display>
-  Browser = {New BrowserClass init}
+BrowserObject = {New Browser.'class' init}
 </code>
-<entry><<Browse>>
-<item> is an unary procedure used to tell <<Browser>> to browse
-its argument:
+<entry><<Browser.browse>>
+<item> is an unary procedure used to tell <<Browser.object>> to browse
+its argument. It is also available as procedure <code/Browse/ in the OPI:
 <index class=module/browse/
 <code display>
-  Browse = proc {$ X} {Browser browse(X)} end
+Browse = proc {$ X} {Browser.object browse(X)} end
 </code>
 </list>
 <p>
-Methods of the <<BrowserClass>> are summarized in the
+Methods of the <<Browser.'class'>> are summarized in the
 <ptr to=sec.browser.applicationBrowsers >.
 </subsection>
 
-<subsection id=sec.browser.browsedInformation><title/Browsed Information/
+<subsection id=sec.browser.browsedInformation><title/Browsing
+Constrained Terms: A Look Under The Hood/
 <p>
 &Oz; Browser displays the current information about values of variables.
 This information is stated by means of constraints stored in constraint
@@ -218,7 +219,8 @@ and one of the following rules is applied:
 a leaf node labeled by <math>y</math> is created that represent the variable
 itself. The variable <math>y</math> is added to <math>\P</math>.
 
-<item> If there is an equation of the form <math>y\deq z</math>, then $\{z\}\cap\P$
+<item> If there is an equation of the form <math>y\deq z</math>, then
+<math/\{z\}\cap\P/
 is adjoined to <math>\V</math>, and <math>y</math> is replaced by <math>z</math> in every couple of <math>\E</math>
 and among nodes' labels. This step can be seen informally as
 <Q/dereferencing/; it serves for minimizing the graph representation of
@@ -414,7 +416,7 @@ are viewed, where <<Width>> is the Browser's expansion limit.
 <index class=menu/Break/
 Browser draws terms sequentially, in the depth-first, left-to-right
 fashion, one term after each other. Drawing process can be stopped
-nearly all the time by pressing the {\bf break} button (or by using the
+nearly all the time by pressing the <em/break/ button (or by using the
 <<Break>>  entry of the <<Browser>> menu). When browsing is being stopped,
 (sub)term(s) yet to be drawn appear in shrunken form, and started but
 not yet completed (sub)term(s) appear partially.
@@ -610,8 +612,8 @@ representation does not contain ellipses just before the closing
 parentheses.
 
 <item> Generally, builiding <<graph>> and <<minimal graph>> representation
-yields {\bf wrong} results. For instance, two equal variables are not
-detected as being equal; whereas two tuples \?a(_)? and \?a(_)? are
+yields <em/wrong/ results. For instance, two equal variables are not
+detected as being equal; whereas two tuples <code/a(_)/ and <code/a(_)/ are
 detected as being equal.
 
 <p class=danger>
@@ -715,7 +717,7 @@ geometry of the Browser window:
 
 <section id=sec.browser.browserCommandsAndOptions><title/Browser Commands and Options/
 <p>
-\newcommand{\kphead}[1]{{\tt #1}}
+<!-- \newcommand{\kphead}[1]{{\tt #1}} -->
 
 The meanings of the menu entries of the Browser are summarized in this
 section.
@@ -772,8 +774,8 @@ term, if any.
 <entry><menu mouse=l2 key="e"/Expand/
 <index class=menu/Buffer/
 <index class=menu/Selection<and>Expand/
-<item>Replaces the selected shrunken (sub)term ('\?,,,?') by a subterm(s),
-or viewes further subterm(s) of a partially shown selected (sub)term.
+<item>Replaces the selected shrunken (sub)term <code/,,,/ by a subterm(s),
+or views further subterm(s) of a partially shown selected (sub)term.
 
 <entry><menu mouse=r2 key="s"/Shrink/
 <index class=menu/Selection<and>Shrink/
