@@ -64,6 +64,6 @@ clean veryclean:
 distclean: clean
 	-$(RM) config.* Makefile gdbm.oz
 
-include ../../share/Makefile.boot
+include $(SRCDIR)/../../share/Makefile.boot
 
 bootstrap: boot-all
