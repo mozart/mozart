@@ -18,9 +18,8 @@
 #include "fdgenvar.hh"
 #include "am.hh"
 
-GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn,
-                           Board * n)
-:type(t), SVariable(n==NULL ? am.currentBoard : n, pn){}
+GenCVariable::GenCVariable(TypeOfGenCVariable t, TaggedRef pn, Board * n)
+: type(t), SVariable(n == NULL ? am.currentBoard : n, pn){}
 
 
 Bool GenCVariable::isLocalVariable(void){
@@ -31,14 +30,10 @@ Bool GenCVariable::isLocalVariable(void){
     ? OK : NO;
 }
 
-
-void GenCVariable::propagate(TaggedRef var, TaggedRef term){
-  am.checkSuspensionList(var, term, NULL);
-}
-
-void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term)
+void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term,
+                             Bool unifyVars)
 {
-  sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term);
+  sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term, NULL, unifyVars);
 }
 
 

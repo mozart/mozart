@@ -43,17 +43,13 @@ protected:
   // suspensionlist of leftVar
   void relinkSuspList(GenCVariable * leftVar);
 
-  // moves appropriate suspension-list entries onto wake-up stack
-  void propagate(TaggedRef, TaggedRef);
-  void propagate(TaggedRef, SuspList * &, TaggedRef);
+  void propagate(TaggedRef, SuspList * &, TaggedRef, Bool);
 
 public:
   USEHEAPMEMORY;
 
   // the constructor creates per default a local variable (wrt curr. node)
-  GenCVariable(TypeOfGenCVariable t,
-               TaggedRef pn = AtomVoid,
-               Board * n = NULL);
+  GenCVariable(TypeOfGenCVariable , TaggedRef = AtomVoid, Board * = NULL);
 
   TypeOfGenCVariable getType(void){return type;}
 
