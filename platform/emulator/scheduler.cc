@@ -3,6 +3,7 @@
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Michael Mehl (mehl@dfki.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Contributors:
  *    Benjamin Lorenz (lorenz@ps.uni-sb.de)

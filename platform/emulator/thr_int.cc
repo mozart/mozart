@@ -4,7 +4,7 @@
  *    Michael Mehl (mehl@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
  *    Organization or Person (Year(s))

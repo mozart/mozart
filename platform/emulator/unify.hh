@@ -5,6 +5,7 @@
  *
  *  Contributors:
  *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
  *    Organization or Person (Year(s))

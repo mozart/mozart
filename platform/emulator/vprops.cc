@@ -2,8 +2,12 @@
  *  Authors:
  *    Denys Duchier <duchier@ps.uni-sb.de>
  *
+ *  Contributors:
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ *
  *  Copyright:
  *    Denys Duchier, 1997
+ *    Christian Schulte, 1997
  *
  *  Last change:
  *    $Date$ by $Author$
