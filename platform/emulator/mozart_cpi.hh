@@ -1,13 +1,13 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
@@ -15,11 +15,11 @@
  *  This file is part of Mozart, an implementation 
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -36,24 +36,24 @@
 // the old built-in interface
 
 #if defined(__cplusplus)
-extern "C" { 
+extern "C" {
 #endif
 
-#define OZ_C_proc_proto(Name)	OZ_BI_proto(Name)
+#define OZ_C_proc_proto(Name)   OZ_BI_proto(Name)
 
-#define OZ_C_proc_begin(Name,arity)					  \
-OZ_BI_proto(Name);							  \
-FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {	  \
-    const OZ_CFun OZ_self = Name;					  \
-    OZ_Term OZ_args[arity];						  \
-    const int OZ_arity = arity;						  \
-    { int i;								  \
-      for (i = arity; i--; ) {						  \
-        OZ_args[i]=_OZ_NEW_ARGS[_OZ_NEW_LOC==OZ_ID_MAP?i:_OZ_NEW_LOC[i]]; \
-    }									  \
+#define OZ_C_proc_begin(Name,arity)                                       \
+OZ_BI_proto(Name);                                                        \
+FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {      \
+    const OZ_CFun OZ_self = Name;                                         \
+    OZ_Term OZ_args[arity];                                               \
+    const int OZ_arity = arity;                                           \
+    { int i;                                                              \
+      for (i = arity; i--; ) {                                            \
+	OZ_args[i]=_OZ_NEW_ARGS[_OZ_NEW_LOC==OZ_ID_MAP?i:_OZ_NEW_LOC[i]]; \
+    }                                                                     \
 }
 
-#define OZ_C_proc_end			OZ_BI_end
+#define OZ_C_proc_end                   OZ_BI_end
 
 /* access arguments */
 #define OZ_getCArg(N) OZ_args[N]
@@ -63,86 +63,86 @@ FUNDECL(OZ_Return,Name,(OZ_Term _OZ_NEW_ARGS[],int _OZ_NEW_LOC[])) {	  \
 #define OZ_declareArg(ARG,VAR) \
      OZ_Term VAR = OZ_getCArg(ARG);
 
-#define OZ_nonvarArg(ARG)			\
-{						\
-  if (OZ_isVariable(OZ_getCArg(ARG))) {		\
-    OZ_suspendOn(OZ_getCArg(ARG));		\
-  }						\
+#define OZ_nonvarArg(ARG)                       \
+{                                               \
+  if (OZ_isVariable(OZ_getCArg(ARG))) {         \
+    OZ_suspendOn(OZ_getCArg(ARG));              \
+  }                                             \
 }
 
-#define OZ_declareNonvarArg(ARG,VAR)		\
-OZ_Term VAR = OZ_getCArg(ARG);			\
-{						\
-  if (OZ_isVariable(VAR)) {			\
-    OZ_suspendOn(VAR);				\
-  }						\
+#define OZ_declareNonvarArg(ARG,VAR)            \
+OZ_Term VAR = OZ_getCArg(ARG);                  \
+{                                               \
+  if (OZ_isVariable(VAR)) {                     \
+    OZ_suspendOn(VAR);                          \
+  }                                             \
 }
 
-#define OZ_declareIntArg(ARG,VAR)		\
- int VAR;					\
- OZ_nonvarArg(ARG);				\
- if (! OZ_isInt(OZ_getCArg(ARG))) {		\
-   return OZ_typeError(ARG,"Int");		\
- } else {					\
-   VAR = OZ_intToC(OZ_getCArg(ARG));		\
+#define OZ_declareIntArg(ARG,VAR)               \
+ int VAR;                                       \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isInt(OZ_getCArg(ARG))) {             \
+   return OZ_typeError(ARG,"Int");              \
+ } else {                                       \
+   VAR = OZ_intToC(OZ_getCArg(ARG));            \
  }
 
-#define OZ_declareFloatArg(ARG,VAR)		\
- double VAR;					\
- OZ_nonvarArg(ARG);				\
- if (! OZ_isFloat(OZ_getCArg(ARG))) {		\
-   return OZ_typeError(ARG,"Float");		\
- } else {					\
-   VAR = OZ_floatToC(OZ_getCArg(ARG));		\
+#define OZ_declareFloatArg(ARG,VAR)             \
+ double VAR;                                    \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isFloat(OZ_getCArg(ARG))) {           \
+   return OZ_typeError(ARG,"Float");            \
+ } else {                                       \
+   VAR = OZ_floatToC(OZ_getCArg(ARG));          \
  }
 
 
-#define OZ_declareAtomArg(ARG,VAR)		\
- OZ_CONST char *VAR;				\
- OZ_nonvarArg(ARG);				\
- if (! OZ_isAtom(OZ_getCArg(ARG))) {		\
-   return OZ_typeError(ARG,"Atom");		\
- } else {					\
-   VAR = OZ_atomToC(OZ_getCArg(ARG));		\
+#define OZ_declareAtomArg(ARG,VAR)              \
+ OZ_CONST char *VAR;                            \
+ OZ_nonvarArg(ARG);                             \
+ if (! OZ_isAtom(OZ_getCArg(ARG))) {            \
+   return OZ_typeError(ARG,"Atom");             \
+ } else {                                       \
+   VAR = OZ_atomToC(OZ_getCArg(ARG));           \
  }
 
-#define OZ_declareProperStringArg(ARG,VAR)		\
- char *VAR;						\
- {							\
-   OZ_Term OZ_avar;					\
-   if (!OZ_isProperString(OZ_getCArg(ARG),&OZ_avar)) {	\
-     if (OZ_avar == 0) {				\
-       return OZ_typeError(ARG,"ProperString");		\
-     } else {						\
-       OZ_suspendOn(OZ_avar);				\
-     }							\
-   }							\
-   VAR = OZ_stringToC(OZ_getCArg(ARG),0);			\
+#define OZ_declareProperStringArg(ARG,VAR)              \
+ char *VAR;                                             \
+ {                                                      \
+   OZ_Term OZ_avar;                                     \
+   if (!OZ_isProperString(OZ_getCArg(ARG),&OZ_avar)) {  \
+     if (OZ_avar == 0) {                                \
+       return OZ_typeError(ARG,"ProperString");         \
+     } else {                                           \
+       OZ_suspendOn(OZ_avar);                           \
+     }                                                  \
+   }                                                    \
+   VAR = OZ_stringToC(OZ_getCArg(ARG),0);                       \
  }
 
-#define OZ_declareVirtualStringArg(ARG,VAR)		\
- char *VAR;						\
- {							\
-   OZ_Term OZ_avar;					\
-   if (!OZ_isVirtualString(OZ_getCArg(ARG),&OZ_avar)) {	\
-     if (OZ_avar == 0) {				\
-       return OZ_typeError(ARG,"VirtualString");	\
-     } else {						\
-       OZ_suspendOn(OZ_avar);				\
-     }							\
-   }							\
-   VAR = OZ_virtualStringToC(OZ_getCArg(ARG),0);		\
+#define OZ_declareVirtualStringArg(ARG,VAR)             \
+ char *VAR;                                             \
+ {                                                      \
+   OZ_Term OZ_avar;                                     \
+   if (!OZ_isVirtualString(OZ_getCArg(ARG),&OZ_avar)) { \
+     if (OZ_avar == 0) {                                \
+       return OZ_typeError(ARG,"VirtualString");        \
+     } else {                                           \
+       OZ_suspendOn(OZ_avar);                           \
+     }                                                  \
+   }                                                    \
+   VAR = OZ_virtualStringToC(OZ_getCArg(ARG),0);                \
  }
 
-#define OZ_declareForeignPointerArg(ARG,VAR)	\
-void *VAR;					\
-{						\
-  OZ_declareNonvarArg(ARG,_VAR);		\
-  if (!OZ_isForeignPointer(_VAR)) {		\
+#define OZ_declareForeignPointerArg(ARG,VAR)    \
+void *VAR;                                      \
+{                                               \
+  OZ_declareNonvarArg(ARG,_VAR);                \
+  if (!OZ_isForeignPointer(_VAR)) {             \
     return OZ_typeError(ARG,"ForeignPointer");  \
-  } else {					\
-    VAR = OZ_getForeignPointer(_VAR);		\
-  }						\
+  } else {                                      \
+    VAR = OZ_getForeignPointer(_VAR);           \
+  }                                             \
 }
 
 #if defined(__cplusplus)
@@ -167,32 +167,32 @@ void *VAR;					\
 
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
-#define _OZ_EXPECT(O, A, P, F)							\
-  {										\
-    OZ_expect_t r = O.F(P);							\
-    if (O.isFailing(r)) {							\
-      O.fail();									\
-      return OZ_typeErrorCPI(expectedType, A, "");				\
-    } else if (O.isSuspending(r) || O.isExceptional(r))				\
-      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));	\
+#define _OZ_EXPECT(O, A, P, F)                                                  \
+  {                                                                             \
+    OZ_expect_t r = O.F(P);                                                     \
+    if (O.isFailing(r)) {                                                       \
+      O.fail();                                                                 \
+      return OZ_typeErrorCPI(expectedType, A, "");                              \
+    } else if (O.isSuspending(r) || O.isExceptional(r))                         \
+      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));       \
   }
 
 #define OZ_EXPECT(O, P, F)  _OZ_EXPECT(O, P, OZ_args[P], F)
- 
-#define _OZ_EXPECT_SUSPEND(O, A, P, F, SC)					\
-  {										\
-    OZ_expect_t r = O.F(P);							\
-    if (O.isFailing(r)) {							\
-      O.fail();									\
-      return OZ_typeErrorCPI(expectedType, A, "");				\
-    } else if (O.isSuspending(r)) {						\
-      SC += 1;									\
-    } else if (O.isExceptional(r)) {						\
-      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));	\
-    }										\
+
+#define _OZ_EXPECT_SUSPEND(O, A, P, F, SC)                                      \
+  {                                                                             \
+    OZ_expect_t r = O.F(P);                                                     \
+    if (O.isFailing(r)) {                                                       \
+      O.fail();                                                                 \
+      return OZ_typeErrorCPI(expectedType, A, "");                              \
+    } else if (O.isSuspending(r)) {                                             \
+      SC += 1;                                                                  \
+    } else if (O.isExceptional(r)) {                                            \
+      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));       \
+    }                                                                           \
   }
 
-#define OZ_EXPECT_SUSPEND(O, P, F, SC) 		\
+#define OZ_EXPECT_SUSPEND(O, P, F, SC)          \
 _OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 
 #define _OZ_EM_FDINF    "0"
@@ -217,7 +217,7 @@ _OZ_EXPECT_SUSPEND(O, P, OZ_args[P], F, SC)
 #define OZ_EM_STREAM    "stream"
 
 //-----------------------------------------------------------------------------
-// OZ_FiniteDomain 
+// OZ_FiniteDomain
 
 class OZ_FSetValue;
 
@@ -243,7 +243,7 @@ public:
   int initEmpty(void);
   int initBool(void);
 
-  int getMidElem(void) const; 
+  int getMidElem(void) const;
   int getNextSmallerElem(int v) const;
   int getNextLargerElem(int v) const;
   int getLowerIntervalBd(int v) const;
@@ -260,16 +260,16 @@ public:
   OZ_Boolean operator != (const OZ_FDState) const;
   OZ_Boolean operator != (const int) const;
 
-  OZ_FiniteDomain operator & (const OZ_FiniteDomain &) const; 
-  OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const; 
-  OZ_FiniteDomain operator ~ (void) const;                    
+  OZ_FiniteDomain operator & (const OZ_FiniteDomain &) const;
+  OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const;
+  OZ_FiniteDomain operator ~ (void) const;
 
   int operator &= (const OZ_FiniteDomain &);
   int operator &= (const int);
-  int operator += (const int); 
-  int operator -= (const int); 
+  int operator += (const int);
+  int operator -= (const int);
   int operator -= (const OZ_FiniteDomain &);
-  int operator <= (const int);    
+  int operator <= (const int);
   int operator >= (const int);
 
   int constrainBool(void);
@@ -279,7 +279,7 @@ public:
   void disposeExtension(void);
 
   char * toString(void) const;
-};   
+};
 
 
 //-----------------------------------------------------------------------------
@@ -360,15 +360,15 @@ public:
 
 
 //-----------------------------------------------------------------------------
-// OZ_FSetConstraint 
+// OZ_FSetConstraint
 
 
-enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val, 
+enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val,
 		       fs_prop_any, fs_prop_bounds};
 
 class OZ_FSetConstraint {
 protected:
-  int _card_min, _card_max; 
+  int _card_min, _card_max;
   int _known_in, _known_not_in;
 
 #ifdef BIGFSET
@@ -394,11 +394,11 @@ public:
 
   int getKnownIn(void) const { return _known_in; }
   int getKnownNotIn(void) const { return _known_not_in; }
-  int getUnknown(void) const { 
+  int getUnknown(void) const {
 #ifdef BIGFSET
     return fs_sup - _known_in - _known_not_in + 1;
 #else
-    return fsethigh32 - _known_in - _known_not_in; 
+    return fsethigh32 - _known_in - _known_not_in;
 #endif
   }
 
@@ -433,8 +433,8 @@ public:
   int getUnknownNextLargerElem(int) const;
 
   int getCardSize(void) const { return _card_max - _card_min + 1; }
-  int getCardMin(void) const { return _card_min; } 
-  int getCardMax(void) const { return _card_max; } 
+  int getCardMin(void) const { return _card_min; }
+  int getCardMax(void) const { return _card_max; }
 
   OZ_Boolean putCard(int, int);
   OZ_Boolean isValue(void) const;
@@ -468,7 +468,7 @@ public:
   OZ_Boolean operator <= (const int);
   OZ_Boolean operator >= (const int);
   char * toString(void) const;
-};   
+};
 
 
 //-----------------------------------------------------------------------------
@@ -478,7 +478,7 @@ class OZ_NonMonotonic {
 public:
   typedef unsigned order_t;
 private:
-  order_t _order; 
+  order_t _order;
   static order_t _next_order;
 public:
   OZ_NonMonotonic(void);
@@ -498,7 +498,7 @@ public:
   OZ_PropagatorProfile(char * propagator_name);
 
   void operator = (char * propagator_name);
-  
+
   char * getPropagatorName()      { return _propagator_name; }
   void incSamples(void)           { _samples++; }
   void incCalls(void)             { _calls++; }
@@ -519,7 +519,7 @@ enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 class OZ_Propagator {
   friend class Propagator;
 private:
-  OZ_Propagator * gc(void); 
+  OZ_Propagator * gc(void);
 public:
   OZ_Propagator(void) {}
   virtual ~OZ_Propagator(void) {}
@@ -544,8 +544,8 @@ public:
 
   // support for nonmonotonic propagator
   virtual OZ_Boolean isMonotonic(void) const { return OZ_TRUE; }
-  virtual OZ_NonMonotonic::order_t getOrder(void) const { 
-    return 0; 
+  virtual OZ_NonMonotonic::order_t getOrder(void) const {
+    return 0;
   }
 
   char * toString(void) const;
@@ -571,7 +571,7 @@ private:
 public:
   OZ_FDIntVar(void) {}
   OZ_FDIntVar(OZ_Term v) { read(v); }
-		      
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -589,7 +589,7 @@ public:
   void ask(OZ_Term);
   int read(OZ_Term);
   int readEncap(OZ_Term);
-  OZ_Boolean leave(void) { 
+  OZ_Boolean leave(void) {
     return isSort(sgl_e) ? OZ_FALSE : tell();
   }
   void fail(void);
@@ -617,7 +617,7 @@ private:
 public:
   OZ_FSetVar(void) {}
   OZ_FSetVar(OZ_Term v) { read(v); }
-		      
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -629,7 +629,7 @@ public:
 
   OZ_FSetConstraint &operator * (void) {return *setPtr;}
   OZ_FSetConstraint * operator -> (void) {return setPtr;}
- 
+
   OZ_Boolean isTouched(void) const;
 
   void ask(OZ_Term);
@@ -667,7 +667,7 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-inline 
+inline
 void OZ_updateHeapTerm(OZ_Term &t) {
   OZ_collectHeapBlock(&t,&t,1);
 }
@@ -728,7 +728,7 @@ public:
   virtual char * getName(void) = 0;
   virtual OZ_Ct * leastConstraint(void) = 0;
   virtual OZ_Boolean isValidValue(OZ_Term) = 0;
-  
+
 };
 
 //-----------------------------------------------------------------------------
@@ -744,9 +744,9 @@ public:
   OZ_Boolean isEmpty(void) { return (_wakeUpDescriptor == 0); }
   OZ_Boolean setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
   OZ_Boolean isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
-  static OZ_CtWakeUp getWakeUpAll(void) { 
+  static OZ_CtWakeUp getWakeUpAll(void) {
     OZ_CtWakeUp aux;
-    aux._wakeUpDescriptor = 0xffff; 
+    aux._wakeUpDescriptor = 0xffff;
     return aux;
   };
 };
@@ -754,13 +754,13 @@ public:
 #define OZ_WAKEUP_ALL OZ_CtWakeUp::getWakeUpAll()
 
 //-----------------------------------------------------------------------------
-// OZ_CtProfile 
+// OZ_CtProfile
 
 class OZ_CtProfile {
-public: 
+public:
   OZ_CtProfile(void) {}
   virtual void init(OZ_Ct *) = 0;
-  
+
 };
 
 //-----------------------------------------------------------------------------
@@ -782,8 +782,8 @@ public:
   virtual char * toString(int) = 0;
   virtual OZ_Ct * copy(void) = 0;
 
-  static void * operator new(size_t, int align = sizeof(void *));  
-  static void operator delete(void *, size_t);  
+  static void * operator new(size_t, int align = sizeof(void *));
+  static void operator delete(void *, size_t);
 };
 
 //-----------------------------------------------------------------------------
@@ -842,7 +842,7 @@ protected:
 public:
 
   OZ_CtVar(void) {}
-		      
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -869,7 +869,7 @@ OZ_Return OZ_mkOZ_VAR_CT(OZ_Term, OZ_Ct *, OZ_CtDefinition *);
 // class OZ_Expect, etc.
 
 struct OZ_expect_t {
-  int size, accepted; 
+  int size, accepted;
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
 };
 
@@ -896,14 +896,14 @@ protected: //tmueller: protected?
   void addSuspend(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
 
 public:
-  OZ_Expect(void); 
-  ~OZ_Expect(void); 
+  OZ_Expect(void);
+  ~OZ_Expect(void);
 
   void collectVarsOn(void);
   void collectVarsOff(void);
 
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
-  OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4); 
+  OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectBoolVar(OZ_Term);
@@ -919,7 +919,7 @@ public:
   OZ_expect_t expectProperRecord(OZ_Term, OZ_Term *);
   OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
   OZ_expect_t expectList(OZ_Term, OZ_ExpectMeth);
-  OZ_expect_t expectStream(OZ_Term st); 
+  OZ_expect_t expectStream(OZ_Term st);
   OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
 
   OZ_Return impose(OZ_Propagator * p);
