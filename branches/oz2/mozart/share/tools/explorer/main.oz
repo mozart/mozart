@@ -16,6 +16,22 @@ local
       {System.showError ''}
    end
 
+   local
+      MoveProc = {Tk.getId}
+   in
+
+      {Tk.send
+       v('proc '#MoveProc#' {c b is} { ' #
+         '   foreach i $is { ' #
+         '      $c move $i $b 0' #
+         '   } ' #
+         '}\n')}
+			   
+      proc {MoveTree C ByX Is}
+	 {Tk.send o(MoveProc C ByX q(b(Is)))}
+      end
+   end
+   
    \insert misc.oz
    
    \insert configure.oz

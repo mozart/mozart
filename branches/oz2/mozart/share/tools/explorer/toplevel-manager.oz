@@ -71,32 +71,23 @@ local
    end
 
    
-   class TagCounter
-      from BaseObject
-      prop final
-      attr n:0
-
-      meth clear  n<-0 end
-      meth get($) N=@n in n<-N+1 N end
-   end
-
-   
    class ScrollCanvas
       from Tk.canvas
 
       attr
-	 scale:  DefScale
+	 scale:   DefScale
          %% These values are scaled
-	 left:   0
-	 right:  0
-	 bottom: 0
+	 left:    0
+	 right:   0
+	 bottom:  0
          %% These values are unscaled
-	 width:  1.0
-	 height: 1.0
+	 width:   1.0
+	 height:  1.0
+         %% This is the number of the next item to be created
+	 item:    0
    
       feat
 	 manager
-	 genTagId
 	 actions
 	 numbers
 	 cursor
@@ -118,7 +109,6 @@ local
 	 FloatXY   = [float(x) float(y)]
       in
 	 self.manager    = Manager
-	 self.genTagId   = {New TagCounter clear}
 	 %% Get some tags
 	 self.cursor     = {New Tk.canvasTag tkInit(parent:self)}
 	 self.connection = {New Tk.canvasTag tkInit(parent:self)}
@@ -144,13 +134,23 @@ local
 			   action: Manager # doByXY(next))}
       end
 
+      meth tkCreate(Tickle)
+	 item <- @item + 1
+	 Tk.canvas,tk(cr Tickle)
+      end
+      
+      meth tkGet(Tickle ?Id)
+	 Id = @item + 1
+	 item <- Id
+	 Tk.canvas,tk(cr Tickle)
+      end
+      
       meth clear
 	 left   <- 0
 	 right  <- 0
 	 bottom <- 0
-	 Tk.canvas,tk(delete all)
+	 Tk.canvas,tk(de all)
 	 ScrollCanvas,AdjustRegion
-	 {self.genTagId clear}
       end
 
       meth scrollTo(X Y)
@@ -358,14 +358,16 @@ in
 	 {Cursor tk(delete)}
 	 {Connection tk(delete)}
 	 {CurNode getCenter(?X ?Y)}
-	 {Canvas tk(crea {Shapes.(case
-				     CurNode.kind==choose andthen
-				     {CurNode isHidden($)} then hidden
-				  else CurNode.kind end)
-			  {IntToFloat (X + ShadeWidth)} * Scale
-			  {IntToFloat (Y + ShadeWidth)} * Scale
-			  Scale}
-		    fill:CursorColor outline: '' tags:Cursor)}
+	 {Canvas tkCreate(o({Shapes.(case
+					CurNode.kind==choose andthen
+					{CurNode isHidden($)} then hidden
+				     else CurNode.kind end)
+			     {IntToFloat (X + ShadeWidth)} * Scale
+			     {IntToFloat (Y + ShadeWidth)} * Scale
+			     Scale}
+			    fi:CursorColor
+			    ou:''
+			    ta:Cursor))}
 	 {Cursor tk(lower)}
 	 case CurNode==@curNode orelse IsVisible then skip else
 	    {Canvas scrollTo(X Y)}
@@ -378,13 +380,13 @@ in
 	       CmpX CmpY
 	    in
 	       {CmpNode getCenter(?CmpX ?CmpY)}
-	       {Canvas tk(crea line
-			  Scale*{IntToFloat X} Scale*{IntToFloat Y}
-			  Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
-			  arrow: last
-			  fill:  CursorColor
-			  width: LinkWidth
-			  tags:  Connection)}
+	       {Canvas
+		tkCreate(li(Scale*{IntToFloat X} Scale*{IntToFloat Y}
+			    Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
+			    ar: last
+			    fi: CursorColor
+			    wi: LinkWidth
+			    ta: Connection))}
 	       {Connection tk('raise')}
 	    end
 	 end
@@ -393,8 +395,8 @@ in
       meth hideCursor
 	 Canvas = self.canvas
       in
-	 {Canvas.cursor tk(delete)}
-	 {Canvas.connection tk(delete)}
+	 {Canvas.cursor tk(del)}
+	 {Canvas.connection tk(del)}
       end
 
       meth getNumber(Node ?N)
