@@ -5,12 +5,14 @@ INSTALLATION INSTRUCTIONS FOR THE MOZART SYSTEM
 
 * Requirements
 
-  Tcl/Tk 8.0
-  GNU mp library
-  C++ compiler (gcc prefered)
-  GNU make
+  GNU GCC 2.7
+  GNU make 
   GNU m4
-  perl
+  GNU bison 1.25
+  GNU flex 2.5.3
+  GNU mp library 2.0
+  Tcl/Tk 8.0
+  Perl
 
 * Fast installation
 
@@ -35,7 +37,7 @@ make install
 * configuration parameters
 
   --prefix=<dir>  (default: /usr/local/oz)
-     where to install the system
+     where to install the system ($PREFIX)
   --disable-wish
      in case you have already installed the wish component of Oz
      and prefer to leave it alone (perhaps because you don't have
@@ -75,7 +77,7 @@ before running configure the following variables can be set
 
  make all
   in the top level directory this is the same as make bootstrap
-  in other directories, this will typically use Oz executable that
+  in other directories, this will typically use Oz executables that
 	have already been installed
 
  make install
@@ -103,7 +105,7 @@ before running configure the following variables can be set
     bin/
 	scripts
 
-    lib/
+    share/
 	components, ...
 
     include/
