@@ -52,25 +52,30 @@ define
 	 end
 	 %% now track dependencies starting from install targets
 	 Stack  = {Utils.newStackFromList {self get_install_targets($)}}
+	 %% avoid loops from circular imports
+	 Done = {NewDictionary}
       in
 	 try
 	    for do F={Stack.pop} in
-	       if {Not {HasFeature Needed F}} then
-		  if {self target_is_src(F $)} then
-		     %% it must be built and packed, but not the sources
-		     %% needed to build it
-		     Needed.F := true
-		  else
-		     R = {self get_rule(F $)}
-		  in
-		     if R.tool==unit then
-			%% there is no rule to build it: it must be distributed
+	       if {HasFeature Done F} then skip else
+		  Done.F := unit
+		  if {Not {HasFeature Needed F}} then
+		     if {self target_is_src(F $)} then
+			%% it must be built and packed, but not the sources
+			%% needed to build it
 			Needed.F := true
 		     else
-			%% else look at all the sources needed to build it
-			for D in {self get_depends(F $)} do {Stack.push D} end
-			%% and whatever is needed for runtime dependencies
-			for D in {self get_autodepend_install(F $)} do {Stack.push D} end
+			R = {self get_rule(F $)}
+		     in
+			if R.tool==unit then
+			   %% there is no rule to build it: it must be distributed
+			   Needed.F := true
+			else
+			   %% else look at all the sources needed to build it
+			   for D in {self get_depends(F $)} do {Stack.push D} end
+			   %% and whatever is needed for runtime dependencies
+			   for D in {self get_autodepend_install(F $)} do {Stack.push D} end
+			end
 		     end
 		  end
 	       end
