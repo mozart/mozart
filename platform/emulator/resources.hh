@@ -265,3 +265,4 @@
  * appropriate handbook chapter: system/system.raw!!!!!!!!
  */
 
+#define PICKLE2TEXTHACK 1

@@ -34,9 +34,12 @@
 #include "perdio.hh"
 #include "comm.hh"
 
+#define MSGFLAG_TEXTMODE 0x1
+
 class MsgBuffer {
 private:
   OZ_Term resources, nogoods;
+  int flags;
 
   //
 protected:
@@ -56,8 +59,11 @@ public:
   void init() { 
     resources = oz_nil(); 
     nogoods   = oz_nil();
+    flags     = 0;
   }
 
+  void setTextmode() { flags |= MSGFLAG_TEXTMODE; }
+  Bool textmode() { return (flags&MSGFLAG_TEXTMODE); }
   //
   // NON-virtual!
   BYTE get(){
@@ -81,9 +87,9 @@ public:
   virtual void unmarshalReset()                 {} // only for network receovery
 
   void addRes(OZ_Term t)    { resources = oz_cons(t,resources); }
-  OZ_Term getResources()    { return (resources); }
+  OZ_Term getResources()    { return resources; }
   void addNogood(OZ_Term t) { nogoods = oz_cons(t,nogoods); }
-  OZ_Term getNoGoods() { return nogoods; }
+  OZ_Term getNoGoods()      { return nogoods; }
 };
 
 MsgBuffer* getComponentMsgBuffer();

@@ -45,6 +45,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strings.h>
+#include <ctype.h>
+#include <stdarg.h>
+
 #include "codearea.hh"
 #include "indexing.hh"
 
@@ -92,14 +95,11 @@
 OZ_Term unmarshalTerm(MsgBuffer *);
 void unmarshalUnsentTerm(MsgBuffer *);
 void marshalTerm(OZ_Term, MsgBuffer *);
-void marshalCode(ProgramCounter,MsgBuffer*);
 ProgramCounter unmarshalCode(MsgBuffer*,Bool);
 void marshalVariable(PerdioVar *, MsgBuffer *);
 SRecord *unmarshalSRecord(MsgBuffer *);
 void unmarshalUnsentSRecord(MsgBuffer *);
 void unmarshalTerm(MsgBuffer *, OZ_Term *);
-void marshalNumber(unsigned int i, MsgBuffer *bs);
-int unmarshalNumber(MsgBuffer *bs);
 int unmarshalUnsentNumber(MsgBuffer *bs);
 
 #define CheckD0Compatibility \
@@ -119,51 +119,10 @@ char *misc_names[MISC_LAST] = {
   "site"
 };
 
-char *dif_names[DIF_LAST] = {
-  "smallint",
-  "bigint",
-  "float",
-  "atom",
-  "name",
-  "uniquename",
-  "record",
-  "tuple",
-  "list",
-  "ref", 
-  "owner", 
-  "owner_sec",
-  "port",
-  "cell",
-  "lock",
-  "var",
-  "builtin",
-  "dict",
-  "object",
-  "thread",
-  "space",
-  "chunk",
-  "proc",
-  "class",
-  "array",
-  "fsetvalue",
-  "abstractionentry",
-  "primary",
-  "secondary",
-  "remote",
-  "virtual",
-  "perm",
-  "copyablename",
-  "passive"
-};
-
 /* *********************************************************************/
 /*   SECTION 3: utility routines                                       */
 /* *********************************************************************/
 
-void marshalDIF(MsgBuffer *bs, MarshalTag tag) {
-  dif_counter[tag].send();
-  bs->put(tag);
-}
 
 /* *********************************************************************/
 /*   SECTION 4: classes RefTable RefTrail                              */
@@ -246,7 +205,10 @@ inline void gotRef(MsgBuffer *bs, TaggedRef val)
 
 class RefTrail: public Stack {
   int counter;
+
 public:
+  int getCounter() { return counter; }
+
   RefTrail() : Stack(200,Stack_WithMalloc) { counter=0; } 
   void pushInt(int i) { push(ToPointer(i)); }
   int trail(OZ_Term *t)
@@ -311,14 +273,6 @@ MessageType unmarshalHeader(MsgBuffer *bs){
 /*   SECTION 6:  simple ground marshaling/unmarshaling                 */
 /* *********************************************************************/
 
-const int shortSize = 2;    
-
-void marshalShort(unsigned short i, MsgBuffer *bs){
-  PD((MARSHAL_CT,"Short %d BYTES:2",i));  
-  for (int k=0; k<shortSize; k++) {
-    bs->put(i&0xFF);
-    i = i>>8;}}
-
 unsigned short unmarshalShort(MsgBuffer *bs){
   unsigned short sh;
   unsigned int i1 = bs->get();
@@ -369,16 +323,6 @@ double unmarshalFloat(MsgBuffer *bs)
     dc.u.i[0] = unmarshalNumber(bs);
   }
   return dc.u.d;
-}
-
-void marshalString(const char *s, MsgBuffer *bs)
-{
-  misc_counter[MISC_STRING].send();
-  marshalNumber(strlen(s),bs);
-  PD((MARSHAL_CT,"String BYTES:%d",strlen(s)));  
-  while(*s) {
-    bs->put(*s);
-    s++;  }
 }
 
 char *unmarshalString(MsgBuffer *bs)
@@ -475,9 +419,26 @@ inline Bool checkCycle(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag)
   return NO;
 }
 
+
+#define Comment(Args) if (bs->textmode()) {comment Args;}
+
+void comment(MsgBuffer *bs, const char *format, ...)
+{
+  char buf[10000];
+  va_list ap;
+  va_start(ap,format);
+  vsprintf(buf,format,ap);
+  va_end(ap);
+  putComment(buf,bs);
+}
+
+
+
+
 inline void trailCycle(OZ_Term *t, MsgBuffer *bs)
 {
   int counter = refTrail->trail(t);
+  Comment((bs,"DEFREF %d",counter));
   PD((REF_COUNTER,"trail: %d",counter));
   *t = ((counter)<<tagSize)|GCTAG;
 #ifdef DEBUG_REFCOUNTERS
@@ -499,6 +460,7 @@ inline Bool checkCycle(LTuple *l, MsgBuffer *bs)
 inline void trailCycle(LTuple *l, MsgBuffer *bs)
 {
   int counter = refTrail->trail(l);
+  Comment((bs,"DEFREF %d",counter));
 #ifdef DEBUG_REFCOUNTERS
   marshalNumber(MagicConst,bs);
   marshalNumber(counter,bs);
@@ -691,6 +653,7 @@ bomb:
 
 void marshalTerm(OZ_Term t, MsgBuffer *bs)
 {
+  int depth = 0;
 loop:
   DEREF(t,tPtr,tTag);
   PD((MARSHAL,"tag:%d",tTag));
@@ -712,7 +675,13 @@ loop:
     {
       PD((MARSHAL,"literal"));
       Literal *lit = tagged2Literal(t);
-      if (checkCycle(*lit->getCycleRef(),bs,tTag)) return;
+      /* make things more readbale (less refs) in textmode */
+      if (0 && bs->textmode() && lit->isAtom()) { 
+	marshalDIF(bs,DIF_ATOMNOREF);
+	marshalString(lit->getPrintName(),bs);
+	break;
+      }
+      if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
 
       if (lit->isAtom()) {
 	marshalDIF(bs,DIF_ATOM);
@@ -740,9 +709,10 @@ loop:
 
   case LTUPLE:
     {
+      depth++; Comment((bs,"("));
       PD((MARSHAL,"ltuple"));
       LTuple *l = tagged2LTuple(t);
-      if (checkCycle(l,bs)) return;
+      if (checkCycle(l,bs)) goto exit;
       marshalDIF(bs,DIF_LIST);
       PD((MARSHAL_CT,"tag DIF_LIST BYTES:1"));
       PD((MARSHAL,"list"));
@@ -757,9 +727,10 @@ loop:
 
   case SRECORD:
     {
+      depth++; Comment((bs,"("));
       PD((MARSHAL,"srecord"));
       SRecord *rec = tagged2SRecord(t);
-      if (checkCycle(*rec->getCycleAddr(),bs,tTag)) return;
+      if (checkCycle(*rec->getCycleAddr(),bs,tTag)) goto exit;
       TaggedRef label = rec->getLabel();
 
       if (rec->isTuple()) {
@@ -787,9 +758,11 @@ loop:
   case OZCONST:
     {
       PD((MARSHAL,"constterm"));
-      if (checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag))
-	break;
-      marshalConst(tagged2Const(t),bs);
+      if (!checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag)) {
+	Comment((bs,"("));
+	marshalConst(tagged2Const(t),bs);
+	Comment((bs,")"));
+      }
       break;
     }
 
@@ -826,6 +799,10 @@ loop:
     break;
   }
 
+ exit:
+  while(depth--) {
+    Comment((bs,")"));
+  }
   return;
 }
 
@@ -925,7 +902,7 @@ void unmarshalTerm(MsgBuffer *bs, OZ_Term *ret)
 {
 loop:
   MarshalTag tag = (MarshalTag) bs->get();
-  PD((UNMARSHAL,"term tag:%s %d",dif_names[(int) tag],tag));
+  PD((UNMARSHAL,"term tag:%s %d",dif_names[(int) tag].name,tag));
 
   dif_counter[tag].recv();
   switch(tag) {
@@ -988,12 +965,14 @@ loop:
     }
 
   case DIF_ATOM:
+  case DIF_ATOMNOREF:
     {
       char *aux = unmarshalString(bs);
       PD((UNMARSHAL,"atom %s",aux));
       *ret = OZ_atom(aux);
       delete aux;
-      gotRef(bs,*ret);
+      if (tag==DIF_ATOM)
+	gotRef(bs,*ret);
       return;
     }
 
@@ -1289,9 +1268,9 @@ OZ_BI_define(BIperdioStatistics,0,1)
   OZ_Term dif_recv_ar=oz_nil();
   int i;
   for (i=0; i<DIF_LAST; i++) {
-    dif_send_ar=oz_cons(oz_pairAI(dif_names[i],dif_counter[i].getSend()),
+    dif_send_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getSend()),
 			dif_send_ar);
-    dif_recv_ar=oz_cons(oz_pairAI(dif_names[i],dif_counter[i].getRecv()),
+    dif_recv_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getRecv()),
 			dif_recv_ar);
   }
   OZ_Term dif_send=OZ_recordInit(oz_atom("dif"),dif_send_ar);
@@ -1393,6 +1372,8 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
 /*   SECTION 17: code unmarshaling/marshaling                          */
 /* *********************************************************************/
 
+void marshalOpCode(ProgramCounter PC,Opcode op, MsgBuffer *bs);
+
 #include "marshalcode.cc"
 
 /* *********************************************************************/
@@ -1451,34 +1432,9 @@ void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs){
 /*               so they will not be inlined                           */
 /* *********************************************************************/
 
-#define SBit (1<<7)
-
-
-void marshalNumber(unsigned int i, MsgBuffer *bs)
-{
-  while(i >= SBit) {
-    bs->put((i%SBit)|SBit);
-    i /= SBit;}
-  bs->put(i);
-}
-
-int unmarshalNumber(MsgBuffer *bs)
-{
-  unsigned int ret = 0, shft = 0;
-  unsigned int c = bs->get();
-  while (c >= SBit) {
-    ret += ((c-SBit) << shft);
-    c = bs->get();
-    shft += 7;
-  }
-  ret |= (c<<shft);
-  return (int) ret;
-}
-
 int unmarshalUnsentNumber(MsgBuffer *bs) // ATTENTION
 {
   return unmarshalNumber(bs);
 }
 
-#undef SBit
-
+#include "pickle.cc"
