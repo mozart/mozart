@@ -53,6 +53,17 @@ AM am;
 
 int AM::ProcessCounter;
 
+int getenvDefault(char *envvar, int def)
+{
+  char *s = getenv(envvar);
+  if (s) {
+    int ret = atoi(s);
+    message("Using %s=%d\n", envvar, ret);
+    return ret;
+  }
+  return def;
+}
+
 ConfigData::ConfigData() {
   ozPath                = OZ_PATH;
   linkPath              = OZ_PATH;
@@ -65,7 +76,7 @@ ConfigData::ConfigData() {
 
   gcFlag                = GC_FLAG;
   gcVerbosity           = GC_VERBOSITY;
-  heapMaxSize           = HEAPMAXSIZE;
+  heapMaxSize           = getenvDefault("OZHEAPMAXSIZE",HEAPMAXSIZE);
   heapMargin            = HEAPMARGIN;
   heapIncrement         = HEAPINCREMENT;
   heapIdleMargin        = HEAPIDLEMARGIN;
