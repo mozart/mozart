@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id$
 # Oz startup script.
 
 
@@ -41,6 +42,12 @@ fi
 # determine machine architecture and OS version
 : ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
 export OZPLATFORM
+
+case "$cmd" in
+   oz-debug)	OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin.debug
+		export OZEMULATOR
+		cmd=oz
+esac
 
 # set OZCOMPILER
 if [ ${OZCOMPILER-xx} = xx ]; then
