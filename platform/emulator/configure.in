@@ -284,6 +284,7 @@ case $platform in
 esac
 
 AC_SUBST(TOOLLDFLAGS)
+AC_SUBST(EMULDFLAGS)
 
 # compiler options
 : ${oz_copt_optimize="-O"}
