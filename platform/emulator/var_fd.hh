@@ -31,21 +31,22 @@
 class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
+friend class GenBoolVariable;
 friend inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
   
 private:
   FiniteDomain finiteDomain;
   SuspList * fdSuspList[fd_any];
   
+  void relinkSuspListToItself(Bool reset_local = FALSE);
+
 public:  
-  GenFDVariable(FiniteDomain &fd)
-  : GenCVariable(FDVariable) {
+  GenFDVariable(FiniteDomain &fd) : GenCVariable(FDVariable) {
     finiteDomain = fd;
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
   }
 
-  GenFDVariable()
-  : GenCVariable(FDVariable) {
+  GenFDVariable() : GenCVariable(FDVariable) {
     finiteDomain.setFull();
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
   }
@@ -59,18 +60,35 @@ public:
 	       Bool, Bool = TRUE);
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
-   
-  // is X=val still valid, i.e. is val an smallint and is it still in the domain
+  void becomesBoolVarAndPropagate(TaggedRef * trPtr);
+  void becomesBool(void) { 
+    relinkSuspListToItself();
+    setType(BoolVariable); 
+
+    finiteDomain.dispose();
+    // sizeof(GenCVariable) == sizeof(GenBoolVariable) !!!
+    freeListDispose(((char *)this) + sizeof(GenCVariable), 
+		    sizeof(GenFDVariable) - sizeof(GenCVariable));
+
+  }
+
+  int intersectWithBool(void) {return finiteDomain.intersectWithBool();}
+
+  // is X=val still valid, i.e. is val a smallint and is it still in the domain
   Bool valid(TaggedRef val);
 
 
-  void setDom(FiniteDomain &fd) {finiteDomain = fd;}
+  void setDom(FiniteDomain &fd) {
+    Assert(fd != fd_bool);
+    finiteDomain = fd;
+  }
   FiniteDomain &getDom(void) {return finiteDomain;}
 
   void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE);
+  void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE);
 
   void propagate(TaggedRef var, FDPropState state,
-		 TaggedRef term, PropCaller prop_eq = pc_propagator);  
+		 PropCaller prop_eq = pc_propagator);  
 
   int getSuspListLength(void) {
     return suspList->length() +

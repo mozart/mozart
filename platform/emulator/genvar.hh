@@ -32,21 +32,20 @@ enum TypeOfGenCVariable {
   BeingTagged  = 0x1, // needs to occupy different bits than the rest
   FDVariable   = 0x2,
   OFSVariable  = 0x4,
-  MetaVariable = 0x6
+  MetaVariable = 0x6,
+  BoolVariable = 0x8
 };
 
 class GenCVariable: public SVariable {
+
+friend class GenFDVariable;
+
 private:
   TypeOfGenCVariable var_type;
 
 protected:
-  // takes the suspensionlist of var and  appends it to the
-  // suspensionlist of leftVar
-  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE) {
-    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
-  }
   
-  void propagate(TaggedRef, SuspList * &, TaggedRef, PropCaller);
+  void propagate(TaggedRef, SuspList * &, PropCaller);
 
 public:
   USEFREELISTMEMORY;
@@ -58,7 +57,8 @@ public:
     return TypeOfGenCVariable(var_type & ~BeingTagged);
   }
   void setType(TypeOfGenCVariable t){
-    Assert(t == FDVariable || t == OFSVariable || t == MetaVariable);
+    Assert(t == FDVariable || t == OFSVariable || 
+	   t == MetaVariable || t == BoolVariable );
     var_type = t;
   }  
   
@@ -89,10 +89,18 @@ public:
 
   void installPropagators(GenCVariable *, Bool prop);
 
+  // takes the suspensionlist of var and  appends it to the
+  // suspensionlist of leftVar
+  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE) {
+    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
+  }
+
   void addDetSusp(Suspension *susp);
+  void dispose(void);
 };
 
 #include "fdgenvar.hh"
+#include "fdbvar.hh"
 #include "ofgenvar.hh"
 #include "metavar.hh"
 

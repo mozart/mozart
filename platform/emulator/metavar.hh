@@ -65,7 +65,7 @@ public:
 
   void constrainVar(TaggedRef v, TaggedRef d) {
     setData(d);
-    propagate(v, suspList, d, pc_propagator);
+    propagate(v, suspList, pc_propagator);
   }
 
   Bool isStrongerThan(TaggedRef var, TaggedRef vdata);

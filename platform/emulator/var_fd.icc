@@ -27,15 +27,14 @@ void GenFDVariable::dispose(void) {
 
 inline
 void GenFDVariable::propagate(TaggedRef var, FDPropState state,
-			      TaggedRef term, PropCaller prop_eq)
+			      PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
     home = getBoardFast();
     switch (state) {
     case fd_det:
       if (fdSuspList[fd_det])
-	//	fdSuspList[fd_det] = fdSuspList[fd_det]->propagate_p(home);
-	GenCVariable::propagate(var, fdSuspList[fd_det], term, prop_eq);
+	GenCVariable::propagate(var, fdSuspList[fd_det], prop_eq);
     case fd_bounds:
       if (fdSuspList[fd_bounds])
 	fdSuspList[fd_bounds] = fdSuspList[fd_bounds]->propagate_p(home);
@@ -43,11 +42,11 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
       break;
     }
   } else {
-    GenCVariable::propagate(var, fdSuspList[fd_det], term, prop_eq);
-    GenCVariable::propagate(var, fdSuspList[fd_bounds], term, prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_det], prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_bounds], prop_eq);
   }
   if (suspList) 
-    GenCVariable::propagate(var, suspList, term, prop_eq);
+    GenCVariable::propagate(var, suspList, prop_eq);
 }
 
 inline
@@ -67,7 +66,7 @@ void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
   Assert(this == tagged2SuspVar(*trPtr));
 
   TaggedRef si_val = newSmallInt(finiteDomain.singl());
-  propagate(*trPtr, fd_det, si_val);
+  propagate(*trPtr, fd_det);
   doBind(trPtr, si_val);
   dispose();
 }
