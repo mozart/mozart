@@ -25,6 +25,7 @@
 
 #define COUNT1(WHAT,n) ProfileCode(ozstat.WHAT += n)
 #define COUNT(WHAT)    COUNT1(WHAT,1) 
+#define CountMax(What,Value) ProfileCode(ozstat.What = max(ozstat.What,Value))
 
 class StatCounter {
 public:
@@ -121,21 +122,20 @@ public:
 
 
   // RS
-  long freeListAllocated;
-  long freeListDisposed;
+  long freeListAllocated, freeListDisposed;
   long totalAllocated;
   long varVarUnify, recRecUnify,totalUnify;
-  long applBuiltin, applProc;
   long maxStackDepth;
-  long maxEnvSize;
-  long numClosures;
+  long sizeClosures, numClosures, sizeGs;
   long sizeStackVars;
-  long sizeEnvs;
+  long sizeEnvs, numEnvAllocs, maxEnvSize;
 
   long fastcalls,bicalls,nonoptcalls,inlinecalls,inlinedots,
-    sendmsg,applmeth;
-  long nonoptbicalls,nonoptsendmsg;
+    sendmsg,applmeth,nonoptbicalls,nonoptsendmsg;
   
+  long numNewName, numNewNamedName;
+  long numThreads;
+
   void derefChain(int n);
   void printDeref();
   long lenDeref;
