@@ -1181,25 +1181,6 @@ static void xy_init(OZ_Term defines) {
   bufferStack = NULL;
 
   hashTable = new XyScannerHashTable;
-  const char *prefix = "Oz_";
-  const int prefixLen = strlen(prefix);
-  char *version = new char[strlen(OZVERSION)+prefixLen+1];
-  strcpy(version,prefix);
-  strcat(version+prefixLen,OZVERSION);
-  int count = 0;
-  for (char *s = version+prefixLen; *s; s++)
-    if (*s == '.') {
-      count++;
-      *s = '_';
-    }
-  hashTable->insert(version);
-  while (count >= 1) {
-    *strrchr(version,'_') = '\0';
-    hashTable->insert(version);
-    count--;
-  }
-  delete [] version;
-  hashTable->insert("NEWCOMPILER");
   while (OZ_isCons(defines)) {
     char *x = OZ_virtualStringToC(OZ_head(defines));
     hashTable->insert(x);
