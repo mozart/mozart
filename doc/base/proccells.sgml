@@ -155,7 +155,7 @@ where ?_{I} gives the number of alternatives of the selected choice.
 </list>
 <p>
 Note that execution of <<Space.askVerbose>> blocks until the space
-becomes stable, even though it possibly constrains it output before having
+becomes stable, even though it possibly constrains its output before having
 completely reduced (in the case of blocked but not stable spaces). So
 a common pattern of usage is the following:
 <<<
