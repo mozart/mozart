@@ -218,9 +218,9 @@ Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
 compiler:
 	$(MKDIR) compiler
 
-compiler/Version.oz: compiler $(COMPILERSRCNOVER) \
+compiler/Version.oz: compiler $(COMPILERSRCNOVER) $(OZVERSION) \
 	$(SRCDIR)/compiler/Opcodes.m4oz
-	($(ECHO) 'OZVERSION = '\'$(OZVERSION)\'; \
+	($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
 
 compiler/Opcodes.oz: compiler $(SRCDIR)/compiler/Opcodes.m4oz \
