@@ -173,12 +173,14 @@ EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
 #---------------------------------------------------------------------
 
 %.o: %.cc
+	OZTOOL_CXX="@CXX@" \
 	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CXXFLAGS) $(CXXEXTRAFLAGS) \
-          -c $< -o $@
+	-c $< -o $@
 
 %.o: %.c
+	OZTOOL_CXX="@CXX@" \
 	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CXXFLAGS) $(CXXEXTRAFLAGS) \
-          -c $< -o $@
+	-c $< -o $@
 
 %.ozf: %.oz
 	$(COMPILE) `$(CYGPATH) $<` \
@@ -189,13 +191,16 @@ EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
 	-I`$(CYGPATH) $(SRCDIR)` -I`$(CYGPATH) $(BUILDDIR)` -o $@
 
 $(PARSERCMPS):%.so-$(PLATFORM): $(PARSEROBJS)
+	OZTOOL_LD="@CXX@" \
 	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $^
 
 $(CCMPS):%.so-$(PLATFORM): $(COBJS)
+	OZTOOL_LD="@CXX@" \
 	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) \
         -o $@ $^ $(NATEXTRAFLAGS)
 
 $(NATCMPS):%.so-$(PLATFORM): %.o
+	OZTOOL_LD="@CXX@" \
 	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(NATEXTRAFLAGS)
 
 #---------------------------------------------------------------------
