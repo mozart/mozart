@@ -452,13 +452,15 @@ in
       in
 	 case T \= undef then
 	    I = {Thread.id T}
+
 	    case {Label A}
 	    
 	    of ' step' then
 	       {Thread.resume T}
 	    
 	    elseof ' next' then
-	       B = ThreadManager,thrIsBuiltin(id:{Thread.id T} builtin:$)
+	       O = {Dget ThreadManager,getThreadDic($) I}
+	       B = {O isBuiltin($)}
 	    in
 	       case B then
 		  {OzcarMessage NextOnBuiltin}
