@@ -1,7 +1,0 @@
-#!/bin/sh -x
-
-for i in *.sgml; do \
-	mv $i $i.bak && \
-	sed 's|[pP]icture.[eE]xtern to="pictures/\(.*\)/\(.*\).eps"|Picture.Extern id="pict.ext.\1.\2" to="pictures/\1/\2.eps"|g' \
-	< $i.bak > $i; done
-

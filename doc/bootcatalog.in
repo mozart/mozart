@@ -1,3 +1,0 @@
-DOCTYPE BOOK "@SRCTOP@/doc/ozdoc.dtd"
-SYSTEM ozdoc.dtd "@SRCTOP@/doc/ozdoc.dtd"
-SGMLDECL "@SRCTOP@/doc/ozdoc.dcl"

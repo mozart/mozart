@@ -1,3 +1,0 @@
-makefile(
-   lib : ['Parser.ozf']
-   )

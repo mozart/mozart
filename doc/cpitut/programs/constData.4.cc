@@ -1,1 +1,0 @@
-ConstDataHdl * _constData;
