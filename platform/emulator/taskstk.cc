@@ -67,7 +67,6 @@ int TaskStack::getSeqSize()
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
     if (cFlag == C_JOB) {
-      Assert(oldTos-tos-1 != 0);
       return oldTos-tos-1;
     }
     Assert(cFlag != C_LOCAL && cFlag != C_SOLVE);
