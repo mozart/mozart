@@ -25,6 +25,7 @@ import
 	seq: SEQ
 	pcdata: PCDATA
 	clean toVirtualString)
+   Gdbm at 'x-oz://contrib/gdbm'
 export
    'class': IndexerClass
 prepare
@@ -164,16 +165,31 @@ define
       meth init()
 	 Entries <- nil
       end
-      meth enter(L Ands HTML)
-	 Entries <- {AddAName Ands L}#HTML|@Entries
+      meth enter(L Ands HTML Classes)
+	 Entries <- {AddAName Ands L}#HTML#Classes|@Entries
       end
       meth empty($)
 	 @Entries == nil
       end
-      meth process(?IndexHTML)
+      meth process(DBName Prefix ?IndexHTML) DB in
 	 thread Es SortedEs Groups in
+	    DB = case DBName of unit then unit
+		 else
+		    try
+		       {Gdbm.new write(DBName)}
+		    catch _ then
+		       {Gdbm.new create(DBName)}
+		    end
+		 end
+	    try
+	       {Gdbm.put DB Prefix @Entries}
+	    catch error(dp(generic _ _ 'Resources'#Rs|_) ...) then
+	       {ForAll Rs Wait}
+	       {Gdbm.put DB Prefix @Entries}
+	    end
+	    {Gdbm.close DB}
 	    Es = {Map @Entries
-		  fun {$ Ands0#EntryHTML} Ands in
+		  fun {$ Ands0#EntryHTML#_} Ands in
 		     %%--** remove any id attributes
 		     Ands = {Map Ands0
 			     fun {$ X}
