@@ -38,13 +38,9 @@
                              out => ['+tuple'],
                              BI  => BIaskSpace},
 
-     'askVerbose'       => { in  => ['+space','!value'],
-                             out => [],
+     'askVerbose'       => { in  => ['+space'],
+                             out => ['value'],
                              BI  => BIaskVerboseSpace},
-
-     'askUnsafe'        => { in  => ['+space','value'],
-                             out => [],
-                             BI  => BIaskUnsafeSpace},
 
      'merge'            => { in  => ['+space'],
                              out => ['+value'],
