@@ -25,10 +25,6 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(VAR_ALL)
-#pragma implementation "var_ct.hh"
-#endif
-
 #include "var_ct.hh"
 #include "am.hh"
 #include "builtins.hh"
