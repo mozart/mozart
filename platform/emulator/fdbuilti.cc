@@ -433,10 +433,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
         GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
         TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
         am.checkSuspensionList(bifdbm_var[i], makeTaggedRef(newtaggedfdvar));
-        doBindAndTrailAndIP(bifdbm_var[i], bifdbm_varptr[i],
-                            makeTaggedRef(newtaggedfdvar),
-                            newfdvar, tagged2GenFDVar(bifdbm_var[i]));
-        newfdvar->setTag();
+        doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
+                       makeTaggedRef(newtaggedfdvar));
         vars_left = TRUE;
       }
       PROFILE_CODE1(
@@ -516,10 +514,8 @@ void BIfdBodyManager::processNonRes(void)
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar));
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
-      doBindAndTrailAndIP(bifdbm_var[0], bifdbm_varptr[0],
-                          makeTaggedRef(newtaggedfdvar),
-                          newfdvar, tagged2GenFDVar(bifdbm_var[0]));
-      newfdvar->setTag();
+      doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
+                     makeTaggedRef(newtaggedfdvar));
       vars_left = TRUE;
     }
     PROFILE_CODE1(
