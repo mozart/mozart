@@ -1722,7 +1722,7 @@ void ThreadsPool::doGC ()
 
   currentThread = currentThread->gcThread ();
   rootThread = rootThread->gcThread ();
-  threadBodyFreeList = (ThreadBodyFreeListEl *) NULL;
+  threadBodyFreeList = (RunnableThreadBody *) NULL;
 
   thq = currentQueue;
   pri = currentPriority;

@@ -79,7 +79,7 @@ class TaskStack: public Stack {
 public:
   USEFREELISTMEMORY;
 
-  TaskStack(int s): Stack(s,freeListMalloc) { push(emptyTaskStackEntry); }
+  TaskStack(int s): Stack(s,freeListMalloc) { makeEmpty(); }
   ~TaskStack()               { error("~TaskStack called"); }
 
   virtual void deallocate(StackEntry *p, int n);
@@ -95,7 +95,7 @@ public:
 
   void makeEmpty()
   {
-    tos = array;
+    mkEmpty();
     push(emptyTaskStackEntry);
   }
 
@@ -204,7 +204,7 @@ public:
   }
 
   int getSeqSize();
-  DebugCode (int hasJobDebug (););
+  DebugCode (int hasJobDebug ();)
   void copySeq(TaskStack *newStack,int size);
   static int frameSize(ContFlag);
 
