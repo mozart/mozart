@@ -290,7 +290,7 @@ unsigned __stdcall readerThread(void *arg)
 static
 void deleteReader(int fd)
 {
-  TerminateThread(readers[fd].thrd);
+  TerminateThread(readers[fd].thrd,0);
   readers[fd].thrd = 0;
 
 }
@@ -757,7 +757,7 @@ void osExit()
   ChildProc *aux = ChildProc::allchildren;
   while(aux) {
 #ifdef WINDOWS
-    TerminateProcess(aux->pid);
+    TerminateProcess((HANDLE)aux->pid,0);
 #else
     int ret = oskill(aux->pid,SIGTERM);
     /* ignore return value */

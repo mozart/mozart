@@ -1485,7 +1485,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
     return FAILED;
   }
 
-  int pid = pinf.dwProcessId;
+  int pid = (int) pinf.hProcess;
   CloseHandle(wh1);
   CloseHandle(rh2);
   SetStdHandle(STD_OUTPUT_HANDLE,saveout);

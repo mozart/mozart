@@ -24,6 +24,8 @@
 
 #ifdef WINDOWS
 
+#define pid_t int
+
 // sleep
 #include <dos.h>
 
