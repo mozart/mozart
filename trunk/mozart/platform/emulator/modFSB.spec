@@ -26,23 +26,23 @@
 
 %builtins_all =
 (
-    'valueToString'	=> { in  => ['+fset'],
+    'value.toString'	=> { in  => ['+fset'],
 			     out => ['+string'],
 			     BI  => BIfsValueToString},
 
-    'isVarB'		=> { in  => ['value'],
+    'var.is'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  => BIfsIsVarB},
 
-    'isValueB'	=> { in  => ['+value','bool'],
+    'value.is'	=> { in  => ['+value','bool'],
 			     out => [],
 			     bi  => BIfsIsValueB},
 
-    'setValue'	=> { in  => ['+value','fset'],
+    'value.make'	=> { in  => ['+value','fset'],
 			     out => [],
 			     bi  => BIfsSetValue},
 
-    'set'		=> { in  => ['+value','+value','fset'],
+    'var.bounds'		=> { in  => ['+value','+value','fset'],
 			     out => [],
 			     bi  => BIfsSet},
 
@@ -58,19 +58,19 @@
 			     out => [],
 			     bi  => BIfsGetKnownNotIn},
 
-    'getUnknown'	=> { in  => ['fset','value'],
+    'reflect.unknown'	=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetUnknown},
 
-    'getGlb'		=> { in  => ['fset','value'],
+    'reflect.lowerBound'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetKnownIn},
 
-    'getLub'		=> { in  => ['fset','value'],
+    'reflect.upperBound'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetLub},
 
-    'getCard'		=> { in  => ['fset','value'],
+    'reflect.card'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetCard},
 
@@ -78,7 +78,7 @@
 			     out => [],
 			     bi  => BIfsCardRange},
 
-    'getNumOfKnownIn'	=> { in  => ['fset','int'],
+    'reflect.cardOf.lowerBound'	=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => BIfsGetNumOfKnownIn},
 
@@ -86,11 +86,11 @@
 			       out => [],
 			       bi  => BIfsGetNumOfKnownNotIn},
     
-    'getNumOfUnknown'	=> { in  => ['fset','int'],
+    'reflect.cardOf.unknown'	=> { in  => ['fset','int'],
 			     out => [],
 			     bi  => BIfsGetNumOfUnknown},
 
-    'clone'		=> { in  => ['fset','fset'],
+    'fsClone'		=> { in  => ['fset','fset'],
 			     out => [],
 			     bi  => BIfsClone},
 
