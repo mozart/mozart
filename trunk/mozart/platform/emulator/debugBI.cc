@@ -22,6 +22,7 @@
  *
  */
 
+#include "base.hh"
 #include "debug.hh"
 #include "codearea.hh"
 #include "builtins.hh"
@@ -96,7 +97,7 @@ OZ_BI_define(BIbreakpointAt, 3,1)
 
   DbgInfo *info = allDbgInfos;
   Bool    ok    = NO;
-  char *inFile  = ozstrdup(toC(file));
+  char *inFile  = strdup(toC(file));
   char *fullFile, *stripFile;
 
   while (info) {
