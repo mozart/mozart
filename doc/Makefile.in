@@ -98,7 +98,7 @@ PSDOCDIRS       = apptut base browser bugs changes compiler \
         tutorial wp
 
 idx.html:
-        if [ -e index.db ]; then \
+        if [ -r index.db ]; then \
         $(OZDOC) --in=index.db --out=idx.html --type=html-global-index; \
         else touch idx.html; fi
 
