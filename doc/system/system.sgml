@@ -85,7 +85,7 @@
       <p>
         The printed text appears on standard output.
 
-      <entry><<show>>
+      <entry id=system.show><<show>>
         <index class=tails/<<System>><And><<show>>/
       <synopsis>
         <<{System.show ?_{X}}>>
