@@ -124,7 +124,7 @@ define
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
-	    try {Shell.execute
+	    try {Shell.executeProgram
 		 {self get_oz_engine($)}|{self get_oz_ozc($)}|L3}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
@@ -145,7 +145,7 @@ define
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
-	    try {Shell.execute
+	    try {Shell.executeProgram
 		 {self get_oz_engine($)}|{self get_oz_ozl($)}|L2}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
@@ -179,7 +179,7 @@ define
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
-	    try {Shell.execute
+	    try {Shell.executeProgram
 		 {self get_oz_oztool($)}|L3}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
@@ -205,7 +205,7 @@ define
 	    %% record time of simulated build
 	    Executor,SimulatedTouch(DST)
 	 else
-	    try {Shell.execute
+	    try {Shell.executeProgram
 		 {self get_oz_oztool($)}|L2}
 	    catch shell(CMD) then
 	       raise ozmake(build:shell(CMD)) end
@@ -348,7 +348,7 @@ define
       meth exec_mkexec(To)
 	 {self xtrace('chmod -x '#To)}
 	 if {self get_justprint($)} then skip else
-	    try {Shell.execute ['chmod' '-x' To]}
+	    try {Shell.executeCommand ['chmod' '-x' To]}
 	    catch _ then
 	       if {Property.get 'platform.os'}\=win32 then
 		  raise ozmake(mkexec:To) end
