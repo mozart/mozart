@@ -62,7 +62,9 @@ to the programmer.
 are related to the <<Remote>> module and virtual sites
 (see also <ptr.extern to="ozdoc:system" key="chapter.remote">).
 <list>
-<item>On Windows, the <<Remote>> module is unavailable.
+<item>On Windows, the <<Remote>> module has limited functionality.
+Only a single option is possible for <<fork>>, namely <<sh>>.
+Future release will add more options.
 
 <item>On Solaris, the <<Remote>> module can only create
 a limited number of virtual sites.
