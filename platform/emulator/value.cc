@@ -360,7 +360,7 @@ void Name::import(GName *name)
 const char *ObjectClass::getPrintName()
 {
   TaggedRef aux = classGetFeature(NameOoPrintName);
-  return aux ? tagged2Literal(aux)->getPrintName() : "???";
+  return aux ? tagged2Literal(oz_deref(aux))->getPrintName() : "???";
 }
 
 const char *ConstTerm::getPrintName()
