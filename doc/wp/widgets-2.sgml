@@ -38,6 +38,7 @@
     <Title/Buttons and Actions/
 
     <P>
+    <para class=apropos><title/actions/
       Button widgets are similar to label widgets in that they display text,
       bitmaps, or images.  Additionally, they provide for <Def/actions/:
       pressing the mouse button over the button widget, invokes an
@@ -72,7 +73,7 @@ B2={New Tk.button tkInit(parent: W
 </chunk>
       </Figure>
 
-    <P>
+    <para class=apropos><title/action values/
       The <<action>> option is different from other options in
       that it has not a generic translation as explained in <Ptr
       to="section.widgets-1.tickles">.  Valid values for this option
@@ -86,7 +87,7 @@ B2={New Tk.button tkInit(parent: W
       All widgets which provide for the <<command>> option in Tk, provide for
       the <<action>> option in &Oz;.
 
-    <P>
+    <para class=apropos><title/changing actions/
       Actions can be deleted or changed by the method <<tkAction>>.  For
       example, deleting the action for button <<B1>> and changing the action
       for <<B2>> can be done by executing:
@@ -103,14 +104,14 @@ B2={New Tk.button tkInit(parent: W
   <Section id="section.widgets-2.otherbuttons">
     <Title/Checkbuttons, Radiobuttons, and Variables/
 
-    <P>
+    <para class=apropos><title/checkbuttons/
       Checkbutton widgets are used for binary choices.  An indicator to the
       left shows whether the button is <Q/on/ or <Q/off/.  The state of the
       indicator is given by a tickle variable. A tickle variable is a tickle
       object that provides messages to set and to query the value of the
       variable.
 
-    <P>
+    <para class=apropos><title/radiobuttons/
       Radiobuttons are used for non-binary choices.  Several radiobuttons
       are linked together to a group. Selecting a radio button de-selects all
       buttons belonging to the same group and displays a mark in an indicator
@@ -144,7 +145,7 @@ Rs={Map ['Times' 'Helvetica' 'Courier']
 </chunk>
       </Figure>
 
-    <P>
+    <para class=apropos><title/state/
       To query the state of the radiobutton and of the checkbuttons we query
       the state of the corresponding variables.  Feeding the following
       expression
@@ -157,7 +158,7 @@ Rs={Map ['Times' 'Helvetica' 'Courier']
       section/ for a detailed explanation of the <<tkReturnInt>> and
       <<tkReturnAtom>> messages.
 
-    <P>
+    <para class=apropos><title/actions/
       Very often selecting a checkbutton or a radiobutton must show
       immediate effect.  For this purpose it is possible to attach actions
       to checkbuttons and radiobuttons in the same way as for buttons.
@@ -218,16 +219,15 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
       whereas the <<tk>> method
       ignores this string.
 
-    <P>
-      The field of the <<tkReturn>> message with the largest integer feature
-      is constrained to the string returned.  The method <<tkReturn>> is
-      asynchronous: it sends the message to the graphics engine but
-      does not block
-      the thread until the return string is available.  Eventually the
-      graphics engine
-      writes the return string to the store.
+    <para class=apropos><title/synchronization/
+      The field of the <<tkReturn>> message with the largest integer
+      feature is constrained to the string returned.  The method
+      <<tkReturn>> is asynchronous: it sends the message to the
+      graphics engine but does not block the thread until the return
+      string is available.  Eventually the graphics engine writes the
+      return string to the store.
 
-    <P>
+    <para class=apropos><title/illegal return values/
       Similar to the method <<tkReturn>> tickle objects provide methods that
       return atoms, integers, floats and lists of strings, atoms, integers,
       and floats.  Rather than writing a string to the store they write a
@@ -286,7 +286,7 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
         </Table>
       </Figure>
 
-    <P>
+    <para class=apropos><title/string handling procedures/
       The Tk Module provides also for a set of procedures that can transform
       strings into atoms, integers, floats and lists of these three types.
       With these procedures it is possible to transform return strings in
@@ -347,7 +347,7 @@ L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
       after it has been created, one needs to use the <<entryconfigure>>
       command rather than the <<configure>> command.
 
-    <P>
+    <para class=apropos><title/tear off entry/
       The program shown in <Ptr to="figure.widgets-2.menu"> creates two menu
       widgets <<M1>> and <<M2>>.  The first cascade entry of the menu widget
       <<M1>> is configured such that it displays the menu <<M2>> when the menu
@@ -377,7 +377,7 @@ CEs={Map Cs fun {$ C}
 </chunk>
       </Figure>
 
-    <P>
+    <para class=apropos><title/posting menus/
       Usually menus are not visible.  Only when needed a menu appears on the
       screen, we say that it is <Def/posted/.  After the user has traversed
       the menu and has selected an entry, the menu is made invisible again: it
@@ -387,7 +387,7 @@ CEs={Map Cs fun {$ C}
 {M1 tk(post 0 0)}
 </chunk>
 
-    <P>
+    <para class=apropos><title/menubuttons/
       From menus one can compose menu bars and popup menus.  A menu bar
       consists of several menubutton widgets.  A menubutton widget can
       display text, bitmaps, or images.  To a menubutton a menu can be
@@ -396,7 +396,7 @@ CEs={Map Cs fun {$ C}
       <<TkTools>> module provides an abstraction that supports the creation
       of menu bars (see <ptr to="section.tools.menubars">).
 
-    <P>
+    <para class=apropos><title/popup menus/
       The command <<tk_popup>> can be used to display popup menus.  It takes
       as arguments the menu widget and the coordinates where the widget should
       appear on the screen.  Ideally, we want the menu widget to appear after
@@ -413,7 +413,7 @@ CEs={Map Cs fun {$ C}
   <Section id="section.widgets-2.events">
     <Title/Events/
 
-    <P>
+    <para class=apropos><title/binding to events/
       Button widgets allow to specify an action which is invoked when the
       button is pressed.  This is only one particular example of attaching an
       action to an event.  The Tk toolkit allows to attach actions to any
@@ -433,7 +433,7 @@ CEs={Map Cs fun {$ C}
       posted at the position of the mouse pointer when the mouse button was
       pressed.
 
-    <P>
+    <para class=apropos><title/event patterns/
       The program in <Ptr to="figure.widgets-2.event-menu"> does what we
       want.  The value <<'&lt;Button-1&gt;'>> for the <<event>> option is
       the so-called <Def/event pattern/.  The value for the <<args>> option
@@ -478,7 +478,7 @@ CEs={Map Cs fun {$ C}
         <<<'&lt;'#?_{Detail}#'&gt;'>>>
         are valid event patterns.
 
-      <P>
+      <para class=apropos><title/event modifiers and types/
         <Ptr to="figure.widgets-2.event-args2"> shows common event modifiers
         and event types.  Multiple entries separated by commas can be used as
         synonyms.  The full set of modifiers and types is described in
@@ -660,7 +660,7 @@ CEs={Map Cs fun {$ C}
 
     <p>
       To that aim the class <<Tk.listener>> is provided. An instance
-      of a subclass of <<Tk.listener>> has a thread of its own, in
+      of a subclass of <<Tk.listener>> has a thread of its own in
       which it serves action messages in order of invocation.
       For example, in
 <chunk class=anonymous><title/listener/
@@ -720,7 +720,7 @@ E={New Tk.entry tkInit(parent:W width:20)}
 </chunk>
        </Figure>
 
-     <P>
+     <para class=apropos><title/focus/
        To be able to enter text into an entry, the entry needs to have the
        <Def/focus/.  If a widget has the focus, all input from the keyboard
        is directed to that widget. A widget that has the focus is drawn
@@ -734,7 +734,7 @@ E={New Tk.entry tkInit(parent:W width:20)}
        several widgets by pressing keys.  For more on this, see
        <ref.extern to="&tkcmd/focus.htm"/<kbd/focus//.
 
-     <P>
+     <para class=apropos><title/returning entered text/
        To query the string entered in a widget the command <<get>> is provided.
        To display the entered string in the Browser we can execute
 <chunk class=anonymous><title/entry get/
@@ -800,14 +800,14 @@ Ss={Map [red green blue]
       <Ptr to="section.widgets-2.event-args">.  The only difference is that no
       event argument specification is required.  Invoking the action is also
       similar.  For instance, if the scale for the color <<red>> changes its
-      value to <<10>>, a thread to execute
-      <<<{F bg(red 10)}>>>
-      is created.
+      value to <<10>>, the message <<bg(red 10)>> will eventually be
+      served by the listener <<L>>.
+
 
   <Section id="section.widgets-2.listbox">
     <Title/Listboxes and Scrollbars/
 
-    <P>
+    <para class=apropos><title/scanning/
       A listbox displays a list of strings and allows the user to select one
       or more of them.  If the listbox contains more lines than it can display
       at once, the user can select the strings to be displayed by <Def
@@ -855,7 +855,7 @@ S={New Tk.scrollbar tkInit(parent:W)}
 </chunk>
       </Figure>
 
-    <P>
+    <para class=apropos><title/attaching scrollbars/
       To attach a scrollbar to a widget we use the predefined procedure
       <<Tk.addYScrollbar>>.  It creates event bindings for the scrollbar such
       that moving the scrollbar's slider affects the visible strings of the
@@ -889,7 +889,7 @@ S={New Tk.scrollbar tkInit(parent:W)}
       can be given as options to the <<tkInit>> method of the <<Tk.toplevel>>
       class.
 
-    <P>
+    <para class=apropos><title/titled toplevel/
       For example
 <chunk class=anonymous><title/wm title/
 W={New Tk.toplevel tkInit(title:'Something different')}
@@ -897,7 +897,7 @@ W={New Tk.toplevel tkInit(title:'Something different')}
       creates a toplevel widget with the title <Samp/Something different/
       rather than <Samp/Oz Window/.
 
-    <P>
+    <para class=apropos><title/withdrawn toplevels/
       Sometimes it is important to create a toplevel widget in a <Def
       /withdrawn/ state: the toplevel widget does not appear on the screen.
       This can be used to first create all widgets to be contained in the
@@ -999,13 +999,13 @@ end
 <chunk><title/Definition of MakePopup/
 fun {MakePopup Parent Text}
    fun {$}
-      [X Y H] = {Map [rootx rooty height]
-                 fun {$ WI}
-                    {Tk.returnInt winfo(WI Parent)}
-                 end}
-      W = {New Tk.toplevel tkInit(withdraw:true bg:black)}
-      M = {New Tk.message
-           tkInit(parent:W text:Text bg:khaki aspect:400)}
+      [X Y H]={Map [rootx rooty height]
+               fun {$ WI}
+                  {Tk.returnInt winfo(WI Parent)}
+               end}
+      W={New Tk.toplevel tkInit(withdraw:true bg:black)}
+      M={New Tk.message
+         tkInit(parent:W text:Text bg:khaki aspect:400)}
    in
       {Tk.batch [wm(overrideredirect W true)
                  wm(geometry W '+'#X+10#'+'#Y+H)

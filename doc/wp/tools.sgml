@@ -126,7 +126,7 @@ E={New TkTools.error
 </chunk>
       </Figure>
 
-    <P>
+    <para class=apropos><title/transient widgets/
       All dialogs provide for the option <<master>>.  By giving a
       toplevel widget as value for <<master>>, the dialog appears as a
       <Def/transient/ widget: depending on the window manager the
@@ -138,7 +138,7 @@ E={New TkTools.error
   <Section id="section.tools.menubars">
     <Title/Menubars/
 
-    <P>
+    <para class=apropos><title/keyboard accelerators/
       A menubar is a frame widget containing several menubutton widgets.  To
       each of the menubutton widgets a menu is attached.  The menu contains
       menuitems being either radiobutton entries, checkbutton entries, command
@@ -268,7 +268,10 @@ F={New Tk.frame tkInit(parent:W width:10#c height:5#c bg:ivory)}
       The menus attached to menubuttons or to cascade entries can be accessed
       under the feature <<menu>>.  For instance the first tear off entry from
       the <Q class=menu/Test/ menu can be removed with
-      <<<{Bar.test.menu tk(configure tearoff:false)}>>>
+<chunk class=anonymous><title/menu tearoff/
+{Bar.test.menu tk(configure tearoff:false)}
+</chunk>
+
     <P>
       It is possible to extend a menubar created with <<TkTools.menubar>> with
       further entries.  The following statement adds a menu entry just before
@@ -345,6 +348,9 @@ W={New Tk.toplevel tkInit}
 <chunk.ref/menubar/
 
 <chunk.ref/entryconfigure/
+
+<chunk.ref/menu tearoff/
+
 
 declare
 <chunk.ref/add menuentry/
