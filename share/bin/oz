@@ -49,7 +49,7 @@ fi
 
 
 # set OZCOMPILER
-${OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin}
+. ${OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin}
 
 # set OZPATH & PATH
 if [ X$cmd = Xoze -o ${OZ_PI-xx} = xx ]; then
