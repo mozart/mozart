@@ -3362,9 +3362,12 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
   switch (tag0) {
   case LITERAL:
     {
-      int len=length(arity);
-      arity = sortlist(arity,len);
-      len=length(arity); // NOTE: duplicates may be removed
+      int len1 = length(arity);
+      arity = sortlist(arity,len1);
+      int len = length(arity); // NOTE: duplicates may be removed
+      if (!recordFlag && len!=len1) {
+	return FAILED;
+      }
       SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
       newrec->setFeatures(list);
       out = newrec->normalize();
