@@ -19,12 +19,11 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 
 #include <stdio.h>
+#include <oz.h>
 
 extern char *calloc ();
 extern char *realloc ();
 extern void done ();
-
-extern char *program_name;
 
 char *
 xmalloc (n)
@@ -38,8 +37,7 @@ xmalloc (n)
   block = calloc (n, 1);
   if (block == NULL)
     {
-      fprintf (stderr, "%s: memory exhausted\n", program_name);
-      done (1);
+      done (OZ_atom("memory exhausted\n"));
     }
 
   return (block);
@@ -56,8 +54,7 @@ xrealloc (block, n)
   block = realloc (block, n);
   if (block == NULL)
     {
-      fprintf (stderr, "%s: memory exhausted\n", program_name);
-      done (1);
+      done (OZ_atom("memory exhausted\n"));
     }
 
   return (block);
