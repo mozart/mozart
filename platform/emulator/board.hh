@@ -34,10 +34,8 @@
 
 #include "actor.hh"
 
-#ifdef PROP_MERGING
+#include "thread.hh"
 #include "thrqueue.hh"
-#endif
-
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
@@ -222,9 +220,14 @@ public:
 
   void setCommitted(Board *s) {
     Assert(!isInstalled() && !isCommitted());
-#ifdef PROP_MERGING
-    pq->merge(s->getPropQueue());
-#endif
+  
+    int both = s->getLocalThreadQueue() && localThreadQueue;
+    s->setLocalThreadQueue(localThreadQueue->merge(s->getLocalThreadQueue()));
+    Assert(localThreadQueue == NULL || (!both || localThreadQueue->isEmpty()));
+    
+    if (both) 
+      resetLocalThreadQueue();
+
     flags |= Bo_Committed;
     u.actor->setCommitted();
     u.ref = s;
@@ -240,7 +243,27 @@ public:
   Bool isInTree(void);
   void unsetGlobalMarks(void);
   void setGlobalMarks(void);
+
+//-----------------------------------------------------------------------------
+// local thread queue
+private:
+  LocalThreadQueue * localThreadQueue;
+public:
+  void pushToLTQ(Thread * thr);
+
+  void resetLocalThreadQueue(void) {
+    localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
+    Assert(localThreadQueue);
+    localThreadQueue->dispose ();
+    localThreadQueue = NULL;
+  }
+  LocalThreadQueue * getLocalThreadQueue(void) {
+    return localThreadQueue;
+  }
+  void setLocalThreadQueue(LocalThreadQueue * ltq) {
+    localThreadQueue = ltq;
+  }
+
 };
 
 #endif
-

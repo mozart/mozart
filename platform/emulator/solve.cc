@@ -216,7 +216,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
 
 SolveActor::SolveActor(Board *bb)
  : Actor (Ac_Solve, bb), cpb(NULL), suspList (NULL), threads (0), 
-   localThreadQueue(NULL), nonMonoSuspList(NULL) {
+   nonMonoSuspList(NULL) {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));

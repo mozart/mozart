@@ -2370,11 +2370,11 @@ LBLdispatcher:
        
        // postpone poping task from taskstack until 
        // local thread queue is empty
-       SolveActor * sa = SolveActor::Cast(e->currentBoard()->getActor());
-       LocalThreadQueue * ltq = sa->getLocalThreadQueue();
+       Board * sb = e->currentBoard();
+       LocalThreadQueue * ltq = sb->getLocalThreadQueue();
 
 #ifdef DEBUG_LTQ
-       cout << "sa=" << sa << " emu " << " thr=" 
+       cout << "sb=" << sb << " emu " << " thr=" 
 	    << e->currentThread() << endl << flush;
 #endif
 
@@ -2405,7 +2405,7 @@ LBLdispatcher:
 	   if (ozconf.timeDetailed)
 	     ozstat.timeForPropagation.incf(osUserTime()-starttime);
 
-	   CTS->pushLTQ(sa); // RS: is this needed ???
+	   CTS->pushLTQ(sb); // RS: is this needed ???
 	   // failure of propagator is never catched !
 	   goto LBLfailure; // top-level failure not possible
 	 } else {
@@ -2421,17 +2421,17 @@ LBLdispatcher:
 
 
        if (ltq->isEmpty()) {
-	 sa->resetLocalThreadQueue();
+	 sb->resetLocalThreadQueue();
 #ifdef DEBUG_LTQ
-	 cout << "sa emu sa=" << sa << " EMPTY" << endl << flush;
+	 cout << "sb emu sb=" << sb << " EMPTY" << endl << flush;
 #endif
 	 goto LBLpopTask;
        } else {
 #ifdef DEBUG_LTQ
-	 cout << "sa emu sa=" << sa << " PREEMPTIVE" << endl << flush;
+	 cout << "sb emu sb=" << sb << " PREEMPTIVE" << endl << flush;
 #endif
-	 CTS->pushLTQ(sa);
-	 Assert(sa->getLocalThreadQueue());
+	 CTS->pushLTQ(sb);
+	 Assert(sb->getLocalThreadQueue());
 	 return T_PREEMPT;
        }
      }
