@@ -66,15 +66,6 @@ in
 	  end
        end
 
-       proc {CompilerReadEvalLoop} File VS0 VS in
-	  File = {New TextFile init(name: stdin flags: [read])}
-	  {File readQuery(?VS0)}
-	  {File close()}
-	  VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
-	  {{Compiler.getOPICompiler} enqueue(feedVirtualString(VS))}
-	  {CompilerReadEvalLoop}
-       end
-
        local
 	  MSG_ERROR = [17]
 	  EMU_OUT_START = [5]
@@ -83,28 +74,14 @@ in
 	  class CompilerInterfaceEmacs from Compiler.genericInterface
 	     prop final
 	     meth init(CompilerObject)
-		lock
-		   Compiler.genericInterface, init(CompilerObject Serve)
-		   case {System.get standalone} then skip
-		   else
-		      {CompilerObject enqueue(setSwitch(echoqueries true))}
-		   end
-		end
+		Compiler.genericInterface, init(CompilerObject Serve)
 	     end
 	     meth Serve(Ms)
 		case Ms of M|Mr then
 		   case M of info(VS) then
-		      case {System.get standalone} then
-			 {System.printInfo VS}
-		      else
-			 {System.printInfo EMU_OUT_END#VS#EMU_OUT_START}
-		      end
+		      {System.printInfo EMU_OUT_END#VS#EMU_OUT_START}
 		   [] info(VS _) then
-		      case {System.get standalone} then
-			 {System.printInfo VS}
-		      else
-			 {System.printInfo EMU_OUT_END#VS#EMU_OUT_START}
-		      end
+		      {System.printInfo EMU_OUT_END#VS#EMU_OUT_START}
 		   [] message(Record _) then
 		      {Error.msg
 		       proc {$ X}
@@ -122,11 +99,7 @@ in
 		      {Print {String.toAtom
 			      {VirtualString.toString 'oz-show-temp '#Name}}}
 		   [] toTop() then
-		      case {System.get standalone} then skip
-		      else
-			 {System.printInfo
-			  EMU_OUT_END#MSG_ERROR#EMU_OUT_START}
-		      end
+		      {System.printInfo EMU_OUT_END#MSG_ERROR#EMU_OUT_START}
 		   else skip
 		   end
 		   CompilerInterfaceEmacs, Serve(Mr)
@@ -134,49 +107,61 @@ in
 	     end
 	  end
        end
-
-       OPICompiler = {New Compiler.compilerClass init()}
-       Env = {Record.foldL IMPORT Adjoin BaseAndStandard}
     in
-       {OPICompiler enqueue(mergeEnv(Env))}
-       {New CompilerInterfaceEmacs init(OPICompiler) _}
-       {{`Builtin` setOPICompiler 1} OPICompiler}
-
-       local
-	  OZVERSION = {System.property.get 'oz.version'}
-	  DATE = {System.property.get 'oz.date'}
-       in
-	  {System.printError
-	   'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
-       end
-       {System.printError
-	'---------------------------------------------\n'#
-	'MOTD\n\n'#
-	'19 Mar 1998, scheidhr@dfki.de\n'#
-	'SmartSave has been renamed to Save\n'#
-	'Save now only takes to parameters: {Save Value Filename}\n'#
-	'It now raises an exception if any resources are found.\n'#
-	'\n'#
-	'---------------------------------------------\n\n'}
-       {System.property.put 'oz.standalone' false}
-
-       % Try to load some ozrc file:
-       local
-	  FileExists = {`Builtin` ozparser_fileExists 2}
-	  OZRC = {OS.getEnv 'OZRC'}
-       in
-	  case OZRC \= false then
-	     {OPICompiler enqueue(feedFile(OZRC))}
-	  elsecase {FileExists '~/.oz/ozrc'} then
-	     {OPICompiler enqueue(feedFile('~/.oz/ozrc'))}
-	  elsecase {FileExists '~/.ozrc'} then   % note: deprecated
-	     {OPICompiler enqueue(feedFile('~/.ozrc'))}
-	  else
-	     skip
+       proc {StartOPI _ _} OPICompiler CompilerReadEvalLoop in
+	  OPICompiler = {New Compiler.compilerClass init()}
+	  local
+	     Env = {Record.foldL IMPORT Adjoin BaseAndStandard}
+	  in
+	     {OPICompiler enqueue(mergeEnv(Env))}
 	  end
-       end
 
-       proc {StartOPI _ _}
+	  {New CompilerInterfaceEmacs init(OPICompiler) _}
+	  {{`Builtin` setOPICompiler 1} OPICompiler}
+
+	  local
+	     OZVERSION = {System.property.get 'oz.version'}
+	     DATE = {System.property.get 'oz.date'}
+	  in
+	     {System.printError
+	      'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
+	  end
+	  {System.printError
+	   '---------------------------------------------\n'#
+	   'MOTD\n\n'#
+	   '19 Mar 1998, scheidhr@dfki.de\n'#
+	   'SmartSave has been renamed to Save\n'#
+	   'Save now only takes to parameters: {Save Value Filename}\n'#
+	   'It now raises an exception if any resources are found.\n'#
+	   '\n'#
+	   '---------------------------------------------\n\n'}
+	  {System.property.put 'oz.standalone' false}
+
+	  % Try to load some ozrc file:
+	  local
+	     FileExists = {`Builtin` ozparser_fileExists 2}
+	     OZRC = {OS.getEnv 'OZRC'}
+	  in
+	     case OZRC \= false then
+		{OPICompiler enqueue(feedFile(OZRC))}
+	     elsecase {FileExists '~/.oz/ozrc'} then
+		{OPICompiler enqueue(feedFile('~/.oz/ozrc'))}
+	     elsecase {FileExists '~/.ozrc'} then   % note: deprecated
+		{OPICompiler enqueue(feedFile('~/.ozrc'))}
+	     else
+		skip
+	     end
+	  end
+
+	  proc {CompilerReadEvalLoop} File VS0 VS in
+	     File = {New TextFile init(name: stdin flags: [read])}
+	     {File readQuery(?VS0)}
+	     {File close()}
+	     VS = case VS0 of ""#'\n'#VS1 then VS1 else VS0 end
+	     {OPICompiler enqueue(feedVirtualString(VS))}
+	     {CompilerReadEvalLoop}
+	  end
+
 	  {CompilerReadEvalLoop}
        end
     end
