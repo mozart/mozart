@@ -24,7 +24,7 @@ This package provides GTK 1.2 bindings for Mozart and Alice
 : ${CFLAGS="$RPM_OPT_FLAGS"}
 : ${CXXFLAGS="$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=$RPM_BUILD_ROOT/usr/lib/mozart
+./configure --prefix=$RPM_BUILD_ROOT/usr/lib/mozart --with-gtk-canvas-dir=/usr/local
 make
 
 %install
