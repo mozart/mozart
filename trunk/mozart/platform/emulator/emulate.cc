@@ -2865,55 +2865,90 @@ Case(GETVOID)
   LBLdeconsCall:
     {
       TaggedRef taggedPredicate = auxTaggedA;
-
       DEREF(taggedPredicate,predPtr);
-
-      if (oz_isAbstraction(taggedPredicate)) {
-	Abstraction *def = tagged2Abstraction(taggedPredicate);
-	PrTabEntry *pte = def->getPred();
-	int calleeArity = pte->getArity();
-	if (calleeArity == 2) {   // direct call
-	  if (!isTailCall) { PushCont(PC+2); }
-	  CallDoChecks(def);
-	  JUMPABSOLUTE(pte->getPC());
-	} else {   // deconstruct and call
-	  TaggedRef taggedArgument = XREGS[0];
-	  DEREF(taggedArgument,argPtr);
-	  if (oz_isSTuple(taggedArgument)) {
-	    SRecord *srec = tagged2SRecord(taggedArgument);
-	    int callerArity = srec->getWidth();
-	    if (srec->getLabel() == AtomPair &&
-		callerArity == calleeArity - 1) {
-	      int i = callerArity;
-	      XREGS[i] = XREGS[1];
-	      while (--i >= 0)
-		XREGS[i] = srec->getArg(i);
+      if (oz_isConst(taggedPredicate)) {
+	predicate = tagged2Const(taggedPredicate);
+	TypeOfConst typ = predicate->getType();
+	switch (typ) {
+	case Co_Abstraction:
+	  {
+	    Abstraction *def = (Abstraction *) predicate;
+	    PrTabEntry *pte = def->getPred();
+	    int calleeArity = pte->getArity();
+	    if (calleeArity == 2) {   // direct call
 	      if (!isTailCall) { PushCont(PC+2); }
 	      CallDoChecks(def);
 	      JUMPABSOLUTE(pte->getPC());
+	    } else {   // deconstruct and call
+	      TaggedRef taggedArgument = XREGS[0];
+	      DEREF(taggedArgument,argPtr);
+	      if (oz_isSTuple(taggedArgument)) {
+		SRecord *srec = tagged2SRecord(taggedArgument);
+		int callerArity = srec->getWidth();
+		if (srec->getLabel() == AtomPair &&
+		    callerArity == calleeArity - 1) {
+		  int i = callerArity;
+		  XREGS[i] = XREGS[1];
+		  while (--i >= 0)
+		    XREGS[i] = srec->getArg(i);
+		  if (!isTailCall) { PushCont(PC+2); }
+		  CallDoChecks(def);
+		  JUMPABSOLUTE(pte->getPC());
+		}
+	      }
+	      Assert(!oz_isRef(taggedArgument));
+	      if (oz_isVarOrRef(taggedArgument)) {
+		SUSP_PC(argPtr,PC);
+	      }
+	      RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
 	    }
 	  }
-
-	  Assert(!oz_isRef(taggedArgument));
-	  if (oz_isVarOrRef(taggedArgument)) {
-	    SUSP_PC(argPtr,PC);
+	  break;
+	case Co_Builtin:
+	  {
+	    Builtin *bi = (Builtin *) predicate;
+	    int calleeArity = bi->getArity();
+	    if (calleeArity == 2) {   // arity is correct
+	      if (!isTailCall) PC = PC+2;
+	      predArity = 2;
+	      goto LBLcall;
+	    } else {   // deconstruct
+	      TaggedRef taggedArgument = XREGS[0];
+	      DEREF(taggedArgument,argPtr);
+	      if (oz_isSTuple(taggedArgument)) {
+		SRecord *srec = tagged2SRecord(taggedArgument);
+		int callerArity = srec->getWidth();
+		if (srec->getLabel() == AtomPair &&
+		    callerArity == calleeArity - 1) {
+		  int i = callerArity;
+		  XREGS[i] = XREGS[1];
+		  while (--i >= 0)
+		    XREGS[i] = srec->getArg(i);
+		  if (!isTailCall) PC = PC+2;
+		  predArity = calleeArity;
+		  goto LBLcall;
+		}
+	      }
+	      Assert(!oz_isRef(taggedArgument));
+	      if (oz_isVarOrRef(taggedArgument)) {
+		SUSP_PC(argPtr,PC);
+	      }
+	      RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	    }
 	  }
+	  break;
+	case Co_Object:
 	  RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	  break;
+	default:
+	  break;
 	}
       }
-
-      if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
-	Assert(!oz_isRef(taggedPredicate));
-	if (oz_isVarOrRef(taggedPredicate)) {
-	  SUSP_PC(predPtr,PC);
-	}
-	RAISE_APPLY(taggedPredicate,OZ_toList(2,XREGS));
+      Assert(!oz_isRef(taggedPredicate));
+      if (oz_isVarOrRef(taggedPredicate)) {
+	SUSP_PC(predPtr,PC);
       }
-
-      if (!isTailCall) PC = PC+2;
-      predicate = tagged2Const(taggedPredicate);
-      predArity = 2;
-      goto LBLcall;
+      RAISE_APPLY(taggedPredicate,OZ_toList(2,XREGS));
     }
 
   Case(CONSCALLX)
@@ -2932,48 +2967,78 @@ Case(GETVOID)
     {
       TaggedRef taggedPredicate = auxTaggedA;
       int callerArity = getPosIntArg(PC+2);
-
       DEREF(taggedPredicate,predPtr);
-
-      if (oz_isAbstraction(taggedPredicate)) {
-	Abstraction *def = tagged2Abstraction(taggedPredicate);
-	PrTabEntry *pte = def->getPred();
-	int calleeArity = pte->getArity();
-	if (calleeArity == callerArity) {   // direct call
-	  if (!isTailCall) { PushCont(PC+3); }
-	  CallDoChecks(def);
-	  JUMPABSOLUTE(pte->getPC());
-	} else {   // construct and call
-	  int width = callerArity - 1;
-	  SRecord *srec =
-	    SRecord::newSRecord(AtomPair,mkTupleWidth(width),width);
-	  int i = width;
-	  while (--i >= 0)
-	    srec->setArg(i,XREGS[i]);
-	  XREGS[0] = makeTaggedSRecord(srec);
-	  XREGS[1] = XREGS[width];
-	  if (calleeArity == 2) {
-	    if (!isTailCall) { PushCont(PC+3); }
-	    CallDoChecks(def);
-	    JUMPABSOLUTE(pte->getPC());
-	  } else {
-	    RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+      if (oz_isConst(taggedPredicate)) {
+	predicate = tagged2Const(taggedPredicate);
+	TypeOfConst typ = predicate->getType();
+	switch (typ) {
+	case Co_Abstraction:
+	  {
+	    Abstraction *def = (Abstraction *) predicate;
+	    PrTabEntry *pte = def->getPred();
+	    int calleeArity = pte->getArity();
+	    if (calleeArity == callerArity) {   // direct call
+	      if (!isTailCall) { PushCont(PC+3); }
+	      CallDoChecks(def);
+	      JUMPABSOLUTE(pte->getPC());
+	    } else {   // construct and call
+	      int width = callerArity - 1;
+	      SRecord *srec =
+		SRecord::newSRecord(AtomPair,mkTupleWidth(width),width);
+	      int i = width;
+	      while (--i >= 0)
+		srec->setArg(i,XREGS[i]);
+	      XREGS[0] = makeTaggedSRecord(srec);
+	      XREGS[1] = XREGS[width];
+	      if (calleeArity == 2) {
+		if (!isTailCall) { PushCont(PC+3); }
+		CallDoChecks(def);
+		JUMPABSOLUTE(pte->getPC());
+	      } else {
+		RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	      }
+	    }
 	  }
+	  break;
+	case Co_Builtin:
+	  {
+	    Builtin *bi = (Builtin *) predicate;
+	    int calleeArity = bi->getArity();
+	    if (calleeArity == callerArity) {   // arity is correct
+	      if (!isTailCall) PC = PC+3;
+	      predArity = callerArity;
+	      goto LBLcall;
+	    } else {
+	      int width = callerArity - 1;
+	      SRecord *srec =
+		SRecord::newSRecord(AtomPair,mkTupleWidth(width),width);
+	      int i = width;
+	      while (--i >= 0)
+		srec->setArg(i,XREGS[i]);
+	      XREGS[0] = makeTaggedSRecord(srec);
+	      XREGS[1] = XREGS[width];
+	      if (calleeArity == 2) {
+		if (!isTailCall) PC = PC+3;
+		predArity = 2;
+		goto LBLcall;
+	      } else {
+		RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	      }
+	    }
+	  }
+	  break;
+	case Co_Object:
+	  RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
+	  break;
+	default:
+	  break;
 	}
       }
-
-      if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
-	Assert(!oz_isRef(taggedPredicate));
-	if (oz_isVarOrRef(taggedPredicate)) {
-	  SUSP_PC(predPtr,PC);
-	}
-	RAISE_APPLY(taggedPredicate,OZ_toList(callerArity,XREGS));
+      Assert(!oz_isRef(taggedPredicate));
+      if (oz_isVarOrRef(taggedPredicate)) {
+	SUSP_PC(predPtr,PC);
       }
-
-      if (!isTailCall) PC = PC+3;
-      predicate = tagged2Const(taggedPredicate);
-      predArity = callerArity;
-      goto LBLcall;
+      RAISE_APPLY(taggedPredicate,OZ_toList(callerArity,XREGS));
     }
 
 // -------------------------------------------------------------------------
