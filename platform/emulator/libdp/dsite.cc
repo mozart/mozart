@@ -321,7 +321,7 @@ char *DSite::stringrep()
 {
   static char buf[100];
   ip_address a=getAddress();
-  sprintf(buf,"type:%d %ld.%ld.%ld.%ld:%d:%ld/%d",
+  sprintf(buf,"type:%d %d.%d.%d.%d:%d:%ld/%d",
           getType(),
           (a/(256*256*256))%256,
           (a/(256*256))%256,
@@ -335,7 +335,7 @@ char *DSite::stringrep_notype()
 {
   static char buf[100];
   ip_address a=getAddress();
-  sprintf(buf,"%ld.%ld.%ld.%ld:%d:%ld/%d",
+  sprintf(buf,"%d.%d.%d.%d:%d:%ld/%d",
           (a/(256*256*256))%256,
           (a/(256*256))%256,
           (a/256)%256,
