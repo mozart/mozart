@@ -137,11 +137,11 @@ define(CaseTwoRegs,``''
     )
 
 
-CaseOneRegGImpossible(GETSELF,
-   ``{
-       Reg1(getRegArg(PC+1)) = makeTaggedConst(e->getCurrentObject());
+Case(GETSELF)
+     {
+       XPC(1) = makeTaggedConst(e->getCurrentObject());
        DISPATCH(2);
-     }'')
+     }
 
 
 
