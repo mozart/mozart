@@ -18,7 +18,7 @@ NL = [10]  %% newline
 %% send a warning/error message
 
 proc {OzcarMessage M}
-   {System.showInfo OzcarMessagePrefix # M}
+   %{System.showInfo OzcarMessagePrefix # M}
    skip
 end
 
