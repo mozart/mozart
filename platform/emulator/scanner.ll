@@ -635,11 +635,12 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                }
 
 
-\\ha(lt?)?                     { BEGIN(DIRECTIVE); return HALT; }
 \\he(lp?)?                     { BEGIN(DIRECTIVE); return HELP; }
 \\l(i(ne?)?)?                  { if (cond()) BEGIN(LINE); }
 \\s(w(i(t(ch?)?)?)?)?          { BEGIN(SWITCHDIR); return SWITCH; }
 \\sh(o(w(Switches)?)?)?        { BEGIN(DIRECTIVE); return SHOWSWITCHES; }
+\\pu(s(h(Switches)?)?)?        { BEGIN(DIRECTIVE); return PUSHSWITCHES; }
+\\po(p(Switches)?)?            { BEGIN(DIRECTIVE); return POPSWITCHES; }
 \\f(e(ed?)?)?                  { BEGIN(INPUTFILE); return FEED; }
 \\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
 \\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
@@ -1115,7 +1116,7 @@ void xyscannerInit()
 }
 
 // this one is called before every new parser run
-static void xy_init() {
+static void xy_init(OZ_Term defines) {
   yy_init = 1;
 
   errorFlag = 0;
@@ -1133,6 +1134,12 @@ static void xy_init() {
   hashTable->insert(SCANNERMinorVersion);   // minor version number
   hashTable->insert(SCANNERMajorVersion);   // general Oz release
   hashTable->insert("NEWCOMPILER");
+  while (OZ_isCons(defines)) {
+    char *x = OZ_virtualStringToC(OZ_head(defines));
+printf("%s\n", x);
+    hashTable->insert(x);
+    defines = OZ_tail(defines);
+  }
 
   conditional_p = 0;
   conditional_basep = 0;
@@ -1141,7 +1148,7 @@ static void xy_init() {
   BEGIN(INITIAL);
 }
 
-int xy_init_from_file(char *file) {
+int xy_init_from_file(char *file, OZ_Term defines) {
   char *fullname = scExpndFileName(file, NULL);
   if (fullname == NULL)
     return 0;
@@ -1149,7 +1156,7 @@ int xy_init_from_file(char *file) {
   if (xyin == NULL)
     return 0;
   xy_create_buffer(xyin, YY_BUF_SIZE);
-  xy_init();
+  xy_init(defines);
   xylino = 1;
   strncpy(xyFileName,fullname,99);
   xyFileNameAtom = OZ_atom(xyFileName);
@@ -1157,10 +1164,10 @@ int xy_init_from_file(char *file) {
   return 1;
 }
 
-void xy_init_from_string(char *str) {
+void xy_init_from_string(char *str, OZ_Term defines) {
   xy_scan_string(str);
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
-  xy_init();
+  xy_init(defines);
   xylino = 1;
   strcpy(xyFileName,"nofile");
   xyFileNameAtom = OZ_atom(xyFileName);
