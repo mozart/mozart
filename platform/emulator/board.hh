@@ -32,6 +32,8 @@ public:
   void setRight(TaggedRef r) { right = r; }
   TaggedRef getLeft() { return left; }
   TaggedRef getRight() { return right; }
+  OZPRINT;
+  OZPRINTLONG;
 };
 
 class Script {
@@ -41,6 +43,8 @@ public:
   Script() { numbOfCons = 0; first = (Equation *)NULL; }
   Script(int sizeInit);
   ~Script();
+  OZPRINT;
+  OZPRINTLONG;
   void allocate(int sizeInit);
   void dealloc();
 
@@ -71,7 +75,8 @@ enum BoardFlags {
   Bo_Committed	= 0x0200,
   Bo_Discarded	= 0x0400,
   Bo_Waiting    = 0x0800,
-  Bo_Reflected  = 0x1000	// for debugging of solve combinator;
+  Bo_Reflected  = 0x1000,	// for debugging of solve combinator;
+  Bo_NervousSolve= 0x2000,
 };
 
 class Board : public ConstTerm {
@@ -100,6 +105,7 @@ public:
   void printTree();
 
   void incSuspCount(int n=1);
+  void decSuspCount();
   void addSuspension (Suspension *susp);
   // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();
@@ -110,6 +116,7 @@ public:
   Continuation *getBodyPtr() { return &body; }
   Board *getParentBoard();
   Board* getSolveBoard (); 
+  Bool underReflected();
   Script &getScriptRef() { return script; }
   int getSuspCount(void);
   Bool hasSuspension(void);
@@ -119,6 +126,7 @@ public:
   Bool isFailed() { return flags & Bo_Failed ? OK : NO; }
   Bool isInstalled() { return flags & Bo_Installed ? OK : NO; }
   Bool isNervous() { return flags & Bo_Nervous ? OK : NO; }
+  Bool isNervousSolve() { return flags & Bo_NervousSolve ? OK : NO; }
   Bool isPathMark() { return flags & Bo_PathMark ? OK : NO; }
   Bool isWaitTop() { return flags & Bo_WaitTop ? OK : NO; }
   Bool isWait() { return flags & Bo_Wait ? OK : NO; }
@@ -128,11 +136,11 @@ public:
   void setReflected () { flags |= Bo_Reflected; }
   Bool isReflected () { return ((flags & Bo_Reflected) ? OK : NO); }
   void newScript(int size);
-  void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
 		       RefsArray g,RefsArray x,int i);
   void setInstalled() { flags |= Bo_Installed; }
   void setNervous() { flags |= Bo_Nervous; }
+  void setNervousSolve() { flags |= Bo_NervousSolve; }
   void setPathMark() { flags |= Bo_PathMark; }
 
   void setScript(int i,TaggedRef *v,TaggedRef r);
@@ -142,6 +150,7 @@ public:
   void setActor (Actor *aa) { u.actor = aa; }   // needed for the solve combinator; 
   void unsetInstalled() { flags &= ~Bo_Installed; }
   void unsetNervous() { flags &= ~Bo_Nervous; }
+  void unsetNervousSolve() { flags &= ~Bo_NervousSolve; }
   void unsetPathMark() { flags &= ~Bo_PathMark; }
   // special for solve combinator: checks whether 'false' stays in body;
   Bool isFailureInBody ();
