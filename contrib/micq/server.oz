@@ -105,7 +105,7 @@ define
       end
       
       meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date) D={GetDate} GlobalMID={GetID} in
-	 {WriteLog "Received and stored message "#GlobalMID#" from "#SID}
+	 {WriteLog "Received and stored message "#GlobalMID#" from "#SID#" to: "#{Value.toVirtualString ID 30 30}}
 	 {DB storeMessage(receiver:ID id:GlobalMID sender:SID message:M date:D reply_to:R)}
 	 {ForAll ID proc {$ I}
 		       thread E in
@@ -148,16 +148,23 @@ define
       end
 
       meth !S_addFriends(id:ID friends:Fs) On Off On1 Off1 in
-	 try C={DB getClient(id:ID client:$)} in
-	    {DB addFriends(id:ID friends:Fs)}
-	    {DB getFriendsStatus(id:ID online:On offline:Off)}
-	    On1={Filter On fun{$ X} {List.member X.id Fs} end}
-	    Off1={Filter Off fun{$ X} {List.member X.id Fs} end}
-	    {C addfriends(online:On1 offline:Off1) "Add friends Failed"}
-	 catch networkFailure(...) then skip end
+	 {WriteLog ID#" add friends: "#{Value.toVirtualString Fs 30 30}}
+	 thread
+	    try C={DB getClient(id:ID client:$)} in
+	       {DB addFriends(id:ID friends:Fs)}
+	       {DB getFriendsStatus(id:ID online:On offline:Off)}
+	       On1={Filter On fun{$ X} {List.member X.id Fs} end}
+	       Off1={Filter Off fun{$ X} {List.member X.id Fs} end}
+	       {C addfriends(online:On1 offline:Off1) "Add friends Failed"}
+	    catch networkFailure(...) then skip end
+	 end
       end
       
-      meth !S_removeFriend(id:ID friend:F) {DB removeFriend(id:ID friend:F)} end
+      meth !S_removeFriend(id:ID friend:F)
+	 {WriteLog ID#" removes "#F}
+	 {DB removeFriend(id:ID friend:F)}
+      end
+
       meth !S_getFriends(id:ID friends:$) {DB getFriends(id:ID friends:$)} end
       
       meth !S_setStatus(id:ID online:O)
@@ -377,6 +384,7 @@ define
       end
 
       meth !S_inviteUser(id:Id sender:S ticket:T client:C name:N aid: Aid) 
+	 {WriteLog S#" invites "#Id#" to join "#N#" [instance: "#Aid#"]"}
 	 if {DB isOnline(id:Id online:$)}\=false then Cl={DB getClient(id:Id client:$)} in
 	    try
 	       {Cl inviteUser(sender:S ticket:T client:C
@@ -387,6 +395,7 @@ define
       end
 
       meth !S_addUser(firstname:F lastname:L friends:Fr<=nil organization:O email:E passwd:P id:U userlevel: UL)
+	 {WriteLog "Create account for "#U#" ("#F#" "#L#", "#O#")"}
 	 try
 	    {DB addUser(id:U
 			firstname:F
@@ -403,7 +412,7 @@ define
       end
       
       meth !S_removeUser(id:Id)
-	 {WriteLog "User '"#Id#"' is being removed!"}
+	 {WriteLog "User "#Id#" is being removed!"}
 	 if {DB isOnline( id:Id online:$ )}\=false then
 	    try C={DB getClient(id:Id client:$)} in
 	       {C serverLogout() "Can't logout "#Id}
@@ -752,8 +761,9 @@ define
 	 end
 	 
 	 thread
+	    {Thread.setThisPriority high}
 	    proc{SaveLoop}
-	       {Delay 300000}
+	       {Delay 10*60000}
 	       {DB saveAll(dir: Args.dbdir)}
 	       {WriteLog "Autosave\n"}
 	       {SaveLoop}
