@@ -327,8 +327,12 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
 
   // for debugging purposes, the propagator isn't invoked directly.
 
-  isFailed   = false;
   int &size  = reg_l_sz;
+
+  if (size < 2)
+    return PROCEED;
+
+  isFailed   = false;
 
   OZ_Return retval;
 
