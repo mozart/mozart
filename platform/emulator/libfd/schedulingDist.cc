@@ -348,14 +348,14 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	    bm3.set(res, left, right);
 	  }
 	  else {
-	    cout << "not nil\n";
+	    printf("not nil\n");
 	    goto failure;
 	  }
 	}
 	else {
 	  if ((OZ_isAtom(old_out)) && (!strcmp("nil", OZ_atomToC(OZ_label(old_out))))) {}
 	  else {
-	    cout << " no Tuple \n";
+	    printf(" no Tuple \n");
 	    goto failure;
 	  }
 	}
@@ -406,7 +406,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      cset->extSize = csize;
 
 	      if ( (csize > 0) && (cset->up - cset->low < cdur) ) {
-//		cout << "csize failed\n";
+//		printf("csize failed\n");
 		goto failure;
 	      }
 	    }
@@ -424,7 +424,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
 	      if (constraintsSize + reg_max_nb_tasks*4
 		  > constraintLimit) {
 		int newLimit = constraintsSize + reg_max_nb_tasks*4;
-		cout << "limit reached " << constraintLimit << endl;
+		printf("limit reached %d\n",constraintLimit);
 		if (constraintLimit > INITIALSIZE)
 		  ::delete [] constraintsExtension;
 		constraintsExtension = ::new int[newLimit];
