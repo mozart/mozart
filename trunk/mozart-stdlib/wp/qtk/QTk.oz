@@ -55,6 +55,7 @@ import
    QTkDropdownlistbox
    QTkNumberentry
    QTkPlaceholder
+   QTkGrid
    QTkPanel
    QTkRubberframe
    QTkScrollframe
@@ -292,6 +293,8 @@ define
 \ifdef FULLLOAD
    {Wait QTkPlaceholder}
 %   {Show 'Placeholder'}
+   {Wait QTkGrid}
+%   {Show 'Grid'}
    {Wait QTkPanel}
 %   {Show 'Panel'}
    {Wait QTkRubberframe}

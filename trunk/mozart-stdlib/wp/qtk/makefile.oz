@@ -5,7 +5,7 @@ makefile(
 		: ['QTkBare.ozf' 'QTkDevel.ozf' 'QTkImage.ozf' 'QTkMenu.ozf'
 		   'QTkSpace.ozf' 'QTkLabel.ozf' 'QTkButton.ozf' 'QTkCheckbutton.ozf'
 		   'QTkRadiobutton.ozf' 'QTkScale.ozf' 'QTkScrollbar.ozf' 'QTkEntry.ozf'
-		   'QTkCanvas.ozf' 'QTkListbox.ozf' 'QTkText.ozf' 'QTkPlaceholder.ozf'
+		   'QTkCanvas.ozf' 'QTkListbox.ozf' 'QTkText.ozf' 'QTkPlaceholder.ozf' 'QTkGrid.ozf'
 		   'QTkPanel.ozf' 'QTkRubberframe.ozf' 'QTkScrollframe.ozf' 'QTkToolbar.ozf'
 		   'QTkDropdownlistbox.ozf' 'QTkNumberentry.ozf']
 		'QTkBare.ozf'

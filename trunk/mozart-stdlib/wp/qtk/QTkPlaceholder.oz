@@ -39,6 +39,7 @@ import
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
 	    registerWidget:     RegisterWidget
+	    redirector:         Redirector
 	    splitParams:        SplitParams)
 
 export
@@ -157,7 +158,7 @@ define
 	    {SplitParams M [1] A B}
 	    QTkClass,A
 	    {Assert self.widgetType self.typeInfo B}
-	    {CondFeat B 1 _}=@Child
+	    {CondFeat B 1 _}=@Child.Redirector
 	 end
       end
 
