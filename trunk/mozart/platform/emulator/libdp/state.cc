@@ -518,38 +518,9 @@ void gcDistLockRecurseImpl(Tertiary *t)
   }
 }
 
-ConstTerm* auxGcDistCellImpl(Tertiary *t)
-{
-  CellFrame *cf=(CellFrame *)t;
-  if (cf->isAccessBit()) {
-    // has only been reached via gcBorrowRoot so far
-    void* forward=cf->getForward();
-    ((CellFrame*)forward)->resetAccessBit();
-    cf->gcMark((ConstTerm *) forward);
-    return (ConstTerm*) forward;
-  } else {
-    return (NULL);
-  }
-}
-
-ConstTerm* auxGcDistLockImpl(Tertiary *t)
-{
-  LockFrame *lf=(LockFrame *)t;
-  if(lf->isAccessBit()){
-    // may be optimized by not resetting at all - PER    
-    lf->resetAccessBit();
-    void* forward=lf->getForward();
-    ((LockFrame*)forward)->resetAccessBit();
-    lf->gcMark((ConstTerm *) forward);
-    return (ConstTerm*) forward;
-  } else {
-    return (NULL);
-  }
-}
-
 void CellSec::gcCellSec(){
   gcPendThread(&pending);
-  switch(stateWithoutAccessBit()){
+  switch(state){
   case Cell_Lock_Next|Cell_Lock_Requested:{
     next->makeGCMarkSite();}
   case Cell_Lock_Requested:{
