@@ -44,7 +44,8 @@ ELCS = $(ELS:%.el=%.elc)
 SHELLSCRIPTS = fontify latex2gif gif2thumbnail
 
 BINFILES = $(SYSLETS:%=$(BINDIR)/%)
-DOCFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
+DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
+DOCFILES = $(DOCDIR)/html.bst
 ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
 
 .PHONY: bootstrap all clean veryclean distclean
@@ -65,7 +66,9 @@ ozdoc: $(FUNCTORS)
 %.elc: %.el
         $(EMACS) -q -batch -f batch-byte-compile $<
 
-install: $(BINDIR) $(BINFILES) $(DOCDIR) $(DOCFILES) $(ELISPDIR) $(ELISPFILES)
+install: $(BINDIR) $(BINFILES)
+install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
+install: $(ELISPDIR) $(ELISPFILES)
 
 $(BINDIR) $(DOCDIR) e$(ELISPDIR):
         $(INSTALL_DIR) $@
@@ -73,8 +76,11 @@ $(BINDIR) $(DOCDIR) e$(ELISPDIR):
 $(BINFILES): $(BINDIR)/% : %
         $(INSTALL_BIN) $< $@
 
-$(DOCFILES): $(DOCDIR)/% : %
+$(DOCBINFILES): $(DOCDIR)/% : %
         $(INSTALL_BIN) $< $@
+
+$(DOCFILES): $(DOCDIR)/% : %
+        $(INSTALL_FILE) $< $@
 
 $(ELISPFILES): $(ELISPDIR)/% : %
         $(INSTALL_FILE) $< $@
