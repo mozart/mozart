@@ -85,7 +85,7 @@ void Statistics::print(FILE *fd) {
   fprintf(fd, ".\n\n  Process resources consumed:");
   printTime(fd,"\n    User time is ", utime);
   printTime(fd,".\n    System time is ", systime);
-  printMem(fd,".\n    Size is ", (unsigned) sbrk(0));
+  printMem(fd,".\n    Size is ", ToInt32(sbrk(0)));
   fprintf(fd, ".\n\n");
 
 #ifdef PROFILE

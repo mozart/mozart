@@ -283,8 +283,8 @@ public:
 
   Bool operator == (const FDState) const;
   Bool operator != (const FDState) const;
-  Bool operator == (int) const;
-  Bool operator != (int) const;
+  Bool operator == (const int) const;
+  Bool operator != (const int) const;
 
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;

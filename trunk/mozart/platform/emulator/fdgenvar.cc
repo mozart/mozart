@@ -89,17 +89,17 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	      propagate(var, l_dom, int_term, pc_cv_unif);
 	      termVar->propagate(term, r_dom, int_term, pc_cv_unif);
 	      doBind(tPtr, int_term);
-	      doBind(vPtr, TaggedRef(tPtr));
+	      doBind(vPtr, makeTaggedRef(tPtr));
 	      if (disp) {
 		dispose();
 		termVar->dispose();
 	      }
 	    } else {
 	      termVar->setDom(intsct);
-	      propagate(var, l_dom, TaggedRef(tPtr), pc_cv_unif);
-	      termVar->propagate(term, r_dom, TaggedRef(vPtr), pc_cv_unif);
+	      propagate(var, l_dom, makeTaggedRef(tPtr), pc_cv_unif);
+	      termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
 	      relinkSuspListTo(termVar);
-	      doBind(vPtr, TaggedRef(tPtr));
+	      doBind(vPtr, makeTaggedRef(tPtr));
 	      if (disp) dispose();
 	    }
 	  } else { // bind term to var
@@ -108,17 +108,17 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	      termVar->propagate(term, r_dom, int_var, pc_cv_unif);
 	      propagate(var, l_dom, int_var, pc_cv_unif);
 	      doBind(vPtr, int_var);
-	      doBind(tPtr, TaggedRef(vPtr));
+	      doBind(tPtr, makeTaggedRef(vPtr));
 	      if (disp) {
 		dispose();
 		termVar->dispose();
 	      }
 	    } else {
 	      setDom(intsct);
-	      termVar->propagate(term, r_dom, TaggedRef(vPtr), pc_cv_unif);
-	      propagate(var, l_dom, TaggedRef(vPtr), pc_cv_unif);
+	      termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
+	      propagate(var, l_dom, makeTaggedRef(vPtr), pc_cv_unif);
 	      termVar->relinkSuspListTo(this);
-	      doBind(tPtr, TaggedRef(vPtr));
+	      doBind(tPtr, makeTaggedRef(vPtr));
 	      if (disp) termVar->dispose();
 	    }
 	  }
@@ -133,20 +133,20 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	      propagate(var, l_dom, int_var, pc_cv_unif);
 	      termVar->addSuspension(new Suspension(am.currentBoard));
 	      doBind(vPtr, int_var);
-	      doBindAndTrail(term, tPtr, TaggedRef(vPtr));
+	      doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
 	      if (disp) dispose();
 	    } else {
 	      setDom(intsct);
-	      termVar->propagate(term, r_dom, TaggedRef(vPtr), pc_cv_unif);
-	      propagate(var, l_dom, TaggedRef(vPtr), pc_cv_unif);
+	      termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
+	      propagate(var, l_dom, makeTaggedRef(vPtr), pc_cv_unif);
 	      termVar->addSuspension(new Suspension(am.currentBoard));
-	      doBindAndTrail(term, tPtr, TaggedRef(vPtr));
+	      doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
 	    }
 	  } else {
-	    termVar->propagate(term, r_dom, TaggedRef(tPtr), pc_cv_unif);
-	    propagate(var, l_dom, TaggedRef(tPtr), pc_cv_unif);
+	    termVar->propagate(term, r_dom, makeTaggedRef(tPtr), pc_cv_unif);
+	    propagate(var, l_dom, makeTaggedRef(tPtr), pc_cv_unif);
 	    relinkSuspListTo(termVar, TRUE);
-	    doBind(vPtr, TaggedRef(tPtr));
+	    doBind(vPtr, makeTaggedRef(tPtr));
 	    if (disp) dispose();
 	  }
 	  break;
@@ -160,20 +160,20 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	      termVar->propagate(term, r_dom, int_term, pc_cv_unif);
 	      addSuspension(new Suspension(am.currentBoard));
 	      doBind(tPtr, int_term);
-	      doBindAndTrail(var, vPtr, TaggedRef(tPtr));
+	      doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
 	      if (disp) termVar->dispose();
 	    } else {
 	      termVar->setDom(intsct);
-	      propagate(var, l_dom, TaggedRef(tPtr), pc_cv_unif);
-	      termVar->propagate(term, r_dom, TaggedRef(tPtr), pc_cv_unif);
+	      propagate(var, l_dom, makeTaggedRef(tPtr), pc_cv_unif);
+	      termVar->propagate(term, r_dom, makeTaggedRef(tPtr), pc_cv_unif);
 	      addSuspension(new Suspension(am.currentBoard));
-	      doBindAndTrail(var, vPtr, TaggedRef(tPtr));
+	      doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
 	    }
 	  } else {
-	    termVar->propagate(term, r_dom, TaggedRef(vPtr), pc_cv_unif);
-	    propagate(var, l_dom, TaggedRef(vPtr), pc_cv_unif);
+	    termVar->propagate(term, r_dom, makeTaggedRef(vPtr), pc_cv_unif);
+	    propagate(var, l_dom, makeTaggedRef(vPtr), pc_cv_unif);
 	    termVar->relinkSuspListTo(this, TRUE);
-	    doBind(tPtr, TaggedRef(vPtr));
+	    doBind(tPtr, makeTaggedRef(vPtr));
 	    if (disp) termVar->dispose();
 	  }
 	  break;
@@ -187,15 +187,15 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	      termVar->propagate(term, r_dom, int_val, pc_cv_unif);
 	    }
 	    doBindAndTrail(var, vPtr, int_val);
-	    doBindAndTrail(term, tPtr, TaggedRef(vPtr));
+	    doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
 	  } else {
 	    TaggedRef * var_val = newTaggedCVar(new GenFDVariable(intsct));
 	    if (prop) {
-	      propagate(var, l_dom, TaggedRef(var_val), pc_cv_unif);
-	      termVar->propagate(term, r_dom, TaggedRef(var_val), pc_cv_unif);
+	      propagate(var, l_dom, makeTaggedRef(var_val), pc_cv_unif);
+	      termVar->propagate(term, r_dom, makeTaggedRef(var_val), pc_cv_unif);
 	    }
-	    doBindAndTrail(var, vPtr, TaggedRef(var_val));
-	    doBindAndTrail(term, tPtr, TaggedRef(var_val));
+	    doBindAndTrail(var, vPtr, makeTaggedRef(var_val));
+	    doBindAndTrail(term, tPtr, makeTaggedRef(var_val));
 	  }
 	  if (prop) {
 	    Suspension * susp = new Suspension(am.currentBoard);

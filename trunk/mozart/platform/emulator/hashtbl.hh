@@ -34,13 +34,13 @@
 #include "types.hh"
 
 
-#define htEmpty ((void*) -1)
+#define htEmpty ((void*) -1L)
 
 class HashNode;
 
 typedef enum hashType {INTTYPE = 0, CHARTYPE = 1};
 
-typedef union {char *fstr; unsigned int fint; } HtKey;
+typedef union {char *fstr; unsigned intlong fint; } HtKey;
 
 class HashNode {
   public:
@@ -51,8 +51,8 @@ class HashNode {
     setEmpty();
   };
 
-  Bool isEmpty()  { return (key.fint == (unsigned int) htEmpty); }
-  void setEmpty() { key.fint = (unsigned int) htEmpty; }
+  Bool isEmpty()  { return (key.fint == (unsigned intlong) htEmpty); }
+  void setEmpty() { key.fint = (unsigned intlong) htEmpty; }
 };
 
 class HashTable {
