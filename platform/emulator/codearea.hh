@@ -95,8 +95,9 @@ class CodeArea {
  protected:
   ByteCode *codeBlock;    /* a block of abstract machine code */
   int size;               /* size of thie block */
-  ProgramCounter wPtr;       /* write pointer for the code block */
   CodeArea *nextBlock;
+  ProgramCounter wPtr;       /* write pointer for the code block */
+#define CheckWPtr Assert(wPtr < codeBlock+size)
 
   static CodeArea *allBlocks;
 
@@ -254,6 +255,10 @@ public:
     return writeWord((ByteCode)index,ptr);
   }
 
+  static ProgramCounter writeSRecordArity(SRecordArity ar, ProgramCounter ptr)
+  {
+    return writeWord((ByteCode)ar,ptr);
+  }
   static ProgramCounter writeArity(int ar, ProgramCounter ptr)
   {
     return writeWord((ByteCode)ar,ptr);
@@ -269,6 +274,7 @@ public:
     return writeWord((ByteCode)i,ptr);
   }
 
+
   static ProgramCounter writePredicateRef(int i, ProgramCounter ptr)
   {
     AbstractionEntry *entry = AbstractionTable::add(i);
@@ -279,6 +285,15 @@ public:
   {
     return writeWord(p, ptr);
   }
+
+  void writeCache();
+  void writeInt(int i)                   { CheckWPtr; wPtr=writeInt(i,wPtr); }
+  void writeTagged(TaggedRef t)          { CheckWPtr; wPtr=writeTagged(t,wPtr); }
+  void writeBuiltin(BuiltinTabEntry *bi) { CheckWPtr; wPtr=writeBuiltin(bi,wPtr); }
+  void writeOpcode(Opcode oc)            { CheckWPtr; wPtr=writeOpcode(oc,wPtr); }
+  void writeSRecordArity(SRecordArity ar){ CheckWPtr; wPtr=writeSRecordArity(ar,wPtr); }
+  void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }
+  void writeLabel(int lbl)         { CheckWPtr; wPtr=writeLabel(lbl,codeBlock,wPtr,OK); }
 };
 
 
