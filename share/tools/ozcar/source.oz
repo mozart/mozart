@@ -191,14 +191,8 @@ in
 	 case F == undef orelse F == '' orelse F == noDebugInfo then
 	    SourceManager,EraseScrollbar(What)
 	 else
-	    %% heuristic: if F begins with '.?.' then it's a prelude file
-	    FS    = {Atom.toString F}
-	    RealF = case FS.1 == &. andthen FS.2.2.1 == &. then
-		       {VS2A {System.get home} # '/lib/' # F}
-		    else
-		       F
-		    end
-	    E = {self lookup(file:RealF entry:$)}
+	    RealF = {LookupPath F}
+	    E     = {self lookup(file:RealF entry:$)}
 	 in
 	    case {IsDet E} then
 	       {self ToTop(entry:E line:L color:C what:What)}

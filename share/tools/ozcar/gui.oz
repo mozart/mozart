@@ -284,10 +284,16 @@ in
 	 {Delay 70} % > TIME_SLICE
 	 L = {Lck is($)}
 	 case L then skip else
+	    Ack
+	 in
+	    thread
+	       SourceManager,scrollbar(file:F.file line:{Abs F.line} ack:Ack
+				       color:ScrollbarStackColor what:stack)
+	    end
+	    thread Gui,loadStatus(F.file Ack) end
+
 	    Gui,SelectStackFrame(T)
 	    Gui,printEnv(frame:F.nr vars:F.env)
-	    SourceManager,scrollbar(file:F.file line:{Abs F.line}
-				    color:ScrollbarStackColor what:stack)
 	    /*
 	    case {Cget verbose} then
 	       {Debug.displayCode F.'PC' 5}
@@ -297,9 +303,10 @@ in
       end
    
       meth SelectStackFrame(T)
-	 W = self.StackText
+	 W   = self.StackText
+	 LSF = @LastSelectedFrame
       in
-	 case @LastSelectedFrame \= undef then
+	 case LSF \= undef andthen LSF \= T then
 	    {W tk(tag conf @LastSelectedFrame
 		  relief:flat borderwidth:0
 		  background: DefaultBackground
@@ -507,7 +514,9 @@ in
       meth loadStatus(File Ack)
 	 {Delay TimeoutToMessage}
 	 case {IsDet Ack} then skip else
-	    Gui,rawStatus('Loading file ' # File # '...')
+	    RealFile = {LookupPath File}
+	 in
+	    Gui,rawStatus('Loading file ' # RealFile # '...')
 	    {Wait Ack}
 	    Gui,rawStatus(' done' append)
 	 end
