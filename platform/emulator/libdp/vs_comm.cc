@@ -484,14 +484,48 @@ void VirtualSite::marshalLocalResources(MsgBuffer *mb,
     marshalNumber(cpm->getSegSHMKey(i), mb);
 }
 
-// for VirtualSite::unmarshalResources see vs_comm_general.cc
+//
+// The 'segKeys' array is allocated with "
 #ifndef USE_FAST_UNMARSHALER
-#define ROBUST_UNMARSHALER
-#include "vs_comm_general.cc"
-#undef ROBUST_UNMARSHALER
+void VirtualSite::unmarshalResourcesRobust(MsgBuffer *mb, int *error)
 #else
-#include "vs_comm_general.cc"
+void VirtualSite::unmarshalResources(MsgBuffer *mb)
 #endif
+{
+#ifndef USE_FAST_UNMARSHALER
+  segKeysNum = unmarshalNumberRobust(mb, error);
+#else
+  segKeysNum = unmarshalNumber(mb);
+#endif
+  Assert(segKeysNum);
+  if (segKeysNum > segKeysArraySize) {
+    int acc = segKeysNum, bits = 0;
+    while (acc) {
+      acc = acc/2;
+      bits++;
+    }
+    bits = max(bits+2, 4);	// heuristic...
+    segKeysArraySize = (int) (0x1 << bits);
+
+    //
+    if (segKeys) free (segKeys);
+    segKeys = (key_t *) malloc(sizeof(key_t) * segKeysArraySize);
+  }
+  Assert(segKeys);
+  Assert(segKeysArraySize >= segKeysNum);
+
+  //
+#ifndef USE_FAST_UNMARSHALER
+  for (int i = 0; i < segKeysNum; i++) {
+    int e;
+    segKeys[i] = (key_t) unmarshalNumberRobust(mb, &e);
+    *error = *error || e;
+  }
+#else
+  for (int i = 0; i < segKeysNum; i++) 
+    segKeys[i] = (key_t) unmarshalNumber(mb);
+#endif
+}
 
 //
 void VirtualSite::gcResources()
