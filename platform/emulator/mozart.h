@@ -40,6 +40,11 @@ typedef enum {
   SUSPEND
 } OZ_Bool;
   
+typedef int OZ_Boolean;
+#define OZ_FALSE 0
+#define OZ_TRUE  1
+
+
 typedef void *OZ_Thread;
 
 typedef OZ_Bool (*OZ_CFun) _PROTOTYPE((int, OZ_Term *));
