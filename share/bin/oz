@@ -96,7 +96,19 @@ if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
     export INFOPATH EMACSLOCKDIR EMACSPATH
     OZEMACS=$CHECKEMACS
 
-  else
+  # Backward compatibility for older ozemacs (19.28)
+  elif [ -f ${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs ]; then
+
+    OZEMACS=${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs
+    EHOME=$OZHOME/ozemacs
+    EMACSLOADPATH=$EHOME/common/lisp:$EHOME/common/site-lisp
+    EMACSDATA=$EHOME/common/data
+    EMACSDOC=$EMACSDATA
+    INFOPATH=$EHOME/info
+    EMACSLOCKDIR=$EHOME/common/lock
+    EMACSPATH=$EHOME/bin/$OZPLATFORM/etc
+    export EMACSLOADPATH EMACSDATA EMACSDOC
+    export INFOPATH EMACSLOCKDIR EMACSPATH
 
      IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
      for name in emacs lemacs; do
