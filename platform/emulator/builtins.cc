@@ -84,7 +84,7 @@ extern void BIinitSpecial();
 extern void BIinitSystem();
 extern void BIinitFD(void);
 
-#ifndef OZDYNLINKING
+#ifndef DYNLINKING
 extern void MyinitUnix();
 #endif
 
@@ -102,7 +102,7 @@ BuiltinTabEntry *BIinit()
 
   BIinitFD();
 
-#ifndef OZDYNLINKING
+#ifndef DYNLINKING
   MyinitUnix();
 #endif
 
