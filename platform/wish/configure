@@ -1105,7 +1105,7 @@ else
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH:$oz_topdira/bin:$oz_topdira$ac_dummy; do
+  for ac_dir in $PATH:$oz_topdira/share/bin:$oz_topdira$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_PLATFORMSCRIPT="$ac_dir/$ac_word"
@@ -1143,7 +1143,7 @@ else
   ;;
   *)
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH:$oz_topdira/bin:$oz_topdira$ac_dummy; do
+  for ac_dir in $PATH:$oz_topdira/share/bin:$oz_topdira$ac_dummy; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
       ac_cv_path_MKINSTALLDIRS="$ac_dir/$ac_word"
