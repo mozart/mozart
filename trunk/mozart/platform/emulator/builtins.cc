@@ -1347,6 +1347,7 @@ TaggedRef vs_suspend(SRecord *vs, int i, TaggedRef arg_rest) {
   }
 }
 
+#include "bytedata.hh"
 static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
   DEREF(vs, vs_ptr, vs_tag);
 
@@ -1411,6 +1412,8 @@ static OZ_Return vs_check(OZ_Term vs, OZ_Term *rest) {
 	return FAILED;
       }
     }
+    return PROCEED;
+  } else if (oz_isByteString(vs)) {
     return PROCEED;
   } else {
     return FAILED;
@@ -1490,6 +1493,9 @@ static OZ_Return vs_length(OZ_Term vs, OZ_Term *rest, int *len) {
 	return FAILED;
       }
     }
+    return PROCEED;
+  } else if (oz_isByteString(vs)) {
+    *len = *len + tagged2ByteString(vs)->getWidth();
     return PROCEED;
   } else {
     return FAILED;
