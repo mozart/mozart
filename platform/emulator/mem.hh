@@ -48,7 +48,7 @@
 
 
 // allocate 2000 kilo byte chuncks of memory
-const heapMaxSize = 2000 * 1024;
+const heapMaxSize = 2 * MB;
 #if __GNUC__ >= 2 && defined(sparc) && defined(REGOPT)
 #define HEAPTOPINTOREGISTER 1
 #endif
