@@ -152,3 +152,82 @@ failure:
   return FAILED;
 }
 
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_bounds, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FSETVAL "," OZ_EM_FSET "," OZ_EM_INT "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  int dummy;
+  OZ_EXPECT(pe, 0, expectFSetValue);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, dummy);
+  OZ_EXPECT(pe, 2, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 3, expectIntVarMinMax, dummy);
+  OZ_EXPECT_SUSPEND(pe, 4, expectIntVarMinMax, dummy);
+  
+  return pe.impose(new BoundsPropagator(OZ_args[0],
+					OZ_args[1],
+					OZ_args[2],
+					OZ_args[3],
+					OZ_args[4]));
+} 
+OZ_C_proc_end
+
+OZ_CFun BoundsPropagator::header = fsp_bounds;
+
+OZ_Return BoundsPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in: ");
+  
+  OZ_FSetVar s(_s);
+  OZ_FDIntVar d(_d), r(_r);
+  PropagatorController_S_D_D P(s, d, r);
+  OZ_Return retval = OZ_SLEEP;
+
+  // the following code is executed once ..
+  if (_s_ub) {
+    OZ_FSetVar s_ub;
+    s_ub.ask(_s_ub);
+    _s_ub_card = s_ub->getCardMin();
+
+    OZ_DEBUGPRINT(("once %s %d\n", s_ub->toString(), _s_ub_card));
+    FailOnInvalid(*s <= *s_ub);
+    FailOnEmpty(*d <= _d_ub);
+    FailOnEmpty(r->constrainBool());
+
+    _s_ub = 0; // .. because of that 
+  }
+
+  if (d->getMinElem() > 0 || 
+      s->getGlbSet().getCard() > 0 ||
+      *r == 1) {
+    OZ_DEBUGPRINT(("a\n"));
+    FailOnEmpty(*d &= _d_ub);
+    FailOnEmpty(*r &= 1);
+    FailOnInvalid(s->putCard(_s_ub_card, _s_ub_card));
+    retval = OZ_ENTAILED;
+  } else if (d->getMaxElem() < _d_ub || 
+	     s->getLubSet().getCard() < _s_ub_card ||
+	     *r == 0) {
+    OZ_DEBUGPRINT(("b\n"));
+    FailOnEmpty(*d &= 0);
+    FailOnEmpty(*r &= 0);
+    FailOnInvalid(s->putCard(0,0));
+    retval = OZ_ENTAILED;
+  } 
+
+  P.leave();
+  OZ_DEBUGPRINTTHIS("out");
+  return OZ_DEBUGRETURNPRINT(retval);
+
+failure:
+  OZ_DEBUGPRINTTHIS("fail: ");
+  P.fail();
+  return FAILED;
+}
+
+//-----------------------------------------------------------------------------
+// eof
