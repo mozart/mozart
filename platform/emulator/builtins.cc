@@ -366,6 +366,30 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 
 OZ_DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline);
 
+inline
+OZ_Return arrayExchangeInline(TaggedRef t, TaggedRef i, TaggedRef value, TaggedRef& old)
+{
+  NONVAR( t, array );
+  NONVAR( i, index );
+
+  if (!oz_isArray(array)) {
+    oz_typeError(0,"Array");
+  }
+
+  if (!oz_isSmallInt(index)) {
+    oz_typeError(1,"smallInteger");
+  }
+
+  OzArray *ar = tagged2Array(array);
+  CheckLocalBoard(ar,"array");
+  old = ar->exchange(tagged2SmallInt(index),value);
+  if (old) return PROCEED;
+
+  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+}
+
+OZ_DECLAREBI_USEINLINEFUN3(BIarrayExchange,arrayExchangeInline);
+
 // ---------------------------------------------------------------------
 // Tuple & Record
 // ---------------------------------------------------------------------

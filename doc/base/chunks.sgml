@@ -106,6 +106,15 @@
 	<Item>
 	  returns the item of ?_{Array} under key&nbsp;?_{I}.
 
+	<Entry><Span class=index/<<exchange>>/
+	  <Index/<<Array>><And><<exchange>>/
+	<Synopsis>
+	  <<{Array.exchange ?+{Array} ?+{I} ?_{OldVal} ?_{NewVal}}>>
+	<Item>
+	  returns the current value of ?_{Array} under key&nbsp;?_{I}
+          as item&nbsp;?_{OldVal} and updates the value of ?_{Array}
+          under key&nbsp;?_{I} to be&nbsp;?_{NewVal}.
+
 	<Entry><<low>>
 	  <Index class=tails/<<Array>><And><<low>>/
 	<Synopsis>
@@ -177,11 +186,32 @@
 	<Entry><<condGet>>
 	  <Index class=tails/<<Dictionary>><And><<condGet>>/
 	<Synopsis>
-	  <<{Dictionary.condGet ?+{Dictionary} ?+{LI} ?_{X} ?_{Y}}>>
+	  <<{Dictionary.condGet ?+{Dictionary} ?+{LI} ?_{DefVal} ?_{X}}>>
 	<Item>
-	  returns the item&nbsp;?_{Y} of ?_{Dictionary} under key&nbsp;?_{LI},
+	  returns the item&nbsp;?_{X} of ?_{Dictionary} under key&nbsp;?_{LI},
 	  if ?_{LI} is a valid key of ?_{Dictionary}.  Otherwise,
-	  returns&nbsp;?_{X}.
+	  returns&nbsp;?_{DefVal}.
+
+	<Entry><<exchange>>
+	  <Index class=tails/<<Dictionary>><And><<exchange>>/
+	<Synopsis>
+	  <<{Dictionary.exchange ?+{Dictionary} ?+{LI} ?_{OldVal} ?_{NewVal}}>>
+	<Item>
+	  returns the current value of ?_{Dictionary} under
+	  key&nbsp;?_{LI} as item&nbsp;?_{OldVal} and updates the
+	  value of ?_{Dictionary} under key&nbsp;?_{LI} to be ?_{NewVal}.
+    
+	<Entry><<condExchange>>
+	  <Index class=tails/<<Dictionary>><And><<condExchange>>/
+	<Synopsis>
+	  <<{Dictionary.condExchange ?+{Dictionary} ?+{LI} ?_{DefVal}
+	  ?_{OldVal} ?_{NewVal}}>>
+	<Item>
+	  If ?_{LI} is a valid key of ?_{Dictionary} then returns the
+	  current value of ?_{Dictionary} under key&nbsp;?_{LI} as
+	  item&nbsp;?_{OldVal} otherwise,  returns ?_{DefVal} as 
+          item&nbsp;?_{OldVal}. Sets the value of ?_{Dictionary}
+	  under key&nbsp;?_{LI} to be ?_{NewVal}. 
 
 	<Entry><<keys>>
 	  <Index class=tails/<<Dictionary>><And><<keys>>/
