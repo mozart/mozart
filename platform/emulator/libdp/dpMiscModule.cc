@@ -374,6 +374,23 @@ OZ_BI_define(BIprintDPTables,0,0)
   return OZ_ENTAILED;
 }OZ_BI_end  
 
+OZ_BI_define(BIcreateLogFile,1,0)
+{
+  OZ_declareVirtualString(0,name);
+
+  initDP();
+
+  FILE *tmp=fopen(name, "w");
+  if(tmp==NULL) {
+    return OZ_FAILED;
+  }
+  else {
+    logfile=tmp;
+    setbuf(logfile,NULL); // No buffering to see immediate result
+    return OZ_ENTAILED;
+  }
+}OZ_BI_end
+
 #ifndef MODULES_LINK_STATIC
 
 #include "modDPMisc-if.cc"
