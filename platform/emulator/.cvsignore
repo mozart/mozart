@@ -1,5 +1,7 @@
 version.cc oz.emulator.bin
 Makefile
+Makefile.rules
+Makefile.vars
 conf.h
 scancode.cc instrtab.hh  opcodes.hh optostr.hh register.hh
 opcodes.cc
