@@ -486,8 +486,8 @@ private:
 
   //  
   //  ... with furhter assertions;
-  DebugCode (void markDeadThread (););
-  DebugCode (void createHook (););
+  DebugCode (void markDeadThread ();)
+  DebugCode (void createHook ();)
 public:
   USEHEAPMEMORY;
   OZPRINT;
