@@ -2234,7 +2234,7 @@ Propagator * Propagator::_cacLocalInline(Board * bb) {
 }
 
 Suspendable * Suspendable::_cacSuspendable(void) {
-  return (this == NULL) ? NULL : _cacSuspendableInline();
+  return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline();
 }
 
 /*
