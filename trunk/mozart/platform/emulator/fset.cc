@@ -38,6 +38,9 @@
 
 //*****************************************************************************
 
+extern int toTheLowerEnd[];
+extern int toTheUpperEnd[];
+
 inline int div32(int n) { return n >> 5; }
 inline int mod32(int n) { return n & 0x1f; }
 
@@ -262,6 +265,7 @@ OZ_Term FSetValue::getKnownNotInList(void) const
   return getAsList(_in, 1);
 }
 
+// returns -1 if there is no min element
 int FSetValue::getMinElem(void) const
 {
   int v, i;
@@ -286,10 +290,13 @@ int FSetValue::getMinElem(void) const
     }
     if (!(word << 31))
       v++;
+
+    return v;
   }
-  return v;
+  return -1;
 }
 
+// returns -1 if there is no max element
 int FSetValue::getMaxElem(void) const
 {
   int v, i;
@@ -314,8 +321,10 @@ int FSetValue::getMaxElem(void) const
     }
     if (!(word >> 31))
       v--;
+
+    return v;
   }
-  return v;
+  return -1;
 }
 
 int FSetValue::getNextLargerElem(int v) const
@@ -894,6 +903,28 @@ FSetValue OZ_FSetImpl::getNotInSet(void) const
   return FSetValue(_not_in);  
 }
 
+OZ_Boolean OZ_FSetImpl::operator >= (const int i)
+{
+  int lower_word = div32(i), lower_bit = mod32(i);
+
+  for (int i = 0; i < lower_word; i += 1)
+    _not_in[i] = ~0;
+  _not_in[lower_word] |= ~toTheUpperEnd[lower_bit];
+
+  return normalize();
+}
+
+OZ_Boolean OZ_FSetImpl::operator <= (const int i)
+{
+  int upper_word = div32(i), upper_bit = mod32(i);
+  
+  for (int i = upper_word + 1; i < fset_high; i += 1)
+    _not_in[i] = ~0;
+  _not_in[upper_word] |= ~toTheLowerEnd[upper_bit];
+  
+  return normalize();
+}
+
 //*****************************************************************************
 
 #define CASTPTR (FSetValue *)
@@ -1118,3 +1149,14 @@ char * OZ_FSetConstraint::toString() const
   CASTTHIS->print(str);
   return str.str();
 }
+
+OZ_Boolean OZ_FSetConstraint::operator <= (const int i)
+{
+  return CASTTHIS->operator <= (i);
+}
+
+OZ_Boolean OZ_FSetConstraint::operator >= (const int i)
+{
+  return CASTTHIS->operator >= (i);
+}
+
