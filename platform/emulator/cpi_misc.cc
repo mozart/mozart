@@ -105,9 +105,9 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
   return isAnyVar(vtag1) && (vptr1 == vptr2);
 }
 
-OZ_Return OZ_typeError(OZ_CFun OZ_self, OZ_Term OZ_args[], 
-                       int OZ_arity, char * __typeString, 
-                       int pos, char * comment) 
+OZ_Return OZ_typeError(char * __typeString, 
+                       int pos, 
+		       char * comment) 
 {
   TypeError(pos, comment);
 }

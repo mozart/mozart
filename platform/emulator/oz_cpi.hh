@@ -27,7 +27,7 @@
     OZ_expect_t r = O.F(OZ_args[P]);                                        \
     if (O.isFailing(r)) {                                                   \
       O.fail();                                                             \
-      return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, P, ""); \
+      return OZ_typeError(expectedType, P, "");                             \
     } else if (O.isSuspending(r))                                           \
       return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));   \
   }
@@ -37,7 +37,7 @@
     OZ_expect_t r = O.F(OZ_args[P]);                                        \
     if (O.isFailing(r)) {                                                   \
       O.fail();                                                             \
-      return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, P, ""); \
+      return OZ_typeError(expectedType, P, "");                             \
     } else if (O.isSuspending(r))                                           \
       SC += 1;                                                              \
   }
@@ -290,7 +290,7 @@ void      OZ_hfreeChars(char *, int);
 int * OZ_findEqualVars(int, OZ_Term *); // static return value
 OZ_Boolean OZ_isEqualVars(OZ_Term, OZ_Term);
 
-OZ_Return OZ_typeError(OZ_CFun, OZ_Term [], int, char *, int, char *);
+OZ_Return OZ_typeError(char *, int, char *);
 
 int OZ_getFDInf(void);
 int OZ_getFDSup(void);

@@ -44,7 +44,7 @@
     int i_size = OZ_vectorSize(OZ_args[I]);				\
     int j_size = OZ_vectorSize(OZ_args[J]);				\
     if ((i_size >= 0) && (j_size >= 0) && (i_size != j_size))		\
-      return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, J,	\
+      return OZ_typeError(expectedType, J,	                        \
 	  		  "Vectors must have same size.");		\
   }
 
@@ -58,7 +58,7 @@
 #define SUM_OP_GT  ">:"
 
 #define ERROR_UNEXPECTED_OPERATOR(P)					\
-return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, P, 	\
+return OZ_typeError(expectedType, P, 	                                \
 		    "Expected one of the following: "			\
 		    SUM_OP_EQ " , " SUM_OP_NEQ " , " SUM_OP_LEQ " , "	\
 		    SUM_OP_LT " , " SUM_OP_GEQ " or " SUM_OP_GT ".")
