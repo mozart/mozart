@@ -43,14 +43,14 @@ AC_SUBST(BUILDTOP)
 AC_MSG_CHECKING(for --enable-contrib)
 AC_ARG_ENABLE(contrib,
     [--enable-contrib=c1,c2,...
-	add these contributions to the configuration (default: NONE)])
+	add these contributions to the configuration (default: doc)])
 
 if test -z "${enable_contrib}"; then
-    : ${oz_enable_contrib=}
+    : ${oz_enable_contrib=doc}
 else
     case "${enable_contrib}" in
     no)		oz_enable_contrib=;;
-    yes)	oz_enable_contrib=gdbm,regex;;
+    yes)	oz_enable_contrib=gdbm,regex,doc;;
     *)		oz_enable_contrib=${enable_contrib};;
     esac
 fi
