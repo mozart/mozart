@@ -23,7 +23,8 @@ CHUNKFILES = \
 include ../Makefile.common
 
 all:: $(CHUNKFILES)
-quick:: $(CHUNKFILES)
+1st:: $(CHUNKFILES)
+2nd:: $(CHUNKFILES)
 
 CHUNK_SPECS     = \
         --chunk="Chat Server    chat-server.oz" \

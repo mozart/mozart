@@ -26,11 +26,12 @@ EXTEND_CLASSES  = TeX.class ID.class Msg.class Meta.class Meta\$$ChunkInfo.class
 HANDLER_CLASSES = $(LATEXHANDLER) $(NXMLHANDLER) $(TEXTHANDLER)
 CLASSES         = $(EXTEND_CLASSES) $(HANDLER_CLASSES)
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend bootquick
+.PHONY: all 1st 2nd bootstrap check install clean veryclean distclean depend boot1st boot2nd
 
 all bootstrap:: $(CLASSES)
 
-bootquick::
+boot1st::
+boot2nd::
 
 Meta\$$ChunkInfo.class: Meta.class
 

@@ -16,15 +16,18 @@ FILES = $(HTMLFILES:%=%.html) \
         ozdoc.css page.gif
 
 all:
-quick:
+1st:
+2nd:
 clean:
 veryclean:
 depend:
 check:
 distclean:
 bootstrap:
-bootquick:
-boot-quick:
+boot1st:
+boot-1st:
+boot2nd:
+boot-2nd:
 installps:
 clean-xref:
 

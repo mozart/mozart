@@ -24,7 +24,8 @@ CHUNKFILES = \
         FiniteDomainTutorial.oz FiniteDomainTutorialSolutions.oz
 
 all:: $(CHUNKFILES)
-quick:: $(CHUNKFILES)
+1st:: $(CHUNKFILES)
+2nd:: $(CHUNKFILES)
 
 clean::
         -rm -f $(CHUNKFILES)

@@ -16,7 +16,7 @@ include ../Makefile.vars
 DOCFILES0=Mozart.hhp Mozart.hhc
 DOCFILES=$(DOCFILES0:%=$(DOCDIR)/%)
 
-.PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick install installps
+.PHONY: bootstrap boot1st boot2nd all clean veryclean distclean 1st 2nd boot-1st boot-2nd install installps
 
 all: Mozart.hhp Mozart.hhc
 
@@ -30,12 +30,15 @@ Mozart.hhc: Mozart.hhc.in preprocess.awk
         $(AWK) -f preprocess.awk < $< > $@ || \
         rm -f $@
 
-quick:
+1st:
+2nd:
 depend:
 
 bootstrap: boot-all
-bootquick: boot-all
-boot-quick: boot-all
+boot1st: boot-all
+boot-1st: boot-all
+boot2nd:
+boot-2nd:
 
 # make it possible to configure and build just the doc
 -include $(BUILDTOP)/share/Makefile.boot

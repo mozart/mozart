@@ -34,7 +34,7 @@ HTMLSUPPORTFILES0 = \
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
-.PHONY: all bootstrap bootquick quick validate verify install clean veryclean distclean clean-xref xref
+.PHONY: all bootstrap boot1st boot2nd 1st 2nd validate verify install installps clean veryclean distclean clean-xref xref
 
 all:: Makefile ../Makefile.common $(WHAT)-html/index.html
 
@@ -42,7 +42,8 @@ all:: Makefile ../Makefile.common $(WHAT)-html/index.html
 
 bootstrap: boot-all
 
-bootquick: boot-quick
+boot1st: boot-1st
+boot2nd: boot-2nd
 
 depend:
 
@@ -52,10 +53,15 @@ Makefile: $(SRCDIR)/Makefile.in ../config.status
 ../Makefile.common: $(SRCTOP)/doc/Makefile.common.in ../config.status
         cd .. && ./config.status
 
-$(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+1st::   $(WHAT)-1st.html
+2nd::   $(WHAT)-2nd.html
+$(WHAT)-html/index.html:        $(WHAT)-1st.html
+
+$(WHAT)-1st.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         rm -f latex.db && \
         if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
         else opt=; fi; \
+        rm -f $(WHAT)-html/index.html ; \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css \
         --link=Top,../index.html $$opt \
@@ -64,6 +70,8 @@ $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         --latexdb=latex.db \
         --xrefdb=../xref.db --xrefdir=$(WHAT) --indexdb=../index.db \
         --make-hhc=$(WHAT).hhc && \
+        rm -f $(WHAT)-1st.html && \
+        ln $(WHAT)-html/index.html $(WHAT)-1st.html && \
         if [ "$(HTMLSUPPORTFILES)" ]; then \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
@@ -77,9 +85,10 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(TEXEXTRAFILES)) NONE; \
         do { test $$i = NONE || cp -p $$i $(WHAT)-tex; } done
 
-quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+$(WHAT)-2nd.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
         else opt=; fi; \
+        rm -f $(WHAT)-html/index.html ; \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
         --type=html-stylesheets --stylesheet=ozdoc.css \
         --link=Top,../index.html $$opt \
@@ -87,6 +96,8 @@ quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         --bst-path=$(SRCTOP)/doc/utilities \
         --latexdb=latex.db --keeppictures \
         --xrefdb=../xref.db --xrefdir=$(WHAT)  --indexdb=../index.db && \
+        rm -f $(WHAT)-2nd.html && \
+        ln $(WHAT)-html/index.html $(WHAT)-2nd.html && \
         if [ "$(HTMLSUPPORTFILES)" ]; then \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
@@ -113,7 +124,7 @@ $(PRINTDOCDIR):
         $(INSTALL_DIR) $@
 
 clean::
-        -rm -rf $(WHAT)-html
+        -rm -rf $(WHAT)-html $(WHAT)-1st.html $(WHAT)-2nd.html
         -rm -rf $(WHAT).{xml,tex,aux,dvi,ps,toc,log,idx,bbl,blg,ind,ilg,stamp,pics,hhc}
         -rm -rf $(WHAT)-*.xml
 
