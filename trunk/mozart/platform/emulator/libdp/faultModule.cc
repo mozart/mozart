@@ -33,63 +33,66 @@
 
 #include "builtins.hh"
 
-//
-OZ_BI_define(BIhwInstall,3,0){
-  OZ_Term e0        = OZ_in(0);
-  OZ_Term c0        = OZ_in(1);
-  OZ_Term proc      = OZ_in(2);  
-
-  //  
-  initDP();
-
-  NONVAR(c0, c);
-  NONVAR(e0, e);
-  TaggedRef label;
-  SRecord  *condStruct;
-  if(oz_isSRecord(c)){
-    condStruct = tagged2SRecord(c);
-    label = condStruct->getLabel();}
-  else
-    return oz_raise(E_ERROR,E_SYSTEM,"???? is not a Srecord",0);
-  
-  Tertiary *entity = tagged2Tert(e);
-  
-  TaggedRef type = condStruct->getLabel();
-  if(type == AtomHandler)
-    return HandlerInstall(entity,condStruct,proc);
-  if(type == AtomWatcher)
-    return WatcherInstall(entity,condStruct,proc);
-  return oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
-}OZ_BI_end
-
+Bool isWatcherEligible(Tertiary *c){
+  switch(c->getType()){
+  case Co_Object:
+  case Co_Cell:
+  case Co_Lock:
+  case Co_Port: return TRUE;
+  default: return FALSE;}
+  Assert(0);
+  return FALSE;
+}
 
 OZ_BI_define(BIhwDeInstall,3,0){
   OZ_Term e0        = OZ_in(0);
   OZ_Term c0        = OZ_in(1);
   OZ_Term proc      = OZ_in(2);  
-
-  //  
-  initDP();
-
+  initDP();  
   NONVAR(c0, c);
   NONVAR(e0, e);
-  TaggedRef label;
   SRecord  *condStruct;
   if(oz_isSRecord(c)){
-    condStruct = tagged2SRecord(c);
-    label = condStruct->getLabel();}
-  else
-    oz_raise(E_ERROR,E_SYSTEM,"???? is not a Srecord",0);
+    condStruct = tagged2SRecord(c);}
+  else{
+    return IncorrectFaultSpecification;}
   
-  Tertiary *entity = tagged2Tert(e);
-  TaggedRef type = condStruct->getLabel();
-  if(type == AtomHandler)
-    return HandlerDeInstall(entity,condStruct,proc);
-  if(type == AtomWatcher)
-    return WatcherDeInstall(entity,condStruct,proc);
-  oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
-  return PROCEED;
+  Tertiary* tert;
+  if(oz_isConst(e)) {
+    tert = tagged2Tert(e);
+    if(!isWatcherEligible(tert)){
+      return IncorrectFaultSpecification;}}
+  else tert=NULL; 
+  return WatcherDeInstall(tert,condStruct,proc);
+
 }OZ_BI_end
+
+// ERIK-LOOK make another for variables
+OZ_BI_define(BIhwInstall,3,0){
+  OZ_Term e0        = OZ_in(0);
+  OZ_Term c0        = OZ_in(1);
+  OZ_Term proc      = OZ_in(2);  
+  
+  initDP();
+  NONVAR(c0, c);
+  NONVAR(e0, e);
+
+  SRecord  *condStruct;
+  if(oz_isSRecord(c)){
+    condStruct = tagged2SRecord(c);}
+  else{
+    return IncorrectFaultSpecification;}
+  
+  Tertiary* tert;
+  if(oz_isConst(e)) {
+    tert = tagged2Tert(e);
+    if(!isWatcherEligible(tert)){
+      return IncorrectFaultSpecification;}}
+  else tert=NULL; 
+
+  return WatcherInstall(tert,condStruct,proc);
+}OZ_BI_end
+
 
 OZ_BI_define(BIgetEntityCond,1,1)
 {

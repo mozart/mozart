@@ -33,46 +33,21 @@
 #include "base.hh"
 #include "dsite.hh"
 #include "chain.hh"
-
-/**********************************************************************/
-/*   Memory management                                               */
-/**********************************************************************/
-
-ChainElem *newChainElem(){
-  return (ChainElem*) genFreeListManager->getOne_3();}  
-
-void freeChainElem(ChainElem* e){
-  genFreeListManager->putOne_3((FreeListEntry*) e);}
-
-Chain *newChain(){
-  return (Chain*) genFreeListManager->getOne_4();}
-
-void freeChain(Chain* e){
-  genFreeListManager->putOne_4((FreeListEntry*) e);}
-
-InformElem* newInformElem(){
-  return (InformElem*) genFreeListManager->getOne_3();}  
-
-void freeInformElem(InformElem* e){
-  genFreeListManager->putOne_3((FreeListEntry*) e);}
+#include "protocolFail.hh"
 
 /**********************************************************************/
 /*   Basic                                              */
 /**********************************************************************/
 
-void ChainElem::init(DSite *s){
-  next=NULL;
-  flags=0;
-  site=s;}
-
-Bool Chain::basicSiteExists(ChainElem *ce,DSite* s){
+Bool Chain::siteExists(DSite* s){
+  ChainElem* ce=getFirstNonGhost();
   while(ce!=NULL){
     if(ce->site==s) {return OK;}
     ce=ce->next;}
   return NO;}
 
 ChainElem** Chain::getFirstNonGhostBase(){
-  if(first==last) {return &first;}
+  if(first==last) return &first;
   ChainElem **ce=&first;
   while((*ce)->next->flagIsSet(CHAIN_GHOST)){
     ce= &((*ce)->next);}
@@ -81,13 +56,7 @@ ChainElem** Chain::getFirstNonGhostBase(){
 void Chain::makeGhost(ChainElem* ce){
   ce->setFlagAndCheck(CHAIN_GHOST);
   ce->resetFlagAndCheck(CHAIN_QUESTION_ASKED);
-  Assert(0);
-  /* PER-HANDLE
-  if(hasFlag(INTERESTED_IN_TEMP)){
-    deinstallProbe(ce->site,PROBE_TYPE_ALL);}
-  else{
-  deinstallProbe(ce->site,PROBE_TYPE_PERM);} */
-}
+  ce->site->deinstallProbe(PROBE_TYPE_ALL);}
 
 void Chain::removeBefore(DSite* s){
   ChainElem **base,*ce;
@@ -126,78 +95,35 @@ Bool Chain::tempConnectionInChain(){
     ce=ce->next;}
   return NO;}
 
-void Chain::probeTemp(Tertiary* t){
-  PD((CHAIN,"Probing Temp"));
-  ChainElem *ce=getFirstNonGhost();
-  while(ce!=NULL){
-    tertiaryInstallProbe(ce->site,PROBE_TYPE_ALL,t); 
-    deinstallProbe(ce->site,PROBE_TYPE_PERM);
-    ce=ce->next;}}
-
-void Chain::deProbeTemp(){
-  PD((CHAIN,"DeProbing Temp"));
-  ChainElem *ce=getFirstNonGhost();
-  while(ce!=NULL){
-    installProbe(ce->site,PROBE_TYPE_PERM);
-    deinstallProbe(ce->site,PROBE_TYPE_ALL);
-    ce=ce->next;}}
-
-//
-void Chain::removeInformOnPerm(DSite *s)
-{ Assert(0); }
-void Chain::informHandle(OwnerEntry* oe,int OTI,EntityCond ec)
-{ Assert(0); }
-void Chain::informHandleTempOnAdd(OwnerEntry* oe,Tertiary *t,DSite *s)
-{ Assert(0); }
-
-/*
-// PER-LOOK
-void Chain::removeInformOnPerm(DSite *s){ 
-  InformElem **ce= &inform;
-  InformElem *tmp;
-  while(*ce!=NULL){
-    if((*ce)->site==s){
-      tmp=*ce;
-      releaseInformElem(tmp);
-      *ce=tmp->next;
-      return;}
-    ce= &((*ce)->next);}}
-
+// 
 void Chain::informHandle(OwnerEntry* oe,int OTI,EntityCond ec){
-  Assert(somePermCondition(ec));
+  EntityCond newEC;
   InformElem **base=&inform;
   InformElem *cur=*base;
   while(cur!=NULL){
-    if(cur->watchcond & ec){
-      sendTellError(oe,cur->site,OTI,cur->watchcond & ec,TRUE);
-      *base=cur->next;
-      freeInformElem(cur);
-      cur=*base;
-      continue;}
+    newEC=cur->watchcond & ec &~cur->foundcond;
+    if(newEC != ENTITY_NORMAL){
+      sendTellError(oe,cur->site,OTI,newEC,TRUE);
+      if(ec & (PERM_ME|PERM_SOME)){
+	*base=cur->next;
+	cur->free();
+	cur=*base;
+	continue;}}
     base=&(cur->next);
-    cur=*base;}}
+    cur=*base;}
+}
 
-void Chain::informHandleTempOnAdd(OwnerEntry* oe,Tertiary *t,Site *s){
-Assert(ch->tempConnectionInChain());
-  InformElem *ie=getInform();
-  while(ie!=NULL){
-    if(ie->site==s){
-      EntityCond ec=ie->wouldTrigger(TEMP_BLOCKED|TEMP_SOME|TEMP_ME);
-      if(ec!=ENTITY_NORMAL){
-	sendTellError(oe,s,t->getIndex(),ec,TRUE);}}
-    ie=ie->next;}}
-
-*/
-
-void Chain::init(DSite *s){
-  ChainElem *e=newChainElem();
-  e->init(s);
-  inform = NULL;
-  first=last=e;}
+void Chain::informHandleOK(OwnerEntry* oe,int OTI,EntityCond ec){
+  EntityCond newEC;
+  InformElem *cur=inform;
+  while(cur!=NULL){
+    newEC=cur->foundcond & ~ec;
+    if(newEC != ENTITY_NORMAL){
+      sendTellError(oe,cur->site,OTI,newEC,FALSE);}
+    cur=cur->next;}}
 
 DSite* Chain::setCurrent(DSite* s, Tertiary* t){
-  ChainElem *e=newChainElem();
-  e->init(s);
+  ChainElem *e=new ChainElem(s);
   DSite *toS=last->site;
   last->next=e;
   last= e;
@@ -206,64 +132,25 @@ DSite* Chain::setCurrent(DSite* s, Tertiary* t){
   ChainElem *de = getFirstNonGhost();
   if(de->site==s){
     de->setFlagAndCheck(CHAIN_DUPLICATE);}
-  /* PER-HANDLE
-  if(hasFlag(INTERESTED_IN_TEMP)){
-    tertiaryInstallProbe(s,PROBE_TYPE_ALL,t);}
-  else{
-    tertiaryInstallProbe(s,PROBE_TYPE_PERM,t);}
-  */
+  tertiaryInstallProbe(s,PROBE_TYPE_ALL,t);
+  Assert(last->next==NULL);
   return toS;}
 
 void Chain::newInform(DSite* toS,EntityCond ec){
-  InformElem *ie=newInformElem();
-  ie->init(toS,ec);
+  InformElem *ie=new InformElem(toS,ec);
   ie->next=inform;
   inform=ie;}
 
-void Chain::releaseChainElem(ChainElem *ce){
-  PD((CHAIN,"Releaseing Element"));
-  if((!ce->flagIsSet(CHAIN_GHOST))){
-    /* PER-HANDLE
-    if(hasFlag(INTERESTED_IN_TEMP)){
-      deinstallProbe(ce->getSite(),PROBE_TYPE_ALL);}
-    else{
-      deinstallProbe(ce->getSite(),PROBE_TYPE_PERM);}
-    */
-  }
-  freeChainElem(ce);}
-
-void Chain::removePerm(ChainElem** base){
-  ChainElem *ce=*base;
-  *base=ce->next;
-  freeChainElem(ce);}
-
 void Chain::removeNextChainElem(ChainElem** base){
   ChainElem *ce=*base;
+  Assert(!(ce==last));
   *base=ce->next;
   releaseChainElem(ce);}
 
-/* PER-HANDLE
-void Chain::releaseInformElem(InformElem *ie){
-  EntityCond ec=ie->watchcond;
-  if(someTempCondition(ie->watchcond)){
-    InformElem *tmp=inform;
-    int interestedInTemp=NO;
-    while(tmp!=NULL){
-      if(someTempCondition(tmp->watchcond)) {
-	interestedInTemp=OK;
-	break;}
-      tmp=tmp->next;}
-    if(!interestedInTemp){
-      deProbeTemp();}}
-  freeInformElem(ie);}
-*/
-
-void InformElem::init(DSite*s,EntityCond c){
-  site=s;
-  next=NULL;
-  watchcond=c;
-  foundcond=0;}
-
+void Chain::releaseChainElem(ChainElem *ce){
+  PD((CHAIN,"Releasing Element"));
+  ce->getSite()->deinstallProbe(PROBE_TYPE_ALL);
+  ce->free();}
 
 /**********************************************************************/
 /*   gc                                                */
@@ -283,13 +170,6 @@ void Chain::gcChainSites(){
 /*   failure                                                */
 /**********************************************************************/
 
-void Chain::receiveUnAsk(DSite* s,EntityCond ec)
-{ Assert(0); } 
-void Chain::receiveAnswer(Tertiary* t,DSite* site,int ans,DSite* deadS)
-{ Assert(0); } 
-
-/* PER-HANDLE
-
 void Chain::receiveUnAsk(DSite* s,EntityCond ec){
   InformElem **ie=&inform;
   InformElem *tmp;
@@ -297,7 +177,7 @@ void Chain::receiveUnAsk(DSite* s,EntityCond ec){
     if(((*ie)->site==s) && ((*ie)->watchcond==ec)){
       tmp=*ie;
       *ie=tmp->next;
-      releaseInformElem(tmp);
+      tmp->free();
       break;}
     ie=&((*ie)->next);}
   PD((WEIRD,"unaskerror with no error"));
@@ -307,7 +187,7 @@ void Chain::receiveAnswer(Tertiary* t,DSite* site,int ans,DSite* deadS){
   PD((ERROR_DET,"chain receive answer %d",ans));
   if(hasFlag(TOKEN_LOST)) return; 
   if(removeGhost(site)) return; 
-  Assert(siteExists(site));
+  Assert(siteExists(site)); 
   ChainElem **base=getFirstNonGhostBase();
   ChainElem *dead,*answer;
 
@@ -348,11 +228,11 @@ void Chain::receiveAnswer(Tertiary* t,DSite* site,int ans,DSite* deadS){
   managerSeesSitePerm(t,deadS);
   return;}
 
-*/
-
 /**********************************************************************/
 /*   Debug                                                */
 /**********************************************************************/
+
+#ifdef DEBUG_PERDIO
 
 int printChain(Chain* chain){
   printf("Chain ### Flags: [");
@@ -401,4 +281,5 @@ int printChain(Chain* chain){
   return 8;
 }
 
+#endif
 

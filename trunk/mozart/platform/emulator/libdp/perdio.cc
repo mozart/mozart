@@ -179,25 +179,49 @@ DSite* getSiteFromTertiaryProxy(Tertiary* t){
 void pendThreadRemoveFirst(PendThread **pt){
   PendThread *tmp=*pt;
   Assert(tmp!=NULL);
-  Assert(!isRealThread(tmp->thread));
+  Assert(tmp->thread==NULL);
   *pt=tmp->next;  
   tmp->dispose();}
 
-OZ_Return pendThreadAddToEnd(PendThread **pt,Thread *t, TaggedRef o, 
-				    TaggedRef n, ExKind e, Board *home)
-{
+void pendThreadAddToEnd(PendThread **pt,TaggedRef o, 
+				    TaggedRef n, ExKind e){
   while(*pt!=NULL){pt= &((*pt)->next);}
+  ControlVarNew(controlvar,oz_rootBoard());
+  *pt=new PendThread(oz_currentThread(),NULL,o,n,controlvar,e);
+  suspendOnControlVar2();
+}
+/*
+void pendThreadAddToEnd(PendThread **pt,Thread* th,TaggedRef o, 
+				    TaggedRef n, ExKind e){
+  while(*pt!=NULL){pt= &((*pt)->next);}
+  ControlVarNew(controlvar,oz_rootBoard());
+  *pt=new PendThread(oz_currentThread(),NULL,o,n,controlvar,e);
+  suspendOnControlVar2();
+}
+*/
 
-  if(isRealThread(t) && e != REMOTEACCESS) {
-    ControlVarNew(controlvar,home);
-    *pt=new PendThread(t,NULL,o,n,controlvar,e);
-    PD((THREAD_D,"stop thread addToEnd %x",t));
-    SuspendOnControlVar;
-  }
-  *pt=new PendThread(t,NULL,o,n,makeTaggedNULL(),e);
-  return PROCEED;
+void pendThreadAddDummyToEnd(PendThread **pt){
+  while(*pt!=NULL){pt= &((*pt)->next);}
+  *pt=new PendThread(NULL,NULL,DUMMY);
 }
 
+void pendThreadAddToEnd(PendThread **pt,Thread *th){
+  while(*pt!=NULL){pt= &((*pt)->next);}
+  ControlVarNew(controlvar,oz_rootBoard());  
+  *pt=new PendThread(th,NULL,controlvar,NOEX);
+  suspendOnControlVar2();
+}
+
+void pendThreadAddMoveToEnd(PendThread **pt){
+  while(*pt!=NULL){pt= &((*pt)->next);}
+  *pt=new PendThread(NULL,NULL,MOVEEX);
+}
+
+void pendThreadAddRAToEnd(PendThread **pt,DSite *s1, DSite *s2,int index){
+  while(*pt!=NULL){pt= &((*pt)->next);}
+  *pt=new PendThread(NULL,NULL,(TaggedRef)s1,(TaggedRef)s2,
+		     (TaggedRef)index,REMOTEACCESS);
+}
 
 /* ******************************************************************* */
 /*   SECTION 18::  garbage-collection  DMM + some BASIC                           */
@@ -214,7 +238,7 @@ void gcFrameToProxyImpl() {
     borrowTable->gcFrameToProxy();
 }
 
-void gcProxy(Tertiary *t) {
+void gcProxyRecurseImpl(Tertiary *t) {
   int i = t->getIndex();
   BorrowEntry *be=BT->getBorrow(i);
   if(be->isGCMarked()){
@@ -226,10 +250,7 @@ void gcProxy(Tertiary *t) {
   PD((GC,"relocate borrow :%d old:%x new:%x",i,be,t));
   return;}
 
-// PER-LOOK: unnecessary inderection;
-void gcProxyRecurseImpl(Tertiary *t) { gcProxy(t); }
-
-void gcManager(Tertiary *t) {
+void gcManagerRecurseImpl(Tertiary *t) {
   Assert(!t->isFrame());
   int i = t->getIndex();
   OwnerEntry *oe=OT->getOwner(i);
@@ -238,36 +259,27 @@ void gcManager(Tertiary *t) {
     return;
   }
   PD((GC,"relocate owner:%d old%x new %x",i,oe,t));
-  oe->gcPO(t);}
-
-// PER-LOOK: unnecessary inderection;
-void gcManagerRecurseImpl(Tertiary *t) { gcManager(t); }
-
+  oe->gcPO(t);
+}
 
 void gcPendThread(PendThread **pt){
   PendThread *tmp;
   while(*pt!=NULL){
-    if(((*pt)->thread == MoveThread) || ((*pt)->thread==DummyThread)){
-      tmp=new PendThread((*pt)->thread,(*pt)->next);
-    } else {
-      if((*pt)->exKind==REMOTEACCESS) {
-	tmp=new PendThread((*pt)->thread,(*pt)->next);	
-	tmp->exKind = (*pt)->exKind;
-	tmp->nw = (*pt)->nw; 
-	tmp->old = (*pt)->old; 
-	((DSite* )(*pt)->thread)->makeGCMarkSite();
-	((DSite* )(*pt)->old)->makeGCMarkSite();
-	OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);
-      } else {
-	tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
-	tmp->exKind = (*pt)->exKind;
-	OZ_collectHeapTerm((*pt)->old,tmp->old);
-	OZ_collectHeapTerm((*pt)->nw,tmp->nw);
-	OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);
-      }
-    }
+    tmp=new PendThread((*pt)->thread->gcThread(),(*pt)->next);
+    tmp->exKind = (*pt)->exKind;
+    if(tmp->exKind==REMOTEACCESS) {    
+      tmp->nw = (*pt)->nw; 
+      tmp->old = (*pt)->old; 
+      tmp->controlvar = (*pt)->controlvar;
+      ((DSite* )tmp->old)->makeGCMarkSite();      
+      ((DSite* )tmp->nw) ->makeGCMarkSite();}
+    else{
+      OZ_collectHeapTerm((*pt)->old,tmp->old);
+      OZ_collectHeapTerm((*pt)->nw,tmp->nw);
+      OZ_collectHeapTerm((*pt)->controlvar,tmp->controlvar);}
     *pt=tmp;
-    pt=&(tmp->next);}}
+    pt=&(tmp->next);}
+}
 
 /*--------------------*/
 
@@ -276,6 +288,7 @@ void gcPerdioRootsImpl()
   if (isPerdioInitializedImpl()) {
     OT->gcOwnerTableRoots();
     BT->gcBorrowTableRoots();
+    gcGlobalWatcher();
   }
 }
 
@@ -287,11 +300,20 @@ void gcPerdioFinalImpl()
     RHT->gcResourceTable();
     gcDSiteTable();
   }
+  gcTwins();
 }
 
 /* *********************************************************************/
 /*   globalization                                       */
 /* *********************************************************************/
+
+void cellifyObject(Object* o){
+  RecOrCell state = o->getState();
+  if(stateIsCell(state)) return;
+  SRecord *r = getRecord(state);
+  Assert(r!=NULL);
+  Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
+  o->setState(cell);}
 
 void globalizeTert(Tertiary *t)
 { 
@@ -318,25 +340,9 @@ void globalizeTert(Tertiary *t)
     }
   case Co_Object:
     {
-      Object *o = (Object*) t;
-      RecOrCell state = o->getState();
-      if (!stateIsCell(state)) {
-	SRecord *r = getRecord(state);
-	Assert(r!=NULL);
-	Tertiary *cell = tagged2Tert(OZ_newCell(makeTaggedSRecord(r)));
-	Watcher *w, **ww = getWatcherBase(t);
-	if(ww!=NULL){
-	  w = *ww;
-	  *ww = NULL;
-	  setMasterTert(cell,o);
-	  while(w!=NULL){
-	    insertWatcher(cell,w);
-	  }}
-	globalizeTert(cell);
-	o->setState(cell);}
+      cellifyObject((Object*) t);
       break;
     }
-  case Co_Space:
   case Co_Port:
     break;
   default:
@@ -346,7 +352,7 @@ void globalizeTert(Tertiary *t)
   t->setTertType(Te_Manager);
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
-  PD((GLOBALIZING,"GLOBALIZING port/object/space/thread index:%d",i));
+  PD((GLOBALIZING,"GLOBALIZING port/object index:%d",i));
   if(t->getType()==Co_Object)
     {PD((SPECIAL,"object:%x class%x",t,((Object *)t)->getClass()));}
   oe->mkTertiary(t);
@@ -822,7 +828,7 @@ void msgReceived(MsgBuffer* bs)
 	  OTI,site->stringrep(),ec));
       BorrowEntry *be=maybeReceiveAtBorrow(site,OTI);
       if(be==NULL) break;
-      receiveTellError(be->getTertiary(),site,OTI,ec,flag);
+      receiveTellError(be->getTertiary(),ec,flag);
       break;
     }
 
@@ -1090,9 +1096,7 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
 /*   Initialization                                      */
 /**********************************************************************/
 //
-OZ_BI_proto(BIprobe);
 OZ_BI_proto(BIstartTmp);
-OZ_BI_proto(BIportWait);
 
 void initDPCore()
 {
@@ -1147,13 +1151,11 @@ void initDPCore()
   borrowTable = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
   resourceTable = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   msgBufferManager = new MsgBufferManager();
-
-  BI_probe = makeTaggedConst(new Builtin("probe", 1, 0, BIprobe, OK));
+  globalWatcher = NULL; // PER-LOOK
+  usedTwins = NULL;
 
   BI_startTmp  = makeTaggedConst(new Builtin("startTmp",
 					     2, 0, BIstartTmp, OK));
-  BI_portWait  = makeTaggedConst(new Builtin("portWait", 
-					     2, 0, BIportWait, OK));
 
   Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
   Assert(sizeof(OwnerCreditExtension)==sizeof(Construct_3));
