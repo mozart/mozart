@@ -117,6 +117,9 @@ local
 	    P = {New TextPipe init(cmd: {OZFLEX}
 				   args: ['-Cem' FlexFile])}
 	    {P getAll(?Ss)}
+	    %% We have to delay here, else the close could kill the
+	    %% subprocess before it has flushed its output to the file:
+	    {Delay 100}
 	    {P close()}
 	    try
 	       {OutputMessages Ss Rep}
