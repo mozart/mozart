@@ -14,7 +14,7 @@ A scrollbar is a widget that displays two arrows, one at each end of the scrollb
 Scrollbars can be used to adjust the view in the associated window by clicking or dragging with the mouse.
 </P>
 <P>
-Note that some widgets have <<tdscrollbar>> and <<lrscrollbar>> parameters that avoids to explicitly create scrollbar widgets.
+<em>Important</em>: Scrollbars are most of the times used in conjonction with another widget (canvas, text widget, scroll frame). The widgets where it is relevant to have scrollbars support the <<tdscrollbar>> and <<lrscrollbar>> parameters that avoids to explicitly create scrollbar widgets. As a result, in usual situations, one should never need to use directly the <<tdscrollbar>> and <<lrscrollbar>> widgets.
 </P>
 <P>
 <EM>ELEMENTS</EM>

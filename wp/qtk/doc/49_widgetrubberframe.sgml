@@ -69,7 +69,7 @@ or lowering the widget.
 <item> The boolean <<append>> parameter specifies if the binding overrides the previous binding for this event, or adds a supplementary action. If not specified, <<false>> is assumed.
 </LIST>
 
-<para><title>chgSize</title><p><<chgSize(R P relative:B)>>: Changes the size of a specific widget of the rubberframe. <<R>> must be either the number of the widget (<<n>> in the option <<n:R>> above) or an handle to one of these widgets. If <<B>> is <<true>> then the integer <<P>> is added to the current size of the widget. If <<B>> is false (default if <<relative>> is not specified) then the size of the widget is set to <<P>>.
+<para><title>chgSize</title><p><<chgSize(R P relative:B)>>: Changes the size of a specific widget of the rubberframe. <<R>> must be either the number of the widget (<<n>> in the option <<n:R>> above) or a handle to one of these widgets. If <<B>> is <<true>> then the integer <<P>> is added to the current size of the widget. If <<B>> is false (default if <<relative>> is not specified) then the size of the widget is set to <<P>>.
 
 <para><title>get</title><p><<get(parameter1:Variable1 ... parameterX:VariableX)>>: Obtains the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<VariableX>> must be free variables that will receive the current value of the parameters.
 

@@ -21,7 +21,7 @@ The documentation is split in the following chapters:
 <ITEM> <ptr to="chapter.basics"> QTk basics
 <ITEM> <ptr to="chapter.advanced"> QTk advanced topics
 <ITEM> <ptr to="chapter.stddialog"> QTk standard dialog boxes
-<ITEM> <ptr to="chapter.widgets"> Widgets reference
+<ITEM> <ptr to="chapter.widgets"> Widget reference
 <ITEM> <ptr to="chapter.misc"> Miscellaneous
 </LIST>
 

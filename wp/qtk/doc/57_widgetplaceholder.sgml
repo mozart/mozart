@@ -115,7 +115,7 @@ window exits). During global grabs the window manager will not receive pointer e
 <LIST>
 <ITEM> The atom <<empty>> to leave the placeholder blank.
 <ITEM> A record describing a widget. 
-<ITEM> An handle to a widget that has already been displayed inside this particular placeholder. A placeholder can display several widgets and switch between them without having to rebuild them and setting them in the correct state each time.
+<ITEM> a handle to a widget that has already been displayed inside this particular placeholder. A placeholder can display several widgets and switch between them without having to rebuild them and setting them in the correct state each time.
 </LIST>
 
 <para id="chapter.widgets.placeholder.class"><title>class</title><p><<class:VS>>: Specifies a class for the window. This class will be used when querying the option database for the window's other options, and it will also be used later for other purposes such as bindings. This option can be specified at creation time only. <<VS>> must be a virtual string.

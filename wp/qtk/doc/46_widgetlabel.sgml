@@ -12,7 +12,7 @@
 in
    {{QTk.build td(Desc)} show}
    {L set("Label widget")}
-   {Wait R} % R will be binded when the window is closed
+   {Wait R} % R will be bound when the window is closed
    {Show {String.toAtom R}}
 end
 >>>

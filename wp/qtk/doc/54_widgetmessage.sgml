@@ -13,7 +13,7 @@
 in
    {{QTk.build td(Desc)} show}
    {M set("Long text for a message widget")}
-   {Wait R} % R will be binded when the window is closed
+   {Wait R} % R will be bound when the window is closed
    {Show {String.toAtom R}}
 end
 >>>

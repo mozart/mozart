@@ -111,7 +111,7 @@ window exits). During global grabs the window manager will not receive pointer e
 
 <ITEM> <<n:empty>>: Leaves an empty blank space.
 </LIST>
-Note that <<newline>>, <<continue>> and <<empty>> are <EM>not</EM> widgets and therefore can't be glued and don't have an handle. These parameters can be specified at creation time only. If you need windows that change their widgets dynamically, use the <<placeholder>> widget (see <ptr to="chapter.widgets.placeholder">).
+Note that <<newline>>, <<continue>> and <<empty>> are <EM>not</EM> widgets and therefore can't be glued and don't have a handle. These parameters can be specified at creation time only. If you need windows that change their widgets dynamically, use the <<placeholder>> widget (see <ptr to="chapter.widgets.placeholder">).
 
 <para id="chapter.widgets.tdlr.param_background"><title>background</title><p><<background:C>>: or <<bg:C>>: Specifies the normal background color to use when displaying the widget. <<C>> must be a valid color (see <ptr to="misc.color">).
 
