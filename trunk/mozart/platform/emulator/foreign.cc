@@ -313,6 +313,22 @@ char *OZ_floatToCStringPretty(OZ_Term term)
 {
   OZ_Float f = OZ_floatToC(term);
   sprintf(TmpBuffer,"%g",f);
+  for (char *s = TmpBuffer; *s!='.'; s++) {
+    if (*s == 'e') {
+      for (char *p = s+strlen(s); p >= s; p--) {
+	*(p+2) = *p;
+      }
+      *s++='.';
+      *s = '0';
+      break;
+    }
+    if (*s == 0) {
+      *s++ = '.';
+      *s++ = '0';
+      *s = 0;
+      break;
+    }
+  }
   return ozstrdup(TmpBuffer);
 }
 
