@@ -201,6 +201,8 @@ public:
   Bool isSetSFlag(StatusBit flag) { return ( statusReg & flag ) ? OK : NO; }
   int isSetSFlag()                { return statusReg; }
 
+  Bool debugmode() { return isSetSFlag(DebugMode); }
+
   void print();
 
 private:
