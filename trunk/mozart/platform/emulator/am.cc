@@ -1546,7 +1546,6 @@ int AM::wakeUser()
 
 
 OZ_Term AM::dbgGetLoc(Board *bb) {
-  if (!ozconf.moreInfo) return NameUnit;
   OZ_Term out = nil();
   while (!bb->isRoot()) {
     if (bb->isSolve()) {

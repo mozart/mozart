@@ -799,6 +799,12 @@ void doBindCVar(TaggedRef *p, GenCVariable *cvar)
 }
 
 inline
+void doBindSVar(TaggedRef *p, SVariable *svar)
+{
+  *p = makeTaggedSVar(svar);
+}
+
+inline
 void unBind(TaggedRef *p, TaggedRef t)
 {
   Assert(isAnyVar(t));
