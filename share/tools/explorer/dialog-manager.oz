@@ -169,10 +169,11 @@ local
    local
 
       fun {DistS2I S}
-	 case {Map {Filter S Char.isGraph} Char.toLower}
-	 of "none" then 1
-	 [] "full" then 0
-	 elseof S then {Tk.string.toInt S}
+	 FS={Map {Filter S Char.isGraph} Char.toLower}
+      in
+	 case FS=="none" then 1
+	 elsecase FS=="full" then 0
+	 else {Tk.string.toInt FS}
 	 end
       end
       
