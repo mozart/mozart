@@ -136,6 +136,7 @@ void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
   printf("sendingperdio: to:%s type:%s site:%s index:%d\n",
          toS->stringRep(),mess_names[mt],sS->stringRep(),sI);
 #endif
+  //  printf("sending msg:%d %s\n",mt, mess_names[mt]);
   int ret=toS->sendTo(bs,mt,sS,sI);
   if(ozconf.perdioMinimal){
     OZ_Term nogoods = bs->getNoGoods();
@@ -516,6 +517,7 @@ void msgReceived(MsgBuffer* bs)
     return;}
 
   PD((MSG_RECEIVED,"msg type %d",mt));
+  //printf("receiving msg:%d %s\n",mt,mess_names[mt]);
   switch (mt) {
   case M_PORT_SEND:
     {
@@ -564,6 +566,7 @@ void msgReceived(MsgBuffer* bs)
       unmarshal_M_OWNER_SEC_CREDIT(bs,s,index,c);
       PD((MSG_RECEIVED,"OWNER_SEC_CREDIT site:%s index:%d credit:%d",
           s->stringrep(),index,c));
+      //printf("receiving sec si:%xd indx:%d \n",(int)s, index);
       receiveAtBorrowNoCredit(s,index)->addSecondaryCredit(c,myDSite);
       creditSiteIn = NULL;
       break;
@@ -577,7 +580,16 @@ void msgReceived(MsgBuffer* bs)
       unmarshal_M_BORROW_CREDIT(bs,sd,si,c);
       PD((MSG_RECEIVED,"BORROW_CREDIT site:%s index:%d credit:%d",
           sd->stringrep(),si,c));
-      receiveAtBorrowNoCredit(sd,si)->addPrimaryCredit(c);
+      //The entry might have been gc'ed. If so send the
+      //credit back.
+      //erik
+      NetAddress na=NetAddress(sd,si);
+      BorrowEntry* be=BT->find(&na);
+      if(be==NULL){
+        //printf("Sending back to %xd#%d  %d\n",(int)sd, si, c);
+        sendCreditBack(na.site,na.index,c);}
+      else {
+        be->addPrimaryCredit(c);}
       break;
     }
 
