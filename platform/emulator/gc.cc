@@ -1037,13 +1037,13 @@ TaggedRef gcVariable(TaggedRef var)
 
   case UVAR:
     {
-      Board *home = tagged2VarHome(var);
-      INFROMSPACE(home);
-      home = home->gcBoard();
-      INTOSPACE (home);
-      GCNEWADDRMSG((home ? makeTaggedUVar(home) : makeTaggedUVar(am.rootBoard)));
+      Board *hom = tagged2VarHome(var);
+      INFROMSPACE(hom);
+      hom = hom->gcBoard();
+      INTOSPACE (hom);
+      GCNEWADDRMSG((hom ? makeTaggedUVar(hom) : makeTaggedUVar(am.rootBoard)));
       // kludge: if its board is not alive, lets its board to be the root...
-      return home ? makeTaggedUVar(home) : makeTaggedUVar(am.rootBoard);
+      return hom ? makeTaggedUVar(hom) : makeTaggedUVar(am.rootBoard);
     }
     
   case SVAR:
@@ -1377,7 +1377,7 @@ void AM::gc(int msgLevel)
   GCPROCMSG("ioNodes");
   for(int i = 0; i < IO::openMax; i++)
     if(FD_ISSET(i,&IO::globalReadFDs)) {
-      if (i != fileno(IO::QueryFILE)) {
+      if (i != IO::QueryFILE->csfileno()) {
 	IO::ioNodes[i] = IO::ioNodes[i]->gcBoard();
       }
     } 
