@@ -39,7 +39,7 @@ LINKS=		ozengine text2pickle pickle2text oldpickle2text
 LIB_SCRIPTS=	$(addprefix $(BINDIR)/,$(SCRIPTS))
 LIB_LINKS=	$(addprefix $(BINDIR)/,$(LINKS))
 
-.PHONY: bootstrap all install clean veryclean distclean
+.PHONY: bootstrap all install clean veryclean distclean depend check
 
 all:
 
@@ -82,10 +82,12 @@ ozengine.exe: oz.exe
 version.h: $(SRCTOP)/OZVERSION
 	echo "#define OZVERSION \"`$<`\"" > $@
 
-check:
-
 Makefile: Makefile.in ../config.status
 	cd .. && ./config.status
 
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
+
+check:
+
+depend:

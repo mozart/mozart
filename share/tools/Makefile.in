@@ -108,7 +108,10 @@ IMAGES1 = \
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
 
-.PHONY: all install bootstrap
+.PHONY: all install bootstrap check depend
+.PHONY: install-main install-images install-cache
+.PHONY: clean veryclean distclean tags
+.PHONY: stage1
 
 all: Makefile $(FUNCTORS)
 
@@ -157,8 +160,6 @@ ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
 # Installation
 #---------------------------------------------------------------------
 
-.PHONY: install install-main install-images install-cache
-
 install: install-main install-images install-cache
 
 install-main: all \
@@ -201,8 +202,6 @@ $(CACHELINK): $(CACHEDIR)
 # Cleaning up
 #---------------------------------------------------------------------
 
-.PHONY: clean veryclean distclean tags
-
 clean:
 	rm -f *~ *.bak ./*/*~ ./*/*.bak
 	rm -f ozcar-version.oz
@@ -225,8 +224,6 @@ Makefile: Makefile.in ../config.status
 ../config.status: ../configure
 	cd .. && ./config.status --recheck
 
-.PHONY: stage1
-
 STAGE1=./stage1
 
 # stage1: create the components using the installed ones
@@ -234,3 +231,5 @@ stage1:
 	$(MAKE) install-main PREFIX=$(STAGE1)
 
 check:
+
+depend:
