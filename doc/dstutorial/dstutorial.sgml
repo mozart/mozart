@@ -33,9 +33,12 @@
 <BOOK PROGLANG=OZ>
   <FRONT>
     <!-- Splitting the document into different HTML nodes -->
-<!--
+
     <Meta name="html.split" value="chapter.introduction">
--->
+    <Meta name="html.split" value="chapter.distmodel">
+    <Meta name="html.split" value="chapter.examples">
+    <Meta name="html.split" value="chapter.failure">
+
     <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">

@@ -26,7 +26,7 @@ ten years of research into concurrent constraint programming.
 The driving goal is to separate the fundamental aspects
 of programming a distributed system:
 application functionality, distribution structure,
-fault-tolerance, security, and opennness.
+fault-tolerance, security, and openness.
 The current release completely separates
 application functionality and distribution structure,
 and provides primitives for fault-tolerance,
