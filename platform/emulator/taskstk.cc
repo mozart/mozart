@@ -176,7 +176,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 }
 
 
-TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
+TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth, Thread *tt)
 {
   Assert(this);
 
@@ -241,7 +241,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       continue;
     }
 
-    if (PC==C_XCONT_Ptr) {
+    if (PC==C_XCONT_Ptr && tt && !tt->isRunnable()) {
       TaggedRef pairlist =
         cons(OZ_pairA("name", OZ_atom("xcont")),
              cons(OZ_pairA("args", nil()),

@@ -246,7 +246,7 @@ OZ_C_proc_begin(BItaskStack,3)
     return OZ_unify(out, nil());
 
   TaskStack *taskstack = thread->getTaskStackRef();
-  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth+1));
+  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth+1, thread));
 }
 OZ_C_proc_end
 
