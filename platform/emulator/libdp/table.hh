@@ -136,13 +136,13 @@ public:
   // However, a variable can be bound later (so a ref chain can still
   // emerge);
   void mkRef(TaggedRef v, unsigned short f) {
-    Assert((!oz_isRef(v) && !oz_isVariable(v)) ||
-	   (oz_isRef(v) && oz_isVariable(*tagged2Ref(v))));
+    Assert((!oz_isRef(v) && !oz_isVar(v)) ||
+	   (oz_isRef(v) && oz_isVar(*tagged2Ref(v))));
     type=PO_Ref; u.ref=v; flags=f;
   }
   void mkRef(TaggedRef v) {
-    Assert((!oz_isRef(v) && !oz_isVariable(v)) ||
-	   (oz_isRef(v) && oz_isVariable(*tagged2Ref(v))));
+    Assert((!oz_isRef(v) && !oz_isVar(v)) ||
+	   (oz_isRef(v) && oz_isVar(*tagged2Ref(v))));
     type=PO_Ref; u.ref=v;
   }
 

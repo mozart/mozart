@@ -33,7 +33,7 @@ void OZ_Stream::setFlags(void)
   valid = TRUE;
   OZ_Term t = tail;
 
-  DEREF(t, tptr, ttag);
+  DEREF(t, tptr);
   
   if (oz_isNil(t)) {
     eostr = closed = TRUE;
@@ -80,7 +80,7 @@ OZ_Boolean OZ_Stream::leave(void)
     return FALSE;
   
   OZ_Term t = tail;
-  DEREF(t, tailptr, tailtag);
+  DEREF(t, tailptr);
 
   oz_var_addSusp(tailptr, Propagator::getRunningPropagator());
   return TRUE;

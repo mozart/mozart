@@ -433,7 +433,6 @@ void DynamicTable::printStream(ostream &stream, int depth)
         tmpval=table[di].value;
 	if (tmpval) { 
 	    nonempty=TRUE;
-            CHECK_DEREF(tmplit);
 	    if (oz_isAtom(tmplit)||oz_isInt(tmplit)) nAtomOrInt++; else nName++;
 	}
     }
@@ -1159,14 +1158,11 @@ void SRecord::printLongStream(ostream &stream, int depth, int offset)
 
   stream << indent(offset) << "Args:\n";
   TaggedRef ar = getArityList();
-  CHECK_DEREF(ar);
   while (oz_isCons(ar)) {
     stream << indent(offset+2);
     TaggedRef feat = oz_head(ar);
-    CHECK_DEREF(feat);
     ozd_printStream(feat,stream);
     ar = oz_tail(ar);
-    CHECK_DEREF(ar);
     stream << ": ";
     ozd_printLongStream(getFeature(feat),stream,
 			PRINT_DEPTH_DEC(depth),offset+2);

@@ -238,7 +238,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 {
   DEBUG_CONSTRAIN_VAR(("tellBasicConstraintFS "));
   //
-  DEREF(v, vptr, vtag);
+  DEREF(v, vptr);
   //
   if (fs && !((FSetConstraint *) fs)->isValid()) {
     goto failed;
@@ -342,7 +342,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       goto proceed;
     }
     goto failed;
-  } else if (oz_isVariable(v)) {
+  } else if (oz_isVar(v)) {
     //
     // future stuff, no idea what is going on here
     TaggedRef newVar = oz_newVariable();

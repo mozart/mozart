@@ -196,12 +196,12 @@ static ThreadReturn debugExit(ProgramCounter PC, RefsArray Y, Abstraction *CAP);
 inline
 OZ_Return fastUnify(OZ_Term A, OZ_Term B) {
   OZ_Term term1 = A;
-  DEREF0(term1,term1Ptr,_1);
+  DEREF0(term1,term1Ptr);
   
   OZ_Term term2 = B;
-  DEREF0(term2,term2Ptr,_2);
+  DEREF0(term2,term2Ptr);
 
-  if (!oz_isVariable(term2)) {
+  if (!oz_isVar(term2)) {
     if (oz_isOptVar(term1)) {
       doBind(term1Ptr, term2);
       goto exit;
@@ -209,7 +209,7 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B) {
     if (term1==term2) {
       goto exit;
     }
-  } else if (!oz_isVariable(term1) && oz_isOptVar(term2)) {
+  } else if (!oz_isVar(term1) && oz_isOptVar(term2)) {
     doBind(term2Ptr, term1);
     goto exit;
   }
@@ -575,22 +575,22 @@ static
 OZ_Return suspendInline(Thread *th, OZ_Term A,OZ_Term B=0,OZ_Term C=0)
 {
   if (C) {
-    DEREF (C, ptr, _1);
-    if (oz_isVariable(C)) {
+    DEREF(C, ptr);
+    if (oz_isVar(C)) {
       OZ_Return ret = oz_var_addSusp(ptr, th);
       if (ret != SUSPEND) return ret;
     }
   }
   if (B) {
-    DEREF (B, ptr, _1);
-    if (oz_isVariable(B)) {
+    DEREF(B, ptr);
+    if (oz_isVar(B)) {
       OZ_Return ret = oz_var_addSusp(ptr, th);
       if (ret != SUSPEND) return ret;
     }
   }
   {
-    DEREF (A, ptr, _1);
-    if (oz_isVariable(A)) {
+    DEREF(A, ptr);
+    if (oz_isVar(A)) {
       OZ_Return ret = oz_var_addSusp(ptr, th);
       if (ret != SUSPEND) return ret;
     }
@@ -787,8 +787,8 @@ LBLdispatcher:
     {
       TaggedRef term = GPC(1);
       if (oz_isRef(term)) {
-	DEREF(term,termPtr,tag);
-	if (oz_isVariable(term)) {
+	DEREF(term,termPtr);
+	if (oz_isVar(term)) {
 	  SUSP_PC(termPtr,PC);
 	}
       }
@@ -966,7 +966,7 @@ LBLdispatcher:
     SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
     
     TaggedRef term = GETTMPA();
-    DEREF(term,termPtr,tag);
+    DEREF(term,termPtr);
     
     if (oz_isOptVar(term)) {
       SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
@@ -974,7 +974,7 @@ LBLdispatcher:
       sPointer = srecord->getRef();
       SetWriteMode;
       DISPATCH(4);
-    } else if (oz_isVariable(term)) {
+    } else if (oz_isVar(term)) {
       Assert(oz_isVar(term));
       TaggedRef record;
       if (oz_onToplevel()) {
@@ -998,7 +998,7 @@ LBLdispatcher:
       }
       if (tmpRet!=FAILED) goto LBLunifySpecial;
       // fall through to failed
-    } else if (isSRecordTag(tag) &&
+    } else if (oz_isSRecord(term) &&
 	       tagged2SRecord(term)->compareSortAndArity(label,ff)) {
       sPointer = tagged2SRecord(term)->getRef();
       SetReadMode;
@@ -1017,8 +1017,8 @@ LBLdispatcher:
     TaggedRef term = auxTaggedA;
     TaggedRef atm  = getLiteralArg(PC+2);
     
-    DEREF(term,termPtr,tag);
-    if (oz_isVariable(term)) {
+    DEREF(term,termPtr);
+    if (oz_isVar(term)) {
       if (oz_isVar(term) &&
 	  !oz_var_valid(tagged2Var(term),atm)) {
 	// fail
@@ -1039,7 +1039,7 @@ LBLdispatcher:
   {
   testBool:
     TaggedRef term = auxTaggedA;
-    DEREF(term,termPtr,tag);
+    DEREF(term,termPtr);
     
     if (oz_eq(term,oz_true())) {
       DISPATCH(4);
@@ -1050,7 +1050,7 @@ LBLdispatcher:
     }
     
     // mm2: kinded and ofs handling missing
-    if (oz_isVariable(term)) {
+    if (oz_isVar(term)) {
       SUSP_PC(termPtr, PC);
     }
     
@@ -1065,10 +1065,10 @@ LBLdispatcher:
     TaggedRef term = auxTaggedA;
     TaggedRef i = getNumberArg(PC+2);
     
-    DEREF(term,termPtr,tag);
+    DEREF(term,termPtr);
     
     /* optimized for integer case */
-    if (isSmallIntTag(tag)) {
+    if (oz_isSmallInt(term)) {
       if (smallIntEq(term,i)) {
 	DISPATCH(4);
       }
@@ -1079,7 +1079,7 @@ LBLdispatcher:
       DISPATCH(4);
     }
     
-    if (oz_isVariable(term)) {
+    if (oz_isVar(term)) {
       if (oz_isKinded(term) &&
 	  !oz_var_valid(tagged2Var(term),i)) {
 	// fail
@@ -1101,13 +1101,13 @@ LBLdispatcher:
     TaggedRef label = getLiteralArg(PC+2);
     SRecordArity sra = (SRecordArity) getAdressArg(PC+3);
     
-    DEREF(term,termPtr,tag);
-    if (isSRecordTag(tag)) {
+    DEREF(term,termPtr);
+    if (oz_isSRecord(term)) {
       if (tagged2SRecord(term)->compareSortAndArity(label,sra)) {
 	sPointer = tagged2SRecord(term)->getRef();
 	DISPATCH(5);
       }
-    } else if (oz_isVariable(term)) {
+    } else if (oz_isVar(term)) {
       if (!oz_isKinded(term)) {
 	SUSP_PC(termPtr,PC);
       } else if (oz_isVar(term)) {
@@ -1136,11 +1136,11 @@ LBLdispatcher:
   testList:
     TaggedRef term = auxTaggedA;
     
-    DEREF(term,termPtr,tag);
-    if (isLTupleTag(tag)) {
+    DEREF(term,termPtr);
+    if (oz_isLTuple(term)) {
       sPointer = tagged2LTuple(term)->getRef();
       DISPATCH(3);
-    } else if (oz_isVariable(term)) {
+    } else if (oz_isVar(term)) {
       if (!oz_isKinded(term)) {
 	SUSP_PC(termPtr,PC);
       } else if (oz_isVar(term)) {
@@ -1165,7 +1165,7 @@ LBLdispatcher:
       TaggedRef atm = getLiteralArg(PC+1);
       
       TaggedRef term = XPC(2);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	doBind(termPtr, atm);
@@ -1184,7 +1184,7 @@ LBLdispatcher:
       TaggedRef atm = getLiteralArg(PC+1);
       
       TaggedRef term = YPC(2);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	doBind(termPtr, atm);
@@ -1203,7 +1203,7 @@ LBLdispatcher:
       TaggedRef atm = getLiteralArg(PC+1);
       
       TaggedRef term = GPC(2);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	doBind(termPtr, atm);
@@ -1223,7 +1223,7 @@ LBLdispatcher:
   getLiteralComplicated:
     TaggedRef term = auxTaggedA;
     TaggedRef atm = getLiteralArg(PC+1);
-    DEREF(term,termPtr,tag);
+    DEREF(term,termPtr);
     if (oz_isVar(term)) {
       tmpRet = oz_var_bind(tagged2Var(term),termPtr,atm);
       if (tmpRet==PROCEED) { DISPATCH(3); }
@@ -1239,7 +1239,7 @@ LBLdispatcher:
     {
       TaggedRef i = getNumberArg(PC+1);
       TaggedRef term = XPC(2);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	doBind(termPtr, i);
@@ -1263,7 +1263,7 @@ LBLdispatcher:
     {
       TaggedRef i = getNumberArg(PC+1);
       TaggedRef term = YPC(2);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	doBind(termPtr, i);
@@ -1287,7 +1287,7 @@ LBLdispatcher:
     {
       TaggedRef i = getNumberArg(PC+1);
       TaggedRef term = GPC(2);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	doBind(termPtr, i);
@@ -1312,7 +1312,7 @@ LBLdispatcher:
   Case(GETLISTVALVARX)
     {
       TaggedRef term = XPC(1);
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	register LTuple *ltuple = new LTuple();
@@ -1337,7 +1337,7 @@ LBLdispatcher:
 	HF_TELL(XPC(2), makeTaggedRef(argg));
       }
       
-      if (oz_isVariable(term)) {
+      if (oz_isVar(term)) {
 	Assert(oz_isVar(term));
 	// mm2: why not new LTuple(h,t)? OPT?
 	register LTuple *ltuple = new LTuple();
@@ -1363,7 +1363,7 @@ LBLdispatcher:
     {
     getList:
       TaggedRef term = GETTMPA();
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       
       if (oz_isOptVar(term)) {
 	LTuple *ltuple = new LTuple();
@@ -1371,7 +1371,7 @@ LBLdispatcher:
 	SetWriteMode;
 	doBind(termPtr,makeTaggedLTuple(ltuple));
 	DISPATCH(2);
-      } else if (oz_isVariable(term)) {
+      } else if (oz_isVar(term)) {
 	Assert(oz_isVar(term));
 	TaggedRef record;
 	if (oz_onToplevel()) {
@@ -1600,14 +1600,14 @@ Case(GETVOID)
        /* code adapted from GETLITERAL */
        TaggedRef *termPtr = sPointer;
        sPointer++;
-       DEREFPTR(term,termPtr,tag);
+       DEREFPTR(term,termPtr);
 
        if (oz_isOptVar(term)) {
          doBind(termPtr, atm);
          DISPATCH(2);
        }
 		 
-       if ( oz_eq(term,atm) ) {
+       if (oz_eq(term,atm) ) {
          DISPATCH(2);
        }
 
@@ -1634,7 +1634,7 @@ Case(GETVOID)
       /* code adapted from GETLITERAL */
       TaggedRef *termPtr = sPointer;
       sPointer++;
-      DEREFPTR(term,termPtr,tag);
+      DEREFPTR(term,termPtr);
 
       if (oz_isOptVar(term)) {
         doBind(termPtr, i);
@@ -2231,7 +2231,7 @@ Case(GETVOID)
   Case(INLINEDOT)
     {
       TaggedRef rec = XPC(1);
-      DEREF(rec,_1,_2);
+      DEREF(rec,_1);
       if (oz_isSRecord(rec)) {
 	SRecord *srec = tagged2SRecord(rec);
 	TaggedRef feature = getLiteralArg(PC+2);
@@ -2326,7 +2326,7 @@ Case(GETVOID)
       Assert(rec!=NULL);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
-	Assert(oz_isRef(*rec->getRef(index)) || !oz_isVariable(*rec->getRef(index)));
+	Assert(oz_isRef(*rec->getRef(index)) || !oz_isVar(*rec->getRef(index)));
 	rec->setArg(index,XPC(2));
 	DISPATCH(5);
       }
@@ -2348,24 +2348,24 @@ Case(GETVOID)
 
   Case(TESTLT)
     {
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef A = XPC(1); DEREF0(A,_1);
       
-      if (isSmallIntTag(tagA)) {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
-	if (isSmallIntTag(tagB)) {
+      if (oz_isSmallInt(A)) {
+	TaggedRef B = XPC(2); DEREF0(B,_2);
+	if (oz_isSmallInt(B)) {
 	  LT_IF(smallIntLess(A,B));
 	}
       }
 	
       if (oz_isFloat(A)) {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	TaggedRef B = XPC(2); DEREF0(B,_2);
 	if (oz_isFloat(B)) {
 	  LT_IF(floatValue(A) < floatValue(B));
 	}
       }
 	
       {
-	TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+	TaggedRef B = XPC(2); DEREF0(B,_2);
 	if (oz_isAtom(A) && oz_isAtom(B)) {
 	  LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
 		       tagged2Literal(B)->getPrintName()) < 0);
@@ -2401,24 +2401,20 @@ Case(GETVOID)
 
   Case(TESTLE)
     {
-      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
-      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+      TaggedRef A = XPC(1); DEREF0(A,_1);
+      TaggedRef B = XPC(2); DEREF0(B,_2);
       
-      if (tagA == tagB) {
-	if (isSmallIntTag(tagA)) {
-	  LT_IF(smallIntLE(A,B));
-	}
+      if (oz_isSmallInt(A) && oz_isSmallInt(B)) {
+	LT_IF(smallIntLE(A,B));
+      }
 	
-	if (oz_isFloat(A) && oz_isFloat(B)) {
-	  LT_IF(floatValue(A) <= floatValue(B));
-	}
+      if (oz_isFloat(A) && oz_isFloat(B)) {
+	LT_IF(floatValue(A) <= floatValue(B));
+      }
 	
-	if (isLiteralTag(tagA)) {
-	  if (oz_isAtom(A) && oz_isAtom(B)) {
-	    LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
-			 tagged2Literal(B)->getPrintName()) <= 0);
-	  }
-	}
+      if (oz_isAtom(A) && oz_isAtom(B)) {
+	LT_IF(strcmp(tagged2Literal(A)->getPrintName(),
+		     tagged2Literal(B)->getPrintName()) <= 0);
       }
       tmpRet = BILessOrLessEq(NO,XPC(1),XPC(2));
       auxString = "=<";
@@ -2494,8 +2490,8 @@ Case(GETVOID)
       int lbl = getLabelArg(PC+1);
       TaggedRef aux      = XPC(2);
   
-      DEREF(aux,auxPtr,_1);
-      if (oz_isVariable(aux)) {
+      DEREF(aux,auxPtr);
+      if (oz_isVar(aux)) {
 	SUSP_PC(auxPtr,PC);
       }
   
@@ -2682,7 +2678,7 @@ Case(GETVOID)
     TaggedRef object   = origObj;
     SRecordArity arity = (SRecordArity) getAdressArg(PC+3);
 
-    DEREF(object,objectPtr,_2);
+    DEREF(object,objectPtr);
     if (oz_isObject(object)) {
       Object *obj      = tagged2Object(object);
       Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4));
@@ -2696,7 +2692,7 @@ Case(GETVOID)
       JUMPABSOLUTE(def->getPC());
     }
 
-    if (oz_isVariable(object)) {
+    if (oz_isVar(object)) {
       SUSP_PC(objectPtr,PC);
     }
 
@@ -2736,7 +2732,7 @@ Case(GETVOID)
        TaggedRef taggedPredicate = auxTaggedA;
        predArity = getPosIntArg(PC+2);
 
-       DEREF(taggedPredicate,predPtr,_1);
+       DEREF(taggedPredicate,predPtr);
 
        if (oz_isAbstraction(taggedPredicate)) {
          Abstraction *def = tagged2Abstraction(taggedPredicate);
@@ -2748,7 +2744,7 @@ Case(GETVOID)
        }
 
        if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
-	 if (oz_isVariable(taggedPredicate)) {
+	 if (oz_isVar(taggedPredicate)) {
 	   SUSP_PC(predPtr,PC);
 	 }
 	 RAISE_APPLY(taggedPredicate,OZ_toList(predArity,XREGS));
@@ -2916,7 +2912,7 @@ Case(GETVOID)
     {
       TaggedRef taggedPredicate = auxTaggedA;
 
-      DEREF(taggedPredicate,predPtr,_1);
+      DEREF(taggedPredicate,predPtr);
 
       if (oz_isAbstraction(taggedPredicate)) {
 	Abstraction *def = tagged2Abstraction(taggedPredicate);
@@ -2928,7 +2924,7 @@ Case(GETVOID)
 	  JUMPABSOLUTE(pte->getPC());
 	} else {   // deconstruct and call
 	  TaggedRef taggedArgument = XREGS[0];
-	  DEREF(taggedArgument,argPtr,_2);
+	  DEREF(taggedArgument,argPtr);
 	  if (oz_isSTuple(taggedArgument)) {
 	    SRecord *srec = tagged2SRecord(taggedArgument);
 	    int callerArity = srec->getWidth();
@@ -2943,7 +2939,7 @@ Case(GETVOID)
 	      JUMPABSOLUTE(pte->getPC());
 	    }
 	  }
-	  if (oz_isVariable(taggedArgument)) {
+	  if (oz_isVar(taggedArgument)) {
 	    SUSP_PC(argPtr,PC);
 	  }
 	  RAISE_ARITY(taggedPredicate,OZ_toList(2,XREGS));
@@ -2951,7 +2947,7 @@ Case(GETVOID)
       }
 
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
-	if (oz_isVariable(taggedPredicate)) {
+	if (oz_isVar(taggedPredicate)) {
 	  SUSP_PC(predPtr,PC);
 	}
 	RAISE_APPLY(taggedPredicate,OZ_toList(2,XREGS));
@@ -2980,7 +2976,7 @@ Case(GETVOID)
       TaggedRef taggedPredicate = auxTaggedA;
       int callerArity = getPosIntArg(PC+2);
 
-      DEREF(taggedPredicate,predPtr,_1);
+      DEREF(taggedPredicate,predPtr);
 
       if (oz_isAbstraction(taggedPredicate)) {
 	Abstraction *def = tagged2Abstraction(taggedPredicate);
@@ -3010,7 +3006,7 @@ Case(GETVOID)
       }
 
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
-	if (oz_isVariable(taggedPredicate)) {
+	if (oz_isVar(taggedPredicate)) {
 	  SUSP_PC(predPtr,PC);
 	}
 	RAISE_APPLY(taggedPredicate,OZ_toList(callerArity,XREGS));
@@ -3051,9 +3047,9 @@ Case(GETVOID)
 
       predArity = args ? getRefsArraySize(args) : 0;
 
-      DEREF(taggedPredicate,predPtr,predTag);
+      DEREF(taggedPredicate,predPtr);
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
-	if (isVariableTag(predTag)) {
+	if (oz_isVar(taggedPredicate)) {
 	  CTS->pushCallNoCopy(makeTaggedRef(predPtr),args);
 	  tmpRet = oz_var_addSusp(predPtr,CTT);
 	  MAGIC_RET;
@@ -3163,8 +3159,8 @@ Case(GETVOID)
       TaggedRef pred = getTaggedArg(PC+1);
       int tailcallAndArity  = getPosIntArg(PC+2);
 
-      DEREF(pred,predPtr,_1);
-      if (oz_isVariable(pred)) {
+      DEREF(pred,predPtr);
+      if (oz_isVar(pred)) {
 	SUSP_PC(predPtr,PC);
       }
 
@@ -3194,8 +3190,8 @@ Case(GETVOID)
       Bool tailCall = tailcallAndArity & 1;
       int arity     = tailcallAndArity >> 1;
 
-      DEREF(pred,predPtr,_1);
-      if (oz_isVariable(pred)) {
+      DEREF(pred,predPtr);
+      if (oz_isVar(pred)) {
 	SUSP_PC(predPtr,PC);
       }
 
@@ -3216,8 +3212,8 @@ Case(GETVOID)
     {
       CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
       TaggedRef cls = CAP->getG(cmi->regIndex);
-      DEREF(cls,clsPtr,_1);
-      if (oz_isVariable(cls)) {
+      DEREF(cls,clsPtr);
+      if (oz_isVar(cls)) {
 	SUSP_PC(clsPtr,PC);
       }
 
@@ -3650,7 +3646,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
 	TaggedRef label = getLiteralArg(PC+1);
 	SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
 	TaggedRef term  = GETTMPA();
-	DEREF(term,termPtr,tag);
+	DEREF(term,termPtr);
 	
 	Assert(oz_isOptVar(term));
 	int numArgs = getWidth(ff);
@@ -3670,7 +3666,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
     {
       TaggedRef i = getNumberArg(PC+1);
       TaggedRef term = GETTMPA();
-      DEREF(term,termPtr,tag);
+      DEREF(term,termPtr);
       Assert(oz_isOptVar(term));
       doBind(termPtr, i);
       DISPATCH(3,-1);
@@ -3680,7 +3676,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
     case GETLISTVALVARX:
       {
 	TaggedRef term = XPC(1);
-	DEREF(term,termPtr,tag);
+	DEREF(term,termPtr);
 	
 	Assert(oz_isOptVar(term));
 	LTuple *ltuple = new LTuple();
@@ -3697,7 +3693,7 @@ void buildRecord(ProgramCounter PC, RefsArray Y, Abstraction *CAP) {
     getList:
       {
 	TaggedRef aux = GETTMPA();
-	DEREF(aux,auxPtr,tag);
+	DEREF(aux,auxPtr);
 	
 	Assert(oz_isOptVar(aux));
 	LTuple *ltuple = new LTuple();

@@ -174,7 +174,7 @@ void Trail::popMark(void) {
 
 inline
 void unBind(TaggedRef *p, TaggedRef t) {
-  Assert(oz_isVariable(t));
+  Assert(oz_isVar(t));
   *p = t;
 }
 
@@ -200,15 +200,15 @@ TaggedRef Trail::unwind(Board * b) {
 	TaggedRef * refPtr, value;
 	
 	popBind(refPtr, value);
-	Assert(oz_isRef(*refPtr) || !oz_isVariable(*refPtr));
-	Assert(oz_isVariable(value));
+	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
+	Assert(oz_isVar(value));
 	
 	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 	
 	TaggedRef vv= *refPtr;
-	DEREF(vv,vvPtr,_vvTag);
+	DEREF(vv,vvPtr);
 
-	if (hasNoRunnable && oz_isVariable(vv) && !oz_var_hasSuspAt(vv,b)) {
+	if (hasNoRunnable && oz_isVar(vv) && !oz_var_hasSuspAt(vv,b)) {
 	  AssureThread;
 	  oz_var_addSusp(vvPtr,t);
 	}
@@ -320,14 +320,14 @@ void Trail::unwindEqEq(void) {
       TaggedRef value;
       popBind(refPtr,value);
 
-      Assert(oz_isVariable(value));
+      Assert(oz_isVar(value));
 
       TaggedRef oldVal = makeTaggedRef(refPtr);
-      DEREF(oldVal,ptrOldVal,_1);
+      DEREF(oldVal,ptrOldVal);
 
       unBind(refPtr,value);
 
-      if (oz_isVariable(oldVal))
+      if (oz_isVar(oldVal))
 	am.addSuspendVarList(ptrOldVal);
 
       am.addSuspendVarList(refPtr);

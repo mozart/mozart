@@ -100,13 +100,9 @@ extern size_t _oz_alover;
 
 void _oz_getNewHeapChunk(const size_t);
 
-#ifdef DEBUG_CHECK
-#define CHECK_ALIGNMENT(p) Assert(!(ToInt32(p) & (OZ_HEAPALIGNMENT - 1)));
-#define CHECK_DOUBLEALIGNMENT(p) Assert(!(ToInt32(p) & (2*OZ_HEAPALIGNMENT - 1)));
-#else
-#define CHECK_ALIGNMENT(p)
-#define CHECK_DOUBLEALIGNMENT(p)
-#endif
+#define oz_isHeapAligned(p)       (!(ToInt32(p) & (OZ_HEAPALIGNMENT - 1)))
+#define oz_isDoubleHeapAligned(p) (!(ToInt32(p) & (2*OZ_HEAPALIGNMENT - 1)))
+
 
 /*
  * Sum up to next multiple of OZ_HEAPALIGNMENT
@@ -123,7 +119,7 @@ void * oz_heapMalloc(const size_t sz) {
    *
    */
 
-  CHECK_ALIGNMENT(_oz_heap_cur);
+  Assert(oz_isHeapAligned(_oz_heap_cur));
 
  retry:
 
@@ -138,7 +134,7 @@ void * oz_heapMalloc(const size_t sz) {
 
     _oz_heap_cur -= a_sz;
 
-    CHECK_ALIGNMENT(_oz_heap_cur);
+    Assert(oz_isHeapAligned(_oz_heap_cur));
 
     /* _oz_heap_cur might be negative!! */
     if (((long) _oz_heap_end) > ((long) _oz_heap_cur)) {

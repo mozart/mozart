@@ -81,14 +81,12 @@ void OzFDVariable::installPropagators(OzFDVariable * glob_var)
 inline
 Bool isGenFDVar(TaggedRef term)
 {
-  GCDEBUG(term);
   return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FD);
 }
 
 inline
 OzFDVariable * tagged2GenFDVar(TaggedRef term)
 {
-  GCDEBUG(term);
   return (OzFDVariable *) tagged2Var(term);
 }
 

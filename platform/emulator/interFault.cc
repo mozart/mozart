@@ -209,7 +209,7 @@ OZ_BI_define(BIinterDistHandlerInstall,2,1){
     if(tagged2Abstraction(proc)->getArity()!=2) 
       return IncorrectFaultSpecification;}
   Assert(entity!=0);
-  if(!oz_isVariable(oz_deref(entity))){
+  if(!oz_isVar(oz_deref(entity))){
     if(!isWatcherEligible(oz_deref(entity))){
       OZ_RETURN(oz_bool(TRUE));}}
   if(perdioInitialized){
@@ -241,7 +241,7 @@ OZ_BI_define(BIinterDistHandlerDeInstall,2,0){
   if(ret!=PROCEED) return ret;
   if(kind & WATCHER_SITE_BASED) return IncorrectFaultSpecification;
   Assert(entity!=0);
-  if(!oz_isVariable(oz_deref(entity))){
+  if(!oz_isVar(oz_deref(entity))){
     if(!isWatcherEligible(oz_deref(entity))){
       OZ_RETURN(oz_bool(TRUE));}}
   if(perdioInitialized){
