@@ -730,8 +730,8 @@ fixedListArgs   : thisCoord phrase
 
 optCatch        : /* empty */
                   { $$ = newCTerm("fNoCatch"); }
-                | catch caseClauseList
-                  { $$ = $2; }
+                | catch coord caseClauseList
+                  { $$ = newCTerm("fCatch",$3,$2); }
                 ;
 
 optFinally      : /* empty */
