@@ -33,7 +33,7 @@ OZ_CFun IncludeRPropagator::header = fsp_includeR;
 
 OZ_Return IncludeRPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
   
   OZ_FDIntVar r(_r);
 
