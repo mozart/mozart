@@ -685,8 +685,8 @@ OZ_expectRecType(ARG,"VirtualString",OZ_isVirtualString);
 OZ_expectRecType(ARG,MSG,COERCE);               \
 TYPE VAR = COERCE(OZ_in(ARG));
 
-inline char* oz_str2c(OZ_Term t) { return OZ_stringToC(t,0); }
-inline char* oz_vs2c(OZ_Term t) { return OZ_vsToC(t,0); }
+#define oz_str2c(t) OZ_stringToC(t,0)
+#define oz_vs2c(t) OZ_vsToC(t,0)
 
 #define OZ_declareString(ARG,VAR)               \
 OZ_declareRecType(ARG,VAR,char*,"String",       \
