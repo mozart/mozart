@@ -8,11 +8,11 @@ BUILDTOP        = @BUILDTOP@
 SRCTOP          = @SRCTOP@
 
 RM              = @RM@ -f
-DYNLD           = @DYNLD@
 
-CC              = @CC@
+OZTOOL          = @OZTOOL@
+CC              = $(OZTOOL) cc
+DYNLD           = $(OZTOOL) ld
 CFLAGS          = @CFLAGS@
-CDYNOPT         = @CDYNOPT@
 INCLUDES        = -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
