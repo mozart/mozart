@@ -356,48 +356,43 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
 
   if (hasEqualVars()) return PC.fail();  
 
-  // here starts code from DISTINCT
-
-#ifdef DISTINCT
-  OZ_FiniteDomain u(fd_empty);   
-
-  for  (int i1 = size; i1--; )
-    if (*reg[i1] == fd_singl) {
-      int s = reg[i1]->getSingleElem();
-      if (u.isIn(s)) {
-	//goto failure;
-        return PC.fail();
-      } else {
-	u += s;
+  {
+    OZ_FiniteDomain u(fd_empty);
+    //
+    for  (int i1 = size; i1--; )
+      if (*reg[i1] == fd_singl) {
+	int s = reg[i1]->getSingleElem();
+	if (u.isIn(s)) {
+	  return PC.fail();
+	} else {
+	  u += s;
+	}
       }
-    }
-
- loop:
-  for (int i2 = size; i2--; ) {
-    if (*reg[i2] != fd_singl) {
-      //FailOnEmpty(*reg[i2] -= u);
-      if ((*reg[i2] -= u) == 0) return PC.fail();
-      if (*reg[i2] == fd_singl) {
-	u += reg[i2]->getSingleElem();
-	goto loop;
+    //
+  loop:
+    for (int i2 = size; i2--; ) {
+      if (*reg[i2] != fd_singl) {
+	printf("reg[%d]=%s ", i2, reg[i2]->toString());
+	printf("u=%s ", u.toString());
+	if ((*reg[i2] -= u) == 0) return PC.fail();
+	printf("afterwards reg[%d]=%s\n", i2, reg[i2]->toString());
+	if (*reg[i2] == fd_singl) {
+	  u += reg[i2]->getSingleElem();
+	  goto loop;
+	}
       }
     }
   }
-
+  //
   int from, to;
   for (from = 0, to = 0; from < size; from += 1) {
     if (*reg[from] != fd_singl) {
       reg_l[to++] = reg_l[from];
     }
   }
-  size = to;
-
-  // here ends code from DISTINCT
-
-#endif
-
+  //
   // now do the "complete thing" iff there still are variables left.
-
+  //
   if (size) {
     list<node> A;
     list<node> B;
@@ -425,8 +420,7 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
   
       DEBUG(("%s\n", toString()));
 
-      PC.leave();
-      return SLEEP;
+      return PC.leave();
     }
     
     matching = g.MAX_CARD_BIPARTITE_MATCHING(A, B);
@@ -478,6 +472,9 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
   DEBUG(("%s\n", toString()));
   retval = (isFailed)? PC.fail() : PC.leave();  
   
+  // finish above compression
+  size = to;
+  //
   return retval;
 }
 
