@@ -227,7 +227,6 @@ class TclSession {
   TaggedRef tcl_rets;
   TaggedRef tcl_dict;
 
-  int top_ctr;
   int widget_ctr;
   int tag_ctr;
   int var_ctr;
@@ -257,7 +256,7 @@ public:
   TaggedRef genTopName() {
     SRecord * s = SRecord::newSRecord(AtomPair,2);
     s->setArg(0,AtomDot);
-    s->setArg(1,makeInt(top_ctr++));
+    s->setArg(1,makeInt(widget_ctr++));
     return makeTaggedSRecord(s);
   }
 
@@ -292,7 +291,6 @@ public:
 
   
   TclSession(int fd, TaggedRef d, TaggedRef r) {
-    top_ctr    = 0;
     widget_ctr = 0;
     tag_ctr    = 0;
     var_ctr    = 0;
@@ -1568,6 +1566,44 @@ OZ_C_proc_begin(BItclClose,3) {
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BItclCloseWeb,2) {  
+  GET_TCL_SESSION;
+  CHECK_TOPLEVEL;
+
+  // Perform closing of objects
+  TaggedRef to = OZ_args[1];
+  DEREF(to, to_ptr, to_tag);
+      
+  Assert(isObject(to));
+
+  Object  * o = tagged2Object(to);
+  TaggedRef v = o->getFeature(NameTclName);
+  TaggedRef slave_entry;    
+	
+  if (v == makeTaggedNULL()) {
+    return raise_type_error(to);
+  }
+	
+  {
+    DEREF(v, v_ptr, v_tag);
+    
+    if (isAnyVar(v_tag)) {
+      am.addSuspendVarList(v_ptr);
+      return SUSPEND;
+    } else if (isLiteral(v_tag) && literalEq(v,NameTclClosed)) {
+      return PROCEED;
+    }
+	
+    ts->close_hierarchy(o);
+
+    OZ_args[1] = NameTclClosed;
+
+    return PROCEED;
+  }
+}
+OZ_C_proc_end
+
+
 // ---------------------------------------------------------------------
 // Counters
 // ---------------------------------------------------------------------
@@ -1622,6 +1658,7 @@ BIspec tclTkSpec[] = {
   {"tclWriteFilter",     6, BItclWriteFilter,     0},
 
   {"tclClose",           3, BItclClose,           0},
+  {"tclCloseWeb",        2, BItclCloseWeb,        0},
 
 
   {"addFastGroup",        3, BIaddFastGroup,	   0},
