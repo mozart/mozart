@@ -259,15 +259,15 @@ win32-i486: $(PACKDIR) $(PACKDIR)/mozart
 files.base:
 	(cd $(PREFIX); \
          find . \( -type f -or -type l \) -and \( \
-		-not -path './platform/*' -and \
-		-not -path './contrib/*' -and  \
-		-not -path './doc/*' -and  \
-		-not -path './examples/*' -and  \
-		-not -path './share/gump/examples/*' -and  \
-		-not -path './share/doc/*' -and  \
-		-not -path './bin/ozdoc' -and \
-		-not -path './bin/convertTextPickle' -and \
-		-not -name '*.so-*' \
+		! -path './platform/*' -and \
+		! -path './contrib/*' -and  \
+		! -path './doc/*' -and  \
+		! -path './examples/*' -and  \
+		! -path './share/gump/examples/*' -and  \
+		! -path './share/doc/*' -and  \
+		! -path './bin/ozdoc' -and \
+		! -path './bin/convertTextPickle' -and \
+		! -name '*.so-*' \
 	\) ) > $@
 
 files.base-%:
@@ -280,7 +280,7 @@ files.base-%:
 files.contrib:
 	(cd $(PREFIX); \
 	 find . \( -type f -or -type l \) -and \( \
-		\( -path './contrib/*' -and -not -name '*.so-*' \) -or \
+		\( -path './contrib/*' -and ! -name '*.so-*' \) -or \
 		-path './bin/ozdoc' -or \
 		-path './bin/convertTextPickle' -or \
 		-path './share/doc/*' \
