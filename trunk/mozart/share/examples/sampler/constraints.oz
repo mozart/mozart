@@ -1,4 +1,30 @@
 %%%
+%%% Authors:
+%%%   Tobias Müller <tmueller@ps.uni-sb.de>
+%%%   Christian Schulte <schulte@ps.uni-sb.de>
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Tobias Müller, 1998
+%%%   Christian Schulte, 1998
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+%%%
 %%% Constraints & propagators
 %%%
 
@@ -266,12 +292,6 @@ end
 		    O.pe >: N.pe
 		 end)}
 
-%% Use Gantt chart to visualize
-\insert constraints/gantt.oz
-
-{Explorer.object add(information {DrawGantt Bridge}
-		     label: 'Draw Gantt Bridge')}
-
 
 
 
@@ -292,43 +312,11 @@ end
 %%%
 %%% Production scheduling
 %%%
-\insert constraints/machines.oz
+\insert constraints/abz6.oz
 
-{Explorer.object add(information {DrawGantt Machines}
-		     label: 'Draw Gantt Machines')}
-
-{ExploreBest {Compile Machines} proc {$ O N}
-				   O.pe >: N.pe
-				end}
-
-
-
-
-
-
-
-
-
-
-
-
-%%%
-%%% Use scheduling propagators
-%%%
-
-{ExploreBest {SmartCompile Bridge}
-              proc {$ O N}
-		 O.pe >: N.pe
-	      end}
-
-{ExploreBest {SmartCompile Machines}
-              proc {$ O N}
-		 O.pe >: N.pe
-	      end}
-
-
-
-
+{ExploreBest {Compile ABZ6} proc {$ O N}
+			       O.pe >: N.pe
+			    end}
 
 
 
@@ -435,4 +423,22 @@ Crew = crew(stewards:
 
 
 {ExploreOne {CrewProb Flights Crew}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
