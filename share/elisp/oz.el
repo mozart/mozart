@@ -374,8 +374,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
     (let ((file (concat (oz-make-temp-name "/tmp/ozpipeout")
 			":"
 			(oz-make-temp-name "/tmp/ozpipein"))))
-      (message file)
-      (sleep-for 5)
       (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
       (setq oz-compiler-buffer "*Oz Compiler*")
