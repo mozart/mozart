@@ -1087,7 +1087,8 @@ public:
     Assert(t >= 0 && t <=3)
     tagged = (ToInt32(p)<<2) || t;
   }
-  TaggedPtr()         { tagged = 0; }
+  void init()         { tagged = 0; }
+  TaggedPtr()         { init(); }
   int *getRef()       { return &tagged; }
   int getType()       { return (tagged&3); }
   void setType(int t) { Assert(t >=0 && t <=3); tagged = (tagged&~3)|t; }
