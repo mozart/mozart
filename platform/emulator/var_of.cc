@@ -310,10 +310,17 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   Bool vLoc = oz_isLocalVar(this);
   Bool tLoc = oz_isLocalVar(termVar);
   //
-  OzOFVariable * newVar   = NULL;
-  OzOFVariable * otherVar = NULL;
-  TaggedRef * nvRefPtr    = NULL;
-  TaggedRef * otherPtr    = NULL;
+  // kost@ : as far as i can comprehend this piece of code, 'newVar'
+  // has two usages: (a) in the "both local" case it references the
+  // remaining variable, and (b) in all the cases the "new" var acts
+  // as a "template" for the new feature table: first, "new" var's
+  // table is copied and then extended with the "other" var's one.
+  // Positively speaking, the word "new" is somewhat misleading here..
+  OzOFVariable *newVar;                 DebugCode(newVar = NULL;);
+  OzOFVariable *otherVar;               DebugCode(otherVar = NULL;);
+  TaggedRef *nvRefPtr;                  DebugCode(nvRefPtr = NULL;);
+  TaggedRef *otherPtr;                  DebugCode(otherPtr = NULL;);
+  //
   long varWidth           = getWidth();
   long termWidth          = termVar->getWidth();
   DynamicTable * dt       = NULL;
@@ -339,13 +346,13 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
     // Reuse the var:
     newVar   = this;
     dt       = newVar->getTable();
-    nvRefPtr = vPtr;
+    // no need to set 'nvRefPtr';
     otherVar = termVar;
   } else if (!vLoc && tLoc) {
     // Reuse the term:
     newVar   = termVar;
     dt       = newVar->getTable();
-    nvRefPtr = tPtr;
+    // no need to set 'nvRefPtr';
     otherVar = this;
   } else if (!vLoc && !tLoc) {
     // Reuse the largest table (this improves unification speed):
@@ -354,18 +361,17 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
       // Make a local copy of the var's DynamicTable:
       newVar   = this;
       dt       = newVar->getTable()->copyDynamicTable();
-      nvRefPtr = newTaggedVar(newVar);
+      // no need to set 'nvRefPtr';
       otherVar = termVar; // otherVar must be smallest
     } else {
       DEBUG_CONSTRAIN_VAR(("! (varWidth > termWidth)\n"));
       // Same as above, but in opposite order:
       newVar   = termVar;
       dt       = newVar->getTable()->copyDynamicTable();
-      nvRefPtr = newTaggedVar(newVar);
+      // no need to set 'nvRefPtr';
       otherVar = this; // otherVar must be smallest
     }
   } else Assert(FALSE);
-  Assert(nvRefPtr != NULL);
   Assert(newVar != NULL);
   Assert(otherVar != NULL);
   Assert(dt != NULL);
@@ -389,7 +395,10 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   PairList * pairs;
   otherVar->dynamictable->merge(dt, pairs);
   long mergeWidth = dt->numelem;
-  newVar->dynamictable = dt;
+  // kost@ : do *not* f$ck up with the newVar's feature table here:
+  //         (a) newVar can be global,
+  //         (b) newVar can be bound (in a "something is non-local" case);
+  // newVar->dynamictable = dt;
 
   // Take care of OFS suspensions, part 2/2 (after merging tables):
   if (vOk && (vList != AtomNil /*mergeWidth>termWidth*/)) {
@@ -409,6 +418,8 @@ OZ_Return OzOFVariable::unify(TaggedRef *vPtr, TaggedRef *tPtr)
   if (vLoc && tLoc) {
     DEBUG_CONSTRAIN_VAR(("vLoc && tLoc\n"));
     Assert(otherPtr);
+    Assert(nvRefPtr);
+    newVar->dynamictable = dt;
     // bind to var without trailing:
     bindLocalVar(otherPtr, nvRefPtr);
   } else if (vLoc && !tLoc) {
