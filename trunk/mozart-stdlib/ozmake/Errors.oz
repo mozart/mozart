@@ -22,7 +22,7 @@ prepare
       [] ozmake(get_package) then
 	 error(kind : TITLE
 	       msg  : 'no package file'
-	       items: 'use -p FILE or --package=FILE in your command')
+	       items: [line('use -p FILE or --package=FILE in your command')])
       [] ozmake(create:hasscheme(PKG S)) then
 	 error(kind : TITLE_CREATE
 	       msg  : 'package to be created should be a filename not a URL'
