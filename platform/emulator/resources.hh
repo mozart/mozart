@@ -200,6 +200,10 @@
 #define RECINSTRFETCH 500
 
 #define DEBUG_FD
+//#define DEBUG_FD_CONSTRREP
+#define DEBUG_FSET
+//#define DEBUG_FSET_CONSTRREP
+
 //#define DEBUG_FDCD
 
 #define DEBUG_DET       // use counter instead of alarm timer for scheduling
@@ -213,7 +217,6 @@
 //#define DEBUG_STACK
 //#define DEBUG_STABLE
 //#define DEBUG_THREADS
-//#define DEBUG_FSET
 //#define DEBUG_NONMONOTONIC
 //#define DEBUG_LTQ
 //#define DEBUG_INDICES

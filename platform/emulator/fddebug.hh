@@ -28,15 +28,17 @@
 #define __FDDEBUG_HH__
 
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+extern ostream * cpi_cout;
+
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD_CONSTRREP)
 
 extern "C" {
 void error( const char *format ...);
 }
 
-extern ostream * cpi_cout;
 
 #  define DEBUG_FD_IR(COND, CODE) if (COND) { *cpi_cout << CODE << flush;}
+
 
 #  define AssertFD(C) \
 if (!(C)) error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
@@ -45,13 +47,28 @@ if (!(C)) error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__);
 
 #else
 
+
 #  define DEBUG_FD_IR(COND, CODE)
+
 #  define AssertFD(C)
 #  define DebugCodeFD(C)
 
 #endif
 
 
-#  define FORCE_ALL 0
+#ifdef DEBUG_FSET_CONSTRREP
+
+#define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
+#define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE)
+#define FSDEBUG(X) { X; }
+
+#else
+
+#define _DEBUG_FSETIR(CODE)
+#define DEBUG_FSETIR(CODE)
+#define FSDEBUG(X)
+
+#endif /* DEBUG_FSET */
+
 
 #endif

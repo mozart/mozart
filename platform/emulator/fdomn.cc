@@ -37,21 +37,6 @@
 #define inline
 #endif
 
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-
-extern ozostream *cpi_cout;
-
-#  define DEBUG_FD_IR(COND, CODE) if (COND) { *cpi_cout << CODE << flush;}
-
-#else
-
-#  define DEBUG_FD_IR(COND, CODE)
-
-#endif
-
-
-#  define FORCE_ALL 0
-
 //-----------------------------------------------------------------------------
 // Miscellaneous --------------------------------------------------------------
 

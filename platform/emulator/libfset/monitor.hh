@@ -43,6 +43,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean) {
     OZ_updateHeapTerm(_stream);
     OZ_updateHeapTerm(_fsetvar);
+    _present_sofar.copyExtension();
   }
 
   virtual OZ_Return propagate(OZ_Boolean is_inprop);

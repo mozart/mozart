@@ -61,6 +61,7 @@ public:
   void printDebug(void) {print(cerr,10,0); cerr << endl; cerr.flush();}
 
   FSetValue * gc(void);
+  void copyExtension(void);
 
   OZ_Boolean unify(OZ_Term t);
   Bool operator == (const FSetValue&) const;
@@ -134,7 +135,7 @@ public:
   void init(const FSetConstraint &);
   void init(OZ_FSetState);
 
-  FSetConstraint *gc(void);
+  FSetConstraint * gc(void);
   void copyExtensions(void);
 
   FSetConstraint unify(const FSetConstraint &) const;

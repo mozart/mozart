@@ -24,16 +24,6 @@
  *
  */
 
-// debug defs
-
-//#define DEBUG
-
-#ifdef DEBUG
-#define FSDEBUG(X) { X; }
-#else
-#define FSDEBUG(X)
-#endif
-
 
 #if defined(INTERFACE)
 #pragma implementation "fset.hh"
@@ -48,19 +38,7 @@
 #include "fdomn.hh"
 
 //*****************************************************************************
-//#define DEBUG_FSET
-#ifdef DEBUG_FSET
 
-
-#define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
-#define DEBUG_FSETIR(CODE) /* _DEBUG_FSETIR(CODE) */
-
-#else
-
-#define _DEBUG_FSETIR(CODE)
-#define DEBUG_FSETIR(CODE)
-
-#endif /* DEBUG_FSET */
 
 #ifdef OUTLINE
 #define inline
@@ -366,6 +344,16 @@ void set_Auxout(const int *bv, bool other) {
 // FSETVALUE
 
 inline
+void FSetValue::copyExtension() {
+#ifdef BIGFSET
+  if (!_normal) {
+    _IN.copyExtension();
+  }
+#endif
+}
+
+
+inline
 void FSetValue::DP(const char *s = NULL) const {
   // this one is ONLY inserted when debug is on.
   printf("fsc (");
@@ -390,6 +378,7 @@ void FSetValue::DP(const char *s = NULL) const {
   set_Auxin(_in, 0);
   printf("s) in: %s#%d\n", _Auxin.toString(), _card);
 #endif
+  fflush(stdout);
 }
 
 inline
@@ -955,7 +944,9 @@ FSetValue FSetValue::operator - (const FSetValue &y) const
     z.maybeToNormal();
   }
   else if (_normal) { // !y._normal
-    z._normal = false;
+    Assert(!y._normal);
+
+    z._normal = true;
     for(int i = fset_high; i--; )
       z._in[i] = _in[i];
     z.toExtended();
@@ -964,7 +955,9 @@ FSetValue FSetValue::operator - (const FSetValue &y) const
     z.maybeToNormal();
   }
   else { // !_normal && y._normal
-    z._normal = false;
+    Assert(!_normal && y._normal);
+
+    z._normal = true;
     for (int i = fset_high; i--; )
       z._in[i] = ~y._in[i]; // !
     z.toExtended();
@@ -3428,6 +3421,10 @@ void * OZ_FSetValue::operator new(size_t s)
 void OZ_FSetValue::operator delete(void *, size_t)
 {
   OZ_error("deleting heap mem");
+}
+
+void OZ_FSetValue::copyExtension() {
+  CASTTHIS->copyExtension();
 }
 
 //-----------------------------------------------------------------------------
