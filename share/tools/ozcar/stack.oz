@@ -65,7 +65,7 @@ in
       end
 
       meth GetStack($)
-	 {Dbg.taskstack self.T MaxStackSize}
+	 {Reverse {Dbg.taskstack self.T MaxStackSize}}
       end
       
       meth Reset
