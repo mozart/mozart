@@ -25,22 +25,18 @@
 %%%
 
 functor
-
 import
+   BootObject at 'x-oz://boot/Object'
    Property(get)
    System(printInfo)
    Compiler(engine interface)
-   TkTools(dialog:Dialog textframe:Textframe)
    Tk
-
-prepare
-   NoArg = {NewName}
-   
+   TkTools
 export
    dialog: EvalDialog
-   
+prepare
+   NoArg = {NewName}
 define
-   
    DefaultForeground
    DefaultBackground
    BlockedThreadColor
@@ -65,8 +61,8 @@ define
    end
 
    SlashList = '/'|'-'|'\\'|'|'|SlashList
-   
-   class EvalDialog from Dialog
+
+   class EvalDialog from TkTools.dialog
       prop locking
       feat Expr Result
       attr
@@ -85,18 +81,18 @@ define
 	 Self <- S
 	 SpinnerLock <- {NewLock}
 
-	 Dialog, tkInit(title: Title
-			master: Master
-			root: Root
-			buttons: ('Eval'#(self#Eval())|
-				  'Exec'#(self#Exec())|
-				  'Reset'#(self#Reset())|
-				  'Done'#(self#Close())|Buttons)
-			focus: Focus
-			pack: false)
-	 Frame = {New Textframe tkInit(parent: self
-				       text: ('Eval Expression' #
-					      ' / Exec Statement'))}
+	 TkTools.dialog, tkInit(title: Title
+				master: Master
+				root: Root
+				buttons: ('Eval'#(self#Eval())|
+					  'Exec'#(self#Exec())|
+					  'Reset'#(self#Reset())|
+					  'Done'#(self#Close())|Buttons)
+				focus: Focus
+				pack: false)
+	 Frame = {New TkTools.textframe tkInit(parent: self
+					       text: ('Eval Expression' #
+						      ' / Exec Statement'))}
 	 ExprLabel = {New Tk.label tkInit(parent: Frame.inner
 					  anchor: w
 					  text: 'Query:')}
@@ -201,12 +197,15 @@ define
 	       case @Self of unit then
 		  {@CurComp
 		   enqueue(feedVirtualString(VS2 return(result: ?R)))}
-	       else
-		  {@CurComp enqueue(mergeEnv(env('`self`': @Self)))}
+	       elseof S then DoWithSelf in
+		  fun {DoWithSelf C}
+		     {BootObject.send eval($) C S}
+		  end
+		  {@CurComp enqueue(mergeEnv(env('`doWithSelf`': DoWithSelf)))}
 		  {@CurComp
-		   enqueue(feedVirtualString('{Object.send eval($) '#
+		   enqueue(feedVirtualString('{`doWithSelf` '#
 					     'class meth eval($)\n'#
-					     VS2#'\nend end `self`}'
+					     VS2#'\nend end}'
 					     return(result: ?R)))}
 	       end
 	       {@CurCompUI sync()}
