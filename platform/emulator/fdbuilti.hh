@@ -116,6 +116,7 @@ if (FORCE_ALL || COND) { \
   } \
 }
 
+// mm2 markDead ???
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
     OZ_getCArgDeref(0, x, xPtr, xTag); \
