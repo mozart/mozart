@@ -80,17 +80,15 @@ other fields contain the object features</NOTE>.
 <CAPTION>Object Construction</CAPTION>
 <<<
 proc {NewObject Class InitialMethod ?Object}
-   local
-      State O
-   in
-      State = {MakeRecord s Class.attrs}
-      {Record.forAll State proc {$ A} {NewCell _ A} end}
-      proc {O M}
-       {Class.methods.{Label M} M State O}
-      end
-      {O InitialMethod}
-      Object = O
+   State O
+in
+   State = {MakeRecord s Class.attrs}
+   {Record.forAll State proc {$ A} {NewCell _ A} end}
+   proc {O M}
+      {Class.methods.{Label M} M State O}
    end
+   {O InitialMethod}
+   Object = O
 end
 >>>
 </FIGURE>
@@ -113,7 +111,7 @@ application
 
 <<<{C inc(X)}>>>
 
-<P>suspends inside the procedure <<INC/3>> that implements method
+<P>suspends inside the procedure <<Inc/3>> that implements method
 <<inc>>. Do you know where exactly? If you on the other hand execute
 the following statement, things will work as expected.
 
@@ -189,22 +187,27 @@ the following form:
 <P>A method call invokes the method defined in the class argument. A
 method call can only be used inside method definitions. This is
 because a method call takes the current object denoted by <<self>> as
-implicit argument. The method could be defined the class or inherited
+implicit argument. The method could be defined the class <<C>> or inherited
 from a super class. Inheritance will be explained shortly.
 
 
 <SUBSECTION><TITLE/Classes as Modules/
 <P>Static method calls have in general the same efficiency as
-procedure calls. This allows classes to be used as modules. This is
+procedure calls. This allows classes to be used as module-specification. This
+may be
 advantageous because classes can be built incrementally by
 inheritance. The program shown in <PTR TO="listClass"> shows a
-possible class acting as a module. The class <<ListC>> defines some
+possible class acting as a module specification. The class <<ListC>> defines some
 common list-procedures as methods. <<ListC>> defines the methods
 <<append/3>>, <<member/2>>, <<length/2>>, and <<nrev/2>>. Notice that
 a method body is similar to any Oz statement but in addition, method
 calls are allowed. We also see the first example of inheritance.
 
 <<<class ListC from BaseObject>>>
+
+We also show functional methods, i.e. methods that return results similar
+to functions. A functional method has in general the following form:
+<<< meth m( ... $) S E end >>>
 
 <P>Here the class <<ListC>> inherits from the predefined class <<BaseObject>>
 that has only one trivial method: <<meth noop() skip end>>.
@@ -213,39 +216,37 @@ that has only one trivial method: <<meth noop() skip end>>.
 <CAPTION>List Class</CAPTION>
 <<<
 class ListC from BaseObject
-   meth append(Xs Ys ?Zs)
+   meth append(Xs Ys $)
       case Xs
-      of nil then Ys = Zs
-      [] X|Xr then Zr in
-       Zs = X|Zr
-       ListC , append(Xr Ys Zr)
+      of nil then Ys
+      [] X|Xr then
+         X|(ListC , append(Xr Ys $))
       end
    end
-   meth member(X L ?B)
-      {Member X L B}    % This defined in List.oz
+   meth member(X L $)
+      {Member X L}    % This defined in List.oz
    end
-   meth length(Xs ?N)
+   meth length(Xs $)
       case Xs
-      of nil then N = 0
-      [] _|Xr then N1 in
-       ListC , length(Xr N1)
-       N = N1+1
+      of nil then 0
+      [] _|Xr then
+        (ListC , length(Xr $)) + 1
       end
    end
    meth nrev(Xs ?Ys)
       case Xs
       of nil then Ys = nil
       [] X|Xr then Yr in
-       ListC , nrev(Xr Yr)
-       ListC , append(Yr [X] Ys)
+         ListC , nrev(Xr Yr)
+         ListC , append(Yr [X] Ys)
       end
    end
 end
 >>>
 </FIGURE>
 
-<P>To use a class as a module one need to create an object from it.
-This is done by:
+<P>To create a module from the module specification one needs to
+create an object from the class.  This is done by:
 
 <<<declare ListM = {New ListC noop}>>>
 
@@ -280,7 +281,7 @@ shortly</NOTE>, and methods are available in the new class. We will
 restrict our discussion of inheritance to methods. Nonetheless, the
 same rules apply to features and attributes.
 
-<P>The methods are available in a class ?{C} (i.e. visible) are
+<P>The methods available in a class ?{C} (i.e. visible) are
 defined through a precedence relation on the methods that appear in
 the class hierarchy. We call this relation the
 <EM>overriding relation</EM>:
@@ -289,10 +290,6 @@ the class hierarchy. We call this relation the
 
 <ITEM>A method in a class ?{C} overrides any method, with the same
 label, in any super class of ?{C}.
-
-<ITEM>A method defined in a class ?{B} declared in the
-from-declaration of ?{C} overrides any method, with the same label,
-defined in a class to the left of ?{B} in the <<from>> declaration.
 
 </LIST>
 
