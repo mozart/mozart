@@ -112,5 +112,21 @@ OrderedSuspList * OrderedSuspList::insert(Propagator * prop)
   return r;
 }
 
+inline
+OrderedSuspList * OrderedSuspList::merge(OrderedSuspList * osl) {
+  
+  if (this) {
+    OrderedSuspList * to = this;
+
+    for (; osl != NULL; osl = osl->getNext())
+      to = to->insert(osl->getPropagator()); 
+
+    return to;
+  } else {
+    return osl;
+  }
+  
+}
+
 #endif
 

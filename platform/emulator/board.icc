@@ -48,35 +48,10 @@ void Board::addSuspension(Suspension susp) {
 }
 
 inline
-void Board::mergeNonMono(Board *bb) {
-  // merge nonmonotonic susp lists
-  if (nonMonoSuspList) {
-    // Merge in current solve board but not elsewhere
-    if (!bb->isRoot()) {
-      // merge nonmonotonic susp list to another solve space
-
-      if (bb->nonMonoSuspList) {
-	bb->mergeNonMonoSuspListWith(nonMonoSuspList);
-	setNonMonoSuspList(NULL);
-      } else {
-	bb->setNonMonoSuspList(nonMonoSuspList);
-      }
-    } else {
-      // merge nonmonotinic susp list to a non-solve space
-      oz_solve_scheduleNonMonoSuspList(this);
-    }
-  }
+void Board::addToNonMono(Propagator * prop) {
+  setNonMono(getNonMono()->insert(prop));
 }
 
-inline
-int Board::commit(int left, int right) {
-  ozstat.incSolveAlt();
-
-  Assert(bag && bag->getDist()->isAlive());
-
-  return bag->getDist()->commit(this,left,right);
-  
-}
 
 inline
 void Board::patchChoiceResult(int i) {
