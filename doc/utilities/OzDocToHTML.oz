@@ -234,6 +234,7 @@ define
 	 MyIndexer: unit
 	 IdxNode: unit
 	 IndexSortAs: unit
+	 AutoIndex: unit
       meth init(Mode SGML Args)
 	 FontifyMode <- Mode
 	 StyleSheet <- {Property.get 'ozdoc.stylesheet'}
@@ -253,6 +254,7 @@ define
 	 ProgLang <- Fontifier.noProgLang
 	 Labels <- {NewDictionary}
 	 ToGenerate <- nil
+	 AutoIndex <- Args.'autoindex'
 	 OzDocToHTML, Process(SGML unit)
 	 OzDocToHTML, GenerateLabels()
 	 {ForAll {Dictionary.items @Labels}
@@ -758,8 +760,16 @@ define
 		       OzDocToHTML, Batch(M 1 $))
 	       [] meta then
 		  i(COMMON: @Common OzDocToHTML, Batch(M 1 $))
-	       [] env then
-		  code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+	       [] env then HTML in
+		  HTML = code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+		  if @AutoIndex then Kind HTML1 HTML2 in
+		     Kind = 'environment variable'
+		     OzDocToHTML, Index(M [PCDATA(Kind) HTML] ?HTML1)
+		     OzDocToHTML, Index(M [SEQ([HTML PCDATA(' '#Kind)])]
+					?HTML2)
+		     SEQ([HTML1 HTML2 HTML])
+		  else HTML
+		  end
 	       [] grammar then
 		  span(COMMON: @Common
 		       PCDATA('<')
@@ -847,47 +857,24 @@ define
 	    %-----------------------------------------------------------
 	    % Index
 	    %-----------------------------------------------------------
-	    [] index then Ands L in
+	    [] index then Ands in
 	       %--** scope?
 	       IndexSortAs <- {CondSelect M 'sort.as' unit}
 	       OzDocToHTML, BatchSub(M 1 ?Ands)
-	       case {CondSelect M id unit} of unit then
-		  ToGenerate <- L|@ToGenerate
-	       elseof X then HTML in
-		  L = X
-		  HTML = SEQ({List.foldRTail Ands
-			      fun {$ _#A|Ar In}
-				 A|case Ar of _|_ then PCDATA(', ')
-				   else EMPTY
-				   end|In
-			      end nil})
-		  OzDocToHTML, ID(L @IdxNode HTML)
-	       end
-	       case {CondSelect M see unit} of unit then
-		  {@MyIndexer enter(Ands a(href: @CurrentNode#"#"#L
-					   PCDATA('here')))}   %--**
-	       elseof X then Node HTML in
-		  OzDocToHTML, ID(X ?Node ?HTML)
-		  {@MyIndexer enter(Ands SEQ([PCDATA('see ')
-					      a(href: Node#"#"#X HTML)]))}
-	       end
-	       a(name: L)
-	    [] and then SortAs0 Item SortAs in
-	       %--** scope?
+	       OzDocToHTML, Index(M Ands $)
+	    [] and then SortAs Item in
 	       if {HasFeature M see} then
 		  {Exception.raiseError ozDoc(sgmlToHTML unsupportedSee M)}
 	       end
-	       SortAs0 = case {CondSelect M 'sort.as' unit}
-			 of unit then @IndexSortAs
-			 elseof X then X
-			 end
+	       SortAs = case {CondSelect M 'sort.as' unit}
+			of unit then @IndexSortAs
+			elseof X then X
+			end
 	       IndexSortAs <- unit
 	       OzDocToHTML, Batch(M 1 ?Item)
-	       SortAs = case SortAs0 of unit then
-			   {HTML.toVirtualString {HTML.clean Item}}
-			else SortAs0
-			end
-	       SortAs#Item
+	       case SortAs of unit then Item
+	       else SortAs#Item
+	       end
 	    [] see then
 	       {Exception.raiseError
 		ozDoc(sgmlToHTML unsupported M)} unit   %--**
@@ -1189,6 +1176,35 @@ define
 	 HTML = 'div'(COMMON: @Common 'class': [footnote]
 		      SEQ([a(name: Label PCDATA(N#'. '))
 			   OzDocToHTML, Batch(M.1 1 $)]))
+      end
+      meth Index(M Ands0 $) Ands L in
+	 Ands = {Map Ands0
+		 fun {$ X}
+		    case X of _#_ then X
+		    else {HTML.toVirtualString {HTML.clean X}}#X
+		    end
+		 end}
+	 case {CondSelect M id unit} of unit then
+	    ToGenerate <- L|@ToGenerate
+	 elseof X then HTML in
+	    L = X
+	    HTML = SEQ({List.foldRTail Ands
+			fun {$ _#A|Ar In}
+			   A|case Ar of _|_ then PCDATA(', ')
+			     else EMPTY
+			     end|In
+			end nil})
+	    OzDocToHTML, ID(L @IdxNode HTML)
+	 end
+	 case {CondSelect M see unit} of unit then
+	    {@MyIndexer enter(Ands a(href: @CurrentNode#"#"#L
+				     PCDATA('here')))}   %--**
+	 elseof X then Node HTML in
+	    OzDocToHTML, ID(X ?Node ?HTML)
+	    {@MyIndexer enter(Ands SEQ([PCDATA('see ')
+					a(href: Node#"#"#X HTML)]))}
+	 end
+	 a(name: L)
       end
       meth FormatAuthors($)
 	 case @Authors of nil then ""
