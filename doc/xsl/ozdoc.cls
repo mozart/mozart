@@ -712,6 +712,10 @@
      \hfill\hbox{}\begin{alltt}\mozart@code@font\mozart@specials@code@display}
   {\end{alltt}\end{list}}
 
+\newenvironment{CHUNKANON}[1]
+  {\begin{CODEDISPLAY}}
+  {\end{CODEDISPLAY}}
+
 \newcommand{\CHUNKREF}[1]{%
   \mbox{\normalfont\bf$\color{chunkborder}\langle$%
     \textcolor{chunkref}{#1}$\color{chunkborder}\rangle$}}
@@ -823,3 +827,22 @@
 
 \newcommand{\@OZDOCREFTOP}[1]{%
   {\normalfont\textsl{``#1''}}}
+
+%% table of contents should also use \mozart@section@font
+\let\latex@l@part               \l@part
+\let\latex@l@chapter            \l@chapter
+\let\latex@l@section            \l@section
+\let\latex@l@subsection         \l@subsection
+\let\latex@l@subsubsection      \l@subsubsection
+\let\latex@l@paragraph          \l@paragraph
+\let\latex@subparagraph         \l@subparagraph
+
+\newcommand{\mozart@toc@font}{\sffamily}
+
+\renewcommand*\l@part[1]{\latex@l@part{\mozart@toc@font#1}}
+\renewcommand*\l@chapter[1]{\latex@l@chapter{\mozart@toc@font#1}}
+\renewcommand*\l@section[1]{\latex@l@section{\mozart@toc@font#1}}
+\renewcommand*\l@subsection[1]{\latex@l@subsection{\mozart@toc@font#1}}
+\renewcommand*\l@subsubsection[1]{\latex@l@subsubsection{\mozart@toc@font#1}}
+\renewcommand*\l@paragraph[1]{\latex@l@paragraph{\mozart@toc@font#1}}
+\renewcommand*\l@subparagraph[1]{\latex@l@subparagraph{\mozart@toc@font#1}}
