@@ -49,6 +49,7 @@
 #include "var.hh"
 #include "var_obj.hh"
 #include "msgContainer.hh"
+#include "dpResource.hh"
 
 Twin *usedTwins;
 Watcher* globalWatcher;
@@ -268,6 +269,8 @@ PendThread* threadTrigger(Tertiary* t,Watcher* w){
     if(t->getTertType()==Te_Proxy) return NULL;
     pd=getPendThreadStartFromCellLock(t);
     break;
+  case Co_Resource:
+    return NULL;
   default:
     Assert(0);
     return NULL;
@@ -483,9 +486,28 @@ void portProxyProbeFault(Tertiary *t, int pr){
     Assert(0);
   }
 }
+void resourceProxyProbeFault(Tertiary *t, int pr){
+  switch(pr){
+  case PROBE_PERM:
+    if(addEntityCond(t,PERM_FAIL)) entityProblem(t);
+    break;
+  case PROBE_OK:
+    if(addEntityCond(t,TEMP_FAIL)) entityProblem(t);
+    break;
+  case PROBE_TEMP:
+    subEntityCond(t,TEMP_FAIL);
+    break;
+  default: 
+    Assert(0);
+  }
+}
+
+
 
 void proxyProbeFault(Tertiary *t, int pr) {
   PD((ERROR_DET,"proxy probe invoked %d",pr));
+  EntityInfo *ei = t->getInfo(); 
+  if (ei && (ei->getEntityCond() & (PERM_FAIL))) return;
   switch(t->getType()){
   case Co_Cell:
   case Co_Lock:
@@ -494,8 +516,10 @@ void proxyProbeFault(Tertiary *t, int pr) {
   case Co_Port:
     portProxyProbeFault(t,pr);
     return;   
-  case Co_Object:
   case Co_Resource:
+    resourceProxyProbeFault(t,pr);
+    return;
+  case Co_Object:
     return;
   default: Assert(0);
     return;}
@@ -788,6 +812,7 @@ EntityCond askPart(Tertiary* t, EntityCond ec){
   case Co_Lock:
   case Co_Cell:
     return ec & (PERM_SOME|TEMP_SOME|PERM_FAIL|TEMP_FAIL);
+  case Co_Resource:
   case Co_Port:
     break;
   default:
@@ -1410,5 +1435,40 @@ OZ_Return tertiaryFailHandle(Tertiary* c,TaggedRef proc,EntityCond ec,
   return BI_REPLACEBICALL;}
   
       
-  
-
+// CreateFailedEntity
+// When a reference is received refering to an entity that no
+// longer exists a dummy stub has to be created. A resource is 
+// inserted in the BorrowTable with the current site as the site. 
+//
+// 
+OZ_Term createFailedEntity(int OTI, Bool defer)
+{
+  OZ_Term oz; 
+  NetAddress na = NetAddress(myDSite,OTI); 
+  BorrowEntry *b = borrowTable->find(&na);
+  if (b!=NULL)
+    {
+      oz = b->getValue();
+    }
+  else
+    {
+      // Did not exists 
+      int bi=borrowTable->newBorrow(NULL,myDSite,OTI);
+      Tertiary *tert = new DistResource(bi);
+      borrowTable->getBorrow(bi)->changeToTertiary(tert);
+      
+      // The entity is now marked as perm_failed. 
+      // This could be done directly, but if the message is
+      // a result of an bind operation, the entity might have 
+      // some handed over watchers and these must be triggered. 
+      // On the otherhand, if it is known that this entity has 
+      // no references from language level it is safe to call 
+      // proxyProbeFualt emidiatly.
+      if(defer)
+	deferProxyTertProbeFault(tert,PROBE_PERM);
+      else
+	proxyProbeFault(tert,PROBE_PERM);
+      oz =  makeTaggedConst(tert);
+    }
+  return oz; 
+}
