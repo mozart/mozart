@@ -863,7 +863,7 @@ OZ_C_proc_end
 #endif
 
 
-static void blockSignals()
+static void unixblockSignals()
 {
   sigset_t s,sOld;
   sigfillset(&s);
@@ -873,7 +873,7 @@ static void blockSignals()
 }
 
 
-static void unblockSignals()
+static void unixunblockSignals()
 {
   sigset_t s;
   sigemptyset(&s);
@@ -902,18 +902,18 @@ OZ_C_ioproc_begin(unix_connectInet,4)
   addr.sin_port = htons ((unsigned short) port);
 
 // critical region
-  blockSignals();
+  unixblockSignals();
 
   int ret;
   while ((ret = connect(s,(struct sockaddr *) &addr,sizeof(addr)))<0) {
     if (errno != EINTR) {
-      unblockSignals();
+      unixunblockSignals();
       RETURN_UNIX_ERROR(out);
     }
   }
 
 // end of critical region
-  unblockSignals();
+  unixunblockSignals();
 
   return OZ_unifyInt(out,ret);
 }
@@ -932,19 +932,19 @@ OZ_C_ioproc_begin(unix_connectUnix,3)
   strcpy(addr.sun_path, path);
 
 // critical region
-  blockSignals();
+  unixblockSignals();
 
   int ret;
   while ((ret = connect(s,(struct sockaddr *) &addr,
                         sizeof(struct sockaddr_un)))<0) {
     if (errno != EINTR) {
-      unblockSignals();
+      unixunblockSignals();
       RETURN_UNIX_ERROR(out);
     }
   }
 
 // end of critical region
-  unblockSignals();
+  unixunblockSignals();
 
   return OZ_unifyInt(out,ret);
 }
