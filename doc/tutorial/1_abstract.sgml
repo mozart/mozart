@@ -10,7 +10,9 @@ lexical scoping. It provides the salient features of logic and
 constraint programming such as logic variables, constraints,
 disjunction constructs, and programmable search mechanisms. Oz is a
 concurrent language where users can create dynamically any number of
-sequential threads. Oz threads are data-flow whose execution proceeds
+sequential threads.
+<!-- DENYS: very unclear -->
+Oz threads are data-flow whose execution proceeds
 only when data dependencies on variables involved are resolved.
 
 <P>The tutorial covers most of the concepts of Oz in an informal
@@ -22,7 +24,9 @@ thus complements other Oz documentation.
 <P>The programming system of Oz is called Mozart and has been
 developed by several researchers from DFKI (the German Research Center
 Artificial Intelligent), SICS (the Swedish Institute of Computer
-Science), and others.
+Science),
+<!-- DENYS: university of saarbrucken -->
+and others.
 
 <P CLASS=WARNING>The material in this document is still incomplete and 
-subject to change for day to day.
+subject to change from day to day.
