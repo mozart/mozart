@@ -653,31 +653,31 @@ do
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
 echo "configure:656: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_EMACS'+set}'`\" = set"; then
+if eval "test \"`echo '$''{'ac_cv_prog_THEEMACS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  if test -n "$EMACS"; then
-  ac_cv_prog_EMACS="$EMACS" # Let the user override the test.
+  if test -n "$THEEMACS"; then
+  ac_cv_prog_THEEMACS="$THEEMACS" # Let the user override the test.
 else
   IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
   for ac_dir in $PATH; do
     test -z "$ac_dir" && ac_dir=.
     if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_EMACS="$ac_prog"
+      ac_cv_prog_THEEMACS="$ac_prog"
       break
     fi
   done
   IFS="$ac_save_ifs"
 fi
 fi
-EMACS="$ac_cv_prog_EMACS"
-if test -n "$EMACS"; then
-  echo "$ac_t""$EMACS" 1>&6
+THEEMACS="$ac_cv_prog_THEEMACS"
+if test -n "$THEEMACS"; then
+  echo "$ac_t""$THEEMACS" 1>&6
 else
   echo "$ac_t""no" 1>&6
 fi
 
-test -n "$EMACS" && break
+test -n "$THEEMACS" && break
 done
 
 for ac_prog in rm
@@ -975,7 +975,7 @@ s%@host_os@%$host_os%g
 s%@TOPDIR@%$TOPDIR%g
 s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@EMACS@%$EMACS%g
+s%@THEEMACS@%$THEEMACS%g
 s%@RM@%$RM%g
 s%@ECHO@%$ECHO%g
 s%@INSTALLSRC@%$INSTALLSRC%g

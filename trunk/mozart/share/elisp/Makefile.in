@@ -3,7 +3,7 @@ PREFIX=		@prefix@
 SRCDIR		= @srcdir@
 ELISPDIR	= $(PREFIX)/lib/elisp
 
-EMACS		= @EMACS@
+EMACS		= @THEEMACS@
 ECHO		= @ECHO@
 RM		= @RM@ -f
 
