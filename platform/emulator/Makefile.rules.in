@@ -34,11 +34,11 @@ tags::
 .m4hh.hh:
 	$(M4) $(M4_S) $(M4_D) $< > $@ || ($(RM) $@; exit 1)
 
-@tmphack_target@:
+@oz_tmphack_target@:
 	tmp=/tmp/ozobj$$$$.o; \
 	trap "$(RM) $$tmp; exit 1" 1 2 15; \
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $$tmp $< && \
-		rcp $$tmp @tmphack_host@:`pwd`/$@ && \
+		rcp $$tmp @oz_tmphack_host@:`pwd`/$@ && \
 		rm -f $$tmp
 
 %.d: %.cc

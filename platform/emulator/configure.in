@@ -43,10 +43,10 @@ AC_CANONICAL_HOST
 
 AC_LANG_CPLUSPLUS
 
+#AC_PREFIX_DEFAULT(${oz_default_prefix=/usr/local})
 if test -n "${oz_default_prefix}" && test -d $oz_default_prefix
 then
   ac_default_prefix=$oz_default_prefix
-  # AC_DEFAULT_PREFIX($oz_default_prefix)  # does not work!
 fi
 
 dnl *****************************************************************
@@ -73,12 +73,11 @@ AC_ARG_ENABLE(wincross,
   [--enable-wincross  Windows cross compilation (default=no)])
 if test "${enable_wincross}" = yes; then
         AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
-	WINCROSS="/project/ps/soft/cygwin-cross"
-	CXX="$WINCROSS/bin/i386-cygwin32-gcc"
-	CC="$CXX"
-	LD="$WINCROSS/bin/i386-cygwin32-ld"
-	RANLIB="$WINCROSS/bin/i386-cygwin32-ranlib"
-	LDFLAGS="$LDFLAGS -L$WINCROSS/lib -L../winlibs"
+	CXX=$oz_wincross_CXX
+	CC=$oz_wincross_CC
+	LD=$oz_wincross_LD
+	RANLIB=$oz_wincross_RANLIB
+	LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
 	platform="win32-i486"
 	PROGRAMNAME="ozemulator.exe"
 	AC_DEFINE(GNUWIN32)
@@ -319,10 +318,10 @@ dnl *****************************************************************
 dnl Checks for header files.
 dnl *****************************************************************
 
-AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
+dnl AC_HEADER_DIRENT
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
 
 dnl *****************************************************************
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -331,22 +330,22 @@ dnl *****************************************************************
 dnl const test not needed for C++!
 dnl AC_C_CONST
 
-AC_C_INLINE
-AC_TYPE_MODE_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_HEADER_TIME
-AC_STRUCT_TM
+dnl AC_C_INLINE
+dnl AC_TYPE_MODE_T
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+dnl AC_STRUCT_TM
 
 dnl *****************************************************************
 dnl Checks for library functions.
 dnl *****************************************************************
 
-AC_FUNC_ALLOCA
-AC_FUNC_MEMCMP
-AC_TYPE_SIGNAL
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
+dnl AC_FUNC_ALLOCA
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
 
 dnl *****************************************************************
 dnl MISC
@@ -359,9 +358,6 @@ dnl *****************************************************************
 dnl *** GMP
 dnl *****************************************************************
 
-GMP_LIB_DIR=/usr/local/lib
-GMP_INC_DIR=/usr/local/include
-
 AC_MSG_CHECKING(for --with-gmp)
 AC_ARG_WITH(gmp,
     [--with-gmp=<dir>
@@ -369,52 +365,44 @@ AC_ARG_WITH(gmp,
 
 if test -n "${with_gmp}"
 then
-    AC_MSG_RESULT(yes)
-    GMP_LIB_DIR=$with_gmp
-    GMP_INC_DIR=$with_gmp
-else
-    AC_MSG_RESULT(no)
+    oz_gmp_lib_dir=$with_gmp
+    oz_gmp_inc_dir=$with_gmp
 fi
 
-AC_MSG_CHECKING(for --with-gmp-lib)
 AC_ARG_WITH(gmp_lib,
     [--with-gmp-lib=<dir>
         search gmp library in <dir> (default: /usr/local/lib)])
 
 if test -n "${with_gmp_lib}"
 then
-    AC_MSG_RESULT(yes)
-    GMP_LIB_DIR=$with_gmp_lib
-else
-    AC_MSG_RESULT(no)
+    oz_gmp_lib_dir=$with_gmp_lib
 fi
 
-AC_MSG_CHECKING(for --with-gmp-include)
 AC_ARG_WITH(gmp_include,
     [--with-gmp-include=<dir>
         search gmp header in <dir> (default: /usr/local/include)])
 
 if test -n "${with_gmp_include}"
 then
-    AC_MSG_RESULT(yes)
-    GMP_INC_DIR=$with_gmp_include
-else
-    AC_MSG_RESULT(no)
+    oz_gmp_inc_dir=$with_gmp_include
 fi
 
-CPPFLAGS="-I$GMP_INC_DIR $CPPFLAGS"
+: ${oz_gmp_lib_dir=/usr/local/lib}
+: ${oz_gmp_inc_dir=/usr/local/include}
+
+AC_MSG_RESULT(trying \"-L$oz_gmp_lib_dir -I$oz_gmp_inc_dir\")
+
+CPPFLAGS="-I$oz_gmp_inc_dir $CPPFLAGS"
 AC_CHECK_HEADER(gmp.h,,
 	AC_MSG_ERROR(required GNU MP include file not found))
 
-LDFLAGS="-L$GMP_LIB_DIR $LDFLAGS"
+LDFLAGS="-L$oz_gmp_lib_dir $LDFLAGS"
 AC_CHECK_LIB(gmp, mpz_init, ,
 	AC_MSG_ERROR(required GNU MP lib not found))
-
 
 dnl *****************************************************************
 dnl *** Features
 dnl *****************************************************************
-
 
 AC_MSG_CHECKING(for --enable-ozma)
 AC_ARG_ENABLE(ozma,
@@ -530,30 +518,19 @@ dnl *****************************************************************
 dnl malloc
 dnl *****************************************************************
 
-dnl rs: Have to use our own malloc/free: brain dead libc 5.12 returns
-dnl both pointers in which top most bits are set and not set.
-
-if test -z "${with_malloc}" && test "${platform}" = linux-i486
-then
-    with_malloc=$PSDIR/lib/$platform/gmalloc.o
-fi
-
 AC_MSG_CHECKING(for --with-malloc)
 AC_ARG_WITH(malloc,
     [--with-malloc=<obj>
         use malloc from object file <obj> (default: NONE)])
-
-if test -n "${with_malloc}"
+if test -n "$with_malloc"
 then
-    AC_MSG_RESULT(yes)
-    AC_MSG_CHECKING(if $with_malloc found)
-    if test -r $with_malloc
-    then
-	AC_MSG_RESULT(yes)
-	LIBS="$LIBS $with_malloc"
-    else
-	AC_MSG_RESULT(no)
-    fi
+    oz_malloc_obj=$with_malloc
+fi
+
+if test -n "$oz_malloc_obj" && test -r $oz_malloc_obj
+then
+    LIBS="$LIBS $oz_malloc_obj"
+    AC_MSG_RESULT(yes (\"$oz_malloc_obj\"))
 else
     AC_MSG_RESULT(no)
 fi
@@ -564,24 +541,26 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --enable-tmphack)
 AC_ARG_ENABLE(tmphack,
-  [--enable-tmphack   link and compile in /tmp (default=no)])
-if test "${enable_tmphack}" = yes; then
-        AC_MSG_RESULT(yes)
-	tmphack_target=".cc.o"
-	tmphack_programname="$PROGRAMNAME"
-	PROGRAMNAME="$PROGRAMNAME.local"
-	if test -z "${tmphack_host}"
-	then
-	    tmphack_host=localhost
-	fi
-else
-        AC_MSG_RESULT(no)
-	tmphack_target=".cc.oo"
-	tmphack_programname="$PROGRAMNAME.tmp"
+  [--enable-tmphack=<host>   link and compile in /tmp (default=no)])
+if test -n "${enable_tmphack}" 
+then
+    oz_tmphack_host=$enable_tmphack
 fi
-AC_SUBST(tmphack_target)
-AC_SUBST(tmphack_host)
-AC_SUBST(tmphack_programname)
+
+if test -n "$oz_tmphack_host"
+then
+    AC_MSG_RESULT(yes (host is \"$oz_tmphack_host\"))
+    oz_tmphack_target=".cc.o"
+    oz_tmphack_programname="$PROGRAMNAME"
+    PROGRAMNAME="$PROGRAMNAME.local"
+else
+    AC_MSG_RESULT(no)
+    oz_tmphack_target=".cc.oo"
+    oz_tmphack_programname="$PROGRAMNAME.tmp"
+fi
+AC_SUBST(oz_tmphack_target)
+AC_SUBST(oz_tmphack_host)
+AC_SUBST(oz_tmphack_programname)
 
 dnl *****************************************************************
 dnl FINALIZATION SUPPORT
