@@ -232,7 +232,7 @@ AC_DEFUN(OZ_CHECK_VERSION,[
   oz_tmp_got="[$2]"
   oz_tmp_want="[$3]"
   oz_tmp_IFS="$IFS"
-  IFS="$IFS._"
+  IFS="$IFS._-"
   set $oz_tmp_got DONE
   oz_tmp__ok=yes
   for oz_tmp_cur in $oz_tmp_want; do
@@ -266,14 +266,18 @@ AC_DEFUN(OZ_PROG_VERSION_CHECK,[
     # first we try to locate the string "version"
     oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
 changequote(<,>)
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._]*\)'`
+    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*\)'`
     # if that failed: we look at the end of the first line
     if test -z "$oz_tmp_version"; then
       oz_tmp_IFS="$IFS"
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+	# else try to match the entire first line
+	if test -z "$oz_tmp_version"; then
+	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
+	fi
 	break
       done
       IFS="$oz_tmp_IFS"
