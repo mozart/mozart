@@ -31,24 +31,24 @@
 #include "am.hh"
 #include "genvar.hh"
 #include "runtime.hh"
+#include "perdio.hh"
+
+void Future::init()
+{
+  requested=oz_newVar(GETBOARD(this));
+}
 
 void Future::request()
 {
-  if (oz_isRef(requested)) {
-    oz_bind_global(requested,oz_unit());
-  }
-  requested=oz_true();
+  (void) oz_unify(requested,oz_unit());
 }
 
 OZ_Return Future::waitRequest(TaggedRef *v)
 {
-  if (oz_eq(requested,oz_false())) {
-    requested=oz_newVar(GETBOARD(this));
-    // fall through
-  }
-
-  if (oz_isRef(requested)) {
-    am.addSuspendVarList(requested);
+  TaggedRef aux = requested;
+  DEREF(aux,auxPtr,_1);
+  if (oz_isVariable(aux)) {
+    am.addSuspendVarList(auxPtr);
     return SUSPEND;
   } else {
     return PROCEED;
@@ -72,29 +72,30 @@ void Future::addSuspFuture(TaggedRef *vPtr, Thread*th,int unstable)
 
 OZ_BI_define(BIPromiseNew,0,1)
 {
-  TaggedRef p = makeTaggedRef(newTaggedCVar(new Future()));
-  OZ_RETURN(makeTaggedPromise(new Promise(p)));
+  if (!am.onToplevel()) {
+    return oz_raise(E_ERROR,E_KERNEL,"promisesOnlyAllowedOnToplevelSoFar",0);
+  }
+  TaggedRef *p = newTaggedUVar(am.currentBoard());
+  (void) var2PerdioVar(p,OK);
+  OZ_RETURN(makeTaggedPromise(new Promise(makeTaggedRef(p),NULL)));
 } OZ_BI_end
 
 OZ_Return promiseAssign(OZ_Term p, OZ_Term val)
 {
-  TaggedRef var = tagged2Promise(p)->getFuture();
+  TaggedRef future = tagged2Promise(p)->getFuture();
+  TaggedRef var    = future;
   DEREF(var,varPtr,_);
-  if (isCVar(var)) {
-    GenCVariable *cvar=tagged2CVar(var);
-    if (cvar->getType()==FUTURE) {
-      Future *l=(Future *)cvar;
-      CheckLocalBoard(l,"promise");
-      if (oz_deref(val)==var) { // mm2
-        return oz_raise(E_ERROR,E_KERNEL,"promiseAssignToItself",
-                        1,makeTaggedRef(varPtr));
-      }
-      oz_bind_global(makeTaggedRef(varPtr),val);
-      return PROCEED;
+  if (isFuture(var)) {
+    Future *l = tagged2Future(var);
+    CheckLocalBoard(l,"promise");
+    if (oz_deref(val)==var) { // mm2
+      return oz_raise(E_ERROR,E_KERNEL,"promiseAssignToItself",1,future);
     }
+    //oz_bind_global(makeTaggedRef(varPtr),val);
+    //return PROCEED;
+    return bindPerdioVar(l,varPtr,val);
   }
-  return oz_raise(E_ERROR,E_KERNEL,"promiseAssignTwice",
-                  1,makeTaggedRef(varPtr));
+  return oz_raise(E_ERROR,E_KERNEL,"promiseAssignTwice",1,future);
 }
 
 OZ_BI_define(BIPromiseAssign,2,0)
@@ -125,10 +126,8 @@ OZ_BI_define(BIPromiseWaitRequest,1,0)
 
   TaggedRef var = tagged2Promise(p)->getFuture();
   DEREF(var,varPtr,_);
-  if (!isCVar(var)) return PROCEED;
-  GenCVariable *cvar=tagged2CVar(var);
-  if (cvar->getType() != FUTURE) return PROCEED;
-  Future *l=(Future *)cvar;
+  if (!isFuture(var)) return PROCEED;
+  Future *l=tagged2Future(var);
 
   CheckLocalBoard(l,"promise");
 

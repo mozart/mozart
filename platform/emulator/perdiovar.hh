@@ -80,7 +80,10 @@ public:
 };
 
 class PerdioVar: public GenCVariable {
-  PV_TYPES pvtype;
+protected:
+  short isfuture;
+private:
+  short pvtype;
   void *ptr;
   union {
     PendBinding *bindings;
@@ -89,17 +92,19 @@ class PerdioVar: public GenCVariable {
     GName *gnameClass;
   } u;
 public:
-  void setpvType(PV_TYPES t) { pvtype = t; }
-  PV_TYPES getpvType()       { return pvtype; }
+  void setpvType(PV_TYPES t) { pvtype = (short) t; }
+  PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
 
   NO_DEFAULT_CONSTRUCTORS2(PerdioVar);
-  PerdioVar() : GenCVariable(PerdioVariable) {
+  PerdioVar(Bool isf) : GenCVariable(PerdioVariable) {
     u.proxies=0;
+    isfuture = (short) isf;
     setpvType(PV_MANAGER);
   }
 
-  PerdioVar(int i) : GenCVariable(PerdioVariable) {
+  PerdioVar(int i, Bool isf) : GenCVariable(PerdioVariable) {
     u.bindings=0;
+    isfuture = (short) isf;
     setpvType(PV_PROXY);
     setIndex(i);
   }
@@ -107,7 +112,10 @@ public:
   PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
     setpvType(PV_OBJECTCLASSAVAIL);
     ptr = o;
+    isfuture = 0;
   }
+
+  int isFuture() { return (int) isfuture; }
 
   void setClass(ObjectClass *cl) {
     Assert(isObjectClassAvail());
@@ -135,8 +143,6 @@ public:
     ptr = ToPointer(i);
   }
 
-  Bool valid(TaggedRef *varPtr, TaggedRef v);
-
   Object *getObject() { Assert(isObject()); return (Object*)ptr; }
   ObjectClass *getClass() { Assert(isObjectClassAvail()); return u.aclass; }
 
@@ -152,9 +158,6 @@ public:
     }
     return NO;
   }
-
-  void primBind(TaggedRef *lPtr,TaggedRef v);
-  OZ_Return unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);
 
   int hasVal() { Assert(isProxy()); return u.bindings!=0; }
   OZ_Return setVal(OZ_Term t) {
@@ -179,6 +182,11 @@ public:
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
   void addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable);
+  Bool valid(TaggedRef *varPtr, TaggedRef v);
+  void primBind(TaggedRef *lPtr,TaggedRef v);
+  OZ_Return unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, ByteCode *);
+
+  void dispose(void);
 
   void gcRecurse(void);
 };

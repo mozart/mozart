@@ -36,6 +36,7 @@ message(M_REGISTER,Index,Site)
 message(M_REDIRECT,Site,Index,Term)
 message(M_ACKNOWLEDGE,Site,Index)
 message(M_SURRENDER,Index,Site,Term)
+message(M_REQUEST_FUTURE,Site,Index)
 
 message(M_CELL_LOCK_GET,Index,Site)
 message(M_CELL_LOCK_FORWARD,Site,Index,Site2)

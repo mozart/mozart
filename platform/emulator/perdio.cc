@@ -229,6 +229,7 @@ char *mess_names[M_LAST] = {
   "redirect",
   "acknowledge",
   "surrender",
+  "request_future",
 
   "cell_lock_get",
   "cell_lock_forward",
@@ -2273,17 +2274,39 @@ inline PendThread* getPendThread(PendThread *pt, Thread *t){
     pt=pt->next;}
   return NULL;}
 
-void sendHelpX(MessageType mt,BorrowEntry *be){
+void sendHelpX(MessageType mt,BorrowEntry *be)
+{
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  if(mt==M_GET_OBJECT){
-    marshal_M_GET_OBJECT(bs,na->index,mySite);}
-  else{
-    Assert(mt==M_GET_OBJECTANDCLASS);
-    marshal_M_GET_OBJECTANDCLASS(bs,na->index,mySite);}
-  SendTo(na->site,bs,mt,na->site,na->index);}
+  switch (mt) {
+  case M_GET_OBJECT:
+    marshal_M_GET_OBJECT(bs,na->index,mySite);
+    break;
+  case M_GET_OBJECTANDCLASS:
+    marshal_M_GET_OBJECTANDCLASS(bs,na->index,mySite);
+    break;
+  case M_REQUEST_FUTURE:
+    marshal_M_REQUEST_FUTURE(bs,mySite,na->index);
+    break;
+  default:
+    Assert(0);
+  }
+  SendTo(na->site,bs,mt,na->site,na->index);
+}
 
-void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable){
+void PerdioVar::addSuspPerdioVar(TaggedRef *v,Thread *el, int unstable)
+{
+  if (isFuture()) {
+    if (isManager()) {
+      ((Future*)this)->addSuspFuture(v,el,unstable);
+    } else {
+      Assert(isProxy());
+      BorrowEntry *be=BT->getBorrow(getIndex());
+      sendHelpX(M_REQUEST_FUTURE,be);
+    }
+    return;
+  }
+
   if (suspList!=NULL) {
     addSuspSVar(el,unstable);
     return;  }
@@ -2680,6 +2703,10 @@ void PerdioVar::gcRecurse(void)
       *last = newPL;
       last = &newPL->next;}
     *last = 0;
+
+    if (isFuture()) {
+      ((Future*)this)->gcFuture();
+    }
     return;
   }
   Assert(isObject());
@@ -2692,6 +2719,14 @@ void PerdioVar::gcRecurse(void)
 /**********************************************************************/
 /*   SECTION 19 :: Globalizing                                        */
 /**********************************************************************/
+
+GName *Promise::globalize()
+{
+  if (gname==0) {
+    gname = newGName(makeTaggedPromise(this),GNT_PROMISE);
+  }
+  return gname;
+}
 
 GName *Name::globalize()
 {
@@ -2845,14 +2880,12 @@ inline void maybeConvertCellProxyToFrame(Tertiary *t){
   if(t->isProxy()){
     convertCellProxyToFrame(t);}}
 
-PerdioVar *var2PerdioVar(TaggedRef *tPtr){
-  TypeOfTerm tag = tagTypeOf(*tPtr);
-  if (tag==CVAR) {
-    switch (tagged2CVar(*tPtr)->getType()) {
-    case PerdioVariable:
-      return tagged2PerdioVar(*tPtr);
-    default:
-      return NULL;}}
+
+
+PerdioVar *var2PerdioVar(TaggedRef *tPtr, Bool isFuture)
+{
+  if (isPerdioVar(*tPtr))
+    return tagged2PerdioVar(*tPtr);
 
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
@@ -2860,12 +2893,14 @@ PerdioVar *var2PerdioVar(TaggedRef *tPtr){
 
   oe->mkVar(makeTaggedRef(tPtr));
 
-  PerdioVar *pvar=new PerdioVar();
-  if (tag==SVAR) {
-    pvar->setSuspList(tagged2SVar(*tPtr)->getSuspList());}
-  pvar->setIndex(i);
-  doBindCVar(tPtr,pvar);
-  return pvar;}
+  PerdioVar *ret = isFuture ? new Future() : new PerdioVar(NO);
+  ret->setIndex(i);
+
+  if (isSVar(*tPtr))
+    ret->setSuspList(tagged2SVar(*tPtr)->getSuspList());
+  doBindCVar(tPtr,ret);
+  return ret;
+}
 
 /**********************************************************************/
 /*   SECTION 20 :: Localizing                                        */
@@ -3018,7 +3053,8 @@ char *tagToComment(MarshalTag tag){
 
 /* ******************  interface *********************************** */
 
-void marshalVar(PerdioVar *pvar,MsgBuffer *bs){
+void marshalVar(PerdioVar *pvar,MsgBuffer *bs)
+{
   Site *sd=bs->getSite();
   if (pvar->isProxy()) {
     int i=pvar->getIndex();
@@ -3027,12 +3063,17 @@ void marshalVar(PerdioVar *pvar,MsgBuffer *bs){
       marshalToOwner(i,bs);
       return;}
     marshalBorrowHead(DIF_VAR,i,bs);
-    return;}
-
-  Assert(pvar->isManager());
-  int i=pvar->getIndex();
-  PD((MARSHAL,"var manager o:%d",i));
-  marshalOwnHead(DIF_VAR,i,bs);
+  } else {
+    Assert(pvar->isManager());
+    int i=pvar->getIndex();
+    PD((MARSHAL,"var manager o:%d",i));
+    marshalOwnHead(DIF_VAR,i,bs);
+  }
+  Bool isf = pvar->isFuture();
+  marshalNumber(isf,bs);
+  if (isf) {
+    marshalTerm(((Future*)pvar)->getRequested(),bs);
+  }
 }
 
 Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
@@ -3155,17 +3196,21 @@ OZ_Term unmarshalOwner(MsgBuffer *bs,MarshalTag mt){
   return OT->getOwner(OTI)->getValue();
 }
 
+
+
 OZ_Term unmarshalVar(MsgBuffer* bs){
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
+  int isfuture = unmarshalNumber(bs);
+  TaggedRef requested = isfuture ? unmarshalTerm(bs) : makeTaggedNULL();
 
   if (val1) {
     PD((UNMARSHAL,"var/chunk hit: b:%d",bi));
     return val1;}
 
   PD((UNMARSHAL,"var miss: b:%d",bi));
-  PerdioVar *pvar = new PerdioVar(bi);
+  PerdioVar *pvar = isfuture ? new Future(bi,requested) : new PerdioVar(bi,NO);
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
   ob->mkVar(val);
   sendRegister((BorrowEntry *)ob);
@@ -3346,6 +3391,20 @@ void Site::msgReceived(MsgBuffer* bs)
       break;
     }
 
+  case M_REQUEST_FUTURE:
+    {
+      int OTI;
+      Site *rsite;
+      unmarshal_M_REQUEST_FUTURE(bs,rsite,OTI);
+      PD((MSG_RECEIVED,"M_REQUEST_FUTURE site:%s index:%d",rsite->stringrep(),OTI));
+      //      OwnerEntry *oe=receiveAtOwner(OTI);
+      OwnerEntry *oe=OT->getOwner(OTI);
+      if (!oe->isTertiary()) {
+        ((Future*)oe->getVar())->request();
+      }
+      break;
+    }
+
   case M_GET_OBJECT:
   case M_GET_OBJECTANDCLASS:
     {
@@ -3353,7 +3412,8 @@ void Site::msgReceived(MsgBuffer* bs)
       Site *rsite;
       unmarshal_M_GET_OBJECT(bs,OTI,rsite);
       PD((MSG_RECEIVED,"M_GET_OBJECT(ANDCLASS) index:%d site:%s",OTI,rsite->stringrep()));
-      OwnerEntry *oe=receiveAtOwner(OTI);
+      //      OwnerEntry *oe=receiveAtOwner(OTI);
+      OwnerEntry *oe=OT->getOwner(OTI);
       Tertiary *t = oe->getTertiary();
       Assert(isObject(t));
       PD((SPECIAL,"object get %x %x",t,((Object *)t)->getClass()));
@@ -3878,7 +3938,8 @@ void PerdioVar::redirect(OZ_Term val) {
 
 OZ_Return sendRedirect(ProxyList *pl,OZ_Term val, Site* ackSite, int OTI){
   OZ_Return ret = PROCEED;
-  if (pl==NULL) { // have to check in this case too for non-exportables
+  OwnerEntry *oe = OT->getOwner(OTI);
+  if (pl==NULL && !oe->hasFullCredit()) {
     MsgBuffer *bs=msgBufferManager->getMsgBuffer(NULL);
     marshal_M_REDIRECT(bs,mySite,OTI,val);
     CheckNogoods(bs,"unify",);
@@ -3916,7 +3977,9 @@ OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
   PD((PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v)));
   Assert(pv->isProxy());
   if (pv->hasVal()) {
-    return pv->pushVal(v); // save binding for ack message, ...
+    return pv->isFuture() ? oz_raise(E_ERROR,E_KERNEL,"promiseAssignTwice",
+                                     1,makeTaggedRef(lPtr))
+                          : pv->pushVal(v); // save binding for ack message, ...
   }
 
   BorrowEntry *be=BT->getBorrow(pv->getIndex());

@@ -35,7 +35,6 @@
 // bind and inform sites
 
 // from perdio.cc
-OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
@@ -59,6 +58,9 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 
 OZ_Return PerdioVar::unifyPerdioVar(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 {
+  if (isFuture())
+    return ((Future*)this)->unifyFuture(lPtr);
+
   TaggedRef rVal = *rPtr;
   TaggedRef lVal = *lPtr;
 
@@ -127,8 +129,19 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 {
   Assert(!oz_isRef(v) && !oz_isVariable(v));
 
+  if (isFuture())
+    return ((Future*)this)->valid(v);
+
   return (isObject()) ? FALSE : TRUE;
 }
+
+
+void PerdioVar::dispose(void)
+{
+  if (isFuture())
+    ((Future*)this)->dispose();
+}
+
 
 //-----------------------------------------------------------------------------
 // Implementation of interface functions

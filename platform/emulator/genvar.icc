@@ -76,8 +76,6 @@ OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef *tptr2, TaggedRef ter
     if (! ((GenLazyVariable*)this)->unifyLazy(tptr1, term2,scp))
       return FAILED;
     break;
-  case FUTURE:
-    return ((Future*)this)->unifyFuture(tptr1);
 
   default:
     Assert(0);
@@ -117,7 +115,6 @@ Bool GenCVariable::valid(TaggedRef *ptr,TaggedRef val)
   case FSetVariable: return ((GenFSetVariable*)this)->valid(val);
   case PerdioVariable: return ((PerdioVar *)this)->valid(ptr,val);
   case LazyVariable: return ((GenLazyVariable*)this)->valid(val);
-  case FUTURE: return ((Future*)this)->valid(val);
   default: Assert(0); break;
   }
   return FALSE;
@@ -239,11 +236,11 @@ void GenCVariable::dispose(void)
   case FSetVariable:
     ((GenFSetVariable *)this)->dispose();
     break;
-  case FUTURE:
-    ((Future *)this)->dispose();
-    break;
   case LazyVariable:
     ((GenLazyVariable *)this)->dispose();
+    break;
+  case PerdioVariable:
+    ((PerdioVar *)this)->dispose();
     break;
   default:
     // mm2: why not handle other cases?
@@ -262,9 +259,6 @@ void addSuspCVar(TaggedRef *v, Thread *el, int unstable=TRUE)
     break;
   case LazyVariable:
     ((GenLazyVariable*)cv)->addSuspLazy(el,unstable);
-    break;
-  case FUTURE:
-    ((Future*)cv)->addSuspFuture(v,el,unstable);
     break;
   default:
     cv->addSuspSVar(el,unstable);

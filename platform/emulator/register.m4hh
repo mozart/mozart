@@ -436,7 +436,6 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
             // fall through
           case PerdioVariable:
           case LazyVariable:
-          case FUTURE:
             PushContX(PC,Y,G,X,getPosIntArg(PC+6));
             addSuspPtr(termPtr, CTT);
             return T_SUSPEND;
@@ -474,7 +473,6 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
             // fall through
           case PerdioVariable:
           case LazyVariable:
-          case FUTURE:
             PushContX(PC,Y,G,X,getPosIntArg(PC+4));
             addSuspPtr(termPtr, CTT);
             return T_SUSPEND;

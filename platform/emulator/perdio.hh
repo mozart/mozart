@@ -37,7 +37,7 @@
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
 
-#define PERDIOMINOR      "10"
+#define PERDIOMINOR      "11"
 #define PERDIOMAJOR      OZVERSION
 #define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
 
@@ -64,6 +64,7 @@ enum MessageType {
   M_REDIRECT,           // NA  DIF
   M_ACKNOWLEDGE,        // NA (implicit 1 credit)
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
+  M_REQUEST_FUTURE,     // OTI* SITE
 
   M_CELL_LOCK_GET,      // OTI* SITE
   M_CELL_LOCK_FORWARD,  // NA* INTEGER SITE
@@ -103,6 +104,7 @@ extern char *mess_names[];
 // the protocol layer needs to know about some of these
 
 typedef enum {
+  DIF_PROMISE,
   DIF_SMALLINT,
   DIF_BIGINT,
   DIF_FLOAT,
@@ -213,7 +215,7 @@ TaggedRef findGNameOutline(GName*);
 void deleteGName(GName*);
 
 // isn't this a variety of globalization - ATTENTION
-PerdioVar *var2PerdioVar(TaggedRef *);
+PerdioVar *var2PerdioVar(TaggedRef *, Bool);
 
 void SiteUnifyCannotFail(TaggedRef,TaggedRef); // ATTENTION
 void pushUnify(Thread *,TaggedRef,TaggedRef); // ATTENTION - for compponents
@@ -276,7 +278,8 @@ enum GNameType {
   GNT_CODE,
   GNT_CHUNK,
   GNT_OBJECT,
-  GNT_CLASS
+  GNT_CLASS,
+  GNT_PROMISE
 };
 
 class GName {
@@ -387,6 +390,7 @@ void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI);
 
 TaggedRef listifyWatcherCond(EntityCond);
 Thread *getDefaultThread();
+OZ_Return bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
 
 /* __PERDIOHH */
 #endif

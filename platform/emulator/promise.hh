@@ -40,31 +40,33 @@
 
 class Promise {
   TaggedRef future;
-
+  GName *gname;
 public:
   USEHEAPMEMORY;
 
-  Promise(TaggedRef f): future(f) {}
+  Promise(TaggedRef f, GName *gn): future(f), gname(gn) {}
 
   TaggedRef getFuture() { return future; }
   Promise *gcPromise();
+  GName *globalize();
 };
 
-class Future: public GenCVariable {
+class Future: public PerdioVar {
   TaggedRef requested;
 
 public:
   NO_DEFAULT_CONSTRUCTORS2(Future);
-  Future() : GenCVariable(FUTURE) {
-    requested=oz_false();
-  }
-  void gcRecurse(void);
+  void init();
+  Future()       : PerdioVar(OK)    { init(); }
+  Future(int bi, TaggedRef req) : PerdioVar(bi,OK) { requested = req; }
+  void gcFuture();
   OZ_Return unifyFuture(TaggedRef*);
   Bool valid(TaggedRef /* val */) { return TRUE; } // mm2
   void addSuspFuture(TaggedRef*,Thread*,int);
   Bool isKinded() { return false; } // mm2
   void dispose(void) { freeListDispose(this, sizeof(Future)); }
   void request();
+  TaggedRef getRequested() { return requested; }
   OZ_Return waitRequest(OZ_Term *);
 };
 
@@ -73,7 +75,7 @@ inline
 Bool isFuture(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == FUTURE);
+  return isPerdioVar(term) && tagged2PerdioVar(term)->isFuture();
 }
 
 inline
