@@ -21,6 +21,8 @@
 extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
        AtomEntailed, AtomSuspended, AtomBlocked,
+       AtomEmpty, AtomUpper, AtomLower, AtomDigit,
+       AtomCharSpace, AtomPunct, AtomOther,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown;
 
 /*===================================================================

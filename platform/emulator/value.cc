@@ -20,6 +20,8 @@
 TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
   AtomEntailed, AtomSuspended, AtomBlocked,
+  AtomEmpty, AtomUpper, AtomLower, AtomDigit,
+  AtomCharSpace, AtomPunct, AtomOther,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown;
 
 
@@ -34,6 +36,14 @@ void initLiterals()
   AtomBool  = makeTaggedAtom(NameOfBool);
   AtomSup   = makeTaggedAtom(NameOfSup);
   AtomCompl = makeTaggedAtom(NameOfCompl);
+
+  AtomEmpty     = makeTaggedAtom("");
+  AtomUpper     = makeTaggedAtom("upper");
+  AtomLower     = makeTaggedAtom("lower");
+  AtomDigit     = makeTaggedAtom("digit");
+  AtomCharSpace = makeTaggedAtom("space");
+  AtomPunct     = makeTaggedAtom("punct");
+  AtomOther     = makeTaggedAtom("other");
 
   AtomSucceeded    = makeTaggedAtom("succeeded");
   AtomAlt          = makeTaggedAtom("alternatives");
