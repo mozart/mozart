@@ -250,12 +250,11 @@
       <Section>
 	<Title/Inspecting the &OPI;'s Commands and User Options/
 	  <Para class=apropos><Title/The Oz Menu/
-	    The Oz major modes add a <Span class=index/menu/ called <Samp/Oz/
-	    to the menu bar (see <Ptr to="figure.menu">); in <Index/Emacs<And
-	    >XEmacs/<Span class=index/XEmacs/, this <Index/buffer<And
-	    >menu/menu is also accessible by pressing the right mouse button
-	    in an Oz buffer.  Many of the commands described in the next
-	    chapters are accessible through this menu.
+	    The Oz major modes add a <Span class=index/menu/ called
+	    <Samp/Oz/ to the menu bar (see <Ptr to="figure.menu">); this
+	    <Index/buffer<And>menu/menu is also accessible by pressing
+	    the right mouse button in an Oz buffer.  Many of the commands
+	    described in the next chapters are accessible through this menu.
 	    <Figure float id="figure.menu" class="maxi figure">
 	      <Caption>The Oz Menu.</Caption>
 	      <P>
