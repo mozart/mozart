@@ -58,6 +58,9 @@ OZFNCTS         = $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf)
 TARGETS         = Reflect.ozf reflect.so-$(PLATFORM)
 LIB_TARGETS     = $(TARGETS:%=$(LIB_DIR)/%)
 
+.PHONY: depend clean distclean bootstrap
+.PRECIOUS: %.o
+
 all:     $(TARGETS)
 install: $(LIB_DIR) $(LIB_TARGETS)
 
@@ -124,3 +127,8 @@ Makefile: Makefile.in config.status
 
 config.status: configure
         ./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps
