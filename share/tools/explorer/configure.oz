@@ -56,12 +56,11 @@ StatusFont      = FontFamily     # 100 # FontMatch
 BoldStatusFont  = BoldFontFamily # 100 # FontMatch
 
 %% Width of the scroller, applies also to the width of the scale
-ScrollerWidth   = 12
-ScaleWidth      = 12
+ScrollerWidth   = 13
+ScaleWidth      = 13
 
 %% Some parameters used in packing the canvas
-Border          = 2
-BigBorder       = 4
+Border          = 3
 Pad             = 2
 BigPad          = 4
 HugePad         = 8
