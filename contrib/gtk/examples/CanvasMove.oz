@@ -35,11 +35,7 @@ define
 	 {self signalConnect('delete-event' deleteEvent _)}
       end
       meth deleteEvent(Args)
-	 %% CAUTION: At this time, the underlying objects has been destroyed.
-	 %% CAUTION: This event is solely intended for oz side cleanup code.
-	 %% CAUTION: If you want eager finalisation of object wrappers then
-	 %% CAUTION: connect the delete event handler using a procedure
-	 %% CAUTION: rather than a object method.
+	 {self gtkClose}
 	 {Application.exit 0}
       end
    end
@@ -47,16 +43,8 @@ define
    Toplevel = {New CanvasToplevel new}
  
    %% Setup the Colors
-   %% 1. Obtain the system colormap
-   %% 2. Allocate the color structure with R, G, B preset
-   %% 3. Try to alloc appropriate system colors,
-   %%    non-writeable and with best-match
-   %% 4. Use colors black and white
-   Colormap = {New GDK.colormap getSystem}
-   Black    = {New GDK.color new(0 0 0)}
-   White    = {New GDK.color new(65535 65535 65535)}
-   {Colormap allocColor(Black 0 1 _)}
-   {Colormap allocColor(White 0 1 _)}
+   Black = {GDK.makeColor '#000000'}
+   White = {GDK.makeColor '#FFFFFF'}
 
    %% Setup canvas without item support
    MyCanvas = {New Canvas.canvas new(false)}
@@ -67,26 +55,26 @@ define
    
    %% Setup Canvas Items
    %% Create a text item (member of root group) and ignore item obj
-   TextItemPars = ["x"#10.0 "y"#10.0
-		   "text"#"Press Button to move canvas item below"
-		   "font"#
-		   "-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1"
-		   "fill_color_gdk"#Black
-		   "anchor"#GTK.'ANCHOR_NORTH_WEST']
+   TextItemPars = ['x'#10.0 'y'#10.0
+		   'text'#"Press Button to move canvas item below"
+		   'font'#
+		   '-adobe-helvetica-medium-r-normal--12-*-72-72-p-*-iso8859-1'
+		   'fill_color_gdk'#Black
+		   'anchor'#GTK.'ANCHOR_NORTH_WEST']
    _ = {MyCanvas newItem({MyCanvas root($)} {MyCanvas textGetType($)}
 			 TextItemPars $)}
 
    %% Create a rectangle item
-   RectItemPars = ["x1"#200.0 "y1"#60.0 "x2"#400.0 "y2"#180.0
-		   "fill_color_gdk"#Black "outline_color_gdk"#White]
+   RectItemPars = ['x1'#200.0 'y1'#60.0 'x2'#400.0 'y2'#180.0
+		   'fill_color_gdk'#Black 'outline_color_gdk'#White]
    RectItem = {MyCanvas newItem({MyCanvas root($)} {MyCanvas rectGetType($)}
 				RectItemPars $)}
 
    %% Create Rectangle Item Event Handler
    local
       proc {ToggleColor Item Fill Outline}
-	 {Item set("fill_color_gdk" Fill)}
-	 {Item set("outline_color_gdk" Outline)}
+	 {Item set('fill_color_gdk' Fill)}
+	 {Item set('outline_color_gdk' Outline)}
       end
    in
       fun {MakeRectEvent Item}
