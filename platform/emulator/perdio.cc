@@ -24,6 +24,7 @@
  *     classify secure/insecure
  *   names
  *     true, false, unit and others (o-o)
+ *       new procedure makeGlobalName(Atom)
  *     don't work at all?
  *   ip
  *     cache does not work together with close detection
@@ -155,6 +156,7 @@ enum PO_TYPE {
 
 class ProtocolObject {
   int type;
+protected:
   union {
     TaggedRef ref;
     Tertiary *tert;
@@ -182,14 +184,16 @@ public:
   }
   void gcPO() {
     if (isTertiary()) {
+      PD(GC,"OT tertiary found");
       u.tert=(Tertiary *)(u.tert->gcConstTerm());
     } else {
       Assert(isRef() || isVar());
+      PD(GC,"OT var/ref");
       gcTagged(u.ref,u.ref);
     }
   }
 
-  ProtocolObject &operator =(ProtocolObject &n);
+  ProtocolObject &operator =(ProtocolObject &n); // not used
 
   TaggedRef getValue() {
     if (isTertiary()) {
@@ -347,11 +351,8 @@ public:
   void initialize(ByteStream *bs1,Site * sd,BorrowEntry *b=NULL){
     bs=bs1;
     refCount=0;
-    back=NULL;
-    site=sd;
-    if (b)
-      back=b;}
-
+    back=b;
+    site=sd;}
   void inc() {refCount++;}
   void dec() {refCount--;}
   BorrowEntry *getBack() {return back;}
@@ -402,7 +403,7 @@ public:
     pend=p;
     next=NULL;  }
 
-  void setTag(){
+  void setTag(){ // FIFO
     pend= (PendEntry *)(((unsigned int) pend) | 1);}
 
   Bool isTagged(){
@@ -699,8 +700,6 @@ protected:
 
   void subFromCredit(Credit c) {u.credit -=c;}
 
-
-
 public:
   void print();
   Credit getCredit(){Assert(!isFree());return u.credit;}
@@ -933,7 +932,7 @@ friend class BorrowTable;
 private:
   NetAddress netaddr;
   PendLink *pendLink;
-  void inDebt(PendLink *);
+  void inDebtInternal(PendLink *);
   Credit pendLinkCredit(Credit c);
   void pendLinkHandle();
 
@@ -953,6 +952,7 @@ public:
     Assert(!isFree());
     return(pendLink!=NULL);}
 
+  void gcBorrow(int i);
   inline void copyBorrow(BorrowEntry* from,int i){
     setCredit(from->getCredit());
     if (from->isTertiary()) {
@@ -986,8 +986,8 @@ public:
   void freeBorrowEntry();
 
   void addAskCredit(Credit c){
-    addToCredit(1);
-    addCredit(c-1);
+    addToCredit(1); // at least one credit to request more
+    addCredit(c-1); // rest may be use for pending messages
   }
 
 #ifdef DEBUG_PERDIO
@@ -1005,7 +1005,8 @@ public:
     if(pendLink!=NULL){
       cin=pendLinkCredit(cin);
       pendLinkHandle();
-      PERDIO_DEBUG_DO(DEBUG_pendLink(pendLink));}
+      PERDIO_DEBUG_DO(DEBUG_pendLink(pendLink));
+      } // fall through with updated cin
     addToCredit(cin);
     Credit cur=getCredit();
     if(cur>MAX_BORROW_CREDIT_SIZE){
@@ -1043,31 +1044,33 @@ public:
     subFromCredit(c);
     return TRUE;}
 
-  void inDebtMain(PendEntry *);
-  void inDebtSec(Credit,PendEntry *);
+  void inDebtPort(PendEntry *);
+  void inDebt(Credit,PendEntry *);
   void moreCredit();
 
   void giveBackCredit(Credit c);
   Bool fifoCanSend(PendLink *,PendEntry *pe,Bool flag);
 };
 
-void BorrowEntry::inDebtMain(PendEntry *pe){
+// FIFO
+void BorrowEntry::inDebtPort(PendEntry *pe){
   PendLink *pl=pendLinkManager->newPendLink();
   pl->initialize(1,pe);
   pl->setTag();
   pe->inc();
-  inDebt(pl);}
+  inDebtInternal(pl);}
 
-void BorrowEntry::inDebtSec(Credit c,PendEntry *pe){
+// non FIFO
+void BorrowEntry::inDebt(Credit c,PendEntry *pe){
   PendLink *pl=pendLinkManager->newPendLink();
   pl->initialize(c,pe);
   pe->inc();
-  inDebt(pl);}
+  inDebtInternal(pl);}
 
-void BorrowEntry::inDebt(PendLink *pl){
+void BorrowEntry::inDebtInternal(PendLink *pl){
+  moreCredit();
   if(pendLink==NULL) {
     PD(PENDLINK,"new- none so far");
-    moreCredit();
     pendLink=pl;
     return;}
   PD(PENDLINK,"new- others around far");
@@ -1183,13 +1186,13 @@ void sendRegister(BorrowEntry *be) {
   PD(MSG_SENT,"REGISTER s:%s o:%d",pSite(site),index);
 
   if (be->getOneCredit()) {  /* priority */
-    reliableSendFail(site,bs,TRUE,3);
+    reliableSendFail(site,bs,FALSE,30);
     return;
   }
 
   PD(DEBT_MAIN,"register");
-  PendEntry *pe= pendEntryManager->newPendEntry(bs,site,be);
-  be->inDebtMain(pe);
+  PendEntry *pe= pendEntryManager->newPendEntry(bs,site);
+  be->inDebt(1,pe);
 }
 
 
@@ -1236,6 +1239,7 @@ public:
     no_used=0;
     hshtbl = new NetHashTable();  }
 
+  void gcBorrowTableRoots();
   void gcBorrowTable();
 
   BorrowEntry* find(NetAddress *na)  {
@@ -1530,6 +1534,7 @@ void NetHashTable::print(){
 
 void gcOwnerTable()  { ownerTable->gcOwnerTable();}
 void gcBorrowTable() { borrowTable->gcBorrowTable();}
+void gcBorrowTableRoots() { borrowTable->gcBorrowTableRoots();}
 void gcGNameTable()  { gnameTable->gcGNameTable();}
 void gcGName(GName* name) { if (name) name->setGCMark(); }
 
@@ -1569,9 +1574,10 @@ void OwnerTable::gcOwnerTable()
 {
   PD(GC,"owner gc");
   int i;
-  for(i=1;i<size;i++){
+  for(i=0;i<size;i++){
       OwnerEntry* o = ownerTable->getOwner(i);
       if(!o->isFree()) {
+        PD(GC,"OT o:%d",i);
         o->gcPO();
       }
   }
@@ -1579,9 +1585,29 @@ void OwnerTable::gcOwnerTable()
   return;
 }
 
-extern TaggedRef gcTagged1(TaggedRef in);
+void BorrowEntry::gcBorrow(int i) {
+  if (!isFree() &&
+      !isMarked() &&
+      isVar()) {
+    PD(GC,"BT b:%d variable found",i);
+    PerdioVar *pv=getVar();
+    if (pv->hasVal()) {
+      PD(WEIRD,"BT b:%d pending unmarked var found",i);
+      gcPO();
+    }
+  }
+}
 
-/* OBSERVE - this must done at the end of other gc */
+void BorrowTable::gcBorrowTableRoots()
+{
+  PD(GC,"borrow gc roots");
+  int i;
+  for(i=0;i<size;i++) {
+    BorrowEntry *b=getBorrow(i);
+    b->gcBorrow(i);
+  }
+}
+
 void BorrowTable::gcBorrowTable()
 {
   PD(GC,"borrow gc");
@@ -1594,8 +1620,8 @@ void BorrowTable::gcBorrowTable()
         PD(GC,"BT b:%d mark found",i);
         if (b->isVar()) {
           PD(GC,"BT b:%d variable found",i);
-          b->mkVar(gcTagged1(b->getRef()));
         } else {
+          PD(GC,"BT b:%d tertiary found",i);
           Assert(b->isTertiary());
         }
       } else {
@@ -1616,32 +1642,30 @@ void GNameTable::gcGNameTable()
   GenHashNode *aux = getFirst(index);
   while(aux) {
     GName *gn = (GName*) aux->getBaseKey();
-    GenHashNode *aux1 = aux;
-    int oldindex = index;
-    aux = getNext(aux,index);
     /* code is never garbage collected */
-    if (gn->getPredMark()) {
-      continue;
+    if (!gn->getPredMark()) {
+      if (gn->getGCMark()) {
+        TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
+        gcTagged(t,t);
+        aux->setEntry((GenHashEntry*)ToPointer(t));
+        gn->resetGCMark();
+      } else {
+        delete gn;
+        if (!htSub(index,aux)) continue;
+      }
     }
-    if (gn->getGCMark()) {
-      TaggedRef t = (TaggedRef) ToInt32(aux1->getEntry());
-      gcTagged(t,t);
-      aux1->setEntry((GenHashEntry*)ToPointer(t));
-      gn->resetGCMark();
-    } else {
-      delete gn;
-      htSub(oldindex,aux1);
-    }
+    aux = getNext(aux,index);
   }
   compactify();
 }
 
 void PerdioVar::gcPerdioVar(void)
 {
-  PD(GC,"PerdioVar");
   int i = getIndex();
   if (isProxy()) {
+    PD(GC,"PerdioVar b:%d",i);
     BorrowEntry *be=borrowTable->getBorrow(i);
+    be->gcPO();
     be->makeMark();
 
     PendBinding **last = &u.bindings;
@@ -1654,6 +1678,7 @@ void PerdioVar::gcPerdioVar(void)
     }
     *last=0;
   } else {
+    PD(GC,"PerdioVar o:%d",i);
     ProxyList **last=&u.proxies;
     for (ProxyList *pl = u.proxies; pl; pl = pl->next) {
       ProxyList *newPL = new ProxyList(pl->sd,0);
@@ -1790,7 +1815,7 @@ public:
       Assert(!isEmpty());
       debt = (int) pop();
       b=borrowTable->getBorrow(bi);
-      b->inDebtSec(debt,pe);}
+      b->inDebt(debt,pe);}
     return;}
 
   void debtPush(int debt,int i){
@@ -2199,7 +2224,7 @@ loop:
         bs->put(M_ATOM);
         PD(MARSHALL_CT,"tag M_ATOM  BYTES:1");
         marshallString(lit->getPrintName(),bs);
-        PD(MARSHALL,"atom");
+        PD(MARSHALL,"atom: %s",lit->getPrintName());
         break;
       }
       if (literalEq(NameTrue,t)) {
@@ -2753,13 +2778,18 @@ void siteReceive(ByteStream* bs)
 
 
       OwnerEntry *oe = OT->getOwner(OTI);
-      oe->returnCredit(1);
-      Assert(!oe->hasFullCredit());
       if (oe->isVar()) {
-        oe->getVar()->registerSite(rsite);
+        PerdioVar *pv=oe->getVar();
+        if (!pv->isRegistered(rsite)) {
+          pv->registerSite(rsite);
+        } else {
+          PD(WEIRD,"REGISTER o:%d s:%s already registered",OTI,pSite(rsite));
+        }
+
       } else {
         sendRedirect(rsite,OTI,oe->getRef());
       }
+      ownerTable->returnCreditAndCheck(OTI,1);
       break;
     }
 
@@ -2776,13 +2806,15 @@ void siteReceive(ByteStream* bs)
       BorrowEntry *be=BT->find(&na);
 
       if (!be) { // if not found, then forget the redirect message
+        PD(WEIRD,"REDIRECT: no borrow entry found");
         sendCreditBack(na.site,na.index,1);
         return;
       }
+      be->addCredit(1);
 
       Assert(be->isVar());
       PerdioVar *pv = be->getVar();
-      PD(TABLE,"REDIRECT - borrow entry hit o:%d",pv->getIndex());
+      PD(TABLE,"REDIRECT - borrow entry hit b:%d",pv->getIndex());
       Assert(pv->isProxy());
       pv->primBind(be->getPtr(),val);
       be->mkRef();
@@ -2792,6 +2824,7 @@ void siteReceive(ByteStream* bs)
         pv->redirect(val);
       }
 
+      // pv->dispose();
       BT->maybeFreeBorrowEntry(pv->getIndex());
 
       break;
@@ -2808,13 +2841,19 @@ void siteReceive(ByteStream* bs)
       OwnerEntry *oe = ownerTable->getOwner(OTI);
 
       if (oe->isVar()) {
+        PD(PD_VAR,"SURRENDER do it");
         PerdioVar *pv = oe->getVar();
         // bug fixed: may be bound to a different perdio var
         pv->primBind(oe->getPtr(),v);
         oe->mkRef();
         oe->returnCredit(1); // don't delete!
+        if (oe->hasFullCredit()) {
+          PD(WEIRD,"SURRENDER: full credit");
+        }
         sendRedirect(pv->getProxies(),v,rsite,OTI);
       } else {
+        PD(PD_VAR,"SURRENDER discard");
+        PD(WEIRD,"SURRENDER discard");
         // ignore redirect: NOTE: v is handled by the usual garbage collection
         ownerTable->returnCreditAndCheck(OTI,1);
       }
@@ -2830,18 +2869,15 @@ void siteReceive(ByteStream* bs)
 
       NetAddress na=NetAddress(sd,si);
       BorrowEntry *be=BT->find(&na);
-
-      if (!be) { // if not found, then forget the ACK message
-        sendCreditBack(na.site,na.index,1);
-        return;
-      }
-
+      Assert(be);
+      be->addCredit(1);
 
       Assert(be->isVar());
       PerdioVar *pv = be->getVar();
       pv->acknowledge(be->getPtr());
       be->mkRef();
 
+      // pv->dispose();
       BT->maybeFreeBorrowEntry(pv->getIndex());
 
       break;
@@ -2884,7 +2920,7 @@ void remoteSend(PortProxy *p, TaggedRef msg) {
   if(!(b->getOneCredit())){
       PD(DEBT_MAIN,"remoteSend");
       pe= pendEntryManager->newPendEntry(bs,site,b);
-      b->inDebtMain(pe);}
+      b->inDebtPort(pe);}
   else pe=NULL;
 
   bs->put(M_PORTSEND);
@@ -2926,7 +2962,7 @@ void remoteClose(PortProxy *p) {
   }
   PD(DEBT_MAIN,"remoteClose");
   PendEntry *pe = pendEntryManager->newPendEntry(bs,site,b);
-  b->inDebtMain(pe);
+  b->inDebtPort(pe);
 }
 
 void getClosure(ProcProxy *pp, Bool getCode)
@@ -2966,10 +3002,11 @@ void sendSurrender(BorrowEntry *be,OZ_Term val)
     PD(DEBT_SEC,"surrender");
     PendEntry *pe=pendEntryManager->newPendEntry(bs,site);
     debtRec->handler(pe);
+    return;
   }
   PD(DEBT_MAIN,"surrender");
-  PendEntry *pe= pendEntryManager->newPendEntry(bs,site,be);
-  be->inDebtMain(pe);
+  PendEntry *pe= pendEntryManager->newPendEntry(bs,site);
+  be->inDebt(1,pe);
   if(!debtRec->isEmpty()){
     debtRec->handler(pe);
   }
@@ -3015,6 +3052,7 @@ void sendAcknowledge(Site* sd,int OTI)
 
 void PerdioVar::acknowledge(OZ_Term *ptr)
 {
+  PD(PD_VAR,"acknowledge");
   OZ_Term val=u.bindings->val;
   primBind(ptr,val);
   oz_resume(u.bindings->thread);
@@ -3028,12 +3066,14 @@ void PerdioVar::acknowledge(OZ_Term *ptr)
 extern TaggedRef BI_Unify;
 
 void PerdioVar::redirect(OZ_Term val) {
+  PD(PD_VAR,"redirect v:%s",toC(val));
   while (u.bindings) {
 
     RefsArray args = allocateRefsArray(2,NO);
     args[0]=val;
     args[1]=u.bindings->val;
     u.bindings->thread->pushCall(BI_Unify,args,2);
+    PD(PD_VAR,"redirect pending unify =%s",toC(u.bindings->val));
     oz_resume(u.bindings->thread);
 
     PendBinding *tmp=u.bindings->next;
@@ -3067,7 +3107,7 @@ void bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v)
     OT->getOwner(pv->getIndex())->mkRef();
     sendRedirect(pv->getProxies(),v,mySite,pv->getIndex());
   } else {
-    PD(PD_VAR,"bind proxy o:%d v:%s",pv->getIndex(),toC(v));
+    PD(PD_VAR,"bind proxy b:%d v:%s",pv->getIndex(),toC(v));
     Assert(pv->isProxy());
     if (pv->hasVal()) {
       pv->pushVal(v); // save binding for ack message, ...
@@ -3152,8 +3192,6 @@ OZ_C_proc_end
 #define INIT_IP(port)                                                     \
   if (!ipIsInit()) {                                                      \
     InterfaceCode ret=ipInit(port,siteReceive);                           \
-    if(ret==INVALID_VIRTUAL_PORT){                                        \
-      return OZ_raiseC("startSite",1,OZ_string("invalid virtual port"));} \
     if(ret==NET_RAN_OUT_OF_TRIES){                                        \
       return OZ_raiseC("startSite",1,OZ_string("ran out of tries"));}     \
     PD(USER,"startSite succeeded");                                       \

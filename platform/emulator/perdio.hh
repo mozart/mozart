@@ -42,6 +42,7 @@ void networkSiteDec(int sd);
 
 void gcOwnerTable();
 void gcBorrowTable();
+void gcBorrowTableRoots();
 void gcPortProxy(PortProxy* );
 void gcPortManager(PortManager* );
 void getClosure(ProcProxy *, Bool getCode);

@@ -95,6 +95,14 @@ public:
     u.proxies = new ProxyList(sd,u.proxies);
   }
 
+  Bool isRegistered(Site* sd) {
+    Assert(isManager());
+    for (ProxyList *pl = u.proxies; pl != 0; pl=pl->next) {
+      if (pl->sd==sd) return OK;
+    }
+    return NO;
+  }
+
   void primBind(TaggedRef *lPtr,TaggedRef v);
   Bool unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop);
 

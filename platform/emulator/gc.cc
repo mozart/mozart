@@ -1594,6 +1594,7 @@ void AM::gc(int msgLevel)
 
   PROFILE_CODE1(FDProfiles.gc());
 
+  gcBorrowTableRoots();
   performCopying();
 
 // -----------------------------------------------------------------------
