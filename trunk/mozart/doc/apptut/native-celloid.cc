@@ -1,6 +1,6 @@
 #include "mozart.h"
 
-class Celloid : public OZ_SituatedExtension {
+class Celloid : public OZ_Extension {
 public:
   OZ_Term content;
   Celloid(OZ_Term t):content(t){}

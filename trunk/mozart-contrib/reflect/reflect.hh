@@ -63,7 +63,7 @@ fflush(stdout)
 
 extern "C" INIT_FUNC(oz_init_module);
 
-class PropagatorReference : public OZ_SituatedExtension {
+class PropagatorReference : public OZ_Extension {
   friend INIT_FUNC(oz_init_module);
 
 private:
@@ -84,7 +84,7 @@ public:
 
   virtual int getIdV(void) { return _id; }
 
-  virtual OZ_SituatedExtension * sCloneV(void) {
+  virtual OZ_Extension * sCloneV(void) {
     DEBUGPRINT("sCloneV\n");
     return new PropagatorReference(_p);
   }
@@ -94,7 +94,7 @@ public:
     _p = (Propagator *) ((Suspendable *) _p)->sCloneSuspendable();
   }
 
-  virtual OZ_SituatedExtension * gCollectV(void) {
+  virtual OZ_Extension * gCollectV(void) {
     DEBUGPRINT("gCollectV\n");
     return new PropagatorReference(_p);
   }
