@@ -38,6 +38,7 @@ LIB_POSIX_DLOAD = $(addprefix $(DIR_DLOAD)/,$(POSIX_DLOAD))
 
 all:    posix
 posix:  $(POSIX_LOAD) $(POSIX_DLOAD)
+bootstrap: all
 
 install:        install-posix
 install-load:   install-posix-load
