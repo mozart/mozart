@@ -66,6 +66,8 @@ local
    end
 
    fun {S2F Nr Frame}
+      Data = {CondSelect Frame data unit}
+   in
       frame(nr:      Nr   % frame counter
 	    dir:     {Label Frame}   % 'entry' or 'exit'
 	    file:    {CondSelect Frame file nofile}
@@ -74,8 +76,6 @@ local
 	    time:    Frame.time
 	    name:    case {CondSelect Frame name unit} of unit then
 			case Frame.kind of call then
-			   Data = {CondSelect Frame data unit}
-			in
 			   case {IsDet Data} then
 			      case Data == unit then 'unknown'
 			      elsecase {IsObject Data} then
@@ -91,9 +91,10 @@ local
 			end
 		     elseof Name then Name
 		     end
+	    data:    Data
 	    args:    case Frame.kind
 		     of 'lock' then [Frame.data]
-		     [] 'cond' then Data = {CondSelect Frame data unit} in
+		     [] 'cond' then
 			case {IsDet Data} andthen Data == unit then unit
 			else [Data]
 			end

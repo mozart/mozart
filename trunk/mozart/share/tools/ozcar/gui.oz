@@ -538,8 +538,13 @@ in
 
       meth printStackFrame(frame:Frame delete:Delete<=true)
 	 W          = {self.StackText w($)}
-	 FrameNr    = Frame.nr    %% frame number
-	 FrameName  = Frame.name  %% procedure/builtin name
+	 FrameNr    = Frame.nr
+	 FrameName  = case Frame.name
+		      of ''  then '$'
+		      [] nil then "nil"
+		      [] '#' then "#"
+		      else Frame.name end
+	 FrameData  = Frame.data
 	 FrameArgs  = case Frame.args == unit then unit
 		      else {FormatArgs Frame.args}  %% argument list
 		      end
@@ -550,26 +555,39 @@ in
 			      action: self # FrameClick(frame:Frame))}
 	 LineEnd     = p(FrameNr 'end')
 	 UpToDate    = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
+	 Arrow       = case Frame.dir == entry then ' -> ' else ' <- ' end
       in
 	 case Delete then
 	    Gui,Enable(stack W)
 	    Gui,DeleteToEnd(stack W FrameNr+1)
 	    Gui,DeleteLine(stack W FrameNr)
 	 else skip end
-	 Gui,Enqueue(stack
-		     o(W insert LineEnd
-		       case Frame.dir == entry then ' -> ' else ' <- ' end #
-		       FrameNr #
-		       case {IsSpecialFrameName FrameName} then
-			  ' ' # FrameName
-		       else
-			  ' {' # case FrameName
-				 of ''  then '$'
-				 [] nil then "nil"
-				 [] '#' then "#"
-				 else FrameName end
-		       end
-		       q(StackTag LineActTag LineColTag)))
+	 case {IsSpecialFrameName FrameName} then
+	    Gui,Enqueue(stack
+			o(W insert LineEnd Arrow # FrameNr # ' ' # FrameName
+			  q(StackTag LineActTag LineColTag)))
+	 elsecase {IsDet FrameData} andthen FrameData == unit then
+	    Gui,Enqueue(stack
+			o(W insert LineEnd Arrow # FrameNr # ' {' # FrameName
+			  q(StackTag LineActTag LineColTag)))
+	 else
+	    ProcTag    = {self.StackText newTag($)}
+	    ProcAction = {New Tk.action
+			  tkInit(parent: W
+				 action: proc {$}
+					    {Browse FrameData}
+					    LastClicked <- FrameData
+					 end)}
+	 in
+	    Gui,Enqueue(stack
+			o(W insert LineEnd Arrow # FrameNr # ' {'
+			  q(StackTag LineActTag LineColTag)))
+	    Gui,Enqueue(stack
+			o(W insert LineEnd FrameName
+			  q(StackTag LineColTag ProcTag)))
+	    Gui,Enqueue(stack o(W tag bind ProcTag '<1>' ProcAction))
+	    Gui,Enqueue(stack o(W tag conf ProcTag font:BoldFont))
+	 end
 	 case FrameArgs of unit then
 	    case {IsSpecialFrameName FrameName} then skip
 	    else Gui,Enqueue(stack
