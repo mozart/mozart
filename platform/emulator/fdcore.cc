@@ -442,3 +442,14 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
 
   return (OZ_unify (OZ_in(2), oz_false()));
 } OZ_BI_end
+
+
+/*
+ * The builtin table
+ */
+
+#ifndef MODULES_LINK_STATIC
+
+#include "modFDB-if.cc"
+
+#endif

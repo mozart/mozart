@@ -3872,5 +3872,12 @@ void OZ_FSetConstraint::disposeExtension() {
   CASTTHIS->disposeExtension();
 }
 
+void
+makeFSetValue(OZ_Term desc,OZ_Term*fs)
+{
+  *fs = makeTaggedFSetValue(new FSetValue(desc));
+}
+
+
 // eof
 //-----------------------------------------------------------------------------

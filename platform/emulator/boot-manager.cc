@@ -48,16 +48,13 @@ static TaggedRef dictionary_of_modules;
 #include "modOS-if.cc"
 #include "modPickle-if.cc"
 #include "modURL-if.cc"
-#include "modFDB-if.cc"
-#include "modFSB-if.cc"
 #include "modSystem-if.cc"
 #include "modApplication-if.cc"
-#include "modCTB-if.cc"
+#include "modRecordC-if.cc"
 #include "modFinalize-if.cc"
 #include "modProfile-if.cc"
 #include "modDistribution-if.cc"
 #include "modWeakDictionary-if.cc"
-#include "modSpace-if.cc"
 #ifdef DENYS_EVENTS
 #include "modEvent-if.cc"
 #include "modTimer-if.cc"
@@ -107,9 +104,13 @@ static TaggedRef dictionary_of_modules;
 #ifdef MODULES_LINK_STATIC
 
 #include "modTk-if.cc"
+#include "modSpace-if.cc"
+#include "modFDB-if.cc"
 #include "modFDP-if.cc"
+#include "modCTB-if.cc"
 #include "modSchedule-if.cc"
 #include "modParser-if.cc"
+#include "modFSB-if.cc"
 #include "modFSP-if.cc"
 #include "modCompilerSupport-if.cc"
 #include "modBrowser-if.cc"
@@ -182,9 +183,7 @@ static ModuleEntry ext_module_table[] = {
   {"Finalize",        mod_int_Finalize},
   {"Profile",         mod_int_Profile},
   {"Distribution",    mod_int_Distribution},
-  {"CTB",             mod_int_CTB},
-  {"FDB",             mod_int_FDB},
-  {"FSB",             mod_int_FSB},
+  {"RecordC",         mod_int_RecordC},
   {"WeakDictionary",  mod_int_WeakDictionary},
   {"INTERNAL",        mod_int_INTERNAL},
 #ifdef DENYS_EVENTS
@@ -192,11 +191,13 @@ static ModuleEntry ext_module_table[] = {
   {"Timer",           mod_int_Timer},
 #endif
 
-  {"Space",           mod_int_Space},
-
 #ifdef MODULES_LINK_STATIC
+  {"Space",           mod_int_Space},
+  {"FDB",             mod_int_FDB},
   {"FSP",             mod_int_FSP},
+  {"FSB",             mod_int_FSB},
   {"FDP",             mod_int_FDP},
+  {"CTB",             mod_int_CTB},
   {"CompilerSupport", mod_int_CompilerSupport},
   {"Parser",          mod_int_Parser},
   {"Browser",         mod_int_Browser},
@@ -447,6 +448,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
     filename      = name;
   }
 
+
   void *handle;
   TaggedRef res = osDlopen(filename,&handle);
 
@@ -507,6 +509,7 @@ void initBuiltins() {
   link_module(ext_module_table,  OK);
 
   // General stuff
+  BI_wait         = string2Builtin("Value","wait");
   BI_send         = string2Builtin("Port","send");
   BI_exchangeCell = string2Builtin("Cell","exchangeFun");
   BI_assign       = string2Builtin("Object","<-");

@@ -47,7 +47,7 @@ extern TaggedRef
 
   _NameTrue, _NameFalse,
 
-  BI_Unify,BI_send,
+  BI_Unify,BI_send,BI_wait,
   BI_load,BI_fail,BI_skip,BI_url_load, BI_obtain_native,
   BI_dot,
   BI_exchangeCell,BI_assign,BI_atRedo,
