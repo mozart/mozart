@@ -34,29 +34,30 @@ import
    URL
 define
    Args = {Application.getCmdArgs
-           single('in'(         type:string optional:false default:unit)
-                  'type'(       type:string optional:false default:unit)
-                  'out'(        type:string optional:false default:unit)
-                  'autoindex'(  type:bool                  default:false)
+           record('in'(single char: &i type: string optional: false)
+                  'type'(single char: &t type: string optional: false)
+                  'html'(alias: 'type'#"html-stylesheets")
+                  'out'(single char: &o type: string optional: false)
+                  'autoindex'(single type: bool default: false)
                   % HTML options
-                  'stylesheet'( type:string optional:false default:unit)
-                  'latexmath'(  type:bool                  default:true)
-                  'split'(      type:bool                  default:true)
+                  'stylesheet'(single type: string default: unit)
+                  'latexmath'(rightmost type: bool default:true)
+                  'split'(rightmost type: bool default:true)
                   % Path names
-                  'ozdoc-home'( type:string optional:false default:unit)
-                  'author-path'(type:string optional:false default:unit)
-                  'bib-path'(   type:string optional:false default:unit)
-                  'bst-path'(   type:string optional:false default:unit)
-                  'elisp-path'( type:string optional:false default:unit)
-                  'sbin-path'(  type:string optional:false default:unit)
-                  'catalog'(    type:string optional:false default:unit)
+                  'ozdoc-home'(single type: string default: unit)
+                  'author-path'(single type: string default: unit)
+                  'bib-path'(single type: string default: unit)
+                  'bst-path'(single type: string default: unit)
+                  'elisp-path'(single type: string default: unit)
+                  'sbin-path'(single type: string default: unit)
+                  'catalog'(single type: string default: unit)
                  )}
    % Process path name options and store results in ozdoc.* properties
    local
       % Determine the directory in which document source files are located:
       SRC_DIR =
-      case Args.'in' of unit then '.'
-      elseof X then
+      local
+         X    = Args.'in'
          Url  = {URL.make X}
          Path = {CondSelect Url path unit}
       in
@@ -139,12 +140,8 @@ define
    end
    % The actual translation
    try
-      case Args.'in' of unit then
-         {Raise usage('no input file name specified')}
-      elsecase Args.'out' of unit then
-         {Raise usage('no output directory name specified')}
-      elsecase Args.2 of _|_ then
-         {Raise usage('unrecognized command line arguments')}
+      case Args.1 of _|_ then
+         {Raise usage('extra command line arguments')}
       elsecase Args.'type' of "html-color" then
          {OzDocToHTML.translate color Args}
       elseof "html-mono" then
