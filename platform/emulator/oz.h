@@ -288,6 +288,9 @@ extern OZ_Return _FUNDECL(OZ_typeError,(int pos,char *type));
 extern OZ_Return _FUNDECL(OZ_raise,(OZ_Term));
 extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
 
+/* special! dont use! */
+extern OZ_Return _FUNDECL(OZ_raiseA,(char*, int, int));
+
 /* Suspending builtins */
 
 void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
@@ -346,29 +349,16 @@ void _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #endif
 
-#define OZ_C_proc_begin(Name,Arity)			\
-    OZ_C_proc_proto(Name)				\
-    OZ_C_proc_header(Name)				\
-       OZ_CFun OZ_self = Name;				\
-       if (OZ_arity != Arity && Arity != VarArity) {	\
-	 return OZ_raiseC("arity",2,OZStringify(Name),	\
-			  OZ_toList(OZ_arity,OZ_args));	\
-         return FAILED;					\
+#define OZ_C_proc_begin(Name,Arity)				\
+    OZ_C_proc_proto(Name)					\
+    OZ_C_proc_header(Name)					\
+       OZ_CFun OZ_self = Name;					\
+       if (OZ_arity != Arity && Arity != VarArity) {		\
+	 return OZ_raiseA(OZStringify(Name),OZ_arity,Arity);	\
        }
 
 #define OZ_C_proc_end }
 
-
-#define OZ_C_ioproc_begin(Name,Arity)			\
-OZ_C_proc_begin(Name,Arity)				\
-  if (!OZ_onToplevel()) {				\
-    return OZ_raiseC("globalState",1,OZ_atom("io"));	\
-  }
-
-#define OZ_C_ioproc_end }
-
-
-						    
 /* access arguments */
 #define OZ_getCArg(N) OZ_args[N]
 
