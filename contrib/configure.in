@@ -127,6 +127,26 @@ AC_ARG_ENABLE(contrib-ri_lp,
 AC_MSG_RESULT($oz_cv_enable_contrib_ri_lp)
 OZ_ADDTO_CONTRIBDIRS(ri_lp)
 
+AC_MSG_CHECKING([for --enable-contrib-lp])
+AC_ARG_ENABLE(contrib-lp,
+  [--enable-contrib-lp
+	whether to build the lp contribution (default: yes)],
+  [oz_cv_enable_contrib_lp=$enableval],
+  [: ${oz_cv_enable_contrib_lp:=$oz_enable_contrib_lp}
+   : ${oz_cv_enable_contrib_lp:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_lp)
+OZ_ADDTO_CONTRIBDIRS(lp)
+
+AC_MSG_CHECKING([for --enable-contrib-ri])
+AC_ARG_ENABLE(contrib-ri,
+  [--enable-contrib-ri
+	whether to build the ri contribution (default: yes)],
+  [oz_cv_enable_contrib_ri=$enableval],
+  [: ${oz_cv_enable_contrib_ri:=$oz_enable_contrib_ri}
+   : ${oz_cv_enable_contrib_ri:=yes}])
+AC_MSG_RESULT($oz_cv_enable_contrib_ri)
+OZ_ADDTO_CONTRIBDIRS(ri)
+
 AC_MSG_CHECKING([for --enable-contrib-davinci])
 AC_ARG_ENABLE(contrib-davinci,
   [--enable-contrib-davinci
