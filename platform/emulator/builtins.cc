@@ -3906,6 +3906,14 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   BIGOP(add);
   return suspendOnNumbers(A,B);
 }
+
+
+OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out)
+{
+  return callPlus ?  BIplusInline(A,B,out) : BIminusInline(A,B,out);
+}
+
+
 #undef BIGOP
 
 /* -----------------------------------
@@ -4155,6 +4163,7 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
   return suspendOnNumbersAndAtoms(A,B);
 }
 
+
 OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   OZ_Return ret = BIlessInline(A,B);
@@ -4232,6 +4241,12 @@ OZ_Return BIgeInline(TaggedRef A, TaggedRef B)
 {
   return BIleInline(B,A);
 }
+
+OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B)
+{
+  return callLess ? BIlessInline(A,B) : BIleInline(A,B);
+}
+
 
 /* -----------------------------------
    X = conv(Y)

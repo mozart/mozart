@@ -797,6 +797,10 @@ void engine(Bool init)
   ConstTerm *predicate;     NoReg(predicate);
   int predArity;            NoReg(predArity);
 
+  TaggedRef auxTaggedA, auxTaggedB;
+  int auxInt;
+  char *auxString;
+
   // short names
 # define CBB (e->currentBoard())
 # define CTT (e->currentThread())
@@ -1487,6 +1491,136 @@ LBLdispatcher:
       }
     }
 
+  Case(INLINEMINUS)
+    {
+      COUNT(inlinecalls);
+
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+
+      if ( isSmallInt(tagA) && isSmallInt(tagB) ) {
+        XPC(3) = makeInt(smallIntValue(A) - smallIntValue(B));
+        DISPATCH(5);
+      }
+
+      if (isFloat(tagA) && isFloat(tagB)) {
+        XPC(3) = oz_float(floatValue(A) - floatValue(B));
+        DISPATCH(5);
+      }
+
+      auxTaggedA = XPC(1);
+      auxTaggedB = XPC(2);
+      auxInt     = 4;
+      auxString = "-";
+
+      // abuse predArity
+      predArity = (int) BIminusOrPlus(NO,A,B,XPC(3));
+      goto LBLhandlePlusMinus;
+    }
+
+  Case(INLINEPLUS)
+    {
+      COUNT(inlinecalls);
+
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+
+      if ( isSmallInt(tagA) && isSmallInt(tagB) ) {
+        XPC(3) = makeInt(smallIntValue(A) + smallIntValue(B));
+        DISPATCH(5);
+      }
+
+      if (isFloat(tagA) && isFloat(tagB)) {
+        XPC(3) = oz_float(floatValue(A) + floatValue(B));
+        DISPATCH(5);
+      }
+
+      auxTaggedA = XPC(1);
+      auxTaggedB = XPC(2);
+      auxInt     = 4;
+      auxString = "+";
+
+      // abuse predArity
+      predArity = (int) BIminusOrPlus(OK,A,B,XPC(3));
+      goto LBLhandlePlusMinus;
+    }
+
+  Case(INLINEMINUS1)
+    {
+      COUNT(inlinecalls);
+
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+
+      if (isSmallInt(tagA)) {
+        /* INTDEP */
+        int res = (int)A - (1<<tagSize);
+        if ((int)A > res) {
+          XPC(2) = res;
+          DISPATCH(4);
+        }
+      }
+
+      auxTaggedA = XPC(1);
+      auxTaggedB = makeTaggedSmallInt(1);
+      auxInt     = 3;
+      auxString = "-1";
+
+      // abuse predArity
+      predArity = (int) BIminusOrPlus(NO,A,makeTaggedSmallInt(1),XPC(2));
+      goto LBLhandlePlusMinus;
+    }
+
+  Case(INLINEPLUS1)
+    {
+      COUNT(inlinecalls);
+
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+
+      if (isSmallInt(tagA)) {
+        /* INTDEP */
+        int res = (int)A + (1<<tagSize);
+        if ((int)A < res) {
+          XPC(2) = res;
+          DISPATCH(4);
+        }
+      }
+
+      auxTaggedA = XPC(1);
+      auxTaggedB = makeTaggedSmallInt(1);
+      auxInt     = 3;
+      auxString = "+1";
+
+      // abuse predArity
+      predArity = (int) BIminusOrPlus(OK,A,auxTaggedB,XPC(2));
+      goto LBLhandlePlusMinus;
+    }
+
+
+  LBLhandlePlusMinus:
+  {
+      OZ_Return res = (OZ_Return) predArity;
+
+      switch(res) {
+      case PROCEED:       DISPATCH(auxInt+1);
+      case BI_TYPE_ERROR: RAISE_TYPE1_FUN(auxString,
+                                          cons(auxTaggedA,cons(auxTaggedB,nil())));
+
+      case SUSPEND:
+        {
+          if (shallowCP) {
+            e->trail.pushIfVar(auxTaggedA);
+            e->trail.pushIfVar(auxTaggedB);
+            goto LBLsuspendShallow;
+          }
+          CheckLiveness(PC,getPosIntArg(PC+auxInt));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+auxInt));
+          suspendInline(CTT,auxTaggedA,auxTaggedB);
+          goto LBLsuspendThread;
+        }
+      default:    Assert(0);
+      }
+    }
+
   Case(INLINEFUN1)
     {
       COUNT(inlinecalls);
@@ -1529,8 +1663,6 @@ LBLdispatcher:
         predArity = MaxToSave(3,4);
         PC += 5;
         goto LBLreplaceBICall;
-
-
 
 
       case BI_TYPE_ERROR:
@@ -1867,12 +1999,7 @@ LBLdispatcher:
         {
           CheckLiveness(PC,getPosIntArg(PC+5));
           PushContX(PC,Y,G,X,getPosIntArg(PC+5));
-          OZ_Term A=XPC(2);
-          OZ_Term B=XPC(3);
-          DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
-          Assert(isAnyVar(ATag) || isAnyVar(BTag));
-          if (isAnyVar (A)) addSusp(APtr, CTT);
-          if (isAnyVar (B)) addSusp(BPtr, CTT);
+          suspendInline(CTT,XPC(2),XPC(3));
           goto LBLsuspendThread;
         }
 
@@ -1884,6 +2011,113 @@ LBLdispatcher:
                     cons(XPC(2),cons(XPC(3),nil())));
 
       case SLEEP:
+      default:
+        Assert(0);
+      }
+    }
+
+  Case(TESTLESS)
+    {
+      COUNT(inlinecalls);
+
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+
+      if (tagA == tagB) {
+        if (tagA == SMALLINT) {
+          if (smallIntLess(A,B))
+            goto LessThenCase;
+          else
+            goto LessElseCase;
+        }
+
+        if (isFloat(tagA)) {
+          if (floatValue(A) < floatValue(B))
+            goto LessThenCase;
+          else
+            goto LessElseCase;
+        }
+
+        if (tagA == LITERAL) {
+          if (isAtom(A) && isAtom(B)) {
+            if  (strcmp(tagged2Literal(A)->getPrintName(),
+                           tagged2Literal(B)->getPrintName()) < 0)
+              goto LessThenCase;
+            else
+              goto LessElseCase;
+          }
+        }
+      }
+      predArity = (int) BILessOrLessEq(OK,XPC(1),XPC(2));
+      auxString = "<";
+      goto LBLhandleLess;
+    }
+
+  Case(TESTLESSEQ)
+    {
+      COUNT(inlinecalls);
+
+      TaggedRef A = XPC(1); DEREF0(A,_1,tagA);
+      TaggedRef B = XPC(2); DEREF0(B,_2,tagB);
+
+      if (tagA == tagB) {
+        if (tagA == SMALLINT) {
+          if (smallIntLE(A,B))
+            goto LessThenCase;
+          else
+            goto LessElseCase;
+        }
+
+        if (isFloat(tagA)) {
+          if (floatValue(A) <= floatValue(B))
+            goto LessThenCase;
+          else
+            goto LessElseCase;
+        }
+
+        if (tagA == LITERAL) {
+          if (isAtom(A) && isAtom(B)) {
+            if  (strcmp(tagged2Literal(A)->getPrintName(),
+                           tagged2Literal(B)->getPrintName()) <= 0)
+              goto LessThenCase;
+            else
+              goto LessElseCase;
+          }
+        }
+      }
+      predArity = (int) BILessOrLessEq(NO,XPC(1),XPC(2));
+      auxString = "=<";
+      goto LBLhandleLess;
+
+    }
+
+    {
+    LessThenCase:
+      DISPATCH(5);
+    LessElseCase:
+      JUMPRELATIVE(getLabelArg(PC+3));
+    }
+
+
+  LBLhandleLess:
+    {
+      OZ_Return res = (OZ_Return) predArity;
+      switch(res) {
+
+      case PROCEED: goto LessThenCase;
+      case FAILED:  goto LessElseCase;
+
+      case SUSPEND:
+        {
+          CheckLiveness(PC,getPosIntArg(PC+4));
+          PushContX(PC,Y,G,X,getPosIntArg(PC+4));
+          suspendInline(CTT,XPC(1),XPC(2));
+          goto LBLsuspendThread;
+        }
+
+      case BI_TYPE_ERROR:
+        RAISE_TYPE1(auxString,cons(XPC(1),cons(XPC(2),nil())));
+
       default:
         Assert(0);
       }
@@ -2067,6 +2301,9 @@ LBLdispatcher:
 // ------------------------------------------------------------------------
 
   Case(DEFINITIONCOPY)
+    {
+      //      error("DEFINITIONCOPY: not yet implemented");
+    }
   Case(DEFINITION)
     {
       Reg reg                     = getRegArg(PC+1);
@@ -3150,12 +3387,6 @@ LBLdispatcher:
       goto LBLerror;
     }
 
-  Case(INLINEPLUS)
-  Case(INLINEPLUS1)
-  Case(INLINEMINUS)
-  Case(INLINEMINUS1)
-  Case(TESTLESS)
-  Case(TESTLESSEQ)
 
   Case(TESTLABEL1)
   Case(TESTLABEL2)

@@ -106,4 +106,11 @@ public:
   void setFH(TaggedRef FH1) { FH=FH1; }
 };
 
+
+// -----------------------------------------------------------------------
+// arithmetics
+
+OZ_Return BIminusOrPlus(Bool callPlus,TaggedRef A, TaggedRef B, TaggedRef &out);
+OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B);
+
 #endif
