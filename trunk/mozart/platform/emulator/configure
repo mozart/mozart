@@ -3119,7 +3119,7 @@ fi
 	
 	    CC="$CC $oz_cc_mingw"
 	    LD="$CC"
-	    TOOLLDCMD="`cd ../mswindows && pwd`/oztool -inc `pwd` ld"
+	    TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
 	else # cross-compiling
 	    cat >> confdefs.h <<\EOF
 #define ARCH_I486 1
