@@ -10,13 +10,11 @@ HOMEURL         = @HOMEURL@
 
 OZC		= @OZC@
 COMPILE		= $(OZC) -c
-OZDYNLD		= @OZDYNLD@
-
-CXX		= @CXX@
+OZTOOL		= @OZTOOL@
 CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
 		  -I$(BUILDTOP)/platform/emulator \
-		  -I$(prefix)/include @CPPFLAGS@
-CXXFLAGS	= @CXXAVOID@ @CXXFLAGS@
+		  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 
@@ -45,10 +43,10 @@ gdbm.ozf: gdbm.oz
 	$(COMPILE) $< -o $@
 
 gdbm.so-$(PLATFORM): gdbm.o
-	$(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
+	$(OZTOOL) ld -o $@ $< $(LDFLAGS) $(LIBS)
 
 gdbm.o: gdbm.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+	$(OZTOOL) c++ $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
 	-$(RM) *~ *.bak *.o *.so-* *.ozf
