@@ -8,6 +8,6 @@ MAIN = bugs.sgml
 SGMLSRCS = bugs.bib
 HTMLEXTRASUPPORTFILES = danger.gif
 OZDOCHTMLFLAGS = --autoindex
-WHATCLASS=misc
-PRINTNAME=Bugs
+#WHATCLASS=misc
+#PRINTNAME=Bugs
 include ../Makefile.common
