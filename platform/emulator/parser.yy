@@ -210,7 +210,7 @@ void xy_setParserExpect() {
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
 %token DEFAULT CHOICE LDOTS
-%token attr _case_ catch choice _class_ _condis_ declare dis
+%token attr body _case_ catch choice _class_ _condis_ declare dis
 %token _else_ elsecase elseif elseof end export fail false FALSE_LABEL
 %token feat finally _from_ _fun_ functor _if_ import _in_ local _lock_
 %token _meth_ not of or proc prop ozraise self skip then
@@ -247,7 +247,12 @@ void xy_setParserExpect() {
 %type <t>  hashes
 %type <t>  phrase2
 %type <t>  procFlags
-%type <t>  decls
+%type <t>  functorDescriptorList
+%type <t>  importDecls
+%type <t>  optFeatures
+%type <t>  featureList
+%type <t>  optFrom
+%type <t>  exportDecls
 %type <t>  compare
 %type <t>  fdCompare
 %type <t>  fdIn
@@ -262,6 +267,7 @@ void xy_setParserExpect() {
 %type <t>  label
 %type <t>  recordArguments
 %type <t>  feature
+%type <t>  featureNoVar
 %type <t>  caseMain
 %type <t>  caseRest
 %type <t>  elseOfList
@@ -518,9 +524,9 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                 | _fun_ coord procFlags '{' phrase phraseList '}'
                   inSequence end
                   { $$ = newCTerm("fFun",$5,$6,$8,$3,$2); }
-                | functor coord phraseOpt import decls export decls _in_
-                  sequence end
-                  { $$ = newCTerm("fFunctor",$3,$5,$7,$9,$2); }
+                | functor coord phraseOpt functorDescriptorList
+                  body inSequence end
+                  { $$ = newCTerm("fFunctor",$3,$4,$6,$2); }
                 | class
                   { $$ = $1; }
                 | local coord sequence _in_ sequence end
@@ -567,10 +573,43 @@ procFlags       : /* empty */
                   { $$ = consList($1,$2); }
                 ;
 
-decls           : /* empty */
+functorDescriptorList
+                : /* empty */
                   { $$ = nilAtom; }
-                | nakedVariable decls
+                | import coord importDecls functorDescriptorList
+                  { $$ = consList(newCTerm("fImport",$3,$2),$4); }
+                | export coord exportDecls functorDescriptorList
+                  { $$ = consList(newCTerm("fExport",$3,$2),$4); }
+                ;
+
+importDecls     : /* empty */
+                  { $$ = nilAtom; }
+                | nakedVariable optFeatures optFrom importDecls
+                  { $$ = consList(newCTerm("fImportItem",$1,$2,$3),$2); }
+                ;
+
+optFeatures     : /* empty */
+                  { $$ = nilAtom; }
+                | '.' '{' featureList '}'
+                  { $$ = $3; }
+                ;
+
+featureList     : featureNoVar
+                  { $$ = consList($1,nilAtom); }
+                | featureNoVar featureList
                   { $$ = consList($1,$2); }
+                ;
+
+optFrom         : /* empty */
+                  { $$ = newCTerm("fNoFrom"); }
+                | _from_ atom
+                  { $$ = newCTerm("fFrom",$2); }
+                ;
+
+exportDecls     : /* empty */
+                  { $$ = nilAtom; }
+                | nakedVariable exportDecls
+                  { $$ = consList(newCTerm("fExportItem",$1),$2); }
                 ;
 
 compare         : COMPARE
@@ -665,6 +704,12 @@ feature         : atom
                   { $$ = makeVar("`true`"); }
                 | false
                   { $$ = makeVar("`false`"); }
+                ;
+
+featureNoVar    : atom
+                  { $$ = $1; }
+                | int
+                  { $$ = $1; }
                 ;
 
 caseMain        : coord sequence then inSequence caseRest coord
