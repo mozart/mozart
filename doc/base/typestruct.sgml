@@ -68,18 +68,25 @@
         label&nbsp;<<'#'>>. For more details see <Ptr to="chapter.text">.
   <Section>
     <Title/Variable Status/
+    <P>
+      Each node&nbsp;?{X} in the store has exactly one of the following
+      statuses: free, determined, future, or kinded.
     <Para class=apropos><Title/Free Variable/
       A variable&nbsp;<<X>> is <Def/free/ if the constraint store does not
       know anything about&nbsp;<<X>> apart from variable equalities <<X = Y>>.
     <Para class=apropos><Title/Determined Variable/
       A variable&nbsp;<<X>> is <Def/determined/ if the constraint store
-      entails <<X = N>> for some number&nbsp;<<N>>, or if it entails
-      <<X = f(a1: _ &ellipsis; an: _)>> for some label&nbsp;<<f>> and the
-      arity <<[a1 &ellipsis; an]>>.
-      <!--** this is not enough! -->
+      entails <<X = ?_{N}>> for some number&nbsp;?_{N}, or if it entails
+      <<X = ?_{f}(?_{a1}: _ &ellipsis; ?_{an}: _)>> for some label&nbsp;?_{f}
+      and the arity <<[?_{a1} &ellipsis; ?_{an}]>>, or if it entails
+      <<X = ?{Y}>> for some byte string, procedure, cell, chunk, space or
+      thread&nbsp;?_{Y}.
+    <Para class=apropos><Title/Future/
+      A variable&nbsp;<<X>> is <Def/future/ if the constraint store
+      entails <<X = ?_{F}>> for some future&nbsp;?_{F}.
     <Para class=apropos><Title/Kinded Variable/
-      A variable&nbsp;<<X>> is <Def/kinded/  if it is neither free nor
-      determined.
+      A variable&nbsp;<<X>> is <Def/kinded/ if it is neither free nor
+      determined nor future.
   <Section id="section.typestruct.format">
     <Title/Description Format/
     <P>
