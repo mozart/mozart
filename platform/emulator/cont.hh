@@ -73,7 +73,7 @@ public:
     }
   }
 
-  void Continuation::setX(RefsArray x, int i);
+  void setX(RefsArray x, int i);
 
   void gcRecurse(void);
   Continuation * gc();
