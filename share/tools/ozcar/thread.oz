@@ -192,8 +192,7 @@ in
 	    case E then
 	       ThreadManager,remove(T I noKill)
 	    else
-	       %{OzcarMessage UnknownTermThread}
-	       skip
+	       {OzcarMessage UnknownTermThread}
 	    end
 	    
 	 [] block then
@@ -242,11 +241,8 @@ in
       end
 
       meth removeSkippedProcs(I)
-	 %{OzcarMessage 'removing all skipped procedures for thread #' # I}
-	 %{OzcarShow 'before:' # @SkippedProcs}
 	 SkippedProcs <- {Filter @SkippedProcs
 			  fun {$ F} F.2 \= I end}
-	 %{OzcarShow 'after :' # @SkippedProcs}
       end
       
       meth add(T I Q R)
