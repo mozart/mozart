@@ -317,12 +317,6 @@ public:
   TypedPtr pop()  { return (TypedPtr) Stack::pop(); }
 };
 
-#ifdef MM2
-// gcc on SGI needs this
-TypedPtrStack::TypedPtrStack() : Stack() {}
-TypedPtrStack::~TypedPtrStack() {}
-#endif
-
 static TypedPtrStack ptrStack;
 
 
