@@ -416,10 +416,14 @@ OZ_BI_define(BIsaveCompressed,3,0)
 OZ_BI_define(BIsaveWithHeader,4,0)
 {
   OZ_declareIN(0,value);
+  OZ_nonvarIN(1);
+  OZ_nonvarIN(2);
+  oz_declareIntIN(3,compressionlevel);
+
   OZ_declareVirtualStringIN(1,filename);
   filename = ozstrdup(filename);
   OZ_declareVirtualStringIN(2,header);
-  oz_declareIntIN(3,compressionlevel);
+
   OZ_Return ret = saveIt(value,filename,header,compressionlevel,NO);
   free(filename);
   return ret;
