@@ -4,6 +4,7 @@ SRCTOP          = @SRCTOP@
 PREFIX          = @prefix@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
+HOMEURL         = @HOMEURL@
 LIB_DIR         = $(PREFIX)/contrib/tk
 OZC             = @OZC@
 INSTALL         = @INSTALL@
