@@ -21,3 +21,7 @@
 14) IsFree (distributed)			Ralf
 15) support for multiple marshalers		Ralf
 16) GC- code					??
+
+from Ralfs TODO.perdio
+- use hashing for BorrowerTable
+- eliminate NetAddress if object is local
