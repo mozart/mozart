@@ -784,7 +784,7 @@ RefsArray gcRefsArray(RefsArray r)
   return aux;
 }
 
-Propagator * Propagator::gc(void)
+OZ_Propagator * OZ_Propagator::gc(void)
 {
   board = ((Board *) board)->gcBoard();
   return gcPropagator();
