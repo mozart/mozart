@@ -475,8 +475,15 @@ public:
 
 
 #ifdef USE_INTVAR_NEW
-#define _DECL_DYN_ARRAY(Type,Var,Size) \
-     Type *Var = (Type *) OZ_FDIntVar::operator new(sizeof(Type) * Size)
+#define _DECL_DYN_ARRAY(Type,Var,Size)                                  \
+     Type *Var;                                                         \
+     {  Type __aux;                                                     \
+        int __sz = Size;                                                \
+        Var = (Type *) OZ_FDIntVar::operator new(sizeof(Type) * __sz);  \
+        for(int __i=0; __i<__sz; __i++) {                               \
+          memcpy(Var+__i,&__aux,sizeof(__aux));                         \
+        }                                                               \
+     }
 #endif
 
 #ifdef USE_ALLOCA
