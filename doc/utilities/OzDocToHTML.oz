@@ -1896,7 +1896,7 @@ define
 		 end
 	      end nil})
       end
-      meth Index(M Ands $) IsTails L in
+      meth Index(M Ands $) IsTails L L2 in
 	 IsTails = ({SGML.isOfClass M tails}
 		    orelse {SGML.isOfClass M menu}
 		    orelse {SGML.isOfClass M module})
@@ -1915,28 +1915,35 @@ define
 	       OzDocToHTML, ID(X @IdxNode SeeHTML)
 	    end
 	    if IsTails then
-	       OzDocToHTML, IndexTails(Ands.2 [Ands.1] L SeeHTML)
+	       OzDocToHTML, IndexTails(Ands.2 [Ands.1] L SeeHTML L2)
 	    end
 	 else
 	    L = unit
 	 end
-	 case {CondSelect M see unit} of unit then L2 in
-	    ToGenerate <- L2|@ToGenerate
+	 ToGenerate <- L2|@ToGenerate
+	 case {CondSelect M see unit} of unit then
 	    {@MyIndexer enter(L Ands a(href: @CurrentNode#"#"#L2 @WhereNow.1))}
-	    a(name: L2)
 	 elseof X then Node HTML in
 	    OzDocToHTML, ID(X ?Node ?HTML)
 	    {@MyIndexer enter(L Ands SEQ([PCDATA('see ')
-					  a(href: Node#"#"#X HTML)]))}
-	    EMPTY
+					  a(href: Node#"#"#X HTML)
+					  PCDATA(' (')
+					  a(href: @CurrentNode#"#"#L2
+					    @WhereNow.1)
+					  PCDATA(')')]))}
 	 end
+	 a(name: L2)
       end
-      meth IndexTails(Ands Prefix L HTML)
+      meth IndexTails(Ands Prefix L HTML L2)
 	 case Ands of A|Ar then
 	    {@MyIndexer enter(unit {Append Ands Prefix}
 			      SEQ([PCDATA('see ')
-				   a(href: @IdxNode#"#"#L HTML)]))}
-	    OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML)
+				   a(href: @IdxNode#"#"#L HTML)
+				   PCDATA(' (')
+				   a(href: @CurrentNode#"#"#L2
+				     @WhereNow.1)
+				   PCDATA(')')]))}
+	    OzDocToHTML, IndexTails(Ar {Append Prefix [A]} L HTML L2)
 	 [] nil then skip
 	 end
       end
