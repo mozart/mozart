@@ -224,10 +224,13 @@ public:
 #endif
   }
 
+  TaggedRef emptySuspendVarList(void) {
+    TaggedRef tmp=_suspendVarList;
+    _suspendVarList=nil();
+    return tmp;
+  }
 
-  TaggedRef getSuspendVarList(void) { return _suspendVarList; }
-  void emptySuspendVarList(void) { _suspendVarList = nil(); }
-  int isEmptySuspendVarList(void) { return _suspendVarList == nil(); }
+  int isEmptySuspendVarList(void) { return OZ_eq(_suspendVarList,nil()); }
 
   void addSuspendVarList(TaggedRef t)
   {
@@ -235,7 +238,7 @@ public:
 
     _suspendVarList=cons(t,_suspendVarList);
   }
-  void addSuspendVarList(TaggedRef * t)
+  void addSuspendVarList(TaggedRef *t)
   {
     addSuspendVarList(makeTaggedRef(t));
   }
@@ -321,6 +324,7 @@ public:
   INLINE void updateSolveBoardPropagatorToRunnable(Thread *tt);
 
   // wake up cconts and board conts
+  void wakeupAny(Thread *tt,Board *bb);
   inline Bool wakeUp(Thread *tt,Board *home, PropCaller calledBy);
   INLINE Bool wakeUpPropagator(Thread *tt, Board *home, 
 			PropCaller calledBy = pc_propagator);

@@ -429,15 +429,18 @@ inline
 Bool AM::installScript(Script &script)
 {
   Bool ret = OK;
-  installingScript = TRUE;
+  installingScript = TRUE; // mm2: special hack ???
   for (int index = 0; index < script.getSize(); index++) {
-    if (oz_unify(script[index].getLeft(),script[index].getRight())
-	!= PROCEED) { // mm_u
+    int res = oz_unify(script[index].getLeft(),script[index].getRight());
+    if (res == PROCEED) continue;
+    if (res == FAILED) {
       ret = NO;
       if (!onToplevel()) {
 	break;
       }
     }
+    // mm2:
+    error("installScript: unify suspended: %d",res);
   }
   installingScript = FALSE;
 #ifndef DEBUG_CHECK
@@ -486,6 +489,9 @@ Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 
 /* Define a partial order on CVARs:
  *
+ *              Promise
+ *                |
+ *                |
  *               Lazy
  *		  |
  *		  |
@@ -504,6 +510,8 @@ int cmpCVar(GenCVariable *v1, GenCVariable *v2)
 {
   TypeOfGenCVariable t1 = v1->getType();
   TypeOfGenCVariable t2 = v2->getType();
+  if (t1==PROMISE)   return  1;
+  if (t2==PROMISE)   return -1;
   if (t1==LazyVariable)   return  1;
   if (t2==LazyVariable)   return -1;
   if (t1==PerdioVariable) return  1;
@@ -580,13 +588,12 @@ loop:
   COUNT(varNonvarUnify);
 
   if (isCVar(tag1)) {
-    if (tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, scp)) // mm_u
-
-      goto next;
+    result = tagged2CVar(term1)->unify(termPtr1, term1, termPtr2, term2, scp);
+    if (result==PROCEED) goto next;
     goto fail;
   }
   
-  oz_bindToNonvar(termPtr1, term1, term2, scp); // mm_u
+  oz_bindToNonvar(termPtr1, term1, term2, scp);
   goto next;
 
 
@@ -608,15 +615,15 @@ loop:
 	(!am.isLocalVariable(term1,termPtr1) ||
 	 (isUVar(term2) && !isUVar(term1)) ||
 	 heapNewer(termPtr2,termPtr1))) {
-      oz_bind(termPtr2, term2, termPtr1, *termPtr1); // mm_u
+      oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
     } else {
-      oz_bind(termPtr1, term1, termPtr2, *termPtr2); // mm_u
+      oz_bind(termPtr1, term1, makeTaggedRef(termPtr2));
     }
     goto next;
   }
   
   if (isNotCVar(tag2)) {
-    oz_bind(termPtr2, term2, termPtr1, *termPtr1); // mm_u
+    oz_bind(termPtr2, term2, makeTaggedRef(termPtr1));
     goto next;
   }
 
@@ -626,10 +633,9 @@ loop:
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);
   }
-  if (tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp)) // mm_u
-    goto next;
+  result = tagged2CVar(term1)->unify(termPtr1,term1,termPtr2,term2,scp);
+  if (result == PROCEED) goto next;
   goto fail;
-
 
 
  /*************/
@@ -712,9 +718,9 @@ push:
     unifyStack.push(termPtr2+1,NO);
   }
   goto loop;
-  
+ 
 fail:
-  Assert(result==FAILED);
+  Assert(result!=PROCEED);
   unifyStack.mkEmpty();
   // fall through
 
@@ -894,14 +900,39 @@ Bool AM::wakeUp(Thread *tt, Board *home, PropCaller calledBy) {
   return FALSE;		// just to keep gcc happy;
 }
 
+
+void AM::wakeupAny(Thread *tt,Board *bb)
+{
+  switch (tt->getThrType()) {
+  case S_RTHREAD:
+    Assert (tt->isSuspended());
+    Assert (tt->isRThread());
+    suspThreadToRunnable(tt);
+    scheduleThread(tt);
+    break;
+  case S_WAKEUP:
+    Assert(tt->isSuspended());
+    wakeupToRunnable(tt);
+    scheduleThread(tt);
+    break;
+  case S_PR_THR:
+    {
+      //mm2
+      int ret = wakeUpPropagator(tt,bb,pc_std_unif);
+      Assert(ret);
+    }
+  break;
+  }
+}
+
 // val is used because it may be a variable which must suspend.
 //  if det X then ... fi
 //  X = Y 
 // --> if det Y then ... fi
 
 SuspList *AM::checkSuspensionList(SVariable * var,
-			      SuspList * suspList,
-			      PropCaller calledBy)
+				  SuspList * suspList,
+				  PropCaller calledBy)
 {
   if (inShallowGuard())
     return suspList;
@@ -1000,14 +1031,15 @@ Bool checkHome(TaggedRef *vPtr) {
 }
 #endif
 
-/* bind var to term */
-void oz_bind(TaggedRef *varPtr, TaggedRef var,
-	     TaggedRef *termPtr, TaggedRef term)
-{
-  Assert(!isCVar(var) && !isRef(term));
+/*
+ * oz_bind: bind var to term
+ * Note: does not handle CVARs specifically
+ */
 
+void oz_bind(TaggedRef *varPtr, TaggedRef var, TaggedRef term)
+{
   /* first step: do suspension */
-  if (isSVar(var)) {
+  if (isSVar(var) || isCVar(var)) {
     am.checkSuspensionList(var, pc_std_unif);
   }
 
@@ -1016,12 +1048,32 @@ void oz_bind(TaggedRef *varPtr, TaggedRef var,
     Assert(am.inShallowGuard() || checkHome(varPtr));
     am.doTrail(varPtr,var);
   } else  { // isLocalVariable(var)
-    if (isSVar(var)) {
+    if (isSVar(var)) { // dispose CVAR??
       tagged2SVar(var)->dispose();
     }
   }
 
-  doBind(varPtr,isAnyVar(term) ? makeTaggedRef(termPtr) : term);
+  /* third step: bind */
+  doBind(varPtr,term);
+}
+
+void oz_bind_global(TaggedRef var, TaggedRef term)
+{
+  DEREF(var,varPtr,varTag);
+
+  Assert(isAnyVar(var));
+
+  /* first step: do suspension */
+  if (isSVar(var) || isCVar(var)) {
+    tagged2SVarPlus(var)->wakeupAll();
+  }
+
+  if (isSVar(var)) { // dispose CVAR TOO??
+    tagged2SVar(var)->dispose();
+  }
+
+  /* second step: bind */
+  doBind(varPtr,term);
 }
 
 
@@ -1346,9 +1398,7 @@ void AM::awakeIOVar(TaggedRef var)
   Assert(onToplevel());
   Assert(isCons(var));
 
-  if (oz_unify(OZ_head(var),OZ_tail(var)) != PROCEED) { // mm_u
-    warning("select or sleep failed");
-  }
+  OZ_unifyInThread(OZ_head(var),OZ_tail(var));
 }
 
 #ifdef DEBUG_CHECK
@@ -1413,7 +1463,10 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
     warning("select only on toplevel");
     return OK;
   }
-  if (osTestSelect(fd,mode)==1) return oz_unify(l,r)==PROCEED; // mm_u
+  if (osTestSelect(fd,mode)==1) {
+    OZ_unifyInThread(l,r);
+    return OK;
+  }
   IONode *ion = findIONode(fd);
   ion->readwritepair[mode]=(void *) cons(l,r);
   gcProtect((TaggedRef *) &(ion->readwritepair[mode]));

@@ -1062,6 +1062,8 @@ GenCVariable * GenCVariable::gc(void) {
     sz = sizeof(PerdioVar);       break;
   case LazyVariable:
     sz = sizeof(GenLazyVariable); break;
+  case PROMISE:
+    sz = sizeof(Promise); break;
   default:
     Assert(0);
   }
@@ -1087,6 +1089,11 @@ void GenLazyVariable::gcRecurse(void) {
     OZ_collectHeapTerm(function,function);
     OZ_collectHeapTerm(result,result);
   }
+}
+
+inline
+void Promise::gcRecurse(void) {
+  OZ_collectHeapTerm(requested,requested);
 }
 
 inline
@@ -1138,6 +1145,8 @@ void GenCVariable::gcRecurse(void) {
     ((PerdioVar *) this)->gcRecurse(); break;
   case LazyVariable:
     ((GenLazyVariable*) this)->gcRecurse(); break;
+  case PROMISE:
+    ((Promise*) this)->gcRecurse(); break;
   default:
     Assert(0);
   }
