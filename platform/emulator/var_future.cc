@@ -72,11 +72,19 @@ void Future::kick(TaggedRef *ptr)
   function=0;
 }
 
-OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
+OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 {
   if (function) kick(vPtr);
 
-  oz_suspendOnPtr(vPtr);
+  am.addSuspendVarList(vPtr);
+  return SUSPEND;
+}
+
+OZ_Return Future::unify(TaggedRef *vPtr, TaggedRef *tPtr, ByteCode*scp)
+{
+  if (function) kick(vPtr);
+
+  am.addSuspendVarList(vPtr);
   return SUSPEND;
 }
 

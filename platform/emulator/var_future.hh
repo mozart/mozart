@@ -43,7 +43,8 @@ public:
   Future(Board *bb) : OzVariable(OZ_VAR_FUTURE,bb), function(0) {}
   Future(OZ_Term function,Board *bb)
     : OzVariable(OZ_VAR_FUTURE,bb), function(function) {}
-  OZ_Return unify(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
+  OZ_Return bind(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
+  OZ_Return unify(TaggedRef* vPtr,TaggedRef* tPtr,ByteCode* scp);
   OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }

@@ -248,7 +248,12 @@ public:
 // mm2: not yet inlined
 void addSuspUVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
 
-void oz_cv_addSusp(OzVariable *, TaggedRef *, Suspension, int = TRUE);
+Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
+OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*, ByteCode*);
+OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef, ByteCode*);
+void oz_var_addSusp(OzVariable*, TaggedRef*, Suspension, int = TRUE);
+void oz_var_printStream(ostream&, const char*, OzVariable*, int);
+int oz_var_getSuspListLength(OzVariable*);
 
 inline
 void addSuspAnyVar(TaggedRef * v, Suspension susp,int unstable = TRUE)
@@ -256,7 +261,7 @@ void addSuspAnyVar(TaggedRef * v, Suspension susp,int unstable = TRUE)
   TaggedRef t = *v;
   // FUT
   if (isCVar(t)) {
-    oz_cv_addSusp(tagged2CVar(*v), v, susp, unstable);
+    oz_var_addSusp(tagged2CVar(*v), v, susp, unstable);
   } else {
     addSuspUVar(v, susp, unstable);
   }
@@ -293,7 +298,7 @@ SimpleVar *tagged2SimpleVar(TaggedRef t) {
  * ------------------------------------------------------------------------- */
 
 inline
-VariableStatus oz_cv_status(OzVariable *cv)
+VariableStatus oz_var_status(OzVariable *cv)
 {
   switch (cv->getType()) {
   case OZ_VAR_FD:
@@ -315,13 +320,13 @@ VariableStatus oz_cv_status(OzVariable *cv)
 inline
 int oz_isFree(TaggedRef r)
 {
-  return isUVar(r) || (isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_FREE);
+  return isUVar(r) || (isCVar(r) && oz_var_status(tagged2CVar(r))==OZ_FREE);
 }
 
 inline
 int oz_isKinded(TaggedRef r)
 {
-  return isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_KINDED;
+  return isCVar(r) && oz_var_status(tagged2CVar(r))==OZ_KINDED;
 }
 
 inline
@@ -334,15 +339,8 @@ int oz_isNonKinded(TaggedRef r)
 inline
 int oz_isFuture(TaggedRef r)
 {
-  return isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_FUTURE;
+  return isCVar(r) && oz_var_status(tagged2CVar(r))==OZ_FUTURE;
 }
-
-Bool oz_cv_valid(OzVariable *,TaggedRef *,TaggedRef);
-OZ_Return oz_cv_unify(OzVariable *,TaggedRef *,TaggedRef, ByteCode *);
-OZ_Return oz_cv_bind(OzVariable *,TaggedRef *,TaggedRef, ByteCode *);
-void oz_cv_addSusp(OzVariable *, TaggedRef *, Suspension, int = TRUE);
-void oz_cv_printStream(ostream &, const char *, OzVariable *, int);
-int oz_cv_getSuspListLength(OzVariable *);
 
 /* -------------------------------------------------------------------------
  *

@@ -905,7 +905,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     if (isVariableTag(vtag)) {
       Assert(isCVar(vtag));
 
-      oz_cv_addSuspINLINE(tagged2CVar(v), vptr, prop);
+      oz_var_addSuspINLINE(tagged2CVar(v), vptr, prop);
       all_local &= am.isLocalSVar(v);
     }
   }

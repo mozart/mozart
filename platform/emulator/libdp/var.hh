@@ -72,10 +72,6 @@ public:
 };
 
 class PerdioVar: public ExtVar {
-private:
-  inline OZ_Return unifyVarVar(TaggedRef *, TaggedRef *, ByteCode *);
-  inline OZ_Return unifyLocalVarVal(TaggedRef *, TaggedRef);
-  inline OZ_Return unifyGlobalVarVal(TaggedRef *, TaggedRef);
 public:
   PerdioVar(Board *bb) : ExtVar(bb) {}
 
@@ -92,7 +88,8 @@ public:
   virtual OZ_Return doBindPV(TaggedRef *lPtr, TaggedRef v) = 0;
   virtual void primBind(TaggedRef *lPtr,TaggedRef v);
 
-  OZ_Return unifyV(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
+  OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr, ByteCode *scp);
+  OZ_Return bindV(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
 };
 
 class ProxyManagerVar : public PerdioVar {
@@ -167,6 +164,9 @@ Bool oz_isProxyVar(TaggedRef v) {
 class ManagerVar : public ProxyManagerVar {
 private:
   ProxyList *proxies;
+#ifdef ORIG
+  OzVariable *origVar;
+#endif
 protected:
   OZ_Return sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:

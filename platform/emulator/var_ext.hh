@@ -47,24 +47,19 @@ public:
   virtual void          gcRecurseV() = 0;
 
   // tell
-  virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, ByteCode *) = 0;
-
-  virtual OZ_Return     bindV(TaggedRef *ptr, TaggedRef val, ByteCode *bc) {
-    return unifyV(ptr,val,bc);
-  }
+  virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*, ByteCode*) = 0;
+  virtual OZ_Return     bindV(TaggedRef*, TaggedRef, ByteCode*) = 0;
   // ask
   virtual Bool          validV(TaggedRef) = 0;
 
-  virtual void addSuspV(TaggedRef *vPtr, Suspension susp, int unstable = TRUE)
-    {
-      addSuspSVar(susp, unstable);
-    }
+  virtual void addSuspV(TaggedRef *, Suspension susp, int unstable = TRUE) {
+    addSuspSVar(susp, unstable);
+  }
   // printing/debugging
   virtual void printStreamV(ostream &out,int depth = 10) {
     out << "<extvar: #" << getIdV() << ">";
   }
-  virtual void printLongStreamV(ostream &out,int depth = 10,
-                                int offset = 0) {
+  virtual void printLongStreamV(ostream &out,int depth = 10, int offset = 0) {
     printStreamV(out,depth); out << endl;
   }
 

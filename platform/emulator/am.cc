@@ -481,14 +481,15 @@ loop:
   COUNT(varNonvarUnify);
 
   if (isCVar(tag1)) {
-    int res = oz_cv_bindINLINE(tagged2CVar(term1),termPtr1, term2, scp);
+    int res = oz_var_bindINLINE(tagged2CVar(term1),termPtr1, term2, scp);
     if (res == PROCEED)
       goto next;
     result = res;
     goto fail;
   }
 
-  oz_bindToNonvar(termPtr1, term2, scp);
+  Assert(isUVar(tag1));
+  oz_bind(termPtr1, term2);
   goto next;
 
 
@@ -520,8 +521,6 @@ loop:
     goto next;
   }
 
-  // FUT
-
   Assert(isCVar(tag1) && isCVar(tag2));
   /* prefered binding of perdio vars */
   if (cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
@@ -529,11 +528,8 @@ loop:
     Swap(termPtr1,termPtr2,TaggedRef*);
   }
 
-
-cvar:
   {
-    int res = oz_cv_unifyINLINE(tagged2CVar(term1),termPtr1,
-                                makeTaggedRef(termPtr2), scp);
+    int res = oz_var_unifyINLINE(tagged2CVar(term1),termPtr1, termPtr2, scp);
     if (res == PROCEED)
       goto next;
     result = res;
@@ -682,10 +678,11 @@ Bool checkHome(TaggedRef *vPtr) {
 #endif
 
 /*
- * oz_bind: bind var to term
- * Note: does not handle CVARs specifically
+ * oz_bind: bind a variable to a value
+ *   - wakeup suspensions
+ *   - trail if needed, else dispose
+ *   - redirect REF
  */
-
 void oz_bind(TaggedRef *varPtr, TaggedRef term)
 {
   /* first step: do suspension */
@@ -699,6 +696,8 @@ void oz_bind(TaggedRef *varPtr, TaggedRef term)
     am.trail.pushRef(varPtr,*varPtr);
   } else  {
     if (isCVar(*varPtr)) {
+      // mm2: this assertion is too strong, but I don't know about stability?
+      // Assert(tagged2CVar(*varPtr)->getSuspList()==0);
       tagged2CVar(*varPtr)->dispose();
     }
   }
@@ -707,6 +706,7 @@ void oz_bind(TaggedRef *varPtr, TaggedRef term)
   doBind(varPtr,term);
 }
 
+// used for ControlVars
 void oz_bind_global(TaggedRef var, TaggedRef term)
 {
   DEREF(var,varPtr,varTag);

@@ -1738,7 +1738,7 @@ OZ_BI_define(BIstatus,1,1)
     // FUT
     OZ_RETURN(AtomFree);
   case CVAR:
-    switch (oz_cv_status(tagged2CVar(term))) {
+    switch (oz_var_status(tagged2CVar(term))) {
     case OZ_FREE:
       OZ_RETURN(AtomFree);
     case OZ_FUTURE:
@@ -3954,7 +3954,7 @@ OZ_BI_define(BIapply,2,0)
  * ???
  * --------------------------------------------------------------------- */
 
-int oz_cv_getSuspListLength(OzVariable *cv);
+int oz_var_getSuspListLength(OzVariable *cv);
 
 OZ_BI_define(BIconstraints,1,1)
 {
@@ -3962,7 +3962,7 @@ OZ_BI_define(BIconstraints,1,1)
 
   int len = 0;
   if (isCVar(inTag)) {
-    len=oz_cv_getSuspListLength(tagged2CVar(in));
+    len=oz_var_getSuspListLength(tagged2CVar(in));
   }
   OZ_RETURN_INT(len);
 } OZ_BI_end

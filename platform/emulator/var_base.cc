@@ -139,27 +139,26 @@ void printBC(ostream &ofile, Board * b)
 
 #endif
 
-Bool oz_cv_valid(OzVariable *cv,TaggedRef *ptr,TaggedRef val) {
-  return oz_cv_validINLINE(cv,ptr,val);
+Bool oz_var_valid(OzVariable *cv,TaggedRef *ptr,TaggedRef val) {
+  return oz_var_validINLINE(cv,ptr,val);
 }
 
-OZ_Return oz_cv_unify(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+OZ_Return oz_var_unify(OzVariable *cv,TaggedRef *ptr,TaggedRef *val,
                       ByteCode *scp) {
-  return oz_cv_unifyINLINE(cv,ptr,val,scp);
+  return oz_var_unifyINLINE(cv,ptr,val,scp);
 }
 
-OZ_Return oz_cv_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+OZ_Return oz_var_bind(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
                       ByteCode *scp) {
-  return oz_cv_bindINLINE(cv,ptr,val,scp);
+  return oz_var_bindINLINE(cv,ptr,val,scp);
 }
 
-void oz_cv_addSusp(OzVariable *cv, TaggedRef *v, Suspension susp,
+void oz_var_addSusp(OzVariable *cv, TaggedRef *v, Suspension susp,
                    int unstable = TRUE) {
-  oz_cv_addSuspINLINE(cv, v, susp, unstable);
+  oz_var_addSuspINLINE(cv, v, susp, unstable);
 }
 
-void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
-                       int depth)
+void oz_var_printStream(ostream &out, const char *s, OzVariable *cv, int depth)
 {
   switch (cv->getType()) {
   case OZ_VAR_SIMPLE:
@@ -190,7 +189,7 @@ void oz_cv_printStream(ostream &out, const char *s, OzVariable *cv,
   }
 }
 
-int oz_cv_getSuspListLength(OzVariable *cv)
+int oz_var_getSuspListLength(OzVariable *cv)
 {
   Assert(cv->getType()!=OZ_VAR_INVALID);
 

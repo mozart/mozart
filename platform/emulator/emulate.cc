@@ -319,6 +319,19 @@ void deallocateY(RefsArray a)
       }
 
 
+// most probable case first: local UVar
+// if (isUVar(var) && isCurrentBoard(tagged2VarHome(var))) {
+// more efficient:
+inline
+void oz_bindOPT(OZ_Term *varPtr, OZ_Term a, ByteCode *scp=0)
+{
+  if (am.currentUVarPrototypeEq(*varPtr) && scp==0) {
+    doBind(varPtr,a);
+  } else {
+    oz_bind(varPtr,a);
+  }
+}
+
 /* specially optimized unify: test two most probable cases first:
  *
  *     1. bind a unconstraint local variable to a non-var

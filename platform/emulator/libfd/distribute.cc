@@ -55,11 +55,9 @@ static int getMid(TaggedRef var) {
   }
 }
 
-int oz_cv_getSuspListLength(OzVariable *);
-
 inline
 static int getConstraints(TaggedRef var) {
-  return oz_cv_getSuspListLength(tagged2CVar(var));
+  return oz_var_getSuspListLength(tagged2CVar(var));
 }
 
 

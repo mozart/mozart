@@ -120,7 +120,7 @@ Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
       // if there is at least one integer member of the domain then goto varLabel
       for (int i = 0; i < size; i++) {
         for (HTEntry* aux = numberTable[i]; aux!=NULL; aux=aux->getNext()) {
-          if (oz_cv_validINLINE(cvar,ptr,aux->getNumber()))
+          if (oz_var_validINLINE(cvar,ptr,aux->getNumber()))
             return NO;
         }
       }
@@ -162,7 +162,7 @@ Bool IHashTable::disentailed(OzVariable *cvar, TaggedRef *ptr)
 
   // mm2: hack: an arbitrary number is check for validity
   case OZ_VAR_EXT:
-    return !oz_cv_validINLINE(cvar,ptr,OZ_int(4711));
+    return !oz_var_validINLINE(cvar,ptr,OZ_int(4711));
 
   default:
     return NO;

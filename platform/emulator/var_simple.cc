@@ -35,39 +35,33 @@
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
   Assert(!oz_isRef(t));
-  oz_bindToNonvar(vPtr, t);
+  oz_bind(vPtr, t);
   return PROCEED;
 }
 
-OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
+OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
 {
-  Assert(!oz_isRef(t)||oz_isVariable(*tagged2Ref(t)));
-
+  // mm2
   if (isExported()) {
-    OZ_Return aux = export(t);
+    OZ_Return aux = export(makeTaggedRef(tPtr));
     if (aux!=PROCEED) return aux;
   }
 
-  if (oz_isRef(t)) {
-    TaggedRef *tPtr=tagged2Ref(t);
-    OzVariable *tv=tagged2CVar(*tPtr);
-    if (tv->getType()==OZ_VAR_SIMPLE
-        && oz_isBelow(GETBOARD(tv),GETBOARD(this))
+  OzVariable *tv=tagged2CVar(*tPtr);
+  if (tv->getType()==OZ_VAR_SIMPLE
+      && oz_isBelow(GETBOARD(tv),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
-        // if both are local, then check heap
-        && (!am.isLocalSVar(this) || heapNewer(tPtr,vPtr))
+      // if both are local, then check heap
+      && (!am.isLocalSVar(this) || heapNewer(tPtr,vPtr))
 #endif
-        ) {
+      ) {
 
-      if (tagged2SimpleVar(*tPtr)->isExported())
-        markExported();  // mm2: already done above?
+    if (tagged2SimpleVar(*tPtr)->isExported())
+      markExported();  // mm2: already done above?
 
-      t    = makeTaggedRef(vPtr);
-      vPtr = tPtr;
-    }
-    oz_bind(vPtr, t);
+    oz_bind(tPtr, makeTaggedRef(vPtr));
   } else {
-    oz_bindToNonvar(vPtr, t);
+    oz_bind(vPtr, makeTaggedRef(tPtr));
   }
   return PROCEED;
 }

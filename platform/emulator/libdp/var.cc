@@ -69,6 +69,10 @@ void ProxyVar::gcRecurseV(void)
 
 void ManagerVar::gcRecurseV(void)
 {
+#ifdef ORIG
+  origVar=origVar->gcVar();
+  origVar->gcVarRecurse();
+#endif
   OT->getOwner(getIndex())->gcPO();
   PD((GC,"PerdioVar o:%d",getIndex()));
   ProxyList **last=&proxies;
@@ -134,15 +138,14 @@ int compareNetAddress(ProxyManagerVar *lVar,ProxyManagerVar *rVar)
 
 
 inline
-OZ_Return PerdioVar::unifyVarVar(TaggedRef *lPtr, TaggedRef *rPtr,
-                                 ByteCode *scp)
+OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
 {
   TaggedRef rVal = *rPtr;
   TaggedRef lVal = *lPtr;
   if (!oz_isExtVar(rVal)) {
     // switch binding order
     if (isSimpleVar(rVal) || isFuture(rVal))  {
-      return oz_cv_unify(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
+      return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
     } else {
       return FAILED;
     }
@@ -160,7 +163,7 @@ OZ_Return PerdioVar::unifyVarVar(TaggedRef *lPtr, TaggedRef *rPtr,
      * bind perdiovar -> proxy
      * bind url proxy -> object proxy
      */
-    return oz_cv_unify(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
+    return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
   }
 
   Assert(getIdV()==OZ_EVAR_PROXY || getIdV()==OZ_EVAR_MANAGER);
@@ -182,39 +185,21 @@ OZ_Return PerdioVar::unifyVarVar(TaggedRef *lPtr, TaggedRef *rPtr,
   }
 }
 
-inline
-OZ_Return PerdioVar::unifyLocalVarVal(TaggedRef *lPtr, TaggedRef r)
+OZ_Return PerdioVar::bindV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
 {
-  Bool ret = validV(r);
-  if (!ret) return FAILED;
-
-  // onToplevel: distributed unification
-  return doBindPV(lPtr,r);
-}
-
-inline
-OZ_Return PerdioVar::unifyGlobalVarVal(TaggedRef *lPtr, TaggedRef r)
-{
-  Bool ret = validV(r);
-  if (!ret) return FAILED;
-  // in guard: bind and trail
-  oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
-  am.doBindAndTrail(lPtr,r);
-  return PROCEED;
-}
-
-OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
-{
-  Assert(oz_safeDeref(r)==r);
-  if (oz_isRef(r)) {
-    return unifyVarVar(lPtr,tagged2Ref(r),scp);
+  Bool isLocal = am.isLocalSVar(this) && scp==0;  // mm2
+  if (isLocal) {
+    Bool ret = validV(r);
+    if (!ret) return FAILED;
+    // onToplevel: distributed unification
+    return doBindPV(lPtr,r);
   } else {
-    Bool isLocal = am.isLocalSVar(this) && scp==0;  // mm2
-    if (isLocal) {
-      return unifyLocalVarVal(lPtr,r);
-    } else {
-      return unifyGlobalVarVal(lPtr,r);
-    }
+    Bool ret = validV(r);
+    if (!ret) return FAILED;
+    // in guard: bind and trail
+    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
+    am.doBindAndTrail(lPtr,r);
+    return PROCEED;
   }
 }
 
@@ -244,16 +229,6 @@ OZ_Return ProxyVar::doBindPV(TaggedRef *lPtr, TaggedRef v)
   if (aux!=PROCEED)
     return aux;
   return setVal(v); // save binding for ack message, ...
-}
-
-static
-void sendRegister(BorrowEntry *be) {
-  Assert(creditSiteOut == NULL);
-  be->getOneMsgCredit();
-  NetAddress *na = be->getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
-  marshal_M_REGISTER(bs,na->index,myDSite);
-  SendTo(na->site,bs,M_REGISTER,na->site,na->index);
 }
 
 //
@@ -354,15 +329,25 @@ OZ_Return ManagerVar::doBindPV(TaggedRef *lPtr, TaggedRef v)
   return aux;
 }
 
+// after a surrender message is received
 void ManagerVar::managerBind(TaggedRef *vPtr, TaggedRef val,
                              OwnerEntry *oe, DSite *rsite)
 {
+#ifdef ORIG
+  OZ_Return ret = oz_var_unify(origVar,vPtr,val);
+  if (ret != PROCEED) {
+    // ignore: SUSPENDs of futures
+    am.cleanupSuspAndControl();
+    return;
+  }
+#endif
   primBind(vPtr,val);
   oe->mkRef();
   if (oe->hasFullCredit()) {
     PD((WEIRD,"SURRENDER: full credit"));
   }
-  sendRedirectToProxies(val,rsite);
+  OZ_Return ret = sendRedirectToProxies(val,rsite);
+  Assert(ret==PROCEED); // can not fail because val is imported
 }
 
 /* --- Marshal --- */
@@ -434,6 +419,16 @@ void ObjectVar::marshalV(MsgBuffer *bs)
     ? globalizeConst(getClass(),bs) : getGNameClass();
 
   marshalObject(getObject(),bs,classgn);
+}
+
+static
+void sendRegister(BorrowEntry *be) {
+  Assert(creditSiteOut == NULL);
+  be->getOneMsgCredit();
+  NetAddress *na = be->getNetAddress();
+  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
+  marshal_M_REGISTER(bs,na->index,myDSite);
+  SendTo(na->site,bs,M_REGISTER,na->site,na->index);
 }
 
 // extern
