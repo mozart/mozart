@@ -25,7 +25,69 @@
   -
   -->
 
-  <Chapter id="Chapter.Error">
-    <Title/Error Routines: <<Error>>/
-  </Chapter>
+<Chapter id="Chapter.Error">
+  <Title/Error Routines: <<Error>>/
+  <P>
+    <Grammar.Rule/?={message}
+      <Grammar.Alt/?={message label}<<(>>/
+      <Grammar.Alt type=space/<<   >>[<<kind: ?={extended virtual string}>>]/
+      <Grammar.Alt type=space/<<   >>[<<msg: ?={extended virtual string}>>]/
+      <Grammar.Alt type=space/<<   >>[<<items: [?={line}]>>]/
+      <Grammar.Alt type=space/<<   >>[<<footer: ?={bool}>>]/
+      <Grammar.Alt type=space/<<   &ellipsis;)>>//
+    <Grammar.Rule/?={message label}
+      <Grammar.Alt/?={error} | &ellipsis;//
+    <Grammar.Rule/?={line}
+      <Grammar.Alt/<<hint(>>[<<l: ?={extended virtual string}>>]/
+      <Grammar.Alt type=space/<<     >>[<<m: ?={extended virtual string}>>]/
+      <Grammar.Alt/?={coordinates}/
+      <Grammar.Alt/<<line(?={extended virtual string})>>/
+      <Grammar.Alt/<<unit>>//
+    <Grammar.Rule/?={extended virtual string}
+      <Grammar.Alt/?={atom} | ?={int} | ?={float} | ?={string}/
+      <Grammar.Alt/<<'#'(>>?={extended virtual string} &ellipsis;
+	?={extended virtual string}<<)>>/
+      <Grammar.Alt/<<oz(?={value})>>/
+      <Grammar.Alt/<<pn(?={atom})>>/
+      <Grammar.Alt/?={coordinates}/
+      <Grammar.Alt/<<apply(?={procedure or print name} [?={value}])>>/
+      <Grammar.Alt/<<list([?={value}] ?={extended virtual string})>>//
+    <Grammar.Rule/?={coordinates}
+      <Grammar.Alt/<<pos(?={atom}>>
+	<Grammar.Note/file name; <<''>> if not known//
+      <Grammar.Alt type=space/<<    ?={int}>>
+	<Grammar.Note/line number; required//
+      <Grammar.Alt type=space/<<    ?={int}>>
+	<Grammar.Note/column number; <<~1>> if not known///
+    <Grammar.Rule/?={procedure or print name}
+      <Grammar.Alt/?={procedure} | ?={atom}//
+    <List enum>
+      <Entry><<exceptionToMessage>>
+	<Index class=tails/<<Error>><And><<exceptionToMessage>>/
+      <Synopsis><<{Error.exceptionToMessage ?+{Exception} ??{Message}}>>
+      <Item>
+	converts an exception to a ?={message}, using the error formatters
+	defined in the <<ErrorRegistry>> (see <Ptr to="Chapter.ErrorRegistry">)
+	or a generic formatter if none is defined for the exception.
 
+      <Entry><<messageToVirtualString>>
+	<Index class=tails/<<Error>><And><<messageToVirtualString>>/
+      <Synopsis><<{Error.messageToVirtualString ?+{Message} ??{V}}>>
+      <Item>
+	converts a ?={message} to a virtual string using the standard layout.
+	This can span several lines and includes the final newline.
+
+      <Entry><<extendedVSToVS>>
+	<Index class=tails/<<Error>><And><<extendedVSToVS>>/
+      <Synopsis><<{Error.extendedVSToVS ?+{ExtendedVirtualString} ??{V}}>>
+      <Item>
+	converts an ?={extended virtual string} to a ?={virtual string}.
+
+      <Entry><<printException>>
+	<Index class=tails/<<Error>><And><<printException>>/
+      <Synopsis><<{Error.printException ?+{Exception}}>>
+      <Item>
+	converts an exception to a message and this to a virtual string,
+	printing the result on standard error (using <<System.printError>>).
+    </List>
+</Chapter>
