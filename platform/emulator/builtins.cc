@@ -6825,6 +6825,36 @@ OZ_C_proc_begin(BIraiseError,1)
 OZ_C_proc_end
 
 
+/********************************************************************
+ * for the new compiler to optimize relative to an existing environment
+ ******************************************************************** */
+
+OZ_C_proc_begin(BIisBuiltin,2)
+{
+  oz_declareNonvarArg(0,val);
+  oz_declareArg(1,res);
+
+  if (isConst(val) && tagged2Const(val)->getType() == Co_Builtin)
+    return OZ_unify(res,OZ_true());
+  else
+    return OZ_unify(res,OZ_false());
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIgetBuiltinName,2)
+{
+  oz_declareNonvarArg(0,val);
+  oz_declareArg(1,res);
+
+  if (!isConst(val))
+    return OZ_typeError(0,"builtin");
+  ConstTerm *cnst = tagged2Const(val);
+  if (cnst->getType() != Co_Builtin)
+    return OZ_typeError(0,"builtin");
+  return OZ_unify(res,((BuiltinTabEntry *) cnst)->getName());
+}
+OZ_C_proc_end
+
 
 
 /********************************************************************
@@ -7194,6 +7224,10 @@ BIspec allSpec[] = {
 
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
+
+  // for the new compiler to optimize relative to an existing environment:
+  {"isBuiltin",             2, BIisBuiltin,             0},
+  {"getBuiltinName",        2, BIgetBuiltinName,        0},
 
   {0,0,0,0}
 };
