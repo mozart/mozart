@@ -1,41 +1,78 @@
 @SET_MAKE@
 BUILDTOP        = @BUILDTOP@
-prefix          = @prefix@
+SRCTOP          = @SRCTOP@
+PREFIX          = @prefix@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 PLATFORM        = @PLATFORM@
-LIB_DIR         = $(prefix)/contrib/io
+LIB_DIR1        = $(PREFIX)/contrib
+LIB_DIR         = $(PREFIX)/contrib/io
 
 OZC             = @OZC@
+OZDYNLD         = @OZDYNLD@
+
+CXX             = @CXX@
+CPPFLAGS        = -I$(SRCTOP)/platform/emulator \
+                  -I$(BUILDTOP)/platform/emulator \
+                  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS        = $(CFLAGS)
+LDFLAGS         = @LDFLAGS@
+LIBS            = @LIBS@
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 
-TARGETS         = mode.ozf
-LIB_TARGETS     = $(addprefix $(LIB_DIR)/,$(TARGETS))
+FUNCTORS        = mode.ozf
+LIB_FUNCTORS    = $(addprefix $(LIB_DIR)/,$(FUNCTORS))
+IOFUNCTOR       = io.ozf
+LIB_IOFUNCTOR   = $(addprefix $(LIB_DIR1)/,$(IOFUNCTOR))
+NATIVES         =
+NATIVES1        = $(addsuffix -$(PLATFORM),$(NATIVES))
+LIB_NATIVES     = $(addprefix $(LIB_DIR)/,$(NATIVES1))
+IONATIVE        = io.so
+IONATIVE1       = $(addsuffix -$(PLATFORM),$(IONATIVE))
+LIB_IONATIVE    = $(addprefix $(LIB_DIR1)/,$(IONATIVE1))
 
 .PHONY: all install clean veryclean distclean bootstrap depend
 
-all:            $(TARGETS)
-install:        $(LIB_DIR) $(LIB_TARGETS)
+all:            $(IOFUNCTOR) $(IONATIVE) \
+                $(FUNCTORS) $(NATIVES)
+install:        $(LIB_DIR) \
+                $(LIB_IOFUNCTOR) $(LIB_IONATIVE) \
+                $(LIB_FUNCTORS) $(LIB_NATIVES)
 
 $(LIB_DIR):
         $(INSTALL_DIR) $@
 
-$(LIB_TARGETS): $(LIB_DIR)/% : %
+$(LIB_IOFUNCTOR): $(LIB_DIR1)/% : %
+        $(INSTALL_LIB) $< $@
+
+$(LIB_IONATIVE): $(LIB_DIR1)/%.so-$(PLATFORM) : %.so
+        $(INSTALL_LIB) $< $@
+
+$(LIB_FUNCTORS): $(LIB_DIR)/% : %
+        $(INSTALL_LIB) $< $@
+
+$(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so
         $(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
         $(OZC) -c $< -o $@
 
+%.so: %.o
+        $(OZDYNLD) $< -o $@ $(LDFLAGS) $(LIBS)
+
+%.o: %.cc
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
 clean veryclean:
-        -$(RM) *~ *.ozf
+        -$(RM) *~ *.ozf *.so *.o
 
 distclean: veryclean
         -$(RM) config.* Makefile
 
-include $(SRCDIR)/../../share/Makefile.boot
+include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 

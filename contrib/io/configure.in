@@ -1,5 +1,5 @@
 AC_INIT(mode.oz)
-OZ_CONTRIB_INIT
+OZ_CONTRIB_INIT_CXX
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
