@@ -291,7 +291,7 @@ emulator.exe: $(PRGDEP)
 text2pickle: $(TEXT2PICKLEOBJS)
         $(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
-install:: install-bin install-inc install-modules
+install:: install-bin install-inc install-module
 
 install-bin: $(TARGETS) $(BINDIR)
         $(INSTALL_BIN) oztool.sh $(TARGETS) $(BINDIR)
