@@ -15,8 +15,6 @@
 #pragma interface
 #endif
 
-/* #include perdio.hh" TODO: why not */
-
 /*===================================================================
  * global names and atoms
  *=================================================================== */
@@ -578,7 +576,6 @@ enum TypeOfConst {
   Co_Builtin,
   Co_Cell,
   Co_Space,
-  Co_Port,        /* 8 */
 
   /* chunks must stay together and the first one
    * must be Co_Object
@@ -586,6 +583,7 @@ enum TypeOfConst {
    * NOTE: update the builtins: subtree and chunkArity !
    */
   Co_Object,
+  Co_Port,
   Co_Chunk,
   Co_Array,
   Co_Dictionary,    /* 12 */
