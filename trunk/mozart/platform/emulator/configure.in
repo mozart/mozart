@@ -160,7 +160,7 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --with-sunpro)
 AC_ARG_WITH(sunpro,
-    [--with-sunpro      use sunpro compiler (default: no)])
+    [--with-sunpro      use sunpro compiler (default: no)],
 	if test "${with_sunpro}" = yes; then
             AC_MSG_RESULT(yes)
 	    AC_CHECK_PROGS(SUNPRO, CC)
@@ -170,11 +170,12 @@ AC_ARG_WITH(sunpro,
 		AC_DEFINE(SUNPRO)
 		oz_enable_threaded=no
 	    else
-		AC_MSG_WARN(Ingnoring --with-sunpro!)
+		AC_MSG_WARN(Ignoring --with-sunpro!)
 	    fi
 	else
 	    AC_MSG_RESULT(no)
-	fi
+	fi,
+	AC_MSG_RESULT(no))
 
 AC_PROG_CXX
 AC_PROG_CXXCPP
@@ -402,7 +403,9 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --with-gmp)
 AC_ARG_WITH(gmp,
-	[--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)],with_gmp=$withval,with_gmp=yes)
+	[--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)],
+    with_gmp=$withval,
+    with_gmp=yes)
 	    
 if test "$with_gmp" != no
 then
@@ -432,7 +435,9 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --with-zlib)
 AC_ARG_WITH(zlib,
-  	[--with-zlib=<dir>  search zlib library and header in <dir> (default: yes)])
+  	[--with-zlib=<dir>  search zlib library and header in <dir> (default: yes)],
+    with_zlib=$withval,
+    with_zlib=yes)
 	    
 
 if test "$with_zlib" != no
