@@ -166,7 +166,7 @@ char *OZ_Propagator::toString() const
 
 OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 {
-  return Propagator::getRunningPropagator()->isUnifyPropagator();
+  return Propagator::getRunningPropagator()->isUnify();
 }
 
 
@@ -219,7 +219,7 @@ void OZ_Propagator::impose(OZ_Propagator * p)
 
   oz_sleepPropagator(prop);
 
-  prop->markRunnable();
+  prop->setRunnable();
   oz_pushToLPQ(oz_currentBoard(),prop);
 
   OZ_Boolean all_local = OZ_TRUE;
@@ -271,7 +271,7 @@ void OZ_Propagator::impose(OZ_Propagator * p)
   }
 
   if (all_local)
-    prop->markLocalPropagator();
+    prop->setLocal();
 
   staticSpawnVarsNumberProp = 0;
 }

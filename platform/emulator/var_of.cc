@@ -43,7 +43,7 @@ Bool hasOFSSuspension(SuspList * suspList)
   while (suspList) {
     Suspension susp = suspList->getSuspension();
 
-    if (!susp.isDead() && susp.isPropagator() && susp.isOFSPropagator())
+    if (!susp.isDead() && susp.isPropagator() && susp.isOFS())
       return TRUE;
 
     suspList = suspList->getNext();

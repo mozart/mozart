@@ -103,68 +103,68 @@ public:
   Bool isFailed(void) {
     return ISMARKEDFLAG(P_failed);
   }
-  void markFailed(void) {
+  void setFailed(void) {
     MARKFLAG(P_failed);
   }
 
-  Bool isDeadPropagator(void) {
+  Bool isDead(void) {
     return ISMARKEDFLAG(P_dead);
   }
-  void markDeadPropagator(void) {
+  void setDead(void) {
     MARKFLAG(P_dead);
   }
 
   Bool isRunnable(void) {
     return ISMARKEDFLAG(P_runnable);
   }
-  void unmarkRunnable(void) {
+  void unsetRunnable(void) {
     UNMARKFLAG(P_runnable);
   }
-  void markRunnable(void) {
+  void setRunnable(void) {
     MARKFLAG(P_runnable);
   }
 
-  Bool isLocalPropagator(void) {
+  Bool isLocal(void) {
     return ISMARKEDFLAG(P_local);
   }
-  void unmarkLocalPropagator(void) {
+  void unsetLocal(void) {
     UNMARKFLAG(P_local);
   }
-  void markLocalPropagator(void) {
+  void setLocal(void) {
     MARKFLAG(P_local);
   }
 
-  Bool isUnifyPropagator(void) {
+  Bool isUnify(void) {
     return ISMARKEDFLAG(P_unify);
   }
-  void unmarkUnifyPropagator(void) {
+  void unsetUnify(void) {
     UNMARKFLAG(P_unify);
   }
-  void markUnifyPropagator(void) {
+  void setUnify(void) {
     MARKFLAG(P_unify);
   }
 
   Bool isTagged(void) {
     return ISMARKEDFLAG(P_tag);
   }
-  void markTagged(void) {
+  void setTagged(void) {
     MARKFLAG(P_tag);
   }
-  void unmarkTagged(void) {
+  void unsetTagged(void) {
     UNMARKFLAG(P_tag);
   }
 
-  Bool isOFSPropagator(void) {
+  Bool isOFS(void) {
     return ISMARKEDFLAG(P_ofs);
   }
-  void markOFSPropagator(void) {
+  void setOFS(void) {
     MARKFLAG(P_ofs);
   }
 
-  Bool wasExtPropagator(void) {
+  Bool isExternal(void) {
     return ISMARKEDFLAG(P_ext);
   }
-  void setExtPropagator(void) {
+  void setExternal(void) {
     MARKFLAG(P_ext);
   }
 
@@ -172,11 +172,11 @@ public:
     return _p->getOrder();
   }
 
-  Bool isNonMonotonicPropagator(void) {
+  Bool isNMO(void) {
     return ISMARKEDFLAG(P_nmo);
   }
 
-  void markNonMonotonicPropagator(void) {
+  void setNMO(void) {
     MARKFLAG(P_nmo);
   }
 
@@ -189,7 +189,7 @@ public:
 
 inline
 Bool isUnifyCurrentPropagator () {
-  return Propagator::getRunningPropagator()->isUnifyPropagator();
+  return Propagator::getRunningPropagator()->isUnify();
 }
 
 #endif

@@ -91,7 +91,7 @@ void OZ_CtVar::read(OZ_Term v)
 
     Assert(isCVar(vtag));
 
-    if (Propagator::getRunningPropagator()->isLocalPropagator()) {
+    if (Propagator::getRunningPropagator()->isLocal()) {
       // local variable per definition
 
       // set flags

@@ -47,7 +47,7 @@ Thread * oz_newThread(int prio) {
   Board *bb  = oz_currentBoard();
   Thread *tt = _newThread(prio,bb);
 
-  tt->markRunnable();
+  tt->setRunnable();
 
   if (!bb->isRoot())
     bb->incSolveThreads();
@@ -60,14 +60,14 @@ Thread * oz_newThread(int prio) {
 Thread * oz_newThreadToplevel() {
   Board *bb=oz_rootBoard();
   Thread *tt = _newThread(DEFAULT_PRIORITY,bb);
-  tt->markRunnable();
+  tt->setRunnable();
   am.threadsPool.scheduleThread(tt);
   return tt;
 }
 
 Thread * oz_newThreadInject(Board *bb) {
   Thread *tt = _newThread(DEFAULT_PRIORITY,bb);
-  tt->markRunnable();
+  tt->setRunnable();
 
   if (!bb->isRoot())
     bb->incSolveThreads();
@@ -89,9 +89,9 @@ Thread * oz_newThreadPropagate(Board *bb) {
 
 //  Dispose a thread.
 void oz_disposeThread(Thread *tt) {
-  tt->markDeadThread();
+  tt->setDead();
 
-  if (am.debugmode() && tt->getTrace())
+  if (am.debugmode() && tt->isTrace())
     debugStreamTerm(tt);
 
   tt->disposeStack();
@@ -100,9 +100,9 @@ void oz_disposeThread(Thread *tt) {
 void oz_wakeupThread(Thread *tt) {
   Assert(tt->isSuspended());
 
-  tt->markRunnable();
+  tt->setRunnable();
 
-  if (am.debugmode() && tt->getTrace())
+  if (am.debugmode() && tt->isTrace())
     debugStreamReady(tt);
 
   am.threadsPool.scheduleThread(tt);
@@ -113,14 +113,14 @@ void oz_wakeupThread(Thread *tt) {
 
     bb->incSolveThreads();
 
-    if (tt->wasExtThread()) {
+    if (tt->isExternal()) {
       do {
         bb->clearSuspList(tt);
         bb = bb->getParent();
       } while (!bb->isRoot());
     }
 
-    tt->clearExtThread();
+    tt->unsetExternal();
 
   }
 }

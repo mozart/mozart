@@ -51,11 +51,11 @@ Propagator * oz_newPropagator(OZ_Propagator * p)
 {
   Board * bb = oz_currentBoard();
   Propagator * prop = new Propagator(p, bb);
-  prop->markRunnable();
-  prop->markUnifyPropagator();
+  prop->setRunnable();
+  prop->setUnify();
 
   if (! p->isMonotonic())
-    prop->markNonMonotonicPropagator();
+    prop->setNMO();
 
   bb->incSuspCount();
 
@@ -85,11 +85,11 @@ inline
 void oz_closeDonePropagator(Propagator * prop)
 {
   Assert(prop);
-  Assert(!prop->isDeadPropagator());
+  Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
   prop->dispose();      // kost@: TODO? optimize;
-  prop->markDeadPropagator();
+  prop->setDead();
 
   //
   //  Actually, the current board can be alive or not -
@@ -161,10 +161,10 @@ inline
 void oz_preemptedPropagator(Propagator * prop)
 {
   Assert(prop);
-  Assert(!prop->isDeadPropagator());
+  Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
-  prop->unmarkRunnable();
+  prop->unsetRunnable();
   oz_wakeup_Propagator(prop, oz_currentBoard(), pc_propagator);
 }
 
@@ -178,11 +178,11 @@ inline
 void oz_sleepPropagator(Propagator * prop)
 {
   Assert(prop);
-  Assert(!prop->isDeadPropagator());
+  Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
-  prop->unmarkRunnable();
-  prop->unmarkUnifyPropagator();
+  prop->unsetRunnable();
+  prop->unsetUnify();
 }
 
 #endif

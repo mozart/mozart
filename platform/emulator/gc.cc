@@ -677,7 +677,7 @@ Thread *Thread::gcThread() {
   if (gcIsMarked())
     return (Thread *) gcGetFwd();
 
-  if (isDeadThread())
+  if (isDead())
     return (Thread *) NULL;
 
   //  Some invariants:
@@ -753,7 +753,7 @@ Propagator * Propagator::gcPropagator(void)
   if (gcIsMarked())
     return (Propagator *) gcGetFwd();
 
-  if (isDeadPropagator())
+  if (isDead())
     return NULL;
 
   Board * bb = _b;
@@ -1144,8 +1144,8 @@ SRecord *SRecord::gcSRecord() {
 }
 
 // mm2
-Thread *Thread::gcDeadThread() {
-  Assert(isDeadThread());
+Thread *Thread::gcDead() {
+  Assert(isDead());
 
   Thread *newThread = (Thread *) gcReallocStatic(this,sizeof(Thread));
 

@@ -43,7 +43,7 @@ OZ_BI_define(BIthreadUnleash,2,0)
   oz_declareThread(0,thread);
   OZ_declareInt(1,frameId);
 
-  if (!thread->isDeadThread())
+  if (!thread->isDead())
     thread->getTaskStackRef()->unleash(frameId);
 
   return PROCEED;
@@ -55,9 +55,9 @@ OZ_BI_define(BIsetStepFlag,2,0)
   oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
-    thread->setStep(OK);
+    thread->setStep();
   else if (OZ_isFalse(yesno))
-    thread->setStep(NO);
+    thread->unsetStep();
   else
     oz_typeError(1,"Bool");
   return PROCEED;
@@ -69,9 +69,9 @@ OZ_BI_define(BIsetTraceFlag,2,0)
   oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
-    thread->setTrace(OK);
+    thread->setTrace();
   else if (OZ_isFalse(yesno))
-    thread->setTrace(NO);
+    thread->unsetTrace();
   else
     oz_typeError(1,"Bool");
   return PROCEED;
@@ -81,7 +81,7 @@ OZ_BI_define(BIcheckStopped,1,1)
 {
   oz_declareThread(0,thread);
 
-  OZ_RETURN(oz_bool(thread->getStop()));
+  OZ_RETURN(oz_bool(thread->isStop()));
 } OZ_BI_end
 
 // ------------------
@@ -181,9 +181,9 @@ OZ_BI_define(BIthreadSetRaiseOnBlock,2,0)
   oz_declareNonvarIN(1,yesno);
 
   if (OZ_isTrue(yesno))
-    thread->setNoBlock(OK);
+    thread->setNoBlock();
   else if (OZ_isFalse(yesno))
-    thread->setNoBlock(NO);
+    thread->unsetNoBlock();
   else
     oz_typeError(1,"Bool");
   return PROCEED;
@@ -203,7 +203,7 @@ OZ_BI_define(BIthreadTaskStack,3,1)
   oz_declareIntIN(1,depth);
   oz_declareNonvarIN(2,verbose);
 
-  if (thread->isDeadThread())
+  if (thread->isDead())
     OZ_RETURN(oz_nil());
 
   Bool doverbose;
@@ -223,7 +223,7 @@ OZ_BI_define(BIthreadFrameVariables,2,1)
   oz_declareThread(0,thread);
   oz_declareIntIN(1,frameId);
 
-  if (thread->isDeadThread())
+  if (thread->isDead())
     OZ_RETURN(NameUnit);
 
   TaskStack *taskstack = thread->getTaskStackRef();

@@ -307,7 +307,7 @@ void oz_checkExtSuspension(Suspension susp, Board * varHome) {
   }
 
   if (wasFound)
-    susp.setExtSuspension();
+    susp.setExternal();
 
 }
 

@@ -1023,7 +1023,7 @@ void Thread::printStream(ostream &stream, int depth)
     return;
   }
 
-  if (isDeadThread ()) {
+  if (isDead()) {
     stream << "Dead Thread @" << this << "" << endl;
     return;
   }
@@ -1049,8 +1049,8 @@ void Thread::printStream(ostream &stream, int depth)
 
   stream << " Tasks #" << taskStack->tasks();
 
-  if ((getFlags ()) & T_ext)       stream << " ext";
-  if ((getFlags ()) & T_tag)       stream << " tag";
+  if (isExternal()) stream << " external";
+  if (isTagged())   stream << " tagged";
 
   stream << " <";
   GETBOARD(this)->printStream(stream, PRINT_DEPTH_DEC(depth));

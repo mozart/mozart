@@ -111,7 +111,7 @@ void debugStreamTerm(Thread *thread) {
 }
 
 void debugStreamException(Thread *thread, TaggedRef exc) {
-  oz_currentThread()->setStop(OK);
+  oz_currentThread()->setStop();
 
   TaggedRef pairlist =
     oz_cons(OZ_pairA("thr",oz_thread(thread)),
@@ -120,13 +120,13 @@ void debugStreamException(Thread *thread, TaggedRef exc) {
 }
 
 void debugStreamEntry(OzDebug *dbg, int frameId) {
-  oz_currentThread()->setStop(OK);
+  oz_currentThread()->setStop();
   am.debugStreamMessage(dbg->toRecord("entry",oz_currentThread(),frameId));
 }
 
 void debugStreamExit(OzDebug *dbg, int frameId) {
-  oz_currentThread()->setStep(OK);
-  oz_currentThread()->setStop(OK);
+  oz_currentThread()->setStep();
+  oz_currentThread()->setStop();
   am.debugStreamMessage(dbg->toRecord("exit",oz_currentThread(),frameId));
 }
 
@@ -137,9 +137,9 @@ void debugStreamUpdate(Thread *thread) {
 }
 
 void execBreakpoint(Thread *t) {
-  if (!t->getTrace() || !t->getStep()) {
-    t->setTrace(OK);
-    t->setStep(OK);
+  if (!t->isTrace() || !t->isStep()) {
+    t->setTrace();
+    t->setStep();
     debugStreamBreakpoint(t);
   }
 }

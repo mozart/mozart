@@ -957,7 +957,7 @@ static void threadRaise(Thread *th,OZ_Term E) {
 
   th->pushCFun(BIraise, args, 1);
 
-  th->setStop(NO);
+  th->unsetStop();
 
   if (th->isSuspended()) {
     oz_wakeupThread(th);
@@ -989,7 +989,7 @@ OZ_BI_define(BIthreadSuspend,1,0)
 {
   oz_declareThread(0,th);
 
-  th->setStop(OK);
+  th->setStop();
   if (th == oz_currentThread()) {
     return BI_PREEMPT;
   }
@@ -997,7 +997,7 @@ OZ_BI_define(BIthreadSuspend,1,0)
 } OZ_BI_end
 
 void threadResume(Thread *th) {
-  th->setStop(NO);
+  th->unsetStop();
 
   /* mm2: I don't understand this, but let's try to give some explanation.
    *  1. resuming the current thread should be a NOOP.
@@ -1023,11 +1023,11 @@ OZ_BI_define(BIthreadIsSuspended,1,1)
 {
   oz_declareThread(0,th);
 
-  OZ_RETURN(oz_bool(th->getStop()));
+  OZ_RETURN(oz_bool(th->isStop()));
 } OZ_BI_end
 
 OZ_Term threadState(Thread *th) {
-  if (th->isDeadThread()) {
+  if (th->isDead()) {
     return oz_atom("terminated");
   }
   if (th->isRunnable()) {
@@ -1072,9 +1072,9 @@ OZ_BI_define(BIthreadCreate,1,0)
   tt->getTaskStackRef()->pushCont(a->getPC(),NULL,a);
   tt->setAbstr(a->getPred());
 
-  if (am.debugmode() && oz_onToplevel() && oz_currentThread()->getTrace()) {
-    tt->setTrace(OK);
-    tt->setStep(OK);
+  if (am.debugmode() && oz_onToplevel() && oz_currentThread()->isTrace()) {
+    tt->setTrace();
+    tt->setStep();
   }
 
   return PROCEED;

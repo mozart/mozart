@@ -121,7 +121,7 @@ void addFeatOFSSuspensionList(TaggedRef var,
       continue;
     }
 
-    if (susp.isPropagator() && susp.isOFSPropagator()) {
+    if (susp.isPropagator() && susp.isOFS()) {
       MonitorArityPropagator * prop =
         (MonitorArityPropagator *) susp.getPropagator()->getPropagator();
 
@@ -666,7 +666,7 @@ OZ_C_proc_begin(BImonitorArity, 3)
         TaggedRef uvar=oz_newVar(home);
         OZ_Return r =
           pe.impose(new MonitorArityPropagator(rec,kill,feattail,uvar,uvar));
-        imposed_propagator->markOFSPropagator();
+        imposed_propagator->setOFS();
         return r;
     }
 
