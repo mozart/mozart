@@ -28,8 +28,17 @@
 
 %builtins_all =
     (
-     'get'      => { in  => ['+object'],
-                     out => ['+class'],
-                     bi  => BIgetClass},
+     'get'       => { in  => ['+object'],
+                      out => ['+class'],
+                      bi  => BIgetClass},
+     'is'        => { in  => ['+value'],
+                      out => ['+bool'],
+                      bi  => BIclassIs},
+     'isSited'   => { in  => ['+class'],
+                      out => ['+bool'],
+                      bi  => BIclassIsSited},
+     'isLocking' => { in  => ['+class'],
+                      out => ['+bool'],
+                      bi  => BIclassIsLocking},
      );
 1;;

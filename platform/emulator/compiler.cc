@@ -567,7 +567,7 @@ OZ_BI_define(BIisBuiltin,1,1)
 {
   oz_declareNonvarIN(0,val);
 
-  OZ_RETURN(oz_bool(oz_isBuiltin(val) && !tagged2Builtin(val)->isNative()));
+  OZ_RETURN(oz_bool(oz_isBuiltin(val) && !tagged2Builtin(val)->isSited()));
 } OZ_BI_end
 
 OZ_BI_define(BInameVariable,2,0)

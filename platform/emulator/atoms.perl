@@ -184,18 +184,28 @@
           ( NameGroupVoid,     "group(void)"),
           ( NameNonExportable, "nonExportable"),
 
-          ( NameOoAttr,        "ooAttr"),
-          ( NameOoFreeFeatR,   "ooFreeFeatR"),
-          ( NameOoFreeFlag,    "ooFreeFlag"),
+
+          # needed for instances: methods
+          ( NameOoLocking,     "ooLocking"),
+          ( NameOoMeth,        "ooMeth"),
+          ( NameOoFastMeth,    "ooFastMeth"),
+          ( NameOoDefaults,    "ooDefaults"),
+          # optional arguments
           ( NameOoDefaultVar,  "ooDefaultVar"),
           ( NameOoRequiredArg, "ooRequiredArg"),
-          ( NameOoFastMeth,    "ooFastMeth"),
+          # needed for instances: attributes
+          ( NameOoAttr,        "ooAttr"),
+          # needed for instances: features
           ( NameOoUnFreeFeat,  "ooUnFreeFeat"),
-          ( NameOoDefaults,    "ooDefaults"),
+          ( NameOoFreeFeatR,   "ooFreeFeatR"),
+          ( NameOoFreeFlag,    "ooFreeFlag"),
+          # misc stuff
           ( NameOoPrintName,   "ooPrintName"),
-          ( NameOoLocking,     "ooLocking"),
           ( NameOoFallback,    "ooFallback"),
-          ( NameOoId,          "ooId")
+          # inheritance related
+          ( NameOoMethSrc,     "ooMethSrc"),
+          ( NameOoAttrSrc,     "ooAttrSrc"),
+          ( NameOoFeatSrc,     "ooFeatSrc"),
           );
 
 

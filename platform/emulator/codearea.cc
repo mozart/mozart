@@ -828,7 +828,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
         fprintf(ofile," pos(%s %d %d)",
                 OZ_atomToC(file),line,colum);
         fprintf(ofile," [");
-        fprintf(ofile,"%s",predd->isNative()?" native":"");
+        fprintf(ofile,"%s",predd->isSited()?" sited":"");
         fprintf(ofile," ]");
         fprintf(ofile," %d",predd->getMaxX());
         fprintf(ofile,") ");
