@@ -70,6 +70,15 @@
             of boolean property <<'application.gui'>>.  The latter is
             set to <<true>> when the <code proglang=sh/ozengine/ is
             invoked with option <code proglang=sh/--gui/.
+
+	  <Entry><<processArgv>>
+	    <Index class=tails/<<Application>><And><<processArgv>>/
+	  <Synopsis>
+	    <<{Application.processArgv ?+{Spec} ??{L}}>>
+	  <Item>
+	    performs argument parsing on the explicitly given list of strings ?_{L}
+	    according to specification ?_{Spec}.
+
 	</List>
       <Para class=apropos><Title/Error Handling/
 	If an error is encountered in the input, an error exception of the
