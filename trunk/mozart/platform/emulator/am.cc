@@ -1280,6 +1280,21 @@ void AM::scheduleWakeup(Board *bb, Bool wasExtSusp)
 }
 
 
+Thread *AM::createThread(int prio)
+{
+  Thread *tt = newThread(prio,currentBoard);
+#ifdef NEWCOUNTER
+  currentBoard->incSuspCount();
+#endif
+  if (currentSolveBoard != (Board *) NULL) {
+    incSolveThreads (currentSolveBoard);
+    tt->setNotificationBoard (currentSolveBoard);
+  }
+  IncfProfCounter(procCounter,sizeof(Thread));
+  scheduleThread(tt);
+  return tt;
+}
+
 /*
  * Toplevel is a queue of toplevel queries, which must be executed
  * sequentially.
