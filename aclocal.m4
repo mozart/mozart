@@ -28,6 +28,27 @@ AC_DEFUN(OZ_INIT, [
     OZ_PATH_PROG(INSTALL_DIR,  mkinstalldirs)
     #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
     #OZ_PATH_PROG(DYNLD,          ozdynld)
+
+    if test -z "$BUILDTOP"
+    then
+	for BUILDTOP in	`pwd` \
+			`pwd`/.. \
+			`pwd`/../.. \
+			`pwd`/../../.. \
+			`pwd`/../../../.. \
+			`pwd`/../../../../..; do
+	  if test -r $BUILDTOP/config.cache
+	  then
+		break
+	  fi
+	done
+    fi
+    if test ! -r $BUILDTOP/config.cache
+    then
+	AC_MSG_ERROR([can't find BUILDTOP])
+    fi
+    BUILDTOP=`cd $BUILDTOP && pwd`
+    AC_SUBST(BUILDTOP)
     ])
 
 echo $P | sed -e "s/^\.:/$X:/g" | sed -e "s/:\.\$/:$X/g" | sed -e "s/:\.:/:$X:/g" | sed "s/:\.\//:$X\//g"
@@ -142,3 +163,19 @@ AC_DEFUN(OZ_CHECK_HEADER_PATH, [
 	   $3
 	fi
 	])
+
+AC_DEFUN(OZ_CONTRIB_INIT,[
+    OZ_INIT
+    OZ_PATH_PROG(OZC,ozc,OZC=$BUILDTOP/share/lib/ozc.sh)
+    OZ_PATH_PROG(OZPLATFORM,ozplatform)
+    PLATFORM=`$OZPLATFORM`
+    AC_SUBST(PLATFORM)
+])
+
+AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
+    OZ_CONTRIB_INIT
+    AC_PROG_CXX
+    AC_PROG_CXXCPP
+    AC_LANG_CPLUSPLUS
+    OZ_PATH_PROG(OZDYNLD,ozdynld)
+])
