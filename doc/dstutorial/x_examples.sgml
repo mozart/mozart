@@ -563,9 +563,11 @@ the network.
 is changed, then one must be careful not to cause
 timing and memory problems.
 <LIST>
-<ITEM>When a reference <<X>> is shared between sites and
-<<X>> refers to unused modules then the modules will be loaded into
-memory.  This is so even if they are never used.
+<ITEM>When a reference <<X>> is exported from a site
+(i.e., put in a message and sent) and
+<<X>> refers directly or indirectly
+to unused modules then the modules will be loaded into memory.
+This is so even if they will never be used.
 
 <ITEM>Relative timings between different parts of a program
 depend on the distribution structure.

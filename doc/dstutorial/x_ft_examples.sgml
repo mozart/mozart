@@ -176,7 +176,7 @@ We need a time-out since otherwise a client
 will be stuck when the server drops it like a hot potato.
 The duration of the time-out is an argument to <<SafeWait>>.
 
-<SUBSECTION><TITLE>Utilities to check for fault states</TITLE>
+<SUBSECTION><TITLE>Definition of <<FOneOf>> and <<FSomeOf>></TITLE>
 
 <P>In the above example and later on in this chapter
 (e.g., in <ptr to="exception.based">),
