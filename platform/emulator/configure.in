@@ -116,7 +116,6 @@ if test "${enable_os2}" = yes; then
     CXX=gcc
     LD=$CXX
     platform="os2-i486"
-    PROGRAMNAME="emulator.exe"
     with_sunpro=no
     with_gmp=no
     oz_malloc_obj=
@@ -179,11 +178,6 @@ dnl *****************************************************************
 
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
-
-: ${PROGRAMNAME=emulator.exe}
-TARGETS="$PROGRAMNAME"
-AC_SUBST(PROGRAMNAME)
-AC_SUBST(TARGETS)
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
@@ -545,15 +539,15 @@ OZ_ENABLE(regopt,[   register optimization],yes,
 OZ_ENABLE(modules-static,[ link modules statically],no,
         AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
 	AC_DEFINE(MODULES_LINK_STATIC)
-	MODULETARGETS="\$(STATIC_MODULETARGETS)"
-        LIBS="$LIBS \$(STATIC_MODULELIBS)"
+	STATIC_MODULES="\$(MODULE_NAMES)"
+	DYNAMIC_MODULES=""
 	,
         AC_MSG_RESULT(no (-UMODULES_LINK_STATIC))
-	MODULETARGETS="\$(DYNAMIC_MODULETARGETS)"
-	MODULEINSTALL="install-module"
+	STATIC_MODULES=""
+	DYNAMIC_MODULES="\$(MODULE_NAMES)"
 	)
-AC_SUBST(MODULETARGETS)
-AC_SUBST(MODULEINSTALL)
+AC_SUBST(STATIC_MODULES)
+AC_SUBST(DYNAMIC_MODULES)
 
 
 dnl *****************************************************************
