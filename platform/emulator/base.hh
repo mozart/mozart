@@ -195,6 +195,7 @@ typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
 
 //  ------------------------------------------------------------------------
 
+#ifdef DEBUG_CONSTRUCTORS
 /* Avoid that the compiler generates constructors, destructors and
  * assignment operators which are not wanted in Oz */
 #define NO_DEFAULT_CONSTRUCTORS2(aclass)        \
@@ -207,7 +208,11 @@ typedef OZ_Return (*InlineFun3)(TaggedRef In1, TaggedRef In2,
   aclass()
 
 #define NO_DEFAULT_CONSTRUCTORS(aclass) NO_DEFAULT_CONSTRUCTORS1(aclass)
-
+#else
+#define NO_DEFAULT_CONSTRUCTORS2(aclass)
+#define NO_DEFAULT_CONSTRUCTORS1(aclass)
+#define NO_DEFAULT_CONSTRUCTORS(aclass)
+#endif
 /*
    Forward declarations of classes and procedures
 */
