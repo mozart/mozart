@@ -1,0 +1,94 @@
+<chapter id=chapter.bin>
+  <title/Installing Binary Distributions/
+  <p>
+Installing Mozart is a very simple task; neither super-user privileges nor
+special knowledge about system administration are required. Mozart is
+distributed in binary form and configures itself on startup. Therefore
+installation of Mozart only consists in unpacking an archive file into
+any directory. To install Mozart on Unix you only have to read <ptr to=sec.unix>
+and optionally <ptr to=sec.emacsunix> if you have not yet installed Emacs.
+
+<p>
+To install Mozart on Windows 9x/NT read <ptr to=sec.windows>
+
+  <section id=sec.windows>
+    <title>MS Windows 9x/NT</title>
+    <p>Installing Mozart needs to be done in two steps. 
+
+<list ENUM>
+<item> You have to install GNU Emacs first.
+<item> Afterwards you install Mozart. (If you upgrade to
+a newer version of Mozart you only have to perform the second step).
+</list>
+
+<subsection><title/Installing Emacs/
+
+<p>Download <Ref.Extern to="ftp://ftp.ps.uni-sb.de/pub/oz2/system/oz-win/emacs-20.3.1.exe">emacs-20.34.1.exe</Ref.Extern>
+execute it, and follow the instructions.
+<p>
+More information about  GNU Emacs for MS Windows can be found under
+<Ref.Extern to="http://www.cs.washington.edu/homes/voelker/ntemacs.html">
+http://www.cs.washington.edu/homes/voelker/ntemacs.html</Ref.Extern>
+<P>
+
+</subsection>
+<subsection><title/Installing Mozart/
+<p>
+
+Get <Ref.Extern to="ftp://ftp.ps.uni-sb.de/pub/oz2/system/oz-win/oz-2.0.4b.exe">oz-2.0.4b.exe</Ref.Extern>,
+execute it, and follow the instructions.
+<p>
+
+</subsection>
+</section>
+
+  <section id=sec.unix>
+    <title/Unix/
+    <subsection><title/Installing Oz on a UNIX based system/
+<p>First get the binaries for your particular platform:
+<p>
+<code display>
+% cd /usr/local
+% gunzip -cd mozart-version-platform.tar.gz | tar -xvf
+</code>
+    </subsection>
+
+    <subsection id=sec.emacsunix><title/Getting a UNIX version of Emacs/
+<p>
+    Oz needs a version of Emacs that supports the X Window System
+environment. You can either use GNU Emacs version 19.28 or higher
+which is available from <p>
+
+<Ref.Extern to="http://www.gnu.org/software/emacs/emacs.html">
+http://www.gnu.org/software/emacs/emacs.html</Ref.Extern>
+<p>
+
+Oz also runs with XEmacs version 19.14 or higher, which is available
+from <p>
+
+<Ref.Extern to="http://www.xemacs.org">http://www.xemacs.org</Ref.Extern>
+<p>
+
+For the unexperienced user we recommend using XEmacs, since it is
+distributed in binary form and its ease of installation. When Oz comes
+uo, it tries to invoke Emacs via the command <code/emacs/. If your
+version of Emacs has to be invoked with a different command name, say
+<code/emacs20/, you can achieve this by setting the environment
+variable <code/OZEMACS/ as in
+<code display>
+setenv OZEMACS emacs20
+</code>
+
+    </subsection>
+    </section>
+
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
